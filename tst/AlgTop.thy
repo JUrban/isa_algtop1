@@ -11550,10 +11550,49 @@ proof -
            V deformation retracts onto T \\<union> \\<Union>(NT-{A1}) (hdr with S = {A1}).
            Apply IH to the DR targets (which are graphs with fewer non-tree arcs).\<close>
         \<comment> \<open>Choose interior points for each non-tree arc.\<close>
-        have "\<forall>A\<in>?NT. \<exists>p. p \<in> A \<and> p \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
-          sorry \<comment> \<open>Each arc has interior points (arcs have \\<ge> 3 points).\<close>
+        have hint_pts: "\<forall>A\<in>?NT. \<exists>p. p \<in> A \<and> p \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+        proof (intro ballI)
+          fix A assume "A \<in> ?NT"
+          hence "A \<in> \<A>" by (by100 blast)
+          have harc: "top1_is_arc_on A (subspace_topology X TX A)" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+          have "A \<subseteq> X" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+          obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+              A (subspace_topology X TX A) h" using harc unfolding top1_is_arc_on_def by (by100 blast)
+          have hbij: "bij_betw h top1_unit_interval A"
+            using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hX_strict: "is_topology_on_strict X TX"
+            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+          have hX_haus: "is_hausdorff_on X TX"
+            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+          from arc_endpoints_are_boundary[OF hX_strict hX_haus \<open>A \<subseteq> X\<close> harc hh]
+          have hep: "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}" .
+          have h12_I: "(1/2::real) \<in> top1_unit_interval"
+            unfolding top1_unit_interval_def by (by100 simp)
+          have "h (1/2) \<in> A" using hbij h12_I unfolding bij_betw_def by (by100 blast)
+          moreover have "h (1/2) \<notin> {h 0, h 1}"
+          proof -
+            have hinj: "inj_on h top1_unit_interval" using hbij unfolding bij_betw_def by (by100 blast)
+            have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have "(1/2::real) \<noteq> 0" by (by100 simp)
+            hence "h (1/2) \<noteq> h 0" using hinj h12_I h0_I unfolding inj_on_def by (by100 blast)
+            have "(1/2::real) \<noteq> 1" by (by100 simp)
+            hence "h (1/2) \<noteq> h 1" using hinj h12_I h1_I unfolding inj_on_def by (by100 blast)
+            thus ?thesis using \<open>h (1/2) \<noteq> h 0\<close> by (by100 blast)
+          qed
+          ultimately show "\<exists>p. p \<in> A \<and> p \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+            using hep by (by100 blast)
+        qed
+        have "\<exists>ps. \<forall>A\<in>?NT. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+        proof -
+          have "\<forall>A. A \<in> ?NT \<longrightarrow> (\<exists>p. p \<in> A \<and> p \<notin> top1_arc_endpoints_on A (subspace_topology X TX A))"
+            using hint_pts by (by100 blast)
+          hence "\<exists>f. \<forall>A. A \<in> ?NT \<longrightarrow> f A \<in> A \<and> f A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+            by (rule choice_iff'[THEN iffD1])
+          thus ?thesis by (by100 blast)
+        qed
         then obtain ps where hps: "\<forall>A\<in>?NT. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
-          sorry \<comment> \<open>Choice function for interior points.\<close>
+          by (by5000 blast)
         \<comment> \<open>Define U, V, and their intersection.\<close>
         let ?S_U = "?NT - {A1}" \<comment> \<open>arcs to remove from for U\<close>
         let ?S_V = "{A1}" \<comment> \<open>arcs to remove from for V\<close>
@@ -11586,12 +11625,62 @@ proof -
           \<comment> \<open>Need: ps(A1) \\<notin> ps\\`(NT-{A1}), i.e. ps injective on NT.
              Interior points are distinct (in different arcs, arcs pairwise disjoint on interiors).\<close>
           have "ps ` (?NT - {A1}) \<inter> ps ` {A1} = {}"
-            sorry \<comment> \<open>ps injective: interior points in different arcs are distinct.\<close>
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            then obtain B where "B \<in> ?NT - {A1}" "ps B = ps A1" by (by100 blast)
+            have "B \<in> \<A>" using \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+            have "B \<noteq> A1" using \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+            have "A1 \<in> \<A>" using hA1 by (by100 blast)
+            have "ps B \<in> B" using hps \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+            have "ps B \<notin> top1_arc_endpoints_on B (subspace_topology X TX B)"
+              using hps \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+            have "ps A1 \<in> A1" using hps hA1 by (by100 blast)
+            have "ps B \<in> A1" using \<open>ps B = ps A1\<close> \<open>ps A1 \<in> A1\<close> by (by100 simp)
+            have "ps B \<in> B \<inter> A1" using \<open>ps B \<in> B\<close> \<open>ps B \<in> A1\<close> by (by100 blast)
+            from h\<A>_inter[rule_format, OF \<open>A1 \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>B \<noteq> A1\<close>[symmetric]]
+            have "B \<inter> A1 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology X TX A1)
+                \<and> B \<inter> A1 \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)" by (by100 blast)
+            hence "ps B \<in> top1_arc_endpoints_on B (subspace_topology X TX B)"
+              using \<open>ps B \<in> B \<inter> A1\<close> by (by100 blast)
+            thus False using \<open>ps B \<notin> _\<close> by (by100 blast)
+          qed
           thus ?thesis by (by100 blast)
         qed
         \<comment> \<open>U and V are open (finite points removed from Hausdorff).\<close>
-        have hU_open: "openin_on X TX ?U" sorry \<comment> \<open>Finite set of points closed in Hausdorff X.\<close>
-        have hV_open: "openin_on X TX ?V" sorry \<comment> \<open>Single point closed in Hausdorff X.\<close>
+        have hX_haus_g: "is_hausdorff_on X TX"
+          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+        have hU_open: "openin_on X TX ?U"
+        proof -
+          have "finite (ps ` ?S_U)" using \<open>finite ?NT\<close> by (by100 blast)
+          moreover have "ps ` ?S_U \<subseteq> X"
+          proof
+            fix x assume "x \<in> ps ` ?S_U"
+            then obtain A where "A \<in> ?S_U" "x = ps A" by (by100 blast)
+            hence "A \<in> ?NT" by (by100 blast)
+            hence "A \<in> \<A>" by (by100 blast)
+            have "ps A \<in> A" using hps \<open>A \<in> ?NT\<close> by (by100 blast)
+            have "A \<subseteq> X" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+            thus "x \<in> X" using \<open>x = ps A\<close> \<open>ps A \<in> A\<close> \<open>A \<subseteq> X\<close> by (by100 blast)
+          qed
+          ultimately have "closedin_on X TX (ps ` ?S_U)"
+            using Theorem_17_8[OF hX_haus_g] by (by100 blast)
+          thus ?thesis unfolding openin_on_def closedin_on_def by (by100 blast)
+        qed
+        have hV_open: "openin_on X TX ?V"
+        proof -
+          have "finite (ps ` ?S_V)" by (by100 simp)
+          moreover have "ps ` ?S_V \<subseteq> X"
+          proof
+            fix x assume "x \<in> ps ` ?S_V"
+            hence "x = ps A1" by (by100 blast)
+            have "ps A1 \<in> A1" using hps hA1 by (by100 blast)
+            have "A1 \<subseteq> X" using h\<A> hA1 by (by100 blast)
+            thus "x \<in> X" using \<open>x = ps A1\<close> \<open>ps A1 \<in> A1\<close> \<open>A1 \<subseteq> X\<close> by (by100 blast)
+          qed
+          ultimately have "closedin_on X TX (ps ` ?S_V)"
+            using Theorem_17_8[OF hX_haus_g] by (by100 blast)
+          thus ?thesis unfolding openin_on_def closedin_on_def by (by100 blast)
+        qed
         \<comment> \<open>U \\<cap> V is simply connected (SC lemma).\<close>
         have hUV_sc: "top1_simply_connected_on ?UV (subspace_topology X TX ?UV)"
           sorry \<comment> \<open>graph\\_remove\\_interior\\_points\\_sc with ps\\`NT.\<close>
