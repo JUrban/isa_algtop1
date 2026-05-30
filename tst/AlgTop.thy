@@ -12100,9 +12100,13 @@ proof -
           \<comment> \<open>Chain: htU\\_free gives G free + iso(G, \\<pi>\\_1(tU)).
              Compose with hpi1\\_U\\_iso, then free\\_group\\_iso\\_transfer.\<close>
           \<comment> \<open>Use the existing hU\\_free (which already composed the isos).\<close>
-          from htU_free hpi1_U_iso hpi1_U_grp show ?thesis
-            sorry \<comment> \<open>6-var extract + groups\\_isomorphic\\_trans\\_fwd + free\\_group\\_iso\\_transfer.
-               The extract is blocked by Isabelle tactic limitations on large terms.\<close>
+          show ?thesis
+            using htU_free hpi1_U_iso hpi1_U_grp
+            apply (elim exE conjE)
+            apply (drule groups_isomorphic_trans_fwd, assumption)
+            apply (drule free_group_iso_transfer, assumption, assumption)
+            apply (elim exE, rule exI, rule exI, assumption)
+            done
         qed
         have hV_free_direct: "\<exists>(\<iota>V::nat \<Rightarrow> _) S2. top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?V ?TV x0)
@@ -12115,8 +12119,13 @@ proof -
               (top1_fundamental_group_carrier ?V ?TV x0) (top1_fundamental_group_mul ?V ?TV x0)
               (top1_fundamental_group_id ?V ?TV x0) (top1_fundamental_group_invg ?V ?TV x0)"
             by (rule top1_fundamental_group_is_group[OF hV_top hx0_V])
-          from htV_free hpi1_V_iso hpi1_V_grp show ?thesis
-            sorry \<comment> \<open>Same extraction + transfer as hU\\_free\\_direct.\<close>
+          show ?thesis
+            using htV_free hpi1_V_iso hpi1_V_grp
+            apply (elim exE conjE)
+            apply (drule groups_isomorphic_trans_fwd, assumption)
+            apply (drule free_group_iso_transfer, assumption, assumption)
+            apply (elim exE, rule exI, rule exI, assumption)
+            done
         qed
         \<comment> \<open>U and V are path-connected.\<close>
         \<comment> \<open>Helper: DR + target path-connected \\<Rightarrow> space path-connected.
