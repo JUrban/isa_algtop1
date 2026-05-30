@@ -11858,7 +11858,10 @@ proof -
           \<comment> \<open>Intermediate point.\<close>
           let ?pt_b = "hA (3/4)"
           \<comment> \<open>All the setup for Lemma 84.6.\<close>
-          have hU_open_loc: "openin_on X TX ?U" sorry
+          have hU_open_loc: "openin_on X TX ?U"
+            sorry \<comment> \<open>X - U = (X-A1) \\<union> {endpoints} closed via coherent topology:
+               B = A1: {ep} finite hence closed in Hausdorff.
+               B \\<noteq> A1: B \\<inter> (A1-endpoints) = \\<emptyset> by graph axiom, so B \\<inter> (X-U) = B, closed.\<close>
           have hV_open_loc: "openin_on X TX ?V"
           proof -
             have hX_haus: "is_hausdorff_on X TX"
