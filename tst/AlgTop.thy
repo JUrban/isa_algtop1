@@ -9501,11 +9501,29 @@ proof -
       thus False using \<open>m > 0\<close> by (by100 simp)
     qed
   qed
-  \<comment> \<open>Step 4: Construct iso \\<pi>\\_1(X, a) \\<cong> \\<Z>.\<close>
+  \<comment> \<open>Step 4: Construct iso \\<pi>\\_1(X, a) \\<cong> \\<Z>.
+     Show \\<pi>\\_1 is free on {0} via [\\<alpha>*\\<beta>]. Then \\<pi>\\_1 \\<cong> \\<Z> from free\\_group\\_hom\\_generators\\_iso.\<close>
+  have ha_X: "a \<in> X" using hUV_split ha hcover by (by100 blast)
+  let ?pi = "top1_fundamental_group_carrier X TX a"
+  let ?mul = "top1_fundamental_group_mul X TX a"
+  let ?eid = "top1_fundamental_group_id X TX a"
+  let ?invg = "top1_fundamental_group_invg X TX a"
+  have hpi_grp: "top1_is_group_on ?pi ?mul ?eid ?invg"
+    by (rule top1_fundamental_group_is_group[OF hTX_top ha_X])
+  \<comment> \<open>\\<pi>\\_1 is free on {0::nat} via [\\<alpha>*\\<beta>].\<close>
+  have hpi_free: "top1_is_free_group_full_on ?pi ?mul ?eid ?invg
+      (\<lambda>(_::nat). {g. top1_loop_equiv_on X TX a (top1_path_product \<alpha> \<beta>) g}) {0::nat}"
+    sorry \<comment> \<open>Free group on {0}: generation from hgen + reduced word condition from hinf\\_order.
+       With one generator, reduced words are all-True or all-False sequences.
+       word\\_product of length n gives [\\<alpha>*\\<beta>]^n or [\\<alpha>*\\<beta>]^{-n}, both \\<noteq> e.\<close>
+  \<comment> \<open>\\<Z> is free on {0::nat}.\<close>
+  have hZ_free: "top1_is_free_group_full_on top1_Z_group top1_Z_mul
+      top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {0::nat}"
+    by (rule Z_is_free_on_one_generator)
+  \<comment> \<open>Both free on {0} \\<Rightarrow> isomorphic (via unique hom mapping generators).\<close>
   show ?thesis
-    sorry \<comment> \<open>hgen (generation) + hinf\\_order (infinite order) \\<Rightarrow> \\<pi>\\_1 \\<cong> \\<Z>.
-       Use free\\_group\\_hom\\_exists with \\<Z> free on {0} + [\\<alpha>*\\<beta>] \\<in> \\<pi>\\_1.
-       Show the unique hom \\<Z> \\<rightarrow> \\<pi>\\_1 is surjective (generation) + injective (inf order).\<close>
+    sorry \<comment> \<open>free\\_group\\_hom\\_exists + free\\_group\\_hom\\_generators\\_iso.
+       Unique hom \\<Z> \\<rightarrow> \\<pi>\\_1 mapping 1 \\<mapsto> [\\<alpha>*\\<beta>] is bijection \\<Rightarrow> iso.\<close>
 qed
 
 text \<open>Helper: free group structure transfers across isomorphism.\<close>
