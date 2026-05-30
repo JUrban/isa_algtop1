@@ -9567,6 +9567,15 @@ qed
 text \<open>Helper: deformation retract onto path-connected subspace implies path-connected.
   If X deformation retracts onto A and A is path-connected, then X is path-connected.
   Proof: the homotopy H gives a path from x to H(x,1) \<in> A for each x \<in> X.\<close>
+text \<open>Helper: convex real subspace is simply connected.
+  Uses straight-line homotopy H(s,t) = (1-t)*f(s) + t*x0.\<close>
+lemma convex_real_subspace_simply_connected:
+  assumes hS_ne: "S \<noteq> {}"
+      and hS_conv: "\<And>x y t. x \<in> S \<Longrightarrow> y \<in> S \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
+          \<Longrightarrow> (1 - t) * x + t * (y::real) \<in> S"
+  shows "top1_simply_connected_on S (subspace_topology (UNIV::real set) top1_open_sets S)"
+  sorry
+
 text \<open>Helper: trivial \<pi>_1 carrier + path-connected \<Rightarrow> simply connected.\<close>
 lemma trivial_pi1_imp_simply_connected:
   assumes "is_topology_on X TX"
@@ -12803,7 +12812,47 @@ proof -
             show ?thesis unfolding top1_path_connected_on_def by (by100 blast)
           qed
           \<comment> \<open>U and V simply connected.\<close>
-          have hU_sc_loc: "top1_simply_connected_on ?U (subspace_topology X TX ?U)" sorry
+          have hU_sc_loc: "top1_simply_connected_on ?U (subspace_topology X TX ?U)"
+          proof -
+            \<comment> \<open>(0,1) is SC (convex real subspace).\<close>
+            let ?I01 = "{t::real. 0 < t \<and> t < 1}"
+            let ?TI01 = "subspace_topology (UNIV::real set) top1_open_sets ?I01"
+            have h01_ne: "?I01 \<noteq> {}"
+              proof - have "(1/2::real) \<in> ?I01" by (by100 simp) thus ?thesis by (by100 blast) qed
+            have h01_conv: "\<And>x y t. x \<in> ?I01 \<Longrightarrow> y \<in> ?I01 \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
+                \<Longrightarrow> (1 - t) * x + t * y \<in> ?I01"
+            proof -
+              fix x y t :: real
+              assume "x \<in> ?I01" "y \<in> ?I01" "0 \<le> t" "t \<le> 1"
+              have "0 < x" "x < 1" "0 < y" "y < 1" using \<open>x \<in> ?I01\<close> \<open>y \<in> ?I01\<close> by (by100 simp)+
+              have h1t: "1 - t \<ge> 0" using \<open>t \<le> 1\<close> by (by100 linarith)
+              have "(1-t)*x \<ge> 0" using h1t \<open>0 < x\<close> by (by100 simp)
+              have "t*y \<ge> 0" using \<open>0 \<le> t\<close> \<open>0 < y\<close> by (by100 simp)
+              have "t*y > 0 \<or> (1-t)*x > 0"
+                by (cases "t = 0") (use h1t \<open>0 < x\<close> \<open>0 \<le> t\<close> \<open>0 < y\<close> in \<open>by100 simp\<close>)+
+              hence "(1-t)*x + t*y > 0" using \<open>(1-t)*x \<ge> 0\<close> \<open>t*y \<ge> 0\<close> by (by100 linarith)
+              have "(1-t)*x \<le> 1-t" using mult_left_mono[OF less_imp_le[OF \<open>x < 1\<close>] h1t] by (by100 simp)
+              have "t*y \<le> t" using mult_left_mono[OF less_imp_le[OF \<open>y < 1\<close>] \<open>0 \<le> t\<close>] by (by100 simp)
+              hence "(1-t)*x + t*y \<le> 1" using \<open>(1-t)*x \<le> 1-t\<close> by (by100 linarith)
+              have "(1-t)*x + t*y \<noteq> 1"
+              proof assume "(1-t)*x + t*y = 1"
+                hence "(1-t)*x = 1-t" "t*y = t"
+                  using \<open>(1-t)*x \<le> 1-t\<close> \<open>t*y \<le> t\<close> by (by100 linarith)+
+                thus False by (cases "t < 1") (use \<open>x < 1\<close> \<open>y < 1\<close> \<open>t \<le> 1\<close> in \<open>by100 simp\<close>)+
+              qed
+              thus "(1-t)*x + t*y \<in> ?I01"
+                using \<open>(1-t)*x + t*y > 0\<close> \<open>(1-t)*x + t*y \<le> 1\<close> \<open>(1-t)*x + t*y \<noteq> 1\<close>
+                by (by100 simp)
+            qed
+            have h01_sc: "top1_simply_connected_on ?I01 ?TI01"
+              by (rule convex_real_subspace_simply_connected[OF h01_ne h01_conv])
+            \<comment> \<open>hA restricted to (0,1) is a homeomorphism (0,1) \\<rightarrow> U.\<close>
+            have hhA_homeo_01: "top1_homeomorphism_on ?I01 ?TI01 ?U (subspace_topology X TX ?U) hA"
+              sorry \<comment> \<open>Restriction of homeomorphism to open subsets: hA: [0,1] \\<rightarrow> A1 homeo,
+                 restrict to (0,1) \\<rightarrow> hA\\`(0,1) = U. Both bijective + continuous + inverse continuous.\<close>
+            from homeomorphism_preserves_simply_connected_forward[OF hhA_homeo_01 h01_sc]
+            show ?thesis .
+          qed
           have hV_sc_loc: "top1_simply_connected_on ?V (subspace_topology X TX ?V)"
           proof -
             \<comment> \<open>Use shared hV\\_dr\\_T\\_early. T is SC. V DR onto T \\<Rightarrow> V SC.\<close>
