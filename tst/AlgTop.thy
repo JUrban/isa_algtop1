@@ -9584,8 +9584,32 @@ proof -
   \<comment> \<open>Prove all-loops-trivial in a SEPARATE block (avoids simp closing the show goal).\<close>
   have hall_trivial: "\<forall>f. top1_is_loop_on S ?TS x0 f \<longrightarrow>
       top1_path_homotopic_on S ?TS x0 x0 f (top1_constant_path x0)"
-    sorry \<comment> \<open>Straight-line homotopy: H(s,t)=(1-t)*f(s)+t*x0.
-       Continuous (top1\\_slh\\_ext). Image in S (convexity). Contracts f to const.\<close>
+  proof (intro allI impI)
+    fix f assume hf: "top1_is_loop_on S ?TS x0 f"
+    have hf_path: "top1_is_path_on S ?TS x0 x0 f"
+      using hf unfolding top1_is_loop_on_def by (by100 blast)
+    have hf_img: "\<forall>s\<in>I_set. f s \<in> S"
+      using hf_path unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    have hf0: "f 0 = x0" using hf_path unfolding top1_is_path_on_def by (by100 blast)
+    have hf1: "f 1 = x0" using hf_path unfolding top1_is_path_on_def by (by100 blast)
+    \<comment> \<open>Straight-line homotopy.\<close>
+    \<comment> \<open>Use top1\\_slh\\_ext for the homotopy. Prove it contracts f to const in S.\<close>
+    have hf_cont_on: "continuous_on I_set f"
+      sorry \<comment> \<open>Extract continuous\\_on from top1\\_continuous\\_map\\_on.\<close>
+    define H where "H = top1_slh_ext f x0"
+    have hH_cont_UNIV: "continuous_on UNIV H"
+      unfolding H_def by (rule top1_slh_ext_continuous[OF hf_cont_on])
+    have hH_cont_II: "top1_continuous_map_on (I_set \<times> I_set) II_topology (UNIV::real set) top1_open_sets H"
+      by (rule top1_continuous_map_on_II_to_UNIV[OF hH_cont_UNIV])
+    have hH_eq: "\<forall>p\<in>I_set \<times> I_set. H p = (1 - snd p) * f (fst p) + snd p * x0"
+      unfolding H_def using top1_slh_ext_agrees by (by100 blast)
+    have hH_img: "\<forall>p\<in>I_set \<times> I_set. H p \<in> S"
+      sorry \<comment> \<open>Convexity: f(fst p) \\<in> S, x0 \\<in> S, 0 \\<le> snd p \\<le> 1 \\<Rightarrow> convex combo \\<in> S.\<close>
+    have hH_cont_S: "top1_continuous_map_on (I_set \<times> I_set) II_topology S ?TS H"
+      sorry \<comment> \<open>Restrict codomain from UNIV to S using hH\\_img.\<close>
+    show "top1_path_homotopic_on S ?TS x0 x0 f (top1_constant_path x0)"
+      sorry \<comment> \<open>Package hH\\_cont\\_S + boundary conditions into path\\_homotopic\\_on\\_def.\<close>
+  qed
   show ?thesis
     by (rule top1_simply_connected_from_one_point[OF hTS hS_pc hx0])
        (use hall_trivial in blast)
