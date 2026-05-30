@@ -9409,6 +9409,19 @@ qed
 
 
 
+text \<open>Helper: tree union arcs (with endpoints in tree) is path-connected.
+  Used in Theorem 84.7 for targets of deformation retractions.\<close>
+lemma tree_union_arcs_path_connected:
+  assumes hTX: "is_topology_on X TX"
+      and hT_tree: "top1_is_tree_on T (subspace_topology X TX T)"
+      and hT_sub: "T \<subseteq> X"
+      and hS_fin: "finite S"
+      and hS_arcs: "\<forall>A\<in>S. top1_is_arc_on A (subspace_topology X TX A) \<and> A \<subseteq> X"
+      and hS_endpts: "\<forall>A\<in>S. \<exists>e. e \<in> T \<and> e \<in> A"
+      and hx0: "x0 \<in> T"
+  shows "top1_path_connected_on (T \<union> \<Union>S) (subspace_topology X TX (T \<union> \<Union>S))"
+  sorry
+
 text \<open>Helper: deformation retract onto path-connected subspace implies path-connected.
   If X deformation retracts onto A and A is path-connected, then X is path-connected.
   Proof: the homotopy H gives a path from x to H(x,1) \<in> A for each x \<in> X.\<close>
@@ -12094,19 +12107,45 @@ proof -
         proof -
           have htarget_V_pc: "top1_path_connected_on ?target_V (subspace_topology ?V ?TV ?target_V)"
           proof -
-            have hTV_trans_loc: "subspace_topology ?V ?TV ?target_V = subspace_topology X TX ?target_V"
+            have "subspace_topology ?V ?TV ?target_V = subspace_topology X TX ?target_V"
               by (rule subspace_topology_trans[OF htV_sub_V])
-            \<comment> \<open>Use common point with F = {T \\<union> A | A \\<in> NT-{A1}} \\<union> {T}.
-               Each T \\<union> A is PC (same argument as target\\_U) and contains x0 \\<in> T.\<close>
-            let ?F_V = "insert T ((\<lambda>A. T \<union> A) ` (?NT - {A1}))"
-            have htV_sub_X: "?target_V \<subseteq> X"
-              using hT_sub h\<A> by (by100 blast)
-            have htV_top_loc: "is_topology_on ?target_V (subspace_topology X TX ?target_V)"
-              by (rule subspace_topology_is_topology_on[OF hTX_top]) (use htV_sub_X in blast)
+            have "?target_V = T \<union> \<Union>(?NT - {A1})" by (by100 blast)
+            have "finite (?NT - {A1})" using \<open>finite ?NT\<close> by (by100 blast)
+            have "\<forall>A\<in>?NT - {A1}. top1_is_arc_on A (subspace_topology X TX A) \<and> A \<subseteq> X"
+              using h\<A> by (by100 blast)
+            have "\<forall>A\<in>?NT - {A1}. \<exists>e. e \<in> T \<and> e \<in> A"
+            proof (intro ballI)
+              fix Aj assume "Aj \<in> ?NT - {A1}"
+              hence "Aj \<in> ?NT" by (by100 blast)
+              have "Aj \<in> \<A>" using \<open>Aj \<in> ?NT\<close> by (by100 blast)
+              have hAj_arc: "top1_is_arc_on Aj (subspace_topology X TX Aj)"
+                using h\<A> \<open>Aj \<in> \<A>\<close> by (by100 blast)
+              have hAj_sub: "Aj \<subseteq> X" using h\<A> \<open>Aj \<in> \<A>\<close> by (by100 blast)
+              obtain hj where hhj: "top1_homeomorphism_on top1_unit_interval
+                  top1_unit_interval_topology Aj (subspace_topology X TX Aj) hj"
+                using hAj_arc unfolding top1_is_arc_on_def by (by100 blast)
+              have hX_strict: "is_topology_on_strict X TX"
+                using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+              have hX_haus: "is_hausdorff_on X TX"
+                using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+              from arc_endpoints_are_boundary[OF hX_strict hX_haus hAj_sub hAj_arc hhj]
+              have "top1_arc_endpoints_on Aj (subspace_topology X TX Aj) = {hj 0, hj 1}" .
+              have "hj 0 \<in> T"
+                using hNT_endpoints[rule_format, OF \<open>Aj \<in> ?NT\<close>] \<open>top1_arc_endpoints_on Aj _ = _\<close>
+                by (by100 simp)
+              have "hj 0 \<in> Aj"
+              proof -
+                have "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                thus ?thesis using hhj unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              qed
+              thus "\<exists>e. e \<in> T \<and> e \<in> Aj" using \<open>hj 0 \<in> T\<close> by (by100 blast)
+            qed
+            from tree_union_arcs_path_connected[OF hTX_top hT_tree hT_sub
+                \<open>finite (?NT - {A1})\<close> \<open>\<forall>A\<in>?NT - {A1}. _ \<and> _\<close>
+                \<open>\<forall>A\<in>?NT - {A1}. \<exists>e. _\<close> hx0_T]
             have "top1_path_connected_on ?target_V (subspace_topology X TX ?target_V)"
-              sorry \<comment> \<open>Each T \\<union> A\\_i is PC (like target\\_U). All contain x0.
-                 \\<Union>F = T \\<union> \\<Union>(NT-{A1}) = target\\_V. Apply finite union common point.\<close>
-            thus ?thesis using hTV_trans_loc by (by100 simp)
+              using \<open>?target_V = T \<union> \<Union>(?NT - {A1})\<close> by (by100 simp)
+            thus ?thesis using \<open>subspace_topology ?V ?TV ?target_V = _\<close> by (by100 simp)
           qed
           show ?thesis by (rule hdr_pc[OF hV_dr hV_top htarget_V_pc])
         qed
