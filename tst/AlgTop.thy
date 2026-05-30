@@ -9595,7 +9595,36 @@ proof -
     \<comment> \<open>Straight-line homotopy.\<close>
     \<comment> \<open>Use top1\\_slh\\_ext for the homotopy. Prove it contracts f to const in S.\<close>
     have hf_cont_on: "continuous_on I_set f"
-      sorry \<comment> \<open>Extract continuous\\_on from top1\\_continuous\\_map\\_on.\<close>
+    proof -
+      \<comment> \<open>f is continuous I \\<rightarrow> S (subspace of R). Extend to f continuous I \\<rightarrow> R.\<close>
+      have "S \<subseteq> (UNIV::real set)" by (by100 blast)
+      have hf_cont_R: "top1_continuous_map_on I_set I_top (UNIV::real set) top1_open_sets f"
+      proof -
+        have hf_cont_S_loc: "top1_continuous_map_on I_set I_top S ?TS f"
+          using hf_path unfolding top1_is_path_on_def by (by100 blast)
+        from top1_continuous_map_on_codomain_enlarge[OF hf_cont_S_loc \<open>S \<subseteq> UNIV\<close> subset_refl]
+        have "top1_continuous_map_on I_set I_top UNIV (subspace_topology UNIV top1_open_sets UNIV) f" .
+        moreover have "subspace_topology (UNIV::real set) top1_open_sets UNIV = top1_open_sets"
+          by (rule subspace_topology_self) (by100 blast)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>Convert top1\\_continuous\\_map\\_on I\\<rightarrow>R to continuous\\_on I f.\<close>
+      show ?thesis unfolding continuous_on_open_invariant
+      proof (intro allI impI)
+        fix B :: "real set" assume "open B"
+        hence "B \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 blast)
+        hence "{s \<in> I_set. f s \<in> B} \<in> I_top"
+          using hf_cont_R unfolding top1_continuous_map_on_def by (by100 blast)
+        hence "{s \<in> I_set. f s \<in> B} \<in> subspace_topology UNIV top1_open_sets I_set"
+          unfolding top1_unit_interval_topology_def .
+        then obtain W where "W \<in> top1_open_sets" "{s \<in> I_set. f s \<in> B} = I_set \<inter> W"
+          unfolding subspace_topology_def by (by100 blast)
+        have "open W" using \<open>W \<in> top1_open_sets\<close> unfolding top1_open_sets_def by (by100 blast)
+        have "W \<inter> I_set = f -` B \<inter> I_set" using \<open>{s \<in> I_set. f s \<in> B} = I_set \<inter> W\<close> by (by100 blast)
+        thus "\<exists>A. open A \<and> A \<inter> I_set = f -` B \<inter> I_set"
+          using \<open>open W\<close> by (by100 blast)
+      qed
+    qed
     define H where "H = top1_slh_ext f x0"
     have hH_cont_UNIV: "continuous_on UNIV H"
       unfolding H_def by (rule top1_slh_ext_continuous[OF hf_cont_on])
@@ -9604,11 +9633,71 @@ proof -
     have hH_eq: "\<forall>p\<in>I_set \<times> I_set. H p = (1 - snd p) * f (fst p) + snd p * x0"
       unfolding H_def using top1_slh_ext_agrees by (by100 blast)
     have hH_img: "\<forall>p\<in>I_set \<times> I_set. H p \<in> S"
-      sorry \<comment> \<open>Convexity: f(fst p) \\<in> S, x0 \\<in> S, 0 \\<le> snd p \\<le> 1 \\<Rightarrow> convex combo \\<in> S.\<close>
+    proof (intro ballI)
+      fix p assume "p \<in> I_set \<times> I_set"
+      hence "fst p \<in> I_set" "snd p \<in> I_set" by (by100 auto)+
+      have "f (fst p) \<in> S" using hf_img \<open>fst p \<in> I_set\<close> by (by100 blast)
+      have "0 \<le> snd p" "snd p \<le> 1"
+        using \<open>snd p \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 simp)+
+      have "H p = (1 - snd p) * f (fst p) + snd p * x0"
+        using hH_eq \<open>p \<in> I_set \<times> I_set\<close> by (by100 blast)
+      thus "H p \<in> S"
+        using hS_conv[OF \<open>f (fst p) \<in> S\<close> hx0 \<open>0 \<le> snd p\<close> \<open>snd p \<le> 1\<close>]
+        by (by100 simp)
+    qed
     have hH_cont_S: "top1_continuous_map_on (I_set \<times> I_set) II_topology S ?TS H"
-      sorry \<comment> \<open>Restrict codomain from UNIV to S using hH\\_img.\<close>
+    proof -
+      have "S \<subseteq> (UNIV::real set)" by (by100 blast)
+      from continuous_map_restrict_codomain[OF hH_cont_II hH_img this]
+      show ?thesis .
+    qed
     show "top1_path_homotopic_on S ?TS x0 x0 f (top1_constant_path x0)"
-      sorry \<comment> \<open>Package hH\\_cont\\_S + boundary conditions into path\\_homotopic\\_on\\_def.\<close>
+      unfolding top1_path_homotopic_on_def
+    proof (intro conjI)
+      show "top1_is_path_on S ?TS x0 x0 f" by (rule hf_path)
+      show "top1_is_path_on S ?TS x0 x0 (top1_constant_path x0)"
+        by (rule top1_constant_path_is_path[OF hTS hx0])
+      show "\<exists>F. top1_continuous_map_on (I_set \<times> I_set) II_topology S ?TS F \<and>
+          (\<forall>s\<in>I_set. F (s, 0) = f s) \<and> (\<forall>s\<in>I_set. F (s, 1) = top1_constant_path x0 s) \<and>
+          (\<forall>t\<in>I_set. F (0, t) = x0) \<and> (\<forall>t\<in>I_set. F (1, t) = x0)"
+      proof (rule exI[of _ H], intro conjI)
+        show "top1_continuous_map_on (I_set \<times> I_set) II_topology S ?TS H" by (rule hH_cont_S)
+        have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        show "\<forall>s\<in>I_set. H (s, 0) = f s"
+        proof (intro ballI)
+          fix s assume "s \<in> I_set"
+          have hs0_II: "(s, 0::real) \<in> I_set \<times> I_set" using \<open>s \<in> I_set\<close> h0I by (by100 blast)
+          show "H (s, 0) = f s" using hH_eq[rule_format, OF hs0_II] by (by100 simp)
+        qed
+        show "\<forall>s\<in>I_set. H (s, 1) = top1_constant_path x0 s"
+        proof (intro ballI)
+          fix s assume "s \<in> I_set"
+          have hs1_II: "(s, 1::real) \<in> I_set \<times> I_set" using \<open>s \<in> I_set\<close> h1I by (by100 blast)
+          have "H (s, 1) = (1 - 1) * f s + 1 * x0" using hH_eq[rule_format, OF hs1_II] by (by100 simp)
+          thus "H (s, 1) = top1_constant_path x0 s"
+            unfolding top1_constant_path_def by (by100 simp)
+        qed
+        show "\<forall>t\<in>I_set. H (0, t) = x0"
+        proof (intro ballI)
+          fix t assume "t \<in> I_set"
+          have h0t_II: "(0::real, t) \<in> I_set \<times> I_set" using h0I \<open>t \<in> I_set\<close> by (by100 blast)
+          have "H (0, t) = (1 - t) * f 0 + t * x0" using hH_eq[rule_format, OF h0t_II] by (by100 simp)
+          also have "... = (1 - t) * x0 + t * x0" using hf0 by (by100 simp)
+          also have "... = x0" using distrib_right[of "1-t" t x0, symmetric] by (by100 simp)
+          finally show "H (0, t) = x0" .
+        qed
+        show "\<forall>t\<in>I_set. H (1, t) = x0"
+        proof (intro ballI)
+          fix t assume "t \<in> I_set"
+          have h1t_II: "(1::real, t) \<in> I_set \<times> I_set" using h1I \<open>t \<in> I_set\<close> by (by100 blast)
+          have "H (1, t) = (1 - t) * f 1 + t * x0" using hH_eq[rule_format, OF h1t_II] by (by100 simp)
+          also have "... = (1 - t) * x0 + t * x0" using hf1 by (by100 simp)
+          also have "... = x0" using distrib_right[of "1-t" t x0, symmetric] by (by100 simp)
+          finally show "H (1, t) = x0" .
+        qed
+      qed
+    qed
   qed
   show ?thesis
     by (rule top1_simply_connected_from_one_point[OF hTS hS_pc hx0])
