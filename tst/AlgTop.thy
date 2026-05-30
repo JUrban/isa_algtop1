@@ -9409,6 +9409,73 @@ qed
 
 
 
+text \<open>Helper: deformation retract onto path-connected subspace implies path-connected.
+  If X deformation retracts onto A and A is path-connected, then X is path-connected.
+  Proof: the homotopy H gives a path from x to H(x,1) \<in> A for each x \<in> X.\<close>
+lemma deformation_retract_path_connected:
+  assumes hdr: "top1_deformation_retract_of_on X TX A"
+      and hTX: "is_topology_on X TX"
+      and hA_pc: "top1_path_connected_on A (subspace_topology X TX A)"
+  shows "top1_path_connected_on X TX"
+proof -
+  have hA_sub: "A \<subseteq> X"
+    using conjunct1[OF hdr[unfolded top1_deformation_retract_of_on_def]] by (by100 blast)
+  from hdr obtain H where
+    hH_cont: "top1_continuous_map_on (X \<times> I_set) (product_topology_on TX I_top) X TX H" and
+    hH_0: "\<forall>x\<in>X. H (x, 0) = x" and
+    hH_1: "\<forall>x\<in>X. H (x, 1) \<in> A" and
+    hH_A: "\<forall>a\<in>A. \<forall>t\<in>I_set. H (a, t) = a"
+    unfolding top1_deformation_retract_of_on_def by (by100 blast)
+  have hI_top: "is_topology_on I_set I_top"
+    by (rule top1_unit_interval_topology_is_topology_on)
+  \<comment> \<open>For each x \\<in> X, t \\<mapsto> H(x, t) is a path from x to H(x,1) \\<in> A.\<close>
+  have hpath_to_A: "\<And>x. x \<in> X \<Longrightarrow> top1_is_path_on X TX x (H (x, 1)) (\<lambda>t. H (x, t))"
+  proof -
+    fix x assume hx: "x \<in> X"
+    \<comment> \<open>t \\<mapsto> H(x, t) = H \\<circ> (\\<lambda>t. (x, t)). The section \\<lambda>t. (x, t) is continuous I \\<rightarrow> X \\<times> I.\<close>
+    have hsection: "top1_continuous_map_on I_set I_top (X \<times> I_set) (product_topology_on TX I_top) (\<lambda>t. (x, t))"
+      by (rule top1_continuous_map_on_section2[OF hTX hI_top hx])
+    from top1_continuous_map_on_comp[OF hsection hH_cont]
+    have hcomp: "top1_continuous_map_on I_set I_top X TX (\<lambda>t. H (x, t))"
+      unfolding comp_def by (by100 simp)
+    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    show "top1_is_path_on X TX x (H (x, 1)) (\<lambda>t. H (x, t))"
+      unfolding top1_is_path_on_def
+      using hcomp hH_0[rule_format, OF hx] hH_1[rule_format, OF hx] h0_I h1_I
+      by (by100 blast)
+  qed
+  show ?thesis unfolding top1_path_connected_on_def
+  proof (intro conjI ballI)
+    show "is_topology_on X TX" by (rule hTX)
+  next
+    fix x y assume hx: "x \<in> X" and hy: "y \<in> X"
+    \<comment> \<open>Path x \\<rightarrow> H(x,1) in X.\<close>
+    have hpx: "top1_is_path_on X TX x (H (x, 1)) (\<lambda>t. H (x, t))"
+      by (rule hpath_to_A[OF hx])
+    \<comment> \<open>Path H(y,1) \\<rightarrow> y in X (reverse of H(y, \\<cdot>)).\<close>
+    have hpy: "top1_is_path_on X TX y (H (y, 1)) (\<lambda>t. H (y, t))"
+      by (rule hpath_to_A[OF hy])
+    have hpy_rev: "top1_is_path_on X TX (H (y, 1)) y (top1_path_reverse (\<lambda>t. H (y, t)))"
+      by (rule top1_path_reverse_is_path[OF hpy])
+    \<comment> \<open>Path H(x,1) \\<rightarrow> H(y,1) in A (path-connected).\<close>
+    have hHx_A: "H (x, 1) \<in> A" using hH_1 hx by (by100 blast)
+    have hHy_A: "H (y, 1) \<in> A" using hH_1 hy by (by100 blast)
+    obtain g where hg: "top1_is_path_on A (subspace_topology X TX A) (H (x, 1)) (H (y, 1)) g"
+      using hA_pc hHx_A hHy_A unfolding top1_path_connected_on_def by (by100 blast)
+    \<comment> \<open>Lift g to X (A \\<subseteq> X).\<close>
+    have hg_X: "top1_is_path_on X TX (H (x, 1)) (H (y, 1)) g"
+      by (rule path_in_subspace_is_path_in_ambient[OF hTX hA_sub hg])
+    \<comment> \<open>Concatenate: x \\<rightarrow> H(x,1) \\<rightarrow> H(y,1) \\<rightarrow> y.\<close>
+    have hpxg: "top1_is_path_on X TX x (H (y, 1)) (top1_path_product (\<lambda>t. H (x, t)) g)"
+      by (rule top1_path_product_is_path[OF hTX hpx hg_X])
+    have hfinal: "top1_is_path_on X TX x y
+        (top1_path_product (top1_path_product (\<lambda>t. H (x, t)) g) (top1_path_reverse (\<lambda>t. H (y, t))))"
+      by (rule top1_path_product_is_path[OF hTX hpxg hpy_rev])
+    show "\<exists>f. top1_is_path_on X TX x y f" by (rule exI[of _ _]) (rule hfinal)
+  qed
+qed
+
 (** from \<S>84 Theorem 84.7: the fundamental group of a connected graph is free.
     Specifically, \<pi>_1(X, x_0) is isomorphic to a free group on a set of generators
     (one per loop in a spanning-tree complement). **)
@@ -11906,15 +11973,7 @@ proof -
         \<comment> \<open>U and V are path-connected.\<close>
         \<comment> \<open>Helper: DR + target path-connected \\<Rightarrow> space path-connected.
            Proof: H(x,\\<cdot>) gives a path from x to H(x,1) \\<in> A. A path-connected connects them.\<close>
-        have hdr_pc: "\<And>Y TY' A. top1_deformation_retract_of_on Y TY' A \<Longrightarrow>
-            is_topology_on Y TY' \<Longrightarrow>
-            top1_path_connected_on A (subspace_topology Y TY' A) \<Longrightarrow>
-            top1_path_connected_on Y TY'"
-          sorry \<comment> \<open>DR \\<Rightarrow> path-connected: for any x,y \\<in> Y,
-             path x \\<rightarrow> H(x,1) \\<in> A (section of H via top1\\_continuous\\_map\\_on\\_section2),
-             path H(x,1) \\<rightarrow> H(y,1) in A (A path-connected),
-             path H(y,1) \\<rightarrow> y (reverse section).
-             Concatenation gives path x \\<rightarrow> y.\<close>
+        note hdr_pc = deformation_retract_path_connected
         have hU_pc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
         proof -
           have htarget_U_pc: "top1_path_connected_on ?target_U (subspace_topology ?U ?TU ?target_U)"
