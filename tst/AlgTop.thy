@@ -12631,9 +12631,6 @@ proof -
           \<comment> \<open>Paths \\<alpha> (in U from a to b) and \\<beta> (in V from b to a).\<close>
           have halpha_loc: "\<exists>\<alpha>. top1_is_path_on ?U (subspace_topology X TX ?U) ?pt_a ?pt_b \<alpha>"
           proof -
-            \<comment> \<open>U = hA\\`(0,1) is PC (image of convex (0,1) under continuous hA).\<close>
-            have hU_pc_loc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
-              sorry \<comment> \<open>(0,1) convex \\<Rightarrow> PC. hA continuous. path\\_connected\\_continuous\\_image.\<close>
             have hU_eq_img: "hA ` {t::real. 0 < t \<and> t < 1} = ?U"
             proof (rule set_eqI, rule iffI)
               fix x assume "x \<in> hA ` {t. 0 < t \<and> t < 1}"
@@ -12661,6 +12658,57 @@ proof -
               have "0 \<le> t" "t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 simp)+
               hence "0 < t \<and> t < 1" using \<open>t \<noteq> 0\<close> \<open>t \<noteq> 1\<close> by (by100 linarith)
               thus "x \<in> hA ` {t. 0 < t \<and> t < 1}" using ht(2) by (by100 blast)
+            qed
+            \<comment> \<open>U = hA\\`(0,1) is PC (image of convex (0,1) under continuous hA).\<close>
+            have hU_pc_loc: "top1_path_connected_on ?U (subspace_topology X TX ?U)"
+            proof -
+              \<comment> \<open>(0,1) is convex \\<Rightarrow> PC. hA continuous. Image is PC.\<close>
+              let ?I_U = "{t::real. 0 < t \<and> t < 1}"
+              let ?TI_U = "subspace_topology (UNIV::real set) top1_open_sets ?I_U"
+              have hI_U_ne: "?I_U \<noteq> {}"
+                proof - have "(1/2::real) \<in> ?I_U" by (by100 simp) thus ?thesis by (by100 blast) qed
+              have hI_U_conv: "\<And>x y t. x \<in> ?I_U \<Longrightarrow> y \<in> ?I_U \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
+                  \<Longrightarrow> (1 - t) * x + t * y \<in> ?I_U"
+                sorry \<comment> \<open>Convexity of (0, 1). Same pattern as (0,1/2) convexity.\<close>
+              from convex_real_subspace_path_connected[OF hI_U_ne hI_U_conv]
+              have hI_U_pc: "top1_path_connected_on ?I_U ?TI_U" by (by100 simp)
+              have hI_U_sub: "?I_U \<subseteq> top1_unit_interval"
+                unfolding top1_unit_interval_def by (by100 auto)
+              have hhA_cont_A1_loc: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                  A1 (subspace_topology X TX A1) hA"
+                using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hhA_cont_X: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX hA"
+              proof -
+                from top1_continuous_map_on_codomain_enlarge[OF hhA_cont_A1_loc hA1_sub subset_refl]
+                have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X
+                    (subspace_topology X TX X) hA" .
+                moreover have "\<forall>U\<in>TX. U \<subseteq> X"
+                  using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+                hence "subspace_topology X TX X = TX" by (rule subspace_topology_self)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              have hI_top_eq: "subspace_topology top1_unit_interval top1_unit_interval_topology ?I_U = ?TI_U"
+              proof -
+                have "subspace_topology top1_unit_interval
+                    (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval) ?I_U
+                    = subspace_topology (UNIV::real set) top1_open_sets ?I_U"
+                  by (rule subspace_topology_trans[OF hI_U_sub])
+                moreover have "top1_unit_interval_topology =
+                    subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval"
+                  unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 blast)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              from top1_continuous_map_on_restrict_domain_simple[OF hhA_cont_X hI_U_sub]
+              have hhA_rest: "top1_continuous_map_on ?I_U ?TI_U X TX hA"
+                using hI_top_eq by (by100 simp)
+              have "\<forall>x\<in>?I_U. hA x \<in> X"
+                using hhA_cont_X unfolding top1_continuous_map_on_def using hI_U_sub by (by100 blast)
+              have hU_sub_X: "?U \<subseteq> X" using hA1_sub by (by100 blast)
+              have hTX_loc: "is_topology_on X TX"
+                using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+              show ?thesis
+                using top1_path_connected_continuous_image[OF hI_U_pc hhA_rest
+                    \<open>\<forall>x\<in>?I_U. hA x \<in> X\<close> hU_eq_img hU_sub_X] hTX_loc by (by100 blast)
             qed
             have hpta_U: "?pt_a \<in> ?U"
             proof -
