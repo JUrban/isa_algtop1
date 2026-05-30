@@ -11992,9 +11992,127 @@ proof -
           have hA_open_loc: "openin_on X TX ?A_comp" sorry
           have hB_open_loc: "openin_on X TX ?B_comp" sorry
           have hA_pc_loc: "top1_path_connected_on ?A_comp (subspace_topology X TX ?A_comp)"
-            sorry \<comment> \<open>hA\\`(0,1/2) is PC: image of convex interval under homeo \\<Rightarrow> PC.\<close>
+          proof -
+            let ?I_A = "{t::real. 0 < t \<and> t < 1/2}"
+            let ?TI_A = "subspace_topology (UNIV::real set) top1_open_sets ?I_A"
+            have hI_A_ne: "?I_A \<noteq> {}"
+            proof - have "(1/4::real) \<in> ?I_A" by (by100 simp) thus ?thesis by (by100 blast) qed
+            have hI_A_conv: "\<And>x y t. x \<in> ?I_A \<Longrightarrow> y \<in> ?I_A \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1
+                \<Longrightarrow> (1 - t) * x + t * y \<in> ?I_A"
+            proof -
+              fix x y t :: real
+              assume hx: "x \<in> ?I_A" and hy: "y \<in> ?I_A" and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+              have "0 < x" "x < 1/2" "0 < y" "y < 1/2" using hx hy by (by100 simp)+
+              have h1t: "1 - t \<ge> 0" using ht1 by (by100 linarith)
+              have "(1 - t) * x \<ge> 0" using h1t \<open>0 < x\<close> by (by100 simp)
+              have "t * y \<ge> 0" using ht0 \<open>0 < y\<close> by (by100 simp)
+              have "t * y > 0 \<or> (1 - t) * x > 0"
+              proof (cases "t = 0")
+                case True thus ?thesis using h1t \<open>0 < x\<close> by (by100 simp)
+              next
+                case False hence "t > 0" using ht0 by (by100 linarith)
+                thus ?thesis using \<open>0 < y\<close> by (by100 simp)
+              qed
+              hence "(1 - t) * x + t * y > 0"
+                using \<open>(1-t)*x \<ge> 0\<close> \<open>t*y \<ge> 0\<close> by (by100 linarith)
+              moreover have "(1 - t) * x \<le> (1 - t) * (1/2)"
+                using mult_left_mono[OF less_imp_le[OF \<open>x < 1/2\<close>] h1t] by (by100 simp)
+              moreover have "t * y \<le> t * (1/2)"
+                using mult_left_mono[OF less_imp_le[OF \<open>y < 1/2\<close>] ht0] by (by100 simp)
+              ultimately have "(1 - t) * x + t * y \<le> (1-t)*(1/2) + t*(1/2)"
+                by (by100 linarith)
+              have "(1-t)*(1/2) + t*(1/2) = (1/2::real)"
+                using distrib_right[of "1-t" t "1/2::real"] by (by100 simp)
+              hence "(1 - t) * x + t * y \<le> 1/2"
+                using \<open>(1-t)*x + t*y \<le> (1-t)*(1/2) + t*(1/2)\<close> by (by100 linarith)
+              moreover have "(1 - t) * x + t * y \<noteq> 1/2"
+              proof
+                assume heq: "(1 - t) * x + t * y = 1/2"
+                have "(1-t)*(1/2) + t*(1/2) = (1/2::real)"
+                  using distrib_right[of "1-t" t "1/2::real"] by (by100 simp)
+                hence "(1-t)*x + t*y = (1-t)*(1/2) + t*(1/2)" using heq by (by100 linarith)
+                hence "(1-t)*(1/2) - (1-t)*x = t*y - t*(1/2)" by (by100 linarith)
+                have hge: "(1-t)*(1/2) - (1-t)*x \<ge> 0"
+                  using \<open>(1-t)*x \<le> (1-t)*(1/2)\<close> by (by100 linarith)
+                have hle: "t*y - t*(1/2) \<le> 0" using \<open>t*y \<le> t*(1/2)\<close> by (by100 linarith)
+                hence "(1-t)*(1/2) - (1-t)*x = 0" "t*y - t*(1/2) = 0"
+                  using \<open>(1-t)*(1/2) - (1-t)*x = t*y - t*(1/2)\<close> hge hle by (by100 linarith)+
+                hence "(1-t)*x = (1-t)*(1/2)" "t*y = t*(1/2)" by (by100 linarith)+
+                show False
+                proof (cases "t < 1")
+                  case True hence "1 - t > 0" by (by100 linarith)
+                  hence "x = 1/2"
+                    using \<open>(1-t)*x = (1-t)*(1/2)\<close> by (by100 simp)
+                  thus False using \<open>x < 1/2\<close> by (by100 linarith)
+                next
+                  case False hence "t = 1" using ht1 by (by100 linarith)
+                  hence "1 * y = 1 * (1/2)" using \<open>t*y = t*(1/2)\<close> by (by100 simp)
+                  hence "y = 1/2" by (by100 simp)
+                  thus False using \<open>y < 1/2\<close> by (by100 linarith)
+                qed
+              qed
+              ultimately have "(1 - t) * x + t * y < 1/2" by (by100 linarith)
+              thus "(1 - t) * x + t * y \<in> ?I_A" using \<open>(1 - t) * x + t * y > 0\<close> by (by100 simp)
+            qed
+            from convex_real_subspace_path_connected[OF hI_A_ne hI_A_conv]
+            have hI_A_pc: "top1_path_connected_on ?I_A ?TI_A" by (by100 simp)
+            have hI_A_sub: "?I_A \<subseteq> top1_unit_interval"
+              unfolding top1_unit_interval_def by (by100 auto)
+            have hhA_cont_A1: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                A1 (subspace_topology X TX A1) hA"
+              using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hhA_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX hA"
+            proof -
+              from top1_continuous_map_on_codomain_enlarge[OF hhA_cont_A1 hA1_sub subset_refl]
+              have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X (subspace_topology X TX X) hA" .
+              moreover have "\<forall>U\<in>TX. U \<subseteq> X"
+                using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+              hence "subspace_topology X TX X = TX" by (rule subspace_topology_self)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            \<comment> \<open>Restrict hA to ?I\\_A \\<subseteq> [0,1].\<close>
+            have "?I_A \<subseteq> top1_unit_interval" using hI_A_sub .
+            have hI_A_sub_R: "?I_A \<subseteq> (UNIV::real set)" by (by100 blast)
+            have hI_top_eq: "subspace_topology top1_unit_interval top1_unit_interval_topology ?I_A = ?TI_A"
+            proof -
+              have "subspace_topology top1_unit_interval
+                  (subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval) ?I_A
+                  = subspace_topology (UNIV::real set) top1_open_sets ?I_A"
+                by (rule subspace_topology_trans[OF hI_A_sub])
+              moreover have "top1_unit_interval_topology =
+                  subspace_topology (UNIV::real set) top1_open_sets top1_unit_interval"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by (by100 blast)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            have hhA_rest: "top1_continuous_map_on ?I_A ?TI_A X TX hA"
+            proof -
+              from top1_continuous_map_on_restrict_domain_simple[OF hhA_cont hI_A_sub]
+              have "top1_continuous_map_on ?I_A (subspace_topology top1_unit_interval top1_unit_interval_topology ?I_A) X TX hA" .
+              thus ?thesis using hI_top_eq by (by100 simp)
+            qed
+            have himg: "hA ` ?I_A = ?A_comp" by (by100 blast)
+            have hA_sub_X: "?A_comp \<subseteq> X"
+            proof -
+              have "hA ` ?I_A \<subseteq> hA ` top1_unit_interval" using hI_A_sub by (by100 blast)
+              have himg_full: "hA ` top1_unit_interval = A1"
+                using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              have "hA ` ?I_A \<subseteq> A1" using \<open>hA ` ?I_A \<subseteq> hA ` top1_unit_interval\<close> himg_full by (by100 blast)
+              thus ?thesis using hA1_sub by (by100 blast)
+            qed
+            have hTX_loc: "is_topology_on X TX"
+              using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+            have "\<forall>x\<in>?I_A. hA x \<in> X"
+            proof (intro ballI)
+              fix x assume "x \<in> ?I_A"
+              hence "x \<in> top1_unit_interval" using hI_A_sub by (by100 blast)
+              thus "hA x \<in> X" using hhA_cont unfolding top1_continuous_map_on_def by (by100 blast)
+            qed
+            show ?thesis
+              using top1_path_connected_continuous_image[OF hI_A_pc hhA_rest]
+                \<open>\<forall>x\<in>?I_A. hA x \<in> X\<close> himg hA_sub_X hTX_loc by (by100 blast)
+          qed
           have hB_pc_loc: "top1_path_connected_on ?B_comp (subspace_topology X TX ?B_comp)"
-            sorry \<comment> \<open>hA\\`(1/2,1) is PC: same argument.\<close>
+            sorry \<comment> \<open>Same as hA\\_pc\\_loc with (1/2, 1) instead of (0, 1/2).\<close>
           have ha_A: "?pt_a \<in> ?A_comp"
           proof - have "(1/4::real) \<in> {t. 0 < t \<and> t < 1/2}" by (by100 simp) thus ?thesis by (by100 blast) qed
           have hb_B: "?pt_b \<in> ?B_comp"
