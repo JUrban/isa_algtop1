@@ -564,11 +564,62 @@ proof -
         top1_path_homotopic_on X TX p p f g \<Longrightarrow>
         \<exists>F. finite F \<and> F \<subseteq> J \<and> top1_path_homotopic_on (\<Union>\<alpha>\<in>F. C \<alpha>)
             (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) p p f g"
-      sorry \<comment> \<open>Proof sketch: H: I\\<times>I \\<rightarrow> X is the homotopy. I\\<times>I compact \\<Rightarrow> H(I\\<times>I) compact.
-         By hcompact\\_finite, H(I\\<times>I) meets finitely many C\\_\\<alpha> - {p}. Together with
-         hloop\\_finite for f and g, take F = union of all finite sets. Then f, g, H all
-         map into \\<Union>F C\\_\\<alpha>. H restricts to a path homotopy in the subspace
-         (continuous map into subspace + endpoint conditions preserved).\<close>
+    proof -
+      fix f g assume hf: "top1_is_loop_on X TX p f" and hg: "top1_is_loop_on X TX p g"
+        and hfg: "top1_path_homotopic_on X TX p p f g"
+      \<comment> \<open>Extract homotopy H.\<close>
+      from hfg[unfolded top1_path_homotopic_on_def]
+      obtain H where hH_cont: "top1_continuous_map_on (I_set \<times> I_set)
+            (product_topology_on top1_unit_interval_topology top1_unit_interval_topology) X TX H"
+        and hH0: "\<forall>s\<in>I_set. H (s, 0) = f s" and hH1: "\<forall>s\<in>I_set. H (s, 1) = g s"
+        and hHl: "\<forall>t\<in>I_set. H (0, t) = p" and hHr: "\<forall>t\<in>I_set. H (1, t) = p"
+        sorry \<comment> \<open>Extract from path\\_homotopic\\_on definition. The II\\_topology might differ.\<close>
+      \<comment> \<open>H(I\\<times>I) is compact.\<close>
+      have hHI_sub: "H ` (I_set \<times> I_set) \<subseteq> X"
+        using hH_cont unfolding top1_continuous_map_on_def by (by100 blast)
+      have hHI_compact: "top1_compact_on (H ` (I_set \<times> I_set))
+          (subspace_topology X TX (H ` (I_set \<times> I_set)))"
+        sorry \<comment> \<open>I\\<times>I compact (product of compacts), H continuous \\<Rightarrow> H(I\\<times>I) compact.\<close>
+      \<comment> \<open>H(I\\<times>I) meets finitely many circles.\<close>
+      from hcompact_finite[OF hHI_sub hHI_compact]
+      have hH_fin: "finite {\<alpha>\<in>J. H ` (I_set \<times> I_set) \<inter> (C \<alpha> - {p}) \<noteq> {}}" .
+      \<comment> \<open>Combine with hloop\\_finite for f and g.\<close>
+      from hloop_finite[OF hf] obtain Ff where hFf: "finite Ff" "Ff \<subseteq> J"
+          "f ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>Ff. C \<alpha>)" by (by100 blast)
+      from hloop_finite[OF hg] obtain Fg where hFg: "finite Fg" "Fg \<subseteq> J"
+          "g ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>Fg. C \<alpha>)" by (by100 blast)
+      let ?SH = "{\<alpha>\<in>J. H ` (I_set \<times> I_set) \<inter> (C \<alpha> - {p}) \<noteq> {}}"
+      have "J \<noteq> {}" using hp hcover by (by100 blast)
+      then obtain \<beta> where "\<beta> \<in> J" by (by100 blast)
+      let ?F = "Ff \<union> Fg \<union> ?SH \<union> {\<beta>}"
+      have "finite ?F" using hFf(1) hFg(1) hH_fin by (by100 simp)
+      have "?F \<subseteq> J" using hFf(2) hFg(2) \<open>\<beta> \<in> J\<close> by (by100 blast)
+      \<comment> \<open>H(I\\<times>I), f(I), g(I) all lie in \\<Union>?F C\\_\\<alpha>.\<close>
+      have hH_in_F: "H ` (I_set \<times> I_set) \<subseteq> (\<Union>\<alpha>\<in>?F. C \<alpha>)"
+      proof
+        fix x assume "x \<in> H ` (I_set \<times> I_set)"
+        hence "x \<in> X" using hHI_sub by (by100 blast)
+        then obtain \<gamma> where "\<gamma> \<in> J" "x \<in> C \<gamma>" using hcover by (by100 blast)
+        show "x \<in> (\<Union>\<alpha>\<in>?F. C \<alpha>)"
+        proof (cases "x = p")
+          case True thus ?thesis using hC \<open>\<beta> \<in> J\<close> by (by100 blast)
+        next
+          case xFalse: False
+          hence "x \<in> C \<gamma> - {p}" using \<open>x \<in> C \<gamma>\<close> by (by100 blast)
+          hence "\<gamma> \<in> ?SH" using \<open>\<gamma> \<in> J\<close> \<open>x \<in> H ` (I_set \<times> I_set)\<close> by (by100 blast)
+          thus ?thesis using \<open>x \<in> C \<gamma>\<close> by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>The homotopy restricts to \\<Union>?F C\\_\\<alpha> \\<Rightarrow> path homotopy in the subspace.\<close>
+      have "top1_path_homotopic_on (\<Union>\<alpha>\<in>?F. C \<alpha>)
+          (subspace_topology X TX (\<Union>\<alpha>\<in>?F. C \<alpha>)) p p f g"
+        sorry \<comment> \<open>H restricts to continuous map I\\<times>I \\<rightarrow> \\<Union>?F C\\_\\<alpha> (subspace topology).
+           Endpoint conditions preserved. f(I) \\<subseteq> \\<Union>?F, g(I) \\<subseteq> \\<Union>?F.\<close>
+      show "\<exists>F. finite F \<and> F \<subseteq> J \<and> top1_path_homotopic_on (\<Union>\<alpha>\<in>F. C \<alpha>)
+          (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) p p f g"
+        sorry \<comment> \<open>Existential packaging of ?F. The three properties are all proved above.\<close>
+    qed
+    \<comment> \<open>For each finite F \\<subseteq> J, the sub-wedge is a wedge (hfinite\\_free).\<close>
     have hfinite_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> J \<Longrightarrow>
         top1_is_wedge_of_circles_on (\<Union>\<alpha>\<in>F. C \<alpha>)
             (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) F p"
