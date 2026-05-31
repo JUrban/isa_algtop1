@@ -15912,7 +15912,26 @@ next
   next
     case hcard_ne0: False
     \<comment> \<open>card \\<ge> 1. Card=1: Lemma 84.6. Card>1: SvK + Suc.IH.\<close>
-    show ?thesis sorry \<comment> \<open>Card=1 and card>1 cases (using Suc.IH for recursive calls).\<close>
+    have hNT_ne: "{A\<in>\<A>. \<not> A \<subseteq> T} \<noteq> {}" using hcard_ne0 Suc(6) by (by100 simp)
+    then obtain A1 where hA1: "A1 \<in> {A\<in>\<A>. \<not> A \<subseteq> T}" by (by100 blast)
+    show ?thesis
+    proof (cases "card {A\<in>\<A>. \<not> A \<subseteq> T} = 1")
+      case True
+      \<comment> \<open>Card=1: Lemma 84.6 (same as graph\\_pi1\\_free\\_weak card=1 case).\<close>
+      show ?thesis sorry \<comment> \<open>Lemma 84.6 application. Does not use IH.\<close>
+    next
+      case hcard_ge2: False
+      \<comment> \<open>Card \\<ge> 2: SvK decomposition + Suc.IH for recursive calls.\<close>
+      have hcard_gt1: "card {A\<in>\<A>. \<not> A \<subseteq> T} > 1"
+      proof -
+        have "card {A\<in>\<A>. \<not> A \<subseteq> T} \<noteq> 0" using Suc(6) hNT_ne by (by100 auto)
+        moreover have "card {A\<in>\<A>. \<not> A \<subseteq> T} \<noteq> 1" using hcard_ge2 by (by100 blast)
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      show ?thesis sorry \<comment> \<open>SvK: U, V open cover + SC intersection + DR.
+         IH: Suc.hyps gives \\<pi>\\_1 free for subgraphs with card(NT) \\<le> n.
+         target\\_U: 1 NT arc \\<le> n. target\\_V: card-1 NT arcs \\<le> n.\<close>
+    qed
   qed
 qed
 
