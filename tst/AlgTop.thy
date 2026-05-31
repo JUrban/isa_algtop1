@@ -20291,15 +20291,16 @@ proof -
   have hE'_graph: "top1_is_graph_on E' TE'"
     by (rule graph_covering_is_graph[OF \<open>top1_is_graph_on X TX\<close>
         \<open>top1_covering_map_on E' TE' X TX p'\<close> hE'_strict])
-  \<comment> \<open>Step 3b: \\<pi>\\_1(E') is free (Theorem 84.7).\<close>
-  from Theorem_84_7_fund_group_graph_is_free[OF hE'_graph
-      \<open>top1_connected_on E' TE'\<close> \<open>e0' \<in> E'\<close>]
-  obtain G_E :: "int set" and mul_E e_E invg_E and \<iota>_E :: "nat \<Rightarrow> int" and S_E
-    where hfree_E: "top1_is_free_group_full_on G_E mul_E e_E invg_E \<iota>_E S_E"
-      and hiso_E: "top1_groups_isomorphic_on G_E mul_E
-          (top1_fundamental_group_carrier E' TE' e0')
-          (top1_fundamental_group_mul E' TE' e0')"
-    by (by100 blast)
+  \<comment> \<open>Step 3b: \\<pi>\\_1(E') is free (graph\\_pi1\\_free\\_weak — no int set needed here).\<close>
+  from graph_pi1_free_weak[OF hE'_graph \<open>top1_connected_on E' TE'\<close> \<open>e0' \<in> E'\<close>]
+  obtain \<iota>_E :: "nat \<Rightarrow> _" and S_E :: "nat set"
+    where hfree_E: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E' TE' e0')
+        (top1_fundamental_group_mul E' TE' e0')
+        (top1_fundamental_group_id E' TE' e0')
+        (top1_fundamental_group_invg E' TE' e0')
+        \<iota>_E S_E"
+    by - ((erule exE)+, (erule that))
   \<comment> \<open>Step 3c: H is free. From p'* injective + H iso p'*(pi1(E')).\<close>
   show ?thesis sorry \<comment> \<open>Need: H corresponds to p'*(pi1(E')) under iso G = pi1(X).
      This requires the covering E' to satisfy p'*(pi1(E')) = image of H.
@@ -20359,14 +20360,16 @@ proof -
       and he0': "e0' \<in> E'"
     sorry \<comment> \<open>Covering existence (Theorem 82.1) + covering of graph is graph (Theorem 83.2).
        E' is nonempty (covering of connected nonempty X).\<close>
-  \<comment> \<open>Step 3a: pi1(E') is free (Theorem 84.7).\<close>
-  from Theorem_84_7_fund_group_graph_is_free[OF hE'_graph hE'_conn he0']
-  obtain G_E :: "int set" and mul_E e_E invg_E and \<iota>_E :: "nat \<Rightarrow> int" and S_E
-    where hfree_E: "top1_is_free_group_full_on G_E mul_E e_E invg_E \<iota>_E S_E"
-      and hiso_E: "top1_groups_isomorphic_on G_E mul_E
-          (top1_fundamental_group_carrier E' TE' e0')
-          (top1_fundamental_group_mul E' TE' e0')"
-    by (by100 blast)
+  \<comment> \<open>Step 3a: pi1(E') is free (graph\\_pi1\\_free\\_weak).\<close>
+  from graph_pi1_free_weak[OF hE'_graph hE'_conn he0']
+  obtain \<iota>_E :: "nat \<Rightarrow> _" and S_E :: "nat set"
+    where hfree_E: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E' TE' e0')
+        (top1_fundamental_group_mul E' TE' e0')
+        (top1_fundamental_group_id E' TE' e0')
+        (top1_fundamental_group_invg E' TE' e0')
+        \<iota>_E S_E"
+    by - ((erule exE)+, (erule that))
   \<comment> \<open>Step 3b: H free with rank kn+1 (Euler characteristic argument).\<close>
   have hE'_free: "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
       top1_is_free_group_full_on H mul e invg \<iota>H SH \<and> card SH = k * n + 1"
