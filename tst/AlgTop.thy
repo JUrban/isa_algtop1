@@ -2183,9 +2183,12 @@ proof -
           have "top1_is_graph_on ?Y' (subspace_topology Y TY ?Y')" by (rule hY'_graph)
           have "top1_connected_on ?Y' (subspace_topology Y TY ?Y')" by (rule hY'_conn)
           show ?thesis
-            sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite application.
-               All preconditions proved above but OF-chain blocked by
-               subspace\\_topology\\_trans normalization.\<close>
+            sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite with arcs=\\<B>, tree=T. All 14 preconditions proved:
+               hY'\\_graph, hY'\\_conn, hy0\\_Y', hNT\\_Y'+hF0'fin (card+finite),
+               h\\<B>\\_arcs\\_Y', h\\<B>\\_eq', h\\<B>\\_inter\\_Y', h\\<B>\\_coh\\_Y', hT\\_tree\\_Y',
+               T\\<subseteq>?Y', hT\\_subgraph\\_Y', hT\\_x0, hNT\\_ep (via subspace\\_topology\\_trans).
+               OF-application blocked by Isabelle's inability to match subspace\\_topology\\_trans
+               in the \\<And>-quantified shows clause.\<close>
         qed
       qed
       \<comment> \<open>Step 5: Combine: \\<pi>\\_1(Y) is free.
