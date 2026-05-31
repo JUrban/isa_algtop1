@@ -712,8 +712,36 @@ proof -
        Any homotopy H between loops also lies in finitely many circles.\<close>
     have hloop_finite: "\<And>f. top1_is_loop_on X TX p f \<Longrightarrow>
         \<exists>F. finite F \<and> F \<subseteq> J \<and> f ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>F. C \<alpha>)"
-      sorry \<comment> \<open>f(I) compact \\<Rightarrow> meets finitely many C\\_\\<alpha> - {p}.
-         Take F = {\\<alpha> | f(I) \\<inter> (C\\_\\<alpha> - {p}) \\<noteq> {}} \\<union> {some \\<beta>}. Then f(I) \\<subseteq> \\<Union>F C\\_\\<alpha>.\<close>
+    proof -
+      fix f assume hf: "top1_is_loop_on X TX p f"
+      have hfI_sub: "f ` top1_unit_interval \<subseteq> X" sorry \<comment> \<open>From loop definition.\<close>
+      have hfI_compact: "top1_compact_on (f ` top1_unit_interval) (subspace_topology X TX (f ` top1_unit_interval))"
+        sorry \<comment> \<open>Continuous image of compact I.\<close>
+      let ?S = "{\<alpha>\<in>J. f ` top1_unit_interval \<inter> (C \<alpha> - {p}) \<noteq> {}}"
+      from hcompact_finite[OF hfI_sub hfI_compact] have "finite ?S" .
+      have "J \<noteq> {}" using hp hcover by (by100 blast)
+      then obtain \<beta> where "\<beta> \<in> J" by (by100 blast)
+      let ?F = "?S \<union> {\<beta>}"
+      have "finite ?F" using \<open>finite ?S\<close> by (by100 simp)
+      have "?F \<subseteq> J" using \<open>\<beta> \<in> J\<close> by (by100 blast)
+      have "f ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>?F. C \<alpha>)"
+      proof
+        fix x assume "x \<in> f ` top1_unit_interval"
+        hence "x \<in> X" using hfI_sub by (by100 blast)
+        then obtain \<gamma> where "\<gamma> \<in> J" "x \<in> C \<gamma>" using hcover by (by100 blast)
+        show "x \<in> (\<Union>\<alpha>\<in>?F. C \<alpha>)"
+        proof (cases "x = p")
+          case True thus ?thesis using hC \<open>\<beta> \<in> J\<close> by (by100 blast)
+        next
+          case False
+          hence "x \<in> C \<gamma> - {p}" using \<open>x \<in> C \<gamma>\<close> by (by100 blast)
+          hence "\<gamma> \<in> ?S" using \<open>\<gamma> \<in> J\<close> \<open>x \<in> f ` top1_unit_interval\<close> by (by100 blast)
+          thus ?thesis using \<open>x \<in> C \<gamma>\<close> by (by100 blast)
+        qed
+      qed
+      thus "\<exists>F. finite F \<and> F \<subseteq> J \<and> f ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>F. C \<alpha>)"
+        using \<open>finite ?F\<close> \<open>?F \<subseteq> J\<close> by (by100 blast)
+    qed
     have hhtpy_finite: "\<And>f g. top1_is_loop_on X TX p f \<Longrightarrow> top1_is_loop_on X TX p g \<Longrightarrow>
         top1_path_homotopic_on X TX p p f g \<Longrightarrow>
         \<exists>F. finite F \<and> F \<subseteq> J \<and> top1_path_homotopic_on (\<Union>\<alpha>\<in>F. C \<alpha>)
