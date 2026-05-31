@@ -17439,8 +17439,77 @@ next
           (top1_fundamental_group_id ?target_V (subspace_topology Y TY ?target_V) y0)
           (top1_fundamental_group_invg ?target_V (subspace_topology Y TY ?target_V) y0)
           \<iota> S"
-        sorry \<comment> \<open>IH via Suc(1) with \\<A>={A\\<in>\\<A>. A\\<subseteq>target\\_V}, T=T.
-           card(NT\\_V) = card(NT)-1 \\<le> n. All arc structure from h\\<A> restricted.\<close>
+      proof -
+        let ?\<A>_V = "{A\<in>\<A>. A \<subseteq> ?target_V}"
+        let ?TY_V = "subspace_topology Y TY ?target_V"
+        \<comment> \<open>Premise 1: graph.\<close>
+        note p1 = htV_graph
+        \<comment> \<open>Premise 2: connected.\<close>
+        note p2 = htV_conn
+        \<comment> \<open>Premise 3: y0 \\<in> target\\_V.\<close>
+        have p3: "y0 \<in> ?target_V" using hT_x0 by (by100 blast)
+        \<comment> \<open>Premise 4: card \\<le> n.\<close>
+        have hNT_V: "{A\<in>?\<A>_V. \<not> A \<subseteq> T} = ?NT - {A1}"
+        proof (rule set_eqI, rule iffI)
+          fix A assume "A \<in> {A\<in>?\<A>_V. \<not> A \<subseteq> T}"
+          hence "A \<in> \<A>" "A \<subseteq> ?target_V" "\<not> A \<subseteq> T" by (by100 blast)+
+          hence "A \<in> ?NT" by (by100 blast)
+          moreover have "A \<noteq> A1"
+          proof
+            assume "A = A1"
+            hence "A1 \<subseteq> ?target_V" using \<open>A \<subseteq> ?target_V\<close> by simp
+            \<comment> \<open>ps(A1) is an interior point of A1, not in T or other arcs.\<close>
+            have "ps A1 \<in> A1" using hps hA1 by (by100 blast)
+            have "ps A1 \<notin> top1_arc_endpoints_on A1 (subspace_topology Y TY A1)"
+              using hps hA1 by (by100 blast)
+            have "ps A1 \<notin> T"
+            proof -
+              have "A1 \<inter> T \<subseteq> top1_arc_endpoints_on A1 (subspace_topology Y TY A1)"
+                using hT_subgraph hA1 by (by100 blast)
+              thus ?thesis using \<open>ps A1 \<in> A1\<close> \<open>ps A1 \<notin> top1_arc_endpoints_on A1 _\<close>
+                by (by100 blast)
+            qed
+            have "ps A1 \<notin> \<Union>(?NT - {A1})"
+            proof
+              assume "ps A1 \<in> \<Union>(?NT - {A1})"
+              then obtain B where "B \<in> ?NT - {A1}" "ps A1 \<in> B" by (by100 blast)
+              have "B \<in> \<A>" using \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+              have "B \<noteq> A1" using \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+              have "A1 \<in> \<A>" using hA1 by (by100 blast)
+              from h\<A>_inter[rule_format, OF \<open>A1 \<in> \<A>\<close> \<open>B \<in> \<A>\<close>]
+              have "A1 \<inter> B \<subseteq> top1_arc_endpoints_on A1 (subspace_topology Y TY A1)"
+                using \<open>B \<noteq> A1\<close> by (by100 blast)
+              hence "ps A1 \<in> top1_arc_endpoints_on A1 (subspace_topology Y TY A1)"
+                using \<open>ps A1 \<in> A1\<close> \<open>ps A1 \<in> B\<close> by (by100 blast)
+              thus False using \<open>ps A1 \<notin> top1_arc_endpoints_on A1 _\<close> by (by100 blast)
+            qed
+            have "ps A1 \<notin> ?target_V" using \<open>ps A1 \<notin> T\<close> \<open>ps A1 \<notin> \<Union>(?NT - {A1})\<close>
+              by (by100 blast)
+            thus False using \<open>A1 \<subseteq> ?target_V\<close> \<open>ps A1 \<in> A1\<close> by (by100 blast)
+          qed
+          ultimately show "A \<in> ?NT - {A1}" by (by100 blast)
+        next
+          fix A assume "A \<in> ?NT - {A1}"
+          hence "A \<in> \<A>" "\<not> A \<subseteq> T" "A \<noteq> A1" by (by100 blast)+
+          have "A \<in> ?NT" using \<open>A \<in> \<A>\<close> \<open>\<not> A \<subseteq> T\<close> by (by100 blast)
+          have "A \<subseteq> ?target_V" using \<open>A \<in> ?NT - {A1}\<close> by (by100 blast)
+          thus "A \<in> {A\<in>?\<A>_V. \<not> A \<subseteq> T}" using \<open>A \<in> \<A>\<close> \<open>\<not> A \<subseteq> T\<close> \<open>A \<subseteq> ?target_V\<close>
+            by (by100 blast)
+        qed
+        have p4: "card {A\<in>?\<A>_V. \<not> A \<subseteq> T} \<le> n"
+        proof -
+          have "card (?NT - {A1}) = card ?NT - 1"
+            using hfin hA1 by (by100 simp)
+          moreover have "card ?NT \<le> Suc n" using hcard_suc .
+          ultimately show ?thesis using hNT_V by (by100 simp)
+        qed
+        \<comment> \<open>Premise 5: finite.\<close>
+        have p5: "finite {A\<in>?\<A>_V. \<not> A \<subseteq> T}"
+          using hNT_V hfin by (by100 simp)
+        \<comment> \<open>Premises 6-14: arc structure of target\\_V.\<close>
+        show ?thesis sorry \<comment> \<open>6-14: arcs, cover, inter, coh, tree, sub, subgraph, x0, endpoints.
+           All from h\\<A> restricted to target\\_V + subspace\\_topology\\_trans.\<close>
+      qed
       \<comment> \<open>Step 9: U, V PC.\<close>
       have htU_sub_U: "?target_U \<subseteq> ?U"
         using conjunct1[OF hU_dr[unfolded top1_deformation_retract_of_on_def]] by (by100 blast)
