@@ -16946,8 +16946,7 @@ next
         moreover have "card ?NT \<ge> 2" using hcard_gt1 by (by100 linarith)
         ultimately show ?thesis by (by100 linarith)
       qed
-      show ?thesis sorry \<comment> \<open>Full SvK + IH proof. Same structure as graph\\_pi1\\_free\\_weak
-         card>1 case (~700 lines), with IH[OF ...] replacing sorry at IH calls.\<close>
+      show ?thesis sorry \<comment> \<open>SvK + IH. Type issue blocks closing.\<close>
     qed
   qed
 qed
