@@ -490,7 +490,59 @@ proof -
   next
     case False
     \<comment> \<open>Infinite case: direct limit argument.\<close>
-    show ?thesis sorry \<comment> \<open>Direct limit argument for infinite J: finite sub-wedges + compactness.\<close>
+    \<comment> \<open>Munkres 71.3: infinite case. The proof reduces everything to finite sub-wedges.
+       Key fact: any loop/homotopy in X lies in a finite sub-wedge (compactness + coherent topology).
+       Then Theorem 71.1 (finite case) gives freeness for each finite sub-wedge,
+       and the three conditions (generation, injectivity, no reduced word = id) follow.\<close>
+    \<comment> \<open>Extract circles from wedge definition.\<close>
+    from assms[unfolded top1_is_wedge_of_circles_on_def]
+    obtain C where
+      hstrict: "is_topology_on_strict X TX" and hhaus: "is_hausdorff_on X TX" and hp: "p \<in> X"
+      and hC: "\<forall>\<alpha>\<in>J. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+             \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                      (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h)"
+      and hcover: "(\<Union>\<alpha>\<in>J. C \<alpha>) = X"
+      and hdisjoint: "\<forall>\<alpha>\<in>J. \<forall>\<beta>\<in>J. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p}"
+      and hweak: "\<forall>D. D \<subseteq> X \<longrightarrow>
+             (closedin_on X TX D \<longleftrightarrow>
+              (\<forall>\<alpha>\<in>J. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
+      by (elim conjE exE) (rule that, assumption+)
+    \<comment> \<open>Key compactness fact: any compact K \\<subseteq> X meets only finitely many C\\_\\<alpha> non-trivially.
+       Proof: C\\_\\<alpha> - {p} are pairwise disjoint open sets. If K meets infinitely many,
+       pick one point from each; this infinite set has no limit point (contradiction with
+       compact + Hausdorff \\<Rightarrow> limit point compact).\<close>
+    have hC_open: "\<And>\<alpha>. \<alpha> \<in> J \<Longrightarrow> C \<alpha> - {p} \<in> TX"
+      sorry \<comment> \<open>C\\_\\<alpha> - {p} is open: C\\_\\<alpha> closed (coherent), {p} closed in C\\_\\<alpha> (Hausdorff),
+         so C\\_\\<alpha> - {p} open in C\\_\\<alpha>. Coherent topology lifts to open in X.\<close>
+    have hcompact_finite: "\<And>K. K \<subseteq> X \<Longrightarrow> top1_compact_on K (subspace_topology X TX K)
+        \<Longrightarrow> finite {\<alpha>\<in>J. K \<inter> (C \<alpha> - {p}) \<noteq> {}}"
+      sorry \<comment> \<open>If infinite, pick x\\_\\<alpha> \\<in> K \\<inter> (C\\_\\<alpha> - {p}). These are distinct (disjoint).
+         {x\\_\\<alpha>} infinite, no limit point (each C\\_\\<beta> - {p} open, contains only x\\_\\<beta>).
+         Contradicts compact Hausdorff \\<Rightarrow> limit point compact.\<close>
+    \<comment> \<open>From compactness: any loop f based at p lies in finitely many circles.
+       Any homotopy H between loops also lies in finitely many circles.\<close>
+    have hloop_finite: "\<And>f. top1_is_loop_on X TX p f \<Longrightarrow>
+        \<exists>F. finite F \<and> F \<subseteq> J \<and> f ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>F. C \<alpha>)"
+      sorry \<comment> \<open>f(I) compact \\<Rightarrow> meets finitely many C\\_\\<alpha> - {p}.
+         Take F = {\\<alpha> | f(I) \\<inter> (C\\_\\<alpha> - {p}) \\<noteq> {}} \\<union> {some \\<beta>}. Then f(I) \\<subseteq> \\<Union>F C\\_\\<alpha>.\<close>
+    have hhtpy_finite: "\<And>f g. top1_is_loop_on X TX p f \<Longrightarrow> top1_is_loop_on X TX p g \<Longrightarrow>
+        top1_path_homotopic_on X TX p p f g \<Longrightarrow>
+        \<exists>F. finite F \<and> F \<subseteq> J \<and> top1_path_homotopic_on (\<Union>\<alpha>\<in>F. C \<alpha>)
+            (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) p p f g"
+      sorry
+    \<comment> \<open>For each finite F \\<subseteq> J, the sub-wedge \\<Union>\\<alpha>\\<in>F. C \\<alpha> has free \\<pi>\\_1 on F
+       (by Theorem 71.1 for finite wedges, relabeled).\<close>
+    have hfinite_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> J \<Longrightarrow>
+        top1_is_wedge_of_circles_on (\<Union>\<alpha>\<in>F. C \<alpha>)
+            (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) F p"
+      sorry
+    \<comment> \<open>Now verify top1\\_is\\_free\\_group\\_full\\_on for \\<pi>\\_1(X, p) with generators from J.
+       The key: every reduced word involves finitely many generators \\<Rightarrow> lies in a finite
+       sub-wedge where Theorem 71.1 gives freeness \\<Rightarrow> the word is non-trivial there
+       \\<Rightarrow> it's non-trivial in X (since the inclusion is injective on \\<pi>\\_1).\<close>
+    \<comment> \<open>For the int set packaging: this requires |J| \\<le> |int|.
+       We sorry the packaging step.\<close>
+    show ?thesis sorry
   qed
 qed
 
