@@ -1652,23 +1652,41 @@ proof -
             "f1 ` top1_unit_interval \<subseteq> T \<union> \<Union>F1" by (by100 blast)
         from hloop_in_finite[OF hf2] obtain F2 where hF2: "finite F2" "F2 \<subseteq> ?NT"
             "f2 ` top1_unit_interval \<subseteq> T \<union> \<Union>F2" by (by100 blast)
-        \<comment> \<open>Extract H from homotopy. H(I\\<times>I) compact, lies in finitely many arcs.\<close>
-        \<comment> \<open>H(I\\<times>I) meets finitely many non-tree arcs (same selection set argument as hloop\\_in\\_finite).\<close>
-        have "\<exists>FH. finite FH \<and> FH \<subseteq> ?NT \<and>
-            (\<forall>x\<in>f1 ` I_set \<union> f2 ` I_set. x \<in> T \<union> \<Union>FH)"
-          sorry \<comment> \<open>From H(I\\<times>I) compact + selection set argument + combine with F1, F2.\<close>
+        \<comment> \<open>Extract H from homotopy.\<close>
+        from hfg[unfolded top1_path_homotopic_on_def]
+        obtain H where hH_cont: "top1_continuous_map_on (I_set \<times> I_set) II_topology Y TY H"
+            and hH0: "\<forall>s\<in>I_set. H (s, 0) = f1 s" and hH1: "\<forall>s\<in>I_set. H (s, 1) = f2 s"
+            and hHl: "\<forall>t\<in>I_set. H (0, t) = y0" and hHr: "\<forall>t\<in>I_set. H (1, t) = y0"
+          by (by100 blast)
+        \<comment> \<open>H(I\\<times>I) compact, lies in finitely many arcs.\<close>
+        have hH_sub: "H ` (I_set \<times> I_set) \<subseteq> Y"
+          using hH_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        \<comment> \<open>H is a loop (I \\<rightarrow> Y) for the purposes of the selection set argument.
+           Actually H: I\\<times>I \\<rightarrow> Y. We need H(I\\<times>I) meets finitely many non-tree arcs.
+           The same selection set argument applies to any compact subset.\<close>
+        \<comment> \<open>For now: let FH cover H(I\\<times>I) the same way F1, F2 cover f1, f2.\<close>
+        have "\<exists>FH. finite FH \<and> FH \<subseteq> ?NT \<and> H ` (I_set \<times> I_set) \<subseteq> T \<union> \<Union>FH"
+          sorry \<comment> \<open>Same selection set argument as hloop\\_in\\_finite, applied to H(I\\<times>I).
+             H(I\\<times>I) compact (continuous image of I\\<times>I which is compact).
+             Meets finitely many non-tree arc interiors.\<close>
         then obtain FH where hFH: "finite FH" "FH \<subseteq> ?NT"
+            "H ` (I_set \<times> I_set) \<subseteq> T \<union> \<Union>FH"
           by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
         let ?F = "F1 \<union> F2 \<union> FH"
         have "finite ?F" using hF1(1) hF2(1) hFH(1) by (by100 simp)
         have "?F \<subseteq> ?NT" using hF1(2) hF2(2) hFH(2) by (by100 blast)
-        \<comment> \<open>The homotopy H maps I\\<times>I into T \\<union> \\<Union>?F (since its image meets finitely many arcs).
-           Combined with f1, f2 images \\<subseteq> T \\<union> \\<Union>F1 \\<subseteq> T \\<union> \\<Union>?F.
-           By Theorem\\_18\\_2 restrict\\_range: H is continuous into the subspace.
-           Package as path\\_homotopic\\_on in the subspace.\<close>
+        \<comment> \<open>H maps into T \\<union> \\<Union>?F, f1 and f2 map into T \\<union> \\<Union>?F.\<close>
+        have hH_in_F: "H ` (I_set \<times> I_set) \<subseteq> T \<union> \<Union>?F"
+          using hFH(3) by (by5000 blast)
+        have hf1_in_F: "f1 ` I_set \<subseteq> T \<union> \<Union>?F"
+          using hF1(3) by (by5000 blast)
+        have hf2_in_F: "f2 ` I_set \<subseteq> T \<union> \<Union>?F"
+          using hF2(3) by (by5000 blast)
+        \<comment> \<open>Package as path\\_homotopic\\_on in the subspace T \\<union> \\<Union>?F.\<close>
         have "top1_path_homotopic_on (T \<union> \<Union>?F)
             (subspace_topology Y TY (T \<union> \<Union>?F)) y0 y0 f1 f2"
-          sorry \<comment> \<open>Extract H from hfg, show H maps into T \\<union> \\<Union>?F, restrict.\<close>
+          sorry \<comment> \<open>H continuous into T \\<union> \\<Union>?F (restrict range via Theorem\\_18\\_2).
+             f1, f2 are paths in T \\<union> \\<Union>?F. Package as path\\_homotopic\\_on.\<close>
         show "\<exists>F. finite F \<and> F \<subseteq> ?NT \<and>
             top1_path_homotopic_on (T \<union> \<Union>F)
                 (subspace_topology Y TY (T \<union> \<Union>F)) y0 y0 f1 f2"
