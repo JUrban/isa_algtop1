@@ -563,10 +563,21 @@ proof -
     have hhtpy_finite: "\<And>f g. top1_is_loop_on X TX p f \<Longrightarrow> top1_is_loop_on X TX p g \<Longrightarrow>
         top1_path_homotopic_on X TX p p f g \<Longrightarrow>
         \<exists>F. finite F \<and> F \<subseteq> J \<and> top1_path_homotopic_on (\<Union>\<alpha>\<in>F. C \<alpha>)
-            (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) p p f g" sorry
+            (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) p p f g"
+      sorry \<comment> \<open>Proof sketch: H: I\\<times>I \\<rightarrow> X is the homotopy. I\\<times>I compact \\<Rightarrow> H(I\\<times>I) compact.
+         By hcompact\\_finite, H(I\\<times>I) meets finitely many C\\_\\<alpha> - {p}. Together with
+         hloop\\_finite for f and g, take F = union of all finite sets. Then f, g, H all
+         map into \\<Union>F C\\_\\<alpha>. H restricts to a path homotopy in the subspace
+         (continuous map into subspace + endpoint conditions preserved).\<close>
     have hfinite_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> J \<Longrightarrow>
         top1_is_wedge_of_circles_on (\<Union>\<alpha>\<in>F. C \<alpha>)
-            (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) F p" sorry
+            (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) F p"
+      sorry \<comment> \<open>Check wedge definition for \\<Union>F C\\_\\<alpha>:
+         strict: from X strict + subspace. Hausdorff: from X Hausdorff + subspace.
+         p \\<in> \\<Union>F C\\_\\<alpha>: p \\<in> C\\_\\<alpha> for any \\<alpha> \\<in> F (or F empty \\<Rightarrow> vacuous).
+         Circles: C restricted to F, each C\\_\\<alpha> homeomorphic to S1.
+         Cover: \\<Union>F C\\_\\<alpha> = \\<Union>F C\\_\\<alpha> trivially. Disjoint: from hdisjoint restricted.
+         Coherent: from hweak restricted via subspace\\_topology\\_trans.\<close>
     \<comment> \<open>Now verify top1\\_is\\_free\\_group\\_full\\_on for \\<pi>\\_1(X, p).
        For each finite sub-wedge F, Theorem\\_71\\_3\\_finite gives \\<pi>\\_1 free on F.
        The free group condition 5 (no reduced word = id): a word w uses finitely many
