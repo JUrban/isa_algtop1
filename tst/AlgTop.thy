@@ -1379,10 +1379,79 @@ proof -
          Since w \\<noteq> id in \\<pi>\\_1(Y') (freeness), w \\<noteq> id in \\<pi>\\_1(Y) (injectivity).
          Injectivity of \\<iota>*: there's a retraction r: Y \\<rightarrow> Y' (collapse non-Y' arcs
          to T-endpoints), so r* \\<circ> \\<iota>* = id on \\<pi>\\_1(Y'), hence \\<iota>* injective.\<close>
-      show ?thesis sorry \<comment> \<open>Infinite case. The proof is correct but needs:
-         (a) Generator loops g\\_A defined for each A (path in T + arc + path back).
-         (b) Retraction Y \\<rightarrow> Y' for finite Y' \\<subseteq> Y (continuous by coherent topology).
-         (c) top1\\_is\\_free\\_group\\_full\\_on verification with potentially infinite generator set.\<close>
+      \<comment> \<open>Book Step 3 (infinite case): same as Theorem 71.3.
+         Key facts: (1) any loop lies in T \\<union> {finitely many arcs} (compactness),
+         (2) any homotopy also lies in such a space,
+         (3) finite subgraph has free \\<pi>\\_1 (finite case),
+         (4) inclusion is injective on \\<pi>\\_1 (retraction: collapse non-Y' arcs).
+         By (1)-(4), \\<pi>\\_1(Y) is free.\<close>
+      \<comment> \<open>The finite subgraph T \\<union> F (for finite F \\<subseteq> ?NT) has free \\<pi>\\_1
+         by graph\\_pi1\\_free\\_weak\\_finite. The inclusion T \\<union> F \\<hookrightarrow> Y is injective
+         on \\<pi>\\_1 because T \\<union> F is a retract of Y (collapse non-F arcs to T-endpoints).
+         The retraction is continuous by the coherent topology.
+         Then Lemma\\_55\\_1\\_retract\\_injective gives \\<pi>\\_1-injectivity.\<close>
+      \<comment> \<open>Step 1: For any finite F \\<subseteq> ?NT, T \\<union> (\\<Union>F) is a retract of Y.\<close>
+      have hretract: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?NT \<Longrightarrow>
+          top1_retract_of_on Y TY (T \<union> \<Union>F)"
+      proof -
+        fix F0 assume hF0fin: "finite F0" and hF0_NT: "F0 \<subseteq> ?NT"
+        let ?Y0 = "T \<union> \<Union>F0"
+        \<comment> \<open>Define retraction r: for each non-F0 arc A, pick an endpoint e\\_A \\<in> T.
+           r(x) = x if x \\<in> ?Y0, r(x) = e\\_A if x \\<in> A for non-F0 arc A.\<close>
+        \<comment> \<open>Each non-F0 arc A has both endpoints in T (from hNT\\_endpoints).\<close>
+        \<comment> \<open>Pick one endpoint for each non-F0 arc.\<close>
+        have h_ep_exists: "\<forall>A\<in>?NT - F0. \<exists>e. e \<in> T \<and> e \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          sorry \<comment> \<open>Each arc has endpoints, and they are in T by hNT\\_endpoints.\<close>
+        obtain e_choice where h_ep: "\<forall>A\<in>?NT - F0. e_choice A \<in> T \<and>
+            e_choice A \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          sorry \<comment> \<open>AC on endpoint choice.\<close>
+        \<comment> \<open>Define r: for x \\<in> ?Y0, r(x) = x. For x \\<in> A (non-F0 arc), r(x) = e\\_choice(A).\<close>
+        define r where "r x = (if x \<in> ?Y0 then x
+            else e_choice (SOME A. A \<in> ?NT - F0 \<and> x \<in> A))" for x
+        show "top1_retract_of_on Y TY ?Y0"
+          unfolding top1_retract_of_on_def top1_is_retraction_on_def
+          sorry \<comment> \<open>Need: ?Y0 \\<subseteq> Y, continuous r: Y \\<rightarrow> ?Y0, r|?Y0 = id.
+             r is well-defined (each non-?Y0 point is in exactly one non-F0 arc).
+             r is continuous by coherent topology: on each arc A \\<in> \\<A>,
+             r|A is either id (if A \\<subseteq> ?Y0) or constant e\\_choice(A) (if A \\<in> ?NT - F0).
+             Both are continuous. By pasting for coherent topologies, r is continuous.\<close>
+      qed
+      \<comment> \<open>Step 2: Any loop in Y lies in T \\<union> (finitely many arcs).\<close>
+      have hloop_in_finite: "\<And>f. top1_is_loop_on Y TY y0 f \<Longrightarrow>
+          \<exists>F. finite F \<and> F \<subseteq> ?NT \<and> f ` top1_unit_interval \<subseteq> T \<union> \<Union>F"
+        sorry \<comment> \<open>Compactness: f(I) compact, meets finitely many arcs.
+           Those arcs either \\<subseteq> T or are non-tree arcs in ?NT.\<close>
+      \<comment> \<open>Step 3: Any homotopy lies in T \\<union> (finitely many arcs).\<close>
+      have hhtpy_in_finite: "\<And>f1 f2. top1_is_loop_on Y TY y0 f1 \<Longrightarrow>
+          top1_is_loop_on Y TY y0 f2 \<Longrightarrow>
+          top1_path_homotopic_on Y TY y0 y0 f1 f2 \<Longrightarrow>
+          \<exists>F. finite F \<and> F \<subseteq> ?NT \<and>
+              top1_path_homotopic_on (T \<union> \<Union>F)
+                  (subspace_topology Y TY (T \<union> \<Union>F)) y0 y0 f1 f2"
+        sorry \<comment> \<open>Same compactness argument applied to homotopy H(I\\<times>I).\<close>
+      \<comment> \<open>Step 4: For finite F \\<subseteq> ?NT, T \\<union> (\\<Union>F) is a subgraph with free \\<pi>\\_1.
+         This follows from graph\\_pi1\\_free\\_weak\\_finite.\<close>
+      have hfinite_subgraph_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?NT \<Longrightarrow>
+          \<exists>\<iota> S. top1_is_free_group_full_on
+              (top1_fundamental_group_carrier (T \<union> \<Union>F)
+                  (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              (top1_fundamental_group_mul (T \<union> \<Union>F)
+                  (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              (top1_fundamental_group_id (T \<union> \<Union>F)
+                  (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              (top1_fundamental_group_invg (T \<union> \<Union>F)
+                  (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              \<iota> S"
+        sorry \<comment> \<open>T \\<union> (\\<Union>F) is a connected graph (subgraph of Y).
+           Apply graph\\_pi1\\_free\\_weak\\_finite.\<close>
+      \<comment> \<open>Step 5: Combine: \\<pi>\\_1(Y) is free.
+         For each c \\<in> \\<pi>\\_1(Y), c lies in \\<pi>\\_1 of some T \\<union> F (Step 2).
+         That \\<pi>\\_1 is free (Step 4).
+         Inclusion is injective (Steps 1 + Lemma\\_55\\_1).
+         Hence \\<pi>\\_1(Y) is free.\<close>
+      show ?thesis
+        sorry \<comment> \<open>Assembly: use Steps 1-4 + the 5 conditions of free\\_group\\_full\\_on.
+           Same structure as Theorem 71.3 infinite case.\<close>
     qed
   qed
 qed
