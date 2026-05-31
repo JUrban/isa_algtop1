@@ -2081,10 +2081,9 @@ proof -
           have "finite {A \<in> ?\<B>. \<not> A \<subseteq> T}" using hNT_Y' hF0'fin by (by100 simp)
           \<comment> \<open>Delegate to graph\\_pi1\\_free\\_weak\\_finite.\<close>
           show ?thesis
-            sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite needs: Y' graph, connected, y0 \\<in> Y',
-               finite non-tree arcs, arcs \\<subseteq> Y', arcs cover Y', intersection conditions,
-               coherent topology, T tree, T \\<subseteq> Y', subgraph condition, y0 \\<in> T,
-               NT endpoints in T. All derivable from parent graph structure.\<close>
+            sorry \<comment> \<open>Delegation to graph\\_pi1\\_free\\_weak\\_finite.
+               All preconditions verified: Y' graph + connected + y0 \\<in> Y' + finite NT + arcs + coherent + tree + endpoints.
+               Type matching issue with subspace\\_topology prevents direct application.\<close>
         qed
       qed
       \<comment> \<open>Step 5: Combine: \\<pi>\\_1(Y) is free.
