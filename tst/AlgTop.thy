@@ -1431,8 +1431,55 @@ proof -
           have hB_in_fI: "?B \<subseteq> f ` I_set" using hsel by (by100 blast)
           \<comment> \<open>For each arc C \\<in> \\<A>: |C \\<inter> ?B| \\<le> 1.\<close>
           have hB_one_per_arc: "\<forall>C\<in>\<A>. finite (C \<inter> ?B) \<and> card (C \<inter> ?B) \<le> 1"
-            sorry \<comment> \<open>Each sel(A) is in int(A), so sel(A) \\<in> C only if C = A.
-               Hence C \\<inter> ?B = {sel(C)} if C \\<in> ?F, else \\<emptyset>. Card \\<le> 1.\<close>
+          proof (intro ballI conjI)
+            fix C assume "C \<in> \<A>"
+            \<comment> \<open>C \\<inter> ?B \\<subseteq> {sel C} (at most).\<close>
+            have "C \<inter> ?B \<subseteq> (if C \<in> ?F then {sel C} else {})"
+            proof
+              fix x assume "x \<in> C \<inter> ?B"
+              then obtain A where "A \<in> ?F" "x = sel A" "x \<in> C" by (by100 blast)
+              have "sel A \<in> A" using hsel \<open>A \<in> ?F\<close> by (by100 blast)
+              have "sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                using hsel \<open>A \<in> ?F\<close> by (by100 blast)
+              show "x \<in> (if C \<in> ?F then {sel C} else {})"
+              proof (cases "A = C")
+                case True thus ?thesis using \<open>x = sel A\<close> \<open>A \<in> ?F\<close> by (by100 simp)
+              next
+                case False
+                \<comment> \<open>A \\<noteq> C. sel(A) \\<in> A \\<inter> C \\<subseteq> endpoints(A). But sel(A) \\<notin> endpoints(A). Contradiction.\<close>
+                have "A \<in> \<A>" using \<open>A \<in> ?F\<close> by (by100 blast)
+                from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>C \<in> \<A>\<close> False]
+                have "A \<inter> C \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" by (by100 blast)
+                hence "sel A \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                  using \<open>sel A \<in> A\<close> \<open>x \<in> C\<close> \<open>x = sel A\<close> by (by100 blast)
+                thus ?thesis using \<open>sel A \<notin> top1_arc_endpoints_on A _\<close> by contradiction
+              qed
+            qed
+            \<comment> \<open>The if-then-else in the subset makes automation hard. Prove directly.\<close>
+            have hC_sub_at_most_one: "\<exists>S. C \<inter> ?B \<subseteq> S \<and> finite S \<and> card S \<le> 1"
+            proof (cases "C \<in> ?F")
+              case True
+              hence "(if C \<in> ?F then {sel C} else {}) = {sel C}" by (by100 simp)
+              hence "C \<inter> ?B \<subseteq> {sel C}"
+                using \<open>C \<inter> ?B \<subseteq> (if C \<in> ?F then {sel C} else {})\<close> by (by100 simp)
+              moreover have "finite {sel C}" by (by100 simp)
+              moreover have "card {sel C} \<le> 1" by (by100 simp)
+              ultimately show ?thesis by (by100 blast)
+            next
+              case False
+              hence "(if C \<in> ?F then {sel C} else {}) = {}" by (by100 simp)
+              hence "C \<inter> ?B \<subseteq> {}"
+                using \<open>C \<inter> ?B \<subseteq> (if C \<in> ?F then {sel C} else {})\<close> by (by100 simp)
+              moreover have "finite {}" by (by100 simp)
+              moreover have "card {} \<le> (1::nat)" by (by100 simp)
+              ultimately show ?thesis by (by100 blast)
+            qed
+            then obtain S where hS: "C \<inter> ?B \<subseteq> S" "finite S" "card S \<le> 1"
+              by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+            show "finite (C \<inter> ?B)" using finite_subset[OF hS(1) hS(2)] .
+            show "card (C \<inter> ?B) \<le> 1"
+              using card_mono[OF hS(2) hS(1)] hS(3) by (by100 simp)
+          qed
           \<comment> \<open>By graph\\_selection\\_set\\_discrete: every subset of ?B is closed in Y.\<close>
           have hB_closed_discrete: "\<forall>S. S \<subseteq> ?B \<longrightarrow> closedin_on Y TY S"
             sorry \<comment> \<open>graph\\_selection\\_set\\_discrete[OF assms(1) hB\\_sub h\\<A> h\\<A>\\_cover h\\<A>\\_coh hB\\_one\\_per\\_arc].\<close>
