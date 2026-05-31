@@ -17885,23 +17885,129 @@ proof -
             (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)"
           by (rule Theorem_58_3[OF hV_dr hV_top hx0_tV])
         \<comment> \<open>Transfer freeness via DR iso.\<close>
+        \<comment> \<open>Rewrite IH to subspace topology of U (resp V).\<close>
+        have htU_pi1_free': "\<exists>\<iota> S. top1_is_free_group_full_on
+            (top1_fundamental_group_carrier ?target_U (subspace_topology ?U (subspace_topology Y TY ?U) ?target_U) y0)
+            (top1_fundamental_group_mul ?target_U (subspace_topology ?U (subspace_topology Y TY ?U) ?target_U) y0)
+            (top1_fundamental_group_id ?target_U (subspace_topology ?U (subspace_topology Y TY ?U) ?target_U) y0)
+            (top1_fundamental_group_invg ?target_U (subspace_topology ?U (subspace_topology Y TY ?U) ?target_U) y0)
+            \<iota> S"
+          using htU_pi1_free hTU_trans by simp
+        have htV_pi1_free': "\<exists>\<iota> S. top1_is_free_group_full_on
+            (top1_fundamental_group_carrier ?target_V (subspace_topology ?V (subspace_topology Y TY ?V) ?target_V) y0)
+            (top1_fundamental_group_mul ?target_V (subspace_topology ?V (subspace_topology Y TY ?V) ?target_V) y0)
+            (top1_fundamental_group_id ?target_V (subspace_topology ?V (subspace_topology Y TY ?V) ?target_V) y0)
+            (top1_fundamental_group_invg ?target_V (subspace_topology ?V (subspace_topology Y TY ?V) ?target_V) y0)
+            \<iota> S"
+          using htV_pi1_free hTV_trans by simp
+        have hpi1_U_grp: "top1_is_group_on
+            (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
+            (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
+            (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
+            (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)"
+          by (rule top1_fundamental_group_is_group[OF hU_top]) (use hx0_UV' in blast)
+        have hpi1_V_grp: "top1_is_group_on
+            (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
+            (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
+            (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
+            (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)"
+          by (rule top1_fundamental_group_is_group[OF hV_top]) (use hx0_UV' in blast)
         have hU_free_transfer: "\<exists>\<iota> S. top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
             (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
             (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
             (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
             \<iota> S"
-          sorry \<comment> \<open>free\\_group\\_iso\\_transfer + hpi1\\_U\\_iso + htU\\_pi1\\_free + hTU\\_trans.\<close>
+          using htU_pi1_free' hpi1_U_iso hpi1_U_grp
+          apply -
+          apply (erule exE)+
+          apply (drule free_group_iso_transfer, assumption, assumption)
+          apply (erule exE, rule exI, rule exI, assumption)
+          done
         have hV_free_transfer: "\<exists>\<iota> S. top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
             (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
             (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
             (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)
             \<iota> S"
-          sorry \<comment> \<open>free\\_group\\_iso\\_transfer + hpi1\\_V\\_iso + htV\\_pi1\\_free + hTV\\_trans.\<close>
-        \<comment> \<open>SvK assembly.\<close>
-        show ?thesis using hU_free_transfer hV_free_transfer
-          sorry \<comment> \<open>svk\\_free\\_product\\_free with disjoint generators.\<close>
+          using htV_pi1_free' hpi1_V_iso hpi1_V_grp
+          apply -
+          apply (erule exE)+
+          apply (drule free_group_iso_transfer, assumption, assumption)
+          apply (erule exE, rule exI, rule exI, assumption)
+          done
+        \<comment> \<open>SvK assembly: reindex generators for disjointness, then apply.\<close>
+        show ?thesis
+        proof -
+          from hU_free_transfer
+          obtain \<iota>U :: "nat \<Rightarrow> _" and S1 :: "nat set" where hU_f:
+            "top1_is_free_group_full_on
+                (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
+                (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
+                (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
+                (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
+                \<iota>U S1"
+            by - ((erule exE)+, (erule that))
+          from hV_free_transfer
+          obtain \<iota>V :: "nat \<Rightarrow> _" and S2 :: "nat set" where hV_f:
+            "top1_is_free_group_full_on
+                (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
+                (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
+                (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
+                (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)
+                \<iota>V S2"
+            by - ((erule exE)+, (erule that))
+          \<comment> \<open>Reindex: even/odd for disjointness.\<close>
+          define f1 :: "nat \<Rightarrow> nat" where "f1 n = 2*n" for n
+          define f2 :: "nat \<Rightarrow> nat" where "f2 n = 2*n+1" for n
+          have "bij_betw (the_inv_into S1 f1) (f1 ` S1) S1"
+          proof -
+            have "inj f1" unfolding f1_def by (intro injI) (by100 simp)
+            hence "inj_on f1 S1" using inj_on_subset[OF \<open>inj f1\<close>] by (by100 blast)
+            hence "bij_betw f1 S1 (f1 ` S1)" unfolding bij_betw_def by (by100 blast)
+            thus ?thesis by (rule bij_betw_the_inv_into)
+          qed
+          from free_group_full_reindex[OF hU_f this]
+          have hU_re: "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
+              (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
+              (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
+              (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
+              (\<iota>U \<circ> the_inv_into S1 f1) (f1 ` S1)" .
+          have "bij_betw (the_inv_into S2 f2) (f2 ` S2) S2"
+          proof -
+            have "inj f2" unfolding f2_def by (intro injI) (by100 simp)
+            hence "inj_on f2 S2" using inj_on_subset[OF \<open>inj f2\<close>] by (by100 blast)
+            hence "bij_betw f2 S2 (f2 ` S2)" unfolding bij_betw_def by (by100 blast)
+            thus ?thesis by (rule bij_betw_the_inv_into)
+          qed
+          from free_group_full_reindex[OF hV_f this]
+          have hV_re: "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
+              (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
+              (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
+              (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)
+              (\<iota>V \<circ> the_inv_into S2 f2) (f2 ` S2)" .
+          have hS_disj: "f1 ` S1 \<inter> f2 ` S2 = {}"
+          proof (rule ccontr)
+            assume "\<not> ?thesis"
+            then obtain x where "x \<in> f1 ` S1" "x \<in> f2 ` S2" by (by100 blast)
+            then obtain a b where "x = 2*a" "x = 2*b+1"
+              unfolding f1_def f2_def by (by100 blast)
+            thus False by presburger
+          qed
+          have hY_strict: "is_topology_on_strict Y TY"
+            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+          from svk_free_product_free[OF hY_strict hU_open hV_open hUV_cover
+              hUV_sc' hU_pc hV_pc hx0_UV' hU_re hV_re hS_disj]
+          obtain \<iota>Y where "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier Y TY y0)
+              (top1_fundamental_group_mul Y TY y0)
+              (top1_fundamental_group_id Y TY y0)
+              (top1_fundamental_group_invg Y TY y0)
+              \<iota>Y (f1 ` S1 \<union> f2 ` S2)" by (by100 blast)
+          thus ?thesis by (by5000 blast)
+        qed
       qed
     next
       case hInf: False
