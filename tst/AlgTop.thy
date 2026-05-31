@@ -15769,40 +15769,42 @@ proof -
   qed
 qed
 
-\<comment> \<open>Auxiliary: finite case of graph\\_pi1\\_free\\_weak by induction on card(NT).\<close>
+\<comment> \<open>Auxiliary: finite case of graph\\_pi1\\_free\\_weak by induction on card(NT).
+   The n parameter bounds the number of non-tree arcs.\<close>
 lemma graph_pi1_free_weak_finite:
-  fixes Y :: "'a set" and TY :: "'a set set" and y0 :: 'a
-  assumes "top1_is_graph_on Y TY"
-      and "top1_connected_on Y TY"
-      and "y0 \<in> Y"
-      and "finite {A\<in>\<A>. \<not> A \<subseteq> T}"
-      and h\<A>: "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
-      and h\<A>_cover: "\<Union>\<A> = Y"
-      and h\<A>_inter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+  fixes n :: nat
+  shows "\<And>Y :: 'a set. \<And>TY :: 'a set set. \<And>y0 :: 'a. \<And>\<A> T.
+      top1_is_graph_on Y TY \<Longrightarrow> top1_connected_on Y TY \<Longrightarrow> y0 \<in> Y \<Longrightarrow>
+      card {A\<in>\<A>. \<not> A \<subseteq> T} \<le> n \<Longrightarrow> finite {A\<in>\<A>. \<not> A \<subseteq> T} \<Longrightarrow>
+      (\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)) \<Longrightarrow>
+      \<Union>\<A> = Y \<Longrightarrow>
+      (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
-         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-      and h\<A>_coh: "\<forall>C. C \<subseteq> Y \<longrightarrow>
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<Longrightarrow>
+      (\<forall>C. C \<subseteq> Y \<longrightarrow>
            (closedin_on Y TY C \<longleftrightarrow>
-            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
-      and hT_tree: "top1_is_tree_on T (subspace_topology Y TY T)"
-      and hT_sub: "T \<subseteq> Y"
-      and hT_subgraph: "\<forall>A\<in>\<A>. A \<subseteq> T \<or>
-           A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-      and hT_x0: "y0 \<in> T"
-  shows "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
-      (top1_fundamental_group_carrier Y TY y0)
-      (top1_fundamental_group_mul Y TY y0)
-      (top1_fundamental_group_id Y TY y0)
-      (top1_fundamental_group_invg Y TY y0)
-      \<iota> S"
-  using assms(4)
-proof (induction "card {A\<in>\<A>. \<not> A \<subseteq> T}" arbitrary: Y TY y0 \<A> T rule: less_induct)
-  case (less Y TY y0 \<A> T)
-  show ?case sorry \<comment> \<open>Induction body: same as graph\\_pi1\\_free\\_weak finite case.
-     Base (NT=\\<emptyset>): tree \\<Rightarrow> SC \\<Rightarrow> trivial \\<pi>\\_1.
-     Card=1: Lemma 84.6.
-     Card>1: SvK with subgraphs having fewer NT arcs.\<close>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))) \<Longrightarrow>
+      top1_is_tree_on T (subspace_topology Y TY T) \<Longrightarrow>
+      T \<subseteq> Y \<Longrightarrow>
+      (\<forall>A\<in>\<A>. A \<subseteq> T \<or>
+           A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)) \<Longrightarrow>
+      y0 \<in> T \<Longrightarrow>
+      (\<forall>A\<in>{A\<in>\<A>. \<not> A \<subseteq> T}. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T) \<Longrightarrow>
+      \<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
+          (top1_fundamental_group_carrier Y TY y0)
+          (top1_fundamental_group_mul Y TY y0)
+          (top1_fundamental_group_id Y TY y0)
+          (top1_fundamental_group_invg Y TY y0)
+          \<iota> S"
+proof (induction n)
+  case 0
+  \<comment> \<open>Base case: card(NT) \\<le> 0, so NT = {}. Y = T. Tree \\<Rightarrow> SC \\<Rightarrow> trivial \\<pi>\\_1.\<close>
+  show ?case sorry \<comment> \<open>Same as NT=\\<emptyset> case in graph\\_pi1\\_free\\_weak.\<close>
+next
+  case (Suc n)
+  \<comment> \<open>Step: card(NT) \\<le> Suc n. Either card=0 (base case), or proceed.\<close>
+  show ?case sorry
 qed
 
 \<comment> \<open>Weak form of Theorem 84.7: \\<pi>\\_1 of a connected graph is free (no int set).
