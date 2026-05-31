@@ -2086,7 +2086,17 @@ proof -
             show ?thesis .
           qed
           \<comment> \<open>T \\<union> \\<Union>F is a retract of T \\<union> \\<Union>(F \\<union> F').
-             For each arc A \\<in> F'\\\\F: retract A to the tree path between its endpoints.\<close>
+             Construction: for each A \\<in> F'\\\\F with endpoints a,b \\<in> T:
+             - T is path-connected (tree = SC = PC)
+             - Choose path p\\_A: [0,1] \\<rightarrow> T from a to b
+             - h\\_A: [0,1] \\<rightarrow> A the arc homeomorphism
+             - Define r|A = p\\_A \\<circ> h\\_A\\<inverse> (continuous, maps A to T)
+             - r(a) = p\\_A(0) = a, r(b) = p\\_A(1) = b (agrees at endpoints)
+             - r|\\_{T \\<union> \\<Union>F} = id
+             Continuity via pasting\\_lemma\\_two\\_closed:
+             - T \\<union> \\<Union>(F \\<union> F') = (T \\<union> \\<Union>F) \\<union> A\\_1 \\<union> ... \\<union> A\\_k (closed cover)
+             - r continuous on each piece, agrees on overlaps
+             - By iterated pasting: r continuous\<close>
           have hretract: "top1_retract_of_on ?YFF ?TYFF ?YF" sorry
           \<comment> \<open>By Lemma 55.1: f1 \\<sim> f2 in T \\<union> \\<Union>F.\<close>
           have hYF_sub_FF: "?YF \<subseteq> ?YFF" by (by100 blast)
