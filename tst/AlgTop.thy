@@ -766,7 +766,10 @@ proof -
     have hfinite_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> J \<Longrightarrow>
         top1_is_wedge_of_circles_on (\<Union>\<alpha>\<in>F. C \<alpha>)
             (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) F p"
-      sorry
+      sorry \<comment> \<open>Check wedge definition for \\<Union>F C\\_\\<alpha> with subspace topology:
+         strict + Hausdorff (from X), p \\<in> \\<Union>F C\\_\\<alpha>, circles = C restricted to F,
+         cover + disjointness from hC + hdisjoint restricted,
+         coherent from hweak restricted (subspace\\_topology\\_trans).\<close>
     \<comment> \<open>Now verify top1\\_is\\_free\\_group\\_full\\_on for \\<pi>\\_1(X, p) with generators from J.
        The key: every reduced word involves finitely many generators \\<Rightarrow> lies in a finite
        sub-wedge where Theorem 71.1 gives freeness \\<Rightarrow> the word is non-trivial there
