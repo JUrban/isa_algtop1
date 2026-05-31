@@ -2234,18 +2234,8 @@ proof -
                     (top1_fundamental_group_invg ?Y' (subspace_topology Y TY ?Y') y0) \<iota> S"
               by (rule graph_pi1_free_weak_finite[where n="card F0'"])
             \<comment> \<open>State the result in \\<Union>?\\<B> form, then convert to ?Y' = T \\<union> \\<Union>F0'.\<close>
-            have "\<exists>\<iota> S. top1_is_free_group_full_on
-                (top1_fundamental_group_carrier (\<Union>?\<B>)
-                    (subspace_topology Y TY (\<Union>?\<B>)) y0)
-                (top1_fundamental_group_mul (\<Union>?\<B>)
-                    (subspace_topology Y TY (\<Union>?\<B>)) y0)
-                (top1_fundamental_group_id (\<Union>?\<B>)
-                    (subspace_topology Y TY (\<Union>?\<B>)) y0)
-                (top1_fundamental_group_invg (\<Union>?\<B>)
-                    (subspace_topology Y TY (\<Union>?\<B>)) y0) \<iota> S"
-              sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite. All 14 preconditions proved above.
-                 Rule application blocked by let-binding expansion of ?Y' = T \\<union> \\<Union>F0'.\<close>
-            thus ?thesis using h\<B>_eq' by (by100 simp)
+            show ?thesis sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite. All preconditions proved.
+               Blocked by simp timeout when rewriting ?Y' \\<leftrightarrow> Y\\_sub in arc conditions.\<close>
           qed
         qed
       qed
