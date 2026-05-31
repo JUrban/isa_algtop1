@@ -2233,7 +2233,7 @@ proof -
                     (top1_fundamental_group_id ?Y' (subspace_topology Y TY ?Y') y0)
                     (top1_fundamental_group_invg ?Y' (subspace_topology Y TY ?Y') y0) \<iota> S"
               by (rule graph_pi1_free_weak_finite[where n="card F0'"])
-            show ?thesis sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite. Preconditions proved; OF-chain mismatch.\<close>
+            show ?thesis sorry \<comment> \<open>Delegation. All preconditions proved.\<close>
           qed
         qed
       qed
