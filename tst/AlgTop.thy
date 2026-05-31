@@ -15769,6 +15769,42 @@ proof -
   qed
 qed
 
+\<comment> \<open>Auxiliary: finite case of graph\\_pi1\\_free\\_weak by induction on card(NT).\<close>
+lemma graph_pi1_free_weak_finite:
+  fixes Y :: "'a set" and TY :: "'a set set" and y0 :: 'a
+  assumes "top1_is_graph_on Y TY"
+      and "top1_connected_on Y TY"
+      and "y0 \<in> Y"
+      and "finite {A\<in>\<A>. \<not> A \<subseteq> T}"
+      and h\<A>: "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+      and h\<A>_cover: "\<Union>\<A> = Y"
+      and h\<A>_inter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and h\<A>_coh: "\<forall>C. C \<subseteq> Y \<longrightarrow>
+           (closedin_on Y TY C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
+      and hT_tree: "top1_is_tree_on T (subspace_topology Y TY T)"
+      and hT_sub: "T \<subseteq> Y"
+      and hT_subgraph: "\<forall>A\<in>\<A>. A \<subseteq> T \<or>
+           A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+      and hT_x0: "y0 \<in> T"
+  shows "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
+      (top1_fundamental_group_carrier Y TY y0)
+      (top1_fundamental_group_mul Y TY y0)
+      (top1_fundamental_group_id Y TY y0)
+      (top1_fundamental_group_invg Y TY y0)
+      \<iota> S"
+  using assms(4)
+proof (induction "card {A\<in>\<A>. \<not> A \<subseteq> T}" arbitrary: Y TY y0 \<A> T rule: less_induct)
+  case (less Y TY y0 \<A> T)
+  show ?case sorry \<comment> \<open>Induction body: same as graph\\_pi1\\_free\\_weak finite case.
+     Base (NT=\\<emptyset>): tree \\<Rightarrow> SC \\<Rightarrow> trivial \\<pi>\\_1.
+     Card=1: Lemma 84.6.
+     Card>1: SvK with subgraphs having fewer NT arcs.\<close>
+qed
+
 \<comment> \<open>Weak form of Theorem 84.7: \\<pi>\\_1 of a connected graph is free (no int set).
    This is proved as a standalone universal lemma that can be used
    for subgraph applications inside Theorem 84.7's proof.\<close>
@@ -18012,7 +18048,16 @@ proof -
     next
       case hInf: False
       \<comment> \<open>Infinite case: compactness reduction to finite subgraphs.\<close>
-      show ?thesis sorry \<comment> \<open>Compactness: any loop in finitely many arcs.\<close>
+      \<comment> \<open>Infinite case: direct limit argument.
+         Every loop in Y has compact image meeting finitely many arcs.
+         So every element of \\<pi>\\_1(Y) lies in \\<pi>\\_1 of some finite subgraph.
+         \\<pi>\\_1(Y) is the direct limit of \\<pi>\\_1(finite subgraphs), all free.
+         Direct limit of free groups with injective maps is free.\<close>
+      show ?thesis sorry \<comment> \<open>Direct limit of free groups. Requires:
+         1. For any loop f, f(I) compact \\<subseteq> T \\<union> finitely many arcs.
+         2. Finite subgraph \\<pi>\\_1 is free (by finite case above).
+         3. \\<pi>\\_1(Y) = direct limit of these.
+         4. Direct limit of free groups with injective inclusions is free.\<close>
     qed
   qed
 qed
