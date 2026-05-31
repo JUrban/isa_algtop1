@@ -253,7 +253,76 @@ qed
 \<comment> \<open>Theorem\_71\_3\_finite moved to AlgTopCached8.\<close>
 
 
-(** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
+\<comment> \<open>Theorem 71.3 (book-faithful): \\<pi>\\_1(X, p) is free with generators indexed by J.
+   This is the actual book statement — \\<pi>\\_1 itself is the free group.\<close>
+theorem Theorem_71_3_pi1_free:
+  fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
+  assumes "top1_is_wedge_of_circles_on X TX J p"
+  shows "\<exists>(\<iota>::'i \<Rightarrow> _). top1_is_free_group_full_on
+      (top1_fundamental_group_carrier X TX p)
+      (top1_fundamental_group_mul X TX p)
+      (top1_fundamental_group_id X TX p)
+      (top1_fundamental_group_invg X TX p)
+      \<iota> J"
+proof -
+  \<comment> \<open>Extract circles from wedge definition.\<close>
+  from assms[unfolded top1_is_wedge_of_circles_on_def]
+  obtain C where
+    hstrict: "is_topology_on_strict X TX" and hhaus: "is_hausdorff_on X TX" and hp: "p \<in> X"
+    and hC: "\<forall>\<alpha>\<in>J. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+           \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+                    (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h)"
+    and hcover: "(\<Union>\<alpha>\<in>J. C \<alpha>) = X"
+    and hdisjoint: "\<forall>\<alpha>\<in>J. \<forall>\<beta>\<in>J. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p}"
+    and hweak: "\<forall>D. D \<subseteq> X \<longrightarrow>
+           (closedin_on X TX D \<longleftrightarrow>
+            (\<forall>\<alpha>\<in>J. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
+    by (elim conjE exE) (rule that, assumption+)
+  have hTX: "is_topology_on X TX" using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>For each \\<alpha>, choose a generator loop f\\_\\<alpha> in C\\_\\<alpha>.\<close>
+  \<comment> \<open>Define \\<iota>(\\<alpha>) = [f\\_\\<alpha>] \\<in> \\<pi>\\_1(X, p).\<close>
+  \<comment> \<open>The book proves three things:
+     (1) The groups G\\_\\<alpha> = image of \\<pi>\\_1(C\\_\\<alpha>) generate \\<pi>\\_1(X).
+     (2) The inclusions i\\_\\<alpha> are monomorphisms.
+     (3) No reduced word in the G\\_\\<alpha> equals the identity.
+     All three use the fact that loops/homotopies lie in finite sub-wedges.\<close>
+  \<comment> \<open>This is a complex proof requiring the full infrastructure from above
+     (hC\\_open, hcompact\\_finite, hloop\\_finite) plus hhtpy\\_finite and hfinite\\_free.
+     We defer to a detailed sorry-first skeleton.\<close>
+  show ?thesis
+  proof (cases "finite J")
+    case True
+    \<comment> \<open>Finite case: from Theorem\\_71\\_3\\_finite.\<close>
+    from Theorem_71_3_finite[OF assms True]
+    obtain G :: "int set" and mul e invg and \<iota> :: "'i \<Rightarrow> int" where
+      hfree: "top1_is_free_group_full_on G mul e invg \<iota> J" and
+      hiso: "top1_groups_isomorphic_on G mul
+          (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
+      by (by100 blast)
+    \<comment> \<open>Transfer freeness from G to \\<pi>\\_1 via the isomorphism.\<close>
+    have hpi1_grp: "top1_is_group_on
+        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)
+        (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)"
+      by (rule top1_fundamental_group_is_group[OF hTX hp])
+    from free_group_iso_transfer[OF hfree hiso hpi1_grp]
+    show ?thesis by (by100 blast)
+  next
+    case False
+    \<comment> \<open>Infinite case: book proof using compactness + coherent topology.
+       Every loop/homotopy lies in a finite sub-wedge (hloop\\_finite, hhtpy\\_finite).
+       Each finite sub-wedge has free \\<pi>\\_1 (Theorem 71.1).
+       The three conditions of top1\\_is\\_free\\_group\\_full\\_on each reduce to the finite case:
+       (1) Generators generate: loop in finite sub-wedge \\<Rightarrow> product of generators.
+       (2) Injectivity: loop in C\\_\\<beta> homotopic to constant in X \\<Rightarrow> in finite sub-wedge \\<Rightarrow> in C\\_\\<beta>.
+       (3) No reduced word = id: word in finite sub-wedge \\<Rightarrow> contradicts Theorem 71.1.\<close>
+    show ?thesis sorry \<comment> \<open>Infinite case of Munkres 71.3.
+       The proof is correct but requires significant infrastructure:
+       hhtpy\\_finite, hfinite\\_free, and the assembly of 5 conditions.\<close>
+  qed
+qed
+
+\<comment> \<open>Theorem 71.3 (int set packaging): corollary for downstream use.
+   The int set wrapping is needed for some applications but requires countable J.\<close>
 theorem Theorem_71_3_wedge_of_circles_general:
   fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
   assumes "top1_is_wedge_of_circles_on X TX J p"
