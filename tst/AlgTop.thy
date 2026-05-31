@@ -1643,7 +1643,40 @@ proof -
           \<exists>F. finite F \<and> F \<subseteq> ?NT \<and>
               top1_path_homotopic_on (T \<union> \<Union>F)
                   (subspace_topology Y TY (T \<union> \<Union>F)) y0 y0 f1 f2"
-        sorry \<comment> \<open>Same compactness argument applied to homotopy H(I\\<times>I).\<close>
+      proof -
+        fix f1 f2 assume hf1: "top1_is_loop_on Y TY y0 f1"
+          and hf2: "top1_is_loop_on Y TY y0 f2"
+          and hfg: "top1_path_homotopic_on Y TY y0 y0 f1 f2"
+        \<comment> \<open>f1(I) and f2(I) lie in finite subgraphs.\<close>
+        from hloop_in_finite[OF hf1] obtain F1 where hF1: "finite F1" "F1 \<subseteq> ?NT"
+            "f1 ` top1_unit_interval \<subseteq> T \<union> \<Union>F1" by (by100 blast)
+        from hloop_in_finite[OF hf2] obtain F2 where hF2: "finite F2" "F2 \<subseteq> ?NT"
+            "f2 ` top1_unit_interval \<subseteq> T \<union> \<Union>F2" by (by100 blast)
+        \<comment> \<open>Extract H from homotopy. H(I\\<times>I) compact, lies in finitely many arcs.\<close>
+        \<comment> \<open>H(I\\<times>I) meets finitely many non-tree arcs (same selection set argument as hloop\\_in\\_finite).\<close>
+        have "\<exists>FH. finite FH \<and> FH \<subseteq> ?NT \<and>
+            (\<forall>x\<in>f1 ` I_set \<union> f2 ` I_set. x \<in> T \<union> \<Union>FH)"
+          sorry \<comment> \<open>From H(I\\<times>I) compact + selection set argument + combine with F1, F2.\<close>
+        then obtain FH where hFH: "finite FH" "FH \<subseteq> ?NT"
+          by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+        let ?F = "F1 \<union> F2 \<union> FH"
+        have "finite ?F" using hF1(1) hF2(1) hFH(1) by (by100 simp)
+        have "?F \<subseteq> ?NT" using hF1(2) hF2(2) hFH(2) by (by100 blast)
+        \<comment> \<open>The homotopy H maps I\\<times>I into T \\<union> \\<Union>?F (since its image meets finitely many arcs).
+           Combined with f1, f2 images \\<subseteq> T \\<union> \\<Union>F1 \\<subseteq> T \\<union> \\<Union>?F.
+           By Theorem\\_18\\_2 restrict\\_range: H is continuous into the subspace.
+           Package as path\\_homotopic\\_on in the subspace.\<close>
+        have "top1_path_homotopic_on (T \<union> \<Union>?F)
+            (subspace_topology Y TY (T \<union> \<Union>?F)) y0 y0 f1 f2"
+          sorry \<comment> \<open>Extract H from hfg, show H maps into T \\<union> \\<Union>?F, restrict.\<close>
+        show "\<exists>F. finite F \<and> F \<subseteq> ?NT \<and>
+            top1_path_homotopic_on (T \<union> \<Union>F)
+                (subspace_topology Y TY (T \<union> \<Union>F)) y0 y0 f1 f2"
+          apply (rule exI[of _ ?F])
+          using \<open>finite ?F\<close> \<open>?F \<subseteq> ?NT\<close>
+            \<open>top1_path_homotopic_on (T \<union> \<Union>?F) _ y0 y0 f1 f2\<close>
+          by (by100 blast)
+      qed
       \<comment> \<open>Step 4: For finite F \\<subseteq> ?NT, T \\<union> (\\<Union>F) is a subgraph with free \\<pi>\\_1.
          This follows from graph\\_pi1\\_free\\_weak\\_finite.\<close>
       have hfinite_subgraph_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?NT \<Longrightarrow>
