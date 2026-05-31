@@ -14182,6 +14182,35 @@ proof -
   thus ?thesis by (by100 blast)
 qed
 
+\<comment> \<open>Deformation retract helper: removing interior points of non-tree arcs
+   gives a subspace that deformation retracts onto the complementary tree \\<union> arcs.
+   Used in both graph\\_pi1\\_free\\_weak (card>1) and Theorem 84.7.\<close>
+lemma graph_deformation_retract_helper:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes hgraph: "top1_is_graph_on X TX"
+      and h\<A>: "\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and h\<A>_cover: "\<Union>\<A> = X"
+      and h\<A>_inter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and h\<A>_coh: "\<forall>C. C \<subseteq> X \<longrightarrow>
+           (closedin_on X TX C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> C)))"
+      and hT_tree: "top1_is_tree_on T (subspace_topology X TX T)"
+      and hT_sub: "T \<subseteq> X"
+      and hT_subgraph: "\<forall>A\<in>\<A>. \<not> A \<subseteq> T \<longrightarrow>
+           A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)"
+      and hNT_endpoints: "\<forall>A\<in>{A\<in>\<A>. \<not> A \<subseteq> T}. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology X TX A). e \<in> T"
+      and hS_fin: "finite S"
+      and hS_sub: "S \<subseteq> {A\<in>\<A>. \<not> A \<subseteq> T}"
+      and hps: "\<forall>A\<in>S. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+  shows "top1_deformation_retract_of_on (X - ps ` S)
+      (subspace_topology X TX (X - ps ` S))
+      (T \<union> \<Union>({A\<in>\<A>. \<not> A \<subseteq> T} - S))"
+  sorry \<comment> \<open>Proof: ~1500 lines of pasting + deformation retract construction.
+     Same as hdr\\_helper in Theorem\\_84\\_7.\<close>
+
 \<comment> \<open>Weak form of Theorem 84.7: \\<pi>\\_1 of a connected graph is free (no int set).
    This is proved as a standalone universal lemma that can be used
    for subgraph applications inside Theorem 84.7's proof.\<close>
@@ -15809,10 +15838,78 @@ proof -
         let ?target_U = "T \<union> A1"
         let ?target_V = "T \<union> \<Union>(?NT - {A1})"
         \<comment> \<open>DR of U onto target\\_U.\<close>
+        have hNT_endpoints_all: "\<forall>A\<in>?NT. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T"
+        proof (intro ballI)
+          fix A e assume "A \<in> ?NT" "e \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          thus "e \<in> T" using hNT_endpoints by (by100 blast)
+        qed
         have hU_dr: "top1_deformation_retract_of_on ?U (subspace_topology Y TY ?U) ?target_U"
-          sorry \<comment> \<open>hdr with S = NT-{A1}: remove interiors of non-A1 arcs.\<close>
+        proof -
+          have "?S_U \<subseteq> ?NT" by (by100 blast)
+          have "\<forall>A\<in>?S_U. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+            using hps by (by100 blast)
+          have "finite ?S_U" using \<open>finite ?NT\<close> by (by100 blast)
+          have hdr_U: "top1_deformation_retract_of_on (Y - ps ` ?S_U)
+              (subspace_topology Y TY (Y - ps ` ?S_U))
+              (T \<union> \<Union>(?NT - ?S_U))"
+          proof (rule graph_deformation_retract_helper)
+            show "top1_is_graph_on Y TY" by (rule assms(1))
+            show "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)" by (rule h\<A>)
+            show "\<Union>\<A> = Y" by (rule h\<A>_cover)
+            show "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+                 A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A) \<and>
+                 A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B) \<and>
+                 finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" by (rule h\<A>_inter)
+            show "\<forall>C. C \<subseteq> Y \<longrightarrow>
+                 (closedin_on Y TY C \<longleftrightarrow>
+                  (\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))" by (rule h\<A>_coh)
+            show "top1_is_tree_on T (subspace_topology Y TY T)" by (rule hT_tree)
+            show "T \<subseteq> Y" by (rule hT_sub)
+            show "\<forall>A\<in>\<A>. \<not> A \<subseteq> T \<longrightarrow> A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using hT_subgraph by (by100 blast)
+            show "\<forall>A\<in>?NT. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T"
+              by (rule hNT_endpoints_all)
+            show "finite ?S_U" using \<open>finite ?S_U\<close> .
+            show "?S_U \<subseteq> ?NT" using \<open>?S_U \<subseteq> ?NT\<close> .
+            show "\<forall>A\<in>?S_U. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using \<open>\<forall>A\<in>?S_U. _\<close> .
+          qed
+          have "?NT - ?S_U = {A1}" using hA1 by (by100 blast)
+          hence "T \<union> \<Union>(?NT - ?S_U) = ?target_U" by (by100 simp)
+          thus ?thesis using hdr_U by simp
+        qed
         have hV_dr: "top1_deformation_retract_of_on ?V (subspace_topology Y TY ?V) ?target_V"
-          sorry \<comment> \<open>hdr with S = {A1}: remove interior of A1.\<close>
+        proof -
+          have hSV_sub: "{A1} \<subseteq> ?NT" using hA1 by (by100 blast)
+          have hSV_ps: "\<forall>A\<in>{A1}. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+            using hps hA1 by (by100 blast)
+          have hdr_V: "top1_deformation_retract_of_on (Y - ps ` {A1})
+              (subspace_topology Y TY (Y - ps ` {A1}))
+              (T \<union> \<Union>(?NT - {A1}))"
+          proof (rule graph_deformation_retract_helper)
+            show "top1_is_graph_on Y TY" by (rule assms(1))
+            show "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)" by (rule h\<A>)
+            show "\<Union>\<A> = Y" by (rule h\<A>_cover)
+            show "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+                 A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A) \<and>
+                 A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B) \<and>
+                 finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" by (rule h\<A>_inter)
+            show "\<forall>C. C \<subseteq> Y \<longrightarrow>
+                 (closedin_on Y TY C \<longleftrightarrow>
+                  (\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))" by (rule h\<A>_coh)
+            show "top1_is_tree_on T (subspace_topology Y TY T)" by (rule hT_tree)
+            show "T \<subseteq> Y" by (rule hT_sub)
+            show "\<forall>A\<in>\<A>. \<not> A \<subseteq> T \<longrightarrow> A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using hT_subgraph by (by100 blast)
+            show "\<forall>A\<in>?NT. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T"
+              by (rule hNT_endpoints_all)
+            show "finite {A1}" by (by100 simp)
+            show "{A1} \<subseteq> ?NT" by (rule hSV_sub)
+            show "\<forall>A\<in>{A1}. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              by (rule hSV_ps)
+          qed
+          thus ?thesis by simp
+        qed
         \<comment> \<open>Arc infrastructure + connectivity (needed for graph proofs below).\<close>
         have hA1_arc_loc': "top1_is_arc_on A1 (subspace_topology Y TY A1)"
           using h\<A> hA1 by (by100 blast)
