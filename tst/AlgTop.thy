@@ -15952,12 +15952,27 @@ next
         moreover have "card {A\<in>\<A>. \<not> A \<subseteq> T} \<noteq> 1" using hcard_ge2 by (by100 blast)
         ultimately show ?thesis by (by100 linarith)
       qed
-      \<comment> \<open>The IH from Suc.hyps: for any graph with \\<le> n NT arcs, \\<pi>\\_1 is free.\<close>
+      \<comment> \<open>The IH: for any graph with \\<le> n NT arcs, \\<pi>\\_1 is free.\<close>
       note IH = Suc(1)
-      \<comment> \<open>IH can be called as: IH[of Y' TY' y0' \\<A>' T'] with 14 premises.\<close>
-      show ?thesis sorry \<comment> \<open>SvK decomposition + IH calls.
-         Same infrastructure as graph\\_pi1\\_free\\_weak card>1 case,
-         but replacing sorry IH with IH[of target\\_U ...] and IH[of target\\_V ...].\<close>
+      note hgraph = Suc(2) and hy0 = Suc(4)
+      note hcard_suc = Suc(5) and hfin = Suc(6)
+      note h\<A> = Suc(7) and h\<A>_cover = Suc(8) and h\<A>_inter = Suc(9) and h\<A>_coh = Suc(10)
+      note hT_tree = Suc(11) and hT_sub = Suc(12) and hT_subgraph = Suc(13)
+      note hT_x0 = Suc(14) and hNT_endpoints = Suc(15)
+      let ?NT = "{A\<in>\<A>. \<not> A \<subseteq> T}"
+      \<comment> \<open>The SvK infrastructure is the same as in graph\\_pi1\\_free\\_weak card>1.
+         The only change: IH sorrys become IH calls.\<close>
+      \<comment> \<open>For target\\_U (T \\<union> A1): card(NT\\_U) = 1 \\<le> n.
+         For target\\_V (T \\<union> \\<Union>(NT-{A1})): card(NT\\_V) = card(NT)-1 \\<le> n.\<close>
+      \<comment> \<open>Card bound: card(NT) \\<le> Suc n and card(NT) \\<ge> 2 implies n \\<ge> 1.\<close>
+      have hn_ge1: "n \<ge> 1"
+      proof -
+        have "card ?NT \<le> Suc n" using hcard_suc .
+        moreover have "card ?NT \<ge> 2" using hcard_gt1 by (by100 linarith)
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      show ?thesis sorry \<comment> \<open>Full SvK + IH proof. Same structure as graph\\_pi1\\_free\\_weak
+         card>1 case (~700 lines), with IH[OF ...] replacing sorry at IH calls.\<close>
     qed
   qed
 qed
