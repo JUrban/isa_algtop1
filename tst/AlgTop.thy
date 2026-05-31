@@ -1404,6 +1404,190 @@ proof -
            The subgraph T \\<union> F has free \\<pi>\\_1 (from hfinite\\_subgraph\\_free).
            The inclusion maps generators of \\<pi>\\_1(T \\<union> F) to generators of \\<pi>\\_1(Y).
            By free group embedding: inclusion is injective.\<close>
+      \<comment> \<open>Helper: any compact K \\<subseteq> Y meets finitely many non-tree arc interiors,
+         hence K \\<subseteq> T \\<union> \\<Union>F for some finite F \\<subseteq> ?NT.\<close>
+      have hcompact_in_finite: "\<And>K. K \<subseteq> Y \<Longrightarrow>
+          top1_compact_on K (subspace_topology Y TY K) \<Longrightarrow>
+          \<exists>F. finite F \<and> F \<subseteq> ?NT \<and> K \<subseteq> T \<union> \<Union>F"
+      proof -
+        fix K assume hK_sub: "K \<subseteq> Y" and hK_compact: "top1_compact_on K (subspace_topology Y TY K)"
+        let ?FK = "{A \<in> ?NT. K \<inter> (A - top1_arc_endpoints_on A (subspace_topology Y TY A)) \<noteq> {}}"
+        \<comment> \<open>Selection set argument (same as hloop\\_in\\_finite).\<close>
+        have "\<forall>A\<in>?FK. \<exists>x. x \<in> K \<and> x \<in> A \<and>
+            x \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          by (by100 blast)
+        define sel where "sel A = (SOME x. x \<in> K \<and> x \<in> A \<and>
+            x \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A))" for A
+        have hsel: "\<forall>A\<in>?FK. sel A \<in> K \<and> sel A \<in> A \<and>
+            sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+        proof (intro ballI conjI)
+          fix A assume "A \<in> ?FK"
+          hence "\<exists>x. x \<in> K \<and> x \<in> A \<and> x \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+            by (by100 blast)
+          from someI_ex[OF this] show "sel A \<in> K" unfolding sel_def by (by100 blast)
+          from someI_ex[OF \<open>\<exists>x. _\<close>] show "sel A \<in> A" unfolding sel_def by (by100 blast)
+          from someI_ex[OF \<open>\<exists>x. _\<close>] show "sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+            unfolding sel_def by (by100 blast)
+        qed
+        let ?BK = "sel ` ?FK"
+        have hBK_sub: "?BK \<subseteq> Y" using hsel hK_sub by (by100 blast)
+        have hBK_in_K: "?BK \<subseteq> K" using hsel by (by100 blast)
+        \<comment> \<open>\\<le>1 point per arc.\<close>
+        have hBK_one: "\<forall>C\<in>\<A>. finite (C \<inter> ?BK) \<and> card (C \<inter> ?BK) \<le> 1"
+        proof (intro ballI conjI)
+          fix C assume "C \<in> \<A>"
+          have "C \<inter> ?BK \<subseteq> (if C \<in> ?FK then {sel C} else {})"
+          proof
+            fix x assume "x \<in> C \<inter> ?BK"
+            then obtain A where "A \<in> ?FK" "x = sel A" "x \<in> C" by (by100 blast)
+            show "x \<in> (if C \<in> ?FK then {sel C} else {})"
+            proof (cases "A = C")
+              case True thus ?thesis using \<open>x = sel A\<close> \<open>A \<in> ?FK\<close> by (by100 simp)
+            next
+              case False
+              have "A \<in> \<A>" using \<open>A \<in> ?FK\<close> by (by100 blast)
+              from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>C \<in> \<A>\<close> False]
+              have "A \<inter> C \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" by (by100 blast)
+              have "sel A \<in> A" using hsel \<open>A \<in> ?FK\<close> by (by100 blast)
+              have "sel A \<in> C" using \<open>x \<in> C\<close> \<open>x = sel A\<close> by (by100 simp)
+              hence "sel A \<in> A \<inter> C" using \<open>sel A \<in> A\<close> by (by100 blast)
+              hence "sel A \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                using \<open>A \<inter> C \<subseteq> _\<close> by (by100 blast)
+              have "sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                using hsel \<open>A \<in> ?FK\<close> by (by100 blast)
+              thus ?thesis using \<open>sel A \<in> top1_arc_endpoints_on A _\<close> by contradiction
+            qed
+          qed
+          have hC_sub: "\<exists>S. C \<inter> ?BK \<subseteq> S \<and> finite S \<and> card S \<le> 1"
+          proof (cases "C \<in> ?FK")
+            case True
+            hence "(if C \<in> ?FK then {sel C} else {}) = {sel C}" by (by100 simp)
+            hence "C \<inter> ?BK \<subseteq> {sel C}"
+              using \<open>C \<inter> ?BK \<subseteq> _\<close> by (by100 simp)
+            moreover have "finite {sel C}" by (by100 simp)
+            moreover have "card {sel C} \<le> 1" by (by100 simp)
+            ultimately show ?thesis by (by100 blast)
+          next
+            case False
+            hence "(if C \<in> ?FK then {sel C} else {}) = {}" by (by100 simp)
+            hence "C \<inter> ?BK \<subseteq> {}"
+              using \<open>C \<inter> ?BK \<subseteq> _\<close> by (by100 simp)
+            moreover have "finite {}" by (by100 simp)
+            moreover have "card {} \<le> (1::nat)" by (by100 simp)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          then obtain S where hS: "C \<inter> ?BK \<subseteq> S" "finite S" "card S \<le> 1"
+            by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+          show "finite (C \<inter> ?BK)" using finite_subset[OF hS(1) hS(2)] .
+          show "card (C \<inter> ?BK) \<le> 1" using card_mono[OF hS(2) hS(1)] hS(3) by (by100 simp)
+        qed
+        have hBK_one': "\<forall>A\<in>\<A>. finite (?BK \<inter> A) \<and> card (?BK \<inter> A) \<le> 1"
+        proof (intro ballI conjI)
+          fix A assume "A \<in> \<A>"
+          from hBK_one[rule_format, OF this]
+          have "finite (A \<inter> ?BK)" "card (A \<inter> ?BK) \<le> 1" by (by100 blast)+
+          have "A \<inter> ?BK = ?BK \<inter> A" by (by100 blast)
+          show "finite (?BK \<inter> A)" using \<open>finite (A \<inter> ?BK)\<close> \<open>A \<inter> ?BK = ?BK \<inter> A\<close> by (by100 simp)
+          show "card (?BK \<inter> A) \<le> 1" using \<open>card (A \<inter> ?BK) \<le> 1\<close> \<open>A \<inter> ?BK = ?BK \<inter> A\<close> by (by100 simp)
+        qed
+        \<comment> \<open>Closed discrete.\<close>
+        have hBK_cd: "\<forall>S. S \<subseteq> ?BK \<longrightarrow> closedin_on Y TY S"
+          by (rule graph_selection_set_discrete[OF assms(1) hBK_sub h\<A> h\<A>_cover h\<A>_coh hBK_one'])
+        \<comment> \<open>Compact + closed discrete = finite.\<close>
+        have hTY_top: "is_topology_on Y TY"
+          using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+        have "closedin_on Y TY ?BK" using hBK_cd by (by100 blast)
+        have hBK_closed_K: "closedin_on K (subspace_topology Y TY K) ?BK"
+        proof -
+          from Theorem_17_2[OF hTY_top hK_sub, THEN iffD2]
+          show ?thesis using \<open>closedin_on Y TY ?BK\<close> hBK_in_K by (by100 blast)
+        qed
+        have hBK_compact: "top1_compact_on ?BK (subspace_topology Y TY ?BK)"
+        proof -
+          from Theorem_26_2[OF hK_compact hBK_closed_K]
+          have "top1_compact_on ?BK (subspace_topology K (subspace_topology Y TY K) ?BK)" .
+          moreover have "subspace_topology K (subspace_topology Y TY K) ?BK =
+              subspace_topology Y TY ?BK"
+            by (rule subspace_topology_trans) (use hBK_in_K in blast)
+          ultimately show ?thesis by (by5000 metis)
+        qed
+        have hBK_singletons_open: "\<forall>x\<in>?BK. {x} \<in> subspace_topology Y TY ?BK"
+        proof (intro ballI)
+          fix x assume "x \<in> ?BK"
+          have "?BK - {x} \<subseteq> ?BK" by (by100 blast)
+          hence "closedin_on Y TY (?BK - {x})" using hBK_cd by (by100 blast)
+          hence "closedin_on ?BK (subspace_topology Y TY ?BK) (?BK - {x})"
+            using Theorem_17_2[OF hTY_top, of ?BK] hBK_sub by (by100 blast)
+          hence "?BK - (?BK - {x}) \<in> subspace_topology Y TY ?BK"
+            unfolding closedin_on_def by (by100 blast)
+          moreover have "?BK - (?BK - {x}) = {x}" using \<open>x \<in> ?BK\<close> by (by100 blast)
+          ultimately show "{x} \<in> subspace_topology Y TY ?BK" by (by100 simp)
+        qed
+        have "?BK \<subseteq> \<Union>((\<lambda>x. {x}) ` ?BK)" by (by100 blast)
+        have "(\<lambda>x. {x}) ` ?BK \<subseteq> subspace_topology Y TY ?BK"
+          using hBK_singletons_open by (by100 blast)
+        from compact_finite_subcover[OF hBK_compact this \<open>?BK \<subseteq> \<Union>((\<lambda>x. {x}) ` ?BK)\<close>]
+        obtain Fc where hFc: "finite Fc" "Fc \<subseteq> (\<lambda>x. {x}) ` ?BK" "?BK \<subseteq> \<Union>Fc"
+          by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+        have "finite (\<Union>Fc)"
+        proof (rule finite_Union[OF hFc(1)])
+          fix S assume "S \<in> Fc"
+          then obtain x where "S = {x}" using hFc(2) by (by100 blast)
+          thus "finite S" by (by100 simp)
+        qed
+        have "finite ?BK" using finite_subset[OF hFc(3) \<open>finite (\<Union>Fc)\<close>] .
+        have "inj_on sel ?FK"
+        proof (rule inj_onI)
+          fix A B assume "A \<in> ?FK" "B \<in> ?FK" "sel A = sel B"
+          have hA_in: "sel A \<in> A" "sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+            using hsel \<open>A \<in> ?FK\<close> by (by100 blast)+
+          have hB_in: "sel B \<in> B" "sel B \<notin> top1_arc_endpoints_on B (subspace_topology Y TY B)"
+            using hsel \<open>B \<in> ?FK\<close> by (by100 blast)+
+          show "A = B"
+          proof (rule ccontr)
+            assume "A \<noteq> B"
+            have "A \<in> \<A>" "B \<in> \<A>" using \<open>A \<in> ?FK\<close> \<open>B \<in> ?FK\<close> by (by100 blast)+
+            from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A \<noteq> B\<close>]
+            have "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" by (by100 blast)
+            have "sel A \<in> B" using hB_in(1) \<open>sel A = sel B\<close> by (by100 simp)
+            have "sel A \<in> A \<inter> B" using hA_in(1) \<open>sel A \<in> B\<close> by (by100 blast)
+            hence "sel A \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using \<open>A \<inter> B \<subseteq> _\<close> by (by100 blast)
+            thus False using hA_in(2) by contradiction
+          qed
+        qed
+        from finite_imageD[OF \<open>finite ?BK\<close> this]
+        have "finite ?FK" .
+        \<comment> \<open>K \\<subseteq> T \\<union> \\<Union>?FK.\<close>
+        have "K \<subseteq> T \<union> \<Union>?FK"
+        proof
+          fix x assume "x \<in> K"
+          hence "x \<in> Y" using hK_sub by (by100 blast)
+          hence "x \<in> \<Union>\<A>" using h\<A>_cover by (by100 simp)
+          then obtain A where "A \<in> \<A>" "x \<in> A" by (by100 blast)
+          show "x \<in> T \<union> \<Union>?FK"
+          proof (cases "A \<subseteq> T")
+            case True thus ?thesis using \<open>x \<in> A\<close> by (by100 blast)
+          next
+            case False
+            hence "A \<in> ?NT" using \<open>A \<in> \<A>\<close> by (by100 blast)
+            show ?thesis
+            proof (cases "x \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)")
+              case True
+              hence "x \<in> T" using hNT_endpoints \<open>A \<in> ?NT\<close> by (by100 blast)
+              thus ?thesis by (by100 blast)
+            next
+              case xFalse: False
+              hence "x \<in> A - top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                using \<open>x \<in> A\<close> by (by100 blast)
+              hence "A \<in> ?FK" using \<open>A \<in> ?NT\<close> \<open>x \<in> K\<close> by (by100 blast)
+              thus ?thesis using \<open>x \<in> A\<close> by (by100 blast)
+            qed
+          qed
+        qed
+        thus "\<exists>F. finite F \<and> F \<subseteq> ?NT \<and> K \<subseteq> T \<union> \<Union>F"
+          using \<open>finite ?FK\<close> by (by100 blast)
+      qed
       \<comment> \<open>Step 2: Any loop in Y lies in T \\<union> (finitely many arcs).\<close>
       have hloop_in_finite: "\<And>f. top1_is_loop_on Y TY y0 f \<Longrightarrow>
           \<exists>F. finite F \<and> F \<subseteq> ?NT \<and> f ` top1_unit_interval \<subseteq> T \<union> \<Union>F"
@@ -1666,9 +1850,33 @@ proof -
            The same selection set argument applies to any compact subset.\<close>
         \<comment> \<open>For now: let FH cover H(I\\<times>I) the same way F1, F2 cover f1, f2.\<close>
         have "\<exists>FH. finite FH \<and> FH \<subseteq> ?NT \<and> H ` (I_set \<times> I_set) \<subseteq> T \<union> \<Union>FH"
-          sorry \<comment> \<open>Same selection set argument as hloop\\_in\\_finite, applied to H(I\\<times>I).
-             H(I\\<times>I) compact (continuous image of I\\<times>I which is compact).
-             Meets finitely many non-tree arc interiors.\<close>
+        proof -
+          \<comment> \<open>H(I\\<times>I) is compact.\<close>
+          have hTY_top: "is_topology_on Y TY"
+            using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+          have hI_compact: "top1_compact_on I_set I_top"
+            unfolding top1_unit_interval_def top1_unit_interval_topology_def
+            using Theorem_27_1[of "0::real" 1] by (by100 simp)
+          have hII_compact: "top1_compact_on (I_set \<times> I_set)
+              (product_topology_on top1_unit_interval_topology top1_unit_interval_topology)"
+            by (rule Theorem_26_7[OF hI_compact hI_compact])
+          have hH_cont': "top1_continuous_map_on (I_set \<times> I_set)
+              (product_topology_on top1_unit_interval_topology top1_unit_interval_topology) Y TY H"
+            using hH_cont unfolding II_topology_def by (by100 simp)
+          have hHI_compact: "top1_compact_on (H ` (I_set \<times> I_set))
+              (subspace_topology Y TY (H ` (I_set \<times> I_set)))"
+          proof -
+            have hII_top: "is_topology_on (I_set \<times> I_set)
+                (product_topology_on top1_unit_interval_topology top1_unit_interval_topology)"
+              using product_topology_on_is_topology_on[OF
+                top1_unit_interval_topology_is_topology_on
+                top1_unit_interval_topology_is_topology_on] .
+            from Theorem_26_5[OF hII_top hTY_top hII_compact hH_cont']
+            show ?thesis .
+          qed
+          from hcompact_in_finite[OF hH_sub hHI_compact]
+          show ?thesis .
+        qed
         then obtain FH where hFH: "finite FH" "FH \<subseteq> ?NT"
             "H ` (I_set \<times> I_set) \<subseteq> T \<union> \<Union>FH"
           by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
