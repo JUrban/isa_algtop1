@@ -1604,7 +1604,44 @@ proof -
         have hY'_graph: "top1_is_graph_on ?Y' (subspace_topology Y TY ?Y')"
           sorry \<comment> \<open>Subgraph of Y. Uses subgraph\\_union\\_of\\_arcs\\_is\\_graph.\<close>
         have hY'_conn: "top1_connected_on ?Y' (subspace_topology Y TY ?Y')"
-          sorry \<comment> \<open>T connected + arcs attach to T. Uses tree\\_union\\_arcs\\_path\\_connected.\<close>
+        proof -
+          have hTY'_top: "is_topology_on Y TY"
+            using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+          have hF0'_arcs: "\<forall>A\<in>F0'. top1_is_arc_on A (subspace_topology Y TY A) \<and> A \<subseteq> Y"
+            using h\<A> hF0'_NT by (by100 blast)
+          have hF0'_meets_T: "\<forall>A\<in>F0'. \<exists>e. e \<in> T \<and> e \<in> A"
+          proof (intro ballI)
+            fix A assume "A \<in> F0'"
+            hence "A \<in> ?NT" using hF0'_NT by (by100 blast)
+            have "A \<in> \<A>" using \<open>A \<in> ?NT\<close> by (by100 blast)
+            have "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+            have "top1_is_arc_on A (subspace_topology Y TY A)" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+            then obtain ha where hha: "top1_homeomorphism_on top1_unit_interval
+                top1_unit_interval_topology A (subspace_topology Y TY A) ha"
+              unfolding top1_is_arc_on_def by (by100 blast)
+            have hstrict_Y: "is_topology_on_strict Y TY"
+              using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+            have hhaus_Y: "is_hausdorff_on Y TY"
+              using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+            from arc_endpoints_are_boundary[OF hstrict_Y hhaus_Y \<open>A \<subseteq> Y\<close>
+                \<open>top1_is_arc_on A _\<close> hha]
+            have "ha 0 \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)" by (by100 blast)
+            hence "ha 0 \<in> T"
+              using hNT_endpoints \<open>A \<in> ?NT\<close> by (by100 blast)
+            have "ha 0 \<in> A"
+            proof -
+              have "(0::real) \<in> top1_unit_interval"
+                unfolding top1_unit_interval_def by (by100 simp)
+              thus ?thesis using hha unfolding top1_homeomorphism_on_def
+                top1_continuous_map_on_def by (by100 blast)
+            qed
+            thus "\<exists>e. e \<in> T \<and> e \<in> A" using \<open>ha 0 \<in> T\<close> by (by100 blast)
+          qed
+          from tree_union_arcs_path_connected[OF hTY'_top hT_tree hT_sub hF0'fin
+              hF0'_arcs hF0'_meets_T hT_x0]
+          have "top1_path_connected_on ?Y' (subspace_topology Y TY ?Y')" .
+          thus ?thesis by (rule path_connected_imp_connected)
+        qed
         have hy0_Y': "y0 \<in> ?Y'" using hT_x0 by (by100 blast)
         \<comment> \<open>Apply graph\\_pi1\\_free\\_weak\\_finite to the finite subgraph.\<close>
         show "\<exists>\<iota> S. top1_is_free_group_full_on
