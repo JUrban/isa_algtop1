@@ -17092,8 +17092,57 @@ next
       \<comment> \<open>Step 6: DR.\<close>
       let ?target_U = "T \<union> A1"
       let ?target_V = "T \<union> \<Union>(?NT - {A1})"
-      have hU_dr: "top1_deformation_retract_of_on ?U (subspace_topology Y TY ?U) ?target_U" sorry
-      have hV_dr: "top1_deformation_retract_of_on ?V (subspace_topology Y TY ?V) ?target_V" sorry
+      have hNT_endpoints_all: "\<forall>A\<in>?NT. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T"
+        using hNT_endpoints by (by100 blast)
+      have hU_dr_raw: "top1_deformation_retract_of_on (Y - ps ` ?S_U) (subspace_topology Y TY (Y - ps ` ?S_U))
+          (T \<union> \<Union>(?NT - ?S_U))"
+      proof (rule graph_deformation_retract_helper)
+        show "top1_is_graph_on Y TY" by (rule hgraph)
+        show "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)" by (rule h\<A>)
+        show "\<Union>\<A> = Y" by (rule h\<A>_cover)
+        show "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" by (rule h\<A>_inter)
+        show "\<forall>C. C \<subseteq> Y \<longrightarrow> (closedin_on Y TY C \<longleftrightarrow>
+              (\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))" by (rule h\<A>_coh)
+        show "top1_is_tree_on T (subspace_topology Y TY T)" by (rule hT_tree)
+        show "T \<subseteq> Y" by (rule hT_sub)
+        show "\<forall>A\<in>\<A>. \<not> A \<subseteq> T \<longrightarrow> A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          using hT_subgraph by (by100 blast)
+        show "\<forall>A\<in>?NT. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T"
+          by (rule hNT_endpoints_all)
+        show "finite ?S_U" using hfin by (by100 blast)
+        show "?S_U \<subseteq> ?NT" by (by100 blast)
+        show "\<forall>A\<in>?S_U. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          using hps by (by100 blast)
+      qed
+      have "?NT - ?S_U = {A1}" using hA1 by (by100 blast)
+      hence "T \<union> \<Union>(?NT - ?S_U) = ?target_U" by (by100 simp)
+      have hU_dr: "top1_deformation_retract_of_on ?U (subspace_topology Y TY ?U) ?target_U"
+        using hU_dr_raw \<open>T \<union> \<Union>(?NT - ?S_U) = ?target_U\<close> by simp
+      have hV_dr: "top1_deformation_retract_of_on ?V (subspace_topology Y TY ?V) ?target_V"
+      proof (rule graph_deformation_retract_helper)
+        show "top1_is_graph_on Y TY" by (rule hgraph)
+        show "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)" by (rule h\<A>)
+        show "\<Union>\<A> = Y" by (rule h\<A>_cover)
+        show "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" by (rule h\<A>_inter)
+        show "\<forall>C. C \<subseteq> Y \<longrightarrow> (closedin_on Y TY C \<longleftrightarrow>
+              (\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))" by (rule h\<A>_coh)
+        show "top1_is_tree_on T (subspace_topology Y TY T)" by (rule hT_tree)
+        show "T \<subseteq> Y" by (rule hT_sub)
+        show "\<forall>A\<in>\<A>. \<not> A \<subseteq> T \<longrightarrow> A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          using hT_subgraph by (by100 blast)
+        show "\<forall>A\<in>?NT. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T"
+          by (rule hNT_endpoints_all)
+        show "finite {A1}" by (by100 simp)
+        show "{A1} \<subseteq> ?NT" using hA1 by (by100 blast)
+        show "\<forall>A\<in>{A1}. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          using hps hA1 by (by100 blast)
+      qed
       \<comment> \<open>Step 7: Targets graph + connected.\<close>
       have htU_graph: "top1_is_graph_on ?target_U (subspace_topology Y TY ?target_U)" sorry
       have htV_graph: "top1_is_graph_on ?target_V (subspace_topology Y TY ?target_V)" sorry
