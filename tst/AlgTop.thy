@@ -1519,10 +1519,27 @@ proof -
                 have "A \<inter> (Y - ?S) = A - U"
                   using \<open>A \<inter> (Y - ?S) = A - V\<close> \<open>A - V = A - U\<close> by (by100 simp)
                 \<comment> \<open>A \\<inter> (Y - ?S) = A - V = A - U. This is closed in A.\<close>
-                show ?thesis
-                  sorry \<comment> \<open>A - U = A \\<inter> (Y - U). Y - U closed in Y (complement of open).
-                     By Theorem\\_17\\_2: A \\<inter> (Y - U) closed in A.
-                     Combined with A \\<inter> (Y - ?S) = A - U. QED.\<close>
+                have hTY': "is_topology_on Y TY"
+                  using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+                have hstrict': "is_topology_on_strict Y TY"
+                  using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                have hU_sub_Y: "U \<subseteq> Y"
+                  using hU hstrict' unfolding is_topology_on_strict_def by (by100 blast)
+                have "closedin_on Y TY (Y - U)"
+                  unfolding closedin_on_def
+                proof (intro conjI)
+                  show "Y - U \<subseteq> Y" by (by100 blast)
+                  have "Y - (Y - U) = U" using hU_sub_Y by (by100 blast)
+                  thus "Y - (Y - U) \<in> TY" using hU by (by100 simp)
+                qed
+                have "A - U = A \<inter> (Y - U)" using \<open>A \<subseteq> Y\<close> by (by100 blast)
+                have hcl_AU: "closedin_on A (subspace_topology Y TY A) (A \<inter> (Y - U))"
+                  using Theorem_17_2[OF hTY' \<open>A \<subseteq> Y\<close>] \<open>closedin_on Y TY (Y - U)\<close>
+                  by (by100 blast)
+                have "A \<inter> (Y - U) = A \<inter> (Y - ?S)"
+                  using \<open>A \<inter> (Y - ?S) = A - U\<close> \<open>A - U = A \<inter> (Y - U)\<close> by (by100 blast)
+                show ?thesis using hcl_AU \<open>A \<inter> (Y - U) = A \<inter> (Y - ?S)\<close>
+                  by (by5000 metis)
               next
                 case False
                 \<comment> \<open>A \\<in> ?NT. Either A \\<in> F0 (\\<subseteq> ?Y0, handled above) or A \\<in> ?NT - F0.\<close>
