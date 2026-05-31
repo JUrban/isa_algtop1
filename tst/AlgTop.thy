@@ -1893,8 +1893,43 @@ proof -
         \<comment> \<open>Package as path\\_homotopic\\_on in the subspace T \\<union> \\<Union>?F.\<close>
         have "top1_path_homotopic_on (T \<union> \<Union>?F)
             (subspace_topology Y TY (T \<union> \<Union>?F)) y0 y0 f1 f2"
-          sorry \<comment> \<open>H continuous into T \\<union> \\<Union>?F (restrict range via Theorem\\_18\\_2).
-             f1, f2 are paths in T \\<union> \\<Union>?F. Package as path\\_homotopic\\_on.\<close>
+        proof -
+          let ?Y0 = "T \<union> \<Union>?F"
+          let ?TY0 = "subspace_topology Y TY ?Y0"
+          have hY0_sub: "?Y0 \<subseteq> Y" using hT_sub h\<A> hF1(2) hF2(2) hFH(2) by (by5000 blast)
+          have hTY_top: "is_topology_on Y TY"
+            using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+          have hII_top: "is_topology_on (I_set \<times> I_set) II_topology"
+            unfolding II_topology_def
+            using product_topology_on_is_topology_on[OF
+              top1_unit_interval_topology_is_topology_on
+              top1_unit_interval_topology_is_topology_on] .
+          \<comment> \<open>H continuous into ?Y0 (restrict range).\<close>
+          have hH_cont_Y0: "top1_continuous_map_on (I_set \<times> I_set) II_topology ?Y0 ?TY0 H"
+            using Theorem_18_2(5)[OF hII_top hTY_top hTY_top, rule_format]
+              hH_cont hH_in_F hY0_sub by (by100 blast)
+          \<comment> \<open>f1 continuous into ?Y0.\<close>
+          have hf1_cont: "top1_continuous_map_on I_set I_top Y TY f1"
+            using hf1 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+          have hf1_cont_Y0: "top1_continuous_map_on I_set I_top ?Y0 ?TY0 f1"
+            using Theorem_18_2(5)[OF top1_unit_interval_topology_is_topology_on hTY_top hTY_top,
+                rule_format] hf1_cont hf1_in_F hY0_sub by (by100 blast)
+          have hf1_0: "f1 0 = y0" "f1 1 = y0"
+            using hf1 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+          \<comment> \<open>f2 continuous into ?Y0.\<close>
+          have hf2_cont: "top1_continuous_map_on I_set I_top Y TY f2"
+            using hf2 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+          have hf2_cont_Y0: "top1_continuous_map_on I_set I_top ?Y0 ?TY0 f2"
+            using Theorem_18_2(5)[OF top1_unit_interval_topology_is_topology_on hTY_top hTY_top,
+                rule_format] hf2_cont hf2_in_F hY0_sub by (by100 blast)
+          have hf2_0: "f2 0 = y0" "f2 1 = y0"
+            using hf2 unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+          \<comment> \<open>Package as path\\_homotopic\\_on.\<close>
+          show ?thesis
+            unfolding top1_path_homotopic_on_def top1_is_path_on_def
+            using hH_cont_Y0 hH0 hH1 hHl hHr hf1_cont_Y0 hf1_0 hf2_cont_Y0 hf2_0
+            by (by100 blast)
+        qed
         show "\<exists>F. finite F \<and> F \<subseteq> ?NT \<and>
             top1_path_homotopic_on (T \<union> \<Union>F)
                 (subspace_topology Y TY (T \<union> \<Union>F)) y0 y0 f1 f2"
