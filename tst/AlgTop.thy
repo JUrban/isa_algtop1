@@ -572,11 +572,76 @@ proof -
     have hfinite_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> J \<Longrightarrow>
         top1_is_wedge_of_circles_on (\<Union>\<alpha>\<in>F. C \<alpha>)
             (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) F p"
-      sorry \<comment> \<open>Verify wedge definition for \\<Union>F C\\_\\<alpha> with subspace topology.
-         strict/Hausdorff: subspace preserves. p \\<in> \\<Union>F: from hC + F \\<noteq> {}.
-         Circles: C restricted to F + subspace\\_topology\\_trans for homeomorphisms.
-         Cover/disjoint: from hcover/hdisjoint restricted.
-         Coherent: from hweak restricted + subspace\\_topology\\_trans.\<close>
+    proof -
+      fix F assume hFfin: "finite F" and hFJ: "F \<subseteq> J"
+      let ?Y = "\<Union>\<alpha>\<in>F. C \<alpha>"
+      let ?TY = "subspace_topology X TX ?Y"
+      have hY_sub: "?Y \<subseteq> X" using hC hFJ by (by100 blast)
+      \<comment> \<open>Coherent topology for the sub-wedge: D \\<subseteq> ?Y closed in ?Y \\<longleftrightarrow>
+         \\<forall>\\<alpha>\\<in>F. C\\_\\<alpha> \\<inter> D closed in C\\_\\<alpha>.
+         Proof: D closed in ?Y \\<longleftrightarrow> D closed in X (by hweak, since for \\<alpha> \\<notin> F:
+         C\\_\\<alpha> \\<inter> D \\<subseteq> {p} closed in Hausdorff C\\_\\<alpha>).
+         Then D = D \\<inter> ?Y closed in subspace ?Y.\<close>
+      have hcoh_F: "\<forall>D. D \<subseteq> ?Y \<longrightarrow>
+          (closedin_on ?Y ?TY D \<longleftrightarrow>
+           (\<forall>\<alpha>\<in>F. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
+      proof (intro allI impI iffI ballI)
+        fix D \<alpha> assume hD: "D \<subseteq> ?Y" and hcl: "closedin_on ?Y ?TY D" and h\<alpha>: "\<alpha> \<in> F"
+        \<comment> \<open>D closed in ?Y (subspace) \\<Longrightarrow> \\<exists>E closed in X with D = E \\<inter> ?Y.\<close>
+        from Theorem_17_2[OF hTX hY_sub, THEN iffD1, OF hcl]
+        obtain E where hE_cl: "closedin_on X TX E" and hDE: "D = E \<inter> ?Y" by (by100 blast)
+        have hE_sub: "E \<subseteq> X" using hE_cl unfolding closedin_on_def by (by100 blast)
+        from hweak[rule_format, OF hE_sub, THEN iffD1, OF hE_cl]
+        have "\<forall>\<beta>\<in>J. closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) (C \<beta> \<inter> E)" .
+        hence "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> E)"
+          using h\<alpha> hFJ by (by100 blast)
+        moreover have "C \<alpha> \<inter> D = C \<alpha> \<inter> E"
+          using \<open>D = E \<inter> ?Y\<close> h\<alpha> by (by100 blast)
+        ultimately show "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+          by (by100 simp)
+      next
+        fix D assume hD: "D \<subseteq> ?Y"
+          and hall: "\<forall>\<alpha>\<in>F. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+        \<comment> \<open>Show D closed in X by hweak. For \\<alpha> \\<in> F: given. For \\<alpha> \\<notin> F: C\\_\\<alpha> \\<inter> D \\<subseteq> {p}.\<close>
+        have "\<forall>\<alpha>\<in>J. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+        proof (intro ballI)
+          fix \<alpha> assume "\<alpha> \<in> J"
+          show "closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+          proof (cases "\<alpha> \<in> F")
+            case True thus ?thesis using hall by (by100 blast)
+          next
+            case False
+            have "C \<alpha> \<inter> D \<subseteq> C \<alpha> \<inter> ?Y" using hD by (by100 blast)
+            also have "... \<subseteq> {p}"
+            proof
+              fix x assume "x \<in> C \<alpha> \<inter> ?Y"
+              then obtain \<beta> where "\<beta> \<in> F" "x \<in> C \<alpha>" "x \<in> C \<beta>" by (by100 blast)
+              have "\<alpha> \<noteq> \<beta>" using False \<open>\<beta> \<in> F\<close> by (by100 blast)
+              from hdisjoint[rule_format, OF \<open>\<alpha> \<in> J\<close> _ \<open>\<alpha> \<noteq> \<beta>\<close>] \<open>\<beta> \<in> F\<close> hFJ
+              have "C \<alpha> \<inter> C \<beta> = {p}" by (by100 blast)
+              thus "x \<in> {p}" using \<open>x \<in> C \<alpha>\<close> \<open>x \<in> C \<beta>\<close> by (by100 blast)
+            qed
+            finally have "C \<alpha> \<inter> D \<subseteq> {p}" .
+            have "finite (C \<alpha> \<inter> D)" using \<open>C \<alpha> \<inter> D \<subseteq> {p}\<close> finite_subset by (by100 blast)
+            have "C \<alpha> \<subseteq> X" using hC \<open>\<alpha> \<in> J\<close> by (by100 blast)
+            have "is_hausdorff_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+              using conjunct2[OF conjunct2[OF Theorem_17_11]] \<open>C \<alpha> \<subseteq> X\<close> hhaus by (by100 blast)
+            have "C \<alpha> \<inter> D \<subseteq> C \<alpha>" by (by100 blast)
+            show ?thesis
+              by (rule Theorem_17_8[OF \<open>is_hausdorff_on (C \<alpha>) _\<close> \<open>finite (C \<alpha> \<inter> D)\<close>
+                  \<open>C \<alpha> \<inter> D \<subseteq> C \<alpha>\<close>])
+          qed
+        qed
+        hence "closedin_on X TX D" using hweak[rule_format, OF \<open>D \<subseteq> ?Y\<close>[THEN subset_trans[OF _ hY_sub]]]
+          by (by100 blast)
+        from Theorem_17_2[OF hTX hY_sub] this hD
+        show "closedin_on ?Y ?TY D" by (by100 blast)
+      qed
+      show "top1_is_wedge_of_circles_on ?Y ?TY F p"
+        unfolding top1_is_wedge_of_circles_on_def
+        sorry \<comment> \<open>Assemble: strict + Hausdorff + p \\<in> ?Y + circles (with subspace\\_topology\\_trans)
+           + cover + disjoint + hcoh\\_F.\<close>
+    qed
     \<comment> \<open>Now verify top1\\_is\\_free\\_group\\_full\\_on for \\<pi>\\_1(X, p).
        For each finite sub-wedge F, Theorem\\_71\\_3\\_finite gives \\<pi>\\_1 free on F.
        The free group condition 5 (no reduced word = id): a word w uses finitely many
