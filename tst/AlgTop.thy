@@ -2080,10 +2080,112 @@ proof -
           qed
           have "finite {A \<in> ?\<B>. \<not> A \<subseteq> T}" using hNT_Y' hF0'fin by (by100 simp)
           \<comment> \<open>Delegate to graph\\_pi1\\_free\\_weak\\_finite.\<close>
+          \<comment> \<open>The tree T in ?Y' has the same topology: subspace\\_topology ?Y' ?TY' T = subspace\\_topology Y TY T
+             (by subspace\\_topology\\_trans since T \\<subseteq> ?Y').\<close>
+          have hT_tree_Y': "top1_is_tree_on T (subspace_topology ?Y' (subspace_topology Y TY ?Y') T)"
+          proof -
+            have "subspace_topology ?Y' (subspace_topology Y TY ?Y') T =
+                subspace_topology Y TY T"
+              by (rule subspace_topology_trans) (by100 blast)
+            thus ?thesis using hT_tree by (by100 simp)
+          qed
+          \<comment> \<open>Arc topology in ?Y' = arc topology in Y.\<close>
+          have h\<B>_arcs_Y': "\<forall>A\<in>?\<B>. A \<subseteq> ?Y' \<and>
+              top1_is_arc_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)"
+          proof (intro ballI conjI)
+            fix A assume "A \<in> ?\<B>"
+            show "A \<subseteq> ?Y'" using \<open>A \<in> ?\<B>\<close> by (by100 blast)
+            have "A \<in> \<A>" using \<open>A \<in> ?\<B>\<close> by (by100 blast)
+            have "top1_is_arc_on A (subspace_topology Y TY A)" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+            moreover have "subspace_topology ?Y' (subspace_topology Y TY ?Y') A =
+                subspace_topology Y TY A"
+              by (rule subspace_topology_trans) (use \<open>A \<in> ?\<B>\<close> in blast)
+            ultimately show "top1_is_arc_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)"
+              by (by100 simp)
+          qed
+          \<comment> \<open>Coherent topology for ?Y'.\<close>
+          have h\<B>_eq': "?Y' = \<Union>?\<B>"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> ?Y'"
+            thus "x \<in> \<Union>?\<B>"
+            proof
+              assume "x \<in> T"
+              then obtain A where "A \<in> \<A>" "A \<subseteq> T" "x \<in> A" using hT_coverage by (by100 blast)
+              thus ?thesis by (by100 blast)
+            next
+              assume "x \<in> \<Union>F0'"
+              then obtain A where "A \<in> F0'" "x \<in> A" by (by100 blast)
+              have "A \<in> \<A>" using hF0'_NT \<open>A \<in> F0'\<close> by (by100 blast)
+              thus ?thesis using \<open>x \<in> A\<close> \<open>A \<in> F0'\<close> by (by100 blast)
+            qed
+          next
+            fix x assume "x \<in> \<Union>?\<B>" thus "x \<in> ?Y'" by (by100 blast)
+          qed
+          have h\<B>_coh_base: "\<forall>C. C \<subseteq> ?Y' \<longrightarrow>
+              (closedin_on ?Y' (subspace_topology Y TY ?Y') C \<longleftrightarrow>
+               (\<forall>A\<in>?\<B>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
+            by (rule subgraph_coherent_topology[OF assms(1) h\<A> h\<A>_cover h\<A>_inter h\<A>_coh _ h\<B>_eq'])
+               (by100 blast)
+          have h\<B>_coh_Y': "\<forall>C. C \<subseteq> ?Y' \<longrightarrow>
+              (closedin_on ?Y' (subspace_topology Y TY ?Y') C \<longleftrightarrow>
+               (\<forall>A\<in>?\<B>. closedin_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A) (A \<inter> C)))"
+          proof (intro allI impI)
+            fix C assume "C \<subseteq> ?Y'"
+            from h\<B>_coh_base[rule_format, OF this]
+            have "closedin_on ?Y' (subspace_topology Y TY ?Y') C \<longleftrightarrow>
+                (\<forall>A\<in>?\<B>. closedin_on A (subspace_topology Y TY A) (A \<inter> C))" .
+            moreover have "\<forall>A\<in>?\<B>. subspace_topology ?Y' (subspace_topology Y TY ?Y') A =
+                subspace_topology Y TY A"
+              by (intro ballI, rule subspace_topology_trans) blast
+            ultimately show "closedin_on ?Y' (subspace_topology Y TY ?Y') C \<longleftrightarrow>
+                (\<forall>A\<in>?\<B>. closedin_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A) (A \<inter> C))"
+              by (by100 simp)
+          qed
+          \<comment> \<open>Intersection conditions.\<close>
+          have h\<B>_inter_Y': "\<forall>A\<in>?\<B>. \<forall>B\<in>?\<B>. A \<noteq> B \<longrightarrow>
+              A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)
+            \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?Y' (subspace_topology Y TY ?Y') B)
+            \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+          proof (intro ballI impI)
+            fix A B assume "A \<in> ?\<B>" "B \<in> ?\<B>" "A \<noteq> B"
+            have "A \<in> \<A>" "B \<in> \<A>" using \<open>A \<in> ?\<B>\<close> \<open>B \<in> ?\<B>\<close> by (by100 blast)+
+            from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A \<noteq> B\<close>]
+            have hinter: "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+              \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+              \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" .
+            have "subspace_topology ?Y' (subspace_topology Y TY ?Y') A = subspace_topology Y TY A"
+              by (rule subspace_topology_trans) (use \<open>A \<in> ?\<B>\<close> in blast)
+            have "subspace_topology ?Y' (subspace_topology Y TY ?Y') B = subspace_topology Y TY B"
+              by (rule subspace_topology_trans) (use \<open>B \<in> ?\<B>\<close> in blast)
+            show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)
+              \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?Y' (subspace_topology Y TY ?Y') B)
+              \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+              using hinter \<open>subspace_topology ?Y' _ A = _\<close> \<open>subspace_topology ?Y' _ B = _\<close>
+              by (by100 simp)
+          qed
+          \<comment> \<open>Subgraph/endpoint conditions.\<close>
+          have hT_subgraph_Y': "\<forall>A\<in>?\<B>. A \<subseteq> T \<or>
+              A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)"
+          proof (intro ballI)
+            fix A assume "A \<in> ?\<B>"
+            have "A \<in> \<A>" using \<open>A \<in> ?\<B>\<close> by (by100 blast)
+            from hT_subgraph[rule_format, OF this]
+            have "A \<subseteq> T \<or> A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" .
+            moreover have "subspace_topology ?Y' (subspace_topology Y TY ?Y') A =
+                subspace_topology Y TY A"
+              by (rule subspace_topology_trans) (use \<open>A \<in> ?\<B>\<close> in blast)
+            ultimately show "A \<subseteq> T \<or>
+                A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)"
+              by (by100 simp)
+          qed
+          \<comment> \<open>Apply graph\\_pi1\\_free\\_weak\\_finite. All preconditions verified above.\<close>
+          \<comment> \<open>Rewrite all preconditions to use the graph topology.\<close>
+          have "top1_is_graph_on ?Y' (subspace_topology Y TY ?Y')" by (rule hY'_graph)
+          have "top1_connected_on ?Y' (subspace_topology Y TY ?Y')" by (rule hY'_conn)
           show ?thesis
-            sorry \<comment> \<open>Delegation to graph\\_pi1\\_free\\_weak\\_finite.
-               All preconditions verified: Y' graph + connected + y0 \\<in> Y' + finite NT + arcs + coherent + tree + endpoints.
-               Type matching issue with subspace\\_topology prevents direct application.\<close>
+            sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite application.
+               All preconditions proved above but OF-chain blocked by
+               subspace\\_topology\\_trans normalization.\<close>
         qed
       qed
       \<comment> \<open>Step 5: Combine: \\<pi>\\_1(Y) is free.
