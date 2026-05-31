@@ -611,7 +611,12 @@ proof -
           (top1_fundamental_group_id X TX p) (top1_fundamental_group_invg X TX p)"
         by (rule top1_fundamental_group_is_group[OF hTX hp])
       show "\<forall>s\<in>J. \<iota> s \<in> top1_fundamental_group_carrier X TX p"
-        sorry \<comment> \<open>[gen\\_loop \\<alpha>] \\<in> \\<pi>\\_1 since gen\\_loop \\<alpha> is a loop.\<close>
+      proof (intro ballI)
+        fix s assume "s \<in> J"
+        have "top1_is_loop_on X TX p (gen_loop s)" using hgen \<open>s \<in> J\<close> by (by100 blast)
+        thus "\<iota> s \<in> top1_fundamental_group_carrier X TX p"
+          unfolding \<iota>_def top1_fundamental_group_carrier_def by (by100 blast)
+      qed
       show "inj_on \<iota> J"
         sorry \<comment> \<open>Book: i\\_\\<beta> is a monomorphism. If \\<iota>(\\<alpha>) = \\<iota>(\\<beta>) then gen\\_loop \\<alpha> \\<sim> gen\\_loop \\<beta>.
            Both lie in a finite sub-wedge. By Theorem 71.1, they generate distinct subgroups
