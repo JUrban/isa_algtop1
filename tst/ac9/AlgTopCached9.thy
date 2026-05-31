@@ -2,7 +2,7 @@ theory AlgTopCached9
   imports "AlgTopCached8.AlgTopCached8"
 begin
 
-(* Cached sorry-free: free_group_hom_subset_injective + Theorem 71.3 (infinite case). *)
+(* Cached sorry-free: free_group_hom_subset_injective + Theorem_71_3 (Munkres 71.3). *)
 
 \<comment> \<open>Free group embedding: a group hom from free(S1) to free(S2) that maps generators
    to generators is injective, when S1 \\<subseteq> S2.\<close>
@@ -254,7 +254,7 @@ qed
 
 \<comment> \<open>Theorem 71.3 (book-faithful): \\<pi>\\_1(X, p) is free with generators indexed by J.
    This is the actual book statement — \\<pi>\\_1 itself is the free group.\<close>
-theorem Theorem_71_3_pi1_free:
+theorem Theorem_71_3:
   fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
   assumes "top1_is_wedge_of_circles_on X TX J p"
   shows "\<exists>(\<iota>::'i \<Rightarrow> _). top1_is_free_group_full_on

@@ -254,47 +254,10 @@ qed
 \<comment> \<open>free\_group\_hom\_subset\_injective + Theorem\_71\_3\_pi1\_free moved to AlgTopCached9.\<close>
 
 
-\<comment> \<open>Theorem 71.3 (int set packaging): corollary for downstream use.
-   The int set wrapping is needed for some applications but requires countable J.\<close>
-theorem Theorem_71_3_wedge_of_circles_general:
-  fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
-  assumes "top1_is_wedge_of_circles_on X TX J p"
-  shows "\<exists>(G::int set) mul e invg (\<iota>::'i \<Rightarrow> int).
-           top1_is_free_group_full_on G mul e invg \<iota> J
-         \<and> top1_groups_isomorphic_on G mul
-             (top1_fundamental_group_carrier X TX p)
-             (top1_fundamental_group_mul X TX p)"
-proof -
-  \<comment> \<open>Munkres 71.3: For infinite J, use the weak topology + a transfinite/direct-limit
-     argument. Each finite sub-wedge gives a free group on that subset of generators.
-     The direct limit over finite subsets gives the free group on all of J.
-     Alternatively: cover X = \<Union>_\<alpha> (X - C_\<alpha> interior) and apply SvK iteratively.\<close>
-  \<comment> \<open>Step 1: For each finite F \<subseteq> J, the sub-wedge X_F has free \<pi>_1 on F
-     (by Theorem 71.1 for finite wedges).\<close>
-  \<comment> \<open>Step 2: The inclusions X_F \<hookrightarrow> X_G for F \<subseteq> G give a directed system.
-     The direct limit of free groups on finite subsets = free group on J.\<close>
-  \<comment> \<open>Step 3: \<pi>_1(X) = direct limit of \<pi>_1(X_F) by the weak topology on X
-     (a loop in X is compact, hence contained in some finite sub-wedge).\<close>
-  show ?thesis
-  proof (cases "finite J")
-    case True
-    show ?thesis by (rule Theorem_71_3_finite[OF assms True])
-  next
-    case False
-    \<comment> \<open>Infinite case: use Theorem\\_71\\_3\\_pi1\\_free (book-faithful version)
-       which proves \\<pi>\\_1(X) is free on J. Then package into int set.\<close>
-    from Theorem_71_3_pi1_free[OF assms]
-    obtain \<iota> where hpi1_free: "top1_is_free_group_full_on
-        (top1_fundamental_group_carrier X TX p)
-        (top1_fundamental_group_mul X TX p)
-        (top1_fundamental_group_id X TX p)
-        (top1_fundamental_group_invg X TX p)
-        \<iota> J" by (by100 blast)
-    \<comment> \<open>Int set packaging: need to construct G :: int set isomorphic to \\<pi>\\_1(X).
-       This requires |J| \\<le> |int| (countable J).\<close>
-    show ?thesis sorry \<comment> \<open>Int set packaging from pi1\\_free. Requires countable J.\<close>
-  qed
-qed
+\<comment> \<open>Theorem 71.3 (book-faithful) is now Theorem\_71\_3 in AlgTopCached9.
+   It states: \\<pi>\\_1(X, p) is free on J (the actual book statement).
+   The old int-set packaging wrapper (Theorem\_71\_3\_wedge\_of\_circles\_general)
+   was unused dead code and has been removed.\<close>
 
 
 
