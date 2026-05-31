@@ -18528,11 +18528,20 @@ proof -
          So every element of \\<pi>\\_1(Y) lies in \\<pi>\\_1 of some finite subgraph.
          \\<pi>\\_1(Y) is the direct limit of \\<pi>\\_1(finite subgraphs), all free.
          Direct limit of free groups with injective maps is free.\<close>
-      show ?thesis sorry \<comment> \<open>Direct limit of free groups. Requires:
-         1. For any loop f, f(I) compact \\<subseteq> T \\<union> finitely many arcs.
-         2. Finite subgraph \\<pi>\\_1 is free (by finite case above).
-         3. \\<pi>\\_1(Y) = direct limit of these.
-         4. Direct limit of free groups with injective inclusions is free.\<close>
+      \<comment> \<open>Book Step 3: Infinite case. For each non-tree arc A, define
+         the loop g\\_A = \\<gamma>\\_a * f\\_A * rev(\\<gamma>\\_b) where \\<gamma>\\_a, \\<gamma>\\_b are
+         paths in T from x0 to A's endpoints, and f\\_A is the linear path in A.
+         Claim: \\<pi>\\_1(Y) is free on {[g\\_A] | A \\<in> NT}.
+         Proof: any reduced word w in these generators involves finitely many A's.
+         The subgraph Y' = T \\<union> {those A's} has \\<pi>\\_1(Y') free on the corresponding
+         generators (by the finite case). The inclusion Y' \\<hookrightarrow> Y induces an injection
+         on \\<pi>\\_1 (since Y' is a retract of Y). So w \\<ne> id in \\<pi>\\_1(Y') implies w \\<ne> id
+         in \\<pi>\\_1(Y).\<close>
+      show ?thesis sorry \<comment> \<open>Infinite case. Needs:
+         1. Generator loops g\\_A for each A \\<in> NT.
+         2. Generation: every loop homotopic to product of g\\_A's.
+         3. Freeness: reduced words \\<ne> id via finite subgraph + injection.
+         4. Injection: Y' retract of Y (collapse non-Y' arcs to T-endpoints).\<close>
     qed
   qed
 qed

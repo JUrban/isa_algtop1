@@ -2046,9 +2046,9 @@ Theorem_80_3_universal                         ac4/AlgTopCached4.thy            
 Theorem_81_2_covering_group_iso                AlgTop.thy                           line 8960
 Theorem_82_1_covering_existence                AlgTop.thy                           line 9258
 Theorem_83_4_covering_of_graph_is_graph        ac5/AlgTopCached5.thy                line 708
-Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 18543
-Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 20256
-Theorem_85_3_Schreier_index                    AlgTop.thy                           line 20313
+Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 18552
+Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 20265
+Theorem_85_3_Schreier_index                    AlgTop.thy                           line 20323
 
 ## corollarys (65)
 

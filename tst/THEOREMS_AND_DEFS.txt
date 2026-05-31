@@ -2088,6 +2088,6 @@ ac4/AlgTopCached4.thy|theorem|Theorem_80_3_universal|4013
 AlgTop.thy|theorem|Theorem_81_2_covering_group_iso|8960
 AlgTop.thy|theorem|Theorem_82_1_covering_existence|9258
 ac5/AlgTopCached5.thy|theorem|Theorem_83_4_covering_of_graph_is_graph|708
-AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|18543
-AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|20256
-AlgTop.thy|theorem|Theorem_85_3_Schreier_index|20313
+AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|18552
+AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|20265
+AlgTop.thy|theorem|Theorem_85_3_Schreier_index|20323
