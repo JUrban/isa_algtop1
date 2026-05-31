@@ -17507,8 +17507,120 @@ next
         have p5: "finite {A\<in>?\<A>_V. \<not> A \<subseteq> T}"
           using hNT_V hfin by (by100 simp)
         \<comment> \<open>Premises 6-14: arc structure of target\\_V.\<close>
-        show ?thesis sorry \<comment> \<open>6-14: arcs, cover, inter, coh, tree, sub, subgraph, x0, endpoints.
-           All from h\\<A> restricted to target\\_V + subspace\\_topology\\_trans.\<close>
+        \<comment> \<open>Premise 6: arcs of target\\_V.\<close>
+        have p6: "\<forall>A\<in>?\<A>_V. A \<subseteq> ?target_V \<and> top1_is_arc_on A (subspace_topology ?target_V ?TY_V A)"
+        proof (intro ballI conjI)
+          fix A assume "A \<in> ?\<A>_V"
+          hence "A \<in> \<A>" "A \<subseteq> ?target_V" by (by100 blast)+
+          show "A \<subseteq> ?target_V" using \<open>A \<subseteq> ?target_V\<close> .
+          have "top1_is_arc_on A (subspace_topology Y TY A)" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+          have "subspace_topology ?target_V ?TY_V A = subspace_topology Y TY A"
+            by (rule subspace_topology_trans[OF \<open>A \<subseteq> ?target_V\<close>])
+          thus "top1_is_arc_on A (subspace_topology ?target_V ?TY_V A)"
+            using \<open>top1_is_arc_on A (subspace_topology Y TY A)\<close> by simp
+        qed
+        \<comment> \<open>Premise 7: cover.\<close>
+        have htV_eq_ext: "?target_V = \<Union>?\<A>_V"
+        proof (rule graph_connected_sub_covered_by_arcs[OF hgraph h\<A> h\<A>_cover h\<A>_coh])
+          show "?target_V \<subseteq> Y" using hT_sub h\<A> by (by100 blast)
+          show "top1_connected_on ?target_V ?TY_V" by (rule htV_conn)
+          show "\<exists>y1 y2. y1 \<in> ?target_V \<and> y2 \<in> ?target_V \<and> y1 \<noteq> y2"
+          proof -
+            obtain hh where hhh: "top1_homeomorphism_on top1_unit_interval
+                top1_unit_interval_topology A1 (subspace_topology Y TY A1) hh"
+              using hA1_arc_loc unfolding top1_is_arc_on_def by (by100 blast)
+            from arc_endpoints_are_boundary[OF hY_strict hY_haus hA1_sub_loc hA1_arc_loc hhh]
+            have hep: "top1_arc_endpoints_on A1 (subspace_topology Y TY A1) = {hh 0, hh 1}" .
+            have "hh 0 \<in> T" using hNT_endpoints[rule_format, OF hA1] hep by (by100 simp)
+            have "hh 1 \<in> T" using hNT_endpoints[rule_format, OF hA1] hep by (by100 simp)
+            have hbij: "bij_betw hh top1_unit_interval A1"
+              using hhh unfolding top1_homeomorphism_on_def by (by100 blast)
+            have hinj: "inj_on hh top1_unit_interval" using hbij unfolding bij_betw_def by (by100 blast)
+            have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+            have "hh 0 \<noteq> hh 1"
+            proof
+              assume "hh 0 = hh 1"
+              from inj_onD[OF hinj this h0_I h1_I] show False by (by100 simp)
+            qed
+            thus ?thesis using \<open>hh 0 \<in> T\<close> \<open>hh 1 \<in> T\<close> by (by100 blast)
+          qed
+          show "\<forall>A\<in>\<A>. \<not> A \<subseteq> ?target_V \<longrightarrow> finite (A \<inter> ?target_V)"
+            sorry \<comment> \<open>A = A1 case: A1 \\<inter> target\\_V finite via endpoints.\<close>
+          show "finite {A \<in> \<A>. \<not> A \<subseteq> ?target_V}"
+          proof -
+            have "{A \<in> \<A>. \<not> A \<subseteq> ?target_V} \<subseteq> {A1}" by (by100 blast)
+            thus ?thesis using finite_subset by (by100 blast)
+          qed
+        qed
+        have p7: "\<Union>?\<A>_V = ?target_V" using htV_eq_ext by simp
+        \<comment> \<open>Premise 8: inter.\<close>
+        have p8: "\<forall>A\<in>?\<A>_V. \<forall>B\<in>?\<A>_V. A \<noteq> B \<longrightarrow>
+            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?target_V ?TY_V A)
+          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?target_V ?TY_V B)
+          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+        proof (intro ballI impI)
+          fix A B assume "A \<in> ?\<A>_V" "B \<in> ?\<A>_V" "A \<noteq> B"
+          hence "A \<in> \<A>" "B \<in> \<A>" by (by100 blast)+
+          from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A \<noteq> B\<close>]
+          have hAB: "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+            \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+            \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" .
+          have "A \<subseteq> ?target_V" using \<open>A \<in> ?\<A>_V\<close> by (by100 blast)
+          have "B \<subseteq> ?target_V" using \<open>B \<in> ?\<A>_V\<close> by (by100 blast)
+          have "subspace_topology ?target_V ?TY_V A = subspace_topology Y TY A"
+            by (rule subspace_topology_trans[OF \<open>A \<subseteq> ?target_V\<close>])
+          have "subspace_topology ?target_V ?TY_V B = subspace_topology Y TY B"
+            by (rule subspace_topology_trans[OF \<open>B \<subseteq> ?target_V\<close>])
+          show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?target_V ?TY_V A)
+            \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?target_V ?TY_V B)
+            \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+            using hAB \<open>subspace_topology ?target_V ?TY_V A = _\<close>
+              \<open>subspace_topology ?target_V ?TY_V B = _\<close> by simp
+        qed
+        \<comment> \<open>Premise 9: coherent topology.\<close>
+        have p9: "\<forall>C. C \<subseteq> ?target_V \<longrightarrow>
+            (closedin_on ?target_V ?TY_V C \<longleftrightarrow>
+             (\<forall>A\<in>?\<A>_V. closedin_on A (subspace_topology ?target_V ?TY_V A) (A \<inter> C)))"
+          sorry \<comment> \<open>subgraph\\_coherent\\_topology + subspace\\_topology\\_trans.\<close>
+        \<comment> \<open>Premise 10: tree.\<close>
+        have p10: "top1_is_tree_on T (subspace_topology ?target_V ?TY_V T)"
+        proof -
+          have "T \<subseteq> ?target_V" by (by100 blast)
+          have "subspace_topology ?target_V ?TY_V T = subspace_topology Y TY T"
+            by (rule subspace_topology_trans[OF \<open>T \<subseteq> ?target_V\<close>])
+          thus ?thesis using hT_tree by simp
+        qed
+        \<comment> \<open>Premise 11.\<close>
+        have p11: "T \<subseteq> ?target_V" by (by100 blast)
+        \<comment> \<open>Premise 12: subgraph.\<close>
+        have p12: "\<forall>A\<in>?\<A>_V. A \<subseteq> T \<or>
+            A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology ?target_V ?TY_V A)"
+        proof (intro ballI)
+          fix A assume "A \<in> ?\<A>_V"
+          hence "A \<in> \<A>" "A \<subseteq> ?target_V" by (by100 blast)+
+          from hT_subgraph[rule_format, OF \<open>A \<in> \<A>\<close>]
+          show "A \<subseteq> T \<or> A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology ?target_V ?TY_V A)"
+            using subspace_topology_trans[OF \<open>A \<subseteq> ?target_V\<close>] by simp
+        qed
+        \<comment> \<open>Premise 13.\<close>
+        have p13: "y0 \<in> T" by (rule hT_x0)
+        \<comment> \<open>Premise 14: endpoints.\<close>
+        have p14: "\<forall>A\<in>{A\<in>?\<A>_V. \<not> A \<subseteq> T}. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology ?target_V ?TY_V A). e \<in> T"
+        proof (intro ballI)
+          fix A e assume "A \<in> {A\<in>?\<A>_V. \<not> A \<subseteq> T}"
+              and "e \<in> top1_arc_endpoints_on A (subspace_topology ?target_V ?TY_V A)"
+          hence "A \<in> \<A>" "\<not> A \<subseteq> T" "A \<subseteq> ?target_V" by (by100 blast)+
+          hence "A \<in> ?NT" by (by100 blast)
+          have "subspace_topology ?target_V ?TY_V A = subspace_topology Y TY A"
+            by (rule subspace_topology_trans[OF \<open>A \<subseteq> ?target_V\<close>])
+          hence "e \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+            using \<open>e \<in> _\<close> by simp
+          thus "e \<in> T" using hNT_endpoints[rule_format, OF \<open>A \<in> ?NT\<close>] by (by100 blast)
+        qed
+        \<comment> \<open>Apply IH.\<close>
+        show ?thesis
+          by (rule IH[OF p1 p2 p3 p4 p5 p6 p7 p8 p9 p10 p11 p12 p13 p14])
       qed
       \<comment> \<open>Step 9: U, V PC.\<close>
       have htU_sub_U: "?target_U \<subseteq> ?U"
