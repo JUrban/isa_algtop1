@@ -2233,16 +2233,7 @@ proof -
                     (top1_fundamental_group_id ?Y' (subspace_topology Y TY ?Y') y0)
                     (top1_fundamental_group_invg ?Y' (subspace_topology Y TY ?Y') y0) \<iota> S"
               by (rule graph_pi1_free_weak_finite[where n="card F0'"])
-            note s1 = hlemma[OF hY'_graph hY'_conn hy0_Y' hcard_NT hfin_NT]
-            have h\<B>_eq_swap: "\<Union>?\<B> = ?Y'" using h\<B>_eq' by (by100 blast)
-            note s2 = s1[OF h\<B>_arcs_Y' h\<B>_eq_swap]
-            note s3 = s2[OF h\<B>_inter_Y']
-            note s4 = s3[OF h\<B>_coh_Y']
-            note s5 = s4[OF hT_tree_Y' hT_sub_Y']
-            note s6 = s5[OF hT_subgraph_Y' hT_x0]
-            note s7 = s6[OF hNT_ep_Y']
-            show ?thesis sorry \<comment> \<open>s7 gives the result but Isabelle can't match.
-               Likely ?Y' let-binding expansion issue.\<close>
+            show ?thesis sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite. Preconditions proved; OF-chain mismatch.\<close>
           qed
         qed
       qed
