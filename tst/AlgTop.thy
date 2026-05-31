@@ -248,35 +248,23 @@ qed
 
 (** Theorem 71.3 stub: infinite case has sorry. Not on \<S>75.3 chain. **)
 
-(** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
-theorem Theorem_71_3_wedge_of_circles_general:
+
+theorem Theorem_71_3_finite:
   fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
-  assumes "top1_is_wedge_of_circles_on X TX J p"
+  assumes "top1_is_wedge_of_circles_on X TX J p" and "finite J"
   shows "\<exists>(G::int set) mul e invg (\<iota>::'i \<Rightarrow> int).
            top1_is_free_group_full_on G mul e invg \<iota> J
          \<and> top1_groups_isomorphic_on G mul
              (top1_fundamental_group_carrier X TX p)
              (top1_fundamental_group_mul X TX p)"
 proof -
-  \<comment> \<open>Munkres 71.3: For infinite J, use the weak topology + a transfinite/direct-limit
-     argument. Each finite sub-wedge gives a free group on that subset of generators.
-     The direct limit over finite subsets gives the free group on all of J.
-     Alternatively: cover X = \<Union>_\<alpha> (X - C_\<alpha> interior) and apply SvK iteratively.\<close>
-  \<comment> \<open>Step 1: For each finite F \<subseteq> J, the sub-wedge X_F has free \<pi>_1 on F
-     (by Theorem 71.1 for finite wedges).\<close>
-  \<comment> \<open>Step 2: The inclusions X_F \<hookrightarrow> X_G for F \<subseteq> G give a directed system.
-     The direct limit of free groups on finite subsets = free group on J.\<close>
-  \<comment> \<open>Step 3: \<pi>_1(X) = direct limit of \<pi>_1(X_F) by the weak topology on X
-     (a loop in X is compact, hence contained in some finite sub-wedge).\<close>
-  show ?thesis
-  proof (cases "finite J")
-    case True
+  note True = assms(2)
     \<comment> \<open>Finite case: bijection J \<leftrightarrow> {..<card J}, relabel wedge, apply Theorem 71.1.\<close>
     have hcard: "{0..<card J} = {..<card J}" by (by100 auto)
     from ex_bij_betw_nat_finite[OF True] obtain f where
       hf: "bij_betw f {..<card J} J" using hcard by (by100 auto)
     \<comment> \<open>Extract the circle family from the wedge.\<close>
-    from assms[unfolded top1_is_wedge_of_circles_on_def]
+    from assms(1)[unfolded top1_is_wedge_of_circles_on_def]
     obtain C where
       hC: "\<forall>\<alpha>\<in>J. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
              \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
@@ -296,11 +284,11 @@ proof -
       unfolding top1_is_wedge_of_circles_on_def
     proof (intro conjI)
       show "is_topology_on_strict X TX"
-        using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+        using assms(1) unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
       show "is_hausdorff_on X TX"
-        using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+        using assms(1) unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
       show "p \<in> X"
-        using assms unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+        using assms(1) unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
       show "\<exists>Ca. (\<forall>\<alpha>\<in>{..<card J}. Ca \<alpha> \<subseteq> X \<and> p \<in> Ca \<alpha>
                \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
                         (Ca \<alpha>) (subspace_topology X TX (Ca \<alpha>)) h))
@@ -487,6 +475,32 @@ proof -
       thus "top1_group_word_product mul0 e0 invg0 (map (\<lambda>(s, b). (\<iota>' s, b)) ws) \<noteq> e0" .
     qed
     show ?thesis using hfree' hiso0 by (by100 blast)
+qed
+
+(** from \<S>71 Theorem 71.3: arbitrary (possibly infinite) wedge of circles. **)
+theorem Theorem_71_3_wedge_of_circles_general:
+  fixes J :: "'i set" and X :: "'a set" and TX :: "'a set set" and p :: 'a
+  assumes "top1_is_wedge_of_circles_on X TX J p"
+  shows "\<exists>(G::int set) mul e invg (\<iota>::'i \<Rightarrow> int).
+           top1_is_free_group_full_on G mul e invg \<iota> J
+         \<and> top1_groups_isomorphic_on G mul
+             (top1_fundamental_group_carrier X TX p)
+             (top1_fundamental_group_mul X TX p)"
+proof -
+  \<comment> \<open>Munkres 71.3: For infinite J, use the weak topology + a transfinite/direct-limit
+     argument. Each finite sub-wedge gives a free group on that subset of generators.
+     The direct limit over finite subsets gives the free group on all of J.
+     Alternatively: cover X = \<Union>_\<alpha> (X - C_\<alpha> interior) and apply SvK iteratively.\<close>
+  \<comment> \<open>Step 1: For each finite F \<subseteq> J, the sub-wedge X_F has free \<pi>_1 on F
+     (by Theorem 71.1 for finite wedges).\<close>
+  \<comment> \<open>Step 2: The inclusions X_F \<hookrightarrow> X_G for F \<subseteq> G give a directed system.
+     The direct limit of free groups on finite subsets = free group on J.\<close>
+  \<comment> \<open>Step 3: \<pi>_1(X) = direct limit of \<pi>_1(X_F) by the weak topology on X
+     (a loop in X is compact, hence contained in some finite sub-wedge).\<close>
+  show ?thesis
+  proof (cases "finite J")
+    case True
+    show ?thesis by (rule Theorem_71_3_finite[OF assms True])
   next
     case False
     \<comment> \<open>Infinite case: direct limit argument.\<close>
@@ -760,7 +774,10 @@ proof -
         top1_path_homotopic_on X TX p p f g \<Longrightarrow>
         \<exists>F. finite F \<and> F \<subseteq> J \<and> top1_path_homotopic_on (\<Union>\<alpha>\<in>F. C \<alpha>)
             (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) p p f g"
-      sorry
+      sorry \<comment> \<open>Proof: homotopy H: I\\<times>I \\<rightarrow> X has compact image (I\\<times>I compact, H continuous).
+         By hcompact\\_finite, H(I\\<times>I) meets finitely many C\\_\\<alpha> - {p}. Take F =
+         those \\<alpha> \\<union> F\\_f \\<union> F\\_g (from hloop\\_finite for f, g). Then f, g, H all map into
+         \\<Union>F C\\_\\<alpha>. The homotopy restricts to a homotopy in the subspace.\<close>
     \<comment> \<open>For each finite F \\<subseteq> J, the sub-wedge \\<Union>\\<alpha>\\<in>F. C \\<alpha> has free \\<pi>\\_1 on F
        (by Theorem 71.1 for finite wedges, relabeled).\<close>
     have hfinite_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> J \<Longrightarrow>
@@ -774,9 +791,17 @@ proof -
        The key: every reduced word involves finitely many generators \\<Rightarrow> lies in a finite
        sub-wedge where Theorem 71.1 gives freeness \\<Rightarrow> the word is non-trivial there
        \\<Rightarrow> it's non-trivial in X (since the inclusion is injective on \\<pi>\\_1).\<close>
-    \<comment> \<open>For the int set packaging: this requires |J| \\<le> |int|.
-       We sorry the packaging step.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Book argument summary (Munkres 71.3):
+       1. Every loop/homotopy lies in a finite sub-wedge (compactness + coherent topology).
+       2. Each finite sub-wedge has free \\<pi>\\_1 (Theorem 71.1).
+       3. Therefore: generators {G\\_\\<alpha>} generate \\<pi>\\_1(X), inclusions are monomorphisms,
+          and no reduced word = identity. So \\<pi>\\_1(X) is free on these generators.
+       For the int set conclusion: need |J| \\<le> |int| = \\<aleph>\\_0 (countable J).
+       This holds for all uses in the book (J \\<subseteq> nat or finite).\<close>
+    show ?thesis sorry \<comment> \<open>Assembly: \\<pi>\\_1(X) free on J generators (by book argument above)
+       + int set packaging (requires countable J).
+       The three conditions from top1\\_is\\_free\\_group\\_full\\_on each reduce to
+       finite sub-wedges via hloop\\_finite / hhtpy\\_finite / hfinite\\_free.\<close>
   qed
 qed
 
@@ -796,7 +821,7 @@ lemma finite_wedge_pi1_free_with_generators:
 proof -
   \<comment> \<open>The existing Theorem\_71\_1 already proves freeness + abstract iso.
      We just need to extract bijectivity from the iso.\<close>
-  from Theorem_71_3_wedge_of_circles_general[OF hwedge]
+  from Theorem_71_3_finite[OF hwedge hfin]
   obtain G :: "int set" and mul e invg and \<eta> :: "'i \<Rightarrow> int" where
     hfree: "top1_is_free_group_full_on G mul e invg \<eta> J" and
     hiso: "top1_groups_isomorphic_on G mul
@@ -2195,7 +2220,7 @@ proof -
       \<and> top1_groups_isomorphic_on F mulF
           (top1_fundamental_group_carrier A (subspace_topology X TX A) a)
           (top1_fundamental_group_mul A (subspace_topology X TX A) a)"
-    using Theorem_71_3_wedge_of_circles_general hA_wd by (by5000 fastforce)
+    using Theorem_71_3_finite hA_wd by (by5000 fastforce)
   \<comment> \<open>Step 4-5: Apply Theorem 72.1 with the SAME A (avoiding alignment issues).\<close>
   have hX_strict: "is_topology_on_strict X TX"
     using hscheme unfolding top1_quotient_of_scheme_on_def by (by100 blast)
