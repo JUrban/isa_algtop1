@@ -315,9 +315,269 @@ proof -
        (1) Generators generate: loop in finite sub-wedge \\<Rightarrow> product of generators.
        (2) Injectivity: loop in C\\_\\<beta> homotopic to constant in X \\<Rightarrow> in finite sub-wedge \\<Rightarrow> in C\\_\\<beta>.
        (3) No reduced word = id: word in finite sub-wedge \\<Rightarrow> contradicts Theorem 71.1.\<close>
-    show ?thesis sorry \<comment> \<open>Infinite case of Munkres 71.3.
-       The proof is correct but requires significant infrastructure:
-       hhtpy\\_finite, hfinite\\_free, and the assembly of 5 conditions.\<close>
+    \<comment> \<open>Inline the infrastructure from the general theorem's infinite case.\<close>
+    \<comment> \<open>C\\_\\<alpha> - {p} open, compact meets finitely many, loop in finite sub-wedge.\<close>
+    have hC_open: "\<And>\<alpha>. \<alpha> \<in> J \<Longrightarrow> C \<alpha> - {p} \<in> TX"
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
+      \<comment> \<open>Show X - (C\\_\\<alpha> - {p}) is closed, i.e. for each \\<beta>, C\\_\\<beta> \\<inter> (X - (C\\_\\<alpha> - {p})) closed in C\\_\\<beta>.\<close>
+      have hcl: "closedin_on X TX (X - (C \<alpha> - {p}))"
+      proof -
+        have hsub: "X - (C \<alpha> - {p}) \<subseteq> X" by (by100 blast)
+        have "\<forall>\<beta>\<in>J. closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) (C \<beta> \<inter> (X - (C \<alpha> - {p})))"
+        proof (intro ballI)
+          fix \<beta> assume h\<beta>: "\<beta> \<in> J"
+          show "closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) (C \<beta> \<inter> (X - (C \<alpha> - {p})))"
+          proof (cases "\<beta> = \<alpha>")
+            case True
+            hence "C \<beta> \<inter> (X - (C \<alpha> - {p})) = {p}"
+              using hC h\<alpha> by (by100 blast)
+            moreover have "closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) {p}"
+            proof -
+              have "C \<beta> \<subseteq> X" using hC h\<beta> by (by100 blast)
+              have "p \<in> C \<beta>" using hC h\<beta> by (by100 blast)
+              have "is_hausdorff_on (C \<beta>) (subspace_topology X TX (C \<beta>))"
+                using conjunct2[OF conjunct2[OF Theorem_17_11]] \<open>C \<beta> \<subseteq> X\<close> hhaus
+                by (by100 blast)
+              have "finite {p}" by (by100 simp)
+              have "{p} \<subseteq> C \<beta>" using \<open>p \<in> C \<beta>\<close> by (by100 blast)
+              from Theorem_17_8[OF \<open>is_hausdorff_on (C \<beta>) _\<close> \<open>finite {p}\<close> \<open>{p} \<subseteq> C \<beta>\<close>]
+              show ?thesis .
+            qed
+            ultimately show ?thesis by (by100 simp)
+          next
+            case False
+            hence "C \<beta> \<inter> (C \<alpha> - {p}) = {}"
+              using hdisjoint h\<alpha> h\<beta> by (by100 blast)
+            hence "C \<beta> \<inter> (X - (C \<alpha> - {p})) = C \<beta>"
+              using hC h\<beta> by (by100 blast)
+            moreover have "closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) (C \<beta>)"
+            proof -
+              have "C \<beta> \<subseteq> X" using hC h\<beta> by (by100 blast)
+              have htop: "is_topology_on (C \<beta>) (subspace_topology X TX (C \<beta>))"
+                by (rule subspace_topology_is_topology_on)
+                   (use hstrict in \<open>unfold is_topology_on_strict_def, by100 blast\<close>,
+                    use \<open>C \<beta> \<subseteq> X\<close> in blast)
+              from closedin_carrier[OF htop] show ?thesis .
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+        qed
+        from hweak[rule_format, OF hsub, THEN iffD2] this
+        show ?thesis by (by100 blast)
+      qed
+      have "X - (C \<alpha> - {p}) \<subseteq> X" by (by100 blast)
+      have "X - (X - (C \<alpha> - {p})) \<in> TX"
+        using hcl unfolding closedin_on_def by (by100 blast)
+      moreover have "X - (X - (C \<alpha> - {p})) = C \<alpha> - {p}"
+        using hC h\<alpha> by (by100 blast)
+      ultimately show "C \<alpha> - {p} \<in> TX" by (by100 simp)
+    qed
+    have hcompact_finite: "\<And>K. K \<subseteq> X \<Longrightarrow> top1_compact_on K (subspace_topology X TX K)
+        \<Longrightarrow> finite {\<alpha>\<in>J. K \<inter> (C \<alpha> - {p}) \<noteq> {}}"
+    proof -
+      fix K assume hK_sub: "K \<subseteq> X" and hK_compact: "top1_compact_on K (subspace_topology X TX K)"
+      let ?S = "{\<alpha>\<in>J. K \<inter> (C \<alpha> - {p}) \<noteq> {}}"
+      show "finite ?S"
+      proof (rule ccontr)
+        assume "infinite ?S"
+        \<comment> \<open>Pick x\\_\\<alpha> \\<in> K \\<inter> (C\\_\\<alpha> - {p}) for each \\<alpha> \\<in> ?S.\<close>
+        have "\<forall>\<alpha>\<in>?S. \<exists>x. x \<in> K \<and> x \<in> C \<alpha> - {p}" by (by100 blast)
+        hence "\<exists>xf. \<forall>\<alpha>\<in>?S. xf \<alpha> \<in> K \<and> xf \<alpha> \<in> C \<alpha> - {p}"
+          by (rule bchoice)
+        then obtain xf where hxf: "\<forall>\<alpha>\<in>?S. xf \<alpha> \<in> K \<and> xf \<alpha> \<in> C \<alpha> - {p}"
+          by (by100 blast)
+        let ?A = "xf ` ?S"
+        \<comment> \<open>A is infinite (x\\_\\<alpha> pairwise distinct since C\\_\\<alpha> - {p} disjoint).\<close>
+        have hinj: "inj_on xf ?S"
+        proof (rule inj_onI)
+          fix \<alpha> \<beta> assume "\<alpha> \<in> ?S" "\<beta> \<in> ?S" "xf \<alpha> = xf \<beta>"
+          have "xf \<alpha> \<in> C \<alpha> - {p}" using hxf \<open>\<alpha> \<in> ?S\<close> by (by100 blast)
+          have "xf \<beta> \<in> C \<beta> - {p}" using hxf \<open>\<beta> \<in> ?S\<close> by (by100 blast)
+          have "xf \<alpha> \<in> C \<beta> - {p}" using \<open>xf \<alpha> = xf \<beta>\<close> \<open>xf \<beta> \<in> C \<beta> - {p}\<close> by (by100 simp)
+          have "xf \<alpha> \<in> (C \<alpha> - {p}) \<inter> (C \<beta> - {p})"
+            using \<open>xf \<alpha> \<in> C \<alpha> - {p}\<close> \<open>xf \<alpha> \<in> C \<beta> - {p}\<close> by (by100 blast)
+          show "\<alpha> = \<beta>"
+          proof (rule ccontr)
+            assume "\<alpha> \<noteq> \<beta>"
+            have "\<alpha> \<in> J" "\<beta> \<in> J" using \<open>\<alpha> \<in> ?S\<close> \<open>\<beta> \<in> ?S\<close> by (by100 blast)+
+            from hdisjoint[rule_format, OF \<open>\<alpha> \<in> J\<close> \<open>\<beta> \<in> J\<close> \<open>\<alpha> \<noteq> \<beta>\<close>]
+            have "C \<alpha> \<inter> C \<beta> = {p}" .
+            hence "(C \<alpha> - {p}) \<inter> (C \<beta> - {p}) = {}" by (by100 blast)
+            thus False using \<open>xf \<alpha> \<in> (C \<alpha> - {p}) \<inter> (C \<beta> - {p})\<close> by (by100 blast)
+          qed
+        qed
+        have hA_inf: "infinite ?A"
+        proof -
+          from \<open>infinite ?S\<close> have "\<not> finite ?S" by simp
+          moreover have "finite ?A \<Longrightarrow> finite ?S" using finite_imageD[OF _ hinj] by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        have hA_sub_K: "?A \<subseteq> K" using hxf by (by100 blast)
+        \<comment> \<open>Key: every subset of A is closed in X (by coherent topology).
+           For any B \\<subseteq> A and any \\<beta> \\<in> J: C\\_\\<beta> \\<inter> B \\<subseteq> {xf \\<beta>} which is finite \\<Rightarrow> closed in C\\_\\<beta>.\<close>
+        have hA_every_sub_closed: "\<forall>B. B \<subseteq> ?A \<longrightarrow> closedin_on X TX B"
+        proof (intro allI impI)
+          fix B assume hB: "B \<subseteq> ?A"
+          have hB_sub_X: "B \<subseteq> X" using hB hA_sub_K hK_sub by (by100 blast)
+          show "closedin_on X TX B"
+            using hweak[rule_format, OF hB_sub_X]
+          proof (rule iffD2)
+            show "\<forall>\<beta>\<in>J. closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) (C \<beta> \<inter> B)"
+            proof (intro ballI)
+              fix \<beta> assume h\<beta>: "\<beta> \<in> J"
+              have "C \<beta> \<inter> B \<subseteq> {xf \<beta>}"
+              proof
+                fix x assume "x \<in> C \<beta> \<inter> B"
+                hence "x \<in> C \<beta>" "x \<in> B" by (by100 blast)+
+                from \<open>x \<in> B\<close> hB obtain \<gamma> where "\<gamma> \<in> ?S" "x = xf \<gamma>" by (by100 blast)
+                have "\<gamma> \<in> J" using \<open>\<gamma> \<in> ?S\<close> by (by100 blast)
+                have "x \<in> C \<gamma> - {p}" using hxf \<open>\<gamma> \<in> ?S\<close> \<open>x = xf \<gamma>\<close> by (by100 blast)
+                have "x \<in> C \<beta> \<inter> C \<gamma>" using \<open>x \<in> C \<beta>\<close> \<open>x \<in> C \<gamma> - {p}\<close> by (by100 blast)
+                have "\<gamma> = \<beta>"
+                proof (rule ccontr)
+                  assume "\<gamma> \<noteq> \<beta>"
+                  from hdisjoint[rule_format, OF \<open>\<beta> \<in> J\<close> \<open>\<gamma> \<in> J\<close>]
+                  have "C \<beta> \<inter> C \<gamma> = {p}" using \<open>\<gamma> \<noteq> \<beta>\<close> by (by100 blast)
+                  hence "x = p" using \<open>x \<in> C \<beta> \<inter> C \<gamma>\<close> by (by100 blast)
+                  thus False using \<open>x \<in> C \<gamma> - {p}\<close> by (by100 blast)
+                qed
+                thus "x \<in> {xf \<beta>}" using \<open>x = xf \<gamma>\<close> by (by100 simp)
+              qed
+              \<comment> \<open>C\\_\\<beta> \\<inter> B is finite (\\<subseteq> {xf \\<beta>}), hence closed in Hausdorff C\\_\\<beta>.\<close>
+              have "finite (C \<beta> \<inter> B)" using \<open>C \<beta> \<inter> B \<subseteq> {xf \<beta>}\<close>
+                by (rule finite_subset) (by100 simp)
+              have "C \<beta> \<subseteq> X" using hC h\<beta> by (by100 blast)
+              have "is_hausdorff_on (C \<beta>) (subspace_topology X TX (C \<beta>))"
+                using conjunct2[OF conjunct2[OF Theorem_17_11]] \<open>C \<beta> \<subseteq> X\<close> hhaus by (by100 blast)
+              have "C \<beta> \<inter> B \<subseteq> C \<beta>" by (by100 blast)
+              show "closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) (C \<beta> \<inter> B)"
+                by (rule Theorem_17_8[OF \<open>is_hausdorff_on (C \<beta>) _\<close> \<open>finite (C \<beta> \<inter> B)\<close>
+                    \<open>C \<beta> \<inter> B \<subseteq> C \<beta>\<close>])
+            qed
+          qed
+        qed
+        \<comment> \<open>A \\<subseteq> K infinite, every subset closed in X (hence in K).
+           K compact Hausdorff \\<Rightarrow> limit point compact (Theorem 28.1).
+           A infinite \\<Rightarrow> has limit point x in K.
+           But A - {x} is closed in K \\<Rightarrow> K - (A - {x}) is open \\<ni> x,
+           and (K - (A - {x})) \\<inter> (A - {x}) = {} \\<Rightarrow> x not a limit point. Contradiction.\<close>
+        have hK_haus: "is_hausdorff_on K (subspace_topology X TX K)"
+          using conjunct2[OF conjunct2[OF Theorem_17_11]] hK_sub hhaus by (by100 blast)
+        have hK_lpc: "top1_limit_point_compact_on K (subspace_topology X TX K)"
+          by (rule Theorem_28_1[OF hK_compact])
+        from hK_lpc[unfolded top1_limit_point_compact_on_def] hA_sub_K hA_inf
+        obtain x where hx: "x \<in> K" and hx_lp: "is_limit_point_of x ?A K (subspace_topology X TX K)"
+          by (by100 blast)
+        \<comment> \<open>A - {x} is closed in X (every subset of A is closed).\<close>
+        have "?A - {x} \<subseteq> ?A" by (by100 blast)
+        from hA_every_sub_closed[rule_format, OF this]
+        have hAmx_cl_X: "closedin_on X TX (?A - {x})" .
+        \<comment> \<open>A - {x} closed in K (from closed in X + Theorem 17.2).\<close>
+        have hTX_top: "is_topology_on X TX"
+          using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+        from Theorem_17_2[OF hTX_top hK_sub]
+        have "closedin_on K (subspace_topology X TX K) (?A - {x}) \<longleftrightarrow>
+            (\<exists>D. closedin_on X TX D \<and> ?A - {x} = D \<inter> K)" .
+        hence hAmx_cl_K: "closedin_on K (subspace_topology X TX K) (?A - {x})"
+          using hAmx_cl_X hA_sub_K by (by100 blast)
+        \<comment> \<open>K - (A - {x}) is open in K, contains x.\<close>
+        have hopen_K: "K - (?A - {x}) \<in> subspace_topology X TX K"
+          using hAmx_cl_K unfolding closedin_on_def by (by100 blast)
+        have "x \<in> K - (?A - {x})" using hx by (by100 blast)
+        \<comment> \<open>(K - (A - {x})) \\<inter> (A - {x}) = {} \\<Rightarrow> x is not a limit point of A.\<close>
+        have "(K - (?A - {x})) \<inter> (?A - {x}) = {}" by (by100 blast)
+        \<comment> \<open>But x IS a limit point: every open U \\<ni> x meets A - {x}.\<close>
+        have "K - (?A - {x}) \<subseteq> K" by (by100 blast)
+        have "K - (?A - {x}) \<in> subspace_topology X TX K" using hopen_K .
+        \<comment> \<open>This open set contains x but is disjoint from A - {x}. Contradicts limit point.\<close>
+        \<comment> \<open>x is a limit point of A, so every open U \\<ni> x meets A - {x}.
+           But K - (A-{x}) is open, contains x, and is disjoint from A-{x}. Contradiction.\<close>
+        from hx_lp[unfolded is_limit_point_of_def]
+        have hlp_raw: "x \<in> K \<and> ?A \<subseteq> K \<and> (\<forall>U. neighborhood_of x K (subspace_topology X TX K) U
+            \<longrightarrow> intersects (U - {x}) ?A)" by (by100 blast)
+        have hlp: "\<forall>U. U \<in> subspace_topology X TX K \<longrightarrow> x \<in> U \<longrightarrow>
+            (\<exists>y. y \<in> ?A \<and> y \<noteq> x \<and> y \<in> U)"
+        proof (intro allI impI)
+          fix U assume "U \<in> subspace_topology X TX K" "x \<in> U"
+          have "neighborhood_of x K (subspace_topology X TX K) U"
+            unfolding neighborhood_of_def using \<open>U \<in> _\<close> \<open>x \<in> U\<close> by (by100 blast)
+          from hlp_raw \<open>neighborhood_of x K _ U\<close>
+          have "intersects (U - {x}) ?A" by (by100 blast)
+          thus "\<exists>y. y \<in> ?A \<and> y \<noteq> x \<and> y \<in> U"
+            unfolding intersects_def by (by100 blast)
+        qed
+        from hlp[rule_format, OF hopen_K \<open>x \<in> K - (?A - {x})\<close>]
+        obtain y where "y \<in> ?A" "y \<noteq> x" "y \<in> K - (?A - {x})" by (by100 blast)
+        hence "y \<notin> ?A - {x}" by (by100 blast)
+        hence "y = x" using \<open>y \<in> ?A\<close> by (by100 blast)
+        thus False using \<open>y \<noteq> x\<close> by (by100 blast)
+      qed
+    qed
+    have hloop_finite: "\<And>f. top1_is_loop_on X TX p f \<Longrightarrow>
+        \<exists>F. finite F \<and> F \<subseteq> J \<and> f ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>F. C \<alpha>)"
+    proof -
+      fix f assume hf: "top1_is_loop_on X TX p f"
+      have hfI_sub: "f ` top1_unit_interval \<subseteq> X"
+        using hf unfolding top1_is_loop_on_def top1_is_path_on_def
+          top1_continuous_map_on_def by (by100 blast)
+      have hfI_compact: "top1_compact_on (f ` top1_unit_interval) (subspace_topology X TX (f ` top1_unit_interval))"
+      proof -
+        have hcont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX f"
+          using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hI_top: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+          using top1_unit_interval_topology_is_topology_on .
+        have hTX_top: "is_topology_on X TX"
+          using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+        have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+          unfolding top1_unit_interval_def top1_unit_interval_topology_def
+          using Theorem_27_1[of "0::real" 1] by (by100 simp)
+        from Theorem_26_5[OF hI_top hTX_top hI_compact hcont]
+        show ?thesis .
+      qed
+      let ?S = "{\<alpha>\<in>J. f ` top1_unit_interval \<inter> (C \<alpha> - {p}) \<noteq> {}}"
+      from hcompact_finite[OF hfI_sub hfI_compact] have "finite ?S" .
+      have "J \<noteq> {}" using hp hcover by (by100 blast)
+      then obtain \<beta> where "\<beta> \<in> J" by (by100 blast)
+      let ?F = "?S \<union> {\<beta>}"
+      have "finite ?F" using \<open>finite ?S\<close> by (by100 simp)
+      have "?F \<subseteq> J" using \<open>\<beta> \<in> J\<close> by (by100 blast)
+      have "f ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>?F. C \<alpha>)"
+      proof
+        fix x assume "x \<in> f ` top1_unit_interval"
+        hence "x \<in> X" using hfI_sub by (by100 blast)
+        then obtain \<gamma> where "\<gamma> \<in> J" "x \<in> C \<gamma>" using hcover by (by100 blast)
+        show "x \<in> (\<Union>\<alpha>\<in>?F. C \<alpha>)"
+        proof (cases "x = p")
+          case True thus ?thesis using hC \<open>\<beta> \<in> J\<close> by (by100 blast)
+        next
+          case False
+          hence "x \<in> C \<gamma> - {p}" using \<open>x \<in> C \<gamma>\<close> by (by100 blast)
+          hence "\<gamma> \<in> ?S" using \<open>\<gamma> \<in> J\<close> \<open>x \<in> f ` top1_unit_interval\<close> by (by100 blast)
+          thus ?thesis using \<open>x \<in> C \<gamma>\<close> by (by100 blast)
+        qed
+      qed
+      thus "\<exists>F. finite F \<and> F \<subseteq> J \<and> f ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>F. C \<alpha>)"
+        using \<open>finite ?F\<close> \<open>?F \<subseteq> J\<close> by (by100 blast)
+    qed
+    have hhtpy_finite: "\<And>f g. top1_is_loop_on X TX p f \<Longrightarrow> top1_is_loop_on X TX p g \<Longrightarrow>
+        top1_path_homotopic_on X TX p p f g \<Longrightarrow>
+        \<exists>F. finite F \<and> F \<subseteq> J \<and> top1_path_homotopic_on (\<Union>\<alpha>\<in>F. C \<alpha>)
+            (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) p p f g" sorry
+    have hfinite_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> J \<Longrightarrow>
+        top1_is_wedge_of_circles_on (\<Union>\<alpha>\<in>F. C \<alpha>)
+            (subspace_topology X TX (\<Union>\<alpha>\<in>F. C \<alpha>)) F p" sorry
+    \<comment> \<open>Now verify top1\\_is\\_free\\_group\\_full\\_on for \\<pi>\\_1(X, p).
+       For each finite sub-wedge F, Theorem\\_71\\_3\\_finite gives \\<pi>\\_1 free on F.
+       The free group condition 5 (no reduced word = id): a word w uses finitely many
+       generators {\\<alpha>\\_1,...,\\<alpha>\\_n}. Take F containing these. The sub-wedge \\<Union>F C\\_\\<alpha>
+       has \\<pi>\\_1 free on F (Theorem 71.1). The word is non-trivial there.
+       The inclusion \\<pi>\\_1(sub-wedge) \\<hookrightarrow> \\<pi>\\_1(X) is injective (by hhtpy\\_finite:
+       if a loop in the sub-wedge is null-homotopic in X, the homotopy lies in a finite
+       sub-wedge, so the loop is null-homotopic in the sub-wedge).
+       Therefore the word is non-trivial in \\<pi>\\_1(X).\<close>
+    show ?thesis sorry \<comment> \<open>Assembly: verify 5 conditions of top1\\_is\\_free\\_group\\_full\\_on.
+       Each condition reduces to finite sub-wedge via hloop\\_finite/hhtpy\\_finite.\<close>
   qed
 qed
 
