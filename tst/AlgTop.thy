@@ -17396,7 +17396,14 @@ next
             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A) \<and>
             A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B) \<and>
             finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-          using h\<A>_inter by (by100 blast)
+        proof (intro ballI impI)
+          fix A B assume "A \<in> ?\<B>V" "B \<in> ?\<B>V" "A \<noteq> B"
+          from h\<A>_inter[rule_format, OF _ _ \<open>A \<noteq> B\<close>]
+          show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A) \<and>
+              A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B) \<and>
+              finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+            using \<open>A \<in> ?\<B>V\<close> \<open>B \<in> ?\<B>V\<close> by (by100 blast)
+        qed
         have hBV_coh: "\<forall>C. C \<subseteq> ?target_V \<longrightarrow>
             (closedin_on ?target_V (subspace_topology Y TY ?target_V) C \<longleftrightarrow>
              (\<forall>A\<in>?\<B>V. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
@@ -17481,9 +17488,9 @@ next
       have hV_top: "is_topology_on ?V (subspace_topology Y TY ?V)"
         by (rule subspace_topology_is_topology_on[OF hTY_top]) (by100 blast)
       have htU_pc: "top1_path_connected_on ?target_U (subspace_topology Y TY ?target_U)"
-        sorry \<comment> \<open>tree\\_union\\_arcs\\_path\\_connected.\<close>
+        using htU_pc_raw .
       have htV_pc: "top1_path_connected_on ?target_V (subspace_topology Y TY ?target_V)"
-        sorry \<comment> \<open>tree\\_union\\_arcs\\_path\\_connected.\<close>
+        using htV_pc_raw .
       have htU_pc_U: "top1_path_connected_on ?target_U (subspace_topology ?U (subspace_topology Y TY ?U) ?target_U)"
         using htU_pc subspace_topology_trans[OF htU_sub_U] by simp
       have htV_pc_V: "top1_path_connected_on ?target_V (subspace_topology ?V (subspace_topology Y TY ?V) ?target_V)"
@@ -17523,13 +17530,75 @@ next
           (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
           (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
           (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
-          \<iota> S" sorry \<comment> \<open>DR iso transfer from htU\\_free.\<close>
+          \<iota> S"
+      proof -
+        have hTU_trans: "subspace_topology ?U (subspace_topology Y TY ?U) ?target_U =
+            subspace_topology Y TY ?target_U"
+          by (rule subspace_topology_trans[OF htU_sub_U])
+        note htU_free' = htU_free[unfolded hTU_trans[symmetric]]
+        have hx0_tU: "y0 \<in> ?target_U" using hT_x0 by (by100 blast)
+        have hpi1_U_iso: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier ?target_U (subspace_topology ?U (subspace_topology Y TY ?U) ?target_U) y0)
+            (top1_fundamental_group_mul ?target_U (subspace_topology ?U (subspace_topology Y TY ?U) ?target_U) y0)
+            (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
+            (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)"
+          by (rule Theorem_58_3[OF hU_dr hU_top hx0_tU])
+        have hpi1_U_grp: "top1_is_group_on
+            (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
+            (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
+            (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
+            (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)"
+        proof -
+          have "y0 \<in> ?U" using hx0_UV hUV_eq by (by100 blast)
+          thus ?thesis by (rule top1_fundamental_group_is_group[OF hU_top])
+        qed
+        show ?thesis using htU_free' hpi1_U_iso hpi1_U_grp
+          apply -
+          apply (erule exE)+
+          apply (drule free_group_iso_transfer, assumption, assumption)
+          apply (erule exE, rule exI, rule exI, assumption)
+          done
+      qed
       have hV_free_direct: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
           (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
           (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
           (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
           (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)
-          \<iota> S" sorry \<comment> \<open>DR iso transfer from htV\\_free.\<close>
+          \<iota> S"
+      proof -
+        have hTV_trans: "subspace_topology ?V (subspace_topology Y TY ?V) ?target_V =
+            subspace_topology Y TY ?target_V"
+          by (rule subspace_topology_trans[OF htV_sub_V])
+        note htV_free' = htV_free[unfolded hTV_trans[symmetric]]
+        have hx0_tV: "y0 \<in> ?target_V" using hT_x0 by (by100 blast)
+        have hpi1_V_iso: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier ?target_V (subspace_topology ?V (subspace_topology Y TY ?V) ?target_V) y0)
+            (top1_fundamental_group_mul ?target_V (subspace_topology ?V (subspace_topology Y TY ?V) ?target_V) y0)
+            (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
+            (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)"
+          by (rule Theorem_58_3[OF hV_dr hV_top hx0_tV])
+        have hpi1_V_grp: "top1_is_group_on
+            (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
+            (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
+            (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
+            (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)"
+        proof -
+          have "y0 \<in> ?V"
+          proof -
+            have "y0 \<in> ?UV" using hx0_UV .
+            have "ps ` {A1} \<subseteq> ps ` ?NT" using hA1 by (by100 blast)
+            hence "?UV \<subseteq> ?V" by (by100 blast)
+            thus ?thesis using \<open>y0 \<in> ?UV\<close> by (by100 blast)
+          qed
+          thus ?thesis by (rule top1_fundamental_group_is_group[OF hV_top])
+        qed
+        show ?thesis using htV_free' hpi1_V_iso hpi1_V_grp
+          apply -
+          apply (erule exE)+
+          apply (drule free_group_iso_transfer, assumption, assumption)
+          apply (erule exE, rule exI, rule exI, assumption)
+          done
+      qed
       \<comment> \<open>Step 12: SvK assembly.\<close>
       from hU_free_direct hV_free_direct
       obtain \<iota>U :: "nat \<Rightarrow> _" and S1 :: "nat set" and \<iota>V :: "nat \<Rightarrow> _" and S2 :: "nat set"
