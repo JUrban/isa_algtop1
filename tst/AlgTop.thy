@@ -15902,8 +15902,18 @@ proof (induction n)
   show ?case by (rule graph_tree_free_pi1[OF 0(1) 0(3) 0(6) 0(7) 0(10) 0(11) 0(13) hNT_empty])
 next
   case (Suc n)
-  \<comment> \<open>Step: card(NT) \\<le> Suc n. Either card=0 (base case), or proceed.\<close>
-  show ?case sorry
+  \<comment> \<open>Step: card(NT) \\<le> Suc n.\<close>
+  show ?case
+  proof (cases "card {A\<in>\<A>. \<not> A \<subseteq> T} = 0")
+    case True
+    \<comment> \<open>card = 0: NT = {}. Use graph\\_tree\\_free\\_pi1.\<close>
+    have hNT_empty: "{A\<in>\<A>. \<not> A \<subseteq> T} = {}" using True Suc(6) by (by100 simp)
+    show ?thesis by (rule graph_tree_free_pi1[OF Suc(2) Suc(4) Suc(7) Suc(8) Suc(11) Suc(12) Suc(14) hNT_empty])
+  next
+    case hcard_ne0: False
+    \<comment> \<open>card \\<ge> 1. Card=1: Lemma 84.6. Card>1: SvK + Suc.IH.\<close>
+    show ?thesis sorry \<comment> \<open>Card=1 and card>1 cases (using Suc.IH for recursive calls).\<close>
+  qed
 qed
 
 \<comment> \<open>Weak form of Theorem 84.7: \\<pi>\\_1 of a connected graph is free (no int set).
