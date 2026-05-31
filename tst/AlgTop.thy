@@ -17432,83 +17432,15 @@ next
           (top1_fundamental_group_id ?target_U (subspace_topology Y TY ?target_U) y0)
           (top1_fundamental_group_invg ?target_U (subspace_topology Y TY ?target_U) y0)
           \<iota> S"
-      proof -
-        \<comment> \<open>target\\_U = T \\<union> A1 has 1 NT arc. Use graph\\_one\\_edge\\_pi1\\_iso\\_Z.\<close>
-        have hNT_tU_singleton: "{A\<in>\<A>. A \<subseteq> ?target_U \<and> \<not> A \<subseteq> T} = {A1}"
-        proof (rule set_eqI, rule iffI)
-          fix A assume "A \<in> {A\<in>\<A>. A \<subseteq> ?target_U \<and> \<not> A \<subseteq> T}"
-          hence "A \<in> \<A>" "A \<subseteq> T \<union> A1" "\<not> A \<subseteq> T" by (by100 blast)+
-          hence "A \<in> ?NT" by (by100 blast)
-          show "A \<in> {A1}"
-          proof (rule ccontr)
-            assume "A \<notin> {A1}" hence "A \<noteq> A1" by (by100 blast)
-            have "A1 \<in> \<A>" using hA1 by (by100 blast)
-            from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>A1 \<in> \<A>\<close> \<open>A \<noteq> A1\<close>]
-            have "A \<inter> A1 \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" by (by100 blast)
-            have "A \<inter> A1 \<subseteq> T" using \<open>A \<inter> A1 \<subseteq> _\<close> hNT_endpoints \<open>A \<in> ?NT\<close> by (by100 blast)
-            have "A \<subseteq> T \<union> A1" using \<open>A \<subseteq> T \<union> A1\<close> .
-            have "A \<subseteq> T"
-            proof
-              fix x assume "x \<in> A"
-              show "x \<in> T"
-              proof (cases "x \<in> A1")
-                case True hence "x \<in> A \<inter> A1" using \<open>x \<in> A\<close> by (by100 blast)
-                thus ?thesis using \<open>A \<inter> A1 \<subseteq> T\<close> by (by100 blast)
-              next
-                case False thus ?thesis using \<open>x \<in> A\<close> \<open>A \<subseteq> T \<union> A1\<close> by (by100 blast)
-              qed
-            qed
-            thus False using \<open>\<not> A \<subseteq> T\<close> by contradiction
-          qed
-        next
-          fix A assume "A \<in> {A1}"
-          hence "A = A1" by (by100 blast)
-          thus "A \<in> {A\<in>\<A>. A \<subseteq> ?target_U \<and> \<not> A \<subseteq> T}"
-            using hA1 by (by100 blast)
-        qed
-        \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z gives \\<pi>\\_1(target\\_U) \\<cong> \\<Z>.\<close>
-        have hiso_tU: "top1_groups_isomorphic_on
-            (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
-            (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
-            top1_Z_group top1_Z_mul"
-          sorry \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z on target\\_U.
-             Need: extract arcs from htU\\_graph, prove NT\\_U = {A1}, apply lemma.\<close>
-        \<comment> \<open>\\<Z> free \\<Rightarrow> \\<pi>\\_1 free.\<close>
-        have hZ_free_loc: "top1_is_free_group_full_on top1_Z_group top1_Z_mul
-            top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {0::nat}"
-          by (rule Z_is_free_on_one_generator)
-        have htU_top_loc: "is_topology_on ?target_U (subspace_topology Y TY ?target_U)"
-          by (rule subspace_topology_is_topology_on[OF hTY_top]) (use hT_sub h\<A> hA1 in blast)
-        have hpi1_tU_grp: "top1_is_group_on
-            (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
-            (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
-            (top1_fundamental_group_id ?target_U (subspace_topology Y TY ?target_U) y0)
-            (top1_fundamental_group_invg ?target_U (subspace_topology Y TY ?target_U) y0)"
-          by (rule top1_fundamental_group_is_group[OF htU_top_loc]) (use hT_x0 in blast)
-        have hZ_grp_loc: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
-          using hZ_free_loc unfolding top1_is_free_group_full_on_def by (by100 blast)
-        from top1_groups_isomorphic_on_sym[OF hiso_tU hpi1_tU_grp hZ_grp_loc]
-        have "top1_groups_isomorphic_on top1_Z_group top1_Z_mul
-            (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
-            (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)" .
-        from free_group_iso_transfer[OF hZ_free_loc this hpi1_tU_grp]
-        obtain \<iota>tU where hfr_tU: "top1_is_free_group_full_on
-            (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
-            (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
-            (top1_fundamental_group_id ?target_U (subspace_topology Y TY ?target_U) y0)
-            (top1_fundamental_group_invg ?target_U (subspace_topology Y TY ?target_U) y0)
-            \<iota>tU {0::nat}" by (by100 blast)
-        show ?thesis using hfr_tU
-          apply -
-          apply (rule exI, rule exI, assumption)
-          done
-      qed
+        sorry \<comment> \<open>IH for target\\_U: graph\\_pi1\\_free\\_weak\\_finite with card = 1 \\<le> n.\<close>
       have htV_free: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
           (top1_fundamental_group_carrier ?target_V (subspace_topology Y TY ?target_V) y0)
           (top1_fundamental_group_mul ?target_V (subspace_topology Y TY ?target_V) y0)
           (top1_fundamental_group_id ?target_V (subspace_topology Y TY ?target_V) y0)
           (top1_fundamental_group_invg ?target_V (subspace_topology Y TY ?target_V) y0)
-          \<iota> S" sorry \<comment> \<open>IH via Suc(1) (card-1 NT arcs \\<le> n). Type annotated for exI.\<close>
+          \<iota> S"
+        sorry \<comment> \<open>IH via Suc(1) with \\<A>={A\\<in>\\<A>. A\\<subseteq>target\\_V}, T=T.
+           card(NT\\_V) = card(NT)-1 \\<le> n. All arc structure from h\\<A> restricted.\<close>
       \<comment> \<open>Step 9: U, V PC.\<close>
       have htU_sub_U: "?target_U \<subseteq> ?U"
         using conjunct1[OF hU_dr[unfolded top1_deformation_retract_of_on_def]] by (by100 blast)
