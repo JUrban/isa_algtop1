@@ -768,10 +768,12 @@ i/Top1_Ch5_8.thy|lemma|gp_singleton_set|29279
 AlgTop.thy|lemma|graph_connected_sub_covered_by_arcs|13990
 AlgTop.thy|lemma|graph_covering_is_graph|9358
 AlgTop.thy|lemma|graph_deformation_retract_helper|14188
-AlgTop.thy|lemma|graph_pi1_free_weak|15775
+AlgTop.thy|lemma|graph_pi1_free_weak|15912
+AlgTop.thy|lemma|graph_pi1_free_weak_finite|15872
 ac6/AlgTopCached6.thy|lemma|graph_quotient_by_tree_wedge_of_circles|1248
 ac6/AlgTopCached6.thy|lemma|graph_remove_interior_points_sc|2034
 ac3/AlgTopCached3.thy|lemma|graph_selection_set_discrete|127
+AlgTop.thy|lemma|graph_tree_free_pi1|15773
 i/Top1_Ch9_13.thy|lemma|grid_from_per_piece_subdivisions|7786
 ac/AlgTopCached.thy|lemma|grid_subdivision_UV|15124
 ac/AlgTopCached.thy|lemma|group_assoc|7524
@@ -2085,6 +2087,6 @@ ac4/AlgTopCached4.thy|theorem|Theorem_80_3_universal|4013
 AlgTop.thy|theorem|Theorem_81_2_covering_group_iso|8960
 AlgTop.thy|theorem|Theorem_82_1_covering_existence|9258
 ac5/AlgTopCached5.thy|theorem|Theorem_83_4_covering_of_graph_is_graph|708
-AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|18023
-AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|20995
-AlgTop.thy|theorem|Theorem_85_3_Schreier_index|21052
+AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|18085
+AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|21057
+AlgTop.thy|theorem|Theorem_85_3_Schreier_index|21114
