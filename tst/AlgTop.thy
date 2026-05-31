@@ -1591,7 +1591,7 @@ proof -
             by (by100 blast)
           then obtain sel where hsel: "\<forall>A\<in>?F. sel A \<in> f ` I_set \<and> sel A \<in> A \<and>
               sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-            sorry \<comment> \<open>AC: choice function from the \\<forall>\\<exists> above.\<close>
+            sorry \<comment> \<open>bchoice on the \\<forall>\\<exists> — times out due to complex set comprehension ?F.\<close>
           let ?B = "sel ` ?F"
           \<comment> \<open>?B picks at most 1 point per arc (interior points are in exactly one arc).\<close>
           have hB_sub: "?B \<subseteq> Y" using hsel hf_sub by (by100 blast)
