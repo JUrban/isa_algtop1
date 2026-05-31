@@ -15928,9 +15928,12 @@ next
         moreover have "card {A\<in>\<A>. \<not> A \<subseteq> T} \<noteq> 1" using hcard_ge2 by (by100 blast)
         ultimately show ?thesis by (by100 linarith)
       qed
-      show ?thesis sorry \<comment> \<open>SvK: U, V open cover + SC intersection + DR.
-         IH: Suc.hyps gives \\<pi>\\_1 free for subgraphs with card(NT) \\<le> n.
-         target\\_U: 1 NT arc \\<le> n. target\\_V: card-1 NT arcs \\<le> n.\<close>
+      \<comment> \<open>The IH from Suc.hyps: for any graph with \\<le> n NT arcs, \\<pi>\\_1 is free.\<close>
+      note IH = Suc(1)
+      \<comment> \<open>IH can be called as: IH[of Y' TY' y0' \\<A>' T'] with 14 premises.\<close>
+      show ?thesis sorry \<comment> \<open>SvK decomposition + IH calls.
+         Same infrastructure as graph\\_pi1\\_free\\_weak card>1 case,
+         but replacing sorry IH with IH[of target\\_U ...] and IH[of target\\_V ...].\<close>
     qed
   qed
 qed
