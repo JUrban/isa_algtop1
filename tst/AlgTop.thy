@@ -15917,8 +15917,32 @@ next
     show ?thesis
     proof (cases "card {A\<in>\<A>. \<not> A \<subseteq> T} = 1")
       case True
-      \<comment> \<open>Card=1: Lemma 84.6 (same as graph\\_pi1\\_free\\_weak card=1 case).\<close>
-      show ?thesis sorry \<comment> \<open>Lemma 84.6 application. Does not use IH.\<close>
+      \<comment> \<open>Card=1: \\<pi>\\_1(Y) \\<cong> \\<Z> (Lemma 84.6), \\<Z> free \\<Rightarrow> \\<pi>\\_1 free.\<close>
+      note hgraph = Suc(2) and hy0 = Suc(4)
+      note h\<A> = Suc(7) and h\<A>_cover = Suc(8) and h\<A>_inter = Suc(9) and h\<A>_coh = Suc(10)
+      note hT_tree = Suc(11) and hT_sub = Suc(12) and hT_subgraph = Suc(13)
+      note hT_x0 = Suc(14) and hNT_endpoints = Suc(15)
+      let ?NT = "{A\<in>\<A>. \<not> A \<subseteq> T}"
+      have hpi1_iso_Z: "top1_groups_isomorphic_on
+          (top1_fundamental_group_carrier Y TY y0) (top1_fundamental_group_mul Y TY y0)
+          top1_Z_group top1_Z_mul"
+        sorry \<comment> \<open>Lemma 84.6 + basepoint change (same as card=1 in graph\\_pi1\\_free\\_weak).\<close>
+      have hZ_free: "top1_is_free_group_full_on top1_Z_group top1_Z_mul
+          top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {0::nat}"
+        by (rule Z_is_free_on_one_generator)
+      have hTY_top: "is_topology_on Y TY"
+        using hgraph unfolding top1_is_graph_on_def is_topology_on_strict_def by (by5000 blast)
+      have hpi1_grp: "top1_is_group_on
+          (top1_fundamental_group_carrier Y TY y0) (top1_fundamental_group_mul Y TY y0)
+          (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)"
+        by (rule top1_fundamental_group_is_group[OF hTY_top hy0])
+      have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+        using hZ_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+      from top1_groups_isomorphic_on_sym[OF hpi1_iso_Z hpi1_grp hZ_grp]
+      have "top1_groups_isomorphic_on top1_Z_group top1_Z_mul
+          (top1_fundamental_group_carrier Y TY y0) (top1_fundamental_group_mul Y TY y0)" .
+      from free_group_iso_transfer[OF hZ_free this hpi1_grp]
+      show ?thesis by (by100 blast)
     next
       case hcard_ge2: False
       \<comment> \<open>Card \\<ge> 2: SvK decomposition + Suc.IH for recursive calls.\<close>
