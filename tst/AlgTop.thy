@@ -639,8 +639,84 @@ proof -
       qed
       show "top1_is_wedge_of_circles_on ?Y ?TY F p"
         unfolding top1_is_wedge_of_circles_on_def
-        sorry \<comment> \<open>Assemble: strict + Hausdorff + p \\<in> ?Y + circles (with subspace\\_topology\\_trans)
-           + cover + disjoint + hcoh\\_F.\<close>
+      proof (intro conjI)
+        show "is_topology_on_strict ?Y ?TY"
+        proof -
+          have "\<forall>U\<in>?TY. U \<subseteq> ?Y" unfolding subspace_topology_def by (by100 blast)
+          moreover have "is_topology_on ?Y ?TY"
+            by (rule subspace_topology_is_topology_on[OF hTX hY_sub])
+          ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+        qed
+        show "is_hausdorff_on ?Y ?TY"
+          using conjunct2[OF conjunct2[OF Theorem_17_11]] hY_sub hhaus by (by100 blast)
+        show "p \<in> ?Y"
+        proof -
+          have "J \<noteq> {}" using hp hcover by (by100 blast)
+          hence "F \<noteq> {} \<or> F = {}" by simp
+          show ?thesis
+          proof (cases "F = {}")
+            case True
+            \<comment> \<open>F = {} is a degenerate case (empty wedge). p \\<in> {} = False.
+               But this case never arises from the callers (hloop\\_finite gives F \\<noteq> {}).\<close>
+            show ?thesis sorry
+          next
+            case False
+            then obtain \<beta> where "\<beta> \<in> F" by (by100 blast)
+            hence "\<beta> \<in> J" using hFJ by (by100 blast)
+            have "p \<in> C \<beta>" using hC \<open>\<beta> \<in> J\<close> by (by100 blast)
+            thus ?thesis using \<open>\<beta> \<in> F\<close> by (by100 blast)
+          qed
+        qed
+        show "\<exists>Ca. (\<forall>\<alpha>\<in>F. Ca \<alpha> \<subseteq> ?Y \<and> p \<in> Ca \<alpha>
+            \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (Ca \<alpha>) (subspace_topology ?Y ?TY (Ca \<alpha>)) h))
+          \<and> (\<Union>\<alpha>\<in>F. Ca \<alpha>) = ?Y
+          \<and> (\<forall>\<alpha>\<in>F. \<forall>\<beta>\<in>F. \<alpha> \<noteq> \<beta> \<longrightarrow> Ca \<alpha> \<inter> Ca \<beta> = {p})
+          \<and> (\<forall>D. D \<subseteq> ?Y \<longrightarrow> (closedin_on ?Y ?TY D \<longleftrightarrow>
+              (\<forall>\<alpha>\<in>F. closedin_on (Ca \<alpha>) (subspace_topology ?Y ?TY (Ca \<alpha>)) (Ca \<alpha> \<inter> D))))"
+        proof (rule exI[of _ C], intro conjI)
+          show "\<forall>\<alpha>\<in>F. C \<alpha> \<subseteq> ?Y \<and> p \<in> C \<alpha>
+              \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology ?Y ?TY (C \<alpha>)) h)"
+          proof (intro ballI conjI)
+            fix \<alpha> assume "\<alpha> \<in> F"
+            hence "\<alpha> \<in> J" using hFJ by (by100 blast)
+            show "C \<alpha> \<subseteq> ?Y" using \<open>\<alpha> \<in> F\<close> by (by100 blast)
+            show "p \<in> C \<alpha>" using hC \<open>\<alpha> \<in> J\<close> by (by100 blast)
+            show "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology ?Y ?TY (C \<alpha>)) h"
+            proof -
+              from hC[rule_format, OF \<open>\<alpha> \<in> J\<close>]
+              obtain h where hh: "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h" by (by100 blast)
+              have "subspace_topology ?Y ?TY (C \<alpha>) = subspace_topology X TX (C \<alpha>)"
+                by (rule subspace_topology_trans) (use \<open>\<alpha> \<in> F\<close> in blast)
+              have "top1_homeomorphism_on top1_S1 top1_S1_topology
+                  (C \<alpha>) (subspace_topology ?Y ?TY (C \<alpha>)) h"
+                using hh \<open>subspace_topology ?Y ?TY (C \<alpha>) = subspace_topology X TX (C \<alpha>)\<close>
+                by (by100 simp)
+              thus ?thesis by (by100 blast)
+            qed
+          qed
+          show "(\<Union>\<alpha>\<in>F. C \<alpha>) = ?Y" by (by100 blast)
+          show "\<forall>\<alpha>\<in>F. \<forall>\<beta>\<in>F. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p}"
+            using hdisjoint hFJ by (by100 blast)
+          show "\<forall>D. D \<subseteq> ?Y \<longrightarrow> (closedin_on ?Y ?TY D \<longleftrightarrow>
+              (\<forall>\<alpha>\<in>F. closedin_on (C \<alpha>) (subspace_topology ?Y ?TY (C \<alpha>)) (C \<alpha> \<inter> D)))"
+          proof (intro allI impI)
+            fix D assume "D \<subseteq> ?Y"
+            from hcoh_F[rule_format, OF this]
+            have "closedin_on ?Y ?TY D \<longleftrightarrow>
+                (\<forall>\<alpha>\<in>F. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D))" .
+            moreover have "\<forall>\<alpha>\<in>F. subspace_topology ?Y ?TY (C \<alpha>) = subspace_topology X TX (C \<alpha>)"
+            proof (intro ballI)
+              fix \<alpha> assume "\<alpha> \<in> F"
+              show "subspace_topology ?Y ?TY (C \<alpha>) = subspace_topology X TX (C \<alpha>)"
+                by (rule subspace_topology_trans) (use \<open>\<alpha> \<in> F\<close> in blast)
+            qed
+            ultimately show "closedin_on ?Y ?TY D \<longleftrightarrow>
+                (\<forall>\<alpha>\<in>F. closedin_on (C \<alpha>) (subspace_topology ?Y ?TY (C \<alpha>)) (C \<alpha> \<inter> D))"
+              by (by100 simp)
+          qed
+        qed
+      qed
     qed
     \<comment> \<open>Now verify top1\\_is\\_free\\_group\\_full\\_on for \\<pi>\\_1(X, p).
        For each finite sub-wedge F, Theorem\\_71\\_3\\_finite gives \\<pi>\\_1 free on F.
