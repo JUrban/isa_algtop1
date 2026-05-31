@@ -926,6 +926,39 @@ qed
 \<comment> \<open>Homotopy helpers + §84 infrastructure moved to AlgTopCached7.\<close>
 
 
+\<comment> \<open>Helper: apply graph\\_pi1\\_free\\_weak\\_finite to a graph given all preconditions.
+   This wrapper avoids let-binding expansion issues when applying inside proofs.\<close>
+lemma graph_pi1_free_weak_apply:
+  assumes "top1_is_graph_on Y_sub TY_sub"
+      and "top1_connected_on Y_sub TY_sub"
+      and "y0 \<in> Y_sub"
+      and "finite {A \<in> \<A>_sub. \<not> A \<subseteq> T_sub}"
+      and "\<forall>A\<in>\<A>_sub. A \<subseteq> Y_sub \<and> top1_is_arc_on A (subspace_topology Y_sub TY_sub A)"
+      and "\<Union>\<A>_sub = Y_sub"
+      and "\<forall>A\<in>\<A>_sub. \<forall>B\<in>\<A>_sub. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y_sub TY_sub A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y_sub TY_sub B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "\<forall>C. C \<subseteq> Y_sub \<longrightarrow>
+           (closedin_on Y_sub TY_sub C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>_sub. closedin_on A (subspace_topology Y_sub TY_sub A) (A \<inter> C)))"
+      and "top1_is_tree_on T_sub (subspace_topology Y_sub TY_sub T_sub)"
+      and "T_sub \<subseteq> Y_sub"
+      and "\<forall>A\<in>\<A>_sub. A \<subseteq> T_sub \<or>
+           A \<inter> T_sub \<subseteq> top1_arc_endpoints_on A (subspace_topology Y_sub TY_sub A)"
+      and "y0 \<in> T_sub"
+      and "\<forall>A\<in>{A\<in>\<A>_sub. \<not> A \<subseteq> T_sub}. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y_sub TY_sub A). e \<in> T_sub"
+  shows "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
+      (top1_fundamental_group_carrier Y_sub TY_sub y0)
+      (top1_fundamental_group_mul Y_sub TY_sub y0)
+      (top1_fundamental_group_id Y_sub TY_sub y0)
+      (top1_fundamental_group_invg Y_sub TY_sub y0)
+      \<iota> S"
+  by (rule graph_pi1_free_weak_finite[where n="card {A \<in> \<A>_sub. \<not> A \<subseteq> T_sub}",
+      OF assms(1) assms(2) assms(3) _ assms(4) assms(5) assms(6) assms(7) assms(8)
+         assms(9) assms(10) assms(11) assms(12) assms(13)])
+     (by100 simp)
+
 \<comment> \<open>Weak form of Theorem 84.7: \\<pi>\\_1 of a connected graph is free (no int set).
    This is proved as a standalone universal lemma that can be used
    for subgraph applications inside Theorem 84.7's proof.\<close>
@@ -1392,18 +1425,6 @@ proof -
          two distinct endpoints in T cannot be collapsed continuously without
          identifying endpoints. The algebraic approach (free group embedding)
          is correct.\<close>
-      \<comment> \<open>Step 1: Inclusion \\<pi>\\_1(T \\<union> F) \\<hookrightarrow> \\<pi>\\_1(Y) is injective.
-         Uses free\\_group\\_hom\\_subset\\_injective from AlgTopCached9.\<close>
-      have hincl_inj: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?NT \<Longrightarrow> F \<noteq> {} \<Longrightarrow>
-          inj_on (top1_fundamental_group_induced_on (T \<union> \<Union>F)
-              (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x))
-            (top1_fundamental_group_carrier (T \<union> \<Union>F)
-              (subspace_topology Y TY (T \<union> \<Union>F)) y0)"
-        sorry \<comment> \<open>Same proof as hincl\\_inj in Theorem 71.3:
-           free\\_group\\_hom\\_subset\\_injective + finite\\_wedge\\_pi1\\_free\\_with\\_chosen\\_loops\\_arb.
-           The subgraph T \\<union> F has free \\<pi>\\_1 (from hfinite\\_subgraph\\_free).
-           The inclusion maps generators of \\<pi>\\_1(T \\<union> F) to generators of \\<pi>\\_1(Y).
-           By free group embedding: inclusion is injective.\<close>
       \<comment> \<open>Helper: any compact K \\<subseteq> Y meets finitely many non-tree arc interiors,
          hence K \\<subseteq> T \\<union> \\<Union>F for some finite F \\<subseteq> ?NT.\<close>
       have hcompact_in_finite: "\<And>K. K \<subseteq> Y \<Longrightarrow>
@@ -1938,10 +1959,174 @@ proof -
             \<open>top1_path_homotopic_on (T \<union> \<Union>?F) _ y0 y0 f1 f2\<close>
           by (by100 blast)
       qed
+      \<comment> \<open>Step 1: Inclusion \\<pi>\\_1(T \\<union> F) \\<hookrightarrow> \\<pi>\\_1(Y) is injective.
+         Uses Lemma\\_55\\_1\\_retract\\_injective + hhtpy\\_in\\_finite.\<close>
+      have hincl_inj: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?NT \<Longrightarrow> F \<noteq> {} \<Longrightarrow>
+          inj_on (top1_fundamental_group_induced_on (T \<union> \<Union>F)
+              (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x))
+            (top1_fundamental_group_carrier (T \<union> \<Union>F)
+              (subspace_topology Y TY (T \<union> \<Union>F)) y0)"
+      proof -
+        fix F assume hFfin: "finite F" and hF_NT: "F \<subseteq> ?NT" and hF_ne: "F \<noteq> {}"
+        let ?YF = "T \<union> \<Union>F"
+        let ?TYF = "subspace_topology Y TY ?YF"
+        let ?incl = "top1_fundamental_group_induced_on ?YF ?TYF y0 Y TY y0 (\<lambda>x. x)"
+        have hYF_sub: "?YF \<subseteq> Y" using hT_sub h\<A> hF_NT by (by100 blast)
+        have hy0_YF: "y0 \<in> ?YF" using hT_x0 by (by100 blast)
+        have hTY_top: "is_topology_on Y TY"
+          using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+        show "inj_on ?incl (top1_fundamental_group_carrier ?YF ?TYF y0)"
+        proof (rule inj_onI)
+          fix c1 c2 assume hc1: "c1 \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
+              and hc2: "c2 \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
+              and heq: "?incl c1 = ?incl c2"
+          \<comment> \<open>Extract representative loops.\<close>
+          from hc1[unfolded top1_fundamental_group_carrier_def]
+          obtain f1 where hf1_loop: "top1_is_loop_on ?YF ?TYF y0 f1"
+              and hc1_eq: "c1 = {g. top1_loop_equiv_on ?YF ?TYF y0 f1 g}"
+            by (by100 blast)
+          from hc2[unfolded top1_fundamental_group_carrier_def]
+          obtain f2 where hf2_loop: "top1_is_loop_on ?YF ?TYF y0 f2"
+              and hc2_eq: "c2 = {g. top1_loop_equiv_on ?YF ?TYF y0 f2 g}"
+            by (by100 blast)
+          \<comment> \<open>Lift to loops in Y.\<close>
+          have hf1Y: "top1_is_loop_on Y TY y0 f1"
+          proof -
+            have "top1_continuous_map_on I_set I_top ?YF ?TYF f1"
+              using hf1_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            have "top1_continuous_map_on I_set I_top Y TY (id \<circ> f1)"
+              by (rule top1_continuous_map_on_comp[OF \<open>top1_continuous_map_on I_set I_top ?YF ?TYF f1\<close>
+                  Theorem_18_2(2)[OF hTY_top hTY_top hTY_top, rule_format, OF hYF_sub]])
+            hence "top1_continuous_map_on I_set I_top Y TY f1" by (by100 simp)
+            moreover have "f1 0 = y0" "f1 1 = y0"
+              using hf1_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+            ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+              by (by100 blast)
+          qed
+          have hf2Y: "top1_is_loop_on Y TY y0 f2"
+          proof -
+            have "top1_continuous_map_on I_set I_top ?YF ?TYF f2"
+              using hf2_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            have "top1_continuous_map_on I_set I_top Y TY (id \<circ> f2)"
+              by (rule top1_continuous_map_on_comp[OF \<open>top1_continuous_map_on I_set I_top ?YF ?TYF f2\<close>
+                  Theorem_18_2(2)[OF hTY_top hTY_top hTY_top, rule_format, OF hYF_sub]])
+            hence "top1_continuous_map_on I_set I_top Y TY f2" by (by100 simp)
+            moreover have "f2 0 = y0" "f2 1 = y0"
+              using hf2_loop unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+            ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+              by (by100 blast)
+          qed
+          \<comment> \<open>incl(c1) = incl(c2) means f1 \\<sim> f2 in Y.
+             Following ac9 proof: f1 \\<in> incl c1, hence f1 \\<in> incl c2 (by heq).
+             Extract f' with loop\\_equiv(?YF, f2, f'), loop\\_equiv(Y, f', f1).
+             Then f2 ~ f' in ?YF, hence in Y. f' ~ f1 in Y. Transitivity: f1 ~ f2 in Y.\<close>
+          have "top1_path_homotopic_on Y TY y0 y0 f1 f2"
+          proof -
+            \<comment> \<open>f1 \\<in> ?incl c1.\<close>
+            have "f1 \<in> ?incl c1"
+            proof -
+              have "f1 \<in> {l. top1_loop_equiv_on ?YF ?TYF y0 f1 l}"
+              proof -
+                have hTYF_top: "is_topology_on ?YF ?TYF"
+                  by (rule subspace_topology_is_topology_on[OF hTY_top hYF_sub])
+                from top1_loop_equiv_on_refl[OF hf1_loop] show ?thesis by (by100 blast)
+              qed
+              moreover have "(\<lambda>x. x) \<circ> f1 = f1" by (by100 auto)
+              hence "top1_loop_equiv_on Y TY y0 ((\<lambda>x. x) \<circ> f1) f1"
+                using top1_loop_equiv_on_refl[OF hf1Y] by (by100 simp)
+              ultimately show ?thesis
+                unfolding top1_fundamental_group_induced_on_def hc1_eq by (by100 blast)
+            qed
+            hence "f1 \<in> ?incl c2" using heq by (by100 simp)
+            then obtain f' where hf'2: "top1_loop_equiv_on ?YF ?TYF y0 f2 f'"
+                and hf'1: "top1_loop_equiv_on Y TY y0 ((\<lambda>x. x) \<circ> f') f1"
+              unfolding top1_fundamental_group_induced_on_def hc2_eq by (by100 blast)
+            have "(\<lambda>x. x) \<circ> f' = f'" by (by100 auto)
+            have hf'1': "top1_loop_equiv_on Y TY y0 f' f1" using hf'1 \<open>(\<lambda>x. x) \<circ> f' = f'\<close>
+              by (by100 simp)
+            have "top1_loop_equiv_on Y TY y0 f2 f'"
+            proof -
+              from hf'2[unfolded top1_loop_equiv_on_def]
+              have "top1_path_homotopic_on ?YF ?TYF y0 y0 f2 f'" by (by100 blast)
+              from path_homotopic_subspace_to_ambient[OF hTY_top hYF_sub _ this]
+              have "top1_path_homotopic_on Y TY y0 y0 f2 f'" by (by100 blast)
+              have "top1_is_loop_on Y TY y0 f'"
+                using hf'1' unfolding top1_loop_equiv_on_def by (by100 blast)
+              thus ?thesis unfolding top1_loop_equiv_on_def
+                using hf2Y \<open>top1_is_loop_on Y TY y0 f'\<close>
+                  \<open>top1_path_homotopic_on Y TY y0 y0 f2 f'\<close> by (by100 blast)
+            qed
+            from top1_loop_equiv_on_trans[OF hTY_top this hf'1']
+            have "top1_loop_equiv_on Y TY y0 f2 f1" .
+            from top1_loop_equiv_on_sym[OF this]
+            show "top1_path_homotopic_on Y TY y0 y0 f1 f2"
+              unfolding top1_loop_equiv_on_def by (by100 blast)
+          qed
+          \<comment> \<open>By hhtpy\\_in\\_finite: f1 \\<sim> f2 in T \\<union> \\<Union>F' for some F'.\<close>
+          from hhtpy_in_finite[OF hf1Y hf2Y \<open>top1_path_homotopic_on Y TY y0 y0 f1 f2\<close>]
+          obtain F' where hF'fin: "finite F'" and hF'_NT: "F' \<subseteq> ?NT"
+              and hF'htpy: "top1_path_homotopic_on (T \<union> \<Union>F')
+                  (subspace_topology Y TY (T \<union> \<Union>F')) y0 y0 f1 f2"
+            by (by100 blast)
+          let ?FF = "F \<union> F'"
+          let ?YFF = "T \<union> \<Union>?FF"
+          let ?TYFF = "subspace_topology Y TY ?YFF"
+          \<comment> \<open>Lift homotopy from T \\<union> \\<Union>F' to T \\<union> \\<Union>(F \\<union> F').\<close>
+          have hF'_sub_FF: "T \<union> \<Union>F' \<subseteq> ?YFF" by (by100 blast)
+          have hYFF_sub': "?YFF \<subseteq> Y" using hYF_sub hF_NT hF'_NT h\<A> by (by100 blast)
+          have hhtpy_FF: "top1_path_homotopic_on ?YFF ?TYFF y0 y0 f1 f2"
+          proof -
+            have hTYFF_top: "is_topology_on ?YFF ?TYFF"
+              by (rule subspace_topology_is_topology_on[OF hTY_top hYFF_sub'])
+            have "subspace_topology ?YFF ?TYFF (T \<union> \<Union>F') =
+                subspace_topology Y TY (T \<union> \<Union>F')"
+              by (rule subspace_topology_trans) (use hF'_sub_FF in blast)
+            from path_homotopic_subspace_to_ambient[OF hTYFF_top hF'_sub_FF
+                this[symmetric] hF'htpy]
+            show ?thesis .
+          qed
+          \<comment> \<open>T \\<union> \\<Union>F is a retract of T \\<union> \\<Union>(F \\<union> F').
+             For each arc A \\<in> F'\\\\F: retract A to the tree path between its endpoints.\<close>
+          have hretract: "top1_retract_of_on ?YFF ?TYFF ?YF" sorry
+          \<comment> \<open>By Lemma 55.1: f1 \\<sim> f2 in T \\<union> \\<Union>F.\<close>
+          have hYF_sub_FF: "?YF \<subseteq> ?YFF" by (by100 blast)
+          have hYFF_sub: "?YFF \<subseteq> Y" using hYF_sub hF_NT hF'_NT h\<A> by (by100 blast)
+          have hsubsp_eq: "subspace_topology ?YFF ?TYFF ?YF = ?TYF"
+            by (rule subspace_topology_trans) (use hYF_sub_FF in blast)
+          from Lemma_55_1_retract_injective[OF hretract hy0_YF
+              hf1_loop[folded hsubsp_eq] hf2_loop[folded hsubsp_eq] hhtpy_FF]
+          have "top1_path_homotopic_on ?YF ?TYF y0 y0 f1 f2"
+            using hsubsp_eq by (by100 simp)
+          \<comment> \<open>Hence c1 = c2: f1 ~ f2 in ?YF \\<Longrightarrow> loop\\_equiv f1 f2 \\<Longrightarrow> c1 = c2.\<close>
+          have "top1_loop_equiv_on ?YF ?TYF y0 f1 f2"
+            unfolding top1_loop_equiv_on_def
+            using hf1_loop hf2_loop \<open>top1_path_homotopic_on ?YF ?TYF y0 y0 f1 f2\<close>
+            by (by100 blast)
+          show "c1 = c2"
+          proof -
+            have hTYF_top: "is_topology_on ?YF ?TYF"
+              by (rule subspace_topology_is_topology_on[OF hTY_top hYF_sub])
+            have "\<forall>g. top1_loop_equiv_on ?YF ?TYF y0 f1 g \<longleftrightarrow>
+                top1_loop_equiv_on ?YF ?TYF y0 f2 g"
+            proof (intro allI iffI)
+              fix g assume "top1_loop_equiv_on ?YF ?TYF y0 f1 g"
+              from top1_loop_equiv_on_trans[OF hTYF_top
+                  top1_loop_equiv_on_sym[OF \<open>top1_loop_equiv_on ?YF ?TYF y0 f1 f2\<close>] this]
+              show "top1_loop_equiv_on ?YF ?TYF y0 f2 g" .
+            next
+              fix g assume "top1_loop_equiv_on ?YF ?TYF y0 f2 g"
+              from top1_loop_equiv_on_trans[OF hTYF_top
+                  \<open>top1_loop_equiv_on ?YF ?TYF y0 f1 f2\<close> this]
+              show "top1_loop_equiv_on ?YF ?TYF y0 f1 g" .
+            qed
+            thus "c1 = c2" using hc1_eq hc2_eq by (by100 blast)
+          qed
+        qed
+      qed
       \<comment> \<open>Step 4: For finite F \\<subseteq> ?NT, T \\<union> (\\<Union>F) is a subgraph with free \\<pi>\\_1.
          This follows from graph\\_pi1\\_free\\_weak\\_finite.\<close>
       have hfinite_subgraph_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?NT \<Longrightarrow>
-          \<exists>\<iota> S. top1_is_free_group_full_on
+          \<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
               (top1_fundamental_group_carrier (T \<union> \<Union>F)
                   (subspace_topology Y TY (T \<union> \<Union>F)) y0)
               (top1_fundamental_group_mul (T \<union> \<Union>F)
@@ -2038,7 +2223,7 @@ proof -
         qed
         have hy0_Y': "y0 \<in> ?Y'" using hT_x0 by (by100 blast)
         \<comment> \<open>Apply graph\\_pi1\\_free\\_weak\\_finite to the finite subgraph.\<close>
-        show "\<exists>\<iota> S. top1_is_free_group_full_on
+        show "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?Y' (subspace_topology Y TY ?Y') y0)
             (top1_fundamental_group_mul ?Y' (subspace_topology Y TY ?Y') y0)
             (top1_fundamental_group_id ?Y' (subspace_topology Y TY ?Y') y0)
@@ -2204,38 +2389,33 @@ proof -
             using hNT_Y' hF0'fin by (by100 simp)
           have hT_sub_Y': "T \<subseteq> ?Y'" by (by100 blast)
           show ?thesis
-          proof -
-            have hlemma: "top1_is_graph_on ?Y' (subspace_topology Y TY ?Y') \<Longrightarrow>
-                top1_connected_on ?Y' (subspace_topology Y TY ?Y') \<Longrightarrow>
-                y0 \<in> ?Y' \<Longrightarrow>
-                card {A \<in> ?\<B>. \<not> A \<subseteq> T} \<le> card F0' \<Longrightarrow>
-                finite {A \<in> ?\<B>. \<not> A \<subseteq> T} \<Longrightarrow>
-                (\<forall>A\<in>?\<B>. A \<subseteq> ?Y' \<and>
-                    top1_is_arc_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)) \<Longrightarrow>
-                \<Union>?\<B> = ?Y' \<Longrightarrow>
-                (\<forall>A\<in>?\<B>. \<forall>B\<in>?\<B>. A \<noteq> B \<longrightarrow>
-                    A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A) \<and>
-                    A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?Y' (subspace_topology Y TY ?Y') B) \<and>
-                    finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<Longrightarrow>
-                (\<forall>C. C \<subseteq> ?Y' \<longrightarrow>
-                    (closedin_on ?Y' (subspace_topology Y TY ?Y') C \<longleftrightarrow>
-                     (\<forall>A\<in>?\<B>. closedin_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A) (A \<inter> C)))) \<Longrightarrow>
-                top1_is_tree_on T (subspace_topology ?Y' (subspace_topology Y TY ?Y') T) \<Longrightarrow>
-                T \<subseteq> ?Y' \<Longrightarrow>
-                (\<forall>A\<in>?\<B>. A \<subseteq> T \<or>
-                    A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)) \<Longrightarrow>
-                y0 \<in> T \<Longrightarrow>
-                (\<forall>A\<in>{A \<in> ?\<B>. \<not> A \<subseteq> T}.
-                    \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A). e \<in> T) \<Longrightarrow>
-                \<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
-                    (top1_fundamental_group_carrier ?Y' (subspace_topology Y TY ?Y') y0)
-                    (top1_fundamental_group_mul ?Y' (subspace_topology Y TY ?Y') y0)
-                    (top1_fundamental_group_id ?Y' (subspace_topology Y TY ?Y') y0)
-                    (top1_fundamental_group_invg ?Y' (subspace_topology Y TY ?Y') y0) \<iota> S"
-              by (rule graph_pi1_free_weak_finite[where n="card F0'"])
-            \<comment> \<open>State the result in \\<Union>?\\<B> form, then convert to ?Y' = T \\<union> \\<Union>F0'.\<close>
-            show ?thesis sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite. All preconditions proved.
-               Blocked by simp timeout when rewriting ?Y' \\<leftrightarrow> Y\\_sub in arc conditions.\<close>
+          proof (rule graph_pi1_free_weak_apply[where \<A>_sub="?\<B>" and T_sub=T])
+            show "top1_is_graph_on ?Y' (subspace_topology Y TY ?Y')" by (rule hY'_graph)
+            show "top1_connected_on ?Y' (subspace_topology Y TY ?Y')" by (rule hY'_conn)
+            show "y0 \<in> ?Y'" by (rule hy0_Y')
+            show "finite {A \<in> ?\<B>. \<not> A \<subseteq> T}" by (rule hfin_NT)
+            show "\<forall>A\<in>?\<B>. A \<subseteq> ?Y' \<and> top1_is_arc_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)"
+              by (rule h\<B>_arcs_Y')
+            show "\<Union>?\<B> = ?Y'" using h\<B>_eq' by (by100 simp)
+            show "\<forall>A\<in>?\<B>. \<forall>B\<in>?\<B>. A \<noteq> B \<longrightarrow>
+                A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A) \<and>
+                A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?Y' (subspace_topology Y TY ?Y') B) \<and>
+                finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+              by (rule h\<B>_inter_Y')
+            show "\<forall>C. C \<subseteq> ?Y' \<longrightarrow>
+                (closedin_on ?Y' (subspace_topology Y TY ?Y') C \<longleftrightarrow>
+                 (\<forall>A\<in>?\<B>. closedin_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A) (A \<inter> C)))"
+              by (rule h\<B>_coh_Y')
+            show "top1_is_tree_on T (subspace_topology ?Y' (subspace_topology Y TY ?Y') T)"
+              by (rule hT_tree_Y')
+            show "T \<subseteq> ?Y'" by (rule hT_sub_Y')
+            show "\<forall>A\<in>?\<B>. A \<subseteq> T \<or>
+                A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)"
+              by (rule hT_subgraph_Y')
+            show "y0 \<in> T" by (rule hT_x0)
+            show "\<forall>A\<in>{A \<in> ?\<B>. \<not> A \<subseteq> T}.
+                \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A). e \<in> T"
+              by (rule hNT_ep_Y')
           qed
         qed
       qed
