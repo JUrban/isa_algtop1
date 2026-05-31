@@ -16333,7 +16333,8 @@ proof -
             (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
             (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
             \<iota> S"
-          sorry \<comment> \<open>free\\_group\\_iso\\_transfer + hpi1\\_U\\_iso + htU\\_pi1\\_free + hTU\\_trans.\<close>
+          sorry \<comment> \<open>free\\_group\\_iso\\_transfer + hpi1\\_U\\_iso + htU\\_pi1\\_free.
+             Type annotation in htU\\_pi1\\_free blocks obtain pattern.\<close>
         have hV_free_transfer: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
             (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
