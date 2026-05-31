@@ -1387,190 +1387,23 @@ proof -
          By (1)-(4), \\<pi>\\_1(Y) is free.\<close>
       \<comment> \<open>The finite subgraph T \\<union> F (for finite F \\<subseteq> ?NT) has free \\<pi>\\_1
          by graph\\_pi1\\_free\\_weak\\_finite. The inclusion T \\<union> F \\<hookrightarrow> Y is injective
-         on \\<pi>\\_1 because T \\<union> F is a retract of Y (collapse non-F arcs to T-endpoints).
-         The retraction is continuous by the coherent topology.
-         Then Lemma\\_55\\_1\\_retract\\_injective gives \\<pi>\\_1-injectivity.\<close>
-      \<comment> \<open>Step 1: For any finite F \\<subseteq> ?NT, T \\<union> (\\<Union>F) is a retract of Y.\<close>
-      have hretract: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?NT \<Longrightarrow>
-          top1_retract_of_on Y TY (T \<union> \<Union>F)"
-      proof -
-        fix F0 assume hF0fin: "finite F0" and hF0_NT: "F0 \<subseteq> ?NT"
-        let ?Y0 = "T \<union> \<Union>F0"
-        \<comment> \<open>Define retraction r: for each non-F0 arc A, pick an endpoint e\\_A \\<in> T.
-           r(x) = x if x \\<in> ?Y0, r(x) = e\\_A if x \\<in> A for non-F0 arc A.\<close>
-        \<comment> \<open>Each non-F0 arc A has both endpoints in T (from hNT\\_endpoints).\<close>
-        \<comment> \<open>Pick one endpoint for each non-F0 arc.\<close>
-        have h_ep_exists: "\<forall>A\<in>?NT - F0. \<exists>e. e \<in> T \<and> e \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-        proof (intro ballI)
-          fix A assume "A \<in> ?NT - F0"
-          hence "A \<in> ?NT" by (by100 blast)
-          hence "A \<in> \<A>" "\<not> A \<subseteq> T" by (by100 blast)+
-          have "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
-          have "top1_is_arc_on A (subspace_topology Y TY A)" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
-          \<comment> \<open>A is an arc, so it has endpoints.\<close>
-          then obtain h where hh: "top1_homeomorphism_on top1_unit_interval
-              top1_unit_interval_topology A (subspace_topology Y TY A) h"
-            unfolding top1_is_arc_on_def by (by100 blast)
-          have hstrict_Y: "is_topology_on_strict Y TY"
-            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
-          have hhaus_Y: "is_hausdorff_on Y TY"
-            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
-          have hhaus_A: "is_hausdorff_on A (subspace_topology Y TY A)"
-            using conjunct2[OF conjunct2[OF Theorem_17_11]] \<open>A \<subseteq> Y\<close> hhaus_Y by (by100 blast)
-          from arc_endpoints_are_boundary[OF hstrict_Y hhaus_Y \<open>A \<subseteq> Y\<close>
-              \<open>top1_is_arc_on A _\<close> hh]
-          have "h 0 \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)
-              \<or> h 1 \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-            by (by100 blast)
-          then obtain e where "e \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-            by (by100 blast)
-          hence "e \<in> T" using hNT_endpoints \<open>A \<in> ?NT\<close> by (by100 blast)
-          thus "\<exists>e. e \<in> T \<and> e \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-            using \<open>e \<in> top1_arc_endpoints_on A _\<close> by (by100 blast)
-        qed
-        obtain e_choice where h_ep: "\<forall>A\<in>?NT - F0. e_choice A \<in> T \<and>
-            e_choice A \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-          using bchoice[OF h_ep_exists] by (by100 blast)
-        \<comment> \<open>Define r: for x \\<in> ?Y0, r(x) = x. For x \\<in> A (non-F0 arc), r(x) = e\\_choice(A).\<close>
-        define r where "r x = (if x \<in> ?Y0 then x
-            else e_choice (SOME A. A \<in> ?NT - F0 \<and> x \<in> A))" for x
-        have hY0_sub: "?Y0 \<subseteq> Y" using hT_sub h\<A> hF0_NT by (by5000 blast)
-        have hr_fix: "\<forall>a\<in>?Y0. r a = a" unfolding r_def by (by100 simp)
-        have hr_image: "\<forall>x\<in>Y. r x \<in> ?Y0"
-        proof (intro ballI)
-          fix x assume "x \<in> Y"
-          show "r x \<in> ?Y0"
-          proof (cases "x \<in> ?Y0")
-            case True thus ?thesis unfolding r_def by (by100 simp)
-          next
-            case False
-            \<comment> \<open>x \\<in> Y - ?Y0. x is in some arc A with A \\<in> ?NT - F0.\<close>
-            have "x \<in> \<Union>\<A>" using \<open>x \<in> Y\<close> h\<A>_cover by (by100 simp)
-            then obtain A where "A \<in> \<A>" "x \<in> A" by (by100 blast)
-            have "\<not> A \<subseteq> T" using False \<open>x \<in> A\<close> by (by100 blast)
-            hence "A \<in> ?NT" using \<open>A \<in> \<A>\<close> by (by100 blast)
-            have "A \<notin> F0" using False \<open>x \<in> A\<close> by (by100 blast)
-            hence "A \<in> ?NT - F0" using \<open>A \<in> ?NT\<close> by (by100 blast)
-            \<comment> \<open>SOME A picks such an arc. e\\_choice(A) \\<in> T.\<close>
-            have hexB: "\<exists>B. B \<in> ?NT - F0 \<and> x \<in> B" using \<open>A \<in> ?NT - F0\<close> \<open>x \<in> A\<close> by (by100 blast)
-            have hsome: "(SOME B. B \<in> ?NT - F0 \<and> x \<in> B) \<in> ?NT - F0"
-              using someI_ex[OF hexB] by (by100 blast)
-            have "e_choice (SOME B. B \<in> ?NT - F0 \<and> x \<in> B) \<in> T"
-              using h_ep hsome by (by100 blast)
-            thus ?thesis unfolding r_def using False by (by100 simp)
-          qed
-        qed
-        have hr_cont: "top1_continuous_map_on Y TY ?Y0 (subspace_topology Y TY ?Y0) r"
-          unfolding top1_continuous_map_on_def
-        proof (intro conjI ballI)
-          \<comment> \<open>r maps Y into ?Y0.\<close>
-          fix x assume "x \<in> Y" thus "r x \<in> ?Y0" using hr_image by (by100 blast)
-        next
-          \<comment> \<open>Preimages of open sets are open: equivalent to preimages of closed sets are closed.\<close>
-          fix V assume hV: "V \<in> subspace_topology Y TY ?Y0"
-          \<comment> \<open>V = ?Y0 \\<inter> U for some U \\<in> TY. Need {x \\<in> Y. r x \\<in> V} \\<in> TY.\<close>
-          \<comment> \<open>V = ?Y0 \\<inter> U for some U \\<in> TY.\<close>
-          from hV obtain U where hU: "U \<in> TY" and hV_eq: "V = ?Y0 \<inter> U"
-            unfolding subspace_topology_def by (by100 blast)
-          \<comment> \<open>Show {x \\<in> Y. r x \\<in> V} \\<in> TY via closedin complement + coherent topology.\<close>
-          let ?S = "{x \<in> Y. r x \<in> V}"
-          have hS_eq: "?S = {x \<in> Y. r x \<in> U}"
-          proof (rule set_eqI, rule iffI)
-            fix x assume "x \<in> ?S" thus "x \<in> {x \<in> Y. r x \<in> U}"
-              using hV_eq hr_image by (by100 blast)
-          next
-            fix x assume "x \<in> {x \<in> Y. r x \<in> U}" thus "x \<in> ?S"
-              using hV_eq hr_image by (by100 blast)
-          qed
-          \<comment> \<open>Show Y - ?S is closedin Y via coherent topology.\<close>
-          have hcompl: "Y - ?S = {x \<in> Y. r x \<notin> V}" by (by100 blast)
-          have "Y - ?S \<subseteq> Y" by (by100 blast)
-          have "closedin_on Y TY (Y - ?S)"
-          proof -
-            from h\<A>_coh[rule_format, OF \<open>Y - ?S \<subseteq> Y\<close>]
-            have "closedin_on Y TY (Y - ?S) \<longleftrightarrow>
-                (\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> (Y - ?S)))" .
-            moreover have "\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> (Y - ?S))"
-            proof (intro ballI)
-              fix A assume "A \<in> \<A>"
-              have "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
-              show "closedin_on A (subspace_topology Y TY A) (A \<inter> (Y - ?S))"
-              proof (cases "A \<subseteq> ?Y0")
-                case True
-                \<comment> \<open>r|A = id, so A \\<inter> (Y - ?S) = A - V = A - U (since A \\<subseteq> ?Y0).\<close>
-                have "A \<inter> (Y - ?S) = A - V"
-                proof (rule set_eqI, rule iffI)
-                  fix x assume "x \<in> A \<inter> (Y - ?S)"
-                  hence "x \<in> A" "x \<in> Y" "r x \<notin> V" by (by100 blast)+
-                  have "x \<in> ?Y0" using True \<open>x \<in> A\<close> by (by100 blast)
-                  hence "r x = x" using hr_fix by (by100 blast)
-                  have "x \<notin> V" using \<open>r x \<notin> V\<close> \<open>r x = x\<close> by (by100 simp)
-                  thus "x \<in> A - V" using \<open>x \<in> A\<close> by (by100 blast)
-                next
-                  fix x assume "x \<in> A - V"
-                  hence "x \<in> A" "x \<notin> V" by (by100 blast)+
-                  have "x \<in> ?Y0" using True \<open>x \<in> A\<close> by (by100 blast)
-                  hence "r x = x" using hr_fix by (by100 blast)
-                  have "x \<in> Y" using \<open>A \<subseteq> Y\<close> \<open>x \<in> A\<close> by (by100 blast)
-                  have "r x \<notin> V" using \<open>x \<notin> V\<close> \<open>r x = x\<close> by (by100 simp)
-                  thus "x \<in> A \<inter> (Y - ?S)" using \<open>x \<in> A\<close> \<open>x \<in> Y\<close> \<open>r x \<notin> V\<close> by (by100 blast)
-                qed
-                have "A - V = A - U" using hV_eq True by (by100 blast)
-                have "A \<inter> (Y - ?S) = A - U"
-                  using \<open>A \<inter> (Y - ?S) = A - V\<close> \<open>A - V = A - U\<close> by (by100 simp)
-                \<comment> \<open>A \\<inter> (Y - ?S) = A - V = A - U. This is closed in A.\<close>
-                have hTY': "is_topology_on Y TY"
-                  using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
-                have hstrict': "is_topology_on_strict Y TY"
-                  using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
-                have hU_sub_Y: "U \<subseteq> Y"
-                  using hU hstrict' unfolding is_topology_on_strict_def by (by100 blast)
-                have "closedin_on Y TY (Y - U)"
-                  unfolding closedin_on_def
-                proof (intro conjI)
-                  show "Y - U \<subseteq> Y" by (by100 blast)
-                  have "Y - (Y - U) = U" using hU_sub_Y by (by100 blast)
-                  thus "Y - (Y - U) \<in> TY" using hU by (by100 simp)
-                qed
-                have "A - U = A \<inter> (Y - U)" using \<open>A \<subseteq> Y\<close> by (by100 blast)
-                have hcl_AU: "closedin_on A (subspace_topology Y TY A) (A \<inter> (Y - U))"
-                  using Theorem_17_2[OF hTY' \<open>A \<subseteq> Y\<close>] \<open>closedin_on Y TY (Y - U)\<close>
-                  by (by100 blast)
-                have "A \<inter> (Y - U) = A \<inter> (Y - ?S)"
-                  using \<open>A \<inter> (Y - ?S) = A - U\<close> \<open>A - U = A \<inter> (Y - U)\<close> by (by100 blast)
-                show ?thesis using hcl_AU \<open>A \<inter> (Y - U) = A \<inter> (Y - ?S)\<close>
-                  by (by5000 metis)
-              next
-                case False
-                \<comment> \<open>A \\<in> ?NT. Either A \\<in> F0 (\\<subseteq> ?Y0, handled above) or A \\<in> ?NT - F0.\<close>
-                have "A \<in> ?NT" using \<open>A \<in> \<A>\<close> False by (by100 blast)
-                have "A \<notin> F0"
-                proof
-                  assume "A \<in> F0"
-                  hence "A \<subseteq> \<Union>F0" by (by100 blast)
-                  hence "A \<subseteq> ?Y0" by (by100 blast)
-                  thus False using False by contradiction
-                qed
-                hence "A \<in> ?NT - F0" using \<open>A \<in> ?NT\<close> by (by100 blast)
-                \<comment> \<open>r maps all of A to e\\_choice(A). So A \\<inter> (Y - ?S) = A if e\\_choice(A) \\<notin> V, else \\<emptyset>.\<close>
-                show ?thesis sorry \<comment> \<open>A or \\<emptyset>, both closed in A.\<close>
-              qed
-            qed
-            ultimately show ?thesis by (by100 blast)
-          qed
-          \<comment> \<open>{x \\<in> Y. r x \\<in> V} = Y - (Y - ?S) \\<in> TY.\<close>
-          have "?S \<subseteq> Y" by (by100 blast)
-          have "Y - (Y - ?S) = ?S" using \<open>?S \<subseteq> Y\<close> by (by100 blast)
-          have hTY_top: "is_topology_on Y TY"
-            using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
-          show "{x \<in> Y. r x \<in> V} \<in> TY"
-            using \<open>closedin_on Y TY (Y - ?S)\<close> \<open>Y - (Y - ?S) = ?S\<close> hTY_top
-            unfolding closedin_on_def by (by5000 metis)
-        qed
-        show "top1_retract_of_on Y TY ?Y0"
-          unfolding top1_retract_of_on_def top1_is_retraction_on_def
-          using hY0_sub hr_cont hr_fix by (by100 blast)
-      qed
+         on \\<pi>\\_1 by free\\_group\\_hom\\_subset\\_injective (same as Theorem 71.3).
+         Note: the retraction approach does NOT work here because arcs with
+         two distinct endpoints in T cannot be collapsed continuously without
+         identifying endpoints. The algebraic approach (free group embedding)
+         is correct.\<close>
+      \<comment> \<open>Step 1: Inclusion \\<pi>\\_1(T \\<union> F) \\<hookrightarrow> \\<pi>\\_1(Y) is injective.
+         Uses free\\_group\\_hom\\_subset\\_injective from AlgTopCached9.\<close>
+      have hincl_inj: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?NT \<Longrightarrow> F \<noteq> {} \<Longrightarrow>
+          inj_on (top1_fundamental_group_induced_on (T \<union> \<Union>F)
+              (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x))
+            (top1_fundamental_group_carrier (T \<union> \<Union>F)
+              (subspace_topology Y TY (T \<union> \<Union>F)) y0)"
+        sorry \<comment> \<open>Same proof as hincl\\_inj in Theorem 71.3:
+           free\\_group\\_hom\\_subset\\_injective + finite\\_wedge\\_pi1\\_free\\_with\\_chosen\\_loops\\_arb.
+           The subgraph T \\<union> F has free \\<pi>\\_1 (from hfinite\\_subgraph\\_free).
+           The inclusion maps generators of \\<pi>\\_1(T \\<union> F) to generators of \\<pi>\\_1(Y).
+           By free group embedding: inclusion is injective.\<close>
       \<comment> \<open>Step 2: Any loop in Y lies in T \\<union> (finitely many arcs).\<close>
       have hloop_in_finite: "\<And>f. top1_is_loop_on Y TY y0 f \<Longrightarrow>
           \<exists>F. finite F \<and> F \<subseteq> ?NT \<and> f ` top1_unit_interval \<subseteq> T \<union> \<Union>F"
