@@ -1408,13 +1408,18 @@ proof -
         \<comment> \<open>Define r: for x \\<in> ?Y0, r(x) = x. For x \\<in> A (non-F0 arc), r(x) = e\\_choice(A).\<close>
         define r where "r x = (if x \<in> ?Y0 then x
             else e_choice (SOME A. A \<in> ?NT - F0 \<and> x \<in> A))" for x
+        have hY0_sub: "?Y0 \<subseteq> Y" using hT_sub h\<A> hF0_NT by (by5000 blast)
+        have hr_fix: "\<forall>a\<in>?Y0. r a = a" unfolding r_def by (by100 simp)
+        have hr_image: "\<forall>x\<in>Y. r x \<in> ?Y0"
+          sorry \<comment> \<open>For x \\<in> ?Y0: r(x) = x \\<in> ?Y0. For x \\<notin> ?Y0: x is in some non-F0 arc A,
+             r(x) = e\\_choice(A) \\<in> T \\<subseteq> ?Y0.\<close>
+        have hr_cont: "top1_continuous_map_on Y TY ?Y0 (subspace_topology Y TY ?Y0) r"
+          sorry \<comment> \<open>Continuous by coherent topology: on each arc A \\<in> \\<A>,
+             r|A is either id (A \\<subseteq> ?Y0) or constant (A \\<in> ?NT - F0). Both continuous.
+             By coherent topology pasting: r continuous on Y.\<close>
         show "top1_retract_of_on Y TY ?Y0"
           unfolding top1_retract_of_on_def top1_is_retraction_on_def
-          sorry \<comment> \<open>Need: ?Y0 \\<subseteq> Y, continuous r: Y \\<rightarrow> ?Y0, r|?Y0 = id.
-             r is well-defined (each non-?Y0 point is in exactly one non-F0 arc).
-             r is continuous by coherent topology: on each arc A \\<in> \\<A>,
-             r|A is either id (if A \\<subseteq> ?Y0) or constant e\\_choice(A) (if A \\<in> ?NT - F0).
-             Both are continuous. By pasting for coherent topologies, r is continuous.\<close>
+          using hY0_sub hr_cont hr_fix by (by100 blast)
       qed
       \<comment> \<open>Step 2: Any loop in Y lies in T \\<union> (finitely many arcs).\<close>
       have hloop_in_finite: "\<And>f. top1_is_loop_on Y TY y0 f \<Longrightarrow>
