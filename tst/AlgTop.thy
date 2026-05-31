@@ -2043,9 +2043,22 @@ proof -
             (top1_fundamental_group_mul ?Y' (subspace_topology Y TY ?Y') y0)
             (top1_fundamental_group_id ?Y' (subspace_topology Y TY ?Y') y0)
             (top1_fundamental_group_invg ?Y' (subspace_topology Y TY ?Y') y0) \<iota> S"
-          sorry \<comment> \<open>Uses graph\\_pi1\\_free\\_weak\\_finite on the subgraph T \\<union> \\<Union>F0'.
-             Need: Y' is graph + connected + finite non-tree arcs (= F0').
-             hY'\\_graph and hY'\\_conn are sorry'd above.\<close>
+        proof -
+          \<comment> \<open>Apply graph\\_pi1\\_free\\_weak\\_finite with arcs = {A \\<in> \\<A>. A \\<subseteq> Y'}, tree = T.\<close>
+          let ?\<B> = "{A \<in> \<A>. A \<subseteq> ?Y'}"
+          \<comment> \<open>Non-tree arcs of Y' are exactly F0'.\<close>
+          have hNT_Y': "{A \<in> ?\<B>. \<not> A \<subseteq> T} = F0'"
+            sorry \<comment> \<open>A \\<in> \\<A>, A \\<subseteq> Y', \\<not>A \\<subseteq> T \\<Longleftrightarrow> A \\<in> F0'.
+               Forward: A \\<subseteq> Y' = T \\<union> \\<Union>F0', \\<not>A \\<subseteq> T \\<Longrightarrow> A has points in \\<Union>F0'.
+               Backward: A \\<in> F0' \\<Longrightarrow> A \\<subseteq> Y', A \\<in> \\<A>, \\<not>A \\<subseteq> T.\<close>
+          have "finite {A \<in> ?\<B>. \<not> A \<subseteq> T}" using hNT_Y' hF0'fin by (by100 simp)
+          \<comment> \<open>Delegate to graph\\_pi1\\_free\\_weak\\_finite.\<close>
+          show ?thesis
+            sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite needs: Y' graph, connected, y0 \\<in> Y',
+               finite non-tree arcs, arcs \\<subseteq> Y', arcs cover Y', intersection conditions,
+               coherent topology, T tree, T \\<subseteq> Y', subgraph condition, y0 \\<in> T,
+               NT endpoints in T. All derivable from parent graph structure.\<close>
+        qed
       qed
       \<comment> \<open>Step 5: Combine: \\<pi>\\_1(Y) is free.
          For each c \\<in> \\<pi>\\_1(Y), c lies in \\<pi>\\_1 of some T \\<union> F (Step 2).
