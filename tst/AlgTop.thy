@@ -1602,7 +1602,47 @@ proof -
         let ?Y' = "T \<union> \<Union>F0'"
         \<comment> \<open>T \\<union> \\<Union>F0' is a connected graph.\<close>
         have hY'_graph: "top1_is_graph_on ?Y' (subspace_topology Y TY ?Y')"
-          sorry \<comment> \<open>Subgraph of Y. Uses subgraph\\_union\\_of\\_arcs\\_is\\_graph.\<close>
+        proof -
+          let ?\<B> = "{A \<in> \<A>. A \<subseteq> ?Y'}"
+          have h\<B>_eq: "?Y' = \<Union>?\<B>"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> ?Y'"
+            thus "x \<in> \<Union>?\<B>"
+            proof
+              assume "x \<in> T"
+              then obtain A where "A \<in> \<A>" "A \<subseteq> T" "x \<in> A" using hT_coverage by (by100 blast)
+              have "A \<subseteq> ?Y'" using \<open>A \<subseteq> T\<close> by (by100 blast)
+              thus ?thesis using \<open>A \<in> \<A>\<close> \<open>x \<in> A\<close> by (by100 blast)
+            next
+              assume "x \<in> \<Union>F0'"
+              then obtain A where "A \<in> F0'" "x \<in> A" by (by100 blast)
+              have "A \<in> \<A>" using hF0'_NT \<open>A \<in> F0'\<close> by (by100 blast)
+              have "A \<subseteq> ?Y'" using \<open>A \<in> F0'\<close> by (by100 blast)
+              thus ?thesis using \<open>A \<in> \<A>\<close> \<open>x \<in> A\<close> by (by100 blast)
+            qed
+          next
+            fix x assume "x \<in> \<Union>?\<B>" thus "x \<in> ?Y'" by (by100 blast)
+          qed
+          have h\<B>_coh: "\<forall>C. C \<subseteq> ?Y' \<longrightarrow>
+              (closedin_on ?Y' (subspace_topology Y TY ?Y') C \<longleftrightarrow>
+               (\<forall>A\<in>?\<B>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
+            by (rule subgraph_coherent_topology[OF assms(1) h\<A> h\<A>_cover h\<A>_inter h\<A>_coh _ h\<B>_eq])
+               (by100 blast)
+          have h\<B>_arcs: "\<forall>A\<in>?\<B>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+            using h\<A> by (by100 blast)
+          have h\<B>_sub: "\<Union>?\<B> \<subseteq> Y" using h\<A> by (by100 blast)
+          have h\<B>_inter: "\<forall>A\<in>?\<B>. \<forall>B\<in>?\<B>. A \<noteq> B \<longrightarrow>
+              A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+            \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+            \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+            using h\<A>_inter by (by100 blast)
+          have h\<B>_coh': "\<forall>C. C \<subseteq> \<Union>?\<B> \<longrightarrow>
+              (closedin_on (\<Union>?\<B>) (subspace_topology Y TY (\<Union>?\<B>)) C \<longleftrightarrow>
+               (\<forall>A\<in>?\<B>. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
+            using h\<B>_coh h\<B>_eq by (by100 simp)
+          from subgraph_union_of_arcs_is_graph[OF assms(1) h\<B>_arcs h\<B>_sub h\<B>_inter h\<B>_coh']
+          show ?thesis using h\<B>_eq by (by100 simp)
+        qed
         have hY'_conn: "top1_connected_on ?Y' (subspace_topology Y TY ?Y')"
         proof -
           have hTY'_top: "is_topology_on Y TY"
