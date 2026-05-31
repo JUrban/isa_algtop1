@@ -17435,13 +17435,44 @@ next
       proof -
         \<comment> \<open>target\\_U = T \\<union> A1 has 1 NT arc. Use graph\\_one\\_edge\\_pi1\\_iso\\_Z.\<close>
         have hNT_tU_singleton: "{A\<in>\<A>. A \<subseteq> ?target_U \<and> \<not> A \<subseteq> T} = {A1}"
-          sorry \<comment> \<open>Only A1 is non-tree among arcs in T \\<union> A1.\<close>
+        proof (rule set_eqI, rule iffI)
+          fix A assume "A \<in> {A\<in>\<A>. A \<subseteq> ?target_U \<and> \<not> A \<subseteq> T}"
+          hence "A \<in> \<A>" "A \<subseteq> T \<union> A1" "\<not> A \<subseteq> T" by (by100 blast)+
+          hence "A \<in> ?NT" by (by100 blast)
+          show "A \<in> {A1}"
+          proof (rule ccontr)
+            assume "A \<notin> {A1}" hence "A \<noteq> A1" by (by100 blast)
+            have "A1 \<in> \<A>" using hA1 by (by100 blast)
+            from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>A1 \<in> \<A>\<close> \<open>A \<noteq> A1\<close>]
+            have "A \<inter> A1 \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" by (by100 blast)
+            have "A \<inter> A1 \<subseteq> T" using \<open>A \<inter> A1 \<subseteq> _\<close> hNT_endpoints \<open>A \<in> ?NT\<close> by (by100 blast)
+            have "A \<subseteq> T \<union> A1" using \<open>A \<subseteq> T \<union> A1\<close> .
+            have "A \<subseteq> T"
+            proof
+              fix x assume "x \<in> A"
+              show "x \<in> T"
+              proof (cases "x \<in> A1")
+                case True hence "x \<in> A \<inter> A1" using \<open>x \<in> A\<close> by (by100 blast)
+                thus ?thesis using \<open>A \<inter> A1 \<subseteq> T\<close> by (by100 blast)
+              next
+                case False thus ?thesis using \<open>x \<in> A\<close> \<open>A \<subseteq> T \<union> A1\<close> by (by100 blast)
+              qed
+            qed
+            thus False using \<open>\<not> A \<subseteq> T\<close> by contradiction
+          qed
+        next
+          fix A assume "A \<in> {A1}"
+          hence "A = A1" by (by100 blast)
+          thus "A \<in> {A\<in>\<A>. A \<subseteq> ?target_U \<and> \<not> A \<subseteq> T}"
+            using hA1 by (by100 blast)
+        qed
         \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z gives \\<pi>\\_1(target\\_U) \\<cong> \\<Z>.\<close>
         have hiso_tU: "top1_groups_isomorphic_on
             (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
             (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
             top1_Z_group top1_Z_mul"
-          sorry \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z[OF htU\\_graph ...]. Needs arc structure of target\\_U.\<close>
+          sorry \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z on target\\_U.
+             Need: extract arcs from htU\\_graph, prove NT\\_U = {A1}, apply lemma.\<close>
         \<comment> \<open>\\<Z> free \\<Rightarrow> \\<pi>\\_1 free.\<close>
         have hZ_free_loc: "top1_is_free_group_full_on top1_Z_group top1_Z_mul
             top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {0::nat}"
