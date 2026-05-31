@@ -2048,9 +2048,36 @@ proof -
           let ?\<B> = "{A \<in> \<A>. A \<subseteq> ?Y'}"
           \<comment> \<open>Non-tree arcs of Y' are exactly F0'.\<close>
           have hNT_Y': "{A \<in> ?\<B>. \<not> A \<subseteq> T} = F0'"
-            sorry \<comment> \<open>A \\<in> \\<A>, A \\<subseteq> Y', \\<not>A \\<subseteq> T \\<Longleftrightarrow> A \\<in> F0'.
-               Forward: A \\<subseteq> Y' = T \\<union> \\<Union>F0', \\<not>A \\<subseteq> T \\<Longrightarrow> A has points in \\<Union>F0'.
-               Backward: A \\<in> F0' \\<Longrightarrow> A \\<subseteq> Y', A \\<in> \\<A>, \\<not>A \\<subseteq> T.\<close>
+          proof (rule set_eqI, rule iffI)
+            fix A assume "A \<in> {A \<in> ?\<B>. \<not> A \<subseteq> T}"
+            hence "A \<in> \<A>" "A \<subseteq> ?Y'" "\<not> A \<subseteq> T" by (by100 blast)+
+            hence "A \<in> ?NT" using \<open>A \<in> \<A>\<close> by (by100 blast)
+            \<comment> \<open>A \\<subseteq> T \\<union> \\<Union>F0', A \\<notin> T. Pick x \\<in> A - T. x is not an endpoint (endpoints \\<in> T).\<close>
+            from \<open>\<not> A \<subseteq> T\<close> obtain x where "x \<in> A" "x \<notin> T" by (by100 blast)
+            have "x \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using hNT_endpoints \<open>A \<in> ?NT\<close> \<open>x \<notin> T\<close> by (by100 blast)
+            \<comment> \<open>x \\<in> A \\<subseteq> ?Y' = T \\<union> \\<Union>F0'. x \\<notin> T. So x \\<in> \\<Union>F0'.\<close>
+            have "x \<in> \<Union>F0'" using \<open>A \<subseteq> ?Y'\<close> \<open>x \<in> A\<close> \<open>x \<notin> T\<close> by (by100 blast)
+            then obtain B where "B \<in> F0'" "x \<in> B" by (by100 blast)
+            \<comment> \<open>x \\<in> int(A) \\<inter> B. If A \\<noteq> B: x \\<in> A \\<inter> B \\<subseteq> endpoints(A). Contradiction.\<close>
+            have "A = B"
+            proof (rule ccontr)
+              assume "A \<noteq> B"
+              have "B \<in> \<A>" using \<open>B \<in> F0'\<close> hF0'_NT by (by100 blast)
+              from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A \<noteq> B\<close>]
+              have "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" by (by100 blast)
+              hence "x \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                using \<open>x \<in> A\<close> \<open>x \<in> B\<close> by (by100 blast)
+              thus False using \<open>x \<notin> top1_arc_endpoints_on A _\<close> by contradiction
+            qed
+            thus "A \<in> F0'" using \<open>B \<in> F0'\<close> by (by100 simp)
+          next
+            fix A assume "A \<in> F0'"
+            have "A \<in> ?NT" using \<open>A \<in> F0'\<close> hF0'_NT by (by100 blast)
+            hence "A \<in> \<A>" "\<not> A \<subseteq> T" by (by100 blast)+
+            have "A \<subseteq> ?Y'" using \<open>A \<in> F0'\<close> by (by100 blast)
+            thus "A \<in> {A \<in> ?\<B>. \<not> A \<subseteq> T}" using \<open>A \<in> \<A>\<close> \<open>A \<subseteq> ?Y'\<close> \<open>\<not> A \<subseteq> T\<close> by (by100 blast)
+          qed
           have "finite {A \<in> ?\<B>. \<not> A \<subseteq> T}" using hNT_Y' hF0'fin by (by100 simp)
           \<comment> \<open>Delegate to graph\\_pi1\\_free\\_weak\\_finite.\<close>
           show ?thesis
