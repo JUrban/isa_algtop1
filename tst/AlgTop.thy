@@ -1481,14 +1481,88 @@ proof -
               using card_mono[OF hS(2) hS(1)] hS(3) by (by100 simp)
           qed
           \<comment> \<open>By graph\\_selection\\_set\\_discrete: every subset of ?B is closed in Y.\<close>
+          have hB_one_per_arc': "\<forall>A\<in>\<A>. finite (?B \<inter> A) \<and> card (?B \<inter> A) \<le> 1"
+          proof (intro ballI conjI)
+            fix A assume "A \<in> \<A>"
+            have "A \<inter> ?B = ?B \<inter> A" by (by100 blast)
+            from hB_one_per_arc[rule_format, OF \<open>A \<in> \<A>\<close>]
+            show "finite (?B \<inter> A)" using \<open>A \<inter> ?B = ?B \<inter> A\<close> by (by100 simp)
+            from hB_one_per_arc[rule_format, OF \<open>A \<in> \<A>\<close>]
+            show "card (?B \<inter> A) \<le> 1" using \<open>A \<inter> ?B = ?B \<inter> A\<close> by (by100 simp)
+          qed
           have hB_closed_discrete: "\<forall>S. S \<subseteq> ?B \<longrightarrow> closedin_on Y TY S"
-            sorry \<comment> \<open>graph\\_selection\\_set\\_discrete[OF assms(1) hB\\_sub h\\<A> h\\<A>\\_cover h\\<A>\\_coh hB\\_one\\_per\\_arc].\<close>
+            by (rule graph_selection_set_discrete[OF assms(1) hB_sub h\<A> h\<A>_cover h\<A>_coh hB_one_per_arc'])
           \<comment> \<open>?B \\<subseteq> f(I) compact. Closed discrete in compact = finite.\<close>
           have "finite ?B"
-            sorry \<comment> \<open>Closed discrete subset of compact space is finite.
-               f(I) compact (continuous image of I).
-               ?B \\<subseteq> f(I). Every subset of ?B closed.
-               Hence ?B is closed discrete, hence finite.\<close>
+          proof -
+            \<comment> \<open>f(I) is compact in Y.\<close>
+            have hTY_top: "is_topology_on Y TY"
+              using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+            have hI_compact: "top1_compact_on I_set I_top"
+              unfolding top1_unit_interval_def top1_unit_interval_topology_def
+              using Theorem_27_1[of "0::real" 1] by (by100 simp)
+            have hfI_compact: "top1_compact_on (f ` I_set) (subspace_topology Y TY (f ` I_set))"
+              by (rule Theorem_26_5[OF top1_unit_interval_topology_is_topology_on hTY_top
+                  hI_compact hf_cont])
+            \<comment> \<open>?B \\<subseteq> f(I), ?B closed in Y \\<Longrightarrow> ?B compact.\<close>
+            have hB_closed: "closedin_on Y TY ?B"
+              using hB_closed_discrete by (by100 blast)
+            have hB_closed_fI: "closedin_on (f ` I_set)
+                (subspace_topology Y TY (f ` I_set)) ?B"
+            proof -
+              from Theorem_17_2[OF hTY_top hf_sub, THEN iffD2]
+              have "\<And>D. closedin_on Y TY D \<Longrightarrow> D \<subseteq> f ` I_set \<Longrightarrow>
+                  closedin_on (f ` I_set) (subspace_topology Y TY (f ` I_set)) D"
+                by (by100 blast)
+              thus ?thesis using hB_closed hB_in_fI by (by100 blast)
+            qed
+            have hB_compact: "top1_compact_on ?B (subspace_topology Y TY ?B)"
+            proof -
+              from Theorem_26_2[OF hfI_compact hB_closed_fI]
+              have "top1_compact_on ?B (subspace_topology (f ` I_set)
+                  (subspace_topology Y TY (f ` I_set)) ?B)" .
+              moreover have "subspace_topology (f ` I_set)
+                  (subspace_topology Y TY (f ` I_set)) ?B = subspace_topology Y TY ?B"
+                by (rule subspace_topology_trans) (use hB_in_fI in blast)
+              ultimately show ?thesis by (by5000 metis)
+            qed
+            \<comment> \<open>?B is compact with discrete (subspace) topology. Compact discrete \\<Longrightarrow> finite.\<close>
+            \<comment> \<open>?B compact + discrete (all subsets closed) \\<Longrightarrow> finite.
+               Open cover {{x} | x \\<in> ?B} has finite subcover.\<close>
+            have hB_subsp_top: "is_topology_on ?B (subspace_topology Y TY ?B)"
+              by (rule subspace_topology_is_topology_on[OF hTY_top])
+                 (use hB_sub in blast)
+            \<comment> \<open>Each {x} is open in ?B (complement is closed).\<close>
+            have hB_singletons_open: "\<forall>x\<in>?B. {x} \<in> subspace_topology Y TY ?B"
+            proof (intro ballI)
+              fix x assume "x \<in> ?B"
+              have "?B - {x} \<subseteq> ?B" by (by100 blast)
+              hence "closedin_on Y TY (?B - {x})" using hB_closed_discrete by (by100 blast)
+              hence "closedin_on ?B (subspace_topology Y TY ?B) (?B - {x})"
+                using Theorem_17_2[OF hTY_top, of ?B] hB_sub by (by100 blast)
+              hence "?B - (?B - {x}) \<in> subspace_topology Y TY ?B"
+                unfolding closedin_on_def by (by100 blast)
+              moreover have "?B - (?B - {x}) = {x}" using \<open>x \<in> ?B\<close> by (by100 blast)
+              ultimately show "{x} \<in> subspace_topology Y TY ?B" by (by100 simp)
+            qed
+            \<comment> \<open>Cover: \\<Union>{{x} | x \\<in> ?B} = ?B.\<close>
+            have hcover_B: "?B \<subseteq> \<Union>((\<lambda>x. {x}) ` ?B)" by (by100 blast)
+            have hcover_open: "(\<lambda>x. {x}) ` ?B \<subseteq> subspace_topology Y TY ?B"
+              using hB_singletons_open by (by100 blast)
+            \<comment> \<open>Compactness: finite subcover.\<close>
+            from compact_finite_subcover[OF hB_compact hcover_open hcover_B]
+            obtain Fc where hFc: "finite Fc" "Fc \<subseteq> (\<lambda>x. {x}) ` ?B" "?B \<subseteq> \<Union>Fc"
+              by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+            \<comment> \<open>Each element of Fc is a singleton, so \\<Union>Fc is finite.\<close>
+            have "finite (\<Union>Fc)"
+            proof (rule finite_Union[OF hFc(1)])
+              fix S assume "S \<in> Fc"
+              hence "S \<in> (\<lambda>x. {x}) ` ?B" using hFc(2) by (by100 blast)
+              then obtain x where "x \<in> ?B" "S = {x}" by (by100 blast)
+              thus "finite S" by (by100 simp)
+            qed
+            show "finite ?B" using finite_subset[OF hFc(3) \<open>finite (\<Union>Fc)\<close>] .
+          qed
           \<comment> \<open>sel is injective on ?F (different arcs give different points).\<close>
           have "inj_on sel ?F"
             sorry \<comment> \<open>sel(A) \\<in> int(A), sel(B) \\<in> int(B). For A \\<noteq> B: int(A) \\<inter> int(B) = \\<emptyset>.
