@@ -4,7 +4,7 @@
 #
 # Files: i/Top1_Ch2.thy,i/Top1_Ch3.thy,i/Top1_Ch4.thy,i/Top1_Ch5_8.thy,i/Top1_Ch9_13.thy,h/AlgTopHelpers.thy,b0/AlgTop_JCT_Base0.thy,b/AlgTop_JCT_Base.thy,a0/AlgTop0.thy,ac/AlgTopCached.thy,fib/AlgIsoFixedBase.thy,fi/AlgIsoFixed.thy,k5/K5_nonplanar.thy,ag/AlgTopGroups.thy,pd/PolygonDisk.thy,svk/AlgTopSvK.thy,wh/AlgTopWedgeHelpers.thy,at/AlgTopChain.thy,ac2/AlgTopCached2.thy,ac3/AlgTopCached3.thy,ac4/AlgTopCached4.thy,ac5/AlgTopCached5.thy,ac6/AlgTopCached6.thy,AlgTop.thy
 #
-# Total entries: 2093
+# Total entries: 2092
 # Duplicate names: 34
 
 ## definitions (332)
@@ -1819,7 +1819,7 @@ Z_auto_sends_1_to_pm1                          ac/AlgTopCached.thy              
 Z_is_free_on_one_generator                     ac/AlgTopCached.thy                  line 31498
 Z_quotient_nZ_iso                              at/AlgTopChain.thy                   line 1804
 
-## theorems (228)
+## theorems (227)
 
 Corollary_17_7                                 i/Top1_Ch2.thy                       line 5793
 Lemma_13_1                                     i/Top1_Ch2.thy                       line 1215
@@ -2046,9 +2046,8 @@ Theorem_80_3_universal                         ac4/AlgTopCached4.thy            
 Theorem_81_2_covering_group_iso                AlgTop.thy                           line 8960
 Theorem_82_1_covering_existence                AlgTop.thy                           line 9258
 Theorem_83_4_covering_of_graph_is_graph        ac5/AlgTopCached5.thy                line 708
-Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 18552
-Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 20265
-Theorem_85_3_Schreier_index                    AlgTop.thy                           line 20323
+Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 18565
+Theorem_85_3_Schreier_index                    AlgTop.thy                           line 18624
 
 ## corollarys (65)
 

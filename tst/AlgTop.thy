@@ -18591,8 +18591,9 @@ proof -
   obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> 'a" and e0' :: 'b
     where "top1_covering_map_on E' TE' X TX p'" "top1_connected_on E' TE'"
       and "e0' \<in> E'" and hE'_strict: "is_topology_on_strict E' TE'"
-    sorry \<comment> \<open>Existence of covering space (Theorem 82.1) for the H-image in \<pi>_1(X).
-       The covering construction gives strict topology on E'.\<close>
+      and "p' e0' = x0"
+    sorry \<comment> \<open>Covering existence (Theorem 82.1) for H-image in \\<pi>\\_1(X).
+       Also need: p'*(\\<pi>\\_1(E', e0')) corresponds to H under iso G \\<cong> \\<pi>\\_1(X).\<close>
   \<comment> \<open>Step 3: E is a graph (Theorem 83.2: covering of graph is graph).
      \<pi>_1(E) is free (Theorem 84.7: fund group of connected graph is free).
      p_* injective (covering maps induce injections on \<pi>_1).
