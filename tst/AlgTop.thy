@@ -714,9 +714,23 @@ proof -
         \<exists>F. finite F \<and> F \<subseteq> J \<and> f ` top1_unit_interval \<subseteq> (\<Union>\<alpha>\<in>F. C \<alpha>)"
     proof -
       fix f assume hf: "top1_is_loop_on X TX p f"
-      have hfI_sub: "f ` top1_unit_interval \<subseteq> X" sorry \<comment> \<open>From loop definition.\<close>
+      have hfI_sub: "f ` top1_unit_interval \<subseteq> X"
+        using hf unfolding top1_is_loop_on_def top1_is_path_on_def
+          top1_continuous_map_on_def by (by100 blast)
       have hfI_compact: "top1_compact_on (f ` top1_unit_interval) (subspace_topology X TX (f ` top1_unit_interval))"
-        sorry \<comment> \<open>Continuous image of compact I.\<close>
+      proof -
+        have hcont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology X TX f"
+          using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hI_top: "is_topology_on top1_unit_interval top1_unit_interval_topology"
+          using top1_unit_interval_topology_is_topology_on .
+        have hTX_top: "is_topology_on X TX"
+          using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+        have hI_compact: "top1_compact_on top1_unit_interval top1_unit_interval_topology"
+          unfolding top1_unit_interval_def top1_unit_interval_topology_def
+          using Theorem_27_1[of "0::real" 1] by (by100 simp)
+        from Theorem_26_5[OF hI_top hTX_top hI_compact hcont]
+        show ?thesis .
+      qed
       let ?S = "{\<alpha>\<in>J. f ` top1_unit_interval \<inter> (C \<alpha> - {p}) \<noteq> {}}"
       from hcompact_finite[OF hfI_sub hfI_compact] have "finite ?S" .
       have "J \<noteq> {}" using hp hcover by (by100 blast)
