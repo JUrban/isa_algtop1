@@ -16951,22 +16951,144 @@ next
       \<comment> \<open>Full SvK + IH proof for card>1.\<close>
       \<comment> \<open>Step 1: Interior points.\<close>
       have hint_pts: "\<forall>A\<in>?NT. \<exists>p. p \<in> A \<and> p \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-        sorry
-      obtain ps where hps: "\<forall>A\<in>?NT. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-        sorry
+      proof (intro ballI)
+        fix A assume "A \<in> ?NT"
+        hence "A \<in> \<A>" by (by100 blast)
+        have harc: "top1_is_arc_on A (subspace_topology Y TY A)" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+        obtain h where hh: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+            A (subspace_topology Y TY A) h" using harc unfolding top1_is_arc_on_def by (by100 blast)
+        have hbij: "bij_betw h top1_unit_interval A"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hY_strict: "is_topology_on_strict Y TY"
+          using hgraph unfolding top1_is_graph_on_def by (by100 blast)
+        have hY_haus: "is_hausdorff_on Y TY"
+          using hgraph unfolding top1_is_graph_on_def by (by100 blast)
+        have "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+        from arc_endpoints_are_boundary[OF hY_strict hY_haus \<open>A \<subseteq> Y\<close> harc hh]
+        have hep: "top1_arc_endpoints_on A (subspace_topology Y TY A) = {h 0, h 1}" .
+        have h12_I: "(1/2::real) \<in> top1_unit_interval"
+          unfolding top1_unit_interval_def by (by100 simp)
+        have "h (1/2) \<in> A" using hbij h12_I unfolding bij_betw_def by (by100 blast)
+        moreover have "h (1/2) \<notin> {h 0, h 1}"
+        proof -
+          have hinj: "inj_on h top1_unit_interval" using hbij unfolding bij_betw_def by (by100 blast)
+          have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+          have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+          have "(1/2::real) \<noteq> 0" by (by100 simp)
+          hence "h (1/2) \<noteq> h 0" using hinj h12_I h0_I unfolding inj_on_def by (by100 blast)
+          have "(1/2::real) \<noteq> 1" by (by100 simp)
+          hence "h (1/2) \<noteq> h 1" using hinj h12_I h1_I unfolding inj_on_def by (by100 blast)
+          thus ?thesis using \<open>h (1/2) \<noteq> h 0\<close> by (by100 blast)
+        qed
+        ultimately show "\<exists>p. p \<in> A \<and> p \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          using hep by (by100 blast)
+      qed
+      have "\<exists>ps. \<forall>A\<in>?NT. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+      proof -
+        have "\<forall>A. A \<in> ?NT \<longrightarrow> (\<exists>p. p \<in> A \<and> p \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A))"
+          using hint_pts by (by100 blast)
+        hence "\<exists>f. \<forall>A. A \<in> ?NT \<longrightarrow> f A \<in> A \<and> f A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          by (rule choice_iff'[THEN iffD1])
+        thus ?thesis by (by100 blast)
+      qed
+      then obtain ps where hps: "\<forall>A\<in>?NT. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+        by (by5000 blast)
       \<comment> \<open>Step 2: Define U, V.\<close>
       let ?S_U = "?NT - {A1}"
       let ?U = "Y - ps ` ?S_U"
       let ?V = "Y - ps ` {A1}"
       let ?UV = "Y - ps ` ?NT"
       \<comment> \<open>Step 3: U\\<union>V=Y, U\\<inter>V=UV.\<close>
-      have hUV_cover: "?U \<union> ?V = Y" sorry
-      have hUV_eq: "?U \<inter> ?V = ?UV" sorry
+      have hUV_cover: "?U \<union> ?V = Y"
+      proof -
+        have "ps ` (?NT - {A1}) \<inter> ps ` {A1} = {}"
+        proof (rule ccontr)
+          assume "\<not> ?thesis"
+          then obtain B where "B \<in> ?NT - {A1}" "ps B = ps A1" by (by100 blast)
+          have "B \<in> \<A>" using \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+          have "B \<noteq> A1" using \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+          have "ps B \<in> B" using hps \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+          have "ps B \<notin> top1_arc_endpoints_on B (subspace_topology Y TY B)"
+            using hps \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+          have "ps B \<in> A1" using \<open>ps B = ps A1\<close> hps hA1 by (by100 simp)
+          have "ps B \<in> B \<inter> A1" using \<open>ps B \<in> B\<close> \<open>ps B \<in> A1\<close> by (by100 blast)
+          have "A1 \<in> \<A>" using hA1 by (by100 blast)
+          from h\<A>_inter[rule_format, OF \<open>B \<in> \<A>\<close> \<open>A1 \<in> \<A>\<close> \<open>B \<noteq> A1\<close>]
+          have "B \<inter> A1 \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)" by (by100 blast)
+          hence "ps B \<in> top1_arc_endpoints_on B (subspace_topology Y TY B)"
+            using \<open>ps B \<in> B \<inter> A1\<close> by (by100 blast)
+          thus False using \<open>ps B \<notin> _\<close> by (by100 blast)
+        qed
+        thus ?thesis by (by100 blast)
+      qed
+      have hUV_eq: "?U \<inter> ?V = ?UV"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> ?U \<inter> ?V"
+        hence "x \<in> Y" "x \<notin> ps ` (?NT - {A1})" "x \<notin> ps ` {A1}" by (by100 blast)+
+        have "?NT = (?NT - {A1}) \<union> {A1}" using hA1 by (by100 blast)
+        hence "ps ` ?NT = ps ` (?NT - {A1}) \<union> ps ` {A1}"
+          using image_Un[of ps "?NT - {A1}" "{A1}"] by (by100 simp)
+        thus "x \<in> ?UV" using \<open>x \<in> Y\<close> \<open>x \<notin> ps ` (?NT - {A1})\<close> \<open>x \<notin> ps ` {A1}\<close> by (by100 blast)
+      next
+        fix x assume "x \<in> ?UV"
+        hence "x \<in> Y" "x \<notin> ps ` ?NT" by (by100 blast)+
+        have "x \<notin> ps ` (?NT - {A1})" using \<open>x \<notin> ps ` ?NT\<close> by (by100 blast)
+        have "x \<notin> ps ` {A1}" using \<open>x \<notin> ps ` ?NT\<close> hA1 by (by100 blast)
+        thus "x \<in> ?U \<inter> ?V" using \<open>x \<in> Y\<close> \<open>x \<notin> ps ` (?NT - {A1})\<close> \<open>x \<notin> ps ` {A1}\<close>
+          by (by100 blast)
+      qed
       \<comment> \<open>Step 4: U, V open.\<close>
-      have hU_open: "openin_on Y TY ?U" sorry
-      have hV_open: "openin_on Y TY ?V" sorry
+      have hY_strict: "is_topology_on_strict Y TY"
+        using hgraph unfolding top1_is_graph_on_def by (by100 blast)
+      have hY_haus: "is_hausdorff_on Y TY"
+        using hgraph unfolding top1_is_graph_on_def by (by100 blast)
+      have hTY_top: "is_topology_on Y TY"
+        using hY_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hU_open: "openin_on Y TY ?U"
+      proof -
+        have hfin_SU: "finite (ps ` ?S_U)" using hfin by (by100 simp)
+        have hsub_SU: "ps ` ?S_U \<subseteq> Y" using hps h\<A> by (by100 blast)
+        have "closedin_on Y TY (ps ` ?S_U)"
+          by (rule Theorem_17_8[OF hY_haus hfin_SU hsub_SU])
+        thus ?thesis using closedin_complement_openin by (by100 simp)
+      qed
+      have hV_open: "openin_on Y TY ?V"
+      proof -
+        have hfin_SV: "finite (ps ` {A1})" by (by100 simp)
+        have hsub_SV: "ps ` {A1} \<subseteq> Y" using hps hA1 h\<A> by (by100 blast)
+        have "closedin_on Y TY (ps ` {A1})"
+          by (rule Theorem_17_8[OF hY_haus hfin_SV hsub_SV])
+        thus ?thesis using closedin_complement_openin by (by100 simp)
+      qed
       \<comment> \<open>Step 5: UV SC.\<close>
-      have hUV_sc: "top1_simply_connected_on ?UV (subspace_topology Y TY ?UV)" sorry
+      have hUV_sc: "top1_simply_connected_on ?UV (subspace_topology Y TY ?UV)"
+      proof -
+        have hvert_T: "\<forall>A\<in>\<A>. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T"
+        proof (intro ballI)
+          fix A e assume "A \<in> \<A>" "e \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          show "e \<in> T"
+          proof (cases "A \<subseteq> T")
+            case True
+            have "e \<in> A" using \<open>e \<in> top1_arc_endpoints_on A _\<close>
+              unfolding top1_arc_endpoints_on_def by (by100 blast)
+            thus ?thesis using True by (by100 blast)
+          next
+            case False
+            hence "A \<in> ?NT" using \<open>A \<in> \<A>\<close> by (by100 blast)
+            thus ?thesis using hNT_endpoints \<open>e \<in> top1_arc_endpoints_on A _\<close> by (by100 blast)
+          qed
+        qed
+        have h\<A>_inter': "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          using h\<A>_inter by (by100 blast)
+        have hNT_eq: "?NT = {A \<in> \<A>. \<not> A \<subseteq> T}" by (by100 blast)
+        have hT_subgraph_impl: "\<forall>A\<in>\<A>. \<not> A \<subseteq> T \<longrightarrow>
+            A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+          using hT_subgraph by (by100 blast)
+        show ?thesis
+          using graph_remove_interior_points_sc[OF hgraph h\<A> h\<A>_cover h\<A>_inter' hT_tree hT_sub
+              hT_subgraph hNT_eq hfin hps hvert_T hT_x0 h\<A>_coh] by (by100 blast)
+      qed
       \<comment> \<open>Step 6: DR.\<close>
       let ?target_U = "T \<union> A1"
       let ?target_V = "T \<union> \<Union>(?NT - {A1})"
