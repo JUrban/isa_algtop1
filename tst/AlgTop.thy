@@ -16299,93 +16299,9 @@ proof -
   show ?thesis
   proof (cases "?NT = {}")
     case True
-    \<comment> \<open>No non-tree arcs: Y = T (tree). \\<pi>\\_1 is trivial (simply connected).\<close>
-    \<comment> \<open>No non-tree arcs: Y = T, simply connected. \\<pi>\\_1 trivial = free on \\<emptyset>.\<close>
-    have "Y = T"
-    proof -
-      have "\<forall>A\<in>\<A>. A \<subseteq> T" using True by (by100 blast)
-      hence "\<Union>\<A> \<subseteq> T" by (by100 blast)
-      hence "Y \<subseteq> T" using h\<A>_cover by (by100 simp)
-      thus ?thesis using hT_sub by (by100 blast)
-    qed
-    have hTY_top: "is_topology_on Y TY"
-      using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by5000 blast)
-    have "top1_simply_connected_on Y TY"
-    proof -
-      from tree_simply_connected[OF hT_tree]
-      have "top1_simply_connected_on T (subspace_topology Y TY T)" .
-      have "subspace_topology Y TY T = TY"
-      proof -
-        have hTY_strict: "is_topology_on_strict Y TY"
-          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
-        have "\<forall>U\<in>TY. U \<subseteq> Y"
-          using hTY_strict unfolding is_topology_on_strict_def by (by100 blast)
-        from subspace_topology_self[OF this]
-        show ?thesis using \<open>Y = T\<close> by (by100 simp)
-      qed
-      thus ?thesis using \<open>top1_simply_connected_on T _\<close> \<open>Y = T\<close> by (by100 simp)
-    qed
-    \<comment> \<open>SC \\<Rightarrow> \\<pi>\\_1 trivial \\<Rightarrow> trivial group is free on \\<emptyset>.\<close>
-    \<comment> \<open>\\<pi>\\_1(Y) = {e} (from SC). Trivial group is free on \\<emptyset>.\<close>
-    have hpi1_triv: "top1_fundamental_group_carrier Y TY y0 = {top1_fundamental_group_id Y TY y0}"
-      by (rule simply_connected_trivial_carrier[OF \<open>top1_simply_connected_on Y TY\<close> assms(3)])
-    let ?G = "top1_fundamental_group_carrier Y TY y0"
-    let ?mul = "top1_fundamental_group_mul Y TY y0"
-    let ?e = "top1_fundamental_group_id Y TY y0"
-    let ?invg = "top1_fundamental_group_invg Y TY y0"
-    have hgrp: "top1_is_group_on ?G ?mul ?e ?invg"
-      by (rule top1_fundamental_group_is_group[OF hTY_top assms(3)])
+    \<comment> \<open>No non-tree arcs: Y = T. Use graph\\_tree\\_free\\_pi1.\<close>
     show ?thesis
-      unfolding top1_is_free_group_full_on_def
-    proof (intro exI conjI)
-      show "top1_is_group_on ?G ?mul ?e ?invg" by (rule hgrp)
-      show "\<forall>s\<in>({}::nat set). ((\<lambda>_::nat. ?e) s) \<in> ?G" by (by100 blast)
-      show "inj_on (\<lambda>_::nat. ?e) ({} :: nat set)" by (by100 simp)
-      show "?G = top1_subgroup_generated_on ?G ?mul ?e ?invg ((\<lambda>_::nat. ?e) ` ({} :: nat set))"
-      proof -
-        have "(\<lambda>_::nat. ?e) ` ({} :: nat set) = {}" by (by100 simp)
-        have "top1_subgroup_generated_on ?G ?mul ?e ?invg {} =
-            \<Inter>{H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}"
-          unfolding top1_subgroup_generated_on_def by (by100 blast)
-        also have "... = ?G"
-        proof -
-          have "?G \<in> {H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}"
-            using hgrp by (by100 blast)
-          moreover have "\<forall>H\<in>{H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}. ?e \<in> H"
-            unfolding top1_is_group_on_def by (by100 blast)
-          ultimately have "\<Inter>{H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg} \<subseteq> ?G"
-            by (by100 blast)
-          moreover have "?G \<subseteq> \<Inter>{H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}"
-          proof (intro subsetI InterI)
-            fix x H assume "x \<in> ?G" "H \<in> {H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}"
-            hence "H \<subseteq> ?G" by (by100 blast)
-            thus "x \<in> H" using \<open>x \<in> ?G\<close> hpi1_triv
-            proof -
-              have "?G = {?e}" by (rule hpi1_triv)
-              hence "x = ?e" using \<open>x \<in> ?G\<close> by (by100 blast)
-              have "?e \<in> H" using \<open>H \<in> _\<close> unfolding top1_is_group_on_def by (by100 blast)
-              thus ?thesis using \<open>x = ?e\<close> by simp
-            qed
-          qed
-          ultimately show ?thesis by (by100 blast)
-        qed
-        finally show ?thesis using \<open>(\<lambda>_::nat. ?e) ` {} = {}\<close> by simp
-      qed
-      show "\<forall>ws::(nat \<times> bool) list. ws \<noteq> [] \<longrightarrow>
-          top1_is_reduced_word (map (\<lambda>(s, b). ((\<lambda>_::nat. ?e) s, b)) ws) \<longrightarrow>
-          (\<forall>i<length ws. fst (ws ! i) \<in> ({} :: nat set)) \<longrightarrow>
-          top1_group_word_product ?mul ?e ?invg (map (\<lambda>(s, b). ((\<lambda>_::nat. ?e) s, b)) ws) \<noteq> ?e"
-      proof (intro allI impI)
-        fix ws :: "(nat \<times> bool) list"
-        assume "ws \<noteq> []" and "\<forall>i<length ws. fst (ws ! i) \<in> ({} :: nat set)"
-        \<comment> \<open>No word with generators from \\<emptyset> can be non-empty.\<close>
-        have "0 < length ws" using \<open>ws \<noteq> []\<close> by (by100 simp)
-        from \<open>\<forall>i<length ws. fst (ws ! i) \<in> {}\<close>[rule_format, OF \<open>0 < length ws\<close>]
-        have False by (by100 simp)
-        thus "top1_group_word_product ?mul ?e ?invg
-            (map (\<lambda>(s, b). ((\<lambda>_::nat. ?e) s, b)) ws) \<noteq> ?e" by (by100 blast)
-      qed
-    qed
+      by (rule graph_tree_free_pi1[OF assms(1) assms(3) h\<A> h\<A>_cover hT_tree hT_sub hT_x0 True])
   next
     case False
     \<comment> \<open>Non-tree arcs exist. Proceed by cases: finite or infinite.\<close>
