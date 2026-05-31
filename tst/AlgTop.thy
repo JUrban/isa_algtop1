@@ -1422,9 +1422,24 @@ proof -
           have "\<forall>A\<in>?F. \<exists>x. x \<in> f ` I_set \<and> x \<in> A \<and>
               x \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
             by (by100 blast)
-          then obtain sel where hsel: "\<forall>A\<in>?F. sel A \<in> f ` I_set \<and> sel A \<in> A \<and>
+          \<comment> \<open>Define sel via SOME for each A.\<close>
+          define sel where "sel A = (SOME x. x \<in> f ` I_set \<and> x \<in> A \<and>
+              x \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A))" for A
+          have hsel: "\<forall>A\<in>?F. sel A \<in> f ` I_set \<and> sel A \<in> A \<and>
               sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
-            sorry \<comment> \<open>bchoice on the \\<forall>\\<exists> — times out due to complex set comprehension ?F.\<close>
+          proof (intro ballI conjI)
+            fix A assume "A \<in> ?F"
+            hence "\<exists>x. x \<in> f ` I_set \<and> x \<in> A \<and>
+                x \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              by (by100 blast)
+            from someI_ex[OF this]
+            show "sel A \<in> f ` I_set" unfolding sel_def by (by100 blast)
+            from someI_ex[OF \<open>\<exists>x. _\<close>]
+            show "sel A \<in> A" unfolding sel_def by (by100 blast)
+            from someI_ex[OF \<open>\<exists>x. _\<close>]
+            show "sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              unfolding sel_def by (by100 blast)
+          qed
           let ?B = "sel ` ?F"
           \<comment> \<open>?B picks at most 1 point per arc (interior points are in exactly one arc).\<close>
           have hB_sub: "?B \<subseteq> Y" using hsel hf_sub by (by100 blast)
@@ -1565,8 +1580,27 @@ proof -
           qed
           \<comment> \<open>sel is injective on ?F (different arcs give different points).\<close>
           have "inj_on sel ?F"
-            sorry \<comment> \<open>sel(A) \\<in> int(A), sel(B) \\<in> int(B). For A \\<noteq> B: int(A) \\<inter> int(B) = \\<emptyset>.
-               So sel(A) \\<noteq> sel(B).\<close>
+          proof (rule inj_onI)
+            fix A B assume "A \<in> ?F" "B \<in> ?F" "sel A = sel B"
+            \<comment> \<open>sel(A) \\<in> A, sel(A) \\<notin> endpoints(A). Similarly for B.\<close>
+            have hA_in: "sel A \<in> A" "sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using hsel \<open>A \<in> ?F\<close> by (by100 blast)+
+            have hB_in: "sel B \<in> B" "sel B \<notin> top1_arc_endpoints_on B (subspace_topology Y TY B)"
+              using hsel \<open>B \<in> ?F\<close> by (by100 blast)+
+            \<comment> \<open>If A \\<noteq> B: sel(A) \\<in> A \\<inter> B \\<subseteq> endpoints(A). Contradiction.\<close>
+            show "A = B"
+            proof (rule ccontr)
+              assume "A \<noteq> B"
+              have "A \<in> \<A>" "B \<in> \<A>" using \<open>A \<in> ?F\<close> \<open>B \<in> ?F\<close> by (by100 blast)+
+              from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A \<noteq> B\<close>]
+              have "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" by (by100 blast)
+              have "sel A \<in> B" using hB_in(1) \<open>sel A = sel B\<close> by (by100 simp)
+              have "sel A \<in> A \<inter> B" using hA_in(1) \<open>sel A \<in> B\<close> by (by100 blast)
+              hence "sel A \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                using \<open>A \<inter> B \<subseteq> _\<close> by (by100 blast)
+              thus False using hA_in(2) by contradiction
+            qed
+          qed
           from finite_imageD[OF \<open>finite ?B\<close> \<open>inj_on sel ?F\<close>]
           show "finite ?F" .
         qed
