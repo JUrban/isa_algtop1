@@ -1584,9 +1584,38 @@ proof -
         \<comment> \<open>f(I) meets finitely many non-tree arc interiors.\<close>
         let ?F = "{A \<in> ?NT. f ` I_set \<inter> (A - top1_arc_endpoints_on A (subspace_topology Y TY A)) \<noteq> {}}"
         have hF_fin: "finite ?F"
-          sorry \<comment> \<open>Selection set argument: pick one point per arc interior from f(I).
-             By graph\\_selection\\_set\\_discrete, this set is closed discrete.
-             Closed discrete subset of compact f(I) is finite.\<close>
+        proof -
+          \<comment> \<open>For each A \\<in> ?F, pick x\\_A \\<in> f(I) \\<inter> int(A).\<close>
+          have "\<forall>A\<in>?F. \<exists>x. x \<in> f ` I_set \<and> x \<in> A \<and>
+              x \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+            by (by100 blast)
+          then obtain sel where hsel: "\<forall>A\<in>?F. sel A \<in> f ` I_set \<and> sel A \<in> A \<and>
+              sel A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+            sorry \<comment> \<open>AC: choice function from the \\<forall>\\<exists> above.\<close>
+          let ?B = "sel ` ?F"
+          \<comment> \<open>?B picks at most 1 point per arc (interior points are in exactly one arc).\<close>
+          have hB_sub: "?B \<subseteq> Y" using hsel hf_sub by (by100 blast)
+          have hB_in_fI: "?B \<subseteq> f ` I_set" using hsel by (by100 blast)
+          \<comment> \<open>For each arc C \\<in> \\<A>: |C \\<inter> ?B| \\<le> 1.\<close>
+          have hB_one_per_arc: "\<forall>C\<in>\<A>. finite (C \<inter> ?B) \<and> card (C \<inter> ?B) \<le> 1"
+            sorry \<comment> \<open>Each sel(A) is in int(A), so sel(A) \\<in> C only if C = A.
+               Hence C \\<inter> ?B = {sel(C)} if C \\<in> ?F, else \\<emptyset>. Card \\<le> 1.\<close>
+          \<comment> \<open>By graph\\_selection\\_set\\_discrete: every subset of ?B is closed in Y.\<close>
+          have hB_closed_discrete: "\<forall>S. S \<subseteq> ?B \<longrightarrow> closedin_on Y TY S"
+            sorry \<comment> \<open>graph\\_selection\\_set\\_discrete[OF assms(1) hB\\_sub h\\<A> h\\<A>\\_cover h\\<A>\\_coh hB\\_one\\_per\\_arc].\<close>
+          \<comment> \<open>?B \\<subseteq> f(I) compact. Closed discrete in compact = finite.\<close>
+          have "finite ?B"
+            sorry \<comment> \<open>Closed discrete subset of compact space is finite.
+               f(I) compact (continuous image of I).
+               ?B \\<subseteq> f(I). Every subset of ?B closed.
+               Hence ?B is closed discrete, hence finite.\<close>
+          \<comment> \<open>sel is injective on ?F (different arcs give different points).\<close>
+          have "inj_on sel ?F"
+            sorry \<comment> \<open>sel(A) \\<in> int(A), sel(B) \\<in> int(B). For A \\<noteq> B: int(A) \\<inter> int(B) = \\<emptyset>.
+               So sel(A) \\<noteq> sel(B).\<close>
+          from finite_imageD[OF \<open>finite ?B\<close> \<open>inj_on sel ?F\<close>]
+          show "finite ?F" .
+        qed
         have hF_NT: "?F \<subseteq> ?NT" by (by100 blast)
         have hf_in_F: "f ` I_set \<subseteq> T \<union> \<Union>?F"
         proof
