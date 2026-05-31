@@ -113,7 +113,12 @@ session AlgTopCached8 in ac8 = AlgTopCached7 +
   theories
     AlgTopCached8
 
-session AlgTop = AlgTopCached8 +
+session AlgTopCached9 in ac9 = AlgTopCached8 +
+  options [timeout = 600]
+  theories
+    AlgTopCached9
+
+session AlgTop = AlgTopCached9 +
   options [quick_and_dirty, timeout = 600]
   theories
     AlgTop
