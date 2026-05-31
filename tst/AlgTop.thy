@@ -15769,6 +15769,104 @@ proof -
   qed
 qed
 
+\<comment> \<open>Helper: graph with no non-tree arcs (Y=T) has trivial hence free \\<pi>\\_1.\<close>
+lemma graph_tree_free_pi1:
+  assumes "top1_is_graph_on Y TY"
+      and "y0 \<in> Y"
+      and "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+      and "\<Union>\<A> = Y"
+      and "top1_is_tree_on T (subspace_topology Y TY T)"
+      and "T \<subseteq> Y"
+      and "y0 \<in> T"
+      and "{A\<in>\<A>. \<not> A \<subseteq> T} = {}"
+  shows "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
+      (top1_fundamental_group_carrier Y TY y0)
+      (top1_fundamental_group_mul Y TY y0)
+      (top1_fundamental_group_id Y TY y0)
+      (top1_fundamental_group_invg Y TY y0)
+      \<iota> S"
+proof -
+  have "Y = T"
+  proof -
+    have "\<forall>A\<in>\<A>. A \<subseteq> T" using assms(8) by (by100 blast)
+    hence "\<Union>\<A> \<subseteq> T" by (by100 blast)
+    hence "Y \<subseteq> T" using assms(4) by (by100 simp)
+    thus ?thesis using assms(6) by (by100 blast)
+  qed
+  have hTY_top: "is_topology_on Y TY"
+    using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by5000 blast)
+  have hTY_strict: "is_topology_on_strict Y TY"
+    using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+  have "top1_simply_connected_on Y TY"
+  proof -
+    from tree_simply_connected[OF assms(5)]
+    have "top1_simply_connected_on T (subspace_topology Y TY T)" .
+    have "\<forall>U\<in>TY. U \<subseteq> Y"
+      using hTY_strict unfolding is_topology_on_strict_def by (by100 blast)
+    from subspace_topology_self[OF this]
+    have "subspace_topology Y TY Y = TY" .
+    hence "subspace_topology Y TY T = TY" using \<open>Y = T\<close> by (by100 simp)
+    thus ?thesis using \<open>top1_simply_connected_on T _\<close> \<open>Y = T\<close> by (by100 simp)
+  qed
+  have hpi1_triv: "top1_fundamental_group_carrier Y TY y0 = {top1_fundamental_group_id Y TY y0}"
+    by (rule simply_connected_trivial_carrier[OF \<open>top1_simply_connected_on Y TY\<close> assms(2)])
+  let ?G = "top1_fundamental_group_carrier Y TY y0"
+  let ?mul = "top1_fundamental_group_mul Y TY y0"
+  let ?e = "top1_fundamental_group_id Y TY y0"
+  let ?invg = "top1_fundamental_group_invg Y TY y0"
+  have hgrp: "top1_is_group_on ?G ?mul ?e ?invg"
+    by (rule top1_fundamental_group_is_group[OF hTY_top assms(2)])
+  show ?thesis
+    unfolding top1_is_free_group_full_on_def
+  proof (intro exI[of _ "\<lambda>_::nat. ?e"] exI[of _ "{}::nat set"] conjI)
+    show "top1_is_group_on ?G ?mul ?e ?invg" by (rule hgrp)
+    show "\<forall>s\<in>({}::nat set). ((\<lambda>_::nat. ?e) s) \<in> ?G" by (by100 blast)
+    show "inj_on (\<lambda>_::nat. ?e) ({} :: nat set)" by (by100 simp)
+    show "?G = top1_subgroup_generated_on ?G ?mul ?e ?invg ((\<lambda>_::nat. ?e) ` ({} :: nat set))"
+    proof -
+      have "(\<lambda>_::nat. ?e) ` ({} :: nat set) = {}" by (by100 simp)
+      hence "top1_subgroup_generated_on ?G ?mul ?e ?invg ((\<lambda>_::nat. ?e) ` ({} :: nat set)) =
+          top1_subgroup_generated_on ?G ?mul ?e ?invg {}" by (by100 simp)
+      also have "... = \<Inter>{H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}"
+        unfolding top1_subgroup_generated_on_def by (by100 blast)
+      also have "... = ?G"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> \<Inter>{H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}"
+        have "?G \<in> {H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}"
+          using hgrp by (by100 blast)
+        thus "x \<in> ?G" using \<open>x \<in> _\<close> by (by100 blast)
+      next
+        fix x assume "x \<in> ?G"
+        show "x \<in> \<Inter>{H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}"
+        proof (rule InterI)
+          fix H assume "H \<in> {H. {} \<subseteq> H \<and> H \<subseteq> ?G \<and> top1_is_group_on H ?mul ?e ?invg}"
+          hence "H \<subseteq> ?G" by (by100 blast)
+          have "?G = {?e}" by (rule hpi1_triv)
+          hence "x = ?e" using \<open>x \<in> ?G\<close> by (by100 blast)
+          have "?e \<in> H"
+            using \<open>H \<in> _\<close> unfolding top1_is_group_on_def by (by100 blast)
+          thus "x \<in> H" using \<open>x = ?e\<close> by (by100 simp)
+        qed
+      qed
+      finally show ?thesis by (by100 simp)
+    qed
+    show "\<forall>ws :: (nat \<times> bool) list.
+        ws \<noteq> [] \<longrightarrow>
+        top1_is_reduced_word (map (\<lambda>(s, b). ((\<lambda>_::nat. ?e) s, b)) ws) \<longrightarrow>
+        (\<forall>i<length ws. fst (ws ! i) \<in> ({} :: nat set)) \<longrightarrow>
+        top1_group_word_product ?mul ?e ?invg (map (\<lambda>(s, b). ((\<lambda>_::nat. ?e) s, b)) ws) \<noteq> ?e"
+    proof (intro allI impI)
+      fix ws :: "(nat \<times> bool) list"
+      assume "ws \<noteq> []" and "\<forall>i<length ws. fst (ws ! i) \<in> ({} :: nat set)"
+      have "0 < length ws" using \<open>ws \<noteq> []\<close> by (by100 simp)
+      from \<open>\<forall>i<length ws. fst (ws ! i) \<in> {}\<close>[rule_format, OF \<open>0 < length ws\<close>]
+      have False by (by100 simp)
+      thus "top1_group_word_product ?mul ?e ?invg
+          (map (\<lambda>(s, b). ((\<lambda>_::nat. ?e) s, b)) ws) \<noteq> ?e" by (by100 blast)
+    qed
+  qed
+qed
+
 \<comment> \<open>Auxiliary: finite case of graph\\_pi1\\_free\\_weak by induction on card(NT).
    The n parameter bounds the number of non-tree arcs.\<close>
 lemma graph_pi1_free_weak_finite:
@@ -15800,7 +15898,8 @@ lemma graph_pi1_free_weak_finite:
 proof (induction n)
   case 0
   \<comment> \<open>Base case: card(NT) \\<le> 0, so NT = {}. Y = T. Tree \\<Rightarrow> SC \\<Rightarrow> trivial \\<pi>\\_1.\<close>
-  show ?case sorry \<comment> \<open>Same as NT=\\<emptyset> case in graph\\_pi1\\_free\\_weak.\<close>
+  have hNT_empty: "{A\<in>\<A>. \<not> A \<subseteq> T} = {}" using 0(4) 0(5) by (by100 simp)
+  show ?case by (rule graph_tree_free_pi1[OF 0(1) 0(3) 0(6) 0(7) 0(10) 0(11) 0(13) hNT_empty])
 next
   case (Suc n)
   \<comment> \<open>Step: card(NT) \\<le> Suc n. Either card=0 (base case), or proceed.\<close>
