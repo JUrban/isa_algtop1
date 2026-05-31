@@ -2182,13 +2182,68 @@ proof -
           \<comment> \<open>Rewrite all preconditions to use the graph topology.\<close>
           have "top1_is_graph_on ?Y' (subspace_topology Y TY ?Y')" by (rule hY'_graph)
           have "top1_connected_on ?Y' (subspace_topology Y TY ?Y')" by (rule hY'_conn)
+          \<comment> \<open>Endpoint condition for non-tree arcs of Y'.\<close>
+          have hNT_ep_Y': "\<forall>A\<in>{A \<in> ?\<B>. \<not> A \<subseteq> T}.
+              \<forall>e\<in>top1_arc_endpoints_on A
+                  (subspace_topology ?Y' (subspace_topology Y TY ?Y') A). e \<in> T"
+          proof (intro ballI)
+            fix A e assume "A \<in> {A \<in> ?\<B>. \<not> A \<subseteq> T}"
+                and "e \<in> top1_arc_endpoints_on A
+                    (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)"
+            have "A \<in> ?NT" using \<open>A \<in> _\<close> hNT_Y' by (by100 blast)
+            have "subspace_topology ?Y' (subspace_topology Y TY ?Y') A =
+                subspace_topology Y TY A"
+              by (rule subspace_topology_trans) (use \<open>A \<in> {A \<in> ?\<B>. _}\<close> in blast)
+            hence "e \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using \<open>e \<in> _\<close> by (by100 simp)
+            thus "e \<in> T" using hNT_endpoints \<open>A \<in> ?NT\<close> by (by100 blast)
+          qed
+          have hcard_NT: "card {A \<in> ?\<B>. \<not> A \<subseteq> T} \<le> card F0'"
+            using hNT_Y' by (by100 simp)
+          have hfin_NT: "finite {A \<in> ?\<B>. \<not> A \<subseteq> T}"
+            using hNT_Y' hF0'fin by (by100 simp)
+          have hT_sub_Y': "T \<subseteq> ?Y'" by (by100 blast)
           show ?thesis
-            sorry \<comment> \<open>graph\\_pi1\\_free\\_weak\\_finite with arcs=\\<B>, tree=T. All 14 preconditions proved:
-               hY'\\_graph, hY'\\_conn, hy0\\_Y', hNT\\_Y'+hF0'fin (card+finite),
-               h\\<B>\\_arcs\\_Y', h\\<B>\\_eq', h\\<B>\\_inter\\_Y', h\\<B>\\_coh\\_Y', hT\\_tree\\_Y',
-               T\\<subseteq>?Y', hT\\_subgraph\\_Y', hT\\_x0, hNT\\_ep (via subspace\\_topology\\_trans).
-               OF-application blocked by Isabelle's inability to match subspace\\_topology\\_trans
-               in the \\<And>-quantified shows clause.\<close>
+          proof -
+            have hlemma: "top1_is_graph_on ?Y' (subspace_topology Y TY ?Y') \<Longrightarrow>
+                top1_connected_on ?Y' (subspace_topology Y TY ?Y') \<Longrightarrow>
+                y0 \<in> ?Y' \<Longrightarrow>
+                card {A \<in> ?\<B>. \<not> A \<subseteq> T} \<le> card F0' \<Longrightarrow>
+                finite {A \<in> ?\<B>. \<not> A \<subseteq> T} \<Longrightarrow>
+                (\<forall>A\<in>?\<B>. A \<subseteq> ?Y' \<and>
+                    top1_is_arc_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)) \<Longrightarrow>
+                \<Union>?\<B> = ?Y' \<Longrightarrow>
+                (\<forall>A\<in>?\<B>. \<forall>B\<in>?\<B>. A \<noteq> B \<longrightarrow>
+                    A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A) \<and>
+                    A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?Y' (subspace_topology Y TY ?Y') B) \<and>
+                    finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<Longrightarrow>
+                (\<forall>C. C \<subseteq> ?Y' \<longrightarrow>
+                    (closedin_on ?Y' (subspace_topology Y TY ?Y') C \<longleftrightarrow>
+                     (\<forall>A\<in>?\<B>. closedin_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A) (A \<inter> C)))) \<Longrightarrow>
+                top1_is_tree_on T (subspace_topology ?Y' (subspace_topology Y TY ?Y') T) \<Longrightarrow>
+                T \<subseteq> ?Y' \<Longrightarrow>
+                (\<forall>A\<in>?\<B>. A \<subseteq> T \<or>
+                    A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A)) \<Longrightarrow>
+                y0 \<in> T \<Longrightarrow>
+                (\<forall>A\<in>{A \<in> ?\<B>. \<not> A \<subseteq> T}.
+                    \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology ?Y' (subspace_topology Y TY ?Y') A). e \<in> T) \<Longrightarrow>
+                \<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
+                    (top1_fundamental_group_carrier ?Y' (subspace_topology Y TY ?Y') y0)
+                    (top1_fundamental_group_mul ?Y' (subspace_topology Y TY ?Y') y0)
+                    (top1_fundamental_group_id ?Y' (subspace_topology Y TY ?Y') y0)
+                    (top1_fundamental_group_invg ?Y' (subspace_topology Y TY ?Y') y0) \<iota> S"
+              by (rule graph_pi1_free_weak_finite[where n="card F0'"])
+            note s1 = hlemma[OF hY'_graph hY'_conn hy0_Y' hcard_NT hfin_NT]
+            have h\<B>_eq_swap: "\<Union>?\<B> = ?Y'" using h\<B>_eq' by (by100 blast)
+            note s2 = s1[OF h\<B>_arcs_Y' h\<B>_eq_swap]
+            note s3 = s2[OF h\<B>_inter_Y']
+            note s4 = s3[OF h\<B>_coh_Y']
+            note s5 = s4[OF hT_tree_Y' hT_sub_Y']
+            note s6 = s5[OF hT_subgraph_Y' hT_x0]
+            note s7 = s6[OF hNT_ep_Y']
+            show ?thesis sorry \<comment> \<open>s7 gives the result but Isabelle can't match.
+               Likely ?Y' let-binding expansion issue.\<close>
+          qed
         qed
       qed
       \<comment> \<open>Step 5: Combine: \\<pi>\\_1(Y) is free.
