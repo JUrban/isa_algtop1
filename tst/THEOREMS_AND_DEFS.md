@@ -4,7 +4,7 @@
 #
 # Files: i/Top1_Ch2.thy,i/Top1_Ch3.thy,i/Top1_Ch4.thy,i/Top1_Ch5_8.thy,i/Top1_Ch9_13.thy,h/AlgTopHelpers.thy,b0/AlgTop_JCT_Base0.thy,b/AlgTop_JCT_Base.thy,a0/AlgTop0.thy,ac/AlgTopCached.thy,fib/AlgIsoFixedBase.thy,fi/AlgIsoFixed.thy,k5/K5_nonplanar.thy,ag/AlgTopGroups.thy,pd/PolygonDisk.thy,svk/AlgTopSvK.thy,wh/AlgTopWedgeHelpers.thy,at/AlgTopChain.thy,ac2/AlgTopCached2.thy,ac3/AlgTopCached3.thy,ac4/AlgTopCached4.thy,ac5/AlgTopCached5.thy,ac6/AlgTopCached6.thy,AlgTop.thy
 #
-# Total entries: 2092
+# Total entries: 2093
 # Duplicate names: 34
 
 ## definitions (332)
@@ -365,7 +365,7 @@ top1_urysohn_U                                 i/Top1_Ch4.thy                   
 
 top1_I01                                       i/Top1_Ch5_8.thy                     line 25035
 
-## lemmas (1450)
+## lemmas (1451)
 
 abelian_commutator_trivial                     AlgTop.thy                           line 5234
 abelian_doubles_normal                         ag/AlgTopGroups.thy                  line 6792
@@ -723,8 +723,9 @@ gp_singleton_set                               i/Top1_Ch5_8.thy                 
 graph_connected_sub_covered_by_arcs            AlgTop.thy                           line 13990
 graph_covering_is_graph                        AlgTop.thy                           line 9358
 graph_deformation_retract_helper               AlgTop.thy                           line 14188
-graph_pi1_free_weak                            AlgTop.thy                           line 15912
-graph_pi1_free_weak_finite                     AlgTop.thy                           line 15872
+graph_one_edge_pi1_iso_Z                       AlgTop.thy                           line 15873
+graph_pi1_free_weak                            AlgTop.thy                           line 16958
+graph_pi1_free_weak_finite                     AlgTop.thy                           line 16839
 graph_quotient_by_tree_wedge_of_circles        ac6/AlgTopCached6.thy                line 1248
 graph_remove_interior_points_sc                ac6/AlgTopCached6.thy                line 2034
 graph_selection_set_discrete                   ac3/AlgTopCached3.thy                line 127
@@ -2045,9 +2046,9 @@ Theorem_80_3_universal                         ac4/AlgTopCached4.thy            
 Theorem_81_2_covering_group_iso                AlgTop.thy                           line 8960
 Theorem_82_1_covering_existence                AlgTop.thy                           line 9258
 Theorem_83_4_covering_of_graph_is_graph        ac5/AlgTopCached5.thy                line 708
-Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 18085
-Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 21057
-Theorem_85_3_Schreier_index                    AlgTop.thy                           line 21114
+Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 18215
+Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 19928
+Theorem_85_3_Schreier_index                    AlgTop.thy                           line 19985
 
 ## corollarys (65)
 
