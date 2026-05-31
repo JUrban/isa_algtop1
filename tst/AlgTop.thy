@@ -569,9 +569,18 @@ proof -
     qed
     have hcompact_finite: "\<And>K. K \<subseteq> X \<Longrightarrow> top1_compact_on K (subspace_topology X TX K)
         \<Longrightarrow> finite {\<alpha>\<in>J. K \<inter> (C \<alpha> - {p}) \<noteq> {}}"
-      sorry \<comment> \<open>If infinite, pick x\\_\\<alpha> \\<in> K \\<inter> (C\\_\\<alpha> - {p}). These are distinct (disjoint).
-         {x\\_\\<alpha>} infinite, no limit point (each C\\_\\<beta> - {p} open, contains only x\\_\\<beta>).
-         Contradicts compact Hausdorff \\<Rightarrow> limit point compact.\<close>
+      sorry \<comment> \<open>Proof: By contradiction. If infinite, use Axiom of Choice to pick
+         x\\_\\<alpha> \\<in> K \\<inter> (C\\_\\<alpha> - {p}) for infinitely many \\<alpha>. The set A = {x\\_\\<alpha>} is infinite.
+         A \\<subseteq> K, K compact Hausdorff \\<Rightarrow> limit point compact (Theorem 28.1).
+         So A has a limit point x \\<in> K \\<subseteq> X. Then x \\<in> C\\_\\<beta> for some \\<beta>.
+         But C\\_\\<beta> - {p} is open, contains at most one x\\_\\<alpha> (the one for \\<beta>).
+         If x \\<noteq> p: x \\<in> C\\_\\<beta> - {p} open, but (C\\_\\<beta> - {p}) \\<inter> A \\<subseteq> {x\\_\\<beta>}, finite \\<Rightarrow> not limit point.
+         If x = p: need to show p is not a limit point either — every open U \\<ni> p has
+         X - U closed \\<Rightarrow> each C\\_\\<alpha> \\<inter> (X-U) closed in C\\_\\<alpha> \\<Rightarrow> finite intersection property...
+         Actually: {p} \\<union> (X - K) is open? No. Better: use that K is closed in X (compact in
+         Hausdorff \\<Rightarrow> closed, Theorem 26.3). Then K \\<inter> (C\\_\\<alpha> - {p}) are in distinct open sets.
+         Open cover {C\\_\\<alpha> - {p} | x\\_\\<alpha> \\<in> K} \\<union> {X - A} covers K, has no finite subcover.
+         This contradicts compactness.\<close>
     \<comment> \<open>From compactness: any loop f based at p lies in finitely many circles.
        Any homotopy H between loops also lies in finitely many circles.\<close>
     have hloop_finite: "\<And>f. top1_is_loop_on X TX p f \<Longrightarrow>
