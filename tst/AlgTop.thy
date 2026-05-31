@@ -17546,7 +17546,56 @@ next
             thus ?thesis using \<open>hh 0 \<in> T\<close> \<open>hh 1 \<in> T\<close> by (by100 blast)
           qed
           show "\<forall>A\<in>\<A>. \<not> A \<subseteq> ?target_V \<longrightarrow> finite (A \<inter> ?target_V)"
-            sorry \<comment> \<open>A = A1 case: A1 \\<inter> target\\_V finite via endpoints.\<close>
+          proof (intro ballI impI)
+            fix A assume "A \<in> \<A>" "\<not> A \<subseteq> ?target_V"
+            hence "A = A1"
+            proof -
+              have "\<not> A \<subseteq> T" using \<open>\<not> A \<subseteq> ?target_V\<close> by (by100 blast)
+              hence "A \<in> ?NT" using \<open>A \<in> \<A>\<close> by (by100 blast)
+              have "A \<notin> ?NT - {A1}" using \<open>\<not> A \<subseteq> ?target_V\<close> by (by100 blast)
+              thus "A = A1" using \<open>A \<in> ?NT\<close> by (by100 blast)
+            qed
+            have "A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using hT_subgraph \<open>A \<in> \<A>\<close> \<open>\<not> A \<subseteq> ?target_V\<close> by (by100 blast)
+            have "finite (top1_arc_endpoints_on A (subspace_topology Y TY A))"
+            proof -
+              obtain h where hh: "top1_homeomorphism_on top1_unit_interval
+                  top1_unit_interval_topology A (subspace_topology Y TY A) h"
+                using h\<A> \<open>A \<in> \<A>\<close> unfolding top1_is_arc_on_def by (by100 blast)
+              from arc_endpoints_are_boundary[OF hY_strict hY_haus _ _ hh]
+              show ?thesis using h\<A> \<open>A \<in> \<A>\<close> by (by100 simp)
+            qed
+            have "finite (A \<inter> T)"
+              using \<open>A \<inter> T \<subseteq> top1_arc_endpoints_on A _\<close>
+              \<open>finite (top1_arc_endpoints_on A _)\<close> finite_subset by (by100 blast)
+            have "\<forall>B\<in>?NT - {A1}. finite (A \<inter> B)"
+            proof (intro ballI)
+              fix B assume "B \<in> ?NT - {A1}"
+              hence "B \<in> \<A>" by (by100 blast)
+              have "A \<noteq> B" using \<open>A = A1\<close> \<open>B \<in> ?NT - {A1}\<close> by (by100 blast)
+              from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A \<noteq> B\<close>]
+              show "finite (A \<inter> B)" by (by100 blast)
+            qed
+            have "finite (?NT - {A1})" using hfin by (by100 blast)
+            have "finite (A \<inter> \<Union>(?NT - {A1}))"
+            proof -
+              have "finite ((\<lambda>B. A \<inter> B) ` (?NT - {A1}))"
+                using \<open>finite (?NT - {A1})\<close> by (by100 simp)
+              moreover have "\<forall>S\<in>(\<lambda>B. A \<inter> B) ` (?NT - {A1}). finite S"
+                using \<open>\<forall>B\<in>?NT - {A1}. finite (A \<inter> B)\<close> by (by100 blast)
+              ultimately have "finite (\<Union>((\<lambda>B. A \<inter> B) ` (?NT - {A1})))"
+                using finite_Union by (by100 blast)
+              moreover have "\<Union>((\<lambda>B. A \<inter> B) ` (?NT - {A1})) = A \<inter> \<Union>(?NT - {A1})"
+                by (by100 blast)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            show "finite (A \<inter> ?target_V)"
+            proof -
+              have "A \<inter> ?target_V \<subseteq> (A \<inter> T) \<union> (A \<inter> \<Union>(?NT - {A1}))" by (by100 blast)
+              thus ?thesis using \<open>finite (A \<inter> T)\<close> \<open>finite (A \<inter> \<Union>(?NT - {A1}))\<close>
+                finite_subset finite_UnI by (by100 blast)
+            qed
+          qed
           show "finite {A \<in> \<A>. \<not> A \<subseteq> ?target_V}"
           proof -
             have "{A \<in> \<A>. \<not> A \<subseteq> ?target_V} \<subseteq> {A1}" by (by100 blast)
@@ -17582,7 +17631,42 @@ next
         have p9: "\<forall>C. C \<subseteq> ?target_V \<longrightarrow>
             (closedin_on ?target_V ?TY_V C \<longleftrightarrow>
              (\<forall>A\<in>?\<A>_V. closedin_on A (subspace_topology ?target_V ?TY_V A) (A \<inter> C)))"
-          sorry \<comment> \<open>subgraph\\_coherent\\_topology + subspace\\_topology\\_trans.\<close>
+        proof -
+          from subgraph_coherent_topology[OF hgraph h\<A> h\<A>_cover h\<A>_inter h\<A>_coh]
+          have hcoh_raw: "\<forall>C. C \<subseteq> ?target_V \<longrightarrow>
+              (closedin_on ?target_V (subspace_topology Y TY ?target_V) C \<longleftrightarrow>
+               (\<forall>A\<in>?\<A>_V. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
+          proof -
+            have "?\<A>_V \<subseteq> \<A>" by (by100 blast)
+            from subgraph_coherent_topology[OF hgraph h\<A> h\<A>_cover h\<A>_inter h\<A>_coh this htV_eq_ext]
+            show ?thesis .
+          qed
+          show ?thesis
+          proof (intro allI impI iffI ballI)
+            fix C A
+            assume hC: "C \<subseteq> ?target_V"
+              and "closedin_on ?target_V ?TY_V C" and "A \<in> ?\<A>_V"
+            have "A \<subseteq> ?target_V" using \<open>A \<in> ?\<A>_V\<close> by (by100 blast)
+            from hcoh_raw[rule_format, OF hC] \<open>closedin_on ?target_V ?TY_V C\<close>
+            have "\<forall>A\<in>?\<A>_V. closedin_on A (subspace_topology Y TY A) (A \<inter> C)" by simp
+            thus "closedin_on A (subspace_topology ?target_V ?TY_V A) (A \<inter> C)"
+              using \<open>A \<in> ?\<A>_V\<close> subspace_topology_trans[OF \<open>A \<subseteq> ?target_V\<close>] by simp
+          next
+            fix C
+            assume hC: "C \<subseteq> ?target_V"
+              and hall: "\<forall>A\<in>?\<A>_V. closedin_on A (subspace_topology ?target_V ?TY_V A) (A \<inter> C)"
+            have "\<forall>A\<in>?\<A>_V. closedin_on A (subspace_topology Y TY A) (A \<inter> C)"
+            proof (intro ballI)
+              fix A assume "A \<in> ?\<A>_V"
+              have "A \<subseteq> ?target_V" using \<open>A \<in> ?\<A>_V\<close> by (by100 blast)
+              from hall[rule_format, OF \<open>A \<in> ?\<A>_V\<close>]
+              show "closedin_on A (subspace_topology Y TY A) (A \<inter> C)"
+                using subspace_topology_trans[OF \<open>A \<subseteq> ?target_V\<close>] by simp
+            qed
+            from hcoh_raw[rule_format, OF hC, THEN iffD2, OF this]
+            show "closedin_on ?target_V ?TY_V C" by simp
+          qed
+        qed
         \<comment> \<open>Premise 10: tree.\<close>
         have p10: "top1_is_tree_on T (subspace_topology ?target_V ?TY_V T)"
         proof -
