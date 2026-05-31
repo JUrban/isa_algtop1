@@ -512,8 +512,61 @@ proof -
        pick one point from each; this infinite set has no limit point (contradiction with
        compact + Hausdorff \\<Rightarrow> limit point compact).\<close>
     have hC_open: "\<And>\<alpha>. \<alpha> \<in> J \<Longrightarrow> C \<alpha> - {p} \<in> TX"
-      sorry \<comment> \<open>C\\_\\<alpha> - {p} is open: C\\_\\<alpha> closed (coherent), {p} closed in C\\_\\<alpha> (Hausdorff),
-         so C\\_\\<alpha> - {p} open in C\\_\\<alpha>. Coherent topology lifts to open in X.\<close>
+    proof -
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> J"
+      \<comment> \<open>Show X - (C\\_\\<alpha> - {p}) is closed, i.e. for each \\<beta>, C\\_\\<beta> \\<inter> (X - (C\\_\\<alpha> - {p})) closed in C\\_\\<beta>.\<close>
+      have hcl: "closedin_on X TX (X - (C \<alpha> - {p}))"
+      proof -
+        have hsub: "X - (C \<alpha> - {p}) \<subseteq> X" by (by100 blast)
+        have "\<forall>\<beta>\<in>J. closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) (C \<beta> \<inter> (X - (C \<alpha> - {p})))"
+        proof (intro ballI)
+          fix \<beta> assume h\<beta>: "\<beta> \<in> J"
+          show "closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) (C \<beta> \<inter> (X - (C \<alpha> - {p})))"
+          proof (cases "\<beta> = \<alpha>")
+            case True
+            hence "C \<beta> \<inter> (X - (C \<alpha> - {p})) = {p}"
+              using hC h\<alpha> by (by100 blast)
+            moreover have "closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) {p}"
+            proof -
+              have "C \<beta> \<subseteq> X" using hC h\<beta> by (by100 blast)
+              have "p \<in> C \<beta>" using hC h\<beta> by (by100 blast)
+              have "is_hausdorff_on (C \<beta>) (subspace_topology X TX (C \<beta>))"
+                using conjunct2[OF conjunct2[OF Theorem_17_11]] \<open>C \<beta> \<subseteq> X\<close> hhaus
+                by (by100 blast)
+              have "finite {p}" by (by100 simp)
+              have "{p} \<subseteq> C \<beta>" using \<open>p \<in> C \<beta>\<close> by (by100 blast)
+              from Theorem_17_8[OF \<open>is_hausdorff_on (C \<beta>) _\<close> \<open>finite {p}\<close> \<open>{p} \<subseteq> C \<beta>\<close>]
+              show ?thesis .
+            qed
+            ultimately show ?thesis by (by100 simp)
+          next
+            case False
+            hence "C \<beta> \<inter> (C \<alpha> - {p}) = {}"
+              using hdisjoint h\<alpha> h\<beta> by (by100 blast)
+            hence "C \<beta> \<inter> (X - (C \<alpha> - {p})) = C \<beta>"
+              using hC h\<beta> by (by100 blast)
+            moreover have "closedin_on (C \<beta>) (subspace_topology X TX (C \<beta>)) (C \<beta>)"
+            proof -
+              have "C \<beta> \<subseteq> X" using hC h\<beta> by (by100 blast)
+              have htop: "is_topology_on (C \<beta>) (subspace_topology X TX (C \<beta>))"
+                by (rule subspace_topology_is_topology_on)
+                   (use hstrict in \<open>unfold is_topology_on_strict_def, by100 blast\<close>,
+                    use \<open>C \<beta> \<subseteq> X\<close> in blast)
+              from closedin_carrier[OF htop] show ?thesis .
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+        qed
+        from hweak[rule_format, OF hsub, THEN iffD2] this
+        show ?thesis by (by100 blast)
+      qed
+      have "X - (C \<alpha> - {p}) \<subseteq> X" by (by100 blast)
+      have "X - (X - (C \<alpha> - {p})) \<in> TX"
+        using hcl unfolding closedin_on_def by (by100 blast)
+      moreover have "X - (X - (C \<alpha> - {p})) = C \<alpha> - {p}"
+        using hC h\<alpha> by (by100 blast)
+      ultimately show "C \<alpha> - {p} \<in> TX" by (by100 simp)
+    qed
     have hcompact_finite: "\<And>K. K \<subseteq> X \<Longrightarrow> top1_compact_on K (subspace_topology X TX K)
         \<Longrightarrow> finite {\<alpha>\<in>J. K \<inter> (C \<alpha> - {p}) \<noteq> {}}"
       sorry \<comment> \<open>If infinite, pick x\\_\\<alpha> \\<in> K \\<inter> (C\\_\\<alpha> - {p}). These are distinct (disjoint).
