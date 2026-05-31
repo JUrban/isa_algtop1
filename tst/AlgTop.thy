@@ -17195,30 +17195,71 @@ next
           apply (rule exI, rule exI, assumption)
           done
       qed
-      have htV_free: "\<exists>\<iota> S. top1_is_free_group_full_on
+      have htV_free: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
           (top1_fundamental_group_carrier ?target_V (subspace_topology Y TY ?target_V) y0)
           (top1_fundamental_group_mul ?target_V (subspace_topology Y TY ?target_V) y0)
           (top1_fundamental_group_id ?target_V (subspace_topology Y TY ?target_V) y0)
           (top1_fundamental_group_invg ?target_V (subspace_topology Y TY ?target_V) y0)
-          \<iota> S" sorry \<comment> \<open>IH via Suc(1) (card-1 NT arcs \\<le> n).\<close>
+          \<iota> S" sorry \<comment> \<open>IH via Suc(1) (card-1 NT arcs \\<le> n). Type annotated for exI.\<close>
       \<comment> \<open>Step 9: U, V PC.\<close>
-      have hU_pc: "top1_path_connected_on ?U (subspace_topology Y TY ?U)" sorry
-      have hV_pc: "top1_path_connected_on ?V (subspace_topology Y TY ?V)" sorry
+      have htU_sub_U: "?target_U \<subseteq> ?U"
+        using conjunct1[OF hU_dr[unfolded top1_deformation_retract_of_on_def]] by (by100 blast)
+      have htV_sub_V: "?target_V \<subseteq> ?V"
+        using conjunct1[OF hV_dr[unfolded top1_deformation_retract_of_on_def]] by (by100 blast)
+      have hU_top: "is_topology_on ?U (subspace_topology Y TY ?U)"
+        by (rule subspace_topology_is_topology_on[OF hTY_top]) (by100 blast)
+      have hV_top: "is_topology_on ?V (subspace_topology Y TY ?V)"
+        by (rule subspace_topology_is_topology_on[OF hTY_top]) (by100 blast)
+      have htU_pc: "top1_path_connected_on ?target_U (subspace_topology Y TY ?target_U)"
+        sorry \<comment> \<open>tree\\_union\\_arcs\\_path\\_connected.\<close>
+      have htV_pc: "top1_path_connected_on ?target_V (subspace_topology Y TY ?target_V)"
+        sorry \<comment> \<open>tree\\_union\\_arcs\\_path\\_connected.\<close>
+      have htU_pc_U: "top1_path_connected_on ?target_U (subspace_topology ?U (subspace_topology Y TY ?U) ?target_U)"
+        using htU_pc subspace_topology_trans[OF htU_sub_U] by simp
+      have htV_pc_V: "top1_path_connected_on ?target_V (subspace_topology ?V (subspace_topology Y TY ?V) ?target_V)"
+        using htV_pc subspace_topology_trans[OF htV_sub_V] by simp
+      have hU_pc: "top1_path_connected_on ?U (subspace_topology Y TY ?U)"
+        by (rule deformation_retract_path_connected[OF hU_dr hU_top htU_pc_U])
+      have hV_pc: "top1_path_connected_on ?V (subspace_topology Y TY ?V)"
+        by (rule deformation_retract_path_connected[OF hV_dr hV_top htV_pc_V])
       \<comment> \<open>Step 10: y0 \\<in> U\\<inter>V.\<close>
-      have hx0_UV: "y0 \<in> ?UV" sorry
+      have hx0_UV: "y0 \<in> ?UV"
+      proof -
+        have "\<forall>A\<in>?NT. y0 \<noteq> ps A"
+        proof (intro ballI)
+          fix A assume "A \<in> ?NT"
+          hence "A \<in> \<A>" "\<not> A \<subseteq> T" by (by100 blast)+
+          have "ps A \<in> A" using hps \<open>A \<in> ?NT\<close> by (by100 blast)
+          have "ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+            using hps \<open>A \<in> ?NT\<close> by (by100 blast)
+          show "y0 \<noteq> ps A"
+          proof
+            assume "y0 = ps A"
+            hence "y0 \<in> A" using \<open>ps A \<in> A\<close> by (by100 simp)
+            hence "y0 \<in> A \<inter> T" using hT_x0 by (by100 blast)
+            have "A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using hT_subgraph \<open>A \<in> \<A>\<close> \<open>\<not> A \<subseteq> T\<close> by (by100 blast)
+            hence "y0 \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+              using \<open>y0 \<in> A \<inter> T\<close> by (by100 blast)
+            thus False using \<open>y0 = ps A\<close> \<open>ps A \<notin> _\<close> by (by100 simp)
+          qed
+        qed
+        hence "y0 \<notin> ps ` ?NT" by (by100 blast)
+        thus ?thesis using hy0 by (by100 blast)
+      qed
       \<comment> \<open>Step 11: DR iso + free transfer.\<close>
-      have hU_free_direct: "\<exists>\<iota> S. top1_is_free_group_full_on
+      have hU_free_direct: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
           (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
           (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
           (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
           (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
-          \<iota> S" sorry
-      have hV_free_direct: "\<exists>\<iota> S. top1_is_free_group_full_on
+          \<iota> S" sorry \<comment> \<open>DR iso transfer from htU\\_free.\<close>
+      have hV_free_direct: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
           (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
           (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
           (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
           (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)
-          \<iota> S" sorry
+          \<iota> S" sorry \<comment> \<open>DR iso transfer from htV\\_free.\<close>
       \<comment> \<open>Step 12: SvK assembly.\<close>
       from hU_free_direct hV_free_direct
       obtain \<iota>U :: "nat \<Rightarrow> _" and S1 :: "nat set" and \<iota>V :: "nat \<Rightarrow> _" and S2 :: "nat set"
@@ -17238,7 +17279,13 @@ next
       \<comment> \<open>Reindex for disjointness.\<close>
       define f1 :: "nat \<Rightarrow> nat" where "f1 n = 2*n" for n
       define f2 :: "nat \<Rightarrow> nat" where "f2 n = 2*n+1" for n
-      have hbij1: "bij_betw (the_inv_into S1 f1) (f1 ` S1) S1" sorry
+      have hbij1: "bij_betw (the_inv_into S1 f1) (f1 ` S1) S1"
+      proof -
+        have "inj f1" unfolding f1_def by (intro injI) (by100 simp)
+        hence "inj_on f1 S1" using inj_on_subset[OF \<open>inj f1\<close>] by (by100 blast)
+        hence "bij_betw f1 S1 (f1 ` S1)" unfolding bij_betw_def by (by100 blast)
+        thus ?thesis by (rule bij_betw_the_inv_into)
+      qed
       from free_group_full_reindex[OF hU_f hbij1]
       have hU_re: "top1_is_free_group_full_on
           (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
@@ -17246,7 +17293,13 @@ next
           (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
           (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
           (\<iota>U \<circ> the_inv_into S1 f1) (f1 ` S1)" .
-      have hbij2: "bij_betw (the_inv_into S2 f2) (f2 ` S2) S2" sorry
+      have hbij2: "bij_betw (the_inv_into S2 f2) (f2 ` S2) S2"
+      proof -
+        have "inj f2" unfolding f2_def by (intro injI) (by100 simp)
+        hence "inj_on f2 S2" using inj_on_subset[OF \<open>inj f2\<close>] by (by100 blast)
+        hence "bij_betw f2 S2 (f2 ` S2)" unfolding bij_betw_def by (by100 blast)
+        thus ?thesis by (rule bij_betw_the_inv_into)
+      qed
       from free_group_full_reindex[OF hV_f hbij2]
       have hV_re: "top1_is_free_group_full_on
           (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
@@ -17254,7 +17307,14 @@ next
           (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
           (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)
           (\<iota>V \<circ> the_inv_into S2 f2) (f2 ` S2)" .
-      have hS_disj: "f1 ` S1 \<inter> f2 ` S2 = {}" sorry
+      have hS_disj: "f1 ` S1 \<inter> f2 ` S2 = {}"
+      proof (rule ccontr)
+        assume "\<not> ?thesis"
+        then obtain x where "x \<in> f1 ` S1" "x \<in> f2 ` S2" by (by100 blast)
+        then obtain a b where "x = 2*a" "x = 2*b+1"
+          unfolding f1_def f2_def by (by100 blast)
+        thus False by presburger
+      qed
       have hY_strict: "is_topology_on_strict Y TY"
         using hgraph unfolding top1_is_graph_on_def by (by100 blast)
       have hx0_UV': "y0 \<in> ?U \<inter> ?V" using hx0_UV hUV_eq by (by100 simp)
