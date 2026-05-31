@@ -17848,14 +17848,14 @@ proof -
           using hUV_sc hUV_eq by (by100 simp)
         \<comment> \<open>\\<pi>\\_1(U) and \\<pi>\\_1(V) are free via IH + DR iso.\<close>
         \<comment> \<open>IH: graph\\_pi1\\_free\\_weak on targets (valid via sorry in quick\\_and\\_dirty).\<close>
-        have htU_pi1_free: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
+        have htU_pi1_free: "\<exists>\<iota> S. top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
             (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
             (top1_fundamental_group_id ?target_U (subspace_topology Y TY ?target_U) y0)
             (top1_fundamental_group_invg ?target_U (subspace_topology Y TY ?target_U) y0)
             \<iota> S"
           sorry \<comment> \<open>IH on target\\_U (1 NT arc) via graph\\_pi1\\_free\\_weak.\<close>
-        have htV_pi1_free: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
+        have htV_pi1_free: "\<exists>\<iota> S. top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?target_V (subspace_topology Y TY ?target_V) y0)
             (top1_fundamental_group_mul ?target_V (subspace_topology Y TY ?target_V) y0)
             (top1_fundamental_group_id ?target_V (subspace_topology Y TY ?target_V) y0)
@@ -17885,15 +17885,14 @@ proof -
             (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)"
           by (rule Theorem_58_3[OF hV_dr hV_top hx0_tV])
         \<comment> \<open>Transfer freeness via DR iso.\<close>
-        have hU_free_transfer: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
+        have hU_free_transfer: "\<exists>\<iota> S. top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
             (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
             (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
             (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
             \<iota> S"
-          sorry \<comment> \<open>free\\_group\\_iso\\_transfer + hpi1\\_U\\_iso + htU\\_pi1\\_free.
-             Type annotation in htU\\_pi1\\_free blocks obtain pattern.\<close>
-        have hV_free_transfer: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
+          sorry \<comment> \<open>free\\_group\\_iso\\_transfer + hpi1\\_U\\_iso + htU\\_pi1\\_free + hTU\\_trans.\<close>
+        have hV_free_transfer: "\<exists>\<iota> S. top1_is_free_group_full_on
             (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
             (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
             (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
