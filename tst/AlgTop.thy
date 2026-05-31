@@ -1414,9 +1414,20 @@ proof -
           sorry \<comment> \<open>For x \\<in> ?Y0: r(x) = x \\<in> ?Y0. For x \\<notin> ?Y0: x is in some non-F0 arc A,
              r(x) = e\\_choice(A) \\<in> T \\<subseteq> ?Y0.\<close>
         have hr_cont: "top1_continuous_map_on Y TY ?Y0 (subspace_topology Y TY ?Y0) r"
-          sorry \<comment> \<open>Continuous by coherent topology: on each arc A \\<in> \\<A>,
-             r|A is either id (A \\<subseteq> ?Y0) or constant (A \\<in> ?NT - F0). Both continuous.
-             By coherent topology pasting: r continuous on Y.\<close>
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          \<comment> \<open>r maps Y into ?Y0.\<close>
+          fix x assume "x \<in> Y" thus "r x \<in> ?Y0" using hr_image by (by100 blast)
+        next
+          \<comment> \<open>Preimages of open sets are open: equivalent to preimages of closed sets are closed.\<close>
+          fix V assume hV: "V \<in> subspace_topology Y TY ?Y0"
+          \<comment> \<open>V = ?Y0 \\<inter> U for some U \\<in> TY. Need {x \\<in> Y. r x \\<in> V} \\<in> TY.\<close>
+          show "{x \<in> Y. r x \<in> V} \<in> TY"
+            sorry \<comment> \<open>By coherent topology: {x \\<in> Y. r x \\<in> V} open in Y iff
+               \\<forall>A \\<in> \\<A>. A \\<inter> {x. r x \\<in> V} open in A (subspace).
+               For A \\<subseteq> ?Y0: A \\<inter> {x. r x \\<in> V} = A \\<inter> V, open in A.
+               For A \\<in> ?NT - F0: A \\<inter> {x. r x \\<in> V} = A or \\<emptyset>, open in A.\<close>
+        qed
         show "top1_retract_of_on Y TY ?Y0"
           unfolding top1_retract_of_on_def top1_is_retraction_on_def
           using hY0_sub hr_cont hr_fix by (by100 blast)
