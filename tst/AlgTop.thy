@@ -16946,7 +16946,118 @@ next
         moreover have "card ?NT \<ge> 2" using hcard_gt1 by (by100 linarith)
         ultimately show ?thesis by (by100 linarith)
       qed
-      show ?thesis sorry \<comment> \<open>SvK + IH. Type issue blocks closing.\<close>
+      \<comment> \<open>This is the full SvK + IH proof from graph\\_pi1\\_free\\_weak card>1,
+         with proper IH calls replacing sorry.\<close>
+      \<comment> \<open>Full SvK + IH proof for card>1.\<close>
+      \<comment> \<open>Step 1: Interior points.\<close>
+      have hint_pts: "\<forall>A\<in>?NT. \<exists>p. p \<in> A \<and> p \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+        sorry
+      obtain ps where hps: "\<forall>A\<in>?NT. ps A \<in> A \<and> ps A \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+        sorry
+      \<comment> \<open>Step 2: Define U, V.\<close>
+      let ?S_U = "?NT - {A1}"
+      let ?U = "Y - ps ` ?S_U"
+      let ?V = "Y - ps ` {A1}"
+      let ?UV = "Y - ps ` ?NT"
+      \<comment> \<open>Step 3: U\\<union>V=Y, U\\<inter>V=UV.\<close>
+      have hUV_cover: "?U \<union> ?V = Y" sorry
+      have hUV_eq: "?U \<inter> ?V = ?UV" sorry
+      \<comment> \<open>Step 4: U, V open.\<close>
+      have hU_open: "openin_on Y TY ?U" sorry
+      have hV_open: "openin_on Y TY ?V" sorry
+      \<comment> \<open>Step 5: UV SC.\<close>
+      have hUV_sc: "top1_simply_connected_on ?UV (subspace_topology Y TY ?UV)" sorry
+      \<comment> \<open>Step 6: DR.\<close>
+      let ?target_U = "T \<union> A1"
+      let ?target_V = "T \<union> \<Union>(?NT - {A1})"
+      have hU_dr: "top1_deformation_retract_of_on ?U (subspace_topology Y TY ?U) ?target_U" sorry
+      have hV_dr: "top1_deformation_retract_of_on ?V (subspace_topology Y TY ?V) ?target_V" sorry
+      \<comment> \<open>Step 7: Targets graph + connected.\<close>
+      have htU_graph: "top1_is_graph_on ?target_U (subspace_topology Y TY ?target_U)" sorry
+      have htV_graph: "top1_is_graph_on ?target_V (subspace_topology Y TY ?target_V)" sorry
+      have htU_conn: "top1_connected_on ?target_U (subspace_topology Y TY ?target_U)" sorry
+      have htV_conn: "top1_connected_on ?target_V (subspace_topology Y TY ?target_V)" sorry
+      \<comment> \<open>Step 8: IH — \\<pi>\\_1 of targets is free.\<close>
+      have htU_free: "\<exists>\<iota> S. top1_is_free_group_full_on
+          (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
+          (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
+          (top1_fundamental_group_id ?target_U (subspace_topology Y TY ?target_U) y0)
+          (top1_fundamental_group_invg ?target_U (subspace_topology Y TY ?target_U) y0)
+          \<iota> S" sorry \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z + Z free (1 NT arc).\<close>
+      have htV_free: "\<exists>\<iota> S. top1_is_free_group_full_on
+          (top1_fundamental_group_carrier ?target_V (subspace_topology Y TY ?target_V) y0)
+          (top1_fundamental_group_mul ?target_V (subspace_topology Y TY ?target_V) y0)
+          (top1_fundamental_group_id ?target_V (subspace_topology Y TY ?target_V) y0)
+          (top1_fundamental_group_invg ?target_V (subspace_topology Y TY ?target_V) y0)
+          \<iota> S" sorry \<comment> \<open>IH via Suc(1) (card-1 NT arcs \\<le> n).\<close>
+      \<comment> \<open>Step 9: U, V PC.\<close>
+      have hU_pc: "top1_path_connected_on ?U (subspace_topology Y TY ?U)" sorry
+      have hV_pc: "top1_path_connected_on ?V (subspace_topology Y TY ?V)" sorry
+      \<comment> \<open>Step 10: y0 \\<in> U\\<inter>V.\<close>
+      have hx0_UV: "y0 \<in> ?UV" sorry
+      \<comment> \<open>Step 11: DR iso + free transfer.\<close>
+      have hU_free_direct: "\<exists>\<iota> S. top1_is_free_group_full_on
+          (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
+          (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
+          (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
+          (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
+          \<iota> S" sorry
+      have hV_free_direct: "\<exists>\<iota> S. top1_is_free_group_full_on
+          (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
+          (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
+          (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
+          (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)
+          \<iota> S" sorry
+      \<comment> \<open>Step 12: SvK assembly.\<close>
+      from hU_free_direct hV_free_direct
+      obtain \<iota>U :: "nat \<Rightarrow> _" and S1 :: "nat set" and \<iota>V :: "nat \<Rightarrow> _" and S2 :: "nat set"
+        where hU_f: "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
+              (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
+              (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
+              (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
+              \<iota>U S1"
+          and hV_f: "top1_is_free_group_full_on
+              (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
+              (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
+              (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
+              (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)
+              \<iota>V S2"
+        by - ((erule exE)+, (erule that))
+      \<comment> \<open>Reindex for disjointness.\<close>
+      define f1 :: "nat \<Rightarrow> nat" where "f1 n = 2*n" for n
+      define f2 :: "nat \<Rightarrow> nat" where "f2 n = 2*n+1" for n
+      have hbij1: "bij_betw (the_inv_into S1 f1) (f1 ` S1) S1" sorry
+      from free_group_full_reindex[OF hU_f hbij1]
+      have hU_re: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0)
+          (top1_fundamental_group_mul ?U (subspace_topology Y TY ?U) y0)
+          (top1_fundamental_group_id ?U (subspace_topology Y TY ?U) y0)
+          (top1_fundamental_group_invg ?U (subspace_topology Y TY ?U) y0)
+          (\<iota>U \<circ> the_inv_into S1 f1) (f1 ` S1)" .
+      have hbij2: "bij_betw (the_inv_into S2 f2) (f2 ` S2) S2" sorry
+      from free_group_full_reindex[OF hV_f hbij2]
+      have hV_re: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0)
+          (top1_fundamental_group_mul ?V (subspace_topology Y TY ?V) y0)
+          (top1_fundamental_group_id ?V (subspace_topology Y TY ?V) y0)
+          (top1_fundamental_group_invg ?V (subspace_topology Y TY ?V) y0)
+          (\<iota>V \<circ> the_inv_into S2 f2) (f2 ` S2)" .
+      have hS_disj: "f1 ` S1 \<inter> f2 ` S2 = {}" sorry
+      have hY_strict: "is_topology_on_strict Y TY"
+        using hgraph unfolding top1_is_graph_on_def by (by100 blast)
+      have hx0_UV': "y0 \<in> ?U \<inter> ?V" using hx0_UV hUV_eq by (by100 simp)
+      have hUV_sc': "top1_simply_connected_on (?U \<inter> ?V) (subspace_topology Y TY (?U \<inter> ?V))"
+        using hUV_sc hUV_eq by (by100 simp)
+      from svk_free_product_free[OF hY_strict hU_open hV_open hUV_cover
+          hUV_sc' hU_pc hV_pc hx0_UV' hU_re hV_re hS_disj]
+      obtain \<iota>Y where hY_fr: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier Y TY y0)
+          (top1_fundamental_group_mul Y TY y0)
+          (top1_fundamental_group_id Y TY y0)
+          (top1_fundamental_group_invg Y TY y0)
+          \<iota>Y (f1 ` S1 \<union> f2 ` S2)" by (by100 blast)
+      show ?thesis using hY_fr by (by5000 blast)
     qed
   qed
 qed
