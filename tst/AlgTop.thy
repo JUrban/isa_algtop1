@@ -1574,8 +1574,51 @@ proof -
       \<comment> \<open>Step 2: Any loop in Y lies in T \\<union> (finitely many arcs).\<close>
       have hloop_in_finite: "\<And>f. top1_is_loop_on Y TY y0 f \<Longrightarrow>
           \<exists>F. finite F \<and> F \<subseteq> ?NT \<and> f ` top1_unit_interval \<subseteq> T \<union> \<Union>F"
-        sorry \<comment> \<open>Compactness: f(I) compact, meets finitely many arcs.
-           Those arcs either \\<subseteq> T or are non-tree arcs in ?NT.\<close>
+      proof -
+        fix f assume hf: "top1_is_loop_on Y TY y0 f"
+        \<comment> \<open>f(I) is compact in Y.\<close>
+        have hf_cont: "top1_continuous_map_on I_set I_top Y TY f"
+          using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hf_sub: "f ` I_set \<subseteq> Y"
+          using hf_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        \<comment> \<open>f(I) meets finitely many non-tree arc interiors.\<close>
+        let ?F = "{A \<in> ?NT. f ` I_set \<inter> (A - top1_arc_endpoints_on A (subspace_topology Y TY A)) \<noteq> {}}"
+        have hF_fin: "finite ?F"
+          sorry \<comment> \<open>Selection set argument: pick one point per arc interior from f(I).
+             By graph\\_selection\\_set\\_discrete, this set is closed discrete.
+             Closed discrete subset of compact f(I) is finite.\<close>
+        have hF_NT: "?F \<subseteq> ?NT" by (by100 blast)
+        have hf_in_F: "f ` I_set \<subseteq> T \<union> \<Union>?F"
+        proof
+          fix x assume "x \<in> f ` I_set"
+          hence "x \<in> Y" using hf_sub by (by100 blast)
+          hence "x \<in> \<Union>\<A>" using h\<A>_cover by (by100 simp)
+          then obtain A where "A \<in> \<A>" "x \<in> A" by (by100 blast)
+          show "x \<in> T \<union> \<Union>?F"
+          proof (cases "A \<subseteq> T")
+            case True thus ?thesis using \<open>x \<in> A\<close> by (by100 blast)
+          next
+            case False
+            hence "A \<in> ?NT" using \<open>A \<in> \<A>\<close> by (by100 blast)
+            show ?thesis
+            proof (cases "x \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)")
+              case True
+              \<comment> \<open>x is an endpoint of A. Endpoints of non-tree arcs are in T.\<close>
+              hence "x \<in> T" using hNT_endpoints \<open>A \<in> ?NT\<close> by (by100 blast)
+              thus ?thesis by (by100 blast)
+            next
+              case xFalse: False
+              \<comment> \<open>x is in the interior of A. So A \\<in> ?F.\<close>
+              hence "x \<in> A - top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                using \<open>x \<in> A\<close> by (by100 blast)
+              hence "A \<in> ?F" using \<open>A \<in> ?NT\<close> \<open>x \<in> f ` I_set\<close> by (by100 blast)
+              thus ?thesis using \<open>x \<in> A\<close> by (by100 blast)
+            qed
+          qed
+        qed
+        thus "\<exists>F. finite F \<and> F \<subseteq> ?NT \<and> f ` top1_unit_interval \<subseteq> T \<union> \<Union>F"
+          using hF_fin hF_NT by (by100 blast)
+      qed
       \<comment> \<open>Step 3: Any homotopy lies in T \\<union> (finitely many arcs).\<close>
       have hhtpy_in_finite: "\<And>f1 f2. top1_is_loop_on Y TY y0 f1 \<Longrightarrow>
           top1_is_loop_on Y TY y0 f2 \<Longrightarrow>
