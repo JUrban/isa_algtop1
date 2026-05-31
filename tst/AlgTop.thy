@@ -17149,12 +17149,52 @@ next
       have htU_conn: "top1_connected_on ?target_U (subspace_topology Y TY ?target_U)" sorry
       have htV_conn: "top1_connected_on ?target_V (subspace_topology Y TY ?target_V)" sorry
       \<comment> \<open>Step 8: IH — \\<pi>\\_1 of targets is free.\<close>
-      have htU_free: "\<exists>\<iota> S. top1_is_free_group_full_on
+      have htU_free: "\<exists>(\<iota>::nat \<Rightarrow> _) (S::nat set). top1_is_free_group_full_on
           (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
           (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
           (top1_fundamental_group_id ?target_U (subspace_topology Y TY ?target_U) y0)
           (top1_fundamental_group_invg ?target_U (subspace_topology Y TY ?target_U) y0)
-          \<iota> S" sorry \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z + Z free (1 NT arc).\<close>
+          \<iota> S"
+      proof -
+        \<comment> \<open>target\\_U = T \\<union> A1 has 1 NT arc. Use graph\\_one\\_edge\\_pi1\\_iso\\_Z.\<close>
+        have hNT_tU_singleton: "{A\<in>\<A>. A \<subseteq> ?target_U \<and> \<not> A \<subseteq> T} = {A1}"
+          sorry \<comment> \<open>Only A1 is non-tree among arcs in T \\<union> A1.\<close>
+        \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z gives \\<pi>\\_1(target\\_U) \\<cong> \\<Z>.\<close>
+        have hiso_tU: "top1_groups_isomorphic_on
+            (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
+            (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
+            top1_Z_group top1_Z_mul"
+          sorry \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z[OF htU\\_graph ...]. Needs arc structure of target\\_U.\<close>
+        \<comment> \<open>\\<Z> free \\<Rightarrow> \\<pi>\\_1 free.\<close>
+        have hZ_free_loc: "top1_is_free_group_full_on top1_Z_group top1_Z_mul
+            top1_Z_id top1_Z_invg (\<lambda>(_::nat). (1::int)) {0::nat}"
+          by (rule Z_is_free_on_one_generator)
+        have htU_top_loc: "is_topology_on ?target_U (subspace_topology Y TY ?target_U)"
+          by (rule subspace_topology_is_topology_on[OF hTY_top]) (use hT_sub h\<A> hA1 in blast)
+        have hpi1_tU_grp: "top1_is_group_on
+            (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
+            (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
+            (top1_fundamental_group_id ?target_U (subspace_topology Y TY ?target_U) y0)
+            (top1_fundamental_group_invg ?target_U (subspace_topology Y TY ?target_U) y0)"
+          by (rule top1_fundamental_group_is_group[OF htU_top_loc]) (use hT_x0 in blast)
+        have hZ_grp_loc: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+          using hZ_free_loc unfolding top1_is_free_group_full_on_def by (by100 blast)
+        from top1_groups_isomorphic_on_sym[OF hiso_tU hpi1_tU_grp hZ_grp_loc]
+        have "top1_groups_isomorphic_on top1_Z_group top1_Z_mul
+            (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
+            (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)" .
+        from free_group_iso_transfer[OF hZ_free_loc this hpi1_tU_grp]
+        obtain \<iota>tU where hfr_tU: "top1_is_free_group_full_on
+            (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
+            (top1_fundamental_group_mul ?target_U (subspace_topology Y TY ?target_U) y0)
+            (top1_fundamental_group_id ?target_U (subspace_topology Y TY ?target_U) y0)
+            (top1_fundamental_group_invg ?target_U (subspace_topology Y TY ?target_U) y0)
+            \<iota>tU {0::nat}" by (by100 blast)
+        show ?thesis using hfr_tU
+          apply -
+          apply (rule exI, rule exI, assumption)
+          done
+      qed
       have htV_free: "\<exists>\<iota> S. top1_is_free_group_full_on
           (top1_fundamental_group_carrier ?target_V (subspace_topology Y TY ?target_V) y0)
           (top1_fundamental_group_mul ?target_V (subspace_topology Y TY ?target_V) y0)
