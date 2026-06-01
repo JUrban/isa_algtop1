@@ -5957,7 +5957,7 @@ proof -
     proof -
       \<comment> \<open>The composed map (f\\_iso\\<inverse>) \\<circ> p'*: \\<pi>\\_1(E') \\<rightarrow> H is a group iso.\<close>
       let ?p_star = "top1_fundamental_group_induced_on E' TE' e0' X TX x0 p'"
-      let ?f_inv = "the_inv_into G f_iso"
+      let ?f_inv = "inv_into G f_iso"
       let ?\<phi> = "?f_inv \<circ> ?p_star"
       \<comment> \<open>\\<phi> is a group hom (composition of two homs).\<close>
       have hp_hom: "top1_group_hom_on
@@ -5966,11 +5966,35 @@ proof -
           (top1_fundamental_group_carrier X TX x0)
           (top1_fundamental_group_mul X TX x0)
           ?p_star"
-        sorry \<comment> \<open>Covering induced hom.\<close>
+      proof -
+        have hE_top: "is_topology_on E' TE'"
+          using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have hX_top: "is_topology_on X TX"
+          using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have hp_cont: "top1_continuous_map_on E' TE' X TX p'"
+          using \<open>top1_covering_map_on E' TE' X TX p'\<close>
+          unfolding top1_covering_map_on_def by (by100 blast)
+        from top1_fundamental_group_induced_on_is_hom[OF hE_top hX_top \<open>e0' \<in> E'\<close>
+            \<open>x0 \<in> X\<close> hp_cont \<open>p' e0' = x0\<close>]
+        show ?thesis .
+      qed
       have hf_inv_hom: "top1_group_hom_on
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
           G mul ?f_inv"
-        sorry \<comment> \<open>Inverse of iso is a hom.\<close>
+      proof -
+        have hG_grp: "top1_is_group_on G mul e invg"
+          using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+        have hX_top: "is_topology_on X TX"
+          using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have hpiX_grp: "top1_is_group_on (top1_fundamental_group_carrier X TX x0)
+            (top1_fundamental_group_mul X TX x0)
+            (top1_fundamental_group_id X TX x0)
+            (top1_fundamental_group_invg X TX x0)"
+          by (rule top1_fundamental_group_is_group[OF hX_top \<open>x0 \<in> X\<close>])
+        note hf_inv_iso = group_iso_on_inverse[OF hf_iso hG_grp hpiX_grp]
+        from hf_inv_iso[unfolded top1_group_iso_on_def, THEN conjunct1]
+        show ?thesis .
+      qed
       \<comment> \<open>\\<phi> maps \\<pi>\\_1(E') into H.\<close>
       have h\<phi>_maps: "\<forall>c \<in> top1_fundamental_group_carrier E' TE' e0'. ?\<phi> c \<in> H"
       proof (intro ballI)
@@ -5980,7 +6004,7 @@ proof -
         have "h \<in> G" using \<open>h \<in> H\<close> assms(3) by (by100 blast)
         have "?f_inv (?p_star c) = ?f_inv (f_iso h)" using \<open>f_iso h = ?p_star c\<close> by (by100 simp)
         also have "\<dots> = h"
-          using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF
+          using inv_into_f_f[OF bij_betw_imp_inj_on[OF
               hf_iso[unfolded top1_group_iso_on_def, THEN conjunct2]] \<open>h \<in> G\<close>]
           by (by100 simp)
         finally have "?\<phi> c = h" unfolding comp_def by (by100 simp)
@@ -6018,10 +6042,10 @@ proof -
                 have "inj_on f_iso G" using hf_iso unfolding top1_group_iso_on_def bij_betw_def
                   by (by100 blast)
                 have "?f_inv x = hx"
-                  using the_inv_into_f_f[OF \<open>inj_on f_iso G\<close>] \<open>hx \<in> H\<close> assms(3) \<open>x = f_iso hx\<close>
+                  using inv_into_f_f[OF \<open>inj_on f_iso G\<close>] \<open>hx \<in> H\<close> assms(3) \<open>x = f_iso hx\<close>
                   by (by100 blast)
                 have "?f_inv y = hy"
-                  using the_inv_into_f_f[OF \<open>inj_on f_iso G\<close>] \<open>hy \<in> H\<close> assms(3) \<open>y = f_iso hy\<close>
+                  using inv_into_f_f[OF \<open>inj_on f_iso G\<close>] \<open>hy \<in> H\<close> assms(3) \<open>y = f_iso hy\<close>
                   by (by100 blast)
                 from \<open>?f_inv x = ?f_inv y\<close> \<open>?f_inv x = hx\<close> \<open>?f_inv y = hy\<close>
                 have "hx = hy" by (by100 simp)
@@ -6047,7 +6071,7 @@ proof -
             have "inj_on f_iso G" using hf_iso unfolding top1_group_iso_on_def bij_betw_def
               by (by100 blast)
             have "?f_inv (f_iso h) = h"
-              using the_inv_into_f_f[OF \<open>inj_on f_iso G\<close> \<open>h \<in> G\<close>] by (by100 simp)
+              using inv_into_f_f[OF \<open>inj_on f_iso G\<close> \<open>h \<in> G\<close>] by (by100 simp)
             hence "?\<phi> c = h" using \<open>?p_star c = f_iso h\<close> unfolding comp_def by (by100 simp)
             thus "h \<in> ?\<phi> ` top1_fundamental_group_carrier E' TE' e0'"
               using \<open>c \<in> _\<close> by (by100 blast)
