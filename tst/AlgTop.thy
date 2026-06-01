@@ -4835,16 +4835,203 @@ proof -
                           (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product ?std_loop (\<pi> \<circ> top1_path_reverse \<gamma>b')))"
                         by (rule path_homotopic_product_right[OF hS1_top_loc h1 h\<pi>ga_path])
                       \<comment> \<open>Now use left/right identity to simplify const*std*const \\<rightarrow> std.\<close>
+                      \<comment> \<open>Chain: \\<pi>\\<circ>gen\\_loop D = LHS (hcomp\\_eq), LHS \\<simeq> RHS (h2),
+                         RHS agrees on I\\_set with const*(std*const), which \\<simeq> std.\<close>
+                      have hstd_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0) ?std_loop"
+                        using standard_S1_loop_is_loop unfolding top1_is_loop_on_def by (by100 blast)
+                      \<comment> \<open>const(1,0) * (std * const(1,0)) \\<simeq> const(1,0) * std \\<simeq> std.\<close>
+                      have h_right_id: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product ?std_loop (top1_constant_path (1,0))) ?std_loop"
+                        by (rule Theorem_51_2_right_identity[OF hS1_top_loc hstd_path])
+                      have h_left_id: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (top1_constant_path (1,0)) ?std_loop) ?std_loop"
+                        by (rule Theorem_51_2_left_identity[OF hS1_top_loc hstd_path])
+                      \<comment> \<open>const * (std * const) \\<simeq> const * std (product\\_left with right\\_id).\<close>
+                      have h10_in_S1: "(1::real, 0::real) \<in> top1_S1"
+                        unfolding top1_S1_def by (by100 simp)
+                      have h_prod_const: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_constant_path (1::real, 0))"
+                        by (rule top1_constant_path_is_path[OF hS1_top_loc h10_in_S1])
+                      have h_inner: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (top1_constant_path (1,0)) (top1_path_product ?std_loop (top1_constant_path (1,0))))
+                          (top1_path_product (top1_constant_path (1,0)) ?std_loop)"
+                        by (rule path_homotopic_product_right[OF hS1_top_loc h_right_id h_prod_const])
+                      \<comment> \<open>Use transitivity: const*(std*const) \\<simeq> const*std \\<simeq> std.\<close>
+                      have h_chain: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (top1_constant_path (1,0)) (top1_path_product ?std_loop (top1_constant_path (1,0))))
+                          ?std_loop"
+                        by (rule Lemma_51_1_path_homotopic_trans[OF hS1_top_loc h_inner h_left_id])
+                      \<comment> \<open>RHS of h2 agrees on I\\_set with const*(std*const).\<close>
+                      have h_agree: "\<forall>s\<in>I_set.
+                          top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product ?std_loop (\<pi> \<circ> top1_path_reverse \<gamma>b')) s =
+                          top1_path_product (top1_constant_path (1,0)) (top1_path_product ?std_loop (top1_constant_path (1,0))) s"
+                      proof (intro ballI)
+                        fix s :: real assume hs: "s \<in> I_set"
+                        show "top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product ?std_loop (\<pi> \<circ> top1_path_reverse \<gamma>b')) s =
+                            top1_path_product (top1_constant_path (1,0)) (top1_path_product ?std_loop (top1_constant_path (1,0))) s"
+                        proof (cases "s \<le> 1/2")
+                          case True
+                          hence h2s: "2 * s \<in> I_set"
+                            using hs unfolding top1_unit_interval_def by (by100 simp)
+                          have "(\<pi> \<circ> \<gamma>a') (2*s) = (1, 0)" using h_const_a h2s by (by100 blast)
+                          moreover have "top1_constant_path (1::real, 0) (2*s) = (1, 0)"
+                            unfolding top1_constant_path_def by simp
+                          ultimately show ?thesis
+                            unfolding top1_path_product_def top1_constant_path_def using True by simp
+                        next
+                          case False
+                          hence hs_gt: "s > 1/2" by simp
+                          hence h2sm1: "2 * s - 1 \<in> I_set"
+                            using hs unfolding top1_unit_interval_def by (by100 simp)
+                          \<comment> \<open>Inner product: same std\\_loop factor, different second factor.\<close>
+                          show ?thesis
+                          proof (cases "2*s - 1 \<le> 1/2")
+                            case True
+                            \<comment> \<open>Both evaluate to std\\_loop(2*(2s-1)).\<close>
+                            show ?thesis
+                              unfolding top1_path_product_def top1_constant_path_def
+                              using hs_gt True by simp
+                          next
+                            case False
+                            hence h_inner_gt: "2*s - 1 > 1/2" by simp
+                            have h_arg: "2*(2*s - 1) - 1 \<in> I_set"
+                              using hs h_inner_gt unfolding top1_unit_interval_def by (by100 simp)
+                            have "(\<pi> \<circ> top1_path_reverse \<gamma>b') (2*(2*s-1)-1) = (1, 0)"
+                              using h_const_b h_arg by (by100 blast)
+                            moreover have "top1_constant_path (1::real, 0) (2*(2*s-1)-1) = (1, 0)"
+                              unfolding top1_constant_path_def by simp
+                            ultimately show ?thesis
+                              unfolding top1_path_product_def top1_constant_path_def
+                              using hs_gt h_inner_gt by simp
+                          qed
+                        qed
+                      qed
+                      \<comment> \<open>So RHS of h2 is path-homotopic to const*(std*const) \\<simeq> std.\<close>
+                      have hstd_gb_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product ?std_loop (\<pi> \<circ> top1_path_reverse \<gamma>b'))"
+                        by (rule top1_path_product_is_path[OF hS1_top_loc hstd_path h\<pi>gb_path])
+                      have h_rhs_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product ?std_loop (\<pi> \<circ> top1_path_reverse \<gamma>b')))"
+                        by (rule top1_path_product_is_path[OF hS1_top_loc h\<pi>ga_path hstd_gb_path])
+                      from paths_agree_on_I_path_homotopic[OF hS1_top_loc h_rhs_path h_agree]
+                      have h_agree_htpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product ?std_loop (\<pi> \<circ> top1_path_reverse \<gamma>b')))
+                          (top1_path_product (top1_constant_path (1,0)) (top1_path_product ?std_loop (top1_constant_path (1,0))))" .
+                      \<comment> \<open>Full chain: \\<pi>\\<circ>gen\\_loop D = LHS (hcomp\\_eq) \\<simeq> RHS (h2) \\<simeq> const*(std*const) \\<simeq> std.\<close>
+                      \<comment> \<open>Transitivity chain.\<close>
+                      have h_step1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (\<pi> \<circ> gen_loop D)
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product ?std_loop (\<pi> \<circ> top1_path_reverse \<gamma>b')))"
+                        using h2 hcomp_eq by simp
+                      have h_step2: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (\<pi> \<circ> gen_loop D)
+                          (top1_path_product (top1_constant_path (1,0)) (top1_path_product ?std_loop (top1_constant_path (1,0))))"
+                        by (rule Lemma_51_1_path_homotopic_trans[OF hS1_top_loc h_step1 h_agree_htpy])
                       have h3: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
                           (\<pi> \<circ> gen_loop D) ?std_loop"
-                        sorry \<comment> \<open>Chain h2 + Theorem\\_51\\_2 + hcomp\\_eq.\<close>
+                        by (rule Lemma_51_1_path_homotopic_trans[OF hS1_top_loc h_step2 h_chain])
                       thus ?thesis by (by100 blast)
                     next
-                      assume hhtpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc)
+                      assume hhtpy_rev: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc)
                           (top1_path_reverse ?std_loop)"
+                      \<comment> \<open>Same chain as forward case but with rev(std\\_loop).\<close>
+                      have hrev_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_reverse ?std_loop)"
+                      proof -
+                        have hstd_path_r: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0) ?std_loop"
+                          using standard_S1_loop_is_loop unfolding top1_is_loop_on_def by (by100 blast)
+                        from top1_path_reverse_is_path[OF this] show ?thesis .
+                      qed
+                      have h1r: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (\<pi> \<circ> h_arc) (\<pi> \<circ> top1_path_reverse \<gamma>b'))
+                          (top1_path_product (top1_path_reverse ?std_loop) (\<pi> \<circ> top1_path_reverse \<gamma>b'))"
+                        by (rule path_homotopic_product_left[OF hS1_top_loc hhtpy_rev h\<pi>gb_path])
+                      have h2r: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product (\<pi> \<circ> h_arc) (\<pi> \<circ> top1_path_reverse \<gamma>b')))
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product (top1_path_reverse ?std_loop) (\<pi> \<circ> top1_path_reverse \<gamma>b')))"
+                        by (rule path_homotopic_product_right[OF hS1_top_loc h1r h\<pi>ga_path])
+                      have h_right_id_r: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (top1_path_reverse ?std_loop) (top1_constant_path (1,0)))
+                          (top1_path_reverse ?std_loop)"
+                        by (rule Theorem_51_2_right_identity[OF hS1_top_loc hrev_path])
+                      have h_left_id_r: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (top1_constant_path (1,0)) (top1_path_reverse ?std_loop))
+                          (top1_path_reverse ?std_loop)"
+                        by (rule Theorem_51_2_left_identity[OF hS1_top_loc hrev_path])
+                      have h10_in_S1_r: "(1::real, 0::real) \<in> top1_S1"
+                        unfolding top1_S1_def by (by100 simp)
+                      have h_prod_const_r: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_constant_path (1::real, 0))"
+                        by (rule top1_constant_path_is_path[OF hS1_top_loc h10_in_S1_r])
+                      have h_inner_r: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (top1_constant_path (1,0))
+                            (top1_path_product (top1_path_reverse ?std_loop) (top1_constant_path (1,0))))
+                          (top1_path_product (top1_constant_path (1,0)) (top1_path_reverse ?std_loop))"
+                        by (rule path_homotopic_product_right[OF hS1_top_loc h_right_id_r h_prod_const_r])
+                      have h_chain_r: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (top1_constant_path (1,0))
+                            (top1_path_product (top1_path_reverse ?std_loop) (top1_constant_path (1,0))))
+                          (top1_path_reverse ?std_loop)"
+                        by (rule Lemma_51_1_path_homotopic_trans[OF hS1_top_loc h_inner_r h_left_id_r])
+                      have h_agree_r: "\<forall>s\<in>I_set.
+                          top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product (top1_path_reverse ?std_loop) (\<pi> \<circ> top1_path_reverse \<gamma>b')) s =
+                          top1_path_product (top1_constant_path (1,0)) (top1_path_product (top1_path_reverse ?std_loop) (top1_constant_path (1,0))) s"
+                      proof (intro ballI)
+                        fix s :: real assume hs: "s \<in> I_set"
+                        show "top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product (top1_path_reverse ?std_loop) (\<pi> \<circ> top1_path_reverse \<gamma>b')) s =
+                            top1_path_product (top1_constant_path (1,0)) (top1_path_product (top1_path_reverse ?std_loop) (top1_constant_path (1,0))) s"
+                        proof (cases "s \<le> 1/2")
+                          case True
+                          hence h2s: "2 * s \<in> I_set"
+                            using hs unfolding top1_unit_interval_def by (by100 simp)
+                          have "(\<pi> \<circ> \<gamma>a') (2*s) = (1, 0)" using h_const_a h2s by (by100 blast)
+                          thus ?thesis
+                            unfolding top1_path_product_def top1_constant_path_def using True by simp
+                        next
+                          case False
+                          hence hs_gt: "s > 1/2" by simp
+                          hence h2sm1: "2 * s - 1 \<in> I_set"
+                            using hs unfolding top1_unit_interval_def by (by100 simp)
+                          show ?thesis
+                          proof (cases "2*s - 1 \<le> 1/2")
+                            case True
+                            show ?thesis
+                              unfolding top1_path_product_def top1_constant_path_def
+                              using hs_gt True by simp
+                          next
+                            case False
+                            hence h_inner_gt: "2*s - 1 > 1/2" by simp
+                            have h_arg: "2*(2*s - 1) - 1 \<in> I_set"
+                              using hs h_inner_gt unfolding top1_unit_interval_def by (by100 simp)
+                            have "(\<pi> \<circ> top1_path_reverse \<gamma>b') (2*(2*s-1)-1) = (1, 0)"
+                              using h_const_b h_arg by (by100 blast)
+                            thus ?thesis
+                              unfolding top1_path_product_def top1_constant_path_def
+                              using hs_gt h_inner_gt by simp
+                          qed
+                        qed
+                      qed
+                      have hrev_gb_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (top1_path_reverse ?std_loop) (\<pi> \<circ> top1_path_reverse \<gamma>b'))"
+                        by (rule top1_path_product_is_path[OF hS1_top_loc hrev_path h\<pi>gb_path])
+                      have h_rhs_path_r: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product (top1_path_reverse ?std_loop) (\<pi> \<circ> top1_path_reverse \<gamma>b')))"
+                        by (rule top1_path_product_is_path[OF hS1_top_loc h\<pi>ga_path hrev_gb_path])
+                      from paths_agree_on_I_path_homotopic[OF hS1_top_loc h_rhs_path_r h_agree_r]
+                      have h_agree_htpy_r: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product (top1_path_reverse ?std_loop) (\<pi> \<circ> top1_path_reverse \<gamma>b')))
+                          (top1_path_product (top1_constant_path (1,0)) (top1_path_product (top1_path_reverse ?std_loop) (top1_constant_path (1,0))))" .
+                      have h_step1r: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (\<pi> \<circ> gen_loop D)
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product (top1_path_reverse ?std_loop) (\<pi> \<circ> top1_path_reverse \<gamma>b')))"
+                        using h2r hcomp_eq by simp
+                      have h_step2r: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (\<pi> \<circ> gen_loop D)
+                          (top1_path_product (top1_constant_path (1,0)) (top1_path_product (top1_path_reverse ?std_loop) (top1_constant_path (1,0))))"
+                        by (rule Lemma_51_1_path_homotopic_trans[OF hS1_top_loc h_step1r h_agree_htpy_r])
                       have h3: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
                           (\<pi> \<circ> gen_loop D) (top1_path_reverse ?std_loop)"
-                        sorry \<comment> \<open>Same chain with rev(std\\_loop).\<close>
+                        by (rule Lemma_51_1_path_homotopic_trans[OF hS1_top_loc h_step2r h_chain_r])
                       thus ?thesis by (by100 blast)
                     qed
                   qed
