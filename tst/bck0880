@@ -1251,7 +1251,44 @@ proof -
       have "\<beta> 1 = \<alpha> 1" using heq_s by simp
       \<comment> \<open>[\\<beta>*rev(\\<alpha>)] = invg([\\<alpha>*rev(\\<beta>)]) \\<in> H.\<close>
       have hinvH: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<beta> (top1_path_reverse \<alpha>)) g} \<in> H"
-        sorry \<comment> \<open>[\\<beta>*rev(\\<alpha>)] = inv([\\<alpha>*rev(\\<beta>)]); H closed under inv.\<close>
+      proof -
+        let ?ab = "top1_path_product \<alpha> (top1_path_reverse \<beta>)"
+        let ?ba = "top1_path_product \<beta> (top1_path_reverse \<alpha>)"
+        let ?ab_class = "{g. top1_loop_equiv_on B TB b0 ?ab g}"
+        let ?ba_class = "{g. top1_loop_equiv_on B TB b0 ?ba g}"
+        \<comment> \<open>Step 1: ?ab is a loop at b0.\<close>
+        have h\<alpha>_path_s: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>"
+          using h\<alpha>_s by (by100 blast)
+        have h\<beta>_path_s: "top1_is_path_on B TB b0 (\<beta> 1) \<beta>"
+          using h\<beta>_s by (by100 blast)
+        have hab_loop: "top1_is_loop_on B TB b0 ?ab"
+        proof -
+          have "top1_is_path_on B TB (\<alpha> 1) b0 (top1_path_reverse \<beta>)"
+            using top1_path_reverse_is_path[OF h\<beta>_path_s] heq_s by simp
+          from top1_path_product_is_path[OF hTB h\<alpha>_path_s this]
+          show ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+        qed
+        \<comment> \<open>Step 2: invg([\\<alpha>*rev(\\<beta>)]) \\<in> H (subgroup closed under inverse).\<close>
+        have hclass_in_carrier: "?ab_class \<in> top1_fundamental_group_carrier B TB b0"
+          unfolding top1_fundamental_group_carrier_def using hab_loop by (by100 blast)
+        hence "?ab_class \<in> H" using hH_s by simp
+        have "top1_fundamental_group_invg B TB b0 ?ab_class \<in> H"
+          by (rule group_inv_closed[OF assms(7) \<open>?ab_class \<in> H\<close>])
+        \<comment> \<open>Step 3: invg([\\<alpha>*rev(\\<beta>)]) = [rev(\\<alpha>*rev(\\<beta>))].\<close>
+        have "top1_fundamental_group_invg B TB b0 ?ab_class
+            = {g. top1_loop_equiv_on B TB b0 (top1_path_reverse ?ab) g}"
+          by (rule fundamental_group_invg_class[OF hTB hab_loop])
+        \<comment> \<open>Step 4: [rev(\\<alpha>*rev(\\<beta>))] = [\\<beta>*rev(\\<alpha>)] (path homotopy).\<close>
+        have hrev_eq: "{g. top1_loop_equiv_on B TB b0 (top1_path_reverse ?ab) g} = ?ba_class"
+          sorry \<comment> \<open>rev(\\<alpha>*rev(\\<beta>)) \\<simeq> \\<beta>*rev(\\<alpha>) as loops.
+             Uses: rev of path product = rev product of reverses + rev(rev(\\<beta>)) = \\<beta>.\<close>
+        \<comment> \<open>Combine steps 2-4.\<close>
+        from \<open>top1_fundamental_group_invg B TB b0 ?ab_class \<in> H\<close>
+            \<open>top1_fundamental_group_invg B TB b0 ?ab_class
+                = {g. top1_loop_equiv_on B TB b0 (top1_path_reverse ?ab) g}\<close>
+            hrev_eq
+        show ?thesis by simp
+      qed
       thus ?thesis using h\<alpha>_s h\<beta>_s \<open>\<beta> 1 = \<alpha> 1\<close> by (by100 auto)
     qed
   qed
