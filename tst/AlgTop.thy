@@ -3282,7 +3282,31 @@ proof -
     have "top1_is_free_group_full_on (top1_fundamental_group_carrier Y TY y0)
         (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
         (top1_fundamental_group_invg Y TY y0) (\<lambda>_::'a set. undefined) ({} :: 'a set set)"
-      sorry \<comment> \<open>Trivial group is free on {} (5 conditions all vacuous/trivial).\<close>
+      unfolding top1_is_free_group_full_on_def
+    proof (intro conjI)
+      have hTY_top_tree: "is_topology_on Y TY"
+        using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+      show "top1_is_group_on (top1_fundamental_group_carrier Y TY y0)
+          (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+          (top1_fundamental_group_invg Y TY y0)"
+        by (rule top1_fundamental_group_is_group[OF hTY_top_tree assms(3)])
+      show "\<forall>s\<in>({} :: 'a set set). (\<lambda>_::'a set. undefined) s \<in>
+          top1_fundamental_group_carrier Y TY y0" by (by100 blast)
+      show "inj_on (\<lambda>_::'a set. undefined) ({} :: 'a set set)" by (by100 simp)
+      show "top1_fundamental_group_carrier Y TY y0 =
+          top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
+              (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+              (top1_fundamental_group_invg Y TY y0) ((\<lambda>_::'a set. undefined) ` ({} :: 'a set set))"
+        sorry \<comment> \<open>\\<pi>\\_1(tree) = {id} = \\<langle>{}\\<rangle>. Needs: tree simply connected \\<Rightarrow> trivial \\<pi>\\_1.\<close>
+      show "\<forall>ws::('a set \<times> bool) list. ws \<noteq> [] \<longrightarrow>
+          top1_is_reduced_word (map (\<lambda>(s, b). ((\<lambda>_::'a set. undefined) s, b)) ws) \<longrightarrow>
+          (\<forall>i<length ws. fst (ws ! i) \<in> ({} :: 'a set set)) \<longrightarrow>
+          top1_group_word_product (top1_fundamental_group_mul Y TY y0)
+              (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
+              (map (\<lambda>(s, b). ((\<lambda>_::'a set. undefined) s, b)) ws) \<noteq>
+          top1_fundamental_group_id Y TY y0"
+        by (by100 blast) \<comment> \<open>Vacuous: \\<forall>i. fst(ws!i) \\<in> {} is impossible for ws \\<ne> [].\<close>
+    qed
     thus ?thesis by (by100 blast)
   next
     case False
