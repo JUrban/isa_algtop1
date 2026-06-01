@@ -865,8 +865,23 @@ proof -
             using hct unfolding top1_covering_transformation_on_def by (by100 blast)
           have "h e0 = e1" using he1 unfolding \<Psi>_def by simp
           \<comment> \<open>Apply Theorem 79.2 direction \\<Rightarrow>.\<close>
-          show ?thesis
-            sorry \<comment> \<open>Theorem 79.2: equiv h with h(e0)=e1 exists \\<Rightarrow> p*(\\<pi>\\_1(E,e0)) = p*(\\<pi>\\_1(E,e1)).\<close>
+          \<comment> \<open>From Theorem 79.2 with E'=E, p'=p, e0'=e1:
+             (\\<exists>h. homeo \\<and> p\\<circ>h = p \\<and> h(e0) = e1) \\<leftrightarrow> image\\_hom(E,e0) = image\\_hom(E,e1).\<close>
+          have hb0B: "b0 \<in> B"
+            using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
+          from Theorem_79_2[OF assms(1) assms(2) assms(1) assms(3) assms(7)
+              assms(3) \<open>p e1 = b0\<close> assms(4) assms(4) assms(5) assms(5) assms(6) \<open>e1 \<in> E\<close> hb0B]
+          have hiff: "(\<exists>h'. top1_homeomorphism_on E TE E TE h' \<and> (\<forall>e\<in>E. p (h' e) = p e) \<and> h' e0 = e1) \<longleftrightarrow>
+              ?H = top1_fundamental_group_image_hom E TE e1 B TB b0 p" .
+          have hexists: "\<exists>h'. top1_homeomorphism_on E TE E TE h' \<and> (\<forall>e\<in>E. p (h' e) = p e) \<and> h' e0 = e1"
+            by (rule exI[of _ h],
+                intro conjI,
+                rule \<open>top1_homeomorphism_on E TE E TE h\<close>,
+                rule \<open>\<forall>e\<in>E. p (h e) = p e\<close>,
+                rule \<open>h e0 = e1\<close>)
+          from hiff hexists have "?H = top1_fundamental_group_image_hom E TE e1 B TB b0 p"
+            by (by100 blast)
+          thus ?thesis by simp
         qed
         show "e1 \<in> {e \<in> E. p e = b0 \<and>
             top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
@@ -881,8 +896,117 @@ proof -
           by (by100 blast)+
         \<comment> \<open>p*(\\<pi>\\_1(E,e1)) = H = p*(\\<pi>\\_1(E,e0)). By Theorem 79.2 \\<Leftarrow>:
            \\<exists> covering equivalence h: (E,e0) \\<rightarrow> (E,e1) with p\\<circ>h = p.\<close>
-        show "e1 \<in> \<Psi> ` ?Cov"
-          sorry \<comment> \<open>Theorem 79.2 backward direction + covering equiv = CT.\<close>
+        \<comment> \<open>By Theorem 79.2 backward: image\\_hom = H \\<Rightarrow> \\<exists> covering equivalence h.\<close>
+        have hb0B_bwd: "b0 \<in> B"
+          using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
+        from Theorem_79_2[OF assms(1) assms(2) assms(1) assms(3) assms(7)
+            assms(3) hpe1 assms(4) assms(4) assms(5) assms(5) assms(6) he1E hb0B_bwd]
+        have "(\<exists>h. top1_homeomorphism_on E TE E TE h \<and> (\<forall>e\<in>E. p (h e) = p e) \<and> h e0 = e1) \<longleftrightarrow>
+            ?H = top1_fundamental_group_image_hom E TE e1 B TB b0 p" .
+        hence "\<exists>h. top1_homeomorphism_on E TE E TE h \<and> (\<forall>e\<in>E. p (h e) = p e) \<and> h e0 = e1"
+          using him by simp
+        then obtain h' where hh'_homeo: "top1_homeomorphism_on E TE E TE h'"
+            and hh'_lift: "\<forall>e\<in>E. p (h' e) = p e" and hh'_e0: "h' e0 = e1"
+          by (by100 blast)
+        \<comment> \<open>h' is a covering transformation: homeomorphism + p\\<circ>h' = p + outside E = id.\<close>
+        \<comment> \<open>Issue: h' might not be id outside E. Need to adjust.\<close>
+        define h_adj where "h_adj e = (if e \<in> E then h' e else e)" for e
+        have hh_adj_ct: "top1_covering_transformation_on E TE B TB p h_adj"
+          unfolding top1_covering_transformation_on_def
+        proof (intro conjI)
+          \<comment> \<open>h\\_adj is a homeomorphism on E: same as h' on E.\<close>
+          have h_agree: "\<forall>e\<in>E. h_adj e = h' e"
+            unfolding h_adj_def by (by100 simp)
+          show "top1_homeomorphism_on E TE E TE h_adj"
+            unfolding top1_homeomorphism_on_def
+          proof (intro conjI)
+            have hTE: "is_topology_on E TE"
+              using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+            show "is_topology_on E TE" by (rule hTE)
+            show "is_topology_on E TE" by (rule hTE)
+            \<comment> \<open>bij\\_betw: h\\_adj on E = h' on E, which is bijective.\<close>
+            have "bij_betw h' E E" using hh'_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+            show "bij_betw h_adj E E"
+            proof -
+              have "\<forall>e\<in>E. h_adj e = h' e" using h_agree .
+              have "h_adj ` E = h' ` E"
+              proof (rule image_cong)
+                fix e assume "e \<in> E" thus "h_adj e = h' e" using h_agree by (by100 blast)
+              qed simp
+              moreover have "inj_on h_adj E"
+              proof (rule inj_onI)
+                fix x y assume "x \<in> E" "y \<in> E" "h_adj x = h_adj y"
+                hence "h' x = h' y" using h_agree by (by100 auto)
+                moreover have "inj_on h' E"
+                  using \<open>bij_betw h' E E\<close> unfolding bij_betw_def by (by100 blast)
+                ultimately show "x = y"
+                  using \<open>x \<in> E\<close> \<open>y \<in> E\<close> unfolding inj_on_def by (by100 blast)
+              qed
+              ultimately show ?thesis using \<open>bij_betw h' E E\<close>
+                unfolding bij_betw_def by (by100 blast)
+            qed
+            \<comment> \<open>Continuity: preimage under h\\_adj = preimage under h' (on E).\<close>
+            show "top1_continuous_map_on E TE E TE h_adj"
+              unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix e assume "e \<in> E" thus "h_adj e \<in> E"
+                using h_agree \<open>bij_betw h' E E\<close> unfolding bij_betw_def by (by100 blast)
+            next
+              fix V assume "V \<in> TE"
+              have "{e \<in> E. h_adj e \<in> V} = {e \<in> E. h' e \<in> V}"
+                using h_agree by (by100 auto)
+              moreover have "{e \<in> E. h' e \<in> V} \<in> TE"
+                using hh'_homeo \<open>V \<in> TE\<close>
+                unfolding top1_homeomorphism_on_def top1_continuous_map_on_def by (by100 blast)
+              ultimately show "{e \<in> E. h_adj e \<in> V} \<in> TE" by simp
+            qed
+            \<comment> \<open>Inverse continuity: inv\\_into E h\\_adj = inv\\_into E h' (agree on E).\<close>
+            show "top1_continuous_map_on E TE E TE (inv_into E h_adj)"
+            proof -
+              \<comment> \<open>inv\\_into E h\\_adj agrees with inv\\_into E h' on E.\<close>
+              have hinv_agree: "\<forall>e\<in>E. inv_into E h_adj e = inv_into E h' e"
+              proof (intro ballI)
+                fix e assume "e \<in> E"
+                have "inj_on h_adj E" using \<open>bij_betw h_adj E E\<close> unfolding bij_betw_def by (by100 blast)
+                have "inj_on h' E" using \<open>bij_betw h' E E\<close> unfolding bij_betw_def by (by100 blast)
+                have "e \<in> h_adj ` E" using \<open>e \<in> E\<close> \<open>bij_betw h_adj E E\<close>
+                  unfolding bij_betw_def by (by100 blast)
+                then obtain x where "x \<in> E" "h_adj x = e" by (by100 blast)
+                have "h_adj x = h' x" using h_agree \<open>x \<in> E\<close> by (by100 blast)
+                hence "h' x = e" using \<open>h_adj x = e\<close> by simp
+                have "inv_into E h_adj e = x"
+                  using inv_into_f_f[OF \<open>inj_on h_adj E\<close> \<open>x \<in> E\<close>] \<open>h_adj x = e\<close> by simp
+                moreover have "inv_into E h' e = x"
+                  using inv_into_f_f[OF \<open>inj_on h' E\<close> \<open>x \<in> E\<close>] \<open>h' x = e\<close> by simp
+                ultimately show "inv_into E h_adj e = inv_into E h' e" by simp
+              qed
+              \<comment> \<open>h' inverse is continuous.\<close>
+              have hinv_cont: "top1_continuous_map_on E TE E TE (inv_into E h')"
+                using hh'_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+              \<comment> \<open>Transfer continuity via pointwise agreement.\<close>
+              show ?thesis unfolding top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix e assume "e \<in> E"
+                thus "inv_into E h_adj e \<in> E"
+                  using hinv_agree hinv_cont unfolding top1_continuous_map_on_def by (by100 auto)
+              next
+                fix V assume "V \<in> TE"
+                have "{e \<in> E. inv_into E h_adj e \<in> V} = {e \<in> E. inv_into E h' e \<in> V}"
+                  using hinv_agree by (by100 auto)
+                thus "{e \<in> E. inv_into E h_adj e \<in> V} \<in> TE"
+                  using hinv_cont \<open>V \<in> TE\<close> unfolding top1_continuous_map_on_def by (by100 auto)
+              qed
+            qed
+          qed
+          show "\<forall>e\<in>E. p (h_adj e) = p e"
+            using hh'_lift h_agree by (by100 auto)
+          show "\<forall>e. e \<notin> E \<longrightarrow> h_adj e = e"
+            unfolding h_adj_def by (by100 simp)
+        qed
+        have "h_adj e0 = e1" using hh'_e0 assms(6) unfolding h_adj_def by (by100 simp)
+        hence "\<Psi> h_adj = e1" unfolding \<Psi>_def by simp
+        moreover have "h_adj \<in> ?Cov" using hh_adj_ct by (by100 blast)
+        ultimately show "e1 \<in> \<Psi> ` ?Cov" by (by100 blast)
       qed
       \<comment> \<open>Step C: \\<Phi>\\<inverse>\\<circ>\\<Psi> is a homomorphism.
          Key: for h,k \\<in> Cov(p), choose \\<gamma>: e0\\<rightarrow>h(e0), \\<delta>: e0\\<rightarrow>k(e0).
