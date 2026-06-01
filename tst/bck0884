@@ -1521,7 +1521,34 @@ proof -
      These follow from the subgroup property of H.\<close>
   \<comment> \<open>===== Step 2 (book): The sets B(U,\\<alpha>) form a basis =====\<close>
   have hbasis: "\<forall>\<alpha> \<in> ?paths. \<forall>U \<in> TB. \<alpha> 1 \<in> U \<longrightarrow> ?coset_class \<alpha> \<in> ?B_basis U \<alpha>"
-    sorry \<comment> \<open>\\<alpha>\\# = (\\<alpha>*const)\\# \\<in> B(U,\\<alpha>).\<close>
+  proof (intro ballI impI)
+    fix \<alpha> U assume h\<alpha>: "\<alpha> \<in> ?paths" and hU: "U \<in> TB" and h\<alpha>U: "\<alpha> 1 \<in> U"
+    \<comment> \<open>Take \\<delta> = const(\\<alpha>(1)). Then \\<alpha>*\\<delta> is in B(U,\\<alpha>) and coset\\_class(\\<alpha>*\\<delta>) = coset\\_class(\\<alpha>).\<close>
+    let ?\<delta> = "top1_constant_path (\<alpha> 1)"
+    have h\<alpha>_p: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha> by (by100 blast)
+    have h\<alpha>1_B: "\<alpha> 1 \<in> B"
+    proof -
+      have "1 \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      from h\<alpha>_p have "top1_continuous_map_on I_set I_top B TB \<alpha>"
+        unfolding top1_is_path_on_def by (by100 blast)
+      hence "\<forall>s\<in>I_set. \<alpha> s \<in> B" unfolding top1_continuous_map_on_def by (by100 blast)
+      thus ?thesis using \<open>1 \<in> I_set\<close> by (by100 blast)
+    qed
+    have h\<delta>_path: "top1_is_path_on B TB (\<alpha> 1) (\<alpha> 1) ?\<delta>"
+      by (rule top1_constant_path_is_path[OF hTB h\<alpha>1_B])
+    have h\<delta>_range: "?\<delta> ` I_set \<subseteq> U"
+      unfolding top1_constant_path_def using h\<alpha>U by (by100 blast)
+    \<comment> \<open>coset\\_class(\\<alpha>*\\<delta>) = coset\\_class(\\<alpha>) because \\<alpha>*const \\<simeq> \\<alpha>.\<close>
+    have hprod_const: "?coset_class (top1_path_product \<alpha> ?\<delta>) = ?coset_class \<alpha>"
+      sorry \<comment> \<open>\\<alpha>*const \\<simeq> \\<alpha> (Theorem\\_51\\_2\\_right\\_identity) \\<Rightarrow> same coset class.\<close>
+    \<comment> \<open>coset\\_class(\\<alpha>*\\<delta>) \\<in> B\\_basis(U, \\<alpha>).\<close>
+    have h\<delta>_ep: "?\<delta> 1 = \<alpha> 1" unfolding top1_constant_path_def by simp
+    have h\<delta>_path2: "top1_is_path_on B TB (\<alpha> 1) (?\<delta> 1) ?\<delta>"
+      using h\<delta>_path h\<delta>_ep by simp
+    have "?coset_class (top1_path_product \<alpha> ?\<delta>) \<in> ?B_basis U \<alpha>"
+      using h\<delta>_path2 h\<delta>_range by (by100 blast)
+    thus "?coset_class \<alpha> \<in> ?B_basis U \<alpha>" using hprod_const by simp
+  qed
   have hbasis_eq: "\<forall>\<alpha> \<beta>. \<forall>U \<in> TB. ?coset_class \<beta> \<in> ?B_basis U \<alpha> \<longrightarrow>
       ?B_basis U \<alpha> = ?B_basis U \<beta>"
     sorry \<comment> \<open>If \\<beta>\\# \\<in> B(U,\\<alpha>), then B(U,\\<alpha>) = B(U,\\<beta>) (book Step 2).\<close>
@@ -1602,7 +1629,7 @@ proof -
     sorry \<comment> \<open>From hp\\_cont, hp\\_surj, hp\\_covering.\<close>
   show ?thesis
     using hTE_strict hcov hE_pc hE_lpc he0_E hp_e0 hp_star_eq_H
-    sorry \<comment> \<open>Existential packaging of ?E, ?TE, ?p, ?e0 with all properties.\<close>
+    sorry \<comment> \<open>Existential packaging: 4-variable existential with let-bound witnesses.\<close>
 qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
