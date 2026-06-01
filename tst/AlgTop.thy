@@ -1554,12 +1554,33 @@ proof -
     sorry \<comment> \<open>If \\<beta>\\# \\<in> B(U,\\<alpha>), then B(U,\\<alpha>) = B(U,\\<beta>) (book Step 2).\<close>
   \<comment> \<open>===== Step 3 (book): p is continuous and open =====\<close>
   have hp_surj: "?p ` ?E = B"
-  proof -
-    \<comment> \<open>B path-connected: for any b \\<in> B, exists path \\<alpha> from b0 to b.
-       Then coset\\_class(\\<alpha>) \\<in> E and p(coset\\_class(\\<alpha>)) = \\<alpha>(1) = b.\<close>
-    \<comment> \<open>Forward: p maps into B (all path endpoints are in B).\<close>
-    \<comment> \<open>Backward: for any b, path-connected gives path \\<alpha>: b0 \\<rightarrow> b.\<close>
-    show ?thesis sorry \<comment> \<open>Needs: path\\_connected B, path endpoint in B, SOME extraction.\<close>
+  proof (rule set_eqI, rule iffI)
+    \<comment> \<open>Forward: p maps E into B.\<close>
+    fix b assume "b \<in> ?p ` ?E"
+    then obtain cls where hcls: "cls \<in> ?E" and hb: "?p cls = b" by (by100 blast)
+    \<comment> \<open>cls = coset\\_class(\\<alpha>) for some \\<alpha> \\<in> paths. p(cls) = endpoint in B.\<close>
+    show "b \<in> B"
+      sorry \<comment> \<open>p maps into B: (SOME \\<beta> \\<in> cls) is a path in B, endpoint \\<in> B.\<close>
+  next
+    \<comment> \<open>Backward: every b \\<in> B is p(some class).\<close>
+    fix b assume hb: "b \<in> B"
+    \<comment> \<open>B path-connected: \\<exists> path \\<alpha>: b0 \\<rightarrow> b.\<close>
+    from assms(2) have hpc: "\<forall>x\<in>B. \<forall>y\<in>B. \<exists>f. top1_is_path_on B TB x y f"
+      unfolding top1_path_connected_on_def by (by100 blast)
+    from hpc[rule_format, OF assms(5) hb]
+    obtain \<alpha> where h\<alpha>: "top1_is_path_on B TB b0 b \<alpha>" by (by100 blast)
+    \<comment> \<open>coset\\_class(\\<alpha>) \\<in> E.\<close>
+    have h\<alpha>_paths: "\<alpha> \<in> ?paths"
+    proof -
+      have "\<alpha> 1 = b" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+      hence "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha> by simp
+      thus ?thesis by (by100 blast)
+    qed
+    hence h\<alpha>_E: "?coset_class \<alpha> \<in> ?E" by (by100 blast)
+    \<comment> \<open>p(coset\\_class(\\<alpha>)) = b.\<close>
+    have "?p (?coset_class \<alpha>) = b"
+      sorry \<comment> \<open>All paths in coset\\_class(\\<alpha>) end at \\<alpha>(1) = b. SOME extraction.\<close>
+    thus "b \<in> ?p ` ?E" using h\<alpha>_E by (by100 blast)
   qed
   have hp_cont: "\<forall>V \<in> TB. {c \<in> ?E. ?p c \<in> V} \<in> ?TE"
     sorry \<comment> \<open>For any open V and c with p(c) \\<in> V, choose pc open V' \\<subseteq> V, B(V',\\<alpha>) \\<subseteq> preimage.\<close>
