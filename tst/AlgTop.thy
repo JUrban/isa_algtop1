@@ -1624,9 +1624,41 @@ proof -
       using h\<delta>_path2 h\<delta>_range by (by100 blast)
     thus "?coset_class \<alpha> \<in> ?B_basis U \<alpha>" using hprod_const by simp
   qed
+  \<comment> \<open>Property (2): if coset\\_class(\\<alpha>) = coset\\_class(\\<beta>), then
+     coset\\_class(\\<alpha>*\\<delta>) = coset\\_class(\\<beta>*\\<delta>) for any path \\<delta> from \\<alpha>(1).
+     This is the coset class compatibility with path extension.\<close>
+  have hcoset_product_compat: "\<forall>\<alpha> \<beta> \<delta>. ?coset_class \<alpha> = ?coset_class \<beta> \<longrightarrow>
+      \<alpha> \<in> ?paths \<longrightarrow> \<beta> \<in> ?paths \<longrightarrow>
+      top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta> \<longrightarrow>
+      ?coset_class (top1_path_product \<alpha> \<delta>) = ?coset_class (top1_path_product \<beta> \<delta>)"
+    sorry \<comment> \<open>[(\\<alpha>*\\<delta>)*rev(\\<beta>*\\<delta>)] = [\\<alpha>*rev(\\<beta>)] \\<in> H (transitivity-style argument:
+       \\<delta>*rev(\\<delta>) cancels in the middle).\<close>
   have hbasis_eq: "\<forall>\<alpha> \<beta>. \<forall>U \<in> TB. ?coset_class \<beta> \<in> ?B_basis U \<alpha> \<longrightarrow>
       ?B_basis U \<alpha> = ?B_basis U \<beta>"
-    sorry \<comment> \<open>If \\<beta>\\# \\<in> B(U,\\<alpha>), then B(U,\\<alpha>) = B(U,\\<beta>) (book Step 2).\<close>
+  proof (intro allI ballI impI)
+    fix \<alpha> \<beta> U assume hU: "U \<in> TB" and h\<beta>_in: "?coset_class \<beta> \<in> ?B_basis U \<alpha>"
+    \<comment> \<open>\\<beta>\\# = (\\<alpha>*\\<delta>)\\# for some \\<delta> in U.\<close>
+    from h\<beta>_in obtain \<delta> where h\<delta>_path: "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
+        and h\<delta>_U: "\<delta> ` I_set \<subseteq> U"
+        and h\<beta>_eq: "?coset_class \<beta> = ?coset_class (top1_path_product \<alpha> \<delta>)"
+      by (by100 blast)
+    \<comment> \<open>Show B(U,\\<alpha>) \\<subseteq> B(U,\\<beta>): any (\\<alpha>*\\<gamma>)\\# can be written as (\\<beta>*\\<gamma>')\\# for some \\<gamma>'.\<close>
+    show "?B_basis U \<alpha> = ?B_basis U \<beta>"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> ?B_basis U \<alpha>"
+      \<comment> \<open>x = (\\<alpha>*\\<gamma>)\\# for some \\<gamma> in U from \\<alpha>(1).
+         Since \\<beta>\\# = (\\<alpha>*\\<delta>)\\#, by property (2): (\\<beta>*\\<gamma>')\\# = ((\\<alpha>*\\<delta>)*\\<gamma>')\\#.
+         Take \\<gamma>' = ... Need: (\\<alpha>*\\<gamma>)\\# = (\\<beta>*\\<gamma>')\\# for some \\<gamma>' in U from \\<beta>(1).
+         By book: (\\<alpha>*\\<gamma>)\\# = (\\<alpha>*(\\<delta>*(rev(\\<delta>)*\\<gamma>)))\\# = ((\\<alpha>*\\<delta>)*(rev(\\<delta>)*\\<gamma>))\\#
+         = (\\<beta>*(rev(\\<delta>)*\\<gamma>))\\# where rev(\\<delta>)*\\<gamma> is a path from \\<beta>(1)=\\<delta>(1) in U.\<close>
+      show "x \<in> ?B_basis U \<beta>"
+        sorry \<comment> \<open>Book Step 2: uses \\<beta>\\# = (\\<alpha>*\\<delta>)\\# and path reparametrization.\<close>
+    next
+      fix x assume "x \<in> ?B_basis U \<beta>"
+      show "x \<in> ?B_basis U \<alpha>"
+        sorry \<comment> \<open>Symmetric: \\<alpha>\\# = (\\<beta>*rev(\\<delta>))\\# (from \\<beta>\\# = (\\<alpha>*\\<delta>)\\#).\<close>
+    qed
+  qed
   \<comment> \<open>===== Step 3 (book): p is continuous and open =====\<close>
   have hp_surj: "?p ` ?E = B"
   proof (rule set_eqI, rule iffI)
