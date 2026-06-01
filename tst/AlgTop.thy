@@ -1859,9 +1859,11 @@ proof -
     show "\<forall>b\<in>B. \<exists>U. b \<in> U \<and> top1_evenly_covered_on ?E ?TE B TB ?p U"
       by (rule hp_covering)
   qed
-  show ?thesis
-    using hTE_strict hcov hE_pc hE_lpc he0_E hp_e0 hp_star_eq_H
-    sorry \<comment> \<open>Existential packaging: 4-variable existential with let-bound witnesses.\<close>
+  have hpkg: "is_topology_on_strict ?E ?TE \<and> top1_covering_map_on ?E ?TE B TB ?p
+      \<and> top1_path_connected_on ?E ?TE \<and> top1_locally_path_connected_on ?E ?TE
+      \<and> ?e0 \<in> ?E \<and> ?p ?e0 = b0 \<and> top1_fundamental_group_image_hom ?E ?TE ?e0 B TB b0 ?p = H"
+    using hTE_strict hcov hE_pc hE_lpc he0_E hp_e0 hp_star_eq_H by (by100 blast)
+  show ?thesis using hpkg sorry \<comment> \<open>Existential packaging: need explicit witnesses for 4-var existential.\<close>
 qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
