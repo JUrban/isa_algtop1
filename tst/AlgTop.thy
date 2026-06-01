@@ -753,7 +753,111 @@ proof -
        Step 3: f is a group homomorphism:
          f(h\<circ>k) = [p\<circ>(\<gamma>*(h\<circ>\<delta>))] \<cdot> H = [p\<circ>\<gamma>]*[p\<circ>\<delta>] \<cdot> H = f(h) \<cdot> f(k).
        Step 4: f is bijective (from Lemma 81.1 + injectivity of \<Psi>).\<close>
-    show ?thesis sorry \<comment> \<open>Construct the isomorphism f and verify all properties.\<close>
+    show ?thesis
+    proof -
+      \<comment> \<open>Step A: Define \\<Phi>: Cov(p) \\<rightarrow> N(H)/H.
+         For h \\<in> Cov(p): h(e0) \\<in> p\\<inverse>(b0). Since E is path-connected, choose
+         path \\<gamma>: e0 \\<rightarrow> h(e0). Then p\\<circ>\\<gamma> is a loop at b0, so [p\\<circ>\\<gamma>] \\<in> \\<pi>\\_1(B,b0).
+         Show [p\\<circ>\\<gamma>] \\<in> N(H). Define \\<Phi>(h) = [p\\<circ>\\<gamma>]\\<cdot>H.\<close>
+      \<comment> \<open>Step B: \\<Phi> is well-defined (different path gives same coset).
+         If \\<gamma>' is another path e0 \\<rightarrow> h(e0), then \\<gamma>*rev(\\<gamma>') is a loop at e0,
+         so [p\\<circ>(\\<gamma>*rev(\\<gamma>'))] \\<in> H. Hence [p\\<circ>\\<gamma>] and [p\\<circ>\\<gamma>'] differ by H.\<close>
+      \<comment> \<open>Step C: \\<Phi> is a group homomorphism.
+         \\<Phi>(h\\<circ>k) = [p\\<circ>(\\<gamma>*(h\\<circ>\\<delta>))] H where \\<gamma>: e0\\<rightarrow>h(e0), \\<delta>: e0\\<rightarrow>k(e0).
+         = [p\\<circ>\\<gamma>]*[p\\<circ>\\<delta>] H = \\<Phi>(h)*\\<Phi>(k) (since p\\<circ>h = p).\<close>
+      \<comment> \<open>Step D: \\<Phi> is injective.
+         \\<Phi>(h) = eH \\<Rightarrow> [p\\<circ>\\<gamma>] \\<in> H \\<Rightarrow> \\<gamma> lifts to a loop at e0 (unique lift)
+         \\<Rightarrow> h(e0) = e0 \\<Rightarrow> h = id (covering transformation is determined by value at e0).\<close>
+      \<comment> \<open>Step E: \\<Phi> is surjective.
+         For [\\<alpha>]\\<cdot>H \\<in> N(H)/H: \\<alpha> is a loop at b0 with [\\<alpha>] \\<in> N(H).
+         Lift \\<alpha> to \\<tilde>\\<alpha> in E starting at e0. Define h by unique lifting:
+         h = (unique covering transformation sending e0 to \\<tilde>\\<alpha>(1)).
+         Then \\<Phi>(h) = [p\\<circ>\\<tilde>\\<alpha>]\\<cdot>H = [\\<alpha>]\\<cdot>H.\<close>
+      \<comment> \<open>Step A: Define \\<Psi>: Cov(p) \\<rightarrow> p\\<inverse>(b0) by \\<Psi>(h) = h(e0).
+         \\<Psi> is injective (covering transformation determined by value at one point).\<close>
+      define \<Psi> where "\<Psi> h = h e0" for h :: "'e \<Rightarrow> 'e"
+      have h\<Psi>_fiber: "\<forall>h\<in>?Cov. \<Psi> h \<in> E \<and> p (\<Psi> h) = b0"
+      proof (intro ballI conjI)
+        fix h assume "h \<in> ?Cov"
+        hence hct: "top1_covering_transformation_on E TE B TB p h" by (by100 blast)
+        have "top1_homeomorphism_on E TE E TE h"
+          using hct unfolding top1_covering_transformation_on_def by (by100 blast)
+        hence "bij_betw h E E" unfolding top1_homeomorphism_on_def by (by100 blast)
+        hence "h ` E = E" unfolding bij_betw_def by (by100 blast)
+        hence "h e0 \<in> E" using assms(6) by (by100 blast)
+        thus "\<Psi> h \<in> E" unfolding \<Psi>_def by simp
+        have "\<forall>e\<in>E. p (h e) = p e"
+          using hct unfolding top1_covering_transformation_on_def by (by100 blast)
+        hence "p (h e0) = p e0" using assms(6) by (by100 blast)
+        thus "p (\<Psi> h) = b0" unfolding \<Psi>_def using assms(7) by simp
+      qed
+      \<comment> \<open>\\<Psi> injective: covering transformation determined by value at e0.\<close>
+      have h\<Psi>_inj: "inj_on \<Psi> ?Cov"
+      proof (rule inj_onI)
+        fix h k assume hh: "h \<in> ?Cov" and hk: "k \<in> ?Cov" and heq: "\<Psi> h = \<Psi> k"
+        hence "h e0 = k e0" unfolding \<Psi>_def by simp
+        have hh_ct: "top1_covering_transformation_on E TE B TB p h"
+          using hh by (by100 blast)
+        have hk_ct: "top1_covering_transformation_on E TE B TB p k"
+          using hk by (by100 blast)
+        have hh_cont: "top1_continuous_map_on E TE E TE h"
+          using hh_ct unfolding top1_covering_transformation_on_def top1_homeomorphism_on_def
+          by (by100 blast)
+        have hk_cont: "top1_continuous_map_on E TE E TE k"
+          using hk_ct unfolding top1_covering_transformation_on_def top1_homeomorphism_on_def
+          by (by100 blast)
+        have hlift: "\<forall>e\<in>E. p (h e) = p (k e)"
+        proof (intro ballI)
+          fix e assume "e \<in> E"
+          have "p (h e) = p e"
+            using hh_ct \<open>e \<in> E\<close> unfolding top1_covering_transformation_on_def by (by100 blast)
+          moreover have "p (k e) = p e"
+            using hk_ct \<open>e \<in> E\<close> unfolding top1_covering_transformation_on_def by (by100 blast)
+          ultimately show "p (h e) = p (k e)" by simp
+        qed
+        have hTE_l: "is_topology_on E TE"
+          using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+        have hTB_l: "is_topology_on B TB"
+          using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+        have hE_conn: "top1_connected_on E TE"
+          by (rule path_connected_imp_connected[OF assms(4)])
+        from covering_lift_unique_connected[OF assms(3) hTE_l hTB_l hTE_l hE_conn
+            hh_cont hk_cont hlift assms(6) \<open>h e0 = k e0\<close>]
+        have hE_eq: "\<forall>e\<in>E. h e = k e" .
+        \<comment> \<open>Outside E: both CTs map to identity.\<close>
+        have hout_h: "\<forall>e. e \<notin> E \<longrightarrow> h e = e"
+          using hh_ct unfolding top1_covering_transformation_on_def by (by100 blast)
+        have hout_k: "\<forall>e. e \<notin> E \<longrightarrow> k e = e"
+          using hk_ct unfolding top1_covering_transformation_on_def by (by100 blast)
+        show "h = k"
+        proof (rule ext)
+          fix e show "h e = k e"
+          proof (cases "e \<in> E")
+            case True thus ?thesis using hE_eq by (by100 blast)
+          next
+            case False
+            hence "h e = e" using hout_h by simp
+            moreover have "k e = e" using False hout_k by simp
+            ultimately show ?thesis by simp
+          qed
+        qed
+      qed
+      \<comment> \<open>Step B: Image of \\<Psi> = \\<Phi>(N(H)/H).
+         h(e0) = e1 iff \\<exists> CT sending e0 to e1 iff [p\\<circ>\\<gamma>] \\<in> N(H)
+         (by Theorem 79.2 + basepoint\\_change\\_image\\_hom).\<close>
+      have h\<Psi>_image: "\<Psi> ` ?Cov = {e \<in> E. p e = b0 \<and>
+          top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
+        sorry \<comment> \<open>From Theorem\\_79\\_2: CT h with h(e0)=e exists iff p*(\\<pi>\\_1(E,e)) = p*(\\<pi>\\_1(E,e0)).\<close>
+      \<comment> \<open>Step C: \\<Phi>\\<inverse>\\<circ>\\<Psi> is a homomorphism.
+         Key: for h,k \\<in> Cov(p), choose \\<gamma>: e0\\<rightarrow>h(e0), \\<delta>: e0\\<rightarrow>k(e0).
+         Then h\\<circ>\\<delta>: h(e0)\\<rightarrow>h(k(e0)). So \\<gamma>*(h\\<circ>\\<delta>) lifts \\<alpha>*\\<beta>
+         where \\<alpha>=p\\<circ>\\<gamma>, \\<beta>=p\\<circ>\\<delta>. The lifting correspondence gives
+         \\<Phi>([\\<alpha>*\\<beta>]H) = (\\<gamma>*(h\\<circ>\\<delta>))(1) = h(k(e0)) = \\<Psi>(h\\<circ>k).\<close>
+      \<comment> \<open>Since \\<Phi> is a bijection (Theorem 54.4/54.6), and \\<Psi> is injective
+         with the right image, \\<Phi>\\<inverse>\\<circ>\\<Psi> is a bijection Cov(p) \\<rightarrow> N(H)/H.
+         The homomorphism property follows from the path composition.\<close>
+      show ?thesis sorry \<comment> \<open>Assembly: \\<Phi>\\<inverse>\\<circ>\\<Psi> is a group isomorphism Cov(p) \\<cong> N(H)/H.\<close>
+    qed
   qed
   obtain eC invgC where hCov_grp: "top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC"
     using hCov_group by (by100 blast)
