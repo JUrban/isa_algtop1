@@ -3868,8 +3868,42 @@ proof -
             show "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
                 (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
                 (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<noteq> top1_fundamental_group_id Y TY y0"
-              sorry \<comment> \<open>hword\\_eq + hword\\_F\\_ne + hincl\\_inj (inclusion injective).
-                 word\\_product(Y) = incl*(word\\_product(?YF)) \\<noteq> incl*(id\\_F) = id\\_Y.\<close>
+            proof (rule notI)
+              assume hcontra: "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
+                  (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
+                  (map (\<lambda>(s, b). (\<iota> s, b)) ws) = top1_fundamental_group_id Y TY y0"
+              \<comment> \<open>By hword\\_eq: incl*(word\\_product(?YF, ws\\_F)) = id\\_Y.\<close>
+              have "?incl (top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
+                  (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
+                  ?ws_F) = top1_fundamental_group_id Y TY y0"
+                using hword_eq hcontra by (by100 simp)
+              \<comment> \<open>word\\_product(?YF, ws\\_F) \\<in> carrier(?YF).\<close>
+              have hword_F_carrier: "top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
+                  (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
+                  ?ws_F \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
+                sorry \<comment> \<open>Word product of carrier elements is in carrier (group closure).\<close>
+              \<comment> \<open>id\\_?YF \\<in> carrier(?YF).\<close>
+              have hid_F_carrier: "top1_fundamental_group_id ?YF ?TYF y0
+                  \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
+                sorry \<comment> \<open>Identity element is in carrier.\<close>
+              \<comment> \<open>incl*(id\\_?YF) = id\\_Y.\<close>
+              have hincl_id: "?incl (top1_fundamental_group_id ?YF ?TYF y0) =
+                  top1_fundamental_group_id Y TY y0"
+                sorry \<comment> \<open>Inclusion hom maps identity to identity.\<close>
+              \<comment> \<open>By hincl\\_inj: incl* injective on carrier(?YF).\<close>
+              have hYF_sub: "?YF \<subseteq> Y" using hT_sub h\<A> hF_NT by (by100 blast)
+              from hincl_inj[OF hF_fin hF_NT hF_ne]
+              have hinj: "inj_on ?incl (top1_fundamental_group_carrier ?YF ?TYF y0)" .
+              \<comment> \<open>incl*(word\\_product) = incl*(id\\_F). By injectivity: word\\_product = id\\_F.\<close>
+              let ?wp_F = "top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
+                  (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0) ?ws_F"
+              have "?incl ?wp_F = ?incl (top1_fundamental_group_id ?YF ?TYF y0)"
+                using \<open>?incl ?wp_F = _\<close> hincl_id by (by100 simp)
+              have "?wp_F = top1_fundamental_group_id ?YF ?TYF y0"
+                using hinj hword_F_carrier hid_F_carrier \<open>?incl ?wp_F = ?incl _\<close>
+                unfolding inj_on_def by (by5000 blast)
+              thus False using hword_F_ne by contradiction
+            qed
           qed
         qed
         thus ?thesis by (by100 blast)
