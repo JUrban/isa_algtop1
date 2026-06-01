@@ -3718,18 +3718,53 @@ proof -
               top1_group_word_product (top1_fundamental_group_mul Y TY y0)
                   (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
                   (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<noteq> top1_fundamental_group_id Y TY y0"
-            sorry \<comment> \<open>Proof from harc\\_loops\\_free + hincl\\_inj + hom\\_word\\_product:
-               1. ws uses generators \\<iota>(s\\_i) = gen(A\\_i) where A\\_i = inv\\_into(idx, s\\_i).
-                  F = {A\\_i} is finite, F \\<subseteq> NT, F \\<noteq> {} (ws \\<noteq> []).
-               2. By harc\\_loops\\_free: \\<pi>\\_1(T\\<union>\\<Union>F) free on F with \\<iota>F, incl*(\\<iota>F(A)) = gen(A).
-               3. Construct word ws\\_F in \\<pi>\\_1(T\\<union>\\<Union>F): map((s,b) \\<mapsto> (\\<iota>F(inv(idx,s)),b), ws).
-               4. word\\_product(\\<pi>\\_1(Y), map((s,b) \\<mapsto> (\\<iota>(s),b), ws))
-                  = incl*(word\\_product(\\<pi>\\_1(T\\<union>\\<Union>F), ws\\_F))  [by hom\\_word\\_product].
-               5. ws\\_F is non-trivial reduced in the free generators \\<iota>F of \\<pi>\\_1(T\\<union>\\<Union>F)
-                  (from ws non-trivial + \\<iota>F injective + bijection preserves reduced).
-               6. By freeness: word\\_product(\\<pi>\\_1(T\\<union>\\<Union>F), ws\\_F) \\<noteq> id\\_F.
-               7. By hincl\\_inj: incl* injective. So incl*(word\\_product) \\<noteq> incl*(id\\_F) = id\\_Y.
-               Each step is 10-20 lines. Total: ~100 lines.\<close>
+          proof (intro allI impI)
+            fix ws :: "(nat \<times> bool) list"
+            assume hws_ne: "ws \<noteq> []"
+              and hws_red: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws)"
+              and hws_in: "\<forall>i<length ws. fst (ws ! i) \<in> S"
+            \<comment> \<open>Step 1: Extract the arcs F = {inv\\_into(idx, s) | s in ws}.\<close>
+            let ?arcs = "(\<lambda>s. the_inv_into ?NT idx s) ` (fst ` set ws)"
+            have hF_fin: "finite ?arcs" by (by100 simp)
+            have hF_NT: "?arcs \<subseteq> ?NT"
+            proof
+              fix A assume "A \<in> ?arcs"
+              then obtain s where "s \<in> fst ` set ws" "A = the_inv_into ?NT idx s"
+                by (by100 blast)
+              then obtain i where "i < length ws" "fst (ws ! i) = s"
+                sorry \<comment> \<open>s \\<in> fst ` set ws \\<Rightarrow> \\<exists>i. fst(ws!i) = s.\<close>
+              hence "s \<in> S" using hws_in by (by100 blast)
+              from bij_betw_imp_surj_on[OF hidx] this
+              obtain B where "B \<in> ?NT" "idx B = s" by (by100 blast)
+              have "the_inv_into ?NT idx s = B"
+                using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF hidx] \<open>B \<in> ?NT\<close>]
+                  \<open>idx B = s\<close> by (by100 simp)
+              thus "A \<in> ?NT" using \<open>A = the_inv_into ?NT idx s\<close> \<open>B \<in> ?NT\<close> by (by100 simp)
+            qed
+            have hF_ne: "?arcs \<noteq> {}" using hws_ne by (by100 simp)
+            let ?YF = "T \<union> \<Union>?arcs" and ?TYF = "subspace_topology Y TY (T \<union> \<Union>?arcs)"
+            \<comment> \<open>Step 2: By harc\\_loops\\_free: \\<pi>\\_1(?YF) free on ?arcs with \\<iota>F.\<close>
+            from harc_loops_free[OF hF_fin hF_NT hF_ne]
+            obtain \<iota>F where hfreeF: "top1_is_free_group_full_on
+                (top1_fundamental_group_carrier ?YF ?TYF y0) (top1_fundamental_group_mul ?YF ?TYF y0)
+                (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
+                \<iota>F ?arcs"
+                and hgenF: "\<forall>A\<in>?arcs. top1_fundamental_group_induced_on ?YF ?TYF y0 Y TY y0 (\<lambda>x. x)
+                    (\<iota>F A) = gen A"
+              sorry \<comment> \<open>Extract from harc\\_loops\\_free existential.\<close>
+            let ?incl = "top1_fundamental_group_induced_on ?YF ?TYF y0 Y TY y0 (\<lambda>x. x)"
+            \<comment> \<open>Step 3: The word product in \\<pi>\\_1(Y) equals incl*(word product in \\<pi>\\_1(?YF)).
+               This uses: \\<iota>(s) = gen(inv(idx,s)) = incl*(\\<iota>F(inv(idx,s))).
+               So map((s,b) \\<mapsto> (\\<iota>(s),b), ws) = map((s,b) \\<mapsto> (incl*(\\<iota>F(inv(idx,s))),b), ws).
+               By hom\\_word\\_product: word\\_product(Y, ...) = incl*(word\\_product(?YF, ...)).\<close>
+            \<comment> \<open>Step 4-7: The inner word is non-trivial by freeness.
+               By hincl\\_inj: incl* injective. So outer \\<noteq> id.\<close>
+            show "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
+                (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
+                (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<noteq> top1_fundamental_group_id Y TY y0"
+              sorry \<comment> \<open>Steps 3-7: hom\\_word\\_product + freeness of ?YF + hincl\\_inj.
+                 Detailed proof: ~80 lines following the 7-step roadmap.\<close>
+          qed
         qed
         thus ?thesis by (by100 blast)
       qed
