@@ -1964,7 +1964,8 @@ proof -
          By book: (\\<alpha>*\\<gamma>)\\# = (\\<alpha>*(\\<delta>*(rev(\\<delta>)*\\<gamma>)))\\# = ((\\<alpha>*\\<delta>)*(rev(\\<delta>)*\\<gamma>))\\#
          = (\\<beta>*(rev(\\<delta>)*\\<gamma>))\\# where rev(\\<delta>)*\\<gamma> is a path from \\<beta>(1)=\\<delta>(1) in U.\<close>
       show "x \<in> ?B_basis U \<beta>"
-        sorry \<comment> \<open>Book Step 2: uses \\<beta>\\# = (\\<alpha>*\\<delta>)\\# and path reparametrization.\<close>
+        sorry \<comment> \<open>Book Step 2 forward: take \\<gamma>' = rev(\\<delta>)*\\<gamma>.
+           Uses property (2) + associativity at class level + path product U-containment.\<close>
     next
       fix x assume "x \<in> ?B_basis U \<beta>"
       show "x \<in> ?B_basis U \<alpha>"
