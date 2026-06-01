@@ -1044,7 +1044,19 @@ proof -
          This requires: path\\_connected E (to choose \\<gamma>,\\<delta>),
          lifting correspondence (Theorem 54.4), and
          composition of covering transformations with paths.\<close>
-      show ?thesis sorry \<comment> \<open>Bijective hom: uses \\<Psi>\\_inj + \\<Psi>\\_image + lifting correspondence hom property.\<close>
+      \<comment> \<open>Step D: Construct the isomorphism Cov(p) \\<cong> N(H)/H.
+         From h\\<Psi>\\_inj (injective) and h\\<Psi>\\_image (image = right fiber set):
+         \\<Psi>: Cov(p) \\<rightarrow> {e \\<in> E | p(e)=b0 \\<and> image\\_hom(E,e)=H} is a bijection.
+         By Lemma 81.1 (book), this set = image of \\<Phi> on N(H)/H.
+         The lifting correspondence \\<Phi> (Theorem 54.4) bijects \\<pi>\\_1(B)/H onto p\\<inverse>(b0).
+         So \\<Phi>\\<inverse>\\<circ>\\<Psi>: Cov(p) \\<rightarrow> N(H)/H is a bijection.
+         For homomorphism: book proof uses path composition (\\<gamma>*(h\\<circ>\\<delta>) lifts \\<alpha>*\\<beta>).
+         This requires the lifting correspondence to interact well with path products.\<close>
+      show ?thesis sorry \<comment> \<open>Full proof requires:
+         (1) Theorem 54.4 (lifting correspondence),
+         (2) h\\<Psi>\\_image \\<Leftrightarrow> Lemma 81.1 (image of \\<Psi> = \\<Phi>(N(H)/H)),
+         (3) path composition under covering maps (homomorphism),
+         (4) composition of bijections (bijectivity).\<close>
     qed
   qed
   obtain eC invgC where hCov_grp: "top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC"
