@@ -3256,13 +3256,16 @@ proof -
                 \<iota>F F
               \<and> (\<forall>A\<in>F. \<iota>F A = top1_fundamental_group_induced_on (T \<union> \<Union>F)
                     (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (gen A))"
-          sorry \<comment> \<open>Book Step 1 + Step 2: SvK induction on |F|. Each generator \\<iota>\\_F(A)
-             equals the inclusion-image of gen(A). The free basis consists of the
-             arc-loop classes, not abstract generators.
-             Base case (|F|=1): graph\\_one\\_edge\\_pi1\\_iso\\_Z + generator computation.
-             Induction step (|F|=n>1): SvK decomposition U = X - p\\_2 - ... - p\\_n,
-             V = X - p\\_1. DR to T\\<union>A\\_1 and T\\<union>A\\_2\\<union>...\\<union>A\\_n respectively.
-             svk\\_free\\_product\\_free\\_with\\_generators provides the correspondence.\<close>
+          sorry \<comment> \<open>Proof by strong induction on card F (book Steps 1+2).
+             Base case (card F = 1): graph\\_one\\_edge\\_pi1\\_iso\\_Z + generator identification.
+             Induction step (card F > 1): SvK decomposition + svk\\_free\\_product\\_free\\_with\\_generators.
+             Full proof is ~300 lines following ac7/graph\\_pi1\\_free\\_weak\\_finite but with
+             generator tracking via svk\\_free\\_product\\_free\\_with\\_generators instead of svk\\_free\\_product\\_free.
+             Key ingredients:
+             - graph\\_deformation\\_retract\\_helper (ac7): DR of X-{int pts} to subgraph
+             - graph\\_remove\\_interior\\_points\\_sc (ac6): X-{int pts} is SC
+             - svk\\_free\\_product\\_free\\_with\\_generators (at/): SvK with generator tracking
+             - graph\\_one\\_edge\\_pi1\\_iso\\_Z (ac7): base case \\<pi>\\_1 \\<cong> \\<Z>\<close>
         \<comment> \<open>Index ?NT by nat.\<close>
         have "\<exists>(idx :: _ \<Rightarrow> nat) (S :: nat set). bij_betw idx ?NT S"
           sorry \<comment> \<open>Any set can be injected into nat (with appropriate cardinality).
