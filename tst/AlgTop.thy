@@ -3258,14 +3258,15 @@ proof -
                     (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (gen A))"
           sorry \<comment> \<open>Proof by strong induction on card F (book Steps 1+2).
              Base case (card F = 1): graph\\_one\\_edge\\_pi1\\_iso\\_Z + generator identification.
-             Induction step (card F > 1): SvK decomposition + svk\\_free\\_product\\_free\\_with\\_generators.
-             Full proof is ~300 lines following ac7/graph\\_pi1\\_free\\_weak\\_finite but with
-             generator tracking via svk\\_free\\_product\\_free\\_with\\_generators instead of svk\\_free\\_product\\_free.
-             Key ingredients:
-             - graph\\_deformation\\_retract\\_helper (ac7): DR of X-{int pts} to subgraph
-             - graph\\_remove\\_interior\\_points\\_sc (ac6): X-{int pts} is SC
-             - svk\\_free\\_product\\_free\\_with\\_generators (at/): SvK with generator tracking
-             - graph\\_one\\_edge\\_pi1\\_iso\\_Z (ac7): base case \\<pi>\\_1 \\<cong> \\<Z>\<close>
+               \\<pi>\\_1(T\\<union>D) \\<cong> \\<Z> with [g\\_D] as the \\<Z> generator. Uses quotient
+               map T\\<union>D \\<rightarrow> S1 (collapse T) to identify [g\\_D] with standard loop.
+             Induction step (card F > 1): Pick A1 \\<in> F. SvK decomposition:
+               U = (T\\<union>\\<Union>F) - {int pts of F-{A1}}, V = (T\\<union>\\<Union>F) - {int pt of A1}.
+               U DR to T\\<union>A1 (IH: free on {A1}), V DR to T\\<union>\\<Union>(F-{A1}) (IH: free on F-{A1}).
+               U\\<inter>V SC (DR to T). svk\\_free\\_product\\_free\\_with\\_generators gives
+               \\<pi>\\_1(T\\<union>\\<Union>F) free on F with generators matching inclusion-images of gen(A).
+             Key infrastructure: graph\\_deformation\\_retract\\_helper, graph\\_remove\\_interior\\_points\\_sc,
+               svk\\_free\\_product\\_free\\_with\\_generators, graph\\_one\\_edge\\_pi1\\_iso\\_Z.\<close>
         \<comment> \<open>Index ?NT by nat.\<close>
         have "\<exists>(idx :: _ \<Rightarrow> nat) (S :: nat set). bij_betw idx ?NT S"
           sorry \<comment> \<open>Any set can be injected into nat (with appropriate cardinality).
