@@ -1560,7 +1560,29 @@ proof -
     then obtain cls where hcls: "cls \<in> ?E" and hb: "?p cls = b" by (by100 blast)
     \<comment> \<open>cls = coset\\_class(\\<alpha>) for some \\<alpha> \\<in> paths. p(cls) = endpoint in B.\<close>
     show "b \<in> B"
-      sorry \<comment> \<open>p maps into B: (SOME \\<beta> \\<in> cls) is a path in B, endpoint \\<in> B.\<close>
+    proof -
+      \<comment> \<open>cls = coset\\_class(\\<alpha>) for some \\<alpha> \\<in> paths.\<close>
+      from hcls obtain \<alpha> where h\<alpha>p: "\<alpha> \<in> ?paths" and hcls_eq: "cls = ?coset_class \<alpha>"
+        by (by100 blast)
+      \<comment> \<open>cls is non-empty (\\<alpha> \\<in> cls by reflexivity).\<close>
+      have "\<alpha> \<in> cls"
+        using hcoset_refl[rule_format, OF h\<alpha>p] h\<alpha>p hcls_eq by (by100 blast)
+      hence hne: "\<exists>\<beta>. \<beta> \<in> cls" by (by100 blast)
+      have hsome: "(SOME \<beta>. \<beta> \<in> cls) \<in> cls" by (rule someI_ex[OF hne])
+      \<comment> \<open>(SOME \\<beta> \\<in> cls) is in coset\\_class(\\<alpha>), hence in paths.\<close>
+      have "(SOME \<beta>. \<beta> \<in> cls) \<in> ?paths" using hsome hcls_eq by (by100 blast)
+      hence "top1_is_path_on B TB b0 ((SOME \<beta>. \<beta> \<in> cls) 1) (SOME \<beta>. \<beta> \<in> cls)" by (by100 blast)
+      hence "(SOME \<beta>. \<beta> \<in> cls) 1 \<in> B"
+      proof -
+        have "top1_continuous_map_on I_set I_top B TB (SOME \<beta>. \<beta> \<in> cls)"
+          using \<open>top1_is_path_on B TB b0 _ _\<close> unfolding top1_is_path_on_def by (by100 blast)
+        hence "\<forall>s\<in>I_set. (SOME \<beta>. \<beta> \<in> cls) s \<in> B"
+          unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      thus ?thesis using hb by simp
+    qed
   next
     \<comment> \<open>Backward: every b \\<in> B is p(some class).\<close>
     fix b assume hb: "b \<in> B"
@@ -1579,7 +1601,20 @@ proof -
     hence h\<alpha>_E: "?coset_class \<alpha> \<in> ?E" by (by100 blast)
     \<comment> \<open>p(coset\\_class(\\<alpha>)) = b.\<close>
     have "?p (?coset_class \<alpha>) = b"
-      sorry \<comment> \<open>All paths in coset\\_class(\\<alpha>) end at \\<alpha>(1) = b. SOME extraction.\<close>
+    proof -
+      \<comment> \<open>All paths in coset\\_class(\\<alpha>) end at \\<alpha>(1).\<close>
+      have "\<forall>\<beta> \<in> ?coset_class \<alpha>. \<beta> 1 = \<alpha> 1" by (by100 blast)
+      \<comment> \<open>coset\\_class(\\<alpha>) non-empty (\\<alpha> \\<in> coset\\_class(\\<alpha>) by reflexivity).\<close>
+      have "\<alpha> \<in> ?coset_class \<alpha>"
+        using hcoset_refl[rule_format, OF h\<alpha>_paths] h\<alpha>_paths by (by100 blast)
+      hence "\<exists>\<beta>. \<beta> \<in> ?coset_class \<alpha>" by (by100 blast)
+      hence "(SOME \<beta>. \<beta> \<in> ?coset_class \<alpha>) \<in> ?coset_class \<alpha>"
+        by (rule someI_ex)
+      hence "(SOME \<beta>. \<beta> \<in> ?coset_class \<alpha>) 1 = \<alpha> 1"
+        using \<open>\<forall>\<beta> \<in> ?coset_class \<alpha>. \<beta> 1 = \<alpha> 1\<close> by (by100 blast)
+      moreover have "\<alpha> 1 = b" using h\<alpha> unfolding top1_is_path_on_def by (by100 blast)
+      ultimately show ?thesis by simp
+    qed
     thus "b \<in> ?p ` ?E" using h\<alpha>_E by (by100 blast)
   qed
   have hp_cont: "\<forall>V \<in> TB. {c \<in> ?E. ?p c \<in> V} \<in> ?TE"
