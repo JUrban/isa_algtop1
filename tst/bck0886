@@ -1721,7 +1721,15 @@ proof -
     from hall_b0[rule_format, OF hsome] show ?thesis by simp
   qed
   have hcov: "top1_covering_map_on ?E ?TE B TB ?p"
-    sorry \<comment> \<open>From hp\\_cont, hp\\_surj, hp\\_covering.\<close>
+    unfolding top1_covering_map_on_def
+  proof (intro conjI)
+    \<comment> \<open>p continuous.\<close>
+    show "top1_continuous_map_on ?E ?TE B TB ?p"
+      using hp_cont sorry \<comment> \<open>From hp\\_cont (continuous\\_map\\_on definition).\<close>
+    show "?p ` ?E = B" by (rule hp_surj)
+    show "\<forall>b\<in>B. \<exists>U. b \<in> U \<and> top1_evenly_covered_on ?E ?TE B TB ?p U"
+      by (rule hp_covering)
+  qed
   show ?thesis
     using hTE_strict hcov hE_pc hE_lpc he0_E hp_e0 hp_star_eq_H
     sorry \<comment> \<open>Existential packaging: 4-variable existential with let-bound witnesses.\<close>
