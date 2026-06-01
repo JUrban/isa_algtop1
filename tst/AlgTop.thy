@@ -3825,7 +3825,7 @@ proof -
                 \<iota>F ?arcs"
                 and hgenF: "\<forall>A\<in>?arcs. top1_fundamental_group_induced_on ?YF ?TYF y0 Y TY y0 (\<lambda>x. x)
                     (\<iota>F A) = gen A"
-              sorry \<comment> \<open>Extract from harc\\_loops\\_free existential.\<close>
+              by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
             let ?incl = "top1_fundamental_group_induced_on ?YF ?TYF y0 Y TY y0 (\<lambda>x. x)"
             \<comment> \<open>Step 3: The word product in \\<pi>\\_1(Y) equals incl*(word product in \\<pi>\\_1(?YF)).
                This uses: \\<iota>(s) = gen(inv(idx,s)) = incl*(\\<iota>F(inv(idx,s))).
