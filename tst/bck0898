@@ -8244,12 +8244,48 @@ proof -
                   (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
                   (map (\<lambda>(s, b). (gen s, b)) ws) \<noteq>
               top1_fundamental_group_id Y TY y0"
-            sorry \<comment> \<open>Compactness argument (same as old nat-indexed proof):
-               1. F = {fst(ws!i) | i < length ws} is finite, F \\<subseteq> ?NT, F \\<noteq> {}.
-               2. harc\\_loops\\_free: \\<pi>\\_1(T\\<union>\\<Union>F) free on F with \\<iota>F.
-               3. Map word from gen to \\<iota>F: reduced word over \\<iota>F.
-               4. Free on F \\<Rightarrow> word \\<ne> id in \\<pi>\\_1(T\\<union>\\<Union>F).
-               5. hincl\\_inj: inclusion injective \\<Rightarrow> word \\<ne> id in \\<pi>\\_1(Y).\<close>
+          proof (intro allI impI)
+            fix ws :: "('a set \<times> bool) list"
+            assume hws_ne: "ws \<noteq> []"
+              and hws_red: "top1_is_reduced_word (map (\<lambda>(s, b). (gen s, b)) ws)"
+              and hws_NT: "\<forall>i<length ws. fst (ws ! i) \<in> ?NT"
+            \<comment> \<open>F = set of arcs mentioned in ws. Finite, \\<subseteq> ?NT, non-empty.\<close>
+            let ?arcs = "fst ` set ws"
+            have hF_fin: "finite ?arcs" by (by100 simp)
+            have hF_NT: "?arcs \<subseteq> ?NT"
+            proof (intro subsetI)
+              fix A assume "A \<in> ?arcs"
+              then obtain p where "p \<in> set ws" "A = fst p" by (by100 blast)
+              then obtain i where "i < length ws" "ws ! i = p"
+                using in_set_conv_nth by (by100 metis)
+              hence "fst (ws ! i) \<in> ?NT" using hws_NT \<open>i < length ws\<close> by (by100 blast)
+              thus "A \<in> ?NT" using \<open>A = fst p\<close> \<open>ws ! i = p\<close> by simp
+            qed
+            have hF_ne: "?arcs \<noteq> {}" using hws_ne by (by100 simp)
+            \<comment> \<open>harc\\_loops\\_free on F.\<close>
+            let ?YF = "T \<union> \<Union>?arcs"
+            let ?TYF = "subspace_topology Y TY ?YF"
+            from harc_loops_free[OF hF_fin hF_NT hF_ne]
+            obtain \<iota>F where hfreeF: "top1_is_free_group_full_on
+                (top1_fundamental_group_carrier ?YF ?TYF y0)
+                (top1_fundamental_group_mul ?YF ?TYF y0)
+                (top1_fundamental_group_id ?YF ?TYF y0)
+                (top1_fundamental_group_invg ?YF ?TYF y0) \<iota>F ?arcs"
+                and hgenF: "\<forall>A\<in>?arcs. top1_fundamental_group_induced_on
+                    ?YF ?TYF y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A"
+              by (by100 blast)
+            \<comment> \<open>The word over gen in \\<pi>\\_1(Y) corresponds to a word over \\<iota>F in \\<pi>\\_1(T\\<union>\\<Union>F).
+               By freeness: \\<iota>F word \\<ne> id. By inclusion injectivity: gen word \\<ne> id.\<close>
+            show "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
+                (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
+                (map (\<lambda>(s, b). (gen s, b)) ws) \<noteq>
+                top1_fundamental_group_id Y TY y0"
+              sorry \<comment> \<open>Map gen word to \\<iota>F word via hgenF.
+                 Reduced word over \\<iota>F (from hws\\_red + hgenF).
+                 Freeness: \\<iota>F word \\<ne> id.
+                 hom\\_word\\_product: gen word = incl(\\<iota>F word).
+                 hincl\\_inj: incl injective \\<Rightarrow> gen word \\<ne> id.\<close>
+          qed
         qed
         thus ?thesis by (by100 blast)
       qed
