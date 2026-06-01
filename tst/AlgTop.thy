@@ -3056,9 +3056,12 @@ proof -
         \<comment> \<open>For each A \\<in> ?NT, get homeomorphism h\\_A and endpoints.\<close>
         have "\<forall>A \<in> ?NT. \<exists>h. top1_homeomorphism_on I_set I_top A (subspace_topology Y TY A) h"
           using h\<A> unfolding top1_is_arc_on_def by (by100 blast)
-        \<comment> \<open>Choose the generator map: for each A \\<in> ?NT, choose a generator loop.
-           The generator loop is in \\<pi>\\_1(Y, y0).\<close>
-        have hgen_exists: "\<forall>A \<in> ?NT. \<exists>c. c \<in> top1_fundamental_group_carrier Y TY y0"
+        \<comment> \<open>Choose the generator map: for each A \\<in> ?NT, construct the specific generator loop.
+           The generator loop g\\_A = \\<gamma>\\_a * (h * rev(\\<gamma>\\_b)) depends on choices of h, \\<gamma>\\_a, \\<gamma>\\_b,
+           but the HOMOTOPY CLASS [g\\_A] is canonical (independent of choices, since T is SC).
+           We construct a specific representative and take its homotopy class.\<close>
+        have hgen_exists: "\<forall>A \<in> ?NT. \<exists>gloop. top1_is_loop_on Y TY y0 gloop
+            \<and> gloop ` top1_unit_interval \<subseteq> T \<union> A"
         proof (intro ballI)
           fix A assume "A \<in> ?NT"
           hence "A \<in> \<A>" by (by100 blast)
@@ -3153,26 +3156,88 @@ proof -
             by (rule top1_path_product_is_path[OF hTY_top h\<gamma>a_Y hinner_Y])
           have hgen_loop: "top1_is_loop_on Y TY y0 ?gen_loop"
             using hgen_Y unfolding top1_is_loop_on_def by (by100 blast)
-          \<comment> \<open>The homotopy class of gen\\_loop is in the fundamental group carrier.\<close>
-          show "\<exists>c. c \<in> top1_fundamental_group_carrier Y TY y0"
-          proof (rule exI)
-            show "{g. top1_loop_equiv_on Y TY y0 ?gen_loop g}
-                \<in> top1_fundamental_group_carrier Y TY y0"
-              unfolding top1_fundamental_group_carrier_def
-              using hgen_loop by (by100 blast)
+          \<comment> \<open>Image containment: gen\\_loop maps into T \\<union> A.\<close>
+          have himg: "?gen_loop ` top1_unit_interval \<subseteq> T \<union> A"
+          proof
+            fix x assume "x \<in> ?gen_loop ` top1_unit_interval"
+            then obtain t where "t \<in> top1_unit_interval" "x = ?gen_loop t" by (by100 blast)
+            have ht_I: "t \<in> I_set" using \<open>t \<in> top1_unit_interval\<close> by (by100 simp)
+            show "x \<in> T \<union> A"
+            proof (cases "t \<le> 1/2")
+              case True \<comment> \<open>First half: \\<gamma>\\_a(2t) \\<in> T.\<close>
+              hence "?gen_loop t = \<gamma>a (2 * t)"
+                unfolding top1_path_product_def by (by100 simp)
+              moreover have "2 * t \<in> I_set"
+                using True ht_I unfolding top1_unit_interval_def by (by100 simp)
+              hence "\<gamma>a (2 * t) \<in> T"
+                using h\<gamma>a unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+              ultimately have "x \<in> T" using \<open>x = ?gen_loop t\<close> by (by100 simp)
+              thus ?thesis by (by100 blast)
+            next
+              case False \<comment> \<open>Second half: inner product.\<close>
+              hence "?gen_loop t = ?inner (2 * t - 1)"
+                unfolding top1_path_product_def by (by100 simp)
+              have ht2: "2 * t - 1 \<in> I_set"
+                using False ht_I unfolding top1_unit_interval_def by (by100 simp)
+              show ?thesis
+              proof (cases "2 * t - 1 \<le> 1/2")
+                case True \<comment> \<open>h(2(2t-1)) \\<in> A.\<close>
+                hence "?inner (2 * t - 1) = h (2 * (2 * t - 1))"
+                  unfolding top1_path_product_def by (by100 simp)
+                moreover have "2 * (2 * t - 1) \<in> I_set"
+                  using True ht2 unfolding top1_unit_interval_def by (by100 simp)
+                hence "h (2 * (2 * t - 1)) \<in> A"
+                  using hh unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
+                  by (by100 blast)
+                ultimately have "x \<in> A"
+                  using \<open>x = ?gen_loop t\<close> \<open>?gen_loop t = ?inner _\<close> by (by100 simp)
+                thus ?thesis by (by100 blast)
+              next
+                case False \<comment> \<open>rev(\\<gamma>\\_b)(2(2t-1)-1) \\<in> T.\<close>
+                hence "?inner (2 * t - 1) = ?rev_\<gamma>b (2 * (2 * t - 1) - 1)"
+                  unfolding top1_path_product_def by (by100 simp)
+                moreover have "2 * (2 * t - 1) - 1 \<in> I_set"
+                  using False ht2 unfolding top1_unit_interval_def by (by100 simp)
+                hence "?rev_\<gamma>b (2 * (2 * t - 1) - 1) \<in> T"
+                proof -
+                  have "?rev_\<gamma>b (2 * (2 * t - 1) - 1) = \<gamma>b (1 - (2 * (2 * t - 1) - 1))"
+                    unfolding top1_path_reverse_def by (by100 simp)
+                  moreover have "1 - (2 * (2 * t - 1) - 1) \<in> I_set"
+                    using \<open>2 * (2 * t - 1) - 1 \<in> I_set\<close> unfolding top1_unit_interval_def
+                    by (by100 simp)
+                  hence "\<gamma>b (1 - (2 * (2 * t - 1) - 1)) \<in> T"
+                    using h\<gamma>b unfolding top1_is_path_on_def top1_continuous_map_on_def
+                    by (by100 blast)
+                  ultimately show ?thesis by (by100 simp)
+                qed
+                ultimately have "x \<in> T"
+                  using \<open>x = ?gen_loop t\<close> \<open>?gen_loop t = ?inner _\<close> by (by100 simp)
+                thus ?thesis by (by100 blast)
+              qed
+            qed
           qed
+          show "\<exists>gloop. top1_is_loop_on Y TY y0 gloop
+              \<and> gloop ` top1_unit_interval \<subseteq> T \<union> A"
+            using hgen_loop himg by (by100 blast)
         qed
-        \<comment> \<open>Choose generator function.\<close>
+        \<comment> \<open>Choose generator loops: for each A \\<in> ?NT, pick a loop in T \\<union> A.\<close>
         from bchoice[OF hgen_exists]
-        obtain gen where hgen: "\<forall>A \<in> ?NT. gen A \<in> top1_fundamental_group_carrier Y TY y0"
+        obtain gen_loop where hgen_loop_props: "\<forall>A \<in> ?NT.
+            top1_is_loop_on Y TY y0 (gen_loop A)
+            \<and> gen_loop A ` top1_unit_interval \<subseteq> T \<union> A"
           by (by100 blast)
-        \<comment> \<open>The generator function gen must also satisfy:
-           - Different arcs give different classes (inj\\_on gen ?NT)
-           - The classes generate \\<pi>\\_1(Y)
-           - No non-trivial reduced word is identity
-           These follow from hincl\\_inj + hfinite\\_subgraph\\_free + hloop\\_in\\_finite.
-           Specifically, the gen function should be chosen to match the generators
-           from hfinite\\_subgraph\\_free for each finite subgraph.\<close>
+        \<comment> \<open>Define gen: A \\<mapsto> [gen\\_loop A] (homotopy class).\<close>
+        define gen where "gen A = {g. top1_loop_equiv_on Y TY y0 (gen_loop A) g}" for A
+        have hgen: "\<forall>A \<in> ?NT. gen A \<in> top1_fundamental_group_carrier Y TY y0"
+        proof (intro ballI)
+          fix A assume "A \<in> ?NT"
+          from hgen_loop_props[rule_format, OF this]
+          have "top1_is_loop_on Y TY y0 (gen_loop A)" by (by100 blast)
+          thus "gen A \<in> top1_fundamental_group_carrier Y TY y0"
+            unfolding gen_def top1_fundamental_group_carrier_def by (by100 blast)
+        qed
+        \<comment> \<open>Key property: gen\\_loop A maps into T \\<union> A.
+           This means gen\\_loop A is also a loop in T \\<union> \\<Union>F for any F containing A.\<close>
         \<comment> \<open>Index ?NT by nat.\<close>
         have "\<exists>(idx :: _ \<Rightarrow> nat) (S :: nat set). bij_betw idx ?NT S"
           sorry \<comment> \<open>Any set can be injected into nat (with appropriate cardinality).
