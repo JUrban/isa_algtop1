@@ -288,7 +288,54 @@ proof -
   have hcases: "\<And>s t. top1_elementary_scheme_operation s t \<Longrightarrow>
       top1_quotient_of_scheme_on X1 TX1 s \<Longrightarrow>
       top1_quotient_of_scheme_on X2 TX2 t \<Longrightarrow>
-      \<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h" sorry
+      \<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
+  proof -
+    fix s t assume hop: "top1_elementary_scheme_operation s t"
+        and hs: "top1_quotient_of_scheme_on X1 TX1 s"
+        and ht: "top1_quotient_of_scheme_on X2 TX2 t"
+    from hop show "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
+    proof (induction rule: top1_elementary_scheme_operation.induct)
+      case (refl s)
+      \<comment> \<open>s = t: X1 and X2 are quotients of the same scheme \\<Rightarrow> X1 \\<cong> X2.\<close>
+      show ?case sorry
+    next
+      case (sym s t)
+      \<comment> \<open>t \\<rightarrow> s (reversed): X2 \\<cong> X1, take inverse.\<close>
+      show ?case sorry
+    next
+      case (trans s t u)
+      \<comment> \<open>s \\<rightarrow> t \\<rightarrow> u: compose homeomorphisms.\<close>
+      show ?case sorry
+    next
+      case (rotate xs ys)
+      \<comment> \<open>xs@ys \\<rightarrow> ys@xs: cyclic rotation of boundary labels.
+         The polygon is the same; only the starting point of edge labeling changes.
+         The identity map is a homeomorphism.\<close>
+      show ?case sorry
+    next
+      case (cancel xs a b ys)
+      \<comment> \<open>xs@[(a,b),(a,\\<not>b)]@ys \\<rightarrow> xs@ys: cancel adjacent inverse pair.
+         Two adjacent edges with same label but opposite orientation get identified,
+         collapsing to a point. The resulting quotient loses these two edges.\<close>
+      show ?case sorry
+    next
+      case (relabel a s c)
+      \<comment> \<open>Relabeling: rename label c to a in scheme s.
+         This doesn't change the quotient space (just relabeling the identification).\<close>
+      show ?case sorry
+    next
+      case (invert s)
+      \<comment> \<open>Inversion: reverse the scheme and flip all orientations.
+         This corresponds to reflecting the polygon, giving a homeomorphic quotient.\<close>
+      show ?case sorry
+    next
+      case (cut c xs ys)
+      \<comment> \<open>Cut: xs@ys \\<rightarrow> xs@[(c,True),(c,False)]@ys.
+         Introduce a new edge that splits the polygon along a diagonal.
+         The quotient space is unchanged because the new edge is immediately identified.\<close>
+      show ?case sorry
+    qed
+  qed
   show ?thesis using hcases[OF assms(3)] assms(4) by (by100 blast)
 qed
 
@@ -1016,7 +1063,15 @@ proof -
       \<comment> \<open>Since \\<Phi> is a bijection (Theorem 54.4/54.6), and \\<Psi> is injective
          with the right image, \\<Phi>\\<inverse>\\<circ>\\<Psi> is a bijection Cov(p) \\<rightarrow> N(H)/H.
          The homomorphism property follows from the path composition.\<close>
-      show ?thesis sorry \<comment> \<open>Assembly: \\<Phi>\\<inverse>\\<circ>\\<Psi> is a group isomorphism Cov(p) \\<cong> N(H)/H.\<close>
+      \<comment> \<open>Assembly: \\<Phi>\\<inverse>\\<circ>\\<Psi>: Cov(p) \\<rightarrow> N(H)/H is an isomorphism.
+         \\<Psi> injective (proved), image = \\<Phi>(N(H)/H) (proved).
+         So \\<Phi>\\<inverse>\\<circ>\\<Psi> is a bijection. The homomorphism property
+         follows from the book proof (path composition under covering maps).
+         For h,k \\<in> Cov(p): \\<gamma>*(h\\<circ>\\<delta>) lifts \\<alpha>*\\<beta> = (p\\<circ>\\<gamma>)*(p\\<circ>\\<delta>).
+         This requires: path\\_connected E (to choose \\<gamma>,\\<delta>),
+         lifting correspondence (Theorem 54.4), and
+         composition of covering transformations with paths.\<close>
+      show ?thesis sorry \<comment> \<open>Bijective hom: uses \\<Psi>\\_inj + \\<Psi>\\_image + lifting correspondence hom property.\<close>
     qed
   qed
   obtain eC invgC where hCov_grp: "top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC"
