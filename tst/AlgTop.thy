@@ -3238,6 +3238,31 @@ proof -
         qed
         \<comment> \<open>Key property: gen\\_loop A maps into T \\<union> A.
            This means gen\\_loop A is also a loop in T \\<union> \\<Union>F for any F containing A.\<close>
+        \<comment> \<open>KEY SUB-LEMMA (book Step 1): For finite F \\<subseteq> ?NT, the arc-loops
+           {gen(A) | A \\<in> F} form a free basis of \\<pi>\\_1(T \\<union> \\<Union>F).
+           Proof: by induction on |F| using SvK (book Step 1 + Step 2).
+           This is the generator correspondence that connects the abstract free
+           group structure from hfinite\\_subgraph\\_free to the concrete arc-loops.\<close>
+        have harc_loops_free: "\<And>F. finite F \<Longrightarrow> F \<subseteq> ?NT \<Longrightarrow> F \<noteq> {} \<Longrightarrow>
+            \<exists>\<iota>F. top1_is_free_group_full_on
+                (top1_fundamental_group_carrier (T \<union> \<Union>F)
+                    (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                (top1_fundamental_group_mul (T \<union> \<Union>F)
+                    (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                (top1_fundamental_group_id (T \<union> \<Union>F)
+                    (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                (top1_fundamental_group_invg (T \<union> \<Union>F)
+                    (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                \<iota>F F
+              \<and> (\<forall>A\<in>F. \<iota>F A = top1_fundamental_group_induced_on (T \<union> \<Union>F)
+                    (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (gen A))"
+          sorry \<comment> \<open>Book Step 1 + Step 2: SvK induction on |F|. Each generator \\<iota>\\_F(A)
+             equals the inclusion-image of gen(A). The free basis consists of the
+             arc-loop classes, not abstract generators.
+             Base case (|F|=1): graph\\_one\\_edge\\_pi1\\_iso\\_Z + generator computation.
+             Induction step (|F|=n>1): SvK decomposition U = X - p\\_2 - ... - p\\_n,
+             V = X - p\\_1. DR to T\\<union>A\\_1 and T\\<union>A\\_2\\<union>...\\<union>A\\_n respectively.
+             svk\\_free\\_product\\_free\\_with\\_generators provides the correspondence.\<close>
         \<comment> \<open>Index ?NT by nat.\<close>
         have "\<exists>(idx :: _ \<Rightarrow> nat) (S :: nat set). bij_betw idx ?NT S"
           sorry \<comment> \<open>Any set can be injected into nat (with appropriate cardinality).
@@ -3294,9 +3319,12 @@ proof -
               top1_group_word_product (top1_fundamental_group_mul Y TY y0)
                   (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
                   (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<noteq> top1_fundamental_group_id Y TY y0"
-            sorry \<comment> \<open>Word uses finitely many generators from F \\<subseteq> ?NT.
-               In \\<pi>\\_1(T \\<union> \\<Union>F), word is non-trivial (hfinite\\_subgraph\\_free).
-               By hincl\\_inj: inclusion injective. Word non-trivial in \\<pi>\\_1(Y).\<close>
+            sorry \<comment> \<open>Proof from harc\\_loops\\_free + hincl\\_inj:
+               1. Word uses generators \\<iota>(s\\_i) = gen(A\\_i). F = {A\\_1,...,A\\_k} finite.
+               2. By harc\\_loops\\_free: \\<pi>\\_1(T\\<union>\\<Union>F) is free with basis \\<iota>\\_F matching gen.
+               3. The word in \\<pi>\\_1(T\\<union>\\<Union>F) is non-trivial (free group word condition).
+               4. \\<iota>*\\_F maps gen(A) to gen(A) in \\<pi>\\_1(Y) (same homotopy class).
+               5. By hincl\\_inj: \\<iota>*\\_F injective. So word non-trivial in \\<pi>\\_1(Y).\<close>
         qed
         thus ?thesis by (by100 blast)
       qed
