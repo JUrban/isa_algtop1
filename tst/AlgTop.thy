@@ -3863,7 +3863,10 @@ proof -
             have hword_F_ne: "top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
                 (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
                 ?ws_F \<noteq> top1_fundamental_group_id ?YF ?TYF y0"
-              sorry \<comment> \<open>From hfreeF[unfolded free\\_group\\_full\\_on\\_def] applied to ?ws\\_F.\<close>
+              sorry \<comment> \<open>Step 6: Convert ?ws\\_F to map((s,b) \\<mapsto> (\\<iota>F(s),b), ws\\_arcs) where
+                 ws\\_arcs = map((s,b) \\<mapsto> (inv(idx,s),b), ws). Then apply freeness condition
+                 from hfreeF with hws\\_F\\_red + hws\\_inv\\_in. Map composition and arc membership
+                 need careful Isabelle handling.\<close>
             \<comment> \<open>Step 7: By hincl\\_inj: incl* injective. So incl*(word\\_product) \\<noteq> id\\_Y.\<close>
             show "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
                 (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
