@@ -1238,7 +1238,65 @@ proof -
   have hgraph: "top1_is_graph_on X TX"
     sorry \<comment> \<open>Wedge of circles with coherent topology is a graph.\<close>
   have hconn: "top1_connected_on X TX"
-    sorry \<comment> \<open>Wedge of circles is connected (all circles share p).\<close>
+  proof -
+    \<comment> \<open>X is path-connected: union of path-connected circles sharing p.\<close>
+    have hwedge_props: "\<exists>C. (\<forall>\<alpha>\<in>{..<?n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+            \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h))
+        \<and> (\<Union>\<alpha>\<in>{..<?n}. C \<alpha>) = X
+        \<and> (\<forall>\<alpha>\<in>{..<?n}. \<forall>\<beta>\<in>{..<?n}. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p})
+        \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
+            (closedin_on X TX D \<longleftrightarrow> (\<forall>\<alpha>\<in>{..<?n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D))))"
+      using hwedge unfolding top1_is_wedge_of_circles_on_def
+      by - ((erule conjE)+, (erule exE)+, (erule conjE)+,
+            rule exI, (intro conjI), assumption+)
+    from hwedge_props obtain C where
+        hC_props: "\<forall>\<alpha>\<in>{..<?n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+            \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h)"
+        and hC_cover: "(\<Union>\<alpha>\<in>{..<?n}. C \<alpha>) = X"
+        and hC_disj: "\<forall>\<alpha>\<in>{..<?n}. \<forall>\<beta>\<in>{..<?n}. \<alpha> \<noteq> \<beta> \<longrightarrow> C \<alpha> \<inter> C \<beta> = {p}"
+        and hC_coh: "\<forall>D. D \<subseteq> X \<longrightarrow>
+            (closedin_on X TX D \<longleftrightarrow> (\<forall>\<alpha>\<in>{..<?n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
+      by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+    \<comment> \<open>Each C(j) is path-connected (homeo to S1, which is path-connected).\<close>
+    have hTX: "is_topology_on X TX"
+      using hwedge unfolding top1_is_wedge_of_circles_on_def is_topology_on_strict_def
+      by (by100 blast)
+    have hC_pc: "\<forall>\<alpha>\<in>{..<?n}. top1_path_connected_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+    proof (intro ballI)
+      fix \<alpha> assume "\<alpha> \<in> {..<?n}"
+      from hC_props[rule_format, OF this]
+      obtain h where "top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h"
+        by (by100 blast)
+      from homeomorphism_preserves_path_connected[OF this S1_path_connected]
+      show "top1_path_connected_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))" .
+    qed
+    \<comment> \<open>Apply union lemma.\<close>
+    have hX_pc: "top1_path_connected_on X TX"
+    proof (cases "?n = 0")
+      case True
+      \<comment> \<open>n=0: wedge definition requires p \\<in> X, so X \\<noteq> {}.
+         But \\<Union> over empty set = {}. This case can't arise with the wedge definition.\<close>
+      have "p \<in> X" using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+      moreover have "(\<Union>\<alpha>\<in>{..<?n}. C \<alpha>) = X" using hC_cover .
+      moreover have "{..<?n} = ({} :: nat set)" using True by simp
+      moreover have "(\<Union>\<alpha>\<in>({} :: nat set). C \<alpha>) = {}" by simp
+      ultimately have False by simp
+      thus ?thesis ..
+    next
+      case False
+      hence "?n > 0" by simp
+      let ?F = "C ` {..<?n}"
+      have hfin: "finite ?F" by (by100 simp)
+      have hsub: "\<forall>A\<in>?F. A \<subseteq> X" using hC_props by (by100 blast)
+      have hpc: "\<forall>A\<in>?F. top1_path_connected_on A (subspace_topology X TX A)"
+        using hC_pc by (by100 blast)
+      have hp_in: "\<forall>A\<in>?F. p \<in> A" using hC_props by (by100 blast)
+      have hcover: "X = \<Union>?F" using hC_cover by (by100 blast)
+      from path_connected_finite_union_common_point[OF hTX hfin hsub hpc hp_in hcover]
+      show ?thesis .
+    qed
+    from path_connected_imp_connected[OF hX_pc] show ?thesis .
+  qed
   have hp: "p \<in> X"
     using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
   show ?thesis
