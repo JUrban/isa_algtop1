@@ -6172,12 +6172,19 @@ proof -
   \<comment> \<open>Step 2: H \<le> F corresponds to a k-sheeted covering E of X.
      By Theorem 82.1, there exists a covering E with p_*(\<pi>_1(E)) = H-image.\<close>
   obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> 'a" and e0' :: 'b
+      and f_iso85 :: "'g \<Rightarrow> _"
     where hE'_cov: "top1_covering_map_on E' TE' X TX p'"
       and hE'_graph: "top1_is_graph_on E' TE'"
       and hE'_conn: "top1_connected_on E' TE'"
       and he0': "e0' \<in> E'"
-    sorry \<comment> \<open>Covering existence (Theorem 82.1) + covering of graph is graph (Theorem 83.2).
-       E' is nonempty (covering of connected nonempty X).\<close>
+      and hE'_strict: "is_topology_on_strict E' TE'"
+      and "p' e0' = x0"
+      and hH_corr85: "top1_fundamental_group_induced_on E' TE' e0' X TX x0 p'
+          ` top1_fundamental_group_carrier E' TE' e0' = f_iso85 ` H"
+      and hf_iso85: "top1_group_iso_on F mul
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0) f_iso85"
+    sorry \<comment> \<open>Covering existence (Theorem 82.1) + graph covering (83.4) + H-correspondence.
+       Same infrastructure as \\<S>85.1.\<close>
   \<comment> \<open>Step 3a: pi1(E') is free (graph\\_pi1\\_free\\_weak).\<close>
   from graph_pi1_free_weak[OF hE'_graph hE'_conn he0']
   obtain \<iota>_E :: "nat \<Rightarrow> _" and S_E :: "nat set"
@@ -6191,8 +6198,24 @@ proof -
   \<comment> \<open>Step 3b: H is free (same pattern as \\<S>85.1 step 3c).\<close>
   have hH_free: "\<exists>(\<iota>H::nat \<Rightarrow> 'g) (SH::nat set).
       top1_is_free_group_full_on H mul e invg \<iota>H SH"
-    sorry \<comment> \<open>Same pattern as \\<S>85.1: covering + graph + free + p'* injective + iso transfer.
-       Requires: H-correspondence (p'*(\\<pi>\\_1(E')) = f\\_iso(H)) from covering construction.\<close>
+  proof -
+    \<comment> \<open>Same proof as \\<S>85.1 step 3c.\<close>
+    have hX_strict85: "is_topology_on_strict X TX"
+      using hX_graph unfolding top1_is_graph_on_def by (by100 blast)
+    have hp85_inj: "inj_on (top1_fundamental_group_induced_on E' TE' e0' X TX x0 p')
+        (top1_fundamental_group_carrier E' TE' e0')"
+      by (rule covering_induced_injective[OF hE'_cov hE'_strict hX_strict85 he0' \<open>p' e0' = x0\<close>])
+    let ?p_star85 = "top1_fundamental_group_induced_on E' TE' e0' X TX x0 p'"
+    let ?f_inv85 = "inv_into F f_iso85"
+    let ?\<phi>85 = "?f_inv85 \<circ> ?p_star85"
+    have "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier E' TE' e0')
+        (top1_fundamental_group_mul E' TE' e0') H mul"
+      sorry \<comment> \<open>Same iso construction as \\<S>85.1: \\<phi> = f\\_inv \\<circ> p'*.
+         Hom + bijective \\<Rightarrow> iso. All steps proved in \\<S>85.1.\<close>
+    from free_group_iso_transfer[OF hfree_E this assms(4)]
+    show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>Step 3c: rank = kn+1 (Euler characteristic argument).\<close>
   from hH_free obtain \<iota>H :: "nat \<Rightarrow> 'g" and SH :: "nat set"
     where "top1_is_free_group_full_on H mul e invg \<iota>H SH"
