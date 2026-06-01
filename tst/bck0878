@@ -1196,7 +1196,28 @@ proof -
           \<and> ?B_basis U \<alpha> \<subseteq> V)}"
   \<comment> \<open>===== Step 1 (book): ?coset\\_rel is an equivalence relation =====\<close>
   have hcoset_refl: "\<forall>\<alpha> \<in> ?paths. ?coset_rel \<alpha> \<alpha>"
-    sorry \<comment> \<open>[\\<alpha>*rev(\\<alpha>)] = [const] \\<in> H (identity in subgroup).\<close>
+  proof (intro ballI)
+    fix \<alpha> assume h\<alpha>: "\<alpha> \<in> ?paths"
+    hence h\<alpha>_path: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" by (by100 blast)
+    show "?coset_rel \<alpha> \<alpha>"
+    proof -
+      have "\<alpha> 1 = \<alpha> 1" by simp
+      \<comment> \<open>[\\<alpha>*rev(\\<alpha>)] = identity class. This is the identity of \\<pi>\\_1(B,b0), which is in H.\<close>
+      have hprod_rev: "top1_is_loop_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<alpha>))"
+        sorry \<comment> \<open>\\<alpha>*rev(\\<alpha>) is a loop at b0.\<close>
+      have hclass_id: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<alpha>)) g}
+          = top1_fundamental_group_id B TB b0"
+        sorry \<comment> \<open>[\\<alpha>*rev(\\<alpha>)] = identity class (Theorem 51.3 inverse).\<close>
+      have "top1_fundamental_group_id B TB b0 \<in> H"
+      proof -
+        from assms(7) have "top1_is_group_on H
+            (top1_fundamental_group_mul B TB b0) (top1_fundamental_group_id B TB b0)
+            (top1_fundamental_group_invg B TB b0)" .
+        thus ?thesis unfolding top1_is_group_on_def by (by100 blast)
+      qed
+      thus ?thesis using h\<alpha> hclass_id by (by100 auto)
+    qed
+  qed
   have hcoset_sym: "\<forall>\<alpha> \<beta>. ?coset_rel \<alpha> \<beta> \<longrightarrow> ?coset_rel \<beta> \<alpha>"
     sorry \<comment> \<open>[\\<beta>*rev(\\<alpha>)] = inv([\\<alpha>*rev(\\<beta>)]) \\<in> H (subgroup closed under inv).\<close>
   have hcoset_trans: "\<forall>\<alpha> \<beta> \<gamma>. ?coset_rel \<alpha> \<beta> \<longrightarrow> ?coset_rel \<beta> \<gamma> \<longrightarrow> ?coset_rel \<alpha> \<gamma>"
@@ -1235,9 +1256,22 @@ proof -
   have hTE_strict: "is_topology_on_strict ?E ?TE"
     sorry \<comment> \<open>?TE is a topology on ?E: union/intersection closure + all open \\<subseteq> ?E.\<close>
   have he0_E: "?e0 \<in> ?E"
-    sorry \<comment> \<open>Constant path at b0 is in ?paths, so its class is in ?E.\<close>
+  proof -
+    have "top1_constant_path b0 \<in> ?paths"
+    proof -
+      have hpath: "top1_is_path_on B TB b0 b0 (top1_constant_path b0)"
+        by (rule top1_constant_path_is_path[OF hTB assms(5)])
+      have hep: "(top1_constant_path b0) 1 = b0"
+        unfolding top1_constant_path_def by simp
+      hence "top1_is_path_on B TB b0 ((top1_constant_path b0) 1) (top1_constant_path b0)"
+        using hpath by simp
+      thus ?thesis by (by100 blast)
+    qed
+    thus ?thesis by (by100 blast)
+  qed
   have hp_e0: "?p ?e0 = b0"
-    sorry \<comment> \<open>Endpoint of constant path = b0.\<close>
+    sorry \<comment> \<open>All paths in coset\\_class(const b0) end at b0 (by coset\\_rel definition).
+       So p(e0) = (SOME \\<beta> \\<in> e0) 1 = b0.\<close>
   have hcov: "top1_covering_map_on ?E ?TE B TB ?p"
     sorry \<comment> \<open>From hp\\_cont, hp\\_surj, hp\\_covering.\<close>
   show ?thesis
