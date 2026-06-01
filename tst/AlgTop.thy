@@ -3269,8 +3269,14 @@ proof -
                   (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A)"
           proof (cases "card F = 1")
             case True
-                \<comment> \<open>Base case (book Step 2): F = {D}. \\<pi>\\_1(T \\<union> D) = \\<Z> with generator [g\\_D].\<close>
-                show ?thesis sorry \<comment> \<open>Base case: ~100 lines.\<close>
+            \<comment> \<open>Base case (book Step 2): F = {D}. \\<pi>\\_1(T \\<union> D) is free with generator [g\\_D].
+               Proof: quotient map T\\<union>D \\<rightarrow> S1 sends [g\\_D] to \\<pm>1, forcing [g\\_D] to generate.
+               Step A: \\<pi>\\_1(T\\<union>D) \\<cong> \\<Z> (graph\\_one\\_edge\\_pi1\\_iso\\_Z).
+               Step B: quotient map \\<pi>: T\\<union>D \\<rightarrow> wedge W (1 circle) exists.
+               Step C: \\<pi>*([g\\_D]) generates \\<pi>\\_1(W) \\<cong> \\<Z>.
+               Step D: algebraic argument: \\<pi>* is hom \\<Z> \\<rightarrow> \\<Z> mapping [g\\_D] to \\<pm>1,
+                       so [g\\_D] maps to \\<pm>1 under the iso, hence generates.\<close>
+            show ?thesis sorry \<comment> \<open>Base case: ~80 lines following the quotient map approach.\<close>
               next
                 case hcard_gt1: False
                 have hcard_ge2: "card F \<ge> 2"
