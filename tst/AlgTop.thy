@@ -3305,7 +3305,52 @@ proof -
           qed
           \<comment> \<open>3. Injective.\<close>
           show "inj_on \<iota> S"
-            sorry \<comment> \<open>From injectivity of gen on ?NT + bijectivity of idx.\<close>
+          proof -
+            \<comment> \<open>gen is injective on ?NT: different arcs give different classes.
+               For A \\<noteq> B in ?NT: gen(A) \\<noteq> gen(B) because they're free generators
+               of \\<pi>\\_1(T \\<union> A \\<union> B), which is free of rank 2.\<close>
+            have hgen_inj: "inj_on gen ?NT"
+            proof (rule inj_onI)
+              fix A B assume "A \<in> ?NT" "B \<in> ?NT" "gen A = gen B"
+              show "A = B"
+              proof (rule ccontr)
+                assume "A \<noteq> B"
+                let ?F = "{A, B}"
+                have "finite ?F" by (by100 simp)
+                have "?F \<subseteq> ?NT" using \<open>A \<in> ?NT\<close> \<open>B \<in> ?NT\<close> by (by100 blast)
+                have "?F \<noteq> {}" by (by100 blast)
+                let ?YAB = "T \<union> \<Union>?F"
+                let ?TYAB = "subspace_topology Y TY ?YAB"
+                from harc_loops_free[OF \<open>finite ?F\<close> \<open>?F \<subseteq> ?NT\<close> \<open>?F \<noteq> {}\<close>]
+                obtain \<iota>F where hfreeF: "top1_is_free_group_full_on
+                    (top1_fundamental_group_carrier ?YAB ?TYAB y0)
+                    (top1_fundamental_group_mul ?YAB ?TYAB y0)
+                    (top1_fundamental_group_id ?YAB ?TYAB y0)
+                    (top1_fundamental_group_invg ?YAB ?TYAB y0) \<iota>F ?F"
+                    and hgenF: "\<forall>C\<in>?F. \<iota>F C = top1_fundamental_group_induced_on
+                        ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (gen C)"
+                  by (by100 blast)
+                \<comment> \<open>In the free group, \\<iota>\\_F(A) \\<noteq> \\<iota>\\_F(B) since A \\<noteq> B and \\<iota>\\_F injective.\<close>
+                have "inj_on \<iota>F ?F"
+                proof -
+                  from hfreeF[unfolded top1_is_free_group_full_on_def]
+                  show ?thesis by (by5000 blast)
+                qed
+                hence "\<iota>F A \<noteq> \<iota>F B" using \<open>A \<noteq> B\<close> by (by100 blast)
+                \<comment> \<open>But \\<iota>\\_F(A) = incl(gen A) and \\<iota>\\_F(B) = incl(gen B).\<close>
+                have "\<iota>F A = top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (gen A)"
+                  using hgenF by (by100 blast)
+                have "\<iota>F B = top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (gen B)"
+                  using hgenF by (by100 blast)
+                \<comment> \<open>Since gen A = gen B: incl(gen A) = incl(gen B). So \\<iota>\\_F(A) = \\<iota>\\_F(B). Contradiction.\<close>
+                have "\<iota>F A = \<iota>F B" using \<open>\<iota>F A = _\<close> \<open>\<iota>F B = _\<close> \<open>gen A = gen B\<close> by (by100 simp)
+                thus False using \<open>\<iota>F A \<noteq> \<iota>F B\<close> by contradiction
+              qed
+            qed
+            \<comment> \<open>\\<iota> = gen \\<circ> the\\_inv\\_into ?NT idx. Injective since gen inj and the\\_inv\\_into bij.\<close>
+            show ?thesis using hgen_inj hidx unfolding \<iota>_def
+              sorry \<comment> \<open>Composition of injective gen with bijective the\\_inv\\_into.\<close>
+          qed
           \<comment> \<open>4. Generated.\<close>
           show "top1_fundamental_group_carrier Y TY y0 =
               top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
