@@ -1569,8 +1569,35 @@ proof -
     thus ?thesis by (by100 blast)
   qed
   have hp_e0: "?p ?e0 = b0"
-    sorry \<comment> \<open>All paths in coset\\_class(const b0) end at b0 (by coset\\_rel definition).
-       So p(e0) = (SOME \\<beta> \\<in> e0) 1 = b0.\<close>
+  proof -
+    \<comment> \<open>All paths in coset\\_class(const b0) end at b0.\<close>
+    have hall_b0: "\<forall>\<beta> \<in> ?e0. \<beta> 1 = b0"
+    proof (intro ballI)
+      fix \<beta> assume h\<beta>_e0: "\<beta> \<in> ?e0"
+      \<comment> \<open>From coset\\_class definition: \\<beta> 1 = (const b0) 1.\<close>
+      hence "\<beta> 1 = (top1_constant_path b0) 1" by (by100 blast)
+      thus "\<beta> 1 = b0" unfolding top1_constant_path_def by simp
+    qed
+    \<comment> \<open>e0 is non-empty (const b0 \\<in> e0, from reflexivity).\<close>
+    have hne: "top1_constant_path b0 \<in> ?e0"
+    proof -
+      have "top1_constant_path b0 \<in> ?paths"
+      proof -
+        have "top1_is_path_on B TB b0 ((top1_constant_path b0) 1) (top1_constant_path b0)"
+          using top1_constant_path_is_path[OF hTB assms(5)]
+          unfolding top1_constant_path_def by simp
+        thus ?thesis by (by100 blast)
+      qed
+      from hcoset_refl[rule_format, OF this]
+      have "?coset_rel (top1_constant_path b0) (top1_constant_path b0)" .
+      \<comment> \<open>coset\\_rel gives all the parts needed for membership in coset\\_class.\<close>
+      thus ?thesis using \<open>top1_constant_path b0 \<in> ?paths\<close> by (by100 blast)
+    qed
+    have "\<exists>\<beta>. \<beta> \<in> ?e0" using hne by (by100 blast)
+    hence hsome: "(SOME \<beta>. \<beta> \<in> ?e0) \<in> ?e0"
+      by (rule someI_ex)
+    from hall_b0[rule_format, OF hsome] show ?thesis by simp
+  qed
   have hcov: "top1_covering_map_on ?E ?TE B TB ?p"
     sorry \<comment> \<open>From hp\\_cont, hp\\_surj, hp\\_covering.\<close>
   show ?thesis
