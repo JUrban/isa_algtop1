@@ -1200,9 +1200,36 @@ proof -
        card S = ?n. Free groups on equinumerous finite sets are isomorphic.
        Chain: F \\<cong> G0 \\<cong> \\<pi>\\_1(X).\<close>
     have "top1_groups_isomorphic_on F mul G0 mul0"
-      sorry \<comment> \<open>Free groups on equinumerous sets are isomorphic.
-         Step 1: bij S \\<rightarrow> {..<?n} (from finite S + card S = ?n).
-         Step 2: free\\_group\\_hom\\_exists + free\\_group\\_hom\\_generators\\_iso.\<close>
+    proof -
+      \<comment> \<open>Step 1: bijection f: S \\<rightarrow> {..<?n}.\<close>
+      have "finite S" using assms(2) .
+      from ex_bij_betw_finite_nat[OF \<open>finite S\<close>]
+      obtain f :: "'s \<Rightarrow> nat" where hf: "bij_betw f S {0..<?n}"
+        by (by100 blast)
+      hence hf': "bij_betw f S {..<?n}" using atLeast0LessThan by simp
+      \<comment> \<open>Step 2: F is also free on {..<?n} via \\<iota> \\<circ> f\\<inverse>.\<close>
+      let ?\<iota>_F' = "\<iota> \<circ> the_inv_into S f"
+      have hf_inv_bij: "bij_betw (the_inv_into S f) {..<?n} S"
+        using bij_betw_the_inv_into[OF hf'] by simp
+      from free_group_full_reindex[OF assms(1) hf_inv_bij]
+      have hF_reindex: "top1_is_free_group_full_on F mul e invg ?\<iota>_F' {..<?n}" .
+      \<comment> \<open>Step 3: Unique hom \\<psi>: F \\<rightarrow> G0 mapping \\<iota>\\_F'(i) to \\<iota>\\_0(i).\<close>
+      have hG0_grp: "top1_is_group_on G0 mul0 e0_g invg0"
+        using hfree0 unfolding top1_is_free_group_full_on_def by (by100 blast)
+      have h\<iota>0_in_G0: "\<forall>s\<in>{..<?n}. \<iota>0 s \<in> G0"
+        using hfree0 unfolding top1_is_free_group_full_on_def by (by100 blast)
+      from free_group_hom_exists[OF hF_reindex hG0_grp h\<iota>0_in_G0]
+      obtain \<psi> where h\<psi>_hom: "top1_group_hom_on F mul G0 mul0 \<psi>"
+          and h\<psi>_gen: "\<forall>s\<in>{..<?n}. \<psi> (?\<iota>_F' s) = \<iota>0 s"
+        by (by100 blast)
+      \<comment> \<open>Step 4: \\<psi> is bijective (free\\_group\\_hom\\_generators\\_iso).\<close>
+      have h\<psi>_bij: "bij_betw \<psi> F G0"
+        by (rule free_group_hom_generators_iso[OF hF_reindex hfree0 h\<psi>_hom h\<psi>_gen])
+      \<comment> \<open>Step 5: \\<psi> is a group iso.\<close>
+      show ?thesis unfolding top1_groups_isomorphic_on_def
+        apply (rule exI[of _ \<psi>])
+        unfolding top1_group_iso_on_def using h\<psi>_hom h\<psi>_bij by (by100 blast)
+    qed
     \<comment> \<open>Transitivity: F \\<cong> G0 \\<cong> \\<pi>\\_1(X).\<close>
     from groups_isomorphic_trans_fwd[OF this hiso0]
     show ?thesis .
