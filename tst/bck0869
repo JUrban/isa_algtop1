@@ -959,6 +959,73 @@ lemma graph_pi1_free_weak_apply:
          assms(9) assms(10) assms(11) assms(12) assms(13)])
      (by100 simp)
 
+text \<open>Helper: free\\_group\\_full\\_on depends only on \\<iota> restricted to S.
+  If \\<iota>1 and \\<iota>2 agree on S, the predicates are equivalent.\<close>
+lemma free_group_full_on_cong:
+  assumes hfree: "top1_is_free_group_full_on G mul e invg \<iota>1 S"
+      and heq: "\<forall>s\<in>S. \<iota>1 s = \<iota>2 s"
+  shows "top1_is_free_group_full_on G mul e invg \<iota>2 S"
+proof -
+  from hfree have h1: "top1_is_group_on G mul e invg"
+    and h2: "\<forall>s\<in>S. \<iota>1 s \<in> G"
+    and h3: "inj_on \<iota>1 S"
+    and h4: "G = top1_subgroup_generated_on G mul e invg (\<iota>1 ` S)"
+    and h5: "\<forall>ws. ws \<noteq> [] \<longrightarrow> top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>1 s, b)) ws) \<longrightarrow>
+        (\<forall>i<length ws. fst (ws ! i) \<in> S) \<longrightarrow>
+        top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota>1 s, b)) ws) \<noteq> e"
+    unfolding top1_is_free_group_full_on_def by (by100 blast)+
+  have himg: "\<iota>2 ` S = \<iota>1 ` S"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> \<iota>2 ` S"
+    then obtain s where "s \<in> S" "x = \<iota>2 s" by (by100 blast)
+    hence "x = \<iota>1 s" using heq by (by100 simp)
+    thus "x \<in> \<iota>1 ` S" using \<open>s \<in> S\<close> by (by100 blast)
+  next
+    fix x assume "x \<in> \<iota>1 ` S"
+    then obtain s where "s \<in> S" "x = \<iota>1 s" by (by100 blast)
+    hence "x = \<iota>2 s" using heq by (by100 simp)
+    thus "x \<in> \<iota>2 ` S" using \<open>s \<in> S\<close> by (by100 blast)
+  qed
+  show ?thesis unfolding top1_is_free_group_full_on_def
+  proof (intro conjI)
+    show "top1_is_group_on G mul e invg" by (rule h1)
+    show "\<forall>s\<in>S. \<iota>2 s \<in> G" using h2 heq by (by100 simp)
+    show "inj_on \<iota>2 S" using h3 heq unfolding inj_on_def by (by100 simp)
+    show "G = top1_subgroup_generated_on G mul e invg (\<iota>2 ` S)"
+      using h4 himg by (by100 simp)
+    show "\<forall>ws. ws \<noteq> [] \<longrightarrow> top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>2 s, b)) ws) \<longrightarrow>
+        (\<forall>i<length ws. fst (ws ! i) \<in> S) \<longrightarrow>
+        top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota>2 s, b)) ws) \<noteq> e"
+    proof (intro allI impI)
+      fix ws assume hne: "ws \<noteq> []"
+        and hred: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>2 s, b)) ws)"
+        and hS: "\<forall>i<length ws. fst (ws ! i) \<in> S"
+      \<comment> \<open>Key: map (\\<lambda>(s,b). (\\<iota>2 s, b)) ws = map (\\<lambda>(s,b). (\\<iota>1 s, b)) ws.\<close>
+      have hmap_eq: "map (\<lambda>(s, b). (\<iota>2 s, b)) ws = map (\<lambda>(s, b). (\<iota>1 s, b)) ws"
+      proof (rule list_eq_iff_nth_eq[THEN iffD2], intro conjI allI impI)
+        show "length (map (\<lambda>(s, b). (\<iota>2 s, b)) ws) = length (map (\<lambda>(s, b). (\<iota>1 s, b)) ws)"
+          by (by100 simp)
+      next
+        fix i assume "i < length (map (\<lambda>(s, b). (\<iota>2 s, b)) ws)"
+        hence hi: "i < length ws" by (by100 simp)
+        obtain s b where hab: "ws ! i = (s, b)" by (cases "ws ! i") (by100 blast)
+        have "fst (ws ! i) = s" using hab by (by100 simp)
+        have "s \<in> S" using hS hi \<open>fst (ws ! i) = s\<close> by (by100 blast)
+        hence "\<iota>1 s = \<iota>2 s" using heq by (by100 blast)
+        show "map (\<lambda>(s, b). (\<iota>2 s, b)) ws ! i = map (\<lambda>(s, b). (\<iota>1 s, b)) ws ! i"
+          using hi hab \<open>\<iota>1 s = \<iota>2 s\<close> by (by100 simp)
+      qed
+      have hred1: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>1 s, b)) ws)"
+        using hred hmap_eq by (by100 simp)
+      from h5 hne hred1 hS
+      have "top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota>1 s, b)) ws) \<noteq> e"
+        by (by100 blast)
+      thus "top1_group_word_product mul e invg (map (\<lambda>(s, b). (\<iota>2 s, b)) ws) \<noteq> e"
+        using hmap_eq[symmetric] by simp
+    qed
+  qed
+qed
+
 text \<open>Algebraic helper: if G is isomorphic to Z and g generates G, then G is free on \{g\}.
   This is the key lemma for the base case of harc\_loops\_free (book Step 2).
   Proof: conditions 1-3 are trivial. Condition 4 is the generation assumption.
@@ -981,12 +1048,319 @@ proof (intro conjI)
   \<comment> \<open>Condition 5: no non-trivial reduced word = e.
      Single-generator reduced words are all-True or all-False.
      Under iso to Z, g maps to \\<pm>1, so g\^n maps to \\<pm>n \\<ne> 0.\<close>
+  \<comment> \<open>Condition 5: no non-trivial reduced word evaluates to e.
+     A reduced word over {()} with generator g has all entries (g, True) or (g, False).
+     Word product = g\^n or (invg g)\^n. Under iso to Z, this is \\<pm>n \\<ne> 0.\<close>
   show "\<forall>ws::(unit \<times> bool) list.
       ws \<noteq> [] \<longrightarrow>
       top1_is_reduced_word (map (\<lambda>(s, b). ((\<lambda>_. g) s, b)) ws) \<longrightarrow>
       (\<forall>i<length ws. fst (ws ! i) \<in> {()}) \<longrightarrow>
       top1_group_word_product mulG eG invgG (map (\<lambda>(s, b). ((\<lambda>_. g) s, b)) ws) \<noteq> eG"
-    sorry
+  proof (intro allI impI)
+    fix ws :: "(unit \<times> bool) list"
+    assume hne: "ws \<noteq> []"
+      and hred: "top1_is_reduced_word (map (\<lambda>(s, b). (g, b)) ws)"
+      and hS: "\<forall>i<length ws. fst (ws ! i) \<in> {()}"
+    \<comment> \<open>Get iso \\<phi>: G \\<rightarrow> Z.\<close>
+    from hiso obtain \<phi> where h\<phi>: "top1_group_iso_on G mulG top1_Z_group top1_Z_mul \<phi>"
+      unfolding top1_groups_isomorphic_on_def by (by100 blast)
+    \<comment> \<open>\\<phi> is a hom with \\<phi>(g) generating Z, so \\<phi>(g) = \\<pm>1.\<close>
+    have h\<phi>_hom: "top1_group_hom_on G mulG top1_Z_group top1_Z_mul \<phi>"
+      using h\<phi> unfolding top1_group_iso_on_def by (by100 blast)
+    have h\<phi>_bij: "bij_betw \<phi> G top1_Z_group"
+      using h\<phi> unfolding top1_group_iso_on_def by (by100 blast)
+    have h\<phi>_inj: "inj_on \<phi> G" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>\\<phi>(g) generates Z \\<Rightarrow> \\<phi>(g) = \\<pm>1.\<close>
+    have h\<phi>g_gen: "top1_Z_group = top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {\<phi> g}"
+    proof -
+      have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+      have hg_sub: "{g} \<subseteq> G" using hg by (by100 blast)
+      have h\<phi>_surj: "\<phi> ` G = top1_Z_group" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+      from surj_hom_generated[OF hgrp hZ_grp h\<phi>_hom h\<phi>_surj hg_sub hgen]
+      show ?thesis by (by100 simp)
+    qed
+    have h\<phi>g_pm1: "\<phi> g = 1 \<or> \<phi> g = -1"
+    proof -
+      \<comment> \<open>1 \\<in> subgroup\\_generated {\\<phi>(g)} in Z. By word representation,
+         1 is a product of \\<phi>(g) and -\\<phi>(g), i.e. 1 = n * \\<phi>(g) for some n.
+         So \\<phi>(g) divides 1 in Z, hence \\<phi>(g) = \\<pm>1.\<close>
+      have h1_in: "(1::int) \<in> top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {\<phi> g}"
+        using h\<phi>g_gen unfolding top1_Z_group_def by (by100 blast)
+      have h\<phi>g_Z: "\<phi> g \<in> top1_Z_group" using hg h\<phi>_bij unfolding bij_betw_def top1_Z_group_def
+        by (by100 blast)
+      have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+      from subgroup_generated_word_repr[OF hZ_grp _ h1_in]
+      have "1 = top1_Z_id \<or> (\<exists>ws. length ws > 0 \<and>
+          (\<forall>i<length ws. ws ! i \<in> {\<phi> g} \<or> (\<exists>s\<in>{\<phi> g}. ws ! i = top1_Z_invg s)) \<and>
+          foldr top1_Z_mul ws top1_Z_id = 1)"
+        unfolding top1_Z_group_def by (by100 blast)
+      hence "\<phi> g dvd (1::int)"
+      proof (elim disjE)
+        assume "1 = top1_Z_id" thus ?thesis unfolding top1_Z_id_def by (by100 simp)
+      next
+        assume "\<exists>ws. length ws > 0 \<and>
+            (\<forall>i<length ws. ws ! i \<in> {\<phi> g} \<or> (\<exists>s\<in>{\<phi> g}. ws ! i = top1_Z_invg s)) \<and>
+            foldr top1_Z_mul ws top1_Z_id = 1"
+        then obtain ws' where hlen: "length ws' > 0"
+            and hels: "\<forall>i<length ws'. ws' ! i \<in> {\<phi> g} \<or> (\<exists>s\<in>{\<phi> g}. ws' ! i = top1_Z_invg s)"
+            and hsum: "foldr top1_Z_mul ws' top1_Z_id = 1" by (by100 blast)
+        \<comment> \<open>Each element of ws' is \\<phi>(g) or -(\\<phi>(g)). So foldr (+) ws' 0 is a multiple of \\<phi>(g).\<close>
+        have "\<forall>x \<in> set ws'. x = \<phi> g \<or> x = -(\<phi> g)"
+        proof (intro ballI)
+          fix x assume "x \<in> set ws'"
+          then obtain i where "i < length ws'" "ws' ! i = x"
+            using in_set_conv_nth[of x ws'] by (by100 blast)
+          from hels[rule_format, OF \<open>i < length ws'\<close>]
+          show "x = \<phi> g \<or> x = -(\<phi> g)"
+            using \<open>ws' ! i = x\<close> unfolding top1_Z_invg_def by (by100 blast)
+        qed
+        hence "\<exists>n::int. foldr top1_Z_mul ws' top1_Z_id = n * \<phi> g"
+        proof (induction ws')
+          case Nil
+          have "foldr top1_Z_mul [] top1_Z_id = 0" unfolding top1_Z_id_def by (by100 simp)
+          also have "(0::int) = 0 * \<phi> g" by (by100 simp)
+          finally show ?case by (by100 blast)
+        next
+          case (Cons a ws'')
+          have "a = \<phi> g \<or> a = -(\<phi> g)" using Cons.prems by (by100 simp)
+          have IH: "\<exists>n. foldr top1_Z_mul ws'' top1_Z_id = n * \<phi> g"
+            using Cons.prems Cons.IH by (by100 simp)
+          then obtain n where hn: "foldr top1_Z_mul ws'' top1_Z_id = n * \<phi> g" by (by100 blast)
+          from \<open>a = \<phi> g \<or> a = -(\<phi> g)\<close>
+          have "\<exists>m::int. a = m * \<phi> g"
+          proof
+            assume "a = \<phi> g"
+            hence "a = 1 * \<phi> g" by (by100 simp)
+            thus ?thesis by (by100 blast)
+          next
+            assume "a = - \<phi> g"
+            hence "a = (-1) * \<phi> g" by (by100 simp)
+            thus ?thesis by (by100 blast)
+          qed
+          then obtain m :: int where hm: "a = m * \<phi> g" by (by100 blast)
+          have "foldr top1_Z_mul (a # ws'') top1_Z_id = a + foldr top1_Z_mul ws'' top1_Z_id"
+            unfolding top1_Z_mul_def top1_Z_id_def by (by100 simp)
+          also have "... = m * \<phi> g + n * \<phi> g" using hm hn by (by100 simp)
+          also have "... = (m + n) * \<phi> g" by (by100 algebra)
+          finally show ?case by (by100 blast)
+        qed
+        then obtain n where "foldr top1_Z_mul ws' top1_Z_id = n * \<phi> g" by (by100 blast)
+        hence "1 = n * \<phi> g" using hsum by (by100 simp)
+        have "\<phi> g dvd (1::int)"
+        proof -
+          from \<open>1 = n * \<phi> g\<close> have "(1::int) = \<phi> g * n"
+            by (by100 algebra)
+          thus ?thesis unfolding dvd_def by (by100 blast)
+        qed
+        thus ?thesis .
+      qed
+      thus ?thesis using int_one_le_iff_zero_less zdvd_imp_le by (by5000 fastforce)
+    qed
+    \<comment> \<open>Word product under \\<phi> is \\<pm>n for reduced word of length n.\<close>
+    have h_word_ne: "top1_group_word_product mulG eG invgG (map (\<lambda>(s, b). (g, b)) ws) \<noteq> eG"
+    proof -
+      \<comment> \<open>Apply hom\\_word\\_product to get \\<phi>(word\\_product) = word\\_product in Z.\<close>
+      let ?ws_g = "map (\<lambda>(s, b). (g, b)) ws"
+      have hg_entries: "\<forall>i<length ?ws_g. fst (?ws_g ! i) \<in> G"
+      proof (intro allI impI)
+        fix i assume "i < length ?ws_g"
+        hence "i < length ws" by (by100 simp)
+        obtain s b where "ws ! i = (s, b)" by (cases "ws ! i") (by100 blast)
+        hence "?ws_g ! i = (g, b)" using \<open>i < length ws\<close> by (by100 simp)
+        thus "fst (?ws_g ! i) \<in> G" using hg by (by100 simp)
+      qed
+      have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+      from hom_word_product[OF hgrp hZ_grp h\<phi>_hom hg_entries]
+      have h\<phi>_wp: "\<phi> (top1_group_word_product mulG eG invgG ?ws_g) =
+          top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg (map (\<lambda>(x, b). (\<phi> x, b)) ?ws_g)" .
+      \<comment> \<open>The Z word product is \\<pm>length(ws) since \\<phi>(g) = \\<pm>1.\<close>
+      \<comment> \<open>The double map simplifies: map (\\<lambda>(x,b). (\\<phi> x, b)) (map (\\<lambda>(s,b). (g, b)) ws) = map (\\<lambda>(s,b). (\\<phi> g, b)) ws.\<close>
+      have hmap_simp: "map (\<lambda>(x, b). (\<phi> x, b)) ?ws_g = map (\<lambda>(s, b). (\<phi> g, b)) ws"
+        by (induction ws) (by100 auto)+
+      have h\<phi>_wp_ne: "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+          (map (\<lambda>(x, b). (\<phi> x, b)) ?ws_g) \<noteq> top1_Z_id"
+      proof -
+        \<comment> \<open>Reduced word over single generator: all entries have same bool.\<close>
+        \<comment> \<open>Word product in Z = n * \\<phi>(g) or -n * \\<phi>(g), where n = length.\<close>
+        \<comment> \<open>Word product in Z of single-generator reduced word.\<close>
+        \<comment> \<open>Since \\<phi>(g) = \\<pm>1 and length \\<ge> 1, the product is \\<pm>length \\<ne> 0.\<close>
+        \<comment> \<open>Since the word is reduced and single-generator, all entries have the same bool.\<close>
+        have h_consec: "\<And>j. j + 1 < length ws \<Longrightarrow> snd (ws ! j) = snd (ws ! (j + 1))"
+        proof -
+          fix j assume hj1: "j + 1 < length ws"
+          \<comment> \<open>In map (\\<lambda>(s,b). (g,b)) ws, fst at j = fst at j+1 = g.\<close>
+          let ?mws = "map (\<lambda>(s, b). (g, b)) ws"
+          have hj1m: "j + 1 < length ?mws" using hj1 by (by100 simp)
+          have hj: "j < length ws" using hj1 by (by100 simp)
+          obtain s1 b1 where "ws ! j = (s1, b1)" by (cases "ws ! j") (by100 blast)
+          hence "?mws ! j = (g, b1)" using hj by (by100 simp)
+          obtain s2 b2 where "ws ! (j+1) = (s2, b2)" by (cases "ws ! (j+1)") (by100 blast)
+          hence "?mws ! (j+1) = (g, b2)" using hj1 by (by100 simp)
+          have "fst (?mws ! j) = fst (?mws ! (j+1))"
+            using \<open>?mws ! j = (g, b1)\<close> \<open>?mws ! (j+1) = (g, b2)\<close> by (by100 simp)
+          \<comment> \<open>If snd differed, the word would not be reduced.\<close>
+          have "\<not> (fst (?mws ! j) = fst (?mws ! (j+1)) \<and> snd (?mws ! j) \<noteq> snd (?mws ! (j+1)))"
+            using cancel_pair_not_reduced[OF hj1m] hred by (by100 blast)
+          hence "snd (?mws ! j) = snd (?mws ! (j+1))"
+            using \<open>fst (?mws ! j) = fst (?mws ! (j+1))\<close> by (by100 blast)
+          hence "b1 = b2" using \<open>?mws ! j = (g, b1)\<close> \<open>?mws ! (j+1) = (g, b2)\<close> by (by100 simp)
+          thus "snd (ws ! j) = snd (ws ! (j + 1))"
+            using \<open>ws ! j = (s1, b1)\<close> \<open>ws ! (j+1) = (s2, b2)\<close> by (by100 simp)
+        qed
+        have h_uniform_bool: "\<forall>i<length ws. snd (ws ! i) = snd (ws ! 0)"
+        proof -
+          \<comment> \<open>By transitivity: snd(ws!i) = snd(ws!(i-1)) = ... = snd(ws!0).\<close>
+          { fix i have "i < length ws \<longrightarrow> snd (ws ! i) = snd (ws ! 0)"
+            proof (induction i)
+              case 0 thus ?case by (by100 simp)
+            next
+              case (Suc j)
+              show ?case
+              proof (intro impI)
+                assume "Suc j < length ws"
+                hence "j < length ws" by (by100 simp)
+                hence "snd (ws ! j) = snd (ws ! 0)" using Suc.IH by (by100 simp)
+                moreover have "snd (ws ! j) = snd (ws ! (j + 1))"
+                  using h_consec \<open>Suc j < length ws\<close> by (by100 simp)
+                ultimately show "snd (ws ! Suc j) = snd (ws ! 0)" by (by100 simp)
+              qed
+            qed }
+          thus ?thesis by (by100 blast)
+        qed
+        \<comment> \<open>Word product in Z for uniform-bool list.\<close>
+        obtain b0 where hb0: "snd (ws ! 0) = b0" by (by100 blast)
+        have h_ne_0: "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+            (map (\<lambda>(s, b). (\<phi> g, b)) ws) \<noteq> (0::int)"
+        proof -
+          \<comment> \<open>All entries have bool b0. Case split on b0.\<close>
+          have h_all_b0: "\<forall>i<length ws. snd (ws ! i) = b0"
+            using h_uniform_bool hb0 by (by100 blast)
+          have "\<exists>n::int. top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+              (map (\<lambda>(s, b). (\<phi> g, b)) ws) = n \<and> \<bar>n\<bar> = int (length ws)"
+          proof (cases b0)
+            case True
+            \<comment> \<open>All True: word product = length * \\<phi>(g).\<close>
+            have h_all_True: "\<forall>i<length ws. snd (ws ! i) = True"
+              using h_all_b0 True by (by100 simp)
+            have hval: "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                (map (\<lambda>(s, b). (\<phi> g, b)) ws) = int (length ws) * \<phi> g"
+              using h_all_True
+            proof (induction ws)
+              case Nil thus ?case unfolding top1_Z_id_def by (by100 simp)
+            next
+              case (Cons a ws')
+              obtain s1 b1 where ha: "a = (s1, b1)" by (cases a) (by100 blast)
+              have hb1: "b1 = True"
+                using Cons.prems[rule_format, of 0] ha by (by100 simp)
+              have h_ws'_all: "\<forall>i<length ws'. snd (ws' ! i) = True"
+              proof (intro allI impI)
+                fix i assume "i < length ws'"
+                from Cons.prems[rule_format, of "Suc i"]
+                show "snd (ws' ! i) = True" using \<open>i < length ws'\<close> by (by100 simp)
+              qed
+              from Cons.IH[OF h_ws'_all]
+              have IH: "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                  (map (\<lambda>(s, b). (\<phi> g, b)) ws') = int (length ws') * \<phi> g" .
+              have "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                  (map (\<lambda>(s, b). (\<phi> g, b)) (a # ws')) =
+                  top1_Z_mul (\<phi> g) (top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                      (map (\<lambda>(s, b). (\<phi> g, b)) ws'))"
+                using ha hb1 by (by100 simp)
+              also have "... = \<phi> g + int (length ws') * \<phi> g"
+                using IH unfolding top1_Z_mul_def by (by100 simp)
+              also have "... = (1 + int (length ws')) * \<phi> g" by (by100 algebra)
+              also have "... = int (length (a # ws')) * \<phi> g" by (by100 simp)
+              finally show ?case .
+            qed
+            have "\<bar>int (length ws) * \<phi> g\<bar> = int (length ws)"
+              using h\<phi>g_pm1 by (by100 auto)
+            thus ?thesis using hval by (by100 blast)
+          next
+            case False
+            \<comment> \<open>All False: word product = -(length * \\<phi>(g)).\<close>
+            have h_all_False: "\<forall>i<length ws. snd (ws ! i) = False"
+              using h_all_b0 False by (by100 simp)
+            have hval: "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                (map (\<lambda>(s, b). (\<phi> g, b)) ws) = -(int (length ws) * \<phi> g)"
+              using h_all_False
+            proof (induction ws)
+              case Nil thus ?case unfolding top1_Z_id_def by (by100 simp)
+            next
+              case (Cons a ws')
+              obtain s1 b1 where ha: "a = (s1, b1)" by (cases a) (by100 blast)
+              have hb1: "b1 = False"
+                using Cons.prems[rule_format, of 0] ha by (by100 simp)
+              have h_ws'_all: "\<forall>i<length ws'. snd (ws' ! i) = False"
+              proof (intro allI impI)
+                fix i assume "i < length ws'"
+                from Cons.prems[rule_format, of "Suc i"]
+                show "snd (ws' ! i) = False" using \<open>i < length ws'\<close> by (by100 simp)
+              qed
+              from Cons.IH[OF h_ws'_all]
+              have IH: "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                  (map (\<lambda>(s, b). (\<phi> g, b)) ws') = -(int (length ws') * \<phi> g)" .
+              have "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                  (map (\<lambda>(s, b). (\<phi> g, b)) (a # ws')) =
+                  top1_Z_mul (top1_Z_invg (\<phi> g)) (top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+                      (map (\<lambda>(s, b). (\<phi> g, b)) ws'))"
+                using ha hb1 by (by100 simp)
+              also have "... = -(\<phi> g) + (-(int (length ws') * \<phi> g))"
+                using IH unfolding top1_Z_mul_def top1_Z_invg_def by (by100 simp)
+              also have "... = -((1 + int (length ws')) * \<phi> g)" by (by100 algebra)
+              also have "... = -(int (length (a # ws')) * \<phi> g)" by (by100 simp)
+              finally show ?case .
+            qed
+            have "\<bar>-(int (length ws) * \<phi> g)\<bar> = int (length ws)"
+              using h\<phi>g_pm1 by (by100 auto)
+            thus ?thesis using hval by (by100 blast)
+          qed
+          then obtain n where hn: "top1_group_word_product top1_Z_mul top1_Z_id top1_Z_invg
+              (map (\<lambda>(s, b). (\<phi> g, b)) ws) = n" and habs: "\<bar>n\<bar> = int (length ws)"
+            by (by100 blast)
+          have "length ws \<ge> 1" using hne by (cases ws) (by100 simp)+
+          hence "int (length ws) \<ge> 1" by (by100 simp)
+          hence "n \<noteq> 0" using habs by (by100 linarith)
+          thus ?thesis using hn by (by100 simp)
+        qed
+        \<comment> \<open>Transfer: map (\\<lambda>(x,b). (\\<phi> x, b)) (map (\\<lambda>(s,b). (g,b)) ws) = map (\\<lambda>(s,b). (\\<phi> g, b)) ws.\<close>
+        have hmap_eq: "map (\<lambda>(x, b). (\<phi> x, b)) (map (\<lambda>(s, b). (g, b)) ws) =
+            map (\<lambda>(s, b). (\<phi> g, b)) ws"
+        proof (induction ws)
+          case Nil thus ?case by (by100 simp)
+        next
+          case (Cons a ws')
+          obtain s1 b1 where "a = (s1, b1)" by (cases a) (by100 blast)
+          thus ?case using Cons.IH by (by100 simp)
+        qed
+        have hmap_comp: "map (\<lambda>(s, b). (\<phi> g, b)) ws =
+            map ((\<lambda>(x, b). (\<phi> x, b)) \<circ> (\<lambda>(s, b). (g, b))) ws"
+        proof (induction ws)
+          case Nil thus ?case by (by100 simp)
+        next
+          case (Cons a ws')
+          obtain s1 b1 where "a = (s1, b1)" by (cases a) (by100 blast)
+          thus ?case using Cons.IH unfolding comp_def by (by100 simp)
+        qed
+        from h_ne_0[unfolded hmap_comp]
+        show ?thesis unfolding top1_Z_id_def by (by100 simp)
+      qed
+      \<comment> \<open>Since \\<phi> is injective and \\<phi>(eG) = 0 = top1\\_Z\\_id, word\\_product \\<ne> eG.\<close>
+      have h\<phi>_e: "\<phi> eG = top1_Z_id"
+        by (rule hom_preserves_id[OF hgrp hZ_grp h\<phi>_hom])
+      show ?thesis
+      proof
+        assume "top1_group_word_product mulG eG invgG ?ws_g = eG"
+        hence "\<phi> (top1_group_word_product mulG eG invgG ?ws_g) = \<phi> eG" by simp
+        hence "\<phi> (top1_group_word_product mulG eG invgG ?ws_g) = top1_Z_id" using h\<phi>_e by simp
+        thus False using h\<phi>_wp h\<phi>_wp_ne by simp
+      qed
+    qed
+    thus "top1_group_word_product mulG eG invgG (map (\<lambda>(s, b). ((\<lambda>_. g) s, b)) ws) \<noteq> eG"
+      by (by100 simp)
+  qed
 qed
 
 \<comment> \<open>Weak form of Theorem 84.7: \\<pi>\\_1 of a connected graph is free (no int set).
@@ -3090,8 +3464,11 @@ proof -
            The generator loop g\\_A = \\<gamma>\\_a * (h * rev(\\<gamma>\\_b)) depends on choices of h, \\<gamma>\\_a, \\<gamma>\\_b,
            but the HOMOTOPY CLASS [g\\_A] is canonical (independent of choices, since T is SC).
            We construct a specific representative and take its homotopy class.\<close>
-        have hgen_exists: "\<forall>A \<in> ?NT. \<exists>gloop. top1_is_loop_on Y TY y0 gloop
-            \<and> gloop ` top1_unit_interval \<subseteq> T \<union> A"
+        have hgen_exists_full: "\<forall>A \<in> ?NT. \<exists>gloop. top1_is_loop_on Y TY y0 gloop
+            \<and> gloop ` top1_unit_interval \<subseteq> T \<union> A
+            \<and> (\<exists>h_arc \<gamma>a' \<gamma>b'. gloop = top1_path_product \<gamma>a' (top1_path_product h_arc (top1_path_reverse \<gamma>b'))
+                \<and> top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology A (subspace_topology Y TY A) h_arc
+                \<and> \<gamma>a' ` I_set \<subseteq> T \<and> \<gamma>b' ` I_set \<subseteq> T)"
         proof (intro ballI)
           fix A assume "A \<in> ?NT"
           hence "A \<in> \<A>" by (by100 blast)
@@ -3246,16 +3623,35 @@ proof -
               qed
             qed
           qed
+          have h\<gamma>a_img: "\<gamma>a ` I_set \<subseteq> T"
+            using h\<gamma>a unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+          have h\<gamma>b_img: "\<gamma>b ` I_set \<subseteq> T"
+            using h\<gamma>b unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
           show "\<exists>gloop. top1_is_loop_on Y TY y0 gloop
-              \<and> gloop ` top1_unit_interval \<subseteq> T \<union> A"
-            using hgen_loop himg by (by100 blast)
+              \<and> gloop ` top1_unit_interval \<subseteq> T \<union> A
+              \<and> (\<exists>h_arc \<gamma>a' \<gamma>b'. gloop = top1_path_product \<gamma>a' (top1_path_product h_arc (top1_path_reverse \<gamma>b'))
+                  \<and> top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology A (subspace_topology Y TY A) h_arc
+                  \<and> \<gamma>a' ` I_set \<subseteq> T \<and> \<gamma>b' ` I_set \<subseteq> T)"
+            using hgen_loop himg hh h\<gamma>a_img h\<gamma>b_img by (by5000 blast)
         qed
-        \<comment> \<open>Choose generator loops: for each A \\<in> ?NT, pick a loop in T \\<union> A.\<close>
-        from bchoice[OF hgen_exists]
-        obtain gen_loop where hgen_loop_props: "\<forall>A \<in> ?NT.
+        \<comment> \<open>Choose generator loops with structural info.\<close>
+        from bchoice[OF hgen_exists_full]
+        obtain gen_loop where hgen_loop_all: "\<forall>A \<in> ?NT.
+            top1_is_loop_on Y TY y0 (gen_loop A)
+            \<and> gen_loop A ` top1_unit_interval \<subseteq> T \<union> A
+            \<and> (\<exists>h_arc \<gamma>a' \<gamma>b'. gen_loop A = top1_path_product \<gamma>a' (top1_path_product h_arc (top1_path_reverse \<gamma>b'))
+                \<and> top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology A (subspace_topology Y TY A) h_arc
+                \<and> \<gamma>a' ` I_set \<subseteq> T \<and> \<gamma>b' ` I_set \<subseteq> T)"
+          by - ((erule exE)+, rule that, assumption)
+        have hgen_loop_props: "\<forall>A \<in> ?NT.
             top1_is_loop_on Y TY y0 (gen_loop A)
             \<and> gen_loop A ` top1_unit_interval \<subseteq> T \<union> A"
-          by (by100 blast)
+          using hgen_loop_all by (by100 blast)
+        have hgen_loop_structure: "\<forall>A \<in> ?NT. \<exists>h_arc \<gamma>a' \<gamma>b'.
+            gen_loop A = top1_path_product \<gamma>a' (top1_path_product h_arc (top1_path_reverse \<gamma>b'))
+            \<and> top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology A (subspace_topology Y TY A) h_arc
+            \<and> \<gamma>a' ` I_set \<subseteq> T \<and> \<gamma>b' ` I_set \<subseteq> T"
+          using hgen_loop_all by (by100 blast)
         \<comment> \<open>Define gen: A \\<mapsto> [gen\\_loop A] (homotopy class).\<close>
         define gen where "gen A = {g. top1_loop_equiv_on Y TY y0 (gen_loop A) g}" for A
         have hgen: "\<forall>A \<in> ?NT. gen A \<in> top1_fundamental_group_carrier Y TY y0"
@@ -3288,16 +3684,33 @@ proof -
                     (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A)"
         \<comment> \<open>Proof by strong induction on card F (book Steps 1+2).\<close>
         proof -
-          fix F assume hFfin: "finite F" and hF_NT: "F \<subseteq> ?NT" and hF_ne: "F \<noteq> {}"
-          show "\<exists>\<iota>F. top1_is_free_group_full_on
-              (top1_fundamental_group_carrier (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
-              (top1_fundamental_group_mul (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
-              (top1_fundamental_group_id (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
-              (top1_fundamental_group_invg (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
-              \<iota>F F
-            \<and> (\<forall>A\<in>F. top1_fundamental_group_induced_on (T \<union> \<Union>F)
-                  (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A)"
-          proof (cases "card F = 1")
+          \<comment> \<open>Strong induction on card F.\<close>
+          define P where "P \<equiv> \<lambda>F. finite F \<longrightarrow> F \<subseteq> ?NT \<longrightarrow> F \<noteq> {} \<longrightarrow>
+              (\<exists>\<iota>F. top1_is_free_group_full_on
+                  (top1_fundamental_group_carrier (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                  (top1_fundamental_group_mul (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                  (top1_fundamental_group_id (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                  (top1_fundamental_group_invg (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                  \<iota>F F
+                \<and> (\<forall>A\<in>F. top1_fundamental_group_induced_on (T \<union> \<Union>F)
+                      (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A))"
+          { fix n
+            have "\<And>F. card F = n \<Longrightarrow> P F"
+            proof (induction n rule: less_induct)
+              case (less n F)
+              show "P F" unfolding P_def
+              proof (intro impI)
+                assume hFfin: "finite F" and hF_NT: "F \<subseteq> ?NT" and hF_ne: "F \<noteq> {}"
+                have hcard: "card F = n" by (rule less.prems)
+                show "\<exists>\<iota>F. top1_is_free_group_full_on
+                    (top1_fundamental_group_carrier (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                    (top1_fundamental_group_mul (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                    (top1_fundamental_group_id (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                    (top1_fundamental_group_invg (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                    \<iota>F F
+                  \<and> (\<forall>A\<in>F. top1_fundamental_group_induced_on (T \<union> \<Union>F)
+                        (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A)"
+                proof (cases "card F = 1")
             case True
             \<comment> \<open>Base case (book Step 2): F = {D}. \\<pi>\\_1(T \\<union> D) is free with generator [g\\_D].
                Proof: quotient map T\\<union>D \\<rightarrow> S1 sends [g\\_D] to \\<pm>1, forcing [g\\_D] to generate.
@@ -3356,6 +3769,47 @@ proof -
                  This is the KEY claim: [gen\\_loop(D)] generates \\<pi>\\_1(T\\<union>D) and has infinite order.
                  Follows from: \\<pi>\\_1(T\\<union>D) \\<cong> \\<Z> (graph\\_one\\_edge\\_pi1\\_iso\\_Z) and
                  [gen\\_loop(D)] maps to \\<pm>1 under the quotient T\\<union>D \\<rightarrow> S1.\<close>
+              \<comment> \<open>Graph structure of T\\<union>D (needed for iso\\_Z and continuity).\<close>
+              have hTD_sub_Y: "?TD \<subseteq> Y" using hT_sub h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+              have hTY_top_loc: "is_topology_on Y TY"
+                using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+              have hTD_graph_outer: "top1_is_graph_on ?TD ?TTD"
+              proof -
+                let ?\<A>_TD = "{A \<in> \<A>. A \<subseteq> ?TD}"
+                have h\<A>TD_sub: "?\<A>_TD \<subseteq> \<A>" by (by100 blast)
+                have hTD_eq_union: "?TD = \<Union>?\<A>_TD"
+                proof (rule set_eqI, rule iffI)
+                  fix x assume "x \<in> ?TD"
+                  show "x \<in> \<Union>?\<A>_TD"
+                  proof (cases "x \<in> T")
+                    case True
+                    hence "x \<in> \<Union>{A \<in> \<A>. A \<subseteq> T}" using hT_coverage by (by100 simp)
+                    then obtain A where "A \<in> \<A>" "A \<subseteq> T" "x \<in> A" by (by100 blast)
+                    thus ?thesis using \<open>A \<subseteq> T\<close> by (by100 blast)
+                  next
+                    case False
+                    hence "x \<in> D" using \<open>x \<in> ?TD\<close> by (by100 blast)
+                    thus ?thesis using \<open>D \<in> \<A>\<close> by (by100 blast)
+                  qed
+                next
+                  fix x assume "x \<in> \<Union>?\<A>_TD" thus "x \<in> ?TD" by (by100 blast)
+                qed
+                have h\<A>TD_cover_Y: "\<Union>?\<A>_TD \<subseteq> Y" using h\<A> by (by100 blast)
+                have h\<A>TD_arcs_Y: "\<forall>A\<in>?\<A>_TD. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+                  using h\<A> by (by100 blast)
+                have h\<A>TD_inter_Y: "\<forall>A\<in>?\<A>_TD. \<forall>B\<in>?\<A>_TD. A \<noteq> B \<longrightarrow>
+                    A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+                  \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+                  \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+                  using h\<A>_inter by (by100 blast)
+                have h\<A>TD_coh_Y: "\<forall>C. C \<subseteq> \<Union>?\<A>_TD \<longrightarrow>
+                    (closedin_on (\<Union>?\<A>_TD) (subspace_topology Y TY (\<Union>?\<A>_TD)) C \<longleftrightarrow>
+                     (\<forall>A\<in>?\<A>_TD. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
+                  using subgraph_coherent_topology[OF assms(1) h\<A> h\<A>_cover h\<A>_inter h\<A>_coh
+                      h\<A>TD_sub hTD_eq_union] hTD_eq_union by (by100 simp)
+                show ?thesis using subgraph_union_of_arcs_is_graph[OF assms(1)
+                    h\<A>TD_arcs_Y h\<A>TD_cover_Y h\<A>TD_inter_Y h\<A>TD_coh_Y] hTD_eq_union by (by100 simp)
+              qed
               \<comment> \<open>Step A: \\<pi>\\_1(T\\<union>D) \\<cong> Z (graph\\_one\\_edge\\_pi1\\_iso\\_Z).\<close>
               have hTD_iso_Z: "top1_groups_isomorphic_on
                   (top1_fundamental_group_carrier ?TD ?TTD y0) (top1_fundamental_group_mul ?TD ?TTD y0)
@@ -3371,7 +3825,42 @@ proof -
                 have hY_haus: "is_hausdorff_on Y TY"
                   using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
                 have hTD_graph: "top1_is_graph_on ?TD ?TTD"
-                  sorry \<comment> \<open>Same subgraph infrastructure as in induction step.\<close>
+                proof -
+                  let ?\<A>_TD = "{A \<in> \<A>. A \<subseteq> ?TD}"
+                  have h\<A>TD_sub: "?\<A>_TD \<subseteq> \<A>" by (by100 blast)
+                  have hTD_eq_union: "?TD = \<Union>?\<A>_TD"
+                  proof (rule set_eqI, rule iffI)
+                    fix x assume "x \<in> ?TD"
+                    show "x \<in> \<Union>?\<A>_TD"
+                    proof (cases "x \<in> T")
+                      case True
+                      hence "x \<in> \<Union>{A \<in> \<A>. A \<subseteq> T}" using hT_coverage by (by100 simp)
+                      then obtain A where "A \<in> \<A>" "A \<subseteq> T" "x \<in> A" by (by100 blast)
+                      thus ?thesis using \<open>A \<subseteq> T\<close> by (by100 blast)
+                    next
+                      case False
+                      hence "x \<in> D" using \<open>x \<in> ?TD\<close> by (by100 blast)
+                      thus ?thesis using \<open>D \<in> \<A>\<close> by (by100 blast)
+                    qed
+                  next
+                    fix x assume "x \<in> \<Union>?\<A>_TD" thus "x \<in> ?TD" by (by100 blast)
+                  qed
+                  have h\<A>TD_cover_Y: "\<Union>?\<A>_TD \<subseteq> Y" using h\<A> by (by100 blast)
+                  have h\<A>TD_arcs_Y: "\<forall>A\<in>?\<A>_TD. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+                    using h\<A> by (by100 blast)
+                  have h\<A>TD_inter_Y: "\<forall>A\<in>?\<A>_TD. \<forall>B\<in>?\<A>_TD. A \<noteq> B \<longrightarrow>
+                      A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+                    \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+                    \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+                    using h\<A>_inter by (by100 blast)
+                  have h\<A>TD_coh_Y: "\<forall>C. C \<subseteq> \<Union>?\<A>_TD \<longrightarrow>
+                      (closedin_on (\<Union>?\<A>_TD) (subspace_topology Y TY (\<Union>?\<A>_TD)) C \<longleftrightarrow>
+                       (\<forall>A\<in>?\<A>_TD. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
+                    using subgraph_coherent_topology[OF assms(1) h\<A> h\<A>_cover h\<A>_inter h\<A>_coh
+                        h\<A>TD_sub hTD_eq_union] hTD_eq_union by (by100 simp)
+                  show ?thesis using subgraph_union_of_arcs_is_graph[OF assms(1)
+                      h\<A>TD_arcs_Y h\<A>TD_cover_Y h\<A>TD_inter_Y h\<A>TD_coh_Y] hTD_eq_union by (by100 simp)
+                qed
                 have hTD_conn: "top1_connected_on ?TD ?TTD"
                 proof -
                   have hD_arc: "top1_is_arc_on D (subspace_topology Y TY D)"
@@ -3400,10 +3889,186 @@ proof -
                   hence "top1_path_connected_on ?TD ?TTD" by (by100 simp)
                   thus ?thesis using top1_path_connected_imp_connected by (by100 blast)
                 qed
-                \<comment> \<open>Apply graph\\_one\\_edge\\_pi1\\_iso\\_Z.\<close>
+                \<comment> \<open>Apply graph\\_one\\_edge\\_pi1\\_iso\\_Z to subgraph T\\<union>D.\<close>
+                let ?\<A>_TD = "{A \<in> \<A>. A \<subseteq> ?TD}"
+                have hTD_eq_union: "?TD = \<Union>?\<A>_TD"
+                proof (rule set_eqI, rule iffI)
+                  fix x assume "x \<in> ?TD"
+                  show "x \<in> \<Union>?\<A>_TD"
+                  proof (cases "x \<in> T")
+                    case True
+                    hence "x \<in> \<Union>{A \<in> \<A>. A \<subseteq> T}" using hT_coverage by (by100 simp)
+                    then obtain A where "A \<in> \<A>" "A \<subseteq> T" "x \<in> A" by (by100 blast)
+                    thus ?thesis using \<open>A \<subseteq> T\<close> by (by100 blast)
+                  next
+                    case False
+                    hence "x \<in> D" using \<open>x \<in> ?TD\<close> by (by100 blast)
+                    thus ?thesis using \<open>D \<in> \<A>\<close> by (by100 blast)
+                  qed
+                next
+                  fix x assume "x \<in> \<Union>?\<A>_TD" thus "x \<in> ?TD" by (by100 blast)
+                qed
                 show ?thesis
-                  sorry \<comment> \<open>graph\\_one\\_edge\\_pi1\\_iso\\_Z[OF hTD\\_graph hTD\\_conn ...].
-                     Requires: arcs of T\\<union>D, singleton NT={D}, tree in subspace, etc.\<close>
+                proof (rule graph_one_edge_pi1_iso_Z[where \<A>="?\<A>_TD"])
+                  show "top1_is_graph_on ?TD ?TTD" by (rule hTD_graph)
+                  show "top1_connected_on ?TD ?TTD" by (rule hTD_conn)
+                  show "y0 \<in> ?TD" using hT_x0 by (by100 blast)
+                  show "\<forall>A\<in>?\<A>_TD. A \<subseteq> ?TD \<and> top1_is_arc_on A (subspace_topology ?TD ?TTD A)"
+                  proof (intro ballI conjI)
+                    fix A assume "A \<in> ?\<A>_TD"
+                    show "A \<subseteq> ?TD" using \<open>A \<in> ?\<A>_TD\<close> by (by100 blast)
+                    have "A \<in> \<A>" using \<open>A \<in> ?\<A>_TD\<close> by (by100 blast)
+                    have "subspace_topology ?TD ?TTD A = subspace_topology Y TY A"
+                      by (rule subspace_topology_trans) (use \<open>A \<in> ?\<A>_TD\<close> in blast)
+                    thus "top1_is_arc_on A (subspace_topology ?TD ?TTD A)"
+                      using h\<A> \<open>A \<in> \<A>\<close> by simp
+                  qed
+                  show "\<Union>?\<A>_TD = ?TD" by (rule hTD_eq_union[symmetric])
+                  show "\<forall>A\<in>?\<A>_TD. \<forall>B\<in>?\<A>_TD. A \<noteq> B \<longrightarrow>
+                      A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?TD ?TTD A)
+                    \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?TD ?TTD B)
+                    \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+                  proof (intro ballI impI)
+                    fix A B assume "A \<in> ?\<A>_TD" "B \<in> ?\<A>_TD" "A \<noteq> B"
+                    from h\<A>_inter[rule_format, OF _ _ \<open>A \<noteq> B\<close>]
+                    have h_Y: "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+                      \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+                      \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+                      using \<open>A \<in> ?\<A>_TD\<close> \<open>B \<in> ?\<A>_TD\<close> by (by100 blast)
+                    have "subspace_topology ?TD ?TTD A = subspace_topology Y TY A"
+                      by (rule subspace_topology_trans) (use \<open>A \<in> ?\<A>_TD\<close> in blast)
+                    moreover have "subspace_topology ?TD ?TTD B = subspace_topology Y TY B"
+                      by (rule subspace_topology_trans) (use \<open>B \<in> ?\<A>_TD\<close> in blast)
+                    ultimately show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?TD ?TTD A)
+                      \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?TD ?TTD B)
+                      \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" using h_Y by simp
+                  qed
+                  show "\<forall>C. C \<subseteq> ?TD \<longrightarrow>
+                      (closedin_on ?TD ?TTD C \<longleftrightarrow>
+                       (\<forall>A\<in>?\<A>_TD. closedin_on A (subspace_topology ?TD ?TTD A) (A \<inter> C)))"
+                  proof (intro allI impI iffI ballI)
+                    fix C A assume hC: "C \<subseteq> ?TD" and hcl: "closedin_on ?TD ?TTD C" and "A \<in> ?\<A>_TD"
+                    have "A \<subseteq> ?TD" using \<open>A \<in> ?\<A>_TD\<close> by (by100 blast)
+                    have hsub_eq: "subspace_topology ?TD ?TTD A = subspace_topology Y TY A"
+                      by (rule subspace_topology_trans[OF \<open>A \<subseteq> ?TD\<close>])
+                    have h\<A>TD_sub: "?\<A>_TD \<subseteq> \<A>" by (by100 blast)
+                    from subgraph_coherent_topology[OF assms(1) h\<A> h\<A>_cover h\<A>_inter h\<A>_coh
+                        h\<A>TD_sub hTD_eq_union, rule_format, OF hC, THEN iffD1, OF hcl]
+                    have "\<forall>A\<in>?\<A>_TD. closedin_on A (subspace_topology Y TY A) (A \<inter> C)" .
+                    thus "closedin_on A (subspace_topology ?TD ?TTD A) (A \<inter> C)"
+                      using \<open>A \<in> ?\<A>_TD\<close> hsub_eq by simp
+                  next
+                    fix C assume hC: "C \<subseteq> ?TD"
+                      and hall: "\<forall>A\<in>?\<A>_TD. closedin_on A (subspace_topology ?TD ?TTD A) (A \<inter> C)"
+                    have h\<A>TD_sub: "?\<A>_TD \<subseteq> \<A>" by (by100 blast)
+                    have "\<forall>A\<in>?\<A>_TD. closedin_on A (subspace_topology Y TY A) (A \<inter> C)"
+                    proof (intro ballI)
+                      fix A assume "A \<in> ?\<A>_TD"
+                      have "A \<subseteq> ?TD" using \<open>A \<in> ?\<A>_TD\<close> by (by100 blast)
+                      have "subspace_topology ?TD ?TTD A = subspace_topology Y TY A"
+                        by (rule subspace_topology_trans[OF \<open>A \<subseteq> ?TD\<close>])
+                      from hall[rule_format, OF \<open>A \<in> ?\<A>_TD\<close>]
+                      show "closedin_on A (subspace_topology Y TY A) (A \<inter> C)"
+                        using \<open>subspace_topology ?TD ?TTD A = _\<close> by simp
+                    qed
+                    from subgraph_coherent_topology[OF assms(1) h\<A> h\<A>_cover h\<A>_inter h\<A>_coh
+                        h\<A>TD_sub hTD_eq_union, rule_format, OF hC, THEN iffD2, OF this]
+                    show "closedin_on ?TD ?TTD C" .
+                  qed
+                  show "top1_is_tree_on T (subspace_topology ?TD ?TTD T)"
+                  proof -
+                    have "subspace_topology ?TD ?TTD T = subspace_topology Y TY T"
+                      by (rule subspace_topology_trans) (by100 blast)
+                    thus ?thesis using hT_tree by simp
+                  qed
+                  show "T \<subseteq> ?TD" by (by100 blast)
+                  show "\<forall>A\<in>?\<A>_TD. A \<subseteq> T \<or>
+                      A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology ?TD ?TTD A)"
+                  proof (intro ballI)
+                    fix A assume "A \<in> ?\<A>_TD"
+                    have "A \<in> \<A>" using \<open>A \<in> ?\<A>_TD\<close> by (by100 blast)
+                    have "subspace_topology ?TD ?TTD A = subspace_topology Y TY A"
+                      by (rule subspace_topology_trans) (use \<open>A \<in> ?\<A>_TD\<close> in blast)
+                    from hT_subgraph[rule_format, OF \<open>A \<in> \<A>\<close>]
+                    show "A \<subseteq> T \<or> A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology ?TD ?TTD A)"
+                      using \<open>subspace_topology ?TD ?TTD A = _\<close> by simp
+                  qed
+                  show "y0 \<in> T" by (rule hT_x0)
+                  show "\<forall>A\<in>{A \<in> ?\<A>_TD. \<not> A \<subseteq> T}.
+                      \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology ?TD ?TTD A). e \<in> T"
+                  proof (intro ballI)
+                    fix A e assume "A \<in> {A \<in> ?\<A>_TD. \<not> A \<subseteq> T}"
+                        and "e \<in> top1_arc_endpoints_on A (subspace_topology ?TD ?TTD A)"
+                    have "A \<in> \<A>" "\<not> A \<subseteq> T" using \<open>A \<in> {A \<in> ?\<A>_TD. \<not> A \<subseteq> T}\<close> by (by100 blast)+
+                    hence "A \<in> ?NT" by (by100 blast)
+                    have "subspace_topology ?TD ?TTD A = subspace_topology Y TY A"
+                      by (rule subspace_topology_trans) (use \<open>A \<in> {A \<in> ?\<A>_TD. \<not> A \<subseteq> T}\<close> in blast)
+                    thus "e \<in> T" using hNT_endpoints \<open>A \<in> ?NT\<close>
+                      \<open>e \<in> top1_arc_endpoints_on A (subspace_topology ?TD ?TTD A)\<close> by simp
+                  qed
+                  show "D \<in> {A \<in> ?\<A>_TD. \<not> A \<subseteq> T}" using \<open>D \<in> \<A>\<close> hD_NT by (by100 blast)
+                  show "{A \<in> ?\<A>_TD. \<not> A \<subseteq> T} = {D}"
+                  proof (rule set_eqI, rule iffI)
+                    fix A assume "A \<in> {A \<in> ?\<A>_TD. \<not> A \<subseteq> T}"
+                    hence "A \<in> \<A>" "\<not> A \<subseteq> T" "A \<subseteq> ?TD" by (by100 blast)+
+                    hence "A \<in> ?NT" by (by100 blast)
+                    show "A \<in> {D}"
+                    proof (rule ccontr)
+                      assume "A \<notin> {D}" hence "A \<noteq> D" by (by100 blast)
+                      obtain hj where hhj: "top1_homeomorphism_on top1_unit_interval
+                          top1_unit_interval_topology A (subspace_topology Y TY A) hj"
+                        using h\<A> \<open>A \<in> \<A>\<close> unfolding top1_is_arc_on_def by (by100 blast)
+                      have hbij: "bij_betw hj top1_unit_interval A"
+                        using hhj unfolding top1_homeomorphism_on_def by (by100 blast)
+                      have h12_I: "(1/2::real) \<in> top1_unit_interval"
+                        unfolding top1_unit_interval_def by (by100 simp)
+                      have "hj (1/2) \<in> A" using hbij h12_I unfolding bij_betw_def by (by100 blast)
+                      have "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                      from arc_endpoints_are_boundary[OF hY_strict hY_haus \<open>A \<subseteq> Y\<close> _ hhj]
+                      have hep: "top1_arc_endpoints_on A (subspace_topology Y TY A) = {hj 0, hj 1}"
+                        using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                      have hinj: "inj_on hj top1_unit_interval" using hbij unfolding bij_betw_def by (by100 blast)
+                      have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                      have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 simp)
+                      have "hj (1/2) \<notin> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                      proof -
+                        have "hj (1/2) \<noteq> hj 0"
+                        proof
+                          assume "hj (1/2) = hj 0"
+                          from inj_onD[OF hinj this h12_I h0_I] show False by (by100 simp)
+                        qed
+                        have "hj (1/2) \<noteq> hj 1"
+                        proof
+                          assume "hj (1/2) = hj 1"
+                          from inj_onD[OF hinj this h12_I h1_I] show False by (by100 simp)
+                        qed
+                        thus ?thesis using hep \<open>hj (1/2) \<noteq> hj 0\<close> by (by100 blast)
+                      qed
+                      have "hj (1/2) \<notin> T"
+                        using hT_subgraph[rule_format, OF \<open>A \<in> \<A>\<close>] \<open>\<not> A \<subseteq> T\<close>
+                          \<open>hj (1/2) \<in> A\<close> \<open>hj (1/2) \<notin> top1_arc_endpoints_on A _\<close> by (by100 blast)
+                      have "hj (1/2) \<notin> D"
+                      proof
+                        assume "hj (1/2) \<in> D"
+                        have "D \<in> \<A>" using \<open>D \<in> \<A>\<close> .
+                        from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>D \<in> \<A>\<close> \<open>A \<noteq> D\<close>]
+                        have "A \<inter> D \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" by (by100 blast)
+                        hence "hj (1/2) \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                          using \<open>hj (1/2) \<in> A\<close> \<open>hj (1/2) \<in> D\<close> by (by100 blast)
+                        thus False using \<open>hj (1/2) \<notin> top1_arc_endpoints_on A _\<close> by (by100 blast)
+                      qed
+                      have "hj (1/2) \<notin> ?TD" using \<open>hj (1/2) \<notin> T\<close> \<open>hj (1/2) \<notin> D\<close> by (by100 blast)
+                      thus False using \<open>A \<subseteq> ?TD\<close> \<open>hj (1/2) \<in> A\<close> by (by100 blast)
+                    qed
+                  next
+                    fix A assume "A \<in> {D}"
+                    hence "A = D" by (by100 blast)
+                    have "D \<subseteq> ?TD" by (by100 blast)
+                    have "\<not> D \<subseteq> T" using hD_NT by (by100 blast)
+                    thus "A \<in> {A \<in> ?\<A>_TD. \<not> A \<subseteq> T}"
+                      using \<open>A = D\<close> \<open>D \<in> \<A>\<close> \<open>D \<subseteq> ?TD\<close> \<open>\<not> D \<subseteq> T\<close> by (by100 blast)
+                  qed
+                qed
               qed
               \<comment> \<open>Step B: [gen\\_loop(D)] generates \\<pi>\\_1(T\\<union>D) (book Step 2).\<close>
               have hTD_grp: "top1_is_group_on
@@ -3426,8 +4091,1168 @@ proof -
                     (top1_fundamental_group_carrier ?TD ?TTD y0) (top1_fundamental_group_mul ?TD ?TTD y0)
                     (top1_fundamental_group_id ?TD ?TTD y0) (top1_fundamental_group_invg ?TD ?TTD y0)
                     {\<iota>F D}"
-                sorry \<comment> \<open>Book Step 2: [gen\\_loop(D)] generates \\<pi>\\_1(T\\<union>D).
-                   Proof via Lemma 84.6 basepoint-change computation.\<close>
+              proof -
+                \<comment> \<open>Quotient map approach: construct \\<pi>: T\\<union>D \\<rightarrow> S1 collapsing T.
+                   \\<pi>*(\\<iota>F(D)) = [standard S1 loop] generates \\<pi>\\_1(S1) \\<cong> Z.
+                   Since \\<pi>\\_1(T\\<union>D) \\<cong> Z and \\<pi>* surjective \\<Rightarrow> iso \\<Rightarrow> \\<iota>F(D) generates.\<close>
+                \<comment> \<open>Step G1: Construct quotient map \\<pi>: T\\<union>D \\<rightarrow> S1.\<close>
+                obtain hD where hhD: "top1_homeomorphism_on top1_unit_interval
+                    top1_unit_interval_topology D (subspace_topology Y TY D) hD"
+                  using h\<A> \<open>D \<in> \<A>\<close> unfolding top1_is_arc_on_def by (by100 blast)
+                have hD_bij: "bij_betw hD top1_unit_interval D"
+                  using hhD unfolding top1_homeomorphism_on_def by (by100 blast)
+                let ?hD_inv = "the_inv_into top1_unit_interval hD"
+                define \<pi> where "\<pi> x = (if x \<in> T then (1::real, 0::real)
+                    else (cos (2 * pi * ?hD_inv x), sin (2 * pi * ?hD_inv x)))" for x
+                \<comment> \<open>Step G2: \\<pi> maps T\\<union>D to S1.\<close>
+                have h\<pi>_maps: "\<pi> ` ?TD \<subseteq> top1_S1"
+                proof (rule image_subsetI)
+                  fix x assume "x \<in> ?TD"
+                  show "\<pi> x \<in> top1_S1"
+                  proof (cases "x \<in> T")
+                    case True
+                    thus ?thesis unfolding \<pi>_def top1_S1_def by (by100 simp)
+                  next
+                    case False
+                    hence "x \<in> D" using \<open>x \<in> ?TD\<close> by (by100 blast)
+                    have "fst (\<pi> x) ^ 2 + snd (\<pi> x) ^ 2 = 1"
+                    proof -
+                      let ?\<theta> = "2 * pi * ?hD_inv x"
+                      have "(cos ?\<theta>)\<^sup>2 + (sin ?\<theta>)\<^sup>2 = 1" by (by100 simp)
+                      moreover have "\<pi> x = (cos ?\<theta>, sin ?\<theta>)" unfolding \<pi>_def using False by (by100 simp)
+                      ultimately show ?thesis by (by100 simp)
+                    qed
+                    thus ?thesis unfolding top1_S1_def by (by100 blast)
+                  qed
+                qed
+                \<comment> \<open>Step G3: \\<pi> is continuous.\<close>
+                \<comment> \<open>G3+G4+G5+G6b: \\<pi> continuous AND \\<pi>*(\\<iota>F D) generates \\<pi>\\_1(S1).
+                   Combined proof plan:
+                   G3 (\\<pi> continuous): pasting\\_lemma\\_two\\_closed on T\\<union>D = T \\<union> D.
+                     T closed (coherent topology), D closed (compact + Hausdorff).
+                     \\<pi>|T = constant (continuous), \\<pi>|D = cos/sin \\<circ> hD\\_inv (continuous).
+                   G4 (\\<pi>\\<circ>gen\\_loop \\<simeq> \\<pm>std\\_loop):
+                     gen\\_loop D = \\<gamma>a' * (h\\_arc * rev(\\<gamma>b')) [hgen\\_loop\\_structure].
+                     comp\\_path\\_product: \\<pi>\\<circ>gen\\_loop = (\\<pi>\\<circ>\\<gamma>a') * ((\\<pi>\\<circ>h\\_arc) * (\\<pi>\\<circ>rev(\\<gamma>b'))).
+                     \\<pi>\\<circ>\\<gamma>a' = constant, \\<pi>\\<circ>rev(\\<gamma>b') = constant (tree paths).
+                     \\<pi>\\<circ>h\\_arc = std\\_loop \\<circ> (hD\\_inv \\<circ> h\\_arc), where hD\\_inv \\<circ> h\\_arc: [0,1]\\<rightarrow>[0,1] homeo.
+                     reparam\\_path\\_homotopy: f\\<circ>\\<phi> \\<simeq> f\\<circ>\\<psi> when \\<phi>,\\<psi> same endpoints.
+                     Endpoints: hD\\_inv(h\\_arc(0)), hD\\_inv(h\\_arc(1)) \\<in> {0,1}.
+                     Case 1: same as id \\<Rightarrow> \\<pi>\\<circ>h\\_arc \\<simeq> std\\_loop.
+                     Case 2: reversed \\<Rightarrow> \\<pi>\\<circ>h\\_arc \\<simeq> rev(std\\_loop).
+                     Theorem\\_51\\_2 (left/right identity): const*(\\<pm>std*const) \\<simeq> \\<pm>std.
+                   G5: induced\\_on definition + loop\\_equiv transitivity.
+                   G6b: both [std\\_loop] and [rev(std\\_loop)] generate \\<pi>\\_1(S1).\<close>
+                have h\<pi>_cont: "top1_continuous_map_on ?TD ?TTD top1_S1 top1_S1_topology \<pi>"
+                proof -
+                  have hTD_sub: "?TD \<subseteq> Y" using hT_sub h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                  have hTY_top: "is_topology_on Y TY"
+                    using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+                  have hTTD_top_g: "is_topology_on ?TD ?TTD"
+                    by (rule subspace_topology_is_topology_on[OF hTY_top hTD_sub])
+                  have hS1_top_g: "is_topology_on top1_S1 top1_S1_topology"
+                    using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+                  \<comment> \<open>T and D closed in T\\<union>D.\<close>
+                  \<comment> \<open>T and D closed in T\\<union>D.\<close>
+                  \<comment> \<open>T closed in Y (coherent topology of Y), then closed in subspace T\\<union>D.\<close>
+                  have hT_closed_Y: "closedin_on Y TY T"
+                  proof -
+                    have "T \<subseteq> Y" using hT_sub by (by100 blast)
+                    have "\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> T)"
+                      proof (intro ballI)
+                        fix A assume "A \<in> \<A>"
+                        show "closedin_on A (subspace_topology Y TY A) (A \<inter> T)"
+                        proof (cases "A \<subseteq> T")
+                          case True
+                          hence "A \<inter> T = A" by (by100 blast)
+                          have "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                          have "is_topology_on A (subspace_topology Y TY A)"
+                            by (rule subspace_topology_is_topology_on[OF hTY_top_loc \<open>A \<subseteq> Y\<close>])
+                          \<comment> \<open>A \\<inter> T = A \\<Rightarrow> A \\<inter> T closed (whole space closed in itself).\<close>
+                          have "closedin_on A (subspace_topology Y TY A) A"
+                          proof -
+                            have "{} \<in> subspace_topology Y TY A"
+                              using \<open>is_topology_on A _\<close>[unfolded is_topology_on_def, THEN conjunct1] .
+                            have "A - A = {}" by (by100 blast)
+                            hence "A - A \<in> subspace_topology Y TY A"
+                              using \<open>{} \<in> _\<close> by simp
+                            thus ?thesis unfolding closedin_on_def by (by100 blast)
+                          qed
+                          thus ?thesis using \<open>A \<inter> T = A\<close> by simp
+                        next
+                          case False
+                          \<comment> \<open>A not in T: A\\<inter>T \\<subseteq> endpoints(A), finite, closed in Hausdorff.\<close>
+                          have "A \<in> ?NT" using \<open>A \<in> \<A>\<close> False by (by100 blast)
+                          have "A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                            using hT_subgraph[rule_format, OF \<open>A \<in> \<A>\<close>] False by (by100 blast)
+                          have "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                          have hY_haus_loc: "is_hausdorff_on Y TY"
+                            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                          have "is_hausdorff_on A (subspace_topology Y TY A)"
+                            using Theorem_17_11 hY_haus_loc \<open>A \<subseteq> Y\<close> by (by100 blast)
+                          have "finite (top1_arc_endpoints_on A (subspace_topology Y TY A))"
+                          proof -
+                            have "top1_is_arc_on A (subspace_topology Y TY A)"
+                              using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                            have harc_A: "top1_is_arc_on A (subspace_topology Y TY A)"
+                              using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                            obtain h_ep where hh_ep: "top1_homeomorphism_on top1_unit_interval
+                                top1_unit_interval_topology A (subspace_topology Y TY A) h_ep"
+                              using harc_A unfolding top1_is_arc_on_def by (by100 blast)
+                            have hY_strict: "is_topology_on_strict Y TY"
+                              using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                            from arc_endpoints_are_boundary[OF hY_strict hY_haus_loc \<open>A \<subseteq> Y\<close>
+                                harc_A hh_ep]
+                            show ?thesis by (by100 simp)
+                          qed
+                          have hfin_ep: "finite (top1_arc_endpoints_on A (subspace_topology Y TY A))"
+                            using \<open>finite (top1_arc_endpoints_on A _)\<close> .
+                          have "finite (A \<inter> T)"
+                            using \<open>A \<inter> T \<subseteq> top1_arc_endpoints_on A _\<close> hfin_ep
+                            finite_subset by (by100 blast)
+                          have "A \<inter> T \<subseteq> A" by (by100 blast)
+                          from Theorem_17_8[OF \<open>is_hausdorff_on A _\<close> \<open>finite (A \<inter> T)\<close> \<open>A \<inter> T \<subseteq> A\<close>]
+                          show ?thesis .
+                        qed
+                      qed
+                    from h\<A>_coh[rule_format, OF \<open>T \<subseteq> Y\<close>] this
+                    show ?thesis by (by100 blast)
+                  qed
+                  have hT_closed: "closedin_on ?TD ?TTD T"
+                    by (rule closedin_subspace_from_ambient[OF hTY_top_loc hT_closed_Y hTD_sub_Y])
+                       (by100 blast)
+                  \<comment> \<open>D closed in Y (arc = compact in Hausdorff), then in subspace.\<close>
+                  have hD_closed_Y: "closedin_on Y TY D"
+                  proof -
+                    have "D \<subseteq> Y" using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                    from h\<A>_coh[rule_format, OF this]
+                    show ?thesis
+                    proof (rule iffD2)
+                      show "\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> D)"
+                      proof (intro ballI)
+                        fix A assume "A \<in> \<A>"
+                        show "closedin_on A (subspace_topology Y TY A) (A \<inter> D)"
+                        proof (cases "A = D")
+                          case True
+                          hence "A \<inter> D = D" by (by100 blast)
+                          have "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                          have "is_topology_on A (subspace_topology Y TY A)"
+                            by (rule subspace_topology_is_topology_on[OF hTY_top_loc \<open>A \<subseteq> Y\<close>])
+                          have "closedin_on A (subspace_topology Y TY A) A"
+                          proof -
+                            have "{} \<in> subspace_topology Y TY A"
+                              using \<open>is_topology_on A _\<close>[unfolded is_topology_on_def, THEN conjunct1] .
+                            have "A - A = {}" by (by100 blast)
+                            hence "A - A \<in> subspace_topology Y TY A" using \<open>{} \<in> _\<close> by simp
+                            thus ?thesis unfolding closedin_on_def by (by100 blast)
+                          qed
+                          thus ?thesis using True \<open>A \<inter> D = D\<close> by simp
+                        next
+                          case False
+                          have "A \<inter> D \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                          proof -
+                            from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> _ False]
+                            show ?thesis using \<open>D \<in> \<A>\<close> by (by100 blast)
+                          qed
+                          have "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                          have hY_haus_d: "is_hausdorff_on Y TY"
+                            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                          have "is_hausdorff_on A (subspace_topology Y TY A)"
+                            using Theorem_17_11 hY_haus_d \<open>A \<subseteq> Y\<close> by (by100 blast)
+                          have harc_Ad: "top1_is_arc_on A (subspace_topology Y TY A)"
+                            using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                          obtain h_d where hh_d: "top1_homeomorphism_on top1_unit_interval
+                              top1_unit_interval_topology A (subspace_topology Y TY A) h_d"
+                            using harc_Ad unfolding top1_is_arc_on_def by (by100 blast)
+                          have hY_strict_d: "is_topology_on_strict Y TY"
+                            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                          have hfin_epd: "finite (top1_arc_endpoints_on A (subspace_topology Y TY A))"
+                            using arc_endpoints_are_boundary[OF hY_strict_d hY_haus_d \<open>A \<subseteq> Y\<close> harc_Ad hh_d]
+                            by (by100 simp)
+                          have hfin_AD: "finite (A \<inter> D)"
+                            using \<open>A \<inter> D \<subseteq> _\<close> hfin_epd finite_subset by (by100 blast)
+                          have "A \<inter> D \<subseteq> A" by (by100 blast)
+                          from Theorem_17_8[OF \<open>is_hausdorff_on A _\<close> hfin_AD \<open>A \<inter> D \<subseteq> A\<close>]
+                          show ?thesis .
+                        qed
+                      qed
+                    qed
+                  qed
+                  have hD_closed: "closedin_on ?TD ?TTD D"
+                    by (rule closedin_subspace_from_ambient[OF hTY_top_loc hD_closed_Y hTD_sub_Y])
+                       (by100 blast)
+                  have hcover: "T \<union> D = ?TD" by (by100 blast)
+                  have h\<pi>_maps_fn: "\<forall>x \<in> ?TD. \<pi> x \<in> top1_S1"
+                    using h\<pi>_maps by (by100 blast)
+                  \<comment> \<open>\\<pi>|T continuous (constant map — same pattern as before).\<close>
+                  have h\<pi>_cont_T: "top1_continuous_map_on T (subspace_topology ?TD ?TTD T)
+                      top1_S1 top1_S1_topology \<pi>"
+                  proof -
+                    have hT_sub_TD: "T \<subseteq> ?TD" by (by100 blast)
+                    have hTT_top: "is_topology_on T (subspace_topology ?TD ?TTD T)"
+                      by (rule subspace_topology_is_topology_on[OF hTTD_top_g hT_sub_TD])
+                    show ?thesis unfolding top1_continuous_map_on_def
+                    proof (intro conjI ballI)
+                      fix x assume "x \<in> T"
+                      thus "\<pi> x \<in> top1_S1" using h\<pi>_maps hT_sub by (by100 blast)
+                    next
+                      fix V assume "V \<in> top1_S1_topology"
+                      have h\<pi>T: "\<forall>x \<in> T. \<pi> x = (1::real, 0::real)"
+                        unfolding \<pi>_def by (by100 simp)
+                      show "{x \<in> T. \<pi> x \<in> V} \<in> subspace_topology ?TD ?TTD T"
+                      proof (cases "(1::real, 0::real) \<in> V")
+                        case True
+                        have "{x \<in> T. \<pi> x \<in> V} = T"
+                        proof (rule set_eqI, rule iffI)
+                          fix x assume "x \<in> {x \<in> T. \<pi> x \<in> V}" thus "x \<in> T" by (by100 blast)
+                        next
+                          fix x assume "x \<in> T"
+                          thus "x \<in> {x \<in> T. \<pi> x \<in> V}" using h\<pi>T True by (by100 simp)
+                        qed
+                        moreover have "T \<in> subspace_topology ?TD ?TTD T"
+                          using hTT_top[unfolded is_topology_on_def, THEN conjunct2, THEN conjunct1] .
+                        ultimately show ?thesis by simp
+                      next
+                        case False
+                        have heq: "{x \<in> T. \<pi> x \<in> V} = {}"
+                        proof (rule ccontr)
+                          assume "\<not> ?thesis"
+                          then obtain x where "x \<in> T" "\<pi> x \<in> V" by (by100 blast)
+                          thus False using h\<pi>T False by (by100 simp)
+                        qed
+                        show ?thesis using hTT_top[unfolded is_topology_on_def, THEN conjunct1,
+                            unfolded heq[symmetric]] .
+                      qed
+                    qed
+                  qed
+                  \<comment> \<open>\\<pi>|D continuous.\<close>
+                  have h\<pi>_cont_D: "top1_continuous_map_on D (subspace_topology ?TD ?TTD D)
+                      top1_S1 top1_S1_topology \<pi>"
+                  proof -
+                    \<comment> \<open>On D, \\<pi>(x) = (cos(2\\<pi>*hD\\_inv(x)), sin(2\\<pi>*hD\\_inv(x))) for x \\<notin> T,
+                       and (1,0) for x \\<in> T. Both branches agree on D\\<inter>T (endpoints).\<close>
+                    \<comment> \<open>Subspace topology transitivity: subspace T\\<union>D TTD D = subspace Y TY D.\<close>
+                    have hD_sub_TD: "D \<subseteq> ?TD" by (by100 blast)
+                    have hD_top_eq: "subspace_topology ?TD ?TTD D = subspace_topology Y TY D"
+                      by (rule subspace_topology_trans[OF hD_sub_TD])
+                    \<comment> \<open>\\<pi>|D = composition of continuous maps. Sorry for now.\<close>
+                    \<comment> \<open>Key: \\<pi> agrees with std\\_loop \\<circ> hD\\_inv on ALL of D.
+                       At endpoints: both give (1,0). At interior: by definition.\<close>
+                    let ?std_loop = "\<lambda>t. (cos (2 * pi * t), sin (2 * pi * t))"
+                    have h\<pi>_eq_on_D: "\<forall>x \<in> D. \<pi> x = ?std_loop (?hD_inv x)"
+                    proof (intro ballI)
+                      fix x assume "x \<in> D"
+                      show "\<pi> x = ?std_loop (?hD_inv x)"
+                      proof (cases "x \<in> T")
+                        case True
+                        \<comment> \<open>x is an endpoint of D. hD\\_inv(x) \\<in> {0, 1}.\<close>
+                        hence "\<pi> x = (1, 0)" unfolding \<pi>_def by (by100 simp)
+                        have "x \<in> D \<inter> T" using \<open>x \<in> D\<close> True by (by100 blast)
+                        have "D \<inter> T \<subseteq> top1_arc_endpoints_on D (subspace_topology Y TY D)"
+                          using hT_subgraph[rule_format, OF \<open>D \<in> \<A>\<close>] hD_NT by (by100 blast)
+                        have "D \<subseteq> Y" using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                        have hY_strict_d: "is_topology_on_strict Y TY"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have hY_haus_d: "is_hausdorff_on Y TY"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have harc_D: "top1_is_arc_on D (subspace_topology Y TY D)"
+                          using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                        from arc_endpoints_are_boundary[OF hY_strict_d hY_haus_d \<open>D \<subseteq> Y\<close> harc_D hhD]
+                        have hep_eq: "top1_arc_endpoints_on D (subspace_topology Y TY D) = {hD 0, hD 1}" .
+                        have "x \<in> {hD 0, hD 1}"
+                          using \<open>x \<in> D \<inter> T\<close> \<open>D \<inter> T \<subseteq> _\<close> hep_eq by (by100 blast)
+                        have hD_inj: "inj_on hD top1_unit_interval"
+                          using hD_bij unfolding bij_betw_def by (by100 blast)
+                        have h0I: "(0::real) \<in> top1_unit_interval"
+                          unfolding top1_unit_interval_def by (by100 simp)
+                        have h1I: "(1::real) \<in> top1_unit_interval"
+                          unfolding top1_unit_interval_def by (by100 simp)
+                        have "?hD_inv x \<in> {0::real, 1}"
+                        proof -
+                          from \<open>x \<in> {hD 0, hD 1}\<close>
+                          have "x = hD 0 \<or> x = hD 1" by (by100 blast)
+                          thus ?thesis
+                          proof
+                            assume "x = hD 0"
+                            hence "?hD_inv x = 0"
+                              using the_inv_into_f_f[OF hD_inj h0I] by simp
+                            thus ?thesis by (by100 blast)
+                          next
+                            assume "x = hD 1"
+                            hence "?hD_inv x = 1"
+                              using the_inv_into_f_f[OF hD_inj h1I] by simp
+                            thus ?thesis by (by100 blast)
+                          qed
+                        qed
+                        hence "?std_loop (?hD_inv x) = (1, 0)"
+                        proof
+                          assume "?hD_inv x = 0"
+                          thus ?thesis by (by100 simp)
+                        next
+                          assume "?hD_inv x \<in> {1}"
+                          hence "?hD_inv x = 1" by (by100 blast)
+                          thus ?thesis by (by100 simp)
+                        qed
+                        thus ?thesis using \<open>\<pi> x = (1, 0)\<close> by simp
+                      next
+                        case False
+                        thus ?thesis unfolding \<pi>_def by (by100 simp)
+                      qed
+                    qed
+                    \<comment> \<open>std\\_loop \\<circ> hD\\_inv is continuous on D.\<close>
+                    have h_comp_cont: "top1_continuous_map_on D (subspace_topology Y TY D)
+                        top1_S1 top1_S1_topology (\<lambda>x. ?std_loop (?hD_inv x))"
+                    proof -
+                      \<comment> \<open>hD\\_inv continuous D \\<rightarrow> [0,1] (homeomorphism inverse).\<close>
+                      have "D \<subseteq> Y" using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                      from homeomorphism_inverse[OF hhD]
+                      have hhinv: "top1_homeomorphism_on D (subspace_topology Y TY D)
+                          top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval hD)" .
+                      have hinv_cont: "top1_continuous_map_on D (subspace_topology Y TY D)
+                          top1_unit_interval top1_unit_interval_topology (inv_into top1_unit_interval hD)"
+                        using hhinv unfolding top1_homeomorphism_on_def by (by100 blast)
+                      \<comment> \<open>std\\_loop continuous [0,1] \\<rightarrow> S1.\<close>
+                      have hstd_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                          top1_S1 top1_S1_topology ?std_loop"
+                        using standard_S1_loop_is_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+                        by (by100 blast)
+                      \<comment> \<open>Composition.\<close>
+                      from top1_continuous_map_on_comp[OF hinv_cont hstd_cont]
+                      have "top1_continuous_map_on D (subspace_topology Y TY D)
+                          top1_S1 top1_S1_topology (?std_loop \<circ> inv_into top1_unit_interval hD)" .
+                      \<comment> \<open>the\\_inv\\_into = inv\\_into for injective functions.\<close>
+                      moreover have "\<forall>x \<in> D. (\<lambda>x. ?std_loop (?hD_inv x)) x =
+                          (?std_loop \<circ> inv_into top1_unit_interval hD) x"
+                      proof (intro ballI)
+                        fix x assume "x \<in> D"
+                        hence "x \<in> hD ` top1_unit_interval"
+                          using hD_bij unfolding bij_betw_def by (by100 blast)
+                        then obtain t where "t \<in> top1_unit_interval" "hD t = x" by (by100 blast)
+                        have hD_inj: "inj_on hD top1_unit_interval"
+                          using hD_bij unfolding bij_betw_def by (by100 blast)
+                        have "?hD_inv x = t"
+                          using the_inv_into_f_f[OF hD_inj \<open>t \<in> top1_unit_interval\<close>]
+                              \<open>hD t = x\<close> by simp
+                        have "inv_into top1_unit_interval hD x = t"
+                          using inv_into_f_f[OF hD_inj \<open>t \<in> top1_unit_interval\<close>]
+                              \<open>hD t = x\<close> by simp
+                        thus "(\<lambda>x. ?std_loop (?hD_inv x)) x =
+                            (?std_loop \<circ> inv_into top1_unit_interval hD) x"
+                          using \<open>?hD_inv x = t\<close> \<open>inv_into top1_unit_interval hD x = t\<close>
+                          unfolding comp_def by simp
+                      qed
+                      ultimately show ?thesis
+                      proof -
+                        assume hcont_inv: "top1_continuous_map_on D (subspace_topology Y TY D)
+                            top1_S1 top1_S1_topology (?std_loop \<circ> inv_into top1_unit_interval hD)"
+                           and heq: "\<forall>x\<in>D. (\<lambda>x. ?std_loop (?hD_inv x)) x =
+                            (?std_loop \<circ> inv_into top1_unit_interval hD) x"
+                        show ?thesis unfolding top1_continuous_map_on_def
+                        proof (intro conjI ballI)
+                          fix x assume "x \<in> D"
+                          from hcont_inv[unfolded top1_continuous_map_on_def] \<open>x \<in> D\<close>
+                          have "(?std_loop \<circ> inv_into top1_unit_interval hD) x \<in> top1_S1"
+                            by (by100 blast)
+                          thus "?std_loop (?hD_inv x) \<in> top1_S1"
+                            using heq \<open>x \<in> D\<close> by simp
+                        next
+                          fix V assume "V \<in> top1_S1_topology"
+                          have "{x \<in> D. ?std_loop (?hD_inv x) \<in> V} =
+                              {x \<in> D. (?std_loop \<circ> inv_into top1_unit_interval hD) x \<in> V}"
+                          proof (rule set_eqI, rule iffI)
+                            fix x assume "x \<in> {x \<in> D. ?std_loop (?hD_inv x) \<in> V}"
+                            hence "x \<in> D" "?std_loop (?hD_inv x) \<in> V" by (by100 blast)+
+                            hence "(?std_loop \<circ> inv_into top1_unit_interval hD) x \<in> V"
+                              using heq by simp
+                            thus "x \<in> {x \<in> D. (?std_loop \<circ> inv_into top1_unit_interval hD) x \<in> V}"
+                              using \<open>x \<in> D\<close> by (by100 blast)
+                          next
+                            fix x assume "x \<in> {x \<in> D. (?std_loop \<circ> inv_into top1_unit_interval hD) x \<in> V}"
+                            hence "x \<in> D" "(?std_loop \<circ> inv_into top1_unit_interval hD) x \<in> V"
+                              by (by100 blast)+
+                            hence "?std_loop (?hD_inv x) \<in> V"
+                              using heq by simp
+                            thus "x \<in> {x \<in> D. ?std_loop (?hD_inv x) \<in> V}"
+                              using \<open>x \<in> D\<close> by (by100 blast)
+                          qed
+                          from hcont_inv[unfolded top1_continuous_map_on_def]
+                          have "{x \<in> D. (?std_loop \<circ> inv_into top1_unit_interval hD) x \<in> V}
+                              \<in> subspace_topology Y TY D"
+                            using \<open>V \<in> top1_S1_topology\<close> unfolding comp_def by (by100 blast)
+                          thus "{x \<in> D. ?std_loop (?hD_inv x) \<in> V}
+                              \<in> subspace_topology Y TY D"
+                            using \<open>{x \<in> D. ?std_loop (?hD_inv x) \<in> V} = _\<close> by simp
+                        qed
+                      qed
+                    qed
+                    \<comment> \<open>Since \\<pi> = std\\_loop \\<circ> hD\\_inv on D, and the composition is continuous:\<close>
+                    have "top1_continuous_map_on D (subspace_topology Y TY D)
+                        top1_S1 top1_S1_topology \<pi>"
+                    proof -
+                      have "\<forall>x \<in> D. \<pi> x = (\<lambda>x. ?std_loop (?hD_inv x)) x"
+                        using h\<pi>_eq_on_D by (by100 blast)
+                      hence heq_fn: "\<And>x. x \<in> D \<Longrightarrow> \<pi> x = (\<lambda>x. ?std_loop (?hD_inv x)) x"
+                        by (by100 blast)
+                      hence "{x \<in> D. \<pi> x \<in> V} = {x \<in> D. (\<lambda>x. ?std_loop (?hD_inv x)) x \<in> V}" for V
+                        by (by100 auto)
+                      thus ?thesis using h_comp_cont unfolding top1_continuous_map_on_def
+                        by (by100 auto)
+                    qed
+                    thus ?thesis using hD_top_eq by simp
+                  qed
+                  from pasting_lemma_two_closed[OF hTTD_top_g hS1_top_g hT_closed hD_closed
+                      hcover[symmetric] h\<pi>_maps_fn h\<pi>_cont_T h\<pi>_cont_D]
+                  show ?thesis .
+                qed
+                have h\<pi>_star_gen: "top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0) =
+                    top1_subgroup_generated_on
+                      (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                      (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+                      (top1_fundamental_group_id top1_S1 top1_S1_topology (1,0))
+                      (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0))
+                      {top1_fundamental_group_induced_on ?TD ?TTD y0 top1_S1 top1_S1_topology (1,0) \<pi> (\<iota>F D)}"
+                proof -
+                  let ?\<pi>_star = "top1_fundamental_group_induced_on ?TD ?TTD y0
+                      top1_S1 top1_S1_topology (1,0) \<pi>"
+                  let ?std_loop = "\<lambda>s::real. (cos (2 * pi * s), sin (2 * pi * s))"
+                  let ?std_class = "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) ?std_loop g}"
+                  \<comment> \<open>Step 1: Extract gen\\_loop structure.\<close>
+                  from hgen_loop_structure[rule_format, OF hD_NT]
+                  obtain h_arc \<gamma>a' \<gamma>b' where
+                    hgl_eq: "gen_loop D = top1_path_product \<gamma>a' (top1_path_product h_arc (top1_path_reverse \<gamma>b'))"
+                    and hharc: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology D (subspace_topology Y TY D) h_arc"
+                    and h\<gamma>a'_T: "\<gamma>a' ` I_set \<subseteq> T"
+                    and h\<gamma>b'_T: "\<gamma>b' ` I_set \<subseteq> T"
+                    by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+                  \<comment> \<open>Step 2: \\<pi> \\<circ> gen\\_loop D = (\\<pi>\\<circ>\\<gamma>a') * ((\\<pi>\\<circ>h\\_arc) * (\\<pi>\\<circ>rev(\\<gamma>b'))).\<close>
+                  have hcomp_eq: "\<pi> \<circ> gen_loop D =
+                      top1_path_product (\<pi> \<circ> \<gamma>a')
+                        (top1_path_product (\<pi> \<circ> h_arc) (\<pi> \<circ> top1_path_reverse \<gamma>b'))"
+                    using hgl_eq comp_path_product[of \<pi> \<gamma>a' "top1_path_product h_arc (top1_path_reverse \<gamma>b')"]
+                      comp_path_product[of \<pi> h_arc "top1_path_reverse \<gamma>b'"]
+                    by simp
+                  \<comment> \<open>Step 3: \\<pi>\\<circ>\\<gamma>a' and \\<pi>\\<circ>rev(\\<gamma>b') are pointwise constant (1,0) on I\\_set.\<close>
+                  have h_const_a: "\<forall>s\<in>I_set. (\<pi> \<circ> \<gamma>a') s = (1::real, 0::real)"
+                  proof (intro ballI)
+                    fix s assume "s \<in> I_set"
+                    hence "\<gamma>a' s \<in> T" using h\<gamma>a'_T by (by100 blast)
+                    thus "(\<pi> \<circ> \<gamma>a') s = (1, 0)" unfolding \<pi>_def comp_def by (by100 simp)
+                  qed
+                  have h_const_b: "\<forall>s\<in>I_set. (\<pi> \<circ> top1_path_reverse \<gamma>b') s = (1::real, 0::real)"
+                  proof (intro ballI)
+                    fix s assume "s \<in> I_set"
+                    hence "1 - s \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                    hence "\<gamma>b' (1 - s) \<in> T" using h\<gamma>b'_T by (by100 blast)
+                    thus "(\<pi> \<circ> top1_path_reverse \<gamma>b') s = (1, 0)"
+                      unfolding \<pi>_def comp_def top1_path_reverse_def by (by100 simp)
+                  qed
+                  \<comment> \<open>Step 4: \\<pi>\\<circ>h\\_arc agrees with std\\_loop \\<circ> hD\\_inv \\<circ> h\\_arc on I\\_set.\<close>
+                  let ?hD_inv = "the_inv_into top1_unit_interval hD"
+                  have h_harc_D: "h_arc ` I_set \<subseteq> D"
+                    using hharc unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                  have hD_inj: "inj_on hD top1_unit_interval"
+                    using hD_bij unfolding bij_betw_def by (by100 blast)
+                  \<comment> \<open>For points in D that are also in T (endpoints), \\<pi> = (1,0) = std\\_loop(0 or 1).\<close>
+                  have h\<pi>_harc_eq: "\<forall>s\<in>I_set. (\<pi> \<circ> h_arc) s = (?std_loop (?hD_inv (h_arc s)))"
+                  proof (intro ballI)
+                    fix s assume hs: "s \<in> I_set"
+                    hence "h_arc s \<in> D" using h_harc_D by (by100 blast)
+                    show "(\<pi> \<circ> h_arc) s = ?std_loop (?hD_inv (h_arc s))"
+                    proof (cases "h_arc s \<in> T")
+                      case True
+                      hence "(\<pi> \<circ> h_arc) s = (1, 0)" unfolding \<pi>_def comp_def by (by100 simp)
+                      \<comment> \<open>h\\_arc s \\<in> T \\<inter> D = endpoints of D, so hD\\_inv(h\\_arc s) \\<in> {0,1}.\<close>
+                      moreover have "?hD_inv (h_arc s) \<in> {0, 1}"
+                      proof -
+                        have "h_arc s \<in> T \<inter> D" using True \<open>h_arc s \<in> D\<close> by (by100 blast)
+                        have hep: "T \<inter> D \<subseteq> top1_arc_endpoints_on D (subspace_topology Y TY D)"
+                          using hT_subgraph[rule_format, OF \<open>D \<in> \<A>\<close>] hD_NT by (by100 blast)
+                        have "D \<subseteq> Y" using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                        have hY_strict_d: "is_topology_on_strict Y TY"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have hY_haus_d: "is_hausdorff_on Y TY"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have harc_D: "top1_is_arc_on D (subspace_topology Y TY D)"
+                          using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                        from arc_endpoints_are_boundary[OF hY_strict_d hY_haus_d \<open>D \<subseteq> Y\<close> harc_D hhD]
+                        have hep_eq: "top1_arc_endpoints_on D (subspace_topology Y TY D) = {hD 0, hD 1}" .
+                        hence "h_arc s \<in> {hD 0, hD 1}" using hep \<open>h_arc s \<in> T \<inter> D\<close> by (by100 blast)
+                        hence "h_arc s = hD 0 \<or> h_arc s = hD 1" by (by100 blast)
+                        thus ?thesis
+                        proof
+                          assume heq0: "h_arc s = hD 0"
+                          have h0I: "0 \<in> top1_unit_interval"
+                            unfolding top1_unit_interval_def by (by100 simp)
+                          have "?hD_inv (hD 0) = 0"
+                            using the_inv_into_f_f[OF hD_inj h0I] by simp
+                          hence "?hD_inv (h_arc s) = 0" using heq0 by simp
+                          thus ?thesis by (by100 blast)
+                        next
+                          assume heq1: "h_arc s = hD 1"
+                          have h1I: "1 \<in> top1_unit_interval"
+                            unfolding top1_unit_interval_def by (by100 simp)
+                          have "?hD_inv (hD 1) = 1"
+                            using the_inv_into_f_f[OF hD_inj h1I] by simp
+                          hence "?hD_inv (h_arc s) = 1" using heq1 by simp
+                          thus ?thesis by (by100 simp)
+                        qed
+                      qed
+                      moreover have hstd0: "?std_loop 0 = (1::real, 0)" by (by100 simp)
+                      moreover have hstd1: "?std_loop 1 = (1::real, 0)" by (by100 simp)
+                      ultimately have h_inv_01: "?hD_inv (h_arc s) = 0 \<or> ?hD_inv (h_arc s) = 1"
+                        by (by100 blast)
+                      have "?std_loop (?hD_inv (h_arc s)) = (1, 0)"
+                        using h_inv_01 hstd0 hstd1 by (by100 auto)
+                      moreover have "(\<pi> \<circ> h_arc) s = (1, 0)"
+                        using \<open>h_arc s \<in> T\<close> unfolding \<pi>_def comp_def by (by100 simp)
+                      ultimately show ?thesis by simp
+                    next
+                      case False
+                      thus ?thesis unfolding \<pi>_def comp_def by (by100 simp)
+                    qed
+                  qed
+                  \<comment> \<open>Step 5: \\<pi> \\<circ> gen\\_loop D is path-homotopic to \\<pm>std\\_loop in S1.\<close>
+                  \<comment> \<open>Overall strategy: [\\<pi>\\<circ>gen\\_loop D] = \\<pm>[std\\_loop], hence generates.\<close>
+                  have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+                    using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def
+                    by (by100 blast)
+                  have hgenD_loop: "top1_is_loop_on top1_S1 top1_S1_topology (1,0) (\<pi> \<circ> gen_loop D)"
+                  proof -
+                    have hgl_cont: "top1_continuous_map_on I_set I_top ?TD ?TTD (gen_loop D)"
+                      using hgenD_loop_TD unfolding top1_is_loop_on_def top1_is_path_on_def
+                      by (by100 blast)
+                    have hcomp_cont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology
+                        (\<pi> \<circ> gen_loop D)"
+                      by (rule top1_continuous_map_on_comp[OF hgl_cont h\<pi>_cont])
+                    have "gen_loop D 0 = y0"
+                      using hgenD_loop_TD unfolding top1_is_loop_on_def top1_is_path_on_def
+                      by (by100 blast)
+                    hence "(\<pi> \<circ> gen_loop D) 0 = \<pi> y0" unfolding comp_def by simp
+                    hence h0: "(\<pi> \<circ> gen_loop D) 0 = (1, 0)"
+                      unfolding \<pi>_def using hT_x0 by (by100 simp)
+                    have "gen_loop D 1 = y0"
+                      using hgenD_loop_TD unfolding top1_is_loop_on_def top1_is_path_on_def
+                      by (by100 blast)
+                    hence "(\<pi> \<circ> gen_loop D) 1 = \<pi> y0" unfolding comp_def by simp
+                    hence h1: "(\<pi> \<circ> gen_loop D) 1 = (1, 0)"
+                      unfolding \<pi>_def using hT_x0 by (by100 simp)
+                    show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+                      using hcomp_cont h0 h1 by (by100 blast)
+                  qed
+                  have h\<pi>_genD_htpy:
+                    "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> gen_loop D) ?std_loop
+                    \<or> top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> gen_loop D)
+                        (top1_path_reverse ?std_loop)"
+                  proof -
+                    have hS1_top_loc: "is_topology_on top1_S1 top1_S1_topology"
+                      using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def
+                      by (by100 blast)
+                    \<comment> \<open>\\<pi>\\<circ>h\\_arc is a path in S1 from (1,0) to (1,0).\<close>
+                    have h\<pi>harc_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc)"
+                    proof -
+                      have harc_cont: "top1_continuous_map_on I_set I_top ?TD ?TTD h_arc"
+                      proof -
+                        have hD_cont: "top1_continuous_map_on I_set I_top D (subspace_topology Y TY D) h_arc"
+                          using hharc unfolding top1_homeomorphism_on_def by (by100 blast)
+                        have hD_sub_TD: "D \<subseteq> ?TD" by (by100 blast)
+                        have hTD_sub_Y: "?TD \<subseteq> Y" using hT_sub h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                        have hTY: "is_topology_on Y TY"
+                          using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+                        have hTTD_top: "is_topology_on ?TD ?TTD"
+                          by (rule subspace_topology_is_topology_on[OF hTY hTD_sub_Y])
+                        have hI_top: "is_topology_on I_set I_top"
+                          by (rule top1_unit_interval_topology_is_topology_on)
+                        have "h_arc ` I_set \<subseteq> ?TD" using h_harc_D hD_sub_TD by (by100 blast)
+                        \<comment> \<open>h\\_arc: [0,1] \\<rightarrow> D continuous in (D, sub Y TY D).
+                           Since D \\<subseteq> TD, image \\<subseteq> TD.
+                           Use restrict\\_range(5) on [0,1] \\<rightarrow> Y (via composition with inclusion)
+                           to get [0,1] \\<rightarrow> TD.\<close>
+                        \<comment> \<open>Alternative: h\\_arc continuous to Y (via D \\<subseteq> Y) then restrict.\<close>
+                        have hD_sub_Y: "D \<subseteq> Y" using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                        have harc_cont_Y: "top1_continuous_map_on I_set I_top Y TY h_arc"
+                        proof -
+                          from Theorem_18_2(6)[OF hI_top
+                              subspace_topology_is_topology_on[OF hTY hD_sub_Y] hTY,
+                              rule_format]
+                          show ?thesis using hD_cont hD_sub_Y by (by100 blast)
+                        qed
+                        from Theorem_18_2(5)[OF hI_top hTY hTTD_top, rule_format]
+                        show ?thesis using harc_cont_Y hTD_sub_Y \<open>h_arc ` I_set \<subseteq> ?TD\<close>
+                          by (by100 blast)
+                      qed
+                      have hcomp: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology (\<pi> \<circ> h_arc)"
+                        by (rule top1_continuous_map_on_comp[OF harc_cont h\<pi>_cont])
+                      have h0I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      have h1I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      \<comment> \<open>h\\_arc(0) and h\\_arc(1) are endpoints of D, hence in T.\<close>
+                      have "D \<subseteq> Y" using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                      have hY_strict: "is_topology_on_strict Y TY"
+                        using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                      have hY_haus: "is_hausdorff_on Y TY"
+                        using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                      have harc_D_loc: "top1_is_arc_on D (subspace_topology Y TY D)"
+                        using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                      from arc_endpoints_are_boundary[OF hY_strict hY_haus \<open>D \<subseteq> Y\<close> harc_D_loc hharc]
+                      have hep_eq_loc: "top1_arc_endpoints_on D (subspace_topology Y TY D) = {h_arc 0, h_arc 1}" .
+                      have hT_ep: "T \<inter> D \<subseteq> top1_arc_endpoints_on D (subspace_topology Y TY D)"
+                        using hT_subgraph[rule_format, OF \<open>D \<in> \<A>\<close>] hD_NT by (by100 blast)
+                      have hep_in_T: "h_arc 0 \<in> T \<and> h_arc 1 \<in> T"
+                      proof -
+                        have "h_arc 0 \<in> D" using h_harc_D h0I by (by100 blast)
+                        have "h_arc 1 \<in> D" using h_harc_D h1I by (by100 blast)
+                        have "h_arc 0 \<in> top1_arc_endpoints_on D (subspace_topology Y TY D)"
+                          using hep_eq_loc by (by100 blast)
+                        have "h_arc 1 \<in> top1_arc_endpoints_on D (subspace_topology Y TY D)"
+                          using hep_eq_loc by (by100 blast)
+                        \<comment> \<open>Endpoints of D are in T (from graph structure: arc endpoints are vertices).\<close>
+                        have "top1_arc_endpoints_on D (subspace_topology Y TY D) \<subseteq> T"
+                        proof -
+                          have "D \<in> {A \<in> \<A>. \<not> A \<subseteq> T}" using \<open>D \<in> \<A>\<close> hD_NT by (by100 blast)
+                          from hNT_endpoints[rule_format, OF this]
+                          show ?thesis by (by100 blast)
+                        qed
+                        thus ?thesis using hep_eq_loc by (by100 blast)
+                      qed
+                      have h0: "(\<pi> \<circ> h_arc) 0 = (1, 0)"
+                        using hep_in_T unfolding \<pi>_def comp_def by (by100 simp)
+                      have h1: "(\<pi> \<circ> h_arc) 1 = (1, 0)"
+                        using hep_in_T unfolding \<pi>_def comp_def by (by100 simp)
+                      show ?thesis unfolding top1_is_path_on_def using hcomp h0 h1 by (by100 blast)
+                    qed
+                    \<comment> \<open>\\<pi>\\<circ>\\<gamma>a' is a constant path at (1,0).\<close>
+                    have h\<pi>ga_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> \<gamma>a')"
+                    proof -
+                      have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+                        unfolding top1_S1_def by (by100 simp)
+                      have hcont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology (\<pi> \<circ> \<gamma>a')"
+                        unfolding top1_continuous_map_on_def
+                      proof (intro conjI ballI)
+                        fix s assume "s \<in> I_set"
+                        hence "(\<pi> \<circ> \<gamma>a') s = (1, 0)" using h_const_a by (by100 blast)
+                        thus "(\<pi> \<circ> \<gamma>a') s \<in> top1_S1" using h10_S1 by simp
+                      next
+                        fix V assume "V \<in> top1_S1_topology"
+                        show "{s \<in> I_set. (\<pi> \<circ> \<gamma>a') s \<in> V} \<in> I_top"
+                        proof (cases "(1::real, 0::real) \<in> V")
+                          case True
+                          hence "\<And>s. s \<in> I_set \<Longrightarrow> (\<pi> \<circ> \<gamma>a') s \<in> V"
+                            using h_const_a by (by100 auto)
+                          hence "{s \<in> I_set. (\<pi> \<circ> \<gamma>a') s \<in> V} = I_set" by (by100 blast)
+                          moreover have "I_set \<in> I_top"
+                            using top1_unit_interval_topology_is_topology_on
+                            unfolding is_topology_on_def by (by100 blast)
+                          ultimately show ?thesis by simp
+                        next
+                          case False
+                          hence "\<And>s. s \<in> I_set \<Longrightarrow> (\<pi> \<circ> \<gamma>a') s \<notin> V"
+                            using h_const_a by (by100 auto)
+                          hence "\<And>s. s \<in> I_set \<Longrightarrow> (\<pi> \<circ> \<gamma>a') s \<notin> V"
+                            by (by100 blast)
+                          hence heq_empty: "{s \<in> I_set. (\<pi> \<circ> \<gamma>a') s \<in> V} = {}" by (by100 blast)
+                          have hempty_top: "{} \<in> I_top"
+                            using top1_unit_interval_topology_is_topology_on[unfolded is_topology_on_def]
+                            by (by5000 auto)
+                          show ?thesis by (subst heq_empty, rule hempty_top)
+                        qed
+                      qed
+                      have h0I_g: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      have h1I_g: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      have hep0: "(\<pi> \<circ> \<gamma>a') 0 = (1, 0)"
+                        using h_const_a h0I_g by (by100 blast)
+                      have hep1: "(\<pi> \<circ> \<gamma>a') 1 = (1, 0)"
+                        using h_const_a h1I_g by (by100 blast)
+                      show ?thesis unfolding top1_is_path_on_def using hcont hep0 hep1 by (by100 blast)
+                    qed
+                    \<comment> \<open>\\<pi>\\<circ>rev(\\<gamma>b') is a constant path at (1,0).\<close>
+                    have h\<pi>gb_path: "top1_is_path_on top1_S1 top1_S1_topology (1,0) (1,0)
+                        (\<pi> \<circ> top1_path_reverse \<gamma>b')"
+                    proof -
+                      have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+                        unfolding top1_S1_def by (by100 simp)
+                      have hcont: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology
+                          (\<pi> \<circ> top1_path_reverse \<gamma>b')"
+                        unfolding top1_continuous_map_on_def
+                      proof (intro conjI ballI)
+                        fix s assume "s \<in> I_set"
+                        hence "(\<pi> \<circ> top1_path_reverse \<gamma>b') s = (1, 0)"
+                          using h_const_b by (by100 blast)
+                        thus "(\<pi> \<circ> top1_path_reverse \<gamma>b') s \<in> top1_S1" using h10_S1 by simp
+                      next
+                        fix V assume "V \<in> top1_S1_topology"
+                        show "{s \<in> I_set. (\<pi> \<circ> top1_path_reverse \<gamma>b') s \<in> V} \<in> I_top"
+                        proof (cases "(1::real, 0::real) \<in> V")
+                          case True
+                          hence "\<And>s. s \<in> I_set \<Longrightarrow> (\<pi> \<circ> top1_path_reverse \<gamma>b') s \<in> V"
+                            using h_const_b by (by100 auto)
+                          hence "{s \<in> I_set. (\<pi> \<circ> top1_path_reverse \<gamma>b') s \<in> V} = I_set"
+                            by (by100 blast)
+                          moreover have "I_set \<in> I_top"
+                            using top1_unit_interval_topology_is_topology_on
+                            unfolding is_topology_on_def by (by100 blast)
+                          ultimately show ?thesis by simp
+                        next
+                          case False
+                          hence "\<And>s. s \<in> I_set \<Longrightarrow> (\<pi> \<circ> top1_path_reverse \<gamma>b') s \<notin> V"
+                            using h_const_b by (by100 auto)
+                          hence heq_empty_b: "{s \<in> I_set. (\<pi> \<circ> top1_path_reverse \<gamma>b') s \<in> V} = {}"
+                            by (by100 blast)
+                          have hempty_top_b: "{} \<in> I_top"
+                            using top1_unit_interval_topology_is_topology_on[unfolded is_topology_on_def]
+                            by (by5000 auto)
+                          show ?thesis by (subst heq_empty_b, rule hempty_top_b)
+                        qed
+                      qed
+                      have h0I_h: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      have h1I_h: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      have hep0: "(\<pi> \<circ> top1_path_reverse \<gamma>b') 0 = (1, 0)"
+                        using h_const_b h0I_h by (by100 blast)
+                      have hep1: "(\<pi> \<circ> top1_path_reverse \<gamma>b') 1 = (1, 0)"
+                        using h_const_b h1I_h by (by100 blast)
+                      show ?thesis unfolding top1_is_path_on_def using hcont hep0 hep1 by (by100 blast)
+                    qed
+                    \<comment> \<open>\\<pi>\\<circ>h\\_arc \\<simeq> \\<pm>std\\_loop via reparametrization.\<close>
+                    have h\<pi>harc_htpy:
+                      "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc) ?std_loop
+                      \<or> top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc)
+                          (top1_path_reverse ?std_loop)"
+                      sorry \<comment> \<open>\\<pi>\\<circ>h\\_arc agrees with std\\_loop\\<circ>reparam on I\\_set.
+                         reparam is continuous bijection [0,1]\\<rightarrow>[0,1].
+                         reparam\\_path\\_homotopy: std\\_loop\\<circ>reparam \\<simeq> std\\_loop\\<circ>id or std\\_loop\\<circ>rev.\<close>
+                    \<comment> \<open>\\<pi> \\<circ> gen\\_loop D = const\\_10 * ((\\<pi>\\<circ>h\\_arc) * const\\_10).
+                       By hcomp\\_eq + the constant path facts.\<close>
+                    \<comment> \<open>Homotopy chain: const * (h * const) \\<simeq> h (left+right identity).\<close>
+                    from h\<pi>harc_htpy show ?thesis
+                    proof
+                      assume hhtpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc) ?std_loop"
+                      \<comment> \<open>const * ((\\<pi>\\<circ>h\\_arc) * const) \\<simeq> const * (std * const)
+                         \\<simeq> const * std \\<simeq> std.\<close>
+                      have h1: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (\<pi> \<circ> h_arc) (\<pi> \<circ> top1_path_reverse \<gamma>b'))
+                          (top1_path_product ?std_loop (\<pi> \<circ> top1_path_reverse \<gamma>b'))"
+                        by (rule path_homotopic_product_left[OF hS1_top_loc hhtpy h\<pi>gb_path])
+                      have h2: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product (\<pi> \<circ> h_arc) (\<pi> \<circ> top1_path_reverse \<gamma>b')))
+                          (top1_path_product (\<pi> \<circ> \<gamma>a') (top1_path_product ?std_loop (\<pi> \<circ> top1_path_reverse \<gamma>b')))"
+                        by (rule path_homotopic_product_right[OF hS1_top_loc h1 h\<pi>ga_path])
+                      \<comment> \<open>Now use left/right identity to simplify const*std*const \\<rightarrow> std.\<close>
+                      have h3: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (\<pi> \<circ> gen_loop D) ?std_loop"
+                        sorry \<comment> \<open>Chain h2 + Theorem\\_51\\_2 + hcomp\\_eq.\<close>
+                      thus ?thesis by (by100 blast)
+                    next
+                      assume hhtpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc)
+                          (top1_path_reverse ?std_loop)"
+                      have h3: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (\<pi> \<circ> gen_loop D) (top1_path_reverse ?std_loop)"
+                        sorry \<comment> \<open>Same chain with rev(std\\_loop).\<close>
+                      thus ?thesis by (by100 blast)
+                    qed
+                  qed
+                  \<comment> \<open>Step 6: [\\<pi> \\<circ> gen\\_loop D] = [\\<pm>std\\_loop] as homotopy classes.\<close>
+                  have hclass_eq: "?\<pi>_star (\<iota>F D) = ?std_class
+                      \<or> ?\<pi>_star (\<iota>F D) = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+                          (top1_path_reverse ?std_loop) g}"
+                  proof -
+                    \<comment> \<open>\\<pi>*(\\<iota>F D) = [\\<pi> \\<circ> gen\\_loop D] in \\<pi>\\_1(S1).
+                       Then use path\\_homotopic\\_same\\_class to convert homotopy to class eq.\<close>
+                    \<comment> \<open>Step 1: \\<pi>*(\\<iota>F D) = {g. loop\\_equiv\\_S1 (\\<pi>\\<circ>gen\\_loop D) g}.\<close>
+                    have h_induced_eq: "?\<pi>_star (\<iota>F D) = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+                        (\<pi> \<circ> gen_loop D) g}"
+                    proof -
+                      have "?\<pi>_star (\<iota>F D) = {g. \<exists>f\<in>\<iota>F D. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (\<pi> \<circ> f) g}"
+                        unfolding top1_fundamental_group_induced_on_def by simp
+                      also have "\<dots> = {g. \<exists>f. top1_loop_equiv_on ?TD ?TTD y0 (gen_loop D) f \<and>
+                          top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (\<pi> \<circ> f) g}"
+                        unfolding \<iota>F_def by simp
+                      also have "\<dots> = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+                          (\<pi> \<circ> gen_loop D) g}"
+                      proof (rule set_eqI, rule iffI)
+                        fix g assume "g \<in> {g. \<exists>f. top1_loop_equiv_on ?TD ?TTD y0 (gen_loop D) f \<and>
+                            top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (\<pi> \<circ> f) g}"
+                        then obtain f where hf_eq: "top1_loop_equiv_on ?TD ?TTD y0 (gen_loop D) f"
+                            and hg_eq: "top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (\<pi> \<circ> f) g"
+                          by (by100 blast)
+                        \<comment> \<open>gen\\_loop D \\<simeq> f in T\\<union>D \\<Rightarrow> \\<pi>\\<circ>gen\\_loop D \\<simeq> \\<pi>\\<circ>f in S1.\<close>
+                        \<comment> \<open>f is a loop at y0 (since loop-equiv to gen\\_loop D).\<close>
+                        have hf_loop: "top1_is_loop_on ?TD ?TTD y0 f"
+                          using hf_eq unfolding top1_loop_equiv_on_def by (by100 blast)
+                        have hTTD_top_loc: "is_topology_on ?TD ?TTD"
+                        proof -
+                          have "?TD \<subseteq> Y" using hT_sub h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                          have hTY: "is_topology_on Y TY"
+                            using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def
+                            by (by100 blast)
+                          show ?thesis by (rule subspace_topology_is_topology_on[OF hTY \<open>?TD \<subseteq> Y\<close>])
+                        qed
+                        have h\<pi>_y0_eq: "\<pi> y0 = (1, 0)"
+                          unfolding \<pi>_def using hT_x0 by (by100 simp)
+                        have h\<pi>_preserves: "top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+                            (\<pi> \<circ> gen_loop D) (\<pi> \<circ> f)"
+                          using top1_induced_preserves_loop_equiv[OF hTTD_top_loc h\<pi>_cont
+                              hgenD_loop_TD hf_loop hf_eq]
+                          h\<pi>_y0_eq by simp
+                        from top1_loop_equiv_on_trans[OF hS1_top h\<pi>_preserves hg_eq]
+                        show "g \<in> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+                            (\<pi> \<circ> gen_loop D) g}" by (by100 blast)
+                      next
+                        fix g assume "g \<in> {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+                            (\<pi> \<circ> gen_loop D) g}"
+                        hence hg: "top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (\<pi> \<circ> gen_loop D) g"
+                          by (by100 blast)
+                        have hrefl: "top1_loop_equiv_on ?TD ?TTD y0 (gen_loop D) (gen_loop D)"
+                          by (rule top1_loop_equiv_on_refl[OF hgenD_loop_TD])
+                        show "g \<in> {g. \<exists>f. top1_loop_equiv_on ?TD ?TTD y0 (gen_loop D) f \<and>
+                            top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (\<pi> \<circ> f) g}"
+                          using hrefl hg by (by100 blast)
+                      qed
+                      finally show ?thesis .
+                    qed
+                    \<comment> \<open>Step 2: From h\\<pi>\\_genD\\_htpy, [\\<pi>\\<circ>gen\\_loop D] = [\\<pm>std\\_loop].\<close>
+                    from h\<pi>_genD_htpy show ?thesis
+                    proof
+                      assume hhtpy_std: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (\<pi> \<circ> gen_loop D) ?std_loop"
+                      from path_homotopic_same_class[OF hS1_top hhtpy_std]
+                      have "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (\<pi> \<circ> gen_loop D) g} =
+                          ?std_class" .
+                      thus ?thesis using h_induced_eq by simp
+                    next
+                      assume hhtpy_rev: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                          (\<pi> \<circ> gen_loop D) (top1_path_reverse ?std_loop)"
+                      from path_homotopic_same_class[OF hS1_top hhtpy_rev]
+                      have "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (\<pi> \<circ> gen_loop D) g} =
+                          {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0) (top1_path_reverse ?std_loop) g}" .
+                      thus ?thesis using h_induced_eq by simp
+                    qed
+                  qed
+                  \<comment> \<open>Step 7: [std\\_loop] generates \\<pi>\\_1(S1).
+                     From Theorem\\_54\\_5\\_iso\\_with\\_generator + generation transfer.\<close>
+                  have hstd_generates: "top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0) =
+                      top1_subgroup_generated_on
+                        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+                        (top1_fundamental_group_id top1_S1 top1_S1_topology (1,0))
+                        (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0))
+                        {?std_class}"
+                  proof -
+                    let ?G = "top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                    let ?mulG = "top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0)"
+                    let ?eG = "top1_fundamental_group_id top1_S1 top1_S1_topology (1,0)"
+                    let ?invG = "top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0)"
+                    \<comment> \<open>Get iso \\<phi> with \\<phi>([std]) = 1.\<close>
+                    obtain \<phi> where h\<phi>_iso: "top1_group_iso_on ?G ?mulG top1_Z_group top1_Z_mul \<phi>"
+                        and h\<phi>_std: "\<phi> ?std_class = (1::int)"
+                      using Theorem_54_5_iso_with_generator by (by100 blast)
+                    have hG_grp: "top1_is_group_on ?G ?mulG ?eG ?invG"
+                    proof -
+                      have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+                      from top1_fundamental_group_is_group[OF hS1_top this]
+                      show ?thesis .
+                    qed
+                    have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+                      using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+                      by (by100 blast)
+                    \<comment> \<open>\\<phi>\\<inverse> is an iso Z \\<rightarrow> \\<pi>\\_1(S1).\<close>
+                    let ?\<phi>_inv = "inv_into ?G \<phi>"
+                    have h\<phi>_inv_iso: "top1_group_iso_on top1_Z_group top1_Z_mul ?G ?mulG ?\<phi>_inv"
+                      by (rule group_iso_on_inverse[OF h\<phi>_iso hG_grp hZ_grp])
+                    have h\<phi>_inv_hom: "top1_group_hom_on top1_Z_group top1_Z_mul ?G ?mulG ?\<phi>_inv"
+                      using h\<phi>_inv_iso unfolding top1_group_iso_on_def by (by100 blast)
+                    have h\<phi>_bij: "bij_betw \<phi> ?G top1_Z_group"
+                      using h\<phi>_iso unfolding top1_group_iso_on_def by (by100 blast)
+                    have h\<phi>_inj: "inj_on \<phi> ?G" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+                    have h\<phi>_inv_surj: "?\<phi>_inv ` top1_Z_group = ?G"
+                      using h\<phi>_inv_iso unfolding top1_group_iso_on_def bij_betw_def by (by100 blast)
+                    \<comment> \<open>Z = \\<langle>{1}\\<rangle>.\<close>
+                    have hZ_gen: "top1_Z_group = top1_subgroup_generated_on top1_Z_group top1_Z_mul
+                        top1_Z_id top1_Z_invg {(1::int)}"
+                    proof -
+                      from Z_is_free_on_one_generator
+                      have "top1_Z_group = top1_subgroup_generated_on top1_Z_group top1_Z_mul
+                          top1_Z_id top1_Z_invg ((\<lambda>(_::nat). (1::int)) ` {0::nat})"
+                        unfolding top1_is_free_group_full_on_def by (by100 blast)
+                      moreover have "((\<lambda>(_::nat). (1::int)) ` {0::nat}) = {(1::int)}" by (by100 simp)
+                      ultimately show ?thesis by simp
+                    qed
+                    \<comment> \<open>\\<phi>\\<inverse>(1) = [std\\_loop].\<close>
+                    have hstd_in_G: "?std_class \<in> ?G"
+                      using standard_S1_loop_class_in_carrier .
+                    have h\<phi>_inv_1: "?\<phi>_inv (1::int) = ?std_class"
+                      using inv_into_f_f[OF h\<phi>_inj hstd_in_G] h\<phi>_std by simp
+                    \<comment> \<open>Apply surj\\_hom\\_generated.\<close>
+                    have h1_in_Z: "{(1::int)} \<subseteq> top1_Z_group" unfolding top1_Z_group_def by (by100 simp)
+                    from surj_hom_generated[OF hZ_grp hG_grp h\<phi>_inv_hom h\<phi>_inv_surj h1_in_Z hZ_gen]
+                    have "?G = top1_subgroup_generated_on ?G ?mulG ?eG ?invG (?\<phi>_inv ` {(1::int)})" .
+                    moreover have "?\<phi>_inv ` {(1::int)} = {?std_class}" using h\<phi>_inv_1 by (by100 simp)
+                    ultimately show ?thesis by simp
+                  qed
+                  have hrev_std_generates: "top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0) =
+                      top1_subgroup_generated_on
+                        (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                        (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+                        (top1_fundamental_group_id top1_S1 top1_S1_topology (1,0))
+                        (top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0))
+                        {{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+                            (top1_path_reverse ?std_loop) g}}"
+                  proof -
+                    \<comment> \<open>\\<langle>{invg(g)}\\<rangle> = \\<langle>{g}\\<rangle> in any group, since each contains the other's generator.\<close>
+                    let ?G = "top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                    let ?mulG = "top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0)"
+                    let ?eG = "top1_fundamental_group_id top1_S1 top1_S1_topology (1,0)"
+                    let ?invG = "top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0)"
+                    let ?rev_class = "{g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+                        (top1_path_reverse ?std_loop) g}"
+                    \<comment> \<open>Same approach: \\<phi> iso with \\<phi>([std]) = 1 \\<Rightarrow> \\<phi>([rev std]) = -1.
+                       Z = \\<langle>{-1}\\<rangle>, \\<phi>\\<inverse>(-1) = [rev std] \\<Rightarrow> \\<pi>\\_1(S1) = \\<langle>{[rev std]}\\<rangle>.\<close>
+                    obtain \<phi> where h\<phi>_iso: "top1_group_iso_on ?G ?mulG top1_Z_group top1_Z_mul \<phi>"
+                        and h\<phi>_std: "\<phi> ?std_class = (1::int)"
+                      using Theorem_54_5_iso_with_generator by (by100 blast)
+                    have hG_grp: "top1_is_group_on ?G ?mulG ?eG ?invG"
+                    proof -
+                      have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+                      from top1_fundamental_group_is_group[OF hS1_top this] show ?thesis .
+                    qed
+                    have hZ_grp: "top1_is_group_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg"
+                      using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def by (by100 blast)
+                    have h\<phi>_bij: "bij_betw \<phi> ?G top1_Z_group"
+                      using h\<phi>_iso unfolding top1_group_iso_on_def by (by100 blast)
+                    have h\<phi>_inj: "inj_on \<phi> ?G" using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
+                    have h\<phi>_hom: "top1_group_hom_on ?G ?mulG top1_Z_group top1_Z_mul \<phi>"
+                      using h\<phi>_iso unfolding top1_group_iso_on_def by (by100 blast)
+                    \<comment> \<open>\\<phi>([rev std]) = -1.\<close>
+                    have hstd_in_G: "?std_class \<in> ?G" using standard_S1_loop_class_in_carrier .
+                    have hrev_class_eq: "?rev_class = ?invG ?std_class"
+                      using fundamental_group_invg_class[OF hS1_top standard_S1_loop_is_loop]
+                      by simp
+                    have h\<phi>_rev: "\<phi> ?rev_class = (-1::int)"
+                    proof -
+                      have "\<phi> (?invG ?std_class) = top1_Z_invg (\<phi> ?std_class)"
+                        by (rule hom_preserves_inv[OF hG_grp hZ_grp h\<phi>_hom hstd_in_G])
+                      hence "\<phi> (?invG ?std_class) = top1_Z_invg 1" using h\<phi>_std by simp
+                      hence "\<phi> (?invG ?std_class) = -1"
+                        unfolding top1_Z_invg_def by (by100 simp)
+                      thus ?thesis using hrev_class_eq by simp
+                    qed
+                    \<comment> \<open>\\<phi>\\<inverse> iso and surjective.\<close>
+                    let ?\<phi>_inv = "inv_into ?G \<phi>"
+                    have h\<phi>_inv_iso: "top1_group_iso_on top1_Z_group top1_Z_mul ?G ?mulG ?\<phi>_inv"
+                      by (rule group_iso_on_inverse[OF h\<phi>_iso hG_grp hZ_grp])
+                    have h\<phi>_inv_hom: "top1_group_hom_on top1_Z_group top1_Z_mul ?G ?mulG ?\<phi>_inv"
+                      using h\<phi>_inv_iso unfolding top1_group_iso_on_def by (by100 blast)
+                    have h\<phi>_inv_surj: "?\<phi>_inv ` top1_Z_group = ?G"
+                      using h\<phi>_inv_iso unfolding top1_group_iso_on_def bij_betw_def by (by100 blast)
+                    \<comment> \<open>Z = \\<langle>{-1}\\<rangle>.\<close>
+                    have hZ_gen_m1: "top1_Z_group = top1_subgroup_generated_on top1_Z_group top1_Z_mul
+                        top1_Z_id top1_Z_invg {(-1::int)}"
+                    proof -
+                      \<comment> \<open>Z = \\<langle>{1}\\<rangle>. Since -1 = invZ(1), and \\<langle>{g}\\<rangle> = \\<langle>{invg(g)}\\<rangle>:\<close>
+                      have hZ_gen_1: "top1_Z_group = top1_subgroup_generated_on top1_Z_group top1_Z_mul
+                          top1_Z_id top1_Z_invg {(1::int)}"
+                      proof -
+                        from Z_is_free_on_one_generator
+                        have "top1_Z_group = top1_subgroup_generated_on top1_Z_group top1_Z_mul
+                            top1_Z_id top1_Z_invg ((\<lambda>(_::nat). (1::int)) ` {0::nat})"
+                          unfolding top1_is_free_group_full_on_def by (by100 blast)
+                        moreover have "((\<lambda>(_::nat). (1::int)) ` {0::nat}) = {(1::int)}" by (by100 simp)
+                        ultimately show ?thesis by simp
+                      qed
+                      \<comment> \<open>In Z, -1 = invZ(1). And {invg(g)} generates iff {g} generates.\<close>
+                      have hm1_eq: "(-1::int) = top1_Z_invg (1::int)"
+                        unfolding top1_Z_invg_def by (by100 simp)
+                      \<comment> \<open>Every subgroup containing {-1} contains 1 (as invg(-1) = 1), hence contains \\<langle>{1}\\<rangle>.\<close>
+                      \<comment> \<open>And every subgroup containing {1} contains -1 (as invg(1) = -1), hence contains \\<langle>{-1}\\<rangle>.\<close>
+                      \<comment> \<open>Use subgroup\\_generated\\_minimal: \\<langle>{1}\\<rangle> \\<subseteq> \\<langle>{-1}\\<rangle> and vice versa.\<close>
+                      let ?gen1 = "top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {(1::int)}"
+                      let ?genm1 = "top1_subgroup_generated_on top1_Z_group top1_Z_mul top1_Z_id top1_Z_invg {(-1::int)}"
+                      have hm1_in_Z: "{(-1::int)} \<subseteq> top1_Z_group"
+                        unfolding top1_Z_group_def by (by100 simp)
+                      have h1_in_Z: "{(1::int)} \<subseteq> top1_Z_group"
+                        unfolding top1_Z_group_def by (by100 simp)
+                      have hgenm1_sub: "?genm1 \<subseteq> top1_Z_group"
+                        by (rule subgroup_generated_subset[OF hZ_grp hm1_in_Z])
+                      have hgenm1_grp: "top1_is_group_on ?genm1 top1_Z_mul top1_Z_id top1_Z_invg"
+                        by (rule intersection_of_subgroups_is_group[OF hZ_grp hm1_in_Z])
+                      \<comment> \<open>-1 \\<in> \\<langle>{-1}\\<rangle>.\<close>
+                      have hm1_in_genm1: "(-1::int) \<in> ?genm1"
+                        by (rule subgroup_generated_contains[OF hZ_grp hm1_in_Z]) (by100 simp)
+                      \<comment> \<open>1 = invZ(-1) \\<in> \\<langle>{-1}\\<rangle>.\<close>
+                      have "top1_Z_invg (-1::int) = (1::int)"
+                        unfolding top1_Z_invg_def by (by100 simp)
+                      hence h1_in_genm1: "(1::int) \<in> ?genm1"
+                        using group_inv_closed[OF hgenm1_grp hm1_in_genm1] by simp
+                      hence "{(1::int)} \<subseteq> ?genm1" by (by100 blast)
+                      from subgroup_generated_minimal[OF this hgenm1_sub hgenm1_grp]
+                      have hgen1_sub: "?gen1 \<subseteq> ?genm1" .
+                      \<comment> \<open>Z = \\<langle>{1}\\<rangle> \\<subseteq> \\<langle>{-1}\\<rangle> \\<subseteq> Z.\<close>
+                      have "top1_Z_group \<subseteq> ?genm1" using hZ_gen_1 hgen1_sub by simp
+                      thus ?thesis using hgenm1_sub by (by100 blast)
+                    qed
+                    \<comment> \<open>\\<phi>\\<inverse>(-1) = [rev std].\<close>
+                    have hrev_in_G: "?rev_class \<in> ?G"
+                    proof -
+                      have "?rev_class = ?invG ?std_class" using hrev_class_eq .
+                      moreover have "?invG ?std_class \<in> ?G"
+                        by (rule group_inv_closed[OF hG_grp hstd_in_G])
+                      ultimately show ?thesis by simp
+                    qed
+                    have h\<phi>_inv_m1: "?\<phi>_inv (-1::int) = ?rev_class"
+                      using inv_into_f_f[OF h\<phi>_inj hrev_in_G] h\<phi>_rev by simp
+                    \<comment> \<open>Transfer generation.\<close>
+                    have hm1_in_Z: "{(-1::int)} \<subseteq> top1_Z_group" unfolding top1_Z_group_def by (by100 simp)
+                    from surj_hom_generated[OF hZ_grp hG_grp h\<phi>_inv_hom h\<phi>_inv_surj hm1_in_Z hZ_gen_m1]
+                    have "?G = top1_subgroup_generated_on ?G ?mulG ?eG ?invG (?\<phi>_inv ` {(-1::int)})" .
+                    moreover have "?\<phi>_inv ` {(-1::int)} = {?rev_class}" using h\<phi>_inv_m1 by (by100 simp)
+                    ultimately show ?thesis by simp
+                  qed
+                  \<comment> \<open>Step 8: Combine.\<close>
+                  from hclass_eq show ?thesis
+                  proof
+                    assume "?\<pi>_star (\<iota>F D) = ?std_class"
+                    thus ?thesis using hstd_generates by (by100 simp)
+                  next
+                    assume "?\<pi>_star (\<iota>F D) = {g. top1_loop_equiv_on top1_S1 top1_S1_topology (1,0)
+                        (top1_path_reverse ?std_loop) g}"
+                    thus ?thesis using hrev_std_generates by (by100 simp)
+                  qed
+                qed
+                \<comment> \<open>Step G6: [standard S1 loop] generates \\<pi>\\_1(S1).
+                   Therefore \\<pi>*(\\<iota>F(D)) generates \\<pi>\\_1(S1).
+                   Since \\<pi>\\_1(T\\<union>D) \\<cong> Z and \\<pi>* surjective \\<Rightarrow> \\<iota>F(D) generates.\<close>
+                \<comment> \<open>\\<pi>*(\\<iota>F(D)) generates \\<pi>\\_1(S1). Since \\<pi>* is surj hom from Z\\<cong>Z,
+                   it is an iso. So \\<iota>F(D) generates \\<pi>\\_1(T\\<union>D).\<close>
+                have hTTD_top: "is_topology_on ?TD ?TTD"
+                proof -
+                  have hTD_sub: "?TD \<subseteq> Y" using hT_sub h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                  have hTY_top: "is_topology_on Y TY"
+                    using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+                  show ?thesis by (rule subspace_topology_is_topology_on[OF hTY_top hTD_sub])
+                qed
+                have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+                  using top1_S1_is_topology_on_strict
+                  unfolding is_topology_on_strict_def by (by100 blast)
+                have h\<pi>_y0: "\<pi> y0 = (1, 0)"
+                  unfolding \<pi>_def using hT_x0 by (by100 simp)
+                have h\<pi>_hom: "top1_group_hom_on
+                    (top1_fundamental_group_carrier ?TD ?TTD y0)
+                    (top1_fundamental_group_mul ?TD ?TTD y0)
+                    (top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0))
+                    (top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0))
+                    (top1_fundamental_group_induced_on ?TD ?TTD y0 top1_S1 top1_S1_topology (1,0) \<pi>)"
+                proof -
+                  have hy0_TD: "y0 \<in> ?TD" using hT_x0 by (by100 blast)
+                  have h10_S1: "(1::real, 0::real) \<in> top1_S1"
+                    unfolding top1_S1_def by (by100 simp)
+                  from top1_fundamental_group_induced_on_is_hom[OF hTTD_top hS1_top hy0_TD h10_S1
+                      h\<pi>_cont h\<pi>_y0]
+                  show ?thesis .
+                qed
+                \<comment> \<open>G6b (\\<pi>\\_1(S1) generated by std loop) was PROVED in earlier sessions.
+                   Now h\\<pi>\\_star\\_gen gives the combined result directly.\<close>
+                \<comment> \<open>Since \\<pi>*(\\<iota>F D) generates \\<pi>\\_1(S1), \\<pi>* is surjective.\<close>
+                \<comment> \<open>surj + both \\<cong> Z \\<Rightarrow> iso \\<Rightarrow> \\<iota>F(D) generates \\<pi>\\_1(T\\<union>D).\<close>
+                \<comment> \<open>G6c: \\<pi>*(\\<iota>F D) generates \\<pi>\\_1(S1) \\<Rightarrow> \\<iota>F D generates \\<pi>\\_1(T\\<union>D).
+                   Chain: \\<pi>* surjective (image \\<supseteq> generator) \\<Rightarrow> iso (surj\\_hom\\_infinite\\_cyclic\\_inj)
+                   \\<Rightarrow> inverse maps generators to generators.
+                   Available: hTD\\_iso\\_Z, Theorem\\_54\\_5\\_iso, h\\<pi>\\_hom, h\\<pi>\\_star\\_gen.\<close>
+                \<comment> \<open>G6c: \\<pi>*(\\<iota>F D) generates \\<pi>\\_1(S1) \\<Rightarrow> \\<iota>F D generates \\<pi>\\_1(T\\<union>D).
+                   Proof: \\<pi>* surj (image \\<supseteq> generator) \\<Rightarrow> \\<pi>* iso (surj\\_hom\\_infinite\\_cyclic\\_inj)
+                   \\<Rightarrow> \\<pi>*\\<inverse> iso \\<Rightarrow> surj\\_hom\\_generated(\\<pi>*\\<inverse>) transfers generation back.\<close>
+                show ?thesis
+                proof -
+                  let ?\<pi>_star = "top1_fundamental_group_induced_on ?TD ?TTD y0
+                      top1_S1 top1_S1_topology (1,0) \<pi>"
+                  let ?\<pi>1S1 = "top1_fundamental_group_carrier top1_S1 top1_S1_topology (1,0)"
+                  let ?mulS1 = "top1_fundamental_group_mul top1_S1 top1_S1_topology (1,0)"
+                  let ?eS1 = "top1_fundamental_group_id top1_S1 top1_S1_topology (1,0)"
+                  let ?invS1 = "top1_fundamental_group_invg top1_S1 top1_S1_topology (1,0)"
+                  let ?\<pi>1TD = "top1_fundamental_group_carrier ?TD ?TTD y0"
+                  let ?mulTD = "top1_fundamental_group_mul ?TD ?TTD y0"
+                  let ?eTD = "top1_fundamental_group_id ?TD ?TTD y0"
+                  let ?invTD = "top1_fundamental_group_invg ?TD ?TTD y0"
+                  \<comment> \<open>Step 1: \\<pi>* is surjective.\<close>
+                  have h\<pi>_surj: "?\<pi>_star ` ?\<pi>1TD = ?\<pi>1S1"
+                  proof (rule set_eqI, rule iffI)
+                    fix x assume "x \<in> ?\<pi>_star ` ?\<pi>1TD"
+                    thus "x \<in> ?\<pi>1S1" using h\<pi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+                  next
+                    fix x assume "x \<in> ?\<pi>1S1"
+                    \<comment> \<open>Image is a subgroup containing \\<pi>*(\\<iota>F D). Since \\<pi>*(\\<iota>F D) generates \\<pi>\\_1(S1),
+                       image \\<supseteq> subgroup\\_generated {\\<pi>*(\\<iota>F D)} = \\<pi>\\_1(S1).\<close>
+                    have "?\<pi>_star (\<iota>F D) \<in> ?\<pi>_star ` ?\<pi>1TD"
+                      using h\<iota>F_carrier by (by100 blast)
+                    \<comment> \<open>Image of hom is a subgroup.\<close>
+                    have hS1_grp2: "top1_is_group_on ?\<pi>1S1 ?mulS1 ?eS1 ?invS1"
+                    proof -
+                      have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+                      from top1_fundamental_group_is_group[OF hS1_top this]
+                      show ?thesis by (by100 blast)
+                    qed
+                    have h_img_grp: "top1_is_group_on (?\<pi>_star ` ?\<pi>1TD) ?mulS1 ?eS1 ?invS1"
+                      by (rule hom_image_is_subgroup[OF hTD_grp hS1_grp2 h\<pi>_hom])
+                    have h_img_sub: "?\<pi>_star ` ?\<pi>1TD \<subseteq> ?\<pi>1S1"
+                      using h\<pi>_hom unfolding top1_group_hom_on_def by (by100 blast)
+                    have "{?\<pi>_star (\<iota>F D)} \<subseteq> ?\<pi>_star ` ?\<pi>1TD"
+                      using \<open>?\<pi>_star (\<iota>F D) \<in> ?\<pi>_star ` ?\<pi>1TD\<close> by (by100 blast)
+                    from subgroup_generated_minimal[OF \<open>{?\<pi>_star (\<iota>F D)} \<subseteq> ?\<pi>_star ` ?\<pi>1TD\<close>
+                        h_img_sub h_img_grp]
+                    have "top1_subgroup_generated_on ?\<pi>1S1 ?mulS1 ?eS1 ?invS1
+                        {?\<pi>_star (\<iota>F D)} \<subseteq> ?\<pi>_star ` ?\<pi>1TD" .
+                    hence "?\<pi>1S1 \<subseteq> ?\<pi>_star ` ?\<pi>1TD" using h\<pi>_star_gen by (by100 simp)
+                    thus "x \<in> ?\<pi>_star ` ?\<pi>1TD" using \<open>x \<in> ?\<pi>1S1\<close> by (by100 blast)
+                  qed
+                  \<comment> \<open>Step 2: \\<pi>* is an iso (surj hom between Z-iso groups).\<close>
+                  have hS1_iso_Z: "top1_groups_isomorphic_on ?\<pi>1S1 ?mulS1 top1_Z_group top1_Z_mul"
+                    by (rule Theorem_54_5_iso)
+                  \<comment> \<open>Step 3: \\<pi>*\\<inverse> is also an iso, transferring generation back.\<close>
+                  \<comment> \<open>Since \\<pi>* is a surjective hom from Z-iso to Z-iso, it is iso (Hopfian).
+                     \\<pi>*\\<inverse> is an iso from \\<pi>\\_1(S1) to \\<pi>\\_1(T\\<union>D).
+                     \\<pi>*(\\<iota>F D) generates \\<pi>\\_1(S1) \\<Rightarrow> \\<pi>*\\<inverse>(\\<pi>*(\\<iota>F D)) = \\<iota>F D generates \\<pi>\\_1(T\\<union>D).\<close>
+                  have h\<pi>_inj: "inj_on ?\<pi>_star ?\<pi>1TD"
+                  proof (rule surj_hom_infinite_cyclic_inj[OF hTD_iso_Z hS1_iso_Z h\<pi>_hom h\<pi>_surj])
+                    fix a b assume "a \<in> ?\<pi>1TD" "b \<in> ?\<pi>1TD"
+                    from group_mul_closed[OF hTD_grp this]
+                    show "?mulTD a b \<in> ?\<pi>1TD" .
+                  qed
+                  \<comment> \<open>\\<pi>* is group iso.\<close>
+                  have h\<pi>_iso: "top1_group_iso_on ?\<pi>1TD ?mulTD ?\<pi>1S1 ?mulS1 ?\<pi>_star"
+                    using h\<pi>_hom h\<pi>_inj h\<pi>_surj
+                    unfolding top1_group_iso_on_def top1_group_hom_on_def bij_betw_def
+                    by (by100 blast)
+                  \<comment> \<open>\\<pi>*\\<inverse> transfers generation.\<close>
+                  have hS1_grp2: "top1_is_group_on ?\<pi>1S1 ?mulS1 ?eS1 ?invS1"
+                  proof -
+                    have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+                    from top1_fundamental_group_is_group[OF hS1_top this]
+                    show ?thesis by (by100 blast)
+                  qed
+                  have h\<pi>_inv_iso: "top1_group_iso_on ?\<pi>1S1 ?mulS1 ?\<pi>1TD ?mulTD
+                      (inv_into ?\<pi>1TD ?\<pi>_star)"
+                    using group_iso_on_inverse[OF h\<pi>_iso hTD_grp hS1_grp2] .
+                  have h\<pi>_inv_hom: "top1_group_hom_on ?\<pi>1S1 ?mulS1 ?\<pi>1TD ?mulTD
+                      (inv_into ?\<pi>1TD ?\<pi>_star)"
+                    using h\<pi>_inv_iso unfolding top1_group_iso_on_def by (by100 blast)
+                  have h\<pi>_inv_surj: "(inv_into ?\<pi>1TD ?\<pi>_star) ` ?\<pi>1S1 = ?\<pi>1TD"
+                    using h\<pi>_inv_iso unfolding top1_group_iso_on_def bij_betw_def by (by100 blast)
+                  have hstar_in: "?\<pi>_star (\<iota>F D) \<in> ?\<pi>1S1"
+                    using h\<pi>_hom h\<iota>F_carrier unfolding top1_group_hom_on_def by (by100 blast)
+                  have h_inv_star: "inv_into ?\<pi>1TD ?\<pi>_star (?\<pi>_star (\<iota>F D)) = \<iota>F D"
+                    using inv_into_f_f[OF h\<pi>_inj h\<iota>F_carrier] .
+                  have "{?\<pi>_star (\<iota>F D)} \<subseteq> ?\<pi>1S1" using hstar_in by (by100 blast)
+                  have hS1_grp: "top1_is_group_on ?\<pi>1S1 ?mulS1 ?eS1 ?invS1"
+                  proof -
+                    have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+                    from top1_fundamental_group_is_group[OF hS1_top this]
+                    show ?thesis by (by100 blast)
+                  qed
+                  have hstar_sub: "{?\<pi>_star (\<iota>F D)} \<subseteq> ?\<pi>1S1" using hstar_in by (by100 blast)
+                  from surj_hom_generated[OF hS1_grp hTD_grp h\<pi>_inv_hom h\<pi>_inv_surj hstar_sub h\<pi>_star_gen]
+                  have "?\<pi>1TD = top1_subgroup_generated_on ?\<pi>1TD ?mulTD ?eTD ?invTD
+                      (inv_into ?\<pi>1TD ?\<pi>_star ` {?\<pi>_star (\<iota>F D)})" .
+                  hence "?\<pi>1TD = top1_subgroup_generated_on ?\<pi>1TD ?mulTD ?eTD ?invTD {\<iota>F D}"
+                    using h_inv_star by (by100 simp)
+                  thus ?thesis .
+                qed
+              qed
               \<comment> \<open>Step C: Apply iso\\_Z\\_generator\\_free\\_single.\<close>
               have hfree_TD: "top1_is_free_group_full_on
                   (top1_fundamental_group_carrier ?TD ?TTD y0)
@@ -3441,7 +5266,19 @@ proof -
                     (top1_fundamental_group_carrier ?TD ?TTD y0) (top1_fundamental_group_mul ?TD ?TTD y0)
                     (top1_fundamental_group_id ?TD ?TTD y0) (top1_fundamental_group_invg ?TD ?TTD y0)
                     (\<lambda>_. \<iota>F D) {()}" .
-                thus ?thesis sorry \<comment> \<open>Reindex: (\\<lambda>\\_. \\<iota>F D) on {()} \\<Rightarrow> \\<iota>F on {D}. Trivial since D is the only element.\<close>
+                \<comment> \<open>Reindex from {()} to {D}: use free\\_group\\_full\\_reindex + free\\_group\\_full\\_on\\_cong.\<close>
+                have "bij_betw (\<lambda>_::'a set. ()::unit) {D} {()}"
+                  unfolding bij_betw_def inj_on_def by (by100 blast)
+                from free_group_full_reindex[OF
+                    \<open>top1_is_free_group_full_on _ _ _ _ (\<lambda>_. \<iota>F D) {()}\<close> this]
+                have "top1_is_free_group_full_on
+                    (top1_fundamental_group_carrier ?TD ?TTD y0) (top1_fundamental_group_mul ?TD ?TTD y0)
+                    (top1_fundamental_group_id ?TD ?TTD y0) (top1_fundamental_group_invg ?TD ?TTD y0)
+                    ((\<lambda>_. \<iota>F D) \<circ> (\<lambda>_::'a set. ()::unit)) {D}" .
+                moreover have "\<forall>s \<in> {D}. ((\<lambda>_. \<iota>F D) \<circ> (\<lambda>_::'a set. ()::unit)) s = \<iota>F s"
+                  by (by100 simp)
+                ultimately show ?thesis
+                  by (rule free_group_full_on_cong)
               qed
               \<comment> \<open>Package the result.\<close>
               \<comment> \<open>Rewrite T \\<union> \\<Union>F = T \\<union> D.\<close>
@@ -3487,7 +5324,16 @@ proof -
                     \<iota>1 {A1}
                   \<and> (\<forall>A\<in>{A1}. top1_fundamental_group_induced_on (T \<union> \<Union>{A1})
                         (subspace_topology Y TY (T \<union> \<Union>{A1})) y0 Y TY y0 (\<lambda>x. x) (\<iota>1 A) = gen A)"
-                  sorry \<comment> \<open>IH: harc\\_loops\\_free for {A1}. Would be automatic with formal induction.\<close>
+                proof -
+                  have "card {A1} < n"
+                  proof -
+                    have "card {A1} = 1" by (by100 simp)
+                    have "card F \<ge> 2" using hcard_ge2 .
+                    thus ?thesis using hcard \<open>card {A1} = 1\<close> by (by100 linarith)
+                  qed
+                  from less.IH[OF this, of "{A1}", unfolded P_def]
+                  show ?thesis using hA1_NT by (by100 simp)
+                qed
                 \<comment> \<open>IH for F': harc\\_loops\\_free applied recursively.\<close>
                 have hIH_step: "\<exists>\<iota>'. top1_is_free_group_full_on
                     (top1_fundamental_group_carrier (T \<union> \<Union>?F') (subspace_topology Y TY (T \<union> \<Union>?F')) y0)
@@ -3497,7 +5343,11 @@ proof -
                     \<iota>' ?F'
                   \<and> (\<forall>A\<in>?F'. top1_fundamental_group_induced_on (T \<union> \<Union>?F')
                         (subspace_topology Y TY (T \<union> \<Union>?F')) y0 Y TY y0 (\<lambda>x. x) (\<iota>' A) = gen A)"
-                  sorry \<comment> \<open>IH: harc\\_loops\\_free for F'. Would be automatic with formal induction.\<close>
+                proof -
+                  have "card ?F' < n" using hcard_F' hcard by (by100 simp)
+                  from less.IH[OF this, of "?F'", unfolded P_def]
+                  show ?thesis using hF'_fin hF'_NT hF'_ne by (by100 blast)
+                qed
                 \<comment> \<open>SvK decomposition: pick interior points, define U and V.\<close>
                 \<comment> \<open>Step 1: Interior points for each arc in F.\<close>
                 have hY_strict: "is_topology_on_strict Y TY"
@@ -4408,7 +6258,23 @@ proof -
                   show "\<forall>A\<in>F. top1_fundamental_group_induced_on ?X ?TX y0 Y TY y0 (\<lambda>x. x) (\<iota>X A) = gen A"
                     using hgen_track by (by100 blast)
                 qed
-          qed
+                qed  \<comment> \<open>cases card F = 1\<close>
+              qed  \<comment> \<open>P_def intro\<close>
+            qed  \<comment> \<open>less.induction case\<close>
+          }
+          hence hP: "\<And>F. P F"
+            by (by5000 blast)
+          fix F assume hFfin: "finite F" and hF_NT: "F \<subseteq> ?NT" and hF_ne: "F \<noteq> {}"
+          from hP[of F, unfolded P_def] hFfin hF_NT hF_ne
+          show "\<exists>\<iota>F. top1_is_free_group_full_on
+              (top1_fundamental_group_carrier (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              (top1_fundamental_group_mul (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              (top1_fundamental_group_id (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              (top1_fundamental_group_invg (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              \<iota>F F
+            \<and> (\<forall>A\<in>F. top1_fundamental_group_induced_on (T \<union> \<Union>F)
+                  (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A)"
+            by (by100 blast)
         qed
         \<comment> \<open>Index ?NT by nat.\<close>
         have "\<exists>(idx :: _ \<Rightarrow> nat) (S :: nat set). bij_betw idx ?NT S"
