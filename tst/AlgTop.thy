@@ -3488,7 +3488,7 @@ proof -
                   proof -
                     \<comment> \<open>loop\\_equiv(\\<alpha>, const) from \\<alpha> \\<simeq> const + both loops.\<close>
                     have hconst_loop: "top1_is_loop_on Y TY y0 (top1_constant_path y0)"
-                      sorry \<comment> \<open>Constant path is a loop. Technical: constant map is continuous.\<close>
+                      by (rule top1_constant_path_is_loop[OF hTY_top assms(3)])
                     have h\<alpha>_const: "top1_loop_equiv_on Y TY y0 \<alpha> (top1_constant_path y0)"
                       unfolding top1_loop_equiv_on_def
                       using h\<alpha>_loop hconst_loop
