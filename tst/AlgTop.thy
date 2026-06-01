@@ -1280,8 +1280,66 @@ proof -
           by (rule fundamental_group_invg_class[OF hTB hab_loop])
         \<comment> \<open>Step 4: [rev(\\<alpha>*rev(\\<beta>))] = [\\<beta>*rev(\\<alpha>)] (path homotopy).\<close>
         have hrev_eq: "{g. top1_loop_equiv_on B TB b0 (top1_path_reverse ?ab) g} = ?ba_class"
-          sorry \<comment> \<open>rev(\\<alpha>*rev(\\<beta>)) \\<simeq> \\<beta>*rev(\\<alpha>) as loops.
-             Uses: rev of path product = rev product of reverses + rev(rev(\\<beta>)) = \\<beta>.\<close>
+        proof -
+          \<comment> \<open>rev(\\<alpha>*rev(\\<beta>)) = rev(rev(\\<beta>))*rev(\\<alpha>) = \\<beta>*rev(\\<alpha>) (extensionally).\<close>
+          have hrev_ext: "top1_path_reverse ?ab = ?ba"
+          proof (rule ext)
+            fix s :: real
+            show "top1_path_reverse (top1_path_product \<alpha> (top1_path_reverse \<beta>)) s
+                = top1_path_product \<beta> (top1_path_reverse \<alpha>) s"
+            proof (cases "s < 1/2")
+              case hlt: True
+              \<comment> \<open>s < 1/2: both sides = \\<beta>(2s).\<close>
+              have "1 - s > 1/2" using hlt by simp
+              hence lhs: "top1_path_reverse (top1_path_product \<alpha> (top1_path_reverse \<beta>)) s
+                  = \<beta> (2 * s)"
+                unfolding top1_path_reverse_def top1_path_product_def
+                using hlt by simp
+              have rhs: "top1_path_product \<beta> (top1_path_reverse \<alpha>) s = \<beta> (2 * s)"
+                using hlt unfolding top1_path_product_def by simp
+              show ?thesis using lhs rhs by simp
+            next
+              case hge: False
+              show ?thesis
+              proof (cases "s > 1/2")
+                case hgt: True
+                \<comment> \<open>s > 1/2: both sides = \\<alpha>(2 - 2s).\<close>
+                have "1 - s < 1/2" using hgt by simp
+                hence lhs: "top1_path_reverse (top1_path_product \<alpha> (top1_path_reverse \<beta>)) s
+                    = \<alpha> (2 - 2 * s)"
+                  unfolding top1_path_reverse_def top1_path_product_def
+                  using hgt by simp
+                have rhs: "top1_path_product \<beta> (top1_path_reverse \<alpha>) s
+                    = \<alpha> (2 - 2 * s)"
+                  using hgt unfolding top1_path_product_def top1_path_reverse_def by simp
+                show ?thesis using lhs rhs by simp
+              next
+                case heq_half: False
+                hence "s = 1/2" using hge by simp
+                \<comment> \<open>s = 1/2: LHS = (\\<alpha>*rev\\<beta>)(1/2) = \\<alpha>(1). RHS = \\<beta>(1). Equal by heq\\_s.\<close>
+                have lhs: "top1_path_reverse (top1_path_product \<alpha> (top1_path_reverse \<beta>)) s
+                    = \<alpha> 1"
+                proof -
+                  have "top1_path_reverse (top1_path_product \<alpha> (top1_path_reverse \<beta>)) s
+                      = \<alpha> (2 * (1 - s))"
+                    unfolding top1_path_reverse_def top1_path_product_def
+                    using \<open>s = 1/2\<close> by simp
+                  also have "2 * (1 - s) = 1" using \<open>s = 1/2\<close> by simp
+                  finally show ?thesis .
+                qed
+                have rhs: "top1_path_product \<beta> (top1_path_reverse \<alpha>) s = \<beta> 1"
+                proof -
+                  have "top1_path_product \<beta> (top1_path_reverse \<alpha>) s = \<beta> (2 * s)"
+                    using \<open>s = 1/2\<close> unfolding top1_path_product_def by simp
+                  also have "2 * s = 1" using \<open>s = 1/2\<close> by simp
+                  finally show ?thesis .
+                qed
+                show ?thesis using lhs rhs heq_s by simp
+              qed
+            qed
+          qed
+          thus ?thesis by simp
+        qed
         \<comment> \<open>Combine steps 2-4.\<close>
         from \<open>top1_fundamental_group_invg B TB b0 ?ab_class \<in> H\<close>
             \<open>top1_fundamental_group_invg B TB b0 ?ab_class
