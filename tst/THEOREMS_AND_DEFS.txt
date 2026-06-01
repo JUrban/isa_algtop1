@@ -770,7 +770,7 @@ ac7/AlgTopCached7.thy|lemma|graph_connected_sub_covered_by_arcs|4698
 AlgTop.thy|lemma|graph_covering_is_graph|871
 ac7/AlgTopCached7.thy|lemma|graph_deformation_retract_helper|4896
 ac7/AlgTopCached7.thy|lemma|graph_one_edge_pi1_iso_Z|6581
-AlgTop.thy|lemma|graph_pi1_free_weak|965
+AlgTop.thy|lemma|graph_pi1_free_weak|995
 AlgTop.thy|lemma|graph_pi1_free_weak_apply|931
 ac7/AlgTopCached7.thy|lemma|graph_pi1_free_weak_finite|7547
 ac6/AlgTopCached6.thy|lemma|graph_quotient_by_tree_wedge_of_circles|1248
@@ -895,6 +895,7 @@ i/Top1_Ch5_8.thy|lemma|interval_open_contains_eps_ball|11994
 at/AlgTopChain.thy|lemma|int_group_pow|476
 i/Top1_Ch5_8.thy|lemma|inv_into_preimage_eq|32190
 i/Top1_Ch3.thy|lemma|is_hausdorff_on_of_homeomorphism_on|10986
+AlgTop.thy|lemma|iso_Z_generator_free_single|968
 i/Top1_Ch2.thy|lemma|is_topology_on_counterexample|46
 i/Top1_Ch2.thy|lemma|is_topology_on_strict_counterexample|50
 i/Top1_Ch2.thy|lemma|is_topology_on_strictI|54
@@ -2092,6 +2093,6 @@ ac4/AlgTopCached4.thy|theorem|Theorem_80_3_universal|4013
 AlgTop.thy|theorem|Theorem_81_2_covering_group_iso|483
 AlgTop.thy|theorem|Theorem_82_1_covering_existence|781
 ac5/AlgTopCached5.thy|theorem|Theorem_83_4_covering_of_graph_is_graph|708
-AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|4677
-AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|4714
-AlgTop.thy|theorem|Theorem_85_3_Schreier_index|4982
+AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|5440
+AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|5477
+AlgTop.thy|theorem|Theorem_85_3_Schreier_index|5745
