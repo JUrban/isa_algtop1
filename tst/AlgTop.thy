@@ -3435,9 +3435,144 @@ proof -
             show "c \<in> top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
                 (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
                 (top1_fundamental_group_invg Y TY y0) (\<iota> ` S)"
-              sorry \<comment> \<open>From harc\\_loops\\_free + hloop\\_in\\_finite + hom\\_image\\_in\\_subgroup\\_from\\_generators.
-                 Key steps: extract loop from c, apply hloop\\_in\\_finite, then harc\\_loops\\_free,
-                 then inclusion\\_induced\\_class + hom\\_image\\_in\\_subgroup.\<close>
+            proof -
+              \<comment> \<open>Extract representative loop from c.\<close>
+              from \<open>c \<in> _\<close>[unfolded top1_fundamental_group_carrier_def]
+              obtain \<alpha> where h\<alpha>_loop: "top1_is_loop_on Y TY y0 \<alpha>"
+                  and hc_eq: "c = {g. top1_loop_equiv_on Y TY y0 \<alpha> g}"
+                by (by100 blast)
+              \<comment> \<open>By hloop\\_in\\_finite: \\<alpha> lies in T \\<union> \\<Union>F for some finite F.\<close>
+              from hloop_in_finite[OF h\<alpha>_loop]
+              obtain F0 where hF0_fin: "finite F0" and hF0_NT: "F0 \<subseteq> ?NT"
+                  and hF0_img: "\<alpha> ` top1_unit_interval \<subseteq> T \<union> \<Union>F0"
+                by (by100 blast)
+              \<comment> \<open>Handle F0 = {} case: \\<alpha> lies entirely in T, which is SC \\<Rightarrow> [\\<alpha>] = id.\<close>
+              show ?thesis
+              proof (cases "F0 = {}")
+                case True
+                \<comment> \<open>\\<alpha> lies in T, which is SC. So [\\<alpha>] = id \\<in> subgroup\\_generated.\<close>
+                show ?thesis sorry
+              next
+                case False
+                let ?YF0 = "T \<union> \<Union>F0" and ?TYF0 = "subspace_topology Y TY (T \<union> \<Union>F0)"
+                \<comment> \<open>\\<alpha> is a loop in T \\<union> \\<Union>F0.\<close>
+                have h\<alpha>_F0: "top1_is_loop_on ?YF0 ?TYF0 y0 \<alpha>"
+                  sorry \<comment> \<open>\\<alpha> maps into T\\<union>\\<Union>F0 (from hF0\\_img), continuous by restriction.\<close>
+                \<comment> \<open>Inclusion-induced map sends [\\<alpha>]\\_F0 to [\\<alpha>]\\_Y = c.\<close>
+                have hYF0_sub: "?YF0 \<subseteq> Y" using hT_sub h\<A> hF0_NT by (by100 blast)
+                let ?c_F0 = "{g. top1_loop_equiv_on ?YF0 ?TYF0 y0 \<alpha> g}"
+                have hc_F0_carrier: "?c_F0 \<in> top1_fundamental_group_carrier ?YF0 ?TYF0 y0"
+                  unfolding top1_fundamental_group_carrier_def using h\<alpha>_F0 by (by100 blast)
+                let ?incl_F0 = "top1_fundamental_group_induced_on ?YF0 ?TYF0 y0 Y TY y0 (\<lambda>x. x)"
+                have hincl_c: "?incl_F0 ?c_F0 = c"
+                proof -
+                  from subspace_inclusion_induced_class[OF hTY_top hYF0_sub h\<alpha>_F0]
+                  have "?incl_F0 ?c_F0 = {k. top1_loop_equiv_on Y TY y0 \<alpha> k}" .
+                  thus ?thesis using hc_eq by (by100 simp)
+                qed
+                \<comment> \<open>By harc\\_loops\\_free: \\<pi>\\_1(T\\<union>\\<Union>F0) is free on F0 with gen correspondence.\<close>
+                from harc_loops_free[OF hF0_fin hF0_NT False]
+                obtain \<iota>F0 where hfreeF0: "top1_is_free_group_full_on
+                    (top1_fundamental_group_carrier ?YF0 ?TYF0 y0)
+                    (top1_fundamental_group_mul ?YF0 ?TYF0 y0)
+                    (top1_fundamental_group_id ?YF0 ?TYF0 y0)
+                    (top1_fundamental_group_invg ?YF0 ?TYF0 y0)
+                    \<iota>F0 F0"
+                    and hgenF0: "\<forall>A\<in>F0. ?incl_F0 (\<iota>F0 A) = gen A"
+                  by (by100 blast)
+                \<comment> \<open>\\<pi>\\_1(T\\<union>\\<Union>F0) = subgroup\\_generated({\\<iota>\\_F0(A) | A \\<in> F0}).\<close>
+                have hF0_gen: "top1_fundamental_group_carrier ?YF0 ?TYF0 y0 =
+                    top1_subgroup_generated_on
+                        (top1_fundamental_group_carrier ?YF0 ?TYF0 y0)
+                        (top1_fundamental_group_mul ?YF0 ?TYF0 y0)
+                        (top1_fundamental_group_id ?YF0 ?TYF0 y0)
+                        (top1_fundamental_group_invg ?YF0 ?TYF0 y0)
+                        (\<iota>F0 ` F0)"
+                proof -
+                  from hfreeF0[unfolded top1_is_free_group_full_on_def]
+                  show ?thesis by (by5000 blast)
+                qed
+                \<comment> \<open>incl* maps {\\<iota>\\_F0(A)} to {gen(A)} \\<subseteq> {\\<iota>(s)} = \\<iota>`S.\<close>
+                have hincl_gens: "?incl_F0 ` (\<iota>F0 ` F0) \<subseteq> \<iota> ` S"
+                proof
+                  fix x assume "x \<in> ?incl_F0 ` (\<iota>F0 ` F0)"
+                  then obtain A where "A \<in> F0" "x = ?incl_F0 (\<iota>F0 A)" by (by100 blast)
+                  have "?incl_F0 (\<iota>F0 A) = gen A" using hgenF0 \<open>A \<in> F0\<close> by (by100 blast)
+                  have "A \<in> ?NT" using hF0_NT \<open>A \<in> F0\<close> by (by100 blast)
+                  have "idx A \<in> S" using bij_betw_imp_surj_on[OF hidx] \<open>A \<in> ?NT\<close>
+                    using hidx unfolding bij_betw_def by (by100 blast)
+                  have "the_inv_into ?NT idx (idx A) = A"
+                    using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF hidx] \<open>A \<in> ?NT\<close>] by (by100 simp)
+                  hence "\<iota> (idx A) = gen A" unfolding \<iota>_def gen_def by (by100 simp)
+                  hence "x = \<iota> (idx A)" using \<open>x = ?incl_F0 (\<iota>F0 A)\<close> \<open>?incl_F0 (\<iota>F0 A) = gen A\<close>
+                    by (by100 simp)
+                  thus "x \<in> \<iota> ` S" using \<open>idx A \<in> S\<close> by (by100 blast)
+                qed
+                \<comment> \<open>By hom\\_image\\_in\\_subgroup\\_from\\_generators:
+                   incl*(\\<pi>\\_1(T\\<union>\\<Union>F0)) \\<subseteq> subgroup\\_generated(\\<iota>`S).\<close>
+                \<comment> \<open>c = incl*(?c\\_F0) \\<in> incl*(\\<pi>\\_1(T\\<union>\\<Union>F0)) \\<subseteq> subgroup\\_gen(\\<iota>`S).\<close>
+                \<comment> \<open>incl* is a hom from \\<pi>\\_1(T\\<union>\\<Union>F0) to \\<pi>\\_1(Y).\<close>
+                have hincl_hom: "top1_group_hom_on
+                    (top1_fundamental_group_carrier ?YF0 ?TYF0 y0)
+                    (top1_fundamental_group_mul ?YF0 ?TYF0 y0)
+                    (top1_fundamental_group_carrier Y TY y0)
+                    (top1_fundamental_group_mul Y TY y0)
+                    ?incl_F0"
+                  using subspace_inclusion_induced_hom[OF hTY_top hYF0_sub]
+                    hT_x0 by (by100 blast)
+                have hF0_grp: "top1_is_group_on
+                    (top1_fundamental_group_carrier ?YF0 ?TYF0 y0)
+                    (top1_fundamental_group_mul ?YF0 ?TYF0 y0)
+                    (top1_fundamental_group_id ?YF0 ?TYF0 y0)
+                    (top1_fundamental_group_invg ?YF0 ?TYF0 y0)"
+                  using hfreeF0 unfolding top1_is_free_group_full_on_def by (by100 blast)
+                have hY_grp: "top1_is_group_on
+                    (top1_fundamental_group_carrier Y TY y0)
+                    (top1_fundamental_group_mul Y TY y0)
+                    (top1_fundamental_group_id Y TY y0)
+                    (top1_fundamental_group_invg Y TY y0)"
+                  by (rule top1_fundamental_group_is_group[OF hTY_top assms(3)])
+                \<comment> \<open>subgroup\\_generated(\\<iota>`S) is a subgroup of \\<pi>\\_1(Y) containing incl*(\\<iota>\\_F0`F0).\<close>
+                let ?SG = "top1_subgroup_generated_on
+                    (top1_fundamental_group_carrier Y TY y0)
+                    (top1_fundamental_group_mul Y TY y0)
+                    (top1_fundamental_group_id Y TY y0)
+                    (top1_fundamental_group_invg Y TY y0) (\<iota> ` S)"
+                have h\<iota>F0_sub: "\<iota>F0 ` F0 \<subseteq> top1_fundamental_group_carrier ?YF0 ?TYF0 y0"
+                proof -
+                  from hfreeF0[unfolded top1_is_free_group_full_on_def]
+                  show ?thesis by (by5000 blast)
+                qed
+                have hSG_grp: "top1_is_group_on ?SG
+                    (top1_fundamental_group_mul Y TY y0)
+                    (top1_fundamental_group_id Y TY y0)
+                    (top1_fundamental_group_invg Y TY y0)"
+                  sorry \<comment> \<open>subgroup\\_generated is a subgroup.\<close>
+                have h\<iota>_sub_loc: "\<iota> ` S \<subseteq> top1_fundamental_group_carrier Y TY y0"
+                proof
+                  fix x assume "x \<in> \<iota> ` S"
+                  then obtain s where "s \<in> S" "x = \<iota> s" by (by100 blast)
+                  from bij_betw_imp_surj_on[OF hidx] \<open>s \<in> S\<close>
+                  obtain A where "A \<in> ?NT" "idx A = s" by (by100 blast)
+                  have "the_inv_into ?NT idx s = A"
+                    using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF hidx] \<open>A \<in> ?NT\<close>]
+                      \<open>idx A = s\<close> by (by100 simp)
+                  hence "\<iota> s = gen A" unfolding \<iota>_def by (by100 simp)
+                  thus "x \<in> top1_fundamental_group_carrier Y TY y0"
+                    using \<open>x = \<iota> s\<close> hgen[rule_format, OF \<open>A \<in> ?NT\<close>] by (by100 simp)
+                qed
+                have hSG_sub: "?SG \<subseteq> top1_fundamental_group_carrier Y TY y0"
+                  using subgroup_generated_subset[OF hY_grp h\<iota>_sub_loc] by (by100 blast)
+                have "?incl_F0 ` (\<iota>F0 ` F0) \<subseteq> ?SG"
+                  sorry \<comment> \<open>incl*(\\<iota>\\_F0`F0) \\<subseteq> \\<iota>`S \\<subseteq> subgroup\\_gen(\\<iota>`S) = ?SG.\<close>
+                from hom_image_in_subgroup_from_generators[OF hF0_grp hY_grp
+                    hincl_hom hF0_gen h\<iota>F0_sub hSG_grp hSG_sub this]
+                have himage_sub: "?incl_F0 ` (top1_fundamental_group_carrier ?YF0 ?TYF0 y0) \<subseteq> ?SG" .
+                have "c \<in> ?incl_F0 ` (top1_fundamental_group_carrier ?YF0 ?TYF0 y0)"
+                  using hincl_c hc_F0_carrier by (by100 blast)
+                thus "c \<in> ?SG" using himage_sub by (by100 blast)
+              qed
+            qed
           next
             fix c assume "c \<in> top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
                 (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
