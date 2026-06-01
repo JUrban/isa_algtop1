@@ -3380,8 +3380,46 @@ proof -
               qed
             qed
             \<comment> \<open>\\<iota> = gen \\<circ> the\\_inv\\_into ?NT idx. Injective since gen inj and the\\_inv\\_into bij.\<close>
-            show ?thesis using hgen_inj hidx unfolding \<iota>_def
-              sorry \<comment> \<open>Composition of injective gen with bijective the\\_inv\\_into.\<close>
+            show ?thesis
+            proof (rule inj_onI)
+              fix s1 s2 assume "s1 \<in> S" "s2 \<in> S" "\<iota> s1 = \<iota> s2"
+              have hs1_NT: "the_inv_into ?NT idx s1 \<in> ?NT"
+              proof -
+                from bij_betw_imp_surj_on[OF hidx] \<open>s1 \<in> S\<close>
+                have "s1 \<in> idx ` ?NT" by (by100 blast)
+                then obtain A where "A \<in> ?NT" "idx A = s1" by (by100 blast)
+                have "the_inv_into ?NT idx s1 = A"
+                  using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF hidx] \<open>A \<in> ?NT\<close>]
+                    \<open>idx A = s1\<close> by (by100 simp)
+                thus ?thesis using \<open>A \<in> ?NT\<close> by (by100 simp)
+              qed
+              have hs2_NT: "the_inv_into ?NT idx s2 \<in> ?NT"
+              proof -
+                from bij_betw_imp_surj_on[OF hidx] \<open>s2 \<in> S\<close>
+                have "s2 \<in> idx ` ?NT" by (by100 blast)
+                then obtain A where "A \<in> ?NT" "idx A = s2" by (by100 blast)
+                have "the_inv_into ?NT idx s2 = A"
+                  using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF hidx] \<open>A \<in> ?NT\<close>]
+                    \<open>idx A = s2\<close> by (by100 simp)
+                thus ?thesis using \<open>A \<in> ?NT\<close> by (by100 simp)
+              qed
+              from \<open>\<iota> s1 = \<iota> s2\<close>
+              have "gen (the_inv_into ?NT idx s1) = gen (the_inv_into ?NT idx s2)"
+                unfolding \<iota>_def by (by100 simp)
+              have "the_inv_into ?NT idx s1 = the_inv_into ?NT idx s2"
+                using hgen_inj hs1_NT hs2_NT \<open>gen _ = gen _\<close>
+                unfolding inj_on_def by (by5000 blast)
+              have heq1: "idx (the_inv_into ?NT idx s1) = s1"
+                using f_the_inv_into_f[OF bij_betw_imp_inj_on[OF hidx]]
+                  bij_betw_imp_surj_on[OF hidx] \<open>s1 \<in> S\<close> by (by100 blast)
+              have heq2: "idx (the_inv_into ?NT idx s2) = s2"
+                using f_the_inv_into_f[OF bij_betw_imp_inj_on[OF hidx]]
+                  bij_betw_imp_surj_on[OF hidx] \<open>s2 \<in> S\<close> by (by100 blast)
+              from \<open>the_inv_into ?NT idx s1 = the_inv_into ?NT idx s2\<close>
+              have "idx (the_inv_into ?NT idx s1) = idx (the_inv_into ?NT idx s2)"
+                by (by100 simp)
+              thus "s1 = s2" using heq1 heq2 by (by100 simp)
+            qed
           qed
           \<comment> \<open>4. Generated.\<close>
           show "top1_fundamental_group_carrier Y TY y0 =
