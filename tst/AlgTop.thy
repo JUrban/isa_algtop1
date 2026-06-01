@@ -2207,11 +2207,14 @@ qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
   (which is a connected graph). This is the geometric realization step.\<close>
+\<comment> \<open>Note (audit E05/E06): The carrier type is fixed to (real \\<times> real)
+   so the construction does not depend on cardinality of a polymorphic 'a.
+   The S={} case (trivial group) is handled separately.\<close>
 lemma free_group_realized_by_wedge:
   fixes F :: "'g set" and mul :: "'g \<Rightarrow> 'g \<Rightarrow> 'g" and S :: "'s set"
   assumes "top1_is_free_group_full_on F mul e invg \<iota> S"
       and "finite S"
-  shows "\<exists>(X :: 'a set) TX (x0 :: 'a).
+  shows "\<exists>(X :: (real \<times> real) set) TX (x0 :: real \<times> real).
       top1_is_graph_on X TX \<and> top1_connected_on X TX \<and> x0 \<in> X
     \<and> top1_groups_isomorphic_on F mul
         (top1_fundamental_group_carrier X TX x0)
@@ -2231,9 +2234,9 @@ proof -
        Topology: subspace of R2 (finite union of closed sets).
        For n = 0: impossible (wedge def needs p \\<in> X but \\<Union>{} = {}).
        Note: for n=0, F is trivial and the conclusion can be proved differently.\<close>
-  then obtain X :: "'a set" and TX :: "'a set set" and p :: 'a
+  then obtain X :: "(real \<times> real) set" and TX :: "(real \<times> real) set set" and p :: "real \<times> real"
     where hwedge: "top1_is_wedge_of_circles_on X TX {..<?n} p"
-    by (by100 blast)
+    by - ((erule exE)+, rule that, assumption)
   \<comment> \<open>Step 3: \\<pi>\\_1(X, p) is free on {0,...,n-1} (Theorem 71.1).\<close>
   \<comment> \<open>Step 3: \\<pi>\\_1(X, p) \\<cong> free group on {0,...,n-1}.\<close>
   note hThm71 = Theorem_71_1_wedge_of_circles_finite[OF hwedge]
@@ -2392,7 +2395,7 @@ lemma schreier_rank_formula:
     \<and> finite SH \<and> card SH = k * (n - 1) + 1"
 proof -
   \<comment> \<open>Munkres 85.3: Realize F = \<pi>_1(X, x0) where X is a wedge of n+1 circles.\<close>
-  obtain X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  obtain X :: "(real \<times> real) set" and TX :: "(real \<times> real) set set" and x0 :: "real \<times> real"
     where hgraph: "top1_is_graph_on X TX" and hconn: "top1_connected_on X TX"
       and hx0: "x0 \<in> X"
       and hiso: "top1_groups_isomorphic_on F mul
@@ -2401,7 +2404,8 @@ proof -
     have "finite S" using assms(2) by (cases "finite S", by100 simp, by100 simp)
     note hrealiz = free_group_realized_by_wedge[OF assms(1) this]
     \<comment> \<open>Extract from the 3-var existential with 4 conjuncts.\<close>
-    from hrealiz obtain X' :: "'a set" and TX' :: "'a set set" and x0' :: 'a where
+    from hrealiz obtain X' :: "(real \<times> real) set" and TX' :: "(real \<times> real) set set"
+        and x0' :: "real \<times> real" where
       hconj: "top1_is_graph_on X' TX' \<and> top1_connected_on X' TX' \<and> x0' \<in> X'
       \<and> top1_groups_isomorphic_on F mul
           (top1_fundamental_group_carrier X' TX' x0') (top1_fundamental_group_mul X' TX' x0')"
@@ -2411,7 +2415,7 @@ proof -
       using hconj by (by100 blast)+
   qed
   \<comment> \<open>Choose covering E \<rightarrow> X with p_*(\<pi>_1(E)) = H. E is k-fold cover.\<close>
-  obtain E :: "'b set" and TE :: "'b set set" and p :: "'b \<Rightarrow> 'a" and e0 :: 'b
+  obtain E :: "'b set" and TE :: "'b set set" and p :: "'b \<Rightarrow> real \<times> real" and e0 :: 'b
     where hcov: "top1_covering_map_on E TE X TX p"
       and hE_conn: "top1_connected_on E TE"
       and he0: "e0 \<in> E"
@@ -9039,7 +9043,7 @@ proof -
   \<comment> \<open>Step 1: Realize G as \<pi>_1(X, x0) where X is a wedge of |S| circles.
      By the free group realization theorem, every free group on S is isomorphic
      to \<pi>_1 of a wedge of |S| circles.\<close>
-  obtain X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  obtain X :: "(real \<times> real) set" and TX :: "(real \<times> real) set set" and x0 :: "real \<times> real"
     where "top1_is_graph_on X TX" "top1_connected_on X TX" "x0 \<in> X"
       and hiso: "top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
@@ -9049,7 +9053,7 @@ proof -
      corresponding to H under the isomorphism G \<cong> \<pi>_1(X).\<close>
   \<comment> \<open>Step 2: Covering existence (Theorem 82.1) + H-correspondence.
      The covering E' is constructed so that p'*(\\<pi>\\_1(E', e0')) corresponds to H.\<close>
-  obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> 'a" and e0' :: 'b
+  obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> real \<times> real" and e0' :: 'b
       and f_iso :: "'g \<Rightarrow> _"
     where "top1_covering_map_on E' TE' X TX p'" "top1_connected_on E' TE'"
       and "e0' \<in> E'" and hE'_strict: "is_topology_on_strict E' TE'"
@@ -9312,7 +9316,7 @@ proof -
      k(n+1) edges. So 1 - rank(\<pi>_1(E)) = \<chi>(E) = k - k(n+1) = -kn.
      Hence rank(\<pi>_1(E)) = kn + 1.\<close>
   \<comment> \<open>Step 1: Realize F as \<pi>_1 of wedge X of n+1 circles.\<close>
-  obtain X :: "'a set" and TX :: "'a set set" and x0 :: 'a
+  obtain X :: "(real \<times> real) set" and TX :: "(real \<times> real) set set" and x0 :: "real \<times> real"
     where hX_graph: "top1_is_graph_on X TX" and hX_conn: "top1_connected_on X TX"
       and hx0: "x0 \<in> X"
       and hF_iso: "top1_groups_isomorphic_on F mul
@@ -9320,7 +9324,8 @@ proof -
   proof -
     have "finite S" using assms(2) by (cases "finite S", by100 simp, by100 simp)
     note hrealiz = free_group_realized_by_wedge[OF assms(1) this]
-    from hrealiz obtain X' :: "'a set" and TX' :: "'a set set" and x0' :: 'a where
+    from hrealiz obtain X' :: "(real \<times> real) set" and TX' :: "(real \<times> real) set set"
+        and x0' :: "real \<times> real" where
       hconj: "top1_is_graph_on X' TX' \<and> top1_connected_on X' TX' \<and> x0' \<in> X'
       \<and> top1_groups_isomorphic_on F mul
           (top1_fundamental_group_carrier X' TX' x0') (top1_fundamental_group_mul X' TX' x0')"
@@ -9331,7 +9336,7 @@ proof -
   qed
   \<comment> \<open>Step 2: H \<le> F corresponds to a k-sheeted covering E of X.
      By Theorem 82.1, there exists a covering E with p_*(\<pi>_1(E)) = H-image.\<close>
-  obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> 'a" and e0' :: 'b
+  obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> real \<times> real" and e0' :: 'b
       and f_iso85 :: "'g \<Rightarrow> _"
     where hE'_cov: "top1_covering_map_on E' TE' X TX p'"
       and hE'_graph: "top1_is_graph_on E' TE'"
