@@ -1219,9 +1219,42 @@ proof -
     qed
   qed
   have hcoset_sym: "\<forall>\<alpha> \<beta>. ?coset_rel \<alpha> \<beta> \<longrightarrow> ?coset_rel \<beta> \<alpha>"
-    sorry \<comment> \<open>[\\<beta>*rev(\\<alpha>)] = inv([\\<alpha>*rev(\\<beta>)]) \\<in> H (subgroup closed under inv).\<close>
+  proof (intro allI impI)
+    fix \<alpha> \<beta> assume hrel: "?coset_rel \<alpha> \<beta>"
+    hence h\<alpha>: "\<alpha> \<in> ?paths" and h\<beta>: "\<beta> \<in> ?paths" and heq: "\<alpha> 1 = \<beta> 1"
+        and hH: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g} \<in> H"
+      by (by100 blast)+
+    show "?coset_rel \<beta> \<alpha>"
+    proof -
+      have "\<beta> 1 = \<alpha> 1" using heq by simp
+      \<comment> \<open>[\\<beta>*rev(\\<alpha>)] = invg([\\<alpha>*rev(\\<beta>)]) \\<in> H.\<close>
+      have hinvH: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<beta> (top1_path_reverse \<alpha>)) g} \<in> H"
+        sorry \<comment> \<open>[\\<beta>*rev(\\<alpha>)] = inv([\\<alpha>*rev(\\<beta>)]); H closed under inv.\<close>
+      thus ?thesis using h\<alpha> h\<beta> \<open>\<beta> 1 = \<alpha> 1\<close> by (by100 auto)
+    qed
+  qed
   have hcoset_trans: "\<forall>\<alpha> \<beta> \<gamma>. ?coset_rel \<alpha> \<beta> \<longrightarrow> ?coset_rel \<beta> \<gamma> \<longrightarrow> ?coset_rel \<alpha> \<gamma>"
-    sorry \<comment> \<open>[\\<alpha>*rev(\\<gamma>)] = [\\<alpha>*rev(\\<beta>)] * [\\<beta>*rev(\\<gamma>)] \\<in> H (subgroup closed under mul).\<close>
+  proof (intro allI impI)
+    fix \<alpha> \<beta> \<gamma> assume hab: "?coset_rel \<alpha> \<beta>" and hbc: "?coset_rel \<beta> \<gamma>"
+    have h\<alpha>: "\<alpha> \<in> ?paths" using hab by (by100 blast)
+    have h\<beta>: "\<beta> \<in> ?paths" using hab by (by100 blast)
+    have h\<gamma>: "\<gamma> \<in> ?paths" using hbc by (by100 blast)
+    have heq_ab: "\<alpha> 1 = \<beta> 1" using hab by (by100 blast)
+    have heq_bc: "\<beta> 1 = \<gamma> 1" using hbc by (by100 blast)
+    have heq: "\<alpha> 1 = \<gamma> 1" using heq_ab heq_bc by simp
+    have hH_ab: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g} \<in> H"
+      using hab by (by100 blast)
+    have hH_bc: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<beta> (top1_path_reverse \<gamma>)) g} \<in> H"
+      using hbc by (by100 blast)
+    show "?coset_rel \<alpha> \<gamma>"
+    proof -
+      \<comment> \<open>[\\<alpha>*rev(\\<gamma>)] = [\\<alpha>*rev(\\<beta>)] * [\\<beta>*rev(\\<gamma>)] \\<in> H (subgroup closed under mul).\<close>
+      have "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<gamma>)) g} \<in> H"
+        sorry \<comment> \<open>Path homotopy: (\\<alpha>*rev(\\<beta>))*(\\<beta>*rev(\\<gamma>)) \\<simeq> \\<alpha>*rev(\\<gamma>).
+           Group product of classes \\<in> H (subgroup closed under mul).\<close>
+      thus ?thesis using h\<alpha> h\<gamma> heq by (by100 auto)
+    qed
+  qed
   \<comment> \<open>===== Key properties from book =====
      (1) If [\\<alpha>]=[\\<beta>], then \\<alpha>\\# = \\<beta>\\# (path-homotopic paths give same class).
      (2) If \\<alpha>\\# = \\<beta>\\#, then (\\<alpha>*\\<delta>)\\# = (\\<beta>*\\<delta>)\\# for any path \\<delta> from \\<alpha>(1).
@@ -1234,7 +1267,13 @@ proof -
     sorry \<comment> \<open>If \\<beta>\\# \\<in> B(U,\\<alpha>), then B(U,\\<alpha>) = B(U,\\<beta>) (book Step 2).\<close>
   \<comment> \<open>===== Step 3 (book): p is continuous and open =====\<close>
   have hp_surj: "?p ` ?E = B"
-    sorry \<comment> \<open>B path-connected: for any b, path from b0 to b gives class mapping to b.\<close>
+  proof -
+    \<comment> \<open>B path-connected: for any b \\<in> B, exists path \\<alpha> from b0 to b.
+       Then coset\\_class(\\<alpha>) \\<in> E and p(coset\\_class(\\<alpha>)) = \\<alpha>(1) = b.\<close>
+    \<comment> \<open>Forward: p maps into B (all path endpoints are in B).\<close>
+    \<comment> \<open>Backward: for any b, path-connected gives path \\<alpha>: b0 \\<rightarrow> b.\<close>
+    show ?thesis sorry \<comment> \<open>Needs: path\\_connected B, path endpoint in B, SOME extraction.\<close>
+  qed
   have hp_cont: "\<forall>V \<in> TB. {c \<in> ?E. ?p c \<in> V} \<in> ?TE"
     sorry \<comment> \<open>For any open V and c with p(c) \\<in> V, choose pc open V' \\<subseteq> V, B(V',\\<alpha>) \\<subseteq> preimage.\<close>
   have hp_open: "\<forall>U \<in> ?TE. ?p ` U \<in> TB"
