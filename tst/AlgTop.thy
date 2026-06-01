@@ -285,6 +285,7 @@ proof -
      Proof by induction on the derivation of top1_elementary_scheme_operation.\<close>
   \<comment> \<open>Each case: rotate preserves the polygon; cancel removes a pair of edges;
      relabel renames consistently; cut/paste split/join polygons; invert reverses.\<close>
+  \<comment> \<open>Prove the strong version: for ALL quotient spaces of related schemes, homeo.\<close>
   have hcases: "\<And>s t. top1_elementary_scheme_operation s t \<Longrightarrow>
       top1_quotient_of_scheme_on X1 TX1 s \<Longrightarrow>
       top1_quotient_of_scheme_on X2 TX2 t \<Longrightarrow>
@@ -293,48 +294,20 @@ proof -
     fix s t assume hop: "top1_elementary_scheme_operation s t"
         and hs: "top1_quotient_of_scheme_on X1 TX1 s"
         and ht: "top1_quotient_of_scheme_on X2 TX2 t"
-    from hop show "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
-    proof (induction rule: top1_elementary_scheme_operation.induct)
-      case (refl s)
-      \<comment> \<open>s = t: X1 and X2 are quotients of the same scheme \\<Rightarrow> X1 \\<cong> X2.\<close>
-      show ?case sorry
-    next
-      case (sym s t)
-      \<comment> \<open>t \\<rightarrow> s (reversed): X2 \\<cong> X1, take inverse.\<close>
-      show ?case sorry
-    next
-      case (trans s t u)
-      \<comment> \<open>s \\<rightarrow> t \\<rightarrow> u: compose homeomorphisms.\<close>
-      show ?case sorry
-    next
-      case (rotate xs ys)
-      \<comment> \<open>xs@ys \\<rightarrow> ys@xs: cyclic rotation of boundary labels.
-         The polygon is the same; only the starting point of edge labeling changes.
-         The identity map is a homeomorphism.\<close>
-      show ?case sorry
-    next
-      case (cancel xs a b ys)
-      \<comment> \<open>xs@[(a,b),(a,\\<not>b)]@ys \\<rightarrow> xs@ys: cancel adjacent inverse pair.
-         Two adjacent edges with same label but opposite orientation get identified,
-         collapsing to a point. The resulting quotient loses these two edges.\<close>
-      show ?case sorry
-    next
-      case (relabel a s c)
-      \<comment> \<open>Relabeling: rename label c to a in scheme s.
-         This doesn't change the quotient space (just relabeling the identification).\<close>
-      show ?case sorry
-    next
-      case (invert s)
-      \<comment> \<open>Inversion: reverse the scheme and flip all orientations.
-         This corresponds to reflecting the polygon, giving a homeomorphic quotient.\<close>
-      show ?case sorry
-    next
-      case (cut c xs ys)
-      \<comment> \<open>Cut: xs@ys \\<rightarrow> xs@[(c,True),(c,False)]@ys.
-         Introduce a new edge that splits the polygon along a diagonal.
-         The quotient space is unchanged because the new edge is immediately identified.\<close>
-      show ?case sorry
-    qed
+    \<comment> \<open>First prove for ANY pair of quotient spaces (needed for sym/trans cases).\<close>
+    have huniv: "\<And>s t (Y1 :: 'x set) TY1 (Y2 :: 'x set) TY2.
+        top1_elementary_scheme_operation s t \<Longrightarrow>
+        is_topology_on_strict Y1 TY1 \<Longrightarrow> is_topology_on_strict Y2 TY2 \<Longrightarrow>
+        top1_quotient_of_scheme_on Y1 TY1 s \<Longrightarrow>
+        top1_quotient_of_scheme_on Y2 TY2 t \<Longrightarrow>
+        \<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+      sorry \<comment> \<open>Induction on elementary\\_scheme\\_operation with 8 cases:
+         refl (quotient uniqueness), sym (inverse homeo), trans (composition),
+         rotate (cyclic permutation), cancel (edge cancellation),
+         relabel (label renaming), invert (reflection), cut (diagonal insertion).
+         Each case constructs a homeomorphism between quotient spaces.\<close>
+    from huniv[OF hop assms(1) assms(2) hs ht]
+    show "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h" .
   qed
   show ?thesis using hcases[OF assms(3)] assms(4) by (by100 blast)
 qed
