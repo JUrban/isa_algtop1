@@ -6211,8 +6211,130 @@ proof -
     have "top1_groups_isomorphic_on
         (top1_fundamental_group_carrier E' TE' e0')
         (top1_fundamental_group_mul E' TE' e0') H mul"
-      sorry \<comment> \<open>Same iso construction as \\<S>85.1: \\<phi> = f\\_inv \\<circ> p'*.
-         Hom + bijective \\<Rightarrow> iso. All steps proved in \\<S>85.1.\<close>
+    proof -
+      \<comment> \<open>Same proof as \\<S>85.1 iso composition.\<close>
+      have hE_top85: "is_topology_on E' TE'"
+        using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hX_top85: "is_topology_on X TX"
+        using hX_strict85 unfolding is_topology_on_strict_def by (by100 blast)
+      have hp85_cont: "top1_continuous_map_on E' TE' X TX p'"
+        using hE'_cov unfolding top1_covering_map_on_def by (by100 blast)
+      have hp85_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier E' TE' e0') (top1_fundamental_group_mul E' TE' e0')
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0) ?p_star85"
+        by (rule top1_fundamental_group_induced_on_is_hom[OF hE_top85 hX_top85
+            he0' hx0 hp85_cont \<open>p' e0' = x0\<close>])
+      have hG85_grp: "top1_is_group_on F mul e invg"
+        using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+      have hpiX85_grp: "top1_is_group_on (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0) (top1_fundamental_group_id X TX x0)
+          (top1_fundamental_group_invg X TX x0)"
+        by (rule top1_fundamental_group_is_group[OF hX_top85 hx0])
+      note hf85_inv_iso = group_iso_on_inverse[OF hf_iso85 hG85_grp hpiX85_grp]
+      have hf85_inv_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+          F mul ?f_inv85"
+        using hf85_inv_iso[unfolded top1_group_iso_on_def, THEN conjunct1] .
+      \<comment> \<open>\\<phi>85 maps into H.\<close>
+      have h\<phi>85_maps: "\<forall>c \<in> top1_fundamental_group_carrier E' TE' e0'. ?\<phi>85 c \<in> H"
+      proof (intro ballI)
+        fix c assume "c \<in> top1_fundamental_group_carrier E' TE' e0'"
+        hence "?p_star85 c \<in> f_iso85 ` H" using hH_corr85 by (by100 blast)
+        then obtain h where "h \<in> H" "f_iso85 h = ?p_star85 c" by (by100 blast)
+        have "h \<in> F" using \<open>h \<in> H\<close> assms(3) by (by100 blast)
+        have "?f_inv85 (?p_star85 c) = ?f_inv85 (f_iso85 h)" using \<open>f_iso85 h = ?p_star85 c\<close>
+          by (by100 simp)
+        also have "\<dots> = h"
+          using inv_into_f_f[OF bij_betw_imp_inj_on[OF
+              hf_iso85[unfolded top1_group_iso_on_def, THEN conjunct2]] \<open>h \<in> F\<close>]
+          by (by100 simp)
+        finally show "?\<phi>85 c \<in> H" using \<open>h \<in> H\<close> unfolding comp_def by (by100 simp)
+      qed
+      \<comment> \<open>\\<phi>85 is hom.\<close>
+      have h\<phi>85_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier E' TE' e0')
+          (top1_fundamental_group_mul E' TE' e0') H mul ?\<phi>85"
+        unfolding top1_group_hom_on_def comp_def
+      proof (intro conjI ballI)
+        fix c assume "c \<in> top1_fundamental_group_carrier E' TE' e0'"
+        show "?f_inv85 (?p_star85 c) \<in> H" using h\<phi>85_maps \<open>c \<in> _\<close> unfolding comp_def
+          by (by100 blast)
+      next
+        fix a b assume ha: "a \<in> top1_fundamental_group_carrier E' TE' e0'"
+            and hb: "b \<in> top1_fundamental_group_carrier E' TE' e0'"
+        have "?p_star85 (top1_fundamental_group_mul E' TE' e0' a b) =
+            top1_fundamental_group_mul X TX x0 (?p_star85 a) (?p_star85 b)"
+          using hp85_hom ha hb unfolding top1_group_hom_on_def by (by100 blast)
+        moreover have "?f_inv85 (top1_fundamental_group_mul X TX x0 (?p_star85 a) (?p_star85 b)) =
+            mul (?f_inv85 (?p_star85 a)) (?f_inv85 (?p_star85 b))"
+        proof -
+          have "?p_star85 a \<in> top1_fundamental_group_carrier X TX x0"
+            using hp85_hom ha unfolding top1_group_hom_on_def by (by100 blast)
+          have "?p_star85 b \<in> top1_fundamental_group_carrier X TX x0"
+            using hp85_hom hb unfolding top1_group_hom_on_def by (by100 blast)
+          from hf85_inv_hom[unfolded top1_group_hom_on_def]
+          show ?thesis using \<open>?p_star85 a \<in> _\<close> \<open>?p_star85 b \<in> _\<close> by (by100 blast)
+        qed
+        ultimately show "?f_inv85 (?p_star85 (top1_fundamental_group_mul E' TE' e0' a b)) =
+            mul (?f_inv85 (?p_star85 a)) (?f_inv85 (?p_star85 b))" by (by100 simp)
+      qed
+      \<comment> \<open>\\<phi>85 is bijective.\<close>
+      have h\<phi>85_bij: "bij_betw ?\<phi>85 (top1_fundamental_group_carrier E' TE' e0') H"
+        unfolding bij_betw_def
+      proof (intro conjI)
+        show "inj_on ?\<phi>85 (top1_fundamental_group_carrier E' TE' e0')"
+        proof (rule comp_inj_on[OF hp85_inj])
+          have "?p_star85 ` top1_fundamental_group_carrier E' TE' e0' = f_iso85 ` H"
+            using hH_corr85 by (by100 blast)
+          moreover have "inj_on ?f_inv85 (f_iso85 ` H)"
+          proof (rule inj_onI)
+            fix x y assume "x \<in> f_iso85 ` H" "y \<in> f_iso85 ` H" "?f_inv85 x = ?f_inv85 y"
+            from \<open>x \<in> f_iso85 ` H\<close> obtain hx where "hx \<in> H" "x = f_iso85 hx" by (by100 blast)
+            from \<open>y \<in> f_iso85 ` H\<close> obtain hy where "hy \<in> H" "y = f_iso85 hy" by (by100 blast)
+            have "inj_on f_iso85 F" using hf_iso85 unfolding top1_group_iso_on_def bij_betw_def
+              by (by100 blast)
+            have "?f_inv85 x = hx"
+              using inv_into_f_f[OF \<open>inj_on f_iso85 F\<close>] \<open>hx \<in> H\<close> assms(3) \<open>x = f_iso85 hx\<close>
+              by (by100 blast)
+            have "?f_inv85 y = hy"
+              using inv_into_f_f[OF \<open>inj_on f_iso85 F\<close>] \<open>hy \<in> H\<close> assms(3) \<open>y = f_iso85 hy\<close>
+              by (by100 blast)
+            from \<open>?f_inv85 x = ?f_inv85 y\<close> \<open>?f_inv85 x = hx\<close> \<open>?f_inv85 y = hy\<close>
+            have "hx = hy" by (by100 simp)
+            thus "x = y" using \<open>x = f_iso85 hx\<close> \<open>y = f_iso85 hy\<close> by (by100 simp)
+          qed
+          ultimately show "inj_on ?f_inv85 (?p_star85 ` top1_fundamental_group_carrier E' TE' e0')"
+            by (by100 simp)
+        qed
+        show "?\<phi>85 ` top1_fundamental_group_carrier E' TE' e0' = H"
+        proof (rule set_eqI, rule iffI)
+          fix h assume "h \<in> ?\<phi>85 ` top1_fundamental_group_carrier E' TE' e0'"
+          then obtain c where "c \<in> top1_fundamental_group_carrier E' TE' e0'" "h = ?\<phi>85 c"
+            by (by100 blast)
+          thus "h \<in> H" using h\<phi>85_maps by (by100 blast)
+        next
+          fix h assume "h \<in> H"
+          hence "h \<in> F" using assms(3) by (by100 blast)
+          hence "f_iso85 h \<in> f_iso85 ` H" using \<open>h \<in> H\<close> by (by100 blast)
+          hence "f_iso85 h \<in> ?p_star85 ` top1_fundamental_group_carrier E' TE' e0'"
+            using hH_corr85 by (by100 blast)
+          then obtain c where "c \<in> top1_fundamental_group_carrier E' TE' e0'"
+              "?p_star85 c = f_iso85 h" by (by100 blast)
+          have "inj_on f_iso85 F" using hf_iso85 unfolding top1_group_iso_on_def bij_betw_def
+            by (by100 blast)
+          have "?f_inv85 (f_iso85 h) = h"
+            using inv_into_f_f[OF \<open>inj_on f_iso85 F\<close> \<open>h \<in> F\<close>] by (by100 simp)
+          hence "?\<phi>85 c = h" using \<open>?p_star85 c = f_iso85 h\<close> unfolding comp_def by (by100 simp)
+          thus "h \<in> ?\<phi>85 ` top1_fundamental_group_carrier E' TE' e0'"
+            using \<open>c \<in> _\<close> by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>Package as group\\_iso\\_on.\<close>
+      have "top1_group_iso_on (top1_fundamental_group_carrier E' TE' e0')
+          (top1_fundamental_group_mul E' TE' e0') H mul ?\<phi>85"
+        unfolding top1_group_iso_on_def using h\<phi>85_hom h\<phi>85_bij by (by100 blast)
+      thus ?thesis unfolding top1_groups_isomorphic_on_def by (by100 blast)
+    qed
     from free_group_iso_transfer[OF hfree_E this assms(4)]
     show ?thesis by (by100 blast)
   qed
