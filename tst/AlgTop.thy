@@ -1275,7 +1275,17 @@ proof -
   qed
   \<comment> \<open>Step 5: X is a graph (wedge of circles is a graph) and connected.\<close>
   have hgraph: "top1_is_graph_on X TX"
-    sorry \<comment> \<open>Wedge of circles with coherent topology is a graph.\<close>
+  proof -
+    \<comment> \<open>Decompose each circle C(j) into 3 arcs (as in book §85.1):
+       Two arcs share endpoint p, third arc connects their other endpoints.
+       Total: 3n arcs for n circles. Vertices: p + 2n split points.
+       The graph axioms follow from the wedge structure + arc decomposition.\<close>
+    \<comment> \<open>Simpler approach: decompose each C(j) into 2 arcs (upper/lower semicircle).
+       Since C(j) \\<cong> S1, and S1 = upper \\<cup> lower with 2 shared endpoints (1,0) and (-1,0),
+       each C(j) decomposes into 2 arcs sharing p and the antipodal point of p in C(j).\<close>
+    show ?thesis sorry \<comment> \<open>Arc decomposition of wedge of circles into graph structure.
+       Needs: homeomorphism S1 \\<cong> C(j), semicircle arcs, endpoint matching.\<close>
+  qed
   have hconn: "top1_connected_on X TX"
   proof -
     \<comment> \<open>X is path-connected: union of path-connected circles sharing p.\<close>
