@@ -1636,7 +1636,46 @@ proof -
     sorry \<comment> \<open>[\\<gamma>] \\<in> p*(\\<pi>\\_1(E,e0)) iff lift of \\<gamma> is a loop iff \\<gamma>\\# = e0 iff [\\<gamma>] \\<in> H.\<close>
   \<comment> \<open>===== Assembly =====\<close>
   have hTE_strict: "is_topology_on_strict ?E ?TE"
-    sorry \<comment> \<open>?TE is a topology on ?E: union/intersection closure + all open \\<subseteq> ?E.\<close>
+  proof -
+    \<comment> \<open>Standard basis-generated topology properties.\<close>
+    have hempty: "{} \<in> ?TE" by (by100 blast)
+    have hfull: "?E \<in> ?TE"
+      sorry \<comment> \<open>For every c \\<in> E, find basis element containing c.
+         c = coset\\_class(\\<alpha>) for some \\<alpha> \\<in> paths. Use hbasis with U = B (whole space).\<close>
+    have hunion: "\<forall>U. U \<subseteq> ?TE \<longrightarrow> \<Union>U \<in> ?TE"
+    proof (intro allI impI)
+      fix Uc assume hUc: "Uc \<subseteq> ?TE"
+      show "\<Union>Uc \<in> ?TE"
+      proof -
+        have "\<Union>Uc \<subseteq> ?E" using hUc by (by100 blast)
+        moreover have "\<forall>c \<in> \<Union>Uc. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> ?coset_class \<alpha> = c
+            \<and> ?B_basis U \<alpha> \<subseteq> \<Union>Uc"
+        proof (intro ballI)
+          fix c assume "c \<in> \<Union>Uc"
+          then obtain V where hV: "V \<in> Uc" "c \<in> V" by (by100 blast)
+          hence "V \<in> ?TE" using hUc by (by100 blast)
+          hence hVprop: "V \<subseteq> ?E \<and> (\<forall>c' \<in> V. \<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> ?coset_class \<alpha>' = c'
+              \<and> ?B_basis U' \<alpha>' \<subseteq> V)" by (by100 blast)
+          hence "\<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> ?coset_class \<alpha>' = c
+              \<and> ?B_basis U' \<alpha>' \<subseteq> V" using \<open>c \<in> V\<close> by (by100 blast)
+          then obtain U' \<alpha>' where "U' \<in> TB" "\<alpha>' \<in> ?paths" "?coset_class \<alpha>' = c"
+              "?B_basis U' \<alpha>' \<subseteq> V"
+            by (by100 blast)
+          moreover have "?B_basis U' \<alpha>' \<subseteq> \<Union>Uc"
+            using \<open>?B_basis U' \<alpha>' \<subseteq> V\<close> \<open>V \<in> Uc\<close> by (by100 blast)
+          ultimately show "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> ?coset_class \<alpha> = c
+              \<and> ?B_basis U \<alpha> \<subseteq> \<Union>Uc" by (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 blast)
+      qed
+    qed
+    have hinter: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TE \<longrightarrow> \<Inter>F \<in> ?TE"
+      sorry \<comment> \<open>Finite intersection: for c \\<in> \\<Inter>F, c in each member,
+         get basis elements B\\_i. Find common refinement using hbasis\\_eq.\<close>
+    have hstrict: "?TE \<subseteq> Pow ?E" by (by100 blast)
+    show ?thesis unfolding is_topology_on_strict_def is_topology_on_def
+      using hempty hfull hunion hinter hstrict by (by100 blast)
+  qed
   have he0_E: "?e0 \<in> ?E"
   proof -
     have "top1_constant_path b0 \<in> ?paths"
