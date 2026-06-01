@@ -3798,7 +3798,15 @@ proof -
               then obtain s where "s \<in> fst ` set ws" "A = the_inv_into ?NT idx s"
                 by (by100 blast)
               then obtain i where "i < length ws" "fst (ws ! i) = s"
-                sorry \<comment> \<open>s \\<in> fst ` set ws \\<Rightarrow> \\<exists>i. fst(ws!i) = s.\<close>
+              proof -
+                from \<open>s \<in> fst ` set ws\<close> obtain sb where "sb \<in> set ws" "fst sb = s"
+                  by (by100 blast)
+                from \<open>sb \<in> set ws\<close> have "\<exists>i. i < length ws \<and> ws ! i = sb"
+                  using in_set_conv_nth by (by5000 metis)
+                then obtain i where "i < length ws" "ws ! i = sb" by (by100 blast)
+                hence "fst (ws ! i) = s" using \<open>fst sb = s\<close> by (by100 simp)
+                thus ?thesis using \<open>i < length ws\<close> that by (by100 blast)
+              qed
               hence "s \<in> S" using hws_in by (by100 blast)
               from bij_betw_imp_surj_on[OF hidx] this
               obtain B where "B \<in> ?NT" "idx B = s" by (by100 blast)
