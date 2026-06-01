@@ -1695,8 +1695,56 @@ proof -
       \<comment> \<open>Step 1: rev(\\<beta>*\\<delta>) = rev(\\<delta>)*rev(\\<beta>) extensionally.\<close>
       have hrev_ext: "top1_path_reverse (top1_path_product \<beta> \<delta>)
           = top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>)"
-        sorry \<comment> \<open>Extensional: rev(f*g) = rev(g)*rev(f). Same pattern as symmetry proof.
-           3-way case split needed for s=1/2 boundary where endpoint equality \\<alpha>(1) = \\<beta>(1) is used.\<close>
+      proof (rule ext)
+        fix s :: real
+        show "top1_path_reverse (top1_path_product \<beta> \<delta>) s
+            = top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>) s"
+        proof (cases "s < 1/2")
+          case hlt: True
+          have "1 - s > 1/2" using hlt by simp
+          hence lhs: "top1_path_reverse (top1_path_product \<beta> \<delta>) s = \<delta> (1 - 2 * s)"
+            unfolding top1_path_reverse_def top1_path_product_def using hlt by simp
+          have rhs: "top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>) s
+              = \<delta> (1 - 2 * s)"
+            using hlt unfolding top1_path_product_def top1_path_reverse_def by simp
+          show ?thesis using lhs rhs by simp
+        next
+          case hge: False show ?thesis
+          proof (cases "s > 1/2")
+            case hgt: True
+            have "1 - s < 1/2" using hgt by simp
+            hence lhs: "top1_path_reverse (top1_path_product \<beta> \<delta>) s = \<beta> (2 - 2 * s)"
+              unfolding top1_path_reverse_def top1_path_product_def using hgt by simp
+            have rhs: "top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>) s
+                = \<beta> (2 - 2 * s)"
+              using hgt unfolding top1_path_product_def top1_path_reverse_def by simp
+            show ?thesis using lhs rhs by simp
+          next
+            case False
+            hence hs: "s = 1/2" using hge by simp
+            have lhs: "top1_path_reverse (top1_path_product \<beta> \<delta>) s = \<beta> 1"
+            proof -
+              have "top1_path_reverse (top1_path_product \<beta> \<delta>) s = \<beta> (2 * (1 - s))"
+                unfolding top1_path_reverse_def top1_path_product_def using hs by simp
+              also have "2 * (1 - s) = 1" using hs by simp
+              finally show ?thesis .
+            qed
+            have rhs: "top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>) s = \<beta> 1"
+            proof -
+              have "\<delta> 0 = \<beta> 1"
+                using h\<delta>p' unfolding top1_is_path_on_def by (by100 blast)
+              have h1: "top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>) s
+                  = (top1_path_reverse \<delta>) (2 * s)"
+                using hs unfolding top1_path_product_def by simp
+              have h2: "(top1_path_reverse \<delta>) (2 * s) = \<delta> (1 - 2 * s)"
+                unfolding top1_path_reverse_def by simp
+              have h3: "1 - 2 * s = (0::real)" using hs by simp
+              show ?thesis using h1 h2 h3 \<open>\<delta> 0 = \<beta> 1\<close> by simp
+            qed
+            show ?thesis using lhs rhs by simp
+          qed
+        qed
+      qed
       \<comment> \<open>Step 2: Rewrite (\\<alpha>*\\<delta>)*rev(\\<beta>*\\<delta>) = (\\<alpha>*\\<delta>)*(rev(\\<delta>)*rev(\\<beta>)).\<close>
       have hrewrite: "top1_path_product (top1_path_product \<alpha> \<delta>) (top1_path_reverse (top1_path_product \<beta> \<delta>))
           = top1_path_product (top1_path_product \<alpha> \<delta>) (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>))"
