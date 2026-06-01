@@ -847,7 +847,14 @@ proof -
          (by Theorem 79.2 + basepoint\\_change\\_image\\_hom).\<close>
       have h\<Psi>_image: "\<Psi> ` ?Cov = {e \<in> E. p e = b0 \<and>
           top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
-        sorry \<comment> \<open>From Theorem\\_79\\_2: CT h with h(e0)=e exists iff p*(\\<pi>\\_1(E,e)) = p*(\\<pi>\\_1(E,e0)).\<close>
+      proof -
+        \<comment> \<open>\\<Psi> maps into {e \\<in> E | p e = b0}. By Theorem 79.2, \\<Psi>(h) = e iff
+           \\<exists> covering equivalence h: (E,e0) \\<rightarrow> (E,e) iff p*(\\<pi>\\_1(E,e0)) = p*(\\<pi>\\_1(E,e)).\<close>
+        \<comment> \<open>Forward: \\<Psi>(h) = e \\<Rightarrow> e \\<in> E, p(e) = b0, and p*(\\<pi>\\_1(E,e)) = H.\<close>
+        \<comment> \<open>Backward: e \\<in> E, p(e) = b0, p*(\\<pi>\\_1(E,e)) = H \\<Rightarrow> \\<exists> h \\<in> Cov(p). \\<Psi>(h) = e.\<close>
+        \<comment> \<open>Both directions use Theorem 79.2.\<close>
+        show ?thesis sorry \<comment> \<open>Theorem 79.2 application; needs covering equiv iff CT.\<close>
+      qed
       \<comment> \<open>Step C: \\<Phi>\\<inverse>\\<circ>\\<Psi> is a homomorphism.
          Key: for h,k \\<in> Cov(p), choose \\<gamma>: e0\\<rightarrow>h(e0), \\<delta>: e0\\<rightarrow>k(e0).
          Then h\\<circ>\\<delta>: h(e0)\\<rightarrow>h(k(e0)). So \\<gamma>*(h\\<circ>\\<delta>) lifts \\<alpha>*\\<beta>
