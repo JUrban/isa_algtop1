@@ -2097,7 +2097,138 @@ proof -
              - T \\<union> \\<Union>(F \\<union> F') = (T \\<union> \\<Union>F) \\<union> A\\_1 \\<union> ... \\<union> A\\_k (closed cover)
              - r continuous on each piece, agrees on overlaps
              - By iterated pasting: r continuous\<close>
-          have hretract: "top1_retract_of_on ?YFF ?TYFF ?YF" sorry
+          have hretract: "top1_retract_of_on ?YFF ?TYFF ?YF"
+          proof -
+            \<comment> \<open>T is path-connected (tree = SC \\<Longrightarrow> PC).\<close>
+            have hT_pc: "top1_path_connected_on T (subspace_topology Y TY T)"
+            proof -
+              from hT_tree[unfolded top1_is_tree_on_def]
+              have "top1_simply_connected_on T (subspace_topology Y TY T)" by (by100 blast)
+              from top1_simply_connected_on_path_connected[OF this]
+              show ?thesis .
+            qed
+            \<comment> \<open>For each arc A \\<in> F'\\\\F: define retraction rA: A \\<rightarrow> T.
+               rA = p\\_A \\<circ> h\\_A\\<inverse> where h\\_A: [0,1] \\<rightarrow> A, p\\_A: [0,1] \\<rightarrow> T (tree path).\<close>
+            have hG_finite: "finite (F' - F)" using hF'fin by (by100 simp)
+            have hG_NT: "F' - F \<subseteq> ?NT" using hF'_NT by (by100 blast)
+            \<comment> \<open>For each A \\<in> F'\\\\F, retraction data exists.\<close>
+            have hretract_data: "\<forall>A \<in> F' - F. \<exists>rA.
+                top1_continuous_map_on A (subspace_topology Y TY A) T (subspace_topology Y TY T) rA \<and>
+                (\<forall>x \<in> A \<inter> T. rA x = x)"
+            proof (intro ballI)
+              fix A assume "A \<in> F' - F"
+              hence "A \<in> ?NT" using hG_NT by (by100 blast)
+              hence "A \<in> \<A>" by (by100 blast)
+              have hA_arc: "top1_is_arc_on A (subspace_topology Y TY A)" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+              have hA_sub: "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+              from hA_arc[unfolded top1_is_arc_on_def]
+              obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology Y TY A) h"
+                by (by100 blast)
+              let ?a = "h 0" let ?b = "h 1"
+              have hstrict_Y: "is_topology_on_strict Y TY"
+                using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+              have hhaus_Y: "is_hausdorff_on Y TY"
+                using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+              from arc_endpoints_are_boundary[OF hstrict_Y hhaus_Y hA_sub hA_arc hh]
+              have hep_eq: "top1_arc_endpoints_on A (subspace_topology Y TY A) = {?a, ?b}" .
+              have ha_ep: "?a \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                using hep_eq by (by100 blast)
+              have hb_ep: "?b \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                using hep_eq by (by100 blast)
+              have ha_T: "?a \<in> T" using hNT_endpoints \<open>A \<in> ?NT\<close> ha_ep by (by100 blast)
+              have hb_T: "?b \<in> T" using hNT_endpoints \<open>A \<in> ?NT\<close> hb_ep by (by100 blast)
+              have h0_I: "(0::real) \<in> I_set" and h1_I: "(1::real) \<in> I_set"
+                unfolding top1_unit_interval_def by (by100 simp)+
+              have ha_A: "?a \<in> A"
+                using hh h0_I unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
+                by (by100 blast)
+              have hb_A: "?b \<in> A"
+                using hh h1_I unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
+                by (by100 blast)
+              \<comment> \<open>Path from a to b in T.\<close>
+              from hT_pc[unfolded top1_path_connected_on_def]
+              have "\<exists>p. top1_is_path_on T (subspace_topology Y TY T) ?a ?b p"
+                using ha_T hb_T by (by100 blast)
+              then obtain p where hp: "top1_is_path_on T (subspace_topology Y TY T) ?a ?b p"
+                by (by100 blast)
+              \<comment> \<open>h\\<inverse>: A \\<rightarrow> [0,1] is continuous.\<close>
+              have hinv: "top1_homeomorphism_on A (subspace_topology Y TY A) I_set I_top (inv_into I_set h)"
+                by (rule homeomorphism_inverse[OF hh])
+              \<comment> \<open>rA = p \\<circ> h\\<inverse>: A \\<rightarrow> T.\<close>
+              let ?rA = "p \<circ> inv_into I_set h"
+              have hinv_cont: "top1_continuous_map_on A (subspace_topology Y TY A) I_set I_top (inv_into I_set h)"
+                using hinv unfolding top1_homeomorphism_on_def by (by100 blast)
+              have hp_cont: "top1_continuous_map_on I_set I_top T (subspace_topology Y TY T) p"
+                using hp unfolding top1_is_path_on_def by (by100 blast)
+              have "top1_continuous_map_on A (subspace_topology Y TY A) T (subspace_topology Y TY T) ?rA"
+                by (rule top1_continuous_map_on_comp[OF hinv_cont hp_cont])
+              moreover have "\<forall>x \<in> A \<inter> T. ?rA x = x"
+              proof (intro ballI)
+                fix x assume "x \<in> A \<inter> T"
+                \<comment> \<open>x is an endpoint of A: x \\<in> {h 0, h 1}.\<close>
+                have "x \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                proof -
+                  from hT_subgraph[rule_format, OF \<open>A \<in> \<A>\<close>]
+                  have "A \<subseteq> T \<or> A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)" .
+                  moreover have "\<not> A \<subseteq> T" using \<open>A \<in> ?NT\<close> by (by100 blast)
+                  ultimately have "A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                    by (by100 blast)
+                  thus ?thesis using \<open>x \<in> A \<inter> T\<close> by (by100 blast)
+                qed
+                hence "x = ?a \<or> x = ?b" using hep_eq by (by100 blast)
+                thus "?rA x = x"
+                proof
+                  assume "x = ?a"
+                  have hh_bij: "bij_betw h I_set A"
+                    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+                  have hh_inj: "inj_on h I_set"
+                    using hh_bij unfolding bij_betw_def by (by100 blast)
+                  have "inv_into I_set h ?a = 0"
+                    using inv_into_f_f[OF hh_inj h0_I] by (by100 simp)
+                  moreover have "p 0 = ?a" using hp unfolding top1_is_path_on_def by (by100 blast)
+                  ultimately show "?rA x = x" using \<open>x = ?a\<close> by (by100 simp)
+                next
+                  assume "x = ?b"
+                  have hh_bij: "bij_betw h I_set A"
+                    using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+                  have hh_inj: "inj_on h I_set"
+                    using hh_bij unfolding bij_betw_def by (by100 blast)
+                  have "inv_into I_set h ?b = 1"
+                    using inv_into_f_f[OF hh_inj h1_I] by (by100 simp)
+                  moreover have "p 1 = ?b" using hp unfolding top1_is_path_on_def by (by100 blast)
+                  ultimately show "?rA x = x" using \<open>x = ?b\<close> by (by100 simp)
+                qed
+              qed
+              ultimately show "\<exists>rA. top1_continuous_map_on A (subspace_topology Y TY A) T (subspace_topology Y TY T) rA \<and>
+                  (\<forall>x \<in> A \<inter> T. rA x = x)" by (by100 blast)
+            qed
+            \<comment> \<open>Choose retraction functions.\<close>
+            from bchoice[OF hretract_data]
+            obtain rr where hrr: "\<forall>A \<in> F' - F.
+                top1_continuous_map_on A (subspace_topology Y TY A) T (subspace_topology Y TY T) (rr A) \<and>
+                (\<forall>x \<in> A \<inter> T. rr A x = x)" by (by100 blast)
+            \<comment> \<open>Define r: ?YFF \\<rightarrow> ?YF.\<close>
+            define r where "r x = (if x \<in> ?YF then x
+              else rr (THE A. A \<in> F' - F \<and> x \<in> A \<and> x \<notin> T) x)" for x
+            \<comment> \<open>r maps ?YFF into ?YF.\<close>
+            have hr_maps: "\<forall>x \<in> ?YFF. r x \<in> ?YF"
+              sorry \<comment> \<open>If x \\<in> ?YF: r x = x \\<in> ?YF. Otherwise: rr A x \\<in> T \\<subseteq> ?YF.\<close>
+            \<comment> \<open>r fixes ?YF.\<close>
+            have hr_fixes: "\<forall>x \<in> ?YF. r x = x"
+              unfolding r_def by (by100 simp)
+            \<comment> \<open>r continuous: use pasting\\_lemma\\_two\\_closed on ?YF and \\<Union>(F'\\\\F).\<close>
+            have hr_cont: "top1_continuous_map_on ?YFF ?TYFF ?YF ?TYF r"
+              sorry \<comment> \<open>By pasting\\_lemma\\_two\\_closed with ?YF and \\<Union>(F'\\\\F).
+                 ?YF closed in ?YFF (coherent topology).
+                 \\<Union>(F'\\\\F) closed in ?YFF (finite union of closed arcs).
+                 r continuous on ?YF (identity).
+                 r continuous on \\<Union>(F'\\\\F) (rr A continuous on each arc A).\<close>
+            have hYF_sub_FF': "?YF \<subseteq> ?YFF" by (by100 blast)
+            have hsubsp_eq': "subspace_topology ?YFF ?TYFF ?YF = ?TYF"
+              by (rule subspace_topology_trans) (use hYF_sub_FF' in blast)
+            show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+              using hYF_sub_FF' hr_cont[folded hsubsp_eq'] hr_fixes by (by100 blast)
+          qed
           \<comment> \<open>By Lemma 55.1: f1 \\<sim> f2 in T \\<union> \\<Union>F.\<close>
           have hYF_sub_FF: "?YF \<subseteq> ?YFF" by (by100 blast)
           have hYFF_sub: "?YFF \<subseteq> Y" using hYF_sub hF_NT hF'_NT h\<A> by (by100 blast)
