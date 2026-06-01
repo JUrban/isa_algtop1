@@ -1404,7 +1404,112 @@ proof -
         have hhtpy: "{g. top1_loop_equiv_on B TB b0 (top1_path_product
                 (top1_path_product \<alpha> (top1_path_reverse \<beta>))
                 (top1_path_product \<beta> (top1_path_reverse \<gamma>))) g} = ?ac_class"
-          sorry \<comment> \<open>Homotopy chain: assoc + Theorem\\_51\\_2 inverse + identity.\<close>
+        proof -
+          \<comment> \<open>Homotopy chain using path product properties.
+             Paths: \\<alpha>: b0\\<rightarrow>\\<beta>(1), rev(\\<beta>): \\<beta>(1)\\<rightarrow>b0, \\<beta>: b0\\<rightarrow>\\<gamma>(1), rev(\\<gamma>): \\<gamma>(1)\\<rightarrow>b0.\<close>
+          have h\<alpha>_p0: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>"
+            using h\<alpha> by (by100 blast)
+          have h\<alpha>_p: "top1_is_path_on B TB b0 (\<beta> 1) \<alpha>"
+            using h\<alpha>_p0 heq_ab by simp
+          have h\<beta>_p0: "top1_is_path_on B TB b0 (\<beta> 1) \<beta>"
+            using h\<beta> by (by100 blast)
+          have h\<beta>_p: "top1_is_path_on B TB b0 (\<gamma> 1) \<beta>"
+            using h\<beta>_p0 heq_bc by simp
+          have h\<gamma>_p: "top1_is_path_on B TB b0 (\<gamma> 1) \<gamma>"
+            using h\<gamma> by (by100 blast)
+          have hrev\<beta>: "top1_is_path_on B TB (\<beta> 1) b0 (top1_path_reverse \<beta>)"
+            by (rule top1_path_reverse_is_path[OF h\<beta>_p0])
+          have hrev\<gamma>: "top1_is_path_on B TB (\<gamma> 1) b0 (top1_path_reverse \<gamma>)"
+            by (rule top1_path_reverse_is_path[OF h\<gamma>_p])
+          \<comment> \<open>Step 1: (\\<alpha>*rev(\\<beta>))*(\\<beta>*rev(\\<gamma>)) \\<simeq> \\<alpha>*(rev(\\<beta>)*(\\<beta>*rev(\\<gamma>))) (assoc).\<close>
+          have hstep1: "top1_path_homotopic_on B TB b0 b0
+              (top1_path_product \<alpha> (top1_path_product (top1_path_reverse \<beta>) (top1_path_product \<beta> (top1_path_reverse \<gamma>))))
+              (top1_path_product (top1_path_product \<alpha> (top1_path_reverse \<beta>)) (top1_path_product \<beta> (top1_path_reverse \<gamma>)))"
+          proof -
+            \<comment> \<open>Associativity: f*(g*h) \\<simeq> (f*g)*h with f=\\<alpha>, g=rev(\\<beta>), h=\\<beta>*rev(\\<gamma>).\<close>
+            have h_bc_path: "top1_is_path_on B TB b0 b0 (top1_path_product \<beta> (top1_path_reverse \<gamma>))"
+              using hbc_loop unfolding top1_is_loop_on_def by (by100 blast)
+            from Theorem_51_2_associativity[OF hTB h\<alpha>_p hrev\<beta> h_bc_path]
+            show ?thesis .
+          qed
+          \<comment> \<open>Step 2: rev(\\<beta>)*(\\<beta>*rev(\\<gamma>)) \\<simeq> (rev(\\<beta>)*\\<beta>)*rev(\\<gamma>) (assoc).\<close>
+          have hstep2a: "top1_path_homotopic_on B TB (\<beta> 1) b0
+              (top1_path_product (top1_path_reverse \<beta>) (top1_path_product \<beta> (top1_path_reverse \<gamma>)))
+              (top1_path_product (top1_path_product (top1_path_reverse \<beta>) \<beta>) (top1_path_reverse \<gamma>))"
+          proof -
+            have "top1_is_path_on B TB (\<beta> 1) b0 (top1_path_reverse \<beta>)"
+              using hrev\<beta> .
+            have "top1_is_path_on B TB b0 (\<gamma> 1) \<beta>"
+              using h\<beta>_p .
+            from Theorem_51_2_associativity[OF hTB hrev\<beta> h\<beta>_p hrev\<gamma>]
+            show ?thesis .
+          qed
+          \<comment> \<open>Step 2b: rev(\\<beta>)*\\<beta> \\<simeq> const(b0) (Theorem 51.2 right inverse).\<close>
+          have hstep2b: "top1_path_homotopic_on B TB (\<beta> 1) (\<beta> 1)
+              (top1_path_product (top1_path_reverse \<beta>) \<beta>) (top1_constant_path (\<beta> 1))"
+          proof -
+            have "top1_is_path_on B TB (\<beta> 1) b0 (top1_path_reverse \<beta>)"
+              using hrev\<beta> .
+            have h\<beta>_rev_p: "top1_is_path_on B TB b0 (\<beta> 1) \<beta>"
+              using h\<beta>_p0 .
+            from Theorem_51_2_invgerse_right[OF hTB h\<beta>_rev_p]
+            show ?thesis .
+          qed
+          \<comment> \<open>Step 2c: (rev(\\<beta>)*\\<beta>)*rev(\\<gamma>) \\<simeq> const*rev(\\<gamma>) (product left homotopy).\<close>
+          have hstep2c: "top1_path_homotopic_on B TB (\<beta> 1) b0
+              (top1_path_product (top1_path_product (top1_path_reverse \<beta>) \<beta>) (top1_path_reverse \<gamma>))
+              (top1_path_product (top1_constant_path (\<beta> 1)) (top1_path_reverse \<gamma>))"
+          proof -
+            have "top1_is_path_on B TB (\<gamma> 1) b0 (top1_path_reverse \<gamma>)"
+              by (rule top1_path_reverse_is_path[OF h\<gamma>_p])
+            hence "top1_is_path_on B TB (\<beta> 1) b0 (top1_path_reverse \<gamma>)"
+              using heq_bc by simp
+            from path_homotopic_product_left[OF hTB hstep2b this]
+            show ?thesis .
+          qed
+          \<comment> \<open>Step 2d: const(\\<beta>(1))*rev(\\<gamma>) \\<simeq> rev(\\<gamma>) (left identity).\<close>
+          have hstep2d: "top1_path_homotopic_on B TB (\<beta> 1) b0
+              (top1_path_product (top1_constant_path (\<beta> 1)) (top1_path_reverse \<gamma>))
+              (top1_path_reverse \<gamma>)"
+          proof -
+            have "top1_is_path_on B TB (\<beta> 1) b0 (top1_path_reverse \<gamma>)"
+              using hrev\<gamma> heq_bc by simp
+            from Theorem_51_2_left_identity[OF hTB this]
+            show ?thesis .
+          qed
+          \<comment> \<open>Chain steps 2a-2d: rev(\\<beta>)*(\\<beta>*rev(\\<gamma>)) \\<simeq> rev(\\<gamma>).\<close>
+          have hchain2: "top1_path_homotopic_on B TB (\<beta> 1) b0
+              (top1_path_product (top1_path_reverse \<beta>) (top1_path_product \<beta> (top1_path_reverse \<gamma>)))
+              (top1_path_reverse \<gamma>)"
+          proof -
+            from Lemma_51_1_path_homotopic_trans[OF hTB hstep2a hstep2c]
+            have "top1_path_homotopic_on B TB (\<beta> 1) b0
+                (top1_path_product (top1_path_reverse \<beta>) (top1_path_product \<beta> (top1_path_reverse \<gamma>)))
+                (top1_path_product (top1_constant_path (\<beta> 1)) (top1_path_reverse \<gamma>))" .
+            from Lemma_51_1_path_homotopic_trans[OF hTB this hstep2d]
+            show ?thesis .
+          qed
+          \<comment> \<open>Step 3: \\<alpha>*(rev(\\<beta>)*(\\<beta>*rev(\\<gamma>))) \\<simeq> \\<alpha>*rev(\\<gamma>) (product right homotopy).\<close>
+          have hstep3: "top1_path_homotopic_on B TB b0 b0
+              (top1_path_product \<alpha> (top1_path_product (top1_path_reverse \<beta>) (top1_path_product \<beta> (top1_path_reverse \<gamma>))))
+              (top1_path_product \<alpha> (top1_path_reverse \<gamma>))"
+            by (rule path_homotopic_product_right[OF hTB hchain2 h\<alpha>_p])
+          \<comment> \<open>Final: combine step1 (assoc) + step3.\<close>
+          have hfinal: "top1_path_homotopic_on B TB b0 b0
+              (top1_path_product (top1_path_product \<alpha> (top1_path_reverse \<beta>)) (top1_path_product \<beta> (top1_path_reverse \<gamma>)))
+              (top1_path_product \<alpha> (top1_path_reverse \<gamma>))"
+          proof -
+            \<comment> \<open>hstep1 gives: \\<alpha>*(rev(\\<beta>)*(\\<beta>*rev(\\<gamma>))) \\<simeq> (\\<alpha>*rev(\\<beta>))*(\\<beta>*rev(\\<gamma>)).
+               We need the reverse: (\\<alpha>*rev(\\<beta>))*(\\<beta>*rev(\\<gamma>)) \\<simeq> \\<alpha>*(rev(\\<beta>)*(\\<beta>*rev(\\<gamma>))).\<close>
+            have hstep1_sym: "top1_path_homotopic_on B TB b0 b0
+                (top1_path_product (top1_path_product \<alpha> (top1_path_reverse \<beta>)) (top1_path_product \<beta> (top1_path_reverse \<gamma>)))
+                (top1_path_product \<alpha> (top1_path_product (top1_path_reverse \<beta>) (top1_path_product \<beta> (top1_path_reverse \<gamma>))))"
+              by (rule Lemma_51_1_path_homotopic_sym[OF hstep1])
+            from Lemma_51_1_path_homotopic_trans[OF hTB hstep1_sym hstep3]
+            show ?thesis .
+          qed
+          from path_homotopic_same_class[OF hTB hfinal] show ?thesis .
+        qed
         from hmul hmul_eq hhtpy show ?thesis by simp
       qed
       thus ?thesis using h\<alpha> h\<gamma> heq by (by100 auto)
