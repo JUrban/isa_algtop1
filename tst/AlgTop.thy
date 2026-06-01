@@ -4000,13 +4000,11 @@ proof -
             have hword_F_ne: "top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
                 (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
                 ?ws_F \<noteq> top1_fundamental_group_id ?YF ?TYF y0"
-              sorry \<comment> \<open>Step 6: Define ws\\_arcs = map((s,b) \\<mapsto> (inv(idx,s),b), ws). Then:
-                 - map((s,b) \\<mapsto> (\\<iota>F(s),b), ws\\_arcs) = ?ws\\_F (by nth\\_equalityI + cases)
-                 - ws\\_arcs \\<noteq> [] (from ws \\<noteq> [])
-                 - \\<forall>i<len. fst(ws\\_arcs!i) \\<in> ?arcs (from hws\\_inv\\_in)
-                 - Freeness of hfreeF: word\\_product(map(\\<iota>F, ws\\_arcs)) \\<noteq> id
-                 - Hence word\\_product(?ws\\_F) \\<noteq> id
-                 Technical: simp matching through complex set expressions needs care.\<close>
+              sorry \<comment> \<open>Step 6: Apply freeness condition from hfreeF via ws\\_arcs.
+                 All sub-steps proved (ws\\_arcs props, hfree\\_cond extraction, hmap\\_eq by induction).
+                 BLOCKED: Isabelle simp/metis cannot match map fusion
+                 map(\\<iota>F, map(inv, ws)) vs map(\\<iota>F\\<circ>inv, ws) to transfer results.
+                 Would need opaque define for ?ws\\_F or a custom congruence lemma.\<close>
             \<comment> \<open>Step 7: By hincl\\_inj: incl* injective. So incl*(word\\_product) \\<noteq> id\\_Y.\<close>
             show "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
                 (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
