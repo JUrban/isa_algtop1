@@ -3878,18 +3878,58 @@ proof -
                   ?ws_F) = top1_fundamental_group_id Y TY y0"
                 using hword_eq hcontra by (by100 simp)
               \<comment> \<open>word\\_product(?YF, ws\\_F) \\<in> carrier(?YF).\<close>
+              have hYF_sub': "?YF \<subseteq> Y" using hT_sub h\<A> hF_NT by (by100 blast)
+              have hTYF_top: "is_topology_on ?YF ?TYF"
+                by (rule subspace_topology_is_topology_on[OF hTY_top hYF_sub'])
+              have hF_grp: "top1_is_group_on (top1_fundamental_group_carrier ?YF ?TYF y0)
+                  (top1_fundamental_group_mul ?YF ?TYF y0) (top1_fundamental_group_id ?YF ?TYF y0)
+                  (top1_fundamental_group_invg ?YF ?TYF y0)"
+                using hfreeF unfolding top1_is_free_group_full_on_def by (by100 blast)
               have hword_F_carrier: "top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
                   (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
                   ?ws_F \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
-                sorry \<comment> \<open>Word product of carrier elements is in carrier (group closure).\<close>
-              \<comment> \<open>id\\_?YF \\<in> carrier(?YF).\<close>
+              proof (rule word_product_in_group[OF hF_grp])
+                show "\<forall>i<length ?ws_F. fst (?ws_F ! i) \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
+                proof (intro allI impI)
+                  fix i assume "i < length ?ws_F"
+                  hence "i < length ws" by (by100 simp)
+                  have "fst (?ws_F ! i) = \<iota>F (the_inv_into ?NT idx (fst (ws ! i)))"
+                  proof -
+                    have "?ws_F ! i = (case ws ! i of (s, b) \<Rightarrow>
+                        (\<iota>F (the_inv_into ?NT idx s), b))"
+                      using \<open>i < length ws\<close> by (by100 simp)
+                    thus ?thesis by (cases "ws ! i") (by100 simp)
+                  qed
+                  moreover have "\<iota>F (the_inv_into ?NT idx (fst (ws ! i)))
+                      \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
+                  proof -
+                    have "the_inv_into ?NT idx (fst (ws ! i)) \<in> ?arcs"
+                      using hws_inv_in \<open>i < length ws\<close> by (by100 blast)
+                    from hfreeF[unfolded top1_is_free_group_full_on_def]
+                    have "\<forall>s\<in>?arcs. \<iota>F s \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
+                      by (by5000 blast)
+                    thus ?thesis using \<open>the_inv_into ?NT idx _ \<in> ?arcs\<close> by (by100 blast)
+                  qed
+                  ultimately show "fst (?ws_F ! i) \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
+                    by (by100 simp)
+                qed
+              qed
               have hid_F_carrier: "top1_fundamental_group_id ?YF ?TYF y0
                   \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
-                sorry \<comment> \<open>Identity element is in carrier.\<close>
-              \<comment> \<open>incl*(id\\_?YF) = id\\_Y.\<close>
+                using hF_grp unfolding top1_is_group_on_def by (by100 blast)
+              have hincl_hom: "top1_group_hom_on
+                  (top1_fundamental_group_carrier ?YF ?TYF y0)
+                  (top1_fundamental_group_mul ?YF ?TYF y0)
+                  (top1_fundamental_group_carrier Y TY y0)
+                  (top1_fundamental_group_mul Y TY y0) ?incl"
+                using subspace_inclusion_induced_hom[OF hTY_top hYF_sub'] hT_x0 by (by100 blast)
+              have hY_grp: "top1_is_group_on (top1_fundamental_group_carrier Y TY y0)
+                  (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+                  (top1_fundamental_group_invg Y TY y0)"
+                by (rule top1_fundamental_group_is_group[OF hTY_top assms(3)])
               have hincl_id: "?incl (top1_fundamental_group_id ?YF ?TYF y0) =
                   top1_fundamental_group_id Y TY y0"
-                sorry \<comment> \<open>Inclusion hom maps identity to identity.\<close>
+                by (rule hom_preserves_id[OF hF_grp hY_grp hincl_hom])
               \<comment> \<open>By hincl\\_inj: incl* injective on carrier(?YF).\<close>
               have hYF_sub: "?YF \<subseteq> Y" using hT_sub h\<A> hF_NT by (by100 blast)
               from hincl_inj[OF hF_fin hF_NT hF_ne]
