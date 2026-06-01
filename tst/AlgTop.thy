@@ -1168,7 +1168,22 @@ proof -
   \<comment> \<open>===== Step 6: p_*(\<pi>_1(E, e0)) = H =====\<close>
   \<comment> \<open>A loop \<gamma> at b0 lifts to a path from e0 = [const]_H to [\<gamma>]_H.
      Lift is a loop iff [\<gamma>]_H = [const]_H iff [\<gamma>] \<in> H.\<close>
-  show ?thesis sorry \<comment> \<open>Full 6-step construction of covering space (Munkres §82).\<close>
+  \<comment> \<open>===== FORMAL SKETCH (Munkres §82) =====\<close>
+  \<comment> \<open>Step 1: Define the H-coset equivalence.
+     For paths \\<alpha>, \\<beta> from b0: \\<alpha> \\<sim>\\_H \\<beta> iff \\<alpha>(1)=\\<beta>(1) and [\\<alpha>*rev(\\<beta>)] \\<in> H.
+     The equivalence class of \\<alpha> is \\<alpha>\\# = {\\<beta> | \\<beta>(1)=\\<alpha>(1), [\\<alpha>*rev(\\<beta>)] \\<in> H}.\<close>
+  let ?paths = "{f. top1_is_path_on B TB b0 (f (1::real)) f}"
+  let ?coset_rel = "\<lambda>\<alpha> \<beta>. \<alpha> \<in> ?paths \<and> \<beta> \<in> ?paths \<and>
+      \<alpha> 1 = \<beta> 1 \<and>
+      {g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g} \<in> H"
+  \<comment> \<open>Step 2: E = equivalence classes of ?coset\\_rel.
+     p maps class to common endpoint. e0 = class of constant path at b0.\<close>
+  \<comment> \<open>Step 3: Basis topology on E: B(U,\\<alpha>) = {(\\<alpha>*\\<delta>)\\# | \\<delta> path in U from \\<alpha>(1)}.
+     These form a basis (Munkres Lemma 82.2).\<close>
+  \<comment> \<open>Step 4: p is a covering map (evenly covered neighborhoods from semilocal simple conn).\<close>
+  \<comment> \<open>Step 5: E path-connected (prefix path t \\<mapsto> \\<alpha>\\_t) and locally path-connected.\<close>
+  \<comment> \<open>Step 6: p*(\\<pi>\\_1(E,e0)) = H (loop lifts to loop iff [loop] \\<in> H).\<close>
+  show ?thesis sorry \<comment> \<open>Full construction requires quotient space + basis topology + 4 verifications.\<close>
 qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
