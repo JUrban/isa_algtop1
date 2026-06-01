@@ -1216,7 +1216,12 @@ proof -
     using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
   show ?thesis
     apply (rule exI[of _ X], rule exI[of _ TX], rule exI[of _ p])
-    using hgraph hconn hp hF_iso_pi1 sorry
+    apply (intro conjI)
+    apply (rule hgraph)
+    apply (rule hconn)
+    apply (rule hp)
+    apply (rule hF_iso_pi1)
+    done
 qed
 
 text \<open>Covering space of a graph is a graph (Munkres Theorem 83.4).\<close>
