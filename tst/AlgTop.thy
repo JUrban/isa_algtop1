@@ -1540,7 +1540,82 @@ proof -
       unfolding top1_constant_path_def using h\<alpha>U by (by100 blast)
     \<comment> \<open>coset\\_class(\\<alpha>*\\<delta>) = coset\\_class(\\<alpha>) because \\<alpha>*const \\<simeq> \\<alpha>.\<close>
     have hprod_const: "?coset_class (top1_path_product \<alpha> ?\<delta>) = ?coset_class \<alpha>"
-      sorry \<comment> \<open>\\<alpha>*const \\<simeq> \\<alpha> (Theorem\\_51\\_2\\_right\\_identity) \\<Rightarrow> same coset class.\<close>
+    proof -
+      \<comment> \<open>Key fact: \\<alpha>*const \\<simeq> \\<alpha> (Theorem 51.2 right identity).\<close>
+      have hright_id: "top1_path_homotopic_on B TB b0 (\<alpha> 1)
+          (top1_path_product \<alpha> (top1_constant_path (\<alpha> 1))) \<alpha>"
+        by (rule Theorem_51_2_right_identity[OF hTB h\<alpha>_p])
+      show ?thesis
+      proof (rule set_eqI, rule iffI)
+      fix \<beta>
+      assume h\<beta>: "\<beta> \<in> ?coset_class (top1_path_product \<alpha> ?\<delta>)"
+      \<comment> \<open>\\<beta>(1) = \\<alpha>(1) and [(\\<alpha>*const)*rev(\\<beta>)] \\<in> H.\<close>
+      have h\<beta>_paths: "\<beta> \<in> ?paths" using h\<beta> by (by100 blast)
+      have h\<beta>_ep: "\<beta> 1 = \<alpha> 1"
+      proof -
+        have "\<beta> 1 = top1_path_product \<alpha> ?\<delta> 1" using h\<beta> by (by100 blast)
+        also have "\<dots> = ?\<delta> 1" unfolding top1_path_product_def by simp
+        also have "\<dots> = \<alpha> 1" unfolding top1_constant_path_def by simp
+        finally show ?thesis .
+      qed
+      have hH_prod: "{g. top1_loop_equiv_on B TB b0
+          (top1_path_product (top1_path_product \<alpha> ?\<delta>) (top1_path_reverse \<beta>)) g} \<in> H"
+        using h\<beta> by (by100 blast)
+      \<comment> \<open>(\\<alpha>*const)*rev(\\<beta>) \\<simeq> \\<alpha>*rev(\\<beta>) via path\\_homotopic\\_product\\_left.\<close>
+      have h\<beta>_p: "top1_is_path_on B TB b0 (\<beta> 1) \<beta>" using h\<beta>_paths by (by100 blast)
+      have hrev\<beta>: "top1_is_path_on B TB (\<alpha> 1) b0 (top1_path_reverse \<beta>)"
+        using top1_path_reverse_is_path[OF h\<beta>_p] h\<beta>_ep by simp
+      from path_homotopic_product_left[OF hTB hright_id hrev\<beta>]
+      have hhtpy_prod: "top1_path_homotopic_on B TB b0 b0
+          (top1_path_product (top1_path_product \<alpha> ?\<delta>) (top1_path_reverse \<beta>))
+          (top1_path_product \<alpha> (top1_path_reverse \<beta>))" .
+      from path_homotopic_same_class[OF hTB hhtpy_prod]
+      have "{g. top1_loop_equiv_on B TB b0
+          (top1_path_product (top1_path_product \<alpha> ?\<delta>) (top1_path_reverse \<beta>)) g}
+        = {g. top1_loop_equiv_on B TB b0
+          (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g}" .
+      hence "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g} \<in> H"
+        using hH_prod by simp
+      thus "\<beta> \<in> ?coset_class \<alpha>" using h\<beta>_paths h\<beta>_ep by (by100 blast)
+    next
+      fix \<beta>
+      assume h\<beta>2: "\<beta> \<in> ?coset_class \<alpha>"
+      \<comment> \<open>Reverse direction: same argument with symmetry of homotopy.\<close>
+      have h\<beta>2_paths: "\<beta> \<in> ?paths" using h\<beta>2 by (by100 blast)
+      have h\<beta>2_ep: "\<beta> 1 = \<alpha> 1" using h\<beta>2 by (by100 blast)
+      have hH2: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g} \<in> H"
+        using h\<beta>2 by (by100 blast)
+      have h\<beta>2_p: "top1_is_path_on B TB b0 (\<beta> 1) \<beta>" using h\<beta>2_paths by (by100 blast)
+      have hrev\<beta>2: "top1_is_path_on B TB (\<alpha> 1) b0 (top1_path_reverse \<beta>)"
+        using top1_path_reverse_is_path[OF h\<beta>2_p] h\<beta>2_ep by simp
+      from path_homotopic_product_left[OF hTB hright_id hrev\<beta>2]
+      have "top1_path_homotopic_on B TB b0 b0
+          (top1_path_product (top1_path_product \<alpha> ?\<delta>) (top1_path_reverse \<beta>))
+          (top1_path_product \<alpha> (top1_path_reverse \<beta>))" .
+      from Lemma_51_1_path_homotopic_sym[OF this]
+      have "top1_path_homotopic_on B TB b0 b0
+          (top1_path_product \<alpha> (top1_path_reverse \<beta>))
+          (top1_path_product (top1_path_product \<alpha> ?\<delta>) (top1_path_reverse \<beta>))" .
+      from path_homotopic_same_class[OF hTB this]
+      have "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g}
+        = {g. top1_loop_equiv_on B TB b0
+          (top1_path_product (top1_path_product \<alpha> ?\<delta>) (top1_path_reverse \<beta>)) g}" .
+      hence "{g. top1_loop_equiv_on B TB b0
+          (top1_path_product (top1_path_product \<alpha> ?\<delta>) (top1_path_reverse \<beta>)) g} \<in> H"
+        using hH2 by simp
+      have hprod_ep: "top1_path_product \<alpha> ?\<delta> 1 = \<alpha> 1"
+        unfolding top1_path_product_def top1_constant_path_def by simp
+      have "\<beta> \<in> ?paths \<and> \<beta> 1 = top1_path_product \<alpha> ?\<delta> 1 \<and>
+          {g. top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_product \<alpha> ?\<delta>) (top1_path_reverse \<beta>)) g} \<in> H"
+        using h\<beta>2_paths h\<beta>2_ep hprod_ep
+          \<open>{g. top1_loop_equiv_on B TB b0
+              (top1_path_product (top1_path_product \<alpha> ?\<delta>) (top1_path_reverse \<beta>)) g} \<in> H\<close>
+        by (by100 auto)
+      thus "\<beta> \<in> ?coset_class (top1_path_product \<alpha> ?\<delta>)"
+        by (by100 blast)
+    qed  \<comment> \<open>set\\_eqI\<close>
+    qed  \<comment> \<open>proof -\<close>
     \<comment> \<open>coset\\_class(\\<alpha>*\\<delta>) \\<in> B\\_basis(U, \\<alpha>).\<close>
     have h\<delta>_ep: "?\<delta> 1 = \<alpha> 1" unfolding top1_constant_path_def by simp
     have h\<delta>_path2: "top1_is_path_on B TB (\<alpha> 1) (?\<delta> 1) ?\<delta>"
