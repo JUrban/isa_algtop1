@@ -6140,7 +6140,7 @@ theorem Theorem_85_3_Schreier_index:
       and "H \<subseteq> F"
       and "top1_is_group_on H mul e invg"
       and "top1_subgroup_has_index_on F mul H k"
-  shows "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
+  shows "\<exists>(\<iota>H::nat \<Rightarrow> 'g) (SH::nat set).
            top1_is_free_group_full_on H mul e invg \<iota>H SH
          \<and> card SH = k * n + 1"
 proof -
@@ -6189,7 +6189,7 @@ proof -
         \<iota>_E S_E"
     by - ((erule exE)+, (erule that))
   \<comment> \<open>Step 3b: H free with rank kn+1 (Euler characteristic argument).\<close>
-  have hE'_free: "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
+  have hE'_free: "\<exists>(\<iota>H::nat \<Rightarrow> 'g) (SH::nat set).
       top1_is_free_group_full_on H mul e invg \<iota>H SH \<and> card SH = k * n + 1"
     sorry \<comment> \<open>Euler char: X has 1 vertex + (n+1) edges, chi(X) = -n.
        E' has k sheets: chi(E') = k*chi(X) = -kn.
