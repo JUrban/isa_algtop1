@@ -5954,9 +5954,119 @@ proof -
         (top1_fundamental_group_carrier E' TE' e0')
         (top1_fundamental_group_mul E' TE' e0')
         H mul"
-      sorry \<comment> \<open>Composition of p'* (hom, bijective onto f\\_iso(H)) with f\\_iso\\<inverse>.
-         Requires: p'* is a hom (from covering\\_induced\\_hom) + f\\_iso is iso.
-         Then: (f\\_iso\\<inverse>) \\<circ> p'*: \\<pi>\\_1(E') \\<rightarrow> H is iso.\<close>
+    proof -
+      \<comment> \<open>The composed map (f\\_iso\\<inverse>) \\<circ> p'*: \\<pi>\\_1(E') \\<rightarrow> H is a group iso.\<close>
+      let ?p_star = "top1_fundamental_group_induced_on E' TE' e0' X TX x0 p'"
+      let ?f_inv = "the_inv_into G f_iso"
+      let ?\<phi> = "?f_inv \<circ> ?p_star"
+      \<comment> \<open>\\<phi> is a group hom (composition of two homs).\<close>
+      have hp_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier E' TE' e0')
+          (top1_fundamental_group_mul E' TE' e0')
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)
+          ?p_star"
+        sorry \<comment> \<open>Covering induced hom.\<close>
+      have hf_inv_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)
+          G mul ?f_inv"
+        sorry \<comment> \<open>Inverse of iso is a hom.\<close>
+      \<comment> \<open>\\<phi> maps \\<pi>\\_1(E') into H.\<close>
+      have h\<phi>_maps: "\<forall>c \<in> top1_fundamental_group_carrier E' TE' e0'. ?\<phi> c \<in> H"
+      proof (intro ballI)
+        fix c assume "c \<in> top1_fundamental_group_carrier E' TE' e0'"
+        hence "?p_star c \<in> f_iso ` H" using hH_corr by (by100 blast)
+        then obtain h where "h \<in> H" "f_iso h = ?p_star c" by (by100 blast)
+        have "h \<in> G" using \<open>h \<in> H\<close> assms(3) by (by100 blast)
+        have "?f_inv (?p_star c) = ?f_inv (f_iso h)" using \<open>f_iso h = ?p_star c\<close> by (by100 simp)
+        also have "\<dots> = h"
+          using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF
+              hf_iso[unfolded top1_group_iso_on_def, THEN conjunct2]] \<open>h \<in> G\<close>]
+          by (by100 simp)
+        finally have "?\<phi> c = h" unfolding comp_def by (by100 simp)
+        thus "?\<phi> c \<in> H" using \<open>h \<in> H\<close> by (by100 simp)
+      qed
+      \<comment> \<open>\\<phi> is bijective.\<close>
+      have h\<phi>_bij: "bij_betw ?\<phi> (top1_fundamental_group_carrier E' TE' e0') H"
+      proof -
+        have hf_bij_H: "bij_betw f_iso H (f_iso ` H)"
+        proof -
+          from hf_iso have "inj_on f_iso G" unfolding top1_group_iso_on_def bij_betw_def
+            by (by100 blast)
+          from inj_on_subset[OF this assms(3)] show ?thesis
+            unfolding bij_betw_def by (by100 blast)
+        qed
+        have hp_bij: "bij_betw ?p_star (top1_fundamental_group_carrier E' TE' e0') (f_iso ` H)"
+          unfolding bij_betw_def using hp_inj hH_corr by (by100 blast)
+        \<comment> \<open>\\<phi> is bijective: injective (both components injective) + surjective (image = H).\<close>
+        show ?thesis unfolding bij_betw_def
+        proof (intro conjI)
+          show "inj_on ?\<phi> (top1_fundamental_group_carrier E' TE' e0')"
+          proof (rule comp_inj_on)
+            show "inj_on ?p_star (top1_fundamental_group_carrier E' TE' e0')"
+              by (rule hp_inj)
+            show "inj_on ?f_inv (?p_star ` top1_fundamental_group_carrier E' TE' e0')"
+            proof -
+              have "?p_star ` top1_fundamental_group_carrier E' TE' e0' = f_iso ` H"
+                using hH_corr by (by100 blast)
+              moreover have "inj_on ?f_inv (f_iso ` H)"
+              proof (rule inj_onI)
+                fix x y assume "x \<in> f_iso ` H" "y \<in> f_iso ` H"
+                  and "?f_inv x = ?f_inv y"
+                from \<open>x \<in> f_iso ` H\<close> obtain hx where "hx \<in> H" "x = f_iso hx" by (by100 blast)
+                from \<open>y \<in> f_iso ` H\<close> obtain hy where "hy \<in> H" "y = f_iso hy" by (by100 blast)
+                have "inj_on f_iso G" using hf_iso unfolding top1_group_iso_on_def bij_betw_def
+                  by (by100 blast)
+                have "?f_inv x = hx"
+                  using the_inv_into_f_f[OF \<open>inj_on f_iso G\<close>] \<open>hx \<in> H\<close> assms(3) \<open>x = f_iso hx\<close>
+                  by (by100 blast)
+                have "?f_inv y = hy"
+                  using the_inv_into_f_f[OF \<open>inj_on f_iso G\<close>] \<open>hy \<in> H\<close> assms(3) \<open>y = f_iso hy\<close>
+                  by (by100 blast)
+                from \<open>?f_inv x = ?f_inv y\<close> \<open>?f_inv x = hx\<close> \<open>?f_inv y = hy\<close>
+                have "hx = hy" by (by100 simp)
+                thus "x = y" using \<open>x = f_iso hx\<close> \<open>y = f_iso hy\<close> by (by100 simp)
+              qed
+              ultimately show ?thesis by (by100 simp)
+            qed
+          qed
+          show "?\<phi> ` top1_fundamental_group_carrier E' TE' e0' = H"
+          proof (rule set_eqI, rule iffI)
+            fix h assume "h \<in> ?\<phi> ` top1_fundamental_group_carrier E' TE' e0'"
+            then obtain c where "c \<in> top1_fundamental_group_carrier E' TE' e0'" "h = ?\<phi> c"
+              by (by100 blast)
+            thus "h \<in> H" using h\<phi>_maps by (by100 blast)
+          next
+            fix h assume "h \<in> H"
+            hence "h \<in> G" using assms(3) by (by100 blast)
+            hence "f_iso h \<in> f_iso ` H" using \<open>h \<in> H\<close> by (by100 blast)
+            hence "f_iso h \<in> ?p_star ` top1_fundamental_group_carrier E' TE' e0'"
+              using hH_corr by (by100 blast)
+            then obtain c where "c \<in> top1_fundamental_group_carrier E' TE' e0'"
+                "?p_star c = f_iso h" by (by100 blast)
+            have "inj_on f_iso G" using hf_iso unfolding top1_group_iso_on_def bij_betw_def
+              by (by100 blast)
+            have "?f_inv (f_iso h) = h"
+              using the_inv_into_f_f[OF \<open>inj_on f_iso G\<close> \<open>h \<in> G\<close>] by (by100 simp)
+            hence "?\<phi> c = h" using \<open>?p_star c = f_iso h\<close> unfolding comp_def by (by100 simp)
+            thus "h \<in> ?\<phi> ` top1_fundamental_group_carrier E' TE' e0'"
+              using \<open>c \<in> _\<close> by (by100 blast)
+          qed
+        qed
+      qed
+      \<comment> \<open>\\<phi> preserves mul.\<close>
+      have h\<phi>_hom: "top1_group_hom_on
+          (top1_fundamental_group_carrier E' TE' e0')
+          (top1_fundamental_group_mul E' TE' e0') H mul ?\<phi>"
+        sorry \<comment> \<open>From hp\\_hom + hf\\_inv\\_hom: composition preserves mul.
+           \\<phi>(mul\\_E(a,b)) = f\\_inv(p*(mul\\_E(a,b))) = f\\_inv(mul\\_X(p*a, p*b))
+           = mul(f\\_inv(p*a), f\\_inv(p*b)) = mul(\\<phi>(a), \\<phi>(b)).\<close>
+      \<comment> \<open>Package as group\\_iso\\_on.\<close>
+      have "top1_group_iso_on (top1_fundamental_group_carrier E' TE' e0')
+          (top1_fundamental_group_mul E' TE' e0') H mul ?\<phi>"
+        unfolding top1_group_iso_on_def using h\<phi>_hom h\<phi>_bij by (by100 blast)
+      thus ?thesis unfolding top1_groups_isomorphic_on_def by (by100 blast)
+    qed
     \<comment> \<open>Transfer freeness: \\<pi>\\_1(E') free \\<Rightarrow> H free.\<close>
     from free_group_iso_transfer[OF hfree_E this assms(2)]
     obtain \<iota>H' where hfreeH: "top1_is_free_group_full_on H mul e invg \<iota>H' S_E"
