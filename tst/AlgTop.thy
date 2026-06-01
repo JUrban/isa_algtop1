@@ -1183,21 +1183,30 @@ proof -
     sorry \<comment> \<open>Concrete construction of wedge of n circles.\<close>
   \<comment> \<open>Step 3: \\<pi>\\_1(X, p) is free on {0,...,n-1} (Theorem 71.1).\<close>
   \<comment> \<open>Step 3: \\<pi>\\_1(X, p) \\<cong> free group on {0,...,n-1}.\<close>
-  from Theorem_71_1_wedge_of_circles_finite[OF hwedge]
-  have "\<exists>(G0 :: int set) mul0 e0_g invg0 (\<iota>0 :: nat \<Rightarrow> int).
-      top1_is_free_group_full_on G0 mul0 e0_g invg0 \<iota>0 {..<?n}
-    \<and> top1_groups_isomorphic_on G0 mul0
-        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
-    sorry \<comment> \<open>Theorem\\_71\\_1 gives free group iso to \\<pi>\\_1.\<close>
+  note hThm71 = Theorem_71_1_wedge_of_circles_finite[OF hwedge]
   \<comment> \<open>Step 4: F is free on S with |S| = n. G0 is free on {0,...,n-1}.
      Both have n generators \\<Rightarrow> F \\<cong> G0 (free groups on equinumerous sets).
      G0 \\<cong> \\<pi>\\_1(X) \\<Rightarrow> F \\<cong> \\<pi>\\_1(X).\<close>
   have hF_iso_pi1: "top1_groups_isomorphic_on F mul
       (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
-    sorry \<comment> \<open>F free on S, G0 free on {..<?n}, card S = ?n.
-       By free\\_group\\_full\\_reindex: F free on {..<?n} (via a bijection S \\<rightarrow> {..<?n}).
-       Both F and G0 free on {..<?n}: use free\\_group\\_hom\\_generators\\_iso.
-       F \\<cong> G0 \\<cong> \\<pi>\\_1(X).\<close>
+  proof -
+    \<comment> \<open>Extract G0, iso from hThm71.\<close>
+    from hThm71 obtain G0 :: "int set" and mul0 and e0_g and invg0 and \<iota>0 :: "nat \<Rightarrow> int"
+      where hfree0: "top1_is_free_group_full_on G0 mul0 e0_g invg0 \<iota>0 {..<?n}"
+        and hiso0: "top1_groups_isomorphic_on G0 mul0
+            (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
+      by (by100 blast)
+    \<comment> \<open>F is free on S (assumption). G0 is free on {..<?n} (from Theorem 71.1).
+       card S = ?n. Free groups on equinumerous finite sets are isomorphic.
+       Chain: F \\<cong> G0 \\<cong> \\<pi>\\_1(X).\<close>
+    have "top1_groups_isomorphic_on F mul G0 mul0"
+      sorry \<comment> \<open>Free groups on equinumerous sets are isomorphic.
+         Step 1: bij S \\<rightarrow> {..<?n} (from finite S + card S = ?n).
+         Step 2: free\\_group\\_hom\\_exists + free\\_group\\_hom\\_generators\\_iso.\<close>
+    \<comment> \<open>Transitivity: F \\<cong> G0 \\<cong> \\<pi>\\_1(X).\<close>
+    from groups_isomorphic_trans_fwd[OF this hiso0]
+    show ?thesis .
+  qed
   \<comment> \<open>Step 5: X is a graph (wedge of circles is a graph) and connected.\<close>
   have hgraph: "top1_is_graph_on X TX"
     sorry \<comment> \<open>Wedge of circles with coherent topology is a graph.\<close>
