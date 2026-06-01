@@ -6188,14 +6188,23 @@ proof -
         (top1_fundamental_group_invg E' TE' e0')
         \<iota>_E S_E"
     by - ((erule exE)+, (erule that))
-  \<comment> \<open>Step 3b: H free with rank kn+1 (Euler characteristic argument).\<close>
-  have hE'_free: "\<exists>(\<iota>H::nat \<Rightarrow> 'g) (SH::nat set).
-      top1_is_free_group_full_on H mul e invg \<iota>H SH \<and> card SH = k * n + 1"
+  \<comment> \<open>Step 3b: H is free (same pattern as \\<S>85.1 step 3c).\<close>
+  have hH_free: "\<exists>(\<iota>H::nat \<Rightarrow> 'g) (SH::nat set).
+      top1_is_free_group_full_on H mul e invg \<iota>H SH"
+    sorry \<comment> \<open>Same pattern as \\<S>85.1: covering + graph + free + p'* injective + iso transfer.
+       Requires: H-correspondence (p'*(\\<pi>\\_1(E')) = f\\_iso(H)) from covering construction.\<close>
+  \<comment> \<open>Step 3c: rank = kn+1 (Euler characteristic argument).\<close>
+  from hH_free obtain \<iota>H :: "nat \<Rightarrow> 'g" and SH :: "nat set"
+    where "top1_is_free_group_full_on H mul e invg \<iota>H SH"
+    by (by100 blast)
+  have "card SH = k * n + 1"
     sorry \<comment> \<open>Euler char: X has 1 vertex + (n+1) edges, chi(X) = -n.
        E' has k sheets: chi(E') = k*chi(X) = -kn.
        rank(pi1(E')) = 1-chi(E') = kn+1.
-       H iso pi1(E') (from covering + p* injective) with same rank.\<close>
-  show ?thesis using hE'_free by (by100 blast)
+       H iso pi1(E') \\<Rightarrow> same rank by free\\_group\\_rank\\_invariant\\_finite.\<close>
+  show ?thesis
+    using \<open>top1_is_free_group_full_on H mul e invg \<iota>H SH\<close> \<open>card SH = k * n + 1\<close>
+    by (by100 blast)
 qed
 
  
