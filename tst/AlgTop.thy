@@ -3254,8 +3254,8 @@ proof -
                 (top1_fundamental_group_invg (T \<union> \<Union>F)
                     (subspace_topology Y TY (T \<union> \<Union>F)) y0)
                 \<iota>F F
-              \<and> (\<forall>A\<in>F. \<iota>F A = top1_fundamental_group_induced_on (T \<union> \<Union>F)
-                    (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (gen A))"
+              \<and> (\<forall>A\<in>F. top1_fundamental_group_induced_on (T \<union> \<Union>F)
+                    (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A)"
           sorry \<comment> \<open>Proof by strong induction on card F (book Steps 1+2).
              Base case (card F = 1): graph\\_one\\_edge\\_pi1\\_iso\\_Z + generator identification.
                \\<pi>\\_1(T\\<union>D) \\<cong> \\<Z> with [g\\_D] as the \\<Z> generator. Uses quotient
@@ -3331,8 +3331,8 @@ proof -
                     (top1_fundamental_group_mul ?YAB ?TYAB y0)
                     (top1_fundamental_group_id ?YAB ?TYAB y0)
                     (top1_fundamental_group_invg ?YAB ?TYAB y0) \<iota>F ?F"
-                    and hgenF: "\<forall>C\<in>?F. \<iota>F C = top1_fundamental_group_induced_on
-                        ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (gen C)"
+                    and hgenF: "\<forall>C\<in>?F. top1_fundamental_group_induced_on
+                        ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F C) = gen C"
                   by (by100 blast)
                 \<comment> \<open>In the free group, \\<iota>\\_F(A) \\<noteq> \\<iota>\\_F(B) since A \\<noteq> B and \\<iota>\\_F injective.\<close>
                 have "inj_on \<iota>F ?F"
@@ -3341,13 +3341,41 @@ proof -
                   show ?thesis by (by5000 blast)
                 qed
                 hence "\<iota>F A \<noteq> \<iota>F B" using \<open>A \<noteq> B\<close> by (by100 blast)
-                \<comment> \<open>But \\<iota>\\_F(A) = incl(gen A) and \\<iota>\\_F(B) = incl(gen B).\<close>
-                have "\<iota>F A = top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (gen A)"
+                \<comment> \<open>But incl(\\<iota>\\_F(A)) = gen(A) = gen(B) = incl(\\<iota>\\_F(B)).
+                   By hincl\\_inj: inclusion injective. So \\<iota>\\_F(A) = \\<iota>\\_F(B). Contradiction.\<close>
+                have hgenFA: "top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A"
                   using hgenF by (by100 blast)
-                have "\<iota>F B = top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (gen B)"
+                have hgenFB: "top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F B) = gen B"
                   using hgenF by (by100 blast)
-                \<comment> \<open>Since gen A = gen B: incl(gen A) = incl(gen B). So \\<iota>\\_F(A) = \\<iota>\\_F(B). Contradiction.\<close>
-                have "\<iota>F A = \<iota>F B" using \<open>\<iota>F A = _\<close> \<open>\<iota>F B = _\<close> \<open>gen A = gen B\<close> by (by100 simp)
+                have hincl_eq: "top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) =
+                    top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F B)"
+                  using hgenFA hgenFB \<open>gen A = gen B\<close> by (by100 simp)
+                \<comment> \<open>Both \\<iota>\\_F(A), \\<iota>\\_F(B) \\<in> carrier. hincl\\_inj: incl injective on carrier.\<close>
+                \<comment> \<open>By hincl\\_inj: the inclusion \\<pi>\\_1(T \\<union> A \\<union> B) \\<rightarrow> \\<pi>\\_1(Y) is injective.
+                   Since incl(\\<iota>\\_F A) = incl(\\<iota>\\_F B), we get \\<iota>\\_F A = \\<iota>\\_F B.\<close>
+                have "\<iota>F A = \<iota>F B"
+                proof -
+                  have "?F \<subseteq> ?NT" using \<open>A \<in> ?NT\<close> \<open>B \<in> ?NT\<close> by (by100 blast)
+                  have hinj: "inj_on (top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x))
+                      (top1_fundamental_group_carrier ?YAB ?TYAB y0)"
+                    using hincl_inj[OF \<open>finite ?F\<close> \<open>?F \<subseteq> ?NT\<close> \<open>?F \<noteq> {}\<close>] by (by100 blast)
+                  have hA_c: "\<iota>F A \<in> top1_fundamental_group_carrier ?YAB ?TYAB y0"
+                  proof -
+                    from hfreeF[unfolded top1_is_free_group_full_on_def]
+                    have "A \<in> ?F \<Longrightarrow> \<iota>F A \<in> top1_fundamental_group_carrier ?YAB ?TYAB y0"
+                      by (by5000 blast)
+                    thus ?thesis by (by100 blast)
+                  qed
+                  have hB_c: "\<iota>F B \<in> top1_fundamental_group_carrier ?YAB ?TYAB y0"
+                  proof -
+                    from hfreeF[unfolded top1_is_free_group_full_on_def]
+                    have "B \<in> ?F \<Longrightarrow> \<iota>F B \<in> top1_fundamental_group_carrier ?YAB ?TYAB y0"
+                      by (by5000 blast)
+                    thus ?thesis by (by100 blast)
+                  qed
+                  show ?thesis using hinj hA_c hB_c hincl_eq
+                    unfolding inj_on_def by (by5000 blast)
+                qed
                 thus False using \<open>\<iota>F A \<noteq> \<iota>F B\<close> by contradiction
               qed
             qed
