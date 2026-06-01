@@ -2267,7 +2267,31 @@ proof -
             have hcover: "?YF \<union> \<Union>(F' - F) = ?YFF" by (by100 blast)
             \<comment> \<open>r continuous on ?YF (identity).\<close>
             have hr_YF: "top1_continuous_map_on ?YF (subspace_topology ?YFF ?TYFF ?YF) ?YF ?TYF r"
-              sorry \<comment> \<open>r = id on ?YF, identity is continuous.\<close>
+            proof -
+              have hsubsp: "subspace_topology ?YFF ?TYFF ?YF = ?TYF"
+                by (rule subspace_topology_trans) blast
+              show ?thesis unfolding hsubsp top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix x assume "x \<in> ?YF" thus "r x \<in> ?YF" using hr_fixes by (by100 simp)
+              next
+                fix V assume "V \<in> ?TYF"
+                hence "V \<subseteq> ?YF" unfolding subspace_topology_def by (by100 blast)
+                have hr_id: "\<And>x. x \<in> ?YF \<Longrightarrow> r x = x" using hr_fixes by (by100 blast)
+                have "{x \<in> ?YF. r x \<in> V} = V"
+                proof (rule set_eqI, rule iffI)
+                  fix x assume "x \<in> {x \<in> ?YF. r x \<in> V}"
+                  hence "x \<in> ?YF" "r x \<in> V" by (by100 blast)+
+                  hence "x \<in> V" using hr_id by (by100 simp)
+                  thus "x \<in> V" .
+                next
+                  fix x assume "x \<in> V"
+                  hence "x \<in> ?YF" using \<open>V \<subseteq> ?YF\<close> by (by100 blast)
+                  hence "r x = x" using hr_id by (by100 blast)
+                  thus "x \<in> {x \<in> ?YF. r x \<in> V}" using \<open>x \<in> V\<close> \<open>x \<in> ?YF\<close> by (by100 simp)
+                qed
+                thus "{x \<in> ?YF. r x \<in> V} \<in> ?TYF" using \<open>V \<in> ?TYF\<close> by (by100 simp)
+              qed
+            qed
             \<comment> \<open>r continuous on \\<Union>(F'\\\\F).\<close>
             have hr_G: "top1_continuous_map_on (\<Union>(F' - F))
                 (subspace_topology ?YFF ?TYFF (\<Union>(F' - F))) ?YF ?TYF r"
