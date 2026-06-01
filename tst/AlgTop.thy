@@ -2212,17 +2212,72 @@ proof -
               else rr (THE A. A \<in> F' - F \<and> x \<in> A \<and> x \<notin> T) x)" for x
             \<comment> \<open>r maps ?YFF into ?YF.\<close>
             have hr_maps: "\<forall>x \<in> ?YFF. r x \<in> ?YF"
-              sorry \<comment> \<open>If x \\<in> ?YF: r x = x \\<in> ?YF. Otherwise: rr A x \\<in> T \\<subseteq> ?YF.\<close>
+            proof (intro ballI)
+              fix x assume "x \<in> ?YFF"
+              show "r x \<in> ?YF"
+              proof (cases "x \<in> ?YF")
+                case True thus ?thesis unfolding r_def by (by100 simp)
+              next
+                case False
+                hence hx_not_T: "x \<notin> T" and hx_not_F: "x \<notin> \<Union>F" by (by100 blast)+
+                from \<open>x \<in> ?YFF\<close> False have "x \<in> \<Union>(F' - F)" by (by100 blast)
+                then obtain A where "A \<in> F' - F" "x \<in> A" by (by100 blast)
+                \<comment> \<open>A is the unique such arc (arc interiors are disjoint).\<close>
+                have hA_unique: "\<And>B. B \<in> F' - F \<Longrightarrow> x \<in> B \<Longrightarrow> x \<notin> T \<Longrightarrow> B = A"
+                proof -
+                  fix B assume "B \<in> F' - F" "x \<in> B" "x \<notin> T"
+                  show "B = A"
+                  proof (rule ccontr)
+                    assume "B \<noteq> A"
+                    have "A \<in> \<A>" "B \<in> \<A>" using \<open>A \<in> F' - F\<close> \<open>B \<in> F' - F\<close> hG_NT by (by100 blast)+
+                    from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>B \<noteq> A\<close>[symmetric]]
+                    have "B \<inter> A \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)" by (by100 blast)
+                    hence "x \<in> top1_arc_endpoints_on B (subspace_topology Y TY B)"
+                      using \<open>x \<in> A\<close> \<open>x \<in> B\<close> by (by100 blast)
+                    hence "x \<in> T" using hNT_endpoints \<open>B \<in> F' - F\<close> hG_NT by (by100 blast)
+                    thus False using \<open>x \<notin> T\<close> by contradiction
+                  qed
+                qed
+                have hthe: "(THE A. A \<in> F' - F \<and> x \<in> A \<and> x \<notin> T) = A"
+                  by (rule the_equality) (use \<open>A \<in> F' - F\<close> \<open>x \<in> A\<close> hx_not_T hA_unique in blast)+
+                have "r x = rr A x" unfolding r_def using False hthe by (by100 simp)
+                moreover have "rr A x \<in> T"
+                  using hrr \<open>A \<in> F' - F\<close> \<open>x \<in> A\<close>
+                  unfolding top1_continuous_map_on_def by (by100 blast)
+                ultimately have "r x \<in> T" by (by100 simp)
+                thus ?thesis by (by100 blast)
+              qed
+            qed
             \<comment> \<open>r fixes ?YF.\<close>
             have hr_fixes: "\<forall>x \<in> ?YF. r x = x"
               unfolding r_def by (by100 simp)
             \<comment> \<open>r continuous: use pasting\\_lemma\\_two\\_closed on ?YF and \\<Union>(F'\\\\F).\<close>
+            \<comment> \<open>r continuous via Theorem 18.3 (pasting lemma for two closed sets).\<close>
+            have hTYFF_top: "is_topology_on ?YFF ?TYFF"
+              by (rule subspace_topology_is_topology_on[OF hTY_top]) (use hYF_sub hF_NT hF'_NT h\<A> in blast)
+            have hTYF_top: "is_topology_on ?YF ?TYF"
+              by (rule subspace_topology_is_topology_on[OF hTY_top hYF_sub])
+            \<comment> \<open>?YF closed in ?YFF.\<close>
+            have hYF_closed: "closedin_on ?YFF ?TYFF ?YF"
+              sorry \<comment> \<open>By coherent topology of ?YFF: ?YF \\<inter> A closed in A for each arc.\<close>
+            \<comment> \<open>\\<Union>(F'\\\\F) closed in ?YFF.\<close>
+            have hG_closed: "closedin_on ?YFF ?TYFF (\<Union>(F' - F))"
+              sorry \<comment> \<open>Finite union of closed arcs.\<close>
+            \<comment> \<open>?YF \\<union> \\<Union>(F'\\\\F) = ?YFF.\<close>
+            have hcover: "?YF \<union> \<Union>(F' - F) = ?YFF" by (by100 blast)
+            \<comment> \<open>r continuous on ?YF (identity).\<close>
+            have hr_YF: "top1_continuous_map_on ?YF (subspace_topology ?YFF ?TYFF ?YF) ?YF ?TYF r"
+              sorry \<comment> \<open>r = id on ?YF, identity is continuous.\<close>
+            \<comment> \<open>r continuous on \\<Union>(F'\\\\F).\<close>
+            have hr_G: "top1_continuous_map_on (\<Union>(F' - F))
+                (subspace_topology ?YFF ?TYFF (\<Union>(F' - F))) ?YF ?TYF r"
+              sorry \<comment> \<open>For each A \\<in> F'\\\\F: r|A = rr(A) continuous from A to T \\<subseteq> ?YF.
+                 By iterated pasting on the finite set F'\\\\F.\<close>
+            \<comment> \<open>Apply pasting\\_lemma\\_two\\_closed.\<close>
+            have hr_maps': "\<forall>x \<in> ?YFF. r x \<in> ?YF" using hr_maps by (by100 blast)
             have hr_cont: "top1_continuous_map_on ?YFF ?TYFF ?YF ?TYF r"
-              sorry \<comment> \<open>By pasting\\_lemma\\_two\\_closed with ?YF and \\<Union>(F'\\\\F).
-                 ?YF closed in ?YFF (coherent topology).
-                 \\<Union>(F'\\\\F) closed in ?YFF (finite union of closed arcs).
-                 r continuous on ?YF (identity).
-                 r continuous on \\<Union>(F'\\\\F) (rr A continuous on each arc A).\<close>
+              by (rule pasting_lemma_two_closed[OF hTYFF_top hTYF_top hYF_closed hG_closed
+                  hcover hr_maps' hr_YF hr_G])
             have hYF_sub_FF': "?YF \<subseteq> ?YFF" by (by100 blast)
             have hsubsp_eq': "subspace_topology ?YFF ?TYFF ?YF = ?TYF"
               by (rule subspace_topology_trans) (use hYF_sub_FF' in blast)
