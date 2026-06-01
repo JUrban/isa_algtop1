@@ -3836,7 +3836,20 @@ proof -
             \<comment> \<open>Step 3: Relate \\<iota>(s) to incl*(\\<iota>F(inv(idx,s))).\<close>
             have h\<iota>_eq_incl: "\<forall>i<length ws. \<iota> (fst (ws ! i)) =
                 ?incl (\<iota>F (the_inv_into ?NT idx (fst (ws ! i))))"
-              sorry \<comment> \<open>\\<iota>(s) = gen(inv(idx,s)) = incl*(\\<iota>F(inv(idx,s))) by \\<iota>\\_def + hgenF.\<close>
+            proof (intro allI impI)
+              fix i assume "i < length ws"
+              let ?s = "fst (ws ! i)" and ?A = "the_inv_into ?NT idx (fst (ws ! i))"
+              \<comment> \<open>\\<iota>(s) = gen(inv(idx,s)) by \\<iota>\\_def.\<close>
+              have "\<iota> ?s = gen ?A" unfolding \<iota>_def by (by100 simp)
+              \<comment> \<open>gen(A) = incl*(\\<iota>F(A)) by hgenF (reversed).\<close>
+              moreover have "?A \<in> ?arcs"
+              proof -
+                have "?s \<in> fst ` set ws" using \<open>i < length ws\<close> by (by100 force)
+                thus ?thesis by (by100 blast)
+              qed
+              hence "?incl (\<iota>F ?A) = gen ?A" using hgenF by (by100 blast)
+              ultimately show "\<iota> ?s = ?incl (\<iota>F ?A)" by (by100 simp)
+            qed
             \<comment> \<open>Step 4: word\\_product(Y, ws) = incl*(word\\_product(?YF, ws\\_F)) by hom\\_word\\_product.\<close>
             let ?ws_F = "map (\<lambda>(s, b). (\<iota>F (the_inv_into ?NT idx s), b)) ws"
             have hword_eq: "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
