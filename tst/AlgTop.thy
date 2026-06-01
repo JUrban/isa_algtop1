@@ -1377,11 +1377,29 @@ proof -
         have hmul: "top1_fundamental_group_mul B TB b0 ?ab_class ?bc_class \<in> H"
           by (rule group_mul_closed[OF assms(7) hH_ab hH_bc])
         \<comment> \<open>[\\<alpha>*rev(\\<beta>)] * [\\<beta>*rev(\\<gamma>)] = [(\\<alpha>*rev(\\<beta>))*(\\<beta>*rev(\\<gamma>))].\<close>
+        have hab_loop: "top1_is_loop_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>))"
+        proof -
+          have h\<alpha>_p: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha> by (by100 blast)
+          have h\<beta>_p: "top1_is_path_on B TB b0 (\<beta> 1) \<beta>" using h\<beta> by (by100 blast)
+          have "top1_is_path_on B TB (\<alpha> 1) b0 (top1_path_reverse \<beta>)"
+            using top1_path_reverse_is_path[OF h\<beta>_p] heq_ab by simp
+          from top1_path_product_is_path[OF hTB h\<alpha>_p this]
+          show ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+        qed
+        have hbc_loop: "top1_is_loop_on B TB b0 (top1_path_product \<beta> (top1_path_reverse \<gamma>))"
+        proof -
+          have h\<beta>_p: "top1_is_path_on B TB b0 (\<beta> 1) \<beta>" using h\<beta> by (by100 blast)
+          have h\<gamma>_p: "top1_is_path_on B TB b0 (\<gamma> 1) \<gamma>" using h\<gamma> by (by100 blast)
+          have "top1_is_path_on B TB (\<beta> 1) b0 (top1_path_reverse \<gamma>)"
+            using top1_path_reverse_is_path[OF h\<gamma>_p] heq_bc by simp
+          from top1_path_product_is_path[OF hTB h\<beta>_p this]
+          show ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+        qed
         have hmul_eq: "top1_fundamental_group_mul B TB b0 ?ab_class ?bc_class
             = {g. top1_loop_equiv_on B TB b0 (top1_path_product
                 (top1_path_product \<alpha> (top1_path_reverse \<beta>))
                 (top1_path_product \<beta> (top1_path_reverse \<gamma>))) g}"
-          sorry \<comment> \<open>fundamental\\_group\\_mul\\_class.\<close>
+          by (rule top1_fundamental_group_mul_class[OF hTB hab_loop hbc_loop])
         \<comment> \<open>[(\\<alpha>*rev(\\<beta>))*(\\<beta>*rev(\\<gamma>))] = [\\<alpha>*rev(\\<gamma>)] (homotopy: assoc + inverse + identity).\<close>
         have hhtpy: "{g. top1_loop_equiv_on B TB b0 (top1_path_product
                 (top1_path_product \<alpha> (top1_path_reverse \<beta>))
