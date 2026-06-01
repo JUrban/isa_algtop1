@@ -1190,9 +1190,16 @@ proof -
      Alternatively: use graph\\_quotient\\_by\\_tree\\_wedge\\_of\\_circles on a graph
      with n+1 arcs, or construct the standard wedge directly.)
      The wedge is a graph (arcs = semi-circles, coherent topology) and connected.\<close>
-  obtain X :: "'a set" and TX :: "'a set set" and p :: 'a
+  have hwedge_exists: "\<exists>(X :: 'a set) TX (p :: 'a). top1_is_wedge_of_circles_on X TX {..<?n} p"
+    sorry \<comment> \<open>Concrete construction of wedge of n circles.
+       For n \\<ge> 1: take n circles in R2 sharing a point.
+       Circle i = {(x,y) | x2 + (y-Suc i)2 = (Suc i)2}, all through (0,0).
+       Topology: subspace of R2 (finite union of closed sets).
+       For n = 0: impossible (wedge def needs p \\<in> X but \\<Union>{} = {}).
+       Note: for n=0, F is trivial and the conclusion can be proved differently.\<close>
+  then obtain X :: "'a set" and TX :: "'a set set" and p :: 'a
     where hwedge: "top1_is_wedge_of_circles_on X TX {..<?n} p"
-    sorry \<comment> \<open>Concrete construction of wedge of n circles.\<close>
+    by (by100 blast)
   \<comment> \<open>Step 3: \\<pi>\\_1(X, p) is free on {0,...,n-1} (Theorem 71.1).\<close>
   \<comment> \<open>Step 3: \\<pi>\\_1(X, p) \\<cong> free group on {0,...,n-1}.\<close>
   note hThm71 = Theorem_71_1_wedge_of_circles_finite[OF hwedge]
