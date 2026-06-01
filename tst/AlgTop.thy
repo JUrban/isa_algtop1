@@ -1631,8 +1631,43 @@ proof -
       \<alpha> \<in> ?paths \<longrightarrow> \<beta> \<in> ?paths \<longrightarrow>
       top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta> \<longrightarrow>
       ?coset_class (top1_path_product \<alpha> \<delta>) = ?coset_class (top1_path_product \<beta> \<delta>)"
-    sorry \<comment> \<open>[(\\<alpha>*\\<delta>)*rev(\\<beta>*\\<delta>)] = [\\<alpha>*rev(\\<beta>)] \\<in> H (transitivity-style argument:
-       \\<delta>*rev(\\<delta>) cancels in the middle).\<close>
+  proof (intro allI impI)
+    fix \<alpha> \<beta> \<delta> assume heq_cls: "?coset_class \<alpha> = ?coset_class \<beta>"
+        and h\<alpha>p: "\<alpha> \<in> ?paths" and h\<beta>p: "\<beta> \<in> ?paths"
+        and h\<delta>p: "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
+    \<comment> \<open>From coset\\_class(\\<alpha>) = coset\\_class(\\<beta>): coset\\_rel(\\<alpha>,\\<beta>), i.e. [\\<alpha>*rev(\\<beta>)] \\<in> H.\<close>
+    have h\<alpha>\<beta>_rel: "?coset_rel \<alpha> \<beta>"
+    proof -
+      \<comment> \<open>\\<alpha> \\<in> coset\\_class(\\<alpha>) (reflexivity). coset\\_class(\\<alpha>) = coset\\_class(\\<beta>).
+         So \\<alpha> \\<in> coset\\_class(\\<beta>), giving coset\\_rel(\\<beta>,\\<alpha>). By symmetry: coset\\_rel(\\<alpha>,\\<beta>).\<close>
+      have "\<alpha> \<in> ?coset_class \<alpha>"
+        using hcoset_refl[rule_format, OF h\<alpha>p] h\<alpha>p by (by100 blast)
+      hence h\<alpha>_in_\<beta>: "\<alpha> \<in> ?coset_class \<beta>" using heq_cls by (by100 blast)
+      \<comment> \<open>\\<alpha> \\<in> coset\\_class(\\<beta>) gives: [\\<beta>*rev(\\<alpha>)] \\<in> H, i.e., coset\\_rel(\\<beta>,\\<alpha>).\<close>
+      have "\<alpha> 1 = \<beta> 1" using h\<alpha>_in_\<beta> by (by100 blast)
+      have "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<beta> (top1_path_reverse \<alpha>)) g} \<in> H"
+        using h\<alpha>_in_\<beta> by (by100 blast)
+      have "?coset_rel \<beta> \<alpha>"
+        using h\<alpha>p h\<beta>p \<open>\<alpha> 1 = \<beta> 1\<close>
+          \<open>{g. top1_loop_equiv_on B TB b0 (top1_path_product \<beta> (top1_path_reverse \<alpha>)) g} \<in> H\<close>
+        by (by100 auto)
+      \<comment> \<open>By symmetry: coset\\_rel(\\<alpha>,\\<beta>).\<close>
+      from hcoset_sym[rule_format, OF this] show ?thesis .
+    qed
+    hence heq_ep: "\<alpha> 1 = \<beta> 1" by (by100 blast)
+    hence h\<delta>p': "top1_is_path_on B TB (\<beta> 1) (\<delta> 1) \<delta>"
+      using h\<delta>p by simp
+    have hH_ab: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g} \<in> H"
+      using h\<alpha>\<beta>_rel by (by100 blast)
+    \<comment> \<open>Need: [(\\<alpha>*\\<delta>)*rev(\\<beta>*\\<delta>)] = [\\<alpha>*rev(\\<beta>)] \\<in> H.
+       The class equality follows from the homotopy:
+       (\\<alpha>*\\<delta>)*rev(\\<beta>*\\<delta>) \\<simeq> \\<alpha>*rev(\\<beta>) (\\<delta>*rev(\\<delta>) cancels).\<close>
+    \<comment> \<open>Then coset\\_class equality follows from the same H-membership argument
+       as in hprod\\_const.\<close>
+    show "?coset_class (top1_path_product \<alpha> \<delta>) = ?coset_class (top1_path_product \<beta> \<delta>)"
+      sorry \<comment> \<open>Both directions: use homotopy (\\<alpha>*\\<delta>)*rev(\\<beta>*\\<delta>) \\<simeq> \\<alpha>*rev(\\<beta>)
+         + path\\_homotopic\\_product\\_left for class compatibility.\<close>
+  qed
   have hbasis_eq: "\<forall>\<alpha> \<beta>. \<forall>U \<in> TB. ?coset_class \<beta> \<in> ?B_basis U \<alpha> \<longrightarrow>
       ?B_basis U \<alpha> = ?B_basis U \<beta>"
   proof (intro allI ballI impI)
