@@ -487,6 +487,11 @@ proof -
      Step 2a: Bring all vertices to one equivalence class.
      Step 2b: Collect pairs aa into adjacent positions (projective type).
      Step 2c: Pair remaining letters into commutator blocks aba\<inverse>b\<inverse> (torus type).\<close>
+  \<comment> \<open>AUDIT NOTE (B03): The predicates top1\\_is\\_torus\\_scheme,
+     top1\\_is\\_projective\\_scheme, top1\\_elementary\\_scheme\\_equiv are not yet
+     defined in the active source tree. They are placeholders inside a sorry block.
+     They should be defined as: torus scheme = a1 b1 a1\\<inverse> b1\\<inverse> ... an bn an\\<inverse> bn\\<inverse>,
+     projective scheme = a1 a1 ... am am, and scheme\\_equiv = rtranclp of elementary moves.\<close>
   have hreduced: "(\<exists>w. scheme = w \<and> (\<forall>a\<in>set w. snd a) \<and> length w = 0)
       \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n
             \<and> top1_elementary_scheme_equiv scheme w)
@@ -2873,6 +2878,11 @@ proof (intro conjI)
 qed
 
 \<comment> \<open>Weak form of Theorem 84.7: \\<pi>\\_1 of a connected graph is free (no int set).
+   AUDIT NOTE (D02): The nat-indexed basis is correct for finite and countable
+   graphs but over-strong for uncountable graphs. The finite case (the main one)
+   is fully proved; the infinite case has a sorry at the countability step.
+   For downstream uses (\\<S>85), only finite covering spaces of finite graphs are
+   needed, so the nat-indexed version is correct in those contexts.
    This is proved as a standalone universal lemma that can be used
    for subgraph applications inside Theorem 84.7's proof.\<close>
 lemma graph_pi1_free_weak:
