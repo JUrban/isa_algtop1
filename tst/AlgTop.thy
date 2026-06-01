@@ -3426,7 +3426,50 @@ proof -
               top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
                   (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
                   (top1_fundamental_group_invg Y TY y0) (\<iota> ` S)"
-            sorry \<comment> \<open>Every [\\<alpha>] is a word in generators (hloop\\_in\\_finite + hfinite\\_subgraph\\_free).\<close>
+          proof (rule set_eqI, rule iffI)
+            fix c assume "c \<in> top1_fundamental_group_carrier Y TY y0"
+            \<comment> \<open>c = [\\<alpha>] for some loop \\<alpha>. By hloop\\_in\\_finite: \\<alpha> lies in T \\<union> \\<Union>F for finite F.
+               By harc\\_loops\\_free: \\<pi>\\_1(T\\<union>\\<Union>F) free on F with generators matching gen.
+               By hom\\_image\\_in\\_subgroup\\_from\\_generators: inclusion maps into subgroup\\_gen({gen(A)}).
+               Since {gen(A) | A \\<in> F} \\<subseteq> {\\<iota>(s) | s \\<in> S}: c \\<in> subgroup\\_gen(\\<iota>`S).\<close>
+            show "c \<in> top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
+                (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+                (top1_fundamental_group_invg Y TY y0) (\<iota> ` S)"
+              sorry \<comment> \<open>From harc\\_loops\\_free + hloop\\_in\\_finite + hom\\_image\\_in\\_subgroup\\_from\\_generators.
+                 Key steps: extract loop from c, apply hloop\\_in\\_finite, then harc\\_loops\\_free,
+                 then inclusion\\_induced\\_class + hom\\_image\\_in\\_subgroup.\<close>
+          next
+            fix c assume "c \<in> top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
+                (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+                (top1_fundamental_group_invg Y TY y0) (\<iota> ` S)"
+            show "c \<in> top1_fundamental_group_carrier Y TY y0"
+            proof -
+              have "top1_is_group_on (top1_fundamental_group_carrier Y TY y0)
+                  (top1_fundamental_group_mul Y TY y0)
+                  (top1_fundamental_group_id Y TY y0)
+                  (top1_fundamental_group_invg Y TY y0)"
+                by (rule top1_fundamental_group_is_group[OF hTY_top assms(3)])
+              have h\<iota>_sub: "\<iota> ` S \<subseteq> top1_fundamental_group_carrier Y TY y0"
+              proof
+                fix x assume "x \<in> \<iota> ` S"
+                then obtain s where "s \<in> S" "x = \<iota> s" by (by100 blast)
+                from bij_betw_imp_surj_on[OF hidx] \<open>s \<in> S\<close>
+                obtain A where "A \<in> ?NT" "idx A = s" by (by100 blast)
+                have "the_inv_into ?NT idx s = A"
+                  using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF hidx] \<open>A \<in> ?NT\<close>]
+                    \<open>idx A = s\<close> by (by100 simp)
+                hence "\<iota> s = gen A" unfolding \<iota>_def by (by100 simp)
+                thus "x \<in> top1_fundamental_group_carrier Y TY y0"
+                  using \<open>x = \<iota> s\<close> hgen[rule_format, OF \<open>A \<in> ?NT\<close>] by (by100 simp)
+              qed
+              from subgroup_generated_subset[OF \<open>top1_is_group_on _ _ _ _\<close> h\<iota>_sub]
+              have "top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
+                  (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+                  (top1_fundamental_group_invg Y TY y0) (\<iota> ` S)
+                  \<subseteq> top1_fundamental_group_carrier Y TY y0" .
+              thus ?thesis using \<open>c \<in> _\<close> by (by100 blast)
+            qed
+          qed
           \<comment> \<open>5. No non-trivial reduced word = identity.\<close>
           show "\<forall>ws. ws \<noteq> [] \<longrightarrow>
               top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<longrightarrow>
