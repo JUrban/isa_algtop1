@@ -6082,9 +6082,32 @@ proof -
       have h\<phi>_hom: "top1_group_hom_on
           (top1_fundamental_group_carrier E' TE' e0')
           (top1_fundamental_group_mul E' TE' e0') H mul ?\<phi>"
-        sorry \<comment> \<open>From hp\\_hom + hf\\_inv\\_hom: composition preserves mul.
-           \\<phi>(mul\\_E(a,b)) = f\\_inv(p*(mul\\_E(a,b))) = f\\_inv(mul\\_X(p*a, p*b))
-           = mul(f\\_inv(p*a), f\\_inv(p*b)) = mul(\\<phi>(a), \\<phi>(b)).\<close>
+        unfolding top1_group_hom_on_def comp_def
+      proof (intro conjI ballI)
+        fix c assume "c \<in> top1_fundamental_group_carrier E' TE' e0'"
+        show "?f_inv (?p_star c) \<in> H" using h\<phi>_maps \<open>c \<in> _\<close> unfolding comp_def
+          by (by100 blast)
+      next
+        fix a b assume "a \<in> top1_fundamental_group_carrier E' TE' e0'"
+            and "b \<in> top1_fundamental_group_carrier E' TE' e0'"
+        \<comment> \<open>p* preserves mul: p*(mul\\_E(a,b)) = mul\\_X(p*a, p*b).\<close>
+        have "?p_star (top1_fundamental_group_mul E' TE' e0' a b) =
+            top1_fundamental_group_mul X TX x0 (?p_star a) (?p_star b)"
+          using hp_hom \<open>a \<in> _\<close> \<open>b \<in> _\<close> unfolding top1_group_hom_on_def by (by100 blast)
+        \<comment> \<open>f\\_inv preserves mul: f\\_inv(mul\\_X(x,y)) = mul(f\\_inv(x), f\\_inv(y)).\<close>
+        moreover have "?f_inv (top1_fundamental_group_mul X TX x0 (?p_star a) (?p_star b)) =
+            mul (?f_inv (?p_star a)) (?f_inv (?p_star b))"
+        proof -
+          have "?p_star a \<in> top1_fundamental_group_carrier X TX x0"
+            using hp_hom \<open>a \<in> _\<close> unfolding top1_group_hom_on_def by (by100 blast)
+          have "?p_star b \<in> top1_fundamental_group_carrier X TX x0"
+            using hp_hom \<open>b \<in> _\<close> unfolding top1_group_hom_on_def by (by100 blast)
+          from hf_inv_hom[unfolded top1_group_hom_on_def]
+          show ?thesis using \<open>?p_star a \<in> _\<close> \<open>?p_star b \<in> _\<close> by (by100 blast)
+        qed
+        ultimately show "?f_inv (?p_star (top1_fundamental_group_mul E' TE' e0' a b)) =
+            mul (?f_inv (?p_star a)) (?f_inv (?p_star b))" by (by100 simp)
+      qed
       \<comment> \<open>Package as group\\_iso\\_on.\<close>
       have "top1_group_iso_on (top1_fundamental_group_carrier E' TE' e0')
           (top1_fundamental_group_mul E' TE' e0') H mul ?\<phi>"
