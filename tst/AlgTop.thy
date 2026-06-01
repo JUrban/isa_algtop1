@@ -3943,7 +3943,15 @@ proof -
             qed
             \<comment> \<open>Step 5: ?ws\\_F is a non-trivial reduced word in \\<pi>\\_1(?YF).\<close>
             have hws_F_red: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>F (the_inv_into ?NT idx s), b)) ws)"
-              sorry \<comment> \<open>Reduced word preserved: \\<iota>F injective on ?arcs, inv(idx) injective on S.\<close>
+            proof -
+              \<comment> \<open>Use reduced\\_word\\_transfer with h = \\<iota>, g = \\<iota>F \\<circ> inv(idx).
+                 Need: \\<iota>(s) = \\<iota>(t) \\<Longrightarrow> (\\<iota>F\\<circ>inv(idx))(s) = (\\<iota>F\\<circ>inv(idx))(t) for s,t \\<in> fst`set ws.\<close>
+              have hS_sub: "\<forall>i<length ws. fst (ws ! i) \<in> S"
+                using hws_in by (by100 blast)
+              show ?thesis
+                sorry \<comment> \<open>reduced\\_word\\_transfer with h=\\<iota>, g=\\<iota>F\\<circ>inv(idx).
+                   Both are injective \\<Longrightarrow> agree on equality \\<Longrightarrow> reduced preserved.\<close>
+            qed
             have hws_F_ne: "?ws_F \<noteq> []" using hws_ne by (by100 simp)
             \<comment> \<open>The generators in the word map to ?arcs.\<close>
             have hws_inv_in: "\<forall>i<length ws. the_inv_into ?NT idx (fst (ws ! i)) \<in> ?arcs"
