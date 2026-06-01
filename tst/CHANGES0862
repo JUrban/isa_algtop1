@@ -1,0 +1,9 @@
+Session 0862: Induction step of harc_loops_free decomposed
+
+Build: 13s, 5593 lines, 29 sorry words
+
+Key: Replaced single induction-step sorry with 16-step proof structure.
+PROVED: interior points, open sets, cover, target subsets, y0 membership,
+  topology rewrites, freeness transfer via DR iso, SvK application, packaging.
+SORRY (6): SC, PC x2, DR x2, generator tracking.
+All provable with existing infrastructure.

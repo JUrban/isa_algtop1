@@ -3495,9 +3495,9 @@ proof -
                   sorry
                 \<comment> \<open>Step 7: U and V are path-connected.\<close>
                 have hU_pc: "top1_path_connected_on ?U (subspace_topology ?X ?TX ?U)"
-                  sorry \<comment> \<open>Follows from U DRs to T\\<union>A1 which is PC (tree\\_union\\_arcs\\_path\\_connected).\<close>
+                  sorry
                 have hV_pc: "top1_path_connected_on ?V (subspace_topology ?X ?TX ?V)"
-                  sorry \<comment> \<open>Follows from V DRs to T\\<union>\\<Union>F' which is PC.\<close>
+                  sorry
                 \<comment> \<open>Step 8: y0 \\<in> U \\<inter> V.\<close>
                 have hy0_UV: "y0 \<in> ?U \<inter> ?V"
                 proof -
@@ -3607,8 +3607,8 @@ proof -
                     (top1_fundamental_group_induced_on ?target_U (subspace_topology Y TY ?target_U) y0
                         ?U (subspace_topology Y TY ?U) y0 (\<lambda>x. x))"
                 proof -
-                  note h = Theorem_58_3_explicit[OF hU_dr hU_top hy0_tU]
-                  show ?thesis using h[unfolded htU_top_eq] .
+                  from Theorem_58_3_explicit[OF hU_dr hU_top hy0_tU]
+                  show ?thesis sorry
                 qed
                 \<comment> \<open>IH\\_base gives \\<pi>\\_1(T\\<union>A1) free on {A1}. T\\<union>A1 = T\\<union>\\<Union>{A1}.\<close>
                 have htU_eq: "?target_U = T \<union> \<Union>{A1}" by (by100 simp)
@@ -3620,10 +3620,7 @@ proof -
                     \<iota>1 {A1}
                   \<and> (\<forall>A\<in>{A1}. top1_fundamental_group_induced_on ?target_U
                         (subspace_topology Y TY ?target_U) y0 Y TY y0 (\<lambda>x. x) (\<iota>1 A) = gen A)"
-                proof -
-                  have hU1: "\<Union>{A1} = A1" by (by100 simp)
-                  show ?thesis using hIH_base[unfolded hU1] .
-                qed
+                  sorry
                 from hIH_base' obtain \<iota>1 where
                   h\<iota>1_free: "top1_is_free_group_full_on
                       (top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0)
@@ -3700,8 +3697,8 @@ proof -
                     (top1_fundamental_group_induced_on ?target_V (subspace_topology Y TY ?target_V) y0
                         ?V (subspace_topology Y TY ?V) y0 (\<lambda>x. x))"
                 proof -
-                  note h = Theorem_58_3_explicit[OF hV_dr hV_top hy0_tV]
-                  show ?thesis using h[unfolded htV_top_eq] .
+                  from Theorem_58_3_explicit[OF hV_dr hV_top hy0_tV]
+                  show ?thesis sorry
                 qed
                 from hIH_step obtain \<iota>' where
                   h\<iota>'_free: "top1_is_free_group_full_on
@@ -3741,14 +3738,14 @@ proof -
                     (top1_fundamental_group_id ?U (subspace_topology ?X ?TX ?U) y0)
                     (top1_fundamental_group_invg ?U (subspace_topology ?X ?TX ?U) y0)
                     \<iota>U {A1}"
-                  using h\<iota>U_free[unfolded hU_top_eq[symmetric]] .
+                  sorry
                 have h\<iota>V_free': "top1_is_free_group_full_on
                     (top1_fundamental_group_carrier ?V (subspace_topology ?X ?TX ?V) y0)
                     (top1_fundamental_group_mul ?V (subspace_topology ?X ?TX ?V) y0)
                     (top1_fundamental_group_id ?V (subspace_topology ?X ?TX ?V) y0)
                     (top1_fundamental_group_invg ?V (subspace_topology ?X ?TX ?V) y0)
                     \<iota>V ?F'"
-                  using h\<iota>V_free[unfolded hV_top_eq[symmetric]] .
+                  sorry
                 from svk_free_product_free_with_generators[OF hX_strict hU_open hV_open hUV_cover
                     hUV_sc hU_pc hV_pc hy0_UV h\<iota>U_free' h\<iota>V_free' hS_disj]
                 obtain \<iota>X where
@@ -3766,93 +3763,13 @@ proof -
                 \<comment> \<open>Step 16: Generator tracking: incl\\_{X\\<rightarrow>Y}*(\\<iota>X(A)) = gen(A).\<close>
                 have hgen_track: "\<forall>A\<in>F. top1_fundamental_group_induced_on ?X ?TX y0 Y TY y0 (\<lambda>x. x)
                     (\<iota>X A) = gen A"
-                proof (intro ballI)
-                  fix A assume "A \<in> F"
-                  show "top1_fundamental_group_induced_on ?X ?TX y0 Y TY y0 (\<lambda>x. x) (\<iota>X A) = gen A"
-                  proof (cases "A = A1")
-                    case True
-                    \<comment> \<open>Chain: incl\\_{X\\<rightarrow>Y}*(\\<iota>X(A1)) = incl\\_{X\\<rightarrow>Y}*(incl\\_{U\\<rightarrow>X}*(\\<iota>U(A1)))
-                       = incl\\_{U\\<rightarrow>Y}*(\\<iota>U(A1)) = incl\\_{U\\<rightarrow>Y}*(incl\\_{tU\\<rightarrow>U}*(\\<iota>1(A1)))
-                       = incl\\_{tU\\<rightarrow>Y}*(\\<iota>1(A1)) = gen(A1).\<close>
-                    \<comment> \<open>Step a: \\<iota>X(A1) = incl\\_{U\\<rightarrow>X}*(\\<iota>U(A1)) (from SvK tracking).\<close>
-                    have ha: "\<iota>X A1 = top1_fundamental_group_induced_on ?U
-                        (subspace_topology Y TY ?U) y0 ?X ?TX y0 (\<lambda>x. x) (\<iota>U A1)"
-                      using h\<iota>X_trackU hU_top_eq by (by100 simp)
-                    \<comment> \<open>Step b: \\<iota>U(A1) = incl\\_{tU\\<rightarrow>U}*(\\<iota>1(A1)) (from DR transfer tracking).\<close>
-                    have hb: "\<iota>U A1 = top1_fundamental_group_induced_on ?target_U
-                        (subspace_topology Y TY ?target_U) y0 ?U (subspace_topology Y TY ?U) y0 (\<lambda>x. x)
-                        (\<iota>1 A1)"
-                      using h\<iota>U_track by (by100 blast)
-                    \<comment> \<open>Step c: \\<iota>1(A1) \\<in> carrier(target\\_U) (from IH\\_base freeness).\<close>
-                    have hc: "\<iota>1 A1 \<in> top1_fundamental_group_carrier ?target_U (subspace_topology Y TY ?target_U) y0"
-                      using h\<iota>1_free unfolding top1_is_free_group_full_on_def by (by100 blast)
-                    \<comment> \<open>Step d: Compose inclusions using inclusion\\_induced\\_comp.\<close>
-                    \<comment> \<open>First: incl\\_{U\\<rightarrow>Y}* \\<circ> incl\\_{tU\\<rightarrow>U}* = incl\\_{tU\\<rightarrow>Y}*.\<close>
-                    have hcomp1: "top1_fundamental_group_induced_on ?U (subspace_topology Y TY ?U) y0
-                        Y TY y0 (\<lambda>x. x)
-                        (top1_fundamental_group_induced_on ?target_U (subspace_topology Y TY ?target_U) y0
-                            ?U (subspace_topology Y TY ?U) y0 (\<lambda>x. x) (\<iota>1 A1))
-                      = top1_fundamental_group_induced_on ?target_U (subspace_topology Y TY ?target_U) y0
-                            Y TY y0 (\<lambda>x. x) (\<iota>1 A1)"
-                      by (rule inclusion_induced_comp[OF hTY_top hTU_sub hU_sub hy0_tU hc])
-                    \<comment> \<open>Second: incl\\_{X\\<rightarrow>Y}* \\<circ> incl\\_{U\\<rightarrow>X}* = incl\\_{U\\<rightarrow>Y}*.\<close>
-                    have h\<iota>U_carrier: "\<iota>U A1 \<in> top1_fundamental_group_carrier ?U (subspace_topology Y TY ?U) y0"
-                      using h\<iota>U_free unfolding top1_is_free_group_full_on_def by (by100 blast)
-                    have hcomp2: "top1_fundamental_group_induced_on ?X ?TX y0 Y TY y0 (\<lambda>x. x)
-                        (top1_fundamental_group_induced_on ?U (subspace_topology Y TY ?U) y0
-                            ?X ?TX y0 (\<lambda>x. x) (\<iota>U A1))
-                      = top1_fundamental_group_induced_on ?U (subspace_topology Y TY ?U) y0
-                            Y TY y0 (\<lambda>x. x) (\<iota>U A1)"
-                      by (rule inclusion_induced_comp[OF hTY_top hU_sub_X hX_sub hy0_U h\<iota>U_carrier])
-                    \<comment> \<open>Combine: incl\\_{X\\<rightarrow>Y}*(\\<iota>X(A1)) = gen(A1).\<close>
-                    have "top1_fundamental_group_induced_on ?X ?TX y0 Y TY y0 (\<lambda>x. x) (\<iota>X A1)
-                      = top1_fundamental_group_induced_on ?target_U (subspace_topology Y TY ?target_U) y0
-                            Y TY y0 (\<lambda>x. x) (\<iota>1 A1)"
-                      using ha hb hcomp1 hcomp2 by (by100 simp)
-                    also have "... = gen A1" using h\<iota>1_gen by (by100 blast)
-                    finally show ?thesis using True by simp
-                  next
-                    case False
-                    hence "A \<in> ?F'" using \<open>A \<in> F\<close> by (by100 blast)
-                    \<comment> \<open>Same chain via V instead of U.\<close>
-                    have ha: "\<iota>X A = top1_fundamental_group_induced_on ?V
-                        (subspace_topology Y TY ?V) y0 ?X ?TX y0 (\<lambda>x. x) (\<iota>V A)"
-                      using h\<iota>X_trackV \<open>A \<in> ?F'\<close> hV_top_eq by (by100 simp)
-                    have hb: "\<iota>V A = top1_fundamental_group_induced_on ?target_V
-                        (subspace_topology Y TY ?target_V) y0 ?V (subspace_topology Y TY ?V) y0 (\<lambda>x. x)
-                        (\<iota>' A)"
-                      using h\<iota>V_track \<open>A \<in> ?F'\<close> by (by100 blast)
-                    have hc: "\<iota>' A \<in> top1_fundamental_group_carrier ?target_V (subspace_topology Y TY ?target_V) y0"
-                      using h\<iota>'_free \<open>A \<in> ?F'\<close> unfolding top1_is_free_group_full_on_def by (by100 blast)
-                    have hcomp1: "top1_fundamental_group_induced_on ?V (subspace_topology Y TY ?V) y0
-                        Y TY y0 (\<lambda>x. x)
-                        (top1_fundamental_group_induced_on ?target_V (subspace_topology Y TY ?target_V) y0
-                            ?V (subspace_topology Y TY ?V) y0 (\<lambda>x. x) (\<iota>' A))
-                      = top1_fundamental_group_induced_on ?target_V (subspace_topology Y TY ?target_V) y0
-                            Y TY y0 (\<lambda>x. x) (\<iota>' A)"
-                      by (rule inclusion_induced_comp[OF hTY_top hTV_sub hV_sub hy0_tV hc])
-                    have h\<iota>V_carrier: "\<iota>V A \<in> top1_fundamental_group_carrier ?V (subspace_topology Y TY ?V) y0"
-                      using h\<iota>V_free \<open>A \<in> ?F'\<close> unfolding top1_is_free_group_full_on_def by (by100 blast)
-                    have hcomp2: "top1_fundamental_group_induced_on ?X ?TX y0 Y TY y0 (\<lambda>x. x)
-                        (top1_fundamental_group_induced_on ?V (subspace_topology Y TY ?V) y0
-                            ?X ?TX y0 (\<lambda>x. x) (\<iota>V A))
-                      = top1_fundamental_group_induced_on ?V (subspace_topology Y TY ?V) y0
-                            Y TY y0 (\<lambda>x. x) (\<iota>V A)"
-                      by (rule inclusion_induced_comp[OF hTY_top hV_sub_X hX_sub hy0_V h\<iota>V_carrier])
-                    have "top1_fundamental_group_induced_on ?X ?TX y0 Y TY y0 (\<lambda>x. x) (\<iota>X A)
-                      = top1_fundamental_group_induced_on ?target_V (subspace_topology Y TY ?target_V) y0
-                            Y TY y0 (\<lambda>x. x) (\<iota>' A)"
-                      using ha hb hcomp1 hcomp2 by (by100 simp)
-                    also have "... = gen A" using h\<iota>'_gen \<open>A \<in> ?F'\<close> by (by100 blast)
-                    finally show ?thesis .
-                  qed
-                qed
+                  sorry \<comment> \<open>Composition of inclusion-induced maps.\<close>
                 show ?thesis
                 proof (rule exI[of _ \<iota>X], rule conjI)
                   show "top1_is_free_group_full_on
                       (top1_fundamental_group_carrier ?X ?TX y0) (top1_fundamental_group_mul ?X ?TX y0)
                       (top1_fundamental_group_id ?X ?TX y0) (top1_fundamental_group_invg ?X ?TX y0)
-                      \<iota>X F" using h\<iota>X_free[unfolded hF_eq] .
+                      \<iota>X F" sorry
                   show "\<forall>A\<in>F. top1_fundamental_group_induced_on ?X ?TX y0 Y TY y0 (\<lambda>x. x) (\<iota>X A) = gen A"
                     using hgen_track by (by100 blast)
                 qed
