@@ -4844,10 +4844,18 @@ proof -
       qed
     next
       case InfFalse: False
-      \<comment> \<open>Infinite case: any loop in finitely many arcs (compactness).\\<close>
-      show ?thesis sorry \<comment> \<open>Compactness reduction: any loop in X lies in T \\<union> (finitely many arcs).
-         Apply finite case to the subgraph T \\<union> {finite arcs}.
-         Book reference: Munkres 84.7 Step 3.\\<close>
+      \<comment> \<open>Infinite case: use graph\\_pi1\\_free\\_weak directly.\<close>
+      from graph_pi1_free_weak[OF assms(1) assms(2) assms(3)]
+      obtain \<iota>_inf :: "nat \<Rightarrow> _" and S_inf :: "nat set"
+        where hfree_inf: "top1_is_free_group_full_on
+            (top1_fundamental_group_carrier X TX x0)
+            (top1_fundamental_group_mul X TX x0)
+            (top1_fundamental_group_id X TX x0)
+            (top1_fundamental_group_invg X TX x0)
+            \<iota>_inf S_inf"
+        by - ((erule exE)+, (erule that))
+      show ?thesis using hfree_inf
+        sorry \<comment> \<open>Same packaging as L4843: convert from abstract type to int set.\<close>
     qed
   qed
 qed
