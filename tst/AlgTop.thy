@@ -4877,7 +4877,61 @@ proof -
                       \<comment> \<open>Endpoint analysis.\<close>
                       have h_reparam_endpoints: "(?reparam 0 = 0 \<and> ?reparam 1 = 1)
                           \<or> (?reparam 0 = 1 \<and> ?reparam 1 = 0)"
-                        sorry \<comment> \<open>Continuous bijection [0,1]\\<rightarrow>[0,1] maps endpoints to endpoints.\<close>
+                      proof -
+                        \<comment> \<open>From arc\\_endpoints\\_are\\_boundary for both homeomorphisms:\<close>
+                        have "D \<subseteq> Y" using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                        have hY_strict_ep: "is_topology_on_strict Y TY"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have hY_haus_ep: "is_hausdorff_on Y TY"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have harc_D_ep: "top1_is_arc_on D (subspace_topology Y TY D)"
+                          using h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                        \<comment> \<open>endpoints(D) = {hD(0), hD(1)} = {h\\_arc(0), h\\_arc(1)}.\<close>
+                        from arc_endpoints_are_boundary[OF hY_strict_ep hY_haus_ep \<open>D \<subseteq> Y\<close> harc_D_ep hhD]
+                        have "top1_arc_endpoints_on D (subspace_topology Y TY D) = {hD 0, hD 1}" .
+                        from arc_endpoints_are_boundary[OF hY_strict_ep hY_haus_ep \<open>D \<subseteq> Y\<close> harc_D_ep hharc]
+                        have "top1_arc_endpoints_on D (subspace_topology Y TY D) = {h_arc 0, h_arc 1}" .
+                        hence h_ep_eq: "{hD 0, hD 1} = {h_arc 0, h_arc 1}"
+                          using \<open>top1_arc_endpoints_on D _ = {hD 0, hD 1}\<close> by simp
+                        \<comment> \<open>hD\\_inv maps hD(0)\\<mapsto>0 and hD(1)\\<mapsto>1.\<close>
+                        have hrep_harc0: "?reparam 0 = ?hD_inv (h_arc 0)" by simp
+                        have hrep_harc1: "?reparam 1 = ?hD_inv (h_arc 1)" by simp
+                        have h0I_ep: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                        have h1I_ep: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                        have hhD0_inv: "?hD_inv (hD 0) = 0"
+                          using the_inv_into_f_f[OF hD_inj h0I_ep] by simp
+                        have hhD1_inv: "?hD_inv (hD 1) = 1"
+                          using the_inv_into_f_f[OF hD_inj h1I_ep] by simp
+                        \<comment> \<open>h\\_arc(0) \\<in> {hD(0), hD(1)} and h\\_arc(1) \\<in> {hD(0), hD(1)}.\<close>
+                        from h_ep_eq have "h_arc 0 \<in> {hD 0, hD 1} \<and> h_arc 1 \<in> {hD 0, hD 1}"
+                          by (by100 blast)
+                        hence "(h_arc 0 = hD 0 \<and> h_arc 1 = hD 1) \<or> (h_arc 0 = hD 1 \<and> h_arc 1 = hD 0)"
+                        proof -
+                          from h_ep_eq have "h_arc 0 = hD 0 \<or> h_arc 0 = hD 1" by (by100 blast)
+                          moreover from h_ep_eq have "h_arc 1 = hD 0 \<or> h_arc 1 = hD 1" by (by100 blast)
+                          moreover have "h_arc 0 \<noteq> h_arc 1"
+                          proof -
+                            have "bij_betw h_arc I_set D"
+                              using hharc unfolding top1_homeomorphism_on_def by (by100 blast)
+                            hence "inj_on h_arc I_set" unfolding bij_betw_def by (by100 blast)
+                            moreover have "(0::real) \<noteq> (1::real)" by (by100 simp)
+                            ultimately show ?thesis using h0I_ep h1I_ep unfolding inj_on_def by (by100 blast)
+                          qed
+                          ultimately show ?thesis by (by5000 metis)
+                        qed
+                        from this show ?thesis
+                        proof (elim disjE conjE)
+                          assume h0eq: "h_arc 0 = hD 0" and h1eq: "h_arc 1 = hD 1"
+                          have "?reparam 0 = 0" using h0eq hhD0_inv by simp
+                          moreover have "?reparam 1 = 1" using h1eq hhD1_inv by simp
+                          ultimately show ?thesis by (by100 blast)
+                        next
+                          assume h0eq: "h_arc 0 = hD 1" and h1eq: "h_arc 1 = hD 0"
+                          have "?reparam 0 = 1" using h0eq hhD1_inv by simp
+                          moreover have "?reparam 1 = 0" using h1eq hhD0_inv by simp
+                          ultimately show ?thesis by (by100 blast)
+                        qed
+                      qed
                       \<comment> \<open>std\\_loop continuous and maps I\\_set to S1.\<close>
                       have hstd_cont_loc: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology ?std_loop"
                         using standard_S1_loop_is_loop unfolding top1_is_loop_on_def top1_is_path_on_def
