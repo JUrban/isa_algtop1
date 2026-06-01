@@ -2529,16 +2529,109 @@ proof -
                     obtain D where "closedin_on Y TY D" "\<Union>(F' - F) = D \<inter> ?YFF" by (by100 blast)
                     have "A \<subseteq> \<Union>(F' - F)" using \<open>A \<in> F' - F\<close> by (by100 blast)
                     have "A \<subseteq> D" using \<open>A \<subseteq> \<Union>(F' - F)\<close> \<open>\<Union>(F' - F) = D \<inter> ?YFF\<close> by (by100 blast)
-                    from h\<A>_coh[rule_format, OF hA_sub_Y, THEN iffD2]
-                    show "closedin_on Y TY A"
-                      sorry \<comment> \<open>A closed in Y via coherent topology (same as in hG\\_closed body).\<close>
+                    have "\<forall>B\<in>\<A>. closedin_on B (subspace_topology Y TY B) (B \<inter> A)"
+                    proof (intro ballI)
+                      fix B assume "B \<in> \<A>"
+                      show "closedin_on B (subspace_topology Y TY B) (B \<inter> A)"
+                      proof (cases "B = A")
+                        case True
+                        have "is_topology_on B (subspace_topology Y TY B)"
+                          by (rule subspace_topology_is_topology_on[OF hTY_top])
+                             (use h\<A> \<open>B \<in> \<A>\<close> in blast)
+                        have "B \<inter> A = B" using True by (by100 blast)
+                        from Theorem_17_1[OF \<open>is_topology_on B _\<close>]
+                        have "closedin_on B (subspace_topology Y TY B) B" by (by100 blast)
+                        thus ?thesis using \<open>B \<inter> A = B\<close> by (by100 simp)
+                      next
+                        case False
+                        from h\<A>_inter[rule_format, OF \<open>B \<in> \<A>\<close> \<open>A \<in> \<A>\<close> False]
+                        have "finite (B \<inter> A)" by (by100 blast)
+                        have "B \<inter> A \<subseteq> B" by (by100 blast)
+                        have "is_hausdorff_on B (subspace_topology Y TY B)"
+                        proof -
+                          have "is_hausdorff_on Y TY"
+                            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                          have "B \<subseteq> Y" using h\<A> \<open>B \<in> \<A>\<close> by (by100 blast)
+                          from Theorem_17_11[THEN conjunct2, THEN conjunct2, rule_format,
+                              OF conjI[OF \<open>is_hausdorff_on Y TY\<close> this]]
+                          show ?thesis .
+                        qed
+                        from Theorem_17_8[OF this \<open>finite (B \<inter> A)\<close> \<open>B \<inter> A \<subseteq> B\<close>]
+                        show ?thesis .
+                      qed
+                    qed
+                    from h\<A>_coh[rule_format, OF hA_sub_Y, THEN iffD2, OF this]
+                    show "closedin_on Y TY A" .
                   qed
                   \<comment> \<open>{x \\<in> A. r x \\<notin> V} = {x \\<in> A. rr A x \\<notin> V} (since r|A = rr(A)).\<close>
                   have hset_eq: "{x \<in> A. r x \<notin> V} = {x \<in> A. rr A x \<notin> V}"
-                    sorry \<comment> \<open>r|A = rr(A) from hr\\_eq\\_rr.\<close>
+                  proof (rule set_eqI, rule iffI)
+                    fix x assume "x \<in> {x \<in> A. r x \<notin> V}"
+                    hence "x \<in> A" "r x \<notin> V" by (by100 blast)+
+                    have "r x = rr A x" by (rule hr_eq_rr[OF \<open>A \<in> F' - F\<close> \<open>x \<in> A\<close>])
+                    hence "rr A x \<notin> V" using \<open>r x \<notin> V\<close> by (by100 simp)
+                    thus "x \<in> {x \<in> A. rr A x \<notin> V}" using \<open>x \<in> A\<close> by (by100 blast)
+                  next
+                    fix x assume "x \<in> {x \<in> A. rr A x \<notin> V}"
+                    hence "x \<in> A" "rr A x \<notin> V" by (by100 blast)+
+                    have "r x = rr A x" by (rule hr_eq_rr[OF \<open>A \<in> F' - F\<close> \<open>x \<in> A\<close>])
+                    hence "r x \<notin> V" using \<open>rr A x \<notin> V\<close> by (by100 simp)
+                    thus "x \<in> {x \<in> A. r x \<notin> V}" using \<open>x \<in> A\<close> by (by100 blast)
+                  qed
                   \<comment> \<open>{x \\<in> A. rr A x \\<notin> V} is closed in A (complement of continuous preimage of open).\<close>
                   have "closedin_on A (subspace_topology Y TY A) {x \<in> A. rr A x \<notin> V}"
-                    sorry \<comment> \<open>rr(A) continuous, so preimage of open V is open, complement is closed.\<close>
+                  proof -
+                    \<comment> \<open>rr(A) continuous from A to T.\<close>
+                    from hrr[rule_format, OF \<open>A \<in> F' - F\<close>]
+                    have hrr_cont: "top1_continuous_map_on A (subspace_topology Y TY A) T
+                        (subspace_topology Y TY T) (rr A)" by (by100 blast)
+                    have hrr_maps: "\<forall>x\<in>A. rr A x \<in> T"
+                      using hrr_cont unfolding top1_continuous_map_on_def by (by100 blast)
+                    \<comment> \<open>V open in ?YF. V \\<inter> T open in T (subspace from Y).\<close>
+                    have "V \<in> ?TYF" by (rule \<open>V \<in> ?TYF\<close>)
+                    from \<open>V \<in> ?TYF\<close>[unfolded subspace_topology_def]
+                    obtain W where "W \<in> TY" "V = W \<inter> ?YF" by (by100 blast)
+                    have "W \<inter> T \<in> subspace_topology Y TY T"
+                      unfolding subspace_topology_def using \<open>W \<in> TY\<close> by (by100 blast)
+                    \<comment> \<open>Preimage of W \\<inter> T under rr(A) is open in A.\<close>
+                    have "{x \<in> A. rr A x \<in> W \<inter> T} \<in> subspace_topology Y TY A"
+                      using hrr_cont \<open>W \<inter> T \<in> subspace_topology Y TY T\<close>
+                      unfolding top1_continuous_map_on_def by (by100 blast)
+                    \<comment> \<open>{x \\<in> A. rr A x \\<in> V} = {x \\<in> A. rr A x \\<in> W \\<inter> T} (since rr maps into T).\<close>
+                    have "{x \<in> A. rr A x \<in> V} = {x \<in> A. rr A x \<in> W \<inter> T}"
+                    proof (rule set_eqI, rule iffI)
+                      fix x assume "x \<in> {x \<in> A. rr A x \<in> V}"
+                      hence "x \<in> A" "rr A x \<in> V" by (by100 blast)+
+                      hence "rr A x \<in> W" "rr A x \<in> ?YF" using \<open>V = W \<inter> ?YF\<close> by (by100 blast)+
+                      hence "rr A x \<in> T" using hrr_maps \<open>x \<in> A\<close> by (by100 blast)
+                      thus "x \<in> {x \<in> A. rr A x \<in> W \<inter> T}" using \<open>x \<in> A\<close> \<open>rr A x \<in> W\<close> by (by100 blast)
+                    next
+                      fix x assume "x \<in> {x \<in> A. rr A x \<in> W \<inter> T}"
+                      hence "x \<in> A" "rr A x \<in> W" "rr A x \<in> T" by (by100 blast)+
+                      hence "rr A x \<in> V" using \<open>V = W \<inter> ?YF\<close> by (by100 blast)
+                      thus "x \<in> {x \<in> A. rr A x \<in> V}" using \<open>x \<in> A\<close> by (by100 blast)
+                    qed
+                    \<comment> \<open>Complement: {x \\<in> A. rr A x \\<notin> V} = A - {x \\<in> A. rr A x \\<in> V}.\<close>
+                    have "{x \<in> A. rr A x \<notin> V} = A - {x \<in> A. rr A x \<in> V}" by (by100 blast)
+                    also have "\<dots> = A - {x \<in> A. rr A x \<in> W \<inter> T}"
+                      using \<open>{x \<in> A. rr A x \<in> V} = {x \<in> A. rr A x \<in> W \<inter> T}\<close> by (by100 simp)
+                    finally have hD_eq: "{x \<in> A. rr A x \<notin> V} = A - {x \<in> A. rr A x \<in> W \<inter> T}" .
+                    \<comment> \<open>{x \\<in> A. rr A x \\<in> W \\<inter> T} is open in A, so its complement is closed.\<close>
+                    have "{x \<in> A. rr A x \<in> W \<inter> T} \<subseteq> A" by (by100 blast)
+                    have "closedin_on A (subspace_topology Y TY A) (A - {x \<in> A. rr A x \<in> W \<inter> T})"
+                      unfolding closedin_on_def
+                    proof (intro conjI)
+                      show "A - {x \<in> A. rr A x \<in> W \<inter> T} \<subseteq> A" by (by100 blast)
+                      show "A - (A - {x \<in> A. rr A x \<in> W \<inter> T}) \<in> subspace_topology Y TY A"
+                      proof -
+                        have "A - (A - {x \<in> A. rr A x \<in> W \<inter> T}) = {x \<in> A. rr A x \<in> W \<inter> T}"
+                          by (by100 blast)
+                        thus ?thesis using \<open>{x \<in> A. rr A x \<in> W \<inter> T} \<in> subspace_topology Y TY A\<close>
+                          by (by100 simp)
+                      qed
+                    qed
+                    thus ?thesis using hD_eq by (by100 simp)
+                  qed
                   \<comment> \<open>Closed in A + A closed in Y \\<Longrightarrow> closed in Y.\<close>
                   from Theorem_17_2[OF hTY_top hA_sub_Y, THEN iffD1, OF this]
                   obtain C where "closedin_on Y TY C" "{x \<in> A. rr A x \<notin> V} = C \<inter> A"
