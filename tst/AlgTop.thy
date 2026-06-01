@@ -3256,17 +3256,83 @@ proof -
                 \<iota>F F
               \<and> (\<forall>A\<in>F. top1_fundamental_group_induced_on (T \<union> \<Union>F)
                     (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A)"
-          sorry \<comment> \<open>Proof by strong induction on card F (book Steps 1+2).
-             Base case (card F = 1): graph\\_one\\_edge\\_pi1\\_iso\\_Z + generator identification.
-               \\<pi>\\_1(T\\<union>D) \\<cong> \\<Z> with [g\\_D] as the \\<Z> generator. Uses quotient
-               map T\\<union>D \\<rightarrow> S1 (collapse T) to identify [g\\_D] with standard loop.
-             Induction step (card F > 1): Pick A1 \\<in> F. SvK decomposition:
-               U = (T\\<union>\\<Union>F) - {int pts of F-{A1}}, V = (T\\<union>\\<Union>F) - {int pt of A1}.
-               U DR to T\\<union>A1 (IH: free on {A1}), V DR to T\\<union>\\<Union>(F-{A1}) (IH: free on F-{A1}).
-               U\\<inter>V SC (DR to T). svk\\_free\\_product\\_free\\_with\\_generators gives
-               \\<pi>\\_1(T\\<union>\\<Union>F) free on F with generators matching inclusion-images of gen(A).
-             Key infrastructure: graph\\_deformation\\_retract\\_helper, graph\\_remove\\_interior\\_points\\_sc,
-               svk\\_free\\_product\\_free\\_with\\_generators, graph\\_one\\_edge\\_pi1\\_iso\\_Z.\<close>
+        \<comment> \<open>Proof by strong induction on card F (book Steps 1+2).\<close>
+        proof -
+          fix F assume hFfin: "finite F" and hF_NT: "F \<subseteq> ?NT" and hF_ne: "F \<noteq> {}"
+          show "\<exists>\<iota>F. top1_is_free_group_full_on
+              (top1_fundamental_group_carrier (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              (top1_fundamental_group_mul (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              (top1_fundamental_group_id (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              (top1_fundamental_group_invg (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+              \<iota>F F
+            \<and> (\<forall>A\<in>F. top1_fundamental_group_induced_on (T \<union> \<Union>F)
+                  (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A)"
+          proof (cases "card F = 1")
+            case True
+            \<comment> \<open>Base case (book Step 2): F = {D}. \\<pi>\\_1(T \\<union> D) = \\<Z> with generator [g\\_D].\<close>
+            show ?thesis sorry \<comment> \<open>Base case: ~100 lines.
+               graph\\_one\\_edge\\_pi1\\_iso\\_Z gives \\<pi>\\_1(T\\<union>D) \\<cong> \\<Z>.
+               Need: [gen\\_loop(D)] generates \\<pi>\\_1(T\\<union>D) (i.e., maps to \\<pm>1 under the iso).
+               Uses quotient T\\<union>D \\<rightarrow> S1 or the SvK computation from the proof of
+               graph\\_one\\_edge\\_pi1\\_iso\\_Z.\<close>
+          next
+            case hcard_gt1: False
+            \<comment> \<open>Induction step (book Step 1): card F > 1. SvK decomposition.\<close>
+            have hcard_ge2: "card F \<ge> 2"
+            proof -
+              have "card F \<noteq> 0" using hFfin hF_ne by (by100 auto)
+              moreover have "card F \<noteq> 1" using hcard_gt1 .
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            then obtain A1 where hA1: "A1 \<in> F" using hF_ne by (by100 blast)
+            let ?F' = "F - {A1}"
+            have hF'_fin: "finite ?F'" using hFfin by (by100 simp)
+            have hF'_NT: "?F' \<subseteq> ?NT" using hF_NT by (by100 blast)
+            have hF'_ne: "?F' \<noteq> {}"
+            proof -
+              have "card ?F' = card F - 1"
+                using hFfin hA1 by (by100 simp)
+              hence "card ?F' \<ge> 1" using hcard_ge2 by (by100 linarith)
+              hence "card ?F' > 0" by (by100 linarith)
+              thus ?thesis using card_gt_0_iff hF'_fin by (by5000 blast)
+            qed
+            have hcard_F': "card ?F' < card F"
+              using hFfin hA1 hcard_ge2 by (by100 simp)
+            have hF_eq: "F = insert A1 ?F'" using hA1 by (by100 blast)
+            have hA1_notin_F': "A1 \<notin> ?F'" by (by100 blast)
+            \<comment> \<open>IH for base case: \\<pi>\\_1(T \\<union> A1) free on {A1} with matching generator.\<close>
+            have hIH_base: "\<exists>\<iota>1. top1_is_free_group_full_on
+                (top1_fundamental_group_carrier (T \<union> A1) (subspace_topology Y TY (T \<union> A1)) y0)
+                (top1_fundamental_group_mul (T \<union> A1) (subspace_topology Y TY (T \<union> A1)) y0)
+                (top1_fundamental_group_id (T \<union> A1) (subspace_topology Y TY (T \<union> A1)) y0)
+                (top1_fundamental_group_invg (T \<union> A1) (subspace_topology Y TY (T \<union> A1)) y0)
+                \<iota>1 {A1}
+              \<and> (\<forall>A\<in>{A1}. top1_fundamental_group_induced_on (T \<union> A1)
+                    (subspace_topology Y TY (T \<union> A1)) y0 Y TY y0 (\<lambda>x. x) (\<iota>1 A) = gen A)"
+              sorry \<comment> \<open>Base case of harc\\_loops\\_free for {A1}.\<close>
+            \<comment> \<open>IH for step: \\<pi>\\_1(T \\<union> \\<Union>F') free on F' with matching generators.\<close>
+            have hIH_step: "\<exists>\<iota>'. top1_is_free_group_full_on
+                (top1_fundamental_group_carrier (T \<union> \<Union>?F') (subspace_topology Y TY (T \<union> \<Union>?F')) y0)
+                (top1_fundamental_group_mul (T \<union> \<Union>?F') (subspace_topology Y TY (T \<union> \<Union>?F')) y0)
+                (top1_fundamental_group_id (T \<union> \<Union>?F') (subspace_topology Y TY (T \<union> \<Union>?F')) y0)
+                (top1_fundamental_group_invg (T \<union> \<Union>?F') (subspace_topology Y TY (T \<union> \<Union>?F')) y0)
+                \<iota>' ?F'
+              \<and> (\<forall>A\<in>?F'. top1_fundamental_group_induced_on (T \<union> \<Union>?F')
+                    (subspace_topology Y TY (T \<union> \<Union>?F')) y0 Y TY y0 (\<lambda>x. x) (\<iota>' A) = gen A)"
+              sorry \<comment> \<open>Recursive call of harc\\_loops\\_free for F' (card F' < card F).\<close>
+            \<comment> \<open>SvK decomposition: pick interior points, define U and V.\<close>
+            show ?thesis
+              sorry \<comment> \<open>Induction step: ~150 lines.
+                 Choose interior points ps(A) for each A \\<in> F.
+                 U = (T\\<union>\\<Union>F) - {ps(A) | A \\<in> F'}, V = (T\\<union>\\<Union>F) - {ps(A1)}.
+                 U DR to T\\<union>A1 (graph\\_deformation\\_retract\\_helper).
+                 V DR to T\\<union>\\<Union>F' (graph\\_deformation\\_retract\\_helper).
+                 U\\<inter>V SC (graph\\_remove\\_interior\\_points\\_sc \\<rightarrow> DR to T).
+                 Transfer freeness via DR iso to \\<pi>\\_1(U), \\<pi>\\_1(V).
+                 svk\\_free\\_product\\_free\\_with\\_generators combines.
+                 Generator tracking: incl\\_U*(DR*(\\<iota>1(A1))) = incl*(gen(A1)) etc.\<close>
+          qed
+        qed
         \<comment> \<open>Index ?NT by nat.\<close>
         have "\<exists>(idx :: _ \<Rightarrow> nat) (S :: nat set). bij_betw idx ?NT S"
           sorry \<comment> \<open>Any set can be injected into nat (with appropriate cardinality).
