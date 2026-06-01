@@ -1691,9 +1691,87 @@ proof -
     have hhtpy_key: "top1_path_homotopic_on B TB b0 b0
         (top1_path_product (top1_path_product \<alpha> \<delta>) (top1_path_reverse (top1_path_product \<beta> \<delta>)))
         (top1_path_product \<alpha> (top1_path_reverse \<beta>))"
-      sorry \<comment> \<open>Homotopy chain: same as transitivity (\\<delta>*rev(\\<delta>) cancels in middle).
-         Uses: extensional rev(\\<beta>*\\<delta>) = rev(\\<delta>)*rev(\\<beta>),
-         associativity, left inverse, left identity, product compatibility.\<close>
+    proof -
+      \<comment> \<open>Step 1: rev(\\<beta>*\\<delta>) = rev(\\<delta>)*rev(\\<beta>) extensionally.\<close>
+      have hrev_ext: "top1_path_reverse (top1_path_product \<beta> \<delta>)
+          = top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>)"
+        sorry \<comment> \<open>Extensional: rev(f*g) = rev(g)*rev(f). Same pattern as symmetry proof.
+           3-way case split needed for s=1/2 boundary where endpoint equality \\<alpha>(1) = \\<beta>(1) is used.\<close>
+      \<comment> \<open>Step 2: Rewrite (\\<alpha>*\\<delta>)*rev(\\<beta>*\\<delta>) = (\\<alpha>*\\<delta>)*(rev(\\<delta>)*rev(\\<beta>)).\<close>
+      have hrewrite: "top1_path_product (top1_path_product \<alpha> \<delta>) (top1_path_reverse (top1_path_product \<beta> \<delta>))
+          = top1_path_product (top1_path_product \<alpha> \<delta>) (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>))"
+        using hrev_ext by simp
+      \<comment> \<open>Step 3: Same chain as transitivity:
+         (\\<alpha>*\\<delta>)*(rev(\\<delta>)*rev(\\<beta>)) \\<simeq> \\<alpha>*(\\<delta>*(rev(\\<delta>)*rev(\\<beta>))) (assoc)
+         \\<delta>*(rev(\\<delta>)*rev(\\<beta>)) \\<simeq> rev(\\<beta>) (inner chain: assoc + left inv + left id)
+         \\<alpha>*rev(\\<beta>) (product right with \\<alpha>).\<close>
+      have hrev\<delta>: "top1_is_path_on B TB (\<delta> 1) (\<beta> 1) (top1_path_reverse \<delta>)"
+        using top1_path_reverse_is_path[OF h\<delta>p] heq_ep by simp
+      have hrev\<beta>: "top1_is_path_on B TB (\<beta> 1) b0 (top1_path_reverse \<beta>)"
+        by (rule top1_path_reverse_is_path[OF h\<beta>_pp])
+      have hrev\<delta>_\<beta>1: "top1_is_path_on B TB (\<delta> 1) (\<alpha> 1) (top1_path_reverse \<delta>)"
+        using hrev\<delta> heq_ep by simp
+      \<comment> \<open>Inner chain: rev(\\<delta>)*(rev(\\<delta>)*rev(\\<beta>)) => use same as transitivity.\<close>
+      \<comment> \<open>Inner chain: \\<delta>*(rev(\\<delta>)*rev(\\<beta>)) \\<simeq> rev(\\<beta>).
+         Paths: \\<delta>: \\<beta>(1)\\<rightarrow>\\<delta>(1), rev(\\<delta>): \\<delta>(1)\\<rightarrow>\\<beta>(1), rev(\\<beta>): \\<beta>(1)\\<rightarrow>b0.\<close>
+      have hinner_assoc: "top1_path_homotopic_on B TB (\<beta> 1) b0
+          (top1_path_product \<delta> (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>)))
+          (top1_path_product (top1_path_product \<delta> (top1_path_reverse \<delta>)) (top1_path_reverse \<beta>))"
+        by (rule Theorem_51_2_associativity[OF hTB h\<delta>p' hrev\<delta> hrev\<beta>])
+      have h\<delta>_inv: "top1_path_homotopic_on B TB (\<beta> 1) (\<beta> 1)
+          (top1_path_product \<delta> (top1_path_reverse \<delta>)) (top1_constant_path (\<beta> 1))"
+        by (rule Theorem_51_2_invgerse_left[OF hTB h\<delta>p'])
+      have hinner_inv: "top1_path_homotopic_on B TB (\<beta> 1) b0
+          (top1_path_product (top1_path_product \<delta> (top1_path_reverse \<delta>)) (top1_path_reverse \<beta>))
+          (top1_path_product (top1_constant_path (\<beta> 1)) (top1_path_reverse \<beta>))"
+        by (rule path_homotopic_product_left[OF hTB h\<delta>_inv hrev\<beta>])
+      have hinner_id: "top1_path_homotopic_on B TB (\<beta> 1) b0
+          (top1_path_product (top1_constant_path (\<beta> 1)) (top1_path_reverse \<beta>))
+          (top1_path_reverse \<beta>)"
+        by (rule Theorem_51_2_left_identity[OF hTB hrev\<beta>])
+      \<comment> \<open>Chain inner: \\<delta>*(rev(\\<delta>)*rev(\\<beta>)) \\<simeq> rev(\\<beta>).\<close>
+      have hinner: "top1_path_homotopic_on B TB (\<beta> 1) b0
+          (top1_path_product \<delta> (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>)))
+          (top1_path_reverse \<beta>)"
+      proof -
+        from Lemma_51_1_path_homotopic_trans[OF hTB hinner_assoc hinner_inv]
+        have "top1_path_homotopic_on B TB (\<beta> 1) b0
+            (top1_path_product \<delta> (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>)))
+            (top1_path_product (top1_constant_path (\<beta> 1)) (top1_path_reverse \<beta>))" .
+        from Lemma_51_1_path_homotopic_trans[OF hTB this hinner_id]
+        show ?thesis .
+      qed
+      \<comment> \<open>Outer: \\<alpha>*(\\<delta>*(rev(\\<delta>)*rev(\\<beta>))) \\<simeq> \\<alpha>*rev(\\<beta>).\<close>
+      have h\<alpha>_p2: "top1_is_path_on B TB b0 (\<beta> 1) \<alpha>"
+        using h\<alpha>_pp heq_ep by simp
+      have houter: "top1_path_homotopic_on B TB b0 b0
+          (top1_path_product \<alpha> (top1_path_product \<delta> (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>))))
+          (top1_path_product \<alpha> (top1_path_reverse \<beta>))"
+        by (rule path_homotopic_product_right[OF hTB hinner h\<alpha>_p2])
+      \<comment> \<open>Associativity: (\\<alpha>*\\<delta>)*(rev(\\<delta>)*rev(\\<beta>)) \\<simeq> \\<alpha>*(\\<delta>*(rev(\\<delta>)*rev(\\<beta>))).\<close>
+      have hdr_path: "top1_is_path_on B TB (\<delta> 1) b0
+          (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>))"
+      proof -
+        have hrev\<delta>2: "top1_is_path_on B TB (\<delta> 1) (\<beta> 1) (top1_path_reverse \<delta>)"
+          using hrev\<delta> .
+        from top1_path_product_is_path[OF hTB hrev\<delta>2 hrev\<beta>]
+        show ?thesis .
+      qed
+      have hassoc: "top1_path_homotopic_on B TB b0 b0
+          (top1_path_product \<alpha> (top1_path_product \<delta> (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>))))
+          (top1_path_product (top1_path_product \<alpha> \<delta>) (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>)))"
+        by (rule Theorem_51_2_associativity[OF hTB h\<alpha>_p2 h\<delta>p' hdr_path])
+      \<comment> \<open>Chain: (\\<alpha>*\\<delta>)*(rev(\\<delta>)*rev(\\<beta>)) \\<simeq> \\<alpha>*(\\<delta>*(...)) \\<simeq> \\<alpha>*rev(\\<beta>).\<close>
+      from Lemma_51_1_path_homotopic_sym[OF hassoc]
+      have "top1_path_homotopic_on B TB b0 b0
+          (top1_path_product (top1_path_product \<alpha> \<delta>) (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>)))
+          (top1_path_product \<alpha> (top1_path_product \<delta> (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>))))" .
+      from Lemma_51_1_path_homotopic_trans[OF hTB this houter]
+      have "top1_path_homotopic_on B TB b0 b0
+          (top1_path_product (top1_path_product \<alpha> \<delta>) (top1_path_product (top1_path_reverse \<delta>) (top1_path_reverse \<beta>)))
+          (top1_path_product \<alpha> (top1_path_reverse \<beta>))" .
+      thus ?thesis using hrewrite by simp
+    qed
     \<comment> \<open>From homotopy: class of (\\<alpha>*\\<delta>)*rev(\\<beta>*\\<delta>) = class of \\<alpha>*rev(\\<beta>).\<close>
     from path_homotopic_same_class[OF hTB hhtpy_key]
     have hclass_eq_loops: "{g. top1_loop_equiv_on B TB b0
