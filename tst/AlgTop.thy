@@ -8331,11 +8331,9 @@ proof -
                 (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
                 (map (\<lambda>(s, b). (gen s, b)) ws) \<noteq>
                 top1_fundamental_group_id Y TY y0"
-              sorry \<comment> \<open>Map gen word to \\<iota>F word via hgenF.
-                 Reduced word over \\<iota>F (from hws\\_red + hgenF).
-                 Freeness: \\<iota>F word \\<ne> id.
-                 hom\\_word\\_product: gen word = incl(\\<iota>F word).
-                 hincl\\_inj: incl injective \\<Rightarrow> gen word \\<ne> id.\<close>
+              sorry \<comment> \<open>Compactness chain: \\<iota>F word in \\<pi>\\_1(T\\<union>\\<Union>F) is nontrivial (freeness),
+                 gen word = incl(\\<iota>F word) (hom\\_word\\_product),
+                 incl injective (hincl\\_inj) \\<Rightarrow> gen word \\<ne> id.\<close>
           qed
         qed
         thus ?thesis by (by100 blast)
