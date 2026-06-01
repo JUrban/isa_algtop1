@@ -4000,11 +4000,62 @@ proof -
             have hword_F_ne: "top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
                 (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
                 ?ws_F \<noteq> top1_fundamental_group_id ?YF ?TYF y0"
-              sorry \<comment> \<open>Step 6: Apply freeness condition from hfreeF via ws\\_arcs.
-                 All sub-steps proved (ws\\_arcs props, hfree\\_cond extraction, hmap\\_eq by induction).
-                 BLOCKED: Isabelle simp/metis cannot match map fusion
-                 map(\\<iota>F, map(inv, ws)) vs map(\\<iota>F\\<circ>inv, ws) to transfer results.
-                 Would need opaque define for ?ws\\_F or a custom congruence lemma.\<close>
+            proof -
+              \<comment> \<open>ws\\_arcs: the word re-indexed by ?arcs.\<close>
+              let ?ws_arcs = "map (\<lambda>(s, b). (the_inv_into ?NT idx s, b)) ws"
+              \<comment> \<open>map(\\<iota>F, ws\\_arcs) = ?ws\\_F by map fusion (induction on ws).\<close>
+              have hmap_eq: "map (\<lambda>(s, b). (\<iota>F s, b)) ?ws_arcs = ?ws_F"
+                by (induction ws) (by100 auto)+
+              \<comment> \<open>ws\\_arcs is non-empty and indexed by ?arcs.\<close>
+              have "?ws_arcs \<noteq> []" using hws_ne by (by100 simp)
+              have hws_arcs_in: "\<forall>i<length ?ws_arcs. fst (?ws_arcs ! i) \<in> ?arcs"
+              proof (intro allI impI)
+                fix i assume "i < length ?ws_arcs"
+                hence "i < length ws" by (by100 simp)
+                have "fst (?ws_arcs ! i) = the_inv_into ?NT idx (fst (ws ! i))"
+                  by (cases "ws ! i") (use \<open>i < length ws\<close> in \<open>by100 simp\<close>)
+                moreover have "fst (ws ! i) \<in> fst ` set ws" using \<open>i < length ws\<close> by (by100 force)
+                ultimately show "fst (?ws_arcs ! i) \<in> ?arcs" by (by100 blast)
+              qed
+              \<comment> \<open>reduced(map(\\<iota>F, ws\\_arcs)) from hws\\_F\\_red + hmap\\_eq.\<close>
+              have hred_arcs: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>F s, b)) ?ws_arcs)"
+              proof -
+                from arg_cong[OF hmap_eq, of top1_is_reduced_word]
+                have "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>F s, b)) ?ws_arcs) =
+                    top1_is_reduced_word ?ws_F" .
+                thus ?thesis using hws_F_red by (by100 simp)
+              qed
+              \<comment> \<open>Extract freeness condition and apply to ws\\_arcs.\<close>
+              from hfreeF[unfolded top1_is_free_group_full_on_def]
+              have "\<forall>ws'. ws' \<noteq> [] \<longrightarrow>
+                  top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>F s, b)) ws') \<longrightarrow>
+                  (\<forall>i<length ws'. fst (ws' ! i) \<in> ?arcs) \<longrightarrow>
+                  top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
+                      (top1_fundamental_group_id ?YF ?TYF y0)
+                      (top1_fundamental_group_invg ?YF ?TYF y0)
+                      (map (\<lambda>(s, b). (\<iota>F s, b)) ws') \<noteq>
+                  top1_fundamental_group_id ?YF ?TYF y0"
+                by (by5000 blast)
+              note hfree_cond = this
+              have hne_arcs: "top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
+                  (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
+                  (map (\<lambda>(s, b). (\<iota>F s, b)) ?ws_arcs) \<noteq>
+                  top1_fundamental_group_id ?YF ?TYF y0"
+                using hfree_cond \<open>?ws_arcs \<noteq> []\<close> hred_arcs hws_arcs_in
+                by (by5000 blast)
+              \<comment> \<open>Transfer via arg\\_cong: word\\_product(map(\\<iota>F, ws\\_arcs)) = word\\_product(?ws\\_F).\<close>
+              moreover from arg_cong[OF hmap_eq, of "top1_group_word_product
+                  (top1_fundamental_group_mul ?YF ?TYF y0)
+                  (top1_fundamental_group_id ?YF ?TYF y0)
+                  (top1_fundamental_group_invg ?YF ?TYF y0)"]
+              have "top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
+                  (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
+                  (map (\<lambda>(s, b). (\<iota>F s, b)) ?ws_arcs) =
+                  top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
+                  (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
+                  ?ws_F" .
+              ultimately show ?thesis by (by100 simp)
+            qed
             \<comment> \<open>Step 7: By hincl\\_inj: incl* injective. So incl*(word\\_product) \\<noteq> id\\_Y.\<close>
             show "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
                 (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
