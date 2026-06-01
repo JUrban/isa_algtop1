@@ -3949,8 +3949,43 @@ proof -
               have hS_sub: "\<forall>i<length ws. fst (ws ! i) \<in> S"
                 using hws_in by (by100 blast)
               show ?thesis
-                sorry \<comment> \<open>reduced\\_word\\_transfer with h=\\<iota>, g=\\<iota>F\\<circ>inv(idx).
-                   Both are injective \\<Longrightarrow> agree on equality \\<Longrightarrow> reduced preserved.\<close>
+              proof (rule reduced_word_transfer[where S="fst ` set ws"
+                  and h="\<iota>" and g="\<lambda>s. \<iota>F (the_inv_into ?NT idx s)"
+                  and ws=ws])
+                \<comment> \<open>Condition: g(s) = g(t) \\<Longrightarrow> h(s) = h(t).\<close>
+                fix s t assume "s \<in> fst ` set ws" "t \<in> fst ` set ws"
+                  and heq: "\<iota>F (the_inv_into ?NT idx s) = \<iota>F (the_inv_into ?NT idx t)"
+                \<comment> \<open>\\<iota>(s) = incl*(\\<iota>F(inv(idx,s))) from h\\<iota>\\_eq\\_incl.\<close>
+                show "\<iota> s = \<iota> t"
+                proof -
+                  from \<open>s \<in> fst ` set ws\<close> obtain sb_s where "sb_s \<in> set ws" "fst sb_s = s"
+                    by (by100 blast)
+                  from \<open>sb_s \<in> set ws\<close> obtain i where "i < length ws" "ws ! i = sb_s"
+                    by (rule in_set_conv_nth[THEN iffD1, elim_format]) (by100 blast)
+                  hence "fst (ws ! i) = s" using \<open>fst sb_s = s\<close> by (by100 simp)
+                  from \<open>t \<in> fst ` set ws\<close> obtain sb_t where "sb_t \<in> set ws" "fst sb_t = t"
+                    by (by100 blast)
+                  from \<open>sb_t \<in> set ws\<close> obtain j where "j < length ws" "ws ! j = sb_t"
+                    by (rule in_set_conv_nth[THEN iffD1, elim_format]) (by100 blast)
+                  hence "fst (ws ! j) = t" using \<open>fst sb_t = t\<close> by (by100 simp)
+                  from h\<iota>_eq_incl[rule_format, OF \<open>i < length ws\<close>]
+                  have "\<iota> s = ?incl (\<iota>F (the_inv_into ?NT idx s))"
+                    using \<open>fst (ws ! i) = s\<close> by (by100 simp)
+                  from h\<iota>_eq_incl[rule_format, OF \<open>j < length ws\<close>]
+                  have "\<iota> t = ?incl (\<iota>F (the_inv_into ?NT idx t))"
+                    using \<open>fst (ws ! j) = t\<close> by (by100 simp)
+                  from heq have "?incl (\<iota>F (the_inv_into ?NT idx s)) =
+                      ?incl (\<iota>F (the_inv_into ?NT idx t))" by (by100 simp)
+                  thus "\<iota> s = \<iota> t"
+                    using \<open>\<iota> s = ?incl _\<close> \<open>\<iota> t = ?incl _\<close> by (by100 simp)
+                qed
+              next
+                show "\<forall>i<length ws. fst (ws ! i) \<in> fst ` set ws"
+                  by (by100 force)
+              next
+                show "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws)"
+                  by (rule hws_red)
+              qed
             qed
             have hws_F_ne: "?ws_F \<noteq> []" using hws_ne by (by100 simp)
             \<comment> \<open>The generators in the word map to ?arcs.\<close>
