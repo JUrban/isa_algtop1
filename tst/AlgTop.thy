@@ -1367,8 +1367,28 @@ proof -
     proof -
       \<comment> \<open>[\\<alpha>*rev(\\<gamma>)] = [\\<alpha>*rev(\\<beta>)] * [\\<beta>*rev(\\<gamma>)] \\<in> H (subgroup closed under mul).\<close>
       have "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<gamma>)) g} \<in> H"
-        sorry \<comment> \<open>Path homotopy: (\\<alpha>*rev(\\<beta>))*(\\<beta>*rev(\\<gamma>)) \\<simeq> \\<alpha>*rev(\\<gamma>).
-           Group product of classes \\<in> H (subgroup closed under mul).\<close>
+      proof -
+        let ?ab_class = "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g}"
+        let ?bc_class = "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<beta> (top1_path_reverse \<gamma>)) g}"
+        let ?ac_class = "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<gamma>)) g}"
+        \<comment> \<open>Step 1: [\\<alpha>*rev(\\<beta>)] * [\\<beta>*rev(\\<gamma>)] = [(\\<alpha>*rev(\\<beta>)) * (\\<beta>*rev(\\<gamma>))].\<close>
+        \<comment> \<open>Step 2: [(\\<alpha>*rev(\\<beta>)) * (\\<beta>*rev(\\<gamma>))] = [\\<alpha>*rev(\\<gamma>)] (homotopy chain).\<close>
+        \<comment> \<open>Step 3: mulH(?ab\\_class, ?bc\\_class) \\<in> H (subgroup closed under mul).\<close>
+        have hmul: "top1_fundamental_group_mul B TB b0 ?ab_class ?bc_class \<in> H"
+          by (rule group_mul_closed[OF assms(7) hH_ab hH_bc])
+        \<comment> \<open>[\\<alpha>*rev(\\<beta>)] * [\\<beta>*rev(\\<gamma>)] = [(\\<alpha>*rev(\\<beta>))*(\\<beta>*rev(\\<gamma>))].\<close>
+        have hmul_eq: "top1_fundamental_group_mul B TB b0 ?ab_class ?bc_class
+            = {g. top1_loop_equiv_on B TB b0 (top1_path_product
+                (top1_path_product \<alpha> (top1_path_reverse \<beta>))
+                (top1_path_product \<beta> (top1_path_reverse \<gamma>))) g}"
+          sorry \<comment> \<open>fundamental\\_group\\_mul\\_class.\<close>
+        \<comment> \<open>[(\\<alpha>*rev(\\<beta>))*(\\<beta>*rev(\\<gamma>))] = [\\<alpha>*rev(\\<gamma>)] (homotopy: assoc + inverse + identity).\<close>
+        have hhtpy: "{g. top1_loop_equiv_on B TB b0 (top1_path_product
+                (top1_path_product \<alpha> (top1_path_reverse \<beta>))
+                (top1_path_product \<beta> (top1_path_reverse \<gamma>))) g} = ?ac_class"
+          sorry \<comment> \<open>Homotopy chain: assoc + Theorem\\_51\\_2 inverse + identity.\<close>
+        from hmul hmul_eq hhtpy show ?thesis by simp
+      qed
       thus ?thesis using h\<alpha> h\<gamma> heq by (by100 auto)
     qed
   qed
