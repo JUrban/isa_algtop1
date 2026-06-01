@@ -1715,8 +1715,54 @@ proof -
     \<comment> \<open>Standard basis-generated topology properties.\<close>
     have hempty: "{} \<in> ?TE" by (by100 blast)
     have hfull: "?E \<in> ?TE"
-      sorry \<comment> \<open>For every c \\<in> E, find basis element containing c.
-         c = coset\\_class(\\<alpha>) for some \\<alpha> \\<in> paths. Use hbasis with U = B (whole space).\<close>
+    proof -
+      have hB_open: "B \<in> TB" using hTB unfolding is_topology_on_def by (by100 blast)
+      have hE_sub_E: "?E \<subseteq> ?E" by simp
+      have "\<forall>c \<in> ?E. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> ?coset_class \<alpha> = c
+          \<and> ?B_basis U \<alpha> \<subseteq> ?E"
+      proof (intro ballI)
+        fix c assume hc: "c \<in> ?E"
+        then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> ?paths" "c = ?coset_class \<alpha>" by (by100 blast)
+        have h\<alpha>1_B: "\<alpha> 1 \<in> B"
+        proof -
+          have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) by (by100 blast)
+          hence "top1_continuous_map_on I_set I_top B TB \<alpha>"
+            unfolding top1_is_path_on_def by (by100 blast)
+          hence "\<forall>s\<in>I_set. \<alpha> s \<in> B" unfolding top1_continuous_map_on_def by (by100 blast)
+          moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        \<comment> \<open>B\\_basis(B, \\<alpha>) \\<subseteq> E: every element is coset\\_class(\\<alpha>*\\<delta>) for some \\<delta>, hence in E.\<close>
+        have "?B_basis B \<alpha> \<subseteq> ?E"
+        proof (rule subsetI)
+          fix x assume "x \<in> ?B_basis B \<alpha>"
+          then obtain \<delta> where "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
+              "x = ?coset_class (top1_path_product \<alpha> \<delta>)" by (by100 blast)
+          \<comment> \<open>\\<alpha>*\\<delta> is a path from b0 to \\<delta>(1), hence in paths.\<close>
+          have "top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)"
+          proof -
+            have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) by (by100 blast)
+            from top1_path_product_is_path[OF hTB this \<open>top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>\<close>]
+            show ?thesis .
+          qed
+          hence "top1_path_product \<alpha> \<delta> \<in> ?paths"
+          proof -
+            have "top1_is_path_on B TB b0 ((top1_path_product \<alpha> \<delta>) 1) (top1_path_product \<alpha> \<delta>)"
+            proof -
+              have "(top1_path_product \<alpha> \<delta>) 1 = \<delta> 1"
+                unfolding top1_path_product_def by simp
+              thus ?thesis
+                using \<open>top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)\<close> by simp
+            qed
+            thus ?thesis by (by100 blast)
+          qed
+          thus "x \<in> ?E" using \<open>x = ?coset_class (top1_path_product \<alpha> \<delta>)\<close> by (by100 blast)
+        qed
+        thus "\<exists>U \<alpha>'. U \<in> TB \<and> \<alpha>' \<in> ?paths \<and> ?coset_class \<alpha>' = c \<and> ?B_basis U \<alpha>' \<subseteq> ?E"
+          using hB_open h\<alpha> by (by100 blast)
+      qed
+      thus ?thesis using hE_sub_E by (by100 blast)
+    qed
     have hunion: "\<forall>U. U \<subseteq> ?TE \<longrightarrow> \<Union>U \<in> ?TE"
     proof (intro allI impI)
       fix Uc assume hUc: "Uc \<subseteq> ?TE"
