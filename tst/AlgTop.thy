@@ -5869,7 +5869,7 @@ theorem Theorem_85_1_Nielsen_Schreier:
   assumes "top1_is_free_group_full_on G mul e invg \<iota> S"
       and "top1_is_group_on H mul e invg"
       and "H \<subseteq> G"
-  shows "\<exists>(\<iota>H::'t \<Rightarrow> 'g) SH.
+  shows "\<exists>(\<iota>H::nat \<Rightarrow> 'g) (SH::nat set).
            top1_is_free_group_full_on H mul e invg \<iota>H SH"
 proof -
   \<comment> \<open>Munkres 85.1 (topological proof): G = \<pi>_1(X, x0) for some graph X (wedge of
@@ -5887,12 +5887,20 @@ proof -
   \<comment> \<open>Step 2: H \<le> G \<cong> \<pi>_1(X) gives a covering space E of X with p_*(\<pi>_1(E)) \<cong> H.
      Use Theorem 82.1 (existence of covering spaces) with the subgroup
      corresponding to H under the isomorphism G \<cong> \<pi>_1(X).\<close>
+  \<comment> \<open>Step 2: Covering existence (Theorem 82.1) + H-correspondence.
+     The covering E' is constructed so that p'*(\\<pi>\\_1(E', e0')) corresponds to H.\<close>
   obtain E' :: "'b set" and TE' :: "'b set set" and p' :: "'b \<Rightarrow> 'a" and e0' :: 'b
+      and f_iso :: "'g \<Rightarrow> _"
     where "top1_covering_map_on E' TE' X TX p'" "top1_connected_on E' TE'"
       and "e0' \<in> E'" and hE'_strict: "is_topology_on_strict E' TE'"
       and "p' e0' = x0"
-    sorry \<comment> \<open>Covering existence (Theorem 82.1) for H-image in \\<pi>\\_1(X).
-       Also need: p'*(\\<pi>\\_1(E', e0')) corresponds to H under iso G \\<cong> \\<pi>\\_1(X).\<close>
+      and hH_corr: "top1_fundamental_group_induced_on E' TE' e0' X TX x0 p'
+          ` top1_fundamental_group_carrier E' TE' e0' = f_iso ` H"
+      and hf_iso: "top1_group_iso_on G mul
+          (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0) f_iso"
+    sorry \<comment> \<open>Covering existence (Theorem 82.1): for the subgroup f\\_iso(H) \\<le> \\<pi>\\_1(X),
+       construct covering E' with p'*(\\<pi>\\_1(E')) = f\\_iso(H).
+       f\\_iso comes from the isomorphism G \\<cong> \\<pi>\\_1(X).\<close>
   \<comment> \<open>Step 3: E is a graph (Theorem 83.2: covering of graph is graph).
      \<pi>_1(E) is free (Theorem 84.7: fund group of connected graph is free).
      p_* injective (covering maps induce injections on \<pi>_1).
@@ -5911,10 +5919,54 @@ proof -
         \<iota>_E S_E"
     by - ((erule exE)+, (erule that))
   \<comment> \<open>Step 3c: H is free. From p'* injective + H iso p'*(pi1(E')).\<close>
-  show ?thesis sorry \<comment> \<open>Need: H corresponds to p'*(pi1(E')) under iso G = pi1(X).
-     This requires the covering E' to satisfy p'*(pi1(E')) = image of H.
-     Then: H iso pi1(E') (p'* injective) iso G\_E (free).
-     Missing ingredient: sorry at 20302 needs to export the H-correspondence.\<close>
+  \<comment> \<open>Step 3c: H is free.
+     Chain: p'* injective \\<Rightarrow> \\<pi>\\_1(E') \\<cong> p'*(\\<pi>\\_1(E')) = f\\_iso(H) \\<cong> H.
+     \\<pi>\\_1(E') is free \\<Rightarrow> H is free (freeness transfers across iso).\<close>
+  show ?thesis
+  proof -
+    \<comment> \<open>p'* is injective (covering maps induce injections on \\<pi>\\_1).\<close>
+    have hX_strict: "is_topology_on_strict X TX"
+      using \<open>top1_is_graph_on X TX\<close> unfolding top1_is_graph_on_def by (by100 blast)
+    have hp_inj: "inj_on (top1_fundamental_group_induced_on E' TE' e0' X TX x0 p')
+        (top1_fundamental_group_carrier E' TE' e0')"
+      by (rule covering_induced_injective[OF \<open>top1_covering_map_on E' TE' X TX p'\<close>
+          hE'_strict hX_strict \<open>e0' \<in> E'\<close> \<open>p' e0' = x0\<close>])
+    \<comment> \<open>p'*(\\<pi>\\_1(E')) = f\\_iso(H). And f\\_iso: G \\<rightarrow> \\<pi>\\_1(X) is iso, so f\\_iso(H) \\<cong> H.\<close>
+    \<comment> \<open>p'* injective: \\<pi>\\_1(E') \\<cong> p'*(\\<pi>\\_1(E')) = f\\_iso(H) \\<cong> H.\<close>
+    \<comment> \<open>\\<pi>\\_1(E') is free (hfree\\_E). Transfer across iso: H is free.\<close>
+    \<comment> \<open>p'* restricted to \\<pi>\\_1(E') is a bijection onto its image f\\_iso(H).\<close>
+    let ?p_star = "top1_fundamental_group_induced_on E' TE' e0' X TX x0 p'"
+    have hp_bij: "bij_betw ?p_star (top1_fundamental_group_carrier E' TE' e0') (f_iso ` H)"
+      unfolding bij_betw_def using hp_inj hH_corr by (by100 blast)
+    \<comment> \<open>f\\_iso restricted to H is a bijection onto f\\_iso(H).\<close>
+    have hf_bij_H: "bij_betw f_iso H (f_iso ` H)"
+    proof -
+      from hf_iso have "bij_betw f_iso G (top1_fundamental_group_carrier X TX x0)"
+        unfolding top1_group_iso_on_def by (by100 blast)
+      hence "inj_on f_iso G" unfolding bij_betw_def by (by100 blast)
+      from inj_on_subset[OF this assms(3)]
+      have "inj_on f_iso H" .
+      thus ?thesis unfolding bij_betw_def by (by100 blast)
+    qed
+    \<comment> \<open>Compose: \\<pi>\\_1(E') \\<rightarrow> f\\_iso(H) \\<rightarrow> H. Both bijections.\<close>
+    \<comment> \<open>The composed map (f\\_iso\\<inverse>) \\<circ> p'*: \\<pi>\\_1(E') \\<rightarrow> H is a group iso.\<close>
+    have "top1_groups_isomorphic_on
+        (top1_fundamental_group_carrier E' TE' e0')
+        (top1_fundamental_group_mul E' TE' e0')
+        H mul"
+      sorry \<comment> \<open>Composition of p'* (hom, bijective onto f\\_iso(H)) with f\\_iso\\<inverse>.
+         Requires: p'* is a hom (from covering\\_induced\\_hom) + f\\_iso is iso.
+         Then: (f\\_iso\\<inverse>) \\<circ> p'*: \\<pi>\\_1(E') \\<rightarrow> H is iso.\<close>
+    \<comment> \<open>Transfer freeness: \\<pi>\\_1(E') free \\<Rightarrow> H free.\<close>
+    from free_group_iso_transfer[OF hfree_E this assms(2)]
+    obtain \<iota>H' where hfreeH: "top1_is_free_group_full_on H mul e invg \<iota>H' S_E"
+      by (by100 blast)
+    show ?thesis
+      apply (rule exI[of _ \<iota>H'])
+      apply (rule exI[of _ S_E])
+      apply (rule hfreeH)
+      done
+  qed
 qed
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
