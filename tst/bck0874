@@ -1170,9 +1170,45 @@ lemma free_group_realized_by_wedge:
     \<and> top1_groups_isomorphic_on F mul
         (top1_fundamental_group_carrier X TX x0)
         (top1_fundamental_group_mul X TX x0)"
-  sorry \<comment> \<open>Construct a wedge of |S| circles. Apply Theorem 71.1: \<pi>_1(wedge) is free.
-     Free groups on equinumerous sets are isomorphic (free\_group\_full\_reindex).
-     Wedge is a graph (arcs = circles, coherent topology). Wedge is connected.\<close>
+proof -
+  \<comment> \<open>Step 1: Get n = card S.\<close>
+  let ?n = "card S"
+  \<comment> \<open>Step 2: Construct a wedge X of n circles.
+     (Concrete construction: embed n circles in R² sharing a point.
+     Alternatively: use graph\\_quotient\\_by\\_tree\\_wedge\\_of\\_circles on a graph
+     with n+1 arcs, or construct the standard wedge directly.)
+     The wedge is a graph (arcs = semi-circles, coherent topology) and connected.\<close>
+  obtain X :: "'a set" and TX :: "'a set set" and p :: 'a
+    where hwedge: "top1_is_wedge_of_circles_on X TX {..<?n} p"
+    sorry \<comment> \<open>Concrete construction of wedge of n circles.\<close>
+  \<comment> \<open>Step 3: \\<pi>\\_1(X, p) is free on {0,...,n-1} (Theorem 71.1).\<close>
+  \<comment> \<open>Step 3: \\<pi>\\_1(X, p) \\<cong> free group on {0,...,n-1}.\<close>
+  from Theorem_71_1_wedge_of_circles_finite[OF hwedge]
+  have "\<exists>(G0 :: int set) mul0 e0_g invg0 (\<iota>0 :: nat \<Rightarrow> int).
+      top1_is_free_group_full_on G0 mul0 e0_g invg0 \<iota>0 {..<?n}
+    \<and> top1_groups_isomorphic_on G0 mul0
+        (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
+    sorry \<comment> \<open>Theorem\\_71\\_1 gives free group iso to \\<pi>\\_1.\<close>
+  \<comment> \<open>Step 4: F is free on S with |S| = n. G0 is free on {0,...,n-1}.
+     Both have n generators \\<Rightarrow> F \\<cong> G0 (free groups on equinumerous sets).
+     G0 \\<cong> \\<pi>\\_1(X) \\<Rightarrow> F \\<cong> \\<pi>\\_1(X).\<close>
+  have hF_iso_pi1: "top1_groups_isomorphic_on F mul
+      (top1_fundamental_group_carrier X TX p) (top1_fundamental_group_mul X TX p)"
+    sorry \<comment> \<open>F free on S, G0 free on {..<?n}, card S = ?n.
+       By free\\_group\\_full\\_reindex: F free on {..<?n} (via a bijection S \\<rightarrow> {..<?n}).
+       Both F and G0 free on {..<?n}: use free\\_group\\_hom\\_generators\\_iso.
+       F \\<cong> G0 \\<cong> \\<pi>\\_1(X).\<close>
+  \<comment> \<open>Step 5: X is a graph (wedge of circles is a graph) and connected.\<close>
+  have hgraph: "top1_is_graph_on X TX"
+    sorry \<comment> \<open>Wedge of circles with coherent topology is a graph.\<close>
+  have hconn: "top1_connected_on X TX"
+    sorry \<comment> \<open>Wedge of circles is connected (all circles share p).\<close>
+  have hp: "p \<in> X"
+    using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+  show ?thesis
+    apply (rule exI[of _ X], rule exI[of _ TX], rule exI[of _ p])
+    using hgraph hconn hp hF_iso_pi1 sorry
+qed
 
 text \<open>Covering space of a graph is a graph (Munkres Theorem 83.4).\<close>
 lemma graph_covering_is_graph:
