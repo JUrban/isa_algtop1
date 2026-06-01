@@ -8184,7 +8184,47 @@ proof -
             using hgen by (by100 blast)
           \<comment> \<open>3. gen injective on ?NT.\<close>
           show "inj_on gen ?NT"
-            sorry \<comment> \<open>Different arcs give different classes: from finite subgraph freeness (rank 2).\<close>
+          proof (rule inj_onI)
+            fix A B assume "A \<in> ?NT" "B \<in> ?NT" "gen A = gen B"
+            show "A = B"
+            proof (rule ccontr)
+              assume "A \<noteq> B"
+              let ?F = "{A, B}"
+              from harc_loops_free[OF _ _ _, of ?F]
+              have "finite ?F" by (by100 simp)
+              have "?F \<subseteq> ?NT" using \<open>A \<in> ?NT\<close> \<open>B \<in> ?NT\<close> by (by100 blast)
+              have "?F \<noteq> {}" by (by100 blast)
+              let ?YAB = "T \<union> \<Union>?F"
+              let ?TYAB = "subspace_topology Y TY ?YAB"
+              from harc_loops_free[OF \<open>finite ?F\<close> \<open>?F \<subseteq> ?NT\<close> \<open>?F \<noteq> {}\<close>]
+              obtain \<iota>F where hfreeF: "top1_is_free_group_full_on
+                  (top1_fundamental_group_carrier ?YAB ?TYAB y0)
+                  (top1_fundamental_group_mul ?YAB ?TYAB y0)
+                  (top1_fundamental_group_id ?YAB ?TYAB y0)
+                  (top1_fundamental_group_invg ?YAB ?TYAB y0) \<iota>F ?F"
+                  and hgenF: "\<forall>C\<in>?F. top1_fundamental_group_induced_on
+                      ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F C) = gen C"
+                by (by100 blast)
+              have "inj_on \<iota>F ?F"
+                using hfreeF[unfolded top1_is_free_group_full_on_def] by (by5000 blast)
+              hence "\<iota>F A \<noteq> \<iota>F B" using \<open>A \<noteq> B\<close> by (by100 blast)
+              have "top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F A)
+                  = top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F B)"
+                using hgenF \<open>gen A = gen B\<close> by (by100 blast)
+              have hinj: "inj_on (top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x))
+                  (top1_fundamental_group_carrier ?YAB ?TYAB y0)"
+                using hincl_inj[OF \<open>finite ?F\<close> \<open>?F \<subseteq> ?NT\<close> \<open>?F \<noteq> {}\<close>] by (by100 blast)
+              have hA_c: "\<iota>F A \<in> top1_fundamental_group_carrier ?YAB ?TYAB y0"
+                using hfreeF[unfolded top1_is_free_group_full_on_def] by (by5000 blast)
+              have hB_c: "\<iota>F B \<in> top1_fundamental_group_carrier ?YAB ?TYAB y0"
+                using hfreeF[unfolded top1_is_free_group_full_on_def] by (by5000 blast)
+              have "\<iota>F A = \<iota>F B" using hinj hA_c hB_c
+                  \<open>top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F A)
+                      = top1_fundamental_group_induced_on ?YAB ?TYAB y0 Y TY y0 (\<lambda>x. x) (\<iota>F B)\<close>
+                unfolding inj_on_def by (by5000 blast)
+              thus False using \<open>\<iota>F A \<noteq> \<iota>F B\<close> by contradiction
+            qed
+          qed
           \<comment> \<open>4. gen generates \\<pi>\\_1(Y).\<close>
           show "top1_fundamental_group_carrier Y TY y0 =
               top1_subgroup_generated_on
