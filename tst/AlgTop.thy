@@ -3882,7 +3882,65 @@ proof -
                 ?incl (top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
                     (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
                     ?ws_F)"
-              sorry \<comment> \<open>Rewrite LHS using hmap\\_incl\\_eq, then apply hom\\_word\\_product (reversed).\<close>
+            proof -
+              \<comment> \<open>Rewrite LHS using hmap\\_incl\\_eq.\<close>
+              from arg_cong[OF hmap_incl_eq, of "top1_group_word_product
+                  (top1_fundamental_group_mul Y TY y0)
+                  (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)"]
+              have "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
+                  (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
+                  (map (\<lambda>(s, b). (\<iota> s, b)) ws) =
+                  top1_group_word_product (top1_fundamental_group_mul Y TY y0)
+                  (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
+                  (map (\<lambda>(x, b). (?incl x, b)) ?ws_F)" by (by100 simp)
+              \<comment> \<open>By hom\\_word\\_product (reversed): = incl*(word\\_product(?YF, ?ws\\_F)).\<close>
+              also have "\<dots> = ?incl (top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
+                  (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
+                  ?ws_F)"
+              proof -
+                have hYF_sub': "?YF \<subseteq> Y" using hT_sub h\<A> hF_NT by (by100 blast)
+                have hTYF_top: "is_topology_on ?YF ?TYF"
+                  by (rule subspace_topology_is_topology_on[OF hTY_top hYF_sub'])
+                have hF_grp: "top1_is_group_on (top1_fundamental_group_carrier ?YF ?TYF y0)
+                    (top1_fundamental_group_mul ?YF ?TYF y0) (top1_fundamental_group_id ?YF ?TYF y0)
+                    (top1_fundamental_group_invg ?YF ?TYF y0)"
+                  using hfreeF unfolding top1_is_free_group_full_on_def by (by100 blast)
+                have hY_grp: "top1_is_group_on (top1_fundamental_group_carrier Y TY y0)
+                    (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+                    (top1_fundamental_group_invg Y TY y0)"
+                  by (rule top1_fundamental_group_is_group[OF hTY_top assms(3)])
+                have hincl_hom': "top1_group_hom_on
+                    (top1_fundamental_group_carrier ?YF ?TYF y0)
+                    (top1_fundamental_group_mul ?YF ?TYF y0)
+                    (top1_fundamental_group_carrier Y TY y0)
+                    (top1_fundamental_group_mul Y TY y0) ?incl"
+                  using subspace_inclusion_induced_hom[OF hTY_top hYF_sub'] hT_x0
+                  by (by100 blast)
+                have hgens_in: "\<forall>i<length ?ws_F. fst (?ws_F ! i) \<in>
+                    top1_fundamental_group_carrier ?YF ?TYF y0"
+                proof (intro allI impI)
+                  fix i assume "i < length ?ws_F"
+                  hence "i < length ws" by (by100 simp)
+                  have "fst (?ws_F ! i) = \<iota>F (the_inv_into ?NT idx (fst (ws ! i)))"
+                    by (cases "ws ! i") (use \<open>i < length ws\<close> in \<open>by100 simp\<close>)
+                  moreover have "\<iota>F (the_inv_into ?NT idx (fst (ws ! i))) \<in>
+                      top1_fundamental_group_carrier ?YF ?TYF y0"
+                  proof -
+                    have "fst (ws ! i) \<in> fst ` set ws" using \<open>i < length ws\<close> by (by100 force)
+                    hence "the_inv_into ?NT idx (fst (ws ! i)) \<in> ?arcs" by (by100 blast)
+                    from hfreeF[unfolded top1_is_free_group_full_on_def]
+                    have "\<forall>s\<in>?arcs. \<iota>F s \<in> top1_fundamental_group_carrier ?YF ?TYF y0"
+                      by (by5000 blast)
+                    thus ?thesis using \<open>the_inv_into ?NT idx _ \<in> ?arcs\<close> by (by100 blast)
+                  qed
+                  ultimately show "fst (?ws_F ! i) \<in>
+                      top1_fundamental_group_carrier ?YF ?TYF y0" by (by100 simp)
+                qed
+                from hom_word_product[OF hF_grp hY_grp hincl_hom' hgens_in]
+                show ?thesis by (by100 simp)
+              qed
+              finally show ?thesis .
+            qed
             \<comment> \<open>Step 5: ?ws\\_F is a non-trivial reduced word in \\<pi>\\_1(?YF).\<close>
             have hws_F_red: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>F (the_inv_into ?NT idx s), b)) ws)"
               sorry \<comment> \<open>Reduced word preserved: \\<iota>F injective on ?arcs, inv(idx) injective on S.\<close>
