@@ -3291,7 +3291,18 @@ proof -
     proof (cases "finite ?NT")
       case True
       \<comment> \<open>Finite case: get nat-indexed from ac7, reindex to 'a set set.\<close>
-      show ?thesis sorry \<comment> \<open>Finite NT: reindex via free\\_group\\_full\\_reindex (finite bijection).\<close>
+      from graph_pi1_free_weak_finite[where n="card ?NT" and \<A>=\<A> and T=T,
+          OF assms(1) assms(2) assms(3) _ True h\<A> h\<A>_cover h\<A>_inter h\<A>_coh
+             hT_tree hT_sub hT_subgraph hT_x0 hNT_endpoints]
+      obtain \<iota>_nat :: "nat \<Rightarrow> _" and S_nat :: "nat set"
+        where hfree_nat: "top1_is_free_group_full_on
+            (top1_fundamental_group_carrier Y TY y0) (top1_fundamental_group_mul Y TY y0)
+            (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
+            \<iota>_nat S_nat"
+        by (by100 blast)
+      \<comment> \<open>Reindex from nat to 'a set set. Use free\\_group\\_full\\_reindex.\<close>
+      show ?thesis sorry \<comment> \<open>Reindex: free\\_group\\_full\\_reindex needs bij\\_betw ?NT S\\_nat.
+         Finite sets with same cardinality biject. TODO: derive bijection.\<close>
     next
       case hInf: False
       \<comment> \<open>Infinite case: compactness reduction to finite subgraphs.\<close>
