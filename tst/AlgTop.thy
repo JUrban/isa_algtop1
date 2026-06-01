@@ -3453,8 +3453,96 @@ proof -
                 \<comment> \<open>\\<alpha> lies in T, which is SC. So [\\<alpha>] = id \\<in> subgroup\\_generated.\<close>
                 \<comment> \<open>\\<alpha> lies in T (since T \\<union> \\<Union>{} = T). T is SC, so [\\<alpha>] = id.\<close>
                 show ?thesis
-                  sorry \<comment> \<open>T SC \\<Rightarrow> [\\<alpha>]\\_T = id \\<Rightarrow> incl*(id) = id\\_Y \\<Rightarrow> c = id\\_Y.
-                     id\\_Y \\<in> subgroup\\_generated (identity is always in the generated subgroup).\<close>
+                proof -
+                  \<comment> \<open>\\<alpha> maps into T (since T \\<union> \\<Union>{} = T).\<close>
+                  have "T \<union> \<Union>F0 = T" using True by (by100 simp)
+                  hence h\<alpha>_in_T: "\<alpha> ` top1_unit_interval \<subseteq> T" using hF0_img by (by100 simp)
+                  \<comment> \<open>\\<alpha> is a loop in T.\<close>
+                  have h\<alpha>_T: "top1_is_loop_on T (subspace_topology Y TY T) y0 \<alpha>"
+                  proof -
+                    have "top1_continuous_map_on I_set I_top Y TY \<alpha>"
+                      using h\<alpha>_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+                      by (by100 blast)
+                    from Theorem_18_2(5)[OF top1_unit_interval_topology_is_topology_on hTY_top hTY_top,
+                        rule_format] this h\<alpha>_in_T hT_sub
+                    have "top1_continuous_map_on I_set I_top T (subspace_topology Y TY T) \<alpha>"
+                      by (by100 blast)
+                    moreover have "\<alpha> 0 = y0" "\<alpha> 1 = y0"
+                      using h\<alpha>_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+                      by (by100 blast)+
+                    ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+                      by (by100 blast)
+                  qed
+                  \<comment> \<open>T is SC: [\\<alpha>] = id in \\<pi>\\_1(T).\<close>
+                  have hT_sc: "top1_simply_connected_on T (subspace_topology Y TY T)"
+                    using hT_tree unfolding top1_is_tree_on_def by (by100 blast)
+                  have h\<alpha>_trivial_T: "top1_path_homotopic_on T (subspace_topology Y TY T) y0 y0
+                      \<alpha> (top1_constant_path y0)"
+                    using hT_sc h\<alpha>_T hT_x0
+                    unfolding top1_simply_connected_on_def by (by100 blast)
+                  \<comment> \<open>Lift to Y: [\\<alpha>] = [const] = id in \\<pi>\\_1(Y).\<close>
+                  from path_homotopic_subspace_to_ambient[OF hTY_top hT_sub _ h\<alpha>_trivial_T]
+                  have "top1_path_homotopic_on Y TY y0 y0 \<alpha> (top1_constant_path y0)"
+                    by (by100 blast)
+                  hence hc_is_id: "c = top1_fundamental_group_id Y TY y0"
+                  proof -
+                    \<comment> \<open>loop\\_equiv(\\<alpha>, const) from \\<alpha> \\<simeq> const + both loops.\<close>
+                    have hconst_loop: "top1_is_loop_on Y TY y0 (top1_constant_path y0)"
+                      sorry \<comment> \<open>Constant path is a loop. Technical: constant map is continuous.\<close>
+                    have h\<alpha>_const: "top1_loop_equiv_on Y TY y0 \<alpha> (top1_constant_path y0)"
+                      unfolding top1_loop_equiv_on_def
+                      using h\<alpha>_loop hconst_loop
+                          \<open>top1_path_homotopic_on Y TY y0 y0 \<alpha> (top1_constant_path y0)\<close>
+                      by (by100 blast)
+                    \<comment> \<open>Equivalence classes of \\<alpha> and const coincide.\<close>
+                    have "\<forall>g. top1_loop_equiv_on Y TY y0 \<alpha> g \<longleftrightarrow>
+                        top1_loop_equiv_on Y TY y0 (top1_constant_path y0) g"
+                    proof (intro allI iffI)
+                      fix g assume "top1_loop_equiv_on Y TY y0 \<alpha> g"
+                      from top1_loop_equiv_on_trans[OF hTY_top
+                          top1_loop_equiv_on_sym[OF h\<alpha>_const] this]
+                      show "top1_loop_equiv_on Y TY y0 (top1_constant_path y0) g" .
+                    next
+                      fix g assume "top1_loop_equiv_on Y TY y0 (top1_constant_path y0) g"
+                      from top1_loop_equiv_on_trans[OF hTY_top h\<alpha>_const this]
+                      show "top1_loop_equiv_on Y TY y0 \<alpha> g" .
+                    qed
+                    thus ?thesis unfolding hc_eq top1_fundamental_group_id_def by (by100 blast)
+                  qed
+                  \<comment> \<open>id \\<in> subgroup\\_generated (identity is always in generated subgroup).\<close>
+                  have hY_grp: "top1_is_group_on (top1_fundamental_group_carrier Y TY y0)
+                      (top1_fundamental_group_mul Y TY y0)
+                      (top1_fundamental_group_id Y TY y0)
+                      (top1_fundamental_group_invg Y TY y0)"
+                    by (rule top1_fundamental_group_is_group[OF hTY_top assms(3)])
+                  have h\<iota>_sub_loc2: "\<iota> ` S \<subseteq> top1_fundamental_group_carrier Y TY y0"
+                  proof
+                    fix x assume "x \<in> \<iota> ` S"
+                    then obtain s where "s \<in> S" "x = \<iota> s" by (by100 blast)
+                    from bij_betw_imp_surj_on[OF hidx] \<open>s \<in> S\<close>
+                    obtain A where "A \<in> ?NT" "idx A = s" by (by100 blast)
+                    have "the_inv_into ?NT idx s = A"
+                      using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF hidx] \<open>A \<in> ?NT\<close>]
+                        \<open>idx A = s\<close> by (by100 simp)
+                    hence "\<iota> s = gen A" unfolding \<iota>_def by (by100 simp)
+                    thus "x \<in> top1_fundamental_group_carrier Y TY y0"
+                      using \<open>x = \<iota> s\<close> hgen[rule_format, OF \<open>A \<in> ?NT\<close>] by (by100 simp)
+                  qed
+                  have hSG_grp2: "top1_is_group_on
+                      (top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
+                          (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+                          (top1_fundamental_group_invg Y TY y0) (\<iota> ` S))
+                      (top1_fundamental_group_mul Y TY y0)
+                      (top1_fundamental_group_id Y TY y0)
+                      (top1_fundamental_group_invg Y TY y0)"
+                    by (rule intersection_of_subgroups_is_group[OF hY_grp h\<iota>_sub_loc2])
+                  have "top1_fundamental_group_id Y TY y0 \<in>
+                      top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
+                          (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+                          (top1_fundamental_group_invg Y TY y0) (\<iota> ` S)"
+                    using hSG_grp2 unfolding top1_is_group_on_def by (by100 blast)
+                  thus ?thesis using hc_is_id by (by100 simp)
+                qed
               next
                 case False
                 let ?YF0 = "T \<union> \<Union>F0" and ?TYF0 = "subspace_topology Y TY (T \<union> \<Union>F0)"
