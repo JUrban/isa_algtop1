@@ -3095,10 +3095,23 @@ proof -
               (top1_fundamental_group_mul Y TY y0)
               (top1_fundamental_group_id Y TY y0)
               (top1_fundamental_group_invg Y TY y0)"
-            sorry \<comment> \<open>fundamental\\_group\\_is\\_group.\<close>
+            by (rule top1_fundamental_group_is_group[OF hTY_top assms(3)])
           \<comment> \<open>2. Generators in carrier.\<close>
           show "\<forall>s\<in>S. \<iota> s \<in> top1_fundamental_group_carrier Y TY y0"
-            sorry \<comment> \<open>gen A \\<in> carrier for each A, and \\<iota> n = gen(idx\\<inverse>(n)).\<close>
+          proof (intro ballI)
+            fix s assume "s \<in> S"
+            from bij_betw_imp_surj_on[OF hidx]
+            have "S \<subseteq> idx ` ?NT" by (by100 blast)
+            hence "s \<in> idx ` ?NT" using \<open>s \<in> S\<close> by (by100 blast)
+            then obtain A where "A \<in> ?NT" "idx A = s" by (by100 blast)
+            have "the_inv_into ?NT idx s = A"
+              using the_inv_into_f_f[OF bij_betw_imp_inj_on[OF hidx] \<open>A \<in> ?NT\<close>]
+                \<open>idx A = s\<close> by (by100 simp)
+            hence "\<iota> s = gen A" unfolding \<iota>_def by (by100 simp)
+            from hgen[rule_format, OF \<open>A \<in> ?NT\<close>]
+            show "\<iota> s \<in> top1_fundamental_group_carrier Y TY y0"
+              using \<open>\<iota> s = gen A\<close> by (by100 simp)
+          qed
           \<comment> \<open>3. Injective.\<close>
           show "inj_on \<iota> S"
             sorry \<comment> \<open>From injectivity of gen on ?NT + bijectivity of idx.\<close>
