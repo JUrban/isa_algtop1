@@ -2433,8 +2433,148 @@ proof -
             \<comment> \<open>r continuous on \\<Union>(F'\\\\F).\<close>
             have hr_G: "top1_continuous_map_on (\<Union>(F' - F))
                 (subspace_topology ?YFF ?TYFF (\<Union>(F' - F))) ?YF ?TYF r"
-              sorry \<comment> \<open>For each A \\<in> F'\\\\F: r|A = rr(A) continuous from A to T \\<subseteq> ?YF.
-                 By iterated pasting on the finite set F'\\\\F.\<close>
+            proof -
+              have hsubsp_G: "subspace_topology ?YFF ?TYFF (\<Union>(F' - F)) =
+                  subspace_topology Y TY (\<Union>(F' - F))"
+                by (rule subspace_topology_trans) blast
+              have hG_sub_Y: "\<Union>(F' - F) \<subseteq> Y" using h\<A> hG_NT by (by100 blast)
+              have hG_top: "is_topology_on (\<Union>(F' - F)) (subspace_topology Y TY (\<Union>(F' - F)))"
+                by (rule subspace_topology_is_topology_on[OF hTY_top hG_sub_Y])
+              \<comment> \<open>Key: r|A = rr(A) for each A \\<in> F'\\\\F (on ALL of A, including endpoints).\<close>
+              have hr_eq_rr: "\<And>A x. A \<in> F' - F \<Longrightarrow> x \<in> A \<Longrightarrow> r x = rr A x"
+              proof -
+                fix A x assume "A \<in> F' - F" "x \<in> A"
+                show "r x = rr A x"
+                proof (cases "x \<in> ?YF")
+                  case True
+                  hence "x \<in> T"
+                  proof -
+                    from True have "x \<in> T \<or> x \<in> \<Union>F" by (by100 blast)
+                    thus "x \<in> T"
+                    proof
+                      assume "x \<in> T" thus ?thesis .
+                    next
+                      assume "x \<in> \<Union>F"
+                      then obtain B where "B \<in> F" "x \<in> B" by (by100 blast)
+                      have "A \<noteq> B" using \<open>A \<in> F' - F\<close> \<open>B \<in> F\<close> by (by100 blast)
+                      have "A \<in> \<A>" "B \<in> \<A>" using \<open>A \<in> F' - F\<close> hG_NT \<open>B \<in> F\<close> hF_NT
+                        by (by100 blast)+
+                      from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A \<noteq> B\<close>]
+                      have "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                        by (by100 blast)
+                      hence "x \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                        using \<open>x \<in> A\<close> \<open>x \<in> B\<close> by (by100 blast)
+                      thus "x \<in> T" using hNT_endpoints \<open>A \<in> F' - F\<close> hG_NT by (by100 blast)
+                    qed
+                  qed
+                  hence "x \<in> A \<inter> T" using \<open>x \<in> A\<close> by (by100 blast)
+                  from hrr[rule_format, OF \<open>A \<in> F' - F\<close>]
+                  have "\<forall>x \<in> A \<inter> T. rr A x = x" by (by100 blast)
+                  hence "rr A x = x" using \<open>x \<in> A \<inter> T\<close> by (by100 blast)
+                  thus ?thesis using True unfolding r_def by (by100 simp)
+                next
+                  case False
+                  have hA_unique: "(THE A'. A' \<in> F' - F \<and> x \<in> A' \<and> x \<notin> T) = A"
+                  proof (rule the_equality)
+                    show "A \<in> F' - F \<and> x \<in> A \<and> x \<notin> T"
+                      using \<open>A \<in> F' - F\<close> \<open>x \<in> A\<close> False by (by100 blast)
+                  next
+                    fix A' assume "A' \<in> F' - F \<and> x \<in> A' \<and> x \<notin> T"
+                    show "A' = A"
+                    proof (rule ccontr)
+                      assume "A' \<noteq> A"
+                      have "A \<in> \<A>" "A' \<in> \<A>" using \<open>A \<in> F' - F\<close> \<open>A' \<in> F' - F \<and> _\<close> hG_NT
+                        by (by100 blast)+
+                      from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>A' \<in> \<A>\<close> \<open>A' \<noteq> A\<close>[symmetric]]
+                      have "A' \<inter> A \<subseteq> top1_arc_endpoints_on A' (subspace_topology Y TY A')"
+                        by (by100 blast)
+                      hence "x \<in> top1_arc_endpoints_on A' (subspace_topology Y TY A')"
+                        using \<open>x \<in> A\<close> \<open>A' \<in> F' - F \<and> _\<close> by (by100 blast)
+                      hence "x \<in> T" using hNT_endpoints \<open>A' \<in> F' - F \<and> _\<close> hG_NT by (by100 blast)
+                      thus False using \<open>A' \<in> F' - F \<and> x \<in> A' \<and> x \<notin> T\<close> by (by100 blast)
+                    qed
+                  qed
+                  thus ?thesis unfolding r_def using False hA_unique by (by100 simp)
+                qed
+              qed
+              \<comment> \<open>Show continuity via open preimage characterization.
+                 For each V open in ?YF: {x \\<in> \\<Union>(F'\\\\F). r x \\<in> V} is open in \\<Union>(F'\\\\F).
+                 Proof: the complement is a finite union of Y-closed sets.\<close>
+              show ?thesis unfolding hsubsp_G top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix x assume "x \<in> \<Union>(F' - F)"
+                thus "r x \<in> ?YF" using hr_maps by (by100 blast)
+              next
+                fix V assume "V \<in> ?TYF"
+                \<comment> \<open>Show {x \\<in> \\<Union>(F'\\\\F). r x \\<in> V} \\<in> subspace\\_topology Y TY (\\<Union>(F'\\\\F)).\<close>
+                \<comment> \<open>Complement: D = {x \\<in> \\<Union>(F'\\\\F). r x \\<notin> V} = \\<Union>{A \\ rr(A)\\<inverse>(V) | A \\<in> F'\\\\F}.
+                   Each A \\ rr(A)\\<inverse>(V) is closed in Y. Finite union: D closed in Y.
+                   Hence {x \\<in> \\<Union>(F'\\\\F). r x \\<in> V} = (Y \\ D) \\<inter> \\<Union>(F'\\\\F) is open.\<close>
+                let ?S = "{x \<in> \<Union>(F' - F). r x \<in> V}"
+                \<comment> \<open>Each arc's complement is closed in Y.\<close>
+                \<comment> \<open>For each A \\<in> F'\\\\F: {x \\<in> A. r x \\<notin> V} is closed in Y.
+                   Proof: rr(A) continuous \\<Longrightarrow> preimage of complement is closed in A.
+                   A closed in Y \\<Longrightarrow> closed-in-A is closed-in-Y.\<close>
+                have hD_closed: "\<forall>A \<in> F' - F. closedin_on Y TY {x \<in> A. r x \<notin> V}"
+                proof (intro ballI)
+                  fix A assume "A \<in> F' - F"
+                  have "A \<in> \<A>" using \<open>A \<in> F' - F\<close> hG_NT by (by100 blast)
+                  have hA_sub_Y: "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                  \<comment> \<open>A is closed in Y (from hG\\_closed\\_Y proof).\<close>
+                  have "closedin_on Y TY A"
+                  proof -
+                    from hG_closed
+                    have "closedin_on ?YFF ?TYFF (\<Union>(F' - F))" .
+                    from Theorem_17_2[OF hTY_top hYFF_sub', THEN iffD1, OF this]
+                    obtain D where "closedin_on Y TY D" "\<Union>(F' - F) = D \<inter> ?YFF" by (by100 blast)
+                    have "A \<subseteq> \<Union>(F' - F)" using \<open>A \<in> F' - F\<close> by (by100 blast)
+                    have "A \<subseteq> D" using \<open>A \<subseteq> \<Union>(F' - F)\<close> \<open>\<Union>(F' - F) = D \<inter> ?YFF\<close> by (by100 blast)
+                    from h\<A>_coh[rule_format, OF hA_sub_Y, THEN iffD2]
+                    show "closedin_on Y TY A"
+                      sorry \<comment> \<open>A closed in Y via coherent topology (same as in hG\\_closed body).\<close>
+                  qed
+                  \<comment> \<open>{x \\<in> A. r x \\<notin> V} = {x \\<in> A. rr A x \\<notin> V} (since r|A = rr(A)).\<close>
+                  have hset_eq: "{x \<in> A. r x \<notin> V} = {x \<in> A. rr A x \<notin> V}"
+                    sorry \<comment> \<open>r|A = rr(A) from hr\\_eq\\_rr.\<close>
+                  \<comment> \<open>{x \\<in> A. rr A x \\<notin> V} is closed in A (complement of continuous preimage of open).\<close>
+                  have "closedin_on A (subspace_topology Y TY A) {x \<in> A. rr A x \<notin> V}"
+                    sorry \<comment> \<open>rr(A) continuous, so preimage of open V is open, complement is closed.\<close>
+                  \<comment> \<open>Closed in A + A closed in Y \\<Longrightarrow> closed in Y.\<close>
+                  from Theorem_17_2[OF hTY_top hA_sub_Y, THEN iffD1, OF this]
+                  obtain C where "closedin_on Y TY C" "{x \<in> A. rr A x \<notin> V} = C \<inter> A"
+                    by (by100 blast)
+                  have "{x \<in> A. rr A x \<notin> V} \<subseteq> A" by (by100 blast)
+                  have "closedin_on Y TY {x \<in> A. rr A x \<notin> V}"
+                  proof -
+                    have "{x \<in> A. rr A x \<notin> V} = C \<inter> A" by (rule \<open>{x \<in> A. rr A x \<notin> V} = C \<inter> A\<close>)
+                    moreover have "closedin_on Y TY (C \<inter> A)"
+                      by (rule closedin_inter2[OF hTY_top \<open>closedin_on Y TY C\<close> \<open>closedin_on Y TY A\<close>])
+                    ultimately show ?thesis by (by100 simp)
+                  qed
+                  thus "closedin_on Y TY {x \<in> A. r x \<notin> V}" using hset_eq by (by100 simp)
+                qed
+                \<comment> \<open>Finite union of Y-closed sets is Y-closed.\<close>
+                have "closedin_on Y TY (\<Union>A \<in> F' - F. {x \<in> A. r x \<notin> V})"
+                proof -
+                  have "finite ((\<lambda>A. {x \<in> A. r x \<notin> V}) ` (F' - F))"
+                    using hG_finite by (by100 simp)
+                  moreover have "\<forall>S \<in> (\<lambda>A. {x \<in> A. r x \<notin> V}) ` (F' - F). closedin_on Y TY S"
+                    using hD_closed by (by100 blast)
+                  ultimately show ?thesis
+                    using closedin_Union_finite[OF hTY_top] by (by100 blast)
+                qed
+                moreover have "\<Union>(F' - F) - ?S = (\<Union>A \<in> F' - F. {x \<in> A. r x \<notin> V})"
+                  by (by100 blast)
+                ultimately have "closedin_on Y TY (\<Union>(F' - F) - ?S)" by (by100 simp)
+                hence "?S = (Y - (\<Union>(F' - F) - ?S)) \<inter> \<Union>(F' - F)"
+                  using hG_sub_Y by (by100 blast)
+                moreover have "(Y - (\<Union>(F' - F) - ?S)) \<in> TY"
+                  using \<open>closedin_on Y TY (\<Union>(F' - F) - ?S)\<close> unfolding closedin_on_def
+                  by (by100 blast)
+                ultimately show "?S \<in> subspace_topology Y TY (\<Union>(F' - F))"
+                  unfolding subspace_topology_def by (by100 blast)
+              qed
+            qed
             \<comment> \<open>Apply pasting\\_lemma\\_two\\_closed.\<close>
             have hr_maps': "\<forall>x \<in> ?YFF. r x \<in> ?YF" using hr_maps by (by100 blast)
             have hr_cont: "top1_continuous_map_on ?YFF ?TYFF ?YF ?TYF r"
