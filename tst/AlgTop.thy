@@ -2258,11 +2258,149 @@ proof -
             have hTYF_top: "is_topology_on ?YF ?TYF"
               by (rule subspace_topology_is_topology_on[OF hTY_top hYF_sub])
             \<comment> \<open>?YF closed in ?YFF.\<close>
+            \<comment> \<open>?YF closed in Y (coherent topology: A \\<inter> ?YF closed in A for each arc).\<close>
+            have hYF_closed_Y: "closedin_on Y TY ?YF"
+            proof -
+              have "?YF \<subseteq> Y" by (rule hYF_sub)
+              from h\<A>_coh[rule_format, OF this]
+              have "closedin_on Y TY ?YF \<longleftrightarrow>
+                  (\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> ?YF))" .
+              moreover have "\<forall>A\<in>\<A>. closedin_on A (subspace_topology Y TY A) (A \<inter> ?YF)"
+              proof (intro ballI)
+                fix A assume "A \<in> \<A>"
+                have hA_sub: "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                have hA_haus: "is_hausdorff_on A (subspace_topology Y TY A)"
+                proof -
+                  have "is_hausdorff_on Y TY"
+                    using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                  from Theorem_17_11[THEN conjunct2, THEN conjunct2, rule_format, OF conjI[OF this hA_sub]]
+                  show ?thesis .
+                qed
+                show "closedin_on A (subspace_topology Y TY A) (A \<inter> ?YF)"
+                proof (cases "A \<subseteq> T \<or> A \<in> F")
+                  case True
+                  hence "A \<inter> ?YF = A" by (by100 blast)
+                  moreover have "closedin_on A (subspace_topology Y TY A) A"
+                  proof -
+                    have "is_topology_on A (subspace_topology Y TY A)"
+                      by (rule subspace_topology_is_topology_on[OF hTY_top hA_sub])
+                    from Theorem_17_1[OF this]
+                    show ?thesis by (by100 blast)
+                  qed
+                  ultimately show ?thesis by (by100 simp)
+                next
+                  case False
+                  \<comment> \<open>A is a non-tree arc not in F. A \\<inter> ?YF \\<subseteq> endpoints(A), which is finite.\<close>
+                  have "A \<inter> ?YF \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                  proof
+                    fix x assume "x \<in> A \<inter> ?YF"
+                    hence "x \<in> A" "x \<in> T \<union> \<Union>F" by (by100 blast)+
+                    show "x \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                    proof (cases "x \<in> T")
+                      case True
+                      from hT_subgraph[rule_format, OF \<open>A \<in> \<A>\<close>] False
+                      have "A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                        by (by100 blast)
+                      thus ?thesis using \<open>x \<in> A\<close> True by (by100 blast)
+                    next
+                      case xnT: False
+                      hence "x \<in> \<Union>F" using \<open>x \<in> T \<union> \<Union>F\<close> by (by100 blast)
+                      then obtain B where "B \<in> F" "x \<in> B" by (by100 blast)
+                      have "B \<in> \<A>" using \<open>B \<in> F\<close> hF_NT by (by100 blast)
+                      have "A \<noteq> B" using False \<open>B \<in> F\<close> by (by100 blast)
+                      from h\<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> this]
+                      have "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+                        by (by100 blast)
+                      thus ?thesis using \<open>x \<in> A\<close> \<open>x \<in> B\<close> by (by100 blast)
+                    qed
+                  qed
+                  moreover have "finite (top1_arc_endpoints_on A (subspace_topology Y TY A))"
+                  proof -
+                    have hA_arc: "top1_is_arc_on A (subspace_topology Y TY A)"
+                      using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                    from hA_arc[unfolded top1_is_arc_on_def]
+                    obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology Y TY A) h"
+                      by (by100 blast)
+                    have "is_topology_on_strict Y TY"
+                      using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                    have "is_hausdorff_on Y TY"
+                      using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                    from arc_endpoints_are_boundary[OF \<open>is_topology_on_strict Y TY\<close>
+                        \<open>is_hausdorff_on Y TY\<close> hA_sub hA_arc hh]
+                    have "top1_arc_endpoints_on A (subspace_topology Y TY A) = {h 0, h 1}" .
+                    thus ?thesis by (by100 simp)
+                  qed
+                  ultimately have "finite (A \<inter> ?YF)" using finite_subset by (by100 blast)
+                  moreover have "A \<inter> ?YF \<subseteq> A" by (by100 blast)
+                  ultimately show ?thesis
+                    using Theorem_17_8[OF hA_haus] by (by100 blast)
+                qed
+              qed
+              ultimately show ?thesis by (by100 blast)
+            qed
             have hYF_closed: "closedin_on ?YFF ?TYFF ?YF"
-              sorry \<comment> \<open>By coherent topology of ?YFF: ?YF \\<inter> A closed in A for each arc.\<close>
-            \<comment> \<open>\\<Union>(F'\\\\F) closed in ?YFF.\<close>
+            proof -
+              have "?YF \<subseteq> ?YFF" by (by100 blast)
+              from Theorem_17_2[OF hTY_top hYFF_sub', THEN iffD2]
+              show ?thesis using hYF_closed_Y \<open>?YF \<subseteq> ?YFF\<close> by (by100 blast)
+            qed
+            \<comment> \<open>Each arc in F'\\\\F is closed in Y, hence in ?YFF. Finite union is closed.\<close>
             have hG_closed: "closedin_on ?YFF ?TYFF (\<Union>(F' - F))"
-              sorry \<comment> \<open>Finite union of closed arcs.\<close>
+            proof -
+              have "\<forall>A \<in> F' - F. closedin_on ?YFF ?TYFF A"
+              proof (intro ballI)
+                fix A assume "A \<in> F' - F"
+                \<comment> \<open>A is closed in Y (compact subset of Hausdorff Y).\<close>
+                have "A \<in> \<A>" using \<open>A \<in> F' - F\<close> hG_NT by (by100 blast)
+                have hA_sub: "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+                have "closedin_on Y TY A"
+                proof -
+                  have "A \<subseteq> Y" by (rule hA_sub)
+                  from h\<A>_coh[rule_format, OF this]
+                  have "closedin_on Y TY A \<longleftrightarrow>
+                      (\<forall>B\<in>\<A>. closedin_on B (subspace_topology Y TY B) (B \<inter> A))" .
+                  moreover have "\<forall>B\<in>\<A>. closedin_on B (subspace_topology Y TY B) (B \<inter> A)"
+                  proof (intro ballI)
+                    fix B assume "B \<in> \<A>"
+                    show "closedin_on B (subspace_topology Y TY B) (B \<inter> A)"
+                    proof (cases "B = A")
+                      case True
+                      have "is_topology_on B (subspace_topology Y TY B)"
+                        by (rule subspace_topology_is_topology_on[OF hTY_top])
+                           (use h\<A> \<open>B \<in> \<A>\<close> in blast)
+                      have "B \<inter> A = B" using True by (by100 blast)
+                      moreover from Theorem_17_1[OF \<open>is_topology_on B (subspace_topology Y TY B)\<close>]
+                      have "closedin_on B (subspace_topology Y TY B) B" by (by100 blast)
+                      ultimately show ?thesis by (by100 simp)
+                    next
+                      case False
+                      from h\<A>_inter[rule_format, OF \<open>B \<in> \<A>\<close> \<open>A \<in> \<A>\<close> False]
+                      have "finite (B \<inter> A)" by (by100 blast)
+                      have "B \<inter> A \<subseteq> B" by (by100 blast)
+                      have "is_hausdorff_on B (subspace_topology Y TY B)"
+                      proof -
+                        have "is_hausdorff_on Y TY"
+                          using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+                        have "B \<subseteq> Y" using h\<A> \<open>B \<in> \<A>\<close> by (by100 blast)
+                        from Theorem_17_11[THEN conjunct2, THEN conjunct2, rule_format,
+                            OF conjI[OF \<open>is_hausdorff_on Y TY\<close> this]]
+                        show ?thesis .
+                      qed
+                      from Theorem_17_8[OF this \<open>finite (B \<inter> A)\<close> \<open>B \<inter> A \<subseteq> B\<close>]
+                      show ?thesis .
+                    qed
+                  qed
+                  ultimately show ?thesis by (by100 blast)
+                qed
+                \<comment> \<open>A closed in Y \\<Longrightarrow> A closed in ?YFF.\<close>
+                have "A \<subseteq> ?YFF" using \<open>A \<in> F' - F\<close> by (by100 blast)
+                from Theorem_17_2[OF hTY_top hYFF_sub', THEN iffD2]
+                show "closedin_on ?YFF ?TYFF A"
+                  using \<open>closedin_on Y TY A\<close> \<open>A \<subseteq> ?YFF\<close> by (by100 blast)
+              qed
+              from closedin_Union_finite[OF hTYFF_top hG_finite this]
+              show ?thesis .
+            qed
             \<comment> \<open>?YF \\<union> \\<Union>(F'\\\\F) = ?YFF.\<close>
             have hcover: "?YF \<union> \<Union>(F' - F) = ?YFF" by (by100 blast)
             \<comment> \<open>r continuous on ?YF (identity).\<close>
