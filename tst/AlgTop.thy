@@ -4815,9 +4815,155 @@ proof -
                       "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc) ?std_loop
                       \<or> top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc)
                           (top1_path_reverse ?std_loop)"
-                      sorry \<comment> \<open>\\<pi>\\<circ>h\\_arc agrees with std\\_loop\\<circ>reparam on I\\_set.
-                         reparam is continuous bijection [0,1]\\<rightarrow>[0,1].
-                         reparam\\_path\\_homotopy: std\\_loop\\<circ>reparam \\<simeq> std\\_loop\\<circ>id or std\\_loop\\<circ>rev.\<close>
+                    proof -
+                      let ?reparam = "\<lambda>s. ?hD_inv (h_arc s)"
+                      \<comment> \<open>\\<pi>\\<circ>h\\_arc agrees with std\\_loop\\<circ>reparam on I\\_set.\<close>
+                      have h_agree_reparam: "\<forall>s\<in>I_set. (\<pi> \<circ> h_arc) s = (?std_loop \<circ> ?reparam) s"
+                        using h\<pi>_harc_eq unfolding comp_def by simp
+                      \<comment> \<open>reparam: I\\_set \\<rightarrow> I\\_set continuous.\<close>
+                      have h_reparam_cont: "top1_continuous_map_on I_set I_top I_set I_top ?reparam"
+                      proof -
+                        \<comment> \<open>h\\_arc: [0,1] \\<rightarrow> D homeomorphism (hence continuous).\<close>
+                        have harc_cont_D: "top1_continuous_map_on I_set I_top D (subspace_topology Y TY D) h_arc"
+                          using hharc unfolding top1_homeomorphism_on_def by (by100 blast)
+                        \<comment> \<open>hD\\<inverse>: D \\<rightarrow> [0,1] continuous (homeomorphism inverse).\<close>
+                        from homeomorphism_inverse[OF hhD]
+                        have "top1_homeomorphism_on D (subspace_topology Y TY D) I_set I_top (inv_into I_set hD)" .
+                        hence hinv_cont: "top1_continuous_map_on D (subspace_topology Y TY D) I_set I_top
+                            (inv_into I_set hD)"
+                          unfolding top1_homeomorphism_on_def by (by100 blast)
+                        \<comment> \<open>the\\_inv\\_into = inv\\_into for injective.\<close>
+                        have h_eq_inv: "\<forall>x\<in>D. ?hD_inv x = inv_into I_set hD x"
+                        proof (intro ballI)
+                          fix x assume "x \<in> D"
+                          hence "x \<in> hD ` I_set"
+                            using hD_bij unfolding bij_betw_def by (by100 blast)
+                          then obtain t where ht: "t \<in> I_set" "hD t = x" by (by100 blast)
+                          have "?hD_inv x = t"
+                            using the_inv_into_f_f[OF hD_inj ht(1)] ht(2) by simp
+                          moreover have "inv_into I_set hD x = t"
+                            using inv_into_f_f[OF hD_inj ht(1)] ht(2) by simp
+                          ultimately show "?hD_inv x = inv_into I_set hD x" by simp
+                        qed
+                        \<comment> \<open>Composition: h\\_arc then hD\\<inverse>.\<close>
+                        have h_comp: "top1_continuous_map_on I_set I_top I_set I_top
+                            (inv_into I_set hD \<circ> h_arc)"
+                          by (rule top1_continuous_map_on_comp[OF harc_cont_D hinv_cont])
+                        \<comment> \<open>?reparam agrees with inv\\_into \\<circ> h\\_arc on I\\_set.\<close>
+                        have "\<forall>s\<in>I_set. ?reparam s = (inv_into I_set hD \<circ> h_arc) s"
+                        proof (intro ballI)
+                          fix s assume "s \<in> I_set"
+                          hence "h_arc s \<in> D" using h_harc_D by (by100 blast)
+                          thus "?reparam s = (inv_into I_set hD \<circ> h_arc) s"
+                            using h_eq_inv unfolding comp_def by (by100 blast)
+                        qed
+                        \<comment> \<open>Same continuity since they agree on I\\_set.\<close>
+                        show ?thesis unfolding top1_continuous_map_on_def
+                        proof (intro conjI ballI)
+                          fix s assume "s \<in> I_set"
+                          thus "?reparam s \<in> I_set"
+                            using h_comp \<open>\<forall>s\<in>I_set. ?reparam s = (inv_into I_set hD \<circ> h_arc) s\<close>
+                            unfolding top1_continuous_map_on_def by (by100 auto)
+                        next
+                          fix V assume "V \<in> I_top"
+                          have "{s \<in> I_set. ?reparam s \<in> V} = {s \<in> I_set. (inv_into I_set hD \<circ> h_arc) s \<in> V}"
+                            using \<open>\<forall>s\<in>I_set. ?reparam s = (inv_into I_set hD \<circ> h_arc) s\<close> by (by100 auto)
+                          thus "{s \<in> I_set. ?reparam s \<in> V} \<in> I_top"
+                            using h_comp \<open>V \<in> I_top\<close> unfolding top1_continuous_map_on_def by (by100 auto)
+                        qed
+                      qed
+                      have h_reparam_range: "\<forall>s\<in>I_set. ?reparam s \<in> I_set"
+                        using h_reparam_cont unfolding top1_continuous_map_on_def by (by100 blast)
+                      \<comment> \<open>Endpoint analysis.\<close>
+                      have h_reparam_endpoints: "(?reparam 0 = 0 \<and> ?reparam 1 = 1)
+                          \<or> (?reparam 0 = 1 \<and> ?reparam 1 = 0)"
+                        sorry \<comment> \<open>Continuous bijection [0,1]\\<rightarrow>[0,1] maps endpoints to endpoints.\<close>
+                      \<comment> \<open>std\\_loop continuous and maps I\\_set to S1.\<close>
+                      have hstd_cont_loc: "top1_continuous_map_on I_set I_top top1_S1 top1_S1_topology ?std_loop"
+                        using standard_S1_loop_is_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+                        by (by100 blast)
+                      have hstd_range_loc: "\<forall>s\<in>I_set. ?std_loop s \<in> top1_S1"
+                        using hstd_cont_loc unfolding top1_continuous_map_on_def by (by100 blast)
+                      have hS1_sub_self: "subspace_topology top1_S1 top1_S1_topology top1_S1 = top1_S1_topology"
+                      proof -
+                        have "\<forall>U\<in>top1_S1_topology. U \<subseteq> top1_S1"
+                          using top1_S1_is_topology_on_strict
+                          unfolding is_topology_on_strict_def by (by100 blast)
+                        from subspace_topology_self[OF this] show ?thesis .
+                      qed
+                      have hS1_top_S1: "is_topology_on top1_S1 (subspace_topology top1_S1 top1_S1_topology top1_S1)"
+                        using hS1_top_loc hS1_sub_self by simp
+                      have h0I_loc: "(0::real) \<in> I_set"
+                        unfolding top1_unit_interval_def by (by100 simp)
+                      have h1I_loc: "(1::real) \<in> I_set"
+                        unfolding top1_unit_interval_def by (by100 simp)
+                      have hI_top_loc: "is_topology_on I_set I_top"
+                        by (rule top1_unit_interval_topology_is_topology_on)
+                      have h_id_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. t)"
+                        unfolding top1_continuous_map_on_def
+                      proof (intro conjI ballI)
+                        fix s assume "s \<in> I_set" thus "s \<in> I_set" .
+                      next
+                        fix V assume hV: "V \<in> I_top"
+                        \<comment> \<open>V \\<subseteq> I\\_set since I\\_top = subspace topology.\<close>
+                        have "V \<subseteq> I_set"
+                          using hV unfolding top1_unit_interval_topology_def subspace_topology_def
+                          by (by100 auto)
+                        hence "{s \<in> I_set. s \<in> V} = V" by (by100 blast)
+                        thus "{s \<in> I_set. s \<in> V} \<in> I_top" using hV by simp
+                      qed
+                      have h_rev_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t::real. 1 - t)"
+                        by (rule op_minus_continuous_on_interval)
+                      from h_reparam_endpoints show ?thesis
+                      proof
+                        assume hep: "?reparam 0 = 0 \<and> ?reparam 1 = 1"
+                        \<comment> \<open>reparam\\_path\\_homotopy: std\\<circ>reparam \\<simeq> std\\<circ>id.\<close>
+                        have hid0: "(\<lambda>t::real. t) 0 = (0::real)" by (by100 simp)
+                        have hid1: "(\<lambda>t::real. t) 1 = (1::real)" by (by100 simp)
+                        have hrp0f: "?reparam 0 = (0::real)" using hep by (by100 blast)
+                        have hrp1f: "?reparam 1 = (1::real)" using hep by (by100 blast)
+                        from reparam_path_homotopy[OF hS1_top_loc hstd_cont_loc hstd_range_loc subset_refl
+                            hS1_top_S1 h_reparam_cont h_id_cont hrp0f hrp1f hid0 hid1 h0I_loc h1I_loc]
+                        have "top1_path_homotopic_on top1_S1 (subspace_topology top1_S1 top1_S1_topology top1_S1)
+                            (?std_loop 0) (?std_loop 1) (?std_loop \<circ> ?reparam) (?std_loop \<circ> (\<lambda>t. t))" .
+                        moreover have "?std_loop 0 = (1::real, 0)" by (by100 simp)
+                        moreover have "?std_loop 1 = (1::real, 0)" by (by100 simp)
+                        moreover have "?std_loop \<circ> (\<lambda>t. t) = ?std_loop" by (rule ext) (simp add: comp_def)
+                        moreover have "subspace_topology top1_S1 top1_S1_topology top1_S1 = top1_S1_topology"
+                          using hS1_sub_self .
+                        ultimately have hreparam_htpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                            (?std_loop \<circ> ?reparam) ?std_loop"
+                          by simp
+                        \<comment> \<open>\\<pi>\\<circ>h\\_arc agrees with std\\<circ>reparam on I\\_set.\<close>
+                        from paths_agree_on_I_path_homotopic[OF hS1_top_loc h\<pi>harc_path h_agree_reparam]
+                        have "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc) (?std_loop \<circ> ?reparam)" .
+                        from Lemma_51_1_path_homotopic_trans[OF hS1_top_loc this hreparam_htpy]
+                        show ?thesis by (by100 blast)
+                      next
+                        assume hep: "?reparam 0 = 1 \<and> ?reparam 1 = 0"
+                        have hrev0: "(\<lambda>t::real. 1 - t) 0 = (1::real)" by (by100 simp)
+                        have hrev1: "(\<lambda>t::real. 1 - t) 1 = (0::real)" by (by100 simp)
+                        have hrp0: "?reparam 0 = (1::real)" using hep by (by100 blast)
+                        have hrp1: "?reparam 1 = (0::real)" using hep by (by100 blast)
+                        from reparam_path_homotopy[OF hS1_top_loc hstd_cont_loc hstd_range_loc subset_refl
+                            hS1_top_S1 h_reparam_cont h_rev_cont hrp0 hrp1 hrev0 hrev1 h1I_loc h0I_loc]
+                        have "top1_path_homotopic_on top1_S1 (subspace_topology top1_S1 top1_S1_topology top1_S1)
+                            (?std_loop 1) (?std_loop 0) (?std_loop \<circ> ?reparam) (?std_loop \<circ> (\<lambda>t::real. 1 - t))" .
+                        moreover have "?std_loop 0 = (1::real, 0)" by (by100 simp)
+                        moreover have "?std_loop 1 = (1::real, 0)" by (by100 simp)
+                        moreover have "?std_loop \<circ> (\<lambda>t::real. 1 - t) = top1_path_reverse ?std_loop"
+                          unfolding top1_path_reverse_def by (rule ext) (simp add: comp_def)
+                        moreover have "subspace_topology top1_S1 top1_S1_topology top1_S1 = top1_S1_topology"
+                          using hS1_sub_self .
+                        ultimately have hreparam_htpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0)
+                            (?std_loop \<circ> ?reparam) (top1_path_reverse ?std_loop)"
+                          by simp
+                        from paths_agree_on_I_path_homotopic[OF hS1_top_loc h\<pi>harc_path h_agree_reparam]
+                        have "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (\<pi> \<circ> h_arc) (?std_loop \<circ> ?reparam)" .
+                        from Lemma_51_1_path_homotopic_trans[OF hS1_top_loc this hreparam_htpy]
+                        show ?thesis by (by100 blast)
+                      qed
+                    qed
                     \<comment> \<open>\\<pi> \\<circ> gen\\_loop D = const\\_10 * ((\\<pi>\\<circ>h\\_arc) * const\\_10).
                        By hcomp\\_eq + the constant path facts.\<close>
                     \<comment> \<open>Homotopy chain: const * (h * const) \\<simeq> h (left+right identity).\<close>
