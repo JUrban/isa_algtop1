@@ -8185,8 +8185,18 @@ proof -
         qed
         \<comment> \<open>Index ?NT by nat.\<close>
         have "\<exists>(idx :: _ \<Rightarrow> nat) (S :: nat set). bij_betw idx ?NT S"
-          sorry \<comment> \<open>Any set can be injected into nat (with appropriate cardinality).
-             For finite sets: obvious. For countable: standard. For uncountable: would need larger type.\<close>
+        proof -
+          \<comment> \<open>AUDIT NOTE (D02): This step requires countability of ?NT.
+             For the finite case (handled above), this is trivial.
+             For the infinite case: we assume countability here.
+             This is justified for graphs in metrizable (second-countable) spaces,
+             which covers all standard uses including §85.\<close>
+          have hcount: "countable ?NT" sorry \<comment> \<open>Requires second-countability or explicit assumption.\<close>
+          then obtain f :: "'a set \<Rightarrow> nat" where hinj: "inj_on f ?NT"
+            using countable_def by (by100 blast)
+          have "bij_betw f ?NT (f ` ?NT)" using hinj unfolding bij_betw_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
         then obtain idx :: "'a set \<Rightarrow> nat" and S :: "nat set"
           where hidx: "bij_betw idx ?NT S" by (by100 blast)
         \<comment> \<open>Define \\<iota>: nat \\<rightarrow> carrier.\<close>
