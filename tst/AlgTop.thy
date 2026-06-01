@@ -1204,10 +1204,30 @@ proof -
       have "\<alpha> 1 = \<alpha> 1" by simp
       \<comment> \<open>[\\<alpha>*rev(\\<alpha>)] = identity class. This is the identity of \\<pi>\\_1(B,b0), which is in H.\<close>
       have hprod_rev: "top1_is_loop_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<alpha>))"
-        sorry \<comment> \<open>\\<alpha>*rev(\\<alpha>) is a loop at b0.\<close>
+      proof -
+        have hrev: "top1_is_path_on B TB (\<alpha> 1) b0 (top1_path_reverse \<alpha>)"
+          by (rule top1_path_reverse_is_path[OF h\<alpha>_path])
+        from top1_path_product_is_path[OF hTB h\<alpha>_path hrev]
+        have "top1_is_path_on B TB b0 b0 (top1_path_product \<alpha> (top1_path_reverse \<alpha>))" .
+        thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+      qed
       have hclass_id: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<alpha>)) g}
           = top1_fundamental_group_id B TB b0"
-        sorry \<comment> \<open>[\\<alpha>*rev(\\<alpha>)] = identity class (Theorem 51.3 inverse).\<close>
+      proof -
+        \<comment> \<open>\\<alpha>*rev(\\<alpha>) \\<simeq> const(b0) by Theorem 51.2 (inverse left).\<close>
+        have hhtpy: "top1_path_homotopic_on B TB b0 b0
+            (top1_path_product \<alpha> (top1_path_reverse \<alpha>)) (top1_constant_path b0)"
+          by (rule Theorem_51_2_invgerse_left[OF hTB h\<alpha>_path])
+        \<comment> \<open>Homotopic paths have the same equivalence class.\<close>
+        from path_homotopic_same_class[OF hTB hhtpy]
+        have "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<alpha>)) g}
+            = {g. top1_loop_equiv_on B TB b0 (top1_constant_path b0) g}" .
+        \<comment> \<open>The class of const(b0) is the identity in \\<pi>\\_1(B,b0).\<close>
+        moreover have "{g. top1_loop_equiv_on B TB b0 (top1_constant_path b0) g}
+            = top1_fundamental_group_id B TB b0"
+          unfolding top1_fundamental_group_id_def by simp
+        ultimately show ?thesis by simp
+      qed
       have "top1_fundamental_group_id B TB b0 \<in> H"
       proof -
         from assms(7) have "top1_is_group_on H
