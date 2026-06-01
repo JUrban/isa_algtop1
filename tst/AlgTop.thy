@@ -3059,8 +3059,109 @@ proof -
         \<comment> \<open>Choose the generator map: for each A \\<in> ?NT, choose a generator loop.
            The generator loop is in \\<pi>\\_1(Y, y0).\<close>
         have hgen_exists: "\<forall>A \<in> ?NT. \<exists>c. c \<in> top1_fundamental_group_carrier Y TY y0"
-          sorry \<comment> \<open>For each A: construct g\\_A as tree\\_path * arc * rev\\_tree\\_path.
-             This is a loop in Y starting and ending at y0. Its class c = [g\\_A] is in the carrier.\<close>
+        proof (intro ballI)
+          fix A assume "A \<in> ?NT"
+          hence "A \<in> \<A>" by (by100 blast)
+          have hA_sub: "A \<subseteq> Y" using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+          have hA_arc: "top1_is_arc_on A (subspace_topology Y TY A)"
+            using h\<A> \<open>A \<in> \<A>\<close> by (by100 blast)
+          from hA_arc[unfolded top1_is_arc_on_def]
+          obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology Y TY A) h"
+            by (by100 blast)
+          \<comment> \<open>Endpoints a = h(0), b = h(1). Both in T.\<close>
+          have hstrict: "is_topology_on_strict Y TY"
+            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+          have hhaus: "is_hausdorff_on Y TY"
+            using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+          from arc_endpoints_are_boundary[OF hstrict hhaus hA_sub hA_arc hh]
+          have hep: "top1_arc_endpoints_on A (subspace_topology Y TY A) = {h 0, h 1}" .
+          have ha_T: "h 0 \<in> T" using hNT_endpoints \<open>A \<in> ?NT\<close> hep by (by100 blast)
+          have hb_T: "h 1 \<in> T" using hNT_endpoints \<open>A \<in> ?NT\<close> hep by (by100 blast)
+          \<comment> \<open>Tree paths from y0 to endpoints.\<close>
+          from hT_pc[unfolded top1_path_connected_on_def] hT_x0 ha_T
+          obtain \<gamma>a where h\<gamma>a: "top1_is_path_on T (subspace_topology Y TY T) y0 (h 0) \<gamma>a"
+            by (by100 blast)
+          from hT_pc[unfolded top1_path_connected_on_def] hT_x0 hb_T
+          obtain \<gamma>b where h\<gamma>b: "top1_is_path_on T (subspace_topology Y TY T) y0 (h 1) \<gamma>b"
+            by (by100 blast)
+          \<comment> \<open>Arc path: h as a path from h(0) to h(1).\<close>
+          have hh_path: "top1_is_path_on A (subspace_topology Y TY A) (h 0) (h 1) h"
+          proof -
+            have hh_cont: "top1_continuous_map_on I_set I_top A (subspace_topology Y TY A) h"
+              using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+            have "h 0 \<in> A" "h 1 \<in> A"
+            proof -
+              have "(0::real) \<in> I_set" "(1::real) \<in> I_set"
+                unfolding top1_unit_interval_def by (by100 simp)+
+              thus "h 0 \<in> A" "h 1 \<in> A"
+                using hh_cont unfolding top1_continuous_map_on_def by (by100 blast)+
+            qed
+            thus ?thesis using hh_cont
+              unfolding top1_is_path_on_def by (by100 blast)
+          qed
+          \<comment> \<open>Lift all paths to Y via inclusion.\<close>
+          \<comment> \<open>Lift paths from subspaces to Y. A path in S \\<subseteq> Y lifts to Y
+             because the inclusion is continuous (Theorem\\_18\\_2(2)).\<close>
+          have h\<gamma>a_Y: "top1_is_path_on Y TY y0 (h 0) \<gamma>a"
+          proof -
+            have "\<gamma>a ` I_set \<subseteq> T"
+              using h\<gamma>a unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+            hence "\<gamma>a ` I_set \<subseteq> Y" using hT_sub by (by100 blast)
+            have "top1_continuous_map_on I_set I_top T (subspace_topology Y TY T) \<gamma>a"
+              using h\<gamma>a unfolding top1_is_path_on_def by (by100 blast)
+            have "top1_continuous_map_on I_set I_top Y TY (id \<circ> \<gamma>a)"
+              by (rule top1_continuous_map_on_comp[OF \<open>top1_continuous_map_on I_set I_top T _ \<gamma>a\<close>
+                  Theorem_18_2(2)[OF hTY_top hTY_top hTY_top, rule_format, OF hT_sub]])
+            hence "top1_continuous_map_on I_set I_top Y TY \<gamma>a" by (by100 simp)
+            moreover have "\<gamma>a 0 = y0" "\<gamma>a 1 = h 0"
+              using h\<gamma>a unfolding top1_is_path_on_def by (by100 blast)+
+            ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+          qed
+          have h\<gamma>b_Y: "top1_is_path_on Y TY y0 (h 1) \<gamma>b"
+          proof -
+            have "top1_continuous_map_on I_set I_top T (subspace_topology Y TY T) \<gamma>b"
+              using h\<gamma>b unfolding top1_is_path_on_def by (by100 blast)
+            have "top1_continuous_map_on I_set I_top Y TY (id \<circ> \<gamma>b)"
+              by (rule top1_continuous_map_on_comp[OF \<open>top1_continuous_map_on I_set I_top T _ \<gamma>b\<close>
+                  Theorem_18_2(2)[OF hTY_top hTY_top hTY_top, rule_format, OF hT_sub]])
+            hence "top1_continuous_map_on I_set I_top Y TY \<gamma>b" by (by100 simp)
+            moreover have "\<gamma>b 0 = y0" "\<gamma>b 1 = h 1"
+              using h\<gamma>b unfolding top1_is_path_on_def by (by100 blast)+
+            ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+          qed
+          have hh_Y: "top1_is_path_on Y TY (h 0) (h 1) h"
+          proof -
+            have "top1_continuous_map_on I_set I_top A (subspace_topology Y TY A) h"
+              using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+            have "top1_continuous_map_on I_set I_top Y TY (id \<circ> h)"
+              by (rule top1_continuous_map_on_comp[OF \<open>top1_continuous_map_on I_set I_top A _ h\<close>
+                  Theorem_18_2(2)[OF hTY_top hTY_top hTY_top, rule_format, OF hA_sub]])
+            hence "top1_continuous_map_on I_set I_top Y TY h" by (by100 simp)
+            moreover have "h 0 \<in> Y" "h 1 \<in> Y" using ha_T hb_T hT_sub by (by100 blast)+
+            ultimately show ?thesis
+              using hh_path unfolding top1_is_path_on_def by (by100 blast)
+          qed
+          \<comment> \<open>Generator loop: g\\_A = \\<gamma>\\_a * (h * rev(\\<gamma>\\_b)).\<close>
+          let ?rev_\<gamma>b = "top1_path_reverse \<gamma>b"
+          have hrev_Y: "top1_is_path_on Y TY (h 1) y0 ?rev_\<gamma>b"
+            by (rule top1_path_reverse_is_path[OF h\<gamma>b_Y])
+          let ?inner = "top1_path_product h ?rev_\<gamma>b"
+          have hinner_Y: "top1_is_path_on Y TY (h 0) y0 ?inner"
+            by (rule top1_path_product_is_path[OF hTY_top hh_Y hrev_Y])
+          let ?gen_loop = "top1_path_product \<gamma>a ?inner"
+          have hgen_Y: "top1_is_path_on Y TY y0 y0 ?gen_loop"
+            by (rule top1_path_product_is_path[OF hTY_top h\<gamma>a_Y hinner_Y])
+          have hgen_loop: "top1_is_loop_on Y TY y0 ?gen_loop"
+            using hgen_Y unfolding top1_is_loop_on_def by (by100 blast)
+          \<comment> \<open>The homotopy class of gen\\_loop is in the fundamental group carrier.\<close>
+          show "\<exists>c. c \<in> top1_fundamental_group_carrier Y TY y0"
+          proof (rule exI)
+            show "{g. top1_loop_equiv_on Y TY y0 ?gen_loop g}
+                \<in> top1_fundamental_group_carrier Y TY y0"
+              unfolding top1_fundamental_group_carrier_def
+              using hgen_loop by (by100 blast)
+          qed
+        qed
         \<comment> \<open>Choose generator function.\<close>
         from bchoice[OF hgen_exists]
         obtain gen where hgen: "\<forall>A \<in> ?NT. gen A \<in> top1_fundamental_group_carrier Y TY y0"
