@@ -3852,14 +3852,37 @@ proof -
             qed
             \<comment> \<open>Step 4: word\\_product(Y, ws) = incl*(word\\_product(?YF, ws\\_F)) by hom\\_word\\_product.\<close>
             let ?ws_F = "map (\<lambda>(s, b). (\<iota>F (the_inv_into ?NT idx s), b)) ws"
+            \<comment> \<open>Key map equality: map((s,b) \\<mapsto> (\\<iota>(s),b), ws) = map((x,b) \\<mapsto> (incl*(x),b), ?ws\\_F).\<close>
+            have hmap_incl_eq: "map (\<lambda>(s, b). (\<iota> s, b)) ws =
+                map (\<lambda>(x, b). (?incl x, b)) ?ws_F"
+            proof -
+              \<comment> \<open>map((x,b) \\<mapsto> (incl*(x),b), ?ws\\_F) = map((s,b) \\<mapsto> (incl*(\\<iota>F(inv(s))),b), ws) by map\\_map.\<close>
+              have "map (\<lambda>(x, b). (?incl x, b)) ?ws_F =
+                  map (\<lambda>(s, b). (?incl (\<iota>F (the_inv_into ?NT idx s)), b)) ws"
+                by (induction ws) (by100 auto)+
+              \<comment> \<open>= map((s,b) \\<mapsto> (\\<iota>(s),b), ws) by h\\<iota>\\_eq\\_incl applied elementwise.\<close>
+              also have "\<dots> = map (\<lambda>(s, b). (\<iota> s, b)) ws"
+              proof (rule nth_equalityI)
+                show "length (map (\<lambda>(s, b). (?incl (\<iota>F (the_inv_into ?NT idx s)), b)) ws) =
+                    length (map (\<lambda>(s, b). (\<iota> s, b)) ws)" by (by100 simp)
+              next
+                fix i assume "i < length (map (\<lambda>(s, b). (?incl (\<iota>F (the_inv_into ?NT idx s)), b)) ws)"
+                hence hi: "i < length ws" by (by100 simp)
+                from h\<iota>_eq_incl[rule_format, OF hi]
+                show "map (\<lambda>(s, b). (?incl (\<iota>F (the_inv_into ?NT idx s)), b)) ws ! i =
+                    map (\<lambda>(s, b). (\<iota> s, b)) ws ! i"
+                  by (cases "ws ! i") (use hi in \<open>by100 simp\<close>)
+              qed
+              finally show ?thesis by (by100 simp)
+            qed
+            \<comment> \<open>By hom\\_word\\_product: incl*(word\\_product(?YF, ?ws\\_F)) = word\\_product(Y, map(incl, ?ws\\_F)).\<close>
             have hword_eq: "top1_group_word_product (top1_fundamental_group_mul Y TY y0)
                 (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
                 (map (\<lambda>(s, b). (\<iota> s, b)) ws) =
                 ?incl (top1_group_word_product (top1_fundamental_group_mul ?YF ?TYF y0)
                     (top1_fundamental_group_id ?YF ?TYF y0) (top1_fundamental_group_invg ?YF ?TYF y0)
                     ?ws_F)"
-              sorry \<comment> \<open>By h\\<iota>\\_eq\\_incl: map((s,b) \\<mapsto> (\\<iota>(s),b), ws) = map((s,b) \\<mapsto> (incl*(\\<iota>F(inv(s))),b), ws).
-                 Then by hom\\_word\\_product applied to incl* (a hom from \\<pi>\\_1(?YF) to \\<pi>\\_1(Y)).\<close>
+              sorry \<comment> \<open>Rewrite LHS using hmap\\_incl\\_eq, then apply hom\\_word\\_product (reversed).\<close>
             \<comment> \<open>Step 5: ?ws\\_F is a non-trivial reduced word in \\<pi>\\_1(?YF).\<close>
             have hws_F_red: "top1_is_reduced_word (map (\<lambda>(s, b). (\<iota>F (the_inv_into ?NT idx s), b)) ws)"
               sorry \<comment> \<open>Reduced word preserved: \\<iota>F injective on ?arcs, inv(idx) injective on S.\<close>
