@@ -3276,7 +3276,79 @@ proof -
                Step C: \\<pi>*([g\\_D]) generates \\<pi>\\_1(W) \\<cong> \\<Z>.
                Step D: algebraic argument: \\<pi>* is hom \\<Z> \\<rightarrow> \\<Z> mapping [g\\_D] to \\<pm>1,
                        so [g\\_D] maps to \\<pm>1 under the iso, hence generates.\<close>
-            show ?thesis sorry \<comment> \<open>Base case: ~80 lines following the quotient map approach.\<close>
+            show ?thesis
+            proof -
+              from card_1_singletonE[OF True] obtain D where hD: "F = {D}" by (by100 blast)
+              hence hD_NT: "D \<in> ?NT" using hF_NT by (by100 blast)
+              hence "D \<in> \<A>" by (by100 blast)
+              have hTD_eq: "T \<union> \<Union>F = T \<union> D" using hD by (by100 simp)
+              let ?TD = "T \<union> D" and ?TTD = "subspace_topology Y TY (T \<union> D)"
+              \<comment> \<open>Define \\<iota>F(D) = [gen\\_loop(D)] in \\<pi>\\_1(T\\<union>D).\<close>
+              define \<iota>F where "\<iota>F A = {g. top1_loop_equiv_on ?TD ?TTD y0 (gen_loop A) g}" for A
+              \<comment> \<open>gen\\_loop(D) is a loop in T\\<union>D (image \\<subseteq> T\\<union>D from hgen\\_loop\\_props).\<close>
+              have hgenD_loop_TD: "top1_is_loop_on ?TD ?TTD y0 (gen_loop D)"
+              proof -
+                from hgen_loop_props[rule_format, OF hD_NT]
+                have "gen_loop D ` top1_unit_interval \<subseteq> T \<union> D" by (by100 blast)
+                have "top1_is_loop_on Y TY y0 (gen_loop D)"
+                  using hgen_loop_props hD_NT by (by100 blast)
+                hence "top1_continuous_map_on I_set I_top Y TY (gen_loop D)"
+                  unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+                have hTD_sub: "?TD \<subseteq> Y" using hT_sub h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+                from Theorem_18_2(5)[OF top1_unit_interval_topology_is_topology_on hTY_top hTY_top,
+                    rule_format]
+                    \<open>top1_continuous_map_on I_set I_top Y TY (gen_loop D)\<close>
+                    \<open>gen_loop D ` top1_unit_interval \<subseteq> ?TD\<close> hTD_sub
+                have "top1_continuous_map_on I_set I_top ?TD ?TTD (gen_loop D)"
+                  by (by100 blast)
+                moreover have "gen_loop D 0 = y0" "gen_loop D 1 = y0"
+                  using \<open>top1_is_loop_on Y TY y0 (gen_loop D)\<close>
+                  unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)+
+                ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+                  by (by100 blast)
+              qed
+              \<comment> \<open>\\<iota>F(D) \\<in> carrier(T\\<union>D).\<close>
+              have h\<iota>F_carrier: "\<iota>F D \<in> top1_fundamental_group_carrier ?TD ?TTD y0"
+                unfolding \<iota>F_def top1_fundamental_group_carrier_def
+                using hgenD_loop_TD by (by100 blast)
+              \<comment> \<open>incl*(\\<iota>F(D)) = gen(D): the inclusion sends [gen\\_loop(D)]\\_TD to [gen\\_loop(D)]\\_Y = gen(D).\<close>
+              have hTD_sub: "?TD \<subseteq> Y" using hT_sub h\<A> \<open>D \<in> \<A>\<close> by (by100 blast)
+              have h_incl_gen: "top1_fundamental_group_induced_on ?TD ?TTD y0 Y TY y0 (\<lambda>x. x)
+                  (\<iota>F D) = gen D"
+              proof -
+                from subspace_inclusion_induced_class[OF hTY_top hTD_sub hgenD_loop_TD]
+                have "top1_fundamental_group_induced_on ?TD ?TTD y0 Y TY y0 (\<lambda>x. x)
+                    {g. top1_loop_equiv_on ?TD ?TTD y0 (gen_loop D) g} =
+                    {g. top1_loop_equiv_on Y TY y0 (gen_loop D) g}" .
+                thus ?thesis unfolding \<iota>F_def gen_def by (by100 simp)
+              qed
+              \<comment> \<open>\\<pi>\\_1(T\\<union>D) is free on {D} with generator \\<iota>F(D).
+                 This is the KEY claim: [gen\\_loop(D)] generates \\<pi>\\_1(T\\<union>D) and has infinite order.
+                 Follows from: \\<pi>\\_1(T\\<union>D) \\<cong> \\<Z> (graph\\_one\\_edge\\_pi1\\_iso\\_Z) and
+                 [gen\\_loop(D)] maps to \\<pm>1 under the quotient T\\<union>D \\<rightarrow> S1.\<close>
+              have hfree_TD: "top1_is_free_group_full_on
+                  (top1_fundamental_group_carrier ?TD ?TTD y0)
+                  (top1_fundamental_group_mul ?TD ?TTD y0)
+                  (top1_fundamental_group_id ?TD ?TTD y0)
+                  (top1_fundamental_group_invg ?TD ?TTD y0)
+                  \<iota>F {D}"
+                sorry \<comment> \<open>Book Step 2: [gen\\_loop(D)] generates \\<pi>\\_1(T\\<union>D) \\<cong> \\<Z>.
+                   Quotient map T\\<union>D \\<rightarrow> S1 sends [gen\\_loop(D)] to \\<pm>1.
+                   Algebraic: hom \\<Z>\\<rightarrow>\\<Z> mapping k to \\<pm>1 forces |k|=1.\<close>
+              \<comment> \<open>Package the result.\<close>
+              \<comment> \<open>Rewrite T \\<union> \\<Union>F = T \\<union> D.\<close>
+              have hfree_F: "top1_is_free_group_full_on
+                  (top1_fundamental_group_carrier (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                  (top1_fundamental_group_mul (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                  (top1_fundamental_group_id (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                  (top1_fundamental_group_invg (T \<union> \<Union>F) (subspace_topology Y TY (T \<union> \<Union>F)) y0)
+                  \<iota>F {D}" using hfree_TD hTD_eq by (by100 simp)
+              have h_incl_F: "\<forall>A\<in>F. top1_fundamental_group_induced_on (T \<union> \<Union>F)
+                    (subspace_topology Y TY (T \<union> \<Union>F)) y0 Y TY y0 (\<lambda>x. x) (\<iota>F A) = gen A"
+                using h_incl_gen hD hTD_eq by (by100 simp)
+              show ?thesis
+                using hfree_F h_incl_F hD by (by100 blast)
+            qed
               next
                 case hcard_gt1: False
                 have hcard_ge2: "card F \<ge> 2"
