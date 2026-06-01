@@ -847,13 +847,42 @@ proof -
          (by Theorem 79.2 + basepoint\\_change\\_image\\_hom).\<close>
       have h\<Psi>_image: "\<Psi> ` ?Cov = {e \<in> E. p e = b0 \<and>
           top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
-      proof -
-        \<comment> \<open>\\<Psi> maps into {e \\<in> E | p e = b0}. By Theorem 79.2, \\<Psi>(h) = e iff
-           \\<exists> covering equivalence h: (E,e0) \\<rightarrow> (E,e) iff p*(\\<pi>\\_1(E,e0)) = p*(\\<pi>\\_1(E,e)).\<close>
-        \<comment> \<open>Forward: \\<Psi>(h) = e \\<Rightarrow> e \\<in> E, p(e) = b0, and p*(\\<pi>\\_1(E,e)) = H.\<close>
-        \<comment> \<open>Backward: e \\<in> E, p(e) = b0, p*(\\<pi>\\_1(E,e)) = H \\<Rightarrow> \\<exists> h \\<in> Cov(p). \\<Psi>(h) = e.\<close>
-        \<comment> \<open>Both directions use Theorem 79.2.\<close>
-        show ?thesis sorry \<comment> \<open>Theorem 79.2 application; needs covering equiv iff CT.\<close>
+      proof (rule set_eqI, rule iffI)
+        \<comment> \<open>Forward: \\<Psi>(h) \\<in> RHS.\<close>
+        fix e1 assume "e1 \<in> \<Psi> ` ?Cov"
+        then obtain h where hh: "h \<in> ?Cov" and he1: "\<Psi> h = e1" by (by100 blast)
+        hence hct: "top1_covering_transformation_on E TE B TB p h" by (by100 blast)
+        have "e1 \<in> E" using h\<Psi>_fiber hh he1 by (by100 blast)
+        have "p e1 = b0" using h\<Psi>_fiber hh he1 by (by100 blast)
+        \<comment> \<open>h is a covering equivalence (E,e0)\\<rightarrow>(E,e1).\<close>
+        \<comment> \<open>By Theorem 79.2: \\<exists> such equiv \\<Leftrightarrow> p*(\\<pi>\\_1(E,e0)) = p*(\\<pi>\\_1(E,e1)).\<close>
+        have "top1_fundamental_group_image_hom E TE e1 B TB b0 p = ?H"
+        proof -
+          \<comment> \<open>h: (E,e0) \\<rightarrow> (E,e1) is a homeomorphism with p\\<circ>h = p and h(e0) = e1.\<close>
+          have "top1_homeomorphism_on E TE E TE h"
+            using hct unfolding top1_covering_transformation_on_def by (by100 blast)
+          have "\<forall>e\<in>E. p (h e) = p e"
+            using hct unfolding top1_covering_transformation_on_def by (by100 blast)
+          have "h e0 = e1" using he1 unfolding \<Psi>_def by simp
+          \<comment> \<open>Apply Theorem 79.2 direction \\<Rightarrow>.\<close>
+          show ?thesis
+            sorry \<comment> \<open>Theorem 79.2: equiv h with h(e0)=e1 exists \\<Rightarrow> p*(\\<pi>\\_1(E,e0)) = p*(\\<pi>\\_1(E,e1)).\<close>
+        qed
+        show "e1 \<in> {e \<in> E. p e = b0 \<and>
+            top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
+          using \<open>e1 \<in> E\<close> \<open>p e1 = b0\<close> \<open>top1_fundamental_group_image_hom _ _ e1 _ _ _ _ = ?H\<close>
+          by (by100 blast)
+      next
+        \<comment> \<open>Backward: e1 \\<in> RHS \\<Rightarrow> e1 \\<in> image(\\<Psi>).\<close>
+        fix e1 assume "e1 \<in> {e \<in> E. p e = b0 \<and>
+            top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
+        hence he1E: "e1 \<in> E" and hpe1: "p e1 = b0"
+            and him: "top1_fundamental_group_image_hom E TE e1 B TB b0 p = ?H"
+          by (by100 blast)+
+        \<comment> \<open>p*(\\<pi>\\_1(E,e1)) = H = p*(\\<pi>\\_1(E,e0)). By Theorem 79.2 \\<Leftarrow>:
+           \\<exists> covering equivalence h: (E,e0) \\<rightarrow> (E,e1) with p\\<circ>h = p.\<close>
+        show "e1 \<in> \<Psi> ` ?Cov"
+          sorry \<comment> \<open>Theorem 79.2 backward direction + covering equiv = CT.\<close>
       qed
       \<comment> \<open>Step C: \\<Phi>\\<inverse>\\<circ>\\<Psi> is a homomorphism.
          Key: for h,k \\<in> Cov(p), choose \\<gamma>: e0\\<rightarrow>h(e0), \\<delta>: e0\\<rightarrow>k(e0).
