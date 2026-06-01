@@ -1221,16 +1221,18 @@ proof -
   have hcoset_sym: "\<forall>\<alpha> \<beta>. ?coset_rel \<alpha> \<beta> \<longrightarrow> ?coset_rel \<beta> \<alpha>"
   proof (intro allI impI)
     fix \<alpha> \<beta> assume hrel: "?coset_rel \<alpha> \<beta>"
-    hence h\<alpha>: "\<alpha> \<in> ?paths" and h\<beta>: "\<beta> \<in> ?paths" and heq: "\<alpha> 1 = \<beta> 1"
-        and hH: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g} \<in> H"
-      by (by100 blast)+
+    have h\<alpha>_s: "\<alpha> \<in> ?paths" using hrel by (by100 blast)
+    have h\<beta>_s: "\<beta> \<in> ?paths" using hrel by (by100 blast)
+    have heq_s: "\<alpha> 1 = \<beta> 1" using hrel by (by100 blast)
+    have hH_s: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<alpha> (top1_path_reverse \<beta>)) g} \<in> H"
+      using hrel by (by100 blast)
     show "?coset_rel \<beta> \<alpha>"
     proof -
-      have "\<beta> 1 = \<alpha> 1" using heq by simp
+      have "\<beta> 1 = \<alpha> 1" using heq_s by simp
       \<comment> \<open>[\\<beta>*rev(\\<alpha>)] = invg([\\<alpha>*rev(\\<beta>)]) \\<in> H.\<close>
       have hinvH: "{g. top1_loop_equiv_on B TB b0 (top1_path_product \<beta> (top1_path_reverse \<alpha>)) g} \<in> H"
         sorry \<comment> \<open>[\\<beta>*rev(\\<alpha>)] = inv([\\<alpha>*rev(\\<beta>)]); H closed under inv.\<close>
-      thus ?thesis using h\<alpha> h\<beta> \<open>\<beta> 1 = \<alpha> 1\<close> by (by100 auto)
+      thus ?thesis using h\<alpha>_s h\<beta>_s \<open>\<beta> 1 = \<alpha> 1\<close> by (by100 auto)
     qed
   qed
   have hcoset_trans: "\<forall>\<alpha> \<beta> \<gamma>. ?coset_rel \<alpha> \<beta> \<longrightarrow> ?coset_rel \<beta> \<gamma> \<longrightarrow> ?coset_rel \<alpha> \<gamma>"
