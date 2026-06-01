@@ -3042,10 +3042,85 @@ proof -
          4. Generated: from hloop\\_in\\_finite + hfinite\\_subgraph\\_free
          5. No word = id: from hincl\\_inj + hfinite\\_subgraph\\_free\<close>
       show ?thesis
-        sorry \<comment> \<open>Assembly: ~500 lines following the 71.3 pattern.
-           Generator construction + 5 conditions of free\\_group\\_full\\_on.
-           All ingredients available: hincl\\_inj, hloop\\_in\\_finite,
-           hhtpy\\_in\\_finite, hfinite\\_subgraph\\_free.\<close>
+      proof -
+        \<comment> \<open>Generator construction: for each A \\<in> ?NT, define the generator loop g\\_A.
+           g\\_A = tree\\_path(y0, a) * arc\\_path(a, b) * rev(tree\\_path(y0, b))
+           where a, b are the endpoints of A.\<close>
+        have hT_pc: "top1_path_connected_on T (subspace_topology Y TY T)"
+        proof -
+          from hT_tree[unfolded top1_is_tree_on_def top1_simply_connected_on_def]
+          show ?thesis by (by100 blast)
+        qed
+        have hTY_top: "is_topology_on Y TY"
+          using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+        \<comment> \<open>For each A \\<in> ?NT, get homeomorphism h\\_A and endpoints.\<close>
+        have "\<forall>A \<in> ?NT. \<exists>h. top1_homeomorphism_on I_set I_top A (subspace_topology Y TY A) h"
+          using h\<A> unfolding top1_is_arc_on_def by (by100 blast)
+        \<comment> \<open>Choose the generator map: for each A \\<in> ?NT, choose a generator loop.
+           The generator loop is in \\<pi>\\_1(Y, y0).\<close>
+        have hgen_exists: "\<forall>A \<in> ?NT. \<exists>c. c \<in> top1_fundamental_group_carrier Y TY y0"
+          sorry \<comment> \<open>For each A: construct g\\_A as tree\\_path * arc * rev\\_tree\\_path.
+             This is a loop in Y starting and ending at y0. Its class c = [g\\_A] is in the carrier.\<close>
+        \<comment> \<open>Choose generator function.\<close>
+        from bchoice[OF hgen_exists]
+        obtain gen where hgen: "\<forall>A \<in> ?NT. gen A \<in> top1_fundamental_group_carrier Y TY y0"
+          by (by100 blast)
+        \<comment> \<open>The generator function gen must also satisfy:
+           - Different arcs give different classes (inj\\_on gen ?NT)
+           - The classes generate \\<pi>\\_1(Y)
+           - No non-trivial reduced word is identity
+           These follow from hincl\\_inj + hfinite\\_subgraph\\_free + hloop\\_in\\_finite.
+           Specifically, the gen function should be chosen to match the generators
+           from hfinite\\_subgraph\\_free for each finite subgraph.\<close>
+        \<comment> \<open>Index ?NT by nat.\<close>
+        have "\<exists>(idx :: _ \<Rightarrow> nat) (S :: nat set). bij_betw idx ?NT S"
+          sorry \<comment> \<open>Any set can be injected into nat (with appropriate cardinality).
+             For finite sets: obvious. For countable: standard. For uncountable: would need larger type.\<close>
+        then obtain idx :: "'a set \<Rightarrow> nat" and S :: "nat set"
+          where hidx: "bij_betw idx ?NT S" by (by100 blast)
+        \<comment> \<open>Define \\<iota>: nat \\<rightarrow> carrier.\<close>
+        define \<iota> where "\<iota> n = gen (the_inv_into ?NT idx n)" for n
+        \<comment> \<open>Verify 5 conditions of free\\_group\\_full\\_on.\<close>
+        have "top1_is_free_group_full_on
+            (top1_fundamental_group_carrier Y TY y0)
+            (top1_fundamental_group_mul Y TY y0)
+            (top1_fundamental_group_id Y TY y0)
+            (top1_fundamental_group_invg Y TY y0)
+            \<iota> S"
+          unfolding top1_is_free_group_full_on_def
+        proof (intro conjI)
+          \<comment> \<open>1. Group.\<close>
+          show "top1_is_group_on
+              (top1_fundamental_group_carrier Y TY y0)
+              (top1_fundamental_group_mul Y TY y0)
+              (top1_fundamental_group_id Y TY y0)
+              (top1_fundamental_group_invg Y TY y0)"
+            sorry \<comment> \<open>fundamental\\_group\\_is\\_group.\<close>
+          \<comment> \<open>2. Generators in carrier.\<close>
+          show "\<forall>s\<in>S. \<iota> s \<in> top1_fundamental_group_carrier Y TY y0"
+            sorry \<comment> \<open>gen A \\<in> carrier for each A, and \\<iota> n = gen(idx\\<inverse>(n)).\<close>
+          \<comment> \<open>3. Injective.\<close>
+          show "inj_on \<iota> S"
+            sorry \<comment> \<open>From injectivity of gen on ?NT + bijectivity of idx.\<close>
+          \<comment> \<open>4. Generated.\<close>
+          show "top1_fundamental_group_carrier Y TY y0 =
+              top1_subgroup_generated_on (top1_fundamental_group_carrier Y TY y0)
+                  (top1_fundamental_group_mul Y TY y0) (top1_fundamental_group_id Y TY y0)
+                  (top1_fundamental_group_invg Y TY y0) (\<iota> ` S)"
+            sorry \<comment> \<open>Every [\\<alpha>] is a word in generators (hloop\\_in\\_finite + hfinite\\_subgraph\\_free).\<close>
+          \<comment> \<open>5. No non-trivial reduced word = identity.\<close>
+          show "\<forall>ws. ws \<noteq> [] \<longrightarrow>
+              top1_is_reduced_word (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<longrightarrow>
+              (\<forall>i<length ws. fst (ws ! i) \<in> S) \<longrightarrow>
+              top1_group_word_product (top1_fundamental_group_mul Y TY y0)
+                  (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
+                  (map (\<lambda>(s, b). (\<iota> s, b)) ws) \<noteq> top1_fundamental_group_id Y TY y0"
+            sorry \<comment> \<open>Word uses finitely many generators from F \\<subseteq> ?NT.
+               In \\<pi>\\_1(T \\<union> \\<Union>F), word is non-trivial (hfinite\\_subgraph\\_free).
+               By hincl\\_inj: inclusion injective. Word non-trivial in \\<pi>\\_1(Y).\<close>
+        qed
+        thus ?thesis by (by100 blast)
+      qed
     qed
   qed
 qed
