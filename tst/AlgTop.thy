@@ -1846,7 +1846,15 @@ proof -
   proof (intro conjI)
     \<comment> \<open>p continuous.\<close>
     show "top1_continuous_map_on ?E ?TE B TB ?p"
-      using hp_cont sorry \<comment> \<open>From hp\\_cont (continuous\\_map\\_on definition).\<close>
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix c assume "c \<in> ?E"
+      thus "?p c \<in> B" using hp_surj by (by100 blast)
+    next
+      fix V assume "V \<in> TB"
+      from hp_cont[rule_format, OF this]
+      show "{c \<in> ?E. ?p c \<in> V} \<in> ?TE" .
+    qed
     show "?p ` ?E = B" by (rule hp_surj)
     show "\<forall>b\<in>B. \<exists>U. b \<in> U \<and> top1_evenly_covered_on ?E ?TE B TB ?p U"
       by (rule hp_covering)
