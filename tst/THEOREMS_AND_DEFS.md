@@ -725,7 +725,7 @@ graph_connected_sub_covered_by_arcs            ac7/AlgTopCached7.thy            
 graph_covering_is_graph                        AlgTop.thy                           line 871
 graph_deformation_retract_helper               ac7/AlgTopCached7.thy                line 4896
 graph_one_edge_pi1_iso_Z                       ac7/AlgTopCached7.thy                line 6581
-graph_pi1_free_weak                            AlgTop.thy                           line 995
+graph_pi1_free_weak                            AlgTop.thy                           line 1302
 graph_pi1_free_weak_apply                      AlgTop.thy                           line 931
 graph_pi1_free_weak_finite                     ac7/AlgTopCached7.thy                line 7547
 graph_quotient_by_tree_wedge_of_circles        ac6/AlgTopCached6.thy                line 1248
@@ -2051,9 +2051,9 @@ Theorem_80_3_universal                         ac4/AlgTopCached4.thy            
 Theorem_81_2_covering_group_iso                AlgTop.thy                           line 483
 Theorem_82_1_covering_existence                AlgTop.thy                           line 781
 Theorem_83_4_covering_of_graph_is_graph        ac5/AlgTopCached5.thy                line 708
-Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 5440
-Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 5477
-Theorem_85_3_Schreier_index                    AlgTop.thy                           line 5745
+Theorem_84_7_fund_group_graph_is_free          AlgTop.thy                           line 5747
+Theorem_85_1_Nielsen_Schreier                  AlgTop.thy                           line 5784
+Theorem_85_3_Schreier_index                    AlgTop.thy                           line 6052
 
 ## corollarys (65)
 
