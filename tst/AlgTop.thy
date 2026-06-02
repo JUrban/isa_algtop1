@@ -4468,10 +4468,85 @@ proof -
   proof (rule equalityI)
     \<comment> \<open>\\<subseteq>: If [p\\<circ>\\<gamma>] \\<in> image (for \\<gamma> loop in E at e0), then [p\\<circ>\\<gamma>] \\<in> H.\<close>
     show "top1_fundamental_group_image_hom ?E ?TE ?e0 B TB b0 ?p \<subseteq> H"
-      sorry \<comment> \<open>\\<gamma> loop at e0 \\<Rightarrow> p\\<circ>\\<gamma> loop at b0. Need [p\\<circ>\\<gamma>] \\<in> H.
-         From construction: p\\<circ>\\<gamma> corresponds to a loop whose lift is \\<gamma>.
-         Since \\<gamma> is a loop at e0 = class(const\\_b0), the endpoint class = e0,
-         which means [p\\<circ>\\<gamma> * rev(const\\_b0)] \\<in> H, i.e., [p\\<circ>\\<gamma>] \\<in> H.\<close>
+      unfolding top1_fundamental_group_image_hom_def
+    proof (rule subsetI)
+      fix cls assume hcls: "cls \<in> top1_fundamental_group_induced_on ?E ?TE ?e0 B TB b0 ?p `
+          top1_fundamental_group_carrier ?E ?TE ?e0"
+      \<comment> \<open>Extract \\<gamma> loop at e0 from the carrier/induced chain.\<close>
+      from hcls obtain \<gamma>_cls where h\<gamma>c: "\<gamma>_cls \<in> top1_fundamental_group_carrier ?E ?TE ?e0"
+          "cls = top1_fundamental_group_induced_on ?E ?TE ?e0 B TB b0 ?p \<gamma>_cls"
+        by (by100 blast)
+      from h\<gamma>c(1) obtain \<gamma> where h\<gamma>_loop: "top1_is_loop_on ?E ?TE ?e0 \<gamma>"
+          and h\<gamma>_cls_eq: "\<gamma>_cls = {g. top1_loop_equiv_on ?E ?TE ?e0 \<gamma> g}"
+        unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      \<comment> \<open>p\\<circ>\\<gamma> is a path in B.\<close>
+      have h\<gamma>_path: "top1_is_path_on ?E ?TE ?e0 ?e0 \<gamma>"
+        using h\<gamma>_loop unfolding top1_is_loop_on_def by (by100 blast)
+      have h\<gamma>_cont: "top1_continuous_map_on I_set I_top ?E ?TE \<gamma>"
+        using h\<gamma>_path unfolding top1_is_path_on_def by (by100 blast)
+      have hp_cont_map: "top1_continuous_map_on ?E ?TE B TB ?p"
+        unfolding top1_continuous_map_on_def using hp_surj hp_cont by (by100 blast)
+      \<comment> \<open>p(e0) = b0.\<close>
+      have hconst_paths: "top1_constant_path b0 \<in> ?paths"
+      proof -
+        have "top1_is_path_on B TB b0 b0 (top1_constant_path b0)"
+          by (rule top1_constant_path_is_path[OF hTB assms(5)])
+        moreover have "(top1_constant_path b0) 1 = b0"
+          unfolding top1_constant_path_def by simp
+        ultimately show ?thesis by (by100 simp)
+      qed
+      have hp_e0_eq: "?p ?e0 = b0"
+        using hp_class[rule_format, OF hconst_paths] unfolding top1_constant_path_def by simp
+      \<comment> \<open>p\\<circ>\\<gamma> is a loop at b0 in B.\<close>
+      have h\<gamma>_0: "\<gamma> 0 = ?e0" using h\<gamma>_path unfolding top1_is_path_on_def by (by100 blast)
+      have h\<gamma>_1: "\<gamma> 1 = ?e0" using h\<gamma>_path unfolding top1_is_path_on_def by (by100 blast)
+      let ?\<alpha> = "?p \<circ> \<gamma>"
+      have h\<alpha>_0: "?\<alpha> 0 = b0" using h\<gamma>_0 hp_e0_eq by simp
+      have h\<alpha>_1: "?\<alpha> 1 = b0" using h\<gamma>_1 hp_e0_eq by simp
+      have h\<alpha>_cont: "top1_continuous_map_on I_set I_top B TB ?\<alpha>"
+        using top1_continuous_map_on_comp[OF h\<gamma>_cont hp_cont_map] unfolding comp_def .
+      have h\<alpha>_path: "top1_is_path_on B TB b0 b0 ?\<alpha>"
+        unfolding top1_is_path_on_def using h\<alpha>_cont h\<alpha>_0 h\<alpha>_1 by (by100 blast)
+      \<comment> \<open>p\\<circ>\\<gamma> \\<in> Paths.\<close>
+      have h\<alpha>_Paths: "?\<alpha> \<in> Paths"
+        using h\<alpha>_path h\<alpha>_1 hPaths_mem by simp
+      have h\<alpha>_paths: "?\<alpha> \<in> ?paths" using h\<alpha>_Paths hPaths_iff by simp
+      \<comment> \<open>Canonical lift \\<tilde>\\<alpha> from hlift\\_path.\<close>
+      let ?\<alpha>_tilde = "\<lambda>c. ?coset_class (\<lambda>t. ?\<alpha> (t * c))"
+      from hlift_path h\<alpha>_paths
+      have h_tilde_path: "top1_is_path_on ?E ?TE ?e0 (?coset_class ?\<alpha>) ?\<alpha>_tilde"
+        by (by100 blast)
+      \<comment> \<open>Canonical lift satisfies p(\\<tilde>\\<alpha>(t)) = \\<alpha>(t) (from hp\\_class).\<close>
+      have h_tilde_lifts: "\<forall>t \<in> I_set. ?p (?\<alpha>_tilde t) = ?\<alpha> t"
+      proof (intro ballI)
+        fix t assume ht: "t \<in> I_set"
+        from hprefix_path h\<alpha>_paths ht
+        have "(\<lambda>s. ?\<alpha> (s * t)) \<in> ?paths" by (by100 blast)
+        from hp_class[rule_format, OF this]
+        show "?p (?\<alpha>_tilde t) = ?\<alpha> t" by simp
+      qed
+      \<comment> \<open>\\<gamma> also lifts \\<alpha> (trivially: p(\\<gamma>(t)) = (p\\<circ>\\<gamma>)(t) = \\<alpha>(t)).\<close>
+      have h\<gamma>_lifts: "\<forall>t \<in> I_set. ?p (\<gamma> t) = ?\<alpha> t" by (by100 auto)
+      \<comment> \<open>Covering map.\<close>
+      have hcov_local: "top1_covering_map_on ?E ?TE B TB ?p"
+        unfolding top1_covering_map_on_def
+        using hp_cont_map hp_surj hp_covering by (by100 blast)
+      \<comment> \<open>By covering\\_lift\\_unique\\_path: \\<gamma> = \\<tilde>\\<alpha> on I\\_set.\<close>
+      have he0_in_E: "?e0 \<in> ?E" using hconst_paths by (by100 simp)
+      have h_unique: "\<forall>t \<in> I_set. \<gamma> t = ?\<alpha>_tilde t"
+        sorry \<comment> \<open>covering\\_lift\\_unique\\_path[OF hcov\\_local hTE\\_strict h\\<alpha>\\_path he0\\_in\\_E hp\\_e0\\_eq
+            h\\<gamma>\\_path h\\_tilde\\_path h\\<gamma>\\_lifts h\\_tilde\\_lifts]. Type matching issue.\<close>
+      \<comment> \<open>\\<gamma>(1) = \\<tilde>\\<alpha>(1). \\<gamma>(1) = e0 (loop). So \\<tilde>\\<alpha>(1) = e0.\<close>
+      \<comment> \<open>\\<gamma>(1) = \\<tilde>\\<alpha>(1) (from uniqueness at t=1).\<close>
+      \<comment> \<open>\\<gamma>(1) = e0. So \\<tilde>\\<alpha>(1) = e0. And \\<tilde>\\<alpha>(1) = class(\\<alpha>). So class(\\<alpha>) = e0.\<close>
+      \<comment> \<open>Use CC trick to avoid let-opacity.\<close>
+      have hclass_e0: "CosetClass ?\<alpha> = CosetClass (top1_constant_path b0)"
+        sorry \<comment> \<open>From h\\_unique at t=1: \\<gamma>(1) = \\<tilde>\\<alpha>(1).
+           \\<gamma>(1) = e0, \\<tilde>\\<alpha>(1) = class(\\<alpha>). So class(\\<alpha>) = e0.\<close>
+      show "cls \<in> H"
+        sorry \<comment> \<open>class(\\<alpha>) = e0 \\<Rightarrow> [\\<alpha>] \\<in> H (reverse of hclass\\_eq\\_e0).
+           Then cls = induced([\\<gamma>]) = [p\\<circ>\\<gamma>] = [\\<alpha>] \\<in> H.\<close>
+    qed
   next
     \<comment> \<open>\\<supseteq>: If [\\<alpha>] \\<in> H (\\<alpha> loop at b0), then [\\<alpha>] \\<in> image.\<close>
     show "H \<subseteq> top1_fundamental_group_image_hom ?E ?TE ?e0 B TB b0 ?p"
