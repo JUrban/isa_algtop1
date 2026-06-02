@@ -3628,11 +3628,56 @@ proof -
       \<comment> \<open>(4) Inverse continuous.\<close>
       have hpinv_cont: "top1_continuous_map_on U (subspace_topology B TB U) V (subspace_topology ?E ?TE V)
           (inv_into V ?p)"
-        sorry \<comment> \<open>inv(p) continuous U \\<rightarrow> V.
-           Strategy: p bijective + open map. For open W in V subspace:
-           W = V \\<inter> W' (W' \\<in> TE). V \\<inter> W' \\<in> TE (intersection closed).
-           p(V \\<inter> W') \\<in> TB (hp\\_open). p(W) \\<subseteq> U. Hence p(W) \\<in> subspace B TB U.
-           {u\\<in>U. inv(p)(u)\\<in>W} = p(W) by bijectivity.\<close>
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        \<comment> \<open>inv maps U to V.\<close>
+        fix u assume hu: "u \<in> U"
+        from hpsurj hu have "u \<in> ?p ` V" by simp
+        then obtain v where "v \<in> V" "?p v = u" by (by100 blast)
+        thus "inv_into V ?p u \<in> V" using inv_into_f_eq[OF hpinj] by simp
+      next
+        \<comment> \<open>Preimage of open W is open.\<close>
+        fix W assume hW: "W \<in> subspace_topology ?E ?TE V"
+        \<comment> \<open>W = V \\<inter> W' for W' \\<in> TE. W \\<subseteq> V.\<close>
+        have hW_sub_V: "W \<subseteq> V" using hW unfolding subspace_topology_def by (by100 blast)
+        \<comment> \<open>Key: {u \\<in> U. inv(p)(u) \\<in> W} = p(W).\<close>
+        have hpreimg_eq: "{u \<in> U. inv_into V ?p u \<in> W} = ?p ` W"
+        proof (rule equalityI; rule subsetI)
+          fix u assume hu: "u \<in> {u \<in> U. inv_into V ?p u \<in> W}"
+          hence "u \<in> U" "inv_into V ?p u \<in> W" by (by100 blast)+
+          have "inv_into V ?p u \<in> V" using hW_sub_V \<open>inv_into V ?p u \<in> W\<close> by (by100 blast)
+          have "u \<in> ?p ` V" using \<open>u \<in> U\<close> hpsurj by simp
+          hence "?p (inv_into V ?p u) = u" by (rule f_inv_into_f)
+          hence "u = ?p (inv_into V ?p u)" by simp
+          thus "u \<in> ?p ` W" using \<open>inv_into V ?p u \<in> W\<close>
+            by (rule image_eqI)
+        next
+          fix u assume "u \<in> ?p ` W"
+          then obtain w where hw: "w \<in> W" "u = ?p w" by (by100 blast)
+          have "w \<in> V" using hw(1) hW_sub_V by (by100 blast)
+          hence "inv_into V ?p u = w" using inv_into_f_eq[OF hpinj \<open>w \<in> V\<close>] hw(2) by simp
+          moreover have "u \<in> U" using hw(2) \<open>w \<in> V\<close> hpsurj by (by100 blast)
+          ultimately show "u \<in> {u \<in> U. inv_into V ?p u \<in> W}" using hw(1) by (by100 blast)
+        qed
+        \<comment> \<open>p(W) is open in subspace(B, TB, U).\<close>
+        \<comment> \<open>W \\<in> subspace \\<Rightarrow> W \\<in> TE (since V \\<in> TE and W \\<subseteq> V and TE is a topology).\<close>
+        \<comment> \<open>Actually: W \\<in> subspace(E,TE,V), and V is open in TE. So W is open in TE.\<close>
+        have hV_TE: "V \<in> ?TE" using hslices_open hV by (rule bspec)
+        \<comment> \<open>p(W) \\<in> TB. W open in V-subspace, V open in TE \\<Rightarrow> W open in TE \\<Rightarrow> p(W) \\<in> TB.\<close>
+        have "?p ` W \<in> TB"
+          sorry \<comment> \<open>W \\<in> subspace(E,TE,V). Extract W=V\\<inter>W', W'\\<in>TE. topology\\_inter2 gives W\\<in>TE.
+             Then hp\\_open gives p(W) \\<in> TB. Blocked by subspace extraction timeout.\<close>
+        moreover have "?p ` W \<subseteq> U"
+        proof -
+          have "W \<subseteq> V" using hW_sub_V .
+          hence "?p ` W \<subseteq> ?p ` V" by (by100 blast)
+          thus ?thesis using hpsurj by simp
+        qed
+        ultimately have "?p ` W \<in> subspace_topology B TB U"
+          by (rule open_in_subspace_if_open_and_subset)
+        thus "{u \<in> U. inv_into V ?p u \<in> W} \<in> subspace_topology B TB U"
+          using hpreimg_eq by simp
+      qed
       \<comment> \<open>Assembly.\<close>
       have hV_top: "is_topology_on V (subspace_topology ?E ?TE V)"
       proof -
