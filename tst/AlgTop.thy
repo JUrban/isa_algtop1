@@ -3628,7 +3628,11 @@ proof -
       \<comment> \<open>(4) Inverse continuous.\<close>
       have hpinv_cont: "top1_continuous_map_on U (subspace_topology B TB U) V (subspace_topology ?E ?TE V)
           (inv_into V ?p)"
-        sorry \<comment> \<open>From hp\\_open: p maps open to open. On V, p is bijective + open \\<Rightarrow> inverse continuous.\<close>
+        sorry \<comment> \<open>inv(p) continuous U \\<rightarrow> V.
+           Strategy: p bijective + open map. For open W in V subspace:
+           W = V \\<inter> W' (W' \\<in> TE). V \\<inter> W' \\<in> TE (intersection closed).
+           p(V \\<inter> W') \\<in> TB (hp\\_open). p(W) \\<subseteq> U. Hence p(W) \\<in> subspace B TB U.
+           {u\\<in>U. inv(p)(u)\\<in>W} = p(W) by bijectivity.\<close>
       \<comment> \<open>Assembly.\<close>
       have hV_top: "is_topology_on V (subspace_topology ?E ?TE V)"
       proof -
