@@ -2879,9 +2879,7 @@ proof -
       \<and> top1_path_connected_on ?E TE \<and> top1_locally_path_connected_on ?E TE
       \<and> e0 \<in> ?E \<and> p e0 = b0 \<and> top1_fundamental_group_image_hom ?E TE e0 B TB b0 p = H"
     by (by100 blast)
-  show ?thesis using hpkg sorry \<comment> \<open>Existential packaging: hpkg provides P(?E,?TE,?p,?e0).
-     ALL tactics fail to introduce 4-var existential with let-bound witnesses in strict mode.
-     Works in quick\\_and\\_dirty (meson). Inside-out approach closes 3 of 4 existentials.\<close>
+  thus ?thesis sorry \<comment> \<open>Single exI for E — times out during unification (~5min+).\<close>
 qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
@@ -10535,7 +10533,7 @@ proof -
     from free_group_iso_transfer[OF hfree_E this assms(2)]
     obtain \<iota>H' where hfreeH: "top1_is_free_group_full_on H mul e invg \<iota>H' S_E"
       by (by100 blast)
-    show ?thesis sorry \<comment> \<open>Existential packaging: type mismatch between obtain-bound S\\_E and polymorphic SH.\<close>
+    show ?thesis sorry \<comment> \<open>Type variable 'b from covering space can't escape to polymorphic \\<exists>.\<close>
   qed
 qed
 
