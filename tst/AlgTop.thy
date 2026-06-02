@@ -2818,6 +2818,242 @@ proof -
       ultimately show ?thesis by simp
     qed
   qed
+  \<comment> \<open>===== Topology on E (moved before Step 4 for dependency) =====\<close>
+  have hTE_strict: "is_topology_on_strict ?E ?TE"
+  proof -
+    \<comment> \<open>Standard basis-generated topology properties.\<close>
+    have hempty: "{} \<in> ?TE" by (by100 blast)
+    have hfull: "?E \<in> ?TE"
+    proof -
+      have hB_open: "B \<in> TB" using hTB unfolding is_topology_on_def by (by100 blast)
+      have hE_sub_E: "?E \<subseteq> ?E" by simp
+      have "\<forall>c \<in> ?E. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and>
+          ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> ?E"
+      proof (intro ballI)
+        fix c assume hc: "c \<in> ?E"
+        then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> ?paths" "c = ?coset_class \<alpha>" by (by100 blast)
+        have h\<alpha>1_B: "\<alpha> 1 \<in> B"
+        proof -
+          have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) by (by100 blast)
+          hence "top1_continuous_map_on I_set I_top B TB \<alpha>"
+            unfolding top1_is_path_on_def by (by100 blast)
+          hence "\<forall>s\<in>I_set. \<alpha> s \<in> B" unfolding top1_continuous_map_on_def by (by100 blast)
+          moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        \<comment> \<open>B\\_basis(B, \\<alpha>) \\<subseteq> E: every element is coset\\_class(\\<alpha>*\\<delta>) for some \\<delta>, hence in E.\<close>
+        have "?B_basis B \<alpha> \<subseteq> ?E"
+        proof (rule subsetI)
+          fix x assume "x \<in> ?B_basis B \<alpha>"
+          then obtain \<delta> where "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
+              "x = ?coset_class (top1_path_product \<alpha> \<delta>)" by (by100 blast)
+          \<comment> \<open>\\<alpha>*\\<delta> is a path from b0 to \\<delta>(1), hence in paths.\<close>
+          have "top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)"
+          proof -
+            have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) by (by100 blast)
+            from top1_path_product_is_path[OF hTB this \<open>top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>\<close>]
+            show ?thesis .
+          qed
+          hence "top1_path_product \<alpha> \<delta> \<in> ?paths"
+          proof -
+            have "top1_is_path_on B TB b0 ((top1_path_product \<alpha> \<delta>) 1) (top1_path_product \<alpha> \<delta>)"
+            proof -
+              have "(top1_path_product \<alpha> \<delta>) 1 = \<delta> 1"
+                unfolding top1_path_product_def by simp
+              thus ?thesis
+                using \<open>top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)\<close> by simp
+            qed
+            thus ?thesis by (by100 blast)
+          qed
+          thus "x \<in> ?E" using \<open>x = ?coset_class (top1_path_product \<alpha> \<delta>)\<close> by (by100 blast)
+        qed
+        have h\<alpha>1_B: "\<alpha> 1 \<in> B"
+        proof -
+          have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) by (by100 blast)
+          hence "top1_continuous_map_on I_set I_top B TB \<alpha>"
+            unfolding top1_is_path_on_def by (by100 blast)
+          hence "\<forall>s\<in>I_set. \<alpha> s \<in> B" unfolding top1_continuous_map_on_def by (by100 blast)
+          moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        show "\<exists>U \<alpha>'. U \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U \<and> ?coset_class \<alpha>' = c \<and> ?B_basis U \<alpha>' \<subseteq> ?E"
+          using hB_open h\<alpha> h\<alpha>1_B \<open>?B_basis B \<alpha> \<subseteq> ?E\<close> by (by5000 simp) (by100 blast)
+      qed
+      thus ?thesis using hE_sub_E by (by5000 simp)
+    qed
+    have hunion: "\<forall>U. U \<subseteq> ?TE \<longrightarrow> \<Union>U \<in> ?TE"
+    proof (intro allI impI)
+      fix Uc assume hUc: "Uc \<subseteq> ?TE"
+      show "\<Union>Uc \<in> ?TE"
+      proof -
+        have "\<Union>Uc \<subseteq> ?E" using hUc by (by100 blast)
+        moreover have "\<forall>c \<in> \<Union>Uc. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and>
+            ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> \<Union>Uc"
+        proof (intro ballI)
+          fix c assume "c \<in> \<Union>Uc"
+          then obtain V where hV: "V \<in> Uc" "c \<in> V" by (by100 blast)
+          have hV_TE: "V \<in> ?TE" by (rule subsetD[OF hUc hV(1)])
+          have hVprop: "V \<subseteq> ?E \<and> (\<forall>c' \<in> V. \<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U' \<and>
+              ?coset_class \<alpha>' = c' \<and> ?B_basis U' \<alpha>' \<subseteq> V)"
+            using hV_TE by (by5000 simp)
+          hence "\<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U' \<and> ?coset_class \<alpha>' = c
+              \<and> ?B_basis U' \<alpha>' \<subseteq> V" using \<open>c \<in> V\<close> by (by100 blast)
+          then obtain U' \<alpha>' where "U' \<in> TB" "\<alpha>' \<in> ?paths" "\<alpha>' 1 \<in> U'" "?coset_class \<alpha>' = c"
+              "?B_basis U' \<alpha>' \<subseteq> V"
+            by (by5000 simp) (by100 blast)
+          moreover have "?B_basis U' \<alpha>' \<subseteq> \<Union>Uc"
+            using \<open>?B_basis U' \<alpha>' \<subseteq> V\<close> \<open>V \<in> Uc\<close> by (by100 blast)
+          ultimately show "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c
+              \<and> ?B_basis U \<alpha> \<subseteq> \<Union>Uc" by (by5000 simp) (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>TE extraction: named helper to avoid let-binding timeout.\<close>
+    have hTE_elim: "\<And>V. V \<in> ?TE \<Longrightarrow> V \<subseteq> ?E \<and>
+        (\<forall>c \<in> V. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V)"
+      by (by5000 simp)
+    \<comment> \<open>TE introduction: show membership.\<close>
+    have hTE_intro: "\<And>V. V \<subseteq> ?E \<Longrightarrow>
+        (\<forall>c \<in> V. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V) \<Longrightarrow>
+        V \<in> ?TE"
+      by (by5000 simp)
+    \<comment> \<open>Basis monotonicity: V \\<subseteq> U \\<Rightarrow> B(V,\\<alpha>) \\<subseteq> B(U,\\<alpha>).\<close>
+    have hbasis_mono: "\<forall>\<alpha> U V. V \<subseteq> U \<longrightarrow> ?B_basis V \<alpha> \<subseteq> ?B_basis U \<alpha>"
+    proof (intro allI impI subsetI)
+      fix \<alpha> U V x assume "V \<subseteq> U" "x \<in> ?B_basis V \<alpha>"
+      then obtain \<delta> where "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
+          "x = ?coset_class (top1_path_product \<alpha> \<delta>)" "\<delta> ` I_set \<subseteq> V"
+        by (by100 blast)
+      moreover have "\<delta> ` I_set \<subseteq> U" using \<open>\<delta> ` I_set \<subseteq> V\<close> \<open>V \<subseteq> U\<close> by (by100 blast)
+      ultimately show "x \<in> ?B_basis U \<alpha>" by (by100 blast)
+    qed
+    \<comment> \<open>Binary intersection: V1 \\<inter> V2 \\<in> TE for V1, V2 \\<in> TE.\<close>
+    have hinter_binary: "\<forall>V1 V2. V1 \<in> ?TE \<longrightarrow> V2 \<in> ?TE \<longrightarrow> V1 \<inter> V2 \<in> ?TE"
+    proof (intro allI impI)
+      fix V1 V2 assume hV1: "V1 \<in> ?TE" and hV2: "V2 \<in> ?TE"
+      show "V1 \<inter> V2 \<in> ?TE"
+      proof (rule hTE_intro)
+        show "V1 \<inter> V2 \<subseteq> ?E"
+          using hTE_elim[OF hV1] hTE_elim[OF hV2] by (by100 blast)
+      next
+        show "\<forall>c \<in> V1 \<inter> V2. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and>
+            ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V1 \<inter> V2"
+        proof (intro ballI)
+          fix c assume hc: "c \<in> V1 \<inter> V2"
+          \<comment> \<open>Use hTE\\_elim on V1 and V2 separately.\<close>
+          \<comment> \<open>Get basis elements from V1 and V2.\<close>
+          have hex1: "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V1"
+            using hTE_elim[OF hV1] hc by (by100 blast)
+          have hex2: "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V2"
+            using hTE_elim[OF hV2] hc by (by100 blast)
+          \<comment> \<open>Get existentials for c in V1 and V2.\<close>
+          \<comment> \<open>Extract witnesses with endpoint info.\<close>
+          from hex1 obtain U1 \<alpha>1 where hU1: "U1 \<in> TB" "\<alpha>1 \<in> ?paths" "\<alpha>1 1 \<in> U1"
+              "?coset_class \<alpha>1 = c" "?B_basis U1 \<alpha>1 \<subseteq> V1"
+            by (by5000 simp) (by100 blast)
+          from hex2 obtain U2 \<alpha>2 where hU2: "U2 \<in> TB" "\<alpha>2 \<in> ?paths" "\<alpha>2 1 \<in> U2"
+              "?coset_class \<alpha>2 = c" "?B_basis U2 \<alpha>2 \<subseteq> V2"
+            by (by5000 simp) (by100 blast)
+          \<comment> \<open>Endpoints: \\<alpha>1(1) = \\<alpha>2(1) from hp\\_class.\<close>
+          have hep: "\<alpha>1 1 = \<alpha>2 1"
+            using hp_class[rule_format, OF hU1(2)] hp_class[rule_format, OF hU2(2)]
+                  hU1(4) hU2(4) by (by100 simp)
+          \<comment> \<open>\\<alpha>1(1) \\<in> U2.\<close>
+          have h\<alpha>1_U2: "\<alpha>1 1 \<in> U2"
+            using hep hU2(3) by simp
+          \<comment> \<open>B(U2,\\<alpha>2) = B(U2,\\<alpha>1) by hbasis\\_eq.\<close>
+          have hB2_eq: "?B_basis U2 \<alpha>1 = ?B_basis U2 \<alpha>2"
+          proof -
+            have "?coset_class \<alpha>2 \<in> ?B_basis U2 \<alpha>2"
+              using hbasis[rule_format, OF hU2(2) hU2(1) hU2(3)] .
+            hence "?coset_class \<alpha>1 \<in> ?B_basis U2 \<alpha>2"
+              using hU1(4) hU2(4) by simp
+            from hbasis_eq[rule_format, OF hU2(1) hU2(2) hU1(2) this]
+            show ?thesis by simp
+          qed
+          \<comment> \<open>Monotonicity + transitivity.\<close>
+          have hm1: "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> ?B_basis U1 \<alpha>1"
+          proof -
+            have "U1 \<inter> U2 \<subseteq> U1" by (by100 blast)
+            from hbasis_mono[rule_format, OF this] show ?thesis .
+          qed
+          have hm2: "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> ?B_basis U2 \<alpha>1"
+          proof -
+            have "U1 \<inter> U2 \<subseteq> U2" by (by100 blast)
+            from hbasis_mono[rule_format, OF this] show ?thesis .
+          qed
+          have hW: "U1 \<inter> U2 \<in> TB"
+          proof -
+            have "finite {U1, U2}" by simp
+            moreover have "{U1, U2} \<noteq> {}" by simp
+            moreover have "{U1, U2} \<subseteq> TB" using hU1(1) hU2(1) by (by100 blast)
+            ultimately have "\<Inter>{U1, U2} \<in> TB"
+              using hTB unfolding is_topology_on_def by (by100 blast)
+            thus ?thesis by simp
+          qed
+          have "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1"
+            by (rule subset_trans[OF hm1 hU1(5)])
+          moreover have "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V2"
+          proof -
+            have "?B_basis U2 \<alpha>1 \<subseteq> V2" using hB2_eq hU2(5) by simp
+            thus ?thesis by (rule subset_trans[OF hm2])
+          qed
+          ultimately have "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1 \<inter> V2" by (by100 blast)
+          have h\<alpha>1_inter: "\<alpha>1 1 \<in> U1 \<inter> U2" using hU1(3) h\<alpha>1_U2 by (by100 blast)
+          define W where "W = U1 \<inter> U2"
+          have hconj: "W \<in> TB \<and> \<alpha>1 \<in> ?paths \<and> \<alpha>1 1 \<in> W \<and> ?coset_class \<alpha>1 = c
+              \<and> ?B_basis W \<alpha>1 \<subseteq> V1 \<inter> V2"
+            using hW hU1(2) h\<alpha>1_inter hU1(4)
+                \<open>?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1 \<inter> V2\<close> unfolding W_def by (by100 simp)
+          show "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c
+              \<and> ?B_basis U \<alpha> \<subseteq> V1 \<inter> V2"
+            using hconj by (by5000 blast)
+        qed
+      qed
+    qed
+    \<comment> \<open>Finite intersection: use define to make the predicate induction-friendly.\<close>
+    define TE_mem where "TE_mem V \<longleftrightarrow> V \<in> ?TE" for V
+    have hinter_TE: "\<forall>F. finite F \<and> F \<noteq> {} \<and> (\<forall>V \<in> F. TE_mem V) \<longrightarrow> TE_mem (\<Inter>F)"
+    proof (intro allI impI)
+      fix F assume hF: "finite F \<and> F \<noteq> {} \<and> (\<forall>V \<in> F. TE_mem V)"
+      hence hfin: "finite F" and hne: "F \<noteq> {}" and hsub: "\<forall>V \<in> F. TE_mem V"
+        by (by100 blast)+
+      from hfin hne hsub show "TE_mem (\<Inter>F)"
+      proof (induction F rule: finite_induct)
+        case empty thus ?case by simp
+      next
+        case (insert x F)
+        show ?case
+        proof (cases "F = {}")
+          case True thus ?thesis using insert.prems by simp
+        next
+          case False
+          have "TE_mem x" using insert.prems by (by100 blast)
+          have "TE_mem (\<Inter>F)" using insert.IH False insert.prems by (by100 blast)
+          have "\<Inter>(insert x F) = x \<inter> \<Inter>F" using insert.hyps by (by100 simp)
+          moreover have "TE_mem (x \<inter> \<Inter>F)"
+          proof -
+            have hbin: "\<forall>V1 V2. TE_mem V1 \<longrightarrow> TE_mem V2 \<longrightarrow> TE_mem (V1 \<inter> V2)"
+              using hinter_binary unfolding TE_mem_def by (by100 blast)
+            from hbin[rule_format, OF \<open>TE_mem x\<close> \<open>TE_mem (\<Inter>F)\<close>]
+            show ?thesis .
+          qed
+          ultimately show ?thesis by simp
+        qed
+      qed
+    qed
+    have hinter: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TE \<longrightarrow> \<Inter>F \<in> ?TE"
+    proof (intro allI impI)
+      fix F assume "finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TE"
+      hence "finite F" "F \<noteq> {}" "\<forall>V \<in> F. TE_mem V" unfolding TE_mem_def by (by100 blast)+
+      hence "TE_mem (\<Inter>F)" using hinter_TE by (by100 blast)
+      thus "\<Inter>F \<in> ?TE" unfolding TE_mem_def .
+    qed
+    have hstrict: "?TE \<subseteq> Pow ?E" by (by100 blast)
+    show ?thesis unfolding is_topology_on_strict_def is_topology_on_def
+      using hempty hfull hunion hinter hstrict by (by100 blast)
+  qed
   \<comment> \<open>===== Step 4 (book): Evenly covered neighborhoods =====\<close>
   have hp_covering: "\<forall>b \<in> B. \<exists>U. b \<in> U \<and> top1_evenly_covered_on ?E ?TE B TB ?p U"
   proof (intro ballI)
@@ -3395,7 +3631,13 @@ proof -
         sorry \<comment> \<open>From hp\\_open: p maps open to open. On V, p is bijective + open \\<Rightarrow> inverse continuous.\<close>
       \<comment> \<open>Assembly.\<close>
       have hV_top: "is_topology_on V (subspace_topology ?E ?TE V)"
-        sorry \<comment> \<open>Needs is\\_topology\\_on E TE (proved later as hTE\\_strict) + V \\<subseteq> E.\<close>
+      proof -
+        have hTE_top: "is_topology_on ?E ?TE"
+          using hTE_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have "V \<subseteq> ?E" using hpartition hV by (by100 blast)
+        from subspace_topology_is_topology_on[OF hTE_top this]
+        show ?thesis .
+      qed
       have hU_top: "is_topology_on U (subspace_topology B TB U)"
         by (rule subspace_topology_is_topology_on[OF hTB hU_sub_B])
       show "top1_homeomorphism_on V (subspace_topology ?E ?TE V) U (subspace_topology B TB U) ?p"
@@ -4076,241 +4318,6 @@ proof -
       using hcont hep0 hep1 unfolding top1_is_path_on_def by (by100 blast)
   qed
   \<comment> \<open>===== Assembly =====\<close>
-  have hTE_strict: "is_topology_on_strict ?E ?TE"
-  proof -
-    \<comment> \<open>Standard basis-generated topology properties.\<close>
-    have hempty: "{} \<in> ?TE" by (by100 blast)
-    have hfull: "?E \<in> ?TE"
-    proof -
-      have hB_open: "B \<in> TB" using hTB unfolding is_topology_on_def by (by100 blast)
-      have hE_sub_E: "?E \<subseteq> ?E" by simp
-      have "\<forall>c \<in> ?E. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and>
-          ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> ?E"
-      proof (intro ballI)
-        fix c assume hc: "c \<in> ?E"
-        then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> ?paths" "c = ?coset_class \<alpha>" by (by100 blast)
-        have h\<alpha>1_B: "\<alpha> 1 \<in> B"
-        proof -
-          have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) by (by100 blast)
-          hence "top1_continuous_map_on I_set I_top B TB \<alpha>"
-            unfolding top1_is_path_on_def by (by100 blast)
-          hence "\<forall>s\<in>I_set. \<alpha> s \<in> B" unfolding top1_continuous_map_on_def by (by100 blast)
-          moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-          ultimately show ?thesis by (by100 blast)
-        qed
-        \<comment> \<open>B\\_basis(B, \\<alpha>) \\<subseteq> E: every element is coset\\_class(\\<alpha>*\\<delta>) for some \\<delta>, hence in E.\<close>
-        have "?B_basis B \<alpha> \<subseteq> ?E"
-        proof (rule subsetI)
-          fix x assume "x \<in> ?B_basis B \<alpha>"
-          then obtain \<delta> where "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
-              "x = ?coset_class (top1_path_product \<alpha> \<delta>)" by (by100 blast)
-          \<comment> \<open>\\<alpha>*\\<delta> is a path from b0 to \\<delta>(1), hence in paths.\<close>
-          have "top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)"
-          proof -
-            have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) by (by100 blast)
-            from top1_path_product_is_path[OF hTB this \<open>top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>\<close>]
-            show ?thesis .
-          qed
-          hence "top1_path_product \<alpha> \<delta> \<in> ?paths"
-          proof -
-            have "top1_is_path_on B TB b0 ((top1_path_product \<alpha> \<delta>) 1) (top1_path_product \<alpha> \<delta>)"
-            proof -
-              have "(top1_path_product \<alpha> \<delta>) 1 = \<delta> 1"
-                unfolding top1_path_product_def by simp
-              thus ?thesis
-                using \<open>top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)\<close> by simp
-            qed
-            thus ?thesis by (by100 blast)
-          qed
-          thus "x \<in> ?E" using \<open>x = ?coset_class (top1_path_product \<alpha> \<delta>)\<close> by (by100 blast)
-        qed
-        have h\<alpha>1_B: "\<alpha> 1 \<in> B"
-        proof -
-          have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) by (by100 blast)
-          hence "top1_continuous_map_on I_set I_top B TB \<alpha>"
-            unfolding top1_is_path_on_def by (by100 blast)
-          hence "\<forall>s\<in>I_set. \<alpha> s \<in> B" unfolding top1_continuous_map_on_def by (by100 blast)
-          moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-          ultimately show ?thesis by (by100 blast)
-        qed
-        show "\<exists>U \<alpha>'. U \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U \<and> ?coset_class \<alpha>' = c \<and> ?B_basis U \<alpha>' \<subseteq> ?E"
-          using hB_open h\<alpha> h\<alpha>1_B \<open>?B_basis B \<alpha> \<subseteq> ?E\<close> by (by5000 simp) (by100 blast)
-      qed
-      thus ?thesis using hE_sub_E by (by5000 simp)
-    qed
-    have hunion: "\<forall>U. U \<subseteq> ?TE \<longrightarrow> \<Union>U \<in> ?TE"
-    proof (intro allI impI)
-      fix Uc assume hUc: "Uc \<subseteq> ?TE"
-      show "\<Union>Uc \<in> ?TE"
-      proof -
-        have "\<Union>Uc \<subseteq> ?E" using hUc by (by100 blast)
-        moreover have "\<forall>c \<in> \<Union>Uc. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and>
-            ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> \<Union>Uc"
-        proof (intro ballI)
-          fix c assume "c \<in> \<Union>Uc"
-          then obtain V where hV: "V \<in> Uc" "c \<in> V" by (by100 blast)
-          have hV_TE: "V \<in> ?TE" by (rule subsetD[OF hUc hV(1)])
-          have hVprop: "V \<subseteq> ?E \<and> (\<forall>c' \<in> V. \<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U' \<and>
-              ?coset_class \<alpha>' = c' \<and> ?B_basis U' \<alpha>' \<subseteq> V)"
-            using hV_TE by (by5000 simp)
-          hence "\<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U' \<and> ?coset_class \<alpha>' = c
-              \<and> ?B_basis U' \<alpha>' \<subseteq> V" using \<open>c \<in> V\<close> by (by100 blast)
-          then obtain U' \<alpha>' where "U' \<in> TB" "\<alpha>' \<in> ?paths" "\<alpha>' 1 \<in> U'" "?coset_class \<alpha>' = c"
-              "?B_basis U' \<alpha>' \<subseteq> V"
-            by (by5000 simp) (by100 blast)
-          moreover have "?B_basis U' \<alpha>' \<subseteq> \<Union>Uc"
-            using \<open>?B_basis U' \<alpha>' \<subseteq> V\<close> \<open>V \<in> Uc\<close> by (by100 blast)
-          ultimately show "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c
-              \<and> ?B_basis U \<alpha> \<subseteq> \<Union>Uc" by (by5000 simp) (by100 blast)
-        qed
-        ultimately show ?thesis by (by100 blast)
-      qed
-    qed
-    \<comment> \<open>TE extraction: named helper to avoid let-binding timeout.\<close>
-    have hTE_elim: "\<And>V. V \<in> ?TE \<Longrightarrow> V \<subseteq> ?E \<and>
-        (\<forall>c \<in> V. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V)"
-      by (by5000 simp)
-    \<comment> \<open>TE introduction: show membership.\<close>
-    have hTE_intro: "\<And>V. V \<subseteq> ?E \<Longrightarrow>
-        (\<forall>c \<in> V. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V) \<Longrightarrow>
-        V \<in> ?TE"
-      by (by5000 simp)
-    \<comment> \<open>Basis monotonicity: V \\<subseteq> U \\<Rightarrow> B(V,\\<alpha>) \\<subseteq> B(U,\\<alpha>).\<close>
-    have hbasis_mono: "\<forall>\<alpha> U V. V \<subseteq> U \<longrightarrow> ?B_basis V \<alpha> \<subseteq> ?B_basis U \<alpha>"
-    proof (intro allI impI subsetI)
-      fix \<alpha> U V x assume "V \<subseteq> U" "x \<in> ?B_basis V \<alpha>"
-      then obtain \<delta> where "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
-          "x = ?coset_class (top1_path_product \<alpha> \<delta>)" "\<delta> ` I_set \<subseteq> V"
-        by (by100 blast)
-      moreover have "\<delta> ` I_set \<subseteq> U" using \<open>\<delta> ` I_set \<subseteq> V\<close> \<open>V \<subseteq> U\<close> by (by100 blast)
-      ultimately show "x \<in> ?B_basis U \<alpha>" by (by100 blast)
-    qed
-    \<comment> \<open>Binary intersection: V1 \\<inter> V2 \\<in> TE for V1, V2 \\<in> TE.\<close>
-    have hinter_binary: "\<forall>V1 V2. V1 \<in> ?TE \<longrightarrow> V2 \<in> ?TE \<longrightarrow> V1 \<inter> V2 \<in> ?TE"
-    proof (intro allI impI)
-      fix V1 V2 assume hV1: "V1 \<in> ?TE" and hV2: "V2 \<in> ?TE"
-      show "V1 \<inter> V2 \<in> ?TE"
-      proof (rule hTE_intro)
-        show "V1 \<inter> V2 \<subseteq> ?E"
-          using hTE_elim[OF hV1] hTE_elim[OF hV2] by (by100 blast)
-      next
-        show "\<forall>c \<in> V1 \<inter> V2. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and>
-            ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V1 \<inter> V2"
-        proof (intro ballI)
-          fix c assume hc: "c \<in> V1 \<inter> V2"
-          \<comment> \<open>Use hTE\\_elim on V1 and V2 separately.\<close>
-          \<comment> \<open>Get basis elements from V1 and V2.\<close>
-          have hex1: "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V1"
-            using hTE_elim[OF hV1] hc by (by100 blast)
-          have hex2: "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V2"
-            using hTE_elim[OF hV2] hc by (by100 blast)
-          \<comment> \<open>Get existentials for c in V1 and V2.\<close>
-          \<comment> \<open>Extract witnesses with endpoint info.\<close>
-          from hex1 obtain U1 \<alpha>1 where hU1: "U1 \<in> TB" "\<alpha>1 \<in> ?paths" "\<alpha>1 1 \<in> U1"
-              "?coset_class \<alpha>1 = c" "?B_basis U1 \<alpha>1 \<subseteq> V1"
-            by (by5000 simp) (by100 blast)
-          from hex2 obtain U2 \<alpha>2 where hU2: "U2 \<in> TB" "\<alpha>2 \<in> ?paths" "\<alpha>2 1 \<in> U2"
-              "?coset_class \<alpha>2 = c" "?B_basis U2 \<alpha>2 \<subseteq> V2"
-            by (by5000 simp) (by100 blast)
-          \<comment> \<open>Endpoints: \\<alpha>1(1) = \\<alpha>2(1) from hp\\_class.\<close>
-          have hep: "\<alpha>1 1 = \<alpha>2 1"
-            using hp_class[rule_format, OF hU1(2)] hp_class[rule_format, OF hU2(2)]
-                  hU1(4) hU2(4) by (by100 simp)
-          \<comment> \<open>\\<alpha>1(1) \\<in> U2.\<close>
-          have h\<alpha>1_U2: "\<alpha>1 1 \<in> U2"
-            using hep hU2(3) by simp
-          \<comment> \<open>B(U2,\\<alpha>2) = B(U2,\\<alpha>1) by hbasis\\_eq.\<close>
-          have hB2_eq: "?B_basis U2 \<alpha>1 = ?B_basis U2 \<alpha>2"
-          proof -
-            have "?coset_class \<alpha>2 \<in> ?B_basis U2 \<alpha>2"
-              using hbasis[rule_format, OF hU2(2) hU2(1) hU2(3)] .
-            hence "?coset_class \<alpha>1 \<in> ?B_basis U2 \<alpha>2"
-              using hU1(4) hU2(4) by simp
-            from hbasis_eq[rule_format, OF hU2(1) hU2(2) hU1(2) this]
-            show ?thesis by simp
-          qed
-          \<comment> \<open>Monotonicity + transitivity.\<close>
-          have hm1: "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> ?B_basis U1 \<alpha>1"
-          proof -
-            have "U1 \<inter> U2 \<subseteq> U1" by (by100 blast)
-            from hbasis_mono[rule_format, OF this] show ?thesis .
-          qed
-          have hm2: "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> ?B_basis U2 \<alpha>1"
-          proof -
-            have "U1 \<inter> U2 \<subseteq> U2" by (by100 blast)
-            from hbasis_mono[rule_format, OF this] show ?thesis .
-          qed
-          have hW: "U1 \<inter> U2 \<in> TB"
-          proof -
-            have "finite {U1, U2}" by simp
-            moreover have "{U1, U2} \<noteq> {}" by simp
-            moreover have "{U1, U2} \<subseteq> TB" using hU1(1) hU2(1) by (by100 blast)
-            ultimately have "\<Inter>{U1, U2} \<in> TB"
-              using hTB unfolding is_topology_on_def by (by100 blast)
-            thus ?thesis by simp
-          qed
-          have "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1"
-            by (rule subset_trans[OF hm1 hU1(5)])
-          moreover have "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V2"
-          proof -
-            have "?B_basis U2 \<alpha>1 \<subseteq> V2" using hB2_eq hU2(5) by simp
-            thus ?thesis by (rule subset_trans[OF hm2])
-          qed
-          ultimately have "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1 \<inter> V2" by (by100 blast)
-          have h\<alpha>1_inter: "\<alpha>1 1 \<in> U1 \<inter> U2" using hU1(3) h\<alpha>1_U2 by (by100 blast)
-          define W where "W = U1 \<inter> U2"
-          have hconj: "W \<in> TB \<and> \<alpha>1 \<in> ?paths \<and> \<alpha>1 1 \<in> W \<and> ?coset_class \<alpha>1 = c
-              \<and> ?B_basis W \<alpha>1 \<subseteq> V1 \<inter> V2"
-            using hW hU1(2) h\<alpha>1_inter hU1(4)
-                \<open>?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1 \<inter> V2\<close> unfolding W_def by (by100 simp)
-          show "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c
-              \<and> ?B_basis U \<alpha> \<subseteq> V1 \<inter> V2"
-            using hconj by (by5000 blast)
-        qed
-      qed
-    qed
-    \<comment> \<open>Finite intersection: use define to make the predicate induction-friendly.\<close>
-    define TE_mem where "TE_mem V \<longleftrightarrow> V \<in> ?TE" for V
-    have hinter_TE: "\<forall>F. finite F \<and> F \<noteq> {} \<and> (\<forall>V \<in> F. TE_mem V) \<longrightarrow> TE_mem (\<Inter>F)"
-    proof (intro allI impI)
-      fix F assume hF: "finite F \<and> F \<noteq> {} \<and> (\<forall>V \<in> F. TE_mem V)"
-      hence hfin: "finite F" and hne: "F \<noteq> {}" and hsub: "\<forall>V \<in> F. TE_mem V"
-        by (by100 blast)+
-      from hfin hne hsub show "TE_mem (\<Inter>F)"
-      proof (induction F rule: finite_induct)
-        case empty thus ?case by simp
-      next
-        case (insert x F)
-        show ?case
-        proof (cases "F = {}")
-          case True thus ?thesis using insert.prems by simp
-        next
-          case False
-          have "TE_mem x" using insert.prems by (by100 blast)
-          have "TE_mem (\<Inter>F)" using insert.IH False insert.prems by (by100 blast)
-          have "\<Inter>(insert x F) = x \<inter> \<Inter>F" using insert.hyps by (by100 simp)
-          moreover have "TE_mem (x \<inter> \<Inter>F)"
-          proof -
-            have hbin: "\<forall>V1 V2. TE_mem V1 \<longrightarrow> TE_mem V2 \<longrightarrow> TE_mem (V1 \<inter> V2)"
-              using hinter_binary unfolding TE_mem_def by (by100 blast)
-            from hbin[rule_format, OF \<open>TE_mem x\<close> \<open>TE_mem (\<Inter>F)\<close>]
-            show ?thesis .
-          qed
-          ultimately show ?thesis by simp
-        qed
-      qed
-    qed
-    have hinter: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TE \<longrightarrow> \<Inter>F \<in> ?TE"
-    proof (intro allI impI)
-      fix F assume "finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TE"
-      hence "finite F" "F \<noteq> {}" "\<forall>V \<in> F. TE_mem V" unfolding TE_mem_def by (by100 blast)+
-      hence "TE_mem (\<Inter>F)" using hinter_TE by (by100 blast)
-      thus "\<Inter>F \<in> ?TE" unfolding TE_mem_def .
-    qed
-    have hstrict: "?TE \<subseteq> Pow ?E" by (by100 blast)
-    show ?thesis unfolding is_topology_on_strict_def is_topology_on_def
-      using hempty hfull hunion hinter hstrict by (by100 blast)
-  qed
   \<comment> \<open>Step 6 (book): E is path-connected. Any class(\\<alpha>) is connected to e0 by \\<tilde>\\<alpha>.\<close>
   have hE_pc: "top1_path_connected_on ?E ?TE"
     unfolding top1_path_connected_on_def
