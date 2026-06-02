@@ -2964,8 +2964,35 @@ proof -
            The homotopy: (\\<beta>*rev(\\<delta>))*\\<delta> \\<simeq> \\<beta> (associativity + right inverse + right id).\<close>
         have hhtpy: "top1_path_homotopic_on B TB b0 (\<beta> 1)
             (top1_path_product ?\<alpha> \<delta>) \<beta>"
-          sorry \<comment> \<open>(\\<beta>*rev(\\<delta>))*\\<delta> \\<simeq> \\<beta>: assoc + inverse\\_right + product\\_right + right\\_id.
-             All 4 lemmas exist but OF chain fails on unification with complex terms.\<close>
+        proof -
+          \<comment> \<open>Associativity: (\\<beta>*rev\\<delta>)*\\<delta> \\<simeq> \\<beta>*(rev\\<delta>*\\<delta>).\<close>
+          have s1: "top1_path_homotopic_on B TB b0 (\<beta> 1)
+              (top1_path_product (top1_path_product \<beta> (top1_path_reverse \<delta>)) \<delta>)
+              (top1_path_product \<beta> (top1_path_product (top1_path_reverse \<delta>) \<delta>))"
+            by (rule Lemma_51_1_path_homotopic_sym[OF
+                  Theorem_51_2_associativity[OF hTB h\<beta>_on hrev\<delta> h\<delta>_B]])
+          \<comment> \<open>Inverse right: rev\\<delta>*\\<delta> \\<simeq> const.\<close>
+          have s2: "top1_path_homotopic_on B TB (\<beta> 1) (\<beta> 1)
+              (top1_path_product (top1_path_reverse \<delta>) \<delta>) (top1_constant_path (\<beta> 1))"
+            by (rule Theorem_51_2_invgerse_right[OF hTB h\<delta>_B])
+          \<comment> \<open>Product right: \\<beta>*(rev\\<delta>*\\<delta>) \\<simeq> \\<beta>*const.\<close>
+          have s3: "top1_path_homotopic_on B TB b0 (\<beta> 1)
+              (top1_path_product \<beta> (top1_path_product (top1_path_reverse \<delta>) \<delta>))
+              (top1_path_product \<beta> (top1_constant_path (\<beta> 1)))"
+            by (rule path_homotopic_product_right[OF hTB s2 h\<beta>_on])
+          \<comment> \<open>Right identity: \\<beta>*const \\<simeq> \\<beta>.\<close>
+          have s4: "top1_path_homotopic_on B TB b0 (\<beta> 1)
+              (top1_path_product \<beta> (top1_constant_path (\<beta> 1))) \<beta>"
+            by (rule Theorem_51_2_right_identity[OF hTB h\<beta>_on])
+          \<comment> \<open>Transitivity: s1 then s3.\<close>
+          from Lemma_51_1_path_homotopic_trans[OF hTB s1 s3]
+          have t13: "top1_path_homotopic_on B TB b0 (\<beta> 1)
+              (top1_path_product ?\<alpha> \<delta>)
+              (top1_path_product \<beta> (top1_constant_path (\<beta> 1)))" .
+          \<comment> \<open>Then s4.\<close>
+          from Lemma_51_1_path_homotopic_trans[OF hTB t13 s4]
+          show ?thesis .
+        qed
         \<comment> \<open>\\<alpha>*\\<delta> \\<in> Paths.\<close>
         have h\<alpha>\<delta>_on: "top1_is_path_on B TB b0 (\<beta> 1) (top1_path_product ?\<alpha> \<delta>)"
           using top1_path_product_is_path[OF hTB h\<alpha>_on h\<delta>_B] .
