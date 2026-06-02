@@ -2798,6 +2798,7 @@ proof -
     qed
     have hinter: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TE \<longrightarrow> \<Inter>F \<in> ?TE"
       sorry \<comment> \<open>From hinter\\_binary by finite induction.
+         BLOCKED: finite\\_induct can't handle let-bound TE predicate.
          Standard: \\<Inter>(insert x F) = x \\<inter> \\<Inter>F. Induction on card(F).
          BLOCKED by finite\\_induct not handling let-bound predicate.\<close>
     have hstrict: "?TE \<subseteq> Pow ?E" by (by100 blast)
