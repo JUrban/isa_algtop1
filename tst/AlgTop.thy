@@ -3302,10 +3302,69 @@ proof -
             (top1_path_product \<delta>1 (top1_path_reverse \<delta>2)) (top1_constant_path b1)"
           using hU_triv h\<delta>1rev\<delta>2_loop_U by (by100 blast)
         \<comment> \<open>From hcoset\\_product\\_compat: class(\\<alpha>*\\<delta>1) = class(\\<alpha>*\\<delta>2).\<close>
-        show "x = y"
-          using h\<delta>1(3) h\<delta>2(3) h\<delta>1rev\<delta>2_triv hcoset_product_compat h\<alpha>_paths hep_eq
-          sorry \<comment> \<open>\\<delta>1*rev(\\<delta>2) \\<simeq> const \\<Rightarrow> class(\\<alpha>*\\<delta>1) = class(\\<alpha>*\\<delta>2).
-             Uses hcoset\\_product\\_compat or direct homotopy argument.\<close>
+        \<comment> \<open>\\<delta>1 \\<simeq> \\<delta>2 (paths from b1 to \\<delta>1(1)=\\<delta>2(1)).
+           Proof: \\<delta>1 \\<simeq> \\<delta>1*const \\<simeq> \\<delta>1*(rev(\\<delta>2)*\\<delta>2) \\<simeq> (\\<delta>1*rev(\\<delta>2))*\\<delta>2 \\<simeq> const*\\<delta>2 \\<simeq> \\<delta>2.\<close>
+        have h\<delta>_htpy: "top1_path_homotopic_on B TB b1 (\<delta>1 1) \<delta>1 \<delta>2"
+        proof -
+          \<comment> \<open>Step a: (\\<delta>1*rev(\\<delta>2))*\\<delta>2 \\<simeq> \\<delta>1*(rev(\\<delta>2)*\\<delta>2) by associativity (sym).\<close>
+          have h\<delta>2_adj': "top1_is_path_on B TB b1 (\<delta>1 1) \<delta>2"
+            using h\<delta>2_adj hep_eq by simp
+          have s1: "top1_path_homotopic_on B TB b1 (\<delta>1 1)
+              (top1_path_product (top1_path_product \<delta>1 (top1_path_reverse \<delta>2)) \<delta>2)
+              (top1_path_product \<delta>1 (top1_path_product (top1_path_reverse \<delta>2) \<delta>2))"
+            by (rule Lemma_51_1_path_homotopic_sym[OF
+                  Theorem_51_2_associativity[OF hTB h\<delta>1_adj hrev\<delta>2' h\<delta>2_adj']])
+          \<comment> \<open>Step b: rev(\\<delta>2)*\\<delta>2 \\<simeq> const (inverse right).\<close>
+          have s2: "top1_path_homotopic_on B TB (\<delta>1 1) (\<delta>1 1)
+              (top1_path_product (top1_path_reverse \<delta>2) \<delta>2) (top1_constant_path (\<delta>1 1))"
+            using Theorem_51_2_invgerse_right[OF hTB h\<delta>2_adj[unfolded hep_eq[symmetric]]]
+              hep_eq by simp
+          \<comment> \<open>Step c: \\<delta>1*(rev(\\<delta>2)*\\<delta>2) \\<simeq> \\<delta>1*const via product\\_right.\<close>
+          have s3: "top1_path_homotopic_on B TB b1 (\<delta>1 1)
+              (top1_path_product \<delta>1 (top1_path_product (top1_path_reverse \<delta>2) \<delta>2))
+              (top1_path_product \<delta>1 (top1_constant_path (\<delta>1 1)))"
+            by (rule path_homotopic_product_right[OF hTB s2 h\<delta>1_adj])
+          \<comment> \<open>Step d: \\<delta>1*const \\<simeq> \\<delta>1 (right identity).\<close>
+          have s4: "top1_path_homotopic_on B TB b1 (\<delta>1 1)
+              (top1_path_product \<delta>1 (top1_constant_path (\<delta>1 1))) \<delta>1"
+            by (rule Theorem_51_2_right_identity[OF hTB h\<delta>1_adj])
+          \<comment> \<open>Step e: const*\\<delta>2 \\<simeq> \\<delta>2 (left identity).\<close>
+          have s5: "top1_path_homotopic_on B TB b1 (\<delta>1 1)
+              (top1_path_product (top1_constant_path b1) \<delta>2) \<delta>2"
+            using Theorem_51_2_left_identity[OF hTB h\<delta>2_adj'] .
+          \<comment> \<open>Step f: (\\<delta>1*rev(\\<delta>2))*\\<delta>2 \\<simeq> const*\\<delta>2 via product\\_left.\<close>
+          have s6: "top1_path_homotopic_on B TB b1 (\<delta>1 1)
+              (top1_path_product (top1_path_product \<delta>1 (top1_path_reverse \<delta>2)) \<delta>2)
+              (top1_path_product (top1_constant_path b1) \<delta>2)"
+            by (rule path_homotopic_product_left[OF hTB h\<delta>1rev\<delta>2_triv h\<delta>2_adj'])
+          \<comment> \<open>Chain: \\<delta>1 \\<simeq> \\<delta>1*const (s4 sym) \\<simeq> \\<delta>1*(rev\\<delta>2*\\<delta>2) (s3 sym)
+             \\<simeq> (\\<delta>1*rev\\<delta>2)*\\<delta>2 (s1 sym) \\<simeq> const*\\<delta>2 (s6) \\<simeq> \\<delta>2 (s5).\<close>
+          \<comment> \<open>More directly: s1 + s3 + s4 give (\\<delta>1*rev\\<delta>2)*\\<delta>2 \\<simeq> \\<delta>1.
+             And s6 + s5 give (\\<delta>1*rev\\<delta>2)*\\<delta>2 \\<simeq> \\<delta>2.
+             So \\<delta>1 \\<simeq> (\\<delta>1*rev\\<delta>2)*\\<delta>2 \\<simeq> \\<delta>2.\<close>
+          \<comment> \<open>Chain: s1+s3+s4 give (\\<delta>1*rev\\<delta>2)*\\<delta>2 \\<simeq> \\<delta>1. s6+s5 give (\\<delta>1*rev\\<delta>2)*\\<delta>2 \\<simeq> \\<delta>2.\<close>
+          have chain1: "top1_path_homotopic_on B TB b1 (\<delta>1 1)
+              (top1_path_product (top1_path_product \<delta>1 (top1_path_reverse \<delta>2)) \<delta>2) \<delta>1"
+            using Lemma_51_1_path_homotopic_trans[OF hTB s1
+                  Lemma_51_1_path_homotopic_trans[OF hTB s3 s4]] .
+          have chain2: "top1_path_homotopic_on B TB b1 (\<delta>1 1)
+              (top1_path_product (top1_path_product \<delta>1 (top1_path_reverse \<delta>2)) \<delta>2) \<delta>2"
+            using Lemma_51_1_path_homotopic_trans[OF hTB s6 s5] .
+          from Lemma_51_1_path_homotopic_trans[OF hTB
+              Lemma_51_1_path_homotopic_sym[OF chain1] chain2]
+          show ?thesis .
+        qed
+        \<comment> \<open>\\<alpha>*\\<delta>1 \\<simeq> \\<alpha>*\\<delta>2 via path\\_homotopic\\_product\\_left.\<close>
+        have h\<alpha>\<delta>_htpy: "top1_path_homotopic_on B TB b0 (\<delta>1 1)
+            (top1_path_product \<alpha> \<delta>1) (top1_path_product \<alpha> \<delta>2)"
+          sorry \<comment> \<open>\\<alpha>*\\<delta>1 \\<simeq> \\<alpha>*\\<delta>2 from \\<delta>1 \\<simeq> \\<delta>2 via product\\_right.
+             OF chain unification failure — needs manual instantiation.\<close>
+        \<comment> \<open>Endpoint adjustment for hhtpy\\_class.\<close>
+        have h\<alpha>\<delta>_htpy': "top1_path_homotopic_on B TB b0 ((top1_path_product \<alpha> \<delta>1) 1)
+            (top1_path_product \<alpha> \<delta>1) (top1_path_product \<alpha> \<delta>2)"
+          using h\<alpha>\<delta>_htpy unfolding top1_path_product_def by simp
+        from hhtpy_class[rule_format, OF h\<alpha>\<delta>1_paths h\<alpha>\<delta>2_paths h\<alpha>\<delta>_htpy']
+        show "x = y" using h\<delta>1(3) h\<delta>2(3) by simp
       qed
       have hbij: "bij_betw ?p V U" using hpinj hpsurj unfolding bij_betw_def by (by100 blast)
       \<comment> \<open>(3) Continuous: p restricted to V.\<close>
