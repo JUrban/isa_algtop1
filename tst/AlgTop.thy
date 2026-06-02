@@ -2964,8 +2964,8 @@ proof -
            The homotopy: (\\<beta>*rev(\\<delta>))*\\<delta> \\<simeq> \\<beta> (associativity + right inverse + right id).\<close>
         have hhtpy: "top1_path_homotopic_on B TB b0 (\<beta> 1)
             (top1_path_product ?\<alpha> \<delta>) \<beta>"
-          sorry \<comment> \<open>(\\<beta>*rev(\\<delta>))*\\<delta> \\<simeq> \\<beta>*(rev(\\<delta>)*\\<delta>) \\<simeq> \\<beta>*const \\<simeq> \\<beta>.
-             Standard chain: Theorem\\_51\\_2\\_associativity + invgerse\\_right + right\\_identity.\<close>
+          sorry \<comment> \<open>(\\<beta>*rev(\\<delta>))*\\<delta> \\<simeq> \\<beta>: assoc + inverse\\_right + product\\_right + right\\_id.
+             All 4 lemmas exist but OF chain fails on unification with complex terms.\<close>
         \<comment> \<open>\\<alpha>*\\<delta> \\<in> Paths.\<close>
         have h\<alpha>\<delta>_on: "top1_is_path_on B TB b0 (\<beta> 1) (top1_path_product ?\<alpha> \<delta>)"
           using top1_path_product_is_path[OF hTB h\<alpha>_on h\<delta>_B] .
