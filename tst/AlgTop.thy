@@ -3103,9 +3103,48 @@ proof -
         qed
         thus "c \<in> ?E" using h\<delta>(2) by (by100 simp)
       qed
-      show "V \<in> ?TE"
-        sorry \<comment> \<open>B(U,\\<alpha>) \\<in> TE: V\\<subseteq>E (proved above), local basis via hbasis\\_eq.
-           Both conjunction assembly and TE introduction timeout on let-expanded terms.\<close>
+      \<comment> \<open>Local basis: for each c \\<in> V, take \\<alpha>'=\\<alpha>*\\<delta>, U'=U. Then B(U',\\<alpha>') = B(U,\\<alpha>) = V.\<close>
+      have hlocal_basis: "\<forall>c \<in> V. \<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U' \<and>
+          ?coset_class \<alpha>' = c \<and> ?B_basis U' \<alpha>' \<subseteq> V"
+      proof (intro ballI)
+        fix c assume hc: "c \<in> V"
+        hence hc_B: "c \<in> ?B_basis U \<alpha>" using h\<alpha>(3) by simp
+        then obtain \<delta>' where h\<delta>': "top1_is_path_on B TB (\<alpha> 1) (\<delta>' 1) \<delta>'"
+            "\<delta>' ` I_set \<subseteq> U" "c = ?coset_class (top1_path_product \<alpha> \<delta>')" by (by100 blast)
+        let ?\<alpha>' = "top1_path_product \<alpha> \<delta>'"
+        have h\<alpha>'_paths: "?\<alpha>' \<in> ?paths"
+        proof -
+          have h\<alpha>_on': "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) hPaths_iff by (by100 blast)
+          from top1_path_product_is_path[OF hTB h\<alpha>_on' h\<delta>'(1)]
+          have "top1_is_path_on B TB b0 (\<delta>' 1) ?\<alpha>'" .
+          moreover have "?\<alpha>' 1 = \<delta>' 1" unfolding top1_path_product_def by simp
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have h\<delta>'1_U: "\<delta>' 1 \<in> U"
+        proof -
+          have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          thus ?thesis using h\<delta>'(2) by (by100 blast)
+        qed
+        have h\<alpha>'_ep: "?\<alpha>' 1 = \<delta>' 1" unfolding top1_path_product_def by simp
+        \<comment> \<open>B(U, \\<alpha>') = B(U, \\<alpha>) (= V) by hbasis\\_eq.\<close>
+        have hc_in_B: "?coset_class ?\<alpha>' \<in> ?B_basis U \<alpha>" using hc_B h\<delta>'(3) by simp
+        have h\<alpha>_in_paths: "\<alpha> \<in> ?paths" using h\<alpha>(1) hPaths_iff by simp
+        from hbasis_eq[rule_format, OF hU_open h\<alpha>_in_paths h\<alpha>'_paths hc_in_B]
+        have "?B_basis U \<alpha> = ?B_basis U ?\<alpha>'" .
+        hence hB_sub: "?B_basis U ?\<alpha>' \<subseteq> V" using h\<alpha>(3) by simp
+        \<comment> \<open>Witness: U' = U, \\<alpha>' = \\<alpha>*\\<delta>'.\<close>
+        \<comment> \<open>The existential witness is U' = U, \\<alpha>' = \\<alpha>*\\<delta>'.\<close>
+        show "\<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U' \<and>
+            ?coset_class \<alpha>' = c \<and> ?B_basis U' \<alpha>' \<subseteq> V"
+        proof (intro exI conjI)
+          show "U \<in> TB" using hU_open .
+          show "?\<alpha>' \<in> ?paths" using h\<alpha>'_paths .
+          show "?\<alpha>' 1 \<in> U" using h\<alpha>'_ep h\<delta>'1_U by simp
+          show "?coset_class ?\<alpha>' = c" using h\<delta>'(3) by simp
+          show "?B_basis U ?\<alpha>' \<subseteq> V" using hB_sub .
+        qed
+      qed
+      show "V \<in> ?TE" using hV_sub_E hlocal_basis by (by5000 simp)
     qed
     \<comment> \<open>Part 4: p maps each slice homeomorphically to U.\<close>
     have hslice_homeo: "\<forall>V \<in> ?slices.
