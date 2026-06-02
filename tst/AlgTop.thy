@@ -2641,11 +2641,19 @@ proof -
     qed
     moreover have "?coset_class (top1_path_product \<alpha> \<delta>) \<in> ?B_basis U \<alpha>"
     proof -
-      have "top1_is_path_on B TB (\<alpha> 1) (top1_path_product \<alpha> \<delta> 1) (top1_path_product \<alpha> \<delta>)"
-        sorry \<comment> \<open>path\\_product endpoint rewrite.\<close>
-      thus ?thesis using h\<delta> sorry
+      \<comment> \<open>Rewrite: \\<delta>(1) = x from path\\_on definition.\<close>
+      have "x = \<delta> 1" using h\<delta>(1) unfolding top1_is_path_on_def by (by100 blast)
+      hence "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>" using h\<delta>(1) by simp
+      thus ?thesis using h\<delta>(2) by (by100 blast)
     qed
-    ultimately show "x \<in> ?p ` (?B_basis U \<alpha>)" sorry
+    ultimately show "x \<in> ?p ` (?B_basis U \<alpha>)"
+    proof -
+      assume hp_eq: "?p (?coset_class (top1_path_product \<alpha> \<delta>)) = x"
+        and hmem: "?coset_class (top1_path_product \<alpha> \<delta>) \<in> ?B_basis U \<alpha>"
+      have "?p (?coset_class (top1_path_product \<alpha> \<delta>)) \<in> ?p ` (?B_basis U \<alpha>)"
+        using hmem by (rule imageI)
+      thus ?thesis using hp_eq by simp
+    qed
   qed
   have hp_open: "\<forall>U \<in> ?TE. ?p ` U \<in> TB"
     sorry \<comment> \<open>p(V) = \\<Union>{p(B\\_c)} for c \\<in> V.
@@ -2740,9 +2748,10 @@ proof -
         proof (intro ballI)
           fix c assume "c \<in> \<Union>Uc"
           then obtain V where hV: "V \<in> Uc" "c \<in> V" by (by100 blast)
-          hence "V \<in> ?TE" using hUc by (by5000 blast)
-          hence hVprop: "V \<subseteq> ?E \<and> (\<forall>c' \<in> V. \<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U' \<and>
-              ?coset_class \<alpha>' = c' \<and> ?B_basis U' \<alpha>' \<subseteq> V)" by (by5000 simp)
+          have hV_TE: "V \<in> ?TE" by (rule subsetD[OF hUc hV(1)])
+          have hVprop: "V \<subseteq> ?E \<and> (\<forall>c' \<in> V. \<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U' \<and>
+              ?coset_class \<alpha>' = c' \<and> ?B_basis U' \<alpha>' \<subseteq> V)"
+            using hV_TE by (by5000 simp)
           hence "\<exists>U' \<alpha>'. U' \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U' \<and> ?coset_class \<alpha>' = c
               \<and> ?B_basis U' \<alpha>' \<subseteq> V" using \<open>c \<in> V\<close> by (by100 blast)
           then obtain U' \<alpha>' where "U' \<in> TB" "\<alpha>' \<in> ?paths" "\<alpha>' 1 \<in> U'" "?coset_class \<alpha>' = c"
