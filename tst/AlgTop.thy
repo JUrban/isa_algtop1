@@ -2911,7 +2911,31 @@ proof -
       \<comment> \<open>\\<subseteq>: if \\<beta>\\# \\<in> p\\<inverse>(U) then \\<beta>(1)\\<in>U. Take \\<delta> in U from b1 to \\<beta>(1).
          Let \\<alpha> = \\<beta>*rev(\\<delta>). Then \\<beta>\\# = (\\<alpha>*\\<delta>)\\# \\<in> B(U,\\<alpha>) where \\<alpha>(1) = b1.\<close>
       show "{x \<in> ?E. ?p x \<in> U} \<subseteq> \<Union>?slices"
-        sorry \<comment> \<open>Uses: U path-connected, coset class properties, hhtpy\\_class.\<close>
+      proof (rule subsetI)
+        fix x assume hx: "x \<in> {x \<in> ?E. ?p x \<in> U}"
+        hence hx_E: "x \<in> ?E" and hp_x_U: "?p x \<in> U" by (by100 blast)+
+        \<comment> \<open>x = class(\\<beta>) for some \\<beta> \\<in> paths. p(x) = \\<beta>(1) \\<in> U.\<close>
+        from hx_E obtain \<beta> where h\<beta>: "\<beta> \<in> ?paths" "x = ?coset_class \<beta>" by (by100 blast)
+        have h\<beta>1_U: "\<beta> 1 \<in> U"
+          using hp_x_U hp_class[rule_format, OF h\<beta>(1)] h\<beta>(2) by simp
+        \<comment> \<open>\\<delta> path in U from b1 to \\<beta>(1) (U is path-connected).\<close>
+        have hb1_U_sub: "b1 \<in> U" using hb1_U .
+        from hU_pc[unfolded top1_path_connected_on_def, THEN conjunct2,
+            rule_format, OF hb1_U_sub h\<beta>1_U]
+        obtain \<delta> where h\<delta>: "top1_is_path_on U (subspace_topology B TB U) b1 (\<beta> 1) \<delta>"
+          by (by100 blast)
+        \<comment> \<open>\\<delta> is also a path in B.\<close>
+        have hU_sub_B: "U \<subseteq> B"
+          using hU_open assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+        have h\<delta>_B: "top1_is_path_on B TB b1 (\<beta> 1) \<delta>"
+          using path_in_subspace_is_path_in_ambient'[OF hTB hU_sub_B h\<delta>] .
+        \<comment> \<open>\\<alpha> = \\<beta>*rev(\\<delta>) is a path from b0 to b1.\<close>
+        let ?\<alpha> = "top1_path_product \<beta> (top1_path_reverse \<delta>)"
+        \<comment> \<open>\\<beta> \\<simeq> \\<alpha>*\\<delta> = (\\<beta>*rev(\\<delta>))*\\<delta> (by associativity + inverse).
+           class(\\<beta>) = class(\\<alpha>*\\<delta>) \\<in> B(U,\\<alpha>). \\<alpha>(1) = b1.\<close>
+        show "x \<in> \<Union>?slices"
+          sorry \<comment> \<open>Deep: \\<alpha> \\<in> paths with \\<alpha>(1)=b1, class(\\<beta>)=class(\\<alpha>*\\<delta>) \\<in> B(U,\\<alpha>) \\<in> slices.\<close>
+      qed
     qed
     \<comment> \<open>Part 2: distinct slices are disjoint.\<close>
     have hdisjoint: "\<forall>V1 \<in> ?slices. \<forall>V2 \<in> ?slices. V1 \<noteq> V2 \<longrightarrow> V1 \<inter> V2 = {}"
