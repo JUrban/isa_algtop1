@@ -2585,9 +2585,15 @@ proof -
       thus ?thesis using hsub by (by5000 simp)
     qed
   qed
+  \<comment> \<open>Helper: p(B(U,\\<alpha>)) = path-component of \\<alpha>(1) in U.\<close>
+  have hp_basis_image: "\<forall>\<alpha> \<in> ?paths. \<forall>U \<in> TB. \<alpha> 1 \<in> U \<longrightarrow>
+      ?p ` (?B_basis U \<alpha>) = {x \<in> U. \<exists>\<delta>. top1_is_path_on B TB (\<alpha> 1) x \<delta> \<and> \<delta> ` I_set \<subseteq> U}"
+    sorry \<comment> \<open>Forward: p(class(\\<alpha>*\\<delta>)) = \\<delta>(1) \\<in> U via hp\\_class + path\\_product\\_at\\_end.
+       Backward: for x reachable from \\<alpha>(1) in U, \\<exists>\\<delta> with (\\<alpha>*\\<delta>)\\# \\<in> B and p = x.\<close>
   have hp_open: "\<forall>U \<in> ?TE. ?p ` U \<in> TB"
-    sorry \<comment> \<open>Book Step 3: p maps B(U,\\<alpha>) onto U (path-connectivity + hp\\_class).
-       Then p(V) = \\<Union>{p(B\\_i)} is a union of open sets.\<close>
+    sorry \<comment> \<open>p(V) = \\<Union>{p(B\\_c)} for c \\<in> V.
+       Each p(B\\_c) is a path-component in U\\_c, which is open by local path-connectivity.
+       Union of open sets is open.\<close>
   \<comment> \<open>===== Step 4 (book): Evenly covered neighborhoods =====\<close>
   have hp_covering: "\<forall>b \<in> B. \<exists>U. b \<in> U \<and> top1_evenly_covered_on ?E ?TE B TB ?p U"
     sorry \<comment> \<open>For each b, use semilocally sc nbhd U. The slices B(U,\\<alpha>\\_i) for
@@ -2918,9 +2924,9 @@ proof -
       \<and> top1_path_connected_on ?E TE \<and> top1_locally_path_connected_on ?E TE
       \<and> e0 \<in> ?E \<and> p e0 = b0 \<and> top1_fundamental_group_image_hom ?E TE e0 B TB b0 p = H"
     by (by100 blast)
-  \<comment> \<open>Use define to create a simple variable for the complex let-bound ?E.\<close>
-  thus ?thesis sorry \<comment> \<open>Packaging: \\<exists>E TE p e0. P(?E,TE,p,e0) \\<Rightarrow> \\<exists>E TE p e0. P(E,TE,p,e0).
-     Even define+blast/auto/exI fail due to polymorphic type mismatch.\<close>
+  \<comment> \<open>Packaging: wrap ?E in a define to create a simple witness for blast.\<close>
+  thus ?thesis sorry \<comment> \<open>Packaging: polymorphic type prevents blast from finding Ew witness.
+     hflat (flat conjunction with 4 simple witnesses) available but type doesn't unify.\<close>
 qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
