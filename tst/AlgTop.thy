@@ -3136,8 +3136,7 @@ proof -
       \<and> e0 \<in> ?E \<and> p e0 = b0 \<and> top1_fundamental_group_image_hom ?E TE e0 B TB b0 p = H"
     by (by100 blast)
   \<comment> \<open>Packaging: explicitly instantiate polymorphic type to match the concrete construction.\<close>
-  thus ?thesis sorry \<comment> \<open>Packaging: \\<exists>TE p e0. P(?E,TE,p,e0) \\<Rightarrow> \\<exists>E TE p e0. P(E,TE,p,e0).
-     Permanent blocker: polymorphic type prevents blast from instantiating E.\<close>
+  thus ?thesis sorry \<comment> \<open>Packaging: type blocker (confirmed many sessions).\<close>
 qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
