@@ -3370,7 +3370,25 @@ proof -
       have hbij: "bij_betw ?p V U" using hpinj hpsurj unfolding bij_betw_def by (by100 blast)
       \<comment> \<open>(3) Continuous: p restricted to V.\<close>
       have hpcont_V: "top1_continuous_map_on V (subspace_topology ?E ?TE V) U (subspace_topology B TB U) ?p"
-        sorry \<comment> \<open>From hp\\_cont: p continuous E\\<rightarrow>B. Restrict domain to V\\<subseteq>E, codomain to U.\<close>
+      proof -
+        \<comment> \<open>p continuous E \\<rightarrow> B.\<close>
+        have hp_cont_map: "top1_continuous_map_on ?E ?TE B TB ?p"
+          unfolding top1_continuous_map_on_def using hp_surj hp_cont by (by100 blast)
+        \<comment> \<open>Restrict domain: V \\<subseteq> E \\<Rightarrow> p continuous V \\<rightarrow> B.\<close>
+        have hV_sub: "V \<subseteq> ?E" using hpartition hV by (by100 blast)
+        have "top1_continuous_map_on V (subspace_topology ?E ?TE V) B TB ?p"
+          by (rule top1_continuous_map_on_restrict_domain_simple[OF hp_cont_map hV_sub])
+        \<comment> \<open>Restrict codomain: p(V) = U \\<subseteq> B \\<Rightarrow> p continuous V \\<rightarrow> U.\<close>
+        moreover have "\<forall>v \<in> V. ?p v \<in> U"
+        proof (intro ballI)
+          fix v assume "v \<in> V"
+          hence "v \<in> \<Union>?slices" using hV by (rule UnionI[rotated])
+          hence "v \<in> {x \<in> ?E. ?p x \<in> U}" using hpartition by simp
+          thus "?p v \<in> U" by (by100 blast)
+        qed
+        ultimately show ?thesis
+          using continuous_map_restrict_codomain hU_sub_B by (by100 blast)
+      qed
       \<comment> \<open>(4) Inverse continuous.\<close>
       have hpinv_cont: "top1_continuous_map_on U (subspace_topology B TB U) V (subspace_topology ?E ?TE V)
           (inv_into V ?p)"
