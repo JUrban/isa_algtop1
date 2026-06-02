@@ -3149,20 +3149,44 @@ proof -
     \<comment> \<open>Part 4: p maps each slice homeomorphically to U.\<close>
     have hslice_homeo: "\<forall>V \<in> ?slices.
         top1_homeomorphism_on V (subspace_topology ?E ?TE V) U (subspace_topology B TB U) ?p"
-      sorry \<comment> \<open>Book: p surjects B(U,\\<alpha>) onto U (already proved in hp\\_open).
-         Injectivity: p((\\<alpha>*\\<delta>\\_1)\\#) = p((\\<alpha>*\\<delta>\\_2)\\#) \\<Rightarrow> \\<delta>\\_1(1)=\\<delta>\\_2(1).
-         By semilocal SC: \\<delta>\\_1*rev(\\<delta>\\_2) \\<simeq> const in B \\<Rightarrow> (\\<alpha>*\\<delta>\\_1)\\# = (\\<alpha>*\\<delta>\\_2)\\#.
-         Homeomorphism follows: bijective + continuous + open.\<close>
+      sorry \<comment> \<open>Book Step 4, Part 4 — deepest sorry.
+         (1) Surjection: p maps B(U,\\<alpha>) onto U. For x\\<in>U, path \\<delta> in U from \\<alpha>(1) to x,
+             then (\\<alpha>*\\<delta>)\\# \\<in> B(U,\\<alpha>) with p((\\<alpha>*\\<delta>)\\#) = x.
+         (2) Injection: p((\\<alpha>*\\<delta>1)\\#) = p((\\<alpha>*\\<delta>2)\\#) means \\<delta>1(1)=\\<delta>2(1).
+             By semilocal SC (hU\\_triv): \\<delta>1*rev(\\<delta>2) is a loop in U \\<simeq> const in B.
+             Then [\\<alpha>*\\<delta>1] = [\\<alpha>*\\<delta>2] (by hcoset\\_product\\_compat + hhtpy\\_class).
+         (3) Continuous: p restricted to V is continuous (from hp\\_cont + restriction).
+         (4) Open: p restricted to V maps V-open to U-open (from hp\\_open + restriction).
+         (5) Homeomorphism: bijective + continuous + open = homeomorphism.\<close>
     \<comment> \<open>Part 5: U is open in B.\<close>
     have hU_openin: "openin_on B TB U"
       unfolding openin_on_def using hU_open
         assms(1)[unfolded is_topology_on_strict_def, THEN conjunct2]
       by (by100 blast)
     \<comment> \<open>Assembly: evenly\\_covered\\_on.\<close>
+    \<comment> \<open>Convert slices\\_open to openin\\_on.\<close>
+    have hslices_openin: "\<forall>V \<in> ?slices. openin_on ?E ?TE V"
+    proof (intro ballI)
+      fix V assume hV: "V \<in> ?slices"
+      have "V \<in> ?TE" by (rule bspec[OF hslices_open hV])
+      moreover from hV hpartition have "V \<subseteq> ?E"
+      proof -
+        from hpartition have "\<Union>?slices = {x \<in> ?E. ?p x \<in> U}" by simp
+        hence "\<Union>?slices \<subseteq> ?E" by (by100 blast)
+        thus ?thesis using hV by (by100 blast)
+      qed
+      ultimately show "openin_on ?E ?TE V" unfolding openin_on_def by (by100 blast)
+    qed
     have "top1_evenly_covered_on ?E ?TE B TB ?p U"
       unfolding top1_evenly_covered_on_def
-      using hU_openin hslices_open hdisjoint hpartition hslice_homeo
-      sorry \<comment> \<open>Assembly: need openin\\_on for slices (V \\<in> TE + V \\<subseteq> E) + exI for slices family.\<close>
+    proof (intro conjI exI[of _ ?slices])
+      show "openin_on B TB U" by (rule hU_openin)
+      show "\<forall>V\<in>?slices. openin_on ?E ?TE V" by (rule hslices_openin)
+      show "\<forall>V\<in>?slices. \<forall>V'\<in>?slices. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}" by (rule hdisjoint)
+      show "{x \<in> ?E. ?p x \<in> U} = \<Union>?slices" by (rule hpartition)
+      show "\<forall>V\<in>?slices. top1_homeomorphism_on V (subspace_topology ?E ?TE V) U (subspace_topology B TB U) ?p"
+        by (rule hslice_homeo)
+    qed
     thus "\<exists>U. b1 \<in> U \<and> top1_evenly_covered_on ?E ?TE B TB ?p U"
       using hb1_U by (by100 blast)
   qed
