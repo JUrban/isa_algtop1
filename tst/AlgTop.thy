@@ -3149,15 +3149,90 @@ proof -
     \<comment> \<open>Part 4: p maps each slice homeomorphically to U.\<close>
     have hslice_homeo: "\<forall>V \<in> ?slices.
         top1_homeomorphism_on V (subspace_topology ?E ?TE V) U (subspace_topology B TB U) ?p"
-      sorry \<comment> \<open>Book Step 4, Part 4 — deepest sorry.
-         (1) Surjection: p maps B(U,\\<alpha>) onto U. For x\\<in>U, path \\<delta> in U from \\<alpha>(1) to x,
-             then (\\<alpha>*\\<delta>)\\# \\<in> B(U,\\<alpha>) with p((\\<alpha>*\\<delta>)\\#) = x.
-         (2) Injection: p((\\<alpha>*\\<delta>1)\\#) = p((\\<alpha>*\\<delta>2)\\#) means \\<delta>1(1)=\\<delta>2(1).
-             By semilocal SC (hU\\_triv): \\<delta>1*rev(\\<delta>2) is a loop in U \\<simeq> const in B.
-             Then [\\<alpha>*\\<delta>1] = [\\<alpha>*\\<delta>2] (by hcoset\\_product\\_compat + hhtpy\\_class).
-         (3) Continuous: p restricted to V is continuous (from hp\\_cont + restriction).
-         (4) Open: p restricted to V maps V-open to U-open (from hp\\_open + restriction).
-         (5) Homeomorphism: bijective + continuous + open = homeomorphism.\<close>
+    proof (intro ballI)
+      fix V assume hV: "V \<in> ?slices"
+      then obtain \<alpha> where h\<alpha>_raw: "\<alpha> \<in> ?paths" "\<alpha> 1 = b1" "V = ?B_basis U \<alpha>"
+        by (by100 blast)
+      have h\<alpha>_paths: "\<alpha> \<in> ?paths" using h\<alpha>_raw(1) .
+      have h\<alpha>_Paths: "\<alpha> \<in> Paths" using h\<alpha>_paths hPaths_iff by simp
+      have hU_sub_B: "U \<subseteq> B"
+        using hU_open assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      \<comment> \<open>(1) Surjection: p maps V onto U.\<close>
+      have hpsurj: "?p ` V = U"
+      proof (rule equalityI)
+        \<comment> \<open>p(V) \\<subseteq> U: every element of V maps to U.\<close>
+        show "?p ` V \<subseteq> U"
+        proof (rule image_subsetI)
+          fix x assume "x \<in> V"
+          hence "x \<in> \<Union>?slices" using hV by (rule UnionI[rotated])
+          hence "x \<in> {x \<in> ?E. ?p x \<in> U}" using hpartition by simp
+          thus "?p x \<in> U" by (by100 blast)
+        qed
+      next
+        \<comment> \<open>U \\<subseteq> p(V): for each x \\<in> U, find preimage in V.\<close>
+        show "U \<subseteq> ?p ` V"
+        proof (rule subsetI)
+          fix x assume hx: "x \<in> U"
+          \<comment> \<open>Path \\<delta> in U from b1 to x.\<close>
+          from hU_pc[unfolded top1_path_connected_on_def, THEN conjunct2,
+              rule_format, OF hb1_U hx]
+          obtain \<delta> where h\<delta>: "top1_is_path_on U (subspace_topology B TB U) b1 x \<delta>"
+            by (by100 blast)
+          have h\<delta>_B: "top1_is_path_on B TB b1 x \<delta>"
+            using path_in_subspace_is_path_in_ambient'[OF hTB hU_sub_B h\<delta>] .
+          have h\<delta>_img: "\<delta> ` I_set \<subseteq> U"
+          proof -
+            from h\<delta> have "top1_continuous_map_on I_set I_top U (subspace_topology B TB U) \<delta>"
+              unfolding top1_is_path_on_def by (by100 blast)
+            thus ?thesis unfolding top1_continuous_map_on_def by (by100 blast)
+          qed
+          \<comment> \<open>(\\<alpha>*\\<delta>)\\# \\<in> B(U,\\<alpha>) = V.\<close>
+          have h\<delta>_ep: "\<delta> 0 = b1 \<and> \<delta> 1 = x"
+            using h\<delta>_B[unfolded top1_is_path_on_def] by (by100 blast)
+          have h\<delta>_1: "\<delta> 1 = x" using h\<delta>_ep by (by100 blast)
+          have h\<delta>_adj: "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
+            using h\<delta>_B h\<alpha>_raw(2) h\<delta>_1 by simp
+          have "?coset_class (top1_path_product \<alpha> \<delta>) \<in> ?B_basis U \<alpha>"
+            using h\<delta>_adj h\<delta>_img by (by5000 blast)
+          hence helem: "?coset_class (top1_path_product \<alpha> \<delta>) \<in> V" using h\<alpha>_raw(3) by simp
+          \<comment> \<open>p((\\<alpha>*\\<delta>)\\#) = (\\<alpha>*\\<delta>)(1) = \\<delta>(1) = x.\<close>
+          have h\<alpha>\<delta>_paths: "top1_path_product \<alpha> \<delta> \<in> ?paths"
+          proof -
+            have h\<alpha>_on: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>_paths by (by100 blast)
+            from top1_path_product_is_path[OF hTB h\<alpha>_on h\<delta>_adj]
+            have "top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)" .
+            moreover have "(top1_path_product \<alpha> \<delta>) 1 = \<delta> 1"
+              unfolding top1_path_product_def by simp
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have "?p (?coset_class (top1_path_product \<alpha> \<delta>)) = x"
+            using hp_class[rule_format, OF h\<alpha>\<delta>_paths] h\<delta>_1
+            unfolding top1_path_product_def by simp
+          thus "x \<in> ?p ` V" using helem by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>(2) Injection: p injective on V.\<close>
+      have hpinj: "inj_on ?p V"
+        sorry \<comment> \<open>p((\\<alpha>*\\<delta>1)\\#)=p((\\<alpha>*\\<delta>2)\\#) \\<Rightarrow> \\<delta>1(1)=\\<delta>2(1).
+           \\<delta>1*rev(\\<delta>2) loop in U. By semilocal SC: \\<delta>1*rev(\\<delta>2) \\<simeq> const in B.
+           Then [\\<alpha>*\\<delta>1]=[\\<alpha>*\\<delta>2], hence (\\<alpha>*\\<delta>1)\\#=(\\<alpha>*\\<delta>2)\\#.\<close>
+      have hbij: "bij_betw ?p V U" using hpinj hpsurj unfolding bij_betw_def by (by100 blast)
+      \<comment> \<open>(3) Continuous: p restricted to V.\<close>
+      have hpcont_V: "top1_continuous_map_on V (subspace_topology ?E ?TE V) U (subspace_topology B TB U) ?p"
+        sorry \<comment> \<open>From hp\\_cont: p continuous E\\<rightarrow>B. Restrict domain to V\\<subseteq>E, codomain to U.\<close>
+      \<comment> \<open>(4) Inverse continuous.\<close>
+      have hpinv_cont: "top1_continuous_map_on U (subspace_topology B TB U) V (subspace_topology ?E ?TE V)
+          (inv_into V ?p)"
+        sorry \<comment> \<open>From hp\\_open: p maps open to open. On V, p is bijective + open \\<Rightarrow> inverse continuous.\<close>
+      \<comment> \<open>Assembly.\<close>
+      have hV_top: "is_topology_on V (subspace_topology ?E ?TE V)"
+        sorry \<comment> \<open>Needs is\\_topology\\_on E TE (proved later as hTE\\_strict) + V \\<subseteq> E.\<close>
+      have hU_top: "is_topology_on U (subspace_topology B TB U)"
+        by (rule subspace_topology_is_topology_on[OF hTB hU_sub_B])
+      show "top1_homeomorphism_on V (subspace_topology ?E ?TE V) U (subspace_topology B TB U) ?p"
+        unfolding top1_homeomorphism_on_def
+        using hV_top hU_top hbij hpcont_V hpinv_cont by (by100 blast)
+    qed
     \<comment> \<open>Part 5: U is open in B.\<close>
     have hU_openin: "openin_on B TB U"
       unfolding openin_on_def using hU_open
