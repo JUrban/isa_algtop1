@@ -4558,9 +4558,13 @@ proof -
         also have "... = CosetClass (top1_constant_path b0)" using he0_CC .
         finally show ?thesis .
       qed
+      \<comment> \<open>class(\\<alpha>) = e0 \\<Rightarrow> \\<alpha> \\<in> class(const b0) \\<Rightarrow> [const*rev(\\<alpha>)] \\<in> H \\<Rightarrow> [\\<alpha>] \\<in> H.\<close>
+      \<comment> \<open>Then cls = induced([\\<gamma>]) = [p\\<circ>\\<gamma>] = [\\<alpha>] \\<in> H.\<close>
+      have h\<alpha>_cls_in_H: "{g. top1_loop_equiv_on B TB b0 ?\<alpha> g} \<in> H"
+        sorry \<comment> \<open>CosetClass(\\<alpha>) = CosetClass(const b0) \\<Rightarrow> CRel(const, \\<alpha>)
+           \\<Rightarrow> [const*rev(\\<alpha>)] \\<in> H \\<Rightarrow> invg([\\<alpha>]) \\<in> H \\<Rightarrow> [\\<alpha>] \\<in> H.\<close>
       show "cls \<in> H"
-        sorry \<comment> \<open>class(\\<alpha>) = e0 \\<Rightarrow> [\\<alpha>] \\<in> H (reverse of hclass\\_eq\\_e0).
-           Then cls = induced([\\<gamma>]) = [p\\<circ>\\<gamma>] = [\\<alpha>] \\<in> H.\<close>
+        sorry \<comment> \<open>cls = induced(p)(\\<gamma>\\_cls) = [p\\<circ>\\<gamma>] = [\\<alpha>].\<close>
     qed
   next
     \<comment> \<open>\\<supseteq>: If [\\<alpha>] \\<in> H (\\<alpha> loop at b0), then [\\<alpha>] \\<in> image.\<close>
