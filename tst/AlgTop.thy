@@ -3355,10 +3355,11 @@ proof -
           show ?thesis .
         qed
         \<comment> \<open>\\<alpha>*\\<delta>1 \\<simeq> \\<alpha>*\\<delta>2 via path\\_homotopic\\_product\\_left.\<close>
+        have h\<alpha>_on_b1: "top1_is_path_on B TB b0 b1 \<alpha>"
+          using h\<alpha>_on h\<alpha>_raw(2) by simp
         have h\<alpha>\<delta>_htpy: "top1_path_homotopic_on B TB b0 (\<delta>1 1)
             (top1_path_product \<alpha> \<delta>1) (top1_path_product \<alpha> \<delta>2)"
-          sorry \<comment> \<open>\\<alpha>*\\<delta>1 \\<simeq> \\<alpha>*\\<delta>2 from \\<delta>1 \\<simeq> \\<delta>2 via product\\_right.
-             OF chain unification failure — needs manual instantiation.\<close>
+          by (rule path_homotopic_product_right[OF hTB h\<delta>_htpy h\<alpha>_on_b1])
         \<comment> \<open>Endpoint adjustment for hhtpy\\_class.\<close>
         have h\<alpha>\<delta>_htpy': "top1_path_homotopic_on B TB b0 ((top1_path_product \<alpha> \<delta>1) 1)
             (top1_path_product \<alpha> \<delta>1) (top1_path_product \<alpha> \<delta>2)"
