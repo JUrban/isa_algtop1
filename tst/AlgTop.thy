@@ -1199,6 +1199,20 @@ proof -
   let ?TE = "{V. V \<subseteq> ?E \<and>
       (\<forall>c \<in> V. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and>
           ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V)}"
+  \<comment> \<open>===== Opaque wrappers to break let-opacity for automation =====\<close>
+  define Paths where "Paths = ?paths"
+  define CosetClass where "CosetClass f = ?coset_class f" for f
+  \<comment> \<open>Key bridge: let-bindings = defines.\<close>
+  have hPaths_iff: "\<And>f. f \<in> ?paths \<longleftrightarrow> f \<in> Paths" unfolding Paths_def by simp
+  have hCC_iff: "\<And>f. ?coset_class f = CosetClass f" unfolding CosetClass_def by simp
+  have hE_CC: "?E = CosetClass ` Paths" unfolding CosetClass_def Paths_def by simp
+  have he0_CC: "?e0 = CosetClass (top1_constant_path b0)" unfolding CosetClass_def by simp
+  \<comment> \<open>Membership in CosetClass via opaque terms.\<close>
+  have hCC_mem_iff: "\<And>f g. g \<in> CosetClass f \<longleftrightarrow> g \<in> ?coset_class f"
+    unfolding CosetClass_def by simp
+  \<comment> \<open>Paths membership.\<close>
+  have hPaths_mem: "\<And>f. f \<in> Paths \<longleftrightarrow> top1_is_path_on B TB b0 (f 1) f"
+    unfolding Paths_def by (by100 blast)
   \<comment> \<open>===== Step 1 (book): ?coset\\_rel is an equivalence relation =====\<close>
   have hcoset_refl: "\<forall>\<alpha> \<in> ?paths. ?coset_rel \<alpha> \<alpha>"
   proof (intro ballI)
@@ -2911,7 +2925,83 @@ proof -
       \<comment> \<open>\\<subseteq>: if \\<beta>\\# \\<in> p\\<inverse>(U) then \\<beta>(1)\\<in>U. Take \\<delta> in U from b1 to \\<beta>(1).
          Let \\<alpha> = \\<beta>*rev(\\<delta>). Then \\<beta>\\# = (\\<alpha>*\\<delta>)\\# \\<in> B(U,\\<alpha>) where \\<alpha>(1) = b1.\<close>
       show "{x \<in> ?E. ?p x \<in> U} \<subseteq> \<Union>?slices"
-        sorry \<comment> \<open>Uses: U path-connected, coset class properties, hhtpy\\_class.\<close>
+      proof (rule subsetI)
+        fix x assume hx: "x \<in> {x \<in> ?E. ?p x \<in> U}"
+        hence hx_E: "x \<in> ?E" and hp_x_U: "?p x \<in> U" by (by100 blast)+
+        \<comment> \<open>x = CosetClass(\\<beta>) for some \\<beta> \\<in> Paths. p(x) = \\<beta>(1) \\<in> U.\<close>
+        from hx_E obtain \<beta> where h\<beta>: "\<beta> \<in> Paths" "x = CosetClass \<beta>"
+          unfolding hE_CC by (by100 blast)
+        have h\<beta>_paths: "\<beta> \<in> ?paths" using h\<beta>(1) hPaths_iff by simp
+        have h\<beta>1_U: "\<beta> 1 \<in> U"
+        proof -
+          have "?p (CosetClass \<beta>) = ?p (?coset_class \<beta>)" using hCC_iff by simp
+          also have "... = \<beta> 1" using hp_class[rule_format, OF h\<beta>_paths] .
+          finally show ?thesis using hp_x_U h\<beta>(2) by simp
+        qed
+        \<comment> \<open>\\<delta> path in U from b1 to \\<beta>(1) (U path-connected).\<close>
+        have hU_sub_B: "U \<subseteq> B"
+          using hU_open assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+        from hU_pc[unfolded top1_path_connected_on_def, THEN conjunct2,
+            rule_format, OF hb1_U h\<beta>1_U]
+        obtain \<delta> where h\<delta>: "top1_is_path_on U (subspace_topology B TB U) b1 (\<beta> 1) \<delta>"
+          by (by100 blast)
+        have h\<delta>_B: "top1_is_path_on B TB b1 (\<beta> 1) \<delta>"
+          using path_in_subspace_is_path_in_ambient'[OF hTB hU_sub_B h\<delta>] .
+        \<comment> \<open>\\<alpha> = \\<beta>*rev(\\<delta>), a path from b0 to b1.\<close>
+        let ?\<alpha> = "top1_path_product \<beta> (top1_path_reverse \<delta>)"
+        have h\<beta>_on: "top1_is_path_on B TB b0 (\<beta> 1) \<beta>" using h\<beta>_paths by (by100 blast)
+        have hrev\<delta>: "top1_is_path_on B TB (\<beta> 1) b1 (top1_path_reverse \<delta>)"
+          using top1_path_reverse_is_path[OF h\<delta>_B] by simp
+        have h\<alpha>_on: "top1_is_path_on B TB b0 b1 ?\<alpha>"
+          using top1_path_product_is_path[OF hTB h\<beta>_on hrev\<delta>] .
+        have h\<delta>_0: "\<delta> 0 = b1" using h\<delta>_B unfolding top1_is_path_on_def by (by100 simp)
+        have h\<alpha>_ep: "?\<alpha> 1 = b1"
+          unfolding top1_path_product_def top1_path_reverse_def using h\<delta>_0 by simp
+        have h\<alpha>_Paths: "?\<alpha> \<in> Paths"
+          using h\<alpha>_on h\<alpha>_ep hPaths_mem by simp
+        \<comment> \<open>Need: x = CosetClass(\\<beta>) \\<in> B(U,\\<alpha>).
+           Equivalently: class(\\<alpha>*\\<delta>) = class(\\<beta>), and class(\\<alpha>*\\<delta>) \\<in> B(U,\\<alpha>).
+           The homotopy: (\\<beta>*rev(\\<delta>))*\\<delta> \\<simeq> \\<beta> (associativity + right inverse + right id).\<close>
+        have hhtpy: "top1_path_homotopic_on B TB b0 (\<beta> 1)
+            (top1_path_product ?\<alpha> \<delta>) \<beta>"
+          sorry \<comment> \<open>(\\<beta>*rev(\\<delta>))*\\<delta> \\<simeq> \\<beta>*(rev(\\<delta>)*\\<delta>) \\<simeq> \\<beta>*const \\<simeq> \\<beta>.
+             Standard chain: Theorem\\_51\\_2\\_associativity + invgerse\\_right + right\\_identity.\<close>
+        \<comment> \<open>\\<alpha>*\\<delta> \\<in> Paths.\<close>
+        have h\<alpha>\<delta>_on: "top1_is_path_on B TB b0 (\<beta> 1) (top1_path_product ?\<alpha> \<delta>)"
+          using top1_path_product_is_path[OF hTB h\<alpha>_on h\<delta>_B] .
+        have h\<delta>_1: "\<delta> 1 = \<beta> 1" using h\<delta>_B unfolding top1_is_path_on_def by (by100 simp)
+        have h\<alpha>\<delta>_ep: "(top1_path_product ?\<alpha> \<delta>) 1 = \<beta> 1"
+          unfolding top1_path_product_def using h\<delta>_1 by simp
+        have h\<alpha>\<delta>_Paths: "top1_path_product ?\<alpha> \<delta> \<in> Paths"
+          using h\<alpha>\<delta>_on h\<alpha>\<delta>_ep hPaths_mem by simp
+        \<comment> \<open>CosetClass(\\<alpha>*\\<delta>) = CosetClass(\\<beta>) via hhtpy\\_class.\<close>
+        have h\<alpha>\<delta>_paths: "top1_path_product ?\<alpha> \<delta> \<in> ?paths"
+          using h\<alpha>\<delta>_Paths hPaths_iff by simp
+        have hhtpy': "top1_path_homotopic_on B TB b0 ((top1_path_product ?\<alpha> \<delta>) 1)
+            (top1_path_product ?\<alpha> \<delta>) \<beta>"
+          using hhtpy h\<alpha>\<delta>_ep by simp
+        from hhtpy_class[rule_format, OF h\<alpha>\<delta>_paths h\<beta>_paths hhtpy']
+        have hcls: "CosetClass (top1_path_product ?\<alpha> \<delta>) = CosetClass \<beta>"
+          unfolding hCC_iff[symmetric] .
+        \<comment> \<open>CosetClass(\\<alpha>*\\<delta>) \\<in> B(U,\\<alpha>) since \\<delta> is a path in U from \\<alpha>(1)=b1.\<close>
+        have h\<delta>_img: "\<delta> ` I_set \<subseteq> U"
+        proof -
+          from h\<delta> have "top1_continuous_map_on I_set I_top U (subspace_topology B TB U) \<delta>"
+            unfolding top1_is_path_on_def by (by100 blast)
+          thus ?thesis unfolding top1_continuous_map_on_def by (by100 blast)
+        qed
+        have h\<delta>_1: "\<delta> 1 = \<beta> 1" using h\<delta>_B unfolding top1_is_path_on_def by (by100 simp)
+        have h\<delta>_adj: "top1_is_path_on B TB (?\<alpha> 1) (\<delta> 1) \<delta>"
+          using h\<delta>_B h\<alpha>_ep h\<delta>_1 by simp
+        have "?coset_class (top1_path_product ?\<alpha> \<delta>) \<in> ?B_basis U ?\<alpha>"
+          using h\<delta>_adj h\<delta>_img by (by5000 blast)
+        hence "CosetClass (top1_path_product ?\<alpha> \<delta>) \<in> ?B_basis U ?\<alpha>"
+          using hCC_iff by simp
+        hence "x \<in> ?B_basis U ?\<alpha>" using hcls h\<beta>(2) by simp
+        moreover have "?B_basis U ?\<alpha> \<in> ?slices"
+          using h\<alpha>_Paths hPaths_iff h\<alpha>_ep by (by100 blast)
+        ultimately show "x \<in> \<Union>?slices" by (rule UnionI[rotated])
+      qed
     qed
     \<comment> \<open>Part 2: distinct slices are disjoint.\<close>
     have hdisjoint: "\<forall>V1 \<in> ?slices. \<forall>V2 \<in> ?slices. V1 \<noteq> V2 \<longrightarrow> V1 \<inter> V2 = {}"
