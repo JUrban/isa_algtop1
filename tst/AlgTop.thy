@@ -4617,14 +4617,111 @@ proof -
           also have "... = ?coset_class ?\<beta>" by simp
           finally show ?thesis using h\<delta>x(3) by simp
         qed
-        show ?thesis
-          unfolding top1_is_path_on_def
-          using hfx_cont hfx_0 hfx_1
-          sorry \<comment> \<open>Assembly: conjI of cont+ep0+ep1. Let-opacity blocks blast.\<close>
+        \<comment> \<open>Assembly via define trick to avoid let-opacity.\<close>
+        define fx_loc where "fx_loc = ?f_x"
+        define a_loc where "a_loc = ?coset_class \<alpha>"
+        have h1: "top1_continuous_map_on I_set I_top ?E ?TE fx_loc"
+          using hfx_cont unfolding fx_loc_def by simp
+        have h2: "fx_loc 0 = a_loc"
+          using hfx_0 unfolding fx_loc_def a_loc_def by simp
+        have h3: "fx_loc 1 = x"
+          using hfx_1 unfolding fx_loc_def by simp
+        have "top1_is_path_on ?E ?TE a_loc x fx_loc"
+          using h1 h2 h3
+          unfolding top1_is_path_on_def fx_loc_def[symmetric] a_loc_def[symmetric]
+          by (by5000 auto)
+        thus ?thesis unfolding fx_loc_def a_loc_def by simp
       qed
       \<comment> \<open>f\\_y is a path in E from \\<alpha>\\# to y.\<close>
       have hfy_path_E: "top1_is_path_on ?E ?TE (?coset_class \<alpha>) y ?f_y"
-        sorry \<comment> \<open>Restriction+reparametrization of hlift\\_path[OF \\<alpha>*\\<delta>y].\<close>
+      proof -
+        let ?\<beta>y = "top1_path_product \<alpha> \<delta>y"
+        have h\<beta>y_path: "top1_is_path_on B TB b0 (\<delta>y 1) ?\<beta>y"
+          using top1_path_product_is_path[OF hTB h\<alpha>_path_pc h\<delta>y(1)] by (by100 blast)
+        have h\<beta>y_ep: "?\<beta>y 1 = \<delta>y 1" unfolding top1_path_product_def by (by100 simp)
+        have h\<beta>y_paths: "?\<beta>y \<in> ?paths" using h\<beta>y_path h\<beta>y_ep by (by100 simp)
+        let ?lifty = "\<lambda>c. ?coset_class (\<lambda>s. ?\<beta>y (s * c))"
+        from hlift_path h\<beta>y_paths
+        have "top1_is_path_on ?E ?TE ?e0 (?coset_class ?\<beta>y) ?lifty" by (by100 blast)
+        hence hlifty_cont: "top1_continuous_map_on I_set I_top ?E ?TE ?lifty"
+          unfolding top1_is_path_on_def by (by100 blast)
+        let ?\<phi> = "\<lambda>t::real. (1 + t) / 2"
+        have h\<phi>_I: "\<forall>t \<in> I_set. ?\<phi> t \<in> I_set"
+        proof (intro ballI)
+          fix t assume "t \<in> I_set"
+          thus "?\<phi> t \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        qed
+        have h\<phi>_cont_R: "continuous_on UNIV (\<lambda>t::real. (1 + t) / 2)"
+          by (intro continuous_intros, simp)
+        have h\<phi>_cont: "top1_continuous_map_on I_set I_top I_set I_top ?\<phi>"
+        proof -
+          have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+              I_set (subspace_topology UNIV top1_open_sets I_set) ?\<phi>"
+            apply (rule top1_continuous_map_on_real_subspace_open_sets)
+            using h\<phi>_I apply (by100 blast)
+            using h\<phi>_cont_R apply (by100 blast)
+            done
+          thus ?thesis unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+        qed
+        have hfy_cont: "top1_continuous_map_on I_set I_top ?E ?TE ?f_y"
+        proof -
+          from top1_continuous_map_on_comp[OF h\<phi>_cont hlifty_cont]
+          have "top1_continuous_map_on I_set I_top ?E ?TE (?lifty \<circ> ?\<phi>)" .
+          moreover have "(?lifty \<circ> ?\<phi>) = ?f_y" by (rule ext, simp)
+          ultimately show ?thesis by simp
+        qed
+        \<comment> \<open>Endpoint 0: class(prefix(\\<beta>y,1/2)) = class(\\<alpha>).\<close>
+        have hfy_0: "?f_y 0 = ?coset_class \<alpha>"
+        proof -
+          let ?prefy = "\<lambda>s. ?\<beta>y (s * (1/2))"
+          have "?f_y 0 = ?coset_class ?prefy" by simp
+          have h_half: "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have hprefy_paths: "?prefy \<in> ?paths"
+            using hprefix_path[rule_format, OF h\<beta>y_paths, rule_format, OF h_half] .
+          have hprefy_path: "top1_is_path_on B TB b0 (?prefy 1) ?prefy"
+            using hprefy_paths by (by100 blast)
+          have hprefy1_eq: "?prefy 1 = ?\<beta>y (1/2)" by simp
+          have hep: "?\<beta>y (1/2) = \<alpha> 1"
+            unfolding top1_path_product_def by (by100 simp)
+          have hprefy_path2: "top1_is_path_on B TB b0 (\<alpha> 1) ?prefy"
+            using hprefy_path hprefy1_eq hep by simp
+          have hagree: "\<forall>s \<in> I_set. ?prefy s = \<alpha> s"
+          proof (intro ballI)
+            fix s assume hs: "s \<in> I_set"
+            have "s * (1/2) \<le> 1/2" using hs unfolding top1_unit_interval_def by simp
+            thus "?prefy s = \<alpha> s"
+              unfolding top1_path_product_def by (by100 simp)
+          qed
+          have hhtpy0: "top1_path_homotopic_on B TB b0 (\<alpha> 1) ?prefy \<alpha>"
+            using paths_agree_on_I_path_homotopic[OF hTB hprefy_path2 hagree] .
+          have hhtpy: "top1_path_homotopic_on B TB b0 (?prefy 1) ?prefy \<alpha>"
+            using hhtpy0 hprefy1_eq hep by simp
+          have h\<alpha>_paths_mem: "\<alpha> \<in> ?paths" using h\<alpha>_pc .
+          have "?coset_class ?prefy = ?coset_class \<alpha>"
+            using hhtpy_class[rule_format, OF hprefy_paths h\<alpha>_paths_mem hhtpy] .
+          thus ?thesis by simp
+        qed
+        have hfy_1: "?f_y 1 = y"
+        proof -
+          have "?f_y 1 = ?coset_class (\<lambda>s. ?\<beta>y (s * 1))" by simp
+          also have "... = ?coset_class ?\<beta>y" by simp
+          finally show ?thesis using h\<delta>y(3) by simp
+        qed
+        \<comment> \<open>Assembly via define trick.\<close>
+        define fy_loc where "fy_loc = ?f_y"
+        define a_loc2 where "a_loc2 = ?coset_class \<alpha>"
+        have hh1: "top1_continuous_map_on I_set I_top ?E ?TE fy_loc"
+          using hfy_cont unfolding fy_loc_def by simp
+        have hh2: "fy_loc 0 = a_loc2"
+          using hfy_0 unfolding fy_loc_def a_loc2_def by simp
+        have hh3: "fy_loc 1 = y"
+          using hfy_1 unfolding fy_loc_def by simp
+        have "top1_is_path_on ?E ?TE a_loc2 y fy_loc"
+          using hh1 hh2 hh3
+          unfolding top1_is_path_on_def fy_loc_def[symmetric] a_loc2_def[symmetric]
+          by (by5000 auto)
+        thus ?thesis unfolding fy_loc_def a_loc2_def by simp
+      qed
       \<comment> \<open>f\\_x stays in B(U,\\<alpha>).\<close>
       have hfx_im: "\<forall>t \<in> I_set. ?f_x t \<in> ?BU"
       proof (intro ballI)
@@ -4716,13 +4813,120 @@ proof -
           using hclass_reparam h\<alpha>\<delta>xt_in_BU by simp
       qed
       have hfy_im: "\<forall>t \<in> I_set. ?f_y t \<in> ?BU"
-        sorry \<comment> \<open>Same argument as hfx\\_im for \\<delta>y.\<close>
+      proof (intro ballI)
+        fix t assume ht: "t \<in> I_set"
+        let ?cy = "(1 + t) / (2::real)"
+        let ?\<delta>y_t = "\<lambda>s::real. \<delta>y (s * t)"
+        have h\<delta>yt_path: "top1_is_path_on B TB (\<alpha> 1) (\<delta>y t) ?\<delta>y_t"
+        proof -
+          have hep0: "?\<delta>y_t 0 = \<alpha> 1"
+            using h\<delta>y(1) unfolding top1_is_path_on_def by (by100 simp)
+          have hep1: "?\<delta>y_t 1 = \<delta>y t" by simp
+          have h\<delta>y_cont: "top1_continuous_map_on I_set I_top B TB \<delta>y"
+            using h\<delta>y(1) unfolding top1_is_path_on_def by (by100 blast)
+          have hlin_cont: "continuous_on UNIV (\<lambda>s::real. s * t)"
+            by (rule continuous_on_mult_right[OF continuous_on_id])
+          have hlin_I: "\<forall>s \<in> I_set. s * t \<in> I_set"
+          proof (intro ballI)
+            fix s assume hs: "s \<in> I_set"
+            have "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by simp_all
+            have "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by simp_all
+            have "0 \<le> s * t" using \<open>0 \<le> s\<close> \<open>0 \<le> t\<close> by (by100 simp)
+            moreover have "s * t \<le> 1"
+              using \<open>0 \<le> s\<close> \<open>s \<le> 1\<close> \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by (simp add: mult_le_one)
+            ultimately show "s * t \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          qed
+          have hlin_top: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>s. s * t)"
+          proof -
+            have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+                I_set (subspace_topology UNIV top1_open_sets I_set) (\<lambda>s. s * t)"
+              apply (rule top1_continuous_map_on_real_subspace_open_sets)
+              using hlin_I apply (by100 blast)
+              using hlin_cont apply (by100 blast)
+              done
+            thus ?thesis unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+          qed
+          have "top1_continuous_map_on I_set I_top B TB ?\<delta>y_t"
+          proof -
+            from top1_continuous_map_on_comp[OF hlin_top h\<delta>y_cont]
+            have "top1_continuous_map_on I_set I_top B TB (\<delta>y \<circ> (\<lambda>s. s * t))" .
+            thus ?thesis unfolding comp_def .
+          qed
+          thus ?thesis unfolding top1_is_path_on_def using hep0 hep1 by (by100 blast)
+        qed
+        have h\<delta>yt_in_U: "?\<delta>y_t ` I_set \<subseteq> U"
+        proof (rule subsetI)
+          fix b assume "b \<in> ?\<delta>y_t ` I_set"
+          then obtain s where hs: "s \<in> I_set" "b = \<delta>y (s * t)" by (by100 blast)
+          have "s * t \<in> I_set" using hs(1) ht
+            unfolding top1_unit_interval_def by (simp add: mult_le_one)
+          hence "\<delta>y (s * t) \<in> \<delta>y ` I_set" by (by100 blast)
+          thus "b \<in> U" using hs(2) h\<delta>y(2) by (by100 blast)
+        qed
+        have hclass_reparamy: "?coset_class (\<lambda>s. (top1_path_product \<alpha> \<delta>y) (s * ?cy)) =
+            ?coset_class (top1_path_product \<alpha> ?\<delta>y_t)"
+          sorry \<comment> \<open>Reparametrization homotopy (same as hclass\\_reparam).\<close>
+        have h\<alpha>\<delta>yt_in_BU: "?coset_class (top1_path_product \<alpha> ?\<delta>y_t) \<in> ?BU"
+        proof -
+          define CC_op2 where "CC_op2 f = ?coset_class f" for f
+          have hCC_op2: "\<And>f. CC_op2 f = ?coset_class f" unfolding CC_op2_def by simp
+          define BU_op2 where "BU_op2 = {CC_op2 (top1_path_product \<alpha> \<delta>) |
+              \<delta>. top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta> \<and> \<delta> ` I_set \<subseteq> U}"
+          have hBU_eq2: "BU_op2 = ?BU" unfolding BU_op2_def CC_op2_def by simp
+          define \<delta>_wity where "\<delta>_wity = ?\<delta>y_t"
+          have h_wit_pathy: "top1_is_path_on B TB (\<alpha> 1) (\<delta>_wity 1) \<delta>_wity"
+            using h\<delta>yt_path unfolding \<delta>_wity_def by simp
+          have h_wit_Uy: "\<delta>_wity ` I_set \<subseteq> U"
+            using h\<delta>yt_in_U unfolding \<delta>_wity_def by simp
+          have "CC_op2 (top1_path_product \<alpha> \<delta>_wity) \<in> BU_op2"
+            unfolding BU_op2_def using h_wit_pathy h_wit_Uy by (by100 blast)
+          hence "CC_op2 (top1_path_product \<alpha> ?\<delta>y_t) \<in> BU_op2"
+            unfolding \<delta>_wity_def by simp
+          thus ?thesis using hBU_eq2 hCC_op2 by simp
+        qed
+        show "?f_y t \<in> ?BU"
+          using hclass_reparamy h\<alpha>\<delta>yt_in_BU by simp
+      qed
       \<comment> \<open>Lift f\\_x to B(U,\\<alpha>) subspace: continuous + image in B(U,\\<alpha>).\<close>
       \<comment> \<open>Restrict to B(U,\\<alpha>) subspace using continuous\\_map\\_restrict\\_codomain.\<close>
+      \<comment> \<open>Helper: path in ambient that stays in subspace \\<Rightarrow> path in subspace.\<close>
+      have hpath_to_subspace: "\<And>W a' b' f'. top1_is_path_on ?E ?TE a' b' f' \<Longrightarrow>
+          W \<subseteq> ?E \<Longrightarrow> (\<forall>t \<in> I_set. f' t \<in> W) \<Longrightarrow> a' \<in> W \<Longrightarrow> b' \<in> W \<Longrightarrow>
+          top1_is_path_on W (subspace_topology ?E ?TE W) a' b' f'"
+      proof -
+        fix W and a' b' f'
+        assume hpath: "top1_is_path_on ?E ?TE a' b' f'"
+            and hW: "W \<subseteq> ?E" and him: "\<forall>t \<in> I_set. f' t \<in> W"
+            and ha: "a' \<in> W" and hb: "b' \<in> W"
+        have hcont: "top1_continuous_map_on I_set I_top ?E ?TE f'"
+          using hpath unfolding top1_is_path_on_def by (by100 blast)
+        have hcont_W: "top1_continuous_map_on I_set I_top W (subspace_topology ?E ?TE W) f'"
+          using continuous_map_restrict_codomain[OF hcont him hW] .
+        have hep0: "f' 0 = a'" using hpath unfolding top1_is_path_on_def by (by100 blast)
+        have hep1: "f' 1 = b'" using hpath unfolding top1_is_path_on_def by (by100 blast)
+        show "top1_is_path_on W (subspace_topology ?E ?TE W) a' b' f'"
+        proof -
+          define W_loc where "W_loc = W"
+          define f_loc where "f_loc = f'"
+          have "top1_continuous_map_on I_set I_top W_loc (subspace_topology ?E ?TE W_loc) f_loc"
+            using hcont_W unfolding W_loc_def f_loc_def by simp
+          moreover have "f_loc 0 = a'" using hep0 unfolding f_loc_def by simp
+          moreover have "f_loc 1 = b'" using hep1 unfolding f_loc_def by simp
+          ultimately have "top1_is_path_on W_loc (subspace_topology ?E ?TE W_loc) a' b' f_loc"
+            unfolding top1_is_path_on_def
+            unfolding top1_unit_interval_def[symmetric] top1_unit_interval_topology_def[symmetric]
+            by (by100 auto)
+          thus ?thesis unfolding W_loc_def f_loc_def by simp
+        qed
+      qed
+      have h\<alpha>_in_BU: "?coset_class \<alpha> \<in> ?BU"
+        using hbasis[rule_format, OF h\<alpha>_pc hU_pc h\<alpha>1_pc] .
+      have hx_in_BU: "x \<in> ?BU" using hx .
+      have hy_in_BU: "y \<in> ?BU" using hy .
       have hfx_path_BU: "top1_is_path_on ?BU ?TE_BU (?coset_class \<alpha>) x ?f_x"
-        sorry \<comment> \<open>From hfx\\_path\\_E + hfx\\_im via codomain restriction.\<close>
+        using hpath_to_subspace[OF hfx_path_E hBU_sub_E hfx_im h\<alpha>_in_BU hx_in_BU] .
       have hfy_path_BU: "top1_is_path_on ?BU ?TE_BU (?coset_class \<alpha>) y ?f_y"
-        sorry \<comment> \<open>From hfy\\_path\\_E + hfy\\_im via codomain restriction.\<close>
+        using hpath_to_subspace[OF hfy_path_E hBU_sub_E hfy_im h\<alpha>_in_BU hy_in_BU] .
       \<comment> \<open>rev(f\\_x) * f\\_y: path from x to y in B(U,\\<alpha>).\<close>
       have hrev_fx: "top1_is_path_on ?BU ?TE_BU x (?coset_class \<alpha>) (top1_path_reverse ?f_x)"
         using top1_path_reverse_is_path[OF hfx_path_BU] by simp
