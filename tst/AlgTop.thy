@@ -3262,7 +3262,41 @@ proof -
         \<comment> \<open>\\<delta>1*rev(\\<delta>2) is a loop in U (both \\<delta>1 and rev(\\<delta>2) have images in U).\<close>
         have h\<delta>1rev\<delta>2_loop_U: "top1_is_loop_on U (subspace_topology B TB U) b1
             (top1_path_product \<delta>1 (top1_path_reverse \<delta>2))"
-          sorry \<comment> \<open>\\<delta>1`I \\<subseteq> U, rev(\\<delta>2)`I \\<subseteq> U, product stays in U. Loop at b1.\<close>
+        proof -
+          have hU_top: "is_topology_on U (subspace_topology B TB U)"
+            by (rule subspace_topology_is_topology_on[OF hTB hU_sub_B])
+          \<comment> \<open>\\<delta>1 as path in U (subspace).\<close>
+          have h\<delta>1_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology B TB U) \<delta>1"
+          proof (rule continuous_map_restrict_codomain)
+            show "top1_continuous_map_on I_set I_top B TB \<delta>1"
+              using h\<delta>1_adj unfolding top1_is_path_on_def by (by100 blast)
+            show "\<forall>s \<in> I_set. \<delta>1 s \<in> U" using h\<delta>1(2) by (by100 blast)
+            show "U \<subseteq> B" using hU_sub_B .
+          qed
+          have h\<delta>1_0: "\<delta>1 0 = b1" using h\<delta>1_adj[unfolded top1_is_path_on_def] by (by100 blast)
+          have h\<delta>1_U: "top1_is_path_on U (subspace_topology B TB U) b1 (\<delta>1 1) \<delta>1"
+            unfolding top1_is_path_on_def using h\<delta>1_cont_U h\<delta>1_0 by (by100 blast)
+          \<comment> \<open>rev(\\<delta>2) as path in U (subspace).\<close>
+          have h\<delta>2_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology B TB U) \<delta>2"
+          proof (rule continuous_map_restrict_codomain)
+            show "top1_continuous_map_on I_set I_top B TB \<delta>2"
+              using h\<delta>2_adj unfolding top1_is_path_on_def by (by100 blast)
+            show "\<forall>s \<in> I_set. \<delta>2 s \<in> U" using h\<delta>2(2) by (by100 blast)
+            show "U \<subseteq> B" using hU_sub_B .
+          qed
+          have h\<delta>2_0: "\<delta>2 0 = b1" using h\<delta>2_adj[unfolded top1_is_path_on_def] by (by100 blast)
+          have h\<delta>2_U: "top1_is_path_on U (subspace_topology B TB U) b1 (\<delta>2 1) \<delta>2"
+            unfolding top1_is_path_on_def using h\<delta>2_cont_U h\<delta>2_0 by (by100 blast)
+          have hrev\<delta>2_U: "top1_is_path_on U (subspace_topology B TB U) (\<delta>2 1) b1 (top1_path_reverse \<delta>2)"
+            using top1_path_reverse_is_path[OF h\<delta>2_U] by simp
+          have hrev\<delta>2_U': "top1_is_path_on U (subspace_topology B TB U) (\<delta>1 1) b1 (top1_path_reverse \<delta>2)"
+            using hrev\<delta>2_U hep_eq by simp
+          \<comment> \<open>Product: \\<delta>1 * rev(\\<delta>2) as path in U.\<close>
+          from top1_path_product_is_path[OF hU_top h\<delta>1_U hrev\<delta>2_U']
+          have "top1_is_path_on U (subspace_topology B TB U) b1 b1
+              (top1_path_product \<delta>1 (top1_path_reverse \<delta>2))" .
+          thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+        qed
         \<comment> \<open>By semilocal SC: \\<delta>1*rev(\\<delta>2) \\<simeq> const in B.\<close>
         have h\<delta>1rev\<delta>2_triv: "top1_path_homotopic_on B TB b1 b1
             (top1_path_product \<delta>1 (top1_path_reverse \<delta>2)) (top1_constant_path b1)"
