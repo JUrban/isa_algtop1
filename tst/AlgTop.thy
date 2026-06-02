@@ -6371,14 +6371,19 @@ proof -
     let ?C = "\<lambda>i::nat. {(x::real, y::real). x^2 + (y - real (Suc i))^2 = (real (Suc i))^2}"
     let ?p = "(0::real, 0::real)"
     let ?X = "\<Union>i \<in> {..<?n}. ?C i"
-    let ?TX = "subspace_topology (UNIV :: (real \<times> real) set) top1_euclidean_topology_R2 ?X"
+    let ?TX = "subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) ?X"
     \<comment> \<open>p \\<in> each C(i): check (0,0) satisfies x^2 + (0-Suc i)^2 = (Suc i)^2.\<close>
     have hp_in_C: "\<forall>i \<in> {..<?n}. ?p \<in> ?C i"
-      sorry \<comment> \<open>0^2 + (0 - Suc i)^2 = (Suc i)^2. Arithmetic.\<close>
+    proof (intro ballI)
+      fix i assume "i \<in> {..<?n}"
+      have "(0::real)^2 + ((0::real) - real (Suc i))^2 = (real (Suc i))^2"
+        using power2_minus[of "real (Suc i)"] by (by100 simp)
+      thus "?p \<in> ?C i" by (by100 simp)
+    qed
     have hp_in_X: "?p \<in> ?X" using hp_in_C hn_pos by (by100 blast)
     \<comment> \<open>Each C(i) is homeomorphic to S1.\<close>
     have hC_homeo: "\<forall>i \<in> {..<?n}. \<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
-        (?C i) (subspace_topology (UNIV :: (real \<times> real) set) top1_euclidean_topology_R2 (?C i)) h"
+        (?C i) (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (?C i)) h"
       sorry \<comment> \<open>Translation + scaling homeomorphism S1 \\<rightarrow> C(i).\<close>
     \<comment> \<open>Circles intersect only at p.\<close>
     have hC_inter: "\<forall>i \<in> {..<?n}. \<forall>j \<in> {..<?n}. i \<noteq> j \<longrightarrow> ?C i \<inter> ?C j = {?p}"
@@ -6387,9 +6392,27 @@ proof -
     have hC_union: "(\<Union>i \<in> {..<?n}. ?C i) = ?X" by simp
     \<comment> \<open>Strict topology, Hausdorff (subspace of R2).\<close>
     have hX_strict: "is_topology_on_strict ?X ?TX"
-      sorry \<comment> \<open>Subspace of R2 is strict (T1 separable).\<close>
+    proof -
+      have "is_topology_on_strict (UNIV :: (real \<times> real) set)
+          (product_topology_on top1_open_sets top1_open_sets)"
+      proof (rule hausdorff_strict_is_strict[OF top1_R2_is_hausdorff])
+        show "product_topology_on top1_open_sets top1_open_sets \<subseteq> Pow (UNIV :: (real \<times> real) set)"
+          by (by100 blast)
+      qed
+      from subspace_topology_is_strict[OF this]
+      show ?thesis by (by100 blast)
+    qed
     have hX_haus: "is_hausdorff_on ?X ?TX"
-      sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff.\<close>
+    proof -
+      have "is_hausdorff_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        by (rule top1_R2_is_hausdorff)
+      from conjunct2[OF conjunct2[OF Theorem_17_11]]
+      have "\<forall>X T Y. is_hausdorff_on X T \<and> Y \<subseteq> X \<longrightarrow>
+          is_hausdorff_on Y (subspace_topology X T Y)" .
+      hence "is_hausdorff_on ?X (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) ?X)"
+        using \<open>is_hausdorff_on UNIV _\<close> by (by100 blast)
+      thus ?thesis by simp
+    qed
     \<comment> \<open>Coherent topology: closed iff closed in each C(i).\<close>
     have hX_coh: "\<forall>D. D \<subseteq> ?X \<longrightarrow>
         (closedin_on ?X ?TX D \<longleftrightarrow>
@@ -6399,7 +6422,7 @@ proof -
     \<comment> \<open>Subspace topology on C(i) in X = subspace topology on C(i) in R2.\<close>
     have hC_sub_topo: "\<forall>i \<in> {..<?n}.
         subspace_topology ?X ?TX (?C i) =
-        subspace_topology (UNIV :: (real \<times> real) set) top1_euclidean_topology_R2 (?C i)"
+        subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (?C i)"
       sorry \<comment> \<open>Transitivity of subspace topology: C(i) \\<subseteq> X \\<subseteq> R2.\<close>
     \<comment> \<open>Assembly.\<close>
     have "top1_is_wedge_of_circles_on ?X ?TX {..<?n} ?p"
