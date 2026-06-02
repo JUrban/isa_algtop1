@@ -2796,11 +2796,44 @@ proof -
         qed
       qed
     qed
+    \<comment> \<open>Finite intersection: use define to make the predicate induction-friendly.\<close>
+    define TE_mem where "TE_mem V \<longleftrightarrow> V \<in> ?TE" for V
+    have hinter_TE: "\<forall>F. finite F \<and> F \<noteq> {} \<and> (\<forall>V \<in> F. TE_mem V) \<longrightarrow> TE_mem (\<Inter>F)"
+    proof (intro allI impI)
+      fix F assume hF: "finite F \<and> F \<noteq> {} \<and> (\<forall>V \<in> F. TE_mem V)"
+      hence hfin: "finite F" and hne: "F \<noteq> {}" and hsub: "\<forall>V \<in> F. TE_mem V"
+        by (by100 blast)+
+      from hfin hne hsub show "TE_mem (\<Inter>F)"
+      proof (induction F rule: finite_induct)
+        case empty thus ?case by simp
+      next
+        case (insert x F)
+        show ?case
+        proof (cases "F = {}")
+          case True thus ?thesis using insert.prems by simp
+        next
+          case False
+          have "TE_mem x" using insert.prems by (by100 blast)
+          have "TE_mem (\<Inter>F)" using insert.IH False insert.prems by (by100 blast)
+          have "\<Inter>(insert x F) = x \<inter> \<Inter>F" using insert.hyps by (by100 simp)
+          moreover have "TE_mem (x \<inter> \<Inter>F)"
+          proof -
+            have hbin: "\<forall>V1 V2. TE_mem V1 \<longrightarrow> TE_mem V2 \<longrightarrow> TE_mem (V1 \<inter> V2)"
+              using hinter_binary unfolding TE_mem_def by (by100 blast)
+            from hbin[rule_format, OF \<open>TE_mem x\<close> \<open>TE_mem (\<Inter>F)\<close>]
+            show ?thesis .
+          qed
+          ultimately show ?thesis by simp
+        qed
+      qed
+    qed
     have hinter: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TE \<longrightarrow> \<Inter>F \<in> ?TE"
-      sorry \<comment> \<open>From hinter\\_binary by finite induction.
-         BLOCKED: finite\\_induct can't handle let-bound TE predicate.
-         Standard: \\<Inter>(insert x F) = x \\<inter> \\<Inter>F. Induction on card(F).
-         BLOCKED by finite\\_induct not handling let-bound predicate.\<close>
+    proof (intro allI impI)
+      fix F assume "finite F \<and> F \<noteq> {} \<and> F \<subseteq> ?TE"
+      hence "finite F" "F \<noteq> {}" "\<forall>V \<in> F. TE_mem V" unfolding TE_mem_def by (by100 blast)+
+      hence "TE_mem (\<Inter>F)" using hinter_TE by (by100 blast)
+      thus "\<Inter>F \<in> ?TE" unfolding TE_mem_def .
+    qed
     have hstrict: "?TE \<subseteq> Pow ?E" by (by100 blast)
     show ?thesis unfolding is_topology_on_strict_def is_topology_on_def
       using hempty hfull hunion hinter hstrict by (by100 blast)
