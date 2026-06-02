@@ -2717,7 +2717,16 @@ proof -
               by (by100 blast)
             \<comment> \<open>\\<delta> path in B with image in U \\<Rightarrow> \\<delta> path in U subspace.\<close>
             have "top1_is_path_on U (subspace_topology B TB U) (\<alpha> 1) x \<delta>"
-              sorry \<comment> \<open>continuous\\_map\\_restrict\\_codomain + endpoint preservation.\<close>
+            proof -
+              have hcont: "top1_continuous_map_on I_set I_top B TB \<delta>"
+                using \<open>top1_is_path_on B TB (\<alpha> 1) x \<delta>\<close> unfolding top1_is_path_on_def by (by100 blast)
+              have him: "\<forall>s \<in> I_set. \<delta> s \<in> U" using \<open>\<delta> ` I_set \<subseteq> U\<close> by (by100 blast)
+              from continuous_map_restrict_codomain[OF hcont him hU_sub_B]
+              have "top1_continuous_map_on I_set I_top U (subspace_topology B TB U) \<delta>" .
+              moreover have "\<delta> 0 = \<alpha> 1" and "\<delta> 1 = x"
+                using \<open>top1_is_path_on B TB (\<alpha> 1) x \<delta>\<close> unfolding top1_is_path_on_def by (by100 blast)+
+              ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+            qed
             thus "x \<in> {y. \<exists>f. top1_is_path_on U (subspace_topology B TB U) (\<alpha> 1) y f}"
               by (by100 blast)
           next
@@ -2728,9 +2737,26 @@ proof -
             hence "top1_is_path_on B TB (\<alpha> 1) x \<delta>"
               by (rule path_in_subspace_is_path_in_ambient[OF hTB hU_sub_B])
             moreover have "\<delta> ` I_set \<subseteq> U"
-              sorry \<comment> \<open>Path in subspace has image in U.\<close>
+            proof -
+              have "top1_continuous_map_on I_set I_top U (subspace_topology B TB U) \<delta>"
+                using \<open>top1_is_path_on U (subspace_topology B TB U) (\<alpha> 1) x \<delta>\<close>
+                unfolding top1_is_path_on_def by (by100 blast)
+              thus ?thesis unfolding top1_continuous_map_on_def by (by100 blast)
+            qed
             moreover have "x \<in> U"
-              sorry \<comment> \<open>Endpoint of path in U is in U.\<close>
+            proof -
+              have "\<delta> 1 = x" using \<open>top1_is_path_on U (subspace_topology B TB U) (\<alpha> 1) x \<delta>\<close>
+                unfolding top1_is_path_on_def by (by100 blast)
+              moreover have "\<delta> 1 \<in> U"
+              proof -
+                have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                moreover have "top1_continuous_map_on I_set I_top U (subspace_topology B TB U) \<delta>"
+                  using \<open>top1_is_path_on U (subspace_topology B TB U) (\<alpha> 1) x \<delta>\<close>
+                  unfolding top1_is_path_on_def by (by100 blast)
+                ultimately show ?thesis unfolding top1_continuous_map_on_def by (by100 blast)
+              qed
+              ultimately show ?thesis by simp
+            qed
             ultimately show "x \<in> ?W" using hW_eq by (by5000 simp) (by100 blast)
           qed
         qed
