@@ -2813,7 +2813,24 @@ proof -
   \<comment> \<open>Helper: prefix path \\<alpha>\\_c(t) = \\<alpha>(tc). For \\<alpha> \\<in> paths, \\<alpha>\\_c \\<in> paths.\<close>
   have hprefix_path: "\<forall>\<alpha> \<in> ?paths. \<forall>c \<in> I_set.
       (\<lambda>t. \<alpha> (t * c)) \<in> ?paths"
-    sorry \<comment> \<open>\\<alpha>\\_c continuous (composition), \\<alpha>\\_c(0) = \\<alpha>(0) = b0, \\<alpha>\\_c(1) = \\<alpha>(c).\<close>
+  proof (intro ballI)
+    fix \<alpha> c assume h\<alpha>: "\<alpha> \<in> ?paths" and hc: "c \<in> I_set"
+    have h\<alpha>_path: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha> by (by100 blast)
+    have h\<alpha>_cont: "top1_continuous_map_on I_set I_top B TB \<alpha>"
+      using h\<alpha>_path unfolding top1_is_path_on_def by (by100 blast)
+    \<comment> \<open>Endpoints: \\<alpha>\\_c(0) = \\<alpha>(0) = b0, \\<alpha>\\_c(1) = \\<alpha>(c).\<close>
+    have hep0: "(\<lambda>t. \<alpha> (t * c)) 0 = b0"
+      using h\<alpha>_path unfolding top1_is_path_on_def by (by100 simp)
+    have hep1: "(\<lambda>t. \<alpha> (t * c)) 1 = \<alpha> c" by simp
+    \<comment> \<open>Continuity: composition of \\<alpha> (continuous I\\<rightarrow>B) with t\\<mapsto>tc (continuous I\\<rightarrow>I).\<close>
+    have h_cont_prefix: "top1_continuous_map_on I_set I_top B TB (\<lambda>t. \<alpha> (t * c))"
+      sorry \<comment> \<open>Composition: t\\<mapsto>tc continuous I\\<rightarrow>I + \\<alpha> continuous I\\<rightarrow>B.\<close>
+    \<comment> \<open>\\<alpha>\\_c(1) = \\<alpha>(c). Need \\<alpha>(c) as the formal endpoint.\<close>
+    have "top1_is_path_on B TB b0 (\<alpha> c) (\<lambda>t. \<alpha> (t * c))"
+      using h_cont_prefix hep0 hep1 unfolding top1_is_path_on_def by (by100 blast)
+    moreover have "(\<lambda>t. \<alpha> (t * c)) 1 = \<alpha> c" by simp
+    ultimately show "(\<lambda>t. \<alpha> (t * c)) \<in> ?paths" by (by100 simp)
+  qed
   \<comment> \<open>Helper: the lift \\<tilde>\\<alpha>(c) = class(\\<alpha>\\_c) is a path in (E,TE) from e0 to class(\\<alpha>).\<close>
   have hlift_path: "\<forall>\<alpha> \<in> ?paths.
       top1_is_path_on ?E ?TE ?e0 (?coset_class \<alpha>) (\<lambda>c. ?coset_class (\<lambda>t. \<alpha> (t * c)))"
