@@ -2580,9 +2580,9 @@ proof -
           using hp_class[rule_format, OF h\<alpha>(1)] h\<alpha>(2) hpc_V by (by100 simp)
         show "\<exists>U \<alpha>'. U \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U \<and> ?coset_class \<alpha>' = c
             \<and> ?B_basis U \<alpha>' \<subseteq> {c \<in> ?E. ?p c \<in> V}"
-          using hV h\<alpha> h\<alpha>1_V \<open>?B_basis V \<alpha> \<subseteq> _\<close> sorry
+          using hV h\<alpha> h\<alpha>1_V \<open>?B_basis V \<alpha> \<subseteq> _\<close> by (by5000 simp) (by100 blast)
       qed
-      thus ?thesis using hsub sorry
+      thus ?thesis using hsub by (by5000 simp)
     qed
   qed
   have hp_open: "\<forall>U \<in> ?TE. ?p ` U \<in> TB"
@@ -2662,9 +2662,9 @@ proof -
           ultimately show ?thesis by (by100 blast)
         qed
         show "\<exists>U \<alpha>'. U \<in> TB \<and> \<alpha>' \<in> ?paths \<and> \<alpha>' 1 \<in> U \<and> ?coset_class \<alpha>' = c \<and> ?B_basis U \<alpha>' \<subseteq> ?E"
-          using hB_open h\<alpha> h\<alpha>1_B \<open>?B_basis B \<alpha> \<subseteq> ?E\<close> sorry
+          using hB_open h\<alpha> h\<alpha>1_B \<open>?B_basis B \<alpha> \<subseteq> ?E\<close> by (by5000 simp) (by100 blast)
       qed
-      thus ?thesis using hE_sub_E sorry
+      thus ?thesis using hE_sub_E by (by5000 simp)
     qed
     have hunion: "\<forall>U. U \<subseteq> ?TE \<longrightarrow> \<Union>U \<in> ?TE"
     proof (intro allI impI)
@@ -2688,7 +2688,7 @@ proof -
           moreover have "?B_basis U' \<alpha>' \<subseteq> \<Union>Uc"
             using \<open>?B_basis U' \<alpha>' \<subseteq> V\<close> \<open>V \<in> Uc\<close> by (by100 blast)
           ultimately show "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c
-              \<and> ?B_basis U \<alpha> \<subseteq> \<Union>Uc" sorry
+              \<and> ?B_basis U \<alpha> \<subseteq> \<Union>Uc" by (by5000 simp) (by100 blast)
         qed
         ultimately show ?thesis by (by100 blast)
       qed
@@ -2787,7 +2787,7 @@ proof -
           have h\<alpha>1_inter: "\<alpha>1 1 \<in> U1 \<inter> U2" using hU1(3) h\<alpha>1_U2 by (by100 blast)
           show "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c
               \<and> ?B_basis U \<alpha> \<subseteq> V1 \<inter> V2"
-            using hW hU1(2) h\<alpha>1_inter hU1(4) hU1(5)
+            using hW hU1(2) h\<alpha>1_inter hU1(4)
                 \<open>?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1 \<inter> V2\<close> sorry
         qed
       qed
