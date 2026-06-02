@@ -2588,8 +2588,65 @@ proof -
   \<comment> \<open>Helper: p(B(U,\\<alpha>)) = path-component of \\<alpha>(1) in U.\<close>
   have hp_basis_image: "\<forall>\<alpha> \<in> ?paths. \<forall>U \<in> TB. \<alpha> 1 \<in> U \<longrightarrow>
       ?p ` (?B_basis U \<alpha>) = {x \<in> U. \<exists>\<delta>. top1_is_path_on B TB (\<alpha> 1) x \<delta> \<and> \<delta> ` I_set \<subseteq> U}"
-    sorry \<comment> \<open>Forward: p(class(\\<alpha>*\\<delta>)) = \\<delta>(1) \\<in> U via hp\\_class + path\\_product\\_at\\_end.
-       Backward: for x reachable from \\<alpha>(1) in U, \\<exists>\\<delta> with (\\<alpha>*\\<delta>)\\# \\<in> B and p = x.\<close>
+  proof (intro ballI impI, rule set_eqI, rule iffI)
+    \<comment> \<open>Forward: x \\<in> p(B(U,\\<alpha>)) \\<Rightarrow> x \\<in> RHS.\<close>
+    fix \<alpha> U x assume h\<alpha>: "\<alpha> \<in> ?paths" and hU: "U \<in> TB" and h\<alpha>U: "\<alpha> 1 \<in> U"
+        and hx: "x \<in> ?p ` (?B_basis U \<alpha>)"
+    from hx obtain cls where hcls: "cls \<in> ?B_basis U \<alpha>" "x = ?p cls" by (by100 blast)
+    from hcls(1) obtain \<delta> where h\<delta>: "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
+        "\<delta> ` I_set \<subseteq> U" "cls = ?coset_class (top1_path_product \<alpha> \<delta>)" by (by100 blast)
+    \<comment> \<open>p(cls) = \\<delta>(1) \\<in> U.\<close>
+    have h\<alpha>\<delta>_path: "top1_path_product \<alpha> \<delta> \<in> ?paths"
+    proof -
+      have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha> by (by100 blast)
+      from top1_path_product_is_path[OF hTB this h\<delta>(1)]
+      have "top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)" .
+      moreover have "top1_path_product \<alpha> \<delta> 1 = \<delta> 1" by (rule top1_path_product_at_end)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have "x = \<delta> 1"
+      using hcls(2) h\<delta>(3) hp_class[rule_format, OF h\<alpha>\<delta>_path]
+            top1_path_product_at_end[of \<alpha> \<delta>] by simp
+    moreover have "\<delta> 1 \<in> U"
+    proof -
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      thus ?thesis using h\<delta>(2) by (by100 blast)
+    qed
+    ultimately show "x \<in> {x \<in> U. \<exists>\<delta>. top1_is_path_on B TB (\<alpha> 1) x \<delta> \<and> \<delta> ` I_set \<subseteq> U}"
+      using h\<delta> by (by100 blast)
+  next
+    \<comment> \<open>Backward: x \\<in> RHS \\<Rightarrow> x \\<in> p(B(U,\\<alpha>)).\<close>
+    fix \<alpha> U x assume h\<alpha>: "\<alpha> \<in> ?paths" and hU: "U \<in> TB" and h\<alpha>U: "\<alpha> 1 \<in> U"
+        and hx: "x \<in> {x \<in> U. \<exists>\<delta>. top1_is_path_on B TB (\<alpha> 1) x \<delta> \<and> \<delta> ` I_set \<subseteq> U}"
+    from hx obtain \<delta> where h\<delta>: "top1_is_path_on B TB (\<alpha> 1) x \<delta>" "\<delta> ` I_set \<subseteq> U" by (by100 blast)
+    \<comment> \<open>class(\\<alpha>*\\<delta>) \\<in> B(U,\\<alpha>) and p(class(\\<alpha>*\\<delta>)) = \\<delta>(1) = x.\<close>
+    have h\<alpha>\<delta>_path: "top1_path_product \<alpha> \<delta> \<in> ?paths"
+    proof -
+      have "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha> by (by100 blast)
+      from top1_path_product_is_path[OF hTB this h\<delta>(1)]
+      have "top1_is_path_on B TB b0 (x) (top1_path_product \<alpha> \<delta>)" .
+      moreover have "top1_path_product \<alpha> \<delta> 1 = x"
+        using top1_path_product_at_end[of \<alpha> \<delta>] h\<delta>(1)
+        unfolding top1_is_path_on_def by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have "?p (?coset_class (top1_path_product \<alpha> \<delta>)) = x"
+    proof -
+      have "?p (?coset_class (top1_path_product \<alpha> \<delta>)) = (top1_path_product \<alpha> \<delta>) 1"
+        by (rule hp_class[rule_format, OF h\<alpha>\<delta>_path])
+      also have "\<dots> = x"
+        using top1_path_product_at_end[of \<alpha> \<delta>] h\<delta>(1)
+        unfolding top1_is_path_on_def by (by100 simp)
+      finally show ?thesis .
+    qed
+    moreover have "?coset_class (top1_path_product \<alpha> \<delta>) \<in> ?B_basis U \<alpha>"
+    proof -
+      have "top1_is_path_on B TB (\<alpha> 1) (top1_path_product \<alpha> \<delta> 1) (top1_path_product \<alpha> \<delta>)"
+        sorry \<comment> \<open>path\\_product endpoint rewrite.\<close>
+      thus ?thesis using h\<delta> sorry
+    qed
+    ultimately show "x \<in> ?p ` (?B_basis U \<alpha>)" sorry
+  qed
   have hp_open: "\<forall>U \<in> ?TE. ?p ` U \<in> TB"
     sorry \<comment> \<open>p(V) = \\<Union>{p(B\\_c)} for c \\<in> V.
        Each p(B\\_c) is a path-component in U\\_c, which is open by local path-connectivity.
