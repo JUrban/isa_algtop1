@@ -4866,7 +4866,35 @@ proof -
           \<comment> \<open>Since they agree on I\\_set, they're path-homotopic (reflexivity + agreement).\<close>
           have h_agree_htpy: "top1_path_homotopic_on B TB b0 (?\<beta> ?c)
               (?\<beta> \<circ> \<psi>) (top1_path_product \<alpha> ?\<delta>x_t)"
-            sorry \<comment> \<open>paths\\_agree\\_on\\_I\\_path\\_homotopic after showing \\<beta>\\<circ>\\<psi> is a path.\<close>
+          proof -
+            \<comment> \<open>\\<beta>\\<circ>\\<psi> is a path from b0 to \\<beta>(c).\<close>
+            have hcomp_path: "top1_is_path_on B TB b0 (?\<beta> ?c) (?\<beta> \<circ> \<psi>)"
+            proof -
+              have hcomp_cont: "top1_continuous_map_on I_set I_top B TB (?\<beta> \<circ> \<psi>)"
+                using top1_continuous_map_on_comp[OF h\<psi>_cont h\<beta>_cont] .
+              have hcomp_0: "(?\<beta> \<circ> \<psi>) 0 = b0"
+                using h\<psi>_ep0 h\<alpha>_path_pc unfolding top1_is_path_on_def top1_path_product_def
+                by (by100 simp)
+              have hcomp_1: "(?\<beta> \<circ> \<psi>) 1 = ?\<beta> ?c"
+                sorry \<comment> \<open>\\<psi>(1) = c, so (\\<beta>\\<circ>\\<psi>)(1) = \\<beta>(c). Trivial but let-opacity.\<close>
+              show ?thesis unfolding top1_is_path_on_def
+              proof -
+                define comp_loc where "comp_loc = ?\<beta> \<circ> \<psi>"
+                define ep_loc where "ep_loc = ?\<beta> ?c"
+                have "top1_continuous_map_on I_set I_top B TB comp_loc \<and>
+                    comp_loc 0 = b0 \<and> comp_loc 1 = ep_loc"
+                  using hcomp_cont hcomp_0 hcomp_1
+                  unfolding comp_loc_def ep_loc_def by simp
+                thus "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology B TB
+                    (?\<beta> \<circ> \<psi>) \<and> (?\<beta> \<circ> \<psi>) 0 = b0 \<and> (?\<beta> \<circ> \<psi>) 1 = ?\<beta> ?c"
+                  unfolding comp_loc_def ep_loc_def
+                  top1_unit_interval_def[symmetric] top1_unit_interval_topology_def[symmetric]
+                  by simp
+              qed
+            qed
+            from paths_agree_on_I_path_homotopic[OF hTB hcomp_path hcomp_eq]
+            show ?thesis .
+          qed
           \<comment> \<open>Transitivity: prefix \\<simeq> \\<beta>\\<circ>\\<psi> \\<simeq> \\<alpha>*prefix(\\<delta>x,t).\<close>
           have hfinal: "top1_path_homotopic_on B TB b0 (?\<beta> ?c)
               (\<lambda>s. ?\<beta> (s * ?c)) (top1_path_product \<alpha> ?\<delta>x_t)"
