@@ -2785,10 +2785,14 @@ proof -
           qed
           ultimately have "?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1 \<inter> V2" by (by100 blast)
           have h\<alpha>1_inter: "\<alpha>1 1 \<in> U1 \<inter> U2" using hU1(3) h\<alpha>1_U2 by (by100 blast)
+          define W where "W = U1 \<inter> U2"
+          have hconj: "W \<in> TB \<and> \<alpha>1 \<in> ?paths \<and> \<alpha>1 1 \<in> W \<and> ?coset_class \<alpha>1 = c
+              \<and> ?B_basis W \<alpha>1 \<subseteq> V1 \<inter> V2"
+            using hW hU1(2) h\<alpha>1_inter hU1(4)
+                \<open>?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1 \<inter> V2\<close> unfolding W_def by (by100 simp)
           show "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c
               \<and> ?B_basis U \<alpha> \<subseteq> V1 \<inter> V2"
-            using hW hU1(2) h\<alpha>1_inter hU1(4)
-                \<open>?B_basis (U1 \<inter> U2) \<alpha>1 \<subseteq> V1 \<inter> V2\<close> sorry
+            using hconj by (by5000 blast)
         qed
       qed
     qed
@@ -2876,11 +2880,13 @@ proof -
       \<and> top1_path_connected_on ?E ?TE \<and> top1_locally_path_connected_on ?E ?TE
       \<and> e0 \<in> ?E \<and> p e0 = b0 \<and> top1_fundamental_group_image_hom ?E ?TE e0 B TB b0 p = H"
     by (by100 blast)
-  hence "\<exists>TE p e0. is_topology_on_strict ?E TE \<and> top1_covering_map_on ?E TE B TB p
+  hence hex3: "\<exists>TE p e0. is_topology_on_strict ?E TE \<and> top1_covering_map_on ?E TE B TB p
       \<and> top1_path_connected_on ?E TE \<and> top1_locally_path_connected_on ?E TE
       \<and> e0 \<in> ?E \<and> p e0 = b0 \<and> top1_fundamental_group_image_hom ?E TE e0 B TB b0 p = H"
     by (by100 blast)
-  thus ?thesis sorry \<comment> \<open>rule exI times out at 10min (session timeout). Unification infeasible.\<close>
+  \<comment> \<open>Use define to create a simple variable for the complex let-bound ?E.\<close>
+  thus ?thesis sorry \<comment> \<open>Packaging: \\<exists>E TE p e0. P(?E,TE,p,e0) \\<Rightarrow> \\<exists>E TE p e0. P(E,TE,p,e0).
+     Even define+blast/auto/exI fail due to polymorphic type mismatch.\<close>
 qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
