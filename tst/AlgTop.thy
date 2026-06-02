@@ -2658,21 +2658,66 @@ proof -
   have hp_open: "\<forall>U \<in> ?TE. ?p ` U \<in> TB"
   proof (intro ballI)
     fix V assume hV: "V \<in> ?TE"
-    \<comment> \<open>p(V) = \\<Union>{p(B\\_c) | c \\<in> V}. Each p(B\\_c) is a path-component of \\<alpha>\\_c(1) in U\\_c.
-       By Theorem\\_25\\_4 (locally path-connected), path-components of open sets are open.\<close>
-    \<comment> \<open>Step 1: p(V) \\<subseteq> \\<Union>{p(B\\_c) | c \\<in> V} and conversely.\<close>
-    \<comment> \<open>Step 2: Each p(B\\_c) is open in TB (path-component in open set).\<close>
-    \<comment> \<open>Step 3: p(V) is union of open sets, hence open.\<close>
-    have "?p ` V = \<Union>{?p ` (?B_basis U \<alpha>) | U \<alpha>.
-        \<exists>c \<in> V. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V}"
-      sorry \<comment> \<open>From hTE\\_elim: V = \\<Union>{B\\_c}, so p(V) = \\<Union>{p(B\\_c)}.\<close>
-    moreover have "\<forall>S \<in> {?p ` (?B_basis U \<alpha>) | U \<alpha>.
-        \<exists>c \<in> V. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V}.
-        S \<in> TB"
-      sorry \<comment> \<open>Each p(B(U,\\<alpha>)) is a path-component of \\<alpha>(1) in U.
-         By Theorem\\_25\\_4, path-components of open sets are open in LPC spaces.\<close>
-    ultimately show "?p ` V \<in> TB"
-      sorry \<comment> \<open>Union of open sets is open.\<close>
+    \<comment> \<open>For each x \\<in> p(V), find an open W \\<in> TB with x \\<in> W \\<subseteq> p(V).
+       Then p(V) = \\<Union>{W\\_x} is a union of open sets, hence open.\<close>
+    have hpV_sub_B: "?p ` V \<subseteq> B"
+    proof -
+      have "V \<subseteq> ?E" using hV by (by5000 simp)
+      hence "?p ` V \<subseteq> ?p ` ?E" by (by100 blast)
+      also have "?p ` ?E = B" by (rule hp_surj)
+      finally show ?thesis .
+    qed
+    have hpV_open_at_each: "\<forall>x \<in> ?p ` V. \<exists>W \<in> TB. x \<in> W \<and> W \<subseteq> ?p ` V"
+    proof (intro ballI)
+      fix x assume hx: "x \<in> ?p ` V"
+      then obtain c where hc: "c \<in> V" "x = ?p c" by (by100 blast)
+      \<comment> \<open>From TE: get U, \\<alpha> with B(U,\\<alpha>) \\<subseteq> V and \\<alpha>(1) \\<in> U.\<close>
+      have hV_TE: "V \<in> ?TE" using hV .
+      from hV_TE have hV_prop: "V \<subseteq> ?E \<and>
+          (\<forall>c' \<in> V. \<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and>
+          ?coset_class \<alpha> = c' \<and> ?B_basis U \<alpha> \<subseteq> V)" by (by5000 simp)
+      have "\<exists>U \<alpha>. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V"
+        using hV_prop hc(1) by (by100 blast)
+      then obtain U \<alpha> where hU\<alpha>: "U \<in> TB" "\<alpha> \<in> ?paths" "\<alpha> 1 \<in> U"
+          "?coset_class \<alpha> = c" "?B_basis U \<alpha> \<subseteq> V"
+        by (by5000 simp) (by100 blast)
+      \<comment> \<open>p(B(U,\\<alpha>)) is the path-component of \\<alpha>(1) in U (from hp\\_basis\\_image).\<close>
+      let ?W = "?p ` (?B_basis U \<alpha>)"
+      \<comment> \<open>x \\<in> W: p(c) = p(class(\\<alpha>)) \\<in> p(B(U,\\<alpha>)).\<close>
+      have hx_W: "x \<in> ?W"
+        sorry \<comment> \<open>c = class(\\<alpha>) \\<in> B(U,\\<alpha>) from hbasis. Then p(c) \\<in> p(B(U,\\<alpha>)).\<close>
+      \<comment> \<open>W \\<subseteq> p(V): B(U,\\<alpha>) \\<subseteq> V \\<Rightarrow> p(B(U,\\<alpha>)) \\<subseteq> p(V).\<close>
+      have hW_sub: "?W \<subseteq> ?p ` V"
+        using hU\<alpha>(5) by (by100 blast)
+      \<comment> \<open>W is open: path-component of \\<alpha>(1) in U, by Theorem\\_25\\_4.\<close>
+      have hW_open: "?W \<in> TB"
+        sorry \<comment> \<open>hp\\_basis\\_image says W = path-component. Theorem\\_25\\_4 + assms(3).\<close>
+      define Ww where "Ww = ?W"
+      have "Ww \<in> TB \<and> x \<in> Ww \<and> Ww \<subseteq> ?p ` V"
+        using hW_open hx_W hW_sub unfolding Ww_def by (by100 blast)
+      thus "\<exists>W \<in> TB. x \<in> W \<and> W \<subseteq> ?p ` V"
+        by (by5000 blast)
+    qed
+    show "?p ` V \<in> TB"
+    proof -
+      \<comment> \<open>p(V) = \\<Union>{W \\<in> TB. W \\<subseteq> p(V)} by hpV\\_open\\_at\\_each.\<close>
+      have "?p ` V = \<Union>{W \<in> TB. W \<subseteq> ?p ` V}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> ?p ` V"
+        from hpV_open_at_each[rule_format, OF this]
+        obtain W where "W \<in> TB" "x \<in> W" "W \<subseteq> ?p ` V" by (by100 blast)
+        thus "x \<in> \<Union>{W \<in> TB. W \<subseteq> ?p ` V}" by (by100 blast)
+      next
+        fix x assume "x \<in> \<Union>{W \<in> TB. W \<subseteq> ?p ` V}"
+        thus "x \<in> ?p ` V" by (by100 blast)
+      qed
+      moreover have "\<Union>{W \<in> TB. W \<subseteq> ?p ` V} \<in> TB"
+      proof -
+        have "{W \<in> TB. W \<subseteq> ?p ` V} \<subseteq> TB" by (by100 blast)
+        thus ?thesis using hTB unfolding is_topology_on_def by (by100 blast)
+      qed
+      ultimately show ?thesis by simp
+    qed
   qed
   \<comment> \<open>===== Step 4 (book): Evenly covered neighborhoods =====\<close>
   have hp_covering: "\<forall>b \<in> B. \<exists>U. b \<in> U \<and> top1_evenly_covered_on ?E ?TE B TB ?p U"
