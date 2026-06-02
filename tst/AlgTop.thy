@@ -3946,7 +3946,7 @@ proof -
             have h\<delta>_in_U: "\<forall>t \<in> I_set. ?\<delta> t \<in> U0"
             proof (intro ballI)
               fix t assume ht: "t \<in> I_set"
-              have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by simp_all
+              have hty01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by simp_all
               have hc01: "0 \<le> c" "c \<le> 1" using hc unfolding top1_unit_interval_def by simp_all
               have hd01: "0 \<le> d" "d \<le> 1" using hd unfolding top1_unit_interval_def by simp_all
               \<comment> \<open>c + t*(d-c) \\<in> [0,1].\<close>
@@ -3956,13 +3956,13 @@ proof -
                 have heq: "c + t * (d - c) = (1 - t) * c + t * d"
                   by (by100 algebra)
                 have h0: "0 \<le> (1 - t) * c + t * d"
-                  using ht01 hc01 hd01 by (by100 auto)
+                  using hty01 hc01 hd01 by (by100 auto)
                 have h_a: "(1-t)*c \<le> (1-t)*1"
                   apply (rule mult_left_mono)
-                  using hc01 ht01 by (by100 linarith)+
+                  using hc01 hty01 by (by100 linarith)+
                 have h_b: "t*d \<le> t*1"
                   apply (rule mult_left_mono)
-                  using hd01 ht01 by (by100 linarith)+
+                  using hd01 hty01 by (by100 linarith)+
                 have h1': "(1 - t) * c + t * d \<le> 1"
                   using h_a h_b by (by100 simp)
                 show ?thesis unfolding top1_unit_interval_def using heq h0 h1' by (by100 simp)
@@ -3971,9 +3971,9 @@ proof -
               have "\<bar>c - (c + t * (d - c))\<bar> < \<epsilon>"
               proof -
                 have "\<bar>c - (c + t * (d - c))\<bar> = \<bar>t * (d - c)\<bar>" by (by100 simp)
-                also have "... = t * \<bar>d - c\<bar>" using ht01 abs_mult[of t "d-c"] by (by100 simp)
+                also have "... = t * \<bar>d - c\<bar>" using hty01 abs_mult[of t "d-c"] by (by100 simp)
                 also have "... \<le> 1 * \<bar>d - c\<bar>"
-                  apply (rule mult_right_mono) using ht01 by (by100 auto)+
+                  apply (rule mult_right_mono) using hty01 by (by100 auto)+
                 also have "... = \<bar>c - d\<bar>" by (by100 auto)
                 also have "... < \<epsilon>" using hcd .
                 finally show ?thesis .
@@ -4748,9 +4748,9 @@ proof -
           proof (intro ballI)
             fix s assume hs: "s \<in> I_set"
             have hs01: "0 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by simp_all
-            have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by simp_all
-            have "0 \<le> s * t" using hs01 ht01 by (by100 simp)
-            moreover have "s * t \<le> 1" using hs01 ht01 by (simp add: mult_le_one)
+            have hty01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by simp_all
+            have "0 \<le> s * t" using hs01 hty01 by (by100 simp)
+            moreover have "s * t \<le> 1" using hs01 hty01 by (simp add: mult_le_one)
             ultimately show "s * t \<in> I_set" unfolding top1_unit_interval_def
               by (by100 simp)
           qed
@@ -4793,8 +4793,8 @@ proof -
               using top1_path_product_is_path[OF hTB h\<alpha>_path_pc h\<delta>x(1)] by (by100 blast)
             thus ?thesis unfolding top1_is_path_on_def by (by100 blast)
           qed
-          have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by simp_all
-          have hc01: "1/2 \<le> ?c" "?c \<le> 1" using ht01 by simp_all
+          have hty01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by simp_all
+          have hc01: "1/2 \<le> ?c" "?c \<le> 1" using hty01 by simp_all
           have hc_I: "?c \<in> I_set" unfolding top1_unit_interval_def using hc01 by (by100 simp)
           \<comment> \<open>\\<phi>(s) = s*c: continuous I\\<rightarrow>I.\<close>
           have h\<phi>_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>s. s * ?c)"
@@ -4816,8 +4816,110 @@ proof -
             unfolding \<psi>_def hc_half by (by100 simp)
           \<comment> \<open>\\<psi> continuous I\\<rightarrow>I: same pasting argument as hlift\\_path.\<close>
           have h\<psi>_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>"
-            sorry \<comment> \<open>Pasting: two affine maps on [0,1/2] and [1/2,1] via Theorem\\_18\\_3.
-               This is ~80 lines of detailed proof (same as hlift\\_path lines 4077-4230).\<close>
+          proof -
+            \<comment> \<open>Pasting: f1(s)=s on A=[0,1/2], f2(s)=1/2+(2s-1)*(t/2) on B=[1/2,1].\<close>
+            let ?A = "{s \<in> I_set. s \<le> 1/2}"
+            let ?B_half = "{s \<in> I_set. s \<ge> 1/2}"
+            let ?f1 = "\<lambda>s::real. s"
+            let ?f2 = "\<lambda>s::real. 1/2 + (2 * s - 1) * (t / 2)"
+            have hI_top: "is_topology_on I_set I_top"
+              using top1_unit_interval_topology_is_topology_on .
+            \<comment> \<open>A and B closed in I.\<close>
+            have hA_closed: "closedin_on I_set I_top ?A"
+            proof -
+              have "{1/2::real<..} \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 simp)
+              hence "I_set \<inter> {1/2<..} \<in> subspace_topology UNIV top1_open_sets I_set"
+                by (rule subspace_topology_memI)
+              have "I_set - ?A = I_set \<inter> {1/2<..}" by (by100 auto)
+              hence "I_set - ?A \<in> I_top"
+                using \<open>I_set \<inter> {1/2<..} \<in> subspace_topology UNIV top1_open_sets I_set\<close>
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              thus ?thesis unfolding closedin_on_def by (by100 blast)
+            qed
+            have hB_closed: "closedin_on I_set I_top ?B_half"
+            proof -
+              have "{..<1/2::real} \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 simp)
+              hence "I_set \<inter> {..<1/2} \<in> subspace_topology UNIV top1_open_sets I_set"
+                by (rule subspace_topology_memI)
+              have "I_set - ?B_half = I_set \<inter> {..<1/2}" by (by100 auto)
+              hence "I_set - ?B_half \<in> I_top"
+                using \<open>I_set \<inter> {..<1/2} \<in> subspace_topology UNIV top1_open_sets I_set\<close>
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              thus ?thesis unfolding closedin_on_def by (by100 blast)
+            qed
+            have hAB: "I_set = ?A \<union> ?B_half" by (by100 auto)
+            \<comment> \<open>f1 continuous on A \\<rightarrow> I.\<close>
+            have hf1_cont: "top1_continuous_map_on ?A (subspace_topology I_set I_top ?A) I_set I_top ?f1"
+            proof -
+              have "continuous_on UNIV (\<lambda>s::real. s)" by (by100 simp)
+              have "\<forall>s \<in> ?A. ?f1 s \<in> I_set" by (by100 blast)
+              have "top1_continuous_map_on ?A (subspace_topology UNIV top1_open_sets ?A)
+                  I_set (subspace_topology UNIV top1_open_sets I_set) ?f1"
+                apply (rule top1_continuous_map_on_real_subspace_open_sets)
+                using \<open>\<forall>s \<in> ?A. ?f1 s \<in> I_set\<close> apply (by100 blast)
+                using \<open>continuous_on UNIV (\<lambda>s::real. s)\<close> apply (by100 blast)
+                done
+              moreover have "?A \<subseteq> I_set" by (by100 blast)
+              from subspace_topology_trans[OF this]
+              have "subspace_topology UNIV top1_open_sets ?A = subspace_topology I_set I_top ?A"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              moreover have "subspace_topology UNIV top1_open_sets I_set = I_top"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              ultimately show ?thesis by simp
+            qed
+            \<comment> \<open>f2 continuous on B \\<rightarrow> I.\<close>
+            have hf2_cont: "top1_continuous_map_on ?B_half (subspace_topology I_set I_top ?B_half)
+                I_set I_top ?f2"
+            proof -
+              have "continuous_on UNIV (\<lambda>s::real. 1/2 + (2*s - 1) * (t/2))"
+                by (intro continuous_intros)
+              have "\<forall>s \<in> ?B_half. ?f2 s \<in> I_set"
+              proof (intro ballI)
+                fix s assume hs: "s \<in> ?B_half"
+                have hs01: "1/2 \<le> s" "s \<le> 1"
+                  using hs unfolding top1_unit_interval_def by simp_all
+                have "0 \<le> (2*s-1)*(t/2)" using hs01 hty01 by (by100 auto)
+                moreover have "(2*s-1)*(t/2) \<le> t/2" using hs01 hty01
+                  apply (rule_tac mult_right_mono[THEN order.trans, of _ 1 "t/2"])
+                  by (by100 simp)+
+                ultimately have "1/2 \<le> ?f2 s" "?f2 s \<le> 1/2 + t/2"
+                  by (by100 simp)+
+                moreover have "1/2 + t/2 \<le> 1" using hty01 by simp
+                ultimately show "?f2 s \<in> I_set"
+                  unfolding top1_unit_interval_def by (by100 simp)
+              qed
+              have "top1_continuous_map_on ?B_half (subspace_topology UNIV top1_open_sets ?B_half)
+                  I_set (subspace_topology UNIV top1_open_sets I_set) ?f2"
+                apply (rule top1_continuous_map_on_real_subspace_open_sets)
+                using \<open>\<forall>s \<in> ?B_half. ?f2 s \<in> I_set\<close> apply (by100 blast)
+                using \<open>continuous_on UNIV (\<lambda>s::real. 1/2 + (2*s - 1) * (t/2))\<close> apply (by100 blast)
+                done
+              moreover have "?B_half \<subseteq> I_set" by (by100 blast)
+              from subspace_topology_trans[OF this]
+              have "subspace_topology UNIV top1_open_sets ?B_half = subspace_topology I_set I_top ?B_half"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              moreover have "subspace_topology UNIV top1_open_sets I_set = I_top"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              ultimately show ?thesis by simp
+            qed
+            \<comment> \<open>Agreement at 1/2.\<close>
+            have hagree: "\<forall>x \<in> ?A \<inter> ?B_half. ?f1 x = ?f2 x"
+            proof (intro ballI)
+              fix x assume "x \<in> ?A \<inter> ?B_half"
+              hence "x = 1/2" by (by100 auto)
+              thus "?f1 x = ?f2 x" by (by100 algebra)
+            qed
+            \<comment> \<open>Paste: define h and apply Theorem\\_18\\_3.\<close>
+            define h where "h \<equiv> (\<lambda>x::real. if x \<in> ?A then ?f1 x else ?f2 x)"
+            from Theorem_18_3[OF hI_top hI_top hA_closed hB_closed hAB hf1_cont hf2_cont
+                hagree, folded h_def]
+            have "top1_continuous_map_on I_set I_top I_set I_top h" .
+            \<comment> \<open>h = \\<psi> on I\\_set.\<close>
+            moreover have "\<forall>s \<in> I_set. h s = \<psi> s"
+              unfolding h_def \<psi>_def hc_half by (by5000 auto)
+            ultimately show ?thesis
+              using top1_continuous_map_on_agree by (by100 blast)
+          qed
           \<comment> \<open>Endpoints: \\<phi>(0)=0, \\<phi>(1)=c; \\<psi>(0)=0, \\<psi>(1)=c.\<close>
           have h\<phi>_ep: "(\<lambda>s. s * ?c) 0 = 0" "(\<lambda>s. s * ?c) 1 = ?c" by simp_all
           have h\<psi>_ep0: "\<psi> 0 = 0" unfolding \<psi>_def by (by100 simp)
@@ -4889,7 +4991,7 @@ proof -
               hence hs_gt: "s > 1/2" by simp
               have h\<psi>s: "\<psi> s = 1/2 + (2*s - 1) * (t/2)" using h\<psi>_simp2[OF hs_gt] .
               \<comment> \<open>LHS: \\<beta>(\\<psi>(s)). Need \\<psi>(s) > 1/2 or \\<psi>(s) = 1/2.\<close>
-              have h\<psi>s_ge: "\<psi> s \<ge> 1/2" using h\<psi>s ht01 hs_gt by (by100 auto)
+              have h\<psi>s_ge: "\<psi> s \<ge> 1/2" using h\<psi>s hty01 hs_gt by (by100 auto)
               show ?thesis
               proof (cases "t = 0")
                 case True
@@ -4913,7 +5015,7 @@ proof -
                   using lhs2 rhs3 by simp
               next
                 case False
-                hence "t > 0" using ht01 by (by100 linarith)
+                hence "t > 0" using hty01 by (by100 linarith)
                 hence h\<psi>s_gt: "\<psi> s > 1/2" using h\<psi>s hs_gt by (by100 auto)
                 hence h\<psi>s_nle: "\<not>(\<psi> s \<le> 1/2)" by (by100 linarith)
                 have "(\<beta>_loc \<circ> \<psi>) s = \<beta>_loc (\<psi> s)" by simp
@@ -5016,7 +5118,7 @@ proof -
               finally show ?thesis using True by simp
             next
               case False
-              hence "t > 0" using ht01 by (by100 linarith)
+              hence "t > 0" using hty01 by (by100 linarith)
               hence "?c > 1/2" by simp
               hence "?\<beta> ?c = \<delta>x (2 * ?c - 1)"
                 unfolding top1_path_product_def by (by100 simp)
@@ -5117,7 +5219,314 @@ proof -
         qed
         have hclass_reparamy: "?coset_class (\<lambda>s. (top1_path_product \<alpha> \<delta>y) (s * ?cy)) =
             ?coset_class (top1_path_product \<alpha> ?\<delta>y_t)"
-          sorry \<comment> \<open>Reparametrization homotopy (same as hclass\\_reparam).\<close>
+        proof -
+          \<comment> \<open>Same reparam argument as hclass\\_reparam but for \\<delta>y.\<close>
+          let ?\<beta>y = "top1_path_product \<alpha> \<delta>y"
+          have h\<beta>y_cont: "top1_continuous_map_on I_set I_top B TB ?\<beta>y"
+          proof -
+            have "top1_is_path_on B TB b0 (\<delta>y 1) ?\<beta>y"
+              using top1_path_product_is_path[OF hTB h\<alpha>_path_pc h\<delta>y(1)] by (by100 blast)
+            thus ?thesis unfolding top1_is_path_on_def by (by100 blast)
+          qed
+          \<comment> \<open>\\<phi>(s) = s*cy, \\<psi>y same pasting as \\<psi>.\<close>
+          define \<psi>y where "\<psi>y s = (if s \<le> 1/2 then 2 * s * (1/2::real) else (1/2) + (2 * s - 1) * (?cy - 1/2))" for s :: real
+          \<comment> \<open>\\<psi>y evaluates like \\<psi> from the \\<delta>x block (both use the same c = (1+t)/2).\<close>
+          \<comment> \<open>Re-derive common infrastructure for \\<delta>y context.\<close>
+          have hty01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by simp_all
+          have hcy01: "1/2 \<le> ?cy" "?cy \<le> 1" using hty01 by simp_all
+          have hcy_I: "?cy \<in> I_set" unfolding top1_unit_interval_def using hcy01 by (by100 simp)
+          have hcy_half: "?cy - 1/2 = t/2"
+          proof -
+            have "(1 + t) / 2 - 1/2 = ((1 + t) - 1) / 2" by (by100 argo)
+            also have "... = t / 2" by simp
+            finally show ?thesis .
+          qed
+          have h\<phi>y_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>s. s * ?cy)"
+            using affine_map_continuous_I_to_I[of 0 ?cy] hcy01 by (by100 simp)
+          \<comment> \<open>\\<psi>y continuity: pasting of identity on [0,1/2] and affine on [1/2,1].\<close>
+          have h\<psi>y_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>y"
+          proof -
+            let ?A = "{s \<in> I_set. s \<le> 1/2}"
+            let ?B_half = "{s \<in> I_set. s \<ge> 1/2}"
+            let ?f1 = "\<lambda>s::real. s"
+            let ?f2 = "\<lambda>s::real. 1/2 + (2 * s - 1) * (t / 2)"
+            have hI_top: "is_topology_on I_set I_top" using top1_unit_interval_topology_is_topology_on .
+            have hA_closed: "closedin_on I_set I_top ?A"
+            proof -
+              have h_open: "{1/2::real<..} \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 simp)
+              have h_inter: "I_set \<inter> {1/2<..} \<in> subspace_topology UNIV top1_open_sets I_set"
+                by (rule subspace_topology_memI[OF h_open])
+              have h_eq: "I_set - ?A = I_set \<inter> {1/2<..}" by (by100 auto)
+              have "I_set - ?A \<in> I_top"
+                using h_inter h_eq
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              thus ?thesis unfolding closedin_on_def by (by100 blast)
+            qed
+            have hB_closed: "closedin_on I_set I_top ?B_half"
+            proof -
+              have h_open: "{..<1/2::real} \<in> top1_open_sets" unfolding top1_open_sets_def by (by100 simp)
+              have h_inter: "I_set \<inter> {..<1/2} \<in> subspace_topology UNIV top1_open_sets I_set"
+                by (rule subspace_topology_memI[OF h_open])
+              have h_eq: "I_set - ?B_half = I_set \<inter> {..<1/2}" by (by100 auto)
+              have "I_set - ?B_half \<in> I_top"
+                using h_inter h_eq
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              thus ?thesis unfolding closedin_on_def by (by100 blast)
+            qed
+            have hAB: "I_set = ?A \<union> ?B_half" by (by100 auto)
+            have hf1_cont: "top1_continuous_map_on ?A (subspace_topology I_set I_top ?A) I_set I_top ?f1"
+            proof -
+              have h1: "continuous_on UNIV (\<lambda>s::real. s)" by (by100 simp)
+              have h2: "\<forall>s \<in> ?A. ?f1 s \<in> I_set" by (by100 blast)
+              have "top1_continuous_map_on ?A (subspace_topology UNIV top1_open_sets ?A)
+                  I_set (subspace_topology UNIV top1_open_sets I_set) ?f1"
+                apply (rule top1_continuous_map_on_real_subspace_open_sets)
+                using h2 apply (by100 blast) using h1 apply (by100 blast) done
+              moreover have "?A \<subseteq> I_set" by (by100 blast)
+              from subspace_topology_trans[OF this]
+              have "subspace_topology UNIV top1_open_sets ?A = subspace_topology I_set I_top ?A"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              moreover have "subspace_topology UNIV top1_open_sets I_set = I_top"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              ultimately show ?thesis by simp
+            qed
+            have hf2_cont: "top1_continuous_map_on ?B_half (subspace_topology I_set I_top ?B_half) I_set I_top ?f2"
+            proof -
+              have h1: "continuous_on UNIV (\<lambda>s::real. 1/2 + (2*s - 1) * (t/2))" by (intro continuous_intros)
+              have h2: "\<forall>s \<in> ?B_half. ?f2 s \<in> I_set"
+              proof (intro ballI)
+                fix s assume hs: "s \<in> ?B_half"
+                have hs01: "1/2 \<le> s" "s \<le> 1" using hs unfolding top1_unit_interval_def by simp_all
+                have "0 \<le> (2*s-1)*(t/2)" using hs01 hty01 by (by100 auto)
+                moreover have "(2*s-1)*(t/2) \<le> t/2" using hs01 hty01
+                  apply (rule_tac mult_right_mono[THEN order.trans, of _ 1 "t/2"])
+                  by (by100 simp)+
+                ultimately have "1/2 \<le> ?f2 s" "?f2 s \<le> 1/2 + t/2" by (by100 simp)+
+                moreover have "1/2 + t/2 \<le> 1" using hty01 by simp
+                ultimately show "?f2 s \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+              qed
+              have "top1_continuous_map_on ?B_half (subspace_topology UNIV top1_open_sets ?B_half)
+                  I_set (subspace_topology UNIV top1_open_sets I_set) ?f2"
+                apply (rule top1_continuous_map_on_real_subspace_open_sets)
+                using h2 apply (by100 blast) using h1 apply (by100 blast) done
+              moreover have "?B_half \<subseteq> I_set" by (by100 blast)
+              from subspace_topology_trans[OF this]
+              have "subspace_topology UNIV top1_open_sets ?B_half = subspace_topology I_set I_top ?B_half"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              moreover have "subspace_topology UNIV top1_open_sets I_set = I_top"
+                unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+              ultimately show ?thesis by simp
+            qed
+            have hagree: "\<forall>x \<in> ?A \<inter> ?B_half. ?f1 x = ?f2 x"
+            proof (intro ballI)
+              fix x assume "x \<in> ?A \<inter> ?B_half"
+              hence "x = 1/2" by (by100 auto)
+              thus "?f1 x = ?f2 x" by (by100 algebra)
+            qed
+            define hy where "hy \<equiv> (\<lambda>x::real. if x \<in> ?A then ?f1 x else ?f2 x)"
+            from Theorem_18_3[OF hI_top hI_top hA_closed hB_closed hAB hf1_cont hf2_cont
+                hagree, folded hy_def]
+            have "top1_continuous_map_on I_set I_top I_set I_top hy" .
+            moreover have "\<forall>s \<in> I_set. hy s = \<psi>y s"
+              unfolding hy_def \<psi>y_def hcy_half by (by5000 auto)
+            ultimately show ?thesis using top1_continuous_map_on_agree by (by100 blast)
+          qed
+          have h\<psi>y_ep0: "\<psi>y 0 = 0" unfolding \<psi>y_def by (by100 simp)
+          have h\<psi>y_ep1: "\<psi>y 1 = ?cy"
+          proof -
+            have "\<psi>y 1 = 1/2 + (2 * 1 - 1) * (?cy - 1/2)" unfolding \<psi>y_def by (by100 simp)
+            also have "... = ?cy" by simp
+            finally show ?thesis .
+          qed
+          have h\<beta>y_img: "\<forall>s \<in> I_set. ?\<beta>y s \<in> B"
+            using h\<beta>y_cont unfolding top1_continuous_map_on_def by (by100 blast)
+          have hB_sub_By: "B \<subseteq> B" by (by100 blast)
+          have hsubspace_selfy: "subspace_topology B TB B = TB"
+          proof -
+            have "\<forall>U \<in> TB. U \<subseteq> B"
+              using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+            thus ?thesis by (rule subspace_topology_self)
+          qed
+          have hTB_suby: "is_topology_on B (subspace_topology B TB B)"
+            using hsubspace_selfy hTB by simp
+          have h0_Iy: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          from reparam_path_homotopy[OF hTB h\<beta>y_cont h\<beta>y_img hB_sub_By hTB_suby
+              h\<phi>y_cont h\<psi>y_cont _ _ h\<psi>y_ep0 h\<psi>y_ep1 h0_Iy hcy_I]
+          have hhtpy_raw: "top1_path_homotopic_on B (subspace_topology B TB B)
+              (?\<beta>y 0) (?\<beta>y ?cy) (?\<beta>y \<circ> (\<lambda>s. s * ?cy)) (?\<beta>y \<circ> \<psi>y)" by simp
+          hence hhtyp_b0: "top1_path_homotopic_on B TB b0 (?\<beta>y ?cy)
+              (\<lambda>s. ?\<beta>y (s * ?cy)) (?\<beta>y \<circ> \<psi>y)"
+          proof -
+            have "?\<beta>y 0 = b0"
+              unfolding top1_path_product_def using h\<alpha>_path_pc unfolding top1_is_path_on_def
+              by (by100 simp)
+            thus ?thesis using hhtpy_raw hsubspace_selfy sorry
+          qed
+          \<comment> \<open>\\<beta>y\\<circ>\\<psi>y = \\<alpha>*prefix(\\<delta>y,t) on I\\_set.\<close>
+          have hcomp_eqy: "\<forall>s \<in> I_set. (?\<beta>y \<circ> \<psi>y) s = (top1_path_product \<alpha> ?\<delta>y_t) s"
+          proof (intro ballI)
+            fix s :: real assume hs: "s \<in> I_set"
+            define \<beta>y_loc where "\<beta>y_loc = ?\<beta>y"
+            define prod_locy where "prod_locy = top1_path_product \<alpha> ?\<delta>y_t"
+            have h\<beta>y_ev_le: "\<And>r::real. r \<le> 1/2 \<Longrightarrow> \<beta>y_loc r = \<alpha> (2*r)"
+              unfolding \<beta>y_loc_def top1_path_product_def by (by100 simp)
+            have h\<beta>y_ev_gt: "\<And>r::real. \<not>(r \<le> 1/2) \<Longrightarrow> \<beta>y_loc r = \<delta>y (2*r - 1)"
+              unfolding \<beta>y_loc_def top1_path_product_def by (by100 simp)
+            have hprod_evy_le: "\<And>r::real. r \<le> 1/2 \<Longrightarrow> prod_locy r = \<alpha> (2*r)"
+              unfolding prod_locy_def top1_path_product_def by (by100 simp)
+            have hprod_evy_gt: "\<And>r::real. \<not>(r \<le> 1/2) \<Longrightarrow> prod_locy r = \<delta>y ((2*r - 1)*t)"
+              unfolding prod_locy_def top1_path_product_def by (by100 simp)
+            have h\<psi>y_simp1: "\<And>r::real. r \<le> 1/2 \<Longrightarrow> \<psi>y r = r"
+              unfolding \<psi>y_def by (by100 simp)
+            have h\<psi>y_simp2: "\<And>r::real. r > 1/2 \<Longrightarrow> \<psi>y r = 1/2 + (2*r - 1) * (t/2)"
+              unfolding \<psi>y_def hcy_half by (by100 simp)
+            show "(?\<beta>y \<circ> \<psi>y) s = (top1_path_product \<alpha> ?\<delta>y_t) s"
+            proof (cases "s \<le> 1/2")
+              case True
+              have "(\<beta>y_loc \<circ> \<psi>y) s = \<beta>y_loc (\<psi>y s)" by simp
+              also have "... = \<beta>y_loc s" using h\<psi>y_simp1[OF True] by simp
+              also have "... = \<alpha> (2*s)" using h\<beta>y_ev_le[OF True] .
+              finally have lhs: "(\<beta>y_loc \<circ> \<psi>y) s = \<alpha> (2*s)" .
+              have rhs: "prod_locy s = \<alpha> (2*s)" using hprod_evy_le[OF True] .
+              show ?thesis unfolding \<beta>y_loc_def[symmetric] prod_locy_def[symmetric]
+                using lhs rhs by simp
+            next
+              case False
+              hence hs_gt: "s > 1/2" by simp
+              have h\<psi>ys: "\<psi>y s = 1/2 + (2*s - 1) * (t/2)"
+                using h\<psi>y_simp2[OF hs_gt] by simp
+              have h\<psi>ys_ge: "\<psi>y s \<ge> 1/2" using h\<psi>ys hty01 hs_gt by (by100 auto)
+              show ?thesis
+              proof (cases "t = 0")
+                case True
+                hence "\<psi>y s = 1/2" using h\<psi>ys by simp
+                have "(\<beta>y_loc \<circ> \<psi>y) s = \<beta>y_loc (\<psi>y s)" by simp
+                also have "... = \<beta>y_loc (1/2)"
+                  using arg_cong[OF \<open>\<psi>y s = 1/2\<close>, of \<beta>y_loc] .
+                also have "... = \<alpha> 1" using h\<beta>y_ev_le by simp
+                finally have lhs: "(\<beta>y_loc \<circ> \<psi>y) s = \<alpha> 1" .
+                have "prod_locy s = \<delta>y ((2*s-1)*0)"
+                  using hprod_evy_gt[OF False] True by simp
+                also have "... = \<delta>y 0" by simp
+                also have "... = \<alpha> 1"
+                  using h\<delta>y(1) unfolding top1_is_path_on_def by (by100 simp)
+                finally have rhs: "prod_locy s = \<alpha> 1" .
+                show ?thesis unfolding \<beta>y_loc_def[symmetric] prod_locy_def[symmetric]
+                  using lhs rhs by simp
+              next
+                case False
+                hence "t > 0" using hty01 by (by100 linarith)
+                hence "\<psi>y s > 1/2" using h\<psi>ys hs_gt by (by100 auto)
+                hence h\<psi>ys_nle: "\<not>(\<psi>y s \<le> 1/2)" by (by100 linarith)
+                have "(\<beta>y_loc \<circ> \<psi>y) s = \<beta>y_loc (\<psi>y s)" by simp
+                also have "... = \<delta>y (2*(\<psi>y s) - 1)" using h\<beta>y_ev_gt[OF h\<psi>ys_nle] .
+                also have "... = \<delta>y ((2*s-1)*t)"
+                proof -
+                  have "2*(\<psi>y s) - 1 = 2*(1/2 + (2*s-1)*(t/2)) - 1" using h\<psi>ys by simp
+                  also have "... = (2*s-1)*t" by (by100 argo)
+                  finally show ?thesis by simp
+                qed
+                finally have lhs: "(\<beta>y_loc \<circ> \<psi>y) s = \<delta>y ((2*s-1)*t)" .
+                have rhs: "prod_locy s = \<delta>y ((2*s-1)*t)"
+                  using hprod_evy_gt[OF \<open>\<not>(s \<le> 1/2)\<close>] .
+                show ?thesis unfolding \<beta>y_loc_def[symmetric] prod_locy_def[symmetric]
+                  using lhs rhs by simp
+              qed
+            qed
+          qed
+          \<comment> \<open>Agreement gives path-homotopy.\<close>
+          have hcomp_pathy: "top1_is_path_on B TB b0 (?\<beta>y ?cy) (?\<beta>y \<circ> \<psi>y)"
+          proof -
+            have hcomp_conty: "top1_continuous_map_on I_set I_top B TB (?\<beta>y \<circ> \<psi>y)"
+              using top1_continuous_map_on_comp[OF h\<psi>y_cont h\<beta>y_cont] .
+            have hcomp_0y: "(?\<beta>y \<circ> \<psi>y) 0 = b0"
+              using h\<psi>y_ep0 h\<alpha>_path_pc unfolding top1_is_path_on_def top1_path_product_def
+              by (by100 simp)
+            define cy_loc where "cy_loc = ?cy"
+            define \<beta>yy_loc where "\<beta>yy_loc = ?\<beta>y"
+            have hcomp_1y: "(?\<beta>y \<circ> \<psi>y) 1 = ?\<beta>y ?cy"
+            proof -
+              have "(\<beta>yy_loc \<circ> \<psi>y) 1 = \<beta>yy_loc (\<psi>y 1)" by simp
+              also have "... = \<beta>yy_loc cy_loc"
+              proof -
+                have "\<psi>y 1 = cy_loc" using h\<psi>y_ep1 unfolding cy_loc_def by simp
+                thus ?thesis by simp
+              qed
+              finally show ?thesis unfolding \<beta>yy_loc_def cy_loc_def by simp
+            qed
+            define comp_locy where "comp_locy = ?\<beta>y \<circ> \<psi>y"
+            define ep_locy where "ep_locy = ?\<beta>y ?cy"
+            have "top1_is_path_on B TB b0 ep_locy comp_locy"
+              using hcomp_conty hcomp_0y hcomp_1y
+              unfolding top1_is_path_on_def comp_locy_def[symmetric] ep_locy_def[symmetric]
+              top1_unit_interval_def[symmetric] top1_unit_interval_topology_def[symmetric]
+              by (by100 auto)
+            thus ?thesis unfolding comp_locy_def ep_locy_def by simp
+          qed
+          from paths_agree_on_I_path_homotopic[OF hTB hcomp_pathy hcomp_eqy]
+          have h_agree_htpyy: "top1_path_homotopic_on B TB b0 (?\<beta>y ?cy)
+              (?\<beta>y \<circ> \<psi>y) (top1_path_product \<alpha> ?\<delta>y_t)" .
+          have hfinaly: "top1_path_homotopic_on B TB b0 (?\<beta>y ?cy)
+              (\<lambda>s. ?\<beta>y (s * ?cy)) (top1_path_product \<alpha> ?\<delta>y_t)"
+            using Lemma_51_1_path_homotopic_trans[OF hTB hhtyp_b0 h_agree_htpyy] .
+          have hprefy_pathsy: "(\<lambda>s. ?\<beta>y (s * ?cy)) \<in> ?paths"
+          proof -
+            have h\<beta>y_pathsy: "?\<beta>y \<in> ?paths"
+            proof -
+              have "top1_is_path_on B TB b0 (\<delta>y 1) ?\<beta>y"
+                using top1_path_product_is_path[OF hTB h\<alpha>_path_pc h\<delta>y(1)] by (by100 blast)
+              moreover have "?\<beta>y 1 = \<delta>y 1" unfolding top1_path_product_def by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            from hprefix_path[rule_format, OF h\<beta>y_pathsy, rule_format, OF hcy_I]
+            show ?thesis .
+          qed
+          have hprody_pathsy: "top1_path_product \<alpha> ?\<delta>y_t \<in> ?paths"
+          proof -
+            have "top1_is_path_on B TB b0 (\<delta>y t) (top1_path_product \<alpha> ?\<delta>y_t)"
+              using top1_path_product_is_path[OF hTB h\<alpha>_path_pc h\<delta>yt_path] by (by100 blast)
+            moreover have "(top1_path_product \<alpha> ?\<delta>y_t) 1 = \<delta>y t"
+              unfolding top1_path_product_def by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have hep_matchy: "(\<lambda>s. ?\<beta>y (s * ?cy)) 1 = (top1_path_product \<alpha> ?\<delta>y_t) 1"
+          proof -
+            have "?\<beta>y ?cy = \<delta>y t"
+            proof (cases "t = 0")
+              case True
+              hence "?cy = 1/2" by simp
+              hence "?\<beta>y ?cy = ?\<beta>y (1/2)" by simp
+              also have "... = \<alpha> 1" unfolding top1_path_product_def by (by5000 simp)
+              also have "... = \<delta>y 0"
+                using h\<delta>y(1) unfolding top1_is_path_on_def by (by100 simp)
+              finally show ?thesis using True by simp
+            next
+              case False
+              hence "t > 0" using hty01 by (by100 linarith)
+              hence "?cy > 1/2" by simp
+              hence "\<not>(?cy \<le> 1/2)" by (by100 linarith)
+              hence "?\<beta>y ?cy = \<delta>y (2 * ?cy - 1)"
+                unfolding top1_path_product_def by (by100 simp)
+              moreover have "2 * ?cy - 1 = t" by (by100 argo)
+              ultimately show ?thesis by simp
+            qed
+            moreover have "(top1_path_product \<alpha> ?\<delta>y_t) 1 = \<delta>y t"
+            proof -
+              have "(top1_path_product \<alpha> ?\<delta>y_t) 1 = ?\<delta>y_t 1"
+                unfolding top1_path_product_def by (by100 simp)
+              thus ?thesis by simp
+            qed
+            ultimately show ?thesis by simp
+          qed
+          have hfinaly': "top1_path_homotopic_on B TB b0 ((\<lambda>s. ?\<beta>y (s * ?cy)) 1)
+              (\<lambda>s. ?\<beta>y (s * ?cy)) (top1_path_product \<alpha> ?\<delta>y_t)"
+          proof -
+            have "?\<beta>y ?cy = (\<lambda>s. ?\<beta>y (s * ?cy)) 1" by simp
+            thus ?thesis using hfinaly by simp
+          qed
+          from hhtpy_class[rule_format, OF hprefy_pathsy hprody_pathsy hfinaly']
+          show ?thesis .
+        qed
         have h\<alpha>\<delta>yt_in_BU: "?coset_class (top1_path_product \<alpha> ?\<delta>y_t) \<in> ?BU"
         proof -
           define CC_op2 where "CC_op2 f = ?coset_class f" for f
