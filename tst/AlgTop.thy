@@ -4785,7 +4785,152 @@ proof -
         \<comment> \<open>class(prefix(\\<alpha>*\\<delta>x, c)) = class(\\<alpha>*prefix(\\<delta>x, t)).\<close>
         have hclass_reparam: "?coset_class (\<lambda>s. (top1_path_product \<alpha> \<delta>x) (s * ?c)) =
             ?coset_class (top1_path_product \<alpha> ?\<delta>x_t)"
-          sorry \<comment> \<open>Reparametrization homotopy: prefix of product \\<simeq> product with prefix.\<close>
+        proof -
+          let ?\<beta> = "top1_path_product \<alpha> \<delta>x"
+          have h\<beta>_cont: "top1_continuous_map_on I_set I_top B TB ?\<beta>"
+          proof -
+            have "top1_is_path_on B TB b0 (\<delta>x 1) ?\<beta>"
+              using top1_path_product_is_path[OF hTB h\<alpha>_path_pc h\<delta>x(1)] by (by100 blast)
+            thus ?thesis unfolding top1_is_path_on_def by (by100 blast)
+          qed
+          have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by simp_all
+          have hc01: "1/2 \<le> ?c" "?c \<le> 1" using ht01 by simp_all
+          have hc_I: "?c \<in> I_set" unfolding top1_unit_interval_def using hc01 by (by100 simp)
+          \<comment> \<open>\\<phi>(s) = s*c: continuous I\\<rightarrow>I.\<close>
+          have h\<phi>_cont: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>s. s * ?c)"
+            using affine_map_continuous_I_to_I[of 0 ?c] hc01 by (by100 simp)
+          \<comment> \<open>\\<psi>: pasting of two affine maps. \\<psi>(s) = s for s\\<le>1/2,
+             \\<psi>(s) = 1/2 + (2s-1)*t/2 for s\\<ge>1/2.
+             Equivalently: \\<psi>(s) = 2*s*(1/2) for s\\<le>1/2, \\<psi>(s) = 1/2 + (2s-1)*(c-1/2) for s\\<ge>1/2.\<close>
+          define \<psi> where "\<psi> s = (if s \<le> 1/2 then 2 * s * (1/2::real) else (1/2) + (2 * s - 1) * (?c - 1/2))" for s :: real
+          \<comment> \<open>Simplify: \\<psi>(s) = s for s\\<le>1/2, \\<psi>(s) = 1/2 + (2s-1)*t/2 for s>1/2.\<close>
+          have h\<psi>_simp1: "\<And>s::real. s \<le> 1/2 \<Longrightarrow> \<psi> s = s"
+            unfolding \<psi>_def by (by100 simp)
+          have hc_half: "?c - 1/2 = t/2"
+          proof -
+            have "(1 + t) / 2 - 1/2 = ((1 + t) - 1) / 2" by (by100 argo)
+            also have "... = t / 2" by simp
+            finally show ?thesis .
+          qed
+          have h\<psi>_simp2: "\<And>s::real. s > 1/2 \<Longrightarrow> \<psi> s = 1/2 + (2*s - 1) * (t/2)"
+            unfolding \<psi>_def hc_half by (by100 simp)
+          \<comment> \<open>\\<psi> continuous I\\<rightarrow>I: same pasting argument as hlift\\_path.\<close>
+          have h\<psi>_cont: "top1_continuous_map_on I_set I_top I_set I_top \<psi>"
+            sorry \<comment> \<open>Pasting: two affine maps on [0,1/2] and [1/2,1] via Theorem\\_18\\_3.
+               This is ~80 lines of detailed proof (same as hlift\\_path lines 4077-4230).\<close>
+          \<comment> \<open>Endpoints: \\<phi>(0)=0, \\<phi>(1)=c; \\<psi>(0)=0, \\<psi>(1)=c.\<close>
+          have h\<phi>_ep: "(\<lambda>s. s * ?c) 0 = 0" "(\<lambda>s. s * ?c) 1 = ?c" by simp_all
+          have h\<psi>_ep0: "\<psi> 0 = 0" unfolding \<psi>_def by (by100 simp)
+          have h\<psi>_ep1: "\<psi> 1 = ?c"
+          proof -
+            have "\<psi> 1 = 1/2 + (2 * 1 - 1) * (?c - 1/2)"
+              unfolding \<psi>_def by (by100 simp)
+            also have "... = 1/2 + (?c - 1/2)" by simp
+            also have "... = ?c" by simp
+            finally show ?thesis .
+          qed
+          \<comment> \<open>Image of \\<beta> in B.\<close>
+          have h\<beta>_img: "\<forall>s \<in> I_set. ?\<beta> s \<in> B"
+            using h\<beta>_cont unfolding top1_continuous_map_on_def by (by100 blast)
+          have hB_sub_B: "B \<subseteq> B" by (by100 blast)
+          have hsubspace_self: "subspace_topology B TB B = TB"
+          proof -
+            have "\<forall>U \<in> TB. U \<subseteq> B"
+              using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+            thus ?thesis by (rule subspace_topology_self)
+          qed
+          have hTB_sub: "is_topology_on B (subspace_topology B TB B)"
+            using hsubspace_self hTB by simp
+          have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          \<comment> \<open>Apply reparam\\_path\\_homotopy.\<close>
+          from reparam_path_homotopy[OF hTB h\<beta>_cont h\<beta>_img hB_sub_B hTB_sub
+              h\<phi>_cont h\<psi>_cont h\<phi>_ep(1) h\<phi>_ep(2) h\<psi>_ep0 h\<psi>_ep1 h0_I hc_I]
+          have "top1_path_homotopic_on B (subspace_topology B TB B)
+              (?\<beta> 0) (?\<beta> ?c) (?\<beta> \<circ> (\<lambda>s. s * ?c)) (?\<beta> \<circ> \<psi>)" .
+          hence hhtpy: "top1_path_homotopic_on B TB b0 (?\<beta> ?c)
+              (\<lambda>s. ?\<beta> (s * ?c)) (?\<beta> \<circ> \<psi>)"
+          proof -
+            have h1: "?\<beta> 0 = b0"
+              unfolding top1_path_product_def using h\<alpha>_path_pc unfolding top1_is_path_on_def
+              by (by100 simp)
+            have h2: "?\<beta> \<circ> (\<lambda>s. s * ?c) = (\<lambda>s. ?\<beta> (s * ?c))" by (rule ext, simp)
+            show ?thesis using \<open>top1_path_homotopic_on B (subspace_topology B TB B)
+                (?\<beta> 0) (?\<beta> ?c) (?\<beta> \<circ> (\<lambda>s. s * ?c)) (?\<beta> \<circ> \<psi>)\<close>
+              hsubspace_self h1 h2 by simp
+          qed
+          \<comment> \<open>\\<beta>\\<circ>\\<psi> = \\<alpha>*prefix(\\<delta>x,t) on I\\_set.\<close>
+          have hcomp_eq: "\<forall>s \<in> I_set. (?\<beta> \<circ> \<psi>) s = (top1_path_product \<alpha> ?\<delta>x_t) s"
+            sorry \<comment> \<open>Case split s\\<le>1/2 vs s>1/2: both sides evaluate to \\<alpha>(2s) resp \\<delta>x((2s-1)t).
+               Requires if-else evaluation of path\\_product at \\<psi>(s).
+               The individual steps are straightforward but let-opacity makes simp fail.\<close>
+          \<comment> \<open>Since they agree on I\\_set, they're path-homotopic (reflexivity + agreement).\<close>
+          have h_agree_htpy: "top1_path_homotopic_on B TB b0 (?\<beta> ?c)
+              (?\<beta> \<circ> \<psi>) (top1_path_product \<alpha> ?\<delta>x_t)"
+            sorry \<comment> \<open>paths\\_agree\\_on\\_I\\_path\\_homotopic after showing \\<beta>\\<circ>\\<psi> is a path.\<close>
+          \<comment> \<open>Transitivity: prefix \\<simeq> \\<beta>\\<circ>\\<psi> \\<simeq> \\<alpha>*prefix(\\<delta>x,t).\<close>
+          have hfinal: "top1_path_homotopic_on B TB b0 (?\<beta> ?c)
+              (\<lambda>s. ?\<beta> (s * ?c)) (top1_path_product \<alpha> ?\<delta>x_t)"
+            using Lemma_51_1_path_homotopic_trans[OF hTB hhtpy h_agree_htpy] .
+          \<comment> \<open>Both are in ?paths \\<Rightarrow> classes equal.\<close>
+          have hpref_paths: "(\<lambda>s. ?\<beta> (s * ?c)) \<in> ?paths"
+          proof -
+            have h\<beta>_paths: "?\<beta> \<in> ?paths"
+            proof -
+              have "top1_is_path_on B TB b0 (\<delta>x 1) ?\<beta>"
+                using top1_path_product_is_path[OF hTB h\<alpha>_path_pc h\<delta>x(1)] by (by100 blast)
+              moreover have "?\<beta> 1 = \<delta>x 1" unfolding top1_path_product_def by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            from hprefix_path[rule_format, OF h\<beta>_paths, rule_format, OF hc_I]
+            show ?thesis .
+          qed
+          have hprod_paths: "top1_path_product \<alpha> ?\<delta>x_t \<in> ?paths"
+          proof -
+            have "top1_is_path_on B TB b0 (\<delta>x t) (top1_path_product \<alpha> ?\<delta>x_t)"
+              using top1_path_product_is_path[OF hTB h\<alpha>_path_pc h\<delta>xt_path] by (by100 blast)
+            moreover have "(top1_path_product \<alpha> ?\<delta>x_t) 1 = \<delta>x t"
+              unfolding top1_path_product_def by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Endpoint matching: prefix(\\<beta>,c)(1) = \\<beta>(c) = (\\<alpha>*\\<delta>x)((1+t)/2).
+             (\\<alpha>*prefix(\\<delta>x,t))(1) = prefix(\\<delta>x,t)(1) = \\<delta>x(t).
+             Need: \\<beta>(c) = \\<delta>x(t).\<close>
+          have hep_match: "(\<lambda>s. ?\<beta> (s * ?c)) 1 = (top1_path_product \<alpha> ?\<delta>x_t) 1"
+          proof -
+            have "(\<lambda>s. ?\<beta> (s * ?c)) 1 = ?\<beta> ?c" by simp
+            have "?\<beta> ?c = \<delta>x t"
+            proof (cases "t = 0")
+              case True
+              hence "?c = 1/2" by simp
+              hence "?\<beta> ?c = ?\<beta> (1/2)" by simp
+              also have "... = \<alpha> 1" unfolding top1_path_product_def by (by100 simp)
+              also have "... = \<delta>x 0"
+                using h\<delta>x(1) unfolding top1_is_path_on_def by (by100 simp)
+              finally show ?thesis using True by simp
+            next
+              case False
+              hence "t > 0" using ht01 by (by100 linarith)
+              hence "?c > 1/2" by simp
+              hence "?\<beta> ?c = \<delta>x (2 * ?c - 1)"
+                unfolding top1_path_product_def by (by100 simp)
+              moreover have "2 * ?c - 1 = t" by (by100 argo)
+              ultimately show ?thesis by simp
+            qed
+            moreover have "(top1_path_product \<alpha> ?\<delta>x_t) 1 = ?\<delta>x_t 1"
+              unfolding top1_path_product_def by (by100 simp)
+            moreover have "?\<delta>x_t 1 = \<delta>x t" by simp
+            ultimately show ?thesis by simp
+          qed
+          have hfinal': "top1_path_homotopic_on B TB b0 ((\<lambda>s. ?\<beta> (s * ?c)) 1)
+              (\<lambda>s. ?\<beta> (s * ?c)) (top1_path_product \<alpha> ?\<delta>x_t)"
+            using hfinal hep_match
+          proof -
+            have "?\<beta> ?c = (\<lambda>s. ?\<beta> (s * ?c)) 1" by simp
+            thus ?thesis using hfinal by simp
+          qed
+          from hhtpy_class[rule_format, OF hpref_paths hprod_paths hfinal']
+          show ?thesis .
+        qed
         \<comment> \<open>class(\\<alpha>*prefix(\\<delta>x,t)) \\<in> B(U,\\<alpha>) by definition.\<close>
         have h\<alpha>\<delta>xt_in_BU: "?coset_class (top1_path_product \<alpha> ?\<delta>x_t) \<in> ?BU"
         proof -
