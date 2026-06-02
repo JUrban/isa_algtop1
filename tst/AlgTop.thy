@@ -2656,9 +2656,24 @@ proof -
     qed
   qed
   have hp_open: "\<forall>U \<in> ?TE. ?p ` U \<in> TB"
-    sorry \<comment> \<open>p(V) = \\<Union>{p(B\\_c)} for c \\<in> V.
-       Each p(B\\_c) is a path-component in U\\_c, which is open by local path-connectivity.
-       Union of open sets is open.\<close>
+  proof (intro ballI)
+    fix V assume hV: "V \<in> ?TE"
+    \<comment> \<open>p(V) = \\<Union>{p(B\\_c) | c \\<in> V}. Each p(B\\_c) is a path-component of \\<alpha>\\_c(1) in U\\_c.
+       By Theorem\\_25\\_4 (locally path-connected), path-components of open sets are open.\<close>
+    \<comment> \<open>Step 1: p(V) \\<subseteq> \\<Union>{p(B\\_c) | c \\<in> V} and conversely.\<close>
+    \<comment> \<open>Step 2: Each p(B\\_c) is open in TB (path-component in open set).\<close>
+    \<comment> \<open>Step 3: p(V) is union of open sets, hence open.\<close>
+    have "?p ` V = \<Union>{?p ` (?B_basis U \<alpha>) | U \<alpha>.
+        \<exists>c \<in> V. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V}"
+      sorry \<comment> \<open>From hTE\\_elim: V = \\<Union>{B\\_c}, so p(V) = \\<Union>{p(B\\_c)}.\<close>
+    moreover have "\<forall>S \<in> {?p ` (?B_basis U \<alpha>) | U \<alpha>.
+        \<exists>c \<in> V. U \<in> TB \<and> \<alpha> \<in> ?paths \<and> \<alpha> 1 \<in> U \<and> ?coset_class \<alpha> = c \<and> ?B_basis U \<alpha> \<subseteq> V}.
+        S \<in> TB"
+      sorry \<comment> \<open>Each p(B(U,\\<alpha>)) is a path-component of \\<alpha>(1) in U.
+         By Theorem\\_25\\_4, path-components of open sets are open in LPC spaces.\<close>
+    ultimately show "?p ` V \<in> TB"
+      sorry \<comment> \<open>Union of open sets is open.\<close>
+  qed
   \<comment> \<open>===== Step 4 (book): Evenly covered neighborhoods =====\<close>
   have hp_covering: "\<forall>b \<in> B. \<exists>U. b \<in> U \<and> top1_evenly_covered_on ?E ?TE B TB ?p U"
     sorry \<comment> \<open>For each b, use semilocally sc nbhd U. The slices B(U,\\<alpha>\\_i) for
