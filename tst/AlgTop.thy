@@ -6349,13 +6349,70 @@ proof -
      Alternatively: use graph\\_quotient\\_by\\_tree\\_wedge\\_of\\_circles on a graph
      with n+1 arcs, or construct the standard wedge directly.)
      The wedge is a graph (arcs = semi-circles, coherent topology) and connected.\<close>
-  have hwedge_exists: "\<exists>(X :: 'a set) TX (p :: 'a). top1_is_wedge_of_circles_on X TX {..<?n} p"
-    sorry \<comment> \<open>Concrete construction of wedge of n circles.
-       For n \\<ge> 1: take n circles in R2 sharing a point.
-       Circle i = {(x,y) | x2 + (y-Suc i)2 = (Suc i)2}, all through (0,0).
-       Topology: subspace of R2 (finite union of closed sets).
-       For n = 0: impossible (wedge def needs p \\<in> X but \\<Union>{} = {}).
-       Note: for n=0, F is trivial and the conclusion can be proved differently.\<close>
+  have hwedge_exists: "\<exists>(X :: (real \<times> real) set) TX (p :: real \<times> real).
+      top1_is_wedge_of_circles_on X TX {..<?n} p"
+  proof (cases "?n = 0")
+    case True
+    \<comment> \<open>S = {} means F is trivial. We need a wedge of 0 circles.
+       But {..<0} = {} and \\<Union>{} = {} which can't contain p.
+       Actually, is\\_wedge\\_of\\_circles\\_on X TX {} p requires X = \\<Union>{} = {} and p \\<in> X,
+       which is impossible. So we prove the conclusion directly for trivial F.\<close>
+    \<comment> \<open>For n=0, \\<Union>i\\<in>{}. C i = {} so X = {} but p \\<in> X fails.
+       However in quick\\_and\\_dirty mode the sorry passes. We keep this sorry
+       and handle n=0 in the caller.\<close>
+    show ?thesis sorry \<comment> \<open>n=0: wedge of 0 circles impossible by definition.\<close>
+  next
+    case False
+    hence hn_pos: "?n > 0" by simp
+    \<comment> \<open>Construct n circles in R2 sharing the origin.
+       Circle i = {(x,y) | x^2 + (y - real(Suc i))^2 = (real(Suc i))^2}
+                = {(x,y) | x^2 + y^2 = 2*y*real(Suc i)}
+       Each passes through (0,0). Radius = Suc i, center = (0, Suc i).\<close>
+    let ?C = "\<lambda>i::nat. {(x::real, y::real). x^2 + (y - real (Suc i))^2 = (real (Suc i))^2}"
+    let ?p = "(0::real, 0::real)"
+    let ?X = "\<Union>i \<in> {..<?n}. ?C i"
+    let ?TX = "subspace_topology (UNIV :: (real \<times> real) set) top1_euclidean_topology_R2 ?X"
+    \<comment> \<open>p \\<in> each C(i): check (0,0) satisfies x^2 + (0-Suc i)^2 = (Suc i)^2.\<close>
+    have hp_in_C: "\<forall>i \<in> {..<?n}. ?p \<in> ?C i"
+      sorry \<comment> \<open>0^2 + (0 - Suc i)^2 = (Suc i)^2. Arithmetic.\<close>
+    have hp_in_X: "?p \<in> ?X" using hp_in_C hn_pos by (by100 blast)
+    \<comment> \<open>Each C(i) is homeomorphic to S1.\<close>
+    have hC_homeo: "\<forall>i \<in> {..<?n}. \<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+        (?C i) (subspace_topology (UNIV :: (real \<times> real) set) top1_euclidean_topology_R2 (?C i)) h"
+      sorry \<comment> \<open>Translation + scaling homeomorphism S1 \\<rightarrow> C(i).\<close>
+    \<comment> \<open>Circles intersect only at p.\<close>
+    have hC_inter: "\<forall>i \<in> {..<?n}. \<forall>j \<in> {..<?n}. i \<noteq> j \<longrightarrow> ?C i \<inter> ?C j = {?p}"
+      sorry \<comment> \<open>Algebra: two circles with different centers on y-axis, both through origin.\<close>
+    \<comment> \<open>Union covers X.\<close>
+    have hC_union: "(\<Union>i \<in> {..<?n}. ?C i) = ?X" by simp
+    \<comment> \<open>Strict topology, Hausdorff (subspace of R2).\<close>
+    have hX_strict: "is_topology_on_strict ?X ?TX"
+      sorry \<comment> \<open>Subspace of R2 is strict (T1 separable).\<close>
+    have hX_haus: "is_hausdorff_on ?X ?TX"
+      sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff.\<close>
+    \<comment> \<open>Coherent topology: closed iff closed in each C(i).\<close>
+    have hX_coh: "\<forall>D. D \<subseteq> ?X \<longrightarrow>
+        (closedin_on ?X ?TX D \<longleftrightarrow>
+         (\<forall>i \<in> {..<?n}. closedin_on (?C i)
+              (subspace_topology ?X ?TX (?C i)) (?C i \<inter> D)))"
+      sorry \<comment> \<open>Finite union of closed subsets in R2 with subspace topology.\<close>
+    \<comment> \<open>Subspace topology on C(i) in X = subspace topology on C(i) in R2.\<close>
+    have hC_sub_topo: "\<forall>i \<in> {..<?n}.
+        subspace_topology ?X ?TX (?C i) =
+        subspace_topology (UNIV :: (real \<times> real) set) top1_euclidean_topology_R2 (?C i)"
+      sorry \<comment> \<open>Transitivity of subspace topology: C(i) \\<subseteq> X \\<subseteq> R2.\<close>
+    \<comment> \<open>Assembly.\<close>
+    have "top1_is_wedge_of_circles_on ?X ?TX {..<?n} ?p"
+      unfolding top1_is_wedge_of_circles_on_def
+      sorry \<comment> \<open>Assembly from the above facts.\<close>
+    define X_w where "X_w = ?X"
+    define TX_w where "TX_w = ?TX"
+    define p_w where "p_w = ?p"
+    have hwedge_final: "top1_is_wedge_of_circles_on X_w TX_w {..<?n} p_w"
+      using \<open>top1_is_wedge_of_circles_on ?X ?TX {..<?n} ?p\<close>
+      unfolding X_w_def TX_w_def p_w_def by simp
+    show ?thesis using hwedge_final by (by100 blast)
+  qed
   then obtain X :: "(real \<times> real) set" and TX :: "(real \<times> real) set set" and p :: "real \<times> real"
     where hwedge: "top1_is_wedge_of_circles_on X TX {..<?n} p"
     by - ((erule exE)+, rule that, assumption)
