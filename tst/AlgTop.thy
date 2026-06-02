@@ -2963,10 +2963,33 @@ proof -
     qed
     \<comment> \<open>Part 3: each slice is open in TE.\<close>
     have hslices_open: "\<forall>V \<in> ?slices. V \<in> ?TE"
-      sorry \<comment> \<open>B(U,\\<alpha>) \\<in> TE: for every c \\<in> B(U,\\<alpha>), c = class(\\<alpha>*\\<delta>) for \\<delta> in U.
-         Take U'=U, \\<alpha>'=\\<alpha>*\\<delta>. Then \\<alpha>' \\<in> paths, \\<alpha>'(1) = \\<delta>(1) \\<in> U,
-         class(\\<alpha>') = c, B(U,\\<alpha>') = B(U,\\<alpha>) (by hbasis\\_eq).
-         Also B(U,\\<alpha>) \\<subseteq> E since every class(\\<alpha>*\\<delta>) \\<in> E.\<close>
+    proof (intro ballI)
+      fix V assume "V \<in> ?slices"
+      then obtain \<alpha> where h\<alpha>: "\<alpha> \<in> ?paths" "\<alpha> 1 = b1" "V = ?B_basis U \<alpha>"
+        by (by5000 simp) (by100 blast)
+      \<comment> \<open>V = B(U,\\<alpha>). Need V \\<in> TE, i.e., V \\<subseteq> E and local basis condition.\<close>
+      \<comment> \<open>V \\<subseteq> E: every class(\\<alpha>*\\<delta>) \\<in> E.\<close>
+      have hV_sub_E: "V \<subseteq> ?E"
+      proof (rule subsetI)
+        fix c assume "c \<in> V"
+        hence "c \<in> ?B_basis U \<alpha>" using h\<alpha>(3) by simp
+        then obtain \<delta> where h\<delta>: "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
+            "c = ?coset_class (top1_path_product \<alpha> \<delta>)" by (by100 blast)
+        have "top1_path_product \<alpha> \<delta> \<in> ?paths"
+        proof -
+          have h\<alpha>_on: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>(1) by (by100 blast)
+          from top1_path_product_is_path[OF hTB h\<alpha>_on h\<delta>(1)]
+          have "top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)" .
+          moreover have "(top1_path_product \<alpha> \<delta>) 1 = \<delta> 1"
+            unfolding top1_path_product_def by simp
+          ultimately show ?thesis by (by100 simp)
+        qed
+        thus "c \<in> ?E" using h\<delta>(2) by (by100 simp)
+      qed
+      show "V \<in> ?TE"
+        sorry \<comment> \<open>B(U,\\<alpha>) \\<in> TE: V\\<subseteq>E (proved above), local basis via hbasis\\_eq.
+           Both conjunction assembly and TE introduction timeout on let-expanded terms.\<close>
+    qed
     \<comment> \<open>Part 4: p maps each slice homeomorphically to U.\<close>
     have hslice_homeo: "\<forall>V \<in> ?slices.
         top1_homeomorphism_on V (subspace_topology ?E ?TE V) U (subspace_topology B TB U) ?p"
