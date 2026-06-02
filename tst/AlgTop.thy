@@ -4533,16 +4533,31 @@ proof -
         using hp_cont_map hp_surj hp_covering by (by100 blast)
       \<comment> \<open>By covering\\_lift\\_unique\\_path: \\<gamma> = \\<tilde>\\<alpha> on I\\_set.\<close>
       have he0_in_E: "?e0 \<in> ?E" using hconst_paths by (by100 simp)
-      have h_unique: "\<forall>t \<in> I_set. \<gamma> t = ?\<alpha>_tilde t"
-        sorry \<comment> \<open>covering\\_lift\\_unique\\_path[OF hcov\\_local hTE\\_strict h\\<alpha>\\_path he0\\_in\\_E hp\\_e0\\_eq
-            h\\<gamma>\\_path h\\_tilde\\_path h\\<gamma>\\_lifts h\\_tilde\\_lifts]. Type matching issue.\<close>
-      \<comment> \<open>\\<gamma>(1) = \\<tilde>\\<alpha>(1). \\<gamma>(1) = e0 (loop). So \\<tilde>\\<alpha>(1) = e0.\<close>
-      \<comment> \<open>\\<gamma>(1) = \\<tilde>\\<alpha>(1) (from uniqueness at t=1).\<close>
-      \<comment> \<open>\\<gamma>(1) = e0. So \\<tilde>\\<alpha>(1) = e0. And \\<tilde>\\<alpha>(1) = class(\\<alpha>). So class(\\<alpha>) = e0.\<close>
-      \<comment> \<open>Use CC trick to avoid let-opacity.\<close>
+      \<comment> \<open>By lift uniqueness: \\<gamma> = canonical lift on I\\_set.
+         At t=1: \\<gamma>(1) = \\<tilde>\\<alpha>(1). \\<gamma>(1) = e0 and \\<tilde>\\<alpha>(1) = class(\\<alpha>).
+         So class(\\<alpha>) = e0, i.e., CosetClass(\\<alpha>) = CosetClass(const b0).\<close>
+      note h_unique_raw = covering_lift_unique_path[OF hcov_local hTE_strict h\<alpha>_path
+          he0_in_E hp_e0_eq h\<gamma>_path h_tilde_path h\<gamma>_lifts h_tilde_lifts]
+      \<comment> \<open>The canonical lift endpoint = class(\\<alpha>). By uniqueness, \\<gamma>(1) = class(\\<alpha>).
+         But \\<gamma>(1) = e0. So class(\\<alpha>) = e0.\<close>
+      have h_one_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      \<comment> \<open>h\\_tilde\\_path endpoint: \\<tilde>\\<alpha>(1) = class(\\<alpha>) (from path\\_on definition).\<close>
+      have h_tilde_ep: "?\<alpha>_tilde 1 = ?coset_class ?\<alpha>"
+        using h_tilde_path unfolding top1_is_path_on_def by (by100 blast)
+      \<comment> \<open>From uniqueness at t=1: \\<gamma>(1) = \\<tilde>\\<alpha>(1). Combined with endpoints.\<close>
+      have "?coset_class ?\<alpha> = ?e0"
+      proof -
+        have "?\<alpha>_tilde 1 = \<gamma> 1" using h_unique_raw[rule_format, OF h_one_I] by simp
+        also have "... = ?e0" using h\<gamma>_1 .
+        finally show "?coset_class ?\<alpha> = ?e0" using h_tilde_ep by simp
+      qed
       have hclass_e0: "CosetClass ?\<alpha> = CosetClass (top1_constant_path b0)"
-        sorry \<comment> \<open>From h\\_unique at t=1: \\<gamma>(1) = \\<tilde>\\<alpha>(1).
-           \\<gamma>(1) = e0, \\<tilde>\\<alpha>(1) = class(\\<alpha>). So class(\\<alpha>) = e0.\<close>
+      proof -
+        have "CosetClass ?\<alpha> = ?coset_class ?\<alpha>" using hCC_iff[symmetric] by simp
+        also have "... = ?e0" using \<open>?coset_class ?\<alpha> = ?e0\<close> .
+        also have "... = CosetClass (top1_constant_path b0)" using he0_CC .
+        finally show ?thesis .
+      qed
       show "cls \<in> H"
         sorry \<comment> \<open>class(\\<alpha>) = e0 \\<Rightarrow> [\\<alpha>] \\<in> H (reverse of hclass\\_eq\\_e0).
            Then cls = induced([\\<gamma>]) = [p\\<circ>\\<gamma>] = [\\<alpha>] \\<in> H.\<close>
