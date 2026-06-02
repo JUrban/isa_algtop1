@@ -3665,8 +3665,24 @@ proof -
         have hV_TE: "V \<in> ?TE" using hslices_open hV by (rule bspec)
         \<comment> \<open>p(W) \\<in> TB. W open in V-subspace, V open in TE \\<Rightarrow> W open in TE \\<Rightarrow> p(W) \\<in> TB.\<close>
         have "?p ` W \<in> TB"
-          sorry \<comment> \<open>W \\<in> subspace(E,TE,V). Extract W=V\\<inter>W', W'\\<in>TE. topology\\_inter2 gives W\\<in>TE.
-             Then hp\\_open gives p(W) \\<in> TB. Blocked by subspace extraction timeout.\<close>
+        proof -
+          \<comment> \<open>Extract W = V \\<inter> W' using define trick for subspace.\<close>
+          define SubV where "SubV = subspace_topology ?E ?TE V"
+          have hW_SubV: "W \<in> SubV" using hW unfolding SubV_def .
+          \<comment> \<open>SubV = {V \\<inter> U | U \\<in> TE}. Use define for TE opacity.\<close>
+          define TE_opaque where "TE_opaque = ?TE"
+          have "SubV = {V \<inter> U | U. U \<in> TE_opaque}"
+            unfolding SubV_def TE_opaque_def subspace_topology_def by simp
+          with hW_SubV obtain W' where "W' \<in> TE_opaque" "W = V \<inter> W'" by (by100 blast)
+          hence hW': "W' \<in> ?TE" "W = V \<inter> W'" unfolding TE_opaque_def by simp_all
+          \<comment> \<open>V \\<inter> W' \\<in> TE by topology\\_inter2.\<close>
+          have "is_topology_on ?E ?TE"
+            using hTE_strict unfolding is_topology_on_strict_def by (by100 blast)
+          from topology_inter2[OF this hV_TE hW'(1)]
+          have "W \<in> ?TE" using hW'(2) by simp
+          from hp_open[rule_format, OF this]
+          show ?thesis .
+        qed
         moreover have "?p ` W \<subseteq> U"
         proof -
           have "W \<subseteq> V" using hW_sub_V .
