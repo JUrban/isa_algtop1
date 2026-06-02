@@ -5360,7 +5360,13 @@ proof -
             have "?\<beta>y 0 = b0"
               unfolding top1_path_product_def using h\<alpha>_path_pc unfolding top1_is_path_on_def
               by (by100 simp)
-            thus ?thesis using hhtpy_raw hsubspace_selfy sorry
+            have h1: "subspace_topology B TB B = TB" using hsubspace_selfy .
+            have h2: "?\<beta>y \<circ> (\<lambda>s. s * ?cy) = (\<lambda>s. ?\<beta>y (s * ?cy))"
+              by (rule ext, simp)
+            from hhtpy_raw[unfolded h1]
+            have "top1_path_homotopic_on B TB (?\<beta>y 0) (?\<beta>y ?cy)
+                (?\<beta>y \<circ> (\<lambda>s. s * ?cy)) (?\<beta>y \<circ> \<psi>y)" .
+            thus ?thesis using \<open>?\<beta>y 0 = b0\<close> h2 by simp
           qed
           \<comment> \<open>\\<beta>y\\<circ>\\<psi>y = \\<alpha>*prefix(\\<delta>y,t) on I\\_set.\<close>
           have hcomp_eqy: "\<forall>s \<in> I_set. (?\<beta>y \<circ> \<psi>y) s = (top1_path_product \<alpha> ?\<delta>y_t) s"
