@@ -3213,9 +3213,47 @@ proof -
       qed
       \<comment> \<open>(2) Injection: p injective on V.\<close>
       have hpinj: "inj_on ?p V"
-        sorry \<comment> \<open>p((\\<alpha>*\\<delta>1)\\#)=p((\\<alpha>*\\<delta>2)\\#) \\<Rightarrow> \\<delta>1(1)=\\<delta>2(1).
-           \\<delta>1*rev(\\<delta>2) loop in U. By semilocal SC: \\<delta>1*rev(\\<delta>2) \\<simeq> const in B.
-           Then [\\<alpha>*\\<delta>1]=[\\<alpha>*\\<delta>2], hence (\\<alpha>*\\<delta>1)\\#=(\\<alpha>*\\<delta>2)\\#.\<close>
+      proof (rule inj_onI)
+        fix x y assume hx: "x \<in> V" and hy: "y \<in> V" and hpeq: "?p x = ?p y"
+        \<comment> \<open>x = class(\\<alpha>*\\<delta>1), y = class(\\<alpha>*\\<delta>2) for paths \\<delta>1, \\<delta>2 in U.\<close>
+        from hx[unfolded h\<alpha>_raw(3)]
+        obtain \<delta>1 where h\<delta>1: "top1_is_path_on B TB (\<alpha> 1) (\<delta>1 1) \<delta>1"
+            "\<delta>1 ` I_set \<subseteq> U" "x = ?coset_class (top1_path_product \<alpha> \<delta>1)"
+          by (by100 blast)
+        from hy[unfolded h\<alpha>_raw(3)]
+        obtain \<delta>2 where h\<delta>2: "top1_is_path_on B TB (\<alpha> 1) (\<delta>2 1) \<delta>2"
+            "\<delta>2 ` I_set \<subseteq> U" "y = ?coset_class (top1_path_product \<alpha> \<delta>2)"
+          by (by100 blast)
+        \<comment> \<open>p(x) = p(y) \\<Rightarrow> \\<delta>1(1) = \\<delta>2(1).\<close>
+        have h\<alpha>_on: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>" using h\<alpha>_paths by (by100 blast)
+        have h\<alpha>\<delta>1_paths: "top1_path_product \<alpha> \<delta>1 \<in> ?paths"
+        proof -
+          from top1_path_product_is_path[OF hTB h\<alpha>_on h\<delta>1(1)]
+          have "top1_is_path_on B TB b0 (\<delta>1 1) (top1_path_product \<alpha> \<delta>1)" .
+          moreover have "(top1_path_product \<alpha> \<delta>1) 1 = \<delta>1 1"
+            unfolding top1_path_product_def by simp
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have h\<alpha>\<delta>2_paths: "top1_path_product \<alpha> \<delta>2 \<in> ?paths"
+        proof -
+          from top1_path_product_is_path[OF hTB h\<alpha>_on h\<delta>2(1)]
+          have "top1_is_path_on B TB b0 (\<delta>2 1) (top1_path_product \<alpha> \<delta>2)" .
+          moreover have "(top1_path_product \<alpha> \<delta>2) 1 = \<delta>2 1"
+            unfolding top1_path_product_def by simp
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have hep_eq: "\<delta>1 1 = \<delta>2 1"
+          using hpeq hp_class[rule_format, OF h\<alpha>\<delta>1_paths] hp_class[rule_format, OF h\<alpha>\<delta>2_paths]
+              h\<delta>1(3) h\<delta>2(3) unfolding top1_path_product_def by simp
+        \<comment> \<open>\\<delta>1*rev(\\<delta>2) is a loop at b1 in U.\<close>
+        \<comment> \<open>By semilocal SC: \\<delta>1*rev(\\<delta>2) \\<simeq> const in B.\<close>
+        \<comment> \<open>Then (\\<alpha>*\\<delta>1)\\# = (\\<alpha>*\\<delta>2)\\# by hhtpy\\_class.\<close>
+        show "x = y"
+          using h\<delta>1 h\<delta>2 hep_eq hU_triv hhtpy_class hcoset_product_compat
+          sorry \<comment> \<open>Deep: \\<delta>1*rev(\\<delta>2) \\<simeq> const (from hU\\_triv).
+             Then [\\<alpha>*\\<delta>1*rev(\\<delta>2)] = [\\<alpha>] (right inverse identity).
+             class(\\<alpha>*\\<delta>1) = class(\\<alpha>*\\<delta>2) via hcoset\\_product\\_compat.\<close>
+      qed
       have hbij: "bij_betw ?p V U" using hpinj hpsurj unfolding bij_betw_def by (by100 blast)
       \<comment> \<open>(3) Continuous: p restricted to V.\<close>
       have hpcont_V: "top1_continuous_map_on V (subspace_topology ?E ?TE V) U (subspace_topology B TB U) ?p"
