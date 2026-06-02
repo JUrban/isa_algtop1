@@ -4860,9 +4860,78 @@ proof -
           qed
           \<comment> \<open>\\<beta>\\<circ>\\<psi> = \\<alpha>*prefix(\\<delta>x,t) on I\\_set.\<close>
           have hcomp_eq: "\<forall>s \<in> I_set. (?\<beta> \<circ> \<psi>) s = (top1_path_product \<alpha> ?\<delta>x_t) s"
-            sorry \<comment> \<open>Case split s\\<le>1/2 vs s>1/2: both sides evaluate to \\<alpha>(2s) resp \\<delta>x((2s-1)t).
-               Requires if-else evaluation of path\\_product at \\<psi>(s).
-               The individual steps are straightforward but let-opacity makes simp fail.\<close>
+          proof (intro ballI)
+            fix s :: real assume hs: "s \<in> I_set"
+            \<comment> \<open>Use define to make \\<beta> and the product opaque.\<close>
+            define \<beta>_loc where "\<beta>_loc = ?\<beta>"
+            define prod_loc where "prod_loc = top1_path_product \<alpha> ?\<delta>x_t"
+            \<comment> \<open>\\<beta>\\_loc and prod\\_loc are both path products. Unfold their definitions.\<close>
+            have h\<beta>_ev_le: "\<And>r::real. r \<le> 1/2 \<Longrightarrow> \<beta>_loc r = \<alpha> (2*r)"
+              unfolding \<beta>_loc_def top1_path_product_def by (by100 simp)
+            have h\<beta>_ev_gt: "\<And>r::real. \<not>(r \<le> 1/2) \<Longrightarrow> \<beta>_loc r = \<delta>x (2*r - 1)"
+              unfolding \<beta>_loc_def top1_path_product_def by (by100 simp)
+            have hprod_ev_le: "\<And>r::real. r \<le> 1/2 \<Longrightarrow> prod_loc r = \<alpha> (2*r)"
+              unfolding prod_loc_def top1_path_product_def by (by100 simp)
+            have hprod_ev_gt: "\<And>r::real. \<not>(r \<le> 1/2) \<Longrightarrow> prod_loc r = \<delta>x ((2*r - 1)*t)"
+              unfolding prod_loc_def top1_path_product_def by (by100 simp)
+            show "(?\<beta> \<circ> \<psi>) s = (top1_path_product \<alpha> ?\<delta>x_t) s"
+            proof (cases "s \<le> 1/2")
+              case True
+              have "(\<beta>_loc \<circ> \<psi>) s = \<beta>_loc (\<psi> s)" by simp
+              also have "... = \<beta>_loc s" using h\<psi>_simp1[OF True] by simp
+              also have "... = \<alpha> (2*s)" using h\<beta>_ev_le[OF True] .
+              finally have lhs: "(\<beta>_loc \<circ> \<psi>) s = \<alpha> (2*s)" .
+              have rhs: "prod_loc s = \<alpha> (2*s)" using hprod_ev_le[OF True] .
+              show ?thesis unfolding \<beta>_loc_def[symmetric] prod_loc_def[symmetric]
+                using lhs rhs by simp
+            next
+              case False
+              hence hs_gt: "s > 1/2" by simp
+              have h\<psi>s: "\<psi> s = 1/2 + (2*s - 1) * (t/2)" using h\<psi>_simp2[OF hs_gt] .
+              \<comment> \<open>LHS: \\<beta>(\\<psi>(s)). Need \\<psi>(s) > 1/2 or \\<psi>(s) = 1/2.\<close>
+              have h\<psi>s_ge: "\<psi> s \<ge> 1/2" using h\<psi>s ht01 hs_gt by (by100 auto)
+              show ?thesis
+              proof (cases "t = 0")
+                case True
+                hence h\<psi>s_half: "\<psi> s = 1/2" using h\<psi>s by simp
+                have "(\<beta>_loc \<circ> \<psi>) s = \<beta>_loc (\<psi> s)" by simp
+                also have "\<beta>_loc (\<psi> s) = \<beta>_loc (1/2)"
+                proof -
+                  from h\<psi>s_half have "\<psi> s = 1/2" .
+                  from arg_cong[OF this, of \<beta>_loc] show ?thesis .
+                qed
+                also have "... = \<alpha> (2 * (1/2))" using h\<beta>_ev_le by simp
+                also have "... = \<alpha> 1" by simp
+                finally have lhs2: "(\<beta>_loc \<circ> \<psi>) s = \<alpha> 1" .
+                have rhs2: "prod_loc s = \<delta>x ((2*s-1)*0)"
+                  using hprod_ev_gt[OF False] True by simp
+                also have "... = \<delta>x 0" by simp
+                also have "... = \<alpha> 1"
+                  using h\<delta>x(1) unfolding top1_is_path_on_def by (by100 simp)
+                finally have rhs3: "prod_loc s = \<alpha> 1" .
+                show ?thesis unfolding \<beta>_loc_def[symmetric] prod_loc_def[symmetric]
+                  using lhs2 rhs3 by simp
+              next
+                case False
+                hence "t > 0" using ht01 by (by100 linarith)
+                hence h\<psi>s_gt: "\<psi> s > 1/2" using h\<psi>s hs_gt by (by100 auto)
+                hence h\<psi>s_nle: "\<not>(\<psi> s \<le> 1/2)" by (by100 linarith)
+                have "(\<beta>_loc \<circ> \<psi>) s = \<beta>_loc (\<psi> s)" by simp
+                also have "... = \<delta>x (2*(\<psi> s) - 1)" using h\<beta>_ev_gt[OF h\<psi>s_nle] .
+                also have "... = \<delta>x ((2*s-1)*t)"
+                proof -
+                  have "2*(\<psi> s) - 1 = 2*(1/2 + (2*s-1)*(t/2)) - 1" using h\<psi>s by simp
+                  also have "... = (2*s-1)*t" by (by100 argo)
+                  finally show ?thesis by simp
+                qed
+                finally have lhs3: "(\<beta>_loc \<circ> \<psi>) s = \<delta>x ((2*s-1)*t)" .
+                have rhs4: "prod_loc s = \<delta>x ((2*s-1)*t)"
+                  using hprod_ev_gt[OF \<open>\<not>(s \<le> 1/2)\<close>] .
+                show ?thesis unfolding \<beta>_loc_def[symmetric] prod_loc_def[symmetric]
+                  using lhs3 rhs4 by simp
+              qed
+            qed
+          qed
           \<comment> \<open>Since they agree on I\\_set, they're path-homotopic (reflexivity + agreement).\<close>
           have h_agree_htpy: "top1_path_homotopic_on B TB b0 (?\<beta> ?c)
               (?\<beta> \<circ> \<psi>) (top1_path_product \<alpha> ?\<delta>x_t)"
@@ -4876,7 +4945,17 @@ proof -
                 using h\<psi>_ep0 h\<alpha>_path_pc unfolding top1_is_path_on_def top1_path_product_def
                 by (by100 simp)
               have hcomp_1: "(?\<beta> \<circ> \<psi>) 1 = ?\<beta> ?c"
-                sorry \<comment> \<open>\\<psi>(1) = c, so (\\<beta>\\<circ>\\<psi>)(1) = \\<beta>(c). Trivial but let-opacity.\<close>
+              proof -
+                define \<beta>_loc where "\<beta>_loc = ?\<beta>"
+                define c_loc where "c_loc = ?c"
+                have "(\<beta>_loc \<circ> \<psi>) 1 = \<beta>_loc (\<psi> 1)" by simp
+                also have "\<beta>_loc (\<psi> 1) = \<beta>_loc c_loc"
+                proof -
+                  have "\<psi> 1 = c_loc" using h\<psi>_ep1 unfolding c_loc_def by simp
+                  thus ?thesis by simp
+                qed
+                finally show ?thesis unfolding \<beta>_loc_def c_loc_def by simp
+              qed
               show ?thesis unfolding top1_is_path_on_def
               proof -
                 define comp_loc where "comp_loc = ?\<beta> \<circ> \<psi>"
