@@ -6387,7 +6387,43 @@ proof -
       sorry \<comment> \<open>Translation + scaling homeomorphism S1 \\<rightarrow> C(i).\<close>
     \<comment> \<open>Circles intersect only at p.\<close>
     have hC_inter: "\<forall>i \<in> {..<?n}. \<forall>j \<in> {..<?n}. i \<noteq> j \<longrightarrow> ?C i \<inter> ?C j = {?p}"
-      sorry \<comment> \<open>Algebra: two circles with different centers on y-axis, both through origin.\<close>
+    proof (intro ballI impI)
+      fix i j assume "i \<in> {..<?n}" "j \<in> {..<?n}" "i \<noteq> j"
+      show "?C i \<inter> ?C j = {?p}"
+      proof (rule set_eqI, rule iffI)
+        fix z :: "real \<times> real" assume hz: "z \<in> ?C i \<inter> ?C j"
+        obtain x y where hxy: "z = (x, y)" by (cases z)
+        from hz have hi: "x^2 + (y - real (Suc i))^2 = (real (Suc i))^2"
+            and hj: "x^2 + (y - real (Suc j))^2 = (real (Suc j))^2"
+          using hxy by (by100 simp)+
+        \<comment> \<open>Expand and subtract: 2y(Suc i) - 2y(Suc j) = 0, i.e., y(i-j) = 0.\<close>
+        have hi_exp: "x^2 + y^2 = 2*y*real (Suc i)"
+        proof -
+          from hi have "x^2 + y^2 - 2*y*real (Suc i) + (real (Suc i))^2 = (real (Suc i))^2"
+            by (by100 algebra)
+          thus ?thesis by (by100 linarith)
+        qed
+        have hj_exp: "x^2 + y^2 = 2*y*real (Suc j)"
+        proof -
+          from hj have "x^2 + y^2 - 2*y*real (Suc j) + (real (Suc j))^2 = (real (Suc j))^2"
+            by (by100 algebra)
+          thus ?thesis by (by100 linarith)
+        qed
+        from hi_exp hj_exp have "2*y*real (Suc i) = 2*y*real (Suc j)" by (by100 linarith)
+        hence "y * (real (Suc i) - real (Suc j)) = 0" by (by100 algebra)
+        moreover have "real (Suc i) - real (Suc j) \<noteq> 0"
+          using \<open>i \<noteq> j\<close> by (by100 simp)
+        ultimately have "y = 0" by (by100 simp)
+        from hi_exp \<open>y = 0\<close> have "x^2 = 0" by (by100 simp)
+        hence "x = 0" by (by100 simp)
+        show "z \<in> {?p}" using hxy \<open>x = 0\<close> \<open>y = 0\<close> by (by100 simp)
+      next
+        fix z assume "z \<in> {?p}"
+        hence "z = ?p" by (by100 simp)
+        thus "z \<in> ?C i \<inter> ?C j"
+          using hp_in_C \<open>i \<in> {..<?n}\<close> \<open>j \<in> {..<?n}\<close> by (by100 blast)
+      qed
+    qed
     \<comment> \<open>Union covers X.\<close>
     have hC_union: "(\<Union>i \<in> {..<?n}. ?C i) = ?X" by simp
     \<comment> \<open>Strict topology, Hausdorff (subspace of R2).\<close>
@@ -6423,7 +6459,14 @@ proof -
     have hC_sub_topo: "\<forall>i \<in> {..<?n}.
         subspace_topology ?X ?TX (?C i) =
         subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (?C i)"
-      sorry \<comment> \<open>Transitivity of subspace topology: C(i) \\<subseteq> X \\<subseteq> R2.\<close>
+    proof (intro ballI)
+      fix i assume "i \<in> {..<?n}"
+      have hCi_sub: "?C i \<subseteq> ?X" using \<open>i \<in> {..<?n}\<close> by (by100 blast)
+      from subspace_topology_trans[OF hCi_sub]
+      show "subspace_topology ?X ?TX (?C i) =
+          subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C i)"
+        by simp
+    qed
     \<comment> \<open>Assembly.\<close>
     have "top1_is_wedge_of_circles_on ?X ?TX {..<?n} ?p"
       unfolding top1_is_wedge_of_circles_on_def
