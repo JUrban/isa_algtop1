@@ -2809,16 +2809,28 @@ proof -
     sorry \<comment> \<open>For each b, use semilocally sc nbhd U. The slices B(U,\\<alpha>\\_i) for
        \\<alpha>\\_i ranging over paths from b0 to b partition p\\<inverse>(U) and
        p maps each slice homeomorphically to U.\<close>
-  \<comment> \<open>===== Step 5 (book): E path-connected and lpc =====\<close>
+  \<comment> \<open>===== Step 5 (book): Lifting a path. Prefix path construction =====\<close>
+  \<comment> \<open>Helper: prefix path \\<alpha>\\_c(t) = \\<alpha>(tc). For \\<alpha> \\<in> paths, \\<alpha>\\_c \\<in> paths.\<close>
+  have hprefix_path: "\<forall>\<alpha> \<in> ?paths. \<forall>c \<in> I_set.
+      (\<lambda>t. \<alpha> (t * c)) \<in> ?paths"
+    sorry \<comment> \<open>\\<alpha>\\_c continuous (composition), \\<alpha>\\_c(0) = \\<alpha>(0) = b0, \\<alpha>\\_c(1) = \\<alpha>(c).\<close>
+  \<comment> \<open>Helper: the lift \\<tilde>\\<alpha>(c) = class(\\<alpha>\\_c) is a path in (E,TE) from e0 to class(\\<alpha>).\<close>
+  have hlift_path: "\<forall>\<alpha> \<in> ?paths.
+      top1_is_path_on ?E ?TE ?e0 (?coset_class \<alpha>) (\<lambda>c. ?coset_class (\<lambda>t. \<alpha> (t * c)))"
+    sorry \<comment> \<open>Book Step 5: continuity at c uses B(U,\\<alpha>\\_c) basis.
+       For d>c: class(\\<alpha>\\_d) = class(\\<alpha>\\_c * \\<delta>\\_cd) \\<in> B(U,\\<alpha>\\_c).
+       Endpoints: \\<tilde>\\<alpha>(0) = class(\\<alpha>\\_0) = e0, \\<tilde>\\<alpha>(1) = class(\\<alpha>) = class(\\<alpha>).\<close>
+  \<comment> \<open>Step 6 (book): E is path-connected. Any class(\\<alpha>) is connected to e0 by \\<tilde>\\<alpha>.\<close>
   have hE_pc: "top1_path_connected_on ?E ?TE"
-    sorry \<comment> \<open>Book Step 5: prefix path t \\<mapsto> class(\\<alpha>\\_t) where \\<alpha>\\_t(s)=\\<alpha>(ts).
-       Goes from e0 = class(\\<alpha>\\_0) to class(\\<alpha>) = class(\\<alpha>\\_1).
-       Needs is\\_topology\\_on (from hTE\\_strict) + path existence for all pairs.\<close>
+    sorry \<comment> \<open>From hlift\\_path: for any class(\\<alpha>) \\<in> E, \\<tilde>\\<alpha> connects e0 to class(\\<alpha>).
+       Needs is\\_topology\\_on (from hTE\\_strict, proved) + path existence.\<close>
   have hE_lpc: "top1_locally_path_connected_on ?E ?TE"
     sorry \<comment> \<open>Basis elements B(U,\\<alpha>) are path-connected.\<close>
   \<comment> \<open>===== Step 6 (book): p*(\\<pi>\\_1(E, e0)) = H =====\<close>
   have hp_star_eq_H: "top1_fundamental_group_image_hom ?E ?TE ?e0 B TB b0 ?p = H"
-    sorry \<comment> \<open>[\\<gamma>] \\<in> p*(\\<pi>\\_1(E,e0)) iff lift of \\<gamma> is a loop iff \\<gamma>\\# = e0 iff [\\<gamma>] \\<in> H.\<close>
+    sorry \<comment> \<open>Book Step 7: [\\<gamma>] \\<in> p*(\\<pi>\\_1(E,e0)) iff \\<tilde>\\<gamma> is a loop iff class(\\<gamma>) = e0
+       iff [\\<gamma>*rev(const b0)] \\<in> H iff [\\<gamma>] \\<in> H.
+       Uses hlift\\_path (\\<tilde>\\<gamma> ends at class(\\<gamma>)) + Theorem 54.6 (lifting criterion).\<close>
   \<comment> \<open>===== Assembly =====\<close>
   have hTE_strict: "is_topology_on_strict ?E ?TE"
   proof -
