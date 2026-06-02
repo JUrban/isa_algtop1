@@ -2824,7 +2824,28 @@ proof -
     have hep1: "(\<lambda>t. \<alpha> (t * c)) 1 = \<alpha> c" by simp
     \<comment> \<open>Continuity: composition of \\<alpha> (continuous I\\<rightarrow>B) with t\\<mapsto>tc (continuous I\\<rightarrow>I).\<close>
     have h_cont_prefix: "top1_continuous_map_on I_set I_top B TB (\<lambda>t. \<alpha> (t * c))"
-      sorry \<comment> \<open>Composition: t\\<mapsto>tc continuous I\\<rightarrow>I + \\<alpha> continuous I\\<rightarrow>B.\<close>
+    proof -
+      \<comment> \<open>Step 1: t\\<mapsto>tc continuous on R.\<close>
+      have hcont_R: "continuous_on UNIV (\<lambda>t::real. t * c)"
+        sorry \<comment> \<open>Standard analysis: t\\<mapsto>tc is continuous on R.
+           Needs: continuous\\_on\\_mult\\_left[OF continuous\\_on\\_id] + commutativity bridge.\<close>
+      \<comment> \<open>Step 2: t\\<mapsto>tc maps I to I (tc \\<in> [0,1] for t,c \\<in> [0,1]).\<close>
+      have him: "\<forall>t \<in> I_set. t * c \<in> I_set"
+      proof (intro ballI)
+        fix t assume "t \<in> I_set"
+        hence "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by simp_all
+        moreover have "0 \<le> c" "c \<le> 1" using hc unfolding top1_unit_interval_def by simp_all
+        ultimately have "0 \<le> t * c" "t * c \<le> 1" by (simp_all add: mult_le_one)
+        thus "t * c \<in> I_set" unfolding top1_unit_interval_def by simp
+      qed
+      \<comment> \<open>Step 3: t\\<mapsto>tc continuous I\\<rightarrow>I (bridge to topology framework).\<close>
+      have hcont_I: "top1_continuous_map_on I_set I_top I_set I_top (\<lambda>t. t * c)"
+        sorry \<comment> \<open>Bridge: him + hcont\\_R + top1\\_continuous\\_map\\_on\\_real\\_subspace\\_open\\_sets.\<close>
+      \<comment> \<open>Step 4: compose with \\<alpha> continuous I\\<rightarrow>B.\<close>
+      from top1_continuous_map_on_comp[OF hcont_I h\<alpha>_cont]
+      have "top1_continuous_map_on I_set I_top B TB (\<alpha> \<circ> (\<lambda>t. t * c))" .
+      thus ?thesis unfolding comp_def .
+    qed
     \<comment> \<open>\\<alpha>\\_c(1) = \\<alpha>(c). Need \\<alpha>(c) as the formal endpoint.\<close>
     have "top1_is_path_on B TB b0 (\<alpha> c) (\<lambda>t. \<alpha> (t * c))"
       using h_cont_prefix hep0 hep1 unfolding top1_is_path_on_def by (by100 blast)
