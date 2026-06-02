@@ -3248,11 +3248,30 @@ proof -
         \<comment> \<open>\\<delta>1*rev(\\<delta>2) is a loop at b1 in U.\<close>
         \<comment> \<open>By semilocal SC: \\<delta>1*rev(\\<delta>2) \\<simeq> const in B.\<close>
         \<comment> \<open>Then (\\<alpha>*\\<delta>1)\\# = (\\<alpha>*\\<delta>2)\\# by hhtpy\\_class.\<close>
+        \<comment> \<open>\\<delta>1*rev(\\<delta>2) is a loop at b1 in U.\<close>
+        have h\<delta>1_adj: "top1_is_path_on B TB b1 (\<delta>1 1) \<delta>1"
+          using h\<delta>1(1) h\<alpha>_raw(2) by simp
+        have h\<delta>2_adj: "top1_is_path_on B TB b1 (\<delta>2 1) \<delta>2"
+          using h\<delta>2(1) h\<alpha>_raw(2) by simp
+        have hrev\<delta>2: "top1_is_path_on B TB (\<delta>2 1) b1 (top1_path_reverse \<delta>2)"
+          using top1_path_reverse_is_path[OF h\<delta>2_adj] by simp
+        have hrev\<delta>2': "top1_is_path_on B TB (\<delta>1 1) b1 (top1_path_reverse \<delta>2)"
+          using hrev\<delta>2 hep_eq by simp
+        have h\<delta>1rev\<delta>2: "top1_is_path_on B TB b1 b1 (top1_path_product \<delta>1 (top1_path_reverse \<delta>2))"
+          using top1_path_product_is_path[OF hTB h\<delta>1_adj hrev\<delta>2'] .
+        \<comment> \<open>\\<delta>1*rev(\\<delta>2) is a loop in U (both \\<delta>1 and rev(\\<delta>2) have images in U).\<close>
+        have h\<delta>1rev\<delta>2_loop_U: "top1_is_loop_on U (subspace_topology B TB U) b1
+            (top1_path_product \<delta>1 (top1_path_reverse \<delta>2))"
+          sorry \<comment> \<open>\\<delta>1`I \\<subseteq> U, rev(\\<delta>2)`I \\<subseteq> U, product stays in U. Loop at b1.\<close>
+        \<comment> \<open>By semilocal SC: \\<delta>1*rev(\\<delta>2) \\<simeq> const in B.\<close>
+        have h\<delta>1rev\<delta>2_triv: "top1_path_homotopic_on B TB b1 b1
+            (top1_path_product \<delta>1 (top1_path_reverse \<delta>2)) (top1_constant_path b1)"
+          using hU_triv h\<delta>1rev\<delta>2_loop_U by (by100 blast)
+        \<comment> \<open>From hcoset\\_product\\_compat: class(\\<alpha>*\\<delta>1) = class(\\<alpha>*\\<delta>2).\<close>
         show "x = y"
-          using h\<delta>1 h\<delta>2 hep_eq hU_triv hhtpy_class hcoset_product_compat
-          sorry \<comment> \<open>Deep: \\<delta>1*rev(\\<delta>2) \\<simeq> const (from hU\\_triv).
-             Then [\\<alpha>*\\<delta>1*rev(\\<delta>2)] = [\\<alpha>] (right inverse identity).
-             class(\\<alpha>*\\<delta>1) = class(\\<alpha>*\\<delta>2) via hcoset\\_product\\_compat.\<close>
+          using h\<delta>1(3) h\<delta>2(3) h\<delta>1rev\<delta>2_triv hcoset_product_compat h\<alpha>_paths hep_eq
+          sorry \<comment> \<open>\\<delta>1*rev(\\<delta>2) \\<simeq> const \\<Rightarrow> class(\\<alpha>*\\<delta>1) = class(\\<alpha>*\\<delta>2).
+             Uses hcoset\\_product\\_compat or direct homotopy argument.\<close>
       qed
       have hbij: "bij_betw ?p V U" using hpinj hpsurj unfolding bij_betw_def by (by100 blast)
       \<comment> \<open>(3) Continuous: p restricted to V.\<close>
