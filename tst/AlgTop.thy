@@ -2879,7 +2879,7 @@ proof -
       \<and> top1_path_connected_on ?E TE \<and> top1_locally_path_connected_on ?E TE
       \<and> e0 \<in> ?E \<and> p e0 = b0 \<and> top1_fundamental_group_image_hom ?E TE e0 B TB b0 p = H"
     by (by100 blast)
-  thus ?thesis sorry \<comment> \<open>Single exI for E — times out during unification (~5min+).\<close>
+  thus ?thesis sorry \<comment> \<open>rule exI times out at 10min (session timeout). Unification infeasible.\<close>
 qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
