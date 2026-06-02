@@ -2820,7 +2820,19 @@ proof -
     \<comment> \<open>B is locally path-connected \\<Rightarrow> every open U0 contains a path-connected open nbhd of b1.\<close>
     obtain U where hU_open: "U \<in> TB" and hb1_U: "b1 \<in> U" and hU_sub_U0: "U \<subseteq> U0"
         and hU_pc: "top1_path_connected_on U (subspace_topology B TB U)"
-      sorry \<comment> \<open>From locally path-connected: path-connected open subset of U0 containing b1.\<close>
+    proof -
+      have hlpc_at: "top1_locally_path_connected_at B TB b1"
+        using assms(3) hb1 unfolding top1_locally_path_connected_on_def by (by100 blast)
+      have hnbhd: "neighborhood_of_strict b1 B TB U0"
+        unfolding neighborhood_of_strict_def using hU0_open hb1_U0 hb1 by (by100 blast)
+      from locally_path_connected_at_strict[OF assms(1) hb1 hlpc_at hnbhd]
+      obtain V where hV_nbhd: "neighborhood_of_strict b1 B TB V" and hV_sub: "V \<subseteq> U0"
+          and hV_pc: "top1_path_connected_on V (subspace_topology B TB V)"
+        by (by100 blast)
+      have "V \<in> TB" using hV_nbhd unfolding neighborhood_of_strict_def by (by100 blast)
+      moreover have "b1 \<in> V" using hV_nbhd unfolding neighborhood_of_strict_def by (by100 blast)
+      ultimately show ?thesis using hV_sub hV_pc that by (by100 blast)
+    qed
     have hU_triv: "\<forall>f. top1_is_loop_on U (subspace_topology B TB U) b1 f \<longrightarrow>
         top1_path_homotopic_on B TB b1 b1 f (top1_constant_path b1)"
     proof (intro allI impI)
@@ -2851,15 +2863,56 @@ proof -
       thus "top1_path_homotopic_on B TB b1 b1 f (top1_constant_path b1)"
         using hU0_triv by (by100 blast)
     qed
-    \<comment> \<open>We can further require U to be path-connected (from local path-connectedness).\<close>
-    have hU_pc: "top1_path_connected_on U (subspace_topology B TB U)"
-      sorry \<comment> \<open>B is locally path-connected \\<Rightarrow> path-connected component of U containing b1.\<close>
+    \<comment> \<open>hU\\_pc already obtained above from locally\\_path\\_connected\\_at\\_strict.\<close>
     \<comment> \<open>Define the slices: V = {B(U,\\<alpha>) | \\<alpha> path from b0 to b1}.\<close>
     let ?slices = "{?B_basis U \<alpha> | \<alpha>. \<alpha> \<in> ?paths \<and> \<alpha> 1 = b1}"
     \<comment> \<open>Part 1: p\\<inverse>(U) = \\<Union> slices.\<close>
     have hpartition: "{x \<in> ?E. ?p x \<in> U} = \<Union>?slices"
-      sorry \<comment> \<open>Book: \\<beta>\\# \\<in> p\\<inverse>(U) \\<Rightarrow> \\<beta>(1)\\<in>U. Take \\<delta> in U from b1 to \\<beta>(1).
-         Let \\<alpha> = \\<beta>*rev(\\<delta>). Then \\<beta>\\# = (\\<alpha>*\\<delta>)\\# \\<in> B(U,\\<alpha>).\<close>
+    proof (rule equalityI)
+      \<comment> \<open>\\<supseteq>: each B(U,\\<alpha>) \\<subseteq> p\\<inverse>(U). From hp\\_basis\\_image or similar.\<close>
+      show "\<Union>?slices \<subseteq> {x \<in> ?E. ?p x \<in> U}"
+      proof (rule subsetI)
+        fix x assume "x \<in> \<Union>?slices"
+        then obtain V where hV: "V \<in> ?slices" "x \<in> V" by (by100 blast)
+        from hV(1) obtain \<alpha> where h\<alpha>: "\<alpha> \<in> ?paths" "\<alpha> 1 = b1" "V = ?B_basis U \<alpha>"
+          by (by5000 simp) (by100 blast)
+        from hV(2)[unfolded h\<alpha>(3)] obtain \<delta> where h\<delta>: "top1_is_path_on B TB (\<alpha> 1) (\<delta> 1) \<delta>"
+            "\<delta> ` I_set \<subseteq> U" "x = ?coset_class (top1_path_product \<alpha> \<delta>)"
+          by (by100 blast)
+        \<comment> \<open>x \\<in> E: class(\\<alpha>*\\<delta>) \\<in> E.\<close>
+        have h\<alpha>\<delta>_path: "top1_path_product \<alpha> \<delta> \<in> ?paths"
+        proof -
+          have h\<alpha>_path_on: "top1_is_path_on B TB b0 (\<alpha> 1) \<alpha>"
+            using h\<alpha>(1) by (by100 blast)
+          from top1_path_product_is_path[OF hTB h\<alpha>_path_on h\<delta>(1)]
+          have "top1_is_path_on B TB b0 (\<delta> 1) (top1_path_product \<alpha> \<delta>)" .
+          moreover have "(top1_path_product \<alpha> \<delta>) 1 = \<delta> 1"
+            unfolding top1_path_product_def by simp
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have "x \<in> ?E" using h\<delta>(3) h\<alpha>\<delta>_path by (by100 simp)
+        \<comment> \<open>p(x) \\<in> U: p(class(\\<alpha>*\\<delta>)) = (\\<alpha>*\\<delta>)(1) = \\<delta>(1).\<close>
+        moreover have "?p x \<in> U"
+        proof -
+          from hp_class[rule_format, OF h\<alpha>\<delta>_path]
+          have "?p x = (top1_path_product \<alpha> \<delta>) 1" using h\<delta>(3) by simp
+          also have "... = \<delta> 1" unfolding top1_path_product_def by simp
+          finally have "?p x = \<delta> 1" .
+          moreover have "\<delta> 1 \<in> U"
+          proof -
+            have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+            thus ?thesis using h\<delta>(2) by (by100 blast)
+          qed
+          ultimately show ?thesis by simp
+        qed
+        ultimately show "x \<in> {x \<in> ?E. ?p x \<in> U}" by (by100 blast)
+      qed
+    next
+      \<comment> \<open>\\<subseteq>: if \\<beta>\\# \\<in> p\\<inverse>(U) then \\<beta>(1)\\<in>U. Take \\<delta> in U from b1 to \\<beta>(1).
+         Let \\<alpha> = \\<beta>*rev(\\<delta>). Then \\<beta>\\# = (\\<alpha>*\\<delta>)\\# \\<in> B(U,\\<alpha>) where \\<alpha>(1) = b1.\<close>
+      show "{x \<in> ?E. ?p x \<in> U} \<subseteq> \<Union>?slices"
+        sorry \<comment> \<open>Uses: U path-connected, coset class properties, hhtpy\\_class.\<close>
+    qed
     \<comment> \<open>Part 2: distinct slices are disjoint.\<close>
     have hdisjoint: "\<forall>V1 \<in> ?slices. \<forall>V2 \<in> ?slices. V1 \<noteq> V2 \<longrightarrow> V1 \<inter> V2 = {}"
     proof (intro ballI impI)
@@ -2876,16 +2929,34 @@ proof -
         \<comment> \<open>x \\<in> B(U,\\<alpha>\\_1) \\<cap> B(U,\\<alpha>\\_2). x = class(\\<beta>) for some \\<beta>.\<close>
         \<comment> \<open>By hbasis\\_eq: class(\\<beta>) \\<in> B(U,\\<alpha>\\_i) \\<Rightarrow> B(U,\\<alpha>\\_i) = B(U,\\<beta>).\<close>
         \<comment> \<open>So B(U,\\<alpha>\\_1) = B(U,\\<beta>) = B(U,\\<alpha>\\_2), i.e., V1 = V2, contradiction.\<close>
-        from \<open>x \<in> ?B_basis U \<alpha>1\<close> obtain \<beta> where h\<beta>: "\<beta> \<in> ?paths"
-            "?coset_class \<beta> = x" "\<beta> 1 \<in> U" "\<beta> ` I_set \<subseteq> U"
-          sorry \<comment> \<open>Extract \\<beta> from B\\_basis membership: x = class(\\<alpha>\\_1*\\<delta>).\<close>
-        from hbasis_eq[rule_format, OF hU_open h\<alpha>1(1) h\<beta>(1)]
-        have "?coset_class \<beta> \<in> ?B_basis U \<alpha>1 \<longrightarrow> ?B_basis U \<alpha>1 = ?B_basis U \<beta>"
-          sorry \<comment> \<open>Instantiation of hbasis\\_eq.\<close>
-        hence "?B_basis U \<alpha>1 = ?B_basis U \<beta>" using \<open>x \<in> ?B_basis U \<alpha>1\<close> h\<beta>(2) by simp
-        moreover from hbasis_eq[rule_format, OF hU_open h\<alpha>2(1) h\<beta>(1)]
-        have "?B_basis U \<alpha>2 = ?B_basis U \<beta>" using \<open>x \<in> ?B_basis U \<alpha>2\<close> h\<beta>(2)
-          sorry
+        \<comment> \<open>x \\<in> B(U,\\<alpha>\\_1). x is a coset class, hence x = class(\\<beta>) for some \\<beta> \\<in> paths.
+           From x \\<in> E, extract \\<beta>.\<close>
+        have hx_E: "x \<in> ?E"
+        proof -
+          \<comment> \<open>x \\<in> B(U,\\<alpha>1). B(U,\\<alpha>1) \\<subseteq> E since every class(\\<alpha>1*\\<delta>) \\<in> E.\<close>
+          from \<open>x \<in> ?B_basis U \<alpha>1\<close> obtain \<delta>' where
+              h\<delta>': "top1_is_path_on B TB (\<alpha>1 1) (\<delta>' 1) \<delta>'"
+              "x = ?coset_class (top1_path_product \<alpha>1 \<delta>')"
+            by (by100 blast)
+          have "top1_path_product \<alpha>1 \<delta>' \<in> ?paths"
+          proof -
+            have h\<alpha>1_on: "top1_is_path_on B TB b0 (\<alpha>1 1) \<alpha>1" using h\<alpha>1(1) by (by100 blast)
+            from top1_path_product_is_path[OF hTB h\<alpha>1_on h\<delta>'(1)]
+            have "top1_is_path_on B TB b0 (\<delta>' 1) (top1_path_product \<alpha>1 \<delta>')" .
+            moreover have "(top1_path_product \<alpha>1 \<delta>') 1 = \<delta>' 1"
+              unfolding top1_path_product_def by simp
+            ultimately show ?thesis by (by100 simp)
+          qed
+          thus ?thesis using h\<delta>'(2) by (by100 simp)
+        qed
+        then obtain \<beta> where h\<beta>: "\<beta> \<in> ?paths" "?coset_class \<beta> = x" by (by100 blast)
+        \<comment> \<open>class(\\<beta>) \\<in> B(U,\\<alpha>\\_i) \\<Rightarrow> B(U,\\<alpha>\\_i) = B(U,\\<beta>) by hbasis\\_eq.\<close>
+        have "?coset_class \<beta> \<in> ?B_basis U \<alpha>1" using \<open>x \<in> ?B_basis U \<alpha>1\<close> h\<beta>(2) by simp
+        from hbasis_eq[rule_format, OF hU_open h\<alpha>1(1) h\<beta>(1) this]
+        have "?B_basis U \<alpha>1 = ?B_basis U \<beta>" .
+        moreover have "?coset_class \<beta> \<in> ?B_basis U \<alpha>2" using \<open>x \<in> ?B_basis U \<alpha>2\<close> h\<beta>(2) by simp
+        from hbasis_eq[rule_format, OF hU_open h\<alpha>2(1) h\<beta>(1) this]
+        have "?B_basis U \<alpha>2 = ?B_basis U \<beta>" .
         ultimately have "V1 = V2" using h\<alpha>1(3) h\<alpha>2(3) by simp
         thus False using hne by contradiction
       qed
@@ -2912,7 +2983,7 @@ proof -
     have "top1_evenly_covered_on ?E ?TE B TB ?p U"
       unfolding top1_evenly_covered_on_def
       using hU_openin hslices_open hdisjoint hpartition hslice_homeo
-      sorry \<comment> \<open>Assembly: openin + \\<exists> slices (open, disjoint, partition, homeo).\<close>
+      sorry \<comment> \<open>Assembly: need openin\\_on for slices (V \\<in> TE + V \\<subseteq> E) + exI for slices family.\<close>
     thus "\<exists>U. b1 \<in> U \<and> top1_evenly_covered_on ?E ?TE B TB ?p U"
       using hb1_U by (by100 blast)
   qed
