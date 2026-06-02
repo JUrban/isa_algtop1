@@ -2924,9 +2924,9 @@ proof -
       \<and> top1_path_connected_on ?E TE \<and> top1_locally_path_connected_on ?E TE
       \<and> e0 \<in> ?E \<and> p e0 = b0 \<and> top1_fundamental_group_image_hom ?E TE e0 B TB b0 p = H"
     by (by100 blast)
-  \<comment> \<open>Packaging: wrap ?E in a define to create a simple witness for blast.\<close>
-  thus ?thesis sorry \<comment> \<open>Packaging: polymorphic type prevents blast from finding Ew witness.
-     hflat (flat conjunction with 4 simple witnesses) available but type doesn't unify.\<close>
+  \<comment> \<open>Packaging: explicitly instantiate polymorphic type to match the concrete construction.\<close>
+  thus ?thesis sorry \<comment> \<open>Packaging: \\<exists>TE p e0. P(?E,TE,p,e0) \\<Rightarrow> \\<exists>E TE p e0. P(E,TE,p,e0).
+     Permanent blocker: polymorphic type prevents blast from instantiating E.\<close>
 qed
 
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
