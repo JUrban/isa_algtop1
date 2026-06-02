@@ -2685,13 +2685,72 @@ proof -
       let ?W = "?p ` (?B_basis U \<alpha>)"
       \<comment> \<open>x \\<in> W: p(c) = p(class(\\<alpha>)) \\<in> p(B(U,\\<alpha>)).\<close>
       have hx_W: "x \<in> ?W"
-        sorry \<comment> \<open>c = class(\\<alpha>) \\<in> B(U,\\<alpha>) from hbasis. Then p(c) \\<in> p(B(U,\\<alpha>)).\<close>
+      proof -
+        have "?coset_class \<alpha> \<in> ?B_basis U \<alpha>"
+          using hbasis[rule_format, OF hU\<alpha>(2) hU\<alpha>(1) hU\<alpha>(3)] .
+        hence "c \<in> ?B_basis U \<alpha>" using hU\<alpha>(4) by simp
+        hence "?p c \<in> ?p ` (?B_basis U \<alpha>)" by (rule imageI)
+        thus ?thesis using hc(2) by simp
+      qed
       \<comment> \<open>W \\<subseteq> p(V): B(U,\\<alpha>) \\<subseteq> V \\<Rightarrow> p(B(U,\\<alpha>)) \\<subseteq> p(V).\<close>
       have hW_sub: "?W \<subseteq> ?p ` V"
         using hU\<alpha>(5) by (by100 blast)
       \<comment> \<open>W is open: path-component of \\<alpha>(1) in U, by Theorem\\_25\\_4.\<close>
       have hW_open: "?W \<in> TB"
-        sorry \<comment> \<open>hp\\_basis\\_image says W = path-component. Theorem\\_25\\_4 + assms(3).\<close>
+      proof -
+        \<comment> \<open>p(B(U,\\<alpha>)) = path-component of \\<alpha>(1) in U.\<close>
+        have hW_eq: "?W = {x \<in> U. \<exists>\<delta>. top1_is_path_on B TB (\<alpha> 1) x \<delta> \<and> \<delta> ` I_set \<subseteq> U}"
+          using hp_basis_image[rule_format, OF hU\<alpha>(2) hU\<alpha>(1) hU\<alpha>(3)] .
+        \<comment> \<open>This equals the path-component of \\<alpha>(1) in U (subspace topology).\<close>
+        have hW_pc: "?W = top1_path_component_of_on U (subspace_topology B TB U) (\<alpha> 1)"
+        proof -
+          have hU_sub_B: "U \<subseteq> B" using hU\<alpha>(1) assms(1) unfolding is_topology_on_strict_def
+            by (by100 blast)
+          \<comment> \<open>Forward: path in B with image \\<subseteq> U \\<Rightarrow> path in U subspace.\<close>
+          \<comment> \<open>Backward: path in U subspace \\<Rightarrow> path in B (with image \\<subseteq> U).\<close>
+          show ?thesis unfolding top1_path_component_of_on_def top1_in_same_path_component_on_def
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> ?W"
+            hence "x \<in> {x \<in> U. \<exists>\<delta>. top1_is_path_on B TB (\<alpha> 1) x \<delta> \<and> \<delta> ` I_set \<subseteq> U}"
+              using hW_eq by simp
+            then obtain \<delta> where "x \<in> U" "top1_is_path_on B TB (\<alpha> 1) x \<delta>" "\<delta> ` I_set \<subseteq> U"
+              by (by100 blast)
+            \<comment> \<open>\\<delta> path in B with image in U \\<Rightarrow> \\<delta> path in U subspace.\<close>
+            have "top1_is_path_on U (subspace_topology B TB U) (\<alpha> 1) x \<delta>"
+              sorry \<comment> \<open>continuous\\_map\\_restrict\\_codomain + endpoint preservation.\<close>
+            thus "x \<in> {y. \<exists>f. top1_is_path_on U (subspace_topology B TB U) (\<alpha> 1) y f}"
+              by (by100 blast)
+          next
+            fix x assume "x \<in> {y. \<exists>f. top1_is_path_on U (subspace_topology B TB U) (\<alpha> 1) y f}"
+            then obtain \<delta> where "top1_is_path_on U (subspace_topology B TB U) (\<alpha> 1) x \<delta>"
+              by (by100 blast)
+            \<comment> \<open>Path in U subspace \\<Rightarrow> path in B (ambient).\<close>
+            hence "top1_is_path_on B TB (\<alpha> 1) x \<delta>"
+              by (rule path_in_subspace_is_path_in_ambient[OF hTB hU_sub_B])
+            moreover have "\<delta> ` I_set \<subseteq> U"
+              sorry \<comment> \<open>Path in subspace has image in U.\<close>
+            moreover have "x \<in> U"
+              sorry \<comment> \<open>Endpoint of path in U is in U.\<close>
+            ultimately show "x \<in> ?W" using hW_eq by (by5000 simp) (by100 blast)
+          qed
+        qed
+        \<comment> \<open>By Theorem\\_25\\_4: locally path-connected \\<Rightarrow> path-components of open sets are open.\<close>
+        have "top1_path_component_of_on U (subspace_topology B TB U) (\<alpha> 1) \<in> TB"
+        proof -
+          have hU_sub_B: "U \<subseteq> B" using hU\<alpha>(1) assms(1) unfolding is_topology_on_strict_def
+            by (by100 blast)
+          from Theorem_25_4[OF hTB, THEN iffD1, OF assms(3)]
+          have "\<forall>U' \<in> TB. U' \<subseteq> B \<longrightarrow>
+              (\<forall>P \<in> top1_path_components_on U' (subspace_topology B TB U'). P \<in> TB)" .
+          hence "\<forall>P \<in> top1_path_components_on U (subspace_topology B TB U). P \<in> TB"
+            using hU\<alpha>(1) hU_sub_B by (by100 blast)
+          moreover have "top1_path_component_of_on U (subspace_topology B TB U) (\<alpha> 1) \<in>
+              top1_path_components_on U (subspace_topology B TB U)"
+            using hU\<alpha>(3) unfolding top1_path_components_on_def by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        thus ?thesis using hW_pc by simp
+      qed
       define Ww where "Ww = ?W"
       have "Ww \<in> TB \<and> x \<in> Ww \<and> Ww \<subseteq> ?p ` V"
         using hW_open hx_W hW_sub unfolding Ww_def by (by100 blast)
