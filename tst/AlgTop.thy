@@ -16809,12 +16809,247 @@ proof -
         show "\<exists>U V. neighborhood_of x ?X TX U \<and> neighborhood_of y ?X TX V \<and> U \<inter> V = {}"
         proof (cases "x = ?p \<or> y = ?p")
           case True
-          \<comment> \<open>One point is p. WLOG y=p or x=p; both in same circle.\<close>
-          show ?thesis sorry \<comment> \<open>One point is p; separate in C(s) via Hausdorff of S1.
-             Strategy: use U = h(s)(U0) \\<subseteq> C(s)\\{p} for the non-p point,
-             and V = h(s)(V0) \\<cup> \\<Union>{C(\\<alpha>):\\<alpha>\\<noteq>s} for p.
-             U open by hempty\\_preimage. V open: preimage for s is V0, for \\<alpha>\\<noteq>s is S1.
-             Disjoint: U \\<subseteq> C(s)\\{p}, V \\<inter> C(s) = h(s)(V0), and U0 \\<inter> V0 = {}.\<close>
+          \<comment> \<open>One point is p. WLOG: get the non-p point and its circle.\<close>
+          obtain snp np where hnp: "snp \<in> S" "np \<in> C snp" "np \<noteq> ?p"
+              and hassign: "(x = np \<and> y = ?p) \<or> (y = np \<and> x = ?p)"
+          proof (cases "x = ?p")
+            case True
+            hence "y \<noteq> ?p" using \<open>x \<noteq> y\<close> by simp
+            show ?thesis using that[of sy y] \<open>sy \<in> S\<close> \<open>y \<in> C sy\<close> \<open>y \<noteq> ?p\<close> True by (by100 blast)
+          next
+            case False
+            show ?thesis using that[of sx x] \<open>sx \<in> S\<close> \<open>x \<in> C sx\<close> False True by (by100 blast)
+          qed
+          have hh_inj_snp: "inj_on (h snp) top1_S1"
+          proof (rule inj_onI)
+            fix u v :: "real \<times> real"
+            assume "u \<in> top1_S1" "v \<in> top1_S1" "h snp u = h snp v"
+            show "u = v"
+            proof (cases "u = (1, 0)")
+              case True show ?thesis
+              proof (cases "v = (1, 0)")
+                case True thus ?thesis using \<open>u = (1,0)\<close> by simp
+              next
+                case False
+                hence "h snp v = Inr (snp, v)" unfolding h_def by simp
+                moreover have "h snp u = ?p" using \<open>u = (1,0)\<close> unfolding h_def by simp
+                ultimately show ?thesis using \<open>h snp u = h snp v\<close> by simp
+              qed
+            next
+              case False show ?thesis
+              proof (cases "v = (1, 0)")
+                case True thus ?thesis
+                  using False \<open>h snp u = h snp v\<close> unfolding h_def by (by100 simp)
+              next
+                case Fv: False
+                thus ?thesis using False \<open>h snp u = h snp v\<close> unfolding h_def by (by100 simp)
+              qed
+            qed
+          qed
+          \<comment> \<open>np \\<in> C(snp)\\{p}: find its preimage under h(snp).\<close>
+          have "np \<in> Inr ` ({snp} \<times> (top1_S1 - {(1, 0)}))"
+            using hnp unfolding C_def by (by100 blast)
+          then obtain unp where "unp \<in> top1_S1 - {(1, 0)}" "np = Inr (snp, unp)"
+            by (by100 blast)
+          have "unp \<in> top1_S1" using \<open>unp \<in> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+          have "unp \<noteq> (1, 0)" using \<open>unp \<in> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+          have hunp_eq: "h snp unp = np"
+            using \<open>np = Inr (snp, unp)\<close> \<open>unp \<noteq> (1, 0)\<close> unfolding h_def by simp
+          \<comment> \<open>Separate unp and (1,0) in S1 by Hausdorff.\<close>
+          have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+          obtain U0 V0 where hU0: "U0 \<in> top1_S1_topology" "unp \<in> U0"
+              and hV0: "V0 \<in> top1_S1_topology" "(1, 0) \<in> V0" and "U0 \<inter> V0 = {}"
+            using hS1_haus \<open>unp \<in> top1_S1\<close> h10_S1 \<open>unp \<noteq> (1, 0)\<close>
+            unfolding is_hausdorff_on_def neighborhood_of_def by (by5000 blast)
+          \<comment> \<open>Restrict U0 to S1\\{(1,0)}: U0' = U0 \\<inter> (S1\\{(1,0)}).\<close>
+          have hS1_top_l: "is_topology_on top1_S1 top1_S1_topology"
+            using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          define U0' where "U0' = U0 \<inter> (top1_S1 - {(1, 0)})"
+          have "U0' \<in> top1_S1_topology"
+            unfolding U0'_def using topology_inter2[OF hS1_top_l hU0(1) hS1_minus_base_open] .
+          have "unp \<in> U0'" using hU0(2) \<open>unp \<in> top1_S1\<close> \<open>unp \<noteq> (1, 0)\<close>
+            unfolding U0'_def by (by100 blast)
+          have "U0' \<subseteq> top1_S1 - {(1, 0)}" unfolding U0'_def by (by100 blast)
+          have "U0' \<inter> V0 = {}" using \<open>U0 \<inter> V0 = {}\<close> unfolding U0'_def by (by100 blast)
+          \<comment> \<open>Ux = h(snp)(U0') \\<subseteq> C(snp)\\{p}: open in TX.\<close>
+          define Ux where "Ux = h snp ` U0'"
+          have "Ux \<subseteq> C snp - {?p}"
+          proof (rule subsetI)
+            fix z assume "z \<in> Ux"
+            then obtain w where "w \<in> U0'" "z = h snp w" unfolding Ux_def by (by100 blast)
+            hence "w \<in> top1_S1" "w \<noteq> (1, 0)"
+              using \<open>U0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)+
+            have "z \<in> C snp" using hh_maps_Cl[OF \<open>snp \<in> S\<close> \<open>w \<in> top1_S1\<close>] \<open>z = h snp w\<close> by simp
+            have "z \<noteq> ?p" using \<open>w \<noteq> (1, 0)\<close> \<open>z = h snp w\<close> unfolding h_def by (by100 auto)
+            thus "z \<in> C snp - {?p}" using \<open>z \<in> C snp\<close> by (by100 blast)
+          qed
+          have "Ux \<subseteq> ?X" using \<open>Ux \<subseteq> C snp - {?p}\<close> \<open>snp \<in> S\<close> by (by100 blast)
+          have "Ux \<in> TX"
+          proof (rule hTX_memI[OF \<open>Ux \<subseteq> ?X\<close>], rule ballI)
+            fix \<alpha> assume "\<alpha> \<in> S"
+            show "{v \<in> top1_S1. h \<alpha> v \<in> Ux} \<in> top1_S1_topology"
+            proof (cases "\<alpha> = snp")
+              case True
+              \<comment> \<open>Preimage = U0' (by injectivity of h(snp)).\<close>
+              have "inj_on (h snp) top1_S1" using hh_inj_snp .
+              have "{v \<in> top1_S1. h \<alpha> v \<in> Ux} = U0'"
+              proof (rule set_eqI, rule iffI)
+                fix v assume "v \<in> {v \<in> top1_S1. h \<alpha> v \<in> Ux}"
+                hence "v \<in> top1_S1" "h \<alpha> v \<in> Ux" by simp+
+                from \<open>h \<alpha> v \<in> Ux\<close> obtain w where "w \<in> U0'" "h \<alpha> v = h snp w"
+                  unfolding Ux_def by (by100 blast)
+                hence "h snp v = h snp w" using True by simp
+                have "w \<in> top1_S1" using \<open>w \<in> U0'\<close> \<open>U0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+                from inj_onD[OF \<open>inj_on (h snp) top1_S1\<close> \<open>h snp v = h snp w\<close>
+                    \<open>v \<in> top1_S1\<close> \<open>w \<in> top1_S1\<close>]
+                show "v \<in> U0'" using \<open>w \<in> U0'\<close> by simp
+              next
+                fix v assume "v \<in> U0'"
+                hence "v \<in> top1_S1" using \<open>U0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+                have "h snp v \<in> h snp ` U0'" using \<open>v \<in> U0'\<close> by (by100 blast)
+                thus "v \<in> {v \<in> top1_S1. h \<alpha> v \<in> Ux}"
+                  using True \<open>v \<in> top1_S1\<close> unfolding Ux_def by (by100 auto)
+              qed
+              thus ?thesis using \<open>U0' \<in> top1_S1_topology\<close> by simp
+            next
+              case False
+              have haux: "{v \<in> top1_S1. h \<alpha> v \<in> Ux} = ({}::(real\<times>real) set)"
+                using hempty_preimage[OF \<open>\<alpha> \<in> S\<close> \<open>snp \<in> S\<close> False \<open>Ux \<subseteq> C snp - {?p}\<close>] .
+              show ?thesis
+                apply (subst haux)
+                using hempty_in_S1_top by simp
+            qed
+          qed
+          have "np \<in> Ux" using hunp_eq \<open>unp \<in> U0'\<close> unfolding Ux_def by (by100 blast)
+          \<comment> \<open>Vp = h(snp)(V0) \\<cup> \\<Union>{C(\\<alpha>) : \\<alpha> \\<noteq> snp}: open nbd of p.\<close>
+          define Vp where "Vp = h snp ` V0 \<union> \<Union>{C \<alpha> |\<alpha>. \<alpha> \<in> S \<and> \<alpha> \<noteq> snp}"
+          have "?p \<in> Vp"
+          proof -
+            have "h snp (1, 0) = ?p" unfolding h_def by simp
+            from imageI[OF hV0(2), of "h snp"]
+            have "h snp (1, 0) \<in> h snp ` V0" .
+            hence "?p \<in> h snp ` V0" using \<open>h snp (1, 0) = ?p\<close> by simp
+            thus ?thesis unfolding Vp_def by (by100 blast)
+          qed
+          have "Vp \<subseteq> ?X"
+          proof -
+            have "h snp ` V0 \<subseteq> C snp"
+            proof (rule subsetI)
+              fix z assume "z \<in> h snp ` V0"
+              then obtain w where "w \<in> V0" "z = h snp w" by (by100 blast)
+              have "V0 \<subseteq> top1_S1"
+                using is_topology_on_strict_Pow[OF top1_S1_is_topology_on_strict]
+                      hV0(1) by (by100 blast)
+              thus "z \<in> C snp" using hh_maps_Cl[OF \<open>snp \<in> S\<close>] \<open>w \<in> V0\<close> \<open>z = h snp w\<close>
+                \<open>V0 \<subseteq> top1_S1\<close> by (by100 blast)
+            qed
+            hence "h snp ` V0 \<subseteq> ?X" using \<open>snp \<in> S\<close> by (by100 blast)
+            have "\<And>\<alpha>. \<alpha> \<in> S \<Longrightarrow> C \<alpha> \<subseteq> ?X" by (by100 blast)
+            thus ?thesis unfolding Vp_def using \<open>h snp ` V0 \<subseteq> ?X\<close> by (by100 blast)
+          qed
+          have "Vp \<in> TX"
+          proof (rule hTX_memI[OF \<open>Vp \<subseteq> ?X\<close>], rule ballI)
+            fix \<alpha> assume "\<alpha> \<in> S"
+            show "{v \<in> top1_S1. h \<alpha> v \<in> Vp} \<in> top1_S1_topology"
+            proof (cases "\<alpha> = snp")
+              case True
+              have "inj_on (h snp) top1_S1" using hh_inj_snp .
+              have "V0 \<subseteq> top1_S1"
+                using is_topology_on_strict_Pow[OF top1_S1_is_topology_on_strict]
+                      hV0(1) by (by100 blast)
+              have "{v \<in> top1_S1. h \<alpha> v \<in> Vp} = V0"
+              proof (rule set_eqI, rule iffI)
+                fix v assume "v \<in> {v \<in> top1_S1. h \<alpha> v \<in> Vp}"
+                hence "v \<in> top1_S1" "h \<alpha> v \<in> Vp" by simp+
+                hence "h snp v \<in> Vp" using True by simp
+                hence "h snp v \<in> h snp ` V0 \<or>
+                    h snp v \<in> \<Union>{C \<beta> |\<beta>. \<beta> \<in> S \<and> \<beta> \<noteq> snp}"
+                  unfolding Vp_def by (by100 blast)
+                thus "v \<in> V0"
+                proof
+                  assume "h snp v \<in> h snp ` V0"
+                  then obtain w where "w \<in> V0" "h snp v = h snp w" by (by100 blast)
+                  have "w \<in> top1_S1" using \<open>w \<in> V0\<close> \<open>V0 \<subseteq> top1_S1\<close> by (by100 blast)
+                  from inj_onD[OF \<open>inj_on (h snp) top1_S1\<close> \<open>h snp v = h snp w\<close>
+                      \<open>v \<in> top1_S1\<close> \<open>w \<in> top1_S1\<close>]
+                  show "v \<in> V0" using \<open>w \<in> V0\<close> by simp
+                next
+                  assume "h snp v \<in> \<Union>{C \<beta> |\<beta>. \<beta> \<in> S \<and> \<beta> \<noteq> snp}"
+                  then obtain \<beta> where "\<beta> \<in> S" "\<beta> \<noteq> snp" "h snp v \<in> C \<beta>" by (by100 blast)
+                  have "h snp v \<in> C snp" using hh_maps_Cl[OF \<open>snp \<in> S\<close> \<open>v \<in> top1_S1\<close>] .
+                  have "snp \<noteq> \<beta>" using \<open>\<beta> \<noteq> snp\<close> by simp
+                  from hC_inter[OF \<open>snp \<in> S\<close> \<open>\<beta> \<in> S\<close> \<open>snp \<noteq> \<beta>\<close>]
+                  have "h snp v = ?p"
+                    using \<open>h snp v \<in> C snp\<close> \<open>h snp v \<in> C \<beta>\<close> by (by100 blast)
+                  have "v = (1, 0)"
+                  proof (rule ccontr)
+                    assume "v \<noteq> (1, 0)"
+                    hence "h snp v = Inr (snp, v)" unfolding h_def by simp
+                    hence "Inr (snp, v) = (Inl () :: unit + ('s \<times> real \<times> real))"
+                      using \<open>h snp v = ?p\<close> by simp
+                    thus False by simp
+                  qed
+                  thus "v \<in> V0" using hV0(2) by simp
+                qed
+              next
+                fix v assume "v \<in> V0"
+                hence "v \<in> top1_S1" using \<open>V0 \<subseteq> top1_S1\<close> by (by100 blast)
+                have "h snp v \<in> h snp ` V0" using \<open>v \<in> V0\<close> by (by100 blast)
+                hence "h snp v \<in> Vp" unfolding Vp_def by (by100 blast)
+                thus "v \<in> {v \<in> top1_S1. h \<alpha> v \<in> Vp}" using True \<open>v \<in> top1_S1\<close> by simp
+              qed
+              thus ?thesis using hV0(1) by simp
+            next
+              case False
+              \<comment> \<open>C(\\<alpha>) \\<subseteq> Vp, so preimage is all of S1.\<close>
+              have "C \<alpha> \<subseteq> Vp" using \<open>\<alpha> \<in> S\<close> False unfolding Vp_def by (by100 blast)
+              have "\<And>v. v \<in> top1_S1 \<Longrightarrow> h \<alpha> v \<in> Vp"
+                using hh_maps_Cl[OF \<open>\<alpha> \<in> S\<close>] \<open>C \<alpha> \<subseteq> Vp\<close> by (by100 blast)
+              hence "{v \<in> top1_S1. h \<alpha> v \<in> Vp} = top1_S1" by (by100 blast)
+              moreover have "top1_S1 \<in> top1_S1_topology"
+                using hS1_top_l unfolding is_topology_on_def by (by100 blast)
+              ultimately show ?thesis by simp
+            qed
+          qed
+          have "Ux \<inter> Vp = {}"
+          proof (rule subset_antisym, rule subsetI)
+            fix z :: "unit + ('s \<times> real \<times> real)" assume "z \<in> Ux \<inter> Vp"
+            hence "z \<in> Ux" "z \<in> Vp" by (by100 blast)+
+            have "z \<in> C snp - {?p}" using \<open>z \<in> Ux\<close> \<open>Ux \<subseteq> C snp - {?p}\<close> by (by100 blast)
+            hence "z \<in> C snp" "z \<noteq> ?p" by (by100 blast)+
+            \<comment> \<open>z \\<in> Vp = h(snp)(V0) \\<cup> other circles. Since z \\<in> C(snp), z \\<notin> other circles\\{p}.\<close>
+            from \<open>z \<in> Vp\<close> have "z \<in> h snp ` V0 \<or> z \<in> \<Union>{C \<alpha> |\<alpha>. \<alpha> \<in> S \<and> \<alpha> \<noteq> snp}"
+              unfolding Vp_def by (by100 blast)
+            thus "z \<in> {}"
+            proof
+              assume "z \<in> h snp ` V0"
+              \<comment> \<open>z = h(snp)(w) for some w \\<in> V0. Also z = h(snp)(u) for some u \\<in> U0'.\<close>
+              then obtain w where "w \<in> V0" "z = h snp w" by (by100 blast)
+              from \<open>z \<in> Ux\<close> obtain u where "u \<in> U0'" "z = h snp u"
+                unfolding Ux_def by (by100 blast)
+              hence "h snp u = h snp w" using \<open>z = h snp w\<close> by simp
+              have "u \<in> top1_S1" using \<open>u \<in> U0'\<close> \<open>U0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+              have "V0 \<subseteq> top1_S1"
+                using is_topology_on_strict_Pow[OF top1_S1_is_topology_on_strict]
+                      hV0(1) by (by100 blast)
+              have "w \<in> top1_S1" using \<open>w \<in> V0\<close> \<open>V0 \<subseteq> top1_S1\<close> by (by100 blast)
+              have "inj_on (h snp) top1_S1" using hh_inj_snp . \<comment> \<open>h(snp) injective on S1.\<close>
+              from inj_onD[OF this \<open>h snp u = h snp w\<close> \<open>u \<in> top1_S1\<close> \<open>w \<in> top1_S1\<close>]
+              have "u = w" .
+              hence "u \<in> U0' \<inter> V0" using \<open>u \<in> U0'\<close> \<open>w \<in> V0\<close> by simp
+              thus "z \<in> {}" using \<open>U0' \<inter> V0 = {}\<close> by (by100 blast)
+            next
+              assume "z \<in> \<Union>{C \<alpha> |\<alpha>. \<alpha> \<in> S \<and> \<alpha> \<noteq> snp}"
+              then obtain \<alpha> where "\<alpha> \<in> S" "\<alpha> \<noteq> snp" "z \<in> C \<alpha>" by (by100 blast)
+              have "snp \<noteq> \<alpha>" using \<open>\<alpha> \<noteq> snp\<close> by simp
+              have "z \<in> C snp \<inter> C \<alpha>" using \<open>z \<in> C snp\<close> \<open>z \<in> C \<alpha>\<close> by (by100 blast)
+              hence "z = ?p" using hC_inter[OF \<open>snp \<in> S\<close> \<open>\<alpha> \<in> S\<close> \<open>snp \<noteq> \<alpha>\<close>] by (by100 blast)
+              thus "z \<in> {}" using \<open>z \<noteq> ?p\<close> by simp
+            qed
+          qed (by100 blast)
+          \<comment> \<open>Assign neighborhoods to x and y.\<close>
+          show ?thesis using hassign \<open>Ux \<in> TX\<close> \<open>Vp \<in> TX\<close> \<open>np \<in> Ux\<close> \<open>?p \<in> Vp\<close> \<open>Ux \<inter> Vp = {}\<close>
+            unfolding neighborhood_of_def by (by100 blast)
         next
           case False
           hence "x \<noteq> ?p" "y \<noteq> ?p" by simp+
