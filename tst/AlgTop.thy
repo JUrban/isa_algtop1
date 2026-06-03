@@ -6360,7 +6360,12 @@ proof -
     \<comment> \<open>For n=0, \\<Union>i\\<in>{}. C i = {} so X = {} but p \\<in> X fails.
        However in quick\\_and\\_dirty mode the sorry passes. We keep this sorry
        and handle n=0 in the caller.\<close>
-    show ?thesis sorry \<comment> \<open>n=0: wedge of 0 circles impossible by definition.\<close>
+    \<comment> \<open>n=0: S={}, F={e} trivial. Use [0,1] as a simply connected graph.\<close>
+    show ?thesis
+      sorry \<comment> \<open>n=0: Construct [0,1] as a graph with trivial \\<pi>\\_1.
+         graph: single arc = [0,1]. connected: path-connected (interval).
+         \\<pi>\\_1 trivial (simply connected: contractible).
+         iso(F, \\<pi>\\_1): both trivial groups.\<close>
   next
     case False
     hence hn_pos: "?n > 0" by simp
