@@ -6384,7 +6384,22 @@ proof -
     \<comment> \<open>Each C(i) is homeomorphic to S1.\<close>
     have hC_homeo: "\<forall>i \<in> {..<?n}. \<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
         (?C i) (subspace_topology (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets) (?C i)) h"
-      sorry \<comment> \<open>Translation + scaling homeomorphism S1 \\<rightarrow> C(i).\<close>
+    proof (intro ballI)
+      fix i assume "i \<in> {..<?n}"
+      let ?r = "real (Suc i)"
+      \<comment> \<open>h(x,y) = (r*x, r + r*y). Maps S1 to C(i).\<close>
+      let ?h = "\<lambda>(x::real, y::real). (?r * x, ?r + ?r * y)"
+      have "top1_homeomorphism_on top1_S1 top1_S1_topology
+          (?C i) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C i)) ?h"
+        sorry \<comment> \<open>h is a homeomorphism: linear map (scaling+translation).
+           h maps S1 to C(i): (rx)^2 + (r+ry-r)^2 = r^2(x^2+y^2) = r^2.
+           h bijective: injective (r>0 so scaling invertible), surjective.
+           h continuous: polynomial (restriction of continuous R^2 \\<rightarrow> R^2).
+           h\\<inverse> continuous: h\\<inverse>(u,v) = (u/r, v/r-1), also polynomial.\<close>
+      thus "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+          (?C i) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C i)) h"
+        by (by100 blast)
+    qed
     \<comment> \<open>Circles intersect only at p.\<close>
     have hC_inter: "\<forall>i \<in> {..<?n}. \<forall>j \<in> {..<?n}. i \<noteq> j \<longrightarrow> ?C i \<inter> ?C j = {?p}"
     proof (intro ballI impI)
