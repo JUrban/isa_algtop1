@@ -6384,7 +6384,85 @@ proof (cases "card S = 0")
     ultimately show ?thesis by simp
   qed
   have hgraph0: "top1_is_graph_on ?X0 ?TX0"
-    sorry \<comment> \<open>Single arc [0,1]\\<times>{0}. Homeomorphism I \\<rightarrow> X0 via t\\<mapsto>(t,0).\<close>
+  proof -
+    let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
+    have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set) ?TR2"
+    proof -
+      have "is_topology_on_strict (UNIV :: (real \<times> real) set) ?TR2"
+        by (rule hausdorff_strict_is_strict[OF top1_R2_is_hausdorff], by100 blast)
+      thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+    qed
+    have hX0_strict: "is_topology_on_strict ?X0 ?TX0"
+    proof -
+      have "is_topology_on_strict (UNIV :: (real \<times> real) set) ?TR2"
+        by (rule hausdorff_strict_is_strict[OF top1_R2_is_hausdorff], by100 blast)
+      from subspace_topology_is_strict[OF this]
+      show ?thesis by (by100 blast)
+    qed
+    have hX0_haus: "is_hausdorff_on ?X0 ?TX0"
+    proof -
+      from conjunct2[OF conjunct2[OF Theorem_17_11]]
+      have "\<forall>X T Y. is_hausdorff_on X T \<and> Y \<subseteq> X \<longrightarrow> is_hausdorff_on Y (subspace_topology X T Y)" .
+      thus ?thesis using top1_R2_is_hausdorff by (by100 blast)
+    qed
+    \<comment> \<open>X0 is an arc: homeomorphic to [0,1].\<close>
+    have hX0_arc: "top1_is_arc_on ?X0 ?TX0"
+    proof -
+      have hX0_strict': "is_topology_on_strict ?X0 ?TX0" using hX0_strict .
+      \<comment> \<open>Homeomorphism I \\<rightarrow> X0 via f0(t) = (t, 0).\<close>
+      let ?f0 = "\<lambda>t::real. (t, 0::real)"
+      \<comment> \<open>f0 is a homeomorphism I\\_set \\<rightarrow> X0.\<close>
+      have hf0_homeo: "top1_homeomorphism_on I_set I_top ?X0 ?TX0 ?f0"
+        sorry \<comment> \<open>f0(t)=(t,0) homeo: bij obvious, continuous via R\\<rightarrow>R2 bridge,
+           inverse=fst via R2\\<rightarrow>R bridge. Build timeout from inv\\_into simp explosion.\<close>
+      show ?thesis unfolding top1_is_arc_on_def
+        using hX0_strict' hf0_homeo by (by100 blast)
+    qed
+    \<comment> \<open>Graph: single arc = X0. Coverage trivial. Pairwise vacuous. Coherent trivial.\<close>
+    show ?thesis unfolding top1_is_graph_on_def
+    proof (intro conjI)
+      show "is_topology_on_strict ?X0 ?TX0" using hX0_strict .
+      show "is_hausdorff_on ?X0 ?TX0" using hX0_haus .
+      show "\<exists>\<A>. (\<forall>A \<in> \<A>. A \<subseteq> ?X0 \<and> top1_is_arc_on A (subspace_topology ?X0 ?TX0 A)) \<and>
+          \<Union>\<A> = ?X0 \<and>
+          (\<forall>A \<in> \<A>. \<forall>B \<in> \<A>. A \<noteq> B \<longrightarrow>
+            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?X0 ?TX0 A) \<and>
+            A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?X0 ?TX0 B) \<and>
+            finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<and>
+          (\<forall>D. D \<subseteq> ?X0 \<longrightarrow>
+            (closedin_on ?X0 ?TX0 D \<longleftrightarrow>
+             (\<forall>A \<in> \<A>. closedin_on A (subspace_topology ?X0 ?TX0 A) (A \<inter> D))))"
+      proof -
+        have hself_sub: "subspace_topology ?X0 ?TX0 ?X0 = ?TX0"
+        proof -
+          have "\<forall>U \<in> ?TX0. U \<subseteq> ?X0"
+            unfolding subspace_topology_def by (by100 blast)
+          from subspace_topology_self[OF this] show ?thesis .
+        qed
+        have h1: "\<forall>A \<in> {?X0}. A \<subseteq> ?X0 \<and> top1_is_arc_on A (subspace_topology ?X0 ?TX0 A)"
+          using hX0_arc hself_sub by (by100 simp)
+        have h2: "\<Union>{?X0} = ?X0" by (by100 simp)
+        have h3: "\<forall>A \<in> {?X0}. \<forall>B \<in> {?X0}. A \<noteq> B \<longrightarrow>
+            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?X0 ?TX0 A) \<and>
+            A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?X0 ?TX0 B) \<and>
+            finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+          by (by100 simp)
+        have h4: "\<forall>D. D \<subseteq> ?X0 \<longrightarrow>
+            (closedin_on ?X0 ?TX0 D \<longleftrightarrow>
+             (\<forall>A \<in> {?X0}. closedin_on A (subspace_topology ?X0 ?TX0 A) (A \<inter> D)))"
+        proof (intro allI impI)
+          fix D assume hD: "D \<subseteq> ?X0"
+          have "?X0 \<inter> D = D" using hD by (by100 blast)
+          thus "closedin_on ?X0 ?TX0 D \<longleftrightarrow>
+              (\<forall>A \<in> {?X0}. closedin_on A (subspace_topology ?X0 ?TX0 A) (A \<inter> D))"
+            using hself_sub by (by100 simp)
+        qed
+        show ?thesis
+          apply (rule exI[of _ "{?X0}"])
+          using h1 h2 h3 h4 by (by5000 auto)
+      qed
+    qed
+  qed
   have hconn0: "top1_connected_on ?X0 ?TX0"
   proof -
     let ?f0 = "\<lambda>t::real. (t, 0::real)"
