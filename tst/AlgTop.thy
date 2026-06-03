@@ -16610,6 +16610,23 @@ lemma free_group_realized_by_abstract_wedge:
     \<and> top1_groups_isomorphic_on G mul
         (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
 proof -
+  show ?thesis
+  proof (cases "S = {}")
+    case True
+    \<comment> \<open>S = {}: free group on {} is trivial. Use one-point space {p}.\<close>
+    let ?p = "Inl () :: unit + ('s \<times> real \<times> real)"
+    let ?X = "{?p}"
+    let ?TX = "{{}, ?X}"
+    have "top1_is_graph_on ?X ?TX" sorry
+    moreover have "top1_connected_on ?X ?TX" sorry
+    moreover have "?p \<in> ?X" by (by100 blast)
+    moreover have "top1_groups_isomorphic_on G mul
+        (top1_fundamental_group_carrier ?X ?TX ?p) (top1_fundamental_group_mul ?X ?TX ?p)"
+      sorry \<comment> \<open>Trivial group iso: G = {e} and \\<pi>\\_1({p}) = {[const\\_p]}.\<close>
+    ultimately show ?thesis by (by100 blast)
+  next
+    case False
+    then obtain s_witness where "s_witness \<in> S" by (by100 blast)
   \<comment> \<open>Step 1: Define the carrier X and circles C(s).\<close>
   let ?p = "Inl () :: unit + ('s \<times> real \<times> real)"
   define C :: "'s \<Rightarrow> (unit + ('s \<times> real \<times> real)) set" where
@@ -16646,7 +16663,7 @@ proof -
            (use hS1_top in simp)
     qed
     show "is_hausdorff_on ?X TX" sorry
-    show "?p \<in> ?X" sorry \<comment> \<open>Needs S nonempty (handled by outer case split).\<close>
+    show "?p \<in> ?X" using hp_in_C \<open>s_witness \<in> S\<close> by (by100 blast)
     show "\<exists>Ca. (\<forall>\<alpha>\<in>S. Ca \<alpha> \<subseteq> ?X \<and> ?p \<in> Ca \<alpha>
              \<and> (\<exists>ha. top1_homeomorphism_on top1_S1 top1_S1_topology
                       (Ca \<alpha>) (subspace_topology ?X TX (Ca \<alpha>)) ha))
@@ -17244,15 +17261,7 @@ proof -
     qed
   qed
   moreover have "?p \<in> ?X"
-  proof (cases "S = {}")
-    case True
-    \<comment> \<open>S = {}: trivial free group on {} means G = {e}. X = {} would need special handling.\<close>
-    thus ?thesis sorry
-  next
-    case False
-    then obtain s0 where "s0 \<in> S" by (by100 blast)
-    thus ?thesis using hp_in_C by (by100 blast)
-  qed
+    using hp_in_C \<open>s_witness \<in> S\<close> by (by100 blast)
   moreover have "top1_groups_isomorphic_on G mul
       (top1_fundamental_group_carrier ?X TX ?p) (top1_fundamental_group_mul ?X TX ?p)"
   proof -
@@ -17401,6 +17410,7 @@ proof -
     thus ?thesis .
   qed
   ultimately show ?thesis by (by100 blast)
+  qed
 qed
 
 (** from \<S>85 Theorem 85.1 (Nielsen-Schreier): subgroups of free groups are free.
