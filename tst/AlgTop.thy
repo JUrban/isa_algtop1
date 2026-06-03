@@ -16772,7 +16772,23 @@ proof -
     let ?X = "{?p}"
     let ?TX = "{{}, ?X}"
     have "top1_is_graph_on ?X ?TX" sorry
-    moreover have "top1_connected_on ?X ?TX" sorry
+    moreover have "top1_connected_on ?X ?TX"
+      unfolding top1_connected_on_def
+    proof (intro conjI)
+      show "is_topology_on ?X ?TX"
+        unfolding is_topology_on_def by (by5000 auto)
+    next
+      show "\<nexists>U V. U \<in> ?TX \<and> V \<in> ?TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = ?X"
+      proof (rule notI)
+        assume "\<exists>U V. U \<in> ?TX \<and> V \<in> ?TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = ?X"
+        then obtain U V where "U \<in> ?TX" "V \<in> ?TX" "U \<noteq> {}" "V \<noteq> {}" "U \<inter> V = {}" "U \<union> V = ?X"
+          by (by100 blast)
+        have "U = {?p}" using \<open>U \<in> ?TX\<close> \<open>U \<noteq> {}\<close> by (by100 blast)
+        have "V = {?p}" using \<open>V \<in> ?TX\<close> \<open>V \<noteq> {}\<close> by (by100 blast)
+        hence "U \<inter> V = {?p}" using \<open>U = {?p}\<close> by (by100 blast)
+        thus False using \<open>U \<inter> V = {}\<close> by (by100 blast)
+      qed
+    qed
     moreover have "?p \<in> ?X" by (by100 blast)
     moreover have "top1_groups_isomorphic_on G mul
         (top1_fundamental_group_carrier ?X ?TX ?p) (top1_fundamental_group_mul ?X ?TX ?p)"
