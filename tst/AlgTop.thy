@@ -7958,7 +7958,14 @@ proof -
         and hP: "P \<in> top1_path_components_on U (subspace_topology X TX U)"
     \<comment> \<open>Show P \\<in> TX. By hopen\\_iff: need P \\<inter> A open in A for each arc A.\<close>
     have hP_sub_U: "P \<subseteq> U"
-      sorry \<comment> \<open>Path-component \\<subseteq> U.\<close>
+    proof -
+      have "is_topology_on U (subspace_topology X TX U)"
+        using subspace_topology_is_topology_on[OF hTX hU_sub] .
+      from hP obtain x where "x \<in> U" "P = top1_path_component_of_on U (subspace_topology X TX U) x"
+        unfolding top1_path_components_on_def by (by100 blast)
+      from top1_path_component_of_on_subset[OF \<open>is_topology_on U _\<close> \<open>x \<in> U\<close>]
+      show ?thesis using \<open>P = _\<close> by simp
+    qed
     have hP_sub_X: "P \<subseteq> X" using hP_sub_U hU_sub by (by100 blast)
     \<comment> \<open>For each arc A: P \\<inter> A is open in A.\<close>
     have "\<forall>A \<in> \<A>. openin_on A (subspace_topology X TX A) (A \<inter> P)"
