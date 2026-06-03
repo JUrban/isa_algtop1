@@ -6978,16 +6978,132 @@ proof -
           top1_is_arc_on A1 (subspace_topology X TX A1) \<and>
           top1_is_arc_on A2 (subspace_topology X TX A2)" .
     qed
-    \<comment> \<open>Step 4: Collect all arcs into a graph structure.\<close>
+    \<comment> \<open>Step 4: Collect all arcs into a graph structure.
+       For each j, choose A1(j), A2(j) from hC\\_arcs.
+       The arc collection is {A1(j), A2(j) | j < n}.\<close>
+    \<comment> \<open>Use SOME to select the arc decomposition for each circle.\<close>
+    define A1 where "A1 j = (SOME A. \<exists>A2 a b. C j = A \<union> A2 \<and> A \<inter> A2 = {a, b} \<and> a \<noteq> b \<and>
+        top1_is_arc_on A (subspace_topology X TX A) \<and>
+        top1_is_arc_on A2 (subspace_topology X TX A2))" for j
+    define A2 where "A2 j = (SOME A2. \<exists>a b. C j = A1 j \<union> A2 \<and> A1 j \<inter> A2 = {a, b} \<and> a \<noteq> b \<and>
+        top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
+        top1_is_arc_on A2 (subspace_topology X TX A2))" for j
+    \<comment> \<open>Arcs have the decomposition property for each j.\<close>
+    have hA_decomp: "\<forall>j\<in>{..<?n}. C j = A1 j \<union> A2 j \<and>
+        (\<exists>a b. A1 j \<inter> A2 j = {a, b} \<and> a \<noteq> b) \<and>
+        top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
+        top1_is_arc_on (A2 j) (subspace_topology X TX (A2 j))"
+    proof (intro ballI)
+      fix j assume hj: "j \<in> {..<?n}"
+      from bspec[OF hC_arcs hj]
+      obtain B1 B2 a b where hB:
+          "C j = B1 \<union> B2" "B1 \<inter> B2 = {a, b}" "a \<noteq> b"
+          "top1_is_arc_on B1 (subspace_topology X TX B1)"
+          "top1_is_arc_on B2 (subspace_topology X TX B2)"
+        by (by100 blast)
+      \<comment> \<open>A1 j = SOME A. \\<exists>... . So A1 j satisfies the property (by someI\\_ex).\<close>
+      have hA1_prop: "\<exists>A2' a b. C j = A1 j \<union> A2' \<and> A1 j \<inter> A2' = {a, b} \<and> a \<noteq> b \<and>
+          top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
+          top1_is_arc_on A2' (subspace_topology X TX A2')"
+      proof -
+        have "\<exists>A. \<exists>A2' a b. C j = A \<union> A2' \<and> A \<inter> A2' = {a, b} \<and> a \<noteq> b \<and>
+            top1_is_arc_on A (subspace_topology X TX A) \<and>
+            top1_is_arc_on A2' (subspace_topology X TX A2')"
+          using hB by (by100 blast)
+        from someI_ex[OF this]
+        show ?thesis unfolding A1_def .
+      qed
+      \<comment> \<open>A2 j = SOME A2'. \\<exists>a b. ... .\<close>
+      from hA1_prop obtain A2' a' b' where hA1: "C j = A1 j \<union> A2'" "A1 j \<inter> A2' = {a', b'}" "a' \<noteq> b'"
+          "top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j))"
+          "top1_is_arc_on A2' (subspace_topology X TX A2')"
+        by (by100 blast)
+      have hA2_prop: "\<exists>a b. C j = A1 j \<union> A2 j \<and> A1 j \<inter> A2 j = {a, b} \<and> a \<noteq> b \<and>
+          top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
+          top1_is_arc_on (A2 j) (subspace_topology X TX (A2 j))"
+      proof -
+        have "\<exists>A2'. \<exists>a b. C j = A1 j \<union> A2' \<and> A1 j \<inter> A2' = {a, b} \<and> a \<noteq> b \<and>
+            top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
+            top1_is_arc_on A2' (subspace_topology X TX A2')"
+          using hA1 by (by100 blast)
+        from someI_ex[OF this]
+        show ?thesis unfolding A2_def .
+      qed
+      from hA2_prop obtain a'' b'' where "C j = A1 j \<union> A2 j" "A1 j \<inter> A2 j = {a'', b''}" "a'' \<noteq> b''"
+          "top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j))"
+          "top1_is_arc_on (A2 j) (subspace_topology X TX (A2 j))"
+        by (by100 blast)
+      thus "C j = A1 j \<union> A2 j \<and>
+          (\<exists>a b. A1 j \<inter> A2 j = {a, b} \<and> a \<noteq> b) \<and>
+          top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
+          top1_is_arc_on (A2 j) (subspace_topology X TX (A2 j))"
+        by (by100 blast)
+    qed
+    let ?arcs = "(\<lambda>j. A1 j) ` {..<?n} \<union> (\<lambda>j. A2 j) ` {..<?n}"
+    \<comment> \<open>Each arc is a subset of X.\<close>
+    have harcs_sub: "\<forall>A \<in> ?arcs. A \<subseteq> X"
+    proof (intro ballI)
+      fix A assume "A \<in> ?arcs"
+      then obtain j where hj: "j \<in> {..<?n}" and "A = A1 j \<or> A = A2 j" by (by100 blast)
+      note hj_decomp = bspec[OF hA_decomp hj]
+      from conjunct1[OF hj_decomp] have hCj_eq: "C j = A1 j \<union> A2 j" .
+      from bspec[OF hC_sub hj] have "C j \<subseteq> X" .
+      with \<open>C j = A1 j \<union> A2 j\<close> \<open>A = A1 j \<or> A = A2 j\<close>
+      show "A \<subseteq> X" by (by100 blast)
+    qed
+    \<comment> \<open>Each arc is an arc.\<close>
+    have harcs_arc: "\<forall>A \<in> ?arcs. top1_is_arc_on A (subspace_topology X TX A)"
+    proof (intro ballI)
+      fix A assume "A \<in> ?arcs"
+      then obtain j where hj: "j \<in> {..<?n}" and "A = A1 j \<or> A = A2 j" by (by100 blast)
+      note hj_decomp = bspec[OF hA_decomp hj]
+      from conjunct1[OF conjunct2[OF conjunct2[OF hj_decomp]]]
+           conjunct2[OF conjunct2[OF conjunct2[OF hj_decomp]]]
+      show "top1_is_arc_on A (subspace_topology X TX A)"
+        using \<open>A = A1 j \<or> A = A2 j\<close> by (by100 blast)
+    qed
+    \<comment> \<open>Arcs cover X.\<close>
+    have harcs_cover: "\<Union>?arcs = X"
+    proof -
+      have "\<Union>?arcs = (\<Union>j\<in>{..<?n}. A1 j \<union> A2 j)" by (by100 blast)
+      also have "... = (\<Union>j\<in>{..<?n}. C j)"
+      proof (rule SUP_cong, simp)
+        fix j assume "j \<in> {..<?n}"
+        from conjunct1[OF bspec[OF hA_decomp this]] show "A1 j \<union> A2 j = C j" by simp
+      qed
+      also have "... = X" using hC_cover .
+      finally show ?thesis .
+    qed
+    \<comment> \<open>Pairwise intersection.\<close>
+    have harcs_inter: "\<forall>A \<in> ?arcs. \<forall>B \<in> ?arcs. A \<noteq> B \<longrightarrow>
+        A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+      \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+      \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      sorry \<comment> \<open>Same-circle: share 2 endpoints. Different-circle: share \\<subseteq> {p}.\<close>
+    \<comment> \<open>Coherent topology.\<close>
+    have harcs_coh: "\<forall>D. D \<subseteq> X \<longrightarrow>
+        (closedin_on X TX D \<longleftrightarrow>
+         (\<forall>A \<in> ?arcs. closedin_on A (subspace_topology X TX A) (A \<inter> D)))"
+      sorry \<comment> \<open>Refine wedge coherent: closed in C(j) iff closed in each arc of C(j).\<close>
+    \<comment> \<open>Assembly.\<close>
     show ?thesis
       unfolding top1_is_graph_on_def
-      sorry \<comment> \<open>Assembly: 2n arcs from Step 3. Need to verify:
-         (1) Each arc \\<subseteq> X (from C(j) \\<subseteq> X).
-         (2) Union = X (arcs cover each C(j), C(j)'s cover X).
-         (3) Pairwise intersection at endpoints (same-circle arcs share 2 pts,
-             different-circle arcs share \\<subseteq> C(j)\\<inter>C(k) = {p}).
-         (4) Coherent topology (from wedge coherent + arc refinement).
-         ~100 lines for careful assembly.\<close>
+    proof (intro conjI)
+      show "is_topology_on_strict X TX" using hwedge_strict .
+      show "is_hausdorff_on X TX" using hwedge_haus .
+      show "\<exists>\<A>. (\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)) \<and>
+          \<Union>\<A> = X \<and>
+          (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A) \<and>
+            A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B) \<and>
+            finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<and>
+          (\<forall>D. D \<subseteq> X \<longrightarrow>
+            (closedin_on X TX D \<longleftrightarrow>
+             (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> D))))"
+        apply (rule exI[of _ ?arcs])
+        using harcs_sub harcs_arc harcs_cover harcs_inter harcs_coh
+        by (by5000 auto)
+    qed
   qed
   have hconn: "top1_connected_on X TX"
   proof -
