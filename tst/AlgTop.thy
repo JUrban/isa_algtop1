@@ -16626,6 +16626,10 @@ proof -
   \<comment> \<open>Step 4: Define coherent topology.\<close>
   define TX :: "(unit + ('s \<times> real \<times> real)) set set" where
     "TX = {U. U \<subseteq> ?X \<and> (\<forall>s \<in> S. {v \<in> top1_S1. h s v \<in> U} \<in> top1_S1_topology)}"
+  have hTX_memI: "\<And>U. U \<subseteq> ?X \<Longrightarrow> (\<forall>s \<in> S. {v \<in> top1_S1. h s v \<in> U} \<in> top1_S1_topology) \<Longrightarrow> U \<in> TX"
+    unfolding TX_def by (by100 blast)
+  have hTX_memD: "\<And>U. U \<in> TX \<Longrightarrow> U \<subseteq> ?X \<and> (\<forall>s \<in> S. {v \<in> top1_S1. h s v \<in> U} \<in> top1_S1_topology)"
+    unfolding TX_def by (by100 blast)
   have "top1_is_wedge_of_circles_on ?X TX S ?p"
     unfolding top1_is_wedge_of_circles_on_def
   proof (intro conjI)
@@ -16767,7 +16771,58 @@ proof -
            or U = (h s ` V) \\<union> \\<Union>{C t | t \\<noteq> s} if p \\<in> h s ` V.\<close>
         have hhinv_cont: "top1_continuous_map_on (C s) (subspace_topology ?X TX (C s))
             top1_S1 top1_S1_topology (inv_into top1_S1 (h s))"
-          sorry \<comment> \<open>Inverse continuous from coherent topology construction.\<close>
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix y assume "y \<in> C s"
+          have "y \<in> h s ` top1_S1" using \<open>y \<in> C s\<close> hh_bij unfolding bij_betw_def by (by100 blast)
+          from inv_into_into[OF this]
+          show "inv_into top1_S1 (h s) y \<in> top1_S1" .
+        next
+          fix V assume hV: "V \<in> top1_S1_topology"
+          have hV_sub: "V \<subseteq> top1_S1"
+            using hV top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+          have hpreimg: "{y \<in> C s. inv_into top1_S1 (h s) y \<in> V} = h s ` V"
+          proof (rule set_eqI)
+            fix y show "(y \<in> {y \<in> C s. inv_into top1_S1 (h s) y \<in> V}) = (y \<in> h s ` V)"
+            proof
+              assume hy: "y \<in> {y \<in> C s. inv_into top1_S1 (h s) y \<in> V}"
+              hence "y \<in> C s" "inv_into top1_S1 (h s) y \<in> V" by (by100 blast)+
+              have "y \<in> h s ` top1_S1" using \<open>y \<in> C s\<close> hh_bij unfolding bij_betw_def by (by100 blast)
+              from f_inv_into_f[OF this] have heq: "h s (inv_into top1_S1 (h s) y) = y" .
+              have "h s (inv_into top1_S1 (h s) y) \<in> h s ` V"
+                using \<open>inv_into top1_S1 (h s) y \<in> V\<close> by (rule imageI)
+              thus "y \<in> h s ` V" using heq by simp
+            next
+              assume "y \<in> h s ` V"
+              then obtain v where hv: "v \<in> V" "y = h s v" by (by100 blast)
+              have "v \<in> top1_S1" using hv(1) hV_sub by (by100 blast)
+              have "y \<in> C s" using hh_maps_Cs \<open>v \<in> top1_S1\<close> hv(2) by (by100 blast)
+              have "inv_into top1_S1 (h s) y = v"
+                using inv_into_f_f[OF _ \<open>v \<in> top1_S1\<close>] hh_bij hv(2) unfolding bij_betw_def
+                by (by100 blast)
+              thus "y \<in> {y \<in> C s. inv_into top1_S1 (h s) y \<in> V}"
+                using \<open>y \<in> C s\<close> hv(1) by simp
+            qed
+          qed
+          define U_V where "U_V = h s ` V \<union> (?X - C s)"
+          have "h s ` V \<subseteq> C s" using hh_bij hV_sub unfolding bij_betw_def by (by100 blast)
+          have hUV_open: "U_V \<in> TX"
+          proof (rule hTX_memI)
+            show "U_V \<subseteq> ?X" unfolding U_V_def using \<open>h s ` V \<subseteq> C s\<close> hs by (by100 blast)
+            show "\<forall>t \<in> S. {w \<in> top1_S1. h t w \<in> U_V} \<in> top1_S1_topology"
+              sorry \<comment> \<open>For t=s: V. For t\\<noteq>s: S1 or S1\\<setminus>{(1,0)}.\<close>
+          qed
+          have "C s \<inter> U_V = h s ` V"
+            unfolding U_V_def using \<open>h s ` V \<subseteq> C s\<close> by (by100 blast)
+          have "h s ` V \<in> subspace_topology ?X TX (C s)"
+          proof -
+            have "C s \<inter> U_V \<in> subspace_topology ?X TX (C s)"
+              unfolding subspace_topology_def using hUV_open by (by100 blast)
+            thus ?thesis using \<open>C s \<inter> U_V = h s ` V\<close> by simp
+          qed
+          thus "{y \<in> C s. inv_into top1_S1 (h s) y \<in> V} \<in> subspace_topology ?X TX (C s)"
+            using hpreimg by simp
+        qed
         show "\<exists>ha. top1_homeomorphism_on top1_S1 top1_S1_topology
                     (C s) (subspace_topology ?X TX (C s)) ha"
           apply (rule exI[of _ "h s"])
