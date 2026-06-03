@@ -8005,8 +8005,11 @@ proof -
            Because paths in A \\<inter> U are paths in U, hence within same path-component P.\<close>
         have hPA_union: "A \<inter> P = \<Union>{Q \<in> top1_path_components_on (A \<inter> U)
             (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}}"
-          sorry \<comment> \<open>Key set equality. Needs path\\_in\\_subspace\\_is\\_path\\_in\\_ambient
-             to transfer paths from A\\<inter>U to U to X.\<close>
+          sorry \<comment> \<open>Set equality: (\\<subseteq>) x \\<in> A\\<inter>P \\<Rightarrow> x \\<in> U\\<inter>A, x's pc Q in U\\<inter>A satisfies Q \\<subseteq> P
+             (paths in A\\<inter>U are paths in U via path\\_in\\_subspace\\_is\\_path\\_in\\_ambient).
+             (\\<supseteq>) Q\\<inter>P \\<noteq> {} \\<Rightarrow> pick z \\<in> Q\\<inter>P, any x \\<in> Q path-connected to z in U\\<inter>A,
+             hence in P. Also x \\<in> A. So x \\<in> A\\<inter>P.
+             ~40 lines using subspace\\_topology\\_trans + path transfer.\<close>
         moreover have "\<Union>{Q \<in> top1_path_components_on (A \<inter> U)
             (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}} \<in> ?TA"
         proof -
