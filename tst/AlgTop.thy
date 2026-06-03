@@ -519,6 +519,124 @@ proof -
   show ?thesis sorry \<comment> \<open>Normal form → homeomorphism type (S², T_n, or P_m).\<close>
 qed
 
+\<comment> \<open>In a group, if H = g\\<inverse>Hg (set-wise), then gHg\\<inverse> = H.\<close>
+lemma group_conj_reverse:
+  assumes "top1_is_group_on G mul e invg"
+      and "H \<subseteq> G" and "g \<in> G"
+      and "H = (\<lambda>h. mul (invg g) (mul h g)) ` H"
+  shows "(\<lambda>h. mul (mul g h) (invg g)) ` H = H"
+proof (rule set_eqI, rule iffI)
+  fix x assume "x \<in> (\<lambda>h. mul (mul g h) (invg g)) ` H"
+  then obtain k where "k \<in> H" "x = mul (mul g k) (invg g)" by (by5000 auto)
+  \<comment> \<open>k \\<in> H = {inv(g)\\<cdot>h\\<cdot>g | h \\<in> H}. So k = inv(g)\\<cdot>h0\\<cdot>g.
+     Then g\\<cdot>k\\<cdot>inv(g) = g\\<cdot>inv(g)\\<cdot>h0\\<cdot>g\\<cdot>inv(g) = h0.\<close>
+  from assms(4) \<open>k \<in> H\<close> obtain h0 where "h0 \<in> H" "k = mul (invg g) (mul h0 g)" by (by5000 auto)
+  have "x = h0"
+  proof -
+    have "g \<in> G" using assms(3) .
+    have "invg g \<in> G" using assms(1) \<open>g \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+    have "h0 \<in> G" using \<open>h0 \<in> H\<close> assms(2) by (by100 blast)
+    have "k \<in> G" using \<open>k \<in> H\<close> assms(2) by (by100 blast)
+    \<comment> \<open>x = mul(mul(g, mul(inv(g), mul(h0, g))), inv(g))
+       = mul(mul(mul(g, inv(g)), mul(h0, g)), inv(g))  [assoc]
+       = mul(mul(e, mul(h0, g)), inv(g))  [g\\<cdot>inv(g)=e]
+       = mul(mul(h0, g), inv(g))  [e\\<cdot>x=x]
+       = mul(h0, mul(g, inv(g)))  [assoc]
+       = mul(h0, e)  [g\\<cdot>inv(g)=e]
+       = h0  [h0\\<cdot>e=h0]\<close>
+    have hassoc: "\<And>a b c. a \<in> G \<Longrightarrow> b \<in> G \<Longrightarrow> c \<in> G \<Longrightarrow> mul (mul a b) c = mul a (mul b c)"
+      using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+    have hlinv: "mul (invg g) g = e" using assms(1) \<open>g \<in> G\<close>
+      unfolding top1_is_group_on_def by (by100 blast)
+    have hrinv: "mul g (invg g) = e" using assms(1) \<open>g \<in> G\<close>
+      unfolding top1_is_group_on_def by (by100 blast)
+    have hlid: "\<And>a. a \<in> G \<Longrightarrow> mul e a = a" using assms(1)
+      unfolding top1_is_group_on_def by (by100 blast)
+    have hrid: "\<And>a. a \<in> G \<Longrightarrow> mul a e = a" using assms(1)
+      unfolding top1_is_group_on_def by (by100 blast)
+    have hmul_cl: "\<And>a b. a \<in> G \<Longrightarrow> b \<in> G \<Longrightarrow> mul a b \<in> G" using assms(1)
+      unfolding top1_is_group_on_def by (by100 blast)
+    have "mul h0 g \<in> G" using hmul_cl[OF \<open>h0 \<in> G\<close> \<open>g \<in> G\<close>] .
+    have "mul (invg g) (mul h0 g) \<in> G" using hmul_cl[OF \<open>invg g \<in> G\<close> \<open>mul h0 g \<in> G\<close>] .
+    have "x = mul (mul g (mul (invg g) (mul h0 g))) (invg g)"
+      using \<open>x = mul (mul g k) (invg g)\<close> \<open>k = mul (invg g) (mul h0 g)\<close> by simp
+    also have "\<dots> = mul g (mul (mul (invg g) (mul h0 g)) (invg g))"
+      using hassoc[OF \<open>g \<in> G\<close> \<open>mul (invg g) (mul h0 g) \<in> G\<close> \<open>invg g \<in> G\<close>] .
+    also have "mul (invg g) (mul h0 g) = mul (mul (invg g) h0) g"
+      using hassoc[OF \<open>invg g \<in> G\<close> \<open>h0 \<in> G\<close> \<open>g \<in> G\<close>] by simp
+    also have "mul (mul (mul (invg g) h0) g) (invg g) =
+        mul (mul (invg g) h0) (mul g (invg g))"
+      using hassoc[OF hmul_cl[OF \<open>invg g \<in> G\<close> \<open>h0 \<in> G\<close>] \<open>g \<in> G\<close> \<open>invg g \<in> G\<close>] .
+    also have "mul g (invg g) = e" using hrinv .
+    also have "mul (mul (invg g) h0) e = mul (invg g) h0"
+      using hrid[OF hmul_cl[OF \<open>invg g \<in> G\<close> \<open>h0 \<in> G\<close>]] .
+    also have "mul g (mul (invg g) h0) = mul (mul g (invg g)) h0"
+      using hassoc[OF \<open>g \<in> G\<close> \<open>invg g \<in> G\<close> \<open>h0 \<in> G\<close>] by simp
+    also have "mul g (invg g) = e" using hrinv .
+    also have "mul e h0 = h0" using hlid[OF \<open>h0 \<in> G\<close>] .
+    \<comment> \<open>Direct step-by-step cancellation.\<close>
+    have s1: "mul g (mul (invg g) (mul h0 g)) = mul (mul g (invg g)) (mul h0 g)"
+      using hassoc[OF \<open>g \<in> G\<close> \<open>invg g \<in> G\<close> \<open>mul h0 g \<in> G\<close>] by simp
+    have s2: "mul (mul g (invg g)) (mul h0 g) = mul e (mul h0 g)" using hrinv by simp
+    have s3: "mul e (mul h0 g) = mul h0 g" using hlid[OF \<open>mul h0 g \<in> G\<close>] .
+    from s1 s2 s3 have hcancel1: "mul g (mul (invg g) (mul h0 g)) = mul h0 g" by simp
+    have s4: "mul (mul h0 g) (invg g) = mul h0 (mul g (invg g))"
+      using hassoc[OF \<open>h0 \<in> G\<close> \<open>g \<in> G\<close> \<open>invg g \<in> G\<close>] .
+    have s5: "mul h0 (mul g (invg g)) = mul h0 e" using hrinv by simp
+    have s6: "mul h0 e = h0" using hrid[OF \<open>h0 \<in> G\<close>] .
+    from s4 s5 s6 have hcancel2: "mul (mul h0 g) (invg g) = h0" by simp
+    from hcancel1 have "mul (mul g (mul (invg g) (mul h0 g))) (invg g) = mul (mul h0 g) (invg g)"
+      by simp
+    hence "mul (mul g (mul (invg g) (mul h0 g))) (invg g) = h0"
+      using hcancel2 by simp
+    thus "x = h0"
+      using \<open>x = mul (mul g (mul (invg g) (mul h0 g))) (invg g)\<close> by simp
+  qed
+  thus "x \<in> H" using \<open>h0 \<in> H\<close> by simp
+next
+  fix m assume "m \<in> H"
+  have "m \<in> G" using \<open>m \<in> H\<close> assms(2) by (by100 blast)
+  \<comment> \<open>Take k = inv(g)\\<cdot>m\\<cdot>g. From H = inv(g)\\<cdot>H\\<cdot>g, k \\<in> H.\<close>
+  have "mul (invg g) (mul m g) \<in> (\<lambda>h. mul (invg g) (mul h g)) ` H"
+    using \<open>m \<in> H\<close> by (by100 blast)
+  hence "mul (invg g) (mul m g) \<in> H" using assms(4) by simp
+  \<comment> \<open>mul(mul(g, inv(g)\\<cdot>m\\<cdot>g), inv(g)) = m (by group cancellation).\<close>
+  have "mul (mul g (mul (invg g) (mul m g))) (invg g) = m"
+  proof -
+    have "g \<in> G" "invg g \<in> G" "m \<in> G" using assms(1,3) \<open>m \<in> G\<close>
+      unfolding top1_is_group_on_def by (by100 blast)+
+    have "mul m g \<in> G" using assms(1) \<open>m \<in> G\<close> \<open>g \<in> G\<close>
+      unfolding top1_is_group_on_def by (by100 blast)
+    have hassoc_l: "\<And>a b c. a \<in> G \<Longrightarrow> b \<in> G \<Longrightarrow> c \<in> G \<Longrightarrow> mul (mul a b) c = mul a (mul b c)"
+      using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+    have hrinv_l: "mul g (invg g) = e" using assms(1) \<open>g \<in> G\<close>
+      unfolding top1_is_group_on_def by (by100 blast)
+    have hlid_l: "\<And>a. a \<in> G \<Longrightarrow> mul e a = a" using assms(1)
+      unfolding top1_is_group_on_def by (by100 blast)
+    have hrid_l: "\<And>a. a \<in> G \<Longrightarrow> mul a e = a" using assms(1)
+      unfolding top1_is_group_on_def by (by100 blast)
+    have s1: "mul g (mul (invg g) (mul m g)) = mul (mul g (invg g)) (mul m g)"
+      using hassoc_l[OF \<open>g \<in> G\<close> \<open>invg g \<in> G\<close> \<open>mul m g \<in> G\<close>] by simp
+    have s2: "mul (mul g (invg g)) (mul m g) = mul e (mul m g)" using hrinv_l by simp
+    have s3: "mul e (mul m g) = mul m g" using hlid_l[OF \<open>mul m g \<in> G\<close>] .
+    from s1 s2 s3 have "mul g (mul (invg g) (mul m g)) = mul m g" by simp
+    hence "mul (mul g (mul (invg g) (mul m g))) (invg g) = mul (mul m g) (invg g)" by simp
+    have s4: "mul (mul m g) (invg g) = mul m (mul g (invg g))"
+      using hassoc_l[OF \<open>m \<in> G\<close> \<open>g \<in> G\<close> \<open>invg g \<in> G\<close>] .
+    have s5: "mul m (mul g (invg g)) = mul m e" using hrinv_l by simp
+    have s6: "mul m e = m" using hrid_l[OF \<open>m \<in> G\<close>] .
+    from s4 s5 s6 have "mul (mul m g) (invg g) = m" by simp
+    thus ?thesis using \<open>mul (mul g (mul (invg g) (mul m g))) (invg g) = mul (mul m g) (invg g)\<close>
+      by simp
+  qed
+  let ?k = "mul (invg g) (mul m g)"
+  have "mul (mul g ?k) (invg g) = m" using \<open>mul (mul g ?k) (invg g) = m\<close> .
+  from imageI[OF \<open>?k \<in> H\<close>, of "\<lambda>h. mul (mul g h) (invg g)"]
+  have "mul (mul g ?k) (invg g) \<in> (\<lambda>h. mul (mul g h) (invg g)) ` H" .
+  thus "m \<in> (\<lambda>h. mul (mul g h) (invg g)) ` H"
+    using \<open>mul (mul g ?k) (invg g) = m\<close> by simp
+qed
+
 lemma quotient_carrier_memI:
   "g \<in> G \<Longrightarrow> top1_group_coset_on G mul N g \<in> top1_quotient_group_carrier_on G mul N"
   unfolding top1_quotient_group_carrier_on_def by (by100 blast)
@@ -1234,24 +1352,13 @@ proof -
           unfolding top1_normalizer_on_def
         proof (intro CollectI conjI)
           show "?\<alpha>_class \<in> ?pi1B" using h\<alpha>_in_pi .
-          show "{?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H} = ?H"
-          proof (rule set_eqI, rule iffI)
-            fix x assume "x \<in> {?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H}"
-            then obtain k where "k \<in> ?H" "x = ?mulB (?mulB ?\<alpha>_class k) (?invB ?\<alpha>_class)"
-              by (by5000 auto)
-            \<comment> \<open>k \\<in> H = {inv(\\<alpha>)\\<cdot>h\\<cdot>\\<alpha> | h \\<in> H} from hH\\_conj.
-               So k = inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha> for some h0 \\<in> H.
-               Then x = \\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) = \\<alpha>\\<cdot>inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha>\\<cdot>inv(\\<alpha>) = h0 \\<in> H.\<close>
-            thus "x \<in> ?H" sorry
-              \<comment> \<open>From k = inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha> (h0 \\<in> H), x = \\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) = h0 \\<in> H.
-                 Requires group cancellation from hpi1\\_grp.\<close>
-          next
-            fix m assume "m \<in> ?H"
-            \<comment> \<open>inv(\\<alpha>)\\<cdot>m\\<cdot>\\<alpha> \\<in> H (from hH\\_conj: H = {inv(\\<alpha>)\\<cdot>h\\<cdot>\\<alpha> | h \\<in> H}).
-               Then \\<alpha>\\<cdot>(inv(\\<alpha>)\\<cdot>m\\<cdot>\\<alpha>)\\<cdot>inv(\\<alpha>) = m.
-               Take k = inv(\\<alpha>)\\<cdot>m\\<cdot>\\<alpha> \\<in> H as witness.\<close>
-            thus "m \<in> {?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H}" sorry
-          qed
+          \<comment> \<open>Use group\\_conj\\_reverse: from H = inv(\\<alpha>)\\<cdot>H\\<cdot>\\<alpha>, derive \\<alpha>\\<cdot>H\\<cdot>inv(\\<alpha>) = H.\<close>
+          have hH_image: "?H = (\<lambda>h'. ?mulB (?invB ?\<alpha>_class) (?mulB h' ?\<alpha>_class)) ` ?H"
+            sorry \<comment> \<open>From hH\\_conj + heq\\_comp: nested image = single lambda image.\<close>
+          from group_conj_reverse[OF hpi1_grp hH_sub h\<alpha>_in_pi hH_image]
+          have "(\<lambda>h'. ?mulB (?mulB ?\<alpha>_class h') (?invB ?\<alpha>_class)) ` ?H = ?H" .
+          thus "{?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H} = ?H"
+            sorry \<comment> \<open>Image = set comprehension.\<close>
         qed
       qed
       \<comment> \<open>Define f: Cov(p) \\<rightarrow> N(H)/H by f(h) = [p\\<circ>\\<gamma>\\_h]\\<cdot>H.\<close>
