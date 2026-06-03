@@ -6386,8 +6386,73 @@ proof (cases "card S = 0")
   let ?TR2_n0 = "product_topology_on top1_open_sets top1_open_sets"
   let ?f_n0 = "\<lambda>t::real. (t, 0::real)"
   have hf0_homeo: "top1_homeomorphism_on I_set I_top ?X0 ?TX0 ?f_n0"
-    sorry \<comment> \<open>f0(t)=(t,0) homeo: bij obvious, continuous via R\\<rightarrow>R2 bridge,
-       inverse=fst via R2\\<rightarrow>R bridge.\<close>
+  proof -
+    let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
+    have hI_top: "is_topology_on I_set I_top"
+      using top1_unit_interval_topology_is_topology_on .
+    have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set) ?TR2"
+    proof -
+      have "is_topology_on_strict (UNIV :: (real \<times> real) set) ?TR2"
+        by (rule hausdorff_strict_is_strict[OF top1_R2_is_hausdorff], by100 blast)
+      thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+    qed
+    have hX0_top: "is_topology_on ?X0 ?TX0"
+      using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
+    \<comment> \<open>I compact (Theorem 27.1).\<close>
+    have hI_compact: "top1_compact_on I_set I_top"
+      using Theorem_27_1[of "0::real" 1]
+      unfolding top1_unit_interval_def top1_unit_interval_topology_def by simp
+    \<comment> \<open>X0 Hausdorff (subspace of R2).\<close>
+    have hX0_haus: "is_hausdorff_on ?X0 ?TX0"
+    proof -
+      from conjunct2[OF conjunct2[OF Theorem_17_11]]
+      have "\<forall>X T Y. is_hausdorff_on X T \<and> Y \<subseteq> X \<longrightarrow> is_hausdorff_on Y (subspace_topology X T Y)" .
+      thus ?thesis using top1_R2_is_hausdorff by (by100 blast)
+    qed
+    \<comment> \<open>f0 continuous I \\<rightarrow> X0.\<close>
+    have hf0_cont_R2: "continuous_on UNIV ?f_n0" by (intro continuous_intros)
+    have hf0_maps: "\<forall>t \<in> I_set. ?f_n0 t \<in> ?X0"
+      unfolding top1_unit_interval_def by (by100 auto)
+    from top1_continuous_map_on_R_to_R2_subspace[OF _ hf0_cont_R2]
+    have "top1_continuous_map_on (UNIV :: real set) top1_open_sets (UNIV :: (real \<times> real) set)
+        (subspace_topology UNIV ?TR2 UNIV) ?f_n0" by (by100 blast)
+    hence "top1_continuous_map_on (UNIV :: real set) top1_open_sets (UNIV :: (real \<times> real) set) ?TR2 ?f_n0"
+    proof -
+      have "subspace_topology UNIV ?TR2 (UNIV :: (real \<times> real) set) = ?TR2"
+      proof -
+        have "\<forall>U \<in> ?TR2. U \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+        from subspace_topology_self[OF this] show ?thesis .
+      qed
+      thus ?thesis using \<open>top1_continuous_map_on _ _ _ _ ?f_n0\<close> by simp
+    qed
+    from top1_continuous_map_on_restrict_domain_simple[OF this]
+    have "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+        (UNIV :: (real \<times> real) set) ?TR2 ?f_n0" by (by100 blast)
+    hence hf0_I_R2: "top1_continuous_map_on I_set I_top (UNIV :: (real \<times> real) set) ?TR2 ?f_n0"
+      unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+    from continuous_map_restrict_codomain[OF hf0_I_R2 hf0_maps]
+    have hf0_cont: "top1_continuous_map_on I_set I_top ?X0 ?TX0 ?f_n0" by (by100 blast)
+    \<comment> \<open>f0 bijective I \\<rightarrow> X0.\<close>
+    have hf0_bij: "bij_betw ?f_n0 I_set ?X0"
+    proof -
+      have "inj_on ?f_n0 I_set" unfolding inj_on_def by (by100 simp)
+      moreover have "?f_n0 ` I_set = ?X0"
+      proof (rule set_eqI, rule iffI)
+        fix p assume "p \<in> ?f_n0 ` I_set"
+        then obtain t where "t \<in> I_set" "p = (t, 0::real)" by (by100 blast)
+        thus "p \<in> ?X0" unfolding top1_unit_interval_def by (by100 simp)
+      next
+        fix p assume "p \<in> ?X0"
+        then obtain t where "t \<in> {0..1::real}" "p = (t, 0::real)" by (by100 blast)
+        hence "t \<in> I_set" unfolding top1_unit_interval_def by simp
+        thus "p \<in> ?f_n0 ` I_set" using \<open>p = (t, 0)\<close> by (by100 blast)
+      qed
+      ultimately show ?thesis unfolding bij_betw_def by (by100 blast)
+    qed
+    \<comment> \<open>By Theorem 26.6: compact + Hausdorff + continuous bijection = homeomorphism.\<close>
+    from Theorem_26_6[OF hI_top hX0_top hI_compact hX0_haus hf0_cont hf0_bij]
+    show ?thesis .
+  qed
   have hgraph0: "top1_is_graph_on ?X0 ?TX0"
   proof -
     let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
