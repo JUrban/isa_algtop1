@@ -8134,13 +8134,65 @@ proof -
         \<comment> \<open>Each such Q is open in A. So A\\<inter>P is open in A.\<close>
         \<comment> \<open>Key: if x \\<in> P\\<inter>A, x's path-component Q in U\\<inter>A satisfies Q \\<subseteq> P.
            Because paths in A \\<inter> U are paths in U, hence within same path-component P.\<close>
+        \<comment> \<open>Subspace topology agreement: subspace(A, TA, A\\<inter>U) = subspace(X, TX, A\\<inter>U).\<close>
+        have hAU_sub_A: "A \<inter> U \<subseteq> A" by (by100 blast)
+        have hAU_topo_eq: "subspace_topology A ?TA (A \<inter> U) = subspace_topology X TX (A \<inter> U)"
+          using subspace_topology_trans[OF hAU_sub_A] by simp
+        \<comment> \<open>Key: paths in A\\<inter>U (subspace of X) are paths in U (subspace of X).\<close>
+        \<comment> \<open>Because A\\<inter>U \\<subseteq> U and path\\_in\\_subspace\\_is\\_path\\_in\\_ambient gives path in X,
+           which stays in U, so restricts to U.\<close>
+        have hAU_sub_U: "A \<inter> U \<subseteq> U" by (by100 blast)
+        have hU_sub_X: "U \<subseteq> X" using hU_sub .
+        \<comment> \<open>For any path-component Q of A\\<inter>U and z \\<in> Q\\<inter>P: Q \\<subseteq> P.\<close>
+        have hQ_sub_P: "\<forall>Q \<in> top1_path_components_on (A \<inter> U)
+            (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {} \<longrightarrow> Q \<subseteq> P"
+          sorry \<comment> \<open>Core argument: z \\<in> Q\\<inter>P, x \\<in> Q.
+             Path from z to x in A\\<inter>U (subspace of A, hence of X).
+             By path\\_in\\_subspace\\_is\\_path\\_in\\_ambient: path in X.
+             Image \\<subseteq> A\\<inter>U \\<subseteq> U. So path stays in U.
+             By path\\_to\\_subspace: path from z to x in U.
+             z \\<in> P (path-component of U) \\<Rightarrow> x \\<in> P.\<close>
         have hPA_union: "A \<inter> P = \<Union>{Q \<in> top1_path_components_on (A \<inter> U)
             (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}}"
-          sorry \<comment> \<open>Set equality: (\\<subseteq>) x \\<in> A\\<inter>P \\<Rightarrow> x \\<in> U\\<inter>A, x's pc Q in U\\<inter>A satisfies Q \\<subseteq> P
-             (paths in A\\<inter>U are paths in U via path\\_in\\_subspace\\_is\\_path\\_in\\_ambient).
-             (\\<supseteq>) Q\\<inter>P \\<noteq> {} \\<Rightarrow> pick z \\<in> Q\\<inter>P, any x \\<in> Q path-connected to z in U\\<inter>A,
-             hence in P. Also x \\<in> A. So x \\<in> A\\<inter>P.
-             ~40 lines using subspace\\_topology\\_trans + path transfer.\<close>
+        proof (rule set_eqI, rule iffI)
+          fix x assume hx: "x \<in> A \<inter> P"
+          hence "x \<in> A" "x \<in> P" by simp_all
+          hence "x \<in> U" using hP_sub_U by (by100 blast)
+          hence "x \<in> A \<inter> U" using \<open>x \<in> A\<close> by (by100 blast)
+          \<comment> \<open>x is in some path-component Q of A\\<inter>U.\<close>
+          have hAU_top: "is_topology_on (A \<inter> U) (subspace_topology A ?TA (A \<inter> U))"
+            using subspace_topology_is_topology_on[OF hA_top hAU_sub_A] .
+          have "x \<in> top1_path_component_of_on (A \<inter> U) (subspace_topology A ?TA (A \<inter> U)) x"
+            unfolding top1_path_component_of_on_def
+            using top1_in_same_path_component_on_refl[OF hAU_top \<open>x \<in> A \<inter> U\<close>] by (by100 blast)
+          moreover have "top1_path_component_of_on (A \<inter> U) (subspace_topology A ?TA (A \<inter> U)) x
+              \<in> top1_path_components_on (A \<inter> U) (subspace_topology A ?TA (A \<inter> U))"
+            unfolding top1_path_components_on_def using \<open>x \<in> A \<inter> U\<close> by (by100 blast)
+          moreover have "top1_path_component_of_on (A \<inter> U) (subspace_topology A ?TA (A \<inter> U)) x \<inter> P \<noteq> {}"
+            using \<open>x \<in> P\<close> \<open>x \<in> top1_path_component_of_on _ _ x\<close> by (by100 blast)
+          ultimately show "x \<in> \<Union>{Q \<in> top1_path_components_on (A \<inter> U)
+              (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}}" by (by100 blast)
+        next
+          fix x assume "x \<in> \<Union>{Q \<in> top1_path_components_on (A \<inter> U)
+              (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}}"
+          then obtain Q where hQ: "Q \<in> top1_path_components_on (A \<inter> U)
+              (subspace_topology A ?TA (A \<inter> U))" "Q \<inter> P \<noteq> {}" "x \<in> Q"
+            by (by100 blast)
+          from hQ_sub_P hQ(1) hQ(2) have "Q \<subseteq> P" by (by100 blast)
+          hence "x \<in> P" using hQ(3) by (by100 blast)
+          \<comment> \<open>x \\<in> Q \\<subseteq> A\\<inter>U \\<subseteq> A.\<close>
+          have "Q \<subseteq> A \<inter> U"
+          proof -
+            from hQ(1) obtain z where "z \<in> A \<inter> U"
+                "Q = top1_path_component_of_on (A \<inter> U) (subspace_topology A ?TA (A \<inter> U)) z"
+              unfolding top1_path_components_on_def by (by100 blast)
+            from top1_path_component_of_on_subset[OF
+                subspace_topology_is_topology_on[OF hA_top hAU_sub_A] \<open>z \<in> A \<inter> U\<close>]
+            show ?thesis using \<open>Q = _\<close> by simp
+          qed
+          hence "x \<in> A" using hQ(3) by (by100 blast)
+          thus "x \<in> A \<inter> P" using \<open>x \<in> P\<close> by (by100 blast)
+        qed
         moreover have "\<Union>{Q \<in> top1_path_components_on (A \<inter> U)
             (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}} \<in> ?TA"
         proof -
