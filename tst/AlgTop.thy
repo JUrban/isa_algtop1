@@ -7899,17 +7899,83 @@ proof -
   qed
   \<comment> \<open>Each arc is compact (homeo to [0,1]) hence closed in X.\<close>
   have hA_closed: "\<forall>A \<in> \<A>. closedin_on X TX A"
-    sorry \<comment> \<open>Arc compact (Theorem 27.1 + Theorem 26.5) + Hausdorff \\<Rightarrow> closed.\<close>
+  proof (intro ballI)
+    fix A assume hA: "A \<in> \<A>"
+    have hA_sub: "A \<subseteq> X" using h\<A> hA by (by100 blast)
+    have hA_arc: "top1_is_arc_on A (subspace_topology X TX A)"
+      using h\<A> hA by (by100 blast)
+    \<comment> \<open>Arc compact: homeomorphic to I = [0,1] which is compact.\<close>
+    have hA_compact: "top1_compact_on A (subspace_topology X TX A)"
+    proof -
+      from hA_arc[unfolded top1_is_arc_on_def] obtain h where
+          hh: "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+        by (by100 blast)
+      have hI_compact: "top1_compact_on I_set I_top"
+        using Theorem_27_1[of "0::real" 1]
+        unfolding top1_unit_interval_def top1_unit_interval_topology_def by simp
+      have hI_top: "is_topology_on I_set I_top"
+        using top1_unit_interval_topology_is_topology_on .
+      have hA_top: "is_topology_on A (subspace_topology X TX A)"
+        using subspace_topology_is_topology_on[OF hTX hA_sub] .
+      have hh_cont: "top1_continuous_map_on I_set I_top A (subspace_topology X TX A) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hh_img: "h ` I_set = A"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      from Theorem_26_5[OF hI_top hA_top hI_compact hh_cont]
+      have "top1_compact_on (h ` I_set) (subspace_topology A (subspace_topology X TX A) (h ` I_set))" .
+      moreover have "subspace_topology A (subspace_topology X TX A) A = subspace_topology X TX A"
+      proof -
+        have "\<forall>U \<in> subspace_topology X TX A. U \<subseteq> A"
+          using hA_sub hTX unfolding subspace_topology_def by (by100 blast)
+        from subspace_topology_self[OF this] show ?thesis .
+      qed
+      ultimately show ?thesis using hh_img by simp
+    qed
+    from compact_in_strict_hausdorff_closedin_on[OF hhaus hstrict hA_sub hA_compact]
+    show "closedin_on X TX A" .
+  qed
   \<comment> \<open>Each arc is locally path-connected (homeo to [0,1] which is lpc).\<close>
+  \<comment> \<open>[0,1] is locally path-connected.\<close>
+  have hI_lpc: "top1_locally_path_connected_on I_set I_top"
+    sorry \<comment> \<open>At each x \\<in> [0,1] and open U \\<ni> x: take V = (x-\\<epsilon>,x+\\<epsilon>)\\<inter>[0,1].
+       V is convex \\<Rightarrow> path-connected. V is open in [0,1]. V \\<subseteq> U.
+       ~30 lines using metric open balls + convexity.\<close>
   have hA_lpc: "\<forall>A \<in> \<A>. top1_locally_path_connected_on A (subspace_topology X TX A)"
-    sorry \<comment> \<open>[0,1] is lpc (convex subspace of R). Homeomorphism preserves lpc.\<close>
+  proof (intro ballI)
+    fix A assume hA: "A \<in> \<A>"
+    from h\<A> hA have "top1_is_arc_on A (subspace_topology X TX A)" by (by100 blast)
+    then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+      unfolding top1_is_arc_on_def by (by100 blast)
+    from homeomorphism_preserves_lpc[OF this hI_lpc]
+    show "top1_locally_path_connected_on A (subspace_topology X TX A)" .
+  qed
   \<comment> \<open>Prove lpc using Theorem 25.4: path-components of open sets are open.\<close>
+  \<comment> \<open>Use Theorem 25.4: lpc \\<Leftrightarrow> path-components of open sets are open.\<close>
   show ?thesis
-    sorry \<comment> \<open>By Theorem 25.4: need path-components of open U \\<in> TX to be in TX.
-       For open U: U \\<inter> A is open in A for each arc A.
-       Path-component P of U: P \\<inter> A is a union of path-components of U \\<inter> A in A.
-       Since A is lpc, path-components of open sets in A are open in A.
-       So P \\<inter> A is open in A. By hopen\\_iff: P is open in X.\<close>
+    unfolding Theorem_25_4[OF hTX]
+  proof (intro ballI impI)
+    fix U P assume hU: "U \<in> TX" and hU_sub: "U \<subseteq> X"
+        and hP: "P \<in> top1_path_components_on U (subspace_topology X TX U)"
+    \<comment> \<open>Show P \\<in> TX. By hopen\\_iff: need P \\<inter> A open in A for each arc A.\<close>
+    have hP_sub_U: "P \<subseteq> U"
+      sorry \<comment> \<open>Path-component \\<subseteq> U.\<close>
+    have hP_sub_X: "P \<subseteq> X" using hP_sub_U hU_sub by (by100 blast)
+    \<comment> \<open>For each arc A: P \\<inter> A is open in A.\<close>
+    have "\<forall>A \<in> \<A>. openin_on A (subspace_topology X TX A) (A \<inter> P)"
+    proof (intro ballI)
+      fix A assume hA: "A \<in> \<A>"
+      \<comment> \<open>U \\<inter> A is open in A (from hU open and hopen\\_iff).\<close>
+      from hopen_iff hU_sub hU hA
+      have hUA_open: "openin_on A (subspace_topology X TX A) (A \<inter> U)" by (by100 blast)
+      \<comment> \<open>P \\<inter> A is a union of path-components of U \\<inter> A.
+         Since A is lpc, path-components of open sets in A are open in A.\<close>
+      show "openin_on A (subspace_topology X TX A) (A \<inter> P)"
+        sorry \<comment> \<open>P\\<inter>A = union of path-components of U\\<inter>A in A.
+           Each path-component is open (A lpc by Theorem 25.4).
+           Union of open = open.\<close>
+    qed
+    from hopen_iff hP_sub_X this show "P \<in> TX" by (by100 blast)
+  qed
 qed
 
 lemma graph_semilocally_simply_connected:
