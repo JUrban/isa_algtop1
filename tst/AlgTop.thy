@@ -7823,6 +7823,21 @@ lemma graph_covering_is_graph:
   shows "top1_is_graph_on E TE"
   by (rule Theorem_83_4_covering_of_graph_is_graph[OF assms])
 
+\<comment> \<open>Graphs are locally path-connected and semilocally simply connected.\<close>
+lemma graph_locally_path_connected:
+  assumes "top1_is_graph_on X TX"
+  shows "top1_locally_path_connected_on X TX"
+  sorry \<comment> \<open>Each point has small path-connected neighborhoods:
+     interior of arc \\<Rightarrow> interval (lpc). Endpoint \\<Rightarrow> star shape (lpc).
+     ~100 lines using arc structure + coherent topology.\<close>
+
+lemma graph_semilocally_simply_connected:
+  assumes "top1_is_graph_on X TX"
+  shows "top1_semilocally_simply_connected_on X TX"
+  sorry \<comment> \<open>Each point has neighborhood where loops are null-homotopic:
+     interior of arc \\<Rightarrow> interval (SC). Endpoint \\<Rightarrow> star (SC, retracts to point).
+     Any loop in the star is null-homotopic in X.\<close>
+
 text \<open>Schreier rank formula: if F is free of rank n and H has index k,
   then H is free of rank kn - k + 1 = k(n-1) + 1.\<close>
 lemma schreier_rank_formula:
@@ -7859,7 +7874,12 @@ proof -
     where hcov: "top1_covering_map_on E TE X TX p"
       and hE_conn: "top1_connected_on E TE"
       and he0: "e0 \<in> E"
-    sorry \<comment> \<open>Covering existence (Theorem 82.1) + covering of graph is graph (Theorem 83.2).\<close>
+    sorry \<comment> \<open>Covering existence via Theorem 82.1:
+       (1) graph\\_lpc + graph\\_ssc give the prerequisites.
+       (2) Transfer H to \\<phi>(H) \\<subseteq> \\<pi>\\_1(X) via iso.
+       (3) Apply 82.1 to get E with p*(\\<pi>\\_1(E)) = \\<phi>(H).
+       (4) Type packaging issue: E' has internal type from 82.1 construction,
+           may not match the external 'b type in obtain.\<close>
   \<comment> \<open>E is a graph (Theorem 83.4). \<pi>_1(E) is free (Theorem 84.7).
      Note: Theorem 84.7 is defined later in this file, so cannot be directly called here.
      E has k \<times> (edges of X) edges and k \<times> (vertices of X) vertices.
@@ -15061,7 +15081,8 @@ proof -
     where "top1_is_graph_on X TX" "top1_connected_on X TX" "x0 \<in> X"
       and hiso: "top1_groups_isomorphic_on G mul
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
-    sorry \<comment> \<open>Wedge of |S| circles realizes the free group G.\<close>
+    sorry \<comment> \<open>Wedge of |S| circles realizes G. For finite S: free\\_group\\_realized\\_by\\_wedge.
+       For infinite S: needs infinite graph construction (CW complex or direct limit).\<close>
   \<comment> \<open>Step 2: H \<le> G \<cong> \<pi>_1(X) gives a covering space E of X with p_*(\<pi>_1(E)) \<cong> H.
      Use Theorem 82.1 (existence of covering spaces) with the subgroup
      corresponding to H under the isomorphism G \<cong> \<pi>_1(X).\<close>
