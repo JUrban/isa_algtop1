@@ -1213,8 +1213,17 @@ proof -
            Then [p\\<circ>\\<gamma>\\_{hk}]\\<cdot>H = [p\\<circ>\\<gamma>\\_h]*[p\\<circ>\\<gamma>\\_k]\\<cdot>H = f(h)*f(k).\<close>
       \<comment> \<open>Step J: f is injective.\<close>
       have hf_inj: "inj_on f ?Cov"
-        sorry \<comment> \<open>f(h) = e\\<cdot>H \\<Rightarrow> [p\\<circ>\\<gamma>\\_h] \\<in> H \\<Rightarrow> \\<gamma>\\_h is a loop at e0
-           \\<Rightarrow> h(e0) = e0 \\<Rightarrow> h = id (by \\<Psi> injectivity).\<close>
+      proof (rule inj_onI)
+        fix h1 h2 assume "h1 \<in> ?Cov" "h2 \<in> ?Cov" "f h1 = f h2"
+        \<comment> \<open>f(h1) = f(h2) means coset([p\\<circ>\\<gamma>\\_1]) = coset([p\\<circ>\\<gamma>\\_2]).
+           So [p\\<circ>\\<gamma>\\_1] and [p\\<circ>\\<gamma>\\_2] differ by H.
+           By lifting, \\<gamma>\\_1(1) = \\<gamma>\\_2(1), i.e., h1(e0) = h2(e0).
+           Then h1 = h2 by \\<Psi>-injectivity.\<close>
+        have "h1 e0 = h2 e0" sorry \<comment> \<open>From f(h1) = f(h2) + lifting correspondence.\<close>
+        hence "\<Psi> h1 = \<Psi> h2" unfolding \<Psi>_def by simp
+        from inj_onD[OF h\<Psi>_inj \<open>\<Psi> h1 = \<Psi> h2\<close> \<open>h1 \<in> ?Cov\<close> \<open>h2 \<in> ?Cov\<close>]
+        show "h1 = h2" .
+      qed
       \<comment> \<open>Step K: f is surjective onto Q.\<close>
       have hf_surj: "f ` ?Cov = ?Q"
         sorry \<comment> \<open>For [\\<alpha>]\\<cdot>H \\<in> N(H)/H: [\\<alpha>] \\<in> N(H) \\<Rightarrow> \\<exists> covering transformation h
