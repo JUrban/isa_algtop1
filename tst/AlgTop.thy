@@ -1198,7 +1198,7 @@ proof -
         let ?\<alpha>_class = "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g}"
         have "?\<alpha>_class \<in> ?N" using hin_normalizer[OF \<open>h \<in> ?Cov\<close>] .
         hence "?coset ?\<alpha>_class \<in> ?Q"
-          unfolding top1_quotient_group_carrier_on_def sorry
+          sorry \<comment> \<open>coset(g) \\<in> {coset(x) | x. x \\<in> N} when g \\<in> N. Standard set comprehension.\<close>
         thus "f h \<in> ?Q" unfolding f_def .
       qed
       \<comment> \<open>Step I: f is a homomorphism (book proof: \\<gamma>*(h\\<circ>\\<delta>) lifts \\<alpha>*\\<beta>).\<close>
