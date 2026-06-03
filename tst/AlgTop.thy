@@ -16662,7 +16662,147 @@ proof -
             unfolded TX_def, OF _ hh_maps])
            (use hS1_top in simp)
     qed
-    show "is_hausdorff_on ?X TX" sorry
+    show "is_hausdorff_on ?X TX"
+    proof -
+      have hTX_top_l: "is_topology_on ?X TX"
+        using \<open>is_topology_on_strict ?X TX\<close> unfolding is_topology_on_strict_def by (by100 blast)
+      have hS1_haus: "is_hausdorff_on top1_S1 top1_S1_topology" using top1_S1_is_hausdorff .
+      have hh_maps_Cl: "\<And>s v. s \<in> S \<Longrightarrow> v \<in> top1_S1 \<Longrightarrow> h s v \<in> C s"
+      proof -
+        fix s v assume "s \<in> S" "v \<in> top1_S1"
+        show "h s v \<in> C s"
+        proof (cases "v = (1, 0)")
+          case True thus ?thesis using hp_in_C \<open>s \<in> S\<close> unfolding h_def by simp
+        next
+          case False
+          hence "Inr (s, v) \<in> C s" unfolding C_def using \<open>v \<in> top1_S1\<close> by (by100 blast)
+          thus ?thesis using False unfolding h_def by simp
+        qed
+      qed
+      \<comment> \<open>Key helper: if A \\<subseteq> C(sx)\\{p}, then A is open in X iff A open in C(sx).\<close>
+      \<comment> \<open>More precisely: for such A, the preimage under h(\\<alpha>) is empty for \\<alpha> \\<noteq> sx.\<close>
+      have hempty_preimage: "\<And>\<alpha> A sx. \<alpha> \<in> S \<Longrightarrow> sx \<in> S \<Longrightarrow> \<alpha> \<noteq> sx \<Longrightarrow> A \<subseteq> C sx - {?p} \<Longrightarrow>
+          {v \<in> top1_S1. h \<alpha> v \<in> A} = {}"
+      proof -
+        fix \<alpha> A sx assume "\<alpha> \<in> S" "sx \<in> S" "\<alpha> \<noteq> sx" "A \<subseteq> C sx - {?p}"
+        have "C \<alpha> \<inter> (C sx - {?p}) = {}"
+          using hC_inter[OF \<open>\<alpha> \<in> S\<close> \<open>sx \<in> S\<close> \<open>\<alpha> \<noteq> sx\<close>] by (by100 blast)
+        hence hCA: "C \<alpha> \<inter> A = {}" using \<open>A \<subseteq> C sx - {?p}\<close> by (by100 blast)
+        show "{v \<in> top1_S1. h \<alpha> v \<in> A} = {}"
+        proof (rule subset_antisym, rule subsetI)
+          fix v :: "real \<times> real"
+          assume "v \<in> {v \<in> top1_S1. h \<alpha> v \<in> A}"
+          hence "v \<in> top1_S1" "h \<alpha> v \<in> A" by simp+
+          have "h \<alpha> v \<in> C \<alpha>" using hh_maps_Cl[OF \<open>\<alpha> \<in> S\<close> \<open>v \<in> top1_S1\<close>] .
+          hence False using \<open>h \<alpha> v \<in> A\<close> hCA by (by100 blast)
+          thus "v \<in> {}" by simp
+        qed (by100 blast)
+      qed
+      have hempty_in_S1_top: "{} \<in> top1_S1_topology"
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def is_topology_on_def
+        by (by100 blast)
+      have hS1_minus_base_open: "top1_S1 - {(1, 0)} \<in> top1_S1_topology"
+      proof -
+        have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+        from singleton_closed_in_hausdorff[OF hS1_haus this]
+        show ?thesis unfolding closedin_on_def by (by100 blast)
+      qed
+      \<comment> \<open>For \\<alpha> = sx: preimage of C(sx)\\{p} under h(sx) is S1\\{(1,0)}.\<close>
+      have hself_preimage: "\<And>sx. sx \<in> S \<Longrightarrow>
+          {v \<in> top1_S1. h sx v \<in> C sx - {?p}} = top1_S1 - {(1, 0)}"
+      proof (rule set_eqI, rule iffI)
+        fix sx v assume "sx \<in> S" "v \<in> {v \<in> top1_S1. h sx v \<in> C sx - {?p}}"
+        hence "v \<in> top1_S1" "h sx v \<noteq> ?p" by (by100 blast)+
+        hence "v \<noteq> (1, 0)" unfolding h_def by (by100 auto)
+        thus "v \<in> top1_S1 - {(1, 0)}" using \<open>v \<in> top1_S1\<close> by (by100 blast)
+      next
+        fix sx v assume "sx \<in> S" "v \<in> top1_S1 - {(1, 0)}"
+        hence "v \<in> top1_S1" "v \<noteq> (1, 0)" by (by100 blast)+
+        have "h sx v \<in> C sx" using hh_maps_Cl[OF \<open>sx \<in> S\<close> \<open>v \<in> top1_S1\<close>] .
+        have "h sx v = Inr (sx, v)" using \<open>v \<noteq> (1, 0)\<close> unfolding h_def by simp
+        hence "h sx v \<noteq> ?p" by (by100 auto)
+        thus "v \<in> {v \<in> top1_S1. h sx v \<in> C sx - {?p}}" using \<open>v \<in> top1_S1\<close> \<open>h sx v \<in> C sx\<close>
+          by (by100 blast)
+      qed
+      \<comment> \<open>Now prove Hausdorff: separate x \\<noteq> y.\<close>
+      show ?thesis unfolding is_hausdorff_on_def
+      proof (intro conjI, rule hTX_top_l, intro ballI impI)
+        fix x y assume "x \<in> ?X" "y \<in> ?X" "x \<noteq> y"
+        from \<open>x \<in> ?X\<close> obtain sx where "sx \<in> S" "x \<in> C sx" by (by100 blast)
+        from \<open>y \<in> ?X\<close> obtain sy where "sy \<in> S" "y \<in> C sy" by (by100 blast)
+        show "\<exists>U V. neighborhood_of x ?X TX U \<and> neighborhood_of y ?X TX V \<and> U \<inter> V = {}"
+        proof (cases "x = ?p \<or> y = ?p")
+          case True
+          show ?thesis sorry \<comment> \<open>One point is p; use Hausdorff of the circle containing the other.\<close>
+        next
+          case False
+          hence "x \<noteq> ?p" "y \<noteq> ?p" by simp+
+          have hx_only: "\<And>\<alpha>. \<alpha> \<in> S \<Longrightarrow> \<alpha> \<noteq> sx \<Longrightarrow> x \<notin> C \<alpha>"
+            using hC_inter[OF \<open>sx \<in> S\<close>] \<open>x \<in> C sx\<close> \<open>x \<noteq> ?p\<close> by (by100 blast)
+          show ?thesis
+          proof (cases "sx = sy")
+            case True
+            show ?thesis sorry \<comment> \<open>Both in same circle; use Hausdorff of C(sx).\<close>
+          next
+            case Fst: False
+            \<comment> \<open>Different circles. Ux = C(sx)\\{p}, Vy = C(sy)\\{p}.\<close>
+            define Ux where "Ux = C sx - {?p}"
+            define Vy where "Vy = C sy - {?p}"
+            have "Ux \<subseteq> ?X" using \<open>sx \<in> S\<close> unfolding Ux_def by (by100 blast)
+            have "Vy \<subseteq> ?X" using \<open>sy \<in> S\<close> unfolding Vy_def by (by100 blast)
+            have "Ux \<subseteq> C sx - {?p}" unfolding Ux_def by (by100 blast)
+            have "Vy \<subseteq> C sy - {?p}" unfolding Vy_def by (by100 blast)
+            have hUx_Vy_disj: "Ux \<inter> Vy = {}"
+            proof -
+              have "C sx \<inter> C sy = {?p}" using hC_inter[OF \<open>sx \<in> S\<close> \<open>sy \<in> S\<close> Fst] .
+              thus ?thesis unfolding Ux_def Vy_def by (by100 blast)
+            qed
+            \<comment> \<open>Ux open in TX: preimage for \\<alpha> = sx is S1\\{(1,0)}, for \\<alpha> \\<noteq> sx is {}.\<close>
+            have "Ux \<in> TX"
+            proof (rule hTX_memI[OF \<open>Ux \<subseteq> ?X\<close>], rule ballI)
+              fix \<alpha> assume "\<alpha> \<in> S"
+              show "{v \<in> top1_S1. h \<alpha> v \<in> Ux} \<in> top1_S1_topology"
+              proof (cases "\<alpha> = sx")
+                case True
+                have "{v \<in> top1_S1. h \<alpha> v \<in> Ux} = top1_S1 - {(1, 0)}"
+                  using hself_preimage[OF \<open>sx \<in> S\<close>] True unfolding Ux_def by simp
+                thus ?thesis using hS1_minus_base_open by simp
+              next
+                case False
+                have haux: "{v \<in> top1_S1. h \<alpha> v \<in> Ux} = ({}::(real\<times>real) set)"
+                  using hempty_preimage[OF \<open>\<alpha> \<in> S\<close> \<open>sx \<in> S\<close> False \<open>Ux \<subseteq> C sx - {?p}\<close>] .
+                show ?thesis
+                  apply (subst haux)
+                  using hempty_in_S1_top by simp
+              qed
+            qed
+            have "Vy \<in> TX"
+            proof (rule hTX_memI[OF \<open>Vy \<subseteq> ?X\<close>], rule ballI)
+              fix \<alpha> assume "\<alpha> \<in> S"
+              show "{v \<in> top1_S1. h \<alpha> v \<in> Vy} \<in> top1_S1_topology"
+              proof (cases "\<alpha> = sy")
+                case True
+                have "{v \<in> top1_S1. h \<alpha> v \<in> Vy} = top1_S1 - {(1, 0)}"
+                  using hself_preimage[OF \<open>sy \<in> S\<close>] True unfolding Vy_def by simp
+                thus ?thesis using hS1_minus_base_open by simp
+              next
+                case False
+                have haux2: "{v \<in> top1_S1. h \<alpha> v \<in> Vy} = ({}::(real\<times>real) set)"
+                  using hempty_preimage[OF \<open>\<alpha> \<in> S\<close> \<open>sy \<in> S\<close> False \<open>Vy \<subseteq> C sy - {?p}\<close>] .
+                show ?thesis
+                  apply (subst haux2)
+                  using hempty_in_S1_top by simp
+              qed
+            qed
+            have "x \<in> Ux" using \<open>x \<in> C sx\<close> \<open>x \<noteq> ?p\<close> unfolding Ux_def by (by100 blast)
+            have "y \<in> Vy" using \<open>y \<in> C sy\<close> \<open>y \<noteq> ?p\<close> unfolding Vy_def by (by100 blast)
+            show ?thesis
+              using \<open>Ux \<in> TX\<close> \<open>Vy \<in> TX\<close> \<open>x \<in> Ux\<close> \<open>y \<in> Vy\<close> hUx_Vy_disj
+              unfolding neighborhood_of_def by (by100 blast)
+          qed
+        qed
+      qed
+    qed
     show "?p \<in> ?X" using hp_in_C \<open>s_witness \<in> S\<close> by (by100 blast)
     show "\<exists>Ca. (\<forall>\<alpha>\<in>S. Ca \<alpha> \<subseteq> ?X \<and> ?p \<in> Ca \<alpha>
              \<and> (\<exists>ha. top1_homeomorphism_on top1_S1 top1_S1_topology
