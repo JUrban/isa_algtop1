@@ -6628,9 +6628,97 @@ proof -
       using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
     \<comment> \<open>Each C(i) is closed in R2 (circle = preimage of continuous function).\<close>
     have hCi_closed_X: "\<forall>i \<in> {..<?n}. closedin_on ?X ?TX (?C i)"
-      sorry \<comment> \<open>Each circle closed in R2 \\<Rightarrow> closed in X (subspace).
-         Circle = {(x,y) | f(x,y) = r^2} where f continuous. {r^2} closed.
-         Preimage of closed under continuous = closed.\<close>
+    proof (intro ballI)
+      fix i assume hi: "i \<in> {..<?n}"
+      let ?r = "real (Suc i)"
+      let ?h = "\<lambda>p::real \<times> real. (?r * fst p, ?r + ?r * snd p)"
+      \<comment> \<open>C(i) = h(S1). h continuous S1 \\<rightarrow> R2. S1 compact. So C(i) compact in subspace.\<close>
+      have hr_pos: "?r > 0" by simp
+      have hh_maps: "\<forall>p \<in> top1_S1. ?h p \<in> ?C i"
+      proof (intro ballI)
+        fix p assume "p \<in> top1_S1"
+        obtain x y where hxy: "p = (x, y)" by (cases p)
+        have hxy2: "x^2 + y^2 = 1"
+          using \<open>p \<in> top1_S1\<close> hxy unfolding top1_S1_def by (by100 auto)
+        have "(?r*x)^2 + (?r + ?r*y - ?r)^2 = ?r^2*(x^2+y^2)"
+          by (by100 algebra)
+        also have "... = ?r^2" using hxy2 by (by100 simp)
+        finally show "?h p \<in> ?C i" using hxy by (by100 simp)
+      qed
+      have hh_surj: "?h ` top1_S1 = ?C i"
+      proof (rule set_eqI, rule iffI)
+        fix q assume "q \<in> ?h ` top1_S1"
+        then obtain p where "p \<in> top1_S1" "q = ?h p" by (by100 blast)
+        from bspec[OF hh_maps this(1)] this(2) show "q \<in> ?C i" by simp
+      next
+        fix q assume "q \<in> ?C i"
+        obtain u v where huv: "q = (u, v)" by (cases q)
+        have huv2: "u^2 + (v - ?r)^2 = ?r^2"
+          using \<open>q \<in> ?C i\<close> huv by (by100 auto)
+        let ?x = "u / ?r" and ?y = "v / ?r - 1"
+        have "?x^2 + ?y^2 = 1"
+        proof -
+          have hr2_nz: "?r^2 \<noteq> (0::real)" using hr_pos by simp
+          have "u^2/?r^2 + (v - ?r)^2/?r^2 = (u^2 + (v - ?r)^2) / ?r^2"
+            by (rule add_divide_distrib[symmetric])
+          also have "... = ?r^2 / ?r^2" using huv2 by simp
+          also have "... = 1" using hr2_nz by simp
+          finally have heq: "u^2/?r^2 + (v - ?r)^2/?r^2 = 1" .
+          have "u^2/?r^2 = (u/?r)^2" using hr_pos
+            using power_divide[of u ?r 2] by (by100 simp)
+          moreover have "(v - ?r)^2/?r^2 = ((v - ?r)/?r)^2" using hr_pos
+            using power_divide[of "v - ?r" ?r 2] by (by100 simp)
+          moreover have "(v - ?r)/?r = v/?r - 1" using hr_pos
+            by (simp add: diff_divide_distrib)
+          ultimately show ?thesis using heq by simp
+        qed
+        hence "(?x, ?y) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+        moreover have "?h (?x, ?y) = q" using hr_pos huv
+          by (simp add: field_simps)
+        ultimately show "q \<in> ?h ` top1_S1" by (by100 blast)
+      qed
+      \<comment> \<open>h continuous S1 \\<rightarrow> R2 (polynomial).\<close>
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+      let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
+      have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set) ?TR2"
+      proof -
+        have "is_topology_on_strict (UNIV :: (real \<times> real) set) ?TR2"
+          by (rule hausdorff_strict_is_strict[OF top1_R2_is_hausdorff], by100 blast)
+        thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+      qed
+      have hh_cont_R2: "continuous_on (UNIV :: (real \<times> real) set) ?h"
+        by (intro continuous_intros)
+      have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology (UNIV :: (real \<times> real) set) ?TR2 ?h"
+      proof -
+        from top1_continuous_map_on_real2_subspace[OF _ hh_cont_R2]
+        have "top1_continuous_map_on top1_S1
+            (subspace_topology UNIV ?TR2 top1_S1) (UNIV :: (real \<times> real) set)
+            (subspace_topology UNIV ?TR2 UNIV) ?h" by (by100 blast)
+        moreover have "subspace_topology UNIV ?TR2 top1_S1 = top1_S1_topology"
+          unfolding top1_S1_topology_def by simp
+        moreover have "subspace_topology UNIV ?TR2 (UNIV :: (real \<times> real) set) = ?TR2"
+        proof -
+          have "\<forall>U \<in> ?TR2. U \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+          from subspace_topology_self[OF this] show ?thesis .
+        qed
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>S1 compact \\<Rightarrow> h(S1) = C(i) compact in subspace of R2.\<close>
+      from Theorem_26_5[OF hS1_top hR2_top S1_compact hh_cont]
+      have "top1_compact_on (?h ` top1_S1) (subspace_topology (UNIV :: (real \<times> real) set) ?TR2 (?h ` top1_S1))" .
+      hence hCi_compact_R2: "top1_compact_on (?C i) (subspace_topology UNIV ?TR2 (?C i))"
+        using hh_surj by simp
+      \<comment> \<open>subspace\\_topology X TX C(i) = subspace\\_topology UNIV R2 C(i).\<close>
+      have hCi_sub: "?C i \<subseteq> ?X" using hi by (by100 blast)
+      from subspace_topology_trans[OF hCi_sub]
+      have "subspace_topology ?X ?TX (?C i) = subspace_topology UNIV ?TR2 (?C i)" by simp
+      hence hCi_compact_X: "top1_compact_on (?C i) (subspace_topology ?X ?TX (?C i))"
+        using hCi_compact_R2 by simp
+      \<comment> \<open>Compact in Hausdorff strict space \\<Rightarrow> closed.\<close>
+      show "closedin_on ?X ?TX (?C i)"
+        by (rule compact_in_strict_hausdorff_closedin_on[OF hX_haus hX_strict hCi_sub hCi_compact_X])
+    qed
     have hX_coh: "\<forall>D. D \<subseteq> ?X \<longrightarrow>
         (closedin_on ?X ?TX D \<longleftrightarrow>
          (\<forall>i \<in> {..<?n}. closedin_on (?C i)
