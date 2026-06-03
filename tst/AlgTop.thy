@@ -16742,7 +16742,219 @@ proof -
           show ?thesis
           proof (cases "sx = sy")
             case True
-            show ?thesis sorry \<comment> \<open>Both in same circle; use Hausdorff of C(sx).\<close>
+            \<comment> \<open>Both x, y \\<in> C(sx)\\{p}. Work in S1 via h(sx).\<close>
+            \<comment> \<open>h(sx) is injective on S1.\<close>
+            have hh_inj: "inj_on (h sx) top1_S1"
+            proof (rule inj_onI)
+              fix u v assume "u \<in> top1_S1" "v \<in> top1_S1" "h sx u = h sx v"
+              show "u = v"
+              proof (cases "u = (1, 0)")
+                case True
+                hence "h sx u = ?p" unfolding h_def by simp
+                hence "h sx v = ?p" using \<open>h sx u = h sx v\<close> by simp
+                show ?thesis
+                proof (cases "v = (1, 0)")
+                  case True thus ?thesis using \<open>u = (1,0)\<close> by simp
+                next
+                  case False
+                  hence "h sx v = Inr (sx, v)" unfolding h_def by simp
+                  hence "Inr (sx, v) = (Inl () :: unit + ('s \<times> real \<times> real))"
+                    using \<open>h sx v = ?p\<close> by simp
+                  thus ?thesis by simp
+                qed
+              next
+                case False
+                hence "h sx u = Inr (sx, u)" unfolding h_def by simp
+                show ?thesis
+                proof (cases "v = (1, 0)")
+                  case True
+                  hence "h sx v = ?p" unfolding h_def by simp
+                  hence "Inr (sx, u) = (Inl () :: unit + ('s \<times> real \<times> real))"
+                    using \<open>h sx u = h sx v\<close> \<open>h sx u = Inr (sx, u)\<close> by simp
+                  thus ?thesis by simp
+                next
+                  case Fv: False
+                  hence "h sx v = Inr (sx, v)" unfolding h_def by simp
+                  hence "Inr (sx, u) = (Inr (sx, v) :: unit + ('s \<times> real \<times> real))"
+                    using \<open>h sx u = h sx v\<close> \<open>h sx u = Inr (sx, u)\<close> by simp
+                  thus ?thesis by simp
+                qed
+              qed
+            qed
+            \<comment> \<open>Find u, v in S1\\{(1,0)} mapping to x, y.\<close>
+            have "x \<in> C sx - {?p}" using \<open>x \<in> C sx\<close> \<open>x \<noteq> ?p\<close> by (by100 blast)
+            hence "x \<in> Inr ` ({sx} \<times> (top1_S1 - {(1, 0)}))" unfolding C_def by (by100 blast)
+            then obtain ux where "ux \<in> top1_S1 - {(1, 0)}" "x = Inr (sx, ux)"
+              by (by100 blast)
+            hence "h sx ux = x" unfolding h_def by (by100 auto)
+            have "y \<in> C sx - {?p}" using \<open>y \<in> C sy\<close> True \<open>y \<noteq> ?p\<close> by (by100 blast)
+            hence "y \<in> Inr ` ({sx} \<times> (top1_S1 - {(1, 0)}))" unfolding C_def by (by100 blast)
+            then obtain vy where "vy \<in> top1_S1 - {(1, 0)}" "y = Inr (sx, vy)"
+              by (by100 blast)
+            hence "h sx vy = y" unfolding h_def by (by100 auto)
+            have "ux \<noteq> vy"
+            proof
+              assume "ux = vy"
+              hence "x = y" using \<open>x = Inr (sx, ux)\<close> \<open>y = Inr (sx, vy)\<close> by simp
+              thus False using \<open>x \<noteq> y\<close> by simp
+            qed
+            have "ux \<in> top1_S1" "vy \<in> top1_S1"
+              using \<open>ux \<in> top1_S1 - {(1, 0)}\<close> \<open>vy \<in> top1_S1 - {(1, 0)}\<close> by (by100 blast)+
+            \<comment> \<open>Separate ux and vy in S1 using Hausdorff.\<close>
+            from hS1_haus have "is_topology_on top1_S1 top1_S1_topology \<and>
+                (\<forall>a\<in>top1_S1. \<forall>b\<in>top1_S1. a \<noteq> b \<longrightarrow>
+                  (\<exists>U V. neighborhood_of a top1_S1 top1_S1_topology U \<and>
+                         neighborhood_of b top1_S1 top1_S1_topology V \<and> U \<inter> V = {}))"
+              unfolding is_hausdorff_on_def .
+            hence "\<exists>U0 V0. neighborhood_of ux top1_S1 top1_S1_topology U0 \<and>
+                neighborhood_of vy top1_S1 top1_S1_topology V0 \<and> U0 \<inter> V0 = {}"
+              using \<open>ux \<in> top1_S1\<close> \<open>vy \<in> top1_S1\<close> \<open>ux \<noteq> vy\<close> by (by100 blast)
+            then obtain U0 V0 where "U0 \<in> top1_S1_topology" "ux \<in> U0"
+                "V0 \<in> top1_S1_topology" "vy \<in> V0" "U0 \<inter> V0 = {}"
+              unfolding neighborhood_of_def by (by100 blast)
+            \<comment> \<open>Restrict to S1\\{(1,0)}: U0' = U0 \\<inter> (S1\\{(1,0)}), V0' = V0 \\<inter> (S1\\{(1,0)}).\<close>
+            define U0' where "U0' = U0 \<inter> (top1_S1 - {(1, 0)})"
+            define V0' where "V0' = V0 \<inter> (top1_S1 - {(1, 0)})"
+            have hS1_top_l: "is_topology_on top1_S1 top1_S1_topology"
+              using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
+            have "U0' \<in> top1_S1_topology"
+              unfolding U0'_def using topology_inter2[OF hS1_top_l \<open>U0 \<in> top1_S1_topology\<close> hS1_minus_base_open] .
+            have "V0' \<in> top1_S1_topology"
+              unfolding V0'_def using topology_inter2[OF hS1_top_l \<open>V0 \<in> top1_S1_topology\<close> hS1_minus_base_open] .
+            have "ux \<in> U0'" using \<open>ux \<in> U0\<close> \<open>ux \<in> top1_S1 - {(1, 0)}\<close>
+              unfolding U0'_def by (by100 blast)
+            have "vy \<in> V0'" using \<open>vy \<in> V0\<close> \<open>vy \<in> top1_S1 - {(1, 0)}\<close>
+              unfolding V0'_def by (by100 blast)
+            have "U0' \<inter> V0' = {}" using \<open>U0 \<inter> V0 = {}\<close>
+              unfolding U0'_def V0'_def by (by100 blast)
+            \<comment> \<open>Map to X: Ux = h(sx)(U0'), Vy = h(sx)(V0').\<close>
+            define Ux where "Ux = h sx ` U0'"
+            define Vy where "Vy = h sx ` V0'"
+            have "U0' \<subseteq> top1_S1 - {(1, 0)}" unfolding U0'_def by (by100 blast)
+            have "V0' \<subseteq> top1_S1 - {(1, 0)}" unfolding V0'_def by (by100 blast)
+            \<comment> \<open>Ux, Vy \\<subseteq> C(sx)\\{p}.\<close>
+            have "Ux \<subseteq> C sx - {?p}"
+            proof (rule subsetI)
+              fix z assume "z \<in> Ux"
+              then obtain w where "w \<in> U0'" "z = h sx w" unfolding Ux_def by (by100 blast)
+              hence "w \<in> top1_S1" "w \<noteq> (1, 0)"
+                using \<open>U0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)+
+              have "z \<in> C sx" using hh_maps_Cl[OF \<open>sx \<in> S\<close> \<open>w \<in> top1_S1\<close>] \<open>z = h sx w\<close> by simp
+              have "z \<noteq> ?p" using \<open>w \<noteq> (1, 0)\<close> \<open>z = h sx w\<close> unfolding h_def by (by100 auto)
+              thus "z \<in> C sx - {?p}" using \<open>z \<in> C sx\<close> by (by100 blast)
+            qed
+            have "Vy \<subseteq> C sy - {?p}"
+            proof (rule subsetI)
+              fix z assume "z \<in> Vy"
+              then obtain w where "w \<in> V0'" "z = h sx w" unfolding Vy_def by (by100 blast)
+              hence "w \<in> top1_S1" "w \<noteq> (1, 0)"
+                using \<open>V0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)+
+              have "z \<in> C sx" using hh_maps_Cl[OF \<open>sx \<in> S\<close> \<open>w \<in> top1_S1\<close>] \<open>z = h sx w\<close> by simp
+              have "z \<noteq> ?p" using \<open>w \<noteq> (1, 0)\<close> \<open>z = h sx w\<close> unfolding h_def by (by100 auto)
+              thus "z \<in> C sy - {?p}" using \<open>z \<in> C sx\<close> True by (by100 blast)
+            qed
+            have "Ux \<subseteq> ?X" using \<open>Ux \<subseteq> C sx - {?p}\<close> \<open>sx \<in> S\<close> by (by100 blast)
+            have "Vy \<subseteq> ?X" using \<open>Vy \<subseteq> C sy - {?p}\<close> \<open>sy \<in> S\<close> by (by100 blast)
+            \<comment> \<open>Preimage under h(\\<alpha>): for \\<alpha>=sx is U0' resp V0', for \\<alpha>\\<noteq>sx is empty.\<close>
+            have hpreUx: "\<And>\<alpha>. \<alpha> \<in> S \<Longrightarrow> {v \<in> top1_S1. h \<alpha> v \<in> Ux} =
+                (if \<alpha> = sx then U0' else {})"
+            proof -
+              fix \<alpha> assume "\<alpha> \<in> S"
+              show "{v \<in> top1_S1. h \<alpha> v \<in> Ux} = (if \<alpha> = sx then U0' else {})"
+              proof (cases "\<alpha> = sx")
+                case True
+                show ?thesis
+                proof (rule set_eqI, rule iffI)
+                  fix v assume "v \<in> {v \<in> top1_S1. h \<alpha> v \<in> Ux}"
+                  hence "v \<in> top1_S1" "h \<alpha> v \<in> Ux" by simp+
+                  from \<open>h \<alpha> v \<in> Ux\<close> obtain w where "w \<in> U0'" "h \<alpha> v = h sx w"
+                    unfolding Ux_def by (by100 blast)
+                  hence "h sx v = h sx w" using True by simp
+                  have "w \<in> top1_S1" using \<open>w \<in> U0'\<close> \<open>U0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+                  hence "v = w" using inj_onD[OF hh_inj \<open>h sx v = h sx w\<close> \<open>v \<in> top1_S1\<close>] by simp
+                  thus "v \<in> (if \<alpha> = sx then U0' else {})" using True \<open>w \<in> U0'\<close> by simp
+                next
+                  fix v assume "v \<in> (if \<alpha> = sx then U0' else {})"
+                  hence "v \<in> U0'" using True by simp
+                  hence "v \<in> top1_S1" using \<open>U0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+                  have "h \<alpha> v = h sx v" using True by simp
+                  have "h sx v \<in> h sx ` U0'" using \<open>v \<in> U0'\<close> by (by100 blast)
+                  hence "h \<alpha> v \<in> Ux" using \<open>h \<alpha> v = h sx v\<close> unfolding Ux_def by simp
+                  thus "v \<in> {v \<in> top1_S1. h \<alpha> v \<in> Ux}" using \<open>v \<in> top1_S1\<close> by (by100 blast)
+                qed
+              next
+                case False
+                have "Ux \<subseteq> C sx - {?p}" using \<open>Ux \<subseteq> C sx - {?p}\<close> .
+                from hempty_preimage[OF \<open>\<alpha> \<in> S\<close> \<open>sx \<in> S\<close> False this]
+                show ?thesis using False by simp
+              qed
+            qed
+            \<comment> \<open>Ux \\<in> TX.\<close>
+            have "Ux \<in> TX"
+            proof (rule hTX_memI[OF \<open>Ux \<subseteq> ?X\<close>], rule ballI)
+              fix \<alpha> assume "\<alpha> \<in> S"
+              have "{v \<in> top1_S1. h \<alpha> v \<in> Ux} = (if \<alpha> = sx then U0' else {})"
+                using hpreUx[OF \<open>\<alpha> \<in> S\<close>] .
+              thus "{v \<in> top1_S1. h \<alpha> v \<in> Ux} \<in> top1_S1_topology"
+                using \<open>U0' \<in> top1_S1_topology\<close> hempty_in_S1_top by (by100 auto)
+            qed
+            \<comment> \<open>Vy \\<in> TX (same argument).\<close>
+            have "Vy \<in> TX"
+            proof (rule hTX_memI[OF \<open>Vy \<subseteq> ?X\<close>], rule ballI)
+              fix \<alpha> assume "\<alpha> \<in> S"
+              show "{v \<in> top1_S1. h \<alpha> v \<in> Vy} \<in> top1_S1_topology"
+              proof (cases "\<alpha> = sx")
+                case True
+                have "{v \<in> top1_S1. h \<alpha> v \<in> Vy} = V0'"
+                proof (rule set_eqI, rule iffI)
+                  fix v assume "v \<in> {v \<in> top1_S1. h \<alpha> v \<in> Vy}"
+                  hence "v \<in> top1_S1" "h \<alpha> v \<in> Vy" by simp+
+                  from \<open>h \<alpha> v \<in> Vy\<close> obtain w where "w \<in> V0'" "h \<alpha> v = h sx w"
+                    unfolding Vy_def by (by100 blast)
+                  hence "v = w" using True inj_onD[OF hh_inj _ \<open>v \<in> top1_S1\<close>]
+                    \<open>V0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+                  thus "v \<in> V0'" using \<open>w \<in> V0'\<close> by simp
+                next
+                  fix v assume "v \<in> V0'"
+                  hence "v \<in> top1_S1" using \<open>V0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+                  have "h sx v \<in> h sx ` V0'" using \<open>v \<in> V0'\<close> by (by100 blast)
+                  thus "v \<in> {v \<in> top1_S1. h \<alpha> v \<in> Vy}"
+                    using True \<open>v \<in> top1_S1\<close> unfolding Vy_def by (by100 auto)
+                qed
+                thus ?thesis using \<open>V0' \<in> top1_S1_topology\<close> by simp
+              next
+                case False
+                have haux_vy: "{v \<in> top1_S1. h \<alpha> v \<in> Vy} = ({}::(real\<times>real) set)"
+                  using hempty_preimage[OF \<open>\<alpha> \<in> S\<close> \<open>sx \<in> S\<close> False]
+                        \<open>Vy \<subseteq> C sy - {?p}\<close> True by simp
+                show ?thesis
+                  apply (subst haux_vy)
+                  using hempty_in_S1_top by simp
+              qed
+            qed
+            \<comment> \<open>Disjointness and membership.\<close>
+            have "Ux \<inter> Vy = {}"
+            proof (rule subset_antisym, rule subsetI)
+              fix z :: "unit + ('s \<times> real \<times> real)" assume "z \<in> Ux \<inter> Vy"
+              hence "z \<in> Ux" "z \<in> Vy" by (by100 blast)+
+              from \<open>z \<in> Ux\<close> obtain u where "u \<in> U0'" "z = h sx u"
+                unfolding Ux_def by (by100 blast)
+              from \<open>z \<in> Vy\<close> obtain v where "v \<in> V0'" "z = h sx v"
+                unfolding Vy_def by (by100 blast)
+              hence "h sx u = h sx v" using \<open>z = h sx u\<close> by simp
+              have "u \<in> top1_S1" using \<open>u \<in> U0'\<close> \<open>U0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+              have "v \<in> top1_S1" using \<open>v \<in> V0'\<close> \<open>V0' \<subseteq> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+              from inj_onD[OF hh_inj \<open>h sx u = h sx v\<close> \<open>u \<in> top1_S1\<close> \<open>v \<in> top1_S1\<close>]
+              have "u = v" .
+              hence "u \<in> U0' \<inter> V0'" using \<open>u \<in> U0'\<close> \<open>v \<in> V0'\<close> by simp
+              hence False using \<open>U0' \<inter> V0' = {}\<close> by (by100 blast)
+              thus "z \<in> {}" by simp
+            qed (by100 blast)
+            have "x \<in> Ux" using \<open>h sx ux = x\<close> \<open>ux \<in> U0'\<close> unfolding Ux_def by (by100 blast)
+            have "y \<in> Vy" using \<open>h sx vy = y\<close> \<open>vy \<in> V0'\<close> unfolding Vy_def by (by100 blast)
+            show ?thesis
+              using \<open>Ux \<in> TX\<close> \<open>Vy \<in> TX\<close> \<open>x \<in> Ux\<close> \<open>y \<in> Vy\<close> \<open>Ux \<inter> Vy = {}\<close>
+              unfolding neighborhood_of_def by (by100 blast)
           next
             case Fst: False
             \<comment> \<open>Different circles. Ux = C(sx)\\{p}, Vy = C(sy)\\{p}.\<close>
