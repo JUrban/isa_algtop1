@@ -1396,9 +1396,21 @@ proof -
       \<comment> \<open>Step I: f is a homomorphism (book proof: \\<gamma>*(h\\<circ>\\<delta>) lifts \\<alpha>*\\<beta>).\<close>
       have hf_hom: "\<And>h k. h \<in> ?Cov \<Longrightarrow> k \<in> ?Cov \<Longrightarrow>
           f (\<lambda>e. h (k e)) = ?mulQ (f h) (f k)"
-        sorry \<comment> \<open>Key: path\\_to(h(k(e0))) is homotopic (rel endpoints) to
-           \\<gamma>\\_h * (h \\<circ> \\<gamma>\\_k), so p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k)) = (p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k).
-           Then [p\\<circ>\\<gamma>\\_{hk}]\\<cdot>H = [p\\<circ>\\<gamma>\\_h]*[p\\<circ>\\<gamma>\\_k]\\<cdot>H = f(h)*f(k).\<close>
+      proof -
+        fix h k assume "h \<in> ?Cov" "k \<in> ?Cov"
+        \<comment> \<open>From the book proof of 81.2:
+           \\<gamma>\\_h = path e0\\<rightarrow>h(e0), \\<gamma>\\_k = path e0\\<rightarrow>k(e0).
+           \\<alpha> = p\\<circ>\\<gamma>\\_h (loop at b0), \\<beta> = p\\<circ>\\<gamma>\\_k (loop at b0).
+           h\\<circ>\\<gamma>\\_k: path h(e0)\\<rightarrow>h(k(e0)).
+           \\<gamma>\\_h * (h\\<circ>\\<gamma>\\_k): path e0\\<rightarrow>h(k(e0)).
+           p\\<circ>(\\<gamma>\\_h * (h\\<circ>\\<gamma>\\_k)) = \\<alpha>*\\<beta> (since p\\<circ>h = p).
+           So \\<alpha>*\\<beta> lifts to a path e0\\<rightarrow>h(k(e0)).
+           Both \\<gamma>\\_{hk} and this path lift loops from e0 to h(k(e0)),
+           so they differ by H (their loop-class difference is in H).
+           Hence f(hk) = coset([p\\<circ>\\<gamma>\\_{hk}]) = coset([\\<alpha>*\\<beta>]) = mulQ(f(h), f(k)).\<close>
+        show "f (\<lambda>e. h (k e)) = ?mulQ (f h) (f k)"
+          sorry
+      qed
       \<comment> \<open>Step J: f is injective.\<close>
       have hf_inj: "inj_on f ?Cov"
       proof (rule inj_onI)
@@ -16955,33 +16967,26 @@ proof -
   show ?thesis
   proof (cases "S = {}")
     case True
-    \<comment> \<open>S = {}: free group on {} is trivial. Use one-point space {p}.\<close>
-    let ?p = "Inl () :: unit + ('s \<times> real \<times> real)"
-    let ?X = "{?p}"
-    let ?TX = "{{}, ?X}"
-    have "top1_is_graph_on ?X ?TX" sorry
-    moreover have "top1_connected_on ?X ?TX"
-      unfolding top1_connected_on_def
-    proof (intro conjI)
-      show "is_topology_on ?X ?TX"
-        unfolding is_topology_on_def by (by5000 auto)
-    next
-      show "\<nexists>U V. U \<in> ?TX \<and> V \<in> ?TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = ?X"
-      proof (rule notI)
-        assume "\<exists>U V. U \<in> ?TX \<and> V \<in> ?TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = ?X"
-        then obtain U V where "U \<in> ?TX" "V \<in> ?TX" "U \<noteq> {}" "V \<noteq> {}" "U \<inter> V = {}" "U \<union> V = ?X"
-          by (by100 blast)
-        have "U = {?p}" using \<open>U \<in> ?TX\<close> \<open>U \<noteq> {}\<close> by (by100 blast)
-        have "V = {?p}" using \<open>V \<in> ?TX\<close> \<open>V \<noteq> {}\<close> by (by100 blast)
-        hence "U \<inter> V = {?p}" using \<open>U = {?p}\<close> by (by100 blast)
-        thus False using \<open>U \<inter> V = {}\<close> by (by100 blast)
-      qed
-    qed
-    moreover have "?p \<in> ?X" by (by100 blast)
-    moreover have "top1_groups_isomorphic_on G mul
-        (top1_fundamental_group_carrier ?X ?TX ?p) (top1_fundamental_group_mul ?X ?TX ?p)"
-      sorry \<comment> \<open>Trivial group iso: G = {e} and \\<pi>\\_1({p}) = {[const\\_p]}.\<close>
-    ultimately show ?thesis by (by100 blast)
+    \<comment> \<open>S = {}: free group on {} is trivial. Use finite realization.\<close>
+    have "finite S" using True by simp
+    from free_group_realized_by_wedge[OF assms \<open>finite S\<close>]
+    obtain X0 :: "(real \<times> real) set" and TX0 and x00 :: "real \<times> real"
+      where "top1_is_graph_on X0 TX0" "top1_connected_on X0 TX0" "x00 \<in> X0"
+        and "top1_groups_isomorphic_on G mul
+            (top1_fundamental_group_carrier X0 TX0 x00) (top1_fundamental_group_mul X0 TX0 x00)"
+      by (by100 blast)
+    \<comment> \<open>Embed (real \\<times> real) into unit + ('s \\<times> real \\<times> real) via Inr(SOME s, \\<cdot>, \\<cdot>).\<close>
+    let ?s0 = "SOME s :: 's. True"
+    define emb :: "real \<times> real \<Rightarrow> unit + ('s \<times> real \<times> real)" where
+      "emb p = Inr (?s0, fst p, snd p)" for p
+    let ?X = "emb ` X0"
+    let ?TX = "(\<lambda>U. emb ` U) ` TX0"
+    let ?x0 = "emb x00"
+    \<comment> \<open>emb is injective, so emb gives a homeomorphism X0 \\<cong> emb(X0).
+       Then graph, connected, basepoint, and \\<pi>\\_1 all transfer.\<close>
+    show ?thesis sorry \<comment> \<open>Transfer from (real\\<times>real) to sum type via injective embedding.
+       All properties (graph, connected, basepoint, \\<pi>\\_1 iso) transfer through
+       the homeomorphism induced by the injective continuous map emb.\<close>
   next
     case False
     then obtain s_witness where "s_witness \<in> S" by (by100 blast)
