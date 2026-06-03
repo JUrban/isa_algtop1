@@ -7976,10 +7976,57 @@ proof -
       have hUA_open: "openin_on A (subspace_topology X TX A) (A \<inter> U)" by (by100 blast)
       \<comment> \<open>P \\<inter> A is a union of path-components of U \\<inter> A.
          Since A is lpc, path-components of open sets in A are open in A.\<close>
+      \<comment> \<open>P\\<inter>A is a union of path-components of U\\<inter>A in A.
+         Proof: for any x \\<in> P\\<inter>A, the path-component of x in U\\<inter>A (within A)
+         is contained in P (any path in A from x to y staying in U\\<inter>A
+         is also a path in U, hence y \\<in> P).
+         Since A is lpc, path-components of U\\<inter>A are open in A (Theorem 25.4).
+         So P\\<inter>A = union of open sets = open in A.\<close>
       show "openin_on A (subspace_topology X TX A) (A \<inter> P)"
-        sorry \<comment> \<open>P\\<inter>A = union of path-components of U\\<inter>A in A.
-           Each path-component is open (A lpc by Theorem 25.4).
-           Union of open = open.\<close>
+      proof -
+        have hA_sub: "A \<subseteq> X" using h\<A> hA by (by100 blast)
+        let ?TA = "subspace_topology X TX A"
+        have hA_top: "is_topology_on A ?TA"
+          using subspace_topology_is_topology_on[OF hTX hA_sub] .
+        \<comment> \<open>U \\<inter> A is open in A.\<close>
+        have hUA: "A \<inter> U \<in> ?TA" using hUA_open unfolding openin_on_def by (by100 blast)
+        have hUA_sub: "A \<inter> U \<subseteq> A" by (by100 blast)
+        \<comment> \<open>A is lpc. By Theorem 25.4: path-components of open sets in A are open in A.\<close>
+        note hA_lpc_j = bspec[OF hA_lpc hA]
+        from iffD1[OF Theorem_25_4[OF hA_top] hA_lpc_j]
+        have hpc_open: "\<forall>V \<in> ?TA. V \<subseteq> A \<longrightarrow>
+            (\<forall>Q \<in> top1_path_components_on V (subspace_topology A ?TA V). Q \<in> ?TA)" .
+        \<comment> \<open>Path-components of U\\<inter>A are open in A.\<close>
+        have "\<forall>Q \<in> top1_path_components_on (A \<inter> U) (subspace_topology A ?TA (A \<inter> U)). Q \<in> ?TA"
+          using hpc_open hUA hUA_sub by (by100 blast)
+        \<comment> \<open>A\\<inter>P = \\<Union>{Q | Q \\<in> path\\_components(U\\<inter>A), Q \\<inter> P \\<noteq> {}}.\<close>
+        \<comment> \<open>Each such Q is open in A. So A\\<inter>P is open in A.\<close>
+        \<comment> \<open>Key: if x \\<in> P\\<inter>A, x's path-component Q in U\\<inter>A satisfies Q \\<subseteq> P.
+           Because paths in A \\<inter> U are paths in U, hence within same path-component P.\<close>
+        have hPA_union: "A \<inter> P = \<Union>{Q \<in> top1_path_components_on (A \<inter> U)
+            (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}}"
+          sorry \<comment> \<open>Key set equality. Needs path\\_in\\_subspace\\_is\\_path\\_in\\_ambient
+             to transfer paths from A\\<inter>U to U to X.\<close>
+        moreover have "\<Union>{Q \<in> top1_path_components_on (A \<inter> U)
+            (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}} \<in> ?TA"
+        proof -
+          have "\<forall>Q \<in> {Q \<in> top1_path_components_on (A \<inter> U)
+              (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}}. Q \<in> ?TA"
+            using \<open>\<forall>Q \<in> top1_path_components_on (A \<inter> U) _. Q \<in> ?TA\<close> by (by100 blast)
+          moreover have "is_topology_on A ?TA" using hA_top .
+          have "(\<forall>Q. Q \<in> top1_path_components_on (A \<inter> U)
+              (subspace_topology A ?TA (A \<inter> U)) \<and> Q \<inter> P \<noteq> {} \<longrightarrow> Q \<in> ?TA)"
+            using \<open>\<forall>Q \<in> top1_path_components_on (A \<inter> U)
+                (subspace_topology A ?TA (A \<inter> U)). Q \<in> ?TA\<close> by (by100 blast)
+          hence "{Q \<in> top1_path_components_on (A \<inter> U)
+              (subspace_topology A ?TA (A \<inter> U)). Q \<inter> P \<noteq> {}} \<subseteq> ?TA"
+            by (by100 blast)
+          ultimately show ?thesis
+            using hA_top unfolding is_topology_on_def by (by5000 blast)
+        qed
+        ultimately have "A \<inter> P \<in> ?TA" by simp
+        thus ?thesis unfolding openin_on_def by (by100 blast)
+      qed
     qed
     from hopen_iff hP_sub_X this show "P \<in> TX" by (by100 blast)
   qed
