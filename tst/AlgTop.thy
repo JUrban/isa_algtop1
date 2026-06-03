@@ -637,6 +637,63 @@ next
     using \<open>mul (mul g ?k) (invg g) = m\<close> by simp
 qed
 
+\<comment> \<open>Covering lift uniqueness: paths with same projection from same basepoint have same endpoint.\<close>
+lemma same_projection_same_endpoint:
+  fixes E :: "'e set" and TE :: "'e set set"
+    and B :: "'b set" and TB :: "'b set set"
+    and p :: "'e \<Rightarrow> 'b" and e0 :: 'e
+  assumes "top1_covering_map_on E TE B TB p"
+      and "is_topology_on_strict E TE"
+      and "top1_is_path_on E TE e0 e1 \<gamma>1"
+      and "top1_is_path_on E TE e0 e2 \<gamma>2"
+      and "\<forall>s\<in>I_set. p (\<gamma>1 s) = p (\<gamma>2 s)"
+  shows "e1 = e2"
+proof -
+  \<comment> \<open>\\<gamma>\\_1 and \\<gamma>\\_2 are paths from e0 lifting the same path in B.
+     By covering lift uniqueness (covering\\_lift\\_unique\\_path), they agree pointwise.
+     In particular, \\<gamma>\\_1(1) = \\<gamma>\\_2(1), i.e., e1 = e2.\<close>
+  have hTE: "is_topology_on E TE" using assms(2)
+    unfolding is_topology_on_strict_def by (by100 blast)
+  have "p e0 = p e0" by simp
+  let ?f = "\<lambda>t. p (\<gamma>1 t)"
+  have hf_path: "top1_is_path_on B TB (p e0) (p e1) ?f"
+  proof -
+    have hp_cont: "top1_continuous_map_on E TE B TB p"
+      using top1_covering_map_on_continuous[OF assms(1)] .
+    have h\<gamma>1_cont: "top1_continuous_map_on I_set I_top E TE \<gamma>1"
+      using assms(3) unfolding top1_is_path_on_def by (by100 blast)
+    have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<gamma>1)"
+      using top1_continuous_map_on_comp[OF h\<gamma>1_cont hp_cont] .
+    moreover have "(p \<circ> \<gamma>1) 0 = p e0"
+      using assms(3) unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "(p \<circ> \<gamma>1) 1 = p e1"
+      using assms(3) unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "?f = p \<circ> \<gamma>1" by (rule ext) simp
+    ultimately show ?thesis unfolding top1_is_path_on_def by simp
+  qed
+  have he0E: "e0 \<in> E"
+  proof -
+    have "\<gamma>1 0 = e0" using assms(3) unfolding top1_is_path_on_def by (by100 blast)
+    have "0 \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "\<gamma>1 0 \<in> E" using assms(3) \<open>0 \<in> I_set\<close>
+      unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+    thus "e0 \<in> E" using \<open>\<gamma>1 0 = e0\<close> by simp
+  qed
+  have hpe0: "p e0 = p e0" by simp
+  have hlift1: "\<forall>s\<in>I_set. p (\<gamma>1 s) = ?f s" by simp
+  have hlift2: "\<forall>s\<in>I_set. p (\<gamma>2 s) = ?f s"
+    using assms(5) by simp
+  from covering_lift_unique_path[OF assms(1) assms(2) hf_path he0E hpe0
+      assms(3) assms(4) hlift1 hlift2]
+  have "\<forall>t\<in>I_set. \<gamma>1 t = \<gamma>2 t" .
+  have "1 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+  have "\<gamma>1 1 = \<gamma>2 1" using \<open>\<forall>t\<in>I_set. \<gamma>1 t = \<gamma>2 t\<close> \<open>1 \<in> I_set\<close> by (by100 blast)
+  hence "\<gamma>2 1 = \<gamma>1 1" by simp
+  have "e1 = \<gamma>1 1" using assms(3) unfolding top1_is_path_on_def by (by100 blast)
+  have "e2 = \<gamma>2 1" using assms(4) unfolding top1_is_path_on_def by (by100 blast)
+  thus "e1 = e2" using \<open>\<gamma>2 1 = \<gamma>1 1\<close> \<open>e1 = \<gamma>1 1\<close> by simp
+qed
+
 lemma quotient_carrier_memI:
   "g \<in> G \<Longrightarrow> top1_group_coset_on G mul N g \<in> top1_quotient_group_carrier_on G mul N"
   unfolding top1_quotient_group_carrier_on_def by (by100 blast)
