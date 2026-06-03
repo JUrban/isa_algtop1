@@ -19075,7 +19075,7 @@ proof -
     have hH_free: "\<exists>(\<iota>H :: (real \<Rightarrow> real \<times> real) set set \<Rightarrow> 'g) SH.
         top1_is_free_group_full_on H mul e invg \<iota>H SH"
       by (by100 blast)
-    show ?thesis sorry \<comment> \<open>Still needs: finite SH and card SH = k*n+1 from Euler characteristic.\<close>
+    show ?thesis using hH_free .
   qed
   \<comment> \<open>Step 3c: rank = kn+1 (Euler characteristic argument).\<close>
   from hH_free obtain \<iota>H :: "(real \<Rightarrow> real \<times> real) set set \<Rightarrow> 'g" and SH
