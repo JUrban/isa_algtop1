@@ -6344,9 +6344,58 @@ lemma free_group_realized_by_wedge:
 proof (cases "card S = 0")
   case True
   \<comment> \<open>n=0: S={}, F={e} trivial. Need any connected graph with trivial \\<pi>\\_1.\<close>
+  \<comment> \<open>n=0: F = {e} trivial. Construct [0,1]\\<times>{0} in R2 as graph with trivial \\<pi>\\_1.\<close>
+  let ?X0 = "{0..1::real} \<times> {0::real}"
+  let ?TX0 = "subspace_topology (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets) ?X0"
+  let ?x00 = "(0::real, 0::real)"
+  \<comment> \<open>X0 is a graph (single arc), connected, simply connected.\<close>
+  \<comment> \<open>F = {e} (from card S = 0 \\<Rightarrow> S = {} \\<Rightarrow> free group on {} is trivial).\<close>
+  have hF_trivial: "F = {e}"
+  proof -
+    have hS_empty: "S = {}" using True assms(2) by (by100 simp)
+    hence "F = top1_subgroup_generated_on F mul e invg (\<iota> ` {})"
+      using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+    hence "F = top1_subgroup_generated_on F mul e invg {}" by simp
+    \<comment> \<open>subgroup\\_generated {} = {e} (intersection of all subgroups contains only identity).\<close>
+    moreover have "top1_subgroup_generated_on F mul e invg {} = {e}"
+    proof -
+      have hgrp: "top1_is_group_on F mul e invg"
+        using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+      have "{} \<subseteq> F" by (by100 blast)
+      from intersection_of_subgroups_is_group[OF hgrp this]
+      have "top1_is_group_on (top1_subgroup_generated_on F mul e invg {}) mul e invg" .
+      hence "e \<in> top1_subgroup_generated_on F mul e invg {}"
+        unfolding top1_is_group_on_def by (by100 blast)
+      moreover have "top1_subgroup_generated_on F mul e invg {} \<subseteq> {e}"
+      proof (rule subsetI)
+        fix x assume "x \<in> top1_subgroup_generated_on F mul e invg {}"
+        \<comment> \<open>subgroup\\_generated = \\<Inter>{H. {} \\<subseteq> H \\<and> H \\<subseteq> F \\<and> group H}.
+           {e} is such an H (trivial subgroup). So generated \\<subseteq> {e}.\<close>
+        have "{e} \<subseteq> F" using hgrp unfolding top1_is_group_on_def by (by100 blast)
+        have "top1_is_group_on {e} mul e invg"
+          using hgrp unfolding top1_is_group_on_def by (by5000 auto)
+        from subgroup_generated_minimal[OF _ \<open>{e} \<subseteq> F\<close> this]
+        have "top1_subgroup_generated_on F mul e invg {} \<subseteq> {e}" by (by100 blast)
+        thus "x \<in> {e}" using \<open>x \<in> _\<close> by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    ultimately show ?thesis by simp
+  qed
+  have hgraph0: "top1_is_graph_on ?X0 ?TX0"
+    sorry \<comment> \<open>Single arc [0,1]\\<times>{0}. Homeomorphism I \\<rightarrow> X0 via t\\<mapsto>(t,0).\<close>
+  have hconn0: "top1_connected_on ?X0 ?TX0"
+    sorry \<comment> \<open>Interval \\<times> {0} connected: continuous image of connected [0,1].\<close>
+  have hx0_in: "?x00 \<in> ?X0" by (by100 simp)
+  have hiso0: "top1_groups_isomorphic_on F mul
+      (top1_fundamental_group_carrier ?X0 ?TX0 ?x00)
+      (top1_fundamental_group_mul ?X0 ?TX0 ?x00)"
+    sorry \<comment> \<open>F = {e} trivial. X0 simply connected \\<Rightarrow> \\<pi>\\_1(X0) = {id} trivial.
+       Iso between singleton groups is the unique map.\<close>
   show ?thesis
-    sorry \<comment> \<open>n=0: F trivial. Construct segment in R^2 as graph with trivial \\<pi>\\_1.
-       Or use any tree (simply connected \\<Rightarrow> trivial \\<pi>\\_1 \\<cong> {e} \\<cong> F).\<close>
+    apply (rule exI[of _ ?X0], rule exI[of _ ?TX0], rule exI[of _ ?x00])
+    using hgraph0 hconn0 hx0_in hiso0 by (by100 blast)
 next
   case False
   hence hn_pos: "card S > 0" by simp
