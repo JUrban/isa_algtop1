@@ -6965,76 +6965,98 @@ proof -
         unfolding top1_simple_closed_curve_on_def
         using hh_cont_X hh_inj hh_img by (by100 blast)
     qed
-    \<comment> \<open>Step 3: Each C(j) decomposes into 2 arcs.\<close>
-    have hC_arcs: "\<forall>j\<in>{..<?n}. \<exists>A1 A2 a b.
-        C j = A1 \<union> A2 \<and> A1 \<inter> A2 = {a, b} \<and> a \<noteq> b \<and>
+    \<comment> \<open>Step 3: Each C(j) decomposes into 2 arcs with p as one of the shared points.
+       Use SCC\\_decompose\\_at\\_given\\_points.\<close>
+    have hC_arcs: "\<forall>j\<in>{..<?n}. \<exists>A1 A2 q. q \<noteq> p \<and>
+        C j = A1 \<union> A2 \<and> A1 \<inter> A2 = {p, q} \<and>
         top1_is_arc_on A1 (subspace_topology X TX A1) \<and>
         top1_is_arc_on A2 (subspace_topology X TX A2)"
     proof (intro ballI)
-      fix j assume "j \<in> {..<?n}"
-      from bspec[OF hC_scc \<open>j \<in> {..<?n}\<close>] have "top1_simple_closed_curve_on X TX (C j)" .
-      from simple_closed_curve_arc_decomposition[OF this hwedge_strict hwedge_haus]
-      show "\<exists>A1 A2 a b. C j = A1 \<union> A2 \<and> A1 \<inter> A2 = {a, b} \<and> a \<noteq> b \<and>
+      fix j assume hj: "j \<in> {..<?n}"
+      from bspec[OF hC_scc hj] have hSCC: "top1_simple_closed_curve_on X TX (C j)" .
+      from bspec[OF hC_p hj] have hp_Cj: "p \<in> C j" .
+      \<comment> \<open>C(j) has another point q \\<noteq> p.\<close>
+      from bspec[OF hC_homeo hj] obtain h where
+          hh: "top1_homeomorphism_on top1_S1 top1_S1_topology (C j) (subspace_topology X TX (C j)) h"
+        by (by100 blast)
+      have hbij: "bij_betw h top1_S1 (C j)"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      have hm10: "(-1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      have hne: "(1::real, 0::real) \<noteq> (-1::real, 0::real)" by simp
+      have h1C: "h (1, 0) \<in> C j" using hbij h10 unfolding bij_betw_def by (by100 blast)
+      have hm1C: "h (-1, 0) \<in> C j" using hbij hm10 unfolding bij_betw_def by (by100 blast)
+      have hne2: "h (1, 0) \<noteq> h (-1, 0)"
+        using hbij h10 hm10 hne unfolding bij_betw_def inj_on_def by (by100 blast)
+      obtain q where hq: "q \<in> C j" "q \<noteq> p"
+        using h1C hm1C hne2 by (by100 blast)
+      \<comment> \<open>Decompose C(j) at p and q.\<close>
+      from SCC_decompose_at_given_points[OF hwedge_strict hwedge_haus hSCC hp_Cj hq(1) hq(2)[symmetric]]
+      obtain C1 C2 where "C j = C1 \<union> C2" "C1 \<inter> C2 = {p, q}"
+          "top1_is_arc_on C1 (subspace_topology X TX C1)"
+          "top1_is_arc_on C2 (subspace_topology X TX C2)"
+        by (by100 blast)
+      thus "\<exists>A1 A2 q. q \<noteq> p \<and> C j = A1 \<union> A2 \<and> A1 \<inter> A2 = {p, q} \<and>
           top1_is_arc_on A1 (subspace_topology X TX A1) \<and>
-          top1_is_arc_on A2 (subspace_topology X TX A2)" .
+          top1_is_arc_on A2 (subspace_topology X TX A2)"
+        using hq(2) by (by100 blast)
     qed
     \<comment> \<open>Step 4: Collect all arcs into a graph structure.
        For each j, choose A1(j), A2(j) from hC\\_arcs.
        The arc collection is {A1(j), A2(j) | j < n}.\<close>
     \<comment> \<open>Use SOME to select the arc decomposition for each circle.\<close>
-    define A1 where "A1 j = (SOME A. \<exists>A2 a b. C j = A \<union> A2 \<and> A \<inter> A2 = {a, b} \<and> a \<noteq> b \<and>
+    define A1 where "A1 j = (SOME A. \<exists>A2 q. q \<noteq> p \<and> C j = A \<union> A2 \<and> A \<inter> A2 = {p, q} \<and>
         top1_is_arc_on A (subspace_topology X TX A) \<and>
         top1_is_arc_on A2 (subspace_topology X TX A2))" for j
-    define A2 where "A2 j = (SOME A2. \<exists>a b. C j = A1 j \<union> A2 \<and> A1 j \<inter> A2 = {a, b} \<and> a \<noteq> b \<and>
+    define A2 where "A2 j = (SOME A2. \<exists>q. q \<noteq> p \<and> C j = A1 j \<union> A2 \<and> A1 j \<inter> A2 = {p, q} \<and>
         top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
         top1_is_arc_on A2 (subspace_topology X TX A2))" for j
     \<comment> \<open>Arcs have the decomposition property for each j.\<close>
     have hA_decomp: "\<forall>j\<in>{..<?n}. C j = A1 j \<union> A2 j \<and>
-        (\<exists>a b. A1 j \<inter> A2 j = {a, b} \<and> a \<noteq> b) \<and>
+        (\<exists>q. q \<noteq> p \<and> A1 j \<inter> A2 j = {p, q}) \<and>
         top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
         top1_is_arc_on (A2 j) (subspace_topology X TX (A2 j))"
     proof (intro ballI)
       fix j assume hj: "j \<in> {..<?n}"
       from bspec[OF hC_arcs hj]
-      obtain B1 B2 a b where hB:
-          "C j = B1 \<union> B2" "B1 \<inter> B2 = {a, b}" "a \<noteq> b"
+      obtain B1 B2 q where hB:
+          "q \<noteq> p" "C j = B1 \<union> B2" "B1 \<inter> B2 = {p, q}"
           "top1_is_arc_on B1 (subspace_topology X TX B1)"
           "top1_is_arc_on B2 (subspace_topology X TX B2)"
         by (by100 blast)
-      \<comment> \<open>A1 j = SOME A. \\<exists>... . So A1 j satisfies the property (by someI\\_ex).\<close>
-      have hA1_prop: "\<exists>A2' a b. C j = A1 j \<union> A2' \<and> A1 j \<inter> A2' = {a, b} \<and> a \<noteq> b \<and>
+      \<comment> \<open>A1 j = SOME. someI\\_ex gives properties.\<close>
+      have hA1_prop: "\<exists>A2' q. q \<noteq> p \<and> C j = A1 j \<union> A2' \<and> A1 j \<inter> A2' = {p, q} \<and>
           top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
           top1_is_arc_on A2' (subspace_topology X TX A2')"
       proof -
-        have "\<exists>A. \<exists>A2' a b. C j = A \<union> A2' \<and> A \<inter> A2' = {a, b} \<and> a \<noteq> b \<and>
+        have "\<exists>A. \<exists>A2' q. q \<noteq> p \<and> C j = A \<union> A2' \<and> A \<inter> A2' = {p, q} \<and>
             top1_is_arc_on A (subspace_topology X TX A) \<and>
             top1_is_arc_on A2' (subspace_topology X TX A2')"
           using hB by (by100 blast)
         from someI_ex[OF this]
         show ?thesis unfolding A1_def .
       qed
-      \<comment> \<open>A2 j = SOME A2'. \\<exists>a b. ... .\<close>
-      from hA1_prop obtain A2' a' b' where hA1: "C j = A1 j \<union> A2'" "A1 j \<inter> A2' = {a', b'}" "a' \<noteq> b'"
+      from hA1_prop obtain A2' q' where hA1: "q' \<noteq> p" "C j = A1 j \<union> A2'" "A1 j \<inter> A2' = {p, q'}"
           "top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j))"
           "top1_is_arc_on A2' (subspace_topology X TX A2')"
         by (by100 blast)
-      have hA2_prop: "\<exists>a b. C j = A1 j \<union> A2 j \<and> A1 j \<inter> A2 j = {a, b} \<and> a \<noteq> b \<and>
+      have hA2_prop: "\<exists>q. q \<noteq> p \<and> C j = A1 j \<union> A2 j \<and> A1 j \<inter> A2 j = {p, q} \<and>
           top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
           top1_is_arc_on (A2 j) (subspace_topology X TX (A2 j))"
       proof -
-        have "\<exists>A2'. \<exists>a b. C j = A1 j \<union> A2' \<and> A1 j \<inter> A2' = {a, b} \<and> a \<noteq> b \<and>
+        have "\<exists>A2'. \<exists>q. q \<noteq> p \<and> C j = A1 j \<union> A2' \<and> A1 j \<inter> A2' = {p, q} \<and>
             top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
             top1_is_arc_on A2' (subspace_topology X TX A2')"
           using hA1 by (by100 blast)
         from someI_ex[OF this]
         show ?thesis unfolding A2_def .
       qed
-      from hA2_prop obtain a'' b'' where "C j = A1 j \<union> A2 j" "A1 j \<inter> A2 j = {a'', b''}" "a'' \<noteq> b''"
+      from hA2_prop obtain q'' where "q'' \<noteq> p" "C j = A1 j \<union> A2 j" "A1 j \<inter> A2 j = {p, q''}"
           "top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j))"
           "top1_is_arc_on (A2 j) (subspace_topology X TX (A2 j))"
         by (by100 blast)
       thus "C j = A1 j \<union> A2 j \<and>
-          (\<exists>a b. A1 j \<inter> A2 j = {a, b} \<and> a \<noteq> b) \<and>
+          (\<exists>q. q \<noteq> p \<and> A1 j \<inter> A2 j = {p, q}) \<and>
           top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j)) \<and>
           top1_is_arc_on (A2 j) (subspace_topology X TX (A2 j))"
         by (by100 blast)
@@ -7075,11 +7097,176 @@ proof -
       finally show ?thesis .
     qed
     \<comment> \<open>Pairwise intersection.\<close>
+    \<comment> \<open>Helper: p is in every arc (from hC\\_p + hA\\_decomp: C(j) = A1(j) \\<union> A2(j) and p \\<in> C(j)).\<close>
+    have hp_in_arc: "\<forall>A \<in> ?arcs. p \<in> A"
+    proof (intro ballI)
+      fix A assume "A \<in> ?arcs"
+      then obtain j where hj: "j \<in> {..<?n}" and "A = A1 j \<or> A = A2 j" by (by100 blast)
+      from bspec[OF hC_p hj] have "p \<in> C j" .
+      from conjunct1[OF bspec[OF hA_decomp hj]] have "C j = A1 j \<union> A2 j" .
+      from bspec[OF hA_decomp hj] have h_inter: "\<exists>a b. A1 j \<inter> A2 j = {a, b} \<and> a \<noteq> b"
+        by (by100 blast)
+      \<comment> \<open>p \\<in> C(j) = A1(j) \\<union> A2(j). So p \\<in> A1(j) or p \\<in> A2(j).\<close>
+      \<comment> \<open>Actually, we need p in BOTH arcs. By scc\\_decomp\\_arc\\_endpoints:
+         arc\\_endpoints(A1) = {a,b}. And p is in the intersection {a,b} or at least in A.\<close>
+      \<comment> \<open>p is in C(j) = A1 \\<union> A2. For the specific A, it's A1 or A2.
+         We need p \\<in> A for whichever A is. Since p \\<in> C(j) and C(j) = A1 \\<union> A2,
+         p is in A1 or A2. But we need p in the SPECIFIC A.\<close>
+      \<comment> \<open>Better approach: p is in A1 \\<inter> A2 = {a,b}. So p = a or p = b, hence p \\<in> A1 and p \\<in> A2.\<close>
+      \<comment> \<open>p \\<in> A1(j) \\<inter> A2(j) = {p, q(j)} by the p-centered decomposition.\<close>
+      note hj_all = bspec[OF hA_decomp hj]
+      from conjunct1[OF conjunct2[OF hj_all]]
+      have "\<exists>q. q \<noteq> p \<and> A1 j \<inter> A2 j = {p, q}" .
+      hence "p \<in> A1 j \<inter> A2 j" by (by100 blast)
+      thus "p \<in> A" using \<open>A = A1 j \<or> A = A2 j\<close> by (by100 blast)
+    qed
+    \<comment> \<open>Helper: arc endpoints for each arc from SCC decomposition.\<close>
+    have hA_endpoints: "\<forall>j\<in>{..<?n}. \<exists>a b. a \<noteq> b \<and>
+        top1_arc_endpoints_on (A1 j) (subspace_topology X TX (A1 j)) = {a, b} \<and>
+        top1_arc_endpoints_on (A2 j) (subspace_topology X TX (A2 j)) = {a, b} \<and>
+        A1 j \<inter> A2 j = {a, b}"
+    proof (intro ballI)
+      fix j assume hj: "j \<in> {..<?n}"
+      note hj_all = bspec[OF hA_decomp hj]
+      have hj_dec: "C j = A1 j \<union> A2 j" using conjunct1[OF hj_all] .
+      have hj_inter: "\<exists>q. q \<noteq> p \<and> A1 j \<inter> A2 j = {p, q}"
+        using conjunct1[OF conjunct2[OF hj_all]] .
+      have hj_arc1: "top1_is_arc_on (A1 j) (subspace_topology X TX (A1 j))"
+        using conjunct1[OF conjunct2[OF conjunct2[OF hj_all]]] .
+      have hj_arc2: "top1_is_arc_on (A2 j) (subspace_topology X TX (A2 j))"
+        using conjunct2[OF conjunct2[OF conjunct2[OF hj_all]]] .
+      from hj_inter obtain q_j where hqj: "q_j \<noteq> p" "A1 j \<inter> A2 j = {p, q_j}" by (by100 blast)
+      have hab: "A1 j \<inter> A2 j = {p, q_j}" "p \<noteq> q_j" using hqj by simp_all
+      have hA1_sub: "A1 j \<subseteq> X" using hj_dec bspec[OF hC_sub hj] by (by100 blast)
+      have hA2_sub: "A2 j \<subseteq> X" using hj_dec bspec[OF hC_sub hj] by (by100 blast)
+      from bspec[OF hC_scc hj] have "top1_simple_closed_curve_on X TX (C j)" .
+      from scc_decomp_arc_endpoints[OF hwedge_strict hwedge_haus this
+          hj_arc1 hj_arc2 hA1_sub hA2_sub hj_dec hab(1) hab(2)]
+      have "top1_arc_endpoints_on (A1 j) (subspace_topology X TX (A1 j)) = {p, q_j}"
+          "top1_arc_endpoints_on (A2 j) (subspace_topology X TX (A2 j)) = {p, q_j}"
+        by (by100 blast)+
+      thus "\<exists>a b. a \<noteq> b \<and>
+          top1_arc_endpoints_on (A1 j) (subspace_topology X TX (A1 j)) = {a, b} \<and>
+          top1_arc_endpoints_on (A2 j) (subspace_topology X TX (A2 j)) = {a, b} \<and>
+          A1 j \<inter> A2 j = {a, b}"
+        using hab by (by100 blast)
+    qed
     have harcs_inter: "\<forall>A \<in> ?arcs. \<forall>B \<in> ?arcs. A \<noteq> B \<longrightarrow>
         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-      sorry \<comment> \<open>Same-circle: share 2 endpoints. Different-circle: share \\<subseteq> {p}.\<close>
+    proof (intro ballI impI)
+      fix A B assume hA_in: "A \<in> ?arcs" and hB_in: "B \<in> ?arcs" and hAB_ne: "A \<noteq> B"
+      obtain jA where hjA: "jA \<in> {..<?n}" and "A = A1 jA \<or> A = A2 jA" using hA_in by (by100 blast)
+      obtain jB where hjB: "jB \<in> {..<?n}" and "B = A1 jB \<or> B = A2 jB" using hB_in by (by100 blast)
+      \<comment> \<open>Get endpoints of A and B from hA\\_endpoints.\<close>
+      \<comment> \<open>Arc endpoints = intersection points = {p, q\\_j}.\<close>
+      note hjA_ep_raw = bspec[OF hA_endpoints hjA]
+      note hjB_ep_raw = bspec[OF hA_endpoints hjB]
+      \<comment> \<open>From the p-centered decomposition: A1 \\<inter> A2 = {p, q}, endpoints = {p, q}.\<close>
+      note hjA_inter = conjunct1[OF conjunct2[OF bspec[OF hA_decomp hjA]]]
+      note hjB_inter = conjunct1[OF conjunct2[OF bspec[OF hA_decomp hjB]]]
+      from hjA_inter obtain qA where hqA: "qA \<noteq> p" "A1 jA \<inter> A2 jA = {p, qA}" by (by100 blast)
+      from hjB_inter obtain qB where hqB: "qB \<noteq> p" "A1 jB \<inter> A2 jB = {p, qB}" by (by100 blast)
+      \<comment> \<open>Endpoints = {p, q\\_j} from scc\\_decomp\\_arc\\_endpoints.\<close>
+      \<comment> \<open>Apply scc\\_decomp\\_arc\\_endpoints for jA and jB.\<close>
+      note hjA_all = bspec[OF hA_decomp hjA]
+      have hjA_dec: "C jA = A1 jA \<union> A2 jA" using conjunct1[OF hjA_all] .
+      have hjA_arc1: "top1_is_arc_on (A1 jA) (subspace_topology X TX (A1 jA))"
+        using conjunct1[OF conjunct2[OF conjunct2[OF hjA_all]]] .
+      have hjA_arc2: "top1_is_arc_on (A2 jA) (subspace_topology X TX (A2 jA))"
+        using conjunct2[OF conjunct2[OF conjunct2[OF hjA_all]]] .
+      have hA1_sub_jA: "A1 jA \<subseteq> X" using hjA_dec bspec[OF hC_sub hjA] by (by100 blast)
+      have hA2_sub_jA: "A2 jA \<subseteq> X" using hjA_dec bspec[OF hC_sub hjA] by (by100 blast)
+      from scc_decomp_arc_endpoints[OF hwedge_strict hwedge_haus bspec[OF hC_scc hjA]
+          hjA_arc1 hjA_arc2 hA1_sub_jA hA2_sub_jA hjA_dec hqA(2) hqA(1)[symmetric]]
+      have hA1_ep_jA: "top1_arc_endpoints_on (A1 jA) (subspace_topology X TX (A1 jA)) = {p, qA}"
+          and hA2_ep_jA: "top1_arc_endpoints_on (A2 jA) (subspace_topology X TX (A2 jA)) = {p, qA}"
+        by (by100 blast)+
+      note hjB_all = bspec[OF hA_decomp hjB]
+      have hjB_dec: "C jB = A1 jB \<union> A2 jB" using conjunct1[OF hjB_all] .
+      have hjB_arc1: "top1_is_arc_on (A1 jB) (subspace_topology X TX (A1 jB))"
+        using conjunct1[OF conjunct2[OF conjunct2[OF hjB_all]]] .
+      have hjB_arc2: "top1_is_arc_on (A2 jB) (subspace_topology X TX (A2 jB))"
+        using conjunct2[OF conjunct2[OF conjunct2[OF hjB_all]]] .
+      have hA1_sub_jB: "A1 jB \<subseteq> X" using hjB_dec bspec[OF hC_sub hjB] by (by100 blast)
+      have hA2_sub_jB: "A2 jB \<subseteq> X" using hjB_dec bspec[OF hC_sub hjB] by (by100 blast)
+      from scc_decomp_arc_endpoints[OF hwedge_strict hwedge_haus bspec[OF hC_scc hjB]
+          hjB_arc1 hjB_arc2 hA1_sub_jB hA2_sub_jB hjB_dec hqB(2) hqB(1)[symmetric]]
+      have hA1_ep_jB: "top1_arc_endpoints_on (A1 jB) (subspace_topology X TX (A1 jB)) = {p, qB}"
+          and hA2_ep_jB: "top1_arc_endpoints_on (A2 jB) (subspace_topology X TX (A2 jB)) = {p, qB}"
+        by (by100 blast)+
+      \<comment> \<open>Endpoints of A.\<close>
+      have hA_ep: "top1_arc_endpoints_on A (subspace_topology X TX A) = {p, qA}"
+        using \<open>A = A1 jA \<or> A = A2 jA\<close> hA1_ep_jA hA2_ep_jA by (by100 blast)
+      have hB_ep: "top1_arc_endpoints_on B (subspace_topology X TX B) = {p, qB}"
+        using \<open>B = A1 jB \<or> B = A2 jB\<close> hA1_ep_jB hA2_ep_jB by (by100 blast)
+      show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+        \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      proof (cases "jA = jB")
+        case True
+        \<comment> \<open>Same circle: A and B are A1(j) and A2(j) (since A \\<noteq> B).\<close>
+        \<comment> \<open>A1(jA) \\<inter> A2(jA) = {p, qA}. Since A \\<noteq> B and both from same circle,
+           one is A1 and other is A2, so A \\<inter> B = {p, qA}.\<close>
+        have "A \<inter> B \<subseteq> {p, qA}"
+        proof -
+          have hAB_cases: "(A = A1 jA \<and> B = A2 jA) \<or> (A = A2 jA \<and> B = A1 jA)"
+            using \<open>A = A1 jA \<or> A = A2 jA\<close> \<open>B = A1 jB \<or> B = A2 jB\<close> True hAB_ne
+            by (by100 blast)
+          hence "A \<inter> B = A1 jA \<inter> A2 jA" by (by100 blast)
+          thus ?thesis using hqA(2) by (by100 blast)
+        qed
+        have "finite (A \<inter> B)"
+          using finite_subset[OF \<open>A \<inter> B \<subseteq> {p, qA}\<close>] by (by100 simp)
+        have "card (A \<inter> B) \<le> 2"
+        proof -
+          have hfin2: "finite {p, qA}" by (by100 simp)
+          have hcard2: "card {p, qA} \<le> 2"
+            by (cases "p = qA", by100 simp, by100 simp)
+          have "card (A \<inter> B) \<le> card {p, qA}"
+            by (rule card_mono[OF hfin2 \<open>A \<inter> B \<subseteq> {p, qA}\<close>])
+          thus ?thesis using hcard2 by (by100 linarith)
+        qed
+        \<comment> \<open>When jA = jB: qA = qB (same circle), so endpoints match.\<close>
+        have hB_ep_same: "top1_arc_endpoints_on B (subspace_topology X TX B) = {p, qA}"
+        proof -
+          \<comment> \<open>jA = jB \\<Rightarrow> A1 jA \\<inter> A2 jA = {p, qA} and A1 jB \\<inter> A2 jB = {p, qB}.
+             Since jA=jB: {p, qA} = {p, qB}. Since qA\\<noteq>p and qB\\<noteq>p: qA=qB.\<close>
+          have "{p, qA} = {p, qB}" using hqA(2) hqB(2) True by simp
+          hence "qA = qB" using hqA(1) hqB(1) by (by100 blast)
+          thus ?thesis using hB_ep True by simp
+        qed
+        show ?thesis using \<open>A \<inter> B \<subseteq> {p, qA}\<close> hA_ep hB_ep_same
+            \<open>finite (A \<inter> B)\<close> \<open>card (A \<inter> B) \<le> 2\<close>
+          by (by100 blast)
+      next
+        case False
+        \<comment> \<open>Different circles: A \\<subseteq> C(jA), B \\<subseteq> C(jB), C(jA)\\<inter>C(jB) = {p}.\<close>
+        have "A \<subseteq> C jA" using \<open>A = A1 jA \<or> A = A2 jA\<close> conjunct1[OF bspec[OF hA_decomp hjA]]
+          by (by100 blast)
+        have "B \<subseteq> C jB" using \<open>B = A1 jB \<or> B = A2 jB\<close> conjunct1[OF bspec[OF hA_decomp hjB]]
+          by (by100 blast)
+        from bspec[OF bspec[OF hC_inter hjA] hjB] False
+        have "C jA \<inter> C jB = {p}" by (by100 blast)
+        hence "A \<inter> B \<subseteq> {p}" using \<open>A \<subseteq> C jA\<close> \<open>B \<subseteq> C jB\<close> by (by100 blast)
+        \<comment> \<open>A \\<inter> B \\<subseteq> {p} \\<subseteq> {p, qA} = endpoints(A) and \\<subseteq> {p, qB} = endpoints(B).\<close>
+        have "A \<inter> B \<subseteq> {p, qA}" using \<open>A \<inter> B \<subseteq> {p}\<close> by (by100 blast)
+        have "A \<inter> B \<subseteq> {p, qB}" using \<open>A \<inter> B \<subseteq> {p}\<close> by (by100 blast)
+        have "finite (A \<inter> B)" using finite_subset[OF \<open>A \<inter> B \<subseteq> {p}\<close>] by (by100 simp)
+        have "card (A \<inter> B) \<le> 2"
+        proof -
+          have "card (A \<inter> B) \<le> card {p}" by (rule card_mono, by100 simp, rule \<open>A \<inter> B \<subseteq> {p}\<close>)
+          thus ?thesis by (by100 simp)
+        qed
+        have "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)"
+          using \<open>A \<inter> B \<subseteq> {p, qA}\<close> hA_ep by (by100 blast)
+        moreover have "A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)"
+          using \<open>A \<inter> B \<subseteq> {p, qB}\<close> hB_ep by (by100 blast)
+        ultimately show ?thesis using \<open>finite (A \<inter> B)\<close> \<open>card (A \<inter> B) \<le> 2\<close>
+          by (by100 blast)
+      qed
+    qed
     \<comment> \<open>Coherent topology.\<close>
     have harcs_coh: "\<forall>D. D \<subseteq> X \<longrightarrow>
         (closedin_on X TX D \<longleftrightarrow>
