@@ -17439,6 +17439,13 @@ proof -
     qed
   qed
   moreover have "top1_is_graph_on ?X TX" sorry
+    \<comment> \<open>Strategy: each circle C(s) = upper arc \\<cup> lower arc.
+       The upper semicircle = h(s)(\\{(cos t, sin t) | 0 \\<le> t \\<le> \\<pi>\\})
+       and lower semicircle = h(s)(\\{(cos t, sin t) | \\<pi> \\<le> t \\<le> 2\\<pi>\\}).
+       Each is homeomorphic to [0,1] (an arc). They share endpoints
+       h(s)(1,0) = p and h(s)(-1,0). The arc family is
+       \\<A> = \\{upper(s), lower(s) | s \\<in> S\\}. Covering, pairwise endpoint
+       intersection, and coherent closed all follow from the wedge structure.\<close>
   moreover have "top1_connected_on ?X TX"
   proof -
     have hTX_top: "is_topology_on ?X TX"
