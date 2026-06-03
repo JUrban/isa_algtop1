@@ -8496,9 +8496,11 @@ proof -
           \<comment> \<open>The arc\\_split\\_endpoints OF chain times out because the second conjunct
              involves D2\\_loc (SOME term). Instead, apply the lemma to a goal that
              only needs the first conjunct.\<close>
-          have "top1_arc_endpoints_on D1_loc (subspace_topology X TX D1_loc) = {h0 0, x}"
-            sorry \<comment> \<open>arc\\_split\\_endpoints OF chain: D2\\_loc SOME term causes
-               timeout in the second conjunct. Mathematically correct.\<close>
+          have hx_ep_D1_eq: "top1_arc_endpoints_on D1_loc (subspace_topology X TX D1_loc) = {h0 0, x}"
+            sorry \<comment> \<open>arc\\_split\\_endpoints: endpoints(D1) = {h0(0), x}.
+               The OF chain times out on D2\\_loc SOME terms.
+               Mathematically: x is the split point (becomes endpoint of both halves),
+               h0(0) is the original endpoint of A0 that's in D1\\_loc.\<close>
           thus ?thesis by (by100 blast)
         qed
         \<comment> \<open>D1\\_loc DR to {x}.\<close>
