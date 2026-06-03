@@ -6905,12 +6905,78 @@ proof -
       using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
     have hwedge_haus: "is_hausdorff_on X TX"
       using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+    \<comment> \<open>Strategy: Each C(j) is a simple closed curve in X. By
+       simple\\_closed\\_curve\\_arc\\_decomposition, it splits into 2 arcs.
+       Collect all arcs to form the graph.\<close>
+    \<comment> \<open>Step 1: Extract circles from wedge.\<close>
+    from hwedge obtain C where
+        hC_sub: "\<forall>j\<in>{..<?n}. C j \<subseteq> X"
+        and hC_p: "\<forall>j\<in>{..<?n}. p \<in> C j"
+        and hC_homeo: "\<forall>j\<in>{..<?n}. \<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+            (C j) (subspace_topology X TX (C j)) h"
+        and hC_cover: "(\<Union>j\<in>{..<?n}. C j) = X"
+        and hC_inter: "\<forall>j\<in>{..<?n}. \<forall>k\<in>{..<?n}. j \<noteq> k \<longrightarrow> C j \<inter> C k = {p}"
+        and hC_coh: "\<forall>D. D \<subseteq> X \<longrightarrow> (closedin_on X TX D \<longleftrightarrow>
+            (\<forall>j\<in>{..<?n}. closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D)))"
+      sorry \<comment> \<open>Extract circles from wedge definition (existential unpacking).\<close>
+    \<comment> \<open>Step 2: Each C(j) is a simple closed curve in X.\<close>
+    have hC_scc: "\<forall>j\<in>{..<?n}. top1_simple_closed_curve_on X TX (C j)"
+    proof (intro ballI)
+      fix j assume hj: "j \<in> {..<?n}"
+      from hC_homeo hj obtain h where
+          hh: "top1_homeomorphism_on top1_S1 top1_S1_topology (C j) (subspace_topology X TX (C j)) h"
+        by (by100 blast)
+      \<comment> \<open>h is continuous S1 \\<rightarrow> C(j) (subspace). Compose with inclusion \\<rightarrow> continuous S1 \\<rightarrow> X.\<close>
+      have hh_cont_sub: "top1_continuous_map_on top1_S1 top1_S1_topology (C j) (subspace_topology X TX (C j)) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have hCj_sub: "C j \<subseteq> X" using hC_sub hj by (by100 blast)
+      have hTX_top: "is_topology_on X TX"
+        using hwedge_strict unfolding is_topology_on_strict_def by (by100 blast)
+      \<comment> \<open>h: S1 \\<rightarrow> X continuous (via inclusion from subspace).\<close>
+      have hh_cont_X: "top1_continuous_map_on top1_S1 top1_S1_topology X TX h"
+      proof -
+        from top1_continuous_map_on_codomain_enlarge[OF hh_cont_sub hCj_sub subset_refl]
+        have "top1_continuous_map_on top1_S1 top1_S1_topology X (subspace_topology X TX X) h" .
+        moreover have "subspace_topology X TX X = TX"
+        proof -
+          have "\<forall>U \<in> TX. U \<subseteq> X"
+            using hwedge_strict unfolding is_topology_on_strict_def by (by100 blast)
+          from subspace_topology_self[OF this] show ?thesis .
+        qed
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>h injective + image = C(j).\<close>
+      have hh_inj: "inj_on h top1_S1"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hh_img: "h ` top1_S1 = C j"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      show "top1_simple_closed_curve_on X TX (C j)"
+        unfolding top1_simple_closed_curve_on_def
+        using hh_cont_X hh_inj hh_img by (by100 blast)
+    qed
+    \<comment> \<open>Step 3: Each C(j) decomposes into 2 arcs.\<close>
+    have hC_arcs: "\<forall>j\<in>{..<?n}. \<exists>A1 A2 a b.
+        C j = A1 \<union> A2 \<and> A1 \<inter> A2 = {a, b} \<and> a \<noteq> b \<and>
+        top1_is_arc_on A1 (subspace_topology X TX A1) \<and>
+        top1_is_arc_on A2 (subspace_topology X TX A2)"
+    proof (intro ballI)
+      fix j assume "j \<in> {..<?n}"
+      from bspec[OF hC_scc \<open>j \<in> {..<?n}\<close>] have "top1_simple_closed_curve_on X TX (C j)" .
+      from simple_closed_curve_arc_decomposition[OF this hwedge_strict hwedge_haus]
+      show "\<exists>A1 A2 a b. C j = A1 \<union> A2 \<and> A1 \<inter> A2 = {a, b} \<and> a \<noteq> b \<and>
+          top1_is_arc_on A1 (subspace_topology X TX A1) \<and>
+          top1_is_arc_on A2 (subspace_topology X TX A2)" .
+    qed
+    \<comment> \<open>Step 4: Collect all arcs into a graph structure.\<close>
     show ?thesis
-      sorry \<comment> \<open>Graph structure: decompose each C(j) into 2 arcs.
-         Each C(j) \\<cong> S1. Split S1 at east/west = {x\\<ge>0} and {x\\<le>0}.
-         Image under homeomorphism gives 2 arcs per circle.
-         Arc endpoints: p and the image of (-1,0) under the S1\\<rightarrow>C(j) homeo.
-         ~200 lines for full proof.\<close>
+      unfolding top1_is_graph_on_def
+      sorry \<comment> \<open>Assembly: 2n arcs from Step 3. Need to verify:
+         (1) Each arc \\<subseteq> X (from C(j) \\<subseteq> X).
+         (2) Union = X (arcs cover each C(j), C(j)'s cover X).
+         (3) Pairwise intersection at endpoints (same-circle arcs share 2 pts,
+             different-circle arcs share \\<subseteq> C(j)\\<inter>C(k) = {p}).
+         (4) Coherent topology (from wedge coherent + arc refinement).
+         ~100 lines for careful assembly.\<close>
   qed
   have hconn: "top1_connected_on X TX"
   proof -
