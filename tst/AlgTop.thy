@@ -6436,8 +6436,8 @@ proof -
         have "?x^2 + ?y^2 = 1"
         proof -
           have "u^2 + (v - ?r)^2 = ?r^2" using huv2 .
-          hence heq: "u^2/?r^2 + (v - ?r)^2/?r^2 = 1" using hr_pos
-            sorry \<comment> \<open>Division by r^2 on both sides.\<close>
+          hence heq: "u^2/?r^2 + (v - ?r)^2/?r^2 = 1"
+            sorry \<comment> \<open>Division by r^2: (u^2+(v-r)^2)/r^2 = 1, split via add\\_divide\\_distrib.\<close>
           have "u^2/?r^2 = (u/?r)^2" using hr_pos
             using power_divide[of u ?r 2] by (by100 simp)
           moreover have "(v - ?r)^2/?r^2 = ((v - ?r)/?r)^2" using hr_pos
@@ -6463,9 +6463,18 @@ proof -
         sorry \<comment> \<open>inv\\_into agrees with (u/r, v/r-1) on C(i). Also polynomial.\<close>
       \<comment> \<open>Topologies.\<close>
       have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
-        sorry \<comment> \<open>S1 topology is a topology.\<close>
+        using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
       have hCi_top: "is_topology_on (?C i) ?T_Ci"
-        sorry \<comment> \<open>Subspace topology is a topology.\<close>
+      proof -
+        have "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        proof -
+          have "is_topology_on_strict (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+            by (rule hausdorff_strict_is_strict[OF top1_R2_is_hausdorff], by100 blast)
+          thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+        qed
+        from subspace_topology_is_topology_on[OF this subset_UNIV]
+        show ?thesis .
+      qed
       have "top1_homeomorphism_on top1_S1 top1_S1_topology (?C i) ?T_Ci ?h"
         unfolding top1_homeomorphism_on_def
         using hS1_top hCi_top hh_bij hh_cont hh_inv_cont by (by100 blast)
