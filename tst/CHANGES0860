@@ -1,0 +1,47 @@
+Session 0860: Interior case of graph_ssc FULLY PROVED
+
+Build: 31s. ~16979 lines. 28 sorry words (22 real executable sorrys).
+
+PROVED:
+- I_set_locally_path_connected: fixed typo (case Falsei→False),
+  fixed by100 timeout on abs_triangle_ineq step (expand let-bindings),
+  fixed moreover chain for strict inequality.
+
+- graph_ssc interior case (case False): ZERO SORRY
+  Previously 1 sorry. Now fully proved via:
+  1. Arc endpoints extraction (arc_endpoints_are_boundary + inj_on h)
+  2. V0' = V0 \ {a,b} open in A0 (finite closed set removed from open)
+  3. V0' disjoint from all other arcs (pairwise endpoint intersection)
+  4. V0' open in X via coherent topology (dual: X\V0' closed in each arc)
+  5. Arc split at x → D1, D2 sub-arcs (arc_split_at_given_point)
+  6. x is endpoint of both D1, D2 (arc_split_endpoints)
+  7. Each sub-arc DRs to {x} (arc_deformation_retract_to_endpoint)
+  8. A0 is path-connected (connected + lpc → pc)
+  9. A0 is strict topology (from arc definition)
+  10. D1, D2 closed in A0 (compact arcs in Hausdorff are closed)
+      - arc_compact_helper: I_set compact → arc compact via Theorem_26_5
+      - Theorem_26_3: compact in Hausdorff → closed
+  11. Witnesses: U = V0', S = A0, F = {D1, D2}
+
+Key infrastructure proved:
+- arc_compact_helper (inline): arc homeomorphic to [0,1] which is compact
+  (top1_compact_on_subspace_UNIV_iff_compact + Theorem_26_5)
+- Topology intersection via finite intersection axiom (is_topology_on_def)
+- closedin_on via closedin_intro rule
+- subspace_topology_trans for compact transfer
+
+VERTEX CASE STATUS:
+- Still sorry (1 sorry). Analysis shows:
+  - Cannot use fixed S (star) because infinitely many arcs may pass through vertex
+  - Book proof uses per-loop compactness: loop image compact → finitely many arcs → finite star → DR → SC
+  - Requires restructuring proof to not use obtain U S F pattern
+  - OR: prove graph vertices have locally finite arc incidence
+
+Sorry breakdown (22 real):
+- §74-78 (8): Surface classification
+- §81 (1): Deck transformations iso
+- §82 (1): Type packaging (permanent)
+- graph_ssc (1): Vertex case
+- §85 chain (7): Covering existence + Euler char
+- graph_pi1 (1): Type reindex nat→'a set set
+- §85 (3): Type packaging (permanent)

@@ -1,0 +1,24 @@
+Session 0861: graph_ssc vertex case nearly complete
+
+Build: ~30s. ~17700 lines. 32 sorry words (decomposed from 28).
+
+NET PROGRESS: 1 real sorry closed (compact to finite in selection set).
+Many structural sorrys added from decomposition of vertex case.
+
+PROVED in vertex case:
+- Selection set finite arcs argument: FULLY PROVED
+- K = f(I_set) inter B compact: FULLY PROVED  
+- D_sel via SOME: PROVED
+- Per-arc DR to {x}: PROVED
+- Pasting DR - SC - null-homotopy - transfer: PROVED
+- f image subset S: PROVED
+- x in S: PROVED
+
+REMAINING in vertex case:
+- arc_sub_arc_covering_compact (standalone helper) - core sorry
+- is_topology_on_strict S
+- pairwise D_sel intersection = {x}
+- S path-connected
+- each D closed in S
+
+New standalone lemma: arc_compact (arc is compact)
