@@ -8398,13 +8398,28 @@ proof -
          with x as endpoint. But this detail is complex.
          Key: we need finitely many closed sub-arcs, each with x as endpoint,
          pairwise intersecting only at x, whose union covers a neighborhood of x.\<close>
+      \<comment> \<open>Case 1: x is interior to some arc (not an endpoint of any arc).
+         Then x is in exactly one arc A, and a small open interval around x
+         in A is open in X, path-connected, and simply connected (interval).
+         Case 2: x is an endpoint of some arc.
+         Then construct the star from sub-arcs.\<close>
+      \<comment> \<open>In either case: find an open SC neighborhood.\<close>
+      \<comment> \<open>x is in some arc.\<close>
+      have "\<exists>A \<in> \<A>. x \<in> A" using hcover hx by (by100 blast)
+      then obtain A0 where hA0: "A0 \<in> \<A>" "x \<in> A0" by (by100 blast)
+      have hA0_sub: "A0 \<subseteq> X" using h\<A> hA0(1) by (by100 blast)
+      have hA0_arc: "top1_is_arc_on A0 (subspace_topology X TX A0)"
+        using h\<A> hA0(1) by (by100 blast)
+      \<comment> \<open>Arc split at x (if x is interior) gives sub-arcs with x as endpoint.\<close>
       show ?thesis
-        sorry \<comment> \<open>Star construction details: ~60 lines.
-           For each arc A with x \\<in> A: produce sub-arc B with x as endpoint.
-           B is an arc \\<Rightarrow> DR to {x} via arc\\_deformation\\_retract\\_to\\_endpoint.
-           Sub-arcs pairwise intersect only at x.
-           S = \\<Union>{sub-arcs}. U = interior(S).
-           F = {sub-arcs}. All 12 conditions verified.\<close>
+        sorry \<comment> \<open>Remaining construction:
+           If x \\<in> endpoints(A0): use A0 directly (x is endpoint \\<Rightarrow> A0 DR to {x}).
+             For other arcs through x: split similarly.
+             F = {sub-arcs with x as endpoint}. S = \\<Union>F. U = interior.
+           If x \\<notin> endpoints(A0): split A0 at x \\<Rightarrow> two sub-arcs with x as endpoint.
+             x is in no other arc (since interior points aren't shared).
+             F = {one sub-arc}. S = F. U = interior of S (open interval).
+           ~50 lines of case analysis + arc\\_split\\_at\\_given\\_point.\<close>
     qed
     \<comment> \<open>S deformation retracts to {x}.\<close>
     have hS_DR: "top1_deformation_retract_of_on S (subspace_topology X TX S) {x}"
