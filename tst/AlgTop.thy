@@ -6909,16 +6909,27 @@ proof -
        simple\\_closed\\_curve\\_arc\\_decomposition, it splits into 2 arcs.
        Collect all arcs to form the graph.\<close>
     \<comment> \<open>Step 1: Extract circles from wedge.\<close>
-    from hwedge obtain C where
-        hC_sub: "\<forall>j\<in>{..<?n}. C j \<subseteq> X"
-        and hC_p: "\<forall>j\<in>{..<?n}. p \<in> C j"
-        and hC_homeo: "\<forall>j\<in>{..<?n}. \<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
-            (C j) (subspace_topology X TX (C j)) h"
+    have hwedge_props2: "\<exists>C. (\<forall>j\<in>{..<?n}. C j \<subseteq> X \<and> p \<in> C j
+          \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C j) (subspace_topology X TX (C j)) h))
+      \<and> (\<Union>j\<in>{..<?n}. C j) = X
+      \<and> (\<forall>j\<in>{..<?n}. \<forall>k\<in>{..<?n}. j \<noteq> k \<longrightarrow> C j \<inter> C k = {p})
+      \<and> (\<forall>D. D \<subseteq> X \<longrightarrow>
+          (closedin_on X TX D \<longleftrightarrow> (\<forall>j\<in>{..<?n}. closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D))))"
+      using hwedge unfolding top1_is_wedge_of_circles_on_def
+      by - ((erule conjE)+, (erule exE)+, (erule conjE)+,
+            rule exI, (intro conjI), assumption+)
+    from hwedge_props2 obtain C where
+        hC_props: "\<forall>j\<in>{..<?n}. C j \<subseteq> X \<and> p \<in> C j
+          \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C j) (subspace_topology X TX (C j)) h)"
         and hC_cover: "(\<Union>j\<in>{..<?n}. C j) = X"
         and hC_inter: "\<forall>j\<in>{..<?n}. \<forall>k\<in>{..<?n}. j \<noteq> k \<longrightarrow> C j \<inter> C k = {p}"
-        and hC_coh: "\<forall>D. D \<subseteq> X \<longrightarrow> (closedin_on X TX D \<longleftrightarrow>
-            (\<forall>j\<in>{..<?n}. closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D)))"
-      sorry \<comment> \<open>Extract circles from wedge definition (existential unpacking).\<close>
+        and hC_coh: "\<forall>D. D \<subseteq> X \<longrightarrow>
+          (closedin_on X TX D \<longleftrightarrow> (\<forall>j\<in>{..<?n}. closedin_on (C j) (subspace_topology X TX (C j)) (C j \<inter> D)))"
+      by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+    have hC_sub: "\<forall>j\<in>{..<?n}. C j \<subseteq> X" using hC_props by (by100 blast)
+    have hC_p: "\<forall>j\<in>{..<?n}. p \<in> C j" using hC_props by (by100 blast)
+    have hC_homeo: "\<forall>j\<in>{..<?n}. \<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+        (C j) (subspace_topology X TX (C j)) h" using hC_props by (by100 blast)
     \<comment> \<open>Step 2: Each C(j) is a simple closed curve in X.\<close>
     have hC_scc: "\<forall>j\<in>{..<?n}. top1_simple_closed_curve_on X TX (C j)"
     proof (intro ballI)
