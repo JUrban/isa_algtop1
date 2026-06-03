@@ -16729,7 +16729,12 @@ proof -
         show "\<exists>U V. neighborhood_of x ?X TX U \<and> neighborhood_of y ?X TX V \<and> U \<inter> V = {}"
         proof (cases "x = ?p \<or> y = ?p")
           case True
-          show ?thesis sorry \<comment> \<open>One point is p; use Hausdorff of the circle containing the other.\<close>
+          \<comment> \<open>One point is p. WLOG y=p or x=p; both in same circle.\<close>
+          show ?thesis sorry \<comment> \<open>One point is p; separate in C(s) via Hausdorff of S1.
+             Strategy: use U = h(s)(U0) \\<subseteq> C(s)\\{p} for the non-p point,
+             and V = h(s)(V0) \\<cup> \\<Union>{C(\\<alpha>):\\<alpha>\\<noteq>s} for p.
+             U open by hempty\\_preimage. V open: preimage for s is V0, for \\<alpha>\\<noteq>s is S1.
+             Disjoint: U \\<subseteq> C(s)\\{p}, V \\<inter> C(s) = h(s)(V0), and U0 \\<inter> V0 = {}.\<close>
         next
           case False
           hence "x \<noteq> ?p" "y \<noteq> ?p" by simp+
