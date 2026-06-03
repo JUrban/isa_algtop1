@@ -16810,7 +16810,47 @@ proof -
           proof (rule hTX_memI)
             show "U_V \<subseteq> ?X" unfolding U_V_def using \<open>h s ` V \<subseteq> C s\<close> hs by (by100 blast)
             show "\<forall>t \<in> S. {w \<in> top1_S1. h t w \<in> U_V} \<in> top1_S1_topology"
-              sorry \<comment> \<open>For t=s: V. For t\\<noteq>s: S1 or S1\\<setminus>{(1,0)}.\<close>
+            proof (intro ballI)
+              fix t assume ht: "t \<in> S"
+              show "{w \<in> top1_S1. h t w \<in> U_V} \<in> top1_S1_topology"
+              proof (cases "t = s")
+                case True
+                \<comment> \<open>{w | h s w \\<in> U\\_V} = V (h s maps into C s, so X \\ C s part is empty).\<close>
+                have "{w \<in> top1_S1. h s w \<in> U_V} = V"
+                proof (rule set_eqI)
+                  fix w show "(w \<in> {w \<in> top1_S1. h s w \<in> U_V}) = (w \<in> V)"
+                  proof
+                    assume "w \<in> {w \<in> top1_S1. h s w \<in> U_V}"
+                    hence hw: "w \<in> top1_S1" "h s w \<in> U_V" by (by100 blast)+
+                    have "h s w \<in> C s" using hh_maps_Cs hw(1) by (by100 blast)
+                    hence "h s w \<notin> ?X - C s" by (by100 blast)
+                    hence "h s w \<in> h s ` V" using hw(2) unfolding U_V_def by (by100 blast)
+                    then obtain v where "v \<in> V" "h s w = h s v" by (rule imageE, by100 blast)
+                    have "v \<in> top1_S1" using \<open>v \<in> V\<close> hV_sub by (by100 blast)
+                    have "v = w" using \<open>h s w = h s v\<close> hh_bij \<open>v \<in> top1_S1\<close> hw(1)
+                      unfolding bij_betw_def inj_on_def by (by100 blast)
+                    thus "w \<in> V" using \<open>v \<in> V\<close> by simp
+                  next
+                    assume "w \<in> V"
+                    hence "w \<in> top1_S1" using hV_sub by (by100 blast)
+                    have "h s w \<in> h s ` V" using \<open>w \<in> V\<close> by (rule imageI)
+                    thus "w \<in> {w \<in> top1_S1. h s w \<in> U_V}"
+                      using \<open>w \<in> top1_S1\<close> unfolding U_V_def by (by100 blast)
+                  qed
+                qed
+                thus ?thesis using True hV by simp
+              next
+                case Ft: False
+                \<comment> \<open>{w | h t w \\<in> U\\_V}: h t w \\<in> X \\ C s iff w \\<noteq> (1,0).
+                   h t w \\<in> h s ` V iff h t w = p iff w = (1,0) and (1,0) \\<in> V.\<close>
+                have "{w \<in> top1_S1. h t w \<in> U_V} =
+                    (if (1, 0) \<in> V then top1_S1 else top1_S1 - {(1, 0)})"
+                  sorry \<comment> \<open>Case analysis on h t w membership.\<close>
+                moreover have "(if (1, 0) \<in> V then top1_S1 else top1_S1 - {(1, 0)}) \<in> top1_S1_topology"
+                  sorry \<comment> \<open>S1 open. S1\\<setminus>{pt} open (Hausdorff).\<close>
+                ultimately show ?thesis by simp
+              qed
+            qed
           qed
           have "C s \<inter> U_V = h s ` V"
             unfolding U_V_def using \<open>h s ` V \<subseteq> C s\<close> by (by100 blast)
