@@ -6383,6 +6383,11 @@ proof (cases "card S = 0")
     qed
     ultimately show ?thesis by simp
   qed
+  let ?TR2_n0 = "product_topology_on top1_open_sets top1_open_sets"
+  let ?f_n0 = "\<lambda>t::real. (t, 0::real)"
+  have hf0_homeo: "top1_homeomorphism_on I_set I_top ?X0 ?TX0 ?f_n0"
+    sorry \<comment> \<open>f0(t)=(t,0) homeo: bij obvious, continuous via R\\<rightarrow>R2 bridge,
+       inverse=fst via R2\\<rightarrow>R bridge.\<close>
   have hgraph0: "top1_is_graph_on ?X0 ?TX0"
   proof -
     let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
@@ -6410,11 +6415,6 @@ proof (cases "card S = 0")
     proof -
       have hX0_strict': "is_topology_on_strict ?X0 ?TX0" using hX0_strict .
       \<comment> \<open>Homeomorphism I \\<rightarrow> X0 via f0(t) = (t, 0).\<close>
-      let ?f0 = "\<lambda>t::real. (t, 0::real)"
-      \<comment> \<open>f0 is a homeomorphism I\\_set \\<rightarrow> X0.\<close>
-      have hf0_homeo: "top1_homeomorphism_on I_set I_top ?X0 ?TX0 ?f0"
-        sorry \<comment> \<open>f0(t)=(t,0) homeo: bij obvious, continuous via R\\<rightarrow>R2 bridge,
-           inverse=fst via R2\\<rightarrow>R bridge. Build timeout from inv\\_into simp explosion.\<close>
       show ?thesis unfolding top1_is_arc_on_def
         using hX0_strict' hf0_homeo by (by100 blast)
     qed
@@ -6527,8 +6527,92 @@ proof (cases "card S = 0")
   have hiso0: "top1_groups_isomorphic_on F mul
       (top1_fundamental_group_carrier ?X0 ?TX0 ?x00)
       (top1_fundamental_group_mul ?X0 ?TX0 ?x00)"
-    sorry \<comment> \<open>F = {e} trivial. X0 simply connected \\<Rightarrow> \\<pi>\\_1(X0) = {id} trivial.
-       Iso between singleton groups is the unique map.\<close>
+  proof -
+    \<comment> \<open>[0,1] is simply connected (convex real subspace).\<close>
+    have hI_ne: "I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 simp)
+    have hI_convex: "\<And>x y t::real. x \<in> I_set \<Longrightarrow> y \<in> I_set \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+        (1 - t) * x + t * y \<in> I_set"
+    proof -
+      fix x y t :: real
+      assume "x \<in> I_set" "y \<in> I_set" "0 \<le> t" "t \<le> 1"
+      have hx: "0 \<le> x" "x \<le> 1" using \<open>x \<in> I_set\<close> unfolding top1_unit_interval_def by simp_all
+      have hy: "0 \<le> y" "y \<le> 1" using \<open>y \<in> I_set\<close> unfolding top1_unit_interval_def by simp_all
+      have "0 \<le> (1-t)*x" using hx \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by (by100 simp)
+      moreover have "0 \<le> t*y" using hy \<open>0 \<le> t\<close> by (by100 simp)
+      ultimately have "0 \<le> (1-t)*x + t*y" by (by100 linarith)
+      moreover have "(1-t)*x + t*y \<le> (1-t)*1 + t*1"
+        apply (rule add_mono)
+        apply (rule mult_left_mono[OF hx(2)]) using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> apply (by100 linarith)
+        apply (rule mult_left_mono[OF hy(2)]) using \<open>0 \<le> t\<close> by (by100 linarith)
+      hence "(1-t)*x + t*y \<le> 1" by simp
+      ultimately show "(1-t)*x + t*y \<in> I_set"
+        unfolding top1_unit_interval_def by (by100 simp)
+    qed
+    have hI_sc: "top1_simply_connected_on I_set I_top"
+      using convex_real_subspace_simply_connected[OF hI_ne hI_convex]
+      unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+    \<comment> \<open>X0 is simply connected (homeomorphic to I\\_set).\<close>
+    have hX0_sc: "top1_simply_connected_on ?X0 ?TX0"
+      using homeomorphism_preserves_simply_connected_forward[OF hf0_homeo hI_sc] .
+    \<comment> \<open>\\<pi>\\_1(X0) is trivial.\<close>
+    have hX0_top: "is_topology_on ?X0 ?TX0"
+      using hgraph0 unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+    from simply_connected_trivial_carrier[OF hX0_sc hx0_in]
+    have hpi1_trivial: "top1_fundamental_group_carrier ?X0 ?TX0 ?x00 =
+        {top1_fundamental_group_id ?X0 ?TX0 ?x00}" .
+    \<comment> \<open>F = {e}, \\<pi>\\_1 = {id}. Unique map e \\<mapsto> id is iso.\<close>
+    \<comment> \<open>F = {e}, \\<pi>\\_1 = {id}. The unique map is an iso.\<close>
+    let ?id_pi1 = "top1_fundamental_group_id ?X0 ?TX0 ?x00"
+    let ?carrier = "top1_fundamental_group_carrier ?X0 ?TX0 ?x00"
+    let ?mul_pi1 = "top1_fundamental_group_mul ?X0 ?TX0 ?x00"
+    let ?iso_map = "\<lambda>_::'g. ?id_pi1"
+    have "top1_group_iso_on F mul ?carrier ?mul_pi1 ?iso_map"
+      unfolding top1_group_iso_on_def
+    proof (intro conjI)
+      show "top1_group_hom_on F mul ?carrier ?mul_pi1 ?iso_map"
+        unfolding top1_group_hom_on_def
+      proof (intro conjI ballI)
+        fix c assume "c \<in> F"
+        show "?iso_map c \<in> ?carrier" using hpi1_trivial by (by100 blast)
+      next
+        fix a b assume ha: "a \<in> F" and hb: "b \<in> F"
+        hence "a = e" "b = e" using hF_trivial by simp_all
+        have "mul a b = e"
+        proof -
+          have "a = e" "b = e" using ha hb hF_trivial by simp_all
+          hence "mul a b = mul e e" by simp
+          moreover have "mul e e = e"
+            using assms(1) unfolding top1_is_free_group_full_on_def top1_is_group_on_def
+            by (by5000 blast)
+          ultimately show ?thesis by simp
+        qed
+        hence "?iso_map (mul a b) = ?id_pi1" by simp
+        moreover have "?mul_pi1 (?iso_map a) (?iso_map b) = ?mul_pi1 ?id_pi1 ?id_pi1"
+          by simp
+        moreover have "?mul_pi1 ?id_pi1 ?id_pi1 = ?id_pi1"
+        proof -
+          from top1_fundamental_group_is_group[OF hX0_top hx0_in]
+          have "top1_is_group_on ?carrier ?mul_pi1
+              (top1_fundamental_group_id ?X0 ?TX0 ?x00)
+              (top1_fundamental_group_invg ?X0 ?TX0 ?x00)" .
+          hence "?id_pi1 \<in> ?carrier \<and> ?mul_pi1 ?id_pi1 ?id_pi1 = ?id_pi1"
+            unfolding top1_is_group_on_def by (by5000 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        ultimately show "?iso_map (mul a b) = ?mul_pi1 (?iso_map a) (?iso_map b)"
+          by simp
+      qed
+    next
+      show "bij_betw ?iso_map F ?carrier"
+        unfolding bij_betw_def
+      proof (intro conjI)
+        show "inj_on ?iso_map F" using hF_trivial by (by100 simp)
+        show "?iso_map ` F = ?carrier"
+          using hF_trivial hpi1_trivial by (by100 auto)
+      qed
+    qed
+    thus ?thesis unfolding top1_groups_isomorphic_on_def by (by100 blast)
+  qed
   show ?thesis
     apply (rule exI[of _ ?X0], rule exI[of _ ?TX0], rule exI[of _ ?x00])
     using hgraph0 hconn0 hx0_in hiso0 by (by100 blast)
