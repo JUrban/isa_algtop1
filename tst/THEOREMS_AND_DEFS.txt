@@ -736,7 +736,7 @@ ag/AlgTopGroups.thy|lemma|free_abelian_kernel_coordinate|6078
 ag/AlgTopGroups.thy|lemma|free_abelian_mod2_card|8065
 ag/AlgTopGroups.thy|lemma|free_abelian_word_kernel|5181
 at/AlgTopChain.thy|lemma|free_group_exponent_sum|427
-AlgTop.thy|lemma|free_group_full_on_cong|6820
+AlgTop.thy|lemma|free_group_full_on_cong|7075
 wh/AlgTopWedgeHelpers.thy|lemma|free_group_full_reindex|1735
 at/AlgTopChain.thy|lemma|free_group_hom_exists|10
 at/AlgTopChain.thy|lemma|free_group_hom_generators_iso|4706
@@ -768,11 +768,11 @@ i/Top1_Ch5_8.thy|lemma|geom_cauchy_lim_bound|11892
 i/Top1_Ch5_8.thy|lemma|gp_singleton|29297
 i/Top1_Ch5_8.thy|lemma|gp_singleton_set|29279
 ac7/AlgTopCached7.thy|lemma|graph_connected_sub_covered_by_arcs|4698
-AlgTop.thy|lemma|graph_covering_is_graph|6726
+AlgTop.thy|lemma|graph_covering_is_graph|6981
 ac7/AlgTopCached7.thy|lemma|graph_deformation_retract_helper|4896
 ac7/AlgTopCached7.thy|lemma|graph_one_edge_pi1_iso_Z|6581
-AlgTop.thy|lemma|graph_pi1_free_weak|7230
-AlgTop.thy|lemma|graph_pi1_free_weak_apply|6787
+AlgTop.thy|lemma|graph_pi1_free_weak|7485
+AlgTop.thy|lemma|graph_pi1_free_weak_apply|7042
 ac7/AlgTopCached7.thy|lemma|graph_pi1_free_weak_finite|7547
 ac6/AlgTopCached6.thy|lemma|graph_quotient_by_tree_wedge_of_circles|1248
 ac6/AlgTopCached6.thy|lemma|graph_remove_interior_points_sc|2034
@@ -896,7 +896,7 @@ i/Top1_Ch5_8.thy|lemma|interval_open_contains_eps_ball|11994
 at/AlgTopChain.thy|lemma|int_group_pow|476
 i/Top1_Ch5_8.thy|lemma|inv_into_preimage_eq|32190
 i/Top1_Ch3.thy|lemma|is_hausdorff_on_of_homeomorphism_on|10986
-AlgTop.thy|lemma|iso_Z_generator_free_single|6891
+AlgTop.thy|lemma|iso_Z_generator_free_single|7146
 i/Top1_Ch2.thy|lemma|is_topology_on_counterexample|46
 i/Top1_Ch2.thy|lemma|is_topology_on_strict_counterexample|50
 i/Top1_Ch2.thy|lemma|is_topology_on_strictI|54
@@ -1276,7 +1276,7 @@ fi/AlgIsoFixed.thy|lemma|scc_minus_point_connected|2636
 fib/AlgIsoFixedBase.thy|lemma|SCC_pi1_iso_Z|14
 at/AlgTopChain.thy|lemma|scheme_quotient_CW_data|3602
 at/AlgTopChain.thy|lemma|scheme_quotient_hausdorff|2902
-AlgTop.thy|lemma|schreier_rank_formula|6735
+AlgTop.thy|lemma|schreier_rank_formula|6990
 i/Top1_Ch4.thy|lemma|second_countable_countable_subcover_of_closed|2160
 i/Top1_Ch5_8.thy|lemma|seq_conv_comp|32635
 i/Top1_Ch2.thy|lemma|seq_converges_eventually|6128
@@ -2094,6 +2094,6 @@ ac4/AlgTopCached4.thy|theorem|Theorem_80_3_universal|4013
 AlgTop.thy|theorem|Theorem_81_2_covering_group_iso|508
 AlgTop.thy|theorem|Theorem_82_1_covering_existence|1090
 ac5/AlgTopCached5.thy|theorem|Theorem_83_4_covering_of_graph_is_graph|708
-AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|13912
-AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|13949
-AlgTop.thy|theorem|Theorem_85_3_Schreier_index|14213
+AlgTop.thy|theorem|Theorem_84_7_fund_group_graph_is_free|14167
+AlgTop.thy|theorem|Theorem_85_1_Nielsen_Schreier|14204
+AlgTop.thy|theorem|Theorem_85_3_Schreier_index|14468
