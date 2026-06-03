@@ -8411,15 +8411,54 @@ proof -
       have hA0_arc: "top1_is_arc_on A0 (subspace_topology X TX A0)"
         using h\<A> hA0(1) by (by100 blast)
       \<comment> \<open>Arc split at x (if x is interior) gives sub-arcs with x as endpoint.\<close>
+      \<comment> \<open>Case split: x is interior to A0 or x is an endpoint of A0.\<close>
       show ?thesis
-        sorry \<comment> \<open>Remaining construction:
-           If x \\<in> endpoints(A0): use A0 directly (x is endpoint \\<Rightarrow> A0 DR to {x}).
-             For other arcs through x: split similarly.
-             F = {sub-arcs with x as endpoint}. S = \\<Union>F. U = interior.
-           If x \\<notin> endpoints(A0): split A0 at x \\<Rightarrow> two sub-arcs with x as endpoint.
-             x is in no other arc (since interior points aren't shared).
-             F = {one sub-arc}. S = F. U = interior of S (open interval).
-           ~50 lines of case analysis + arc\\_split\\_at\\_given\\_point.\<close>
+      proof (cases "x \<in> top1_arc_endpoints_on A0 (subspace_topology X TX A0)")
+        case False
+        \<comment> \<open>x is interior to A0. x is in exactly one arc.
+           Split A0 at x \\<Rightarrow> two sub-arcs D1, D2 with x as endpoint.
+           Take F = {D1}, S = D1, U = interior of D1.\<close>
+        have hx_not_ep: "x \<notin> top1_arc_endpoints_on A0 (subspace_topology X TX A0)" using False .
+        \<comment> \<open>x is in no other arc (interior points aren't shared).\<close>
+        have hx_unique: "\<forall>B \<in> \<A>. B \<noteq> A0 \<longrightarrow> x \<notin> B"
+        proof (intro ballI impI)
+          fix B assume "B \<in> \<A>" "B \<noteq> A0"
+          from hinter hA0(1) \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>
+          have "A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology X TX A0)"
+            by (by100 blast)
+          thus "x \<notin> B" using hx_not_ep hA0(2) by (by100 blast)
+        qed
+        \<comment> \<open>Split A0 at x: get sub-arcs D1, D2.\<close>
+        from hA0_arc obtain h0 where hh0: "top1_homeomorphism_on I_set I_top A0 (subspace_topology X TX A0) h0"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        from arc_endpoints_are_boundary[OF hstrict hhaus hA0_sub hA0_arc hh0]
+        have hA0_ep: "top1_arc_endpoints_on A0 (subspace_topology X TX A0) = {h0 0, h0 1}" .
+        have hA0_ep_ne: "h0 0 \<noteq> h0 1"
+        proof -
+          have "bij_betw h0 I_set A0" using hh0 unfolding top1_homeomorphism_on_def by (by100 blast)
+          hence "inj_on h0 I_set" unfolding bij_betw_def by (by100 blast)
+          have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          show ?thesis
+          proof
+            assume "h0 0 = h0 1"
+            from \<open>inj_on h0 I_set\<close>[unfolded inj_on_def, rule_format, OF h0_I h1_I \<open>h0 0 = h0 1\<close>]
+            show False by simp
+          qed
+        qed
+        show ?thesis
+          sorry \<comment> \<open>Interior case: arc\\_split\\_at\\_given\\_point gives D1,D2 with x as endpoint.
+             D1 DR to {x} (arc\\_deformation\\_retract\\_to\\_endpoint).
+             D1 compact→closed. F={D1}, S=D1, U=D1-{other endpoint}.
+             All 12 conditions verified. ~50 lines but arc\\_split extraction times out
+             due to SOME-defined graph terms.\<close>
+      next
+        case True
+        \<comment> \<open>x is an endpoint of A0. Vertex case: construct star from sub-arcs.\<close>
+        show ?thesis
+          sorry \<comment> \<open>Vertex case: for each arc through x, take sub-arc with x as endpoint.
+             Pasting DR \\<Rightarrow> star DR to {x}. ~40 lines.\<close>
+      qed
     qed
     \<comment> \<open>S deformation retracts to {x}.\<close>
     have hS_DR: "top1_deformation_retract_of_on S (subspace_topology X TX S) {x}"
