@@ -16847,7 +16847,23 @@ proof -
                     (if (1, 0) \<in> V then top1_S1 else top1_S1 - {(1, 0)})"
                   sorry \<comment> \<open>Case analysis on h t w membership.\<close>
                 moreover have "(if (1, 0) \<in> V then top1_S1 else top1_S1 - {(1, 0)}) \<in> top1_S1_topology"
-                  sorry \<comment> \<open>S1 open. S1\\<setminus>{pt} open (Hausdorff).\<close>
+                proof (cases "(1, 0) \<in> V")
+                  case True
+                  have "top1_S1 \<in> top1_S1_topology"
+                    using hS1_top unfolding is_topology_on_def by (by100 blast)
+                  thus ?thesis using True by simp
+                next
+                  case False
+                  have "top1_S1 - {(1, 0)} \<in> top1_S1_topology"
+                  proof -
+                    have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+                    have "is_hausdorff_on top1_S1 top1_S1_topology" using top1_S1_is_hausdorff .
+                    from singleton_closed_in_hausdorff[OF this \<open>(1,0) \<in> top1_S1\<close>]
+                    have "closedin_on top1_S1 top1_S1_topology {(1, 0)}" .
+                    thus ?thesis unfolding closedin_on_def by (by100 blast)
+                  qed
+                  thus ?thesis using False by simp
+                qed
                 ultimately show ?thesis by simp
               qed
             qed
