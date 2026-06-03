@@ -8354,19 +8354,68 @@ proof -
        Then loops in U are null-homotopic in U, hence in X.
        U = small star at x. Star DR to {x} \\<Rightarrow> SC.
        DR via pasting\\_deformation\\_retracts\\_to\\_point.\<close>
+    \<comment> \<open>Strategy: find small star U around x. Star is open in X.
+       Closed star S DR to {x} (arc\\_deformation\\_retract\\_to\\_endpoint + pasting).
+       S is SC. Loop in U \\<subseteq> S null-homotopic in S, hence in X.\<close>
+    \<comment> \<open>Construct a small open neighborhood U and closed star S \\<supseteq> U around x.\<close>
+    obtain U S F where
+        hU_open: "openin_on X TX U" and hx_U: "x \<in> U" and hU_sub_S: "U \<subseteq> S"
+        and hS_sub_X: "S \<subseteq> X"
+        and hS_strict: "is_topology_on_strict S (subspace_topology X TX S)"
+        and hF_fin: "finite F" and hF_closed: "\<forall>A \<in> F. closedin_on S (subspace_topology X TX S) A"
+        and hF_cover: "S = \<Union>F" and hx_in_all: "\<forall>A \<in> F. x \<in> A"
+        and hF_inter: "\<forall>A \<in> F. \<forall>B \<in> F. A \<noteq> B \<longrightarrow> A \<inter> B = {x}"
+        and hF_DR: "\<forall>A \<in> F. top1_deformation_retract_of_on A (subspace_topology X TX A) {x}"
+        and hS_pc: "top1_path_connected_on S (subspace_topology X TX S)"
+      sorry \<comment> \<open>Star construction: ~80 lines.
+         For each arc through x: take a small sub-arc with x as endpoint.
+         Each sub-arc is an arc \\<Rightarrow> DR to endpoint (arc\\_deformation\\_retract\\_to\\_endpoint).
+         U = open star (interior). S = closed star (union of sub-arcs).\<close>
+    \<comment> \<open>S deformation retracts to {x}.\<close>
+    have hS_DR: "top1_deformation_retract_of_on S (subspace_topology X TX S) {x}"
+    proof (rule pasting_deformation_retracts_to_point[OF hS_strict hF_fin])
+      show "\<forall>A \<in> F. closedin_on S (subspace_topology X TX S) A" using hF_closed .
+      show "S = \<Union>F" using hF_cover .
+      show "x \<in> S" using hx_U hU_sub_S by (by100 blast)
+      show "\<forall>A \<in> F. x \<in> A" using hx_in_all .
+      show "\<forall>A \<in> F. \<forall>B \<in> F. A \<noteq> B \<longrightarrow> A \<inter> B = {x}" using hF_inter .
+      show "\<forall>A \<in> F. top1_deformation_retract_of_on A (subspace_topology S (subspace_topology X TX S) A) {x}"
+      proof (intro ballI)
+        fix A assume "A \<in> F"
+        \<comment> \<open>subspace(S, subspace(X,TX,S), A) = subspace(X,TX,A).\<close>
+        have "A \<subseteq> S" using \<open>A \<in> F\<close> hF_cover by (by100 blast)
+        from subspace_topology_trans[OF this]
+        have "subspace_topology S (subspace_topology X TX S) A = subspace_topology X TX A" .
+        thus "top1_deformation_retract_of_on A (subspace_topology S (subspace_topology X TX S) A) {x}"
+          using bspec[OF hF_DR \<open>A \<in> F\<close>] by simp
+      qed
+    qed
+    \<comment> \<open>S is simply connected.\<close>
+    have hx_S: "x \<in> S" using hx_U hU_sub_S by (by100 blast)
+    have hS_top: "is_topology_on S (subspace_topology X TX S)"
+      using hS_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hS_SC: "top1_simply_connected_on S (subspace_topology X TX S)"
+      using deformation_retract_to_singleton_imp_simply_connected[OF hS_top hx_S hS_pc hS_DR] .
+    \<comment> \<open>Loops in U are null-homotopic in X.\<close>
     show "\<exists>U. openin_on X TX U \<and> x \<in> U \<and>
         (\<forall>f. top1_is_loop_on U (subspace_topology X TX U) x f \<longrightarrow>
              top1_path_homotopic_on X TX x x f (top1_constant_path x))"
-      sorry \<comment> \<open>~100 lines. Steps:
-         (1) Extract arcs from graph (same as lpc proof).
-         (2) For arcs B not containing x: separate x from B (Hausdorff + closed).
-         (3) For arcs containing x: take small sub-interval of arc near x.
-         (4) U = union of sub-intervals. U is open (coherent topology).
-         (5) Each sub-interval DR to {x} (straight-line retraction).
-         (6) pasting\\_deformation\\_retracts\\_to\\_point gives DR(U, {x}).
-         (7) deformation\\_retract\\_to\\_singleton\\_imp\\_simply\\_connected gives SC(U).
-         (8) Loops in U null-homotopic in U (from SC).
-         (9) path\\_homotopic\\_subspace\\_to\\_ambient transfers to X.\<close>
+    proof (rule exI[of _ U], intro conjI allI impI)
+      show "openin_on X TX U" using hU_open .
+      show "x \<in> U" using hx_U .
+      fix f assume hf: "top1_is_loop_on U (subspace_topology X TX U) x f"
+      \<comment> \<open>f is a loop in U at x. Since U \\<subseteq> S, f is a loop in S.\<close>
+      have hU_sub_X: "U \<subseteq> X" using hU_sub_S hS_sub_X by (by100 blast)
+      have hf_S: "top1_is_loop_on S (subspace_topology X TX S) x f"
+        sorry \<comment> \<open>Loop in U \\<subseteq> S \\<Rightarrow> loop in S. Uses codomain\\_enlarge.\<close>
+      \<comment> \<open>f null-homotopic in S (from SC).\<close>
+      have hf_null_S: "top1_path_homotopic_on S (subspace_topology X TX S) x x f (top1_constant_path x)"
+        using hS_SC hx_S hf_S unfolding top1_simply_connected_on_def by (by5000 blast)
+      \<comment> \<open>Transfer to X.\<close>
+      have "subspace_topology X TX S = subspace_topology X TX S" by simp
+      from path_homotopic_subspace_to_ambient[OF hTX hS_sub_X this hf_null_S]
+      show "top1_path_homotopic_on X TX x x f (top1_constant_path x)" .
+    qed
   qed
 qed
 
