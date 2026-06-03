@@ -7937,9 +7937,121 @@ proof -
   \<comment> \<open>Each arc is locally path-connected (homeo to [0,1] which is lpc).\<close>
   \<comment> \<open>[0,1] is locally path-connected.\<close>
   have hI_lpc: "top1_locally_path_connected_on I_set I_top"
-    sorry \<comment> \<open>At each x \\<in> [0,1] and open U \\<ni> x: take V = (x-\\<epsilon>,x+\\<epsilon>)\\<inter>[0,1].
-       V is convex \\<Rightarrow> path-connected. V is open in [0,1]. V \\<subseteq> U.
-       ~30 lines using metric open balls + convexity.\<close>
+  proof -
+    have hI_top: "is_topology_on I_set I_top"
+      using top1_unit_interval_topology_is_topology_on .
+    show ?thesis
+      unfolding top1_locally_path_connected_on_def top1_locally_path_connected_at_def
+    proof (intro conjI ballI allI impI)
+      show "is_topology_on I_set I_top" using hI_top .
+    next
+      fix x W assume hx: "x \<in> I_set" and hW: "neighborhood_of x I_set I_top W \<and> W \<subseteq> I_set"
+      \<comment> \<open>W \\<in> I\\_top and x \\<in> W. Find path-connected V \\<subseteq> W.\<close>
+      from hW have hW_open: "W \<in> I_top" and hx_W: "x \<in> W"
+        unfolding neighborhood_of_def by (by100 blast)+
+      \<comment> \<open>W = {0..1} \\<inter> U' for some open U' in R.\<close>
+      from hW_open obtain U' where hU': "U' \<in> top1_open_sets" "W = I_set \<inter> U'"
+        unfolding top1_unit_interval_topology_def top1_unit_interval_def subspace_topology_def
+        by (by100 blast)
+      hence "open U'" unfolding top1_open_sets_def by (by100 blast)
+      have "x \<in> U'" using hx_W hU'(2) by (by100 blast)
+      from \<open>open U'\<close> \<open>x \<in> U'\<close> obtain \<epsilon> where h\<epsilon>: "\<epsilon> > 0" "\<forall>y. dist y x < \<epsilon> \<longrightarrow> y \<in> U'"
+        unfolding open_dist by (by100 blast)
+      \<comment> \<open>V = (x-\\<epsilon>, x+\\<epsilon>) \\<inter> {0..1}.\<close>
+      let ?V = "{y \<in> I_set. \<bar>y - x\<bar> < \<epsilon>}"
+      have hV_sub_W: "?V \<subseteq> W"
+      proof (rule subsetI)
+        fix y assume "y \<in> ?V"
+        hence "y \<in> I_set" "\<bar>y - x\<bar> < \<epsilon>" by simp_all
+        hence "dist y x < \<epsilon>" unfolding dist_real_def by (by100 simp)
+        hence "y \<in> U'" using h\<epsilon>(2) by (by100 blast)
+        thus "y \<in> W" using hU'(2) \<open>y \<in> I_set\<close> by (by100 blast)
+      qed
+      have hV_sub_I: "?V \<subseteq> I_set" by (by100 blast)
+      have hx_V: "x \<in> ?V" using hx h\<epsilon>(1) by (by100 simp)
+      \<comment> \<open>V is open in I\\_set.\<close>
+      have hV_open: "?V \<in> I_top"
+      proof -
+        have "{y::real. \<bar>y - x\<bar> < \<epsilon>} \<in> top1_open_sets"
+        proof -
+          have "{y::real. \<bar>y - x\<bar> < \<epsilon>} = {x - \<epsilon><..<x + \<epsilon>}" by (by100 auto)
+          moreover have "open {x - \<epsilon><..<x + \<epsilon>}" by (by100 simp)
+          ultimately have "open {y::real. \<bar>y - x\<bar> < \<epsilon>}" by simp
+          thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+        qed
+        hence "I_set \<inter> {y::real. \<bar>y - x\<bar> < \<epsilon>} \<in> I_top"
+          unfolding top1_unit_interval_topology_def top1_unit_interval_def
+          subspace_topology_def by (by100 blast)
+        moreover have "I_set \<inter> {y. \<bar>y - x\<bar> < \<epsilon>} = ?V" by (by100 blast)
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>V is path-connected (convex interval).\<close>
+      have hV_pc: "top1_path_connected_on ?V (subspace_topology I_set I_top ?V)"
+      proof -
+        \<comment> \<open>V = {y \\<in> [0,1]. |y-x| < \\<epsilon>} is a convex subset of R.\<close>
+        have hV_ne: "?V \<noteq> {}" using hx_V by (by100 blast)
+        have hV_convex: "\<And>a b t::real. a \<in> ?V \<Longrightarrow> b \<in> ?V \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+            (1 - t) * a + t * b \<in> ?V"
+        proof -
+          fix a b t :: real assume ha: "a \<in> ?V" and hb: "b \<in> ?V" and ht0: "0 \<le> t" and ht1: "t \<le> 1"
+          have ha_I: "a \<in> I_set" and ha_ball: "\<bar>a - x\<bar> < \<epsilon>" using ha by simp_all
+          have hb_I: "b \<in> I_set" and hb_ball: "\<bar>b - x\<bar> < \<epsilon>" using hb by simp_all
+          have ha01: "0 \<le> a" "a \<le> 1" using ha_I unfolding top1_unit_interval_def by simp_all
+          have hb01: "0 \<le> b" "b \<le> 1" using hb_I unfolding top1_unit_interval_def by simp_all
+          let ?c = "(1 - t) * a + t * b"
+          have hc0: "0 \<le> ?c"
+            using ha01 hb01 ht0 ht1 by (by100 auto)
+          have hc1: "?c \<le> 1"
+          proof -
+            have h1: "(1-t)*a \<le> (1-t) * 1"
+              apply (rule mult_left_mono) using ha01 ht0 ht1 by (by100 linarith)+
+            have h2: "t*b \<le> t * 1"
+              apply (rule mult_left_mono) using hb01 ht0 by (by100 linarith)+
+            have h3: "(1-t)*1 + t*1 = (1::real)" by simp
+            show ?thesis using h1 h2 h3 by (by100 linarith)
+          qed
+          hence "?c \<in> I_set" using hc0 hc1 unfolding top1_unit_interval_def by (by100 simp)
+          moreover have "\<bar>?c - x\<bar> < \<epsilon>"
+          proof -
+            have "?c - x = (1 - t) * (a - x) + t * (b - x)" by (by100 algebra)
+            have "?c - x = (1-t)*(a-x) + t*(b-x)" by (by100 algebra)
+            have h_abs_le: "\<bar>(1-t)*(a-x) + t*(b-x)\<bar> \<le> (1-t)*\<bar>a-x\<bar> + t*\<bar>b-x\<bar>"
+              sorry \<comment> \<open>|ca + db| \\<le> c|a| + d|b| for c,d \\<ge> 0 (weighted triangle inequality).\<close>
+            have h_le_eps: "(1-t)*\<bar>a-x\<bar> + t*\<bar>b-x\<bar> < (1-t)*\<epsilon> + t*\<epsilon>"
+              sorry \<comment> \<open>Convex combination of strict bounds.\<close>
+            have "(1-t)*\<epsilon> + t*\<epsilon> = \<epsilon>" by (by100 argo)
+            show ?thesis using \<open>?c - x = _\<close> h_abs_le h_le_eps \<open>(1-t)*\<epsilon> + t*\<epsilon> = \<epsilon>\<close>
+              by (by100 linarith)
+          qed
+          ultimately show "?c \<in> ?V" by (by100 simp)
+        qed
+        \<comment> \<open>Convex \\<Rightarrow> simply connected \\<Rightarrow> path-connected.\<close>
+        have "?V \<subseteq> I_set" by (by100 blast)
+        have hV_sub_R: "?V \<subseteq> (UNIV :: real set)" by (by100 blast)
+        have hV_real_sub: "\<And>a b t::real. a \<in> ?V \<Longrightarrow> b \<in> ?V \<Longrightarrow>
+            0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow> (1 - t) * a + t * b \<in> ?V"
+          using hV_convex by simp
+        from convex_real_subspace_simply_connected[OF hV_ne hV_real_sub]
+        have "top1_simply_connected_on ?V (subspace_topology UNIV top1_open_sets ?V)" .
+        \<comment> \<open>Simply connected \\<Rightarrow> path-connected.\<close>
+        hence "top1_path_connected_on ?V (subspace_topology UNIV top1_open_sets ?V)"
+          unfolding top1_simply_connected_on_def by (by100 blast)
+        \<comment> \<open>Subspace topology agreement: subspace(UNIV, R, V) = subspace(I, I\\_top, V).\<close>
+        moreover have "subspace_topology UNIV top1_open_sets ?V =
+            subspace_topology I_set I_top ?V"
+        proof -
+          have "?V \<subseteq> I_set" by (by100 blast)
+          from subspace_topology_trans[OF this]
+          show ?thesis unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+        qed
+        ultimately show ?thesis by simp
+      qed
+      show "\<exists>V. neighborhood_of x I_set I_top V \<and> V \<subseteq> W \<and> V \<subseteq> I_set \<and>
+          top1_path_connected_on V (subspace_topology I_set I_top V)"
+        using hV_open hx_V hV_sub_W hV_sub_I hV_pc
+        unfolding neighborhood_of_def by (by100 blast)
+    qed
+  qed
   have hA_lpc: "\<forall>A \<in> \<A>. top1_locally_path_connected_on A (subspace_topology X TX A)"
   proof (intro ballI)
     fix A assume hA: "A \<in> \<A>"
