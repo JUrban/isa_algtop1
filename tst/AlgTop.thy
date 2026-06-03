@@ -7827,9 +7827,90 @@ lemma graph_covering_is_graph:
 lemma graph_locally_path_connected:
   assumes "top1_is_graph_on X TX"
   shows "top1_locally_path_connected_on X TX"
-  sorry \<comment> \<open>Each point has small path-connected neighborhoods:
-     interior of arc \\<Rightarrow> interval (lpc). Endpoint \\<Rightarrow> star shape (lpc).
-     ~100 lines using arc structure + coherent topology.\<close>
+proof -
+  have hstrict: "is_topology_on_strict X TX"
+    using assms unfolding top1_is_graph_on_def by (by100 blast)
+  have hTX: "is_topology_on X TX"
+    using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+  have hhaus: "is_hausdorff_on X TX"
+    using assms unfolding top1_is_graph_on_def by (by100 blast)
+  \<comment> \<open>Extract arcs from graph.\<close>
+  from assms[unfolded top1_is_graph_on_def]
+  have "\<exists>\<A>. (\<forall>A \<in> \<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)) \<and>
+      \<Union>\<A> = X \<and>
+      (\<forall>A \<in> \<A>. \<forall>B \<in> \<A>. A \<noteq> B \<longrightarrow>
+          A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+        \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<and>
+      (\<forall>D. D \<subseteq> X \<longrightarrow> (closedin_on X TX D \<longleftrightarrow>
+          (\<forall>A \<in> \<A>. closedin_on A (subspace_topology X TX A) (A \<inter> D))))"
+    by - ((erule conjE)+, (erule exE)+, (erule conjE)+,
+          rule exI, (intro conjI), assumption+)
+  then obtain \<A> where
+      h\<A>: "\<forall>A \<in> \<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and hcover: "\<Union>\<A> = X"
+      and hinter: "\<forall>A \<in> \<A>. \<forall>B \<in> \<A>. A \<noteq> B \<longrightarrow>
+          A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+        \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and hcoh: "\<forall>D. D \<subseteq> X \<longrightarrow> (closedin_on X TX D \<longleftrightarrow>
+          (\<forall>A \<in> \<A>. closedin_on A (subspace_topology X TX A) (A \<inter> D)))"
+    by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+  \<comment> \<open>Key: open in X \\<Leftrightarrow> open in each arc (from coherent topology dual).\<close>
+  have hopen_iff: "\<forall>U. U \<subseteq> X \<longrightarrow> (U \<in> TX \<longleftrightarrow>
+      (\<forall>A \<in> \<A>. openin_on A (subspace_topology X TX A) (A \<inter> U)))"
+  proof (intro allI impI iffI ballI)
+    fix U A assume hU: "U \<subseteq> X" and hU_open: "U \<in> TX" and hA: "A \<in> \<A>"
+    \<comment> \<open>U open in X \\<Rightarrow> A\\<inter>U open in A (subspace definition).\<close>
+    have "A \<inter> U \<in> subspace_topology X TX A"
+      unfolding subspace_topology_def using hU_open by (by100 blast)
+    have "A \<inter> U \<in> subspace_topology X TX A"
+      using hU_open unfolding subspace_topology_def by (by100 blast)
+    moreover have "A \<inter> U \<subseteq> A" by (by100 blast)
+    ultimately show "openin_on A (subspace_topology X TX A) (A \<inter> U)"
+      unfolding openin_on_def by (by100 blast)
+  next
+    fix U assume hU: "U \<subseteq> X"
+        and hall: "\<forall>A \<in> \<A>. openin_on A (subspace_topology X TX A) (A \<inter> U)"
+    \<comment> \<open>A\\<inter>U open in A for all A \\<Rightarrow> A\\<inter>(X-U) closed in A for all A \\<Rightarrow> X-U closed in X \\<Rightarrow> U open.\<close>
+    have hXU_sub: "X - U \<subseteq> X" by (by100 blast)
+    have "\<forall>A \<in> \<A>. closedin_on A (subspace_topology X TX A) (A \<inter> (X - U))"
+    proof (intro ballI)
+      fix A assume hA: "A \<in> \<A>"
+      have hA_sub: "A \<subseteq> X" using h\<A> hA by (by100 blast)
+      from bspec[OF hall hA] have "openin_on A (subspace_topology X TX A) (A \<inter> U)" .
+      hence "A \<inter> U \<in> subspace_topology X TX A"
+        unfolding openin_on_def by (by100 blast)
+      have hA_top: "is_topology_on A (subspace_topology X TX A)"
+        using subspace_topology_is_topology_on[OF hTX hA_sub] .
+      have hAXU_sub: "A \<inter> (X - U) \<subseteq> A" by (by100 blast)
+      have "A - (A \<inter> (X - U)) = A \<inter> U" using hA_sub by (by100 blast)
+      hence "A - (A \<inter> (X - U)) \<in> subspace_topology X TX A"
+        using \<open>A \<inter> U \<in> subspace_topology X TX A\<close> by simp
+      thus "closedin_on A (subspace_topology X TX A) (A \<inter> (X - U))"
+        unfolding closedin_on_def using hAXU_sub by (by100 blast)
+    qed
+    hence "closedin_on X TX (X - U)"
+      using hcoh hXU_sub by (by5000 blast)
+    hence "X - (X - U) \<in> TX"
+      unfolding closedin_on_def by (by100 blast)
+    moreover have "X - (X - U) = U" using hU by (by100 blast)
+    ultimately show "U \<in> TX" by simp
+  qed
+  \<comment> \<open>Each arc is compact (homeo to [0,1]) hence closed in X.\<close>
+  have hA_closed: "\<forall>A \<in> \<A>. closedin_on X TX A"
+    sorry \<comment> \<open>Arc compact (Theorem 27.1 + Theorem 26.5) + Hausdorff \\<Rightarrow> closed.\<close>
+  \<comment> \<open>Each arc is locally path-connected (homeo to [0,1] which is lpc).\<close>
+  have hA_lpc: "\<forall>A \<in> \<A>. top1_locally_path_connected_on A (subspace_topology X TX A)"
+    sorry \<comment> \<open>[0,1] is lpc (convex subspace of R). Homeomorphism preserves lpc.\<close>
+  \<comment> \<open>Prove lpc using Theorem 25.4: path-components of open sets are open.\<close>
+  show ?thesis
+    sorry \<comment> \<open>By Theorem 25.4: need path-components of open U \\<in> TX to be in TX.
+       For open U: U \\<inter> A is open in A for each arc A.
+       Path-component P of U: P \\<inter> A is a union of path-components of U \\<inter> A in A.
+       Since A is lpc, path-components of open sets in A are open in A.
+       So P \\<inter> A is open in A. By hopen\\_iff: P is open in X.\<close>
+qed
 
 lemma graph_semilocally_simply_connected:
   assumes "top1_is_graph_on X TX"
