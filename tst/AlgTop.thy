@@ -1204,10 +1204,53 @@ proof -
            This is a group-theoretic fact: inv(g)\\<cdot>H\\<cdot>g = H \\<Leftrightarrow> g\\<cdot>H\\<cdot>inv(g) = H.\<close>
         have "?\<alpha>_class \<in> ?pi1B" using hloop_class[OF \<open>h \<in> ?Cov\<close>]
           unfolding heq_comp .
-        show "?\<alpha>_class \<in> ?N" sorry
-          \<comment> \<open>From hH\\_conj + \\<alpha>\\_class \\<in> \\<pi>\\_1(B): unfold normalizer\\_on\\_def,
-             show {mulB(mulB(\\<alpha>, k), inv(\\<alpha>)) | k \\<in> H} = H using the
-             conjugation equation hH\\_conj and group algebra.\<close>
+        \<comment> \<open>From H = {inv(\\<alpha>)\\<cdot>h\\<cdot>\\<alpha> | h \\<in> H}, derive {\\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) | k \\<in> H} = H.\<close>
+        \<comment> \<open>For \\<subseteq>: k \\<in> H \\<Rightarrow> k = inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha> for some h0 \\<in> H
+           \\<Rightarrow> \\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) = h0 \\<in> H.
+           For \\<supseteq>: m \\<in> H \\<Rightarrow> inv(\\<alpha>)\\<cdot>m\\<cdot>\\<alpha> \\<in> {inv(\\<alpha>)\\<cdot>h\\<cdot>\\<alpha> | h \\<in> H} = H
+           \\<Rightarrow> \\<alpha>\\<cdot>(inv(\\<alpha>)\\<cdot>m\\<cdot>\\<alpha>)\\<cdot>inv(\\<alpha>) = m. So m \\<in> {\\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) | k \\<in> H}.\<close>
+        \<comment> \<open>Derive the normalizer condition using group algebra.\<close>
+        have hb0B: "b0 \<in> B"
+          using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
+        have hpi1_grp: "top1_is_group_on ?pi1B ?mulB ?eB ?invB"
+          using top1_fundamental_group_is_group[OF hTB hb0B] .
+        \<comment> \<open>H is a subgroup of \\<pi>\\_1(B).\<close>
+        have hH_sub: "?H \<subseteq> ?pi1B"
+        proof -
+          have "top1_group_hom_on (top1_fundamental_group_carrier E TE e0)
+              (top1_fundamental_group_mul E TE e0) ?pi1B ?mulB
+              (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
+            using top1_fundamental_group_induced_on_is_hom[OF hTE hTB he0E hb0B hp_cont hpe0] .
+          hence "\<forall>c \<in> top1_fundamental_group_carrier E TE e0.
+              top1_fundamental_group_induced_on E TE e0 B TB b0 p c \<in> ?pi1B"
+            unfolding top1_group_hom_on_def by (by100 blast)
+          thus ?thesis unfolding top1_fundamental_group_image_hom_def by (by100 blast)
+        qed
+        \<comment> \<open>\\<alpha>\\_class \\<in> \\<pi>\\_1(B).\<close>
+        have h\<alpha>_in_pi: "?\<alpha>_class \<in> ?pi1B" using \<open>?\<alpha>_class \<in> ?pi1B\<close> .
+        \<comment> \<open>The forward conjugation equation hH\\_conj says H = inv(\\<alpha>)\\<cdot>H\\<cdot>\\<alpha>.
+           We need to show {\\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) | k \\<in> H} = H for the normalizer.\<close>
+        show "?\<alpha>_class \<in> ?N"
+          unfolding top1_normalizer_on_def
+        proof (intro CollectI conjI)
+          show "?\<alpha>_class \<in> ?pi1B" using h\<alpha>_in_pi .
+          show "{?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H} = ?H"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> {?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H}"
+            then obtain k where "k \<in> ?H" "x = ?mulB (?mulB ?\<alpha>_class k) (?invB ?\<alpha>_class)"
+              sorry
+            \<comment> \<open>k \\<in> H = {inv(\\<alpha>)\\<cdot>h\\<cdot>\\<alpha> | h \\<in> H} from hH\\_conj.
+               So k = inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha> for some h0 \\<in> H.
+               Then \\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) = \\<alpha>\\<cdot>inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha>\\<cdot>inv(\\<alpha>) = h0 \\<in> H.\<close>
+            thus "x \<in> ?H" sorry
+          next
+            fix m assume "m \<in> ?H"
+            \<comment> \<open>inv(\\<alpha>)\\<cdot>m\\<cdot>\\<alpha> \\<in> H (from hH\\_conj: H = {inv(\\<alpha>)\\<cdot>h\\<cdot>\\<alpha> | h \\<in> H}).
+               Then \\<alpha>\\<cdot>(inv(\\<alpha>)\\<cdot>m\\<cdot>\\<alpha>)\\<cdot>inv(\\<alpha>) = m.
+               Take k = inv(\\<alpha>)\\<cdot>m\\<cdot>\\<alpha> \\<in> H as witness.\<close>
+            thus "m \<in> {?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H}" sorry
+          qed
+        qed
       qed
       \<comment> \<open>Define f: Cov(p) \\<rightarrow> N(H)/H by f(h) = [p\\<circ>\\<gamma>\\_h]\\<cdot>H.\<close>
       define f :: "('e \<Rightarrow> 'e) \<Rightarrow> (real \<Rightarrow> 'b) set set" where
