@@ -6389,13 +6389,86 @@ proof -
       let ?r = "real (Suc i)"
       \<comment> \<open>h(x,y) = (r*x, r + r*y). Maps S1 to C(i).\<close>
       let ?h = "\<lambda>(x::real, y::real). (?r * x, ?r + ?r * y)"
-      have "top1_homeomorphism_on top1_S1 top1_S1_topology
-          (?C i) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C i)) ?h"
-        sorry \<comment> \<open>h is a homeomorphism: linear map (scaling+translation).
-           h maps S1 to C(i): (rx)^2 + (r+ry-r)^2 = r^2(x^2+y^2) = r^2.
-           h bijective: injective (r>0 so scaling invertible), surjective.
-           h continuous: polynomial (restriction of continuous R^2 \\<rightarrow> R^2).
-           h\\<inverse> continuous: h\\<inverse>(u,v) = (u/r, v/r-1), also polynomial.\<close>
+      let ?T_Ci = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C i)"
+      have hr_pos: "?r > 0" by simp
+      \<comment> \<open>h maps S1 into C(i).\<close>
+      have hh_maps: "\<forall>p \<in> top1_S1. ?h p \<in> ?C i"
+      proof (intro ballI)
+        fix p assume "p \<in> top1_S1"
+        obtain x y where hxy: "p = (x, y)" by (cases p)
+        have hxy2: "x^2 + y^2 = 1"
+          using \<open>p \<in> top1_S1\<close> hxy unfolding top1_S1_def by (by100 auto)
+        have "fst (?h p) = ?r * x" "snd (?h p) = ?r + ?r * y"
+          using hxy by simp_all
+        have "(?r*x)^2 + (?r + ?r*y - ?r)^2 = ?r^2*x^2 + ?r^2*y^2"
+          by (by100 algebra)
+        also have "... = ?r^2 * (x^2 + y^2)" by (by100 algebra)
+        also have "... = ?r^2" using hxy2 by (by100 simp)
+        finally show "?h p \<in> ?C i" using hxy by (by100 simp)
+      qed
+      \<comment> \<open>h injective on S1.\<close>
+      have hh_inj: "inj_on ?h top1_S1"
+      proof (rule inj_onI)
+        fix p1 p2 assume "p1 \<in> top1_S1" "p2 \<in> top1_S1" "?h p1 = ?h p2"
+        obtain x1 y1 where hxy1: "p1 = (x1, y1)" by (cases p1)
+        obtain x2 y2 where hxy2: "p2 = (x2, y2)" by (cases p2)
+        from \<open>?h p1 = ?h p2\<close> have "?r * x1 = ?r * x2" "?r + ?r * y1 = ?r + ?r * y2"
+          using hxy1 hxy2 by simp_all
+        from \<open>?r * x1 = ?r * x2\<close> hr_pos have "x1 = x2" by (by100 simp)
+        from \<open>?r + ?r * y1 = ?r + ?r * y2\<close> hr_pos have "y1 = y2" by (by100 simp)
+        show "p1 = p2" using hxy1 hxy2 \<open>x1 = x2\<close> \<open>y1 = y2\<close> by simp
+      qed
+      \<comment> \<open>h surjective onto C(i).\<close>
+      have hh_surj: "?h ` top1_S1 = ?C i"
+      proof (rule set_eqI, rule iffI)
+        fix q assume "q \<in> ?h ` top1_S1"
+        then obtain p where "p \<in> top1_S1" "q = ?h p" by (by100 blast)
+        from bspec[OF hh_maps \<open>p \<in> top1_S1\<close>]
+        have "?h p \<in> ?C i" .
+        thus "q \<in> ?C i" using \<open>q = ?h p\<close> by simp
+      next
+        fix q assume "q \<in> ?C i"
+        obtain u v where huv: "q = (u, v)" by (cases q)
+        have huv2: "u^2 + (v - ?r)^2 = ?r^2"
+          using \<open>q \<in> ?C i\<close> huv by (by100 auto)
+        \<comment> \<open>Preimage: (u/r, v/r - 1) \\<in> S1.\<close>
+        let ?x = "u / ?r" and ?y = "v / ?r - 1"
+        have "?x^2 + ?y^2 = 1"
+        proof -
+          have "u^2 + (v - ?r)^2 = ?r^2" using huv2 .
+          hence heq: "u^2/?r^2 + (v - ?r)^2/?r^2 = 1" using hr_pos
+            sorry \<comment> \<open>Division by r^2 on both sides.\<close>
+          have "u^2/?r^2 = (u/?r)^2" using hr_pos
+            using power_divide[of u ?r 2] by (by100 simp)
+          moreover have "(v - ?r)^2/?r^2 = ((v - ?r)/?r)^2" using hr_pos
+            using power_divide[of "v - ?r" ?r 2] by (by100 simp)
+          moreover have "(v - ?r)/?r = v/?r - 1" using hr_pos
+            by (simp add: diff_divide_distrib)
+          ultimately show ?thesis using heq by (by100 simp)
+        qed
+        hence h_pre_S1: "(?x, ?y) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+        have "?h (?x, ?y) = (?r * ?x, ?r + ?r * ?y)" by simp
+        also have "... = (u, v)" using hr_pos by (simp add: field_simps)
+        finally have "?h (?x, ?y) = q" using huv by simp
+        thus "q \<in> ?h ` top1_S1" using h_pre_S1 by (by100 blast)
+      qed
+      have hh_bij: "bij_betw ?h top1_S1 (?C i)"
+        unfolding bij_betw_def using hh_inj hh_surj by (by100 blast)
+      \<comment> \<open>h continuous: restriction of polynomial R2 \\<rightarrow> R2.\<close>
+      have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology (?C i) ?T_Ci ?h"
+        sorry \<comment> \<open>h = (r*x, r+r*y) is polynomial, hence continuous R2\\<rightarrow>R2.
+           Restriction to subspaces preserves continuity.\<close>
+      \<comment> \<open>h\\<inverse> continuous.\<close>
+      have hh_inv_cont: "top1_continuous_map_on (?C i) ?T_Ci top1_S1 top1_S1_topology (inv_into top1_S1 ?h)"
+        sorry \<comment> \<open>inv\\_into agrees with (u/r, v/r-1) on C(i). Also polynomial.\<close>
+      \<comment> \<open>Topologies.\<close>
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        sorry \<comment> \<open>S1 topology is a topology.\<close>
+      have hCi_top: "is_topology_on (?C i) ?T_Ci"
+        sorry \<comment> \<open>Subspace topology is a topology.\<close>
+      have "top1_homeomorphism_on top1_S1 top1_S1_topology (?C i) ?T_Ci ?h"
+        unfolding top1_homeomorphism_on_def
+        using hS1_top hCi_top hh_bij hh_cont hh_inv_cont by (by100 blast)
       thus "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
           (?C i) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C i)) h"
         by (by100 blast)
