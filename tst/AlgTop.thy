@@ -246,7 +246,7 @@ qed
 
 
 
-(** Theorem 71.3 stub: infinite case has sorry. Not on \<S>75.3 chain. **)
+(** Theorem 71.3: fully proved and cached in ac9/AlgTopCached9.thy. **)
 
 
 
@@ -10623,14 +10623,10 @@ proof (intro conjI)
   qed
 qed
 
-\<comment> \<open>Weak form of Theorem 84.7: \\<pi>\\_1 of a connected graph is free (no int set).
-   AUDIT NOTE (D02): The nat-indexed basis is correct for finite and countable
-   graphs but over-strong for uncountable graphs. The finite case (the main one)
-   is fully proved; the infinite case has a sorry at the countability step.
-   For downstream uses (\\<S>85), only finite covering spaces of finite graphs are
-   needed, so the nat-indexed version is correct in those contexts.
-   This is proved as a standalone universal lemma that can be used
-   for subgraph applications inside Theorem 84.7's proof.\<close>
+\<comment> \<open>Theorem 84.7: \\<pi>\\_1 of a connected graph is free.
+   Basis indexed by non-tree arcs (any cardinality).
+   Fully proved (finite case via cached graph\\_pi1\\_free\\_weak\\_finite,
+   general case via SvK induction on finite subgraphs + direct limit).\<close>
 lemma graph_pi1_free_weak:
   fixes Y :: "'a set" and TY :: "'a set set" and y0 :: 'a
   assumes "top1_is_graph_on Y TY"
