@@ -6648,8 +6648,45 @@ proof -
     \<comment> \<open>Assembly.\<close>
     have "top1_is_wedge_of_circles_on ?X ?TX {..<?n} ?p"
       unfolding top1_is_wedge_of_circles_on_def
-      sorry \<comment> \<open>Assembly: all ingredients (strict, haus, p\\<in>X, homeo, union, inter, coh) proved.
-         Just needs careful matching with the definition's existential.\<close>
+    proof (intro conjI)
+      show "is_topology_on_strict ?X ?TX" using hX_strict .
+    next
+      show "is_hausdorff_on ?X ?TX" using hX_haus .
+    next
+      show "?p \<in> ?X" using hp_in_X .
+    next
+      \<comment> \<open>Existential: witness C = ?C.\<close>
+      have hC_sub: "\<forall>a \<in> {..<?n}. ?C a \<subseteq> ?X"
+        by (by100 blast)
+      have hC_p: "\<forall>a \<in> {..<?n}. ?p \<in> ?C a"
+        using hp_in_C .
+      have hC_h: "\<forall>a \<in> {..<?n}. \<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology
+          (?C a) (subspace_topology ?X ?TX (?C a)) h"
+      proof (intro ballI)
+        fix a assume "a \<in> {..<?n}"
+        from hC_homeo \<open>a \<in> {..<?n}\<close>
+        obtain h where "top1_homeomorphism_on top1_S1 top1_S1_topology
+            (?C a) (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C a)) h"
+          by (by100 blast)
+        from hC_sub_topo \<open>a \<in> {..<?n}\<close>
+        have "subspace_topology ?X ?TX (?C a) =
+            subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C a)"
+          by (by100 blast)
+        from \<open>top1_homeomorphism_on _ _ _ _ h\<close> this[symmetric]
+        have "top1_homeomorphism_on top1_S1 top1_S1_topology (?C a) (subspace_topology ?X ?TX (?C a)) h"
+          by simp
+        thus "\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (?C a) (subspace_topology ?X ?TX (?C a)) h"
+          by (by100 blast)
+      qed
+      show "\<exists>C. (\<forall>a\<in>{..<?n}. C a \<subseteq> ?X \<and> ?p \<in> C a \<and>
+               (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C a) (subspace_topology ?X ?TX (C a)) h)) \<and>
+             (\<Union>a\<in>{..<?n}. C a) = ?X \<and>
+             (\<forall>a\<in>{..<?n}. \<forall>b\<in>{..<?n}. a \<noteq> b \<longrightarrow> C a \<inter> C b = {?p}) \<and>
+             (\<forall>D\<subseteq>?X. closedin_on ?X ?TX D = (\<forall>a\<in>{..<?n}. closedin_on (C a) (subspace_topology ?X ?TX (C a)) (C a \<inter> D)))"
+        apply (rule exI[of _ ?C])
+        using hC_sub hC_p hC_h hC_inter hX_coh
+        by (by5000 auto)
+    qed
     define X_w where "X_w = ?X"
     define TX_w where "TX_w = ?TX"
     define p_w where "p_w = ?p"
