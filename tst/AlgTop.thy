@@ -6670,9 +6670,14 @@ proof -
         thus ?thesis by (by100 blast)
       qed
       \<comment> \<open>Finite union of closed sets is closed.\<close>
-      show "closedin_on ?X ?TX D"
-        sorry \<comment> \<open>D = finite union of closedin\\_on X, hence closed.
-           Uses finite induction on {..<n}.\<close>
+      let ?F = "(\<lambda>i. ?C i \<inter> D) ` {..<?n}"
+      have hF_finite: "finite ?F" by (by100 simp)
+      have hF_closed: "\<forall>A \<in> ?F. closedin_on ?X ?TX A"
+        using \<open>\<forall>i \<in> {..<?n}. closedin_on ?X ?TX (?C i \<inter> D)\<close> by (by100 blast)
+      from closedin_Union_finite[OF hX_top hF_finite hF_closed]
+      have "closedin_on ?X ?TX (\<Union>?F)" .
+      moreover have "\<Union>?F = D" using hD_union by (by100 blast)
+      ultimately show "closedin_on ?X ?TX D" by simp
     qed
     \<comment> \<open>Subspace topology on C(i) in X = subspace topology on C(i) in R2.\<close>
     have hC_sub_topo: "\<forall>i \<in> {..<?n}.
