@@ -6454,7 +6454,11 @@ proof -
         (closedin_on ?X ?TX D \<longleftrightarrow>
          (\<forall>i \<in> {..<?n}. closedin_on (?C i)
               (subspace_topology ?X ?TX (?C i)) (?C i \<inter> D)))"
-      sorry \<comment> \<open>Finite union of closed subsets in R2 with subspace topology.\<close>
+      sorry \<comment> \<open>Coherent topology for finite union of closed subsets.
+         Each C(i) closed in R2 (circle = preimage of closed set).
+         (\\<rightarrow>): closedin X D \\<Rightarrow> closedin C(i) (C(i)\\<inter>D) by closedin\\_subspace\\_from\\_ambient.
+         (\\<leftarrow>): closedin C(i) (C(i)\\<inter>D) \\<Rightarrow> C(i)\\<inter>D closed in X (Theorem 17.2 + C(i) closed).
+         Then D = \\<Union>(D\\<inter>C(i)) = finite union of closed = closed.\<close>
     \<comment> \<open>Subspace topology on C(i) in X = subspace topology on C(i) in R2.\<close>
     have hC_sub_topo: "\<forall>i \<in> {..<?n}.
         subspace_topology ?X ?TX (?C i) =
