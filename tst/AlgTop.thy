@@ -519,6 +519,10 @@ proof -
   show ?thesis sorry \<comment> \<open>Normal form → homeomorphism type (S², T_n, or P_m).\<close>
 qed
 
+lemma quotient_carrier_memI:
+  "g \<in> G \<Longrightarrow> top1_group_coset_on G mul N g \<in> top1_quotient_group_carrier_on G mul N"
+  unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+
 (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
     isomorphic to N(H)/H, where H = p_*(\<pi>_1(E, e_0)) and N(H) is its normalizer
     in \<pi>_1(B, b_0). **)
@@ -1081,7 +1085,7 @@ proof -
       let ?eB = "top1_fundamental_group_id B TB b0"
       let ?invB = "top1_fundamental_group_invg B TB b0"
       let ?N = "top1_normalizer_on ?pi1B ?mulB ?invB ?H"
-      let ?coset = "\<lambda>g. top1_group_coset_on ?pi1B ?mulB ?H g"
+      let ?coset = "\<lambda>g. top1_group_coset_on ?N ?mulB ?H g"
       \<comment> \<open>Step F.1: For each h \\<in> Cov, path-connectedness of E gives a path e0 \\<rightarrow> h(e0).\<close>
       have hE_pc: "top1_path_connected_on E TE" using assms(4) .
       have he0E: "e0 \<in> E" using assms(6) .
@@ -1197,8 +1201,8 @@ proof -
         fix h assume "h \<in> ?Cov"
         let ?\<alpha>_class = "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g}"
         have "?\<alpha>_class \<in> ?N" using hin_normalizer[OF \<open>h \<in> ?Cov\<close>] .
-        hence "?coset ?\<alpha>_class \<in> ?Q"
-          sorry \<comment> \<open>coset(g) \\<in> {coset(x) | x. x \\<in> N} when g \\<in> N. Standard set comprehension.\<close>
+        have "?coset ?\<alpha>_class \<in> ?Q"
+          by (rule quotient_carrier_memI[OF \<open>?\<alpha>_class \<in> ?N\<close>])
         thus "f h \<in> ?Q" unfolding f_def .
       qed
       \<comment> \<open>Step I: f is a homomorphism (book proof: \\<gamma>*(h\\<circ>\\<delta>) lifts \\<alpha>*\\<beta>).\<close>
