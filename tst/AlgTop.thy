@@ -6388,7 +6388,7 @@ proof -
       fix i assume "i \<in> {..<?n}"
       let ?r = "real (Suc i)"
       \<comment> \<open>h(x,y) = (r*x, r + r*y). Maps S1 to C(i).\<close>
-      let ?h = "\<lambda>(x::real, y::real). (?r * x, ?r + ?r * y)"
+      let ?h = "\<lambda>p::real \<times> real. (?r * fst p, ?r + ?r * snd p)"
       let ?T_Ci = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C i)"
       have hr_pos: "?r > 0" by simp
       \<comment> \<open>h maps S1 into C(i).\<close>
@@ -6456,11 +6456,66 @@ proof -
         unfolding bij_betw_def using hh_inj hh_surj by (by100 blast)
       \<comment> \<open>h continuous: restriction of polynomial R2 \\<rightarrow> R2.\<close>
       have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology (?C i) ?T_Ci ?h"
-        sorry \<comment> \<open>h = (r*x, r+r*y): continuous R2\\<rightarrow>R2 (polynomial), restrict to subspaces.
-           Uses top1\\_continuous\\_map\\_on\\_real2\\_subspace.\<close>
+      proof -
+        have hh_cont_R2: "continuous_on (UNIV :: (real \<times> real) set) ?h"
+          by (intro continuous_intros)
+        from top1_continuous_map_on_real2_subspace[OF _ hh_cont_R2]
+        have "top1_continuous_map_on top1_S1
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_S1)
+            (?C i)
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (?C i))
+            ?h"
+          using hh_maps by (by100 blast)
+        thus ?thesis unfolding top1_S1_topology_def by simp
+      qed
       \<comment> \<open>h\\<inverse> continuous.\<close>
       have hh_inv_cont: "top1_continuous_map_on (?C i) ?T_Ci top1_S1 top1_S1_topology (inv_into top1_S1 ?h)"
-        sorry \<comment> \<open>inv\\_into agrees with (u/r, v/r-1) on C(i). Also polynomial.\<close>
+      proof -
+        let ?g = "\<lambda>p::real \<times> real. (fst p / ?r, snd p / ?r - 1)"
+        \<comment> \<open>g is continuous R2 \\<rightarrow> R2.\<close>
+        have hr_nz: "?r \<noteq> 0" using hr_pos by simp
+        have hg_cont_R2: "continuous_on (UNIV :: (real \<times> real) set) ?g"
+          using hr_nz by (intro continuous_intros, simp_all)
+        \<comment> \<open>g maps C(i) into S1.\<close>
+        have hg_maps: "\<forall>q \<in> ?C i. ?g q \<in> top1_S1"
+        proof (intro ballI)
+          fix q assume "q \<in> ?C i"
+          obtain u v where huv: "q = (u, v)" by (cases q)
+          have huv2: "u^2 + (v - ?r)^2 = ?r^2"
+            using \<open>q \<in> ?C i\<close> huv by (by100 auto)
+          have "(u/?r)^2 + (v/?r - 1)^2 = 1"
+            sorry \<comment> \<open>Same division arithmetic as heq.\<close>
+          thus "?g q \<in> top1_S1" using huv unfolding top1_S1_def by (by100 auto)
+        qed
+        \<comment> \<open>g continuous C(i) \\<rightarrow> S1 as subspaces of R2.\<close>
+        from top1_continuous_map_on_real2_subspace[OF _ hg_cont_R2]
+        have hg_cont: "top1_continuous_map_on (?C i) ?T_Ci top1_S1 top1_S1_topology ?g"
+          using hg_maps unfolding top1_S1_topology_def by (by100 blast)
+        \<comment> \<open>g = inv\\_into S1 h on C(i).\<close>
+        have hg_eq_inv: "\<forall>q \<in> ?C i. ?g q = inv_into top1_S1 ?h q"
+        proof (intro ballI)
+          fix q assume "q \<in> ?C i"
+          from hh_surj have "?h ` top1_S1 = ?C i" .
+          hence "q \<in> ?h ` top1_S1" using \<open>q \<in> ?C i\<close> by (by100 blast)
+          then obtain p where hp: "p \<in> top1_S1" "?h p = q" by (by100 blast)
+          have "inv_into top1_S1 ?h q = p"
+            using inv_into_f_f[OF bij_betw_imp_inj_on[OF hh_bij] hp(1)] hp(2) by simp
+          moreover have "?g q = p"
+          proof -
+            obtain x y where hxy: "p = (x, y)" by (cases p)
+            have "?g q = ?g (?h p)" using hp(2) by simp
+            also have "... = (?r * x / ?r, (?r + ?r * y) / ?r - 1)"
+              using hxy by simp
+            also have "... = (x, y)" using hr_pos hr_nz
+              by (simp add: field_simps)
+            finally show ?thesis using hxy by simp
+          qed
+          ultimately show "?g q = inv_into top1_S1 ?h q" by simp
+        qed
+        \<comment> \<open>Transfer continuity from g to inv\\_into.\<close>
+        show ?thesis using hg_cont hg_eq_inv
+          using top1_continuous_map_on_agree'[OF hg_cont] by (by100 blast)
+      qed
       \<comment> \<open>Topologies.\<close>
       have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
         using top1_S1_is_topology_on_strict unfolding is_topology_on_strict_def by (by100 blast)
