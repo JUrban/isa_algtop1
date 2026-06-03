@@ -1426,8 +1426,18 @@ proof -
       qed
       \<comment> \<open>Step K: f is surjective onto Q.\<close>
       have hf_surj: "f ` ?Cov = ?Q"
-        sorry \<comment> \<open>For [\\<alpha>]\\<cdot>H \\<in> N(H)/H: [\\<alpha>] \\<in> N(H) \\<Rightarrow> \\<exists> covering transformation h
-           with h(e0) = \\<tilde>\\<alpha>(1) (from h\\<Psi>\\_image). Then f(h) = [\\<alpha>]\\<cdot>H.\<close>
+      proof (rule set_eqI, rule iffI)
+        fix c assume "c \<in> f ` ?Cov"
+        then obtain h where "h \<in> ?Cov" "c = f h" by (by100 blast)
+        thus "c \<in> ?Q" using hf_maps by simp
+      next
+        fix c assume "c \<in> ?Q"
+        \<comment> \<open>c = coset(g) for some g \\<in> N(H). By h\\<Psi>\\_image (Lemma 81.1):
+           \\<exists> covering transformation h with h(e0) having image\\_hom = H.
+           The lifting correspondence sends g to h(e0) = \\<Phi>(g).
+           Then f(h) = coset([p\\<circ>\\<gamma>\\_h]) = coset(g) = c.\<close>
+        show "c \<in> f ` ?Cov" sorry
+      qed
       \<comment> \<open>Assemble: f is a group isomorphism.\<close>
       show ?thesis unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
       proof (rule exI[of _ f], intro conjI)
