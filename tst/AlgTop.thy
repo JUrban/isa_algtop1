@@ -6437,7 +6437,15 @@ proof -
         proof -
           have "u^2 + (v - ?r)^2 = ?r^2" using huv2 .
           hence heq: "u^2/?r^2 + (v - ?r)^2/?r^2 = 1"
-            sorry \<comment> \<open>Division by r^2: (u^2+(v-r)^2)/r^2 = 1, split via add\\_divide\\_distrib.\<close>
+          proof -
+            have hr2_nz: "?r^2 \<noteq> (0::real)" using hr_pos by simp
+            have "u^2/?r^2 + (v - ?r)^2/?r^2 = (u^2 + (v - ?r)^2) / ?r^2"
+              by (rule add_divide_distrib[symmetric])
+            also have "... = ?r^2 / ?r^2"
+              using \<open>u^2 + (v - ?r)^2 = ?r^2\<close> by simp
+            also have "... = 1" using hr2_nz by simp
+            finally show ?thesis .
+          qed
           have "u^2/?r^2 = (u/?r)^2" using hr_pos
             using power_divide[of u ?r 2] by (by100 simp)
           moreover have "(v - ?r)^2/?r^2 = ((v - ?r)/?r)^2" using hr_pos
@@ -6484,7 +6492,21 @@ proof -
           have huv2: "u^2 + (v - ?r)^2 = ?r^2"
             using \<open>q \<in> ?C i\<close> huv by (by100 auto)
           have "(u/?r)^2 + (v/?r - 1)^2 = 1"
-            sorry \<comment> \<open>Same division arithmetic as heq.\<close>
+          proof -
+            have hr2_nz: "?r^2 \<noteq> (0::real)" using hr_pos by simp
+            have "u^2/?r^2 + (v - ?r)^2/?r^2 = (u^2 + (v - ?r)^2) / ?r^2"
+              by (rule add_divide_distrib[symmetric])
+            also have "... = ?r^2 / ?r^2" using huv2 by simp
+            also have "... = 1" using hr2_nz by simp
+            finally have "u^2/?r^2 + (v - ?r)^2/?r^2 = 1" .
+            moreover have "u^2/?r^2 = (u/?r)^2" using hr_pos
+              using power_divide[of u ?r 2] by (by100 simp)
+            moreover have "(v - ?r)^2/?r^2 = ((v - ?r)/?r)^2" using hr_pos
+              using power_divide[of "v - ?r" ?r 2] by (by100 simp)
+            moreover have "(v - ?r)/?r = v/?r - 1" using hr_pos hr_nz
+              by (simp add: diff_divide_distrib)
+            ultimately show ?thesis by simp
+          qed
           thus "?g q \<in> top1_S1" using huv unfolding top1_S1_def by (by100 auto)
         qed
         \<comment> \<open>g continuous C(i) \\<rightarrow> S1 as subspaces of R2.\<close>
