@@ -6341,34 +6341,22 @@ lemma free_group_realized_by_wedge:
     \<and> top1_groups_isomorphic_on F mul
         (top1_fundamental_group_carrier X TX x0)
         (top1_fundamental_group_mul X TX x0)"
-proof -
-  \<comment> \<open>Step 1: Get n = card S.\<close>
+proof (cases "card S = 0")
+  case True
+  \<comment> \<open>n=0: S={}, F={e} trivial. Need any connected graph with trivial \\<pi>\\_1.\<close>
+  show ?thesis
+    sorry \<comment> \<open>n=0: F trivial. Construct segment in R^2 as graph with trivial \\<pi>\\_1.
+       Or use any tree (simply connected \\<Rightarrow> trivial \\<pi>\\_1 \\<cong> {e} \\<cong> F).\<close>
+next
+  case False
+  hence hn_pos: "card S > 0" by simp
+  \<comment> \<open>Step 1: Get n = card S > 0.\<close>
   let ?n = "card S"
-  \<comment> \<open>Step 2: Construct a wedge X of n circles.
-     (Concrete construction: embed n circles in R² sharing a point.
-     Alternatively: use graph\\_quotient\\_by\\_tree\\_wedge\\_of\\_circles on a graph
-     with n+1 arcs, or construct the standard wedge directly.)
-     The wedge is a graph (arcs = semi-circles, coherent topology) and connected.\<close>
+  \<comment> \<open>Step 2: Construct a wedge X of n circles (n \\<ge> 1).\<close>
   have hwedge_exists: "\<exists>(X :: (real \<times> real) set) TX (p :: real \<times> real).
       top1_is_wedge_of_circles_on X TX {..<?n} p"
-  proof (cases "?n = 0")
-    case True
-    \<comment> \<open>S = {} means F is trivial. We need a wedge of 0 circles.
-       But {..<0} = {} and \\<Union>{} = {} which can't contain p.
-       Actually, is\\_wedge\\_of\\_circles\\_on X TX {} p requires X = \\<Union>{} = {} and p \\<in> X,
-       which is impossible. So we prove the conclusion directly for trivial F.\<close>
-    \<comment> \<open>For n=0, \\<Union>i\\<in>{}. C i = {} so X = {} but p \\<in> X fails.
-       However in quick\\_and\\_dirty mode the sorry passes. We keep this sorry
-       and handle n=0 in the caller.\<close>
-    \<comment> \<open>n=0: S={}, F={e} trivial. Use [0,1] as a simply connected graph.\<close>
-    show ?thesis
-      sorry \<comment> \<open>n=0: Construct [0,1] as a graph with trivial \\<pi>\\_1.
-         graph: single arc = [0,1]. connected: path-connected (interval).
-         \\<pi>\\_1 trivial (simply connected: contractible).
-         iso(F, \\<pi>\\_1): both trivial groups.\<close>
-  next
-    case False
-    hence hn_pos: "?n > 0" by simp
+  proof -
+    have hn_pos: "?n > 0" using hn_pos by simp
     \<comment> \<open>Construct n circles in R2 sharing the origin.
        Circle i = {(x,y) | x^2 + (y - real(Suc i))^2 = (real(Suc i))^2}
                 = {(x,y) | x^2 + y^2 = 2*y*real(Suc i)}
