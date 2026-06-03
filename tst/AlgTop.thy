@@ -8327,9 +8327,48 @@ qed
 lemma graph_semilocally_simply_connected:
   assumes "top1_is_graph_on X TX"
   shows "top1_semilocally_simply_connected_on X TX"
-  sorry \<comment> \<open>Each point has neighborhood where loops are null-homotopic:
-     interior of arc \\<Rightarrow> interval (SC). Endpoint \\<Rightarrow> star (SC, retracts to point).
-     Any loop in the star is null-homotopic in X.\<close>
+proof -
+  have hstrict: "is_topology_on_strict X TX"
+    using assms unfolding top1_is_graph_on_def by (by100 blast)
+  have hTX: "is_topology_on X TX"
+    using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+  have hhaus: "is_hausdorff_on X TX"
+    using assms unfolding top1_is_graph_on_def by (by100 blast)
+  have hlpc: "top1_locally_path_connected_on X TX"
+    using graph_locally_path_connected[OF assms] .
+  \<comment> \<open>For each x \\<in> X, find open U with x \\<in> U where loops in U are null-homotopic in X.
+     Strategy: at each x, find a small open neighborhood U that is simply connected.
+     Then loops in U are null-homotopic in U, hence in X.\<close>
+  show ?thesis unfolding top1_semilocally_simply_connected_on_def
+  proof (intro ballI)
+    fix x assume hx: "x \<in> X"
+    \<comment> \<open>By lpc, x has a path-connected open neighborhood V.
+       A small enough path-connected neighborhood of x in a graph is simply connected
+       (it's a star shape that deformation retracts to x).\<close>
+    \<comment> \<open>Use lpc to get a path-connected open V containing x.\<close>
+    from hlpc have "top1_locally_path_connected_at X TX x"
+      unfolding top1_locally_path_connected_on_def using hx by (by100 blast)
+    \<comment> \<open>Take U = V (any path-connected open neighborhood). For small enough V,
+       V is contained in a star of arcs meeting at x, which is simply connected.\<close>
+    \<comment> \<open>Strategy: find open pc U around x that is simply connected.
+       Then loops in U are null-homotopic in U, hence in X.
+       U = small star at x. Star DR to {x} \\<Rightarrow> SC.
+       DR via pasting\\_deformation\\_retracts\\_to\\_point.\<close>
+    show "\<exists>U. openin_on X TX U \<and> x \<in> U \<and>
+        (\<forall>f. top1_is_loop_on U (subspace_topology X TX U) x f \<longrightarrow>
+             top1_path_homotopic_on X TX x x f (top1_constant_path x))"
+      sorry \<comment> \<open>~100 lines. Steps:
+         (1) Extract arcs from graph (same as lpc proof).
+         (2) For arcs B not containing x: separate x from B (Hausdorff + closed).
+         (3) For arcs containing x: take small sub-interval of arc near x.
+         (4) U = union of sub-intervals. U is open (coherent topology).
+         (5) Each sub-interval DR to {x} (straight-line retraction).
+         (6) pasting\\_deformation\\_retracts\\_to\\_point gives DR(U, {x}).
+         (7) deformation\\_retract\\_to\\_singleton\\_imp\\_simply\\_connected gives SC(U).
+         (8) Loops in U null-homotopic in U (from SC).
+         (9) path\\_homotopic\\_subspace\\_to\\_ambient transfers to X.\<close>
+  qed
+qed
 
 text \<open>Schreier rank formula: if F is free of rank n and H has index k,
   then H is free of rank kn - k + 1 = k(n-1) + 1.\<close>
