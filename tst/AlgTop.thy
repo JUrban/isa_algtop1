@@ -6456,8 +6456,8 @@ proof -
         unfolding bij_betw_def using hh_inj hh_surj by (by100 blast)
       \<comment> \<open>h continuous: restriction of polynomial R2 \\<rightarrow> R2.\<close>
       have hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology (?C i) ?T_Ci ?h"
-        sorry \<comment> \<open>h = (r*x, r+r*y) is polynomial, hence continuous R2\\<rightarrow>R2.
-           Restriction to subspaces preserves continuity.\<close>
+        sorry \<comment> \<open>h = (r*x, r+r*y): continuous R2\\<rightarrow>R2 (polynomial), restrict to subspaces.
+           Uses top1\\_continuous\\_map\\_on\\_real2\\_subspace.\<close>
       \<comment> \<open>h\\<inverse> continuous.\<close>
       have hh_inv_cont: "top1_continuous_map_on (?C i) ?T_Ci top1_S1 top1_S1_topology (inv_into top1_S1 ?h)"
         sorry \<comment> \<open>inv\\_into agrees with (u/r, v/r-1) on C(i). Also polynomial.\<close>
