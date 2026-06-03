@@ -8016,9 +8016,28 @@ proof -
             have "?c - x = (1 - t) * (a - x) + t * (b - x)" by (by100 algebra)
             have "?c - x = (1-t)*(a-x) + t*(b-x)" by (by100 algebra)
             have h_abs_le: "\<bar>(1-t)*(a-x) + t*(b-x)\<bar> \<le> (1-t)*\<bar>a-x\<bar> + t*\<bar>b-x\<bar>"
-              sorry \<comment> \<open>|ca + db| \\<le> c|a| + d|b| for c,d \\<ge> 0 (weighted triangle inequality).\<close>
+            proof -
+              have "\<bar>(1-t)*(a-x)\<bar> = (1-t)*\<bar>a-x\<bar>" using ht0 ht1
+                using abs_mult[of "1-t" "a-x"] by (by100 simp)
+              moreover have "\<bar>t*(b-x)\<bar> = t*\<bar>b-x\<bar>" using ht0
+                using abs_mult[of t "b-x"] by (by100 simp)
+              ultimately show ?thesis using abs_triangle_ineq[of "(1-t)*(a-x)" "t*(b-x)"] by (by100 linarith)
+            qed
             have h_le_eps: "(1-t)*\<bar>a-x\<bar> + t*\<bar>b-x\<bar> < (1-t)*\<epsilon> + t*\<epsilon>"
-              sorry \<comment> \<open>Convex combination of strict bounds.\<close>
+            proof -
+              have "(1-t)*\<bar>a-x\<bar> \<le> (1-t)*\<epsilon>"
+                apply (rule mult_left_mono) using ha_ball ht0 ht1 by (by100 linarith)+
+              moreover have "t*\<bar>b-x\<bar> \<le> t*\<epsilon>"
+                apply (rule mult_left_mono) using hb_ball ht0 by (by100 linarith)+
+              moreover have "(1-t)*\<bar>a-x\<bar> < (1-t)*\<epsilon> \<or> t*\<bar>b-x\<bar> < t*\<epsilon>"
+              proof (cases "t = 0")
+                case True thus ?thesis using ha_ball by (by100 simp)
+              next
+                case False hence "t > 0" using ht0 by (by100 linarith)
+                thus ?thesis using hb_ball by (by100 simp)
+              qed
+              ultimately show ?thesis by (by100 linarith)
+            qed
             have "(1-t)*\<epsilon> + t*\<epsilon> = \<epsilon>" by (by100 argo)
             show ?thesis using \<open>?c - x = _\<close> h_abs_le h_le_eps \<open>(1-t)*\<epsilon> + t*\<epsilon> = \<epsilon>\<close>
               by (by100 linarith)
