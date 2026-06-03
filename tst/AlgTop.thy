@@ -8407,7 +8407,35 @@ proof -
       \<comment> \<open>f is a loop in U at x. Since U \\<subseteq> S, f is a loop in S.\<close>
       have hU_sub_X: "U \<subseteq> X" using hU_sub_S hS_sub_X by (by100 blast)
       have hf_S: "top1_is_loop_on S (subspace_topology X TX S) x f"
-        sorry \<comment> \<open>Loop in U \\<subseteq> S \\<Rightarrow> loop in S. Uses codomain\\_enlarge.\<close>
+      proof -
+        have hf_cont_U: "top1_continuous_map_on I_set I_top U (subspace_topology X TX U) f"
+          using hf unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        have hf_img_U: "\<forall>t \<in> I_set. f t \<in> U"
+          using hf_cont_U unfolding top1_continuous_map_on_def by (by100 blast)
+        hence hf_img_S: "\<forall>t \<in> I_set. f t \<in> S" using hU_sub_S by (by100 blast)
+        from top1_continuous_map_on_codomain_enlarge[OF hf_cont_U hU_sub_S hS_sub_X]
+        have "top1_continuous_map_on I_set I_top S (subspace_topology X TX S) f" .
+        moreover have "f 0 = x" using hf unfolding top1_is_loop_on_def top1_is_path_on_def
+          by (by100 blast)
+        moreover have "f 1 = x" using hf unfolding top1_is_loop_on_def top1_is_path_on_def
+          by (by100 blast)
+        ultimately show ?thesis
+        proof -
+          assume h1: "top1_continuous_map_on I_set I_top S (subspace_topology X TX S) f"
+              and h2: "f 0 = x" and h3: "f 1 = x"
+          define f_loc where "f_loc = f"
+          define x_loc where "x_loc = x"
+          have hh1: "top1_continuous_map_on I_set I_top S (subspace_topology X TX S) f_loc"
+            using h1 unfolding f_loc_def by simp
+          have hh2: "f_loc 0 = x_loc" using h2 unfolding f_loc_def x_loc_def by simp
+          have hh3: "f_loc 1 = x_loc" using h3 unfolding f_loc_def x_loc_def by simp
+          have "top1_is_loop_on S (subspace_topology X TX S) x_loc f_loc"
+            unfolding top1_is_loop_on_def top1_is_path_on_def
+              top1_unit_interval_def[symmetric] top1_unit_interval_topology_def[symmetric]
+            using hh1 hh2 hh3 by (by5000 auto)
+          thus ?thesis unfolding f_loc_def x_loc_def by simp
+        qed
+      qed
       \<comment> \<open>f null-homotopic in S (from SC).\<close>
       have hf_null_S: "top1_path_homotopic_on S (subspace_topology X TX S) x x f (top1_constant_path x)"
         using hS_SC hx_S hf_S unfolding top1_simply_connected_on_def by (by5000 blast)
