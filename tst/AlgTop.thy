@@ -16845,7 +16845,98 @@ proof -
                    h t w \\<in> h s ` V iff h t w = p iff w = (1,0) and (1,0) \\<in> V.\<close>
                 have "{w \<in> top1_S1. h t w \<in> U_V} =
                     (if (1, 0) \<in> V then top1_S1 else top1_S1 - {(1, 0)})"
-                  sorry \<comment> \<open>Case analysis on h t w membership.\<close>
+                proof (rule set_eqI)
+                  fix w show "(w \<in> {w \<in> top1_S1. h t w \<in> U_V}) =
+                      (w \<in> (if (1, 0) \<in> V then top1_S1 else top1_S1 - {(1, 0)}))"
+                  proof
+                    assume hw: "w \<in> {w \<in> top1_S1. h t w \<in> U_V}"
+                    hence hwS: "w \<in> top1_S1" and hwU: "h t w \<in> U_V" by (by100 blast)+
+                    show "w \<in> (if (1, 0) \<in> V then top1_S1 else top1_S1 - {(1, 0)})"
+                    proof (cases "(1, 0) \<in> V")
+                      case True thus ?thesis using hwS by simp
+                    next
+                      case False
+                      have "w \<noteq> (1, 0)"
+                      proof
+                        assume "w = (1, 0)"
+                        hence "h t w = ?p" unfolding h_def by simp
+                        have "?p \<in> C s" using hp_in_C hs .
+                        hence "?p \<notin> ?X - C s" by (by100 blast)
+                        have "?p \<notin> h s ` V"
+                        proof
+                          assume "?p \<in> h s ` V"
+                          then obtain v where "v \<in> V" "?p = h s v" by (rule imageE, by100 blast)
+                          hence "v = (1, 0)"
+                          proof (cases "v = (1, 0)")
+                            case True thus ?thesis .
+                          next
+                            case Fv: False
+                            hence "h s v = Inr (s, v)" unfolding h_def by simp
+                            hence "Inr (s, v) = (Inl () :: unit + ('s \<times> real \<times> real))"
+                              using \<open>?p = h s v\<close> by simp
+                            thus ?thesis by simp
+                          qed
+                          thus False using \<open>v \<in> V\<close> False by simp
+                        qed
+                        hence "?p \<notin> U_V" using \<open>?p \<notin> ?X - C s\<close> \<open>?p \<notin> h s ` V\<close>
+                          unfolding U_V_def by (by100 blast)
+                        thus False using hwU \<open>h t w = ?p\<close> by simp
+                      qed
+                      thus ?thesis using hwS False by simp
+                    qed
+                  next
+                    assume hw: "w \<in> (if (1, 0) \<in> V then top1_S1 else top1_S1 - {(1, 0)})"
+                    show "w \<in> {w \<in> top1_S1. h t w \<in> U_V}"
+                    proof (cases "w = (1, 0)")
+                      case True
+                      hence "h t w = ?p" unfolding h_def by simp
+                      have "(1::real, 0::real) \<in> V"
+                      proof (rule ccontr)
+                        assume "(1, 0) \<notin> V"
+                        hence "w \<in> top1_S1 - {(1, 0)}" using hw by simp
+                        thus False using True by (by100 blast)
+                      qed
+                      have "h s (1, 0) = ?p" unfolding h_def by simp
+                      from imageI[OF \<open>(1, 0) \<in> V\<close>, of "h s"]
+                      have "h s (1, 0) \<in> h s ` V" .
+                      hence "?p \<in> h s ` V" using \<open>h s (1, 0) = ?p\<close> by simp
+                      have "?p \<in> U_V" using \<open>?p \<in> h s ` V\<close> unfolding U_V_def by (by100 blast)
+                      hence "h t w \<in> U_V" using \<open>h t w = ?p\<close> by simp
+                      have "w \<in> top1_S1"
+                      proof (cases "(1, 0) \<in> V")
+                        case True thus ?thesis using hw by simp
+                      next
+                        case False
+                        hence "w \<in> top1_S1 - {(1, 0)}" using hw by simp
+                        thus ?thesis by (by100 blast)
+                      qed
+                      thus ?thesis using \<open>h t w \<in> U_V\<close> \<open>w \<in> top1_S1\<close> by (by100 blast)
+                    next
+                      case False
+                      hence "h t w = Inr (t, w)" unfolding h_def by simp
+                      have hwS1: "w \<in> top1_S1"
+                      proof (cases "(1, 0) \<in> V")
+                        case True thus ?thesis using hw by simp
+                      next
+                        case Fv: False
+                        hence "w \<in> top1_S1 - {(1, 0)}" using hw by simp
+                        thus ?thesis by (by100 blast)
+                      qed
+                      have "w \<in> top1_S1 - {(1, 0)}" using hwS1 False by (by100 blast)
+                      hence "(t, w) \<in> {t} \<times> (top1_S1 - {(1, 0)})" by (by100 blast)
+                      hence "Inr (t, w) \<in> Inr ` ({t} \<times> (top1_S1 - {(1, 0)}))"
+                        by (rule imageI)
+                      hence "Inr (t, w) \<in> C t" unfolding C_def by (by100 blast)
+                      hence "h t w \<in> C t" using \<open>h t w = Inr (t, w)\<close> by simp
+                      have "h t w \<noteq> ?p" using False unfolding h_def by (by100 auto)
+                      hence "h t w \<notin> C s"
+                        using hC_inter[OF ht hs Ft] \<open>h t w \<in> C t\<close> by (by100 blast)
+                      hence "h t w \<in> ?X - C s" using \<open>h t w \<in> C t\<close> ht by (by100 blast)
+                      hence "h t w \<in> U_V" unfolding U_V_def by (by100 blast)
+                      thus ?thesis using hwS1 \<open>h t w \<in> U_V\<close> by (by100 blast)
+                    qed
+                  qed
+                qed
                 moreover have "(if (1, 0) \<in> V then top1_S1 else top1_S1 - {(1, 0)}) \<in> top1_S1_topology"
                 proof (cases "(1, 0) \<in> V")
                   case True
@@ -16885,17 +16976,273 @@ proof -
           unfolding top1_homeomorphism_on_def
           using hS1_top hCs_top hh_bij hh_cont hhinv_cont by (by100 blast)
       qed
+      have hh_maps_C: "\<And>s v. s \<in> S \<Longrightarrow> v \<in> top1_S1 \<Longrightarrow> h s v \<in> C s"
+      proof -
+        fix s v assume "s \<in> S" "v \<in> top1_S1"
+        show "h s v \<in> C s"
+        proof (cases "v = (1, 0)")
+          case True
+          hence "h s v = ?p" unfolding h_def by simp
+          thus ?thesis using hp_in_C \<open>s \<in> S\<close> by simp
+        next
+          case False
+          hence "v \<in> top1_S1 - {(1, 0)}" using \<open>v \<in> top1_S1\<close> by (by100 blast)
+          hence "(s, v) \<in> {s} \<times> (top1_S1 - {(1, 0)})" by (by100 blast)
+          hence "Inr (s, v) \<in> Inr ` ({s} \<times> (top1_S1 - {(1, 0)}))" by (rule imageI)
+          hence "h s v \<in> Inr ` ({s} \<times> (top1_S1 - {(1, 0)}))"
+            using False unfolding h_def by simp
+          thus ?thesis unfolding C_def by (by100 blast)
+        qed
+      qed
       have hC_coherent: "\<forall>D. D \<subseteq> ?X \<longrightarrow>
            (closedin_on ?X TX D \<longleftrightarrow>
             (\<forall>\<alpha>\<in>S. closedin_on (C \<alpha>) (subspace_topology ?X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
-        sorry \<comment> \<open>Coherent closed from TX definition.\<close>
+      proof (intro allI impI iffI)
+        fix D assume hD: "D \<subseteq> ?X"
+        \<comment> \<open>Forward: D closed in X \\<Rightarrow> C \\<alpha> \\<inter> D closed in C \\<alpha>.\<close>
+        assume hcl: "closedin_on ?X TX D"
+        hence "?X - D \<in> TX" unfolding closedin_on_def by (by100 blast)
+        show "\<forall>\<alpha>\<in>S. closedin_on (C \<alpha>) (subspace_topology ?X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+        proof
+          fix \<alpha> assume "\<alpha> \<in> S"
+          have "C \<alpha> \<inter> (?X - D) \<in> subspace_topology ?X TX (C \<alpha>)"
+            unfolding subspace_topology_def using \<open>?X - D \<in> TX\<close> by (by100 blast)
+          have "C \<alpha> \<inter> (?X - D) = C \<alpha> - D"
+            using hC_sub \<open>\<alpha> \<in> S\<close> by (by100 blast)
+          hence "C \<alpha> - D \<in> subspace_topology ?X TX (C \<alpha>)"
+            using \<open>C \<alpha> \<inter> (?X - D) \<in> _\<close> by simp
+          have "C \<alpha> - (C \<alpha> \<inter> D) = C \<alpha> - D" by (by100 blast)
+          have "(C \<alpha> \<inter> D) \<subseteq> C \<alpha>" by (by100 blast)
+          thus "closedin_on (C \<alpha>) (subspace_topology ?X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+            unfolding closedin_on_def
+            using \<open>C \<alpha> - D \<in> subspace_topology ?X TX (C \<alpha>)\<close>
+                  \<open>C \<alpha> - (C \<alpha> \<inter> D) = C \<alpha> - D\<close>
+            by simp
+        qed
+      next
+        fix D assume hD: "D \<subseteq> ?X"
+        \<comment> \<open>Backward: all C \\<alpha> \\<inter> D closed in C \\<alpha> \\<Rightarrow> D closed in X.\<close>
+        assume hall: "\<forall>\<alpha>\<in>S. closedin_on (C \<alpha>) (subspace_topology ?X TX (C \<alpha>)) (C \<alpha> \<inter> D)"
+        \<comment> \<open>Need: X - D \\<in> TX, i.e., X - D \\<subseteq> X and preimages open.\<close>
+        have hXD_sub: "?X - D \<subseteq> ?X" by (by100 blast)
+        have hXD_preimg: "\<forall>s\<in>S. {v \<in> top1_S1. h s v \<in> ?X - D} \<in> top1_S1_topology"
+        proof
+          fix s assume "s \<in> S"
+          from hall have hcls: "closedin_on (C s) (subspace_topology ?X TX (C s)) (C s \<inter> D)"
+            using \<open>s \<in> S\<close> by (by100 blast)
+          hence "C s - (C s \<inter> D) \<in> subspace_topology ?X TX (C s)"
+            unfolding closedin_on_def by (by100 blast)
+          have "C s - (C s \<inter> D) = C s - D" by (by100 blast)
+          hence "C s - D \<in> subspace_topology ?X TX (C s)"
+            using \<open>C s - (C s \<inter> D) \<in> _\<close> by simp
+          then obtain U where "U \<in> TX" "C s \<inter> U = C s - D"
+            unfolding subspace_topology_def by (by100 blast)
+          from hTX_memD[OF \<open>U \<in> TX\<close>]
+          have "{v \<in> top1_S1. h s v \<in> U} \<in> top1_S1_topology" using \<open>s \<in> S\<close> by (by100 blast)
+          \<comment> \<open>Since h s maps S1 into C s: h s v \\<in> X - D iff h s v \\<in> C s - D iff h s v \\<in> U.\<close>
+          have heq: "{v \<in> top1_S1. h s v \<in> ?X - D} = {v \<in> top1_S1. h s v \<in> U}"
+          proof (rule set_eqI, rule iffI)
+            fix v assume "v \<in> {v \<in> top1_S1. h s v \<in> ?X - D}"
+            hence "v \<in> top1_S1" "h s v \<in> ?X - D" by (by100 blast)+
+            have "h s v \<in> C s" using hh_maps_C[OF \<open>s \<in> S\<close> \<open>v \<in> top1_S1\<close>] .
+            hence "h s v \<in> C s - D" using \<open>h s v \<in> ?X - D\<close> by (by100 blast)
+            hence "h s v \<in> C s \<inter> U" using \<open>C s \<inter> U = C s - D\<close> by simp
+            thus "v \<in> {v \<in> top1_S1. h s v \<in> U}" using \<open>v \<in> top1_S1\<close> by (by100 blast)
+          next
+            fix v assume "v \<in> {v \<in> top1_S1. h s v \<in> U}"
+            hence "v \<in> top1_S1" "h s v \<in> U" by (by100 blast)+
+            have "h s v \<in> C s" using hh_maps_C[OF \<open>s \<in> S\<close> \<open>v \<in> top1_S1\<close>] .
+            hence "h s v \<in> C s \<inter> U" using \<open>h s v \<in> U\<close> by (by100 blast)
+            hence "h s v \<in> C s - D" using \<open>C s \<inter> U = C s - D\<close> by simp
+            hence "h s v \<in> ?X - D" using hC_sub \<open>s \<in> S\<close> by (by100 blast)
+            thus "v \<in> {v \<in> top1_S1. h s v \<in> ?X - D}" using \<open>v \<in> top1_S1\<close> by (by100 blast)
+          qed
+          thus "{v \<in> top1_S1. h s v \<in> ?X - D} \<in> top1_S1_topology"
+            using \<open>{v \<in> top1_S1. h s v \<in> U} \<in> top1_S1_topology\<close> by simp
+        qed
+        have "?X - D \<in> TX" using hTX_memI[OF hXD_sub hXD_preimg] .
+        thus "closedin_on ?X TX D" unfolding closedin_on_def using hD by (by100 blast)
+      qed
       show ?thesis
         apply (rule exI[of _ C])
         using hC_sub hp_in_C hC_homeo hC_cover hC_inter hC_coherent by (by5000 blast)
     qed
   qed
   moreover have "top1_is_graph_on ?X TX" sorry
-  moreover have "top1_connected_on ?X TX" sorry
+  moreover have "top1_connected_on ?X TX"
+  proof -
+    have hTX_top: "is_topology_on ?X TX"
+      using \<open>top1_is_wedge_of_circles_on ?X TX S ?p\<close>
+      unfolding top1_is_wedge_of_circles_on_def is_topology_on_strict_def by (by100 blast)
+    \<comment> \<open>h s is continuous S1 \\<rightarrow> X (from TX definition).\<close>
+    have hC_sub_outer: "\<And>s. s \<in> S \<Longrightarrow> C s \<subseteq> ?X" by (by100 blast)
+    have hh_maps_C_outer: "\<And>s v. s \<in> S \<Longrightarrow> v \<in> top1_S1 \<Longrightarrow> h s v \<in> C s"
+    proof -
+      fix s v assume "s \<in> S" "v \<in> top1_S1"
+      show "h s v \<in> C s"
+      proof (cases "v = (1, 0)")
+        case True
+        hence "h s v = ?p" unfolding h_def by simp
+        thus ?thesis using hp_in_C \<open>s \<in> S\<close> by simp
+      next
+        case False
+        hence "v \<in> top1_S1 - {(1, 0)}" using \<open>v \<in> top1_S1\<close> by (by100 blast)
+        hence "(s, v) \<in> {s} \<times> (top1_S1 - {(1, 0)})" by (by100 blast)
+        hence "Inr (s, v) \<in> Inr ` ({s} \<times> (top1_S1 - {(1, 0)}))" by (rule imageI)
+        hence "Inr (s, v) \<in> C s" unfolding C_def by (by100 blast)
+        thus ?thesis using False unfolding h_def by simp
+      qed
+    qed
+    have hh_cont_outer: "\<And>s. s \<in> S \<Longrightarrow> top1_continuous_map_on top1_S1 top1_S1_topology ?X TX (h s)"
+    proof -
+      fix s assume "s \<in> S"
+      show "top1_continuous_map_on top1_S1 top1_S1_topology ?X TX (h s)"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix v assume "v \<in> top1_S1"
+        thus "h s v \<in> ?X" using hh_maps_C_outer[OF \<open>s \<in> S\<close> \<open>v \<in> top1_S1\<close>]
+            hC_sub_outer[OF \<open>s \<in> S\<close>] by (by100 blast)
+      next
+        fix U assume "U \<in> TX"
+        from hTX_memD[OF this]
+        show "{v \<in> top1_S1. h s v \<in> U} \<in> top1_S1_topology"
+          using \<open>s \<in> S\<close> by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>h s maps S1 onto C s.\<close>
+    have hh_surj: "\<And>s. s \<in> S \<Longrightarrow> h s ` top1_S1 = C s"
+    proof -
+      fix s assume "s \<in> S"
+      show "h s ` top1_S1 = C s"
+      proof (rule set_eqI, rule iffI)
+        fix y assume "y \<in> h s ` top1_S1"
+        then obtain v where "v \<in> top1_S1" "y = h s v" by (by100 blast)
+        thus "y \<in> C s" using hh_maps_C_outer[OF \<open>s \<in> S\<close> \<open>v \<in> top1_S1\<close>] by simp
+      next
+        fix y assume "y \<in> C s"
+        thus "y \<in> h s ` top1_S1"
+        proof (cases "y = ?p")
+          case True
+          have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+          have "h s (1, 0) = ?p" unfolding h_def by simp
+          hence "y = h s (1, 0)" using True by simp
+          thus ?thesis using \<open>(1, 0) \<in> top1_S1\<close> by (by100 blast)
+        next
+          case False
+          hence "y \<in> Inr ` ({s} \<times> (top1_S1 - {(1, 0)}))" using \<open>y \<in> C s\<close> unfolding C_def
+            by (by100 blast)
+          then obtain v where "v \<in> top1_S1 - {(1, 0)}" "y = Inr (s, v)" by (by100 blast)
+          hence "h s v = y" unfolding h_def by (by100 auto)
+          have "v \<in> top1_S1" using \<open>v \<in> top1_S1 - {(1, 0)}\<close> by (by100 blast)
+          thus ?thesis using \<open>h s v = y\<close> \<open>v \<in> top1_S1\<close> by (by100 blast)
+        qed
+      qed
+    qed
+    \<comment> \<open>S1 connected \\<Rightarrow> C(s) = h(s)(S1) connected.\<close>
+    have hCs_conn: "\<And>s. s \<in> S \<Longrightarrow> top1_connected_on (C s) (subspace_topology ?X TX (C s))"
+    proof -
+      fix s assume "s \<in> S"
+      have "top1_connected_on top1_S1 top1_S1_topology"
+        using S1_path_connected path_connected_imp_connected by (by100 blast)
+      from Theorem_23_5[OF _ _ this hh_cont_outer[OF \<open>s \<in> S\<close>]]
+      have "top1_connected_on (h s ` top1_S1) (subspace_topology ?X TX (h s ` top1_S1))"
+        using top1_S1_is_topology_on_strict hTX_top
+        unfolding is_topology_on_strict_def by (by100 blast)
+      thus "top1_connected_on (C s) (subspace_topology ?X TX (C s))"
+        using hh_surj[OF \<open>s \<in> S\<close>] by simp
+    qed
+    show ?thesis unfolding top1_connected_on_def
+    proof (intro conjI, rule hTX_top, rule notI)
+      assume "\<exists>U V. U \<in> TX \<and> V \<in> TX \<and> U \<noteq> {} \<and> V \<noteq> {} \<and> U \<inter> V = {} \<and> U \<union> V = ?X"
+      then obtain U V where hUV: "U \<in> TX" "V \<in> TX" "U \<noteq> {}" "V \<noteq> {}"
+          "U \<inter> V = {}" "U \<union> V = ?X" by (by100 blast)
+      \<comment> \<open>p must be in U or V.\<close>
+      have "?p \<in> ?X \<or> S = {}"
+      proof (cases "S = {}")
+        case True thus ?thesis by simp
+      next
+        case False
+        then obtain s0 where "s0 \<in> S" by (by100 blast)
+        thus ?thesis using hp_in_C by (by100 blast)
+      qed
+      hence "?p \<in> U \<or> ?p \<in> V \<or> S = {}"
+        using hUV(6) by (by100 blast)
+      moreover {
+        assume "S = {}"
+        hence "?X = {}" by simp
+        hence False using hUV(3) hUV(6) by (by100 blast)
+      }
+      moreover {
+        \<comment> \<open>WLOG p \\<in> U. Each C(s) connected, p \\<in> C(s) \\<inter> U, so C(s) \\<subseteq> U.\<close>
+        assume "?p \<in> U"
+        have "\<forall>s \<in> S. C s \<subseteq> U"
+        proof
+          fix s assume "s \<in> S"
+          have hCss: "C s \<subseteq> ?X" using hC_sub_outer \<open>s \<in> S\<close> .
+          have "C s \<inter> U \<in> subspace_topology ?X TX (C s)"
+            unfolding subspace_topology_def using hUV(1) by (by100 blast)
+          have "C s \<inter> V \<in> subspace_topology ?X TX (C s)"
+            unfolding subspace_topology_def using hUV(2) by (by100 blast)
+          have "C s \<inter> U \<union> (C s \<inter> V) = C s"
+            using hCss hUV(6) by (by100 blast)
+          have "(C s \<inter> U) \<inter> (C s \<inter> V) = {}"
+            using hUV(5) by (by100 blast)
+          have "?p \<in> C s" using hp_in_C \<open>s \<in> S\<close> .
+          hence "C s \<inter> U \<noteq> {}" using \<open>?p \<in> U\<close> by (by100 blast)
+          from hCs_conn[OF \<open>s \<in> S\<close>]
+          have "\<nexists>U' V'. U' \<in> subspace_topology ?X TX (C s) \<and> V' \<in> subspace_topology ?X TX (C s)
+              \<and> U' \<noteq> {} \<and> V' \<noteq> {} \<and> U' \<inter> V' = {} \<and> U' \<union> V' = C s"
+            unfolding top1_connected_on_def by (by100 blast)
+          hence "C s \<inter> V = {}"
+            using \<open>C s \<inter> U \<in> subspace_topology ?X TX (C s)\<close>
+                  \<open>C s \<inter> V \<in> subspace_topology ?X TX (C s)\<close>
+                  \<open>C s \<inter> U \<noteq> {}\<close>
+                  \<open>(C s \<inter> U) \<inter> (C s \<inter> V) = {}\<close>
+                  \<open>C s \<inter> U \<union> (C s \<inter> V) = C s\<close>
+            by (by5000 blast)
+          thus "C s \<subseteq> U" using hCss hUV(6) \<open>C s \<inter> V = {}\<close> by (by100 blast)
+        qed
+        hence "?X \<subseteq> U" by (by100 blast)
+        hence "V = {}" using hUV(5) hUV(6) by (by100 blast)
+        hence False using hUV(4) by simp
+      }
+      moreover {
+        \<comment> \<open>Symmetric case: p \\<in> V.\<close>
+        assume "?p \<in> V"
+        have "\<forall>s \<in> S. C s \<subseteq> V"
+        proof
+          fix s assume "s \<in> S"
+          have hCss: "C s \<subseteq> ?X" using hC_sub_outer \<open>s \<in> S\<close> .
+          have "C s \<inter> U \<in> subspace_topology ?X TX (C s)"
+            unfolding subspace_topology_def using hUV(1) by (by100 blast)
+          have "C s \<inter> V \<in> subspace_topology ?X TX (C s)"
+            unfolding subspace_topology_def using hUV(2) by (by100 blast)
+          have "C s \<inter> U \<union> (C s \<inter> V) = C s"
+            using hCss hUV(6) by (by100 blast)
+          have "(C s \<inter> U) \<inter> (C s \<inter> V) = {}"
+            using hUV(5) by (by100 blast)
+          have "?p \<in> C s" using hp_in_C \<open>s \<in> S\<close> .
+          hence "C s \<inter> V \<noteq> {}" using \<open>?p \<in> V\<close> by (by100 blast)
+          from hCs_conn[OF \<open>s \<in> S\<close>]
+          have "\<nexists>U' V'. U' \<in> subspace_topology ?X TX (C s) \<and> V' \<in> subspace_topology ?X TX (C s)
+              \<and> U' \<noteq> {} \<and> V' \<noteq> {} \<and> U' \<inter> V' = {} \<and> U' \<union> V' = C s"
+            unfolding top1_connected_on_def by (by100 blast)
+          hence "C s \<inter> U = {}"
+            using \<open>C s \<inter> U \<in> subspace_topology ?X TX (C s)\<close>
+                  \<open>C s \<inter> V \<in> subspace_topology ?X TX (C s)\<close>
+                  \<open>C s \<inter> V \<noteq> {}\<close>
+                  \<open>(C s \<inter> U) \<inter> (C s \<inter> V) = {}\<close>
+                  \<open>C s \<inter> U \<union> (C s \<inter> V) = C s\<close>
+            by (by5000 blast)
+          thus "C s \<subseteq> V" using hCss hUV(6) \<open>C s \<inter> U = {}\<close> by (by100 blast)
+        qed
+        hence "?X \<subseteq> V" by (by100 blast)
+        hence "U = {}" using hUV(5) hUV(6) by (by100 blast)
+        hence False using hUV(3) by simp
+      }
+      ultimately show False by (by100 blast)
+    qed
+  qed
   moreover have "?p \<in> ?X"
   proof (cases "S = {}")
     case True
