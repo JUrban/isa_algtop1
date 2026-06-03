@@ -8473,36 +8473,31 @@ proof -
         have hx_D1: "x \<in> D1_loc" using hD1_prop by (by100 blast)
         have hh0_D1: "h0 0 \<in> D1_loc" using hD1_prop by (by100 blast)
         \<comment> \<open>Endpoints of D1\\_loc.\<close>
-        have hx_ep_D1: "x \<in> top1_arc_endpoints_on D1_loc (subspace_topology X TX D1_loc)"
-        proof -
-          \<comment> \<open>Extract D2 via SOME.\<close>
-          define D2_loc where "D2_loc = (SOME D2. A0 = D1_loc \<union> D2 \<and> D1_loc \<inter> D2 = {x} \<and>
-              top1_is_arc_on D1_loc (subspace_topology X TX D1_loc) \<and>
-              top1_is_arc_on D2 (subspace_topology X TX D2) \<and>
-              h0 0 \<in> D1_loc \<and> h0 1 \<in> D2 \<and> x \<in> D1_loc \<and> x \<in> D2 \<and> D1_loc \<subseteq> X \<and> D2 \<subseteq> X)"
-          from someI_ex[OF hD1_prop]
-          have hD2_all: "A0 = D1_loc \<union> D2_loc \<and> D1_loc \<inter> D2_loc = {x} \<and>
-              top1_is_arc_on D1_loc (subspace_topology X TX D1_loc) \<and>
-              top1_is_arc_on D2_loc (subspace_topology X TX D2_loc) \<and>
-              h0 0 \<in> D1_loc \<and> h0 1 \<in> D2_loc \<and> x \<in> D1_loc \<and> x \<in> D2_loc \<and> D1_loc \<subseteq> X \<and> D2_loc \<subseteq> X"
-            unfolding D2_loc_def .
-          have hD2_eq: "A0 = D1_loc \<union> D2_loc" using hD2_all by (by100 blast)
-          have hD2_inter: "D1_loc \<inter> D2_loc = {x}" using hD2_all by (by100 blast)
-          have hD2_arc: "top1_is_arc_on D2_loc (subspace_topology X TX D2_loc)"
-            using hD2_all by (by100 blast)
-          have hh1_D2: "h0 1 \<in> D2_loc" using hD2_all by (by100 blast)
-          have hx_D2: "x \<in> D2_loc" using hD2_all by (by100 blast)
-          have hD2_sub: "D2_loc \<subseteq> X" using hD2_all by (by100 blast)
-          \<comment> \<open>The arc\\_split\\_endpoints OF chain times out because the second conjunct
-             involves D2\\_loc (SOME term). Instead, apply the lemma to a goal that
-             only needs the first conjunct.\<close>
-          have hx_ep_D1_eq: "top1_arc_endpoints_on D1_loc (subspace_topology X TX D1_loc) = {h0 0, x}"
-            sorry \<comment> \<open>arc\\_split\\_endpoints: endpoints(D1) = {h0(0), x}.
-               The OF chain times out on D2\\_loc SOME terms.
-               Mathematically: x is the split point (becomes endpoint of both halves),
-               h0(0) is the original endpoint of A0 that's in D1\\_loc.\<close>
-          thus ?thesis by (by100 blast)
+        \<comment> \<open>Extract D2\\_loc (the other half of A0 after splitting at x).\<close>
+        define D2_loc where "D2_loc = (SOME D2. A0 = D1_loc \<union> D2 \<and> D1_loc \<inter> D2 = {x} \<and>
+            top1_is_arc_on D1_loc (subspace_topology X TX D1_loc) \<and>
+            top1_is_arc_on D2 (subspace_topology X TX D2) \<and>
+            h0 0 \<in> D1_loc \<and> h0 1 \<in> D2 \<and> x \<in> D1_loc \<and> x \<in> D2 \<and> D1_loc \<subseteq> X \<and> D2 \<subseteq> X)"
+        from someI_ex[OF hD1_prop]
+        have hD2_all: "A0 = D1_loc \<union> D2_loc \<and> D1_loc \<inter> D2_loc = {x} \<and>
+            top1_is_arc_on D1_loc (subspace_topology X TX D1_loc) \<and>
+            top1_is_arc_on D2_loc (subspace_topology X TX D2_loc) \<and>
+            h0 0 \<in> D1_loc \<and> h0 1 \<in> D2_loc \<and> x \<in> D1_loc \<and> x \<in> D2_loc \<and> D1_loc \<subseteq> X \<and> D2_loc \<subseteq> X"
+          unfolding D2_loc_def .
+        have hD2_eq: "A0 = D1_loc \<union> D2_loc" using hD2_all by (by100 blast)
+        have hD2_inter: "D1_loc \<inter> D2_loc = {x}" using hD2_all by (by100 blast)
+        have hh1_D2: "h0 1 \<in> D2_loc" using hD2_all by (by100 blast)
+        have hD1_sub_A0: "D1_loc \<subseteq> A0" using hD2_eq by (by100 blast)
+        have hh1_not_D1: "h0 1 \<notin> D1_loc"
+        proof
+          assume "h0 1 \<in> D1_loc"
+          hence "h0 1 \<in> D1_loc \<inter> D2_loc" using hh1_D2 by (by100 blast)
+          hence "h0 1 = x" using hD2_inter by (by100 blast)
+          thus False using hx_not_ep hA0_ep by (by100 blast)
         qed
+        have hx_ep_D1: "x \<in> top1_arc_endpoints_on D1_loc (subspace_topology X TX D1_loc)"
+          sorry \<comment> \<open>arc\\_split\\_endpoints: endpoints(D1) = {h0(0), x}.
+             OF chain times out on D2\\_loc SOME terms.\<close>
         \<comment> \<open>D1\\_loc DR to {x}.\<close>
         from arc_deformation_retract_to_endpoint[OF hD1_arc hx_ep_D1]
         have hD1_DR: "top1_deformation_retract_of_on D1_loc (subspace_topology X TX D1_loc) {x}" .
@@ -8583,13 +8578,94 @@ proof -
         qed
         \<comment> \<open>Construct U = D1\\_loc minus other endpoint, S = D1\\_loc, F = {D1\\_loc}.\<close>
         have hU_int_open: "\<exists>U. openin_on X TX U \<and> x \<in> U \<and> U \<subseteq> D1_loc"
-          sorry \<comment> \<open>D1\\_loc - {h0 0} is open in X. Proof (~15 lines):
-             (1) Open iff open in each arc (dual of hcoh, same as graph\\_lpc).
-             (2) (D1\\_loc - {h0 0}) \\<inter> A0 = D1\\_loc - {h0 0}: open in A0
-                 (removing endpoint from sub-arc = open in arc topology).
-             (3) (D1\\_loc - {h0 0}) \\<inter> B = {} for B \\<noteq> A0:
-                 x unique to A0 (interior), h0(1) \\<notin> D1\\_loc.
-             (4) Coherent open \\<Rightarrow> D1\\_loc - {h0 0} open in X.\<close>
+        proof -
+          let ?U0 = "D1_loc - {h0 0}"
+          \<comment> \<open>Step 1: ?U0 \\<inter> B = {} for B \\<noteq> A0.\<close>
+          have hU0_disjoint: "\<forall>B \<in> \<A>. B \<noteq> A0 \<longrightarrow> ?U0 \<inter> B = {}"
+          proof (intro ballI impI)
+            fix B assume hB: "B \<in> \<A>" "B \<noteq> A0"
+            \<comment> \<open>D1\\_loc \\<subseteq> A0. A0 \\<inter> B \\<subseteq> endpoints(A0) = {h0 0, h0 1}.
+               D1\\_loc \\<inter> B \\<subseteq> A0 \\<inter> B \\<subseteq> {h0 0, h0 1}.
+               h0 1 \\<notin> D1\\_loc (h0 1 \\<in> D2\\_loc, D1\\_loc \\<inter> D2\\_loc = {x}, x \\<noteq> h0 1).
+               So D1\\_loc \\<inter> B \\<subseteq> {h0 0}.
+               ?U0 = D1\\_loc - {h0 0}, so ?U0 \\<inter> B = {}.\<close>
+            have hD1_sub_A0': "D1_loc \<subseteq> A0" using hD1_sub_A0 .
+            from hinter hA0(1) hB have "A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology X TX A0)"
+              by (by100 blast)
+            hence "A0 \<inter> B \<subseteq> {h0 0, h0 1}" using hA0_ep by simp
+            hence "D1_loc \<inter> B \<subseteq> {h0 0, h0 1}" using hD1_sub_A0 by (by100 blast)
+            have "h0 1 \<notin> D1_loc" using hh1_not_D1 .
+            hence "D1_loc \<inter> B \<subseteq> {h0 0}" using \<open>D1_loc \<inter> B \<subseteq> {h0 0, h0 1}\<close> by (by100 blast)
+            thus "?U0 \<inter> B = {}" by (by100 blast)
+          qed
+          \<comment> \<open>Step 2: ?U0 open in X (via coherent topology dual).\<close>
+          have hU0_sub: "?U0 \<subseteq> X" using hD1_sub by (by100 blast)
+          have "X - ?U0 \<subseteq> X" by (by100 blast)
+          have "closedin_on X TX (X - ?U0)"
+          proof -
+            have "\<forall>A \<in> \<A>. closedin_on A (subspace_topology X TX A) (A \<inter> (X - ?U0))"
+            proof (intro ballI)
+              fix A assume hA: "A \<in> \<A>"
+              have hA_sub: "A \<subseteq> X" using h\<A> hA by (by100 blast)
+              show "closedin_on A (subspace_topology X TX A) (A \<inter> (X - ?U0))"
+              proof (cases "A = A0")
+                case True
+                \<comment> \<open>A = A0: A0 \\<inter> (X - ?U0) = A0 - ?U0. Since D1\\_loc \\<subseteq> A0:
+                   A0 - ?U0 = A0 - (D1\\_loc - {h0 0}) = (A0 - D1\\_loc) \\<union> {h0 0}.\<close>
+                have "A \<inter> (X - ?U0) = A - ?U0" using hA_sub by (by100 blast)
+                also have "... = (A - D1_loc) \<union> {h0 0}"
+                proof -
+                  have "A - (D1_loc - {h0 0}) = (A - D1_loc) \<union> (A \<inter> {h0 0})"
+                    by (by100 blast)
+                  also have "A \<inter> {h0 0} = {h0 0}" using True hh0_D1 hD1_sub_A0 by (by100 blast)
+                  finally show ?thesis by simp
+                qed
+                finally have hAXU: "A \<inter> (X - ?U0) = (A0 - D1_loc) \<union> {h0 0}" using True by simp
+                \<comment> \<open>(A0 - D1\\_loc) \\<union> {h0 0} is closed in A0: it's the complement of ?U0 in A0.\<close>
+                show ?thesis using hAXU
+                  sorry \<comment> \<open>(A0 - D1\\_loc) \\<union> {h0 0} closed in A0:
+                     A0 - D1\\_loc = D2\\_loc - {x} (open endpoint removal from arc).
+                     {h0 0} = singleton (closed). Their union: need careful argument.
+                     Actually: complement in A is ?U0 \\<inter> A = D1\\_loc - {h0 0},
+                     which is open in A (remove endpoint from sub-arc).
+                     So A - (A \\<inter> (X - ?U0)) = ?U0 \\<inter> A is open \\<Rightarrow> complement is closed.\<close>
+              next
+                case False
+                hence h_dis: "?U0 \<inter> A = {}" using hU0_disjoint hA by (by100 blast)
+                have "A \<inter> (X - ?U0) = A" using h_dis hA_sub by (by5000 blast)
+                \<comment> \<open>A is closed in itself (trivial).\<close>
+                have "is_topology_on A (subspace_topology X TX A)"
+                  using subspace_topology_is_topology_on[OF hTX hA_sub] .
+                have "A \<subseteq> A" by (by100 blast)
+                have "closedin_on A (subspace_topology X TX A) A"
+                proof -
+                  have "A \<subseteq> A" by (by100 blast)
+                  moreover have "A - A \<in> subspace_topology X TX A"
+                  proof -
+                    have "A - A = {}" by (by100 blast)
+                    moreover have "{} \<in> subspace_topology X TX A"
+                      using \<open>is_topology_on A _\<close> unfolding is_topology_on_def by (by100 blast)
+                    ultimately show ?thesis by simp
+                  qed
+                  ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+                qed
+                thus ?thesis using \<open>A \<inter> (X - ?U0) = A\<close> by simp
+              qed
+            qed
+            from iffD2[OF hcoh[rule_format, OF \<open>X - ?U0 \<subseteq> X\<close>]] this
+            show ?thesis .
+          qed
+          hence "X - (X - ?U0) \<in> TX"
+            unfolding closedin_on_def by (by100 blast)
+          moreover have "X - (X - ?U0) = ?U0" using hU0_sub by (by100 blast)
+          ultimately have "?U0 \<in> TX" by simp
+          \<comment> \<open>x \\<in> ?U0 and ?U0 \\<subseteq> D1\\_loc.\<close>
+          have "x \<in> ?U0" using hx_D1 hx_not_ep hA0_ep by (by100 blast)
+          have "?U0 \<subseteq> D1_loc" by (by100 blast)
+          show ?thesis
+            using \<open>?U0 \<in> TX\<close> \<open>x \<in> ?U0\<close> \<open>?U0 \<subseteq> D1_loc\<close> hU0_sub
+            unfolding openin_on_def by (by100 blast)
+        qed
         then obtain U_int where hU_int: "openin_on X TX U_int" "x \<in> U_int" "U_int \<subseteq> D1_loc"
           by (by100 blast)
         \<comment> \<open>12 conditions for singleton F = {D1\\_loc}, S = D1\\_loc.\<close>
