@@ -698,6 +698,85 @@ lemma quotient_carrier_memI:
   "g \<in> G \<Longrightarrow> top1_group_coset_on G mul N g \<in> top1_quotient_group_carrier_on G mul N"
   unfolding top1_quotient_group_carrier_on_def by (by100 blast)
 
+\<comment> \<open>Key: paths from e0 to the same endpoint project to loops in the same H-coset.
+   If \\<gamma>\\_1, \\<gamma>\\_2: e0 \\<rightarrow> e1, then [p\\<circ>\\<gamma>\\_1]\\<inverse>\\<cdot>[p\\<circ>\\<gamma>\\_2] \\<in> H = p*(\\<pi>\\_1(E,e0)),
+   so coset([p\\<circ>\\<gamma>\\_1], H) = coset([p\\<circ>\\<gamma>\\_2], H).\<close>
+lemma same_endpoint_same_coset:
+  fixes E :: "'e set" and TE :: "'e set set"
+    and B :: "'b set" and TB :: "'b set set"
+    and p :: "'e \<Rightarrow> 'b" and e0 :: 'e and b0 :: 'b
+  assumes "top1_covering_map_on E TE B TB p"
+      and "is_topology_on E TE" and "is_topology_on B TB"
+      and "e0 \<in> E" and "p e0 = b0"
+      and "top1_is_path_on E TE e0 e1 \<gamma>1"
+      and "top1_is_path_on E TE e0 e1 \<gamma>2"
+  shows "top1_group_coset_on
+      (top1_fundamental_group_carrier B TB b0)
+      (top1_fundamental_group_mul B TB b0)
+      (top1_fundamental_group_image_hom E TE e0 B TB b0 p)
+      {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>1 t)) g}
+    = top1_group_coset_on
+      (top1_fundamental_group_carrier B TB b0)
+      (top1_fundamental_group_mul B TB b0)
+      (top1_fundamental_group_image_hom E TE e0 B TB b0 p)
+      {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>2 t)) g}"
+proof -
+  \<comment> \<open>\\<gamma>\\_1 * rev(\\<gamma>\\_2) is a loop at e0 (e0 \\<rightarrow> e1 \\<rightarrow> e0).\<close>
+  let ?\<delta> = "top1_path_product \<gamma>1 (top1_path_reverse \<gamma>2)"
+  have h\<delta>_loop: "top1_is_loop_on E TE e0 ?\<delta>"
+    unfolding top1_is_loop_on_def
+    using top1_path_product_is_path[OF assms(2) assms(6)
+        top1_path_reverse_is_path[OF assms(7)]] .
+  \<comment> \<open>p\\<circ>\\<delta> is a loop at b0 in B.\<close>
+  have hp\<delta>_loop: "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<delta> t))"
+  proof -
+    have hp_cont: "top1_continuous_map_on E TE B TB p"
+      using top1_covering_map_on_continuous[OF assms(1)] .
+    have h\<delta>_path: "top1_is_path_on E TE e0 e0 ?\<delta>"
+      using h\<delta>_loop unfolding top1_is_loop_on_def .
+    have h\<delta>_cont: "top1_continuous_map_on I_set I_top E TE ?\<delta>"
+      using h\<delta>_path unfolding top1_is_path_on_def by (by100 blast)
+    have "top1_continuous_map_on I_set I_top B TB (p \<circ> ?\<delta>)"
+      using top1_continuous_map_on_comp[OF h\<delta>_cont hp_cont] .
+    moreover have "(p \<circ> ?\<delta>) 0 = b0"
+      using h\<delta>_path assms(5) unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "(p \<circ> ?\<delta>) 1 = b0"
+      using h\<delta>_path assms(5) unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "(\<lambda>t. p (?\<delta> t)) = p \<circ> ?\<delta>" by (rule ext) simp
+    ultimately show ?thesis
+      unfolding top1_is_loop_on_def top1_is_path_on_def by simp
+  qed
+  \<comment> \<open>[p\\<circ>\\<delta>] \\<in> H = image\\_hom(E, e0) (definition of image\\_hom).\<close>
+  have h\<delta>_in_H: "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) g} \<in>
+      top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+  proof -
+    let ?c_E = "{g. top1_loop_equiv_on E TE e0 ?\<delta> g}"
+    have "?c_E \<in> top1_fundamental_group_carrier E TE e0"
+      using h\<delta>_loop unfolding top1_fundamental_group_carrier_def top1_is_loop_on_def
+      by (by100 blast)
+    have "top1_fundamental_group_induced_on E TE e0 B TB b0 p ?c_E \<in>
+        top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+      using \<open>?c_E \<in> top1_fundamental_group_carrier E TE e0\<close>
+      unfolding top1_fundamental_group_image_hom_def by (by100 blast)
+    \<comment> \<open>Need: induced([\\<delta>]) = [p\\<circ>\\<delta>], i.e., the induced map sends the loop class to the projected class.\<close>
+    have "top1_fundamental_group_induced_on E TE e0 B TB b0 p ?c_E =
+        {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) g}"
+    proof -
+      have "?\<delta> \<in> ?c_E" unfolding top1_loop_equiv_on_def
+        using h\<delta>_loop unfolding top1_is_loop_on_def top1_is_path_on_def
+        sorry \<comment> \<open>\\<delta> \\<in> [\\<delta>] by reflexivity of loop equivalence.\<close>
+      have "(\<lambda>t. p (?\<delta> t)) = p \<circ> ?\<delta>" by (rule ext) simp
+      show ?thesis unfolding top1_fundamental_group_induced_on_def
+        sorry \<comment> \<open>{g. \\<exists>f\\<in>[\\<delta>]. loop\\_equiv(p\\<circ>f, g)} = {g. loop\\_equiv(p\\<circ>\\<delta>, g)}.
+           Forward: take f=\\<delta>. Backward: if f\\<sim>\\<delta> then p\\<circ>f\\<sim>p\\<circ>\\<delta>.\<close>
+    qed
+    thus ?thesis using \<open>top1_fundamental_group_induced_on _ _ _ _ _ _ _ ?c_E \<in> _\<close> by simp
+  qed
+  \<comment> \<open>[p\\<circ>\\<delta>] = [rev(p\\<circ>\\<gamma>\\_1)*(p\\<circ>\\<gamma>\\_2)] = [p\\<circ>\\<gamma>\\_1]\\<inverse>\\<cdot>[p\\<circ>\\<gamma>\\_2].
+     Being in H means [p\\<circ>\\<gamma>\\_1] and [p\\<circ>\\<gamma>\\_2] are in the same H-coset.\<close>
+  show ?thesis sorry \<comment> \<open>Coset equality from difference being in H.\<close>
+qed
+
 (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
     isomorphic to N(H)/H, where H = p_*(\<pi>_1(E, e_0)) and N(H) is its normalizer
     in \<pi>_1(B, b_0). **)
