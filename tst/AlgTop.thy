@@ -6900,10 +6900,17 @@ proof -
        Upper arc: {(x,y) \\<in> C(j) | x \\<ge> 0}, Lower arc: {(x,y) \\<in> C(j) | x \\<le> 0}.
        Endpoints: (0,0) and (0, 2*Suc j).
        Total: 2n arcs. Vertices: (0,0) and {(0, 2*Suc j) | j < n}.\<close>
+    \<comment> \<open>Graph structure: extract circles from wedge, split into arcs.\<close>
+    have hwedge_strict: "is_topology_on_strict X TX"
+      using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+    have hwedge_haus: "is_hausdorff_on X TX"
+      using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
     show ?thesis
-      sorry \<comment> \<open>Graph structure: decompose each circle into 2 arcs (semicircles).
-         Each semicircle homeo to [0,1] via angle parametrization.
-         ~200 lines needed for full proof. All ingredients available from hwedge.\<close>
+      sorry \<comment> \<open>Graph structure: decompose each C(j) into 2 arcs.
+         Each C(j) \\<cong> S1. Split S1 at east/west = {x\\<ge>0} and {x\\<le>0}.
+         Image under homeomorphism gives 2 arcs per circle.
+         Arc endpoints: p and the image of (-1,0) under the S1\\<rightarrow>C(j) homeo.
+         ~200 lines for full proof.\<close>
   qed
   have hconn: "top1_connected_on X TX"
   proof -
