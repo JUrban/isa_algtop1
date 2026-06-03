@@ -8580,10 +8580,34 @@ proof -
           sorry \<comment> \<open>D1\\_loc - {h0 0} is open in X (coherent: open in each arc).\<close>
         then obtain U_int where hU_int: "openin_on X TX U_int" "x \<in> U_int" "U_int \<subseteq> D1_loc"
           by (by100 blast)
+        \<comment> \<open>12 conditions for singleton F = {D1\\_loc}, S = D1\\_loc.\<close>
+        have hfin: "finite {D1_loc}" by (by100 simp)
+        have hclosed_F: "\<forall>A \<in> {D1_loc}. closedin_on D1_loc (subspace_topology X TX D1_loc) A"
+        proof -
+          have hD1_top_loc: "is_topology_on D1_loc (subspace_topology X TX D1_loc)"
+            using subspace_topology_is_topology_on[OF hTX hD1_sub] .
+          have "D1_loc \<subseteq> D1_loc" by (by100 blast)
+          moreover have "D1_loc - D1_loc \<in> subspace_topology X TX D1_loc"
+          proof -
+            have "D1_loc - D1_loc = {}" by (by100 blast)
+            moreover have "{} \<in> subspace_topology X TX D1_loc"
+              using hD1_top_loc unfolding is_topology_on_def by (by100 blast)
+            ultimately show ?thesis by simp
+          qed
+          ultimately have "closedin_on D1_loc (subspace_topology X TX D1_loc) D1_loc"
+            unfolding closedin_on_def by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+        have hcover_F: "D1_loc = \<Union>{D1_loc}" by (by100 simp)
+        have hinter_F: "\<forall>A \<in> {D1_loc}. \<forall>B \<in> {D1_loc}. A \<noteq> B \<longrightarrow> A \<inter> B = {x}"
+          by (by100 simp)
+        have hDR_F: "\<forall>A \<in> {D1_loc}. top1_deformation_retract_of_on A (subspace_topology X TX A) {x}"
+          using hD1_DR by (by100 simp)
         show ?thesis
           apply (rule that[of U_int D1_loc "{D1_loc}"])
-          using hU_int(1) hU_int(2) hU_int(3) hD1_sub hD1_strict hD1_closed hx_D1 hD1_DR hD1_pc
-          sorry \<comment> \<open>Assembly of 12 conditions: singleton F, pairwise vacuous, coherent trivial.\<close>
+          using hU_int(1) hU_int(2) hU_int(3) hD1_sub hD1_strict hfin hclosed_F
+                hcover_F hx_D1 hinter_F hDR_F hD1_pc
+          by (by5000 blast)+
       next
         case True
         \<comment> \<open>x is an endpoint of A0. Vertex case: construct star from sub-arcs.\<close>
