@@ -1354,11 +1354,30 @@ proof -
           show "?\<alpha>_class \<in> ?pi1B" using h\<alpha>_in_pi .
           \<comment> \<open>Use group\\_conj\\_reverse: from H = inv(\\<alpha>)\\<cdot>H\\<cdot>\\<alpha>, derive \\<alpha>\\<cdot>H\\<cdot>inv(\\<alpha>) = H.\<close>
           have hH_image: "?H = (\<lambda>h'. ?mulB (?invB ?\<alpha>_class) (?mulB h' ?\<alpha>_class)) ` ?H"
-            sorry \<comment> \<open>From hH\\_conj + heq\\_comp: nested image = single lambda image.\<close>
+          proof -
+            have "?\<alpha>_class = {g. top1_loop_equiv_on B TB b0 (p \<circ> ?\<gamma>) g}"
+              using heq_comp by simp
+            hence "?mulB (?invB ?\<alpha>_class) = ?mulB (?invB {g. top1_loop_equiv_on B TB b0 (p \<circ> ?\<gamma>) g})"
+              by simp
+            have "(\<lambda>x. ?mulB x ?\<alpha>_class) = (\<lambda>x. ?mulB x {g. top1_loop_equiv_on B TB b0 (p \<circ> ?\<gamma>) g})"
+              using \<open>?\<alpha>_class = _\<close> by simp
+            have hH_nested: "?H = ?mulB (?invB {g. top1_loop_equiv_on B TB b0 (p \<circ> ?\<gamma>) g}) `
+                ((\<lambda>x. ?mulB x {g. top1_loop_equiv_on B TB b0 (p \<circ> ?\<gamma>) g}) ` ?H)"
+              using hH_conj by simp
+            hence "?H = ?mulB (?invB ?\<alpha>_class) ` ((\<lambda>x. ?mulB x ?\<alpha>_class) ` ?H)"
+              using \<open>?\<alpha>_class = _\<close> by simp
+            also have "?mulB (?invB ?\<alpha>_class) ` ((\<lambda>x. ?mulB x ?\<alpha>_class) ` ?H)
+                = (\<lambda>h'. ?mulB (?invB ?\<alpha>_class) (?mulB h' ?\<alpha>_class)) ` ?H"
+              by (by5000 auto)
+            finally show ?thesis .
+          qed
           from group_conj_reverse[OF hpi1_grp hH_sub h\<alpha>_in_pi hH_image]
           have "(\<lambda>h'. ?mulB (?mulB ?\<alpha>_class h') (?invB ?\<alpha>_class)) ` ?H = ?H" .
+          have "{?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H} =
+              (\<lambda>h'. ?mulB (?mulB ?\<alpha>_class h') (?invB ?\<alpha>_class)) ` ?H"
+            by (by100 blast)
           thus "{?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H} = ?H"
-            sorry \<comment> \<open>Image = set comprehension.\<close>
+            using \<open>(\<lambda>h'. ?mulB (?mulB ?\<alpha>_class h') (?invB ?\<alpha>_class)) ` ?H = ?H\<close> by simp
         qed
       qed
       \<comment> \<open>Define f: Cov(p) \\<rightarrow> N(H)/H by f(h) = [p\\<circ>\\<gamma>\\_h]\\<cdot>H.\<close>
