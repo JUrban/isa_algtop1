@@ -7106,8 +7106,29 @@ proof -
             from hA_arc[unfolded top1_is_arc_on_def] obtain h where
                 "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
               by (by100 blast)
-            hence "top1_compact_on A (subspace_topology X TX A)"
-              sorry \<comment> \<open>[0,1] compact + continuous image = compact.\<close>
+            \<comment> \<open>[0,1] compact (Theorem 27.1) \\<Rightarrow> A compact (continuous image).\<close>
+            have hI_compact: "top1_compact_on I_set I_top"
+              using Theorem_27_1[of "0::real" 1]
+              unfolding top1_unit_interval_def top1_unit_interval_topology_def by simp
+            have hI_top: "is_topology_on I_set I_top"
+              using top1_unit_interval_topology_is_topology_on .
+            have hA_sub_top: "is_topology_on A (subspace_topology X TX A)"
+              using subspace_topology_is_topology_on[OF hTX_top hA_sub] .
+            from \<open>top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h\<close>
+            have hh_cont: "top1_continuous_map_on I_set I_top A (subspace_topology X TX A) h"
+              unfolding top1_homeomorphism_on_def by (by100 blast)
+            from Theorem_26_5[OF hI_top hA_sub_top hI_compact hh_cont]
+            have "top1_compact_on (h ` I_set) (subspace_topology A (subspace_topology X TX A) (h ` I_set))" .
+            moreover have "h ` I_set = A"
+              using \<open>top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h\<close>
+              unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            moreover have "subspace_topology A (subspace_topology X TX A) A = subspace_topology X TX A"
+            proof -
+              have "\<forall>U \<in> subspace_topology X TX A. U \<subseteq> A"
+                using hA_sub hTX_top unfolding subspace_topology_def by (by100 blast)
+              from subspace_topology_self[OF this] show ?thesis .
+            qed
+            ultimately have "top1_compact_on A (subspace_topology X TX A)" by simp
             from compact_in_strict_hausdorff_closedin_on[OF hwedge_haus hwedge_strict hA_sub this]
             show ?thesis .
           qed
@@ -7127,7 +7148,52 @@ proof -
         assume hall: "\<forall>A \<in> ?arcs. closedin_on A (subspace_topology X TX A) (A \<inter> D)"
         \<comment> \<open>D = \\<Union>(D\\<inter>A) over all arcs. Each D\\<inter>A closed in A, A closed in X, so D\\<inter>A closed in X.\<close>
         have "\<forall>A \<in> ?arcs. closedin_on X TX (A \<inter> D)"
-          sorry \<comment> \<open>From hall + Theorem 17.2 + A closed in X.\<close>
+        proof (intro ballI)
+          fix A assume hA_in: "A \<in> ?arcs"
+          have hA_sub: "A \<subseteq> X" using harcs_sub hA_in by (by100 blast)
+          have hTX_top': "is_topology_on X TX"
+            using hwedge_strict unfolding is_topology_on_strict_def by (by100 blast)
+          \<comment> \<open>A is closed in X (arc compact \\<Rightarrow> closed in Hausdorff).\<close>
+          have hA_arc: "top1_is_arc_on A (subspace_topology X TX A)"
+            using harcs_arc hA_in by (by100 blast)
+          from hA_arc[unfolded top1_is_arc_on_def] obtain h_A where
+              "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h_A"
+            by (by100 blast)
+          have hI_compact: "top1_compact_on I_set I_top"
+            using Theorem_27_1[of "0::real" 1]
+            unfolding top1_unit_interval_def top1_unit_interval_topology_def by simp
+          have hI_top: "is_topology_on I_set I_top"
+            using top1_unit_interval_topology_is_topology_on .
+          have hA_sub_top: "is_topology_on A (subspace_topology X TX A)"
+            using subspace_topology_is_topology_on[OF hTX_top' hA_sub] .
+          have hh_cont_A: "top1_continuous_map_on I_set I_top A (subspace_topology X TX A) h_A"
+            using \<open>top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h_A\<close>
+            unfolding top1_homeomorphism_on_def by (by100 blast)
+          have hh_img_A: "h_A ` I_set = A"
+            using \<open>top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h_A\<close>
+            unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          from Theorem_26_5[OF hI_top hA_sub_top hI_compact hh_cont_A]
+          have "top1_compact_on (h_A ` I_set) (subspace_topology A (subspace_topology X TX A) (h_A ` I_set))" .
+          hence hA_compact: "top1_compact_on A (subspace_topology X TX A)"
+          proof -
+            have "\<forall>U \<in> subspace_topology X TX A. U \<subseteq> A"
+              using hA_sub hTX_top' unfolding subspace_topology_def by (by100 blast)
+            have "subspace_topology A (subspace_topology X TX A) A = subspace_topology X TX A"
+              using subspace_topology_self[OF \<open>\<forall>U \<in> subspace_topology X TX A. U \<subseteq> A\<close>] .
+            thus ?thesis using hh_img_A
+              \<open>top1_compact_on (h_A ` I_set) (subspace_topology A (subspace_topology X TX A) (h_A ` I_set))\<close>
+              by simp
+          qed
+          have hA_closed: "closedin_on X TX A"
+            using compact_in_strict_hausdorff_closedin_on[OF hwedge_haus hwedge_strict hA_sub hA_compact] .
+          \<comment> \<open>closedin A (subspace A) (A\\<inter>D) \\<Rightarrow> by Thm 17.2: A\\<inter>D = F \\<inter> A for closed F \\<Rightarrow> closed in X.\<close>
+          from hall hA_in have "closedin_on A (subspace_topology X TX A) (A \<inter> D)" by (by100 blast)
+          from iffD1[OF Theorem_17_2[OF hTX_top' hA_sub] this]
+          obtain F where hF: "closedin_on X TX F" "A \<inter> D = F \<inter> A" by (by100 blast)
+          have "closedin_on X TX (F \<inter> A)"
+            by (rule closedin_inter2[OF hTX_top' hF(1) hA_closed])
+          thus "closedin_on X TX (A \<inter> D)" using hF(2) by simp
+        qed
         have hD_union: "D = (\<Union>A \<in> ?arcs. A \<inter> D)"
           using hD harcs_cover by (by100 blast)
         have hfin: "finite ?arcs" by (by100 simp)
