@@ -6474,7 +6474,8 @@ proof -
     \<comment> \<open>Assembly.\<close>
     have "top1_is_wedge_of_circles_on ?X ?TX {..<?n} ?p"
       unfolding top1_is_wedge_of_circles_on_def
-      sorry \<comment> \<open>Assembly from the above facts.\<close>
+      sorry \<comment> \<open>Assembly: all ingredients (strict, haus, p\\<in>X, homeo, union, inter, coh) proved.
+         Just needs careful matching with the definition's existential.\<close>
     define X_w where "X_w = ?X"
     define TX_w where "TX_w = ?TX"
     define p_w where "p_w = ?p"
