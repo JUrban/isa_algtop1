@@ -6624,15 +6624,56 @@ proof -
       thus ?thesis by simp
     qed
     \<comment> \<open>Coherent topology: closed iff closed in each C(i).\<close>
+    have hX_top: "is_topology_on ?X ?TX"
+      using hX_strict unfolding is_topology_on_strict_def by (by100 blast)
+    \<comment> \<open>Each C(i) is closed in R2 (circle = preimage of continuous function).\<close>
+    have hCi_closed_X: "\<forall>i \<in> {..<?n}. closedin_on ?X ?TX (?C i)"
+      sorry \<comment> \<open>Each circle closed in R2 \\<Rightarrow> closed in X (subspace).
+         Circle = {(x,y) | f(x,y) = r^2} where f continuous. {r^2} closed.
+         Preimage of closed under continuous = closed.\<close>
     have hX_coh: "\<forall>D. D \<subseteq> ?X \<longrightarrow>
         (closedin_on ?X ?TX D \<longleftrightarrow>
          (\<forall>i \<in> {..<?n}. closedin_on (?C i)
               (subspace_topology ?X ?TX (?C i)) (?C i \<inter> D)))"
-      sorry \<comment> \<open>Coherent topology for finite union of closed subsets.
-         Each C(i) closed in R2 (circle = preimage of closed set).
-         (\\<rightarrow>): closedin X D \\<Rightarrow> closedin C(i) (C(i)\\<inter>D) by closedin\\_subspace\\_from\\_ambient.
-         (\\<leftarrow>): closedin C(i) (C(i)\\<inter>D) \\<Rightarrow> C(i)\\<inter>D closed in X (Theorem 17.2 + C(i) closed).
-         Then D = \\<Union>(D\\<inter>C(i)) = finite union of closed = closed.\<close>
+    proof (intro allI impI iffI ballI)
+      fix D i assume hD: "D \<subseteq> ?X" and hcl: "closedin_on ?X ?TX D" and hi: "i \<in> {..<?n}"
+      \<comment> \<open>(\\<rightarrow>): D closed in X, C(i) closed in X \\<Rightarrow> D\\<inter>C(i) closed in X \\<Rightarrow> closed in C(i).\<close>
+      have hDCi_cl_X: "closedin_on ?X ?TX (?C i \<inter> D)"
+        by (rule closedin_inter2[OF hX_top hCi_closed_X[rule_format, OF hi] hcl])
+      have hCi_sub: "?C i \<subseteq> ?X" using hi by (by100 blast)
+      have "?C i \<inter> D \<subseteq> ?C i" by (by100 blast)
+      from closedin_subspace_from_ambient[OF hX_top hDCi_cl_X hCi_sub this]
+      show "closedin_on (?C i) (subspace_topology ?X ?TX (?C i)) (?C i \<inter> D)" .
+    next
+      fix D assume hD: "D \<subseteq> ?X"
+          and hall: "\<forall>i \<in> {..<?n}. closedin_on (?C i) (subspace_topology ?X ?TX (?C i)) (?C i \<inter> D)"
+      \<comment> \<open>(\\<leftarrow>): D\\<inter>C(i) closed in C(i) for all i. Show D closed in X.\<close>
+      \<comment> \<open>By Theorem 17.2: closedin C(i) ... (C(i)\\<inter>D) \\<Leftrightarrow> \\<exists>F. closedin X F \\<and> C(i)\\<inter>D = F\\<inter>C(i).\<close>
+      \<comment> \<open>So C(i)\\<inter>D = F\\<inter>C(i) for some closed F. Then C(i)\\<inter>D is closed in X
+         (intersection of closed F and closed C(i)).
+         D = \\<Union>(D\\<inter>C(i)) = finite union of closed in X = closed.\<close>
+      have "\<forall>i \<in> {..<?n}. closedin_on ?X ?TX (?C i \<inter> D)"
+      proof (intro ballI)
+        fix i assume hi: "i \<in> {..<?n}"
+        have hCi_sub: "?C i \<subseteq> ?X" using hi by (by100 blast)
+        from hall hi have "closedin_on (?C i) (subspace_topology ?X ?TX (?C i)) (?C i \<inter> D)" by (by100 blast)
+        from iffD1[OF Theorem_17_2[OF hX_top hCi_sub]] this
+        obtain F where hF: "closedin_on ?X ?TX F" "?C i \<inter> D = F \<inter> ?C i" by (by100 blast)
+        have "closedin_on ?X ?TX (F \<inter> ?C i)"
+          by (rule closedin_inter2[OF hX_top hF(1) hCi_closed_X[rule_format, OF hi]])
+        thus "closedin_on ?X ?TX (?C i \<inter> D)" using hF(2) by (by100 simp)
+      qed
+      \<comment> \<open>D = \\<Union>(D\\<inter>C(i)) since D \\<subseteq> X = \\<Union>C(i).\<close>
+      have hD_union: "D = (\<Union>i \<in> {..<?n}. ?C i \<inter> D)"
+      proof -
+        have "D \<subseteq> (\<Union>i \<in> {..<?n}. ?C i)" using hD by simp
+        thus ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>Finite union of closed sets is closed.\<close>
+      show "closedin_on ?X ?TX D"
+        sorry \<comment> \<open>D = finite union of closedin\\_on X, hence closed.
+           Uses finite induction on {..<n}.\<close>
+    qed
     \<comment> \<open>Subspace topology on C(i) in X = subspace topology on C(i) in R2.\<close>
     have hC_sub_topo: "\<forall>i \<in> {..<?n}.
         subspace_topology ?X ?TX (?C i) =
