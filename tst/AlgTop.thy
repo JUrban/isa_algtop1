@@ -8474,7 +8474,29 @@ proof -
         have hh0_D1: "h0 0 \<in> D1_loc" using hD1_prop by (by100 blast)
         \<comment> \<open>Endpoints of D1\\_loc.\<close>
         have hx_ep_D1: "x \<in> top1_arc_endpoints_on D1_loc (subspace_topology X TX D1_loc)"
-          sorry \<comment> \<open>From arc\\_split\\_endpoints: endpoints(D1) = {h0(0), x}.\<close>
+        proof -
+          \<comment> \<open>Extract D2 via SOME.\<close>
+          define D2_loc where "D2_loc = (SOME D2. A0 = D1_loc \<union> D2 \<and> D1_loc \<inter> D2 = {x} \<and>
+              top1_is_arc_on D1_loc (subspace_topology X TX D1_loc) \<and>
+              top1_is_arc_on D2 (subspace_topology X TX D2) \<and>
+              h0 0 \<in> D1_loc \<and> h0 1 \<in> D2 \<and> x \<in> D1_loc \<and> x \<in> D2 \<and> D1_loc \<subseteq> X \<and> D2 \<subseteq> X)"
+          from someI_ex[OF hD1_prop]
+          have hD2_all: "A0 = D1_loc \<union> D2_loc \<and> D1_loc \<inter> D2_loc = {x} \<and>
+              top1_is_arc_on D1_loc (subspace_topology X TX D1_loc) \<and>
+              top1_is_arc_on D2_loc (subspace_topology X TX D2_loc) \<and>
+              h0 0 \<in> D1_loc \<and> h0 1 \<in> D2_loc \<and> x \<in> D1_loc \<and> x \<in> D2_loc \<and> D1_loc \<subseteq> X \<and> D2_loc \<subseteq> X"
+            unfolding D2_loc_def .
+          have hD2_eq: "A0 = D1_loc \<union> D2_loc" using hD2_all by (by100 blast)
+          have hD2_inter: "D1_loc \<inter> D2_loc = {x}" using hD2_all by (by100 blast)
+          have hD2_arc: "top1_is_arc_on D2_loc (subspace_topology X TX D2_loc)"
+            using hD2_all by (by100 blast)
+          have hh1_D2: "h0 1 \<in> D2_loc" using hD2_all by (by100 blast)
+          have hx_D2: "x \<in> D2_loc" using hD2_all by (by100 blast)
+          have hD2_sub: "D2_loc \<subseteq> X" using hD2_all by (by100 blast)
+          have "top1_arc_endpoints_on D1_loc (subspace_topology X TX D1_loc) = {h0 0, x}"
+            sorry \<comment> \<open>From arc\\_split\\_endpoints but D2\\_loc SOME term causes OF timeout.\<close>
+          thus ?thesis by (by100 blast)
+        qed
         \<comment> \<open>D1\\_loc DR to {x}.\<close>
         from arc_deformation_retract_to_endpoint[OF hD1_arc hx_ep_D1]
         have hD1_DR: "top1_deformation_retract_of_on D1_loc (subspace_topology X TX D1_loc) {x}" .
