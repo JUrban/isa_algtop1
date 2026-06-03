@@ -1074,11 +1074,91 @@ proof -
          So \\<Phi>\\<inverse>\\<circ>\\<Psi>: Cov(p) \\<rightarrow> N(H)/H is a bijection.
          For homomorphism: book proof uses path composition (\\<gamma>*(h\\<circ>\\<delta>) lifts \\<alpha>*\\<beta>).
          This requires the lifting correspondence to interact well with path products.\<close>
-      show ?thesis sorry \<comment> \<open>Full proof requires:
-         (1) Theorem 54.4 (lifting correspondence),
-         (2) h\\<Psi>\\_image \\<Leftrightarrow> Lemma 81.1 (image of \\<Psi> = \\<Phi>(N(H)/H)),
-         (3) path composition under covering maps (homomorphism),
-         (4) composition of bijections (bijectivity).\<close>
+      \<comment> \<open>Following Munkres 81.2 proof: define f: Cov(p) \\<rightarrow> N(H)/H.
+         For h \\<in> Cov: pick path \\<gamma>: e0 \\<rightarrow> h(e0) in E, then f(h) = [p\\<circ>\\<gamma>]\\<cdot>H.\<close>
+      let ?pi1B = "top1_fundamental_group_carrier B TB b0"
+      let ?mulB = "top1_fundamental_group_mul B TB b0"
+      let ?eB = "top1_fundamental_group_id B TB b0"
+      let ?invB = "top1_fundamental_group_invg B TB b0"
+      let ?N = "top1_normalizer_on ?pi1B ?mulB ?invB ?H"
+      let ?coset = "\<lambda>g. top1_group_coset_on ?pi1B ?mulB ?H g"
+      \<comment> \<open>Step F.1: For each h \\<in> Cov, path-connectedness of E gives a path e0 \\<rightarrow> h(e0).\<close>
+      have hE_pc: "top1_path_connected_on E TE" using assms(4) .
+      have he0E: "e0 \<in> E" using assms(6) .
+      have hpe0: "p e0 = b0" using assms(7) .
+      \<comment> \<open>Step F.2: For h \\<in> Cov, h(e0) \\<in> E with p(h(e0)) = b0.
+         So p\\<circ>\\<gamma> is a loop at b0, giving a class [p\\<circ>\\<gamma>] \\<in> \\<pi>\\_1(B,b0).\<close>
+      \<comment> \<open>Step F.3: [p\\<circ>\\<gamma>] \\<in> N(H) (from h\\<Psi>\\_image: h(e0) has image\\_hom = H,
+         so Lemma 79.3 gives conjugation preserves H).\<close>
+      \<comment> \<open>Step F.4: Define f(h) = [p\\<circ>\\<gamma>]\\<cdot>H = the coset of [p\\<circ>\\<gamma>] in N(H)/H.\<close>
+      \<comment> \<open>Step F.5: f is well-defined: if \\<gamma>' is another path e0\\<rightarrow>h(e0),
+         then \\<gamma>*rev(\\<gamma>') is a loop at e0, so [p\\<circ>(\\<gamma>*rev(\\<gamma>'))] \\<in> H.
+         Hence [p\\<circ>\\<gamma>]\\<cdot>H = [p\\<circ>\\<gamma>']\\<cdot>H.\<close>
+      \<comment> \<open>Step F.6: f is a homomorphism.
+         For h,k: \\<gamma>*(h\\<circ>\\<delta>) lifts (p\\<circ>\\<gamma>)*(p\\<circ>\\<delta>) = \\<alpha>*\\<beta>.
+         So f(h\\<circ>k) = [\\<alpha>*\\<beta>]\\<cdot>H = ([\\<alpha>]\\<cdot>H)*([\\<beta>]\\<cdot>H) = f(h)*f(k).\<close>
+      \<comment> \<open>Step F.7: f is bijective.
+         Injective: f(h) = e\\<cdot>H \\<Rightarrow> [p\\<circ>\\<gamma>] \\<in> H \\<Rightarrow> \\<gamma> closes to loop
+         \\<Rightarrow> h(e0) = e0 \\<Rightarrow> h = id.
+         Surjective: for [\\<alpha>]\\<cdot>H with [\\<alpha>] \\<in> N(H): lift \\<alpha> to \\<tilde>\\<alpha> starting at e0,
+         define h as the covering transformation with h(e0) = \\<tilde>\\<alpha>(1).
+         Then f(h) = [\\<alpha>]\\<cdot>H.\<close>
+      \<comment> \<open>Step G: For h \\<in> Cov, pick a path \\<gamma>: e0 \\<rightarrow> h(e0). Define the loop class.\<close>
+      \<comment> \<open>For each e1 \\<in> fiber, pick a path e0\\<rightarrow>e1 using SOME and path-connectedness.\<close>
+      define path_to :: "'e \<Rightarrow> real \<Rightarrow> 'e" where
+        "path_to e1 = (SOME \<gamma>. top1_is_path_on E TE e0 e1 \<gamma>)" for e1
+      have hpath_to: "\<And>e1. e1 \<in> E \<Longrightarrow> top1_is_path_on E TE e0 e1 (path_to e1)"
+      proof -
+        fix e1 assume "e1 \<in> E"
+        from hE_pc have "\<exists>\<gamma>. top1_is_path_on E TE e0 e1 \<gamma>"
+          using he0E \<open>e1 \<in> E\<close> unfolding top1_path_connected_on_def by (by100 blast)
+        thus "top1_is_path_on E TE e0 e1 (path_to e1)"
+          unfolding path_to_def by (rule someI_ex)
+      qed
+      \<comment> \<open>For h \\<in> Cov: \\<gamma>\\_h = path\\_to(h(e0)). Then p\\<circ>\\<gamma>\\_h is a loop at b0.\<close>
+      have hloop_class: "\<And>h. h \<in> ?Cov \<Longrightarrow>
+          {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g} \<in> ?pi1B"
+        sorry \<comment> \<open>p\\<circ>\\<gamma> is a loop at b0, its equivalence class is in \\<pi>\\_1(B,b0).\<close>
+      \<comment> \<open>The loop class [p\\<circ>\\<gamma>\\_h] is in N(H) (from Lemma 81.1/h\\<Psi>\\_image).\<close>
+      have hin_normalizer: "\<And>h. h \<in> ?Cov \<Longrightarrow>
+          {f. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) f} \<in> ?N"
+        sorry \<comment> \<open>From h\\<Psi>\\_image + Lemma 79.3 (conjugation by [\\<alpha>] preserves H iff [\\<alpha>] \\<in> N(H)).\<close>
+      \<comment> \<open>Define f: Cov(p) \\<rightarrow> N(H)/H by f(h) = [p\\<circ>\\<gamma>\\_h]\\<cdot>H.\<close>
+      define f :: "('e \<Rightarrow> 'e) \<Rightarrow> (real \<Rightarrow> 'b) set set" where
+        "f h = ?coset {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g}" for h
+      \<comment> \<open>Step H: f maps Cov to Q.\<close>
+      have hf_maps: "\<And>h. h \<in> ?Cov \<Longrightarrow> f h \<in> ?Q"
+      proof -
+        fix h assume "h \<in> ?Cov"
+        let ?\<alpha>_class = "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g}"
+        have "?\<alpha>_class \<in> ?N" using hin_normalizer[OF \<open>h \<in> ?Cov\<close>] .
+        hence "?coset ?\<alpha>_class \<in> ?Q"
+          unfolding top1_quotient_group_carrier_on_def sorry
+        thus "f h \<in> ?Q" unfolding f_def .
+      qed
+      \<comment> \<open>Step I: f is a homomorphism (book proof: \\<gamma>*(h\\<circ>\\<delta>) lifts \\<alpha>*\\<beta>).\<close>
+      have hf_hom: "\<And>h k. h \<in> ?Cov \<Longrightarrow> k \<in> ?Cov \<Longrightarrow>
+          f (\<lambda>e. h (k e)) = ?mulQ (f h) (f k)"
+        sorry \<comment> \<open>Key: path\\_to(h(k(e0))) is homotopic (rel endpoints) to
+           \\<gamma>\\_h * (h \\<circ> \\<gamma>\\_k), so p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k)) = (p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k).
+           Then [p\\<circ>\\<gamma>\\_{hk}]\\<cdot>H = [p\\<circ>\\<gamma>\\_h]*[p\\<circ>\\<gamma>\\_k]\\<cdot>H = f(h)*f(k).\<close>
+      \<comment> \<open>Step J: f is injective.\<close>
+      have hf_inj: "inj_on f ?Cov"
+        sorry \<comment> \<open>f(h) = e\\<cdot>H \\<Rightarrow> [p\\<circ>\\<gamma>\\_h] \\<in> H \\<Rightarrow> \\<gamma>\\_h is a loop at e0
+           \\<Rightarrow> h(e0) = e0 \\<Rightarrow> h = id (by \\<Psi> injectivity).\<close>
+      \<comment> \<open>Step K: f is surjective onto Q.\<close>
+      have hf_surj: "f ` ?Cov = ?Q"
+        sorry \<comment> \<open>For [\\<alpha>]\\<cdot>H \\<in> N(H)/H: [\\<alpha>] \\<in> N(H) \\<Rightarrow> \\<exists> covering transformation h
+           with h(e0) = \\<tilde>\\<alpha>(1) (from h\\<Psi>\\_image). Then f(h) = [\\<alpha>]\\<cdot>H.\<close>
+      \<comment> \<open>Assemble: f is a group isomorphism.\<close>
+      show ?thesis unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
+      proof (rule exI[of _ f], intro conjI)
+        show "top1_group_hom_on ?Cov (\<lambda>h k e. h (k e)) ?Q ?mulQ f"
+          unfolding top1_group_hom_on_def
+          using hf_maps hf_hom sorry
+        show "bij_betw f ?Cov ?Q"
+          unfolding bij_betw_def using hf_inj hf_surj by (by100 blast)
+      qed
     qed
   qed
   obtain eC invgC where hCov_grp: "top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC"
