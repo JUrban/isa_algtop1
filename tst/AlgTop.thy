@@ -1186,11 +1186,28 @@ proof -
            image\\_hom(E, h(e0)) = [p\\<circ>\\<gamma>]\\<inverse> \\<cdot> H \\<cdot> [p\\<circ>\\<gamma>].
            Since image\\_hom(E, h(e0)) = H (him\\_eq), the conjugation equals H.
            Hence [p\\<circ>\\<gamma>] \\<in> N(H).\<close>
+        \<comment> \<open>Apply basepoint\\_change\\_image\\_hom: image\\_hom(E,h(e0)) = inv(\\<alpha>)\\<cdot>H\\<cdot>\\<alpha>.\<close>
+        let ?\<gamma> = "path_to (h e0)"
+        have heq_comp: "(\<lambda>t. p (?\<gamma> t)) = p \<circ> ?\<gamma>" by (rule ext) simp
+        from basepoint_change_image_hom[OF assms(3) hTE hTB he0E \<open>h e0 \<in> E\<close> h\<gamma>
+            hpe0 \<open>p (h e0) = b0\<close> hE_pc]
+        have hconj: "top1_fundamental_group_image_hom E TE (h e0) B TB b0 p =
+            (\<lambda>H'. ?mulB (?invB {g. top1_loop_equiv_on B TB b0 (p \<circ> ?\<gamma>) g}) `
+                 ((\<lambda>x. ?mulB x {g. top1_loop_equiv_on B TB b0 (p \<circ> ?\<gamma>) g}) ` H'))
+            ?H" .
+        \<comment> \<open>With him\\_eq: H = inv(\\<alpha>)\\<cdot>H\\<cdot>\\<alpha>. Hence \\<alpha> normalizes H.\<close>
+        from him_eq hconj
+        have hH_conj: "?H = (\<lambda>H'. ?mulB (?invB {g. top1_loop_equiv_on B TB b0 (p \<circ> ?\<gamma>) g}) `
+                 ((\<lambda>x. ?mulB x {g. top1_loop_equiv_on B TB b0 (p \<circ> ?\<gamma>) g}) ` H'))
+            ?H" by simp
+        \<comment> \<open>From H = inv(\\<alpha>)\\<cdot>H\\<cdot>\\<alpha>, derive \\<alpha>\\<cdot>H\\<cdot>inv(\\<alpha>) = H (normalizer condition).
+           This is a group-theoretic fact: inv(g)\\<cdot>H\\<cdot>g = H \\<Leftrightarrow> g\\<cdot>H\\<cdot>inv(g) = H.\<close>
+        have "?\<alpha>_class \<in> ?pi1B" using hloop_class[OF \<open>h \<in> ?Cov\<close>]
+          unfolding heq_comp .
         show "?\<alpha>_class \<in> ?N" sorry
-          \<comment> \<open>Algebraic conclusion from him\\_eq + basepoint\\_change\\_image\\_hom + normalizer\\_def.
-             Available: basepoint\\_change\\_image\\_hom[OF assms(3) hTE hTB he0E \\<open>h e0 \\<in> E\\<close> h\\<gamma>
-                 hpe0 \\<open>p (h e0) = b0\\<close> hE\\_pc].
-             Need: unfold normalizer\\_on\\_def and show conjugation preserves H.\<close>
+          \<comment> \<open>From hH\\_conj + \\<alpha>\\_class \\<in> \\<pi>\\_1(B): unfold normalizer\\_on\\_def,
+             show {mulB(mulB(\\<alpha>, k), inv(\\<alpha>)) | k \\<in> H} = H using the
+             conjugation equation hH\\_conj and group algebra.\<close>
       qed
       \<comment> \<open>Define f: Cov(p) \\<rightarrow> N(H)/H by f(h) = [p\\<circ>\\<gamma>\\_h]\\<cdot>H.\<close>
       define f :: "('e \<Rightarrow> 'e) \<Rightarrow> (real \<Rightarrow> 'b) set set" where
