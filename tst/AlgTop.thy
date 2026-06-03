@@ -1155,7 +1155,39 @@ proof -
       \<comment> \<open>The loop class [p\\<circ>\\<gamma>\\_h] is in N(H) (from Lemma 81.1/h\\<Psi>\\_image).\<close>
       have hin_normalizer: "\<And>h. h \<in> ?Cov \<Longrightarrow>
           {f. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) f} \<in> ?N"
-        sorry \<comment> \<open>From h\\<Psi>\\_image + Lemma 79.3 (conjugation by [\\<alpha>] preserves H iff [\\<alpha>] \\<in> N(H)).\<close>
+      proof -
+        fix h assume "h \<in> ?Cov"
+        let ?\<alpha>_class = "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g}"
+        have "h e0 \<in> E" "p (h e0) = b0"
+          using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>h \<in> ?Cov\<close> by (by100 blast)+
+        \<comment> \<open>From h\\<Psi>\\_image: image\\_hom(E, h(e0)) = H.\<close>
+        have hhe0_in_img: "h e0 \<in> \<Psi> ` ?Cov"
+          using \<open>h \<in> ?Cov\<close> unfolding \<Psi>_def by (by100 blast)
+        have "h e0 \<in> {e \<in> E. p e = b0 \<and>
+            top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
+          using h\<Psi>_image hhe0_in_img by (by100 blast)
+        hence him_eq: "top1_fundamental_group_image_hom E TE (h e0) B TB b0 p = ?H"
+          by (by100 blast)
+        \<comment> \<open>By Lemma 79.3 (basepoint\\_change\\_image\\_hom):
+           image\\_hom(E, h(e0)) = [p\\<circ>\\<gamma>]\\<inverse> \\<cdot> H \\<cdot> [p\\<circ>\\<gamma>].
+           Since image\\_hom(E, h(e0)) = H, we get [p\\<circ>\\<gamma>]\\<inverse> \\<cdot> H \\<cdot> [p\\<circ>\\<gamma>] = H,
+           i.e., [p\\<circ>\\<gamma>] \\<in> N(H).\<close>
+        have hTE: "is_topology_on E TE"
+          using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+        have hTB: "is_topology_on B TB"
+          using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+        have h\<gamma>: "top1_is_path_on E TE e0 (h e0) (path_to (h e0))"
+          using hpath_to[OF \<open>h e0 \<in> E\<close>] .
+        \<comment> \<open>By Lemma 79.3 (basepoint\\_change\\_image\\_hom):
+           image\\_hom(E, h(e0)) = [p\\<circ>\\<gamma>]\\<inverse> \\<cdot> H \\<cdot> [p\\<circ>\\<gamma>].
+           Since image\\_hom(E, h(e0)) = H (him\\_eq), the conjugation equals H.
+           Hence [p\\<circ>\\<gamma>] \\<in> N(H).\<close>
+        show "?\<alpha>_class \<in> ?N" sorry
+          \<comment> \<open>Algebraic conclusion from him\\_eq + basepoint\\_change\\_image\\_hom + normalizer\\_def.
+             Available: basepoint\\_change\\_image\\_hom[OF assms(3) hTE hTB he0E \\<open>h e0 \\<in> E\\<close> h\\<gamma>
+                 hpe0 \\<open>p (h e0) = b0\\<close> hE\\_pc].
+             Need: unfold normalizer\\_on\\_def and show conjugation preserves H.\<close>
+      qed
       \<comment> \<open>Define f: Cov(p) \\<rightarrow> N(H)/H by f(h) = [p\\<circ>\\<gamma>\\_h]\\<cdot>H.\<close>
       define f :: "('e \<Rightarrow> 'e) \<Rightarrow> (real \<Rightarrow> 'b) set set" where
         "f h = ?coset {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g}" for h
