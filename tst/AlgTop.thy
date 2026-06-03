@@ -8324,6 +8324,23 @@ proof -
   qed
 qed
 
+lemma arc_locally_path_connected:
+  assumes "top1_is_arc_on A (subspace_topology X TX A)"
+      and "is_topology_on X TX" and "A \<subseteq> X"
+  shows "top1_locally_path_connected_on A (subspace_topology X TX A)"
+proof -
+  from assms(1)[unfolded top1_is_arc_on_def] obtain h where
+      "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+    by (by100 blast)
+  \<comment> \<open>[0,1] is lpc (same proof as in graph\\_lpc: convexity + SC).\<close>
+  have "top1_locally_path_connected_on I_set I_top"
+    sorry \<comment> \<open>Same proof as hI\\_lpc in graph\\_locally\\_path\\_connected (~60 lines).
+       Convex \\<epsilon>-ball \\<inter> [0,1] is path-connected.
+       Uses convex\\_real\\_subspace\\_simply\\_connected + subspace\\_topology\\_trans.\<close>
+  from homeomorphism_preserves_lpc[OF \<open>top1_homeomorphism_on I_set I_top A _ h\<close> this]
+  show ?thesis .
+qed
+
 lemma graph_semilocally_simply_connected:
   assumes "top1_is_graph_on X TX"
   shows "top1_semilocally_simply_connected_on X TX"
@@ -8415,7 +8432,6 @@ proof -
       show ?thesis
       proof (cases "x \<in> top1_arc_endpoints_on A0 (subspace_topology X TX A0)")
         case False
-        case False
         \<comment> \<open>x is interior to A0 (not an endpoint). x is in exactly one arc.
            Take U = open interval in A0 around x.
            U is SC (convex subset), so loops in U null-homotopic in U, hence in X.\<close>
@@ -8433,13 +8449,55 @@ proof -
            A small open interval around x in A0 is open in X (coherent: open in A0,
            empty for other arcs). And it's simply connected (convex).
            From SC: loops null-homotopic in U, hence in X.\<close>
+        \<comment> \<open>A0 \\<cong> [0,1]. x interior \\<Rightarrow> small open interval around x is open in A0,
+           disjoint from other arcs, hence open in X, and SC.\<close>
+        \<comment> \<open>From lpc of A0: x has a path-connected open neighborhood in A0.\<close>
+        \<comment> \<open>A0 is lpc (homeomorphic to [0,1] which is lpc).
+           Actually, simpler: A0 \\<subseteq> X and X is lpc (graph\\_lpc). Not directly useful
+           since A0 is NOT open in X. But A0's subspace topology from X = its intrinsic
+           topology (by coherent), and arcs ARE lpc (intervals).\<close>
+        have hA0_lpc: "top1_locally_path_connected_on A0 (subspace_topology X TX A0)"
+          using arc_locally_path_connected[OF hA0_arc hTX hA0_sub] .
+        \<comment> \<open>Get a path-connected open neighborhood V of x in A0.\<close>
+        have hA0_top: "is_topology_on A0 (subspace_topology X TX A0)"
+          using subspace_topology_is_topology_on[OF hTX hA0_sub] .
+        from hA0_lpc[unfolded top1_locally_path_connected_on_def top1_locally_path_connected_at_def]
+        have hlpc_at_x: "\<forall>W. neighborhood_of x A0 (subspace_topology X TX A0) W \<and> W \<subseteq> A0 \<longrightarrow>
+            (\<exists>V. neighborhood_of x A0 (subspace_topology X TX A0) V \<and> V \<subseteq> W \<and> V \<subseteq> A0 \<and>
+              top1_path_connected_on V (subspace_topology A0 (subspace_topology X TX A0) V))"
+          using hA0(2) by (by100 blast)
+        \<comment> \<open>Take W = A0 (the whole arc). Get V \\<subseteq> A0 open, pc, containing x.\<close>
+        have "neighborhood_of x A0 (subspace_topology X TX A0) A0 \<and> A0 \<subseteq> A0"
+        proof -
+          have "A0 \<in> subspace_topology X TX A0"
+            using hA0_top unfolding is_topology_on_def by (by100 blast)
+          thus ?thesis using hA0(2) unfolding neighborhood_of_def by (by100 blast)
+        qed
+        from hlpc_at_x[rule_format, OF this]
+        obtain V0 where hV0: "neighborhood_of x A0 (subspace_topology X TX A0) V0"
+            "V0 \<subseteq> A0" "top1_path_connected_on V0 (subspace_topology A0 (subspace_topology X TX A0) V0)"
+          by (by100 blast)
+        have hV0_open: "V0 \<in> subspace_topology X TX A0" and hx_V0: "x \<in> V0"
+          using hV0(1) unfolding neighborhood_of_def by (by100 blast)+
+        \<comment> \<open>V0 open in A0 \\<Rightarrow> V0 = A0 \\<inter> W for some W \\<in> TX.\<close>
+        from hV0_open obtain W0 where hW0: "W0 \<in> TX" "V0 = A0 \<inter> W0"
+          unfolding subspace_topology_def by (by100 blast)
+        \<comment> \<open>V0 \\<inter> B = {} for B \\<noteq> A0 (all of V0 is in A0, and points of V0
+           that are in B must be in A0 \\<inter> B \\<subseteq> endpoints(A0), but x \\<notin> endpoints
+           and the interval V0 might contain endpoints. Use Hausdorff separation
+           to shrink V0 if needed, or show V0 \\<inter> B \\<subseteq> endpoints \\<Rightarrow> V0 \\<inter> B finite).\<close>
+        \<comment> \<open>Actually: V0 is open in A0, containing x. Since x is NOT in any other arc B,
+           and B is closed in X (compact arc in Hausdorff), X-B is open and contains x.
+           So V0 \\<inter> (X-B) is open in A0, contains x, and is disjoint from B.
+           Take the intersection over all B \\<noteq> A0 containing endpoints of A0.
+           Only finitely many B share endpoints with A0 (card(A0 \\<inter> B) \\<le> 2 for each B).\<close>
+        \<comment> \<open>Simpler: just find an open U \\<subseteq> V0 that's open in X.\<close>
         show ?thesis
-          sorry \<comment> \<open>Interior case: take U = open interval in A0 around x.
-             U open in X: coherent (U\\<inter>A0 open, U\\<inter>B={} for B\\<noteq>A0).
-             U SC: homeomorphic to open interval (convex \\<Rightarrow> SC).
-             Loops in U null-homotopic in U (SC).
-             Transfer to X via path\\_homotopic\\_subspace\\_to\\_ambient.
-             Key facts: hx\\_unique, arc homeo to [0,1], convex\\_real\\_subspace\\_simply\\_connected.\<close>
+          sorry \<comment> \<open>Interior case (~30 lines remaining):
+             V0 open in A0. For B \\<noteq> A0: V0 \\<inter> B \\<subseteq> A0 \\<inter> B \\<subseteq> endpoints(A0) = finite.
+             Shrink V0 to avoid these finite intersection points.
+             Result: open U in X, contained in one arc, hence SC.
+             Loops null-homotopic in SC U, transfer to X.\<close>
       next
         case True
         \<comment> \<open>x is an endpoint of A0. Vertex case: construct star from sub-arcs.\<close>
