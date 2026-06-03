@@ -1238,11 +1238,13 @@ proof -
           proof (rule set_eqI, rule iffI)
             fix x assume "x \<in> {?mulB (?mulB ?\<alpha>_class h) (?invB ?\<alpha>_class) |h. h \<in> ?H}"
             then obtain k where "k \<in> ?H" "x = ?mulB (?mulB ?\<alpha>_class k) (?invB ?\<alpha>_class)"
-              sorry
+              by (by5000 auto)
             \<comment> \<open>k \\<in> H = {inv(\\<alpha>)\\<cdot>h\\<cdot>\\<alpha> | h \\<in> H} from hH\\_conj.
                So k = inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha> for some h0 \\<in> H.
-               Then \\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) = \\<alpha>\\<cdot>inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha>\\<cdot>inv(\\<alpha>) = h0 \\<in> H.\<close>
+               Then x = \\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) = \\<alpha>\\<cdot>inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha>\\<cdot>inv(\\<alpha>) = h0 \\<in> H.\<close>
             thus "x \<in> ?H" sorry
+              \<comment> \<open>From k = inv(\\<alpha>)\\<cdot>h0\\<cdot>\\<alpha> (h0 \\<in> H), x = \\<alpha>\\<cdot>k\\<cdot>inv(\\<alpha>) = h0 \\<in> H.
+                 Requires group cancellation from hpi1\\_grp.\<close>
           next
             fix m assume "m \<in> ?H"
             \<comment> \<open>inv(\\<alpha>)\\<cdot>m\\<cdot>\\<alpha> \\<in> H (from hH\\_conj: H = {inv(\\<alpha>)\\<cdot>h\\<cdot>\\<alpha> | h \\<in> H}).
