@@ -17409,7 +17409,8 @@ proof -
     have "\<exists>\<iota>'. top1_is_free_group_full_on
         (top1_fundamental_group_carrier ?X TX ?p) (top1_fundamental_group_mul ?X TX ?p)
         (top1_fundamental_group_id ?X TX ?p) (top1_fundamental_group_invg ?X TX ?p)
-        \<iota>' S" sorry \<comment> \<open>Theorem 71.3 applied to wedge. Needs wedge\\_of\\_circles proved.\<close>
+        \<iota>' S"
+      using Theorem_71_3[OF \<open>top1_is_wedge_of_circles_on ?X TX S ?p\<close>] .
     \<comment> \<open>Two free groups on the same S are isomorphic.\<close>
     \<comment> \<open>Two free groups on same S are isomorphic (universal property).\<close>
     then obtain \<iota>' where h71: "top1_is_free_group_full_on
