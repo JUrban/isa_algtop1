@@ -7084,7 +7084,65 @@ proof -
     have harcs_coh: "\<forall>D. D \<subseteq> X \<longrightarrow>
         (closedin_on X TX D \<longleftrightarrow>
          (\<forall>A \<in> ?arcs. closedin_on A (subspace_topology X TX A) (A \<inter> D)))"
-      sorry \<comment> \<open>Refine wedge coherent: closed in C(j) iff closed in each arc of C(j).\<close>
+    proof (intro allI impI)
+      fix D assume hD: "D \<subseteq> X"
+      show "closedin_on X TX D \<longleftrightarrow>
+          (\<forall>A \<in> ?arcs. closedin_on A (subspace_topology X TX A) (A \<inter> D))"
+      proof (rule iffI)
+        \<comment> \<open>(\\<rightarrow>): D closed in X \\<Rightarrow> D\\<inter>A closed in A for each arc A.\<close>
+        assume hcl: "closedin_on X TX D"
+        show "\<forall>A \<in> ?arcs. closedin_on A (subspace_topology X TX A) (A \<inter> D)"
+        proof (intro ballI)
+          fix A assume "A \<in> ?arcs"
+          have hA_sub: "A \<subseteq> X" using harcs_sub \<open>A \<in> ?arcs\<close> by (by100 blast)
+          have hTX_top: "is_topology_on X TX"
+            using hwedge_strict unfolding is_topology_on_strict_def by (by100 blast)
+          \<comment> \<open>A is compact (arc = homeo image of [0,1] = compact), hence closed in Hausdorff X.\<close>
+          have hA_arc: "top1_is_arc_on A (subspace_topology X TX A)"
+            using harcs_arc \<open>A \<in> ?arcs\<close> by (by100 blast)
+          have hA_closed: "closedin_on X TX A"
+          proof -
+            \<comment> \<open>arc \\<Rightarrow> homeo to [0,1] \\<Rightarrow> compact \\<Rightarrow> closed in Hausdorff.\<close>
+            from hA_arc[unfolded top1_is_arc_on_def] obtain h where
+                "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+              by (by100 blast)
+            hence "top1_compact_on A (subspace_topology X TX A)"
+              sorry \<comment> \<open>[0,1] compact + continuous image = compact.\<close>
+            from compact_in_strict_hausdorff_closedin_on[OF hwedge_haus hwedge_strict hA_sub this]
+            show ?thesis .
+          qed
+          have "closedin_on X TX (A \<inter> D)"
+            by (rule closedin_inter2[OF hTX_top hA_closed hcl])
+          from closedin_subspace_from_ambient[OF hTX_top this hA_sub]
+          have "closedin_on A (subspace_topology X TX A) (A \<inter> D)"
+          proof -
+            have "A \<inter> D \<subseteq> A" by (by100 blast)
+            from closedin_subspace_from_ambient[OF hTX_top \<open>closedin_on X TX (A \<inter> D)\<close> hA_sub this]
+            show ?thesis .
+          qed
+          thus "closedin_on A (subspace_topology X TX A) (A \<inter> D)" .
+        qed
+      next
+        \<comment> \<open>(\\<leftarrow>): closed in each arc \\<Rightarrow> closed in X.\<close>
+        assume hall: "\<forall>A \<in> ?arcs. closedin_on A (subspace_topology X TX A) (A \<inter> D)"
+        \<comment> \<open>D = \\<Union>(D\\<inter>A) over all arcs. Each D\\<inter>A closed in A, A closed in X, so D\\<inter>A closed in X.\<close>
+        have "\<forall>A \<in> ?arcs. closedin_on X TX (A \<inter> D)"
+          sorry \<comment> \<open>From hall + Theorem 17.2 + A closed in X.\<close>
+        have hD_union: "D = (\<Union>A \<in> ?arcs. A \<inter> D)"
+          using hD harcs_cover by (by100 blast)
+        have hfin: "finite ?arcs" by (by100 simp)
+        let ?F = "(\<lambda>A. A \<inter> D) ` ?arcs"
+        have hF_fin: "finite ?F" using hfin by (by100 simp)
+        have hF_closed: "\<forall>A \<in> ?F. closedin_on X TX A"
+          using \<open>\<forall>A \<in> ?arcs. closedin_on X TX (A \<inter> D)\<close> by (by100 blast)
+        have hTX_top: "is_topology_on X TX"
+          using hwedge_strict unfolding is_topology_on_strict_def by (by100 blast)
+        from closedin_Union_finite[OF hTX_top hF_fin hF_closed]
+        have "closedin_on X TX (\<Union>?F)" .
+        moreover have "\<Union>?F = D" using hD_union by (by100 blast)
+        ultimately show "closedin_on X TX D" by simp
+      qed
+    qed
     \<comment> \<open>Assembly.\<close>
     show ?thesis
       unfolding top1_is_graph_on_def
