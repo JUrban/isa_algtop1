@@ -6895,8 +6895,19 @@ proof -
     \<comment> \<open>Simpler approach: decompose each C(j) into 2 arcs (upper/lower semicircle).
        Since C(j) \\<cong> S1, and S1 = upper \\<cup> lower with 2 shared endpoints (1,0) and (-1,0),
        each C(j) decomposes into 2 arcs sharing p and the antipodal point of p in C(j).\<close>
-    show ?thesis sorry \<comment> \<open>Arc decomposition of wedge of circles into graph structure.
-       Needs: homeomorphism S1 \\<cong> C(j), semicircle arcs, endpoint matching.\<close>
+    \<comment> \<open>Decompose each circle into 2 arcs (upper/lower semicircle).
+       C(j) = {(x,y) | x^2+(y-r)^2=r^2} with r = Suc j.
+       Upper arc: {(x,y) \\<in> C(j) | x \\<ge> 0}, Lower arc: {(x,y) \\<in> C(j) | x \\<le> 0}.
+       Endpoints: (0,0) and (0, 2*Suc j).
+       Total: 2n arcs. Vertices: (0,0) and {(0, 2*Suc j) | j < n}.\<close>
+    show ?thesis
+      unfolding top1_is_graph_on_def
+      sorry \<comment> \<open>Graph structure from arc decomposition.
+         Needs: (1) Each semicircle homeomorphic to [0,1] (arc).
+         (2) Union of all arcs = X. (3) Pairwise intersection at endpoints.
+         (4) Coherent topology (from wedge coherent + arc structure).
+         Each of these is feasible but requires ~50 lines.
+         Total estimate: ~200 lines.\<close>
   qed
   have hconn: "top1_connected_on X TX"
   proof -
