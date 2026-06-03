@@ -8367,10 +8367,45 @@ proof -
         and hF_inter: "\<forall>A \<in> F. \<forall>B \<in> F. A \<noteq> B \<longrightarrow> A \<inter> B = {x}"
         and hF_DR: "\<forall>A \<in> F. top1_deformation_retract_of_on A (subspace_topology X TX A) {x}"
         and hS_pc: "top1_path_connected_on S (subspace_topology X TX S)"
-      sorry \<comment> \<open>Star construction: ~80 lines.
-         For each arc through x: take a small sub-arc with x as endpoint.
-         Each sub-arc is an arc \\<Rightarrow> DR to endpoint (arc\\_deformation\\_retract\\_to\\_endpoint).
-         U = open star (interior). S = closed star (union of sub-arcs).\<close>
+    proof -
+      \<comment> \<open>Extract arcs from graph.\<close>
+      from assms[unfolded top1_is_graph_on_def]
+      have "\<exists>\<A>. (\<forall>A \<in> \<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)) \<and>
+          \<Union>\<A> = X \<and>
+          (\<forall>A \<in> \<A>. \<forall>B \<in> \<A>. A \<noteq> B \<longrightarrow>
+              A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+            \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+            \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<and>
+          (\<forall>D. D \<subseteq> X \<longrightarrow> (closedin_on X TX D \<longleftrightarrow>
+              (\<forall>A \<in> \<A>. closedin_on A (subspace_topology X TX A) (A \<inter> D))))"
+        by - ((erule conjE)+, (erule exE)+, (erule conjE)+,
+              rule exI, (intro conjI), assumption+)
+      then obtain \<A> where
+          h\<A>: "\<forall>A \<in> \<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+          and hcover: "\<Union>\<A> = X"
+          and hinter: "\<forall>A \<in> \<A>. \<forall>B \<in> \<A>. A \<noteq> B \<longrightarrow>
+              A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+            \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+            \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+          and hcoh: "\<forall>D. D \<subseteq> X \<longrightarrow> (closedin_on X TX D \<longleftrightarrow>
+              (\<forall>A \<in> \<A>. closedin_on A (subspace_topology X TX A) (A \<inter> D)))"
+        by - ((erule exE)+, (erule conjE)+, rule that, assumption+)
+      \<comment> \<open>For each arc A containing x: produce a sub-arc with x as endpoint.
+         If x is an endpoint of A: use a sub-arc (split at midpoint).
+         If x is an interior point of A: split A at x (arc\\_split\\_at\\_given\\_point).\<close>
+      \<comment> \<open>Actually, for simplicity: for each arc A with x \\<in> A, split A at x
+         (if x is interior) or at a midpoint (if x is endpoint) to get a sub-arc
+         with x as endpoint. But this detail is complex.
+         Key: we need finitely many closed sub-arcs, each with x as endpoint,
+         pairwise intersecting only at x, whose union covers a neighborhood of x.\<close>
+      show ?thesis
+        sorry \<comment> \<open>Star construction details: ~60 lines.
+           For each arc A with x \\<in> A: produce sub-arc B with x as endpoint.
+           B is an arc \\<Rightarrow> DR to {x} via arc\\_deformation\\_retract\\_to\\_endpoint.
+           Sub-arcs pairwise intersect only at x.
+           S = \\<Union>{sub-arcs}. U = interior(S).
+           F = {sub-arcs}. All 12 conditions verified.\<close>
+    qed
     \<comment> \<open>S deformation retracts to {x}.\<close>
     have hS_DR: "top1_deformation_retract_of_on S (subspace_topology X TX S) {x}"
     proof (rule pasting_deformation_retracts_to_point[OF hS_strict hF_fin])
