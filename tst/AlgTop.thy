@@ -8583,7 +8583,13 @@ proof -
         qed
         \<comment> \<open>Construct U = D1\\_loc minus other endpoint, S = D1\\_loc, F = {D1\\_loc}.\<close>
         have hU_int_open: "\<exists>U. openin_on X TX U \<and> x \<in> U \<and> U \<subseteq> D1_loc"
-          sorry \<comment> \<open>D1\\_loc - {h0 0} is open in X (coherent: open in each arc).\<close>
+          sorry \<comment> \<open>D1\\_loc - {h0 0} is open in X. Proof (~15 lines):
+             (1) Open iff open in each arc (dual of hcoh, same as graph\\_lpc).
+             (2) (D1\\_loc - {h0 0}) \\<inter> A0 = D1\\_loc - {h0 0}: open in A0
+                 (removing endpoint from sub-arc = open in arc topology).
+             (3) (D1\\_loc - {h0 0}) \\<inter> B = {} for B \\<noteq> A0:
+                 x unique to A0 (interior), h0(1) \\<notin> D1\\_loc.
+             (4) Coherent open \\<Rightarrow> D1\\_loc - {h0 0} open in X.\<close>
         then obtain U_int where hU_int: "openin_on X TX U_int" "x \<in> U_int" "U_int \<subseteq> D1_loc"
           by (by100 blast)
         \<comment> \<open>12 conditions for singleton F = {D1\\_loc}, S = D1\\_loc.\<close>
