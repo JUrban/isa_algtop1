@@ -6386,7 +6386,65 @@ proof (cases "card S = 0")
   have hgraph0: "top1_is_graph_on ?X0 ?TX0"
     sorry \<comment> \<open>Single arc [0,1]\\<times>{0}. Homeomorphism I \\<rightarrow> X0 via t\\<mapsto>(t,0).\<close>
   have hconn0: "top1_connected_on ?X0 ?TX0"
-    sorry \<comment> \<open>Interval \\<times> {0} connected: continuous image of connected [0,1].\<close>
+  proof -
+    let ?f0 = "\<lambda>t::real. (t, 0::real)"
+    have hf0_cont: "continuous_on UNIV ?f0" by (intro continuous_intros)
+    let ?TR2 = "product_topology_on top1_open_sets top1_open_sets"
+    have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set) ?TR2"
+    proof -
+      have "is_topology_on_strict (UNIV :: (real \<times> real) set) ?TR2"
+        by (rule hausdorff_strict_is_strict[OF top1_R2_is_hausdorff], by100 blast)
+      thus ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+    qed
+    have hI_top: "is_topology_on I_set I_top"
+      using top1_unit_interval_topology_is_topology_on .
+    \<comment> \<open>f0 continuous I \\<rightarrow> R2.\<close>
+    \<comment> \<open>f0 maps I\\_set into X0.\<close>
+    have hf0_maps_X0: "\<forall>t \<in> I_set. ?f0 t \<in> ?X0"
+      unfolding top1_unit_interval_def by (by100 auto)
+    \<comment> \<open>f0 continuous R \\<rightarrow> X0 (subspace of R2).\<close>
+    \<comment> \<open>f0 continuous R \\<rightarrow> R2 (whole space), then restrict.\<close>
+    from top1_continuous_map_on_R_to_R2_subspace[OF _ hf0_cont]
+    have hf0_R_R2: "top1_continuous_map_on (UNIV :: real set) top1_open_sets
+        (UNIV :: (real \<times> real) set) (subspace_topology UNIV ?TR2 UNIV) ?f0"
+      by (by100 blast)
+    have "subspace_topology UNIV ?TR2 (UNIV :: (real \<times> real) set) = ?TR2"
+    proof -
+      have "\<forall>U \<in> ?TR2. U \<subseteq> (UNIV :: (real \<times> real) set)" by (by100 blast)
+      from subspace_topology_self[OF this] show ?thesis .
+    qed
+    hence hf0_R_R2': "top1_continuous_map_on (UNIV :: real set) top1_open_sets
+        (UNIV :: (real \<times> real) set) ?TR2 ?f0" using hf0_R_R2 by simp
+    \<comment> \<open>Restrict domain to I\\_set.\<close>
+    have hI_sub: "I_set \<subseteq> (UNIV :: real set)" by (by100 blast)
+    from top1_continuous_map_on_restrict_domain_simple[OF hf0_R_R2' hI_sub]
+    have hf0_I_R2: "top1_continuous_map_on I_set (subspace_topology UNIV top1_open_sets I_set)
+        (UNIV :: (real \<times> real) set) ?TR2 ?f0" .
+    hence hf0_I_R2': "top1_continuous_map_on I_set I_top (UNIV :: (real \<times> real) set) ?TR2 ?f0"
+      unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+    \<comment> \<open>Restrict codomain to X0.\<close>
+    from continuous_map_restrict_codomain[OF hf0_I_R2' hf0_maps_X0]
+    have hf0_cont_top: "top1_continuous_map_on I_set I_top ?X0 ?TX0 ?f0"
+      by (by100 blast)
+    \<comment> \<open>[0,1] connected \\<Rightarrow> image connected.\<close>
+    have hX0_top: "is_topology_on ?X0 ?TX0"
+    proof -
+      from subspace_topology_is_topology_on[OF hR2_top]
+      show ?thesis by (by100 blast)
+    qed
+    from Theorem_23_5[OF hI_top hX0_top top1_unit_interval_connected hf0_cont_top]
+    have "top1_connected_on (?f0 ` I_set) (subspace_topology ?X0 ?TX0 (?f0 ` I_set))" .
+    \<comment> \<open>f0 ` I\\_set = {0..1} \\<times> {0}.\<close>
+    moreover have "?f0 ` I_set = ?X0"
+      unfolding top1_unit_interval_def by (by100 auto)
+    moreover have "subspace_topology ?X0 ?TX0 ?X0 = ?TX0"
+    proof -
+      have "\<forall>U \<in> ?TX0. U \<subseteq> ?X0"
+        unfolding subspace_topology_def by (by100 blast)
+      from subspace_topology_self[OF this] show ?thesis .
+    qed
+    ultimately show ?thesis by simp
+  qed
   have hx0_in: "?x00 \<in> ?X0" by (by100 simp)
   have hiso0: "top1_groups_isomorphic_on F mul
       (top1_fundamental_group_carrier ?X0 ?TX0 ?x00)
