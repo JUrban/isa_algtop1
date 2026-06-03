@@ -1116,9 +1116,42 @@ proof -
           unfolding path_to_def by (rule someI_ex)
       qed
       \<comment> \<open>For h \\<in> Cov: \\<gamma>\\_h = path\\_to(h(e0)). Then p\\<circ>\\<gamma>\\_h is a loop at b0.\<close>
+      have hp_cont: "top1_continuous_map_on E TE B TB p"
+        using top1_covering_map_on_continuous[OF assms(3)] .
       have hloop_class: "\<And>h. h \<in> ?Cov \<Longrightarrow>
           {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g} \<in> ?pi1B"
-        sorry \<comment> \<open>p\\<circ>\\<gamma> is a loop at b0, its equivalence class is in \\<pi>\\_1(B,b0).\<close>
+      proof -
+        fix h assume "h \<in> ?Cov"
+        \<comment> \<open>h(e0) \\<in> E with p(h(e0)) = b0.\<close>
+        have "h e0 \<in> E" "p (h e0) = b0"
+          using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>h \<in> ?Cov\<close> by (by100 blast)+
+        \<comment> \<open>\\<gamma> = path\\_to(h(e0)) is a path from e0 to h(e0) in E.\<close>
+        have h\<gamma>: "top1_is_path_on E TE e0 (h e0) (path_to (h e0))"
+          using hpath_to[OF \<open>h e0 \<in> E\<close>] .
+        \<comment> \<open>p\\<circ>\\<gamma> is continuous from I to B.\<close>
+        have h\<gamma>_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology E TE (path_to (h e0))"
+          using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+        have hpg_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology B TB
+            (p \<circ> path_to (h e0))"
+          using top1_continuous_map_on_comp[OF h\<gamma>_cont hp_cont] .
+        \<comment> \<open>Endpoints: (p\\<circ>\\<gamma>)(0) = b0, (p\\<circ>\\<gamma>)(1) = b0.\<close>
+        have "path_to (h e0) 0 = e0" using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+        have "path_to (h e0) 1 = h e0" using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+        have "(p \<circ> path_to (h e0)) 0 = b0"
+          using \<open>path_to (h e0) 0 = e0\<close> hpe0 by simp
+        have "(p \<circ> path_to (h e0)) 1 = b0"
+          using \<open>path_to (h e0) 1 = h e0\<close> \<open>p (h e0) = b0\<close> by simp
+        \<comment> \<open>Hence p\\<circ>\\<gamma> is a loop at b0.\<close>
+        have hloop: "top1_is_loop_on B TB b0 (p \<circ> path_to (h e0))"
+          unfolding top1_is_loop_on_def top1_is_path_on_def
+          using hpg_cont \<open>(p \<circ> path_to (h e0)) 0 = b0\<close> \<open>(p \<circ> path_to (h e0)) 1 = b0\<close>
+          by (by100 blast)
+        \<comment> \<open>Its class is in \\<pi>\\_1(B,b0). Need: (\\<lambda>t. p(\\<gamma> t)) equiv to (p\\<circ>\\<gamma>).\<close>
+        have heq: "(\<lambda>t. p (path_to (h e0) t)) = p \<circ> path_to (h e0)" by (rule ext) simp
+        show "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g} \<in> ?pi1B"
+          unfolding heq top1_fundamental_group_carrier_def
+          using hloop by (by100 blast)
+      qed
       \<comment> \<open>The loop class [p\\<circ>\\<gamma>\\_h] is in N(H) (from Lemma 81.1/h\\<Psi>\\_image).\<close>
       have hin_normalizer: "\<And>h. h \<in> ?Cov \<Longrightarrow>
           {f. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) f} \<in> ?N"
