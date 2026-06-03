@@ -1224,7 +1224,7 @@ proof -
       proof (rule exI[of _ f], intro conjI)
         show "top1_group_hom_on ?Cov (\<lambda>h k e. h (k e)) ?Q ?mulQ f"
           unfolding top1_group_hom_on_def
-          using hf_maps hf_hom sorry
+          using hf_maps hf_hom by (by5000 blast)
         show "bij_betw f ?Cov ?Q"
           unfolding bij_betw_def using hf_inj hf_surj by (by100 blast)
       qed
