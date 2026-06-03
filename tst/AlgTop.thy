@@ -8446,12 +8446,122 @@ proof -
             show False by simp
           qed
         qed
+        \<comment> \<open>Apply arc\\_split\\_at\\_given\\_point. Use note to avoid blast timeout.\<close>
+        note hsplit = arc_split_at_given_point[OF hstrict hhaus hA0_sub hA0_arc hA0(2) hx_not_ep hA0_ep hA0_ep_ne]
+        \<comment> \<open>hsplit gives: \\<exists>D1 D2. A0 = D1 \\<union> D2 \\<and> D1 \\<inter> D2 = {x} \\<and> arcs \\<and> ... .\<close>
+        \<comment> \<open>Extract D1 using SOME.\<close>
+        define D1_loc where "D1_loc = (SOME D1. \<exists>D2. A0 = D1 \<union> D2 \<and> D1 \<inter> D2 = {x} \<and>
+            top1_is_arc_on D1 (subspace_topology X TX D1) \<and>
+            top1_is_arc_on D2 (subspace_topology X TX D2) \<and>
+            h0 0 \<in> D1 \<and> h0 1 \<in> D2 \<and> x \<in> D1 \<and> x \<in> D2 \<and> D1 \<subseteq> X \<and> D2 \<subseteq> X)"
+        have hD1_prop: "\<exists>D2. A0 = D1_loc \<union> D2 \<and> D1_loc \<inter> D2 = {x} \<and>
+            top1_is_arc_on D1_loc (subspace_topology X TX D1_loc) \<and>
+            top1_is_arc_on D2 (subspace_topology X TX D2) \<and>
+            h0 0 \<in> D1_loc \<and> h0 1 \<in> D2 \<and> x \<in> D1_loc \<and> x \<in> D2 \<and> D1_loc \<subseteq> X \<and> D2 \<subseteq> X"
+        proof -
+          from hsplit have "\<exists>D1. \<exists>D2. A0 = D1 \<union> D2 \<and> D1 \<inter> D2 = {x} \<and>
+              top1_is_arc_on D1 (subspace_topology X TX D1) \<and>
+              top1_is_arc_on D2 (subspace_topology X TX D2) \<and>
+              h0 0 \<in> D1 \<and> h0 1 \<in> D2 \<and> x \<in> D1 \<and> x \<in> D2 \<and> D1 \<subseteq> X \<and> D2 \<subseteq> X"
+            by (by5000 blast)
+          from someI_ex[OF this] show ?thesis unfolding D1_loc_def .
+        qed
+        \<comment> \<open>D1\\_loc is an arc with x as endpoint (from arc\\_split\\_endpoints).\<close>
+        have hD1_arc: "top1_is_arc_on D1_loc (subspace_topology X TX D1_loc)"
+          using hD1_prop by (by100 blast)
+        have hD1_sub: "D1_loc \<subseteq> X" using hD1_prop by (by100 blast)
+        have hx_D1: "x \<in> D1_loc" using hD1_prop by (by100 blast)
+        have hh0_D1: "h0 0 \<in> D1_loc" using hD1_prop by (by100 blast)
+        \<comment> \<open>Endpoints of D1\\_loc.\<close>
+        have hx_ep_D1: "x \<in> top1_arc_endpoints_on D1_loc (subspace_topology X TX D1_loc)"
+          sorry \<comment> \<open>From arc\\_split\\_endpoints: endpoints(D1) = {h0(0), x}.\<close>
+        \<comment> \<open>D1\\_loc DR to {x}.\<close>
+        from arc_deformation_retract_to_endpoint[OF hD1_arc hx_ep_D1]
+        have hD1_DR: "top1_deformation_retract_of_on D1_loc (subspace_topology X TX D1_loc) {x}" .
+        \<comment> \<open>D1\\_loc is closed, path-connected, strict.\<close>
+        have hD1_strict: "is_topology_on_strict D1_loc (subspace_topology X TX D1_loc)"
+          using subspace_topology_is_strict[OF hstrict] hD1_sub by (by100 blast)
+        have hD1_pc: "top1_path_connected_on D1_loc (subspace_topology X TX D1_loc)"
+        proof -
+          from hD1_arc[unfolded top1_is_arc_on_def] obtain h_D1 where
+              "top1_homeomorphism_on I_set I_top D1_loc (subspace_topology X TX D1_loc) h_D1"
+            by (by100 blast)
+          \<comment> \<open>[0,1] is SC \\<Rightarrow> pc. Transfer via homeomorphism.\<close>
+          have "top1_simply_connected_on I_set I_top"
+          proof -
+            have "I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 simp)
+            have "\<And>a b t::real. a \<in> I_set \<Longrightarrow> b \<in> I_set \<Longrightarrow> 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+                (1 - t) * a + t * b \<in> I_set"
+              unfolding top1_unit_interval_def
+            proof -
+              fix a b t :: real
+              assume "a \<in> {0..1}" "b \<in> {0..1}" "0 \<le> t" "t \<le> 1"
+              have "0 \<le> (1-t)*a" using \<open>a \<in> {0..1}\<close> \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by (by100 auto)
+              moreover have "0 \<le> t*b" using \<open>b \<in> {0..1}\<close> \<open>0 \<le> t\<close> by (by100 auto)
+              ultimately have "0 \<le> (1-t)*a + t*b" by (by100 linarith)
+              have h1: "(1-t)*a \<le> (1-t)*1"
+                apply (rule mult_left_mono)
+                using \<open>a \<in> {0..1}\<close> apply (by100 simp)
+                using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> by (by100 linarith)
+              have h2: "t*b \<le> t*1"
+                apply (rule mult_left_mono)
+                using \<open>b \<in> {0..1}\<close> apply (by100 simp)
+                using \<open>0 \<le> t\<close> by (by100 linarith)
+              have "(1-t)*a + t*b \<le> 1"
+              proof -
+                have "(1-t)*1 + t*1 = (1::real)" by (by100 argo)
+                thus ?thesis using h1 h2 by (by100 linarith)
+              qed
+              show "(1-t)*a + t*b \<in> {0..1}" using \<open>0 \<le> (1-t)*a + t*b\<close> \<open>(1-t)*a + t*b \<le> 1\<close>
+                by (by100 simp)
+            qed
+            from convex_real_subspace_simply_connected[OF \<open>I_set \<noteq> {}\<close> this]
+            show ?thesis unfolding top1_unit_interval_topology_def top1_unit_interval_def by simp
+          qed
+          hence "top1_path_connected_on I_set I_top"
+            unfolding top1_simply_connected_on_def by (by100 blast)
+          from homeomorphism_preserves_path_connected[OF
+              \<open>top1_homeomorphism_on I_set I_top D1_loc _ h_D1\<close> this]
+          show ?thesis .
+        qed
+        have hD1_closed: "closedin_on X TX D1_loc"
+        proof -
+          from hD1_arc[unfolded top1_is_arc_on_def] obtain h_D1c where
+              "top1_homeomorphism_on I_set I_top D1_loc (subspace_topology X TX D1_loc) h_D1c"
+            by (by100 blast)
+          have hI_compact: "top1_compact_on I_set I_top"
+            using Theorem_27_1[of "0::real" 1]
+            unfolding top1_unit_interval_def top1_unit_interval_topology_def by simp
+          have hI_top: "is_topology_on I_set I_top" using top1_unit_interval_topology_is_topology_on .
+          have hD1_top: "is_topology_on D1_loc (subspace_topology X TX D1_loc)"
+            using subspace_topology_is_topology_on[OF hTX hD1_sub] .
+          have "top1_continuous_map_on I_set I_top D1_loc (subspace_topology X TX D1_loc) h_D1c"
+            using \<open>top1_homeomorphism_on I_set I_top D1_loc _ h_D1c\<close>
+            unfolding top1_homeomorphism_on_def by (by100 blast)
+          from Theorem_26_5[OF hI_top hD1_top hI_compact this]
+          have "top1_compact_on (h_D1c ` I_set) (subspace_topology D1_loc (subspace_topology X TX D1_loc) (h_D1c ` I_set))" .
+          moreover have "h_D1c ` I_set = D1_loc"
+            using \<open>top1_homeomorphism_on I_set I_top D1_loc _ h_D1c\<close>
+            unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          moreover have "subspace_topology D1_loc (subspace_topology X TX D1_loc) D1_loc = subspace_topology X TX D1_loc"
+          proof -
+            have "\<forall>U \<in> subspace_topology X TX D1_loc. U \<subseteq> D1_loc"
+              using hD1_sub hTX unfolding subspace_topology_def by (by100 blast)
+            from subspace_topology_self[OF this] show ?thesis .
+          qed
+          ultimately have "top1_compact_on D1_loc (subspace_topology X TX D1_loc)" by simp
+          from compact_in_strict_hausdorff_closedin_on[OF hhaus hstrict hD1_sub this]
+          show ?thesis .
+        qed
+        \<comment> \<open>Construct U = D1\\_loc minus other endpoint, S = D1\\_loc, F = {D1\\_loc}.\<close>
+        have hU_int_open: "\<exists>U. openin_on X TX U \<and> x \<in> U \<and> U \<subseteq> D1_loc"
+          sorry \<comment> \<open>D1\\_loc - {h0 0} is open in X (coherent: open in each arc).\<close>
+        then obtain U_int where hU_int: "openin_on X TX U_int" "x \<in> U_int" "U_int \<subseteq> D1_loc"
+          by (by100 blast)
         show ?thesis
-          sorry \<comment> \<open>Interior case: arc\\_split\\_at\\_given\\_point gives D1,D2 with x as endpoint.
-             D1 DR to {x} (arc\\_deformation\\_retract\\_to\\_endpoint).
-             D1 compact→closed. F={D1}, S=D1, U=D1-{other endpoint}.
-             All 12 conditions verified. ~50 lines but arc\\_split extraction times out
-             due to SOME-defined graph terms.\<close>
+          apply (rule that[of U_int D1_loc "{D1_loc}"])
+          using hU_int(1) hU_int(2) hU_int(3) hD1_sub hD1_strict hD1_closed hx_D1 hD1_DR hD1_pc
+          sorry \<comment> \<open>Assembly of 12 conditions: singleton F, pairwise vacuous, coherent trivial.\<close>
       next
         case True
         \<comment> \<open>x is an endpoint of A0. Vertex case: construct star from sub-arcs.\<close>
