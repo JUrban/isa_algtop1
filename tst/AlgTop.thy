@@ -22006,6 +22006,19 @@ proof -
   qed
 qed
 
+\<comment> \<open>Lemma 85.2 (Euler number): for a finite connected graph,
+   rank(\\<pi>\\_1) = 1 - \\<chi> = 1 - (vertices - edges) = edges - vertices + 1.
+   Key tool: any two finite free bases of the same group have equal cardinality
+   (free\\_group\\_rank\\_invariant\\_finite).\<close>
+
+\<comment> \<open>For the Schreier formula, we need: rank(\\<pi>\\_1(E')) = kn + 1.
+   Since E' is a k-fold covering of X (wedge of n+1 circles):
+   - \\<pi>\\_1(X) free of rank n+1 (from Theorem 71.3)
+   - The covering E' has k times as many arcs and vertices as X
+   - So rank(\\<pi>\\_1(E')) = k \\<cdot> arcs(X) - k \\<cdot> vertices(X) + 1 = k(arcs - vertices) + 1
+   - arcs(X) - vertices(X) = n (from rank(\\<pi>\\_1(X)) = n+1 = arcs - vertices + 1)
+   - Hence rank(\\<pi>\\_1(E')) = kn + 1.\<close>
+
 (** from \<S>85 Theorem 85.3: Schreier index formula.
     If F is free on n+1 generators and H \<le> F has finite index k in F, then H
     is free on kn+1 generators. **)
