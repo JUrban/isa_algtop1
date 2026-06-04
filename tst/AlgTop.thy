@@ -573,6 +573,34 @@ proof -
         \<comment> \<open>Step 3: \\<alpha>\\<tilde> * ftg lifts p\\<circ>\\<alpha>\\<tilde> * fg, ending at \\<phi>(g).
            Step 4: By Theorem 54.3, fth and \\<alpha>\\<tilde>*ftg end at same point.
            Hence \\<phi>(h) = \\<phi>(g).\<close>
+        \<comment> \<open>Step 3: \\<alpha>\\<tilde>*ftg is a path from e0 to \\<phi>(g) in E.\<close>
+        have h\<alpha>_path: "top1_is_path_on E TE e0 e0 \<alpha>_tilde"
+          using h\<alpha>(1) unfolding top1_is_loop_on_def .
+        have h\<alpha>ftg: "top1_is_path_on E TE e0 (\<phi> g) (top1_path_product \<alpha>_tilde ftg)"
+          using top1_path_product_is_path[OF hE_top h\<alpha>_path hfg(3)] .
+        \<comment> \<open>Step 4: \\<alpha>\\<tilde>*ftg projects to (p\\<circ>\\<alpha>\\<tilde>)*fg which represents k*g = h.\<close>
+        have hproj_\<alpha>ftg: "\<forall>s\<in>I_set. p (top1_path_product \<alpha>_tilde ftg s)
+            = top1_path_product (\<lambda>t. p (\<alpha>_tilde t)) fg s"
+        proof (intro ballI)
+          fix s assume "s \<in> I_set"
+          show "p (top1_path_product \<alpha>_tilde ftg s)
+              = top1_path_product (\<lambda>t. p (\<alpha>_tilde t)) fg s"
+          proof (cases "s \<le> 1/2")
+            case True
+            hence "2 * s \<in> I_set" using \<open>s \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 auto)
+            thus ?thesis using True unfolding top1_path_product_def by simp
+          next
+            case False
+            hence "2 * s - 1 \<in> I_set" using \<open>s \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 auto)
+            thus ?thesis using False hfg(4) unfolding top1_path_product_def by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>Step 5: fh represents h = k*g. The product (p\\<circ>\\<alpha>\\<tilde>)*fg also represents k*g.
+           So fh and (p\\<circ>\\<alpha>\\<tilde>)*fg are path-homotopic.
+           By Thm 54.3: their lifts from e0 end at the same point.
+           Lift of fh = fth, ending at \\<phi>(h).
+           Lift of (p\\<circ>\\<alpha>\\<tilde>)*fg = \\<alpha>\\<tilde>*ftg, ending at \\<phi>(g).
+           So \\<phi>(h) = \\<phi>(g).\<close>
         show ?thesis sorry
       qed
     qed
