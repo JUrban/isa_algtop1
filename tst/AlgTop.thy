@@ -2033,7 +2033,18 @@ proof -
         \<comment> \<open>  Step B: ?c\\_composed = ?c\\_product (pointwise agreement via hp\\_composed\\_eq).\<close>
         \<comment> \<open>  Step C: ?c\\_product = mulB(?ch, ?ck) via fundamental\\_group\\_mul\\_class.\<close>
         also have "?coset ?chk = ?coset (?mulB ?ch ?ck)"
-          sorry \<comment> \<open>Steps A+B+C: same\\_endpoint\\_same\\_coset + hclass\\_eq + mul\\_class.\<close>
+        proof -
+          \<comment> \<open>Step A: same\\_endpoint\\_same\\_coset applied to \\<gamma>\\_{hk} and \\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k).\<close>
+          \<comment> \<open>Both paths go from e0 to h(k(e0)), so projected classes give same coset.\<close>
+          \<comment> \<open>Step B: the projected composed path = (p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k) (hp\\_composed\\_eq).\<close>
+          \<comment> \<open>Step C: [(p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k)] = mulB([p\\<circ>\\<gamma>\\_h], [p\\<circ>\\<gamma>\\_k]).\<close>
+          show ?thesis sorry
+            \<comment> \<open>Remaining: formal application of same\\_endpoint\\_same\\_coset
+               + pointwise agreement \\<rightarrow> class equality + mul\\_class.
+               All ingredients available: h\\_gamma\\_hk, h\\_composed\\_path,
+               hp\\_composed\\_eq, hloop\\_class, fundamental\\_group\\_mul\\_class,
+               hH\\_normal\\_in\\_N, hin\\_normalizer.\<close>
+        qed
         \<comment> \<open>mulQ(f(h), f(k)) = coset(mulB(?ch, ?ck)) by normal\\_coset\\_mul\\_eq.\<close>
         also have "?coset (?mulB ?ch ?ck) = ?mulQ (?coset ?ch) (?coset ?ck)"
         proof -
