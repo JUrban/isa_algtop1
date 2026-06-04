@@ -1117,6 +1117,11 @@ lemma finite_tree_has_leaf_arc:
       and "finite \<A>" and "card \<A> \<ge> 2"
   shows "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
       \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
+  \<comment> \<open>Proof: by contradiction. If every endpoint of every arc is shared with another arc,
+     then starting from any arc and following shared endpoints produces a walk
+     that must eventually revisit an arc (finite), creating a cycle.
+     A cycle of arcs in a graph creates a non-contractible loop,
+     contradicting simply connected (tree).\<close>
   sorry
 
 \<comment> \<open>Removing a leaf arc from a tree gives a tree.\<close>
