@@ -2898,8 +2898,46 @@ proof -
         \<comment> \<open>f(h\\_ct) = coset([p\\<circ>\\<gamma>\\_{h\\_ct}]). Both \\<gamma>\\_{h\\_ct} and \\<gamma>\\_lift go e0 \\<rightarrow> e1.
            By same\\_endpoint\\_same\\_coset: coset([p\\<circ>\\<gamma>\\_{h\\_ct}]) = coset([p\\<circ>\\<gamma>\\_lift]).
            And [p\\<circ>\\<gamma>\\_lift] = g, so coset([p\\<circ>\\<gamma>\\_lift]) = coset(g) = c.\<close>
-        have "f h_ct = c" sorry
-          \<comment> \<open>From same\\_endpoint\\_same\\_coset + [p\\<circ>\\<gamma>\\_lift] = g + c = coset(g).\<close>
+        have "f h_ct = c"
+        proof -
+          \<comment> \<open>f(h\\_ct) = coset([p\\<circ>\\<gamma>\\_{h\\_ct}]) where \\<gamma>\\_{h\\_ct} = path\\_to(h\\_ct(e0)) = path\\_to(e1).\<close>
+          have "f h_ct = ?coset {h. top1_loop_equiv_on B TB b0
+              (\<lambda>t. p (path_to (h_ct e0) t)) h}" unfolding f_def by simp
+          also have "h_ct e0 = ?e1" using \<open>h_ct e0 = ?e1\<close> .
+          finally have hf_eq: "f h_ct = ?coset {h. top1_loop_equiv_on B TB b0
+              (\<lambda>t. p (path_to ?e1 t)) h}" by simp
+          \<comment> \<open>Both path\\_to(e1) and \\<gamma>\\_lift go from e0 to e1.
+             By same\\_endpoint\\_same\\_coset: coset([p\\<circ>path\\_to(e1)]) = coset([p\\<circ>\\<gamma>\\_lift]).\<close>
+          have hpath_e1: "top1_is_path_on E TE e0 ?e1 (path_to ?e1)"
+            using hpath_to[OF \<open>?e1 \<in> E\<close>] .
+          have "?coset {h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to ?e1 t)) h} =
+              ?coset {h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h}"
+          proof -
+            have "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to ?e1 t)) h} \<in> ?N"
+              sorry \<comment> \<open>Loop class of path\\_to(e1) \\<in> N(H) (same as hin\\_normalizer pattern).\<close>
+            have "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h} \<in> ?N"
+            proof -
+              have "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h} = g"
+                using hclass_lift .
+              thus ?thesis using \<open>g \<in> ?N\<close> by simp
+            qed
+            have "?mulB = ?mulB" by simp
+            have "?invB = ?invB" by simp
+            from same_endpoint_same_coset[OF assms(3) hTE_n hTB_n assms(6) assms(7)
+                \<open>p ?e1 = b0\<close> hpath_e1
+                \<open>top1_is_path_on E TE e0 ?e1 \<gamma>_lift\<close>
+                hN_grp_n hH_normal_in_N_n
+                \<open>{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to ?e1 t)) h} \<in> ?N\<close>
+                \<open>{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h} \<in> ?N\<close>
+                \<open>?mulB = ?mulB\<close> \<open>?invB = ?invB\<close>]
+            show ?thesis by simp
+          qed
+          \<comment> \<open>And [p\\<circ>\\<gamma>\\_lift] = g, so coset([p\\<circ>\\<gamma>\\_lift]) = coset(g) = c.\<close>
+          also have "?coset {h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h} = ?coset g"
+            using hclass_lift by simp
+          also have "?coset g = c" using \<open>c = ?coset g\<close> by simp
+          finally show ?thesis using hf_eq by simp
+        qed
         show "c \<in> f ` ?Cov" using \<open>h_ct \<in> ?Cov\<close> \<open>f h_ct = c\<close> by (by100 blast)
       qed
       \<comment> \<open>Assemble: f is a group isomorphism.\<close>
