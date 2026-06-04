@@ -1367,7 +1367,7 @@ proof -
        But T = (T \\<inter> V') \\<union> (T \\ V'). V' open in T, T \\ V' = complement in T.
        Need T \\ V' also open... that makes V' clopen, contradicting T connected.\<close>
     \<comment> \<open>Need w (other endpoint of A0).\<close>
-    have "\<exists>w. w \<in> ?T' \<and> w \<noteq> v"
+    have "\<exists>w. w \<in> ?T' \<and> w \<noteq> v \<and> w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
     proof -
       have hstrict: "is_topology_on_strict T TT"
         using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
@@ -1403,12 +1403,67 @@ proof -
       from tree_leaf_other_endpoint_shared[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7) assms(8) assms(9) hw_ep_A0 hw_ep(2)]
       obtain B where "B \<in> \<A> - {A0}" "w \<in> B" by (by100 blast)
       hence "w \<in> ?T'" by (by100 blast)
-      thus ?thesis using hw_ep(2) by (by100 blast)
+      thus ?thesis using hw_ep(2) hw_ep_A0 by (by100 blast)
     qed
-    then obtain w where "w \<in> ?T'" "w \<noteq> v" by (by100 blast)
+    then obtain w where "w \<in> ?T'" "w \<noteq> v"
+        "w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" by (by100 blast)
     have hw_in: "w \<in> U \<or> w \<in> V" using \<open>w \<in> ?T'\<close> hcov by (by100 blast)
     \<comment> \<open>WLOG w \\<in> U. Then V is disjoint from A0. V' open in T, V \\<ne> {}, T\\\\V' nonempty.\<close>
     \<comment> \<open>Similar argument for w \\<in> V (swap U and V).\<close>
+    \<comment> \<open>Define f: T \\<to> {0,1} by f|T' = characteristic of U, f|A0 = constant (w\\<in>U?0:1).
+       f continuous on T (coherent topology). T connected \\<Rightarrow> f constant.
+       But U,V nonempty in T' \\<Rightarrow> f not constant. Contradiction.\<close>
+    \<comment> \<open>A0 \\<inter> T' \\<subseteq> {w}: from the disjointness proof.\<close>
+    have hA0_T'_disj: "A0 \<inter> ?T' \<subseteq> {w}"
+    proof
+      fix x assume "x \<in> A0 \<inter> ?T'"
+      hence hx_A0: "x \<in> A0" and hx_T': "x \<in> ?T'" by (by100 blast)+
+      from \<open>x \<in> ?T'\<close> obtain B where "B \<in> \<A> - {A0}" "x \<in> B" by (by100 blast)
+      hence "B \<in> \<A>" "B \<noteq> A0" by (by100 blast)+
+      have "x \<in> A0 \<inter> B" using hx_A0 \<open>x \<in> B\<close> by (by100 blast)
+      from assms(4)[rule_format, OF assms(5) \<open>B \<in> \<A>\<close>]
+      have "A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        using \<open>B \<noteq> A0\<close> by (by100 blast)
+      hence "x \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        using \<open>x \<in> A0 \<inter> B\<close> by (by100 blast)
+      \<comment> \<open>x is an endpoint of A0 = {v, w}. v \\<notin> B (leaf). So x = w.\<close>
+      have "x = v \<or> x = w"
+      proof -
+        have hstrict: "is_topology_on_strict T TT"
+          using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have hhaus: "is_hausdorff_on T TT"
+          using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have hA0_sub: "A0 \<subseteq> T" using assms(2,5) by (by100 blast)
+        have hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)" using assms(2,5) by (by100 blast)
+        obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+          using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+        have hep: "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {h 0, h 1}"
+          by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA0_sub hA0_arc hh])
+        have hinj: "inj_on h I_set"
+          using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have hne: "h 0 \<noteq> h 1"
+        proof
+          assume "h 0 = h 1"
+          from inj_onD[OF hinj this] show False unfolding top1_unit_interval_def by (by100 auto)
+        qed
+        have "v \<in> {h 0, h 1}" using assms(6) hep by simp
+        have "w \<in> {h 0, h 1}"
+          using \<open>w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)\<close> hep by simp
+        have "{v, w} = {h 0, h 1}"
+          using \<open>v \<in> {h 0, h 1}\<close> \<open>w \<in> {h 0, h 1}\<close> \<open>w \<noteq> v\<close> hne
+          by (by5000 force)
+        thus ?thesis
+          using \<open>x \<in> top1_arc_endpoints_on A0 _\<close> hep \<open>{v, w} = {h 0, h 1}\<close>
+          by (by100 blast)
+      qed
+      moreover have "x \<noteq> v" using assms(7)[rule_format, OF \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>] \<open>x \<in> B\<close> by (by100 blast)
+      ultimately show "x \<in> {w}" by (by100 blast)
+    qed
+    \<comment> \<open>If w \\<in> U: any point in A0 \\<inter> V must be in A0 \\<inter> T' \\<inter> V \\<subseteq> {w} \\<inter> V = {} (since w \\<in> U, U \\<inter> V = {}).
+       So A0 \\<inter> V = {} (V \\<subseteq> T'). Then V is disjoint from A0.
+       V \\<subseteq> T \\ A0 and V is open in T' = T \\<inter> subspace. V' open in T.
+       V' \\<inter> T \\<ne> {} (contains V), (T \\ V') \\<ne> {} (contains A0).
+       V' and U' \\<union> {preimage of A0-stuff} separate T.\<close>
     show False sorry
   qed
   have hT'_sc: "top1_simply_connected_on ?T' ?TT'"
