@@ -2015,7 +2015,29 @@ proof -
             unfolding top1_normal_subgroup_on_def
           proof (intro conjI)
             show "?H \<subseteq> ?N" sorry \<comment> \<open>H \\<subseteq> N(H): every h \\<in> H normalizes H.\<close>
-            show "top1_is_group_on ?H ?mulB ?eB ?invB" sorry \<comment> \<open>H is a group (image of group hom).\<close>
+            show "top1_is_group_on ?H ?mulB ?eB ?invB"
+            proof -
+              have hTE_l: "is_topology_on E TE"
+                using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+              have hTB_l: "is_topology_on B TB"
+                using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+              have hb0B_l: "b0 \<in> B"
+                using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
+              have hpi1E_grp: "top1_is_group_on (top1_fundamental_group_carrier E TE e0)
+                  (top1_fundamental_group_mul E TE e0) (top1_fundamental_group_id E TE e0)
+                  (top1_fundamental_group_invg E TE e0)"
+                using top1_fundamental_group_is_group[OF hTE_l assms(6)] .
+              have hp_cont_l: "top1_continuous_map_on E TE B TB p"
+                using top1_covering_map_on_continuous[OF assms(3)] .
+              have hind_hom: "top1_group_hom_on (top1_fundamental_group_carrier E TE e0)
+                  (top1_fundamental_group_mul E TE e0) ?pi1B ?mulB
+                  (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
+                using top1_fundamental_group_induced_on_is_hom[OF hTE_l hTB_l assms(6) hb0B_l hp_cont_l assms(7)] .
+              have hpi1_grp_l: "top1_is_group_on ?pi1B ?mulB ?eB ?invB"
+                using top1_fundamental_group_is_group[OF hTB_l hb0B_l] .
+              from hom_image_is_subgroup[OF hpi1E_grp hpi1_grp_l hind_hom]
+              show ?thesis unfolding top1_fundamental_group_image_hom_def .
+            qed
             show "\<forall>g\<in>?N. \<forall>n\<in>?H. ?mulB (?mulB g n) (?invB g) \<in> ?H"
             proof (intro ballI)
               fix g n assume "g \<in> ?N" "n \<in> ?H"
