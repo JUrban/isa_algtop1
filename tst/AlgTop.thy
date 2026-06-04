@@ -22450,7 +22450,10 @@ proof -
       show ?thesis unfolding top1_subgroup_has_index_on_def
         using hpiX_fin hpiX_card by (by100 blast)
     qed
-    \<comment> \<open>Steps B--E: covering Euler multiplicity + rank formula.\<close>
+    \<comment> \<open>Steps B--E (Munkres 85.3): covering Euler multiplicity.
+       The k-sheeted covering E' \\<rightarrow> X satisfies rank(\\<pi>\\_1(E')) = k(n+1-1)+1 = kn+1.
+       Book proof: E' has k\\<times>arcs(X) arcs and k\\<times>verts(X) vertices,
+       \\<chi>(E') = k\\<chi>(X), rank = 1-\\<chi>. Requires Lemma 85.2 + covering multiplicity.\<close>
     show ?thesis sorry
   qed
   have "finite S_E"
