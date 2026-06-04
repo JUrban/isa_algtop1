@@ -239,7 +239,12 @@ lemma left_right_coset_card_eq:
       and "H \<subseteq> G"
       and "top1_is_group_on H mul e invg"
   shows "card (top1_left_cosets_on G mul H) = card (top1_right_cosets_on G mul H)"
-  sorry
+proof -
+  define \<psi> :: "'a set \<Rightarrow> 'a set" where "\<psi> C = invg ` C" for C
+  have h\<psi>_bij: "bij_betw \<psi> (top1_left_cosets_on G mul H) (top1_right_cosets_on G mul H)"
+    sorry
+  from bij_betw_same_card[OF h\<psi>_bij] show ?thesis .
+qed
 
 
 \<comment> \<open>Theorem 54.6(c): [f] in H = p*(pi1(E,e0)) iff f lifts to a loop at e0.\<close>
