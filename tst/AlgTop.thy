@@ -28,10 +28,10 @@ theorem Theorem_54_6b:
     \<and> (\<forall>g\<in>top1_fundamental_group_carrier B TB b0.
        \<forall>h\<in>top1_fundamental_group_carrier B TB b0.
         (\<phi> g = \<phi> h) =
-        (top1_group_coset_on (top1_fundamental_group_carrier B TB b0)
+        (top1_right_coset_on (top1_fundamental_group_carrier B TB b0)
             (top1_fundamental_group_mul B TB b0)
             (top1_fundamental_group_image_hom E TE e0 B TB b0 p) g
-         = top1_group_coset_on (top1_fundamental_group_carrier B TB b0)
+         = top1_right_coset_on (top1_fundamental_group_carrier B TB b0)
             (top1_fundamental_group_mul B TB b0)
             (top1_fundamental_group_image_hom E TE e0 B TB b0 p) h))"
 proof -
@@ -49,7 +49,7 @@ proof -
     by (elim exE conjE)
   \<comment> \<open>Step 2: Prove \\<phi>(g) = \\<phi>(h) \\<leftrightarrow> same coset. This is the key content of 54.6(b).\<close>
   have h\<phi>_coset: "\<forall>g\<in>?piB. \<forall>h\<in>?piB.
-      (\<phi> g = \<phi> h) = (top1_group_coset_on ?piB ?mulB ?H g = top1_group_coset_on ?piB ?mulB ?H h)"
+      (\<phi> g = \<phi> h) = (top1_right_coset_on ?piB ?mulB ?H g = top1_right_coset_on ?piB ?mulB ?H h)"
   proof (intro ballI)
     fix g h assume hg: "g \<in> ?piB" and hh: "h \<in> ?piB"
     from h\<phi>_lift[rule_format, OF hg]
@@ -60,7 +60,7 @@ proof -
     obtain fh fth where hfh: "fh \<in> h" "top1_is_loop_on B TB b0 fh"
         "top1_is_path_on E TE e0 (\<phi> h) fth" "\<forall>s\<in>I_set. p (fth s) = fh s"
       by (by100 blast)
-    show "(\<phi> g = \<phi> h) = (top1_group_coset_on ?piB ?mulB ?H g = top1_group_coset_on ?piB ?mulB ?H h)"
+    show "(\<phi> g = \<phi> h) = (top1_right_coset_on ?piB ?mulB ?H g = top1_right_coset_on ?piB ?mulB ?H h)"
     proof (rule iffI)
       \<comment> \<open>Forward: \\<phi>(g)=\\<phi>(h) \\<Rightarrow> same coset.
          Book 54.6(b): ftg and fth end at same point.
@@ -197,7 +197,7 @@ proof -
       qed
       \<comment> \<open>This class = g * h\\<inverse> in \\<pi>\\_1(B).\<close>
       \<comment> \<open>g * h\\<inverse> \\<in> ?H \\<Rightarrow> gH = hH.\<close>
-      show "top1_group_coset_on ?piB ?mulB ?H g = top1_group_coset_on ?piB ?mulB ?H h"
+      show "top1_right_coset_on ?piB ?mulB ?H g = top1_right_coset_on ?piB ?mulB ?H h"
         sorry
     next
       \<comment> \<open>Backward: same coset \\<Rightarrow> \\<phi>(g)=\\<phi>(h).
@@ -210,7 +210,7 @@ proof -
          h\\<tilde>*g\\<tilde> lifts h*g, starts at e0, ends at g\\<tilde>(1) = \\<phi>(g).
          Since [f] = [h*g], lifts f\\<tilde> and h\\<tilde>*g\\<tilde> end at same point (Thm 54.3).
          So \\<phi>(f) = \\<phi>(g). Done.\<close>
-      assume hcoset_eq: "top1_group_coset_on ?piB ?mulB ?H g = top1_group_coset_on ?piB ?mulB ?H h"
+      assume hcoset_eq: "top1_right_coset_on ?piB ?mulB ?H g = top1_right_coset_on ?piB ?mulB ?H h"
       show "\<phi> g = \<phi> h"
         sorry
     qed
@@ -226,6 +226,21 @@ proof -
     done
 qed
 
+\<comment> \<open>Right cosets: Hg = {mul k g | k in H}.\<close>
+definition top1_right_coset_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> 'a set \<Rightarrow> 'a \<Rightarrow> 'a set"
+  where "top1_right_coset_on G mul H g = {mul k g | k. k \<in> H}"
+
+definition top1_right_cosets_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> 'a set \<Rightarrow> 'a set set"
+  where "top1_right_cosets_on G mul H = {top1_right_coset_on G mul H g | g. g \<in> G}"
+
+\<comment> \<open>card(left cosets) = card(right cosets). Standard: map gH -> Hg\\<inverse> is bijection.\<close>
+lemma left_right_coset_card_eq:
+  assumes "top1_is_group_on G mul e invg"
+      and "H \<subseteq> G"
+      and "top1_is_group_on H mul e invg"
+  shows "card (top1_left_cosets_on G mul H) = card (top1_right_cosets_on G mul H)"
+  sorry
+
 \<comment> \<open>Theorem 54.6(c): [f] in H = p*(pi1(E,e0)) iff f lifts to a loop at e0.\<close>
 theorem Theorem_54_6c:
   fixes E :: "'e set" and TE :: "'e set set"
@@ -239,6 +254,18 @@ theorem Theorem_54_6c:
          = top1_fundamental_group_image_hom E TE e0 B TB b0 p \<Longrightarrow>
     ({g. top1_loop_equiv_on B TB b0 f g} \<in> top1_fundamental_group_image_hom E TE e0 B TB b0 p)
     = (\<exists>ft. top1_is_loop_on E TE e0 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))"
+  sorry
+
+\<comment> \<open>Right-coset version: surjection with right-coset kernel gives bijection.\<close>
+lemma surjection_right_coset_bij:
+  assumes grp: "top1_is_group_on G mul e invg"
+      and Hsub: "H \<subseteq> G"
+      and Hgrp: "top1_is_group_on H mul e invg"
+      and maps: "\<forall>g\<in>G. \<phi> g \<in> Y"
+      and surj: "\<phi> ` G = Y"
+      and fiber_eq: "\<forall>g\<in>G. \<forall>h\<in>G.
+          (\<phi> g = \<phi> h) = (top1_right_coset_on G mul H g = top1_right_coset_on G mul H h)"
+  shows "\<exists>f. bij_betw f (top1_right_cosets_on G mul H) Y"
   sorry
 
 \<comment> \<open>Reusable quotient lemma: a surjection that identifies coset-equivalent
@@ -1604,7 +1631,7 @@ proof -
           \<and> (\<forall>c\<in>?piX. \<exists>f ft. f \<in> c \<and> top1_is_loop_on X TX x0 f
               \<and> top1_is_path_on E' TE' e0' (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p' (ft s) = f s))
           \<and> (\<forall>g\<in>?piX. \<forall>h\<in>?piX.
-              (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h))"
+              (\<phi> g = \<phi> h) = (top1_right_coset_on ?piX ?mulX ?pH g = top1_right_coset_on ?piX ?mulX ?pH h))"
       proof -
         from Theorem_54_6b[OF hE'_cov hE'_pc hX_top he0' \<open>p' e0' = x0\<close>]
         have "\<exists>\<phi>. (\<forall>c\<in>?piX. \<phi> c \<in> {e \<in> E'. p' e = x0})
@@ -1612,9 +1639,9 @@ proof -
             \<and> (\<forall>c\<in>?piX. \<exists>f ft. f \<in> c \<and> top1_is_loop_on X TX x0 f
                 \<and> top1_is_path_on E' TE' e0' (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p' (ft s) = f s))
             \<and> (\<forall>g\<in>?piX. \<forall>h\<in>?piX.
-                (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX
+                (\<phi> g = \<phi> h) = (top1_right_coset_on ?piX ?mulX
                     (top1_fundamental_group_image_hom E' TE' e0' X TX x0 p') g
-                 = top1_group_coset_on ?piX ?mulX
+                 = top1_right_coset_on ?piX ?mulX
                     (top1_fundamental_group_image_hom E' TE' e0' X TX x0 p') h))" .
         moreover have "top1_fundamental_group_image_hom E' TE' e0' X TX x0 p' = ?pH"
           unfolding top1_fundamental_group_image_hom_def by simp
@@ -1625,7 +1652,7 @@ proof -
           and h\<phi>_lift: "\<forall>c\<in>?piX. \<exists>f ft. f \<in> c \<and> top1_is_loop_on X TX x0 f
               \<and> top1_is_path_on E' TE' e0' (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p' (ft s) = f s)"
           and h\<phi>_fiber_eq: "\<forall>g\<in>?piX. \<forall>h\<in>?piX.
-              (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h)"
+              (\<phi> g = \<phi> h) = (top1_right_coset_on ?piX ?mulX ?pH g = top1_right_coset_on ?piX ?mulX ?pH h)"
         by (elim exE conjE)
       have hpiX_grp: "top1_is_group_on ?piX ?mulX
           (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
@@ -1665,14 +1692,16 @@ proof -
         from hom_image_is_subgroup[OF hE'_grp hpiX_grp hp_hom]
         show ?thesis .
       qed
-      from surjection_coset_bij[OF hpiX_grp hpH_sub hpH_grp h\<phi>_maps h\<phi>_surj h\<phi>_fiber_eq]
-      obtain f where "bij_betw f (top1_left_cosets_on ?piX ?mulX ?pH) {e \<in> E'. p' e = x0}"
+      from surjection_right_coset_bij[OF hpiX_grp hpH_sub hpH_grp h\<phi>_maps h\<phi>_surj h\<phi>_fiber_eq]
+      obtain f where "bij_betw f (top1_right_cosets_on ?piX ?mulX ?pH) {e \<in> E'. p' e = x0}"
         by (by100 blast)
       from bij_betw_same_card[OF this]
-      have "card (top1_left_cosets_on ?piX ?mulX ?pH) = card {e \<in> E'. p' e = x0}" .
+      have hright_card: "card (top1_right_cosets_on ?piX ?mulX ?pH) = card {e \<in> E'. p' e = x0}" .
+      from left_right_coset_card_eq[OF hpiX_grp hpH_sub hpH_grp]
+      have hlr: "card (top1_left_cosets_on ?piX ?mulX ?pH) = card (top1_right_cosets_on ?piX ?mulX ?pH)" .
       from hindex[unfolded top1_subgroup_has_index_on_def]
       have "card (top1_left_cosets_on ?piX ?mulX ?pH) = k" by (by100 blast)
-      thus ?thesis using \<open>card _ = card _\<close> by simp
+      thus ?thesis using hright_card hlr by simp
     qed
     have harc_mult: "card \<A>_E = k * card \<A>_X"
       sorry \<comment> \<open>Needs lifted arc family interface (expert audit2: fix statement first).\<close>
