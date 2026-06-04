@@ -601,11 +601,51 @@ proof -
            Lift of fh = fth, ending at \\<phi>(h).
            Lift of (p\\<circ>\\<alpha>\\<tilde>)*fg = \\<alpha>\\<tilde>*ftg, ending at \\<phi>(g).
            So \\<phi>(h) = \\<phi>(g).\<close>
-        \<comment> \<open>Book proof: fh and (p\\<circ>\\<alpha>\\<tilde>)*fg are homotopic (both represent h=k*g).
-           \\<alpha>\\<tilde>*ftg lifts (p\\<circ>\\<alpha>\\<tilde>)*fg from e0, ending at \\<phi>(g).
-           fth lifts fh from e0, ending at \\<phi>(h).
+        \<comment> \<open>Book proof: fh ~ (p\\<circ>\\<alpha>\\<tilde>)*fg (both represent h=k*g).
+           Lifts from e0: fth (\\<to> \\<phi>(h)), \\<alpha>\\<tilde>*ftg (\\<to> \\<phi>(g)).
            By Theorem 54.3: \\<phi>(h) = \\<phi>(g).\<close>
-        show ?thesis sorry
+        let ?pafg = "top1_path_product (\<lambda>t. p (\<alpha>_tilde t)) fg"
+        \<comment> \<open>Step 5a: (p\\<circ>\\<alpha>\\<tilde>)*fg is a loop at b0.\<close>
+        have h_pafg_path: "top1_is_path_on B TB b0 b0 ?pafg"
+        proof -
+          have "top1_is_loop_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t))"
+          proof -
+            have hp_cont: "top1_continuous_map_on E TE B TB p"
+              using assms(1) unfolding top1_covering_map_on_def top1_evenly_covered_on_def by (by5000 blast)
+            have "top1_continuous_map_on I_set I_top E TE \<alpha>_tilde"
+              using h\<alpha>_path unfolding top1_is_path_on_def by (by100 blast)
+            from top1_continuous_map_on_comp[OF this hp_cont]
+            have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<alpha>_tilde)" .
+            moreover have "(p \<circ> \<alpha>_tilde) 0 = b0"
+              using h\<alpha>_path assms(5) unfolding top1_is_path_on_def comp_def by (by100 simp)
+            moreover have "(p \<circ> \<alpha>_tilde) 1 = b0"
+              using h\<alpha>_path assms(5) unfolding top1_is_path_on_def comp_def by (by100 simp)
+            ultimately have "top1_is_path_on B TB b0 b0 (p \<circ> \<alpha>_tilde)"
+              unfolding top1_is_path_on_def by (by100 blast)
+            thus ?thesis unfolding top1_is_loop_on_def comp_def .
+          qed
+          hence "top1_is_path_on B TB b0 b0 (\<lambda>t. p (\<alpha>_tilde t))"
+            unfolding top1_is_loop_on_def .
+          have "top1_is_path_on B TB b0 b0 fg"
+            using hfg(2) unfolding top1_is_loop_on_def .
+          from top1_path_product_is_path[OF assms(3) \<open>top1_is_path_on B TB b0 b0 (\<lambda>t. p (\<alpha>_tilde t))\<close> this]
+          show ?thesis .
+        qed
+        \<comment> \<open>Step 5b: fh and ?pafg are homotopic (both \\<in> h = k*g).\<close>
+        have hfh_homot: "top1_path_homotopic_on B TB b0 b0 fh ?pafg"
+          sorry \<comment> \<open>h = k*g = [(p\\<circ>\\<alpha>\\<tilde>)]*[fg] = [(p\\<circ>\\<alpha>\\<tilde>)*fg]. fh \\<in> h.\<close>
+        \<comment> \<open>Step 5c: fth lifts fh, \\<alpha>\\<tilde>*ftg lifts ?pafg (pointwise on I\\_set).\<close>
+        \<comment> \<open>Step 5d: Apply Theorem 54.3.\<close>
+        have hE_strict: "is_topology_on_strict E TE"
+          sorry \<comment> \<open>E strict from covering map.\<close>
+        have hfh_path': "top1_is_path_on B TB b0 b0 fh"
+          using hfh(2) unfolding top1_is_loop_on_def .
+        from Theorem_54_3[OF assms(1) hE_top assms(3) assms(4) assms(5)
+            hfh_path' h_pafg_path hfh_homot
+            hfh(3) hfh(4)
+            h\<alpha>ftg hproj_\<alpha>ftg]
+        have "\<phi> h = \<phi> g" by (by100 blast)
+        thus ?thesis by simp
       qed
     qed
   qed
