@@ -2359,6 +2359,95 @@ proof -
             using \<open>(\<lambda>h'. ?mulB (?mulB ?\<alpha>_class h') (?invB ?\<alpha>_class)) ` ?H = ?H\<close> by simp
         qed
       qed
+      \<comment> \<open>Derive normality facts needed for both homomorphism and quotient mul.\<close>
+      have hTE_n: "is_topology_on E TE"
+        using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+      have hTB_n: "is_topology_on B TB"
+        using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+      have hb0B_n: "b0 \<in> B"
+        using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
+      have hpi1_grp_n: "top1_is_group_on ?pi1B ?mulB ?eB ?invB"
+        using top1_fundamental_group_is_group[OF hTB_n hb0B_n] .
+      have hH_sub_n: "?H \<subseteq> ?pi1B"
+      proof -
+        have "top1_group_hom_on (top1_fundamental_group_carrier E TE e0)
+            (top1_fundamental_group_mul E TE e0) ?pi1B ?mulB
+            (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
+          using top1_fundamental_group_induced_on_is_hom[OF hTE_n hTB_n assms(6)
+              hb0B_n hp_cont assms(7)] .
+        hence "\<forall>c\<in>top1_fundamental_group_carrier E TE e0.
+            top1_fundamental_group_induced_on E TE e0 B TB b0 p c \<in> ?pi1B"
+          unfolding top1_group_hom_on_def by (by100 blast)
+        thus ?thesis unfolding top1_fundamental_group_image_hom_def by (by100 blast)
+      qed
+      have hH_grp_n: "top1_is_group_on ?H ?mulB ?eB ?invB"
+      proof -
+        from hom_image_is_subgroup[OF
+            top1_fundamental_group_is_group[OF hTE_n assms(6)]
+            hpi1_grp_n
+            top1_fundamental_group_induced_on_is_hom[OF hTE_n hTB_n assms(6)
+                hb0B_n hp_cont assms(7)]]
+        show ?thesis unfolding top1_fundamental_group_image_hom_def .
+      qed
+      have hN_grp_n: "top1_is_group_on ?N ?mulB ?eB ?invB"
+        using normalizer_is_group[OF hpi1_grp_n hH_sub_n hH_grp_n] .
+      have hH_normal_in_N_n: "top1_normal_subgroup_on ?N ?mulB ?eB ?invB ?H"
+        unfolding top1_normal_subgroup_on_def
+      proof (intro conjI)
+        show "?H \<subseteq> ?N"
+        proof (rule subsetI)
+          fix h assume "h \<in> ?H"
+          hence "h \<in> ?pi1B" using hH_sub_n by (by100 blast)
+          show "h \<in> ?N" unfolding top1_normalizer_on_def
+          proof (intro CollectI conjI)
+            show "h \<in> ?pi1B" using \<open>h \<in> ?pi1B\<close> .
+            show "{?mulB (?mulB h n) (?invB h) |n. n \<in> ?H} = ?H"
+            proof (rule set_eqI, rule iffI)
+              fix x assume "x \<in> {?mulB (?mulB h n) (?invB h) |n. n \<in> ?H}"
+              then obtain n where "n \<in> ?H" "x = ?mulB (?mulB h n) (?invB h)" by (by5000 auto)
+              have "?mulB h n \<in> ?H" using group_mul_closed[OF hH_grp_n \<open>h \<in> ?H\<close> \<open>n \<in> ?H\<close>] .
+              have "?invB h \<in> ?H" using group_inv_closed[OF hH_grp_n \<open>h \<in> ?H\<close>] .
+              have "?mulB (?mulB h n) (?invB h) \<in> ?H"
+                using group_mul_closed[OF hH_grp_n \<open>?mulB h n \<in> ?H\<close> \<open>?invB h \<in> ?H\<close>] .
+              thus "x \<in> ?H" using \<open>x = ?mulB (?mulB h n) (?invB h)\<close> by simp
+            next
+              fix m assume "m \<in> ?H"
+              let ?n = "?mulB (?invB h) (?mulB m h)"
+              have "?invB h \<in> ?H" using group_inv_closed[OF hH_grp_n \<open>h \<in> ?H\<close>] .
+              have "?mulB m h \<in> ?H" using group_mul_closed[OF hH_grp_n \<open>m \<in> ?H\<close> \<open>h \<in> ?H\<close>] .
+              have "?n \<in> ?H" using group_mul_closed[OF hH_grp_n \<open>?invB h \<in> ?H\<close> \<open>?mulB m h \<in> ?H\<close>] .
+              have "?mulB (?mulB h ?n) (?invB h) = m"
+              proof -
+                have s1: "?mulB h (?mulB (?invB h) (?mulB m h)) =
+                    ?mulB (?mulB h (?invB h)) (?mulB m h)"
+                  using group_assoc[OF hH_grp_n \<open>h \<in> ?H\<close> \<open>?invB h \<in> ?H\<close> \<open>?mulB m h \<in> ?H\<close>] by simp
+                have s2: "?mulB h (?invB h) = ?eB" using group_right_inv[OF hH_grp_n \<open>h \<in> ?H\<close>] .
+                have s3: "?mulB ?eB (?mulB m h) = ?mulB m h"
+                  using group_left_id[OF hH_grp_n \<open>?mulB m h \<in> ?H\<close>] .
+                from s1 s2 s3 have "?mulB h ?n = ?mulB m h" by simp
+                have s4: "?mulB (?mulB m h) (?invB h) = ?mulB m (?mulB h (?invB h))"
+                  using group_assoc[OF hH_grp_n \<open>m \<in> ?H\<close> \<open>h \<in> ?H\<close> \<open>?invB h \<in> ?H\<close>] .
+                from s4 s2 have "?mulB (?mulB m h) (?invB h) = ?mulB m ?eB" by simp
+                have "?mulB m ?eB = m" using group_right_id[OF hH_grp_n \<open>m \<in> ?H\<close>] .
+                from \<open>?mulB h ?n = ?mulB m h\<close> \<open>?mulB (?mulB m h) (?invB h) = ?mulB m ?eB\<close>
+                    \<open>?mulB m ?eB = m\<close>
+                show ?thesis by simp
+              qed
+              show "m \<in> {?mulB (?mulB h n) (?invB h) |n. n \<in> ?H}"
+                apply (rule CollectI, rule exI[of _ ?n])
+                using \<open>?n \<in> ?H\<close> \<open>?mulB (?mulB h ?n) (?invB h) = m\<close>[symmetric] by (by100 blast)
+            qed
+          qed
+        qed
+        show "top1_is_group_on ?H ?mulB ?eB ?invB" using hH_grp_n .
+        show "\<forall>g\<in>?N. \<forall>n\<in>?H. ?mulB (?mulB g n) (?invB g) \<in> ?H"
+        proof (intro ballI)
+          fix g n assume "g \<in> ?N" "n \<in> ?H"
+          have "{?mulB (?mulB g h) (?invB g) |h. h \<in> ?H} = ?H"
+            using \<open>g \<in> ?N\<close> unfolding top1_normalizer_on_def by (by5000 blast)
+          thus "?mulB (?mulB g n) (?invB g) \<in> ?H" using \<open>n \<in> ?H\<close> by (by5000 blast)
+        qed
+      qed
       \<comment> \<open>Define f: Cov(p) \\<rightarrow> N(H)/H by f(h) = [p\\<circ>\\<gamma>\\_h]\\<cdot>H.\<close>
       define f :: "('e \<Rightarrow> 'e) \<Rightarrow> (real \<Rightarrow> 'b) set set" where
         "f h = ?coset {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g}" for h
@@ -2557,9 +2646,27 @@ proof -
           \<comment> \<open>Step A: coset([p\\<circ>\\<gamma>\\_{hk}]) = coset([p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))])
              via same\\_endpoint\\_same\\_coset (both paths e0 \\<rightarrow> h(k(e0))).\<close>
           have hcoset_eq: "?coset ?chk = ?coset ?c_composed"
-            sorry \<comment> \<open>Apply same\\_endpoint\\_same\\_coset with normality.
-               All ingredients available locally; needs hH\\_normal\\_in\\_N and hN\\_grp
-               which are proved below. Should be refactored to move them up.\<close>
+          proof -
+            have "?chk \<in> ?N" using hin_normalizer[OF hhk_cov] .
+            \<comment> \<open>Need: c\\_composed \\<in> N(H). It's the loop class of p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k)).\<close>
+            \<comment> \<open>By hclass\\_chain: ?c\\_composed = [?pp] = mulB(?ch, ?ck).
+               And ?ch, ?ck \\<in> N(H), so mulB(?ch, ?ck) \\<in> N(H) (closure).\<close>
+            have "?c_composed = {g. top1_loop_equiv_on B TB b0 ?pp g}"
+              using hclass_chain .
+            also have "\<dots> = ?mulB ?ch ?ck" using hmul_eq by simp
+            finally have hc_eq: "?c_composed = ?mulB ?ch ?ck" .
+            have "?ch \<in> ?N" using hin_normalizer[OF \<open>h \<in> ?Cov\<close>] .
+            have "?ck \<in> ?N" using hin_normalizer[OF \<open>k \<in> ?Cov\<close>] .
+            have "?c_composed \<in> ?N"
+              using hc_eq group_mul_closed[OF hN_grp_n \<open>?ch \<in> ?N\<close> \<open>?ck \<in> ?N\<close>] by simp
+            have "?mulB = ?mulB" by simp
+            have "?invB = ?invB" by simp
+            from same_endpoint_same_coset[OF assms(3) hTE_n hTB_n assms(6) assms(7)
+                \<open>p (h (k e0)) = b0\<close> h_gamma_hk h_composed_path
+                hN_grp_n hH_normal_in_N_n \<open>?chk \<in> ?N\<close> \<open>?c_composed \<in> ?N\<close>
+                \<open>?mulB = ?mulB\<close> \<open>?invB = ?invB\<close>]
+            show ?thesis by simp
+          qed
           \<comment> \<open>Chain: coset(?chk) = coset(?c\\_composed) = coset(?pp\\_class) = coset(mulB(?ch,?ck)).\<close>
           from hcoset_eq have "?coset ?chk = ?coset ?c_composed" .
           also have "?coset ?c_composed = ?coset {g. top1_loop_equiv_on B TB b0 ?pp g}"
