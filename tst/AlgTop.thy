@@ -1138,7 +1138,14 @@ lemma finite_tree_remove_leaf_is_tree:
       and "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
       and "card \<A> \<ge> 2" and "finite \<A>"
   shows "top1_is_tree_on (\<Union>(\<A> - {A0})) (subspace_topology T TT (\<Union>(\<A> - {A0})))"
-  sorry
+proof -
+  let ?T' = "\<Union>(\<A> - {A0})" and ?TT' = "subspace_topology T TT (\<Union>(\<A> - {A0}))"
+  \<comment> \<open>Tree = graph + connected + simply\\_connected.\<close>
+  have hT'_graph: "top1_is_graph_on ?T' ?TT'" sorry
+  have hT'_conn: "top1_connected_on ?T' ?TT'" sorry
+  have hT'_sc: "top1_simply_connected_on ?T' ?TT'" sorry
+  show ?thesis unfolding top1_is_tree_on_def using hT'_graph hT'_conn hT'_sc by (by100 blast)
+qed
 
 \<comment> \<open>In a tree with \\<ge> 2 arcs, a leaf vertex's other endpoint is shared with another arc.
    (Needed for V = V' \\<union> {v} in tree Euler induction.)\<close>
