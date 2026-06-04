@@ -863,6 +863,112 @@ lemma group_right_id:
   "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> mul a e = a"
   unfolding top1_is_group_on_def by (by5000 blast)
 
+lemma group_inv_e:
+  assumes "top1_is_group_on G mul e invg"
+  shows "invg e = e"
+proof -
+  have "e \<in> G" using assms unfolding top1_is_group_on_def by (by5000 blast)
+  have "mul (invg e) e = e" using assms \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by5000 blast)
+  have "mul e e = e" using assms \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by5000 blast)
+  \<comment> \<open>Both invg(e) and e satisfy mul(x, e) = e. By right cancellation: they're equal.\<close>
+  have "invg e \<in> G" using assms \<open>e \<in> G\<close> unfolding top1_is_group_on_def by (by5000 blast)
+  have "invg e = mul (invg e) e"
+    using group_right_id[OF assms \<open>invg e \<in> G\<close>] by simp
+  also have "\<dots> = e" using \<open>mul (invg e) e = e\<close> .
+  finally show "invg e = e" .
+qed
+
+lemma group_e_in:
+  "top1_is_group_on G mul e invg \<Longrightarrow> e \<in> G"
+  unfolding top1_is_group_on_def by (by5000 blast)
+
+\<comment> \<open>The normalizer N(H) is a group when H \\<le> G and G is a group.\<close>
+lemma normalizer_is_group:
+  assumes hG: "top1_is_group_on G mul e invg"
+      and hH_sub: "H \<subseteq> G"
+      and hH_grp: "top1_is_group_on H mul e invg"
+  shows "top1_is_group_on (top1_normalizer_on G mul invg H) mul e invg"
+proof -
+  let ?N = "top1_normalizer_on G mul invg H"
+  have hN_sub: "?N \<subseteq> G" unfolding top1_normalizer_on_def by (by100 blast)
+  \<comment> \<open>e \\<in> N(H): e\\<cdot>h\\<cdot>e\\<inverse> = h for all h.\<close>
+  have he_in: "e \<in> ?N"
+  proof -
+    have "e \<in> G" using group_e_in[OF hG] .
+    have "{mul (mul e h) (invg e) |h. h \<in> H} = H"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {mul (mul e h) (invg e) |h. h \<in> H}"
+      then obtain h where "h \<in> H" "x = mul (mul e h) (invg e)" by (by5000 auto)
+      have "h \<in> G" using \<open>h \<in> H\<close> hH_sub by (by100 blast)
+      have "mul e h = h" using group_left_id[OF hG \<open>h \<in> G\<close>] .
+      have "mul h (invg e) = mul h e"
+        using group_inv_e[OF hG] by simp
+      also have "\<dots> = h" using group_right_id[OF hG \<open>h \<in> G\<close>] .
+      finally show "x \<in> H" using \<open>h \<in> H\<close> \<open>x = mul (mul e h) (invg e)\<close> \<open>mul e h = h\<close> by simp
+    next
+      fix x assume "x \<in> H"
+      have "x \<in> G" using \<open>x \<in> H\<close> hH_sub by (by100 blast)
+      have "mul (mul e x) (invg e) = mul x (invg e)"
+        using group_left_id[OF hG \<open>x \<in> G\<close>] by simp
+      also have "\<dots> = mul x e"
+        using group_inv_e[OF hG] by simp
+      also have "\<dots> = x" using group_right_id[OF hG \<open>x \<in> G\<close>] .
+      finally have "mul (mul e x) (invg e) = x" .
+      show "x \<in> {mul (mul e h) (invg e) |h. h \<in> H}"
+        apply (rule CollectI, rule exI[of _ x])
+        using \<open>x \<in> H\<close> \<open>mul (mul e x) (invg e) = x\<close>[symmetric] by (by100 blast)
+    qed
+    thus ?thesis unfolding top1_normalizer_on_def using \<open>e \<in> G\<close> by (by100 blast)
+  qed
+  \<comment> \<open>Closure: g,k \\<in> N(H) \\<Rightarrow> g\\<cdot>k \\<in> N(H).\<close>
+  have hmul_N: "\<forall>g\<in>?N. \<forall>k\<in>?N. mul g k \<in> ?N"
+    sorry \<comment> \<open>(g\\<cdot>k)\\<cdot>H\\<cdot>(g\\<cdot>k)\\<inverse> = g\\<cdot>(k\\<cdot>H\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> = g\\<cdot>H\\<cdot>g\\<inverse> = H.\<close>
+  \<comment> \<open>Inverse: g \\<in> N(H) \\<Rightarrow> g\\<inverse> \\<in> N(H) (from group\\_conj\\_reverse).\<close>
+  have hinv_N: "\<forall>g\<in>?N. invg g \<in> ?N"
+  proof (intro ballI)
+    fix g assume "g \<in> ?N"
+    hence "g \<in> G" using hN_sub by (by100 blast)
+    have "{mul (mul g h) (invg g) |h. h \<in> H} = H"
+      using \<open>g \<in> ?N\<close> unfolding top1_normalizer_on_def by (by5000 blast)
+    hence "H = (\<lambda>h. mul (invg g) (mul h g)) ` H"
+      sorry \<comment> \<open>Rewrite set comprehension to image form.\<close>
+    from group_conj_reverse[OF hG hH_sub \<open>g \<in> G\<close> this]
+    have "(\<lambda>h. mul (mul g h) (invg g)) ` H = H" .
+    \<comment> \<open>Wait, this gives back the original. Need the inverse direction.\<close>
+    \<comment> \<open>Actually: from g\\<cdot>H\\<cdot>g\\<inverse> = H, group\\_conj\\_reverse gives g\\<inverse>\\<cdot>H\\<cdot>g = H.
+       But we need g\\<inverse>\\<cdot>H\\<cdot>(g\\<inverse>)\\<inverse> = g\\<inverse>\\<cdot>H\\<cdot>g = H.\<close>
+    have "invg g \<in> G" using group_inv_closed[OF hG \<open>g \<in> G\<close>] .
+    show "invg g \<in> ?N"
+      sorry \<comment> \<open>From g\\<cdot>H\\<cdot>g\\<inverse> = H derive g\\<inverse>\\<cdot>H\\<cdot>g = H via group\\_conj\\_reverse,
+         then invg(invg g) = g gives the normalizer condition for g\\<inverse>.\<close>
+  qed
+  \<comment> \<open>Assemble is\\_group\\_on from closure + inherited axioms.\<close>
+  show ?thesis unfolding top1_is_group_on_def
+  proof (intro conjI)
+    show "e \<in> ?N" using he_in .
+    show "\<forall>x\<in>?N. \<forall>y\<in>?N. mul x y \<in> ?N" using hmul_N .
+    show "\<forall>x\<in>?N. invg x \<in> ?N" using hinv_N .
+    show "\<forall>x\<in>?N. \<forall>y\<in>?N. \<forall>z\<in>?N. mul (mul x y) z = mul x (mul y z)"
+    proof (intro ballI)
+      fix x y z assume "x \<in> ?N" "y \<in> ?N" "z \<in> ?N"
+      thus "mul (mul x y) z = mul x (mul y z)"
+        using group_assoc[OF hG] hN_sub by (by100 blast)
+    qed
+    show "\<forall>x\<in>?N. mul e x = x \<and> mul x e = x"
+    proof (intro ballI conjI)
+      fix x assume "x \<in> ?N"
+      thus "mul e x = x" using group_left_id[OF hG] hN_sub by (by100 blast)
+      thus "mul x e = x" using group_right_id[OF hG] hN_sub \<open>x \<in> ?N\<close> by (by100 blast)
+    qed
+    show "\<forall>x\<in>?N. mul (invg x) x = e \<and> mul x (invg x) = e"
+    proof (intro ballI conjI)
+      fix x assume "x \<in> ?N"
+      thus "mul (invg x) x = e" using group_left_inv[OF hG] hN_sub by (by100 blast)
+      thus "mul x (invg x) = e" using group_right_inv[OF hG] hN_sub \<open>x \<in> ?N\<close> by (by100 blast)
+    qed
+  qed
+qed
+
 lemma quotient_carrier_memI:
   "g \<in> G \<Longrightarrow> top1_group_coset_on G mul N g \<in> top1_quotient_group_carrier_on G mul N"
   unfolding top1_quotient_group_carrier_on_def by (by100 blast)
