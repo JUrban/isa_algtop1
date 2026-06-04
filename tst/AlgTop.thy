@@ -241,6 +241,7 @@ lemma left_right_coset_card_eq:
   shows "card (top1_left_cosets_on G mul H) = card (top1_right_cosets_on G mul H)"
   sorry
 
+
 \<comment> \<open>Theorem 54.6(c): [f] in H = p*(pi1(E,e0)) iff f lifts to a loop at e0.\<close>
 theorem Theorem_54_6c:
   fixes E :: "'e set" and TE :: "'e set set"
