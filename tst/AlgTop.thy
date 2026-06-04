@@ -2818,7 +2818,34 @@ proof -
            So [p\\<circ>\\<gamma>\\_1] and [p\\<circ>\\<gamma>\\_2] differ by H.
            By lifting, \\<gamma>\\_1(1) = \\<gamma>\\_2(1), i.e., h1(e0) = h2(e0).
            Then h1 = h2 by \\<Psi>-injectivity.\<close>
-        have "h1 e0 = h2 e0" sorry \<comment> \<open>From f(h1) = f(h2) + lifting correspondence.\<close>
+        \<comment> \<open>Kernel argument: f(h1) = f(h2) \\<Rightarrow> f(h2\\<inverse> \\<circ> h1)(e0) = e0.
+           Key: f(h) = identity coset \\<Rightarrow> [p\\<circ>\\<gamma>\\_h] \\<in> H \\<Rightarrow> h(e0) = e0 by Theorem 54.3.\<close>
+        have "h1 e0 = h2 e0"
+        proof -
+          \<comment> \<open>Step 1: f(h) = identity coset \\<Rightarrow> [p\\<circ>\\<gamma>\\_h] \\<in> H.\<close>
+          \<comment> \<open>Step 2: [p\\<circ>\\<gamma>\\_h] \\<in> H \\<Rightarrow> \\<exists> loop \\<delta> at e0 with [p\\<circ>\\<delta>] = [p\\<circ>\\<gamma>\\_h].
+             By Theorem 54.3: lifts from e0 of path-homotopic loops have same endpoint.
+             \\<delta> lifts to loop at e0 (ends at e0). \\<gamma>\\_h lifts to path ending at h(e0).
+             So h(e0) = e0.\<close>
+          \<comment> \<open>Step 3: h2\\<inverse>\\<circ>h1 is in the kernel, so h2\\<inverse>(h1(e0)) = e0,
+             hence h1(e0) = h2(e0).\<close>
+          \<comment> \<open>From f(h1) = f(h2), coset equality gives mulB(invB(c1), c2) \\<in> H
+             (where c1, c2 are the loop classes). This is equivalent to
+             h1(e0) = h2(e0) via the Theorem 54.3 argument.
+             Simplification: just use the h\\<Psi>\\_image characterization directly.\<close>
+          \<comment> \<open>Both h1(e0) and h2(e0) are in the fiber with image\\_hom = H.\<close>
+          have "h1 e0 \<in> \<Psi> ` ?Cov"
+            using \<open>h1 \<in> ?Cov\<close> unfolding \<Psi>_def by (by100 blast)
+          have "h2 e0 \<in> \<Psi> ` ?Cov"
+            using \<open>h2 \<in> ?Cov\<close> unfolding \<Psi>_def by (by100 blast)
+          \<comment> \<open>f(h1) = coset([p\\<circ>path\\_to(h1(e0))]) = coset([p\\<circ>path\\_to(h2(e0))]) = f(h2).
+             By same\\_endpoint\\_same\\_coset (CONVERSE): same coset \\<Rightarrow> same endpoint.
+             This is the Theorem 54.6 direction that we need.\<close>
+          show ?thesis sorry
+            \<comment> \<open>Needs: from f(h1) = f(h2) derive h1(e0) = h2(e0).
+               Key missing step: Theorem 54.3 applied to show that
+               [p\\<circ>\\<gamma>] \\<in> H implies the lift endpoint = e0.\<close>
+        qed
         hence "\<Psi> h1 = \<Psi> h2" unfolding \<Psi>_def by simp
         from inj_onD[OF h\<Psi>_inj \<open>\<Psi> h1 = \<Psi> h2\<close> \<open>h1 \<in> ?Cov\<close> \<open>h2 \<in> ?Cov\<close>]
         show "h1 = h2" .
