@@ -10226,7 +10226,7 @@ next
   have hp: "p \<in> X"
     using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
   have hcompact: "top1_compact_on X TX"
-    sorry \<comment> \<open>X = wedge of circles: finite union of compact arcs (images of [0,1]).\<close>
+    sorry \<comment> \<open>X = wedge of circles: each C(alpha) iso S1 compact, finite union compact.\<close>
   show ?thesis
     apply (rule exI[of _ X], rule exI[of _ TX], rule exI[of _ p])
     apply (intro conjI)
@@ -22909,7 +22909,9 @@ proof -
        F is free on S (card n+1) and F \\<cong> \\<pi>\\_1(X) which is free on S\\_X.
        By free\\_group\\_rank\\_invariant\\_finite: card S\\_X = card S = n+1.\<close>
     \<comment> \<open>Step D: X and E' are finite graphs. Get finiteness.\<close>
-    have h\<A>_X_fin: "finite \<A>_X" sorry
+    have h\<A>_X_fin: "finite \<A>_X"
+      by (rule compact_graph_finite_arcs[OF hX_graph hX_compact
+          h\<A>_X h\<A>_X_cover h\<A>_X_inter h\<A>_X_coh])
     \<comment> \<open>card S\\_X = n + 1: Transfer freeness from \\<pi>\\_1(X) to F via the isomorphism,
        then rank invariance. F free on S (card n+1), \\<pi>\\_1(X) free on S\\_X,
        F \\<cong> \\<pi>\\_1(X) \\<Rightarrow> F free on S\\_X \\<Rightarrow> card S\\_X = card S = n+1.\<close>
