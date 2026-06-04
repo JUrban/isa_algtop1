@@ -1124,66 +1124,6 @@ lemma finite_tree_has_leaf_arc:
      contradicting simply connected (tree).\<close>
   sorry
 
-\<comment> \<open>Removing a leaf arc from a tree gives a tree.\<close>
-lemma finite_tree_remove_leaf_is_tree:
-  assumes "top1_is_tree_on T TT"
-      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
-      and "\<Union>\<A> = T"
-      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
-           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
-         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-      and "A0 \<in> \<A>"
-      and "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
-      and "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
-      and "card \<A> \<ge> 2" and "finite \<A>"
-  shows "top1_is_tree_on (\<Union>(\<A> - {A0})) (subspace_topology T TT (\<Union>(\<A> - {A0})))"
-proof -
-  let ?T' = "\<Union>(\<A> - {A0})" and ?TT' = "subspace_topology T TT (\<Union>(\<A> - {A0}))"
-  \<comment> \<open>Tree = graph + connected + simply\\_connected.\<close>
-  have hT'_graph: "top1_is_graph_on ?T' ?TT'"
-  proof -
-    have hstrict: "is_topology_on_strict T TT"
-      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
-    have hhaus: "is_hausdorff_on T TT"
-      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
-    have hT'_sub: "?T' \<subseteq> T" using assms(2,3) by (by100 blast)
-    have hT'_strict: "is_topology_on_strict ?T' ?TT'"
-    proof -
-      have "\<forall>U\<in>?TT'. U \<subseteq> ?T'" unfolding subspace_topology_def by (by100 blast)
-      moreover have "is_topology_on ?T' ?TT'"
-        using subspace_topology_is_topology_on[OF hstrict[unfolded is_topology_on_strict_def, THEN conjunct1] hT'_sub] .
-      ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
-    qed
-    have hT'_haus: "is_hausdorff_on ?T' ?TT'"
-      using hhaus hT'_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
-    \<comment> \<open>Arc family \\<A>-{A0} covers T' and satisfies all graph properties in subspace.\<close>
-    show ?thesis unfolding top1_is_graph_on_def sorry
-  qed
-  have hT'_conn: "top1_connected_on ?T' ?TT'" sorry
-  have hT'_sc: "top1_simply_connected_on ?T' ?TT'"
-  proof -
-    \<comment> \<open>T' is a retract of T: the map r(x) = x for x \\<in> T', r(x) = w for x \\<in> A0\\\\T'
-       is a continuous retraction. By Lemma 55.1, loops in T' that are contractible
-       in T are contractible in T'. Since T is simply connected, all loops in T' are
-       contractible in T, hence in T'.\<close>
-    \<comment> \<open>The other endpoint w of A0 is in T' (from tree\\_leaf\\_other\\_endpoint\\_shared).\<close>
-    have hw_exists: "\<exists>w. w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and> w \<noteq> v \<and> w \<in> ?T'"
-      sorry \<comment> \<open>Other endpoint exists and is shared (proved lemma).\<close>
-    then obtain w where hw: "w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" "w \<noteq> v" "w \<in> ?T'"
-      by (by100 blast)
-    \<comment> \<open>T' is a retract of T.\<close>
-    have "top1_retract_of_on T TT ?T'"
-      sorry \<comment> \<open>Retraction r(x) = x for x \\<in> T', r(x) = w for x \\<in> A0\\\\T'.
-         Continuous in coherent topology (r|A = id for A \\<ne> A0, r|A0 = const w).\<close>
-    \<comment> \<open>By Lemma 55.1: loops in T' contractible in T \\<Rightarrow> contractible in T'.\<close>
-    \<comment> \<open>T simply connected + retract \\<Rightarrow> T' simply connected.\<close>
-    have hT_sc: "top1_simply_connected_on T TT"
-      using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
-    show ?thesis sorry \<comment> \<open>From retract + T simply connected.\<close>
-  qed
-  show ?thesis unfolding top1_is_tree_on_def using hT'_graph hT'_conn hT'_sc by (by100 blast)
-qed
 
 \<comment> \<open>In a tree with \\<ge> 2 arcs, a leaf vertex's other endpoint is shared with another arc.
    (Needed for V = V' \\<union> {v} in tree Euler induction.)\<close>
@@ -1345,6 +1285,108 @@ proof (rule ccontr)
   thus False using hA0_ne \<open>T = A0 \<union> _\<close> hA0_disj hrest_ne by (by100 blast)
 qed
 
+
+\<comment> \<open>Removing a leaf arc from a tree gives a tree.\<close>
+lemma finite_tree_remove_leaf_is_tree:
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "A0 \<in> \<A>"
+      and "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+      and "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
+      and "card \<A> \<ge> 2" and "finite \<A>"
+  shows "top1_is_tree_on (\<Union>(\<A> - {A0})) (subspace_topology T TT (\<Union>(\<A> - {A0})))"
+proof -
+  let ?T' = "\<Union>(\<A> - {A0})" and ?TT' = "subspace_topology T TT (\<Union>(\<A> - {A0}))"
+  \<comment> \<open>Tree = graph + connected + simply\\_connected.\<close>
+  have hT'_graph: "top1_is_graph_on ?T' ?TT'"
+  proof -
+    have hstrict: "is_topology_on_strict T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hhaus: "is_hausdorff_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hT'_sub: "?T' \<subseteq> T" using assms(2,3) by (by100 blast)
+    have hT'_strict: "is_topology_on_strict ?T' ?TT'"
+    proof -
+      have "\<forall>U\<in>?TT'. U \<subseteq> ?T'" unfolding subspace_topology_def by (by100 blast)
+      moreover have "is_topology_on ?T' ?TT'"
+        using subspace_topology_is_topology_on[OF hstrict[unfolded is_topology_on_strict_def, THEN conjunct1] hT'_sub] .
+      ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+    qed
+    have hT'_haus: "is_hausdorff_on ?T' ?TT'"
+      using hhaus hT'_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+    \<comment> \<open>Arc family \\<A>-{A0} covers T' and satisfies all graph properties in subspace.\<close>
+    show ?thesis unfolding top1_is_graph_on_def sorry
+  qed
+  have hT'_conn: "top1_connected_on ?T' ?TT'" sorry
+  have hT'_sc: "top1_simply_connected_on ?T' ?TT'"
+  proof -
+    \<comment> \<open>T' is a retract of T: the map r(x) = x for x \\<in> T', r(x) = w for x \\<in> A0\\\\T'
+       is a continuous retraction. By Lemma 55.1, loops in T' that are contractible
+       in T are contractible in T'. Since T is simply connected, all loops in T' are
+       contractible in T, hence in T'.\<close>
+    \<comment> \<open>The other endpoint w of A0 is in T' (from tree\\_leaf\\_other\\_endpoint\\_shared).\<close>
+    have hw_exists: "\<exists>w. w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and> w \<noteq> v \<and> w \<in> ?T'"
+    proof -
+      \<comment> \<open>A0 has 2 endpoints. One is v. The other w \\<ne> v.\<close>
+      have hstrict: "is_topology_on_strict T TT"
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have hhaus: "is_hausdorff_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have hA0_sub: "A0 \<subseteq> T" using assms(2,5) by (by100 blast)
+      have hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)" using assms(2,5) by (by100 blast)
+      obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+        using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have hep: "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {h 0, h 1}"
+        by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA0_sub hA0_arc hh])
+      have h_inj: "inj_on h I_set"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hne: "h 0 \<noteq> h 1"
+      proof
+        assume "h 0 = h 1"
+        from inj_onD[OF h_inj this] show False unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      \<comment> \<open>v is one of {h 0, h 1}. The other is w.\<close>
+      have "v \<in> {h 0, h 1}" using assms(6) hep by simp
+      have "\<exists>w. w \<in> {h 0, h 1} \<and> w \<noteq> v"
+      proof (cases "v = h 0")
+        case True
+        have "h 1 \<in> {h 0, h 1} \<and> h 1 \<noteq> v" using hne True by (by100 simp)
+        thus ?thesis by (by100 blast)
+      next
+        case False
+        hence "v = h 1" using \<open>v \<in> {h 0, h 1}\<close> by (by100 blast)
+        thus ?thesis using hne by (by100 blast)
+      qed
+      then obtain w where hw_ep: "w \<in> {h 0, h 1}" "w \<noteq> v" by (by100 blast)
+      have "w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" using hw_ep(1) hep by simp
+      \<comment> \<open>w is shared with another arc (from tree\\_leaf\\_other\\_endpoint\\_shared).\<close>
+      have hw_ep_A0: "w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        using hw_ep(1) hep by simp
+      from tree_leaf_other_endpoint_shared[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7) assms(8) assms(9) hw_ep_A0 hw_ep(2)]
+      have "\<exists>B\<in>\<A> - {A0}. w \<in> B" .
+      then obtain B where "B \<in> \<A> - {A0}" "w \<in> B" by (by100 blast)
+      hence "w \<in> ?T'" by (by100 blast)
+      thus ?thesis using \<open>w \<in> top1_arc_endpoints_on A0 _\<close> hw_ep(2) by (by100 blast)
+    qed
+    then obtain w where hw: "w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" "w \<noteq> v" "w \<in> ?T'"
+      by (by100 blast)
+    \<comment> \<open>T' is a retract of T.\<close>
+    have "top1_retract_of_on T TT ?T'"
+      sorry \<comment> \<open>Retraction r(x) = x for x \\<in> T', r(x) = w for x \\<in> A0\\\\T'.
+         Continuous in coherent topology (r|A = id for A \\<ne> A0, r|A0 = const w).\<close>
+    \<comment> \<open>By Lemma 55.1: loops in T' contractible in T \\<Rightarrow> contractible in T'.\<close>
+    \<comment> \<open>T simply connected + retract \\<Rightarrow> T' simply connected.\<close>
+    have hT_sc: "top1_simply_connected_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+    show ?thesis sorry \<comment> \<open>From retract + T simply connected.\<close>
+  qed
+  show ?thesis unfolding top1_is_tree_on_def using hT'_graph hT'_conn hT'_sc by (by100 blast)
+qed
 lemma tree_euler_nat:
   fixes n :: nat
   shows "\<forall>(T :: 'a set) TT \<A>. card \<A> = n \<longrightarrow>
