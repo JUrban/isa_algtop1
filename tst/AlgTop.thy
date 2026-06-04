@@ -2014,7 +2014,36 @@ proof -
           have hH_normal_in_N: "top1_normal_subgroup_on ?N ?mulB ?eB ?invB ?H"
             unfolding top1_normal_subgroup_on_def
           proof (intro conjI)
-            show "?H \<subseteq> ?N" sorry \<comment> \<open>H \\<subseteq> N(H): every h \\<in> H normalizes H.\<close>
+            show "?H \<subseteq> ?N"
+            proof (rule subsetI)
+              fix h assume "h \<in> ?H"
+              have "?H \<subseteq> ?pi1B"
+              proof -
+                have hTE_l: "is_topology_on E TE"
+                  using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+                have hTB_l: "is_topology_on B TB"
+                  using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+                have hb0B_l: "b0 \<in> B"
+                  using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
+                have hp_cont_l: "top1_continuous_map_on E TE B TB p"
+                  using top1_covering_map_on_continuous[OF assms(3)] .
+                have "top1_group_hom_on (top1_fundamental_group_carrier E TE e0)
+                    (top1_fundamental_group_mul E TE e0) ?pi1B ?mulB
+                    (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
+                  using top1_fundamental_group_induced_on_is_hom[OF hTE_l hTB_l assms(6) hb0B_l hp_cont_l assms(7)] .
+                hence "\<forall>c \<in> top1_fundamental_group_carrier E TE e0.
+                    top1_fundamental_group_induced_on E TE e0 B TB b0 p c \<in> ?pi1B"
+                  unfolding top1_group_hom_on_def by (by100 blast)
+                thus ?thesis unfolding top1_fundamental_group_image_hom_def by (by100 blast)
+              qed
+              hence "h \<in> ?pi1B" using \<open>h \<in> ?H\<close> by (by100 blast)
+              show "h \<in> ?N" unfolding top1_normalizer_on_def
+              proof (intro CollectI conjI)
+                show "h \<in> ?pi1B" using \<open>h \<in> ?pi1B\<close> .
+                show "{?mulB (?mulB h n) (?invB h) |n. n \<in> ?H} = ?H"
+                  sorry \<comment> \<open>H is a subgroup: closure under conjugation by h \\<in> H.\<close>
+              qed
+            qed
             show "top1_is_group_on ?H ?mulB ?eB ?invB"
             proof -
               have hTE_l: "is_topology_on E TE"
