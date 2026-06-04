@@ -34,7 +34,80 @@ theorem Theorem_54_6b:
          = top1_group_coset_on (top1_fundamental_group_carrier B TB b0)
             (top1_fundamental_group_mul B TB b0)
             (top1_fundamental_group_image_hom E TE e0 B TB b0 p) h))"
-  sorry
+proof -
+  let ?piB = "top1_fundamental_group_carrier B TB b0"
+  let ?mulB = "top1_fundamental_group_mul B TB b0"
+  let ?H = "top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+  \<comment> \<open>Step 1: Get \\<phi> from Theorem 54.4 with all properties.\<close>
+  have hE_top: "is_topology_on E TE"
+    using assms(2) unfolding top1_path_connected_on_def by (by100 blast)
+  from Theorem_54_4_lifting_correspondence[OF assms(4-5,1-2,3)]
+  obtain \<phi> where h\<phi>_maps: "\<forall>c\<in>?piB. \<phi> c \<in> {e \<in> E. p e = b0}"
+      and h\<phi>_surj: "\<phi> ` ?piB = {e \<in> E. p e = b0}"
+      and h\<phi>_lift: "\<forall>c\<in>?piB. \<exists>f ft. f \<in> c \<and> top1_is_loop_on B TB b0 f
+          \<and> top1_is_path_on E TE e0 (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s)"
+    by (elim exE conjE)
+  \<comment> \<open>Step 2: Prove \\<phi>(g) = \\<phi>(h) \\<leftrightarrow> same coset. This is the key content of 54.6(b).\<close>
+  have h\<phi>_coset: "\<forall>g\<in>?piB. \<forall>h\<in>?piB.
+      (\<phi> g = \<phi> h) = (top1_group_coset_on ?piB ?mulB ?H g = top1_group_coset_on ?piB ?mulB ?H h)"
+  proof (intro ballI)
+    fix g h assume hg: "g \<in> ?piB" and hh: "h \<in> ?piB"
+    from h\<phi>_lift[rule_format, OF hg]
+    obtain fg ftg where hfg: "fg \<in> g" "top1_is_loop_on B TB b0 fg"
+        "top1_is_path_on E TE e0 (\<phi> g) ftg" "\<forall>s\<in>I_set. p (ftg s) = fg s"
+      by (by100 blast)
+    from h\<phi>_lift[rule_format, OF hh]
+    obtain fh fth where hfh: "fh \<in> h" "top1_is_loop_on B TB b0 fh"
+        "top1_is_path_on E TE e0 (\<phi> h) fth" "\<forall>s\<in>I_set. p (fth s) = fh s"
+      by (by100 blast)
+    show "(\<phi> g = \<phi> h) = (top1_group_coset_on ?piB ?mulB ?H g = top1_group_coset_on ?piB ?mulB ?H h)"
+    proof (rule iffI)
+      \<comment> \<open>Forward: \\<phi>(g)=\\<phi>(h) \\<Rightarrow> same coset.
+         Book 54.6(b): ftg and fth end at same point.
+         ftg * rev(fth) is loop at e0. p\\<circ>(ftg * rev(fth)) represents g*h\\<inverse>.
+         So g*h\\<inverse> \\<in> ?H, hence gH = hH.\<close>
+      assume h\<phi>_eq: "\<phi> g = \<phi> h"
+      \<comment> \<open>ftg * reverse(fth) is a loop at e0 (both end at \\<phi>(g) = \\<phi>(h)).\<close>
+      have hloop_E: "top1_is_path_on E TE e0 e0
+          (top1_path_product ftg (top1_path_reverse fth))"
+        sorry
+      \<comment> \<open>Its projection p\\<circ>(ftg * rev(fth)) = fg * rev(fh) represents g*h\\<inverse>.\<close>
+      have hproj_loop: "top1_is_loop_on B TB b0
+          (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t))"
+        sorry
+      \<comment> \<open>Class of p\\<circ>(loop) is in ?H = p*(\\<pi>\\_1(E,e0)).\<close>
+      have "{f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)) f'} \<in> ?H"
+        sorry
+      \<comment> \<open>This class = g * h\\<inverse> in \\<pi>\\_1(B).\<close>
+      \<comment> \<open>g * h\\<inverse> \\<in> ?H \\<Rightarrow> gH = hH.\<close>
+      show "top1_group_coset_on ?piB ?mulB ?H g = top1_group_coset_on ?piB ?mulB ?H h"
+        sorry
+    next
+      \<comment> \<open>Backward: same coset \\<Rightarrow> \\<phi>(g)=\\<phi>(h).
+         Book: gH = hH, so g = h*k for some k \\<in> H.
+         k \\<in> H = p*(\\<pi>\\_1(E)) means k = [p\\<circ>\\<alpha>\\<tilde>] for loop \\<alpha>\\<tilde> at e0.
+         Lift of fg = lift of (fh * (p\\<circ>\\<alpha>\\<tilde>)) = fth * \\<alpha>\\<tilde>.
+         fth * \\<alpha>\\<tilde> ends at \\<phi>(h) (since \\<alpha>\\<tilde> is loop, fth ends at \\<phi>(h)).
+         Wait --- actually fth ends at \\<phi>(h), \\<alpha>\\<tilde> starts at e0 not \\<phi>(h).
+         The correct argument (book): [f] = [h*g] where h = p\\<circ>h\\<tilde>.
+         h\\<tilde>*g\\<tilde> lifts h*g, starts at e0, ends at g\\<tilde>(1) = \\<phi>(g).
+         Since [f] = [h*g], lifts f\\<tilde> and h\\<tilde>*g\\<tilde> end at same point (Thm 54.3).
+         So \\<phi>(f) = \\<phi>(g). Done.\<close>
+      assume hcoset_eq: "top1_group_coset_on ?piB ?mulB ?H g = top1_group_coset_on ?piB ?mulB ?H h"
+      show "\<phi> g = \<phi> h"
+        sorry
+    qed
+  qed
+  \<comment> \<open>Assemble the 4-tuple existential.\<close>
+  show ?thesis
+    apply (rule exI[of _ \<phi>])
+    apply (intro conjI)
+    using h\<phi>_maps apply assumption
+    using h\<phi>_surj apply assumption
+    using h\<phi>_lift apply assumption
+    using h\<phi>_coset apply assumption
+    done
+qed
 
 \<comment> \<open>Theorem 54.6(c): [f] in H = p*(pi1(E,e0)) iff f lifts to a loop at e0.\<close>
 theorem Theorem_54_6c:
