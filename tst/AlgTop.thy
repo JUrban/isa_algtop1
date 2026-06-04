@@ -12997,12 +12997,16 @@ lemma graph_pi1_free_weak:
       and "top1_connected_on Y TY"
       and "y0 \<in> Y"
   \<comment> \<open>Faithful to Munkres \\<S>84.7: free basis indexed by non-tree arcs (any cardinality).\<close>
-  shows "\<exists>(\<iota>::'a set \<Rightarrow> _) (S::'a set set). top1_is_free_group_full_on
+  shows "\<exists>(\<iota>::'a set \<Rightarrow> _) (S::'a set set) \<A> T. top1_is_free_group_full_on
       (top1_fundamental_group_carrier Y TY y0)
       (top1_fundamental_group_mul Y TY y0)
       (top1_fundamental_group_id Y TY y0)
       (top1_fundamental_group_invg Y TY y0)
-      \<iota> S"
+      \<iota> S
+    \<and> (\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A))
+    \<and> \<Union>\<A> = Y
+    \<and> top1_is_tree_on T (subspace_topology Y TY T) \<and> T \<subseteq> Y \<and> y0 \<in> T
+    \<and> S = {A \<in> \<A>. \<not> A \<subseteq> T}"
 proof -
   \<comment> \<open>Extract graph structure.\<close>
   obtain \<A> where h\<A>: "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
@@ -13496,7 +13500,28 @@ proof -
           top1_fundamental_group_id Y TY y0"
         by (by100 blast) \<comment> \<open>Vacuous: \\<forall>i. fst(ws!i) \\<in> {} is impossible for ws \\<ne> [].\<close>
     qed
-    thus ?thesis by (by100 blast)
+    moreover have hNT_empty: "?NT = {}" using True .
+    moreover have hempty_eq: "{} = {A \<in> \<A>. \<not> A \<subseteq> T}" using True by simp
+    ultimately have hfree_empty: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier Y TY y0)
+        (top1_fundamental_group_mul Y TY y0)
+        (top1_fundamental_group_id Y TY y0)
+        (top1_fundamental_group_invg Y TY y0)
+        (\<lambda>_::'a set. undefined) {}" by (by100 simp)
+    show ?thesis
+      apply (rule exI[of _ "\<lambda>_::'a set. undefined"])
+      apply (rule exI[of _ "{}"])
+      apply (rule exI[of _ \<A>])
+      apply (rule exI[of _ T])
+      apply (intro conjI)
+      using hfree_empty apply assumption
+      using h\<A> apply assumption
+      using h\<A>_cover apply assumption
+      using hT_tree apply assumption
+      using hT_sub apply assumption
+      using hT_x0 apply assumption
+      using hempty_eq apply assumption
+      done
   next
     case False
     \<comment> \<open>Non-tree arcs exist. Proceed by cases: finite or infinite.\<close>
@@ -18376,7 +18401,7 @@ proof -
             by (by100 blast)
         qed
         \<comment> \<open>Directly verify free\\_group\\_full\\_on gen ?NT (faithful: no nat encoding).\<close>
-        have "top1_is_free_group_full_on
+        have hgen_free: "top1_is_free_group_full_on
             (top1_fundamental_group_carrier Y TY y0) (top1_fundamental_group_mul Y TY y0)
             (top1_fundamental_group_id Y TY y0) (top1_fundamental_group_invg Y TY y0)
             gen ?NT"
@@ -18819,7 +18844,24 @@ proof -
             qed
           qed
         qed
-        thus ?thesis by (by100 blast)
+        \<comment> \<open>Assemble the 4-witness existential: \\<iota>=gen, S=?NT, \\<A>=\\<A>, T=T.\<close>
+        have h\<A>_props: "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+          using h\<A> .
+        have hNT_eq: "?NT = {A \<in> \<A>. \<not> A \<subseteq> T}" by (by100 blast)
+        show ?thesis
+          apply (rule exI[of _ gen])
+          apply (rule exI[of _ "?NT"])
+          apply (rule exI[of _ \<A>])
+          apply (rule exI[of _ T])
+          apply (intro conjI)
+          using hgen_free apply assumption
+          using h\<A>_props apply assumption
+          using h\<A>_cover apply assumption
+          using hT_tree apply assumption
+          using hT_sub apply assumption
+          using hT_x0 apply assumption
+          using hNT_eq apply assumption
+          done
       qed
     qed
   qed
@@ -18851,7 +18893,14 @@ theorem Theorem_84_7_fund_group_graph_is_free:
              (top1_fundamental_group_id X TX x0)
              (top1_fundamental_group_invg X TX x0)
              \<iota> S"
-  by (rule graph_pi1_free_weak[OF assms])
+proof -
+  from graph_pi1_free_weak[OF assms]
+  show ?thesis
+    apply (elim exE conjE)
+    apply (intro exI)
+    apply assumption
+    done
+qed
 
 \<comment> \<open>The full SvK proof of Theorem 84.7 with int-set packaging was previously
    here (~1700 lines). It has been replaced by a direct application of
@@ -21792,14 +21841,21 @@ proof -
   \<comment> \<open>Step 3b: \\<pi>\\_1(E') is free (graph\\_pi1\\_free\\_weak — no int set needed here).\<close>
   from graph_pi1_free_weak[OF hE'_graph \<open>top1_connected_on E' TE'\<close> \<open>e0' \<in> E'\<close>]
   obtain \<iota>_E :: "(real \<Rightarrow> unit + ('s \<times> real \<times> real)) set set \<Rightarrow> _" and
-      S_E :: "(real \<Rightarrow> unit + ('s \<times> real \<times> real)) set set set"
+      S_E :: "(real \<Rightarrow> unit + ('s \<times> real \<times> real)) set set set" and
+      \<A>_E :: "(real \<Rightarrow> unit + ('s \<times> real \<times> real)) set set set" and
+      T_E :: "(real \<Rightarrow> unit + ('s \<times> real \<times> real)) set set"
     where hfree_E: "top1_is_free_group_full_on
         (top1_fundamental_group_carrier E' TE' e0')
         (top1_fundamental_group_mul E' TE' e0')
         (top1_fundamental_group_id E' TE' e0')
         (top1_fundamental_group_invg E' TE' e0')
         \<iota>_E S_E"
-    by (by100 blast)
+      and h\<A>_E: "\<forall>A\<in>\<A>_E. A \<subseteq> E' \<and> top1_is_arc_on A (subspace_topology E' TE' A)"
+      and h\<A>_E_cover: "\<Union>\<A>_E = E'"
+      and hT_E_tree: "top1_is_tree_on T_E (subspace_topology E' TE' T_E)"
+      and hT_E_sub: "T_E \<subseteq> E'" and hT_E_x0: "e0' \<in> T_E"
+      and hS_E_eq: "S_E = {A \<in> \<A>_E. \<not> A \<subseteq> T_E}"
+    by (elim exE conjE)
   \<comment> \<open>Step 3c: H is free. From p'* injective + H iso p'*(pi1(E')).\<close>
   \<comment> \<open>Step 3c: H is free.
      Chain: p'* injective \\<Rightarrow> \\<pi>\\_1(E') \\<cong> p'*(\\<pi>\\_1(E')) = f\\_iso(H) \\<cong> H.
@@ -22009,6 +22065,80 @@ qed
    Key tool: any two finite free bases of the same group have equal cardinality
    (free\\_group\\_rank\\_invariant\\_finite).\<close>
 
+\<comment> \<open>Definition: the vertex set of a graph (union of all arc endpoints).\<close>
+definition top1_graph_vertex_set :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set set \<Rightarrow> 'a set"
+  where "top1_graph_vertex_set Y TY \<A> =
+    (\<Union>A\<in>\<A>. top1_arc_endpoints_on A (subspace_topology Y TY A))"
+
+\<comment> \<open>Lemma 85.2, Step 1: \\<chi>(T) = 1 for any finite tree.
+   Proof by induction on the number of arcs. If T is a tree and T = T\\_0 \\<union> A
+   where T\\_0 is a tree and A is an arc meeting T\\_0 in a single vertex,
+   then T has one more arc and one more vertex than T\\_0, so \\<chi> is preserved.\<close>
+lemma tree_euler_number_one:
+  fixes T :: "'a set" and TT :: "'a set set" and \<A> :: "'a set set"
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "finite \<A>"
+      and "\<A> \<noteq> {}"
+  shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
+  sorry
+
+\<comment> \<open>Lemma 85.2, Step 2: for a finite connected graph with spanning tree T,
+   rank(\\<pi>\\_1) = card(non-tree arcs) = card(\\<A>) - card(V) + 1.
+   The tree and graph share the same vertex set (endpoints of non-tree arcs are in T),
+   and \\<chi>(T) = 1, so \\<chi>(X) = 1 - card(non-tree arcs).\<close>
+lemma graph_euler_rank:
+  fixes Y :: "'a set" and TY :: "'a set set"
+  assumes "top1_is_graph_on Y TY"
+      and "top1_connected_on Y TY"
+      and "y0 \<in> Y"
+      and \<A>_def: "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+      and \<A>_cover: "\<Union>\<A> = Y"
+      and T_tree: "top1_is_tree_on T (subspace_topology Y TY T)"
+      and T_sub: "T \<subseteq> Y" and T_x0: "y0 \<in> T"
+      and S_eq: "S = {A \<in> \<A>. \<not> A \<subseteq> T}"
+      and "finite \<A>"
+  shows "card S + card (top1_graph_vertex_set Y TY \<A>) = card \<A> + 1"
+  sorry
+
+\<comment> \<open>Covering multiplicity for arcs: a k-sheeted covering of a graph
+   has exactly k times as many arcs.\<close>
+lemma covering_graph_arc_multiplicity:
+  fixes E :: "'b set" and TE :: "'b set set" and X :: "'a set" and TX :: "'a set set"
+  assumes "top1_covering_map_on E TE X TX p"
+      and "top1_is_graph_on X TX"
+      and "is_topology_on_strict E TE"
+      and "\<forall>A\<in>\<A>_X. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and "\<Union>\<A>_X = X"
+      and "\<forall>A\<in>\<A>_E. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
+      and "\<Union>\<A>_E = E"
+      and "finite \<A>_X"
+      and "card {e \<in> E. p e = x0} = k"
+      and "x0 \<in> X"
+  shows "card \<A>_E = k * card \<A>_X"
+  sorry
+
+\<comment> \<open>Covering multiplicity for vertices.\<close>
+lemma covering_graph_vertex_multiplicity:
+  fixes E :: "'b set" and TE :: "'b set set" and X :: "'a set" and TX :: "'a set set"
+  assumes "top1_covering_map_on E TE X TX p"
+      and "top1_is_graph_on X TX"
+      and "is_topology_on_strict E TE"
+      and "\<forall>A\<in>\<A>_X. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and "\<Union>\<A>_X = X"
+      and "\<forall>A\<in>\<A>_E. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
+      and "\<Union>\<A>_E = E"
+      and "finite (top1_graph_vertex_set X TX \<A>_X)"
+      and "card {e \<in> E. p e = x0} = k"
+      and "x0 \<in> X"
+  shows "card (top1_graph_vertex_set E TE \<A>_E) = k * card (top1_graph_vertex_set X TX \<A>_X)"
+  sorry
+
 \<comment> \<open>For the Schreier formula, we need: rank(\\<pi>\\_1(E')) = kn + 1.
    Since E' is a k-fold covering of X (wedge of n+1 circles):
    - \\<pi>\\_1(X) free of rank n+1 (from Theorem 71.3)
@@ -22155,14 +22285,21 @@ proof -
   \<comment> \<open>Step 3a: pi1(E') is free (graph\\_pi1\\_free\\_weak).\<close>
   from graph_pi1_free_weak[OF hE'_graph hE'_conn he0']
   obtain \<iota>_E :: "(real \<Rightarrow> real \<times> real) set set \<Rightarrow> _" and
-      S_E :: "(real \<Rightarrow> real \<times> real) set set set"
+      S_E :: "(real \<Rightarrow> real \<times> real) set set set" and
+      \<A>_E :: "(real \<Rightarrow> real \<times> real) set set set" and
+      T_E :: "(real \<Rightarrow> real \<times> real) set set"
     where hfree_E: "top1_is_free_group_full_on
         (top1_fundamental_group_carrier E' TE' e0')
         (top1_fundamental_group_mul E' TE' e0')
         (top1_fundamental_group_id E' TE' e0')
         (top1_fundamental_group_invg E' TE' e0')
         \<iota>_E S_E"
-    by (by100 blast)
+      and h\<A>_E: "\<forall>A\<in>\<A>_E. A \<subseteq> E' \<and> top1_is_arc_on A (subspace_topology E' TE' A)"
+      and h\<A>_E_cover: "\<Union>\<A>_E = E'"
+      and hT_E_tree: "top1_is_tree_on T_E (subspace_topology E' TE' T_E)"
+      and hT_E_sub: "T_E \<subseteq> E'" and hT_E_x0: "e0' \<in> T_E"
+      and hS_E_eq: "S_E = {A \<in> \<A>_E. \<not> A \<subseteq> T_E}"
+    by (elim exE conjE)
   \<comment> \<open>Step 3b: H is free on S\\_E (the same basis from \\<pi>\\_1(E')).\<close>
   have hH_free_SE: "\<exists>(\<iota>H :: (real \<Rightarrow> real \<times> real) set set \<Rightarrow> 'g).
       top1_is_free_group_full_on H mul e invg \<iota>H S_E"
@@ -22454,7 +22591,136 @@ proof -
        The k-sheeted covering E' \\<rightarrow> X satisfies rank(\\<pi>\\_1(E')) = k(n+1-1)+1 = kn+1.
        Book proof: E' has k\\<times>arcs(X) arcs and k\\<times>verts(X) vertices,
        \\<chi>(E') = k\\<chi>(X), rank = 1-\\<chi>. Requires Lemma 85.2 + covering multiplicity.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Step B: Apply graph\\_pi1\\_free\\_weak to X to get its arc/tree structure.\<close>
+    from graph_pi1_free_weak[OF hX_graph hX_conn hx0]
+    obtain \<iota>_X :: "(real \<times> real) set \<Rightarrow> _" and
+        S_X :: "(real \<times> real) set set" and
+        \<A>_X :: "(real \<times> real) set set" and
+        T_X :: "(real \<times> real) set"
+      where hfree_X: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)
+          (top1_fundamental_group_id X TX x0)
+          (top1_fundamental_group_invg X TX x0)
+          \<iota>_X S_X"
+        and h\<A>_X: "\<forall>A\<in>\<A>_X. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+        and h\<A>_X_cover: "\<Union>\<A>_X = X"
+        and hT_X_tree: "top1_is_tree_on T_X (subspace_topology X TX T_X)"
+        and hT_X_sub: "T_X \<subseteq> X" and hT_X_x0: "x0 \<in> T_X"
+        and hS_X_eq: "S_X = {A \<in> \<A>_X. \<not> A \<subseteq> T_X}"
+      by (elim exE conjE)
+    \<comment> \<open>Step C: card S\\_X = n + 1 by rank invariance.
+       F is free on S (card n+1) and F \\<cong> \\<pi>\\_1(X) which is free on S\\_X.
+       By free\\_group\\_rank\\_invariant\\_finite: card S\\_X = card S = n+1.\<close>
+    \<comment> \<open>Step D: X and E' are finite graphs. Get finiteness.\<close>
+    have h\<A>_X_fin: "finite \<A>_X" sorry
+    \<comment> \<open>card S\\_X = n + 1: Transfer freeness from \\<pi>\\_1(X) to F via the isomorphism,
+       then rank invariance. F free on S (card n+1), \\<pi>\\_1(X) free on S\\_X,
+       F \\<cong> \\<pi>\\_1(X) \\<Rightarrow> F free on S\\_X \\<Rightarrow> card S\\_X = card S = n+1.\<close>
+    have hS_X_card: "card S_X = n + 1"
+    proof -
+      have hF_grp: "top1_is_group_on F mul e invg"
+        using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+      have hpiX_grp: "top1_is_group_on ?piX ?mulX
+          (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
+      proof -
+        have "is_topology_on X TX"
+          using hX_graph unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+        from top1_fundamental_group_is_group[OF this hx0]
+        show ?thesis .
+      qed
+      \<comment> \<open>\\<pi>\\_1(X) \\<cong> F (symmetry of isomorphism).\<close>
+      have "top1_groups_isomorphic_on ?piX ?mulX F mul"
+        by (rule top1_groups_isomorphic_on_sym[OF hF_iso hF_grp hpiX_grp])
+      \<comment> \<open>Transfer: \\<pi>\\_1(X) free on S\\_X, \\<pi>\\_1(X) \\<cong> F \\<Rightarrow> F free on S\\_X.\<close>
+      from free_group_iso_transfer[OF hfree_X this hF_grp]
+      obtain \<iota>' where h\<iota>': "top1_is_free_group_full_on F mul e invg \<iota>' S_X"
+        by (by100 blast)
+      \<comment> \<open>Rank invariance: F free on S (card n+1) and on S\\_X \\<Rightarrow> card S\\_X = card S.\<close>
+      have "finite S" using assms(2) by (cases "finite S", by100 simp, by100 simp)
+      have "finite S_X" using hS_X_eq h\<A>_X_fin by (by100 simp)
+      from free_group_rank_invariant_finite[OF assms(1) h\<iota>' \<open>finite S\<close> \<open>finite S_X\<close>]
+      show ?thesis using assms(2) by simp
+    qed
+    have hV_X_fin: "finite (top1_graph_vertex_set X TX \<A>_X)"
+    proof -
+      have "\<forall>A\<in>\<A>_X. finite (top1_arc_endpoints_on A (subspace_topology X TX A))"
+      proof (intro ballI)
+        fix A assume "A \<in> \<A>_X"
+        hence "A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)" using h\<A>_X by (by100 blast)
+        hence "top1_is_arc_on A (subspace_topology X TX A)" by (by100 blast)
+        then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        have hX_strict: "is_topology_on_strict X TX"
+          using hX_graph unfolding top1_is_graph_on_def by (by100 blast)
+        have hX_haus: "is_hausdorff_on X TX"
+          using hX_graph unfolding top1_is_graph_on_def by (by100 blast)
+        from arc_endpoints_are_boundary[OF hX_strict hX_haus \<open>A \<subseteq> X \<and> _\<close>[THEN conjunct1]
+            \<open>top1_is_arc_on A _\<close> \<open>top1_homeomorphism_on _ _ _ _ h\<close>]
+        have "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}" .
+        thus "finite (top1_arc_endpoints_on A (subspace_topology X TX A))" by (by100 simp)
+      qed
+      thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>_X_fin by (by100 blast)
+    qed
+    have h\<A>_E_fin: "finite \<A>_E" sorry
+    have hV_E_fin: "finite (top1_graph_vertex_set E' TE' \<A>_E)"
+    proof -
+      have "\<forall>A\<in>\<A>_E. finite (top1_arc_endpoints_on A (subspace_topology E' TE' A))"
+      proof (intro ballI)
+        fix A assume "A \<in> \<A>_E"
+        hence "A \<subseteq> E' \<and> top1_is_arc_on A (subspace_topology E' TE' A)" using h\<A>_E by (by100 blast)
+        hence "top1_is_arc_on A (subspace_topology E' TE' A)" by (by100 blast)
+        then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology E' TE' A) h"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        have hE'_haus: "is_hausdorff_on E' TE'"
+          using hE'_graph unfolding top1_is_graph_on_def by (by100 blast)
+        from arc_endpoints_are_boundary[OF hE'_strict hE'_haus \<open>A \<subseteq> E' \<and> _\<close>[THEN conjunct1]
+            \<open>top1_is_arc_on A _\<close> \<open>top1_homeomorphism_on _ _ _ _ h\<close>]
+        have "top1_arc_endpoints_on A (subspace_topology E' TE' A) = {h 0, h 1}" .
+        thus "finite (top1_arc_endpoints_on A (subspace_topology E' TE' A))" by (by100 simp)
+      qed
+      thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>_E_fin by (by100 blast)
+    qed
+    \<comment> \<open>Step E: Euler formula for X: card S\\_X + card V\\_X = card \\<A>\\_X + 1.
+       Hence card \\<A>\\_X - card V\\_X = card S\\_X - 1 = n.\<close>
+    let ?V_X = "top1_graph_vertex_set X TX \<A>_X"
+    let ?V_E = "top1_graph_vertex_set E' TE' \<A>_E"
+    have heuler_X: "card S_X + card ?V_X = card \<A>_X + 1"
+      by (rule graph_euler_rank[OF hX_graph hX_conn hx0 h\<A>_X h\<A>_X_cover
+          hT_X_tree hT_X_sub hT_X_x0 hS_X_eq h\<A>_X_fin])
+    hence heuler_X_diff: "int (card \<A>_X) - int (card ?V_X) = int n"
+      using hS_X_card by linarith
+    \<comment> \<open>Step F: Covering multiplicity.\<close>
+    have hfiber_card: "card {e \<in> E'. p' e = x0} = k"
+      sorry
+    have harc_mult: "card \<A>_E = k * card \<A>_X"
+      by (rule covering_graph_arc_multiplicity[OF hE'_cov hX_graph hE'_strict
+          h\<A>_X h\<A>_X_cover h\<A>_E h\<A>_E_cover h\<A>_X_fin hfiber_card hx0])
+    have hvert_mult: "card ?V_E = k * card ?V_X"
+      by (rule covering_graph_vertex_multiplicity[OF hE'_cov hX_graph hE'_strict
+          h\<A>_X h\<A>_X_cover h\<A>_E h\<A>_E_cover hV_X_fin hfiber_card hx0])
+    \<comment> \<open>Step G: Euler formula for E': card S\\_E + card V\\_E = card \\<A>\\_E + 1.\<close>
+    have hE'_sub_top: "is_topology_on E' TE'"
+      using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have heuler_E: "card S_E + card ?V_E = card \<A>_E + 1"
+      by (rule graph_euler_rank[OF hE'_graph hE'_conn he0' h\<A>_E h\<A>_E_cover
+          hT_E_tree hT_E_sub hT_E_x0 hS_E_eq h\<A>_E_fin])
+    \<comment> \<open>Step H: Combine.
+       card S\\_E = card \\<A>\\_E - card V\\_E + 1
+                = k \\<cdot> card \\<A>\\_X - k \\<cdot> card V\\_X + 1
+                = k \\<cdot> (card \\<A>\\_X - card V\\_X) + 1
+                = k \\<cdot> n + 1.\<close>
+    \<comment> \<open>Use int arithmetic to avoid nat subtraction traps.\<close>
+    have "int (card S_E) + int (card ?V_E) = int (card \<A>_E) + 1"
+      using heuler_E by linarith
+    hence "int (card S_E) = int (card \<A>_E) - int (card ?V_E) + 1" by linarith
+    also have "... = int (k * card \<A>_X) - int (k * card ?V_X) + 1"
+      using harc_mult hvert_mult by simp
+    also have "... = int k * (int (card \<A>_X) - int (card ?V_X)) + 1"
+      by (simp add: algebra_simps)
+    also have "... = int k * int n + 1" using heuler_X_diff by simp
+    finally have "int (card S_E) = int (k * n + 1)" by simp
+    thus ?thesis by linarith
   qed
   have "finite S_E"
   proof -
