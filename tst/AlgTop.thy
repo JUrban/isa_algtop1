@@ -113,7 +113,25 @@ proof -
         using top1_path_product_is_path[OF assms(3) hfg_path hfh_rev_path] .
       have hproj_loop: "top1_is_loop_on B TB b0
           (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t))"
-        sorry \<comment> \<open>Follows from hproj\\_eq + hfg\\_rev\\_fh\\_loop (pointwise equal on I\\_set).\<close>
+      proof -
+        \<comment> \<open>p \\<circ> (path in E) is a path in B: composition of continuous maps.\<close>
+        have hp_cont: "top1_continuous_map_on E TE B TB p"
+          using assms(1) unfolding top1_covering_map_on_def top1_evenly_covered_on_def by (by5000 blast)
+        have hloop_cont: "top1_continuous_map_on I_set I_top E TE
+            (top1_path_product ftg (top1_path_reverse fth))"
+          using hloop_E unfolding top1_is_path_on_def by (by100 blast)
+        from top1_continuous_map_on_comp[OF hloop_cont hp_cont]
+        have "top1_continuous_map_on I_set I_top B TB (p \<circ> (top1_path_product ftg (top1_path_reverse fth)))" .
+        moreover have "(p \<circ> (top1_path_product ftg (top1_path_reverse fth))) 0 = b0"
+          using hloop_E assms(5) unfolding top1_is_path_on_def comp_def by (by100 simp)
+        moreover have "(p \<circ> (top1_path_product ftg (top1_path_reverse fth))) 1 = b0"
+          using hloop_E assms(5) unfolding top1_is_path_on_def comp_def by (by100 simp)
+        ultimately have "top1_is_path_on B TB b0 b0 (p \<circ> (top1_path_product ftg (top1_path_reverse fth)))"
+          unfolding top1_is_path_on_def by (by100 blast)
+        hence "top1_is_loop_on B TB b0 (p \<circ> (top1_path_product ftg (top1_path_reverse fth)))"
+          unfolding top1_is_loop_on_def .
+        thus ?thesis unfolding comp_def .
+      qed
       \<comment> \<open>Class of p\\<circ>(loop) is in ?H = p*(\\<pi>\\_1(E,e0)).
          The loop ftg*rev(fth) is at e0 in E, so its class is in \\<pi>\\_1(E,e0).
          The induced map p* sends it to the class of p\\<circ>(loop), which is in H.\<close>
