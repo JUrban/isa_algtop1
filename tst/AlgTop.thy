@@ -22317,75 +22317,20 @@ proof -
     by (by100 blast)
   have "card S_E = k * n + 1"
   proof -
-    \<comment> \<open>Following Munkres 85.2--85.3: Euler characteristic of covering.\<close>
-    have hX_top: "is_topology_on X TX"
-      using hX_graph unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
-    have hE'_top: "is_topology_on E' TE'"
-      using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
-    have hpe0: "p' e0' = x0" using \<open>p' e0' = x0\<close> .
-    \<comment> \<open>Step A: The index [\\<pi>\\_1(X) : p'\\<^sub>*(\\<pi>\\_1(E'))] = k.
-       From hH\\_corr85: p'\\<^sub>*(\\<pi>\\_1(E')) corresponds to f\\_iso85(H).
-       From assms(5): [F:H] = k. Iso preserves index.\<close>
-    let ?piX = "top1_fundamental_group_carrier X TX x0"
-    let ?mulX = "top1_fundamental_group_mul X TX x0"
-    let ?pH = "top1_fundamental_group_induced_on E' TE' e0' X TX x0 p'
-        ` top1_fundamental_group_carrier E' TE' e0'"
-    have hpH_eq: "?pH = f_iso85 ` H"
-      using hH_corr85 unfolding top1_fundamental_group_image_hom_def by simp
-    have hindex_piX: "top1_subgroup_has_index_on ?piX ?mulX ?pH k"
-    proof -
-      \<comment> \<open>f\\_iso85 is a bijection F \\<rightarrow> \\<pi>\\_1(X) mapping H to ?pH.
-         The coset map g\\<cdot>H \\<mapsto> f(g)\\<cdot>f(H) is a bijection of coset spaces.\<close>
-      have hf_bij: "bij_betw f_iso85 F ?piX"
-        using hf_iso85 unfolding top1_group_iso_on_def by (by100 blast)
-      have hf_hom: "\<forall>x\<in>F. \<forall>y\<in>F. f_iso85 (mul x y) = ?mulX (f_iso85 x) (f_iso85 y)"
-        using hf_iso85 unfolding top1_group_iso_on_def top1_group_hom_on_def by (by5000 blast)
-      \<comment> \<open>The map C \\<mapsto> f\\_iso85 ` C sends left cosets of H in F to left cosets of ?pH in \\<pi>\\_1(X).\<close>
-      have hcoset_bij: "bij_betw ((`) f_iso85) (top1_left_cosets_on F mul H)
-          (top1_left_cosets_on ?piX ?mulX ?pH)"
-      proof (rule bij_betw_imageI)
-        show "inj_on ((`) f_iso85) (top1_left_cosets_on F mul H)"
-        proof (rule inj_onI)
-          fix C1 C2 assume "C1 \<in> top1_left_cosets_on F mul H"
-              "C2 \<in> top1_left_cosets_on F mul H" "f_iso85 ` C1 = f_iso85 ` C2"
-          then obtain g1 g2 where "g1 \<in> F" "C1 = top1_group_coset_on F mul H g1"
-              "g2 \<in> F" "C2 = top1_group_coset_on F mul H g2"
-            unfolding top1_left_cosets_on_def by (by100 blast)
-          have "inj_on f_iso85 F" using hf_bij unfolding bij_betw_def by (by100 blast)
-          hence "C1 = C2" using \<open>f_iso85 ` C1 = f_iso85 ` C2\<close>
-              \<open>C1 = _\<close> \<open>C2 = _\<close> sorry
-          thus "C1 = C2" .
-        qed
-        show "(`) f_iso85 ` top1_left_cosets_on F mul H = top1_left_cosets_on ?piX ?mulX ?pH"
-          sorry
-      qed
-      from assms(5) have "finite (top1_left_cosets_on F mul H)"
-          "card (top1_left_cosets_on F mul H) = k"
-        unfolding top1_subgroup_has_index_on_def by (by100 blast)+
-      show ?thesis unfolding top1_subgroup_has_index_on_def
-        using bij_betw_finite[OF hcoset_bij \<open>finite _\<close>]
-              bij_betw_same_card[OF hcoset_bij] \<open>card _ = k\<close> by simp
-    qed
-    \<comment> \<open>Step B: The fiber p'\\<inverse>(x0) has k elements.
-       From the lifting correspondence: |fiber| = [\\<pi>\\_1(X) : ?pH] = k.\<close>
-    have hfiber_k: "card {e \<in> E'. p' e = x0} = k"
-    proof -
-      \<comment> \<open>Theorem 54.4: \\<phi> surjects \\<pi>\\_1(X) onto fiber.
-         \\<phi>(c1) = \\<phi>(c2) iff c1, c2 in same ?pH-coset.
-         So |fiber| = |coset space| = k.\<close>
-      sorry
-    qed
-    \<comment> \<open>Step C: Covering Euler multiplicity.
-       For each vertex v of X: |p'\\<inverse>(v)| = k (constant fiber).
-       For each arc A of X: p'\\<inverse>(A) = k arcs in E' (simply connected base).
-       So arcs(E') = k \\<cdot> arcs(X), vertices(E') = k \\<cdot> vertices(X).
-       \\<chi>(E') = k \\<cdot> \\<chi>(X).\<close>
-    \<comment> \<open>Step D: rank = 1 - \\<chi>.
-       rank(\\<pi>\\_1(X)) = n+1 (from F \\<cong> \\<pi>\\_1(X)).
-       \\<chi>(X) = 1 - (n+1) = -n.
-       \\<chi>(E') = k \\<cdot> (-n) = -kn.
-       rank(\\<pi>\\_1(E')) = 1 - (-kn) = kn + 1.\<close>
-    \<comment> \<open>Step E: card S\\_E = rank(\\<pi>\\_1(E')) = kn + 1.\<close>
+    \<comment> \<open>Munkres 85.3: Euler characteristic argument.
+       X is a wedge of n+1 circles, E' is its k-sheeted covering.
+       \\<chi>(X) = -n, \\<chi>(E') = k\\<cdot>\\<chi>(X) = -kn.
+       rank(\\<pi>\\_1(E')) = 1 - \\<chi>(E') = kn + 1.
+       S\\_E is a free basis of \\<pi>\\_1(E'), so card S\\_E = rank = kn + 1.\<close>
+    \<comment> \<open>Step 1: X is finite graph. F \\<cong> \\<pi>\\_1(X) free of rank n+1.
+       By free\\_group\\_rank\\_invariant\\_finite, any finite basis of \\<pi>\\_1(X) has card n+1.\<close>
+    \<comment> \<open>Step 2: E' is k-sheeted covering of X (finite graph).
+       By graph covering structure: arcs(E') = k \\<cdot> arcs(X), vertices(E') = k \\<cdot> vertices(X).
+       Hence \\<chi>(E') = k \\<cdot> \\<chi>(X).\<close>
+    \<comment> \<open>Step 3: By Lemma 85.2: rank(\\<pi>\\_1(E')) = 1 - \\<chi>(E') = 1 - k\\<chi>(X).
+       From rank(\\<pi>\\_1(X)) = n+1: \\<chi>(X) = 1 - (n+1) = -n.
+       So rank(\\<pi>\\_1(E')) = 1 + kn.\<close>
+    \<comment> \<open>Step 4: S\\_E is a free basis, so card S\\_E = rank = kn + 1.\<close>
     show ?thesis sorry
   qed
   have "finite S_E"
