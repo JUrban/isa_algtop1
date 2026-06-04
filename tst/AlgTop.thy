@@ -1324,7 +1324,39 @@ proof -
       unfolding top1_is_graph_on_def
       using hT'_strict hT'_haus sorry
   qed
-  have hT'_conn: "top1_connected_on ?T' ?TT'" sorry
+  have hT'_conn: "top1_connected_on ?T' ?TT'"
+  proof (rule ccontr)
+    assume "\<not> top1_connected_on ?T' ?TT'"
+    \<comment> \<open>If T' disconnected: T' = U \\<union> V with U,V open, disjoint, nonempty.
+       w \\<in> U or V (say U). A0 connected, A0 \\<inter> T' = {w}, so A0 doesn't help V.
+       T = A0 \\<union> T'. V is open in T' and also open in T (via subspace).
+       T \\ V = A0 \\<union> U: this is closed in T (V open).
+       So T \\ V \\<ne> {} and V \\<ne> {} disconnects T. Contradiction with T connected.\<close>
+    have hT_conn: "top1_connected_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+    have hTT: "is_topology_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+          is_topology_on_strict_def by (by100 blast)
+    have hT'_sub: "?T' \<subseteq> T" using assms(2,3) by (by100 blast)
+    have hTT': "is_topology_on ?T' ?TT'"
+      using subspace_topology_is_topology_on[OF hTT hT'_sub] .
+    \<comment> \<open>T' disconnected: \\<exists> separation.\<close>
+    from \<open>\<not> top1_connected_on ?T' ?TT'\<close>
+    obtain U V where hU: "U \<in> ?TT'" and hV: "V \<in> ?TT'"
+        and hne_U: "U \<noteq> {}" and hne_V: "V \<noteq> {}"
+        and hdisj: "U \<inter> V = {}" and hcov: "U \<union> V = ?T'"
+      unfolding top1_connected_on_def using hTT' by (by100 blast)
+    \<comment> \<open>U and V are open in T' = subspace of T. So U = T'\\<inter>U', V = T'\\<inter>V' for some U',V' open in T.\<close>
+    from hU obtain U' where "U' \<in> TT" "U = ?T' \<inter> U'" unfolding subspace_topology_def by (by100 blast)
+    from hV obtain V' where "V' \<in> TT" "V = ?T' \<inter> V'" unfolding subspace_topology_def by (by100 blast)
+    \<comment> \<open>T = T' \\<union> A0 and A0 \\<inter> T' \\<subseteq> {w} (disjointness from tree\\_leaf\\_other).\<close>
+    have hT_eq: "T = ?T' \<union> A0" using assms(3,5) by (by100 blast)
+    \<comment> \<open>A0 is connected (arc). w \\<in> U or w \\<in> V. A0 connects to T' only at w.
+       So A0 is entirely within the open set containing w (plus its interior).
+       The OTHER open set (not containing w) is disjoint from A0.
+       Hence that other set is open in T and creates a disconnection of T.\<close>
+    show False sorry
+  qed
   have hT'_sc: "top1_simply_connected_on ?T' ?TT'"
   proof -
     \<comment> \<open>T' is a retract of T: the map r(x) = x for x \\<in> T', r(x) = w for x \\<in> A0\\\\T'
