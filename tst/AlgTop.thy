@@ -230,7 +230,26 @@ proof -
         \<comment> \<open>Step 1: h \\<in> Hg, i.e., \\<exists>k\\<in>H. h = k*g.\<close>
         \<comment> \<open>Step 1: Hg = Hh \\<Rightarrow> h \\<in> Hg.\<close>
         have hh_in_Hh: "h \<in> top1_right_coset_on ?piB ?mulB ?H h"
-          sorry \<comment> \<open>h = mul e h, e \\<in> H (identity in subgroup).\<close>
+        proof -
+          \<comment> \<open>The identity e \\<in> H, and mul e h = h.\<close>
+          let ?e = "top1_fundamental_group_id B TB b0"
+          have "b0 \<in> B"
+            using assms(1,4,5) unfolding top1_covering_map_on_def top1_evenly_covered_on_def
+            by (by5000 blast)
+          have hpiB_grp: "top1_is_group_on ?piB ?mulB ?e (top1_fundamental_group_invg B TB b0)"
+            using top1_fundamental_group_is_group[OF assms(3) \<open>b0 \<in> B\<close>] .
+          have "?e \<in> ?H"
+          proof -
+            have "?e \<in> ?piB"
+              using hpiB_grp unfolding top1_is_group_on_def by (by100 blast)
+            have hH_is_subgroup: "top1_is_group_on ?H ?mulB ?e (top1_fundamental_group_invg B TB b0)"
+              sorry \<comment> \<open>H is a subgroup (image of homomorphism).\<close>
+            thus ?thesis unfolding top1_is_group_on_def by (by100 blast)
+          qed
+          moreover have "h = ?mulB ?e h"
+            using group_left_id[OF hpiB_grp hh] by simp
+          ultimately show ?thesis unfolding top1_right_coset_on_def by (by100 blast)
+        qed
         hence hh_in_Hg: "h \<in> top1_right_coset_on ?piB ?mulB ?H g"
           using hcoset_eq by simp
         then obtain k where "k \<in> ?H" "h = ?mulB k g"
