@@ -601,6 +601,10 @@ proof -
            Lift of fh = fth, ending at \\<phi>(h).
            Lift of (p\\<circ>\\<alpha>\\<tilde>)*fg = \\<alpha>\\<tilde>*ftg, ending at \\<phi>(g).
            So \\<phi>(h) = \\<phi>(g).\<close>
+        \<comment> \<open>Book proof: fh and (p\\<circ>\\<alpha>\\<tilde>)*fg are homotopic (both represent h=k*g).
+           \\<alpha>\\<tilde>*ftg lifts (p\\<circ>\\<alpha>\\<tilde>)*fg from e0, ending at \\<phi>(g).
+           fth lifts fh from e0, ending at \\<phi>(h).
+           By Theorem 54.3: \\<phi>(h) = \\<phi>(g).\<close>
         show ?thesis sorry
       qed
     qed
