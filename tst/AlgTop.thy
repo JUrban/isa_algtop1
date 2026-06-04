@@ -136,8 +136,27 @@ proof -
             by (by100 blast)
           hence "top1_loop_equiv_on E TE e0 ?loop f" by (by100 blast)
           \<comment> \<open>f homotopic to ?loop \\<Rightarrow> p\\<circ>f homotopic to p\\<circ>?loop \\<Rightarrow> g homotopic to p\\<circ>?loop.\<close>
+          have "top1_path_homotopic_on E TE e0 e0 ?loop f"
+            using \<open>top1_loop_equiv_on E TE e0 ?loop f\<close>
+            unfolding top1_loop_equiv_on_def by (by100 blast)
+          have hp_cont: "top1_continuous_map_on E TE B TB p"
+            using assms(1) unfolding top1_covering_map_on_def top1_evenly_covered_on_def by (by5000 blast)
+          from continuous_preserves_path_homotopic[OF hE_top assms(3) hp_cont
+              \<open>top1_path_homotopic_on E TE e0 e0 ?loop f\<close>]
+          have "top1_path_homotopic_on B TB (p e0) (p e0) (p \<circ> ?loop) (p \<circ> f)" .
+          hence "top1_path_homotopic_on B TB b0 b0 (p \<circ> ?loop) (p \<circ> f)"
+            using assms(5) by simp
+          hence hle1: "top1_loop_equiv_on B TB b0 (p \<circ> ?loop) (p \<circ> f)"
+            unfolding top1_loop_equiv_on_def top1_is_loop_on_def top1_path_homotopic_on_def
+            by (by100 blast)
+          have hle2: "top1_loop_equiv_on B TB b0 (p \<circ> f) g"
+            using \<open>top1_loop_equiv_on B TB b0 (p \<circ> f) g\<close> .
+          from top1_loop_equiv_on_trans[OF assms(3) hle1 hle2]
+          have "top1_loop_equiv_on B TB b0 (p \<circ> ?loop) g" .
+          hence "top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) g"
+            unfolding comp_def by simp
           show "g \<in> {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) f'}"
-            sorry
+            using \<open>top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) g\<close> by (by100 blast)
         next
           fix g assume "g \<in> {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) f'}"
           hence "top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) g" by (by100 blast)
