@@ -22317,20 +22317,25 @@ proof -
     by (by100 blast)
   have "card S_E = k * n + 1"
   proof -
-    \<comment> \<open>Munkres 85.3: Euler characteristic argument.
-       X is a wedge of n+1 circles, E' is its k-sheeted covering.
-       \\<chi>(X) = -n, \\<chi>(E') = k\\<cdot>\\<chi>(X) = -kn.
-       rank(\\<pi>\\_1(E')) = 1 - \\<chi>(E') = kn + 1.
-       S\\_E is a free basis of \\<pi>\\_1(E'), so card S\\_E = rank = kn + 1.\<close>
-    \<comment> \<open>Step 1: X is finite graph. F \\<cong> \\<pi>\\_1(X) free of rank n+1.
-       By free\\_group\\_rank\\_invariant\\_finite, any finite basis of \\<pi>\\_1(X) has card n+1.\<close>
-    \<comment> \<open>Step 2: E' is k-sheeted covering of X (finite graph).
-       By graph covering structure: arcs(E') = k \\<cdot> arcs(X), vertices(E') = k \\<cdot> vertices(X).
-       Hence \\<chi>(E') = k \\<cdot> \\<chi>(X).\<close>
-    \<comment> \<open>Step 3: By Lemma 85.2: rank(\\<pi>\\_1(E')) = 1 - \\<chi>(E') = 1 - k\\<chi>(X).
-       From rank(\\<pi>\\_1(X)) = n+1: \\<chi>(X) = 1 - (n+1) = -n.
-       So rank(\\<pi>\\_1(E')) = 1 + kn.\<close>
-    \<comment> \<open>Step 4: S\\_E is a free basis, so card S\\_E = rank = kn + 1.\<close>
+    \<comment> \<open>Munkres 85.3 Euler char: rank(\\<pi>\\_1(E')) = k \\<cdot> (rank(\\<pi>\\_1(X)) - 1) + 1 = kn + 1.
+       The argument uses: covering p: E' \\<rightarrow> X multiplies Euler char by k.\<close>
+    \<comment> \<open>Step 1: The fiber p'\\<inverse>(x0) has k elements.
+       From the lifting correspondence: |fiber| = [pi1(X) : p'*(pi1(E'))].
+       Since F iso pi1(X) and f(H) = p'*(pi1(E')): [F:H] = k.
+       So the fiber has k elements.\<close>
+    have hfiber_k: "card {e \<in> E'. p' e = x0} = k" sorry
+    \<comment> \<open>Step 2: E' is a finite graph. Its arc family and vertex count
+       are k times those of X. From the covering map:
+       - Each arc A of X has exactly k preimage components in E', each an arc.
+       - Each vertex v of X has exactly k preimages in E'.
+       So Euler(E') = k \\<cdot> Euler(X).\<close>
+    \<comment> \<open>Step 3: rank(\\<pi>\\_1(X)) = n+1 (from F \\<cong> \\<pi>\\_1(X)).
+       So Euler(X) = 1 - (n+1) = -n.
+       Euler(E') = -kn.
+       rank(\\<pi>\\_1(E')) = 1 - Euler(E') = kn + 1.\<close>
+    \<comment> \<open>Step 4: S\\_E is a free basis of \\<pi>\\_1(E'), so card S\\_E = rank = kn + 1.
+       Uses free\\_group\\_rank\\_invariant\\_finite: any two finite bases have same card.\<close>
+    \<comment> \<open>Combine: fiber size k + covering structure \\<Rightarrow> rank = kn + 1.\<close>
     show ?thesis sorry
   qed
   have "finite S_E"
