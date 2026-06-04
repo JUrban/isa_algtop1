@@ -1924,10 +1924,47 @@ proof -
         \<comment> \<open>Step I.3: Apply same\\_endpoint\\_same\\_coset to \\<gamma>\\_{hk} and \\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k).\<close>
         \<comment> \<open>Step I.4: [p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))] = mulB([p\\<circ>\\<gamma>\\_h], [p\\<circ>\\<gamma>\\_k]).\<close>
         \<comment> \<open>Step I.5: mulQ(f(h), f(k)) = coset(mulB([p\\<circ>\\<gamma>\\_h], [p\\<circ>\\<gamma>\\_k])).\<close>
+        \<comment> \<open>Step I.4: h\\<circ>\\<gamma>\\_k is a path h(e0) \\<rightarrow> h(k(e0)) in E.\<close>
+        have h_hgk_path: "top1_is_path_on E TE (h e0) (h (k e0)) (\<lambda>t. h (?\<gamma>k t))"
+        proof -
+          have h_cont: "top1_continuous_map_on E TE E TE h"
+            using \<open>h \<in> ?Cov\<close> unfolding top1_covering_transformation_on_def top1_homeomorphism_on_def
+            by (by100 blast)
+          have h\<gamma>k: "top1_is_path_on E TE e0 (k e0) ?\<gamma>k"
+            using hpath_to[OF \<open>k e0 \<in> E\<close>] .
+          have h\<gamma>k_cont: "top1_continuous_map_on I_set I_top E TE ?\<gamma>k"
+            using h\<gamma>k unfolding top1_is_path_on_def by (by100 blast)
+          have "top1_continuous_map_on I_set I_top E TE (h \<circ> ?\<gamma>k)"
+            using top1_continuous_map_on_comp[OF h\<gamma>k_cont h_cont] .
+          moreover have "(h \<circ> ?\<gamma>k) 0 = h e0"
+            using h\<gamma>k unfolding top1_is_path_on_def by (by100 simp)
+          moreover have "(h \<circ> ?\<gamma>k) 1 = h (k e0)"
+            using h\<gamma>k unfolding top1_is_path_on_def by (by100 simp)
+          moreover have "(\<lambda>t. h (?\<gamma>k t)) = h \<circ> ?\<gamma>k" by (rule ext) simp
+          ultimately show ?thesis unfolding top1_is_path_on_def by simp
+        qed
+        \<comment> \<open>Step I.5: \\<gamma>\\_h * (h\\<circ>\\<gamma>\\_k) is a path e0 \\<rightarrow> h(k(e0)).\<close>
+        have h_composed_path: "top1_is_path_on E TE e0 (h (k e0))
+            (top1_path_product ?\<gamma>h (\<lambda>t. h (?\<gamma>k t)))"
+        proof -
+          have h\<gamma>h: "top1_is_path_on E TE e0 (h e0) ?\<gamma>h"
+            using hpath_to[OF \<open>h e0 \<in> E\<close>] .
+          have hTE_loc: "is_topology_on E TE"
+            using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+          show ?thesis using top1_path_product_is_path[OF hTE_loc h\<gamma>h h_hgk_path] .
+        qed
+        \<comment> \<open>Step I.6: Both \\<gamma>\\_{hk} and the composed path go from e0 to h(k(e0)).
+           By same\\_endpoint\\_same\\_coset: their projected loop classes give same coset.\<close>
+        let ?\<gamma>hk = "path_to (h (k e0))"
+        have h_gamma_hk: "top1_is_path_on E TE e0 (h (k e0)) ?\<gamma>hk"
+          using hpath_to[OF \<open>h (k e0) \<in> E\<close>] .
+        \<comment> \<open>Step I.7: p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k)) = (p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k) since p\\<circ>h = p.\<close>
+        \<comment> \<open>Step I.8: Conclude f(h\\<circ>k) = mulQ(f(h), f(k)).\<close>
         show "f (\<lambda>e. h (k e)) = ?mulQ (f h) (f k)"
-          sorry \<comment> \<open>Needs: path composition in E (\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k)),
-             same\\_endpoint\\_same\\_coset, fundamental\\_group\\_mul\\_class,
-             quotient group multiplication (normal\\_coset\\_mul\\_eq).\<close>
+          sorry \<comment> \<open>Chain: f(hk) = coset([p\\<circ>\\<gamma>\\_{hk}])
+             = coset([p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))]) (same\\_endpoint\\_same\\_coset)
+             = coset(mulB([p\\<circ>\\<gamma>\\_h], [p\\<circ>\\<gamma>\\_k])) (mul\\_class + p\\<circ>h=p)
+             = mulQ(f(h), f(k)) (normal\\_coset\\_mul\\_eq).\<close>
       qed
       \<comment> \<open>Step J: f is injective.\<close>
       have hf_inj: "inj_on f ?Cov"
