@@ -1320,7 +1320,9 @@ proof -
     have hT'_haus: "is_hausdorff_on ?T' ?TT'"
       using hhaus hT'_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
     \<comment> \<open>Arc family \\<A>-{A0} covers T' and satisfies all graph properties in subspace.\<close>
-    show ?thesis unfolding top1_is_graph_on_def sorry
+    show ?thesis
+      unfolding top1_is_graph_on_def
+      using hT'_strict hT'_haus sorry
   qed
   have hT'_conn: "top1_connected_on ?T' ?TT'" sorry
   have hT'_sc: "top1_simply_connected_on ?T' ?TT'"
