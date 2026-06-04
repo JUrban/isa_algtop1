@@ -1021,7 +1021,49 @@ proof -
       \<comment> \<open>m \\<in> H = {g\\<cdot>h'\\<cdot>g\\<inverse> | h'\\<in>H}. So m = g\\<cdot>h0\\<cdot>g\\<inverse> for some h0 \\<in> H.\<close>
       \<comment> \<open>h0 \\<in> H = {k\\<cdot>h\\<cdot>k\\<inverse> | h\\<in>H}. So h0 = k\\<cdot>h1\\<cdot>k\\<inverse> for some h1 \\<in> H.\<close>
       \<comment> \<open>Then m = g\\<cdot>(k\\<cdot>h1\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> = (g\\<cdot>k)\\<cdot>h1\\<cdot>(g\\<cdot>k)\\<inverse>.\<close>
-      show "m \<in> {mul (mul (mul g k) h) (invg (mul g k)) |h. h \<in> H}" sorry
+      \<comment> \<open>m \\<in> H. From g \\<in> N(H): \\<exists>h'\\<in>H with m = g\\<cdot>h'\\<cdot>g\\<inverse>.
+         From k \\<in> N(H): \\<exists>h\\<in>H with h' = k\\<cdot>h\\<cdot>k\\<inverse>.
+         Then m = (g\\<cdot>k)\\<cdot>h\\<cdot>(g\\<cdot>k)\\<inverse>.\<close>
+      have "m \<in> {mul (mul g h') (invg g) |h'. h' \<in> H}" using hg_conj \<open>m \<in> H\<close> by simp
+      then obtain h' where "h' \<in> H" "m = mul (mul g h') (invg g)" by (by5000 auto)
+      have "h' \<in> {mul (mul k h) (invg k) |h. h \<in> H}" using hk_conj \<open>h' \<in> H\<close> by simp
+      then obtain h1 where "h1 \<in> H" "h' = mul (mul k h1) (invg k)" by (by5000 auto)
+      \<comment> \<open>m = g\\<cdot>(k\\<cdot>h1\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> = (g\\<cdot>k)\\<cdot>h1\\<cdot>(g\\<cdot>k)\\<inverse> (reverse of forward direction).\<close>
+      have "m = mul (mul g (mul (mul k h1) (invg k))) (invg g)"
+        using \<open>m = mul (mul g h') (invg g)\<close> \<open>h' = mul (mul k h1) (invg k)\<close> by simp
+      \<comment> \<open>And we showed (forward): mul(mul(mul g k) h1)(invg(mul g k)) = mul(mul g (mul(mul k h1)(invg k)))(invg g).\<close>
+      have "mul (mul (mul g k) h1) (invg (mul g k)) =
+          mul (mul g (mul (mul k h1) (invg k))) (invg g)"
+      proof -
+        have "h1 \<in> G" using \<open>h1 \<in> H\<close> hH_sub by (by100 blast)
+        have "invg k \<in> G" using group_inv_closed[OF hG \<open>k \<in> G\<close>] .
+        have "invg g \<in> G" using group_inv_closed[OF hG \<open>g \<in> G\<close>] .
+        have "mul k h1 \<in> G" using group_mul_closed[OF hG \<open>k \<in> G\<close> \<open>h1 \<in> G\<close>] .
+        have "mul (invg k) (invg g) \<in> G"
+          using group_mul_closed[OF hG \<open>invg k \<in> G\<close> \<open>invg g \<in> G\<close>] .
+        have hh1': "mul (mul k h1) (invg k) \<in> G"
+          using group_mul_closed[OF hG \<open>mul k h1 \<in> G\<close> \<open>invg k \<in> G\<close>] .
+        have hinv_gk: "invg (mul g k) = mul (invg k) (invg g)"
+          using group_inv_mul[OF hG \<open>g \<in> G\<close> \<open>k \<in> G\<close>] .
+        have r1: "mul (mul g k) h1 = mul g (mul k h1)"
+          using group_assoc[OF hG \<open>g \<in> G\<close> \<open>k \<in> G\<close> \<open>h1 \<in> G\<close>] .
+        have r2: "mul (mul g (mul k h1)) (mul (invg k) (invg g)) =
+            mul g (mul (mul k h1) (mul (invg k) (invg g)))"
+          using group_assoc[OF hG \<open>g \<in> G\<close> \<open>mul k h1 \<in> G\<close> \<open>mul (invg k) (invg g) \<in> G\<close>] .
+        have r3: "mul (mul k h1) (mul (invg k) (invg g)) =
+            mul (mul (mul k h1) (invg k)) (invg g)"
+          using group_assoc[OF hG \<open>mul k h1 \<in> G\<close> \<open>invg k \<in> G\<close> \<open>invg g \<in> G\<close>] by simp
+        have r4: "mul g (mul (mul (mul k h1) (invg k)) (invg g)) =
+            mul (mul g (mul (mul k h1) (invg k))) (invg g)"
+          using group_assoc[OF hG \<open>g \<in> G\<close> hh1' \<open>invg g \<in> G\<close>] by simp
+        show ?thesis using r1 r2 r3 r4 hinv_gk by simp
+      qed
+      hence "m = mul (mul (mul g k) h1) (invg (mul g k))"
+        using \<open>m = mul (mul g (mul (mul k h1) (invg k))) (invg g)\<close> by simp
+      show "m \<in> {mul (mul (mul g k) h) (invg (mul g k)) |h. h \<in> H}"
+        apply (rule CollectI, rule exI[of _ h1])
+        using \<open>h1 \<in> H\<close> \<open>m = mul (mul (mul g k) h1) (invg (mul g k))\<close>[symmetric]
+        by (by100 blast)
     qed
     thus "mul g k \<in> ?N"
       unfolding top1_normalizer_on_def using \<open>mul g k \<in> G\<close> by (by100 blast)
