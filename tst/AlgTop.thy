@@ -969,11 +969,60 @@ proof -
     \<comment> \<open>Show: {(g\\<cdot>k)\\<cdot>h\\<cdot>(g\\<cdot>k)\\<inverse> | h\\<in>H} = {g\\<cdot>(k\\<cdot>h\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> | h\\<in>H}
        = {g\\<cdot>h'\\<cdot>g\\<inverse> | h'\\<in>H} (k\\<cdot>H\\<cdot>k\\<inverse> = H) = H (g\\<cdot>H\\<cdot>g\\<inverse> = H).\<close>
     have "{mul (mul (mul g k) h) (invg (mul g k)) |h. h \<in> H} = H"
-      sorry \<comment> \<open>Composition of conjugations. All pieces proved:
-         group\\_inv\\_mul for (g\\<cdot>k)\\<inverse>, group\\_assoc for rewriting,
-         hg\\_conj and hk\\_conj for set equalities.
-         Issue: Isabelle set comprehension rewriting with deeply nested
-         mul terms causes timeout in auto/blast.\<close>
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {mul (mul (mul g k) h) (invg (mul g k)) |h. h \<in> H}"
+      then obtain h where "h \<in> H" "x = mul (mul (mul g k) h) (invg (mul g k))"
+        by (by5000 auto)
+      \<comment> \<open>h \\<in> H \\<Rightarrow> k\\<cdot>h\\<cdot>k\\<inverse> \\<in> H (from k \\<in> N(H)).\<close>
+      have "mul (mul k h) (invg k) \<in> H"
+      proof -
+        have "mul (mul k h) (invg k) \<in> {mul (mul k h') (invg k) |h'. h' \<in> H}"
+          using \<open>h \<in> H\<close> by (by5000 blast)
+        thus ?thesis using hk_conj by simp
+      qed
+      \<comment> \<open>Then g\\<cdot>(k\\<cdot>h\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> \\<in> H (from g \\<in> N(H)).\<close>
+      let ?h' = "mul (mul k h) (invg k)"
+      have "mul (mul g ?h') (invg g) \<in> H"
+      proof -
+        have "mul (mul g ?h') (invg g) \<in> {mul (mul g h'') (invg g) |h''. h'' \<in> H}"
+          using \<open>?h' \<in> H\<close> by (by5000 blast)
+        thus ?thesis using hg_conj by simp
+      qed
+      \<comment> \<open>And x = g\\<cdot>(k\\<cdot>h\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> (by group algebra).\<close>
+      have "x = mul (mul g ?h') (invg g)"
+      proof -
+        have "h \<in> G" using \<open>h \<in> H\<close> hH_sub by (by100 blast)
+        have "invg k \<in> G" using group_inv_closed[OF hG \<open>k \<in> G\<close>] .
+        have "invg g \<in> G" using group_inv_closed[OF hG \<open>g \<in> G\<close>] .
+        have "mul k h \<in> G" using group_mul_closed[OF hG \<open>k \<in> G\<close> \<open>h \<in> G\<close>] .
+        have "mul (invg k) (invg g) \<in> G"
+          using group_mul_closed[OF hG \<open>invg k \<in> G\<close> \<open>invg g \<in> G\<close>] .
+        have "?h' \<in> G" using group_mul_closed[OF hG \<open>mul k h \<in> G\<close> \<open>invg k \<in> G\<close>] .
+        have hinv_gk: "invg (mul g k) = mul (invg k) (invg g)"
+          using group_inv_mul[OF hG \<open>g \<in> G\<close> \<open>k \<in> G\<close>] .
+        have r1: "mul (mul g k) h = mul g (mul k h)"
+          using group_assoc[OF hG \<open>g \<in> G\<close> \<open>k \<in> G\<close> \<open>h \<in> G\<close>] .
+        have r2: "x = mul (mul g (mul k h)) (mul (invg k) (invg g))"
+          using \<open>x = mul (mul (mul g k) h) (invg (mul g k))\<close> r1 hinv_gk by simp
+        have r3: "mul (mul g (mul k h)) (mul (invg k) (invg g)) =
+            mul g (mul (mul k h) (mul (invg k) (invg g)))"
+          using group_assoc[OF hG \<open>g \<in> G\<close> \<open>mul k h \<in> G\<close> \<open>mul (invg k) (invg g) \<in> G\<close>] .
+        have r4: "mul (mul k h) (mul (invg k) (invg g)) =
+            mul (mul (mul k h) (invg k)) (invg g)"
+          using group_assoc[OF hG \<open>mul k h \<in> G\<close> \<open>invg k \<in> G\<close> \<open>invg g \<in> G\<close>] by simp
+        have r5: "mul g (mul (mul (mul k h) (invg k)) (invg g)) =
+            mul (mul g (mul (mul k h) (invg k))) (invg g)"
+          using group_assoc[OF hG \<open>g \<in> G\<close> \<open>?h' \<in> G\<close> \<open>invg g \<in> G\<close>] by simp
+        from r2 r3 r4 r5 show ?thesis by simp
+      qed
+      thus "x \<in> H" using \<open>mul (mul g ?h') (invg g) \<in> H\<close> by simp
+    next
+      fix m assume "m \<in> H"
+      \<comment> \<open>m \\<in> H = {g\\<cdot>h'\\<cdot>g\\<inverse> | h'\\<in>H}. So m = g\\<cdot>h0\\<cdot>g\\<inverse> for some h0 \\<in> H.\<close>
+      \<comment> \<open>h0 \\<in> H = {k\\<cdot>h\\<cdot>k\\<inverse> | h\\<in>H}. So h0 = k\\<cdot>h1\\<cdot>k\\<inverse> for some h1 \\<in> H.\<close>
+      \<comment> \<open>Then m = g\\<cdot>(k\\<cdot>h1\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> = (g\\<cdot>k)\\<cdot>h1\\<cdot>(g\\<cdot>k)\\<inverse>.\<close>
+      show "m \<in> {mul (mul (mul g k) h) (invg (mul g k)) |h. h \<in> H}" sorry
+    qed
     thus "mul g k \<in> ?N"
       unfolding top1_normalizer_on_def using \<open>mul g k \<in> G\<close> by (by100 blast)
   qed
