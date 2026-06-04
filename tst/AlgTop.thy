@@ -22469,15 +22469,44 @@ proof -
     proof -
       \<comment> \<open>Need: T is a tree, \\<A>\\_T are arcs in T, etc. Most from graph\\_euler\\_rank assumptions.\<close>
       have hT_arcs: "\<forall>A\<in>?\<A>_T. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T (subspace_topology Y TY T) A)"
-        sorry
+      proof (intro ballI conjI)
+        fix A assume "A \<in> ?\<A>_T"
+        thus "A \<subseteq> T" by (by100 blast)
+        have "A \<in> \<A>" using \<open>A \<in> ?\<A>_T\<close> by (by100 blast)
+        hence "top1_is_arc_on A (subspace_topology Y TY A)" using \<A>_def by (by100 blast)
+        moreover have "subspace_topology T (subspace_topology Y TY T) A = subspace_topology Y TY A"
+          using subspace_topology_trans[of A T Y TY] \<open>A \<subseteq> T\<close> by (by100 simp)
+        ultimately show "top1_is_arc_on A (subspace_topology T (subspace_topology Y TY T) A)"
+          by simp
+      qed
       have hT_cover: "\<Union>?\<A>_T = T" using T_coverage by simp
       have hT_inter: "\<forall>A\<in>?\<A>_T. \<forall>B\<in>?\<A>_T. A \<noteq> B \<longrightarrow>
            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T (subspace_topology Y TY T) A)
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T (subspace_topology Y TY T) B)
          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-        sorry
+      proof (intro ballI impI)
+        fix A B assume "A \<in> ?\<A>_T" "B \<in> ?\<A>_T" "A \<noteq> B"
+        hence "A \<in> \<A>" "B \<in> \<A>" "A \<subseteq> T" "B \<subseteq> T" by (by100 blast)+
+        from \<A>_inter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A \<noteq> B\<close>]
+        have h: "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" .
+        have "subspace_topology T (subspace_topology Y TY T) A = subspace_topology Y TY A"
+          using subspace_topology_trans[of A T Y TY] \<open>A \<subseteq> T\<close> by (by100 simp)
+        moreover have "subspace_topology T (subspace_topology Y TY T) B = subspace_topology Y TY B"
+          using subspace_topology_trans[of B T Y TY] \<open>B \<subseteq> T\<close> by (by100 simp)
+        ultimately show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T (subspace_topology Y TY T) A)
+          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T (subspace_topology Y TY T) B)
+          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+          using h by simp
+      qed
       have hT_fin: "finite ?\<A>_T" using assms(15) by (by100 simp)
-      have hT_ne: "?\<A>_T \<noteq> {}" sorry
+      have hT_ne: "?\<A>_T \<noteq> {}"
+      proof -
+        have "T \<noteq> {}" using T_x0 by (by100 blast)
+        hence "\<Union>?\<A>_T \<noteq> {}" using T_coverage by simp
+        thus ?thesis by (by100 blast)
+      qed
       from tree_euler_number_one[OF T_tree hT_arcs hT_cover hT_inter hT_fin hT_ne]
       show ?thesis .
     qed
