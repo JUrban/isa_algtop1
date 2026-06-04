@@ -22295,7 +22295,47 @@ lemma tree_euler_number_one:
      Step (n>1): find a leaf arc A\\_0 (endpoint not in any other arc).
      Remove it: T\\_0 = T \\ (A\\_0 \\ {shared endpoint}) is a tree with n-1 arcs.
      By IH: card V\\_0 = n. Adding A\\_0 adds 1 vertex, so card V = n+1.\<close>
-  sorry
+proof (cases "card \<A> = 1")
+  case True
+  \<comment> \<open>Base case: 1 arc has exactly 2 endpoints.\<close>
+  from card_1_singletonE[OF True] obtain A0 where hA0_in: "\<A> = {A0}" .
+  have hA0: "A0 \<subseteq> T \<and> top1_is_arc_on A0 (subspace_topology T TT A0)"
+    using assms(2) hA0_in by (by100 blast)
+  have hstrict: "is_topology_on_strict T TT"
+    using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+  have hhaus: "is_hausdorff_on T TT"
+    using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+  obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+    using hA0 unfolding top1_is_arc_on_def by (by100 blast)
+  have hep: "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {h 0, h 1}"
+    by (rule arc_endpoints_are_boundary[OF hstrict hhaus conjunct1[OF hA0] conjunct2[OF hA0] hh])
+  have h_inj: "inj_on h I_set"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  have "h 0 \<noteq> h 1"
+  proof
+    assume "h 0 = h 1"
+    from inj_onD[OF h_inj this]
+    show False
+      unfolding top1_unit_interval_def by (by100 auto)
+  qed
+  hence "card {h 0, h 1} = 2" by (by100 simp)
+  hence "card (top1_arc_endpoints_on A0 (subspace_topology T TT A0)) = 2"
+    using hep by simp
+  moreover have "top1_graph_vertex_set T TT \<A> =
+      top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+    unfolding top1_graph_vertex_set_def using hA0_in by simp
+  ultimately show ?thesis using True by simp
+next
+  case False
+  hence hcard_ge2: "card \<A> \<ge> 2"
+  proof -
+    have "card \<A> \<noteq> 0" using assms(5-6) by (by100 force)
+    thus ?thesis using False by linarith
+  qed
+  \<comment> \<open>Induction step: find a leaf arc and remove it.
+     This requires showing every finite tree with \\<ge> 2 arcs has a leaf.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Lemma 85.2, Step 2: for a finite connected graph with spanning tree T,
    rank(\\<pi>\\_1) = card(non-tree arcs) = card(\\<A>) - card(V) + 1.
