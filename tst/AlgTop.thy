@@ -694,6 +694,146 @@ proof -
   thus "e1 = e2" using \<open>\<gamma>2 1 = \<gamma>1 1\<close> \<open>e1 = \<gamma>1 1\<close> by simp
 qed
 
+\<comment> \<open>Left coset equality from a\\<cdot>b\\<inverse> \\<in> H: if mul(a, invg(b)) \\<in> H then coset(a, H) = coset(b, H).\<close>
+lemma coset_eq_from_diff_in_H:
+  assumes "top1_is_group_on G mul e invg"
+      and "top1_normal_subgroup_on G mul e invg H"
+      and "a \<in> G" and "b \<in> G"
+      and "mul a (invg b) \<in> H"
+  shows "top1_group_coset_on G mul H a = top1_group_coset_on G mul H b"
+proof -
+  \<comment> \<open>coset(a, H) = {mul a h | h \\<in> H}. Since mul(a, invg(b)) \\<in> H =: k0,
+     a = mul(k0, b). So mul(a, h) = mul(k0, mul(b, h)).
+     As h ranges over H, k0\\<cdot>(b\\<cdot>H) = {mul(k0, mul(b, h)) | h \\<in> H}.
+     We need this = b\\<cdot>H, which requires k0\\<cdot>b\\<cdot>H = b\\<cdot>H.\<close>
+  have hH_sub: "H \<subseteq> G" using assms(2) unfolding top1_normal_subgroup_on_def by (by100 blast)
+  let ?k0 = "mul a (invg b)"
+  have "?k0 \<in> H" using assms(5) .
+  have "?k0 \<in> G" using hH_sub \<open>?k0 \<in> H\<close> by (by100 blast)
+  \<comment> \<open>a = k0 \\<cdot> b (group algebra: a = a\\<cdot>b\\<inverse>\\<cdot>b = k0\\<cdot>b).\<close>
+  have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
+    using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+  have hrinv: "mul b (invg b) = e" using assms(1) assms(4)
+    unfolding top1_is_group_on_def by (by100 blast)
+  have hrid: "\<And>x. x \<in> G \<Longrightarrow> mul x e = x" using assms(1)
+    unfolding top1_is_group_on_def by (by100 blast)
+  have hinvb_G: "invg b \<in> G" using assms(1) assms(4)
+    unfolding top1_is_group_on_def by (by100 blast)
+  have hmul_cl: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y \<in> G"
+    using assms(1) unfolding top1_is_group_on_def by (by100 blast)
+  have ha_eq: "a = mul ?k0 b"
+  proof -
+    have s1: "mul ?k0 b = mul a (mul (invg b) b)"
+      using hassoc[OF assms(3) hinvb_G assms(4)] by simp
+    have s2: "mul (invg b) b = e" using assms(1) assms(4)
+      unfolding top1_is_group_on_def by (by100 blast)
+    have s3: "mul a e = a" using hrid[OF assms(3)] .
+    from s1 s2 s3 show "a = mul ?k0 b" by simp
+  qed
+  \<comment> \<open>coset(a, H) = {mul(k0, mul(b, h)) | h \\<in> H} = {mul(b, h') | h' \\<in> H} = coset(b, H).
+     Forward: mul(a, h) = mul(k0, mul(b, h)). Since k0 \\<in> H and H closed under mul,
+     k0\\<cdot>(b\\<cdot>h) has the form b\\<cdot>h' for some h'.
+     This requires H to be a LEFT coset of itself, i.e., k0\\<cdot>b\\<cdot>H = b\\<cdot>H.
+     For a subgroup H: k0 \\<in> H \\<Rightarrow> k0\\<cdot>H = H \\<Rightarrow> k0\\<cdot>b\\<cdot>H = b\\<cdot>(b\\<inverse>\\<cdot>k0\\<cdot>b)\\<cdot>H = b\\<cdot>H (normal case).
+     But for left cosets: a\\<cdot>H = k0\\<cdot>(b\\<cdot>H). And k0 \\<in> H means k0\\<cdot>(b\\<cdot>H) \\<supseteq>\\<subseteq> b\\<cdot>H
+     is equivalent to k0\\<cdot>b\\<cdot>H = b\\<cdot>H, which means b\\<inverse>\\<cdot>k0\\<cdot>b \\<in> H (normality).\<close>
+  \<comment> \<open>Use normality: a\\<cdot>b\\<inverse> \\<in> H \\<Rightarrow> a\\<inverse>\\<cdot>(a\\<cdot>b\\<inverse>)\\<cdot>a = b\\<inverse>\\<cdot>a \\<in> H
+     \\<Rightarrow> (b\\<inverse>\\<cdot>a)\\<inverse> = a\\<inverse>\\<cdot>b \\<in> H \\<Rightarrow> coset(a) = coset(b) by normal\\_coset\\_eq.\<close>
+  have hH_grp: "top1_is_group_on H mul e invg"
+    using assms(2) unfolding top1_normal_subgroup_on_def by (by100 blast)
+  \<comment> \<open>Step 1: normality gives conjugation of a\\<cdot>b\\<inverse> by a\\<inverse>.\<close>
+  have ha_inv: "invg a \<in> G" using assms(1) assms(3)
+    unfolding top1_is_group_on_def by (by100 blast)
+  have "\<forall>g \<in> G. \<forall>n \<in> H. mul (mul g n) (invg g) \<in> H"
+    using assms(2) unfolding top1_normal_subgroup_on_def by (by100 blast)
+  \<comment> \<open>Conjugate a\\<cdot>b\\<inverse> by a\\<inverse>: a\\<inverse>\\<cdot>(a\\<cdot>b\\<inverse>)\\<cdot>(a\\<inverse>)\\<inverse> = a\\<inverse>\\<cdot>(a\\<cdot>b\\<inverse>)\\<cdot>a.\<close>
+  have "invg (invg a) = a" using group_inv_inv_early[OF assms(1) assms(3)] .
+  have "mul (mul (invg a) ?k0) (invg (invg a)) \<in> H"
+    using \<open>\<forall>g \<in> G. \<forall>n \<in> H. mul (mul g n) (invg g) \<in> H\<close> ha_inv \<open>?k0 \<in> H\<close> by (by100 blast)
+  hence hconj: "mul (mul (invg a) ?k0) a \<in> H"
+    using \<open>invg (invg a) = a\<close> by simp
+  \<comment> \<open>Simplify: inv(a)\\<cdot>(a\\<cdot>inv(b))\\<cdot>a = inv(b)\\<cdot>a.\<close>
+  have s1: "mul (invg a) ?k0 = mul (mul (invg a) a) (invg b)"
+    using hassoc[OF ha_inv assms(3) hinvb_G] by simp
+  have s2: "mul (invg a) a = e" using assms(1) assms(3)
+    unfolding top1_is_group_on_def by (by100 blast)
+  from s1 s2 have "mul (invg a) ?k0 = mul e (invg b)" by simp
+  have hlid: "\<And>x. x \<in> G \<Longrightarrow> mul e x = x" using assms(1)
+    unfolding top1_is_group_on_def by (by100 blast)
+  hence "mul (invg a) ?k0 = invg b"
+    using \<open>mul (invg a) ?k0 = mul e (invg b)\<close> hlid[OF hinvb_G] by simp
+  hence "mul (invg b) a \<in> H"
+  proof -
+    \<comment> \<open>inv(a)\\<cdot>k0 = inv(b). So (inv(a)\\<cdot>k0)\\<cdot>a = inv(b)\\<cdot>a.
+       And we know (inv(a)\\<cdot>k0)\\<cdot>a = hconj \\<in> H.\<close>
+    have "mul (mul (invg a) ?k0) a = mul (invg b) a"
+      using \<open>mul (invg a) ?k0 = invg b\<close> by simp
+    thus ?thesis using hconj by simp
+  qed
+  \<comment> \<open>Take inverse: (inv(b)\\<cdot>a)\\<inverse> = inv(a)\\<cdot>b \\<in> H (H closed under inverse).\<close>
+  have "invg (mul (invg b) a) \<in> H"
+    using hH_grp \<open>mul (invg b) a \<in> H\<close> unfolding top1_is_group_on_def by (by100 blast)
+  hence "mul (invg a) b \<in> H"
+  proof -
+    assume h: "invg (mul (invg b) a) \<in> H"
+    \<comment> \<open>inv(inv(b)\\<cdot>a) = inv(a)\\<cdot>inv(inv(b)) = inv(a)\\<cdot>b.\<close>
+    have hinvb_G': "invg b \<in> G" using hinvb_G .
+    have hmul_invb_a_G: "mul (invg b) a \<in> G"
+      using hmul_cl[OF hinvb_G assms(3)] .
+    \<comment> \<open>inv(x\\<cdot>y) = inv(y)\\<cdot>inv(x) for groups.\<close>
+    have "invg (mul (invg b) a) = mul (invg a) (invg (invg b))"
+    proof -
+      \<comment> \<open>inv(x\\<cdot>y) = inv(y)\\<cdot>inv(x). Proof: show mul(inv(y)\\<cdot>inv(x), x\\<cdot>y) = e.\<close>
+      let ?z = "mul (invg a) (invg (invg b))"
+      have hinva: "invg a \<in> G" using ha_inv .
+      have hinvb2: "invg (invg b) \<in> G" using assms(1) hinvb_G
+        unfolding top1_is_group_on_def by (by100 blast)
+      have hz_G: "?z \<in> G" using hmul_cl[OF hinva hinvb2] .
+      have hx: "invg b \<in> G" using hinvb_G .
+      have hy: "a \<in> G" using assms(3) .
+      have hxy_G: "mul (invg b) a \<in> G" using hmul_cl[OF hx hy] .
+      \<comment> \<open>mul(?z, mul(invg(b), a)) = mul(invg(a), mul(invg(invg(b)), mul(invg(b), a)))
+         = mul(invg(a), mul(mul(invg(invg(b)), invg(b)), a))
+         = mul(invg(a), mul(e, a)) = mul(invg(a), a) = e.\<close>
+      have t1: "mul ?z (mul (invg b) a) = mul (invg a) (mul (invg (invg b)) (mul (invg b) a))"
+        using hassoc[OF hinva hinvb2 hxy_G] by simp
+      have t2: "mul (invg (invg b)) (mul (invg b) a) =
+          mul (mul (invg (invg b)) (invg b)) a"
+        using hassoc[OF hinvb2 hx hy] by simp
+      have t3: "mul (invg (invg b)) (invg b) = e"
+        using assms(1) hinvb_G unfolding top1_is_group_on_def by (by100 blast)
+      have t4: "mul e a = a" using hlid[OF hy] .
+      from t1 t2 t3 t4
+      have "mul ?z (mul (invg b) a) = mul (invg a) a" by simp
+      also have "mul (invg a) a = e" using assms(1) assms(3)
+        unfolding top1_is_group_on_def by (by100 blast)
+      finally have "mul ?z (mul (invg b) a) = e" .
+      \<comment> \<open>By uniqueness of group inverse: invg(mul(invg(b), a)) = ?z.\<close>
+      have hinv_unique: "\<And>x z. x \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul z x = e \<Longrightarrow> z = invg x"
+      proof -
+        fix x z assume "x \<in> G" "z \<in> G" "mul z x = e"
+        have "invg x \<in> G" using assms(1) \<open>x \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+        have "mul x (invg x) = e" using assms(1) \<open>x \<in> G\<close> unfolding top1_is_group_on_def by (by100 blast)
+        have "z = mul z e" using hrid[OF \<open>z \<in> G\<close>] by simp
+        also have "\<dots> = mul z (mul x (invg x))" using \<open>mul x (invg x) = e\<close> by simp
+        also have "\<dots> = mul (mul z x) (invg x)"
+          using hassoc[OF \<open>z \<in> G\<close> \<open>x \<in> G\<close> \<open>invg x \<in> G\<close>] by simp
+        also have "mul z x = e" using \<open>mul z x = e\<close> .
+        also have "mul e (invg x) = invg x" using hlid[OF \<open>invg x \<in> G\<close>] .
+        finally show "z = invg x" by simp
+      qed
+      from hinv_unique[OF hxy_G hz_G \<open>mul ?z (mul (invg b) a) = e\<close>]
+      show ?thesis by simp
+    qed
+    also have "invg (invg b) = b" using group_inv_inv_early[OF assms(1) assms(4)] .
+    finally have "invg (mul (invg b) a) = mul (invg a) b" .
+    thus ?thesis using h by simp
+  qed
+  \<comment> \<open>By normal\\_coset\\_eq: coset(a) = coset(b).\<close>
+  from normal_coset_eq[OF assms(1) assms(2) assms(3) assms(4)]
+  show ?thesis using \<open>mul (invg a) b \<in> H\<close> by simp
+qed
+
 lemma quotient_carrier_memI:
   "g \<in> G \<Longrightarrow> top1_group_coset_on G mul N g \<in> top1_quotient_group_carrier_on G mul N"
   unfolding top1_quotient_group_carrier_on_def by (by100 blast)
@@ -708,6 +848,7 @@ lemma same_endpoint_same_coset:
   assumes "top1_covering_map_on E TE B TB p"
       and "is_topology_on E TE" and "is_topology_on B TB"
       and "e0 \<in> E" and "p e0 = b0"
+      and "p e1 = b0"
       and "top1_is_path_on E TE e0 e1 \<gamma>1"
       and "top1_is_path_on E TE e0 e1 \<gamma>2"
   shows "top1_group_coset_on
@@ -725,8 +866,8 @@ proof -
   let ?\<delta> = "top1_path_product \<gamma>1 (top1_path_reverse \<gamma>2)"
   have h\<delta>_loop: "top1_is_loop_on E TE e0 ?\<delta>"
     unfolding top1_is_loop_on_def
-    using top1_path_product_is_path[OF assms(2) assms(6)
-        top1_path_reverse_is_path[OF assms(7)]] .
+    using top1_path_product_is_path[OF assms(2) assms(7)
+        top1_path_reverse_is_path[OF assms(8)]] .
   \<comment> \<open>p\\<circ>\\<delta> is a loop at b0 in B.\<close>
   have hp\<delta>_loop: "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<delta> t))"
   proof -
@@ -910,8 +1051,69 @@ proof -
   qed
   \<comment> \<open>Step 3: This class = mulB([p\\<circ>\\<gamma>\\_1], invB([p\\<circ>\\<gamma>\\_2])) via fundamental\\_group\\_mul\\_class + invg\\_class.\<close>
   \<comment> \<open>Step 4: Being in H + group algebra gives coset equality.\<close>
-  show ?thesis sorry \<comment> \<open>Chain: [p\\<circ>\\<delta>] \\<in> H \\<Rightarrow> mulB([p\\<circ>\\<gamma>\\_1], invB([p\\<circ>\\<gamma>\\_2])) \\<in> H
-     \\<Rightarrow> coset([p\\<circ>\\<gamma>\\_1]) = coset([p\\<circ>\\<gamma>\\_2]).\<close>
+  \<comment> \<open>Step 3: [p\\<circ>\\<delta>] = [?pp] \\<in> H. We showed [p\\<circ>\\<delta>] class = [?pp] class (hclass\\_eq).
+     So h\\<delta>\\_in\\_H gives [?pp] \\<in> H.
+     Step 4: [?pp] = [(p\\<circ>\\<gamma>\\_1)*rev(p\\<circ>\\<gamma>\\_2)] = mulB([p\\<circ>\\<gamma>\\_1], invB([p\\<circ>\\<gamma>\\_2])).
+     From this being in H, derive coset equality using normal\\_coset\\_eq.\<close>
+  let ?c1 = "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>1 t)) g}"
+  let ?c2 = "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>2 t)) g}"
+  let ?H = "top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+  let ?mulB = "top1_fundamental_group_mul B TB b0"
+  let ?pi1B = "top1_fundamental_group_carrier B TB b0"
+  let ?cosetH = "\<lambda>g. top1_group_coset_on ?pi1B ?mulB ?H g"
+  \<comment> \<open>The class [?pp] is in H:\<close>
+  have hpp_in_H: "{g. top1_loop_equiv_on B TB b0 ?pp g} \<in> ?H"
+    using h\<delta>_in_H hclass_eq by simp
+  \<comment> \<open>Show the loops are actual loops at b0.\<close>
+  have hloop1: "top1_is_loop_on B TB b0 (\<lambda>t. p (\<gamma>1 t))"
+  proof -
+    have h1: "top1_is_path_on E TE e0 e1 \<gamma>1" using assms(7) .
+    have h1_cont: "top1_continuous_map_on I_set I_top E TE \<gamma>1"
+      using h1 unfolding top1_is_path_on_def by (by100 blast)
+    have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<gamma>1)"
+      using top1_continuous_map_on_comp[OF h1_cont
+          top1_covering_map_on_continuous[OF assms(1)]] .
+    moreover have "(p \<circ> \<gamma>1) 0 = b0" using h1 assms(5) unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "(p \<circ> \<gamma>1) 1 = b0" using h1 assms(6) unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "(\<lambda>t. p (\<gamma>1 t)) = p \<circ> \<gamma>1" by (rule ext) simp
+    ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by simp
+  qed
+  have hloop2: "top1_is_loop_on B TB b0 (\<lambda>t. p (\<gamma>2 t))"
+  proof -
+    have h2: "top1_is_path_on E TE e0 e1 \<gamma>2" using assms(8) .
+    have h2_cont: "top1_continuous_map_on I_set I_top E TE \<gamma>2"
+      using h2 unfolding top1_is_path_on_def by (by100 blast)
+    have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<gamma>2)"
+      using top1_continuous_map_on_comp[OF h2_cont
+          top1_covering_map_on_continuous[OF assms(1)]] .
+    moreover have "(p \<circ> \<gamma>2) 0 = b0" using h2 assms(5) unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "(p \<circ> \<gamma>2) 1 = b0" using h2 assms(6) unfolding top1_is_path_on_def by (by100 simp)
+    moreover have "(\<lambda>t. p (\<gamma>2 t)) = p \<circ> \<gamma>2" by (rule ext) simp
+    ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by simp
+  qed
+  \<comment> \<open>By fundamental\\_group\\_mul\\_class + invg\\_class: [?pp] = mulB(?c1, invB(?c2)).\<close>
+  have hrev_class: "top1_fundamental_group_invg B TB b0 ?c2 =
+      {g. top1_loop_equiv_on B TB b0 (top1_path_reverse (\<lambda>t. p (\<gamma>2 t))) g}"
+    using fundamental_group_invg_class[OF assms(3) hloop2] .
+  have hmul_class: "?mulB ?c1 (top1_fundamental_group_invg B TB b0 ?c2) =
+      {g. top1_loop_equiv_on B TB b0 ?pp g}"
+  proof -
+    have hrev_loop: "top1_is_loop_on B TB b0 (top1_path_reverse (\<lambda>t. p (\<gamma>2 t)))"
+      using top1_path_reverse_is_path[OF hloop2[unfolded top1_is_loop_on_def]]
+      unfolding top1_is_loop_on_def .
+    show ?thesis using top1_fundamental_group_mul_class[OF assms(3) hloop1 hrev_loop]
+      hrev_class by simp
+  qed
+  \<comment> \<open>So mulB(?c1, invB(?c2)) = [?pp] \\<in> H.\<close>
+  have hmul_in_H: "?mulB ?c1 (top1_fundamental_group_invg B TB b0 ?c2) \<in> ?H"
+    using hmul_class hpp_in_H by simp
+  \<comment> \<open>Coset equality from a\\<cdot>b\\<inverse> \\<in> H.
+     coset(a) = coset(b) if a\\<cdot>b\\<inverse> \\<in> H (standard coset theory).\<close>
+  show ?thesis sorry \<comment> \<open>From hmul\\_in\\_H: mulB(?c1, invB(?c2)) \\<in> H.
+     Standard group theory: a\\<cdot>b\\<inverse> \\<in> H \\<Rightarrow> coset(a, H) = coset(b, H).
+     For left cosets: a\\<cdot>H = \\{a\\<cdot>h | h\\<in>H\\}. Since a\\<cdot>b\\<inverse> \\<in> H,
+     a = (a\\<cdot>b\\<inverse>)\\<cdot>b, so a\\<cdot>H = (a\\<cdot>b\\<inverse>)\\<cdot>b\\<cdot>H = b\\<cdot>H (for normal H).
+     Needs normal\\_coset\\_eq or direct argument.\<close>
 qed
 
 (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
