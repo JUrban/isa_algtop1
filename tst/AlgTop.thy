@@ -2,6 +2,55 @@ theory AlgTop
   imports "AlgTopCached10.AlgTopCached10"
 begin
 
+\<comment> \<open>Munkres Theorem 54.6: Strengthened lifting correspondence.
+   (a) p* is a monomorphism. (Already: covering\\_induced\\_injective in ac4.)
+   (b) The lifting correspondence induces a bijection from cosets to the fiber.
+   (c) [f] in p*(pi1(E)) iff f lifts to a loop at e0.\<close>
+
+\<comment> \<open>Theorem 54.6(a): p* is injective. Already proved as covering\\_induced\\_injective.\<close>
+
+\<comment> \<open>Theorem 54.6(b): The lifting correspondence phi satisfies
+   phi([f]) = phi([g]) iff [f] and [g] are in the same coset of H = p*(pi1(E,e0)).
+   When E is path-connected, phi is surjective, so this gives a bijection
+   pi1(B,b0)/H -> p-inv(b0).\<close>
+theorem Theorem_54_6b:
+  fixes E :: "'e set" and TE :: "'e set set"
+    and B :: "'b set" and TB :: "'b set set"
+  assumes "top1_covering_map_on E TE B TB p"
+      and "top1_path_connected_on E TE"
+      and "is_topology_on B TB"
+      and "e0 \<in> E" and "p e0 = b0"
+  shows "\<exists>\<phi>. (\<forall>c\<in>top1_fundamental_group_carrier B TB b0. \<phi> c \<in> {e \<in> E. p e = b0})
+    \<and> \<phi> ` (top1_fundamental_group_carrier B TB b0) = {e \<in> E. p e = b0}
+    \<and> (\<forall>c\<in>top1_fundamental_group_carrier B TB b0.
+        \<exists>f ft. f \<in> c \<and> top1_is_loop_on B TB b0 f
+          \<and> top1_is_path_on E TE e0 (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))
+    \<and> (\<forall>g\<in>top1_fundamental_group_carrier B TB b0.
+       \<forall>h\<in>top1_fundamental_group_carrier B TB b0.
+        (\<phi> g = \<phi> h) =
+        (top1_group_coset_on (top1_fundamental_group_carrier B TB b0)
+            (top1_fundamental_group_mul B TB b0)
+            (top1_fundamental_group_image_hom E TE e0 B TB b0 p) g
+         = top1_group_coset_on (top1_fundamental_group_carrier B TB b0)
+            (top1_fundamental_group_mul B TB b0)
+            (top1_fundamental_group_image_hom E TE e0 B TB b0 p) h))"
+  sorry
+
+\<comment> \<open>Theorem 54.6(c): [f] in H = p*(pi1(E,e0)) iff f lifts to a loop at e0.\<close>
+theorem Theorem_54_6c:
+  fixes E :: "'e set" and TE :: "'e set set"
+    and B :: "'b set" and TB :: "'b set set"
+  assumes "top1_covering_map_on E TE B TB p"
+      and "is_topology_on E TE" and "is_topology_on B TB"
+      and "e0 \<in> E" and "p e0 = b0"
+      and "top1_is_loop_on B TB b0 f"
+  shows "(top1_fundamental_group_induced_on E TE e0 B TB b0 p)
+            ` top1_fundamental_group_carrier E TE e0
+         = top1_fundamental_group_image_hom E TE e0 B TB b0 p \<Longrightarrow>
+    ({g. top1_loop_equiv_on B TB b0 f g} \<in> top1_fundamental_group_image_hom E TE e0 B TB b0 p)
+    = (\<exists>ft. top1_is_loop_on E TE e0 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))"
+  sorry
+
 \<comment> \<open>Reusable quotient lemma: a surjection that identifies coset-equivalent
    elements induces a bijection from cosets to the image.
    Expert audit2: make this a standalone lemma, not inline in Schreier.\<close>
@@ -1167,50 +1216,23 @@ proof -
         using connected_locally_path_connected_imp_path_connected[OF
             hE'_strict[unfolded is_topology_on_strict_def, THEN conjunct1]
             hE'_conn graph_locally_path_connected[OF hE'_graph]] he0' by (by100 blast)
-      from Theorem_54_4_lifting_correspondence[OF he0' \<open>p' e0' = x0\<close> hE'_cov hE'_pc hX_top]
-      obtain \<phi> where h\<phi>_maps: "\<forall>c\<in>?piX. \<phi> c \<in> {e \<in> E'. p' e = x0}"
+      \<comment> \<open>Apply Theorem 54.6(b) to get \\<phi> with full coset-fiber equivalence.\<close>
+      \<comment> \<open>Apply Theorem 54.6(b) to get \\<phi> with full coset-fiber equivalence.\<close>
+      have h546b: "\<exists>\<phi>. (\<forall>c\<in>?piX. \<phi> c \<in> {e \<in> E'. p' e = x0})
+          \<and> \<phi> ` ?piX = {e \<in> E'. p' e = x0}
+          \<and> (\<forall>c\<in>?piX. \<exists>f ft. f \<in> c \<and> top1_is_loop_on X TX x0 f
+              \<and> top1_is_path_on E' TE' e0' (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p' (ft s) = f s))
+          \<and> (\<forall>g\<in>?piX. \<forall>h\<in>?piX.
+              (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h))"
+        using Theorem_54_6b[OF hE'_cov hE'_pc hX_top he0' \<open>p' e0' = x0\<close>]
+        sorry \<comment> \<open>Need pH = image\\_hom matching. Follows from hH\\_corr85.\<close>
+      then obtain \<phi> where h\<phi>_maps: "\<forall>c\<in>?piX. \<phi> c \<in> {e \<in> E'. p' e = x0}"
           and h\<phi>_surj: "\<phi> ` ?piX = {e \<in> E'. p' e = x0}"
           and h\<phi>_lift: "\<forall>c\<in>?piX. \<exists>f ft. f \<in> c \<and> top1_is_loop_on X TX x0 f
               \<and> top1_is_path_on E' TE' e0' (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p' (ft s) = f s)"
+          and h\<phi>_fiber_eq: "\<forall>g\<in>?piX. \<forall>h\<in>?piX.
+              (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h)"
         by (elim exE conjE)
-      \<comment> \<open>Munkres Theorem 54.6(b): \\<phi>(g) = \\<phi>(h) iff g and h are in the same coset of pH.
-         Book proof: \\<phi>(g) = endpoint of lift of representative loop.
-         Forward: \\<phi>(g)=\\<phi>(h) \\<Rightarrow> lift(g)\\<cdot>rev(lift(h)) is loop at e0 \\<Rightarrow> g\\<cdot>h\\<inverse> \\<in> pH.
-         Backward: g\\<cdot>h\\<inverse> \\<in> pH \\<Rightarrow> g\\<cdot>h\\<inverse> lifts to loop \\<Rightarrow> lifts end at same point.\<close>
-      have h\<phi>_fiber_eq: "\<forall>g\<in>?piX. \<forall>h\<in>?piX.
-          (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h)"
-      proof (intro ballI)
-        fix g h assume hg: "g \<in> ?piX" and hh: "h \<in> ?piX"
-        \<comment> \<open>Get representatives and lifts.\<close>
-        from h\<phi>_lift[rule_format, OF hg]
-        obtain fg ftg where hfg: "fg \<in> g" "top1_is_loop_on X TX x0 fg"
-            "top1_is_path_on E' TE' e0' (\<phi> g) ftg" "\<forall>s\<in>I_set. p' (ftg s) = fg s"
-          by (by100 blast)
-        from h\<phi>_lift[rule_format, OF hh]
-        obtain fh fth where hfh: "fh \<in> h" "top1_is_loop_on X TX x0 fh"
-            "top1_is_path_on E' TE' e0' (\<phi> h) fth" "\<forall>s\<in>I_set. p' (fth s) = fh s"
-          by (by100 blast)
-        show "(\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h)"
-        proof (rule iffI)
-          \<comment> \<open>Forward: \\<phi>(g) = \\<phi>(h) \\<Rightarrow> same coset.
-             Book: f\\<tilde> and g\\<tilde> end at same point.
-             f\\<tilde> * reverse(g\\<tilde>) is loop at e0 projecting to fg * reverse(fh).
-             So [fg * reverse(fh)] \\<in> pH, hence g * h\\<inverse> \\<in> pH, hence gH = hH.\<close>
-          assume h\<phi>_eq: "\<phi> g = \<phi> h"
-          show "top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h"
-            sorry
-        next
-          \<comment> \<open>Backward: same coset \\<Rightarrow> \\<phi>(g) = \\<phi>(h).
-             Book: g * h\\<inverse> \\<in> pH, so g * h\\<inverse> = p*(\\<alpha>\\<tilde>) for loop \\<alpha>\\<tilde> at e0.
-             Lift of fg * reverse(fh) starting at e0 is \\<alpha>\\<tilde> * something...
-             Actually: lift of fg * reverse(fh) = ftg * reverse(fth).
-             Since g * h\\<inverse> \\<in> pH: the lift is a loop, so ftg(1) = fth(1).
-             Hence \\<phi>(g) = \\<phi>(h).\<close>
-          assume hcoset_eq: "top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h"
-          show "\<phi> g = \<phi> h"
-            sorry
-        qed
-      qed
       have hpiX_grp: "top1_is_group_on ?piX ?mulX
           (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
       proof -
