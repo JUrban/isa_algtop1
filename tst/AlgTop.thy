@@ -1383,7 +1383,41 @@ proof -
     \<comment> \<open>T simply connected + retract \\<Rightarrow> T' simply connected.\<close>
     have hT_sc: "top1_simply_connected_on T TT"
       using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
-    show ?thesis sorry \<comment> \<open>From retract + T simply connected.\<close>
+    show ?thesis
+    proof -
+      \<comment> \<open>Simply connected = path-connected + all loops contractible.\<close>
+      have hT_pc: "top1_path_connected_on T TT"
+        using hT_sc unfolding top1_simply_connected_on_def by (by100 blast)
+      have hT'_sub: "?T' \<subseteq> T" using assms(2,3) by (by100 blast)
+      have hTT: "is_topology_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+            is_topology_on_strict_def by (by100 blast)
+      have hTT': "is_topology_on ?T' ?TT'"
+        using subspace_topology_is_topology_on[OF hTT hT'_sub] .
+      \<comment> \<open>Step 1: T' is path-connected (retraction image of path-connected).\<close>
+      have hT'_pc: "top1_path_connected_on ?T' ?TT'"
+        sorry \<comment> \<open>Image of path-connected under continuous retraction.\<close>
+      \<comment> \<open>Step 2: All loops in T' are contractible (Lemma 55.1 + T simply connected).\<close>
+      have hT'_loops: "\<forall>x\<in>?T'. \<forall>f. top1_is_loop_on ?T' ?TT' x f \<longrightarrow>
+          top1_path_homotopic_on ?T' ?TT' x x f (top1_constant_path x)"
+      proof (intro ballI allI impI)
+        fix x f assume hx: "x \<in> ?T'" and hf: "top1_is_loop_on ?T' ?TT' x f"
+        \<comment> \<open>f is a loop in T' \\<subseteq> T. Hence a loop in T.\<close>
+        have hf_T: "top1_is_loop_on T TT x f"
+          sorry \<comment> \<open>Subspace loop is ambient loop (inclusion continuous by Thm 18.2).\<close>
+        \<comment> \<open>T simply connected \\<Rightarrow> f contractible in T.\<close>
+        have "top1_path_homotopic_on T TT x x f (top1_constant_path x)"
+          using hT_sc hf_T hx hT'_sub
+          unfolding top1_simply_connected_on_def by (by100 blast)
+        \<comment> \<open>By Lemma 55.1: contractible in T \\<Rightarrow> contractible in T'.\<close>
+        have hconst_loop: "top1_is_loop_on ?T' ?TT' x (top1_constant_path x)"
+          by (rule top1_constant_path_is_loop[OF hTT' hx])
+        from Lemma_55_1_retract_injective[OF \<open>top1_retract_of_on T TT ?T'\<close>
+            hx hf hconst_loop \<open>top1_path_homotopic_on T TT x x f (top1_constant_path x)\<close>]
+        show "top1_path_homotopic_on ?T' ?TT' x x f (top1_constant_path x)" .
+      qed
+      show ?thesis unfolding top1_simply_connected_on_def using hT'_pc hT'_loops by (by100 blast)
+    qed
   qed
   show ?thesis unfolding top1_is_tree_on_def using hT'_graph hT'_conn hT'_sc by (by100 blast)
 qed
