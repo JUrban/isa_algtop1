@@ -842,6 +842,27 @@ lemma group_inv_closed:
   "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> invg a \<in> G"
   unfolding top1_is_group_on_def by (by5000 blast)
 
+lemma group_assoc:
+  "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> b \<in> G \<Longrightarrow> c \<in> G \<Longrightarrow>
+   mul (mul a b) c = mul a (mul b c)"
+  unfolding top1_is_group_on_def by (by5000 blast)
+
+lemma group_left_inv:
+  "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> mul (invg a) a = e"
+  unfolding top1_is_group_on_def by (by5000 blast)
+
+lemma group_right_inv:
+  "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> mul a (invg a) = e"
+  unfolding top1_is_group_on_def by (by5000 blast)
+
+lemma group_left_id:
+  "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> mul e a = a"
+  unfolding top1_is_group_on_def by (by5000 blast)
+
+lemma group_right_id:
+  "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> mul a e = a"
+  unfolding top1_is_group_on_def by (by5000 blast)
+
 lemma quotient_carrier_memI:
   "g \<in> G \<Longrightarrow> top1_group_coset_on G mul N g \<in> top1_quotient_group_carrier_on G mul N"
   unfolding top1_quotient_group_carrier_on_def by (by100 blast)
@@ -2081,8 +2102,23 @@ proof -
                   have "?invB h \<in> ?H" using group_inv_closed[OF hH_grp_early \<open>h \<in> ?H\<close>] .
                   have "?mulB m h \<in> ?H" using group_mul_closed[OF hH_grp_early \<open>m \<in> ?H\<close> \<open>h \<in> ?H\<close>] .
                   have "?n \<in> ?H" using group_mul_closed[OF hH_grp_early \<open>?invB h \<in> ?H\<close> \<open>?mulB m h \<in> ?H\<close>] .
-                  have "?mulB (?mulB h ?n) (?invB h) = m" sorry
-                    \<comment> \<open>Group cancellation: h\\<cdot>(inv(h)\\<cdot>(m\\<cdot>h))\\<cdot>inv(h) = m.\<close>
+                  have "?mulB (?mulB h ?n) (?invB h) = m"
+                  proof -
+                    have s1: "?mulB h (?mulB (?invB h) (?mulB m h)) =
+                        ?mulB (?mulB h (?invB h)) (?mulB m h)"
+                      using group_assoc[OF hH_grp_early \<open>h \<in> ?H\<close> \<open>?invB h \<in> ?H\<close> \<open>?mulB m h \<in> ?H\<close>] by simp
+                    have s2: "?mulB h (?invB h) = ?eB"
+                      using group_right_inv[OF hH_grp_early \<open>h \<in> ?H\<close>] .
+                    have s3: "?mulB ?eB (?mulB m h) = ?mulB m h"
+                      using group_left_id[OF hH_grp_early \<open>?mulB m h \<in> ?H\<close>] .
+                    from s1 s2 s3 have hstep1: "?mulB h ?n = ?mulB m h" by simp
+                    have s4: "?mulB (?mulB m h) (?invB h) = ?mulB m (?mulB h (?invB h))"
+                      using group_assoc[OF hH_grp_early \<open>m \<in> ?H\<close> \<open>h \<in> ?H\<close> \<open>?invB h \<in> ?H\<close>] .
+                    from s4 s2 have s5: "?mulB (?mulB m h) (?invB h) = ?mulB m ?eB" by simp
+                    have s6: "?mulB m ?eB = m" using group_right_id[OF hH_grp_early \<open>m \<in> ?H\<close>] .
+                    from s5 s6 have hstep2: "?mulB (?mulB m h) (?invB h) = m" by simp
+                    from hstep1 hstep2 show ?thesis by simp
+                  qed
                   show "m \<in> {?mulB (?mulB h n) (?invB h) |n. n \<in> ?H}"
                     apply (rule CollectI, rule exI[of _ ?n])
                     using \<open>?n \<in> ?H\<close> \<open>?mulB (?mulB h ?n) (?invB h) = m\<close>[symmetric]
