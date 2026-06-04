@@ -127,6 +127,57 @@ proof -
   qed
 qed
 
+\<comment> \<open>Expert audit2: extract tree Euler sub-lemmas as named lemmas.\<close>
+
+\<comment> \<open>A finite tree with at least 2 arcs has a leaf: an arc with one endpoint
+   not contained in any other arc. (Munkres 85.2 Step 1 key step.)\<close>
+lemma finite_tree_has_leaf_arc:
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "finite \<A>" and "card \<A> \<ge> 2"
+  shows "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
+      \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
+  sorry
+
+\<comment> \<open>Removing a leaf arc from a tree gives a tree.\<close>
+lemma finite_tree_remove_leaf_is_tree:
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "A0 \<in> \<A>"
+      and "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+      and "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
+      and "card \<A> \<ge> 2" and "finite \<A>"
+  shows "top1_is_tree_on (\<Union>(\<A> - {A0})) (subspace_topology T TT (\<Union>(\<A> - {A0})))"
+  sorry
+
+\<comment> \<open>In a tree with \\<ge> 2 arcs, a leaf vertex's other endpoint is shared with another arc.
+   (Needed for V = V' \\<union> {v} in tree Euler induction.)\<close>
+lemma tree_leaf_other_endpoint_shared:
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "A0 \<in> \<A>"
+      and "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+      and "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
+      and "card \<A> \<ge> 2" and "finite \<A>"
+      and "x \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" and "x \<noteq> v"
+  shows "\<exists>B\<in>\<A> - {A0}. x \<in> B"
+  sorry
+
 lemma tree_euler_nat:
   fixes n :: nat
   shows "\<forall>(T :: 'a set) TT \<A>. card \<A> = n \<longrightarrow>
@@ -191,9 +242,10 @@ proof (induction n rule: less_induct)
       qed
       \<comment> \<open>Induction step: leaf arc removal.
          Book: find leaf arc A0 meeting T\\_0 in one vertex.\<close>
+      have hcard_ge2: "card \<A> \<ge> 2" using hn_ge2 hcard by simp
+      from finite_tree_has_leaf_arc[OF htree harcs hcover hinter hfin hcard_ge2]
       have "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-          (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-        sorry \<comment> \<open>Finite tree with \\<ge> 2 arcs has a leaf.\<close>
+          (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)" .
       then obtain A0 v where hA0: "A0 \<in> \<A>"
           and hv_ep: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
           and hv_uniq: "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
@@ -210,7 +262,7 @@ proof (induction n rule: less_induct)
       have h\<A>'_lt: "n - 1 < n" using hn_ge2 by linarith
       \<comment> \<open>Transfer properties to subspace.\<close>
       have hT'_tree: "top1_is_tree_on ?T' (subspace_topology T TT ?T')"
-        sorry \<comment> \<open>Removing leaf preserves tree.\<close>
+        by (rule finite_tree_remove_leaf_is_tree[OF htree harcs hcover hinter hA0 hv_ep hv_uniq hcard_ge2 hfin])
       have h\<A>'_arcs: "\<forall>A\<in>?\<A>'. A \<subseteq> ?T' \<and>
           top1_is_arc_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)"
       proof (intro ballI conjI)
@@ -275,19 +327,16 @@ proof (induction n rule: less_induct)
           next
             case False
             \<comment> \<open>x is the other endpoint of A0. x must be in some arc B \\<in> \\<A>'.\<close>
+            \<comment> \<open>x is the other endpoint of A0. By tree\\_leaf\\_other\\_endpoint\\_shared,
+               x is in some arc B \\<in> \\<A> - {A0}.\<close>
             have "x \<in> A0" using \<open>x \<in> top1_arc_endpoints_on A0 _\<close>
               unfolding top1_arc_endpoints_on_def by (by100 blast)
-            have "x \<in> T" using \<open>x \<in> A0\<close> harcs hA(1) True by (by100 blast)
-            have "x \<in> \<Union>\<A>" using hcover \<open>x \<in> T\<close> by simp
-            then obtain B where "B \<in> \<A>" "x \<in> B" by (by100 blast)
-            have "B \<noteq> A0"
-            proof
-              assume "B = A0" thus False sorry
-                \<comment> \<open>x is in A0 but is not v and is an endpoint. The only option
-                   is x = w (other endpoint). Need: w is in some other arc.
-                   Since tree connected + \\<ge>2 arcs, A0 shares w with another arc.\<close>
-            qed
-            hence "B \<in> ?\<A>'" using \<open>B \<in> \<A>\<close> by (by100 blast)
+            from tree_leaf_other_endpoint_shared[OF htree harcs hcover hinter hA0 hv_ep hv_uniq hcard_ge2 hfin
+                \<open>x \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)\<close> False]
+            obtain B where "B \<in> \<A> - {A0}" "x \<in> B" by (by100 blast)
+            hence "B \<in> ?\<A>'" by (by100 blast)
+            have "B \<in> \<A>" using \<open>B \<in> \<A> - {A0}\<close> by (by100 blast)
+            have "B \<noteq> A0" using \<open>B \<in> \<A> - {A0}\<close> by (by100 blast)
             have "x \<in> A0 \<inter> B" using \<open>x \<in> A0\<close> \<open>x \<in> B\<close> by (by100 blast)
             have "A0 \<in> \<A>" using hA0 .
             have "A0 \<noteq> B" using \<open>B \<noteq> A0\<close> by (by100 blast)
