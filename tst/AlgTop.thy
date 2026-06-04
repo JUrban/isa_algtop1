@@ -1075,8 +1075,79 @@ proof -
     hence "g \<in> G" using hN_sub by (by100 blast)
     have "{mul (mul g h) (invg g) |h. h \<in> H} = H"
       using \<open>g \<in> ?N\<close> unfolding top1_normalizer_on_def by (by5000 blast)
-    hence "H = (\<lambda>h. mul (invg g) (mul h g)) ` H"
-      sorry \<comment> \<open>Rewrite set comprehension to image form.\<close>
+    have "H = (\<lambda>h. mul (invg g) (mul h g)) ` H"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> H"
+      \<comment> \<open>x \\<in> H = {g\\<cdot>k\\<cdot>g\\<inverse> | k\\<in>H}, so x = g\\<cdot>k0\\<cdot>g\\<inverse>. Then g\\<inverse>\\<cdot>x\\<cdot>g = k0 \\<in> H.\<close>
+      from \<open>{mul (mul g h) (invg g) |h. h \<in> H} = H\<close> \<open>x \<in> H\<close>
+      have "x \<in> {mul (mul g h) (invg g) |h. h \<in> H}" by simp
+      then obtain k0 where "k0 \<in> H" "x = mul (mul g k0) (invg g)" by (by5000 auto)
+      have "invg g \<in> G" using group_inv_closed[OF hG \<open>g \<in> G\<close>] .
+      have "k0 \<in> G" using \<open>k0 \<in> H\<close> hH_sub by (by100 blast)
+      \<comment> \<open>g\\<inverse>\\<cdot>x\\<cdot>g = g\\<inverse>\\<cdot>(g\\<cdot>k0\\<cdot>g\\<inverse>)\\<cdot>g = k0 (by cancellation).\<close>
+      \<comment> \<open>So x = the image of k0 composed with x = g\\<cdot>k0\\<cdot>g\\<inverse>... actually we want
+         x as image of (g\\<cdot>x\\<cdot>g\\<inverse>). Take h = g\\<cdot>x\\<cdot>g\\<inverse> \\<in> H.\<close>
+      have "mul (mul g x) (invg g) \<in> H"
+      proof -
+        have "mul (mul g x) (invg g) \<in> {mul (mul g h) (invg g) |h. h \<in> H}"
+          using \<open>x \<in> H\<close> by (by5000 blast)
+        thus ?thesis using \<open>{mul (mul g h) (invg g) |h. h \<in> H} = H\<close> by simp
+      qed
+      let ?h = "mul (mul g x) (invg g)"
+      \<comment> \<open>inv(g)\\<cdot>?h\\<cdot>g = inv(g)\\<cdot>g\\<cdot>x\\<cdot>inv(g)\\<cdot>g = x.\<close>
+      have "x \<in> G" using \<open>x \<in> H\<close> hH_sub by (by100 blast)
+      have "mul g x \<in> G" using group_mul_closed[OF hG \<open>g \<in> G\<close> \<open>x \<in> G\<close>] .
+      have "?h \<in> G" using group_mul_closed[OF hG \<open>mul g x \<in> G\<close> \<open>invg g \<in> G\<close>] .
+      have r1: "mul (mul (mul g x) (invg g)) g = mul (mul g x) (mul (invg g) g)"
+        using group_assoc[OF hG \<open>mul g x \<in> G\<close> \<open>invg g \<in> G\<close> \<open>g \<in> G\<close>] .
+      have r2: "mul (invg g) g = e" using group_left_inv[OF hG \<open>g \<in> G\<close>] .
+      have r3: "mul (mul g x) e = mul g x" using group_right_id[OF hG \<open>mul g x \<in> G\<close>] .
+      from r1 r2 r3 have "mul ?h g = mul g x" by simp
+      hence "mul (invg g) (mul ?h g) = mul (invg g) (mul g x)" by simp
+      have r4: "mul (invg g) (mul g x) = mul (mul (invg g) g) x"
+        using group_assoc[OF hG \<open>invg g \<in> G\<close> \<open>g \<in> G\<close> \<open>x \<in> G\<close>] by simp
+      from r2 r4 have "mul (invg g) (mul g x) = mul e x" by simp
+      have r5: "mul e x = x" using group_left_id[OF hG \<open>x \<in> G\<close>] .
+      from \<open>mul (invg g) (mul ?h g) = mul (invg g) (mul g x)\<close>
+           \<open>mul (invg g) (mul g x) = mul e x\<close> r5
+      have "mul (invg g) (mul ?h g) = x" by simp
+      have "mul (invg g) (mul ?h g) \<in> (\<lambda>h. mul (invg g) (mul h g)) ` H"
+        using \<open>?h \<in> H\<close> by (by100 blast)
+      thus "x \<in> (\<lambda>h. mul (invg g) (mul h g)) ` H"
+        using \<open>mul (invg g) (mul ?h g) = x\<close> by simp
+    next
+      fix x assume "x \<in> (\<lambda>h. mul (invg g) (mul h g)) ` H"
+      then obtain h where "h \<in> H" "x = mul (invg g) (mul h g)" by (by5000 auto)
+      have "invg g \<in> G" using group_inv_closed[OF hG \<open>g \<in> G\<close>] .
+      have "h \<in> G" using \<open>h \<in> H\<close> hH_sub by (by100 blast)
+      have "mul h g \<in> G" using group_mul_closed[OF hG \<open>h \<in> G\<close> \<open>g \<in> G\<close>] .
+      \<comment> \<open>h \\<in> H = {g\\<cdot>k\\<cdot>g\\<inverse> | k\\<in>H}. So h = g\\<cdot>k0\\<cdot>g\\<inverse>. Then x = inv(g)\\<cdot>g\\<cdot>k0\\<cdot>g\\<inverse>\\<cdot>g = k0 \\<in> H.\<close>
+      from \<open>{mul (mul g k) (invg g) |k. k \<in> H} = H\<close> \<open>h \<in> H\<close>
+      have "h \<in> {mul (mul g k) (invg g) |k. k \<in> H}" by simp
+      then obtain k0 where "k0 \<in> H" "h = mul (mul g k0) (invg g)" by (by5000 auto)
+      have "k0 \<in> G" using \<open>k0 \<in> H\<close> hH_sub by (by100 blast)
+      \<comment> \<open>x = inv(g)\\<cdot>(g\\<cdot>k0\\<cdot>inv(g))\\<cdot>g = k0 by cancellation.\<close>
+      have "x = mul (invg g) (mul (mul (mul g k0) (invg g)) g)"
+        using \<open>x = mul (invg g) (mul h g)\<close> \<open>h = mul (mul g k0) (invg g)\<close> by simp
+      have "mul g k0 \<in> G" using group_mul_closed[OF hG \<open>g \<in> G\<close> \<open>k0 \<in> G\<close>] .
+      have "invg g \<in> G" using group_inv_closed[OF hG \<open>g \<in> G\<close>] .
+      have s1: "mul (mul (mul g k0) (invg g)) g = mul (mul g k0) (mul (invg g) g)"
+        using group_assoc[OF hG \<open>mul g k0 \<in> G\<close> \<open>invg g \<in> G\<close> \<open>g \<in> G\<close>] .
+      have s2: "mul (invg g) g = e" using group_left_inv[OF hG \<open>g \<in> G\<close>] .
+      have s3: "mul (mul g k0) e = mul g k0"
+        using group_right_id[OF hG \<open>mul g k0 \<in> G\<close>] .
+      from s1 s2 s3 have "mul (mul (mul g k0) (invg g)) g = mul g k0" by simp
+      hence "x = mul (invg g) (mul g k0)"
+        using \<open>x = mul (invg g) (mul (mul (mul g k0) (invg g)) g)\<close> by simp
+      have s4: "mul (invg g) (mul g k0) = mul (mul (invg g) g) k0"
+        using group_assoc[OF hG \<open>invg g \<in> G\<close> \<open>g \<in> G\<close> \<open>k0 \<in> G\<close>] by simp
+      from s2 s4 have "mul (invg g) (mul g k0) = mul e k0" by simp
+      have s5: "mul e k0 = k0" using group_left_id[OF hG \<open>k0 \<in> G\<close>] .
+      hence "mul (invg g) (mul g k0) = k0"
+        using \<open>mul (invg g) (mul g k0) = mul e k0\<close> by simp
+      hence "x = k0" using \<open>x = mul (invg g) (mul g k0)\<close> by simp
+      thus "x \<in> H" using \<open>k0 \<in> H\<close> by simp
+    qed
     from group_conj_reverse[OF hG hH_sub \<open>g \<in> G\<close> this]
     have "(\<lambda>h. mul (mul g h) (invg g)) ` H = H" .
     \<comment> \<open>Wait, this gives back the original. Need the inverse direction.\<close>
