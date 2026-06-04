@@ -22305,9 +22305,23 @@ proof -
     where hfreeH_SE: "top1_is_free_group_full_on H mul e invg \<iota>H S_E"
     by (by100 blast)
   have "card S_E = k * n + 1"
-    sorry \<comment> \<open>Euler char counting: need graph vertex/edge infrastructure.
-       Expert recommends: define formal vertex set, count arcs/vertices for wedge X
-       and covering E', derive rank = card(arcs) - card(vertices) + 1.\<close>
+  proof -
+    \<comment> \<open>Munkres 85.3: Euler characteristic argument.
+       X is a wedge of n+1 circles, E' is its k-sheeted covering.
+       \\<chi>(X) = -n, \\<chi>(E') = k\\<cdot>\\<chi>(X) = -kn.
+       rank(\\<pi>\\_1(E')) = 1 - \\<chi>(E') = kn + 1.
+       S\\_E is a free basis of \\<pi>\\_1(E'), so card S\\_E = rank = kn + 1.\<close>
+    \<comment> \<open>Step 1: X is finite graph. F \\<cong> \\<pi>\\_1(X) free of rank n+1.
+       By free\\_group\\_rank\\_invariant\\_finite, any finite basis of \\<pi>\\_1(X) has card n+1.\<close>
+    \<comment> \<open>Step 2: E' is k-sheeted covering of X (finite graph).
+       By graph covering structure: arcs(E') = k \\<cdot> arcs(X), vertices(E') = k \\<cdot> vertices(X).
+       Hence \\<chi>(E') = k \\<cdot> \\<chi>(X).\<close>
+    \<comment> \<open>Step 3: By Lemma 85.2: rank(\\<pi>\\_1(E')) = 1 - \\<chi>(E') = 1 - k\\<chi>(X).
+       From rank(\\<pi>\\_1(X)) = n+1: \\<chi>(X) = 1 - (n+1) = -n.
+       So rank(\\<pi>\\_1(E')) = 1 + kn.\<close>
+    \<comment> \<open>Step 4: S\\_E is a free basis, so card S\\_E = rank = kn + 1.\<close>
+    show ?thesis sorry
+  qed
   have "finite S_E"
   proof -
     have "card S_E > 0" using \<open>card S_E = k * n + 1\<close> by (by100 linarith)
