@@ -2557,8 +2557,9 @@ proof -
           \<comment> \<open>Step A: coset([p\\<circ>\\<gamma>\\_{hk}]) = coset([p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))])
              via same\\_endpoint\\_same\\_coset (both paths e0 \\<rightarrow> h(k(e0))).\<close>
           have hcoset_eq: "?coset ?chk = ?coset ?c_composed"
-            sorry \<comment> \<open>Apply same\\_endpoint\\_same\\_coset with normality context.
-               Needs 14 assumptions.\<close>
+            sorry \<comment> \<open>Apply same\\_endpoint\\_same\\_coset with normality.
+               All ingredients available locally; needs hH\\_normal\\_in\\_N and hN\\_grp
+               which are proved below. Should be refactored to move them up.\<close>
           \<comment> \<open>Chain: coset(?chk) = coset(?c\\_composed) = coset(?pp\\_class) = coset(mulB(?ch,?ck)).\<close>
           from hcoset_eq have "?coset ?chk = ?coset ?c_composed" .
           also have "?coset ?c_composed = ?coset {g. top1_loop_equiv_on B TB b0 ?pp g}"
