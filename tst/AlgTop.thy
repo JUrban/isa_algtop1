@@ -22152,9 +22152,9 @@ proof -
         (top1_fundamental_group_invg E' TE' e0')
         \<iota>_E S_E"
     by (by100 blast)
-  \<comment> \<open>Step 3b: H is free (same pattern as \\<S>85.1 step 3c).\<close>
-  have hH_free: "\<exists>(\<iota>H :: (real \<Rightarrow> real \<times> real) set set \<Rightarrow> 'g) SH.
-      top1_is_free_group_full_on H mul e invg \<iota>H SH"
+  \<comment> \<open>Step 3b: H is free on S\\_E (the same basis from \\<pi>\\_1(E')).\<close>
+  have hH_free_SE: "\<exists>(\<iota>H :: (real \<Rightarrow> real \<times> real) set set \<Rightarrow> 'g).
+      top1_is_free_group_full_on H mul e invg \<iota>H S_E"
   proof -
     \<comment> \<open>Same proof as \\<S>85.1 step 3c.\<close>
     have hX_strict85: "is_topology_on_strict X TX"
@@ -22293,27 +22293,28 @@ proof -
       thus ?thesis unfolding top1_groups_isomorphic_on_def by (by100 blast)
     qed
     from free_group_iso_transfer[OF hfree_E this assms(4)]
-    have hH_free: "\<exists>(\<iota>H :: (real \<Rightarrow> real \<times> real) set set \<Rightarrow> 'g) SH.
-        top1_is_free_group_full_on H mul e invg \<iota>H SH"
-      by (by100 blast)
-    show ?thesis using hH_free .
+    show ?thesis .
   qed
-  \<comment> \<open>Step 3c: rank = kn+1 (Euler characteristic argument).\<close>
-  from hH_free obtain \<iota>H :: "(real \<Rightarrow> real \<times> real) set set \<Rightarrow> 'g" and SH
-    where hfreeH_SH: "top1_is_free_group_full_on H mul e invg \<iota>H SH"
+  \<comment> \<open>Step 3c: rank = kn+1 (Euler characteristic argument).
+     Following Munkres 85.3: E' is a k-sheeted covering of X.
+     X is a wedge of n+1 circles: card(arcs) - card(vertices) = n.
+     E' has k times as many arcs and vertices: card(AE) - card(VE) = kn.
+     rank(\\<pi>\\_1(E')) = card(AE) - card(VE) + 1 = kn + 1.
+     Since H is free on S\\_E (same basis as \\<pi>\\_1(E')): card S\\_E = kn + 1.\<close>
+  from hH_free_SE obtain \<iota>H :: "(real \<Rightarrow> real \<times> real) set set \<Rightarrow> 'g"
+    where hfreeH_SE: "top1_is_free_group_full_on H mul e invg \<iota>H S_E"
     by (by100 blast)
-  have "card SH = k * n + 1"
-    sorry \<comment> \<open>Euler char: X has 1 vertex + (n+1) edges, chi(X) = -n.
-       E' has k sheets: chi(E') = k*chi(X) = -kn.
-       rank(pi1(E')) = 1-chi(E') = kn+1.
-       H iso pi1(E') \\<Rightarrow> same rank by free\\_group\\_rank\\_invariant\\_finite.\<close>
-  have "finite SH"
+  have "card S_E = k * n + 1"
+    sorry \<comment> \<open>Euler char counting: need graph vertex/edge infrastructure.
+       Expert recommends: define formal vertex set, count arcs/vertices for wedge X
+       and covering E', derive rank = card(arcs) - card(vertices) + 1.\<close>
+  have "finite S_E"
   proof -
-    have "card SH > 0" using \<open>card SH = k * n + 1\<close> by (by100 linarith)
+    have "card S_E > 0" using \<open>card S_E = k * n + 1\<close> by (by100 linarith)
     thus ?thesis using card_gt_0_iff by (by100 blast)
   qed
   show ?thesis
-    using \<open>top1_is_free_group_full_on H mul e invg \<iota>H SH\<close> \<open>card SH = k * n + 1\<close> \<open>finite SH\<close>
+    using hfreeH_SE \<open>card S_E = k * n + 1\<close> \<open>finite S_E\<close>
     by (by100 blast)
 qed
 
