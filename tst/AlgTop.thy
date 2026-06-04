@@ -834,6 +834,14 @@ proof -
   show ?thesis using \<open>mul (invg a) b \<in> H\<close> by simp
 qed
 
+lemma group_mul_closed:
+  "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> b \<in> G \<Longrightarrow> mul a b \<in> G"
+  unfolding top1_is_group_on_def by (by5000 blast)
+
+lemma group_inv_closed:
+  "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> invg a \<in> G"
+  unfolding top1_is_group_on_def by (by5000 blast)
+
 lemma quotient_carrier_memI:
   "g \<in> G \<Longrightarrow> top1_group_coset_on G mul N g \<in> top1_quotient_group_carrier_on G mul N"
   unfolding top1_quotient_group_carrier_on_def by (by100 blast)
@@ -2011,6 +2019,21 @@ proof -
           have "?ch \<in> ?N" using hin_normalizer[OF \<open>h \<in> ?Cov\<close>] .
           have "?ck \<in> ?N" using hin_normalizer[OF \<open>k \<in> ?Cov\<close>] .
           have hN_grp: "top1_is_group_on ?N ?mulB ?eB ?invB" sorry
+          have hH_grp_early: "top1_is_group_on ?H ?mulB ?eB ?invB"
+          proof -
+            have hTE_l0: "is_topology_on E TE"
+              using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+            have hTB_l0: "is_topology_on B TB"
+              using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+            have hb0B_l0: "b0 \<in> B"
+              using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
+            from hom_image_is_subgroup[OF
+                top1_fundamental_group_is_group[OF hTE_l0 assms(6)]
+                top1_fundamental_group_is_group[OF hTB_l0 hb0B_l0]
+                top1_fundamental_group_induced_on_is_hom[OF hTE_l0 hTB_l0 assms(6) hb0B_l0
+                    top1_covering_map_on_continuous[OF assms(3)] assms(7)]]
+            show ?thesis unfolding top1_fundamental_group_image_hom_def .
+          qed
           have hH_normal_in_N: "top1_normal_subgroup_on ?N ?mulB ?eB ?invB ?H"
             unfolding top1_normal_subgroup_on_def
           proof (intro conjI)
@@ -2041,32 +2064,33 @@ proof -
               proof (intro CollectI conjI)
                 show "h \<in> ?pi1B" using \<open>h \<in> ?pi1B\<close> .
                 show "{?mulB (?mulB h n) (?invB h) |n. n \<in> ?H} = ?H"
-                  sorry \<comment> \<open>H is a subgroup: closure under conjugation by h \\<in> H.\<close>
+                proof (rule set_eqI, rule iffI)
+                  fix x assume "x \<in> {?mulB (?mulB h n) (?invB h) |n. n \<in> ?H}"
+                  then obtain n where "n \<in> ?H" "x = ?mulB (?mulB h n) (?invB h)"
+                    by (by5000 auto)
+                  have "?mulB h n \<in> ?H"
+                    using group_mul_closed[OF hH_grp_early \<open>h \<in> ?H\<close> \<open>n \<in> ?H\<close>] .
+                  have "?invB h \<in> ?H"
+                    using group_inv_closed[OF hH_grp_early \<open>h \<in> ?H\<close>] .
+                  have "?mulB (?mulB h n) (?invB h) \<in> ?H"
+                    using group_mul_closed[OF hH_grp_early \<open>?mulB h n \<in> ?H\<close> \<open>?invB h \<in> ?H\<close>] .
+                  thus "x \<in> ?H" using \<open>x = ?mulB (?mulB h n) (?invB h)\<close> by simp
+                next
+                  fix m assume "m \<in> ?H"
+                  let ?n = "?mulB (?invB h) (?mulB m h)"
+                  have "?invB h \<in> ?H" using group_inv_closed[OF hH_grp_early \<open>h \<in> ?H\<close>] .
+                  have "?mulB m h \<in> ?H" using group_mul_closed[OF hH_grp_early \<open>m \<in> ?H\<close> \<open>h \<in> ?H\<close>] .
+                  have "?n \<in> ?H" using group_mul_closed[OF hH_grp_early \<open>?invB h \<in> ?H\<close> \<open>?mulB m h \<in> ?H\<close>] .
+                  have "?mulB (?mulB h ?n) (?invB h) = m" sorry
+                    \<comment> \<open>Group cancellation: h\\<cdot>(inv(h)\\<cdot>(m\\<cdot>h))\\<cdot>inv(h) = m.\<close>
+                  show "m \<in> {?mulB (?mulB h n) (?invB h) |n. n \<in> ?H}"
+                    apply (rule CollectI, rule exI[of _ ?n])
+                    using \<open>?n \<in> ?H\<close> \<open>?mulB (?mulB h ?n) (?invB h) = m\<close>[symmetric]
+                    by (by100 blast)
+                qed
               qed
             qed
-            show "top1_is_group_on ?H ?mulB ?eB ?invB"
-            proof -
-              have hTE_l: "is_topology_on E TE"
-                using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
-              have hTB_l: "is_topology_on B TB"
-                using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
-              have hb0B_l: "b0 \<in> B"
-                using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
-              have hpi1E_grp: "top1_is_group_on (top1_fundamental_group_carrier E TE e0)
-                  (top1_fundamental_group_mul E TE e0) (top1_fundamental_group_id E TE e0)
-                  (top1_fundamental_group_invg E TE e0)"
-                using top1_fundamental_group_is_group[OF hTE_l assms(6)] .
-              have hp_cont_l: "top1_continuous_map_on E TE B TB p"
-                using top1_covering_map_on_continuous[OF assms(3)] .
-              have hind_hom: "top1_group_hom_on (top1_fundamental_group_carrier E TE e0)
-                  (top1_fundamental_group_mul E TE e0) ?pi1B ?mulB
-                  (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
-                using top1_fundamental_group_induced_on_is_hom[OF hTE_l hTB_l assms(6) hb0B_l hp_cont_l assms(7)] .
-              have hpi1_grp_l: "top1_is_group_on ?pi1B ?mulB ?eB ?invB"
-                using top1_fundamental_group_is_group[OF hTB_l hb0B_l] .
-              from hom_image_is_subgroup[OF hpi1E_grp hpi1_grp_l hind_hom]
-              show ?thesis unfolding top1_fundamental_group_image_hom_def .
-            qed
+            show "top1_is_group_on ?H ?mulB ?eB ?invB" using hH_grp_early .
             show "\<forall>g\<in>?N. \<forall>n\<in>?H. ?mulB (?mulB g n) (?invB g) \<in> ?H"
             proof (intro ballI)
               fix g n assume "g \<in> ?N" "n \<in> ?H"
