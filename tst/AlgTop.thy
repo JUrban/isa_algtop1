@@ -922,7 +922,23 @@ proof -
   qed
   \<comment> \<open>Closure: g,k \\<in> N(H) \\<Rightarrow> g\\<cdot>k \\<in> N(H).\<close>
   have hmul_N: "\<forall>g\<in>?N. \<forall>k\<in>?N. mul g k \<in> ?N"
-    sorry \<comment> \<open>(g\\<cdot>k)\\<cdot>H\\<cdot>(g\\<cdot>k)\\<inverse> = g\\<cdot>(k\\<cdot>H\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> = g\\<cdot>H\\<cdot>g\\<inverse> = H.\<close>
+  proof (intro ballI)
+    fix g k assume "g \<in> ?N" "k \<in> ?N"
+    have "g \<in> G" "k \<in> G" using hN_sub \<open>g \<in> ?N\<close> \<open>k \<in> ?N\<close> by (by100 blast)+
+    have "mul g k \<in> G" using group_mul_closed[OF hG \<open>g \<in> G\<close> \<open>k \<in> G\<close>] .
+    \<comment> \<open>Need: {mul(mul(g\\<cdot>k, h), invg(g\\<cdot>k)) | h\\<in>H} = H.\<close>
+    have hg_conj: "{mul (mul g h) (invg g) |h. h \<in> H} = H"
+      using \<open>g \<in> ?N\<close> unfolding top1_normalizer_on_def by (by5000 blast)
+    have hk_conj: "{mul (mul k h) (invg k) |h. h \<in> H} = H"
+      using \<open>k \<in> ?N\<close> unfolding top1_normalizer_on_def by (by5000 blast)
+    \<comment> \<open>Show: {(g\\<cdot>k)\\<cdot>h\\<cdot>(g\\<cdot>k)\\<inverse> | h\\<in>H} = {g\\<cdot>(k\\<cdot>h\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> | h\\<in>H}
+       = {g\\<cdot>h'\\<cdot>g\\<inverse> | h'\\<in>H} (k\\<cdot>H\\<cdot>k\\<inverse> = H) = H (g\\<cdot>H\\<cdot>g\\<inverse> = H).\<close>
+    have "{mul (mul (mul g k) h) (invg (mul g k)) |h. h \<in> H} = H"
+      sorry \<comment> \<open>Composition of conjugations: (g\\<cdot>k)\\<cdot>h\\<cdot>(g\\<cdot>k)\\<inverse> = g\\<cdot>(k\\<cdot>h\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse>.
+         Then {k\\<cdot>h\\<cdot>k\\<inverse> | h\\<in>H} = H and {g\\<cdot>h'\\<cdot>g\\<inverse> | h'\\<in>H} = H.\<close>
+    thus "mul g k \<in> ?N"
+      unfolding top1_normalizer_on_def using \<open>mul g k \<in> G\<close> by (by100 blast)
+  qed
   \<comment> \<open>Inverse: g \\<in> N(H) \\<Rightarrow> g\\<inverse> \\<in> N(H) (from group\\_conj\\_reverse).\<close>
   have hinv_N: "\<forall>g\<in>?N. invg g \<in> ?N"
   proof (intro ballI)
