@@ -1161,7 +1161,27 @@ proof -
     show ?thesis unfolding top1_is_graph_on_def sorry
   qed
   have hT'_conn: "top1_connected_on ?T' ?TT'" sorry
-  have hT'_sc: "top1_simply_connected_on ?T' ?TT'" sorry
+  have hT'_sc: "top1_simply_connected_on ?T' ?TT'"
+  proof -
+    \<comment> \<open>T' is a retract of T: the map r(x) = x for x \\<in> T', r(x) = w for x \\<in> A0\\\\T'
+       is a continuous retraction. By Lemma 55.1, loops in T' that are contractible
+       in T are contractible in T'. Since T is simply connected, all loops in T' are
+       contractible in T, hence in T'.\<close>
+    \<comment> \<open>The other endpoint w of A0 is in T' (from tree\\_leaf\\_other\\_endpoint\\_shared).\<close>
+    have hw_exists: "\<exists>w. w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and> w \<noteq> v \<and> w \<in> ?T'"
+      sorry \<comment> \<open>Other endpoint exists and is shared (proved lemma).\<close>
+    then obtain w where hw: "w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" "w \<noteq> v" "w \<in> ?T'"
+      by (by100 blast)
+    \<comment> \<open>T' is a retract of T.\<close>
+    have "top1_retract_of_on T TT ?T'"
+      sorry \<comment> \<open>Retraction r(x) = x for x \\<in> T', r(x) = w for x \\<in> A0\\\\T'.
+         Continuous in coherent topology (r|A = id for A \\<ne> A0, r|A0 = const w).\<close>
+    \<comment> \<open>By Lemma 55.1: loops in T' contractible in T \\<Rightarrow> contractible in T'.\<close>
+    \<comment> \<open>T simply connected + retract \\<Rightarrow> T' simply connected.\<close>
+    have hT_sc: "top1_simply_connected_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+    show ?thesis sorry \<comment> \<open>From retract + T simply connected.\<close>
+  qed
   show ?thesis unfolding top1_is_tree_on_def using hT'_graph hT'_conn hT'_sc by (by100 blast)
 qed
 
