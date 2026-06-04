@@ -939,8 +939,61 @@ proof -
        But we need g\\<inverse>\\<cdot>H\\<cdot>(g\\<inverse>)\\<inverse> = g\\<inverse>\\<cdot>H\\<cdot>g = H.\<close>
     have "invg g \<in> G" using group_inv_closed[OF hG \<open>g \<in> G\<close>] .
     show "invg g \<in> ?N"
-      sorry \<comment> \<open>From g\\<cdot>H\\<cdot>g\\<inverse> = H derive g\\<inverse>\\<cdot>H\\<cdot>g = H via group\\_conj\\_reverse,
-         then invg(invg g) = g gives the normalizer condition for g\\<inverse>.\<close>
+    proof -
+      have "{mul (mul g h) (invg g) |h. h \<in> H} = H"
+        using \<open>g \<in> ?N\<close> unfolding top1_normalizer_on_def by (by5000 blast)
+      \<comment> \<open>Rewrite: H = (\\<lambda>h'. mul g (mul h' (invg g))) ` H.\<close>
+      have "{mul (mul g h) (invg g) |h. h \<in> H} = (\<lambda>h. mul (mul g h) (invg g)) ` H"
+        by (by100 blast)
+      hence hgHginv_img: "(\<lambda>h. mul (mul g h) (invg g)) ` H = H"
+        using \<open>{mul (mul g h) (invg g) |h. h \<in> H} = H\<close> by simp
+      \<comment> \<open>Rewrite: \\<lambda>h. mul(mul g h)(invg g) = \\<lambda>h. mul g (mul h (invg g)) by associativity.\<close>
+      have hgHginv: "H = (\<lambda>h'. mul g (mul h' (invg g))) ` H"
+      proof -
+        have "\<forall>h\<in>H. mul (mul g h) (invg g) = mul g (mul h (invg g))"
+        proof (intro ballI)
+          fix h assume "h \<in> H"
+          have "h \<in> G" using \<open>h \<in> H\<close> hH_sub by (by100 blast)
+          have "invg g \<in> G" using group_inv_closed[OF hG \<open>g \<in> G\<close>] .
+          from group_assoc[OF hG \<open>g \<in> G\<close> \<open>h \<in> G\<close> \<open>invg g \<in> G\<close>]
+          show "mul (mul g h) (invg g) = mul g (mul h (invg g))" .
+        qed
+        hence "(\<lambda>h. mul (mul g h) (invg g)) ` H = (\<lambda>h'. mul g (mul h' (invg g))) ` H"
+          by (by5000 auto)
+        thus ?thesis using hgHginv_img by simp
+      qed
+      \<comment> \<open>Apply group\\_conj\\_reverse with invg(g) in place of g:
+         needs H = (\\<lambda>h'. mul(invg(invg g))(mul h' (invg g))) ` H.\<close>
+      have "invg (invg g) = g" using group_inv_inv_early[OF hG \<open>g \<in> G\<close>] .
+      hence "H = (\<lambda>h'. mul (invg (invg g)) (mul h' (invg g))) ` H"
+        using hgHginv by simp
+      from group_conj_reverse[OF hG hH_sub \<open>invg g \<in> G\<close> this]
+      have "(\<lambda>h'. mul (mul (invg g) h') (invg (invg g))) ` H = H" .
+      hence "(\<lambda>h'. mul (mul (invg g) h') g) ` H = H"
+        using \<open>invg (invg g) = g\<close> by simp
+      \<comment> \<open>This is {inv(g)\\<cdot>h\\<cdot>g | h\\<in>H} = H. And invg(invg g) = g.\<close>
+      \<comment> \<open>The normalizer needs {mul(mul(invg g, h), invg(invg g)) | h\\<in>H} = H.\<close>
+      have "(\<lambda>h'. mul (mul (invg g) h') g) ` H =
+          (\<lambda>h'. mul (mul (invg g) h') (invg (invg g))) ` H"
+        using \<open>invg (invg g) = g\<close> by simp
+      hence "(\<lambda>h'. mul (mul (invg g) h') (invg (invg g))) ` H = H"
+        using \<open>(\<lambda>h'. mul (mul (invg g) h') g) ` H = H\<close> by simp
+      have "{mul (mul (invg g) h) (invg (invg g)) |h. h \<in> H} = H"
+      proof -
+        have "\<forall>h\<in>H. mul (mul (invg g) h) (invg (invg g)) =
+            mul (mul (invg g) h) g"
+          using \<open>invg (invg g) = g\<close> by simp
+        hence "{mul (mul (invg g) h) (invg (invg g)) |h. h \<in> H} =
+            {mul (mul (invg g) h) g |h. h \<in> H}"
+          apply (subst \<open>invg (invg g) = g\<close>)
+          by simp
+        also have "\<dots> = (\<lambda>h'. mul (mul (invg g) h') g) ` H" by (by100 blast)
+        also have "\<dots> = H" using \<open>(\<lambda>h'. mul (mul (invg g) h') g) ` H = H\<close> .
+        finally show ?thesis .
+      qed
+      thus "invg g \<in> ?N"
+        unfolding top1_normalizer_on_def using \<open>invg g \<in> G\<close> by (by100 blast)
+    qed
   qed
   \<comment> \<open>Assemble is\\_group\\_on from closure + inherited axioms.\<close>
   show ?thesis unfolding top1_is_group_on_def
