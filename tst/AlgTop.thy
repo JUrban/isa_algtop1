@@ -270,7 +270,25 @@ proof -
         \<comment> \<open>Step 2: k = [p\\<circ>\\<alpha>\\<tilde>] for loop \\<alpha>\\<tilde> at e0.\<close>
         have "\<exists>\<alpha>_tilde. top1_is_loop_on E TE e0 \<alpha>_tilde \<and>
             k = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t)) f'}"
-          sorry \<comment> \<open>k \\<in> H = p*(\\<pi>\\_1(E,e0)): definition of image\\_hom.\<close>
+        proof -
+          \<comment> \<open>k \\<in> H = image\\_hom. So k = induced(c) for some c \\<in> \\<pi>\\_1(E,e0).\<close>
+          from \<open>k \<in> ?H\<close>
+          obtain c where "c \<in> top1_fundamental_group_carrier E TE e0"
+              "k = top1_fundamental_group_induced_on E TE e0 B TB b0 p c"
+            unfolding top1_fundamental_group_image_hom_def by (by100 blast)
+          \<comment> \<open>c is a class of loops at e0. Get a representative.\<close>
+          from \<open>c \<in> top1_fundamental_group_carrier E TE e0\<close>
+          obtain \<alpha>_tilde where h\<alpha>t: "top1_is_loop_on E TE e0 \<alpha>_tilde"
+              "c = {f'. top1_loop_equiv_on E TE e0 \<alpha>_tilde f'}"
+            unfolding top1_fundamental_group_carrier_def by (by100 blast)
+          \<comment> \<open>induced(c) = {f'. loop\\_equiv(B, b0, p\\<circ>\\<alpha>\\<tilde>, f')}.\<close>
+          have "k = {f'. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>_tilde) f'}"
+            using \<open>k = top1_fundamental_group_induced_on E TE e0 B TB b0 p c\<close>
+            unfolding top1_fundamental_group_induced_on_def h\<alpha>t(2) sorry
+          hence "k = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t)) f'}"
+            unfolding comp_def by simp
+          thus ?thesis using h\<alpha>t(1) by (by100 blast)
+        qed
         then obtain \<alpha>_tilde where h\<alpha>: "top1_is_loop_on E TE e0 \<alpha>_tilde"
             "k = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t)) f'}"
           by (by100 blast)
