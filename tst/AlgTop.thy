@@ -176,7 +176,54 @@ lemma tree_leaf_other_endpoint_shared:
       and "card \<A> \<ge> 2" and "finite \<A>"
       and "x \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" and "x \<noteq> v"
   shows "\<exists>B\<in>\<A> - {A0}. x \<in> B"
-  sorry
+proof (rule ccontr)
+  assume hcontr: "\<not> (\<exists>B\<in>\<A> - {A0}. x \<in> B)"
+  hence hx_only_A0: "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> x \<notin> B" by (by100 blast)
+  \<comment> \<open>Both v and x are only in A0. So A0 is disjoint from \\<Union>(\\<A>-{A0}).\<close>
+  have hA0_disj: "A0 \<inter> \<Union>(\<A> - {A0}) = {}"
+  proof (rule ccontr)
+    assume "A0 \<inter> \<Union>(\<A> - {A0}) \<noteq> {}"
+    then obtain y where "y \<in> A0" "y \<in> \<Union>(\<A> - {A0})" by (by100 blast)
+    then obtain B where "B \<in> \<A> - {A0}" "y \<in> B" by (by100 blast)
+    hence "B \<in> \<A>" "B \<noteq> A0" by (by100 blast)+
+    from assms(4)[rule_format, OF assms(5) \<open>B \<in> \<A>\<close>]
+    have "A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+      using \<open>B \<noteq> A0\<close> by (by100 blast)
+    hence "y \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+      using \<open>y \<in> A0\<close> \<open>y \<in> B\<close> by (by100 blast)
+    \<comment> \<open>y is an endpoint of A0. v and x are endpoints.
+       But v \\<notin> B (leaf) and x \\<notin> B (by contradiction hypothesis). So y \\<notin> B.\<close>
+    have "y \<notin> B"
+    proof -
+      have "y = v \<or> y = x"
+        sorry \<comment> \<open>Endpoints of A0 = {v, x} (arc has exactly 2 endpoints).\<close>
+      thus ?thesis using assms(7)[rule_format, OF \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>]
+          hx_only_A0[rule_format, OF \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>] by (by100 blast)
+    qed
+    thus False using \<open>y \<in> B\<close> by contradiction
+  qed
+  \<comment> \<open>T = A0 \\<union> \\<Union>(\\<A>-{A0}) is a disjoint union of two nonempty sets.\<close>
+  have hA0_ne: "A0 \<noteq> {}"
+  proof -
+    have "x \<in> A0" using assms(10) unfolding top1_arc_endpoints_on_def by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
+  have hrest_ne: "\<Union>(\<A> - {A0}) \<noteq> {}"
+    sorry \<comment> \<open>\\<A> has \\<ge> 2 arcs, each nonempty (arc \\<cong> [0,1]). So \\<Union>(\\<A>-{A0}) \\<ne> {}.\<close>
+  \<comment> \<open>T connected but A0 and \\<Union>(\\<A>-{A0}) are both closed (coherent topology) and disjoint \\<Rightarrow> contradiction.\<close>
+  have hT_conn: "top1_connected_on T TT"
+    using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+  have "A0 \<subseteq> T" using assms(2,5) by (by100 blast)
+  have "\<Union>(\<A> - {A0}) \<subseteq> T" using assms(2,3) by (by100 blast)
+  have "T = A0 \<union> \<Union>(\<A> - {A0})" using assms(3,5) by (by100 blast)
+  \<comment> \<open>Both sets are closed in T (by graph coherent closedness).\<close>
+  have "closedin_on T TT A0" sorry
+  have "closedin_on T TT (\<Union>(\<A> - {A0}))" sorry
+  \<comment> \<open>Disjoint nonempty closed sets covering T contradicts connectedness.\<close>
+  thus False using hT_conn hA0_ne hrest_ne hA0_disj \<open>T = A0 \<union> _\<close>
+      \<open>closedin_on T TT A0\<close> \<open>closedin_on T TT (\<Union>(\<A> - {A0}))\<close>
+    sorry
+qed
 
 lemma tree_euler_nat:
   fixes n :: nat
