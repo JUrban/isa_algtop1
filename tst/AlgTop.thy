@@ -2,6 +2,20 @@ theory AlgTop
   imports "AlgTopCached10.AlgTopCached10"
 begin
 
+\<comment> \<open>Reusable quotient lemma: a surjection that identifies coset-equivalent
+   elements induces a bijection from cosets to the image.
+   Expert audit2: make this a standalone lemma, not inline in Schreier.\<close>
+lemma surjection_coset_bij:
+  assumes grp: "top1_is_group_on G mul e invg"
+      and Hsub: "H \<subseteq> G"
+      and Hgrp: "top1_is_group_on H mul e invg"
+      and maps: "\<forall>g\<in>G. \<phi> g \<in> Y"
+      and surj: "\<phi> ` G = Y"
+      and fiber_eq: "\<forall>g\<in>G. \<forall>h\<in>G.
+          (\<phi> g = \<phi> h) = (top1_group_coset_on G mul H g = top1_group_coset_on G mul H h)"
+  shows "\<exists>f. bij_betw f (top1_left_cosets_on G mul H) Y"
+  sorry
+
 lemma tree_euler_nat:
   fixes n :: nat
   shows "\<forall>(T :: 'a set) TT \<A>. card \<A> = n \<longrightarrow>
@@ -1095,11 +1109,54 @@ proof -
       obtain \<phi> where h\<phi>_maps: "\<forall>c\<in>?piX. \<phi> c \<in> {e \<in> E'. p' e = x0}"
           and h\<phi>_surj: "\<phi> ` ?piX = {e \<in> E'. p' e = x0}"
         by (elim exE conjE)
-      \<comment> \<open>The induced map on cosets bijects with the fiber. Card = k.\<close>
-      have "bij_betw (\<lambda>C. \<phi> (SOME c. c \<in> C))
-          (top1_left_cosets_on ?piX ?mulX ?pH)
-          {e \<in> E'. p' e = x0}"
-        sorry \<comment> \<open>\\<phi>(c1) = \\<phi>(c2) iff c1\\<cdot>c2\\<inverse> \\<in> p*(\\<pi>\\_1(E')).\<close>
+      \<comment> \<open>The induced map on cosets bijects with the fiber.
+         Key fact (Munkres 54.6): \\<phi>(c1) = \\<phi>(c2) iff c1 and c2 are in the same coset of pH.\<close>
+      have h\<phi>_fiber_eq: "\<forall>g\<in>?piX. \<forall>h\<in>?piX.
+          (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h)"
+        sorry \<comment> \<open>Munkres 54.6: \\<phi>(g)=\\<phi>(h) iff g h\\<inverse> \\<in> p*(\\<pi>\\_1(E')).
+           Proof: \\<phi>(g) = endpoint of lift of g from e0.
+           \\<phi>(g)=\\<phi>(h) iff concatenation of lifts is loop at e0 iff g*h\\<inverse> in p*(pi1(E')).\<close>
+      have hpiX_grp: "top1_is_group_on ?piX ?mulX
+          (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
+      proof -
+        from top1_fundamental_group_is_group[OF hX_top hx0] show ?thesis .
+      qed
+      have hpH_sub: "?pH \<subseteq> ?piX"
+      proof -
+        have hE_top: "is_topology_on E' TE'"
+          using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have hp_hom: "top1_group_hom_on
+            (top1_fundamental_group_carrier E' TE' e0') (top1_fundamental_group_mul E' TE' e0')
+            ?piX ?mulX (top1_fundamental_group_induced_on E' TE' e0' X TX x0 p')"
+        proof -
+          have hp_cont: "top1_continuous_map_on E' TE' X TX p'"
+            using hE'_cov unfolding top1_covering_map_on_def top1_evenly_covered_on_def by (by5000 blast)
+          from top1_fundamental_group_induced_on_is_hom[OF hE_top hX_top he0' hx0 hp_cont \<open>p' e0' = x0\<close>]
+          show ?thesis .
+        qed
+        thus ?thesis unfolding top1_group_hom_on_def by (by100 blast)
+      qed
+      have hpH_grp: "top1_is_group_on ?pH ?mulX
+          (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
+      proof -
+        have hE_top: "is_topology_on E' TE'"
+          using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
+        have hE'_grp: "top1_is_group_on (top1_fundamental_group_carrier E' TE' e0')
+            (top1_fundamental_group_mul E' TE' e0')
+            (top1_fundamental_group_id E' TE' e0') (top1_fundamental_group_invg E' TE' e0')"
+          by (rule top1_fundamental_group_is_group[OF hE_top he0'])
+        have hp_cont: "top1_continuous_map_on E' TE' X TX p'"
+          using hE'_cov unfolding top1_covering_map_on_def top1_evenly_covered_on_def by (by5000 blast)
+        have hp_hom: "top1_group_hom_on
+            (top1_fundamental_group_carrier E' TE' e0') (top1_fundamental_group_mul E' TE' e0')
+            ?piX ?mulX (top1_fundamental_group_induced_on E' TE' e0' X TX x0 p')"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hE_top hX_top he0' hx0 hp_cont \<open>p' e0' = x0\<close>])
+        from hom_image_is_subgroup[OF hE'_grp hpiX_grp hp_hom]
+        show ?thesis .
+      qed
+      from surjection_coset_bij[OF hpiX_grp hpH_sub hpH_grp h\<phi>_maps h\<phi>_surj h\<phi>_fiber_eq]
+      obtain f where "bij_betw f (top1_left_cosets_on ?piX ?mulX ?pH) {e \<in> E'. p' e = x0}"
+        by (by100 blast)
       from bij_betw_same_card[OF this]
       have "card (top1_left_cosets_on ?piX ?mulX ?pH) = card {e \<in> E'. p' e = x0}" .
       from hindex[unfolded top1_subgroup_has_index_on_def]
