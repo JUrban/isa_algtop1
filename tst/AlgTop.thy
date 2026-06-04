@@ -142,7 +142,30 @@ proof (induction n rule: less_induct)
         ultimately show ?thesis by (by100 blast)
       qed
       have hfin_V': "finite (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>')"
-        sorry
+      proof -
+        have "\<forall>A\<in>?\<A>'. finite (top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A))"
+        proof (intro ballI)
+          fix A assume "A \<in> ?\<A>'"
+          hence "A \<in> \<A>" by (by100 blast)
+          have hA_sub: "A \<subseteq> T" using harcs \<open>A \<in> \<A>\<close> by (by100 blast)
+          have hA_arc: "top1_is_arc_on A (subspace_topology T TT A)" using harcs \<open>A \<in> \<A>\<close> by (by100 blast)
+          have hstrict: "is_topology_on_strict T TT"
+            using htree unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+          have hhaus: "is_hausdorff_on T TT"
+            using htree unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+          obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
+            using hA_arc unfolding top1_is_arc_on_def by (by100 blast)
+          have "top1_arc_endpoints_on A (subspace_topology T TT A) = {h 0, h 1}"
+            by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA_sub hA_arc hh])
+          hence "finite (top1_arc_endpoints_on A (subspace_topology T TT A))" by (by100 simp)
+          have "A \<subseteq> ?T'" using \<open>A \<in> ?\<A>'\<close> by (by100 blast)
+          have "subspace_topology ?T' (subspace_topology T TT ?T') A = subspace_topology T TT A"
+            using subspace_topology_trans[of A ?T' T TT] \<open>A \<subseteq> ?T'\<close> by (by100 simp)
+          thus "finite (top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A))"
+            using \<open>finite (top1_arc_endpoints_on A (subspace_topology T TT A))\<close> by simp
+        qed
+        thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>'_fin by (by100 blast)
+      qed
       have "card (top1_graph_vertex_set T TT \<A>) =
           card (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>') + 1"
       proof -
