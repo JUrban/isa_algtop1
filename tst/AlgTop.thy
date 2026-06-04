@@ -2892,12 +2892,51 @@ proof -
               using \<open>top1_is_loop_on E TE e0 \<delta>\<close> unfolding top1_is_loop_on_def .
             have "\<forall>s\<in>I_set. p (\<delta> s) = (\<lambda>t. p (\<delta> t)) s" by simp
             have "\<forall>s\<in>I_set. p (?\<gamma> s) = (\<lambda>t. p (?\<gamma> t)) s" by simp
-            have "top1_is_loop_on B TB b0 (\<lambda>t. p (\<delta> t))"
-              sorry \<comment> \<open>p\\<circ>\\<delta> is a loop (proved pattern).\<close>
-            have "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<gamma> t))"
-              sorry \<comment> \<open>p\\<circ>\\<gamma> is a loop (proved pattern).\<close>
+            have hloop_delta: "top1_is_loop_on B TB b0 (\<lambda>t. p (\<delta> t))"
+            proof -
+              have "(\<lambda>t. p (\<delta> t)) = p \<circ> \<delta>" by (rule ext) simp
+              have h\<delta>_cont: "top1_continuous_map_on I_set I_top E TE \<delta>"
+                using \<open>top1_is_loop_on E TE e0 \<delta>\<close>
+                unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+              have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<delta>)"
+                using top1_continuous_map_on_comp[OF h\<delta>_cont hp_cont] .
+              moreover have "(p \<circ> \<delta>) 0 = b0"
+                using \<open>top1_is_loop_on E TE e0 \<delta>\<close> hpe0
+                unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 simp)
+              moreover have "(p \<circ> \<delta>) 1 = b0"
+                using \<open>top1_is_loop_on E TE e0 \<delta>\<close> hpe0
+                unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 simp)
+              ultimately show ?thesis using \<open>(\<lambda>t. p (\<delta> t)) = p \<circ> \<delta>\<close>
+                unfolding top1_is_loop_on_def top1_is_path_on_def by simp
+            qed
+            have hloop_gamma: "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<gamma> t))"
+            proof -
+              have "(\<lambda>t. p (?\<gamma> t)) = p \<circ> ?\<gamma>" by (rule ext) simp
+              have h\<gamma>_cont: "top1_continuous_map_on I_set I_top E TE ?\<gamma>"
+                using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+              have "top1_continuous_map_on I_set I_top B TB (p \<circ> ?\<gamma>)"
+                using top1_continuous_map_on_comp[OF h\<gamma>_cont hp_cont] .
+              moreover have "(p \<circ> ?\<gamma>) 0 = b0"
+                using h\<gamma> hpe0 unfolding top1_is_path_on_def by (by100 simp)
+              moreover have "(p \<circ> ?\<gamma>) 1 = b0"
+                using h\<gamma> \<open>p (h e0) = b0\<close> unfolding top1_is_path_on_def by (by100 simp)
+              ultimately show ?thesis using \<open>(\<lambda>t. p (?\<gamma> t)) = p \<circ> ?\<gamma>\<close>
+                unfolding top1_is_loop_on_def top1_is_path_on_def by simp
+            qed
             have "top1_path_homotopic_on B TB b0 b0 (\<lambda>t. p (\<delta> t)) (\<lambda>t. p (?\<gamma> t))"
-              sorry \<comment> \<open>From hclass\\_eq\\_delta + loop\\_equiv definition.\<close>
+            proof -
+              have "top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<delta> t)) (\<lambda>t. p (\<delta> t))"
+                using top1_loop_equiv_on_refl[OF hloop_delta] .
+              hence "(\<lambda>t. p (\<delta> t)) \<in> {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<delta> t)) g}"
+                by (by100 blast)
+              hence "(\<lambda>t. p (\<delta> t)) \<in> {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<gamma> t)) g}"
+                using hclass_eq_delta by simp
+              hence "top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<gamma> t)) (\<lambda>t. p (\<delta> t))"
+                by (by100 blast)
+              from top1_loop_equiv_on_sym[OF this]
+              have "top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<delta> t)) (\<lambda>t. p (?\<gamma> t))" .
+              thus ?thesis unfolding top1_loop_equiv_on_def by (by100 blast)
+            qed
             from Theorem_54_3[OF assms(3) hTE_n hTB_n assms(6) assms(7)
                 _ _ this
                 \<open>top1_is_path_on E TE e0 e0 \<delta>\<close>
