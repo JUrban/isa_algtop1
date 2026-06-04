@@ -2937,13 +2937,18 @@ proof -
               have "top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<delta> t)) (\<lambda>t. p (?\<gamma> t))" .
               thus ?thesis unfolding top1_loop_equiv_on_def by (by100 blast)
             qed
+            have hpath_pd: "top1_is_path_on B TB b0 b0 (\<lambda>t. p (\<delta> t))"
+              using hloop_delta unfolding top1_is_loop_on_def .
+            have hpath_pg: "top1_is_path_on B TB b0 b0 (\<lambda>t. p (?\<gamma> t))"
+              using hloop_gamma unfolding top1_is_loop_on_def .
             from Theorem_54_3[OF assms(3) hTE_n hTB_n assms(6) assms(7)
-                _ _ this
+                hpath_pd hpath_pg
+                \<open>top1_path_homotopic_on B TB b0 b0 (\<lambda>t. p (\<delta> t)) (\<lambda>t. p (?\<gamma> t))\<close>
                 \<open>top1_is_path_on E TE e0 e0 \<delta>\<close>
                 \<open>\<forall>s\<in>I_set. p (\<delta> s) = (\<lambda>t. p (\<delta> t)) s\<close>
                 h\<gamma>
                 \<open>\<forall>s\<in>I_set. p (?\<gamma> s) = (\<lambda>t. p (?\<gamma> t)) s\<close>]
-            have "e0 = h e0" sorry \<comment> \<open>Theorem 54.3 conclusion: e1 = e1'.\<close>
+            have "e0 = h e0" by (by100 blast)
             thus "h e0 = e0" by simp
           qed
           \<comment> \<open>Now: f(h1)=f(h2) \\<Rightarrow> coset([p\\<circ>\\<gamma>\\_1])=coset([p\\<circ>\\<gamma>\\_2])
