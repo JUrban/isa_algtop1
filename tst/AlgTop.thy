@@ -2,6 +2,14 @@ theory AlgTop
   imports "AlgTopCached10.AlgTopCached10"
 begin
 
+\<comment> \<open>Right cosets: Hg = {mul k g | k in H}.\<close>
+definition top1_right_coset_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> 'a set \<Rightarrow> 'a \<Rightarrow> 'a set"
+  where "top1_right_coset_on G mul H g = {mul k g | k. k \<in> H}"
+
+definition top1_right_cosets_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> 'a set \<Rightarrow> 'a set set"
+  where "top1_right_cosets_on G mul H = {top1_right_coset_on G mul H g | g. g \<in> G}"
+
+
 \<comment> \<open>Munkres Theorem 54.6: Strengthened lifting correspondence.
    (a) p* is a monomorphism. (Already: covering\\_induced\\_injective in ac4.)
    (b) The lifting correspondence induces a bijection from cosets to the fiber.
@@ -212,7 +220,33 @@ proof -
          So \\<phi>(f) = \\<phi>(g). Done.\<close>
       assume hcoset_eq: "top1_right_coset_on ?piB ?mulB ?H g = top1_right_coset_on ?piB ?mulB ?H h"
       show "\<phi> g = \<phi> h"
-        sorry
+      proof -
+        \<comment> \<open>Book: Hg = Hh means h \\<in> Hg, i.e., h = k*g for some k \\<in> H.
+           k \\<in> H = p*(\\<pi>\\_1(E,e0)) means k = [p\\<circ>\\<alpha>\\<tilde>] for loop \\<alpha>\\<tilde> at e0.
+           h = k*g = [p\\<circ>\\<alpha>\\<tilde>]*g = [p\\<circ>\\<alpha>\\<tilde> * fg].
+           Lift of p\\<circ>\\<alpha>\\<tilde> * fg from e0 is \\<alpha>\\<tilde> * ftg, ending at \\<phi>(g).
+           Since h = [p\\<circ>\\<alpha>\\<tilde> * fg], lifts of fh and p\\<circ>\\<alpha>\\<tilde>*fg end at same point.
+           So \\<phi>(h) = \\<phi>(g).\<close>
+        \<comment> \<open>Step 1: h \\<in> Hg, i.e., \\<exists>k\\<in>H. h = k*g.\<close>
+        \<comment> \<open>Step 1: Hg = Hh \\<Rightarrow> h \\<in> Hg.\<close>
+        have hh_in_Hh: "h \<in> top1_right_coset_on ?piB ?mulB ?H h"
+          sorry \<comment> \<open>h = mul e h, e \\<in> H (identity in subgroup).\<close>
+        hence hh_in_Hg: "h \<in> top1_right_coset_on ?piB ?mulB ?H g"
+          using hcoset_eq by simp
+        then obtain k where "k \<in> ?H" "h = ?mulB k g"
+          unfolding top1_right_coset_on_def by (by100 blast)
+        \<comment> \<open>Step 2: k = [p\\<circ>\\<alpha>\\<tilde>] for loop \\<alpha>\\<tilde> at e0.\<close>
+        have "\<exists>\<alpha>_tilde. top1_is_loop_on E TE e0 \<alpha>_tilde \<and>
+            k = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t)) f'}"
+          sorry \<comment> \<open>k \\<in> H = p*(\\<pi>\\_1(E,e0)): definition of image\\_hom.\<close>
+        then obtain \<alpha>_tilde where h\<alpha>: "top1_is_loop_on E TE e0 \<alpha>_tilde"
+            "k = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t)) f'}"
+          by (by100 blast)
+        \<comment> \<open>Step 3: \\<alpha>\\<tilde> * ftg lifts p\\<circ>\\<alpha>\\<tilde> * fg, ending at \\<phi>(g).
+           Step 4: By Theorem 54.3, fth and \\<alpha>\\<tilde>*ftg end at same point.
+           Hence \\<phi>(h) = \\<phi>(g).\<close>
+        show ?thesis sorry
+      qed
     qed
   qed
   \<comment> \<open>Assemble the 4-tuple existential.\<close>
@@ -225,13 +259,6 @@ proof -
     using h\<phi>_coset apply assumption
     done
 qed
-
-\<comment> \<open>Right cosets: Hg = {mul k g | k in H}.\<close>
-definition top1_right_coset_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> 'a set \<Rightarrow> 'a \<Rightarrow> 'a set"
-  where "top1_right_coset_on G mul H g = {mul k g | k. k \<in> H}"
-
-definition top1_right_cosets_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<Rightarrow> 'a) \<Rightarrow> 'a set \<Rightarrow> 'a set set"
-  where "top1_right_cosets_on G mul H = {top1_right_coset_on G mul H g | g. g \<in> G}"
 
 \<comment> \<open>card(left cosets) = card(right cosets). Standard: map gH -> Hg\\<inverse> is bijection.\<close>
 lemma left_right_coset_card_eq:
