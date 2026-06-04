@@ -23348,7 +23348,32 @@ proof -
       using hS_X_card by linarith
     \<comment> \<open>Step F: Covering multiplicity.\<close>
     have hfiber_card: "card {e \<in> E'. p' e = x0} = k"
-      sorry
+    proof -
+      \<comment> \<open>Book: 'the lifting correspondence Phi: pi1(X,x0)/H -> p-inv(x0) is a bijection.
+         Therefore, E is a k-fold covering of X.'
+         The lifting correspondence (Theorem 54.4) surjects pi1(X) onto the fiber.
+         Its kernel is p*(pi1(E)), so it induces a bijection on cosets.\<close>
+      have hX_top: "is_topology_on X TX"
+        using hX_graph unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+      have hE'_pc: "top1_path_connected_on E' TE'"
+        using connected_locally_path_connected_imp_path_connected[OF
+            hE'_strict[unfolded is_topology_on_strict_def, THEN conjunct1]
+            hE'_conn graph_locally_path_connected[OF hE'_graph]] he0' by (by100 blast)
+      from Theorem_54_4_lifting_correspondence[OF he0' \<open>p' e0' = x0\<close> hE'_cov hE'_pc hX_top]
+      obtain \<phi> where h\<phi>_maps: "\<forall>c\<in>?piX. \<phi> c \<in> {e \<in> E'. p' e = x0}"
+          and h\<phi>_surj: "\<phi> ` ?piX = {e \<in> E'. p' e = x0}"
+        by (elim exE conjE)
+      \<comment> \<open>The induced map on cosets bijects with the fiber. Card = k.\<close>
+      have "bij_betw (\<lambda>C. \<phi> (SOME c. c \<in> C))
+          (top1_left_cosets_on ?piX ?mulX ?pH)
+          {e \<in> E'. p' e = x0}"
+        sorry \<comment> \<open>\\<phi>(c1) = \\<phi>(c2) iff c1\\<cdot>c2\\<inverse> \\<in> p*(\\<pi>\\_1(E')).\<close>
+      from bij_betw_same_card[OF this]
+      have "card (top1_left_cosets_on ?piX ?mulX ?pH) = card {e \<in> E'. p' e = x0}" .
+      from hindex[unfolded top1_subgroup_has_index_on_def]
+      have "card (top1_left_cosets_on ?piX ?mulX ?pH) = k" by (by100 blast)
+      thus ?thesis using \<open>card _ = card _\<close> by simp
+    qed
     have harc_mult: "card \<A>_E = k * card \<A>_X"
       by (rule covering_graph_arc_multiplicity[OF hE'_cov hX_graph hE'_strict
           h\<A>_X h\<A>_X_cover h\<A>_E h\<A>_E_cover h\<A>_X_fin hfiber_card hx0])
