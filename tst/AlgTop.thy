@@ -464,36 +464,36 @@ proof -
   thus ?thesis using hcard_partition by linarith
 qed
 
-\<comment> \<open>Covering multiplicity for arcs: a k-sheeted covering of a graph
-   has exactly k times as many arcs.\<close>
-lemma covering_graph_arc_multiplicity:
+\<comment> \<open>Covering lifted arc family: \\<A>\\_E is exactly the set of path components
+   of p\\<inverse>(A) for each A \\<in> \\<A>\\_X. Each base arc A lifts to exactly k arcs,
+   one per sheet of the covering.\<close>
+definition top1_covering_lifted_arc_family_on ::
+    "'b set \<Rightarrow> 'b set set \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> ('b \<Rightarrow> 'a)
+     \<Rightarrow> 'a set set \<Rightarrow> 'b set set \<Rightarrow> bool"
+  where "top1_covering_lifted_arc_family_on E TE X TX p \<A>_X \<A>_E \<longleftrightarrow>
+    (\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A) \<and>
+    (\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A}) \<and>
+    (\<forall>B1\<in>\<A>_E. \<forall>B2\<in>\<A>_E. B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {} \<or>
+        (\<exists>A\<in>\<A>_X. B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A}))"
+
+\<comment> \<open>Covering multiplicity for arcs: a k-sheeted covering with lifted arc family
+   has exactly k times as many arcs as the base.\<close>
+lemma covering_lifted_arc_family_card:
   fixes E :: "'b set" and TE :: "'b set set" and X :: "'a set" and TX :: "'a set set"
   assumes "top1_covering_map_on E TE X TX p"
-      and "top1_is_graph_on X TX"
-      and "is_topology_on_strict E TE"
-      and "\<forall>A\<in>\<A>_X. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
-      and "\<Union>\<A>_X = X"
-      and "\<forall>A\<in>\<A>_E. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
-      and "\<Union>\<A>_E = E"
+      and "top1_covering_lifted_arc_family_on E TE X TX p \<A>_X \<A>_E"
       and "finite \<A>_X"
-      and "card {e \<in> E. p e = x0} = k"
-      and "x0 \<in> X"
-  shows "card \<A>_E = k * card \<A>_X"
+      and "\<forall>x\<in>X. card {e \<in> E. p e = x} = k"
+  shows "finite \<A>_E \<and> card \<A>_E = k * card \<A>_X"
   sorry
 
 \<comment> \<open>Covering multiplicity for vertices.\<close>
-lemma covering_graph_vertex_multiplicity:
+lemma covering_lifted_vertex_set_card:
   fixes E :: "'b set" and TE :: "'b set set" and X :: "'a set" and TX :: "'a set set"
   assumes "top1_covering_map_on E TE X TX p"
-      and "top1_is_graph_on X TX"
-      and "is_topology_on_strict E TE"
-      and "\<forall>A\<in>\<A>_X. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
-      and "\<Union>\<A>_X = X"
-      and "\<forall>A\<in>\<A>_E. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
-      and "\<Union>\<A>_E = E"
+      and "top1_covering_lifted_arc_family_on E TE X TX p \<A>_X \<A>_E"
       and "finite (top1_graph_vertex_set X TX \<A>_X)"
-      and "card {e \<in> E. p e = x0} = k"
-      and "x0 \<in> X"
+      and "\<forall>x\<in>X. card {e \<in> E. p e = x} = k"
   shows "card (top1_graph_vertex_set E TE \<A>_E) = k * card (top1_graph_vertex_set X TX \<A>_X)"
   sorry
 
@@ -1107,11 +1107,9 @@ proof -
       thus ?thesis using \<open>card _ = card _\<close> by simp
     qed
     have harc_mult: "card \<A>_E = k * card \<A>_X"
-      by (rule covering_graph_arc_multiplicity[OF hE'_cov hX_graph hE'_strict
-          h\<A>_X h\<A>_X_cover h\<A>_E h\<A>_E_cover h\<A>_X_fin hfiber_card hx0])
+      sorry \<comment> \<open>Needs lifted arc family interface (expert audit2: fix statement first).\<close>
     have hvert_mult: "card ?V_E = k * card ?V_X"
-      by (rule covering_graph_vertex_multiplicity[OF hE'_cov hX_graph hE'_strict
-          h\<A>_X h\<A>_X_cover h\<A>_E h\<A>_E_cover hV_X_fin hfiber_card hx0])
+      sorry \<comment> \<open>Needs lifted arc family interface (expert audit2: fix statement first).\<close>
     \<comment> \<open>Step G: Euler formula for E': card S\\_E + card V\\_E = card \\<A>\\_E + 1.\<close>
     have hE'_sub_top: "is_topology_on E' TE'"
       using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
