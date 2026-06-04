@@ -205,6 +205,11 @@ proof -
       qed
       \<comment> \<open>This class = g * h\\<inverse> in \\<pi>\\_1(B).\<close>
       \<comment> \<open>g * h\\<inverse> \\<in> ?H \\<Rightarrow> gH = hH.\<close>
+      \<comment> \<open>The class of p\\<circ>(ftg*rev(fth)) is in H.
+         This class represents g*h\\<inverse> in \\<pi>\\_1(B) (from the loop classes fg, fh).
+         For RIGHT cosets: Hg = Hh \\<leftarrow> h*g\\<inverse> \\<in> H.
+         We have g*h\\<inverse> \\<in> H \\<Rightarrow> (g*h\\<inverse>)\\<inverse> = h*g\\<inverse> \\<in> H (subgroup closed under inv).
+         Then Hg = Hh.\<close>
       show "top1_right_coset_on ?piB ?mulB ?H g = top1_right_coset_on ?piB ?mulB ?H h"
         sorry
     next
@@ -283,8 +288,52 @@ proof -
             unfolding top1_fundamental_group_carrier_def by (by100 blast)
           \<comment> \<open>induced(c) = {f'. loop\\_equiv(B, b0, p\\<circ>\\<alpha>\\<tilde>, f')}.\<close>
           have "k = {f'. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>_tilde) f'}"
-            using \<open>k = top1_fundamental_group_induced_on E TE e0 B TB b0 p c\<close>
-            unfolding top1_fundamental_group_induced_on_def h\<alpha>t(2) sorry
+          proof -
+            have "k = {g. \<exists>f\<in>c. top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+              using \<open>k = top1_fundamental_group_induced_on E TE e0 B TB b0 p c\<close>
+              unfolding top1_fundamental_group_induced_on_def by simp
+            also have "... = {g. \<exists>f. top1_loop_equiv_on E TE e0 \<alpha>_tilde f
+                \<and> top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+              unfolding h\<alpha>t(2) by (by100 blast)
+            also have "... = {g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>_tilde) g}"
+            proof (rule set_eqI, rule iffI)
+              fix g assume "g \<in> {g. \<exists>f. top1_loop_equiv_on E TE e0 \<alpha>_tilde f
+                  \<and> top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+              then obtain f where hf: "top1_loop_equiv_on E TE e0 \<alpha>_tilde f"
+                  "top1_loop_equiv_on B TB b0 (p \<circ> f) g" by (by100 blast)
+              \<comment> \<open>f homotopic to \\<alpha>\\<tilde> \\<Rightarrow> p\\<circ>f homotopic to p\\<circ>\\<alpha>\\<tilde> \\<Rightarrow> g homotopic to p\\<circ>\\<alpha>\\<tilde>.\<close>
+              have "top1_path_homotopic_on E TE e0 e0 \<alpha>_tilde f"
+                using hf(1) unfolding top1_loop_equiv_on_def by (by100 blast)
+              have hp_cont: "top1_continuous_map_on E TE B TB p"
+                using assms(1) unfolding top1_covering_map_on_def top1_evenly_covered_on_def
+                by (by5000 blast)
+              from continuous_preserves_path_homotopic[OF hE_top assms(3) hp_cont
+                  \<open>top1_path_homotopic_on E TE e0 e0 \<alpha>_tilde f\<close>]
+              have "top1_path_homotopic_on B TB b0 b0 (p \<circ> \<alpha>_tilde) (p \<circ> f)"
+                using assms(5) by simp
+              hence "top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>_tilde) (p \<circ> f)"
+                unfolding top1_loop_equiv_on_def top1_is_loop_on_def top1_path_homotopic_on_def
+                by (by100 blast)
+              from top1_loop_equiv_on_trans[OF assms(3) this hf(2)]
+              show "g \<in> {g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>_tilde) g}" by (by100 blast)
+            next
+              fix g assume "g \<in> {g. top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>_tilde) g}"
+              hence "top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>_tilde) g" by (by100 blast)
+              moreover have "\<alpha>_tilde \<in> {f'. top1_loop_equiv_on E TE e0 \<alpha>_tilde f'}"
+              proof -
+                have h\<alpha>_path: "top1_is_path_on E TE e0 e0 \<alpha>_tilde"
+                  using h\<alpha>t(1) unfolding top1_is_loop_on_def .
+                from Lemma_51_1_path_homotopic_refl[OF h\<alpha>_path]
+                show ?thesis unfolding top1_loop_equiv_on_def using h\<alpha>t(1) by (by100 blast)
+              qed
+              moreover have "top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>_tilde) g"
+                using \<open>top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>_tilde) g\<close> .
+              ultimately show "g \<in> {g. \<exists>f. top1_loop_equiv_on E TE e0 \<alpha>_tilde f
+                  \<and> top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+                by (by100 blast)
+            qed
+            finally show ?thesis .
+          qed
           hence "k = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t)) f'}"
             unfolding comp_def by simp
           thus ?thesis using h\<alpha>t(1) by (by100 blast)
