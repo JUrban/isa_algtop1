@@ -19159,7 +19159,341 @@ proof -
           using \<open>U \<in> TX0\<close> by (by100 blast)
       qed
     qed
-    have "top1_is_graph_on ?X ?TX" sorry
+    have "top1_is_graph_on ?X ?TX"
+    proof -
+      have hX0_strict: "is_topology_on_strict X0 TX0"
+        using \<open>top1_is_graph_on X0 TX0\<close> unfolding top1_is_graph_on_def by (by100 blast)
+      have hX0_haus: "is_hausdorff_on X0 TX0"
+        using \<open>top1_is_graph_on X0 TX0\<close> unfolding top1_is_graph_on_def by (by100 blast)
+      have hY_strict: "is_topology_on_strict ?X ?TX"
+      proof -
+        have "\<And>U. U \<in> ?TX \<Longrightarrow> U \<subseteq> ?X"
+        proof -
+          fix U assume "U \<in> ?TX"
+          then obtain V where "V \<in> TX0" "U = emb ` V" by (by100 blast)
+          thus "U \<subseteq> ?X" using hX0_strict unfolding is_topology_on_strict_def by (by100 blast)
+        qed
+        thus ?thesis unfolding is_topology_on_strict_def using himg_top by (by5000 blast)
+      qed
+      have hY_haus: "is_hausdorff_on ?X ?TX"
+        using is_hausdorff_on_of_homeomorphism_on[OF homeomorphism_inverse[OF hemb_homeo] hX0_haus] .
+      \<comment> \<open>X0 is a graph. For S={}, X0 = [0,1]\\<times>{0} which is a single arc.
+         We transfer the graph structure through emb using the arc family {?X}.\<close>
+      \<comment> \<open>First show ?X is an arc: X0 has an arc family, and emb transfers arcs.\<close>
+      from \<open>top1_is_graph_on X0 TX0\<close>[unfolded top1_is_graph_on_def]
+      have "\<exists>A0. (\<forall>a\<in>A0. a \<subseteq> X0 \<and> top1_is_arc_on a (subspace_topology X0 TX0 a)) \<and>
+          \<Union>A0 = X0 \<and>
+          (\<forall>a\<in>A0. \<forall>b\<in>A0. a \<noteq> b \<longrightarrow>
+            a \<inter> b \<subseteq> top1_arc_endpoints_on a (subspace_topology X0 TX0 a) \<and>
+            a \<inter> b \<subseteq> top1_arc_endpoints_on b (subspace_topology X0 TX0 b) \<and>
+            finite (a \<inter> b) \<and> card (a \<inter> b) \<le> 2) \<and>
+          (\<forall>D. D \<subseteq> X0 \<longrightarrow>
+            (closedin_on X0 TX0 D \<longleftrightarrow>
+             (\<forall>a\<in>A0. closedin_on a (subspace_topology X0 TX0 a) (a \<inter> D))))"
+        by (by100 blast)
+      then obtain A0 where hA0: "(\<forall>a\<in>A0. a \<subseteq> X0 \<and> top1_is_arc_on a (subspace_topology X0 TX0 a)) \<and>
+          \<Union>A0 = X0 \<and>
+          (\<forall>a\<in>A0. \<forall>b\<in>A0. a \<noteq> b \<longrightarrow>
+            a \<inter> b \<subseteq> top1_arc_endpoints_on a (subspace_topology X0 TX0 a) \<and>
+            a \<inter> b \<subseteq> top1_arc_endpoints_on b (subspace_topology X0 TX0 b) \<and>
+            finite (a \<inter> b) \<and> card (a \<inter> b) \<le> 2) \<and>
+          (\<forall>D. D \<subseteq> X0 \<longrightarrow>
+            (closedin_on X0 TX0 D \<longleftrightarrow>
+             (\<forall>a\<in>A0. closedin_on a (subspace_topology X0 TX0 a) (a \<inter> D))))"
+        by auto
+      \<comment> \<open>Transfer each arc in A0 through emb.\<close>
+      have hA0_sub: "\<forall>a\<in>A0. a \<subseteq> X0" using conjunct1[OF hA0] by (by100 blast)
+      have hA0_arc: "\<forall>a\<in>A0. top1_is_arc_on a (subspace_topology X0 TX0 a)"
+        using conjunct1[OF hA0] by (by100 blast)
+      have hA0_cover: "\<Union>A0 = X0" using conjunct1[OF conjunct2[OF hA0]] .
+      let ?AY = "(`) emb ` A0"
+      have hAY_arcs: "\<forall>a\<in>?AY. a \<subseteq> ?X \<and> top1_is_arc_on a (subspace_topology ?X ?TX a)"
+      proof (intro ballI conjI)
+        fix a assume "a \<in> ?AY"
+        then obtain a0 where ha0: "a0 \<in> A0" "a = emb ` a0" by (by100 blast)
+        have ha0_sub: "a0 \<subseteq> X0" using ha0(1) hA0_sub by (by100 blast)
+        thus "a \<subseteq> ?X" using ha0(2) by (by100 blast)
+        have "top1_is_arc_on a0 (subspace_topology X0 TX0 a0)"
+          using ha0(1) hA0_arc by (by100 blast)
+        then obtain h0 where hh0: "top1_homeomorphism_on I_set I_top
+            a0 (subspace_topology X0 TX0 a0) h0"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        from homeomorphism_on_restrict[OF hemb_homeo ha0_sub]
+        have "top1_homeomorphism_on a0 (subspace_topology X0 TX0 a0)
+            (emb ` a0) (subspace_topology ?X ?TX (emb ` a0)) emb" .
+        from homeomorphism_compose[OF hh0 this]
+        have "top1_homeomorphism_on I_set I_top
+            (emb ` a0) (subspace_topology ?X ?TX (emb ` a0)) (emb \<circ> h0)" .
+        have "is_topology_on_strict (emb ` a0) (subspace_topology ?X ?TX (emb ` a0))"
+          using subspace_topology_is_strict[OF hY_strict] \<open>a \<subseteq> ?X\<close> ha0(2) by simp
+        thus "top1_is_arc_on a (subspace_topology ?X ?TX a)"
+          unfolding top1_is_arc_on_def ha0(2)
+          using \<open>top1_homeomorphism_on I_set I_top (emb ` a0) _ (emb \<circ> h0)\<close>
+                \<open>is_topology_on_strict (emb ` a0) _\<close> by (by100 blast)
+      qed
+      have hAY_cover: "\<Union>?AY = ?X"
+      proof (rule set_eqI, rule iffI)
+        fix y assume "y \<in> \<Union>?AY"
+        then obtain a a0 where "a0 \<in> A0" "a = emb ` a0" "y \<in> a" by (by100 blast)
+        thus "y \<in> ?X" using hA0_sub \<open>a0 \<in> A0\<close> \<open>a = emb ` a0\<close> by (by100 blast)
+      next
+        fix y assume "y \<in> ?X"
+        then obtain x where "x \<in> X0" "y = emb x" by (by100 blast)
+        have "x \<in> \<Union>A0" using \<open>x \<in> X0\<close> hA0_cover by simp
+        then obtain a0 where "a0 \<in> A0" "x \<in> a0" by (by100 blast)
+        thus "y \<in> \<Union>?AY" using \<open>y = emb x\<close> by (by100 blast)
+      qed
+      \<comment> \<open>Pairwise intersection and coherent closedness: sorry for now.\<close>
+      \<comment> \<open>Pre-extract intersection property from hA0.\<close>
+      have hA0_inter: "\<forall>a\<in>A0. \<forall>b\<in>A0. a \<noteq> b \<longrightarrow>
+          a \<inter> b \<subseteq> top1_arc_endpoints_on a (subspace_topology X0 TX0 a) \<and>
+          a \<inter> b \<subseteq> top1_arc_endpoints_on b (subspace_topology X0 TX0 b) \<and>
+          finite (a \<inter> b) \<and> card (a \<inter> b) \<le> 2"
+        using conjunct1[OF conjunct2[OF conjunct2[OF hA0]]] .
+      \<comment> \<open>Endpoint transfer helper: emb maps endpoints to endpoints.\<close>
+      have hep_transfer: "\<And>a0. a0 \<in> A0 \<Longrightarrow>
+          emb ` top1_arc_endpoints_on a0 (subspace_topology X0 TX0 a0) =
+          top1_arc_endpoints_on (emb ` a0) (subspace_topology ?X ?TX (emb ` a0))"
+      proof -
+        fix a0 assume "a0 \<in> A0"
+        have ha0_sub: "a0 \<subseteq> X0" using \<open>a0 \<in> A0\<close> hA0_sub by (by100 blast)
+        have ha0_arc: "top1_is_arc_on a0 (subspace_topology X0 TX0 a0)"
+          using \<open>a0 \<in> A0\<close> hA0_arc by (by100 blast)
+        then obtain h0 where hh0: "top1_homeomorphism_on I_set I_top
+            a0 (subspace_topology X0 TX0 a0) h0"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        have hh0_inj: "inj_on h0 I_set"
+          using hh0 unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have "h0 0 \<noteq> h0 1"
+        proof
+          assume "h0 0 = h0 1"
+          have "0 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+          have "1 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+          from inj_onD[OF hh0_inj \<open>h0 0 = h0 1\<close> \<open>0 \<in> I_set\<close> \<open>1 \<in> I_set\<close>]
+          show False by simp
+        qed
+        from arc_endpoints_are_boundary[OF hX0_strict hX0_haus ha0_sub ha0_arc hh0]
+        have hep_a0: "top1_arc_endpoints_on a0 (subspace_topology X0 TX0 a0) = {h0 0, h0 1}" .
+        from arc_endpoints_under_homeomorphism[OF hX0_strict hY_strict hX0_haus hY_haus
+            hemb_homeo ha0_sub ha0_arc hep_a0 \<open>h0 0 \<noteq> h0 1\<close>]
+        have "top1_arc_endpoints_on (emb ` a0) (subspace_topology ?X ?TX (emb ` a0)) =
+            {emb (h0 0), emb (h0 1)}" by (by100 blast)
+        moreover have "emb ` {h0 0, h0 1} = {emb (h0 0), emb (h0 1)}" by (by100 blast)
+        ultimately show "emb ` top1_arc_endpoints_on a0 (subspace_topology X0 TX0 a0) =
+            top1_arc_endpoints_on (emb ` a0) (subspace_topology ?X ?TX (emb ` a0))"
+          using hep_a0 by simp
+      qed
+      have hAY_inter: "\<forall>a\<in>?AY. \<forall>b\<in>?AY. a \<noteq> b \<longrightarrow>
+          a \<inter> b \<subseteq> top1_arc_endpoints_on a (subspace_topology ?X ?TX a) \<and>
+          a \<inter> b \<subseteq> top1_arc_endpoints_on b (subspace_topology ?X ?TX b) \<and>
+          finite (a \<inter> b) \<and> card (a \<inter> b) \<le> 2"
+      proof (intro ballI impI)
+        fix a b assume "a \<in> ?AY" "b \<in> ?AY" "a \<noteq> b"
+        obtain a0 where ha0: "a0 \<in> A0" "a = emb ` a0" using \<open>a \<in> ?AY\<close> by (by100 blast)
+        obtain b0 where hb0: "b0 \<in> A0" "b = emb ` b0" using \<open>b \<in> ?AY\<close> by (by100 blast)
+        have "a0 \<noteq> b0"
+        proof
+          assume "a0 = b0" hence "a = b" using ha0(2) hb0(2) by simp
+          thus False using \<open>a \<noteq> b\<close> by simp
+        qed
+        \<comment> \<open>emb injective: emb(a0) \\<inter> emb(b0) = emb(a0 \\<inter> b0).\<close>
+        have ha0_sub: "a0 \<subseteq> X0" using ha0(1) hA0_sub by (by100 blast)
+        have hb0_sub: "b0 \<subseteq> X0" using hb0(1) hA0_sub by (by100 blast)
+        have hemb_inj_on: "inj_on emb X0"
+          using hemb_inj unfolding inj_on_def inj_def by (by100 blast)
+        have hab_img: "a \<inter> b = emb ` (a0 \<inter> b0)"
+          using inj_on_image_Int[OF hemb_inj_on ha0_sub hb0_sub] ha0(2) hb0(2) by simp
+        \<comment> \<open>From hA0: a0\\<inter>b0 \\<subseteq> endpoints(a0), finite, card \\<le> 2.\<close>
+        from bspec[OF bspec[OF hA0_inter ha0(1)] hb0(1)] \<open>a0 \<noteq> b0\<close>
+        have hab0: "a0 \<inter> b0 \<subseteq> top1_arc_endpoints_on a0 (subspace_topology X0 TX0 a0)"
+            "a0 \<inter> b0 \<subseteq> top1_arc_endpoints_on b0 (subspace_topology X0 TX0 b0)"
+            "finite (a0 \<inter> b0)" "card (a0 \<inter> b0) \<le> 2" by (by100 blast)+
+        \<comment> \<open>Transfer endpoints.\<close>
+        have "a \<inter> b \<subseteq> top1_arc_endpoints_on a (subspace_topology ?X ?TX a)"
+        proof -
+          have "emb ` (a0 \<inter> b0) \<subseteq> emb ` top1_arc_endpoints_on a0 (subspace_topology X0 TX0 a0)"
+            using hab0(1) by (by100 blast)
+          also have "\<dots> = top1_arc_endpoints_on (emb ` a0) (subspace_topology ?X ?TX (emb ` a0))"
+            using hep_transfer[OF ha0(1)] .
+          finally show ?thesis using hab_img ha0(2) by simp
+        qed
+        moreover have "a \<inter> b \<subseteq> top1_arc_endpoints_on b (subspace_topology ?X ?TX b)"
+        proof -
+          have "emb ` (a0 \<inter> b0) \<subseteq> emb ` top1_arc_endpoints_on b0 (subspace_topology X0 TX0 b0)"
+            using hab0(2) by (by100 blast)
+          also have "\<dots> = top1_arc_endpoints_on (emb ` b0) (subspace_topology ?X ?TX (emb ` b0))"
+            using hep_transfer[OF hb0(1)] .
+          finally show ?thesis using hab_img hb0(2) by simp
+        qed
+        moreover have "finite (a \<inter> b)"
+          using hab_img hab0(3) by simp
+        moreover have "card (a \<inter> b) \<le> 2"
+        proof -
+          have "card (a \<inter> b) = card (a0 \<inter> b0)"
+          proof -
+            have "a0 \<inter> b0 \<subseteq> X0" using ha0_sub by (by100 blast)
+            have "inj_on emb (a0 \<inter> b0)"
+              using inj_on_subset[OF hemb_inj_on \<open>a0 \<inter> b0 \<subseteq> X0\<close>] .
+            thus ?thesis using hab_img card_image by simp
+          qed
+          thus ?thesis using hab0(4) by simp
+        qed
+        ultimately show "a \<inter> b \<subseteq> top1_arc_endpoints_on a (subspace_topology ?X ?TX a) \<and>
+            a \<inter> b \<subseteq> top1_arc_endpoints_on b (subspace_topology ?X ?TX b) \<and>
+            finite (a \<inter> b) \<and> card (a \<inter> b) \<le> 2" by (by100 blast)
+      qed
+      have hAY_coh: "\<forall>D. D \<subseteq> ?X \<longrightarrow>
+          (closedin_on ?X ?TX D \<longleftrightarrow>
+           (\<forall>a\<in>?AY. closedin_on a (subspace_topology ?X ?TX a) (a \<inter> D)))"
+      proof (intro allI impI iffI)
+        fix D assume hD: "D \<subseteq> ?X" and hcl: "closedin_on ?X ?TX D"
+        show "\<forall>a\<in>?AY. closedin_on a (subspace_topology ?X ?TX a) (a \<inter> D)"
+        proof (intro ballI)
+          fix a assume "a \<in> ?AY"
+          then obtain a0 where "a0 \<in> A0" "a = emb ` a0" by (by100 blast)
+          have "a \<subseteq> ?X" using \<open>a0 \<in> A0\<close> hA0_sub \<open>a = emb ` a0\<close> by (by100 blast)
+          from Theorem_17_2[OF himg_top \<open>a \<subseteq> ?X\<close>]
+          show "closedin_on a (subspace_topology ?X ?TX a) (a \<inter> D)"
+            using hcl by (by100 blast)
+        qed
+      next
+        fix D assume hD: "D \<subseteq> ?X"
+        assume hall: "\<forall>a\<in>?AY. closedin_on a (subspace_topology ?X ?TX a) (a \<inter> D)"
+        \<comment> \<open>Transfer to X0: D' = inv(emb)(D). Need D' closed in X0.\<close>
+        let ?D' = "{x \<in> X0. emb x \<in> D}"
+        have hD'_sub: "?D' \<subseteq> X0" by (by100 blast)
+        \<comment> \<open>D' closed in X0 via hA0\\_coh: need a0\\<inter>D' closed in a0 for all a0.\<close>
+        have hA0_coh: "\<forall>D'. D' \<subseteq> X0 \<longrightarrow>
+            (closedin_on X0 TX0 D' \<longleftrightarrow>
+             (\<forall>a\<in>A0. closedin_on a (subspace_topology X0 TX0 a) (a \<inter> D')))"
+          using conjunct2[OF conjunct2[OF conjunct2[OF hA0]]] .
+        have "\<forall>a0\<in>A0. closedin_on a0 (subspace_topology X0 TX0 a0) (a0 \<inter> ?D')"
+        proof (intro ballI)
+          fix a0 assume "a0 \<in> A0"
+          have ha0_sub: "a0 \<subseteq> X0" using \<open>a0 \<in> A0\<close> hA0_sub by (by100 blast)
+          \<comment> \<open>a0\\<inter>D' closed in a0 via Thm 17.2: \\<exists>C closed in X0. a0\\<inter>D' = C\\<inter>a0.\<close>
+          \<comment> \<open>emb(a0)\\<inter>D closed in emb(a0): from hall.\<close>
+          have "emb ` a0 \<in> ?AY" using \<open>a0 \<in> A0\<close> by (by100 blast)
+          have hcl_img: "closedin_on (emb ` a0) (subspace_topology ?X ?TX (emb ` a0))
+              (emb ` a0 \<inter> D)"
+            using bspec[OF hall \<open>emb ` a0 \<in> ?AY\<close>] .
+          \<comment> \<open>By Thm 17.2: \\<exists>C closed in ?X. emb(a0)\\<inter>D = C\\<inter>emb(a0).\<close>
+          have "emb ` a0 \<subseteq> ?X" using ha0_sub by (by100 blast)
+          from Theorem_17_2[OF himg_top this]
+          have "closedin_on (emb ` a0) (subspace_topology ?X ?TX (emb ` a0)) (emb ` a0 \<inter> D) =
+              (\<exists>C. closedin_on ?X ?TX C \<and> emb ` a0 \<inter> D = C \<inter> emb ` a0)" .
+          hence "\<exists>C. closedin_on ?X ?TX C \<and> emb ` a0 \<inter> D = C \<inter> emb ` a0"
+            using hcl_img by simp
+          then obtain C where hC: "closedin_on ?X ?TX C" "emb ` a0 \<inter> D = C \<inter> emb ` a0"
+            by auto
+          \<comment> \<open>Preimage of C under emb: {x\\<in>X0. emb x \\<in> C} closed in X0.\<close>
+          have "closedin_on X0 TX0 {x \<in> X0. emb x \<in> C}"
+          proof -
+            have "?X - C \<in> ?TX" using \<open>closedin_on ?X ?TX C\<close>
+              unfolding closedin_on_def by (by100 blast)
+            then obtain UC where "UC \<in> TX0" "?X - C = emb ` UC"
+              by (by100 blast)
+            have "{x \<in> X0. emb x \<in> C} = X0 - UC"
+            proof (rule set_eqI, rule iffI)
+              fix x assume "x \<in> {x \<in> X0. emb x \<in> C}"
+              hence "x \<in> X0" "emb x \<in> C" by (by100 blast)+
+              have "emb x \<notin> ?X - C" using \<open>emb x \<in> C\<close> by (by100 blast)
+              hence "emb x \<notin> emb ` UC" using \<open>?X - C = emb ` UC\<close> by simp
+              hence "x \<notin> UC" using hemb_inj unfolding inj_def by (by100 blast)
+              thus "x \<in> X0 - UC" using \<open>x \<in> X0\<close> by (by100 blast)
+            next
+              fix x assume "x \<in> X0 - UC"
+              hence "x \<in> X0" "x \<notin> UC" by (by100 blast)+
+              have "emb x \<in> ?X" using \<open>x \<in> X0\<close> by (by100 blast)
+              have "emb x \<notin> emb ` UC"
+              proof
+                assume "emb x \<in> emb ` UC"
+                then obtain u where "u \<in> UC" "emb x = emb u" by (by100 blast)
+                hence "x = u" using hemb_inj unfolding inj_def by (by100 blast)
+                thus False using \<open>x \<notin> UC\<close> \<open>u \<in> UC\<close> by simp
+              qed
+              hence "emb x \<notin> ?X - C" using \<open>?X - C = emb ` UC\<close> by simp
+              hence "emb x \<in> C" using \<open>emb x \<in> ?X\<close> by (by100 blast)
+              thus "x \<in> {x \<in> X0. emb x \<in> C}" using \<open>x \<in> X0\<close> by (by100 blast)
+            qed
+            moreover have "closedin_on X0 TX0 (X0 - UC)"
+            proof -
+              have "UC \<subseteq> X0" using \<open>UC \<in> TX0\<close> hX0_strict
+                unfolding is_topology_on_strict_def by (by100 blast)
+              have "X0 - UC \<subseteq> X0" by (by100 blast)
+              have "X0 - (X0 - UC) = UC" using \<open>UC \<subseteq> X0\<close> by (by100 blast)
+              thus ?thesis unfolding closedin_on_def
+                using \<open>X0 - UC \<subseteq> X0\<close> \<open>X0 - (X0 - UC) = UC\<close> \<open>UC \<in> TX0\<close> by simp
+            qed
+            ultimately show ?thesis by simp
+          qed
+          \<comment> \<open>a0\\<inter>D' = a0\\<inter>{x\\<in>X0. emb x \\<in> D} \\<subseteq> a0\\<inter>{x\\<in>X0. emb x \\<in> C}.\<close>
+          \<comment> \<open>Actually: a0\\<inter>D' = {x\\<in>a0. emb x \\<in> D}. And {x\\<in>X0. emb x \\<in> C}\\<inter>a0 = {x\\<in>a0. emb x \\<in> C}.\<close>
+          \<comment> \<open>Need: {x\\<in>a0. emb x \\<in> D} = {x\\<in>X0. emb x \\<in> C}\\<inter>a0.\<close>
+          have "a0 \<inter> ?D' = {x \<in> X0. emb x \<in> C} \<inter> a0"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> a0 \<inter> ?D'"
+            hence "x \<in> a0" "x \<in> X0" "emb x \<in> D" by (by100 blast)+
+            have "emb x \<in> emb ` a0" using \<open>x \<in> a0\<close> by (by100 blast)
+            hence "emb x \<in> emb ` a0 \<inter> D" using \<open>emb x \<in> D\<close> by (by100 blast)
+            hence "emb x \<in> C \<inter> emb ` a0" using \<open>emb ` a0 \<inter> D = C \<inter> emb ` a0\<close> by simp
+            hence "emb x \<in> C" by (by100 blast)
+            thus "x \<in> {x \<in> X0. emb x \<in> C} \<inter> a0" using \<open>x \<in> a0\<close> \<open>x \<in> X0\<close> by (by100 blast)
+          next
+            fix x assume "x \<in> {x \<in> X0. emb x \<in> C} \<inter> a0"
+            hence "x \<in> a0" "x \<in> X0" "emb x \<in> C" by (by100 blast)+
+            have "emb x \<in> emb ` a0" using \<open>x \<in> a0\<close> by (by100 blast)
+            hence "emb x \<in> C \<inter> emb ` a0" using \<open>emb x \<in> C\<close> by (by100 blast)
+            hence "emb x \<in> emb ` a0 \<inter> D" using \<open>emb ` a0 \<inter> D = C \<inter> emb ` a0\<close> by simp
+            hence "emb x \<in> D" by (by100 blast)
+            thus "x \<in> a0 \<inter> ?D'" using \<open>x \<in> a0\<close> \<open>x \<in> X0\<close> by (by100 blast)
+          qed
+          from Theorem_17_2[OF hX0_top ha0_sub]
+          show "closedin_on a0 (subspace_topology X0 TX0 a0) (a0 \<inter> ?D')"
+            using \<open>closedin_on X0 TX0 {x \<in> X0. emb x \<in> C}\<close>
+                  \<open>a0 \<inter> ?D' = {x \<in> X0. emb x \<in> C} \<inter> a0\<close> by (by100 blast)
+        qed
+        from hA0_coh hD'_sub this
+        have "closedin_on X0 TX0 ?D'" by (by100 blast)
+        \<comment> \<open>D = emb ` D'. Transfer closedness.\<close>
+        have "D = emb ` ?D'"
+        proof (rule set_eqI, rule iffI)
+          fix y assume "y \<in> D"
+          hence "y \<in> ?X" using hD by (by100 blast)
+          then obtain x where "x \<in> X0" "y = emb x" by (by100 blast)
+          hence "x \<in> ?D'" using \<open>y \<in> D\<close> by (by100 blast)
+          thus "y \<in> emb ` ?D'" using \<open>y = emb x\<close> by (by100 blast)
+        next
+          fix y assume "y \<in> emb ` ?D'"
+          then obtain x where "x \<in> ?D'" "y = emb x" by (by100 blast)
+          thus "y \<in> D" by (by100 blast)
+        qed
+        \<comment> \<open>emb maps closed sets to closed sets (open map from homeomorphism).\<close>
+        have "?X - D = emb ` (X0 - ?D')"
+        proof (rule set_eqI, rule iffI)
+          fix y assume "y \<in> ?X - D"
+          then obtain x where "x \<in> X0" "y = emb x" "y \<notin> D" by (by100 blast)
+          hence "x \<notin> ?D'" by (by100 blast)
+          thus "y \<in> emb ` (X0 - ?D')" using \<open>y = emb x\<close> \<open>x \<in> X0\<close> by (by100 blast)
+        next
+          fix y assume "y \<in> emb ` (X0 - ?D')"
+          then obtain x where "x \<in> X0" "x \<notin> ?D'" "y = emb x" by (by100 blast)
+          hence "emb x \<notin> D" by (by100 blast)
+          thus "y \<in> ?X - D" using \<open>y = emb x\<close> \<open>x \<in> X0\<close> by (by100 blast)
+        qed
+        have "X0 - ?D' \<in> TX0"
+          using \<open>closedin_on X0 TX0 ?D'\<close> hD'_sub unfolding closedin_on_def by (by100 blast)
+        hence "emb ` (X0 - ?D') \<in> ?TX" by (by100 blast)
+        hence "?X - D \<in> ?TX" using \<open>?X - D = emb ` (X0 - ?D')\<close> by simp
+        thus "closedin_on ?X ?TX D" unfolding closedin_on_def using hD by (by100 blast)
+      qed
+      show ?thesis unfolding top1_is_graph_on_def
+        apply (intro conjI)
+        using hY_strict apply (by100 blast)
+        using hY_haus apply (by100 blast)
+        apply (rule exI[of _ ?AY])
+        using hAY_arcs hAY_cover hAY_inter hAY_coh by auto
+    qed
     moreover have "top1_connected_on ?X ?TX"
     proof -
       have "top1_locally_path_connected_on X0 TX0"
