@@ -2039,7 +2039,11 @@ proof -
         proof -
           have "?ch \<in> ?N" using hin_normalizer[OF \<open>h \<in> ?Cov\<close>] .
           have "?ck \<in> ?N" using hin_normalizer[OF \<open>k \<in> ?Cov\<close>] .
-          have hN_grp: "top1_is_group_on ?N ?mulB ?eB ?invB" sorry
+          have hN_grp: "top1_is_group_on ?N ?mulB ?eB ?invB"
+            sorry \<comment> \<open>Normalizer is a group: e \\<in> N(H) (identity conjugation),
+               closure under mul (composition of conjugations),
+               closure under invg (from group\\_conj\\_reverse).
+               Each step uses group axiom helpers + normalizer\\_on\\_def.\<close>
           have hH_grp_early: "top1_is_group_on ?H ?mulB ?eB ?invB"
           proof -
             have hTE_l0: "is_topology_on E TE"
