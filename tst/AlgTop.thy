@@ -636,8 +636,6 @@ proof -
           sorry \<comment> \<open>h = k*g = [(p\\<circ>\\<alpha>\\<tilde>)]*[fg] = [(p\\<circ>\\<alpha>\\<tilde>)*fg]. fh \\<in> h.\<close>
         \<comment> \<open>Step 5c: fth lifts fh, \\<alpha>\\<tilde>*ftg lifts ?pafg (pointwise on I\\_set).\<close>
         \<comment> \<open>Step 5d: Apply Theorem 54.3.\<close>
-        have hE_strict: "is_topology_on_strict E TE"
-          sorry \<comment> \<open>E strict from covering map.\<close>
         have hfh_path': "top1_is_path_on B TB b0 b0 fh"
           using hfh(2) unfolding top1_is_loop_on_def .
         from Theorem_54_3[OF assms(1) hE_top assms(3) assms(4) assms(5)
