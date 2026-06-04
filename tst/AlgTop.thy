@@ -838,8 +838,74 @@ proof -
     \<comment> \<open>For any h: loop\\_equiv(p\\<circ>\\<delta>, h) \\<longleftrightarrow> loop\\_equiv(?pp, h).\<close>
     have "\<And>h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) h \<longleftrightarrow>
         top1_loop_equiv_on B TB b0 ?pp h"
-      sorry \<comment> \<open>Functions agreeing on I\\_set have same loop\\_equiv\\_on classes.
-         Needs: loop\\_equiv\\_on depends only on values on I\\_set.\<close>
+    proof -
+      fix h
+      \<comment> \<open>The functions agree on I\\_set, so all topology predicates are equivalent.\<close>
+      have "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<delta> t)) \<longleftrightarrow> top1_is_loop_on B TB b0 ?pp"
+      proof -
+        have hcont_iff: "top1_continuous_map_on I_set I_top B TB (\<lambda>t. p (?\<delta> t)) \<longleftrightarrow>
+            top1_continuous_map_on I_set I_top B TB ?pp"
+          using top1_continuous_map_on_cong[of I_set "\<lambda>t. p (?\<delta> t)" ?pp] hagree by (by100 blast)
+        have "0 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+        have "1 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+        have "(\<lambda>t. p (?\<delta> t)) 0 = ?pp 0" using hagree \<open>0 \<in> I_set\<close> by (by100 blast)
+        have "(\<lambda>t. p (?\<delta> t)) 1 = ?pp 1" using hagree \<open>1 \<in> I_set\<close> by (by100 blast)
+        show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+          using hcont_iff \<open>(\<lambda>t. p (?\<delta> t)) 0 = ?pp 0\<close> \<open>(\<lambda>t. p (?\<delta> t)) 1 = ?pp 1\<close>
+          by (by100 simp)
+      qed
+      have hhtpy: "top1_path_homotopic_on B TB b0 b0 (\<lambda>t. p (?\<delta> t)) h \<longleftrightarrow>
+          top1_path_homotopic_on B TB b0 b0 ?pp h"
+      proof (rule iffI)
+        assume "top1_path_homotopic_on B TB b0 b0 (\<lambda>t. p (?\<delta> t)) h"
+        then obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F"
+            "\<forall>s \<in> I_set. F (s, 0) = p (?\<delta> s)"
+            "\<forall>s \<in> I_set. F (s, 1) = h s"
+            "\<forall>t \<in> I_set. F (0, t) = b0" "\<forall>t \<in> I_set. F (1, t) = b0"
+            and hpaths: "top1_is_path_on B TB b0 b0 (\<lambda>t. p (?\<delta> t))"
+                "top1_is_path_on B TB b0 b0 h"
+          unfolding top1_path_homotopic_on_def by (by100 blast)
+        \<comment> \<open>F(s,0) = p(\\<delta>(s)) = ?pp(s) for s\\<in>I, so same F witnesses homotopy for ?pp.\<close>
+        have "\<forall>s \<in> I_set. F (s, 0) = ?pp s"
+          using hF(2) hagree by simp
+        moreover have "top1_is_path_on B TB b0 b0 ?pp"
+        proof -
+          have "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<delta> t))"
+            using hpaths(1) unfolding top1_is_loop_on_def by simp
+          hence "top1_is_loop_on B TB b0 ?pp"
+            using \<open>top1_is_loop_on B TB b0 (\<lambda>t. p (?\<delta> t)) \<longleftrightarrow> _\<close> by simp
+          thus ?thesis unfolding top1_is_loop_on_def .
+        qed
+        ultimately show "top1_path_homotopic_on B TB b0 b0 ?pp h"
+          unfolding top1_path_homotopic_on_def
+          using hF(1) hF(3) hF(4) hF(5) hpaths(2) by (by100 blast)
+      next
+        assume "top1_path_homotopic_on B TB b0 b0 ?pp h"
+        then obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology B TB F"
+            "\<forall>s \<in> I_set. F (s, 0) = ?pp s"
+            "\<forall>s \<in> I_set. F (s, 1) = h s"
+            "\<forall>t \<in> I_set. F (0, t) = b0" "\<forall>t \<in> I_set. F (1, t) = b0"
+            and hpaths: "top1_is_path_on B TB b0 b0 ?pp" "top1_is_path_on B TB b0 b0 h"
+          unfolding top1_path_homotopic_on_def by (by100 blast)
+        have "\<forall>s \<in> I_set. F (s, 0) = p (?\<delta> s)"
+          using hF(2) hagree by simp
+        moreover have "top1_is_path_on B TB b0 b0 (\<lambda>t. p (?\<delta> t))"
+        proof -
+          have "top1_is_loop_on B TB b0 ?pp"
+            using hpaths(1) unfolding top1_is_loop_on_def by simp
+          hence "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<delta> t))"
+            using \<open>top1_is_loop_on B TB b0 (\<lambda>t. p (?\<delta> t)) \<longleftrightarrow> _\<close> by simp
+          thus ?thesis unfolding top1_is_loop_on_def .
+        qed
+        ultimately show "top1_path_homotopic_on B TB b0 b0 (\<lambda>t. p (?\<delta> t)) h"
+          unfolding top1_path_homotopic_on_def
+          using hF(1) hF(3) hF(4) hF(5) hpaths(2) by (by100 blast)
+      qed
+      show "top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) h \<longleftrightarrow>
+          top1_loop_equiv_on B TB b0 ?pp h"
+        unfolding top1_loop_equiv_on_def
+        using \<open>top1_is_loop_on B TB b0 (\<lambda>t. p (?\<delta> t)) \<longleftrightarrow> _\<close> hhtpy by simp
+    qed
     thus ?thesis by (by100 blast)
   qed
   \<comment> \<open>Step 3: This class = mulB([p\\<circ>\\<gamma>\\_1], invB([p\\<circ>\\<gamma>\\_2])) via fundamental\\_group\\_mul\\_class + invg\\_class.\<close>
