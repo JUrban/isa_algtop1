@@ -279,7 +279,35 @@ proof -
          Then Hg = Hh.\<close>
       \<comment> \<open>Step: show [fg*rev(fh)] = mulB g (invgB h), hence g*h\\<inverse> \\<in> H.\<close>
       have "?mulB g (top1_fundamental_group_invg B TB b0 h) \<in> ?H"
-        sorry \<comment> \<open>[fg*rev(fh)] = mulB(g, invg(h)). class\\_in\\_H gives this \\<in> H.\<close>
+      proof -
+        \<comment> \<open>mulB g (invgB h) = class of product(fg, rev(fh)).
+           From class\\_in\\_H: class of p\\<circ>(product(ftg,rev(fth))) \\<in> H.
+           p\\<circ>(product(ftg,rev(fth))) = product(fg,rev(fh)) on I\\_set.\<close>
+        \<comment> \<open>Step 1: class of product(fg,rev(fh)) = mulB g (invgB h).\<close>
+        have hfh_in_h: "fh \<in> h" using hfh(1) .
+        have hrev_fh_in_invh: "top1_path_reverse fh \<in> top1_fundamental_group_invg B TB b0 h"
+        proof -
+          have "fh \<in> h" using hfh_in_h .
+          have "top1_is_loop_on B TB b0 (top1_path_reverse fh)"
+            unfolding top1_is_loop_on_def
+            using top1_path_reverse_is_path[OF hfh_path] .
+          hence "top1_loop_equiv_on B TB b0 (top1_path_reverse fh) (top1_path_reverse fh)"
+            unfolding top1_loop_equiv_on_def
+            using Lemma_51_1_path_homotopic_refl[OF top1_path_reverse_is_path[OF hfh_path]] by (by100 blast)
+          thus ?thesis unfolding top1_fundamental_group_invg_def using \<open>fh \<in> h\<close> by (by100 blast)
+        qed
+        have hclass_eq: "?mulB g (top1_fundamental_group_invg B TB b0 h) =
+            {f'. top1_loop_equiv_on B TB b0 (top1_path_product fg (top1_path_reverse fh)) f'}"
+          sorry \<comment> \<open>mulB(g,invg(h)) = class of product(fg,rev(fh)). Standard.\<close>
+        \<comment> \<open>Step 2: This class = class of p\\<circ>(product(ftg,rev(fth))) (pointwise equal on I\\_set).\<close>
+        have hclass_proj: "{f'. top1_loop_equiv_on B TB b0 (top1_path_product fg (top1_path_reverse fh)) f'}
+            = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)) f'}"
+          sorry \<comment> \<open>Pointwise equal on I\\_set \\<Rightarrow> same loop class.\<close>
+        \<comment> \<open>Step 3: class\\_in\\_H says this is in H.\<close>
+        show ?thesis using hclass_eq hclass_proj
+            \<open>{f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)) f'} \<in> ?H\<close>
+          by simp
+      qed
       have hg_in_piB: "g \<in> ?piB" using hg .
       have hh_in_piB: "h \<in> ?piB" using hh .
       have "b0 \<in> B"
