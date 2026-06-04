@@ -1960,11 +1960,65 @@ proof -
           using hpath_to[OF \<open>h (k e0) \<in> E\<close>] .
         \<comment> \<open>Step I.7: p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k)) = (p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k) since p\\<circ>h = p.\<close>
         \<comment> \<open>Step I.8: Conclude f(h\\<circ>k) = mulQ(f(h), f(k)).\<close>
-        show "f (\<lambda>e. h (k e)) = ?mulQ (f h) (f k)"
-          sorry \<comment> \<open>Chain: f(hk) = coset([p\\<circ>\\<gamma>\\_{hk}])
-             = coset([p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))]) (same\\_endpoint\\_same\\_coset)
-             = coset(mulB([p\\<circ>\\<gamma>\\_h], [p\\<circ>\\<gamma>\\_k])) (mul\\_class + p\\<circ>h=p)
-             = mulQ(f(h), f(k)) (normal\\_coset\\_mul\\_eq).\<close>
+        \<comment> \<open>Step I.9: Apply same\\_endpoint\\_same\\_coset.\<close>
+        \<comment> \<open>Both \\<gamma>\\_{hk} and \\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k) go from e0 to h(k(e0)).\<close>
+        \<comment> \<open>Step I.10: p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))(s) = path\\_product (p\\<circ>\\<gamma>\\_h) (p\\<circ>\\<gamma>\\_k)(s)
+           because p(h(\\<gamma>\\_k(t))) = p(\\<gamma>\\_k(t)) for all t (CT preserves p).\<close>
+        have hp_h_eq: "\<forall>e\<in>E. p (h e) = p e"
+          using \<open>h \<in> ?Cov\<close> unfolding top1_covering_transformation_on_def by (by100 blast)
+        have hp_compose: "\<forall>t\<in>I_set. p (h (?\<gamma>k t)) = p (?\<gamma>k t)"
+        proof (intro ballI)
+          fix t assume "t \<in> I_set"
+          have "?\<gamma>k t \<in> E"
+            using hpath_to[OF \<open>k e0 \<in> E\<close>] \<open>t \<in> I_set\<close>
+            unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+          thus "p (h (?\<gamma>k t)) = p (?\<gamma>k t)" using hp_h_eq by (by100 blast)
+        qed
+        \<comment> \<open>Step I.11: The projected composed path = (p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k) pointwise.\<close>
+        have hp_composed_eq: "\<forall>s\<in>I_set. p (?\<gamma>hk_composed s) =
+            top1_path_product (\<lambda>t. p (?\<gamma>h t)) (\<lambda>t. p (?\<gamma>k t)) s"
+        proof (intro ballI)
+          fix s :: real assume "s \<in> I_set"
+          show "p (?\<gamma>hk_composed s) =
+              top1_path_product (\<lambda>t. p (?\<gamma>h t)) (\<lambda>t. p (?\<gamma>k t)) s"
+          proof (cases "s \<le> 1/2")
+            case True
+            thus ?thesis unfolding top1_path_product_def by simp
+          next
+            case False
+            hence "2 * s - 1 \<in> I_set" using \<open>s \<in> I_set\<close>
+              unfolding top1_unit_interval_def by (by100 auto)
+            hence "p (h (?\<gamma>k (2 * s - 1))) = p (?\<gamma>k (2 * s - 1))"
+              using hp_compose by (by100 blast)
+            thus ?thesis using False unfolding top1_path_product_def by simp
+          qed
+        qed
+        \<comment> \<open>Step I.12: Assemble the chain.\<close>
+        let ?chk = "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h (k e0)) t)) g}"
+        let ?ch = "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<gamma>h t)) g}"
+        let ?ck = "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<gamma>k t)) g}"
+        \<comment> \<open>f(h\\<circ>k) = coset(?chk) by definition.\<close>
+        have "f (\<lambda>e. h (k e)) = ?coset ?chk" unfolding f_def by simp
+        \<comment> \<open>coset(?chk) = coset(mulB(?ch, ?ck)) by the chain:\<close>
+        \<comment> \<open>  Step A: coset(?chk) = coset(?c\\_composed) via same\\_endpoint\\_same\\_coset.\<close>
+        \<comment> \<open>  Step B: ?c\\_composed = ?c\\_product (pointwise agreement via hp\\_composed\\_eq).\<close>
+        \<comment> \<open>  Step C: ?c\\_product = mulB(?ch, ?ck) via fundamental\\_group\\_mul\\_class.\<close>
+        also have "?coset ?chk = ?coset (?mulB ?ch ?ck)"
+          sorry \<comment> \<open>Steps A+B+C: same\\_endpoint\\_same\\_coset + hclass\\_eq + mul\\_class.\<close>
+        \<comment> \<open>mulQ(f(h), f(k)) = coset(mulB(?ch, ?ck)) by normal\\_coset\\_mul\\_eq.\<close>
+        also have "?coset (?mulB ?ch ?ck) = ?mulQ (?coset ?ch) (?coset ?ck)"
+        proof -
+          have "?ch \<in> ?N" using hin_normalizer[OF \<open>h \<in> ?Cov\<close>] .
+          have "?ck \<in> ?N" using hin_normalizer[OF \<open>k \<in> ?Cov\<close>] .
+          have hN_grp: "top1_is_group_on ?N ?mulB ?eB ?invB" sorry
+          have hH_normal_in_N: "top1_normal_subgroup_on ?N ?mulB ?eB ?invB ?H" sorry
+          from normal_coset_mul_eq[OF hN_grp hH_normal_in_N \<open>?ch \<in> ?N\<close> \<open>?ck \<in> ?N\<close>]
+          show ?thesis by simp
+        qed
+        \<comment> \<open>= mulQ(f(h), f(k)) by f\\_def.\<close>
+        also have "?mulQ (?coset ?ch) (?coset ?ck) = ?mulQ (f h) (f k)"
+          unfolding f_def by simp
+        finally show "f (\<lambda>e. h (k e)) = ?mulQ (f h) (f k)" .
       qed
       \<comment> \<open>Step J: f is injective.\<close>
       have hf_inj: "inj_on f ?Cov"
