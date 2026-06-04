@@ -10226,7 +10226,52 @@ next
   have hp: "p \<in> X"
     using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
   have hcompact: "top1_compact_on X TX"
-    sorry \<comment> \<open>X = wedge of circles: each C(alpha) iso S1 compact, finite union compact.\<close>
+  proof -
+    \<comment> \<open>Re-extract wedge structure (hC\\_props etc. out of scope from hconn block).\<close>
+    obtain C where
+        hC_pr: "\<forall>\<alpha>\<in>{..<?n}. C \<alpha> \<subseteq> X \<and> p \<in> C \<alpha>
+            \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h)"
+        and hC_cv: "(\<Union>\<alpha>\<in>{..<?n}. C \<alpha>) = X"
+        and hC_coh: "\<forall>D. D \<subseteq> X \<longrightarrow>
+            (closedin_on X TX D \<longleftrightarrow> (\<forall>\<alpha>\<in>{..<?n}. closedin_on (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha> \<inter> D)))"
+    proof -
+      from hwedge[unfolded top1_is_wedge_of_circles_on_def]
+      show ?thesis by - ((erule conjE)+, (erule exE)+, (erule conjE)+, rule that, assumption+)
+    qed
+    have hTX: "is_topology_on X TX"
+      using hwedge unfolding top1_is_wedge_of_circles_on_def is_topology_on_strict_def
+      by (by100 blast)
+    \<comment> \<open>Each C(\\<alpha>) is compact (homeomorphic to S1 compact).\<close>
+    have hC_compact: "\<forall>\<alpha>\<in>{..<?n}. top1_compact_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+    proof (intro ballI)
+      fix \<alpha> assume h\<alpha>: "\<alpha> \<in> {..<?n}"
+      from hC_pr[rule_format, OF h\<alpha>]
+      obtain h where hh: "top1_homeomorphism_on top1_S1 top1_S1_topology
+          (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h" by (by100 blast)
+      have hCA_sub: "C \<alpha> \<subseteq> X" using hC_pr h\<alpha> by (by100 blast)
+      have hCA_top: "is_topology_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))"
+        by (rule subspace_topology_is_topology_on[OF hTX hCA_sub])
+      have h_cont: "top1_continuous_map_on top1_S1 top1_S1_topology
+          (C \<alpha>) (subspace_topology X TX (C \<alpha>)) h"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      have h_bij: "bij_betw h top1_S1 (C \<alpha>)"
+        using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+      from top1_compact_on_continuous_image[OF S1_compact hCA_top h_cont]
+      have "top1_compact_on (h ` top1_S1) (subspace_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (h ` top1_S1))" .
+      moreover have "h ` top1_S1 = C \<alpha>"
+        using h_bij unfolding bij_betw_def by (by100 blast)
+      moreover have "subspace_topology (C \<alpha>) (subspace_topology X TX (C \<alpha>)) (C \<alpha>) =
+          subspace_topology X TX (C \<alpha>)"
+      proof -
+        have "\<forall>U \<in> subspace_topology X TX (C \<alpha>). U \<subseteq> C \<alpha>"
+          unfolding subspace_topology_def by (by100 blast)
+        from subspace_topology_self[OF this] show ?thesis .
+      qed
+      ultimately show "top1_compact_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))" by simp
+    qed
+    \<comment> \<open>X = finite union of compact sets. Use iterated union compactness.\<close>
+    show ?thesis sorry
+  qed
   show ?thesis
     apply (rule exI[of _ X], rule exI[of _ TX], rule exI[of _ p])
     apply (intro conjI)
@@ -22332,9 +22377,57 @@ next
     have "card \<A> \<noteq> 0" using assms(5-6) by (by100 force)
     thus ?thesis using False by linarith
   qed
-  \<comment> \<open>Induction step: find a leaf arc and remove it.
-     This requires showing every finite tree with \\<ge> 2 arcs has a leaf.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Induction step: following Munkres 85.2 Step 1.
+     T = T\\_0 \\<union> A where T\\_0 tree with n-1 arcs, A meets T\\_0 in one vertex.
+     T has one more arc and one more vertex than T\\_0.
+     By IH, card V\\_0 = (n-1)+1 = n. Hence card V = n+1.\<close>
+  \<comment> \<open>Step 1: Find a leaf arc (book: 'we can write T = T\\_0 \\<union> A').\<close>
+  have "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
+    sorry \<comment> \<open>Every finite tree with \\<ge> 2 arcs has a leaf arc.\<close>
+  then obtain A0 v where hA0: "A0 \<in> \<A>"
+      and hv_ep: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+      and hv_uniq: "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
+    by (elim exE conjE)
+  \<comment> \<open>Step 2: \\<A>' = \\<A> - {A0}, T' = \\<Union>\\<A>'.\<close>
+  let ?\<A>' = "\<A> - {A0}"
+  let ?T' = "\<Union>?\<A>'"
+  have h\<A>'_fin: "finite ?\<A>'" using assms(5) by (by100 simp)
+  have h\<A>'_ne: "?\<A>' \<noteq> {}"
+  proof -
+    have "card ?\<A>' \<ge> 1" using hcard_ge2 assms(5) hA0 by (by100 simp)
+    thus ?thesis using h\<A>'_fin by (by100 force)
+  qed
+  have h\<A>'_card: "card ?\<A>' = card \<A> - 1" using assms(5) hA0 by (by100 simp)
+  \<comment> \<open>Step 3: T' is a tree (book: 'T\\_0 is a tree having n-1 edges').\<close>
+  have hT'_tree: "top1_is_tree_on ?T' (subspace_topology T TT ?T')"
+    sorry \<comment> \<open>Removing a leaf arc from a tree gives a tree.\<close>
+  have h\<A>'_arcs: "\<forall>A\<in>?\<A>'. A \<subseteq> ?T' \<and> top1_is_arc_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)"
+    sorry \<comment> \<open>Arc property transfers to subspace.\<close>
+  have h\<A>'_cover: "\<Union>?\<A>' = ?T'" by (by100 blast)
+  have h\<A>'_inter: "\<forall>A\<in>?\<A>'. \<forall>B\<in>?\<A>'. A \<noteq> B \<longrightarrow>
+       A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)
+     \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?T' (subspace_topology T TT ?T') B)
+     \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+    sorry \<comment> \<open>Intersection property transfers to subspace.\<close>
+  \<comment> \<open>Step 4: Apply IH (via sorry-based recursion in quick\\_and\\_dirty).\<close>
+  have hIH: "card (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>') = card ?\<A>' + 1"
+    sorry \<comment> \<open>IH: tree\\_euler\\_number\\_one for smaller tree.\<close>
+  \<comment> \<open>Step 5: Vertex count. V = V' \\<union> {v}, v \\<notin> V'.\<close>
+  have hV_union: "top1_graph_vertex_set T TT \<A> =
+      top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<union> {v}"
+    sorry \<comment> \<open>V = V' + leaf endpoint.\<close>
+  have hv_fresh: "v \<notin> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>'"
+    sorry \<comment> \<open>Leaf endpoint not in any other arc.\<close>
+  have "card (top1_graph_vertex_set T TT \<A>) =
+      card (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>') + 1"
+  proof -
+    have hfin_V': "finite (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>')"
+      sorry
+    from card_insert_disjoint[OF hfin_V'] hv_fresh
+    show ?thesis using hV_union by simp
+  qed
+  thus ?thesis using hIH h\<A>'_card hcard_ge2 by linarith
 qed
 
 \<comment> \<open>Lemma 85.2, Step 2: for a finite connected graph with spanning tree T,
