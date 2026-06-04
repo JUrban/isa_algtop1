@@ -324,18 +324,29 @@ proof -
             qed
             thus ?thesis using \<open>g = _\<close> by simp
           qed
-          have hinvh_class: "top1_fundamental_group_invg B TB b0 h =
-              {f'. top1_loop_equiv_on B TB b0 (top1_path_reverse fh) f'}"
+          have hh_class: "h = {f'. top1_loop_equiv_on B TB b0 fh f'}"
           proof -
-            \<comment> \<open>invg(h) = {f'. \\<exists>f\\<in>h. loop\\_equiv(rev f, f')}. Since fh \\<in> h, rev(fh) witnesses.\<close>
-            have "h \<in> ?piB" using hh .
-            then obtain f0 where "top1_is_loop_on B TB b0 f0"
+            from \<open>h \<in> ?piB\<close> obtain f0 where "top1_is_loop_on B TB b0 f0"
                 "h = {f'. top1_loop_equiv_on B TB b0 f0 f'}"
               unfolding top1_fundamental_group_carrier_def by (by100 blast)
             have "top1_loop_equiv_on B TB b0 f0 fh" using hfh(1) \<open>h = _\<close> by (by100 blast)
-            show ?thesis
-              unfolding top1_fundamental_group_invg_def sorry
+            have "{f'. top1_loop_equiv_on B TB b0 fh f'} = {f'. top1_loop_equiv_on B TB b0 f0 f'}"
+            proof (rule set_eqI, rule iffI)
+              fix f' assume "f' \<in> {f'. top1_loop_equiv_on B TB b0 fh f'}"
+              hence "top1_loop_equiv_on B TB b0 fh f'" by (by100 blast)
+              from top1_loop_equiv_on_trans[OF assms(3) \<open>top1_loop_equiv_on B TB b0 f0 fh\<close> this]
+              show "f' \<in> {f'. top1_loop_equiv_on B TB b0 f0 f'}" by (by100 blast)
+            next
+              fix f' assume "f' \<in> {f'. top1_loop_equiv_on B TB b0 f0 f'}"
+              hence "top1_loop_equiv_on B TB b0 f0 f'" by (by100 blast)
+              from top1_loop_equiv_on_trans[OF assms(3) top1_loop_equiv_on_sym[OF \<open>top1_loop_equiv_on B TB b0 f0 fh\<close>] this]
+              show "f' \<in> {f'. top1_loop_equiv_on B TB b0 fh f'}" by (by100 blast)
+            qed
+            thus ?thesis using \<open>h = _\<close> by simp
           qed
+          have hinvh_class: "top1_fundamental_group_invg B TB b0 h =
+              {f'. top1_loop_equiv_on B TB b0 (top1_path_reverse fh) f'}"
+            unfolding hh_class using fundamental_group_invg_class[OF assms(3) hfh(2)] .
           \<comment> \<open>Apply fundamental\\_group\\_mul\\_class.\<close>
           have "top1_is_loop_on B TB b0 (top1_path_reverse fh)"
             unfolding top1_is_loop_on_def using top1_path_reverse_is_path[OF hfh_path] .
