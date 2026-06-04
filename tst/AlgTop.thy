@@ -851,13 +851,20 @@ lemma same_endpoint_same_coset:
       and "p e1 = b0"
       and "top1_is_path_on E TE e0 e1 \<gamma>1"
       and "top1_is_path_on E TE e0 e1 \<gamma>2"
-  shows "top1_group_coset_on
-      (top1_fundamental_group_carrier B TB b0)
+      \<comment> \<open>Normality: H is normal in some group G containing both loop classes.
+         In practice G = N(H) where H = image\\_hom(E,e0,B,b0,p).\<close>
+      and "top1_is_group_on G mulG eG invgG"
+      and "top1_normal_subgroup_on G mulG eG invgG
+              (top1_fundamental_group_image_hom E TE e0 B TB b0 p)"
+      and "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>1 t)) g} \<in> G"
+      and "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>2 t)) g} \<in> G"
+      and "mulG = top1_fundamental_group_mul B TB b0"
+      and "invgG = top1_fundamental_group_invg B TB b0"
+  shows "top1_group_coset_on G
       (top1_fundamental_group_mul B TB b0)
       (top1_fundamental_group_image_hom E TE e0 B TB b0 p)
       {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>1 t)) g}
-    = top1_group_coset_on
-      (top1_fundamental_group_carrier B TB b0)
+    = top1_group_coset_on G
       (top1_fundamental_group_mul B TB b0)
       (top1_fundamental_group_image_hom E TE e0 B TB b0 p)
       {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>2 t)) g}"
@@ -1109,9 +1116,12 @@ proof -
     using hmul_class hpp_in_H by simp
   \<comment> \<open>Coset equality from a\\<cdot>b\\<inverse> \\<in> H.
      coset(a) = coset(b) if a\\<cdot>b\\<inverse> \\<in> H (standard coset theory).\<close>
-  show ?thesis sorry \<comment> \<open>From hmul\\_in\\_H: mulB(?c1, invB(?c2)) \\<in> H.
-     Standard group theory: a\\<cdot>b\\<inverse> \\<in> H \\<Rightarrow> coset(a, H) = coset(b, H).
-     For left cosets: a\\<cdot>H = \\{a\\<cdot>h | h\\<in>H\\}. Since a\\<cdot>b\\<inverse> \\<in> H,
+  have hmul_in_H_typed: "mulG ?c1 (invgG ?c2) \<in> ?H"
+    using hmul_in_H assms(13) assms(14) by simp
+  show ?thesis
+    using coset_eq_from_diff_in_H[OF assms(9) assms(10) assms(11) assms(12) hmul_in_H_typed]
+    assms(13) by simp
+  \<comment> \<open>From hmul\\_in\\_H: mulB(?c1, invB(?c2)) \\<in> H.
      a = (a\\<cdot>b\\<inverse>)\\<cdot>b, so a\\<cdot>H = (a\\<cdot>b\\<inverse>)\\<cdot>b\\<cdot>H = b\\<cdot>H (for normal H).
      Needs normal\\_coset\\_eq or direct argument.\<close>
 qed
