@@ -368,7 +368,91 @@ lemma left_right_coset_card_eq:
 proof -
   define \<psi> :: "'a set \<Rightarrow> 'a set" where "\<psi> C = invg ` C" for C
   have h\<psi>_bij: "bij_betw \<psi> (top1_left_cosets_on G mul H) (top1_right_cosets_on G mul H)"
-    sorry
+    unfolding bij_betw_def
+  proof (intro conjI)
+    \<comment> \<open>\\<psi> maps left cosets to right cosets.\<close>
+    have h\<psi>_maps: "\<psi> ` (top1_left_cosets_on G mul H) \<subseteq> top1_right_cosets_on G mul H"
+      sorry \<comment> \<open>invg ` (gH) = H(g\\<inverse>).\<close>
+    have h\<psi>_surj: "\<psi> ` (top1_left_cosets_on G mul H) \<supseteq> top1_right_cosets_on G mul H"
+      sorry \<comment> \<open>Every Hg = \\<psi>(g\\<inverse>H).\<close>
+    show "\<psi> ` (top1_left_cosets_on G mul H) = top1_right_cosets_on G mul H"
+      using h\<psi>_maps h\<psi>_surj by (by100 blast)
+    \<comment> \<open>\\<psi> is injective: invg is injective on G (group inverse is bijective).\<close>
+    show "inj_on \<psi> (top1_left_cosets_on G mul H)"
+    proof (rule inj_onI)
+      fix C1 C2 assume hC1: "C1 \<in> top1_left_cosets_on G mul H"
+          and hC2: "C2 \<in> top1_left_cosets_on G mul H" and heq: "\<psi> C1 = \<psi> C2"
+      \<comment> \<open>invg ` C1 = invg ` C2, and invg is injective on G, so C1 = C2.\<close>
+      from hC1 obtain g1 where "g1 \<in> G" "C1 = {mul g1 h |h. h \<in> H}"
+        unfolding top1_left_cosets_on_def top1_group_coset_on_def by (by100 blast)
+      from hC2 obtain g2 where "g2 \<in> G" "C2 = {mul g2 h |h. h \<in> H}"
+        unfolding top1_left_cosets_on_def top1_group_coset_on_def by (by100 blast)
+      have "C1 \<subseteq> G"
+      proof -
+        have "\<forall>h\<in>H. mul g1 h \<in> G"
+          using group_mul_closed[OF assms(1) \<open>g1 \<in> G\<close>] assms(2) by (by100 blast)
+        thus ?thesis using \<open>C1 = _\<close> by (by100 blast)
+      qed
+      have "C2 \<subseteq> G"
+      proof -
+        have "\<forall>h\<in>H. mul g2 h \<in> G"
+          using group_mul_closed[OF assms(1) \<open>g2 \<in> G\<close>] assms(2) by (by100 blast)
+        thus ?thesis using \<open>C2 = _\<close> by (by100 blast)
+      qed
+      \<comment> \<open>invg injective on G: invg x = invg y \\<Rightarrow> x = y (double inverse).\<close>
+      have hinvg_inj: "inj_on invg G"
+      proof (rule inj_onI)
+        fix x y assume "x \<in> G" "y \<in> G" "invg x = invg y"
+        \<comment> \<open>invg(invg(x)) = x (double inverse). So x = invg(invg x) = invg(invg y) = y.\<close>
+        \<comment> \<open>invg(invg x) = x: from mul(invg(invg x))(invg x) = e = mul x (invg x), cancel.\<close>
+        have hx_inv_in: "invg x \<in> G" using group_inv_closed[OF assms(1) \<open>x \<in> G\<close>] .
+        have hy_inv_in: "invg y \<in> G" using group_inv_closed[OF assms(1) \<open>y \<in> G\<close>] .
+        \<comment> \<open>Derive invg(invg x) = x from group axioms.\<close>
+        have "mul x (invg x) = e" using group_right_inv[OF assms(1) \<open>x \<in> G\<close>] .
+        have "mul (invg x) x = e" using group_left_inv[OF assms(1) \<open>x \<in> G\<close>] .
+        have "mul (invg (invg x)) (invg x) = e" using group_left_inv[OF assms(1) hx_inv_in] .
+        have hinvx_inv_in: "invg (invg x) \<in> G" using group_inv_closed[OF assms(1) hx_inv_in] .
+        have hxx: "invg (invg x) = x"
+        proof -
+          \<comment> \<open>From mul(invg(invg x))(invg x) = e and mul x (invg x) = e:
+             both invg(invg x) and x are left inverses of invg x.
+             Multiply both sides on right by x: invg(invg x) = x.\<close>
+          have "invg (invg x) = mul (invg (invg x)) e"
+            using group_right_id[OF assms(1) hinvx_inv_in] by simp
+          also have "... = mul (invg (invg x)) (mul (invg x) x)"
+            using \<open>mul (invg x) x = e\<close> by simp
+          also have "... = mul (mul (invg (invg x)) (invg x)) x"
+            using group_assoc[OF assms(1) hinvx_inv_in hx_inv_in \<open>x \<in> G\<close>] by simp
+          also have "... = mul e x"
+            using \<open>mul (invg (invg x)) (invg x) = e\<close> by simp
+          also have "... = x"
+            using group_left_id[OF assms(1) \<open>x \<in> G\<close>] .
+          finally show ?thesis .
+        qed
+        have hyy: "invg (invg y) = y"
+        proof -
+          have hinvy_inv_in: "invg (invg y) \<in> G" using group_inv_closed[OF assms(1) hy_inv_in] .
+          have "invg (invg y) = mul (invg (invg y)) e"
+            using group_right_id[OF assms(1) hinvy_inv_in] by simp
+          also have "... = mul (invg (invg y)) (mul (invg y) y)"
+            using group_left_inv[OF assms(1) \<open>y \<in> G\<close>] by simp
+          also have "... = mul (mul (invg (invg y)) (invg y)) y"
+            using group_assoc[OF assms(1) hinvy_inv_in hy_inv_in \<open>y \<in> G\<close>] by simp
+          also have "... = mul e y"
+            using group_left_inv[OF assms(1) hy_inv_in] by simp
+          also have "... = y"
+            using group_left_id[OF assms(1) \<open>y \<in> G\<close>] .
+          finally show ?thesis .
+        qed
+        have "x = invg (invg x)" using hxx by simp
+        also have "... = invg (invg y)" using \<open>invg x = invg y\<close> by simp
+        also have "... = y" using hyy .
+        finally show "x = y" .
+      qed
+      from inj_on_image_eq_iff[OF hinvg_inj \<open>C1 \<subseteq> G\<close> \<open>C2 \<subseteq> G\<close>]
+      show "C1 = C2" using heq unfolding \<psi>_def by simp
+    qed
+  qed
   from bij_betw_same_card[OF h\<psi>_bij] show ?thesis .
 qed
 
