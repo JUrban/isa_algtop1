@@ -2914,7 +2914,13 @@ proof -
               ?coset {h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h}"
           proof -
             have "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to ?e1 t)) h} \<in> ?N"
-              sorry \<comment> \<open>Loop class of path\\_to(e1) \\<in> N(H) (same as hin\\_normalizer pattern).\<close>
+            proof -
+              have "h_ct e0 = ?e1" using \<open>h_ct e0 = ?e1\<close> .
+              hence "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to ?e1 t)) h} =
+                  {h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h_ct e0) t)) h}" by simp
+              also have "\<dots> \<in> ?N" using hin_normalizer[OF \<open>h_ct \<in> ?Cov\<close>] .
+              finally show ?thesis .
+            qed
             have "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h} \<in> ?N"
             proof -
               have "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h} = g"
