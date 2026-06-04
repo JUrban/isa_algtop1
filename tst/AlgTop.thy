@@ -357,7 +357,48 @@ proof -
         \<comment> \<open>Step 2: This class = class of p\\<circ>(product(ftg,rev(fth))) (pointwise equal on I\\_set).\<close>
         have hclass_proj: "{f'. top1_loop_equiv_on B TB b0 (top1_path_product fg (top1_path_reverse fh)) f'}
             = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)) f'}"
-          sorry \<comment> \<open>Pointwise equal on I\\_set \\<Rightarrow> same loop class.\<close>
+        proof -
+          \<comment> \<open>The two functions agree on I\\_set. By loop\\_agree\\_on\\_I they are homotopic.
+             Homotopic loops have the same equivalence class.\<close>
+          have hagree: "\<forall>s\<in>I_set.
+              (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)) s
+              = (top1_path_product fg (top1_path_reverse fh)) s"
+            using hproj_eq by simp
+          from loop_agree_on_I[OF hfg_rev_fh_loop, of "\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)"]
+          have hle: "top1_is_loop_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t))
+              \<and> top1_path_homotopic_on B TB b0 b0
+                  (top1_path_product fg (top1_path_reverse fh))
+                  (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t))"
+            using hagree by (by100 simp)
+          hence hloop2: "top1_is_loop_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t))"
+              and hhomot: "top1_path_homotopic_on B TB b0 b0
+                  (top1_path_product fg (top1_path_reverse fh))
+                  (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t))"
+            by (by100 blast)+
+          \<comment> \<open>Two homotopic loops define the same loop\\_equiv class.\<close>
+          have hle_fwd: "top1_loop_equiv_on B TB b0
+              (top1_path_product fg (top1_path_reverse fh))
+              (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t))"
+            unfolding top1_loop_equiv_on_def using hfg_rev_fh_loop hloop2 hhomot by (by100 blast)
+          let ?f1 = "top1_path_product fg (top1_path_reverse fh)"
+          let ?f2 = "\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)"
+          show ?thesis
+          proof (rule set_eqI, rule iffI)
+            fix f' assume "f' \<in> {f'. top1_loop_equiv_on B TB b0 ?f1 f'}"
+            hence h1: "top1_loop_equiv_on B TB b0 ?f1 f'" by (by100 blast)
+            \<comment> \<open>?f1 ~ ?f2 (hle\\_fwd) + ?f1 ~ f' (h1).
+               sym: ?f2 ~ ?f1. trans: ?f2 ~ ?f1 ~ f'. So ?f2 ~ f'.\<close>
+            from top1_loop_equiv_on_sym[OF hle_fwd]
+            have "top1_loop_equiv_on B TB b0 ?f2 ?f1" .
+            from top1_loop_equiv_on_trans[OF assms(3) this h1]
+            show "f' \<in> {f'. top1_loop_equiv_on B TB b0 ?f2 f'}" by (by100 blast)
+          next
+            fix f' assume "f' \<in> {f'. top1_loop_equiv_on B TB b0 ?f2 f'}"
+            hence h1: "top1_loop_equiv_on B TB b0 ?f2 f'" by (by100 blast)
+            from top1_loop_equiv_on_trans[OF assms(3) hle_fwd h1]
+            show "f' \<in> {f'. top1_loop_equiv_on B TB b0 ?f1 f'}" by (by100 blast)
+          qed
+        qed
         \<comment> \<open>Step 3: class\\_in\\_H says this is in H.\<close>
         show ?thesis using hclass_eq hclass_proj
             \<open>{f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)) f'} \<in> ?H\<close>
