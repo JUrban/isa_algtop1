@@ -17,6 +17,73 @@ definition top1_right_cosets_on :: "'a set \<Rightarrow> ('a \<Rightarrow> 'a \<
 
 \<comment> \<open>Theorem 54.6(a): p* is injective. Already proved as covering\\_induced\\_injective.\<close>
 
+\<comment> \<open>Right coset characterization: g*h\\<inverse> \\<in> H \\<Rightarrow> Hg = Hh.\<close>
+lemma right_coset_eq_from_product_in_H:
+  assumes grp: "top1_is_group_on G mul e invg"
+      and Hsub: "H \<subseteq> G"
+      and Hgrp: "top1_is_group_on H mul e invg"
+      and hg: "g \<in> G" and hh: "h \<in> G"
+      and hprod: "mul g (invg h) \<in> H"
+  shows "top1_right_coset_on G mul H g = top1_right_coset_on G mul H h"
+proof -
+  let ?\<alpha> = "mul g (invg h)"
+  have h\<alpha>_in_H: "?\<alpha> \<in> H" using hprod .
+  have h\<alpha>_in_G: "?\<alpha> \<in> G" using Hsub h\<alpha>_in_H by (by100 blast)
+  have hinvh: "invg h \<in> G" using group_inv_closed[OF grp hh] .
+  \<comment> \<open>g = \\<alpha>*h: from g*h\\<inverse> = \\<alpha> we get g = \\<alpha>*h.\<close>
+  have hg_eq: "g = mul ?\<alpha> h"
+  proof -
+    have "mul g (mul (invg h) h) = mul g e" using group_left_inv[OF grp hh] by simp
+    also have "... = g" using group_right_id[OF grp hg] .
+    finally have "mul g (mul (invg h) h) = g" .
+    moreover have "mul (mul g (invg h)) h = mul g (mul (invg h) h)"
+      using group_assoc[OF grp hg hinvh hh] .
+    ultimately show ?thesis by simp
+  qed
+  show ?thesis
+    unfolding top1_right_coset_on_def
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> {mul k g |k. k \<in> H}"
+    then obtain k where hk: "k \<in> H" "x = mul k g" by (by100 blast)
+    have "x = mul k (mul ?\<alpha> h)" using hk(2) hg_eq by simp
+    also have "... = mul (mul k ?\<alpha>) h"
+    proof -
+      have "k \<in> G" using hk(1) Hsub by (by100 blast)
+      from group_assoc[OF grp \<open>k \<in> G\<close> h\<alpha>_in_G hh] show ?thesis by simp
+    qed
+    finally have "x = mul (mul k ?\<alpha>) h" .
+    moreover have "mul k ?\<alpha> \<in> H"
+      using group_mul_closed[OF Hgrp hk(1) h\<alpha>_in_H] .
+    ultimately show "x \<in> {mul k h |k. k \<in> H}" by (by100 blast)
+  next
+    fix x assume "x \<in> {mul k h |k. k \<in> H}"
+    then obtain k where hk: "k \<in> H" "x = mul k h" by (by100 blast)
+    \<comment> \<open>h = \\<alpha>\\<inverse>*g, so k*h = k*\\<alpha>\\<inverse>*g.\<close>
+    have h\<alpha>_inv: "invg ?\<alpha> \<in> H" using group_inv_closed[OF Hgrp h\<alpha>_in_H] .
+    have "mul (invg ?\<alpha>) g = h"
+    proof -
+      have hinv\<alpha>: "invg ?\<alpha> \<in> G" using group_inv_closed[OF grp h\<alpha>_in_G] .
+      have "mul (invg ?\<alpha>) g = mul (invg ?\<alpha>) (mul ?\<alpha> h)" using hg_eq by simp
+      also have "... = mul (mul (invg ?\<alpha>) ?\<alpha>) h"
+        using group_assoc[OF grp hinv\<alpha> h\<alpha>_in_G hh] by simp
+      also have "... = mul e h" using group_left_inv[OF grp h\<alpha>_in_G] by simp
+      also have "... = h" using group_left_id[OF grp hh] .
+      finally show ?thesis .
+    qed
+    hence "x = mul k (mul (invg ?\<alpha>) g)" using hk(2) \<open>mul (invg ?\<alpha>) g = h\<close> by simp
+    also have "... = mul (mul k (invg ?\<alpha>)) g"
+    proof -
+      have "k \<in> G" using hk(1) Hsub by (by100 blast)
+      have "invg ?\<alpha> \<in> G" using group_inv_closed[OF grp h\<alpha>_in_G] .
+      from group_assoc[OF grp \<open>k \<in> G\<close> \<open>invg ?\<alpha> \<in> G\<close> hg] show ?thesis by simp
+    qed
+    finally have "x = mul (mul k (invg ?\<alpha>)) g" .
+    moreover have "mul k (invg ?\<alpha>) \<in> H"
+      using group_mul_closed[OF Hgrp hk(1) h\<alpha>_inv] .
+    ultimately show "x \<in> {mul k g |k. k \<in> H}" by (by100 blast)
+  qed
+qed
+
 \<comment> \<open>Theorem 54.6(b): The lifting correspondence phi satisfies
    phi([f]) = phi([g]) iff [f] and [g] are in the same coset of H = p*(pi1(E,e0)).
    When E is path-connected, phi is surjective, so this gives a bijection
@@ -210,8 +277,46 @@ proof -
          For RIGHT cosets: Hg = Hh \\<leftarrow> h*g\\<inverse> \\<in> H.
          We have g*h\\<inverse> \\<in> H \\<Rightarrow> (g*h\\<inverse>)\\<inverse> = h*g\\<inverse> \\<in> H (subgroup closed under inv).
          Then Hg = Hh.\<close>
+      \<comment> \<open>Step: show [fg*rev(fh)] = mulB g (invgB h), hence g*h\\<inverse> \\<in> H.\<close>
+      have "?mulB g (top1_fundamental_group_invg B TB b0 h) \<in> ?H"
+        sorry \<comment> \<open>[fg*rev(fh)] = mulB(g, invg(h)). class\\_in\\_H gives this \\<in> H.\<close>
+      have hg_in_piB: "g \<in> ?piB" using hg .
+      have hh_in_piB: "h \<in> ?piB" using hh .
+      have "b0 \<in> B"
+        using assms(1,4,5) unfolding top1_covering_map_on_def top1_evenly_covered_on_def
+        by (by5000 blast)
+      have hpiB_grp: "top1_is_group_on ?piB ?mulB
+          (top1_fundamental_group_id B TB b0) (top1_fundamental_group_invg B TB b0)"
+        using top1_fundamental_group_is_group[OF assms(3) \<open>b0 \<in> B\<close>] .
+      have hH_sub: "?H \<subseteq> ?piB"
+      proof -
+        have hp_cont: "top1_continuous_map_on E TE B TB p"
+          using assms(1) unfolding top1_covering_map_on_def top1_evenly_covered_on_def by (by5000 blast)
+        have hp_hom: "top1_group_hom_on
+            (top1_fundamental_group_carrier E TE e0) (top1_fundamental_group_mul E TE e0)
+            ?piB ?mulB (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hE_top assms(3) assms(4) \<open>b0 \<in> B\<close> hp_cont assms(5)])
+        thus ?thesis unfolding top1_fundamental_group_image_hom_def top1_group_hom_on_def by (by100 blast)
+      qed
+      have hH_grp: "top1_is_group_on ?H ?mulB
+          (top1_fundamental_group_id B TB b0) (top1_fundamental_group_invg B TB b0)"
+      proof -
+        have hE'_grp: "top1_is_group_on (top1_fundamental_group_carrier E TE e0)
+            (top1_fundamental_group_mul E TE e0) (top1_fundamental_group_id E TE e0)
+            (top1_fundamental_group_invg E TE e0)"
+          by (rule top1_fundamental_group_is_group[OF hE_top assms(4)])
+        have hp_cont: "top1_continuous_map_on E TE B TB p"
+          using assms(1) unfolding top1_covering_map_on_def top1_evenly_covered_on_def by (by5000 blast)
+        have hp_hom: "top1_group_hom_on
+            (top1_fundamental_group_carrier E TE e0) (top1_fundamental_group_mul E TE e0)
+            ?piB ?mulB (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
+          by (rule top1_fundamental_group_induced_on_is_hom[OF hE_top assms(3) assms(4) \<open>b0 \<in> B\<close> hp_cont assms(5)])
+        from hom_image_is_subgroup[OF hE'_grp hpiB_grp hp_hom]
+        show ?thesis unfolding top1_fundamental_group_image_hom_def .
+      qed
       show "top1_right_coset_on ?piB ?mulB ?H g = top1_right_coset_on ?piB ?mulB ?H h"
-        sorry
+        by (rule right_coset_eq_from_product_in_H[OF hpiB_grp hH_sub hH_grp hg_in_piB hh_in_piB
+            \<open>?mulB g (top1_fundamental_group_invg B TB b0 h) \<in> ?H\<close>])
     next
       \<comment> \<open>Backward: same coset \\<Rightarrow> \\<phi>(g)=\\<phi>(h).
          Book: gH = hH, so g = h*k for some k \\<in> H.
