@@ -1368,7 +1368,43 @@ proof -
        Need T \\ V' also open... that makes V' clopen, contradicting T connected.\<close>
     \<comment> \<open>Need w (other endpoint of A0).\<close>
     have "\<exists>w. w \<in> ?T' \<and> w \<noteq> v"
-      sorry \<comment> \<open>From tree\\_leaf\\_other\\_endpoint\\_shared.\<close>
+    proof -
+      have hstrict: "is_topology_on_strict T TT"
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have hhaus: "is_hausdorff_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have hA0_sub: "A0 \<subseteq> T" using assms(2,5) by (by100 blast)
+      have hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)" using assms(2,5) by (by100 blast)
+      obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+        using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have hep: "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {h 0, h 1}"
+        by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA0_sub hA0_arc hh])
+      have h_inj: "inj_on h I_set"
+        using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hne: "h 0 \<noteq> h 1"
+      proof
+        assume "h 0 = h 1"
+        from inj_onD[OF h_inj this] show False unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      have "v \<in> {h 0, h 1}" using assms(6) hep by simp
+      then obtain w where hw_ep: "w \<in> {h 0, h 1}" "w \<noteq> v"
+      proof (cases "v = h 0")
+        case True
+        have "h 1 \<in> {h 0, h 1} \<and> h 1 \<noteq> v" using hne True by (by100 simp)
+        thus ?thesis using that by (by100 blast)
+      next
+        case False
+        hence "v = h 1" using \<open>v \<in> {h 0, h 1}\<close> by (by100 blast)
+        have "h 0 \<in> {h 0, h 1} \<and> h 0 \<noteq> v" using hne \<open>v = h 1\<close> by (by100 simp)
+        thus ?thesis using that by (by100 blast)
+      qed
+      have hw_ep_A0: "w \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        using hw_ep(1) hep by simp
+      from tree_leaf_other_endpoint_shared[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7) assms(8) assms(9) hw_ep_A0 hw_ep(2)]
+      obtain B where "B \<in> \<A> - {A0}" "w \<in> B" by (by100 blast)
+      hence "w \<in> ?T'" by (by100 blast)
+      thus ?thesis using hw_ep(2) by (by100 blast)
+    qed
     then obtain w where "w \<in> ?T'" "w \<noteq> v" by (by100 blast)
     have hw_in: "w \<in> U \<or> w \<in> V" using \<open>w \<in> ?T'\<close> hcov by (by100 blast)
     \<comment> \<open>WLOG w \\<in> U. Then V is disjoint from A0. V' open in T, V \\<ne> {}, T\\\\V' nonempty.\<close>
