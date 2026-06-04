@@ -22108,6 +22108,10 @@ lemma tree_euler_number_one:
       and "finite \<A>"
       and "\<A> \<noteq> {}"
   shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
+  \<comment> \<open>Munkres Lemma 85.2 Step 1: \\<chi>(T) = vertices - arcs = 1.
+     Proof by induction on card(\\<A>). Base: 1 arc has 2 endpoints.
+     Step: find a leaf arc (endpoint not in any other arc), remove it,
+     apply IH to the smaller tree.\<close>
   sorry
 
 \<comment> \<open>Lemma 85.2, Step 2: for a finite connected graph with spanning tree T,
@@ -22126,7 +22130,30 @@ lemma graph_euler_rank:
       and S_eq: "S = {A \<in> \<A>. \<not> A \<subseteq> T}"
       and "finite \<A>"
   shows "card S + card (top1_graph_vertex_set Y TY \<A>) = card \<A> + 1"
-  sorry
+proof -
+  let ?\<A>_T = "{A \<in> \<A>. A \<subseteq> T}"
+  have h\<A>_partition: "\<A> = ?\<A>_T \<union> S" using S_eq by (by100 blast)
+  have h\<A>_disjoint: "?\<A>_T \<inter> S = {}" using S_eq by (by100 blast)
+  have h\<A>_T_fin: "finite ?\<A>_T" using assms(10) by (by100 simp)
+  have hS_fin: "finite S" using S_eq assms(10) by (by100 simp)
+  have hcard_partition: "card \<A> = card ?\<A>_T + card S"
+  proof -
+    have "card \<A> = card (?\<A>_T \<union> S)" using h\<A>_partition by simp
+    also have "... = card ?\<A>_T + card S"
+      using card_Un_disjoint[OF h\<A>_T_fin hS_fin] h\<A>_disjoint by simp
+    finally show ?thesis .
+  qed
+  \<comment> \<open>The full vertex set equals the tree vertex set (non-tree arc endpoints are in tree arcs).\<close>
+  have hV_eq: "top1_graph_vertex_set Y TY \<A> =
+      (\<Union>A\<in>?\<A>_T. top1_arc_endpoints_on A (subspace_topology Y TY A))"
+    sorry \<comment> \<open>Non-tree arc endpoints are also tree arc endpoints.\<close>
+  \<comment> \<open>Apply tree\\_euler\\_number\\_one to the tree T with arc family \\<A>\\_T.\<close>
+  have htree_euler: "card (\<Union>A\<in>?\<A>_T. top1_arc_endpoints_on A (subspace_topology Y TY A)) = card ?\<A>_T + 1"
+    sorry \<comment> \<open>Follows from tree\\_euler\\_number\\_one applied to T/\\<A>\\_T.\<close>
+  have "card (top1_graph_vertex_set Y TY \<A>) = card ?\<A>_T + 1"
+    using hV_eq htree_euler by simp
+  thus ?thesis using hcard_partition by linarith
+qed
 
 \<comment> \<open>Covering multiplicity for arcs: a k-sheeted covering of a graph
    has exactly k times as many arcs.\<close>
