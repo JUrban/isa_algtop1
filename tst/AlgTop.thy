@@ -267,12 +267,57 @@ proof (rule ccontr)
   have "\<Union>(\<A> - {A0}) \<subseteq> T" using assms(2,3) by (by100 blast)
   have "T = A0 \<union> \<Union>(\<A> - {A0})" using assms(3,5) by (by100 blast)
   \<comment> \<open>Both sets are closed in T (by graph coherent closedness).\<close>
-  have "closedin_on T TT A0" sorry
-  have "closedin_on T TT (\<Union>(\<A> - {A0}))" sorry
-  \<comment> \<open>Disjoint nonempty closed sets covering T contradicts connectedness.\<close>
-  thus False using hT_conn hA0_ne hrest_ne hA0_disj \<open>T = A0 \<union> _\<close>
-      \<open>closedin_on T TT A0\<close> \<open>closedin_on T TT (\<Union>(\<A> - {A0}))\<close>
-    sorry
+  have "closedin_on T TT A0"
+  proof -
+    have hhaus: "is_hausdorff_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)" using assms(2,5) by (by100 blast)
+    from arc_compact[OF hA0_arc]
+    have "top1_compact_on A0 (subspace_topology T TT A0)" .
+    from Theorem_26_3[OF hhaus \<open>A0 \<subseteq> T\<close> this]
+    show ?thesis .
+  qed
+  have "closedin_on T TT (\<Union>(\<A> - {A0}))"
+  proof -
+    \<comment> \<open>Each arc B is compact (arc\\_compact) hence closed in Hausdorff T (Theorem 26.3).
+       Finite union of closed sets is closed.\<close>
+    have hhaus: "is_hausdorff_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hTT: "is_topology_on T TT"
+      using hhaus unfolding is_hausdorff_on_def by (by100 blast)
+    have "\<forall>B\<in>\<A> - {A0}. closedin_on T TT B"
+    proof (intro ballI)
+      fix B assume "B \<in> \<A> - {A0}"
+      hence "B \<in> \<A>" by (by100 blast)
+      have "B \<subseteq> T" using assms(2) \<open>B \<in> \<A>\<close> by (by100 blast)
+      have "top1_is_arc_on B (subspace_topology T TT B)" using assms(2) \<open>B \<in> \<A>\<close> by (by100 blast)
+      from arc_compact[OF this]
+      have "top1_compact_on B (subspace_topology T TT B)" .
+      from Theorem_26_3[OF hhaus \<open>B \<subseteq> T\<close> this]
+      show "closedin_on T TT B" .
+    qed
+    have "finite (\<A> - {A0})" using assms(9) by (by100 simp)
+    from closedin_Union_finite[OF hTT \<open>finite (\<A> - {A0})\<close> \<open>\<forall>B\<in>\<A> - {A0}. closedin_on T TT B\<close>]
+    show ?thesis .
+  qed
+  \<comment> \<open>A0 is closed + complement closed \\<Rightarrow> A0 is clopen. Connected \\<Rightarrow> A0 = {} or T.\<close>
+  have hA0_open: "A0 \<in> TT"
+  proof -
+    have "T - \<Union>(\<A> - {A0}) = A0"
+      using \<open>T = A0 \<union> \<Union>(\<A> - {A0})\<close> hA0_disj by (by100 blast)
+    moreover have "T - \<Union>(\<A> - {A0}) \<in> TT"
+      using \<open>closedin_on T TT (\<Union>(\<A> - {A0}))\<close> unfolding closedin_on_def by (by100 blast)
+    ultimately show ?thesis by simp
+  qed
+  have hA0_clopen: "A0 \<in> TT \<and> closedin_on T TT A0"
+    using hA0_open \<open>closedin_on T TT A0\<close> by (by100 blast)
+  have hTT: "is_topology_on T TT"
+    using hT_conn unfolding top1_connected_on_def by (by100 blast)
+  from connected_iff_clopen[OF hTT]
+  have "\<forall>U. U \<in> TT \<and> closedin_on T TT U \<longrightarrow> U = {} \<or> U = T"
+    using hT_conn by (by100 blast)
+  hence "A0 = {} \<or> A0 = T" using hA0_clopen by (by100 blast)
+  thus False using hA0_ne \<open>T = A0 \<union> _\<close> hA0_disj hrest_ne by (by100 blast)
 qed
 
 lemma tree_euler_nat:
