@@ -1404,7 +1404,35 @@ proof -
         fix x f assume hx: "x \<in> ?T'" and hf: "top1_is_loop_on ?T' ?TT' x f"
         \<comment> \<open>f is a loop in T' \\<subseteq> T. Hence a loop in T.\<close>
         have hf_T: "top1_is_loop_on T TT x f"
-          sorry \<comment> \<open>Subspace loop is ambient loop (inclusion continuous by Thm 18.2).\<close>
+        proof -
+          have hf_path: "top1_is_path_on ?T' ?TT' x x f"
+            using hf unfolding top1_is_loop_on_def .
+          have hf_cont: "top1_continuous_map_on I_set I_top ?T' ?TT' f"
+            using hf_path unfolding top1_is_path_on_def by (by100 blast)
+          \<comment> \<open>Inclusion T' \\<hookrightarrow> T is continuous (Theorem 18.2).\<close>
+          have hT'_sub: "?T' \<subseteq> T" using assms(2,3) by (by100 blast)
+          have hincl: "top1_continuous_map_on ?T' ?TT' T TT id"
+          proof -
+            \<comment> \<open>Direct: preimage of open in T under id restricted to T' is open in T'.\<close>
+            show ?thesis unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix x assume "x \<in> ?T'"
+              have "x \<in> T" using \<open>x \<in> ?T'\<close> hT'_sub by (by100 blast)
+              thus "id x \<in> T" by simp
+            next
+              fix U assume "U \<in> TT"
+              have "{x \<in> ?T'. id x \<in> U} = ?T' \<inter> U" by (by100 auto)
+              also have "?T' \<inter> U \<in> ?TT'" unfolding subspace_topology_def using \<open>U \<in> TT\<close> by (by100 blast)
+              finally show "{x \<in> ?T'. id x \<in> U} \<in> ?TT'" .
+            qed
+          qed
+          from top1_continuous_map_on_comp[OF hf_cont hincl]
+          have "top1_continuous_map_on I_set I_top T TT (id \<circ> f)" .
+          hence "top1_continuous_map_on I_set I_top T TT f" by simp
+          moreover have "f 0 = x" using hf_path unfolding top1_is_path_on_def by (by100 blast)
+          moreover have "f 1 = x" using hf_path unfolding top1_is_path_on_def by (by100 blast)
+          ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        qed
         \<comment> \<open>T simply connected \\<Rightarrow> f contractible in T.\<close>
         have "top1_path_homotopic_on T TT x x f (top1_constant_path x)"
           using hT_sc hf_T hx hT'_sub
