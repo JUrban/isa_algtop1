@@ -2883,12 +2883,82 @@ proof -
           thus ?thesis using \<open>g = {h. top1_loop_equiv_on B TB b0 \<alpha> h}\<close> by simp
         qed
         \<comment> \<open>image\\_hom(E, e1) = H (from g \\<in> N(H) + basepoint\\_change\\_image\\_hom).\<close>
-        have "top1_fundamental_group_image_hom E TE ?e1 B TB b0 p = ?H"
-          sorry \<comment> \<open>From g \\<in> N(H): g\\<cdot>H\\<cdot>g\\<inverse> = H, and basepoint\\_change\\_image\\_hom gives
-             image\\_hom(E, e1) = g\\<inverse>\\<cdot>H\\<cdot>g = H (via group\\_conj\\_reverse with invg g).
-             Infrastructure available: basepoint\\_change\\_image\\_hom, hclass\\_lift,
-             group\\_conj\\_reverse, group\\_inv\\_inv\\_early.
-             Blocked by: scope of hpi1\\_grp\\_n with \\<open>invg g\\<close> type mismatch.\<close>
+        have him_eq_H: "top1_fundamental_group_image_hom E TE ?e1 B TB b0 p = ?H"
+        proof -
+          \<comment> \<open>Apply basepoint\\_change\\_image\\_hom.\<close>
+          have "(\<lambda>t. p (\<gamma>_lift t)) = p \<circ> \<gamma>_lift" by (rule ext) simp
+          from basepoint_change_image_hom[OF assms(3) hTE_n hTB_n assms(6)
+              \<open>?e1 \<in> E\<close> \<open>top1_is_path_on E TE e0 ?e1 \<gamma>_lift\<close>
+              assms(7) \<open>p ?e1 = b0\<close> assms(4)]
+          have him: "top1_fundamental_group_image_hom E TE ?e1 B TB b0 p =
+              (\<lambda>H'. ?mulB (?invB {g'. top1_loop_equiv_on B TB b0 (p \<circ> \<gamma>_lift) g'}) `
+                   ((\<lambda>h. ?mulB h {g'. top1_loop_equiv_on B TB b0 (p \<circ> \<gamma>_lift) g'}) ` H')) ?H" .
+          \<comment> \<open>Rewrite [p\\<circ>\\<gamma>\\_lift] = g via hclass\\_lift.\<close>
+          have "{g'. top1_loop_equiv_on B TB b0 (p \<circ> \<gamma>_lift) g'} = g"
+            using hclass_lift \<open>(\<lambda>t. p (\<gamma>_lift t)) = p \<circ> \<gamma>_lift\<close> by simp
+          hence him2: "top1_fundamental_group_image_hom E TE ?e1 B TB b0 p =
+              ?mulB (?invB g) ` ((\<lambda>h. ?mulB h g) ` ?H)" using him by simp
+          \<comment> \<open>This is g\\<inverse>\\<cdot>H\\<cdot>g in image form. Convert to single lambda.\<close>
+          have him3: "top1_fundamental_group_image_hom E TE ?e1 B TB b0 p =
+              (\<lambda>h'. ?mulB (?invB g) (?mulB h' g)) ` ?H"
+            using him2 by (by5000 auto)
+          \<comment> \<open>From g \\<in> N(H): g\\<cdot>H\\<cdot>g\\<inverse> = H \\<Rightarrow> g\\<inverse>\\<cdot>H\\<cdot>g = H.\<close>
+          \<comment> \<open>This was proved in normalizer\\_is\\_group: the inverse closure proof
+             established exactly this pattern. Apply group\\_conj\\_reverse
+             with g replaced by ?invB g.\<close>
+          have "g \<in> ?pi1B" using \<open>g \<in> ?N\<close>
+            unfolding top1_normalizer_on_def by (by100 blast)
+          have "{?mulB (?mulB g h) (?invB g) |h. h \<in> ?H} = ?H"
+            using \<open>g \<in> ?N\<close> unfolding top1_normalizer_on_def by (by5000 blast)
+          \<comment> \<open>Convert to image form: g\\<cdot>H\\<cdot>g\\<inverse> = H.\<close>
+          hence "(\<lambda>h. ?mulB (?mulB g h) (?invB g)) ` ?H = ?H"
+            by (by100 blast)
+          \<comment> \<open>By assoc: (\\<lambda>h. mulB g (mulB h (invB g))) ` H = H.\<close>
+          have "(\<lambda>h. ?mulB g (?mulB h (?invB g))) ` ?H = ?H"
+          proof -
+            have "\<forall>h\<in>?H. ?mulB (?mulB g h) (?invB g) = ?mulB g (?mulB h (?invB g))"
+            proof (intro ballI)
+              fix h assume "h \<in> ?H"
+              have "h \<in> ?pi1B" using \<open>h \<in> ?H\<close> hH_sub_n by (by100 blast)
+              have "?invB g \<in> ?pi1B" using group_inv_closed[OF hpi1_grp_n \<open>g \<in> ?pi1B\<close>] .
+              from group_assoc[OF hpi1_grp_n \<open>g \<in> ?pi1B\<close> \<open>h \<in> ?pi1B\<close> \<open>?invB g \<in> ?pi1B\<close>]
+              show "?mulB (?mulB g h) (?invB g) = ?mulB g (?mulB h (?invB g))" .
+            qed
+            hence "(\<lambda>h. ?mulB (?mulB g h) (?invB g)) ` ?H = (\<lambda>h. ?mulB g (?mulB h (?invB g))) ` ?H"
+              by (by5000 auto)
+            thus ?thesis using \<open>(\<lambda>h. ?mulB (?mulB g h) (?invB g)) ` ?H = ?H\<close> by simp
+          qed
+          \<comment> \<open>Apply group\\_conj\\_reverse with ?invB g: H = g\\<cdot>H\\<cdot>g\\<inverse> \\<Rightarrow> g\\<inverse>\\<cdot>H\\<cdot>g = H.\<close>
+          have "?invB g \<in> ?pi1B" using group_inv_closed[OF hpi1_grp_n \<open>g \<in> ?pi1B\<close>] .
+          have "?invB (?invB g) = g" using group_inv_inv_early[OF hpi1_grp_n \<open>g \<in> ?pi1B\<close>] .
+          \<comment> \<open>group\\_conj\\_reverse needs: H = (\\<lambda>h. invg(invg g)\\<cdot>(h\\<cdot>invg g)) ` H
+             = (\\<lambda>h. g\\<cdot>(h\\<cdot>invg g)) ` H = g\\<cdot>H\\<cdot>g\\<inverse>.\<close>
+          have "?H = (\<lambda>h. ?mulB (?invB (?invB g)) (?mulB h (?invB g))) ` ?H"
+            using \<open>?invB (?invB g) = g\<close> \<open>(\<lambda>h. ?mulB g (?mulB h (?invB g))) ` ?H = ?H\<close> by simp
+          from group_conj_reverse[OF hpi1_grp_n hH_sub_n \<open>?invB g \<in> ?pi1B\<close> this]
+          have "(\<lambda>h'. ?mulB (?mulB (?invB g) h') (?invB (?invB g))) ` ?H = ?H" .
+          hence "(\<lambda>h'. ?mulB (?invB g) (?mulB h' g)) ` ?H = ?H"
+          proof -
+            have "\<forall>h'\<in>?H. ?mulB (?mulB (?invB g) h') (?invB (?invB g)) =
+                ?mulB (?invB g) (?mulB h' g)"
+            proof (intro ballI)
+              fix h' assume "h' \<in> ?H"
+              have "h' \<in> ?pi1B" using \<open>h' \<in> ?H\<close> hH_sub_n by (by100 blast)
+              have "?mulB (?invB g) h' \<in> ?pi1B"
+                using group_mul_closed[OF hpi1_grp_n \<open>?invB g \<in> ?pi1B\<close> \<open>h' \<in> ?pi1B\<close>] .
+              from group_assoc[OF hpi1_grp_n \<open>?invB g \<in> ?pi1B\<close> \<open>h' \<in> ?pi1B\<close> \<open>g \<in> ?pi1B\<close>]
+              have "?mulB (?mulB (?invB g) h') g = ?mulB (?invB g) (?mulB h' g)" .
+              thus "?mulB (?mulB (?invB g) h') (?invB (?invB g)) =
+                  ?mulB (?invB g) (?mulB h' g)"
+                using \<open>?invB (?invB g) = g\<close> by simp
+            qed
+            hence "(\<lambda>h'. ?mulB (?mulB (?invB g) h') (?invB (?invB g))) ` ?H =
+                (\<lambda>h'. ?mulB (?invB g) (?mulB h' g)) ` ?H" by (by5000 auto)
+            thus ?thesis using \<open>(\<lambda>h'. ?mulB (?mulB (?invB g) h') (?invB (?invB g))) ` ?H = ?H\<close>
+              by simp
+          qed
+          thus ?thesis using him3 by simp
+        qed
         \<comment> \<open>By h\\<Psi>\\_image backward: \\<exists> h \\<in> Cov with h(e0) = e1.\<close>
         have "?e1 \<in> {e \<in> E. p e = b0 \<and>
             top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
