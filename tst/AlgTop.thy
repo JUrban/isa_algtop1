@@ -2883,9 +2883,12 @@ proof -
           thus ?thesis using \<open>g = {h. top1_loop_equiv_on B TB b0 \<alpha> h}\<close> by simp
         qed
         \<comment> \<open>image\\_hom(E, e1) = H (from g \\<in> N(H) + basepoint\\_change\\_image\\_hom).\<close>
-        have "top1_fundamental_group_image_hom E TE ?e1 B TB b0 p = ?H" sorry
-          \<comment> \<open>From g \\<in> N(H): g\\<cdot>H\\<cdot>g\\<inverse> = H, and basepoint\\_change gives
-             image\\_hom(E, e1) = g\\<inverse>\\<cdot>H\\<cdot>g = H.\<close>
+        have "top1_fundamental_group_image_hom E TE ?e1 B TB b0 p = ?H"
+          sorry \<comment> \<open>From g \\<in> N(H): g\\<cdot>H\\<cdot>g\\<inverse> = H, and basepoint\\_change\\_image\\_hom gives
+             image\\_hom(E, e1) = g\\<inverse>\\<cdot>H\\<cdot>g = H (via group\\_conj\\_reverse with invg g).
+             Infrastructure available: basepoint\\_change\\_image\\_hom, hclass\\_lift,
+             group\\_conj\\_reverse, group\\_inv\\_inv\\_early.
+             Blocked by: scope of hpi1\\_grp\\_n with \\<open>invg g\\<close> type mismatch.\<close>
         \<comment> \<open>By h\\<Psi>\\_image backward: \\<exists> h \\<in> Cov with h(e0) = e1.\<close>
         have "?e1 \<in> {e \<in> E. p e = b0 \<and>
             top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
