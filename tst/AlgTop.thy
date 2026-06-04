@@ -372,9 +372,143 @@ proof -
   proof (intro conjI)
     \<comment> \<open>\\<psi> maps left cosets to right cosets.\<close>
     have h\<psi>_maps: "\<psi> ` (top1_left_cosets_on G mul H) \<subseteq> top1_right_cosets_on G mul H"
-      sorry \<comment> \<open>invg ` (gH) = H(g\\<inverse>).\<close>
+    proof
+      fix D assume "D \<in> \<psi> ` (top1_left_cosets_on G mul H)"
+      then obtain C where "C \<in> top1_left_cosets_on G mul H" "D = \<psi> C" by (by100 blast)
+      then obtain g where hg: "g \<in> G" "C = {mul g h |h. h \<in> H}"
+        unfolding top1_left_cosets_on_def top1_group_coset_on_def by (by100 blast)
+      have "D = invg ` {mul g h |h. h \<in> H}" using \<open>D = \<psi> C\<close> hg(2) unfolding \<psi>_def by simp
+      \<comment> \<open>{invg(mul g h) | h \\<in> H} = {mul (invg h) (invg g) | h \\<in> H} = {mul k (invg g) | k \\<in> H}.\<close>
+      have "D = {mul k (invg g) | k. k \<in> H}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> D"
+        hence "x \<in> invg ` {mul g h |h. h \<in> H}" using \<open>D = invg ` _\<close> by simp
+        then obtain h where "h \<in> H" "x = invg (mul g h)" by (by100 blast)
+        have "h \<in> G" using \<open>h \<in> H\<close> assms(2) by (by100 blast)
+        have "x = mul (invg h) (invg g)" using group_inv_mul[OF assms(1) hg(1) \<open>h \<in> G\<close>] \<open>x = _\<close> by simp
+        moreover have "invg h \<in> H" using group_inv_closed[OF assms(3) \<open>h \<in> H\<close>] .
+        ultimately show "x \<in> {mul k (invg g) | k. k \<in> H}" by (by100 blast)
+      next
+        fix x assume "x \<in> {mul k (invg g) | k. k \<in> H}"
+        then obtain k where "k \<in> H" "x = mul k (invg g)" by (by100 blast)
+        have "invg k \<in> H" using group_inv_closed[OF assms(3) \<open>k \<in> H\<close>] .
+        have "k \<in> G" using \<open>k \<in> H\<close> assms(2) by (by100 blast)
+        have hik: "invg k \<in> G" using group_inv_closed[OF assms(1) \<open>k \<in> G\<close>] .
+        have "invg (mul g (invg k)) = mul (invg (invg k)) (invg g)"
+          using group_inv_mul[OF assms(1) hg(1) hik] .
+        also have "invg (invg k) = k"
+        proof -
+          have hk_inv_in: "invg (invg k) \<in> G" using group_inv_closed[OF assms(1) hik] .
+          have "invg (invg k) = mul (invg (invg k)) e"
+            using group_right_id[OF assms(1) hk_inv_in] by simp
+          also have "... = mul (invg (invg k)) (mul (invg k) k)"
+            using group_left_inv[OF assms(1) \<open>k \<in> G\<close>] by simp
+          also have "... = mul (mul (invg (invg k)) (invg k)) k"
+            using group_assoc[OF assms(1) hk_inv_in hik \<open>k \<in> G\<close>] by simp
+          also have "... = mul e k"
+            using group_left_inv[OF assms(1) hik] by simp
+          also have "... = k"
+            using group_left_id[OF assms(1) \<open>k \<in> G\<close>] .
+          finally show ?thesis .
+        qed
+        finally have "invg (mul g (invg k)) = x" using \<open>x = mul k (invg g)\<close> by simp
+        thus "x \<in> D" using \<open>D = invg ` _\<close> \<open>invg k \<in> H\<close> by (by100 blast)
+      qed
+      moreover have "invg g \<in> G" using group_inv_closed[OF assms(1) hg(1)] .
+      ultimately show "D \<in> top1_right_cosets_on G mul H"
+        unfolding top1_right_cosets_on_def top1_right_coset_on_def by (by100 blast)
+    qed
     have h\<psi>_surj: "\<psi> ` (top1_left_cosets_on G mul H) \<supseteq> top1_right_cosets_on G mul H"
-      sorry \<comment> \<open>Every Hg = \\<psi>(g\\<inverse>H).\<close>
+    proof
+      fix D assume "D \<in> top1_right_cosets_on G mul H"
+      then obtain g where hg: "g \<in> G" "D = {mul k g |k. k \<in> H}"
+        unfolding top1_right_cosets_on_def top1_right_coset_on_def by (by100 blast)
+      \<comment> \<open>D = H*g = \\<psi>((g\\<inverse>)*H) where (g\\<inverse>)*H is a left coset.\<close>
+      have hinvg: "invg g \<in> G" using group_inv_closed[OF assms(1) hg(1)] .
+      let ?C = "{mul (invg g) h |h. h \<in> H}"
+      have "?C \<in> top1_left_cosets_on G mul H"
+        unfolding top1_left_cosets_on_def top1_group_coset_on_def using hinvg by (by100 blast)
+      moreover have "\<psi> ?C = D"
+      proof -
+        have "\<psi> ?C = invg ` {mul (invg g) h |h. h \<in> H}" unfolding \<psi>_def by simp
+        also have "... = {invg (mul (invg g) h) |h. h \<in> H}" by (by100 blast)
+        also have "... = {mul (invg h) (invg (invg g)) |h. h \<in> H}"
+        proof (rule Collect_cong)
+          fix x show "(\<exists>h. x = invg (mul (invg g) h) \<and> h \<in> H) =
+              (\<exists>h. x = mul (invg h) (invg (invg g)) \<and> h \<in> H)"
+          proof (rule iffI)
+            assume "\<exists>h. x = invg (mul (invg g) h) \<and> h \<in> H"
+            then obtain h where "h \<in> H" "x = invg (mul (invg g) h)" by (by100 blast)
+            have "h \<in> G" using \<open>h \<in> H\<close> assms(2) by (by100 blast)
+            show "\<exists>h. x = mul (invg h) (invg (invg g)) \<and> h \<in> H"
+              using group_inv_mul[OF assms(1) hinvg \<open>h \<in> G\<close>] \<open>x = _\<close> \<open>h \<in> H\<close> by (by100 blast)
+          next
+            assume "\<exists>h. x = mul (invg h) (invg (invg g)) \<and> h \<in> H"
+            then obtain h where "h \<in> H" "x = mul (invg h) (invg (invg g))" by (by100 blast)
+            have "h \<in> G" using \<open>h \<in> H\<close> assms(2) by (by100 blast)
+            have "x = invg (mul (invg g) h)"
+              using group_inv_mul[OF assms(1) hinvg \<open>h \<in> G\<close>] \<open>x = mul (invg h) (invg (invg g))\<close> by simp
+            thus "\<exists>h. x = invg (mul (invg g) h) \<and> h \<in> H" using \<open>h \<in> H\<close> by (by100 blast)
+          qed
+        qed
+        also have "... = {mul k g |k. k \<in> H}"
+        proof -
+          \<comment> \<open>invg(invg g) = g. And invg maps H bijectively to H.\<close>
+          have "invg (invg g) = g"
+          proof -
+            have hiig: "invg (invg g) \<in> G" using group_inv_closed[OF assms(1) hinvg] .
+            have "invg (invg g) = mul (invg (invg g)) e"
+              using group_right_id[OF assms(1) hiig] by simp
+            also have "... = mul (invg (invg g)) (mul (invg g) g)"
+              using group_left_inv[OF assms(1) hg(1)] by simp
+            also have "... = mul (mul (invg (invg g)) (invg g)) g"
+              using group_assoc[OF assms(1) hiig hinvg hg(1)] by simp
+            also have "... = mul e g"
+              using group_left_inv[OF assms(1) hinvg] by simp
+            also have "... = g"
+              using group_left_id[OF assms(1) hg(1)] .
+            finally show ?thesis .
+          qed
+          show ?thesis
+          proof (rule Collect_cong)
+            fix x show "(\<exists>h. x = mul (invg h) (invg (invg g)) \<and> h \<in> H)
+                = (\<exists>k. x = mul k g \<and> k \<in> H)"
+            proof (rule iffI)
+              assume "\<exists>h. x = mul (invg h) (invg (invg g)) \<and> h \<in> H"
+              then obtain h where "h \<in> H" "x = mul (invg h) (invg (invg g))" by (by100 blast)
+              hence "x = mul (invg h) g" using \<open>invg (invg g) = g\<close> by simp
+              moreover have "invg h \<in> H" using group_inv_closed[OF assms(3) \<open>h \<in> H\<close>] .
+              ultimately show "\<exists>k. x = mul k g \<and> k \<in> H" by (by100 blast)
+            next
+              assume "\<exists>k. x = mul k g \<and> k \<in> H"
+              then obtain k where "k \<in> H" "x = mul k g" by (by100 blast)
+              have "invg k \<in> H" using group_inv_closed[OF assms(3) \<open>k \<in> H\<close>] .
+              have "invg (invg k) = k"
+              proof -
+                have "k \<in> G" using \<open>k \<in> H\<close> assms(2) by (by100 blast)
+                have hik: "invg k \<in> G" using group_inv_closed[OF assms(1) \<open>k \<in> G\<close>] .
+                have hiik: "invg (invg k) \<in> G" using group_inv_closed[OF assms(1) hik] .
+                have "invg (invg k) = mul (invg (invg k)) e"
+                  using group_right_id[OF assms(1) hiik] by simp
+                also have "... = mul (invg (invg k)) (mul (invg k) k)"
+                  using group_left_inv[OF assms(1) \<open>k \<in> G\<close>] by simp
+                also have "... = mul (mul (invg (invg k)) (invg k)) k"
+                  using group_assoc[OF assms(1) hiik hik \<open>k \<in> G\<close>] by simp
+                also have "... = mul e k" using group_left_inv[OF assms(1) hik] by simp
+                also have "... = k" using group_left_id[OF assms(1) \<open>k \<in> G\<close>] .
+                finally show ?thesis .
+              qed
+              have "x = mul (invg (invg k)) (invg (invg g))"
+                using \<open>x = mul k g\<close> \<open>invg (invg k) = k\<close> \<open>invg (invg g) = g\<close> by simp
+              thus "\<exists>h. x = mul (invg h) (invg (invg g)) \<and> h \<in> H"
+                using \<open>invg k \<in> H\<close> by (by100 blast)
+            qed
+          qed
+        qed
+        finally show ?thesis using hg(2) by simp
+      qed
+      ultimately show "D \<in> \<psi> ` (top1_left_cosets_on G mul H)" by (by100 blast)
+    qed
     show "\<psi> ` (top1_left_cosets_on G mul H) = top1_right_cosets_on G mul H"
       using h\<psi>_maps h\<psi>_surj by (by100 blast)
     \<comment> \<open>\\<psi> is injective: invg is injective on G (group inverse is bijective).\<close>
