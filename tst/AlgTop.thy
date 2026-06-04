@@ -22329,6 +22329,9 @@ lemma tree_euler_all:
        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
     finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
     card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
+  \<comment> \<open>Munkres Lemma 85.2 Step 1 by induction on card(\\<A>).
+     Base: 1 arc, 2 endpoints.
+     Step: leaf arc removal, IH for smaller tree.\<close>
   sorry
 
 \<comment> \<open>Lemma 85.2, Step 1: \\<chi>(T) = 1 for any finite tree.
