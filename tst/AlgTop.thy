@@ -114,9 +114,50 @@ proof -
       have hproj_loop: "top1_is_loop_on B TB b0
           (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t))"
         sorry \<comment> \<open>Follows from hproj\\_eq + hfg\\_rev\\_fh\\_loop (pointwise equal on I\\_set).\<close>
-      \<comment> \<open>Class of p\\<circ>(loop) is in ?H = p*(\\<pi>\\_1(E,e0)).\<close>
+      \<comment> \<open>Class of p\\<circ>(loop) is in ?H = p*(\\<pi>\\_1(E,e0)).
+         The loop ftg*rev(fth) is at e0 in E, so its class is in \\<pi>\\_1(E,e0).
+         The induced map p* sends it to the class of p\\<circ>(loop), which is in H.\<close>
       have "{f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)) f'} \<in> ?H"
-        sorry
+      proof -
+        \<comment> \<open>The loop at e0 defines a class in \\<pi>\\_1(E,e0).\<close>
+        let ?loop = "top1_path_product ftg (top1_path_reverse fth)"
+        have hloop_is_loop: "top1_is_loop_on E TE e0 ?loop"
+          using hloop_E unfolding top1_is_loop_on_def .
+        let ?class_E = "{g. top1_loop_equiv_on E TE e0 ?loop g}"
+        have hclass_in: "?class_E \<in> top1_fundamental_group_carrier E TE e0"
+          unfolding top1_fundamental_group_carrier_def using hloop_is_loop by (by100 blast)
+        \<comment> \<open>p* maps this class to the class of p\\<circ>loop in \\<pi>\\_1(B,b0).\<close>
+        have "top1_fundamental_group_induced_on E TE e0 B TB b0 p ?class_E
+            = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) f'}"
+          unfolding top1_fundamental_group_induced_on_def
+        proof (rule set_eqI, rule iffI)
+          fix g assume "g \<in> {g. \<exists>f\<in>?class_E. top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+          then obtain f where "f \<in> ?class_E" "top1_loop_equiv_on B TB b0 (p \<circ> f) g"
+            by (by100 blast)
+          hence "top1_loop_equiv_on E TE e0 ?loop f" by (by100 blast)
+          \<comment> \<open>f homotopic to ?loop \\<Rightarrow> p\\<circ>f homotopic to p\\<circ>?loop \\<Rightarrow> g homotopic to p\\<circ>?loop.\<close>
+          show "g \<in> {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) f'}"
+            sorry
+        next
+          fix g assume "g \<in> {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) f'}"
+          hence "top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) g" by (by100 blast)
+          \<comment> \<open>?loop is itself in ?class\\_E. So p\\<circ>?loop witnesses the existential.\<close>
+          moreover have "?loop \<in> ?class_E"
+          proof -
+            have "top1_loop_equiv_on E TE e0 ?loop ?loop"
+              unfolding top1_loop_equiv_on_def using hloop_is_loop
+                Lemma_51_1_path_homotopic_refl[OF hloop_E] by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          moreover have "top1_loop_equiv_on B TB b0 (p \<circ> ?loop) g"
+            using \<open>top1_loop_equiv_on B TB b0 (\<lambda>t. p (?loop t)) g\<close>
+            unfolding comp_def by simp
+          ultimately show "g \<in> {g. \<exists>f\<in>?class_E. top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+            by (by100 blast)
+        qed
+        thus ?thesis
+          unfolding top1_fundamental_group_image_hom_def using hclass_in by (by100 blast)
+      qed
       \<comment> \<open>This class = g * h\\<inverse> in \\<pi>\\_1(B).\<close>
       \<comment> \<open>g * h\\<inverse> \\<in> ?H \\<Rightarrow> gH = hH.\<close>
       show "top1_group_coset_on ?piB ?mulB ?H g = top1_group_coset_on ?piB ?mulB ?H h"
