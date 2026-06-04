@@ -1170,14 +1170,47 @@ proof -
       from Theorem_54_4_lifting_correspondence[OF he0' \<open>p' e0' = x0\<close> hE'_cov hE'_pc hX_top]
       obtain \<phi> where h\<phi>_maps: "\<forall>c\<in>?piX. \<phi> c \<in> {e \<in> E'. p' e = x0}"
           and h\<phi>_surj: "\<phi> ` ?piX = {e \<in> E'. p' e = x0}"
+          and h\<phi>_lift: "\<forall>c\<in>?piX. \<exists>f ft. f \<in> c \<and> top1_is_loop_on X TX x0 f
+              \<and> top1_is_path_on E' TE' e0' (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p' (ft s) = f s)"
         by (elim exE conjE)
-      \<comment> \<open>The induced map on cosets bijects with the fiber.
-         Key fact (Munkres 54.6): \\<phi>(c1) = \\<phi>(c2) iff c1 and c2 are in the same coset of pH.\<close>
+      \<comment> \<open>Munkres Theorem 54.6(b): \\<phi>(g) = \\<phi>(h) iff g and h are in the same coset of pH.
+         Book proof: \\<phi>(g) = endpoint of lift of representative loop.
+         Forward: \\<phi>(g)=\\<phi>(h) \\<Rightarrow> lift(g)\\<cdot>rev(lift(h)) is loop at e0 \\<Rightarrow> g\\<cdot>h\\<inverse> \\<in> pH.
+         Backward: g\\<cdot>h\\<inverse> \\<in> pH \\<Rightarrow> g\\<cdot>h\\<inverse> lifts to loop \\<Rightarrow> lifts end at same point.\<close>
       have h\<phi>_fiber_eq: "\<forall>g\<in>?piX. \<forall>h\<in>?piX.
           (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h)"
-        sorry \<comment> \<open>Munkres 54.6: \\<phi>(g)=\\<phi>(h) iff g h\\<inverse> \\<in> p*(\\<pi>\\_1(E')).
-           Proof: \\<phi>(g) = endpoint of lift of g from e0.
-           \\<phi>(g)=\\<phi>(h) iff concatenation of lifts is loop at e0 iff g*h\\<inverse> in p*(pi1(E')).\<close>
+      proof (intro ballI)
+        fix g h assume hg: "g \<in> ?piX" and hh: "h \<in> ?piX"
+        \<comment> \<open>Get representatives and lifts.\<close>
+        from h\<phi>_lift[rule_format, OF hg]
+        obtain fg ftg where hfg: "fg \<in> g" "top1_is_loop_on X TX x0 fg"
+            "top1_is_path_on E' TE' e0' (\<phi> g) ftg" "\<forall>s\<in>I_set. p' (ftg s) = fg s"
+          by (by100 blast)
+        from h\<phi>_lift[rule_format, OF hh]
+        obtain fh fth where hfh: "fh \<in> h" "top1_is_loop_on X TX x0 fh"
+            "top1_is_path_on E' TE' e0' (\<phi> h) fth" "\<forall>s\<in>I_set. p' (fth s) = fh s"
+          by (by100 blast)
+        show "(\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h)"
+        proof (rule iffI)
+          \<comment> \<open>Forward: \\<phi>(g) = \\<phi>(h) \\<Rightarrow> same coset.
+             Book: f\\<tilde> and g\\<tilde> end at same point.
+             f\\<tilde> * reverse(g\\<tilde>) is loop at e0 projecting to fg * reverse(fh).
+             So [fg * reverse(fh)] \\<in> pH, hence g * h\\<inverse> \\<in> pH, hence gH = hH.\<close>
+          assume h\<phi>_eq: "\<phi> g = \<phi> h"
+          show "top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h"
+            sorry
+        next
+          \<comment> \<open>Backward: same coset \\<Rightarrow> \\<phi>(g) = \\<phi>(h).
+             Book: g * h\\<inverse> \\<in> pH, so g * h\\<inverse> = p*(\\<alpha>\\<tilde>) for loop \\<alpha>\\<tilde> at e0.
+             Lift of fg * reverse(fh) starting at e0 is \\<alpha>\\<tilde> * something...
+             Actually: lift of fg * reverse(fh) = ftg * reverse(fth).
+             Since g * h\\<inverse> \\<in> pH: the lift is a loop, so ftg(1) = fth(1).
+             Hence \\<phi>(g) = \\<phi>(h).\<close>
+          assume hcoset_eq: "top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h"
+          show "\<phi> g = \<phi> h"
+            sorry
+        qed
+      qed
       have hpiX_grp: "top1_is_group_on ?piX ?mulX
           (top1_fundamental_group_id X TX x0) (top1_fundamental_group_invg X TX x0)"
       proof -
