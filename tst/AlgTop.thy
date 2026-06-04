@@ -22377,7 +22377,69 @@ proof -
     proof -
       have hcoset_bij: "bij_betw (\<lambda>C. f_iso85 ` C)
           (top1_left_cosets_on F mul H) (top1_left_cosets_on ?piX ?mulX ?pH)"
-        sorry
+        unfolding bij_betw_def
+      proof (intro conjI)
+        show "inj_on (\<lambda>C. f_iso85 ` C) (top1_left_cosets_on F mul H)"
+        proof (rule inj_onI)
+          fix C1 C2 assume hC1: "C1 \<in> top1_left_cosets_on F mul H"
+              and hC2: "C2 \<in> top1_left_cosets_on F mul H"
+              and heq: "f_iso85 ` C1 = f_iso85 ` C2"
+          from hC1 obtain g1 where "g1 \<in> F" "C1 = top1_group_coset_on F mul H g1"
+            unfolding top1_left_cosets_on_def by (by100 blast)
+          from hC2 obtain g2 where "g2 \<in> F" "C2 = top1_group_coset_on F mul H g2"
+            unfolding top1_left_cosets_on_def by (by100 blast)
+          have hF_grp: "top1_is_group_on F mul e invg"
+            using assms(1) unfolding top1_is_free_group_full_on_def by (by100 blast)
+          have "C1 \<subseteq> F"
+          proof -
+            have "\<forall>h\<in>H. mul g1 h \<in> F"
+              using group_mul_closed[OF hF_grp \<open>g1 \<in> F\<close>] hH_sub_F by (by100 blast)
+            thus ?thesis using \<open>C1 = _\<close> unfolding top1_group_coset_on_def by (by100 blast)
+          qed
+          have "C2 \<subseteq> F"
+          proof -
+            have "\<forall>h\<in>H. mul g2 h \<in> F"
+              using group_mul_closed[OF hF_grp \<open>g2 \<in> F\<close>] hH_sub_F by (by100 blast)
+            thus ?thesis using \<open>C2 = _\<close> unfolding top1_group_coset_on_def by (by100 blast)
+          qed
+          show "C1 = C2"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> C1"
+            hence "f_iso85 x \<in> f_iso85 ` C2" using heq by (by100 blast)
+            then obtain y where "y \<in> C2" "f_iso85 x = f_iso85 y" by (by100 blast)
+            from inj_onD[OF hf_inj this(2)]
+            show "x \<in> C2" using \<open>y \<in> C2\<close> \<open>x \<in> C1\<close> \<open>C1 \<subseteq> F\<close> \<open>C2 \<subseteq> F\<close> by (by100 blast)
+          next
+            fix x assume "x \<in> C2"
+            hence "f_iso85 x \<in> f_iso85 ` C1" using heq by (by100 blast)
+            then obtain y where "y \<in> C1" "f_iso85 x = f_iso85 y" by (by100 blast)
+            from inj_onD[OF hf_inj this(2)]
+            show "x \<in> C1" using \<open>y \<in> C1\<close> \<open>x \<in> C2\<close> \<open>C1 \<subseteq> F\<close> \<open>C2 \<subseteq> F\<close> by (by100 blast)
+          qed
+        qed
+        show "(\<lambda>C. f_iso85 ` C) ` (top1_left_cosets_on F mul H) =
+            top1_left_cosets_on ?piX ?mulX ?pH"
+          unfolding top1_left_cosets_on_def
+        proof (rule set_eqI, rule iffI)
+          fix D assume "D \<in> (\<lambda>C. f_iso85 ` C) ` {top1_group_coset_on F mul H g |g. g \<in> F}"
+          then obtain g where "g \<in> F" "D = f_iso85 ` top1_group_coset_on F mul H g"
+            by (by100 blast)
+          hence "D = top1_group_coset_on ?piX ?mulX ?pH (f_iso85 g)"
+            using hcoset_map by simp
+          thus "D \<in> {top1_group_coset_on ?piX ?mulX ?pH g' |g'. g' \<in> ?piX}"
+            using \<open>g \<in> F\<close> hf_bij unfolding bij_betw_def by (by100 blast)
+        next
+          fix D assume "D \<in> {top1_group_coset_on ?piX ?mulX ?pH g' |g'. g' \<in> ?piX}"
+          then obtain g' where "g' \<in> ?piX" "D = top1_group_coset_on ?piX ?mulX ?pH g'"
+            by (by100 blast)
+          from \<open>g' \<in> ?piX\<close> obtain g where "g \<in> F" "g' = f_iso85 g"
+            using hf_bij unfolding bij_betw_def by (by100 blast)
+          have "D = f_iso85 ` top1_group_coset_on F mul H g"
+            using \<open>D = _\<close> \<open>g' = f_iso85 g\<close> hcoset_map[OF \<open>g \<in> F\<close>] by simp
+          thus "D \<in> (\<lambda>C. f_iso85 ` C) ` {top1_group_coset_on F mul H g |g. g \<in> F}"
+            using \<open>g \<in> F\<close> by (by100 blast)
+        qed
+      qed
       from assms(5) have hF_fin: "finite (top1_left_cosets_on F mul H)"
           and hF_card: "card (top1_left_cosets_on F mul H) = k"
         unfolding top1_subgroup_has_index_on_def by (by100 blast)+
