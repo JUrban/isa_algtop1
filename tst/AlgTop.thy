@@ -14,7 +14,69 @@ lemma surjection_coset_bij:
       and fiber_eq: "\<forall>g\<in>G. \<forall>h\<in>G.
           (\<phi> g = \<phi> h) = (top1_group_coset_on G mul H g = top1_group_coset_on G mul H h)"
   shows "\<exists>f. bij_betw f (top1_left_cosets_on G mul H) Y"
-  sorry
+proof -
+  \<comment> \<open>Define f(C) = \\<phi>(SOME g. g \\<in> C) for each coset C.\<close>
+  define f where "f \<equiv> \<lambda>C. \<phi> (SOME g. g \<in> G \<and> top1_group_coset_on G mul H g = C)"
+  show ?thesis
+  proof (rule exI[of _ f], unfold bij_betw_def, intro conjI)
+    \<comment> \<open>f is injective on cosets.\<close>
+    show "inj_on f (top1_left_cosets_on G mul H)"
+    proof (rule inj_onI)
+      fix C1 C2 assume hC1: "C1 \<in> top1_left_cosets_on G mul H"
+          and hC2: "C2 \<in> top1_left_cosets_on G mul H" and heq: "f C1 = f C2"
+      from hC1 obtain g1 where hg1: "g1 \<in> G" "C1 = top1_group_coset_on G mul H g1"
+        unfolding top1_left_cosets_on_def by (by100 blast)
+      from hC2 obtain g2 where hg2: "g2 \<in> G" "C2 = top1_group_coset_on G mul H g2"
+        unfolding top1_left_cosets_on_def by (by100 blast)
+      \<comment> \<open>Extract the SOME witnesses.\<close>
+      have hsome1: "(SOME g. g \<in> G \<and> top1_group_coset_on G mul H g = C1) \<in> G \<and>
+          top1_group_coset_on G mul H (SOME g. g \<in> G \<and> top1_group_coset_on G mul H g = C1) = C1"
+        using someI_ex[of "\<lambda>g. g \<in> G \<and> top1_group_coset_on G mul H g = C1"] hg1 by (by100 blast)
+      have hsome2: "(SOME g. g \<in> G \<and> top1_group_coset_on G mul H g = C2) \<in> G \<and>
+          top1_group_coset_on G mul H (SOME g. g \<in> G \<and> top1_group_coset_on G mul H g = C2) = C2"
+        using someI_ex[of "\<lambda>g. g \<in> G \<and> top1_group_coset_on G mul H g = C2"] hg2 by (by100 blast)
+      let ?s1 = "SOME g. g \<in> G \<and> top1_group_coset_on G mul H g = C1"
+      let ?s2 = "SOME g. g \<in> G \<and> top1_group_coset_on G mul H g = C2"
+      have "?s1 \<in> G" "?s2 \<in> G" using hsome1 hsome2 by (by100 blast)+
+      have "\<phi> ?s1 = \<phi> ?s2" using heq unfolding f_def by simp
+      from fiber_eq[rule_format, OF \<open>?s1 \<in> G\<close> \<open>?s2 \<in> G\<close>]
+      have "top1_group_coset_on G mul H ?s1 = top1_group_coset_on G mul H ?s2"
+        using \<open>\<phi> ?s1 = \<phi> ?s2\<close> by simp
+      thus "C1 = C2" using hsome1 hsome2 by simp
+    qed
+    \<comment> \<open>f is surjective onto Y.\<close>
+    show "f ` (top1_left_cosets_on G mul H) = Y"
+    proof (rule set_eqI, rule iffI)
+      fix y assume "y \<in> f ` (top1_left_cosets_on G mul H)"
+      then obtain C where hC: "C \<in> top1_left_cosets_on G mul H" "y = f C" by (by100 blast)
+      from hC(1) obtain g where hg: "g \<in> G" "C = top1_group_coset_on G mul H g"
+        unfolding top1_left_cosets_on_def by (by100 blast)
+      have hsome: "(SOME g'. g' \<in> G \<and> top1_group_coset_on G mul H g' = C) \<in> G"
+        using someI_ex[of "\<lambda>g'. g' \<in> G \<and> top1_group_coset_on G mul H g' = C"] hg by (by100 blast)
+      from maps[rule_format, OF hsome]
+      show "y \<in> Y" using hC(2) unfolding f_def by simp
+    next
+      fix y assume "y \<in> Y"
+      from surj have "\<exists>g\<in>G. \<phi> g = y" using \<open>y \<in> Y\<close> by (by100 blast)
+      then obtain g where hg: "g \<in> G" "\<phi> g = y" by (by100 blast)
+      let ?C = "top1_group_coset_on G mul H g"
+      have hC_in: "?C \<in> top1_left_cosets_on G mul H"
+        unfolding top1_left_cosets_on_def using hg(1) by (by100 blast)
+      have hsome: "(SOME g'. g' \<in> G \<and> top1_group_coset_on G mul H g' = ?C) \<in> G \<and>
+          top1_group_coset_on G mul H (SOME g'. g' \<in> G \<and> top1_group_coset_on G mul H g' = ?C) = ?C"
+        using someI_ex[of "\<lambda>g'. g' \<in> G \<and> top1_group_coset_on G mul H g' = ?C"] hg(1)
+        by (by100 blast)
+      let ?s = "SOME g'. g' \<in> G \<and> top1_group_coset_on G mul H g' = ?C"
+      have "?s \<in> G" using hsome by (by100 blast)
+      have "top1_group_coset_on G mul H ?s = ?C" using hsome by (by100 blast)
+      \<comment> \<open>Since ?s and g are in the same coset, \\<phi>(?s) = \\<phi>(g).\<close>
+      from fiber_eq[rule_format, OF \<open>?s \<in> G\<close> hg(1)]
+      have "\<phi> ?s = \<phi> g" using \<open>top1_group_coset_on G mul H ?s = ?C\<close> by simp
+      hence "f ?C = y" using hg(2) unfolding f_def by simp
+      thus "y \<in> f ` (top1_left_cosets_on G mul H)" using hC_in by (by100 blast)
+    qed
+  qed
+qed
 
 lemma tree_euler_nat:
   fixes n :: nat
