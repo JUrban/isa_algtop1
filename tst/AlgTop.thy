@@ -9064,7 +9064,40 @@ proof (cases "card S = 0")
     thus ?thesis unfolding top1_groups_isomorphic_on_def by (by100 blast)
   qed
   have hcompact0: "top1_compact_on ?X0 ?TX0"
-    sorry \<comment> \<open>X0 = [0,1] \\<times> {0}: compact image of compact [0,1].\<close>
+  proof -
+    \<comment> \<open>[0,1] is compact. f\\_n0 is a homeomorphism I \\<to> X0. Continuous image of compact is compact.\<close>
+    have hI_compact: "top1_compact_on I_set I_top"
+      using Theorem_27_1[of "0::real" 1]
+      unfolding top1_unit_interval_def top1_unit_interval_topology_def by simp
+    have hI_top: "is_topology_on I_set I_top"
+      using top1_unit_interval_topology_is_topology_on .
+    have hR2_top_loc: "is_topology_on (UNIV :: (real \<times> real) set)
+        (product_topology_on top1_open_sets top1_open_sets)"
+      using product_topology_on_is_topology_on[OF
+          top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+      by (by100 simp)
+    have hX0_top: "is_topology_on ?X0 ?TX0"
+      using subspace_topology_is_topology_on[OF hR2_top_loc] by (by100 blast)
+    have hf_cont: "top1_continuous_map_on I_set I_top ?X0 ?TX0 ?f_n0"
+      using hf0_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+    from top1_compact_on_continuous_image[OF hI_compact hX0_top hf_cont]
+    have "top1_compact_on (?f_n0 ` I_set) (subspace_topology ?X0 ?TX0 (?f_n0 ` I_set))" .
+    moreover have "?f_n0 ` I_set = ?X0"
+    proof -
+      have hbij: "bij_betw ?f_n0 I_set ?X0"
+        using hf0_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      thus ?thesis using bij_betw_imp_surj_on[OF hbij] by simp
+    qed
+    moreover have "subspace_topology ?X0 ?TX0 ?X0 = ?TX0"
+    proof -
+      have hstrict: "is_topology_on_strict ?X0 ?TX0"
+        using hgraph0 unfolding top1_is_graph_on_def by (by100 blast)
+      have "\<forall>U \<in> ?TX0. U \<subseteq> ?X0"
+        using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+      from subspace_topology_self[OF this] show ?thesis .
+    qed
+    ultimately show ?thesis by simp
+  qed
   show ?thesis
     apply (rule exI[of _ ?X0], rule exI[of _ ?TX0], rule exI[of _ ?x00])
     using hgraph0 hconn0 hx0_in hcompact0 hiso0 by (by100 blast)
@@ -22107,7 +22140,133 @@ lemma compact_graph_finite_arcs:
            (closedin_on X TX C \<longleftrightarrow>
             (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> C)))"
   shows "finite \<A>"
-  sorry
+proof -
+  \<comment> \<open>For each arc A, choose an interior point (not an endpoint).
+     The resulting selection set is closed-discrete in X, hence finite.\<close>
+  have hTX: "is_topology_on X TX"
+    using assms(1) unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+  have hTX_strict: "is_topology_on_strict X TX"
+    using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+  have hX_haus: "is_hausdorff_on X TX"
+    using assms(1) unfolding top1_is_graph_on_def by (by100 blast)
+  \<comment> \<open>Every arc has an interior point (arc \\<cong> [0,1], at least 3 points).\<close>
+  have hex: "\<forall>A\<in>\<A>. \<exists>x. x \<in> A \<and> x \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+  proof (intro ballI)
+    fix A assume "A \<in> \<A>"
+    hence hA_sub: "A \<subseteq> X" and hA_arc: "top1_is_arc_on A (subspace_topology X TX A)"
+      using assms(3) by (by100 blast)+
+    obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+      using hA_arc unfolding top1_is_arc_on_def by (by100 blast)
+    have hep: "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}"
+      by (rule arc_endpoints_are_boundary[OF hTX_strict hX_haus hA_sub hA_arc hh])
+    \<comment> \<open>h(1/2) is an interior point: h is injective and 1/2 \\<noteq> 0, 1.\<close>
+    have h_bij: "bij_betw h I_set A"
+      using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    have h_inj: "inj_on h I_set"
+      using h_bij unfolding bij_betw_def by (by100 blast)
+    have "h (1/2) \<in> A"
+      using h_bij unfolding bij_betw_def top1_unit_interval_def by (by100 auto)
+    moreover have "h (1/2) \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+    proof -
+      have "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+      have "h (1/2) \<noteq> h 0"
+      proof
+        assume "h (1/2) = h 0"
+        from inj_onD[OF h_inj this \<open>(1/2) \<in> I_set\<close> \<open>(0::real) \<in> I_set\<close>]
+        show False by (by100 simp)
+      qed
+      moreover have "h (1/2) \<noteq> h 1"
+      proof
+        assume "h (1/2) = h 1"
+        from inj_onD[OF h_inj this \<open>(1/2) \<in> I_set\<close> \<open>(1::real) \<in> I_set\<close>]
+        show False by (by100 simp)
+      qed
+      ultimately show ?thesis using hep by (by100 blast)
+    qed
+    ultimately show "\<exists>x. x \<in> A \<and> x \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+      by (by100 blast)
+  qed
+  define f where "f \<equiv> \<lambda>A. SOME x. x \<in> A \<and> x \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+  have hf: "\<forall>A\<in>\<A>. f A \<in> A \<and> f A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+  proof (intro ballI)
+    fix A assume "A \<in> \<A>"
+    from hex[rule_format, OF this]
+    have "\<exists>x. x \<in> A \<and> x \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)" .
+    from someI_ex[OF this] show "f A \<in> A \<and> f A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+      unfolding f_def .
+  qed
+  \<comment> \<open>f is injective: interior point of A can't be in another arc B (would be endpoint).\<close>
+  have hf_inj: "inj_on f \<A>"
+  proof (rule inj_onI)
+    fix A1 A2 assume "A1 \<in> \<A>" "A2 \<in> \<A>" "f A1 = f A2"
+    show "A1 = A2"
+    proof (rule ccontr)
+      assume "A1 \<noteq> A2"
+      have "f A1 \<in> A1" "f A1 \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+        using hf \<open>A1 \<in> \<A>\<close> by (by100 blast)+
+      have "f A2 \<in> A2" using hf \<open>A2 \<in> \<A>\<close> by (by100 blast)
+      have "f A1 \<in> A2" using \<open>f A2 \<in> A2\<close> \<open>f A1 = f A2\<close> by (by100 simp)
+      have "f A1 \<in> A1 \<inter> A2" using \<open>f A1 \<in> A1\<close> \<open>f A1 \<in> A2\<close> by (by100 blast)
+      from assms(5)[rule_format, OF \<open>A1 \<in> \<A>\<close> \<open>A2 \<in> \<A>\<close> \<open>A1 \<noteq> A2\<close>]
+      have "f A1 \<in> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+        using \<open>f A1 \<in> A1 \<inter> A2\<close> by (by100 blast)
+      thus False using \<open>f A1 \<notin> top1_arc_endpoints_on A1 (subspace_topology X TX A1)\<close> by contradiction
+    qed
+  qed
+  let ?B = "f ` \<A>"
+  have hB_sub: "?B \<subseteq> X" using hf assms(3) by (by100 blast)
+  \<comment> \<open>?B has \\<le> 1 point per arc. Hence every subset of ?B is closed
+     (via coherent closedness + Hausdorff + finite intersection with each arc).\<close>
+  have hB_card: "\<forall>A'\<in>\<A>. finite (?B \<inter> A') \<and> card (?B \<inter> A') \<le> 1"
+  proof (intro ballI conjI)
+    fix A' assume hA': "A' \<in> \<A>"
+    have hB_A': "?B \<inter> A' \<subseteq> {f A'}"
+    proof
+      fix x assume "x \<in> ?B \<inter> A'"
+      then obtain A where hA: "A \<in> \<A>" "x = f A" "x \<in> A'" by (by100 blast)
+      have "A = A'"
+      proof (rule ccontr)
+        assume "A \<noteq> A'"
+        have "f A \<in> A" using hf hA(1) by (by100 blast)
+        have "f A \<in> A'" using hA(2-3) by (by100 simp)
+        hence "f A \<in> A \<inter> A'" using \<open>f A \<in> A\<close> by (by100 blast)
+        from assms(5)[rule_format, OF hA(1) hA' \<open>A \<noteq> A'\<close>]
+        have "f A \<in> top1_arc_endpoints_on A (subspace_topology X TX A)"
+          using \<open>f A \<in> A \<inter> A'\<close> by (by100 blast)
+        moreover have "f A \<notin> top1_arc_endpoints_on A (subspace_topology X TX A)"
+          using hf hA(1) by (by100 blast)
+        ultimately show False by contradiction
+      qed
+      thus "x \<in> {f A'}" using hA(2) by (by100 blast)
+    qed
+    show "finite (?B \<inter> A')" using finite_subset[OF hB_A'] by (by100 simp)
+    show "card (?B \<inter> A') \<le> 1" using card_mono[OF _ hB_A'] by (by100 simp)
+  qed
+  have hB_all_closed: "\<forall>S. S \<subseteq> ?B \<longrightarrow> closedin_on X TX S"
+    by (rule graph_selection_set_discrete[OF assms(1) hB_sub assms(3-4,6) hB_card])
+  \<comment> \<open>?B \\<subseteq> X compact, ?B closed \\<Rightarrow> ?B compact. ?B discrete \\<Rightarrow> ?B finite.\<close>
+  have hB_closed: "closedin_on X TX ?B" using hB_all_closed by (by100 blast)
+  have hB_compact: "top1_compact_on ?B (subspace_topology X TX ?B)"
+  proof -
+    from Theorem_26_2[OF assms(2) hB_closed]
+    show ?thesis .
+  qed
+  have hB_discrete: "\<forall>x\<in>?B. {x} \<in> subspace_topology X TX ?B"
+  proof (intro ballI)
+    fix x assume hx: "x \<in> ?B"
+    have "?B - {x} \<subseteq> ?B" by (by100 blast)
+    from hB_all_closed[rule_format, OF this]
+    have hcl: "closedin_on X TX (?B - {x})" .
+    have hopen: "X - (?B - {x}) \<in> TX" using closedin_diff_open hcl by (by100 blast)
+    have "{x} = ?B \<inter> (X - (?B - {x}))" using hx hB_sub by (by100 blast)
+    thus "{x} \<in> subspace_topology X TX ?B"
+      unfolding subspace_topology_def using hopen by (by100 blast)
+  qed
+  have "finite ?B" by (rule compact_discrete_finite[OF hB_compact hB_discrete])
+  thus "finite \<A>" using finite_imageD hf_inj by (by100 blast)
+qed
 
 \<comment> \<open>Definition: the vertex set of a graph (union of all arc endpoints).\<close>
 definition top1_graph_vertex_set :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set set \<Rightarrow> 'a set"
@@ -22131,9 +22290,11 @@ lemma tree_euler_number_one:
       and "\<A> \<noteq> {}"
   shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
   \<comment> \<open>Munkres Lemma 85.2 Step 1: \\<chi>(T) = vertices - arcs = 1.
-     Proof by induction on card(\\<A>). Base: 1 arc has 2 endpoints.
-     Step: find a leaf arc (endpoint not in any other arc), remove it,
-     apply IH to the smaller tree.\<close>
+     Book proof: induction on n = card(\\<A>).
+     Base (n=1): one arc has 2 endpoints, card V = 2 = 1+1.
+     Step (n>1): find a leaf arc A\\_0 (endpoint not in any other arc).
+     Remove it: T\\_0 = T \\ (A\\_0 \\ {shared endpoint}) is a tree with n-1 arcs.
+     By IH: card V\\_0 = n. Adding A\\_0 adds 1 vertex, so card V = n+1.\<close>
   sorry
 
 \<comment> \<open>Lemma 85.2, Step 2: for a finite connected graph with spanning tree T,
