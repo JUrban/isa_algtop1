@@ -882,6 +882,41 @@ lemma group_e_in:
   "top1_is_group_on G mul e invg \<Longrightarrow> e \<in> G"
   unfolding top1_is_group_on_def by (by5000 blast)
 
+\<comment> \<open>inv(a\\<cdot>b) = inv(b)\\<cdot>inv(a) in a group.\<close>
+lemma group_inv_mul:
+  assumes "top1_is_group_on G mul e invg" "a \<in> G" "b \<in> G"
+  shows "invg (mul a b) = mul (invg b) (invg a)"
+proof -
+  let ?z = "mul (invg b) (invg a)"
+  have "invg a \<in> G" using group_inv_closed[OF assms(1,2)] .
+  have "invg b \<in> G" using group_inv_closed[OF assms(1,3)] .
+  have "?z \<in> G" using group_mul_closed[OF assms(1) \<open>invg b \<in> G\<close> \<open>invg a \<in> G\<close>] .
+  have "mul a b \<in> G" using group_mul_closed[OF assms(1,2,3)] .
+  \<comment> \<open>Show mul(?z, mul(a,b)) = e.\<close>
+  have "mul ?z (mul a b) = mul (invg b) (mul (invg a) (mul a b))"
+    using group_assoc[OF assms(1) \<open>invg b \<in> G\<close> \<open>invg a \<in> G\<close> \<open>mul a b \<in> G\<close>] .
+  also have "mul (invg a) (mul a b) = mul (mul (invg a) a) b"
+    using group_assoc[OF assms(1) \<open>invg a \<in> G\<close> assms(2,3)] by simp
+  also have "mul (invg a) a = e" using group_left_inv[OF assms(1,2)] .
+  also have "mul e b = b" using group_left_id[OF assms(1,3)] .
+  finally have "mul ?z (mul a b) = mul (invg b) b" by simp
+  also have "mul (invg b) b = e" using group_left_inv[OF assms(1,3)] .
+  finally have "mul ?z (mul a b) = e" .
+  \<comment> \<open>By inverse uniqueness: ?z = invg(mul a b).\<close>
+  have "invg (mul a b) \<in> G" using group_inv_closed[OF assms(1) \<open>mul a b \<in> G\<close>] .
+  have s1: "?z = mul ?z e" using group_right_id[OF assms(1) \<open>?z \<in> G\<close>] by simp
+  have s2: "mul ?z e = mul ?z (mul (mul a b) (invg (mul a b)))"
+    using group_right_inv[OF assms(1) \<open>mul a b \<in> G\<close>] by simp
+  have s3: "mul ?z (mul (mul a b) (invg (mul a b))) =
+      mul (mul ?z (mul a b)) (invg (mul a b))"
+    using group_assoc[OF assms(1) \<open>?z \<in> G\<close> \<open>mul a b \<in> G\<close> \<open>invg (mul a b) \<in> G\<close>] by simp
+  have s4: "mul (mul ?z (mul a b)) (invg (mul a b)) = mul e (invg (mul a b))"
+    using \<open>mul ?z (mul a b) = e\<close> by simp
+  have s5: "mul e (invg (mul a b)) = invg (mul a b)"
+    using group_left_id[OF assms(1) \<open>invg (mul a b) \<in> G\<close>] .
+  from s1 s2 s3 s4 s5 show "invg (mul a b) = ?z" by simp
+qed
+
 \<comment> \<open>The normalizer N(H) is a group when H \\<le> G and G is a group.\<close>
 lemma normalizer_is_group:
   assumes hG: "top1_is_group_on G mul e invg"
@@ -934,8 +969,11 @@ proof -
     \<comment> \<open>Show: {(g\\<cdot>k)\\<cdot>h\\<cdot>(g\\<cdot>k)\\<inverse> | h\\<in>H} = {g\\<cdot>(k\\<cdot>h\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse> | h\\<in>H}
        = {g\\<cdot>h'\\<cdot>g\\<inverse> | h'\\<in>H} (k\\<cdot>H\\<cdot>k\\<inverse> = H) = H (g\\<cdot>H\\<cdot>g\\<inverse> = H).\<close>
     have "{mul (mul (mul g k) h) (invg (mul g k)) |h. h \<in> H} = H"
-      sorry \<comment> \<open>Composition of conjugations: (g\\<cdot>k)\\<cdot>h\\<cdot>(g\\<cdot>k)\\<inverse> = g\\<cdot>(k\\<cdot>h\\<cdot>k\\<inverse>)\\<cdot>g\\<inverse>.
-         Then {k\\<cdot>h\\<cdot>k\\<inverse> | h\\<in>H} = H and {g\\<cdot>h'\\<cdot>g\\<inverse> | h'\\<in>H} = H.\<close>
+      sorry \<comment> \<open>Composition of conjugations. All pieces proved:
+         group\\_inv\\_mul for (g\\<cdot>k)\\<inverse>, group\\_assoc for rewriting,
+         hg\\_conj and hk\\_conj for set equalities.
+         Issue: Isabelle set comprehension rewriting with deeply nested
+         mul terms causes timeout in auto/blast.\<close>
     thus "mul g k \<in> ?N"
       unfolding top1_normalizer_on_def using \<open>mul g k \<in> G\<close> by (by100 blast)
   qed
