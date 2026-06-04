@@ -196,7 +196,36 @@ proof (rule ccontr)
     have "y \<notin> B"
     proof -
       have "y = v \<or> y = x"
-        sorry \<comment> \<open>Endpoints of A0 = {v, x} (arc has exactly 2 endpoints).\<close>
+      proof -
+        have hstrict: "is_topology_on_strict T TT"
+          using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have hhaus: "is_hausdorff_on T TT"
+          using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have hA0_sub: "A0 \<subseteq> T" using assms(2,5) by (by100 blast)
+        have hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)" using assms(2,5) by (by100 blast)
+        obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+          using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+        have hep: "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {h 0, h 1}"
+          by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA0_sub hA0_arc hh])
+        have h_inj: "inj_on h I_set"
+          using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have hne: "h 0 \<noteq> h 1"
+        proof
+          assume "h 0 = h 1"
+          from inj_onD[OF h_inj this] show False unfolding top1_unit_interval_def by (by100 auto)
+        qed
+        \<comment> \<open>endpoints = {h 0, h 1} with h0 \\<ne> h1. v and x are both in endpoints, x \\<ne> v.
+           So {v, x} = {h 0, h 1}. Hence y \\<in> {h 0, h 1} = {v, x}.\<close>
+        have "v \<in> {h 0, h 1}" using assms(6) hep by simp
+        have "x \<in> {h 0, h 1}" using assms(10) hep by simp
+        have "card {h 0, h 1} = 2" using hne by (by100 simp)
+        have "card {v, x} = 2" using assms(11) by (by100 simp)
+        have "{v, x} = {h 0, h 1}"
+          using \<open>v \<in> {h 0, h 1}\<close> \<open>x \<in> {h 0, h 1}\<close> \<open>card {h 0, h 1} = 2\<close> \<open>card {v, x} = 2\<close>
+          by (by5000 force)
+        thus ?thesis using \<open>y \<in> top1_arc_endpoints_on A0 _\<close> hep \<open>{v, x} = {h 0, h 1}\<close>
+          by (by100 blast)
+      qed
       thus ?thesis using assms(7)[rule_format, OF \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>]
           hx_only_A0[rule_format, OF \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>] by (by100 blast)
     qed
