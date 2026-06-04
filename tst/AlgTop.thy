@@ -238,7 +238,28 @@ proof (rule ccontr)
     thus ?thesis by (by100 blast)
   qed
   have hrest_ne: "\<Union>(\<A> - {A0}) \<noteq> {}"
-    sorry \<comment> \<open>\\<A> has \\<ge> 2 arcs, each nonempty (arc \\<cong> [0,1]). So \\<Union>(\\<A>-{A0}) \\<ne> {}.\<close>
+  proof -
+    have "\<A> - {A0} \<noteq> {}"
+    proof -
+      have "card \<A> \<ge> 2" using assms(8) .
+      have "card (\<A> - {A0}) = card \<A> - 1" using assms(9,5) by (by100 simp)
+      hence "card (\<A> - {A0}) \<ge> 1" using \<open>card \<A> \<ge> 2\<close> by linarith
+      thus ?thesis using assms(9) by (by100 force)
+    qed
+    then obtain B where "B \<in> \<A> - {A0}" by (by100 blast)
+    have "B \<noteq> {}"
+    proof -
+      have "B \<in> \<A>" using \<open>B \<in> \<A> - {A0}\<close> by (by100 blast)
+      hence "top1_is_arc_on B (subspace_topology T TT B)" using assms(2) by (by100 blast)
+      then obtain h where "top1_homeomorphism_on I_set I_top B (subspace_topology T TT B) h"
+        unfolding top1_is_arc_on_def by (by100 blast)
+      hence "bij_betw h I_set B" unfolding top1_homeomorphism_on_def by (by100 blast)
+      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+      hence "h 0 \<in> B" using \<open>bij_betw h I_set B\<close> unfolding bij_betw_def by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    thus ?thesis using \<open>B \<in> \<A> - {A0}\<close> by (by100 blast)
+  qed
   \<comment> \<open>T connected but A0 and \\<Union>(\\<A>-{A0}) are both closed (coherent topology) and disjoint \\<Rightarrow> contradiction.\<close>
   have hT_conn: "top1_connected_on T TT"
     using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
