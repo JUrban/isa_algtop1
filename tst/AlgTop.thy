@@ -2848,7 +2848,14 @@ proof -
         \<comment> \<open>Lift \\<alpha> from e0.\<close>
         obtain \<gamma>_lift where "top1_is_path_on E TE e0 (\<gamma>_lift 1) \<gamma>_lift"
             "\<forall>s\<in>I_set. p (\<gamma>_lift s) = \<alpha> s"
-          sorry \<comment> \<open>Lemma 54.1 path lifting.\<close>
+        proof -
+          have "top1_is_path_on B TB b0 b0 \<alpha>"
+            using \<open>top1_is_loop_on B TB b0 \<alpha>\<close> unfolding top1_is_loop_on_def .
+          from Lemma_54_1_path_lifting[OF assms(3) assms(6) assms(7) this hTB_n hTE_n]
+          obtain ftilde where "top1_is_path_on E TE e0 (ftilde 1) ftilde"
+              "\<forall>s\<in>I_set. p (ftilde s) = \<alpha> s" by (by100 blast)
+          thus ?thesis using that by (by100 blast)
+        qed
         let ?e1 = "\<gamma>_lift 1"
         have "?e1 \<in> E"
         proof -
