@@ -70,11 +70,50 @@ proof -
       \<comment> \<open>ftg * reverse(fth) is a loop at e0 (both end at \\<phi>(g) = \\<phi>(h)).\<close>
       have hloop_E: "top1_is_path_on E TE e0 e0
           (top1_path_product ftg (top1_path_reverse fth))"
-        sorry
+      proof -
+        have "top1_is_path_on E TE (\<phi> h) e0 (top1_path_reverse fth)"
+          by (rule top1_path_reverse_is_path[OF hfh(3)])
+        hence "top1_is_path_on E TE (\<phi> g) e0 (top1_path_reverse fth)"
+          using h\<phi>_eq by simp
+        from top1_path_product_is_path[OF hE_top hfg(3) this]
+        show ?thesis .
+      qed
       \<comment> \<open>Its projection p\\<circ>(ftg * rev(fth)) = fg * rev(fh) represents g*h\\<inverse>.\<close>
+      \<comment> \<open>p \\<circ> path\\_product(ftg, rev(fth)) = path\\_product(fg, rev(fh)) pointwise.\<close>
+      have hproj_eq: "\<forall>t\<in>I_set. p (top1_path_product ftg (top1_path_reverse fth) t)
+          = top1_path_product fg (top1_path_reverse fh) t"
+      proof (intro ballI)
+        fix t assume "t \<in> I_set"
+        show "p (top1_path_product ftg (top1_path_reverse fth) t)
+            = top1_path_product fg (top1_path_reverse fh) t"
+        proof (cases "t \<le> 1/2")
+          case True
+          hence "2 * t \<in> I_set" unfolding top1_unit_interval_def
+            using \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 auto)
+          thus ?thesis using True hfg(4) unfolding top1_path_product_def top1_path_reverse_def by (by100 simp)
+        next
+          case False
+          hence "1 - (2 * t - 1) \<in> I_set"
+            using \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 auto)
+          hence "2 - 2 * t \<in> I_set"
+            using \<open>t \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 auto)
+          thus ?thesis using False hfh(4) unfolding top1_path_product_def top1_path_reverse_def
+            by (by100 simp)
+        qed
+      qed
+      have hfg_path: "top1_is_path_on B TB b0 b0 fg"
+        using hfg(2) unfolding top1_is_loop_on_def .
+      have hfh_path: "top1_is_path_on B TB b0 b0 fh"
+        using hfh(2) unfolding top1_is_loop_on_def .
+      have hfh_rev_path: "top1_is_path_on B TB b0 b0 (top1_path_reverse fh)"
+        using top1_path_reverse_is_path[OF hfh_path] .
+      have hfg_rev_fh_loop: "top1_is_loop_on B TB b0
+          (top1_path_product fg (top1_path_reverse fh))"
+        unfolding top1_is_loop_on_def
+        using top1_path_product_is_path[OF assms(3) hfg_path hfh_rev_path] .
       have hproj_loop: "top1_is_loop_on B TB b0
           (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t))"
-        sorry
+        sorry \<comment> \<open>Follows from hproj\\_eq + hfg\\_rev\\_fh\\_loop (pointwise equal on I\\_set).\<close>
       \<comment> \<open>Class of p\\<circ>(loop) is in ?H = p*(\\<pi>\\_1(E,e0)).\<close>
       have "{f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)) f'} \<in> ?H"
         sorry
