@@ -22330,7 +22330,65 @@ proof -
     \<comment> \<open>Step 3: By Lemma 85.2: rank(\\<pi>\\_1(E')) = 1 - \\<chi>(E') = 1 - k\\<chi>(X).
        From rank(\\<pi>\\_1(X)) = n+1: \\<chi>(X) = 1 - (n+1) = -n.
        So rank(\\<pi>\\_1(E')) = 1 + kn.\<close>
-    \<comment> \<open>Step 4: S\\_E is a free basis, so card S\\_E = rank = kn + 1.\<close>
+    \<comment> \<open>Step A: [\\<pi>\\_1(X) : p'*(\\<pi>\\_1(E'))] = k (iso preserves index).\<close>
+    let ?piX = "top1_fundamental_group_carrier X TX x0"
+    let ?mulX = "top1_fundamental_group_mul X TX x0"
+    let ?pH = "top1_fundamental_group_induced_on E' TE' e0' X TX x0 p'
+        ` top1_fundamental_group_carrier E' TE' e0'"
+    have hpH_eq: "?pH = f_iso85 ` H"
+      using hH_corr85 unfolding top1_fundamental_group_image_hom_def by simp
+    have hf_bij: "bij_betw f_iso85 F ?piX"
+      using hf_iso85 unfolding top1_group_iso_on_def by (by100 blast)
+    have hf_inj: "inj_on f_iso85 F"
+      using hf_bij unfolding bij_betw_def by (by100 blast)
+    \<comment> \<open>The map C \\<mapsto> f\\_iso85 ` C bijects left cosets of H to left cosets of ?pH.\<close>
+    have hf_hom: "\<forall>x\<in>F. \<forall>y\<in>F. f_iso85 (mul x y) = ?mulX (f_iso85 x) (f_iso85 y)"
+      using hf_iso85 unfolding top1_group_iso_on_def top1_group_hom_on_def by (by5000 blast)
+    have hH_sub_F: "H \<subseteq> F" using assms(3) .
+    have hcoset_map: "\<And>g. g \<in> F \<Longrightarrow>
+        f_iso85 ` (top1_group_coset_on F mul H g) =
+        top1_group_coset_on ?piX ?mulX ?pH (f_iso85 g)"
+    proof -
+      fix g assume "g \<in> F"
+      show "f_iso85 ` (top1_group_coset_on F mul H g) =
+          top1_group_coset_on ?piX ?mulX ?pH (f_iso85 g)"
+        unfolding top1_group_coset_on_def hpH_eq
+      proof (rule set_eqI, rule iffI)
+        fix y assume "y \<in> f_iso85 ` {mul g h |h. h \<in> H}"
+        then obtain h where "h \<in> H" "y = f_iso85 (mul g h)" by (by100 blast)
+        have "h \<in> F" using \<open>h \<in> H\<close> hH_sub_F by (by100 blast)
+        have "y = ?mulX (f_iso85 g) (f_iso85 h)"
+          using \<open>y = f_iso85 (mul g h)\<close> hf_hom \<open>g \<in> F\<close> \<open>h \<in> F\<close> by simp
+        thus "y \<in> {?mulX (f_iso85 g) h' |h'. h' \<in> f_iso85 ` H}"
+          using \<open>h \<in> H\<close> by (by100 blast)
+      next
+        fix y assume "y \<in> {?mulX (f_iso85 g) h' |h'. h' \<in> f_iso85 ` H}"
+        then obtain h' where "h' \<in> f_iso85 ` H" "y = ?mulX (f_iso85 g) h'" by (by100 blast)
+        then obtain h where "h \<in> H" "h' = f_iso85 h" by (by100 blast)
+        have "h \<in> F" using \<open>h \<in> H\<close> hH_sub_F by (by100 blast)
+        have "y = f_iso85 (mul g h)"
+          using \<open>y = ?mulX (f_iso85 g) h'\<close> \<open>h' = f_iso85 h\<close> hf_hom \<open>g \<in> F\<close> \<open>h \<in> F\<close> by simp
+        thus "y \<in> f_iso85 ` {mul g h |h. h \<in> H}"
+          using \<open>h \<in> H\<close> by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Index preservation: the coset map is a bijection on coset spaces.\<close>
+    have hindex: "top1_subgroup_has_index_on ?piX ?mulX ?pH k"
+    proof -
+      have hcoset_bij: "bij_betw (\<lambda>C. f_iso85 ` C)
+          (top1_left_cosets_on F mul H) (top1_left_cosets_on ?piX ?mulX ?pH)"
+        sorry
+      from assms(5) have hF_fin: "finite (top1_left_cosets_on F mul H)"
+          and hF_card: "card (top1_left_cosets_on F mul H) = k"
+        unfolding top1_subgroup_has_index_on_def by (by100 blast)+
+      have hpiX_fin: "finite (top1_left_cosets_on ?piX ?mulX ?pH)"
+        using bij_betw_finite[OF hcoset_bij] hF_fin by simp
+      have hpiX_card: "card (top1_left_cosets_on ?piX ?mulX ?pH) = k"
+        using bij_betw_same_card[OF hcoset_bij] hF_card by simp
+      show ?thesis unfolding top1_subgroup_has_index_on_def
+        using hpiX_fin hpiX_card by (by100 blast)
+    qed
+    \<comment> \<open>Steps B--E: covering Euler multiplicity + rank formula.\<close>
     show ?thesis sorry
   qed
   have "finite S_E"
