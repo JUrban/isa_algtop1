@@ -820,9 +820,23 @@ proof -
     qed
     thus ?thesis using \<open>top1_fundamental_group_induced_on _ _ _ _ _ _ _ ?c_E \<in> _\<close> by simp
   qed
-  \<comment> \<open>[p\\<circ>\\<delta>] = [rev(p\\<circ>\\<gamma>\\_1)*(p\\<circ>\\<gamma>\\_2)] = [p\\<circ>\\<gamma>\\_1]\\<inverse>\\<cdot>[p\\<circ>\\<gamma>\\_2].
+  \<comment> \<open>[p\\<circ>\\<delta>] = [p\\<circ>(\\<gamma>\\_1*rev(\\<gamma>\\_2))] = [(p\\<circ>\\<gamma>\\_1)*rev(p\\<circ>\\<gamma>\\_2)] = [p\\<circ>\\<gamma>\\_1]\\<cdot>[p\\<circ>\\<gamma>\\_2]\\<inverse>.
      Being in H means [p\\<circ>\\<gamma>\\_1] and [p\\<circ>\\<gamma>\\_2] are in the same H-coset.\<close>
-  show ?thesis sorry \<comment> \<open>Coset equality from difference being in H.\<close>
+  \<comment> \<open>Step 1: p distributes over path\\_product and path\\_reverse.\<close>
+  have hp_distrib: "\<And>s. s \<in> I_set \<Longrightarrow>
+      p (top1_path_product \<gamma>1 (top1_path_reverse \<gamma>2) s) =
+      top1_path_product (\<lambda>t. p (\<gamma>1 t)) (top1_path_reverse (\<lambda>t. p (\<gamma>2 t))) s"
+    unfolding top1_path_product_def top1_path_reverse_def by simp
+  \<comment> \<open>Step 2: The loop class [p\\<circ>\\<delta>] equals [(p\\<circ>\\<gamma>\\_1)*rev(p\\<circ>\\<gamma>\\_2)].\<close>
+  have hclass_eq: "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) g} =
+      {g. top1_loop_equiv_on B TB b0
+          (top1_path_product (\<lambda>t. p (\<gamma>1 t)) (top1_path_reverse (\<lambda>t. p (\<gamma>2 t)))) g}"
+    sorry \<comment> \<open>From hp\\_distrib: p\\<circ>\\<delta> = (p\\<circ>\\<gamma>\\_1)*rev(p\\<circ>\\<gamma>\\_2) pointwise on I\\_set.
+       Need: pointwise equality on I\\_set implies same loop\\_equiv class.\<close>
+  \<comment> \<open>Step 3: This class = mulB([p\\<circ>\\<gamma>\\_1], invB([p\\<circ>\\<gamma>\\_2])) via fundamental\\_group\\_mul\\_class + invg\\_class.\<close>
+  \<comment> \<open>Step 4: Being in H + group algebra gives coset equality.\<close>
+  show ?thesis sorry \<comment> \<open>Chain: [p\\<circ>\\<delta>] \\<in> H \\<Rightarrow> mulB([p\\<circ>\\<gamma>\\_1], invB([p\\<circ>\\<gamma>\\_2])) \\<in> H
+     \\<Rightarrow> coset([p\\<circ>\\<gamma>\\_1]) = coset([p\\<circ>\\<gamma>\\_2]).\<close>
 qed
 
 (** from *\<S>81 Theorem 81.2: the group of covering transformations Cov(p) is
