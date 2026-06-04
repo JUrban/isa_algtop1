@@ -1355,6 +1355,24 @@ proof -
        So A0 is entirely within the open set containing w (plus its interior).
        The OTHER open set (not containing w) is disjoint from A0.
        Hence that other set is open in T and creates a disconnection of T.\<close>
+    \<comment> \<open>V' is open in T. V \\<subseteq> T'. If we can show A0 \\<inter> V' = {} (A0 disjoint from V' in T),
+       then V' creates a separation of T: T = (T \\ V') \\<union> (T \\<inter> V') with V' open,
+       V' \\<inter> T \\<ne> {} (contains V \\<ne> {}), T \\ V' \\<ne> {} (contains A0 or U).
+
+       A0 \\<inter> V' = ? We need A0 \\<inter> T' \\<subseteq> {w} (proved as disjointness).
+       w \\<in> U (or V, WLOG). If w \\<in> U: V \\<inter> A0 \\<subseteq> V \\<inter> (T' \\<inter> A0) \\<subseteq> V \\<inter> {w}.
+       Since V open in T' and w \\<in> U, w \\<notin> V (disjoint). So V \\<inter> A0 = {}.
+       Then V \\<subseteq> T', V \\<inter> A0 = {}, V \\<noteq> {}.
+       V' open in T, V' \\<inter> T \\<supseteq> V \\<noteq> {}, T \\ V' \\<supseteq> A0 \\<noteq> {}.
+       But T = (T \\<inter> V') \\<union> (T \\ V'). V' open in T, T \\ V' = complement in T.
+       Need T \\ V' also open... that makes V' clopen, contradicting T connected.\<close>
+    \<comment> \<open>Need w (other endpoint of A0).\<close>
+    have "\<exists>w. w \<in> ?T' \<and> w \<noteq> v"
+      sorry \<comment> \<open>From tree\\_leaf\\_other\\_endpoint\\_shared.\<close>
+    then obtain w where "w \<in> ?T'" "w \<noteq> v" by (by100 blast)
+    have hw_in: "w \<in> U \<or> w \<in> V" using \<open>w \<in> ?T'\<close> hcov by (by100 blast)
+    \<comment> \<open>WLOG w \\<in> U. Then V is disjoint from A0. V' open in T, V \\<ne> {}, T\\\\V' nonempty.\<close>
+    \<comment> \<open>Similar argument for w \\<in> V (swap U and V).\<close>
     show False sorry
   qed
   have hT'_sc: "top1_simply_connected_on ?T' ?TT'"
