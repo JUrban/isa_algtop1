@@ -2011,7 +2011,19 @@ proof -
           have "?ch \<in> ?N" using hin_normalizer[OF \<open>h \<in> ?Cov\<close>] .
           have "?ck \<in> ?N" using hin_normalizer[OF \<open>k \<in> ?Cov\<close>] .
           have hN_grp: "top1_is_group_on ?N ?mulB ?eB ?invB" sorry
-          have hH_normal_in_N: "top1_normal_subgroup_on ?N ?mulB ?eB ?invB ?H" sorry
+          have hH_normal_in_N: "top1_normal_subgroup_on ?N ?mulB ?eB ?invB ?H"
+            unfolding top1_normal_subgroup_on_def
+          proof (intro conjI)
+            show "?H \<subseteq> ?N" sorry \<comment> \<open>H \\<subseteq> N(H): every h \\<in> H normalizes H.\<close>
+            show "top1_is_group_on ?H ?mulB ?eB ?invB" sorry \<comment> \<open>H is a group (image of group hom).\<close>
+            show "\<forall>g\<in>?N. \<forall>n\<in>?H. ?mulB (?mulB g n) (?invB g) \<in> ?H"
+            proof (intro ballI)
+              fix g n assume "g \<in> ?N" "n \<in> ?H"
+              have "{?mulB (?mulB g h) (?invB g) |h. h \<in> ?H} = ?H"
+                using \<open>g \<in> ?N\<close> unfolding top1_normalizer_on_def by (by5000 blast)
+              thus "?mulB (?mulB g n) (?invB g) \<in> ?H" using \<open>n \<in> ?H\<close> by (by5000 blast)
+            qed
+          qed
           from normal_coset_mul_eq[OF hN_grp hH_normal_in_N \<open>?ch \<in> ?N\<close> \<open>?ck \<in> ?N\<close>]
           show ?thesis by simp
         qed
