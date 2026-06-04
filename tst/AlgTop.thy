@@ -243,7 +243,20 @@ proof -
             have "?e \<in> ?piB"
               using hpiB_grp unfolding top1_is_group_on_def by (by100 blast)
             have hH_is_subgroup: "top1_is_group_on ?H ?mulB ?e (top1_fundamental_group_invg B TB b0)"
-              sorry \<comment> \<open>H is a subgroup (image of homomorphism).\<close>
+            proof -
+              have hE'_grp: "top1_is_group_on (top1_fundamental_group_carrier E TE e0)
+                  (top1_fundamental_group_mul E TE e0) (top1_fundamental_group_id E TE e0)
+                  (top1_fundamental_group_invg E TE e0)"
+                by (rule top1_fundamental_group_is_group[OF hE_top assms(4)])
+              have hp_cont: "top1_continuous_map_on E TE B TB p"
+                using assms(1) unfolding top1_covering_map_on_def top1_evenly_covered_on_def by (by5000 blast)
+              have hp_hom: "top1_group_hom_on
+                  (top1_fundamental_group_carrier E TE e0) (top1_fundamental_group_mul E TE e0)
+                  ?piB ?mulB (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
+                by (rule top1_fundamental_group_induced_on_is_hom[OF hE_top assms(3) assms(4) \<open>b0 \<in> B\<close> hp_cont assms(5)])
+              from hom_image_is_subgroup[OF hE'_grp hpiB_grp hp_hom]
+              show ?thesis unfolding top1_fundamental_group_image_hom_def .
+            qed
             thus ?thesis unfolding top1_is_group_on_def by (by100 blast)
           qed
           moreover have "h = ?mulB ?e h"
