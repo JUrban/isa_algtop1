@@ -2839,7 +2839,8 @@ proof -
         have "c \<in> ?Q" using \<open>c \<in> ?Q\<close> .
         then obtain g where "g \<in> ?N" "c = ?coset g"
           unfolding top1_quotient_group_carrier_on_def by (by5000 auto)
-        have "g \<in> ?pi1B" sorry \<comment> \<open>g \\<in> N(H) \\<subseteq> \\<pi>\\_1(B).\<close>
+        have "g \<in> ?pi1B"
+          using \<open>g \<in> ?N\<close> unfolding top1_normalizer_on_def by (by100 blast)
         \<comment> \<open>g = [\\<alpha>] for some loop \\<alpha> at b0. Lift \\<alpha> from e0 to get \\<gamma> ending at e1.\<close>
         then obtain \<alpha> where "top1_is_loop_on B TB b0 \<alpha>"
             "g = {h. top1_loop_equiv_on B TB b0 \<alpha> h}"
@@ -2849,11 +2850,31 @@ proof -
             "\<forall>s\<in>I_set. p (\<gamma>_lift s) = \<alpha> s"
           sorry \<comment> \<open>Lemma 54.1 path lifting.\<close>
         let ?e1 = "\<gamma>_lift 1"
-        have "?e1 \<in> E" sorry \<comment> \<open>Endpoint of path in E.\<close>
-        have "p ?e1 = b0" sorry \<comment> \<open>p(\\<gamma>(1)) = \\<alpha>(1) = b0 (\\<alpha> is a loop).\<close>
+        have "?e1 \<in> E"
+        proof -
+          have "1 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+          thus ?thesis using \<open>top1_is_path_on E TE e0 ?e1 \<gamma>_lift\<close>
+            unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+        qed
+        have "p ?e1 = b0"
+        proof -
+          have "1 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+          have "p (\<gamma>_lift 1) = \<alpha> 1" using \<open>\<forall>s\<in>I_set. p (\<gamma>_lift s) = \<alpha> s\<close> \<open>1 \<in> I_set\<close>
+            by (by100 blast)
+          have "\<alpha> 1 = b0" using \<open>top1_is_loop_on B TB b0 \<alpha>\<close>
+            unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+          thus ?thesis using \<open>p (\<gamma>_lift 1) = \<alpha> 1\<close> \<open>\<alpha> 1 = b0\<close> by simp
+        qed
         \<comment> \<open>[p\\<circ>\\<gamma>\\_lift] = g (since p\\<circ>\\<gamma>\\_lift = \\<alpha> pointwise, loop\\_class\\_cong).\<close>
         have hclass_lift: "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h} = g"
-          sorry \<comment> \<open>p\\<circ>\\<gamma>\\_lift = \\<alpha> on I\\_set \\<Rightarrow> same loop class by loop\\_class\\_cong.\<close>
+        proof -
+          have "\<forall>s\<in>I_set. (\<lambda>t. p (\<gamma>_lift t)) s = \<alpha> s"
+            using \<open>\<forall>s\<in>I_set. p (\<gamma>_lift s) = \<alpha> s\<close> by simp
+          from loop_class_cong[OF hTB_n this]
+          have "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h} =
+              {h. top1_loop_equiv_on B TB b0 \<alpha> h}" .
+          thus ?thesis using \<open>g = {h. top1_loop_equiv_on B TB b0 \<alpha> h}\<close> by simp
+        qed
         \<comment> \<open>image\\_hom(E, e1) = H (from g \\<in> N(H) + basepoint\\_change\\_image\\_hom).\<close>
         have "top1_fundamental_group_image_hom E TE ?e1 B TB b0 p = ?H" sorry
           \<comment> \<open>From g \\<in> N(H): g\\<cdot>H\\<cdot>g\\<inverse> = H, and basepoint\\_change gives
