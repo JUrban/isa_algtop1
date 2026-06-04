@@ -1224,8 +1224,21 @@ proof -
               \<and> top1_is_path_on E' TE' e0' (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p' (ft s) = f s))
           \<and> (\<forall>g\<in>?piX. \<forall>h\<in>?piX.
               (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX ?pH g = top1_group_coset_on ?piX ?mulX ?pH h))"
-        using Theorem_54_6b[OF hE'_cov hE'_pc hX_top he0' \<open>p' e0' = x0\<close>]
-        sorry \<comment> \<open>Need pH = image\\_hom matching. Follows from hH\\_corr85.\<close>
+      proof -
+        from Theorem_54_6b[OF hE'_cov hE'_pc hX_top he0' \<open>p' e0' = x0\<close>]
+        have "\<exists>\<phi>. (\<forall>c\<in>?piX. \<phi> c \<in> {e \<in> E'. p' e = x0})
+            \<and> \<phi> ` ?piX = {e \<in> E'. p' e = x0}
+            \<and> (\<forall>c\<in>?piX. \<exists>f ft. f \<in> c \<and> top1_is_loop_on X TX x0 f
+                \<and> top1_is_path_on E' TE' e0' (\<phi> c) ft \<and> (\<forall>s\<in>I_set. p' (ft s) = f s))
+            \<and> (\<forall>g\<in>?piX. \<forall>h\<in>?piX.
+                (\<phi> g = \<phi> h) = (top1_group_coset_on ?piX ?mulX
+                    (top1_fundamental_group_image_hom E' TE' e0' X TX x0 p') g
+                 = top1_group_coset_on ?piX ?mulX
+                    (top1_fundamental_group_image_hom E' TE' e0' X TX x0 p') h))" .
+        moreover have "top1_fundamental_group_image_hom E' TE' e0' X TX x0 p' = ?pH"
+          unfolding top1_fundamental_group_image_hom_def by simp
+        ultimately show ?thesis by simp
+      qed
       then obtain \<phi> where h\<phi>_maps: "\<forall>c\<in>?piX. \<phi> c \<in> {e \<in> E'. p' e = x0}"
           and h\<phi>_surj: "\<phi> ` ?piX = {e \<in> E'. p' e = x0}"
           and h\<phi>_lift: "\<forall>c\<in>?piX. \<exists>f ft. f \<in> c \<and> top1_is_loop_on X TX x0 f
