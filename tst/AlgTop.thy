@@ -1141,7 +1141,25 @@ lemma finite_tree_remove_leaf_is_tree:
 proof -
   let ?T' = "\<Union>(\<A> - {A0})" and ?TT' = "subspace_topology T TT (\<Union>(\<A> - {A0}))"
   \<comment> \<open>Tree = graph + connected + simply\\_connected.\<close>
-  have hT'_graph: "top1_is_graph_on ?T' ?TT'" sorry
+  have hT'_graph: "top1_is_graph_on ?T' ?TT'"
+  proof -
+    have hstrict: "is_topology_on_strict T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hhaus: "is_hausdorff_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hT'_sub: "?T' \<subseteq> T" using assms(2,3) by (by100 blast)
+    have hT'_strict: "is_topology_on_strict ?T' ?TT'"
+    proof -
+      have "\<forall>U\<in>?TT'. U \<subseteq> ?T'" unfolding subspace_topology_def by (by100 blast)
+      moreover have "is_topology_on ?T' ?TT'"
+        using subspace_topology_is_topology_on[OF hstrict[unfolded is_topology_on_strict_def, THEN conjunct1] hT'_sub] .
+      ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+    qed
+    have hT'_haus: "is_hausdorff_on ?T' ?TT'"
+      using hhaus hT'_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+    \<comment> \<open>Arc family \\<A>-{A0} covers T' and satisfies all graph properties in subspace.\<close>
+    show ?thesis unfolding top1_is_graph_on_def sorry
+  qed
   have hT'_conn: "top1_connected_on ?T' ?TT'" sorry
   have hT'_sc: "top1_simply_connected_on ?T' ?TT'" sorry
   show ?thesis unfolding top1_is_tree_on_def using hT'_graph hT'_conn hT'_sc by (by100 blast)
