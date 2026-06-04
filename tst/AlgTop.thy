@@ -2354,11 +2354,6 @@ proof -
         proof -
           have "?ch \<in> ?N" using hin_normalizer[OF \<open>h \<in> ?Cov\<close>] .
           have "?ck \<in> ?N" using hin_normalizer[OF \<open>k \<in> ?Cov\<close>] .
-          have hN_grp: "top1_is_group_on ?N ?mulB ?eB ?invB"
-            sorry \<comment> \<open>Standard: normalizer N(H) is a subgroup of \\<pi>\\_1(B), hence a group.
-               Needs: e \\<in> N(H), closure under mul (conjugation composition),
-               closure under invg (group\\_conj\\_reverse). All provable with
-               group axiom helpers but requires ~50 lines of group algebra.\<close>
           have hH_grp_early: "top1_is_group_on ?H ?mulB ?eB ?invB"
           proof -
             have hTE_l0: "is_topology_on E TE"
@@ -2454,6 +2449,34 @@ proof -
               thus "?mulB (?mulB g n) (?invB g) \<in> ?H" using \<open>n \<in> ?H\<close> by (by5000 blast)
             qed
           qed
+          have hpi1_grp_l2: "top1_is_group_on ?pi1B ?mulB ?eB ?invB"
+          proof -
+            have hTB_l2: "is_topology_on B TB"
+              using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+            have hb0B_l2: "b0 \<in> B"
+              using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
+            show ?thesis using top1_fundamental_group_is_group[OF hTB_l2 hb0B_l2] .
+          qed
+          have hH_sub_l2: "?H \<subseteq> ?pi1B"
+          proof -
+            have hTE_l2: "is_topology_on E TE"
+              using assms(1) unfolding is_topology_on_strict_def by (by100 blast)
+            have hTB_l2: "is_topology_on B TB"
+              using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+            have hb0B_l2: "b0 \<in> B"
+              using top1_covering_map_on_surj[OF assms(3)] assms(6) assms(7) by (by100 blast)
+            have "top1_group_hom_on (top1_fundamental_group_carrier E TE e0)
+                (top1_fundamental_group_mul E TE e0) ?pi1B ?mulB
+                (top1_fundamental_group_induced_on E TE e0 B TB b0 p)"
+              using top1_fundamental_group_induced_on_is_hom[OF hTE_l2 hTB_l2 assms(6) hb0B_l2
+                  top1_covering_map_on_continuous[OF assms(3)] assms(7)] .
+            hence "\<forall>c \<in> top1_fundamental_group_carrier E TE e0.
+                top1_fundamental_group_induced_on E TE e0 B TB b0 p c \<in> ?pi1B"
+              unfolding top1_group_hom_on_def by (by100 blast)
+            thus ?thesis unfolding top1_fundamental_group_image_hom_def by (by100 blast)
+          qed
+          have hN_grp: "top1_is_group_on ?N ?mulB ?eB ?invB"
+            using normalizer_is_group[OF hpi1_grp_l2 hH_sub_l2 hH_grp_early] .
           from normal_coset_mul_eq[OF hN_grp hH_normal_in_N \<open>?ch \<in> ?N\<close> \<open>?ck \<in> ?N\<close>]
           show ?thesis by simp
         qed
