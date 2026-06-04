@@ -8722,6 +8722,7 @@ lemma free_group_realized_by_wedge:
       and "finite S"
   shows "\<exists>(X :: (real \<times> real) set) TX (x0 :: real \<times> real).
       top1_is_graph_on X TX \<and> top1_connected_on X TX \<and> x0 \<in> X
+    \<and> top1_compact_on X TX
     \<and> top1_groups_isomorphic_on F mul
         (top1_fundamental_group_carrier X TX x0)
         (top1_fundamental_group_mul X TX x0)"
@@ -9062,9 +9063,11 @@ proof (cases "card S = 0")
     qed
     thus ?thesis unfolding top1_groups_isomorphic_on_def by (by100 blast)
   qed
+  have hcompact0: "top1_compact_on ?X0 ?TX0"
+    sorry \<comment> \<open>X0 = [0,1] \\<times> {0}: compact image of compact [0,1].\<close>
   show ?thesis
     apply (rule exI[of _ ?X0], rule exI[of _ ?TX0], rule exI[of _ ?x00])
-    using hgraph0 hconn0 hx0_in hiso0 by (by100 blast)
+    using hgraph0 hconn0 hx0_in hcompact0 hiso0 by (by100 blast)
 next
   case False
   hence hn_pos: "card S > 0" by simp
@@ -10189,12 +10192,15 @@ next
   qed
   have hp: "p \<in> X"
     using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+  have hcompact: "top1_compact_on X TX"
+    sorry \<comment> \<open>X = wedge of circles: finite union of compact arcs (images of [0,1]).\<close>
   show ?thesis
     apply (rule exI[of _ X], rule exI[of _ TX], rule exI[of _ p])
     apply (intro conjI)
     apply (rule hgraph)
     apply (rule hconn)
     apply (rule hp)
+    apply (rule hcompact)
     apply (rule hF_iso_pi1)
     done
 qed
@@ -22065,6 +22071,22 @@ qed
    Key tool: any two finite free bases of the same group have equal cardinality
    (free\\_group\\_rank\\_invariant\\_finite).\<close>
 
+\<comment> \<open>A compact graph has finitely many arcs (in any arc decomposition).\<close>
+lemma compact_graph_finite_arcs:
+  assumes "top1_is_graph_on X TX"
+      and "top1_compact_on X TX"
+      and "\<forall>A\<in>\<A>. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and "\<Union>\<A> = X"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "\<forall>C. C \<subseteq> X \<longrightarrow>
+           (closedin_on X TX C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology X TX A) (A \<inter> C)))"
+  shows "finite \<A>"
+  sorry
+
 \<comment> \<open>Definition: the vertex set of a graph (union of all arc endpoints).\<close>
 definition top1_graph_vertex_set :: "'a set \<Rightarrow> 'a set set \<Rightarrow> 'a set set \<Rightarrow> 'a set"
   where "top1_graph_vertex_set Y TY \<A> =
@@ -22176,6 +22198,7 @@ proof -
   obtain X :: "(real \<times> real) set" and TX :: "(real \<times> real) set set" and x0 :: "real \<times> real"
     where hX_graph: "top1_is_graph_on X TX" and hX_conn: "top1_connected_on X TX"
       and hx0: "x0 \<in> X"
+      and hX_compact: "top1_compact_on X TX"
       and hF_iso: "top1_groups_isomorphic_on F mul
           (top1_fundamental_group_carrier X TX x0) (top1_fundamental_group_mul X TX x0)"
   proof -
@@ -22184,6 +22207,7 @@ proof -
     from hrealiz obtain X' :: "(real \<times> real) set" and TX' :: "(real \<times> real) set set"
         and x0' :: "real \<times> real" where
       hconj: "top1_is_graph_on X' TX' \<and> top1_connected_on X' TX' \<and> x0' \<in> X'
+      \<and> top1_compact_on X' TX'
       \<and> top1_groups_isomorphic_on F mul
           (top1_fundamental_group_carrier X' TX' x0') (top1_fundamental_group_mul X' TX' x0')"
       by (by5000 fast)
