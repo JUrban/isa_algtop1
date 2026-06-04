@@ -2841,10 +2841,78 @@ proof -
           \<comment> \<open>f(h1) = coset([p\\<circ>path\\_to(h1(e0))]) = coset([p\\<circ>path\\_to(h2(e0))]) = f(h2).
              By same\\_endpoint\\_same\\_coset (CONVERSE): same coset \\<Rightarrow> same endpoint.
              This is the Theorem 54.6 direction that we need.\<close>
+          \<comment> \<open>Kernel argument: suffices to show f(h) = eQ \\<Rightarrow> h(e0) = e0.\<close>
+          \<comment> \<open>Then f(h1\\<circ>h2\\<inverse>) = eQ \\<Rightarrow> h1\\<circ>h2\\<inverse> = id \\<Rightarrow> h1 = h2.\<close>
+          \<comment> \<open>Key: f(h) = eQ \\<Rightarrow> [p\\<circ>\\<gamma>\\_h] \\<in> H \\<Rightarrow> h(e0) = e0 by Theorem 54.3.\<close>
+          \<comment> \<open>[p\\<circ>\\<gamma>\\_h] \\<in> H = image\\_hom(E,e0): \\<exists> loop \\<delta> at e0 with [p\\<circ>\\<delta>] = [p\\<circ>\\<gamma>\\_h].
+             Thm 54.3: lifts of homotopic loops from e0 have same endpoint.
+             Lift of p\\<circ>\\<delta> = \\<delta> (ends at e0). Lift of p\\<circ>\\<gamma>\\_h = \\<gamma>\\_h (ends at h(e0)).
+             So h(e0) = e0.\<close>
+          \<comment> \<open>Key lemma: [p\\<circ>\\<gamma>] \\<in> H \\<Rightarrow> \\<gamma>(1) = e0 (via Theorem 54.3).\<close>
+          have hkernel: "\<And>h. h \<in> ?Cov \<Longrightarrow>
+              {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (path_to (h e0) t)) g} \<in> ?H \<Longrightarrow>
+              h e0 = e0"
+          proof -
+            fix h assume "h \<in> ?Cov"
+                and hclass_in_H: "{g. top1_loop_equiv_on B TB b0
+                    (\<lambda>t. p (path_to (h e0) t)) g} \<in> ?H"
+            have "h e0 \<in> E" using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>h \<in> ?Cov\<close> by (by100 blast)
+            have "p (h e0) = b0" using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>h \<in> ?Cov\<close> by (by100 blast)
+            let ?\<gamma> = "path_to (h e0)"
+            have h\<gamma>: "top1_is_path_on E TE e0 (h e0) ?\<gamma>" using hpath_to[OF \<open>h e0 \<in> E\<close>] .
+            \<comment> \<open>[p\\<circ>\\<gamma>] \\<in> H = image\\_hom(E,e0): \\<exists> loop \\<delta> at e0 in E with [p\\<circ>\\<delta>] = [p\\<circ>\\<gamma>].\<close>
+            from hclass_in_H obtain \<delta>_loop and c_E
+              where "c_E \<in> top1_fundamental_group_carrier E TE e0"
+                and hind: "top1_fundamental_group_induced_on E TE e0 B TB b0 p c_E =
+                    {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<gamma> t)) g}"
+              unfolding top1_fundamental_group_image_hom_def by (by5000 auto)
+            \<comment> \<open>c\\_E = [\\<delta>] for some loop \\<delta> at e0.\<close>
+            from \<open>c_E \<in> top1_fundamental_group_carrier E TE e0\<close>
+            obtain \<delta> where "top1_is_loop_on E TE e0 \<delta>"
+                "c_E = {g. top1_loop_equiv_on E TE e0 \<delta> g}"
+              unfolding top1_fundamental_group_carrier_def by (by5000 auto)
+            \<comment> \<open>induced([\\<delta>]) = [p\\<circ>\\<delta>] (by loop\\_class\\_cong pattern).\<close>
+            have "top1_fundamental_group_induced_on E TE e0 B TB b0 p c_E =
+                {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<delta> t)) g}"
+            proof -
+              have "(\<lambda>t. p (\<delta> t)) = p \<circ> \<delta>" by (rule ext) simp
+              show ?thesis unfolding \<open>c_E = _\<close> top1_fundamental_group_induced_on_def
+                using \<open>(\<lambda>t. p (\<delta> t)) = p \<circ> \<delta>\<close> sorry
+                \<comment> \<open>{g. \\<exists>f\\<in>[\\<delta>]. loop\\_equiv(p\\<circ>f, g)} = {g. loop\\_equiv(p\\<circ>\\<delta>, g)}.
+                   Same as in same\\_endpoint\\_same\\_coset proof.\<close>
+            qed
+            \<comment> \<open>So [p\\<circ>\\<delta>] = [p\\<circ>\\<gamma>], i.e., p\\<circ>\\<delta> \\<sim> p\\<circ>\\<gamma> as loops at b0.\<close>
+            hence hclass_eq_delta: "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<delta> t)) g} =
+                {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<gamma> t)) g}"
+              using hind by simp
+            \<comment> \<open>This gives path\\_homotopic(p\\<circ>\\<delta>, p\\<circ>\\<gamma>) as loops at b0.\<close>
+            \<comment> \<open>Apply Theorem 54.3: lifts from e0 of p\\<circ>\\<delta> (= \\<delta>) and p\\<circ>\\<gamma> (= \\<gamma>)
+               have same endpoint. \\<delta>(1) = e0, \\<gamma>(1) = h(e0). So h(e0) = e0.\<close>
+            have "top1_is_path_on E TE e0 e0 \<delta>"
+              using \<open>top1_is_loop_on E TE e0 \<delta>\<close> unfolding top1_is_loop_on_def .
+            have "\<forall>s\<in>I_set. p (\<delta> s) = (\<lambda>t. p (\<delta> t)) s" by simp
+            have "\<forall>s\<in>I_set. p (?\<gamma> s) = (\<lambda>t. p (?\<gamma> t)) s" by simp
+            have "top1_is_loop_on B TB b0 (\<lambda>t. p (\<delta> t))"
+              sorry \<comment> \<open>p\\<circ>\\<delta> is a loop (proved pattern).\<close>
+            have "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<gamma> t))"
+              sorry \<comment> \<open>p\\<circ>\\<gamma> is a loop (proved pattern).\<close>
+            have "top1_path_homotopic_on B TB b0 b0 (\<lambda>t. p (\<delta> t)) (\<lambda>t. p (?\<gamma> t))"
+              sorry \<comment> \<open>From hclass\\_eq\\_delta + loop\\_equiv definition.\<close>
+            from Theorem_54_3[OF assms(3) hTE_n hTB_n assms(6) assms(7)
+                _ _ this
+                \<open>top1_is_path_on E TE e0 e0 \<delta>\<close>
+                \<open>\<forall>s\<in>I_set. p (\<delta> s) = (\<lambda>t. p (\<delta> t)) s\<close>
+                h\<gamma>
+                \<open>\<forall>s\<in>I_set. p (?\<gamma> s) = (\<lambda>t. p (?\<gamma> t)) s\<close>]
+            have "e0 = h e0" sorry \<comment> \<open>Theorem 54.3 conclusion: e1 = e1'.\<close>
+            thus "h e0 = e0" by simp
+          qed
+          \<comment> \<open>Now: f(h1)=f(h2) \\<Rightarrow> coset([p\\<circ>\\<gamma>\\_1])=coset([p\\<circ>\\<gamma>\\_2])
+             \\<Rightarrow> mulB(invB([p\\<circ>\\<gamma>\\_1]), [p\\<circ>\\<gamma>\\_2]) \\<in> H
+             \\<Rightarrow> (via kernel of hom on Cov group) h2\\<inverse>\\<circ>h1 is in kernel
+             \\<Rightarrow> (h2\\<inverse>\\<circ>h1)(e0) = e0 \\<Rightarrow> h1(e0) = h2(e0).\<close>
           show ?thesis sorry
-            \<comment> \<open>Needs: from f(h1) = f(h2) derive h1(e0) = h2(e0).
-               Key missing step: Theorem 54.3 applied to show that
-               [p\\<circ>\\<gamma>] \\<in> H implies the lift endpoint = e0.\<close>
+            \<comment> \<open>Uses hkernel + group structure of Cov + f being hom.\<close>
         qed
         hence "\<Psi> h1 = \<Psi> h2" unfolding \<Psi>_def by simp
         from inj_onD[OF h\<Psi>_inj \<open>\<Psi> h1 = \<Psi> h2\<close> \<open>h1 \<in> ?Cov\<close> \<open>h2 \<in> ?Cov\<close>]
