@@ -1893,8 +1893,41 @@ proof -
            Both \\<gamma>\\_{hk} and this path lift loops from e0 to h(k(e0)),
            so they differ by H (their loop-class difference is in H).
            Hence f(hk) = coset([p\\<circ>\\<gamma>\\_{hk}]) = coset([\\<alpha>*\\<beta>]) = mulQ(f(h), f(k)).\<close>
+        \<comment> \<open>Step I.1: h\\<circ>k \\<in> Cov and h(k(e0)) \\<in> fiber.\<close>
+        have hhk_cov: "(\<lambda>e. h (k e)) \<in> ?Cov"
+        proof -
+          from hCov_group obtain eC invgC where
+            "top1_is_group_on ?Cov (\<lambda>h k e. h (k e)) eC invgC" by (by100 blast)
+          hence "\<forall>h\<in>?Cov. \<forall>k\<in>?Cov. (\<lambda>e. h (k e)) \<in> ?Cov"
+            unfolding top1_is_group_on_def by (by5000 blast)
+          thus ?thesis using \<open>h \<in> ?Cov\<close> \<open>k \<in> ?Cov\<close> by (by100 blast)
+        qed
+        have hke0E: "k e0 \<in> E"
+          using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>k \<in> ?Cov\<close> by (by100 blast)
+        have "bij_betw h E E"
+          using \<open>h \<in> ?Cov\<close> unfolding top1_covering_transformation_on_def top1_homeomorphism_on_def
+          by (by100 blast)
+        hence "h (k e0) \<in> E" using hke0E unfolding bij_betw_def by (by100 blast)
+        have "\<forall>e\<in>E. p (h e) = p e"
+          using \<open>h \<in> ?Cov\<close> unfolding top1_covering_transformation_on_def by (by100 blast)
+        hence "p (h (k e0)) = p (k e0)" using hke0E by (by100 blast)
+        have "p (k e0) = b0"
+          using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>k \<in> ?Cov\<close> by (by100 blast)
+        hence "p (h (k e0)) = b0" using \<open>p (h (k e0)) = p (k e0)\<close> by simp
+        \<comment> \<open>Step I.2: \\<gamma>\\_h * (h\\<circ>\\<gamma>\\_k) is a path from e0 to h(k(e0)).\<close>
+        let ?\<gamma>h = "path_to (h e0)" and ?\<gamma>k = "path_to (k e0)"
+        let ?\<gamma>hk_composed = "top1_path_product ?\<gamma>h (\<lambda>t. h (?\<gamma>k t))"
+        have "h e0 \<in> E" "p (h e0) = b0"
+          using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>h \<in> ?Cov\<close> by (by100 blast)+
+        have "k e0 \<in> E" "p (k e0) = b0"
+          using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>k \<in> ?Cov\<close> by (by100 blast)+
+        \<comment> \<open>Step I.3: Apply same\\_endpoint\\_same\\_coset to \\<gamma>\\_{hk} and \\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k).\<close>
+        \<comment> \<open>Step I.4: [p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))] = mulB([p\\<circ>\\<gamma>\\_h], [p\\<circ>\\<gamma>\\_k]).\<close>
+        \<comment> \<open>Step I.5: mulQ(f(h), f(k)) = coset(mulB([p\\<circ>\\<gamma>\\_h], [p\\<circ>\\<gamma>\\_k])).\<close>
         show "f (\<lambda>e. h (k e)) = ?mulQ (f h) (f k)"
-          sorry
+          sorry \<comment> \<open>Needs: path composition in E (\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k)),
+             same\\_endpoint\\_same\\_coset, fundamental\\_group\\_mul\\_class,
+             quotient group multiplication (normal\\_coset\\_mul\\_eq).\<close>
       qed
       \<comment> \<open>Step J: f is injective.\<close>
       have hf_inj: "inj_on f ?Cov"
