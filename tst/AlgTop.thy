@@ -2835,7 +2835,44 @@ proof -
            \\<exists> covering transformation h with h(e0) having image\\_hom = H.
            The lifting correspondence sends g to h(e0) = \\<Phi>(g).
            Then f(h) = coset([p\\<circ>\\<gamma>\\_h]) = coset(g) = c.\<close>
-        show "c \<in> f ` ?Cov" sorry
+        \<comment> \<open>c = coset(g) for some g \\<in> N(H).\<close>
+        have "c \<in> ?Q" using \<open>c \<in> ?Q\<close> .
+        then obtain g where "g \<in> ?N" "c = ?coset g"
+          unfolding top1_quotient_group_carrier_on_def by (by5000 auto)
+        have "g \<in> ?pi1B" sorry \<comment> \<open>g \\<in> N(H) \\<subseteq> \\<pi>\\_1(B).\<close>
+        \<comment> \<open>g = [\\<alpha>] for some loop \\<alpha> at b0. Lift \\<alpha> from e0 to get \\<gamma> ending at e1.\<close>
+        then obtain \<alpha> where "top1_is_loop_on B TB b0 \<alpha>"
+            "g = {h. top1_loop_equiv_on B TB b0 \<alpha> h}"
+          unfolding top1_fundamental_group_carrier_def by (by5000 auto)
+        \<comment> \<open>Lift \\<alpha> from e0.\<close>
+        obtain \<gamma>_lift where "top1_is_path_on E TE e0 (\<gamma>_lift 1) \<gamma>_lift"
+            "\<forall>s\<in>I_set. p (\<gamma>_lift s) = \<alpha> s"
+          sorry \<comment> \<open>Lemma 54.1 path lifting.\<close>
+        let ?e1 = "\<gamma>_lift 1"
+        have "?e1 \<in> E" sorry \<comment> \<open>Endpoint of path in E.\<close>
+        have "p ?e1 = b0" sorry \<comment> \<open>p(\\<gamma>(1)) = \\<alpha>(1) = b0 (\\<alpha> is a loop).\<close>
+        \<comment> \<open>[p\\<circ>\\<gamma>\\_lift] = g (since p\\<circ>\\<gamma>\\_lift = \\<alpha> pointwise, loop\\_class\\_cong).\<close>
+        have hclass_lift: "{h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<gamma>_lift t)) h} = g"
+          sorry \<comment> \<open>p\\<circ>\\<gamma>\\_lift = \\<alpha> on I\\_set \\<Rightarrow> same loop class by loop\\_class\\_cong.\<close>
+        \<comment> \<open>image\\_hom(E, e1) = H (from g \\<in> N(H) + basepoint\\_change\\_image\\_hom).\<close>
+        have "top1_fundamental_group_image_hom E TE ?e1 B TB b0 p = ?H" sorry
+          \<comment> \<open>From g \\<in> N(H): g\\<cdot>H\\<cdot>g\\<inverse> = H, and basepoint\\_change gives
+             image\\_hom(E, e1) = g\\<inverse>\\<cdot>H\\<cdot>g = H.\<close>
+        \<comment> \<open>By h\\<Psi>\\_image backward: \\<exists> h \\<in> Cov with h(e0) = e1.\<close>
+        have "?e1 \<in> {e \<in> E. p e = b0 \<and>
+            top1_fundamental_group_image_hom E TE e B TB b0 p = ?H}"
+          using \<open>?e1 \<in> E\<close> \<open>p ?e1 = b0\<close>
+                \<open>top1_fundamental_group_image_hom E TE ?e1 B TB b0 p = ?H\<close>
+          by (by100 blast)
+        hence "?e1 \<in> \<Psi> ` ?Cov" using h\<Psi>_image by simp
+        then obtain h_ct where "h_ct \<in> ?Cov" "\<Psi> h_ct = ?e1" by (by5000 auto)
+        hence "h_ct e0 = ?e1" unfolding \<Psi>_def by simp
+        \<comment> \<open>f(h\\_ct) = coset([p\\<circ>\\<gamma>\\_{h\\_ct}]). Both \\<gamma>\\_{h\\_ct} and \\<gamma>\\_lift go e0 \\<rightarrow> e1.
+           By same\\_endpoint\\_same\\_coset: coset([p\\<circ>\\<gamma>\\_{h\\_ct}]) = coset([p\\<circ>\\<gamma>\\_lift]).
+           And [p\\<circ>\\<gamma>\\_lift] = g, so coset([p\\<circ>\\<gamma>\\_lift]) = coset(g) = c.\<close>
+        have "f h_ct = c" sorry
+          \<comment> \<open>From same\\_endpoint\\_same\\_coset + [p\\<circ>\\<gamma>\\_lift] = g + c = coset(g).\<close>
+        show "c \<in> f ` ?Cov" using \<open>h_ct \<in> ?Cov\<close> \<open>f h_ct = c\<close> by (by100 blast)
       qed
       \<comment> \<open>Assemble: f is a group isomorphism.\<close>
       show ?thesis unfolding top1_groups_isomorphic_on_def top1_group_iso_on_def
