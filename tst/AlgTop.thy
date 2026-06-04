@@ -762,13 +762,61 @@ proof -
     have "top1_fundamental_group_induced_on E TE e0 B TB b0 p ?c_E =
         {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) g}"
     proof -
-      have "?\<delta> \<in> ?c_E" unfolding top1_loop_equiv_on_def
-        using h\<delta>_loop unfolding top1_is_loop_on_def top1_is_path_on_def
-        sorry \<comment> \<open>\\<delta> \\<in> [\\<delta>] by reflexivity of loop equivalence.\<close>
+      have "?\<delta> \<in> ?c_E" using top1_loop_equiv_on_refl[OF h\<delta>_loop] by (by100 blast)
       have "(\<lambda>t. p (?\<delta> t)) = p \<circ> ?\<delta>" by (rule ext) simp
       show ?thesis unfolding top1_fundamental_group_induced_on_def
-        sorry \<comment> \<open>{g. \\<exists>f\\<in>[\\<delta>]. loop\\_equiv(p\\<circ>f, g)} = {g. loop\\_equiv(p\\<circ>\\<delta>, g)}.
-           Forward: take f=\\<delta>. Backward: if f\\<sim>\\<delta> then p\\<circ>f\\<sim>p\\<circ>\\<delta>.\<close>
+      proof (rule set_eqI, rule iffI)
+        fix g assume "g \<in> {g. \<exists>f\<in>?c_E. top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+        then obtain f where "f \<in> ?c_E" "top1_loop_equiv_on B TB b0 (p \<circ> f) g"
+          by (by100 blast)
+        hence "top1_loop_equiv_on E TE e0 ?\<delta> f" by (by100 blast)
+        hence "top1_path_homotopic_on E TE e0 e0 ?\<delta> f"
+          unfolding top1_loop_equiv_on_def by (by100 blast)
+        from continuous_preserves_path_homotopic[OF assms(2) assms(3)
+            top1_covering_map_on_continuous[OF assms(1)] this]
+        have "top1_path_homotopic_on B TB (p e0) (p e0) (p \<circ> ?\<delta>) (p \<circ> f)" .
+        have hpf_loop: "top1_is_loop_on B TB b0 (p \<circ> f)"
+        proof -
+          have "top1_is_loop_on E TE e0 f"
+            using \<open>top1_loop_equiv_on E TE e0 ?\<delta> f\<close>
+            unfolding top1_loop_equiv_on_def by (by100 blast)
+          hence "top1_is_path_on E TE e0 e0 f"
+            unfolding top1_is_loop_on_def .
+          have hf_cont: "top1_continuous_map_on I_set I_top E TE f"
+            using \<open>top1_is_path_on E TE e0 e0 f\<close> unfolding top1_is_path_on_def by (by100 blast)
+          have "top1_continuous_map_on I_set I_top B TB (p \<circ> f)"
+            using top1_continuous_map_on_comp[OF hf_cont
+                top1_covering_map_on_continuous[OF assms(1)]] .
+          moreover have "(p \<circ> f) 0 = b0"
+            using \<open>top1_is_path_on E TE e0 e0 f\<close> assms(5)
+            unfolding top1_is_path_on_def by (by100 simp)
+          moreover have "(p \<circ> f) 1 = b0"
+            using \<open>top1_is_path_on E TE e0 e0 f\<close> assms(5)
+            unfolding top1_is_path_on_def by (by100 simp)
+          ultimately show ?thesis
+            unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+        qed
+        have hpd_as_comp: "(\<lambda>t. p (?\<delta> t)) = p \<circ> ?\<delta>" by (rule ext) simp
+        have hpd_loop_comp: "top1_is_loop_on B TB b0 (p \<circ> ?\<delta>)"
+          using hp\<delta>_loop hpd_as_comp by simp
+        hence "top1_loop_equiv_on B TB b0 (p \<circ> ?\<delta>) (p \<circ> f)"
+          unfolding top1_loop_equiv_on_def
+          using hpf_loop \<open>top1_path_homotopic_on B TB (p e0) (p e0) (p \<circ> ?\<delta>) (p \<circ> f)\<close>
+                assms(5)
+          by simp
+        from top1_loop_equiv_on_trans[OF assms(3)
+            \<open>top1_loop_equiv_on B TB b0 (p \<circ> ?\<delta>) (p \<circ> f)\<close>
+            \<open>top1_loop_equiv_on B TB b0 (p \<circ> f) g\<close>]
+        have "top1_loop_equiv_on B TB b0 (p \<circ> ?\<delta>) g" .
+        thus "g \<in> {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) g}"
+          using \<open>(\<lambda>t. p (?\<delta> t)) = p \<circ> ?\<delta>\<close> by simp
+      next
+        fix g assume "g \<in> {g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) g}"
+        hence "top1_loop_equiv_on B TB b0 (p \<circ> ?\<delta>) g"
+          using \<open>(\<lambda>t. p (?\<delta> t)) = p \<circ> ?\<delta>\<close> by simp
+        thus "g \<in> {g. \<exists>f\<in>?c_E. top1_loop_equiv_on B TB b0 (p \<circ> f) g}"
+          using \<open>?\<delta> \<in> ?c_E\<close> by (by100 blast)
+      qed
     qed
     thus ?thesis using \<open>top1_fundamental_group_induced_on _ _ _ _ _ _ _ ?c_E \<in> _\<close> by simp
   qed
