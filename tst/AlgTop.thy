@@ -8711,6 +8711,43 @@ proof -
   thus ?thesis by (by100 blast)
 qed
 
+\<comment> \<open>Finite union of compact subsets (in subspace topology) is compact.\<close>
+lemma compact_finite_union_subspace:
+  assumes "is_topology_on X TX"
+      and "finite F"
+      and "\<forall>S\<in>F. S \<subseteq> X"
+      and "\<forall>S\<in>F. top1_compact_on S (subspace_topology X TX S)"
+  shows "top1_compact_on (\<Union>F) (subspace_topology X TX (\<Union>F))"
+  using assms(2-4)
+proof (induction F rule: finite_induct)
+  case empty
+  have "\<Union>{} = ({} :: 'a set)" by (by100 blast)
+  thus ?case using top1_compact_on_empty_subspace[OF assms(1)] by simp
+next
+  case (insert S F)
+  have hF_sub: "\<Union>F \<subseteq> X" using insert.prems(1) by (by100 blast)
+  have hS_sub: "S \<subseteq> X" using insert.prems(1) by (by100 blast)
+  have hF_compact: "top1_compact_on (\<Union>F) (subspace_topology X TX (\<Union>F))"
+  proof (cases "F = {}")
+    case True
+    have heq: "\<Union>F = ({} :: 'a set)" using True by (by100 blast)
+    show ?thesis unfolding heq using top1_compact_on_empty_subspace[OF assms(1)] .
+  next
+    case False
+    have hF_sub': "\<forall>S\<in>F. S \<subseteq> X" using insert.prems(1) by (by100 blast)
+    have hF_cpt': "\<forall>S\<in>F. top1_compact_on S (subspace_topology X TX S)"
+      using insert.prems(2) by (by100 blast)
+    from insert.IH[OF hF_sub' hF_cpt']
+    show ?thesis .
+  qed
+  have hS_compact: "top1_compact_on S (subspace_topology X TX S)"
+    using insert.prems(2) by (by100 blast)
+  have "\<Union>(insert S F) = S \<union> \<Union>F" by (by100 blast)
+  moreover have "top1_compact_on (S \<union> \<Union>F) (subspace_topology X TX (S \<union> \<Union>F))"
+    by (rule top1_compact_on_union2_subspace[OF assms(1) hS_sub hF_sub hS_compact hF_compact])
+  ultimately show ?case by simp
+qed
+
 text \<open>Any free group on a finite set S is realized as \<pi>_1 of a wedge of |S| circles
   (which is a connected graph). This is the geometric realization step.\<close>
 \<comment> \<open>Note (audit E05/E06): The carrier type is fixed to (real \\<times> real)
@@ -10270,7 +10307,23 @@ next
       ultimately show "top1_compact_on (C \<alpha>) (subspace_topology X TX (C \<alpha>))" by simp
     qed
     \<comment> \<open>X = finite union of compact sets. Use iterated union compactness.\<close>
-    show ?thesis sorry
+    let ?F = "C ` {..<?n}"
+    have hF_fin: "finite ?F" by (by100 simp)
+    have hF_sub: "\<forall>S\<in>?F. S \<subseteq> X" using hC_pr by (by100 blast)
+    have hF_cpt: "\<forall>S\<in>?F. top1_compact_on S (subspace_topology X TX S)"
+      using hC_compact by (by100 blast)
+    from compact_finite_union_subspace[OF hTX hF_fin hF_sub hF_cpt]
+    have "top1_compact_on (\<Union>?F) (subspace_topology X TX (\<Union>?F))" .
+    moreover have "\<Union>?F = X" using hC_cv by (by100 blast)
+    moreover have "subspace_topology X TX X = TX"
+    proof -
+      have hstrict: "is_topology_on_strict X TX"
+        using hwedge unfolding top1_is_wedge_of_circles_on_def by (by100 blast)
+      have "\<forall>U \<in> TX. U \<subseteq> X"
+        using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+      from subspace_topology_self[OF this] show ?thesis .
+    qed
+    ultimately show ?thesis by simp
   qed
   show ?thesis
     apply (rule exI[of _ X], rule exI[of _ TX], rule exI[of _ p])
