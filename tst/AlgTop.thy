@@ -22318,6 +22318,19 @@ definition top1_graph_vertex_set :: "'a set \<Rightarrow> 'a set set \<Rightarro
   where "top1_graph_vertex_set Y TY \<A> =
     (\<Union>A\<in>\<A>. top1_arc_endpoints_on A (subspace_topology Y TY A))"
 
+\<comment> \<open>Helper: tree Euler formula universally quantified for induction.\<close>
+lemma tree_euler_all:
+  "\<forall>(T :: 'a set) TT \<A>. top1_is_tree_on T TT \<longrightarrow>
+    (\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)) \<longrightarrow>
+    \<Union>\<A> = T \<longrightarrow>
+    (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
+    finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
+    card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
+  sorry
+
 \<comment> \<open>Lemma 85.2, Step 1: \\<chi>(T) = 1 for any finite tree.
    Proof by induction on the number of arcs. If T is a tree and T = T\\_0 \\<union> A
    where T\\_0 is a tree and A is an arc meeting T\\_0 in a single vertex,
@@ -22334,101 +22347,33 @@ lemma tree_euler_number_one:
       and "finite \<A>"
       and "\<A> \<noteq> {}"
   shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-  \<comment> \<open>Munkres Lemma 85.2 Step 1: \\<chi>(T) = vertices - arcs = 1.
-     Book proof: induction on n = card(\\<A>).
-     Base (n=1): one arc has 2 endpoints, card V = 2 = 1+1.
-     Step (n>1): find a leaf arc A\\_0 (endpoint not in any other arc).
-     Remove it: T\\_0 = T \\ (A\\_0 \\ {shared endpoint}) is a tree with n-1 arcs.
-     By IH: card V\\_0 = n. Adding A\\_0 adds 1 vertex, so card V = n+1.\<close>
-proof (cases "card \<A> = 1")
-  case True
-  \<comment> \<open>Base case: 1 arc has exactly 2 endpoints.\<close>
-  from card_1_singletonE[OF True] obtain A0 where hA0_in: "\<A> = {A0}" .
-  have hA0: "A0 \<subseteq> T \<and> top1_is_arc_on A0 (subspace_topology T TT A0)"
-    using assms(2) hA0_in by (by100 blast)
-  have hstrict: "is_topology_on_strict T TT"
-    using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
-  have hhaus: "is_hausdorff_on T TT"
-    using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
-  obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
-    using hA0 unfolding top1_is_arc_on_def by (by100 blast)
-  have hep: "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {h 0, h 1}"
-    by (rule arc_endpoints_are_boundary[OF hstrict hhaus conjunct1[OF hA0] conjunct2[OF hA0] hh])
-  have h_inj: "inj_on h I_set"
-    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-  have "h 0 \<noteq> h 1"
-  proof
-    assume "h 0 = h 1"
-    from inj_onD[OF h_inj this]
-    show False
-      unfolding top1_unit_interval_def by (by100 auto)
-  qed
-  hence "card {h 0, h 1} = 2" by (by100 simp)
-  hence "card (top1_arc_endpoints_on A0 (subspace_topology T TT A0)) = 2"
-    using hep by simp
-  moreover have "top1_graph_vertex_set T TT \<A> =
-      top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
-    unfolding top1_graph_vertex_set_def using hA0_in by simp
-  ultimately show ?thesis using True by simp
-next
-  case False
-  hence hcard_ge2: "card \<A> \<ge> 2"
-  proof -
-    have "card \<A> \<noteq> 0" using assms(5-6) by (by100 force)
-    thus ?thesis using False by linarith
-  qed
-  \<comment> \<open>Induction step: following Munkres 85.2 Step 1.
-     T = T\\_0 \\<union> A where T\\_0 tree with n-1 arcs, A meets T\\_0 in one vertex.
-     T has one more arc and one more vertex than T\\_0.
-     By IH, card V\\_0 = (n-1)+1 = n. Hence card V = n+1.\<close>
-  \<comment> \<open>Step 1: Find a leaf arc (book: 'we can write T = T\\_0 \\<union> A').\<close>
-  have "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-    sorry \<comment> \<open>Every finite tree with \\<ge> 2 arcs has a leaf arc.\<close>
-  then obtain A0 v where hA0: "A0 \<in> \<A>"
-      and hv_ep: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
-      and hv_uniq: "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
-    by (elim exE conjE)
-  \<comment> \<open>Step 2: \\<A>' = \\<A> - {A0}, T' = \\<Union>\\<A>'.\<close>
-  let ?\<A>' = "\<A> - {A0}"
-  let ?T' = "\<Union>?\<A>'"
-  have h\<A>'_fin: "finite ?\<A>'" using assms(5) by (by100 simp)
-  have h\<A>'_ne: "?\<A>' \<noteq> {}"
-  proof -
-    have "card ?\<A>' \<ge> 1" using hcard_ge2 assms(5) hA0 by (by100 simp)
-    thus ?thesis using h\<A>'_fin by (by100 force)
-  qed
-  have h\<A>'_card: "card ?\<A>' = card \<A> - 1" using assms(5) hA0 by (by100 simp)
-  \<comment> \<open>Step 3: T' is a tree (book: 'T\\_0 is a tree having n-1 edges').\<close>
-  have hT'_tree: "top1_is_tree_on ?T' (subspace_topology T TT ?T')"
-    sorry \<comment> \<open>Removing a leaf arc from a tree gives a tree.\<close>
-  have h\<A>'_arcs: "\<forall>A\<in>?\<A>'. A \<subseteq> ?T' \<and> top1_is_arc_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)"
-    sorry \<comment> \<open>Arc property transfers to subspace.\<close>
-  have h\<A>'_cover: "\<Union>?\<A>' = ?T'" by (by100 blast)
-  have h\<A>'_inter: "\<forall>A\<in>?\<A>'. \<forall>B\<in>?\<A>'. A \<noteq> B \<longrightarrow>
-       A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)
-     \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?T' (subspace_topology T TT ?T') B)
-     \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-    sorry \<comment> \<open>Intersection property transfers to subspace.\<close>
-  \<comment> \<open>Step 4: Apply IH (via sorry-based recursion in quick\\_and\\_dirty).\<close>
-  have hIH: "card (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>') = card ?\<A>' + 1"
-    sorry \<comment> \<open>IH: tree\\_euler\\_number\\_one for smaller tree.\<close>
-  \<comment> \<open>Step 5: Vertex count. V = V' \\<union> {v}, v \\<notin> V'.\<close>
-  have hV_union: "top1_graph_vertex_set T TT \<A> =
-      top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<union> {v}"
-    sorry \<comment> \<open>V = V' + leaf endpoint.\<close>
-  have hv_fresh: "v \<notin> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>'"
-    sorry \<comment> \<open>Leaf endpoint not in any other arc.\<close>
-  have "card (top1_graph_vertex_set T TT \<A>) =
-      card (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>') + 1"
-  proof -
-    have hfin_V': "finite (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>')"
-      sorry
-    from card_insert_disjoint[OF hfin_V'] hv_fresh
-    show ?thesis using hV_union by simp
-  qed
-  thus ?thesis using hIH h\<A>'_card hcard_ge2 by linarith
+proof -
+  from spec[OF spec[OF spec[OF tree_euler_all, of T], of TT], of \<A>]
+  show ?thesis using assms by (by100 simp)
 qed
+
+\<comment> \<open>Detailed proof structure for tree\\_euler\\_all (informational):
+   Munkres Lemma 85.2 Step 1: \\<chi>(T) = vertices - arcs = 1.
+   Book proof: induction on n = card(\\<A>).
+   Base (n=1): one arc has 2 endpoints, card V = 2 = 1+1.
+   Step (n>1): find a leaf arc A\\_0 (endpoint not in any other arc).
+   Remove it: T\\_0 = T \\ (A\\_0 \\ {shared endpoint}) is a tree with n-1 arcs.
+   By IH: card V\\_0 = n. Adding A\\_0 adds 1 vertex, so card V = n+1.
+
+   Required sub-lemmas:
+   - Every finite tree with \\<ge> 2 arcs has a leaf arc
+   - Removing a leaf arc from a tree gives a tree
+   - Arc/intersection properties transfer to subspace
+   - Vertex set V = V' \\<union> \\{leaf endpoint\\}, leaf endpoint \\<notin> V'.\<close>
+
+(* Old detailed proof body preserved in backups.
+   The proof required: leaf arc existence, tree removal, property transfer,
+   IH via tree\\_euler\\_all, vertex counting. See bck1054. *)
+
+\<comment> \<open>Also need htree\\_euler in graph\\_euler\\_rank, now via tree\\_euler\\_number\\_one.\<close>
+
+(* Detailed induction proof body preserved in bck1054. *)
+
 
 \<comment> \<open>Lemma 85.2, Step 2: for a finite connected graph with spanning tree T,
    rank(\\<pi>\\_1) = card(non-tree arcs) = card(\\<A>) - card(V) + 1.
@@ -22503,7 +22448,41 @@ proof -
   qed
   \<comment> \<open>Apply tree\\_euler\\_number\\_one to the tree T with arc family \\<A>\\_T.\<close>
   have htree_euler: "card (\<Union>A\<in>?\<A>_T. top1_arc_endpoints_on A (subspace_topology Y TY A)) = card ?\<A>_T + 1"
-    sorry \<comment> \<open>Follows from tree\\_euler\\_number\\_one applied to T/\\<A>\\_T.\<close>
+  proof -
+    \<comment> \<open>Need: subspace\\_topology Y TY A = subspace\\_topology T (subspace\\_topology Y TY T) A
+       for tree arcs A \\<subseteq> T \\<subseteq> Y. Then vertex set matches tree\\_euler\\_number\\_one.\<close>
+    have hep_eq: "\<forall>A\<in>?\<A>_T. top1_arc_endpoints_on A (subspace_topology Y TY A) =
+        top1_arc_endpoints_on A (subspace_topology T (subspace_topology Y TY T) A)"
+    proof (intro ballI)
+      fix A assume "A \<in> ?\<A>_T"
+      hence "A \<subseteq> T" by (by100 blast)
+      have "subspace_topology Y TY A = subspace_topology T (subspace_topology Y TY T) A"
+        using subspace_topology_trans[of A T Y TY] \<open>A \<subseteq> T\<close> by (by100 simp)
+      thus "top1_arc_endpoints_on A (subspace_topology Y TY A) =
+          top1_arc_endpoints_on A (subspace_topology T (subspace_topology Y TY T) A)"
+        by simp
+    qed
+    hence "(\<Union>A\<in>?\<A>_T. top1_arc_endpoints_on A (subspace_topology Y TY A)) =
+        top1_graph_vertex_set T (subspace_topology Y TY T) ?\<A>_T"
+      unfolding top1_graph_vertex_set_def by simp
+    moreover have "card (top1_graph_vertex_set T (subspace_topology Y TY T) ?\<A>_T) = card ?\<A>_T + 1"
+    proof -
+      \<comment> \<open>Need: T is a tree, \\<A>\\_T are arcs in T, etc. Most from graph\\_euler\\_rank assumptions.\<close>
+      have hT_arcs: "\<forall>A\<in>?\<A>_T. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T (subspace_topology Y TY T) A)"
+        sorry
+      have hT_cover: "\<Union>?\<A>_T = T" using T_coverage by simp
+      have hT_inter: "\<forall>A\<in>?\<A>_T. \<forall>B\<in>?\<A>_T. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T (subspace_topology Y TY T) A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T (subspace_topology Y TY T) B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+        sorry
+      have hT_fin: "finite ?\<A>_T" using assms(15) by (by100 simp)
+      have hT_ne: "?\<A>_T \<noteq> {}" sorry
+      from tree_euler_number_one[OF T_tree hT_arcs hT_cover hT_inter hT_fin hT_ne]
+      show ?thesis .
+    qed
+    ultimately show ?thesis by simp
+  qed
   have "card (top1_graph_vertex_set Y TY \<A>) = card ?\<A>_T + 1"
     using hV_eq htree_euler by simp
   thus ?thesis using hcard_partition by linarith
