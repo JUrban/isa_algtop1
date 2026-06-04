@@ -2413,12 +2413,69 @@ proof -
           \<comment> \<open>Both paths go from e0 to h(k(e0)), so projected classes give same coset.\<close>
           \<comment> \<open>Step B: the projected composed path = (p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k) (hp\\_composed\\_eq).\<close>
           \<comment> \<open>Step C: [(p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k)] = mulB([p\\<circ>\\<gamma>\\_h], [p\\<circ>\\<gamma>\\_k]).\<close>
-          show ?thesis sorry
-            \<comment> \<open>Remaining: formal application of same\\_endpoint\\_same\\_coset
-               + pointwise agreement \\<rightarrow> class equality + mul\\_class.
-               All ingredients available: h\\_gamma\\_hk, h\\_composed\\_path,
-               hp\\_composed\\_eq, hloop\\_class, fundamental\\_group\\_mul\\_class,
-               hH\\_normal\\_in\\_N, hin\\_normalizer.\<close>
+          \<comment> \<open>Step C: [(p\\<circ>\\<gamma>\\_h)*(p\\<circ>\\<gamma>\\_k)] = mulB([p\\<circ>\\<gamma>\\_h], [p\\<circ>\\<gamma>\\_k]).\<close>
+          let ?pp = "top1_path_product (\<lambda>t. p (?\<gamma>h t)) (\<lambda>t. p (?\<gamma>k t))"
+          have hTB_loc: "is_topology_on B TB"
+            using assms(2) unfolding is_topology_on_strict_def by (by100 blast)
+          have hloop_h: "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<gamma>h t))"
+          proof -
+            have "(\<lambda>t. p (?\<gamma>h t)) = p \<circ> ?\<gamma>h" by (rule ext) simp
+            moreover have "top1_is_loop_on B TB b0 (p \<circ> ?\<gamma>h)"
+            proof -
+              have "h e0 \<in> E" using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>h \<in> ?Cov\<close> by (by100 blast)
+              have "p (h e0) = b0" using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>h \<in> ?Cov\<close> by (by100 blast)
+              have h\<gamma>: "top1_is_path_on E TE e0 (h e0) ?\<gamma>h" using hpath_to[OF \<open>h e0 \<in> E\<close>] .
+              have "top1_continuous_map_on I_set I_top B TB (p \<circ> ?\<gamma>h)"
+                using top1_continuous_map_on_comp[OF _ hp_cont]
+                  h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+              moreover have "(p \<circ> ?\<gamma>h) 0 = b0"
+                using h\<gamma> hpe0 unfolding top1_is_path_on_def by (by100 simp)
+              moreover have "(p \<circ> ?\<gamma>h) 1 = b0"
+                using h\<gamma> \<open>p (h e0) = b0\<close> unfolding top1_is_path_on_def by (by100 simp)
+              ultimately show ?thesis
+                unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            qed
+            ultimately show ?thesis by simp
+          qed
+          have hloop_k: "top1_is_loop_on B TB b0 (\<lambda>t. p (?\<gamma>k t))"
+          proof -
+            have "(\<lambda>t. p (?\<gamma>k t)) = p \<circ> ?\<gamma>k" by (rule ext) simp
+            moreover have "top1_is_loop_on B TB b0 (p \<circ> ?\<gamma>k)"
+            proof -
+              have "k e0 \<in> E" using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>k \<in> ?Cov\<close> by (by100 blast)
+              have "p (k e0) = b0" using h\<Psi>_fiber[unfolded \<Psi>_def] \<open>k \<in> ?Cov\<close> by (by100 blast)
+              have h\<gamma>: "top1_is_path_on E TE e0 (k e0) ?\<gamma>k" using hpath_to[OF \<open>k e0 \<in> E\<close>] .
+              have "top1_continuous_map_on I_set I_top B TB (p \<circ> ?\<gamma>k)"
+                using top1_continuous_map_on_comp[OF _ hp_cont]
+                  h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+              moreover have "(p \<circ> ?\<gamma>k) 0 = b0"
+                using h\<gamma> hpe0 unfolding top1_is_path_on_def by (by100 simp)
+              moreover have "(p \<circ> ?\<gamma>k) 1 = b0"
+                using h\<gamma> \<open>p (k e0) = b0\<close> unfolding top1_is_path_on_def by (by100 simp)
+              ultimately show ?thesis
+                unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            qed
+            ultimately show ?thesis by simp
+          qed
+          have hmul_eq: "?mulB ?ch ?ck = {g. top1_loop_equiv_on B TB b0 ?pp g}"
+            using top1_fundamental_group_mul_class[OF hTB_loc hloop_h hloop_k] .
+          \<comment> \<open>Step B: [p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))] = [?pp] (pointwise agreement on I\\_set).\<close>
+          let ?c_composed = "{g. top1_loop_equiv_on B TB b0
+              (\<lambda>t. p (top1_path_product ?\<gamma>h (\<lambda>t. h (?\<gamma>k t)) t)) g}"
+          have hclass_chain: "?c_composed = {g. top1_loop_equiv_on B TB b0 ?pp g}"
+            sorry \<comment> \<open>Functions agree on I\\_set (hp\\_composed\\_eq) \\<Rightarrow> same loop class.
+               Pattern proved before in same\\_endpoint\\_same\\_coset.\<close>
+          \<comment> \<open>Step A: coset([p\\<circ>\\<gamma>\\_{hk}]) = coset([p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))])
+             via same\\_endpoint\\_same\\_coset (both paths e0 \\<rightarrow> h(k(e0))).\<close>
+          have hcoset_eq: "?coset ?chk = ?coset ?c_composed"
+            sorry \<comment> \<open>Apply same\\_endpoint\\_same\\_coset with normality context.
+               Needs 14 assumptions.\<close>
+          \<comment> \<open>Chain: coset(?chk) = coset(?c\\_composed) = coset(?pp\\_class) = coset(mulB(?ch,?ck)).\<close>
+          from hcoset_eq have "?coset ?chk = ?coset ?c_composed" .
+          also have "?coset ?c_composed = ?coset {g. top1_loop_equiv_on B TB b0 ?pp g}"
+            using hclass_chain by simp
+          also have "\<dots> = ?coset (?mulB ?ch ?ck)" using hmul_eq by simp
+          finally show ?thesis .
         qed
         \<comment> \<open>mulQ(f(h), f(k)) = coset(mulB(?ch, ?ck)) by normal\\_coset\\_mul\\_eq.\<close>
         also have "?coset (?mulB ?ch ?ck) = ?mulQ (?coset ?ch) (?coset ?ck)"
