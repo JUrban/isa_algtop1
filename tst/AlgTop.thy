@@ -13022,6 +13022,7 @@ lemma graph_pi1_free_weak:
     \<and> (\<forall>A\<in>\<A>. A \<subseteq> T \<or>
          A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A))
     \<and> T = \<Union>{A \<in> \<A>. A \<subseteq> T}
+    \<and> (\<forall>A\<in>{A \<in> \<A>. \<not> A \<subseteq> T}. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T)
     \<and> S = {A \<in> \<A>. \<not> A \<subseteq> T}"
 proof -
   \<comment> \<open>Extract graph structure.\<close>
@@ -13540,7 +13541,9 @@ proof -
       using hT_x0 apply assumption
       using hT_subgraph apply assumption
       using hT_coverage apply assumption
+      defer \<comment> \<open>Non-tree endpoints in T: vacuously true since NT = {}.\<close>
       using hempty_eq apply assumption
+      using True apply (by100 force)
       done
   next
     case False
@@ -18884,6 +18887,7 @@ proof -
           using hT_x0 apply assumption
           using hT_subgraph apply assumption
           using hT_coverage apply assumption
+          using hNT_endpoints apply assumption
           using hNT_eq apply assumption
           done
       qed
@@ -22155,6 +22159,7 @@ lemma graph_euler_rank:
       and T_subgraph: "\<forall>A\<in>\<A>. A \<subseteq> T \<or>
            A \<inter> T \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)"
       and T_coverage: "T = \<Union>{A \<in> \<A>. A \<subseteq> T}"
+      and NT_endpoints: "\<forall>A\<in>{A \<in> \<A>. \<not> A \<subseteq> T}. \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T"
       and S_eq: "S = {A \<in> \<A>. \<not> A \<subseteq> T}"
       and "finite \<A>"
   shows "card S + card (top1_graph_vertex_set Y TY \<A>) = card \<A> + 1"
@@ -22162,8 +22167,8 @@ proof -
   let ?\<A>_T = "{A \<in> \<A>. A \<subseteq> T}"
   have h\<A>_partition: "\<A> = ?\<A>_T \<union> S" using S_eq by (by100 blast)
   have h\<A>_disjoint: "?\<A>_T \<inter> S = {}" using S_eq by (by100 blast)
-  have h\<A>_T_fin: "finite ?\<A>_T" using assms(14) by (by100 simp)
-  have hS_fin: "finite S" using S_eq assms(14) by (by100 simp)
+  have h\<A>_T_fin: "finite ?\<A>_T" using assms(15) by (by100 simp)
+  have hS_fin: "finite S" using S_eq assms(15) by (by100 simp)
   have hcard_partition: "card \<A> = card ?\<A>_T + card S"
   proof -
     have "card \<A> = card (?\<A>_T \<union> S)" using h\<A>_partition by simp
@@ -22174,7 +22179,34 @@ proof -
   \<comment> \<open>The full vertex set equals the tree vertex set (non-tree arc endpoints are in tree arcs).\<close>
   have hV_eq: "top1_graph_vertex_set Y TY \<A> =
       (\<Union>A\<in>?\<A>_T. top1_arc_endpoints_on A (subspace_topology Y TY A))"
-    sorry \<comment> \<open>Non-tree arc endpoints are also tree arc endpoints.\<close>
+  proof (rule set_eqI, rule iffI)
+    fix e assume "e \<in> top1_graph_vertex_set Y TY \<A>"
+    then obtain A where hA_in: "A \<in> \<A>" and he_ep: "e \<in> top1_arc_endpoints_on A (subspace_topology Y TY A)"
+      unfolding top1_graph_vertex_set_def by (by100 blast)
+    show "e \<in> (\<Union>A\<in>?\<A>_T. top1_arc_endpoints_on A (subspace_topology Y TY A))"
+    proof (cases "A \<subseteq> T")
+      case True thus ?thesis using hA_in he_ep by (by100 blast)
+    next
+      case False
+      \<comment> \<open>A is a non-tree arc. Its endpoint e is in T.\<close>
+      have he_T: "e \<in> T" using NT_endpoints hA_in False he_ep by (by100 blast)
+      \<comment> \<open>e \\<in> T = \\<Union>{B \\<in> \\<A>. B \\<subseteq> T}, so e \\<in> some tree arc B.\<close>
+      then obtain B where hB_in: "B \<in> \<A>" and hB_T: "B \<subseteq> T" and he_B: "e \<in> B"
+        using T_coverage by (by100 blast)
+      \<comment> \<open>e \\<in> A \\<inter> B and A \\<ne> B, so e is in endpoints(B).\<close>
+      have hAB: "A \<noteq> B" using False hB_T by (by100 blast)
+      have he_ep_A: "e \<in> A" using he_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have he_AB: "e \<in> A \<inter> B" using he_ep_A he_B by (by100 blast)
+      from \<A>_inter[rule_format, OF hA_in hB_in hAB]
+      have "e \<in> top1_arc_endpoints_on B (subspace_topology Y TY B)"
+        using he_AB by (by100 blast)
+      thus ?thesis using hB_in hB_T by (by100 blast)
+    qed
+  next
+    fix e assume "e \<in> (\<Union>A\<in>?\<A>_T. top1_arc_endpoints_on A (subspace_topology Y TY A))"
+    thus "e \<in> top1_graph_vertex_set Y TY \<A>"
+      unfolding top1_graph_vertex_set_def by (by100 blast)
+  qed
   \<comment> \<open>Apply tree\\_euler\\_number\\_one to the tree T with arc family \\<A>\\_T.\<close>
   have htree_euler: "card (\<Union>A\<in>?\<A>_T. top1_arc_endpoints_on A (subspace_topology Y TY A)) = card ?\<A>_T + 1"
     sorry \<comment> \<open>Follows from tree\\_euler\\_number\\_one applied to T/\\<A>\\_T.\<close>
@@ -22387,6 +22419,8 @@ proof -
       and hT_E_subgraph: "\<forall>A\<in>\<A>_E. A \<subseteq> T_E \<or>
            A \<inter> T_E \<subseteq> top1_arc_endpoints_on A (subspace_topology E' TE' A)"
       and hT_E_coverage: "T_E = \<Union>{A \<in> \<A>_E. A \<subseteq> T_E}"
+      and hNT_E_endpoints: "\<forall>A\<in>{A \<in> \<A>_E. \<not> A \<subseteq> T_E}.
+           \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology E' TE' A). e \<in> T_E"
       and hS_E_eq: "S_E = {A \<in> \<A>_E. \<not> A \<subseteq> T_E}"
     by (elim exE conjE)
   \<comment> \<open>Step 3b: H is free on S\\_E (the same basis from \\<pi>\\_1(E')).\<close>
@@ -22706,6 +22740,8 @@ proof -
         and hT_X_subgraph: "\<forall>A\<in>\<A>_X. A \<subseteq> T_X \<or>
              A \<inter> T_X \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)"
         and hT_X_coverage: "T_X = \<Union>{A \<in> \<A>_X. A \<subseteq> T_X}"
+        and hNT_X_endpoints: "\<forall>A\<in>{A \<in> \<A>_X. \<not> A \<subseteq> T_X}.
+             \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology X TX A). e \<in> T_X"
         and hS_X_eq: "S_X = {A \<in> \<A>_X. \<not> A \<subseteq> T_X}"
       by (elim exE conjE)
     \<comment> \<open>Step C: card S\\_X = n + 1 by rank invariance.
@@ -22788,7 +22824,7 @@ proof -
     have heuler_X: "card S_X + card ?V_X = card \<A>_X + 1"
       by (rule graph_euler_rank[OF hX_graph hX_conn hx0 h\<A>_X h\<A>_X_cover
           h\<A>_X_inter h\<A>_X_coh hT_X_tree hT_X_sub hT_X_x0 hT_X_subgraph hT_X_coverage
-          hS_X_eq h\<A>_X_fin])
+          hNT_X_endpoints hS_X_eq h\<A>_X_fin])
     hence heuler_X_diff: "int (card \<A>_X) - int (card ?V_X) = int n"
       using hS_X_card by linarith
     \<comment> \<open>Step F: Covering multiplicity.\<close>
@@ -22807,7 +22843,7 @@ proof -
     have heuler_E: "card S_E + card ?V_E = card \<A>_E + 1"
       by (rule graph_euler_rank[OF hE'_graph hE'_conn he0' h\<A>_E h\<A>_E_cover
           h\<A>_E_inter h\<A>_E_coh hT_E_tree hT_E_sub hT_E_x0 hT_E_subgraph hT_E_coverage
-          hS_E_eq h\<A>_E_fin])
+          hNT_E_endpoints hS_E_eq h\<A>_E_fin])
     \<comment> \<open>Step H: Combine.
        card S\\_E = card \\<A>\\_E - card V\\_E + 1
                 = k \\<cdot> card \\<A>\\_X - k \\<cdot> card V\\_X + 1
