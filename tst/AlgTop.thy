@@ -298,7 +298,51 @@ proof -
         qed
         have hclass_eq: "?mulB g (top1_fundamental_group_invg B TB b0 h) =
             {f'. top1_loop_equiv_on B TB b0 (top1_path_product fg (top1_path_reverse fh)) f'}"
-          sorry \<comment> \<open>mulB(g,invg(h)) = class of product(fg,rev(fh)). Standard.\<close>
+        proof -
+          \<comment> \<open>g = class of fg, invg(h) = class of rev(fh).\<close>
+          have hg_class: "g = {f'. top1_loop_equiv_on B TB b0 fg f'}"
+          proof -
+            have "fg \<in> g" using hfg(1) .
+            have "top1_is_loop_on B TB b0 fg" using hfg(2) .
+            have "g \<in> ?piB" using hg .
+            then obtain f0 where "top1_is_loop_on B TB b0 f0"
+                "g = {f'. top1_loop_equiv_on B TB b0 f0 f'}"
+              unfolding top1_fundamental_group_carrier_def by (by100 blast)
+            \<comment> \<open>fg \\<in> g = class of f0, so fg ~ f0, so class of fg = class of f0 = g.\<close>
+            have "top1_loop_equiv_on B TB b0 f0 fg" using \<open>fg \<in> g\<close> \<open>g = _\<close> by (by100 blast)
+            have "{f'. top1_loop_equiv_on B TB b0 fg f'} = {f'. top1_loop_equiv_on B TB b0 f0 f'}"
+            proof (rule set_eqI, rule iffI)
+              fix f' assume "f' \<in> {f'. top1_loop_equiv_on B TB b0 fg f'}"
+              hence "top1_loop_equiv_on B TB b0 fg f'" by (by100 blast)
+              from top1_loop_equiv_on_trans[OF assms(3) \<open>top1_loop_equiv_on B TB b0 f0 fg\<close> this]
+              show "f' \<in> {f'. top1_loop_equiv_on B TB b0 f0 f'}" by (by100 blast)
+            next
+              fix f' assume "f' \<in> {f'. top1_loop_equiv_on B TB b0 f0 f'}"
+              hence "top1_loop_equiv_on B TB b0 f0 f'" by (by100 blast)
+              from top1_loop_equiv_on_trans[OF assms(3) top1_loop_equiv_on_sym[OF \<open>top1_loop_equiv_on B TB b0 f0 fg\<close>] this]
+              show "f' \<in> {f'. top1_loop_equiv_on B TB b0 fg f'}" by (by100 blast)
+            qed
+            thus ?thesis using \<open>g = _\<close> by simp
+          qed
+          have hinvh_class: "top1_fundamental_group_invg B TB b0 h =
+              {f'. top1_loop_equiv_on B TB b0 (top1_path_reverse fh) f'}"
+          proof -
+            \<comment> \<open>invg(h) = {f'. \\<exists>f\\<in>h. loop\\_equiv(rev f, f')}. Since fh \\<in> h, rev(fh) witnesses.\<close>
+            have "h \<in> ?piB" using hh .
+            then obtain f0 where "top1_is_loop_on B TB b0 f0"
+                "h = {f'. top1_loop_equiv_on B TB b0 f0 f'}"
+              unfolding top1_fundamental_group_carrier_def by (by100 blast)
+            have "top1_loop_equiv_on B TB b0 f0 fh" using hfh(1) \<open>h = _\<close> by (by100 blast)
+            show ?thesis
+              unfolding top1_fundamental_group_invg_def sorry
+          qed
+          \<comment> \<open>Apply fundamental\\_group\\_mul\\_class.\<close>
+          have "top1_is_loop_on B TB b0 (top1_path_reverse fh)"
+            unfolding top1_is_loop_on_def using top1_path_reverse_is_path[OF hfh_path] .
+          show ?thesis unfolding hg_class hinvh_class
+            using top1_fundamental_group_mul_class[OF assms(3) hfg(2)
+                \<open>top1_is_loop_on B TB b0 (top1_path_reverse fh)\<close>] .
+        qed
         \<comment> \<open>Step 2: This class = class of p\\<circ>(product(ftg,rev(fth))) (pointwise equal on I\\_set).\<close>
         have hclass_proj: "{f'. top1_loop_equiv_on B TB b0 (top1_path_product fg (top1_path_reverse fh)) f'}
             = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (top1_path_product ftg (top1_path_reverse fth) t)) f'}"
