@@ -19243,8 +19243,7 @@ proof -
         then obtain a0 where "a0 \<in> A0" "x \<in> a0" by (by100 blast)
         thus "y \<in> \<Union>?AY" using \<open>y = emb x\<close> by (by100 blast)
       qed
-      \<comment> \<open>Pairwise intersection and coherent closedness: sorry for now.\<close>
-      \<comment> \<open>Pre-extract intersection property from hA0.\<close>
+      \<comment> \<open>Pairwise intersection transfer via injectivity + endpoint transfer.\<close>
       have hA0_inter: "\<forall>a\<in>A0. \<forall>b\<in>A0. a \<noteq> b \<longrightarrow>
           a \<inter> b \<subseteq> top1_arc_endpoints_on a (subspace_topology X0 TX0 a) \<and>
           a \<inter> b \<subseteq> top1_arc_endpoints_on b (subspace_topology X0 TX0 b) \<and>
@@ -19563,8 +19562,7 @@ proof -
     by (rule coherent_topology_is_strict[of S "\<lambda>_. top1_S1" "\<lambda>_. top1_S1_topology" h,
         unfolded TX_def, OF _ hh_maps_pre])
        (use hS1_top_pre in simp)
-  \<comment> \<open>Homeomorphism h(s): S1 \\<rightarrow> C(s). Proved inside wedge block below, but exposed here
-     for graph\\_on. The sorry is technically redundant (same proof exists inside wedge block).\<close>
+  \<comment> \<open>Homeomorphism h(s): S1 \\<rightarrow> C(s). Factored to outer scope for graph\\_on.\<close>
   have hC_homeo_pre: "\<And>s. s \<in> S \<Longrightarrow> \<exists>ha. top1_homeomorphism_on top1_S1 top1_S1_topology
       (C s) (subspace_topology ?X TX (C s)) ha"
   proof -
