@@ -633,7 +633,59 @@ proof -
         qed
         \<comment> \<open>Step 5b: fh and ?pafg are homotopic (both \\<in> h = k*g).\<close>
         have hfh_homot: "top1_path_homotopic_on B TB b0 b0 fh ?pafg"
-          sorry \<comment> \<open>h = k*g = [(p\\<circ>\\<alpha>\\<tilde>)]*[fg] = [(p\\<circ>\\<alpha>\\<tilde>)*fg]. fh \\<in> h.\<close>
+        proof -
+          \<comment> \<open>h = k*g. k = class(p\\<circ>\\<alpha>\\<tilde>), g = class(fg).
+             mulB(k,g) = class((p\\<circ>\\<alpha>\\<tilde>)*fg) by fundamental\\_group\\_mul\\_class.
+             fh \\<in> h = class((p\\<circ>\\<alpha>\\<tilde>)*fg) means fh ~ (p\\<circ>\\<alpha>\\<tilde>)*fg.\<close>
+          have hk_class: "k = {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t)) f'}"
+            using h\<alpha>(2) .
+          have hg_class_loc: "g = {f'. top1_loop_equiv_on B TB b0 fg f'}"
+          proof -
+            from hg obtain f0 where "top1_is_loop_on B TB b0 f0"
+                "g = {f'. top1_loop_equiv_on B TB b0 f0 f'}"
+              unfolding top1_fundamental_group_carrier_def by (by100 blast)
+            have "top1_loop_equiv_on B TB b0 f0 fg" using hfg(1) \<open>g = _\<close> by (by100 blast)
+            have "{f'. top1_loop_equiv_on B TB b0 fg f'} = {f'. top1_loop_equiv_on B TB b0 f0 f'}"
+            proof (rule set_eqI, rule iffI)
+              fix f' assume "f' \<in> {f'. top1_loop_equiv_on B TB b0 fg f'}"
+              hence "top1_loop_equiv_on B TB b0 fg f'" by (by100 blast)
+              from top1_loop_equiv_on_trans[OF assms(3) \<open>top1_loop_equiv_on B TB b0 f0 fg\<close> this]
+              show "f' \<in> {f'. top1_loop_equiv_on B TB b0 f0 f'}" by (by100 blast)
+            next
+              fix f' assume "f' \<in> {f'. top1_loop_equiv_on B TB b0 f0 f'}"
+              hence "top1_loop_equiv_on B TB b0 f0 f'" by (by100 blast)
+              from top1_loop_equiv_on_trans[OF assms(3) top1_loop_equiv_on_sym[OF \<open>top1_loop_equiv_on B TB b0 f0 fg\<close>] this]
+              show "f' \<in> {f'. top1_loop_equiv_on B TB b0 fg f'}" by (by100 blast)
+            qed
+            thus ?thesis using \<open>g = _\<close> by simp
+          qed
+          have h_pa_loop: "top1_is_loop_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t))"
+          proof -
+            have hp_cont: "top1_continuous_map_on E TE B TB p"
+              using assms(1) unfolding top1_covering_map_on_def top1_evenly_covered_on_def by (by5000 blast)
+            from top1_continuous_map_on_comp[OF
+                h\<alpha>_path[unfolded top1_is_path_on_def, THEN conjunct1] hp_cont]
+            have "top1_continuous_map_on I_set I_top B TB (p \<circ> \<alpha>_tilde)" .
+            moreover have "(p \<circ> \<alpha>_tilde) 0 = b0"
+              using h\<alpha>_path assms(5) unfolding top1_is_path_on_def comp_def by (by100 simp)
+            moreover have "(p \<circ> \<alpha>_tilde) 1 = b0"
+              using h\<alpha>_path assms(5) unfolding top1_is_path_on_def comp_def by (by100 simp)
+            ultimately have "top1_is_path_on B TB b0 b0 (p \<circ> \<alpha>_tilde)"
+              unfolding top1_is_path_on_def by (by100 blast)
+            thus ?thesis unfolding top1_is_loop_on_def comp_def .
+          qed
+          from top1_fundamental_group_mul_class[OF assms(3) h_pa_loop hfg(2)]
+          have hmul_class: "?mulB {f'. top1_loop_equiv_on B TB b0 (\<lambda>t. p (\<alpha>_tilde t)) f'}
+              {f'. top1_loop_equiv_on B TB b0 fg f'}
+              = {f'. top1_loop_equiv_on B TB b0 ?pafg f'}" .
+          hence "h = {f'. top1_loop_equiv_on B TB b0 ?pafg f'}"
+            using \<open>h = ?mulB k g\<close> hk_class hg_class_loc by simp
+          hence "fh \<in> {f'. top1_loop_equiv_on B TB b0 ?pafg f'}" using hfh(1) by simp
+          hence "top1_loop_equiv_on B TB b0 ?pafg fh" by (by100 blast)
+          hence "top1_path_homotopic_on B TB b0 b0 ?pafg fh"
+            unfolding top1_loop_equiv_on_def by (by100 blast)
+          from Lemma_51_1_path_homotopic_sym[OF this] show ?thesis .
+        qed
         \<comment> \<open>Step 5c: fth lifts fh, \\<alpha>\\<tilde>*ftg lifts ?pafg (pointwise on I\\_set).\<close>
         \<comment> \<open>Step 5d: Apply Theorem 54.3.\<close>
         have hfh_path': "top1_is_path_on B TB b0 b0 fh"
