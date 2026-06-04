@@ -828,11 +828,20 @@ proof -
       top1_path_product (\<lambda>t. p (\<gamma>1 t)) (top1_path_reverse (\<lambda>t. p (\<gamma>2 t))) s"
     unfolding top1_path_product_def top1_path_reverse_def by simp
   \<comment> \<open>Step 2: The loop class [p\\<circ>\\<delta>] equals [(p\\<circ>\\<gamma>\\_1)*rev(p\\<circ>\\<gamma>\\_2)].\<close>
+  let ?pp = "top1_path_product (\<lambda>t. p (\<gamma>1 t)) (top1_path_reverse (\<lambda>t. p (\<gamma>2 t)))"
   have hclass_eq: "{g. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) g} =
-      {g. top1_loop_equiv_on B TB b0
-          (top1_path_product (\<lambda>t. p (\<gamma>1 t)) (top1_path_reverse (\<lambda>t. p (\<gamma>2 t)))) g}"
-    sorry \<comment> \<open>From hp\\_distrib: p\\<circ>\\<delta> = (p\\<circ>\\<gamma>\\_1)*rev(p\\<circ>\\<gamma>\\_2) pointwise on I\\_set.
-       Need: pointwise equality on I\\_set implies same loop\\_equiv class.\<close>
+      {g. top1_loop_equiv_on B TB b0 ?pp g}"
+  proof -
+    \<comment> \<open>The functions agree on I\\_set, so loop equivalence classes are the same.\<close>
+    have hagree: "\<forall>s \<in> I_set. p (?\<delta> s) = ?pp s"
+      using hp_distrib by simp
+    \<comment> \<open>For any h: loop\\_equiv(p\\<circ>\\<delta>, h) \\<longleftrightarrow> loop\\_equiv(?pp, h).\<close>
+    have "\<And>h. top1_loop_equiv_on B TB b0 (\<lambda>t. p (?\<delta> t)) h \<longleftrightarrow>
+        top1_loop_equiv_on B TB b0 ?pp h"
+      sorry \<comment> \<open>Functions agreeing on I\\_set have same loop\\_equiv\\_on classes.
+         Needs: loop\\_equiv\\_on depends only on values on I\\_set.\<close>
+    thus ?thesis by (by100 blast)
+  qed
   \<comment> \<open>Step 3: This class = mulB([p\\<circ>\\<gamma>\\_1], invB([p\\<circ>\\<gamma>\\_2])) via fundamental\\_group\\_mul\\_class + invg\\_class.\<close>
   \<comment> \<open>Step 4: Being in H + group algebra gives coset equality.\<close>
   show ?thesis sorry \<comment> \<open>Chain: [p\\<circ>\\<delta>] \\<in> H \\<Rightarrow> mulB([p\\<circ>\\<gamma>\\_1], invB([p\\<circ>\\<gamma>\\_2])) \\<in> H
