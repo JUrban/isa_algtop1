@@ -126,7 +126,79 @@ proof (induction n rule: less_induct)
       \<comment> \<open>Vertex counting: V = V' \\<union> {v}, v \\<notin> V'.\<close>
       have hV_union: "top1_graph_vertex_set T TT \<A> =
           top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<union> {v}"
-        sorry \<comment> \<open>V = V' + leaf endpoint.\<close>
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> top1_graph_vertex_set T TT \<A>"
+        then obtain A where hA: "A \<in> \<A>"
+            "x \<in> top1_arc_endpoints_on A (subspace_topology T TT A)"
+          unfolding top1_graph_vertex_set_def by (by100 blast)
+        show "x \<in> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<union> {v}"
+        proof (cases "A = A0")
+          case False
+          hence "A \<in> ?\<A>'" using hA(1) by (by100 blast)
+          have "A \<subseteq> ?T'" using \<open>A \<in> ?\<A>'\<close> by (by100 blast)
+          have "subspace_topology ?T' (subspace_topology T TT ?T') A = subspace_topology T TT A"
+            using subspace_topology_trans[of A ?T' T TT] \<open>A \<subseteq> ?T'\<close> by (by100 simp)
+          hence "x \<in> top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)"
+            using hA(2) by simp
+          thus ?thesis unfolding top1_graph_vertex_set_def using \<open>A \<in> ?\<A>'\<close> by (by100 blast)
+        next
+          case True
+          hence "x \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" using hA(2) by simp
+          thus ?thesis
+          proof (cases "x = v")
+            case True thus ?thesis by (by100 blast)
+          next
+            case False
+            \<comment> \<open>x is the other endpoint of A0. x must be in some arc B \\<in> \\<A>'.\<close>
+            have "x \<in> A0" using \<open>x \<in> top1_arc_endpoints_on A0 _\<close>
+              unfolding top1_arc_endpoints_on_def by (by100 blast)
+            have "x \<in> T" using \<open>x \<in> A0\<close> harcs hA(1) True by (by100 blast)
+            have "x \<in> \<Union>\<A>" using hcover \<open>x \<in> T\<close> by simp
+            then obtain B where "B \<in> \<A>" "x \<in> B" by (by100 blast)
+            have "B \<noteq> A0"
+            proof
+              assume "B = A0" thus False sorry
+                \<comment> \<open>x is in A0 but is not v and is an endpoint. The only option
+                   is x = w (other endpoint). Need: w is in some other arc.
+                   Since tree connected + \\<ge>2 arcs, A0 shares w with another arc.\<close>
+            qed
+            hence "B \<in> ?\<A>'" using \<open>B \<in> \<A>\<close> by (by100 blast)
+            have "x \<in> A0 \<inter> B" using \<open>x \<in> A0\<close> \<open>x \<in> B\<close> by (by100 blast)
+            have "A0 \<in> \<A>" using hA0 .
+            have "A0 \<noteq> B" using \<open>B \<noteq> A0\<close> by (by100 blast)
+            from hinter[rule_format, OF \<open>A0 \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A0 \<noteq> B\<close>]
+            have "x \<in> top1_arc_endpoints_on B (subspace_topology T TT B)"
+              using \<open>x \<in> A0 \<inter> B\<close> by (by100 blast)
+            have "B \<subseteq> ?T'" using \<open>B \<in> ?\<A>'\<close> by (by100 blast)
+            have "subspace_topology ?T' (subspace_topology T TT ?T') B = subspace_topology T TT B"
+              using subspace_topology_trans[of B ?T' T TT] \<open>B \<subseteq> ?T'\<close> by (by100 simp)
+            hence "x \<in> top1_arc_endpoints_on B (subspace_topology ?T' (subspace_topology T TT ?T') B)"
+              using \<open>x \<in> top1_arc_endpoints_on B (subspace_topology T TT B)\<close> by simp
+            thus ?thesis unfolding top1_graph_vertex_set_def using \<open>B \<in> ?\<A>'\<close> by (by100 blast)
+          qed
+        qed
+      next
+        fix x assume "x \<in> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<union> {v}"
+        thus "x \<in> top1_graph_vertex_set T TT \<A>"
+        proof
+          assume "x \<in> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>'"
+          then obtain B where "B \<in> ?\<A>'"
+              "x \<in> top1_arc_endpoints_on B (subspace_topology ?T' (subspace_topology T TT ?T') B)"
+            unfolding top1_graph_vertex_set_def by (by100 blast)
+          have "B \<in> \<A>" using \<open>B \<in> ?\<A>'\<close> by (by100 blast)
+          have "B \<subseteq> ?T'" using \<open>B \<in> ?\<A>'\<close> by (by100 blast)
+          have "subspace_topology ?T' (subspace_topology T TT ?T') B = subspace_topology T TT B"
+            using subspace_topology_trans[of B ?T' T TT] \<open>B \<subseteq> ?T'\<close> by (by100 simp)
+          hence "x \<in> top1_arc_endpoints_on B (subspace_topology T TT B)"
+            using \<open>x \<in> top1_arc_endpoints_on B _\<close> by simp
+          thus ?thesis unfolding top1_graph_vertex_set_def using \<open>B \<in> \<A>\<close> by (by100 blast)
+        next
+          assume "x \<in> {v}"
+          hence "x = v" by (by100 blast)
+          thus ?thesis unfolding top1_graph_vertex_set_def
+            using hA0 hv_ep by (by100 blast)
+        qed
+      qed
       have hv_fresh: "v \<notin> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>'"
       proof -
         have "v \<notin> \<Union>?\<A>'"
