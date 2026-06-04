@@ -863,6 +863,96 @@ lemma group_right_id:
   "top1_is_group_on G mul e invg \<Longrightarrow> a \<in> G \<Longrightarrow> mul a e = a"
   unfolding top1_is_group_on_def by (by5000 blast)
 
+\<comment> \<open>Functions agreeing on I\\_set have the same loop\\_equiv class.\<close>
+lemma loop_class_cong:
+  assumes "is_topology_on X TX"
+      and "\<forall>s\<in>I_set. f s = g s"
+  shows "{h. top1_loop_equiv_on X TX x0 f h} = {h. top1_loop_equiv_on X TX x0 g h}"
+proof (rule set_eqI, rule iffI)
+  fix h
+  assume "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+  hence "top1_loop_equiv_on X TX x0 f h" by (by100 blast)
+  hence "top1_is_loop_on X TX x0 f" "top1_is_loop_on X TX x0 h"
+      "top1_path_homotopic_on X TX x0 x0 f h"
+    unfolding top1_loop_equiv_on_def by (by100 blast)+
+  have "top1_is_loop_on X TX x0 g"
+  proof -
+    have "top1_continuous_map_on I_set I_top X TX g"
+      using top1_continuous_map_on_cong[of I_set f g] assms(2)
+        \<open>top1_is_loop_on X TX x0 f\<close>
+      unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have "0 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+    have "1 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+    have "f 0 = g 0" using assms(2) \<open>0 \<in> I_set\<close> by (by100 blast)
+    have "f 1 = g 1" using assms(2) \<open>1 \<in> I_set\<close> by (by100 blast)
+    have "g 0 = x0" using \<open>f 0 = g 0\<close> \<open>top1_is_loop_on X TX x0 f\<close>
+      unfolding top1_is_loop_on_def top1_is_path_on_def by simp
+    have "g 1 = x0" using \<open>f 1 = g 1\<close> \<open>top1_is_loop_on X TX x0 f\<close>
+      unfolding top1_is_loop_on_def top1_is_path_on_def by simp
+    show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+      using \<open>top1_continuous_map_on I_set I_top X TX g\<close> \<open>g 0 = x0\<close> \<open>g 1 = x0\<close>
+      by (by100 blast)
+  qed
+  have "top1_path_homotopic_on X TX x0 x0 g h"
+  proof -
+    from \<open>top1_path_homotopic_on X TX x0 x0 f h\<close>
+    obtain F where "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+        "\<forall>s \<in> I_set. F (s, 0) = f s" "\<forall>s \<in> I_set. F (s, 1) = h s"
+        "\<forall>t \<in> I_set. F (0, t) = x0" "\<forall>t \<in> I_set. F (1, t) = x0"
+      unfolding top1_path_homotopic_on_def top1_is_path_on_def by (by100 blast)
+    have "\<forall>s \<in> I_set. F (s, 0) = g s" using \<open>\<forall>s\<in>I_set. F (s, 0) = f s\<close> assms(2) by simp
+    thus ?thesis unfolding top1_path_homotopic_on_def
+      using \<open>top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F\<close>
+            \<open>\<forall>s\<in>I_set. F (s, 1) = h s\<close>
+            \<open>\<forall>t\<in>I_set. F (0, t) = x0\<close> \<open>\<forall>t\<in>I_set. F (1, t) = x0\<close>
+            \<open>top1_is_loop_on X TX x0 g\<close> \<open>top1_is_loop_on X TX x0 h\<close>
+      unfolding top1_is_loop_on_def by (by100 blast)
+  qed
+  thus "h \<in> {h. top1_loop_equiv_on X TX x0 g h}"
+    unfolding top1_loop_equiv_on_def
+    using \<open>top1_is_loop_on X TX x0 g\<close> \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+next
+  fix h
+  assume "h \<in> {h. top1_loop_equiv_on X TX x0 g h}"
+  hence "top1_loop_equiv_on X TX x0 g h" by (by100 blast)
+  hence "top1_is_loop_on X TX x0 g" "top1_is_loop_on X TX x0 h"
+      "top1_path_homotopic_on X TX x0 x0 g h"
+    unfolding top1_loop_equiv_on_def by (by100 blast)+
+  have "top1_is_loop_on X TX x0 f"
+  proof -
+    have "\<forall>s\<in>I_set. g s = f s" using assms(2) by simp
+    have "top1_continuous_map_on I_set I_top X TX f"
+      using top1_continuous_map_on_cong[of I_set g f] \<open>\<forall>s\<in>I_set. g s = f s\<close>
+        \<open>top1_is_loop_on X TX x0 g\<close>
+      unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    have "0 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+    have "1 \<in> (I_set :: real set)" unfolding top1_unit_interval_def by (by100 simp)
+    have "f 0 = g 0" using assms(2) \<open>0 \<in> I_set\<close> by (by100 blast)
+    have "f 1 = g 1" using assms(2) \<open>1 \<in> I_set\<close> by (by100 blast)
+    have "f 0 = x0" using \<open>f 0 = g 0\<close> \<open>top1_is_loop_on X TX x0 g\<close>
+      unfolding top1_is_loop_on_def top1_is_path_on_def by simp
+    have "f 1 = x0" using \<open>f 1 = g 1\<close> \<open>top1_is_loop_on X TX x0 g\<close>
+      unfolding top1_is_loop_on_def top1_is_path_on_def by simp
+    show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def
+      using \<open>top1_continuous_map_on I_set I_top X TX f\<close> \<open>f 0 = x0\<close> \<open>f 1 = x0\<close>
+      by (by100 blast)
+  qed
+  from \<open>top1_path_homotopic_on X TX x0 x0 g h\<close>
+  obtain F where hF: "top1_continuous_map_on (I_set \<times> I_set) II_topology X TX F"
+      "\<forall>s \<in> I_set. F (s, 0) = g s" "\<forall>s \<in> I_set. F (s, 1) = h s"
+      "\<forall>t \<in> I_set. F (0, t) = x0" "\<forall>t \<in> I_set. F (1, t) = x0"
+    unfolding top1_path_homotopic_on_def top1_is_path_on_def by (by100 blast)
+  have "\<forall>s \<in> I_set. F (s, 0) = f s" using hF(2) assms(2) by simp
+  hence "top1_path_homotopic_on X TX x0 x0 f h"
+    unfolding top1_path_homotopic_on_def
+    using hF(1) hF(3) hF(4) hF(5)
+          \<open>top1_is_loop_on X TX x0 f\<close> \<open>top1_is_loop_on X TX x0 h\<close>
+    unfolding top1_is_loop_on_def by (by100 blast)
+  thus "h \<in> {h. top1_loop_equiv_on X TX x0 f h}"
+    unfolding top1_loop_equiv_on_def
+    using \<open>top1_is_loop_on X TX x0 f\<close> \<open>top1_is_loop_on X TX x0 h\<close> by (by100 blast)
+qed
+
 lemma group_inv_e:
   assumes "top1_is_group_on G mul e invg"
   shows "invg e = e"
@@ -2463,8 +2553,7 @@ proof -
           let ?c_composed = "{g. top1_loop_equiv_on B TB b0
               (\<lambda>t. p (top1_path_product ?\<gamma>h (\<lambda>t. h (?\<gamma>k t)) t)) g}"
           have hclass_chain: "?c_composed = {g. top1_loop_equiv_on B TB b0 ?pp g}"
-            sorry \<comment> \<open>Functions agree on I\\_set (hp\\_composed\\_eq) \\<Rightarrow> same loop class.
-               Pattern proved before in same\\_endpoint\\_same\\_coset.\<close>
+            using loop_class_cong[OF hTB_loc hp_composed_eq] .
           \<comment> \<open>Step A: coset([p\\<circ>\\<gamma>\\_{hk}]) = coset([p\\<circ>(\\<gamma>\\_h*(h\\<circ>\\<gamma>\\_k))])
              via same\\_endpoint\\_same\\_coset (both paths e0 \\<rightarrow> h(k(e0))).\<close>
           have hcoset_eq: "?coset ?chk = ?coset ?c_composed"
