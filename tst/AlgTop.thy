@@ -3196,9 +3196,32 @@ proof -
                   have hA23_arc: "top1_is_arc_on (A2 \<union> A3) (subspace_topology T' TT' (A2 \<union> A3))"
                     by (rule arcs_concatenation_is_arc[OF hstrict' hhaus' hA2_arc \<open>A2 \<subseteq> T'\<close>
                         hA3_arc \<open>A3 \<subseteq> T'\<close> hA23_inter hr2_ep_A2 hr2_ep_A3])
-                  \<comment> \<open>Step 3: A1 and A2\\<union>A3 share both endpoints {p1,q1} \\<Rightarrow> SCC.\<close>
-                  \<comment> \<open>Step 4: SCC in tree \\<Rightarrow> contradiction (already proved).\<close>
-                  show ?thesis sorry \<comment> \<open>Continue with SCC argument as before.\<close>
+                  \<comment> \<open>Step 3: endpoints(A2\\<union>A3) = {p1,q1} by arc\\_concat\\_endpoints.\<close>
+                  have "r2 \<noteq> q1" using \<open>s3 \<noteq> r2\<close> \<open>s3 = q1\<close> by simp
+                  have hA2_ep_form: "top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {p1, r2}"
+                    using hA2_ep_pr .
+                  have hA3_ep_form: "top1_arc_endpoints_on A3 (subspace_topology T' TT' A3) = {r2, q1}"
+                    using hA3_ep_rq .
+                  have hA23_ep: "top1_arc_endpoints_on (A2 \<union> A3) (subspace_topology T' TT' (A2 \<union> A3)) = {p1, q1}"
+                    by (rule arc_concat_endpoints[OF hstrict' hhaus' hA2_arc \<open>A2 \<subseteq> T'\<close>
+                        hA3_arc \<open>A3 \<subseteq> T'\<close> hA23_inter hr2_ep_A2 hr2_ep_A3
+                        hA2_ep_form hA3_ep_form \<open>r2 \<noteq> p1\<close>[symmetric] \<open>r2 \<noteq> q1\<close>])
+                  \<comment> \<open>Step 4: A1 \\<inter> (A2\\<union>A3) = {p1,q1}.\<close>
+                  have hA1_A23_inter: "A1 \<inter> (A2 \<union> A3) = {p1, q1}"
+                    sorry \<comment> \<open>From hinter' applied to A1\\<inter>A2 and A1\\<inter>A3 + endpoint analysis.\<close>
+                  \<comment> \<open>Step 5: SCC via arcs\\_form\\_simple\\_closed\\_curve.\<close>
+                  have "A1 \<subseteq> T'" using h\<A>' \<open>A1 \<in> \<A>'\<close> by (by100 blast)
+                  have "A2 \<union> A3 \<subseteq> T'" using \<open>A2 \<subseteq> T'\<close> \<open>A3 \<subseteq> T'\<close> by (by100 blast)
+                  have hA1_arc: "top1_is_arc_on A1 (subspace_topology T' TT' A1)"
+                    using h\<A>' \<open>A1 \<in> \<A>'\<close> by (by100 blast)
+                  from arcs_form_simple_closed_curve[OF hstrict' hhaus' hA1_arc \<open>A1 \<subseteq> T'\<close>
+                      hA23_arc \<open>A2 \<union> A3 \<subseteq> T'\<close> hA1_A23_inter \<open>p1 \<noteq> q1\<close>
+                      \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> hA23_ep]
+                  have "top1_simple_closed_curve_on T' TT' (A1 \<union> (A2 \<union> A3))" .
+                  \<comment> \<open>Step 6: SCC in tree \\<Rightarrow> contradiction. Same chain as the 2-arc case.\<close>
+                  show ?thesis sorry \<comment> \<open>A1\\<union>A2\\<union>A3 is SCC in tree. Need retract + \\<pi>\\_1 chain.
+                     The retract needs two\\_arc\\_union\\_is\\_retract for A1 and A2\\<union>A3.
+                     Then the existing SC + nontrivial chain gives False.\<close>
                 qed
               next
                 case a4ne1: False
