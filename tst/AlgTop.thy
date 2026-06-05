@@ -4330,7 +4330,7 @@ proof -
       thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>_X_fin by (by100 blast)
     qed
     \<comment> \<open>Step F: Covering multiplicity.\<close>
-    have hfiber_card: "card {e \<in> E'. p' e = x0} = k"
+    have hfiber_card_and_fin: "card {e \<in> E'. p' e = x0} = k \<and> finite {e \<in> E'. p' e = x0}"
     proof -
       \<comment> \<open>Book: 'the lifting correspondence Phi: pi1(X,x0)/H -> p-inv(x0) is a bijection.
          Therefore, E is a k-fold covering of X.'
@@ -4418,9 +4418,44 @@ proof -
       from left_right_coset_card_eq[OF hpiX_grp hpH_sub hpH_grp]
       have hlr: "card (top1_left_cosets_on ?piX ?mulX ?pH) = card (top1_right_cosets_on ?piX ?mulX ?pH)" .
       from hindex[unfolded top1_subgroup_has_index_on_def]
-      have "card (top1_left_cosets_on ?piX ?mulX ?pH) = k" by (by100 blast)
-      thus ?thesis using hright_card hlr by simp
+      have hk_eq: "card (top1_left_cosets_on ?piX ?mulX ?pH) = k" by (by100 blast)
+      have hcard_eq: "card {e \<in> E'. p' e = x0} = k" using hright_card hlr hk_eq by simp
+      have "finite (top1_left_cosets_on ?piX ?mulX ?pH)"
+        using hindex unfolding top1_subgroup_has_index_on_def by (by100 blast)
+      hence "finite (top1_right_cosets_on ?piX ?mulX ?pH)"
+      proof -
+        assume "finite (top1_left_cosets_on ?piX ?mulX ?pH)"
+        have "card (top1_left_cosets_on ?piX ?mulX ?pH) = card (top1_right_cosets_on ?piX ?mulX ?pH)"
+          using hlr .
+        show ?thesis
+        proof (rule ccontr)
+          assume "\<not> finite (top1_right_cosets_on ?piX ?mulX ?pH)"
+          hence "card (top1_right_cosets_on ?piX ?mulX ?pH) = 0" by simp
+          hence "card (top1_left_cosets_on ?piX ?mulX ?pH) = 0" using hlr by simp
+          hence "top1_left_cosets_on ?piX ?mulX ?pH = {}"
+            using \<open>finite (top1_left_cosets_on ?piX ?mulX ?pH)\<close> by simp
+          moreover have "top1_left_cosets_on ?piX ?mulX ?pH \<noteq> {}"
+          proof -
+            have "top1_fundamental_group_id X TX x0 \<in> ?piX"
+              using top1_fundamental_group_is_group[OF hX_top hx0]
+              unfolding top1_is_group_on_def by (by100 blast)
+            hence "top1_group_coset_on ?piX ?mulX ?pH (top1_fundamental_group_id X TX x0)
+                \<in> top1_left_cosets_on ?piX ?mulX ?pH"
+              unfolding top1_left_cosets_on_def by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          ultimately show False by (by100 blast)
+        qed
+      qed
+      have "finite {e \<in> E'. p' e = x0}"
+        using bij_betw_finite[OF \<open>bij_betw f _ _\<close>]
+            \<open>finite (top1_right_cosets_on ?piX ?mulX ?pH)\<close> by (by100 blast)
+      thus ?thesis using hcard_eq by (by100 blast)
     qed
+    have hfiber_card: "card {e \<in> E'. p' e = x0} = k"
+      using hfiber_card_and_fin by (by100 blast)
+    have hfiber_fin: "finite {e \<in> E'. p' e = x0}"
+      using hfiber_card_and_fin by (by100 blast)
     have hE'_compact: "top1_compact_on E' TE'"
     proof -
       have hX_top: "is_topology_on X TX"
@@ -4690,7 +4725,18 @@ proof -
       have "e0' \<in> {e \<in> E'. p' e = x0}" using he0' \<open>p' e0' = x0\<close> by (by100 blast)
       hence "{e \<in> E'. p' e = x0} \<noteq> {}" by (by100 blast)
       moreover have "card {e \<in> E'. p' e = x0} = k" using hfiber_card .
-      ultimately show "k > 0" sorry \<comment> \<open>Nonempty set with card = k implies k > 0 (needs finite).\<close>
+      ultimately show "k > 0"
+      proof -
+        assume "{e \<in> E'. p' e = x0} \<noteq> {}" "card {e \<in> E'. p' e = x0} = k"
+        show "k > 0"
+        proof (rule ccontr)
+          assume "\<not> k > 0"
+          hence "k = 0" by simp
+          hence "card {e \<in> E'. p' e = x0} = 0" using \<open>card _ = k\<close> by simp
+          hence "{e \<in> E'. p' e = x0} = {}" using hfiber_fin by simp
+          with \<open>{e \<in> E'. p' e = x0} \<noteq> {}\<close> show False by (by100 blast)
+        qed
+      qed
     qed
     \<comment> \<open>Apply covering multiplicity lemmas to A\\_E (= lifted family from Thm 83.4).\<close>
     have harc_mult: "card \<A>_E = k * card \<A>_X"
