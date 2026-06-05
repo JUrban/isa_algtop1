@@ -5585,8 +5585,9 @@ proof -
           \<comment> \<open>inv\\_into B p continuous on A0 (p is open map from covering).\<close>
           show "top1_continuous_map_on A0 (subspace_topology X TX A0) B (subspace_topology E TE B)
               (inv_into B p)"
-            sorry \<comment> \<open>Inverse continuous: p is open map (covering), so p|B is open,
-               and a continuous open bijection has continuous inverse.\<close>
+            sorry \<comment> \<open>Inverse continuity: B is open in preimage(A0) (max conn comp of locally connected
+               space). V'\\<inter>B open in preimage(A0) for V' open. p(V'\\<inter>B) open by covering\\_map\\_is\\_open\\_map.
+               Hence p|B is open, so inv(p|B) is continuous.\<close>
         qed
         \<comment> \<open>Get homeomorphism h\\_A0: [0,1] \\<rightarrow> A0.\<close>
         obtain h_A0 where hh_A0: "top1_homeomorphism_on top1_unit_interval
