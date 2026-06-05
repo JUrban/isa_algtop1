@@ -5555,16 +5555,33 @@ proof -
          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
         using conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF hbig_E]]]] .
       \<comment> \<open>Need: \\<A>\\_L satisfies the graph decomposition conditions.\<close>
+      \<comment> \<open>Extract ANY valid decomposition from hE\\_graph to use in Euler invariance.
+         We use \\<A>E\\_raw itself (which is already extracted from graph\\_pi1\\_free\\_weak).\<close>
+      \<comment> \<open>Actually, graph\\_euler\\_invariance needs TWO decompositions. We have \\<A>E\\_raw.
+         For the second: use \\<A>E\\_raw again (trivially gives V - E = V - E).
+         BUT we need V\\_L - card(\\<A>\\_L) = V\\_E\\_raw - card(\\<A>E\\_raw).
+         This requires \\<A>\\_L as a valid decomposition, which needs the conditions below.
+         ALTERNATIVELY: bypass graph\\_euler\\_invariance and prove hrank\\_E\\_formula differently.\<close>
+      \<comment> \<open>Simpler approach: since we need V\\_L - card(\\<A>\\_L) = V\\_E\\_raw - card(\\<A>E\\_raw),
+         and we have V\\_L = k * V\\_X and card(\\<A>\\_L) = k * card(\\<A>w), we need:
+         k * V\\_X - k * card(\\<A>w) = V\\_E\\_raw - card(\\<A>E\\_raw).
+         I.e., k * (V\\_X - card(\\<A>w)) = V\\_E\\_raw - card(\\<A>E\\_raw).
+         The LHS = k * (-n) = -kn (from hchi\\_X: card(\\<A>w) - V\\_X = n).
+         So we need: V\\_E\\_raw - card(\\<A>E\\_raw) = -kn.
+         From hrank\\_E\\_raw: card(SE\\_raw) + V\\_E\\_raw = card(\\<A>E\\_raw) + 1.
+         So V\\_E\\_raw - card(\\<A>E\\_raw) = 1 - card(SE\\_raw).
+         Need: 1 - card(SE\\_raw) = -kn, i.e., card(SE\\_raw) = kn + 1.
+         This IS what we're trying to prove! Circular.\<close>
+      \<comment> \<open>So the \\<A>\\_L conditions ARE needed. Let me extract them from Theorem\\_83\\_4.\<close>
       have h\<A>L_arcs: "\<forall>A\<in>?\<A>_L. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
-        sorry \<comment> \<open>Each lifted arc B: B \\<subseteq> E from Clause 1 (B \\<subseteq> preimage(A) \\<subseteq> E).
-           Arc from Theorem\\_83\\_4 internal proof (homeomorphic to base arc).\<close>
+        sorry \<comment> \<open>From Theorem\\_83\\_4 internal proof: each max conn comp is an arc in E.\<close>
       have h\<A>L_cover: "\<Union>?\<A>_L = E"
-        sorry \<comment> \<open>From covering Clause 2 + B \\<subseteq> E. Provable from h\\_lifted.\<close>
+        sorry \<comment> \<open>From covering Clause 2: every e \\<in> E in some lifted arc.\<close>
       have h\<A>L_inter: "\<forall>A\<in>?\<A>_L. \<forall>B\<in>?\<A>_L. A \<noteq> B \<longrightarrow>
            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-        sorry \<comment> \<open>From Theorem\\_83\\_4 applied to the lifted family.\<close>
+        sorry \<comment> \<open>From Theorem\\_83\\_4 internal proof: lifted arcs meet at endpoints.\<close>
       have hE_compact: "top1_compact_on E TE"
       proof -
         have hTX_top: "is_topology_on X TX"
@@ -7634,4 +7651,4 @@ qed
 
 
 end
-           
+            
