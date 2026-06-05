@@ -2641,9 +2641,41 @@ lemma finite_tree_has_leaf:
        Contradiction.
        The key claim: a non-backtracking cycle of arcs gives a NON-null-homotopic loop.
        This is the topological bridge.\<close>
-    show ?thesis sorry \<comment> \<open>Topological bridge: SC + finite graph + all degrees \\<ge> 2 \\<Rightarrow> \\<bottom>.
-       The walk+pigeonhole gives a cycle. The cycle gives a loop.
-       In SC: the loop is trivial. But the cycle is non-trivial (topological bridge sorry).\<close>
+    \<comment> \<open>Step 3: The walk+pigeonhole argument (Munkres Lemma 84.2 converse).
+       Assume no leaf (all degrees \\<ge> 2). Construct non-backtracking walk.
+       By finiteness, revisit a vertex. This gives a "closed reduced edge path."
+       Bridge: in an SC graph, no closed reduced edge path exists.
+       Contradiction.\<close>
+    \<comment> \<open>Assume for contradiction: no leaf exists.\<close>
+    show ?thesis
+    proof (rule ccontr)
+      assume hno: "\<not> (\<exists>A0 v. A0 \<in> \<A>' \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0) \<and>
+          (\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
+      \<comment> \<open>Every endpoint of every arc is shared with another arc (degree \\<ge> 2).\<close>
+      have hshared: "\<forall>A0\<in>\<A>'. \<forall>v\<in>top1_arc_endpoints_on A0 (subspace_topology T' TT' A0).
+          \<exists>B\<in>\<A>'. B \<noteq> A0 \<and> v \<in> B"
+      proof (intro ballI)
+        fix A0 v assume "A0 \<in> \<A>'" "v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0)"
+        show "\<exists>B\<in>\<A>'. B \<noteq> A0 \<and> v \<in> B"
+        proof (rule ccontr)
+          assume "\<not> (\<exists>B\<in>\<A>'. B \<noteq> A0 \<and> v \<in> B)"
+          hence "\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B" by (by100 blast)
+          with \<open>A0 \<in> \<A>'\<close> \<open>v \<in> top1_arc_endpoints_on A0 _\<close>
+          have "\<exists>A0 v. A0 \<in> \<A>' \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0) \<and>
+              (\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B)" by (by100 blast)
+          with hno show False by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>The topological bridge: SC graph with all vertices shared \\<Rightarrow> \\<bottom>.
+         In Munkres' terms: the walk+pigeonhole constructs a closed reduced edge path,
+         but SC trees have no such paths.
+         Formally: this requires showing that a non-backtracking cycle of distinct arcs
+         gives a non-null-homotopic loop in the graph. For the SPECIFIC decompositions
+         arising from graph\\_pi1\\_free\\_weak, this follows from the spanning tree construction.
+         For arbitrary decompositions, this is the topological bridge sorry.\<close>
+      show False sorry \<comment> \<open>SC + all vertices shared \\<Rightarrow> False.
+         Walk+pigeonhole gives cycle. SC \\<Rightarrow> no cycles (topological bridge).\<close>
+    qed
   qed
 
 lemma tree_euler_and_leaf_combined:
@@ -7524,3 +7556,4 @@ qed
 
 
 end
+  
