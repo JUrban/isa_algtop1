@@ -2996,10 +2996,24 @@ proof -
       \<comment> \<open>h\\_s: S1 \\<rightarrow> T' continuous injection with image A1\\<union>A2.\<close>
       \<comment> \<open>S1 compact, A1\\<union>A2 Hausdorff \\<Rightarrow> h\\_s homeomorphism onto A1\\<union>A2.\<close>
       \<comment> \<open>Transfer SC from A1\\<union>A2 to S1 via homeomorphism. But S1 is NOT SC.\<close>
+      \<comment> \<open>h\\_s: S1 \\<rightarrow> A1\\<union>A2 is a homeomorphism (Theorem 26.6: compact → Hausdorff bijection).\<close>
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        using S1_compact unfolding top1_compact_on_def by (by100 blast)
+      have hC_haus: "is_hausdorff_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2))"
+        using hhaus' hC_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+      have "bij_betw h_s top1_S1 (A1 \<union> A2)"
+        unfolding bij_betw_def using \<open>inj_on h_s top1_S1\<close> \<open>h_s ` top1_S1 = A1 \<union> A2\<close> by (by100 blast)
+      have "top1_continuous_map_on top1_S1 top1_S1_topology (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) h_s"
+        sorry \<comment> \<open>h\\_s continuous S1 \\<rightarrow> T' \\<Rightarrow> h\\_s continuous S1 \\<rightarrow> sub(A1\\<union>A2) (restrict codomain).\<close>
+      from Theorem_26_6[OF hS1_top hC_top S1_compact hC_haus this \<open>bij_betw h_s top1_S1 (A1 \<union> A2)\<close>]
+      have hhomeo: "top1_homeomorphism_on top1_S1 top1_S1_topology (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) h_s" .
+      \<comment> \<open>Transfer SC from A1\\<union>A2 to S1 via homeomorphism.\<close>
+      \<comment> \<open>Need SC S1 from SC A1\\<union>A2. Use inverse homeomorphism A1\\<union>A2 \\<rightarrow> S1.\<close>
+      have hhomeo_inv: "top1_homeomorphism_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2))
+          top1_S1 top1_S1_topology (inv_into top1_S1 h_s)"
+        sorry \<comment> \<open>Inverse of homeomorphism is a homeomorphism.\<close>
       have "top1_simply_connected_on top1_S1 top1_S1_topology"
-        sorry \<comment> \<open>Transfer SC from A1\\<union>A2 to S1 via homeomorphism h\\_s.
-           h\\_s: S1 \\<rightarrow> A1\\<union>A2 is a homeomorphism (Theorem 26.6: compact\\<rightarrow>Hausdorff bijection).
-           SC transfers under homeomorphism.\<close>
+        by (rule homeomorphism_preserves_simply_connected[OF hhomeo_inv hC_sc])
       \<comment> \<open>But S1 is NOT simply connected: \\<pi>\\_1(S1) \\<ne> 0.\<close>
       \<comment> \<open>But S1 is NOT simply connected.\<close>
       from top1_S1_fundamental_group_nontrivial
