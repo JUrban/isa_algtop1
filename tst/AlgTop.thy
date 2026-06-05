@@ -5252,6 +5252,8 @@ proof -
           obtain W' where hW'_sub: "W' \<subseteq> ?pre"
               and hW'_e: "e' \<in> W'"
               and hW'_pc: "top1_path_connected_on W' (subspace_topology ?pre (subspace_topology E TE ?pre) W')"
+              and hW'_homeo: "top1_homeomorphism_on W' (subspace_topology ?pre (subspace_topology E TE ?pre) W')
+                  (p ` W') (subspace_topology A (subspace_topology X TX A) (p ` W')) p"
               and hW'_ev: "top1_evenly_covered_on ?pre (subspace_topology E TE ?pre) A (subspace_topology X TX A) p (p ` W')"
             by (by100 blast)
           \<comment> \<open>p(W') is open in A.\<close>
@@ -5302,9 +5304,23 @@ proof -
             have hVb_sub_B: "Vb \<subseteq> B"
             proof -
               have hVb_conn: "top1_connected_on Vb (subspace_topology ?pre (subspace_topology E TE ?pre) Vb)"
-                sorry \<comment> \<open>Vb connected: homeomorphic to p(W') via p (from hVb\\_homeo).
-                   p(W') connected from continuous image of path-connected W'.
-                   Inverse homeomorphism preserves connectedness.\<close>
+              proof -
+                \<comment> \<open>p(W') is path-connected (from W' PC + homeomorphism W' \\<rightarrow> p(W')).\<close>
+                have hpW'_pc: "top1_path_connected_on (p ` W')
+                    (subspace_topology A (subspace_topology X TX A) (p ` W'))"
+                  by (rule homeomorphism_preserves_path_connected[OF hW'_homeo hW'_pc])
+                \<comment> \<open>Inverse of hVb\\_homeo: p(W') \\<rightarrow> Vb is a homeomorphism.\<close>
+                have hinv_Vb: "top1_homeomorphism_on (p ` W')
+                    (subspace_topology A (subspace_topology X TX A) (p ` W'))
+                    Vb (subspace_topology ?pre (subspace_topology E TE ?pre) Vb)
+                    (inv_into Vb p)"
+                  by (rule homeomorphism_inverse[OF hVb_homeo])
+                \<comment> \<open>Vb is path-connected (from inverse homeomorphism + p(W') PC).\<close>
+                have "top1_path_connected_on Vb
+                    (subspace_topology ?pre (subspace_topology E TE ?pre) Vb)"
+                  by (rule homeomorphism_preserves_path_connected[OF hinv_Vb hpW'_pc])
+                thus ?thesis by (rule path_connected_imp_connected)
+              qed
               have "Vb \<inter> B \<noteq> {}" using \<open>b \<in> Vb\<close> \<open>b \<in> B\<close> by (by100 blast)
               from h_mcc_absorb[OF hpre_top hB_comp hVb_conn \<open>Vb \<subseteq> ?pre\<close> this]
               show ?thesis .
