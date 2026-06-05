@@ -955,7 +955,132 @@ theorem Theorem_54_6c:
          = top1_fundamental_group_image_hom E TE e0 B TB b0 p \<Longrightarrow>
     ({g. top1_loop_equiv_on B TB b0 f g} \<in> top1_fundamental_group_image_hom E TE e0 B TB b0 p)
     = (\<exists>ft. top1_is_loop_on E TE e0 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))"
-  sorry
+proof -
+  assume hH_eq: "(top1_fundamental_group_induced_on E TE e0 B TB b0 p)
+      ` top1_fundamental_group_carrier E TE e0
+     = top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+  let ?H = "top1_fundamental_group_image_hom E TE e0 B TB b0 p"
+  let ?fclass = "{g. top1_loop_equiv_on B TB b0 f g}"
+  have hp_cont: "top1_continuous_map_on E TE B TB p"
+    using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
+  show "(?fclass \<in> ?H) = (\<exists>ft. top1_is_loop_on E TE e0 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s))"
+  proof (rule iffI)
+    \<comment> \<open>(\\<Rightarrow>) [f] \\<in> H = p*(\\<pi>\\_1(E)). So \\<exists>[\\<alpha>] \\<in> \\<pi>\\_1(E). p*([\\<alpha>]) = [f].
+       Lift f from e0: get f\\_tilde with f\\_tilde(1) = ? (unknown a priori).
+       \\<alpha> is a lift of p\\<circ>\\<alpha>. f ~ p\\<circ>\\<alpha>. By Thm 54.3: f\\_tilde(1) = \\<alpha>(1) = e0.
+       So f\\_tilde is a loop.\<close>
+    assume hfH: "?fclass \<in> ?H"
+    \<comment> \<open>[f] \\<in> p*(\\<pi>\\_1(E)) \\<Rightarrow> \\<exists>\\<alpha> loop at e0 with f ~ p \\<circ> \\<alpha>.\<close>
+    have "\<exists>\<alpha>. top1_is_loop_on E TE e0 \<alpha> \<and> top1_loop_equiv_on B TB b0 f (p \<circ> \<alpha>)"
+    proof -
+      \<comment> \<open>[f] \\<in> H = induced ` carrier. Extract c \\<in> carrier with induced(c) = [f].\<close>
+      from hfH[unfolded hH_eq[symmetric]]
+      obtain c where hc_carr: "c \<in> top1_fundamental_group_carrier E TE e0"
+          and hc_ind: "top1_fundamental_group_induced_on E TE e0 B TB b0 p c = ?fclass"
+        by (by100 blast)
+      \<comment> \<open>c = [\\<alpha>] for some loop \\<alpha> at e0.\<close>
+      from hc_carr obtain \<alpha> where h\<alpha>_loop: "top1_is_loop_on E TE e0 \<alpha>"
+          and h\<alpha>_class: "c = {g. top1_loop_equiv_on E TE e0 \<alpha> g}"
+        unfolding top1_fundamental_group_carrier_def by (by100 blast)
+      \<comment> \<open>\\<alpha> \\<in> c (reflexivity).\<close>
+      have "\<alpha> \<in> c" using h\<alpha>_class top1_loop_equiv_on_refl[OF h\<alpha>_loop] by (by100 blast)
+      \<comment> \<open>f \\<in> induced(c) = [f] (reflexivity of loop\\_equiv for f).\<close>
+      have hf_in_fclass: "f \<in> ?fclass"
+        using top1_loop_equiv_on_refl[OF assms(6)] by (by100 blast)
+      hence "f \<in> top1_fundamental_group_induced_on E TE e0 B TB b0 p c"
+        using hc_ind by simp
+      \<comment> \<open>Unfolding induced: \\<exists>f'\\<in>c. loop\\_equiv(p \\<circ> f', f).\<close>
+      then obtain f' where "f' \<in> c" "top1_loop_equiv_on B TB b0 (p \<circ> f') f"
+        unfolding top1_fundamental_group_induced_on_def by (by100 blast)
+      \<comment> \<open>f' \\<in> c = [\\<alpha>], so f' ~ \\<alpha>. p preserves equiv: p \\<circ> f' ~ p \\<circ> \\<alpha>.\<close>
+      have "top1_loop_equiv_on E TE e0 \<alpha> f'" using \<open>f' \<in> c\<close> h\<alpha>_class by (by100 blast)
+      have hf'_loop: "top1_is_loop_on E TE e0 f'"
+        using \<open>top1_loop_equiv_on E TE e0 \<alpha> f'\<close> unfolding top1_loop_equiv_on_def by (by100 blast)
+      from top1_induced_preserves_loop_equiv[OF assms(2) hp_cont h\<alpha>_loop hf'_loop
+          \<open>top1_loop_equiv_on E TE e0 \<alpha> f'\<close>]
+      have "top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) (p \<circ> f')" using assms(5) by simp
+      \<comment> \<open>p \\<circ> \\<alpha> ~ p \\<circ> f' and p \\<circ> f' ~ f (from above). By transitivity: p \\<circ> \\<alpha> ~ f.\<close>
+      from top1_loop_equiv_on_trans[OF assms(3) this \<open>top1_loop_equiv_on B TB b0 (p \<circ> f') f\<close>]
+      have "top1_loop_equiv_on B TB b0 (p \<circ> \<alpha>) f" .
+      from top1_loop_equiv_on_sym[OF this]
+      have "top1_loop_equiv_on B TB b0 f (p \<circ> \<alpha>)" .
+      thus ?thesis using h\<alpha>_loop by (by100 blast)
+    qed
+    then obtain \<alpha> where h\<alpha>: "top1_is_loop_on E TE e0 \<alpha>"
+        "top1_loop_equiv_on B TB b0 f (p \<circ> \<alpha>)" by (by100 blast)
+    \<comment> \<open>f is a loop at b0 (path from b0 to b0). Lift f from e0.\<close>
+    have hf_path: "top1_is_path_on B TB b0 b0 f"
+      using assms(6) unfolding top1_is_loop_on_def .
+    from Lemma_54_1_path_lifting[OF assms(1) assms(4) assms(5) hf_path assms(3) assms(2)]
+    obtain ftilde where hft: "top1_is_path_on E TE e0 (ftilde 1) ftilde"
+        "\<forall>s\<in>I_set. p (ftilde s) = f s" by (by100 blast)
+    \<comment> \<open>\\<alpha> is a path from e0 to e0 (loop) in E. p \\<circ> \\<alpha> is a loop at b0.
+       f ~ p \\<circ> \\<alpha> (loop-equivalent). By Theorem 54.3:
+       the lift of f (= ftilde) and the lift of p\\<circ>\\<alpha> (= \\<alpha>) end at the same point.
+       \\<alpha> ends at e0 (loop). So ftilde ends at e0.\<close>
+    have h\<alpha>_path: "top1_is_path_on E TE e0 e0 \<alpha>"
+      using h\<alpha>(1) unfolding top1_is_loop_on_def .
+    have hp\<alpha>_path: "top1_is_path_on B TB b0 b0 (p \<circ> \<alpha>)"
+    proof -
+      from top1_continuous_map_loop_early[OF hp_cont h\<alpha>(1)]
+      show ?thesis using assms(5) unfolding top1_is_loop_on_def by simp
+    qed
+    have hp\<alpha>_lift: "\<forall>s\<in>I_set. p (\<alpha> s) = (p \<circ> \<alpha>) s" by simp
+    \<comment> \<open>f ~ p \\<circ> \\<alpha> (from h\\<alpha>(2)). By Thm 54.3: ftilde(1) = \\<alpha>(1) = e0.\<close>
+    have hf_homotopic_p\<alpha>: "top1_path_homotopic_on B TB b0 b0 f (p \<circ> \<alpha>)"
+      using h\<alpha>(2) unfolding top1_loop_equiv_on_def by (by100 blast)
+    from Theorem_54_3[OF assms(1) assms(2) assms(3) assms(4) assms(5)
+        hf_path hp\<alpha>_path hf_homotopic_p\<alpha> hft(1) hft(2) h\<alpha>_path hp\<alpha>_lift]
+    have "ftilde 1 = e0" by (by100 blast)
+    hence "top1_is_loop_on E TE e0 ftilde"
+      using hft(1) unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+    thus "\<exists>ft. top1_is_loop_on E TE e0 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s)"
+      using hft(2) by (by100 blast)
+  next
+    \<comment> \<open>(\\<Leftarrow>) ft loop at e0, p \\<circ> ft = f on I\\_set \\<Rightarrow> [f] \\<in> H.\<close>
+    assume "\<exists>ft. top1_is_loop_on E TE e0 ft \<and> (\<forall>s\<in>I_set. p (ft s) = f s)"
+    then obtain ft where hft: "top1_is_loop_on E TE e0 ft" "\<forall>s\<in>I_set. p (ft s) = f s"
+      by (by100 blast)
+    \<comment> \<open>[ft] \\<in> \\<pi>\\_1(E). p*([ft]) = [p \\<circ> ft] = [f]. So [f] \\<in> H.\<close>
+    have hft_class: "{g. top1_loop_equiv_on E TE e0 ft g} \<in>
+        top1_fundamental_group_carrier E TE e0"
+      unfolding top1_fundamental_group_carrier_def using hft(1) by (by100 blast)
+    \<comment> \<open>p \\<circ> ft is a loop at b0, and p \\<circ> ft = f on I\\_set \\<Rightarrow> [p \\<circ> ft] = [f].\<close>
+    have hpft_loop: "top1_is_loop_on B TB b0 (p \<circ> ft)"
+      using top1_continuous_map_loop_early[OF hp_cont hft(1)] assms(5) by simp
+    have hpft_agree: "\<forall>s\<in>I_set. f s = (p \<circ> ft) s" using hft(2) by (by100 auto)
+    from conjunct2[OF loop_agree_on_I[OF hpft_loop hpft_agree]]
+    have "top1_path_homotopic_on B TB b0 b0 (p \<circ> ft) f" .
+    hence hpft_equiv_f: "top1_loop_equiv_on B TB b0 (p \<circ> ft) f"
+      unfolding top1_loop_equiv_on_def using hpft_loop assms(6) by (by100 blast)
+    \<comment> \<open>p*([ft]) = {g. \\<exists>f'\\<in>[ft]. loop\\_equiv (p \\<circ> f') g}.\<close>
+    \<comment> \<open>Since ft \\<in> [ft] and loop\\_equiv (p \\<circ> ft) f, we have f \\<in> p*([ft]).\<close>
+    \<comment> \<open>Hence [f] = p*([ft]) (they share element f, and equiv classes are equal or disjoint).\<close>
+    have "f \<in> (top1_fundamental_group_induced_on E TE e0 B TB b0 p)
+        {g. top1_loop_equiv_on E TE e0 ft g}"
+      unfolding top1_fundamental_group_induced_on_def
+    proof -
+      have hft_path: "top1_is_path_on E TE e0 e0 ft"
+        using hft(1) unfolding top1_is_loop_on_def .
+      have "top1_loop_equiv_on E TE e0 ft ft"
+        unfolding top1_loop_equiv_on_def
+        using hft(1) Lemma_51_1_path_homotopic_refl[OF hft_path] by (by100 blast)
+      hence "ft \<in> {g. top1_loop_equiv_on E TE e0 ft g}" by (by100 blast)
+      moreover have "top1_loop_equiv_on B TB b0 (p \<circ> ft) f" using hpft_equiv_f .
+      ultimately show "f \<in> {g. \<exists>f'\<in>{g. top1_loop_equiv_on E TE e0 ft g}.
+          top1_loop_equiv_on B TB b0 (p \<circ> f') g}" by (by100 blast)
+    qed
+    \<comment> \<open>p*([ft]) \\<in> H (from hH\\_eq). f \\<in> p*([ft]). [f] = p*([ft]) (since both are equiv classes
+       containing f). Hence [f] \\<in> H.\<close>
+    have "top1_fundamental_group_induced_on E TE e0 B TB b0 p
+        {g. top1_loop_equiv_on E TE e0 ft g} \<in> ?H"
+      using hH_eq hft_class by (by100 blast)
+    moreover have "?fclass = top1_fundamental_group_induced_on E TE e0 B TB b0 p
+        {g. top1_loop_equiv_on E TE e0 ft g}"
+      sorry \<comment> \<open>p*([ft]) = [p \\<circ> ft] = [f] by loop\\_equiv transitivity + induced preserves equiv.\<close>
+    ultimately show "?fclass \<in> ?H" by simp
+  qed
+qed
 
 \<comment> \<open>Right-coset version: surjection with right-coset kernel gives bijection.\<close>
 lemma surjection_right_coset_bij:
@@ -1118,11 +1243,507 @@ lemma finite_tree_has_leaf_arc:
   shows "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
       \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
   \<comment> \<open>Proof: by contradiction. If every endpoint of every arc is shared with another arc,
-     then starting from any arc and following shared endpoints produces a walk
-     that must eventually revisit an arc (finite), creating a cycle.
-     A cycle of arcs in a graph creates a non-contractible loop,
-     contradicting simply connected (tree).\<close>
-  sorry
+     then following shared endpoints produces a walk that revisits an arc (pigeonhole),
+     creating a cycle contradicting simply connected (tree).\<close>
+proof (rule ccontr)
+  assume "\<not> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
+  hence hno_leaf: "\<forall>A0\<in>\<A>. \<forall>v\<in>top1_arc_endpoints_on A0 (subspace_topology T TT A0).
+      \<exists>B\<in>\<A>. B \<noteq> A0 \<and> v \<in> B"
+  proof (intro ballI)
+    fix A0 v assume hA0: "A0 \<in> \<A>" and hv: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+    show "\<exists>B\<in>\<A>. B \<noteq> A0 \<and> v \<in> B"
+    proof (rule ccontr)
+      assume "\<not> (\<exists>B\<in>\<A>. B \<noteq> A0 \<and> v \<in> B)"
+      hence "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B" by (by100 blast)
+      hence "A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+          (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)" using hA0 hv by (by100 blast)
+      hence "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+          (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)" by (by100 blast)
+      with \<open>\<not> (\<exists>A0 v. _)\<close> show False by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Each arc has exactly 2 endpoints.\<close>
+  have hstrict: "is_topology_on_strict T TT"
+    using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+  have hhaus: "is_hausdorff_on T TT"
+    using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+  have hTT: "is_topology_on T TT"
+    using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+  have hsc: "top1_simply_connected_on T TT"
+    using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+  \<comment> \<open>Strategy: Build a walk through arcs. When an arc is revisited (pigeonhole),
+     extract two arcs sharing two endpoints \\<Rightarrow> SCC \\<Rightarrow> \\<pi>\\_1 \\<cong> Z \\<Rightarrow> not SC.
+     Key step: define a "next arc" function using hno\\_leaf.\<close>
+  \<comment> \<open>Each arc has 2 distinct endpoints.\<close>
+  have h2ep: "\<forall>A\<in>\<A>. \<exists>a b. a \<noteq> b \<and>
+      top1_arc_endpoints_on A (subspace_topology T TT A) = {a, b}"
+  proof (intro ballI)
+    fix A assume "A \<in> \<A>"
+    have "A \<subseteq> T" using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)
+    have "top1_is_arc_on A (subspace_topology T TT A)" using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)
+    then obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
+      unfolding top1_is_arc_on_def by (by100 blast)
+    have hep: "top1_arc_endpoints_on A (subspace_topology T TT A) = {h 0, h 1}"
+      by (rule arc_endpoints_are_boundary[OF hstrict hhaus \<open>A \<subseteq> T\<close>
+          \<open>top1_is_arc_on A (subspace_topology T TT A)\<close> hh])
+    have "h 0 \<noteq> h 1"
+    proof
+      assume "h 0 = h 1"
+      have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      from inj_onD[OF this \<open>h 0 = h 1\<close>] show False unfolding top1_unit_interval_def by (by100 auto)
+    qed
+    thus "\<exists>a b. a \<noteq> b \<and> top1_arc_endpoints_on A (subspace_topology T TT A) = {a, b}"
+      using hep by (by100 blast)
+  qed
+  \<comment> \<open>Under hno\\_leaf: every endpoint is shared. Build walk and find SCC.\<close>
+  \<comment> \<open>Pick any arc A1.\<close>
+  have h\<A>_ne: "\<A> \<noteq> {}" using assms(6) by (by100 force)
+  then obtain A1 where "A1 \<in> \<A>" by (by100 blast)
+  from h2ep[rule_format, OF \<open>A1 \<in> \<A>\<close>]
+  obtain p1 q1 where "p1 \<noteq> q1"
+      "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {p1, q1}" by (by100 blast)
+  \<comment> \<open>By hno\\_leaf, p1 is in some A2 \\<ne> A1.\<close>
+  have "p1 \<in> top1_arc_endpoints_on A1 (subspace_topology T TT A1)"
+    using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+  from hno_leaf[rule_format, OF \<open>A1 \<in> \<A>\<close> this]
+  obtain A2 where "A2 \<in> \<A>" "A2 \<noteq> A1" "p1 \<in> A2" by (by100 blast)
+  \<comment> \<open>p1 \\<in> A1 \\<inter> A2 \\<subseteq> endpoints(A1) \\<inter> endpoints(A2). So p1 is an endpoint of A2.\<close>
+  have "p1 \<in> A1 \<inter> A2"
+  proof -
+    have "p1 \<in> A1"
+      using \<open>p1 \<in> top1_arc_endpoints_on A1 _\<close> unfolding top1_arc_endpoints_on_def by (by100 blast)
+    thus ?thesis using \<open>p1 \<in> A2\<close> by (by100 blast)
+  qed
+  from assms(4)[rule_format, OF \<open>A1 \<in> \<A>\<close> \<open>A2 \<in> \<A>\<close> \<open>A2 \<noteq> A1\<close>[symmetric]]
+  have h12: "A1 \<inter> A2 \<subseteq> top1_arc_endpoints_on A2 (subspace_topology T TT A2)" by (by100 blast)
+  hence "p1 \<in> top1_arc_endpoints_on A2 (subspace_topology T TT A2)"
+    using \<open>p1 \<in> A1 \<inter> A2\<close> by (by100 blast)
+  \<comment> \<open>A2 has endpoints {p1, r2} for some r2 \\<ne> p1.\<close>
+  from h2ep[rule_format, OF \<open>A2 \<in> \<A>\<close>]
+  obtain a2 b2 where "a2 \<noteq> b2"
+      "top1_arc_endpoints_on A2 (subspace_topology T TT A2) = {a2, b2}" by (by100 blast)
+  have "p1 \<in> {a2, b2}" using \<open>p1 \<in> top1_arc_endpoints_on A2 _\<close>
+      \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by simp
+  \<comment> \<open>The other endpoint of A2 (call it r2).\<close>
+  define r2 where "r2 = (if p1 = a2 then b2 else a2)"
+  have "r2 \<noteq> p1" using \<open>a2 \<noteq> b2\<close> \<open>p1 \<in> {a2, b2}\<close> unfolding r2_def by (by100 auto)
+  have "r2 \<in> top1_arc_endpoints_on A2 (subspace_topology T TT A2)"
+    using \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> unfolding r2_def by (by100 auto)
+  \<comment> \<open>By hno\\_leaf, r2 is in some A3 \\<ne> A2.\<close>
+  from hno_leaf[rule_format, OF \<open>A2 \<in> \<A>\<close> \<open>r2 \<in> top1_arc_endpoints_on A2 _\<close>]
+  obtain A3 where "A3 \<in> \<A>" "A3 \<noteq> A2" "r2 \<in> A3" by (by100 blast)
+  \<comment> \<open>Case 1: A3 = A1. Then r2 \\<in> A1 \\<inter> A2 \\<subseteq> endpoints(A1). Since r2 \\<ne> p1 and
+     endpoints(A1) = {p1, q1}, we get r2 = q1. So A1 and A2 share both p1 and q1 = r2.\<close>
+  \<comment> \<open>Case 2: A3 \\<ne> A1. Continue the walk: A3 has another endpoint s3, shared with A4, etc.
+     By pigeonhole on finite \\<A>, the walk revisits an arc. When it does, the shared
+     vertices force two arcs to share two endpoints (by the intersection \\<subseteq> endpoints property).\<close>
+  show False
+  proof (cases "A3 = A1")
+    case True
+    \<comment> \<open>A3 = A1. So r2 \\<in> A1. Since r2 \\<in> A1 \\<inter> A2 \\<subseteq> endpoints(A1) = {p1,q1},
+       and r2 \\<ne> p1, we get r2 = q1. So A1 and A2 share both endpoints.\<close>
+    have "r2 \<in> A1" using True \<open>r2 \<in> A3\<close> by simp
+    have "r2 \<in> A2" using \<open>r2 \<in> top1_arc_endpoints_on A2 _\<close>
+        unfolding top1_arc_endpoints_on_def by (by100 blast)
+    have "r2 \<in> A1 \<inter> A2" using \<open>r2 \<in> A1\<close> \<open>r2 \<in> A2\<close> by (by100 blast)
+    have h12_ep: "A1 \<inter> A2 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology T TT A1)"
+      using assms(4)[rule_format, OF \<open>A1 \<in> \<A>\<close> \<open>A2 \<in> \<A>\<close> \<open>A2 \<noteq> A1\<close>[symmetric]] by (by100 blast)
+    have "r2 \<in> {p1, q1}"
+      using h12_ep \<open>r2 \<in> A1 \<inter> A2\<close> \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+    hence "r2 = q1" using \<open>r2 \<noteq> p1\<close> by (by100 blast)
+    \<comment> \<open>Both endpoints of A2 are in A1: endpoints(A2) = {p1, q1}.\<close>
+    have hA2_ep_eq: "top1_arc_endpoints_on A2 (subspace_topology T TT A2) = {p1, q1}"
+    proof -
+      have "p1 \<in> {a2, b2}" using \<open>p1 \<in> {a2, b2}\<close> .
+      have "q1 \<in> {a2, b2}"
+      proof -
+        have "r2 \<in> {a2, b2}" using \<open>r2 \<in> top1_arc_endpoints_on A2 _\<close>
+            \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by simp
+        thus ?thesis using \<open>r2 = q1\<close> by simp
+      qed
+      have "{a2, b2} = {p1, q1}"
+        using \<open>p1 \<in> {a2, b2}\<close> \<open>q1 \<in> {a2, b2}\<close> \<open>p1 \<noteq> q1\<close> \<open>a2 \<noteq> b2\<close> by (by100 blast)
+      thus ?thesis using \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by simp
+    qed
+    \<comment> \<open>A1 \\<inter> A2 = {p1, q1}.\<close>
+    have hA12: "A1 \<inter> A2 = {p1, q1}"
+    proof -
+      have "A1 \<inter> A2 \<subseteq> {p1, q1}" using h12_ep \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+      moreover have "p1 \<in> A1 \<inter> A2" using \<open>p1 \<in> A1 \<inter> A2\<close> .
+      moreover have "q1 \<in> A1 \<inter> A2"
+      proof -
+        have "q1 \<in> A1" using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close>
+            unfolding top1_arc_endpoints_on_def by (by100 blast)
+        have "q1 \<in> A2" using \<open>r2 = q1\<close> \<open>r2 \<in> A2\<close> by simp
+        thus ?thesis using \<open>q1 \<in> A1\<close> by (by100 blast)
+      qed
+      ultimately show ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>arcs\\_form\\_simple\\_closed\\_curve gives SCC.\<close>
+    have hA1_arc: "top1_is_arc_on A1 (subspace_topology T TT A1)" using assms(2) \<open>A1 \<in> \<A>\<close> by (by100 blast)
+    have hA2_arc: "top1_is_arc_on A2 (subspace_topology T TT A2)" using assms(2) \<open>A2 \<in> \<A>\<close> by (by100 blast)
+    have "A1 \<subseteq> T" using assms(2) \<open>A1 \<in> \<A>\<close> by (by100 blast)
+    have "A2 \<subseteq> T" using assms(2) \<open>A2 \<in> \<A>\<close> by (by100 blast)
+    have hA1_ep: "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {p1, q1}"
+      using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> .
+    from arcs_form_simple_closed_curve[OF hstrict hhaus hA1_arc \<open>A1 \<subseteq> T\<close>
+        hA2_arc \<open>A2 \<subseteq> T\<close> hA12 \<open>p1 \<noteq> q1\<close> hA1_ep hA2_ep_eq]
+    have hSCC: "top1_simple_closed_curve_on T TT (A1 \<union> A2)" .
+    \<comment> \<open>SCC in T contradicts T simply connected.
+       If T = A1 Un A2: T homeomorphic to S1, pi1 = Z != 0. But T SC. Contradiction.
+       If T strictly contains A1 Un A2: use graph pi1 free weak on A1 Un A2 as subgraph.\<close>
+    \<comment> \<open>From the SCC: there exists h: S1 -> T continuous, injective, h ` S1 = A1 Un A2.\<close>
+    from hSCC[unfolded top1_simple_closed_curve_on_def]
+    obtain h_s where hhs: "top1_continuous_map_on top1_S1 top1_S1_topology T TT h_s"
+        "inj_on h_s top1_S1" "h_s ` top1_S1 = A1 \<union> A2"
+      by (by100 blast)
+    \<comment> \<open>A1 \\<union> A2 = T or A1 \\<union> A2 \\<subsetneq> T. Handle both cases.\<close>
+    have "A1 \<union> A2 \<subseteq> T" using \<open>A1 \<subseteq> T\<close> \<open>A2 \<subseteq> T\<close> by (by100 blast)
+    show False
+    proof (cases "A1 \<union> A2 = T")
+      case True
+      \<comment> \<open>T = A1 \\<union> A2. h\\_s: S1 \\<rightarrow> T is continuous, injective, surjective.
+         S1 compact + T Hausdorff \\<Rightarrow> h\\_s homeomorphism.
+         T SC + homeomorphism \\<Rightarrow> S1 SC. But S1 not SC. Contradiction.\<close>
+      have hhs_surj: "h_s ` top1_S1 = T" using hhs(3) True by simp
+      \<comment> \<open>S1 compact, T Hausdorff: continuous bijection is homeomorphism.\<close>
+      have hS1_compact: "top1_compact_on top1_S1 top1_S1_topology"
+        by (metis S1_compact)
+      \<comment> \<open>h\\_s maps S1 homeomorphically onto T.\<close>
+      \<comment> \<open>If T is SC, so is S1 (homeomorphic). But S1 is NOT SC.\<close>
+      have hS1_sc: "top1_simply_connected_on top1_S1 top1_S1_topology"
+      proof -
+        \<comment> \<open>Transfer SC from T to S1 via the homeomorphism.\<close>
+        show ?thesis unfolding top1_simply_connected_on_def
+        proof (intro conjI)
+          show "top1_path_connected_on top1_S1 top1_S1_topology"
+            by (metis S1_path_connected)
+        next
+          show "\<forall>x\<in>top1_S1. \<forall>f. top1_is_loop_on top1_S1 top1_S1_topology x f \<longrightarrow>
+              top1_path_homotopic_on top1_S1 top1_S1_topology x x f (top1_constant_path x)"
+          proof (intro ballI allI impI)
+            fix x0 f assume hx0: "x0 \<in> top1_S1" and hf: "top1_is_loop_on top1_S1 top1_S1_topology x0 f"
+            \<comment> \<open>h\\_s \\<circ> f is a loop in T at h\\_s(x0). T is SC \\<Rightarrow> h\\_s \\<circ> f nullhomotopic in T.\<close>
+            have hhsf_loop: "top1_is_loop_on T TT (h_s x0) (h_s \<circ> f)"
+              by (rule top1_continuous_map_loop_early[OF hhs(1) hf])
+            have "h_s x0 \<in> T" using hhs(1) hx0 unfolding top1_continuous_map_on_def by (by100 blast)
+            have hhsf_null: "top1_path_homotopic_on T TT (h_s x0) (h_s x0) (h_s \<circ> f) (top1_constant_path (h_s x0))"
+              using hsc[unfolded top1_simply_connected_on_def] hhsf_loop \<open>h_s x0 \<in> T\<close> by (by100 blast)
+            \<comment> \<open>Transfer homotopy back via h\\_s\\<inverse>: f nullhomotopic in S1.\<close>
+            \<comment> \<open>h\\_s is a homeomorphism S1 \\<rightarrow> T (compact to Hausdorff, continuous bijection).
+               Its inverse h\\_s\\<inverse> is continuous. Apply continuous\\_preserves\\_path\\_homotopic
+               with h\\_s\\<inverse> to transfer the nullhomotopy from T back to S1.\<close>
+            \<comment> \<open>h\\_s\\<inverse>: T \\<rightarrow> S1 continuous.\<close>
+            \<comment> \<open>h\\_s: S1 \\<rightarrow> T is a homeomorphism (Theorem 26.6: compact to Hausdorff bijection).\<close>
+            have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+              using S1_compact unfolding top1_compact_on_def by (by100 blast)
+            have hbij: "bij_betw h_s top1_S1 T"
+              unfolding bij_betw_def using hhs(2) hhs_surj by (by100 blast)
+            from Theorem_26_6[OF hS1_top hTT hS1_compact hhaus hhs(1) hbij]
+            have hhomeo: "top1_homeomorphism_on top1_S1 top1_S1_topology T TT h_s" .
+            \<comment> \<open>Extract inverse from homeomorphism.\<close>
+            from hhomeo[unfolded top1_homeomorphism_on_def]
+            obtain h_inv where h_inv_props:
+                "top1_continuous_map_on T TT top1_S1 top1_S1_topology h_inv"
+                "\<forall>x\<in>top1_S1. h_inv (h_s x) = x"
+              by (metis bij_betw_def f_inv_into_f inv_into_f_f)
+            have h_inv_cont: "top1_continuous_map_on T TT top1_S1 top1_S1_topology h_inv"
+              using h_inv_props(1) .
+            \<comment> \<open>Apply continuous\\_preserves\\_path\\_homotopic with h\\_inv.\<close>
+            from continuous_preserves_path_homotopic[OF hTT hS1_top h_inv_cont hhsf_null]
+            have htr: "top1_path_homotopic_on top1_S1 top1_S1_topology
+                (h_inv (h_s x0)) (h_inv (h_s x0))
+                (h_inv \<circ> (h_s \<circ> f)) (h_inv \<circ> top1_constant_path (h_s x0))" .
+            have heq1: "h_inv (h_s x0) = x0" using h_inv_props(2) hx0 by (by100 blast)
+            have heq3: "h_inv \<circ> top1_constant_path (h_s x0) = top1_constant_path x0"
+            proof (rule ext)
+              fix t show "(h_inv \<circ> top1_constant_path (h_s x0)) t = top1_constant_path x0 t"
+                unfolding top1_constant_path_def using heq1 by simp
+            qed
+            \<comment> \<open>h\\_inv \\<circ> h\\_s \\<circ> f agrees with f on I\\_set.\<close>
+            have heq2_I: "\<forall>t\<in>I_set. (h_inv \<circ> (h_s \<circ> f)) t = f t"
+            proof (intro ballI)
+              fix t assume "t \<in> I_set"
+              have "f t \<in> top1_S1" using hf \<open>t \<in> I_set\<close> unfolding top1_is_loop_on_def top1_is_path_on_def
+                  top1_continuous_map_on_def by (by5000 blast)
+              have "h_inv (h_s (f t)) = f t" using h_inv_props(2) \<open>f t \<in> top1_S1\<close> by (by100 blast)
+              thus "(h_inv \<circ> (h_s \<circ> f)) t = f t" by simp
+            qed
+            \<comment> \<open>From htr + heq1 + heq3: h\\_inv \\<circ> h\\_s \\<circ> f \\<sim> const\\_x0.\<close>
+            have htr2: "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0
+                (h_inv \<circ> (h_s \<circ> f)) (top1_constant_path x0)"
+              using htr heq1 heq3 by simp
+            \<comment> \<open>f agrees with h\\_inv \\<circ> h\\_s \\<circ> f on I\\_set \\<Rightarrow> f \\<sim> h\\_inv \\<circ> h\\_s \\<circ> f (by loop\\_agree\\_on\\_I).\<close>
+            from conjunct2[OF loop_agree_on_I[OF hf heq2_I]]
+            have "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0 f (h_inv \<circ> (h_s \<circ> f))" .
+            \<comment> \<open>Transitivity: f \\<sim> h\\_inv \\<circ> h\\_s \\<circ> f \\<sim> const.\<close>
+            from Lemma_51_1_path_homotopic_trans[OF hS1_top this htr2]
+            show "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0 f (top1_constant_path x0)" .
+          qed
+        qed
+      qed
+      \<comment> \<open>But S1 is NOT simply connected.\<close>
+      from top1_S1_fundamental_group_nontrivial
+      obtain f0 g0 where hfg: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f0"
+          "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g0"
+          "\<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
+        by (by100 blast)
+      \<comment> \<open>From hS1\\_sc: f0 \\<sim> const and g0 \\<sim> const \\<Rightarrow> f0 \\<sim> g0. Contradiction.\<close>
+      have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 (top1_constant_path (1, 0))"
+      proof -
+        have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+        from hS1_sc[unfolded top1_simply_connected_on_def]
+        have h_all_null: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f \<longrightarrow>
+            top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f (top1_constant_path (1, 0))"
+          using h10_S1 by (by100 blast)
+        show ?thesis using h_all_null hfg(1) by (by100 blast)
+      qed
+      moreover have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) g0 (top1_constant_path (1, 0))"
+      proof -
+        have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+        from hS1_sc[unfolded top1_simply_connected_on_def]
+        have "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f \<longrightarrow>
+            top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f (top1_constant_path (1, 0))"
+          using h10_S1 by (by100 blast)
+        thus ?thesis using hfg(2) by (by100 blast)
+      qed
+      \<comment> \<open>f0 \\<sim> const \\<sim> g0 \\<Rightarrow> f0 \\<sim> g0.\<close>
+      ultimately have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
+      proof -
+        assume hf0: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 (top1_constant_path (1, 0))"
+        assume hg0: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) g0 (top1_constant_path (1, 0))"
+        from Lemma_51_1_path_homotopic_sym[OF hg0]
+        have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) (top1_constant_path (1, 0)) g0" .
+        have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+          using S1_compact unfolding top1_compact_on_def by (by100 blast)
+        from Lemma_51_1_path_homotopic_trans[OF hS1_top hf0 \<open>top1_path_homotopic_on _ _ _ _ (top1_constant_path _) g0\<close>]
+        show ?thesis .
+      qed
+      with hfg(3) show False by (by100 blast)
+    next
+      case False
+      \<comment> \<open>A1 Un A2 is a proper subspace of T, homeomorphic to S1.
+         Show A1 Un A2 is a retract of T. Then by Lemma 55.1,
+         pi1(A1 Un A2) injects into pi1(T). pi1(A1 Un A2) = Z != 0.
+         pi1(T) = 0 (SC). Contradiction.\<close>
+      have hC_sub: "A1 \<union> A2 \<subseteq> T" using \<open>A1 \<subseteq> T\<close> \<open>A2 \<subseteq> T\<close> by (by100 blast)
+      have hC_top: "is_topology_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
+        using subspace_topology_is_topology_on[OF hTT hC_sub] .
+      \<comment> \<open>A1 Un A2 is a retract of T: the other arcs attach at p1,q1 only
+         (from graph intersection property). Retract each branch to its attachment point.\<close>
+      have hretract: "top1_retract_of_on T TT (A1 \<union> A2)"
+      proof -
+        \<comment> \<open>Define retraction: r(x) = x for x \\<in> A1\\<union>A2.
+           For x \\<in> C with C \\<in> A\\\\{A1,A2}:
+           If C has exactly 1 endpoint in A1\\<union>A2 (say v): r maps all of C to v.
+           If C has 2 endpoints in {p1,q1}: r maps C to A1 via a homeomorphism.
+           This is continuous in the coherent topology (piecewise continuous on arcs).\<close>
+        \<comment> \<open>Other arcs only meet A1\\<union>A2 at \\<subseteq> {p1,q1}.\<close>
+        have hother_inter: "\<forall>C\<in>\<A>. C \<noteq> A1 \<longrightarrow> C \<noteq> A2 \<longrightarrow>
+            C \<inter> (A1 \<union> A2) \<subseteq> {p1, q1}"
+        proof (intro ballI impI)
+          fix C assume "C \<in> \<A>" "C \<noteq> A1" "C \<noteq> A2"
+          have "C \<inter> A1 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology T TT A1)"
+            using assms(4)[rule_format, OF \<open>C \<in> \<A>\<close> \<open>A1 \<in> \<A>\<close> \<open>C \<noteq> A1\<close>] by (by100 blast)
+          hence "C \<inter> A1 \<subseteq> {p1, q1}"
+            using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+          have "C \<inter> A2 \<subseteq> top1_arc_endpoints_on A2 (subspace_topology T TT A2)"
+            using assms(4)[rule_format, OF \<open>C \<in> \<A>\<close> \<open>A2 \<in> \<A>\<close> \<open>C \<noteq> A2\<close>] by (by100 blast)
+          hence "C \<inter> A2 \<subseteq> {p1, q1}"
+            using hA2_ep_eq by (by100 blast)
+          have "C \<inter> (A1 \<union> A2) = (C \<inter> A1) \<union> (C \<inter> A2)" by (by100 blast)
+          thus "C \<inter> (A1 \<union> A2) \<subseteq> {p1, q1}"
+            using \<open>C \<inter> A1 \<subseteq> {p1, q1}\<close> \<open>C \<inter> A2 \<subseteq> {p1, q1}\<close> by (by100 blast)
+        qed
+        \<comment> \<open>The retraction T \\<rightarrow> A1 Un A2 exists: each external arc meets A1 Un A2 only at
+           {p1,q1} (hother\\_inter). The retraction maps each external arc to its attachment
+           point(s) via constant maps (single attachment) or homeomorphisms (both endpoints).
+           Continuity follows from coherent topology (piecewise continuous on arcs).\<close>
+        show ?thesis sorry
+      qed
+      \<comment> \<open>Extract SCC homeomorphism S1 \\<rightarrow> A1 Un A2.\<close>
+      from hSCC[unfolded top1_simple_closed_curve_on_def]
+      obtain h_s2 where hhs2: "top1_continuous_map_on top1_S1 top1_S1_topology T TT h_s2"
+          "inj_on h_s2 top1_S1" "h_s2 ` top1_S1 = A1 \<union> A2" by (by100 blast)
+      have hrange: "\<forall>s\<in>top1_S1. h_s2 s \<in> A1 \<union> A2"
+      proof (intro ballI)
+        fix s assume "s \<in> top1_S1"
+        have "h_s2 s \<in> h_s2 ` top1_S1" using \<open>s \<in> top1_S1\<close> by (by100 blast)
+        thus "h_s2 s \<in> A1 \<union> A2" using hhs2(3) by (by100 blast)
+      qed
+      have hhs2_sub: "top1_continuous_map_on top1_S1 top1_S1_topology
+          (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) h_s2"
+        by (rule continuous_map_restrict_codomain[OF hhs2(1) hrange hC_sub])
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        using S1_compact unfolding top1_compact_on_def by (by100 blast)
+      have hC_haus: "is_hausdorff_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
+        using hhaus hC_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+      have hbij2: "bij_betw h_s2 top1_S1 (A1 \<union> A2)"
+        unfolding bij_betw_def using hhs2(2) hhs2(3) by (by100 blast)
+      from Theorem_26_6[OF hS1_top hC_top S1_compact hC_haus hhs2_sub hbij2]
+      have hhomeo2: "top1_homeomorphism_on top1_S1 top1_S1_topology
+          (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) h_s2" .
+      \<comment> \<open>A1 Un A2 is PC (homeomorphic to S1 which is PC).\<close>
+      have hC_pc: "top1_path_connected_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
+      proof -
+        have "top1_path_connected_on top1_S1 top1_S1_topology" by (metis S1_path_connected)
+        have hself: "subspace_topology (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) (A1 \<union> A2)
+            = subspace_topology T TT (A1 \<union> A2)"
+          using subspace_topology_trans[of "A1 \<union> A2" "A1 \<union> A2" T TT] by simp
+        from top1_path_connected_continuous_image[OF \<open>top1_path_connected_on top1_S1 _\<close>
+            hhs2_sub hrange hhs2(3)]
+        have "top1_path_connected_on (A1 \<union> A2) (subspace_topology (A1 \<union> A2)
+            (subspace_topology T TT (A1 \<union> A2)) (A1 \<union> A2))"
+          using hC_top by (by100 blast)
+        thus ?thesis using hself by simp
+      qed
+      \<comment> \<open>A1 Un A2 is SC (retract of SC tree + Lemma 55.1).\<close>
+      have hC_sc: "top1_simply_connected_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
+      proof -
+        show ?thesis unfolding top1_simply_connected_on_def
+        proof (intro conjI)
+          \<comment> \<open>A1 Un A2 is path-connected (it's an SCC = connected).\<close>
+          show "top1_path_connected_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
+            using hC_pc .
+        next
+          \<comment> \<open>All loops in A1 Un A2 are null-homotopic (Lemma 55.1 + T SC).\<close>
+          show "\<forall>x\<in>A1 \<union> A2. \<forall>f. top1_is_loop_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x f \<longrightarrow>
+              top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x x f
+                  (top1_constant_path x)"
+          proof (intro ballI allI impI)
+            fix x0 f assume hx0: "x0 \<in> A1 \<union> A2"
+                and hf: "top1_is_loop_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x0 f"
+            \<comment> \<open>f loop in A1 Un A2 \\<subseteq> T, hence loop in T. T SC \\<Rightarrow> null-homotopic in T.
+               By Lemma 55.1 (retract) \\<Rightarrow> null-homotopic in A1 Un A2.\<close>
+            have hf_T: "top1_is_loop_on T TT x0 f"
+            proof -
+              have hf_path: "top1_is_path_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x0 x0 f"
+                using hf unfolding top1_is_loop_on_def .
+              have hf_cont: "top1_continuous_map_on I_set I_top (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) f"
+                using hf_path unfolding top1_is_path_on_def by (by100 blast)
+              have hincl: "top1_continuous_map_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) T TT id"
+                unfolding top1_continuous_map_on_def
+              proof (intro conjI ballI)
+                fix x assume "x \<in> A1 \<union> A2"
+                have "x \<in> T" using \<open>x \<in> A1 \<union> A2\<close> hC_sub by (by100 blast)
+                thus "id x \<in> T" by simp
+              next
+                fix V assume "V \<in> TT"
+                have "{x \<in> A1 \<union> A2. id x \<in> V} = (A1 \<union> A2) \<inter> V" by (by100 auto)
+                also have "... \<in> subspace_topology T TT (A1 \<union> A2)"
+                  unfolding subspace_topology_def using \<open>V \<in> TT\<close> by (by100 blast)
+                finally show "{x \<in> A1 \<union> A2. id x \<in> V} \<in> subspace_topology T TT (A1 \<union> A2)" .
+              qed
+              from top1_continuous_map_on_comp[OF hf_cont hincl]
+              have "top1_continuous_map_on I_set I_top T TT (id \<circ> f)" .
+              hence "top1_continuous_map_on I_set I_top T TT f" by simp
+              moreover have "f 0 = x0" using hf_path unfolding top1_is_path_on_def by (by100 blast)
+              moreover have "f 1 = x0" using hf_path unfolding top1_is_path_on_def by (by100 blast)
+              ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
+            qed
+            have hf_null_T: "top1_path_homotopic_on T TT x0 x0 f (top1_constant_path x0)"
+              using hsc hf_T hx0 hC_sub unfolding top1_simply_connected_on_def by (by100 blast)
+            have hconst: "top1_is_loop_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x0
+                (top1_constant_path x0)"
+              by (rule top1_constant_path_is_loop[OF hC_top hx0])
+            from Lemma_55_1_retract_injective[OF hretract hx0 hf hconst hf_null_T]
+            show "top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x0 x0 f
+                (top1_constant_path x0)" .
+          qed
+        qed
+      qed
+      \<comment> \<open>But A1 Un A2 homeomorphic to S1 \\<Rightarrow> not SC. Reuse hhomeo2 from above.\<close>
+      have hS1_sc: "top1_simply_connected_on top1_S1 top1_S1_topology"
+      proof -
+        show ?thesis unfolding top1_simply_connected_on_def
+        proof (intro conjI)
+          show "top1_path_connected_on top1_S1 top1_S1_topology" by (metis S1_path_connected)
+        next
+          show "\<forall>x\<in>top1_S1. \<forall>f. top1_is_loop_on top1_S1 top1_S1_topology x f \<longrightarrow>
+              top1_path_homotopic_on top1_S1 top1_S1_topology x x f (top1_constant_path x)"
+          proof (intro ballI allI impI)
+            fix x0 f assume hx0: "x0 \<in> top1_S1" and hf: "top1_is_loop_on top1_S1 top1_S1_topology x0 f"
+            have hhsf_loop: "top1_is_loop_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) (h_s2 x0) (h_s2 \<circ> f)"
+              by (rule top1_continuous_map_loop_early[OF hhs2_sub hf])
+            have "h_s2 x0 \<in> A1 \<union> A2" using hhs2_sub hx0 unfolding top1_continuous_map_on_def by (by100 blast)
+            have hhsf_null: "top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))
+                (h_s2 x0) (h_s2 x0) (h_s2 \<circ> f) (top1_constant_path (h_s2 x0))"
+              using hC_sc[unfolded top1_simply_connected_on_def] hhsf_loop \<open>h_s2 x0 \<in> A1 \<union> A2\<close> by (by100 blast)
+            \<comment> \<open>Transfer back via inverse, same as T=SCC case.\<close>
+            obtain h_inv2 where h_inv2_props:
+                "top1_continuous_map_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))
+                    top1_S1 top1_S1_topology h_inv2"
+                "\<forall>x\<in>top1_S1. h_inv2 (h_s2 x) = x"
+              using hhomeo2 unfolding top1_homeomorphism_on_def
+              by (metis bij_betw_def f_inv_into_f inv_into_f_f)
+            from continuous_preserves_path_homotopic[OF hC_top hS1_top h_inv2_props(1) hhsf_null]
+            have htr: "top1_path_homotopic_on top1_S1 top1_S1_topology
+                (h_inv2 (h_s2 x0)) (h_inv2 (h_s2 x0))
+                (h_inv2 \<circ> (h_s2 \<circ> f)) (h_inv2 \<circ> top1_constant_path (h_s2 x0))" .
+            have heq1: "h_inv2 (h_s2 x0) = x0" using h_inv2_props(2) hx0 by (by100 blast)
+            have heq2_I: "\<forall>t\<in>I_set. (h_inv2 \<circ> (h_s2 \<circ> f)) t = f t"
+            proof (intro ballI)
+              fix t assume "t \<in> I_set"
+              have "f t \<in> top1_S1" using hf \<open>t \<in> I_set\<close> unfolding top1_is_loop_on_def top1_is_path_on_def
+                  top1_continuous_map_on_def by (by5000 blast)
+              have "h_inv2 (h_s2 (f t)) = f t" using h_inv2_props(2) \<open>f t \<in> top1_S1\<close> by (by100 blast)
+              thus "(h_inv2 \<circ> (h_s2 \<circ> f)) t = f t" by simp
+            qed
+            have heq3: "h_inv2 \<circ> top1_constant_path (h_s2 x0) = top1_constant_path x0"
+            proof (rule ext)
+              fix t show "(h_inv2 \<circ> top1_constant_path (h_s2 x0)) t = top1_constant_path x0 t"
+                unfolding top1_constant_path_def using heq1 by simp
+            qed
+            have htr2: "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0
+                (h_inv2 \<circ> (h_s2 \<circ> f)) (top1_constant_path x0)"
+              using htr heq1 heq3 by simp
+            from conjunct2[OF loop_agree_on_I[OF hf heq2_I]]
+            have "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0 f (h_inv2 \<circ> (h_s2 \<circ> f))" .
+            from Lemma_51_1_path_homotopic_trans[OF hS1_top this htr2]
+            show "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0 f (top1_constant_path x0)" .
+          qed
+        qed
+      qed
+      from top1_S1_fundamental_group_nontrivial
+      obtain f0 g0 where hfg: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f0"
+          "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g0"
+          "\<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
+        by (by100 blast)
+      have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+      from hS1_sc[unfolded top1_simply_connected_on_def]
+      have h_all_null: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f \<longrightarrow>
+          top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f (top1_constant_path (1, 0))"
+        using h10_S1 by (by100 blast)
+      have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 (top1_constant_path (1, 0))"
+        using h_all_null hfg(1) by (by100 blast)
+      moreover have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) g0 (top1_constant_path (1, 0))"
+        using h_all_null hfg(2) by (by100 blast)
+      moreover from Lemma_51_1_path_homotopic_sym[OF this]
+      have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) (top1_constant_path (1, 0)) g0" .
+      ultimately have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
+        using Lemma_51_1_path_homotopic_trans[OF hS1_top] by (by100 blast)
+      with hfg(3) show False by (by100 blast)
+    qed
+  next
+    case False
+    \<comment> \<open>A3 \\<ne> A1, A3 \\<ne> A2 (from context). Continue the walk from A3.
+       The other endpoint s3 of A3 is shared with some A4 \\<ne> A3.
+       If A4 = A2: then A2 and A3 share both endpoints \\<Rightarrow> SCC \\<Rightarrow> contradiction.
+       If A4 = A1: then A1 and A3 share an endpoint s3. Since A3 already shares r2 with A2
+         and r2 \\<in> A1 (would need to check), we might get two endpoints shared.
+       If A4 \\<notin> {A1,A2,A3}: continue walking.
+       By pigeonhole (card \\<A> finite), the walk must revisit an arc.
+       When arc Ai is revisited, the two entry vertices create an SCC.
+       For now, this argument requires formalizing the walk and pigeonhole.\<close>
+    \<comment> \<open>Under hno\\_leaf with finite \\<A> and 3 distinct arcs A1,A2,A3:
+       The walk continues from A3. Each step extends by a new arc or finds two arcs
+       sharing both endpoints (\\<Rightarrow> SCC \\<Rightarrow> contradiction).
+       By finiteness of \\<A>, the walk must terminate with an SCC within card(\\<A>) steps.
+       The SCC argument (T=SCC or SCC\\<subsetneq>T) then gives the contradiction.\<close>
+    show False sorry
+  qed
+qed
 
 
 \<comment> \<open>In a tree with \\<ge> 2 arcs, a leaf vertex's other endpoint is shared with another arc.
@@ -1299,9 +1920,40 @@ lemma finite_tree_remove_leaf_is_tree:
       and "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
       and "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
       and "card \<A> \<ge> 2" and "finite \<A>"
-  shows "top1_is_tree_on (\<Union>(\<A> - {A0})) (subspace_topology T TT (\<Union>(\<A> - {A0})))"
+      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+  shows "top1_is_tree_on (\<Union>(\<A> - {A0})) (subspace_topology T TT (\<Union>(\<A> - {A0})))
+       \<and> (\<forall>C. C \<subseteq> \<Union>(\<A> - {A0}) \<longrightarrow>
+           (closedin_on (\<Union>(\<A> - {A0})) (subspace_topology T TT (\<Union>(\<A> - {A0}))) C \<longleftrightarrow>
+            (\<forall>A\<in>\<A> - {A0}. closedin_on A (subspace_topology (\<Union>(\<A> - {A0})) (subspace_topology T TT (\<Union>(\<A> - {A0}))) A) (A \<inter> C))))"
 proof -
   let ?T' = "\<Union>(\<A> - {A0})" and ?TT' = "subspace_topology T TT (\<Union>(\<A> - {A0}))"
+  \<comment> \<open>Coherent closedness for T': derived from assms(10) by restricting to \\<A>-{A0}.\<close>
+  have hgraph_T: "top1_is_graph_on T TT"
+    using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+  have h\<A>_arcs_all: "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+    using assms(2) by (by100 blast)
+  have hT'_sub: "?T' \<subseteq> T" using assms(2,3) by (by100 blast)
+  have h\<B>_coh_raw: "\<forall>C. C \<subseteq> ?T' \<longrightarrow>
+      (closedin_on ?T' (subspace_topology T TT ?T') C \<longleftrightarrow>
+       (\<forall>A\<in>\<A> - {A0}. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+    using subgraph_coherent_topology[OF hgraph_T h\<A>_arcs_all assms(3) assms(4) assms(10),
+      of "\<A> - {A0}" ?T'] by (by5000 blast)
+  have h\<B>_coh: "\<forall>C. C \<subseteq> ?T' \<longrightarrow>
+      (closedin_on ?T' ?TT' C \<longleftrightarrow>
+       (\<forall>A\<in>\<A> - {A0}. closedin_on A (subspace_topology ?T' ?TT' A) (A \<inter> C)))"
+  proof (intro allI impI)
+    fix C assume hC: "C \<subseteq> ?T'"
+    have "\<forall>A\<in>\<A> - {A0}. subspace_topology ?T' ?TT' A = subspace_topology T TT A"
+    proof (intro ballI)
+      fix A assume "A \<in> \<A> - {A0}"
+      hence "A \<subseteq> ?T'" by (by100 blast)
+      thus "subspace_topology ?T' ?TT' A = subspace_topology T TT A"
+        using subspace_topology_trans[of A ?T' T TT] by (by100 blast)
+    qed
+    thus "closedin_on ?T' ?TT' C \<longleftrightarrow>
+       (\<forall>A\<in>\<A> - {A0}. closedin_on A (subspace_topology ?T' ?TT' A) (A \<inter> C))"
+      using h\<B>_coh_raw[rule_format, OF hC] by simp
+  qed
   \<comment> \<open>Tree = graph + connected + simply\\_connected.\<close>
   have hT'_graph: "top1_is_graph_on ?T' ?TT'"
   proof -
@@ -1320,9 +1972,49 @@ proof -
     have hT'_haus: "is_hausdorff_on ?T' ?TT'"
       using hhaus hT'_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
     \<comment> \<open>Arc family \\<A>-{A0} covers T' and satisfies all graph properties in subspace.\<close>
+    have hgraph: "top1_is_graph_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+    \<comment> \<open>Each B in \\<A>-{A0} is an arc in subspace of T', using subspace\\_topology\\_trans.\<close>
+    have h\<B>_arcs: "\<forall>B\<in>\<A> - {A0}. B \<subseteq> ?T' \<and> top1_is_arc_on B (subspace_topology ?T' ?TT' B)"
+    proof (intro ballI conjI)
+      fix B assume hB: "B \<in> \<A> - {A0}"
+      show "B \<subseteq> ?T'" using hB by (by100 blast)
+      have "B \<subseteq> ?T'" using hB by (by100 blast)
+      have "top1_is_arc_on B (subspace_topology T TT B)" using assms(2) hB by (by100 blast)
+      moreover have "subspace_topology ?T' ?TT' B = subspace_topology T TT B"
+        using subspace_topology_trans[OF \<open>B \<subseteq> ?T'\<close>] by simp
+      ultimately show "top1_is_arc_on B (subspace_topology ?T' ?TT' B)" by simp
+    qed
+    have h\<B>_cover: "\<Union>(\<A> - {A0}) = ?T'" by simp
+    \<comment> \<open>Intersection properties transfer via subspace\\_topology\\_trans.\<close>
+    have h\<B>_inter: "\<forall>A\<in>\<A> - {A0}. \<forall>B\<in>\<A> - {A0}. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?T' ?TT' A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?T' ?TT' B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+    proof (intro ballI impI)
+      fix A B assume hA: "A \<in> \<A> - {A0}" and hB: "B \<in> \<A> - {A0}" and hAB: "A \<noteq> B"
+      have hA': "A \<in> \<A>" and hB': "B \<in> \<A>" using hA hB by (by100 blast)+
+      from assms(4)[rule_format, OF hA' hB' hAB]
+      have hinter: "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" .
+      have "subspace_topology ?T' ?TT' A = subspace_topology T TT A"
+        using subspace_topology_trans[of A ?T' T TT] hA by (by100 blast)
+      moreover have "subspace_topology ?T' ?TT' B = subspace_topology T TT B"
+        using subspace_topology_trans[of B ?T' T TT] hB by (by100 blast)
+      ultimately show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?T' ?TT' A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?T' ?TT' B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+        using hinter by simp
+    qed
     show ?thesis
       unfolding top1_is_graph_on_def
-      using hT'_strict hT'_haus sorry
+      apply (intro conjI)
+        apply (rule hT'_strict)
+       apply (rule hT'_haus)
+      apply (rule exI[of _ "\<A> - {A0}"])
+      using h\<B>_arcs h\<B>_cover h\<B>_inter h\<B>_coh
+      by (by5000 blast)
   qed
   have hT'_conn: "top1_connected_on ?T' ?TT'"
   proof (rule ccontr)
@@ -1345,7 +2037,7 @@ proof -
     obtain U V where hU: "U \<in> ?TT'" and hV: "V \<in> ?TT'"
         and hne_U: "U \<noteq> {}" and hne_V: "V \<noteq> {}"
         and hdisj: "U \<inter> V = {}" and hcov: "U \<union> V = ?T'"
-      unfolding top1_connected_on_def using hTT' by (by100 blast)
+      unfolding top1_connected_on_def using hTT' by (by5000 blast)
     \<comment> \<open>U and V are open in T' = subspace of T. So U = T'\\<inter>U', V = T'\\<inter>V' for some U',V' open in T.\<close>
     from hU obtain U' where "U' \<in> TT" "U = ?T' \<inter> U'" unfolding subspace_topology_def by (by100 blast)
     from hV obtain V' where "V' \<in> TT" "V = ?T' \<inter> V'" unfolding subspace_topology_def by (by100 blast)
@@ -1464,7 +2156,155 @@ proof -
        V \\<subseteq> T \\ A0 and V is open in T' = T \\<inter> subspace. V' open in T.
        V' \\<inter> T \\<ne> {} (contains V), (T \\ V') \\<ne> {} (contains A0).
        V' and U' \\<union> {preimage of A0-stuff} separate T.\<close>
-    show False sorry
+    \<comment> \<open>In coherent topology: each arc B \\<in> \\<A>-{A0} is connected, so B \\<subseteq> U or B \\<subseteq> V.
+       Let C1 = arcs in U, C2 = arcs in V. WLOG w \\<in> U.
+       D2 = V (= \\<Union>C2). D2 closed in T: for each B \\<in> \\<A>,
+       D2 \\<inter> B closed in B. For B \\<ne> A0: D2\\<inter>B = V\\<inter>B closed in B (V closed in T').
+       For B = A0: D2\\<inter>A0 = V\\<inter>A0 \\<subseteq> V\\<inter>{w} = {} (w \\<in> U). {} closed.
+       D2 also open in T (complement D1 = U\\<union>A0 is closed similarly).
+       D2 clopen in T. T connected \\<Rightarrow> D2 = {} or T. D2 \\<ne> T (A0 \\<notin> D2). Contradiction.\<close>
+    \<comment> \<open>w \\<in> U or w \\<in> V. Pick the component not containing w.\<close>
+    have hV_no_A0: "\<exists>W. W \<in> {U, V} \<and> W \<noteq> {} \<and> w \<notin> W"
+    proof (cases "w \<in> U")
+      case True thus ?thesis using hne_V hdisj True by (by100 blast)
+    next
+      case False hence "w \<in> V" using hw_in by (by100 blast)
+      thus ?thesis using hne_U hdisj \<open>w \<in> V\<close> by (by100 blast)
+    qed
+    then obtain W where "W \<in> {U, V}" "W \<noteq> {}" "w \<notin> W" by (by100 blast)
+    \<comment> \<open>W \\<subseteq> T', W \\<inter> A0 = {} (since W \\<inter> A0 \\<subseteq> W \\<inter> T' \\<inter> A0 \\<subseteq> W \\<inter> {w} = {}).\<close>
+    have hW_sub_T': "W \<subseteq> ?T'" using \<open>W \<in> {U, V}\<close> hcov by (by100 blast)
+    have hW_disj_A0: "W \<inter> A0 = {}"
+    proof -
+      have "W \<inter> A0 \<subseteq> W \<inter> ?T' \<inter> A0" using hW_sub_T' by (by100 blast)
+      also have "... \<subseteq> W \<inter> {w}" using hA0_T'_disj by (by100 blast)
+      also have "... = {}" using \<open>w \<notin> W\<close> by (by100 blast)
+      finally show ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>W closed in T via coherent closedness.\<close>
+    have "closedin_on T TT W"
+    proof -
+      \<comment> \<open>W closed in T' (complement of U or V, both open in T').\<close>
+      have hW_closed_T': "closedin_on ?T' ?TT' W"
+      proof -
+        have "?T' - W \<in> ?TT'"
+        proof (cases "W = U")
+          case True hence "?T' - W = V" using hcov hdisj by (by100 blast)
+          thus ?thesis using hV by simp
+        next
+          case False hence "W = V" using \<open>W \<in> {U, V}\<close> by (by100 blast)
+          hence "?T' - W = U" using hcov hdisj by (by100 blast)
+          thus ?thesis using hU by simp
+        qed
+        thus ?thesis unfolding closedin_on_def using hW_sub_T' by (by100 blast)
+      qed
+      \<comment> \<open>T' closed in T (finite union of compact arcs in Hausdorff).\<close>
+      have hT'_closed: "closedin_on T TT ?T'"
+      proof -
+        have hhaus: "is_hausdorff_on T TT"
+          using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have hfin': "finite (\<A> - {A0})" using assms(9) by (by100 simp)
+        have "\<forall>B\<in>\<A> - {A0}. closedin_on T TT B"
+        proof (intro ballI)
+          fix B assume "B \<in> \<A> - {A0}"
+          hence "B \<in> \<A>" by (by100 blast)
+          have "B \<subseteq> T" using assms(2) \<open>B \<in> \<A>\<close> by (by100 blast)
+          have "top1_is_arc_on B (subspace_topology T TT B)" using assms(2) \<open>B \<in> \<A>\<close> by (by100 blast)
+          from arc_compact[OF this]
+          have "top1_compact_on B (subspace_topology T TT B)" .
+          from Theorem_26_3[OF hhaus \<open>B \<subseteq> T\<close> this]
+          show "closedin_on T TT B" .
+        qed
+        from closedin_Union_finite[OF hTT hfin' this]
+        show ?thesis .
+      qed
+      \<comment> \<open>W closed in T: closed in closed \\<Rightarrow> closed in ambient.
+         W closed in T' means T'-W open in T' = T'\\<inter>O for O open in T.
+         T' closed \\<Rightarrow> T\\\\T' open. W = T'\\<inter>(T\\\\O) = T \\ ((T\\\\T')\\<union>O). Complement of open \\<Rightarrow> closed.\<close>
+      \<comment> \<open>Closed in closed = closed in ambient: Theorem 17.3.\<close>
+      from Theorem_17_3[OF hTT hT'_closed hW_closed_T']
+      show "closedin_on T TT W" .
+    qed
+    \<comment> \<open>W open in T: show T-W is closed in T.
+       T-W = (T'-W) \\<union> A0 since W \\<inter> A0 = {} and T = T' \\<union> A0.
+       T'-W closed in T' (it's the other component, complement of W which is open).
+       T' closed in T (finite union of compact arcs). By Thm 17.3, T'-W closed in T.
+       A0 closed in T (arc \\<Rightarrow> compact \\<Rightarrow> closed in Hausdorff). Union of 2 closed = closed.\<close>
+    have "W \<in> TT"
+    proof -
+      \<comment> \<open>T = T' \\<union> A0.\<close>
+      have hT_eq: "T = ?T' \<union> A0" using assms(3,5) by (by100 blast)
+      \<comment> \<open>T - W = (T' - W) \\<union> A0.\<close>
+      have hTmW: "T - W = (?T' - W) \<union> A0" using hT_eq hW_disj_A0 by (by100 blast)
+      \<comment> \<open>T' - W is closed in T' (complement of open set W).\<close>
+      have hW_open_T': "W \<in> ?TT'"
+        using \<open>W \<in> {U, V}\<close> hU hV by (by100 blast)
+      have hTmW_closed_T': "closedin_on ?T' ?TT' (?T' - W)"
+      proof -
+        have "?T' - W \<subseteq> ?T'" by (by100 blast)
+        moreover have "?T' - (?T' - W) = W" using hW_sub_T' by (by100 blast)
+        hence "?T' - (?T' - W) \<in> ?TT'" using hW_open_T' by simp
+        ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+      qed
+      \<comment> \<open>T' closed in T.\<close>
+      have hT'_closed: "closedin_on T TT ?T'"
+      proof -
+        have hhaus: "is_hausdorff_on T TT"
+          using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have hfin': "finite (\<A> - {A0})" using assms(9) by (by100 simp)
+        have "\<forall>B\<in>\<A> - {A0}. closedin_on T TT B"
+        proof (intro ballI)
+          fix B assume "B \<in> \<A> - {A0}"
+          hence "B \<in> \<A>" by (by100 blast)
+          have "B \<subseteq> T" using assms(2) \<open>B \<in> \<A>\<close> by (by100 blast)
+          have "top1_is_arc_on B (subspace_topology T TT B)" using assms(2) \<open>B \<in> \<A>\<close> by (by100 blast)
+          from arc_compact[OF this]
+          have "top1_compact_on B (subspace_topology T TT B)" .
+          from Theorem_26_3[OF hhaus \<open>B \<subseteq> T\<close> this]
+          show "closedin_on T TT B" .
+        qed
+        from closedin_Union_finite[OF hTT hfin' this]
+        show ?thesis .
+      qed
+      \<comment> \<open>T'-W closed in T (by Thm 17.3: closed in closed = closed in ambient).\<close>
+      have hTmW_closed_T: "closedin_on T TT (?T' - W)"
+        using Theorem_17_3[OF hTT hT'_closed hTmW_closed_T'] .
+      \<comment> \<open>A0 closed in T.\<close>
+      have hA0_closed: "closedin_on T TT A0"
+      proof -
+        have hhaus: "is_hausdorff_on T TT"
+          using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have hA0_sub: "A0 \<subseteq> T" using assms(2,5) by (by100 blast)
+        have "top1_is_arc_on A0 (subspace_topology T TT A0)" using assms(2,5) by (by100 blast)
+        from arc_compact[OF this]
+        have "top1_compact_on A0 (subspace_topology T TT A0)" .
+        from Theorem_26_3[OF hhaus hA0_sub this]
+        show ?thesis .
+      qed
+      \<comment> \<open>T - W = (T'-W) \\<union> A0 is closed in T (union of 2 closed sets).\<close>
+      have "closedin_on T TT ((?T' - W) \<union> A0)"
+        using closedin_Union_finite[OF hTT, of "{?T' - W, A0}"] hTmW_closed_T hA0_closed by (by100 simp)
+      hence "closedin_on T TT (T - W)" using hTmW by simp
+      \<comment> \<open>T - W closed \\<Rightarrow> W open.\<close>
+      hence "T - (T - W) \<in> TT" unfolding closedin_on_def by (by100 blast)
+      moreover have "T - (T - W) = W"
+        using hW_sub_T' hT'_sub by (by100 blast)
+      ultimately show "W \<in> TT" by simp
+    qed
+    \<comment> \<open>W clopen in T. T connected \\<Rightarrow> W = {} or W = T.\<close>
+    from connected_iff_clopen[OF hTT]
+    have "\<forall>S. S \<in> TT \<and> closedin_on T TT S \<longrightarrow> S = {} \<or> S = T"
+      using hT_conn by (by100 blast)
+    hence "W = {} \<or> W = T" using \<open>W \<in> TT\<close> \<open>closedin_on T TT W\<close> by (by100 blast)
+    moreover have "W \<noteq> {}" using \<open>W \<noteq> {}\<close> .
+    moreover have "W \<noteq> T" using hW_disj_A0
+    proof -
+      have "v \<in> A0" using assms(6) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      hence "v \<notin> W" using hW_disj_A0 by (by100 blast)
+      moreover have "v \<in> T" using \<open>v \<in> A0\<close> assms(2,3,5) by (by100 blast)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    ultimately show False by (by100 blast)
   qed
   have hT'_sc: "top1_simply_connected_on ?T' ?TT'"
   proof -
@@ -1520,8 +2360,143 @@ proof -
       by (by100 blast)
     \<comment> \<open>T' is a retract of T.\<close>
     have "top1_retract_of_on T TT ?T'"
-      sorry \<comment> \<open>Retraction r(x) = x for x \\<in> T', r(x) = w for x \\<in> A0\\\\T'.
-         Continuous in coherent topology (r|A = id for A \\<ne> A0, r|A0 = const w).\<close>
+    proof -
+      \<comment> \<open>Retraction r(x) = x for x \\<in> T', r(x) = w for x \\<in> A0\\\\T'.
+         Continuity via Theorem 18.3 (pasting lemma): T = T' \\<union> A0, both closed.
+         f = id on T', g = const w on A0. Both continuous. Agree on T'\\<inter>A0 = {w}.\<close>
+      let ?r = "\<lambda>x. if x \<in> ?T' then x else w"
+      have hT'_sub: "?T' \<subseteq> T" using assms(2,3) by (by100 blast)
+      have hT_eq: "T = ?T' \<union> A0" using assms(3,5) by (by100 blast)
+      have hA0_T'_w: "A0 \<inter> ?T' \<subseteq> {w}"
+      proof (intro subsetI)
+        fix x assume "x \<in> A0 \<inter> ?T'"
+        hence "x \<in> A0" "x \<in> ?T'" by (by100 blast)+
+        then obtain B where "B \<in> \<A> - {A0}" "x \<in> B" by (by100 blast)
+        have "B \<in> \<A>" "B \<noteq> A0" using \<open>B \<in> \<A> - {A0}\<close> by (by100 blast)+
+        have "x \<in> A0 \<inter> B" using \<open>x \<in> A0\<close> \<open>x \<in> B\<close> by (by100 blast)
+        have "A0 \<noteq> B" using \<open>B \<noteq> A0\<close> by simp
+        from assms(4)[rule_format, OF assms(5) \<open>B \<in> \<A>\<close> \<open>A0 \<noteq> B\<close>]
+        have "A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+          by (by100 blast)
+        hence "x \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+          using \<open>x \<in> A0 \<inter> B\<close> by (by100 blast)
+        \<comment> \<open>x is endpoint of A0 and x \\<in> B with B \\<ne> A0. By assms(7), v \\<notin> B, so x \\<ne> v.
+           endpoints(A0) = {v, w}, so x = w.\<close>
+        have "x \<noteq> v"
+        proof
+          assume "x = v"
+          from assms(7)[rule_format, OF \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>]
+          show False using \<open>x \<in> B\<close> \<open>x = v\<close> by (by100 blast)
+        qed
+        moreover have "x \<in> {v, w}"
+        proof -
+          have hstrict: "is_topology_on_strict T TT"
+            using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+          have hhaus: "is_hausdorff_on T TT"
+            using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+          have hA0_sub: "A0 \<subseteq> T" using assms(2,5) by (by100 blast)
+          have hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)" using assms(2,5) by (by100 blast)
+          obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+            using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+          have hep: "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {h 0, h 1}"
+            by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA0_sub hA0_arc hh])
+          have "v \<in> {h 0, h 1}" using assms(6) hep by simp
+          have "w \<in> {h 0, h 1}" using hw(1) hep by simp
+          have "h 0 \<noteq> h 1"
+          proof
+            assume "h 0 = h 1"
+            have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            from inj_onD[OF this \<open>h 0 = h 1\<close>] show False unfolding top1_unit_interval_def by (by100 auto)
+          qed
+          have "{h 0, h 1} \<subseteq> {v, w}"
+            using \<open>v \<in> {h 0, h 1}\<close> \<open>w \<in> {h 0, h 1}\<close> \<open>h 0 \<noteq> h 1\<close> hw(2) by (by100 blast)
+          thus ?thesis using \<open>x \<in> top1_arc_endpoints_on A0 _\<close> hep by (by100 blast)
+        qed
+        ultimately show "x \<in> {w}" by (by100 blast)
+      qed
+      have hw_A0: "w \<in> A0" using hw(1) unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have hr_maps: "\<forall>x\<in>T. ?r x \<in> ?T'"
+      proof (intro ballI)
+        fix x assume "x \<in> T"
+        show "?r x \<in> ?T'"
+        proof (cases "x \<in> ?T'")
+          case True thus ?thesis by simp
+        next
+          case False thus ?thesis using hw(3) by simp
+        qed
+      qed
+      have hr_fixes: "\<forall>x\<in>?T'. ?r x = x" by simp
+      \<comment> \<open>Continuity via pasting lemma.\<close>
+      have hr_cont: "top1_continuous_map_on T TT ?T' ?TT' ?r"
+      proof -
+        have hTT_local: "is_topology_on T TT"
+          using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+              is_topology_on_strict_def by (by100 blast)
+        have hT'_closed: "closedin_on T TT ?T'"
+        proof -
+          have hhaus2: "is_hausdorff_on T TT"
+            using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+          have "\<forall>B\<in>\<A> - {A0}. closedin_on T TT B"
+          proof (intro ballI)
+            fix B assume "B \<in> \<A> - {A0}"
+            have "B \<subseteq> T" using assms(2) \<open>B \<in> \<A> - {A0}\<close> by (by100 blast)
+            have "top1_is_arc_on B (subspace_topology T TT B)" using assms(2) \<open>B \<in> \<A> - {A0}\<close> by (by100 blast)
+            from Theorem_26_3[OF hhaus2 \<open>B \<subseteq> T\<close> arc_compact[OF this]] show "closedin_on T TT B" .
+          qed
+          from closedin_Union_finite[OF hTT_local, of "\<A> - {A0}"] this assms(9) show ?thesis by (by100 simp)
+        qed
+        have hA0_closed: "closedin_on T TT A0"
+        proof -
+          have hhaus2: "is_hausdorff_on T TT"
+            using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+          have "A0 \<subseteq> T" using assms(2,5) by (by100 blast)
+          from Theorem_26_3[OF hhaus2 this arc_compact[OF assms(2)[rule_format, OF assms(5), THEN conjunct2]]]
+          show ?thesis .
+        qed
+        have hTT': "is_topology_on ?T' ?TT'"
+          using subspace_topology_is_topology_on[OF hTT_local hT'_sub] .
+        \<comment> \<open>f = id: T' \\<rightarrow> T' continuous.\<close>
+        have hf: "top1_continuous_map_on ?T' (subspace_topology T TT ?T') ?T' ?TT' id"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI)
+          fix x assume "x \<in> ?T'" thus "id x \<in> ?T'" by simp
+        next
+          fix V assume "V \<in> ?TT'"
+          have "V \<subseteq> ?T'"
+          proof -
+            from \<open>V \<in> ?TT'\<close> obtain U where "U \<in> TT" "V = ?T' \<inter> U"
+              unfolding subspace_topology_def by (by100 blast)
+            thus ?thesis by (by100 blast)
+          qed
+          hence "{x \<in> ?T'. id x \<in> V} = V" by (by100 auto)
+          thus "{x \<in> ?T'. id x \<in> V} \<in> subspace_topology T TT ?T'"
+            using \<open>V \<in> ?TT'\<close> by simp
+        qed
+        \<comment> \<open>g = const w: A0 \\<rightarrow> T' continuous.\<close>
+        have hg: "top1_continuous_map_on A0 (subspace_topology T TT A0) ?T' ?TT' (\<lambda>x. w)"
+        proof -
+          have "A0 \<subseteq> T" using assms(2,5) by (by100 blast)
+          have "is_topology_on A0 (subspace_topology T TT A0)"
+            by (rule subspace_topology_is_topology_on[OF hTT_local \<open>A0 \<subseteq> T\<close>])
+          from top1_continuous_map_on_const[OF this hTT' hw(3)]
+          show ?thesis .
+        qed
+        have hagree: "\<forall>x\<in>?T' \<inter> A0. id x = w"
+        proof (intro ballI)
+          fix x assume "x \<in> ?T' \<inter> A0"
+          hence "x \<in> A0 \<inter> ?T'" by (by100 blast)
+          hence "x \<in> {w}" using hA0_T'_w by (by100 blast)
+          thus "id x = w" by (by100 simp)
+        qed
+        \<comment> \<open>?r = (\\<lambda>x. if x \\<in> T' then id x else w).\<close>
+        from Theorem_18_3[OF hTT_local hTT' hT'_closed hA0_closed hT_eq hf hg hagree]
+        have "top1_continuous_map_on T TT ?T' ?TT' (\<lambda>x. if x \<in> ?T' then id x else w)" .
+        moreover have "(\<lambda>x. if x \<in> ?T' then id x else w) = ?r" by (by100 auto)
+        ultimately show ?thesis by simp
+      qed
+      show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+        using hT'_sub hr_cont hr_fixes by (by100 blast)
+    qed
     \<comment> \<open>By Lemma 55.1: loops in T' contractible in T \\<Rightarrow> contractible in T'.\<close>
     \<comment> \<open>T simply connected + retract \\<Rightarrow> T' simply connected.\<close>
     have hT_sc: "top1_simply_connected_on T TT"
@@ -1539,7 +2514,34 @@ proof -
         using subspace_topology_is_topology_on[OF hTT hT'_sub] .
       \<comment> \<open>Step 1: T' is path-connected (retraction image of path-connected).\<close>
       have hT'_pc: "top1_path_connected_on ?T' ?TT'"
-        sorry \<comment> \<open>Image of path-connected under continuous retraction.\<close>
+      proof -
+        from \<open>top1_retract_of_on T TT ?T'\<close>
+        obtain r where hr: "top1_is_retraction_on T TT ?T' r"
+          unfolding top1_retract_of_on_def by (by100 blast)
+        have hr_cont: "top1_continuous_map_on T TT ?T' ?TT' r"
+          using hr unfolding top1_is_retraction_on_def by (by100 blast)
+        have hr_maps: "\<forall>x\<in>T. r x \<in> ?T'"
+          using hr_cont unfolding top1_continuous_map_on_def by (by100 blast)
+        have hr_fixes: "\<forall>x\<in>?T'. r x = x"
+          using hr unfolding top1_is_retraction_on_def by (by100 blast)
+        have hr_surj: "r ` T = ?T'"
+        proof (rule set_eqI, rule iffI)
+          fix y assume "y \<in> r ` T"
+          then obtain x where "x \<in> T" "y = r x" by (by100 blast)
+          thus "y \<in> ?T'" using hr_maps by (by100 blast)
+        next
+          fix y assume "y \<in> ?T'"
+          hence "y \<in> T" using hT'_sub by (by100 blast)
+          have "r y = y" using hr_fixes \<open>y \<in> ?T'\<close> by (by100 blast)
+          thus "y \<in> r ` T" using \<open>y \<in> T\<close> by (by100 force)
+        qed
+        have hTT'_sub: "subspace_topology ?T' ?TT' ?T' = ?TT'"
+          using subspace_topology_trans[of ?T' ?T' T TT] by simp
+        have hT'_self: "?T' \<subseteq> ?T'" by (by100 blast)
+        from top1_path_connected_continuous_image[OF hT_pc hr_cont hr_maps hr_surj hT'_self _ hTT']
+        have "top1_path_connected_on ?T' (subspace_topology ?T' ?TT' ?T')" by simp
+        thus ?thesis using hTT'_sub by simp
+      qed
       \<comment> \<open>Step 2: All loops in T' are contractible (Lemma 55.1 + T simply connected).\<close>
       have hT'_loops: "\<forall>x\<in>?T'. \<forall>f. top1_is_loop_on ?T' ?TT' x f \<longrightarrow>
           top1_path_homotopic_on ?T' ?TT' x x f (top1_constant_path x)"
@@ -1590,7 +2592,15 @@ proof -
       show ?thesis unfolding top1_simply_connected_on_def using hT'_pc hT'_loops by (by100 blast)
     qed
   qed
-  show ?thesis unfolding top1_is_tree_on_def using hT'_graph hT'_conn hT'_sc by (by100 blast)
+  show ?thesis
+  proof (intro conjI)
+    show "top1_is_tree_on ?T' ?TT'"
+      unfolding top1_is_tree_on_def using hT'_graph hT'_conn hT'_sc by (by100 blast)
+    show "\<forall>C. C \<subseteq> ?T' \<longrightarrow>
+        (closedin_on ?T' ?TT' C \<longleftrightarrow>
+         (\<forall>A\<in>\<A> - {A0}. closedin_on A (subspace_topology ?T' ?TT' A) (A \<inter> C)))"
+      using h\<B>_coh .
+  qed
 qed
 lemma tree_euler_nat:
   fixes n :: nat
@@ -1603,6 +2613,7 @@ lemma tree_euler_nat:
        \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
     finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
+    (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
     card (top1_graph_vertex_set T TT \<A>) = n + 1"
   \<comment> \<open>Munkres Lemma 85.2 Step 1 by induction on n = card(\\<A>).
      Base: 1 arc, 2 endpoints.
@@ -1621,6 +2632,7 @@ proof (induction n rule: less_induct)
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
       and hfin: "finite \<A>" and hne: "\<A> \<noteq> {}"
+      and hcoh: "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
     show "card (top1_graph_vertex_set T TT \<A>) = n + 1"
     proof (cases "n = 1")
       case True
@@ -1675,8 +2687,17 @@ proof (induction n rule: less_induct)
       have h\<A>'_card: "card ?\<A>' = n - 1" using hcard hfin hA0 by (by100 simp)
       have h\<A>'_lt: "n - 1 < n" using hn_ge2 by linarith
       \<comment> \<open>Transfer properties to subspace.\<close>
+      have hremove_result: "top1_is_tree_on ?T' (subspace_topology T TT ?T')
+           \<and> (\<forall>C. C \<subseteq> ?T' \<longrightarrow>
+               (closedin_on ?T' (subspace_topology T TT ?T') C \<longleftrightarrow>
+                (\<forall>A\<in>?\<A>'. closedin_on A (subspace_topology ?T' (subspace_topology T TT ?T') A) (A \<inter> C))))"
+        by (rule finite_tree_remove_leaf_is_tree[OF htree harcs hcover hinter hA0 hv_ep hv_uniq hcard_ge2 hfin hcoh])
       have hT'_tree: "top1_is_tree_on ?T' (subspace_topology T TT ?T')"
-        by (rule finite_tree_remove_leaf_is_tree[OF htree harcs hcover hinter hA0 hv_ep hv_uniq hcard_ge2 hfin])
+        using hremove_result by (by100 blast)
+      have h\<A>'_coh: "\<forall>C. C \<subseteq> ?T' \<longrightarrow>
+          (closedin_on ?T' (subspace_topology T TT ?T') C \<longleftrightarrow>
+           (\<forall>A\<in>?\<A>'. closedin_on A (subspace_topology ?T' (subspace_topology T TT ?T') A) (A \<inter> C)))"
+        using hremove_result by (by100 blast)
       have h\<A>'_arcs: "\<forall>A\<in>?\<A>'. A \<subseteq> ?T' \<and>
           top1_is_arc_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)"
       proof (intro ballI conjI)
@@ -1713,7 +2734,7 @@ proof (induction n rule: less_induct)
       \<comment> \<open>Apply IH via less.hyps.\<close>
       from spec[OF spec[OF spec[OF less(1)[OF h\<A>'_lt], of ?T'], of "subspace_topology T TT ?T'"], of ?\<A>']
       have hIH: "card (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>') = (n - 1) + 1"
-        using h\<A>'_card hT'_tree h\<A>'_arcs h\<A>'_cover h\<A>'_inter h\<A>'_fin h\<A>'_ne by (by100 simp)
+        using h\<A>'_card hT'_tree h\<A>'_arcs h\<A>'_cover h\<A>'_inter h\<A>'_fin h\<A>'_ne h\<A>'_coh by (by5000 simp)
       \<comment> \<open>Vertex counting: V = V' \\<union> {v}, v \\<notin> V'.\<close>
       have hV_union: "top1_graph_vertex_set T TT \<A> =
           top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<union> {v}"
@@ -1851,6 +2872,7 @@ lemma tree_euler_all:
        \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
     finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
+    (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
     card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
 proof (intro allI impI)
   fix T :: "'a set" and TT \<A>
@@ -1862,6 +2884,7 @@ proof (intro allI impI)
        \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
     "finite \<A>" "\<A> \<noteq> {}"
+    "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
   from spec[OF spec[OF spec[OF tree_euler_nat[of "card \<A>"], of T], of TT], of \<A>]
   show "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1" using h by (by100 simp)
 qed
@@ -1881,6 +2904,7 @@ lemma tree_euler_number_one:
          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
       and "finite \<A>"
       and "\<A> \<noteq> {}"
+      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
   shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
 proof -
   from spec[OF spec[OF spec[OF tree_euler_all, of T], of TT], of \<A>]
@@ -2042,7 +3066,35 @@ proof -
         hence "\<Union>?\<A>_T \<noteq> {}" using T_coverage by simp
         thus ?thesis by (by100 blast)
       qed
-      from tree_euler_number_one[OF T_tree hT_arcs hT_cover hT_inter hT_fin hT_ne]
+      have hT_coh: "\<forall>C. C \<subseteq> T \<longrightarrow>
+          (closedin_on T (subspace_topology Y TY T) C \<longleftrightarrow>
+           (\<forall>A\<in>?\<A>_T. closedin_on A (subspace_topology T (subspace_topology Y TY T) A) (A \<inter> C)))"
+      proof -
+        have hgraph_Y: "top1_is_graph_on Y TY" using assms(1) .
+        have h\<A>_arcs: "\<forall>A\<in>\<A>. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+          using assms(4) by (by100 blast)
+        from subgraph_coherent_topology[OF hgraph_Y h\<A>_arcs assms(5) assms(6) \<A>_coh,
+          of "?\<A>_T" T]
+        have hraw: "\<forall>C. C \<subseteq> T \<longrightarrow>
+            (closedin_on T (subspace_topology Y TY T) C \<longleftrightarrow>
+             (\<forall>A\<in>?\<A>_T. closedin_on A (subspace_topology Y TY A) (A \<inter> C)))"
+          using T_coverage by (by5000 blast)
+        show ?thesis
+        proof (intro allI impI)
+          fix C assume "C \<subseteq> T"
+          have "\<forall>A\<in>?\<A>_T. subspace_topology T (subspace_topology Y TY T) A = subspace_topology Y TY A"
+          proof (intro ballI)
+            fix A assume "A \<in> ?\<A>_T"
+            hence "A \<subseteq> T" by (by100 blast)
+            thus "subspace_topology T (subspace_topology Y TY T) A = subspace_topology Y TY A"
+              using subspace_topology_trans[of A T Y TY] by (by100 blast)
+          qed
+          thus "closedin_on T (subspace_topology Y TY T) C \<longleftrightarrow>
+             (\<forall>A\<in>?\<A>_T. closedin_on A (subspace_topology T (subspace_topology Y TY T) A) (A \<inter> C))"
+            using hraw[rule_format, OF \<open>C \<subseteq> T\<close>] by simp
+        qed
+      qed
+      from tree_euler_number_one[OF T_tree hT_arcs hT_cover hT_inter hT_fin hT_ne hT_coh]
       show ?thesis .
     qed
     ultimately show ?thesis by simp
@@ -2073,7 +3125,68 @@ lemma covering_lifted_arc_family_card:
       and "finite \<A>_X"
       and "\<forall>x\<in>X. card {e \<in> E. p e = x} = k"
   shows "finite \<A>_E \<and> card \<A>_E = k * card \<A>_X"
-  sorry
+proof -
+  \<comment> \<open>For each base arc A \\<in> \\<A>\\_X, the lifts of A partition {e \\<in> E | p(e) \\<in> A} into
+     connected components, one for each point in the fiber of any point of A.
+     By the covering property, each component maps homeomorphically onto A,
+     so there are exactly k components = k lifted arcs over A.\<close>
+  let ?lift = "\<lambda>A. {B \<in> \<A>_E. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A}"
+  \<comment> \<open>Step 1: Each lifted arc maps onto exactly one base arc (existence + uniqueness).\<close>
+  note hdef = assms(2)[unfolded top1_covering_lifted_arc_family_on_def]
+  have h_clause1: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A"
+    using conjunct1[OF hdef] .
+  have h_clause2: "\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A}"
+    using conjunct1[OF conjunct2[OF hdef]] .
+  have h_exists: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A"
+    using h_clause1 .
+  \<comment> \<open>The base arc is uniquely determined: p ` B = A.\<close>
+  \<comment> \<open>Step 2: For each base arc, there are exactly k lifted arcs.\<close>
+  have h_k_lifts: "\<forall>A\<in>\<A>_X. card (?lift A) = k"
+    sorry
+  \<comment> \<open>Step 3: The lifts of different base arcs are disjoint (since p`B determines A).\<close>
+  have h_disjoint: "\<forall>A1\<in>\<A>_X. \<forall>A2\<in>\<A>_X. A1 \<noteq> A2 \<longrightarrow> ?lift A1 \<inter> ?lift A2 = {}"
+  proof (intro ballI impI)
+    fix A1 A2 assume "A1 \<in> \<A>_X" "A2 \<in> \<A>_X" "A1 \<noteq> A2"
+    show "?lift A1 \<inter> ?lift A2 = {}"
+    proof (rule ccontr)
+      assume "?lift A1 \<inter> ?lift A2 \<noteq> {}"
+      then obtain B where "B \<in> ?lift A1" "B \<in> ?lift A2" by (by100 blast)
+      hence "p ` B = A1" "p ` B = A2" by (by100 blast)+
+      hence "A1 = A2" by simp
+      with \<open>A1 \<noteq> A2\<close> show False by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Step 4: Every lifted arc is in some base arc's lifts.\<close>
+  have h_covers: "\<A>_E = (\<Union>A\<in>\<A>_X. ?lift A)"
+  proof (rule set_eqI, rule iffI)
+    fix B assume "B \<in> \<A>_E"
+    from h_exists[rule_format, OF this]
+    obtain A where "A \<in> \<A>_X" "B \<subseteq> {e \<in> E. p e \<in> A}" "p ` B = A" by (by100 blast)
+    thus "B \<in> (\<Union>A\<in>\<A>_X. ?lift A)" using \<open>B \<in> \<A>_E\<close> by (by100 blast)
+  next
+    fix B assume "B \<in> (\<Union>A\<in>\<A>_X. ?lift A)"
+    thus "B \<in> \<A>_E" by (by100 blast)
+  qed
+  \<comment> \<open>Step 5: Combine to get card(\\<A>\\_E) = k * card(\\<A>\\_X).\<close>
+  have h_fin_lifts: "\<forall>A\<in>\<A>_X. finite (?lift A)"
+    sorry \<comment> \<open>Each lift family is finite (subset of the finite fiber partition).\<close>
+  have "finite \<A>_E"
+  proof -
+    have "finite (\<Union>A\<in>\<A>_X. ?lift A)"
+      using assms(3) h_fin_lifts by (by100 blast)
+    thus ?thesis using h_covers by simp
+  qed
+  moreover have "card \<A>_E = k * card \<A>_X"
+  proof -
+    have "card \<A>_E = card (\<Union>A\<in>\<A>_X. ?lift A)" using h_covers by simp
+    also have "... = (\<Sum>A\<in>\<A>_X. card (?lift A))"
+      using card_UN_disjoint[OF assms(3) h_fin_lifts h_disjoint] by simp
+    also have "... = (\<Sum>A\<in>\<A>_X. k)" using h_k_lifts by simp
+    also have "... = k * card \<A>_X" by simp
+    finally show ?thesis .
+  qed
+  ultimately show ?thesis by (by100 blast)
+qed
 
 \<comment> \<open>Covering multiplicity for vertices.\<close>
 lemma covering_lifted_vertex_set_card:
@@ -2092,6 +3205,358 @@ lemma covering_lifted_vertex_set_card:
    - So rank(\\<pi>\\_1(E')) = k \\<cdot> arcs(X) - k \\<cdot> vertices(X) + 1 = k(arcs - vertices) + 1
    - arcs(X) - vertices(X) = n (from rank(\\<pi>\\_1(X)) = n+1 = arcs - vertices + 1)
    - Hence rank(\\<pi>\\_1(E')) = kn + 1.\<close>
+
+\<comment> \<open>Finite-sheeted covering of compact space is compact.
+   Standard argument: cover X by evenly covered sets, lift finite subcover to E.\<close>
+lemma finite_covering_compact:
+  assumes "top1_covering_map_on E TE X TX p"
+      and "top1_compact_on X TX"
+      and "is_topology_on X TX" and "is_topology_on E TE"
+      and "\<forall>x\<in>X. card {e \<in> E. p e = x} = k"
+      and "k > 0"
+  shows "top1_compact_on E TE"
+  unfolding top1_compact_on_def
+proof (intro conjI allI impI)
+  show "is_topology_on E TE" using assms(4) .
+next
+  fix Uc assume hUc: "Uc \<subseteq> TE \<and> E \<subseteq> \<Union>Uc"
+  \<comment> \<open>For each x \\<in> X, get evenly covered nbhd and refine. Use compactness of X.\<close>
+  \<comment> \<open>Step 1: For each e \\<in> E, choose Ue \\<in> Uc with e \\<in> Ue.\<close>
+  \<comment> \<open>Step 2: For each x \\<in> X, get evenly covered Vx. p\\<inverse>(Vx) = \\<Union>slices.
+     Each slice contains one fiber point. That fiber point is in some Ue.
+     Intersect Ue with the slice: open in E. Project to X: open nbhd Wx \\<subseteq> Vx of x.\<close>
+  \<comment> \<open>Step 3: {Wx | x \\<in> X} covers X. Finite subcover by compactness of X.\<close>
+  \<comment> \<open>Step 4: Lift back: finitely many Uc elements cover E.\<close>
+  \<comment> \<open>For each e \\<in> E, pick Ue \\<in> Uc with e \\<in> Ue (axiom of choice).\<close>
+  have "\<forall>e\<in>E. \<exists>Ue. Ue \<in> Uc \<and> e \<in> Ue" using hUc by (by100 blast)
+  from bchoice[OF this]
+  obtain g where hg: "\<forall>e\<in>E. g e \<in> Uc \<and> e \<in> g e" by (by100 blast)
+  \<comment> \<open>For each x \\<in> X, choose an evenly covered nbhd Vx with slices V1,...,Vk.
+     For each slice Vi, pick a fiber point ei (the preimage of x in Vi).
+     The open set g(ei) \\<inter> Vi projects to an open subset of Vx containing x.
+     The intersection of these k projections gives Wx \\<subseteq> Vx, open, containing x.\<close>
+  \<comment> \<open>The cover {Wx | x \\<in> X} of X has a finite subcover (X compact).
+     For each xi in the finite subcover, the k open sets g(eij) cover p\\<inverse>(Wxi).
+     So finitely many g(eij) cover E.\<close>
+  \<comment> \<open>p surjects E onto X.\<close>
+  have hp_surj: "p ` E = X"
+    using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
+  have hp_cont: "top1_continuous_map_on E TE X TX p"
+    using assms(1) unfolding top1_covering_map_on_def by (by100 blast)
+  \<comment> \<open>For each x \\<in> X, construct open Wx \\<in> TX containing x, such that
+     p\\<inverse>(Wx) is covered by finitely many elements of Uc.\<close>
+  have hcover_X: "\<forall>x\<in>X. \<exists>Wx\<in>TX. x \<in> Wx \<and> Wx \<subseteq> X \<and>
+      (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> {e \<in> E. p e \<in> Wx} \<subseteq> \<Union>F)"
+  proof (intro ballI)
+    fix x assume "x \<in> X"
+    \<comment> \<open>Get evenly covered nbhd Vx.\<close>
+    from top1_covering_map_on_evenly_covered[OF assms(1) \<open>x \<in> X\<close>]
+    obtain Vx where hVx: "x \<in> Vx" "top1_evenly_covered_on E TE X TX p Vx" by (by100 blast)
+    \<comment> \<open>Extract slices.\<close>
+    from hVx(2)[unfolded top1_evenly_covered_on_def]
+    obtain V where hV_props: "(\<forall>Vi\<in>V. openin_on E TE Vi) \<and>
+        (\<forall>Vi\<in>V. \<forall>Vj\<in>V. Vi \<noteq> Vj \<longrightarrow> Vi \<inter> Vj = {}) \<and>
+        {e \<in> E. p e \<in> Vx} = \<Union>V \<and>
+        (\<forall>Vi\<in>V. top1_homeomorphism_on Vi (subspace_topology E TE Vi)
+            Vx (subspace_topology X TX Vx) p)"
+        and hVx_open: "openin_on X TX Vx"
+      by (by100 auto)
+    have hV_open: "\<forall>Vi\<in>V. openin_on E TE Vi" using hV_props by (by100 blast)
+    have hV_disj: "\<forall>Vi\<in>V. \<forall>Vj\<in>V. Vi \<noteq> Vj \<longrightarrow> Vi \<inter> Vj = {}" using hV_props by (by100 blast)
+    have hV_union: "{e \<in> E. p e \<in> Vx} = \<Union>V" using hV_props by (by100 blast)
+    have hV_homeo: "\<forall>Vi\<in>V. top1_homeomorphism_on Vi (subspace_topology E TE Vi)
+        Vx (subspace_topology X TX Vx) p" using hV_props by (by100 blast)
+    have hVx_sub: "Vx \<subseteq> X" using hVx_open unfolding openin_on_def by (by100 blast)
+    have hVx_TX: "Vx \<in> TX" using hVx_open unfolding openin_on_def by (by100 blast)
+    \<comment> \<open>V has exactly k slices (from fiber card = k).\<close>
+    \<comment> \<open>Each slice Vi contains exactly one preimage of x.\<close>
+    have "x \<in> Vx" using hVx(1) .
+    have huniq: "\<forall>Vi\<in>V. \<exists>!e. e \<in> Vi \<and> p e = x"
+    proof (intro ballI)
+      fix Vi assume "Vi \<in> V"
+      from hV_homeo[rule_format, OF this]
+      have "bij_betw p Vi Vx" unfolding top1_homeomorphism_on_def by (by100 blast)
+      from bij_betw_imp_surj_on[OF this]
+      have "\<exists>e\<in>Vi. p e = x" using \<open>x \<in> Vx\<close> by (by100 blast)
+      moreover have "\<forall>e1 e2. e1 \<in> Vi \<and> p e1 = x \<longrightarrow> e2 \<in> Vi \<and> p e2 = x \<longrightarrow> e1 = e2"
+      proof (intro allI impI)
+        fix e1 e2 assume "e1 \<in> Vi \<and> p e1 = x" "e2 \<in> Vi \<and> p e2 = x"
+        have "inj_on p Vi" using bij_betw_imp_inj_on[OF \<open>bij_betw p Vi Vx\<close>] .
+        from inj_onD[OF this]
+        show "e1 = e2" using \<open>e1 \<in> Vi \<and> p e1 = x\<close> \<open>e2 \<in> Vi \<and> p e2 = x\<close> by (by100 blast)
+      qed
+      ultimately show "\<exists>!e. e \<in> Vi \<and> p e = x" by (by100 blast)
+    qed
+    define f where "f = (\<lambda>Vi. THE e. e \<in> Vi \<and> p e = x)"
+    have hbij: "bij_betw f V {e \<in> E. p e = x}"
+      unfolding bij_betw_def
+    proof (intro conjI)
+      show "inj_on f V"
+      proof (rule inj_onI)
+        fix Vi Vj assume "Vi \<in> V" "Vj \<in> V" "f Vi = f Vj"
+        have hfVi: "f Vi \<in> Vi \<and> p (f Vi) = x"
+          using theI'[OF huniq[rule_format, OF \<open>Vi \<in> V\<close>]]
+          unfolding f_def by (by100 blast)
+        have hfVj: "f Vj \<in> Vj \<and> p (f Vj) = x"
+          using theI'[OF huniq[rule_format, OF \<open>Vj \<in> V\<close>]]
+          unfolding f_def by (by100 blast)
+        have "f Vi \<in> Vi" using hfVi by (by100 blast)
+        have "f Vj \<in> Vj" using hfVj by (by100 blast)
+        have "f Vi \<in> Vj" using \<open>f Vj \<in> Vj\<close> \<open>f Vi = f Vj\<close> by simp
+        hence "f Vi \<in> Vi \<inter> Vj" using \<open>f Vi \<in> Vi\<close> by (by100 blast)
+        thus "Vi = Vj" using hV_disj \<open>Vi \<in> V\<close> \<open>Vj \<in> V\<close> by (by100 blast)
+      qed
+      show "f ` V = {e \<in> E. p e = x}"
+      proof (rule set_eqI, rule iffI)
+        fix e assume "e \<in> f ` V"
+        then obtain Vi where "Vi \<in> V" "e = f Vi" by (by100 blast)
+        have "e \<in> Vi \<and> p e = x"
+          using theI'[OF huniq[rule_format, OF \<open>Vi \<in> V\<close>]]
+          unfolding f_def \<open>e = f Vi\<close> by (by100 blast)
+        have "Vi \<subseteq> E" using hV_open \<open>Vi \<in> V\<close> unfolding openin_on_def by (by100 blast)
+        thus "e \<in> {e \<in> E. p e = x}" using \<open>e \<in> Vi \<and> p e = x\<close> \<open>Vi \<subseteq> E\<close> by (by100 blast)
+      next
+        fix e assume "e \<in> {e \<in> E. p e = x}"
+        hence "e \<in> E" "p e = x" by (by100 blast)+
+        have "p e \<in> Vx" using \<open>p e = x\<close> hVx(1) by simp
+        hence "e \<in> \<Union>V" using \<open>e \<in> E\<close> hV_union by (by100 blast)
+        then obtain Vi where "Vi \<in> V" "e \<in> Vi" by (by100 blast)
+        have "e \<in> Vi \<and> p e = x" using \<open>e \<in> Vi\<close> \<open>p e = x\<close> by (by100 blast)
+        have "f Vi = e" unfolding f_def
+          by (rule the1_equality[OF huniq[rule_format, OF \<open>Vi \<in> V\<close>]
+              \<open>e \<in> Vi \<and> p e = x\<close>])
+        thus "e \<in> f ` V" using \<open>Vi \<in> V\<close> by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>card V = k: via the bijection f.\<close>
+    have hV_card: "card V = k"
+    proof -
+      have "card {e \<in> E. p e = x} = k" using assms(5) \<open>x \<in> X\<close> by (by100 blast)
+      moreover have "card {e \<in> E. p e = x} = card V"
+        using bij_betw_same_card[OF hbij] by simp
+      ultimately show ?thesis by simp
+    qed
+    have hV_fin: "finite V"
+    proof -
+      have "k > 0" using assms(6) .
+      hence "card V > 0" using hV_card by simp
+      thus ?thesis using card_gt_0_iff by (by100 blast)
+    qed
+    \<comment> \<open>For each slice Vi, the unique preimage of x is some ei, covered by g(ei).
+       Project g(ei) \\<inter> Vi to get an open subset of Vx containing x.\<close>
+    \<comment> \<open>Wx = Vx \\<inter> \\<Inter>{p ` (Vi \\<inter> g(ei)) | Vi \\<in> V}: open in X, contains x.\<close>
+    \<comment> \<open>p\\<inverse>(Wx) \\<subseteq> \\<Union>{g(ei) | Vi \\<in> V}: finitely many elements of Uc.\<close>
+    \<comment> \<open>f(Vi) properties: f Vi \\<in> Vi, p(f Vi) = x, f Vi \\<in> E.\<close>
+    have hf_in: "\<forall>Vi\<in>V. f Vi \<in> Vi \<and> p (f Vi) = x"
+    proof (intro ballI conjI)
+      fix Vi assume "Vi \<in> V"
+      from theI'[OF huniq[rule_format, OF \<open>Vi \<in> V\<close>]]
+      show "f Vi \<in> Vi" "p (f Vi) = x" unfolding f_def by (by100 blast)+
+    qed
+    have hf_E: "\<forall>Vi\<in>V. f Vi \<in> E"
+    proof (intro ballI)
+      fix Vi assume "Vi \<in> V"
+      have "Vi \<subseteq> E" using hV_open \<open>Vi \<in> V\<close> unfolding openin_on_def by (by100 blast)
+      thus "f Vi \<in> E" using hf_in \<open>Vi \<in> V\<close> by (by100 blast)
+    qed
+    \<comment> \<open>g(f Vi) \\<in> Uc and f Vi \\<in> g(f Vi).\<close>
+    have hgf: "\<forall>Vi\<in>V. g (f Vi) \<in> Uc \<and> f Vi \<in> g (f Vi)"
+      using hg hf_E by (by100 blast)
+    \<comment> \<open>For each Vi, p ` (Vi \\<inter> g(f Vi)) is open in X and contains x.
+       p|Vi: Vi \\<rightarrow> Vx is a homeomorphism, hence an open map.
+       Vi \\<inter> g(f Vi) is open in Vi (both open in E). Its image under p is open in Vx.
+       Since Vx is open in X, the image is open in X.\<close>
+    have hproj_open: "\<forall>Vi\<in>V. p ` (Vi \<inter> g (f Vi)) \<in> TX"
+    proof (intro ballI)
+      fix Vi assume "Vi \<in> V"
+      \<comment> \<open>Vi \\<inter> g(f Vi) is open in the subspace topology of Vi.\<close>
+      have "Vi \<in> TE" using hV_open \<open>Vi \<in> V\<close> unfolding openin_on_def by (by100 blast)
+      have "g (f Vi) \<in> TE" using hgf hf_E \<open>Vi \<in> V\<close> hUc by (by100 blast)
+      have "Vi \<inter> g (f Vi) \<in> subspace_topology E TE Vi"
+        unfolding subspace_topology_def using \<open>g (f Vi) \<in> TE\<close> by (by100 blast)
+      \<comment> \<open>p|Vi is a homeomorphism Vi \\<rightarrow> Vx. Hence p maps open subsets of Vi to open subsets of Vx.\<close>
+      have hhomeo: "top1_homeomorphism_on Vi (subspace_topology E TE Vi)
+          Vx (subspace_topology X TX Vx) p"
+        using hV_homeo \<open>Vi \<in> V\<close> by (by100 blast)
+      \<comment> \<open>The inverse of p|Vi maps open sets in Vx back to open sets in Vi.
+         So p maps open sets in Vi to open sets in Vx.\<close>
+      have "p ` (Vi \<inter> g (f Vi)) \<in> subspace_topology X TX Vx"
+      proof -
+        \<comment> \<open>p|Vi open map: from homeomorphism, p maps opens in Vi to opens in Vx.\<close>
+        obtain pinv where hpinv:
+            "top1_continuous_map_on Vx (subspace_topology X TX Vx)
+            Vi (subspace_topology E TE Vi) pinv"
+            "bij_betw p Vi Vx"
+            "\<forall>e\<in>Vi. pinv (p e) = e" "\<forall>y\<in>Vx. p (pinv y) = y"
+          using hhomeo unfolding top1_homeomorphism_on_def
+          by (metis bij_betw_def f_inv_into_f inv_into_f_f)
+        \<comment> \<open>pinv continuous Vx \\<rightarrow> Vi: preimage of open in Vi under pinv = open in Vx.
+           p ` U = pinv\\<inverse>(U) for U \\<subseteq> Vi (since p and pinv are inverses).\<close>
+        have "Vi \<inter> g (f Vi) \<subseteq> Vi" by (by100 blast)
+        \<comment> \<open>pinv\\<inverse>(Vi \\<inter> g(f Vi)) = {y \\<in> Vx. pinv y \\<in> Vi \\<inter> g(f Vi)}.\<close>
+        have "{y \<in> Vx. pinv y \<in> Vi \<inter> g (f Vi)} \<in> subspace_topology X TX Vx"
+          using hpinv(1) \<open>Vi \<inter> g (f Vi) \<in> subspace_topology E TE Vi\<close>
+          unfolding top1_continuous_map_on_def by (by100 blast)
+        moreover have "p ` (Vi \<inter> g (f Vi)) = {y \<in> Vx. pinv y \<in> Vi \<inter> g (f Vi)}"
+        proof (rule set_eqI, rule iffI)
+          fix y assume "y \<in> p ` (Vi \<inter> g (f Vi))"
+          then obtain e where "e \<in> Vi \<inter> g (f Vi)" "y = p e" by (by100 blast)
+          have "y \<in> Vx" using \<open>e \<in> Vi \<inter> g (f Vi)\<close> \<open>y = p e\<close>
+              bij_betw_apply[OF hpinv(2)] by (by100 blast)
+          have "pinv y = e" using hpinv(3) \<open>e \<in> Vi \<inter> g (f Vi)\<close> \<open>y = p e\<close> by (by100 blast)
+          thus "y \<in> {y \<in> Vx. pinv y \<in> Vi \<inter> g (f Vi)}"
+            using \<open>y \<in> Vx\<close> \<open>e \<in> Vi \<inter> g (f Vi)\<close> by (by100 blast)
+        next
+          fix y assume "y \<in> {y \<in> Vx. pinv y \<in> Vi \<inter> g (f Vi)}"
+          hence "y \<in> Vx" "pinv y \<in> Vi \<inter> g (f Vi)" by (by100 blast)+
+          have "p (pinv y) = y" using hpinv(4) \<open>y \<in> Vx\<close> by (by100 blast)
+          thus "y \<in> p ` (Vi \<inter> g (f Vi))"
+            using \<open>pinv y \<in> Vi \<inter> g (f Vi)\<close> by (by100 force)
+        qed
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>Open in Vx (subspace of X) + Vx open in X \\<Rightarrow> open in X.\<close>
+      then obtain W where "W \<in> TX" "p ` (Vi \<inter> g (f Vi)) = Vx \<inter> W"
+        unfolding subspace_topology_def by (by100 blast)
+      have "Vx \<inter> W \<in> TX" by (rule topology_inter_open[OF assms(3) hVx_TX \<open>W \<in> TX\<close>])
+      thus "p ` (Vi \<inter> g (f Vi)) \<in> TX" using \<open>p ` (Vi \<inter> g (f Vi)) = Vx \<inter> W\<close> by simp
+    qed
+    have hproj_x: "\<forall>Vi\<in>V. x \<in> p ` (Vi \<inter> g (f Vi))"
+    proof (intro ballI)
+      fix Vi assume "Vi \<in> V"
+      have "f Vi \<in> Vi \<inter> g (f Vi)" using hf_in hgf \<open>Vi \<in> V\<close> by (by100 blast)
+      moreover have "p (f Vi) = x" using hf_in \<open>Vi \<in> V\<close> by (by100 blast)
+      ultimately show "x \<in> p ` (Vi \<inter> g (f Vi))" by (by100 blast)
+    qed
+    \<comment> \<open>Wx = \\<Inter>{p ` (Vi \\<inter> g(f Vi)) | Vi \\<in> V}: finite intersection of open sets containing x.\<close>
+    let ?Wx = "\<Inter>Vi\<in>V. p ` (Vi \<inter> g (f Vi))"
+    have hWx_open: "?Wx \<in> TX"
+    proof -
+      have "V \<noteq> {}" using hV_fin hV_card assms(6) by (by100 force)
+      let ?S = "(\<lambda>Vi. p ` (Vi \<inter> g (f Vi))) ` V"
+      have "finite ?S" using hV_fin by (by100 simp)
+      have "?S \<noteq> {}" using \<open>V \<noteq> {}\<close> by (by100 blast)
+      have "?S \<subseteq> TX" using hproj_open by (by100 blast)
+      \<comment> \<open>is\\_topology\\_on: finite nonempty F \\<subseteq> TX \\<Rightarrow> \\<Inter>F \\<in> TX.\<close>
+      from assms(3)[unfolded is_topology_on_def]
+      have "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> TX \<longrightarrow> \<Inter>F \<in> TX" by (by100 blast)
+      hence "\<Inter>?S \<in> TX" using \<open>finite ?S\<close> \<open>?S \<noteq> {}\<close> \<open>?S \<subseteq> TX\<close> by (by100 blast)
+      moreover have "\<Inter>?S = ?Wx" by (by100 blast)
+      ultimately show ?thesis by simp
+    qed
+    have hWx_x: "x \<in> ?Wx" using hproj_x by (by100 blast)
+    have hWx_sub: "?Wx \<subseteq> X"
+    proof -
+      have "V \<noteq> {}" using hV_fin hV_card assms(6) by (by100 force)
+      then obtain Vi0 where "Vi0 \<in> V" by (by100 blast)
+      have "?Wx \<subseteq> p ` (Vi0 \<inter> g (f Vi0))" using \<open>Vi0 \<in> V\<close> by (by100 blast)
+      also have "... \<subseteq> p ` Vi0" by (by100 blast)
+      also have "... = Vx"
+        using hV_homeo[rule_format, OF \<open>Vi0 \<in> V\<close>]
+        unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      finally show ?thesis using hVx_sub by (by100 blast)
+    qed
+    \<comment> \<open>p\\<inverse>(?Wx) covered by {g(f Vi) | Vi \\<in> V}.\<close>
+    have hWx_covered: "{e \<in> E. p e \<in> ?Wx} \<subseteq> \<Union>((\<lambda>Vi. g (f Vi)) ` V)"
+    proof (intro subsetI)
+      fix e assume "e \<in> {e \<in> E. p e \<in> ?Wx}"
+      hence he: "e \<in> E" "p e \<in> ?Wx" by (by100 blast)+
+      have "p e \<in> Vx"
+      proof -
+        have "V \<noteq> {}" using hV_fin hV_card assms(6) by (by100 force)
+        then obtain Vi0 where "Vi0 \<in> V" by (by100 blast)
+        have "p e \<in> p ` (Vi0 \<inter> g (f Vi0))" using he(2) \<open>Vi0 \<in> V\<close> by (by100 blast)
+        hence "p e \<in> p ` Vi0" by (by100 blast)
+        also have "p ` Vi0 = Vx"
+          using hV_homeo[rule_format, OF \<open>Vi0 \<in> V\<close>]
+          unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        finally show ?thesis .
+      qed
+      hence "e \<in> \<Union>V" using he(1) hV_union by (by100 blast)
+      then obtain Vj where "Vj \<in> V" "e \<in> Vj" by (by100 blast)
+      have "p e \<in> p ` (Vj \<inter> g (f Vj))" using he(2) \<open>Vj \<in> V\<close> by (by100 blast)
+      then obtain e' where "e' \<in> Vj \<inter> g (f Vj)" "p e = p e'" by (by100 auto)
+      have "inj_on p Vj"
+        using hV_homeo[rule_format, OF \<open>Vj \<in> V\<close>]
+        unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      from inj_onD[OF this \<open>p e = p e'\<close> \<open>e \<in> Vj\<close>]
+      have "e = e'" using \<open>e' \<in> Vj \<inter> g (f Vj)\<close> by (by100 blast)
+      hence "e \<in> g (f Vj)" using \<open>e' \<in> Vj \<inter> g (f Vj)\<close> by (by100 blast)
+      thus "e \<in> \<Union>((\<lambda>Vi. g (f Vi)) ` V)" using \<open>Vj \<in> V\<close> by (by100 blast)
+    qed
+    \<comment> \<open>Assemble the result.\<close>
+    let ?F = "(\<lambda>Vi. g (f Vi)) ` V"
+    show "\<exists>Wx\<in>TX. x \<in> Wx \<and> Wx \<subseteq> X \<and>
+        (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> {e \<in> E. p e \<in> Wx} \<subseteq> \<Union>F)"
+    proof (rule bexI[of _ ?Wx], intro conjI)
+      show "x \<in> ?Wx" using hWx_x .
+      show "?Wx \<subseteq> X" using hWx_sub .
+      show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> {e \<in> E. p e \<in> ?Wx} \<subseteq> \<Union>F"
+      proof (rule exI[of _ ?F], intro conjI)
+        show "finite ?F" using hV_fin by (by100 simp)
+        show "?F \<subseteq> Uc" using hgf by (by100 blast)
+        show "{e \<in> E. p e \<in> ?Wx} \<subseteq> \<Union>?F" using hWx_covered .
+      qed
+    next
+      show "?Wx \<in> TX" using hWx_open .
+    qed
+  qed
+  \<comment> \<open>Use bchoice to get Wx for each x.\<close>
+  have hcover_X': "\<forall>x\<in>X. \<exists>Wx. Wx \<in> TX \<and> x \<in> Wx \<and> Wx \<subseteq> X \<and>
+      (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> {e \<in> E. p e \<in> Wx} \<subseteq> \<Union>F)"
+  proof (intro ballI)
+    fix x assume "x \<in> X"
+    from hcover_X[rule_format, OF this]
+    obtain Wx where "Wx \<in> TX" "x \<in> Wx" "Wx \<subseteq> X"
+        "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> {e \<in> E. p e \<in> Wx} \<subseteq> \<Union>F" by (by100 blast)
+    thus "\<exists>Wx. Wx \<in> TX \<and> x \<in> Wx \<and> Wx \<subseteq> X \<and>
+        (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> {e \<in> E. p e \<in> Wx} \<subseteq> \<Union>F)" by (by100 blast)
+  qed
+  from bchoice[OF hcover_X']
+  obtain W where hW: "\<forall>x\<in>X. W x \<in> TX \<and> x \<in> W x \<and> W x \<subseteq> X \<and>
+      (\<exists>F. finite F \<and> F \<subseteq> Uc \<and> {e \<in> E. p e \<in> W x} \<subseteq> \<Union>F)" by (by100 blast)
+  \<comment> \<open>{W x | x \\<in> X} is an open cover of X.\<close>
+  have hWcover: "W ` X \<subseteq> TX \<and> X \<subseteq> \<Union>(W ` X)"
+  proof (intro conjI)
+    show "W ` X \<subseteq> TX" using hW by (by100 blast)
+    show "X \<subseteq> \<Union>(W ` X)" using hW by (by100 blast)
+  qed
+  \<comment> \<open>Compactness: finite subcover.\<close>
+  from assms(2)[unfolded top1_compact_on_def, THEN conjunct2, rule_format, of "W ` X"]
+  have "\<exists>F0. finite F0 \<and> F0 \<subseteq> W ` X \<and> X \<subseteq> \<Union>F0" using hWcover by (by100 blast)
+  then obtain Wfin where hWfin: "finite Wfin" "Wfin \<subseteq> W ` X" "X \<subseteq> \<Union>Wfin"
+    by (elim exE conjE) (rule that, assumption+)
+  \<comment> \<open>For each W \\<in> Wfin, get finitely many Uc elements covering p\\<inverse>(W).\<close>
+  \<comment> \<open>Union of these finite sets covers E.\<close>
+  show "\<exists>F. finite F \<and> F \<subseteq> Uc \<and> E \<subseteq> \<Union>F"
+  proof -
+    have "\<forall>W\<in>Wfin. \<exists>FW. finite FW \<and> FW \<subseteq> Uc \<and> {e \<in> E. p e \<in> W} \<subseteq> \<Union>FW"
+    proof (intro ballI)
+      fix Ww assume "Ww \<in> Wfin"
+      hence "Ww \<in> W ` X" using hWfin(2) by (by100 blast)
+      then obtain x where "x \<in> X" "Ww = W x" by (by100 blast)
+      thus "\<exists>FW. finite FW \<and> FW \<subseteq> Uc \<and> {e \<in> E. p e \<in> Ww} \<subseteq> \<Union>FW"
+        using hW by (by100 blast)
+    qed
+    from bchoice[OF this]
+    obtain h where hh: "\<forall>W\<in>Wfin. finite (h W) \<and> h W \<subseteq> Uc \<and> {e \<in> E. p e \<in> W} \<subseteq> \<Union>(h W)"
+      by (by100 blast)
+    let ?F = "\<Union>W\<in>Wfin. h W"
+    have "finite ?F" using hWfin(1) hh by (by100 blast)
+    moreover have "?F \<subseteq> Uc" using hh by (by100 blast)
+    moreover have "E \<subseteq> \<Union>?F"
+    proof (intro subsetI)
+      fix e assume "e \<in> E"
+      have "p e \<in> X" using hp_cont \<open>e \<in> E\<close> unfolding top1_continuous_map_on_def by (by100 blast)
+      hence "p e \<in> \<Union>Wfin" using hWfin(3) by (by100 blast)
+      then obtain W where "W \<in> Wfin" "p e \<in> W" by (by100 blast)
+      hence "e \<in> {e \<in> E. p e \<in> W}" using \<open>e \<in> E\<close> by (by100 blast)
+      hence "e \<in> \<Union>(h W)" using hh \<open>W \<in> Wfin\<close> by (by100 blast)
+      thus "e \<in> \<Union>?F" using \<open>W \<in> Wfin\<close> by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
+qed
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
     If F is free on n+1 generators and H \<le> F has finite index k in F, then H
@@ -2636,36 +4101,6 @@ proof -
       qed
       thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>_X_fin by (by100 blast)
     qed
-    have h\<A>_E_fin: "finite \<A>_E" sorry
-    have hV_E_fin: "finite (top1_graph_vertex_set E' TE' \<A>_E)"
-    proof -
-      have "\<forall>A\<in>\<A>_E. finite (top1_arc_endpoints_on A (subspace_topology E' TE' A))"
-      proof (intro ballI)
-        fix A assume "A \<in> \<A>_E"
-        hence "A \<subseteq> E' \<and> top1_is_arc_on A (subspace_topology E' TE' A)" using h\<A>_E by (by100 blast)
-        hence "top1_is_arc_on A (subspace_topology E' TE' A)" by (by100 blast)
-        then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology E' TE' A) h"
-          unfolding top1_is_arc_on_def by (by100 blast)
-        have hE'_haus: "is_hausdorff_on E' TE'"
-          using hE'_graph unfolding top1_is_graph_on_def by (by100 blast)
-        from arc_endpoints_are_boundary[OF hE'_strict hE'_haus \<open>A \<subseteq> E' \<and> _\<close>[THEN conjunct1]
-            \<open>top1_is_arc_on A _\<close> \<open>top1_homeomorphism_on _ _ _ _ h\<close>]
-        have "top1_arc_endpoints_on A (subspace_topology E' TE' A) = {h 0, h 1}" .
-        thus "finite (top1_arc_endpoints_on A (subspace_topology E' TE' A))" by (by100 simp)
-      qed
-      thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>_E_fin by (by100 blast)
-    qed
-    \<comment> \<open>Step E: Euler formula for X: card S\\_X + card V\\_X = card \\<A>\\_X + 1.
-       Hence card \\<A>\\_X - card V\\_X = card S\\_X - 1 = n.\<close>
-    let ?V_X = "top1_graph_vertex_set X TX \<A>_X"
-    let ?V_E = "top1_graph_vertex_set E' TE' \<A>_E"
-    \<comment> \<open>h\\<A>\\_X\\_inter, h\\<A>\\_X\\_coh, hT\\_X\\_subgraph, hT\\_X\\_coverage now from graph\\_pi1\\_free\\_weak.\<close>
-    have heuler_X: "card S_X + card ?V_X = card \<A>_X + 1"
-      by (rule graph_euler_rank[OF hX_graph hX_conn hx0 h\<A>_X h\<A>_X_cover
-          h\<A>_X_inter h\<A>_X_coh hT_X_tree hT_X_sub hT_X_x0 hT_X_subgraph hT_X_coverage
-          hNT_X_endpoints hS_X_eq h\<A>_X_fin])
-    hence heuler_X_diff: "int (card \<A>_X) - int (card ?V_X) = int n"
-      using hS_X_card by linarith
     \<comment> \<open>Step F: Covering multiplicity.\<close>
     have hfiber_card: "card {e \<in> E'. p' e = x0} = k"
     proof -
@@ -2758,10 +4193,251 @@ proof -
       have "card (top1_left_cosets_on ?piX ?mulX ?pH) = k" by (by100 blast)
       thus ?thesis using hright_card hlr by simp
     qed
-    have harc_mult: "card \<A>_E = k * card \<A>_X"
-      sorry \<comment> \<open>Needs lifted arc family interface (expert audit2: fix statement first).\<close>
-    have hvert_mult: "card ?V_E = k * card ?V_X"
-      sorry \<comment> \<open>Needs lifted arc family interface (expert audit2: fix statement first).\<close>
+    have hE'_compact: "top1_compact_on E' TE'"
+    proof -
+      have hX_top: "is_topology_on X TX"
+        using hX_graph unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+      have hE'_top: "is_topology_on E' TE'"
+        using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
+      have hfiber_all: "\<forall>x\<in>X. card {e \<in> E'. p' e = x} = k"
+      proof -
+        \<comment> \<open>The set {x \\<in> X. card(fiber(x)) = k} is clopen in X and contains x0.
+           X connected \\<Rightarrow> this set = X.\<close>
+        let ?S = "{x \<in> X. card {e \<in> E'. p' e = x} = k}"
+        have hx0_S: "x0 \<in> ?S" using hfiber_card hx0 by (by100 blast)
+        \<comment> \<open>?S is open: for any x \\<in> ?S, the evenly covered nbhd Vx has constant fiber card.\<close>
+        \<comment> \<open>Fiber card is locally constant: in any evenly covered U, all points have same fiber card.\<close>
+        have hlocal_const: "\<forall>x\<in>X. \<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> X \<and>
+            (\<forall>y\<in>U. card {e \<in> E'. p' e = y} = card {e \<in> E'. p' e = x})"
+        proof (intro ballI)
+          fix x assume "x \<in> X"
+          \<comment> \<open>Get evenly covered nbhd U of x.\<close>
+          from top1_covering_map_on_evenly_covered[OF hE'_cov \<open>x \<in> X\<close>]
+          obtain U where hU: "x \<in> U" "top1_evenly_covered_on E' TE' X TX p' U" by (by100 blast)
+          have hU_open: "openin_on X TX U"
+            using hU(2) unfolding top1_evenly_covered_on_def by (by100 blast)
+          from hU(2)[unfolded top1_evenly_covered_on_def]
+          obtain V where hV_props: "(\<forall>Vi\<in>V. openin_on E' TE' Vi) \<and>
+              (\<forall>Vi\<in>V. \<forall>Vj\<in>V. Vi \<noteq> Vj \<longrightarrow> Vi \<inter> Vj = {}) \<and>
+              {e \<in> E'. p' e \<in> U} = \<Union>V \<and>
+              (\<forall>Vi\<in>V. top1_homeomorphism_on Vi (subspace_topology E' TE' Vi)
+                  U (subspace_topology X TX U) p')"
+            by (by100 auto)
+          have hV_open: "\<forall>Vi\<in>V. openin_on E' TE' Vi" using hV_props by (by100 blast)
+          have hV_disj: "\<forall>Vi\<in>V. \<forall>Vj\<in>V. Vi \<noteq> Vj \<longrightarrow> Vi \<inter> Vj = {}" using hV_props by (by100 blast)
+          have hV_union: "{e \<in> E'. p' e \<in> U} = \<Union>V" using hV_props by (by100 blast)
+          have hV_homeo: "\<forall>Vi\<in>V. top1_homeomorphism_on Vi (subspace_topology E' TE' Vi)
+                  U (subspace_topology X TX U) p'" using hV_props by (by100 blast)
+          have hU_TX: "U \<in> TX" using hU_open unfolding openin_on_def by (by100 blast)
+          have hU_sub: "U \<subseteq> X" using hU_open unfolding openin_on_def by (by100 blast)
+          \<comment> \<open>For each y \\<in> U: fiber(y) has exactly |V| elements (one per slice).
+             Hence all y \\<in> U have same fiber card.\<close>
+          have hcard_eq: "\<forall>y\<in>U. card {e \<in> E'. p' e = y} = card V"
+          proof (intro ballI)
+            fix y assume "y \<in> U"
+            \<comment> \<open>Construct bijection: for each Vi \\<in> V, the unique e \\<in> Vi with p'(e) = y.\<close>
+            have "\<forall>Vi\<in>V. \<exists>!e. e \<in> Vi \<and> p' e = y"
+            proof (intro ballI)
+              fix Vi assume "Vi \<in> V"
+              from hV_homeo[rule_format, OF this]
+              have hhomeo: "top1_homeomorphism_on Vi (subspace_topology E' TE' Vi)
+                  U (subspace_topology X TX U) p'" .
+              hence hbij: "bij_betw p' Vi U"
+                unfolding top1_homeomorphism_on_def by (by100 blast)
+              from bij_betw_imp_surj_on[OF hbij]
+              have "\<forall>y\<in>U. \<exists>e\<in>Vi. p' e = y" by (by100 blast)
+              hence "\<exists>e. e \<in> Vi \<and> p' e = y" using \<open>y \<in> U\<close> by (by100 blast)
+              moreover have "\<forall>e1 e2. e1 \<in> Vi \<and> p' e1 = y \<longrightarrow> e2 \<in> Vi \<and> p' e2 = y \<longrightarrow> e1 = e2"
+              proof (intro allI impI)
+                fix e1 e2 assume "e1 \<in> Vi \<and> p' e1 = y" "e2 \<in> Vi \<and> p' e2 = y"
+                from bij_betw_imp_inj_on[OF hbij]
+                have "inj_on p' Vi" .
+                from inj_onD[OF this] show "e1 = e2"
+                  using \<open>e1 \<in> Vi \<and> p' e1 = y\<close> \<open>e2 \<in> Vi \<and> p' e2 = y\<close> by (by100 blast)
+              qed
+              ultimately show "\<exists>!e. e \<in> Vi \<and> p' e = y" by (by100 blast)
+            qed
+            \<comment> \<open>Define f: V \\<rightarrow> E' mapping Vi to the unique e.\<close>
+            define f where "f = (\<lambda>Vi. THE e. e \<in> Vi \<and> p' e = y)"
+            \<comment> \<open>f is a bijection from V to {e \\<in> E'. p' e = y}.\<close>
+            have hf_bij: "bij_betw f V {e \<in> E'. p' e = y}"
+              unfolding bij_betw_def
+            proof (intro conjI)
+              show "inj_on f V"
+              proof (rule inj_onI)
+                fix Vi Vj assume "Vi \<in> V" "Vj \<in> V" "f Vi = f Vj"
+                have hfVi: "f Vi \<in> Vi \<and> p' (f Vi) = y"
+                  using theI'[OF \<open>\<forall>Vi\<in>V. \<exists>!e. _\<close>[rule_format, OF \<open>Vi \<in> V\<close>]]
+                  unfolding f_def by (by100 blast)
+                have hfVj: "f Vj \<in> Vj \<and> p' (f Vj) = y"
+                  using theI'[OF \<open>\<forall>Vi\<in>V. \<exists>!e. _\<close>[rule_format, OF \<open>Vj \<in> V\<close>]]
+                  unfolding f_def by (by100 blast)
+                have "f Vi \<in> Vi" using hfVi by (by100 blast)
+                have "f Vj \<in> Vj" using hfVj by (by100 blast)
+                have "f Vi \<in> Vj" using \<open>f Vj \<in> Vj\<close> \<open>f Vi = f Vj\<close> by simp
+                hence "f Vi \<in> Vi \<inter> Vj" using \<open>f Vi \<in> Vi\<close> by (by100 blast)
+                thus "Vi = Vj" using hV_disj \<open>Vi \<in> V\<close> \<open>Vj \<in> V\<close> by (by100 blast)
+              qed
+              show "f ` V = {e \<in> E'. p' e = y}"
+              proof (rule set_eqI, rule iffI)
+                fix e assume "e \<in> f ` V"
+                then obtain Vi where "Vi \<in> V" "e = f Vi" by (by100 blast)
+                have he_props: "e \<in> Vi \<and> p' e = y"
+                  using theI'[OF \<open>\<forall>Vi\<in>V. \<exists>!e. _\<close>[rule_format, OF \<open>Vi \<in> V\<close>]]
+                  unfolding f_def \<open>e = f Vi\<close> by (by100 blast)
+                have "Vi \<subseteq> E'" using hV_open \<open>Vi \<in> V\<close> unfolding openin_on_def by (by100 blast)
+                thus "e \<in> {e \<in> E'. p' e = y}" using he_props \<open>Vi \<subseteq> E'\<close> by (by100 blast)
+              next
+                fix e assume "e \<in> {e \<in> E'. p' e = y}"
+                hence "e \<in> E'" "p' e = y" by (by100 blast)+
+                have "p' e \<in> U" using \<open>p' e = y\<close> \<open>y \<in> U\<close> by simp
+                hence "e \<in> {e \<in> E'. p' e \<in> U}" using \<open>e \<in> E'\<close> by (by100 blast)
+                hence "e \<in> \<Union>V" using hV_union by (by100 blast)
+                then obtain Vi where "Vi \<in> V" "e \<in> Vi" by (by100 blast)
+                have "f Vi = e"
+                proof -
+                  have "\<exists>!e. e \<in> Vi \<and> p' e = y"
+                    using \<open>\<forall>Vi\<in>V. \<exists>!e. _\<close> \<open>Vi \<in> V\<close> by (by100 blast)
+                  moreover have "e \<in> Vi \<and> p' e = y" using \<open>e \<in> Vi\<close> \<open>p' e = y\<close> by (by100 blast)
+                  ultimately show ?thesis unfolding f_def
+                    by (rule the1_equality)
+                qed
+                thus "e \<in> f ` V" using \<open>Vi \<in> V\<close> by (by100 blast)
+              qed
+            qed
+            from bij_betw_same_card[OF hf_bij]
+            show "card {e \<in> E'. p' e = y} = card V" by simp
+          qed
+          hence "\<forall>y\<in>U. card {e \<in> E'. p' e = y} = card {e \<in> E'. p' e = x}"
+            using \<open>x \<in> U\<close> by simp
+          thus "\<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> X \<and>
+              (\<forall>y\<in>U. card {e \<in> E'. p' e = y} = card {e \<in> E'. p' e = x})"
+            using hU_TX hU(1) hU_sub by (by100 blast)
+        qed
+        have hS_open: "?S \<in> TX"
+        proof -
+          \<comment> \<open>?S = \\<Union>{U | x \\<in> ?S, U evenly covered nbhd of x with constant fiber card}.\<close>
+          have "\<forall>x\<in>?S. \<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> ?S"
+          proof (intro ballI)
+            fix x assume "x \<in> ?S"
+            hence "x \<in> X" "card {e \<in> E'. p' e = x} = k" by (by100 blast)+
+            from hlocal_const[rule_format, OF \<open>x \<in> X\<close>]
+            obtain U where "U \<in> TX" "x \<in> U" "U \<subseteq> X"
+                "\<forall>y\<in>U. card {e \<in> E'. p' e = y} = card {e \<in> E'. p' e = x}" by (by100 blast)
+            have "U \<subseteq> ?S"
+            proof (intro subsetI)
+              fix y assume "y \<in> U"
+              have "y \<in> X" using \<open>U \<subseteq> X\<close> \<open>y \<in> U\<close> by (by100 blast)
+              have "card {e \<in> E'. p' e = y} = k"
+                using \<open>\<forall>y\<in>U. _\<close> \<open>y \<in> U\<close> \<open>card {e \<in> E'. p' e = x} = k\<close> by simp
+              thus "y \<in> ?S" using \<open>y \<in> X\<close> by (by100 blast)
+            qed
+            thus "\<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> ?S" using \<open>U \<in> TX\<close> \<open>x \<in> U\<close> by (by100 blast)
+          qed
+          hence "?S = \<Union>{U \<in> TX. U \<subseteq> ?S}" by (by100 blast)
+          moreover have "{U \<in> TX. U \<subseteq> ?S} \<subseteq> TX" by (by100 blast)
+          hence "\<Union>{U \<in> TX. U \<subseteq> ?S} \<in> TX"
+            using hX_top unfolding is_topology_on_def by (by5000 blast)
+          ultimately show ?thesis by simp
+        qed
+        \<comment> \<open>?S is closed: X \\ ?S is open (same argument with \\<noteq> k).\<close>
+        have hS_closed: "closedin_on X TX ?S"
+        proof -
+          have "X - ?S \<in> TX"
+          proof -
+            have "\<forall>x\<in>X - ?S. \<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> X - ?S"
+            proof (intro ballI)
+              fix x assume "x \<in> X - ?S"
+              hence "x \<in> X" "card {e \<in> E'. p' e = x} \<noteq> k" by (by100 blast)+
+              from hlocal_const[rule_format, OF \<open>x \<in> X\<close>]
+              obtain U where "U \<in> TX" "x \<in> U" "U \<subseteq> X"
+                  "\<forall>y\<in>U. card {e \<in> E'. p' e = y} = card {e \<in> E'. p' e = x}" by (by100 blast)
+              have "U \<subseteq> X - ?S"
+              proof (intro subsetI DiffI)
+                fix y assume "y \<in> U"
+                show "y \<in> X" using \<open>U \<subseteq> X\<close> \<open>y \<in> U\<close> by (by100 blast)
+                show "y \<notin> ?S"
+                proof
+                  assume "y \<in> ?S"
+                  hence "card {e \<in> E'. p' e = y} = k" by (by100 blast)
+                  moreover have "card {e \<in> E'. p' e = y} = card {e \<in> E'. p' e = x}"
+                    using \<open>\<forall>y\<in>U. _\<close> \<open>y \<in> U\<close> by (by100 blast)
+                  ultimately show False using \<open>card {e \<in> E'. p' e = x} \<noteq> k\<close> by simp
+                qed
+              qed
+              thus "\<exists>U\<in>TX. x \<in> U \<and> U \<subseteq> X - ?S" using \<open>U \<in> TX\<close> \<open>x \<in> U\<close> by (by100 blast)
+            qed
+            hence "X - ?S = \<Union>{U \<in> TX. U \<subseteq> X - ?S}" by (by100 blast)
+            moreover have "{U \<in> TX. U \<subseteq> X - ?S} \<subseteq> TX" by (by100 blast)
+            hence "\<Union>{U \<in> TX. U \<subseteq> X - ?S} \<in> TX"
+              using hX_top unfolding is_topology_on_def by (by5000 blast)
+            ultimately show ?thesis by simp
+          qed
+          moreover have "?S \<subseteq> X" by (by100 blast)
+          ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+        qed
+        \<comment> \<open>X connected, ?S clopen and non-empty \\<Rightarrow> ?S = X.\<close>
+        have "?S = {} \<or> ?S = X"
+          using connected_iff_clopen[OF hX_top] hX_conn hS_open hS_closed by (by100 blast)
+        hence "?S = X" using hx0_S by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      have hk_pos: "k > 0"
+      proof -
+        from assms(5) have "card (top1_left_cosets_on F mul H) = k"
+          unfolding top1_subgroup_has_index_on_def by (by100 blast)
+        moreover have "top1_left_cosets_on F mul H \<noteq> {}"
+        proof -
+          have "e \<in> F" using assms(1) unfolding top1_is_free_group_full_on_def
+              top1_is_group_on_def by (by100 blast)
+          hence "top1_group_coset_on F mul H e \<in> top1_left_cosets_on F mul H"
+            unfolding top1_left_cosets_on_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        moreover have "finite (top1_left_cosets_on F mul H)"
+          using assms(5) unfolding top1_subgroup_has_index_on_def by (by100 blast)
+        ultimately show "k > 0" by (by100 force)
+      qed
+      from finite_covering_compact[OF hE'_cov hX_compact hX_top hE'_top hfiber_all hk_pos]
+      show ?thesis .
+    qed
+    have h\<A>_E_fin: "finite \<A>_E"
+      by (rule compact_graph_finite_arcs[OF hE'_graph hE'_compact h\<A>_E h\<A>_E_cover h\<A>_E_inter h\<A>_E_coh])
+    have hV_E_fin: "finite (top1_graph_vertex_set E' TE' \<A>_E)"
+    proof -
+      have "\<forall>A\<in>\<A>_E. finite (top1_arc_endpoints_on A (subspace_topology E' TE' A))"
+      proof (intro ballI)
+        fix A assume "A \<in> \<A>_E"
+        hence "A \<subseteq> E' \<and> top1_is_arc_on A (subspace_topology E' TE' A)" using h\<A>_E by (by100 blast)
+        hence "top1_is_arc_on A (subspace_topology E' TE' A)" by (by100 blast)
+        then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology E' TE' A) h"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        have hE'_haus: "is_hausdorff_on E' TE'"
+          using hE'_graph unfolding top1_is_graph_on_def by (by100 blast)
+        from arc_endpoints_are_boundary[OF hE'_strict hE'_haus \<open>A \<subseteq> E' \<and> _\<close>[THEN conjunct1]
+            \<open>top1_is_arc_on A _\<close> \<open>top1_homeomorphism_on _ _ _ _ h\<close>]
+        have "top1_arc_endpoints_on A (subspace_topology E' TE' A) = {h 0, h 1}" .
+        thus "finite (top1_arc_endpoints_on A (subspace_topology E' TE' A))" by (by100 simp)
+      qed
+      thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>_E_fin by (by100 blast)
+    qed
+    \<comment> \<open>Step E: Euler formula for X: card S\\_X + card V\\_X = card \\<A>\\_X + 1.
+       Hence card \\<A>\\_X - card V\\_X = card S\\_X - 1 = n.\<close>
+    let ?V_X = "top1_graph_vertex_set X TX \<A>_X"
+    let ?V_E = "top1_graph_vertex_set E' TE' \<A>_E"
+    \<comment> \<open>h\\<A>\\_X\\_inter, h\\<A>\\_X\\_coh, hT\\_X\\_subgraph, hT\\_X\\_coverage now from graph\\_pi1\\_free\\_weak.\<close>
+    have heuler_X: "card S_X + card ?V_X = card \<A>_X + 1"
+      by (rule graph_euler_rank[OF hX_graph hX_conn hx0 h\<A>_X h\<A>_X_cover
+          h\<A>_X_inter h\<A>_X_coh hT_X_tree hT_X_sub hT_X_x0 hT_X_subgraph hT_X_coverage
+          hNT_X_endpoints hS_X_eq h\<A>_X_fin])
+    hence heuler_X_diff: "int (card \<A>_X) - int (card ?V_X) = int n"
+      using hS_X_card by linarith
+    \<comment> \<open>Euler characteristic multiplicity: \\<chi>(E) = k \\<cdot> \\<chi>(X).
+       Book: 'E has k times as many edges as X, and k times as many vertices.'
+       Each arc of X lifts to k arcs of E; each vertex of X lifts to k vertices.
+       Formally: card(A\\_E) - card(V\\_E) = k * (card(A\\_X) - card(V\\_X)).\<close>
+    have hchi_mult: "int (card \<A>_E) - int (card ?V_E) = int k * (int (card \<A>_X) - int (card ?V_X))"
+      sorry \<comment> \<open>Covering Euler characteristic multiplicity: needs arc/vertex k-fold lifting.\<close>
     \<comment> \<open>Step G: Euler formula for E': card S\\_E + card V\\_E = card \\<A>\\_E + 1.\<close>
     have hE'_sub_top: "is_topology_on E' TE'"
       using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
@@ -2779,10 +4455,8 @@ proof -
     have "int (card S_E) + int (card ?V_E) = int (card \<A>_E) + 1"
       using heuler_E by linarith
     hence "int (card S_E) = int (card \<A>_E) - int (card ?V_E) + 1" by linarith
-    also have "... = int (k * card \<A>_X) - int (k * card ?V_X) + 1"
-      using harc_mult hvert_mult by simp
     also have "... = int k * (int (card \<A>_X) - int (card ?V_X)) + 1"
-      by (simp add: algebra_simps)
+      using hchi_mult by linarith
     also have "... = int k * int n + 1" using heuler_X_diff by simp
     finally have "int (card S_E) = int (k * n + 1)" by simp
     thus ?thesis by linarith
