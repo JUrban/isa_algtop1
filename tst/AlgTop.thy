@@ -6189,12 +6189,30 @@ proof -
      For base X: (n+1) + card(V\\_X) = card(\\<A>w) + 1 gives \\<chi>\\_X = n.
      For lifted E: rank(E) + card(V\\_L) = card(\\<A>\\_L) + 1 gives rank = kn+1.\<close>
   \<comment> \<open>Step 6a: Rank formula for base graph X with supplied decomposition \\<A>w + Tw.\<close>
+  \<comment> \<open>Decompose into: partition of \\<A>w + tree Euler + vertex equality.\<close>
+  let ?tree_arcs = "{A \<in> \<A>w. A \<subseteq> Tw}"
+  have hpart: "\<A>w = ?tree_arcs \<union> Sw" using hSw_eq by (by100 blast)
+  have hpart_disj: "?tree_arcs \<inter> Sw = {}" using hSw_eq by (by100 blast)
+  have htree_arcs_fin: "finite ?tree_arcs"
+    by (rule finite_subset[of _ \<A>w]) (simp_all add: h\<A>w_fin)
+  have hpart_card: "card \<A>w = card ?tree_arcs + card Sw"
+    using card_Un_disjoint[OF htree_arcs_fin hSw_fin hpart_disj] hpart by simp
+  \<comment> \<open>Tree Euler: card(V\\_Tw) = card(tree\\_arcs) + 1.
+     This is the fundamental tree property, needing the leaf existence chain.\<close>
+  have htree_euler: "card (top1_graph_vertex_set Tw (subspace_topology X TX Tw) ?tree_arcs)
+      = card ?tree_arcs + 1"
+    sorry \<comment> \<open>Tree Euler: finite tree with arcs ?tree\\_arcs \\<Rightarrow> card V = card E + 1.
+       This is the remaining deep sorry. Needs leaf existence from acyclicity.\<close>
+  \<comment> \<open>Vertex equality: V\\_X = V\\_Tw (all endpoints of non-tree arcs are in Tw).\<close>
+  have hV_eq: "top1_graph_vertex_set X TX \<A>w = top1_graph_vertex_set Tw (subspace_topology X TX Tw) ?tree_arcs"
+    sorry \<comment> \<open>All vertices of \\<A>w are in Tw (non-tree arc endpoints \\<in> Tw from hNTw\\_endpoints).\<close>
   have hrank_X_formula: "int (card Sw) + int (card (top1_graph_vertex_set X TX \<A>w))
       = int (card \<A>w) + 1"
-    sorry \<comment> \<open>Supplied-witness graph rank: rank + card V = card A + 1.
-       Proof: tree Euler (card(V\\_Tw) = card(tree\\_arcs) + 1) + rank = card(non-tree arcs)
-       + V = V\\_Tw (all endpoints of non-tree arcs are in tree).
-       Blocked by tree Euler sorry chain.\<close>
+  proof -
+    have "card (top1_graph_vertex_set X TX \<A>w) = card ?tree_arcs + 1"
+      using htree_euler hV_eq by simp
+    thus ?thesis using hpart_card by linarith
+  qed
   have hchi_X: "int (card \<A>w) - int (card (top1_graph_vertex_set X TX \<A>w)) = int n"
     using hrank_X_formula hSw_card by linarith
   \<comment> \<open>Step 6b: Multiplicity gives lifted Euler.\<close>
