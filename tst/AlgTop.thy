@@ -5599,11 +5599,247 @@ proof -
             show ?thesis .
           qed
           \<comment> \<open>inv\\_into B p continuous on A0 (p is open map from covering).\<close>
+          \<comment> \<open>Inverse continuity via: p|B is an open map (from covering sheets + B absorbs sheets).
+             Open bijection has continuous inverse.\<close>
+          have hp_open_on_B: "\<forall>U. openin_on B (subspace_topology E TE B) U \<longrightarrow>
+              openin_on A0 (subspace_topology X TX A0) (p ` U)"
+          proof (intro allI impI)
+            fix U assume hU: "openin_on B (subspace_topology E TE B) U"
+            \<comment> \<open>Show p(U) open: every point has an open neighborhood in p(U).\<close>
+            have hU_sub: "U \<subseteq> B" using hU unfolding openin_on_def by (by100 blast)
+            have hpU_sub: "p ` U \<subseteq> A0" using hU_sub hpB_eq by (by100 blast)
+            have "\<forall>a\<in>p ` U. \<exists>V. V \<in> subspace_topology X TX A0 \<and> a \<in> V \<and> V \<subseteq> p ` U"
+            proof (intro ballI)
+              fix a assume "a \<in> p ` U"
+              then obtain b where "b \<in> U" "p b = a" by (by100 blast)
+              have "b \<in> B" using \<open>b \<in> U\<close> hU_sub by (by100 blast)
+              have "b \<in> ?pre0" using \<open>b \<in> B\<close> hB_sub0 by (by100 blast)
+              \<comment> \<open>Covering sheet at b.\<close>
+              from covering_sheet_over_arc_path_connected[OF hcov_A0 hA0_arc hpre0_top hTA0 \<open>b \<in> ?pre0\<close>]
+              obtain Wb where hWb_sub: "Wb \<subseteq> ?pre0"
+                  and hWb_open: "openin_on ?pre0 (subspace_topology E TE ?pre0) Wb"
+                  and hWb_b: "b \<in> Wb"
+                  and hWb_pc: "top1_path_connected_on Wb (subspace_topology ?pre0 (subspace_topology E TE ?pre0) Wb)"
+                  and hWb_homeo: "top1_homeomorphism_on Wb (subspace_topology ?pre0 (subspace_topology E TE ?pre0) Wb)
+                      (p ` Wb) (subspace_topology A0 (subspace_topology X TX A0) (p ` Wb)) p"
+                  and hWb_ev: "top1_evenly_covered_on ?pre0 (subspace_topology E TE ?pre0) A0
+                      (subspace_topology X TX A0) p (p ` Wb)"
+                by (by100 blast)
+              \<comment> \<open>Wb \\<subseteq> B (connected sheet meets B at b, B is max conn comp).\<close>
+              have hWb_conn: "top1_connected_on Wb (subspace_topology ?pre0 (subspace_topology E TE ?pre0) Wb)"
+                by (rule path_connected_imp_connected[OF hWb_pc])
+              have "Wb \<inter> B \<noteq> {}" using hWb_b \<open>b \<in> B\<close> by (by100 blast)
+              have hWb_sub_B: "Wb \<subseteq> B"
+                by (rule h_mcc_absorb[OF hpre0_top hB_comp0 hWb_conn hWb_sub \<open>Wb \<inter> B \<noteq> {}\<close>])
+              \<comment> \<open>Wb \\<inter> U open in sub(preimage,sub(E,TE,preimage), Wb).
+                 Since p|Wb is a homeomorphism, p(Wb \\<inter> U) open in sub(A0,sub(X,TX,A0), p(Wb)).\<close>
+              \<comment> \<open>U open in sub(E,TE,B). Wb \\<subseteq> B. So Wb \\<inter> U open in sub(E,TE,Wb).\<close>
+              have "p ` Wb \<in> subspace_topology X TX A0"
+              proof -
+                from top1_evenly_covered_on_openin_on[OF hWb_ev]
+                show ?thesis unfolding openin_on_def by (by100 blast)
+              qed
+              \<comment> \<open>Wb \\<inter> U nonempty (b \\<in> both). a \\<in> p(Wb \\<inter> U).\<close>
+              have "a \<in> p ` Wb" using \<open>p b = a\<close> hWb_b by (by100 blast)
+              \<comment> \<open>Key: p(Wb) \\<subseteq> p(U). Since Wb \\<subseteq> B and... wait, Wb might not be \\<subseteq> U.
+                 Actually p(Wb) might be bigger than what we need.
+                 We need p(Wb) \\<inter> p(U) to contain an open nbhd of a.
+                 Since p|B is injective, p(Wb \\<inter> U) = p(Wb) \\<inter> p(U).
+                 And p(Wb \\<inter> U) \\<subseteq> p(U). So if p(Wb \\<inter> U) is open in A0, we're done.\<close>
+              \<comment> \<open>p(Wb \\<inter> U) = p(Wb) \\<inter> p(U) (from injectivity of p on B, since Wb, U \\<subseteq> B).\<close>
+              \<comment> \<open>p(Wb) open in A0 (from evenly covered). p(U) \\<subseteq> A0.
+                 p(Wb) \\<inter> p(U) open in A0? Not directly (intersection of open with arbitrary).\<close>
+              \<comment> \<open>Better: p(Wb) open in A0. a \\<in> p(Wb). p(Wb) \\<subseteq> p(B) = A0.
+                 So p(Wb) is an open nbhd of a in A0. If p(Wb) \\<subseteq> p(U)... not true in general.\<close>
+              \<comment> \<open>What IS true: p(Wb \\<inter> U) is open in p(Wb) (from homeomorphism).
+                 p(Wb) open in A0. Open subset of open subset = open in A0.
+                 p(Wb \\<inter> U) open in p(Wb) (homeo maps open to open).
+                 p(Wb \\<inter> U) open in A0 (sub-open of open = open).\<close>
+              have hWbU_open_in_pWb: "openin_on (p ` Wb) (subspace_topology A0 (subspace_topology X TX A0) (p ` Wb)) (p ` (Wb \<inter> U))"
+              proof -
+                \<comment> \<open>Wb \\<inter> U is open in sub(?pre0, sub(E,TE,?pre0), Wb).
+                   Proof: U open in sub(E,TE,B) \\<Rightarrow> U = V0 \\<inter> B for V0 \\<in> TE.
+                   Wb \\<inter> U = Wb \\<inter> V0 \\<inter> B = Wb \\<inter> V0 (since Wb \\<subseteq> B).
+                   Wb \\<inter> V0 = V0 \\<inter> Wb \\<in> sub(E,TE,Wb) = sub(?pre0, sub(E,TE,?pre0), Wb).\<close>
+                have hWbU_open_Wb: "Wb \<inter> U \<in> subspace_topology ?pre0 (subspace_topology E TE ?pre0) Wb"
+                proof -
+                  from hU[unfolded openin_on_def]
+                  have "U \<in> subspace_topology E TE B" by (by100 blast)
+                  then obtain V0 where "V0 \<in> TE" "U = V0 \<inter> B"
+                    unfolding subspace_topology_def by (by100 blast)
+                  have "Wb \<inter> U = V0 \<inter> Wb" using \<open>U = V0 \<inter> B\<close> hWb_sub_B by (by100 blast)
+                  moreover have "V0 \<inter> Wb \<in> subspace_topology E TE Wb"
+                    unfolding subspace_topology_def using \<open>V0 \<in> TE\<close> by (by100 blast)
+                  moreover have "subspace_topology E TE Wb = subspace_topology ?pre0 (subspace_topology E TE ?pre0) Wb"
+                    by (rule subspace_topology_trans[OF hWb_sub, symmetric])
+                  ultimately show ?thesis by simp
+                qed
+                \<comment> \<open>p|Wb homeomorphism maps open Wb\\<inter>U to open p(Wb\\<inter>U).\<close>
+                \<comment> \<open>The homeomorphism on\\_def says: f continuous + f\\<inverse> continuous + bijective.
+                   Continuous \\<Rightarrow> preimage of open is open. Equivalently: image of open is open (from inverse).\<close>
+                have "openin_on Wb (subspace_topology ?pre0 (subspace_topology E TE ?pre0) Wb) (Wb \<inter> U)"
+                  unfolding openin_on_def using hWbU_open_Wb hU_sub hWb_sub_B by (by100 blast)
+                \<comment> \<open>Homeomorphism: continuous inverse means p maps open to open.\<close>
+                have hp_inv_cont: "top1_continuous_map_on (p ` Wb)
+                    (subspace_topology A0 (subspace_topology X TX A0) (p ` Wb))
+                    Wb (subspace_topology ?pre0 (subspace_topology E TE ?pre0) Wb) (inv_into Wb p)"
+                  using hWb_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+                \<comment> \<open>Preimage of (Wb\\<inter>U) under inv\\_into is {a \\<in> p(Wb). inv(a) \\<in> Wb\\<inter>U} = p(Wb\\<inter>U).
+                   Since inv\\_into is continuous, this preimage is open.\<close>
+                have "{a \<in> p ` Wb. inv_into Wb p a \<in> Wb \<inter> U} = p ` (Wb \<inter> U)"
+                proof (rule set_eqI, rule iffI)
+                  fix a assume "a \<in> {a \<in> p ` Wb. inv_into Wb p a \<in> Wb \<inter> U}"
+                  hence "a \<in> p ` Wb" "inv_into Wb p a \<in> Wb \<inter> U" by (by100 blast)+
+                  have "p (inv_into Wb p a) = a" using f_inv_into_f[OF \<open>a \<in> p ` Wb\<close>] .
+                  hence "a = p (inv_into Wb p a)" by simp
+                  thus "a \<in> p ` (Wb \<inter> U)" using \<open>inv_into Wb p a \<in> Wb \<inter> U\<close> by (by100 blast)
+                next
+                  fix a assume "a \<in> p ` (Wb \<inter> U)"
+                  then obtain w where "w \<in> Wb" "w \<in> U" "a = p w" by (by100 blast)
+                  have "a \<in> p ` Wb" using \<open>w \<in> Wb\<close> \<open>a = p w\<close> by (by100 blast)
+                  have hinj_Wb: "inj_on p Wb"
+                    using hWb_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+                  have "inv_into Wb p a = w" using inv_into_f_f[OF hinj_Wb \<open>w \<in> Wb\<close>] \<open>a = p w\<close> by simp
+                  thus "a \<in> {a \<in> p ` Wb. inv_into Wb p a \<in> Wb \<inter> U}"
+                    using \<open>a \<in> p ` Wb\<close> \<open>w \<in> Wb\<close> \<open>w \<in> U\<close> \<open>inv_into Wb p a = w\<close> by (by100 blast)
+                qed
+                from hp_inv_cont[unfolded top1_continuous_map_on_def, THEN conjunct2,
+                    rule_format, OF hWbU_open_Wb]
+                have "{a \<in> p ` Wb. inv_into Wb p a \<in> Wb \<inter> U}
+                    \<in> subspace_topology A0 (subspace_topology X TX A0) (p ` Wb)" .
+                hence "p ` (Wb \<inter> U) \<in> subspace_topology A0 (subspace_topology X TX A0) (p ` Wb)"
+                  using \<open>{a \<in> p ` Wb. inv_into Wb p a \<in> Wb \<inter> U} = p ` (Wb \<inter> U)\<close> by simp
+                moreover have "p ` (Wb \<inter> U) \<subseteq> p ` Wb" by (by100 blast)
+                ultimately show ?thesis unfolding openin_on_def by (by100 blast)
+              qed
+              have "a \<in> p ` (Wb \<inter> U)" using \<open>p b = a\<close> hWb_b \<open>b \<in> U\<close> by (by100 blast)
+              have "p ` (Wb \<inter> U) \<subseteq> p ` U" by (by100 blast)
+              \<comment> \<open>p(Wb \\<inter> U) is open in A0 (open in open subset of A0).\<close>
+              have "p ` (Wb \<inter> U) \<in> subspace_topology X TX A0"
+              proof -
+                from hWbU_open_in_pWb[unfolded openin_on_def]
+                \<comment> \<open>Use subspace\\_topology\\_trans to collapse double subspace.\<close>
+                have hpWb_sub_A0: "p ` Wb \<subseteq> A0"
+                  using hWb_sub hB_sub0 hpB_eq hWb_sub_B by (by100 blast)
+                have "subspace_topology A0 (subspace_topology X TX A0) (p ` Wb)
+                    = subspace_topology X TX (p ` Wb)"
+                  by (rule subspace_topology_trans[OF hpWb_sub_A0])
+                \<comment> \<open>p ` (Wb \\<inter> U) \\<in> sub(X,TX,p(Wb)): from openin\\_on and topology collapse.\<close>
+                have "p ` (Wb \<inter> U) \<in> subspace_topology X TX (p ` Wb)"
+                proof -
+                  from hWbU_open_in_pWb[unfolded openin_on_def]
+                  have "p ` (Wb \<inter> U) \<in> subspace_topology A0 (subspace_topology X TX A0) (p ` Wb)"
+                    by (by100 blast)
+                  thus ?thesis using \<open>subspace_topology A0 _ _ = subspace_topology X TX _\<close> by simp
+                qed
+                \<comment> \<open>So p ` (Wb \\<inter> U) = V \\<inter> p(Wb) for V \\<in> TX.\<close>
+                then obtain VR where "VR \<in> TX" "p ` (Wb \<inter> U) = VR \<inter> p ` Wb"
+                proof -
+                  assume hgoal: "\<And>VR. VR \<in> TX \<Longrightarrow> p ` (Wb \<inter> U) = VR \<inter> p ` Wb \<Longrightarrow> thesis"
+                  from \<open>p ` (Wb \<inter> U) \<in> subspace_topology X TX (p ` Wb)\<close>
+                  obtain VR0 where "VR0 \<in> TX" "p ` (Wb \<inter> U) = VR0 \<inter> p ` Wb"
+                    unfolding subspace_topology_def by (by100 auto)
+                  from hgoal[OF this] show thesis .
+                qed
+                \<comment> \<open>p(Wb) = V2 \\<inter> A0 for V2 \\<in> TX.\<close>
+                obtain V2 where "V2 \<in> TX" "p ` Wb = V2 \<inter> A0"
+                  using \<open>p ` Wb \<in> subspace_topology X TX A0\<close>
+                  unfolding subspace_topology_def by (by100 blast)
+                \<comment> \<open>p(Wb \\<inter> U) = V \\<inter> V2 \\<inter> A0, and V \\<inter> V2 \\<in> TX.\<close>
+                have "p ` (Wb \<inter> U) = (VR \<inter> V2) \<inter> A0"
+                  using \<open>p ` (Wb \<inter> U) = VR \<inter> p ` Wb\<close> \<open>p ` Wb = V2 \<inter> A0\<close> by (by100 blast)
+                moreover have "VR \<inter> V2 \<in> TX"
+                proof -
+                  have hfin_inter: "\<forall>F. finite F \<and> F \<noteq> {} \<and> F \<subseteq> TX \<longrightarrow> \<Inter>F \<in> TX"
+                    using hTX unfolding is_topology_on_def by (by100 blast)
+                  have "finite {VR, V2} \<and> {VR, V2} \<noteq> {} \<and> {VR, V2} \<subseteq> TX"
+                    using \<open>VR \<in> TX\<close> \<open>V2 \<in> TX\<close> by (by100 simp)
+                  from hfin_inter[rule_format, OF this]
+                  have "\<Inter>{VR, V2} \<in> TX" .
+                  thus ?thesis by (by100 simp)
+                qed
+                ultimately have "p ` (Wb \<inter> U) \<in> subspace_topology X TX A0"
+                  unfolding subspace_topology_def using \<open>VR \<inter> V2 \<in> TX\<close> by (by100 blast)
+                thus ?thesis .
+              qed
+              thus "\<exists>V. V \<in> subspace_topology X TX A0 \<and> a \<in> V \<and> V \<subseteq> p ` U"
+                using \<open>a \<in> p ` (Wb \<inter> U)\<close> \<open>p ` (Wb \<inter> U) \<subseteq> p ` U\<close> by (by100 blast)
+            qed
+            \<comment> \<open>p(U) = union of open sets \\<Rightarrow> open.\<close>
+            have "p ` U = \<Union>{V. V \<in> subspace_topology X TX A0 \<and> V \<subseteq> p ` U}"
+            proof (rule set_eqI, rule iffI)
+              fix a assume "a \<in> p ` U"
+              with \<open>\<forall>a\<in>p ` U. _\<close>[rule_format, OF this]
+              obtain V where "V \<in> subspace_topology X TX A0" "a \<in> V" "V \<subseteq> p ` U" by (by100 blast)
+              thus "a \<in> \<Union>{V. V \<in> subspace_topology X TX A0 \<and> V \<subseteq> p ` U}" by (by100 blast)
+            next
+              fix a assume "a \<in> \<Union>{V. V \<in> subspace_topology X TX A0 \<and> V \<subseteq> p ` U}"
+              thus "a \<in> p ` U" by (by100 blast)
+            qed
+            moreover have "\<Union>{V. V \<in> subspace_topology X TX A0 \<and> V \<subseteq> p ` U} \<in> subspace_topology X TX A0"
+            proof -
+              have hsub_TA0: "{V. V \<in> subspace_topology X TX A0 \<and> V \<subseteq> p ` U} \<subseteq> subspace_topology X TX A0"
+                by (by100 blast)
+              have "\<forall>S\<subseteq>subspace_topology X TX A0. \<Union>S \<in> subspace_topology X TX A0"
+                using hTA0 unfolding is_topology_on_def by (by100 blast)
+              thus ?thesis using hsub_TA0 by (by100 blast)
+            qed
+            ultimately have "p ` U \<in> subspace_topology X TX A0" by simp
+            thus "openin_on A0 (subspace_topology X TX A0) (p ` U)"
+              unfolding openin_on_def using hpU_sub by (by100 blast)
+          qed
+          \<comment> \<open>Open bijection has continuous inverse.\<close>
           show "top1_continuous_map_on A0 (subspace_topology X TX A0) B (subspace_topology E TE B)
               (inv_into B p)"
-            sorry \<comment> \<open>Inverse continuity: B is open in preimage(A0) (max conn comp of locally connected
-               space). V'\\<inter>B open in preimage(A0) for V' open. p(V'\\<inter>B) open by covering\\_map\\_is\\_open\\_map.
-               Hence p|B is open, so inv(p|B) is continuous.\<close>
+          proof -
+            have hTB: "is_topology_on B (subspace_topology E TE B)"
+              by (rule subspace_topology_is_topology_on[OF hTE hB_sub_E])
+            show ?thesis unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix a assume "a \<in> A0"
+              have "a \<in> p ` B" using \<open>a \<in> A0\<close> hpB_eq by simp
+              from inv_into_into[OF this] show "inv_into B p a \<in> B" .
+            next
+              fix V assume "V \<in> subspace_topology E TE B"
+              \<comment> \<open>{a \\<in> A0. inv\\_into B p a \\<in> V} = p(V \\<inter> B) = p(V) (since V \\<subseteq> B from subspace).\<close>
+              have "V \<subseteq> B"
+              proof -
+                from \<open>V \<in> subspace_topology E TE B\<close>
+                obtain W where "W \<in> TE" "V = W \<inter> B" unfolding subspace_topology_def by (by100 blast)
+                thus ?thesis by (by100 blast)
+              qed
+              have "{a \<in> A0. inv_into B p a \<in> V} = p ` V"
+              proof (rule set_eqI, rule iffI)
+                fix a assume "a \<in> {a \<in> A0. inv_into B p a \<in> V}"
+                hence "a \<in> A0" "inv_into B p a \<in> V" by (by100 blast)+
+                have "inv_into B p a \<in> B" using \<open>inv_into B p a \<in> V\<close> \<open>V \<subseteq> B\<close> by (by100 blast)
+                have "p (inv_into B p a) = a"
+                proof -
+                  have "a \<in> p ` B" using \<open>a \<in> A0\<close> hpB_eq by simp
+                  from f_inv_into_f[OF this] show ?thesis .
+                qed
+                hence "a = p (inv_into B p a)" by simp
+                thus "a \<in> p ` V" using \<open>inv_into B p a \<in> V\<close> by (by100 blast)
+              next
+                fix a assume "a \<in> p ` V"
+                then obtain v where "v \<in> V" "a = p v" by (by100 blast)
+                have "v \<in> B" using \<open>v \<in> V\<close> \<open>V \<subseteq> B\<close> by (by100 blast)
+                have "a \<in> A0" using \<open>a = p v\<close> \<open>v \<in> B\<close> hpB_eq by (by100 blast)
+                have "inv_into B p a = v"
+                  using inv_into_f_f[OF hB_inj \<open>v \<in> B\<close>] \<open>a = p v\<close> by simp
+                thus "a \<in> {a \<in> A0. inv_into B p a \<in> V}" using \<open>a \<in> A0\<close> \<open>v \<in> V\<close>
+                    \<open>inv_into B p a = v\<close> by (by100 blast)
+              qed
+              \<comment> \<open>V open in sub(E,TE,B). openin\\_on B ... V. p(V) open in A0.\<close>
+              have "openin_on B (subspace_topology E TE B) V"
+                unfolding openin_on_def using \<open>V \<subseteq> B\<close> \<open>V \<in> subspace_topology E TE B\<close> by (by100 blast)
+              from hp_open_on_B[rule_format, OF this]
+              have "openin_on A0 (subspace_topology X TX A0) (p ` V)" .
+              hence "p ` V \<in> subspace_topology X TX A0" unfolding openin_on_def by (by100 blast)
+              thus "{a \<in> A0. inv_into B p a \<in> V} \<in> subspace_topology X TX A0"
+                using \<open>{a \<in> A0. inv_into B p a \<in> V} = p ` V\<close> by simp
+            qed
+          qed
         qed
         \<comment> \<open>Get homeomorphism h\\_A0: [0,1] \\<rightarrow> A0.\<close>
         obtain h_A0 where hh_A0: "top1_homeomorphism_on top1_unit_interval
