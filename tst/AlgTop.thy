@@ -2333,9 +2333,249 @@ lemma tree_euler_from_leaf:
     finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
     (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
     card (top1_graph_vertex_set T TT \<A>) = n + 1"
-  sorry \<comment> \<open>By strong induction on n. Same as tree\\_euler\\_nat but using hleaf\\_all
-     instead of finite\\_tree\\_has\\_leaf\\_arc. The IH can provide the leaf for subtrees
-     because hleaf\\_all is universal.\<close>
+proof (induction n rule: less_induct)
+  case (less n)
+  show ?case
+  proof (intro allI impI)
+    fix T :: "'a set" and TT :: "'a set set" and \<A> :: "'a set set"
+    assume hcard: "card \<A> = n"
+      and htree: "top1_is_tree_on T TT"
+      and harcs: "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and hcover: "\<Union>\<A> = T"
+      and hinter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and hfin: "finite \<A>" and hne: "\<A> \<noteq> {}"
+      and hcoh: "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+    show "card (top1_graph_vertex_set T TT \<A>) = n + 1"
+    proof (cases "n = 1")
+      case True
+      \<comment> \<open>Base: 1 arc has 2 endpoints.\<close>
+      from card_1_singletonE[OF True[folded hcard]] obtain A0 where "\<A> = {A0}" .
+      have hA0: "A0 \<subseteq> T \<and> top1_is_arc_on A0 (subspace_topology T TT A0)"
+        using harcs \<open>\<A> = {A0}\<close> by (by100 blast)
+      have hstrict: "is_topology_on_strict T TT"
+        using htree unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have hhaus: "is_hausdorff_on T TT"
+        using htree unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+        using hA0 unfolding top1_is_arc_on_def by (by100 blast)
+      have "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {h 0, h 1}"
+        by (rule arc_endpoints_are_boundary[OF hstrict hhaus conjunct1[OF hA0] conjunct2[OF hA0] hh])
+      moreover have "h 0 \<noteq> h 1"
+      proof
+        assume "h 0 = h 1"
+        have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        from inj_onD[OF this \<open>h 0 = h 1\<close>] show False unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      ultimately have "card (top1_arc_endpoints_on A0 (subspace_topology T TT A0)) = 2" by (by100 simp)
+      moreover have "top1_graph_vertex_set T TT \<A> =
+          top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        unfolding top1_graph_vertex_set_def using \<open>\<A> = {A0}\<close> by simp
+      ultimately show ?thesis using True by simp
+    next
+      case False
+      hence hn_ge2: "n \<ge> 2"
+      proof -
+        have "n \<noteq> 0" using hcard hfin hne by (by100 force)
+        thus ?thesis using False by linarith
+      qed
+      \<comment> \<open>Induction step: leaf arc removal.
+         Book: find leaf arc A0 meeting T\\_0 in one vertex.\<close>
+      have hcard_ge2: "card \<A> \<ge> 2" using hn_ge2 hcard by simp
+      from hleaf_all[OF htree harcs hcover hinter hfin hcard_ge2 hcoh]
+      have "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+          (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)" .
+      then obtain A0 v where hA0: "A0 \<in> \<A>"
+          and hv_ep: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+          and hv_uniq: "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
+        by (elim exE conjE)
+      let ?\<A>' = "\<A> - {A0}" and ?T' = "\<Union>(\<A> - {A0})"
+      have h\<A>'_fin: "finite ?\<A>'" using hfin by (by100 simp)
+      have h\<A>'_ne: "?\<A>' \<noteq> {}"
+      proof -
+        have "card ?\<A>' = n - 1" using hcard hfin hA0 by (by100 simp)
+        hence "card ?\<A>' \<ge> 1" using hn_ge2 by linarith
+        thus ?thesis using h\<A>'_fin by (by100 force)
+      qed
+      have h\<A>'_card: "card ?\<A>' = n - 1" using hcard hfin hA0 by (by100 simp)
+      have h\<A>'_lt: "n - 1 < n" using hn_ge2 by linarith
+      \<comment> \<open>Transfer properties to subspace.\<close>
+      have hremove_result: "top1_is_tree_on ?T' (subspace_topology T TT ?T')
+           \<and> (\<forall>C. C \<subseteq> ?T' \<longrightarrow>
+               (closedin_on ?T' (subspace_topology T TT ?T') C \<longleftrightarrow>
+                (\<forall>A\<in>?\<A>'. closedin_on A (subspace_topology ?T' (subspace_topology T TT ?T') A) (A \<inter> C))))"
+        by (rule finite_tree_remove_leaf_is_tree[OF htree harcs hcover hinter hA0 hv_ep hv_uniq hcard_ge2 hfin hcoh])
+      have hT'_tree: "top1_is_tree_on ?T' (subspace_topology T TT ?T')"
+        using hremove_result by (by100 blast)
+      have h\<A>'_coh: "\<forall>C. C \<subseteq> ?T' \<longrightarrow>
+          (closedin_on ?T' (subspace_topology T TT ?T') C \<longleftrightarrow>
+           (\<forall>A\<in>?\<A>'. closedin_on A (subspace_topology ?T' (subspace_topology T TT ?T') A) (A \<inter> C)))"
+        using hremove_result by (by100 blast)
+      have h\<A>'_arcs: "\<forall>A\<in>?\<A>'. A \<subseteq> ?T' \<and>
+          top1_is_arc_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)"
+      proof (intro ballI conjI)
+        fix A assume "A \<in> ?\<A>'" thus "A \<subseteq> ?T'" by (by100 blast)
+        have "A \<in> \<A>" using \<open>A \<in> ?\<A>'\<close> by (by100 blast)
+        hence "top1_is_arc_on A (subspace_topology T TT A)" using harcs by (by100 blast)
+        have "A \<subseteq> ?T'" using \<open>A \<in> ?\<A>'\<close> by (by100 blast)
+        have "subspace_topology ?T' (subspace_topology T TT ?T') A = subspace_topology T TT A"
+          using subspace_topology_trans[of A ?T' T TT] \<open>A \<subseteq> ?T'\<close> by (by100 simp)
+        thus "top1_is_arc_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)"
+          using \<open>top1_is_arc_on A (subspace_topology T TT A)\<close> by simp
+      qed
+      have h\<A>'_cover: "\<Union>?\<A>' = ?T'" by (by100 blast)
+      have h\<A>'_inter: "\<forall>A\<in>?\<A>'. \<forall>B\<in>?\<A>'. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?T' (subspace_topology T TT ?T') B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      proof (intro ballI impI)
+        fix A B assume hAB: "A \<in> ?\<A>'" "B \<in> ?\<A>'" "A \<noteq> B"
+        have "A \<in> \<A>" "B \<in> \<A>" using hAB(1-2) by (by100 blast)+
+        have "A \<subseteq> ?T'" "B \<subseteq> ?T'" using hAB(1-2) by (by100 blast)+
+        from hinter[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> hAB(3)]
+        have h: "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" .
+        have "subspace_topology ?T' (subspace_topology T TT ?T') A = subspace_topology T TT A"
+          using subspace_topology_trans[of A ?T' T TT] \<open>A \<subseteq> ?T'\<close> by (by100 simp)
+        moreover have "subspace_topology ?T' (subspace_topology T TT ?T') B = subspace_topology T TT B"
+          using subspace_topology_trans[of B ?T' T TT] \<open>B \<subseteq> ?T'\<close> by (by100 simp)
+        ultimately show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)
+          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?T' (subspace_topology T TT ?T') B)
+          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" using h by simp
+      qed
+      \<comment> \<open>Apply IH via less.hyps.\<close>
+      from spec[OF spec[OF spec[OF less(1)[OF h\<A>'_lt], of ?T'], of "subspace_topology T TT ?T'"], of ?\<A>']
+      have hIH: "card (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>') = (n - 1) + 1"
+        using h\<A>'_card hT'_tree h\<A>'_arcs h\<A>'_cover h\<A>'_inter h\<A>'_fin h\<A>'_ne h\<A>'_coh by (by5000 simp)
+      \<comment> \<open>Vertex counting: V = V' \\<union> {v}, v \\<notin> V'.\<close>
+      have hV_union: "top1_graph_vertex_set T TT \<A> =
+          top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<union> {v}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> top1_graph_vertex_set T TT \<A>"
+        then obtain A where hA: "A \<in> \<A>"
+            "x \<in> top1_arc_endpoints_on A (subspace_topology T TT A)"
+          unfolding top1_graph_vertex_set_def by (by100 blast)
+        show "x \<in> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<union> {v}"
+        proof (cases "A = A0")
+          case False
+          hence "A \<in> ?\<A>'" using hA(1) by (by100 blast)
+          have "A \<subseteq> ?T'" using \<open>A \<in> ?\<A>'\<close> by (by100 blast)
+          have "subspace_topology ?T' (subspace_topology T TT ?T') A = subspace_topology T TT A"
+            using subspace_topology_trans[of A ?T' T TT] \<open>A \<subseteq> ?T'\<close> by (by100 simp)
+          hence "x \<in> top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A)"
+            using hA(2) by simp
+          thus ?thesis unfolding top1_graph_vertex_set_def using \<open>A \<in> ?\<A>'\<close> by (by100 blast)
+        next
+          case True
+          hence "x \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" using hA(2) by simp
+          thus ?thesis
+          proof (cases "x = v")
+            case True thus ?thesis by (by100 blast)
+          next
+            case False
+            \<comment> \<open>x is the other endpoint of A0. x must be in some arc B \\<in> \\<A>'.\<close>
+            \<comment> \<open>x is the other endpoint of A0. By tree\\_leaf\\_other\\_endpoint\\_shared,
+               x is in some arc B \\<in> \\<A> - {A0}.\<close>
+            have "x \<in> A0" using \<open>x \<in> top1_arc_endpoints_on A0 _\<close>
+              unfolding top1_arc_endpoints_on_def by (by100 blast)
+            from tree_leaf_other_endpoint_shared[OF htree harcs hcover hinter hA0 hv_ep hv_uniq hcard_ge2 hfin
+                \<open>x \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)\<close> False]
+            obtain B where "B \<in> \<A> - {A0}" "x \<in> B" by (by100 blast)
+            hence "B \<in> ?\<A>'" by (by100 blast)
+            have "B \<in> \<A>" using \<open>B \<in> \<A> - {A0}\<close> by (by100 blast)
+            have "B \<noteq> A0" using \<open>B \<in> \<A> - {A0}\<close> by (by100 blast)
+            have "x \<in> A0 \<inter> B" using \<open>x \<in> A0\<close> \<open>x \<in> B\<close> by (by100 blast)
+            have "A0 \<in> \<A>" using hA0 .
+            have "A0 \<noteq> B" using \<open>B \<noteq> A0\<close> by (by100 blast)
+            from hinter[rule_format, OF \<open>A0 \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A0 \<noteq> B\<close>]
+            have "x \<in> top1_arc_endpoints_on B (subspace_topology T TT B)"
+              using \<open>x \<in> A0 \<inter> B\<close> by (by100 blast)
+            have "B \<subseteq> ?T'" using \<open>B \<in> ?\<A>'\<close> by (by100 blast)
+            have "subspace_topology ?T' (subspace_topology T TT ?T') B = subspace_topology T TT B"
+              using subspace_topology_trans[of B ?T' T TT] \<open>B \<subseteq> ?T'\<close> by (by100 simp)
+            hence "x \<in> top1_arc_endpoints_on B (subspace_topology ?T' (subspace_topology T TT ?T') B)"
+              using \<open>x \<in> top1_arc_endpoints_on B (subspace_topology T TT B)\<close> by simp
+            thus ?thesis unfolding top1_graph_vertex_set_def using \<open>B \<in> ?\<A>'\<close> by (by100 blast)
+          qed
+        qed
+      next
+        fix x assume "x \<in> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<union> {v}"
+        thus "x \<in> top1_graph_vertex_set T TT \<A>"
+        proof
+          assume "x \<in> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>'"
+          then obtain B where "B \<in> ?\<A>'"
+              "x \<in> top1_arc_endpoints_on B (subspace_topology ?T' (subspace_topology T TT ?T') B)"
+            unfolding top1_graph_vertex_set_def by (by100 blast)
+          have "B \<in> \<A>" using \<open>B \<in> ?\<A>'\<close> by (by100 blast)
+          have "B \<subseteq> ?T'" using \<open>B \<in> ?\<A>'\<close> by (by100 blast)
+          have "subspace_topology ?T' (subspace_topology T TT ?T') B = subspace_topology T TT B"
+            using subspace_topology_trans[of B ?T' T TT] \<open>B \<subseteq> ?T'\<close> by (by100 simp)
+          hence "x \<in> top1_arc_endpoints_on B (subspace_topology T TT B)"
+            using \<open>x \<in> top1_arc_endpoints_on B _\<close> by simp
+          thus ?thesis unfolding top1_graph_vertex_set_def using \<open>B \<in> \<A>\<close> by (by100 blast)
+        next
+          assume "x \<in> {v}"
+          hence "x = v" by (by100 blast)
+          thus ?thesis unfolding top1_graph_vertex_set_def
+            using hA0 hv_ep by (by100 blast)
+        qed
+      qed
+      have hv_fresh: "v \<notin> top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>'"
+      proof -
+        have "v \<notin> \<Union>?\<A>'"
+        proof
+          assume "v \<in> \<Union>?\<A>'"
+          then obtain B where "B \<in> ?\<A>'" "v \<in> B" by (by100 blast)
+          hence "B \<in> \<A>" "B \<noteq> A0" by (by100 blast)+
+          from hv_uniq[rule_format, OF \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>]
+          show False using \<open>v \<in> B\<close> by (by100 blast)
+        qed
+        moreover have "top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>' \<subseteq> \<Union>?\<A>'"
+          unfolding top1_graph_vertex_set_def top1_arc_endpoints_on_def by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      have hfin_V': "finite (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>')"
+      proof -
+        have "\<forall>A\<in>?\<A>'. finite (top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A))"
+        proof (intro ballI)
+          fix A assume "A \<in> ?\<A>'"
+          hence "A \<in> \<A>" by (by100 blast)
+          have hA_sub: "A \<subseteq> T" using harcs \<open>A \<in> \<A>\<close> by (by100 blast)
+          have hA_arc: "top1_is_arc_on A (subspace_topology T TT A)" using harcs \<open>A \<in> \<A>\<close> by (by100 blast)
+          have hstrict: "is_topology_on_strict T TT"
+            using htree unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+          have hhaus: "is_hausdorff_on T TT"
+            using htree unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+          obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
+            using hA_arc unfolding top1_is_arc_on_def by (by100 blast)
+          have "top1_arc_endpoints_on A (subspace_topology T TT A) = {h 0, h 1}"
+            by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA_sub hA_arc hh])
+          hence "finite (top1_arc_endpoints_on A (subspace_topology T TT A))" by (by100 simp)
+          have "A \<subseteq> ?T'" using \<open>A \<in> ?\<A>'\<close> by (by100 blast)
+          have "subspace_topology ?T' (subspace_topology T TT ?T') A = subspace_topology T TT A"
+            using subspace_topology_trans[of A ?T' T TT] \<open>A \<subseteq> ?T'\<close> by (by100 simp)
+          thus "finite (top1_arc_endpoints_on A (subspace_topology ?T' (subspace_topology T TT ?T') A))"
+            using \<open>finite (top1_arc_endpoints_on A (subspace_topology T TT A))\<close> by simp
+        qed
+        thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>'_fin by (by100 blast)
+      qed
+      have "card (top1_graph_vertex_set T TT \<A>) =
+          card (top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>') + 1"
+      proof -
+        let ?V' = "top1_graph_vertex_set ?T' (subspace_topology T TT ?T') ?\<A>'"
+        have "top1_graph_vertex_set T TT \<A> = insert v ?V'"
+          using hV_union hv_fresh by (by100 blast)
+        moreover have "card (insert v ?V') = card ?V' + 1"
+          using card_insert_disjoint[OF hfin_V'] hv_fresh by (by100 simp)
+        ultimately show ?thesis by simp
+      qed
+      thus ?thesis using hIH hn_ge2 by linarith
+    qed
+  qed
+qed
 
 \<comment> \<open>Combined Euler + leaf lemma for finite trees, proved by induction on card \\<A>.
    Breaks the circular dependency between tree\\_euler and finite\\_tree\\_has\\_leaf\\_arc.
