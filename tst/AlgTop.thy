@@ -1580,13 +1580,14 @@ proof -
              This follows from: A\\{q1} is connected, in one path component of T\\{q1},
              and hno\\_bridge ensures the constant is q1 when q1 \\<in> A (else p1).\<close>
           have hr_const_on_A: "\<not> (p1 \<in> A \<and> q1 \<in> A) \<Longrightarrow> \<exists>c. c \<in> A1 \<union> A2 \<and> (\<forall>x\<in>A. r_ret x = c)"
-            sorry \<comment> \<open>Branch is constant on A. Case analysis:
-               If q1 \\<in> A (not p1): hno\\_bridge \\<Rightarrow> A\\{q1} NOT in p1's comp \\<Rightarrow> branch = q1.
-                 At q1: identity = q1. So c = q1 on all of A.
-               If p1 \\<in> A (not q1): A \\<subseteq> T\\{q1}, connected, p1 \\<in> A \\<Rightarrow> A in p1's comp \\<Rightarrow> branch = p1.
-                 At p1: identity = p1. So c = p1 on all of A.
-               If neither: A \\<subseteq> T\\{q1}, connected \\<Rightarrow> in one comp \\<Rightarrow> branch = constant. No SCC endpoint.
-                 r\\_ret = branch everywhere. c = branch on A.\<close>
+          proof -
+            assume hnot_both: "\<not> (p1 \<in> A \<and> q1 \<in> A)"
+            \<comment> \<open>For all x \\<in> A \\ (A1\\<union>A2): r\\_ret x = branch x (from r\\_ret\\_def, not homeo case).
+               For x \\<in> A \\<inter> (A1\\<union>A2): r\\_ret x = x \\<in> {p1,q1}.\<close>
+            \<comment> \<open>branch is constant on A\\{q1} (connected subset of T\\{q1}).\<close>
+            have hA_sub_T: "A \<subseteq> T" using h\<A>_arcs \<open>A \<in> \<A>\<close> by (by100 blast)
+            show ?thesis sorry \<comment> \<open>Full case analysis on A's endpoint config + branch constancy.\<close>
+          qed
           have hr_cont_A: "top1_continuous_map_on A (subspace_topology T TT A) T TT r_ret"
           proof (cases "p1 \<in> A \<and> q1 \<in> A")
             case True
