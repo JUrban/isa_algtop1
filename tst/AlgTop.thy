@@ -1355,7 +1355,52 @@ proof -
         hence "r_ret x = h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x)"
           using hr_eq by simp
         moreover have "inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x \<in> I_set"
-          sorry \<comment> \<open>inv\\_into maps back to I\\_set if the SOME picks a valid homeomorphism.\<close>
+        proof -
+          \<comment> \<open>x \\<in> T, x \\<notin> A1\\<union>A2. So x is in some arc C \\<in> \\<A> with C \\<ne> A1, C \\<ne> A2.\<close>
+          have "\<exists>C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C'"
+          proof -
+            have "x \<in> \<Union>\<A>" using \<open>x \<in> T\<close> h\<A>_cover by simp
+            then obtain C' where "C' \<in> \<A>" "x \<in> C'" by (by100 blast)
+            have "C' \<noteq> A1"
+            proof
+              assume "C' = A1"
+              hence "x \<in> A1" using \<open>x \<in> C'\<close> by simp
+              hence "x \<in> A1 \<union> A2" by (by100 blast)
+              with False show False by (by100 blast)
+            qed
+            have "C' \<noteq> A2"
+            proof
+              assume "C' = A2"
+              hence "x \<in> A2" using \<open>x \<in> C'\<close> by simp
+              hence "x \<in> A1 \<union> A2" by (by100 blast)
+              with False show False by (by100 blast)
+            qed
+            show ?thesis using \<open>C' \<in> \<A>\<close> \<open>C' \<noteq> A1\<close> \<open>C' \<noteq> A2\<close> \<open>x \<in> C'\<close> by (by100 blast)
+          qed
+          hence hC_prop: "?C \<in> \<A> \<and> ?C \<noteq> A1 \<and> ?C \<noteq> A2 \<and> x \<in> ?C"
+            by (rule someI_ex)
+          hence "x \<in> ?C" by (by100 blast)
+          have "?C \<in> \<A>" using hC_prop by (by100 blast)
+          hence "top1_is_arc_on ?C (subspace_topology T TT ?C)"
+            using h\<A>_arcs by (by100 blast)
+          then obtain h_C where "top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h_C"
+            unfolding top1_is_arc_on_def by (by100 blast)
+          let ?h_C_some = "SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h'"
+          have "\<exists>h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h'"
+            using \<open>top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h_C\<close>
+            by (by100 blast)
+          hence "top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) ?h_C_some"
+            by (rule someI_ex)
+          hence "bij_betw ?h_C_some I_set ?C"
+            unfolding top1_homeomorphism_on_def by (by100 blast)
+          have "inj_on ?h_C_some I_set" using \<open>bij_betw ?h_C_some I_set ?C\<close>
+            unfolding bij_betw_def by (by100 blast)
+          have "?h_C_some ` I_set = ?C" using \<open>bij_betw ?h_C_some I_set ?C\<close>
+            unfolding bij_betw_def by (by100 blast)
+          hence "x \<in> ?h_C_some ` I_set" using \<open>x \<in> ?C\<close> by simp
+          from inv_into_into[OF \<open>x \<in> ?h_C_some ` I_set\<close>]
+          show ?thesis .
+        qed
         ultimately have "r_ret x \<in> A1"
         proof -
           assume "r_ret x = h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x)"
