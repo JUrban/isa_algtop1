@@ -4992,62 +4992,10 @@ proof -
     \<comment> \<open>Clause 3: lifts over the same base arc are pairwise disjoint.\<close>
     show "\<forall>A\<in>\<A>w. \<forall>B1\<in>?\<A>_L. \<forall>B2\<in>?\<A>_L.
         B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A} \<and> B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {}"
-    proof (intro ballI impI)
-      fix A B1 B2
-      assume "A \<in> \<A>w" "B1 \<in> ?\<A>_L" "B2 \<in> ?\<A>_L"
-          "B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A} \<and> B1 \<noteq> B2"
-      hence hB1_sub: "B1 \<subseteq> {e \<in> E. p e \<in> A}" and hB2_sub: "B2 \<subseteq> {e \<in> E. p e \<in> A}"
-          and hne: "B1 \<noteq> B2" by (by100 blast)+
-      \<comment> \<open>B1 \\<in> \\<A>\\_L: \\<exists>A1. max\\_conn\\_comp p^{-1}(A1) B1. Similarly B2 from A2.\<close>
-      from \<open>B1 \<in> ?\<A>_L\<close> obtain A1 where "A1 \<in> \<A>w"
-          "top1_max_conn_comp {e \<in> E. p e \<in> A1} (subspace_topology E TE {e \<in> E. p e \<in> A1}) B1"
-        by (by100 blast)
-      from \<open>B2 \<in> ?\<A>_L\<close> obtain A2 where "A2 \<in> \<A>w"
-          "top1_max_conn_comp {e \<in> E. p e \<in> A2} (subspace_topology E TE {e \<in> E. p e \<in> A2}) B2"
-        by (by100 blast)
-      \<comment> \<open>Key: B1 \\<subseteq> p^{-1}(A1) and B1 \\<subseteq> p^{-1}(A). So p(B1) \\<subseteq> A1 \\<inter> A.
-         If A1 \\<ne> A: A1 \\<inter> A \\<subseteq> {at most 2 endpoints}. But B1 is a component of p^{-1}(A1)
-         which maps onto A1 (uncountably many points). p(B1) \\<subseteq> A1 but also p(B1) \\<subseteq> A.
-         So p(B1) \\<subseteq> A1 \\<inter> A \\<subseteq> {endpoints}. But B1 maps ONTO A1. Contradiction.
-         So A1 = A. Similarly A2 = A.\<close>
-      have "A1 = A"
-        sorry \<comment> \<open>From B1 maps onto A1, B1 \\<subseteq> p^{-1}(A), A1 \\<inter> A finite when A1 \\<ne> A.\<close>
-      have "A2 = A"
-        sorry \<comment> \<open>Same argument for B2.\<close>
-      \<comment> \<open>Both B1, B2 are max conn comps of p^{-1}(A). Disjointness by maximality.\<close>
-      show "B1 \<inter> B2 = {}"
-      proof (rule ccontr)
-        assume "B1 \<inter> B2 \<noteq> {}"
-        then obtain x where "x \<in> B1" "x \<in> B2" by (by100 blast)
-        \<comment> \<open>B1 and B2 connected, overlap at x \\<Rightarrow> B1\\<union>B2 connected (Theorem 23.3).\<close>
-        have hB1_conn: "top1_connected_on B1 (subspace_topology E TE B1)"
-          sorry \<comment> \<open>From max\\_conn\\_comp connected + subspace\\_topology\\_trans.\<close>
-        have hB2_conn: "top1_connected_on B2 (subspace_topology E TE B2)"
-          sorry \<comment> \<open>Same.\<close>
-        have "B1 \<subseteq> {e \<in> E. p e \<in> A}" using hB1_sub .
-        have "B2 \<subseteq> {e \<in> E. p e \<in> A}" using hB2_sub .
-        have hB12_sub: "B1 \<union> B2 \<subseteq> {e \<in> E. p e \<in> A}" using hB1_sub hB2_sub by (by100 blast)
-        \<comment> \<open>B1\\<union>B2 connected and \\<subseteq> p^{-1}(A). By maximality of B1: B1\\<union>B2 \\<subseteq> B1 \\<Rightarrow> B2 \\<subseteq> B1.
-           Similarly B1 \\<subseteq> B2. So B1 = B2. Contradiction.\<close>
-        have hB12_conn: "top1_connected_on (B1 \<union> B2) (subspace_topology E TE (B1 \<union> B2))"
-          sorry \<comment> \<open>From Theorem\\_23\\_3 with common point x.\<close>
-        \<comment> \<open>But the max conn comp condition says: B1 maximal connected in p^{-1}(A).\<close>
-        have "top1_max_conn_comp {e \<in> E. p e \<in> A} (subspace_topology E TE {e \<in> E. p e \<in> A}) B1"
-          using \<open>top1_max_conn_comp {e \<in> E. p e \<in> A1} _ B1\<close> \<open>A1 = A\<close> by simp
-        \<comment> \<open>Maximality: B1\\<union>B2 \\<supseteq> B1, B1\\<union>B2 \\<subseteq> p^{-1}(A), B1\\<union>B2 connected \\<Rightarrow> B1\\<union>B2 = B1.\<close>
-        have "B1 \<union> B2 = B1"
-          sorry \<comment> \<open>From maximality of B1 in the definition of max\\_conn\\_comp.\<close>
-        hence "B2 \<subseteq> B1" by (by100 blast)
-        \<comment> \<open>Similarly B1 \\<subseteq> B2.\<close>
-        have "top1_max_conn_comp {e \<in> E. p e \<in> A} (subspace_topology E TE {e \<in> E. p e \<in> A}) B2"
-          using \<open>top1_max_conn_comp {e \<in> E. p e \<in> A2} _ B2\<close> \<open>A2 = A\<close> by simp
-        have "B1 \<union> B2 = B2"
-          sorry \<comment> \<open>Same argument from maximality of B2.\<close>
-        hence "B1 \<subseteq> B2" by (by100 blast)
-        from \<open>B2 \<subseteq> B1\<close> \<open>B1 \<subseteq> B2\<close> have "B1 = B2" by (by100 blast)
-        with hne show False by (by100 blast)
-      qed
-    qed
+      sorry \<comment> \<open>Max conn comps of the same preimage set are disjoint.
+         Proof outline: B1,B2 both \\<subseteq> p^{-1}(A) forces same source arc (A1=A=A2).
+         Then both are max conn comps of p^{-1}(A). Disjointness by maximality +
+         Theorem\\_23\\_3 (overlapping connected sets \\<Rightarrow> connected union \\<Rightarrow> maximality \\<Rightarrow> equality).\<close>
   qed
   have h\<A>w_sub: "\<forall>A\<in>\<A>w. A \<subseteq> X \<and> A \<noteq> {}"
   proof (intro ballI conjI)
