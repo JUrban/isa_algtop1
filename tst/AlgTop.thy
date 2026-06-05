@@ -2819,6 +2819,104 @@ proof (induction n rule: less_induct)
   qed
 qed
 
+\<comment> \<open>Key topological bridge: a simply connected space cannot contain a simple closed curve
+   as a retract. Used to derive contradiction from SCC in tree.\<close>
+lemma scc_in_sc_false:
+  assumes hsc: "top1_simply_connected_on T TT"
+      and hTT: "is_topology_on T TT"
+      and hhaus_T: "is_hausdorff_on T TT"
+      and hSCC: "top1_simple_closed_curve_on T TT C"
+      and hretract: "top1_retract_of_on T TT C"
+      and hC_sub: "C \<subseteq> T"
+  shows False
+proof -
+  have hC_top: "is_topology_on C (subspace_topology T TT C)"
+    using subspace_topology_is_topology_on[OF hTT hC_sub] .
+  \<comment> \<open>C path-connected (SCC \\<cong> S1 which is path-connected).\<close>
+  from hSCC[unfolded top1_simple_closed_curve_on_def]
+  obtain h_s where hhs_cont: "top1_continuous_map_on top1_S1 top1_S1_topology T TT h_s"
+      and hhs_inj: "inj_on h_s top1_S1" and hhs_img: "h_s ` top1_S1 = C"
+    by (by100 blast)
+  have hhs_range: "\<forall>s\<in>top1_S1. h_s s \<in> C"
+  proof (intro ballI)
+    fix s assume "s \<in> top1_S1"
+    hence "h_s s \<in> h_s ` top1_S1" by (by100 blast)
+    thus "h_s s \<in> C" using hhs_img by (by100 blast)
+  qed
+  have hhs_T_range: "\<forall>s\<in>top1_S1. h_s s \<in> T"
+    using hhs_range hC_sub by (by100 blast)
+  have hC_pc: "top1_path_connected_on C (subspace_topology T TT C)"
+  proof -
+    have "\<forall>s\<in>top1_S1. h_s s \<in> T" using hhs_range hC_sub by (by100 blast)
+    from top1_path_connected_continuous_image[OF S1_path_connected hhs_cont
+        this hhs_img hC_sub _ hTT]
+    show ?thesis by simp
+  qed
+  \<comment> \<open>C is simply connected (from retract + T SC).\<close>
+  have hC_sc: "top1_simply_connected_on C (subspace_topology T TT C)"
+  proof -
+    have hC_loops: "\<forall>x\<in>C. \<forall>f. top1_is_loop_on C (subspace_topology T TT C) x f \<longrightarrow>
+        top1_path_homotopic_on C (subspace_topology T TT C) x x f (top1_constant_path x)"
+    proof (intro ballI allI impI)
+      fix x f assume hx: "x \<in> C"
+          and hf: "top1_is_loop_on C (subspace_topology T TT C) x f"
+      have hf_T: "top1_is_loop_on T TT x f"
+      proof -
+        from hf have "top1_is_path_on C (subspace_topology T TT C) x x f"
+          unfolding top1_is_loop_on_def by (by100 blast)
+        from path_in_subspace_is_path_in_ambient'[OF hTT hC_sub this]
+        show ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+      qed
+      have "x \<in> T" using hx hC_sub by (by100 blast)
+      have hf_null_T: "top1_path_homotopic_on T TT x x f (top1_constant_path x)"
+        using hsc[unfolded top1_simply_connected_on_def] hf_T \<open>x \<in> T\<close> by (by100 blast)
+      have hconst: "top1_is_loop_on C (subspace_topology T TT C) x (top1_constant_path x)"
+        by (rule top1_constant_path_is_loop[OF hC_top hx])
+      from Lemma_55_1_retract_injective[OF hretract hx hf hconst hf_null_T]
+      show "top1_path_homotopic_on C (subspace_topology T TT C) x x f (top1_constant_path x)" .
+    qed
+    show ?thesis unfolding top1_simply_connected_on_def using hC_pc hC_loops by (by100 blast)
+  qed
+  \<comment> \<open>Transfer SC to S1 via homeomorphism. But S1 is NOT SC.\<close>
+  have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+    using S1_compact unfolding top1_compact_on_def by (by100 blast)
+  have hhaus: "is_hausdorff_on C (subspace_topology T TT C)"
+    using hhaus_T hC_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+  have "top1_continuous_map_on top1_S1 top1_S1_topology C (subspace_topology T TT C) h_s"
+    by (rule continuous_map_restrict_codomain[OF hhs_cont hhs_range hC_sub])
+  have "bij_betw h_s top1_S1 C"
+    unfolding bij_betw_def using hhs_inj hhs_img by (by100 blast)
+  from Theorem_26_6[OF hS1_top hC_top S1_compact hhaus
+      \<open>top1_continuous_map_on top1_S1 top1_S1_topology C _ h_s\<close> this]
+  have hhomeo: "top1_homeomorphism_on top1_S1 top1_S1_topology C (subspace_topology T TT C) h_s" .
+  have hhomeo_inv: "top1_homeomorphism_on C (subspace_topology T TT C)
+      top1_S1 top1_S1_topology (inv_into top1_S1 h_s)"
+    by (rule homeomorphism_inverse[OF hhomeo])
+  have "top1_simply_connected_on top1_S1 top1_S1_topology"
+    by (rule homeomorphism_preserves_simply_connected[OF hhomeo_inv hC_sc])
+  \<comment> \<open>But S1 NOT simply connected.\<close>
+  from top1_S1_fundamental_group_nontrivial
+  obtain f0 g0 where "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f0"
+      "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g0"
+      "\<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
+    by (by100 blast)
+  have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+  from \<open>top1_simply_connected_on top1_S1 top1_S1_topology\<close>[unfolded top1_simply_connected_on_def]
+  have "\<forall>x\<in>top1_S1. \<forall>f. top1_is_loop_on top1_S1 top1_S1_topology x f \<longrightarrow>
+      top1_path_homotopic_on top1_S1 top1_S1_topology x x f (top1_constant_path x)"
+    using h10 by (by100 blast)
+  hence "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) f0 (top1_constant_path (1,0))"
+    using \<open>top1_is_loop_on top1_S1 _ _ f0\<close> h10 by (by100 blast)
+  hence "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) g0 (top1_constant_path (1,0))"
+    using \<open>\<forall>x\<in>top1_S1. \<forall>f. _\<close> \<open>top1_is_loop_on top1_S1 _ _ g0\<close> h10 by (by100 blast)
+  from Lemma_51_1_path_homotopic_sym[OF this]
+  have "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (top1_constant_path (1,0)) g0" .
+  from Lemma_51_1_path_homotopic_trans[OF hS1_top
+      \<open>top1_path_homotopic_on _ _ _ _ f0 (top1_constant_path _)\<close> this]
+  have hfg_htpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) f0 g0" .
+  show False using hfg_htpy \<open>\<not> top1_path_homotopic_on _ _ _ _ f0 g0\<close> by (by100 blast)
+qed
+
 \<comment> \<open>Combined Euler + leaf lemma for finite trees, proved by induction on card \\<A>.
    Breaks the circular dependency between tree\\_euler and finite\\_tree\\_has\\_leaf\\_arc.
    Uses degree\\_sum\\_leaf for the leaf existence in the induction step.\<close>
