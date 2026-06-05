@@ -1452,10 +1452,57 @@ proof -
     have "closedin_on T TT {x \<in> T. r_ret x \<notin> U}"
     proof -
       have "\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> {x \<in> T. r_ret x \<notin> U})"
-        sorry \<comment> \<open>For each A: A\\<inter>preimage-complement is closed in A.
-           A=A1,A2: id, so A\\<inter>{x|x\\<notin>U} = A\\\\U. Closed (complement of open).
-           A external constant: A or {}. Both closed.
-           A external homeomorphism: preimage of closed under homeomorphism. Closed.\<close>
+      proof (intro ballI)
+        fix A assume "A \<in> \<A>"
+        show "closedin_on A (subspace_topology T TT A) (A \<inter> {x \<in> T. r_ret x \<notin> U})"
+        proof (cases "A = A1 \<or> A = A2")
+          case True
+          \<comment> \<open>r\\_ret|A = id. A \\<inter> {x | r\\_ret x \\<notin> U} = A \\<inter> {x | x \\<notin> U} = A \\<inter> (T\\\\U).\<close>
+          have "A \<inter> {x \<in> T. r_ret x \<notin> U} = A \<inter> (T - U)"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> A \<inter> {x \<in> T. r_ret x \<notin> U}"
+            hence "x \<in> A" "x \<in> T" "r_ret x \<notin> U" by (by100 blast)+
+            have "x \<in> A1 \<union> A2" using \<open>x \<in> A\<close> True by (by100 blast)
+            hence "r_ret x = x" using hr_fixes by (by100 blast)
+            thus "x \<in> A \<inter> (T - U)" using \<open>x \<in> A\<close> \<open>x \<in> T\<close> \<open>r_ret x \<notin> U\<close> by simp
+          next
+            fix x assume "x \<in> A \<inter> (T - U)"
+            hence "x \<in> A" "x \<in> T" "x \<notin> U" by (by100 blast)+
+            have "x \<in> A1 \<union> A2" using \<open>x \<in> A\<close> True by (by100 blast)
+            hence "r_ret x = x" using hr_fixes by (by100 blast)
+            thus "x \<in> A \<inter> {x \<in> T. r_ret x \<notin> U}" using \<open>x \<in> A\<close> \<open>x \<in> T\<close> \<open>x \<notin> U\<close> by simp
+          qed
+          moreover have "closedin_on A (subspace_topology T TT A) (A \<inter> (T - U))"
+          proof -
+            have "T - U \<subseteq> T" by (by100 blast)
+            have "closedin_on T TT (T - U)" unfolding closedin_on_def
+            proof (intro conjI)
+              show "T - U \<subseteq> T" by (by100 blast)
+              have "U \<subseteq> T" using \<open>U \<in> TT\<close> hstrict unfolding is_topology_on_strict_def by (by100 blast)
+              hence "T - (T - U) = U" by (by100 blast)
+              thus "T - (T - U) \<in> TT" using \<open>U \<in> TT\<close> by simp
+            qed
+            have "A \<subseteq> T" using h\<A>_arcs \<open>A \<in> \<A>\<close> by (by100 blast)
+            from Theorem_17_2[OF hTT \<open>A \<subseteq> T\<close>]
+            have "closedin_on A (subspace_topology T TT A) (A \<inter> (T - U)) \<longleftrightarrow>
+                (\<exists>C. closedin_on T TT C \<and> A \<inter> (T - U) = C \<inter> A)" by (by100 blast)
+            moreover have "\<exists>C. closedin_on T TT C \<and> A \<inter> (T - U) = C \<inter> A"
+              using \<open>closedin_on T TT (T - U)\<close> by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          ultimately show ?thesis by simp
+        next
+          case False
+          \<comment> \<open>A is external. r\\_ret|A is constant (p1 or q1) or homeomorphism.\<close>
+          \<comment> \<open>For constant c: A \\<inter> {x | r\\_ret x \\<notin> U} = A if c \\<notin> U, {} if c \\<in> U.\<close>
+          \<comment> \<open>Both A and {} are closed in sub(T,A).\<close>
+          have "A \<subseteq> T" using h\<A>_arcs \<open>A \<in> \<A>\<close> by (by100 blast)
+          have "A \<inter> {x \<in> T. r_ret x \<notin> U} \<subseteq> A" by (by100 blast)
+          \<comment> \<open>For now, all external arcs: r\\_ret restricted to A takes values in {p1,q1,h1(...)}.
+             The preimage of the complement is a union of closed sets.\<close>
+          show ?thesis sorry
+        qed
+      qed
       from hcoherent[rule_format, OF hpre_sub] this
       show ?thesis by (by100 blast)
     qed
