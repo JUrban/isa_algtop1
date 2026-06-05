@@ -4811,9 +4811,27 @@ proof -
   \<comment> \<open>Step 3: \\<A>\\_L satisfies the lifted arc family interface.
      This gives us: card(\\<A>\\_L) = k * card(\\<A>w) and card(V\\_L) = k * card(V\\_X).\<close>
   have h_lifted: "top1_covering_lifted_arc_family_on E TE X TX p \<A>w ?\<A>_L"
-    sorry \<comment> \<open>Clause 1: each path component B maps onto A with inj\\_on p B (from covering\\_sheet\\_over\\_arc).
-       Clause 2: every fiber point is in some path component.
-       Clause 3: path components of the same preimage are disjoint (by definition).\<close>
+    unfolding top1_covering_lifted_arc_family_on_def
+  proof (intro conjI)
+    \<comment> \<open>Clause 1: each B \\<in> \\<A>\\_L maps onto some A with inj\\_on p B and endpoint preservation.\<close>
+    show "\<forall>B\<in>?\<A>_L. \<exists>A\<in>\<A>w. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B
+        \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+          = top1_arc_endpoints_on A (subspace_topology X TX A)"
+      sorry \<comment> \<open>From Theorem 83.4 internal proof: each path component of p^{-1}(A) is an arc,
+         p restricted to it is a homeomorphism onto A (arc simply connected \\<Rightarrow> trivial covering).
+         Homeomorphism \\<Rightarrow> bijective \\<Rightarrow> injective, and preserves endpoints.\<close>
+  next
+    \<comment> \<open>Clause 2: every fiber point is in some path component.\<close>
+    show "\<forall>A\<in>\<A>w. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>?\<A>_L. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A"
+      sorry \<comment> \<open>From max\\_conn\\_comp\\_covers: every point is in some max connected component.
+         And from Clause 1: each component maps onto A.\<close>
+  next
+    \<comment> \<open>Clause 3: lifts over the same base arc are pairwise disjoint.\<close>
+    show "\<forall>A\<in>\<A>w. \<forall>B1\<in>?\<A>_L. \<forall>B2\<in>?\<A>_L.
+        B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A} \<and> B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {}"
+      sorry \<comment> \<open>Max connected components of the SAME set are disjoint.
+         If B1,B2 \\<subseteq> p^{-1}(A) and both are max conn comps of p^{-1}(A), then B1\\<inter>B2={} or B1=B2.\<close>
+  qed
   have h\<A>w_sub: "\<forall>A\<in>\<A>w. A \<subseteq> X \<and> A \<noteq> {}"
   proof (intro ballI conjI)
     fix A assume "A \<in> \<A>w"
