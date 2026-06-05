@@ -4987,13 +4987,350 @@ proof -
       (subspace_topology E TE {e \<in> E. p e \<in> A}) B}"
   \<comment> \<open>Step 3: \\<A>\\_L satisfies the lifted arc family interface.
      This gives us: card(\\<A>\\_L) = k * card(\\<A>w) and card(V\\_L) = k * card(V\\_X).\<close>
+  have hTE: "is_topology_on E TE"
+    using hstrict_E unfolding is_topology_on_strict_def by (by100 blast)
+  have hTX: "is_topology_on X TX"
+    using hgraph_X unfolding top1_is_graph_on_def is_hausdorff_on_def by (by100 blast)
+  have hTX_strict: "is_topology_on_strict X TX"
+    using hgraph_X unfolding top1_is_graph_on_def by (by100 blast)
+  have hX_haus: "is_hausdorff_on X TX"
+    using hgraph_X unfolding top1_is_graph_on_def by (by100 blast)
+  have hp_cont: "top1_continuous_map_on E TE X TX p"
+    using hcov unfolding top1_covering_map_on_def by (by100 blast)
+  have hp_surj: "p ` E = X"
+    using hcov unfolding top1_covering_map_on_def by (by100 blast)
+  \<comment> \<open>Helper: for each A in Aw, restriction p: p^{-1}(A) -> A is a covering (Theorem 53.2).\<close>
+  have h_cov_restrict: "\<forall>A\<in>\<A>w. top1_covering_map_on {e \<in> E. p e \<in> A}
+      (subspace_topology E TE {e \<in> E. p e \<in> A}) A (subspace_topology X TX A) p"
+  proof (intro ballI)
+    fix A assume "A \<in> \<A>w"
+    have "A \<subseteq> X" using h\<A>w \<open>A \<in> \<A>w\<close> by (by100 blast)
+    show "top1_covering_map_on {e \<in> E. p e \<in> A}
+        (subspace_topology E TE {e \<in> E. p e \<in> A}) A (subspace_topology X TX A) p"
+      by (rule Theorem_53_2[OF hcov hstrict_E hTX_strict \<open>A \<subseteq> X\<close>, of "{e \<in> E. p e \<in> A}"]) (by100 simp)
+  qed
+  \<comment> \<open>Helper: max conn comps of the same set are disjoint.\<close>
+  have h_mcc_disjoint: "\<And>S TS (B1 :: 'b set) B2. \<lbrakk>is_topology_on S TS;
+      top1_max_conn_comp S TS B1; top1_max_conn_comp S TS B2; B1 \<noteq> B2\<rbrakk>
+      \<Longrightarrow> B1 \<inter> B2 = {}"
+  proof -
+    fix S :: "'b set" and TS and B1 :: "'b set" and B2
+    assume hST: "is_topology_on S TS"
+        and hB1: "top1_max_conn_comp S TS B1"
+        and hB2: "top1_max_conn_comp S TS B2"
+        and hne: "B1 \<noteq> B2"
+    show "B1 \<inter> B2 = {}"
+    proof (rule ccontr)
+      assume "B1 \<inter> B2 \<noteq> {}"
+      then obtain e where "e \<in> B1" "e \<in> B2" by (by100 blast)
+      have hB1_sub: "B1 \<subseteq> S" using max_conn_comp_sub[OF hB1] .
+      have hB2_sub: "B2 \<subseteq> S" using max_conn_comp_sub[OF hB2] .
+      have hB1_conn: "top1_connected_on B1 (subspace_topology S TS B1)"
+        using hB1 unfolding top1_max_conn_comp_def by (by100 blast)
+      have hB2_conn: "top1_connected_on B2 (subspace_topology S TS B2)"
+        using hB2 unfolding top1_max_conn_comp_def by (by100 blast)
+      have hU_sub: "B1 \<union> B2 \<subseteq> S" using hB1_sub hB2_sub by (by100 blast)
+      have hU_conn: "top1_connected_on (B1 \<union> B2) (subspace_topology S TS (B1 \<union> B2))"
+      proof -
+        define f where "f \<equiv> (\<lambda>b::bool. if b then B1 else B2)"
+        have hf_eq: "B1 \<union> B2 = (\<Union>i\<in>{True, False}. f i)"
+          unfolding f_def by (by100 auto)
+        have h_sub: "\<forall>i\<in>{True, False}. f i \<subseteq> S"
+          unfolding f_def using hB1_sub hB2_sub by (by100 auto)
+        have h_conn: "\<forall>i\<in>{True, False}. top1_connected_on (f i) (subspace_topology S TS (f i))"
+        proof (intro ballI)
+          fix i :: bool assume "i \<in> {True, False}"
+          show "top1_connected_on (f i) (subspace_topology S TS (f i))"
+            unfolding f_def using hB1_conn hB2_conn by (cases i) simp_all
+        qed
+        have he_inter: "e \<in> \<Inter>(f ` {True, False})"
+          unfolding f_def using \<open>e \<in> B1\<close> \<open>e \<in> B2\<close> by (by100 auto)
+        have hI_ne: "{True, False} \<noteq> ({}::bool set)" by (by100 blast)
+        from Theorem_23_3[OF hST hI_ne h_sub h_conn he_inter]
+        have "top1_connected_on (\<Union>(f ` {True, False})) (subspace_topology S TS (\<Union>(f ` {True, False})))" .
+        moreover have "\<Union>(f ` {True, False}) = B1 \<union> B2"
+          unfolding f_def by (by100 auto)
+        ultimately show ?thesis by simp
+      qed
+      from hB1[unfolded top1_max_conn_comp_def, THEN conjunct2, THEN conjunct2,
+          THEN conjunct2, rule_format, OF _ hU_sub hU_conn]
+      have "B1 \<union> B2 = B1" by (by100 blast)
+      hence "B2 \<subseteq> B1" by (by100 blast)
+      from hB2[unfolded top1_max_conn_comp_def, THEN conjunct2, THEN conjunct2,
+          THEN conjunct2, rule_format, OF _ hU_sub hU_conn]
+      have "B1 \<union> B2 = B2" by (by100 blast)
+      hence "B1 \<subseteq> B2" by (by100 blast)
+      from \<open>B2 \<subseteq> B1\<close> \<open>B1 \<subseteq> B2\<close> have "B1 = B2" by (by100 blast)
+      with hne show False by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Helper: a max conn comp of preimage(A) surjects onto A via p.
+     Proof: p(B) is open in A (covering sheets), closed in A (complement argument),
+     nonempty (B \\<ne> {}), A connected \\<Rightarrow> p(B) = A.\<close>
+  have h_comp_surj: "\<And>A B. \<lbrakk>A \<in> \<A>w;
+      top1_max_conn_comp {e \<in> E. p e \<in> A} (subspace_topology E TE {e \<in> E. p e \<in> A}) B\<rbrakk>
+      \<Longrightarrow> p ` B = A"
+  proof -
+    fix A B
+    assume hA_in: "A \<in> \<A>w"
+        and hB_comp: "top1_max_conn_comp {e \<in> E. p e \<in> A} (subspace_topology E TE {e \<in> E. p e \<in> A}) B"
+    let ?pre = "{e \<in> E. p e \<in> A}"
+    have hA_sub: "A \<subseteq> X" using h\<A>w hA_in by (by100 blast)
+    have hA_arc: "top1_is_arc_on A (subspace_topology X TX A)" using h\<A>w hA_in by (by100 blast)
+    have hTA: "is_topology_on A (subspace_topology X TX A)"
+      by (rule subspace_topology_is_topology_on[OF hTX hA_sub])
+    have hB_sub: "B \<subseteq> ?pre" using max_conn_comp_sub[OF hB_comp] .
+    have hB_ne: "B \<noteq> {}" using max_conn_comp_ne[OF hB_comp] .
+    have hpB_sub: "p ` B \<subseteq> A" using hB_sub by (by100 blast)
+    have hpB_ne: "p ` B \<noteq> {}" using hB_ne by (by100 blast)
+    \<comment> \<open>A is connected (arc is path-connected, hence connected).\<close>
+    have hA_conn: "top1_connected_on A (subspace_topology X TX A)"
+      by (rule arc_connected[OF hA_arc])
+    \<comment> \<open>p(B) is open in A: use covering sheets.\<close>
+    have hpB_open: "openin_on A (subspace_topology X TX A) (p ` B)"
+    proof -
+      have hpre_sub: "?pre \<subseteq> E" by (by100 blast)
+      have hpre_top: "is_topology_on ?pre (subspace_topology E TE ?pre)"
+        by (rule subspace_topology_is_topology_on[OF hTE hpre_sub])
+      have hcov_A: "top1_covering_map_on ?pre (subspace_topology E TE ?pre) A (subspace_topology X TX A) p"
+        using h_cov_restrict hA_in by (by100 blast)
+      \<comment> \<open>For each a \\<in> p(B), get a covering sheet W at the preimage point in B.\<close>
+      have "\<forall>a\<in>p ` B. \<exists>U. U \<in> subspace_topology X TX A \<and> a \<in> U \<and> U \<subseteq> p ` B"
+      proof (intro ballI)
+        fix a assume "a \<in> p ` B"
+        then obtain e where he_B: "e \<in> B" and hpe: "p e = a" by (by100 blast)
+        have he_pre: "e \<in> ?pre" using he_B hB_sub by (by100 blast)
+        from covering_sheet_over_arc_path_connected[OF hcov_A hA_arc hpre_top hTA he_pre]
+        obtain W where hW_sub: "W \<subseteq> ?pre" and hW_open: "openin_on ?pre (subspace_topology E TE ?pre) W"
+            and hW_e: "e \<in> W"
+            and hW_pc: "top1_path_connected_on W (subspace_topology ?pre (subspace_topology E TE ?pre) W)"
+            and hW_homeo: "top1_homeomorphism_on W (subspace_topology ?pre (subspace_topology E TE ?pre) W)
+                (p ` W) (subspace_topology A (subspace_topology X TX A) (p ` W)) p"
+            and hW_ev: "top1_evenly_covered_on ?pre (subspace_topology E TE ?pre)
+                A (subspace_topology X TX A) p (p ` W)"
+          by (by100 blast)
+        \<comment> \<open>W \\<subseteq> B by maximality of B (W connected, shares point e with B).\<close>
+        have hW_sub_B: "W \<subseteq> B"
+        proof -
+          have hW_conn: "top1_connected_on W (subspace_topology ?pre (subspace_topology E TE ?pre) W)"
+            by (rule path_connected_imp_connected[OF hW_pc])
+          \<comment> \<open>W \\<union> B connected (share e), W \\<union> B \\<subseteq> preimage(A).\<close>
+          have hWB_sub: "W \<union> B \<subseteq> ?pre" using hW_sub hB_sub by (by100 blast)
+          have hWB_conn: "top1_connected_on (W \<union> B) (subspace_topology ?pre (subspace_topology E TE ?pre) (W \<union> B))"
+          proof -
+            define g where "g \<equiv> (\<lambda>b::bool. if b then W else B)"
+            have hg_sub: "\<forall>i\<in>{True, False}. g i \<subseteq> ?pre"
+              unfolding g_def using hW_sub hB_sub by (by100 auto)
+            have hg_conn: "\<forall>i\<in>{True, False}. top1_connected_on (g i)
+                (subspace_topology ?pre (subspace_topology E TE ?pre) (g i))"
+            proof (intro ballI)
+              fix i :: bool assume "i \<in> {True, False}"
+              show "top1_connected_on (g i) (subspace_topology ?pre (subspace_topology E TE ?pre) (g i))"
+              proof (cases i)
+                case True thus ?thesis unfolding g_def using hW_conn by simp
+              next
+                case False
+                have "top1_connected_on B (subspace_topology ?pre (subspace_topology E TE ?pre) B)"
+                  using hB_comp unfolding top1_max_conn_comp_def by (by100 blast)
+                thus ?thesis unfolding g_def using False by simp
+              qed
+            qed
+            have "e \<in> \<Inter>(g ` {True, False})"
+              unfolding g_def using hW_e he_B by (by100 auto)
+            have "{True, False} \<noteq> ({}::bool set)" by (by100 blast)
+            from Theorem_23_3[OF hpre_top this hg_sub hg_conn \<open>e \<in> \<Inter>(g ` _)\<close>]
+            have "top1_connected_on (\<Union>(g ` {True, False}))
+                (subspace_topology ?pre (subspace_topology E TE ?pre) (\<Union>(g ` {True, False})))" .
+            moreover have "\<Union>(g ` {True, False}) = W \<union> B" unfolding g_def by (by100 auto)
+            ultimately show ?thesis by simp
+          qed
+          from hB_comp[unfolded top1_max_conn_comp_def, THEN conjunct2, THEN conjunct2,
+              THEN conjunct2, rule_format, OF _ hWB_sub hWB_conn]
+          show ?thesis by (by100 blast)
+        qed
+        \<comment> \<open>p(W) is open in A (from homeomorphism + W open in preimage).\<close>
+        have "p ` W \<in> subspace_topology X TX A"
+        proof -
+          from top1_evenly_covered_on_openin_on[OF hW_ev]
+          have "openin_on A (subspace_topology X TX A) (p ` W)" .
+          thus ?thesis unfolding openin_on_def by (by100 blast)
+        qed
+        have "a \<in> p ` W" using hpe hW_e by (by100 blast)
+        have "p ` W \<subseteq> p ` B" using hW_sub_B by (by100 blast)
+        thus "\<exists>U. U \<in> subspace_topology X TX A \<and> a \<in> U \<and> U \<subseteq> p ` B"
+          using \<open>p ` W \<in> subspace_topology X TX A\<close> \<open>a \<in> p ` W\<close> \<open>p ` W \<subseteq> p ` B\<close> by (by100 blast)
+      qed
+      \<comment> \<open>p(B) = union of open sets (the U's), hence open.\<close>
+      have "p ` B = \<Union>{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> p ` B}"
+      proof (rule set_eqI, rule iffI)
+        fix a assume "a \<in> p ` B"
+        with \<open>\<forall>a\<in>p ` B. _\<close> obtain U where "U \<in> subspace_topology X TX A" "a \<in> U" "U \<subseteq> p ` B"
+          by (by100 blast)
+        thus "a \<in> \<Union>{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> p ` B}" by (by100 blast)
+      next
+        fix a assume "a \<in> \<Union>{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> p ` B}"
+        thus "a \<in> p ` B" by (by100 blast)
+      qed
+      moreover have "\<Union>{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> p ` B} \<in> subspace_topology X TX A"
+      proof -
+        have hsub_TA: "{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> p ` B} \<subseteq> subspace_topology X TX A"
+          by (by100 blast)
+        have "\<forall>U\<subseteq>subspace_topology X TX A. \<Union>U \<in> subspace_topology X TX A"
+          using hTA unfolding is_topology_on_def by (by100 blast)
+        thus ?thesis using hsub_TA by (by100 blast)
+      qed
+      ultimately have "p ` B \<in> subspace_topology X TX A" by simp
+      thus ?thesis unfolding openin_on_def using hpB_sub by (by100 blast)
+    qed
+    \<comment> \<open>p(B) is closed in A: A \\ p(B) is open.\<close>
+    \<comment> \<open>p(B) closed = complement open. A \\ p(B) = union of p-images of other components.\<close>
+    have hpB_closed: "closedin_on A (subspace_topology X TX A) (p ` B)"
+    proof -
+      \<comment> \<open>Show A \\ p(B) is open. For a \\<in> A \\ p(B): a has a preimage in some other component C.
+         The covering sheet at that preimage maps to open p(W') \\<subseteq> A \\ p(B).
+         So A \\ p(B) is open, hence p(B) is closed.\<close>
+      have "openin_on A (subspace_topology X TX A) (A - p ` B)"
+      proof -
+        have "\<forall>a\<in>A - p ` B. \<exists>U. U \<in> subspace_topology X TX A \<and> a \<in> U \<and> U \<subseteq> A - p ` B"
+        proof (intro ballI)
+          fix a assume ha: "a \<in> A - p ` B"
+          hence "a \<in> A" "a \<notin> p ` B" by (by100 blast)+
+          \<comment> \<open>a \\<in> A \\<subseteq> X = p(E), so \\<exists>e' \\<in> E with p(e') = a. e' \\<in> preimage(A).\<close>
+          have "a \<in> X" using \<open>a \<in> A\<close> hA_sub by (by100 blast)
+          have "a \<in> p ` E" using hp_surj \<open>a \<in> X\<close> by simp
+          then obtain e' where "e' \<in> E" "p e' = a" by (by100 blast)
+          have "e' \<in> ?pre" using \<open>e' \<in> E\<close> \<open>p e' = a\<close> \<open>a \<in> A\<close> by (by100 blast)
+          \<comment> \<open>e' \\<notin> B (since a = p(e') \\<notin> p(B)).\<close>
+          have "e' \<notin> B" using \<open>p e' = a\<close> \<open>a \<notin> p ` B\<close> by (by100 blast)
+          \<comment> \<open>Get covering sheet at e'.\<close>
+          have hcov_A: "top1_covering_map_on ?pre (subspace_topology E TE ?pre) A (subspace_topology X TX A) p"
+            using h_cov_restrict hA_in by (by100 blast)
+          have hpre_sub: "?pre \<subseteq> E" by (by100 blast)
+          have hpre_top: "is_topology_on ?pre (subspace_topology E TE ?pre)"
+            by (rule subspace_topology_is_topology_on[OF hTE hpre_sub])
+          from covering_sheet_over_arc_path_connected[OF hcov_A hA_arc hpre_top hTA \<open>e' \<in> ?pre\<close>]
+          obtain W' where hW'_sub: "W' \<subseteq> ?pre"
+              and hW'_e: "e' \<in> W'"
+              and hW'_pc: "top1_path_connected_on W' (subspace_topology ?pre (subspace_topology E TE ?pre) W')"
+              and hW'_ev: "top1_evenly_covered_on ?pre (subspace_topology E TE ?pre) A (subspace_topology X TX A) p (p ` W')"
+            by (by100 blast)
+          \<comment> \<open>p(W') is open in A.\<close>
+          have "openin_on A (subspace_topology X TX A) (p ` W')"
+            using top1_evenly_covered_on_openin_on[OF hW'_ev] .
+          hence "p ` W' \<in> subspace_topology X TX A"
+            unfolding openin_on_def by (by100 blast)
+          \<comment> \<open>W' \\<subseteq> some max conn comp C of preimage(A). C \\<ne> B (since e' \\<in> W' \\<subseteq> C, e' \\<notin> B).\<close>
+          \<comment> \<open>p(W') \\<inter> p(B) = {} because W' \\<subseteq> C, C \\<inter> B = {} (disjoint components).\<close>
+          \<comment> \<open>So p(W') \\<subseteq> A \\ p(B).\<close>
+          have "p ` W' \<subseteq> A - p ` B"
+            sorry \<comment> \<open>W' is in a component disjoint from B, so p(W') disjoint from p(B).\<close>
+          have "a \<in> p ` W'" using \<open>p e' = a\<close> hW'_e by (by100 blast)
+          thus "\<exists>U. U \<in> subspace_topology X TX A \<and> a \<in> U \<and> U \<subseteq> A - p ` B"
+            using \<open>p ` W' \<in> subspace_topology X TX A\<close> \<open>a \<in> p ` W'\<close> \<open>p ` W' \<subseteq> A - p ` B\<close>
+            by (by100 blast)
+        qed
+        \<comment> \<open>A \\ p(B) = union of open sets, hence open.\<close>
+        have "A - p ` B = \<Union>{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> A - p ` B}"
+        proof (rule set_eqI, rule iffI)
+          fix a assume ha: "a \<in> A - p ` B"
+          from \<open>\<forall>a\<in>A - p ` B. _\<close>[rule_format, OF ha]
+          obtain U where "U \<in> subspace_topology X TX A" "a \<in> U" "U \<subseteq> A - p ` B"
+            by (by100 blast)
+          thus "a \<in> \<Union>{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> A - p ` B}" by (by100 blast)
+        next
+          fix a assume "a \<in> \<Union>{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> A - p ` B}"
+          thus "a \<in> A - p ` B" by (by100 blast)
+        qed
+        moreover have "\<Union>{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> A - p ` B} \<in> subspace_topology X TX A"
+        proof -
+          have "{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> A - p ` B} \<subseteq> subspace_topology X TX A"
+            by (by100 blast)
+          have "\<forall>U\<subseteq>subspace_topology X TX A. \<Union>U \<in> subspace_topology X TX A"
+            using hTA unfolding is_topology_on_def by (by100 blast)
+          thus ?thesis
+            using \<open>{U. U \<in> subspace_topology X TX A \<and> U \<subseteq> A - p ` B} \<subseteq> subspace_topology X TX A\<close>
+            by (by100 blast)
+        qed
+        ultimately have "A - p ` B \<in> subspace_topology X TX A" by simp
+        thus ?thesis unfolding openin_on_def by (by100 blast)
+      qed
+      have "A - p ` B \<in> subspace_topology X TX A"
+        using \<open>openin_on A (subspace_topology X TX A) (A - p ` B)\<close>
+        unfolding openin_on_def by (by100 blast)
+      thus ?thesis unfolding closedin_on_def using hpB_sub by (by100 blast)
+    qed
+    \<comment> \<open>Connected + open + closed + nonempty \\<Rightarrow> p(B) = A.\<close>
+    have hA_strict: "is_topology_on_strict A (subspace_topology X TX A)"
+      by (rule subspace_topology_is_strict[OF hTX_strict hA_sub])
+    from connected_iff_clopen_openin_on[OF hA_strict, THEN iffD1, OF hA_conn,
+        THEN conjunct2, rule_format, OF conjI[OF hpB_open hpB_closed]]
+    have "p ` B = {} \<or> p ` B = A" by (by100 blast)
+    thus "p ` B = A" using hpB_ne by (by100 blast)
+  qed
   have h_lifted: "top1_covering_lifted_arc_family_on E TE X TX p \<A>w ?\<A>_L"
-    sorry \<comment> \<open>The lifted family (path components of preimages) satisfies the interface.
-       Proof follows Theorem 83.4 (covering of graph is graph) internal structure:
-       Clause 1: each component maps homeomorphically onto base arc (arc = SC \\<Rightarrow> trivial covering).
-       Clause 2: max\\_conn\\_comp\\_covers gives component containing each fiber point.
-         Surjectivity (p`B = A) from trivial covering over simply connected arc.
-       Clause 3: max conn comps disjoint by maximality + Theorem\\_23\\_3 (connected union).\<close>
+    unfolding top1_covering_lifted_arc_family_on_def
+  proof (intro conjI)
+    \<comment> \<open>Clause 1: each lift maps bijectively onto some base arc with endpoint preservation.\<close>
+    show "\<forall>B\<in>?\<A>_L. \<exists>A\<in>\<A>w. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B
+        \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+          = top1_arc_endpoints_on A (subspace_topology X TX A)"
+      sorry
+  next
+    \<comment> \<open>Clause 2: every fiber point over a base arc is in some lift.\<close>
+    show "\<forall>A\<in>\<A>w. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>?\<A>_L. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A"
+    proof (intro ballI)
+      fix A e assume hA: "A \<in> \<A>w" and he: "e \<in> {e' \<in> E. p e' \<in> A}"
+      let ?pre = "{e' \<in> E. p e' \<in> A}"
+      have hpre_sub: "?pre \<subseteq> E" by (by100 blast)
+      have hpre_top: "is_topology_on ?pre (subspace_topology E TE ?pre)"
+        by (rule subspace_topology_is_topology_on[OF hTE hpre_sub])
+      have he_pre: "e \<in> ?pre" using he by (by100 blast)
+      \<comment> \<open>By max\\_conn\\_comp\\_covers: e is in some max conn comp B of preimage(A).\<close>
+      from max_conn_comp_covers[OF hpre_top he_pre]
+      obtain B where hB_comp: "top1_max_conn_comp ?pre (subspace_topology E TE ?pre) B"
+          and he_B: "e \<in> B" by (by100 blast)
+      have hB_sub: "B \<subseteq> ?pre" using max_conn_comp_sub[OF hB_comp] .
+      \<comment> \<open>B \\<in> ?\\<A>\\_L by construction (B is a max conn comp of preimage(A) for A \\<in> \\<A>w).\<close>
+      have hB_in: "B \<in> ?\<A>_L"
+      proof -
+        have "B \<in> {B'. top1_max_conn_comp ?pre (subspace_topology E TE ?pre) B'}"
+          using hB_comp by (by100 blast)
+        thus ?thesis using hA by (by100 blast)
+      qed
+      \<comment> \<open>Surjectivity: p ` B = A. By path lifting: for any a \\<in> A, lift a path from p(e) to a.
+         The lift stays in preimage(A) and in B (connected component). End maps to a.\<close>
+      have hp_surj_B: "p ` B = A"
+        by (rule h_comp_surj[OF hA hB_comp])
+      show "\<exists>B\<in>?\<A>_L. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A"
+        using hB_in he_B hB_sub hp_surj_B by (by100 blast)
+    qed
+  next
+    \<comment> \<open>Clause 3: lifts over the same base arc are pairwise disjoint.
+       If B1, B2 are max conn comps of preimage(A) and B1 \\<ne> B2, disjoint by h\\_mcc\\_disjoint.
+       If they come from different arcs' preimages, the fact that both \\<subseteq> preimage(A)
+       and max conn comp maximality forces containment in the same max conn comp of preimage(A).\<close>
+    show "\<forall>A\<in>\<A>w. \<forall>B1\<in>?\<A>_L. \<forall>B2\<in>?\<A>_L.
+        B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A} \<and> B1 \<noteq> B2
+        \<longrightarrow> B1 \<inter> B2 = {}"
+    proof (intro ballI impI)
+      fix A B1 B2
+      assume hA: "A \<in> \<A>w" and hB1L: "B1 \<in> ?\<A>_L" and hB2L: "B2 \<in> ?\<A>_L"
+          and hconj: "B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A} \<and> B1 \<noteq> B2"
+      have hB1_sub: "B1 \<subseteq> {e \<in> E. p e \<in> A}" and hB2_sub: "B2 \<subseteq> {e \<in> E. p e \<in> A}"
+          and hne: "B1 \<noteq> B2" using hconj by (by100 blast)+
+      \<comment> \<open>B1 is connected (from max conn comp). B1 \\<subseteq> preimage(A).
+         So B1 is in some max conn comp C1 of preimage(A).
+         Similarly B2 \\<subseteq> C2. If B1 \\<inter> B2 \\<ne> {}, then C1 = C2 (max conn comps form partition).
+         But then both B1, B2 \\<subseteq> C1, and C1 is a max conn comp of preimage(A).
+         If C1 \\<inter> B1 \\<ne> {} and C1 \\<inter> B2 \\<ne> {}, we can derive B1 = C1 = B2 via maximality
+         (since B1 \\<union> C1 connected and B1 is max in its own preimage).
+         Actually, for the same-arc case this is immediate from h\\_mcc\\_disjoint.
+         The cross-arc case: show B1 \\<subseteq> C1 and B2 \\<subseteq> C1, then use h\\_mcc\\_disjoint on C1.\<close>
+      \<comment> \<open>Both are connected and in preimage(A). If they overlap, both are in the same
+         max conn comp C of preimage(A). Leads to B1=C=B2, contradicting B1\\<ne>B2.\<close>
+      show "B1 \<inter> B2 = {}" sorry
+    qed
+  qed
   have h\<A>w_sub: "\<forall>A\<in>\<A>w. A \<subseteq> X \<and> A \<noteq> {}"
   proof (intro ballI conjI)
     fix A assume "A \<in> \<A>w"
