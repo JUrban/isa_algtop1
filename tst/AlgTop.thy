@@ -2970,7 +2970,7 @@ proof -
       proof -
         \<comment> \<open>A1\\<union>A2 path-connected (SCC \\<cong> S1 which is path-connected).\<close>
         have hC_pc: "top1_path_connected_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2))"
-          sorry \<comment> \<open>From hSCC: A1\\<union>A2 is SCC \\<cong> S1 which is path-connected.\<close>
+          sorry \<comment> \<open>Image of path-connected S1 under continuous h\\_s. Use top1\\_path\\_connected\\_continuous\\_image.\<close>
         \<comment> \<open>Every loop in A1\\<union>A2 is null-homotopic in A1\\<union>A2.\<close>
         have hC_loops: "\<forall>x\<in>A1 \<union> A2. \<forall>f. top1_is_loop_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x f \<longrightarrow>
             top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x x f (top1_constant_path x)"
@@ -2979,8 +2979,13 @@ proof -
               and hf: "top1_is_loop_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x f"
           \<comment> \<open>f is a loop in A1\\<union>A2, hence a loop in T' (via inclusion).\<close>
           have hf_T: "top1_is_loop_on T' TT' x f"
-            sorry \<comment> \<open>Loop in subspace \\<Rightarrow> loop in ambient. f continuous I \\<rightarrow> sub(A1\\<union>A2)
-               implies f continuous I \\<rightarrow> T' (inclusion is continuous).\<close>
+          proof -
+            from hf have hf_path: "top1_is_path_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x x f"
+              unfolding top1_is_loop_on_def by (by100 blast)
+            from path_in_subspace_is_path_in_ambient'[OF hTT' hC_sub hf_path]
+            have "top1_is_path_on T' TT' x x f" .
+            thus ?thesis unfolding top1_is_loop_on_def by (by100 blast)
+          qed
           \<comment> \<open>T' is SC \\<Rightarrow> f null-homotopic in T'.\<close>
           have "x \<in> T'" using hx hC_sub by (by100 blast)
           have hf_null_T: "top1_path_homotopic_on T' TT' x x f (top1_constant_path x)"
