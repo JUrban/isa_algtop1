@@ -5663,7 +5663,55 @@ proof -
       \<comment> \<open>Vertex equality: V(\\<A>E\\_raw) = V(tree\\_arcs\\_E).\<close>
       have hVE_eq: "top1_graph_vertex_set E TE \<A>E_raw =
           top1_graph_vertex_set TE_raw (subspace_topology E TE TE_raw) ?tree_arcs_E"
-        sorry \<comment> \<open>Same pattern as hV\\_eq for X. All non-tree arc endpoints are in TE\\_raw.\<close>
+      proof -
+        have hV_TE_eq: "top1_graph_vertex_set TE_raw (subspace_topology E TE TE_raw) ?tree_arcs_E
+            = (\<Union>A\<in>?tree_arcs_E. top1_arc_endpoints_on A (subspace_topology E TE A))"
+        proof -
+          have "\<forall>A\<in>?tree_arcs_E. top1_arc_endpoints_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A)
+              = top1_arc_endpoints_on A (subspace_topology E TE A)"
+          proof (intro ballI)
+            fix A assume "A \<in> ?tree_arcs_E"
+            have "subspace_topology TE_raw (subspace_topology E TE TE_raw) A = subspace_topology E TE A"
+              by (rule subspace_topology_trans) (use \<open>A \<in> ?tree_arcs_E\<close> in blast)
+            thus "top1_arc_endpoints_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A)
+                = top1_arc_endpoints_on A (subspace_topology E TE A)" by simp
+          qed
+          thus ?thesis unfolding top1_graph_vertex_set_def by simp
+        qed
+        have hV_E_eq: "top1_graph_vertex_set E TE \<A>E_raw
+            = (\<Union>A\<in>\<A>E_raw. top1_arc_endpoints_on A (subspace_topology E TE A))"
+          unfolding top1_graph_vertex_set_def by simp
+        have hVsupE: "(\<Union>A\<in>?tree_arcs_E. top1_arc_endpoints_on A (subspace_topology E TE A))
+            \<subseteq> (\<Union>A\<in>\<A>E_raw. top1_arc_endpoints_on A (subspace_topology E TE A))"
+          by (by100 blast)
+        have hVsubE: "(\<Union>A\<in>\<A>E_raw. top1_arc_endpoints_on A (subspace_topology E TE A))
+            \<subseteq> (\<Union>A\<in>?tree_arcs_E. top1_arc_endpoints_on A (subspace_topology E TE A))"
+        proof (intro UN_least subsetI)
+          fix A v assume hA: "A \<in> \<A>E_raw" and hv: "v \<in> top1_arc_endpoints_on A (subspace_topology E TE A)"
+          show "v \<in> (\<Union>A\<in>?tree_arcs_E. top1_arc_endpoints_on A (subspace_topology E TE A))"
+          proof (cases "A \<subseteq> TE_raw")
+            case True thus ?thesis using hA hv by (by100 blast)
+          next
+            case False
+            have "v \<in> TE_raw" using hNTE_endpoints hA False hv hSE_eq by (by100 blast)
+            have "v \<in> \<Union>?tree_arcs_E" using \<open>v \<in> TE_raw\<close> hTE_coverage by simp
+            then obtain B where "B \<in> ?tree_arcs_E" "v \<in> B" by (by100 blast)
+            have "B \<in> \<A>E_raw" using \<open>B \<in> ?tree_arcs_E\<close> by (by100 blast)
+            have "A \<noteq> B" using False \<open>B \<in> ?tree_arcs_E\<close> by (by100 blast)
+            have "v \<in> A" using hv unfolding top1_arc_endpoints_on_def by (by100 blast)
+            have "v \<in> A \<inter> B" using \<open>v \<in> A\<close> \<open>v \<in> B\<close> by (by100 blast)
+            have "A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)"
+              using h\<A>E_inter[rule_format, OF hA \<open>B \<in> \<A>E_raw\<close> \<open>A \<noteq> B\<close>] by (by100 blast)
+            hence "v \<in> top1_arc_endpoints_on B (subspace_topology E TE B)"
+              using \<open>v \<in> A \<inter> B\<close> by (by100 blast)
+            thus ?thesis using \<open>B \<in> ?tree_arcs_E\<close> by (by100 blast)
+          qed
+        qed
+        from hVsupE hVsubE have "(\<Union>A\<in>\<A>E_raw. top1_arc_endpoints_on A (subspace_topology E TE A))
+            = (\<Union>A\<in>?tree_arcs_E. top1_arc_endpoints_on A (subspace_topology E TE A))"
+          by (by100 blast)
+        thus ?thesis using hV_TE_eq hV_E_eq by simp
+      qed
       show ?thesis
       proof -
         have "card (top1_graph_vertex_set E TE \<A>E_raw) = card ?tree_arcs_E + 1"
@@ -7781,4 +7829,4 @@ qed
 
 
 end
-                       
+                        
