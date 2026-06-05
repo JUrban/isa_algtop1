@@ -5775,8 +5775,28 @@ proof -
            p|B: B \\<rightarrow> A is a homeomorphism (from Clause 1 + Theorem 26.6).
            A is an arc \\<Rightarrow> B is an arc. B \\<subseteq> preimage(A) \\<subseteq> E.\<close>
       have h\<A>L_cover: "\<Union>?\<A>_L = E"
-        sorry \<comment> \<open>From Clause 2: every e \\<in> E is in some B \\<in> \\<A>\\_L.
-           And B \\<subseteq> E from above. So \\<Union>\\<A>\\_L = E.\<close>
+      proof (rule set_eqI, rule iffI)
+        fix e assume "e \<in> \<Union>?\<A>_L"
+        then obtain B where "B \<in> ?\<A>_L" "e \<in> B" by (by100 blast)
+        then obtain A0 where "A0 \<in> \<A>w" and hB_comp: "top1_max_conn_comp {e' \<in> E. p e' \<in> A0}
+            (subspace_topology E TE {e' \<in> E. p e' \<in> A0}) B" by (by100 blast)
+        have "B \<subseteq> {e' \<in> E. p e' \<in> A0}" using max_conn_comp_sub[OF hB_comp] .
+        thus "e \<in> E" using \<open>e \<in> B\<close> by (by100 blast)
+      next
+        fix e assume "e \<in> E"
+        have "p e \<in> X" using \<open>e \<in> E\<close> hp_surj by (by100 blast)
+        hence "p e \<in> \<Union>\<A>w" using h\<A>w_cover by simp
+        then obtain A0 where "A0 \<in> \<A>w" "p e \<in> A0" by (by100 blast)
+        hence "e \<in> {e' \<in> E. p e' \<in> A0}" using \<open>e \<in> E\<close> by (by100 blast)
+        have hpre_top: "is_topology_on {e' \<in> E. p e' \<in> A0}
+            (subspace_topology E TE {e' \<in> E. p e' \<in> A0})"
+          by (rule subspace_topology_is_topology_on[OF hTE]) (by100 blast)
+        from max_conn_comp_covers[OF hpre_top \<open>e \<in> {e' \<in> E. p e' \<in> A0}\<close>]
+        obtain B where hB_comp: "top1_max_conn_comp {e' \<in> E. p e' \<in> A0}
+            (subspace_topology E TE {e' \<in> E. p e' \<in> A0}) B" and "e \<in> B" by (by100 blast)
+        have "B \<in> ?\<A>_L" using \<open>A0 \<in> \<A>w\<close> hB_comp by (by100 blast)
+        thus "e \<in> \<Union>?\<A>_L" using \<open>e \<in> B\<close> by (by100 blast)
+      qed
       have h\<A>L_inter: "\<forall>A\<in>?\<A>_L. \<forall>B\<in>?\<A>_L. A \<noteq> B \<longrightarrow>
            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
@@ -7839,4 +7859,4 @@ qed
 
 
 end
-                                 
+                                  
