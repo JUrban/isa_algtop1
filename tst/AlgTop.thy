@@ -1334,15 +1334,21 @@ proof -
     using hh1 unfolding top1_homeomorphism_on_def by (by100 blast)
   have hh1_maps: "\<forall>t\<in>I_set. h1 t \<in> A1"
     using hh1_bij unfolding bij_betw_def by (by100 blast)
-  \<comment> \<open>Retraction r\\_ret with orient\\_map for both-endpoint arcs, constant otherwise.\<close>
+  \<comment> \<open>Branch map: maps each point x to its branch attachment vertex (p1 or q1).
+     Defined using path components of T \\ {q1}: if x is path-connected to p1 in T\\{q1},
+     then x is in the p1-branch, otherwise in the q1-branch.\<close>
+  let ?Tq = "T - {q1}"
+  let ?TTq = "subspace_topology T TT ?Tq"
+  define branch where "branch \<equiv> (\<lambda>x :: 'a.
+    if x \<in> top1_path_component_of_on ?Tq ?TTq p1 then p1 else q1)"
+  \<comment> \<open>Retraction: identity on SCC, branch-constant or orient\\_map for external arcs.\<close>
   define r_ret where "r_ret \<equiv> (\<lambda>x :: 'a.
     if x \<in> A1 \<union> A2 then x
     else
       let C = SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C' in
       if p1 \<in> C \<and> q1 \<in> C then
         orient_map h1 (SOME h'. top1_homeomorphism_on I_set I_top C (subspace_topology T TT C) h') x
-      else if q1 \<in> C \<and> p1 \<notin> C then q1
-      else p1)"
+      else branch x)"
   \<comment> \<open>r_ret maps into A1 \<union> A2.\<close>
   \<comment> \<open>orient\\_map h1 h\\_C always maps into A1.\<close>
   have orient_map_range: "\<And>h_C x. bij_betw h_C I_set (h_C ` I_set) \<Longrightarrow> x \<in> h_C ` I_set
@@ -1405,12 +1411,13 @@ proof -
         thus ?thesis by (by100 blast)
       next
         case False
-        have "r_ret x = (if q1 \<in> ?C \<and> p1 \<notin> ?C then q1 else p1)"
+        have "r_ret x = branch x"
         proof -
           have "\<not> (p1 \<in> ?C \<and> q1 \<in> ?C)" using False .
           thus ?thesis unfolding r_ret_def Let_def using \<open>\<not> (x \<in> A1 \<union> A2)\<close> by (by5000 auto)
         qed
-        hence "r_ret x = q1 \<or> r_ret x = p1" by (by100 auto)
+        moreover have "branch x \<in> {p1, q1}" unfolding branch_def by (by100 auto)
+        ultimately have "r_ret x \<in> {p1, q1}" by simp
         thus ?thesis using hp1_in hq1_in by (by100 blast)
       qed
     qed
