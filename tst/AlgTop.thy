@@ -5750,18 +5750,8 @@ proof -
          So V\\_E\\_raw - card(\\<A>E\\_raw) = 1 - card(SE\\_raw).
          Need: 1 - card(SE\\_raw) = -kn, i.e., card(SE\\_raw) = kn + 1.
          This IS what we're trying to prove! Circular.\<close>
-      \<comment> \<open>Extract a graph decomposition from hE\\_graph. Since hE\\_graph was proved by
-         Theorem\\_83\\_4 (which constructs the max-conn-comp family), the extracted
-         decomposition satisfies all graph axioms.\<close>
-      obtain \<A>_G where h\<A>G_arcs: "\<forall>A\<in>\<A>_G. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
-          and h\<A>G_cover: "\<Union>\<A>_G = E"
-          and h\<A>G_inter: "\<forall>A\<in>\<A>_G. \<forall>B\<in>\<A>_G. A \<noteq> B \<longrightarrow>
-               A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
-             \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
-             \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-          and h\<A>G_coh: "\<forall>C. C \<subseteq> E \<longrightarrow> (closedin_on E TE C \<longleftrightarrow>
-              (\<forall>A\<in>\<A>_G. closedin_on A (subspace_topology E TE A) (A \<inter> C)))"
-        using hE_graph unfolding top1_is_graph_on_def by (by5000 auto)
+      \<comment> \<open>Previous approach: extracted \\<A>\\_G from hE\\_graph, but couldn't identify with \\<A>\\_L.
+         Current approach: prove \\<A>\\_L conditions directly, use Euler invariance.\<close>
       have hE_compact: "top1_compact_on E TE"
       proof -
         have hTX_top: "is_topology_on X TX"
@@ -5779,25 +5769,28 @@ proof -
         from compact_graph_finite_arcs[OF hE_graph hE_compact h\<A>E_arcs h\<A>E_cover h\<A>E_inter h\<A>E_coh]
         show ?thesis .
       qed
-      \<comment> \<open>Use Euler invariance between \\<A>\\_G (extracted from hE\\_graph) and \\<A>E\\_raw.\<close>
-      have h\<A>G_fin: "finite \<A>_G"
-        by (rule compact_graph_finite_arcs[OF hE_graph hE_compact h\<A>G_arcs h\<A>G_cover h\<A>G_inter h\<A>G_coh])
-      from graph_euler_invariance[OF hE_graph h\<A>G_arcs h\<A>G_cover h\<A>G_inter h\<A>G_fin
+      \<comment> \<open>Prove \\<A>\\_L graph conditions, then apply Euler invariance directly to \\<A>\\_L and \\<A>E\\_raw.\<close>
+      have h\<A>L_arcs: "\<forall>B\<in>?\<A>_L. B \<subseteq> E \<and> top1_is_arc_on B (subspace_topology E TE B)"
+        sorry \<comment> \<open>Each B \\<in> \\<A>\\_L is an arc: B = max conn comp of preimage(A).
+           p|B: B \\<rightarrow> A is a homeomorphism (from Clause 1 + Theorem 26.6).
+           A is an arc \\<Rightarrow> B is an arc. B \\<subseteq> preimage(A) \\<subseteq> E.\<close>
+      have h\<A>L_cover: "\<Union>?\<A>_L = E"
+        sorry \<comment> \<open>From Clause 2: every e \\<in> E is in some B \\<in> \\<A>\\_L.
+           And B \\<subseteq> E from above. So \\<Union>\\<A>\\_L = E.\<close>
+      have h\<A>L_inter: "\<forall>A\<in>?\<A>_L. \<forall>B\<in>?\<A>_L. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+        sorry \<comment> \<open>Lifted arcs from different base arcs are disjoint (Clause 3 of covering interface).
+           Lifted arcs from the same base arc: disjoint (also Clause 3).
+           So A \\<inter> B = {} \\<subseteq> endpoints. \\<checkmark>\<close>
+      have h\<A>L_fin: "finite ?\<A>_L" using h\<A>_L_card by (by100 blast)
+      \<comment> \<open>Direct Euler invariance between \\<A>\\_L and \\<A>E\\_raw.\<close>
+      from graph_euler_invariance[OF hE_graph h\<A>L_arcs h\<A>L_cover h\<A>L_inter h\<A>L_fin
           h\<A>E_arcs h\<A>E_cover h\<A>E_inter h\<A>E_fin]
-      have "int (card (top1_graph_vertex_set E TE \<A>_G)) - int (card \<A>_G)
-          = int (card (top1_graph_vertex_set E TE \<A>E_raw)) - int (card \<A>E_raw)" .
-      \<comment> \<open>Now need: V(\\<A>\\_G) - card(\\<A>\\_G) = V(\\<A>\\_L) - card(\\<A>\\_L).
-         \\<A>\\_G was extracted from hE\\_graph. In Isabelle's SOME, \\<A>\\_G IS the decomposition
-         from Theorem\\_83\\_4's proof = the max-conn-comp family = \\<A>\\_L.
-         But we can't prove \\<A>\\_G = \\<A>\\_L definitionally.
-         HOWEVER: we can use ANOTHER application of Euler invariance between \\<A>\\_G and \\<A>\\_L...
-         which needs \\<A>\\_L conditions. OR: accept this as a sorry.\<close>
       have hstep2: "int (card (top1_graph_vertex_set E TE ?\<A>_L)) - int (card ?\<A>_L)
-          = int (card (top1_graph_vertex_set E TE \<A>_G)) - int (card \<A>_G)"
-        sorry \<comment> \<open>Euler invariance between \\<A>\\_L and \\<A>\\_G. Both are valid decompositions.\<close>
-      show ?thesis using \<open>int (card (top1_graph_vertex_set E TE \<A>_G)) - int (card \<A>_G)
-          = int (card (top1_graph_vertex_set E TE \<A>E_raw)) - int (card \<A>E_raw)\<close> hstep2
-        by linarith
+          = int (card (top1_graph_vertex_set E TE \<A>E_raw)) - int (card \<A>E_raw)" .
+      show ?thesis using hstep2 by linarith
     qed
     \<comment> \<open>Combine: rank + V\\_L = \\<A>\\_L + 1.\<close>
     show ?thesis using hrank_E_raw heuler_inv by linarith
@@ -7846,4 +7839,4 @@ qed
 
 
 end
-                             
+                                 
