@@ -3451,15 +3451,44 @@ proof -
        Clause 2: every fiber point is in some path component.
        Clause 3: path components of the same preimage are disjoint (by definition).\<close>
   have h\<A>w_sub: "\<forall>A\<in>\<A>w. A \<subseteq> X \<and> A \<noteq> {}"
-    sorry \<comment> \<open>From h\\<A>w and arc non-empty (homeomorphic to [0,1]).\<close>
+  proof (intro ballI conjI)
+    fix A assume "A \<in> \<A>w"
+    show "A \<subseteq> X" using h\<A>w \<open>A \<in> \<A>w\<close> by (by100 blast)
+    show "A \<noteq> {}"
+    proof -
+      have "top1_is_arc_on A (subspace_topology X TX A)" using h\<A>w \<open>A \<in> \<A>w\<close> by (by100 blast)
+      then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+        unfolding top1_is_arc_on_def by (by100 blast)
+      hence "h ` I_set = A" unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      moreover have "I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 auto)
+      ultimately show ?thesis by (by100 blast)
+    qed
+  qed
   \<comment> \<open>Step 4: Apply multiplicity lemmas.
      card(\\<A>\\_L) = k * card(\\<A>w) and card(V\\_L) = k * card(V\\_X).\<close>
-  have h\<A>_L_card: "card ?\<A>_L = k * card \<A>w"
-    sorry \<comment> \<open>From covering\\_lifted\\_arc\\_family\\_card[OF hcov h\\_lifted h\\<A>w\\_fin hfiber h\\<A>w\\_sub hk].\<close>
+  have h\<A>_L_card: "finite ?\<A>_L \<and> card ?\<A>_L = k * card \<A>w"
+    by (rule covering_lifted_arc_family_card[OF hcov h_lifted h\<A>w_fin hfiber h\<A>w_sub hk])
   have hV_X_fin: "finite (top1_graph_vertex_set X TX \<A>w)"
-    sorry \<comment> \<open>From h\\<A>w\\_fin + arc endpoints are 2 per arc.\<close>
+  proof -
+    have hstrict_X: "is_topology_on_strict X TX"
+      using hgraph_X unfolding top1_is_graph_on_def by (by100 blast)
+    have hhaus_X: "is_hausdorff_on X TX"
+      using hgraph_X unfolding top1_is_graph_on_def by (by100 blast)
+    have "\<forall>A\<in>\<A>w. finite (top1_arc_endpoints_on A (subspace_topology X TX A))"
+    proof (intro ballI)
+      fix A assume "A \<in> \<A>w"
+      have "top1_is_arc_on A (subspace_topology X TX A)" using h\<A>w \<open>A \<in> \<A>w\<close> by (by100 blast)
+      have "A \<subseteq> X" using h\<A>w \<open>A \<in> \<A>w\<close> by (by100 blast)
+      then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+        using \<open>top1_is_arc_on A _\<close> unfolding top1_is_arc_on_def by (by100 blast)
+      from arc_endpoints_are_boundary[OF hstrict_X hhaus_X \<open>A \<subseteq> X\<close> \<open>top1_is_arc_on A _\<close> this]
+      have "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}" .
+      thus "finite (top1_arc_endpoints_on A (subspace_topology X TX A))" by (by100 simp)
+    qed
+    thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>w_fin by (by100 blast)
+  qed
   have hV_L_card: "card (top1_graph_vertex_set E TE ?\<A>_L) = k * card (top1_graph_vertex_set X TX \<A>w)"
-    sorry \<comment> \<open>From covering\\_lifted\\_vertex\\_set\\_card[OF hcov h\\_lifted hV\\_X\\_fin hfiber h\\<A>w\\_sub hk].\<close>
+    by (rule covering_lifted_vertex_set_card[OF hcov h_lifted hV_X_fin hfiber h\<A>w_sub hk])
   \<comment> \<open>Step 5: E is a graph. Apply graph\\_pi1\\_free\\_weak to E.
      This gives \\<pi>\\_1(E) free on some basis. The rank = number of non-tree arcs.\<close>
   have hE_graph: "top1_is_graph_on E TE"
