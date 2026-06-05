@@ -3785,7 +3785,7 @@ proof -
       (top1_fundamental_group_mul E TE e0)
       (top1_fundamental_group_id E TE e0)
       (top1_fundamental_group_invg E TE e0) \<iota>E SE"
-    sorry \<comment> \<open>From graph\\_pi1\\_free\\_weak[OF hE\\_graph hconn\\_E he0]. Extract existential.\<close>
+    sorry \<comment> \<open>From graph\\_pi1\\_free\\_weak[OF hE\\_graph hconn\\_E he0]: extract free group.\<close>
   \<comment> \<open>Step 6: Euler characteristic argument.
      From graph\\_pi1\\_free\\_weak on E: card(SE) = rank(\\<pi>\\_1(E)).
      From Euler formula (heuler\\_X): card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.
