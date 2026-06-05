@@ -6213,19 +6213,11 @@ proof -
     hence "int (card SE_raw) = int (k * n + 1)" by simp
     thus "card SE_raw = k * n + 1" using of_nat_eq_iff by (by100 blast)
   qed
-  \<comment> \<open>Step 6e: Use free\\_group\\_rank\\_invariant\\_finite to transfer to nat set.\<close>
+  \<comment> \<open>Step 6e: Construct the final result.\<close>
   show ?thesis
-  proof (rule exI[of _ "\<lambda>i. \<iota>E_raw (from_nat_into SE_raw i)"],
-         rule exI[of _ "{..<card SE_raw}"])
-    show "top1_is_free_group_full_on
-        (top1_fundamental_group_carrier E TE e0)
-        (top1_fundamental_group_mul E TE e0)
-        (top1_fundamental_group_id E TE e0)
-        (top1_fundamental_group_invg E TE e0)
-        (\<lambda>i. \<iota>E_raw (from_nat_into SE_raw i)) {..<card SE_raw}
-        \<and> card {..<card SE_raw} = k * n + 1"
-      sorry \<comment> \<open>Transfer free group to nat-indexed basis via bijection SE\\_raw \\<leftrightarrow> {..<card SE\\_raw}.\<close>
-  qed
+    sorry \<comment> \<open>Use hfree\\_E with card(SE\\_raw) = k*n+1. Transfer to nat-indexed basis
+       via graph\\_pi1\\_free\\_weak\\_apply + free\\_group\\_rank\\_invariant\\_finite.
+       All non-sorry premises proved. Blocked by hchi\\_X and hrank\\_E.\<close>
 qed
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
