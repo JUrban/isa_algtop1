@@ -2959,8 +2959,72 @@ proof -
       \<comment> \<open>The full argument: any loop in A1\\<union>A2 is null-homotopic in T' (SC).
          By Lemma 55.1 (retract injective): null-homotopic in T' \\<Rightarrow> null-homotopic in A1\\<union>A2.
          So \\<pi>\\_1(A1\\<union>A2) = 0. But A1\\<union>A2 \\<cong> S1 has \\<pi>\\_1 = Z \\<ne> 0.\<close>
-      show False
-        sorry \<comment> \<open>Standard retract+SC+nontrivial argument. About 100 lines from old proof.\<close>
+      \<comment> \<open>Step 1: A1\\<union>A2 is simply connected (from retract + T' SC).\<close>
+      have hC_sub: "A1 \<union> A2 \<subseteq> T'" using \<open>A1 \<union> A2 \<subseteq> T'\<close> .
+      have hTT': "is_topology_on T' TT'"
+        using hstrict' unfolding is_topology_on_strict_def by (by100 blast)
+      have hC_top: "is_topology_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2))"
+        using subspace_topology_is_topology_on[OF hTT' hC_sub] .
+      have hC_sc: "top1_simply_connected_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2))"
+      proof -
+        \<comment> \<open>A1\\<union>A2 path-connected (SCC \\<cong> S1 which is path-connected).\<close>
+        have hC_pc: "top1_path_connected_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2))"
+          sorry \<comment> \<open>From hSCC: A1\\<union>A2 is SCC \\<cong> S1 which is path-connected.\<close>
+        \<comment> \<open>Every loop in A1\\<union>A2 is null-homotopic in A1\\<union>A2.\<close>
+        have hC_loops: "\<forall>x\<in>A1 \<union> A2. \<forall>f. top1_is_loop_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x f \<longrightarrow>
+            top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x x f (top1_constant_path x)"
+        proof (intro ballI allI impI)
+          fix x f assume hx: "x \<in> A1 \<union> A2"
+              and hf: "top1_is_loop_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x f"
+          \<comment> \<open>f is a loop in A1\\<union>A2, hence a loop in T' (via inclusion).\<close>
+          have hf_T: "top1_is_loop_on T' TT' x f"
+            sorry \<comment> \<open>Loop in subspace \\<Rightarrow> loop in ambient. f continuous I \\<rightarrow> sub(A1\\<union>A2)
+               implies f continuous I \\<rightarrow> T' (inclusion is continuous).\<close>
+          \<comment> \<open>T' is SC \\<Rightarrow> f null-homotopic in T'.\<close>
+          have "x \<in> T'" using hx hC_sub by (by100 blast)
+          have hf_null_T: "top1_path_homotopic_on T' TT' x x f (top1_constant_path x)"
+            using hsc'[unfolded top1_simply_connected_on_def] hf_T \<open>x \<in> T'\<close> by (by100 blast)
+          \<comment> \<open>By Lemma 55.1: retract \\<Rightarrow> null-homotopic in T' \\<Rightarrow> null-homotopic in A1\\<union>A2.\<close>
+          have hconst: "top1_is_loop_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x (top1_constant_path x)"
+            by (rule top1_constant_path_is_loop[OF hC_top hx])
+          from Lemma_55_1_retract_injective[OF hretract' hx hf hconst hf_null_T]
+          show "top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x x f (top1_constant_path x)" .
+        qed
+        show ?thesis unfolding top1_simply_connected_on_def using hC_pc hC_loops by (by100 blast)
+      qed
+      \<comment> \<open>Step 2: A1\\<union>A2 \\<cong> S1 (from hSCC). Transfer SC from A1\\<union>A2 to S1.\<close>
+      \<comment> \<open>h\\_s: S1 \\<rightarrow> T' continuous injection with image A1\\<union>A2.\<close>
+      \<comment> \<open>S1 compact, A1\\<union>A2 Hausdorff \\<Rightarrow> h\\_s homeomorphism onto A1\\<union>A2.\<close>
+      \<comment> \<open>Transfer SC from A1\\<union>A2 to S1 via homeomorphism. But S1 is NOT SC.\<close>
+      have "top1_simply_connected_on top1_S1 top1_S1_topology"
+        sorry \<comment> \<open>Transfer SC from A1\\<union>A2 to S1 via homeomorphism h\\_s.
+           h\\_s: S1 \\<rightarrow> A1\\<union>A2 is a homeomorphism (Theorem 26.6: compact\\<rightarrow>Hausdorff bijection).
+           SC transfers under homeomorphism.\<close>
+      \<comment> \<open>But S1 is NOT simply connected: \\<pi>\\_1(S1) \\<ne> 0.\<close>
+      \<comment> \<open>But S1 is NOT simply connected.\<close>
+      from top1_S1_fundamental_group_nontrivial
+      obtain f0 g0 where hfg: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f0"
+          "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g0"
+          "\<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
+        by (by100 blast)
+      \<comment> \<open>SC \\<Rightarrow> f0 \\<sim> const and g0 \\<sim> const \\<Rightarrow> f0 \\<sim> g0. Contradiction.\<close>
+      have h10: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
+        using S1_compact unfolding top1_compact_on_def by (by100 blast)
+      from \<open>top1_simply_connected_on top1_S1 top1_S1_topology\<close>[unfolded top1_simply_connected_on_def]
+      have "\<forall>x\<in>top1_S1. \<forall>f. top1_is_loop_on top1_S1 top1_S1_topology x f \<longrightarrow>
+          top1_path_homotopic_on top1_S1 top1_S1_topology x x f (top1_constant_path x)"
+        using h10 by (by100 blast)
+      hence hf0_null: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) f0 (top1_constant_path (1,0))"
+        using hfg(1) h10 by (by100 blast)
+      hence hg0_null: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) g0 (top1_constant_path (1,0))"
+        using \<open>\<forall>x\<in>top1_S1. \<forall>f. _\<close> hfg(2) h10 by (by100 blast)
+      \<comment> \<open>f0 \\<sim> const \\<sim> g0 \\<Rightarrow> f0 \\<sim> g0 by transitivity + symmetry.\<close>
+      from Lemma_51_1_path_homotopic_sym[OF hg0_null]
+      have "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) (top1_constant_path (1,0)) g0" .
+      from Lemma_51_1_path_homotopic_trans[OF hS1_top hf0_null this]
+      have hfg_htpy: "top1_path_homotopic_on top1_S1 top1_S1_topology (1,0) (1,0) f0 g0" .
+      show False using hfg_htpy hfg(3) by (by100 blast)
     qed
   qed
   \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_universal.\<close>
