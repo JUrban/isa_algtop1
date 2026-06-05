@@ -2948,8 +2948,9 @@ proof -
         using htree' unfolding top1_is_tree_on_def by (by100 blast)
       \<comment> \<open>Extract S1-homeomorphism from the SCC.\<close>
       from hSCC[unfolded top1_simple_closed_curve_on_def]
-      obtain h_s where "top1_continuous_map_on top1_S1 top1_S1_topology T' TT' h_s"
-          "inj_on h_s top1_S1" "h_s ` top1_S1 = A1 \<union> A2" by (by100 blast)
+      obtain h_s where hhs_cont: "top1_continuous_map_on top1_S1 top1_S1_topology T' TT' h_s"
+          and hhs_inj: "inj_on h_s top1_S1" and hhs_img: "h_s ` top1_S1 = A1 \<union> A2"
+        by (by100 blast)
       \<comment> \<open>Need a basepoint in A1\\<union>A2 for the \\<pi>\\_1 argument.
          Take p1' which is in A1\\<union>A2.\<close>
       have "p1' \<in> A1 \<union> A2"
@@ -3002,16 +3003,22 @@ proof -
       have hC_haus: "is_hausdorff_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2))"
         using hhaus' hC_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
       have "bij_betw h_s top1_S1 (A1 \<union> A2)"
-        unfolding bij_betw_def using \<open>inj_on h_s top1_S1\<close> \<open>h_s ` top1_S1 = A1 \<union> A2\<close> by (by100 blast)
+        unfolding bij_betw_def using hhs_inj hhs_img by (by100 blast)
+      have hhs_range: "\<forall>s\<in>top1_S1. h_s s \<in> A1 \<union> A2"
+      proof (intro ballI)
+        fix s assume "s \<in> top1_S1"
+        hence "h_s s \<in> h_s ` top1_S1" by (by100 blast)
+        thus "h_s s \<in> A1 \<union> A2" using hhs_img by (by100 blast)
+      qed
       have "top1_continuous_map_on top1_S1 top1_S1_topology (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) h_s"
-        sorry \<comment> \<open>h\\_s continuous S1 \\<rightarrow> T' \\<Rightarrow> h\\_s continuous S1 \\<rightarrow> sub(A1\\<union>A2) (restrict codomain).\<close>
+        by (rule continuous_map_restrict_codomain[OF hhs_cont hhs_range hC_sub])
       from Theorem_26_6[OF hS1_top hC_top S1_compact hC_haus this \<open>bij_betw h_s top1_S1 (A1 \<union> A2)\<close>]
       have hhomeo: "top1_homeomorphism_on top1_S1 top1_S1_topology (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) h_s" .
       \<comment> \<open>Transfer SC from A1\\<union>A2 to S1 via homeomorphism.\<close>
       \<comment> \<open>Need SC S1 from SC A1\\<union>A2. Use inverse homeomorphism A1\\<union>A2 \\<rightarrow> S1.\<close>
       have hhomeo_inv: "top1_homeomorphism_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2))
           top1_S1 top1_S1_topology (inv_into top1_S1 h_s)"
-        sorry \<comment> \<open>Inverse of homeomorphism is a homeomorphism.\<close>
+        by (rule homeomorphism_inverse[OF hhomeo])
       have "top1_simply_connected_on top1_S1 top1_S1_topology"
         by (rule homeomorphism_preserves_simply_connected[OF hhomeo_inv hC_sc])
       \<comment> \<open>But S1 is NOT simply connected: \\<pi>\\_1(S1) \\<ne> 0.\<close>
