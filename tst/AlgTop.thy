@@ -2842,8 +2842,32 @@ proof -
      \<forall>C. C \<subseteq> T' \<longrightarrow> (closedin_on T' TT' C \<longleftrightarrow> (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T' TT' A) (A \<inter> C)))\<rbrakk>
     \<Longrightarrow> \<exists>A0 v. A0 \<in> \<A>' \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0)
         \<and> (\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-    sorry \<comment> \<open>Walk+pigeonhole for ANY tree: if no leaf, all degrees \\<ge> 2.
-       Walk \\<Rightarrow> revisit \\<Rightarrow> cycle \\<Rightarrow> SCC \\<Rightarrow> contradicts SC (via two\\_arc\\_union\\_is\\_retract).\<close>
+  proof -
+    fix T' :: "'a set" and TT' and \<A>'
+    assume htree': "top1_is_tree_on T' TT'"
+      and h\<A>': "\<forall>A\<in>\<A>'. A \<subseteq> T' \<and> top1_is_arc_on A (subspace_topology T' TT' A)"
+      and hcover': "\<Union>\<A>' = T'"
+      and hinter': "\<forall>A\<in>\<A>'. \<forall>B\<in>\<A>'. A \<noteq> B \<longrightarrow>
+         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T' TT' A)
+       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T' TT' B)
+       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and hfin': "finite \<A>'" and hge2': "card \<A>' \<ge> 2"
+      and hcoh': "\<forall>C. C \<subseteq> T' \<longrightarrow> (closedin_on T' TT' C \<longleftrightarrow>
+          (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T' TT' A) (A \<inter> C)))"
+    \<comment> \<open>Proof by contradiction. If no leaf, all degrees \\<ge> 2.\<close>
+    show "\<exists>A0 v. A0 \<in> \<A>' \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0) \<and>
+        (\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
+      sorry \<comment> \<open>Walk+pigeonhole argument. Steps:
+         1. Assume no leaf: all endpoints shared with another arc.
+         2. Pick A1, endpoint p1. Shared with A2. Other endpoint r2 of A2 shared with A3.
+         3. If A3 = A1: SCC formed (A1,A2 share {p1,q1=r2}).
+         4. Continue walk. By pigeonhole (finite \\<A>'), revisit within card(\\<A>') steps.
+         5. SCC formed: two arcs sharing both endpoints.
+         6. SCC in tree \\<Rightarrow> retract to SCC \\<Rightarrow> \\<pi>\\_1(SCC) = Z \\<hookrightarrow> \\<pi>\\_1(T') = 0.
+         7. Contradiction.
+         Uses: two\\_arc\\_union\\_is\\_retract, arcs\\_form\\_simple\\_closed\\_curve,
+         Lemma\\_55\\_1\\_retract\\_injective, top1\\_S1\\_fundamental\\_group\\_nontrivial.\<close>
+  qed
   \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_universal.\<close>
   have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
   proof -
