@@ -2857,16 +2857,61 @@ proof -
     \<comment> \<open>Proof by contradiction. If no leaf, all degrees \\<ge> 2.\<close>
     show "\<exists>A0 v. A0 \<in> \<A>' \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0) \<and>
         (\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-      sorry \<comment> \<open>Walk+pigeonhole argument. Steps:
-         1. Assume no leaf: all endpoints shared with another arc.
-         2. Pick A1, endpoint p1. Shared with A2. Other endpoint r2 of A2 shared with A3.
-         3. If A3 = A1: SCC formed (A1,A2 share {p1,q1=r2}).
-         4. Continue walk. By pigeonhole (finite \\<A>'), revisit within card(\\<A>') steps.
-         5. SCC formed: two arcs sharing both endpoints.
-         6. SCC in tree \\<Rightarrow> retract to SCC \\<Rightarrow> \\<pi>\\_1(SCC) = Z \\<hookrightarrow> \\<pi>\\_1(T') = 0.
-         7. Contradiction.
-         Uses: two\\_arc\\_union\\_is\\_retract, arcs\\_form\\_simple\\_closed\\_curve,
-         Lemma\\_55\\_1\\_retract\\_injective, top1\\_S1\\_fundamental\\_group\\_nontrivial.\<close>
+    proof (rule ccontr)
+      assume hno: "\<not> (\<exists>A0 v. A0 \<in> \<A>' \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0) \<and>
+          (\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
+      \<comment> \<open>Step 1: no leaf \\<Rightarrow> every endpoint is shared.\<close>
+      have hshared: "\<forall>A0\<in>\<A>'. \<forall>v\<in>top1_arc_endpoints_on A0 (subspace_topology T' TT' A0).
+          \<exists>B\<in>\<A>'. B \<noteq> A0 \<and> v \<in> B"
+      proof (intro ballI)
+        fix A0 v assume "A0 \<in> \<A>'" "v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0)"
+        show "\<exists>B\<in>\<A>'. B \<noteq> A0 \<and> v \<in> B"
+        proof (rule ccontr)
+          assume "\<not> (\<exists>B\<in>\<A>'. B \<noteq> A0 \<and> v \<in> B)"
+          hence "\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B" by (by100 blast)
+          with \<open>A0 \<in> \<A>'\<close> \<open>v \<in> top1_arc_endpoints_on A0 _\<close>
+          have "\<exists>A0 v. A0 \<in> \<A>' \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0) \<and>
+              (\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B)" by (by100 blast)
+          with hno show False by (by100 blast)
+        qed
+      qed
+      \<comment> \<open>Steps 2-5: Walk through arcs. Find two arcs sharing both endpoints (SCC).\<close>
+      have "\<exists>A1 A2 p1 q1. A1 \<in> \<A>' \<and> A2 \<in> \<A>' \<and> A1 \<noteq> A2 \<and> p1 \<noteq> q1 \<and>
+          top1_arc_endpoints_on A1 (subspace_topology T' TT' A1) = {p1, q1} \<and>
+          top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {p1, q1}"
+        sorry \<comment> \<open>Walk+pigeonhole on the incidence graph. Key steps:
+           Pick A1 (from hge2': card \\<ge> 2). Get endpoint p1.
+           hshared: p1 shared with A2 \\<ne> A1. A2 has other endpoint r2.
+           hshared: r2 shared with A3 \\<ne> A2.
+           If A3 = A1: A1 and A2 share p1 and r2 = q1. SCC.
+           If A3 \\<ne> A1: continue with A3. After \\<le> card(\\<A>') steps,
+           pigeonhole on finite \\<A>' forces revisit. Two arcs sharing both endpoints.\<close>
+      then obtain A1 A2 p1' q1' where hA1: "A1 \<in> \<A>'" and hA2: "A2 \<in> \<A>'"
+          and hne12: "A1 \<noteq> A2" and hpq': "p1' \<noteq> q1'"
+          and hep1': "top1_arc_endpoints_on A1 (subspace_topology T' TT' A1) = {p1', q1'}"
+          and hep2': "top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {p1', q1'}"
+        by (by100 blast)
+      \<comment> \<open>Step 6: SCC in tree \\<Rightarrow> contradiction.\<close>
+      have hstrict': "is_topology_on_strict T' TT'"
+        using htree' unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have hhaus': "is_hausdorff_on T' TT'"
+        using htree' unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have hA12_inter': "\<forall>C\<in>\<A>'. C \<noteq> A1 \<longrightarrow> C \<noteq> A2 \<longrightarrow> C \<inter> (A1 \<union> A2) \<subseteq> {p1', q1'}"
+        sorry \<comment> \<open>From hinter' + hep1' + hep2'.\<close>
+      from two_arc_union_is_retract[OF hstrict' hhaus' h\<A>' hcover' hinter' hcoh'
+          hA1 hA2 hne12 hep1' hep2' hpq' hA12_inter']
+      have hretract': "top1_retract_of_on T' TT' (A1 \<union> A2)" .
+      \<comment> \<open>SCC: arcs\\_form\\_simple\\_closed\\_curve.\<close>
+      have "A1 \<inter> A2 = {p1', q1'}" sorry
+      from arcs_form_simple_closed_curve[OF hstrict' hhaus' _ _ _ _
+          \<open>A1 \<inter> A2 = {p1', q1'}\<close> hpq' hep1' hep2']
+      have hSCC: "top1_simple_closed_curve_on T' TT' (A1 \<union> A2)"
+        using h\<A>' hA1 hA2 sorry
+      \<comment> \<open>T' simply connected + retract of SCC \\<Rightarrow> \\<pi>\\_1(SCC) = Z embeds into \\<pi>\\_1(T') = 0.\<close>
+      \<comment> \<open>But Z \\<ne> 0 \\<Rightarrow> contradiction.\<close>
+      show False
+        sorry \<comment> \<open>From hretract' + hSCC + Lemma\\_55\\_1 + \\<pi>\\_1(S1) \\<ne> 0.\<close>
+    qed
   qed
   \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_universal.\<close>
   have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
