@@ -1344,9 +1344,77 @@ proof -
       else if q1 \<in> C \<and> p1 \<notin> C then q1
       else p1)"
   \<comment> \<open>r_ret maps into A1 \<union> A2.\<close>
+  \<comment> \<open>orient\\_map h1 h\\_C always maps into A1.\<close>
+  have orient_map_range: "\<And>h_C x. bij_betw h_C I_set (h_C ` I_set) \<Longrightarrow> x \<in> h_C ` I_set
+      \<Longrightarrow> orient_map h1 h_C x \<in> A1"
+  proof -
+    fix h_C :: "real \<Rightarrow> 'a" and x :: 'a
+    assume hbij: "bij_betw h_C I_set (h_C ` I_set)" and hx: "x \<in> h_C ` I_set"
+    let ?t = "inv_into I_set h_C x"
+    have ht: "?t \<in> I_set" using inv_into_into[OF hx] .
+    have h1t: "1 - ?t \<in> I_set"
+    proof -
+      have "0 \<le> ?t" "?t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+      thus ?thesis unfolding top1_unit_interval_def by (by100 auto)
+    qed
+    show "orient_map h1 h_C x \<in> A1"
+      unfolding orient_map_def Let_def using hh1_maps ht h1t by (by100 auto)
+  qed
   have hr_maps: "\<forall>x\<in>T. r_ret x \<in> A1 \<union> A2"
-    sorry \<comment> \<open>For constant cases: p1 or q1 \\<in> A1\\<union>A2.
-       For orient\\_map case: orient\\_map h1 h\\_C maps into A1 (h1(t) or h1(1-t) \\<in> A1).\<close>
+  proof (intro ballI)
+    fix x assume "x \<in> T"
+    show "r_ret x \<in> A1 \<union> A2"
+    proof (cases "x \<in> A1 \<union> A2")
+      case True thus ?thesis unfolding r_ret_def by (by100 simp)
+    next
+      case False
+      \<comment> \<open>x is in some external arc C.\<close>
+      have "\<exists>C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C'"
+      proof -
+        have "x \<in> \<Union>\<A>" using \<open>x \<in> T\<close> h\<A>_cover by simp
+        then obtain C' where "C' \<in> \<A>" "x \<in> C'" by (by100 blast)
+        have "C' \<noteq> A1" "C' \<noteq> A2" using False \<open>x \<in> C'\<close> by (by100 blast)+
+        thus ?thesis using \<open>C' \<in> \<A>\<close> \<open>x \<in> C'\<close> by (by100 blast)
+      qed
+      hence hC_prop: "(SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C') \<in> \<A> \<and>
+          (SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C') \<noteq> A1 \<and>
+          (SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C') \<noteq> A2 \<and>
+          x \<in> (SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C')" by (rule someI_ex)
+      let ?C = "SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C'"
+      show ?thesis
+      proof (cases "p1 \<in> ?C \<and> q1 \<in> ?C")
+        case True
+        \<comment> \<open>orient\\_map case.\<close>
+        have "?C \<in> \<A>" using hC_prop by (by100 blast)
+        have "top1_is_arc_on ?C (subspace_topology T TT ?C)" using h\<A>_arcs \<open>?C \<in> \<A>\<close> by (by100 blast)
+        then obtain h_C0 where "top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h_C0"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        let ?h_C = "SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h'"
+        have hh_C: "top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) ?h_C"
+          using someI_ex[of "\<lambda>h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h'"]
+              \<open>top1_homeomorphism_on _ _ ?C _ h_C0\<close> by (by100 blast)
+        have hbij_C: "bij_betw ?h_C I_set ?C" using hh_C unfolding top1_homeomorphism_on_def by (by100 blast)
+        have "x \<in> ?C" using hC_prop by (by100 blast)
+        hence "x \<in> ?h_C ` I_set" using hbij_C unfolding bij_betw_def by (by100 blast)
+        have "?h_C ` I_set = ?C" using hbij_C unfolding bij_betw_def by (by100 blast)
+        have hbij_C2: "bij_betw ?h_C I_set (?h_C ` I_set)" using hbij_C \<open>?h_C ` I_set = ?C\<close> by simp
+        have hom_in_A1: "orient_map h1 ?h_C x \<in> A1" by (rule orient_map_range[OF hbij_C2 \<open>x \<in> ?h_C ` I_set\<close>])
+        have "r_ret x = orient_map h1 ?h_C x"
+          unfolding r_ret_def Let_def using False True by simp
+        hence "r_ret x \<in> A1" using hom_in_A1 by simp
+        thus ?thesis by (by100 blast)
+      next
+        case False
+        have "r_ret x = (if q1 \<in> ?C \<and> p1 \<notin> ?C then q1 else p1)"
+        proof -
+          have "\<not> (p1 \<in> ?C \<and> q1 \<in> ?C)" using False .
+          thus ?thesis unfolding r_ret_def Let_def using \<open>\<not> (x \<in> A1 \<union> A2)\<close> by (by5000 auto)
+        qed
+        hence "r_ret x = q1 \<or> r_ret x = p1" by (by100 auto)
+        thus ?thesis using hp1_in hq1_in by (by100 blast)
+      qed
+    qed
+  qed
   \<comment> \<open>r_ret is the identity on A1 \<union> A2.\<close>
   have hr_fixes: "\<forall>a\<in>A1 \<union> A2. r_ret a = a"
     unfolding r_ret_def by (by100 simp)
