@@ -6205,7 +6205,65 @@ proof -
        This is the remaining deep sorry. Needs leaf existence from acyclicity.\<close>
   \<comment> \<open>Vertex equality: V\\_X = V\\_Tw (all endpoints of non-tree arcs are in Tw).\<close>
   have hV_eq: "top1_graph_vertex_set X TX \<A>w = top1_graph_vertex_set Tw (subspace_topology X TX Tw) ?tree_arcs"
-    sorry \<comment> \<open>All vertices of \\<A>w are in Tw (non-tree arc endpoints \\<in> Tw from hNTw\\_endpoints).\<close>
+  proof -
+    \<comment> \<open>V\\_Tw uses sub(Tw, sub(X,TX,Tw), A) = sub(X,TX,A) for A \\<subseteq> Tw.\<close>
+    have hV_Tw_eq: "top1_graph_vertex_set Tw (subspace_topology X TX Tw) ?tree_arcs
+        = (\<Union>A\<in>?tree_arcs. top1_arc_endpoints_on A (subspace_topology X TX A))"
+    proof -
+      have "\<forall>A\<in>?tree_arcs. top1_arc_endpoints_on A (subspace_topology Tw (subspace_topology X TX Tw) A)
+          = top1_arc_endpoints_on A (subspace_topology X TX A)"
+      proof (intro ballI)
+        fix A assume "A \<in> ?tree_arcs"
+        hence "A \<subseteq> Tw" by (by100 blast)
+        have "subspace_topology Tw (subspace_topology X TX Tw) A = subspace_topology X TX A"
+          by (rule subspace_topology_trans[OF \<open>A \<subseteq> Tw\<close>])
+        thus "top1_arc_endpoints_on A (subspace_topology Tw (subspace_topology X TX Tw) A)
+            = top1_arc_endpoints_on A (subspace_topology X TX A)" by simp
+      qed
+      thus ?thesis unfolding top1_graph_vertex_set_def by simp
+    qed
+    have hV_X_eq: "top1_graph_vertex_set X TX \<A>w
+        = (\<Union>A\<in>\<A>w. top1_arc_endpoints_on A (subspace_topology X TX A))"
+      unfolding top1_graph_vertex_set_def by simp
+    \<comment> \<open>\\<supseteq>: tree\\_arcs \\<subseteq> \\<A>w.\<close>
+    have hVsup: "(\<Union>A\<in>?tree_arcs. top1_arc_endpoints_on A (subspace_topology X TX A))
+        \<subseteq> (\<Union>A\<in>\<A>w. top1_arc_endpoints_on A (subspace_topology X TX A))"
+      by (by100 blast)
+    \<comment> \<open>\\<subseteq>: for non-tree arcs, endpoints are in Tw, hence in some tree arc's endpoints.\<close>
+    have hVsub: "(\<Union>A\<in>\<A>w. top1_arc_endpoints_on A (subspace_topology X TX A))
+        \<subseteq> (\<Union>A\<in>?tree_arcs. top1_arc_endpoints_on A (subspace_topology X TX A))"
+    proof (intro UN_least subsetI)
+      fix A v assume hA: "A \<in> \<A>w" and hv: "v \<in> top1_arc_endpoints_on A (subspace_topology X TX A)"
+      show "v \<in> (\<Union>A\<in>?tree_arcs. top1_arc_endpoints_on A (subspace_topology X TX A))"
+      proof (cases "A \<subseteq> Tw")
+        case True
+        hence "A \<in> ?tree_arcs" using hA by (by100 blast)
+        thus ?thesis using hv by (by100 blast)
+      next
+        case False
+        \<comment> \<open>A is a non-tree arc. v is an endpoint of A. v \\<in> Tw (from hNTw\\_endpoints).\<close>
+        have "A \<in> Sw" using hA False hSw_eq by (by100 blast)
+        have "v \<in> Tw" using hNTw_endpoints hA False hv hSw_eq by (by100 blast)
+        \<comment> \<open>v \\<in> Tw = \\<Union>(tree\\_arcs). So v \\<in> some tree arc B.\<close>
+        have "v \<in> \<Union>?tree_arcs" using \<open>v \<in> Tw\<close> hTw_coverage by simp
+        then obtain B where "B \<in> ?tree_arcs" "v \<in> B" by (by100 blast)
+        have "B \<in> \<A>w" using \<open>B \<in> ?tree_arcs\<close> by (by100 blast)
+        \<comment> \<open>v \\<in> A \\<inter> B. A \\<ne> B (A non-tree, B tree). So v \\<in> endpoints(B).\<close>
+        have "A \<noteq> B" using False \<open>B \<in> ?tree_arcs\<close> by (by100 blast)
+        have "v \<in> A" using hv unfolding top1_arc_endpoints_on_def by (by100 blast)
+        have "v \<in> A \<inter> B" using \<open>v \<in> A\<close> \<open>v \<in> B\<close> by (by100 blast)
+        have "A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)"
+          using h\<A>w_inter[rule_format, OF hA \<open>B \<in> \<A>w\<close> \<open>A \<noteq> B\<close>] by (by100 blast)
+        hence "v \<in> top1_arc_endpoints_on B (subspace_topology X TX B)"
+          using \<open>v \<in> A \<inter> B\<close> by (by100 blast)
+        thus ?thesis using \<open>B \<in> ?tree_arcs\<close> by (by100 blast)
+      qed
+    qed
+    from hVsup hVsub have "(\<Union>A\<in>\<A>w. top1_arc_endpoints_on A (subspace_topology X TX A))
+        = (\<Union>A\<in>?tree_arcs. top1_arc_endpoints_on A (subspace_topology X TX A))"
+      by (by100 blast)
+    thus ?thesis using hV_Tw_eq hV_X_eq by simp
+  qed
   have hrank_X_formula: "int (card Sw) + int (card (top1_graph_vertex_set X TX \<A>w))
       = int (card \<A>w) + 1"
   proof -
