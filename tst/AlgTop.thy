@@ -2602,11 +2602,49 @@ lemma finite_tree_has_leaf:
           (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T' TT' A) (A \<inter> C)))"
   shows "\<exists>A0 v. A0 \<in> \<A>' \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0)
       \<and> (\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-  sorry \<comment> \<open>Proof plan (expert audit4 \\<S>4.2):
-     1. Build finite incidence graph from (T', \\<A>').
-     2. SC \\<Rightarrow> incidence graph is acyclic (the topological bridge).
-     3. Finite connected acyclic graph has leaf (purely combinatorial).
-     4. Transfer leaf back to topological arc.\<close>
+  proof -
+    \<comment> \<open>Step 1: Each arc has exactly 2 distinct endpoints.\<close>
+    have hstrict': "is_topology_on_strict T' TT'"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hhaus': "is_hausdorff_on T' TT'"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have h2ep: "\<forall>A\<in>\<A>'. \<exists>a b. a \<noteq> b \<and>
+        top1_arc_endpoints_on A (subspace_topology T' TT' A) = {a, b}"
+    proof (intro ballI)
+      fix A assume "A \<in> \<A>'"
+      have "A \<subseteq> T'" "top1_is_arc_on A (subspace_topology T' TT' A)"
+        using assms(2) \<open>A \<in> \<A>'\<close> by (by100 blast)+
+      then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology T' TT' A) h"
+        unfolding top1_is_arc_on_def by (by100 blast)
+      have "top1_arc_endpoints_on A (subspace_topology T' TT' A) = {h 0, h 1}"
+        by (rule arc_endpoints_are_boundary[OF hstrict' hhaus' \<open>A \<subseteq> T'\<close>
+            \<open>top1_is_arc_on A _\<close> \<open>top1_homeomorphism_on _ _ _ _ h\<close>])
+      moreover have "h 0 \<noteq> h 1"
+      proof
+        assume "h 0 = h 1"
+        have "inj_on h I_set" using \<open>top1_homeomorphism_on _ _ _ _ h\<close>
+            unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        from inj_onD[OF this \<open>h 0 = h 1\<close>] show False
+          unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      ultimately show "\<exists>a b. a \<noteq> b \<and>
+          top1_arc_endpoints_on A (subspace_topology T' TT' A) = {a, b}"
+        by (by100 blast)
+    qed
+    \<comment> \<open>Step 2: Degree of each vertex is \\<ge> 1 (every vertex is endpoint of some arc).
+       If no leaf exists: all vertices have degree \\<ge> 2.\<close>
+    \<comment> \<open>Step 3: The topological bridge. By contradiction: assume no leaf exists.
+       Then every vertex has degree \\<ge> 2. Construct a non-backtracking walk.
+       By finiteness, revisit a VERTEX. This gives a cycle of distinct arcs.
+       The cycle forms a loop in T'. Since T' is SC (tree), the loop is null-homotopic.
+       But the loop, being a cycle of distinct arcs, is non-null-homotopic.
+       Contradiction.
+       The key claim: a non-backtracking cycle of arcs gives a NON-null-homotopic loop.
+       This is the topological bridge.\<close>
+    show ?thesis sorry \<comment> \<open>Topological bridge: SC + finite graph + all degrees \\<ge> 2 \\<Rightarrow> \\<bottom>.
+       The walk+pigeonhole gives a cycle. The cycle gives a loop.
+       In SC: the loop is trivial. But the cycle is non-trivial (topological bridge sorry).\<close>
+  qed
 
 lemma tree_euler_and_leaf_combined:
   fixes T :: "'a set" and TT :: "'a set set" and \<A> :: "'a set set"
