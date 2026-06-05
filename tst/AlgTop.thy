@@ -4664,8 +4664,12 @@ proof -
        Book: 'E has k times as many edges as X, and k times as many vertices.'
        Each arc of X lifts to k arcs of E; each vertex of X lifts to k vertices.
        Formally: card(A\\_E) - card(V\\_E) = k * (card(A\\_X) - card(V\\_X)).\<close>
+    \<comment> \<open>Construct the lifted arc family and use multiplicity lemmas.\<close>
+    \<comment> \<open>The lifted family A\\_lifted from Theorem 83.4 satisfies the interface.
+       card(A\\_lifted) = k * card(A\\_X) and card(V\\_lifted) = k * card(V\\_X).
+       By Euler invariance: card(A\\_E) - card(V\\_E) = card(A\\_lifted) - card(V\\_lifted).\<close>
     have hchi_mult: "int (card \<A>_E) - int (card ?V_E) = int k * (int (card \<A>_X) - int (card ?V_X))"
-      sorry \<comment> \<open>Covering Euler characteristic multiplicity: needs arc/vertex k-fold lifting.\<close>
+      sorry \<comment> \<open>Euler invariance: rank(pi1) from lifted family = k*n+1 = rank from A\\_E.\<close>
     \<comment> \<open>Step G: Euler formula for E': card S\\_E + card V\\_E = card \\<A>\\_E + 1.\<close>
     have hE'_sub_top: "is_topology_on E' TE'"
       using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
