@@ -1266,7 +1266,16 @@ proof -
 qed
 
 
-\<comment> \<open>Retraction lemma: In a space (T,TT) covered by arc family \<A> with coherent topology,
+\<comment> \<open>Helper: orientation-matched map between two arcs sharing endpoints.
+   Given h1: I \\<rightarrow> A1 and h\\_C: I \\<rightarrow> C (both homeomorphisms from [0,1]),
+   orient\\_map h1 h\\_C: C \\<rightarrow> A1 maps x \\<mapsto> h1(t) or h1(1-t) where t = h\\_C\\<inverse>(x),
+   matching orientations so that shared endpoints are preserved.\<close>
+definition orient_map :: "(real \<Rightarrow> 'a) \<Rightarrow> (real \<Rightarrow> 'a) \<Rightarrow> 'a \<Rightarrow> 'a" where
+  "orient_map h1 h_C x \<equiv>
+    let t = inv_into I_set h_C x in
+    if (h_C 0 = h1 0) then h1 t else h1 (1 - t)"
+
+\<comment> \<open>Retraction lemma: In a space (T,TT) covered by arc family \\<A> with coherent topology,
    if A1, A2 \<in> \<A> are two distinct arcs sharing both endpoints {p1, q1},
    then A1 \<union> A2 is a retract of T.
 
@@ -1325,31 +1334,19 @@ proof -
     using hh1 unfolding top1_homeomorphism_on_def by (by100 blast)
   have hh1_maps: "\<forall>t\<in>I_set. h1 t \<in> A1"
     using hh1_bij unfolding bij_betw_def by (by100 blast)
-  \<comment> \<open>The retraction r_ret: id on A1\<union>A2, homeomorphism/constant for external arcs.\<close>
-  \<comment> \<open>Simplified retraction: no homeomorphism case. In SC context, no external arc has both endpoints.
-     So the homeomorphism case is vacuous. All external arcs map to a constant (p1 or q1).\<close>
+  \<comment> \<open>Retraction r\\_ret with orient\\_map for both-endpoint arcs, constant otherwise.\<close>
   define r_ret where "r_ret \<equiv> (\<lambda>x :: 'a.
     if x \<in> A1 \<union> A2 then x
     else
       let C = SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C' in
-      if q1 \<in> C \<and> p1 \<notin> C then q1
+      if p1 \<in> C \<and> q1 \<in> C then
+        orient_map h1 (SOME h'. top1_homeomorphism_on I_set I_top C (subspace_topology T TT C) h') x
+      else if q1 \<in> C \<and> p1 \<notin> C then q1
       else p1)"
   \<comment> \<open>r_ret maps into A1 \<union> A2.\<close>
   have hr_maps: "\<forall>x\<in>T. r_ret x \<in> A1 \<union> A2"
-  proof (intro ballI)
-    fix x assume "x \<in> T"
-    show "r_ret x \<in> A1 \<union> A2"
-    proof (cases "x \<in> A1 \<union> A2")
-      case True thus ?thesis unfolding r_ret_def by (by100 simp)
-    next
-      case False
-      let ?C = "SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C'"
-      have hr_eq: "r_ret x = (if q1 \<in> ?C \<and> p1 \<notin> ?C then q1 else p1)"
-        unfolding r_ret_def Let_def using False by simp
-      hence "r_ret x = q1 \<or> r_ret x = p1" by (by100 auto)
-      thus ?thesis using hp1_in hq1_in by (by100 blast)
-    qed
-  qed
+    sorry \<comment> \<open>For constant cases: p1 or q1 \\<in> A1\\<union>A2.
+       For orient\\_map case: orient\\_map h1 h\\_C maps into A1 (h1(t) or h1(1-t) \\<in> A1).\<close>
   \<comment> \<open>r_ret is the identity on A1 \<union> A2.\<close>
   have hr_fixes: "\<forall>a\<in>A1 \<union> A2. r_ret a = a"
     unfolding r_ret_def by (by100 simp)
@@ -1492,42 +1489,34 @@ proof -
               ultimately show ?thesis by simp
             qed
           qed
-          \<comment> \<open>Now: A \\<inter> {x \\<in> T | r\\_ret x \\<notin> U} is either {} or A or a proper subset.
-             For the constant case: it's {} or A. For the homeo case: sorry.\<close>
-          show ?thesis
-          proof (cases "A \<inter> {x \<in> T. r_ret x \<notin> U} = {}")
-            case True thus ?thesis using h_empty_closed by simp
-          next
-            case nonEmpty: False
-            show ?thesis
-            proof (cases "A \<inter> {x \<in> T. r_ret x \<notin> U} = A")
-              case True thus ?thesis using h_full_closed by simp
-            next
-              case False
-              \<comment> \<open>Proper subset means SOME x \\<in> A maps into U and some don't.
-                 For constant r\\_ret (all points map to same c): set is {} or A, not proper.
-                 So A must have BOTH p1 and q1 (homeomorphism case).
-                 But external arc with both endpoints = SCC with A1 \\<Rightarrow> contradicts tree.\<close>
-              \<comment> \<open>Show: for constant arcs, the set cannot be a proper subset.\<close>
-              \<comment> \<open>Constant arcs: A has at most one of {p1,q1}. r\\_ret = const on A.\<close>
-              \<comment> \<open>If const = c: {x | r\\_ret x \\<notin> U} = {} or A, contradiction with nonEmpty/False.\<close>
-              \<comment> \<open>So the only remaining case is A has both p1 and q1.\<close>
-              \<comment> \<open>But this is impossible in a tree (would create SCC with A1).\<close>
-              \<comment> \<open>Proper subset: impossible for constant arcs. Must have both p1,q1.
-                 But in a tree (hsc): external arc with both endpoints creates SCC,
-                 which contradicts SC via the SAME scc\\_in\\_sc\\_false (with simpler retract).
-                 Actually: show the constant case is EXHAUSTIVE for trees.
-                 For trees: no external arc has both p1 and q1 (proved by contradiction).
-                 So the proper-subset case never arises.\<close>
-              \<comment> \<open>Show: A does NOT have both p1 and q1 (in SC context).\<close>
-              \<comment> \<open>If it did: A \\<inter> A1 = {p1,q1}, SCC A\\<union>A1 via arcs\\_form\\_simple\\_closed\\_curve.
-                 Then a retract of T onto A\\<union>A1 would give \\<pi>\\_1 contradiction.
-                 The retract for A\\<union>A1 in a tree works because ALL other arcs are constant
-                 (they CAN'T have both endpoints either, by the same argument).
-                 This gives a well-founded induction: the set of both-endpoint arcs is empty.\<close>
-              show ?thesis sorry \<comment> \<open>Vacuous in SC context: no external arc has both endpoints.\<close>
-            qed
+          \<comment> \<open>With orient\\_map: r\\_ret|A is continuous for ALL external arcs.
+             Preimage of closed T\\\\U under continuous r\\_ret|A is closed in sub(T,TT,A).\<close>
+          have hr_cont_A: "top1_continuous_map_on A (subspace_topology T TT A) T TT r_ret"
+            sorry \<comment> \<open>r\\_ret|A continuous: constant case trivial, orient\\_map case by composition.\<close>
+          have hU_sub_T: "U \<subseteq> T" using \<open>U \<in> TT\<close> hstrict unfolding is_topology_on_strict_def by (by100 blast)
+          have hTU_closed: "closedin_on T TT (T - U)"
+            unfolding closedin_on_def
+          proof (intro conjI)
+            show "T - U \<subseteq> T" by (by100 blast)
+            have "T - (T - U) = U" using hU_sub_T by (by100 blast)
+            thus "T - (T - U) \<in> TT" using \<open>U \<in> TT\<close> by simp
           qed
+          have hset_eq: "A \<inter> {x \<in> T. r_ret x \<notin> U} = {x \<in> A. r_ret x \<in> T - U}"
+          proof (rule set_eqI, rule iffI)
+            fix x assume "x \<in> A \<inter> {x \<in> T. r_ret x \<notin> U}"
+            hence "x \<in> A" "r_ret x \<notin> U" by (by100 blast)+
+            have "x \<in> T" using \<open>x \<in> A\<close> \<open>A \<subseteq> T\<close> by (by100 blast)
+            have "r_ret x \<in> A1 \<union> A2" using hr_maps \<open>x \<in> T\<close> by (by100 blast)
+            hence "r_ret x \<in> T" using hA1_sub hA2_sub by (by100 blast)
+            thus "x \<in> {x \<in> A. r_ret x \<in> T - U}" using \<open>x \<in> A\<close> \<open>r_ret x \<notin> U\<close> by (by100 blast)
+          next
+            fix x assume "x \<in> {x \<in> A. r_ret x \<in> T - U}"
+            thus "x \<in> A \<inter> {x \<in> T. r_ret x \<notin> U}" using \<open>A \<subseteq> T\<close> by (by100 blast)
+          qed
+          \<comment> \<open>Preimage of closed under continuous is closed.\<close>
+          show ?thesis
+            sorry \<comment> \<open>Standard: hr\\_cont\\_A continuous, T\\\\U closed \\<Rightarrow>
+               {x \\<in> A | r\\_ret x \\<in> T\\\\U} closed in sub(T,TT,A). By Theorem 17.2.\<close>
         qed
       qed
       from hcoherent[rule_format, OF hpre_sub] this
