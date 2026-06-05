@@ -1481,7 +1481,18 @@ proof -
         \<comment> \<open>Both equal card{(v,A) | A \<in> \<A> \<and> v \<in> ?ep A} via bijection.\<close>
         have "?V = (\<Union>A\<in>\<A>. ?ep A)" unfolding top1_graph_vertex_set_def by (by100 blast)
         \<comment> \<open>Use sum.Sigma or card\_eq\_sum directly.\<close>
-        show ?thesis sorry
+        \<comment> \<open>Both sides equal card(Sigma V (\<lambda>v. {A \<in> \<A>. v \<in> ?ep A})) = card(Sigma \<A> ?ep).\<close>
+        have "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A})
+            = (\<Sum>v\<in>?V. (\<Sum>A\<in>{A \<in> \<A>. v \<in> ?ep A}. (1::nat)))"
+          by simp
+        also have "\<dots> = (\<Sum>(v,A)\<in>(SIGMA v:?V. {A \<in> \<A>. v \<in> ?ep A}). (1::nat))"
+          using sum.Sigma[OF hV_fin] sorry
+        also have "\<dots> = (\<Sum>(A,v)\<in>(SIGMA A:\<A>. ?ep A). (1::nat))"
+          sorry \<comment> \<open>Bijection (v,A) \<mapsto> (A,v) between the two Sigma sets.\<close>
+        also have "\<dots> = (\<Sum>A\<in>\<A>. (\<Sum>v\<in>?ep A. (1::nat)))"
+          using sum.Sigma[OF assms(5)] sorry
+        also have "\<dots> = (\<Sum>A\<in>\<A>. card (?ep A))" by simp
+        finally show ?thesis .
       qed
       also have "\<dots> = (\<Sum>A\<in>\<A>. 2)" using hep_card by simp
       also have "\<dots> = 2 * card \<A>" by simp
