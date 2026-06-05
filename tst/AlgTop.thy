@@ -6213,11 +6213,42 @@ proof -
     hence "int (card SE_raw) = int (k * n + 1)" by simp
     thus "card SE_raw = k * n + 1" using of_nat_eq_iff by (by100 blast)
   qed
-  \<comment> \<open>Step 6e: Construct the final result.\<close>
+  \<comment> \<open>Step 6e: Transfer to nat-indexed basis.
+     hfree\\_E gives free group on SE\\_raw ('a set set) with card = k*n+1.
+     Re-index via bijection SE\\_raw \\<leftrightarrow> {..<k*n+1} to get nat set.\<close>
+  have hSE_fin: "finite SE_raw"
+    using hcard_SE by (cases "finite SE_raw") simp_all
   show ?thesis
-    sorry \<comment> \<open>Use hfree\\_E with card(SE\\_raw) = k*n+1. Transfer to nat-indexed basis
-       via graph\\_pi1\\_free\\_weak\\_apply + free\\_group\\_rank\\_invariant\\_finite.
-       All non-sorry premises proved. Blocked by hchi\\_X and hrank\\_E.\<close>
+  proof -
+    \<comment> \<open>Construct nat-indexed basis via bijection.\<close>
+    obtain f :: "nat \<Rightarrow> 'b set" where hf: "bij_betw f {..<card SE_raw} SE_raw"
+    proof -
+      from ex_bij_betw_nat_finite[OF hSE_fin]
+      obtain g where "bij_betw g {0..<card SE_raw} SE_raw" by (by100 blast)
+      have "{0..<card SE_raw} = {..<card SE_raw}" by (by100 auto)
+      hence "bij_betw g {..<card SE_raw} SE_raw" using \<open>bij_betw g _ _\<close> by simp
+      thus thesis using that by (by100 blast)
+    qed
+    let ?\<iota>N = "\<lambda>i::nat. \<iota>E_raw (f i)"
+    let ?SN = "{..<card SE_raw}"
+    have "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E TE e0)
+        (top1_fundamental_group_mul E TE e0)
+        (top1_fundamental_group_id E TE e0)
+        (top1_fundamental_group_invg E TE e0) ?\<iota>N ?SN"
+    proof -
+      from free_group_full_reindex[OF hfree_E hf]
+      have "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier E TE e0)
+          (top1_fundamental_group_mul E TE e0)
+          (top1_fundamental_group_id E TE e0)
+          (top1_fundamental_group_invg E TE e0) (\<iota>E_raw \<circ> f) ?SN" .
+      moreover have "(\<iota>E_raw \<circ> f) = ?\<iota>N" by (by100 auto)
+      ultimately show ?thesis by simp
+    qed
+    moreover have "card ?SN = k * n + 1" using hcard_SE by simp
+    ultimately show ?thesis by (by100 blast)
+  qed
 qed
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
