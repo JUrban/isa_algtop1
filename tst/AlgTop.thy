@@ -4054,8 +4054,35 @@ proof -
   qed
 qed
 
-\<comment> \<open>Covering graph Euler characteristic multiplicativity.
-   For a k-fold covering p: E \\<rightarrow> X of a finite connected graph,
+\<comment> \<open>Euler invariance: V - E is the same for any two finite arc decompositions of a graph.
+   Proof idea: common refinement via arc subdivision. Each subdivision adds 1 vertex and 1 arc,
+   preserving V - E. Both decompositions refine to the same common refinement.\<close>
+lemma graph_euler_invariance:
+  fixes Y :: "'a set" and TY :: "'a set set"
+  assumes hgraph: "top1_is_graph_on Y TY"
+      and h\<A>1: "\<forall>A\<in>\<A>1. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+      and h\<A>1_cover: "\<Union>\<A>1 = Y"
+      and h\<A>1_inter: "\<forall>A\<in>\<A>1. \<forall>B\<in>\<A>1. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and hfin1: "finite \<A>1"
+      and h\<A>2: "\<forall>A\<in>\<A>2. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A)"
+      and h\<A>2_cover: "\<Union>\<A>2 = Y"
+      and h\<A>2_inter: "\<forall>A\<in>\<A>2. \<forall>B\<in>\<A>2. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and hfin2: "finite \<A>2"
+  shows "int (card (top1_graph_vertex_set Y TY \<A>1)) - int (card \<A>1)
+       = int (card (top1_graph_vertex_set Y TY \<A>2)) - int (card \<A>2)"
+  sorry \<comment> \<open>Euler invariance via common refinement:
+     1. Each arc of \\<A>1 is subdivided by intersections with arcs of \\<A>2.
+     2. Subdivision preserves V - E (adding 1 vertex and 1 arc per subdivision point).
+     3. The common refinement is the same from both sides.
+     4. Hence V1 - E1 = V\\_ref - E\\_ref = V2 - E2.\<close>
+
+\<comment> \<open>For a k-fold covering p: E \\<rightarrow> X of a finite connected graph,
    if \\<pi>\\_1(X) is free of rank n+1, then \\<pi>\\_1(E) is free of rank kn+1.
    Proof: lift the arc family of X to E (path components of preimages).
    Each arc lifts to k arcs, each vertex lifts to k vertices.
@@ -5509,9 +5536,44 @@ proof -
   \<comment> \<open>Step 6c: Rank formula for covering graph E with supplied decomposition \\<A>\\_L.\<close>
   have hrank_E_formula: "int (card SE_raw) + int (card (top1_graph_vertex_set E TE ?\<A>_L))
       = int (card ?\<A>_L) + 1"
-    sorry \<comment> \<open>Supplied-witness graph rank for E: rank + card V\\_L = card \\<A>\\_L + 1.
-       Same approach as X: tree Euler for spanning tree of \\<A>\\_L + rank = non-tree arcs.
-       Note: by rank invariance, card(SE\\_raw) = rank(\\<pi>\\_1(E)) for ANY decomposition.\<close>
+  proof -
+    \<comment> \<open>From \\<A>E\\_raw: rank + V\\_E\\_raw = E\\_raw + 1 (from tree Euler via sorry #1).\<close>
+    have hrank_E_raw: "int (card SE_raw) + int (card (top1_graph_vertex_set E TE \<A>E_raw))
+        = int (card \<A>E_raw) + 1"
+      sorry \<comment> \<open>Tree Euler for E's internal decomposition. Flows through finite\\_tree\\_has\\_leaf.\<close>
+    \<comment> \<open>Euler invariance: V\\_L - \\<A>\\_L = V\\_E\\_raw - \\<A>E\\_raw.\<close>
+    have heuler_inv: "int (card (top1_graph_vertex_set E TE ?\<A>_L)) - int (card ?\<A>_L)
+        = int (card (top1_graph_vertex_set E TE \<A>E_raw)) - int (card \<A>E_raw)"
+    proof -
+      have h\<A>E_arcs: "\<forall>A\<in>\<A>E_raw. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
+        using conjunct1[OF conjunct2[OF hbig_E]] .
+      have h\<A>E_cover: "\<Union>\<A>E_raw = E"
+        using conjunct1[OF conjunct2[OF conjunct2[OF hbig_E]]] .
+      have h\<A>E_inter: "\<forall>A\<in>\<A>E_raw. \<forall>B\<in>\<A>E_raw. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+        using conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF hbig_E]]]] .
+      \<comment> \<open>Need: \\<A>\\_L satisfies the graph decomposition conditions.\<close>
+      have h\<A>L_arcs: "\<forall>A\<in>?\<A>_L. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
+        sorry \<comment> \<open>From covering interface: each lifted arc is an arc in E.\<close>
+      have h\<A>L_cover: "\<Union>?\<A>_L = E"
+        sorry \<comment> \<open>From covering interface Clause 2: lifted arcs cover E.\<close>
+      have h\<A>L_inter: "\<forall>A\<in>?\<A>_L. \<forall>B\<in>?\<A>_L. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+        sorry \<comment> \<open>From Theorem\\_83\\_4 applied to the lifted family.\<close>
+      have h\<A>E_fin: "finite \<A>E_raw"
+        sorry \<comment> \<open>E is a finite graph (compact covering of compact graph).\<close>
+      from graph_euler_invariance[OF hE_graph h\<A>L_arcs h\<A>L_cover h\<A>L_inter
+          \<open>finite ?\<A>_L \<and> card ?\<A>_L = k * card \<A>w\<close>[THEN conjunct1]
+          h\<A>E_arcs h\<A>E_cover h\<A>E_inter h\<A>E_fin]
+      show ?thesis by linarith
+    qed
+    \<comment> \<open>Combine: rank + V\\_L = \\<A>\\_L + 1.\<close>
+    show ?thesis using hrank_E_raw heuler_inv by linarith
+  qed
   have hrank_E: "int (card SE_raw) = int (card ?\<A>_L) - int (card (top1_graph_vertex_set E TE ?\<A>_L)) + 1"
     using hrank_E_formula by linarith
   \<comment> \<open>Step 6d: Combine to get card(SE\\_raw) = k*n + 1.\<close>
@@ -7556,4 +7618,4 @@ qed
 
 
 end
-  
+       
