@@ -4534,42 +4534,37 @@ proof -
      This gives \\<pi>\\_1(E) free on some basis. The rank = number of non-tree arcs.\<close>
   have hE_graph: "top1_is_graph_on E TE"
     by (rule Theorem_83_4_covering_of_graph_is_graph[OF hgraph_X hcov hstrict_E])
-  note hfree_E_note = graph_is_free[OF hE_graph hconn_E he0]
-  have hfree_E_ex: "\<exists>\<iota>E SE. top1_is_free_group_full_on
+  \<comment> \<open>Extract free group from graph\\_pi1\\_free\\_weak via Isar block.\<close>
+  from graph_pi1_free_weak[OF hE_graph hconn_E he0]
+  obtain \<iota>E_raw SE_raw \<A>E_raw TE_raw where hbig_E: "top1_is_free_group_full_on
       (top1_fundamental_group_carrier E TE e0)
       (top1_fundamental_group_mul E TE e0)
       (top1_fundamental_group_id E TE e0)
-      (top1_fundamental_group_invg E TE e0) \<iota>E SE"
-    using hfree_E_note sorry
-  define \<iota>E where "\<iota>E \<equiv> SOME \<iota>. \<exists>S. top1_is_free_group_full_on
-      (top1_fundamental_group_carrier E TE e0)
-      (top1_fundamental_group_mul E TE e0)
-      (top1_fundamental_group_id E TE e0)
-      (top1_fundamental_group_invg E TE e0) \<iota> S"
-  define SE where "SE \<equiv> SOME S. top1_is_free_group_full_on
-      (top1_fundamental_group_carrier E TE e0)
-      (top1_fundamental_group_mul E TE e0)
-      (top1_fundamental_group_id E TE e0)
-      (top1_fundamental_group_invg E TE e0) \<iota>E S"
+      (top1_fundamental_group_invg E TE e0) \<iota>E_raw SE_raw \<and>
+    (\<forall>A\<in>\<A>E_raw. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)) \<and>
+    \<Union>\<A>E_raw = E \<and>
+    (\<forall>A\<in>\<A>E_raw. \<forall>B\<in>\<A>E_raw. A \<noteq> B \<longrightarrow>
+         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
+       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
+       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<and>
+    (\<forall>C. C \<subseteq> E \<longrightarrow>
+         (closedin_on E TE C \<longleftrightarrow>
+          (\<forall>A\<in>\<A>E_raw. closedin_on A (subspace_topology E TE A) (A \<inter> C)))) \<and>
+    top1_is_tree_on TE_raw (subspace_topology E TE TE_raw) \<and> TE_raw \<subseteq> E \<and> e0 \<in> TE_raw \<and>
+    (\<forall>A\<in>\<A>E_raw. A \<subseteq> TE_raw \<or>
+         A \<inter> TE_raw \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)) \<and>
+    TE_raw = \<Union>{A \<in> \<A>E_raw. A \<subseteq> TE_raw} \<and>
+    (\<forall>A\<in>{A \<in> \<A>E_raw. \<not> A \<subseteq> TE_raw}.
+         \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology E TE A). e \<in> TE_raw) \<and>
+    SE_raw = {A \<in> \<A>E_raw. \<not> A \<subseteq> TE_raw}"
+    sorry \<comment> \<open>Isabelle obtain from large \\<exists>\\<and> — trivial but automation timeout.\<close>
   have hfree_E: "top1_is_free_group_full_on
       (top1_fundamental_group_carrier E TE e0)
       (top1_fundamental_group_mul E TE e0)
       (top1_fundamental_group_id E TE e0)
-      (top1_fundamental_group_invg E TE e0) \<iota>E SE"
-  proof -
-    from hfree_E_ex have h1: "\<exists>\<iota>. \<exists>S. top1_is_free_group_full_on
-        (top1_fundamental_group_carrier E TE e0)
-        (top1_fundamental_group_mul E TE e0)
-        (top1_fundamental_group_id E TE e0)
-        (top1_fundamental_group_invg E TE e0) \<iota> S" by (by100 blast)
-    have h2: "\<exists>S. top1_is_free_group_full_on
-        (top1_fundamental_group_carrier E TE e0)
-        (top1_fundamental_group_mul E TE e0)
-        (top1_fundamental_group_id E TE e0)
-        (top1_fundamental_group_invg E TE e0) \<iota>E S"
-      unfolding \<iota>E_def using someI_ex[OF h1] by (by100 blast)
-    show ?thesis unfolding SE_def using someI_ex[OF h2] by (by100 blast)
-  qed
+      (top1_fundamental_group_invg E TE e0) \<iota>E_raw SE_raw"
+    using conjunct1[OF hbig_E] .
+  \<comment> \<open>hfree\\_E at line above gives the free group with \\<iota>E\\_raw and SE\\_raw.\<close>
   \<comment> \<open>Step 6: Euler characteristic argument.
      From graph\\_pi1\\_free\\_weak on E: card(SE) = rank(\\<pi>\\_1(E)).
      From Euler formula (heuler\\_X): card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.
