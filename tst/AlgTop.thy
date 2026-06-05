@@ -1265,6 +1265,100 @@ proof -
   qed
 qed
 
+
+\<comment> \<open>Retraction lemma: In a space (T,TT) covered by arc family \<A> with coherent topology,
+   if A1, A2 \<in> \<A> are two distinct arcs sharing both endpoints {p1, q1},
+   then A1 \<union> A2 is a retract of T.
+
+   Proof sketch: define r_ret : T \<rightarrow> A1\<union>A2 by:
+   - r_ret(x) = x for x \<in> A1\<union>A2 (identity)
+   - For external arc C with p1,q1 \<in> C: r_ret|_C = h1 \<circ> h_C\<inverse> (homeomorphism C \<to> A1)
+   - For external C with only q1 \<in> C: r_ret|_C = const q1
+   - Otherwise: r_ret|_C = const p1
+   Continuity follows from the coherent topology; retraction from the definition.\<close>
+lemma two_arc_union_is_retract:
+  fixes T :: "'a set" and TT :: "'a set set"
+  fixes \<A> :: "'a set set"
+  fixes A1 A2 :: "'a set"
+  fixes p1 q1 :: "'a"
+  assumes hstrict: "is_topology_on_strict T TT"
+      and hhaus: "is_hausdorff_on T TT"
+      and h\<A>_arcs: "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and h\<A>_cover: "\<Union>\<A> = T"
+      and h\<A>_inter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and hcoherent: "\<forall>C. C \<subseteq> T \<longrightarrow>
+           (closedin_on T TT C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+      and hA1: "A1 \<in> \<A>"
+      and hA2: "A2 \<in> \<A>"
+      and hA12_ne: "A1 \<noteq> A2"
+      and hep1: "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {p1, q1}"
+      and hep2: "top1_arc_endpoints_on A2 (subspace_topology T TT A2) = {p1, q1}"
+      and hpq_ne: "p1 \<noteq> q1"
+      and hA12_inter: "\<forall>C\<in>\<A>. C \<noteq> A1 \<longrightarrow> C \<noteq> A2 \<longrightarrow>
+           C \<inter> (A1 \<union> A2) \<subseteq> {p1, q1}"
+  shows "top1_retract_of_on T TT (A1 \<union> A2)"
+proof -
+  have hTT: "is_topology_on T TT"
+    using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+  have hA1_sub: "A1 \<subseteq> T" using h\<A>_arcs hA1 by (by100 blast)
+  have hA2_sub: "A2 \<subseteq> T" using h\<A>_arcs hA2 by (by100 blast)
+  have hS_sub: "A1 \<union> A2 \<subseteq> T" using hA1_sub hA2_sub by (by100 blast)
+  have hp1_in: "p1 \<in> A1 \<union> A2"
+    using hep1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hq1_in: "q1 \<in> A1 \<union> A2"
+    using hep1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hp1_A1: "p1 \<in> A1"
+    using hep1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hq1_A1: "q1 \<in> A1"
+    using hep1 unfolding top1_arc_endpoints_on_def by (by100 blast)
+  have hA1_arc: "top1_is_arc_on A1 (subspace_topology T TT A1)"
+    using h\<A>_arcs hA1 by (by100 blast)
+  obtain h1 where hh1: "top1_homeomorphism_on I_set I_top A1 (subspace_topology T TT A1) h1"
+    using hA1_arc unfolding top1_is_arc_on_def by (by100 blast)
+  have hh1_bij: "bij_betw h1 I_set A1"
+    using hh1 unfolding top1_homeomorphism_on_def by (by100 blast)
+  have hh1_maps: "\<forall>t\<in>I_set. h1 t \<in> A1"
+    using hh1_bij unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>The retraction r_ret: id on A1\<union>A2, homeomorphism/constant for external arcs.\<close>
+  define r_ret where "r_ret \<equiv> (\<lambda>x :: 'a.
+    if x \<in> A1 \<union> A2 then x
+    else
+      let C = SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C' in
+      if p1 \<in> C \<and> q1 \<in> C then
+        (let h_C = SOME h'. top1_homeomorphism_on I_set I_top C (subspace_topology T TT C) h' in
+         h1 (inv_into I_set h_C x))
+      else if q1 \<in> C \<and> p1 \<notin> C then q1
+      else p1)"
+  \<comment> \<open>r_ret maps into A1 \<union> A2.\<close>
+  have hr_maps: "\<forall>x\<in>T. r_ret x \<in> A1 \<union> A2"
+  proof (intro ballI)
+    fix x assume "x \<in> T"
+    show "r_ret x \<in> A1 \<union> A2"
+    proof (cases "x \<in> A1 \<union> A2")
+      case True thus ?thesis unfolding r_ret_def by (by100 simp)
+    next
+      case False
+      \<comment> \<open>Constant cases: p1,q1 \<in> A1\<union>A2. Homeomorphism: h1 maps I_set to A1.\<close>
+      show ?thesis using hp1_in hq1_in hh1_maps unfolding r_ret_def sorry
+    qed
+  qed
+  \<comment> \<open>r_ret is the identity on A1 \<union> A2.\<close>
+  have hr_fixes: "\<forall>a\<in>A1 \<union> A2. r_ret a = a"
+    unfolding r_ret_def by (by100 simp)
+  \<comment> \<open>r_ret is continuous: for each arc in \<A>, r_ret|_arc is continuous.
+     For A1, A2: r_ret|_A = id. For external C constant: trivially continuous.
+     For external C with both endpoints: r_ret|_C = h1 \<circ> h_C\<inverse>, a homeomorphism.
+     By the coherent topology, arc-local continuity implies global continuity.\<close>
+  have hr_cont:
+    "top1_continuous_map_on T TT (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) r_ret"
+    sorry
+  show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+    using hS_sub hr_cont hr_fixes by (by100 blast)
+qed
 \<comment> \<open>Expert audit3: combinatorial leaf existence for finite acyclic connected graphs.
    Purely combinatorial: no topology. Used to break circular dependency with tree\\_euler.\<close>
 
@@ -1339,14 +1433,57 @@ proof -
     assume hge2: "card \<A> \<ge> 2"
     let ?V = "top1_graph_vertex_set T TT \<A>"
     let ?deg = "\<lambda>v. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+    have hstrict: "is_topology_on_strict T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hhaus: "is_hausdorff_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hep_fin: "\<forall>A\<in>\<A>. finite (top1_arc_endpoints_on A (subspace_topology T TT A))"
+    proof (intro ballI)
+      fix A assume "A \<in> \<A>"
+      have "A \<subseteq> T" "top1_is_arc_on A (subspace_topology T TT A)"
+        using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)+
+      then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
+        unfolding top1_is_arc_on_def by (by100 blast)
+      from arc_endpoints_are_boundary[OF hstrict hhaus \<open>A \<subseteq> T\<close> \<open>top1_is_arc_on A _\<close> this]
+      show "finite (top1_arc_endpoints_on A (subspace_topology T TT A))" by (by100 simp)
+    qed
     have hV_fin: "finite ?V"
-      sorry
+      unfolding top1_graph_vertex_set_def using assms(5) hep_fin by (by100 blast)
     have hep_card: "\<forall>A\<in>\<A>. card (top1_arc_endpoints_on A (subspace_topology T TT A)) = 2"
-      sorry
+    proof (intro ballI)
+      fix A assume "A \<in> \<A>"
+      have "A \<subseteq> T" "top1_is_arc_on A (subspace_topology T TT A)"
+        using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)+
+      then obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
+        unfolding top1_is_arc_on_def by (by100 blast)
+      from arc_endpoints_are_boundary[OF hstrict hhaus \<open>A \<subseteq> T\<close> \<open>top1_is_arc_on A _\<close> hh]
+      have "top1_arc_endpoints_on A (subspace_topology T TT A) = {h 0, h 1}" .
+      moreover have "h 0 \<noteq> h 1"
+      proof
+        assume "h 0 = h 1"
+        have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+          by (by100 blast)
+        from inj_onD[OF this \<open>h 0 = h 1\<close>] show False
+          unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      ultimately show "card (top1_arc_endpoints_on A (subspace_topology T TT A)) = 2"
+        by (by100 simp)
+    qed
     have hsum: "(\<Sum>v\<in>?V. ?deg v) = 2 * card \<A>"
       sorry \<comment> \<open>Double counting.\<close>
     have hdeg_pos: "\<forall>v\<in>?V. ?deg v \<ge> 1"
-      sorry
+    proof (intro ballI)
+      fix v assume "v \<in> ?V"
+      then obtain A0 where "A0 \<in> \<A>" "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        unfolding top1_graph_vertex_set_def by (by100 blast)
+      hence "{A0} \<subseteq> {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+        by (by100 blast)
+      moreover have hfin_S: "finite {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+        using assms(5) by (by100 simp)
+      ultimately have "card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} \<ge> card {A0}"
+        using card_mono[OF hfin_S] by (by100 blast)
+      thus "?deg v \<ge> 1" by (by100 simp)
+    qed
     have hn_ge1: "card \<A> \<ge> 1" using hge2 by linarith
     from degree_sum_leaf[OF hV_fin heuler hn_ge1 hsum hdeg_pos]
     obtain v where hv_V: "v \<in> ?V" and hv_deg: "?deg v = 1"
