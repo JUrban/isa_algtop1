@@ -3438,16 +3438,50 @@ proof -
   \<comment> \<open>Step 2: Construct lifted arc family.
      \\<A>\\_L = \\<Union>{ connected components of p^{-1}(A) \\<inter> E | A \\<in> \\<A>w }.
      This is exactly what Theorem 83.4 constructs internally.\<close>
-  \<comment> \<open>Step 3: Show \\<A>\\_L is a valid graph decomposition with spanning tree.
-     By Theorem 83.4: E is a graph (with the lifted family as witness).
-     The lifted family satisfies arc, cover, intersection, coherent conditions.
-     For the spanning tree: lift the tree Tw \\<subseteq> X. The preimage p^{-1}(Tw) is a
-     forest of k copies of Tw. Augment with k-1 arcs to form a spanning tree.\<close>
-  \<comment> \<open>Step 4: Apply graph\\_pi1\\_free\\_weak\\_apply.
-     With the lifted family and its spanning tree, get \\<pi>\\_1(E) free on some SL.
-     Step 5: Compute card(SL) = card(non-tree arcs) = k*(card \\<A>w) - (k*card Vw - 1) = kn+1.\<close>
-  \<comment> \<open>Full proof deferred: requires constructing the lifted family explicitly and
-     verifying all graph decomposition conditions.\<close>
+  \<comment> \<open>Step 2: Construct lifted arc family.
+     \\<A>\\_L = path components of p^{-1}(A) for each A \\<in> \\<A>w.
+     Book: "the path components of p^{-1}(A) are edges of E, each mapped by p homeomorphically onto A."
+     This is exactly what Theorem 83.4 constructs internally.\<close>
+  let ?\<A>_L = "\<Union>A\<in>\<A>w. {B. top1_max_conn_comp {e \<in> E. p e \<in> A}
+      (subspace_topology E TE {e \<in> E. p e \<in> A}) B}"
+  \<comment> \<open>Step 3: \\<A>\\_L satisfies the lifted arc family interface.
+     This gives us: card(\\<A>\\_L) = k * card(\\<A>w) and card(V\\_L) = k * card(V\\_X).\<close>
+  have h_lifted: "top1_covering_lifted_arc_family_on E TE X TX p \<A>w ?\<A>_L"
+    sorry \<comment> \<open>Clause 1: each path component B maps onto A with inj\\_on p B (from covering\\_sheet\\_over\\_arc).
+       Clause 2: every fiber point is in some path component.
+       Clause 3: path components of the same preimage are disjoint (by definition).\<close>
+  have h\<A>w_sub: "\<forall>A\<in>\<A>w. A \<subseteq> X \<and> A \<noteq> {}"
+    sorry \<comment> \<open>From h\\<A>w and arc non-empty (homeomorphic to [0,1]).\<close>
+  \<comment> \<open>Step 4: Apply multiplicity lemmas.
+     card(\\<A>\\_L) = k * card(\\<A>w) and card(V\\_L) = k * card(V\\_X).\<close>
+  have h\<A>_L_card: "card ?\<A>_L = k * card \<A>w"
+    sorry \<comment> \<open>From covering\\_lifted\\_arc\\_family\\_card[OF hcov h\\_lifted h\\<A>w\\_fin hfiber h\\<A>w\\_sub hk].\<close>
+  have hV_X_fin: "finite (top1_graph_vertex_set X TX \<A>w)"
+    sorry \<comment> \<open>From h\\<A>w\\_fin + arc endpoints are 2 per arc.\<close>
+  have hV_L_card: "card (top1_graph_vertex_set E TE ?\<A>_L) = k * card (top1_graph_vertex_set X TX \<A>w)"
+    sorry \<comment> \<open>From covering\\_lifted\\_vertex\\_set\\_card[OF hcov h\\_lifted hV\\_X\\_fin hfiber h\\<A>w\\_sub hk].\<close>
+  \<comment> \<open>Step 5: E is a graph. Apply graph\\_pi1\\_free\\_weak to E.
+     This gives \\<pi>\\_1(E) free on some basis. The rank = number of non-tree arcs.\<close>
+  have hE_graph: "top1_is_graph_on E TE"
+    by (rule Theorem_83_4_covering_of_graph_is_graph[OF hgraph_X hcov hstrict_E])
+  from graph_pi1_free_weak[OF hE_graph hconn_E he0]
+  obtain \<iota>E SE \<A>E TE_tree
+    where hfree_E: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E TE e0)
+        (top1_fundamental_group_mul E TE e0)
+        (top1_fundamental_group_id E TE e0)
+        (top1_fundamental_group_invg E TE e0)
+        \<iota>E SE"
+      and hSE_eq: "SE = {A \<in> \<A>E. \<not> A \<subseteq> TE_tree}"
+    sorry
+  \<comment> \<open>Step 6: Euler characteristic argument.
+     From graph\\_pi1\\_free\\_weak on E: card(SE) = rank(\\<pi>\\_1(E)).
+     From Euler formula (heuler\\_X): card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.
+     Lifted family: card(\\<A>\\_L) - card(V\\_L) = k * (card(\\<A>w) - card(V\\_X)) = kn.
+     By Euler invariance (rank is independent of decomposition):
+     rank(\\<pi>\\_1(E)) = card(\\<A>\\_L) - card(V\\_L) + 1 = kn + 1.
+     By rank invariance: card(SE) = kn + 1.\<close>
+  \<comment> \<open>The Euler invariance step is the remaining hard part.\<close>
   show ?thesis sorry
 qed
 
