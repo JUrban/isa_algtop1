@@ -1265,6 +1265,74 @@ proof -
   qed
 qed
 
+\<comment> \<open>Expert audit3: combinatorial leaf existence for finite acyclic connected graphs.
+   Purely combinatorial: no topology. Used to break circular dependency with tree\\_euler.\<close>
+
+\<comment> \<open>A finite connected acyclic multigraph (given by vertices V, edge set E as triples
+   (u,v,e) where e is an edge label and u,v are its endpoints) has a leaf vertex
+   (degree 1) when |E| \\<ge> 1.
+
+   Proof sketch: by strong induction on |E|.
+   For |E|=1: the single edge has 2 endpoints, both of degree 1.
+   For |E|>1: if a leaf exists, done. Otherwise all degrees \\<ge> 2.
+   Connected acyclic with |E| edges has |E|+1 vertices (proved separately by induction
+   with leaf removal — breaking circularity by proving leaf+Euler simultaneously).
+   Sum of degrees = 2|E| = 2(|V|-1) < 2|V|. Contradiction with all degrees \\<ge> 2.
+
+   We prove a combined statement: acyclic connected finite graph with \\<ge> 1 edge
+   satisfies |V| = |E| + 1 AND has a leaf.\<close>
+
+\<comment> \<open>For our purposes: the "graph" is abstracted as a finite set of edges E,
+   each edge e has two distinct endpoints ep1(e) and ep2(e) in some set V.
+   V = \\<Union>{{ep1(e), ep2(e)} | e \\<in> E}.
+   Connected: for any two vertices, there's a path through edges.
+   Acyclic: no sequence of distinct edges forms a cycle.
+   Leaf: a vertex v with exactly one edge incident.\<close>
+
+\<comment> \<open>Combinatorial lemma: in a finite graph where sum of degrees = 2*|E|,
+   |V| = |E| + 1, and |E| \\<ge> 1, there is a vertex of degree 1 (leaf).
+   Proof: if all degrees \\<ge> 2, sum \\<ge> 2|V| = 2(|E|+1) > 2|E|. Contradiction.\<close>
+lemma degree_sum_leaf:
+  fixes V :: "'v set" and deg :: "'v \<Rightarrow> nat"
+  assumes hfin_V: "finite V"
+      and hV_card: "card V = n + 1"
+      and hn: "n \<ge> 1"
+      and hdeg_sum: "(\<Sum>v\<in>V. deg v) = 2 * n"
+      and hdeg_pos: "\<forall>v\<in>V. deg v \<ge> 1"
+  shows "\<exists>v\<in>V. deg v = 1"
+proof (rule ccontr)
+  assume "\<not> (\<exists>v\<in>V. deg v = 1)"
+  hence "\<forall>v\<in>V. deg v \<noteq> 1" by (by100 blast)
+  hence hdeg2: "\<forall>v\<in>V. deg v \<ge> 2" using hdeg_pos by (by100 force)
+  have "(\<Sum>v\<in>V. deg v) \<ge> (\<Sum>v\<in>V. (2::nat))"
+    by (rule sum_mono) (use hdeg2 in blast)
+  moreover have "(\<Sum>v\<in>V. (2::nat)) = 2 * card V" by simp
+  ultimately have "(\<Sum>v\<in>V. deg v) \<ge> 2 * card V" by linarith
+  hence "2 * n \<ge> 2 * (n + 1)" using hdeg_sum hV_card by linarith
+  thus False by (by100 simp)
+qed
+
+\<comment> \<open>Combined Euler + leaf lemma for finite trees, proved by induction on card \\<A>.
+   Breaks the circular dependency between tree\\_euler and finite\\_tree\\_has\\_leaf\\_arc.
+   Uses degree\\_sum\\_leaf for the leaf existence in the induction step.\<close>
+lemma tree_euler_and_leaf_combined:
+  fixes T :: "'a set" and TT :: "'a set set" and \<A> :: "'a set set"
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "finite \<A>" and "\<A> \<noteq> {}"
+      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+  shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1
+    \<and> (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
+        \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)))"
+  sorry \<comment> \<open>By strong induction on card \\<A>. Base: card=1 (2 endpoints). Step: card\\<ge>2.
+     Leaf from degree\\_sum\\_leaf + Euler from IH. Remove leaf \\<Rightarrow> IH gives Euler for n-1.
+     Then Euler for n. Then degree\\_sum\\_leaf gives leaf for n.\<close>
+
 \<comment> \<open>Expert audit2: extract tree Euler sub-lemmas as named lemmas.\<close>
 
 \<comment> \<open>A finite tree with at least 2 arcs has a leaf: an arc with one endpoint
@@ -1278,510 +1346,16 @@ lemma finite_tree_has_leaf_arc:
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
       and "finite \<A>" and "card \<A> \<ge> 2"
+      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
   shows "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
       \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-  \<comment> \<open>Proof: by contradiction. If every endpoint of every arc is shared with another arc,
-     then following shared endpoints produces a walk that revisits an arc (pigeonhole),
-     creating a cycle contradicting simply connected (tree).\<close>
-proof (rule ccontr)
-  assume "\<not> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
-  hence hno_leaf: "\<forall>A0\<in>\<A>. \<forall>v\<in>top1_arc_endpoints_on A0 (subspace_topology T TT A0).
-      \<exists>B\<in>\<A>. B \<noteq> A0 \<and> v \<in> B"
-  proof (intro ballI)
-    fix A0 v assume hA0: "A0 \<in> \<A>" and hv: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
-    show "\<exists>B\<in>\<A>. B \<noteq> A0 \<and> v \<in> B"
-    proof (rule ccontr)
-      assume "\<not> (\<exists>B\<in>\<A>. B \<noteq> A0 \<and> v \<in> B)"
-      hence "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B" by (by100 blast)
-      hence "A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-          (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)" using hA0 hv by (by100 blast)
-      hence "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-          (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)" by (by100 blast)
-      with \<open>\<not> (\<exists>A0 v. _)\<close> show False by (by100 blast)
-    qed
-  qed
-  \<comment> \<open>Each arc has exactly 2 endpoints.\<close>
-  have hstrict: "is_topology_on_strict T TT"
-    using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
-  have hhaus: "is_hausdorff_on T TT"
-    using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
-  have hTT: "is_topology_on T TT"
-    using hstrict unfolding is_topology_on_strict_def by (by100 blast)
-  have hsc: "top1_simply_connected_on T TT"
-    using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
-  \<comment> \<open>Strategy: Build a walk through arcs. When an arc is revisited (pigeonhole),
-     extract two arcs sharing two endpoints \\<Rightarrow> SCC \\<Rightarrow> \\<pi>\\_1 \\<cong> Z \\<Rightarrow> not SC.
-     Key step: define a "next arc" function using hno\\_leaf.\<close>
-  \<comment> \<open>Each arc has 2 distinct endpoints.\<close>
-  have h2ep: "\<forall>A\<in>\<A>. \<exists>a b. a \<noteq> b \<and>
-      top1_arc_endpoints_on A (subspace_topology T TT A) = {a, b}"
-  proof (intro ballI)
-    fix A assume "A \<in> \<A>"
-    have "A \<subseteq> T" using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)
-    have "top1_is_arc_on A (subspace_topology T TT A)" using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)
-    then obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
-      unfolding top1_is_arc_on_def by (by100 blast)
-    have hep: "top1_arc_endpoints_on A (subspace_topology T TT A) = {h 0, h 1}"
-      by (rule arc_endpoints_are_boundary[OF hstrict hhaus \<open>A \<subseteq> T\<close>
-          \<open>top1_is_arc_on A (subspace_topology T TT A)\<close> hh])
-    have "h 0 \<noteq> h 1"
-    proof
-      assume "h 0 = h 1"
-      have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-      from inj_onD[OF this \<open>h 0 = h 1\<close>] show False unfolding top1_unit_interval_def by (by100 auto)
-    qed
-    thus "\<exists>a b. a \<noteq> b \<and> top1_arc_endpoints_on A (subspace_topology T TT A) = {a, b}"
-      using hep by (by100 blast)
-  qed
-  \<comment> \<open>Under hno\\_leaf: every endpoint is shared. Build walk and find SCC.\<close>
-  \<comment> \<open>Pick any arc A1.\<close>
+  \<comment> \<open>Derives from tree\\_euler\\_and\\_leaf\\_combined.\<close>
+proof -
   have h\<A>_ne: "\<A> \<noteq> {}" using assms(6) by (by100 force)
-  then obtain A1 where "A1 \<in> \<A>" by (by100 blast)
-  from h2ep[rule_format, OF \<open>A1 \<in> \<A>\<close>]
-  obtain p1 q1 where "p1 \<noteq> q1"
-      "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {p1, q1}" by (by100 blast)
-  \<comment> \<open>By hno\\_leaf, p1 is in some A2 \\<ne> A1.\<close>
-  have "p1 \<in> top1_arc_endpoints_on A1 (subspace_topology T TT A1)"
-    using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
-  from hno_leaf[rule_format, OF \<open>A1 \<in> \<A>\<close> this]
-  obtain A2 where "A2 \<in> \<A>" "A2 \<noteq> A1" "p1 \<in> A2" by (by100 blast)
-  \<comment> \<open>p1 \\<in> A1 \\<inter> A2 \\<subseteq> endpoints(A1) \\<inter> endpoints(A2). So p1 is an endpoint of A2.\<close>
-  have "p1 \<in> A1 \<inter> A2"
-  proof -
-    have "p1 \<in> A1"
-      using \<open>p1 \<in> top1_arc_endpoints_on A1 _\<close> unfolding top1_arc_endpoints_on_def by (by100 blast)
-    thus ?thesis using \<open>p1 \<in> A2\<close> by (by100 blast)
-  qed
-  from assms(4)[rule_format, OF \<open>A1 \<in> \<A>\<close> \<open>A2 \<in> \<A>\<close> \<open>A2 \<noteq> A1\<close>[symmetric]]
-  have h12: "A1 \<inter> A2 \<subseteq> top1_arc_endpoints_on A2 (subspace_topology T TT A2)" by (by100 blast)
-  hence "p1 \<in> top1_arc_endpoints_on A2 (subspace_topology T TT A2)"
-    using \<open>p1 \<in> A1 \<inter> A2\<close> by (by100 blast)
-  \<comment> \<open>A2 has endpoints {p1, r2} for some r2 \\<ne> p1.\<close>
-  from h2ep[rule_format, OF \<open>A2 \<in> \<A>\<close>]
-  obtain a2 b2 where "a2 \<noteq> b2"
-      "top1_arc_endpoints_on A2 (subspace_topology T TT A2) = {a2, b2}" by (by100 blast)
-  have "p1 \<in> {a2, b2}" using \<open>p1 \<in> top1_arc_endpoints_on A2 _\<close>
-      \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by simp
-  \<comment> \<open>The other endpoint of A2 (call it r2).\<close>
-  define r2 where "r2 = (if p1 = a2 then b2 else a2)"
-  have "r2 \<noteq> p1" using \<open>a2 \<noteq> b2\<close> \<open>p1 \<in> {a2, b2}\<close> unfolding r2_def by (by100 auto)
-  have "r2 \<in> top1_arc_endpoints_on A2 (subspace_topology T TT A2)"
-    using \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> unfolding r2_def by (by100 auto)
-  \<comment> \<open>By hno\\_leaf, r2 is in some A3 \\<ne> A2.\<close>
-  from hno_leaf[rule_format, OF \<open>A2 \<in> \<A>\<close> \<open>r2 \<in> top1_arc_endpoints_on A2 _\<close>]
-  obtain A3 where "A3 \<in> \<A>" "A3 \<noteq> A2" "r2 \<in> A3" by (by100 blast)
-  \<comment> \<open>Case 1: A3 = A1. Then r2 \\<in> A1 \\<inter> A2 \\<subseteq> endpoints(A1). Since r2 \\<ne> p1 and
-     endpoints(A1) = {p1, q1}, we get r2 = q1. So A1 and A2 share both p1 and q1 = r2.\<close>
-  \<comment> \<open>Case 2: A3 \\<ne> A1. Continue the walk: A3 has another endpoint s3, shared with A4, etc.
-     By pigeonhole on finite \\<A>, the walk revisits an arc. When it does, the shared
-     vertices force two arcs to share two endpoints (by the intersection \\<subseteq> endpoints property).\<close>
-  show False
-  proof (cases "A3 = A1")
-    case True
-    \<comment> \<open>A3 = A1. So r2 \\<in> A1. Since r2 \\<in> A1 \\<inter> A2 \\<subseteq> endpoints(A1) = {p1,q1},
-       and r2 \\<ne> p1, we get r2 = q1. So A1 and A2 share both endpoints.\<close>
-    have "r2 \<in> A1" using True \<open>r2 \<in> A3\<close> by simp
-    have "r2 \<in> A2" using \<open>r2 \<in> top1_arc_endpoints_on A2 _\<close>
-        unfolding top1_arc_endpoints_on_def by (by100 blast)
-    have "r2 \<in> A1 \<inter> A2" using \<open>r2 \<in> A1\<close> \<open>r2 \<in> A2\<close> by (by100 blast)
-    have h12_ep: "A1 \<inter> A2 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology T TT A1)"
-      using assms(4)[rule_format, OF \<open>A1 \<in> \<A>\<close> \<open>A2 \<in> \<A>\<close> \<open>A2 \<noteq> A1\<close>[symmetric]] by (by100 blast)
-    have "r2 \<in> {p1, q1}"
-      using h12_ep \<open>r2 \<in> A1 \<inter> A2\<close> \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
-    hence "r2 = q1" using \<open>r2 \<noteq> p1\<close> by (by100 blast)
-    \<comment> \<open>Both endpoints of A2 are in A1: endpoints(A2) = {p1, q1}.\<close>
-    have hA2_ep_eq: "top1_arc_endpoints_on A2 (subspace_topology T TT A2) = {p1, q1}"
-    proof -
-      have "p1 \<in> {a2, b2}" using \<open>p1 \<in> {a2, b2}\<close> .
-      have "q1 \<in> {a2, b2}"
-      proof -
-        have "r2 \<in> {a2, b2}" using \<open>r2 \<in> top1_arc_endpoints_on A2 _\<close>
-            \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by simp
-        thus ?thesis using \<open>r2 = q1\<close> by simp
-      qed
-      have "{a2, b2} = {p1, q1}"
-        using \<open>p1 \<in> {a2, b2}\<close> \<open>q1 \<in> {a2, b2}\<close> \<open>p1 \<noteq> q1\<close> \<open>a2 \<noteq> b2\<close> by (by100 blast)
-      thus ?thesis using \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by simp
-    qed
-    \<comment> \<open>A1 \\<inter> A2 = {p1, q1}.\<close>
-    have hA12: "A1 \<inter> A2 = {p1, q1}"
-    proof -
-      have "A1 \<inter> A2 \<subseteq> {p1, q1}" using h12_ep \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
-      moreover have "p1 \<in> A1 \<inter> A2" using \<open>p1 \<in> A1 \<inter> A2\<close> .
-      moreover have "q1 \<in> A1 \<inter> A2"
-      proof -
-        have "q1 \<in> A1" using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close>
-            unfolding top1_arc_endpoints_on_def by (by100 blast)
-        have "q1 \<in> A2" using \<open>r2 = q1\<close> \<open>r2 \<in> A2\<close> by simp
-        thus ?thesis using \<open>q1 \<in> A1\<close> by (by100 blast)
-      qed
-      ultimately show ?thesis by (by100 blast)
-    qed
-    \<comment> \<open>arcs\\_form\\_simple\\_closed\\_curve gives SCC.\<close>
-    have hA1_arc: "top1_is_arc_on A1 (subspace_topology T TT A1)" using assms(2) \<open>A1 \<in> \<A>\<close> by (by100 blast)
-    have hA2_arc: "top1_is_arc_on A2 (subspace_topology T TT A2)" using assms(2) \<open>A2 \<in> \<A>\<close> by (by100 blast)
-    have "A1 \<subseteq> T" using assms(2) \<open>A1 \<in> \<A>\<close> by (by100 blast)
-    have "A2 \<subseteq> T" using assms(2) \<open>A2 \<in> \<A>\<close> by (by100 blast)
-    have hA1_ep: "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {p1, q1}"
-      using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> .
-    from arcs_form_simple_closed_curve[OF hstrict hhaus hA1_arc \<open>A1 \<subseteq> T\<close>
-        hA2_arc \<open>A2 \<subseteq> T\<close> hA12 \<open>p1 \<noteq> q1\<close> hA1_ep hA2_ep_eq]
-    have hSCC: "top1_simple_closed_curve_on T TT (A1 \<union> A2)" .
-    \<comment> \<open>SCC in T contradicts T simply connected.
-       If T = A1 Un A2: T homeomorphic to S1, pi1 = Z != 0. But T SC. Contradiction.
-       If T strictly contains A1 Un A2: use graph pi1 free weak on A1 Un A2 as subgraph.\<close>
-    \<comment> \<open>From the SCC: there exists h: S1 -> T continuous, injective, h ` S1 = A1 Un A2.\<close>
-    from hSCC[unfolded top1_simple_closed_curve_on_def]
-    obtain h_s where hhs: "top1_continuous_map_on top1_S1 top1_S1_topology T TT h_s"
-        "inj_on h_s top1_S1" "h_s ` top1_S1 = A1 \<union> A2"
-      by (by100 blast)
-    \<comment> \<open>A1 \\<union> A2 = T or A1 \\<union> A2 \\<subsetneq> T. Handle both cases.\<close>
-    have "A1 \<union> A2 \<subseteq> T" using \<open>A1 \<subseteq> T\<close> \<open>A2 \<subseteq> T\<close> by (by100 blast)
-    show False
-    proof (cases "A1 \<union> A2 = T")
-      case True
-      \<comment> \<open>T = A1 \\<union> A2. h\\_s: S1 \\<rightarrow> T is continuous, injective, surjective.
-         S1 compact + T Hausdorff \\<Rightarrow> h\\_s homeomorphism.
-         T SC + homeomorphism \\<Rightarrow> S1 SC. But S1 not SC. Contradiction.\<close>
-      have hhs_surj: "h_s ` top1_S1 = T" using hhs(3) True by simp
-      \<comment> \<open>S1 compact, T Hausdorff: continuous bijection is homeomorphism.\<close>
-      have hS1_compact: "top1_compact_on top1_S1 top1_S1_topology"
-        by (metis S1_compact)
-      \<comment> \<open>h\\_s maps S1 homeomorphically onto T.\<close>
-      \<comment> \<open>If T is SC, so is S1 (homeomorphic). But S1 is NOT SC.\<close>
-      have hS1_sc: "top1_simply_connected_on top1_S1 top1_S1_topology"
-      proof -
-        \<comment> \<open>Transfer SC from T to S1 via the homeomorphism.\<close>
-        show ?thesis unfolding top1_simply_connected_on_def
-        proof (intro conjI)
-          show "top1_path_connected_on top1_S1 top1_S1_topology"
-            by (metis S1_path_connected)
-        next
-          show "\<forall>x\<in>top1_S1. \<forall>f. top1_is_loop_on top1_S1 top1_S1_topology x f \<longrightarrow>
-              top1_path_homotopic_on top1_S1 top1_S1_topology x x f (top1_constant_path x)"
-          proof (intro ballI allI impI)
-            fix x0 f assume hx0: "x0 \<in> top1_S1" and hf: "top1_is_loop_on top1_S1 top1_S1_topology x0 f"
-            \<comment> \<open>h\\_s \\<circ> f is a loop in T at h\\_s(x0). T is SC \\<Rightarrow> h\\_s \\<circ> f nullhomotopic in T.\<close>
-            have hhsf_loop: "top1_is_loop_on T TT (h_s x0) (h_s \<circ> f)"
-              by (rule top1_continuous_map_loop_early[OF hhs(1) hf])
-            have "h_s x0 \<in> T" using hhs(1) hx0 unfolding top1_continuous_map_on_def by (by100 blast)
-            have hhsf_null: "top1_path_homotopic_on T TT (h_s x0) (h_s x0) (h_s \<circ> f) (top1_constant_path (h_s x0))"
-              using hsc[unfolded top1_simply_connected_on_def] hhsf_loop \<open>h_s x0 \<in> T\<close> by (by100 blast)
-            \<comment> \<open>Transfer homotopy back via h\\_s\\<inverse>: f nullhomotopic in S1.\<close>
-            \<comment> \<open>h\\_s is a homeomorphism S1 \\<rightarrow> T (compact to Hausdorff, continuous bijection).
-               Its inverse h\\_s\\<inverse> is continuous. Apply continuous\\_preserves\\_path\\_homotopic
-               with h\\_s\\<inverse> to transfer the nullhomotopy from T back to S1.\<close>
-            \<comment> \<open>h\\_s\\<inverse>: T \\<rightarrow> S1 continuous.\<close>
-            \<comment> \<open>h\\_s: S1 \\<rightarrow> T is a homeomorphism (Theorem 26.6: compact to Hausdorff bijection).\<close>
-            have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
-              using S1_compact unfolding top1_compact_on_def by (by100 blast)
-            have hbij: "bij_betw h_s top1_S1 T"
-              unfolding bij_betw_def using hhs(2) hhs_surj by (by100 blast)
-            from Theorem_26_6[OF hS1_top hTT hS1_compact hhaus hhs(1) hbij]
-            have hhomeo: "top1_homeomorphism_on top1_S1 top1_S1_topology T TT h_s" .
-            \<comment> \<open>Extract inverse from homeomorphism.\<close>
-            from hhomeo[unfolded top1_homeomorphism_on_def]
-            obtain h_inv where h_inv_props:
-                "top1_continuous_map_on T TT top1_S1 top1_S1_topology h_inv"
-                "\<forall>x\<in>top1_S1. h_inv (h_s x) = x"
-              by (metis bij_betw_def f_inv_into_f inv_into_f_f)
-            have h_inv_cont: "top1_continuous_map_on T TT top1_S1 top1_S1_topology h_inv"
-              using h_inv_props(1) .
-            \<comment> \<open>Apply continuous\\_preserves\\_path\\_homotopic with h\\_inv.\<close>
-            from continuous_preserves_path_homotopic[OF hTT hS1_top h_inv_cont hhsf_null]
-            have htr: "top1_path_homotopic_on top1_S1 top1_S1_topology
-                (h_inv (h_s x0)) (h_inv (h_s x0))
-                (h_inv \<circ> (h_s \<circ> f)) (h_inv \<circ> top1_constant_path (h_s x0))" .
-            have heq1: "h_inv (h_s x0) = x0" using h_inv_props(2) hx0 by (by100 blast)
-            have heq3: "h_inv \<circ> top1_constant_path (h_s x0) = top1_constant_path x0"
-            proof (rule ext)
-              fix t show "(h_inv \<circ> top1_constant_path (h_s x0)) t = top1_constant_path x0 t"
-                unfolding top1_constant_path_def using heq1 by simp
-            qed
-            \<comment> \<open>h\\_inv \\<circ> h\\_s \\<circ> f agrees with f on I\\_set.\<close>
-            have heq2_I: "\<forall>t\<in>I_set. (h_inv \<circ> (h_s \<circ> f)) t = f t"
-            proof (intro ballI)
-              fix t assume "t \<in> I_set"
-              have "f t \<in> top1_S1" using hf \<open>t \<in> I_set\<close> unfolding top1_is_loop_on_def top1_is_path_on_def
-                  top1_continuous_map_on_def by (by5000 blast)
-              have "h_inv (h_s (f t)) = f t" using h_inv_props(2) \<open>f t \<in> top1_S1\<close> by (by100 blast)
-              thus "(h_inv \<circ> (h_s \<circ> f)) t = f t" by simp
-            qed
-            \<comment> \<open>From htr + heq1 + heq3: h\\_inv \\<circ> h\\_s \\<circ> f \\<sim> const\\_x0.\<close>
-            have htr2: "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0
-                (h_inv \<circ> (h_s \<circ> f)) (top1_constant_path x0)"
-              using htr heq1 heq3 by simp
-            \<comment> \<open>f agrees with h\\_inv \\<circ> h\\_s \\<circ> f on I\\_set \\<Rightarrow> f \\<sim> h\\_inv \\<circ> h\\_s \\<circ> f (by loop\\_agree\\_on\\_I).\<close>
-            from conjunct2[OF loop_agree_on_I[OF hf heq2_I]]
-            have "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0 f (h_inv \<circ> (h_s \<circ> f))" .
-            \<comment> \<open>Transitivity: f \\<sim> h\\_inv \\<circ> h\\_s \\<circ> f \\<sim> const.\<close>
-            from Lemma_51_1_path_homotopic_trans[OF hS1_top this htr2]
-            show "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0 f (top1_constant_path x0)" .
-          qed
-        qed
-      qed
-      \<comment> \<open>But S1 is NOT simply connected.\<close>
-      from top1_S1_fundamental_group_nontrivial
-      obtain f0 g0 where hfg: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f0"
-          "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g0"
-          "\<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
-        by (by100 blast)
-      \<comment> \<open>From hS1\\_sc: f0 \\<sim> const and g0 \\<sim> const \\<Rightarrow> f0 \\<sim> g0. Contradiction.\<close>
-      have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 (top1_constant_path (1, 0))"
-      proof -
-        have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
-        from hS1_sc[unfolded top1_simply_connected_on_def]
-        have h_all_null: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f \<longrightarrow>
-            top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f (top1_constant_path (1, 0))"
-          using h10_S1 by (by100 blast)
-        show ?thesis using h_all_null hfg(1) by (by100 blast)
-      qed
-      moreover have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) g0 (top1_constant_path (1, 0))"
-      proof -
-        have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
-        from hS1_sc[unfolded top1_simply_connected_on_def]
-        have "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f \<longrightarrow>
-            top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f (top1_constant_path (1, 0))"
-          using h10_S1 by (by100 blast)
-        thus ?thesis using hfg(2) by (by100 blast)
-      qed
-      \<comment> \<open>f0 \\<sim> const \\<sim> g0 \\<Rightarrow> f0 \\<sim> g0.\<close>
-      ultimately have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
-      proof -
-        assume hf0: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 (top1_constant_path (1, 0))"
-        assume hg0: "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) g0 (top1_constant_path (1, 0))"
-        from Lemma_51_1_path_homotopic_sym[OF hg0]
-        have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) (top1_constant_path (1, 0)) g0" .
-        have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
-          using S1_compact unfolding top1_compact_on_def by (by100 blast)
-        from Lemma_51_1_path_homotopic_trans[OF hS1_top hf0 \<open>top1_path_homotopic_on _ _ _ _ (top1_constant_path _) g0\<close>]
-        show ?thesis .
-      qed
-      with hfg(3) show False by (by100 blast)
-    next
-      case False
-      \<comment> \<open>A1 Un A2 is a proper subspace of T, homeomorphic to S1.
-         Show A1 Un A2 is a retract of T. Then by Lemma 55.1,
-         pi1(A1 Un A2) injects into pi1(T). pi1(A1 Un A2) = Z != 0.
-         pi1(T) = 0 (SC). Contradiction.\<close>
-      have hC_sub: "A1 \<union> A2 \<subseteq> T" using \<open>A1 \<subseteq> T\<close> \<open>A2 \<subseteq> T\<close> by (by100 blast)
-      have hC_top: "is_topology_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
-        using subspace_topology_is_topology_on[OF hTT hC_sub] .
-      \<comment> \<open>A1 Un A2 is a retract of T: the other arcs attach at p1,q1 only
-         (from graph intersection property). Retract each branch to its attachment point.\<close>
-      have hretract: "top1_retract_of_on T TT (A1 \<union> A2)"
-      proof -
-        \<comment> \<open>Define retraction: r(x) = x for x \\<in> A1\\<union>A2.
-           For x \\<in> C with C \\<in> A\\\\{A1,A2}:
-           If C has exactly 1 endpoint in A1\\<union>A2 (say v): r maps all of C to v.
-           If C has 2 endpoints in {p1,q1}: r maps C to A1 via a homeomorphism.
-           This is continuous in the coherent topology (piecewise continuous on arcs).\<close>
-        \<comment> \<open>Other arcs only meet A1\\<union>A2 at \\<subseteq> {p1,q1}.\<close>
-        have hother_inter: "\<forall>C\<in>\<A>. C \<noteq> A1 \<longrightarrow> C \<noteq> A2 \<longrightarrow>
-            C \<inter> (A1 \<union> A2) \<subseteq> {p1, q1}"
-        proof (intro ballI impI)
-          fix C assume "C \<in> \<A>" "C \<noteq> A1" "C \<noteq> A2"
-          have "C \<inter> A1 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology T TT A1)"
-            using assms(4)[rule_format, OF \<open>C \<in> \<A>\<close> \<open>A1 \<in> \<A>\<close> \<open>C \<noteq> A1\<close>] by (by100 blast)
-          hence "C \<inter> A1 \<subseteq> {p1, q1}"
-            using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
-          have "C \<inter> A2 \<subseteq> top1_arc_endpoints_on A2 (subspace_topology T TT A2)"
-            using assms(4)[rule_format, OF \<open>C \<in> \<A>\<close> \<open>A2 \<in> \<A>\<close> \<open>C \<noteq> A2\<close>] by (by100 blast)
-          hence "C \<inter> A2 \<subseteq> {p1, q1}"
-            using hA2_ep_eq by (by100 blast)
-          have "C \<inter> (A1 \<union> A2) = (C \<inter> A1) \<union> (C \<inter> A2)" by (by100 blast)
-          thus "C \<inter> (A1 \<union> A2) \<subseteq> {p1, q1}"
-            using \<open>C \<inter> A1 \<subseteq> {p1, q1}\<close> \<open>C \<inter> A2 \<subseteq> {p1, q1}\<close> by (by100 blast)
-        qed
-        \<comment> \<open>The retraction T \\<rightarrow> A1 Un A2 exists: each external arc meets A1 Un A2 only at
-           {p1,q1} (hother\\_inter). The retraction maps each external arc to its attachment
-           point(s) via constant maps (single attachment) or homeomorphisms (both endpoints).
-           Continuity follows from coherent topology (piecewise continuous on arcs).\<close>
-        show ?thesis sorry
-      qed
-      \<comment> \<open>Extract SCC homeomorphism S1 \\<rightarrow> A1 Un A2.\<close>
-      from hSCC[unfolded top1_simple_closed_curve_on_def]
-      obtain h_s2 where hhs2: "top1_continuous_map_on top1_S1 top1_S1_topology T TT h_s2"
-          "inj_on h_s2 top1_S1" "h_s2 ` top1_S1 = A1 \<union> A2" by (by100 blast)
-      have hrange: "\<forall>s\<in>top1_S1. h_s2 s \<in> A1 \<union> A2"
-      proof (intro ballI)
-        fix s assume "s \<in> top1_S1"
-        have "h_s2 s \<in> h_s2 ` top1_S1" using \<open>s \<in> top1_S1\<close> by (by100 blast)
-        thus "h_s2 s \<in> A1 \<union> A2" using hhs2(3) by (by100 blast)
-      qed
-      have hhs2_sub: "top1_continuous_map_on top1_S1 top1_S1_topology
-          (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) h_s2"
-        by (rule continuous_map_restrict_codomain[OF hhs2(1) hrange hC_sub])
-      have hS1_top: "is_topology_on top1_S1 top1_S1_topology"
-        using S1_compact unfolding top1_compact_on_def by (by100 blast)
-      have hC_haus: "is_hausdorff_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
-        using hhaus hC_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
-      have hbij2: "bij_betw h_s2 top1_S1 (A1 \<union> A2)"
-        unfolding bij_betw_def using hhs2(2) hhs2(3) by (by100 blast)
-      from Theorem_26_6[OF hS1_top hC_top S1_compact hC_haus hhs2_sub hbij2]
-      have hhomeo2: "top1_homeomorphism_on top1_S1 top1_S1_topology
-          (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) h_s2" .
-      \<comment> \<open>A1 Un A2 is PC (homeomorphic to S1 which is PC).\<close>
-      have hC_pc: "top1_path_connected_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
-      proof -
-        have "top1_path_connected_on top1_S1 top1_S1_topology" by (metis S1_path_connected)
-        have hself: "subspace_topology (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) (A1 \<union> A2)
-            = subspace_topology T TT (A1 \<union> A2)"
-          using subspace_topology_trans[of "A1 \<union> A2" "A1 \<union> A2" T TT] by simp
-        from top1_path_connected_continuous_image[OF \<open>top1_path_connected_on top1_S1 _\<close>
-            hhs2_sub hrange hhs2(3)]
-        have "top1_path_connected_on (A1 \<union> A2) (subspace_topology (A1 \<union> A2)
-            (subspace_topology T TT (A1 \<union> A2)) (A1 \<union> A2))"
-          using hC_top by (by100 blast)
-        thus ?thesis using hself by simp
-      qed
-      \<comment> \<open>A1 Un A2 is SC (retract of SC tree + Lemma 55.1).\<close>
-      have hC_sc: "top1_simply_connected_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
-      proof -
-        show ?thesis unfolding top1_simply_connected_on_def
-        proof (intro conjI)
-          \<comment> \<open>A1 Un A2 is path-connected (it's an SCC = connected).\<close>
-          show "top1_path_connected_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))"
-            using hC_pc .
-        next
-          \<comment> \<open>All loops in A1 Un A2 are null-homotopic (Lemma 55.1 + T SC).\<close>
-          show "\<forall>x\<in>A1 \<union> A2. \<forall>f. top1_is_loop_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x f \<longrightarrow>
-              top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x x f
-                  (top1_constant_path x)"
-          proof (intro ballI allI impI)
-            fix x0 f assume hx0: "x0 \<in> A1 \<union> A2"
-                and hf: "top1_is_loop_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x0 f"
-            \<comment> \<open>f loop in A1 Un A2 \\<subseteq> T, hence loop in T. T SC \\<Rightarrow> null-homotopic in T.
-               By Lemma 55.1 (retract) \\<Rightarrow> null-homotopic in A1 Un A2.\<close>
-            have hf_T: "top1_is_loop_on T TT x0 f"
-            proof -
-              have hf_path: "top1_is_path_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x0 x0 f"
-                using hf unfolding top1_is_loop_on_def .
-              have hf_cont: "top1_continuous_map_on I_set I_top (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) f"
-                using hf_path unfolding top1_is_path_on_def by (by100 blast)
-              have hincl: "top1_continuous_map_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) T TT id"
-                unfolding top1_continuous_map_on_def
-              proof (intro conjI ballI)
-                fix x assume "x \<in> A1 \<union> A2"
-                have "x \<in> T" using \<open>x \<in> A1 \<union> A2\<close> hC_sub by (by100 blast)
-                thus "id x \<in> T" by simp
-              next
-                fix V assume "V \<in> TT"
-                have "{x \<in> A1 \<union> A2. id x \<in> V} = (A1 \<union> A2) \<inter> V" by (by100 auto)
-                also have "... \<in> subspace_topology T TT (A1 \<union> A2)"
-                  unfolding subspace_topology_def using \<open>V \<in> TT\<close> by (by100 blast)
-                finally show "{x \<in> A1 \<union> A2. id x \<in> V} \<in> subspace_topology T TT (A1 \<union> A2)" .
-              qed
-              from top1_continuous_map_on_comp[OF hf_cont hincl]
-              have "top1_continuous_map_on I_set I_top T TT (id \<circ> f)" .
-              hence "top1_continuous_map_on I_set I_top T TT f" by simp
-              moreover have "f 0 = x0" using hf_path unfolding top1_is_path_on_def by (by100 blast)
-              moreover have "f 1 = x0" using hf_path unfolding top1_is_path_on_def by (by100 blast)
-              ultimately show ?thesis unfolding top1_is_loop_on_def top1_is_path_on_def by (by100 blast)
-            qed
-            have hf_null_T: "top1_path_homotopic_on T TT x0 x0 f (top1_constant_path x0)"
-              using hsc hf_T hx0 hC_sub unfolding top1_simply_connected_on_def by (by100 blast)
-            have hconst: "top1_is_loop_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x0
-                (top1_constant_path x0)"
-              by (rule top1_constant_path_is_loop[OF hC_top hx0])
-            from Lemma_55_1_retract_injective[OF hretract hx0 hf hconst hf_null_T]
-            show "top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) x0 x0 f
-                (top1_constant_path x0)" .
-          qed
-        qed
-      qed
-      \<comment> \<open>But A1 Un A2 homeomorphic to S1 \\<Rightarrow> not SC. Reuse hhomeo2 from above.\<close>
-      have hS1_sc: "top1_simply_connected_on top1_S1 top1_S1_topology"
-      proof -
-        show ?thesis unfolding top1_simply_connected_on_def
-        proof (intro conjI)
-          show "top1_path_connected_on top1_S1 top1_S1_topology" by (metis S1_path_connected)
-        next
-          show "\<forall>x\<in>top1_S1. \<forall>f. top1_is_loop_on top1_S1 top1_S1_topology x f \<longrightarrow>
-              top1_path_homotopic_on top1_S1 top1_S1_topology x x f (top1_constant_path x)"
-          proof (intro ballI allI impI)
-            fix x0 f assume hx0: "x0 \<in> top1_S1" and hf: "top1_is_loop_on top1_S1 top1_S1_topology x0 f"
-            have hhsf_loop: "top1_is_loop_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) (h_s2 x0) (h_s2 \<circ> f)"
-              by (rule top1_continuous_map_loop_early[OF hhs2_sub hf])
-            have "h_s2 x0 \<in> A1 \<union> A2" using hhs2_sub hx0 unfolding top1_continuous_map_on_def by (by100 blast)
-            have hhsf_null: "top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))
-                (h_s2 x0) (h_s2 x0) (h_s2 \<circ> f) (top1_constant_path (h_s2 x0))"
-              using hC_sc[unfolded top1_simply_connected_on_def] hhsf_loop \<open>h_s2 x0 \<in> A1 \<union> A2\<close> by (by100 blast)
-            \<comment> \<open>Transfer back via inverse, same as T=SCC case.\<close>
-            obtain h_inv2 where h_inv2_props:
-                "top1_continuous_map_on (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2))
-                    top1_S1 top1_S1_topology h_inv2"
-                "\<forall>x\<in>top1_S1. h_inv2 (h_s2 x) = x"
-              using hhomeo2 unfolding top1_homeomorphism_on_def
-              by (metis bij_betw_def f_inv_into_f inv_into_f_f)
-            from continuous_preserves_path_homotopic[OF hC_top hS1_top h_inv2_props(1) hhsf_null]
-            have htr: "top1_path_homotopic_on top1_S1 top1_S1_topology
-                (h_inv2 (h_s2 x0)) (h_inv2 (h_s2 x0))
-                (h_inv2 \<circ> (h_s2 \<circ> f)) (h_inv2 \<circ> top1_constant_path (h_s2 x0))" .
-            have heq1: "h_inv2 (h_s2 x0) = x0" using h_inv2_props(2) hx0 by (by100 blast)
-            have heq2_I: "\<forall>t\<in>I_set. (h_inv2 \<circ> (h_s2 \<circ> f)) t = f t"
-            proof (intro ballI)
-              fix t assume "t \<in> I_set"
-              have "f t \<in> top1_S1" using hf \<open>t \<in> I_set\<close> unfolding top1_is_loop_on_def top1_is_path_on_def
-                  top1_continuous_map_on_def by (by5000 blast)
-              have "h_inv2 (h_s2 (f t)) = f t" using h_inv2_props(2) \<open>f t \<in> top1_S1\<close> by (by100 blast)
-              thus "(h_inv2 \<circ> (h_s2 \<circ> f)) t = f t" by simp
-            qed
-            have heq3: "h_inv2 \<circ> top1_constant_path (h_s2 x0) = top1_constant_path x0"
-            proof (rule ext)
-              fix t show "(h_inv2 \<circ> top1_constant_path (h_s2 x0)) t = top1_constant_path x0 t"
-                unfolding top1_constant_path_def using heq1 by simp
-            qed
-            have htr2: "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0
-                (h_inv2 \<circ> (h_s2 \<circ> f)) (top1_constant_path x0)"
-              using htr heq1 heq3 by simp
-            from conjunct2[OF loop_agree_on_I[OF hf heq2_I]]
-            have "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0 f (h_inv2 \<circ> (h_s2 \<circ> f))" .
-            from Lemma_51_1_path_homotopic_trans[OF hS1_top this htr2]
-            show "top1_path_homotopic_on top1_S1 top1_S1_topology x0 x0 f (top1_constant_path x0)" .
-          qed
-        qed
-      qed
-      from top1_S1_fundamental_group_nontrivial
-      obtain f0 g0 where hfg: "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f0"
-          "top1_is_loop_on top1_S1 top1_S1_topology (1, 0) g0"
-          "\<not> top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
-        by (by100 blast)
-      have h10_S1: "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
-      from hS1_sc[unfolded top1_simply_connected_on_def]
-      have h_all_null: "\<forall>f. top1_is_loop_on top1_S1 top1_S1_topology (1, 0) f \<longrightarrow>
-          top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f (top1_constant_path (1, 0))"
-        using h10_S1 by (by100 blast)
-      have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 (top1_constant_path (1, 0))"
-        using h_all_null hfg(1) by (by100 blast)
-      moreover have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) g0 (top1_constant_path (1, 0))"
-        using h_all_null hfg(2) by (by100 blast)
-      moreover from Lemma_51_1_path_homotopic_sym[OF this]
-      have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) (top1_constant_path (1, 0)) g0" .
-      ultimately have "top1_path_homotopic_on top1_S1 top1_S1_topology (1, 0) (1, 0) f0 g0"
-        using Lemma_51_1_path_homotopic_trans[OF hS1_top] by (by100 blast)
-      with hfg(3) show False by (by100 blast)
-    qed
-  next
-    case False
-    \<comment> \<open>A3 \\<ne> A1, A3 \\<ne> A2 (from context). Continue the walk from A3.
-       The other endpoint s3 of A3 is shared with some A4 \\<ne> A3.
-       If A4 = A2: then A2 and A3 share both endpoints \\<Rightarrow> SCC \\<Rightarrow> contradiction.
-       If A4 = A1: then A1 and A3 share an endpoint s3. Since A3 already shares r2 with A2
-         and r2 \\<in> A1 (would need to check), we might get two endpoints shared.
-       If A4 \\<notin> {A1,A2,A3}: continue walking.
-       By pigeonhole (card \\<A> finite), the walk must revisit an arc.
-       When arc Ai is revisited, the two entry vertices create an SCC.
-       For now, this argument requires formalizing the walk and pigeonhole.\<close>
-    \<comment> \<open>Under hno\\_leaf with finite \\<A> and 3 distinct arcs A1,A2,A3:
-       The walk continues from A3. Each step extends by a new arc or finds two arcs
-       sharing both endpoints (\\<Rightarrow> SCC \\<Rightarrow> contradiction).
-       By finiteness of \\<A>, the walk must terminate with an SCC within card(\\<A>) steps.
-       The SCC argument (T=SCC or SCC\\<subsetneq>T) then gives the contradiction.\<close>
-    show False sorry
-  qed
+  from tree_euler_and_leaf_combined[OF assms(1) assms(2) assms(3) assms(4) assms(5) h\<A>_ne assms(7)]
+  show ?thesis using assms(6) by (by100 blast)
 qed
+
 
 
 
@@ -2708,7 +2282,7 @@ proof (induction n rule: less_induct)
       \<comment> \<open>Induction step: leaf arc removal.
          Book: find leaf arc A0 meeting T\\_0 in one vertex.\<close>
       have hcard_ge2: "card \<A> \<ge> 2" using hn_ge2 hcard by simp
-      from finite_tree_has_leaf_arc[OF htree harcs hcover hinter hfin hcard_ge2]
+      from finite_tree_has_leaf_arc[OF htree harcs hcover hinter hfin hcard_ge2 hcoh]
       have "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
           (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)" .
       then obtain A0 v where hA0: "A0 \<in> \<A>"
@@ -2945,10 +2519,8 @@ lemma tree_euler_number_one:
       and "\<A> \<noteq> {}"
       and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
   shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-proof -
-  from spec[OF spec[OF spec[OF tree_euler_all, of T], of TT], of \<A>]
-  show ?thesis using assms by (by100 simp)
-qed
+  using tree_euler_and_leaf_combined[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(6) assms(7)]
+  by (by100 blast)
 
 \<comment> \<open>Detailed proof structure for tree\\_euler\\_all (informational):
    Munkres Lemma 85.2 Step 1: \\<chi>(T) = vertices - arcs = 1.
