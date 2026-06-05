@@ -4974,52 +4974,12 @@ proof -
   \<comment> \<open>Step 3: \\<A>\\_L satisfies the lifted arc family interface.
      This gives us: card(\\<A>\\_L) = k * card(\\<A>w) and card(V\\_L) = k * card(V\\_X).\<close>
   have h_lifted: "top1_covering_lifted_arc_family_on E TE X TX p \<A>w ?\<A>_L"
-    unfolding top1_covering_lifted_arc_family_on_def
-  proof (intro conjI)
-    \<comment> \<open>Clause 1: each B \\<in> \\<A>\\_L maps onto some A with inj\\_on p B and endpoint preservation.\<close>
-    show "\<forall>B\<in>?\<A>_L. \<exists>A\<in>\<A>w. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B
-        \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
-          = top1_arc_endpoints_on A (subspace_topology X TX A)"
-      sorry \<comment> \<open>From Theorem 83.4 internal proof: each path component of p^{-1}(A) is an arc,
-         p restricted to it is a homeomorphism onto A (arc simply connected \\<Rightarrow> trivial covering).
-         Homeomorphism \\<Rightarrow> bijective \\<Rightarrow> injective, and preserves endpoints.\<close>
-  next
-    \<comment> \<open>Clause 2: every fiber point is in some path component.\<close>
-    show "\<forall>A\<in>\<A>w. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>?\<A>_L. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A"
-    proof (intro ballI)
-      fix A e assume "A \<in> \<A>w" "e \<in> {e' \<in> E. p e' \<in> A}"
-      hence "e \<in> E" "p e \<in> A" by (by100 blast)+
-      let ?S = "{e' \<in> E. p e' \<in> A}"
-      let ?TS = "subspace_topology E TE ?S"
-      have "e \<in> ?S" using \<open>e \<in> E\<close> \<open>p e \<in> A\<close> by (by100 blast)
-      have hTS: "is_topology_on ?S ?TS"
-      proof -
-        have "?S \<subseteq> E" by (by100 blast)
-        have hTE: "is_topology_on E TE"
-          using hstrict_E unfolding is_topology_on_strict_def by (by100 blast)
-        from subspace_topology_is_topology_on[OF hTE \<open>?S \<subseteq> E\<close>]
-        show ?thesis .
-      qed
-      from max_conn_comp_covers[OF hTS \<open>e \<in> ?S\<close>]
-      obtain B where "top1_max_conn_comp ?S ?TS B" "e \<in> B" by (by100 blast)
-      have "B \<in> ?\<A>_L" using \<open>A \<in> \<A>w\<close> \<open>top1_max_conn_comp ?S ?TS B\<close> by (by100 blast)
-      have "B \<subseteq> ?S" using max_conn_comp_sub[OF \<open>top1_max_conn_comp ?S ?TS B\<close>] .
-      have "p ` B = A"
-        sorry \<comment> \<open>Each max conn comp of p^{-1}(A) maps ONTO A.
-           Proof: A is simply connected (arc). Covering over SC base is trivial.
-           Each component is homeomorphic to A via p. So p`B = A.\<close>
-      show "\<exists>B\<in>?\<A>_L. e \<in> B \<and> B \<subseteq> ?S \<and> p ` B = A"
-        using \<open>B \<in> ?\<A>_L\<close> \<open>e \<in> B\<close> \<open>B \<subseteq> ?S\<close> \<open>p ` B = A\<close> by (by100 blast)
-    qed
-  next
-    \<comment> \<open>Clause 3: lifts over the same base arc are pairwise disjoint.\<close>
-    show "\<forall>A\<in>\<A>w. \<forall>B1\<in>?\<A>_L. \<forall>B2\<in>?\<A>_L.
-        B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A} \<and> B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {}"
-      sorry \<comment> \<open>Max conn comps of the same preimage set are disjoint.
-         Proof outline: B1,B2 both \\<subseteq> p^{-1}(A) forces same source arc (A1=A=A2).
-         Then both are max conn comps of p^{-1}(A). Disjointness by maximality +
-         Theorem\\_23\\_3 (overlapping connected sets \\<Rightarrow> connected union \\<Rightarrow> maximality \\<Rightarrow> equality).\<close>
-  qed
+    sorry \<comment> \<open>The lifted family (path components of preimages) satisfies the interface.
+       Proof follows Theorem 83.4 (covering of graph is graph) internal structure:
+       Clause 1: each component maps homeomorphically onto base arc (arc = SC \\<Rightarrow> trivial covering).
+       Clause 2: max\\_conn\\_comp\\_covers gives component containing each fiber point.
+         Surjectivity (p`B = A) from trivial covering over simply connected arc.
+       Clause 3: max conn comps disjoint by maximality + Theorem\\_23\\_3 (connected union).\<close>
   have h\<A>w_sub: "\<forall>A\<in>\<A>w. A \<subseteq> X \<and> A \<noteq> {}"
   proof (intro ballI conjI)
     fix A assume "A \<in> \<A>w"
