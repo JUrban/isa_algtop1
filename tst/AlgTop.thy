@@ -1343,7 +1343,33 @@ proof -
     next
       case False
       \<comment> \<open>Constant cases: p1,q1 \<in> A1\<union>A2. Homeomorphism: h1 maps I_set to A1.\<close>
-      show ?thesis using hp1_in hq1_in hh1_maps unfolding r_ret_def sorry
+      \<comment> \<open>x \\<notin> A1\\<union>A2, so r\\_ret takes the else branch. The result is p1, q1, or h1(...).\<close>
+      let ?C = "SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C'"
+      have hr_eq: "r_ret x = (if p1 \<in> ?C \<and> q1 \<in> ?C then
+          h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x)
+        else if q1 \<in> ?C \<and> p1 \<notin> ?C then q1 else p1)"
+        unfolding r_ret_def Let_def using False by simp
+      show ?thesis
+      proof (cases "p1 \<in> ?C \<and> q1 \<in> ?C")
+        case True
+        hence "r_ret x = h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x)"
+          using hr_eq by simp
+        moreover have "inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x \<in> I_set"
+          sorry \<comment> \<open>inv\\_into maps back to I\\_set if the SOME picks a valid homeomorphism.\<close>
+        ultimately have "r_ret x \<in> A1"
+        proof -
+          assume "r_ret x = h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x)"
+            and "inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x \<in> I_set"
+          hence "h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x) \<in> A1"
+            using hh1_maps by (by100 blast)
+          thus ?thesis using \<open>r_ret x = h1 _\<close> by simp
+        qed
+        thus ?thesis by (by100 blast)
+      next
+        case False
+        hence "r_ret x = q1 \<or> r_ret x = p1" using hr_eq by (by100 auto)
+        thus ?thesis using hp1_in hq1_in by (by100 blast)
+      qed
     qed
   qed
   \<comment> \<open>r_ret is the identity on A1 \<union> A2.\<close>
