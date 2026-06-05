@@ -1576,18 +1576,82 @@ proof -
              Both are continuous. Branch case: A\\{q1} connected \\<subseteq> one component,
              hno\\_bridge ensures it's the q1-component if q1 \\<in> A, so branch = q1 on A\\{q1},
              and r\\_ret(q1) = q1 (identity). Hence r\\_ret = constant q1 or p1 on A.\<close>
+          \<comment> \<open>Prove r\\_ret is constant on A for the branch case.
+             This follows from: A\\{q1} is connected, in one path component of T\\{q1},
+             and hno\\_bridge ensures the constant is q1 when q1 \\<in> A (else p1).\<close>
+          have hr_const_on_A: "\<not> (p1 \<in> A \<and> q1 \<in> A) \<Longrightarrow> \<exists>c. c \<in> A1 \<union> A2 \<and> (\<forall>x\<in>A. r_ret x = c)"
+            sorry \<comment> \<open>Branch is constant on A. Case analysis:
+               If q1 \\<in> A (not p1): hno\\_bridge \\<Rightarrow> A\\{q1} NOT in p1's comp \\<Rightarrow> branch = q1.
+                 At q1: identity = q1. So c = q1 on all of A.
+               If p1 \\<in> A (not q1): A \\<subseteq> T\\{q1}, connected, p1 \\<in> A \\<Rightarrow> A in p1's comp \\<Rightarrow> branch = p1.
+                 At p1: identity = p1. So c = p1 on all of A.
+               If neither: A \\<subseteq> T\\{q1}, connected \\<Rightarrow> in one comp \\<Rightarrow> branch = constant. No SCC endpoint.
+                 r\\_ret = branch everywhere. c = branch on A.\<close>
           have hr_cont_A: "top1_continuous_map_on A (subspace_topology T TT A) T TT r_ret"
-            sorry \<comment> \<open>Proof: case split on A's endpoint config.
-               1. A has both p1, q1: orient\\_map case. Continuous (composition of homeos + flip).
-               2. A has q1 (not p1): hno\\_bridge says A\\{q1} NOT in p1's component.
-                  So branch = q1 on A\\{q1}. At q1: identity = q1. Constant q1 on A. Continuous.
-               3. A has p1 (not q1): A \\<subseteq> T\\{q1}. Connected. In one component.
-                  branch = constant (p1 or q1) on A. And at p1: identity = p1.
-                  If branch = p1: r\\_ret = p1 on A. At p1: identity = p1. Consistent. Continuous.
-                  If branch = q1: r\\_ret = q1 on interior, p1 at p1. Discontinuous!
-                  But branch(p1) = p1 (p1 is in its own component). So branch = p1 on A. Continuous.
-               4. A has neither: A \\<subseteq> T\\{q1}\\\\{p1}. branch = constant. Continuous.
-               Each case gives continuity. Full proof requires formalizing each case.\<close>
+          proof (cases "p1 \<in> A \<and> q1 \<in> A")
+            case True
+            \<comment> \<open>Orient\\_map case: r\\_ret = orient\\_map on A (continuous by composition).\<close>
+            show ?thesis sorry \<comment> \<open>orient\\_map h1 h\\_C: composition of continuous (h1, inv\\_h\\_C, flip).\<close>
+          next
+            case False
+            \<comment> \<open>Branch case: r\\_ret is constant on A.\<close>
+            from hr_const_on_A[OF False]
+            obtain c where "c \<in> A1 \<union> A2" "\<forall>x\<in>A. r_ret x = c" by (by100 blast)
+            have "c \<in> T" using \<open>c \<in> A1 \<union> A2\<close> hA1_sub hA2_sub by (by100 blast)
+            \<comment> \<open>Constant function is continuous.\<close>
+            show ?thesis unfolding top1_continuous_map_on_def
+            proof (intro conjI ballI)
+              fix x assume "x \<in> A"
+              show "r_ret x \<in> T" using \<open>\<forall>x\<in>A. r_ret x = c\<close> \<open>x \<in> A\<close> \<open>c \<in> T\<close> by simp
+            next
+              fix V assume "V \<in> TT"
+              show "{x \<in> A. r_ret x \<in> V} \<in> subspace_topology T TT A"
+              proof (cases "c \<in> V")
+                case True
+                have "{x \<in> A. r_ret x \<in> V} = A"
+                proof (rule set_eqI, rule iffI)
+                  fix x assume "x \<in> {x \<in> A. r_ret x \<in> V}"
+                  thus "x \<in> A" by (by100 blast)
+                next
+                  fix x assume "x \<in> A"
+                  hence "r_ret x = c" using \<open>\<forall>x\<in>A. r_ret x = c\<close> by (by100 blast)
+                  thus "x \<in> {x \<in> A. r_ret x \<in> V}" using \<open>x \<in> A\<close> True by simp
+                qed
+                moreover have "A \<in> subspace_topology T TT A"
+                proof -
+                  have "T \<in> TT" using hTT unfolding is_topology_on_def by (by100 blast)
+                  hence "T \<inter> A \<in> subspace_topology T TT A"
+                    unfolding subspace_topology_def by (by100 blast)
+                  moreover have "T \<inter> A = A" using \<open>A \<subseteq> T\<close> by (by100 blast)
+                  ultimately show ?thesis by simp
+                qed
+                ultimately show ?thesis by simp
+              next
+                case cFalse: False
+                have "\<forall>x\<in>A. r_ret x \<notin> V"
+                proof (intro ballI)
+                  fix x assume "x \<in> A"
+                  have "r_ret x = c" using \<open>\<forall>x\<in>A. r_ret x = c\<close> \<open>x \<in> A\<close> by (by100 blast)
+                  thus "r_ret x \<notin> V" using cFalse by simp
+                qed
+                have "{x \<in> A. r_ret x \<in> V} = {}"
+                proof (rule set_eqI, rule iffI)
+                  fix x assume "x \<in> {x \<in> A. r_ret x \<in> V}"
+                  hence "x \<in> A" "r_ret x \<in> V" by (by100 blast)+
+                  from \<open>\<forall>x\<in>A. r_ret x \<notin> V\<close>[rule_format, OF \<open>x \<in> A\<close>] \<open>r_ret x \<in> V\<close>
+                  show "x \<in> {}" by (by100 blast)
+                next
+                  fix x assume "x \<in> ({} :: 'a set)" thus "x \<in> {x \<in> A. r_ret x \<in> V}" by (by100 blast)
+                qed
+                have "{} \<in> TT" using hTT unfolding is_topology_on_def by (by100 blast)
+                hence "{} \<inter> A \<in> subspace_topology T TT A"
+                  unfolding subspace_topology_def by (by100 blast)
+                hence hempty_in: "{} \<in> subspace_topology T TT A" by simp
+                from \<open>{x \<in> A. r_ret x \<in> V} = {}\<close> hempty_in
+                show ?thesis by (by100 metis)
+              qed
+            qed
+          qed
           have hU_sub_T: "U \<subseteq> T" using \<open>U \<in> TT\<close> hstrict unfolding is_topology_on_strict_def by (by100 blast)
           have hTU_closed: "closedin_on T TT (T - U)"
             unfolding closedin_on_def
