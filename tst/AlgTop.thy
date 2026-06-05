@@ -1329,10 +1329,16 @@ lemma tree_euler_and_leaf_combined:
   shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1
     \<and> (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
         \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)))"
-  sorry \<comment> \<open>By strong induction on card \\<A>. Base: card=1 (2 endpoints, leaf vacuous).
-     Step: card\\<ge>2. Leaf from walk+pigeonhole (no Euler dep). Remove leaf via
-     finite\\_tree\\_remove\\_leaf\\_is\\_tree (no circularity). Apply IH for card-1.
-     Add back leaf: card V = (card-1)+1+1 = card+1. Both statements follow.\<close>
+proof -
+  have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
+    sorry \<comment> \<open>Euler formula for trees. Self-contained induction proof.\<close>
+  have hleaf: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
+      v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
+    sorry \<comment> \<open>Leaf from degree\_sum\_leaf + heuler + double counting.\<close>
+  show ?thesis using heuler hleaf by (by100 blast)
+qed
+
 
 \<comment> \<open>Expert audit2: extract tree Euler sub-lemmas as named lemmas.\<close>
 
