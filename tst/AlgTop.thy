@@ -1571,10 +1571,18 @@ proof -
               case True thus ?thesis using h_full_closed by simp
             next
               case False
-              \<comment> \<open>Proper subset: some points of A map into U, some don't.
-                 This requires the homeomorphism case or mixed constant+identity case.
-                 For now, sorry.\<close>
-              show ?thesis sorry
+              \<comment> \<open>Proper subset means SOME x \\<in> A maps into U and some don't.
+                 For constant r\\_ret (all points map to same c): set is {} or A, not proper.
+                 So A must have BOTH p1 and q1 (homeomorphism case).
+                 But external arc with both endpoints = SCC with A1 \\<Rightarrow> contradicts tree.\<close>
+              \<comment> \<open>Show: for constant arcs, the set cannot be a proper subset.\<close>
+              \<comment> \<open>Constant arcs: A has at most one of {p1,q1}. r\\_ret = const on A.\<close>
+              \<comment> \<open>If const = c: {x | r\\_ret x \\<notin> U} = {} or A, contradiction with nonEmpty/False.\<close>
+              \<comment> \<open>So the only remaining case is A has both p1 and q1.\<close>
+              \<comment> \<open>But this is impossible in a tree (would create SCC with A1).\<close>
+              show ?thesis sorry \<comment> \<open>External arc with both endpoints \\<Rightarrow> SCC \\<Rightarrow> \\<not> tree.
+                 This sub-case is vacuous. Full proof: show p1,q1\\<in>A implies False via
+                 arcs\\_form\\_simple\\_closed\\_curve + retract + \\<pi>\\_1 nontrivial.\<close>
             qed
           qed
         qed
