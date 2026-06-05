@@ -6201,8 +6201,66 @@ proof -
      This is the fundamental tree property, needing the leaf existence chain.\<close>
   have htree_euler: "card (top1_graph_vertex_set Tw (subspace_topology X TX Tw) ?tree_arcs)
       = card ?tree_arcs + 1"
-    sorry \<comment> \<open>Tree Euler: finite tree with arcs ?tree\\_arcs \\<Rightarrow> card V = card E + 1.
-       This is the remaining deep sorry. Needs leaf existence from acyclicity.\<close>
+  proof -
+    \<comment> \<open>Apply tree\\_euler\\_number\\_one to Tw with tree arcs.
+       Conditions: tree, arcs, cover, intersection, finite, nonempty, coherent.\<close>
+    have hta_arcs: "\<forall>A\<in>?tree_arcs. A \<subseteq> Tw \<and> top1_is_arc_on A (subspace_topology Tw (subspace_topology X TX Tw) A)"
+    proof (intro ballI conjI)
+      fix A assume "A \<in> ?tree_arcs"
+      hence "A \<subseteq> Tw" "A \<in> \<A>w" by (by100 blast)+
+      show "A \<subseteq> Tw" using \<open>A \<subseteq> Tw\<close> .
+      have "top1_is_arc_on A (subspace_topology X TX A)" using h\<A>w \<open>A \<in> \<A>w\<close> by (by100 blast)
+      moreover have "subspace_topology Tw (subspace_topology X TX Tw) A = subspace_topology X TX A"
+        by (rule subspace_topology_trans[OF \<open>A \<subseteq> Tw\<close>])
+      ultimately show "top1_is_arc_on A (subspace_topology Tw (subspace_topology X TX Tw) A)" by simp
+    qed
+    have hta_inter: "\<forall>A\<in>?tree_arcs. \<forall>B\<in>?tree_arcs. A \<noteq> B \<longrightarrow>
+         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Tw (subspace_topology X TX Tw) A)
+       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Tw (subspace_topology X TX Tw) B)
+       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+    proof (intro ballI impI)
+      fix A B assume "A \<in> ?tree_arcs" "B \<in> ?tree_arcs" "A \<noteq> B"
+      have "A \<in> \<A>w" "B \<in> \<A>w" using \<open>A \<in> ?tree_arcs\<close> \<open>B \<in> ?tree_arcs\<close> by (by100 blast)+
+      have "A \<subseteq> Tw" "B \<subseteq> Tw" using \<open>A \<in> ?tree_arcs\<close> \<open>B \<in> ?tree_arcs\<close> by (by100 blast)+
+      from h\<A>w_inter[rule_format, OF \<open>A \<in> \<A>w\<close> \<open>B \<in> \<A>w\<close> \<open>A \<noteq> B\<close>]
+      have "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" .
+      moreover have "subspace_topology Tw (subspace_topology X TX Tw) A = subspace_topology X TX A"
+        by (rule subspace_topology_trans[OF \<open>A \<subseteq> Tw\<close>])
+      moreover have "subspace_topology Tw (subspace_topology X TX Tw) B = subspace_topology X TX B"
+        by (rule subspace_topology_trans[OF \<open>B \<subseteq> Tw\<close>])
+      ultimately show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Tw (subspace_topology X TX Tw) A)
+          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Tw (subspace_topology X TX Tw) B)
+          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" by simp
+    qed
+    have hta_ne: "?tree_arcs \<noteq> {}"
+    proof -
+      have "x0 \<in> Tw" using hTw_x0 .
+      have "x0 \<in> X" using hx0 .
+      have "x0 \<in> \<Union>\<A>w" using h\<A>w_cover \<open>x0 \<in> X\<close> by simp
+      then obtain A0 where "A0 \<in> \<A>w" "x0 \<in> A0" by (by100 blast)
+      from hTw_subgraph[rule_format, OF \<open>A0 \<in> \<A>w\<close>]
+      have "A0 \<subseteq> Tw \<or> A0 \<inter> Tw \<subseteq> top1_arc_endpoints_on A0 (subspace_topology X TX A0)" .
+      thus ?thesis
+      proof
+        assume "A0 \<subseteq> Tw" thus ?thesis using \<open>A0 \<in> \<A>w\<close> by (by100 blast)
+      next
+        assume "A0 \<inter> Tw \<subseteq> top1_arc_endpoints_on A0 (subspace_topology X TX A0)"
+        have "x0 \<in> A0 \<inter> Tw" using \<open>x0 \<in> A0\<close> \<open>x0 \<in> Tw\<close> by (by100 blast)
+        \<comment> \<open>x0 is in the arc's endpoints but also in Tw. Arc has nonempty tree part.\<close>
+        \<comment> \<open>Need: Tw = \\<Union>(tree\\_arcs), and x0 \\<in> Tw implies x0 \\<in> some tree arc.\<close>
+        have "x0 \<in> \<Union>?tree_arcs" using hTw_coverage \<open>x0 \<in> Tw\<close> by simp
+        thus ?thesis by (by100 blast)
+      qed
+    qed
+    have hta_coh: "\<forall>C. C \<subseteq> Tw \<longrightarrow> (closedin_on Tw (subspace_topology X TX Tw) C \<longleftrightarrow>
+        (\<forall>A\<in>?tree_arcs. closedin_on A (subspace_topology Tw (subspace_topology X TX Tw) A) (A \<inter> C)))"
+      sorry \<comment> \<open>Coherent topology restriction: from h\\<A>w\\_coh for X restricted to Tw.\<close>
+    have hta_cover: "\<Union>?tree_arcs = Tw" using hTw_coverage by simp
+    from tree_euler_number_one[OF hTw_tree hta_arcs hta_cover hta_inter htree_arcs_fin hta_ne hta_coh]
+    show ?thesis .
+  qed
   \<comment> \<open>Vertex equality: V\\_X = V\\_Tw (all endpoints of non-tree arcs are in Tw).\<close>
   have hV_eq: "top1_graph_vertex_set X TX \<A>w = top1_graph_vertex_set Tw (subspace_topology X TX Tw) ?tree_arcs"
   proof -
