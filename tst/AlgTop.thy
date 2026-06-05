@@ -1514,9 +1514,11 @@ proof -
             thus "x \<in> A \<inter> {x \<in> T. r_ret x \<notin> U}" using \<open>A \<subseteq> T\<close> by (by100 blast)
           qed
           \<comment> \<open>Preimage of closed under continuous is closed.\<close>
-          show ?thesis
-            sorry \<comment> \<open>Standard: hr\\_cont\\_A continuous, T\\\\U closed \\<Rightarrow>
-               {x \\<in> A | r\\_ret x \\<in> T\\\\U} closed in sub(T,TT,A). By Theorem 17.2.\<close>
+          have hTA_top: "is_topology_on A (subspace_topology T TT A)"
+            by (rule subspace_topology_is_topology_on[OF hTT \<open>A \<subseteq> T\<close>])
+          from continuous_preimage_closedin[OF hTA_top hTT hr_cont_A hTU_closed]
+          have "closedin_on A (subspace_topology T TT A) {x \<in> A. r_ret x \<in> T - U}" .
+          thus ?thesis using hset_eq by simp
         qed
       qed
       from hcoherent[rule_format, OF hpre_sub] this
