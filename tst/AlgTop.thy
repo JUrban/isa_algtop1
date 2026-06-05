@@ -5513,7 +5513,71 @@ proof -
          Homeomorphisms map boundary to boundary. Arc endpoints = boundary.\<close>
       have hB_ep: "p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
           = top1_arc_endpoints_on A0 (subspace_topology X TX A0)"
-        sorry \<comment> \<open>Endpoint preservation via homeomorphism B \\<cong> A0.\<close>
+      proof -
+        \<comment> \<open>p|B is a homeomorphism B \\<rightarrow> A0 (continuous bijection, compact \\<rightarrow> Hausdorff).\<close>
+        have hB_sub_E: "B \<subseteq> E" using hB_sub0 by (by100 blast)
+        have hp_homeo_B: "top1_homeomorphism_on B (subspace_topology E TE B)
+            A0 (subspace_topology X TX A0) p"
+          sorry \<comment> \<open>p continuous on B, bij (inj + surj), B compact (homeo to A0 via [0,1]),
+             A0 Hausdorff. By Theorem 26.6.\<close>
+        \<comment> \<open>Get homeomorphism h\\_A0: [0,1] \\<rightarrow> A0.\<close>
+        obtain h_A0 where hh_A0: "top1_homeomorphism_on top1_unit_interval
+            top1_unit_interval_topology A0 (subspace_topology X TX A0) h_A0"
+          using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+        \<comment> \<open>Compose: (p|B)^{-1} \\<circ> h\\_A0: [0,1] \\<rightarrow> B is a homeomorphism.\<close>
+        \<comment> \<open>Then B is an arc.\<close>
+        \<comment> \<open>endpoints\\_A0 = {h\\_A0(0), h\\_A0(1)}. endpoints\\_B = {g(0), g(1)} where g = inv \\<circ> h\\_A0.\<close>
+        \<comment> \<open>p(g(0)) = p(inv(h\\_A0(0))) = h\\_A0(0). Similarly p(g(1)) = h\\_A0(1).\<close>
+        \<comment> \<open>So p ` endpoints\\_B = endpoints\\_A0.\<close>
+        have hep_A0: "top1_arc_endpoints_on A0 (subspace_topology X TX A0) = {h_A0 0, h_A0 1}"
+          by (rule arc_endpoints_are_boundary[OF hTX_strict hX_haus hA0_sub hA0_arc hh_A0])
+        \<comment> \<open>The inverse p|B^{-1}: A0 \\<rightarrow> B is well-defined.\<close>
+        let ?invp = "inv_into B p"
+        have hinvp_range: "\<forall>a\<in>A0. ?invp a \<in> B"
+        proof (intro ballI)
+          fix a assume "a \<in> A0"
+          hence "a \<in> p ` B" using hpB_eq by simp
+          from inv_into_into[OF this] show "?invp a \<in> B" .
+        qed
+        \<comment> \<open>g = inv\\_p \\<circ> h\\_A0: [0,1] \\<rightarrow> B is a homeomorphism.\<close>
+        let ?g = "?invp \<circ> h_A0"
+        have hg_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
+            B (subspace_topology E TE B) ?g"
+          sorry \<comment> \<open>Composition of homeomorphisms: h\\_A0: I \\<rightarrow> A0, inv\\_p: A0 \\<rightarrow> B.\<close>
+        \<comment> \<open>B is an arc.\<close>
+        have hB_strict: "is_topology_on_strict B (subspace_topology E TE B)"
+          by (rule subspace_topology_is_strict[OF hstrict_E hB_sub_E])
+        have hB_arc: "top1_is_arc_on B (subspace_topology E TE B)"
+          unfolding top1_is_arc_on_def using hB_strict hg_homeo by (by100 blast)
+        \<comment> \<open>endpoints\\_B = {g(0), g(1)} = {inv\\_p(h\\_A0(0)), inv\\_p(h\\_A0(1))}.\<close>
+        have hE_strict: "is_topology_on_strict E TE" using hstrict_E .
+        have hE_haus: "is_hausdorff_on E TE"
+        proof -
+          have "top1_is_graph_on E TE"
+            by (rule Theorem_83_4_covering_of_graph_is_graph[OF hgraph_X hcov hstrict_E])
+          thus ?thesis unfolding top1_is_graph_on_def by (by100 blast)
+        qed
+        have hep_B: "top1_arc_endpoints_on B (subspace_topology E TE B) = {?g 0, ?g 1}"
+          by (rule arc_endpoints_are_boundary[OF hE_strict hE_haus hB_sub_E hB_arc hg_homeo])
+        \<comment> \<open>p(g(0)) = p(inv\\_p(h\\_A0(0))) = h\\_A0(0). Similarly for 1.\<close>
+        have h_bij_A0: "bij_betw h_A0 top1_unit_interval A0"
+          using hh_A0 unfolding top1_homeomorphism_on_def by (by100 blast)
+        have h0_I: "(0::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 auto)
+        have h1_I: "(1::real) \<in> top1_unit_interval" unfolding top1_unit_interval_def by (by100 auto)
+        have h_A0_0: "h_A0 0 \<in> A0"
+          using h_bij_A0 h0_I unfolding bij_betw_def by (by100 blast)
+        have h_A0_1: "h_A0 1 \<in> A0"
+          using h_bij_A0 h1_I unfolding bij_betw_def by (by100 blast)
+        have "h_A0 0 \<in> p ` B" using h_A0_0 hpB_eq by simp
+        have "h_A0 1 \<in> p ` B" using h_A0_1 hpB_eq by simp
+        \<comment> \<open>f(inv\\_into A f x) = x when x \\<in> f ` A.\<close>
+        have "p (?g 0) = h_A0 0"
+          using f_inv_into_f[OF \<open>h_A0 0 \<in> p ` B\<close>] by (by100 simp)
+        have "p (?g 1) = h_A0 1"
+          using f_inv_into_f[OF \<open>h_A0 1 \<in> p ` B\<close>] by (by100 simp)
+        show ?thesis
+          using hep_A0 hep_B \<open>p (?g 0) = h_A0 0\<close> \<open>p (?g 1) = h_A0 1\<close> by (by100 auto)
+      qed
       have hconj: "B \<subseteq> {e \<in> E. p e \<in> A0} \<and> p ` B = A0 \<and> inj_on p B
           \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
             = top1_arc_endpoints_on A0 (subspace_topology X TX A0)"
