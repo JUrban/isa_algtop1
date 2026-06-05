@@ -5556,9 +5556,10 @@ proof -
         using conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF hbig_E]]]] .
       \<comment> \<open>Need: \\<A>\\_L satisfies the graph decomposition conditions.\<close>
       have h\<A>L_arcs: "\<forall>A\<in>?\<A>_L. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
-        sorry \<comment> \<open>From covering interface: each lifted arc is an arc in E.\<close>
+        sorry \<comment> \<open>Each lifted arc B: B \\<subseteq> E from Clause 1 (B \\<subseteq> preimage(A) \\<subseteq> E).
+           Arc from Theorem\\_83\\_4 internal proof (homeomorphic to base arc).\<close>
       have h\<A>L_cover: "\<Union>?\<A>_L = E"
-        sorry \<comment> \<open>From covering interface Clause 2: lifted arcs cover E.\<close>
+        sorry \<comment> \<open>From covering Clause 2 + B \\<subseteq> E. Provable from h\\_lifted.\<close>
       have h\<A>L_inter: "\<forall>A\<in>?\<A>_L. \<forall>B\<in>?\<A>_L. A \<noteq> B \<longrightarrow>
            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
@@ -7618,4 +7619,4 @@ qed
 
 
 end
-       
+         
