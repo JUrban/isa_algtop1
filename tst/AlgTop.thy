@@ -1500,6 +1500,12 @@ proof -
           have "A \<inter> {x \<in> T. r_ret x \<notin> U} \<subseteq> A" by (by100 blast)
           \<comment> \<open>For now, all external arcs: r\\_ret restricted to A takes values in {p1,q1,h1(...)}.
              The preimage of the complement is a union of closed sets.\<close>
+          \<comment> \<open>For external arcs, r\\_ret on A \\ (A1\\<union>A2) is constant (p1 or q1).
+             Points in A \\<inter> (A1\\<union>A2) \\<subseteq> {p1,q1} also map to themselves = p1 or q1.
+             So r\\_ret restricted to A takes values only in {p1, q1, h1(...)}.
+             The preimage A \\<inter> {x | r\\_ret x \\<notin> U} is a union of {x \\<in> A | r\\_ret x = c \\<and> c \\<notin> U}
+             for c \\<in> {p1,q1,...}. Each piece is either empty or A (for constant) or closed
+             (for homeomorphism via inverse image). Overall: closed in A.\<close>
           show ?thesis sorry
         qed
       qed
