@@ -5319,7 +5319,213 @@ proof -
     show "\<forall>B\<in>?\<A>_L. \<exists>A\<in>\<A>w. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B
         \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
           = top1_arc_endpoints_on A (subspace_topology X TX A)"
-      sorry
+    proof (intro ballI)
+      fix B assume "B \<in> ?\<A>_L"
+      then obtain A0 where hA0: "A0 \<in> \<A>w"
+          and hB_comp0: "top1_max_conn_comp {e \<in> E. p e \<in> A0}
+              (subspace_topology E TE {e \<in> E. p e \<in> A0}) B"
+        by (by100 blast)
+      have hB_sub0: "B \<subseteq> {e \<in> E. p e \<in> A0}" using max_conn_comp_sub[OF hB_comp0] .
+      have hpB_eq: "p ` B = A0" by (rule h_comp_surj[OF hA0 hB_comp0])
+      \<comment> \<open>Injectivity: Theorem 54.3 + A0 simply connected.\<close>
+      \<comment> \<open>Setup for injectivity proof (following AlgTopCached5 Theorem\\_83\\_4 lines 994-1084).\<close>
+      let ?pre0 = "{e \<in> E. p e \<in> A0}"
+      have hpre0_sub: "?pre0 \<subseteq> E" by (by100 blast)
+      have hpre0_top: "is_topology_on ?pre0 (subspace_topology E TE ?pre0)"
+        by (rule subspace_topology_is_topology_on[OF hTE hpre0_sub])
+      have hA0_sub: "A0 \<subseteq> X" using h\<A>w hA0 by (by100 blast)
+      have hA0_arc: "top1_is_arc_on A0 (subspace_topology X TX A0)" using h\<A>w hA0 by (by100 blast)
+      have hTA0: "is_topology_on A0 (subspace_topology X TX A0)"
+        by (rule subspace_topology_is_topology_on[OF hTX hA0_sub])
+      have hcov_A0: "top1_covering_map_on ?pre0 (subspace_topology E TE ?pre0)
+          A0 (subspace_topology X TX A0) p"
+        using h_cov_restrict hA0 by (by100 blast)
+      \<comment> \<open>B is path-connected (from covering\\_component\\_over\\_arc\\_path\\_connected).\<close>
+      have hB_pc: "top1_path_connected_on B (subspace_topology E TE B)"
+      proof -
+        from covering_component_over_arc_path_connected[OF hcov_A0 hA0_arc hpre0_top hTA0 hB_comp0]
+        have "top1_path_connected_on B (subspace_topology ?pre0 (subspace_topology E TE ?pre0) B)" .
+        moreover have "subspace_topology ?pre0 (subspace_topology E TE ?pre0) B = subspace_topology E TE B"
+          by (rule subspace_topology_trans[OF hB_sub0])
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>A0 is simply connected (arc is SC).\<close>
+      have hA0_sc: "top1_simply_connected_on A0 (subspace_topology X TX A0)"
+      proof -
+        \<comment> \<open>Get homeomorphism h\\_arc: [0,1] \\<rightarrow> A0.\<close>
+        obtain h_arc where hh_arc: "top1_homeomorphism_on top1_unit_interval
+            top1_unit_interval_topology A0 (subspace_topology X TX A0) h_arc"
+          using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+        \<comment> \<open>Get endpoint.\<close>
+        have hep_ne: "top1_arc_endpoints_on A0 (subspace_topology X TX A0) \<noteq> {}"
+        proof -
+          from arc_endpoints_are_boundary[OF hTX_strict hX_haus hA0_sub hA0_arc hh_arc]
+          show ?thesis by (by100 blast)
+        qed
+        then obtain ep where hep: "ep \<in> top1_arc_endpoints_on A0 (subspace_topology X TX A0)"
+          by (by100 blast)
+        \<comment> \<open>DR to endpoint.\<close>
+        have hA0_dr: "top1_deformation_retract_of_on A0 (subspace_topology X TX A0) {ep}"
+          by (rule arc_deformation_retract_to_endpoint[OF hA0_arc hep])
+        \<comment> \<open>Arc path-connected: [0,1] is PC, homeomorphism preserves PC.\<close>
+        have hA0_pc: "top1_path_connected_on A0 (subspace_topology X TX A0)"
+        proof -
+          have hI_pc: "top1_path_connected_on top1_unit_interval top1_unit_interval_topology"
+            unfolding top1_path_connected_on_def
+          proof (intro conjI ballI)
+            show "is_topology_on top1_unit_interval top1_unit_interval_topology"
+              by (rule top1_unit_interval_topology_is_topology_on)
+          next
+            fix x y assume hx: "x \<in> top1_unit_interval" and hy: "y \<in> top1_unit_interval"
+            let ?f = "\<lambda>t::real. (1 - t) * x + t * y"
+            have hf_range: "\<forall>t\<in>top1_unit_interval. ?f t \<in> top1_unit_interval"
+            proof (intro ballI)
+              fix t assume "t \<in> top1_unit_interval"
+              hence "0 \<le> t" "t \<le> 1" using hx hy
+                unfolding top1_unit_interval_def by (by100 auto)+
+              have "0 \<le> x" "x \<le> 1" "0 \<le> y" "y \<le> 1"
+                using hx hy unfolding top1_unit_interval_def by (by100 auto)+
+              have "0 \<le> (1-t)*x + t*y"
+                using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close> \<open>0 \<le> x\<close> \<open>0 \<le> y\<close>
+                by (intro add_nonneg_nonneg mult_nonneg_nonneg) linarith+
+              moreover have "(1-t)*x + t*y \<le> 1"
+              proof -
+                have "(1-t)*x \<le> (1-t)*1" using \<open>x \<le> 1\<close> \<open>t \<le> 1\<close>
+                  by (intro mult_left_mono) linarith+
+                moreover have "t*y \<le> t*1" using \<open>y \<le> 1\<close> \<open>0 \<le> t\<close>
+                  by (intro mult_left_mono) linarith+
+                moreover have "(1-t)*1 + t*1 = (1::real)" by (by100 simp)
+                ultimately show ?thesis by linarith
+              qed
+              ultimately show "?f t \<in> top1_unit_interval"
+                unfolding top1_unit_interval_def by (by100 auto)
+            qed
+            have hf_cont: "continuous_on top1_unit_interval ?f"
+              by (intro continuous_intros)
+            from top1_continuous_map_on_subspace_open_sets_on[OF _ hf_cont] hf_range
+            have "top1_continuous_map_on top1_unit_interval
+                (subspace_topology UNIV top1_open_sets top1_unit_interval)
+                top1_unit_interval
+                (subspace_topology UNIV top1_open_sets top1_unit_interval) ?f"
+              by (by100 blast)
+            hence hf_top: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+                top1_unit_interval top1_unit_interval_topology ?f"
+              unfolding top1_unit_interval_topology_def by (by100 simp)
+            have "?f 0 = x" by (by100 simp)
+            moreover have "?f 1 = y" by (by100 simp)
+            ultimately show "\<exists>f. top1_is_path_on top1_unit_interval top1_unit_interval_topology x y f"
+              unfolding top1_is_path_on_def using hf_top by (by100 blast)
+          qed
+          from homeomorphism_preserves_path_connected[OF hh_arc hI_pc]
+          show ?thesis .
+        qed
+        have "ep \<in> A0" using hep unfolding top1_arc_endpoints_on_def by (by100 blast)
+        from deformation_retract_to_singleton_imp_simply_connected[OF hTA0 \<open>ep \<in> A0\<close> hA0_pc hA0_dr]
+        show ?thesis .
+      qed
+      have hB_inj: "inj_on p B"
+      proof (intro inj_onI)
+        fix e1 e2 assume he1: "e1 \<in> B" and he2: "e2 \<in> B" and hpeq12: "p e1 = p e2"
+        let ?a0 = "p e1"
+        \<comment> \<open>Get path \\<gamma> from e1 to e2 in B (path-connected).\<close>
+        from hB_pc[unfolded top1_path_connected_on_def]
+        have "\<exists>f. top1_is_path_on B (subspace_topology E TE B) e1 e2 f"
+          using he1 he2 by (by100 blast)
+        then obtain \<gamma> where h\<gamma>: "top1_is_path_on B (subspace_topology E TE B) e1 e2 \<gamma>"
+          by (by100 blast)
+        \<comment> \<open>Lift \\<gamma> to preimage(A0).\<close>
+        have h\<gamma>_pre: "top1_is_path_on ?pre0 (subspace_topology E TE ?pre0) e1 e2 \<gamma>"
+        proof -
+          have h\<gamma>_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              B (subspace_topology E TE B) \<gamma>"
+            using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+          from top1_continuous_map_on_codomain_enlarge[OF h\<gamma>_cont hB_sub0 hpre0_sub]
+          have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              ?pre0 (subspace_topology E TE ?pre0) \<gamma>" .
+          moreover have "\<gamma> 0 = e1" "\<gamma> 1 = e2"
+            using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)+
+          ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+        qed
+        \<comment> \<open>p \\<circ> \\<gamma> is a loop at ?a0 in A0.\<close>
+        have hp_cont_pre: "top1_continuous_map_on ?pre0 (subspace_topology E TE ?pre0)
+            A0 (subspace_topology X TX A0) p"
+        proof -
+          have hp_cont_E: "top1_continuous_map_on E TE X TX p"
+            using hcov unfolding top1_covering_map_on_def by (by100 blast)
+          have "top1_continuous_map_on ?pre0 (subspace_topology E TE ?pre0) X TX p"
+            by (rule top1_continuous_map_on_subspace_restrict[OF hp_cont_E hpre0_sub])
+          have hp_range: "\<forall>e \<in> ?pre0. p e \<in> A0" by (by100 blast)
+          from continuous_map_restrict_codomain[OF
+              \<open>top1_continuous_map_on ?pre0 (subspace_topology E TE ?pre0) X TX p\<close>
+              hp_range hA0_sub]
+          show ?thesis .
+        qed
+        have h_pg: "top1_is_path_on A0 (subspace_topology X TX A0) ?a0 ?a0 (p \<circ> \<gamma>)"
+        proof -
+          have h\<gamma>_cont2: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              ?pre0 (subspace_topology E TE ?pre0) \<gamma>"
+            using h\<gamma>_pre unfolding top1_is_path_on_def by (by100 blast)
+          from top1_continuous_map_on_comp[OF h\<gamma>_cont2 hp_cont_pre]
+          have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
+              A0 (subspace_topology X TX A0) (p \<circ> \<gamma>)" .
+          moreover have "(p \<circ> \<gamma>) 0 = ?a0"
+            using h\<gamma> unfolding top1_is_path_on_def by (by100 simp)
+          moreover have "(p \<circ> \<gamma>) 1 = ?a0"
+            using h\<gamma> hpeq12 unfolding top1_is_path_on_def by (by100 simp)
+          ultimately show ?thesis unfolding top1_is_path_on_def by (by100 blast)
+        qed
+        \<comment> \<open>Constant path at ?a0 in A0.\<close>
+        have h_const: "top1_is_path_on A0 (subspace_topology X TX A0) ?a0 ?a0 (top1_constant_path ?a0)"
+        proof -
+          have "?a0 \<in> A0" using he1 hB_sub0 by (by100 blast)
+          from top1_constant_path_is_path[OF hTA0 this] show ?thesis .
+        qed
+        \<comment> \<open>A0 SC \\<Rightarrow> loop p\\<circ>\\<gamma> is null-homotopic.\<close>
+        have h_loop_pg: "top1_is_loop_on A0 (subspace_topology X TX A0) ?a0 (p \<circ> \<gamma>)"
+          unfolding top1_is_loop_on_def using h_pg by (by100 blast)
+        have h_htpy: "top1_path_homotopic_on A0 (subspace_topology X TX A0) ?a0 ?a0
+            (p \<circ> \<gamma>) (top1_constant_path ?a0)"
+        proof -
+          have "?a0 \<in> A0" using he1 hB_sub0 by (by100 blast)
+          from hA0_sc[unfolded top1_simply_connected_on_def, THEN conjunct2, rule_format,
+              OF \<open>?a0 \<in> A0\<close> h_loop_pg]
+          show ?thesis .
+        qed
+        \<comment> \<open>\\<gamma> is a lift of p\\<circ>\\<gamma>. constant\\_e1 is a lift of constant\\_?a0.\<close>
+        have h\<gamma>_lift: "\<forall>s\<in>I_set. p (\<gamma> s) = (p \<circ> \<gamma>) s" by (by100 simp)
+        have hconst_lift: "top1_is_path_on ?pre0 (subspace_topology E TE ?pre0) e1 e1
+            (top1_constant_path e1)"
+        proof -
+          have "e1 \<in> ?pre0" using he1 hB_sub0 by (by100 blast)
+          from top1_constant_path_is_path[OF hpre0_top this] show ?thesis .
+        qed
+        have hconst_proj: "\<forall>s\<in>I_set. p (top1_constant_path e1 s) = (top1_constant_path ?a0) s"
+          unfolding top1_constant_path_def by (by100 simp)
+        \<comment> \<open>Apply Theorem 54.3: homotopic paths lift to paths with same endpoint.\<close>
+        have he1_pre: "e1 \<in> ?pre0" using he1 hB_sub0 by (by100 blast)
+        have hpe1_eq: "p e1 = ?a0" by (by100 simp)
+        from Theorem_54_3[OF hcov_A0 hpre0_top hTA0 he1_pre hpe1_eq h_pg h_const h_htpy
+            h\<gamma>_pre h\<gamma>_lift hconst_lift hconst_proj]
+        have "e2 = e1" by (by100 blast)
+        thus "e1 = e2" by (by100 simp)
+      qed
+      \<comment> \<open>Endpoint preservation: p is a homeomorphism B \\<rightarrow> A0 (from inj + surj + compact/Hausdorff).
+         Homeomorphisms map boundary to boundary. Arc endpoints = boundary.\<close>
+      have hB_ep: "p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+          = top1_arc_endpoints_on A0 (subspace_topology X TX A0)"
+        sorry \<comment> \<open>Endpoint preservation via homeomorphism B \\<cong> A0.\<close>
+      have hconj: "B \<subseteq> {e \<in> E. p e \<in> A0} \<and> p ` B = A0 \<and> inj_on p B
+          \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+            = top1_arc_endpoints_on A0 (subspace_topology X TX A0)"
+        using hB_sub0 hpB_eq hB_inj hB_ep by (by100 blast)
+      show "\<exists>A\<in>\<A>w. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B
+          \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+            = top1_arc_endpoints_on A (subspace_topology X TX A)"
+        apply (rule bexI[of _ A0])
+         apply (rule hconj)
+        apply (rule hA0)
+        done
+    qed
   next
     \<comment> \<open>Clause 2: every fiber point over a base arc is in some lift.\<close>
     show "\<forall>A\<in>\<A>w. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>?\<A>_L. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A"
