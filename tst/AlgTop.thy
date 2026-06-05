@@ -1426,7 +1426,47 @@ proof -
      By the coherent topology, arc-local continuity implies global continuity.\<close>
   have hr_cont:
     "top1_continuous_map_on T TT (A1 \<union> A2) (subspace_topology T TT (A1 \<union> A2)) r_ret"
-    sorry
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI)
+    fix x assume "x \<in> T" thus "r_ret x \<in> A1 \<union> A2" using hr_maps by (by100 blast)
+  next
+    fix V assume "V \<in> subspace_topology T TT (A1 \<union> A2)"
+    then obtain U where "U \<in> TT" "V = U \<inter> (A1 \<union> A2)"
+      unfolding subspace_topology_def by (by100 blast)
+    \<comment> \<open>{x \\<in> T. r\\_ret x \\<in> V} = {x \\<in> T. r\\_ret x \\<in> U} (since r\\_ret maps into A1\\<union>A2).\<close>
+    have hpre_eq: "{x \<in> T. r_ret x \<in> V} = {x \<in> T. r_ret x \<in> U}"
+    proof (rule set_eqI, rule iffI)
+      fix x assume "x \<in> {x \<in> T. r_ret x \<in> V}"
+      thus "x \<in> {x \<in> T. r_ret x \<in> U}" using \<open>V = U \<inter> (A1 \<union> A2)\<close> by (by100 blast)
+    next
+      fix x assume "x \<in> {x \<in> T. r_ret x \<in> U}"
+      hence "x \<in> T" "r_ret x \<in> U" by (by100 blast)+
+      have "r_ret x \<in> A1 \<union> A2" using hr_maps \<open>x \<in> T\<close> by (by100 blast)
+      thus "x \<in> {x \<in> T. r_ret x \<in> V}" using \<open>r_ret x \<in> U\<close> \<open>r_ret x \<in> A1 \<union> A2\<close>
+          \<open>x \<in> T\<close> \<open>V = U \<inter> (A1 \<union> A2)\<close> by (by100 blast)
+    qed
+    \<comment> \<open>Show {x \\<in> T. r\\_ret x \\<in> U} \\<in> TT via complement: T \\ preimage is closed.\<close>
+    have "T - {x \<in> T. r_ret x \<in> U} = {x \<in> T. r_ret x \<notin> U}" by (by100 blast)
+    have hpre_sub: "{x \<in> T. r_ret x \<notin> U} \<subseteq> T" by (by100 blast)
+    \<comment> \<open>By coherent topology: closed \\<longleftrightarrow> each arc restriction is closed.\<close>
+    have "closedin_on T TT {x \<in> T. r_ret x \<notin> U}"
+    proof -
+      have "\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> {x \<in> T. r_ret x \<notin> U})"
+        sorry \<comment> \<open>For each A: A\\<inter>preimage-complement is closed in A.
+           A=A1,A2: id, so A\\<inter>{x|x\\<notin>U} = A\\\\U. Closed (complement of open).
+           A external constant: A or {}. Both closed.
+           A external homeomorphism: preimage of closed under homeomorphism. Closed.\<close>
+      from hcoherent[rule_format, OF hpre_sub] this
+      show ?thesis by (by100 blast)
+    qed
+    have "U \<subseteq> T" using \<open>U \<in> TT\<close> hstrict unfolding is_topology_on_strict_def by (by100 blast)
+    hence "T - {x \<in> T. r_ret x \<notin> U} = {x \<in> T. r_ret x \<in> U}" by (by100 blast)
+    have "T - {x \<in> T. r_ret x \<notin> U} \<in> TT"
+      using \<open>closedin_on T TT {x \<in> T. r_ret x \<notin> U}\<close> unfolding closedin_on_def by (by100 blast)
+    hence "{x \<in> T. r_ret x \<in> U} \<in> TT"
+      using \<open>T - {x \<in> T. r_ret x \<notin> U} = {x \<in> T. r_ret x \<in> U}\<close> by simp
+    thus "{x \<in> T. r_ret x \<in> V} \<in> TT" using hpre_eq by simp
+  qed
   show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
     using hS_sub hr_cont hr_fixes by (by100 blast)
 qed
