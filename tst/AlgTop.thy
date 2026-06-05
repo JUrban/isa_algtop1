@@ -2941,8 +2941,26 @@ proof -
       have hSCC: "top1_simple_closed_curve_on T' TT' (A1 \<union> A2)" .
       \<comment> \<open>T' simply connected + retract of SCC \\<Rightarrow> \\<pi>\\_1(SCC) = Z embeds into \\<pi>\\_1(T') = 0.\<close>
       \<comment> \<open>But Z \\<ne> 0 \\<Rightarrow> contradiction.\<close>
+      \<comment> \<open>T' is simply connected. A1\\<union>A2 \\<cong> S1 is a retract of T'.
+         Retract \\<Rightarrow> \\<pi>\\_1 injection \\<Rightarrow> \\<pi>\\_1(S1) \\<hookrightarrow> \\<pi>\\_1(T') = 0.
+         But \\<pi>\\_1(S1) \\<ne> 0. Contradiction.\<close>
+      have hsc': "top1_simply_connected_on T' TT'"
+        using htree' unfolding top1_is_tree_on_def by (by100 blast)
+      \<comment> \<open>Extract S1-homeomorphism from the SCC.\<close>
+      from hSCC[unfolded top1_simple_closed_curve_on_def]
+      obtain h_s where "top1_continuous_map_on top1_S1 top1_S1_topology T' TT' h_s"
+          "inj_on h_s top1_S1" "h_s ` top1_S1 = A1 \<union> A2" by (by100 blast)
+      \<comment> \<open>Need a basepoint in A1\\<union>A2 for the \\<pi>\\_1 argument.
+         Take p1' which is in A1\\<union>A2.\<close>
+      have "p1' \<in> A1 \<union> A2"
+        using hep1' unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have "A1 \<union> A2 \<subseteq> T'" using \<open>A1 \<subseteq> T'\<close> \<open>A2 \<subseteq> T'\<close> by (by100 blast)
+      hence "p1' \<in> T'" using \<open>p1' \<in> A1 \<union> A2\<close> by (by100 blast)
+      \<comment> \<open>The full argument: any loop in A1\\<union>A2 is null-homotopic in T' (SC).
+         By Lemma 55.1 (retract injective): null-homotopic in T' \\<Rightarrow> null-homotopic in A1\\<union>A2.
+         So \\<pi>\\_1(A1\\<union>A2) = 0. But A1\\<union>A2 \\<cong> S1 has \\<pi>\\_1 = Z \\<ne> 0.\<close>
       show False
-        sorry \<comment> \<open>From hretract' + hSCC + Lemma\\_55\\_1 + \\<pi>\\_1(S1) \\<ne> 0.\<close>
+        sorry \<comment> \<open>Standard retract+SC+nontrivial argument. About 100 lines from old proof.\<close>
     qed
   qed
   \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_universal.\<close>
