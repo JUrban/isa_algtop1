@@ -1473,7 +1473,16 @@ proof -
     proof -
       \<comment> \<open>Double counting: \<Sum>v. |{A | v \<in> ep(A)}| = \<Sum>A. |ep(A)| = \<Sum>A. 2 = 2*|\<A>|.\<close>
       have "(\<Sum>v\<in>?V. ?deg v) = (\<Sum>A\<in>\<A>. card (top1_arc_endpoints_on A (subspace_topology T TT A)))"
-        sorry \<comment> \<open>Sum swap: both sides count (vertex,arc) incidence pairs.\<close>
+      proof -
+        let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
+        let ?P = "\<lambda>v A. A \<in> \<A> \<and> v \<in> ?ep A"
+        \<comment> \<open>LHS = \<Sum>v\<in>V. card{A. ?P v A} = card(Sigma V (\<lambda>v. {A. ?P v A})).\<close>
+        \<comment> \<open>RHS = \<Sum>A\<in>\<A>. card(?ep A) = card(Sigma \<A> ?ep).\<close>
+        \<comment> \<open>Both equal card{(v,A) | A \<in> \<A> \<and> v \<in> ?ep A} via bijection.\<close>
+        have "?V = (\<Union>A\<in>\<A>. ?ep A)" unfolding top1_graph_vertex_set_def by (by100 blast)
+        \<comment> \<open>Use sum.Sigma or card\_eq\_sum directly.\<close>
+        show ?thesis sorry
+      qed
       also have "\<dots> = (\<Sum>A\<in>\<A>. 2)" using hep_card by simp
       also have "\<dots> = 2 * card \<A>" by simp
       finally show ?thesis .
