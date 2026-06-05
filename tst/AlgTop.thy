@@ -3145,7 +3145,60 @@ proof -
                      Key: A2\\<union>A3 is an arc (arcs\\_concatenation\\_is\\_arc at r2).
                      Then A1 and A2\\<union>A3 share both endpoints {p1,q1} \\<Rightarrow> SCC.
                      SCC in tree \\<Rightarrow> contradiction.\<close>
-                  show ?thesis sorry \<comment> \<open>Use arcs\\_concatenation\\_is\\_arc + arcs\\_form\\_simple\\_closed\\_curve.\<close>
+                  \<comment> \<open>Step 1: A2 \\<inter> A3 = {r2}.\<close>
+                  have "A2 \<inter> A3 \<subseteq> top1_arc_endpoints_on A2 (subspace_topology T' TT' A2)"
+                    using hinter'[rule_format, OF \<open>A2 \<in> \<A>'\<close> \<open>A3 \<in> \<A>'\<close> \<open>A3 \<noteq> A2\<close>[symmetric]]
+                    by (by100 blast)
+                  have "A2 \<inter> A3 \<subseteq> top1_arc_endpoints_on A3 (subspace_topology T' TT' A3)"
+                    using hinter'[rule_format, OF \<open>A2 \<in> \<A>'\<close> \<open>A3 \<in> \<A>'\<close> \<open>A3 \<noteq> A2\<close>[symmetric]]
+                    by (by100 blast)
+                  \<comment> \<open>endpoints(A2) = {p1,r2}, endpoints(A3) = {r2,q1}.\<close>
+                  have hA2_ep_pr: "top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {p1, r2}"
+                  proof -
+                    have "p1 \<in> {a2, b2}" using \<open>p1 \<in> top1_arc_endpoints_on A2 _\<close>
+                        \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+                    have "r2 \<in> {a2, b2}" using hr2_ep
+                        \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+                    thus ?thesis using \<open>p1 \<in> {a2, b2}\<close> \<open>r2 \<noteq> p1\<close> \<open>a2 \<noteq> b2\<close>
+                        \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+                  qed
+                  have hA3_ep_rq: "top1_arc_endpoints_on A3 (subspace_topology T' TT' A3) = {r2, q1}"
+                  proof -
+                    have "r2 \<in> {a3, b3}" using \<open>r2 \<in> top1_arc_endpoints_on A3 _\<close>
+                        \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> by (by100 blast)
+                    have "q1 \<in> {a3, b3}" using hs3_ep \<open>s3 = q1\<close>
+                        \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> by (by100 blast)
+                    thus ?thesis using \<open>r2 \<in> {a3, b3}\<close> \<open>s3 \<noteq> r2\<close> \<open>s3 = q1\<close> \<open>a3 \<noteq> b3\<close>
+                        \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> by (by100 blast)
+                  qed
+                  have "A2 \<inter> A3 \<subseteq> {p1, r2} \<inter> {r2, q1}"
+                    using \<open>A2 \<inter> A3 \<subseteq> top1_arc_endpoints_on A2 _\<close> hA2_ep_pr
+                        \<open>A2 \<inter> A3 \<subseteq> top1_arc_endpoints_on A3 _\<close> hA3_ep_rq by (by100 blast)
+                  have "{p1, r2} \<inter> {r2, q1} = {r2}"
+                    using \<open>p1 \<noteq> q1\<close> \<open>r2 \<noteq> p1\<close> \<open>s3 \<noteq> r2\<close> \<open>s3 = q1\<close> by (by100 blast)
+                  have "A2 \<inter> A3 \<subseteq> {r2}" using \<open>A2 \<inter> A3 \<subseteq> {p1, r2} \<inter> {r2, q1}\<close>
+                      \<open>{p1, r2} \<inter> {r2, q1} = {r2}\<close> by (by100 blast)
+                  have "r2 \<in> A2" using hr2_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+                  have "r2 \<in> A2 \<inter> A3" using \<open>r2 \<in> A2\<close> \<open>r2 \<in> A3\<close> by (by100 blast)
+                  have hA23_inter: "A2 \<inter> A3 = {r2}" using \<open>A2 \<inter> A3 \<subseteq> {r2}\<close> \<open>r2 \<in> A2 \<inter> A3\<close>
+                    by (by100 blast)
+                  \<comment> \<open>Step 2: A2\\<union>A3 is an arc by arcs\\_concatenation\\_is\\_arc.\<close>
+                  have hA2_arc: "top1_is_arc_on A2 (subspace_topology T' TT' A2)"
+                    using h\<A>' \<open>A2 \<in> \<A>'\<close> by (by100 blast)
+                  have "A2 \<subseteq> T'" using h\<A>' \<open>A2 \<in> \<A>'\<close> by (by100 blast)
+                  have hA3_arc: "top1_is_arc_on A3 (subspace_topology T' TT' A3)"
+                    using h\<A>' \<open>A3 \<in> \<A>'\<close> by (by100 blast)
+                  have "A3 \<subseteq> T'" using h\<A>' \<open>A3 \<in> \<A>'\<close> by (by100 blast)
+                  have hr2_ep_A2: "r2 \<in> top1_arc_endpoints_on A2 (subspace_topology T' TT' A2)"
+                    using hr2_ep .
+                  have hr2_ep_A3: "r2 \<in> top1_arc_endpoints_on A3 (subspace_topology T' TT' A3)"
+                    using \<open>r2 \<in> top1_arc_endpoints_on A3 _\<close> .
+                  have hA23_arc: "top1_is_arc_on (A2 \<union> A3) (subspace_topology T' TT' (A2 \<union> A3))"
+                    by (rule arcs_concatenation_is_arc[OF hstrict' hhaus' hA2_arc \<open>A2 \<subseteq> T'\<close>
+                        hA3_arc \<open>A3 \<subseteq> T'\<close> hA23_inter hr2_ep_A2 hr2_ep_A3])
+                  \<comment> \<open>Step 3: A1 and A2\\<union>A3 share both endpoints {p1,q1} \\<Rightarrow> SCC.\<close>
+                  \<comment> \<open>Step 4: SCC in tree \\<Rightarrow> contradiction (already proved).\<close>
+                  show ?thesis sorry \<comment> \<open>Continue with SCC argument as before.\<close>
                 qed
               next
                 case a4ne1: False
