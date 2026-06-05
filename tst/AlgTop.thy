@@ -1462,8 +1462,20 @@ lemma tree_euler_and_leaf_combined:
     \<and> (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
         \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)))"
 proof -
+  \<comment> \<open>Leaf existence by walk+pigeonhole (the only topological bridge; no Euler needed).\<close>
+  have hleaf_raw: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
+      v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
+    sorry \<comment> \<open>Walk+pigeonhole: if no leaf, all degrees \\<ge> 2. Walk through incidence graph
+       visits new vertex each step. Pigeonhole \\<Rightarrow> revisit \\<Rightarrow> cycle \\<Rightarrow> SCC in tree
+       \\<Rightarrow> contradiction with simply connected (via two\\_arc\\_union\\_is\\_retract).\<close>
+  \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_raw for the leaf.\<close>
   have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-    sorry \<comment> \<open>Euler formula for trees. Self-contained induction proof.\<close>
+    sorry \<comment> \<open>By strong induction on card \\<A>. Base: card=1 (2 endpoints).
+       Step: card\\<ge>2. Use hleaf\\_raw to find leaf. Remove leaf via
+       finite\\_tree\\_remove\\_leaf\\_is\\_tree. Apply IH for card-1.
+       Add back leaf: card V = (card-1)+1+1 = card+1.\<close>
+  \<comment> \<open>Now derive hleaf from heuler using degree\\_sum\\_leaf.\<close>
   have hleaf: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
       v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
       (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
