@@ -5344,7 +5344,37 @@ proof -
       (top1_fundamental_group_id E TE e0)
       (top1_fundamental_group_invg E TE e0) \<iota>E_raw SE_raw"
     using conjunct1[OF hbig_E] .
-  \<comment> \<open>hfree\\_E at line above gives the free group with \\<iota>E\\_raw and SE\\_raw.\<close>
+  \<comment> \<open>Extract individual conjuncts from hbig\\_E for later use.\<close>
+  have h\<A>E_arcs: "\<forall>A\<in>\<A>E_raw. A \<subseteq> E \<and> top1_is_arc_on A (subspace_topology E TE A)"
+    using hbig_E by (by5000 fast)
+  have h\<A>E_cover: "\<Union>\<A>E_raw = E"
+    using hbig_E by (by5000 fast)
+  have h\<A>E_inter: "\<forall>A\<in>\<A>E_raw. \<forall>B\<in>\<A>E_raw. A \<noteq> B \<longrightarrow>
+       A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
+     \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
+     \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+    using conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF hbig_E]]]] .
+  have h\<A>E_coh: "\<forall>C. C \<subseteq> E \<longrightarrow> (closedin_on E TE C \<longleftrightarrow>
+      (\<forall>A\<in>\<A>E_raw. closedin_on A (subspace_topology E TE A) (A \<inter> C)))"
+    using conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF hbig_E]]]]] .
+  \<comment> \<open>Extract remaining conjuncts level by level.\<close>
+  note hrest5 = conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF hbig_E]]]]]
+  have hTE_tree: "top1_is_tree_on TE_raw (subspace_topology E TE TE_raw)"
+    using conjunct1[OF hrest5] .
+  have hTE_sub: "TE_raw \<subseteq> E"
+    using conjunct1[OF conjunct2[OF hrest5]] .
+  have he0_TE: "e0 \<in> TE_raw"
+    using conjunct1[OF conjunct2[OF conjunct2[OF hrest5]]] .
+  have hTE_subgraph: "\<forall>A\<in>\<A>E_raw. A \<subseteq> TE_raw \<or>
+       A \<inter> TE_raw \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)"
+    using conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF hrest5]]]] .
+  have hTE_coverage: "TE_raw = \<Union>{A \<in> \<A>E_raw. A \<subseteq> TE_raw}"
+    using conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF hrest5]]]]] .
+  have hNTE_endpoints: "\<forall>A\<in>{A \<in> \<A>E_raw. \<not> A \<subseteq> TE_raw}.
+       \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology E TE A). e \<in> TE_raw"
+    using conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF hrest5]]]]]] .
+  have hSE_eq: "SE_raw = {A \<in> \<A>E_raw. \<not> A \<subseteq> TE_raw}"
+    using conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF hrest5]]]]]] .
   \<comment> \<open>Step 6: Euler characteristic argument.
      From graph\\_pi1\\_free\\_weak on E: card(SE) = rank(\\<pi>\\_1(E)).
      From Euler formula (heuler\\_X): card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.
@@ -7651,4 +7681,4 @@ qed
 
 
 end
-            
+                     
