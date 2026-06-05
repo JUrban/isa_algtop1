@@ -2887,13 +2887,96 @@ proof -
       have "\<exists>A1 A2 p1 q1. A1 \<in> \<A>' \<and> A2 \<in> \<A>' \<and> A1 \<noteq> A2 \<and> p1 \<noteq> q1 \<and>
           top1_arc_endpoints_on A1 (subspace_topology T' TT' A1) = {p1, q1} \<and>
           top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {p1, q1}"
-        sorry \<comment> \<open>Walk+pigeonhole on the incidence graph. Key steps:
-           Pick A1 (from hge2': card \\<ge> 2). Get endpoint p1.
-           hshared: p1 shared with A2 \\<ne> A1. A2 has other endpoint r2.
-           hshared: r2 shared with A3 \\<ne> A2.
-           If A3 = A1: A1 and A2 share p1 and r2 = q1. SCC.
-           If A3 \\<ne> A1: continue with A3. After \\<le> card(\\<A>') steps,
-           pigeonhole on finite \\<A>' forces revisit. Two arcs sharing both endpoints.\<close>
+      proof -
+        \<comment> \<open>Each arc has 2 distinct endpoints.\<close>
+        have hstrict': "is_topology_on_strict T' TT'"
+          using htree' unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have hhaus': "is_hausdorff_on T' TT'"
+          using htree' unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have h2ep': "\<forall>A\<in>\<A>'. \<exists>a b. a \<noteq> b \<and>
+            top1_arc_endpoints_on A (subspace_topology T' TT' A) = {a, b}"
+        proof (intro ballI)
+          fix A assume "A \<in> \<A>'"
+          have "A \<subseteq> T'" "top1_is_arc_on A (subspace_topology T' TT' A)"
+            using h\<A>' \<open>A \<in> \<A>'\<close> by (by100 blast)+
+          then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology T' TT' A) h"
+            unfolding top1_is_arc_on_def by (by100 blast)
+          have "top1_arc_endpoints_on A (subspace_topology T' TT' A) = {h 0, h 1}"
+            by (rule arc_endpoints_are_boundary[OF hstrict' hhaus' \<open>A \<subseteq> T'\<close>
+                \<open>top1_is_arc_on A _\<close> \<open>top1_homeomorphism_on _ _ _ _ h\<close>])
+          moreover have "h 0 \<noteq> h 1"
+          proof
+            assume "h 0 = h 1"
+            have "inj_on h I_set" using \<open>top1_homeomorphism_on _ _ _ _ h\<close>
+                unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            from inj_onD[OF this \<open>h 0 = h 1\<close>] show False
+              unfolding top1_unit_interval_def by (by100 auto)
+          qed
+          ultimately show "\<exists>a b. a \<noteq> b \<and>
+              top1_arc_endpoints_on A (subspace_topology T' TT' A) = {a, b}"
+            by (by100 blast)
+        qed
+        \<comment> \<open>Pick arc A1. Get its endpoints {p1, q1}.\<close>
+        have "\<A>' \<noteq> {}" using hge2' by (by100 force)
+        then obtain A1 where "A1 \<in> \<A>'" by (by100 blast)
+        from h2ep'[rule_format, OF \<open>A1 \<in> \<A>'\<close>]
+        obtain p1 q1 where "p1 \<noteq> q1"
+            "top1_arc_endpoints_on A1 (subspace_topology T' TT' A1) = {p1, q1}"
+          by (by100 blast)
+        \<comment> \<open>p1 shared with some A2 \\<ne> A1.\<close>
+        have "p1 \<in> top1_arc_endpoints_on A1 (subspace_topology T' TT' A1)"
+          using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+        from hshared[rule_format, OF \<open>A1 \<in> \<A>'\<close> this]
+        obtain A2 where "A2 \<in> \<A>'" "A2 \<noteq> A1" "p1 \<in> A2" by (by100 blast)
+        \<comment> \<open>q1 shared with some B \\<ne> A1.\<close>
+        have "q1 \<in> top1_arc_endpoints_on A1 (subspace_topology T' TT' A1)"
+          using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+        from hshared[rule_format, OF \<open>A1 \<in> \<A>'\<close> this]
+        obtain B where "B \<in> \<A>'" "B \<noteq> A1" "q1 \<in> B" by (by100 blast)
+        \<comment> \<open>Case: B = A2. Then A2 contains both p1 and q1.\<close>
+        show ?thesis
+        proof (cases "B = A2")
+          case True
+          \<comment> \<open>A2 contains both p1 and q1. A1 \\<inter> A2 = {p1, q1} and A2 has endpoints {p1, q1}.\<close>
+          have "q1 \<in> A2" using True \<open>q1 \<in> B\<close> by simp
+          \<comment> \<open>p1, q1 are endpoints of A2 (from intersection condition).\<close>
+          have "p1 \<in> A1" using \<open>p1 \<in> top1_arc_endpoints_on A1 _\<close>
+              unfolding top1_arc_endpoints_on_def by (by100 blast)
+          hence "p1 \<in> A1 \<inter> A2" using \<open>p1 \<in> A2\<close> by (by100 blast)
+          have "A1 \<inter> A2 \<subseteq> top1_arc_endpoints_on A2 (subspace_topology T' TT' A2)"
+            using hinter'[rule_format, OF \<open>A1 \<in> \<A>'\<close> \<open>A2 \<in> \<A>'\<close> \<open>A2 \<noteq> A1\<close>[symmetric]]
+            by (by100 blast)
+          hence "p1 \<in> top1_arc_endpoints_on A2 (subspace_topology T' TT' A2)"
+            using \<open>p1 \<in> A1 \<inter> A2\<close> by (by100 blast)
+          have "q1 \<in> A1" using \<open>q1 \<in> top1_arc_endpoints_on A1 _\<close>
+              unfolding top1_arc_endpoints_on_def by (by100 blast)
+          hence "q1 \<in> A1 \<inter> A2" using \<open>q1 \<in> A2\<close> by (by100 blast)
+          hence "q1 \<in> top1_arc_endpoints_on A2 (subspace_topology T' TT' A2)"
+            using \<open>A1 \<inter> A2 \<subseteq> top1_arc_endpoints_on A2 _\<close> by (by100 blast)
+          \<comment> \<open>A2 has endpoints containing {p1,q1}. Since each arc has 2 endpoints:\<close>
+          from h2ep'[rule_format, OF \<open>A2 \<in> \<A>'\<close>]
+          obtain a2 b2 where "a2 \<noteq> b2"
+              "top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {a2, b2}"
+            by (by100 blast)
+          have "{p1, q1} \<subseteq> {a2, b2}"
+            using \<open>p1 \<in> top1_arc_endpoints_on A2 _\<close> \<open>q1 \<in> top1_arc_endpoints_on A2 _\<close>
+                \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+          hence "{a2, b2} = {p1, q1}" using \<open>p1 \<noteq> q1\<close> \<open>a2 \<noteq> b2\<close> by (by100 blast)
+          hence "top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {p1, q1}"
+            using \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by simp
+          show ?thesis
+            using \<open>A1 \<in> \<A>'\<close> \<open>A2 \<in> \<A>'\<close> \<open>A2 \<noteq> A1\<close> \<open>p1 \<noteq> q1\<close>
+                \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close>
+                \<open>top1_arc_endpoints_on A2 _ = {p1, q1}\<close>
+            by (by100 blast)
+        next
+          case bFalse: False
+          \<comment> \<open>B \\<ne> A2. q1 shared with B, p1 shared with A2. Need walk continuation.\<close>
+          show ?thesis sorry \<comment> \<open>General case: walk+pigeonhole for card \\<ge> 3.
+             Continue walk from A2's other endpoint. By pigeonhole on finite \\<A>',
+             revisit a vertex, giving two arcs sharing both endpoints.\<close>
+        qed
+      qed
       then obtain A1 A2 p1' q1' where hA1: "A1 \<in> \<A>'" and hA2: "A2 \<in> \<A>'"
           and hne12: "A1 \<noteq> A2" and hpq': "p1' \<noteq> q1'"
           and hep1': "top1_arc_endpoints_on A1 (subspace_topology T' TT' A1) = {p1', q1'}"
