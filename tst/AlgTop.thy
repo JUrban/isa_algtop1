@@ -4557,7 +4557,8 @@ proof -
     (\<forall>A\<in>{A \<in> \<A>E_raw. \<not> A \<subseteq> TE_raw}.
          \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology E TE A). e \<in> TE_raw) \<and>
     SE_raw = {A \<in> \<A>E_raw. \<not> A \<subseteq> TE_raw}"
-    sorry \<comment> \<open>Isabelle obtain from large \\<exists>\\<and> — trivial but automation timeout.\<close>
+    sorry \<comment> \<open>Obtain from graph\\_pi1\\_free\\_weak: 4-level \\<exists> with 11-conjunct body.
+       Isabelle automation can't decompose within timeout. Mathematically trivial.\<close>
   have hfree_E: "top1_is_free_group_full_on
       (top1_fundamental_group_carrier E TE e0)
       (top1_fundamental_group_mul E TE e0)
