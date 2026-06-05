@@ -6254,10 +6254,31 @@ proof -
         thus ?thesis by (by100 blast)
       qed
     qed
+    have hta_cover: "\<Union>?tree_arcs = Tw" using hTw_coverage by simp
     have hta_coh: "\<forall>C. C \<subseteq> Tw \<longrightarrow> (closedin_on Tw (subspace_topology X TX Tw) C \<longleftrightarrow>
         (\<forall>A\<in>?tree_arcs. closedin_on A (subspace_topology Tw (subspace_topology X TX Tw) A) (A \<inter> C)))"
-      sorry \<comment> \<open>Coherent topology restriction: from h\\<A>w\\_coh for X restricted to Tw.\<close>
-    have hta_cover: "\<Union>?tree_arcs = Tw" using hTw_coverage by simp
+    proof (intro allI impI)
+      fix C assume "C \<subseteq> Tw"
+      have hta_sub_Aw: "?tree_arcs \<subseteq> \<A>w" by (by100 blast)
+      from subgraph_coherent_topology[OF hgraph_X h\<A>w h\<A>w_cover h\<A>w_inter h\<A>w_coh
+          hta_sub_Aw hta_cover[symmetric], rule_format, OF \<open>C \<subseteq> Tw\<close>]
+      have "closedin_on Tw (subspace_topology X TX Tw) C =
+          (\<forall>A\<in>?tree_arcs. closedin_on A (subspace_topology X TX A) (A \<inter> C))" .
+      \<comment> \<open>Convert sub(X,TX,A) to sub(Tw, sub(X,TX,Tw), A) via subspace\\_topology\\_trans.\<close>
+      moreover have "\<forall>A\<in>?tree_arcs. closedin_on A (subspace_topology X TX A) (A \<inter> C) =
+          closedin_on A (subspace_topology Tw (subspace_topology X TX Tw) A) (A \<inter> C)"
+      proof (intro ballI)
+        fix A assume "A \<in> ?tree_arcs"
+        have "A \<subseteq> Tw" using \<open>A \<in> ?tree_arcs\<close> by (by100 blast)
+        have "subspace_topology Tw (subspace_topology X TX Tw) A = subspace_topology X TX A"
+          by (rule subspace_topology_trans[OF \<open>A \<subseteq> Tw\<close>])
+        thus "closedin_on A (subspace_topology X TX A) (A \<inter> C) =
+            closedin_on A (subspace_topology Tw (subspace_topology X TX Tw) A) (A \<inter> C)" by simp
+      qed
+      ultimately show "closedin_on Tw (subspace_topology X TX Tw) C =
+          (\<forall>A\<in>?tree_arcs. closedin_on A (subspace_topology Tw (subspace_topology X TX Tw) A) (A \<inter> C))"
+        by simp
+    qed
     from tree_euler_number_one[OF hTw_tree hta_arcs hta_cover hta_inter htree_arcs_fin hta_ne hta_coh]
     show ?thesis .
   qed
