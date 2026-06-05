@@ -1300,6 +1300,8 @@ lemma two_arc_union_is_retract:
       and hpq_ne: "p1 \<noteq> q1"
       and hA12_inter: "\<forall>C\<in>\<A>. C \<noteq> A1 \<longrightarrow> C \<noteq> A2 \<longrightarrow>
            C \<inter> (A1 \<union> A2) \<subseteq> {p1, q1}"
+      \<comment> \<open>SC assumption: external arcs with both endpoints create SCC \\<Rightarrow> contradiction.\<close>
+      and hsc: "top1_simply_connected_on T TT"
   shows "top1_retract_of_on T TT (A1 \<union> A2)"
 proof -
   have hTT: "is_topology_on T TT"
@@ -1580,9 +1582,19 @@ proof -
               \<comment> \<open>If const = c: {x | r\\_ret x \\<notin> U} = {} or A, contradiction with nonEmpty/False.\<close>
               \<comment> \<open>So the only remaining case is A has both p1 and q1.\<close>
               \<comment> \<open>But this is impossible in a tree (would create SCC with A1).\<close>
-              show ?thesis sorry \<comment> \<open>External arc with both endpoints \\<Rightarrow> SCC \\<Rightarrow> \\<not> tree.
-                 This sub-case is vacuous. Full proof: show p1,q1\\<in>A implies False via
-                 arcs\\_form\\_simple\\_closed\\_curve + retract + \\<pi>\\_1 nontrivial.\<close>
+              \<comment> \<open>Proper subset: impossible for constant arcs. Must have both p1,q1.
+                 But in a tree (hsc): external arc with both endpoints creates SCC,
+                 which contradicts SC via the SAME scc\\_in\\_sc\\_false (with simpler retract).
+                 Actually: show the constant case is EXHAUSTIVE for trees.
+                 For trees: no external arc has both p1 and q1 (proved by contradiction).
+                 So the proper-subset case never arises.\<close>
+              \<comment> \<open>Show: A does NOT have both p1 and q1 (in SC context).\<close>
+              \<comment> \<open>If it did: A \\<inter> A1 = {p1,q1}, SCC A\\<union>A1 via arcs\\_form\\_simple\\_closed\\_curve.
+                 Then a retract of T onto A\\<union>A1 would give \\<pi>\\_1 contradiction.
+                 The retract for A\\<union>A1 in a tree works because ALL other arcs are constant
+                 (they CAN'T have both endpoints either, by the same argument).
+                 This gives a well-founded induction: the set of both-endpoint arcs is empty.\<close>
+              show ?thesis sorry \<comment> \<open>Vacuous in SC context: no external arc has both endpoints.\<close>
             qed
           qed
         qed
@@ -3393,8 +3405,10 @@ proof -
         hence "C \<inter> A2 \<subseteq> {p1', q1'}" using hep2' by (by100 blast)
         thus "C \<inter> (A1 \<union> A2) \<subseteq> {p1', q1'}" using hCA1 by (by100 blast)
       qed
+      have hsc_T'_for_retract: "top1_simply_connected_on T' TT'"
+        using htree' unfolding top1_is_tree_on_def by (by100 blast)
       from two_arc_union_is_retract[OF hstrict' hhaus' h\<A>' hcover' hinter' hcoh'
-          hA1 hA2 hne12 hep1' hep2' hpq' hA12_inter']
+          hA1 hA2 hne12 hep1' hep2' hpq' hA12_inter' hsc_T'_for_retract]
       have hretract': "top1_retract_of_on T' TT' (A1 \<union> A2)" .
       \<comment> \<open>SCC: arcs\\_form\\_simple\\_closed\\_curve.\<close>
       have "A1 \<inter> A2 = {p1', q1'}"
