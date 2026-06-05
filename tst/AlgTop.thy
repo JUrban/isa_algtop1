@@ -1444,205 +1444,6 @@ proof (rule ccontr)
   thus False by (by100 simp)
 qed
 
-\<comment> \<open>Euler formula for trees, assuming leaf existence as a parameter.
-   This breaks the circular dependency: leaf existence is proved separately
-   (walk+pigeonhole), and the Euler formula uses it.\<close>
-\<comment> \<open>Assumption: leaf existence for ALL trees (the topological bridge).\<close>
-lemma tree_euler_from_leaf:
-  fixes n :: nat
-  assumes hleaf_all: "\<And>(T :: 'a set) TT \<A>.
-    \<lbrakk>top1_is_tree_on T TT;
-     \<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A);
-     \<Union>\<A> = T;
-     \<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
-         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
-       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2;
-     finite \<A>; card \<A> \<ge> 2;
-     \<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))\<rbrakk>
-    \<Longrightarrow> \<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
-        \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-  shows "\<forall>(T :: 'a set) TT \<A>. card \<A> = n \<longrightarrow>
-    top1_is_tree_on T TT \<longrightarrow>
-    (\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)) \<longrightarrow>
-    \<Union>\<A> = T \<longrightarrow>
-    (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
-         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
-       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
-    finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
-    (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
-    card (top1_graph_vertex_set T TT \<A>) = n + 1"
-  sorry \<comment> \<open>By strong induction on n. Same as tree\\_euler\\_nat but using hleaf\\_all
-     instead of finite\\_tree\\_has\\_leaf\\_arc. The IH can provide the leaf for subtrees
-     because hleaf\\_all is universal.\<close>
-
-\<comment> \<open>Combined Euler + leaf lemma for finite trees, proved by induction on card \\<A>.
-   Breaks the circular dependency between tree\\_euler and finite\\_tree\\_has\\_leaf\\_arc.
-   Uses degree\\_sum\\_leaf for the leaf existence in the induction step.\<close>
-lemma tree_euler_and_leaf_combined:
-  fixes T :: "'a set" and TT :: "'a set set" and \<A> :: "'a set set"
-  assumes "top1_is_tree_on T TT"
-      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
-      and "\<Union>\<A> = T"
-      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
-           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
-         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-      and "finite \<A>" and "\<A> \<noteq> {}"
-      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
-  shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1
-    \<and> (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
-        \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)))"
-proof -
-  \<comment> \<open>Leaf existence by walk+pigeonhole (the only topological bridge; no Euler needed).\<close>
-  have hleaf_raw: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
-      v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
-    sorry \<comment> \<open>Walk+pigeonhole: if no leaf, all degrees \\<ge> 2. Walk through incidence graph
-       visits new vertex each step. Pigeonhole \\<Rightarrow> revisit \\<Rightarrow> cycle \\<Rightarrow> SCC in tree
-       \\<Rightarrow> contradiction with simply connected (via two\\_arc\\_union\\_is\\_retract).\<close>
-  \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_raw for the leaf.\<close>
-  have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-  proof -
-    from tree_euler_from_leaf[of "card \<A>"]
-    have "\<forall>(T :: 'a set) TT \<A>. card \<A> = card \<A> \<longrightarrow>
-        top1_is_tree_on T TT \<longrightarrow>
-        (\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)) \<longrightarrow>
-        \<Union>\<A> = T \<longrightarrow>
-        (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
-             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
-           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
-        finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
-        (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
-            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
-        card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-      sorry \<comment> \<open>Need hleaf\\_raw to be universal for the hleaf\\_all assumption.\<close>
-    thus ?thesis using assms sorry
-  qed
-  \<comment> \<open>Now derive hleaf from heuler using degree\\_sum\\_leaf.\<close>
-  have hleaf: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
-      v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
-  proof (intro impI)
-    assume hge2: "card \<A> \<ge> 2"
-    let ?V = "top1_graph_vertex_set T TT \<A>"
-    let ?deg = "\<lambda>v. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
-    have hstrict: "is_topology_on_strict T TT"
-      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
-    have hhaus: "is_hausdorff_on T TT"
-      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
-    have hep_fin: "\<forall>A\<in>\<A>. finite (top1_arc_endpoints_on A (subspace_topology T TT A))"
-    proof (intro ballI)
-      fix A assume "A \<in> \<A>"
-      have "A \<subseteq> T" "top1_is_arc_on A (subspace_topology T TT A)"
-        using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)+
-      then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
-        unfolding top1_is_arc_on_def by (by100 blast)
-      from arc_endpoints_are_boundary[OF hstrict hhaus \<open>A \<subseteq> T\<close> \<open>top1_is_arc_on A _\<close> this]
-      show "finite (top1_arc_endpoints_on A (subspace_topology T TT A))" by (by100 simp)
-    qed
-    have hV_fin: "finite ?V"
-      unfolding top1_graph_vertex_set_def using assms(5) hep_fin by (by100 blast)
-    have hep_card: "\<forall>A\<in>\<A>. card (top1_arc_endpoints_on A (subspace_topology T TT A)) = 2"
-    proof (intro ballI)
-      fix A assume "A \<in> \<A>"
-      have "A \<subseteq> T" "top1_is_arc_on A (subspace_topology T TT A)"
-        using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)+
-      then obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
-        unfolding top1_is_arc_on_def by (by100 blast)
-      from arc_endpoints_are_boundary[OF hstrict hhaus \<open>A \<subseteq> T\<close> \<open>top1_is_arc_on A _\<close> hh]
-      have "top1_arc_endpoints_on A (subspace_topology T TT A) = {h 0, h 1}" .
-      moreover have "h 0 \<noteq> h 1"
-      proof
-        assume "h 0 = h 1"
-        have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def
-          by (by100 blast)
-        from inj_onD[OF this \<open>h 0 = h 1\<close>] show False
-          unfolding top1_unit_interval_def by (by100 auto)
-      qed
-      ultimately show "card (top1_arc_endpoints_on A (subspace_topology T TT A)) = 2"
-        by (by100 simp)
-    qed
-    have hsum: "(\<Sum>v\<in>?V. ?deg v) = 2 * card \<A>"
-    proof -
-      let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
-      have "?V = (\<Union>A\<in>\<A>. ?ep A)" unfolding top1_graph_vertex_set_def by (by100 blast)
-      from double_counting_sum[OF assms(5) hep_fin this]
-      have "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A}) = (\<Sum>A\<in>\<A>. card (?ep A))" .
-      also have "\<dots> = (\<Sum>A\<in>\<A>. 2)" using hep_card by simp
-      also have "\<dots> = 2 * card \<A>" by simp
-      finally show ?thesis .
-    qed
-    have hdeg_pos: "\<forall>v\<in>?V. ?deg v \<ge> 1"
-    proof (intro ballI)
-      fix v assume "v \<in> ?V"
-      then obtain A0 where "A0 \<in> \<A>" "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
-        unfolding top1_graph_vertex_set_def by (by100 blast)
-      hence "{A0} \<subseteq> {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
-        by (by100 blast)
-      moreover have hfin_S: "finite {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
-        using assms(5) by (by100 simp)
-      ultimately have "card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} \<ge> card {A0}"
-        using card_mono[OF hfin_S] by (by100 blast)
-      thus "?deg v \<ge> 1" by (by100 simp)
-    qed
-    have hn_ge1: "card \<A> \<ge> 1" using hge2 by linarith
-    from degree_sum_leaf[OF hV_fin heuler hn_ge1 hsum hdeg_pos]
-    obtain v where hv_V: "v \<in> ?V" and hv_deg: "?deg v = 1"
-      by (by100 blast)
-    have hcard1: "card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} = 1"
-      using \<open>?deg v = 1\<close> by simp
-    from card_1_singletonE[OF hcard1]
-    obtain A0 where hA0_sing: "{A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} = {A0}"
-      by (by100 blast)
-    have hA0: "A0 \<in> \<A>" using hA0_sing by (by100 blast)
-    have hv_ep: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" using hA0_sing by (by100 blast)
-    have "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
-    proof (intro ballI impI)
-      fix B assume "B \<in> \<A>" "B \<noteq> A0"
-      show "v \<notin> B"
-      proof
-        assume "v \<in> B"
-        have "v \<in> A0" using hv_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
-        hence "v \<in> A0 \<inter> B" using \<open>v \<in> B\<close> by (by100 blast)
-        hence "v \<in> top1_arc_endpoints_on B (subspace_topology T TT B)"
-          using assms(4)[rule_format, OF hA0 \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>[symmetric]] by (by100 blast)
-        hence "B \<in> {A0}" using \<open>B \<in> \<A>\<close> hA0_sing by (by100 blast)
-        with \<open>B \<noteq> A0\<close> show False by (by100 blast)
-      qed
-    qed
-    show "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-        (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-      using hA0 hv_ep \<open>\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B\<close> by (by5000 blast)
-  qed
-  show ?thesis using heuler hleaf by (by100 blast)
-qed
-
-
-\<comment> \<open>Expert audit2: extract tree Euler sub-lemmas as named lemmas.\<close>
-
-\<comment> \<open>A finite tree with at least 2 arcs has a leaf: an arc with one endpoint
-   not contained in any other arc. (Munkres 85.2 Step 1 key step.)\<close>
-lemma finite_tree_has_leaf_arc:
-  assumes "top1_is_tree_on T TT"
-      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
-      and "\<Union>\<A> = T"
-      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
-           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
-         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
-      and "finite \<A>" and "card \<A> \<ge> 2"
-      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
-  shows "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
-      \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-  \<comment> \<open>Derives from tree\\_euler\\_and\\_leaf\\_combined.\<close>
-proof -
-  have h\<A>_ne: "\<A> \<noteq> {}" using assms(6) by (by100 force)
-  from tree_euler_and_leaf_combined[OF assms(1) assms(2) assms(3) assms(4) assms(5) h\<A>_ne assms(7)]
-  show ?thesis using assms(6) by (by100 blast)
-qed
 
 
 
@@ -2502,6 +2303,205 @@ proof -
          (\<forall>A\<in>\<A> - {A0}. closedin_on A (subspace_topology ?T' ?TT' A) (A \<inter> C)))"
       using h\<B>_coh .
   qed
+qed
+\<comment> \<open>Euler formula for trees, assuming leaf existence as a parameter.
+   This breaks the circular dependency: leaf existence is proved separately
+   (walk+pigeonhole), and the Euler formula uses it.\<close>
+\<comment> \<open>Assumption: leaf existence for ALL trees (the topological bridge).\<close>
+lemma tree_euler_from_leaf:
+  fixes n :: nat
+  assumes hleaf_all: "\<And>(T :: 'a set) TT \<A>.
+    \<lbrakk>top1_is_tree_on T TT;
+     \<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A);
+     \<Union>\<A> = T;
+     \<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2;
+     finite \<A>; card \<A> \<ge> 2;
+     \<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))\<rbrakk>
+    \<Longrightarrow> \<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
+        \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
+  shows "\<forall>(T :: 'a set) TT \<A>. card \<A> = n \<longrightarrow>
+    top1_is_tree_on T TT \<longrightarrow>
+    (\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)) \<longrightarrow>
+    \<Union>\<A> = T \<longrightarrow>
+    (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
+    finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
+    (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
+    card (top1_graph_vertex_set T TT \<A>) = n + 1"
+  sorry \<comment> \<open>By strong induction on n. Same as tree\\_euler\\_nat but using hleaf\\_all
+     instead of finite\\_tree\\_has\\_leaf\\_arc. The IH can provide the leaf for subtrees
+     because hleaf\\_all is universal.\<close>
+
+\<comment> \<open>Combined Euler + leaf lemma for finite trees, proved by induction on card \\<A>.
+   Breaks the circular dependency between tree\\_euler and finite\\_tree\\_has\\_leaf\\_arc.
+   Uses degree\\_sum\\_leaf for the leaf existence in the induction step.\<close>
+lemma tree_euler_and_leaf_combined:
+  fixes T :: "'a set" and TT :: "'a set set" and \<A> :: "'a set set"
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "finite \<A>" and "\<A> \<noteq> {}"
+      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+  shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1
+    \<and> (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
+        \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)))"
+proof -
+  \<comment> \<open>Leaf existence by walk+pigeonhole (the only topological bridge; no Euler needed).\<close>
+  have hleaf_raw: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
+      v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
+    sorry \<comment> \<open>Walk+pigeonhole: if no leaf, all degrees \\<ge> 2. Walk through incidence graph
+       visits new vertex each step. Pigeonhole \\<Rightarrow> revisit \\<Rightarrow> cycle \\<Rightarrow> SCC in tree
+       \\<Rightarrow> contradiction with simply connected (via two\\_arc\\_union\\_is\\_retract).\<close>
+  \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_raw for the leaf.\<close>
+  have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
+  proof -
+    from tree_euler_from_leaf[of "card \<A>"]
+    have "\<forall>(T :: 'a set) TT \<A>. card \<A> = card \<A> \<longrightarrow>
+        top1_is_tree_on T TT \<longrightarrow>
+        (\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)) \<longrightarrow>
+        \<Union>\<A> = T \<longrightarrow>
+        (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
+        finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
+        (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
+        card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
+      sorry \<comment> \<open>Need hleaf\\_raw to be universal for the hleaf\\_all assumption.\<close>
+    thus ?thesis using assms sorry
+  qed
+  \<comment> \<open>Now derive hleaf from heuler using degree\\_sum\\_leaf.\<close>
+  have hleaf: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
+      v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
+  proof (intro impI)
+    assume hge2: "card \<A> \<ge> 2"
+    let ?V = "top1_graph_vertex_set T TT \<A>"
+    let ?deg = "\<lambda>v. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+    have hstrict: "is_topology_on_strict T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hhaus: "is_hausdorff_on T TT"
+      using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hep_fin: "\<forall>A\<in>\<A>. finite (top1_arc_endpoints_on A (subspace_topology T TT A))"
+    proof (intro ballI)
+      fix A assume "A \<in> \<A>"
+      have "A \<subseteq> T" "top1_is_arc_on A (subspace_topology T TT A)"
+        using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)+
+      then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
+        unfolding top1_is_arc_on_def by (by100 blast)
+      from arc_endpoints_are_boundary[OF hstrict hhaus \<open>A \<subseteq> T\<close> \<open>top1_is_arc_on A _\<close> this]
+      show "finite (top1_arc_endpoints_on A (subspace_topology T TT A))" by (by100 simp)
+    qed
+    have hV_fin: "finite ?V"
+      unfolding top1_graph_vertex_set_def using assms(5) hep_fin by (by100 blast)
+    have hep_card: "\<forall>A\<in>\<A>. card (top1_arc_endpoints_on A (subspace_topology T TT A)) = 2"
+    proof (intro ballI)
+      fix A assume "A \<in> \<A>"
+      have "A \<subseteq> T" "top1_is_arc_on A (subspace_topology T TT A)"
+        using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)+
+      then obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) h"
+        unfolding top1_is_arc_on_def by (by100 blast)
+      from arc_endpoints_are_boundary[OF hstrict hhaus \<open>A \<subseteq> T\<close> \<open>top1_is_arc_on A _\<close> hh]
+      have "top1_arc_endpoints_on A (subspace_topology T TT A) = {h 0, h 1}" .
+      moreover have "h 0 \<noteq> h 1"
+      proof
+        assume "h 0 = h 1"
+        have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+          by (by100 blast)
+        from inj_onD[OF this \<open>h 0 = h 1\<close>] show False
+          unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      ultimately show "card (top1_arc_endpoints_on A (subspace_topology T TT A)) = 2"
+        by (by100 simp)
+    qed
+    have hsum: "(\<Sum>v\<in>?V. ?deg v) = 2 * card \<A>"
+    proof -
+      let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
+      have "?V = (\<Union>A\<in>\<A>. ?ep A)" unfolding top1_graph_vertex_set_def by (by100 blast)
+      from double_counting_sum[OF assms(5) hep_fin this]
+      have "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A}) = (\<Sum>A\<in>\<A>. card (?ep A))" .
+      also have "\<dots> = (\<Sum>A\<in>\<A>. 2)" using hep_card by simp
+      also have "\<dots> = 2 * card \<A>" by simp
+      finally show ?thesis .
+    qed
+    have hdeg_pos: "\<forall>v\<in>?V. ?deg v \<ge> 1"
+    proof (intro ballI)
+      fix v assume "v \<in> ?V"
+      then obtain A0 where "A0 \<in> \<A>" "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        unfolding top1_graph_vertex_set_def by (by100 blast)
+      hence "{A0} \<subseteq> {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+        by (by100 blast)
+      moreover have hfin_S: "finite {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+        using assms(5) by (by100 simp)
+      ultimately have "card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} \<ge> card {A0}"
+        using card_mono[OF hfin_S] by (by100 blast)
+      thus "?deg v \<ge> 1" by (by100 simp)
+    qed
+    have hn_ge1: "card \<A> \<ge> 1" using hge2 by linarith
+    from degree_sum_leaf[OF hV_fin heuler hn_ge1 hsum hdeg_pos]
+    obtain v where hv_V: "v \<in> ?V" and hv_deg: "?deg v = 1"
+      by (by100 blast)
+    have hcard1: "card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} = 1"
+      using \<open>?deg v = 1\<close> by simp
+    from card_1_singletonE[OF hcard1]
+    obtain A0 where hA0_sing: "{A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} = {A0}"
+      by (by100 blast)
+    have hA0: "A0 \<in> \<A>" using hA0_sing by (by100 blast)
+    have hv_ep: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" using hA0_sing by (by100 blast)
+    have "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
+    proof (intro ballI impI)
+      fix B assume "B \<in> \<A>" "B \<noteq> A0"
+      show "v \<notin> B"
+      proof
+        assume "v \<in> B"
+        have "v \<in> A0" using hv_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+        hence "v \<in> A0 \<inter> B" using \<open>v \<in> B\<close> by (by100 blast)
+        hence "v \<in> top1_arc_endpoints_on B (subspace_topology T TT B)"
+          using assms(4)[rule_format, OF hA0 \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>[symmetric]] by (by100 blast)
+        hence "B \<in> {A0}" using \<open>B \<in> \<A>\<close> hA0_sing by (by100 blast)
+        with \<open>B \<noteq> A0\<close> show False by (by100 blast)
+      qed
+    qed
+    show "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+        (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
+      using hA0 hv_ep \<open>\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B\<close> by (by5000 blast)
+  qed
+  show ?thesis using heuler hleaf by (by100 blast)
+qed
+
+
+\<comment> \<open>Expert audit2: extract tree Euler sub-lemmas as named lemmas.\<close>
+
+\<comment> \<open>A finite tree with at least 2 arcs has a leaf: an arc with one endpoint
+   not contained in any other arc. (Munkres 85.2 Step 1 key step.)\<close>
+lemma finite_tree_has_leaf_arc:
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "finite \<A>" and "card \<A> \<ge> 2"
+      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+  shows "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
+      \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
+  \<comment> \<open>Derives from tree\\_euler\\_and\\_leaf\\_combined.\<close>
+proof -
+  have h\<A>_ne: "\<A> \<noteq> {}" using assms(6) by (by100 force)
+  from tree_euler_and_leaf_combined[OF assms(1) assms(2) assms(3) assms(4) assms(5) h\<A>_ne assms(7)]
+  show ?thesis using assms(6) by (by100 blast)
 qed
 lemma tree_euler_nat:
   fixes n :: nat
