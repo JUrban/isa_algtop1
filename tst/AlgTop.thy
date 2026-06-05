@@ -1470,7 +1470,14 @@ proof -
         by (by100 simp)
     qed
     have hsum: "(\<Sum>v\<in>?V. ?deg v) = 2 * card \<A>"
-      sorry \<comment> \<open>Double counting.\<close>
+    proof -
+      \<comment> \<open>Double counting: \<Sum>v. |{A | v \<in> ep(A)}| = \<Sum>A. |ep(A)| = \<Sum>A. 2 = 2*|\<A>|.\<close>
+      have "(\<Sum>v\<in>?V. ?deg v) = (\<Sum>A\<in>\<A>. card (top1_arc_endpoints_on A (subspace_topology T TT A)))"
+        sorry \<comment> \<open>Sum swap: both sides count (vertex,arc) incidence pairs.\<close>
+      also have "\<dots> = (\<Sum>A\<in>\<A>. 2)" using hep_card by simp
+      also have "\<dots> = 2 * card \<A>" by simp
+      finally show ?thesis .
+    qed
     have hdeg_pos: "\<forall>v\<in>?V. ?deg v \<ge> 1"
     proof (intro ballI)
       fix v assume "v \<in> ?V"
