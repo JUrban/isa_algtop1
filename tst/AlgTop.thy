@@ -3102,8 +3102,50 @@ proof -
               proof (cases "A4 = A1")
                 case True
                 \<comment> \<open>A4 = A1. s3 \\<in> A1 \\<inter> A3 \\<subseteq> endpoints(A1) = {p1, q1}.\<close>
-                show ?thesis sorry \<comment> \<open>s3 = p1 or q1. If p1: A3 and A2 share {p1,r2}. SCC.
-                   If q1: 3-arc cycle A1-A2-A3-A1. Need generalized SCC argument.\<close>
+                have "s3 \<in> A1" using True \<open>s3 \<in> A4\<close> by simp
+                have "s3 \<in> A3" using hs3_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+                have "s3 \<in> A1 \<inter> A3" using \<open>s3 \<in> A1\<close> \<open>s3 \<in> A3\<close> by (by100 blast)
+                have "s3 \<in> top1_arc_endpoints_on A1 (subspace_topology T' TT' A1)"
+                proof -
+                  have "A3 \<inter> A1 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology T' TT' A1)"
+                    using hinter'[rule_format, OF \<open>A3 \<in> \<A>'\<close> \<open>A1 \<in> \<A>'\<close>] a3False by (by100 blast)
+                  thus ?thesis using \<open>s3 \<in> A1 \<inter> A3\<close> by (by100 blast)
+                qed
+                hence "s3 \<in> {p1, q1}" using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+                show ?thesis
+                proof (cases "s3 = p1")
+                  case True
+                  \<comment> \<open>s3 = p1: A3 has endpoints {r2, p1}. A2 has endpoints {p1, r2}. SCC.\<close>
+                  have "top1_arc_endpoints_on A3 (subspace_topology T' TT' A3) = {p1, r2}"
+                  proof -
+                    have "r2 \<in> {a3, b3}" using \<open>r2 \<in> top1_arc_endpoints_on A3 _\<close>
+                        \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> by (by100 blast)
+                    have "p1 \<in> {a3, b3}" using hs3_ep True
+                        \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> by (by100 blast)
+                    thus ?thesis using \<open>r2 \<in> {a3, b3}\<close> \<open>r2 \<noteq> p1\<close> \<open>a3 \<noteq> b3\<close>
+                        \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> by (by100 blast)
+                  qed
+                  have hA2_ep_pr: "top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {p1, r2}"
+                  proof -
+                    have "p1 \<in> {a2, b2}" using \<open>p1 \<in> top1_arc_endpoints_on A2 _\<close>
+                        \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+                    have "r2 \<in> {a2, b2}" using hr2_ep
+                        \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+                    thus ?thesis using \<open>p1 \<in> {a2, b2}\<close> \<open>r2 \<noteq> p1\<close> \<open>a2 \<noteq> b2\<close>
+                        \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+                  qed
+                  show ?thesis
+                    using \<open>A2 \<in> \<A>'\<close> \<open>A3 \<in> \<A>'\<close> \<open>A3 \<noteq> A2\<close> \<open>r2 \<noteq> p1\<close>[symmetric]
+                        hA2_ep_pr \<open>top1_arc_endpoints_on A3 _ = {p1, r2}\<close>
+                    by (by100 blast)
+                next
+                  case sFalse: False
+                  hence "s3 = q1" using \<open>s3 \<in> {p1, q1}\<close> by (by100 blast)
+                  \<comment> \<open>3-arc cycle: A1({p1,q1}), A2({p1,r2}), A3({r2,q1}).
+                     This forms an SCC in the tree \\<Rightarrow> contradiction.
+                     But we don't have a 3-arc SCC lemma. Sorry for now.\<close>
+                  show ?thesis sorry
+                qed
               next
                 case a4ne1: False
                 \<comment> \<open>A4 \\<notin> {A1,A2,A3}. Continue walk (needs pigeonhole for general case).\<close>
