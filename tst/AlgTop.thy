@@ -2970,7 +2970,21 @@ proof -
       proof -
         \<comment> \<open>A1\\<union>A2 path-connected (SCC \\<cong> S1 which is path-connected).\<close>
         have hC_pc: "top1_path_connected_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2))"
-          sorry \<comment> \<open>Image of path-connected S1 under continuous h\\_s. Use top1\\_path\\_connected\\_continuous\\_image.\<close>
+        proof -
+          have h1: "\<forall>x\<in>top1_S1. h_s x \<in> T'"
+          proof (intro ballI)
+            fix s assume "s \<in> top1_S1"
+            hence "h_s s \<in> h_s ` top1_S1" by (by100 blast)
+            hence "h_s s \<in> A1 \<union> A2" using hhs_img by (by100 blast)
+            thus "h_s s \<in> T'" using hC_sub by (by100 blast)
+          qed
+          have h2: "h_s ` top1_S1 = A1 \<union> A2" using hhs_img .
+          have h3: "A1 \<union> A2 \<subseteq> T'" using hC_sub .
+          have h4: "subspace_topology T' TT' (A1 \<union> A2) = subspace_topology T' TT' (A1 \<union> A2)"
+            by simp
+          from top1_path_connected_continuous_image[OF S1_path_connected hhs_cont h1 h2 h3 _ hTT']
+          show ?thesis by simp
+        qed
         \<comment> \<open>Every loop in A1\\<union>A2 is null-homotopic in A1\\<union>A2.\<close>
         have hC_loops: "\<forall>x\<in>A1 \<union> A2. \<forall>f. top1_is_loop_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x f \<longrightarrow>
             top1_path_homotopic_on (A1 \<union> A2) (subspace_topology T' TT' (A1 \<union> A2)) x x f (top1_constant_path x)"
