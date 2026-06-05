@@ -4311,14 +4311,42 @@ proof -
      This gives \\<pi>\\_1(E) free on some basis. The rank = number of non-tree arcs.\<close>
   have hE_graph: "top1_is_graph_on E TE"
     by (rule Theorem_83_4_covering_of_graph_is_graph[OF hgraph_X hcov hstrict_E])
-  obtain \<iota>E SE where hfree_E: "top1_is_free_group_full_on
+  note hfree_E_note = graph_is_free[OF hE_graph hconn_E he0]
+  have hfree_E_ex: "\<exists>\<iota>E SE. top1_is_free_group_full_on
       (top1_fundamental_group_carrier E TE e0)
       (top1_fundamental_group_mul E TE e0)
       (top1_fundamental_group_id E TE e0)
       (top1_fundamental_group_invg E TE e0) \<iota>E SE"
-    sorry \<comment> \<open>From graph\\_is\\_free[OF hE\\_graph hconn\\_E he0].
-       Automation cannot decompose the large existential conjunction from graph\\_pi1\\_free\\_weak
-       within timeout. The mathematical content is trivial: extract first conjunct.\<close>
+    using hfree_E_note sorry
+  define \<iota>E where "\<iota>E \<equiv> SOME \<iota>. \<exists>S. top1_is_free_group_full_on
+      (top1_fundamental_group_carrier E TE e0)
+      (top1_fundamental_group_mul E TE e0)
+      (top1_fundamental_group_id E TE e0)
+      (top1_fundamental_group_invg E TE e0) \<iota> S"
+  define SE where "SE \<equiv> SOME S. top1_is_free_group_full_on
+      (top1_fundamental_group_carrier E TE e0)
+      (top1_fundamental_group_mul E TE e0)
+      (top1_fundamental_group_id E TE e0)
+      (top1_fundamental_group_invg E TE e0) \<iota>E S"
+  have hfree_E: "top1_is_free_group_full_on
+      (top1_fundamental_group_carrier E TE e0)
+      (top1_fundamental_group_mul E TE e0)
+      (top1_fundamental_group_id E TE e0)
+      (top1_fundamental_group_invg E TE e0) \<iota>E SE"
+  proof -
+    from hfree_E_ex have h1: "\<exists>\<iota>. \<exists>S. top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E TE e0)
+        (top1_fundamental_group_mul E TE e0)
+        (top1_fundamental_group_id E TE e0)
+        (top1_fundamental_group_invg E TE e0) \<iota> S" by (by100 blast)
+    have h2: "\<exists>S. top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E TE e0)
+        (top1_fundamental_group_mul E TE e0)
+        (top1_fundamental_group_id E TE e0)
+        (top1_fundamental_group_invg E TE e0) \<iota>E S"
+      unfolding \<iota>E_def using someI_ex[OF h1] by (by100 blast)
+    show ?thesis unfolding SE_def using someI_ex[OF h2] by (by100 blast)
+  qed
   \<comment> \<open>Step 6: Euler characteristic argument.
      From graph\\_pi1\\_free\\_weak on E: card(SE) = rank(\\<pi>\\_1(E)).
      From Euler formula (heuler\\_X): card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.
