@@ -6185,24 +6185,34 @@ proof -
      card(\\<A>w) = card(tree\\_arcs) + card(Sw).
      card(V\\_X) = card(V\\_Tw) = card(tree\\_arcs) + 1.
      So card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.\<close>
+  \<comment> \<open>Expert audit4 \\<S>3 Step 3: use rank + card V = card A + 1 form.
+     For base X: (n+1) + card(V\\_X) = card(\\<A>w) + 1 gives \\<chi>\\_X = n.
+     For lifted E: rank(E) + card(V\\_L) = card(\\<A>\\_L) + 1 gives rank = kn+1.\<close>
+  \<comment> \<open>Step 6a: Rank formula for base graph X with supplied decomposition \\<A>w + Tw.\<close>
+  have hrank_X_formula: "int (card Sw) + int (card (top1_graph_vertex_set X TX \<A>w))
+      = int (card \<A>w) + 1"
+    sorry \<comment> \<open>Supplied-witness graph rank: rank + card V = card A + 1.
+       Proof: tree Euler (card(V\\_Tw) = card(tree\\_arcs) + 1) + rank = card(non-tree arcs)
+       + V = V\\_Tw (all endpoints of non-tree arcs are in tree).
+       Blocked by tree Euler sorry chain.\<close>
   have hchi_X: "int (card \<A>w) - int (card (top1_graph_vertex_set X TX \<A>w)) = int n"
-    sorry \<comment> \<open>Euler characteristic of X: card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.
-       Uses tree Euler for Tw + rank formula.\<close>
-  \<comment> \<open>Step 6b: Lifted family multiplicity gives Euler for E.\<close>
+    using hrank_X_formula hSw_card by linarith
+  \<comment> \<open>Step 6b: Multiplicity gives lifted Euler.\<close>
   have hchi_L: "int (card ?\<A>_L) - int (card (top1_graph_vertex_set E TE ?\<A>_L)) = int k * int n"
   proof -
-    have "int (card ?\<A>_L) = int k * int (card \<A>w)"
-      using h\<A>_L_card by simp
+    have "int (card ?\<A>_L) = int k * int (card \<A>w)" using h\<A>_L_card by simp
     moreover have "int (card (top1_graph_vertex_set E TE ?\<A>_L)) = int k * int (card (top1_graph_vertex_set X TX \<A>w))"
       using hV_L_card by simp
     ultimately show ?thesis using hchi_X by (simp add: algebra_simps)
   qed
-  \<comment> \<open>Step 6c: Euler invariance: rank(\\<pi>\\_1(E)) = card(\\<A>\\_L) - card(V\\_L) + 1.
-     This is the key step: the Euler characteristic is independent of decomposition.\<close>
+  \<comment> \<open>Step 6c: Rank formula for covering graph E with supplied decomposition \\<A>\\_L.\<close>
+  have hrank_E_formula: "int (card SE_raw) + int (card (top1_graph_vertex_set E TE ?\<A>_L))
+      = int (card ?\<A>_L) + 1"
+    sorry \<comment> \<open>Supplied-witness graph rank for E: rank + card V\\_L = card \\<A>\\_L + 1.
+       Same approach as X: tree Euler for spanning tree of \\<A>\\_L + rank = non-tree arcs.
+       Note: by rank invariance, card(SE\\_raw) = rank(\\<pi>\\_1(E)) for ANY decomposition.\<close>
   have hrank_E: "int (card SE_raw) = int (card ?\<A>_L) - int (card (top1_graph_vertex_set E TE ?\<A>_L)) + 1"
-    sorry \<comment> \<open>Euler invariance: rank = arcs - vertices + 1 for any decomposition.
-       Both 𝒜E_raw and 𝒜_L are valid decompositions of E, so they give the same Euler χ.
-       card(SE_raw) = card(𝒜E_raw) - card(VE_raw) + 1 = card(𝒜_L) - card(V_L) + 1.\<close>
+    using hrank_E_formula by linarith
   \<comment> \<open>Step 6d: Combine to get card(SE\\_raw) = k*n + 1.\<close>
   have "int (card SE_raw) = int k * int n + 1"
     using hrank_E hchi_L by linarith
