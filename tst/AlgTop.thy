@@ -2972,9 +2972,66 @@ proof -
         next
           case bFalse: False
           \<comment> \<open>B \\<ne> A2. q1 shared with B, p1 shared with A2. Need walk continuation.\<close>
-          show ?thesis sorry \<comment> \<open>General case: walk+pigeonhole for card \\<ge> 3.
-             Continue walk from A2's other endpoint. By pigeonhole on finite \\<A>',
-             revisit a vertex, giving two arcs sharing both endpoints.\<close>
+          \<comment> \<open>B \\<ne> A2. A2 has other endpoint r2. r2 shared with A3 \\<ne> A2.\<close>
+          have "p1 \<in> A1 \<inter> A2"
+          proof -
+            have "p1 \<in> A1" using \<open>p1 \<in> top1_arc_endpoints_on A1 _\<close>
+                unfolding top1_arc_endpoints_on_def by (by100 blast)
+            thus ?thesis using \<open>p1 \<in> A2\<close> by (by100 blast)
+          qed
+          have "p1 \<in> top1_arc_endpoints_on A2 (subspace_topology T' TT' A2)"
+            using hinter'[rule_format, OF \<open>A1 \<in> \<A>'\<close> \<open>A2 \<in> \<A>'\<close> \<open>A2 \<noteq> A1\<close>[symmetric]]
+                \<open>p1 \<in> A1 \<inter> A2\<close> by (by100 blast)
+          \<comment> \<open>A2 has endpoints {p1, r2} for some r2 \\<ne> p1.\<close>
+          from h2ep'[rule_format, OF \<open>A2 \<in> \<A>'\<close>]
+          obtain a2 b2 where "a2 \<noteq> b2"
+              "top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {a2, b2}"
+            by (by100 blast)
+          define r2 where "r2 = (if p1 = a2 then b2 else a2)"
+          have "r2 \<noteq> p1" using \<open>a2 \<noteq> b2\<close> \<open>p1 \<in> top1_arc_endpoints_on A2 _\<close>
+              \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close>
+            unfolding r2_def by (by100 auto)
+          have hr2_ep: "r2 \<in> top1_arc_endpoints_on A2 (subspace_topology T' TT' A2)"
+            using \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close>
+            unfolding r2_def by (by100 auto)
+          \<comment> \<open>r2 shared with A3 \\<ne> A2.\<close>
+          from hshared[rule_format, OF \<open>A2 \<in> \<A>'\<close> hr2_ep]
+          obtain A3 where "A3 \<in> \<A>'" "A3 \<noteq> A2" "r2 \<in> A3" by (by100 blast)
+          show ?thesis
+          proof (cases "A3 = A1")
+            case True
+            \<comment> \<open>A3 = A1. r2 \\<in> A1. r2 \\<in> A1 \\<inter> A2 \\<subseteq> endpoints(A1) = {p1,q1}.
+               r2 \\<ne> p1 \\<Rightarrow> r2 = q1. A2 has endpoints {p1, q1} = endpoints(A1). SCC.\<close>
+            have "r2 \<in> A1" using True \<open>r2 \<in> A3\<close> by simp
+            have "r2 \<in> A2" using hr2_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+            have "r2 \<in> A1 \<inter> A2" using \<open>r2 \<in> A1\<close> \<open>r2 \<in> A2\<close> by (by100 blast)
+            have "r2 \<in> top1_arc_endpoints_on A1 (subspace_topology T' TT' A1)"
+              using hinter'[rule_format, OF \<open>A2 \<in> \<A>'\<close> \<open>A1 \<in> \<A>'\<close> \<open>A2 \<noteq> A1\<close>]
+                  \<open>r2 \<in> A1 \<inter> A2\<close> by (by100 blast)
+            hence "r2 \<in> {p1, q1}" using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+            hence "r2 = q1" using \<open>r2 \<noteq> p1\<close> by (by100 blast)
+            hence "top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {p1, q1}"
+            proof -
+              have "p1 \<in> {a2, b2}" using \<open>p1 \<in> top1_arc_endpoints_on A2 _\<close>
+                  \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+              have "q1 \<in> {a2, b2}" using hr2_ep \<open>r2 = q1\<close>
+                  \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+              have "{a2, b2} = {p1, q1}" using \<open>p1 \<in> {a2, b2}\<close> \<open>q1 \<in> {a2, b2}\<close>
+                  \<open>p1 \<noteq> q1\<close> \<open>a2 \<noteq> b2\<close> by (by100 blast)
+              thus ?thesis using \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by simp
+            qed
+            show ?thesis
+              using \<open>A1 \<in> \<A>'\<close> \<open>A2 \<in> \<A>'\<close> \<open>A2 \<noteq> A1\<close> \<open>p1 \<noteq> q1\<close>
+                  \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close>
+                  \<open>top1_arc_endpoints_on A2 _ = {p1, q1}\<close>
+              by (by100 blast)
+          next
+            case a3False: False
+            \<comment> \<open>A3 \\<ne> A1 and A3 \\<ne> A2. Continue walk. Pigeonhole on finite \\<A>'.\<close>
+            show ?thesis sorry \<comment> \<open>General walk continuation + pigeonhole.
+               By finiteness of \\<A>' and the no-leaf assumption, the walk must eventually
+               revisit a vertex, creating two arcs sharing both endpoints.\<close>
+          qed
         qed
       qed
       then obtain A1 A2 p1' q1' where hA1: "A1 \<in> \<A>'" and hA2: "A2 \<in> \<A>'"
