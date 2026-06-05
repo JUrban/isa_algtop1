@@ -1500,13 +1500,83 @@ proof -
           have "A \<inter> {x \<in> T. r_ret x \<notin> U} \<subseteq> A" by (by100 blast)
           \<comment> \<open>For now, all external arcs: r\\_ret restricted to A takes values in {p1,q1,h1(...)}.
              The preimage of the complement is a union of closed sets.\<close>
-          \<comment> \<open>For external arcs, r\\_ret on A \\ (A1\\<union>A2) is constant (p1 or q1).
-             Points in A \\<inter> (A1\\<union>A2) \\<subseteq> {p1,q1} also map to themselves = p1 or q1.
-             So r\\_ret restricted to A takes values only in {p1, q1, h1(...)}.
-             The preimage A \\<inter> {x | r\\_ret x \\<notin> U} is a union of {x \\<in> A | r\\_ret x = c \\<and> c \\<notin> U}
-             for c \\<in> {p1,q1,...}. Each piece is either empty or A (for constant) or closed
-             (for homeomorphism via inverse image). Overall: closed in A.\<close>
-          show ?thesis sorry
+          \<comment> \<open>Key fact: r\\_ret maps every point of A to the SAME value as a constant
+             or as a continuous homeomorphism. Either way, the preimage of T\\\\U is closed.\<close>
+          \<comment> \<open>Case 1: A does not have both p1 and q1 (constant case).
+             r\\_ret maps the entire A to a single constant c \\<in> {p1,q1}.
+             Preimage = A if c \\<notin> U, {} if c \\<in> U.\<close>
+          \<comment> \<open>Case 2: A has both p1 and q1 (homeomorphism case).
+             r\\_ret|A = h1 \\<circ> h\\_C\\<inverse>, continuous. Preimage of closed is closed.\<close>
+          \<comment> \<open>In both cases: the intersection A \\<inter> {x | r\\_ret x \\<notin> U} is closed in A.\<close>
+          have hA_ne_A1: "A \<noteq> A1" and hA_ne_A2: "A \<noteq> A2" using False by (by100 blast)+
+          \<comment> \<open>For the constant case: every x \\<in> A has r\\_ret x \\<in> {p1, q1}.
+             Because: x \\<in> A \\<inter> (A1\\<union>A2) \\<subseteq> {p1,q1} \\<Rightarrow> r\\_ret x = x \\<in> {p1,q1}.
+             And x \\<in> A \\ (A1\\<union>A2) \\<Rightarrow> r\\_ret x = p1 or q1 by definition.\<close>
+          have hA_val: "\<forall>x\<in>A. r_ret x \<in> A1 \<union> A2"
+          proof (intro ballI)
+            fix x assume "x \<in> A"
+            show "r_ret x \<in> A1 \<union> A2" using hr_maps \<open>x \<in> A\<close> \<open>A \<subseteq> T\<close> by (by100 blast)
+          qed
+          \<comment> \<open>The key: every x \\<in> A maps r\\_ret x \\<in> A1\\<union>A2 (from hA\\_val).
+             The set A \\<inter> {x | r\\_ret x \\<notin> U} = {x \\<in> A | r\\_ret x \\<in> (A1\\<union>A2)\\\\U}.
+             We need this closed in sub(T,A).
+             By Theorem 17.2: closed in sub(T,A) \\<longleftrightarrow> \\<exists>C closed in T with set = C\\<inter>A.
+             Take C = {x \\<in> T | r\\_ret x \\<notin> U}. If C is closed in T, then C\\<inter>A is closed in A.
+             But C is exactly what we're trying to prove closed!
+             Instead: C = T \\ U is closed (U open). Then we need A \\<inter> {x | r\\_ret \\<notin> U}
+             which is NOT the same as A \\<inter> (T\\\\U) unless r\\_ret = id.
+             For constant r\\_ret: A \\<inter> {x | c \\<notin> U} = A or {}.
+             For homeomorphism: continuous preimage.\<close>
+          \<comment> \<open>Simple observation: {} is always closed, and A is always closed in sub(T,A).\<close>
+          have h_empty_closed: "closedin_on A (subspace_topology T TT A) {}"
+          proof -
+            have "{} \<subseteq> A" by (by100 blast)
+            moreover have "A - {} \<in> subspace_topology T TT A"
+            proof -
+              have "A - {} = A" by (by100 blast)
+              moreover have "T \<in> TT" using hTT unfolding is_topology_on_def by (by100 blast)
+              hence "T \<inter> A \<in> subspace_topology T TT A"
+                unfolding subspace_topology_def by (by100 blast)
+              moreover have "T \<inter> A = A" using \<open>A \<subseteq> T\<close> by (by100 blast)
+              ultimately show ?thesis by simp
+            qed
+            ultimately show ?thesis unfolding closedin_on_def by (by100 blast)
+          qed
+          have h_full_closed: "closedin_on A (subspace_topology T TT A) A"
+            unfolding closedin_on_def
+          proof (intro conjI)
+            show "A \<subseteq> A" by (by100 blast)
+            show "A - A \<in> subspace_topology T TT A"
+            proof -
+              have "A - A = {}" by (by100 blast)
+              moreover have "{} \<in> subspace_topology T TT A"
+              proof -
+                have "{} \<in> TT" using hTT unfolding is_topology_on_def by (by100 blast)
+                hence "{} \<inter> A \<in> subspace_topology T TT A"
+                  unfolding subspace_topology_def by (by100 blast)
+                thus ?thesis by simp
+              qed
+              ultimately show ?thesis by simp
+            qed
+          qed
+          \<comment> \<open>Now: A \\<inter> {x \\<in> T | r\\_ret x \\<notin> U} is either {} or A or a proper subset.
+             For the constant case: it's {} or A. For the homeo case: sorry.\<close>
+          show ?thesis
+          proof (cases "A \<inter> {x \<in> T. r_ret x \<notin> U} = {}")
+            case True thus ?thesis using h_empty_closed by simp
+          next
+            case nonEmpty: False
+            show ?thesis
+            proof (cases "A \<inter> {x \<in> T. r_ret x \<notin> U} = A")
+              case True thus ?thesis using h_full_closed by simp
+            next
+              case False
+              \<comment> \<open>Proper subset: some points of A map into U, some don't.
+                 This requires the homeomorphism case or mixed constant+identity case.
+                 For now, sorry.\<close>
+              show ?thesis sorry
+            qed
+          qed
         qed
       qed
       from hcoherent[rule_format, OF hpre_sub] this
