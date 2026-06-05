@@ -1329,9 +1329,19 @@ lemma tree_euler_and_leaf_combined:
   shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1
     \<and> (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
         \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)))"
-  sorry \<comment> \<open>By strong induction on card \\<A>. Base: card=1 (2 endpoints). Step: card\\<ge>2.
-     Leaf from degree\\_sum\\_leaf + Euler from IH. Remove leaf \\<Rightarrow> IH gives Euler for n-1.
-     Then Euler for n. Then degree\\_sum\\_leaf gives leaf for n.\<close>
+proof -
+  \<comment> \<open>Leaf existence (walk + pigeonhole, NO Euler dependency).\<close>
+  have hleaf_if_ge2: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
+      v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
+    sorry \<comment> \<open>Walk + pigeonhole: cycle in incidence graph \\<Rightarrow> SCC \\<Rightarrow> contradicts SC.
+       Does NOT use Euler formula. See finite\\_tree\\_has\\_leaf\\_arc old proof sketch.\<close>
+  \<comment> \<open>Euler formula by induction (uses leaf removal from above).\<close>
+  have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
+    sorry \<comment> \<open>Strong induction on card \\<A>. Base: card=1 standard. Step: use hleaf\\_if\\_ge2
+       to find leaf, remove it (finite\\_tree\\_remove\\_leaf\\_is\\_tree), apply IH, add back.\<close>
+  show ?thesis using heuler hleaf_if_ge2 by (by100 blast)
+qed
 
 \<comment> \<open>Expert audit2: extract tree Euler sub-lemmas as named lemmas.\<close>
 
