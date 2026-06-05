@@ -1447,8 +1447,21 @@ qed
 \<comment> \<open>Euler formula for trees, assuming leaf existence as a parameter.
    This breaks the circular dependency: leaf existence is proved separately
    (walk+pigeonhole), and the Euler formula uses it.\<close>
+\<comment> \<open>Assumption: leaf existence for ALL trees (the topological bridge).\<close>
 lemma tree_euler_from_leaf:
   fixes n :: nat
+  assumes hleaf_all: "\<And>(T :: 'a set) TT \<A>.
+    \<lbrakk>top1_is_tree_on T TT;
+     \<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A);
+     \<Union>\<A> = T;
+     \<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2;
+     finite \<A>; card \<A> \<ge> 2;
+     \<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))\<rbrakk>
+    \<Longrightarrow> \<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
+        \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
   shows "\<forall>(T :: 'a set) TT \<A>. card \<A> = n \<longrightarrow>
     top1_is_tree_on T TT \<longrightarrow>
     (\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)) \<longrightarrow>
@@ -1459,12 +1472,10 @@ lemma tree_euler_from_leaf:
        \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
     finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
     (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow> (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
-    (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
-        \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))) \<longrightarrow>
     card (top1_graph_vertex_set T TT \<A>) = n + 1"
-  sorry \<comment> \<open>By strong induction on n. Base: n=1 (2 endpoints). Step: n\\<ge>2.
-     Use the leaf assumption to find leaf A0. Remove A0 via
-     finite\\_tree\\_remove\\_leaf\\_is\\_tree. Apply IH for n-1. Add back leaf vertex.\<close>
+  sorry \<comment> \<open>By strong induction on n. Same as tree\\_euler\\_nat but using hleaf\\_all
+     instead of finite\\_tree\\_has\\_leaf\\_arc. The IH can provide the leaf for subtrees
+     because hleaf\\_all is universal.\<close>
 
 \<comment> \<open>Combined Euler + leaf lemma for finite trees, proved by induction on card \\<A>.
    Breaks the circular dependency between tree\\_euler and finite\\_tree\\_has\\_leaf\\_arc.
@@ -1493,8 +1504,23 @@ proof -
        \\<Rightarrow> contradiction with simply connected (via two\\_arc\\_union\\_is\\_retract).\<close>
   \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_raw for the leaf.\<close>
   have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-    using spec[OF spec[OF spec[OF tree_euler_from_leaf[of "card \<A>"], of T], of TT], of \<A>]
-        assms hleaf_raw by (by5000 simp)
+  proof -
+    from tree_euler_from_leaf[of "card \<A>"]
+    have "\<forall>(T :: 'a set) TT \<A>. card \<A> = card \<A> \<longrightarrow>
+        top1_is_tree_on T TT \<longrightarrow>
+        (\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)) \<longrightarrow>
+        \<Union>\<A> = T \<longrightarrow>
+        (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
+        finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
+        (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
+        card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
+      sorry \<comment> \<open>Need hleaf\\_raw to be universal for the hleaf\\_all assumption.\<close>
+    thus ?thesis using assms sorry
+  qed
   \<comment> \<open>Now derive hleaf from heuler using degree\\_sum\\_leaf.\<close>
   have hleaf: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
       v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
