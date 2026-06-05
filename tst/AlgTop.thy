@@ -2897,16 +2897,48 @@ proof -
       have hhaus': "is_hausdorff_on T' TT'"
         using htree' unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
       have hA12_inter': "\<forall>C\<in>\<A>'. C \<noteq> A1 \<longrightarrow> C \<noteq> A2 \<longrightarrow> C \<inter> (A1 \<union> A2) \<subseteq> {p1', q1'}"
-        sorry \<comment> \<open>From hinter' + hep1' + hep2'.\<close>
+      proof (intro ballI impI)
+        fix C assume "C \<in> \<A>'" "C \<noteq> A1" "C \<noteq> A2"
+        have "C \<inter> A1 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology T' TT' A1)"
+          using hinter'[rule_format, OF \<open>C \<in> \<A>'\<close> hA1 \<open>C \<noteq> A1\<close>] by (by100 blast)
+        hence hCA1: "C \<inter> A1 \<subseteq> {p1', q1'}" using hep1' by (by100 blast)
+        have "C \<inter> A2 \<subseteq> top1_arc_endpoints_on A2 (subspace_topology T' TT' A2)"
+          using hinter'[rule_format, OF \<open>C \<in> \<A>'\<close> hA2 \<open>C \<noteq> A2\<close>] by (by100 blast)
+        hence "C \<inter> A2 \<subseteq> {p1', q1'}" using hep2' by (by100 blast)
+        thus "C \<inter> (A1 \<union> A2) \<subseteq> {p1', q1'}" using hCA1 by (by100 blast)
+      qed
       from two_arc_union_is_retract[OF hstrict' hhaus' h\<A>' hcover' hinter' hcoh'
           hA1 hA2 hne12 hep1' hep2' hpq' hA12_inter']
       have hretract': "top1_retract_of_on T' TT' (A1 \<union> A2)" .
       \<comment> \<open>SCC: arcs\\_form\\_simple\\_closed\\_curve.\<close>
-      have "A1 \<inter> A2 = {p1', q1'}" sorry
-      from arcs_form_simple_closed_curve[OF hstrict' hhaus' _ _ _ _
-          \<open>A1 \<inter> A2 = {p1', q1'}\<close> hpq' hep1' hep2']
-      have hSCC: "top1_simple_closed_curve_on T' TT' (A1 \<union> A2)"
-        using h\<A>' hA1 hA2 sorry
+      have "A1 \<inter> A2 = {p1', q1'}"
+      proof -
+        have "A1 \<inter> A2 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology T' TT' A1)"
+          using hinter'[rule_format, OF hA1 hA2 hne12] by (by100 blast)
+        hence "A1 \<inter> A2 \<subseteq> {p1', q1'}" using hep1' by (by100 blast)
+        moreover have "p1' \<in> A1 \<inter> A2"
+        proof -
+          have "p1' \<in> A1" using hep1' unfolding top1_arc_endpoints_on_def by (by100 blast)
+          have "p1' \<in> A2" using hep2' unfolding top1_arc_endpoints_on_def by (by100 blast)
+          thus ?thesis using \<open>p1' \<in> A1\<close> by (by100 blast)
+        qed
+        moreover have "q1' \<in> A1 \<inter> A2"
+        proof -
+          have "q1' \<in> A1" using hep1' unfolding top1_arc_endpoints_on_def by (by100 blast)
+          have "q1' \<in> A2" using hep2' unfolding top1_arc_endpoints_on_def by (by100 blast)
+          thus ?thesis using \<open>q1' \<in> A1\<close> by (by100 blast)
+        qed
+        ultimately show ?thesis by (by100 blast)
+      qed
+      have hA1_arc: "top1_is_arc_on A1 (subspace_topology T' TT' A1)"
+        using h\<A>' hA1 by (by100 blast)
+      have "A1 \<subseteq> T'" using h\<A>' hA1 by (by100 blast)
+      have hA2_arc: "top1_is_arc_on A2 (subspace_topology T' TT' A2)"
+        using h\<A>' hA2 by (by100 blast)
+      have "A2 \<subseteq> T'" using h\<A>' hA2 by (by100 blast)
+      from arcs_form_simple_closed_curve[OF hstrict' hhaus' hA1_arc \<open>A1 \<subseteq> T'\<close>
+          hA2_arc \<open>A2 \<subseteq> T'\<close> \<open>A1 \<inter> A2 = {p1', q1'}\<close> hpq' hep1' hep2']
+      have hSCC: "top1_simple_closed_curve_on T' TT' (A1 \<union> A2)" .
       \<comment> \<open>T' simply connected + retract of SCC \\<Rightarrow> \\<pi>\\_1(SCC) = Z embeds into \\<pi>\\_1(T') = 0.\<close>
       \<comment> \<open>But Z \\<ne> 0 \\<Rightarrow> contradiction.\<close>
       show False
