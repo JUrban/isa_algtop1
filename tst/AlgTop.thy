@@ -1347,13 +1347,15 @@ proof -
       sorry \<comment> \<open>Double counting.\<close>
     have hdeg_pos: "\<forall>v\<in>?V. ?deg v \<ge> 1"
       sorry
-    from degree_sum_leaf[OF hV_fin heuler _ hsum hdeg_pos]
-    obtain v where "v \<in> ?V" "?deg v = 1" using hge2 sorry
+    have hn_ge1: "card \<A> \<ge> 1" using hge2 by linarith
+    from degree_sum_leaf[OF hV_fin heuler hn_ge1 hsum hdeg_pos]
+    obtain v where hv_V: "v \<in> ?V" and hv_deg: "?deg v = 1"
+      by (by100 blast)
     have hcard1: "card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} = 1"
       using \<open>?deg v = 1\<close> by simp
     from card_1_singletonE[OF hcard1]
     obtain A0 where hA0_sing: "{A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} = {A0}"
-      sorry
+      by (by100 blast)
     have hA0: "A0 \<in> \<A>" using hA0_sing by (by100 blast)
     have hv_ep: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" using hA0_sing by (by100 blast)
     have "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
@@ -1372,7 +1374,7 @@ proof -
     qed
     show "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
         (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
-      sorry
+      using hA0 hv_ep \<open>\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B\<close> by (by5000 blast)
   qed
   show ?thesis using heuler hleaf by (by100 blast)
 qed
