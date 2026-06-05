@@ -1335,7 +1335,45 @@ proof -
   have hleaf: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
       v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
       (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
-    sorry \<comment> \<open>Leaf from degree\_sum\_leaf + heuler + double counting.\<close>
+  proof (intro impI)
+    assume hge2: "card \<A> \<ge> 2"
+    let ?V = "top1_graph_vertex_set T TT \<A>"
+    let ?deg = "\<lambda>v. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+    have hV_fin: "finite ?V"
+      sorry
+    have hep_card: "\<forall>A\<in>\<A>. card (top1_arc_endpoints_on A (subspace_topology T TT A)) = 2"
+      sorry
+    have hsum: "(\<Sum>v\<in>?V. ?deg v) = 2 * card \<A>"
+      sorry \<comment> \<open>Double counting.\<close>
+    have hdeg_pos: "\<forall>v\<in>?V. ?deg v \<ge> 1"
+      sorry
+    from degree_sum_leaf[OF hV_fin heuler _ hsum hdeg_pos]
+    obtain v where "v \<in> ?V" "?deg v = 1" using hge2 sorry
+    have hcard1: "card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} = 1"
+      using \<open>?deg v = 1\<close> by simp
+    from card_1_singletonE[OF hcard1]
+    obtain A0 where hA0_sing: "{A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} = {A0}"
+      sorry
+    have hA0: "A0 \<in> \<A>" using hA0_sing by (by100 blast)
+    have hv_ep: "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" using hA0_sing by (by100 blast)
+    have "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
+    proof (intro ballI impI)
+      fix B assume "B \<in> \<A>" "B \<noteq> A0"
+      show "v \<notin> B"
+      proof
+        assume "v \<in> B"
+        have "v \<in> A0" using hv_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+        hence "v \<in> A0 \<inter> B" using \<open>v \<in> B\<close> by (by100 blast)
+        hence "v \<in> top1_arc_endpoints_on B (subspace_topology T TT B)"
+          using assms(4)[rule_format, OF hA0 \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>[symmetric]] by (by100 blast)
+        hence "B \<in> {A0}" using \<open>B \<in> \<A>\<close> hA0_sing by (by100 blast)
+        with \<open>B \<noteq> A0\<close> show False by (by100 blast)
+      qed
+    qed
+    show "\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
+        (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
+      sorry
+  qed
   show ?thesis using heuler hleaf by (by100 blast)
 qed
 
