@@ -5570,7 +5570,107 @@ proof -
     \<comment> \<open>From \\<A>E\\_raw: rank + V\\_E\\_raw = E\\_raw + 1 (from tree Euler via sorry #1).\<close>
     have hrank_E_raw: "int (card SE_raw) + int (card (top1_graph_vertex_set E TE \<A>E_raw))
         = int (card \<A>E_raw) + 1"
-      sorry \<comment> \<open>Tree Euler for E's internal decomposition. Flows through finite\\_tree\\_has\\_leaf.\<close>
+    proof -
+      \<comment> \<open>Same pattern as hrank\\_X\\_formula: partition + tree Euler + V\\_eq.\<close>
+      let ?tree_arcs_E = "{A \<in> \<A>E_raw. A \<subseteq> TE_raw}"
+      have hpartE: "\<A>E_raw = ?tree_arcs_E \<union> SE_raw" using hSE_eq by (by100 blast)
+      have hpartE_disj: "?tree_arcs_E \<inter> SE_raw = {}" using hSE_eq by (by100 blast)
+      have h\<A>E_fin: "finite \<A>E_raw"
+      proof -
+        have hTX_top: "is_topology_on X TX"
+          using hgraph_X unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+        have hTE_top: "is_topology_on E TE"
+          using hstrict_E unfolding is_topology_on_strict_def by (by100 blast)
+        have hE_compact: "top1_compact_on E TE"
+          by (rule finite_covering_compact[OF hcov hcompact_X hTX_top hTE_top hfiber hk])
+        from compact_graph_finite_arcs[OF hE_graph hE_compact h\<A>E_arcs h\<A>E_cover h\<A>E_inter h\<A>E_coh]
+        show ?thesis .
+      qed
+      have htreeE_fin: "finite ?tree_arcs_E"
+        by (rule finite_subset[of _ \<A>E_raw]) (simp_all add: h\<A>E_fin)
+      have hSE_fin: "finite SE_raw"
+      proof -
+        have "SE_raw \<subseteq> \<A>E_raw" using hSE_eq by (by100 blast)
+        from finite_subset[OF this h\<A>E_fin] show ?thesis .
+      qed
+      have hpartE_card: "card \<A>E_raw = card ?tree_arcs_E + card SE_raw"
+        using card_Un_disjoint[OF htreeE_fin hSE_fin hpartE_disj] hpartE by simp
+      \<comment> \<open>Tree Euler for TE\\_raw (flows through sorry #1 via tree\\_euler\\_number\\_one).\<close>
+      have htreeE_euler: "card (top1_graph_vertex_set TE_raw (subspace_topology E TE TE_raw) ?tree_arcs_E)
+          = card ?tree_arcs_E + 1"
+      proof -
+        have hta_cover_E: "\<Union>?tree_arcs_E = TE_raw" using hTE_coverage by simp
+        have hta_arcs_E: "\<forall>A\<in>?tree_arcs_E. A \<subseteq> TE_raw \<and> top1_is_arc_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A)"
+        proof (intro ballI conjI)
+          fix A assume "A \<in> ?tree_arcs_E"
+          show "A \<subseteq> TE_raw" using \<open>A \<in> ?tree_arcs_E\<close> by (by100 blast)
+          have "A \<in> \<A>E_raw" using \<open>A \<in> ?tree_arcs_E\<close> by (by100 blast)
+          have "top1_is_arc_on A (subspace_topology E TE A)" using h\<A>E_arcs \<open>A \<in> \<A>E_raw\<close> by (by100 blast)
+          moreover have "subspace_topology TE_raw (subspace_topology E TE TE_raw) A = subspace_topology E TE A"
+            by (rule subspace_topology_trans) (use \<open>A \<in> ?tree_arcs_E\<close> in blast)
+          ultimately show "top1_is_arc_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A)" by simp
+        qed
+        have hta_inter_E: "\<forall>A\<in>?tree_arcs_E. \<forall>B\<in>?tree_arcs_E. A \<noteq> B \<longrightarrow>
+             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A)
+           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology TE_raw (subspace_topology E TE TE_raw) B)
+           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+        proof (intro ballI impI)
+          fix A B assume "A \<in> ?tree_arcs_E" "B \<in> ?tree_arcs_E" "A \<noteq> B"
+          have "A \<in> \<A>E_raw" "B \<in> \<A>E_raw" using \<open>A \<in> ?tree_arcs_E\<close> \<open>B \<in> ?tree_arcs_E\<close> by (by100 blast)+
+          from h\<A>E_inter[rule_format, OF \<open>A \<in> \<A>E_raw\<close> \<open>B \<in> \<A>E_raw\<close> \<open>A \<noteq> B\<close>]
+          have h_raw: "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology E TE A)
+              \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
+              \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" .
+          have "subspace_topology TE_raw (subspace_topology E TE TE_raw) A = subspace_topology E TE A"
+            by (rule subspace_topology_trans) (use \<open>A \<in> ?tree_arcs_E\<close> in blast)
+          moreover have "subspace_topology TE_raw (subspace_topology E TE TE_raw) B = subspace_topology E TE B"
+            by (rule subspace_topology_trans) (use \<open>B \<in> ?tree_arcs_E\<close> in blast)
+          ultimately show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A)
+              \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology TE_raw (subspace_topology E TE TE_raw) B)
+              \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" using h_raw by simp
+        qed
+        have hta_ne_E: "?tree_arcs_E \<noteq> {}"
+        proof -
+          have "e0 \<in> TE_raw" using he0_TE .
+          have "e0 \<in> \<Union>?tree_arcs_E" using hTE_coverage \<open>e0 \<in> TE_raw\<close> by simp
+          thus ?thesis by (by100 blast)
+        qed
+        have hta_coh_E: "\<forall>C. C \<subseteq> TE_raw \<longrightarrow> (closedin_on TE_raw (subspace_topology E TE TE_raw) C \<longleftrightarrow>
+            (\<forall>A\<in>?tree_arcs_E. closedin_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A) (A \<inter> C)))"
+        proof (intro allI impI)
+          fix C assume "C \<subseteq> TE_raw"
+          have "{A \<in> \<A>E_raw. A \<subseteq> TE_raw} \<subseteq> \<A>E_raw" by (by100 blast)
+          from subgraph_coherent_topology[OF hE_graph h\<A>E_arcs h\<A>E_cover h\<A>E_inter h\<A>E_coh
+              this hta_cover_E[symmetric], rule_format, OF \<open>C \<subseteq> TE_raw\<close>]
+          have "closedin_on TE_raw (subspace_topology E TE TE_raw) C =
+              (\<forall>A\<in>?tree_arcs_E. closedin_on A (subspace_topology E TE A) (A \<inter> C))" .
+          moreover have "\<forall>A\<in>?tree_arcs_E. closedin_on A (subspace_topology E TE A) (A \<inter> C) =
+              closedin_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A) (A \<inter> C)"
+          proof (intro ballI)
+            fix A assume "A \<in> ?tree_arcs_E"
+            have "subspace_topology TE_raw (subspace_topology E TE TE_raw) A = subspace_topology E TE A"
+              by (rule subspace_topology_trans) (use \<open>A \<in> ?tree_arcs_E\<close> in blast)
+            thus "closedin_on A (subspace_topology E TE A) (A \<inter> C) =
+                closedin_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A) (A \<inter> C)" by simp
+          qed
+          ultimately show "closedin_on TE_raw (subspace_topology E TE TE_raw) C =
+              (\<forall>A\<in>?tree_arcs_E. closedin_on A (subspace_topology TE_raw (subspace_topology E TE TE_raw) A) (A \<inter> C))"
+            by simp
+        qed
+        from tree_euler_number_one[OF hTE_tree hta_arcs_E hta_cover_E hta_inter_E htreeE_fin hta_ne_E hta_coh_E]
+        show ?thesis .
+      qed
+      \<comment> \<open>Vertex equality: V(\\<A>E\\_raw) = V(tree\\_arcs\\_E).\<close>
+      have hVE_eq: "top1_graph_vertex_set E TE \<A>E_raw =
+          top1_graph_vertex_set TE_raw (subspace_topology E TE TE_raw) ?tree_arcs_E"
+        sorry \<comment> \<open>Same pattern as hV\\_eq for X. All non-tree arc endpoints are in TE\\_raw.\<close>
+      show ?thesis
+      proof -
+        have "card (top1_graph_vertex_set E TE \<A>E_raw) = card ?tree_arcs_E + 1"
+          using htreeE_euler hVE_eq by simp
+        thus ?thesis using hpartE_card by linarith
+      qed
+    qed
     \<comment> \<open>Euler invariance: V\\_L - \\<A>\\_L = V\\_E\\_raw - \\<A>E\\_raw.\<close>
     have heuler_inv: "int (card (top1_graph_vertex_set E TE ?\<A>_L)) - int (card ?\<A>_L)
         = int (card (top1_graph_vertex_set E TE \<A>E_raw)) - int (card \<A>E_raw)"
@@ -7681,4 +7781,4 @@ qed
 
 
 end
-                     
+                       
