@@ -4668,8 +4668,57 @@ proof -
     \<comment> \<open>The lifted family A\\_lifted from Theorem 83.4 satisfies the interface.
        card(A\\_lifted) = k * card(A\\_X) and card(V\\_lifted) = k * card(V\\_X).
        By Euler invariance: card(A\\_E) - card(V\\_E) = card(A\\_lifted) - card(V\\_lifted).\<close>
+    \<comment> \<open>A\\_E is the lifted arc family from Theorem 83.4. Establish the interface.\<close>
+    have h_lifted: "top1_covering_lifted_arc_family_on E' TE' X TX p' \<A>_X \<A>_E"
+      sorry \<comment> \<open>A\\_E from graph\\_pi1\\_free\\_weak = lifted family from Theorem 83.4.\<close>
+    have h\<A>_X_sub: "\<forall>A\<in>\<A>_X. A \<subseteq> X \<and> A \<noteq> {}"
+    proof (intro ballI conjI)
+      fix A assume "A \<in> \<A>_X"
+      show "A \<subseteq> X" using h\<A>_X \<open>A \<in> \<A>_X\<close> by (by100 blast)
+      show "A \<noteq> {}"
+      proof -
+        have "top1_is_arc_on A (subspace_topology X TX A)" using h\<A>_X \<open>A \<in> \<A>_X\<close> by (by100 blast)
+        then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        hence "h ` I_set = A" unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        moreover have "I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 auto)
+        ultimately show ?thesis by (by100 blast)
+      qed
+    qed
+    have hk_pos: "k > 0"
+    proof -
+      have "e0' \<in> {e \<in> E'. p' e = x0}" using he0' \<open>p' e0' = x0\<close> by (by100 blast)
+      hence "{e \<in> E'. p' e = x0} \<noteq> {}" by (by100 blast)
+      moreover have "card {e \<in> E'. p' e = x0} = k" using hfiber_card .
+      ultimately show "k > 0" sorry \<comment> \<open>Nonempty set with card = k implies k > 0 (needs finite).\<close>
+    qed
+    \<comment> \<open>Apply covering multiplicity lemmas to A\\_E (= lifted family from Thm 83.4).\<close>
+    have harc_mult: "card \<A>_E = k * card \<A>_X"
+      sorry \<comment> \<open>From h\\_lifted + covering\\_lifted\\_arc\\_family\\_card.\<close>
+    have hV_X_fin: "finite (top1_graph_vertex_set X TX \<A>_X)"
+    proof -
+      have "\<forall>A\<in>\<A>_X. finite (top1_arc_endpoints_on A (subspace_topology X TX A))"
+      proof (intro ballI)
+        fix A assume "A \<in> \<A>_X"
+        hence "A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)" using h\<A>_X by (by100 blast)
+        hence "top1_is_arc_on A (subspace_topology X TX A)" by (by100 blast)
+        then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        have hX_strict: "is_topology_on_strict X TX"
+          using hX_graph unfolding top1_is_graph_on_def by (by100 blast)
+        have hX_haus: "is_hausdorff_on X TX"
+          using hX_graph unfolding top1_is_graph_on_def by (by100 blast)
+        from arc_endpoints_are_boundary[OF hX_strict hX_haus \<open>A \<subseteq> X \<and> _\<close>[THEN conjunct1]
+            \<open>top1_is_arc_on A _\<close> \<open>top1_homeomorphism_on _ _ _ _ h\<close>]
+        have "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}" .
+        thus "finite (top1_arc_endpoints_on A (subspace_topology X TX A))" by (by100 simp)
+      qed
+      thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>_X_fin by (by100 blast)
+    qed
+    have hvert_mult: "card ?V_E = k * card ?V_X"
+      sorry \<comment> \<open>From h\\_lifted + covering\\_lifted\\_vertex\\_set\\_card.\<close>
     have hchi_mult: "int (card \<A>_E) - int (card ?V_E) = int k * (int (card \<A>_X) - int (card ?V_X))"
-      sorry \<comment> \<open>Euler invariance: rank(pi1) from lifted family = k*n+1 = rank from A\\_E.\<close>
+      using harc_mult hvert_mult by (simp add: algebra_simps)
     \<comment> \<open>Step G: Euler formula for E': card S\\_E + card V\\_E = card \\<A>\\_E + 1.\<close>
     have hE'_sub_top: "is_topology_on E' TE'"
       using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
