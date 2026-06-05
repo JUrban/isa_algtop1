@@ -5302,7 +5302,9 @@ proof -
             have hVb_sub_B: "Vb \<subseteq> B"
             proof -
               have hVb_conn: "top1_connected_on Vb (subspace_topology ?pre (subspace_topology E TE ?pre) Vb)"
-                sorry \<comment> \<open>Vb path-connected from homeomorphism with p(W').\<close>
+                sorry \<comment> \<open>Vb connected: homeomorphic to p(W') via p (from hVb\\_homeo).
+                   p(W') connected from continuous image of path-connected W'.
+                   Inverse homeomorphism preserves connectedness.\<close>
               have "Vb \<inter> B \<noteq> {}" using \<open>b \<in> Vb\<close> \<open>b \<in> B\<close> by (by100 blast)
               from h_mcc_absorb[OF hpre_top hB_comp hVb_conn \<open>Vb \<subseteq> ?pre\<close> this]
               show ?thesis .
@@ -5563,8 +5565,29 @@ proof -
         have hB_sub_E: "B \<subseteq> E" using hB_sub0 by (by100 blast)
         have hp_homeo_B: "top1_homeomorphism_on B (subspace_topology E TE B)
             A0 (subspace_topology X TX A0) p"
-          sorry \<comment> \<open>p continuous on B, bij (inj + surj), B compact (homeo to A0 via [0,1]),
-             A0 Hausdorff. By Theorem 26.6.\<close>
+          unfolding top1_homeomorphism_on_def
+        proof (intro conjI)
+          show "is_topology_on B (subspace_topology E TE B)"
+            by (rule subspace_topology_is_topology_on[OF hTE hB_sub_E])
+          show "is_topology_on A0 (subspace_topology X TX A0)" by (rule hTA0)
+          show "bij_betw p B A0" unfolding bij_betw_def using hB_inj hpB_eq by (by100 blast)
+          \<comment> \<open>p continuous on B (restriction of continuous p: E \\<rightarrow> X).\<close>
+          show "top1_continuous_map_on B (subspace_topology E TE B) A0 (subspace_topology X TX A0) p"
+          proof -
+            have "top1_continuous_map_on B (subspace_topology E TE B) X TX p"
+              by (rule top1_continuous_map_on_subspace_restrict[OF hp_cont hB_sub_E])
+            have "\<forall>e\<in>B. p e \<in> A0" using hB_sub0 by (by100 blast)
+            from continuous_map_restrict_codomain[OF
+                \<open>top1_continuous_map_on B (subspace_topology E TE B) X TX p\<close>
+                this hA0_sub]
+            show ?thesis .
+          qed
+          \<comment> \<open>inv\\_into B p continuous on A0 (p is open map from covering).\<close>
+          show "top1_continuous_map_on A0 (subspace_topology X TX A0) B (subspace_topology E TE B)
+              (inv_into B p)"
+            sorry \<comment> \<open>Inverse continuous: p is open map (covering), so p|B is open,
+               and a continuous open bijection has continuous inverse.\<close>
+        qed
         \<comment> \<open>Get homeomorphism h\\_A0: [0,1] \\<rightarrow> A0.\<close>
         obtain h_A0 where hh_A0: "top1_homeomorphism_on top1_unit_interval
             top1_unit_interval_topology A0 (subspace_topology X TX A0) h_A0"
@@ -5588,7 +5611,13 @@ proof -
         let ?g = "?invp \<circ> h_A0"
         have hg_homeo: "top1_homeomorphism_on top1_unit_interval top1_unit_interval_topology
             B (subspace_topology E TE B) ?g"
-          sorry \<comment> \<open>Composition of homeomorphisms: h\\_A0: I \\<rightarrow> A0, inv\\_p: A0 \\<rightarrow> B.\<close>
+        proof -
+          have hinvp_homeo: "top1_homeomorphism_on A0 (subspace_topology X TX A0)
+              B (subspace_topology E TE B) ?invp"
+            by (rule homeomorphism_inverse[OF hp_homeo_B])
+          from homeomorphism_comp[OF hh_A0 hinvp_homeo]
+          show ?thesis .
+        qed
         \<comment> \<open>B is an arc.\<close>
         have hB_strict: "is_topology_on_strict B (subspace_topology E TE B)"
           by (rule subspace_topology_is_strict[OF hstrict_E hB_sub_E])
