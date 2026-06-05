@@ -2612,8 +2612,25 @@ proof -
        Walk \\<Rightarrow> revisit \\<Rightarrow> cycle \\<Rightarrow> SCC \\<Rightarrow> contradicts SC (via two\\_arc\\_union\\_is\\_retract).\<close>
   \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_universal.\<close>
   have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-    using spec[OF spec[OF spec[OF tree_euler_from_leaf[OF hleaf_universal, of "card \<A>"],
-        of T], of TT], of \<A>] assms sorry
+  proof -
+    \<comment> \<open>tree\\_euler\\_from\\_leaf[OF hleaf\\_universal] gives the Euler formula for trees
+       where leaf existence is guaranteed by hleaf\\_universal.\<close>
+    have h: "\<forall>(T' :: 'a set) TT' \<A>'. card \<A>' = card \<A> \<longrightarrow>
+        top1_is_tree_on T' TT' \<longrightarrow>
+        (\<forall>A\<in>\<A>'. A \<subseteq> T' \<and> top1_is_arc_on A (subspace_topology T' TT' A)) \<longrightarrow>
+        \<Union>\<A>' = T' \<longrightarrow>
+        (\<forall>A\<in>\<A>'. \<forall>B\<in>\<A>'. A \<noteq> B \<longrightarrow>
+             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T' TT' A)
+           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T' TT' B)
+           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
+        finite \<A>' \<longrightarrow> \<A>' \<noteq> {} \<longrightarrow>
+        (\<forall>C. C \<subseteq> T' \<longrightarrow> (closedin_on T' TT' C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T' TT' A) (A \<inter> C)))) \<longrightarrow>
+        card (top1_graph_vertex_set T' TT' \<A>') = card \<A> + 1"
+      by (rule tree_euler_from_leaf[OF hleaf_universal])
+    from spec[OF spec[OF spec[OF h, of T], of TT], of \<A>]
+    show ?thesis using assms by (by5000 simp)
+  qed
   \<comment> \<open>Now derive hleaf from heuler using degree\\_sum\\_leaf.\<close>
   have hleaf: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
       v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
