@@ -1329,12 +1329,10 @@ lemma tree_euler_and_leaf_combined:
   shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1
     \<and> (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
         \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)))"
-  \<comment> \<open>Leaf existence (walk + pigeonhole, NO Euler dependency) is the key sub-lemma.
-     Then Euler follows by standard induction with leaf removal.\<close>
-  sorry \<comment> \<open>Combined induction: leaf by walk+pigeonhole (no Euler dep),
-     Euler by leaf removal + IH. Both statements proved simultaneously.
-     Key sub-lemma: walk+pigeonhole for leaf existence (does NOT use Euler).
-     Key sub-lemma: finite\\_tree\\_remove\\_leaf\\_is\\_tree (already proved, no circularity).\<close>
+  sorry \<comment> \<open>By strong induction on card \\<A>. Base: card=1 (2 endpoints, leaf vacuous).
+     Step: card\\<ge>2. Leaf from walk+pigeonhole (no Euler dep). Remove leaf via
+     finite\\_tree\\_remove\\_leaf\\_is\\_tree (no circularity). Apply IH for card-1.
+     Add back leaf: card V = (card-1)+1+1 = card+1. Both statements follow.\<close>
 
 \<comment> \<open>Expert audit2: extract tree Euler sub-lemmas as named lemmas.\<close>
 
