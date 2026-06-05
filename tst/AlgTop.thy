@@ -2595,32 +2595,25 @@ lemma tree_euler_and_leaf_combined:
     \<and> (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
         \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)))"
 proof -
-  \<comment> \<open>Leaf existence by walk+pigeonhole (the only topological bridge; no Euler needed).\<close>
-  have hleaf_raw: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
-      v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
-    sorry \<comment> \<open>Walk+pigeonhole: if no leaf, all degrees \\<ge> 2. Walk through incidence graph
-       visits new vertex each step. Pigeonhole \\<Rightarrow> revisit \\<Rightarrow> cycle \\<Rightarrow> SCC in tree
-       \\<Rightarrow> contradiction with simply connected (via two\\_arc\\_union\\_is\\_retract).\<close>
-  \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_raw for the leaf.\<close>
+  \<comment> \<open>Universal leaf existence by walk+pigeonhole (topological bridge; no Euler needed).\<close>
+  have hleaf_universal: "\<And>(T' :: 'a set) TT' \<A>'.
+    \<lbrakk>top1_is_tree_on T' TT';
+     \<forall>A\<in>\<A>'. A \<subseteq> T' \<and> top1_is_arc_on A (subspace_topology T' TT' A);
+     \<Union>\<A>' = T';
+     \<forall>A\<in>\<A>'. \<forall>B\<in>\<A>'. A \<noteq> B \<longrightarrow>
+         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T' TT' A)
+       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T' TT' B)
+       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2;
+     finite \<A>'; card \<A>' \<ge> 2;
+     \<forall>C. C \<subseteq> T' \<longrightarrow> (closedin_on T' TT' C \<longleftrightarrow> (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T' TT' A) (A \<inter> C)))\<rbrakk>
+    \<Longrightarrow> \<exists>A0 v. A0 \<in> \<A>' \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T' TT' A0)
+        \<and> (\<forall>B\<in>\<A>'. B \<noteq> A0 \<longrightarrow> v \<notin> B)"
+    sorry \<comment> \<open>Walk+pigeonhole for ANY tree: if no leaf, all degrees \\<ge> 2.
+       Walk \\<Rightarrow> revisit \\<Rightarrow> cycle \\<Rightarrow> SCC \\<Rightarrow> contradicts SC (via two\\_arc\\_union\\_is\\_retract).\<close>
+  \<comment> \<open>Euler formula by induction on card \\<A>, using hleaf\\_universal.\<close>
   have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-  proof -
-    from tree_euler_from_leaf[of "card \<A>"]
-    have "\<forall>(T :: 'a set) TT \<A>. card \<A> = card \<A> \<longrightarrow>
-        top1_is_tree_on T TT \<longrightarrow>
-        (\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)) \<longrightarrow>
-        \<Union>\<A> = T \<longrightarrow>
-        (\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
-             A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
-           \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-           \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2) \<longrightarrow>
-        finite \<A> \<longrightarrow> \<A> \<noteq> {} \<longrightarrow>
-        (\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
-            (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))) \<longrightarrow>
-        card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-      sorry \<comment> \<open>Need hleaf\\_raw to be universal for the hleaf\\_all assumption.\<close>
-    thus ?thesis using assms sorry
-  qed
+    using spec[OF spec[OF spec[OF tree_euler_from_leaf[OF hleaf_universal, of "card \<A>"],
+        of T], of TT], of \<A>] assms sorry
   \<comment> \<open>Now derive hleaf from heuler using degree\\_sum\\_leaf.\<close>
   have hleaf: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
       v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
