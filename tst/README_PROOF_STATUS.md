@@ -47,17 +47,33 @@ These are in `fi/AlgIsoFixed.thy` and `ac/AlgTopCached.thy`.
   OF-chain with 35 premises exceeds timeout.
 - Main contradiction — needs component boundary infrastructure.
 
-### AlgTop.thy (23 gaps)
-- §64: K5/K33 non-planarity (2 gaps, partially addressed in K5 session)
-- §67-§68: Free abelian group rank uniqueness (1 gap)
-- §69: Free group independence (1 gap)
-- §71: Free group of infinite wedge (1 gap)
-- §73: Torus/dunce cap fundamental groups (4 gaps)
-- §74: Surface fundamental groups (5 gaps)
-- §75-§78: Surface classification (5 gaps)
-- §79-§82: Covering space existence (2 gaps)
-- §83-§84: Graph covering / free subgroup (4 gaps)
-- §85: Nielsen-Schreier rank formula (3 gaps)
+### AlgTop.thy (10 executable gaps, updated 2026-06-06)
+
+**Non-surface (2 gaps):**
+- `finite_tree_has_leaf` (L2676): SC + all vertices degree≥2 → False (topological bridge)
+- `covering_graph_pi1_rank` (L5512): Euler invariance for lifted graph (witness drift)
+
+**Surface classification (8 gaps):**
+- Theorem 75.4: 1-skeleton is wedge of circles (L7266)
+- Theorem 76: Elementary scheme operation induction (L7356)
+- Theorem 75.4: Abelianization + Smith normal form (L7398)
+- Theorem 78.1: Disjoint simplex copies + pasting (L7460)
+- Theorem 78.2: Iterative merging construction (L7496)
+- Theorem 77.5: Polygonal region → edge scheme (L7536)
+- Theorem 77.5: Normal form reduction (L7552)
+- Theorem 77.5: Normal form → homeomorphism type (L7554)
+
+**Fully proved infrastructure (highlights):**
+- Covering lifted arc family interface (all 3 clauses: surj+inj+endpoints, coverage, disjointness)
+- Covering arc/vertex multiplicity
+- Injectivity via Theorem 54.3 + arc simply connected
+- Free group transfer to nat basis
+- Max conn comp helpers, graph arc containment
+- Euler characteristic arithmetic chain
+- Vertex set equality, subgraph coherent topology
+- All §64, §67-§73, §79-§82, §83-§84 infrastructure
+
+See `SORRY_AUDIT.md` for detailed dependency analysis.
 
 ## Build Command
 

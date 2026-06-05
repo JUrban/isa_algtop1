@@ -178,7 +178,7 @@ i/Top1_Ch5_8.thy|definition|top1_continuous_maps_metric_on|10524
 i/Top1_Ch4.thy|definition|top1_countable|16
 i/Top1_Ch4.thy|definition|top1_countable_neighborhood_basis_at|436
 i/Top1_Ch3.thy|definition|top1_countably_compact_on|10373
-AlgTop.thy|definition|top1_covering_lifted_arc_family_on|546
+AlgTop.thy|definition|top1_covering_lifted_arc_family_on|3362
 i/Top1_Ch9_13.thy|definition|top1_covering_map_on|3918
 ac4/AlgTopCached4.thy|definition|top1_covering_transformation_on|4965
 i/Top1_Ch5_8.thy|definition|top1_cover_order_le_on|26322
@@ -236,7 +236,7 @@ i/Top1_Ch9_13.thy|definition|top1_induced_homomorphism_on|2481
 i/Top1_Ch3.thy|definition|top1_in_same_component_on|2466
 i/Top1_Ch3.thy|definition|top1_in_same_path_component_on|3057
 i/Top1_Ch3.thy|definition|top1_interval_encode|9643
-AlgTop.thy|definition|top1_inverse_edge|2037
+AlgTop.thy|definition|top1_inverse_edge|7307
 wh/AlgTopWedgeHelpers.thy|definition|top1_is_2_manifold_on|11
 i/Top1_Ch9_13.thy|definition|top1_is_abelian_group_on|3124
 ac/AlgTopCached.thy|definition|top1_is_abelianization_of|7044
@@ -328,6 +328,8 @@ i/Top1_Ch5_8.thy|definition|top1_refines|2840
 i/Top1_Ch4.thy|definition|top1_regular_on|2418
 i/Top1_Ch9_13.thy|definition|top1_retract_of_on|11439
 i/Top1_Ch5_8.thy|definition|top1_rho49|25062
+AlgTop.thy|definition|top1_right_coset_on|6
+AlgTop.thy|definition|top1_right_cosets_on|9
 i/Top1_Ch4.thy|definition|top1_Rpow_set|17545
 i/Top1_Ch5_8.thy|definition|top1_Rpow_sq_metric|28094
 i/Top1_Ch5_8.thy|definition|top1_Rpow_sup_dist|27594
@@ -346,7 +348,7 @@ b/AlgTop_JCT_Base.thy|definition|top1_S2_topology|3731
 b0/AlgTop_JCT_Base0.thy|definition|top1_same_homotopy_type_on|4048
 i/Top1_Ch2.thy|definition|top1_saturated_with_respect_to_on|18798
 i/Top1_Ch5_8.thy|definition|top1_SC_F|20779
-AlgTop.thy|definition|top1_scheme_equiv|2047
+AlgTop.thy|definition|top1_scheme_equiv|7317
 i/Top1_Ch5_8.thy|definition|top1_SC_J|20775
 i/Top1_Ch5_8.thy|definition|top1_SC_TY|20793
 i/Top1_Ch5_8.thy|definition|top1_SC_TZ|20785
@@ -643,9 +645,10 @@ i/Top1_Ch5_8.thy|lemma|co_subbasis_in_cc_subspace|18552
 i/Top1_Ch5_8.thy|lemma|countable_union_sigma_lf|2963
 ac4/AlgTopCached4.thy|lemma|covering_base_locally_path_connected|3813
 ac5/AlgTopCached5.thy|lemma|covering_component_over_arc_path_connected|397
+AlgTop.thy|lemma|covering_graph_pi1_rank|4063
 ac4/AlgTopCached4.thy|lemma|covering_induced_injective|36
-AlgTop.thy|lemma|covering_lifted_arc_family_card|557
-AlgTop.thy|lemma|covering_lifted_vertex_set_card|567
+AlgTop.thy|lemma|covering_lifted_arc_family_card|3379
+AlgTop.thy|lemma|covering_lifted_vertex_set_card|3542
 a0/AlgTop0.thy|lemma|covering_lift_endpoint_contradiction|2577
 ac4/AlgTopCached4.thy|lemma|covering_lift_unique_connected|179
 ac4/AlgTopCached4.thy|lemma|covering_lift_unique_path|23
@@ -675,6 +678,7 @@ ac4/AlgTopCached4.thy|lemma|deck_transformation_homeomorphism|4972
 ac4/AlgTopCached4.thy|lemma|deck_transformations_group|4978
 ac7/AlgTopCached7.thy|lemma|deformation_retract_path_connected|4516
 wh/AlgTopWedgeHelpers.thy|lemma|deformation_retract_to_singleton_imp_simply_connected|2777
+AlgTop.thy|lemma|degree_sum_leaf|1334
 i/Top1_Ch5_8.thy|lemma|dense_in_compact_image|12068
 i/Top1_Ch5_8.thy|lemma|dense_in_own_closure|20742
 i/Top1_Ch2.thy|lemma|diff_Inter_eq|4890
@@ -688,6 +692,7 @@ i/Top1_Ch2.thy|lemma|dist_to_set_nonneg|16846
 i/Top1_Ch2.thy|lemma|dist_to_set_zero_iff_closure|16907
 i/Top1_Ch2.thy|lemma|dist_to_set_zero_iff_eps|16862
 i/Top1_Ch9_13.thy|lemma|double_basepoint_change_equiv|14542
+AlgTop.thy|lemma|double_counting_sum|1295
 ac/AlgTopCached.thy|lemma|doubleton_eq_iff|48487
 ac2/AlgTopCached2.thy|lemma|dunce_cap_hausdorff|80
 ac2/AlgTopCached2.thy|lemma|dunce_cap_skeleton_is_circle|570
@@ -710,10 +715,14 @@ i/Top1_Ch2.thy|lemma|finer_than_on_imp|1057
 i/Top1_Ch2.thy|lemma|finer_than_on_strict|1528
 i/Top1_Ch5_8.thy|lemma|fin_inter_open_on|14361
 i/Top1_Ch5_8.thy|lemma|finite_cover_enumerate|29663
+AlgTop.thy|lemma|finite_covering_compact|3660
 i/Top1_Ch4.thy|lemma|finite_distinct_list_of_set|11669
 i/Top1_Ch5_8.thy|lemma|finite_Func|14520
 i/Top1_Ch5_8.thy|lemma|finite_range_const_subseq|32593
 i/Top1_Ch5_8.thy|lemma|finite_subset_compact|15017
+AlgTop.thy|lemma|finite_tree_has_leaf|2592
+AlgTop.thy|lemma|finite_tree_has_leaf_arc|2841
+AlgTop.thy|lemma|finite_tree_remove_leaf_is_tree|1520
 i/Top1_Ch5_8.thy|lemma|finite_union_empty_interior|27702
 i/Top1_Ch5_8.thy|lemma|finite_union_finite_dim|27408
 i/Top1_Ch5_8.thy|lemma|finite_union_locally_finite|2890
@@ -786,7 +795,8 @@ i/Top1_Ch5_8.thy|lemma|gp_singleton_set|29279
 ac7/AlgTopCached7.thy|lemma|graph_connected_sub_covered_by_arcs|4698
 ac10/AlgTopCached10.thy|lemma|graph_covering_is_graph|9824
 ac7/AlgTopCached7.thy|lemma|graph_deformation_retract_helper|4896
-AlgTop.thy|lemma|graph_euler_rank|405
+AlgTop.thy|lemma|graph_euler_rank|3193
+AlgTop.thy|lemma|graph_is_free|4011
 ac10/AlgTopCached10.thy|lemma|graph_locally_path_connected|9939
 ac7/AlgTopCached7.thy|lemma|graph_one_edge_pi1_iso_Z|6581
 ac10/AlgTopCached10.thy|lemma|graph_pi1_free_weak|12615
@@ -946,6 +956,7 @@ fib/AlgIsoFixedBase.thy|lemma|K4_nonadjacent_edges_different_components|1289
 k5/K5_nonplanar.thy|lemma|K5_K4_sep|10
 ac/AlgTopCached.thy|lemma|kernel_is_normal_subgroup|7746
 i/Top1_Ch5_8.thy|lemma|lebesgue_number_lemma|14062
+AlgTop.thy|lemma|left_right_coset_card_eq|714
 i/Top1_Ch2.thy|lemma|Lemma_16_4_aux|4273
 i/Top1_Ch3.thy|lemma|Lemma_23_1|33
 i/Top1_Ch3.thy|lemma|Lemma_23_1_proper|40
@@ -1078,7 +1089,7 @@ i/Top1_Ch5_8.thy|lemma|metrizable_imp_strict|5230
 i/Top1_Ch5_8.thy|lemma|metrizable_openin_on|5245
 i/Top1_Ch5_8.thy|lemma|metrizable_open_sub_carrier|5240
 fi/AlgIsoFixed.thy|lemma|move_one_puncture|4391
-AlgTop.thy|lemma|m_projective_scheme_CW_data|1769
+AlgTop.thy|lemma|m_projective_scheme_CW_data|7039
 i/Top1_Ch5_8.thy|lemma|munkres_basis_property|9379
 fi/AlgIsoFixed.thy|lemma|Munkres_Step_1_arc_splice|1515
 fi/AlgIsoFixed.thy|lemma|Munkres_Step_4_move_punctures|6247
@@ -1250,6 +1261,7 @@ i/Top1_Ch4.thy|lemma|regular_separation_openin_on|2584
 ag/AlgTopGroups.thy|lemma|remdups_fst_single_pol|4599
 ag/AlgTopGroups.thy|lemma|remdups_map_inj_on|4573
 ac/AlgTopCached.thy|lemma|reparam_path_homotopy|15568
+AlgTop.thy|lemma|right_coset_eq_from_product_in_H|21
 h/AlgTopHelpers.thy|lemma|right_top_strip_connected|8
 i/Top1_Ch5_8.thy|lemma|RN_covering_order_N_plus_1|31842
 i/Top1_Ch5_8.thy|lemma|RN_grid_covering_covers|31127
@@ -1307,6 +1319,7 @@ ac10/AlgTopCached10.thy|lemma|same_endpoint_same_coset|822
 ac10/AlgTopCached10.thy|lemma|same_projection_same_endpoint|125
 fi/AlgIsoFixed.thy|lemma|scc_decomp_arc_endpoints|3060
 fi/AlgIsoFixed.thy|lemma|SCC_decompose_at_given_points|6389
+AlgTop.thy|lemma|scc_in_sc_false|2489
 fi/AlgIsoFixed.thy|lemma|scc_interior_contradiction|2863
 fi/AlgIsoFixed.thy|lemma|scc_minus_point_connected|2636
 fib/AlgIsoFixedBase.thy|lemma|SCC_pi1_iso_Z|14
@@ -1395,7 +1408,8 @@ i/Top1_Ch9_13.thy|lemma|subspace_topology_UNIV_self|10651
 i/Top1_Ch5_8.thy|lemma|sup_metric_ge_pointwise|14751
 i/Top1_Ch5_8.thy|lemma|sup_uniform_ball_eq|15425
 i/Top1_Ch5_8.thy|lemma|sup_uniform_topology_eq_on_continuous|18068
-AlgTop.thy|lemma|surjection_coset_bij|8
+AlgTop.thy|lemma|surjection_coset_bij|1195
+AlgTop.thy|lemma|surjection_right_coset_bij|1124
 ac8/AlgTopCached8.thy|lemma|surjective_hom_preserves_generation|4607
 ag/AlgTopGroups.thy|lemma|surj_hom_generated|2538
 ac8/AlgTopCached8.thy|lemma|surj_hom_image_commutator|4218
@@ -1863,9 +1877,12 @@ pd/PolygonDisk.thy|lemma|torus_scheme_all_eq_v0|3875
 ac8/AlgTopCached8.thy|lemma|torus_scheme_nth|3287
 pd/PolygonDisk.thy|lemma|torus_scheme_vertex_connectivity|4095
 b/AlgTop_JCT_Base.thy|lemma|translation_homeo_R2|8430
-AlgTop.thy|lemma|tree_euler_all|333
-AlgTop.thy|lemma|tree_euler_nat|81
-AlgTop.thy|lemma|tree_euler_number_one|361
+AlgTop.thy|lemma|tree_euler_all|3120
+AlgTop.thy|lemma|tree_euler_and_leaf_combined|2681
+AlgTop.thy|lemma|tree_euler_from_leaf|2218
+AlgTop.thy|lemma|tree_euler_nat|2859
+AlgTop.thy|lemma|tree_euler_number_one|3150
+AlgTop.thy|lemma|tree_leaf_other_endpoint_shared|1360
 ac3/AlgTopCached3.thy|lemma|tree_simply_connected|84
 ac7/AlgTopCached7.thy|lemma|tree_union_arcs_path_connected|4220
 ac/AlgTopCached.thy|lemma|triangle_compact|41256
@@ -2073,6 +2090,8 @@ i/Top1_Ch9_13.thy|theorem|Theorem_54_4_bijective_simply_connected|10460
 i/Top1_Ch9_13.thy|theorem|Theorem_54_4_lifting_correspondence|10223
 i/Top1_Ch9_13.thy|theorem|Theorem_54_5|10951
 i/Top1_Ch9_13.thy|theorem|Theorem_54_5_iso|11026
+AlgTop.thy|theorem|Theorem_54_6b|91
+AlgTop.thy|theorem|Theorem_54_6c|946
 i/Top1_Ch9_13.thy|theorem|Theorem_55_2_no_retraction|12147
 i/Top1_Ch9_13.thy|theorem|Theorem_55_5_vector_field|13839
 i/Top1_Ch9_13.thy|theorem|Theorem_55_6_brouwer|13914
@@ -2121,11 +2140,11 @@ ac8/AlgTopCached8.thy|theorem|Theorem_74_3_fund_group_n_torus|3346
 ac8/AlgTopCached8.thy|theorem|Theorem_74_4_fund_group_m_projective|8204
 ac8/AlgTopCached8.thy|theorem|Theorem_75_1_H1_abelianization|3761
 ac8/AlgTopCached8.thy|theorem|Theorem_75_3_H1_n_torus|4446
-AlgTop.thy|theorem|Theorem_75_4_H1_m_projective|2101
-AlgTop.thy|theorem|Theorem_76_elementary_operations|2055
-AlgTop.thy|theorem|Theorem_77_5_classification|2237
-AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|2138
-AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|2196
+AlgTop.thy|theorem|Theorem_75_4_H1_m_projective|7371
+AlgTop.thy|theorem|Theorem_76_elementary_operations|7325
+AlgTop.thy|theorem|Theorem_77_5_classification|7507
+AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|7408
+AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|7466
 ac4/AlgTopCached4.thy|theorem|Theorem_79_2|1524
 ac4/AlgTopCached4.thy|theorem|Theorem_79_4|2333
 ac4/AlgTopCached4.thy|theorem|Theorem_80_1_universal_unique|3345
@@ -2135,4 +2154,4 @@ ac10/AlgTopCached10.thy|theorem|Theorem_82_1_covering_existence|2957
 ac5/AlgTopCached5.thy|theorem|Theorem_83_4_covering_of_graph_is_graph|708
 ac10/AlgTopCached10.thy|theorem|Theorem_84_7_fund_group_graph_is_free|18527
 ac10/AlgTopCached10.thy|theorem|Theorem_85_1_Nielsen_Schreier|21359
-AlgTop.thy|theorem|Theorem_85_3_Schreier_index|587
+AlgTop.thy|theorem|Theorem_85_3_Schreier_index|5568
