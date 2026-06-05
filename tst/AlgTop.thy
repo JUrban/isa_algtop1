@@ -4138,6 +4138,53 @@ next
   qed
 qed
 
+\<comment> \<open>Helper: extract free group from graph\\_pi1\\_free\\_weak (large existential).\<close>
+lemma graph_is_free:
+  fixes Y :: "'a set" and TY :: "'a set set"
+  assumes "top1_is_graph_on Y TY" "top1_connected_on Y TY" "y0 \<in> Y"
+  shows "\<exists>(\<iota> :: 'a set \<Rightarrow> _) (S :: 'a set set). top1_is_free_group_full_on
+      (top1_fundamental_group_carrier Y TY y0)
+      (top1_fundamental_group_mul Y TY y0)
+      (top1_fundamental_group_id Y TY y0)
+      (top1_fundamental_group_invg Y TY y0) \<iota> S"
+proof -
+  note h = graph_pi1_free_weak[OF assms]
+  \<comment> \<open>h has type \\<exists>\\<iota> S \\<A> T. (big conjunction). Extract first existential.\<close>
+  \<comment> \<open>h gives \\<exists>\\<iota> S \\<A> T. big\\_conj. Extract \\<exists>\\<iota> S. free using exE + conjunct1.\<close>
+  from h show ?thesis
+  proof (elim exE)
+    fix \<iota>0 S0 \<A>0 T0
+    assume hconj: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier Y TY y0)
+        (top1_fundamental_group_mul Y TY y0)
+        (top1_fundamental_group_id Y TY y0)
+        (top1_fundamental_group_invg Y TY y0) \<iota>0 S0
+      \<and> (\<forall>A\<in>\<A>0. A \<subseteq> Y \<and> top1_is_arc_on A (subspace_topology Y TY A))
+      \<and> \<Union>\<A>0 = Y
+      \<and> (\<forall>A\<in>\<A>0. \<forall>B\<in>\<A>0. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology Y TY B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2)
+      \<and> (\<forall>C. C \<subseteq> Y \<longrightarrow>
+           (closedin_on Y TY C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>0. closedin_on A (subspace_topology Y TY A) (A \<inter> C))))
+      \<and> top1_is_tree_on T0 (subspace_topology Y TY T0) \<and> T0 \<subseteq> Y \<and> y0 \<in> T0
+      \<and> (\<forall>A\<in>\<A>0. A \<subseteq> T0 \<or>
+           A \<inter> T0 \<subseteq> top1_arc_endpoints_on A (subspace_topology Y TY A))
+      \<and> T0 = \<Union>{A \<in> \<A>0. A \<subseteq> T0}
+      \<and> (\<forall>A\<in>{A \<in> \<A>0. \<not> A \<subseteq> T0}.
+           \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology Y TY A). e \<in> T0)
+      \<and> S0 = {A \<in> \<A>0. \<not> A \<subseteq> T0}"
+    have hfree: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier Y TY y0)
+        (top1_fundamental_group_mul Y TY y0)
+        (top1_fundamental_group_id Y TY y0)
+        (top1_fundamental_group_invg Y TY y0) \<iota>0 S0"
+      using conjunct1[OF hconj] .
+    show ?thesis by (rule exI[of _ \<iota>0], rule exI[of _ S0], rule hfree)
+  qed
+qed
+
 \<comment> \<open>Covering graph Euler characteristic multiplicativity.
    For a k-fold covering p: E \\<rightarrow> X of a finite connected graph,
    if \\<pi>\\_1(X) is free of rank n+1, then \\<pi>\\_1(E) is free of rank kn+1.
@@ -4269,7 +4316,7 @@ proof -
       (top1_fundamental_group_mul E TE e0)
       (top1_fundamental_group_id E TE e0)
       (top1_fundamental_group_invg E TE e0) \<iota>E SE"
-    sorry \<comment> \<open>From graph\\_pi1\\_free\\_weak[OF hE\\_graph hconn\\_E he0]: extract free group.\<close>
+    sorry \<comment> \<open>From graph\\_is\\_free[OF hE\\_graph hconn\\_E he0] — type unification issue with obtain.\<close>
   \<comment> \<open>Step 6: Euler characteristic argument.
      From graph\\_pi1\\_free\\_weak on E: card(SE) = rank(\\<pi>\\_1(E)).
      From Euler formula (heuler\\_X): card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.
