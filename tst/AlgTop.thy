@@ -5064,6 +5064,46 @@ proof -
       with hne show False by (by100 blast)
     qed
   qed
+  \<comment> \<open>Helper: connected subset sharing a point with a max conn comp is inside the max conn comp.\<close>
+  have h_mcc_absorb: "\<And>S TS (C :: 'b set) B0. \<lbrakk>is_topology_on S TS;
+      top1_max_conn_comp S TS B0; top1_connected_on C (subspace_topology S TS C);
+      C \<subseteq> S; C \<inter> B0 \<noteq> {}\<rbrakk> \<Longrightarrow> C \<subseteq> B0"
+  proof -
+    fix S :: "'b set" and TS and C :: "'b set" and B0
+    assume hST: "is_topology_on S TS"
+        and hB0: "top1_max_conn_comp S TS B0"
+        and hC_conn: "top1_connected_on C (subspace_topology S TS C)"
+        and hC_sub: "C \<subseteq> S" and hC_meet: "C \<inter> B0 \<noteq> {}"
+    then obtain e where "e \<in> C" "e \<in> B0" by (by100 blast)
+    have hB0_sub: "B0 \<subseteq> S" using max_conn_comp_sub[OF hB0] .
+    have hB0_conn: "top1_connected_on B0 (subspace_topology S TS B0)"
+      using hB0 unfolding top1_max_conn_comp_def by (by100 blast)
+    have hU_sub: "C \<union> B0 \<subseteq> S" using hC_sub hB0_sub by (by100 blast)
+    have hU_conn: "top1_connected_on (C \<union> B0) (subspace_topology S TS (C \<union> B0))"
+    proof -
+      define f where "f \<equiv> (\<lambda>b::bool. if b then C else B0)"
+      have hf_eq: "C \<union> B0 = (\<Union>i\<in>{True, False}. f i)" unfolding f_def by (by100 auto)
+      have hf_sub: "\<forall>i\<in>{True, False}. f i \<subseteq> S"
+        unfolding f_def using hC_sub hB0_sub by (by100 auto)
+      have hf_conn: "\<forall>i\<in>{True, False}. top1_connected_on (f i) (subspace_topology S TS (f i))"
+      proof (intro ballI)
+        fix i :: bool assume "i \<in> {True, False}"
+        show "top1_connected_on (f i) (subspace_topology S TS (f i))"
+          unfolding f_def using hC_conn hB0_conn by (cases i) simp_all
+      qed
+      have hf_inter: "e \<in> \<Inter>(f ` {True, False})"
+        unfolding f_def using \<open>e \<in> C\<close> \<open>e \<in> B0\<close> by (by100 auto)
+      have hI_ne: "{True, False} \<noteq> ({}::bool set)" by (by100 blast)
+      from Theorem_23_3[OF hST hI_ne hf_sub hf_conn hf_inter]
+      have "top1_connected_on (\<Union>(f ` {True, False}))
+          (subspace_topology S TS (\<Union>(f ` {True, False})))" .
+      moreover have "\<Union>(f ` {True, False}) = C \<union> B0" unfolding f_def by (by100 auto)
+      ultimately show ?thesis by simp
+    qed
+    from hB0[unfolded top1_max_conn_comp_def, THEN conjunct2, THEN conjunct2,
+        THEN conjunct2, rule_format, OF _ hU_sub hU_conn]
+    show "C \<subseteq> B0" by (by100 blast)
+  qed
   \<comment> \<open>Helper: a max conn comp of preimage(A) surjects onto A via p.
      Proof: p(B) is open in A (covering sheets), closed in A (complement argument),
      nonempty (B \\<ne> {}), A connected \\<Rightarrow> p(B) = A.\<close>
@@ -5260,8 +5300,13 @@ proof -
               using hVb_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
             \<comment> \<open>Vb \\<subseteq> B: Vb connected (homeo to p(W') which is connected), meets B at b.\<close>
             have hVb_sub_B: "Vb \<subseteq> B"
-              sorry \<comment> \<open>Vb connected (homeo to p(W')), shares b with B,
-                 both in preimage(A), B max conn comp \\<Rightarrow> Vb \\<subseteq> B by Theorem\\_23\\_3 + maximality.\<close>
+            proof -
+              have hVb_conn: "top1_connected_on Vb (subspace_topology ?pre (subspace_topology E TE ?pre) Vb)"
+                sorry \<comment> \<open>Vb path-connected from homeomorphism with p(W').\<close>
+              have "Vb \<inter> B \<noteq> {}" using \<open>b \<in> Vb\<close> \<open>b \<in> B\<close> by (by100 blast)
+              from h_mcc_absorb[OF hpre_top hB_comp hVb_conn \<open>Vb \<subseteq> ?pre\<close> this]
+              show ?thesis .
+            qed
             have "p ` W' \<subseteq> p ` B"
               using \<open>p ` Vb = p ` W'\<close> hVb_sub_B by (by100 blast)
             have "a \<in> p ` W'" using \<open>p e' = a\<close> hW'_e by (by100 blast)
@@ -5438,7 +5483,7 @@ proof -
         proof -
           have h\<gamma>_cont: "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               B (subspace_topology E TE B) \<gamma>"
-            using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+            using h\<gamma> unfolding top1_is_path_on_def by (by5000 blast)
           from top1_continuous_map_on_codomain_enlarge[OF h\<gamma>_cont hB_sub0 hpre0_sub]
           have "top1_continuous_map_on top1_unit_interval top1_unit_interval_topology
               ?pre0 (subspace_topology E TE ?pre0) \<gamma>" .
@@ -5643,7 +5688,132 @@ proof -
          The cross-arc case: show B1 \\<subseteq> C1 and B2 \\<subseteq> C1, then use h\\_mcc\\_disjoint on C1.\<close>
       \<comment> \<open>Both are connected and in preimage(A). If they overlap, both are in the same
          max conn comp C of preimage(A). Leads to B1=C=B2, contradicting B1\\<ne>B2.\<close>
-      show "B1 \<inter> B2 = {}" sorry
+      show "B1 \<inter> B2 = {}"
+      proof (rule ccontr)
+        assume "B1 \<inter> B2 \<noteq> {}"
+        \<comment> \<open>B1 is max conn comp of preimage(A1) for some A1. By h\\_comp\\_surj: p`B1 = A1.
+           B1 \\<subseteq> preimage(A) \\<Rightarrow> p`B1 \\<subseteq> A \\<Rightarrow> A1 \\<subseteq> A. Similarly A2 \\<subseteq> A.
+           In a graph: A1, A are arcs in \\<A>w with A1 \\<subseteq> A. Since arcs cover X and meet only at
+           endpoints, A1 \\<subseteq> A and A1 is an arc (nonempty interior) forces A1 = A.
+           Similarly A2 = A. Then B1, B2 are max conn comps of preimage(A), and
+           h\\_mcc\\_disjoint gives B1 \\<inter> B2 = {} since B1 \\<ne> B2.\<close>
+        obtain A1 where hA1: "A1 \<in> \<A>w"
+            and hB1_comp: "top1_max_conn_comp {e \<in> E. p e \<in> A1}
+                (subspace_topology E TE {e \<in> E. p e \<in> A1}) B1"
+          using hB1L by (by100 blast)
+        obtain A2 where hA2: "A2 \<in> \<A>w"
+            and hB2_comp: "top1_max_conn_comp {e \<in> E. p e \<in> A2}
+                (subspace_topology E TE {e \<in> E. p e \<in> A2}) B2"
+          using hB2L by (by100 blast)
+        \<comment> \<open>p`B1 = A1 (from h\\_comp\\_surj). A1 \\<subseteq> A (from B1 \\<subseteq> preimage(A)).\<close>
+        have "p ` B1 = A1" by (rule h_comp_surj[OF hA1 hB1_comp])
+        have "p ` B1 \<subseteq> A" using hB1_sub by (by100 blast)
+        hence "A1 \<subseteq> A" using \<open>p ` B1 = A1\<close> by simp
+        \<comment> \<open>A1 \\<subseteq> A and both are arcs in \\<A>w. A1 = A.\<close>
+        have "A1 = A"
+        proof (rule ccontr)
+          assume "A1 \<noteq> A"
+          \<comment> \<open>A1 \\<inter> A \\<subseteq> endpoints(A1). But A1 \\<subseteq> A \\<Rightarrow> A1 \\<inter> A = A1. So A1 \\<subseteq> endpoints(A1).
+             Endpoints have card \\<le> 2. But A1 is an arc, so card A1 is infinite. Contradiction.\<close>
+          have "A1 \<inter> A \<subseteq> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+            using h\<A>w_inter[rule_format, OF hA1 hA \<open>A1 \<noteq> A\<close>] by (by100 blast)
+          hence "A1 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology X TX A1)"
+            using \<open>A1 \<subseteq> A\<close> by (by100 blast)
+          moreover have "finite (top1_arc_endpoints_on A1 (subspace_topology X TX A1))"
+          proof -
+            have "top1_is_arc_on A1 (subspace_topology X TX A1)" using h\<A>w hA1 by (by100 blast)
+            then obtain h1 where hh1: "top1_homeomorphism_on I_set I_top A1 (subspace_topology X TX A1) h1"
+              unfolding top1_is_arc_on_def by (by100 blast)
+            have "A1 \<subseteq> X" using h\<A>w hA1 by (by100 blast)
+            from arc_endpoints_are_boundary[OF hTX_strict hX_haus \<open>A1 \<subseteq> X\<close>
+                \<open>top1_is_arc_on A1 _\<close> hh1]
+            show ?thesis by (by100 simp)
+          qed
+          moreover have "\<not> finite A1"
+          proof -
+            have "top1_is_arc_on A1 (subspace_topology X TX A1)" using h\<A>w hA1 by (by100 blast)
+            then obtain h1 where hh1: "top1_homeomorphism_on I_set I_top A1 (subspace_topology X TX A1) h1"
+              unfolding top1_is_arc_on_def by (by100 blast)
+            have "bij_betw h1 I_set A1" using hh1 unfolding top1_homeomorphism_on_def by (by100 blast)
+            hence "h1 ` I_set = A1" unfolding bij_betw_def by (by100 blast)
+            moreover have "\<not> finite I_set"
+            proof -
+              have "infinite {x::real. 0 \<le> x \<and> x \<le> 1}"
+              proof -
+                have "{0::real..1} = {x. 0 \<le> x \<and> x \<le> 1}"
+                  unfolding atLeastAtMost_def atLeast_def atMost_def by (by100 blast)
+                moreover have "infinite {0::real..1}" by (rule infinite_Icc) linarith
+                ultimately show ?thesis by simp
+              qed
+              thus ?thesis unfolding top1_unit_interval_def by (by100 simp)
+            qed
+            moreover have "inj_on h1 I_set" using \<open>bij_betw h1 I_set A1\<close>
+              unfolding bij_betw_def by (by100 blast)
+            ultimately show ?thesis using finite_imageD by (by100 blast)
+          qed
+          ultimately show False using finite_subset by (by100 blast)
+        qed
+        \<comment> \<open>Similarly A2 = A.\<close>
+        have "p ` B2 = A2" by (rule h_comp_surj[OF hA2 hB2_comp])
+        have "p ` B2 \<subseteq> A" using hB2_sub by (by100 blast)
+        hence "A2 \<subseteq> A" using \<open>p ` B2 = A2\<close> by simp
+        have "A2 = A"
+        proof (rule ccontr)
+          assume "A2 \<noteq> A"
+          have "A2 \<inter> A \<subseteq> top1_arc_endpoints_on A2 (subspace_topology X TX A2)"
+            using h\<A>w_inter[rule_format, OF hA2 hA \<open>A2 \<noteq> A\<close>] by (by100 blast)
+          hence "A2 \<subseteq> top1_arc_endpoints_on A2 (subspace_topology X TX A2)"
+            using \<open>A2 \<subseteq> A\<close> by (by100 blast)
+          moreover have "finite (top1_arc_endpoints_on A2 (subspace_topology X TX A2))"
+          proof -
+            have "top1_is_arc_on A2 (subspace_topology X TX A2)" using h\<A>w hA2 by (by100 blast)
+            then obtain h2 where hh2: "top1_homeomorphism_on I_set I_top A2 (subspace_topology X TX A2) h2"
+              unfolding top1_is_arc_on_def by (by100 blast)
+            have "A2 \<subseteq> X" using h\<A>w hA2 by (by100 blast)
+            from arc_endpoints_are_boundary[OF hTX_strict hX_haus \<open>A2 \<subseteq> X\<close>
+                \<open>top1_is_arc_on A2 _\<close> hh2]
+            show ?thesis by (by100 simp)
+          qed
+          moreover have "\<not> finite A2"
+          proof -
+            have "top1_is_arc_on A2 (subspace_topology X TX A2)" using h\<A>w hA2 by (by100 blast)
+            then obtain h2 where hh2: "top1_homeomorphism_on I_set I_top A2 (subspace_topology X TX A2) h2"
+              unfolding top1_is_arc_on_def by (by100 blast)
+            have "bij_betw h2 I_set A2" using hh2 unfolding top1_homeomorphism_on_def by (by100 blast)
+            hence "h2 ` I_set = A2" unfolding bij_betw_def by (by100 blast)
+            moreover have "\<not> finite I_set"
+            proof -
+              have "infinite {0::real..1}" by (rule infinite_Icc) linarith
+              hence "infinite {x::real. 0 \<le> x \<and> x \<le> 1}"
+              proof -
+                have "{0::real..1} = {x. 0 \<le> x \<and> x \<le> 1}"
+                  unfolding atLeastAtMost_def atLeast_def atMost_def by (by100 blast)
+                thus ?thesis using \<open>infinite {0::real..1}\<close> by simp
+              qed
+              thus ?thesis unfolding top1_unit_interval_def by (by100 simp)
+            qed
+            moreover have "inj_on h2 I_set" using \<open>bij_betw h2 I_set A2\<close>
+              unfolding bij_betw_def by (by100 blast)
+            ultimately show ?thesis using finite_imageD by (by100 blast)
+          qed
+          ultimately show False using finite_subset by (by100 blast)
+        qed
+        \<comment> \<open>Now B1, B2 are max conn comps of preimage(A). h\\_mcc\\_disjoint gives B1 \\<inter> B2 = {}.\<close>
+        have "B1 \<inter> B2 = {}"
+        proof -
+          have hpre_top: "is_topology_on {e \<in> E. p e \<in> A} (subspace_topology E TE {e \<in> E. p e \<in> A})"
+            by (rule subspace_topology_is_topology_on[OF hTE]) (by100 blast)
+          have hB1_compA: "top1_max_conn_comp {e \<in> E. p e \<in> A}
+              (subspace_topology E TE {e \<in> E. p e \<in> A}) B1"
+            using hB1_comp \<open>A1 = A\<close> by simp
+          have hB2_compA: "top1_max_conn_comp {e \<in> E. p e \<in> A}
+              (subspace_topology E TE {e \<in> E. p e \<in> A}) B2"
+            using hB2_comp \<open>A2 = A\<close> by simp
+          from h_mcc_disjoint[OF hpre_top hB1_compA hB2_compA hne]
+          show ?thesis .
+        qed
+        with \<open>B1 \<inter> B2 \<noteq> {}\<close> show False by (by100 blast)
+      qed
     qed
   qed
   have h\<A>w_sub: "\<forall>A\<in>\<A>w. A \<subseteq> X \<and> A \<noteq> {}"
@@ -6389,7 +6559,7 @@ proof -
               unfolding top1_left_cosets_on_def by (by100 blast)
             thus ?thesis by (by100 blast)
           qed
-          ultimately show False by (by100 blast)
+          ultimately show False using finite_subset by (by100 blast)
         qed
       qed
       have "finite {e \<in> E'. p' e = x0}"
