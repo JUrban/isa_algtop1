@@ -1784,6 +1784,7 @@ proof (rule ccontr)
 qed
 
 
+
 \<comment> \<open>In a tree with \\<ge> 2 arcs, a leaf vertex's other endpoint is shared with another arc.
    (Needed for V = V' \\<union> {v} in tree Euler induction.)\<close>
 lemma tree_leaf_other_endpoint_shared:
@@ -3155,8 +3156,10 @@ definition top1_covering_lifted_arc_family_on ::
         = top1_arc_endpoints_on A (subspace_topology X TX A)) \<and>
     \<comment> \<open>Clause 2: every fiber point over a base arc is in some lift that maps onto the full arc.\<close>
     (\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A) \<and>
-    \<comment> \<open>Clause 3: lifts are pairwise disjoint.\<close>
-    (\<forall>B1\<in>\<A>_E. \<forall>B2\<in>\<A>_E. B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {})"
+    \<comment> \<open>Clause 3: lifts over the same base arc are pairwise disjoint.\<close>
+    (\<forall>A\<in>\<A>_X. \<forall>B1\<in>\<A>_E. \<forall>B2\<in>\<A>_E.
+      B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A} \<and> B1 \<noteq> B2
+      \<longrightarrow> B1 \<inter> B2 = {})"
 
 \<comment> \<open>Covering multiplicity for arcs: a k-sheeted covering with lifted arc family
    has exactly k times as many arcs as the base.\<close>
@@ -3189,7 +3192,9 @@ proof -
     using h_clause1 .
   \<comment> \<open>The base arc is uniquely determined: p ` B = A.\<close>
   \<comment> \<open>Step 2: For each base arc, there are exactly k lifted arcs.\<close>
-  have h_clause3: "\<forall>B1\<in>\<A>_E. \<forall>B2\<in>\<A>_E. B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {}"
+  have h_clause3: "\<forall>A\<in>\<A>_X. \<forall>B1\<in>\<A>_E. \<forall>B2\<in>\<A>_E.
+      B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A} \<and> B1 \<noteq> B2
+      \<longrightarrow> B1 \<inter> B2 = {}"
     using conjunct2[OF conjunct2[OF hdef]] .
   have h_k_lifts: "\<forall>A\<in>\<A>_X. card (?lift A) = k"
   proof (intro ballI)
@@ -3229,8 +3234,11 @@ proof -
         have "f B1 \<in> B2" using \<open>f B2 \<in> B2\<close> \<open>f B1 = f B2\<close> by simp
         have "f B1 \<in> B1 \<inter> B2" using \<open>f B1 \<in> B1\<close> \<open>f B1 \<in> B2\<close> by (by100 blast)
         have "B1 \<in> \<A>_E" "B2 \<in> \<A>_E" using \<open>B1 \<in> ?lift A\<close> \<open>B2 \<in> ?lift A\<close> by (by100 blast)+
-        from h_clause3[rule_format, OF \<open>B1 \<in> \<A>_E\<close> \<open>B2 \<in> \<A>_E\<close>]
-        show "B1 = B2" using \<open>f B1 \<in> B1 \<inter> B2\<close> by (by100 blast)
+        have "B1 \<subseteq> {e \<in> E. p e \<in> A}" "B2 \<subseteq> {e \<in> E. p e \<in> A}"
+          using \<open>B1 \<in> ?lift A\<close> \<open>B2 \<in> ?lift A\<close> by (by100 blast)+
+        from h_clause3[rule_format, OF \<open>A \<in> \<A>_X\<close> \<open>B1 \<in> \<A>_E\<close> \<open>B2 \<in> \<A>_E\<close>]
+        show "B1 = B2" using \<open>f B1 \<in> B1 \<inter> B2\<close>
+            \<open>B1 \<subseteq> {e \<in> E. p e \<in> A}\<close> \<open>B2 \<subseteq> {e \<in> E. p e \<in> A}\<close> by (by100 blast)
       qed
       show "f ` (?lift A) = {e \<in> E. p e = x}"
       proof (rule set_eqI, rule iffI)
@@ -3784,6 +3792,90 @@ next
     qed
     ultimately show ?thesis by (by100 blast)
   qed
+qed
+
+\<comment> \<open>Covering graph Euler characteristic multiplicativity.
+   For a k-fold covering p: E \\<rightarrow> X of a finite connected graph,
+   if \\<pi>\\_1(X) is free of rank n+1, then \\<pi>\\_1(E) is free of rank kn+1.
+   Proof: lift the arc family of X to E (path components of preimages).
+   Each arc lifts to k arcs, each vertex lifts to k vertices.
+   Euler: rank = arcs - vertices + 1 = k*arcs\\_X - k*vertices\\_X + 1 = kn + 1.\<close>
+lemma covering_graph_pi1_rank:
+  assumes hgraph_X: "top1_is_graph_on X TX"
+      and hconn_X: "top1_connected_on X TX"
+      and hx0: "x0 \<in> X"
+      and hcov: "top1_covering_map_on E TE X TX p"
+      and hstrict_E: "is_topology_on_strict E TE"
+      and hconn_E: "top1_connected_on E TE"
+      and he0: "e0 \<in> E" and hpe0: "p e0 = x0"
+      and hfiber: "\<forall>x\<in>X. card {e \<in> E. p e = x} = k"
+      and hk: "k > 0"
+      and hfree_X: "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)
+          (top1_fundamental_group_id X TX x0)
+          (top1_fundamental_group_invg X TX x0)
+          \<iota>X SX"
+      and hcard_SX: "card SX = n + 1"
+      and hfin_SX: "finite SX"
+      and hcompact_X: "top1_compact_on X TX"
+  shows "\<exists>(\<iota>L :: nat \<Rightarrow> _) (SL :: nat set). top1_is_free_group_full_on
+      (top1_fundamental_group_carrier E TE e0)
+      (top1_fundamental_group_mul E TE e0)
+      (top1_fundamental_group_id E TE e0)
+      (top1_fundamental_group_invg E TE e0)
+      \<iota>L SL \<and> card SL = k * n + 1"
+proof -
+  \<comment> \<open>Step 1: Get arc family and tree from graph\\_pi1\\_free\\_weak on X.\<close>
+  from graph_pi1_free_weak[OF hgraph_X hconn_X hx0]
+  obtain \<iota>w Sw \<A>w Tw
+    where hfree_w: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier X TX x0)
+        (top1_fundamental_group_mul X TX x0)
+        (top1_fundamental_group_id X TX x0)
+        (top1_fundamental_group_invg X TX x0)
+        \<iota>w Sw"
+      and h\<A>w: "\<forall>A\<in>\<A>w. A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)"
+      and h\<A>w_cover: "\<Union>\<A>w = X"
+      and h\<A>w_inter: "\<forall>A\<in>\<A>w. \<forall>B\<in>\<A>w. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology X TX B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and h\<A>w_coh: "\<forall>C. C \<subseteq> X \<longrightarrow>
+           (closedin_on X TX C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>w. closedin_on A (subspace_topology X TX A) (A \<inter> C)))"
+      and hTw_tree: "top1_is_tree_on Tw (subspace_topology X TX Tw)"
+      and hTw_sub: "Tw \<subseteq> X" and hTw_x0: "x0 \<in> Tw"
+      and hTw_subgraph: "\<forall>A\<in>\<A>w. A \<subseteq> Tw \<or>
+           A \<inter> Tw \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)"
+      and hTw_coverage: "Tw = \<Union>{A \<in> \<A>w. A \<subseteq> Tw}"
+      and hNTw_endpoints: "\<forall>A\<in>{A \<in> \<A>w. \<not> A \<subseteq> Tw}.
+           \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology X TX A). e \<in> Tw"
+      and hSw_eq: "Sw = {A \<in> \<A>w. \<not> A \<subseteq> Tw}"
+    by (elim exE conjE)
+  \<comment> \<open>card Sw = n+1 by rank invariance with hfree\\_X.\<close>
+  have h\<A>w_fin: "finite \<A>w"
+    by (rule compact_graph_finite_arcs[OF hgraph_X hcompact_X h\<A>w h\<A>w_cover h\<A>w_inter h\<A>w_coh])
+  have hSw_fin: "finite Sw" using hSw_eq h\<A>w_fin by (by100 simp)
+  have hSw_card: "card Sw = n + 1"
+  proof -
+    from free_group_rank_invariant_finite[OF hfree_X hfree_w hfin_SX hSw_fin]
+    show ?thesis using hcard_SX by simp
+  qed
+  \<comment> \<open>Step 2: Construct lifted arc family.
+     \\<A>\\_L = \\<Union>{ connected components of p^{-1}(A) \\<inter> E | A \\<in> \\<A>w }.
+     This is exactly what Theorem 83.4 constructs internally.\<close>
+  \<comment> \<open>Step 3: Show \\<A>\\_L is a valid graph decomposition with spanning tree.
+     By Theorem 83.4: E is a graph (with the lifted family as witness).
+     The lifted family satisfies arc, cover, intersection, coherent conditions.
+     For the spanning tree: lift the tree Tw \\<subseteq> X. The preimage p^{-1}(Tw) is a
+     forest of k copies of Tw. Augment with k-1 arcs to form a spanning tree.\<close>
+  \<comment> \<open>Step 4: Apply graph\\_pi1\\_free\\_weak\\_apply.
+     With the lifted family and its spanning tree, get \\<pi>\\_1(E) free on some SL.
+     Step 5: Compute card(SL) = card(non-tree arcs) = k*(card \\<A>w) - (k*card Vw - 1) = kn+1.\<close>
+  \<comment> \<open>Full proof deferred: requires constructing the lifted family explicitly and
+     verifying all graph decomposition conditions.\<close>
+  show ?thesis sorry
 qed
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
@@ -4456,14 +4548,12 @@ proof -
       using hfiber_card_and_fin by (by100 blast)
     have hfiber_fin: "finite {e \<in> E'. p' e = x0}"
       using hfiber_card_and_fin by (by100 blast)
-    have hE'_compact: "top1_compact_on E' TE'"
+    have hX_top: "is_topology_on X TX"
+      using hX_graph unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+    have hE'_top: "is_topology_on E' TE'"
+      using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
+    have hfiber_all: "\<forall>x\<in>X. card {e \<in> E'. p' e = x} = k"
     proof -
-      have hX_top: "is_topology_on X TX"
-        using hX_graph unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
-      have hE'_top: "is_topology_on E' TE'"
-        using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
-      have hfiber_all: "\<forall>x\<in>X. card {e \<in> E'. p' e = x} = k"
-      proof -
         \<comment> \<open>The set {x \\<in> X. card(fiber(x)) = k} is clopen in X and contains x0.
            X connected \\<Rightarrow> this set = X.\<close>
         let ?S = "{x \<in> X. card {e \<in> E'. p' e = x} = k}"
@@ -4644,26 +4734,25 @@ proof -
           using connected_iff_clopen[OF hX_top] hX_conn hS_open hS_closed by (by100 blast)
         hence "?S = X" using hx0_S by (by100 blast)
         thus ?thesis by (by100 blast)
-      qed
-      have hk_pos: "k > 0"
-      proof -
-        from assms(5) have "card (top1_left_cosets_on F mul H) = k"
-          unfolding top1_subgroup_has_index_on_def by (by100 blast)
-        moreover have "top1_left_cosets_on F mul H \<noteq> {}"
-        proof -
-          have "e \<in> F" using assms(1) unfolding top1_is_free_group_full_on_def
-              top1_is_group_on_def by (by100 blast)
-          hence "top1_group_coset_on F mul H e \<in> top1_left_cosets_on F mul H"
-            unfolding top1_left_cosets_on_def by (by100 blast)
-          thus ?thesis by (by100 blast)
-        qed
-        moreover have "finite (top1_left_cosets_on F mul H)"
-          using assms(5) unfolding top1_subgroup_has_index_on_def by (by100 blast)
-        ultimately show "k > 0" by (by100 force)
-      qed
-      from finite_covering_compact[OF hE'_cov hX_compact hX_top hE'_top hfiber_all hk_pos]
-      show ?thesis .
     qed
+    have hk_pos: "k > 0"
+    proof -
+      from assms(5) have "card (top1_left_cosets_on F mul H) = k"
+        unfolding top1_subgroup_has_index_on_def by (by100 blast)
+      moreover have "top1_left_cosets_on F mul H \<noteq> {}"
+      proof -
+        have "e \<in> F" using assms(1) unfolding top1_is_free_group_full_on_def
+            top1_is_group_on_def by (by100 blast)
+        hence "top1_group_coset_on F mul H e \<in> top1_left_cosets_on F mul H"
+          unfolding top1_left_cosets_on_def by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      moreover have "finite (top1_left_cosets_on F mul H)"
+        using assms(5) unfolding top1_subgroup_has_index_on_def by (by100 blast)
+      ultimately show "k > 0" by (by100 force)
+    qed
+    have hE'_compact: "top1_compact_on E' TE'"
+      using finite_covering_compact[OF hE'_cov hX_compact hX_top hE'_top hfiber_all hk_pos] .
     have h\<A>_E_fin: "finite \<A>_E"
       by (rule compact_graph_finite_arcs[OF hE'_graph hE'_compact h\<A>_E h\<A>_E_cover h\<A>_E_inter h\<A>_E_coh])
     have hV_E_fin: "finite (top1_graph_vertex_set E' TE' \<A>_E)"
@@ -4695,31 +4784,14 @@ proof -
           hNT_X_endpoints hS_X_eq h\<A>_X_fin])
     hence heuler_X_diff: "int (card \<A>_X) - int (card ?V_X) = int n"
       using hS_X_card by linarith
-    \<comment> \<open>Euler characteristic multiplicity: \\<chi>(E) = k \\<cdot> \\<chi>(X).
-       Book: 'E has k times as many edges as X, and k times as many vertices.'
-       Each arc of X lifts to k arcs of E; each vertex of X lifts to k vertices.
-       Formally: card(A\\_E) - card(V\\_E) = k * (card(A\\_X) - card(V\\_X)).\<close>
-    \<comment> \<open>Construct the lifted arc family and use multiplicity lemmas.\<close>
-    \<comment> \<open>The lifted family A\\_lifted from Theorem 83.4 satisfies the interface.
-       card(A\\_lifted) = k * card(A\\_X) and card(V\\_lifted) = k * card(V\\_X).
-       By Euler invariance: card(A\\_E) - card(V\\_E) = card(A\\_lifted) - card(V\\_lifted).\<close>
-    \<comment> \<open>A\\_E is the lifted arc family from Theorem 83.4. Establish the interface.\<close>
-    have h_lifted: "top1_covering_lifted_arc_family_on E' TE' X TX p' \<A>_X \<A>_E"
-      sorry \<comment> \<open>A\\_E from graph\\_pi1\\_free\\_weak = lifted family from Theorem 83.4.\<close>
-    have h\<A>_X_sub: "\<forall>A\<in>\<A>_X. A \<subseteq> X \<and> A \<noteq> {}"
-    proof (intro ballI conjI)
-      fix A assume "A \<in> \<A>_X"
-      show "A \<subseteq> X" using h\<A>_X \<open>A \<in> \<A>_X\<close> by (by100 blast)
-      show "A \<noteq> {}"
-      proof -
-        have "top1_is_arc_on A (subspace_topology X TX A)" using h\<A>_X \<open>A \<in> \<A>_X\<close> by (by100 blast)
-        then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
-          unfolding top1_is_arc_on_def by (by100 blast)
-        hence "h ` I_set = A" unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-        moreover have "I_set \<noteq> {}" unfolding top1_unit_interval_def by (by100 auto)
-        ultimately show ?thesis by (by100 blast)
-      qed
-    qed
+    \<comment> \<open>Euler characteristic multiplicity: card(S\\_E) - 1 = k * (card(S\\_X) - 1).
+       Munkres 85.3: E' has k times as many arcs and vertices as X.
+       The proof constructs the lifted arc family from \\<A>\\_X (connected components
+       of p'^{-1}(A) for each A \\<in> \\<A>\\_X). Each arc lifts to k arcs (since arcs
+       are simply connected, the covering over each arc is trivial: k disjoint sheets).
+       Similarly, each vertex lifts to k vertices (fibers of points).
+       The lifted family gives an Euler formula with the same rank as \\<pi>\\_1(E').
+       By rank invariance, card(S\\_E) for ANY valid decomposition equals kn+1.\<close>
     have hk_pos: "k > 0"
     proof -
       have "e0' \<in> {e \<in> E'. p' e = x0}" using he0' \<open>p' e0' = x0\<close> by (by100 blast)
@@ -4738,55 +4810,68 @@ proof -
         qed
       qed
     qed
-    \<comment> \<open>Apply covering multiplicity lemmas to A\\_E (= lifted family from Thm 83.4).\<close>
-    have harc_mult: "card \<A>_E = k * card \<A>_X"
-      sorry \<comment> \<open>From h\\_lifted + covering\\_lifted\\_arc\\_family\\_card.\<close>
-    have hV_X_fin: "finite (top1_graph_vertex_set X TX \<A>_X)"
-    proof -
-      have "\<forall>A\<in>\<A>_X. finite (top1_arc_endpoints_on A (subspace_topology X TX A))"
-      proof (intro ballI)
-        fix A assume "A \<in> \<A>_X"
-        hence "A \<subseteq> X \<and> top1_is_arc_on A (subspace_topology X TX A)" using h\<A>_X by (by100 blast)
-        hence "top1_is_arc_on A (subspace_topology X TX A)" by (by100 blast)
-        then obtain h where "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
-          unfolding top1_is_arc_on_def by (by100 blast)
-        have hX_strict: "is_topology_on_strict X TX"
-          using hX_graph unfolding top1_is_graph_on_def by (by100 blast)
-        have hX_haus: "is_hausdorff_on X TX"
-          using hX_graph unfolding top1_is_graph_on_def by (by100 blast)
-        from arc_endpoints_are_boundary[OF hX_strict hX_haus \<open>A \<subseteq> X \<and> _\<close>[THEN conjunct1]
-            \<open>top1_is_arc_on A _\<close> \<open>top1_homeomorphism_on _ _ _ _ h\<close>]
-        have "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}" .
-        thus "finite (top1_arc_endpoints_on A (subspace_topology X TX A))" by (by100 simp)
-      qed
-      thus ?thesis unfolding top1_graph_vertex_set_def using h\<A>_X_fin by (by100 blast)
+    \<comment> \<open>Step G--H: Compute rank(\\<pi>\\_1(E')) = kn + 1 via rank invariance.
+       Munkres 85.3: construct the lifted arc family \\<A>\\_L from \\<A>\\_X.
+       Each arc of X lifts to k arcs (arc = simply connected \\<Rightarrow> trivial covering).
+       Each vertex of X has k preimages.
+       card(\\<A>\\_L) = k * card(\\<A>\\_X), card(V\\_L) = k * card(V\\_X).
+       A spanning tree of the lifted graph has card(V\\_L) - 1 arcs.
+       Non-tree arcs: card(\\<A>\\_L) - (card(V\\_L) - 1) = k*(card(\\<A>\\_X) - card(V\\_X)) + 1 = kn + 1.
+       By graph\\_pi1\\_free\\_weak: \\<pi>\\_1(E') is free on these kn+1 non-tree arcs.
+       By rank invariance: card(S\\_E) = kn + 1.\<close>
+    have "\<exists>(\<iota>L :: nat \<Rightarrow> _) (SL :: nat set). top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E' TE' e0')
+        (top1_fundamental_group_mul E' TE' e0')
+        (top1_fundamental_group_id E' TE' e0')
+        (top1_fundamental_group_invg E' TE' e0')
+        \<iota>L SL \<and> card SL = k * n + 1"
+    proof (rule covering_graph_pi1_rank)
+      show "top1_is_graph_on X TX" using hX_graph .
+      show "top1_connected_on X TX" using hX_conn .
+      show "x0 \<in> X" using hx0 .
+      show "top1_covering_map_on E' TE' X TX p'" using hE'_cov .
+      show "is_topology_on_strict E' TE'" using hE'_strict .
+      show "top1_connected_on E' TE'" using hE'_conn .
+      show "e0' \<in> E'" using he0' .
+      show "p' e0' = x0" using \<open>p' e0' = x0\<close> .
+      show "\<forall>x\<in>X. card {e \<in> E'. p' e = x} = k" using hfiber_all .
+      show "k > 0" using hk_pos .
+      show "top1_is_free_group_full_on
+          (top1_fundamental_group_carrier X TX x0)
+          (top1_fundamental_group_mul X TX x0)
+          (top1_fundamental_group_id X TX x0)
+          (top1_fundamental_group_invg X TX x0)
+          \<iota>_X S_X" using hfree_X .
+      show "card S_X = n + 1" using hS_X_card .
+      show "finite S_X" using hS_X_eq h\<A>_X_fin by (by100 simp)
+      show "top1_compact_on X TX" using hX_compact .
     qed
-    have hvert_mult: "card ?V_E = k * card ?V_X"
-      sorry \<comment> \<open>From h\\_lifted + covering\\_lifted\\_vertex\\_set\\_card.\<close>
-    have hchi_mult: "int (card \<A>_E) - int (card ?V_E) = int k * (int (card \<A>_X) - int (card ?V_X))"
-      using harc_mult hvert_mult by (simp add: algebra_simps)
-    \<comment> \<open>Step G: Euler formula for E': card S\\_E + card V\\_E = card \\<A>\\_E + 1.\<close>
-    have hE'_sub_top: "is_topology_on E' TE'"
-      using hE'_strict unfolding is_topology_on_strict_def by (by100 blast)
-    \<comment> \<open>h\\<A>\\_E\\_inter, h\\<A>\\_E\\_coh, hT\\_E\\_subgraph, hT\\_E\\_coverage now from graph\\_pi1\\_free\\_weak.\<close>
-    have heuler_E: "card S_E + card ?V_E = card \<A>_E + 1"
-      by (rule graph_euler_rank[OF hE'_graph hE'_conn he0' h\<A>_E h\<A>_E_cover
-          h\<A>_E_inter h\<A>_E_coh hT_E_tree hT_E_sub hT_E_x0 hT_E_subgraph hT_E_coverage
-          hNT_E_endpoints hS_E_eq h\<A>_E_fin])
-    \<comment> \<open>Step H: Combine.
-       card S\\_E = card \\<A>\\_E - card V\\_E + 1
-                = k \\<cdot> card \\<A>\\_X - k \\<cdot> card V\\_X + 1
-                = k \\<cdot> (card \\<A>\\_X - card V\\_X) + 1
-                = k \\<cdot> n + 1.\<close>
-    \<comment> \<open>Use int arithmetic to avoid nat subtraction traps.\<close>
-    have "int (card S_E) + int (card ?V_E) = int (card \<A>_E) + 1"
-      using heuler_E by linarith
-    hence "int (card S_E) = int (card \<A>_E) - int (card ?V_E) + 1" by linarith
-    also have "... = int k * (int (card \<A>_X) - int (card ?V_X)) + 1"
-      using hchi_mult by linarith
-    also have "... = int k * int n + 1" using heuler_X_diff by simp
-    finally have "int (card S_E) = int (k * n + 1)" by simp
-    thus ?thesis by linarith
+    then obtain \<iota>L :: "nat \<Rightarrow> _" and SL :: "nat set"
+      where hfreeL: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E' TE' e0')
+        (top1_fundamental_group_mul E' TE' e0')
+        (top1_fundamental_group_id E' TE' e0')
+        (top1_fundamental_group_invg E' TE' e0')
+        \<iota>L SL"
+      and hcard_SL: "card SL = k * n + 1" by (by100 blast)
+    \<comment> \<open>Now transfer: H \\<cong> \\<pi>\\_1(E') free on S\\_E AND \\<pi>\\_1(E') free on SL with card kn+1.
+       Rank invariance: card(S\\_E) = card(SL) = kn+1.\<close>
+    have hSL_fin: "finite SL"
+    proof -
+      have "card SL > 0" using hcard_SL by linarith
+      thus ?thesis using card_gt_0_iff by (by100 blast)
+    qed
+    \<comment> \<open>Transfer freeL from \\<pi>\\_1(E') to H via the iso, then compare with hfreeH\\_SE.\<close>
+    have hpiE_free_SE: "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E' TE' e0')
+        (top1_fundamental_group_mul E' TE' e0')
+        (top1_fundamental_group_id E' TE' e0')
+        (top1_fundamental_group_invg E' TE' e0')
+        \<iota>_E S_E" using hfree_E .
+    have hSE_fin: "finite S_E" using hS_E_eq h\<A>_E_fin by (by100 simp)
+    from free_group_rank_invariant_finite[OF hpiE_free_SE hfreeL hSE_fin hSL_fin]
+    have "card S_E = card SL" .
+    thus ?thesis using hcard_SL by simp
   qed
   have "finite S_E"
   proof -
