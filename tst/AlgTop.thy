@@ -1566,8 +1566,28 @@ proof -
           qed
           \<comment> \<open>With orient\\_map: r\\_ret|A is continuous for ALL external arcs.
              Preimage of closed T\\\\U under continuous r\\_ret|A is closed in sub(T,TT,A).\<close>
+          \<comment> \<open>Key fact: no external arc is a "bridge arc" connecting p1's component to q1.
+             A bridge arc would have A\\{q1} in p1's path-component but q1 as endpoint.
+             In SC context this can't happen (would create a non-trivial loop).\<close>
+          have hno_bridge: "\<not> (q1 \<in> A \<and> A - {q1} \<subseteq> top1_path_component_of_on ?Tq ?TTq p1)"
+            sorry \<comment> \<open>No bridge arcs in SC graph. If A connects p1's component to q1,
+               combined with A1 (p1\\<rightarrow>q1) gives a cycle. SC \\<Rightarrow> no cycles. Contradiction.\<close>
+          \<comment> \<open>With hno\\_bridge: r\\_ret restricted to A is either constant or orient\\_map.
+             Both are continuous. Branch case: A\\{q1} connected \\<subseteq> one component,
+             hno\\_bridge ensures it's the q1-component if q1 \\<in> A, so branch = q1 on A\\{q1},
+             and r\\_ret(q1) = q1 (identity). Hence r\\_ret = constant q1 or p1 on A.\<close>
           have hr_cont_A: "top1_continuous_map_on A (subspace_topology T TT A) T TT r_ret"
-            sorry \<comment> \<open>r\\_ret|A continuous: constant case trivial, orient\\_map case by composition.\<close>
+            sorry \<comment> \<open>Proof: case split on A's endpoint config.
+               1. A has both p1, q1: orient\\_map case. Continuous (composition of homeos + flip).
+               2. A has q1 (not p1): hno\\_bridge says A\\{q1} NOT in p1's component.
+                  So branch = q1 on A\\{q1}. At q1: identity = q1. Constant q1 on A. Continuous.
+               3. A has p1 (not q1): A \\<subseteq> T\\{q1}. Connected. In one component.
+                  branch = constant (p1 or q1) on A. And at p1: identity = p1.
+                  If branch = p1: r\\_ret = p1 on A. At p1: identity = p1. Consistent. Continuous.
+                  If branch = q1: r\\_ret = q1 on interior, p1 at p1. Discontinuous!
+                  But branch(p1) = p1 (p1 is in its own component). So branch = p1 on A. Continuous.
+               4. A has neither: A \\<subseteq> T\\{q1}\\\\{p1}. branch = constant. Continuous.
+               Each case gives continuity. Full proof requires formalizing each case.\<close>
           have hU_sub_T: "U \<subseteq> T" using \<open>U \<in> TT\<close> hstrict unfolding is_topology_on_strict_def by (by100 blast)
           have hTU_closed: "closedin_on T TT (T - U)"
             unfolding closedin_on_def
