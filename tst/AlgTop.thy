@@ -5222,8 +5222,53 @@ proof -
           \<comment> \<open>W' \\<subseteq> some max conn comp C of preimage(A). C \\<ne> B (since e' \\<in> W' \\<subseteq> C, e' \\<notin> B).\<close>
           \<comment> \<open>p(W') \\<inter> p(B) = {} because W' \\<subseteq> C, C \\<inter> B = {} (disjoint components).\<close>
           \<comment> \<open>So p(W') \\<subseteq> A \\ p(B).\<close>
-          have "p ` W' \<subseteq> A - p ` B"
-            sorry \<comment> \<open>W' is in a component disjoint from B, so p(W') disjoint from p(B).\<close>
+          \<comment> \<open>Key: p(W') \\<inter> p(B) = {}. Proof via evenly covered sheets:
+             If z \\<in> p(W') \\<inter> p(B), get b \\<in> B with p(b)=z. b is in some sheet Vb over p(W').
+             Vb is connected, meets B (at b), so Vb \\<subseteq> B (maximality). p(Vb) = p(W') (homeo).
+             So a \\<in> p(W') = p(Vb) \\<subseteq> p(B), contradicting a \\<notin> p(B).\<close>
+          have "p ` W' \<inter> p ` B = {}"
+          proof (rule ccontr)
+            assume "p ` W' \<inter> p ` B \<noteq> {}"
+            then obtain z where "z \<in> p ` W'" "z \<in> p ` B" by (by100 blast)
+            from \<open>z \<in> p ` B\<close> obtain b where "b \<in> B" "p b = z" by (by100 blast)
+            have "b \<in> ?pre" using \<open>b \<in> B\<close> hB_sub by (by100 blast)
+            have "p b \<in> p ` W'" using \<open>p b = z\<close> \<open>z \<in> p ` W'\<close> by simp
+            hence "b \<in> {e \<in> ?pre. p e \<in> p ` W'}" using \<open>b \<in> ?pre\<close> by (by100 blast)
+            \<comment> \<open>From evenly covered: get sheets over p(W'). b is in some sheet Vb.\<close>
+            from hW'_ev[unfolded top1_evenly_covered_on_def]
+            obtain \<V>' where
+                hV'_open: "\<forall>V\<in>\<V>'. openin_on ?pre (subspace_topology E TE ?pre) V"
+                and hV'_disj: "\<forall>V\<in>\<V>'. \<forall>V'\<in>\<V>'. V \<noteq> V' \<longrightarrow> V \<inter> V' = {}"
+                and hV'_union: "{e \<in> ?pre. p e \<in> p ` W'} = \<Union>\<V>'"
+                and hV'_homeo: "\<forall>V\<in>\<V>'. top1_homeomorphism_on V
+                    (subspace_topology ?pre (subspace_topology E TE ?pre) V)
+                    (p ` W') (subspace_topology A (subspace_topology X TX A) (p ` W')) p"
+              by (elim conjE exE) (rule that, assumption+)
+            from hV'_union have "b \<in> \<Union>\<V>'" using \<open>b \<in> {e \<in> ?pre. p e \<in> p ` W'}\<close> by simp
+            then obtain Vb where "Vb \<in> \<V>'" "b \<in> Vb" by (by100 blast)
+            \<comment> \<open>Vb is connected (path-connected from homeomorphism).\<close>
+            \<comment> \<open>Vb meets B (at b). Vb \\<subseteq> preimage(A) (from sheet structure).\<close>
+            \<comment> \<open>By maximality of B: Vb \\<subseteq> B.\<close>
+            \<comment> \<open>Then p(Vb) = p(W') (homeomorphism). So p(W') \\<subseteq> p(B).\<close>
+            \<comment> \<open>a \\<in> p(W') \\<subseteq> p(B), contradicting a \\<notin> p(B).\<close>
+            have "Vb \<subseteq> ?pre" using hV'_union \<open>Vb \<in> \<V>'\<close> by (by100 blast)
+            have hVb_homeo: "top1_homeomorphism_on Vb
+                (subspace_topology ?pre (subspace_topology E TE ?pre) Vb)
+                (p ` W') (subspace_topology A (subspace_topology X TX A) (p ` W')) p"
+              using hV'_homeo \<open>Vb \<in> \<V>'\<close> by (by100 blast)
+            have "p ` Vb = p ` W'"
+              using hVb_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            \<comment> \<open>Vb \\<subseteq> B: Vb connected (homeo to p(W') which is connected), meets B at b.\<close>
+            have hVb_sub_B: "Vb \<subseteq> B"
+              sorry \<comment> \<open>Vb connected (homeo to p(W')), shares b with B,
+                 both in preimage(A), B max conn comp \\<Rightarrow> Vb \\<subseteq> B by Theorem\\_23\\_3 + maximality.\<close>
+            have "p ` W' \<subseteq> p ` B"
+              using \<open>p ` Vb = p ` W'\<close> hVb_sub_B by (by100 blast)
+            have "a \<in> p ` W'" using \<open>p e' = a\<close> hW'_e by (by100 blast)
+            hence "a \<in> p ` B" using \<open>p ` W' \<subseteq> p ` B\<close> by (by100 blast)
+            thus False using \<open>a \<notin> p ` B\<close> by (by100 blast)
+          qed
+          hence "p ` W' \<subseteq> A - p ` B" using hW'_sub by (by100 blast)
           have "a \<in> p ` W'" using \<open>p e' = a\<close> hW'_e by (by100 blast)
           thus "\<exists>U. U \<in> subspace_topology X TX A \<and> a \<in> U \<and> U \<subseteq> A - p ` B"
             using \<open>p ` W' \<in> subspace_topology X TX A\<close> \<open>a \<in> p ` W'\<close> \<open>p ` W' \<subseteq> A - p ` B\<close>
