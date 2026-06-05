@@ -3347,9 +3347,21 @@ proof -
                       \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> hA23_ep]
                   have "top1_simple_closed_curve_on T' TT' (A1 \<union> (A2 \<union> A3))" .
                   \<comment> \<open>Step 6: SCC in tree \\<Rightarrow> contradiction. Same chain as the 2-arc case.\<close>
-                  show ?thesis sorry \<comment> \<open>A1\\<union>A2\\<union>A3 is SCC in tree. Need retract + \\<pi>\\_1 chain.
-                     The retract needs two\\_arc\\_union\\_is\\_retract for A1 and A2\\<union>A3.
-                     Then the existing SC + nontrivial chain gives False.\<close>
+                  \<comment> \<open>Use scc\\_in\\_sc\\_false to derive contradiction.\<close>
+                  have "top1_retract_of_on T' TT' (A1 \<union> (A2 \<union> A3))"
+                    sorry \<comment> \<open>Retract: same construction as two\\_arc\\_union\\_is\\_retract but
+                       with A1 and A2\\<union>A3. External arcs map to attachment vertices.\<close>
+                  have "A1 \<union> (A2 \<union> A3) \<subseteq> T'"
+                    using \<open>A1 \<subseteq> T'\<close> \<open>A2 \<union> A3 \<subseteq> T'\<close> by (by100 blast)
+                  have hsc_T': "top1_simply_connected_on T' TT'"
+                    using htree' unfolding top1_is_tree_on_def by (by100 blast)
+                  have hTT'_top: "is_topology_on T' TT'"
+                    using hstrict' unfolding is_topology_on_strict_def by (by100 blast)
+                  from scc_in_sc_false[OF hsc_T' hTT'_top hhaus'
+                      \<open>top1_simple_closed_curve_on T' TT' (A1 \<union> (A2 \<union> A3))\<close>
+                      \<open>top1_retract_of_on T' TT' (A1 \<union> (A2 \<union> A3))\<close>
+                      \<open>A1 \<union> (A2 \<union> A3) \<subseteq> T'\<close>]
+                  show ?thesis by (by100 blast)
                 qed
               next
                 case a4ne1: False
