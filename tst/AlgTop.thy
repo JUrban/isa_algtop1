@@ -3149,8 +3149,10 @@ definition top1_covering_lifted_arc_family_on ::
     "'b set \<Rightarrow> 'b set set \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> ('b \<Rightarrow> 'a)
      \<Rightarrow> 'a set set \<Rightarrow> 'b set set \<Rightarrow> bool"
   where "top1_covering_lifted_arc_family_on E TE X TX p \<A>_X \<A>_E \<longleftrightarrow>
-    \<comment> \<open>Clause 1: each lift maps bijectively onto some base arc.\<close>
-    (\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B) \<and>
+    \<comment> \<open>Clause 1: each lift maps bijectively onto some base arc, preserving endpoints.\<close>
+    (\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B
+      \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+        = top1_arc_endpoints_on A (subspace_topology X TX A)) \<and>
     \<comment> \<open>Clause 2: every fiber point over a base arc is in some lift that maps onto the full arc.\<close>
     (\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A) \<and>
     \<comment> \<open>Clause 3: lifts are pairwise disjoint.\<close>
@@ -3175,11 +3177,15 @@ proof -
   let ?lift = "\<lambda>A. {B \<in> \<A>_E. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A}"
   \<comment> \<open>Step 1: Each lifted arc maps onto exactly one base arc (existence + uniqueness).\<close>
   note hdef = assms(2)[unfolded top1_covering_lifted_arc_family_on_def]
-  have h_clause1: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B"
+  have h_clause1: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B
+      \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+        = top1_arc_endpoints_on A (subspace_topology X TX A)"
     using conjunct1[OF hdef] .
   have h_clause2: "\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A"
     using conjunct1[OF conjunct2[OF hdef]] .
-  have h_exists: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B"
+  have h_exists: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B
+      \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+        = top1_arc_endpoints_on A (subspace_topology X TX A)"
     using h_clause1 .
   \<comment> \<open>The base arc is uniquely determined: p ` B = A.\<close>
   \<comment> \<open>Step 2: For each base arc, there are exactly k lifted arcs.\<close>
@@ -3278,7 +3284,8 @@ proof -
   proof (rule set_eqI, rule iffI)
     fix B assume "B \<in> \<A>_E"
     from h_exists[rule_format, OF this]
-    obtain A where "A \<in> \<A>_X" "B \<subseteq> {e \<in> E. p e \<in> A}" "p ` B = A" "inj_on p B" by (by100 blast)
+    obtain A where "A \<in> \<A>_X" "B \<subseteq> {e \<in> E. p e \<in> A}" "p ` B = A" "inj_on p B"
+      by (by100 blast)
     thus "B \<in> (\<Union>A\<in>\<A>_X. ?lift A)" using \<open>B \<in> \<A>_E\<close> by (by100 blast)
   next
     fix B assume "B \<in> (\<Union>A\<in>\<A>_X. ?lift A)"
@@ -3324,8 +3331,73 @@ proof -
   let ?V_X = "top1_graph_vertex_set X TX \<A>_X"
   let ?V_E = "top1_graph_vertex_set E TE \<A>_E"
   \<comment> \<open>Step 1: V\\_E = \\<Union>{p\\<inverse>{v} \\<inter> E | v \\<in> V\\_X} (vertex fiber equality).\<close>
+  note hdef2 = assms(2)[unfolded top1_covering_lifted_arc_family_on_def]
+  have h_clause1v: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B
+      \<and> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+        = top1_arc_endpoints_on A (subspace_topology X TX A)"
+    using conjunct1[OF hdef2] .
+  have h_clause2v: "\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A"
+    using conjunct1[OF conjunct2[OF hdef2]] .
   have hV_eq: "?V_E = (\<Union>v\<in>?V_X. {e \<in> E. p e = v})"
-    sorry \<comment> \<open>Needs: p maps endpoints of lifts to endpoints of base arcs.\<close>
+  proof (rule set_eqI, rule iffI)
+    fix e assume "e \<in> ?V_E"
+    \<comment> \<open>e is an endpoint of some B \\<in> A\\_E. From clause 1: p maps endpoints of B to endpoints of A.\<close>
+    then obtain B where "B \<in> \<A>_E"
+        "e \<in> top1_arc_endpoints_on B (subspace_topology E TE B)"
+      unfolding top1_graph_vertex_set_def by (by100 blast)
+    from h_clause1v[rule_format, OF \<open>B \<in> \<A>_E\<close>]
+    obtain A where "A \<in> \<A>_X" "B \<subseteq> {e \<in> E. p e \<in> A}" "inj_on p B"
+        "p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+          = top1_arc_endpoints_on A (subspace_topology X TX A)"
+      by (by5000 blast)
+    have "p e \<in> top1_arc_endpoints_on A (subspace_topology X TX A)"
+      using \<open>e \<in> top1_arc_endpoints_on B _\<close>
+          \<open>p ` (top1_arc_endpoints_on B _) = top1_arc_endpoints_on A _\<close>
+      by (by100 blast)
+    hence "p e \<in> ?V_X" unfolding top1_graph_vertex_set_def using \<open>A \<in> \<A>_X\<close> by (by100 blast)
+    have "e \<in> E" using \<open>e \<in> top1_arc_endpoints_on B _\<close> \<open>B \<subseteq> {e \<in> E. p e \<in> A}\<close>
+        unfolding top1_arc_endpoints_on_def by (by100 blast)
+    thus "e \<in> (\<Union>v\<in>?V_X. {e \<in> E. p e = v})" using \<open>p e \<in> ?V_X\<close> \<open>e \<in> E\<close> by (by100 blast)
+  next
+    fix e assume "e \<in> (\<Union>v\<in>?V_X. {e \<in> E. p e = v})"
+    then obtain v where "v \<in> ?V_X" "e \<in> E" "p e = v" by (by100 blast)
+    \<comment> \<open>v is an endpoint of some A \\<in> A\\_X.\<close>
+    from \<open>v \<in> ?V_X\<close> obtain A where "A \<in> \<A>_X"
+        "v \<in> top1_arc_endpoints_on A (subspace_topology X TX A)"
+      unfolding top1_graph_vertex_set_def by (by100 blast)
+    \<comment> \<open>v \\<in> A (endpoints \\<subseteq> A). e \\<in> fiber(A). From clause 2: e in some lift B.\<close>
+    have "v \<in> A" using \<open>v \<in> top1_arc_endpoints_on A _\<close>
+        unfolding top1_arc_endpoints_on_def by (by100 blast)
+    hence "e \<in> {e' \<in> E. p e' \<in> A}" using \<open>e \<in> E\<close> \<open>p e = v\<close> by (by100 blast)
+    from h_clause2v[rule_format, OF \<open>A \<in> \<A>_X\<close> this]
+    obtain B where "B \<in> \<A>_E" "e \<in> B" "B \<subseteq> {e' \<in> E. p e' \<in> A}" "p ` B = A" by (by100 blast)
+    \<comment> \<open>From clause 1: p|B injective and p maps endpoints(B) to endpoints(A).
+       v = p(e) \\<in> endpoints(A) = p ` endpoints(B). So \\<exists>e' \\<in> endpoints(B). p(e') = v = p(e).
+       Since e, e' \\<in> B and p injective on B: e = e'. So e \\<in> endpoints(B).\<close>
+    from h_clause1v[rule_format, OF \<open>B \<in> \<A>_E\<close>]
+    obtain A' where "A' \<in> \<A>_X" "p ` B = A'" "inj_on p B"
+        "p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+          = top1_arc_endpoints_on A' (subspace_topology X TX A')"
+      by (by5000 blast)
+    \<comment> \<open>A' = A (from p ` B = A and p ` B = A').\<close>
+    have "A' = A" using \<open>p ` B = A'\<close> \<open>p ` B = A\<close> by simp
+    hence "p ` (top1_arc_endpoints_on B (subspace_topology E TE B))
+          = top1_arc_endpoints_on A (subspace_topology X TX A)"
+      using \<open>p ` (top1_arc_endpoints_on B _) = top1_arc_endpoints_on A' _\<close> by simp
+    have "v \<in> p ` (top1_arc_endpoints_on B (subspace_topology E TE B))"
+      using \<open>v \<in> top1_arc_endpoints_on A _\<close>
+          \<open>p ` (top1_arc_endpoints_on B _) = top1_arc_endpoints_on A _\<close>
+      by (by100 blast)
+    then obtain e' where "e' \<in> top1_arc_endpoints_on B (subspace_topology E TE B)" "p e' = v"
+      by (by100 blast)
+    have "e' \<in> B" using \<open>e' \<in> top1_arc_endpoints_on B _\<close>
+        unfolding top1_arc_endpoints_on_def by (by100 blast)
+    from inj_onD[OF \<open>inj_on p B\<close>] have "e = e'"
+      using \<open>e \<in> B\<close> \<open>e' \<in> B\<close> \<open>p e = v\<close> \<open>p e' = v\<close> by (by100 blast)
+    hence "e \<in> top1_arc_endpoints_on B (subspace_topology E TE B)"
+      using \<open>e' \<in> top1_arc_endpoints_on B _\<close> by simp
+    thus "e \<in> ?V_E" unfolding top1_graph_vertex_set_def using \<open>B \<in> \<A>_E\<close> by (by100 blast)
+  qed
   \<comment> \<open>Step 2: The fibers are pairwise disjoint.\<close>
   have hV_disj: "\<forall>v1\<in>?V_X. \<forall>v2\<in>?V_X. v1 \<noteq> v2 \<longrightarrow>
       {e \<in> E. p e = v1} \<inter> {e \<in> E. p e = v2} = {}"
