@@ -6179,8 +6179,53 @@ proof -
      By Euler invariance (rank is independent of decomposition):
      rank(\\<pi>\\_1(E)) = card(\\<A>\\_L) - card(V\\_L) + 1 = kn + 1.
      By rank invariance: card(SE) = kn + 1.\<close>
-  \<comment> \<open>The Euler invariance step is the remaining hard part.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 6a: From X data, derive card(\\<A>w) - card(V\\_X) = n.
+     Sw = non-tree arcs, card(Sw) = n+1.
+     Tree Euler: card(V\\_Tw) = card(tree\\_arcs) + 1.
+     card(\\<A>w) = card(tree\\_arcs) + card(Sw).
+     card(V\\_X) = card(V\\_Tw) = card(tree\\_arcs) + 1.
+     So card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.\<close>
+  have hchi_X: "int (card \<A>w) - int (card (top1_graph_vertex_set X TX \<A>w)) = int n"
+    sorry \<comment> \<open>Euler characteristic of X: card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.
+       Uses tree Euler for Tw + rank formula.\<close>
+  \<comment> \<open>Step 6b: Lifted family multiplicity gives Euler for E.\<close>
+  have hchi_L: "int (card ?\<A>_L) - int (card (top1_graph_vertex_set E TE ?\<A>_L)) = int k * int n"
+  proof -
+    have "int (card ?\<A>_L) = int k * int (card \<A>w)"
+      using h\<A>_L_card by simp
+    moreover have "int (card (top1_graph_vertex_set E TE ?\<A>_L)) = int k * int (card (top1_graph_vertex_set X TX \<A>w))"
+      using hV_L_card by simp
+    ultimately show ?thesis using hchi_X by (simp add: algebra_simps)
+  qed
+  \<comment> \<open>Step 6c: Euler invariance: rank(\\<pi>\\_1(E)) = card(\\<A>\\_L) - card(V\\_L) + 1.
+     This is the key step: the Euler characteristic is independent of decomposition.\<close>
+  have hrank_E: "int (card SE_raw) = int (card ?\<A>_L) - int (card (top1_graph_vertex_set E TE ?\<A>_L)) + 1"
+    sorry \<comment> \<open>Euler invariance: rank = arcs - vertices + 1 for any decomposition.
+       Both 𝒜E_raw and 𝒜_L are valid decompositions of E, so they give the same Euler χ.
+       card(SE_raw) = card(𝒜E_raw) - card(VE_raw) + 1 = card(𝒜_L) - card(V_L) + 1.\<close>
+  \<comment> \<open>Step 6d: Combine to get card(SE\\_raw) = k*n + 1.\<close>
+  have "int (card SE_raw) = int k * int n + 1"
+    using hrank_E hchi_L by linarith
+  hence hcard_SE: "card SE_raw = k * n + 1"
+  proof -
+    assume h: "int (card SE_raw) = int k * int n + 1"
+    have "int (card SE_raw) = int (k * n) + 1" using h by simp
+    hence "int (card SE_raw) = int (k * n + 1)" by simp
+    thus "card SE_raw = k * n + 1" using of_nat_eq_iff by (by100 blast)
+  qed
+  \<comment> \<open>Step 6e: Use free\\_group\\_rank\\_invariant\\_finite to transfer to nat set.\<close>
+  show ?thesis
+  proof (rule exI[of _ "\<lambda>i. \<iota>E_raw (from_nat_into SE_raw i)"],
+         rule exI[of _ "{..<card SE_raw}"])
+    show "top1_is_free_group_full_on
+        (top1_fundamental_group_carrier E TE e0)
+        (top1_fundamental_group_mul E TE e0)
+        (top1_fundamental_group_id E TE e0)
+        (top1_fundamental_group_invg E TE e0)
+        (\<lambda>i. \<iota>E_raw (from_nat_into SE_raw i)) {..<card SE_raw}
+        \<and> card {..<card SE_raw} = k * n + 1"
+      sorry \<comment> \<open>Transfer free group to nat-indexed basis via bijection SE\\_raw \\<leftrightarrow> {..<card SE\\_raw}.\<close>
+  qed
 qed
 
 (** from \<S>85 Theorem 85.3: Schreier index formula.
