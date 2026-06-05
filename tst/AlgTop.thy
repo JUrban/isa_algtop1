@@ -5565,8 +5565,23 @@ proof -
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology E TE B)
          \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
         sorry \<comment> \<open>From Theorem\\_83\\_4 applied to the lifted family.\<close>
+      have hE_compact: "top1_compact_on E TE"
+      proof -
+        have hTX_top: "is_topology_on X TX"
+          using hgraph_X unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+        have hTE_top: "is_topology_on E TE"
+          using hstrict_E unfolding is_topology_on_strict_def by (by100 blast)
+        from finite_covering_compact[OF hcov hcompact_X hTX_top hTE_top hfiber hk]
+        show ?thesis .
+      qed
       have h\<A>E_fin: "finite \<A>E_raw"
-        sorry \<comment> \<open>E is a finite graph (compact covering of compact graph).\<close>
+      proof -
+        have h\<A>E_coh: "\<forall>C. C \<subseteq> E \<longrightarrow> (closedin_on E TE C \<longleftrightarrow>
+            (\<forall>A\<in>\<A>E_raw. closedin_on A (subspace_topology E TE A) (A \<inter> C)))"
+          using conjunct1[OF conjunct2[OF conjunct2[OF conjunct2[OF conjunct2[OF hbig_E]]]]] .
+        from compact_graph_finite_arcs[OF hE_graph hE_compact h\<A>E_arcs h\<A>E_cover h\<A>E_inter h\<A>E_coh]
+        show ?thesis .
+      qed
       from graph_euler_invariance[OF hE_graph h\<A>L_arcs h\<A>L_cover h\<A>L_inter
           \<open>finite ?\<A>_L \<and> card ?\<A>_L = k * card \<A>w\<close>[THEN conjunct1]
           h\<A>E_arcs h\<A>E_cover h\<A>E_inter h\<A>E_fin]
@@ -7619,4 +7634,4 @@ qed
 
 
 end
-         
+           
