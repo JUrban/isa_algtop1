@@ -4986,8 +4986,31 @@ proof -
   next
     \<comment> \<open>Clause 2: every fiber point is in some path component.\<close>
     show "\<forall>A\<in>\<A>w. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>?\<A>_L. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A"
-      sorry \<comment> \<open>From max\\_conn\\_comp\\_covers: every point is in some max connected component.
-         And from Clause 1: each component maps onto A.\<close>
+    proof (intro ballI)
+      fix A e assume "A \<in> \<A>w" "e \<in> {e' \<in> E. p e' \<in> A}"
+      hence "e \<in> E" "p e \<in> A" by (by100 blast)+
+      let ?S = "{e' \<in> E. p e' \<in> A}"
+      let ?TS = "subspace_topology E TE ?S"
+      have "e \<in> ?S" using \<open>e \<in> E\<close> \<open>p e \<in> A\<close> by (by100 blast)
+      have hTS: "is_topology_on ?S ?TS"
+      proof -
+        have "?S \<subseteq> E" by (by100 blast)
+        have hTE: "is_topology_on E TE"
+          using hstrict_E unfolding is_topology_on_strict_def by (by100 blast)
+        from subspace_topology_is_topology_on[OF hTE \<open>?S \<subseteq> E\<close>]
+        show ?thesis .
+      qed
+      from max_conn_comp_covers[OF hTS \<open>e \<in> ?S\<close>]
+      obtain B where "top1_max_conn_comp ?S ?TS B" "e \<in> B" by (by100 blast)
+      have "B \<in> ?\<A>_L" using \<open>A \<in> \<A>w\<close> \<open>top1_max_conn_comp ?S ?TS B\<close> by (by100 blast)
+      have "B \<subseteq> ?S" using max_conn_comp_sub[OF \<open>top1_max_conn_comp ?S ?TS B\<close>] .
+      have "p ` B = A"
+        sorry \<comment> \<open>Each max conn comp of p^{-1}(A) maps ONTO A.
+           Proof: A is simply connected (arc). Covering over SC base is trivial.
+           Each component is homeomorphic to A via p. So p`B = A.\<close>
+      show "\<exists>B\<in>?\<A>_L. e \<in> B \<and> B \<subseteq> ?S \<and> p ` B = A"
+        using \<open>B \<in> ?\<A>_L\<close> \<open>e \<in> B\<close> \<open>B \<subseteq> ?S\<close> \<open>p ` B = A\<close> by (by100 blast)
+    qed
   next
     \<comment> \<open>Clause 3: lifts over the same base arc are pairwise disjoint.\<close>
     show "\<forall>A\<in>\<A>w. \<forall>B1\<in>?\<A>_L. \<forall>B2\<in>?\<A>_L.
