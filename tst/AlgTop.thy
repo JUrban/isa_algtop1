@@ -1326,14 +1326,13 @@ proof -
   have hh1_maps: "\<forall>t\<in>I_set. h1 t \<in> A1"
     using hh1_bij unfolding bij_betw_def by (by100 blast)
   \<comment> \<open>The retraction r_ret: id on A1\<union>A2, homeomorphism/constant for external arcs.\<close>
+  \<comment> \<open>Simplified retraction: no homeomorphism case. In SC context, no external arc has both endpoints.
+     So the homeomorphism case is vacuous. All external arcs map to a constant (p1 or q1).\<close>
   define r_ret where "r_ret \<equiv> (\<lambda>x :: 'a.
     if x \<in> A1 \<union> A2 then x
     else
       let C = SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C' in
-      if p1 \<in> C \<and> q1 \<in> C then
-        (let h_C = SOME h'. top1_homeomorphism_on I_set I_top C (subspace_topology T TT C) h' in
-         h1 (inv_into I_set h_C x))
-      else if q1 \<in> C \<and> p1 \<notin> C then q1
+      if q1 \<in> C \<and> p1 \<notin> C then q1
       else p1)"
   \<comment> \<open>r_ret maps into A1 \<union> A2.\<close>
   have hr_maps: "\<forall>x\<in>T. r_ret x \<in> A1 \<union> A2"
@@ -1344,79 +1343,11 @@ proof -
       case True thus ?thesis unfolding r_ret_def by (by100 simp)
     next
       case False
-      \<comment> \<open>Constant cases: p1,q1 \<in> A1\<union>A2. Homeomorphism: h1 maps I_set to A1.\<close>
-      \<comment> \<open>x \\<notin> A1\\<union>A2, so r\\_ret takes the else branch. The result is p1, q1, or h1(...).\<close>
       let ?C = "SOME C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C'"
-      have hr_eq: "r_ret x = (if p1 \<in> ?C \<and> q1 \<in> ?C then
-          h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x)
-        else if q1 \<in> ?C \<and> p1 \<notin> ?C then q1 else p1)"
+      have hr_eq: "r_ret x = (if q1 \<in> ?C \<and> p1 \<notin> ?C then q1 else p1)"
         unfolding r_ret_def Let_def using False by simp
-      show ?thesis
-      proof (cases "p1 \<in> ?C \<and> q1 \<in> ?C")
-        case True
-        hence "r_ret x = h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x)"
-          using hr_eq by simp
-        moreover have "inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x \<in> I_set"
-        proof -
-          \<comment> \<open>x \\<in> T, x \\<notin> A1\\<union>A2. So x is in some arc C \\<in> \\<A> with C \\<ne> A1, C \\<ne> A2.\<close>
-          have "\<exists>C'. C' \<in> \<A> \<and> C' \<noteq> A1 \<and> C' \<noteq> A2 \<and> x \<in> C'"
-          proof -
-            have "x \<in> \<Union>\<A>" using \<open>x \<in> T\<close> h\<A>_cover by simp
-            then obtain C' where "C' \<in> \<A>" "x \<in> C'" by (by100 blast)
-            have "C' \<noteq> A1"
-            proof
-              assume "C' = A1"
-              hence "x \<in> A1" using \<open>x \<in> C'\<close> by simp
-              hence "x \<in> A1 \<union> A2" by (by100 blast)
-              with False show False by (by100 blast)
-            qed
-            have "C' \<noteq> A2"
-            proof
-              assume "C' = A2"
-              hence "x \<in> A2" using \<open>x \<in> C'\<close> by simp
-              hence "x \<in> A1 \<union> A2" by (by100 blast)
-              with False show False by (by100 blast)
-            qed
-            show ?thesis using \<open>C' \<in> \<A>\<close> \<open>C' \<noteq> A1\<close> \<open>C' \<noteq> A2\<close> \<open>x \<in> C'\<close> by (by100 blast)
-          qed
-          hence hC_prop: "?C \<in> \<A> \<and> ?C \<noteq> A1 \<and> ?C \<noteq> A2 \<and> x \<in> ?C"
-            by (rule someI_ex)
-          hence "x \<in> ?C" by (by100 blast)
-          have "?C \<in> \<A>" using hC_prop by (by100 blast)
-          hence "top1_is_arc_on ?C (subspace_topology T TT ?C)"
-            using h\<A>_arcs by (by100 blast)
-          then obtain h_C where "top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h_C"
-            unfolding top1_is_arc_on_def by (by100 blast)
-          let ?h_C_some = "SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h'"
-          have "\<exists>h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h'"
-            using \<open>top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h_C\<close>
-            by (by100 blast)
-          hence "top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) ?h_C_some"
-            by (rule someI_ex)
-          hence "bij_betw ?h_C_some I_set ?C"
-            unfolding top1_homeomorphism_on_def by (by100 blast)
-          have "inj_on ?h_C_some I_set" using \<open>bij_betw ?h_C_some I_set ?C\<close>
-            unfolding bij_betw_def by (by100 blast)
-          have "?h_C_some ` I_set = ?C" using \<open>bij_betw ?h_C_some I_set ?C\<close>
-            unfolding bij_betw_def by (by100 blast)
-          hence "x \<in> ?h_C_some ` I_set" using \<open>x \<in> ?C\<close> by simp
-          from inv_into_into[OF \<open>x \<in> ?h_C_some ` I_set\<close>]
-          show ?thesis .
-        qed
-        ultimately have "r_ret x \<in> A1"
-        proof -
-          assume "r_ret x = h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x)"
-            and "inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x \<in> I_set"
-          hence "h1 (inv_into I_set (SOME h'. top1_homeomorphism_on I_set I_top ?C (subspace_topology T TT ?C) h') x) \<in> A1"
-            using hh1_maps by (by100 blast)
-          thus ?thesis using \<open>r_ret x = h1 _\<close> by simp
-        qed
-        thus ?thesis by (by100 blast)
-      next
-        case False
-        hence "r_ret x = q1 \<or> r_ret x = p1" using hr_eq by (by100 auto)
-        thus ?thesis using hp1_in hq1_in by (by100 blast)
-      qed
+      hence "r_ret x = q1 \<or> r_ret x = p1" by (by100 auto)
+      thus ?thesis using hp1_in hq1_in by (by100 blast)
     qed
   qed
   \<comment> \<open>r_ret is the identity on A1 \<union> A2.\<close>
