@@ -3317,8 +3317,42 @@ lemma covering_lifted_vertex_set_card:
       and "top1_covering_lifted_arc_family_on E TE X TX p \<A>_X \<A>_E"
       and "finite (top1_graph_vertex_set X TX \<A>_X)"
       and "\<forall>x\<in>X. card {e \<in> E. p e = x} = k"
+      and "\<forall>A\<in>\<A>_X. A \<subseteq> X \<and> A \<noteq> {}"
+      and "k > 0"
   shows "card (top1_graph_vertex_set E TE \<A>_E) = k * card (top1_graph_vertex_set X TX \<A>_X)"
-  sorry
+proof -
+  let ?V_X = "top1_graph_vertex_set X TX \<A>_X"
+  let ?V_E = "top1_graph_vertex_set E TE \<A>_E"
+  \<comment> \<open>Step 1: V\\_E = \\<Union>{p\\<inverse>{v} \\<inter> E | v \\<in> V\\_X} (vertex fiber equality).\<close>
+  have hV_eq: "?V_E = (\<Union>v\<in>?V_X. {e \<in> E. p e = v})"
+    sorry \<comment> \<open>Needs: p maps endpoints of lifts to endpoints of base arcs.\<close>
+  \<comment> \<open>Step 2: The fibers are pairwise disjoint.\<close>
+  have hV_disj: "\<forall>v1\<in>?V_X. \<forall>v2\<in>?V_X. v1 \<noteq> v2 \<longrightarrow>
+      {e \<in> E. p e = v1} \<inter> {e \<in> E. p e = v2} = {}"
+    by (by100 blast)
+  \<comment> \<open>Step 3: Each fiber has k elements.\<close>
+  have hV_X_sub: "?V_X \<subseteq> X"
+    unfolding top1_graph_vertex_set_def top1_arc_endpoints_on_def
+    using assms(5) by (by100 blast)
+  have hV_card: "\<forall>v\<in>?V_X. card {e \<in> E. p e = v} = k"
+    using assms(4) hV_X_sub by (by100 blast)
+  \<comment> \<open>Step 4: Finite fibers.\<close>
+  have hV_fin: "\<forall>v\<in>?V_X. finite {e \<in> E. p e = v}"
+  proof (intro ballI)
+    fix v assume "v \<in> ?V_X"
+    hence "v \<in> X" using hV_X_sub by (by100 blast)
+    have "card {e \<in> E. p e = v} = k" using assms(4) \<open>v \<in> X\<close> by (by100 blast)
+    hence "card {e \<in> E. p e = v} > 0" using assms(6) by simp
+    thus "finite {e \<in> E. p e = v}" using card_gt_0_iff by (by100 blast)
+  qed
+  \<comment> \<open>Step 5: card(V\\_E) = \\<Sum>v\\<in>V\\_X. k = k * card(V\\_X).\<close>
+  have "card ?V_E = card (\<Union>v\<in>?V_X. {e \<in> E. p e = v})" using hV_eq by simp
+  also have "... = (\<Sum>v\<in>?V_X. card {e \<in> E. p e = v})"
+    using card_UN_disjoint[OF assms(3) hV_fin hV_disj] by simp
+  also have "... = (\<Sum>v\<in>?V_X. k)" using hV_card by simp
+  also have "... = k * card ?V_X" by simp
+  finally show ?thesis .
+qed
 
 \<comment> \<open>For the Schreier formula, we need: rank(\\<pi>\\_1(E')) = kn + 1.
    Since E' is a k-fold covering of X (wedge of n+1 circles):
