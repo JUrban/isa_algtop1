@@ -3149,10 +3149,12 @@ definition top1_covering_lifted_arc_family_on ::
     "'b set \<Rightarrow> 'b set set \<Rightarrow> 'a set \<Rightarrow> 'a set set \<Rightarrow> ('b \<Rightarrow> 'a)
      \<Rightarrow> 'a set set \<Rightarrow> 'b set set \<Rightarrow> bool"
   where "top1_covering_lifted_arc_family_on E TE X TX p \<A>_X \<A>_E \<longleftrightarrow>
-    (\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A) \<and>
-    (\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A}) \<and>
-    (\<forall>B1\<in>\<A>_E. \<forall>B2\<in>\<A>_E. B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {} \<or>
-        (\<exists>A\<in>\<A>_X. B1 \<subseteq> {e \<in> E. p e \<in> A} \<and> B2 \<subseteq> {e \<in> E. p e \<in> A}))"
+    \<comment> \<open>Clause 1: each lift maps bijectively onto some base arc.\<close>
+    (\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B) \<and>
+    \<comment> \<open>Clause 2: every fiber point over a base arc is in some lift that maps onto the full arc.\<close>
+    (\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A) \<and>
+    \<comment> \<open>Clause 3: lifts are pairwise disjoint.\<close>
+    (\<forall>B1\<in>\<A>_E. \<forall>B2\<in>\<A>_E. B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {})"
 
 \<comment> \<open>Covering multiplicity for arcs: a k-sheeted covering with lifted arc family
    has exactly k times as many arcs as the base.\<close>
@@ -3162,6 +3164,8 @@ lemma covering_lifted_arc_family_card:
       and "top1_covering_lifted_arc_family_on E TE X TX p \<A>_X \<A>_E"
       and "finite \<A>_X"
       and "\<forall>x\<in>X. card {e \<in> E. p e = x} = k"
+      and "\<forall>A\<in>\<A>_X. A \<subseteq> X \<and> A \<noteq> {}"
+      and "k > 0"
   shows "finite \<A>_E \<and> card \<A>_E = k * card \<A>_X"
 proof -
   \<comment> \<open>For each base arc A \\<in> \\<A>\\_X, the lifts of A partition {e \\<in> E | p(e) \\<in> A} into
@@ -3171,16 +3175,91 @@ proof -
   let ?lift = "\<lambda>A. {B \<in> \<A>_E. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A}"
   \<comment> \<open>Step 1: Each lifted arc maps onto exactly one base arc (existence + uniqueness).\<close>
   note hdef = assms(2)[unfolded top1_covering_lifted_arc_family_on_def]
-  have h_clause1: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A"
+  have h_clause1: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B"
     using conjunct1[OF hdef] .
-  have h_clause2: "\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A}"
+  have h_clause2: "\<forall>A\<in>\<A>_X. \<forall>e\<in>{e' \<in> E. p e' \<in> A}. \<exists>B\<in>\<A>_E. e \<in> B \<and> B \<subseteq> {e' \<in> E. p e' \<in> A} \<and> p ` B = A"
     using conjunct1[OF conjunct2[OF hdef]] .
-  have h_exists: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A"
+  have h_exists: "\<forall>B\<in>\<A>_E. \<exists>A\<in>\<A>_X. B \<subseteq> {e \<in> E. p e \<in> A} \<and> p ` B = A \<and> inj_on p B"
     using h_clause1 .
   \<comment> \<open>The base arc is uniquely determined: p ` B = A.\<close>
   \<comment> \<open>Step 2: For each base arc, there are exactly k lifted arcs.\<close>
+  have h_clause3: "\<forall>B1\<in>\<A>_E. \<forall>B2\<in>\<A>_E. B1 \<noteq> B2 \<longrightarrow> B1 \<inter> B2 = {}"
+    using conjunct2[OF conjunct2[OF hdef]] .
   have h_k_lifts: "\<forall>A\<in>\<A>_X. card (?lift A) = k"
-    sorry
+  proof (intro ballI)
+    fix A assume "A \<in> \<A>_X"
+    \<comment> \<open>Pick any x \\<in> A (arcs are nonempty). Build bijection ?lift A \\<leftrightarrow> fiber(x).\<close>
+    \<comment> \<open>Each B \\<in> ?lift A has p injective on B and p ` B = A \\<ni> x.
+       So \\<exists>!e \\<in> B. p(e) = x. This gives the bijection.\<close>
+    have hA_ne: "A \<noteq> {}" using assms(5) \<open>A \<in> \<A>_X\<close> by (by100 blast)
+    then obtain x where "x \<in> A" by (by100 blast)
+    define f where "f = (\<lambda>B. THE e. e \<in> B \<and> p e = x)"
+    have huniq: "\<forall>B\<in>?lift A. \<exists>!e. e \<in> B \<and> p e = x"
+    proof (intro ballI)
+      fix B assume "B \<in> ?lift A"
+      hence "B \<in> \<A>_E" "B \<subseteq> {e \<in> E. p e \<in> A}" "p ` B = A" by (by100 blast)+
+      from h_clause1[rule_format, OF \<open>B \<in> \<A>_E\<close>]
+      obtain A' where "p ` B = A'" "inj_on p B" by (by100 blast)
+      have "\<exists>e\<in>B. p e = x" using \<open>p ` B = A\<close> \<open>x \<in> A\<close> by (by100 blast)
+      moreover have "\<forall>e1 e2. e1 \<in> B \<and> p e1 = x \<longrightarrow> e2 \<in> B \<and> p e2 = x \<longrightarrow> e1 = e2"
+      proof (intro allI impI)
+        fix e1 e2 assume "e1 \<in> B \<and> p e1 = x" "e2 \<in> B \<and> p e2 = x"
+        from inj_onD[OF \<open>inj_on p B\<close>]
+        show "e1 = e2" using \<open>e1 \<in> B \<and> p e1 = x\<close> \<open>e2 \<in> B \<and> p e2 = x\<close> by (by100 blast)
+      qed
+      ultimately show "\<exists>!e. e \<in> B \<and> p e = x" by (by100 blast)
+    qed
+    \<comment> \<open>f is a bijection from ?lift A to fiber(x).\<close>
+    have hf_bij: "bij_betw f (?lift A) {e \<in> E. p e = x}"
+      unfolding bij_betw_def
+    proof (intro conjI)
+      show "inj_on f (?lift A)"
+      proof (rule inj_onI)
+        fix B1 B2 assume "B1 \<in> ?lift A" "B2 \<in> ?lift A" "f B1 = f B2"
+        have "f B1 \<in> B1" using theI'[OF huniq[rule_format, OF \<open>B1 \<in> ?lift A\<close>]]
+            unfolding f_def by (by100 blast)
+        have "f B2 \<in> B2" using theI'[OF huniq[rule_format, OF \<open>B2 \<in> ?lift A\<close>]]
+            unfolding f_def by (by100 blast)
+        have "f B1 \<in> B2" using \<open>f B2 \<in> B2\<close> \<open>f B1 = f B2\<close> by simp
+        have "f B1 \<in> B1 \<inter> B2" using \<open>f B1 \<in> B1\<close> \<open>f B1 \<in> B2\<close> by (by100 blast)
+        have "B1 \<in> \<A>_E" "B2 \<in> \<A>_E" using \<open>B1 \<in> ?lift A\<close> \<open>B2 \<in> ?lift A\<close> by (by100 blast)+
+        from h_clause3[rule_format, OF \<open>B1 \<in> \<A>_E\<close> \<open>B2 \<in> \<A>_E\<close>]
+        show "B1 = B2" using \<open>f B1 \<in> B1 \<inter> B2\<close> by (by100 blast)
+      qed
+      show "f ` (?lift A) = {e \<in> E. p e = x}"
+      proof (rule set_eqI, rule iffI)
+        fix e assume "e \<in> f ` (?lift A)"
+        then obtain B where "B \<in> ?lift A" "e = f B" by (by100 blast)
+        have "e \<in> B \<and> p e = x"
+          using theI'[OF huniq[rule_format, OF \<open>B \<in> ?lift A\<close>]]
+          unfolding f_def \<open>e = f B\<close> by (by100 blast)
+        have "B \<subseteq> E" using \<open>B \<in> ?lift A\<close> by (by100 blast)
+        thus "e \<in> {e \<in> E. p e = x}" using \<open>e \<in> B \<and> p e = x\<close> \<open>B \<subseteq> E\<close> by (by100 blast)
+      next
+        fix e assume "e \<in> {e \<in> E. p e = x}"
+        hence "e \<in> E" "p e = x" by (by100 blast)+
+        hence "e \<in> {e' \<in> E. p e' \<in> A}" using \<open>x \<in> A\<close> by (by100 blast)
+        from h_clause2[rule_format, OF \<open>A \<in> \<A>_X\<close> this]
+        obtain B where "B \<in> \<A>_E" "e \<in> B" "B \<subseteq> {e' \<in> E. p e' \<in> A}" "p ` B = A"
+          by (by100 blast)
+        have "B \<in> ?lift A" using \<open>B \<in> \<A>_E\<close> \<open>B \<subseteq> {e' \<in> E. p e' \<in> A}\<close> \<open>p ` B = A\<close>
+          by (by100 blast)
+        have "e \<in> B \<and> p e = x" using \<open>e \<in> B\<close> \<open>p e = x\<close> by (by100 blast)
+        have "f B = e" unfolding f_def
+          by (rule the1_equality[OF huniq[rule_format, OF \<open>B \<in> ?lift A\<close>] \<open>e \<in> B \<and> p e = x\<close>])
+        thus "e \<in> f ` (?lift A)" using \<open>B \<in> ?lift A\<close> by (by100 blast)
+      qed
+    qed
+    from bij_betw_same_card[OF hf_bij]
+    have "card (?lift A) = card {e \<in> E. p e = x}" by simp
+    also have "... = k"
+    proof -
+      have "A \<subseteq> X" using assms(5) \<open>A \<in> \<A>_X\<close> by (by100 blast)
+      hence "x \<in> X" using \<open>x \<in> A\<close> by (by100 blast)
+      thus ?thesis using assms(4) by (by100 blast)
+    qed
+    finally show "card (?lift A) = k" .
+  qed
   \<comment> \<open>Step 3: The lifts of different base arcs are disjoint (since p`B determines A).\<close>
   have h_disjoint: "\<forall>A1\<in>\<A>_X. \<forall>A2\<in>\<A>_X. A1 \<noteq> A2 \<longrightarrow> ?lift A1 \<inter> ?lift A2 = {}"
   proof (intro ballI impI)
@@ -3199,7 +3278,7 @@ proof -
   proof (rule set_eqI, rule iffI)
     fix B assume "B \<in> \<A>_E"
     from h_exists[rule_format, OF this]
-    obtain A where "A \<in> \<A>_X" "B \<subseteq> {e \<in> E. p e \<in> A}" "p ` B = A" by (by100 blast)
+    obtain A where "A \<in> \<A>_X" "B \<subseteq> {e \<in> E. p e \<in> A}" "p ` B = A" "inj_on p B" by (by100 blast)
     thus "B \<in> (\<Union>A\<in>\<A>_X. ?lift A)" using \<open>B \<in> \<A>_E\<close> by (by100 blast)
   next
     fix B assume "B \<in> (\<Union>A\<in>\<A>_X. ?lift A)"
@@ -3207,7 +3286,12 @@ proof -
   qed
   \<comment> \<open>Step 5: Combine to get card(\\<A>\\_E) = k * card(\\<A>\\_X).\<close>
   have h_fin_lifts: "\<forall>A\<in>\<A>_X. finite (?lift A)"
-    sorry \<comment> \<open>Each lift family is finite (subset of the finite fiber partition).\<close>
+  proof (intro ballI)
+    fix A assume "A \<in> \<A>_X"
+    have "card (?lift A) = k" using h_k_lifts \<open>A \<in> \<A>_X\<close> by (by100 blast)
+    hence "card (?lift A) > 0" using assms(6) by simp
+    thus "finite (?lift A)" using card_gt_0_iff by (by100 blast)
+  qed
   have "finite \<A>_E"
   proof -
     have "finite (\<Union>A\<in>\<A>_X. ?lift A)"
