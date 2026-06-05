@@ -3493,16 +3493,12 @@ proof -
      This gives \\<pi>\\_1(E) free on some basis. The rank = number of non-tree arcs.\<close>
   have hE_graph: "top1_is_graph_on E TE"
     by (rule Theorem_83_4_covering_of_graph_is_graph[OF hgraph_X hcov hstrict_E])
-  from graph_pi1_free_weak[OF hE_graph hconn_E he0]
-  obtain \<iota>E SE \<A>E TE_tree
-    where hfree_E: "top1_is_free_group_full_on
-        (top1_fundamental_group_carrier E TE e0)
-        (top1_fundamental_group_mul E TE e0)
-        (top1_fundamental_group_id E TE e0)
-        (top1_fundamental_group_invg E TE e0)
-        \<iota>E SE"
-      and hSE_eq: "SE = {A \<in> \<A>E. \<not> A \<subseteq> TE_tree}"
-    sorry
+  obtain \<iota>E SE where hfree_E: "top1_is_free_group_full_on
+      (top1_fundamental_group_carrier E TE e0)
+      (top1_fundamental_group_mul E TE e0)
+      (top1_fundamental_group_id E TE e0)
+      (top1_fundamental_group_invg E TE e0) \<iota>E SE"
+    sorry \<comment> \<open>From graph\\_pi1\\_free\\_weak[OF hE\\_graph hconn\\_E he0]. Extract existential.\<close>
   \<comment> \<open>Step 6: Euler characteristic argument.
      From graph\\_pi1\\_free\\_weak on E: card(SE) = rank(\\<pi>\\_1(E)).
      From Euler formula (heuler\\_X): card(\\<A>w) - card(V\\_X) = card(Sw) - 1 = n.
