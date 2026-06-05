@@ -1072,13 +1072,51 @@ proof -
     qed
     \<comment> \<open>p*([ft]) \\<in> H (from hH\\_eq). f \\<in> p*([ft]). [f] = p*([ft]) (since both are equiv classes
        containing f). Hence [f] \\<in> H.\<close>
-    have "top1_fundamental_group_induced_on E TE e0 B TB b0 p
-        {g. top1_loop_equiv_on E TE e0 ft g} \<in> ?H"
-      using hH_eq hft_class by (by100 blast)
-    moreover have "?fclass = top1_fundamental_group_induced_on E TE e0 B TB b0 p
+    \<comment> \<open>p*([ft]) \\<in> carrier(B) and \\<in> ?H. f \\<in> p*([ft]).
+       p*([ft]) is an equiv class in carrier. Extract its representative f'.
+       Then loop\\_equiv f' f (from f \\<in> class). And loop\\_equiv f g \\<Leftrightarrow> loop\\_equiv f' g.
+       So ?fclass = p*([ft]).\<close>
+    let ?pft = "top1_fundamental_group_induced_on E TE e0 B TB b0 p
         {g. top1_loop_equiv_on E TE e0 ft g}"
-      sorry \<comment> \<open>p*([ft]) = [p \\<circ> ft] = [f] by loop\\_equiv transitivity + induced preserves equiv.\<close>
-    ultimately show "?fclass \<in> ?H" by simp
+    have "?pft \<in> ?H" using hH_eq hft_class by (by100 blast)
+    have "?pft \<in> top1_fundamental_group_carrier B TB b0"
+    proof -
+      have "b0 \<in> B"
+      proof -
+        have "p e0 \<in> B" using hp_cont assms(4) unfolding top1_continuous_map_on_def by (by100 blast)
+        thus ?thesis using assms(5) by simp
+      qed
+      from top1_fundamental_group_induced_on_is_hom[OF assms(2) assms(3) assms(4) \<open>b0 \<in> B\<close> hp_cont assms(5)]
+      have "top1_group_hom_on (top1_fundamental_group_carrier E TE e0)
+          (top1_fundamental_group_mul E TE e0)
+          (top1_fundamental_group_carrier B TB b0) (top1_fundamental_group_mul B TB b0)
+          (top1_fundamental_group_induced_on E TE e0 B TB b0 p)" .
+      thus ?thesis using hft_class unfolding top1_group_hom_on_def by (by100 blast)
+    qed
+    then obtain f' where "top1_is_loop_on B TB b0 f'"
+        "?pft = {h. top1_loop_equiv_on B TB b0 f' h}"
+      unfolding top1_fundamental_group_carrier_def by (by100 blast)
+    have "f \<in> ?pft"
+      using \<open>f \<in> (top1_fundamental_group_induced_on E TE e0 B TB b0 p)
+          {g. top1_loop_equiv_on E TE e0 ft g}\<close> .
+    hence "top1_loop_equiv_on B TB b0 f' f"
+      using \<open>?pft = {h. top1_loop_equiv_on B TB b0 f' h}\<close> by (by100 blast)
+    have "?fclass = ?pft"
+    proof (rule set_eqI, rule iffI)
+      fix g assume "g \<in> ?fclass"
+      hence "top1_loop_equiv_on B TB b0 f g" by (by100 blast)
+      from top1_loop_equiv_on_trans[OF assms(3) \<open>top1_loop_equiv_on B TB b0 f' f\<close> this]
+      have "top1_loop_equiv_on B TB b0 f' g" .
+      thus "g \<in> ?pft" using \<open>?pft = {h. _}\<close> by (by100 blast)
+    next
+      fix g assume "g \<in> ?pft"
+      hence "top1_loop_equiv_on B TB b0 f' g" using \<open>?pft = {h. _}\<close> by (by100 blast)
+      from top1_loop_equiv_on_sym[OF \<open>top1_loop_equiv_on B TB b0 f' f\<close>]
+      have "top1_loop_equiv_on B TB b0 f f'" .
+      from top1_loop_equiv_on_trans[OF assms(3) this \<open>top1_loop_equiv_on B TB b0 f' g\<close>]
+      show "g \<in> ?fclass" by (by100 blast)
+    qed
+    thus "?fclass \<in> ?H" using \<open>?pft \<in> ?H\<close> by simp
   qed
 qed
 
