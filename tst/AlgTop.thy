@@ -1329,19 +1329,12 @@ lemma tree_euler_and_leaf_combined:
   shows "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1
     \<and> (card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and> v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)
         \<and> (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B)))"
-proof -
-  \<comment> \<open>Leaf existence (walk + pigeonhole, NO Euler dependency).\<close>
-  have hleaf_if_ge2: "card \<A> \<ge> 2 \<longrightarrow> (\<exists>A0 v. A0 \<in> \<A> \<and>
-      v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0) \<and>
-      (\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B))"
-    sorry \<comment> \<open>Walk + pigeonhole: cycle in incidence graph \\<Rightarrow> SCC \\<Rightarrow> contradicts SC.
-       Does NOT use Euler formula. See finite\\_tree\\_has\\_leaf\\_arc old proof sketch.\<close>
-  \<comment> \<open>Euler formula by induction (uses leaf removal from above).\<close>
-  have heuler: "card (top1_graph_vertex_set T TT \<A>) = card \<A> + 1"
-    sorry \<comment> \<open>Strong induction on card \\<A>. Base: card=1 standard. Step: use hleaf\\_if\\_ge2
-       to find leaf, remove it (finite\\_tree\\_remove\\_leaf\\_is\\_tree), apply IH, add back.\<close>
-  show ?thesis using heuler hleaf_if_ge2 by (by100 blast)
-qed
+  \<comment> \<open>Leaf existence (walk + pigeonhole, NO Euler dependency) is the key sub-lemma.
+     Then Euler follows by standard induction with leaf removal.\<close>
+  sorry \<comment> \<open>Combined induction: leaf by walk+pigeonhole (no Euler dep),
+     Euler by leaf removal + IH. Both statements proved simultaneously.
+     Key sub-lemma: walk+pigeonhole for leaf existence (does NOT use Euler).
+     Key sub-lemma: finite\\_tree\\_remove\\_leaf\\_is\\_tree (already proved, no circularity).\<close>
 
 \<comment> \<open>Expert audit2: extract tree Euler sub-lemmas as named lemmas.\<close>
 
