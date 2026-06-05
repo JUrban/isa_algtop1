@@ -3028,9 +3028,88 @@ proof -
           next
             case a3False: False
             \<comment> \<open>A3 \\<ne> A1 and A3 \\<ne> A2. Continue walk. Pigeonhole on finite \\<A>'.\<close>
-            show ?thesis sorry \<comment> \<open>General walk continuation + pigeonhole.
-               By finiteness of \\<A>' and the no-leaf assumption, the walk must eventually
-               revisit a vertex, creating two arcs sharing both endpoints.\<close>
+            \<comment> \<open>A3 \\<ne> A1, A3 \\<ne> A2. A3's other endpoint s3 shared with A4 \\<ne> A3.\<close>
+            from h2ep'[rule_format, OF \<open>A3 \<in> \<A>'\<close>]
+            obtain a3 b3 where "a3 \<noteq> b3"
+                "top1_arc_endpoints_on A3 (subspace_topology T' TT' A3) = {a3, b3}"
+              by (by100 blast)
+            have "r2 \<in> top1_arc_endpoints_on A3 (subspace_topology T' TT' A3)"
+            proof -
+              have "r2 \<in> A2" using hr2_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+              hence "r2 \<in> A2 \<inter> A3" using \<open>r2 \<in> A3\<close> by (by100 blast)
+              thus ?thesis using hinter'[rule_format, OF \<open>A2 \<in> \<A>'\<close> \<open>A3 \<in> \<A>'\<close> \<open>A3 \<noteq> A2\<close>[symmetric]]
+                by (by100 blast)
+            qed
+            define s3 where "s3 = (if r2 = a3 then b3 else a3)"
+            have "s3 \<noteq> r2" using \<open>a3 \<noteq> b3\<close> \<open>r2 \<in> top1_arc_endpoints_on A3 _\<close>
+                \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> unfolding s3_def by (by100 auto)
+            have hs3_ep: "s3 \<in> top1_arc_endpoints_on A3 (subspace_topology T' TT' A3)"
+              using \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> unfolding s3_def by (by100 auto)
+            \<comment> \<open>s3 shared with A4 \\<ne> A3.\<close>
+            from hshared[rule_format, OF \<open>A3 \<in> \<A>'\<close> hs3_ep]
+            obtain A4 where "A4 \<in> \<A>'" "A4 \<noteq> A3" "s3 \<in> A4" by (by100 blast)
+            show ?thesis
+            proof (cases "A4 = A2")
+              case True
+              \<comment> \<open>A4 = A2. s3 \\<in> A2 \\<inter> A3 \\<subseteq> endpoints(A2) = {p1, r2}. s3 \\<ne> r2 \\<Rightarrow> s3 = p1.
+                 A3 has endpoints {r2, s3} = {r2, p1} = endpoints(A2). SCC.\<close>
+              have "s3 \<in> A2" using True \<open>s3 \<in> A4\<close> by simp
+              have "s3 \<in> A3" using hs3_ep unfolding top1_arc_endpoints_on_def by (by100 blast)
+              have "s3 \<in> A2 \<inter> A3" using \<open>s3 \<in> A2\<close> \<open>s3 \<in> A3\<close> by (by100 blast)
+              have "s3 \<in> top1_arc_endpoints_on A2 (subspace_topology T' TT' A2)"
+                using hinter'[rule_format, OF \<open>A3 \<in> \<A>'\<close> \<open>A2 \<in> \<A>'\<close> \<open>A3 \<noteq> A2\<close>]
+                    \<open>s3 \<in> A2 \<inter> A3\<close> by (by100 blast)
+              have "p1 \<in> {a2, b2}" using \<open>p1 \<in> top1_arc_endpoints_on A2 _\<close>
+                  \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+              have "r2 \<in> {a2, b2}" using hr2_ep
+                  \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+              have "{a2, b2} = {p1, r2}" using \<open>p1 \<in> {a2, b2}\<close> \<open>r2 \<in> {a2, b2}\<close>
+                  \<open>r2 \<noteq> p1\<close> \<open>a2 \<noteq> b2\<close> by (by100 blast)
+              hence "s3 \<in> {p1, r2}"
+                using \<open>s3 \<in> top1_arc_endpoints_on A2 _\<close>
+                    \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+              hence "s3 = p1" using \<open>s3 \<noteq> r2\<close> by (by100 blast)
+              \<comment> \<open>A3 has endpoints {r2, p1} and A2 has endpoints {p1, r2}. SCC.\<close>
+              have "top1_arc_endpoints_on A3 (subspace_topology T' TT' A3) = {p1, r2}"
+              proof -
+                have "r2 \<in> {a3, b3}" using \<open>r2 \<in> top1_arc_endpoints_on A3 _\<close>
+                    \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> by (by100 blast)
+                have "p1 \<in> {a3, b3}" using hs3_ep \<open>s3 = p1\<close>
+                    \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> by (by100 blast)
+                have "{a3, b3} = {p1, r2}"
+                  using \<open>p1 \<in> {a3, b3}\<close> \<open>r2 \<in> {a3, b3}\<close> \<open>r2 \<noteq> p1\<close> \<open>a3 \<noteq> b3\<close>
+                  by (by100 blast)
+                thus ?thesis using \<open>top1_arc_endpoints_on A3 _ = {a3, b3}\<close> by simp
+              qed
+              have hA2_ep: "top1_arc_endpoints_on A2 (subspace_topology T' TT' A2) = {p1, r2}"
+              proof -
+                have "p1 \<in> {a2, b2}" using \<open>p1 \<in> top1_arc_endpoints_on A2 _\<close>
+                    \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+                have "r2 \<in> {a2, b2}" using hr2_ep
+                    \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by (by100 blast)
+                have "{a2, b2} = {p1, r2}"
+                  using \<open>p1 \<in> {a2, b2}\<close> \<open>r2 \<in> {a2, b2}\<close> \<open>r2 \<noteq> p1\<close> \<open>a2 \<noteq> b2\<close>
+                  by (by100 blast)
+                thus ?thesis using \<open>top1_arc_endpoints_on A2 _ = {a2, b2}\<close> by simp
+              qed
+              show ?thesis
+                using \<open>A2 \<in> \<A>'\<close> \<open>A3 \<in> \<A>'\<close> \<open>A3 \<noteq> A2\<close> \<open>r2 \<noteq> p1\<close>[symmetric]
+                    hA2_ep \<open>top1_arc_endpoints_on A3 _ = {p1, r2}\<close>
+                by (by100 blast)
+            next
+              case a4ne2: False
+              show ?thesis
+              proof (cases "A4 = A1")
+                case True
+                \<comment> \<open>A4 = A1. s3 \\<in> A1 \\<inter> A3 \\<subseteq> endpoints(A1) = {p1, q1}.\<close>
+                show ?thesis sorry \<comment> \<open>s3 = p1 or q1. If p1: A3 and A2 share {p1,r2}. SCC.
+                   If q1: 3-arc cycle A1-A2-A3-A1. Need generalized SCC argument.\<close>
+              next
+                case a4ne1: False
+                \<comment> \<open>A4 \\<notin> {A1,A2,A3}. Continue walk (needs pigeonhole for general case).\<close>
+                show ?thesis sorry \<comment> \<open>General walk continuation + pigeonhole.\<close>
+              qed
+            qed
           qed
         qed
       qed
