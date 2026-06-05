@@ -3208,7 +3208,37 @@ proof -
                         hA2_ep_form hA3_ep_form \<open>r2 \<noteq> p1\<close>[symmetric] \<open>r2 \<noteq> q1\<close>])
                   \<comment> \<open>Step 4: A1 \\<inter> (A2\\<union>A3) = {p1,q1}.\<close>
                   have hA1_A23_inter: "A1 \<inter> (A2 \<union> A3) = {p1, q1}"
-                    sorry \<comment> \<open>From hinter' applied to A1\\<inter>A2 and A1\\<inter>A3 + endpoint analysis.\<close>
+                  proof -
+                    have "A1 \<inter> (A2 \<union> A3) = (A1 \<inter> A2) \<union> (A1 \<inter> A3)" by (by100 blast)
+                    \<comment> \<open>A1\\<inter>A2 \\<subseteq> endpoints(A1) = {p1,q1} and contains p1.\<close>
+                    have "A1 \<inter> A2 \<subseteq> {p1, q1}"
+                      using hinter'[rule_format, OF \<open>A1 \<in> \<A>'\<close> \<open>A2 \<in> \<A>'\<close> \<open>A2 \<noteq> A1\<close>[symmetric]]
+                          \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+                    have "p1 \<in> A1 \<inter> A2"
+                    proof -
+                      have "p1 \<in> A1" using \<open>p1 \<in> top1_arc_endpoints_on A1 _\<close>
+                          unfolding top1_arc_endpoints_on_def by (by100 blast)
+                      thus ?thesis using \<open>p1 \<in> A2\<close> by (by100 blast)
+                    qed
+                    \<comment> \<open>A1\\<inter>A3 \\<subseteq> endpoints(A1) = {p1,q1} and contains q1.\<close>
+                    have "A1 \<inter> A3 \<subseteq> {p1, q1}"
+                    proof -
+                      have "A3 \<inter> A1 \<subseteq> top1_arc_endpoints_on A1 (subspace_topology T' TT' A1)"
+                        using hinter'[rule_format, OF \<open>A3 \<in> \<A>'\<close> \<open>A1 \<in> \<A>'\<close>] a3False by (by100 blast)
+                      thus ?thesis using \<open>top1_arc_endpoints_on A1 _ = {p1, q1}\<close> by (by100 blast)
+                    qed
+                    have "q1 \<in> A1 \<inter> A3"
+                    proof -
+                      have "q1 \<in> A1" using \<open>q1 \<in> top1_arc_endpoints_on A1 _\<close>
+                          unfolding top1_arc_endpoints_on_def by (by100 blast)
+                      have "q1 \<in> A3" using hs3_ep \<open>s3 = q1\<close>
+                          unfolding top1_arc_endpoints_on_def by (by100 blast)
+                      thus ?thesis using \<open>q1 \<in> A1\<close> by (by100 blast)
+                    qed
+                    show ?thesis using \<open>A1 \<inter> (A2 \<union> A3) = (A1 \<inter> A2) \<union> (A1 \<inter> A3)\<close>
+                        \<open>A1 \<inter> A2 \<subseteq> {p1, q1}\<close> \<open>A1 \<inter> A3 \<subseteq> {p1, q1}\<close>
+                        \<open>p1 \<in> A1 \<inter> A2\<close> \<open>q1 \<in> A1 \<inter> A3\<close> by (by100 blast)
+                  qed
                   \<comment> \<open>Step 5: SCC via arcs\\_form\\_simple\\_closed\\_curve.\<close>
                   have "A1 \<subseteq> T'" using h\<A>' \<open>A1 \<in> \<A>'\<close> by (by100 blast)
                   have "A2 \<union> A3 \<subseteq> T'" using \<open>A2 \<subseteq> T'\<close> \<open>A3 \<subseteq> T'\<close> by (by100 blast)
