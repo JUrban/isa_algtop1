@@ -3142,9 +3142,10 @@ proof -
                   case sFalse: False
                   hence "s3 = q1" using \<open>s3 \<in> {p1, q1}\<close> by (by100 blast)
                   \<comment> \<open>3-arc cycle: A1({p1,q1}), A2({p1,r2}), A3({r2,q1}).
-                     This forms an SCC in the tree \\<Rightarrow> contradiction.
-                     But we don't have a 3-arc SCC lemma. Sorry for now.\<close>
-                  show ?thesis sorry
+                     Key: A2\\<union>A3 is an arc (arcs\\_concatenation\\_is\\_arc at r2).
+                     Then A1 and A2\\<union>A3 share both endpoints {p1,q1} \\<Rightarrow> SCC.
+                     SCC in tree \\<Rightarrow> contradiction.\<close>
+                  show ?thesis sorry \<comment> \<open>Use arcs\\_concatenation\\_is\\_arc + arcs\\_form\\_simple\\_closed\\_curve.\<close>
                 qed
               next
                 case a4ne1: False
