@@ -5991,7 +5991,48 @@ proof (rule ccontr)
            walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx) (from walk step: other\\_endpt).
            So walk\\_v(i+idx) = walk\\_v(Suc i + ((idx+1) mod k)).
            From hv\\_distinct/hmin with j-i \\<ge> 3: these are at distinct positions with distinct values.\<close>
-        show False sorry
+        \<comment> \<open>ep of second arc contains walk\\_v(Suc i+idx) and walk\\_v(next).\<close>
+        let ?nxt = "(idx + 1) mod (j - i)"
+        have hnxt_lt: "?nxt < j - i" using hidx' hji_ge2 by simp
+        \<comment> \<open>walk\\_v(Suc i + idx) is the current vertex. It's in ep(second arc) from the walk.\<close>
+        have "fst (walk (Suc i + idx)) \<in> ?ep2 (?ws ! ?nxt)"
+        proof -
+          \<comment> \<open>The second arc = snd(walk(Suc i + ?nxt)). Its predecessor is walk\\_v(i + ?nxt).
+             But the shared vertex walk\\_v(Suc i + idx) is in ep via the walk adjacency.\<close>
+          have "fst (walk (Suc i + idx)) \<in> ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)"
+          proof -
+            have "fst (walk (Suc i + idx)) \<in> snd (walk (Suc i + idx))"
+              using hwalk_shared by (by100 blast)
+            hence "fst (walk (Suc i + idx)) \<in> ?ws ! idx" using hws_nth[OF hidx'] by simp
+            moreover have "fst (walk (Suc i + idx)) \<in> snd (walk (Suc (Suc i + idx)))"
+              using hwalk_shared by (by100 blast)
+            hence "fst (walk (Suc i + idx)) \<in> ?ws ! ?nxt"
+            proof (cases "idx + 1 < j - i")
+              case True
+              hence "?nxt = idx + 1" using hws_len by simp
+              moreover have "?ws ! (idx + 1) = snd (walk (Suc i + (idx + 1)))"
+                using hws_nth[OF True] by simp
+              ultimately show ?thesis using \<open>fst (walk (Suc i + idx)) \<in> snd (walk (Suc (Suc i + idx)))\<close> by simp
+            next
+              case False
+              hence "idx = j - i - 1" using hidx' by linarith
+              hence "idx + 1 = j - i" using hidx' by linarith
+              hence "?nxt = 0" using hji_ge2 by simp
+              have "Suc (Suc i + idx) = Suc j" using \<open>idx = j - i - 1\<close> hij(1) by linarith
+              \<comment> \<open>snd(walk(Suc j)) and snd(walk(Suc i)) ... need to handle wrap.\<close>
+              show ?thesis sorry \<comment> \<open>Wrap case for walk\\_v(Suc i+idx) \\<in> ws!0.\<close>
+            qed
+            ultimately show ?thesis using hws_len by (by100 blast)
+          qed
+          thus ?thesis using assms(4)[rule_format, OF hwsA hwsB hwsAB_ne] by (by100 blast)
+        qed
+        \<comment> \<open>Now: walk\\_v(i+idx) \\<in> ep(second arc) and walk\\_v(Suc i+idx) \\<in> ep(second arc).
+           ep has 2 elements. walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx) (from walk step).
+           So walk\\_v(i+idx) and walk\\_v(Suc i+idx) ARE the 2 elements of ep.\<close>
+        \<comment> \<open>But ep also contains walk\\_v(predecessor of second arc) = walk\\_v(i + ?nxt).
+           So walk\\_v(i+idx) = walk\\_v(i + ?nxt) or walk\\_v(i+idx) = walk\\_v(Suc i + ?nxt).\<close>
+        \<comment> \<open>From hv\\_distinct/hmin: all these are distinct for j-i \\<ge> 3.\<close>
+        show False sorry \<comment> \<open>Final step: element analysis in 2-element set + hv\\_distinct.\<close>
           \<comment> \<open>Remaining: show walk\\_v(i+idx) = walk\\_v(Suc i+((idx+1) mod k)) from ep membership,
              then apply hv\\_distinct/hmin for the contradiction. ~20 lines.\<close>
       qed
