@@ -4857,12 +4857,34 @@ proof (rule ccontr)
        Finite V \\<Rightarrow> walk must stop after card(V) steps.
        But degree \\<ge> 2 \\<Rightarrow> walk never stops. Contradiction.
        This is Munkres' proof of Lemma 84.2, purely combinatorial.\<close>
+    \<comment> \<open>Construct the walk. Define step function and iterate.
+       At each vertex v with previous arc e\\_prev: pick next arc e \\<noteq> e\\_prev containing v.
+       Degree \\<ge> 2 guarantees such e exists. The walk visits new vertices (acyclicity).\<close>
+    \<comment> \<open>For each vertex v and arc e with v \\<in> ep(e): the "other endpoint" of e from v.\<close>
+    let ?ep2 = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
+    have hshared_arc: "\<forall>v\<in>?V. \<forall>e\<in>\<A>. v \<in> ?ep2 e \<longrightarrow>
+        (\<exists>e'\<in>\<A>. e' \<noteq> e \<and> v \<in> ?ep2 e')"
+    proof (intro ballI impI)
+      fix v e assume "v \<in> ?V" "e \<in> \<A>" "v \<in> ?ep2 e"
+      from hshared[rule_format, OF \<open>e \<in> \<A>\<close> \<open>v \<in> ?ep2 e\<close>]
+      obtain B where "B \<in> \<A>" "B \<noteq> e" "v \<in> B" by (by100 blast)
+      have "v \<in> ?ep2 B"
+      proof -
+        have "v \<in> e \<inter> B" using \<open>v \<in> ?ep2 e\<close> \<open>v \<in> B\<close> unfolding top1_arc_endpoints_on_def by (by100 blast)
+        have "e \<noteq> B" using \<open>B \<noteq> e\<close> by simp
+        from assms(4)[rule_format, OF \<open>e \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>e \<noteq> B\<close>]
+        have "e \<inter> B \<subseteq> ?ep2 B" by (by100 blast)
+        thus ?thesis using \<open>v \<in> e \<inter> B\<close> by (by100 blast)
+      qed
+      thus "\<exists>e'\<in>\<A>. e' \<noteq> e \<and> v \<in> ?ep2 e'" using \<open>B \<in> \<A>\<close> \<open>B \<noteq> e\<close> by (by100 blast)
+    qed
+    \<comment> \<open>The walk visits distinct vertices. After card(V)+1 steps: must revisit.
+       But revisit creates cycle (contradicting hacyclic). So walk can't reach card(V)+1 steps.
+       But degree \\<ge> 2 guarantees it does. Contradiction.\<close>
     show False sorry
-      \<comment> \<open>Acyclic + all degrees \\<ge> 2 + finite \\<Rightarrow> False.
-         Walk construction: at each step, choose non-backtracking arc (degree \\<ge> 2 gives one).
-         Walk visits new vertices (revisit \\<Rightarrow> cycle, contradicting acyclic).
-         After card(V) + 1 steps: must revisit (pigeonhole). Contradiction with acyclic.
-         Pure combinatorics.\<close>
+      \<comment> \<open>Walk + pigeonhole + acyclicity. hshared\\_arc provides the step function.
+         Need: define walk by SOME + rec\\_nat, show injectivity on vertices,
+         pigeonhole for card(V)+1 > card(V). Pure combinatorics.\<close>
   qed
 qed
 
