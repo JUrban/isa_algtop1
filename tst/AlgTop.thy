@@ -4973,7 +4973,9 @@ proof -
       thus ?thesis using hA1_union by simp
     qed
     have hA1A2_inter: "A1 \<inter> ?A2 = {a_start, a_end}"
-      sorry \<comment> \<open>From cycle structure: first and last arcs share the cycle's start/end vertices.\<close>
+      sorry \<comment> \<open>From harc\\_ep + hdisjoint\\_non\\_adj + hshared\\_v. Each ws!j for j < k-1 intersects
+         ws!(k-1) only at shared vertices (j=0 gives shared\\_v(k-1), j=k-2 gives shared\\_v(k-2)).
+         Non-adjacent j give empty intersection.\<close>
     \<comment> \<open>Step 3: Construct f: S1 \\<to> C using x-coordinate.
        Upper semicircle (y \\<ge> 0): map to A1 via hA1 with parameter (1-x)/2.
        Lower semicircle (y < 0): map to A2 via hA2 with parameter (x+1)/2.\<close>
