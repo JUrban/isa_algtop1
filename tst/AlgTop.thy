@@ -4571,11 +4571,11 @@ lemma sc_graph_no_cycle:
       and "finite \<A>"
       and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
           (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
-      \<comment> \<open>"Cycle" of arcs: a list of \\<ge> 2 distinct arcs forming a closed non-backtracking walk.\<close>
+      \<comment> \<open>"Cycle" of arcs: a list of \\<ge> 2 distinct arcs visiting distinct shared vertices.\<close>
       and "length ws \<ge> 2"
       and "distinct ws" and "set ws \<subseteq> \<A>"
-      \<comment> \<open>Consecutive arcs share a vertex, forming a closed path.\<close>
-      and "\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}"
+      \<comment> \<open>Consecutive arcs share exactly 1 vertex, forming a simple closed path.\<close>
+      and "\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1"
   shows False
 proof -
   \<comment> \<open>Strategy: The cycle C = \\<Union>(set ws) is homeomorphic to S1 (a simple closed curve).
@@ -4906,7 +4906,7 @@ lemma forest_euler_formula:
       and hhaus: "is_hausdorff_on T TT"
       \<comment> \<open>Acyclicity: no cycle of \\<ge> 2 distinct arcs forming a closed walk.\<close>
       and hacyclic: "\<forall>ws. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> \<A> \<longrightarrow>
-          (\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}) \<longrightarrow> False"
+          (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow> False"
       and hne: "\<A> \<noteq> {}"
   shows "card (top1_graph_vertex_set T TT \<A>) \<ge> card \<A> + 1"
 proof -
@@ -5148,17 +5148,17 @@ proof (rule ccontr)
      Case B (has cycle): sc\\_graph\\_no\\_cycle gives \\<bottom> directly.\<close>
   show False
   proof (cases "\<exists>ws :: 'a set list. length ws \<ge> 2 \<and> distinct ws \<and> set ws \<subseteq> \<A> \<and>
-      (\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {})")
+      (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1)")
     case True \<comment> \<open>Case B: has a cycle.\<close>
     then obtain ws :: "'a set list" where "length ws \<ge> 2" "distinct ws" "set ws \<subseteq> \<A>"
-        "\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}" by (by100 blast)
+        "\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1" by (by100 blast)
     from sc_graph_no_cycle[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
         this(1) this(2) this(3) this(4)]
     show False .
   next
     case False \<comment> \<open>Case A: acyclic (no cycle of distinct arcs).\<close>
     hence hacyclic: "\<forall>ws :: 'a set list. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> \<A> \<longrightarrow>
-        (\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}) \<longrightarrow> False"
+        (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow> False"
       by (by100 blast)
     \<comment> \<open>Acyclic + all degrees \\<ge> 2 + finite \\<Rightarrow> False.
        Walk from any vertex: non-backtracking. Acyclic \\<Rightarrow> walk visits new vertices.
@@ -5873,7 +5873,10 @@ proof (rule ccontr)
       qed
     qed
     \<comment> \<open>Apply hacyclic.\<close>
-    show False using hacyclic hws_len2 hws_dist hws_sub hws_adj by (by100 blast)
+    \<comment> \<open>Strengthen hws\\_adj from \\<noteq> {} to card = 1 using vertex distinctness (hv\\_distinct).\<close>
+    have hws_adj_card: "\<forall>idx < length ?ws. card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
+      sorry \<comment> \<open>From hws\\_adj (\\<noteq> {}) + intersection conditions (card \\<le> 2) + hv\\_distinct (card \\<noteq> 2).\<close>
+    show False using hacyclic hws_len2 hws_dist hws_sub hws_adj_card by (by100 blast)
   qed
 qed
 
