@@ -4924,7 +4924,44 @@ proof -
                A1 = \<Union>(set (take n ws)) \<and>
                ?ep A1 = {shared_v ((?k - 1) mod ?k), shared_v (n - 1)} \<and>
                shared_v ((?k - 1) mod ?k) \<noteq> shared_v (n - 1)"
-      sorry \<comment> \<open>Induction on n using arc\\_merge\\_at\\_endpoint + hdisjoint\\_non\\_adj.\<close>
+      proof -
+        fix n assume hn1: "1 \<le> n" and hn2: "n \<le> ?k - 1"
+        show "\<exists>A1. top1_is_arc_on A1 (subspace_topology T TT A1) \<and> A1 \<subseteq> T \<and>
+               A1 = \<Union>(set (take n ws)) \<and>
+               ?ep A1 = {shared_v ((?k - 1) mod ?k), shared_v (n - 1)} \<and>
+               shared_v ((?k - 1) mod ?k) \<noteq> shared_v (n - 1)"
+          using hn1 hn2
+        proof (induction n)
+          case 0 thus ?case by (by100 simp)
+        next
+          case (Suc n')
+          show ?case
+          proof (cases "n' = 0")
+            case True \<comment> \<open>Base: n=1, take 1 ws = [ws!0].\<close>
+            have "take 1 ws = [ws ! 0]" using hk_ge2 by (by100 simp)
+            have "ws ! 0 \<in> \<A>" using assms(9) hk_ge2 by (by100 force)
+            have hepws0: "?ep (ws ! 0) = {shared_v ((?k - 1) mod ?k), shared_v 0}"
+              using harc_ep[rule_format] hk_ge2 by (by100 force)
+            show ?thesis using True \<open>take 1 ws = [ws ! 0]\<close> hepws0
+              assms(2) \<open>ws ! 0 \<in> \<A>\<close>
+              hshared_v_distinct[rule_format] hk_ge2
+              sorry \<comment> \<open>Base case assembly.\<close>
+          next
+            case False \<comment> \<open>Step: merge first n' arcs, then add ws!n'.\<close>
+            hence "n' \<ge> 1" by linarith
+            have "n' \<le> ?k - 1" using Suc.prems(2) by linarith
+            from Suc.IH[OF \<open>n' \<ge> 1\<close> \<open>n' \<le> ?k - 1\<close>]
+            obtain A1' where hIH: "top1_is_arc_on A1' (subspace_topology T TT A1')"
+                "A1' \<subseteq> T" "A1' = \<Union>(set (take n' ws))"
+                "?ep A1' = {shared_v ((?k - 1) mod ?k), shared_v (n' - 1)}"
+                "shared_v ((?k - 1) mod ?k) \<noteq> shared_v (n' - 1)" by (by100 blast)
+            \<comment> \<open>ws!n' is the next arc. Shared vertex with A1' is shared\\_v(n'-1).\<close>
+            \<comment> \<open>A1' \\<inter> ws!n' = {shared\\_v(n'-1)} from hdisjoint\\_non\\_adj.\<close>
+            \<comment> \<open>Apply arc\\_merge\\_at\\_endpoint to get A1' \\<union> ws!n'.\<close>
+            show ?thesis sorry \<comment> \<open>Step case: arc\\_merge\\_at\\_endpoint application.\<close>
+          qed
+        qed
+      qed
       \<comment> \<open>Apply merge\\_chain with n = k-1 = length(butlast ws).\<close>
       have "1 \<le> ?k - 1" using hk_ge2 by linarith
       have "?k - 1 \<le> ?k - 1" by (by100 simp)
