@@ -5367,7 +5367,38 @@ proof (rule ccontr)
             \<comment> \<open>Case 2 of doubleton equality: cross-matching.
                fst(walk(Suc i+k)) = fst(walk(i+l)) and fst(walk(i+k)) = fst(walk(Suc i+l)).
                Analysis with hv\\_distinct + hmin + boundary cases gives contradiction.\<close>
-            show False sorry \<comment> \<open>Doubleton Case 2: cross-matching vertices \\<Rightarrow> k=l via hv\\_distinct+hmin.\<close>
+            \<comment> \<open>From same arc + fst(walk ?mk) = fst(walk(i+l)):
+               the other equality gives fst(walk(i+k)) = fst(walk ?ml) or fst(walk(i+k)) = fst(walk(i+l)).
+               Case fst(walk(i+k)) = fst(walk(i+l)): hv\\_distinct/hmin gives k=l. Contradiction.
+               Case fst(walk(i+k)) = fst(walk ?ml): gives k = l+1 from hv\\_distinct/hmin.
+               Then j-i = 2 (from hmin + revisit). So k=1, l=0.
+               But then snd(walk(Suc i)) = snd(walk(Suc i+1)) = consecutive arcs.
+               Non-backtracking: snd(walk(Suc m)) \\<noteq> snd(walk m). Contradiction.\<close>
+            \<comment> \<open>Step 1: fst(walk(i+k)) must be in {fst(walk(i+l)), fst(walk ?ml)} (from ep of the same arc).\<close>
+            have "fst (walk (i+k)) \<in> ?ep2 (snd (walk ?mk))" using hpred_k .
+            hence "fst (walk (i+k)) \<in> ?ep2 (snd (walk ?ml))"
+              using \<open>?ep2 (snd (walk ?mk)) = ?ep2 (snd (walk ?ml))\<close> by simp
+            \<comment> \<open>ep(snd(walk ?ml)) = {fst(walk(i+l)), fst(walk ?ml)} (2-element set, both known endpoints).\<close>
+            \<comment> \<open>So fst(walk(i+k)) \\<in> {fst(walk(i+l)), fst(walk ?ml)}.\<close>
+            \<comment> \<open>Step 2: If fst(walk(i+k)) = fst(walk(i+l)): hv\\_distinct/hmin gives k = l \\<Rightarrow> contradiction.\<close>
+            \<comment> \<open>Step 3: If fst(walk(i+k)) = fst(walk ?ml): gives k = l+1 then j-i = 2, k=1, l=0.
+               Non-backtracking on consecutive arcs gives contradiction.\<close>
+            \<comment> \<open>The non-backtracking property: snd(walk(Suc m)) \\<noteq> snd(walk m).\<close>
+            have hnonback: "\<And>m. snd (walk (Suc m)) \<noteq> snd (walk m)"
+            proof -
+              fix m
+              have "snd (walk (Suc m)) = next_arc (fst (walk m)) (snd (walk m))" using hwalk_suc_snd .
+              moreover have "next_arc (fst (walk m)) (snd (walk m)) \<noteq> snd (walk m)"
+                using hnext_arc hwalk_props by (by100 blast)
+              ultimately show "snd (walk (Suc m)) \<noteq> snd (walk m)" by simp
+            qed
+            \<comment> \<open>The full argument for Case 2 requires careful position arithmetic
+               with boundary handling at i and j. All cases lead to either:
+               (a) k = l via hv\\_distinct/hmin, or
+               (b) |k - l| = 1, giving consecutive arcs equal, violating non-backtracking.\<close>
+            show False sorry
+              \<comment> \<open>Case 2 doubleton: position arithmetic + hv\\_distinct + hmin + hnonback.
+                 All ingredients proved. Needs careful nat case splits.\<close>
           qed
         qed
       qed
