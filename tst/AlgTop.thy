@@ -5396,9 +5396,36 @@ proof (rule ccontr)
                with boundary handling at i and j. All cases lead to either:
                (a) k = l via hv\\_distinct/hmin, or
                (b) |k - l| = 1, giving consecutive arcs equal, violating non-backtracking.\<close>
+            \<comment> \<open>|k - l| = 1 \\<Rightarrow> consecutive arcs equal \\<Rightarrow> hnonback contradiction.\<close>
+            have hkl_ne_1: "\<not> (k + 1 = l \<or> l + 1 = k)"
+            proof
+              assume "k + 1 = l \<or> l + 1 = k"
+              thus False
+              proof
+                assume "k + 1 = l"
+                hence "Suc i + l = Suc (Suc i + k)" by linarith
+                hence "snd (walk (Suc (Suc i + k))) = snd (walk (Suc i + k))"
+                  using \<open>snd (walk ?mk) = snd (walk ?ml)\<close> by simp
+                thus False using hnonback[of "Suc i + k"] by simp
+              next
+                assume "l + 1 = k"
+                hence "Suc i + k = Suc (Suc i + l)" by linarith
+                hence "snd (walk (Suc (Suc i + l))) = snd (walk (Suc i + l))"
+                  using \<open>snd (walk ?mk) = snd (walk ?ml)\<close> by simp
+                thus False using hnonback[of "Suc i + l"] by simp
+              qed
+            qed
+            \<comment> \<open>From heq (fst(walk ?mk) = fst(walk(i+l))) and hv\\_distinct/hmin:
+               ?mk and i+l are "close" (same vertex \\<Rightarrow> same position mod boundary).
+               Combined with |k-l| \\<noteq> 1: derive contradiction.\<close>
+            \<comment> \<open>heq: fst(walk ?mk) = fst(walk(i+l)). Positions ?mk = Suc i+k and i+l.
+               Both \\<le> j. If both in {Suc i, ..., j-1}: hv\\_distinct gives Suc i+k = i+l, k+1=l. But hkl\\_ne\\_1.\<close>
+            \<comment> \<open>Detailed position analysis with hv\\_distinct + hmin + hkl\\_ne\\_1:
+               Interior case: Suc i+k = i+l \\<Rightarrow> k+1=l \\<Rightarrow> contradicts hkl\\_ne\\_1.
+               Boundary cases: k=j-i-1, l=0, j=i+2, |k-l|=1 \\<Rightarrow> contradicts hkl\\_ne\\_1.\<close>
             show False sorry
-              \<comment> \<open>Case 2 doubleton: position arithmetic + hv\\_distinct + hmin + hnonback.
-                 All ingredients proved. Needs careful nat case splits.\<close>
+              \<comment> \<open>Case 2 boundary arithmetic. All ingredients proved (hv\\_distinct, hmin, hkl\\_ne\\_1).
+                 Needs careful natural number case analysis on whether positions hit i or j.\<close>
           qed
         qed
       qed
