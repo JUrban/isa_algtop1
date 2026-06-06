@@ -5155,7 +5155,22 @@ proof -
     qed
     \<comment> \<open>The last arc A2 has endpoints that include a\\_start and a\\_end (from the cycle structure).\<close>
     have hA2_ep: "top1_arc_endpoints_on ?A2 (subspace_topology T TT ?A2) = {a_end, a_start}"
-      sorry \<comment> \<open>From cycle structure: last arc endpoints = {a\\_start, a\\_end}.\<close>
+    proof -
+      have hk1: "?k - 1 < ?k" using hk_ge2 by linarith
+      have "?A2 = ws ! (?k - 1)"
+        using \<open>ws \<noteq> []\<close> hk_ge2 by (by100 simp add: last_conv_nth)
+      from harc_ep[rule_format, OF hk1]
+      have "?ep (ws ! (?k - 1)) = {shared_v ((?k - 1 + ?k - 1) mod ?k), shared_v (?k - 1)}" .
+      have "(?k - 1 + ?k - 1) mod ?k = (?k - 2) mod ?k"
+      proof -
+        have "?k - 1 + ?k - 1 = (?k - 2) + ?k" using hk_ge2 by linarith
+        thus ?thesis by (by100 simp)
+      qed
+      have "(?k - 2) mod ?k = ?k - 2" using hk_ge2 by (by100 simp)
+      thus ?thesis using \<open>?A2 = ws ! (?k - 1)\<close>
+        \<open>?ep (ws ! (?k - 1)) = _\<close> \<open>(?k - 1 + ?k - 1) mod ?k = (?k - 2) mod ?k\<close>
+        \<open>(?k - 2) mod ?k = ?k - 2\<close> by (by100 simp)
+    qed
     obtain hB where hhB: "top1_homeomorphism_on I_set I_top ?A2 (subspace_topology T TT ?A2) hB"
         and hhB0: "hB 0 = a_end" and hhB1: "hB 1 = a_start"
     proof -
