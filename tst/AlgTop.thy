@@ -4946,8 +4946,21 @@ next
      The key property: for each non-cycle arc A, r|A is continuous (constant).
      And at shared vertices: if x \\<in> A \\<inter> B, r from A-side = r from B-side.
      This holds because target is consistent at shared vertices.\<close>
-  show ?thesis sorry \<comment> \<open>Retraction: r well-defined + continuous + fixes C.
-     Needs unique-attachment property for consistency.\<close>
+  \<comment> \<open>Key property: for each non-cycle arc A, target(A) \\<in> C and target is consistent
+     at shared vertices with other arcs (cycle or non-cycle).\<close>
+  have htarget_in_C: "\<forall>A \<in> \<A> - set ws. target A \<in> ?C" sorry
+  have htarget_consistent: "\<forall>A \<in> \<A> - set ws. \<forall>x \<in> A \<inter> ?C. target A = x" sorry
+  have htarget_agree: "\<forall>A \<in> \<A> - set ws. \<forall>B \<in> \<A> - set ws.
+      \<forall>x \<in> A \<inter> B. target A = target B" sorry
+  \<comment> \<open>Prove retraction using coherent topology.\<close>
+  show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+  proof (intro exI[of _ r] conjI)
+    show "?C \<subseteq> T" using hws_C_sub .
+    \<comment> \<open>r is continuous: use coherent topology. For each closed Z \\<subseteq> C (in subspace topology),
+       r\\<inverse>(Z) \\<inter> A is closed in A for each A \\<in> \\<A>.\<close>
+    show "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) r" sorry
+    show "\<forall>a \<in> ?C. r a = a" unfolding r_def by (by100 simp)
+  qed
 qed
 
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
