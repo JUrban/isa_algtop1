@@ -5919,9 +5919,22 @@ proof (rule ccontr)
       qed
       \<comment> \<open>card \\<noteq> 2: if card = 2, arcs share both endpoints, contradicting hv\\_distinct.\<close>
       have hne2: "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<noteq> 2"
-        sorry \<comment> \<open>From hv\\_distinct: walk vertices at consecutive positions are distinct.
-           If card = 2: both arcs share 2 endpoints \\<Rightarrow> walk\\_v(i+idx) = walk\\_v(i+idx+2).
-           But hv\\_distinct says these are different. Contradiction.\<close>
+      proof
+        assume hcard2: "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 2"
+        \<comment> \<open>Both arcs share 2 endpoints. From intersection conditions: their intersection
+           \\<subseteq> endpoints of each arc. So they share both endpoints of each arc.
+           Arc ws!idx has endpoints including walk\\_v(i+idx) and walk\\_v(Suc i+idx).
+           Arc ws!((idx+1) mod k) has endpoints including walk\\_v(Suc i+idx) and walk\\_v(Suc i+(idx+1) mod k).
+           Same 2 endpoints \\<Rightarrow> walk\\_v(i+idx) = walk\\_v(Suc i + ((idx+1) mod k) mod ?)... complex.
+           Simpler: card = 2 means the intersection has 2 points, both are endpoints of both arcs.
+           Each arc has exactly 2 endpoints. So the arcs share ALL endpoints.
+           But from the walk: the "shared vertex" between ws!idx and ws!(idx+1) is walk\\_v(Suc i+idx).
+           If they share ANOTHER vertex: that vertex = walk\\_v(i+idx) = walk\\_v(Suc i+(idx+1)).
+           But hv\\_distinct says these are different positions with different values.\<close>
+        show False sorry
+          \<comment> \<open>Needs: extract "other shared endpoint" from card = 2, show it equals walk vertices
+             at positions differing by 2, apply hv\\_distinct/hmin for contradiction.\<close>
+      qed
       show "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
         using hge1 hinter_props hne2 by linarith
     qed
