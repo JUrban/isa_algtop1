@@ -5327,14 +5327,41 @@ proof -
                 proof (cases "idx = n' - 1")
                   case True \<comment> \<open>Adjacent: ws!(n'-1) \\<inter> ws!n' = {shared\\_v(n'-1)}.\<close>
                   have "ws ! (n'-1) \<inter> ws ! n' = {shared_v (n'-1)}"
-                    sorry \<comment> \<open>From hshared\\_v + graph conditions.\<close>
+                  proof -
+                    have "ws ! (n'-1) \<inter> ws ! ((n'-1+1) mod ?k) = {shared_v (n'-1)}"
+                      using hshared_v[rule_format, OF \<open>n'-1 < ?k\<close>] .
+                    have "(n'-1+1) = n'" using \<open>n' \<ge> 1\<close> by linarith
+                    hence "((n'-1+1) mod ?k) = n'" using hn'_lt by (by100 simp)
+                    thus ?thesis using \<open>ws!(n'-1) \<inter> ws!((n'-1+1) mod ?k) = {shared_v(n'-1)}\<close> by (by100 simp)
+                  qed
                   thus ?thesis using \<open>x \<in> ws ! idx \<inter> ws ! n'\<close> True by (by100 blast)
                 next
                   case False \<comment> \<open>Non-adjacent: ws!idx \\<inter> ws!n' = {}.\<close>
                   have "idx < ?k" using hidx(1) \<open>n' \<le> ?k - 1\<close> by linarith
+                  have "idx \<noteq> n'" using hidx(1) by linarith
+                  have "idx < n' - 1" using hidx(1) False by linarith
+                  have h_prev_ne: "(idx + ?k - 1) mod ?k \<noteq> n'"
+                  proof (cases "idx = 0")
+                    case True
+                    have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+                    moreover have "?k - 1 \<noteq> n'" using Suc.prems(2) by linarith
+                    ultimately show ?thesis using True by (by100 simp)
+                  next
+                    case False
+                    have "idx + ?k - 1 = (idx - 1) + ?k" using False by linarith
+                    hence "(idx + ?k - 1) mod ?k = idx - 1"
+                      using \<open>idx < ?k\<close> by (by100 simp)
+                    thus ?thesis using \<open>idx < n' - 1\<close> by linarith
+                  qed
+                  have h_next_ne: "(idx + 1) mod ?k \<noteq> n'"
+                  proof -
+                    have "idx + 1 \<le> n' - 1" using \<open>idx < n' - 1\<close> by linarith
+                    have "idx + 1 < ?k" using \<open>idx < ?k\<close> by linarith
+                    hence "(idx + 1) mod ?k = idx + 1" by (by100 simp)
+                    thus ?thesis using \<open>idx + 1 \<le> n' - 1\<close> by linarith
+                  qed
                   have "ws ! idx \<inter> ws ! n' = {}"
-                    using hdisjoint_non_adj[OF \<open>idx < ?k\<close> hn'_lt _ _ _] hidx(1) False
-                    sorry \<comment> \<open>Need to show non-adjacency conditions for idx and n'.\<close>
+                    using hdisjoint_non_adj[OF \<open>idx < ?k\<close> hn'_lt h_prev_ne h_next_ne \<open>idx \<noteq> n'\<close>] .
                   thus ?thesis using \<open>x \<in> ws ! idx \<inter> ws ! n'\<close> by (by100 blast)
                 qed
               qed
