@@ -7586,7 +7586,25 @@ proof (rule ccontr)
       let ?ws' = "[D1, ?arcB, D2]"
       have hws'_sub: "set ?ws' \<subseteq> \<A>'" unfolding \<A>'_def using harcB_in by (by100 blast)
       have hws'_len: "length ?ws' \<ge> 2" by (by100 simp)
-      have hws'_dist: "distinct ?ws'" sorry
+      have hws'_dist: "distinct ?ws'"
+      proof -
+        have "D1 \<noteq> ?arcB"
+        proof
+          assume "D1 = ?arcB"
+          hence "D1 \<subseteq> ?arcA" using hD_union by (by100 blast)
+          hence "?arcB \<subseteq> ?arcA" using \<open>D1 = ?arcB\<close> by (by100 simp)
+          have "?arcB \<noteq> ?arcA" using hAB_ne by (by100 simp)
+          from assms(4)[rule_format, OF harcA_in harcB_in \<open>?arcA \<noteq> ?arcB\<close>]
+          have "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+            by (by100 blast)
+          hence "?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+            using \<open>?arcB \<subseteq> ?arcA\<close> by (by100 blast)
+          thus False sorry \<comment> \<open>An arc can't be a subset of another arc's endpoints (2 points).\<close>
+        qed
+        have "D2 \<noteq> ?arcB" sorry \<comment> \<open>Same argument.\<close>
+        have "D1 \<noteq> D2" sorry \<comment> \<open>From D1 \\<inter> D2 = {p} with both being arcs (infinite).\<close>
+        thus ?thesis using \<open>D1 \<noteq> ?arcB\<close> \<open>D2 \<noteq> ?arcB\<close> \<open>D1 \<noteq> D2\<close> by (by100 simp)
+      qed
       have hws'_card1: "\<forall>i < length ?ws'. card (?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws')) = 1" sorry
       have hws'_vdist: "\<forall>i < length ?ws'. \<forall>j < length ?ws'. i \<noteq> j \<longrightarrow>
           (\<forall>v w. ?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws') = {v} \<longrightarrow>
