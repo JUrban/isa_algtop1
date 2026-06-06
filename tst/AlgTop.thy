@@ -4577,7 +4577,48 @@ lemma sc_graph_no_cycle:
       \<comment> \<open>Consecutive arcs share a vertex, forming a closed path.\<close>
       and "\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}"
   shows False
-  sorry \<comment> \<open>Topological bridge: Munkres 84.2 + 84.7. CREP in CW-complex gives non-trivial pi1.\<close>
+proof -
+  \<comment> \<open>Strategy: The cycle C = \\<Union>(set ws) is homeomorphic to S1 (a simple closed curve).
+     C is a retract of T (collapse non-cycle arcs to cycle vertices using coherent topology).
+     Apply scc\\_in\\_sc\\_false: SC + SCC retract \\<Rightarrow> False.
+
+     Proof by induction on card(\\<A>) - length(ws) (number of non-cycle arcs).
+     Base (card = length): T = C. Identity retraction. SCC construction.
+     Step: Find a "leaf" non-cycle arc (pendant arc not in cycle).
+           Remove it (leaf removal preserves SC).
+           Apply IH to the smaller graph.\<close>
+  have hSC: "top1_simply_connected_on T TT"
+    using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+  have hgraph: "top1_is_graph_on T TT"
+    using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+  have hconn: "top1_connected_on T TT"
+    using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+  have htop: "is_topology_on T TT"
+    using hgraph unfolding top1_is_graph_on_def is_topology_on_strict_def by (by100 blast)
+  have hhaus: "is_hausdorff_on T TT"
+    using hgraph unfolding top1_is_graph_on_def by (by100 blast)
+  have hstrict: "is_topology_on_strict T TT"
+    using hgraph unfolding top1_is_graph_on_def by (by100 blast)
+  \<comment> \<open>The cycle subgraph C = \\<Union>(set ws) is a simple closed curve (homeomorphic to S1).
+     This follows from the path product construction: concatenate k arc homeomorphisms
+     around the cycle, then identify endpoints to get S1 \\<to> C.\<close>
+  let ?C = "\<Union>(set ws)"
+  have hC_sub: "?C \<subseteq> T"
+  proof -
+    have "\<forall>A\<in>set ws. A \<subseteq> T" using assms(2) assms(9) by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
+  have hC_SCC: "top1_simple_closed_curve_on T TT ?C"
+    sorry \<comment> \<open>SCC construction: k arcs forming a cycle give a simple closed curve.
+       Needs: path product of k homeomorphisms + S1 parametrization + Theorem 26.6.\<close>
+  \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
+  have hC_retract: "top1_retract_of_on T TT ?C"
+    sorry \<comment> \<open>Retraction construction: for each non-cycle arc, map to a cycle vertex.
+       Continuity from coherent topology. Needs tree-branch collapse argument.\<close>
+  \<comment> \<open>Apply scc\\_in\\_sc\\_false.\<close>
+  from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
+  show False .
+qed
 
 \<comment> \<open>Forest Euler formula (purely combinatorial, no topology):
    In a graph (finite vertex set V, finite arc set \\<A>, each arc has 2 distinct endpoints in V)
