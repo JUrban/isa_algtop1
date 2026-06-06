@@ -2,44 +2,37 @@
 
 ## Current Sorry Count: 21 word-matches (~13 executable)
 
-### Non-surface blocking sorrys (5):
+### Non-surface blocking sorrys:
 
 | # | Location | Description | Status |
 |---|----------|-------------|--------|
-| 1 | cycle_subgraph_retract | Cycle subgraph retract of graph space | **HARDEST** sorry |
+| 1 | sc_graph_no_cycle | Retraction (general case with non-cycle arcs) | **THE blocker** |
 | 2 | tree_leaf_existence_bridge | j-i=2 subdivision case | Delegates to sc_graph_no_cycle |
 | 3 | forest_euler_formula | Walk + pigeonhole | Orphan |
 | 4 | forest_euler_formula | Leaf induction | Orphan |
 
-### FULLY PROVED in sc_graph_no_cycle (modulo cycle_subgraph_retract):
-- A1 merge (iterative arc_merge_at_endpoint induction) ZERO SORRY
-- A1 ∩ A2 intersection ZERO SORRY
-- A2 endpoints ZERO SORRY
-- SCC construction via loop_factors_through_S1 ZERO SORRY
-- f injectivity (g-injectivity on [0,1)) ZERO SORRY
-- f surjectivity ZERO SORRY
-- shared_v extraction + harc_ep (each arc endpoints = adjacent shared vertices) ZERO SORRY
-- hdisjoint_non_adj (non-adjacent arcs disjoint) ZERO SORRY
-- two_arcs_same_endpoints_sc_false ZERO SORRY
+### FULLY PROVED in sc_graph_no_cycle:
+- ✅ shared_v extraction + distinctness
+- ✅ harc_ep (each arc's endpoints = adjacent shared vertices)
+- ✅ hdisjoint_non_adj (non-adjacent arcs disjoint)
+- ✅ A1 merge (iterative arc_merge_at_endpoint induction via merge_chain)
+- ✅ A1 ∩ A2 intersection
+- ✅ A2 endpoints
+- ✅ SCC construction via loop_factors_through_S1
+- ✅ f injectivity + surjectivity
+- ✅ Base case (𝒜 = set ws → identity retraction → scc_in_sc_false)
+- 🔲 General case retraction (non-cycle arcs exist)
 
 ### Surface classification sorrys (8): Theorems 75.4, 76, 77.5, 78.1, 78.2
 
 ### Non-surface proof chain:
 ```
-cycle_subgraph_retract [1 sorry]
-  → sc_graph_no_cycle [PROVED modulo above]
-    → tree_leaf_existence_bridge [PROVED modulo above + j-i=2]
-      → tree_euler_from_leaf [PROVED]
-        → tree_euler_from_sc [PROVED]
-          → finite_tree_has_leaf [PROVED]
-            → tree_euler_and_leaf_combined [PROVED]
-              → tree_euler_number_one [PROVED]
-                → covering_graph_pi1_rank [PROVED]
-                  → Theorem_85_3_Schreier_index [PROVED]
+sc_graph_no_cycle [1 sorry: retraction]
+  → tree_leaf_existence_bridge [PROVED modulo above + j-i=2]
+    → ... → Theorem_85_3_Schreier_index [PROVED]
 ```
 
-## Build Command
-
+## Build: ~45s (cached) or ~24s (fresh)
 ```bash
 cd /project/tst && /project/bin/isabelle build -D .
 ```
