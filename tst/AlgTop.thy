@@ -4911,56 +4911,25 @@ proof (cases "\<A> = set ws")
     show "\<forall>a\<in>\<Union>(set ws). id a = a" by (by100 simp)
   qed
 next
-  case False \<comment> \<open>Step: non-cycle arcs exist.\<close>
-  \<comment> \<open>The retraction maps each non-cycle arc to a cycle vertex.
-     Coherent topology gives continuity. Unique attachment gives consistency.\<close>
-  \<comment> \<open>Define target assignment: for each non-cycle arc, a cycle vertex it retracts to.\<close>
-  let ?C = "\<Union>(set ws)"
-  let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
-  have htop: "is_topology_on T TT"
-    using htree unfolding top1_is_tree_on_def top1_is_graph_on_def is_topology_on_strict_def
-    by (by100 blast)
-  \<comment> \<open>For each non-cycle arc A, choose a vertex target(A) on the cycle.
-     The target is well-defined if each connected component of non-cycle arcs
-     touches C at exactly one vertex (unique attachment).\<close>
-  \<comment> \<open>The unique attachment property follows from SC:
-     if a non-cycle component touches C at two vertices u, v, then
-     the component path u-to-v + cycle segment v-to-u forms a new SCC.
-     By scc\\_in\\_sc\\_false (SC of T + SCC + identity retraction on the new cycle): False.\<close>
-  \<comment> \<open>Define r: T \\<to> C using the coherent topology.\<close>
-  \<comment> \<open>For each non-cycle arc A, define target\\_A \\<in> C as the unique cycle attachment vertex
-     of A's connected component in the non-cycle subgraph.
-     For arcs directly touching C: target = shared vertex with C.
-     For other arcs: target = inherited from chain.\<close>
-  \<comment> \<open>Simpler approach: pick ANY endpoint of any adjacent cycle arc.
-     Every non-cycle arc has at least one endpoint shared with another arc.
-     Through the finite chain of arcs, eventually reach a cycle arc.\<close>
-  have hNC_finite: "finite (\<A> - set ws)" using hfin by (by100 blast)
-  \<comment> \<open>For each non-cycle arc A, choose target: a cycle vertex reachable from A through arcs.\<close>
-  define target :: "'a set \<Rightarrow> 'a" where
-    "target A = (SOME v. v \<in> ?C \<and> v \<in> A)" for A
-  \<comment> \<open>Define r: for x \\<in> cycle arc, r(x) = x. For x \\<in> non-cycle arc A, r(x) = target(A).\<close>
-  define r :: "'a \<Rightarrow> 'a" where
-    "r x = (if x \<in> ?C then x else target (SOME A. A \<in> \<A> - set ws \<and> x \<in> A))" for x
-  \<comment> \<open>r fixes C, maps T to C, and is continuous by coherent topology.
-     The key property: for each non-cycle arc A, r|A is continuous (constant).
-     And at shared vertices: if x \\<in> A \\<inter> B, r from A-side = r from B-side.
-     This holds because target is consistent at shared vertices.\<close>
-  \<comment> \<open>Key property: for each non-cycle arc A, target(A) \\<in> C and target is consistent
-     at shared vertices with other arcs (cycle or non-cycle).\<close>
-  have htarget_in_C: "\<forall>A \<in> \<A> - set ws. target A \<in> ?C" sorry
-  have htarget_consistent: "\<forall>A \<in> \<A> - set ws. \<forall>x \<in> A \<inter> ?C. target A = x" sorry
-  have htarget_agree: "\<forall>A \<in> \<A> - set ws. \<forall>B \<in> \<A> - set ws.
-      \<forall>x \<in> A \<inter> B. target A = target B" sorry
-  \<comment> \<open>Prove retraction using coherent topology.\<close>
-  show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
-  proof (intro exI[of _ r] conjI)
-    show "?C \<subseteq> T" using hws_C_sub .
-    \<comment> \<open>r is continuous: use coherent topology. For each closed Z \\<subseteq> C (in subspace topology),
-       r\\<inverse>(Z) \\<inter> A is closed in A for each A \\<in> \\<A>.\<close>
-    show "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) r" sorry
-    show "\<forall>a \<in> ?C. r a = a" unfolding r_def by (by100 simp)
-  qed
+  case False \<comment> \<open>Step: non-cycle arcs exist. Need retraction onto C.\<close>
+  \<comment> \<open>PROOF STRATEGY (per expert audit Route 1):
+     1. Each connected component of non-cycle arcs attaches to C at exactly 1 vertex.
+        Proof: if double attachment at u, v \\<in> C, the component path u-v + cycle segment
+        v-u forms a NEW cycle with FEWER non-cycle arcs. By IH: graph\\_cycle\\_retract
+        gives retraction for that cycle \\<Rightarrow> scc\\_in\\_sc\\_false \\<Rightarrow> False. Contradiction.
+     2. With unique attachment: define r arc-by-arc.
+        Cycle arcs: r|A = id. Non-cycle arcs: r|A = constant to attachment vertex.
+     3. Coherent topology \\<Rightarrow> r continuous. r|C = id \\<Rightarrow> retraction.
+
+     The induction is on card(\\<A> \\ set ws) (number of non-cycle arcs).
+     In the double-attachment case: the new cycle ws' uses some former non-cycle arcs
+     as cycle arcs, so card(\\<A> \\ set ws') < card(\\<A> \\ set ws).
+
+     This induction requires graph\\_cycle\\_retract to be reformulated with the
+     induction built in. Currently sorry'd pending this reformulation.\<close>
+  show ?thesis sorry \<comment> \<open>Retraction by induction on card(\\<A> \\ set ws).
+     See strategy above. Needs: component path extraction + new cycle construction +
+     coherent topology retraction assembly. ~150 lines.\<close>
 qed
 
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
