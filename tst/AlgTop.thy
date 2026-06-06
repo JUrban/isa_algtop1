@@ -5934,9 +5934,41 @@ proof (rule ccontr)
            But from the walk: the "shared vertex" between ws!idx and ws!(idx+1) is walk\\_v(Suc i+idx).
            If they share ANOTHER vertex: that vertex = walk\\_v(i+idx) = walk\\_v(Suc i+(idx+1)).
            But hv\\_distinct says these are different positions with different values.\<close>
+        \<comment> \<open>card = 2 and intersection \\<subseteq> ep(A) with card(ep) = 2 \\<Rightarrow> intersection = ep(A).
+           ep(A) \\<supseteq> {walk\\_v(i+idx), walk\\_v(Suc i+idx)} (both endpoints of the walk arc).
+           So walk\\_v(i+idx) \\<in> intersection \\<subseteq> ep(B). ep(B) has walk\\_v(Suc i+idx) and walk\\_v(next).
+           walk\\_v(i+idx) \\<in> {walk\\_v(Suc i+idx), walk\\_v(next)}. But walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx).
+           So walk\\_v(i+idx) = walk\\_v(next). From hv\\_distinct/hmin: these differ. Contradiction.\<close>
+        \<comment> \<open>Step 1: walk\\_v(i+idx) is in ep of the first arc (predecessor endpoint).\<close>
+        have hpred_in_ep: "fst (walk (i + idx)) \<in> ?ep2 (snd (walk (Suc i + idx)))"
+        proof -
+          have "snd (walk (Suc i + idx)) = next_arc (fst (walk (i + idx))) (snd (walk (i + idx)))"
+            using hwalk_suc_snd[of "i + idx"] by simp
+          moreover have "fst (walk (i+idx)) \<in> ?ep2 (next_arc (fst (walk (i+idx))) (snd (walk (i+idx))))"
+            using hnext_arc hwalk_props by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        \<comment> \<open>Step 2: walk\\_v(i+idx) is in the intersection (via ep \\<supseteq> intersection \\<supseteq> ep).\<close>
+        have "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<subseteq> ?ep2 (?ws ! idx)"
+          using assms(4)[rule_format, OF hwsA hwsB hwsAB_ne] by (by100 blast)
+        \<comment> \<open>intersection = ep(first arc) (both have card 2, one \\<subseteq> other).\<close>
+        have hinter_eq_ep: "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) = ?ep2 (?ws ! idx)"
+          sorry \<comment> \<open>card\\_subset\\_eq: finite ep, inter \\<subseteq> ep, card inter = card ep = 2.\<close>
+        \<comment> \<open>Step 3: walk\\_v(i+idx) \\<in> ep of the second arc.\<close>
+        have "fst (walk (i + idx)) \<in> ?ep2 (?ws ! idx)"
+          using hpred_in_ep hws_nth[OF hidx'] by simp
+        hence "fst (walk (i + idx)) \<in> ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)"
+          using hinter_eq_ep by simp
+        hence "fst (walk (i + idx)) \<in> ?ep2 (?ws ! ((idx + 1) mod length ?ws))"
+          using assms(4)[rule_format, OF hwsA hwsB hwsAB_ne] by (by100 blast)
+        \<comment> \<open>Step 4: ep of second arc = {walk\\_v(next-1), walk\\_v(next)} where next = Suc i + ((idx+1) mod k).\<close>
+        \<comment> \<open>walk\\_v(i+idx) \\<in> ep(second arc) = {walk\\_v(Suc i+idx), walk\\_v(Suc i+((idx+1) mod k))}.
+           walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx) (from walk step: other\\_endpt).
+           So walk\\_v(i+idx) = walk\\_v(Suc i + ((idx+1) mod k)).
+           From hv\\_distinct/hmin with j-i \\<ge> 3: these are at distinct positions with distinct values.\<close>
         show False sorry
-          \<comment> \<open>Needs: extract "other shared endpoint" from card = 2, show it equals walk vertices
-             at positions differing by 2, apply hv\\_distinct/hmin for contradiction.\<close>
+          \<comment> \<open>Remaining: show walk\\_v(i+idx) = walk\\_v(Suc i+((idx+1) mod k)) from ep membership,
+             then apply hv\\_distinct/hmin for the contradiction. ~20 lines.\<close>
       qed
       show "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
         using hge1 hinter_props hne2 by linarith
