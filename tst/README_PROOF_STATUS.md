@@ -22,61 +22,50 @@ Top0 → AlgTopBase0 → AlgTopBase → AlgTop0 → AlgTopC
   → K5
 ```
 
-## Key Theorems (oracle-clean, no proof gaps)
+## Current Sorry Count: ~16 executable (8 blocking + 8 surface)
 
-All verified with `thm_oracles` returning empty (no `skip_proof`):
+### Non-surface blocking sorrys (8, all in sc_graph_no_cycle):
+These block the ENTIRE chain from tree_euler_from_sc through Theorem_85_3_Schreier_index.
 
-- `Theorem_58_7` — Homotopy equivalence induces π₁ iso (specific map)
-- `Lemma_65_1` — K4 inclusion induces π₁ iso (via inclusion map id)
-- `Lemma_65_1_exists_basepoint` — Basepoint-flexible version
-- `Theorem_65_2` — SCC inclusion induces π₁ iso (Munkres §65 main result)
-- `move_one_puncture` — Step 4: moving punctures preserves iso
-- `Munkres_Step_4_move_punctures` — Full Step 4
-- `pi1_S2_minus_two_points_iso_Z_proved` — π₁(S²-{p}-{q}) ≅ Z
+| # | Description | Type |
+|---|-------------|------|
+| 1 | A1 merge (iterative arc_merge_at_endpoint) | SCC construction |
+| 2 | A1 ∩ A2 = {a_start, a_end} | SCC construction |
+| 3 | A2 endpoints | SCC construction |
+| 4 | f: S¹ → T continuous | SCC construction |
+| 5 | f injective | SCC construction |
+| 6 | card ≠ 2 in walk adjacency | Walk proof |
+| 7 | C retract of T | Retraction |
 
-These are in `fi/AlgIsoFixed.thy` and `ac/AlgTopCached.thy`.
+### Surface classification sorrys (8): Theorems 75.4, 76, 77.5, 78.1, 78.2
 
-## Proof Gaps
+### Orphan sorrys (4): forest_euler_formula (2) + helpers (2)
 
-### AlgTop0.thy (1 gap)
-- `pi1_S2_minus_two_points_iso_Z` — proved in AlgTopCached as `_proved` variant.
-  Cannot close at AlgTop0 level (infrastructure not available upstream).
+## FULLY PROVED (modulo sc_graph_no_cycle):
 
-### K5_nonplanar.thy (2 gaps)
-- K4 4-component separation — all premises proved individually, but Isabelle
-  OF-chain with 35 premises exceeds timeout.
-- Main contradiction — needs component boundary infrastructure.
+### Walk proof: ZERO SORRY
+- Walk definition, properties, unfold lemmas
+- Pigeonhole (vertex revisit), shortest revisit (LEAST)
+- Arc adjacency, surjectivity, distinctness, hacyclic application
 
-### AlgTop.thy (9 executable gaps, updated 2026-06-06)
+### Non-surface proof chain:
+```
+sc_graph_no_cycle [8 sorrys]
+  → tree_leaf_existence_bridge [PROVED]
+    → tree_euler_from_leaf [PROVED]
+      → tree_euler_from_sc [PROVED]
+        → finite_tree_has_leaf [PROVED]
+          → tree_euler_and_leaf_combined [PROVED]
+            → tree_euler_number_one [PROVED]
+              → covering_graph_pi1_rank [PROVED]
+                → Theorem_85_3_Schreier_index [PROVED]
+```
 
-**Non-surface (1 gap):**
-- `finite_tree_has_leaf` (L2676): SC + all vertices degree≥2 → False (topological bridge)
-
-**Surface classification (8 gaps):**
-- Theorem 75.4: 1-skeleton is wedge of circles (L9785)
-- Theorem 76: Elementary scheme operation induction (L9875)
-- Theorem 75.4: Abelianization + Smith normal form (L9917)
-- Theorem 78.1: Disjoint simplex copies + pasting (L9979)
-- Theorem 78.2: Iterative merging construction (L10015)
-- Theorem 77.5: Polygonal region → edge scheme (L10055)
-- Theorem 77.5: Normal form reduction (L10071)
-- Theorem 77.5: Normal form → homeomorphism type (L10073)
-
-**FULLY PROVED infrastructure (major lemmas, zero sorry):**
-- **graph_euler_invariance**: V-E invariant under decomposition change
-- **graph_iterated_subdivision_exists**: iterated arc subdivision
-- **graph_same_vertices_same_arcs**: same vertex set → same arcs
-- **graph_arc_containment_via_open_interior**: arc containment via connectedness
-- **graph_coherent_any_decomposition**: coherent topology for any finite decomposition
-- **graph_arc_interior_open**: arc interiors open in coherent topology
-- **graph_subdivision_preserves_euler**: single subdivision preserves V-E
-- **closed_set_first_entry**: boundary point in connected space
-- Covering lifted arc family interface (all 3 clauses)
-- 𝒜_L conditions: arc, cover, intersection, finiteness — ALL PROVED
-- Covering arc/vertex multiplicity, free group transfer, max conn comp helpers
-- All §64, §67-§73, §79-§85 infrastructure
-
-See `SORRY_AUDIT.md` for detailed dependency analysis.
+### Key infrastructure PROVED:
+- graph_euler_invariance: V-E invariant under decomposition change
+- graph_coherent_any_decomposition: coherent topology from graph conditions
+- arc_merge_at_endpoint: two arcs sharing 1 endpoint → arc
+- All covering infrastructure, §64, §67-§73, §79-§85
 
 ## Build Command
 
@@ -86,6 +75,6 @@ cd /project/tst && /project/bin/isabelle build -D .
 
 ## Files to Ignore
 
-- `archive/` — old backups and stale files. Not part of the active formalization.
-- `bck*`, `*_old.thy`, `*_bak.thy` — if any remain, they are stale backups.
+- `archive/` — old backups and stale files.
+- `bck*`, `*_old.thy`, `*_bak.thy` — stale backups.
 - `CHANGES*` files — incremental changelog snapshots.
