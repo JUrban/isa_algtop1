@@ -4643,7 +4643,23 @@ proof -
     have "shared_v ((i + ?k - 1) mod ?k) \<in> ws ! ((i + ?k - 1) mod ?k) \<inter> ws ! (((i + ?k - 1) mod ?k + 1) mod ?k)"
       using hshared_v[rule_format, OF hprev] by simp
     have hmod_prev_succ: "((i + ?k - 1) mod ?k + 1) mod ?k = i"
-      sorry \<comment> \<open>Standard modular arithmetic: (i-1 mod k + 1) mod k = i for i < k.\<close>
+    proof (cases "i = 0")
+      case True
+      have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
+      have "Suc (?k - 1) = ?k" using hk_ge2 by linarith
+      hence "(?k - 1 + 1) mod ?k = 0" by simp
+      thus ?thesis using True \<open>(0 + ?k - 1) mod ?k = ?k - 1\<close> by simp
+    next
+      case False hence "i \<ge> 1" by linarith
+      have "i + ?k - 1 = (i - 1) + ?k" using \<open>i \<ge> 1\<close> by linarith
+      hence "(i + ?k - 1) mod ?k = (i - 1) mod ?k" by simp
+      have "i - 1 < ?k" using hi by linarith
+      hence "(i - 1) mod ?k = i - 1" by simp
+      hence "(i + ?k - 1) mod ?k = i - 1"
+        using \<open>(i + ?k - 1) mod ?k = (i - 1) mod ?k\<close> by simp
+      hence "((i + ?k - 1) mod ?k + 1) = i" using \<open>i \<ge> 1\<close> by linarith
+      thus ?thesis using hi by simp
+    qed
     hence "shared_v ((i + ?k - 1) mod ?k) \<in> ws ! ((i + ?k - 1) mod ?k) \<inter> ws ! i"
       using \<open>shared_v ((i + ?k - 1) mod ?k) \<in> _\<close> by simp
     hence hsv_prev_in: "shared_v ((i + ?k - 1) mod ?k) \<in> ?ep (ws ! i)"
@@ -4652,7 +4668,8 @@ proof -
       have "(i + ?k - 1) mod ?k \<noteq> i"
       proof (cases "i = 0")
         case True hence "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
-        thus ?thesis using True hk_ge2 by linarith
+        have "?k - 1 \<noteq> 0" using hk_ge2 by linarith
+        thus ?thesis using True \<open>(0 + ?k - 1) mod ?k = ?k - 1\<close> \<open>?k - 1 \<noteq> 0\<close> by simp
       next
         case False
         have "i + ?k - 1 = (i - 1) + ?k" using False by linarith
@@ -4688,7 +4705,19 @@ proof -
       thus ?thesis using \<open>shared_v i \<in> ws ! i \<inter> ws ! ((i+1) mod ?k)\<close> by (by100 blast)
     qed
     \<comment> \<open>ep(ws!i) has exactly 2 elements. Both shared\\_v's are in it and distinct. So they ARE the 2.\<close>
-    have hprev_ne_i: "(i + ?k - 1) mod ?k \<noteq> i" using hk_ge2 hi sorry
+    have hprev_ne_i: "(i + ?k - 1) mod ?k \<noteq> i"
+    proof (cases "i = 0")
+      case True hence "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
+      have "?k - 1 \<noteq> 0" using hk_ge2 by linarith
+      thus ?thesis using True \<open>(0 + ?k - 1) mod ?k = ?k - 1\<close> \<open>?k - 1 \<noteq> 0\<close> by simp
+    next
+      case False
+      have "i + ?k - 1 = (i - 1) + ?k" using False by linarith
+      hence "(i + ?k - 1) mod ?k = (i - 1) mod ?k" by simp
+      have "i - 1 < ?k" using hi by linarith
+      hence "(i - 1) mod ?k = i - 1" by simp
+      thus ?thesis using False \<open>(i + ?k - 1) mod ?k = (i - 1) mod ?k\<close> by linarith
+    qed
     have hne: "shared_v ((i + ?k - 1) mod ?k) \<noteq> shared_v i"
       using hshared_v_distinct[rule_format, OF hprev hi hprev_ne_i] .
     have hcard2: "card (?ep (ws ! i)) = 2"
