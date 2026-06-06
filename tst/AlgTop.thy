@@ -5013,10 +5013,24 @@ proof -
     show False .
   next
     case False \<comment> \<open>General case: non-cycle arcs exist. Need retraction onto C.\<close>
+    \<comment> \<open>Define retraction r: T \\<to> C using the coherent topology.
+       For each non-cycle arc A, choose a vertex target(A) \\<in> C.
+       r(x) = x for x \\<in> C, r(x) = target(A) for x \\<in> A (non-cycle).
+       Coherent topology: r continuous iff r|A continuous for each A \\<in> \\<A>.
+       Cycle arcs: r|A = id, continuous. Non-cycle: r|A = constant, continuous.
+       Consistency: at shared vertices, both arcs agree on the target.\<close>
+    \<comment> \<open>For each non-cycle arc, choose a cycle vertex it touches.\<close>
+    have hNC_touch_cycle: "\<forall>A \<in> \<A> - set ws. \<exists>v \<in> ?C.
+        v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)"
+      sorry \<comment> \<open>Every non-cycle arc endpoint is shared with some arc; eventually reaches cycle.\<close>
+    \<comment> \<open>Choose target vertices.\<close>
+    define target where "target A = (SOME v. v \<in> ?C \<and>
+        v \<in> top1_arc_endpoints_on A (subspace_topology T TT A))" for A
+    \<comment> \<open>Define r.\<close>
+    define r where "r x = (if x \<in> ?C then x else
+        target (SOME A. A \<in> \<A> - set ws \<and> x \<in> A))" for x
     have hC_retract: "top1_retract_of_on T TT ?C"
-      sorry \<comment> \<open>Retraction for graph with non-cycle arcs.
-         Define r arc-by-arc: id on cycle, constant on non-cycle.
-         Coherent topology gives continuity. Unique attachment from SC.\<close>
+      sorry \<comment> \<open>r is well-defined, maps T to C, fixes C, continuous by coherent topology.\<close>
     from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
     show False .
   qed
