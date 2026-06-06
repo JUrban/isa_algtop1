@@ -5228,9 +5228,147 @@ proof (rule ccontr)
              that differs from fst(walk(i+k))). Same arc + different predecessor vertex
              = different arrived-at vertex. But same arc means same endpoint pair, forcing
              equal predecessor and arrived-at vertices. With hv\\_distinct: k = l.\<close>
-          show False sorry
-            \<comment> \<open>Endpoint pair set theory: same arc + distinct intermediate vertices \\<Rightarrow> k = l.
-               Fiddly but mathematically clear. Needs doubleton\\_eq\\_iff + hv\\_distinct.\<close>
+          \<comment> \<open>Endpoint pair: ep(snd(walk m)) = {fst(walk(m-1)), fst(walk m)} for the walk.\<close>
+          let ?mk = "Suc i + k" and ?ml = "Suc i + l"
+          have hpred_k: "fst (walk (i + k)) \<in> ?ep2 (snd (walk ?mk))"
+          proof -
+            have "snd (walk ?mk) = next_arc (fst (walk (i + k))) (snd (walk (i + k)))"
+              using hwalk_suc_snd[of "i + k"] by simp
+            moreover have "fst (walk (i+k)) \<in> ?ep2 (next_arc (fst (walk (i+k))) (snd (walk (i+k))))"
+              using hnext_arc hwalk_props by (by100 blast)
+            ultimately show ?thesis by simp
+          qed
+          have hpred_l: "fst (walk (i + l)) \<in> ?ep2 (snd (walk ?ml))"
+          proof -
+            have "snd (walk ?ml) = next_arc (fst (walk (i + l))) (snd (walk (i + l)))"
+              using hwalk_suc_snd[of "i + l"] by simp
+            moreover have "fst (walk (i+l)) \<in> ?ep2 (next_arc (fst (walk (i+l))) (snd (walk (i+l))))"
+              using hnext_arc hwalk_props by (by100 blast)
+            ultimately show ?thesis by simp
+          qed
+          have harr_k: "fst (walk ?mk) \<in> ?ep2 (snd (walk ?mk))" using hwalk_props by (by100 blast)
+          have harr_l: "fst (walk ?ml) \<in> ?ep2 (snd (walk ?ml))" using hwalk_props by (by100 blast)
+          have hne_k: "fst (walk ?mk) \<noteq> fst (walk (i + k))"
+          proof -
+            have "fst (walk ?mk) = other_endpt (fst (walk (i+k))) (next_arc (fst (walk (i+k))) (snd (walk (i+k))))"
+              using hwalk_suc_fst[of "i+k"] by simp
+            moreover have "next_arc (fst (walk (i+k))) (snd (walk (i+k))) \<in> \<A>"
+              using hnext_arc hwalk_props by (by100 blast)
+            moreover have hik_ep: "fst (walk (i+k)) \<in> ?ep2 (next_arc (fst (walk (i+k))) (snd (walk (i+k))))"
+              using hnext_arc hwalk_props by (by100 blast)
+            moreover have hik_arc: "next_arc (fst (walk (i+k))) (snd (walk (i+k))) \<in> \<A>"
+              using hnext_arc hwalk_props by (by100 blast)
+            moreover have "other_endpt (fst (walk (i+k))) (next_arc (fst (walk (i+k))) (snd (walk (i+k)))) \<noteq> fst (walk (i+k))"
+              using hother_endpt[rule_format, OF hik_arc hik_ep] by (by100 blast)
+            ultimately show ?thesis by simp
+          qed
+          \<comment> \<open>ep has exactly 2 elements, both known. Same arc \\<Rightarrow> same ep.\<close>
+          have "?ep2 (snd (walk ?mk)) = ?ep2 (snd (walk ?ml))"
+            using \<open>snd (walk ?mk) = snd (walk ?ml)\<close> by simp
+          hence hep_eq: "{fst (walk (i+k)), fst (walk ?mk)} \<subseteq> ?ep2 (snd (walk ?ml))
+              \<and> {fst (walk (i+l)), fst (walk ?ml)} \<subseteq> ?ep2 (snd (walk ?mk))"
+            using hpred_k harr_k hpred_l harr_l by (by100 blast)
+          \<comment> \<open>The arrived-at vertex fst(walk ?mk) is in ep(snd(walk ?ml)) = {fst(walk(i+l)), fst(walk ?ml)}.
+             So fst(walk ?mk) = fst(walk(i+l)) or fst(walk ?mk) = fst(walk ?ml).\<close>
+          have "fst (walk ?mk) \<in> {fst (walk (i+l)), fst (walk ?ml)}"
+          proof -
+            have "fst (walk ?mk) \<in> ?ep2 (snd (walk ?ml))"
+              using harr_k \<open>?ep2 (snd (walk ?mk)) = ?ep2 (snd (walk ?ml))\<close> by simp
+            moreover from h2ep[rule_format] hwalk_props
+            have "?ep2 (snd (walk ?ml)) \<subseteq> {fst (walk (i+l)), fst (walk ?ml)}"
+            proof -
+              have "snd (walk ?ml) \<in> \<A>" using hwalk_props by (by100 blast)
+              from h2ep[rule_format, OF this]
+              obtain a b where hab: "a \<noteq> b" "?ep2 (snd (walk ?ml)) = {a, b}" by (by100 blast)
+              have "fst (walk (i+l)) \<in> {a, b}" using hpred_l hab(2) by simp
+              have "fst (walk ?ml) \<in> {a, b}" using harr_l hab(2) by simp
+              have "fst (walk ?ml) \<noteq> fst (walk (i+l))"
+              proof -
+                have "fst (walk ?ml) = other_endpt (fst (walk (i+l))) (next_arc (fst (walk (i+l))) (snd (walk (i+l))))"
+                  using hwalk_suc_fst[of "i+l"] by simp
+                moreover have "next_arc (fst (walk (i+l))) (snd (walk (i+l))) \<in> \<A>"
+                  using hnext_arc hwalk_props by (by100 blast)
+                moreover have hil_ep: "fst (walk (i+l)) \<in> ?ep2 (next_arc (fst (walk (i+l))) (snd (walk (i+l))))"
+                  using hnext_arc hwalk_props by (by100 blast)
+                moreover have hil_arc: "next_arc (fst (walk (i+l))) (snd (walk (i+l))) \<in> \<A>"
+                  using hnext_arc hwalk_props by (by100 blast)
+                moreover have "other_endpt (fst (walk (i+l))) (next_arc (fst (walk (i+l))) (snd (walk (i+l)))) \<noteq> fst (walk (i+l))"
+                  using hother_endpt[rule_format, OF hil_arc hil_ep] by (by100 blast)
+                ultimately show ?thesis by simp
+              qed
+              hence "{a, b} = {fst (walk (i+l)), fst (walk ?ml)}"
+                using \<open>fst (walk (i+l)) \<in> {a, b}\<close> \<open>fst (walk ?ml) \<in> {a, b}\<close> hab(1) by (by100 force)
+              thus ?thesis using hab(2) by (by100 blast)
+            qed
+            ultimately show ?thesis by (by100 blast)
+          qed
+          hence "fst (walk ?mk) = fst (walk (i+l)) \<or> fst (walk ?mk) = fst (walk ?ml)"
+            by (by100 blast)
+          thus False
+          proof
+            assume hmk_ml: "fst (walk ?mk) = fst (walk ?ml)"
+            \<comment> \<open>Both ?mk, ?ml \\<in> {Suc i, ..., j}. Need case split for boundary j.\<close>
+            have "?mk \<le> j" using hk by linarith
+            have "?ml \<le> j" using hl by linarith
+            \<comment> \<open>If both < j: hv\\_distinct gives ?mk = ?ml, hence k = l. Contradiction.\<close>
+            \<comment> \<open>If ?mk = j: fst(walk j) = fst(walk i). Then fst(walk ?ml) = fst(walk i).
+               hmin gives j-i \\<le> ?ml - i = l+1 and j-i \\<le> j - ?ml = j-i-l-1. Second gives l+1+j-i-l-1 \\<le> j-i, trivially true.
+               But also ?ml < j (from hl: l < j-i, so ?ml = Suc i+l < Suc i + j-i = j+1, but could be = j).
+               If ?ml = j too: k = l = j-i-1, contradicting k \\<noteq> l... unless both = j-i-1.
+               Since k \\<noteq> l and both \\<le> j-i-1: at most one = j-i-1.\<close>
+            \<comment> \<open>Actually: if ?mk = j and ?ml < j: fst(walk(j)) = fst(walk(i)) and fst(walk ?ml) = fst(walk(j)) = fst(walk(i)).
+               Then hmin: j-i \\<le> ?ml - i = l+1. But l < j-i. So l+1 \\<le> j-i \\<le> l+1, giving j-i = l+1.
+               Also ?mk = j means k = j-i-1 = l. So k = l. Contradiction with k \\<noteq> l.\<close>
+            have "?mk = ?ml"
+            proof (cases "?mk < j")
+              case True
+              show ?thesis
+              proof (cases "?ml < j")
+                case True
+                from hv_distinct[rule_format, of ?mk ?ml]
+                show ?thesis using hmk_ml \<open>?mk < j\<close> True by (by100 force)
+              next
+                case False
+                hence "?ml = j" using \<open>?ml \<le> j\<close> by linarith
+                hence "fst (walk ?ml) = fst (walk i)" using hij(3) by simp
+                hence "fst (walk ?mk) = fst (walk i)" using hmk_ml by simp
+                \<comment> \<open>?mk \\<in> {Suc i, ..., j-1}. fst(walk ?mk) = fst(walk i). hmin: j-i \\<le> ?mk - i.\<close>
+                have "fst (walk i) = fst (walk ?mk)" using \<open>fst (walk ?mk) = fst (walk i)\<close> by simp
+                have "i < ?mk \<and> ?mk \<le> card ?V \<and> fst (walk i) = fst (walk ?mk)"
+                  using \<open>?mk < j\<close> hij(2) \<open>fst (walk i) = fst (walk ?mk)\<close> by linarith
+                hence "j - i \<le> ?mk - i" using hmin[rule_format] by (by100 blast)
+                hence "j \<le> ?mk" by linarith
+                thus ?thesis using \<open>?mk < j\<close> by linarith
+              qed
+            next
+              case False
+              hence "?mk = j" using \<open>?mk \<le> j\<close> by linarith
+              show ?thesis
+              proof (cases "?ml < j")
+                case True
+                have "fst (walk ?mk) = fst (walk i)" using \<open>?mk = j\<close> hij(3) by simp
+                hence "fst (walk ?ml) = fst (walk i)" using hmk_ml by simp
+                have "fst (walk i) = fst (walk ?ml)" using \<open>fst (walk ?ml) = fst (walk i)\<close> by simp
+                have "i < ?ml \<and> ?ml \<le> card ?V \<and> fst (walk i) = fst (walk ?ml)"
+                  using True hij(2) \<open>fst (walk i) = fst (walk ?ml)\<close> by linarith
+                hence "j - i \<le> ?ml - i" using hmin[rule_format] by (by100 blast)
+                hence "j \<le> ?ml" by linarith
+                thus ?thesis using True by linarith
+              next
+                case False
+                hence "?ml = j" using \<open>?ml \<le> j\<close> by linarith
+                thus ?thesis using \<open>?mk = j\<close> by linarith
+              qed
+            qed
+            hence "k = l" by linarith
+            thus False using hkl(3) by (by100 blast)
+          next
+            assume heq: "fst (walk ?mk) = fst (walk (i + l))"
+            \<comment> \<open>Case 2 of doubleton equality: cross-matching.
+               fst(walk(Suc i+k)) = fst(walk(i+l)) and fst(walk(i+k)) = fst(walk(Suc i+l)).
+               Analysis with hv\\_distinct + hmin + boundary cases gives contradiction.\<close>
+            show False sorry \<comment> \<open>Doubleton Case 2: cross-matching vertices \\<Rightarrow> k=l via hv\\_distinct+hmin.\<close>
+          qed
         qed
       qed
     qed
