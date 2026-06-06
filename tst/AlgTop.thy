@@ -5875,7 +5875,56 @@ proof (rule ccontr)
     \<comment> \<open>Apply hacyclic.\<close>
     \<comment> \<open>Strengthen hws\\_adj from \\<noteq> {} to card = 1 using vertex distinctness (hv\\_distinct).\<close>
     have hws_adj_card: "\<forall>idx < length ?ws. card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
-      sorry \<comment> \<open>From hws\\_adj (\\<noteq> {}) + intersection conditions (card \\<le> 2) + hv\\_distinct (card \\<noteq> 2).\<close>
+    proof (intro allI impI)
+      fix idx assume hidx: "idx < length ?ws"
+      have hidx': "idx < j - i" using hidx hws_len by linarith
+      \<comment> \<open>Get arc membership and intersection properties.\<close>
+      have hwsA: "?ws ! idx \<in> \<A>"
+        using nth_mem[OF hidx] hws_sub by (by100 blast)
+      have hlen_pos: "length ?ws > 0" using hws_len2 by linarith
+      have hmod_lt: "(idx + 1) mod length ?ws < length ?ws" using hlen_pos by simp
+      have hwsB: "?ws ! ((idx + 1) mod length ?ws) \<in> \<A>"
+        using nth_mem[OF hmod_lt] hws_sub by (by100 blast)
+      have hwsAB_ne: "?ws ! idx \<noteq> ?ws ! ((idx + 1) mod length ?ws)"
+      proof -
+        have "idx \<noteq> (idx + 1) mod length ?ws"
+        proof (cases "idx + 1 < length ?ws")
+          case True thus ?thesis by simp
+        next
+          case False
+          hence "idx + 1 = length ?ws" using hidx by linarith
+          hence "(idx + 1) mod length ?ws = 0" using hws_len2 by simp
+          moreover have "idx > 0" using \<open>idx + 1 = length ?ws\<close> hws_len2 by linarith
+          ultimately show ?thesis by linarith
+        qed
+        thus ?thesis using nth_eq_iff_index_eq[OF hws_dist hidx hmod_lt] by (by100 blast)
+      qed
+      from assms(4)[rule_format, OF hwsA hwsB hwsAB_ne]
+      have hinter_props: "finite (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws))
+          \<and> card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<le> 2" by (by100 blast)
+      \<comment> \<open>card \\<ge> 1 from hws\\_adj.\<close>
+      have hge1: "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<ge> 1"
+      proof -
+        from hws_adj[rule_format, OF hidx]
+        have hne: "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<noteq> {}" .
+        have hfin: "finite (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws))"
+          using hinter_props by (by100 blast)
+        have "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<noteq> 0"
+        proof
+          assume "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 0"
+          hence "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) = {}" using hfin by simp
+          thus False using hne by simp
+        qed
+        thus ?thesis by linarith
+      qed
+      \<comment> \<open>card \\<noteq> 2: if card = 2, arcs share both endpoints, contradicting hv\\_distinct.\<close>
+      have hne2: "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<noteq> 2"
+        sorry \<comment> \<open>From hv\\_distinct: walk vertices at consecutive positions are distinct.
+           If card = 2: both arcs share 2 endpoints \\<Rightarrow> walk\\_v(i+idx) = walk\\_v(i+idx+2).
+           But hv\\_distinct says these are different. Contradiction.\<close>
+      show "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
+        using hge1 hinter_props hne2 by linarith
+    qed
     show False using hacyclic hws_len2 hws_dist hws_sub hws_adj_card by (by100 blast)
   qed
 qed
