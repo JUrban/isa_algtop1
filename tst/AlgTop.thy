@@ -4931,8 +4931,23 @@ next
 
      This induction requires graph\\_cycle\\_retract to be reformulated with the
      induction built in. Currently sorry'd pending this reformulation.\<close>
-  show ?case sorry \<comment> \<open>Retraction by induction on card(\\<A> \\ set ws).
-     See strategy above. Now less.IH is available for new cycles with fewer NC arcs.\<close>
+  \<comment> \<open>Step case: define r arc-by-arc using coherent topology.
+     For cycle arcs: r = id. For non-cycle arcs: r = constant to unique attachment vertex.
+     Unique attachment follows from IH: double attachment \\<Rightarrow> new cycle \\<Rightarrow> IH \\<Rightarrow> False.\<close>
+  let ?C = "\<Union>(set ws)"
+  have htop: "is_topology_on T TT"
+    using less.prems(7) unfolding top1_is_tree_on_def top1_is_graph_on_def is_topology_on_strict_def
+    by (by100 blast)
+  have hC_sub: "?C \<subseteq> T" using less.prems(9) .
+  \<comment> \<open>Each non-cycle arc has at least one endpoint on C (via graph connectivity).\<close>
+  \<comment> \<open>And each non-cycle arc has at MOST one endpoint on C (unique attachment).\<close>
+  \<comment> \<open>For each non-cycle arc A: pick the unique cycle vertex target(A).\<close>
+  \<comment> \<open>Define r globally: x \\<in> C \\<Rightarrow> r(x) = x. x \\<in> A\\<setminus>C (non-cycle) \\<Rightarrow> r(x) = target(A).\<close>
+  \<comment> \<open>Coherent topology: r continuous iff r|A continuous for each A.
+     Cycle: r|A = id, continuous. Non-cycle: r|A = constant, continuous.
+     Consistency at shared vertices: follows from unique attachment.\<close>
+  show ?case sorry \<comment> \<open>Needs: (1) unique attachment per non-cycle arc, (2) target definition,
+     (3) coherent-topology continuity proof. Each ~30 lines.\<close>
   qed
 qed
 
