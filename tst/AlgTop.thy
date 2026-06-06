@@ -4831,7 +4831,40 @@ proof -
             assume "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)"
             hence "(j+?k-1) mod ?k = (m+?k-1) mod ?k"
               using hshared_v_distinct hj_prev hm_prev by (by100 force)
-            hence "j = m" sorry \<comment> \<open>mod cancellation\<close>
+            hence "j = m"
+            proof (cases "j = 0")
+              case True note j0 = this
+              show ?thesis
+              proof (cases "m = 0")
+                case True thus ?thesis using j0 by simp
+              next
+                case False
+                have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
+                have "(m + ?k - 1) mod ?k = m - 1" using False hm by simp
+                hence "?k - 1 = m - 1" using j0 \<open>(j+?k-1) mod ?k = (m+?k-1) mod ?k\<close>
+                  \<open>(0 + ?k - 1) mod ?k = ?k - 1\<close> by simp
+                thus ?thesis using j0 hm by linarith
+              qed
+            next
+              case False
+              have "(j + ?k - 1) mod ?k = j - 1" using False hj by simp
+              show ?thesis
+              proof (cases "m = 0")
+                case True
+                have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
+                hence "j - 1 = ?k - 1"
+                  using \<open>(j+?k-1) mod ?k = j - 1\<close> \<open>(j+?k-1) mod ?k = (m+?k-1) mod ?k\<close>
+                  True \<open>(0 + ?k - 1) mod ?k = ?k - 1\<close> by simp
+                thus ?thesis using True hj by linarith
+              next
+                case False
+                have "(m + ?k - 1) mod ?k = m - 1" using False hm by simp
+                hence "j - 1 = m - 1"
+                  using \<open>(j+?k-1) mod ?k = j - 1\<close> \<open>(j+?k-1) mod ?k = (m+?k-1) mod ?k\<close>
+                  \<open>(m + ?k - 1) mod ?k = m - 1\<close> by simp
+                thus ?thesis by linarith
+              qed
+            qed
             thus False using hne by simp
           next
             assume "shared_v ((j+?k-1) mod ?k) = shared_v m"
@@ -4841,7 +4874,18 @@ proof -
             assume "shared_v j = shared_v ((m+?k-1) mod ?k)"
             hence "j = (m+?k-1) mod ?k" using hshared_v_distinct hj hm_prev by (by100 force)
             \<comment> \<open>j = (m-1) mod k \\<Rightarrow> (j+1) mod k = m. But hnext says (j+1) mod k \\<noteq> m.\<close>
-            hence "(j + 1) mod ?k = m" sorry \<comment> \<open>mod arithmetic: j = (m-1) mod k \\<Rightarrow> j+1 = m mod k\<close>
+            hence "(j + 1) mod ?k = m"
+            proof (cases "m = 0")
+              case True hence "(m + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
+              hence "j = ?k - 1" using \<open>j = (m+?k-1) mod ?k\<close> by simp
+              hence "j + 1 = ?k" by linarith
+              thus ?thesis using True by simp
+            next
+              case False hence "(m + ?k - 1) mod ?k = m - 1" using hm by simp
+              hence "j = m - 1" using \<open>j = (m+?k-1) mod ?k\<close> by simp
+              hence "j + 1 = m" using False by linarith
+              thus ?thesis using hm by simp
+            qed
             thus False using hnext by simp
           next
             assume "shared_v j = shared_v m"
