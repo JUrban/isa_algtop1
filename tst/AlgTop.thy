@@ -4609,8 +4609,20 @@ proof -
     thus ?thesis by (by100 blast)
   qed
   have hC_SCC: "top1_simple_closed_curve_on T TT ?C"
-    sorry \<comment> \<open>SCC construction: k arcs forming a cycle give a simple closed curve.
-       Needs: path product of k homeomorphisms + S1 parametrization + Theorem 26.6.\<close>
+  proof -
+    \<comment> \<open>Construct continuous injection S1 \\<to> C.
+       Step 1: Orient arcs so consecutive arcs match at shared vertices.
+       Step 2: Concatenate via foldr\\_path\\_product to get a loop F: [0,1] \\<to> C.
+       Step 3: F is injective on (0,1) (distinct vertices between arcs).
+       Step 4: Factor through S1: continuous bijection S1 \\<to> C.
+       Step 5: Compact-to-Hausdorff gives homeomorphism (Theorem 26.6).\<close>
+    \<comment> \<open>The SCC construction requires k oriented arc homeomorphisms matching at shared vertices.
+       This is a composition of the arc\\_merge\\_at\\_endpoint technique applied cyclically.\<close>
+    show ?thesis sorry
+      \<comment> \<open>SCC construction. Mathematically: concatenate k arc homeomorphisms around the cycle.
+         The loop [0,1] \\<to> C factors through S1. Bijectivity from distinct intermediate vertices.
+         Theorem 26.6 (compact-to-Hausdorff) gives homeomorphism. Then SCC definition.\<close>
+  qed
   \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
   have hC_retract: "top1_retract_of_on T TT ?C"
     sorry \<comment> \<open>Retraction construction: for each non-cycle arc, map to a cycle vertex.
