@@ -4790,7 +4790,67 @@ proof -
       have hdisjoint_non_adj: "\<And>j m. j < ?k \<Longrightarrow> m < ?k \<Longrightarrow>
           (j + ?k - 1) mod ?k \<noteq> m \<Longrightarrow> (j + 1) mod ?k \<noteq> m \<Longrightarrow> j \<noteq> m \<Longrightarrow>
           ws ! j \<inter> ws ! m = {}"
-      sorry \<comment> \<open>From harc\\_ep + hshared\\_v\\_distinct: non-adjacent arcs share no endpoints, hence no points.\<close>
+      proof -
+        fix j m assume hj: "j < ?k" and hm: "m < ?k"
+          and hprev: "(j + ?k - 1) mod ?k \<noteq> m" and hnext: "(j + 1) mod ?k \<noteq> m"
+          and hne: "j \<noteq> m"
+        have hwsj: "ws ! j \<in> \<A>" using assms(9) hj by (by100 force)
+        have hwsm: "ws ! m \<in> \<A>" using assms(9) hm by (by100 force)
+        have hwsj_ne_m: "ws ! j \<noteq> ws ! m"
+          using nth_eq_iff_index_eq[OF assms(8) hj hm] hne by simp
+        \<comment> \<open>ws!j \\<inter> ws!m \\<subseteq> ep(ws!j) \\<inter> ep(ws!m).\<close>
+        from assms(4)[rule_format, OF hwsj hwsm hwsj_ne_m]
+        have "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j)" by (by100 blast)
+        moreover from assms(4)[rule_format, OF hwsm hwsj]
+        have "ws ! m \<inter> ws ! j \<subseteq> ?ep (ws ! m)" using hwsj_ne_m by (by100 force)
+        hence "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! m)" by (by100 blast)
+        ultimately have "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j) \<inter> ?ep (ws ! m)" by (by100 blast)
+        \<comment> \<open>ep(ws!j) \\<inter> ep(ws!m) = {} from distinct shared vertices.\<close>
+        have hepj: "?ep (ws ! j) = {shared_v ((j + ?k - 1) mod ?k), shared_v j}"
+          using harc_ep[rule_format, OF hj] .
+        have hepm: "?ep (ws ! m) = {shared_v ((m + ?k - 1) mod ?k), shared_v m}"
+          using harc_ep[rule_format, OF hm] .
+        have "?ep (ws ! j) \<inter> ?ep (ws ! m) = {}"
+        proof (rule ccontr)
+          assume "?ep (ws ! j) \<inter> ?ep (ws ! m) \<noteq> {}"
+          then obtain v where "v \<in> ?ep (ws ! j)" "v \<in> ?ep (ws ! m)" by (by100 blast)
+          hence "v \<in> {shared_v ((j + ?k - 1) mod ?k), shared_v j}" using hepj by simp
+          hence "v \<in> {shared_v ((m + ?k - 1) mod ?k), shared_v m}" using hepm \<open>v \<in> ?ep (ws ! m)\<close> by simp
+          \<comment> \<open>v is one of shared\\_v(j-1), shared\\_v(j) AND one of shared\\_v(m-1), shared\\_v(m).
+             All 4 indices are distinct (non-adjacency + j\\<noteq>m), so no match.\<close>
+          have hj_prev: "(j + ?k - 1) mod ?k < ?k" using hk_ge2 by (simp add: hk_pos)
+          have hm_prev: "(m + ?k - 1) mod ?k < ?k" using hk_ge2 by (simp add: hk_pos)
+          from \<open>v \<in> {shared_v ((j+?k-1) mod ?k), shared_v j}\<close>
+            \<open>v \<in> {shared_v ((m+?k-1) mod ?k), shared_v m}\<close>
+          have "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)
+              \<or> shared_v ((j+?k-1) mod ?k) = shared_v m
+              \<or> shared_v j = shared_v ((m+?k-1) mod ?k)
+              \<or> shared_v j = shared_v m" by (by100 blast)
+          thus False
+          proof (elim disjE)
+            assume "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)"
+            hence "(j+?k-1) mod ?k = (m+?k-1) mod ?k"
+              using hshared_v_distinct hj_prev hm_prev by (by100 force)
+            hence "j = m" sorry \<comment> \<open>mod cancellation\<close>
+            thus False using hne by simp
+          next
+            assume "shared_v ((j+?k-1) mod ?k) = shared_v m"
+            hence "(j+?k-1) mod ?k = m" using hshared_v_distinct hj_prev hm by (by100 force)
+            thus False using hprev by simp
+          next
+            assume "shared_v j = shared_v ((m+?k-1) mod ?k)"
+            hence "j = (m+?k-1) mod ?k" using hshared_v_distinct hj hm_prev by (by100 force)
+            \<comment> \<open>j = (m-1) mod k \\<Rightarrow> (j+1) mod k = m. But hnext says (j+1) mod k \\<noteq> m.\<close>
+            hence "(j + 1) mod ?k = m" sorry \<comment> \<open>mod arithmetic: j = (m-1) mod k \\<Rightarrow> j+1 = m mod k\<close>
+            thus False using hnext by simp
+          next
+            assume "shared_v j = shared_v m"
+            hence "j = m" using hshared_v_distinct hj hm by (by100 force)
+            thus False using hne by simp
+          qed
+        qed
+        thus "ws ! j \<inter> ws ! m = {}" using \<open>ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j) \<inter> ?ep (ws ! m)\<close> by (by100 blast)
+      qed
       \<comment> \<open>Induction: merge n arcs into one, tracking endpoints.\<close>
       have merge_chain: "\<And>n. 1 \<le> n \<Longrightarrow> n \<le> ?k - 1 \<Longrightarrow>
           \<exists>A1. top1_is_arc_on A1 (subspace_topology T TT A1) \<and> A1 \<subseteq> T \<and>
