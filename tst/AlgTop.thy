@@ -5384,11 +5384,10 @@ proof -
               using hshared_v_distinct[rule_format, OF \<open>n'-1 < ?k\<close> hn'_lt] \<open>n' \<ge> 1\<close> by linarith
             \<comment> \<open>Apply arc\\_merge\\_at\\_endpoint: A1' and ws!n' share vertex shared\\_v(n'-1).\<close>
             have hsv_ne2: "shared_v n' \<noteq> shared_v (n' - 1)" using hsv_ne by (by100 simp)
-            from arc_merge_at_endpoint[OF hstrict hhaus hIH(1) hwsn'_arc hIH(2) hwsn'_sub
-                hinter hIH(4) hepn' hIH(5) hsv_ne2]
             have hmerge: "top1_is_arc_on (A1' \<union> ws!n') (subspace_topology T TT (A1' \<union> ws!n'))
                 \<and> ?ep (A1' \<union> ws!n') = {shared_v ((?k-1) mod ?k), shared_v n'}"
-              sorry
+              using arc_merge_at_endpoint[OF hstrict hhaus hIH(1) hwsn'_arc hIH(2) hwsn'_sub
+                hinter hIH(4) hepn' hIH(5) hsv_ne2] by (by100 blast)
             \<comment> \<open>Assembly: take (Suc n') ws = take n' ws @ [ws!n'].\<close>
             have "Suc n' \<le> length ws" using Suc.prems(2) hk_ge2 by linarith
             have "take (Suc n') ws = take n' ws @ [ws ! n']"
