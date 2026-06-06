@@ -4649,7 +4649,18 @@ proof -
     hence hsv_prev_in: "shared_v ((i + ?k - 1) mod ?k) \<in> ?ep (ws ! i)"
     proof -
       have "ws ! ((i + ?k - 1) mod ?k) \<in> \<A>" using assms(9) hprev by (by100 force)
-      have "(i + ?k - 1) mod ?k \<noteq> i" using hk_ge2 hi sorry
+      have "(i + ?k - 1) mod ?k \<noteq> i"
+      proof (cases "i = 0")
+        case True hence "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
+        thus ?thesis using True hk_ge2 by linarith
+      next
+        case False
+        have "i + ?k - 1 = (i - 1) + ?k" using False by linarith
+        hence "(i + ?k - 1) mod ?k = (i - 1) mod ?k" by simp
+        have "i - 1 < ?k" using hi by linarith
+        hence "(i - 1) mod ?k = i - 1" by simp
+        thus ?thesis using False \<open>(i + ?k - 1) mod ?k = (i - 1) mod ?k\<close> by linarith
+      qed
       have "ws ! ((i + ?k - 1) mod ?k) \<noteq> ws ! i"
         using nth_eq_iff_index_eq[OF assms(8) hprev hi] \<open>(i + ?k - 1) mod ?k \<noteq> i\<close> by simp
       from assms(4)[rule_format, OF \<open>ws ! ((i+?k-1) mod ?k) \<in> \<A>\<close> hwsi this]
