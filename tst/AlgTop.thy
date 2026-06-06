@@ -4634,7 +4634,17 @@ proof -
       using assms(2) hA2_in by (by100 blast)
     have hA2_sub: "?A2 \<subseteq> T" using assms(2) hA2_in by (by100 blast)
     have hA1A2_union: "A1 \<union> ?A2 = ?C"
-      using hA1_union assms(7) sorry \<comment> \<open>butlast ws \\<union> {last ws} = set ws\<close>
+    proof -
+      have "ws \<noteq> []" using assms(7) by (by100 force)
+      hence "set ws = set (butlast ws) \<union> {last ws}"
+      proof -
+        have "ws = butlast ws @ [last ws]" using \<open>ws \<noteq> []\<close> by simp
+        hence "set ws = set (butlast ws @ [last ws])" by simp
+        thus ?thesis by simp
+      qed
+      hence "\<Union>(set ws) = \<Union>(set (butlast ws)) \<union> last ws" by (by100 force)
+      thus ?thesis using hA1_union by simp
+    qed
     have hA1A2_inter: "A1 \<inter> ?A2 = {a_start, a_end}"
       sorry \<comment> \<open>From cycle structure: first and last arcs share the cycle's start/end vertices.\<close>
     \<comment> \<open>Step 3: Construct f: S1 \\<to> C using x-coordinate.
