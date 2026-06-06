@@ -5056,6 +5056,138 @@ proof -
         \<open>card {shared_v ((i+?k-1) mod ?k), shared_v i} = card (?ep (ws!i))\<close>]
     show "?ep (ws ! i) = {shared_v ((i + ?k - 1) mod ?k), shared_v i}" by simp
   qed
+      \<comment> \<open>Non-adjacent arcs in the cycle have disjoint endpoints.\<close>
+      have hdisjoint_non_adj: "\<And>j m. j < ?k \<Longrightarrow> m < ?k \<Longrightarrow>
+          (j + ?k - 1) mod ?k \<noteq> m \<Longrightarrow> (j + 1) mod ?k \<noteq> m \<Longrightarrow> j \<noteq> m \<Longrightarrow>
+          ws ! j \<inter> ws ! m = {}"
+      proof -
+        fix j m assume hj: "j < ?k" and hm: "m < ?k"
+          and hprev_ne: "(j + ?k - 1) mod ?k \<noteq> m" and hnext_ne: "(j + 1) mod ?k \<noteq> m"
+          and hjm_ne: "j \<noteq> m"
+        have hwsj: "ws ! j \<in> \<A>" using assms(9) hj by (by100 force)
+        have hwsm: "ws ! m \<in> \<A>" using assms(9) hm by (by100 force)
+        have "ws ! j \<noteq> ws ! m" using nth_eq_iff_index_eq[OF assms(8) hj hm] hjm_ne by (by100 simp)
+        from assms(4)[rule_format, OF hwsj hwsm this]
+        have hsub_j: "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j)" by (by100 blast)
+        from assms(4)[rule_format, OF hwsm hwsj] \<open>ws ! j \<noteq> ws ! m\<close>
+        have "ws ! m \<inter> ws ! j \<subseteq> ?ep (ws ! m)" by (by100 force)
+        hence hsub_m: "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! m)" by (by100 blast)
+        have hsub_both: "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j) \<inter> ?ep (ws ! m)"
+          using hsub_j hsub_m by (by100 blast)
+        \<comment> \<open>ep(ws!j) and ep(ws!m) are disjoint: their elements are distinct shared vertices.\<close>
+        have hepj: "?ep (ws ! j) = {shared_v ((j + ?k - 1) mod ?k), shared_v j}"
+          using harc_ep[rule_format, OF hj] .
+        have hepm: "?ep (ws ! m) = {shared_v ((m + ?k - 1) mod ?k), shared_v m}"
+          using harc_ep[rule_format, OF hm] .
+        have "?ep (ws ! j) \<inter> ?ep (ws ! m) = {}"
+        proof (rule ccontr)
+          assume "\<not> ?thesis"
+          then obtain v where hv1: "v \<in> ?ep (ws ! j)" and hv2: "v \<in> ?ep (ws ! m)" by (by100 blast)
+          have hkp: "?k > 0" using hk_ge2 by linarith
+          have hjp: "(j + ?k - 1) mod ?k < ?k" using hkp by (by100 simp)
+          have hmp: "(m + ?k - 1) mod ?k < ?k" using hkp by (by100 simp)
+          \<comment> \<open>shared\\_v injective.\<close>
+          have sv_inj: "\<And>x y. x < ?k \<Longrightarrow> y < ?k \<Longrightarrow> shared_v x = shared_v y \<Longrightarrow> x = y"
+          proof (rule ccontr)
+            fix x y assume "x < ?k" "y < ?k" "shared_v x = shared_v y" "x \<noteq> y"
+            from hshared_v_distinct[rule_format, OF \<open>x < ?k\<close> \<open>y < ?k\<close> \<open>x \<noteq> y\<close>]
+            show False using \<open>shared_v x = shared_v y\<close> by (by100 simp)
+          qed
+          \<comment> \<open>v is in both 2-element ep sets. Case analysis on which element it matches.\<close>
+          from hv1[unfolded hepj] hv2[unfolded hepm]
+          consider
+            (c1) "v = shared_v ((j+?k-1) mod ?k)" "v = shared_v ((m+?k-1) mod ?k)"
+          | (c2) "v = shared_v ((j+?k-1) mod ?k)" "v = shared_v m"
+          | (c3) "v = shared_v j" "v = shared_v ((m+?k-1) mod ?k)"
+          | (c4) "v = shared_v j" "v = shared_v m"
+            by (by100 blast)
+          then show False
+          proof cases
+            case c1
+            hence "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)" by (by100 simp)
+            hence heq_mod: "(j+?k-1) mod ?k = (m+?k-1) mod ?k" using sv_inj[OF hjp hmp] by (by100 simp)
+            hence "j = m"
+            proof (cases "j = 0")
+              case True show ?thesis
+              proof (cases "m = 0")
+                case True thus ?thesis using \<open>j = 0\<close> by (by100 simp)
+              next
+                case False
+                have "m + ?k - 1 = (m - 1) + ?k" using False by linarith
+                hence "(m + ?k - 1) mod ?k = (m - 1) mod ?k" by (by100 simp)
+                have "m - 1 < ?k" using hm by linarith
+                hence "(m - 1) mod ?k = m - 1" by (by100 simp)
+                have hm_mod: "(m + ?k - 1) mod ?k = m - 1"
+                  using \<open>(m + ?k - 1) mod ?k = (m - 1) mod ?k\<close> \<open>(m - 1) mod ?k = m - 1\<close> by (by100 simp)
+                have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+                hence "?k - 1 = m - 1" using True heq_mod hm_mod by (by100 simp)
+                thus ?thesis using True hm by linarith
+              qed
+            next
+              case False
+              have "j + ?k - 1 = (j - 1) + ?k" using False by linarith
+              hence "(j + ?k - 1) mod ?k = (j - 1) mod ?k" by (by100 simp)
+              have "j - 1 < ?k" using hj by linarith
+              hence "(j - 1) mod ?k = j - 1" by (by100 simp)
+              have hj_m: "(j + ?k - 1) mod ?k = j - 1"
+                using \<open>(j + ?k - 1) mod ?k = (j - 1) mod ?k\<close> \<open>(j - 1) mod ?k = j - 1\<close> by (by100 simp)
+              show ?thesis
+              proof (cases "m = 0")
+                case True
+                have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+                hence "j - 1 = ?k - 1" using hj_m True heq_mod by (by100 simp)
+                thus ?thesis using True hj by linarith
+              next
+                case False
+                have "m + ?k - 1 = (m - 1) + ?k" using False by linarith
+                hence "(m + ?k - 1) mod ?k = (m - 1) mod ?k" by (by100 simp)
+                have "m - 1 < ?k" using hm by linarith
+                hence "(m - 1) mod ?k = m - 1" by (by100 simp)
+                have "(m + ?k - 1) mod ?k = m - 1"
+                  using \<open>(m + ?k - 1) mod ?k = (m - 1) mod ?k\<close> \<open>(m - 1) mod ?k = m - 1\<close> by (by100 simp)
+                hence "j - 1 = m - 1" using hj_m heq_mod by (by100 simp)
+                thus ?thesis using \<open>j \<noteq> 0\<close> False by linarith
+              qed
+            qed
+            thus False using hjm_ne by (by100 simp)
+          next
+            case c2
+            have "shared_v ((j+?k-1) mod ?k) = shared_v m" using c2 by (by100 simp)
+            hence "(j+?k-1) mod ?k = m" using sv_inj[OF hjp hm] by (by100 simp)
+            thus False using hprev_ne by (by100 simp)
+          next
+            case c3
+            have "shared_v j = shared_v ((m+?k-1) mod ?k)" using c3 by (by100 simp)
+            hence "j = (m+?k-1) mod ?k" using sv_inj[OF hj hmp] by (by100 simp)
+            hence "(j+1) mod ?k = m"
+            proof (cases "m = 0")
+              case True
+              hence "(m + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+              hence "j = ?k - 1" using \<open>j = (m+?k-1) mod ?k\<close> by (by100 simp)
+              hence "j + 1 = ?k" using hk_ge2 by linarith
+              hence "(j + 1) mod ?k = 0" by (by100 simp)
+              thus ?thesis using True by (by100 simp)
+            next
+              case False
+              have "m + ?k - 1 = (m - 1) + ?k" using False by linarith
+              hence "(m + ?k - 1) mod ?k = (m - 1) mod ?k" by (by100 simp)
+              have "m - 1 < ?k" using hm by linarith
+              hence "(m - 1) mod ?k = m - 1" by (by100 simp)
+              hence "j = m - 1" using \<open>j = (m+?k-1) mod ?k\<close>
+                \<open>(m + ?k - 1) mod ?k = (m - 1) mod ?k\<close> by (by100 simp)
+              hence "j + 1 = m" using False by linarith
+              thus ?thesis using hm by (by100 simp)
+            qed
+            thus False using hnext_ne by (by100 simp)
+          next
+            case c4
+            have "shared_v j = shared_v m" using c4 by (by100 simp)
+            hence "j = m" using sv_inj[OF hj hm] by (by100 simp)
+            thus False using hjm_ne by (by100 simp)
+          qed
+        qed
+        thus "ws ! j \<inter> ws ! m = {}" using hsub_both by (by100 blast)
+      qed
   have hC_SCC: "top1_simple_closed_curve_on T TT ?C"
   proof -
     \<comment> \<open>Strategy: Merge all but the last cycle arc into a single arc A1 (via arc\\_merge\\_at\\_endpoint).
