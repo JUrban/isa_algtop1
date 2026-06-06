@@ -5430,7 +5430,7 @@ proof -
           and hA1_sub2: "A1 \<subseteq> T"
           and hA1_union2: "A1 = \<Union>(set (take (?k - 1) ws))"
           and hA1_ep2: "?ep A1 = {shared_v ((?k - 1) mod ?k), shared_v (?k - 2)}"
-          and hA1_ne2: "shared_v ((?k - 1) mod ?k) \<noteq> shared_v (?k - 2)" sorry
+          and hA1_ne2: "shared_v ((?k - 1) mod ?k) \<noteq> shared_v (?k - 2)" by (by100 blast)
       have "take (?k - 1) ws = butlast ws" using hk_ge2 by (simp add: butlast_conv_take)
       hence "A1 = \<Union>(set (butlast ws))" using hA1_union2 by simp
       have "(?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
