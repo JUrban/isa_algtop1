@@ -5872,9 +5872,12 @@ proof (rule ccontr)
         qed
       qed
     qed
-    \<comment> \<open>Apply hacyclic.\<close>
-    \<comment> \<open>Strengthen hws\\_adj from \\<noteq> {} to card = 1 using vertex distinctness (hv\\_distinct).\<close>
-    have hws_adj_card: "\<forall>idx < length ?ws. card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
+    \<comment> \<open>Case split on j - i: for j-i \\<ge> 3 use hacyclic (card = 1); for j-i = 2 use sc\\_graph\\_no\\_cycle.\<close>
+    show False
+    proof (cases "j - i \<ge> 3")
+      case True
+      \<comment> \<open>j-i \\<ge> 3: all consecutive pairs have card = 1 (distinct vertices 2 apart). Apply hacyclic.\<close>
+      have hws_adj_card: "\<forall>idx < length ?ws. card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
     proof (intro allI impI)
       fix idx assume hidx: "idx < length ?ws"
       have hidx': "idx < j - i" using hidx hws_len by linarith
@@ -5938,7 +5941,22 @@ proof (rule ccontr)
       show "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
         using hge1 hinter_props hne2 by linarith
     qed
-    show False using hacyclic hws_len2 hws_dist hws_sub hws_adj_card by (by100 blast)
+      show False using hacyclic hws_len2 hws_dist hws_sub hws_adj_card by (by100 blast)
+    next
+      case False
+      hence "j - i = 2" using hji_ge2 by linarith
+      \<comment> \<open>j - i = 2: two arcs sharing 2 endpoints. Apply sc\\_graph\\_no\\_cycle for k=2 case.\<close>
+      \<comment> \<open>The two arcs ws!0 and ws!1 share both endpoints walk\\_v(i) and walk\\_v(i+1).
+         This means: they are 2 distinct arcs from walk\\_v(i) to walk\\_v(i+1).
+         Their union \\<cong> S1 \\<Rightarrow> retract of T \\<Rightarrow> scc\\_in\\_sc\\_false \\<Rightarrow> \\<bottom>.\<close>
+      \<comment> \<open>Two arcs sharing 2 endpoints in SC graph. Their union \\<cong> S1.
+         Need SCC construction for 2 arcs + retraction + scc\\_in\\_sc\\_false.
+         This is independent of sc\\_graph\\_no\\_cycle (which handles card = 1 cycles).
+         It's the "topological bridge for k = 2" case.\<close>
+      show False sorry
+        \<comment> \<open>Two arcs sharing 2 endpoints in SC graph \\<Rightarrow> False.
+           Proof: union \\<cong> S1 (SCC), retract of T, apply scc\\_in\\_sc\\_false.\<close>
+    qed
   qed
 qed
 
