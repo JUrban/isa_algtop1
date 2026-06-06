@@ -5423,9 +5423,143 @@ proof (rule ccontr)
             \<comment> \<open>Detailed position analysis with hv\\_distinct + hmin + hkl\\_ne\\_1:
                Interior case: Suc i+k = i+l \\<Rightarrow> k+1=l \\<Rightarrow> contradicts hkl\\_ne\\_1.
                Boundary cases: k=j-i-1, l=0, j=i+2, |k-l|=1 \\<Rightarrow> contradicts hkl\\_ne\\_1.\<close>
-            show False sorry
-              \<comment> \<open>Case 2 boundary arithmetic. All ingredients proved (hv\\_distinct, hmin, hkl\\_ne\\_1).
-                 Needs careful natural number case analysis on whether positions hit i or j.\<close>
+            \<comment> \<open>Case analysis on whether positions are in interior or boundary.\<close>
+            show False
+            proof (cases "l = 0")
+              case True \<comment> \<open>l = 0: heq gives fst(walk(Suc i+k)) = fst(walk(i)) = fst(walk(j)).\<close>
+              hence "fst (walk ?mk) = fst (walk i)" using heq by simp
+              \<comment> \<open>hmin gives j-i \\<le> ?mk - i = k+1. With k < j-i: k+1 = j-i, so ?mk = j.\<close>
+              have "i < ?mk" by linarith
+              have "?mk \<le> card ?V" using hk hij(2) by linarith
+              have "fst (walk i) = fst (walk ?mk)" using \<open>fst (walk ?mk) = fst (walk i)\<close> by simp
+              hence "j - i \<le> ?mk - i" using hmin[rule_format, of i ?mk] \<open>i < ?mk\<close> \<open>?mk \<le> card ?V\<close>
+                by (by100 blast)
+              hence "k + 1 \<ge> j - i" by linarith
+              hence "k = j - i - 1" using hk by linarith
+              \<comment> \<open>Now: same arc snd(walk j) = snd(walk(Suc i)). Both have fst(walk(j-1)) resp fst(walk(i))
+                 as one endpoint. fst(walk(j)) = fst(walk(i)). Same arc \\<Rightarrow> same ep set.
+                 The other endpoint: fst(walk(j-1)) = fst(walk(Suc i)) (from ep set equality).
+                 hv\\_distinct: j-1 = Suc i \\<Rightarrow> j = i+2, j-i = 2.
+                 Then k = 1, l = 0, l+1 = 1 = k. hkl\\_ne\\_1 gives \\<bottom>.\<close>
+              \<comment> \<open>Shortcut: with k = j-i-1 and l = 0, we have l+1 = 1 and k = j-i-1.
+                 If j-i = 2: l+1 = k. hkl\\_ne\\_1 gives False.
+                 If j-i > 2: k > 1 and l = 0. Not consecutive. But need another argument.
+                 Use: fst(walk(j)) = fst(walk(i)) and snd(walk(j)) = snd(walk(Suc i)).
+                 Arc snd(walk(Suc i)) has ep = {fst(walk(i)), fst(walk(Suc i))}.
+                 Arc snd(walk(j)) has ep = {fst(walk(j-1)), fst(walk(j))} = {fst(walk(j-1)), fst(walk(i))}.
+                 Same arc \\<Rightarrow> {fst(walk(i)), fst(walk(Suc i))} = {fst(walk(j-1)), fst(walk(i))}.
+                 So fst(walk(Suc i)) = fst(walk(j-1)).
+                 hv\\_distinct: both in {Suc i, ..., j-1}. Suc i and j-1. If Suc i \\<noteq> j-1: contradiction.
+                 If Suc i = j-1: j = i+2. Then k = 1, l+1 = 1 = k. hkl\\_ne\\_1.\<close>
+              have hj_eq: "j - i = 2"
+              proof -
+                \<comment> \<open>fst(walk(Suc i)) and fst(walk(j-1)) are both in {Suc i,...,j-1}.
+                   Same arc \\<Rightarrow> same ep. fst(walk j) = fst(walk i) is in both eps.
+                   The other elements must match: fst(walk(Suc i)) = fst(walk(j-1)).\<close>
+                have "?mk = j" using \<open>k = j - i - 1\<close> hij(1) by linarith
+                hence "snd (walk j) = snd (walk (Suc i))"
+                  using \<open>snd (walk ?mk) = snd (walk ?ml)\<close> True by simp
+                \<comment> \<open>Both fst(walk(Suc i)) and fst(walk(j-1)) are endpoints of this arc,
+                   and both differ from fst(walk(i)). With 2-element ep set: they must be equal.\<close>
+                have "fst (walk (Suc i)) \<in> ?ep2 (snd (walk (Suc i)))" using hwalk_props by (by100 blast)
+                have "fst (walk i) \<in> ?ep2 (snd (walk (Suc i)))"
+                proof -
+                  have "snd (walk (Suc i)) = next_arc (fst (walk i)) (snd (walk i))"
+                    using hwalk_suc_snd[of i] by simp
+                  moreover have "fst (walk i) \<in> ?ep2 (next_arc (fst (walk i)) (snd (walk i)))"
+                    using hnext_arc hwalk_props by (by100 blast)
+                  ultimately show ?thesis by simp
+                qed
+                have "fst (walk (j - 1)) \<in> ?ep2 (snd (walk j))"
+                proof -
+                  have "j = Suc (j - 1)" using hij(1) by linarith
+                  hence "snd (walk j) = next_arc (fst (walk (j-1))) (snd (walk (j-1)))"
+                    using hwalk_suc_snd[of "j-1"] by simp
+                  moreover have "fst (walk (j-1)) \<in> ?ep2 (next_arc (fst (walk (j-1))) (snd (walk (j-1))))"
+                    using hnext_arc hwalk_props by (by100 blast)
+                  ultimately show ?thesis by simp
+                qed
+                hence "fst (walk (j-1)) \<in> ?ep2 (snd (walk (Suc i)))"
+                  using \<open>snd (walk j) = snd (walk (Suc i))\<close> by simp
+                \<comment> \<open>ep(snd(walk(Suc i))) has 2 elements: fst(walk i) and fst(walk(Suc i)).
+                   fst(walk(j-1)) is in this set. And fst(walk(j-1)) \\<noteq> fst(walk i) unless j-1 = i (impossible).\<close>
+                have "Suc i \<le> j - 1" using hji_ge2 by linarith
+                have "j - 1 < j" using hij(1) by linarith
+                \<comment> \<open>If fst(walk(j-1)) = fst(walk i): from hmin, j-i \\<le> (j-1)-i = j-i-1. Impossible.\<close>
+                have "fst (walk (j-1)) \<noteq> fst (walk i)"
+                proof
+                  assume "fst (walk (j-1)) = fst (walk i)"
+                  have "fst (walk i) = fst (walk (j-1))" using \<open>fst (walk (j-1)) = fst (walk i)\<close> by simp
+                  have "i < j-1" using hji_ge2 by linarith
+                  have "j-1 \<le> card ?V" using hij(2) by linarith
+                  hence "j - i \<le> (j-1) - i" using hmin[rule_format, of i "j-1"]
+                      \<open>i < j-1\<close> \<open>j-1 \<le> card ?V\<close> \<open>fst (walk i) = fst (walk (j-1))\<close> by (by100 blast)
+                  thus False using hji_ge2 by linarith
+                qed
+                \<comment> \<open>So fst(walk(j-1)) = fst(walk(Suc i)) (the only other element of the 2-element ep set).\<close>
+                \<comment> \<open>From hv\\_distinct: j-1 = Suc i, giving j = i + 2.\<close>
+                have "fst (walk (j-1)) = fst (walk (Suc i))"
+                proof -
+                  have "snd (walk (Suc i)) \<in> \<A>" using hwalk_props by (by100 blast)
+                  from h2ep[rule_format, OF this]
+                  obtain a b where hab: "a \<noteq> b" "?ep2 (snd (walk (Suc i))) = {a, b}" by (by100 blast)
+                  have "fst (walk i) \<in> {a, b}" using \<open>fst (walk i) \<in> ?ep2 (snd (walk (Suc i)))\<close> hab(2) by simp
+                  have "fst (walk (Suc i)) \<in> {a, b}" using \<open>fst (walk (Suc i)) \<in> ?ep2 (snd (walk (Suc i)))\<close> hab(2) by simp
+                  have "fst (walk (j-1)) \<in> {a, b}" using \<open>fst (walk (j-1)) \<in> ?ep2 (snd (walk (Suc i)))\<close> hab(2) by simp
+                  have "fst (walk (Suc i)) \<noteq> fst (walk i)"
+                  proof -
+                    let ?ei = "next_arc (fst (walk i)) (snd (walk i))"
+                    have "fst (walk (Suc i)) = other_endpt (fst (walk i)) ?ei"
+                      using hwalk_suc_fst by simp
+                    moreover have "?ei \<in> \<A>" using hnext_arc hwalk_props by (by100 blast)
+                    moreover have "fst (walk i) \<in> ?ep2 ?ei" using hnext_arc hwalk_props by (by100 blast)
+                    moreover have "other_endpt (fst (walk i)) ?ei \<noteq> fst (walk i)"
+                      using hother_endpt calculation(2) calculation(3) by (by100 blast)
+                    ultimately show ?thesis by simp
+                  qed
+                  \<comment> \<open>2-element set {a,b}: fst(walk i) and fst(walk(Suc i)) are the two elements.
+                     fst(walk(j-1)) is also in {a,b} and \\<noteq> fst(walk i). So = fst(walk(Suc i)).\<close>
+                  show ?thesis using \<open>fst (walk (j-1)) \<in> {a,b}\<close> \<open>fst (walk i) \<in> {a,b}\<close>
+                      \<open>fst (walk (Suc i)) \<in> {a,b}\<close> \<open>fst (walk (j-1)) \<noteq> fst (walk i)\<close>
+                      \<open>fst (walk (Suc i)) \<noteq> fst (walk i)\<close> hab(1) by (by100 force)
+                qed
+                from hv_distinct[rule_format, of "j-1" "Suc i"]
+                have "j - 1 \<noteq> Suc i \<longrightarrow> fst (walk (j-1)) \<noteq> fst (walk (Suc i))"
+                  using \<open>Suc i \<le> j - 1\<close> \<open>j - 1 < j\<close> by (by100 force)
+                hence "j - 1 = Suc i" using \<open>fst (walk (j-1)) = fst (walk (Suc i))\<close> by (by100 blast)
+                thus "j - i = 2" by linarith
+              qed
+              hence "k = 1" using \<open>k = j - i - 1\<close> by linarith
+              hence "l + 1 = k" using True by linarith
+              thus False using hkl_ne_1 by (by100 blast)
+            next
+              case False \<comment> \<open>l \\<ge> 1.\<close>
+              hence hl1: "l \<ge> 1" by linarith
+              show False
+              proof (cases "Suc i + k < j")
+                case True \<comment> \<open>?mk < j and i+l \\<ge> Suc i: both in hv\\_distinct range.\<close>
+                have "Suc i \<le> i + l" using hl1 by linarith
+                have "i + l < j" using hl by linarith
+                from hv_distinct[rule_format, of ?mk "i+l"]
+                have "?mk \<noteq> i+l \<longrightarrow> fst (walk ?mk) \<noteq> fst (walk (i+l))"
+                  using True \<open>Suc i \<le> i+l\<close> \<open>i+l < j\<close> by (by100 force)
+                hence "?mk = i + l" using heq by (by100 blast)
+                hence "k + 1 = l" by linarith
+                thus False using hkl_ne_1 by (by100 blast)
+              next
+                case False \<comment> \<open>?mk = j: fst(walk(j)) = fst(walk(i+l)).\<close>
+                hence "?mk = j" using hk by linarith
+                hence "fst (walk j) = fst (walk (i+l))" using heq by simp
+                hence "fst (walk i) = fst (walk (i+l))" using hij(3) by simp
+                \<comment> \<open>hmin: j-i \\<le> (i+l) - i = l. But l < j-i. Contradiction.\<close>
+                have "i < i + l" using hl1 by linarith
+                have "i + l \<le> card ?V" using hl hij(2) by linarith
+                hence "j - i \<le> (i+l) - i" using hmin[rule_format, of i "i+l"]
+                    \<open>i < i+l\<close> \<open>i+l \<le> card ?V\<close> \<open>fst (walk i) = fst (walk (i+l))\<close> by (by100 blast)
+                hence "j - i \<le> l" by linarith
+                thus False using hl by linarith
+              qed
+            qed
           qed
         qed
       qed
