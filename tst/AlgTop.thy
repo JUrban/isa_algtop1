@@ -7599,29 +7599,34 @@ proof (rule ccontr)
             by (by100 blast)
           hence "?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
             using \<open>?arcB \<subseteq> ?arcA\<close> by (by100 blast)
-          \<comment> \<open>arcB has \\<ge> 3 points (arc \\<cong> [0,1]). But arcB \\<subseteq> ep(arcA) which has \\<le> 2 points.\<close>
-          thus False sorry \<comment> \<open>|arc| > 2 but |ep| \\<le> 2.\<close>
+          \<comment> \<open>arcB has \\<ge> 3 points (h injective on [0,1]). ep has \\<le> 2. Contradiction.\<close>
+          obtain hB where hhB: "top1_homeomorphism_on I_set I_top ?arcB (subspace_topology T TT ?arcB) hB"
+            using assms(2) harcB_in unfolding top1_is_arc_on_def by (by100 blast)
+          have "inj_on hB I_set" using hhB unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have "hB 0 \<in> ?arcB" "hB (1/2) \<in> ?arcB" "hB 1 \<in> ?arcB"
+            using hhB unfolding top1_homeomorphism_on_def bij_betw_def top1_unit_interval_def
+            by (by100 force)+
+          have "hB 0 \<noteq> hB (1/2)" using inj_onD[OF \<open>inj_on hB I_set\<close>]
+            unfolding top1_unit_interval_def by (by100 auto)
+          have "hB 0 \<noteq> hB 1" using inj_onD[OF \<open>inj_on hB I_set\<close>]
+            unfolding top1_unit_interval_def by (by100 auto)
+          have "hB (1/2) \<noteq> hB 1" using inj_onD[OF \<open>inj_on hB I_set\<close>]
+            unfolding top1_unit_interval_def by (by100 auto)
+          have "card {hB 0, hB (1/2), hB 1} = 3"
+            using \<open>hB 0 \<noteq> hB (1/2)\<close> \<open>hB 0 \<noteq> hB 1\<close> \<open>hB (1/2) \<noteq> hB 1\<close> by (by100 simp)
+          have "{hB 0, hB (1/2), hB 1} \<subseteq> ?arcB"
+            using \<open>hB 0 \<in> ?arcB\<close> \<open>hB (1/2) \<in> ?arcB\<close> \<open>hB 1 \<in> ?arcB\<close> by (by100 blast)
+          hence "card ?arcB \<ge> 3" sorry \<comment> \<open>3-element subset \\<Rightarrow> card \\<ge> 3.\<close>
+          have "card (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)) \<le> 2"
+            sorry \<comment> \<open>Endpoints have \\<le> 2 elements.\<close>
+          have "card ?arcB \<le> 2"
+            sorry \<comment> \<open>From ?arcB \\<subseteq> ep(arcA) + card ep \\<le> 2.\<close>
+          thus False using \<open>card ?arcB \<ge> 3\<close> by linarith
         qed
         have "D2 \<noteq> ?arcB"
-        proof
-          assume "D2 = ?arcB"
-          hence "D2 \<subseteq> ?arcA" using hD_union by (by100 blast)
-          hence "?arcB \<subseteq> ?arcA" using \<open>D2 = ?arcB\<close> by (by100 simp)
-          from assms(4)[rule_format, OF harcA_in harcB_in \<open>?arcA \<noteq> ?arcB\<close>]
-          have "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
-            by (by100 blast)
-          hence "?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
-            using \<open>?arcB \<subseteq> ?arcA\<close> by (by100 blast)
-          thus False sorry \<comment> \<open>|arc| > 2 but |ep| \\<le> 2.\<close>
-        qed
+          sorry \<comment> \<open>Same argument as D1 \\<noteq> arcB.\<close>
         have "D1 \<noteq> D2"
-        proof
-          assume "D1 = D2"
-          hence "D1 \<inter> D2 = D1" by (by100 simp)
-          hence "D1 = {p}" using hD_inter by (by100 simp)
-          \<comment> \<open>But D1 is an arc (homeomorphic to [0,1]), so |D1| \\<ge> 3.\<close>
-          thus False sorry \<comment> \<open>|arc| > 1 but D1 = {p}.\<close>
-        qed
+          sorry \<comment> \<open>D1 \\<inter> D2 = {p}, D1 is an arc with \\<ge> 2 points \\<Rightarrow> D1 \\<noteq> D2.\<close>
         thus ?thesis using \<open>D1 \<noteq> ?arcB\<close> \<open>D2 \<noteq> ?arcB\<close> \<open>D1 \<noteq> D2\<close> by (by100 simp)
       qed
       have hws'_card1: "\<forall>i < length ?ws'. card (?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws')) = 1" sorry
