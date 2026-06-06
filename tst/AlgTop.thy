@@ -4653,10 +4653,67 @@ proof -
     \<comment> \<open>Get oriented homeomorphisms.\<close>
     obtain hA where hhA: "top1_homeomorphism_on I_set I_top A1 (subspace_topology T TT A1) hA"
         and hhA0: "hA 0 = a_start" and hhA1: "hA 1 = a_end"
-      sorry \<comment> \<open>From hA1\\_arc + hA1\\_ep + doubleton\\_eq\\_iff + reversal.\<close>
+    proof -
+      obtain h0 where hh0: "top1_homeomorphism_on I_set I_top A1 (subspace_topology T TT A1) h0"
+        using hA1_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have heps0: "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {h0 0, h0 1}"
+        by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA1_sub hA1_arc hh0])
+      have hab_h0: "{h0 0, h0 1} = {a_start, a_end}" using heps0 hA1_ep by simp
+      have "h0 0 \<noteq> h0 1"
+      proof
+        assume "h0 0 = h0 1"
+        hence "{h0 0, h0 1} = {h0 0}" by simp
+        hence "card {a_start, a_end} \<le> 1" using hab_h0 by simp
+        thus False using ha_ne by simp
+      qed
+      from doubleton_eq_iff[OF hab_h0 this]
+      show ?thesis
+      proof
+        assume "h0 0 = a_start \<and> h0 1 = a_end" thus ?thesis using that[OF hh0] by (by100 blast)
+      next
+        assume "h0 0 = a_end \<and> h0 1 = a_start"
+        have hcomp: "top1_homeomorphism_on I_set I_top A1 (subspace_topology T TT A1) (h0 \<circ> (\<lambda>t::real. 1-t))"
+          by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
+        have "(h0 \<circ> (\<lambda>t::real. 1-t)) 0 = a_start" unfolding comp_def
+          using \<open>h0 0 = a_end \<and> h0 1 = a_start\<close> by simp
+        moreover have "(h0 \<circ> (\<lambda>t::real. 1-t)) 1 = a_end" unfolding comp_def
+          using \<open>h0 0 = a_end \<and> h0 1 = a_start\<close> by simp
+        ultimately show ?thesis using that[OF hcomp] by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>The last arc A2 has endpoints that include a\\_start and a\\_end (from the cycle structure).\<close>
+    have hA2_ep: "top1_arc_endpoints_on ?A2 (subspace_topology T TT ?A2) = {a_end, a_start}"
+      sorry \<comment> \<open>From cycle structure: last arc endpoints = {a\\_start, a\\_end}.\<close>
     obtain hB where hhB: "top1_homeomorphism_on I_set I_top ?A2 (subspace_topology T TT ?A2) hB"
         and hhB0: "hB 0 = a_end" and hhB1: "hB 1 = a_start"
-      sorry \<comment> \<open>From hA2\\_arc + endpoint analysis + reversal.\<close>
+    proof -
+      obtain h0 where hh0: "top1_homeomorphism_on I_set I_top ?A2 (subspace_topology T TT ?A2) h0"
+        using hA2_arc unfolding top1_is_arc_on_def by (by100 blast)
+      have heps0: "top1_arc_endpoints_on ?A2 (subspace_topology T TT ?A2) = {h0 0, h0 1}"
+        by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA2_sub hA2_arc hh0])
+      have hab_h0: "{h0 0, h0 1} = {a_end, a_start}" using heps0 hA2_ep by simp
+      have "h0 0 \<noteq> h0 1"
+      proof
+        assume "h0 0 = h0 1"
+        hence "{h0 0, h0 1} = {h0 0}" by simp
+        hence "card {a_end, a_start} \<le> 1" using hab_h0 by simp
+        thus False using ha_ne by simp
+      qed
+      from doubleton_eq_iff[OF hab_h0 this]
+      show ?thesis
+      proof
+        assume "h0 0 = a_end \<and> h0 1 = a_start" thus ?thesis using that[OF hh0] by (by100 blast)
+      next
+        assume "h0 0 = a_start \<and> h0 1 = a_end"
+        have hcomp: "top1_homeomorphism_on I_set I_top ?A2 (subspace_topology T TT ?A2) (h0 \<circ> (\<lambda>t::real. 1-t))"
+          by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
+        have "(h0 \<circ> (\<lambda>t::real. 1-t)) 0 = a_end" unfolding comp_def
+          using \<open>h0 0 = a_start \<and> h0 1 = a_end\<close> by simp
+        moreover have "(h0 \<circ> (\<lambda>t::real. 1-t)) 1 = a_start" unfolding comp_def
+          using \<open>h0 0 = a_start \<and> h0 1 = a_end\<close> by simp
+        ultimately show ?thesis using that[OF hcomp] by (by100 blast)
+      qed
+    qed
     \<comment> \<open>Define f using x-coordinate of S1.\<close>
     define f :: "real \<times> real \<Rightarrow> 'a" where
       "f p = (if snd p \<ge> 0 then hA ((1 - fst p) / 2) else hB ((fst p + 1) / 2))" for p
