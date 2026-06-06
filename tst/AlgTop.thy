@@ -4880,7 +4880,36 @@ lemma graph_cycle_retract:
 proof (cases "\<A> = set ws")
   case True \<comment> \<open>Base: T = C. Identity retraction.\<close>
   hence "T = \<Union>(set ws)" using hcover by (by100 simp)
-  thus ?thesis sorry \<comment> \<open>Identity retraction: T \\<to> T = C. Same as base case in sc\\_graph\\_no\\_cycle.\<close>
+  \<comment> \<open>Identity retraction: T retracts to itself = C.\<close>
+  have htop: "is_topology_on T TT"
+    using htree unfolding top1_is_tree_on_def top1_is_graph_on_def is_topology_on_strict_def
+    by (by100 blast)
+  show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+    using \<open>T = \<Union>(set ws)\<close>
+  proof (intro exI[of _ id] conjI)
+    show "\<Union>(set ws) \<subseteq> T" using hws_C_sub .
+    show "top1_continuous_map_on T TT \<Union>(set ws) (subspace_topology T TT (\<Union>(set ws))) id"
+      unfolding \<open>T = \<Union>(set ws)\<close>[symmetric]
+      unfolding top1_continuous_map_on_def subspace_topology_def
+    proof (intro conjI ballI allI impI)
+      fix x assume "x \<in> T" thus "id x \<in> T" by (by100 simp)
+    next
+      fix V assume "V \<in> {T \<inter> U |U. U \<in> TT}"
+      then obtain U where hU: "U \<in> TT" "V = T \<inter> U" by (by100 blast)
+      have "T \<in> TT" using htop unfolding is_topology_on_def by (by100 blast)
+      have "finite {T, U}" by (by100 simp)
+      have "{T, U} \<noteq> {}" by (by100 simp)
+      have "{T, U} \<subseteq> TT" using \<open>T \<in> TT\<close> hU(1) by (by100 blast)
+      have "\<Inter>{T, U} \<in> TT"
+        using htop[unfolded is_topology_on_def, THEN conjunct2, THEN conjunct2, THEN conjunct2,
+            rule_format, of "{T, U}"]
+          \<open>finite {T, U}\<close> \<open>{T, U} \<noteq> {}\<close> \<open>{T, U} \<subseteq> TT\<close> by (by100 blast)
+      hence "T \<inter> U \<in> TT" by (by100 simp)
+      have "{x \<in> T. id x \<in> V} = T \<inter> U" using hU(2) by (by100 force)
+      thus "{x \<in> T. id x \<in> V} \<in> TT" using \<open>T \<inter> U \<in> TT\<close> by (by100 simp)
+    qed
+    show "\<forall>a\<in>\<Union>(set ws). id a = a" by (by100 simp)
+  qed
 next
   case False \<comment> \<open>Step: non-cycle arcs exist.\<close>
   \<comment> \<open>The retraction maps each non-cycle arc to a cycle vertex.
