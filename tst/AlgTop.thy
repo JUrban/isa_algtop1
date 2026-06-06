@@ -5340,7 +5340,13 @@ proof -
             have hm_ep: "?ep (A1' \<union> ws!n') = {shared_v ((?k-1) mod ?k), shared_v n'}"
               using hmerge by (by100 blast)
             have hm_sub: "A1' \<union> ws!n' \<subseteq> T" using hIH(2) hwsn'_sub by (by100 blast)
-            show ?thesis sorry
+            have "A1' \<union> ws!n' = \<Union>(set (take (Suc n') ws))"
+              using \<open>\<Union>(set (take (Suc n') ws)) = A1' \<union> ws ! n'\<close> by (by100 simp)
+            show ?thesis
+              apply (rule exI[of _ "A1' \<union> ws ! n'"])
+              using hm_arc hm_sub \<open>A1' \<union> ws!n' = \<Union>(set (take (Suc n') ws))\<close>
+                hm_ep \<open>shared_v ((?k-1) mod ?k) \<noteq> shared_v n'\<close>
+              by (by100 simp)
           qed
         qed
       qed
