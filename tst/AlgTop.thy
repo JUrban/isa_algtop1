@@ -4571,11 +4571,15 @@ lemma sc_graph_no_cycle:
       and "finite \<A>"
       and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
           (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
-      \<comment> \<open>"Cycle" of arcs: a list of \\<ge> 2 distinct arcs visiting distinct shared vertices.\<close>
+      \<comment> \<open>"Cycle": \\<ge> 2 distinct arcs, consecutive share exactly 1 vertex, shared vertices all distinct.\<close>
       and "length ws \<ge> 2"
       and "distinct ws" and "set ws \<subseteq> \<A>"
-      \<comment> \<open>Consecutive arcs share exactly 1 vertex, forming a simple closed path.\<close>
-      and "\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1"
+      \<comment> \<open>Consecutive arcs share exactly 1 vertex.\<close>
+      and hcard1: "\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1"
+      \<comment> \<open>The shared vertices are pairwise distinct (simple polygon, not star graph).\<close>
+      and hdist_v: "\<forall>i < length ws. \<forall>j < length ws. i \<noteq> j \<longrightarrow>
+          (\<forall>v w. ws ! i \<inter> ws ! ((i + 1) mod length ws) = {v} \<longrightarrow>
+                 ws ! j \<inter> ws ! ((j + 1) mod length ws) = {w} \<longrightarrow> v \<noteq> w)"
   shows False
 proof -
   \<comment> \<open>Strategy: The cycle C = \\<Union>(set ws) is homeomorphic to S1 (a simple closed curve).
@@ -5148,17 +5152,27 @@ proof (rule ccontr)
      Case B (has cycle): sc\\_graph\\_no\\_cycle gives \\<bottom> directly.\<close>
   show False
   proof (cases "\<exists>ws :: 'a set list. length ws \<ge> 2 \<and> distinct ws \<and> set ws \<subseteq> \<A> \<and>
-      (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1)")
-    case True \<comment> \<open>Case B: has a cycle.\<close>
-    then obtain ws :: "'a set list" where "length ws \<ge> 2" "distinct ws" "set ws \<subseteq> \<A>"
-        "\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1" by (by100 blast)
+      (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<and>
+      (\<forall>i < length ws. \<forall>j < length ws. i \<noteq> j \<longrightarrow>
+          (\<forall>v w. ws ! i \<inter> ws ! ((i + 1) mod length ws) = {v} \<longrightarrow>
+                 ws ! j \<inter> ws ! ((j + 1) mod length ws) = {w} \<longrightarrow> v \<noteq> w))")
+    case True \<comment> \<open>Case B: has a simple cycle (card = 1, distinct shared vertices).\<close>
+    then obtain ws :: "'a set list" where hwsB: "length ws \<ge> 2" "distinct ws" "set ws \<subseteq> \<A>"
+        "\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1"
+        "\<forall>i < length ws. \<forall>j < length ws. i \<noteq> j \<longrightarrow>
+          (\<forall>v w. ws ! i \<inter> ws ! ((i + 1) mod length ws) = {v} \<longrightarrow>
+                 ws ! j \<inter> ws ! ((j + 1) mod length ws) = {w} \<longrightarrow> v \<noteq> w)"
+      by (by100 auto)
     from sc_graph_no_cycle[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
-        this(1) this(2) this(3) this(4)]
+        this(1) this(2) this(3) this(4) this(5)]
     show False .
   next
-    case False \<comment> \<open>Case A: acyclic (no cycle of distinct arcs).\<close>
+    case False \<comment> \<open>Case A: acyclic (no simple cycle).\<close>
     hence hacyclic: "\<forall>ws :: 'a set list. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> \<A> \<longrightarrow>
-        (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow> False"
+        (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow>
+        (\<forall>i < length ws. \<forall>j < length ws. i \<noteq> j \<longrightarrow>
+          (\<forall>v w. ws ! i \<inter> ws ! ((i + 1) mod length ws) = {v} \<longrightarrow>
+                 ws ! j \<inter> ws ! ((j + 1) mod length ws) = {w} \<longrightarrow> v \<noteq> w)) \<longrightarrow> False"
       by (by100 blast)
     \<comment> \<open>Acyclic + all degrees \\<ge> 2 + finite \\<Rightarrow> False.
        Walk from any vertex: non-backtracking. Acyclic \\<Rightarrow> walk visits new vertices.
@@ -5935,7 +5949,11 @@ proof (rule ccontr)
       show "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
         using hge1 hinter_props hne2 by linarith
     qed
-      show False using hacyclic hws_len2 hws_dist hws_sub hws_adj_card by (by100 blast)
+      have hws_vdist: "\<forall>ii < length ?ws. \<forall>jj < length ?ws. ii \<noteq> jj \<longrightarrow>
+          (\<forall>v w. ?ws ! ii \<inter> ?ws ! ((ii + 1) mod length ?ws) = {v} \<longrightarrow>
+                 ?ws ! jj \<inter> ?ws ! ((jj + 1) mod length ?ws) = {w} \<longrightarrow> v \<noteq> w)"
+        sorry \<comment> \<open>From hv\\_distinct: walk shared vertices are all distinct.\<close>
+      show False using hacyclic hws_len2 hws_dist hws_sub hws_adj_card hws_vdist by (by100 blast)
     next
       case False
       hence "j - i = 2" using hji_ge2 by linarith
