@@ -4877,7 +4877,16 @@ lemma graph_cycle_retract:
       and hws_ne: "length ws \<ge> 2"
       and hws_C_sub: "\<Union>(set ws) \<subseteq> T"
   shows "top1_retract_of_on T TT (\<Union>(set ws))"
-  sorry
+proof (cases "\<A> = set ws")
+  case True \<comment> \<open>Base: T = C. Identity retraction.\<close>
+  hence "T = \<Union>(set ws)" using hcover by (by100 simp)
+  thus ?thesis sorry \<comment> \<open>Identity retraction: T \\<to> T = C. Same as base case in sc\\_graph\\_no\\_cycle.\<close>
+next
+  case False \<comment> \<open>Step: non-cycle arcs exist.\<close>
+  \<comment> \<open>The retraction maps each non-cycle arc to a cycle vertex.
+     Coherent topology gives continuity. Unique attachment gives consistency.\<close>
+  show ?thesis sorry \<comment> \<open>Coherent-topology retraction + unique attachment by induction.\<close>
+qed
 
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
    A "cycle" here means a sequence of \\<ge> 2 distinct arcs A1, ..., Ak such that
