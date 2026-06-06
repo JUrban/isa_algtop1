@@ -4668,7 +4668,68 @@ proof -
      (revisiting would create cycle, contradicting acyclicity). Finite \\<Rightarrow> walk must stop.
      But degree \\<ge> 2 means walk never stops. Contradiction.\<close>
   have "\<exists>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<le> 1"
-    sorry \<comment> \<open>Walk+pigeonhole+acyclicity: no leaf \\<Rightarrow> walk \\<Rightarrow> vertex revisit \\<Rightarrow> cycle. Combinatorial.\<close>
+  proof (rule ccontr)
+    assume "\<not> (\<exists>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<le> 1)"
+    hence hdeg_ge2: "\<forall>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<ge> 2" by (by100 force)
+    \<comment> \<open>Degree sum = 2E \\<ge> 2V, so E \\<ge> V.\<close>
+    have "2 * card \<A> \<ge> 2 * card ?V"
+    proof -
+      have "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A}) \<ge> (\<Sum>v\<in>?V. 2)"
+        by (rule sum_mono) (use hdeg_ge2 in auto)
+      thus ?thesis using hsum by simp
+    qed
+    hence "card \<A> \<ge> card ?V" by linarith
+    \<comment> \<open>But acyclic + connected: V \\<ge> E + 1 (proved below via leaf induction from IH or directly).
+       Actually, we derive the contradiction differently:
+       all degrees \\<ge> 2 + sum = 2E gives 2E \\<ge> 2V, so E \\<ge> V.
+       But V \\<ge> 1 (from hne). And each arc adds at most 2 new vertices.
+       With E arcs and at most 2E vertex-slots: V \\<le> 2E.
+       From E \\<ge> V: V \\<le> 2V, which is always true. No contradiction yet.
+
+       The contradiction comes from the walk argument:
+       all degrees \\<ge> 2 + acyclic + finite \\<Rightarrow> False.
+       Walk visits distinct vertices (acyclic prevents revisits).
+       Finite \\<Rightarrow> walk must terminate. But degree \\<ge> 2 \\<Rightarrow> walk never terminates.
+       This is a pigeonhole argument on the vertex set.\<close>
+    \<comment> \<open>Walk construction: define walk\\_v :: nat \\<Rightarrow> 'a (vertex at step n)
+       and walk\\_e :: nat \\<Rightarrow> 'a set (arc at step n).
+       At each step: pick an arc \\<noteq> previous arc containing current vertex.
+       The vertices walk\\_v 0, walk\\_v 1, ... are all distinct (acyclicity).
+       After card(V) steps: no more new vertices. But walk continues. Contradiction.\<close>
+    \<comment> \<open>Define the non-backtracking walk. At each step, choose an arc different from the previous one.
+       walk\\_state :: nat \\<Rightarrow> 'a \\<times> 'a set gives (current vertex, last arc used).\<close>
+    obtain v0 where hv0: "v0 \<in> ?V"
+    proof -
+      obtain A0 where "A0 \<in> \<A>" using hne by (by100 blast)
+      from h2ep[rule_format, OF this]
+      obtain a0 b0 where "?ep A0 = {a0, b0}" by (by100 blast)
+      hence "a0 \<in> ?V" unfolding top1_graph_vertex_set_def using \<open>A0 \<in> \<A>\<close> by (by100 blast)
+      thus ?thesis using that by (by100 blast)
+    qed
+    obtain e0 where he0: "e0 \<in> \<A>" "v0 \<in> ?ep e0"
+    proof -
+      from hv0 obtain A0 where "A0 \<in> \<A>" "v0 \<in> ?ep A0"
+        unfolding top1_graph_vertex_set_def by (by100 blast)
+      thus ?thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>Step function: given (v, e\\_prev), find next arc e' \\<noteq> e\\_prev with v \\<in> ep(e'),
+       then v' = the other endpoint of e'.\<close>
+    define next_arc :: "'a \<Rightarrow> 'a set \<Rightarrow> 'a set" where
+      "next_arc v e_prev = (SOME e'. e' \<in> \<A> \<and> v \<in> ?ep e' \<and> e' \<noteq> e_prev)" for v e_prev
+    define other_ep :: "'a \<Rightarrow> 'a set \<Rightarrow> 'a" where
+      "other_ep v e = (SOME v'. v' \<in> ?ep e \<and> v' \<noteq> v)" for v e
+    define walk_state :: "nat \<Rightarrow> 'a \<times> 'a set" where
+      "walk_state = rec_nat (other_ep v0 e0, e0)
+        (\<lambda>n (v, e). let e' = next_arc v e in (other_ep v e', e'))"
+    let ?wv = "\<lambda>n. fst (walk_state n)"
+    let ?we = "\<lambda>n. snd (walk_state n)"
+    \<comment> \<open>Properties of the walk (each requires proof):
+       1. ?wv n \\<in> V for all n.
+       2. ?we n \\<in> \\<A> for all n.
+       3. ?wv n \\<noteq> ?wv m for n \\<noteq> m (injectivity, from acyclicity).
+       4. After card V steps: injective function on {0..card V} into V. Pigeonhole \\<Rightarrow> False.\<close>
+    show False sorry \<comment> \<open>Walk properties + pigeonhole. Combinatorial but needs careful Isabelle work.\<close>
+  qed
   \<comment> \<open>From the leaf, do induction on card(\\<A>) to get V \\<ge> E + 1.
      Base (card=1): V = 2 \\<ge> 2 = 1+1.
      Step (card\\<ge>2): remove the leaf arc. The remaining graph is still acyclic.
