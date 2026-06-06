@@ -4942,10 +4942,26 @@ proof -
             have "ws ! 0 \<in> \<A>" using assms(9) hk_ge2 by (by100 force)
             have hepws0: "?ep (ws ! 0) = {shared_v ((?k - 1) mod ?k), shared_v 0}"
               using harc_ep[rule_format] hk_ge2 by (by100 force)
-            show ?thesis using True \<open>take 1 ws = [ws ! 0]\<close> hepws0
-              assms(2) \<open>ws ! 0 \<in> \<A>\<close>
-              hshared_v_distinct[rule_format] hk_ge2
-              sorry \<comment> \<open>Base case assembly.\<close>
+            have "top1_is_arc_on (ws!0) (subspace_topology T TT (ws!0))"
+              using assms(2) \<open>ws ! 0 \<in> \<A>\<close> by (by100 blast)
+            moreover have "ws!0 \<subseteq> T" using assms(2) \<open>ws ! 0 \<in> \<A>\<close> by (by100 blast)
+            moreover have "\<Union>(set (take (Suc n') ws)) = ws!0"
+              using True \<open>take 1 ws = [ws!0]\<close> by (by100 simp)
+            moreover have "?ep (ws!0) = {shared_v ((?k-1) mod ?k), shared_v (Suc n' - 1)}"
+              using hepws0 True by (by100 simp)
+            moreover have "shared_v ((?k-1) mod ?k) \<noteq> shared_v (Suc n' - 1)"
+            proof -
+              have "(?k - 1) mod ?k < ?k" using hk_ge2 by (by100 simp)
+              have "(0::nat) < ?k" using hk_ge2 by linarith
+              have "(?k - 1) mod ?k \<noteq> 0"
+              proof -
+                have "(?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+                thus ?thesis using hk_ge2 by linarith
+              qed
+              thus ?thesis using True hshared_v_distinct[rule_format, OF \<open>(?k-1) mod ?k < ?k\<close> \<open>0 < ?k\<close>]
+                by (by100 simp)
+            qed
+            ultimately show ?thesis using True by (by100 blast)
           next
             case False \<comment> \<open>Step: merge first n' arcs, then add ws!n'.\<close>
             hence "n' \<ge> 1" by linarith
