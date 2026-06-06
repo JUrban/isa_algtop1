@@ -5466,7 +5466,51 @@ proof -
       thus ?thesis using hA1_union by simp
     qed
     have hA1A2_inter: "A1 \<inter> ?A2 = {a_start, a_end}"
-      sorry \<comment> \<open>From cycle structure: first and last arcs share the cycle's start/end vertices.\<close>
+    proof -
+      have hk1_lt: "?k - 1 < ?k" using hk_ge2 by linarith
+      \<comment> \<open>shared\\_v(k-2) and shared\\_v(k-1) are in A1 \\<inter> A2.\<close>
+      have "shared_v (?k - 2) \<in> ws ! (?k - 2) \<inter> ws ! (?k - 1)"
+      proof -
+        have "?k - 2 < ?k" using hk_ge2 by linarith
+        from hshared_v[rule_format, OF this]
+        have "ws ! (?k-2) \<inter> ws ! ((?k-2+1) mod ?k) = {shared_v (?k-2)}" .
+        have "(?k - 2 + 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+        thus ?thesis using \<open>ws ! (?k-2) \<inter> ws ! ((?k-2+1) mod ?k) = {shared_v (?k-2)}\<close> by (by100 simp)
+      qed
+      hence "shared_v (?k - 2) \<in> A1 \<inter> ?A2"
+      proof -
+        have "?k - 2 < ?k - 1" using hk_ge2 by linarith
+        have "ws ! (?k - 2) \<in> set (take (?k - 1) ws)"
+          using \<open>?k - 2 < ?k - 1\<close> hk_ge2 by (by100 simp)
+        hence "shared_v (?k - 2) \<in> A1" using hA1_union
+          \<open>shared_v (?k - 2) \<in> ws ! (?k - 2) \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+        moreover have "shared_v (?k - 2) \<in> ?A2" using hlast_idx
+          \<open>shared_v (?k - 2) \<in> ws ! (?k - 2) \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      have "shared_v (?k - 1) \<in> ws ! 0 \<inter> ws ! (?k - 1)"
+      proof -
+        from hshared_v[rule_format, OF hk1_lt]
+        have "ws ! (?k-1) \<inter> ws ! ((?k-1+1) mod ?k) = {shared_v (?k-1)}" .
+        have "(?k - 1 + 1) mod ?k = 0" using hk_ge2 by (by100 simp)
+        thus ?thesis using \<open>ws ! (?k-1) \<inter> ws ! ((?k-1+1) mod ?k) = {shared_v (?k-1)}\<close> by (by100 simp)
+      qed
+      hence "shared_v (?k - 1) \<in> A1 \<inter> ?A2"
+      proof -
+        have "0 < ?k - 1" using hk_ge2 by linarith
+        have "ws ! 0 \<in> set (take (?k - 1) ws)" using \<open>0 < ?k - 1\<close> hk_ge2 by (by100 simp)
+        hence "shared_v (?k - 1) \<in> A1" using hA1_union
+          \<open>shared_v (?k - 1) \<in> ws ! 0 \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+        moreover have "shared_v (?k - 1) \<in> ?A2" using hlast_idx
+          \<open>shared_v (?k - 1) \<in> ws ! 0 \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>No other points: same argument as hinter.\<close>
+      have "\<And>x. x \<in> A1 \<inter> ?A2 \<Longrightarrow> x \<in> {shared_v (?k - 1), shared_v (?k - 2)}"
+        sorry \<comment> \<open>Each ws!j for j < k-1 intersects ws!(k-1) only at shared vertices.\<close>
+      thus ?thesis using \<open>shared_v (?k - 2) \<in> A1 \<inter> ?A2\<close> \<open>shared_v (?k - 1) \<in> A1 \<inter> ?A2\<close>
+        by (by100 blast)
+    qed
     \<comment> \<open>Step 3: Construct f: S1 \\<to> C using x-coordinate.
        Upper semicircle (y \\<ge> 0): map to A1 via hA1 with parameter (1-x)/2.
        Lower semicircle (y < 0): map to A2 via hA2 with parameter (x+1)/2.\<close>
