@@ -4904,9 +4904,64 @@ proof (rule ccontr)
     \<comment> \<open>Simplified argument: the walk can take at least card(V) steps (degree \\<ge> 2 at each vertex).
        At each step it visits a new vertex (acyclic \\<Rightarrow> no revisit, because revisit \\<Rightarrow> cycle).
        So after card(V) steps: card(V) + 1 distinct vertices \\<subseteq> V, card(V) + 1 > card(V). Impossible.\<close>
+    \<comment> \<open>Define the walk. walk n = (vertex at step n, arc used to reach it).
+       At each step, pick a non-backtracking arc (using hshared\\_arc) and go to its other endpoint.\<close>
+    define next_arc where "next_arc v e = (SOME e'. e' \<in> \<A> \<and> v \<in> ?ep2 e' \<and> e' \<noteq> e)" for v e
+    define other_endpt where "other_endpt v e = (SOME v'. v' \<in> ?ep2 e \<and> v' \<noteq> v)" for v e
+    \<comment> \<open>Walk: walk n = (current vertex, last arc used).\<close>
+    define walk where "walk = rec_nat (v0, e0)
+      (\<lambda>n (v, e). let e' = next_arc v e in (other_endpt v e', e'))"
+    \<comment> \<open>Key properties of the walk (by induction on n):\<close>
+    have hwalk_props: "\<forall>n \<le> card ?V. fst (walk n) \<in> ?V \<and> snd (walk n) \<in> \<A>
+        \<and> fst (walk n) \<in> ?ep2 (snd (walk n))"
+      sorry \<comment> \<open>Induction on n. Base: (v0,e0). Step: SOME gives valid next arc+vertex.\<close>
+    \<comment> \<open>Walk visits at most card(V) distinct vertices. By pigeonhole: must revisit.\<close>
+    have "\<exists>i j. i < j \<and> j \<le> card ?V \<and> fst (walk i) = fst (walk j)"
+    proof (rule ccontr)
+      assume hno_rev: "\<not> (\<exists>i j. i < j \<and> j \<le> card ?V \<and> fst (walk i) = fst (walk j))"
+      hence hinj: "\<forall>i j. i \<le> card ?V \<longrightarrow> j \<le> card ?V \<longrightarrow> i \<noteq> j \<longrightarrow> fst (walk i) \<noteq> fst (walk j)"
+      proof (intro allI impI)
+        fix i j assume "i \<le> card ?V" "j \<le> card ?V" "i \<noteq> j"
+        show "fst (walk i) \<noteq> fst (walk j)"
+        proof (cases "i < j")
+          case True thus ?thesis using hno_rev \<open>j \<le> card ?V\<close> by (by100 blast)
+        next
+          case False
+          hence "j < i" using \<open>i \<noteq> j\<close> by linarith
+          show ?thesis
+          proof
+            assume heq: "fst (walk i) = fst (walk j)"
+            hence "fst (walk j) = fst (walk i)" by simp
+            with \<open>j < i\<close> \<open>i \<le> card ?V\<close> have "\<exists>i j. i < j \<and> j \<le> card ?V \<and> fst (walk i) = fst (walk j)"
+              by (by100 blast)
+            with hno_rev show False by (by100 blast)
+          qed
+        qed
+      qed
+      have "inj_on (fst \<circ> walk) {..card ?V}"
+        unfolding inj_on_def comp_def using hinj by (by100 blast)
+      moreover have "(fst \<circ> walk) ` {..card ?V} \<subseteq> ?V"
+      proof (intro image_subsetI)
+        fix n assume "n \<in> {..card ?V}"
+        hence "n \<le> card ?V" by simp
+        thus "(fst \<circ> walk) n \<in> ?V" using hwalk_props by (by100 force)
+      qed
+      moreover have "card {..card ?V} = card ?V + 1" by simp
+      ultimately have "card ?V + 1 \<le> card ?V"
+        using card_inj_on_le[OF \<open>inj_on _ _\<close> \<open>_ ` _ \<subseteq> ?V\<close> hV_fin] by linarith
+      thus False by linarith
+    qed
+    then obtain i j where hij: "i < j" "j \<le> card ?V" "fst (walk i) = fst (walk j)" by (by100 blast)
+    \<comment> \<open>The arcs walk(i+1), ..., walk(j) form a cycle. Extract them and apply hacyclic.\<close>
+    \<comment> \<open>The cycle is: [snd(walk(i+1)), ..., snd(walk(j))], with j-i \\<ge> 1 arcs.
+       Actually need \\<ge> 2 arcs for hacyclic. Since arcs have distinct endpoints,
+       a 1-arc cycle is impossible (would need fst(walk i) = fst(walk(i+1)) but
+       the "other endpoint" is always different). So j - i \\<ge> 2.\<close>
     show False sorry
-      \<comment> \<open>REMAINING: define walk\\_v by rec\\_nat using SOME, prove walk\\_v injective,
-         derive card(V)+1 \\<le> card(V) contradiction. Pure combinatorics, ~80 lines.\<close>
+      \<comment> \<open>Extract cycle from walk(i..j), show it satisfies hacyclic conditions.
+         Needs: j-i \\<ge> 2, arcs are distinct, consecutive arcs share vertex, arcs \\<in> \\<A>.
+         The hard part: showing arcs are distinct (follows from vertices being distinct
+         in the shortest revisit cycle).\<close>
   qed
 qed
 
