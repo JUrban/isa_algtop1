@@ -5442,7 +5442,115 @@ proof -
       thus ?thesis using hA1_union by simp
     qed
     have hA1A2_inter: "A1 \<inter> ?A2 = {a_start, a_end}"
-      sorry \<comment> \<open>From cycle structure: first and last arcs share the cycle's start/end vertices.\<close>
+    proof -
+      have hlast_eq: "?A2 = ws ! (?k - 1)"
+        using \<open>ws \<noteq> []\<close> assms(7) by (by100 simp add: last_conv_nth)
+      have hk1_lt: "?k - 1 < ?k" using hk_ge2 by linarith
+      \<comment> \<open>shared\\_v(k-2) and shared\\_v(k-1) are in A1 \\<inter> A2.\<close>
+      have "shared_v (?k - 2) \<in> ws ! (?k - 2) \<inter> ws ! (?k - 1)"
+      proof -
+        have "?k - 2 < ?k" using hk_ge2 by linarith
+        from hshared_v[rule_format, OF this]
+        have "ws ! (?k-2) \<inter> ws ! ((?k-2+1) mod ?k) = {shared_v (?k-2)}" .
+        have "(?k - 2 + 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+        thus ?thesis using \<open>ws ! (?k-2) \<inter> ws ! ((?k-2+1) mod ?k) = {shared_v (?k-2)}\<close> by (by100 simp)
+      qed
+      hence "shared_v (?k - 2) \<in> A1 \<inter> ?A2"
+      proof -
+        have "?k - 2 < ?k - 1" using hk_ge2 by linarith
+        have "ws ! (?k - 2) \<in> set (take (?k - 1) ws)"
+          using \<open>?k - 2 < ?k - 1\<close> hk_ge2 by (by100 simp)
+        hence "shared_v (?k - 2) \<in> A1" using hA1_union
+          \<open>shared_v (?k - 2) \<in> ws ! (?k - 2) \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+        moreover have "shared_v (?k - 2) \<in> ?A2" using hlast_eq
+          \<open>shared_v (?k - 2) \<in> ws ! (?k - 2) \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      have "shared_v (?k - 1) \<in> ws ! 0 \<inter> ws ! (?k - 1)"
+      proof -
+        from hshared_v[rule_format, OF hk1_lt]
+        have "ws ! (?k-1) \<inter> ws ! ((?k-1+1) mod ?k) = {shared_v (?k-1)}" .
+        have "(?k - 1 + 1) mod ?k = 0" using hk_ge2 by (by100 simp)
+        thus ?thesis using \<open>ws ! (?k-1) \<inter> ws ! ((?k-1+1) mod ?k) = {shared_v (?k-1)}\<close> by (by100 simp)
+      qed
+      hence "shared_v (?k - 1) \<in> A1 \<inter> ?A2"
+      proof -
+        have "0 < ?k - 1" using hk_ge2 by linarith
+        have "ws ! 0 \<in> set (take (?k - 1) ws)" using \<open>0 < ?k - 1\<close> hk_ge2 by (by100 simp)
+        hence "shared_v (?k - 1) \<in> A1" using hA1_union
+          \<open>shared_v (?k - 1) \<in> ws ! 0 \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+        moreover have "shared_v (?k - 1) \<in> ?A2" using hlast_eq
+          \<open>shared_v (?k - 1) \<in> ws ! 0 \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>No other points: same argument as hinter.\<close>
+      have "\<And>x. x \<in> A1 \<inter> ?A2 \<Longrightarrow> x \<in> {shared_v (?k - 1), shared_v (?k - 2)}"
+      proof -
+        fix x assume "x \<in> A1 \<inter> ?A2"
+        hence "x \<in> A1" "x \<in> ?A2" by (by100 blast)+
+        from \<open>x \<in> A1\<close>[unfolded hA1_union]
+        obtain j where "j \<in> set (take (?k-1) ws)" "x \<in> j" by (by100 blast)
+        then obtain idx where hidx: "idx < ?k - 1" "j = ws ! idx"
+          by (metis in_set_conv_nth length_take min.absorb2 hk_ge2 le_refl)
+        have "x \<in> ws ! idx \<inter> ws ! (?k - 1)" using \<open>x \<in> ?A2\<close> hlast_eq \<open>x \<in> j\<close> hidx(2) by (by100 simp)
+        have "idx < ?k" using hidx(1) hk_ge2 by linarith
+        show "x \<in> {shared_v (?k - 1), shared_v (?k - 2)}"
+        proof (cases "idx = ?k - 2")
+          case True
+          hence "x \<in> ws ! (?k - 2) \<inter> ws ! (?k - 1)" using \<open>x \<in> ws ! idx \<inter> ws ! (?k - 1)\<close> by (by100 simp)
+          have "ws ! (?k - 2) \<inter> ws ! (?k - 1) = {shared_v (?k - 2)}"
+          proof -
+            have "?k - 2 < ?k" using hk_ge2 by linarith
+            from hshared_v[rule_format, OF this]
+            have "ws ! (?k-2) \<inter> ws ! ((?k-2+1) mod ?k) = {shared_v (?k-2)}" .
+            have "(?k - 2 + 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+            thus ?thesis using \<open>ws ! (?k-2) \<inter> ws ! ((?k-2+1) mod ?k) = {shared_v (?k-2)}\<close> by (by100 simp)
+          qed
+          thus ?thesis using \<open>x \<in> ws ! (?k-2) \<inter> ws ! (?k-1)\<close> by (by100 blast)
+        next
+          case False
+          show ?thesis
+          proof (cases "idx = 0")
+            case True
+            hence "x \<in> ws ! 0 \<inter> ws ! (?k - 1)" using \<open>x \<in> ws ! idx \<inter> ws ! (?k - 1)\<close> by (by100 simp)
+            have "ws ! 0 \<inter> ws ! (?k - 1) \<subseteq> {shared_v (?k - 1)}"
+            proof -
+              from hshared_v[rule_format, OF hk1_lt]
+              have "ws ! (?k-1) \<inter> ws ! ((?k-1+1) mod ?k) = {shared_v (?k-1)}" .
+              have "(?k - 1 + 1) mod ?k = 0" using hk_ge2 by (by100 simp)
+              hence "ws ! (?k - 1) \<inter> ws ! 0 = {shared_v (?k - 1)}"
+                using \<open>ws ! (?k-1) \<inter> ws ! ((?k-1+1) mod ?k) = {shared_v (?k-1)}\<close> by (by100 simp)
+              thus ?thesis by (by100 blast)
+            qed
+            thus ?thesis using \<open>x \<in> ws ! 0 \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+          next
+            case False2: False
+            \<comment> \<open>idx \\<noteq> 0, idx \\<noteq> k-2: non-adjacent to k-1. Disjoint intersection.\<close>
+            have "idx \<noteq> ?k - 1" using hidx(1) by linarith
+            have h_prev: "(idx + ?k - 1) mod ?k \<noteq> ?k - 1"
+            proof (cases "idx = 0")
+              case True
+              have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+              thus ?thesis using True False2 by (by100 simp)
+            next
+              case False3: False
+              have "idx + ?k - 1 = (idx - 1) + ?k" using False3 by linarith
+              hence "(idx + ?k - 1) mod ?k = idx - 1" using \<open>idx < ?k\<close> by (by100 simp)
+              thus ?thesis using hidx(1) False by linarith
+            qed
+            have h_next: "(idx + 1) mod ?k \<noteq> ?k - 1"
+            proof -
+              have "idx + 1 \<le> ?k - 2" using hidx(1) False by linarith
+              have "idx + 1 < ?k" using \<open>idx < ?k\<close> by linarith
+              hence "(idx + 1) mod ?k = idx + 1" by (by100 simp)
+              thus ?thesis using \<open>idx + 1 \<le> ?k - 2\<close> by linarith
+            qed
+            have "ws ! idx \<inter> ws ! (?k - 1) = {}"
+              using hdisjoint_non_adj[OF \<open>idx < ?k\<close> hk1_lt h_prev h_next \<open>idx \<noteq> ?k - 1\<close>] .
+            thus ?thesis using \<open>x \<in> ws ! idx \<inter> ws ! (?k - 1)\<close> by (by100 blast)
+          qed
+        qed
+      qed
     \<comment> \<open>Step 3: Construct f: S1 \\<to> C using x-coordinate.
        Upper semicircle (y \\<ge> 0): map to A1 via hA1 with parameter (1-x)/2.
        Lower semicircle (y < 0): map to A2 via hA2 with parameter (x+1)/2.\<close>
