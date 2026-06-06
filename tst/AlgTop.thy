@@ -4625,7 +4625,14 @@ proof -
         and hA1_union: "A1 = \<Union>(set (butlast ws))"
         and hA1_ep: "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {a_start, a_end}"
         and ha_ne: "a_start \<noteq> a_end"
-      sorry \<comment> \<open>Iterative arc\\_merge\\_at\\_endpoint on ws!0, ..., ws!(k-2). Needs induction on k.\<close>
+      sorry \<comment> \<open>Iterative arc\\_merge\\_at\\_endpoint on butlast ws.
+         For length 1: A1 = ws!0, endpoints from h2ep.
+         For length n+1: merge A1(n arcs) with ws!n at shared vertex.
+         arc\\_merge\\_at\\_endpoint (ZERO SORRY) gives the merged arc.
+         Needs: consecutive arcs share exactly 1 vertex (from hcard1 + hdist\\_v).
+         Needs: each arc \\<subseteq> T and is\\_arc (from assms(2,9)).
+         Needs: intersection = shared vertex (from assms(4) + hcard1).
+         All ingredients available. ~50 lines of induction.\<close>
     \<comment> \<open>Step 2: The last arc A2 = ws!(k-1) shares both endpoints with A1.\<close>
     let ?A2 = "last ws"
     have hA2_in: "?A2 \<in> \<A>"
