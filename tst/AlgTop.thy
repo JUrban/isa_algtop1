@@ -6481,10 +6481,22 @@ proof (rule ccontr)
         thus ?thesis using \<open>fst (walk (Suc i)) \<in> snd (walk (Suc (Suc i)))\<close> by simp
       qed
       \<comment> \<open>Subdivide arcA at an interior point, then apply sc\\_graph\\_no\\_cycle to the 3-arc cycle.\<close>
-      show False
-        sorry \<comment> \<open>Subdivision + sc\\_graph\\_no\\_cycle. All ingredients available:
-           arc\\_split\\_at\\_midpoint gives D1, D2. graph\\_coherent\\_any\\_decomposition gives coherent topology.
-           sc\\_graph\\_no\\_cycle applied to [D1, arcB, D2] with card-1 intersections gives False.\<close>
+      \<comment> \<open>Subdivide arcA at an interior point p. Get D1, D2 with arcA = D1 \\<union> D2, D1 \\<inter> D2 = {p}.
+         New decomposition \\<A>' = (\\<A> - {arcA}) \\<union> {D1, D2}. Cycle [D1, arcB, D2] has card-1 intersections.
+         sc\\_graph\\_no\\_cycle on \\<A>' gives False.\<close>
+      have harcA_sub: "?arcA \<subseteq> T" using assms(2) harcA_in by (by100 blast)
+      have harcA_arc: "top1_is_arc_on ?arcA (subspace_topology T TT ?arcA)"
+        using assms(2) harcA_in by (by100 blast)
+      \<comment> \<open>Get an interior point of arcA via arc\\_split\\_at\\_midpoint.\<close>
+      from arc_split_at_midpoint[OF hstrict hhaus harcA_sub harcA_arc]
+      obtain p D1 D2 where hp_in: "p \<in> ?arcA"
+          and hD_union: "?arcA = D1 \<union> D2" and hD_inter: "D1 \<inter> D2 = {p}"
+          and hD1_arc: "top1_is_arc_on D1 (subspace_topology T TT D1)"
+          and hD2_arc: "top1_is_arc_on D2 (subspace_topology T TT D2)"
+        by (by100 blast)
+      \<comment> \<open>Remaining steps: construct \\<A>', show graph properties, construct 3-arc cycle,
+         apply sc\\_graph\\_no\\_cycle. All mechanical but long.\<close>
+      show False sorry
     qed
   qed
 qed
