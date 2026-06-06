@@ -4858,6 +4858,27 @@ proof -
 qed
 
 
+\<comment> \<open>Cycle subgraph retraction: the union of cycle arcs is a retract of the full graph space.
+   Uses coherent topology: define r arc-by-arc, identity on cycle arcs, constant on non-cycle arcs.
+   The "unique attachment" property (each non-cycle component touches C at exactly 1 vertex)
+   follows from the SC property via strong induction on the number of non-cycle arcs.\<close>
+lemma cycle_subgraph_retract:
+  fixes T :: "'a set" and TT :: "'a set set" and \<A> :: "'a set set"
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "finite \<A>"
+      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
+          (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+      and "ws_cycle \<subseteq> \<A>" and "ws_cycle \<noteq> {}"
+      and "\<Union>ws_cycle \<subseteq> T"
+  shows "top1_retract_of_on T TT (\<Union>ws_cycle)"
+  sorry
+
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
    A "cycle" here means a sequence of \\<ge> 2 distinct arcs A1, ..., Ak such that
    consecutive arcs share exactly 1 vertex, and the sequence forms a closed path.
@@ -5922,21 +5943,9 @@ proof -
   qed
   \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
   have hC_retract: "top1_retract_of_on T TT ?C"
-  proof -
-    \<comment> \<open>For each vertex v of the graph, define target(v) = closest cycle vertex.
-       For cycle vertices: target(v) = v. For non-cycle vertices: unique attachment point.
-       Then r(x) = target(v) for each point x in non-cycle arc containing x,
-       and r(x) = x for x in cycle arcs.
-       Coherent topology: r continuous iff r|A continuous for each arc A.
-       Cycle arcs: r|A = id, continuous. Non-cycle arcs: r|A = constant, continuous.\<close>
-    \<comment> \<open>Key property: each connected component of non-cycle arcs attaches to C at exactly 1 vertex.
-       If a component attached at 2 cycle vertices u, v: the component path u-to-v plus
-       the cycle segment v-to-u would form another simple closed curve in the SC space T.
-       By two\\_arcs\\_same\\_endpoints\\_sc\\_false or similar, this contradicts SC.\<close>
-    \<comment> \<open>This unique attachment defines a well-defined retraction onto C.\<close>
-    show ?thesis sorry \<comment> \<open>Retraction: unique cycle attachment + coherent topology continuity.
-       The hardest remaining sorry. Needs unique-attachment lemma.\<close>
-  qed
+    by (rule cycle_subgraph_retract[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(6)
+        _ _ hC_sub])
+      (use assms(9) in \<open>by100 blast\<close>)+
   \<comment> \<open>Apply scc\\_in\\_sc\\_false.\<close>
   from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
   show False .
