@@ -4553,6 +4553,310 @@ proof -
   finally show ?thesis .
 qed
 
+\<comment> \<open>Arc merge: two arcs sharing one endpoint form an arc.
+   If A is an arc from a to v and B is an arc from v to b, with A inter B = {v},
+   then A union B is an arc from a to b.
+   Proof: path product gives continuous bijection [0,1] to A union B;
+   Theorem 26.6 (compact-to-Hausdorff) gives homeomorphism.\<close>
+lemma arc_merge_at_endpoint:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes hstrict: "is_topology_on_strict X TX"
+      and hhaus: "is_hausdorff_on X TX"
+      and hA_arc: "top1_is_arc_on A (subspace_topology X TX A)"
+      and hB_arc: "top1_is_arc_on B (subspace_topology X TX B)"
+      and hA_sub: "A \<subseteq> X" and hB_sub: "B \<subseteq> X"
+      and hAB_inter: "A \<inter> B = {v}"
+      and hep_A: "top1_arc_endpoints_on A (subspace_topology X TX A) = {a, v}"
+      and hep_B: "top1_arc_endpoints_on B (subspace_topology X TX B) = {v, b}"
+      and ha_ne_v: "a \<noteq> v" and hb_ne_v: "b \<noteq> v"
+  shows "top1_is_arc_on (A \<union> B) (subspace_topology X TX (A \<union> B))
+    \<and> top1_arc_endpoints_on (A \<union> B) (subspace_topology X TX (A \<union> B)) = {a, b}"
+proof -
+  have htop: "is_topology_on X TX"
+    using hstrict unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>Step 1: Get homeomorphisms hA: [0,1] \\<to> A with hA(0)=a, hA(1)=v
+     and hB: [0,1] \\<to> B with hB(0)=v, hB(1)=b.\<close>
+  obtain hA where hhA: "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) hA"
+      and hhA0: "hA 0 = a" and hhA1: "hA 1 = v"
+  proof -
+    obtain h0 where hh0: "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h0"
+      using hA_arc unfolding top1_is_arc_on_def by (by100 blast)
+    have heps0: "top1_arc_endpoints_on A (subspace_topology X TX A) = {h0 0, h0 1}"
+      by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA_sub hA_arc hh0])
+    have hab_h0: "{h0 0, h0 1} = {a, v}" using heps0 hep_A by simp
+    have "h0 0 \<noteq> h0 1"
+    proof
+      assume "h0 0 = h0 1"
+      hence "{h0 0, h0 1} = {h0 0}" by simp
+      hence "card {a, v} \<le> 1" using hab_h0 by simp
+      thus False using ha_ne_v by simp
+    qed
+    from doubleton_eq_iff[OF hab_h0 this]
+    show ?thesis
+    proof
+      assume "h0 0 = a \<and> h0 1 = v" thus ?thesis using that[OF hh0] by (by100 blast)
+    next
+      assume "h0 0 = v \<and> h0 1 = a"
+      have hcomp: "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) (h0 \<circ> (\<lambda>t::real. 1-t))"
+        by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
+      have "(h0 \<circ> (\<lambda>t::real. 1-t)) 0 = a" unfolding comp_def using \<open>h0 0 = v \<and> h0 1 = a\<close> by simp
+      moreover have "(h0 \<circ> (\<lambda>t::real. 1-t)) 1 = v" unfolding comp_def using \<open>h0 0 = v \<and> h0 1 = a\<close> by simp
+      ultimately show ?thesis using that[OF hcomp] by (by100 blast)
+    qed
+  qed
+  obtain hB where hhB: "top1_homeomorphism_on I_set I_top B (subspace_topology X TX B) hB"
+      and hhB0: "hB 0 = v" and hhB1: "hB 1 = b"
+  proof -
+    obtain h0 where hh0: "top1_homeomorphism_on I_set I_top B (subspace_topology X TX B) h0"
+      using hB_arc unfolding top1_is_arc_on_def by (by100 blast)
+    have heps0: "top1_arc_endpoints_on B (subspace_topology X TX B) = {h0 0, h0 1}"
+      by (rule arc_endpoints_are_boundary[OF hstrict hhaus hB_sub hB_arc hh0])
+    have hvb_h0: "{h0 0, h0 1} = {v, b}" using heps0 hep_B by simp
+    have "h0 0 \<noteq> h0 1"
+    proof
+      assume "h0 0 = h0 1"
+      hence "{h0 0, h0 1} = {h0 0}" by simp
+      hence "card {v, b} \<le> 1" using hvb_h0 by simp
+      thus False using hb_ne_v by simp
+    qed
+    from doubleton_eq_iff[OF hvb_h0 this]
+    show ?thesis
+    proof
+      assume "h0 0 = v \<and> h0 1 = b" thus ?thesis using that[OF hh0] by (by100 blast)
+    next
+      assume "h0 0 = b \<and> h0 1 = v"
+      have hcomp: "top1_homeomorphism_on I_set I_top B (subspace_topology X TX B) (h0 \<circ> (\<lambda>t::real. 1-t))"
+        by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
+      have "(h0 \<circ> (\<lambda>t::real. 1-t)) 0 = v" unfolding comp_def using \<open>h0 0 = b \<and> h0 1 = v\<close> by simp
+      moreover have "(h0 \<circ> (\<lambda>t::real. 1-t)) 1 = b" unfolding comp_def using \<open>h0 0 = b \<and> h0 1 = v\<close> by simp
+      ultimately show ?thesis using that[OF hcomp] by (by100 blast)
+    qed
+  qed
+  \<comment> \<open>Step 2: Define H = path\\_product hA hB : [0,1] \\<to> A \\<union> B.\<close>
+  let ?H = "top1_path_product hA hB"
+  have hmatch: "hA 1 = hB 0" using hhA1 hhB0 by simp
+  \<comment> \<open>Step 3: H is continuous as a map [0,1] \\<to> X.\<close>
+  have hI_top: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have hA_top: "is_topology_on A (subspace_topology X TX A)"
+    by (rule subspace_topology_is_topology_on[OF htop hA_sub])
+  have hB_top: "is_topology_on B (subspace_topology X TX B)"
+    by (rule subspace_topology_is_topology_on[OF htop hB_sub])
+  have hhA_cont: "top1_continuous_map_on I_set I_top X TX hA"
+  proof -
+    have hcA: "top1_continuous_map_on I_set I_top A (subspace_topology X TX A) hA"
+      using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+    from Theorem_18_2(6)[OF hI_top hA_top htop, rule_format, of hA]
+    show ?thesis using hcA hA_sub by (by100 blast)
+  qed
+  have hhB_cont: "top1_continuous_map_on I_set I_top X TX hB"
+  proof -
+    have hcB: "top1_continuous_map_on I_set I_top B (subspace_topology X TX B) hB"
+      using hhB unfolding top1_homeomorphism_on_def by (by100 blast)
+    from Theorem_18_2(6)[OF hI_top hB_top htop, rule_format, of hB]
+    show ?thesis using hcB hB_sub by (by100 blast)
+  qed
+  have hH_cont: "top1_continuous_map_on I_set I_top X TX ?H"
+    by (rule top1_path_product_continuous[OF htop hhA_cont hhB_cont hmatch])
+  \<comment> \<open>Step 4: H maps I\\_set into A \\<union> B.\<close>
+  have hH_range: "\<forall>t\<in>I_set. ?H t \<in> A \<union> B"
+  proof (intro ballI)
+    fix t assume "t \<in> I_set"
+    show "?H t \<in> A \<union> B"
+    proof (cases "t \<le> 1/2")
+      case True
+      have "2 * t \<in> I_set"
+        using \<open>t \<in> I_set\<close> True unfolding top1_unit_interval_def by (by100 auto)
+      have hA_in: "hA (2*t) \<in> A"
+        using hhA \<open>2 * t \<in> I_set\<close> unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "?H t = hA (2 * t)" unfolding top1_path_product_def using True by simp
+      thus ?thesis using hA_in by simp
+    next
+      case False
+      have "2 * t - 1 \<in> I_set"
+        using \<open>t \<in> I_set\<close> False unfolding top1_unit_interval_def by (by100 auto)
+      have hB_in: "hB (2*t - 1) \<in> B"
+        using hhB \<open>2 * t - 1 \<in> I_set\<close> unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have "?H t = hB (2 * t - 1)" unfolding top1_path_product_def using False by simp
+      thus ?thesis using hB_in by simp
+    qed
+  qed
+  \<comment> \<open>Step 5: H is surjective onto A \\<union> B.
+     Left half [0,1/2] maps onto A via hA, right half [1/2,1] maps onto B via hB.\<close>
+  have hH_surj: "?H ` I_set = A \<union> B"
+  proof
+    show "?H ` I_set \<subseteq> A \<union> B" using hH_range by (by100 blast)
+  next
+    have hA_bij: "bij_betw hA I_set A" using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hB_bij: "bij_betw hB I_set B" using hhB unfolding top1_homeomorphism_on_def by (by100 blast)
+    show "A \<union> B \<subseteq> ?H ` I_set"
+    proof
+      fix x assume "x \<in> A \<union> B"
+      thus "x \<in> ?H ` I_set"
+      proof
+        assume "x \<in> A"
+        then obtain t where ht: "t \<in> I_set" "hA t = x"
+          using hA_bij unfolding bij_betw_def by (by100 blast)
+        have "t/2 \<in> I_set" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
+        have "t/2 \<le> 1/2" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
+        have "?H (t/2) = hA (2 * (t/2))" unfolding top1_path_product_def using \<open>t/2 \<le> 1/2\<close> by simp
+        hence "?H (t/2) = hA t" by simp
+        hence "?H (t/2) = x" using ht(2) by simp
+        thus "x \<in> ?H ` I_set" using \<open>t/2 \<in> I_set\<close> by (by100 blast)
+      next
+        assume "x \<in> B"
+        then obtain t where ht: "t \<in> I_set" "hB t = x"
+          using hB_bij unfolding bij_betw_def by (by100 blast)
+        show "x \<in> ?H ` I_set"
+        proof (cases "t = 0")
+          case True
+          \<comment> \<open>t=0: hB(0)=v=hA(1). H(1/2)=hA(1)=v=hB(0)=x.\<close>
+          have "?H (1/2) = hA (2 * (1/2::real))" unfolding top1_path_product_def by simp
+          hence "?H (1/2) = hA 1" by simp
+          hence "?H (1/2) = v" using hhA1 by simp
+          hence "?H (1/2) = x" using ht(2) True hhB0 by simp
+          moreover have "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
+          ultimately show ?thesis by (by100 blast)
+        next
+          case False
+          have "(t+1)/2 \<in> I_set" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
+          have "t > 0" using ht(1) False unfolding top1_unit_interval_def by (by100 auto)
+          hence "\<not> ((t+1)/2 \<le> (1::real)/2)"
+            by (simp add: field_simps)
+          have "?H ((t+1)/2) = hB (2 * ((t+1)/2) - 1)" unfolding top1_path_product_def
+            using \<open>\<not> ((t+1)/2 \<le> 1/2)\<close> by simp
+          have "2 * ((t+1)/2) - 1 = (t::real)" by (simp add: field_simps)
+          hence "?H ((t+1)/2) = hB t" using \<open>?H ((t+1)/2) = hB (2 * ((t+1)/2) - 1)\<close> by simp
+          hence "?H ((t+1)/2) = x" using ht(2) by simp
+          thus ?thesis using \<open>(t+1)/2 \<in> I_set\<close> by (by100 blast)
+        qed
+      qed
+    qed
+  qed
+  \<comment> \<open>Step 6: H is injective on I\\_set.\<close>
+  have hH_inj: "inj_on ?H I_set"
+  proof (rule inj_onI)
+    fix t1 t2 assume ht1: "t1 \<in> I_set" and ht2: "t2 \<in> I_set" and heq: "?H t1 = ?H t2"
+    have hA_inj: "inj_on hA I_set" using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have hB_inj: "inj_on hB I_set" using hhB unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    have hA_bij: "bij_betw hA I_set A" using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
+    have hB_bij: "bij_betw hB I_set B" using hhB unfolding top1_homeomorphism_on_def by (by100 blast)
+    show "t1 = t2"
+    proof (cases "t1 \<le> 1/2")
+      case True note ht1_le = this
+      show ?thesis
+      proof (cases "t2 \<le> 1/2")
+        case True
+        \<comment> \<open>Both in left half: use hA injectivity.\<close>
+        have "hA (2*t1) = hA (2*t2)"
+          using heq ht1_le True unfolding top1_path_product_def by simp
+        moreover have "2*t1 \<in> I_set" using ht1 ht1_le unfolding top1_unit_interval_def by (by100 auto)
+        moreover have "2*t2 \<in> I_set" using ht2 True unfolding top1_unit_interval_def by (by100 auto)
+        ultimately have "2*t1 = 2*t2" using inj_onD[OF hA_inj] by (by100 blast)
+        thus ?thesis by linarith
+      next
+        case False
+        \<comment> \<open>t1 in left, t2 in right: H(t1) \\<in> A, H(t2) \\<in> B\\{v}. Disjoint by A \\<inter> B = {v}.\<close>
+        have h1: "?H t1 = hA (2*t1)" using ht1_le unfolding top1_path_product_def by simp
+        have h2: "?H t2 = hB (2*t2-1)" using False unfolding top1_path_product_def by simp
+        have "2*t1 \<in> I_set" using ht1 ht1_le unfolding top1_unit_interval_def by (by100 auto)
+        have "hA (2*t1) \<in> A" using hA_bij \<open>2*t1 \<in> I_set\<close> unfolding bij_betw_def by (by100 blast)
+        have "2*t2-1 \<in> I_set" using ht2 False unfolding top1_unit_interval_def by (by100 auto)
+        have "hB (2*t2-1) \<in> B" using hB_bij \<open>2*t2-1 \<in> I_set\<close> unfolding bij_betw_def by (by100 blast)
+        have "2*t2-1 > 0" using False ht2 unfolding top1_unit_interval_def by (by100 auto)
+        hence "2*t2-1 \<noteq> 0" by linarith
+        hence "hB (2*t2-1) \<noteq> v"
+          using inj_onD[OF hB_inj _ _ , of "2*t2-1" 0] \<open>2*t2-1 \<in> I_set\<close> hhB0
+          unfolding top1_unit_interval_def by (by100 auto)
+        hence "hB (2*t2-1) \<notin> A" using hAB_inter \<open>hB (2*t2-1) \<in> B\<close> by (by100 blast)
+        have "hA (2*t1) \<in> A" by (rule \<open>hA (2*t1) \<in> A\<close>)
+        have "hB (2*t2-1) \<notin> A" by (rule \<open>hB (2*t2-1) \<notin> A\<close>)
+        have "hA (2*t1) \<noteq> hB (2*t2-1)"
+        proof
+          assume "hA (2*t1) = hB (2*t2-1)"
+          thus False using \<open>hA (2*t1) \<in> A\<close> \<open>hB (2*t2-1) \<notin> A\<close> by simp
+        qed
+        thus ?thesis using heq h1 h2 by (by100 force)
+      qed
+    next
+      case False note ht1_gt = this
+      show ?thesis
+      proof (cases "t2 \<le> 1/2")
+        case True
+        \<comment> \<open>Symmetric to the t1 left, t2 right case.\<close>
+        have h1: "?H t1 = hB (2*t1-1)" using ht1_gt unfolding top1_path_product_def by simp
+        have h2: "?H t2 = hA (2*t2)" using True unfolding top1_path_product_def by simp
+        have "2*t1-1 \<in> I_set" using ht1 ht1_gt unfolding top1_unit_interval_def by (by100 auto)
+        have "hB (2*t1-1) \<in> B" using hB_bij \<open>2*t1-1 \<in> I_set\<close> unfolding bij_betw_def by (by100 blast)
+        have "2*t1-1 > 0" using ht1_gt ht1 unfolding top1_unit_interval_def by (by100 auto)
+        hence "2*t1-1 \<noteq> 0" by linarith
+        hence "hB (2*t1-1) \<noteq> v"
+          using inj_onD[OF hB_inj, of "2*t1-1" 0] \<open>2*t1-1 \<in> I_set\<close> hhB0
+          unfolding top1_unit_interval_def by (by100 auto)
+        hence "hB (2*t1-1) \<notin> A" using hAB_inter \<open>hB (2*t1-1) \<in> B\<close> by (by100 blast)
+        have "2*t2 \<in> I_set" using ht2 True unfolding top1_unit_interval_def by (by100 auto)
+        have "hA (2*t2) \<in> A" using hA_bij \<open>2*t2 \<in> I_set\<close> unfolding bij_betw_def by (by100 blast)
+        have "hB (2*t1-1) \<noteq> hA (2*t2)"
+        proof
+          assume "hB (2*t1-1) = hA (2*t2)"
+          thus False using \<open>hB (2*t1-1) \<notin> A\<close> \<open>hA (2*t2) \<in> A\<close> by simp
+        qed
+        thus ?thesis using heq h1 h2 by (by100 force)
+      next
+        case False
+        \<comment> \<open>Both in right half: use hB injectivity.\<close>
+        have "hB (2*t1-1) = hB (2*t2-1)"
+          using heq ht1_gt False unfolding top1_path_product_def by simp
+        moreover have "2*t1-1 \<in> I_set" using ht1 ht1_gt unfolding top1_unit_interval_def by (by100 auto)
+        moreover have "2*t2-1 \<in> I_set" using ht2 False unfolding top1_unit_interval_def by (by100 auto)
+        ultimately have "2*t1-1 = 2*t2-1" using inj_onD[OF hB_inj] by (by100 blast)
+        thus ?thesis by linarith
+      qed
+    qed
+  qed
+  \<comment> \<open>Step 7: H is a bijection I\\_set \\<to> A \\<union> B.\<close>
+  have hH_bij: "bij_betw ?H I_set (A \<union> B)"
+    unfolding bij_betw_def using hH_inj hH_surj by (by100 blast)
+  \<comment> \<open>Step 8: A \\<union> B with subspace topology is Hausdorff.\<close>
+  have hAB_sub: "A \<union> B \<subseteq> X" using hA_sub hB_sub by (by100 blast)
+  have hAB_top: "is_topology_on (A \<union> B) (subspace_topology X TX (A \<union> B))"
+    by (rule subspace_topology_is_topology_on[OF htop hAB_sub])
+  have hAB_haus: "is_hausdorff_on (A \<union> B) (subspace_topology X TX (A \<union> B))"
+    using hhaus hAB_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+  \<comment> \<open>Step 9: H is continuous I\\_set \\<to> (A \\<union> B, subspace\\_topology).\<close>
+  have hH_cont_sub: "top1_continuous_map_on I_set I_top (A \<union> B) (subspace_topology X TX (A \<union> B)) ?H"
+    by (rule continuous_map_restrict_codomain[OF hH_cont hH_range hAB_sub])
+  \<comment> \<open>Step 10: Apply Theorem 26.6 (compact-to-Hausdorff bijection is homeomorphism).\<close>
+  have hI_top: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
+  have hI_compact: "top1_compact_on I_set I_top"
+    unfolding top1_unit_interval_def top1_unit_interval_topology_def
+    using Theorem_27_1[of "0::real" 1] by (by100 simp)
+  from Theorem_26_6[OF hI_top hAB_top hI_compact hAB_haus hH_cont_sub hH_bij]
+  have "top1_homeomorphism_on I_set I_top (A \<union> B) (subspace_topology X TX (A \<union> B)) ?H" .
+  have hAB_strict: "is_topology_on_strict (A \<union> B) (subspace_topology X TX (A \<union> B))"
+  proof -
+    have "\<forall>U\<in>subspace_topology X TX (A \<union> B). U \<subseteq> A \<union> B"
+      unfolding subspace_topology_def by (by100 blast)
+    thus ?thesis using hAB_top unfolding is_topology_on_strict_def by (by100 blast)
+  qed
+  have hAB_arc: "top1_is_arc_on (A \<union> B) (subspace_topology X TX (A \<union> B))"
+    unfolding top1_is_arc_on_def using hAB_strict
+    \<open>top1_homeomorphism_on I_set I_top (A \<union> B) (subspace_topology X TX (A \<union> B)) ?H\<close>
+    by (by100 blast)
+  \<comment> \<open>Step 11: Endpoints of A \\<union> B are {a, b}.\<close>
+  have hep_AB: "top1_arc_endpoints_on (A \<union> B) (subspace_topology X TX (A \<union> B)) = {a, b}"
+  proof -
+    from arc_endpoints_are_boundary[OF hstrict hhaus hAB_sub hAB_arc
+        \<open>top1_homeomorphism_on I_set I_top (A \<union> B) (subspace_topology X TX (A \<union> B)) ?H\<close>]
+    have "top1_arc_endpoints_on (A \<union> B) (subspace_topology X TX (A \<union> B)) = {?H 0, ?H 1}" .
+    moreover have "?H 0 = a"
+      unfolding top1_path_product_def using hhA0 by simp
+    moreover have "?H 1 = b"
+      unfolding top1_path_product_def using hhB1 by simp
+    ultimately show ?thesis by simp
+  qed
+  show ?thesis using hAB_arc hep_AB by (by100 blast)
+qed
+
 
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
    A "cycle" here means a sequence of \\<ge> 2 distinct arcs A1, ..., Ak such that
@@ -4981,7 +5285,62 @@ proof -
             \<comment> \<open>ws!n' is the next arc. Shared vertex with A1' is shared\\_v(n'-1).\<close>
             \<comment> \<open>A1' \\<inter> ws!n' = {shared\\_v(n'-1)} from hdisjoint\\_non\\_adj.\<close>
             \<comment> \<open>Apply arc\\_merge\\_at\\_endpoint to get A1' \\<union> ws!n'.\<close>
-            show ?thesis sorry \<comment> \<open>Step case: arc\\_merge\\_at\\_endpoint application.\<close>
+            have hn'_lt: "n' < ?k" using \<open>n' \<le> ?k - 1\<close> hk_ge2 by linarith
+            have "0 < length ws" using hk_ge2 by linarith
+            have "ws ! n' \<in> set ws" using hn'_lt by (by100 simp)
+            hence hwsn': "ws ! n' \<in> \<A>" using assms(9) by (by100 blast)
+            have hwsn'_arc: "top1_is_arc_on (ws!n') (subspace_topology T TT (ws!n'))"
+              using assms(2) hwsn' by (by100 blast)
+            have hwsn'_sub: "ws!n' \<subseteq> T" using assms(2) hwsn' by (by100 blast)
+            \<comment> \<open>A1' \\<inter> ws!n' = {shared\\_v(n'-1)}.\<close>
+            have hinter: "A1' \<inter> ws ! n' = {shared_v (n' - 1)}" sorry
+            \<comment> \<open>Endpoint of ws!n': {shared\\_v(n'-1), shared\\_v(n')}.\<close>
+            have hepn': "?ep (ws ! n') = {shared_v (n' - 1), shared_v n'}"
+            proof -
+              have "n' + ?k - 1 = (n' - 1) + ?k" using \<open>n' \<ge> 1\<close> by linarith
+              hence "(n' + ?k - 1) mod ?k = (n' - 1) mod ?k" by (by100 simp)
+              have "n' - 1 < ?k" using hn'_lt by linarith
+              hence "(n' - 1) mod ?k = n' - 1" by (by100 simp)
+              hence "(n' + ?k - 1) mod ?k = n' - 1"
+                using \<open>(n' + ?k - 1) mod ?k = (n' - 1) mod ?k\<close> by (by100 simp)
+              thus ?thesis using harc_ep[rule_format, OF hn'_lt] by (by100 simp)
+            qed
+            \<comment> \<open>shared\\_v(n'-1) \\<noteq> shared\\_v(n') and shared\\_v(k-1) \\<noteq> shared\\_v(n'-1).\<close>
+            have "n' - 1 < ?k" using hn'_lt by linarith
+            have hsv_ne: "shared_v (n' - 1) \<noteq> shared_v n'"
+              using hshared_v_distinct[rule_format, OF \<open>n'-1 < ?k\<close> hn'_lt] \<open>n' \<ge> 1\<close> by linarith
+            \<comment> \<open>Apply arc\\_merge\\_at\\_endpoint: A1' and ws!n' share vertex shared\\_v(n'-1).\<close>
+            have hsv_ne2: "shared_v n' \<noteq> shared_v (n' - 1)" using hsv_ne by (by100 simp)
+            from arc_merge_at_endpoint[OF hstrict hhaus hIH(1) hwsn'_arc hIH(2) hwsn'_sub
+                hinter hIH(4) hepn' hIH(5) hsv_ne2]
+            have hmerge: "top1_is_arc_on (A1' \<union> ws!n') (subspace_topology T TT (A1' \<union> ws!n'))
+                \<and> ?ep (A1' \<union> ws!n') = {shared_v ((?k-1) mod ?k), shared_v n'}"
+              sorry
+            \<comment> \<open>Assembly: take (Suc n') ws = take n' ws @ [ws!n'].\<close>
+            have "Suc n' \<le> length ws" using Suc.prems(2) hk_ge2 by linarith
+            have "take (Suc n') ws = take n' ws @ [ws ! n']"
+            proof -
+              have "n' < length ws" using hn'_lt by (by100 simp)
+              thus ?thesis by (rule take_Suc_conv_app_nth)
+            qed
+            hence "set (take (Suc n') ws) = set (take n' ws) \<union> {ws ! n'}" by (by100 simp)
+            hence "\<Union>(set (take (Suc n') ws)) = \<Union>(set (take n' ws)) \<union> ws ! n'" by (by100 force)
+            hence "\<Union>(set (take (Suc n') ws)) = A1' \<union> ws ! n'" using hIH(3) by (by100 simp)
+            have "(?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+            have "(?k - 1) mod ?k \<noteq> n'"
+            proof -
+              have "?k - 1 \<noteq> n'" using Suc.prems(2) by linarith
+              thus ?thesis using \<open>(?k - 1) mod ?k = ?k - 1\<close> by (by100 simp)
+            qed
+            have "shared_v ((?k - 1) mod ?k) \<noteq> shared_v n'"
+              using hshared_v_distinct[rule_format, OF _ hn'_lt \<open>(?k-1) mod ?k \<noteq> n'\<close>]
+              hk_ge2 by (by100 simp)
+            have hm_arc: "top1_is_arc_on (A1' \<union> ws!n') (subspace_topology T TT (A1' \<union> ws!n'))"
+              using hmerge by (by100 blast)
+            have hm_ep: "?ep (A1' \<union> ws!n') = {shared_v ((?k-1) mod ?k), shared_v n'}"
+              using hmerge by (by100 blast)
+            have hm_sub: "A1' \<union> ws!n' \<subseteq> T" using hIH(2) hwsn'_sub by (by100 blast)
+            show ?thesis sorry
           qed
         qed
       qed
@@ -7252,310 +7611,6 @@ proof -
   qed
   from scc_in_sc_false[OF hsc htop hhaus hSCC hretract]
   show False by simp
-qed
-
-\<comment> \<open>Arc merge: two arcs sharing one endpoint form an arc.
-   If A is an arc from a to v and B is an arc from v to b, with A inter B = {v},
-   then A union B is an arc from a to b.
-   Proof: path product gives continuous bijection [0,1] to A union B;
-   Theorem 26.6 (compact-to-Hausdorff) gives homeomorphism.\<close>
-lemma arc_merge_at_endpoint:
-  fixes X :: "'a set" and TX :: "'a set set"
-  assumes hstrict: "is_topology_on_strict X TX"
-      and hhaus: "is_hausdorff_on X TX"
-      and hA_arc: "top1_is_arc_on A (subspace_topology X TX A)"
-      and hB_arc: "top1_is_arc_on B (subspace_topology X TX B)"
-      and hA_sub: "A \<subseteq> X" and hB_sub: "B \<subseteq> X"
-      and hAB_inter: "A \<inter> B = {v}"
-      and hep_A: "top1_arc_endpoints_on A (subspace_topology X TX A) = {a, v}"
-      and hep_B: "top1_arc_endpoints_on B (subspace_topology X TX B) = {v, b}"
-      and ha_ne_v: "a \<noteq> v" and hb_ne_v: "b \<noteq> v"
-  shows "top1_is_arc_on (A \<union> B) (subspace_topology X TX (A \<union> B))
-    \<and> top1_arc_endpoints_on (A \<union> B) (subspace_topology X TX (A \<union> B)) = {a, b}"
-proof -
-  have htop: "is_topology_on X TX"
-    using hstrict unfolding is_topology_on_strict_def by (by100 blast)
-  \<comment> \<open>Step 1: Get homeomorphisms hA: [0,1] \\<to> A with hA(0)=a, hA(1)=v
-     and hB: [0,1] \\<to> B with hB(0)=v, hB(1)=b.\<close>
-  obtain hA where hhA: "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) hA"
-      and hhA0: "hA 0 = a" and hhA1: "hA 1 = v"
-  proof -
-    obtain h0 where hh0: "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h0"
-      using hA_arc unfolding top1_is_arc_on_def by (by100 blast)
-    have heps0: "top1_arc_endpoints_on A (subspace_topology X TX A) = {h0 0, h0 1}"
-      by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA_sub hA_arc hh0])
-    have hab_h0: "{h0 0, h0 1} = {a, v}" using heps0 hep_A by simp
-    have "h0 0 \<noteq> h0 1"
-    proof
-      assume "h0 0 = h0 1"
-      hence "{h0 0, h0 1} = {h0 0}" by simp
-      hence "card {a, v} \<le> 1" using hab_h0 by simp
-      thus False using ha_ne_v by simp
-    qed
-    from doubleton_eq_iff[OF hab_h0 this]
-    show ?thesis
-    proof
-      assume "h0 0 = a \<and> h0 1 = v" thus ?thesis using that[OF hh0] by (by100 blast)
-    next
-      assume "h0 0 = v \<and> h0 1 = a"
-      have hcomp: "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) (h0 \<circ> (\<lambda>t::real. 1-t))"
-        by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
-      have "(h0 \<circ> (\<lambda>t::real. 1-t)) 0 = a" unfolding comp_def using \<open>h0 0 = v \<and> h0 1 = a\<close> by simp
-      moreover have "(h0 \<circ> (\<lambda>t::real. 1-t)) 1 = v" unfolding comp_def using \<open>h0 0 = v \<and> h0 1 = a\<close> by simp
-      ultimately show ?thesis using that[OF hcomp] by (by100 blast)
-    qed
-  qed
-  obtain hB where hhB: "top1_homeomorphism_on I_set I_top B (subspace_topology X TX B) hB"
-      and hhB0: "hB 0 = v" and hhB1: "hB 1 = b"
-  proof -
-    obtain h0 where hh0: "top1_homeomorphism_on I_set I_top B (subspace_topology X TX B) h0"
-      using hB_arc unfolding top1_is_arc_on_def by (by100 blast)
-    have heps0: "top1_arc_endpoints_on B (subspace_topology X TX B) = {h0 0, h0 1}"
-      by (rule arc_endpoints_are_boundary[OF hstrict hhaus hB_sub hB_arc hh0])
-    have hvb_h0: "{h0 0, h0 1} = {v, b}" using heps0 hep_B by simp
-    have "h0 0 \<noteq> h0 1"
-    proof
-      assume "h0 0 = h0 1"
-      hence "{h0 0, h0 1} = {h0 0}" by simp
-      hence "card {v, b} \<le> 1" using hvb_h0 by simp
-      thus False using hb_ne_v by simp
-    qed
-    from doubleton_eq_iff[OF hvb_h0 this]
-    show ?thesis
-    proof
-      assume "h0 0 = v \<and> h0 1 = b" thus ?thesis using that[OF hh0] by (by100 blast)
-    next
-      assume "h0 0 = b \<and> h0 1 = v"
-      have hcomp: "top1_homeomorphism_on I_set I_top B (subspace_topology X TX B) (h0 \<circ> (\<lambda>t::real. 1-t))"
-        by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
-      have "(h0 \<circ> (\<lambda>t::real. 1-t)) 0 = v" unfolding comp_def using \<open>h0 0 = b \<and> h0 1 = v\<close> by simp
-      moreover have "(h0 \<circ> (\<lambda>t::real. 1-t)) 1 = b" unfolding comp_def using \<open>h0 0 = b \<and> h0 1 = v\<close> by simp
-      ultimately show ?thesis using that[OF hcomp] by (by100 blast)
-    qed
-  qed
-  \<comment> \<open>Step 2: Define H = path\\_product hA hB : [0,1] \\<to> A \\<union> B.\<close>
-  let ?H = "top1_path_product hA hB"
-  have hmatch: "hA 1 = hB 0" using hhA1 hhB0 by simp
-  \<comment> \<open>Step 3: H is continuous as a map [0,1] \\<to> X.\<close>
-  have hI_top: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-  have hA_top: "is_topology_on A (subspace_topology X TX A)"
-    by (rule subspace_topology_is_topology_on[OF htop hA_sub])
-  have hB_top: "is_topology_on B (subspace_topology X TX B)"
-    by (rule subspace_topology_is_topology_on[OF htop hB_sub])
-  have hhA_cont: "top1_continuous_map_on I_set I_top X TX hA"
-  proof -
-    have hcA: "top1_continuous_map_on I_set I_top A (subspace_topology X TX A) hA"
-      using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
-    from Theorem_18_2(6)[OF hI_top hA_top htop, rule_format, of hA]
-    show ?thesis using hcA hA_sub by (by100 blast)
-  qed
-  have hhB_cont: "top1_continuous_map_on I_set I_top X TX hB"
-  proof -
-    have hcB: "top1_continuous_map_on I_set I_top B (subspace_topology X TX B) hB"
-      using hhB unfolding top1_homeomorphism_on_def by (by100 blast)
-    from Theorem_18_2(6)[OF hI_top hB_top htop, rule_format, of hB]
-    show ?thesis using hcB hB_sub by (by100 blast)
-  qed
-  have hH_cont: "top1_continuous_map_on I_set I_top X TX ?H"
-    by (rule top1_path_product_continuous[OF htop hhA_cont hhB_cont hmatch])
-  \<comment> \<open>Step 4: H maps I\\_set into A \\<union> B.\<close>
-  have hH_range: "\<forall>t\<in>I_set. ?H t \<in> A \<union> B"
-  proof (intro ballI)
-    fix t assume "t \<in> I_set"
-    show "?H t \<in> A \<union> B"
-    proof (cases "t \<le> 1/2")
-      case True
-      have "2 * t \<in> I_set"
-        using \<open>t \<in> I_set\<close> True unfolding top1_unit_interval_def by (by100 auto)
-      have hA_in: "hA (2*t) \<in> A"
-        using hhA \<open>2 * t \<in> I_set\<close> unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-      have "?H t = hA (2 * t)" unfolding top1_path_product_def using True by simp
-      thus ?thesis using hA_in by simp
-    next
-      case False
-      have "2 * t - 1 \<in> I_set"
-        using \<open>t \<in> I_set\<close> False unfolding top1_unit_interval_def by (by100 auto)
-      have hB_in: "hB (2*t - 1) \<in> B"
-        using hhB \<open>2 * t - 1 \<in> I_set\<close> unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-      have "?H t = hB (2 * t - 1)" unfolding top1_path_product_def using False by simp
-      thus ?thesis using hB_in by simp
-    qed
-  qed
-  \<comment> \<open>Step 5: H is surjective onto A \\<union> B.
-     Left half [0,1/2] maps onto A via hA, right half [1/2,1] maps onto B via hB.\<close>
-  have hH_surj: "?H ` I_set = A \<union> B"
-  proof
-    show "?H ` I_set \<subseteq> A \<union> B" using hH_range by (by100 blast)
-  next
-    have hA_bij: "bij_betw hA I_set A" using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
-    have hB_bij: "bij_betw hB I_set B" using hhB unfolding top1_homeomorphism_on_def by (by100 blast)
-    show "A \<union> B \<subseteq> ?H ` I_set"
-    proof
-      fix x assume "x \<in> A \<union> B"
-      thus "x \<in> ?H ` I_set"
-      proof
-        assume "x \<in> A"
-        then obtain t where ht: "t \<in> I_set" "hA t = x"
-          using hA_bij unfolding bij_betw_def by (by100 blast)
-        have "t/2 \<in> I_set" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
-        have "t/2 \<le> 1/2" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
-        have "?H (t/2) = hA (2 * (t/2))" unfolding top1_path_product_def using \<open>t/2 \<le> 1/2\<close> by simp
-        hence "?H (t/2) = hA t" by simp
-        hence "?H (t/2) = x" using ht(2) by simp
-        thus "x \<in> ?H ` I_set" using \<open>t/2 \<in> I_set\<close> by (by100 blast)
-      next
-        assume "x \<in> B"
-        then obtain t where ht: "t \<in> I_set" "hB t = x"
-          using hB_bij unfolding bij_betw_def by (by100 blast)
-        show "x \<in> ?H ` I_set"
-        proof (cases "t = 0")
-          case True
-          \<comment> \<open>t=0: hB(0)=v=hA(1). H(1/2)=hA(1)=v=hB(0)=x.\<close>
-          have "?H (1/2) = hA (2 * (1/2::real))" unfolding top1_path_product_def by simp
-          hence "?H (1/2) = hA 1" by simp
-          hence "?H (1/2) = v" using hhA1 by simp
-          hence "?H (1/2) = x" using ht(2) True hhB0 by simp
-          moreover have "(1/2::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
-          ultimately show ?thesis by (by100 blast)
-        next
-          case False
-          have "(t+1)/2 \<in> I_set" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
-          have "t > 0" using ht(1) False unfolding top1_unit_interval_def by (by100 auto)
-          hence "\<not> ((t+1)/2 \<le> (1::real)/2)"
-            by (simp add: field_simps)
-          have "?H ((t+1)/2) = hB (2 * ((t+1)/2) - 1)" unfolding top1_path_product_def
-            using \<open>\<not> ((t+1)/2 \<le> 1/2)\<close> by simp
-          have "2 * ((t+1)/2) - 1 = (t::real)" by (simp add: field_simps)
-          hence "?H ((t+1)/2) = hB t" using \<open>?H ((t+1)/2) = hB (2 * ((t+1)/2) - 1)\<close> by simp
-          hence "?H ((t+1)/2) = x" using ht(2) by simp
-          thus ?thesis using \<open>(t+1)/2 \<in> I_set\<close> by (by100 blast)
-        qed
-      qed
-    qed
-  qed
-  \<comment> \<open>Step 6: H is injective on I\\_set.\<close>
-  have hH_inj: "inj_on ?H I_set"
-  proof (rule inj_onI)
-    fix t1 t2 assume ht1: "t1 \<in> I_set" and ht2: "t2 \<in> I_set" and heq: "?H t1 = ?H t2"
-    have hA_inj: "inj_on hA I_set" using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-    have hB_inj: "inj_on hB I_set" using hhB unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-    have hA_bij: "bij_betw hA I_set A" using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
-    have hB_bij: "bij_betw hB I_set B" using hhB unfolding top1_homeomorphism_on_def by (by100 blast)
-    show "t1 = t2"
-    proof (cases "t1 \<le> 1/2")
-      case True note ht1_le = this
-      show ?thesis
-      proof (cases "t2 \<le> 1/2")
-        case True
-        \<comment> \<open>Both in left half: use hA injectivity.\<close>
-        have "hA (2*t1) = hA (2*t2)"
-          using heq ht1_le True unfolding top1_path_product_def by simp
-        moreover have "2*t1 \<in> I_set" using ht1 ht1_le unfolding top1_unit_interval_def by (by100 auto)
-        moreover have "2*t2 \<in> I_set" using ht2 True unfolding top1_unit_interval_def by (by100 auto)
-        ultimately have "2*t1 = 2*t2" using inj_onD[OF hA_inj] by (by100 blast)
-        thus ?thesis by linarith
-      next
-        case False
-        \<comment> \<open>t1 in left, t2 in right: H(t1) \\<in> A, H(t2) \\<in> B\\{v}. Disjoint by A \\<inter> B = {v}.\<close>
-        have h1: "?H t1 = hA (2*t1)" using ht1_le unfolding top1_path_product_def by simp
-        have h2: "?H t2 = hB (2*t2-1)" using False unfolding top1_path_product_def by simp
-        have "2*t1 \<in> I_set" using ht1 ht1_le unfolding top1_unit_interval_def by (by100 auto)
-        have "hA (2*t1) \<in> A" using hA_bij \<open>2*t1 \<in> I_set\<close> unfolding bij_betw_def by (by100 blast)
-        have "2*t2-1 \<in> I_set" using ht2 False unfolding top1_unit_interval_def by (by100 auto)
-        have "hB (2*t2-1) \<in> B" using hB_bij \<open>2*t2-1 \<in> I_set\<close> unfolding bij_betw_def by (by100 blast)
-        have "2*t2-1 > 0" using False ht2 unfolding top1_unit_interval_def by (by100 auto)
-        hence "2*t2-1 \<noteq> 0" by linarith
-        hence "hB (2*t2-1) \<noteq> v"
-          using inj_onD[OF hB_inj _ _ , of "2*t2-1" 0] \<open>2*t2-1 \<in> I_set\<close> hhB0
-          unfolding top1_unit_interval_def by (by100 auto)
-        hence "hB (2*t2-1) \<notin> A" using hAB_inter \<open>hB (2*t2-1) \<in> B\<close> by (by100 blast)
-        have "hA (2*t1) \<in> A" by (rule \<open>hA (2*t1) \<in> A\<close>)
-        have "hB (2*t2-1) \<notin> A" by (rule \<open>hB (2*t2-1) \<notin> A\<close>)
-        have "hA (2*t1) \<noteq> hB (2*t2-1)"
-        proof
-          assume "hA (2*t1) = hB (2*t2-1)"
-          thus False using \<open>hA (2*t1) \<in> A\<close> \<open>hB (2*t2-1) \<notin> A\<close> by simp
-        qed
-        thus ?thesis using heq h1 h2 by (by100 force)
-      qed
-    next
-      case False note ht1_gt = this
-      show ?thesis
-      proof (cases "t2 \<le> 1/2")
-        case True
-        \<comment> \<open>Symmetric to the t1 left, t2 right case.\<close>
-        have h1: "?H t1 = hB (2*t1-1)" using ht1_gt unfolding top1_path_product_def by simp
-        have h2: "?H t2 = hA (2*t2)" using True unfolding top1_path_product_def by simp
-        have "2*t1-1 \<in> I_set" using ht1 ht1_gt unfolding top1_unit_interval_def by (by100 auto)
-        have "hB (2*t1-1) \<in> B" using hB_bij \<open>2*t1-1 \<in> I_set\<close> unfolding bij_betw_def by (by100 blast)
-        have "2*t1-1 > 0" using ht1_gt ht1 unfolding top1_unit_interval_def by (by100 auto)
-        hence "2*t1-1 \<noteq> 0" by linarith
-        hence "hB (2*t1-1) \<noteq> v"
-          using inj_onD[OF hB_inj, of "2*t1-1" 0] \<open>2*t1-1 \<in> I_set\<close> hhB0
-          unfolding top1_unit_interval_def by (by100 auto)
-        hence "hB (2*t1-1) \<notin> A" using hAB_inter \<open>hB (2*t1-1) \<in> B\<close> by (by100 blast)
-        have "2*t2 \<in> I_set" using ht2 True unfolding top1_unit_interval_def by (by100 auto)
-        have "hA (2*t2) \<in> A" using hA_bij \<open>2*t2 \<in> I_set\<close> unfolding bij_betw_def by (by100 blast)
-        have "hB (2*t1-1) \<noteq> hA (2*t2)"
-        proof
-          assume "hB (2*t1-1) = hA (2*t2)"
-          thus False using \<open>hB (2*t1-1) \<notin> A\<close> \<open>hA (2*t2) \<in> A\<close> by simp
-        qed
-        thus ?thesis using heq h1 h2 by (by100 force)
-      next
-        case False
-        \<comment> \<open>Both in right half: use hB injectivity.\<close>
-        have "hB (2*t1-1) = hB (2*t2-1)"
-          using heq ht1_gt False unfolding top1_path_product_def by simp
-        moreover have "2*t1-1 \<in> I_set" using ht1 ht1_gt unfolding top1_unit_interval_def by (by100 auto)
-        moreover have "2*t2-1 \<in> I_set" using ht2 False unfolding top1_unit_interval_def by (by100 auto)
-        ultimately have "2*t1-1 = 2*t2-1" using inj_onD[OF hB_inj] by (by100 blast)
-        thus ?thesis by linarith
-      qed
-    qed
-  qed
-  \<comment> \<open>Step 7: H is a bijection I\\_set \\<to> A \\<union> B.\<close>
-  have hH_bij: "bij_betw ?H I_set (A \<union> B)"
-    unfolding bij_betw_def using hH_inj hH_surj by (by100 blast)
-  \<comment> \<open>Step 8: A \\<union> B with subspace topology is Hausdorff.\<close>
-  have hAB_sub: "A \<union> B \<subseteq> X" using hA_sub hB_sub by (by100 blast)
-  have hAB_top: "is_topology_on (A \<union> B) (subspace_topology X TX (A \<union> B))"
-    by (rule subspace_topology_is_topology_on[OF htop hAB_sub])
-  have hAB_haus: "is_hausdorff_on (A \<union> B) (subspace_topology X TX (A \<union> B))"
-    using hhaus hAB_sub conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
-  \<comment> \<open>Step 9: H is continuous I\\_set \\<to> (A \\<union> B, subspace\\_topology).\<close>
-  have hH_cont_sub: "top1_continuous_map_on I_set I_top (A \<union> B) (subspace_topology X TX (A \<union> B)) ?H"
-    by (rule continuous_map_restrict_codomain[OF hH_cont hH_range hAB_sub])
-  \<comment> \<open>Step 10: Apply Theorem 26.6 (compact-to-Hausdorff bijection is homeomorphism).\<close>
-  have hI_top: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-  have hI_compact: "top1_compact_on I_set I_top"
-    unfolding top1_unit_interval_def top1_unit_interval_topology_def
-    using Theorem_27_1[of "0::real" 1] by (by100 simp)
-  from Theorem_26_6[OF hI_top hAB_top hI_compact hAB_haus hH_cont_sub hH_bij]
-  have "top1_homeomorphism_on I_set I_top (A \<union> B) (subspace_topology X TX (A \<union> B)) ?H" .
-  have hAB_strict: "is_topology_on_strict (A \<union> B) (subspace_topology X TX (A \<union> B))"
-  proof -
-    have "\<forall>U\<in>subspace_topology X TX (A \<union> B). U \<subseteq> A \<union> B"
-      unfolding subspace_topology_def by (by100 blast)
-    thus ?thesis using hAB_top unfolding is_topology_on_strict_def by (by100 blast)
-  qed
-  have hAB_arc: "top1_is_arc_on (A \<union> B) (subspace_topology X TX (A \<union> B))"
-    unfolding top1_is_arc_on_def using hAB_strict
-    \<open>top1_homeomorphism_on I_set I_top (A \<union> B) (subspace_topology X TX (A \<union> B)) ?H\<close>
-    by (by100 blast)
-  \<comment> \<open>Step 11: Endpoints of A \\<union> B are {a, b}.\<close>
-  have hep_AB: "top1_arc_endpoints_on (A \<union> B) (subspace_topology X TX (A \<union> B)) = {a, b}"
-  proof -
-    from arc_endpoints_are_boundary[OF hstrict hhaus hAB_sub hAB_arc
-        \<open>top1_homeomorphism_on I_set I_top (A \<union> B) (subspace_topology X TX (A \<union> B)) ?H\<close>]
-    have "top1_arc_endpoints_on (A \<union> B) (subspace_topology X TX (A \<union> B)) = {?H 0, ?H 1}" .
-    moreover have "?H 0 = a"
-      unfolding top1_path_product_def using hhA0 by simp
-    moreover have "?H 1 = b"
-      unfolding top1_path_product_def using hhB1 by simp
-    ultimately show ?thesis by simp
-  qed
-  show ?thesis using hAB_arc hep_AB by (by100 blast)
 qed
 
 \<comment> \<open>Tree Euler formula V = E + 1 for SC graphs, proved via building order.
