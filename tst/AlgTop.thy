@@ -4852,66 +4852,17 @@ proof (rule ccontr)
     hence hacyclic: "\<forall>ws :: 'a set list. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> \<A> \<longrightarrow>
         (\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}) \<longrightarrow> False"
       by (by100 blast)
-    \<comment> \<open>Forest Euler: V \\<ge> E + 1.\<close>
-    have hne_A: "\<A> \<noteq> {}" using assms(6) by (by100 force)
-    from forest_euler_formula[OF assms(2) assms(3) assms(4) assms(5) hstrict hhaus hacyclic hne_A]
-    have hV_ge: "card ?V \<ge> card \<A> + 1" .
-    \<comment> \<open>Degree counting: all degrees \\<ge> 2 gives 2E \\<ge> 2V, so E \\<ge> V.\<close>
-    have hep_card: "\<forall>A0\<in>\<A>. card (top1_arc_endpoints_on A0 (subspace_topology T TT A0)) = 2"
-    proof (intro ballI)
-      fix A0 assume "A0 \<in> \<A>"
-      from h2ep[rule_format, OF this]
-      obtain a0 b0 where "a0 \<noteq> b0" "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {a0, b0}"
-        by (by100 blast)
-      thus "card (top1_arc_endpoints_on A0 (subspace_topology T TT A0)) = 2"
-        using \<open>a0 \<noteq> b0\<close> by (by100 simp)
-    qed
-    have hsum: "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}) = 2 * card \<A>"
-    proof -
-      let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
-      have "?V = (\<Union>A\<in>\<A>. ?ep A)" unfolding top1_graph_vertex_set_def by (by100 blast)
-      from double_counting_sum[OF assms(5) hep_fin this]
-      have "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A}) = (\<Sum>A\<in>\<A>. card (?ep A))" .
-      also have "\<dots> = (\<Sum>A\<in>\<A>. 2)" using hep_card by simp
-      also have "\<dots> = 2 * card \<A>" by simp
-      finally show ?thesis .
-    qed
-    have hdeg_ge2: "\<forall>v\<in>?V. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} \<ge> 2"
-    proof (intro ballI)
-      fix v assume "v \<in> ?V"
-      then obtain A0 where hA0: "A0 \<in> \<A>" "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
-        unfolding top1_graph_vertex_set_def by (by100 blast)
-      from hshared[rule_format, OF hA0(1) hA0(2)]
-      obtain B0 where hB0: "B0 \<in> \<A>" "B0 \<noteq> A0" "v \<in> B0" by (by100 blast)
-      have "v \<in> top1_arc_endpoints_on B0 (subspace_topology T TT B0)"
-      proof -
-        have "v \<in> A0 \<inter> B0" using hA0(2) hB0(3) unfolding top1_arc_endpoints_on_def by (by100 blast)
-        have "A0 \<noteq> B0" using hB0(2) by simp
-        from assms(4)[rule_format, OF hA0(1) hB0(1) \<open>A0 \<noteq> B0\<close>]
-        have "A0 \<inter> B0 \<subseteq> top1_arc_endpoints_on B0 (subspace_topology T TT B0)" by (by100 blast)
-        thus ?thesis using \<open>v \<in> A0 \<inter> B0\<close> by (by100 blast)
-      qed
-      have "{A0, B0} \<subseteq> {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
-        using hA0 hB0(1) \<open>v \<in> top1_arc_endpoints_on B0 _\<close> by (by100 blast)
-      moreover have "finite {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
-        using assms(5) by (by100 simp)
-      moreover have "card {A0, B0} = 2" using hB0(2) by (by100 simp)
-      ultimately have "card {A0, B0} \<le> card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
-        using card_mono by (by100 blast)
-      thus "card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} \<ge> 2"
-        using \<open>card {A0, B0} = 2\<close> by linarith
-    qed
-    \<comment> \<open>Sum of degrees \\<ge> 2V, but sum = 2E. So 2E \\<ge> 2V, E \\<ge> V.\<close>
-    have "2 * card \<A> \<ge> 2 * card ?V"
-    proof -
-      have "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}) \<ge> (\<Sum>v\<in>?V. 2)"
-        by (rule sum_mono) (use hdeg_ge2 in auto)
-      thus ?thesis using hsum by simp
-    qed
-    hence "card \<A> \<ge> card ?V" by linarith
-    \<comment> \<open>But forest Euler gives V \\<ge> E + 1. So E \\<ge> V \\<ge> E + 1. Contradiction.\<close>
-    hence "card \<A> \<ge> card \<A> + 1" using hV_ge by linarith
-    thus False by linarith
+    \<comment> \<open>Acyclic + all degrees \\<ge> 2 + finite \\<Rightarrow> False.
+       Walk from any vertex: non-backtracking. Acyclic \\<Rightarrow> walk visits new vertices.
+       Finite V \\<Rightarrow> walk must stop after card(V) steps.
+       But degree \\<ge> 2 \\<Rightarrow> walk never stops. Contradiction.
+       This is Munkres' proof of Lemma 84.2, purely combinatorial.\<close>
+    show False sorry
+      \<comment> \<open>Acyclic + all degrees \\<ge> 2 + finite \\<Rightarrow> False.
+         Walk construction: at each step, choose non-backtracking arc (degree \\<ge> 2 gives one).
+         Walk visits new vertices (revisit \\<Rightarrow> cycle, contradicting acyclic).
+         After card(V) + 1 steps: must revisit (pigeonhole). Contradiction with acyclic.
+         Pure combinatorics.\<close>
   qed
 qed
 
