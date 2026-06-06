@@ -1,42 +1,50 @@
-# AlgTop.thy Sorry Audit (2026-06-06, session 1355)
+# AlgTop.thy Sorry Audit (2026-06-06, session 1356)
 
-## Summary: ~12 executable sorrys (4 non-surface [1 orphan], 8 surface)
+## Summary: ~13 executable sorrys (5 non-surface [3 orphan], 8 surface)
 
-Build: `/project/bin/isabelle build -D .` — ~22s, clean. 10942 lines.
+Build: `/project/bin/isabelle build -D .` — ~20s, clean. 11173 lines.
 
 ## Non-surface proof chain: PROVED modulo 3 sorrys
 
-```
-sc_graph_no_cycle [SORRY: topological bridge]
-  + forest_euler_formula [2 SORRYS: leaf from acyclicity + leaf induction]
-  → tree_leaf_existence_bridge [PROVED: case split on acyclicity]
-    → tree_euler_from_leaf [PROVED]
-      → tree_euler_from_sc [PROVED via graph_coherent_any_decomposition]
-        → finite_tree_has_leaf [PROVED]
-          → tree_euler_and_leaf_combined [PROVED]
-            → tree_euler_number_one [PROVED]
-              → covering_graph_pi1_rank [PROVED]
-                → Theorem_85_3_Schreier_index [PROVED]
-```
+The walk construction is now MOSTLY proved:
 
-## Non-surface sorrys (4):
-| # | Lemma | Type | Description |
-|---|-------|------|-------------|
-| 1 | sc_graph_no_cycle | TOPOLOGICAL | Cycle in SC graph → False (Munkres 84.7) |
-| 2 | forest_euler_formula (leaf) | COMBINATORIAL | Acyclic → leaf exists (walk+pigeonhole) |
-| 3 | forest_euler_formula (induction) | COMBINATORIAL | Leaf induction: V ≥ E+1 |
-| 4 | two_arcs_same_endpoints_sc_false | ORPHAN | SCC construction (unused) |
+**PROVED in tree_leaf_existence_bridge:**
+- No-leaf → all degrees ≥ 2 (hshared)
+- Each arc has 2 endpoints (h2ep)  
+- Vertex set finite and non-empty (hV_fin, x0)
+- hshared_arc: at every vertex, there's another arc (step function)
+- hnext_arc: SOME gives valid next arc
+- hother_endpt: SOME gives the other endpoint
+- hwalk_props: walk stays in V and 𝒜 (full induction proof)
+- hwalk_suc_fst/snd: walk unfold lemmas
+- hwalk_shared: walk vertex is in both current and next arc
+- Pigeonhole: walk must revisit a vertex (card_inj_on_le)
+- j-i ≥ 2: cycle has ≥ 2 arcs (other_endpt gives different vertex)
+- hacyclic application: blast instantiates universal
 
-**tree_leaf_existence_bridge** proof (no sorry!):
-- Case A (acyclic): forest_euler gives V ≥ E+1; degree counting gives E ≥ V → contradiction
-- Case B (has cycle): sc_graph_no_cycle → contradiction
-- All degree counting, vertex finiteness, etc. FULLY PROVED
+**Remaining sorrys in walk proof (2 micro-sorrys):**
+- hws_adj: consecutive arcs share vertex (conceptually proved via hwalk_shared, needs nth_map_upt)
+- hws_dist: arcs are distinct (needs shortest revisit argument)
+
+## Non-surface sorrys:
+| # | Line | Lemma | Status |
+|---|------|-------|--------|  
+| 1 | L4580 | sc_graph_no_cycle | BLOCKING: topological bridge (cycle case) |
+| 2 | ~L5060 | tree_leaf_existence_bridge | BLOCKING: hws_adj (nth_map lemma) |
+| 3 | ~L5062 | tree_leaf_existence_bridge | BLOCKING: hws_dist (shortest revisit) |
+| 4 | L4731 | forest_euler_formula | ORPHAN: not in main chain |
+| 5 | L4738 | forest_euler_formula | ORPHAN: not in main chain |
+
+Plus two_arcs_same_endpoints_sc_false (orphan).
 
 ## Surface sorrys (8): Theorems 75.4, 76, 77.5, 78.1, 78.2
 
-## Key infrastructure PROVED:
-- graph_coherent_any_decomposition: coherent topology from graph conditions
-- graph_euler_invariance: V-E invariant under decomposition change
-- arc_merge_at_endpoint: two arcs sharing 1 endpoint → arc (mostly proved)
-- double_counting_sum: degree sum = 2E
-- All covering infrastructure, §64-§85
+## Complete proof chain:
+```
+sc_graph_no_cycle [SORRY: cycle case]
+  + walk construction [2 micro-sorrys: adj + distinct]  
+  → tree_leaf_existence_bridge [case split proved]
+    → tree_euler_from_leaf [PROVED]
+      → tree_euler_from_sc [PROVED]
+        → ... → Theorem_85_3_Schreier_index [PROVED]
+```
