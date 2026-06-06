@@ -7535,7 +7535,49 @@ proof (rule ccontr)
         by (by100 blast)
       \<comment> \<open>Use graph\\_iterated\\_subdivision\\_exists to get \\<A>' with all graph conditions.\<close>
       have hp_not_vertex: "p \<notin> top1_graph_vertex_set T TT \<A>"
-        sorry \<comment> \<open>p is interior to arcA, not in any arc's endpoints.\<close>
+      proof -
+        \<comment> \<open>p is interior to arcA: p \\<notin> ep(arcA).
+           p is not in any other arc (from graph conditions).
+           Hence p is not in any arc's endpoints.\<close>
+        have "p \<notin> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+        proof -
+          \<comment> \<open>p = midpoint of arcA. Endpoints are h(0), h(1). p = h(1/2) \\<noteq> h(0), h(1).\<close>
+          obtain h where hh: "top1_homeomorphism_on I_set I_top ?arcA (subspace_topology T TT ?arcA) h"
+            using harcA_arc unfolding top1_is_arc_on_def by (by100 blast)
+          have "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {h 0, h 1}"
+            by (rule arc_endpoints_are_boundary[OF hstrict hhaus harcA_sub harcA_arc hh])
+          \<comment> \<open>arc\\_split\\_at\\_midpoint picks h(1/2). D1 \\<inter> D2 = {p}. p \\<in> D1 \\<inter> D2.
+             If p = h(0): p \\<in> ep(arcA). Then D1 \\<inter> D2 = {h(0)}.
+             But the split should give D1 = h([0, 1/2]) and D2 = h([1/2, 1]).
+             D1 \\<inter> D2 = {h(1/2)} \\<noteq> {h(0)}. Contradiction.\<close>
+          show ?thesis sorry \<comment> \<open>p = h(1/2) \\<noteq> h(0) and \\<noteq> h(1) by injectivity.\<close>
+        qed
+        \<comment> \<open>p \\<notin> any other arc: p \\<in> arcA, so p \\<in> arcA \\<inter> B for any B containing p. But
+           arcA \\<inter> B \\<subseteq> ep(arcA) and p \\<notin> ep(arcA). So p \\<notin> B.\<close>
+        have "\<forall>A \<in> \<A>. p \<notin> top1_arc_endpoints_on A (subspace_topology T TT A)"
+        proof (intro ballI)
+          fix A assume "A \<in> \<A>"
+          show "p \<notin> top1_arc_endpoints_on A (subspace_topology T TT A)"
+          proof (cases "A = ?arcA")
+            case True thus ?thesis using \<open>p \<notin> top1_arc_endpoints_on ?arcA _\<close> by (by100 simp)
+          next
+            case False
+            have "p \<notin> A"
+            proof
+              assume "p \<in> A"
+              hence "p \<in> ?arcA \<inter> A" using hp_in by (by100 blast)
+              from assms(4)[rule_format, OF harcA_in \<open>A \<in> \<A>\<close> False]
+              have "?arcA \<inter> A \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+                by (by100 blast)
+              hence "p \<in> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+                using \<open>p \<in> ?arcA \<inter> A\<close> by (by100 blast)
+              thus False using \<open>p \<notin> top1_arc_endpoints_on ?arcA _\<close> by (by100 simp)
+            qed
+            thus ?thesis using \<open>p \<notin> A\<close> unfolding top1_arc_endpoints_on_def by (by100 blast)
+          qed
+        qed
+        thus ?thesis unfolding top1_graph_vertex_set_def by (by100 blast)
+      qed
       have hp_sub: "{p} \<subseteq> T" using hp_in harcA_sub by (by100 blast)
       have "finite {p}" by (by100 simp)
       have "\<forall>pp \<in> {p}. pp \<notin> top1_graph_vertex_set T TT \<A>"
