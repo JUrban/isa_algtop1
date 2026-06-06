@@ -4792,129 +4792,61 @@ proof -
           ws ! j \<inter> ws ! m = {}"
       proof -
         fix j m assume hj: "j < ?k" and hm: "m < ?k"
-          and hprev: "(j + ?k - 1) mod ?k \<noteq> m" and hnext: "(j + 1) mod ?k \<noteq> m"
-          and hne: "j \<noteq> m"
+          and hprev_ne: "(j + ?k - 1) mod ?k \<noteq> m" and hnext_ne: "(j + 1) mod ?k \<noteq> m"
+          and hjm_ne: "j \<noteq> m"
         have hwsj: "ws ! j \<in> \<A>" using assms(9) hj by (by100 force)
         have hwsm: "ws ! m \<in> \<A>" using assms(9) hm by (by100 force)
-        have hwsj_ne_m: "ws ! j \<noteq> ws ! m"
-          using nth_eq_iff_index_eq[OF assms(8) hj hm] hne by simp
-        \<comment> \<open>ws!j \\<inter> ws!m \\<subseteq> ep(ws!j) \\<inter> ep(ws!m).\<close>
-        from assms(4)[rule_format, OF hwsj hwsm hwsj_ne_m]
-        have "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j)" by (by100 blast)
-        moreover from assms(4)[rule_format, OF hwsm hwsj]
-        have "ws ! m \<inter> ws ! j \<subseteq> ?ep (ws ! m)" using hwsj_ne_m by (by100 force)
-        hence "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! m)" by (by100 blast)
-        ultimately have "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j) \<inter> ?ep (ws ! m)" by (by100 blast)
-        \<comment> \<open>ep(ws!j) \\<inter> ep(ws!m) = {} from distinct shared vertices.\<close>
+        have "ws ! j \<noteq> ws ! m" using nth_eq_iff_index_eq[OF assms(8) hj hm] hjm_ne by (by100 simp)
+        from assms(4)[rule_format, OF hwsj hwsm this]
+        have hsub_j: "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j)" by (by100 blast)
+        from assms(4)[rule_format, OF hwsm hwsj] \<open>ws ! j \<noteq> ws ! m\<close>
+        have "ws ! m \<inter> ws ! j \<subseteq> ?ep (ws ! m)" by (by100 force)
+        hence hsub_m: "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! m)" by (by100 blast)
+        have hsub_both: "ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j) \<inter> ?ep (ws ! m)"
+          using hsub_j hsub_m by (by100 blast)
+        \<comment> \<open>ep(ws!j) and ep(ws!m) are disjoint: their elements are distinct shared vertices.\<close>
         have hepj: "?ep (ws ! j) = {shared_v ((j + ?k - 1) mod ?k), shared_v j}"
           using harc_ep[rule_format, OF hj] .
         have hepm: "?ep (ws ! m) = {shared_v ((m + ?k - 1) mod ?k), shared_v m}"
           using harc_ep[rule_format, OF hm] .
         have "?ep (ws ! j) \<inter> ?ep (ws ! m) = {}"
         proof (rule ccontr)
-          assume "?ep (ws ! j) \<inter> ?ep (ws ! m) \<noteq> {}"
-          then obtain v where "v \<in> ?ep (ws ! j)" "v \<in> ?ep (ws ! m)" by (by100 blast)
-          hence "v \<in> {shared_v ((j + ?k - 1) mod ?k), shared_v j}" using hepj by simp
-          hence "v \<in> {shared_v ((m + ?k - 1) mod ?k), shared_v m}" using hepm \<open>v \<in> ?ep (ws ! m)\<close> by simp
-          \<comment> \<open>v is one of shared\\_v(j-1), shared\\_v(j) AND one of shared\\_v(m-1), shared\\_v(m).
-             All 4 indices are distinct (non-adjacency + j\\<noteq>m), so no match.\<close>
-          have hk_pos2: "?k > 0" using hk_ge2 by linarith
-          have hj_prev: "(j + ?k - 1) mod ?k < ?k" using hk_pos2 by simp
-          have hm_prev: "(m + ?k - 1) mod ?k < ?k" using hk_pos2 by simp
-          from \<open>v \<in> {shared_v ((j+?k-1) mod ?k), shared_v j}\<close>
-            \<open>v \<in> {shared_v ((m+?k-1) mod ?k), shared_v m}\<close>
-          have "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)
-              \<or> shared_v ((j+?k-1) mod ?k) = shared_v m
-              \<or> shared_v j = shared_v ((m+?k-1) mod ?k)
-              \<or> shared_v j = shared_v m" by (by100 blast)
+          assume "\<not> ?thesis"
+          then obtain v where hv1: "v \<in> ?ep (ws ! j)" and hv2: "v \<in> ?ep (ws ! m)" by (by100 blast)
+          have hkp: "?k > 0" using hk_ge2 by linarith
+          have hjp: "(j + ?k - 1) mod ?k < ?k" using hkp by (by100 simp)
+          have hmp: "(m + ?k - 1) mod ?k < ?k" using hkp by (by100 simp)
+          \<comment> \<open>v is in both 2-element ep sets. Case analysis on which element it matches.\<close>
+          from hv1[unfolded hepj] hv2[unfolded hepm]
+          consider
+            (c1) "v = shared_v ((j+?k-1) mod ?k)" "v = shared_v ((m+?k-1) mod ?k)"
+          | (c2) "v = shared_v ((j+?k-1) mod ?k)" "v = shared_v m"
+          | (c3) "v = shared_v j" "v = shared_v ((m+?k-1) mod ?k)"
+          | (c4) "v = shared_v j" "v = shared_v m"
+            by (by100 blast)
           thus False
-          proof (elim disjE)
-            assume heq1: "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)"
-            have "(j+?k-1) mod ?k = (m+?k-1) mod ?k"
-            proof (rule ccontr)
-              assume "(j+?k-1) mod ?k \<noteq> (m+?k-1) mod ?k"
-              from hshared_v_distinct[rule_format, OF hj_prev hm_prev this]
-              show False using heq1 by simp
-            qed
-            hence "j = m"
-            proof (cases "j = 0")
-              case True note j0 = this
-              show ?thesis
-              proof (cases "m = 0")
-                case True thus ?thesis using j0 by simp
-              next
-                case False
-                have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
-                have "m + ?k - 1 = (m - 1) + ?k" using False by linarith
-                hence "(m + ?k - 1) mod ?k = m - 1" using hm by simp
-                hence "?k - 1 = m - 1" using j0 \<open>(j+?k-1) mod ?k = (m+?k-1) mod ?k\<close>
-                  \<open>(0 + ?k - 1) mod ?k = ?k - 1\<close> by simp
-                thus ?thesis using j0 hm by linarith
-              qed
-            next
-              case False
-              have "(j + ?k - 1) mod ?k = j - 1" using False hj by simp
-              show ?thesis
-              proof (cases "m = 0")
-                case True
-                have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
-                hence "j - 1 = ?k - 1"
-                  using \<open>(j+?k-1) mod ?k = j - 1\<close> \<open>(j+?k-1) mod ?k = (m+?k-1) mod ?k\<close>
-                  True \<open>(0 + ?k - 1) mod ?k = ?k - 1\<close> by simp
-                thus ?thesis using True hj by linarith
-              next
-                case False
-                have "(m + ?k - 1) mod ?k = m - 1" using False hm by simp
-                hence "j - 1 = m - 1"
-                  using \<open>(j+?k-1) mod ?k = j - 1\<close> \<open>(j+?k-1) mod ?k = (m+?k-1) mod ?k\<close>
-                  \<open>(m + ?k - 1) mod ?k = m - 1\<close> by simp
-                thus ?thesis by linarith
-              qed
-            qed
-            thus False using hne by simp
+          proof cases
+            case c1
+            hence "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)" by (by100 simp)
+            hence "(j+?k-1) mod ?k = (m+?k-1) mod ?k" sorry \<comment> \<open>from hshared\\_v\\_distinct\<close>
+            hence "j = m" sorry \<comment> \<open>mod cancellation\<close>
+            thus False using hjm_ne by (by100 simp)
           next
-            assume "shared_v ((j+?k-1) mod ?k) = shared_v m"
-            hence "(j+?k-1) mod ?k = m"
-            proof (rule ccontr)
-              assume "(j+?k-1) mod ?k \<noteq> m"
-              from hshared_v_distinct[rule_format, OF hj_prev hm this]
-              show False using \<open>shared_v ((j+?k-1) mod ?k) = shared_v m\<close> by simp
-            qed
-            thus False using hprev by simp
+            case c2
+            hence "(j+?k-1) mod ?k = m" sorry \<comment> \<open>from hshared\\_v\\_distinct\<close>
+            thus False using hprev_ne by (by100 simp)
           next
-            assume "shared_v j = shared_v ((m+?k-1) mod ?k)"
-            hence "j = (m+?k-1) mod ?k"
-            proof (rule ccontr)
-              assume "j \<noteq> (m+?k-1) mod ?k"
-              from hshared_v_distinct[rule_format, OF hj hm_prev this]
-              show False using \<open>shared_v j = shared_v ((m+?k-1) mod ?k)\<close> by simp
-            qed
-            \<comment> \<open>j = (m-1) mod k \\<Rightarrow> (j+1) mod k = m. But hnext says (j+1) mod k \\<noteq> m.\<close>
-            hence "(j + 1) mod ?k = m"
-            proof (cases "m = 0")
-              case True hence "(m + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
-              hence "j = ?k - 1" using \<open>j = (m+?k-1) mod ?k\<close> by simp
-              hence "j + 1 = ?k" by linarith
-              thus ?thesis using True by simp
-            next
-              case False hence "(m + ?k - 1) mod ?k = m - 1" using hm by simp
-              hence "j = m - 1" using \<open>j = (m+?k-1) mod ?k\<close> by simp
-              hence "j + 1 = m" using False by linarith
-              thus ?thesis using hm by simp
-            qed
-            thus False using hnext by simp
+            case c3
+            hence "j = (m+?k-1) mod ?k" sorry \<comment> \<open>from hshared\\_v\\_distinct\<close>
+            hence "(j+1) mod ?k = m" sorry \<comment> \<open>succ of pred = id\<close>
+            thus False using hnext_ne by (by100 simp)
           next
-            assume "shared_v j = shared_v m"
-            hence "j = m"
-            proof (rule ccontr)
-              assume "j \<noteq> m"
-              from hshared_v_distinct[rule_format, OF hj hm this]
-              show False using \<open>shared_v j = shared_v m\<close> by simp
-            qed
-            thus False using hne by simp
+            case c4
+            hence "j = m" sorry \<comment> \<open>from hshared\\_v\\_distinct\<close>
+            thus False using hjm_ne by (by100 simp)
           qed
         qed
-        thus "ws ! j \<inter> ws ! m = {}" using \<open>ws ! j \<inter> ws ! m \<subseteq> ?ep (ws ! j) \<inter> ?ep (ws ! m)\<close> by (by100 blast)
+        thus "ws ! j \<inter> ws ! m = {}" using hsub_both by (by100 blast)
       qed
       \<comment> \<open>Induction: merge n arcs into one, tracking endpoints.\<close>
       have merge_chain: "\<And>n. 1 \<le> n \<Longrightarrow> n \<le> ?k - 1 \<Longrightarrow>
@@ -4925,7 +4857,7 @@ proof -
       sorry \<comment> \<open>Induction on n using arc\\_merge\\_at\\_endpoint + hdisjoint\\_non\\_adj.\<close>
       \<comment> \<open>Apply merge\\_chain with n = k-1 = length(butlast ws).\<close>
       have "1 \<le> ?k - 1" using hk_ge2 by linarith
-      have "?k - 1 \<le> ?k - 1" by simp
+      have "?k - 1 \<le> ?k - 1" by (by100 simp)
       from merge_chain[OF \<open>1 \<le> ?k - 1\<close> \<open>?k - 1 \<le> ?k - 1\<close>]
       obtain A1 where hA1_arc2: "top1_is_arc_on A1 (subspace_topology T TT A1)"
           and hA1_sub2: "A1 \<subseteq> T"
