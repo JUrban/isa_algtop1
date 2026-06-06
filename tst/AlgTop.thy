@@ -5279,16 +5279,21 @@ proof -
               have "n' - 1 < n'" using \<open>n' \<ge> 1\<close> by linarith
               hence "n' - 1 < ?k" using hn'_lt by linarith
               have "shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! ((n' - 1 + 1) mod ?k)"
-                using hshared_v[rule_format, OF \<open>n'-1 < ?k\<close>] .
-              have "(n' - 1 + 1) mod ?k = n' mod ?k" using \<open>n' \<ge> 1\<close> by linarith
+                using hshared_v[rule_format, OF \<open>n'-1 < ?k\<close>] by (by100 blast)
+              have "n' - 1 + 1 = n'" using \<open>n' \<ge> 1\<close> by linarith
+              hence "(n' - 1 + 1) mod ?k = n' mod ?k" by (by100 simp)
               have "n' mod ?k = n'" using hn'_lt by (by100 simp)
               hence "shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! n'"
                 using \<open>shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! ((n' - 1 + 1) mod ?k)\<close>
                 \<open>(n' - 1 + 1) mod ?k = n' mod ?k\<close> \<open>n' mod ?k = n'\<close> by (by100 simp)
               hence hsv_in_n': "shared_v (n' - 1) \<in> ws ! n'" by (by100 blast)
               have "n' - 1 < n'" using \<open>n' \<ge> 1\<close> by linarith
-              have "ws ! (n' - 1) \<in> set (take n' ws)" using \<open>n' - 1 < n'\<close> \<open>n' \<le> ?k - 1\<close> hk_ge2
+              have "n' - 1 < length (take n' ws)" using \<open>n' - 1 < n'\<close> \<open>n' \<le> ?k - 1\<close> hk_ge2
                 by (by100 simp)
+              have "take n' ws ! (n' - 1) = ws ! (n' - 1)" using \<open>n' - 1 < n'\<close> by (by100 simp)
+              have "ws ! (n' - 1) \<in> set (take n' ws)"
+                using \<open>n' - 1 < length (take n' ws)\<close> \<open>take n' ws ! (n' - 1) = ws ! (n' - 1)\<close>
+                by (metis nth_mem)
               hence "shared_v (n' - 1) \<in> A1'" using hIH(3)
                 \<open>shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! n'\<close> by (by100 blast)
               hence "shared_v (n' - 1) \<in> A1' \<inter> ws ! n'" using hsv_in_n' by (by100 blast)
