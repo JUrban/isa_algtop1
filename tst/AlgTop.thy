@@ -5885,13 +5885,47 @@ proof -
     show ?thesis unfolding top1_simple_closed_curve_on_def
       using hf_cont hf_inj hf_img by (by100 blast)
   qed
-  \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
-  have hC_retract: "top1_retract_of_on T TT ?C"
-    sorry \<comment> \<open>Retraction construction: for each non-cycle arc, map to a cycle vertex.
-       Continuity from coherent topology. Needs tree-branch collapse argument.\<close>
-  \<comment> \<open>Apply scc\\_in\\_sc\\_false.\<close>
-  from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
-  show False .
+  \<comment> \<open>Case split: if T = C (no non-cycle arcs), identity retraction.
+     Otherwise, need to construct retraction onto C.\<close>
+  show False
+  proof (cases "\<A> = set ws")
+    case True
+    hence "T = ?C" using assms(3) by (by100 simp)
+    have hid_retract: "top1_retract_of_on T TT T"
+      unfolding top1_retract_of_on_def top1_is_retraction_on_def
+    proof (rule exI[of _ id], intro conjI)
+      show "T \<subseteq> T" by (by100 blast)
+      show "top1_continuous_map_on T TT T (subspace_topology T TT T) id"
+        unfolding top1_continuous_map_on_def subspace_topology_def
+      proof (intro conjI ballI allI impI)
+        fix x assume "x \<in> T" thus "id x \<in> T" by (by100 simp)
+      next
+        fix V assume "V \<in> {T \<inter> U |U. U \<in> TT}"
+        then obtain U where hU: "U \<in> TT" "V = T \<inter> U" by (by100 blast)
+        have "T \<in> TT" using htop unfolding is_topology_on_def by (by100 blast)
+        have "finite {T, U}" by (by100 simp)
+        have "{T, U} \<noteq> {}" by (by100 simp)
+        have "{T, U} \<subseteq> TT" using \<open>T \<in> TT\<close> hU(1) by (by100 blast)
+        have "\<Inter>{T, U} \<in> TT"
+          using htop[unfolded is_topology_on_def, THEN conjunct2, THEN conjunct2, THEN conjunct2,
+              rule_format, of "{T, U}"]
+            \<open>finite {T, U}\<close> \<open>{T, U} \<noteq> {}\<close> \<open>{T, U} \<subseteq> TT\<close> by (by100 blast)
+        hence "T \<inter> U \<in> TT" by (by100 simp)
+        have "{x \<in> T. id x \<in> V} = T \<inter> U" using hU(2) by (by100 force)
+        thus "{x \<in> T. id x \<in> V} \<in> TT" using \<open>T \<inter> U \<in> TT\<close> by (by100 simp)
+      qed
+      show "\<forall>a\<in>T. id a = a" by (by100 simp)
+    qed
+    hence "top1_retract_of_on T TT ?C" using \<open>T = ?C\<close> by (by100 simp)
+    from scc_in_sc_false[OF hSC htop hhaus hC_SCC this hC_sub]
+    show False .
+  next
+    case False
+    have hC_retract: "top1_retract_of_on T TT ?C"
+      sorry \<comment> \<open>Retraction with non-cycle arcs: coherent topology + unique attachment.\<close>
+    from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
+    show False .
+  qed
 qed
 
 \<comment> \<open>Forest Euler formula (purely combinatorial, no topology):
