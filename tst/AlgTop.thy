@@ -4631,6 +4631,79 @@ proof -
   qed
   have hshared_v_distinct: "\<forall>i < ?k. \<forall>j < ?k. i \<noteq> j \<longrightarrow> shared_v i \<noteq> shared_v j"
     using hdist_v hshared_v by (by100 force)
+  \<comment> \<open>Each arc's endpoints are its two adjacent shared vertices.\<close>
+  let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
+  have harc_ep: "\<forall>i < ?k. ?ep (ws ! i) = {shared_v ((i + ?k - 1) mod ?k), shared_v i}"
+  proof (intro allI impI)
+    fix i assume hi: "i < ?k"
+    have hwsi: "ws ! i \<in> \<A>" using assms(9) hi by (by100 force)
+    \<comment> \<open>shared\\_v((i+k-1) mod k) and shared\\_v(i) are both in ep(ws!i).\<close>
+    have hk_pos: "?k > 0" using hk_ge2 by linarith
+    have hprev: "(i + ?k - 1) mod ?k < ?k" using hk_pos by simp
+    have "shared_v ((i + ?k - 1) mod ?k) \<in> ws ! ((i + ?k - 1) mod ?k) \<inter> ws ! (((i + ?k - 1) mod ?k + 1) mod ?k)"
+      using hshared_v[rule_format, OF hprev] by simp
+    have hmod_prev_succ: "((i + ?k - 1) mod ?k + 1) mod ?k = i"
+      sorry \<comment> \<open>Standard modular arithmetic: (i-1 mod k + 1) mod k = i for i < k.\<close>
+    hence "shared_v ((i + ?k - 1) mod ?k) \<in> ws ! ((i + ?k - 1) mod ?k) \<inter> ws ! i"
+      using \<open>shared_v ((i + ?k - 1) mod ?k) \<in> _\<close> by simp
+    hence hsv_prev_in: "shared_v ((i + ?k - 1) mod ?k) \<in> ?ep (ws ! i)"
+    proof -
+      have "ws ! ((i + ?k - 1) mod ?k) \<in> \<A>" using assms(9) hprev by (by100 force)
+      have "(i + ?k - 1) mod ?k \<noteq> i" using hk_ge2 hi sorry
+      have "ws ! ((i + ?k - 1) mod ?k) \<noteq> ws ! i"
+        using nth_eq_iff_index_eq[OF assms(8) hprev hi] \<open>(i + ?k - 1) mod ?k \<noteq> i\<close> by simp
+      from assms(4)[rule_format, OF \<open>ws ! ((i+?k-1) mod ?k) \<in> \<A>\<close> hwsi this]
+      have "ws ! ((i+?k-1) mod ?k) \<inter> ws ! i \<subseteq> ?ep (ws ! i)" by (by100 blast)
+      thus ?thesis using \<open>shared_v ((i+?k-1) mod ?k) \<in> ws ! ((i+?k-1) mod ?k) \<inter> ws ! i\<close> by (by100 blast)
+    qed
+    have hsv_curr_in: "shared_v i \<in> ?ep (ws ! i)"
+    proof -
+      have "shared_v i \<in> ws ! i \<inter> ws ! ((i+1) mod ?k)" using hshared_v[rule_format, OF hi] by simp
+      have hmod: "(i+1) mod ?k < ?k" using hk_pos by simp
+      have "ws ! ((i+1) mod ?k) \<in> \<A>" using assms(9) hmod by (by100 force)
+      have "i \<noteq> (i+1) mod ?k" using hk_ge2 hi sorry
+      have "ws ! i \<noteq> ws ! ((i+1) mod ?k)"
+        using nth_eq_iff_index_eq[OF assms(8) hi hmod] \<open>i \<noteq> (i+1) mod ?k\<close> by simp
+      from assms(4)[rule_format, OF hwsi \<open>ws ! ((i+1) mod ?k) \<in> \<A>\<close> this]
+      have "ws ! i \<inter> ws ! ((i+1) mod ?k) \<subseteq> ?ep (ws ! i)" by (by100 blast)
+      thus ?thesis using \<open>shared_v i \<in> ws ! i \<inter> ws ! ((i+1) mod ?k)\<close> by (by100 blast)
+    qed
+    \<comment> \<open>ep(ws!i) has exactly 2 elements. Both shared\\_v's are in it and distinct. So they ARE the 2.\<close>
+    have hprev_ne_i: "(i + ?k - 1) mod ?k \<noteq> i" using hk_ge2 hi sorry
+    have hne: "shared_v ((i + ?k - 1) mod ?k) \<noteq> shared_v i"
+      using hshared_v_distinct[rule_format, OF hprev hi hprev_ne_i] .
+    have hcard2: "card (?ep (ws ! i)) = 2"
+    proof -
+      have "ws ! i \<subseteq> T" "top1_is_arc_on (ws!i) (subspace_topology T TT (ws!i))"
+        using assms(2) hwsi by (by100 blast)+
+      then obtain hh where "top1_homeomorphism_on I_set I_top (ws!i) (subspace_topology T TT (ws!i)) hh"
+        unfolding top1_is_arc_on_def by (by100 blast)
+      have "?ep (ws!i) = {hh 0, hh 1}"
+        by (rule arc_endpoints_are_boundary[OF hstrict hhaus \<open>ws!i \<subseteq> T\<close>
+            \<open>top1_is_arc_on (ws!i) _\<close> \<open>top1_homeomorphism_on _ _ _ _ hh\<close>])
+      moreover have "hh 0 \<noteq> hh 1"
+      proof
+        assume "hh 0 = hh 1"
+        have "inj_on hh I_set" using \<open>top1_homeomorphism_on _ _ _ _ hh\<close>
+          unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        from inj_onD[OF this \<open>hh 0 = hh 1\<close>] show False
+          unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have "card {shared_v ((i + ?k - 1) mod ?k), shared_v i} = 2" using hne by (by100 simp)
+    have "{shared_v ((i + ?k - 1) mod ?k), shared_v i} \<subseteq> ?ep (ws ! i)"
+      using hsv_prev_in hsv_curr_in by (by100 blast)
+    have "finite (?ep (ws ! i))"
+    proof (rule ccontr) assume "\<not> finite (?ep (ws ! i))"
+      hence "card (?ep (ws ! i)) = 0" by (rule card.infinite) thus False using hcard2 by simp qed
+    have "card {shared_v ((i + ?k - 1) mod ?k), shared_v i} = card (?ep (ws ! i))"
+      using \<open>card {shared_v ((i+?k-1) mod ?k), shared_v i} = 2\<close> hcard2 by simp
+    from card_subset_eq[OF \<open>finite (?ep (ws!i))\<close>
+        \<open>{shared_v ((i+?k-1) mod ?k), shared_v i} \<subseteq> ?ep (ws!i)\<close>
+        \<open>card {shared_v ((i+?k-1) mod ?k), shared_v i} = card (?ep (ws!i))\<close>]
+    show "?ep (ws ! i) = {shared_v ((i + ?k - 1) mod ?k), shared_v i}" by simp
+  qed
   have hC_SCC: "top1_simple_closed_curve_on T TT ?C"
   proof -
     \<comment> \<open>Strategy: Merge all but the last cycle arc into a single arc A1 (via arc\\_merge\\_at\\_endpoint).
