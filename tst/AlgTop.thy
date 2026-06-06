@@ -4914,7 +4914,32 @@ next
   case False \<comment> \<open>Step: non-cycle arcs exist.\<close>
   \<comment> \<open>The retraction maps each non-cycle arc to a cycle vertex.
      Coherent topology gives continuity. Unique attachment gives consistency.\<close>
-  show ?thesis sorry \<comment> \<open>Coherent-topology retraction + unique attachment by induction.\<close>
+  \<comment> \<open>Define target assignment: for each non-cycle arc, a cycle vertex it retracts to.\<close>
+  let ?C = "\<Union>(set ws)"
+  let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
+  have htop: "is_topology_on T TT"
+    using htree unfolding top1_is_tree_on_def top1_is_graph_on_def is_topology_on_strict_def
+    by (by100 blast)
+  \<comment> \<open>For each non-cycle arc A, choose a vertex target(A) on the cycle.
+     The target is well-defined if each connected component of non-cycle arcs
+     touches C at exactly one vertex (unique attachment).\<close>
+  \<comment> \<open>The unique attachment property follows from SC:
+     if a non-cycle component touches C at two vertices u, v, then
+     the component path u-to-v + cycle segment v-to-u forms a new SCC.
+     By scc\\_in\\_sc\\_false (SC of T + SCC + identity retraction on the new cycle): False.\<close>
+  \<comment> \<open>Define r: T \\<to> C using the coherent topology.\<close>
+  define r :: "'a \<Rightarrow> 'a" where
+    "r x = (if x \<in> ?C then x else
+      (SOME v. v \<in> ?C \<and> (\<exists>A \<in> \<A> - set ws. x \<in> A \<and> v \<in> ?ep A)))" for x
+  have hr_on_C: "\<forall>x \<in> ?C. r x = x" unfolding r_def by (by100 simp)
+  have hr_range: "\<forall>x \<in> T. r x \<in> ?C" sorry
+  have hr_cont: "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) r" sorry
+  show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+  proof (intro exI[of _ r] conjI)
+    show "?C \<subseteq> T" using hws_C_sub .
+    show "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) r" using hr_cont .
+    show "\<forall>a \<in> ?C. r a = a" using hr_on_C by (by100 blast)
+  qed
 qed
 
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
