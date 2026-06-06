@@ -4731,8 +4731,20 @@ proof -
          A1 \\<inter> A2 = {a\\_start, a\\_end}, so interiors disjoint.
          Boundary points (1,0) and (-1,0) map to a\\_start, a\\_end \\<in> A1 \\<inter> A2.\<close>
     have hf_img: "f ` top1_S1 = ?C"
-      sorry \<comment> \<open>Upper semicircle covers A1 (hA surjective), lower covers A2 (hB surjective).
-         A1 \\<union> A2 = C.\<close>
+    proof -
+      \<comment> \<open>hA surjects onto A1: for each x \\<in> A1, \\<exists> (p,q) \\<in> S1 with q \\<ge> 0 and f(p,q) = x.\<close>
+      have hA_surj: "hA ` I_set = A1"
+        using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hB_surj: "hB ` I_set = ?A2"
+        using hhB unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      \<comment> \<open>f ` S1 \\<supseteq> A1: for each x \\<in> A1, x = hA(t) for some t \\<in> [0,1].
+         Let p = 1 - 2t, q = sqrt(1 - p^2). Then (p,q) \\<in> S1 and f(p,q) = hA((1-p)/2) = hA(t).\<close>
+      \<comment> \<open>Similarly for A2.\<close>
+      show ?thesis using hA1A2_union sorry
+        \<comment> \<open>Surjectivity needs: for each t \\<in> [0,1], (1-2t, sqrt(1-(1-2t)^2)) \\<in> S1.
+           And f maps it to hA(t). This is the parametrization of the upper semicircle.
+           Similarly for the lower semicircle and hB.\<close>
+    qed
     show ?thesis unfolding top1_simple_closed_curve_on_def
       using hf_cont hf_inj hf_img by (by100 blast)
   qed
