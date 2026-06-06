@@ -5023,11 +5023,36 @@ proof (rule ccontr)
        Actually need \\<ge> 2 arcs for hacyclic. Since arcs have distinct endpoints,
        a 1-arc cycle is impossible (would need fst(walk i) = fst(walk(i+1)) but
        the "other endpoint" is always different). So j - i \\<ge> 2.\<close>
-    show False sorry
-      \<comment> \<open>Extract cycle from walk(i..j), show it satisfies hacyclic conditions.
-         Needs: j-i \\<ge> 2, arcs are distinct, consecutive arcs share vertex, arcs \\<in> \\<A>.
-         The hard part: showing arcs are distinct (follows from vertices being distinct
-         in the shortest revisit cycle).\<close>
+    \<comment> \<open>j - i \\<ge> 2: walk(i+1) has different vertex from walk(i) (other\\_endpt gives v \\<noteq> prev\\_v).\<close>
+    have hji_ge2: "j - i \<ge> 2"
+    proof -
+      have "fst (walk (Suc i)) \<noteq> fst (walk i)"
+        using hwalk_suc_fst hother_endpt hwalk_props
+        sorry \<comment> \<open>other\\_endpt gives different vertex\<close>
+      hence "Suc i \<noteq> j \<or> fst (walk (Suc i)) \<noteq> fst (walk j)"
+        using hij(3) by (by100 force)
+      hence "j > Suc i" using hij sorry
+      thus ?thesis by linarith
+    qed
+    \<comment> \<open>Form the cycle: list of arcs from walk(i+1) to walk(j).\<close>
+    let ?ws = "map (\<lambda>k. snd (walk k)) [Suc i ..< Suc j]"
+    have hws_len: "length ?ws = j - i"
+      using hij(1) by simp
+    hence hws_len2: "length ?ws \<ge> 2" using hji_ge2 by linarith
+    have hws_sub: "set ?ws \<subseteq> \<A>"
+    proof -
+      have "\<forall>k. Suc i \<le> k \<and> k < Suc j \<longrightarrow> snd (walk k) \<in> \<A>"
+        using hwalk_props by (by100 blast)
+      thus ?thesis by (by100 auto)
+    qed
+    \<comment> \<open>Consecutive arcs share a vertex (from the walk structure).\<close>
+    have hws_adj: "\<forall>idx < length ?ws. ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<noteq> {}"
+      sorry \<comment> \<open>Each pair shares fst(walk(i+1+idx)). Last/first share fst(walk(i))=fst(walk(j)).\<close>
+    \<comment> \<open>Arcs are distinct (from shortest revisit + vertex distinctness).\<close>
+    have hws_dist: "distinct ?ws"
+      sorry \<comment> \<open>Follows from intermediate vertices being distinct (shortest revisit).\<close>
+    \<comment> \<open>Apply hacyclic.\<close>
+    show False using hacyclic hws_len2 hws_dist hws_sub hws_adj by (by100 blast)
   qed
 qed
 
