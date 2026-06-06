@@ -7541,8 +7541,38 @@ proof (rule ccontr)
       \<comment> \<open>New decomposition.\<close>
       define \<A>' where "\<A>' = (\<A> - {?arcA}) \<union> {D1, D2}"
       \<comment> \<open>\\<A>' covers T, satisfies graph conditions, has coherent topology.\<close>
-      have h\<A>'_arcs: "\<forall>A\<in>\<A>'. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)" sorry
-      have h\<A>'_cover: "\<Union>\<A>' = T" sorry
+      have h\<A>'_arcs: "\<forall>A\<in>\<A>'. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      proof (intro ballI conjI)
+        fix A assume "A \<in> \<A>'"
+        hence "A \<in> \<A> - {?arcA} \<or> A = D1 \<or> A = D2" unfolding \<A>'_def by (by100 blast)
+        thus "A \<subseteq> T"
+        proof (elim disjE)
+          assume "A \<in> \<A> - {?arcA}" thus ?thesis using assms(2) by (by100 blast)
+        next
+          assume "A = D1" thus ?thesis using hD1_sub by (by100 simp)
+        next
+          assume "A = D2" thus ?thesis using hD2_sub by (by100 simp)
+        qed
+        show "top1_is_arc_on A (subspace_topology T TT A)"
+        proof -
+          from \<open>A \<in> \<A> - {?arcA} \<or> A = D1 \<or> A = D2\<close>
+          show ?thesis
+          proof (elim disjE)
+            assume "A \<in> \<A> - {?arcA}" thus ?thesis using assms(2) by (by100 blast)
+          next
+            assume "A = D1" thus ?thesis using hD1_arc by (by100 simp)
+          next
+            assume "A = D2" thus ?thesis using hD2_arc by (by100 simp)
+          qed
+        qed
+      qed
+      have h\<A>'_cover: "\<Union>\<A>' = T"
+      proof -
+        have "\<Union>\<A>' = \<Union>(\<A> - {?arcA}) \<union> D1 \<union> D2" unfolding \<A>'_def by (by100 blast)
+        also have "\<dots> = \<Union>(\<A> - {?arcA}) \<union> ?arcA" using hD_union by (by100 blast)
+        also have "\<dots> = \<Union>\<A>" using harcA_in by (by100 blast)
+        finally show ?thesis using assms(3) by (by100 simp)
+      qed
       have h\<A>'_inter: "\<forall>A\<in>\<A>'. \<forall>B\<in>\<A>'. A \<noteq> B \<longrightarrow>
            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
