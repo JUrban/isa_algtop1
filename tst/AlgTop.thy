@@ -4726,10 +4726,22 @@ proof -
          f restricted to each is continuous (composition of linear rescaling + hA/hB).
          They agree at boundary ((-1,0) and (1,0)).\<close>
     have hf_inj: "inj_on f top1_S1"
-      sorry \<comment> \<open>Upper maps to A1 \\ {a\\_start, a\\_end} interior injectively.
-         Lower maps to A2 \\ {a\\_start, a\\_end} interior injectively.
-         A1 \\<inter> A2 = {a\\_start, a\\_end}, so interiors disjoint.
-         Boundary points (1,0) and (-1,0) map to a\\_start, a\\_end \\<in> A1 \\<inter> A2.\<close>
+    proof (rule inj_onI)
+      fix p q assume hp: "p \<in> top1_S1" and hq: "q \<in> top1_S1" and hfpq: "f p = f q"
+      have hp_eq: "fst p ^ 2 + snd p ^ 2 = 1" using hp unfolding top1_S1_def by (by100 blast)
+      have hq_eq: "fst q ^ 2 + snd q ^ 2 = 1" using hq unfolding top1_S1_def by (by100 blast)
+      have hA_inj: "inj_on hA I_set" using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      have hB_inj: "inj_on hB I_set" using hhB unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      \<comment> \<open>The x-coordinate determines the parameter: (1-x)/2 for upper, (x+1)/2 for lower.
+         If both on same semicircle: same parameter \\<Rightarrow> same x \\<Rightarrow> same y (from S1 equation).
+         If on different semicircles: images in disjoint sets \\<Rightarrow> f(p) \\<noteq> f(q) unless boundary.\<close>
+      show "p = q" sorry
+        \<comment> \<open>Case analysis on snd p \\<ge> 0 and snd q \\<ge> 0:
+           Same semicircle: hA/hB injective + (1-x)/2 injective \\<Rightarrow> same x \\<Rightarrow> same y.
+           Different semicircles: A1 \\<inter> A2 = {a\\_start, a\\_end}, only at boundary (\\<pm>1, 0).
+           Needs: A1 \\<inter> A2 = {a\\_start, a\\_end} (sorry hA1A2\\_inter).
+           ~50 lines of case analysis.\<close>
+    qed
     have hf_img: "f ` top1_S1 = ?C"
     proof -
       \<comment> \<open>hA surjects onto A1: for each x \\<in> A1, \\<exists> (p,q) \\<in> S1 with q \\<ge> 0 and f(p,q) = x.\<close>
