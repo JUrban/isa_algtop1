@@ -4612,6 +4612,25 @@ proof -
     have "\<forall>A\<in>set ws. A \<subseteq> T" using assms(2) assms(9) by (by100 blast)
     thus ?thesis by (by100 blast)
   qed
+  \<comment> \<open>Shared vertex extraction: for each consecutive pair, extract the unique shared vertex.\<close>
+  let ?k = "length ws"
+  have hk_ge2: "?k \<ge> 2" using assms(7) .
+  define shared_v :: "nat \<Rightarrow> 'a" where
+    "shared_v i = (THE v. ws ! i \<inter> ws ! ((i + 1) mod ?k) = {v})" for i
+  have hshared_v: "\<forall>i < ?k. ws ! i \<inter> ws ! ((i + 1) mod ?k) = {shared_v i}"
+  proof (intro allI impI)
+    fix i assume "i < ?k"
+    from hcard1[rule_format, OF this]
+    have "card (ws ! i \<inter> ws ! ((i + 1) mod ?k)) = 1" .
+    then obtain v where hv: "ws ! i \<inter> ws ! ((i + 1) mod ?k) = {v}"
+      using card_1_singletonE by (by100 blast)
+    have "(THE v. ws ! i \<inter> ws ! ((i + 1) mod ?k) = {v}) = v"
+      by (rule the_equality) (use hv in simp_all)
+    thus "ws ! i \<inter> ws ! ((i + 1) mod ?k) = {shared_v i}"
+      unfolding shared_v_def using hv by simp
+  qed
+  have hshared_v_distinct: "\<forall>i < ?k. \<forall>j < ?k. i \<noteq> j \<longrightarrow> shared_v i \<noteq> shared_v j"
+    using hdist_v hshared_v by (by100 force)
   have hC_SCC: "top1_simple_closed_curve_on T TT ?C"
   proof -
     \<comment> \<open>Strategy: Merge all but the last cycle arc into a single arc A1 (via arc\\_merge\\_at\\_endpoint).
