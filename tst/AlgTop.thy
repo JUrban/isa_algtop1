@@ -7533,9 +7533,41 @@ proof (rule ccontr)
           and hD1_arc: "top1_is_arc_on D1 (subspace_topology T TT D1)"
           and hD2_arc: "top1_is_arc_on D2 (subspace_topology T TT D2)"
         by (by100 blast)
-      \<comment> \<open>Remaining steps: construct \\<A>', show graph properties, construct 3-arc cycle,
-         apply sc\\_graph\\_no\\_cycle. All mechanical but long.\<close>
-      show False sorry
+      \<comment> \<open>Use graph\\_iterated\\_subdivision\\_exists to get \\<A>' with all graph conditions.\<close>
+      have hp_not_vertex: "p \<notin> top1_graph_vertex_set T TT \<A>"
+        sorry \<comment> \<open>p is interior to arcA, not in any arc's endpoints.\<close>
+      have hp_sub: "{p} \<subseteq> T" using hp_in harcA_sub by (by100 blast)
+      from graph_iterated_subdivision_exists[OF hstrict hhaus assms(2) assms(3) assms(4) assms(5)
+          _ hp_sub _]
+      obtain \<A>' where h\<A>': "(\<forall>A\<in>\<A>'. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A))"
+          "\<Union>\<A>' = T"
+          "(\<forall>A\<in>\<A>'. \<forall>B\<in>\<A>'. A \<noteq> B \<longrightarrow>
+               A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+             \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+             \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2)"
+          "finite \<A>'"
+        sorry \<comment> \<open>Instantiation of graph\\_iterated\\_subdivision\\_exists with P = {p}.\<close>
+      have h\<A>'_coh: "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
+          (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+        using graph_coherent_any_decomposition[OF hgraph h\<A>'(1) h\<A>'(2) h\<A>'(3) h\<A>'(4)]
+        by (by100 blast)
+      \<comment> \<open>D1, D2, arcB are in \\<A>'. The cycle [D1, arcB, D2] has card-1 intersections.\<close>
+      have "D1 \<in> \<A>'" "D2 \<in> \<A>'" "?arcB \<in> \<A>'"
+        sorry \<comment> \<open>D1, D2 from subdivision of arcA; arcB unchanged.\<close>
+      let ?ws' = "[D1, ?arcB, D2]"
+      have "length ?ws' \<ge> 2" by (by100 simp)
+      have "distinct ?ws'" sorry \<comment> \<open>D1 \\<noteq> arcB \\<noteq> D2, D1 \\<noteq> D2.\<close>
+      have "set ?ws' \<subseteq> \<A>'" using \<open>D1 \<in> \<A>'\<close> \<open>D2 \<in> \<A>'\<close> \<open>?arcB \<in> \<A>'\<close> by (by100 simp)
+      have "\<forall>i < length ?ws'. card (?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws')) = 1"
+        sorry \<comment> \<open>D1 \\<inter> arcB, arcB \\<inter> D2, D2 \\<inter> D1 each have card 1.\<close>
+      have "\<forall>i < length ?ws'. \<forall>j < length ?ws'. i \<noteq> j \<longrightarrow>
+          (\<forall>v w. ?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws') = {v} \<longrightarrow>
+                 ?ws' ! j \<inter> ?ws' ! ((j + 1) mod length ?ws') = {w} \<longrightarrow> v \<noteq> w)"
+        sorry \<comment> \<open>Shared vertices: fst(walk(Suc i)), fst(walk i), p — all distinct.\<close>
+      from sc_graph_no_cycle[OF assms(1) h\<A>'(1) h\<A>'(2) h\<A>'(3) h\<A>'(4) h\<A>'_coh
+          \<open>length ?ws' \<ge> 2\<close> \<open>distinct ?ws'\<close> \<open>set ?ws' \<subseteq> \<A>'\<close>
+          \<open>\<forall>i < length ?ws'. card _ = 1\<close> \<open>\<forall>i < length ?ws'. \<forall>j < length ?ws'. _\<close>]
+      show False .
     qed
   qed
 qed
