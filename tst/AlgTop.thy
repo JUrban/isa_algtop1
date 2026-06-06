@@ -6000,10 +6000,45 @@ proof (rule ccontr)
            ep has 2 elements. So walk\\_v(i+idx) = the OTHER element of ep(arc\\_next).
            The other element is walk\\_v at the "next-next" position.
            For j-i \\<ge> 3: hv\\_distinct/hmin gives contradiction.\<close>
+        \<comment> \<open>walk\\_v(Suc i+idx) \\<in> ep(arc\\_next) (it's the shared walk vertex).\<close>
+        have "fst (walk (Suc i + idx)) \<in> ?ep2 arc_next"
+        proof -
+          have "fst (walk (Suc i + idx)) \<in> snd (walk (Suc i + idx))"
+            using hwalk_shared by (by100 blast)
+          hence "fst (walk (Suc i + idx)) \<in> arc_k" unfolding arc_k_def by simp
+          moreover have "fst (walk (Suc i + idx)) \<in> snd (walk (Suc (Suc i + idx)))"
+            using hwalk_shared by (by100 blast)
+          \<comment> \<open>For non-wrap: Suc (Suc i + idx) = Suc i + (idx+1). For wrap: need walk\\_v(j) = walk\\_v(i).\<close>
+          ultimately have "fst (walk (Suc i + idx)) \<in> arc_k \<inter> arc_next"
+            sorry \<comment> \<open>Need fst(walk(Suc i+idx)) \\<in> arc\\_next. Non-wrap: direct. Wrap: via walk\\_v(j)=walk\\_v(i).\<close>
+          thus ?thesis using assms(4)[rule_format, OF harc_k_in harc_next_in harc_ne] by (by100 blast)
+        qed
+        \<comment> \<open>ep(arc\\_next) has 2 elements. Both walk\\_v(i+idx) and walk\\_v(Suc i+idx) are in it.
+           walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx). So these ARE the 2 elements.
+           But walk\\_v(i+idx) is ALSO in ep (proved above). ep has only 2 elements.
+           walk\\_v(i+idx) = walk\\_v(Suc i+idx) or walk\\_v(i+idx) = walk\\_v(Suc i + nxt).
+           First is impossible (other\\_endpt). So walk\\_v(i+idx) = walk\\_v(Suc i + nxt).
+           hv\\_distinct/hmin: these are at positions i+idx and Suc i + nxt. For j-i \\<ge> 3: distinct.\<close>
+        have hne_step: "fst (walk (i + idx)) \<noteq> fst (walk (Suc i + idx))"
+        proof -
+          have "fst (walk (Suc i + idx)) = other_endpt (fst (walk (i+idx))) (next_arc (fst (walk (i+idx))) (snd (walk (i+idx))))"
+            using hwalk_suc_fst[of "i+idx"] by simp
+          moreover have "next_arc (fst (walk (i+idx))) (snd (walk (i+idx))) \<in> \<A>"
+            using hnext_arc hwalk_props by (by100 blast)
+          moreover have hna_in: "fst (walk (i+idx)) \<in> ?ep2 (next_arc (fst (walk (i+idx))) (snd (walk (i+idx))))"
+            using hnext_arc hwalk_props by (by100 blast)
+          moreover have hna_arc: "next_arc (fst (walk (i+idx))) (snd (walk (i+idx))) \<in> \<A>"
+            using hnext_arc hwalk_props by (by100 blast)
+          moreover have "other_endpt (fst (walk (i+idx))) (next_arc (fst (walk (i+idx))) (snd (walk (i+idx)))) \<noteq> fst (walk (i+idx))"
+            using hother_endpt[rule_format, OF hna_arc hna_in] by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        \<comment> \<open>walk\\_v(i+idx) \\<in> ep(arc\\_next) and walk\\_v(Suc i+idx) \\<in> ep(arc\\_next) and they differ.
+           ep has 2 elements. walk\\_v(i+idx) is also in ep. So walk\\_v(i+idx) is one of the 2.
+           Since walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx): walk\\_v(i+idx) is the OTHER one.
+           hv\\_distinct/hmin gives contradiction.\<close>
         show False sorry
-          \<comment> \<open>Remaining: walk\\_v(i+idx) \\<in> ep(arc\\_next) with walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx)
-             \\<Rightarrow> walk\\_v(i+idx) = walk\\_v(Suc i + ((idx+1) mod k))
-             \\<Rightarrow> hv\\_distinct/hmin contradiction for j-i \\<ge> 3. ~15 lines.\<close>
+          \<comment> \<open>Final: doubleton membership + hv\\_distinct/hmin. ~10 lines.\<close>
       qed
       show "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
         using hge1 hinter_props hne2 by linarith
