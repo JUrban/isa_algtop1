@@ -4877,7 +4877,11 @@ lemma graph_cycle_retract:
       and hws_ne: "length ws \<ge> 2"
       and hws_C_sub: "\<Union>(set ws) \<subseteq> T"
   shows "top1_retract_of_on T TT (\<Union>(set ws))"
-proof (cases "\<A> = set ws")
+  using hfin hws_sub harcs hcover hinter hcoh htree hws_ne hws_C_sub
+proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
+  case (less \<A> ws)
+  show ?case
+  proof (cases "\<A> = set ws")
   case True \<comment> \<open>Base: T = C. Identity retraction.\<close>
   hence "T = \<Union>(set ws)" using hcover by (by100 simp)
   \<comment> \<open>Identity retraction: T retracts to itself = C.\<close>
@@ -4927,9 +4931,9 @@ next
 
      This induction requires graph\\_cycle\\_retract to be reformulated with the
      induction built in. Currently sorry'd pending this reformulation.\<close>
-  show ?thesis sorry \<comment> \<open>Retraction by induction on card(\\<A> \\ set ws).
-     See strategy above. Needs: component path extraction + new cycle construction +
-     coherent topology retraction assembly. ~150 lines.\<close>
+  show ?case sorry \<comment> \<open>Retraction by induction on card(\\<A> \\ set ws).
+     See strategy above. Now less.IH is available for new cycles with fewer NC arcs.\<close>
+  qed
 qed
 
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
