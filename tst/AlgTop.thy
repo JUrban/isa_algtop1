@@ -4931,41 +4931,8 @@ next
 
      This induction requires graph\\_cycle\\_retract to be reformulated with the
      induction built in. Currently sorry'd pending this reformulation.\<close>
-  \<comment> \<open>Step case: define r arc-by-arc using coherent topology.
-     For cycle arcs: r = id. For non-cycle arcs: r = constant to unique attachment vertex.
-     Unique attachment follows from IH: double attachment \\<Rightarrow> new cycle \\<Rightarrow> IH \\<Rightarrow> False.\<close>
-  let ?C = "\<Union>(set ws)"
-  have htop: "is_topology_on T TT"
-    using less.prems(7) unfolding top1_is_tree_on_def top1_is_graph_on_def is_topology_on_strict_def
-    by (by100 blast)
-  have hC_sub: "?C \<subseteq> T" using less.prems(9) .
-  \<comment> \<open>Each non-cycle arc has at least one endpoint on C (via graph connectivity).\<close>
-  \<comment> \<open>And each non-cycle arc has at MOST one endpoint on C (unique attachment).\<close>
-  \<comment> \<open>For each non-cycle arc A: pick the unique cycle vertex target(A).\<close>
-  \<comment> \<open>Define r globally: x \\<in> C \\<Rightarrow> r(x) = x. x \\<in> A\\<setminus>C (non-cycle) \\<Rightarrow> r(x) = target(A).\<close>
-  \<comment> \<open>Coherent topology: r continuous iff r|A continuous for each A.
-     Cycle: r|A = id, continuous. Non-cycle: r|A = constant, continuous.
-     Consistency at shared vertices: follows from unique attachment.\<close>
-  \<comment> \<open>Pick a non-cycle arc A0 that touches C (exists since T is connected and C \\<subseteq> T).\<close>
-  have "\<exists>A0 \<in> \<A> - set ws. A0 \<inter> ?C \<noteq> {}"
-    sorry \<comment> \<open>T connected + C \\<subseteq> T + non-cycle arcs exist \\<Rightarrow> some non-cycle arc touches C.\<close>
-  then obtain A0 where hA0: "A0 \<in> \<A> - set ws" "A0 \<inter> ?C \<noteq> {}" by (by100 blast)
-  \<comment> \<open>A0 touches C at some vertex v0. Set r|A0 = constant v0.\<close>
-  obtain v0 where hv0: "v0 \<in> A0 \<inter> ?C" using hA0(2) by (by100 blast)
-  \<comment> \<open>Remove A0: \\<A>' = \\<A> \\ {A0}. The cycle ws is still in \\<A>'.
-     card(\\<A>' \\ set ws) < card(\\<A> \\ set ws) since A0 \\<in> \\<A> \\ set ws.\<close>
-  let ?\<A>' = "\<A> - {A0}"
-  have "card (?\<A>' - set ws) < card (\<A> - set ws)"
-    sorry \<comment> \<open>A0 \\<in> \\<A> - set ws, finite, removal decreases card.\<close>
-  \<comment> \<open>\\<A>' still covers T \\ int(A0) \\<supseteq> C. And T \\ int(A0) is still SC (subspace of SC space?).
-     Actually, we need a DIFFERENT approach: don't remove the arc from the graph,
-     just note that A0 touches C, so we can extend the cycle to include A0.\<close>
-  \<comment> \<open>Better approach: check if A0 has 1 or 2 endpoints on C.\<close>
-  \<comment> \<open>If 2 endpoints: A0 + cycle segment \\<Rightarrow> new cycle ws' with card(\\<A> \\ set ws') < card(\\<A> \\ set ws).
-     IH \\<Rightarrow> retraction for ws'. Then scc\\_in\\_sc\\_false \\<Rightarrow> False. Vacuously eliminated.\<close>
-  \<comment> \<open>If 1 endpoint: A0 is pendant. Map A0 to v0. Remaining graph still has retraction by IH
-     (either for same ws with fewer non-cycle arcs, or by removing A0).\<close>
-  show ?case sorry \<comment> \<open>Case split on #endpoints of A0 on C + IH application.\<close>
+  show ?case sorry \<comment> \<open>Retraction by induction on card(\\<A> \\ set ws).
+     See strategy above. Now less.IH is available for new cycles with fewer NC arcs.\<close>
   qed
 qed
 
