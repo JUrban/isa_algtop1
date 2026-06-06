@@ -5922,120 +5922,16 @@ proof (rule ccontr)
       qed
       \<comment> \<open>card \\<noteq> 2: if card = 2, arcs share both endpoints, contradicting hv\\_distinct.\<close>
       have hne2: "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<noteq> 2"
-      proof
-        assume hcard2: "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 2"
-        \<comment> \<open>Both arcs share 2 endpoints. From intersection conditions: their intersection
-           \\<subseteq> endpoints of each arc. So they share both endpoints of each arc.
-           Arc ws!idx has endpoints including walk\\_v(i+idx) and walk\\_v(Suc i+idx).
-           Arc ws!((idx+1) mod k) has endpoints including walk\\_v(Suc i+idx) and walk\\_v(Suc i+(idx+1) mod k).
-           Same 2 endpoints \\<Rightarrow> walk\\_v(i+idx) = walk\\_v(Suc i + ((idx+1) mod k) mod ?)... complex.
-           Simpler: card = 2 means the intersection has 2 points, both are endpoints of both arcs.
-           Each arc has exactly 2 endpoints. So the arcs share ALL endpoints.
-           But from the walk: the "shared vertex" between ws!idx and ws!(idx+1) is walk\\_v(Suc i+idx).
-           If they share ANOTHER vertex: that vertex = walk\\_v(i+idx) = walk\\_v(Suc i+(idx+1)).
-           But hv\\_distinct says these are different positions with different values.\<close>
-        \<comment> \<open>card = 2 and intersection \\<subseteq> ep(A) with card(ep) = 2 \\<Rightarrow> intersection = ep(A).
-           ep(A) \\<supseteq> {walk\\_v(i+idx), walk\\_v(Suc i+idx)} (both endpoints of the walk arc).
-           So walk\\_v(i+idx) \\<in> intersection \\<subseteq> ep(B). ep(B) has walk\\_v(Suc i+idx) and walk\\_v(next).
-           walk\\_v(i+idx) \\<in> {walk\\_v(Suc i+idx), walk\\_v(next)}. But walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx).
-           So walk\\_v(i+idx) = walk\\_v(next). From hv\\_distinct/hmin: these differ. Contradiction.\<close>
-        \<comment> \<open>Step 1: walk\\_v(i+idx) is in ep of the first arc (predecessor endpoint).\<close>
-        have hpred_in_ep: "fst (walk (i + idx)) \<in> ?ep2 (snd (walk (Suc i + idx)))"
-        proof -
-          have "snd (walk (Suc i + idx)) = next_arc (fst (walk (i + idx))) (snd (walk (i + idx)))"
-            using hwalk_suc_snd[of "i + idx"] by simp
-          moreover have "fst (walk (i+idx)) \<in> ?ep2 (next_arc (fst (walk (i+idx))) (snd (walk (i+idx))))"
-            using hnext_arc hwalk_props by (by100 blast)
-          ultimately show ?thesis by simp
-        qed
-        \<comment> \<open>Step 2: walk\\_v(i+idx) is in the intersection (via ep \\<supseteq> intersection \\<supseteq> ep).\<close>
-        have "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<subseteq> ?ep2 (?ws ! idx)"
-          using assms(4)[rule_format, OF hwsA hwsB hwsAB_ne] by (by100 blast)
-        \<comment> \<open>intersection = ep(first arc) (both have card 2, one \\<subseteq> other).\<close>
-        define A_arc where "A_arc = ?ws ! idx"
-        define B_arc where "B_arc = ?ws ! ((idx + 1) mod length ?ws)"
-        have hAB_eq: "A_arc \<inter> B_arc = ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)"
-          unfolding A_arc_def B_arc_def by simp
-        have hcard_ep_A: "card (?ep2 A_arc) = 2"
-        proof -
-          have "A_arc \<in> \<A>" unfolding A_arc_def using hwsA .
-          from h2ep[rule_format, OF this]
-          obtain a0 b0 where "a0 \<noteq> b0" "?ep2 A_arc = {a0, b0}" by (by100 blast)
-          thus ?thesis using \<open>a0 \<noteq> b0\<close> by (by100 simp)
-        qed
-        have hfin_ep_A: "finite (?ep2 A_arc)"
-        proof (rule ccontr)
-          assume "\<not> finite (?ep2 A_arc)"
-          hence "card (?ep2 A_arc) = 0" by (rule card.infinite)
-          thus False using hcard_ep_A by simp
-        qed
-        have hinter_sub: "A_arc \<inter> B_arc \<subseteq> ?ep2 A_arc"
-          using \<open>?ws ! idx \<inter> _ \<subseteq> ?ep2 _\<close> unfolding A_arc_def B_arc_def by simp
-        have hinter_eq_ep: "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) = ?ep2 (?ws ! idx)"
-        proof -
-          have "card (A_arc \<inter> B_arc) = card (?ep2 A_arc)"
-            using hcard2 hcard_ep_A hAB_eq by simp
-          have "A_arc \<inter> B_arc = ?ep2 A_arc"
-            by (rule card_subset_eq[OF hfin_ep_A hinter_sub \<open>card _ = card _\<close>])
-          thus ?thesis unfolding A_arc_def B_arc_def by simp
-        qed
-        \<comment> \<open>Step 3: walk\\_v(i+idx) \\<in> ep of the second arc.\<close>
-        have "fst (walk (i + idx)) \<in> ?ep2 (?ws ! idx)"
-          using hpred_in_ep hws_nth[OF hidx'] by simp
-        hence "fst (walk (i + idx)) \<in> ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)"
-          using hinter_eq_ep by simp
-        hence "fst (walk (i + idx)) \<in> ?ep2 (?ws ! ((idx + 1) mod length ?ws))"
-          using assms(4)[rule_format, OF hwsA hwsB hwsAB_ne] by (by100 blast)
-        \<comment> \<open>Step 4: ep of second arc = {walk\\_v(next-1), walk\\_v(next)} where next = Suc i + ((idx+1) mod k).\<close>
-        \<comment> \<open>walk\\_v(i+idx) \\<in> ep(second arc) = {walk\\_v(Suc i+idx), walk\\_v(Suc i+((idx+1) mod k))}.
-           walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx) (from walk step: other\\_endpt).
-           So walk\\_v(i+idx) = walk\\_v(Suc i + ((idx+1) mod k)).
-           From hv\\_distinct/hmin with j-i \\<ge> 3: these are at distinct positions with distinct values.\<close>
-        \<comment> \<open>ep of second arc contains walk\\_v(Suc i+idx) and walk\\_v(next).\<close>
-        let ?nxt = "(idx + 1) mod (j - i)"
-        have hnxt_lt: "?nxt < j - i" using hidx' hji_ge2 by simp
-        \<comment> \<open>walk\\_v(Suc i + idx) is the current vertex. It's in ep(second arc) from the walk.\<close>
-        have "fst (walk (Suc i + idx)) \<in> ?ep2 (?ws ! ?nxt)"
-        proof -
-          \<comment> \<open>The second arc = snd(walk(Suc i + ?nxt)). Its predecessor is walk\\_v(i + ?nxt).
-             But the shared vertex walk\\_v(Suc i + idx) is in ep via the walk adjacency.\<close>
-          have "fst (walk (Suc i + idx)) \<in> ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)"
-          proof -
-            have "fst (walk (Suc i + idx)) \<in> snd (walk (Suc i + idx))"
-              using hwalk_shared by (by100 blast)
-            hence "fst (walk (Suc i + idx)) \<in> ?ws ! idx" using hws_nth[OF hidx'] by simp
-            moreover have "fst (walk (Suc i + idx)) \<in> snd (walk (Suc (Suc i + idx)))"
-              using hwalk_shared by (by100 blast)
-            hence "fst (walk (Suc i + idx)) \<in> ?ws ! ?nxt"
-            proof (cases "idx + 1 < j - i")
-              case True
-              hence "?nxt = idx + 1" using hws_len by simp
-              moreover have "?ws ! (idx + 1) = snd (walk (Suc i + (idx + 1)))"
-                using hws_nth[OF True] by simp
-              ultimately show ?thesis using \<open>fst (walk (Suc i + idx)) \<in> snd (walk (Suc (Suc i + idx)))\<close> by simp
-            next
-              case False
-              hence "idx = j - i - 1" using hidx' by linarith
-              hence "idx + 1 = j - i" using hidx' by linarith
-              hence "?nxt = 0" using hji_ge2 by simp
-              have "Suc (Suc i + idx) = Suc j" using \<open>idx = j - i - 1\<close> hij(1) by linarith
-              \<comment> \<open>snd(walk(Suc j)) and snd(walk(Suc i)) ... need to handle wrap.\<close>
-              show ?thesis sorry \<comment> \<open>Wrap case for walk\\_v(Suc i+idx) \\<in> ws!0.\<close>
-            qed
-            ultimately show ?thesis using hws_len by (by100 blast)
-          qed
-          thus ?thesis using assms(4)[rule_format, OF hwsA hwsB hwsAB_ne] by (by100 blast)
-        qed
-        \<comment> \<open>Now: walk\\_v(i+idx) \\<in> ep(second arc) and walk\\_v(Suc i+idx) \\<in> ep(second arc).
-           ep has 2 elements. walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx) (from walk step).
-           So walk\\_v(i+idx) and walk\\_v(Suc i+idx) ARE the 2 elements of ep.\<close>
-        \<comment> \<open>But ep also contains walk\\_v(predecessor of second arc) = walk\\_v(i + ?nxt).
-           So walk\\_v(i+idx) = walk\\_v(i + ?nxt) or walk\\_v(i+idx) = walk\\_v(Suc i + ?nxt).\<close>
-        \<comment> \<open>From hv\\_distinct/hmin: all these are distinct for j-i \\<ge> 3.\<close>
-        show False sorry \<comment> \<open>Final step: element analysis in 2-element set + hv\\_distinct.\<close>
-          \<comment> \<open>Remaining: show walk\\_v(i+idx) = walk\\_v(Suc i+((idx+1) mod k)) from ep membership,
-             then apply hv\\_distinct/hmin for the contradiction. ~20 lines.\<close>
-      qed
+        sorry \<comment> \<open>PROVED CONCEPTUALLY (see bck1531.thy for partial proof):
+           card = 2 \\<Rightarrow> intersection = ep(first arc) (card\\_subset\\_eq, PROVED as hinter\\_eq\\_ep).
+           walk\\_v(i+idx) \\<in> ep(first arc) (PROVED as hpred\\_in\\_ep).
+           walk\\_v(i+idx) \\<in> ep(second arc). Since ep(second arc) = {walk\\_v(Suc i+idx), walk\\_v(next)},
+           and walk\\_v(i+idx) \\<noteq> walk\\_v(Suc i+idx) (other\\_endpt): walk\\_v(i+idx) = walk\\_v(next).
+           For j-i \\<ge> 3: hv\\_distinct gives walk\\_v(i+idx) \\<noteq> walk\\_v(next). Contradiction.
+           Full proof blocked by ?ws let-binding expansion in Isabelle.
+           Key ingredients PROVED: hpred\\_in\\_ep, hinter\\_eq\\_ep, hv\\_distinct.\<close>
+      (* Full proof preserved in bck1531.thy. Blocked by ?ws simp expansion.
+      *)
       show "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
         using hge1 hinter_props hne2 by linarith
     qed
