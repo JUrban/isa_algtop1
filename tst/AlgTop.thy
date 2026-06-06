@@ -4912,9 +4912,34 @@ proof (rule ccontr)
     define walk where "walk = rec_nat (v0, e0)
       (\<lambda>n (v, e). let e' = next_arc v e in (other_endpt v e', e'))"
     \<comment> \<open>Key properties of the walk (by induction on n):\<close>
-    have hwalk_props: "\<forall>n \<le> card ?V. fst (walk n) \<in> ?V \<and> snd (walk n) \<in> \<A>
+    \<comment> \<open>Helper: next\\_arc gives a valid arc (from hshared\\_arc + SOME).\<close>
+    have hnext_arc: "\<forall>v\<in>?V. \<forall>e\<in>\<A>. v \<in> ?ep2 e \<longrightarrow>
+        next_arc v e \<in> \<A> \<and> v \<in> ?ep2 (next_arc v e) \<and> next_arc v e \<noteq> e"
+    proof (intro ballI impI)
+      fix v e assume "v \<in> ?V" "e \<in> \<A>" "v \<in> ?ep2 e"
+      from hshared_arc[rule_format, OF this]
+      have "\<exists>e'\<in>\<A>. e' \<noteq> e \<and> v \<in> ?ep2 e'" .
+      hence "\<exists>e'. e' \<in> \<A> \<and> v \<in> ?ep2 e' \<and> e' \<noteq> e" by (by100 blast)
+      from someI_ex[OF this]
+      show "next_arc v e \<in> \<A> \<and> v \<in> ?ep2 (next_arc v e) \<and> next_arc v e \<noteq> e"
+        unfolding next_arc_def by (by100 blast)
+    qed
+    \<comment> \<open>Helper: other\\_endpt gives the other endpoint.\<close>
+    have hother_endpt: "\<forall>v. \<forall>e\<in>\<A>. v \<in> ?ep2 e \<longrightarrow>
+        other_endpt v e \<in> ?ep2 e \<and> other_endpt v e \<noteq> v"
+    proof (intro allI ballI impI)
+      fix v e assume "e \<in> \<A>" "v \<in> ?ep2 e"
+      from h2ep[rule_format, OF \<open>e \<in> \<A>\<close>]
+      obtain a0 b0 where hab: "a0 \<noteq> b0" "?ep2 e = {a0, b0}" by (by100 blast)
+      have "v \<in> {a0, b0}" using \<open>v \<in> ?ep2 e\<close> hab(2) by simp
+      hence "\<exists>v'. v' \<in> ?ep2 e \<and> v' \<noteq> v" using hab by (by100 blast)
+      from someI_ex[OF this]
+      show "other_endpt v e \<in> ?ep2 e \<and> other_endpt v e \<noteq> v"
+        unfolding other_endpt_def by (by100 blast)
+    qed
+    have hwalk_props: "\<And>n. n \<le> card ?V \<Longrightarrow> fst (walk n) \<in> ?V \<and> snd (walk n) \<in> \<A>
         \<and> fst (walk n) \<in> ?ep2 (snd (walk n))"
-      sorry \<comment> \<open>Induction on n. Base: (v0,e0). Step: SOME gives valid next arc+vertex.\<close>
+      sorry \<comment> \<open>Induction on n. Base: (v0,e0) from hv0/he0. Step: hnext\\_arc + hother\\_endpt.\<close>
     \<comment> \<open>Walk visits at most card(V) distinct vertices. By pigeonhole: must revisit.\<close>
     have "\<exists>i j. i < j \<and> j \<le> card ?V \<and> fst (walk i) = fst (walk j)"
     proof (rule ccontr)
