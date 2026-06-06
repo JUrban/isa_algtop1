@@ -4818,8 +4818,9 @@ proof -
           hence "v \<in> {shared_v ((m + ?k - 1) mod ?k), shared_v m}" using hepm \<open>v \<in> ?ep (ws ! m)\<close> by simp
           \<comment> \<open>v is one of shared\\_v(j-1), shared\\_v(j) AND one of shared\\_v(m-1), shared\\_v(m).
              All 4 indices are distinct (non-adjacency + j\\<noteq>m), so no match.\<close>
-          have hj_prev: "(j + ?k - 1) mod ?k < ?k" using hk_ge2 by (simp add: hk_pos)
-          have hm_prev: "(m + ?k - 1) mod ?k < ?k" using hk_ge2 by (simp add: hk_pos)
+          have hk_pos2: "?k > 0" using hk_ge2 by linarith
+          have hj_prev: "(j + ?k - 1) mod ?k < ?k" using hk_pos2 by simp
+          have hm_prev: "(m + ?k - 1) mod ?k < ?k" using hk_pos2 by simp
           from \<open>v \<in> {shared_v ((j+?k-1) mod ?k), shared_v j}\<close>
             \<open>v \<in> {shared_v ((m+?k-1) mod ?k), shared_v m}\<close>
           have "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)
@@ -4828,9 +4829,13 @@ proof -
               \<or> shared_v j = shared_v m" by (by100 blast)
           thus False
           proof (elim disjE)
-            assume "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)"
-            hence "(j+?k-1) mod ?k = (m+?k-1) mod ?k"
-              using hshared_v_distinct hj_prev hm_prev by (by100 force)
+            assume heq1: "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)"
+            have "(j+?k-1) mod ?k = (m+?k-1) mod ?k"
+            proof (rule ccontr)
+              assume "(j+?k-1) mod ?k \<noteq> (m+?k-1) mod ?k"
+              from hshared_v_distinct[rule_format, OF hj_prev hm_prev this]
+              show False using heq1 by simp
+            qed
             hence "j = m"
             proof (cases "j = 0")
               case True note j0 = this
@@ -4840,7 +4845,8 @@ proof -
               next
                 case False
                 have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
-                have "(m + ?k - 1) mod ?k = m - 1" using False hm by simp
+                have "m + ?k - 1 = (m - 1) + ?k" using False by linarith
+                hence "(m + ?k - 1) mod ?k = m - 1" using hm by simp
                 hence "?k - 1 = m - 1" using j0 \<open>(j+?k-1) mod ?k = (m+?k-1) mod ?k\<close>
                   \<open>(0 + ?k - 1) mod ?k = ?k - 1\<close> by simp
                 thus ?thesis using j0 hm by linarith
@@ -4868,11 +4874,21 @@ proof -
             thus False using hne by simp
           next
             assume "shared_v ((j+?k-1) mod ?k) = shared_v m"
-            hence "(j+?k-1) mod ?k = m" using hshared_v_distinct hj_prev hm by (by100 force)
+            hence "(j+?k-1) mod ?k = m"
+            proof (rule ccontr)
+              assume "(j+?k-1) mod ?k \<noteq> m"
+              from hshared_v_distinct[rule_format, OF hj_prev hm this]
+              show False using \<open>shared_v ((j+?k-1) mod ?k) = shared_v m\<close> by simp
+            qed
             thus False using hprev by simp
           next
             assume "shared_v j = shared_v ((m+?k-1) mod ?k)"
-            hence "j = (m+?k-1) mod ?k" using hshared_v_distinct hj hm_prev by (by100 force)
+            hence "j = (m+?k-1) mod ?k"
+            proof (rule ccontr)
+              assume "j \<noteq> (m+?k-1) mod ?k"
+              from hshared_v_distinct[rule_format, OF hj hm_prev this]
+              show False using \<open>shared_v j = shared_v ((m+?k-1) mod ?k)\<close> by simp
+            qed
             \<comment> \<open>j = (m-1) mod k \\<Rightarrow> (j+1) mod k = m. But hnext says (j+1) mod k \\<noteq> m.\<close>
             hence "(j + 1) mod ?k = m"
             proof (cases "m = 0")
@@ -4889,7 +4905,12 @@ proof -
             thus False using hnext by simp
           next
             assume "shared_v j = shared_v m"
-            hence "j = m" using hshared_v_distinct hj hm by (by100 force)
+            hence "j = m"
+            proof (rule ccontr)
+              assume "j \<noteq> m"
+              from hshared_v_distinct[rule_format, OF hj hm this]
+              show False using \<open>shared_v j = shared_v m\<close> by simp
+            qed
             thus False using hne by simp
           qed
         qed
