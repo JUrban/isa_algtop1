@@ -4881,10 +4881,32 @@ proof (rule ccontr)
     \<comment> \<open>The walk visits distinct vertices. After card(V)+1 steps: must revisit.
        But revisit creates cycle (contradicting hacyclic). So walk can't reach card(V)+1 steps.
        But degree \\<ge> 2 guarantees it does. Contradiction.\<close>
+    \<comment> \<open>Pick starting vertex and arc.\<close>
+    obtain v0 where hv0: "v0 \<in> ?V"
+    proof -
+      obtain A0 where "A0 \<in> \<A>" using assms(6) by (by100 force)
+      from h2ep[rule_format, OF this]
+      obtain a0 b0 where "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {a0, b0}" by (by100 blast)
+      hence "a0 \<in> ?V" unfolding top1_graph_vertex_set_def using \<open>A0 \<in> \<A>\<close> by (by100 blast)
+      thus ?thesis using that by (by100 blast)
+    qed
+    obtain e0 where he0: "e0 \<in> \<A>" "v0 \<in> ?ep2 e0"
+    proof -
+      from hv0 obtain A0 where "A0 \<in> \<A>" "v0 \<in> ?ep2 A0"
+        unfolding top1_graph_vertex_set_def by (by100 blast)
+      thus ?thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>The walk. At each step: current vertex v, previous arc e.
+       Pick next arc e' \\<noteq> e with v \\<in> ep(e'). Go to the other endpoint v' of e'.\<close>
+    \<comment> \<open>For the walk, we need the "other endpoint" function.\<close>
+    \<comment> \<open>Actually, the walk visits vertices. We show the walk function is injective on
+       {0..card(V)} using acyclicity. Pigeonhole gives the contradiction.\<close>
+    \<comment> \<open>Simplified argument: the walk can take at least card(V) steps (degree \\<ge> 2 at each vertex).
+       At each step it visits a new vertex (acyclic \\<Rightarrow> no revisit, because revisit \\<Rightarrow> cycle).
+       So after card(V) steps: card(V) + 1 distinct vertices \\<subseteq> V, card(V) + 1 > card(V). Impossible.\<close>
     show False sorry
-      \<comment> \<open>Walk + pigeonhole + acyclicity. hshared\\_arc provides the step function.
-         Need: define walk by SOME + rec\\_nat, show injectivity on vertices,
-         pigeonhole for card(V)+1 > card(V). Pure combinatorics.\<close>
+      \<comment> \<open>REMAINING: define walk\\_v by rec\\_nat using SOME, prove walk\\_v injective,
+         derive card(V)+1 \\<le> card(V) contradiction. Pure combinatorics, ~80 lines.\<close>
   qed
 qed
 
