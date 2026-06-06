@@ -4618,10 +4618,22 @@ proof -
        Step 5: Compact-to-Hausdorff gives homeomorphism (Theorem 26.6).\<close>
     \<comment> \<open>The SCC construction requires k oriented arc homeomorphisms matching at shared vertices.
        This is a composition of the arc\\_merge\\_at\\_endpoint technique applied cyclically.\<close>
+    \<comment> \<open>Step 1: Each arc ws!i has a homeomorphism [0,1] \\<to> ws!i. Orient them so consecutive
+       arcs match: the endpoint of ws!i matches the startpoint of ws!(i+1).
+       The shared vertices form a sequence v0, v1, ..., v(k-1) where vi is in ws!i \\<inter> ws!((i+1) mod k).\<close>
+    \<comment> \<open>Step 2: Concatenate the k oriented arc homeomorphisms via top1\\_path\\_product
+       to get a loop F: [0,1] \\<to> C with F(0) = F(1) = v0.\<close>
+    \<comment> \<open>Step 3: F is continuous, surjective onto C, and injective on (0,1) (each arc's interior
+       is mapped bijectively, and different arcs have disjoint interiors).\<close>
+    \<comment> \<open>Step 4: Define f: S1 \\<to> C by f(R\\_to\\_S1(t)) = F(t) for t \\<in> [0,1). This is well-defined
+       since F(0) = F(1). Continuity from R\\_to\\_S1\\_interval\\_homeomorphism. Injectivity from F.
+       Surjectivity from F. This gives top1\\_simple\\_closed\\_curve\\_on T TT C.\<close>
     show ?thesis sorry
-      \<comment> \<open>SCC construction. Mathematically: concatenate k arc homeomorphisms around the cycle.
-         The loop [0,1] \\<to> C factors through S1. Bijectivity from distinct intermediate vertices.
-         Theorem 26.6 (compact-to-Hausdorff) gives homeomorphism. Then SCC definition.\<close>
+      \<comment> \<open>SCC construction: ~150 lines. Key ingredients:
+         - arc\\_endpoints\\_are\\_boundary (orient arcs)
+         - top1\\_path\\_product\\_continuous / foldr\\_path\\_product\\_is\\_path (concatenate)
+         - R\\_to\\_S1\\_interval\\_homeomorphism (factor through S1)
+         - Theorem\\_26\\_6 (compact-to-Hausdorff bijection = homeomorphism)\<close>
   qed
   \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
   have hC_retract: "top1_retract_of_on T TT ?C"
