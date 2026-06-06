@@ -47,31 +47,34 @@ These are in `fi/AlgIsoFixed.thy` and `ac/AlgTopCached.thy`.
   OF-chain with 35 premises exceeds timeout.
 - Main contradiction — needs component boundary infrastructure.
 
-### AlgTop.thy (10 executable gaps, updated 2026-06-06)
+### AlgTop.thy (9 executable gaps, updated 2026-06-06)
 
-**Non-surface (2 gaps):**
+**Non-surface (1 gap):**
 - `finite_tree_has_leaf` (L2676): SC + all vertices degree≥2 → False (topological bridge)
-- `covering_graph_pi1_rank` (L5512): Euler invariance for lifted graph (witness drift)
 
 **Surface classification (8 gaps):**
-- Theorem 75.4: 1-skeleton is wedge of circles (L7266)
-- Theorem 76: Elementary scheme operation induction (L7356)
-- Theorem 75.4: Abelianization + Smith normal form (L7398)
-- Theorem 78.1: Disjoint simplex copies + pasting (L7460)
-- Theorem 78.2: Iterative merging construction (L7496)
-- Theorem 77.5: Polygonal region → edge scheme (L7536)
-- Theorem 77.5: Normal form reduction (L7552)
-- Theorem 77.5: Normal form → homeomorphism type (L7554)
+- Theorem 75.4: 1-skeleton is wedge of circles (L9785)
+- Theorem 76: Elementary scheme operation induction (L9875)
+- Theorem 75.4: Abelianization + Smith normal form (L9917)
+- Theorem 78.1: Disjoint simplex copies + pasting (L9979)
+- Theorem 78.2: Iterative merging construction (L10015)
+- Theorem 77.5: Polygonal region → edge scheme (L10055)
+- Theorem 77.5: Normal form reduction (L10071)
+- Theorem 77.5: Normal form → homeomorphism type (L10073)
 
-**Fully proved infrastructure (highlights):**
-- Covering lifted arc family interface (all 3 clauses: surj+inj+endpoints, coverage, disjointness)
-- Covering arc/vertex multiplicity
-- Injectivity via Theorem 54.3 + arc simply connected
-- Free group transfer to nat basis
-- Max conn comp helpers, graph arc containment
-- Euler characteristic arithmetic chain
-- Vertex set equality, subgraph coherent topology
-- All §64, §67-§73, §79-§82, §83-§84 infrastructure
+**FULLY PROVED infrastructure (major lemmas, zero sorry):**
+- **graph_euler_invariance**: V-E invariant under decomposition change
+- **graph_iterated_subdivision_exists**: iterated arc subdivision
+- **graph_same_vertices_same_arcs**: same vertex set → same arcs
+- **graph_arc_containment_via_open_interior**: arc containment via connectedness
+- **graph_coherent_any_decomposition**: coherent topology for any finite decomposition
+- **graph_arc_interior_open**: arc interiors open in coherent topology
+- **graph_subdivision_preserves_euler**: single subdivision preserves V-E
+- **closed_set_first_entry**: boundary point in connected space
+- Covering lifted arc family interface (all 3 clauses)
+- 𝒜_L conditions: arc, cover, intersection, finiteness — ALL PROVED
+- Covering arc/vertex multiplicity, free group transfer, max conn comp helpers
+- All §64, §67-§73, §79-§85 infrastructure
 
 See `SORRY_AUDIT.md` for detailed dependency analysis.
 

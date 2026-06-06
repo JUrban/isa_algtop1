@@ -236,7 +236,7 @@ i/Top1_Ch9_13.thy|definition|top1_induced_homomorphism_on|2481
 i/Top1_Ch3.thy|definition|top1_in_same_component_on|2466
 i/Top1_Ch3.thy|definition|top1_in_same_path_component_on|3057
 i/Top1_Ch3.thy|definition|top1_interval_encode|9643
-AlgTop.thy|definition|top1_inverse_edge|7307
+AlgTop.thy|definition|top1_inverse_edge|9826
 wh/AlgTopWedgeHelpers.thy|definition|top1_is_2_manifold_on|11
 i/Top1_Ch9_13.thy|definition|top1_is_abelian_group_on|3124
 ac/AlgTopCached.thy|definition|top1_is_abelianization_of|7044
@@ -348,7 +348,7 @@ b/AlgTop_JCT_Base.thy|definition|top1_S2_topology|3731
 b0/AlgTop_JCT_Base0.thy|definition|top1_same_homotopy_type_on|4048
 i/Top1_Ch2.thy|definition|top1_saturated_with_respect_to_on|18798
 i/Top1_Ch5_8.thy|definition|top1_SC_F|20779
-AlgTop.thy|definition|top1_scheme_equiv|7317
+AlgTop.thy|definition|top1_scheme_equiv|9836
 i/Top1_Ch5_8.thy|definition|top1_SC_J|20775
 i/Top1_Ch5_8.thy|definition|top1_SC_TY|20793
 i/Top1_Ch5_8.thy|definition|top1_SC_TZ|20785
@@ -539,6 +539,7 @@ i/Top1_Ch5_8.thy|lemma|closed_interval_hausdorff|1946
 i/Top1_Ch2.thy|lemma|closedin_Union_finite|4920
 ac10/AlgTopCached10.thy|lemma|closed_real_Inf_in|10395
 ac10/AlgTopCached10.thy|lemma|closed_real_Sup_in|10370
+AlgTop.thy|lemma|closed_set_first_entry|4224
 ac/AlgTopCached.thy|lemma|closed_subset_compact|41030
 i/Top1_Ch5_8.thy|lemma|closed_subset_complete|11512
 i/Top1_Ch5_8.thy|lemma|closure_cc_cont_on_compact|16493
@@ -645,7 +646,7 @@ i/Top1_Ch5_8.thy|lemma|co_subbasis_in_cc_subspace|18552
 i/Top1_Ch5_8.thy|lemma|countable_union_sigma_lf|2963
 ac4/AlgTopCached4.thy|lemma|covering_base_locally_path_connected|3813
 ac5/AlgTopCached5.thy|lemma|covering_component_over_arc_path_connected|397
-AlgTop.thy|lemma|covering_graph_pi1_rank|4063
+AlgTop.thy|lemma|covering_graph_pi1_rank|5986
 ac4/AlgTopCached4.thy|lemma|covering_induced_injective|36
 AlgTop.thy|lemma|covering_lifted_arc_family_card|3379
 AlgTop.thy|lemma|covering_lifted_vertex_set_card|3542
@@ -792,11 +793,16 @@ i/Top1_Ch5_8.thy|lemma|geom_cauchy_converges|11886
 i/Top1_Ch5_8.thy|lemma|geom_cauchy_lim_bound|11892
 i/Top1_Ch5_8.thy|lemma|gp_singleton|29297
 i/Top1_Ch5_8.thy|lemma|gp_singleton_set|29279
+AlgTop.thy|lemma|graph_arc_containment_via_open_interior|4713
+AlgTop.thy|lemma|graph_arc_interior_open|4540
+AlgTop.thy|lemma|graph_coherent_any_decomposition|4302
 ac7/AlgTopCached7.thy|lemma|graph_connected_sub_covered_by_arcs|4698
 ac10/AlgTopCached10.thy|lemma|graph_covering_is_graph|9824
 ac7/AlgTopCached7.thy|lemma|graph_deformation_retract_helper|4896
+AlgTop.thy|lemma|graph_euler_invariance|5796
 AlgTop.thy|lemma|graph_euler_rank|3193
 AlgTop.thy|lemma|graph_is_free|4011
+AlgTop.thy|lemma|graph_iterated_subdivision_exists|5405
 ac10/AlgTopCached10.thy|lemma|graph_locally_path_connected|9939
 ac7/AlgTopCached7.thy|lemma|graph_one_edge_pi1_iso_Z|6581
 ac10/AlgTopCached10.thy|lemma|graph_pi1_free_weak|12615
@@ -804,8 +810,10 @@ ac10/AlgTopCached10.thy|lemma|graph_pi1_free_weak_apply|12176
 ac7/AlgTopCached7.thy|lemma|graph_pi1_free_weak_finite|7547
 ac6/AlgTopCached6.thy|lemma|graph_quotient_by_tree_wedge_of_circles|1248
 ac6/AlgTopCached6.thy|lemma|graph_remove_interior_points_sc|2034
+AlgTop.thy|lemma|graph_same_vertices_same_arcs|5007
 ac3/AlgTopCached3.thy|lemma|graph_selection_set_discrete|127
 ac10/AlgTopCached10.thy|lemma|graph_semilocally_simply_connected|10896
+AlgTop.thy|lemma|graph_subdivision_preserves_euler|4061
 ac7/AlgTopCached7.thy|lemma|graph_tree_free_pi1|6481
 i/Top1_Ch9_13.thy|lemma|grid_from_per_piece_subdivisions|7786
 ac/AlgTopCached.thy|lemma|grid_subdivision_UV|15124
@@ -1089,7 +1097,7 @@ i/Top1_Ch5_8.thy|lemma|metrizable_imp_strict|5230
 i/Top1_Ch5_8.thy|lemma|metrizable_openin_on|5245
 i/Top1_Ch5_8.thy|lemma|metrizable_open_sub_carrier|5240
 fi/AlgIsoFixed.thy|lemma|move_one_puncture|4391
-AlgTop.thy|lemma|m_projective_scheme_CW_data|7039
+AlgTop.thy|lemma|m_projective_scheme_CW_data|9558
 i/Top1_Ch5_8.thy|lemma|munkres_basis_property|9379
 fi/AlgIsoFixed.thy|lemma|Munkres_Step_1_arc_splice|1515
 fi/AlgIsoFixed.thy|lemma|Munkres_Step_4_move_punctures|6247
@@ -2140,11 +2148,11 @@ ac8/AlgTopCached8.thy|theorem|Theorem_74_3_fund_group_n_torus|3346
 ac8/AlgTopCached8.thy|theorem|Theorem_74_4_fund_group_m_projective|8204
 ac8/AlgTopCached8.thy|theorem|Theorem_75_1_H1_abelianization|3761
 ac8/AlgTopCached8.thy|theorem|Theorem_75_3_H1_n_torus|4446
-AlgTop.thy|theorem|Theorem_75_4_H1_m_projective|7371
-AlgTop.thy|theorem|Theorem_76_elementary_operations|7325
-AlgTop.thy|theorem|Theorem_77_5_classification|7507
-AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|7408
-AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|7466
+AlgTop.thy|theorem|Theorem_75_4_H1_m_projective|9890
+AlgTop.thy|theorem|Theorem_76_elementary_operations|9844
+AlgTop.thy|theorem|Theorem_77_5_classification|10026
+AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|9927
+AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|9985
 ac4/AlgTopCached4.thy|theorem|Theorem_79_2|1524
 ac4/AlgTopCached4.thy|theorem|Theorem_79_4|2333
 ac4/AlgTopCached4.thy|theorem|Theorem_80_1_universal_unique|3345
@@ -2154,4 +2162,4 @@ ac10/AlgTopCached10.thy|theorem|Theorem_82_1_covering_existence|2957
 ac5/AlgTopCached5.thy|theorem|Theorem_83_4_covering_of_graph_is_graph|708
 ac10/AlgTopCached10.thy|theorem|Theorem_84_7_fund_group_graph_is_free|18527
 ac10/AlgTopCached10.thy|theorem|Theorem_85_1_Nielsen_Schreier|21359
-AlgTop.thy|theorem|Theorem_85_3_Schreier_index|5568
+AlgTop.thy|theorem|Theorem_85_3_Schreier_index|8087
