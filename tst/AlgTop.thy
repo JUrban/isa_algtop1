@@ -5074,9 +5074,50 @@ proof (rule ccontr)
       with hk show "fst (walk k) \<in> snd (walk k) \<and> fst (walk k) \<in> snd (walk (Suc k))" by (by100 blast)
     qed
     \<comment> \<open>Consecutive arcs in the cycle share a vertex. Needs nth\\_map lemma for lists.\<close>
+    \<comment> \<open>nth of the walk cycle: ?ws ! idx = snd(walk(Suc i + idx)).\<close>
+    have hws_nth: "\<And>idx. idx < j - i \<Longrightarrow> ?ws ! idx = snd (walk (Suc i + idx))"
+      sorry \<comment> \<open>From nth\\_map + nth\\_upt: (map f [a..<b]) ! k = f(a+k) when k < b-a.\<close>
     have hws_adj: "\<forall>idx < length ?ws. ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<noteq> {}"
-      sorry \<comment> \<open>Each consecutive pair shares fst(walk(Suc i + idx)). Wrap shares fst(walk(i))=fst(walk(j)).
-         Proved conceptually but nth\\_map\\_upt lemma needed for Isabelle.\<close>
+    proof (intro allI impI)
+      fix idx assume hidx: "idx < length ?ws"
+      hence hidx': "idx < j - i" using hws_len by linarith
+      show "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<noteq> {}"
+      proof (cases "idx + 1 < j - i")
+        case True \<comment> \<open>Not the wrap-around.\<close>
+        hence hmod: "(idx + 1) mod length ?ws = idx + 1" using hws_len by simp
+        have "?ws ! idx = snd (walk (Suc i + idx))" using hws_nth hidx' .
+        moreover have "?ws ! (idx + 1) = snd (walk (Suc (Suc i + idx)))"
+          using hws_nth[OF True] by simp
+        moreover have "fst (walk (Suc i + idx)) \<in> snd (walk (Suc i + idx))"
+            and "fst (walk (Suc i + idx)) \<in> snd (walk (Suc (Suc i + idx)))"
+          using hwalk_shared by (by100 blast)+
+        ultimately have "fst (walk (Suc i + idx)) \<in> ?ws ! idx \<inter> ?ws ! (idx + 1)" by (by100 blast)
+        hence "?ws ! idx \<inter> ?ws ! (idx + 1) \<noteq> {}" by (by100 blast)
+        thus ?thesis using hmod by simp
+      next
+        case False \<comment> \<open>Wrap-around: idx = j - i - 1.\<close>
+        hence "idx = j - i - 1" using hidx' by linarith
+        hence "idx + 1 = j - i" using hidx' by linarith
+        hence hmod: "(idx + 1) mod length ?ws = 0"
+          using hws_len hji_ge2 by simp
+        have "?ws ! idx = snd (walk j)"
+          using hws_nth[OF hidx'] \<open>idx = j - i - 1\<close> hij(1) by simp
+        moreover have "?ws ! 0 = snd (walk (Suc i))"
+        proof -
+          have "0 < j - i" using hji_ge2 by linarith
+          from hws_nth[OF this] show ?thesis by simp
+        qed
+        \<comment> \<open>Shared point: fst(walk i) = fst(walk j).\<close>
+        moreover have "fst (walk j) \<in> snd (walk j)" using hwalk_shared by (by100 blast)
+        moreover have "fst (walk i) \<in> snd (walk (Suc i))" using hwalk_shared by (by100 blast)
+        ultimately have "fst (walk j) \<in> snd (walk j)" and "fst (walk j) \<in> snd (walk (Suc i))"
+          using hij(3) by simp_all
+        hence "fst (walk j) \<in> ?ws ! idx \<inter> ?ws ! 0"
+          using \<open>?ws ! idx = snd (walk j)\<close> \<open>?ws ! 0 = snd (walk (Suc i))\<close> by (by100 blast)
+        hence "?ws ! idx \<inter> ?ws ! 0 \<noteq> {}" by (by100 blast)
+        thus ?thesis using hmod by simp
+      qed
+    qed
     \<comment> \<open>Arcs are distinct (from shortest revisit + vertex distinctness).\<close>
     have hws_dist: "distinct ?ws"
       sorry \<comment> \<open>Follows from intermediate vertices being distinct (shortest revisit).\<close>
