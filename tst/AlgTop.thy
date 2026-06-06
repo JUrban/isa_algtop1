@@ -7535,7 +7535,38 @@ proof (rule ccontr)
         by (by100 blast)
       \<comment> \<open>Remaining steps: construct \\<A>', show graph properties, construct 3-arc cycle,
          apply sc\\_graph\\_no\\_cycle. All mechanical but long.\<close>
-      show False sorry
+      \<comment> \<open>D1, D2 \\<subseteq> T.\<close>
+      have hD1_sub: "D1 \<subseteq> T" using hD_union harcA_sub by (by100 blast)
+      have hD2_sub: "D2 \<subseteq> T" using hD_union harcA_sub by (by100 blast)
+      \<comment> \<open>New decomposition.\<close>
+      define \<A>' where "\<A>' = (\<A> - {?arcA}) \<union> {D1, D2}"
+      \<comment> \<open>\\<A>' covers T, satisfies graph conditions, has coherent topology.\<close>
+      have h\<A>'_arcs: "\<forall>A\<in>\<A>'. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)" sorry
+      have h\<A>'_cover: "\<Union>\<A>' = T" sorry
+      have h\<A>'_inter: "\<forall>A\<in>\<A>'. \<forall>B\<in>\<A>'. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2" sorry
+      have h\<A>'_fin: "finite \<A>'" using assms(5) unfolding \<A>'_def by (by100 blast)
+      have h\<A>'_coh: "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
+          (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+        using graph_coherent_any_decomposition[OF hgraph h\<A>'_arcs h\<A>'_cover h\<A>'_inter h\<A>'_fin]
+        by (by100 blast)
+      \<comment> \<open>The 3-arc cycle [D1, arcB, D2].\<close>
+      let ?ws' = "[D1, ?arcB, D2]"
+      have hws'_sub: "set ?ws' \<subseteq> \<A>'" unfolding \<A>'_def using harcB_in by (by100 blast)
+      have hws'_len: "length ?ws' \<ge> 2" by (by100 simp)
+      have hws'_dist: "distinct ?ws'" sorry
+      have hws'_card1: "\<forall>i < length ?ws'. card (?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws')) = 1" sorry
+      have hws'_vdist: "\<forall>i < length ?ws'. \<forall>j < length ?ws'. i \<noteq> j \<longrightarrow>
+          (\<forall>v w. ?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws') = {v} \<longrightarrow>
+                 ?ws' ! j \<inter> ?ws' ! ((j + 1) mod length ?ws') = {w} \<longrightarrow> v \<noteq> w)" sorry
+      have hws'_C_sub: "\<Union>(set ?ws') \<subseteq> T"
+        using hD1_sub hD2_sub assms(2) harcB_in by (by100 blast)
+      \<comment> \<open>Apply sc\\_graph\\_no\\_cycle.\<close>
+      from sc_graph_no_cycle[OF assms(1) h\<A>'_arcs h\<A>'_cover h\<A>'_inter h\<A>'_fin h\<A>'_coh
+          hws'_len hws'_dist hws'_sub hws'_card1 hws'_vdist]
+      show False .
     qed
   qed
 qed
