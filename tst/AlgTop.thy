@@ -5293,7 +5293,53 @@ proof -
               using assms(2) hwsn' by (by100 blast)
             have hwsn'_sub: "ws!n' \<subseteq> T" using assms(2) hwsn' by (by100 blast)
             \<comment> \<open>A1' \\<inter> ws!n' = {shared\\_v(n'-1)}.\<close>
-            have hinter: "A1' \<inter> ws ! n' = {shared_v (n' - 1)}" sorry
+            have hinter: "A1' \<inter> ws ! n' = {shared_v (n' - 1)}"
+            proof -
+              \<comment> \<open>shared\\_v(n'-1) \\<in> A1': it's in ws!(n'-1) which is part of take n' ws.\<close>
+              have "n' - 1 < n'" using \<open>n' \<ge> 1\<close> by linarith
+              hence "n' - 1 < ?k" using hn'_lt by linarith
+              have "shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! ((n' - 1 + 1) mod ?k)"
+                using hshared_v[rule_format, OF \<open>n'-1 < ?k\<close>] .
+              have "(n' - 1 + 1) mod ?k = n' mod ?k" using \<open>n' \<ge> 1\<close> by linarith
+              have "n' mod ?k = n'" using hn'_lt by (by100 simp)
+              hence "shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! n'"
+                using \<open>shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! ((n' - 1 + 1) mod ?k)\<close>
+                \<open>(n' - 1 + 1) mod ?k = n' mod ?k\<close> \<open>n' mod ?k = n'\<close> by (by100 simp)
+              hence hsv_in_n': "shared_v (n' - 1) \<in> ws ! n'" by (by100 blast)
+              have "n' - 1 < n'" using \<open>n' \<ge> 1\<close> by linarith
+              have "ws ! (n' - 1) \<in> set (take n' ws)" using \<open>n' - 1 < n'\<close> \<open>n' \<le> ?k - 1\<close> hk_ge2
+                by (by100 simp)
+              hence "shared_v (n' - 1) \<in> A1'" using hIH(3)
+                \<open>shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! n'\<close> by (by100 blast)
+              hence "shared_v (n' - 1) \<in> A1' \<inter> ws ! n'" using hsv_in_n' by (by100 blast)
+              \<comment> \<open>No other point: A1' = \\<Union>(take n' ws). Each ws!j for j < n' either has empty
+                 intersection with ws!n' (non-adjacent) or intersects at shared\\_v(n'-1) (adjacent).\<close>
+              have "\<And>x. x \<in> A1' \<inter> ws ! n' \<Longrightarrow> x = shared_v (n' - 1)"
+              proof -
+                fix x assume "x \<in> A1' \<inter> ws ! n'"
+                hence "x \<in> A1'" "x \<in> ws ! n'" by (by100 blast)+
+                from \<open>x \<in> A1'\<close>[unfolded hIH(3)]
+                obtain j where hj_take: "j \<in> set (take n' ws)" "x \<in> j" by (by100 blast)
+                then obtain idx where hidx: "idx < n'" "j = ws ! idx"
+                  by (metis in_set_conv_nth length_take min.absorb2 \<open>n' \<le> ?k - 1\<close> hk_ge2 le_trans)
+                hence "x \<in> ws ! idx \<inter> ws ! n'" using \<open>x \<in> ws ! n'\<close> hj_take(2) by (by100 blast)
+                show "x = shared_v (n' - 1)"
+                proof (cases "idx = n' - 1")
+                  case True \<comment> \<open>Adjacent: ws!(n'-1) \\<inter> ws!n' = {shared\\_v(n'-1)}.\<close>
+                  have "ws ! (n'-1) \<inter> ws ! n' = {shared_v (n'-1)}"
+                    sorry \<comment> \<open>From hshared\\_v + graph conditions.\<close>
+                  thus ?thesis using \<open>x \<in> ws ! idx \<inter> ws ! n'\<close> True by (by100 blast)
+                next
+                  case False \<comment> \<open>Non-adjacent: ws!idx \\<inter> ws!n' = {}.\<close>
+                  have "idx < ?k" using hidx(1) \<open>n' \<le> ?k - 1\<close> by linarith
+                  have "ws ! idx \<inter> ws ! n' = {}"
+                    using hdisjoint_non_adj[OF \<open>idx < ?k\<close> hn'_lt _ _ _] hidx(1) False
+                    sorry \<comment> \<open>Need to show non-adjacency conditions for idx and n'.\<close>
+                  thus ?thesis using \<open>x \<in> ws ! idx \<inter> ws ! n'\<close> by (by100 blast)
+                qed
+              qed
+              thus ?thesis using \<open>shared_v (n' - 1) \<in> A1' \<inter> ws ! n'\<close> by (by100 blast)
+            qed
             \<comment> \<open>Endpoint of ws!n': {shared\\_v(n'-1), shared\\_v(n')}.\<close>
             have hepn': "?ep (ws ! n') = {shared_v (n' - 1), shared_v n'}"
             proof -
