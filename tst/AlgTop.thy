@@ -5076,7 +5076,20 @@ proof (rule ccontr)
     \<comment> \<open>Consecutive arcs in the cycle share a vertex. Needs nth\\_map lemma for lists.\<close>
     \<comment> \<open>nth of the walk cycle: ?ws ! idx = snd(walk(Suc i + idx)).\<close>
     have hws_nth: "\<And>idx. idx < j - i \<Longrightarrow> ?ws ! idx = snd (walk (Suc i + idx))"
-      sorry \<comment> \<open>From nth\\_map + nth\\_upt: (map f [a..<b]) ! k = f(a+k) when k < b-a.\<close>
+    proof -
+      fix idx assume hidx: "idx < j - i"
+      \<comment> \<open>length [Suc i..<Suc j] = Suc j - Suc i = j - i (since i < j).\<close>
+      have hlen_upt: "length [Suc i..<Suc j] = j - i" using hij(1) by simp
+      hence hidx_len: "idx < length [Suc i..<Suc j]" using hidx by linarith
+      \<comment> \<open>nth\\_map: (map f xs) ! n = f (xs ! n) when n < length xs.\<close>
+      have h1: "(map (\<lambda>k. snd (walk k)) [Suc i..<Suc j]) ! idx =
+          (\<lambda>k. snd (walk k)) ([Suc i..<Suc j] ! idx)"
+        using nth_map[OF hidx_len, of "\<lambda>k. snd (walk k)"] .
+      \<comment> \<open>nth\\_upt: [a..<b] ! k = a + k when a + k < b.\<close>
+      have "Suc i + idx < Suc j" using hidx hij(1) by linarith
+      hence h2: "[Suc i..<Suc j] ! idx = Suc i + idx" by (rule nth_upt)
+      show "?ws ! idx = snd (walk (Suc i + idx))" using h1 h2 by simp
+    qed
     have hws_adj: "\<forall>idx < length ?ws. ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<noteq> {}"
     proof (intro allI impI)
       fix idx assume hidx: "idx < length ?ws"
