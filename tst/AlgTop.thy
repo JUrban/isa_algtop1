@@ -4765,14 +4765,54 @@ proof -
         and hA1_union: "A1 = \<Union>(set (butlast ws))"
         and hA1_ep: "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {a_start, a_end}"
         and ha_ne: "a_start \<noteq> a_end"
-      sorry \<comment> \<open>Iterative arc\\_merge\\_at\\_endpoint on butlast ws.
-         For length 1: A1 = ws!0, endpoints from h2ep.
-         For length n+1: merge A1(n arcs) with ws!n at shared vertex.
-         arc\\_merge\\_at\\_endpoint (ZERO SORRY) gives the merged arc.
-         Needs: consecutive arcs share exactly 1 vertex (from hcard1 + hdist\\_v).
-         Needs: each arc \\<subseteq> T and is\\_arc (from assms(2,9)).
-         Needs: intersection = shared vertex (from assms(4) + hcard1).
-         All ingredients available. ~50 lines of induction.\<close>
+    proof -
+      \<comment> \<open>The chain ws!0, ..., ws!(k-2) has free endpoints shared\\_v(k-1) and shared\\_v(k-2).
+         Proof by induction on the chain length, using arc\\_merge\\_at\\_endpoint.\<close>
+      let ?bl = "butlast ws"
+      have "ws \<noteq> []" using hk_ge2 by (by100 force)
+      have hbl_ne: "?bl \<noteq> []"
+      proof -
+        have "length ws \<ge> 2" using hk_ge2 .
+        hence "length (butlast ws) \<ge> 1" by simp
+        thus ?thesis by (by100 force)
+      qed
+      have hbl_len: "length ?bl = ?k - 1" using hk_ge2 by simp
+      have hbl_sub: "set ?bl \<subseteq> set ws" sorry
+      have hbl_sub_A: "set ?bl \<subseteq> \<A>" using hbl_sub assms(9) by (by100 blast)
+      have hlast_idx: "last ws = ws ! (?k - 1)"
+        using \<open>ws \<noteq> []\<close> hk_ge2 by (simp add: last_conv_nth)
+      \<comment> \<open>Non-adjacent arcs in the cycle have disjoint endpoints.\<close>
+      have hdisjoint_non_adj: "\<And>j m. j < ?k \<Longrightarrow> m < ?k \<Longrightarrow>
+          (j + ?k - 1) mod ?k \<noteq> m \<Longrightarrow> (j + 1) mod ?k \<noteq> m \<Longrightarrow> j \<noteq> m \<Longrightarrow>
+          ws ! j \<inter> ws ! m = {}"
+      sorry \<comment> \<open>From harc\\_ep + hshared\\_v\\_distinct: non-adjacent arcs share no endpoints, hence no points.\<close>
+      \<comment> \<open>Induction: merge n arcs into one, tracking endpoints.\<close>
+      have merge_chain: "\<And>n. 1 \<le> n \<Longrightarrow> n \<le> ?k - 1 \<Longrightarrow>
+          \<exists>A1. top1_is_arc_on A1 (subspace_topology T TT A1) \<and> A1 \<subseteq> T \<and>
+               A1 = \<Union>(set (take n ws)) \<and>
+               ?ep A1 = {shared_v ((?k - 1) mod ?k), shared_v (n - 1)} \<and>
+               shared_v ((?k - 1) mod ?k) \<noteq> shared_v (n - 1)"
+      sorry \<comment> \<open>Induction on n using arc\\_merge\\_at\\_endpoint + hdisjoint\\_non\\_adj.\<close>
+      \<comment> \<open>Apply merge\\_chain with n = k-1 = length(butlast ws).\<close>
+      have "1 \<le> ?k - 1" using hk_ge2 by linarith
+      have "?k - 1 \<le> ?k - 1" by simp
+      from merge_chain[OF \<open>1 \<le> ?k - 1\<close> \<open>?k - 1 \<le> ?k - 1\<close>]
+      obtain A1 where hA1_arc2: "top1_is_arc_on A1 (subspace_topology T TT A1)"
+          and hA1_sub2: "A1 \<subseteq> T"
+          and hA1_union2: "A1 = \<Union>(set (take (?k - 1) ws))"
+          and hA1_ep2: "?ep A1 = {shared_v ((?k - 1) mod ?k), shared_v (?k - 2)}"
+          and hA1_ne2: "shared_v ((?k - 1) mod ?k) \<noteq> shared_v (?k - 2)" sorry
+      have "take (?k - 1) ws = butlast ws" using hk_ge2 by (simp add: butlast_conv_take)
+      hence "A1 = \<Union>(set (butlast ws))" using hA1_union2 by simp
+      have "(?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
+      have hep_final: "?ep A1 = {shared_v (?k - 1), shared_v (?k - 2)}"
+        using hA1_ep2 \<open>(?k - 1) mod ?k = ?k - 1\<close> by simp
+      have hne_final: "shared_v (?k - 1) \<noteq> shared_v (?k - 2)"
+        using hA1_ne2 \<open>(?k - 1) mod ?k = ?k - 1\<close> by simp
+      show ?thesis
+        by (rule that[of A1 "shared_v (?k - 1)" "shared_v (?k - 2)"])
+          (use hA1_arc2 hA1_sub2 \<open>A1 = \<Union>(set (butlast ws))\<close> hep_final hne_final in simp_all)
+    qed
     \<comment> \<open>Step 2: The last arc A2 = ws!(k-1) shares both endpoints with A1.\<close>
     let ?A2 = "last ws"
     have hA2_in: "?A2 \<in> \<A>"
