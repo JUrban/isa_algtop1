@@ -5026,12 +5026,23 @@ proof (rule ccontr)
     \<comment> \<open>j - i \\<ge> 2: walk(i+1) has different vertex from walk(i) (other\\_endpt gives v \\<noteq> prev\\_v).\<close>
     have hji_ge2: "j - i \<ge> 2"
     proof -
+      \<comment> \<open>fst(walk(Suc i)) \\<noteq> fst(walk i): other\\_endpt gives different vertex.\<close>
       have "fst (walk (Suc i)) \<noteq> fst (walk i)"
-        using hwalk_suc_fst hother_endpt hwalk_props
-        sorry \<comment> \<open>other\\_endpt gives different vertex\<close>
-      hence "Suc i \<noteq> j \<or> fst (walk (Suc i)) \<noteq> fst (walk j)"
-        using hij(3) by (by100 force)
-      hence "j > Suc i" using hij sorry
+      proof -
+        let ?v = "fst (walk i)" and ?e = "snd (walk i)"
+        let ?e' = "next_arc ?v ?e"
+        have "fst (walk (Suc i)) = other_endpt ?v ?e'" using hwalk_suc_fst by simp
+        moreover have "?e' \<in> \<A>" and "?v \<in> ?ep2 ?e'"
+          using hnext_arc hwalk_props by (by100 blast)+
+        moreover have "other_endpt ?v ?e' \<noteq> ?v"
+          using hother_endpt \<open>?e' \<in> \<A>\<close> \<open>?v \<in> ?ep2 ?e'\<close> by (by100 blast)
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>Since fst(walk i) = fst(walk j) but fst(walk(Suc i)) \\<noteq> fst(walk i):
+         Suc i \\<noteq> j (otherwise fst(walk(Suc i)) = fst(walk j) = fst(walk i)). So j > Suc i.\<close>
+      hence "fst (walk (Suc i)) \<noteq> fst (walk j)" using hij(3) by simp
+      hence "Suc i \<noteq> j" by (by100 force)
+      hence "j > Suc i" using hij(1) by linarith
       thus ?thesis by linarith
     qed
     \<comment> \<open>Form the cycle: list of arcs from walk(i+1) to walk(j).\<close>
