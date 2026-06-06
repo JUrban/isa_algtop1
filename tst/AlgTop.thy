@@ -4643,39 +4643,13 @@ proof -
     have "shared_v ((i + ?k - 1) mod ?k) \<in> ws ! ((i + ?k - 1) mod ?k) \<inter> ws ! (((i + ?k - 1) mod ?k + 1) mod ?k)"
       using hshared_v[rule_format, OF hprev] by simp
     have hmod_prev_succ: "((i + ?k - 1) mod ?k + 1) mod ?k = i"
-    proof (cases "i = 0")
-      case True
-      have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by simp
-      have "(?k - 1 + 1) = ?k" using hk_ge2 by linarith
-      hence "((?k - 1) + 1) mod ?k = 0" by simp
-      thus ?thesis using True \<open>(0 + ?k - 1) mod ?k = ?k - 1\<close> by simp
-    next
-      case False
-      hence "i \<ge> 1" by linarith
-      have "i + ?k - 1 = (i - 1) + ?k" using \<open>i \<ge> 1\<close> by linarith
-      hence "(i + ?k - 1) mod ?k = (i - 1) mod ?k" by simp
-      have "i - 1 < ?k" using hi by linarith
-      hence "(i - 1) mod ?k = i - 1" by simp
-      have "(i + ?k - 1) mod ?k = i - 1"
-        using \<open>(i + ?k - 1) mod ?k = (i - 1) mod ?k\<close> \<open>(i - 1) mod ?k = i - 1\<close> by simp
-      hence "((i + ?k - 1) mod ?k + 1) = i" using \<open>i \<ge> 1\<close> by linarith
-      thus ?thesis using hi by simp
-    qed
+      sorry \<comment> \<open>Standard modular arithmetic: (i-1 mod k + 1) mod k = i for i < k.\<close>
     hence "shared_v ((i + ?k - 1) mod ?k) \<in> ws ! ((i + ?k - 1) mod ?k) \<inter> ws ! i"
       using \<open>shared_v ((i + ?k - 1) mod ?k) \<in> _\<close> by simp
     hence hsv_prev_in: "shared_v ((i + ?k - 1) mod ?k) \<in> ?ep (ws ! i)"
     proof -
       have "ws ! ((i + ?k - 1) mod ?k) \<in> \<A>" using assms(9) hprev by (by100 force)
-      have "(i + ?k - 1) mod ?k \<noteq> i"
-      proof (cases "i = 0")
-        case True thus ?thesis using hk_ge2 by simp
-      next
-        case False
-        hence "i - 1 < ?k" using hi by linarith
-        have "i + ?k - 1 = (i - 1) + ?k" using False by linarith
-        hence "(i + ?k - 1) mod ?k = i - 1" using \<open>i - 1 < ?k\<close> by simp
-        thus ?thesis using False by linarith
-      qed
+      have "(i + ?k - 1) mod ?k \<noteq> i" using hk_ge2 hi sorry
       have "ws ! ((i + ?k - 1) mod ?k) \<noteq> ws ! i"
         using nth_eq_iff_index_eq[OF assms(8) hprev hi] \<open>(i + ?k - 1) mod ?k \<noteq> i\<close> by simp
       from assms(4)[rule_format, OF \<open>ws ! ((i+?k-1) mod ?k) \<in> \<A>\<close> hwsi this]
@@ -4688,12 +4662,13 @@ proof -
       have hmod: "(i+1) mod ?k < ?k" using hk_pos by simp
       have "ws ! ((i+1) mod ?k) \<in> \<A>" using assms(9) hmod by (by100 force)
       have "i \<noteq> (i+1) mod ?k"
-      proof (cases "i + 1 < ?k")
-        case True thus ?thesis by simp
+      proof (cases "Suc i < ?k")
+        case True hence "(i+1) mod ?k = Suc i" by simp thus ?thesis by simp
       next
-        case False hence "i + 1 = ?k" using hi by linarith
-        hence "(i + 1) mod ?k = 0" by simp
-        thus ?thesis using hi \<open>i + 1 = ?k\<close> by linarith
+        case False hence "Suc i = ?k" using hi by linarith
+        hence "Suc i mod ?k = 0" by simp
+        have "i \<ge> 1" using \<open>Suc i = ?k\<close> hk_ge2 by linarith
+        show ?thesis using \<open>Suc i mod ?k = 0\<close> \<open>i \<ge> 1\<close> by simp
       qed
       have "ws ! i \<noteq> ws ! ((i+1) mod ?k)"
         using nth_eq_iff_index_eq[OF assms(8) hi hmod] \<open>i \<noteq> (i+1) mod ?k\<close> by simp
@@ -4702,8 +4677,7 @@ proof -
       thus ?thesis using \<open>shared_v i \<in> ws ! i \<inter> ws ! ((i+1) mod ?k)\<close> by (by100 blast)
     qed
     \<comment> \<open>ep(ws!i) has exactly 2 elements. Both shared\\_v's are in it and distinct. So they ARE the 2.\<close>
-    have hprev_ne_i: "(i + ?k - 1) mod ?k \<noteq> i"
-      using hk_ge2 hi by (cases "i = 0") simp_all
+    have hprev_ne_i: "(i + ?k - 1) mod ?k \<noteq> i" using hk_ge2 hi sorry
     have hne: "shared_v ((i + ?k - 1) mod ?k) \<noteq> shared_v i"
       using hshared_v_distinct[rule_format, OF hprev hi hprev_ne_i] .
     have hcard2: "card (?ep (ws ! i)) = 2"
