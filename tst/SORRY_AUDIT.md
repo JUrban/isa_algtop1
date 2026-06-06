@@ -1,41 +1,43 @@
-# AlgTop.thy Sorry Audit (2026-06-06, final)
+# AlgTop.thy Sorry Audit (2026-06-06, session 1354)
 
-## Summary: 9 executable sorrys (1 non-surface, 8 surface)
+## Summary: 10 executable sorrys (2 non-surface [1 orphan], 8 surface)
 
-Build: `/project/bin/isabelle build -D .` — ~30s, clean. 10077 lines. 2165 theorem entries.
+Build: `/project/bin/isabelle build -D .` — ~21s, clean. 10672 lines.
 
-## FULLY PROVED (ZERO SORRY) — Complete Euler invariance chain:
-1. **graph_euler_invariance** — V-E invariant under decomposition change
-2. **graph_iterated_subdivision_exists** — iterated arc subdivision (induction on card P)
-3. **graph_same_vertices_same_arcs** — same vertex set → same arcs (both directions)
-4. **graph_arc_containment_via_open_interior** — A ⊆ B via connectedness of (0,1)
-5. **graph_coherent_any_decomposition** — coherent topology for any finite decomposition
-6. **graph_arc_interior_open** — arc interiors open in coherent topology
-7. **graph_subdivision_preserves_euler** — single subdivision preserves V-E
-8. **closed_set_first_entry** — boundary point in connected space
-9. **All covering infrastructure** (𝒜_L conditions, multiplicity, etc.)
-10. **All §64, §67-§73, §79-§85 infrastructure**
+## tree_euler_from_sc: PROVED modulo single sorry
 
-## Non-surface sorrys (1):
-| # | Line | Lemma | Description |
-|---|------|-------|-------------|
-| 1 | L2676 | finite_tree_has_leaf | SC + all vertices degree≥2 → False |
+**tree_euler_from_sc** proof structure:
+1. `graph_coherent_any_decomposition` [PROVED] — derives coherent topology
+2. `tree_leaf_existence_bridge` [1 SORRY] — leaf existence (Munkres 84.2)
+3. `tree_euler_from_leaf` [PROVED] — V = E + 1 by induction
+4. Instantiation [PROVED]
 
-This is the SC → no-CREP topological bridge. Blocks tree Euler (V=E+1),
-which blocks covering_graph_pi1_rank → Theorem_85_3_Schreier_index.
-Equivalent to: "in an SC graph, V = E + 1 for any decomposition."
-Deep circular dependency: V = E + 1 needs leaf existence needs V = E + 1.
+**tree_leaf_existence_bridge** proof structure:
+1. No-leaf assumption → all degrees ≥ 2 [PROVED]
+2. Each arc has 2 endpoints [PROVED]  
+3. Vertex set finite and non-empty [PROVED]
+4. Walk + CREP + Theorem 84.7 → False [SORRY]
 
-## Surface sorrys (8): L9785-L10073 (Theorems 75.4, 76, 77.5, 78.1, 78.2)
+## Non-surface sorrys (2):
+| # | Line | Lemma | Status |
+|---|------|-------|--------|
+| 1 | ~L4663 | tree_leaf_existence_bridge | **BLOCKING** — topological bridge |
+| 2 | ~L4693 | two_arcs_same_endpoints_sc_false | ORPHAN — not used |
 
-## Complete proof chain (modulo finite_tree_has_leaf):
+The topological bridge (Munkres 84.2 + 84.7): walk+pigeonhole gives CREP in the graph.
+CREP corresponds to non-trivial π₁ element (Theorem 84.7). SC → π₁ = 1. Contradiction.
+
+## Surface sorrys (8): Theorems 75.4, 76, 77.5, 78.1, 78.2
+
+## Proof chain (all PROVED modulo tree_leaf_existence_bridge):
 ```
-graph_euler_invariance [PROVED]
-  → covering_graph_pi1_rank [modulo tree Euler]
-    → Theorem_85_3_Schreier_index [modulo tree Euler]
-
-tree_euler_number_one [modulo finite_tree_has_leaf]
-  → covering_graph_pi1_rank
-
-finite_tree_has_leaf [SORRY: topological bridge SC → no CREP]
+graph_coherent_any_decomposition [PROVED]
+  + tree_leaf_existence_bridge [1 SORRY]
+  + tree_euler_from_leaf [PROVED]
+  → tree_euler_from_sc [PROVED]
+    → finite_tree_has_leaf [PROVED]
+      → tree_euler_and_leaf_combined [PROVED]
+        → tree_euler_number_one [PROVED]
+          → covering_graph_pi1_rank [PROVED]
+            → Theorem_85_3_Schreier_index [PROVED]
 ```
