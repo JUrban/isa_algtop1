@@ -5941,14 +5941,49 @@ proof -
     show ?thesis unfolding top1_simple_closed_curve_on_def
       using hf_cont hf_inj hf_img by (by100 blast)
   qed
-  \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
-  have hC_retract: "top1_retract_of_on T TT ?C"
-    by (rule cycle_subgraph_retract[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(6)
-        _ _ hC_sub])
-      (use assms(9) in \<open>by100 blast\<close>)+
-  \<comment> \<open>Apply scc\\_in\\_sc\\_false.\<close>
-  from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
-  show False .
+  \<comment> \<open>Route 2: Direct \\<pi>\\_1 argument (avoids retraction entirely).
+     connected\\_graph\\_has\\_maximal\\_tree gives a maximal tree T\\_sub \\<subseteq> T.
+     The cycle arcs can't all be in T\\_sub (tree has no cycles).
+     So at least 1 arc is non-tree. graph\\_pi1\\_free\\_weak\\_apply gives \\<pi>\\_1 free of rank \\<ge> 1.
+     But T is SC, so \\<pi>\\_1 = 0. Contradiction.\<close>
+  \<comment> \<open>Step 1: Get a maximal tree T\\_sub of the graph.\<close>
+  have hgraph: "top1_is_graph_on T TT" using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+  have hconn: "top1_connected_on T TT" using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+  obtain x0 where hx0: "x0 \<in> T" using hconn unfolding top1_connected_on_def by (by100 blast)
+  have h\<A>_inter_ep: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+      A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)"
+    using assms(4) by (by100 blast)
+  from connected_graph_has_maximal_tree[OF hgraph hconn hx0 assms(2) assms(3) h\<A>_inter_ep
+      assms(5) assms(6)]
+  obtain T_sub where hT_tree: "top1_is_tree_on T_sub (subspace_topology T TT T_sub)"
+      and hT_sub: "T_sub \<subseteq> T"
+      and hx0_T: "x0 \<in> T_sub"
+      and hT_arcs: "\<forall>A\<in>\<A>. A \<subseteq> T_sub \<or>
+          A \<inter> T_sub \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)"
+    by (by100 blast)
+  \<comment> \<open>Step 2: The cycle can't be fully in T\\_sub (tree has no cycles).
+     At least one cycle arc is non-tree.\<close>
+  have hNT_nonempty: "{A \<in> \<A>. \<not> A \<subseteq> T_sub} \<noteq> {}"
+    sorry \<comment> \<open>If all cycle arcs \\<subseteq> T\\_sub: T\\_sub contains a cycle. But T\\_sub is a tree. Contradiction.\<close>
+  \<comment> \<open>Step 3: \\<pi>\\_1(T) is free with rank \\<ge> 1.\<close>
+  have hNT_fin: "finite {A \<in> \<A>. \<not> A \<subseteq> T_sub}" using assms(5) by (by100 blast)
+  have hvertices_T: "\<forall>A\<in>{A\<in>\<A>. \<not> A \<subseteq> T_sub}.
+      \<forall>e\<in>top1_arc_endpoints_on A (subspace_topology T TT A). e \<in> T_sub"
+    sorry \<comment> \<open>Maximal tree contains all vertices.\<close>
+  from graph_pi1_free_weak_apply[OF hgraph hconn hx0 hNT_fin assms(2) assms(3) assms(4) assms(6)
+      hT_tree hT_sub hT_arcs hx0_T hvertices_T]
+  obtain \<iota> S where hfree: "top1_is_free_group_full_on
+      (top1_fundamental_group_carrier T TT x0)
+      (top1_fundamental_group_mul T TT x0)
+      (top1_fundamental_group_id T TT x0)
+      (top1_fundamental_group_invg T TT x0) \<iota> S" by (by100 blast)
+  \<comment> \<open>Step 4: \\<pi>\\_1(T) = 0 (from SC) contradicts rank \\<ge> 1.\<close>
+  have "top1_simply_connected_on T TT" using hSC .
+  hence "\<forall>f. top1_is_loop_on T TT x0 f \<longrightarrow>
+      top1_path_homotopic_on T TT x0 x0 f (top1_constant_path x0)"
+    unfolding top1_simply_connected_on_def using hx0 by (by100 blast)
+  \<comment> \<open>SC + free rank \\<ge> 1 \\<Rightarrow> False.\<close>
+  show False sorry \<comment> \<open>free\\_group\\_full with \\<iota>, S nonempty + SC \\<Rightarrow> \\<pi>\\_1 is both free rank\\<ge>1 and trivial.\<close>
 qed
 
 \<comment> \<open>Forest Euler formula (purely combinatorial, no topology):
