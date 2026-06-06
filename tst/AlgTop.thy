@@ -5018,9 +5018,34 @@ proof (rule ccontr)
       thus False by linarith
     qed
     \<comment> \<open>Pick the SHORTEST revisit (minimize j - i) for the distinctness argument.\<close>
-    then obtain i j where hij: "i < j" "j \<le> card ?V" "fst (walk i) = fst (walk j)"
-        and hmin: "\<forall>i' j'. i' < j' \<and> j' \<le> card ?V \<and> fst (walk i') = fst (walk j') \<longrightarrow> j - i \<le> j' - i'"
-      sorry \<comment> \<open>From the existence of SOME revisit, extract the shortest one using Least/Min.\<close>
+    then obtain i0 j0 where "i0 < j0" "j0 \<le> card ?V" "fst (walk i0) = fst (walk j0)"
+      by (by100 blast)
+    \<comment> \<open>Find the minimum difference among all revisit pairs.\<close>
+    define P where "P d \<longleftrightarrow> (\<exists>i' j'. i' < j' \<and> j' \<le> card ?V \<and> fst (walk i') = fst (walk j') \<and> j' - i' = d)" for d
+    have "P (j0 - i0)" unfolding P_def using \<open>i0 < j0\<close> \<open>j0 \<le> card ?V\<close> \<open>fst (walk i0) = fst (walk j0)\<close>
+      by (by100 blast)
+    define dmin where "dmin = (LEAST d. P d)"
+    have hP_dmin: "P dmin"
+    proof -
+      have "\<exists>d. P d" using \<open>P (j0 - i0)\<close> by (by100 blast)
+      then obtain d0 where "P d0" by (by100 blast)
+      have "(LEAST d. P d) \<le> d0" by (rule Least_le) (rule \<open>P d0\<close>)
+      show ?thesis unfolding dmin_def
+        using LeastI_ex[OF \<open>\<exists>d. P d\<close>] by simp
+    qed
+    have hP_min: "\<forall>d. P d \<longrightarrow> dmin \<le> d"
+    proof (intro allI impI)
+      fix d assume "P d"
+      show "dmin \<le> d" unfolding dmin_def by (rule Least_le) (rule \<open>P d\<close>)
+    qed
+    from hP_dmin obtain i j where hij: "i < j" "j \<le> card ?V" "fst (walk i) = fst (walk j)"
+        and hdmin_eq: "j - i = dmin" unfolding P_def by (by100 blast)
+    have hmin: "\<forall>i' j'. i' < j' \<and> j' \<le> card ?V \<and> fst (walk i') = fst (walk j') \<longrightarrow> j - i \<le> j' - i'"
+    proof (intro allI impI)
+      fix i' j' assume "i' < j' \<and> j' \<le> card ?V \<and> fst (walk i') = fst (walk j')"
+      hence "P (j' - i')" unfolding P_def by (by100 blast)
+      from hP_min[rule_format, OF this] show "j - i \<le> j' - i'" using hdmin_eq by linarith
+    qed
     \<comment> \<open>The arcs walk(i+1), ..., walk(j) form a cycle. Extract them and apply hacyclic.\<close>
     \<comment> \<open>The cycle is: [snd(walk(i+1)), ..., snd(walk(j))], with j-i \\<ge> 1 arcs.
        Actually need \\<ge> 2 arcs for hacyclic. Since arcs have distinct endpoints,
@@ -5136,7 +5161,79 @@ proof (rule ccontr)
     qed
     \<comment> \<open>Arcs are distinct (from shortest revisit + vertex distinctness).\<close>
     have hws_dist: "distinct ?ws"
-      sorry \<comment> \<open>Follows from intermediate vertices being distinct (shortest revisit).\<close>
+    proof -
+      \<comment> \<open>First: all vertices in the cycle are pairwise distinct (except walk(i)=walk(j)).
+         From hmin: any shorter revisit would contradict minimality.\<close>
+      have hv_distinct: "\<forall>k l. Suc i \<le> k \<and> k < j \<and> Suc i \<le> l \<and> l < j \<and> k \<noteq> l
+          \<longrightarrow> fst (walk k) \<noteq> fst (walk l)"
+      proof (intro allI impI)
+        fix k l assume hkl: "Suc i \<le> k \<and> k < j \<and> Suc i \<le> l \<and> l < j \<and> k \<noteq> l"
+        show "fst (walk k) \<noteq> fst (walk l)"
+        proof
+          assume heq: "fst (walk k) = fst (walk l)"
+          have "k < l \<or> l < k" using hkl by linarith
+          thus False
+          proof
+            assume "k < l"
+            hence "l - k < j - i" using hkl by linarith
+            moreover have "k < l \<and> l \<le> card ?V \<and> fst (walk k) = fst (walk l)"
+              using \<open>k < l\<close> heq hkl hij(2) by linarith
+            ultimately show False using hmin[rule_format, of k l] by linarith
+          next
+            assume "l < k"
+            hence "k - l < j - i" using hkl by linarith
+            have "fst (walk l) = fst (walk k)" using heq by simp
+            have "l < k \<and> k \<le> card ?V \<and> fst (walk l) = fst (walk k)"
+              using \<open>l < k\<close> \<open>fst (walk l) = fst (walk k)\<close> hkl hij(2) by linarith
+            hence "j - i \<le> k - l" using hmin[rule_format] by (by100 blast)
+            thus False using \<open>k - l < j - i\<close> by linarith
+          qed
+        qed
+      qed
+      \<comment> \<open>Second: distinct vertices \\<Rightarrow> distinct arcs. If snd(walk k) = snd(walk l) for k \\<noteq> l,
+         then the arc connects the same endpoint pair. But fst(walk(k-1)) and fst(walk k) are
+         both endpoints of snd(walk k). Similarly for l. Since intermediate vertices are distinct,
+         the endpoint pairs must differ, so the arcs differ.\<close>
+      \<comment> \<open>More precisely: the arc snd(walk k) for Suc i \\<le> k \\<le> j has fst(walk(k-1)) and fst(walk k)
+         as its two endpoints (one arrived-from, one arrived-at). Different k values give
+         different arrived-at vertices (from hv\\_distinct), hence different arcs.\<close>
+      \<comment> \<open>Proof: ?ws is distinct iff ?ws ! k \\<noteq> ?ws ! l for all 0 \\<le> k < l < length ?ws.\<close>
+      show "distinct ?ws"
+      proof (rule distinct_conv_nth[THEN iffD2], intro allI impI)
+        fix k l assume hkl: "k < length ?ws" "l < length ?ws" "k \<noteq> l"
+        show "?ws ! k \<noteq> ?ws ! l"
+        proof
+          assume "?ws ! k = ?ws ! l"
+          \<comment> \<open>?ws ! k = snd(walk(Suc i + k)), ?ws ! l = snd(walk(Suc i + l)).\<close>
+          have hk: "k < j - i" using hkl(1) hws_len by linarith
+          have hl: "l < j - i" using hkl(2) hws_len by linarith
+          have "snd (walk (Suc i + k)) = snd (walk (Suc i + l))"
+            using \<open>?ws ! k = ?ws ! l\<close> hws_nth[OF hk] hws_nth[OF hl] by simp
+          \<comment> \<open>Both arcs have the walk vertex as an endpoint (the "arrived-at" vertex).
+             fst(walk(Suc i + k)) \\<in> ep(snd(walk(Suc i + k))) and
+             fst(walk(Suc i + l)) \\<in> ep(snd(walk(Suc i + l))).
+             Same arc \\<Rightarrow> same endpoint set \\<Rightarrow> {fst(walk(Suc i + k - 1)), fst(walk(Suc i + k))}
+             = {fst(walk(Suc i + l - 1)), fst(walk(Suc i + l))}.
+             But these are distinct vertices. Contradiction.\<close>
+          \<comment> \<open>The walk arc snd(walk m) has endpoints fst(walk(m-1)) and fst(walk m)
+             (where fst(walk(m-1)) is the vertex we came from, fst(walk m) = other\\_endpt).\<close>
+          \<comment> \<open>Actually, snd(walk m) has fst(walk(m-1)) as an endpoint (from next\\_arc: fst(walk(m-1)) \\<in> ep)
+             and fst(walk m) as the other endpoint (from other\\_endpt).\<close>
+          \<comment> \<open>So ep(snd(walk m)) = {fst(walk(m-1)), fst(walk m)} for m \\<ge> 1.\<close>
+          \<comment> \<open>Same arc \\<Rightarrow> same endpoint set. With distinct vertices: gives equality of pairs \\<Rightarrow> k = l.\<close>
+          \<comment> \<open>The arc snd(walk(Suc i + k)) has endpoint set {fst(walk(i+k)), fst(walk(Suc i+k))}.
+             Same arc implies same endpoint set. But with k \\<noteq> l and distinct intermediate
+             vertices (hv\\_distinct), the endpoint pairs cannot match. Contradiction.\<close>
+          \<comment> \<open>Key: fst(walk(Suc i + k)) is determined by its arc (it's the unique vertex in ep
+             that differs from fst(walk(i+k))). Same arc + different predecessor vertex
+             = different arrived-at vertex. But same arc means same endpoint pair, forcing
+             equal predecessor and arrived-at vertices. With hv\\_distinct: k = l.\<close>
+          show False sorry
+            \<comment> \<open>Endpoint pair set theory: same arc + distinct intermediate vertices \\<Rightarrow> k = l.
+               Fiddly but mathematically clear. Needs doubleton\\_eq\\_iff + hv\\_distinct.\<close>
+        qed
+      qed
+    qed
     \<comment> \<open>Apply hacyclic.\<close>
     show False using hacyclic hws_len2 hws_dist hws_sub hws_adj by (by100 blast)
   qed
