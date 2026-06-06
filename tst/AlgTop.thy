@@ -5922,8 +5922,21 @@ proof -
   qed
   \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
   have hC_retract: "top1_retract_of_on T TT ?C"
-    sorry \<comment> \<open>Retraction construction: for each non-cycle arc, map to a cycle vertex.
-       Continuity from coherent topology. Needs tree-branch collapse argument.\<close>
+  proof -
+    \<comment> \<open>For each non-cycle arc A, choose a cycle vertex v\\_A that A touches.
+       Define r: T \\<to> C by r(x) = x for x \\<in> C, r(x) = v\\_A for x \\<in> A \\<setminus> C.
+       Continuity from coherent topology: r|A continuous for each A.\<close>
+    \<comment> \<open>Each non-cycle arc has at least one endpoint on the cycle (from graph connectivity).\<close>
+    \<comment> \<open>Choose a retraction target for each non-cycle arc.\<close>
+    define cycle_attach :: "'a set \<Rightarrow> 'a" where
+      "cycle_attach A = (SOME v. v \<in> ?C \<and> v \<in> top1_arc_endpoints_on A (subspace_topology T TT A))" for A
+    \<comment> \<open>Define r: for x \\<in> C, r(x) = x. For x \\<in> A \\<setminus> C (non-cycle arc), r(x) = cycle\\_attach(A).\<close>
+    define r :: "'a \<Rightarrow> 'a" where
+      "r x = (if x \<in> ?C then x else
+        cycle_attach (SOME A. A \<in> \<A> \<and> A \<notin> set ws \<and> x \<in> A))" for x
+    \<comment> \<open>r maps T to C, fixes C, and is continuous (from coherent topology).\<close>
+    show ?thesis sorry \<comment> \<open>Retraction: well-definedness + consistency + coherent-topology continuity.\<close>
+  qed
   \<comment> \<open>Apply scc\\_in\\_sc\\_false.\<close>
   from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
   show False .
