@@ -4610,43 +4610,62 @@ proof -
   qed
   have hC_SCC: "top1_simple_closed_curve_on T TT ?C"
   proof -
-    \<comment> \<open>Construct continuous injection S1 \\<to> C.
-       Step 1: Orient arcs so consecutive arcs match at shared vertices.
-       Step 2: Concatenate via foldr\\_path\\_product to get a loop F: [0,1] \\<to> C.
-       Step 3: F is injective on (0,1) (distinct vertices between arcs).
-       Step 4: Factor through S1: continuous bijection S1 \\<to> C.
-       Step 5: Compact-to-Hausdorff gives homeomorphism (Theorem 26.6).\<close>
-    \<comment> \<open>The SCC construction requires k oriented arc homeomorphisms matching at shared vertices.
-       This is a composition of the arc\\_merge\\_at\\_endpoint technique applied cyclically.\<close>
-    \<comment> \<open>Step 1: Each arc ws!i has a homeomorphism [0,1] \\<to> ws!i. Orient them so consecutive
-       arcs match: the endpoint of ws!i matches the startpoint of ws!(i+1).
-       The shared vertices form a sequence v0, v1, ..., v(k-1) where vi is in ws!i \\<inter> ws!((i+1) mod k).\<close>
-    \<comment> \<open>Step 2: Concatenate the k oriented arc homeomorphisms via top1\\_path\\_product
-       to get a loop F: [0,1] \\<to> C with F(0) = F(1) = v0.\<close>
-    \<comment> \<open>Step 3: F is continuous, surjective onto C, and injective on (0,1) (each arc's interior
-       is mapped bijectively, and different arcs have disjoint interiors).\<close>
-    \<comment> \<open>Step 4: Define f: S1 \\<to> C by f(R\\_to\\_S1(t)) = F(t) for t \\<in> [0,1). This is well-defined
-       since F(0) = F(1). Continuity from R\\_to\\_S1\\_interval\\_homeomorphism. Injectivity from F.
-       Surjectivity from F. This gives top1\\_simple\\_closed\\_curve\\_on T TT C.\<close>
-    \<comment> \<open>Step 1: Build a loop F: [0,1] \\<to> C surjecting onto C, injective on (0,1).\<close>
-    obtain F v0 where hF_cont: "top1_continuous_map_on I_set I_top T TT F"
-        and hF_loop: "F 0 = v0" "F 1 = v0" and hv0: "v0 \<in> ?C"
-        and hF_surj: "F ` I_set = ?C"
-        and hF_inj_int: "inj_on F {t. 0 < t \<and> t < (1::real)}"
-        and hv0_not_int: "v0 \<notin> F ` {t. 0 < t \<and> t < (1::real)}"
-      sorry \<comment> \<open>Build loop from oriented arc homeomorphisms via foldr\\_path\\_product.\<close>
-    \<comment> \<open>Step 2: Factor F through S1 to get f: S1 \\<to> T.\<close>
-    \<comment> \<open>R\\_to\\_S1 restricted to (0,1) is a homeomorphism onto S1 \\ {(1,0)}.
-       Define f(p) = F(R\\_to\\_S1\\_inv(p)) for p \\<noteq> (1,0), f((1,0)) = v0.\<close>
-    define f where "f p = (if p = (1::real, 0::real)
-        then v0
-        else F (inv_into {t::real. 0 < t \<and> t < 1} top1_R_to_S1 p))" for p
+    \<comment> \<open>Strategy: Merge all but the last cycle arc into a single arc A1 (via arc\\_merge\\_at\\_endpoint).
+       Then A1 and the last arc A2 share 2 endpoints. Construct f: S1 \\<to> A1 \\<union> A2 = C
+       using the x-coordinate of S1: upper semicircle \\<to> A1, lower semicircle \\<to> A2.
+       f is continuous (pasting lemma), injective (disjoint interiors), surjective.\<close>
+    \<comment> \<open>Step 1: Merge arcs ws!0, ..., ws!(k-2) into a single arc A1.\<close>
+    obtain A1 a_start a_end where
+        hA1_arc: "top1_is_arc_on A1 (subspace_topology T TT A1)"
+        and hA1_sub: "A1 \<subseteq> T"
+        and hA1_union: "A1 = \<Union>(set (butlast ws))"
+        and hA1_ep: "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {a_start, a_end}"
+        and ha_ne: "a_start \<noteq> a_end"
+      sorry \<comment> \<open>Iterative arc\\_merge\\_at\\_endpoint on ws!0, ..., ws!(k-2). Needs induction on k.\<close>
+    \<comment> \<open>Step 2: The last arc A2 = ws!(k-1) shares both endpoints with A1.\<close>
+    let ?A2 = "last ws"
+    have hA2_in: "?A2 \<in> \<A>"
+    proof -
+      have "ws \<noteq> []" using assms(7) by (by100 force)
+      have "?A2 \<in> set ws" using last_in_set[OF \<open>ws \<noteq> []\<close>] .
+      thus ?thesis using assms(9) by (by100 blast)
+    qed
+    have hA2_arc: "top1_is_arc_on ?A2 (subspace_topology T TT ?A2)"
+      using assms(2) hA2_in by (by100 blast)
+    have hA2_sub: "?A2 \<subseteq> T" using assms(2) hA2_in by (by100 blast)
+    have hA1A2_union: "A1 \<union> ?A2 = ?C"
+      using hA1_union assms(7) sorry \<comment> \<open>butlast ws \\<union> {last ws} = set ws\<close>
+    have hA1A2_inter: "A1 \<inter> ?A2 = {a_start, a_end}"
+      sorry \<comment> \<open>From cycle structure: first and last arcs share the cycle's start/end vertices.\<close>
+    \<comment> \<open>Step 3: Construct f: S1 \\<to> C using x-coordinate.
+       Upper semicircle (y \\<ge> 0): map to A1 via hA1 with parameter (1-x)/2.
+       Lower semicircle (y < 0): map to A2 via hA2 with parameter (x+1)/2.\<close>
+    \<comment> \<open>Get oriented homeomorphisms.\<close>
+    obtain hA where hhA: "top1_homeomorphism_on I_set I_top A1 (subspace_topology T TT A1) hA"
+        and hhA0: "hA 0 = a_start" and hhA1: "hA 1 = a_end"
+      sorry \<comment> \<open>From hA1\\_arc + hA1\\_ep + doubleton\\_eq\\_iff + reversal.\<close>
+    obtain hB where hhB: "top1_homeomorphism_on I_set I_top ?A2 (subspace_topology T TT ?A2) hB"
+        and hhB0: "hB 0 = a_end" and hhB1: "hB 1 = a_start"
+      sorry \<comment> \<open>From hA2\\_arc + endpoint analysis + reversal.\<close>
+    \<comment> \<open>Define f using x-coordinate of S1.\<close>
+    define f :: "real \<times> real \<Rightarrow> 'a" where
+      "f p = (if snd p \<ge> 0 then hA ((1 - fst p) / 2) else hB ((fst p + 1) / 2))" for p
+    \<comment> \<open>f is well-defined at boundary: at (1,0): hA(0) = a\\_start. At (-1,0): hA(1) = a\\_end = hB(0).\<close>
+    have hf_at_10: "f (1, 0) = a_start" unfolding f_def using hhA0 by simp
+    have hf_at_m10: "f (-1, 0) = a_end" unfolding f_def using hhA1 by simp
+    \<comment> \<open>f is continuous, injective, surjective onto C.\<close>
     have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology T TT f"
-      sorry \<comment> \<open>Continuous: on S1 \\ {(1,0)} via R\\_to\\_S1\\_inv + F. At (1,0) by limit.\<close>
+      sorry \<comment> \<open>Pasting lemma: upper (y\\<ge>0) and lower (y\\<le>0) semicircles are closed in S1.
+         f restricted to each is continuous (composition of linear rescaling + hA/hB).
+         They agree at boundary ((-1,0) and (1,0)).\<close>
     have hf_inj: "inj_on f top1_S1"
-      sorry \<comment> \<open>Injective: on S1 \\ {(1,0)} via F's injectivity on (0,1). At (1,0): v0 not in interior.\<close>
+      sorry \<comment> \<open>Upper maps to A1 \\ {a\\_start, a\\_end} interior injectively.
+         Lower maps to A2 \\ {a\\_start, a\\_end} interior injectively.
+         A1 \\<inter> A2 = {a\\_start, a\\_end}, so interiors disjoint.
+         Boundary points (1,0) and (-1,0) map to a\\_start, a\\_end \\<in> A1 \\<inter> A2.\<close>
     have hf_img: "f ` top1_S1 = ?C"
-      sorry \<comment> \<open>Surjective: from F's surjectivity onto C.\<close>
+      sorry \<comment> \<open>Upper semicircle covers A1 (hA surjective), lower covers A2 (hB surjective).
+         A1 \\<union> A2 = C.\<close>
     show ?thesis unfolding top1_simple_closed_curve_on_def
       using hf_cont hf_inj hf_img by (by100 blast)
   qed
