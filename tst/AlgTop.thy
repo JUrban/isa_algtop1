@@ -4996,9 +4996,12 @@ proof -
         then obtain U where hU: "U \<in> TT" "V = T \<inter> U" by (by100 blast)
         have "T \<in> TT" using htop unfolding is_topology_on_def by (by100 blast)
         have "{T, U} \<subseteq> TT" using \<open>T \<in> TT\<close> hU(1) by (by100 blast)
+        have "finite {T, U}" by (by100 simp)
+        have "{T, U} \<noteq> {}" by (by100 simp)
         have "\<Inter>{T, U} \<in> TT"
           using htop[unfolded is_topology_on_def, THEN conjunct2, THEN conjunct2, THEN conjunct2,
-              rule_format, of "{T, U}"] by (by100 blast)
+              rule_format, of "{T, U}"]
+            \<open>finite {T, U}\<close> \<open>{T, U} \<noteq> {}\<close> \<open>{T, U} \<subseteq> TT\<close> by (by100 blast)
         hence "T \<inter> U \<in> TT" by (by100 simp)
         have "{x \<in> T. id x \<in> V} = T \<inter> U" using hU(2) by (by100 force)
         thus "{x \<in> T. id x \<in> V} \<in> TT" using \<open>T \<inter> U \<in> TT\<close> by (by100 simp)
