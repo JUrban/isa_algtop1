@@ -22,36 +22,40 @@ Top0 → AlgTopBase0 → AlgTopBase → AlgTop0 → AlgTopC
   → K5
 ```
 
-## Current Sorry Count: ~16 executable (8 blocking + 8 surface)
+## Current Sorry Count: ~15 executable (7 blocking + 8 surface)
 
-### Non-surface blocking sorrys (8, all in sc_graph_no_cycle):
-These block the ENTIRE chain from tree_euler_from_sc through Theorem_85_3_Schreier_index.
+### Non-surface blocking sorrys:
 
-| # | Description | Type |
-|---|-------------|------|
-| 1 | A1 merge (iterative arc_merge_at_endpoint) | SCC construction |
-| 2 | A1 ∩ A2 = {a_start, a_end} | SCC construction |
-| 3 | A2 endpoints | SCC construction |
-| 4 | f: S¹ → T continuous | SCC construction |
-| 5 | f injective | SCC construction |
-| 6 | card ≠ 2 in walk adjacency | Walk proof |
-| 7 | C retract of T | Retraction |
+| # | Location | Description | Status |
+|---|----------|-------------|--------|
+| 1 | sc_graph_no_cycle | A1 merge (iterative arc_merge_at_endpoint) | Sorry |
+| 2 | sc_graph_no_cycle | A1 ∩ A2 = {a_start, a_end} | Sorry (depends on #1) |
+| 3 | sc_graph_no_cycle | A2 endpoints = {a_start, a_end} | Sorry (depends on #1) |
+| 4 | sc_graph_no_cycle | C retract of T | Sorry (hardest) |
+| 5 | tree_leaf_existence_bridge | j-i=2 subdivision case | Sorry |
+
+### PROVED in recent sessions (formerly sorry):
+- ✅ sc_graph_no_cycle f continuity (via loop_factors_through_S1)
+- ✅ sc_graph_no_cycle f injectivity (semicircle case analysis)
+- ✅ two_arcs_same_endpoints_sc_false: ZERO SORRY (full SCC via loop factoring)
+- ✅ Walk proof: hws_adj_card, hws_vdist, vertex distinctness all PROVED
 
 ### Surface classification sorrys (8): Theorems 75.4, 76, 77.5, 78.1, 78.2
 
-### Orphan sorrys (4): forest_euler_formula (2) + helpers (2)
+### Orphan sorrys (2): forest_euler_formula (walk+pigeonhole, leaf induction)
 
 ## FULLY PROVED (modulo sc_graph_no_cycle):
 
-### Walk proof: ZERO SORRY
+### Walk proof in tree_leaf_existence_bridge: j-i≥3 case ZERO SORRY
 - Walk definition, properties, unfold lemmas
 - Pigeonhole (vertex revisit), shortest revisit (LEAST)
-- Arc adjacency, surjectivity, distinctness, hacyclic application
+- Arc adjacency (hws_adj), card=1 (hws_adj_card), distinctness (hws_dist)
+- Shared vertex distinctness (hws_vdist), hacyclic application
 
 ### Non-surface proof chain:
 ```
-sc_graph_no_cycle [8 sorrys]
-  → tree_leaf_existence_bridge [PROVED]
+sc_graph_no_cycle [4 sorrys] + walk j-i=2 [1 sorry]
+  → tree_leaf_existence_bridge [PROVED modulo above]
     → tree_euler_from_leaf [PROVED]
       → tree_euler_from_sc [PROVED]
         → finite_tree_has_leaf [PROVED]
@@ -64,7 +68,9 @@ sc_graph_no_cycle [8 sorrys]
 ### Key infrastructure PROVED:
 - graph_euler_invariance: V-E invariant under decomposition change
 - graph_coherent_any_decomposition: coherent topology from graph conditions
-- arc_merge_at_endpoint: two arcs sharing 1 endpoint → arc
+- arc_merge_at_endpoint: two arcs sharing 1 endpoint → arc (ZERO SORRY)
+- two_arcs_same_endpoints_sc_false: 2 arcs same endpoints → False (ZERO SORRY)
+- loop_factors_through_S1: loop factoring for SCC construction
 - All covering infrastructure, §64, §67-§73, §79-§85
 
 ## Build Command
