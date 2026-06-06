@@ -4777,7 +4777,12 @@ proof -
         thus ?thesis by (by100 force)
       qed
       have hbl_len: "length ?bl = ?k - 1" using hk_ge2 by simp
-      have hbl_sub: "set ?bl \<subseteq> set ws" sorry
+      have hbl_sub: "set ?bl \<subseteq> set ws"
+      proof
+        fix x assume "x \<in> set ?bl"
+        hence "x \<in> set (butlast ws @ [last ws])" using \<open>ws \<noteq> []\<close> by simp
+        thus "x \<in> set ws" using \<open>ws \<noteq> []\<close> append_butlast_last_id by (by100 force)
+      qed
       have hbl_sub_A: "set ?bl \<subseteq> \<A>" using hbl_sub assms(9) by (by100 blast)
       have hlast_idx: "last ws = ws ! (?k - 1)"
         using \<open>ws \<noteq> []\<close> hk_ge2 by (simp add: last_conv_nth)
