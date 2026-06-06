@@ -5017,7 +5017,10 @@ proof (rule ccontr)
         using card_inj_on_le[OF \<open>inj_on _ _\<close> \<open>_ ` _ \<subseteq> ?V\<close> hV_fin] by linarith
       thus False by linarith
     qed
-    then obtain i j where hij: "i < j" "j \<le> card ?V" "fst (walk i) = fst (walk j)" by (by100 blast)
+    \<comment> \<open>Pick the SHORTEST revisit (minimize j - i) for the distinctness argument.\<close>
+    then obtain i j where hij: "i < j" "j \<le> card ?V" "fst (walk i) = fst (walk j)"
+        and hmin: "\<forall>i' j'. i' < j' \<and> j' \<le> card ?V \<and> fst (walk i') = fst (walk j') \<longrightarrow> j - i \<le> j' - i'"
+      sorry \<comment> \<open>From the existence of SOME revisit, extract the shortest one using Least/Min.\<close>
     \<comment> \<open>The arcs walk(i+1), ..., walk(j) form a cycle. Extract them and apply hacyclic.\<close>
     \<comment> \<open>The cycle is: [snd(walk(i+1)), ..., snd(walk(j))], with j-i \\<ge> 1 arcs.
        Actually need \\<ge> 2 arcs for hacyclic. Since arcs have distinct endpoints,
