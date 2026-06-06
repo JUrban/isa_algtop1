@@ -5952,8 +5952,33 @@ proof (rule ccontr)
         have "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<subseteq> ?ep2 (?ws ! idx)"
           using assms(4)[rule_format, OF hwsA hwsB hwsAB_ne] by (by100 blast)
         \<comment> \<open>intersection = ep(first arc) (both have card 2, one \\<subseteq> other).\<close>
+        define A_arc where "A_arc = ?ws ! idx"
+        define B_arc where "B_arc = ?ws ! ((idx + 1) mod length ?ws)"
+        have hAB_eq: "A_arc \<inter> B_arc = ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)"
+          unfolding A_arc_def B_arc_def by simp
+        have hcard_ep_A: "card (?ep2 A_arc) = 2"
+        proof -
+          have "A_arc \<in> \<A>" unfolding A_arc_def using hwsA .
+          from h2ep[rule_format, OF this]
+          obtain a0 b0 where "a0 \<noteq> b0" "?ep2 A_arc = {a0, b0}" by (by100 blast)
+          thus ?thesis using \<open>a0 \<noteq> b0\<close> by (by100 simp)
+        qed
+        have hfin_ep_A: "finite (?ep2 A_arc)"
+        proof (rule ccontr)
+          assume "\<not> finite (?ep2 A_arc)"
+          hence "card (?ep2 A_arc) = 0" by (rule card.infinite)
+          thus False using hcard_ep_A by simp
+        qed
+        have hinter_sub: "A_arc \<inter> B_arc \<subseteq> ?ep2 A_arc"
+          using \<open>?ws ! idx \<inter> _ \<subseteq> ?ep2 _\<close> unfolding A_arc_def B_arc_def by simp
         have hinter_eq_ep: "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) = ?ep2 (?ws ! idx)"
-          sorry \<comment> \<open>card\\_subset\\_eq: finite ep, inter \\<subseteq> ep, card inter = card ep = 2.\<close>
+        proof -
+          have "card (A_arc \<inter> B_arc) = card (?ep2 A_arc)"
+            using hcard2 hcard_ep_A hAB_eq by simp
+          have "A_arc \<inter> B_arc = ?ep2 A_arc"
+            by (rule card_subset_eq[OF hfin_ep_A hinter_sub \<open>card _ = card _\<close>])
+          thus ?thesis unfolding A_arc_def B_arc_def by simp
+        qed
         \<comment> \<open>Step 3: walk\\_v(i+idx) \\<in> ep of the second arc.\<close>
         have "fst (walk (i + idx)) \<in> ?ep2 (?ws ! idx)"
           using hpred_in_ep hws_nth[OF hidx'] by simp
