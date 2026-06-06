@@ -5057,8 +5057,26 @@ proof (rule ccontr)
       thus ?thesis by (by100 auto)
     qed
     \<comment> \<open>Consecutive arcs share a vertex (from the walk structure).\<close>
+    \<comment> \<open>Key: fst(walk k) is a point in both snd(walk k) and snd(walk(Suc k)).
+       This gives adjacency of consecutive arcs in the cycle.\<close>
+    have hwalk_shared: "\<And>k. fst (walk k) \<in> snd (walk k) \<and> fst (walk k) \<in> snd (walk (Suc k))"
+    proof -
+      fix k
+      have "fst (walk k) \<in> ?ep2 (snd (walk k))" using hwalk_props by (by100 blast)
+      hence hk: "fst (walk k) \<in> snd (walk k)"
+        unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have "snd (walk (Suc k)) = next_arc (fst (walk k)) (snd (walk k))" using hwalk_suc_snd .
+      moreover have "fst (walk k) \<in> ?ep2 (next_arc (fst (walk k)) (snd (walk k)))"
+        using hnext_arc hwalk_props by (by100 blast)
+      hence "fst (walk k) \<in> next_arc (fst (walk k)) (snd (walk k))"
+        unfolding top1_arc_endpoints_on_def by (by100 blast)
+      ultimately have "fst (walk k) \<in> snd (walk (Suc k))" by simp
+      with hk show "fst (walk k) \<in> snd (walk k) \<and> fst (walk k) \<in> snd (walk (Suc k))" by (by100 blast)
+    qed
+    \<comment> \<open>Consecutive arcs in the cycle share a vertex. Needs nth\\_map lemma for lists.\<close>
     have hws_adj: "\<forall>idx < length ?ws. ?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<noteq> {}"
-      sorry \<comment> \<open>Each pair shares fst(walk(i+1+idx)). Last/first share fst(walk(i))=fst(walk(j)).\<close>
+      sorry \<comment> \<open>Each consecutive pair shares fst(walk(Suc i + idx)). Wrap shares fst(walk(i))=fst(walk(j)).
+         Proved conceptually but nth\\_map\\_upt lemma needed for Isabelle.\<close>
     \<comment> \<open>Arcs are distinct (from shortest revisit + vertex distinctness).\<close>
     have hws_dist: "distinct ?ws"
       sorry \<comment> \<open>Follows from intermediate vertices being distinct (shortest revisit).\<close>
