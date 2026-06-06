@@ -5299,16 +5299,20 @@ proof -
               have "n' - 1 < n'" using \<open>n' \<ge> 1\<close> by linarith
               hence "n' - 1 < ?k" using hn'_lt by linarith
               have "shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! ((n' - 1 + 1) mod ?k)"
-                using hshared_v[rule_format, OF \<open>n'-1 < ?k\<close>] .
-              have "(n' - 1 + 1) mod ?k = n' mod ?k" using \<open>n' \<ge> 1\<close> by linarith
+                using hshared_v[rule_format, OF \<open>n'-1 < ?k\<close>] by (by100 blast)
+              have "n' - 1 + 1 = n'" using \<open>n' \<ge> 1\<close> by linarith
+              hence "(n' - 1 + 1) mod ?k = n' mod ?k" by (by100 simp)
               have "n' mod ?k = n'" using hn'_lt by (by100 simp)
               hence "shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! n'"
                 using \<open>shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! ((n' - 1 + 1) mod ?k)\<close>
                 \<open>(n' - 1 + 1) mod ?k = n' mod ?k\<close> \<open>n' mod ?k = n'\<close> by (by100 simp)
               hence hsv_in_n': "shared_v (n' - 1) \<in> ws ! n'" by (by100 blast)
               have "n' - 1 < n'" using \<open>n' \<ge> 1\<close> by linarith
-              have "ws ! (n' - 1) \<in> set (take n' ws)" using \<open>n' - 1 < n'\<close> \<open>n' \<le> ?k - 1\<close> hk_ge2
-                by (by100 simp)
+              have "n' - 1 < length (take n' ws)" using \<open>n' - 1 < n'\<close> \<open>n' \<le> ?k - 1\<close> hk_ge2 by (by100 simp)
+              have "ws ! (n' - 1) = take n' ws ! (n' - 1)" using \<open>n' - 1 < n'\<close> by (by100 simp)
+              have "ws ! (n' - 1) \<in> set (take n' ws)"
+                using \<open>n' - 1 < length (take n' ws)\<close> \<open>ws ! (n' - 1) = take n' ws ! (n' - 1)\<close>
+                by (metis nth_mem)
               hence "shared_v (n' - 1) \<in> A1'" using hIH(3)
                 \<open>shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! n'\<close> by (by100 blast)
               hence "shared_v (n' - 1) \<in> A1' \<inter> ws ! n'" using hsv_in_n' by (by100 blast)
@@ -5480,11 +5484,18 @@ proof -
       hence "shared_v (?k - 2) \<in> A1 \<inter> ?A2"
       proof -
         have "?k - 2 < ?k - 1" using hk_ge2 by linarith
+        have "?k - 2 < length (take (?k - 1) ws)" using \<open>?k - 2 < ?k - 1\<close> hk_ge2 by (by100 simp)
+        have "ws ! (?k - 2) = take (?k - 1) ws ! (?k - 2)" using \<open>?k - 2 < ?k - 1\<close> by (by100 simp)
         have "ws ! (?k - 2) \<in> set (take (?k - 1) ws)"
-          using \<open>?k - 2 < ?k - 1\<close> hk_ge2 by (by100 simp)
+          using \<open>?k - 2 < length (take (?k - 1) ws)\<close> \<open>ws ! (?k - 2) = take (?k - 1) ws ! (?k - 2)\<close>
+          by (metis nth_mem)
+        have "ws ! (?k - 2) \<in> set (butlast ws)"
+          using \<open>ws ! (?k - 2) \<in> set (take (?k - 1) ws)\<close> hk_ge2 by (simp add: butlast_conv_take)
         hence "shared_v (?k - 2) \<in> A1" using hA1_union
           \<open>shared_v (?k - 2) \<in> ws ! (?k - 2) \<inter> ws ! (?k - 1)\<close> by (by100 blast)
-        moreover have "shared_v (?k - 2) \<in> ?A2" using hlast_idx
+        have hlast_eq: "?A2 = ws ! (?k - 1)"
+          using \<open>ws \<noteq> []\<close> hk_ge2 by (simp add: last_conv_nth)
+        moreover have "shared_v (?k - 2) \<in> ?A2" using hlast_eq
           \<open>shared_v (?k - 2) \<in> ws ! (?k - 2) \<inter> ws ! (?k - 1)\<close> by (by100 blast)
         ultimately show ?thesis by (by100 blast)
       qed
@@ -5501,7 +5512,7 @@ proof -
         have "ws ! 0 \<in> set (take (?k - 1) ws)" using \<open>0 < ?k - 1\<close> hk_ge2 by (by100 simp)
         hence "shared_v (?k - 1) \<in> A1" using hA1_union
           \<open>shared_v (?k - 1) \<in> ws ! 0 \<inter> ws ! (?k - 1)\<close> by (by100 blast)
-        moreover have "shared_v (?k - 1) \<in> ?A2" using hlast_idx
+        moreover have "shared_v (?k - 1) \<in> ?A2" using hlast_eq
           \<open>shared_v (?k - 1) \<in> ws ! 0 \<inter> ws ! (?k - 1)\<close> by (by100 blast)
         ultimately show ?thesis by (by100 blast)
       qed
@@ -5514,7 +5525,7 @@ proof -
         obtain j where "j \<in> set (take (?k-1) ws)" "x \<in> j" by (by100 blast)
         then obtain idx where hidx: "idx < ?k - 1" "j = ws ! idx"
           by (metis in_set_conv_nth length_take min.absorb2 hk_ge2 le_refl)
-        have "x \<in> ws ! idx \<inter> ws ! (?k - 1)" using \<open>x \<in> ?A2\<close> hlast_idx \<open>x \<in> j\<close> hidx(2) by (by100 simp)
+        have "x \<in> ws ! idx \<inter> ws ! (?k - 1)" using \<open>x \<in> ?A2\<close> hlast_eq \<open>x \<in> j\<close> hidx(2) by (by100 simp)
         have "idx < ?k" using hidx(1) hk_ge2 by linarith
         show "x \<in> {shared_v (?k - 1), shared_v (?k - 2)}"
         proof (cases "idx = ?k - 2")
@@ -5614,7 +5625,7 @@ proof -
     have hA2_ep: "top1_arc_endpoints_on ?A2 (subspace_topology T TT ?A2) = {a_end, a_start}"
     proof -
       have "?k - 1 < ?k" using hk_ge2 by linarith
-      have "?A2 = ws ! (?k - 1)" using hlast_idx .
+      have "?A2 = ws ! (?k - 1)" using hlast_eq .
       from harc_ep[rule_format, OF \<open>?k - 1 < ?k\<close>]
       have "?ep (ws ! (?k - 1)) = {shared_v ((?k - 1 + ?k - 1) mod ?k), shared_v (?k - 1)}" .
       have "(?k - 1 + ?k - 1) mod ?k = (?k - 2) mod ?k"
@@ -7428,7 +7439,15 @@ proof (rule ccontr)
         by (by100 blast)
       \<comment> \<open>Remaining steps: construct \\<A>', show graph properties, construct 3-arc cycle,
          apply sc\\_graph\\_no\\_cycle. All mechanical but long.\<close>
-      show False sorry
+      \<comment> \<open>Build new decomposition with D1, D2 replacing arcA.\<close>
+      define \<A>' where "\<A>' = (\<A> - {?arcA}) \<union> {D1, D2}"
+      \<comment> \<open>The 3-arc cycle [D1, arcB, D2] has card-1 intersections.
+         D1 \\<inter> arcB = {fst(walk(Suc i))} (one shared vertex).
+         arcB \\<inter> D2 = {fst(walk i)} (the other shared vertex).
+         D1 \\<inter> D2 = {p} (the split point, which is interior to arcA).
+         All three shared vertices are distinct.
+         Apply sc\\_graph\\_no\\_cycle to \\<A>' with ws' = [D1, arcB, D2].\<close>
+      show False sorry \<comment> \<open>Subdivision + sc\\_graph\\_no\\_cycle delegation. Mechanical.\<close>
     qed
   qed
 qed
