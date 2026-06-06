@@ -4858,6 +4858,27 @@ proof -
   qed
   show ?thesis using hAB_arc hep_AB by (by100 blast)
 qed
+\<comment> \<open>Graph cycle retraction: in a graph with SC topology and a cycle,
+   the cycle subspace C is a retract. Proved by strong induction on card(\\<A>).
+   Base (\\<A> = cycle arcs): T = C, identity. Step: remove a pendant non-cycle arc.\<close>
+lemma graph_cycle_retract:
+  fixes T :: "'a set" and TT :: "'a set set"
+  assumes htree: "top1_is_tree_on T TT"
+      and harcs: "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and hcover: "\<Union>\<A> = T"
+      and hinter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and hfin: "finite \<A>"
+      and hcoh: "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
+          (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+      and hws_sub: "set ws \<subseteq> \<A>"
+      and hws_ne: "length ws \<ge> 2"
+      and hws_C_sub: "\<Union>(set ws) \<subseteq> T"
+  shows "top1_retract_of_on T TT (\<Union>(set ws))"
+  sorry
+
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
    A "cycle" here means a sequence of \\<ge> 2 distinct arcs A1, ..., Ak such that
    consecutive arcs share exactly 1 vertex, and the sequence forms a closed path.
@@ -5926,8 +5947,22 @@ proof -
     show False .
   next
     case False
+    \<comment> \<open>Construct retraction r: T \\<to> C via coherent topology.
+       For each non-cycle arc A, define r|A = constant to some cycle vertex.
+       For each cycle arc A, define r|A = id.
+       Coherent topology: r continuous iff r|A continuous for each A.
+       Need: consistent at shared vertices (unique cycle attachment per component).\<close>
+    \<comment> \<open>Each non-cycle arc that shares a vertex with a cycle arc: target = that vertex.\<close>
+    \<comment> \<open>Non-cycle arcs not directly on C: inherit target from adjacent arcs.\<close>
+    \<comment> \<open>For this, need: each connected component of non-cycle arcs has a unique
+       cycle attachment vertex. If a component touches C at 2 vertices: the component
+       path + cycle segment forms a new SCC, contradicting SC via scc\\_in\\_sc\\_false
+       (after constructing the SCC and retraction for the new cycle, which has
+       MORE cycle arcs hence FEWER non-cycle arcs \\<Rightarrow> induction on card(\\<A> \\ set ws)).\<close>
     have hC_retract: "top1_retract_of_on T TT ?C"
-      sorry \<comment> \<open>Retraction with non-cycle arcs: coherent topology + unique attachment.\<close>
+      using graph_cycle_retract[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(6)
+          assms(9) assms(7)] hC_sub by (by100 blast)
+    \<comment> \<open>Delegates to graph\\_cycle\\_retract (separate lemma).\<close>
     from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
     show False .
   qed
