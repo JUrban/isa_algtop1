@@ -4628,12 +4628,27 @@ proof -
     \<comment> \<open>Step 4: Define f: S1 \\<to> C by f(R\\_to\\_S1(t)) = F(t) for t \\<in> [0,1). This is well-defined
        since F(0) = F(1). Continuity from R\\_to\\_S1\\_interval\\_homeomorphism. Injectivity from F.
        Surjectivity from F. This gives top1\\_simple\\_closed\\_curve\\_on T TT C.\<close>
-    show ?thesis sorry
-      \<comment> \<open>SCC construction: ~150 lines. Key ingredients:
-         - arc\\_endpoints\\_are\\_boundary (orient arcs)
-         - top1\\_path\\_product\\_continuous / foldr\\_path\\_product\\_is\\_path (concatenate)
-         - R\\_to\\_S1\\_interval\\_homeomorphism (factor through S1)
-         - Theorem\\_26\\_6 (compact-to-Hausdorff bijection = homeomorphism)\<close>
+    \<comment> \<open>Step 1: Build a loop F: [0,1] \\<to> C surjecting onto C, injective on (0,1).\<close>
+    obtain F v0 where hF_cont: "top1_continuous_map_on I_set I_top T TT F"
+        and hF_loop: "F 0 = v0" "F 1 = v0" and hv0: "v0 \<in> ?C"
+        and hF_surj: "F ` I_set = ?C"
+        and hF_inj_int: "inj_on F {t. 0 < t \<and> t < (1::real)}"
+        and hv0_not_int: "v0 \<notin> F ` {t. 0 < t \<and> t < (1::real)}"
+      sorry \<comment> \<open>Build loop from oriented arc homeomorphisms via foldr\\_path\\_product.\<close>
+    \<comment> \<open>Step 2: Factor F through S1 to get f: S1 \\<to> T.\<close>
+    \<comment> \<open>R\\_to\\_S1 restricted to (0,1) is a homeomorphism onto S1 \\ {(1,0)}.
+       Define f(p) = F(R\\_to\\_S1\\_inv(p)) for p \\<noteq> (1,0), f((1,0)) = v0.\<close>
+    define f where "f p = (if p = (1::real, 0::real)
+        then v0
+        else F (inv_into {t::real. 0 < t \<and> t < 1} top1_R_to_S1 p))" for p
+    have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology T TT f"
+      sorry \<comment> \<open>Continuous: on S1 \\ {(1,0)} via R\\_to\\_S1\\_inv + F. At (1,0) by limit.\<close>
+    have hf_inj: "inj_on f top1_S1"
+      sorry \<comment> \<open>Injective: on S1 \\ {(1,0)} via F's injectivity on (0,1). At (1,0): v0 not in interior.\<close>
+    have hf_img: "f ` top1_S1 = ?C"
+      sorry \<comment> \<open>Surjective: from F's surjectivity onto C.\<close>
+    show ?thesis unfolding top1_simple_closed_curve_on_def
+      using hf_cont hf_inj hf_img by (by100 blast)
   qed
   \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
   have hC_retract: "top1_retract_of_on T TT ?C"
