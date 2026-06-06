@@ -4740,10 +4740,128 @@ proof -
       \<comment> \<open>f ` S1 \\<supseteq> A1: for each x \\<in> A1, x = hA(t) for some t \\<in> [0,1].
          Let p = 1 - 2t, q = sqrt(1 - p^2). Then (p,q) \\<in> S1 and f(p,q) = hA((1-p)/2) = hA(t).\<close>
       \<comment> \<open>Similarly for A2.\<close>
-      show ?thesis using hA1A2_union sorry
-        \<comment> \<open>Surjectivity needs: for each t \\<in> [0,1], (1-2t, sqrt(1-(1-2t)^2)) \\<in> S1.
-           And f maps it to hA(t). This is the parametrization of the upper semicircle.
-           Similarly for the lower semicircle and hB.\<close>
+      show ?thesis
+      proof
+        \<comment> \<open>f(S1) \\<subseteq> C: f maps upper semicircle to A1 and lower to A2.\<close>
+        show "f ` top1_S1 \<subseteq> ?C"
+        proof (intro image_subsetI)
+          fix p assume "p \<in> top1_S1"
+          hence "fst p ^ 2 + snd p ^ 2 = 1" unfolding top1_S1_def by (by100 blast)
+          show "f p \<in> ?C"
+          proof (cases "snd p \<ge> 0")
+            case True
+            have "f p = hA ((1 - fst p) / 2)" unfolding f_def using True by simp
+            moreover have "(1 - fst p) / 2 \<in> I_set"
+            proof -
+              have "snd p ^ 2 \<ge> 0" by simp
+              have "fst p ^ 2 \<le> 1" using \<open>fst p ^ 2 + snd p ^ 2 = 1\<close> \<open>snd p ^ 2 \<ge> 0\<close> by linarith
+              hence "-1 \<le> fst p \<and> fst p \<le> 1"
+                using power2_le_imp_le[of "fst p" 1] power2_le_imp_le[of "- fst p" 1]
+                by (by100 force)
+              thus ?thesis unfolding top1_unit_interval_def by (by100 auto)
+            qed
+            ultimately have "f p \<in> A1" using hA_surj by (by100 blast)
+            thus ?thesis using hA1A2_union by (by100 blast)
+          next
+            case False
+            have "f p = hB ((fst p + 1) / 2)" unfolding f_def using False by simp
+            moreover have "(fst p + 1) / 2 \<in> I_set"
+            proof -
+              have "snd p ^ 2 \<ge> 0" by simp
+              have "fst p ^ 2 \<le> 1" using \<open>fst p ^ 2 + snd p ^ 2 = 1\<close> \<open>snd p ^ 2 \<ge> 0\<close> by linarith
+              hence "-1 \<le> fst p \<and> fst p \<le> 1"
+                using power2_le_imp_le[of "fst p" 1] power2_le_imp_le[of "- fst p" 1]
+                by (by100 force)
+              thus ?thesis unfolding top1_unit_interval_def by (by100 auto)
+            qed
+            ultimately have "f p \<in> ?A2" using hB_surj by (by100 blast)
+            thus ?thesis using hA1A2_union by (by100 blast)
+          qed
+        qed
+      next
+        \<comment> \<open>C \\<subseteq> f(S1): for each point in A1 or A2, construct a preimage on S1.\<close>
+        show "?C \<subseteq> f ` top1_S1"
+        proof
+          fix z assume "z \<in> ?C"
+          hence "z \<in> A1 \<union> ?A2" using hA1A2_union by simp
+          thus "z \<in> f ` top1_S1"
+          proof
+            assume "z \<in> A1"
+            then obtain t where ht: "t \<in> I_set" "hA t = z" using hA_surj by (by100 blast)
+            \<comment> \<open>Preimage: (1-2t, sqrt(1-(1-2t)^2)) on upper semicircle.\<close>
+            define x where "x = 1 - 2 * t"
+            define y where "y = sqrt (1 - x^2)"
+            have "t \<ge> 0 \<and> t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
+            hence hx_range: "-1 \<le> x \<and> x \<le> 1" unfolding x_def by linarith
+            hence "x * x \<le> 1"
+            proof -
+              have "x \<le> 1" and "-1 \<le> x" using hx_range by (by100 blast)+
+              hence "(1 - x) * (1 + x) \<ge> 0" by (by100 force)
+              thus "x * x \<le> 1" by (simp add: algebra_simps)
+            qed
+            hence "1 - x^2 \<ge> 0" by (simp add: power2_eq_square)
+            hence hy_ge: "y \<ge> 0" unfolding y_def by simp
+            have hS1: "x^2 + y^2 = 1" unfolding y_def using \<open>1 - x^2 \<ge> 0\<close> by simp
+            hence "(x, y) \<in> top1_S1" unfolding top1_S1_def by simp
+            have "f (x, y) = hA ((1 - x) / 2)" unfolding f_def using hy_ge by simp
+            also have "(1 - x) / 2 = t" unfolding x_def by simp
+            finally have "f (x, y) = z" using ht(2) by simp
+            thus "z \<in> f ` top1_S1" using \<open>(x, y) \<in> top1_S1\<close> by (by100 blast)
+          next
+            assume "z \<in> ?A2"
+            have "z \<in> hB ` I_set" using hB_surj \<open>z \<in> ?A2\<close> by simp
+            then obtain t where ht: "t \<in> I_set" "hB t = z" by (by100 blast)
+            \<comment> \<open>Preimage: (2t-1, -sqrt(1-(2t-1)^2)) on lower semicircle.\<close>
+            define x where "x = 2 * t - 1"
+            define y where "y = - sqrt (1 - x^2)"
+            have "t \<ge> 0 \<and> t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
+            hence hx_range: "-1 \<le> x \<and> x \<le> 1" unfolding x_def by linarith
+            hence "x * x \<le> 1"
+            proof -
+              have "x \<le> 1" and "-1 \<le> x" using hx_range by (by100 blast)+
+              hence "(1 - x) * (1 + x) \<ge> 0" by (by100 force)
+              thus "x * x \<le> 1" by (simp add: algebra_simps)
+            qed
+            hence "1 - x^2 \<ge> 0" by (simp add: power2_eq_square)
+            have hy_le: "\<not> (y \<ge> 0) \<or> y = 0" unfolding y_def using \<open>1 - x^2 \<ge> 0\<close> by simp
+            have hS1: "x^2 + y^2 = 1" unfolding y_def using \<open>1 - x^2 \<ge> 0\<close>
+              by (simp add: power2_eq_square)
+            hence "(x, y) \<in> top1_S1" unfolding top1_S1_def by simp
+            show "z \<in> f ` top1_S1"
+            proof (cases "y \<ge> 0")
+              case True
+              hence "y = 0" using hy_le by (by100 blast)
+              hence "x^2 = 1" using hS1 by (simp add: power2_eq_square)
+              hence "x = 1 \<or> x = -1" using power2_eq_1_iff by (by100 blast)
+              \<comment> \<open>Boundary case: y = 0 means x = \\<pm>1. f maps to a\\_start or a\\_end.\<close>
+              \<comment> \<open>z = hB(t). If x=1: t = 1, z = hB(1) = a\\_start. If x=-1: t = 0, z = hB(0) = a\\_end.
+                 Both are in A1 \\<inter> A2. The upper semicircle also maps to them.\<close>
+              thus ?thesis
+              proof
+                assume "x = 1"
+                hence "t = 1" unfolding x_def by linarith
+                hence "z = a_start" using ht(2) hhB1 by simp
+                moreover have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+                moreover have "f (1, 0) = a_start" using hf_at_10 .
+                ultimately show ?thesis by (by100 force)
+              next
+                assume "x = -1"
+                hence "t = 0" unfolding x_def by linarith
+                hence "z = a_end" using ht(2) hhB0 by simp
+                moreover have "(-1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 auto)
+                moreover have "f (-1, 0) = a_end" using hf_at_m10 .
+                ultimately show ?thesis by (by100 force)
+              qed
+            next
+              case False
+              have "f (x, y) = hB ((x + 1) / 2)" unfolding f_def using False by simp
+              also have "(x + 1) / 2 = t" unfolding x_def by simp
+              finally have "f (x, y) = z" using ht(2) by simp
+              thus "z \<in> f ` top1_S1" using \<open>(x, y) \<in> top1_S1\<close> by (by100 blast)
+            qed
+          qed
+        qed
+      qed
     qed
     show ?thesis unfolding top1_simple_closed_curve_on_def
       using hf_cont hf_inj hf_img by (by100 blast)
