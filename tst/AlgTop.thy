@@ -5208,8 +5208,200 @@ proof -
                A1 = \<Union>(set (take n ws)) \<and>
                ?epl A1 = {shared_v ((?k - 1) mod ?k), shared_v (n - 1)} \<and>
                shared_v ((?k - 1) mod ?k) \<noteq> shared_v (n - 1)"
-        sorry \<comment> \<open>Induction on n: base (n=1) uses harc\\_ep; step uses arc\\_merge\\_at\\_endpoint
-           + hdisjoint\\_non\\_adj (from harc\\_ep + hshared\\_v\\_distinct). ~80 lines.\<close>
+      proof -
+        fix n assume hn1: "1 \<le> n" and hn2: "n \<le> ?k - 1"
+        show "\<exists>A1. top1_is_arc_on A1 (subspace_topology T TT A1) \<and> A1 \<subseteq> T \<and>
+               A1 = \<Union>(set (take n ws)) \<and>
+               ?epl A1 = {shared_v ((?k - 1) mod ?k), shared_v (n - 1)} \<and>
+               shared_v ((?k - 1) mod ?k) \<noteq> shared_v (n - 1)"
+          using hn1 hn2
+        proof (induction n)
+          case 0 thus ?case by (by100 simp)
+        next
+          case (Suc n')
+          show ?case
+          proof (cases "n' = 0")
+            case True \<comment> \<open>Base: n=1, take 1 ws = [ws!0].\<close>
+            have "take 1 ws = [ws ! 0]"
+            proof -
+              have "length ws \<ge> 1" using hk_ge2 by linarith
+              then obtain x xs where "ws = x # xs" by (cases ws) (by100 auto)
+              thus ?thesis by (by100 simp)
+            qed
+            have "0 < length ws" using hk_ge2 by linarith
+            have "ws ! 0 \<in> set ws" using \<open>0 < length ws\<close> by (by100 simp)
+            have "ws ! 0 \<in> \<A>" using assms(9) \<open>ws ! 0 \<in> set ws\<close> by (by100 blast)
+            have hepws0: "?epl (ws ! 0) = {shared_v ((?k - 1) mod ?k), shared_v 0}"
+              using harc_ep[rule_format] hk_ge2 by (by100 force)
+            have "top1_is_arc_on (ws!0) (subspace_topology T TT (ws!0))"
+              using assms(2) \<open>ws ! 0 \<in> \<A>\<close> by (by100 blast)
+            moreover have "ws!0 \<subseteq> T" using assms(2) \<open>ws ! 0 \<in> \<A>\<close> by (by100 blast)
+            moreover have "\<Union>(set (take (Suc n') ws)) = ws!0"
+              using True \<open>take 1 ws = [ws!0]\<close> by (by100 simp)
+            moreover have "?epl (ws!0) = {shared_v ((?k-1) mod ?k), shared_v (Suc n' - 1)}"
+              using hepws0 True by (by100 simp)
+            moreover have "shared_v ((?k-1) mod ?k) \<noteq> shared_v (Suc n' - 1)"
+            proof -
+              have "(?k - 1) mod ?k < ?k" using hk_ge2 by (by100 simp)
+              have "(0::nat) < ?k" using hk_ge2 by linarith
+              have "(?k - 1) mod ?k \<noteq> 0"
+              proof -
+                have "(?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+                thus ?thesis using hk_ge2 by linarith
+              qed
+              thus ?thesis using True hshared_v_distinct[rule_format, OF \<open>(?k-1) mod ?k < ?k\<close> \<open>0 < ?k\<close>]
+                by (by100 simp)
+            qed
+            ultimately show ?thesis using True by (by100 blast)
+          next
+            case False \<comment> \<open>Step: merge first n' arcs, then add ws!n'.\<close>
+            hence "n' \<ge> 1" by linarith
+            have "n' \<le> ?k - 1" using Suc.prems(2) by linarith
+            from Suc.IH[OF \<open>n' \<ge> 1\<close> \<open>n' \<le> ?k - 1\<close>]
+            obtain A1' where hIH: "top1_is_arc_on A1' (subspace_topology T TT A1')"
+                "A1' \<subseteq> T" "A1' = \<Union>(set (take n' ws))"
+                "?epl A1' = {shared_v ((?k - 1) mod ?k), shared_v (n' - 1)}"
+                "shared_v ((?k - 1) mod ?k) \<noteq> shared_v (n' - 1)" by (by100 blast)
+            \<comment> \<open>ws!n' is the next arc. Shared vertex with A1' is shared\\_v(n'-1).\<close>
+            \<comment> \<open>A1' \\<inter> ws!n' = {shared\\_v(n'-1)} from hdisjoint\\_non\\_adj.\<close>
+            \<comment> \<open>Apply arc\\_merge\\_at\\_endpoint to get A1' \\<union> ws!n'.\<close>
+            have hn'_lt: "n' < ?k" using \<open>n' \<le> ?k - 1\<close> hk_ge2 by linarith
+            have "0 < length ws" using hk_ge2 by linarith
+            have "ws ! n' \<in> set ws" using hn'_lt by (by100 simp)
+            hence hwsn': "ws ! n' \<in> \<A>" using assms(9) by (by100 blast)
+            have hwsn'_arc: "top1_is_arc_on (ws!n') (subspace_topology T TT (ws!n'))"
+              using assms(2) hwsn' by (by100 blast)
+            have hwsn'_sub: "ws!n' \<subseteq> T" using assms(2) hwsn' by (by100 blast)
+            \<comment> \<open>A1' \\<inter> ws!n' = {shared\\_v(n'-1)}.\<close>
+            have hinter: "A1' \<inter> ws ! n' = {shared_v (n' - 1)}"
+            proof -
+              \<comment> \<open>shared\\_v(n'-1) \\<in> A1': it's in ws!(n'-1) which is part of take n' ws.\<close>
+              have "n' - 1 < n'" using \<open>n' \<ge> 1\<close> by linarith
+              hence "n' - 1 < ?k" using hn'_lt by linarith
+              have "shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! ((n' - 1 + 1) mod ?k)"
+                using hshared_v[rule_format, OF \<open>n'-1 < ?k\<close>] .
+              have "(n' - 1 + 1) mod ?k = n' mod ?k" using \<open>n' \<ge> 1\<close> by linarith
+              have "n' mod ?k = n'" using hn'_lt by (by100 simp)
+              hence "shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! n'"
+                using \<open>shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! ((n' - 1 + 1) mod ?k)\<close>
+                \<open>(n' - 1 + 1) mod ?k = n' mod ?k\<close> \<open>n' mod ?k = n'\<close> by (by100 simp)
+              hence hsv_in_n': "shared_v (n' - 1) \<in> ws ! n'" by (by100 blast)
+              have "n' - 1 < n'" using \<open>n' \<ge> 1\<close> by linarith
+              have "ws ! (n' - 1) \<in> set (take n' ws)" using \<open>n' - 1 < n'\<close> \<open>n' \<le> ?k - 1\<close> hk_ge2
+                by (by100 simp)
+              hence "shared_v (n' - 1) \<in> A1'" using hIH(3)
+                \<open>shared_v (n' - 1) \<in> ws ! (n' - 1) \<inter> ws ! n'\<close> by (by100 blast)
+              hence "shared_v (n' - 1) \<in> A1' \<inter> ws ! n'" using hsv_in_n' by (by100 blast)
+              \<comment> \<open>No other point: A1' = \\<Union>(take n' ws). Each ws!j for j < n' either has empty
+                 intersection with ws!n' (non-adjacent) or intersects at shared\\_v(n'-1) (adjacent).\<close>
+              have "\<And>x. x \<in> A1' \<inter> ws ! n' \<Longrightarrow> x = shared_v (n' - 1)"
+              proof -
+                fix x assume "x \<in> A1' \<inter> ws ! n'"
+                hence "x \<in> A1'" "x \<in> ws ! n'" by (by100 blast)+
+                from \<open>x \<in> A1'\<close>[unfolded hIH(3)]
+                obtain j where hj_take: "j \<in> set (take n' ws)" "x \<in> j" by (by100 blast)
+                then obtain idx where hidx: "idx < n'" "j = ws ! idx"
+                  by (metis in_set_conv_nth length_take min.absorb2 \<open>n' \<le> ?k - 1\<close> hk_ge2 le_trans)
+                hence "x \<in> ws ! idx \<inter> ws ! n'" using \<open>x \<in> ws ! n'\<close> hj_take(2) by (by100 blast)
+                show "x = shared_v (n' - 1)"
+                proof (cases "idx = n' - 1")
+                  case True \<comment> \<open>Adjacent: ws!(n'-1) \\<inter> ws!n' = {shared\\_v(n'-1)}.\<close>
+                  have "ws ! (n'-1) \<inter> ws ! n' = {shared_v (n'-1)}"
+                  proof -
+                    have "ws ! (n'-1) \<inter> ws ! ((n'-1+1) mod ?k) = {shared_v (n'-1)}"
+                      using hshared_v[rule_format, OF \<open>n'-1 < ?k\<close>] .
+                    have "(n'-1+1) = n'" using \<open>n' \<ge> 1\<close> by linarith
+                    hence "((n'-1+1) mod ?k) = n'" using hn'_lt by (by100 simp)
+                    thus ?thesis using \<open>ws!(n'-1) \<inter> ws!((n'-1+1) mod ?k) = {shared_v(n'-1)}\<close> by (by100 simp)
+                  qed
+                  thus ?thesis using \<open>x \<in> ws ! idx \<inter> ws ! n'\<close> True by (by100 blast)
+                next
+                  case False \<comment> \<open>Non-adjacent: ws!idx \\<inter> ws!n' = {}.\<close>
+                  have "idx < ?k" using hidx(1) \<open>n' \<le> ?k - 1\<close> by linarith
+                  have "idx \<noteq> n'" using hidx(1) by linarith
+                  have "idx < n' - 1" using hidx(1) False by linarith
+                  have h_prev_ne: "(idx + ?k - 1) mod ?k \<noteq> n'"
+                  proof (cases "idx = 0")
+                    case True
+                    have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+                    moreover have "?k - 1 \<noteq> n'" using Suc.prems(2) by linarith
+                    ultimately show ?thesis using True by (by100 simp)
+                  next
+                    case False
+                    have "idx + ?k - 1 = (idx - 1) + ?k" using False by linarith
+                    hence "(idx + ?k - 1) mod ?k = idx - 1"
+                      using \<open>idx < ?k\<close> by (by100 simp)
+                    thus ?thesis using \<open>idx < n' - 1\<close> by linarith
+                  qed
+                  have h_next_ne: "(idx + 1) mod ?k \<noteq> n'"
+                  proof -
+                    have "idx + 1 \<le> n' - 1" using \<open>idx < n' - 1\<close> by linarith
+                    have "idx + 1 < ?k" using \<open>idx < ?k\<close> by linarith
+                    hence "(idx + 1) mod ?k = idx + 1" by (by100 simp)
+                    thus ?thesis using \<open>idx + 1 \<le> n' - 1\<close> by linarith
+                  qed
+                  have "ws ! idx \<inter> ws ! n' = {}"
+                    using hdisjoint_non_adj[OF \<open>idx < ?k\<close> hn'_lt h_prev_ne h_next_ne \<open>idx \<noteq> n'\<close>] .
+                  thus ?thesis using \<open>x \<in> ws ! idx \<inter> ws ! n'\<close> by (by100 blast)
+                qed
+              qed
+              thus ?thesis using \<open>shared_v (n' - 1) \<in> A1' \<inter> ws ! n'\<close> by (by100 blast)
+            qed
+            \<comment> \<open>Endpoint of ws!n': {shared\\_v(n'-1), shared\\_v(n')}.\<close>
+            have hepn': "?epl (ws ! n') = {shared_v (n' - 1), shared_v n'}"
+            proof -
+              have "n' + ?k - 1 = (n' - 1) + ?k" using \<open>n' \<ge> 1\<close> by linarith
+              hence "(n' + ?k - 1) mod ?k = (n' - 1) mod ?k" by (by100 simp)
+              have "n' - 1 < ?k" using hn'_lt by linarith
+              hence "(n' - 1) mod ?k = n' - 1" by (by100 simp)
+              hence "(n' + ?k - 1) mod ?k = n' - 1"
+                using \<open>(n' + ?k - 1) mod ?k = (n' - 1) mod ?k\<close> by (by100 simp)
+              thus ?thesis using harc_ep[rule_format, OF hn'_lt] by (by100 simp)
+            qed
+            \<comment> \<open>shared\\_v(n'-1) \\<noteq> shared\\_v(n') and shared\\_v(k-1) \\<noteq> shared\\_v(n'-1).\<close>
+            have "n' - 1 < ?k" using hn'_lt by linarith
+            have hsv_ne: "shared_v (n' - 1) \<noteq> shared_v n'"
+              using hshared_v_distinct[rule_format, OF \<open>n'-1 < ?k\<close> hn'_lt] \<open>n' \<ge> 1\<close> by linarith
+            \<comment> \<open>Apply arc\\_merge\\_at\\_endpoint: A1' and ws!n' share vertex shared\\_v(n'-1).\<close>
+            have hsv_ne2: "shared_v n' \<noteq> shared_v (n' - 1)" using hsv_ne by (by100 simp)
+            have hmerge: "top1_is_arc_on (A1' \<union> ws!n') (subspace_topology T TT (A1' \<union> ws!n'))
+                \<and> ?epl (A1' \<union> ws!n') = {shared_v ((?k-1) mod ?k), shared_v n'}"
+              using arc_merge_at_endpoint[OF hstrict hhaus hIH(1) hwsn'_arc hIH(2) hwsn'_sub
+                hinter hIH(4) hepn' hIH(5) hsv_ne2] by (by100 blast)
+            \<comment> \<open>Assembly: take (Suc n') ws = take n' ws @ [ws!n'].\<close>
+            have "Suc n' \<le> length ws" using Suc.prems(2) hk_ge2 by linarith
+            have "take (Suc n') ws = take n' ws @ [ws ! n']"
+            proof -
+              have "n' < length ws" using hn'_lt by (by100 simp)
+              thus ?thesis by (rule take_Suc_conv_app_nth)
+            qed
+            hence "set (take (Suc n') ws) = set (take n' ws) \<union> {ws ! n'}" by (by100 simp)
+            hence "\<Union>(set (take (Suc n') ws)) = \<Union>(set (take n' ws)) \<union> ws ! n'" by (by100 force)
+            hence "\<Union>(set (take (Suc n') ws)) = A1' \<union> ws ! n'" using hIH(3) by (by100 simp)
+            have "(?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+            have "(?k - 1) mod ?k \<noteq> n'"
+            proof -
+              have "?k - 1 \<noteq> n'" using Suc.prems(2) by linarith
+              thus ?thesis using \<open>(?k - 1) mod ?k = ?k - 1\<close> by (by100 simp)
+            qed
+            have "shared_v ((?k - 1) mod ?k) \<noteq> shared_v n'"
+              using hshared_v_distinct[rule_format, OF _ hn'_lt \<open>(?k-1) mod ?k \<noteq> n'\<close>]
+              hk_ge2 by (by100 simp)
+            have hm_arc: "top1_is_arc_on (A1' \<union> ws!n') (subspace_topology T TT (A1' \<union> ws!n'))"
+              using hmerge by (by100 blast)
+            have hm_ep: "?epl (A1' \<union> ws!n') = {shared_v ((?k-1) mod ?k), shared_v n'}"
+              using hmerge by (by100 blast)
+            have hm_sub: "A1' \<union> ws!n' \<subseteq> T" using hIH(2) hwsn'_sub by (by100 blast)
+            have "A1' \<union> ws!n' = \<Union>(set (take (Suc n') ws))"
+              using \<open>\<Union>(set (take (Suc n') ws)) = A1' \<union> ws ! n'\<close> by (by100 simp)
+            show ?thesis
+              apply (rule exI[of _ "A1' \<union> ws ! n'"])
+              using hm_arc hm_sub \<open>A1' \<union> ws!n' = \<Union>(set (take (Suc n') ws))\<close>
+                hm_ep \<open>shared_v ((?k-1) mod ?k) \<noteq> shared_v n'\<close>
+              by (by100 simp)
+          qed
+        qed
+      qed
       have "1 \<le> ?k - 1" using hk_ge2 by linarith
       from merge_chain[OF this le_refl]
       obtain A1 where hA1_props: "top1_is_arc_on A1 (subspace_topology T TT A1)"
