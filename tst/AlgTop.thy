@@ -4816,6 +4816,13 @@ proof -
           have hkp: "?k > 0" using hk_ge2 by linarith
           have hjp: "(j + ?k - 1) mod ?k < ?k" using hkp by (by100 simp)
           have hmp: "(m + ?k - 1) mod ?k < ?k" using hkp by (by100 simp)
+          \<comment> \<open>shared\\_v injective.\<close>
+          have sv_inj: "\<And>x y. x < ?k \<Longrightarrow> y < ?k \<Longrightarrow> shared_v x = shared_v y \<Longrightarrow> x = y"
+          proof (rule ccontr)
+            fix x y assume "x < ?k" "y < ?k" "shared_v x = shared_v y" "x \<noteq> y"
+            from hshared_v_distinct[rule_format, OF \<open>x < ?k\<close> \<open>y < ?k\<close> \<open>x \<noteq> y\<close>]
+            show False using \<open>shared_v x = shared_v y\<close> by (by100 simp)
+          qed
           \<comment> \<open>v is in both 2-element ep sets. Case analysis on which element it matches.\<close>
           from hv1[unfolded hepj] hv2[unfolded hepm]
           consider
@@ -4824,25 +4831,88 @@ proof -
           | (c3) "v = shared_v j" "v = shared_v ((m+?k-1) mod ?k)"
           | (c4) "v = shared_v j" "v = shared_v m"
             by (by100 blast)
-          thus False
+          then show False
           proof cases
             case c1
             hence "shared_v ((j+?k-1) mod ?k) = shared_v ((m+?k-1) mod ?k)" by (by100 simp)
-            hence "(j+?k-1) mod ?k = (m+?k-1) mod ?k" sorry \<comment> \<open>from hshared\\_v\\_distinct\<close>
-            hence "j = m" sorry \<comment> \<open>mod cancellation\<close>
+            hence heq_mod: "(j+?k-1) mod ?k = (m+?k-1) mod ?k" using sv_inj[OF hjp hmp] by (by100 simp)
+            hence "j = m"
+            proof (cases "j = 0")
+              case True show ?thesis
+              proof (cases "m = 0")
+                case True thus ?thesis using \<open>j = 0\<close> by (by100 simp)
+              next
+                case False
+                have "m + ?k - 1 = (m - 1) + ?k" using False by linarith
+                hence "(m + ?k - 1) mod ?k = (m - 1) mod ?k" by (by100 simp)
+                have "m - 1 < ?k" using hm by linarith
+                hence "(m - 1) mod ?k = m - 1" by (by100 simp)
+                have hm_mod: "(m + ?k - 1) mod ?k = m - 1"
+                  using \<open>(m + ?k - 1) mod ?k = (m - 1) mod ?k\<close> \<open>(m - 1) mod ?k = m - 1\<close> by (by100 simp)
+                have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+                hence "?k - 1 = m - 1" using True heq_mod hm_mod by (by100 simp)
+                thus ?thesis using True hm by linarith
+              qed
+            next
+              case False
+              have "j + ?k - 1 = (j - 1) + ?k" using False by linarith
+              hence "(j + ?k - 1) mod ?k = (j - 1) mod ?k" by (by100 simp)
+              have "j - 1 < ?k" using hj by linarith
+              hence "(j - 1) mod ?k = j - 1" by (by100 simp)
+              have hj_m: "(j + ?k - 1) mod ?k = j - 1"
+                using \<open>(j + ?k - 1) mod ?k = (j - 1) mod ?k\<close> \<open>(j - 1) mod ?k = j - 1\<close> by (by100 simp)
+              show ?thesis
+              proof (cases "m = 0")
+                case True
+                have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+                hence "j - 1 = ?k - 1" using hj_m True heq_mod by (by100 simp)
+                thus ?thesis using True hj by linarith
+              next
+                case False
+                have "m + ?k - 1 = (m - 1) + ?k" using False by linarith
+                hence "(m + ?k - 1) mod ?k = (m - 1) mod ?k" by (by100 simp)
+                have "m - 1 < ?k" using hm by linarith
+                hence "(m - 1) mod ?k = m - 1" by (by100 simp)
+                have "(m + ?k - 1) mod ?k = m - 1"
+                  using \<open>(m + ?k - 1) mod ?k = (m - 1) mod ?k\<close> \<open>(m - 1) mod ?k = m - 1\<close> by (by100 simp)
+                hence "j - 1 = m - 1" using hj_m heq_mod by (by100 simp)
+                thus ?thesis using \<open>j \<noteq> 0\<close> False by linarith
+              qed
+            qed
             thus False using hjm_ne by (by100 simp)
           next
             case c2
-            hence "(j+?k-1) mod ?k = m" sorry \<comment> \<open>from hshared\\_v\\_distinct\<close>
+            have "shared_v ((j+?k-1) mod ?k) = shared_v m" using c2 by (by100 simp)
+            hence "(j+?k-1) mod ?k = m" using sv_inj[OF hjp hm] by (by100 simp)
             thus False using hprev_ne by (by100 simp)
           next
             case c3
-            hence "j = (m+?k-1) mod ?k" sorry \<comment> \<open>from hshared\\_v\\_distinct\<close>
-            hence "(j+1) mod ?k = m" sorry \<comment> \<open>succ of pred = id\<close>
+            have "shared_v j = shared_v ((m+?k-1) mod ?k)" using c3 by (by100 simp)
+            hence "j = (m+?k-1) mod ?k" using sv_inj[OF hj hmp] by (by100 simp)
+            hence "(j+1) mod ?k = m"
+            proof (cases "m = 0")
+              case True
+              hence "(m + ?k - 1) mod ?k = ?k - 1" using hk_ge2 by (by100 simp)
+              hence "j = ?k - 1" using \<open>j = (m+?k-1) mod ?k\<close> by (by100 simp)
+              hence "j + 1 = ?k" using hk_ge2 by linarith
+              hence "(j + 1) mod ?k = 0" by (by100 simp)
+              thus ?thesis using True by (by100 simp)
+            next
+              case False
+              have "m + ?k - 1 = (m - 1) + ?k" using False by linarith
+              hence "(m + ?k - 1) mod ?k = (m - 1) mod ?k" by (by100 simp)
+              have "m - 1 < ?k" using hm by linarith
+              hence "(m - 1) mod ?k = m - 1" by (by100 simp)
+              hence "j = m - 1" using \<open>j = (m+?k-1) mod ?k\<close>
+                \<open>(m + ?k - 1) mod ?k = (m - 1) mod ?k\<close> by (by100 simp)
+              hence "j + 1 = m" using False by linarith
+              thus ?thesis using hm by (by100 simp)
+            qed
             thus False using hnext_ne by (by100 simp)
           next
             case c4
-            hence "j = m" sorry \<comment> \<open>from hshared\\_v\\_distinct\<close>
+            have "shared_v j = shared_v m" using c4 by (by100 simp)
+            hence "j = m" using sv_inj[OF hj hm] by (by100 simp)
             thus False using hjm_ne by (by100 simp)
           qed
         qed
