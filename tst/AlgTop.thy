@@ -7599,10 +7599,29 @@ proof (rule ccontr)
             by (by100 blast)
           hence "?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
             using \<open>?arcB \<subseteq> ?arcA\<close> by (by100 blast)
-          thus False sorry \<comment> \<open>An arc can't be a subset of another arc's endpoints (2 points).\<close>
+          \<comment> \<open>arcB has \\<ge> 3 points (arc \\<cong> [0,1]). But arcB \\<subseteq> ep(arcA) which has \\<le> 2 points.\<close>
+          thus False sorry \<comment> \<open>|arc| > 2 but |ep| \\<le> 2.\<close>
         qed
-        have "D2 \<noteq> ?arcB" sorry \<comment> \<open>Same argument.\<close>
-        have "D1 \<noteq> D2" sorry \<comment> \<open>From D1 \\<inter> D2 = {p} with both being arcs (infinite).\<close>
+        have "D2 \<noteq> ?arcB"
+        proof
+          assume "D2 = ?arcB"
+          hence "D2 \<subseteq> ?arcA" using hD_union by (by100 blast)
+          hence "?arcB \<subseteq> ?arcA" using \<open>D2 = ?arcB\<close> by (by100 simp)
+          from assms(4)[rule_format, OF harcA_in harcB_in \<open>?arcA \<noteq> ?arcB\<close>]
+          have "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+            by (by100 blast)
+          hence "?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+            using \<open>?arcB \<subseteq> ?arcA\<close> by (by100 blast)
+          thus False sorry \<comment> \<open>|arc| > 2 but |ep| \\<le> 2.\<close>
+        qed
+        have "D1 \<noteq> D2"
+        proof
+          assume "D1 = D2"
+          hence "D1 \<inter> D2 = D1" by (by100 simp)
+          hence "D1 = {p}" using hD_inter by (by100 simp)
+          \<comment> \<open>But D1 is an arc (homeomorphic to [0,1]), so |D1| \\<ge> 3.\<close>
+          thus False sorry \<comment> \<open>|arc| > 1 but D1 = {p}.\<close>
+        qed
         thus ?thesis using \<open>D1 \<noteq> ?arcB\<close> \<open>D2 \<noteq> ?arcB\<close> \<open>D1 \<noteq> D2\<close> by (by100 simp)
       qed
       have hws'_card1: "\<forall>i < length ?ws'. card (?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws')) = 1" sorry
