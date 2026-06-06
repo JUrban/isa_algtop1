@@ -4938,8 +4938,15 @@ proof -
           show ?case
           proof (cases "n' = 0")
             case True \<comment> \<open>Base: n=1, take 1 ws = [ws!0].\<close>
-            have "take 1 ws = [ws ! 0]" using hk_ge2 by (by100 simp)
-            have "ws ! 0 \<in> \<A>" using assms(9) hk_ge2 by (by100 force)
+            have "take 1 ws = [ws ! 0]"
+            proof -
+              have "length ws \<ge> 1" using hk_ge2 by linarith
+              then obtain x xs where "ws = x # xs" by (cases ws) (by100 auto)
+              thus ?thesis by (by100 simp)
+            qed
+            have "0 < length ws" using hk_ge2 by linarith
+            have "ws ! 0 \<in> set ws" using \<open>0 < length ws\<close> by (by100 simp)
+            have "ws ! 0 \<in> \<A>" using assms(9) \<open>ws ! 0 \<in> set ws\<close> by (by100 blast)
             have hepws0: "?ep (ws ! 0) = {shared_v ((?k - 1) mod ?k), shared_v 0}"
               using harc_ep[rule_format] hk_ge2 by (by100 force)
             have "top1_is_arc_on (ws!0) (subspace_topology T TT (ws!0))"
