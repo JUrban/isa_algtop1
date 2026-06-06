@@ -4937,9 +4937,50 @@ proof (rule ccontr)
       show "other_endpt v e \<in> ?ep2 e \<and> other_endpt v e \<noteq> v"
         unfolding other_endpt_def by (by100 blast)
     qed
-    have hwalk_props: "\<And>n. n \<le> card ?V \<Longrightarrow> fst (walk n) \<in> ?V \<and> snd (walk n) \<in> \<A>
+    \<comment> \<open>Unfold walk at Suc n.\<close>
+    have hwalk_suc: "\<And>n. walk (Suc n) = (let (v, e) = walk n in
+        let e' = next_arc v e in (other_endpt v e', e'))"
+      unfolding walk_def by simp
+    have hwalk_suc_fst: "\<And>n. fst (walk (Suc n)) = other_endpt (fst (walk n)) (next_arc (fst (walk n)) (snd (walk n)))"
+      using hwalk_suc by (simp add: case_prod_beta Let_def)
+    have hwalk_suc_snd: "\<And>n. snd (walk (Suc n)) = next_arc (fst (walk n)) (snd (walk n))"
+      using hwalk_suc by (simp add: case_prod_beta Let_def)
+    have hwalk_props: "\<And>n. fst (walk n) \<in> ?V \<and> snd (walk n) \<in> \<A>
         \<and> fst (walk n) \<in> ?ep2 (snd (walk n))"
-      sorry \<comment> \<open>Induction on n. Base: (v0,e0) from hv0/he0. Step: hnext\\_arc + hother\\_endpt.\<close>
+    proof -
+      fix n show "fst (walk n) \<in> ?V \<and> snd (walk n) \<in> \<A> \<and> fst (walk n) \<in> ?ep2 (snd (walk n))"
+      proof (induction n)
+        case 0
+        have "walk 0 = (v0, e0)" unfolding walk_def by simp
+        thus ?case using hv0 he0 by simp
+      next
+        case (Suc n)
+        have hv: "fst (walk n) \<in> ?V" and he: "snd (walk n) \<in> \<A>"
+            and hve: "fst (walk n) \<in> ?ep2 (snd (walk n))"
+          using Suc.IH by (by100 blast)+
+        let ?e' = "next_arc (fst (walk n)) (snd (walk n))"
+        from hnext_arc[rule_format, OF hv he hve]
+        have he': "?e' \<in> \<A>" and hve': "fst (walk n) \<in> ?ep2 ?e'" and hne': "?e' \<noteq> snd (walk n)"
+          by (by100 blast)+
+        from hother_endpt[rule_format, OF he' hve']
+        have hv': "other_endpt (fst (walk n)) ?e' \<in> ?ep2 ?e'"
+            and hv'_ne: "other_endpt (fst (walk n)) ?e' \<noteq> fst (walk n)"
+          by (by100 blast)+
+        have hsuc_fst: "fst (walk (Suc n)) = other_endpt (fst (walk n)) ?e'"
+          using hwalk_suc_fst by simp
+        have hsuc_snd: "snd (walk (Suc n)) = ?e'" using hwalk_suc_snd by simp
+        have "fst (walk (Suc n)) \<in> ?V"
+        proof -
+          have "other_endpt (fst (walk n)) ?e' \<in> ?ep2 ?e'" using hv' .
+          hence "other_endpt (fst (walk n)) ?e' \<in> (\<Union>A\<in>\<A>. ?ep2 A)" using he' by (by100 blast)
+          thus ?thesis using hsuc_fst unfolding top1_graph_vertex_set_def by simp
+        qed
+        moreover have "snd (walk (Suc n)) \<in> \<A>" using hsuc_snd he' by simp
+        moreover have "fst (walk (Suc n)) \<in> ?ep2 (snd (walk (Suc n)))"
+          using hsuc_fst hsuc_snd hv' by simp
+        ultimately show ?case by (by100 blast)
+      qed
+    qed
     \<comment> \<open>Walk visits at most card(V) distinct vertices. By pigeonhole: must revisit.\<close>
     have "\<exists>i j. i < j \<and> j \<le> card ?V \<and> fst (walk i) = fst (walk j)"
     proof (rule ccontr)
