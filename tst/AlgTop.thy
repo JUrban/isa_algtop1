@@ -4928,18 +4928,26 @@ next
      the component path u-to-v + cycle segment v-to-u forms a new SCC.
      By scc\\_in\\_sc\\_false (SC of T + SCC + identity retraction on the new cycle): False.\<close>
   \<comment> \<open>Define r: T \\<to> C using the coherent topology.\<close>
+  \<comment> \<open>For each non-cycle arc A, define target\\_A \\<in> C as the unique cycle attachment vertex
+     of A's connected component in the non-cycle subgraph.
+     For arcs directly touching C: target = shared vertex with C.
+     For other arcs: target = inherited from chain.\<close>
+  \<comment> \<open>Simpler approach: pick ANY endpoint of any adjacent cycle arc.
+     Every non-cycle arc has at least one endpoint shared with another arc.
+     Through the finite chain of arcs, eventually reach a cycle arc.\<close>
+  have hNC_finite: "finite (\<A> - set ws)" using hfin by (by100 blast)
+  \<comment> \<open>For each non-cycle arc A, choose target: a cycle vertex reachable from A through arcs.\<close>
+  define target :: "'a set \<Rightarrow> 'a" where
+    "target A = (SOME v. v \<in> ?C \<and> v \<in> A)" for A
+  \<comment> \<open>Define r: for x \\<in> cycle arc, r(x) = x. For x \\<in> non-cycle arc A, r(x) = target(A).\<close>
   define r :: "'a \<Rightarrow> 'a" where
-    "r x = (if x \<in> ?C then x else
-      (SOME v. v \<in> ?C \<and> (\<exists>A \<in> \<A> - set ws. x \<in> A \<and> v \<in> ?ep A)))" for x
-  have hr_on_C: "\<forall>x \<in> ?C. r x = x" unfolding r_def by (by100 simp)
-  have hr_range: "\<forall>x \<in> T. r x \<in> ?C" sorry
-  have hr_cont: "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) r" sorry
-  show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
-  proof (intro exI[of _ r] conjI)
-    show "?C \<subseteq> T" using hws_C_sub .
-    show "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) r" using hr_cont .
-    show "\<forall>a \<in> ?C. r a = a" using hr_on_C by (by100 blast)
-  qed
+    "r x = (if x \<in> ?C then x else target (SOME A. A \<in> \<A> - set ws \<and> x \<in> A))" for x
+  \<comment> \<open>r fixes C, maps T to C, and is continuous by coherent topology.
+     The key property: for each non-cycle arc A, r|A is continuous (constant).
+     And at shared vertices: if x \\<in> A \\<inter> B, r from A-side = r from B-side.
+     This holds because target is consistent at shared vertices.\<close>
+  show ?thesis sorry \<comment> \<open>Retraction: r well-defined + continuous + fixes C.
+     Needs unique-attachment property for consistency.\<close>
 qed
 
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
