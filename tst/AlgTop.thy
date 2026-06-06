@@ -4601,7 +4601,81 @@ lemma forest_euler_formula:
           (\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}) \<longrightarrow> False"
       and hne: "\<A> \<noteq> {}"
   shows "card (top1_graph_vertex_set T TT \<A>) \<ge> card \<A> + 1"
-  sorry \<comment> \<open>Forest Euler: induction on card(\\<A>). Each arc is a bridge (acyclic), split+IH.\<close>
+proof -
+  \<comment> \<open>Proof by induction on card(\\<A>). In the step case, pick any arc A0.
+     Since the graph is acyclic, A0 is a bridge: removing it splits the vertex set.
+     Each side has at least one more vertex than arcs (by IH on each component).
+     Together: V \\<ge> (E1+1) + (E2+1) = (E-1)+2 = E+1.\<close>
+  let ?V = "top1_graph_vertex_set T TT \<A>"
+  let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
+  \<comment> \<open>Each arc has exactly 2 endpoints.\<close>
+  have h2ep: "\<forall>A0\<in>\<A>. \<exists>a0 b0. a0 \<noteq> b0 \<and> ?ep A0 = {a0, b0}"
+  proof (intro ballI)
+    fix A0 assume "A0 \<in> \<A>"
+    have "A0 \<subseteq> T" "top1_is_arc_on A0 (subspace_topology T TT A0)"
+      using harcs \<open>A0 \<in> \<A>\<close> by (by100 blast)+
+    then obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+      unfolding top1_is_arc_on_def by (by100 blast)
+    have "?ep A0 = {h 0, h 1}"
+      by (rule arc_endpoints_are_boundary[OF hstrict hhaus \<open>A0 \<subseteq> T\<close> \<open>top1_is_arc_on A0 _\<close> hh])
+    moreover have "h 0 \<noteq> h 1"
+    proof
+      assume "h 0 = h 1"
+      have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+      from inj_onD[OF this \<open>h 0 = h 1\<close>] show False unfolding top1_unit_interval_def by (by100 auto)
+    qed
+    ultimately show "\<exists>a0 b0. a0 \<noteq> b0 \<and> ?ep A0 = {a0, b0}" by (by100 blast)
+  qed
+  have hep_fin: "\<forall>A0\<in>\<A>. finite (?ep A0)" using h2ep by (by100 force)
+  have hV_fin: "finite ?V" unfolding top1_graph_vertex_set_def using hfin hep_fin by (by100 blast)
+  have hep_card: "\<forall>A0\<in>\<A>. card (?ep A0) = 2"
+  proof (intro ballI)
+    fix A0 assume "A0 \<in> \<A>"
+    from h2ep[rule_format, OF this] obtain a0 b0 where "a0 \<noteq> b0" "?ep A0 = {a0, b0}" by (by100 blast)
+    thus "card (?ep A0) = 2" using \<open>a0 \<noteq> b0\<close> by (by100 simp)
+  qed
+  \<comment> \<open>Use double counting: sum of endpoint cardinalities = 2 * card(\\<A>).\<close>
+  have "?V = (\<Union>A\<in>\<A>. ?ep A)" unfolding top1_graph_vertex_set_def by (by100 blast)
+  have hsum: "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A}) = 2 * card \<A>"
+  proof -
+    from double_counting_sum[OF hfin hep_fin \<open>?V = (\<Union>A\<in>\<A>. ?ep A)\<close>]
+    have "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A}) = (\<Sum>A\<in>\<A>. card (?ep A))" .
+    also have "\<dots> = (\<Sum>A\<in>\<A>. 2)" using hep_card by simp
+    also have "\<dots> = 2 * card \<A>" by simp
+    finally show ?thesis .
+  qed
+  \<comment> \<open>Key: every vertex has degree \\<ge> 1 (it is an endpoint of some arc).\<close>
+  have hdeg_pos: "\<forall>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<ge> 1"
+  proof (intro ballI)
+    fix v assume "v \<in> ?V"
+    then obtain A0 where "A0 \<in> \<A>" "v \<in> ?ep A0"
+      unfolding top1_graph_vertex_set_def by (by100 blast)
+    hence "{A0} \<subseteq> {A \<in> \<A>. v \<in> ?ep A}" by (by100 blast)
+    moreover have hfin_deg: "finite {A \<in> \<A>. v \<in> ?ep A}" using hfin by (by100 simp)
+    ultimately have "card {A0} \<le> card {A \<in> \<A>. v \<in> ?ep A}"
+      using card_mono by (by100 blast)
+    thus "card {A \<in> \<A>. v \<in> ?ep A} \<ge> 1" by simp
+  qed
+  \<comment> \<open>Sum of degrees \\<ge> V (each degree \\<ge> 1). Combined with sum = 2E:
+     2E \\<ge> V, so E \\<ge> V/2. But we want V \\<ge> E+1.
+     This doesn't directly give what we want. Need stronger argument using acyclicity.
+     Use: acyclic \\<Rightarrow> at most V-1 arcs. Proof: induction on E, bridge removal.\<close>
+  \<comment> \<open>Direct proof: acyclic \\<Rightarrow> card(\\<A>) \\<le> card(?V) - 1.
+     By contradiction: if card(\\<A>) \\<ge> card(?V), then by pigeonhole, some vertex has degree \\<ge> 2.
+     Actually this doesn't immediately help. Use the bridge argument instead.\<close>
+  \<comment> \<open>First show: acyclic \\<Rightarrow> some vertex has degree \\<le> 1 (i.e., a leaf exists).
+     Proof: if no leaf (all degrees \\<ge> 2), construct walk. Walk never revisits vertex
+     (revisiting would create cycle, contradicting acyclicity). Finite \\<Rightarrow> walk must stop.
+     But degree \\<ge> 2 means walk never stops. Contradiction.\<close>
+  have "\<exists>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<le> 1"
+    sorry \<comment> \<open>Walk+pigeonhole+acyclicity: no leaf \\<Rightarrow> walk \\<Rightarrow> vertex revisit \\<Rightarrow> cycle. Combinatorial.\<close>
+  \<comment> \<open>From the leaf, do induction on card(\\<A>) to get V \\<ge> E + 1.
+     Base (card=1): V = 2 \\<ge> 2 = 1+1.
+     Step (card\\<ge>2): remove the leaf arc. The remaining graph is still acyclic.
+     By IH: V(remaining) \\<ge> E(remaining) + 1.
+     The leaf vertex adds 1 to V without adding to E. So V \\<ge> E + 1.\<close>
+  show ?thesis sorry \<comment> \<open>Leaf induction: remove leaf, apply IH. Needs topological leaf removal infrastructure.\<close>
+qed
 
 
 \<comment> \<open>Topological bridge: leaf existence in SC graphs with coherent topology.
@@ -4699,21 +4773,85 @@ proof (rule ccontr)
     hence "a0 \<in> ?V" unfolding top1_graph_vertex_set_def using \<open>A0 \<in> \<A>\<close> by (by100 blast)
     thus ?thesis using that by (by100 blast)
   qed
-  \<comment> \<open>Step 4: Walk + pigeonhole \\<Rightarrow> cycle of arcs. Then sc\\_graph\\_no\\_cycle \\<Rightarrow> False.
-     Walk construction (Munkres 84.2): start at x0, take non-backtracking steps.
-     Pigeonhole on directed arcs (at most 2*card(\\<A>)) gives a repeated directed arc.
-     Between the two uses: a cycle of distinct arcs.
-     sc\\_graph\\_no\\_cycle gives the contradiction.\<close>
-  \<comment> \<open>Construct a cycle of \\<ge> 2 distinct arcs forming a closed walk.
-     This is the combinatorial walk+pigeonhole argument.
-     Using hshared: at each vertex, there is always a different arc to take.\<close>
-  obtain ws :: "'a set list" where hcyc_len: "length ws \<ge> 2"
-      and hcyc_dist: "distinct ws" and hcyc_sub: "set ws \<subseteq> \<A>"
-      and hcyc_adj: "\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}"
-    sorry \<comment> \<open>Walk + pigeonhole: all degrees \\<ge> 2 + finite + connected \\<Rightarrow> cycle exists\<close>
-  from sc_graph_no_cycle[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
-      hcyc_len hcyc_dist hcyc_sub hcyc_adj]
-  show False .
+  \<comment> \<open>Step 4: Case split on acyclicity.
+     Case A (acyclic): forest\\_euler\\_formula gives V \\<ge> E + 1. But degree sum = 2E \\<ge> 2V
+     gives E \\<ge> V. So E \\<ge> V \\<ge> E + 1, contradiction.
+     Case B (has cycle): sc\\_graph\\_no\\_cycle gives \\<bottom> directly.\<close>
+  show False
+  proof (cases "\<exists>ws :: 'a set list. length ws \<ge> 2 \<and> distinct ws \<and> set ws \<subseteq> \<A> \<and>
+      (\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {})")
+    case True \<comment> \<open>Case B: has a cycle.\<close>
+    then obtain ws :: "'a set list" where "length ws \<ge> 2" "distinct ws" "set ws \<subseteq> \<A>"
+        "\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}" by (by100 blast)
+    from sc_graph_no_cycle[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
+        this(1) this(2) this(3) this(4)]
+    show False .
+  next
+    case False \<comment> \<open>Case A: acyclic (no cycle of distinct arcs).\<close>
+    hence hacyclic: "\<forall>ws :: 'a set list. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> \<A> \<longrightarrow>
+        (\<forall>i < length ws. ws ! i \<inter> ws ! ((i + 1) mod length ws) \<noteq> {}) \<longrightarrow> False"
+      by (by100 blast)
+    \<comment> \<open>Forest Euler: V \\<ge> E + 1.\<close>
+    have hne_A: "\<A> \<noteq> {}" using assms(6) by (by100 force)
+    from forest_euler_formula[OF assms(2) assms(3) assms(4) assms(5) hstrict hhaus hacyclic hne_A]
+    have hV_ge: "card ?V \<ge> card \<A> + 1" .
+    \<comment> \<open>Degree counting: all degrees \\<ge> 2 gives 2E \\<ge> 2V, so E \\<ge> V.\<close>
+    have hep_card: "\<forall>A0\<in>\<A>. card (top1_arc_endpoints_on A0 (subspace_topology T TT A0)) = 2"
+    proof (intro ballI)
+      fix A0 assume "A0 \<in> \<A>"
+      from h2ep[rule_format, OF this]
+      obtain a0 b0 where "a0 \<noteq> b0" "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {a0, b0}"
+        by (by100 blast)
+      thus "card (top1_arc_endpoints_on A0 (subspace_topology T TT A0)) = 2"
+        using \<open>a0 \<noteq> b0\<close> by (by100 simp)
+    qed
+    have hsum: "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}) = 2 * card \<A>"
+    proof -
+      let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
+      have "?V = (\<Union>A\<in>\<A>. ?ep A)" unfolding top1_graph_vertex_set_def by (by100 blast)
+      from double_counting_sum[OF assms(5) hep_fin this]
+      have "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A}) = (\<Sum>A\<in>\<A>. card (?ep A))" .
+      also have "\<dots> = (\<Sum>A\<in>\<A>. 2)" using hep_card by simp
+      also have "\<dots> = 2 * card \<A>" by simp
+      finally show ?thesis .
+    qed
+    have hdeg_ge2: "\<forall>v\<in>?V. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} \<ge> 2"
+    proof (intro ballI)
+      fix v assume "v \<in> ?V"
+      then obtain A0 where hA0: "A0 \<in> \<A>" "v \<in> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        unfolding top1_graph_vertex_set_def by (by100 blast)
+      from hshared[rule_format, OF hA0(1) hA0(2)]
+      obtain B0 where hB0: "B0 \<in> \<A>" "B0 \<noteq> A0" "v \<in> B0" by (by100 blast)
+      have "v \<in> top1_arc_endpoints_on B0 (subspace_topology T TT B0)"
+      proof -
+        have "v \<in> A0 \<inter> B0" using hA0(2) hB0(3) unfolding top1_arc_endpoints_on_def by (by100 blast)
+        have "A0 \<noteq> B0" using hB0(2) by simp
+        from assms(4)[rule_format, OF hA0(1) hB0(1) \<open>A0 \<noteq> B0\<close>]
+        have "A0 \<inter> B0 \<subseteq> top1_arc_endpoints_on B0 (subspace_topology T TT B0)" by (by100 blast)
+        thus ?thesis using \<open>v \<in> A0 \<inter> B0\<close> by (by100 blast)
+      qed
+      have "{A0, B0} \<subseteq> {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+        using hA0 hB0(1) \<open>v \<in> top1_arc_endpoints_on B0 _\<close> by (by100 blast)
+      moreover have "finite {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+        using assms(5) by (by100 simp)
+      moreover have "card {A0, B0} = 2" using hB0(2) by (by100 simp)
+      ultimately have "card {A0, B0} \<le> card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}"
+        using card_mono by (by100 blast)
+      thus "card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} \<ge> 2"
+        using \<open>card {A0, B0} = 2\<close> by linarith
+    qed
+    \<comment> \<open>Sum of degrees \\<ge> 2V, but sum = 2E. So 2E \\<ge> 2V, E \\<ge> V.\<close>
+    have "2 * card \<A> \<ge> 2 * card ?V"
+    proof -
+      have "(\<Sum>v\<in>?V. card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)}) \<ge> (\<Sum>v\<in>?V. 2)"
+        by (rule sum_mono) (use hdeg_ge2 in auto)
+      thus ?thesis using hsum by simp
+    qed
+    hence "card \<A> \<ge> card ?V" by linarith
+    \<comment> \<open>But forest Euler gives V \\<ge> E + 1. So E \\<ge> V \\<ge> E + 1. Contradiction.\<close>
+    hence "card \<A> \<ge> card \<A> + 1" using hV_ge by linarith
+    thus False by linarith
+  qed
 qed
 
 \<comment> \<open>Combined Euler + leaf lemma for finite trees, proved by induction on card \\<A>.
