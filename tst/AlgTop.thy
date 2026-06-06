@@ -7537,8 +7537,11 @@ proof (rule ccontr)
       have hp_not_vertex: "p \<notin> top1_graph_vertex_set T TT \<A>"
         sorry \<comment> \<open>p is interior to arcA, not in any arc's endpoints.\<close>
       have hp_sub: "{p} \<subseteq> T" using hp_in harcA_sub by (by100 blast)
+      have "finite {p}" by (by100 simp)
+      have "\<forall>pp \<in> {p}. pp \<notin> top1_graph_vertex_set T TT \<A>"
+        using hp_not_vertex by (by100 simp)
       from graph_iterated_subdivision_exists[OF hstrict hhaus assms(2) assms(3) assms(4) assms(5)
-          _ hp_sub _]
+          \<open>finite {p}\<close> hp_sub \<open>\<forall>pp \<in> {p}. pp \<notin> top1_graph_vertex_set T TT \<A>\<close>]
       obtain \<A>' where h\<A>': "(\<forall>A\<in>\<A>'. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A))"
           "\<Union>\<A>' = T"
           "(\<forall>A\<in>\<A>'. \<forall>B\<in>\<A>'. A \<noteq> B \<longrightarrow>
@@ -7546,7 +7549,7 @@ proof (rule ccontr)
              \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
              \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2)"
           "finite \<A>'"
-        sorry \<comment> \<open>Instantiation of graph\\_iterated\\_subdivision\\_exists with P = {p}.\<close>
+        by (by100 blast)
       have h\<A>'_coh: "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
           (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
         using graph_coherent_any_decomposition[OF hgraph h\<A>'(1) h\<A>'(2) h\<A>'(3) h\<A>'(4)]
