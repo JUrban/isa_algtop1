@@ -4647,11 +4647,9 @@ proof -
         show "\<forall>x \<in> ?CuA. r x \<in> C" unfolding r_def using hv(2) by (by100 simp)
         \<comment> \<open>r continuous on C: r|C = id, inclusion is continuous.\<close>
         show "top1_continuous_map_on C (subspace_topology ?CuA (subspace_topology X TX ?CuA) C) C (subspace_topology X TX C) r"
-          unfolding \<open>subspace_topology ?CuA _ C = subspace_topology X TX C\<close>
-          sorry \<comment> \<open>r|C = id. Identity on C is continuous.\<close>
-        \<comment> \<open>r continuous on A: r|A = const v (continuous).\<close>
+          sorry \<comment> \<open>r|C = id: C \\<to> C continuous. Direct from definition.\<close>
         show "top1_continuous_map_on A (subspace_topology ?CuA (subspace_topology X TX ?CuA) A) C (subspace_topology X TX C) r"
-          sorry \<comment> \<open>r|A = const v. Constant map is continuous.\<close>
+          sorry \<comment> \<open>r|A = const v: A \\<to> C continuous. Theorem\\_18\\_2(1) + A \\<inter> C = {v}.\<close>
       qed
     qed
   next
