@@ -14928,38 +14928,47 @@ proof -
            Y1 is also a quotient of the relabeled scheme. Then scheme\\_quotient\\_uniqueness.\<close>
         have "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
           sorry \<comment> \<open>Same (P,q,vx,vy): relabeling in scheme conditions doesn't change q-fibres.\<close>
-        from scheme_quotient_uniqueness[OF hY1 hY2 this]
-        show ?thesis using relabel ht sorry
+        hence "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
+          using ht relabel by simp
+        from scheme_quotient_uniqueness[OF hY1 hY2 _ this]
+        show ?thesis sorry \<comment> \<open>Need quotient Y1 (relabeled scheme) as 3rd arg.\<close>
       next
         case (flip_label a)
         \<comment> \<open>Flipping orientations: same polygon, same q, flipped edge directions.
            Y1 is also a quotient of the flipped scheme.\<close>
         have "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) s)"
           sorry \<comment> \<open>Same (P,q,vx,vy): flipping direction of identification doesn't change fibres.\<close>
-        from scheme_quotient_uniqueness[OF hY1 hY2 this]
-        show ?thesis using flip_label ht sorry
+        moreover have "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) s)"
+          using ht flip_label by simp
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
       next
         case (cut_paste u1 a u2 u3)
         \<comment> \<open>Cut-and-repaste: \\<S>76 Theorem 76.1. Cut, flip, paste preserves quotient.\<close>
         have "top1_quotient_of_scheme_on Y1 TY1
             (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
           sorry \<comment> \<open>The cut-flip-paste gives a new polygon whose quotient is the same space Y1.\<close>
-        from scheme_quotient_uniqueness[OF hY1 hY2 this]
-        show ?thesis using cut_paste ht sorry
+        moreover have "top1_quotient_of_scheme_on Y2 TY2
+            (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+          using ht cut_paste by simp
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
       next
         case (cut_paste2 u0 a u1 u2 b)
         have "top1_quotient_of_scheme_on Y1 TY1
             ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
           sorry \<comment> \<open>The Figure 77.2 cut-flip-paste gives a new polygon whose quotient is Y1.\<close>
-        from scheme_quotient_uniqueness[OF hY1 hY2 this]
-        show ?thesis using cut_paste2 ht sorry
+        moreover have "top1_quotient_of_scheme_on Y2 TY2
+            ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+          using ht cut_paste2 by simp
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
       next
         case (cut_paste_opp u0 u1 a u2 u3)
         have "top1_quotient_of_scheme_on Y1 TY1
             (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
           sorry \<comment> \<open>Figure 77.3: move u1 from before a to after a⁻¹. Same polygon, same fibres.\<close>
-        from scheme_quotient_uniqueness[OF hY1 hY2 this]
-        show ?thesis using cut_paste_opp ht sorry
+        moreover have "top1_quotient_of_scheme_on Y2 TY2
+            (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+          using ht cut_paste_opp by simp
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
       qed
     qed
     from huniv[OF hop assms(1) assms(2) hs ht]
