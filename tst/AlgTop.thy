@@ -4660,9 +4660,64 @@ proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
       thus ?thesis by (by100 blast)
     qed
     \<comment> \<open>Compose retraction T \\<to> C \\<union> A0 with pasting retraction C \\<union> A0 \\<to> C.\<close>
-    show ?thesis sorry \<comment> \<open>Pasting retraction: id on C, const on A0.
-       Card(A0 \\<inter> C) \\<le> 2 from hA0C\\_sub\\_ep. If \\<le> 1: pasting lemma.
-       If = 2: double attachment contradicts tree (IH + scc\\_in\\_sc\\_false).\<close>
+    show ?thesis
+    proof (cases "\<exists>v. A0 \<inter> ?C \<subseteq> {v}")
+      case True
+      \<comment> \<open>A0 \\<inter> C has \\<le> 1 point. Pasting retraction.\<close>
+      have hC_ne: "?C \<noteq> {}"
+      proof -
+        have "ws \<noteq> []" using less.prems(8) by (by100 force)
+        then obtain B rest where "ws = B # rest" by (cases ws) (by100 simp)+
+        hence "B \<in> set ws" by (by100 simp)
+        have "B \<subseteq> T \<and> top1_is_arc_on B (subspace_topology T TT B)"
+          using less.prems(2)[rule_format, of B] less.prems(7) \<open>B \<in> set ws\<close> by (by100 blast)
+        then obtain g where "top1_homeomorphism_on I_set I_top B (subspace_topology T TT B) g"
+          unfolding top1_is_arc_on_def by (by100 blast)
+        hence "bij_betw g I_set B" unfolding top1_homeomorphism_on_def by (by100 blast)
+        hence "g ` I_set = B" unfolding bij_betw_def by (by100 blast)
+        have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        hence "g 0 \<in> B" using \<open>g ` I_set = B\<close> by (by100 blast)
+        thus ?thesis using \<open>B \<in> set ws\<close> by (by100 blast)
+      qed
+      obtain v where hv: "A0 \<inter> ?C \<subseteq> {v}" "v \<in> ?C"
+      proof (cases "A0 \<inter> ?C = {}")
+        case True
+        from hC_ne obtain w where "w \<in> ?C" by (by100 blast)
+        thus ?thesis using that True by (by100 blast)
+      next
+        case False
+        then obtain w where hw: "w \<in> A0 \<inter> ?C" by (by100 blast)
+        from True obtain v0 where hv0: "A0 \<inter> ?C \<subseteq> {v0}" by (by100 blast)
+        have "w = v0" using hw hv0 by (by100 blast)
+        hence "v0 \<in> ?C" using hw by (by100 blast)
+        thus ?thesis using that hv0 by (by100 blast)
+      qed
+      \<comment> \<open>Extract r1 from hret\\_ext, define r' on C \\<union> A0, compose.\<close>
+      from hret_ext obtain r1 where hr1: "top1_is_retraction_on T TT (?C \<union> A0) r1"
+        unfolding top1_retract_of_on_def by (by100 blast)
+      define r where "r x = (if r1 x \<in> ?C then r1 x else v)" for x
+      show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+      proof (intro exI[of _ r] conjI)
+        show "?C \<subseteq> T" using less.prems(9) by (by100 blast)
+        show "\<forall>a \<in> ?C. r a = a"
+        proof (intro ballI)
+          fix a assume "a \<in> ?C"
+          hence "a \<in> ?C \<union> A0" by (by100 blast)
+          hence "r1 a = a" using hr1 unfolding top1_is_retraction_on_def by (by100 blast)
+          hence "r1 a \<in> ?C" using \<open>a \<in> ?C\<close> by simp
+          thus "r a = a" unfolding r_def using \<open>r1 a = a\<close> by (by100 simp)
+        qed
+        show "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) r"
+          sorry \<comment> \<open>r = (if r1 x \\<in> C then r1 x else v). Continuous because r1 is continuous
+             and the "correction" only affects points in A0 \\ C, mapped to v \\<in> C.\<close>
+      qed
+    next
+      case False
+      \<comment> \<open>card(A0 \\<inter> C) = 2: double attachment. Derive False.\<close>
+      show ?thesis
+        sorry \<comment> \<open>A0 has both endpoints in C. This contradicts tree/SC property:
+           A0 + path in C forms SCC. IH gives retraction. scc\\_in\\_sc\\_false.\<close>
+    qed
   qed
 qed
 
