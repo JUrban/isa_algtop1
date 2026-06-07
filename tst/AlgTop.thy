@@ -15190,10 +15190,21 @@ proof -
     \<comment> \<open>If scheme\\_equiv to a normal form: Theorem 76 gives homeomorphism preservation.
        The normal form's quotient = the standard surface. So X \\<cong> standard surface.\<close>
     from hreduced show ?thesis
-      sorry \<comment> \<open>Case analysis on 3 normal forms. Each case:
-         1. scheme\\_equiv gives homeomorphism via Theorem\\_76 (iterated).
-         2. Standard surface = quotient of normal form scheme (by definition).
-         3. scheme\\_quotient\\_uniqueness gives X \\<cong> standard surface.\<close>
+    proof (elim disjE exE conjE)
+      \<comment> \<open>Case 1: scheme is empty (length 0) — gives S².\<close>
+      fix w assume "scheme = w" "\<forall>a\<in>set w. snd a" "length w = 0"
+      show ?thesis sorry
+    next
+      \<comment> \<open>Case 2: scheme \\<sim> torus normal form.\<close>
+      fix n w assume "n > 0" "top1_is_torus_scheme w n" "top1_scheme_equiv scheme w"
+      \<comment> \<open>X is quotient of scheme. scheme \\<sim> w. Theorem 76 (iterated) gives X \\<cong> quotient(w).
+         quotient(w) = quotient(torus\\_scheme n) = n-fold torus by definition.\<close>
+      show ?thesis sorry
+    next
+      \<comment> \<open>Case 3: scheme \\<sim> projective normal form.\<close>
+      fix m w assume "m > 0" "top1_is_projective_scheme w m" "top1_scheme_equiv scheme w"
+      show ?thesis sorry
+    qed
   qed
 qed
 
