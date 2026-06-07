@@ -4724,8 +4724,33 @@ proof -
     proof -
       \<comment> \<open>A \\<inter> C \\<subseteq> {h 0, h 1}, A \\<inter> C \\<noteq> {v} for any single v (from False), A \\<inter> C \\<noteq> {}.
          So A \\<inter> C = {h 0, h 1}.\<close>
+      have hh01_ne: "h 0 \<noteq> h 1"
+      proof
+        assume "h 0 = h 1"
+        have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def
+          by (by100 blast)
+        from inj_onD[OF this \<open>h 0 = h 1\<close>] show False
+          unfolding top1_unit_interval_def by (by100 auto)
+      qed
       have "A \<inter> C = {h 0, h 1}"
-        sorry \<comment> \<open>From False + hAC\\_sub\\_h + hmeet: card 2.\<close>
+      proof -
+        \<comment> \<open>v \\<in> A \\<inter> C, A \\<inter> C \\<subseteq> {h 0, h 1}, A \\<inter> C \\<noteq> {v}. So A \\<inter> C = {h 0, h 1}.\<close>
+        have "v \<in> {h 0, h 1}" using hv hAC_sub_h by (by100 blast)
+        from False have "A \<inter> C \<noteq> {v}" .
+        \<comment> \<open>Since v \\<in> A\\<inter>C, A\\<inter>C \\<noteq> {v}, there's another element w \\<in> A\\<inter>C, w \\<noteq> v.\<close>
+        then obtain w where "w \<in> A \<inter> C" "w \<noteq> v" using hv by (by100 blast)
+        hence "w \<in> {h 0, h 1}" using hAC_sub_h by (by100 blast)
+        \<comment> \<open>{v, w} \\<subseteq> A\\<inter>C, v \\<noteq> w, both in {h 0, h 1}. So {v,w} = {h 0, h 1}.\<close>
+        have "{v, w} \<subseteq> A \<inter> C" using hv \<open>w \<in> A \<inter> C\<close> by (by100 blast)
+        have "{v, w} \<subseteq> {h 0, h 1}" using \<open>v \<in> {h 0, h 1}\<close> \<open>w \<in> {h 0, h 1}\<close> by (by100 blast)
+        have "card {v, w} = 2" using \<open>w \<noteq> v\<close> by (by100 simp)
+        have "card {h 0, h 1} = 2" using hh01_ne by (by100 simp)
+        from card_subset_eq[of "{h 0, h 1}" "{v, w}"]
+        have "{v, w} = {h 0, h 1}" using \<open>{v, w} \<subseteq> {h 0, h 1}\<close> \<open>card {v, w} = 2\<close>
+            \<open>card {h 0, h 1} = 2\<close> by (by100 auto)
+        hence "{h 0, h 1} \<subseteq> A \<inter> C" using \<open>{v, w} \<subseteq> A \<inter> C\<close> by simp
+        thus "A \<inter> C = {h 0, h 1}" using hAC_sub_h by (by100 blast)
+      qed
       thus "h 0 \<in> C" "h 1 \<in> C" by (by100 blast)+
     qed
     \<comment> \<open>Get path \\<gamma> in C from h 0 to h 1 (C is path-connected).\<close>
