@@ -7580,7 +7580,7 @@ proof (rule ccontr)
         have hsub: "{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB" using hvi_inter hvsi_inter by (by100 blast)
         have "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
         from card_subset_eq[OF hAB_fin hsub] \<open>card (?arcA \<inter> ?arcB) = 2\<close> \<open>card {?vi, ?vsi} = 2\<close>
-        show ?thesis sorry \<comment> \<open>card\\_subset\\_eq: finite S, T \\<subseteq> S, card T = card S \\<Rightarrow> T = S.\<close>
+        show ?thesis by (by100 auto)
       qed
       \<comment> \<open>ep(arcA) and ep(arcB) both equal {vi, vsi}: each has card 2 and contains {vi, vsi}.\<close>
       have hep_arcA: "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {?vi, ?vsi}"
@@ -7588,31 +7588,43 @@ proof (rule ccontr)
         have hsup: "{?vi, ?vsi} \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
           using hAB_inter_sub hAB_eq by (by100 blast)
         have "finite (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA))"
-          sorry \<comment> \<open>Endpoints of an arc are finite (they form a 2-element set).\<close>
+          using hep_fin harcA_in by (by100 blast)
         have "card (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)) = 2"
-          sorry \<comment> \<open>From h2ep and harcA\\_in.\<close>
+        proof -
+          from h2ep[rule_format, OF harcA_in]
+          obtain a0 b0 where "a0 \<noteq> b0"
+              "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {a0, b0}"
+            by (by100 blast)
+          thus ?thesis using \<open>a0 \<noteq> b0\<close> by (by100 simp)
+        qed
         have "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
         from card_subset_eq[OF \<open>finite (top1_arc_endpoints_on ?arcA _)\<close> hsup]
             \<open>card _ = 2\<close> \<open>card {?vi, ?vsi} = 2\<close>
-        show ?thesis sorry
+        show ?thesis by (by100 auto)
       qed
       have hep_arcB: "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {?vi, ?vsi}"
       proof -
         have hsup: "{?vi, ?vsi} \<subseteq> top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)"
           using hAB_inter_subB hAB_eq by (by100 blast)
         have "finite (top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB))"
-          sorry
+          using hep_fin harcB_in by (by100 blast)
         have "card (top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)) = 2"
-          sorry
+        proof -
+          from h2ep[rule_format, OF harcB_in]
+          obtain a0 b0 where "a0 \<noteq> b0"
+              "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {a0, b0}"
+            by (by100 blast)
+          thus ?thesis using \<open>a0 \<noteq> b0\<close> by (by100 simp)
+        qed
         have "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
         from card_subset_eq[OF \<open>finite (top1_arc_endpoints_on ?arcB _)\<close> hsup]
             \<open>card _ = 2\<close> \<open>card {?vi, ?vsi} = 2\<close>
-        show ?thesis sorry
+        show ?thesis by (by100 auto)
       qed
       \<comment> \<open>Step 1: arcA \\<union> arcB is a simple closed curve.\<close>
       have hSCC: "top1_simple_closed_curve_on T TT (?arcA \<union> ?arcB)"
-        sorry \<comment> \<open>arcs\\_form\\_simple\\_closed\\_curve[OF hstrict hhaus harcA\\_arc harcA\\_sub
-               harcB\\_arc harcB\\_sub hAB\\_eq hvi\\_ne hep\\_arcA hep\\_arcB].\<close>
+        by (rule arcs_form_simple_closed_curve[OF hstrict hhaus harcA_arc harcA_sub
+               harcB_arc harcB_sub hAB_eq hvi_ne hep_arcA hep_arcB])
       \<comment> \<open>Step 2: T retracts onto arcA \\<union> arcB (via graph\\_cycle\\_retract with ws = [arcA, arcB]).\<close>
       have hretract: "top1_retract_of_on T TT (?arcA \<union> ?arcB)"
       proof -
@@ -7623,7 +7635,7 @@ proof (rule ccontr)
         have hws2_eq: "\<Union>(set ?ws2) = ?arcA \<union> ?arcB" by (by100 simp)
         from graph_cycle_retract[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
             hws2_sub hws2_len hws2_T]
-        show ?thesis using hws2_eq sorry
+        show ?thesis using hws2_eq by (by100 simp)
       qed
       \<comment> \<open>Step 3: SC + SCC retract \\<Rightarrow> False.\<close>
       have hSC: "top1_simply_connected_on T TT"
