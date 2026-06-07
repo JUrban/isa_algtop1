@@ -15028,7 +15028,7 @@ proof -
       "\<forall>U. U \<subseteq> X \<longrightarrow>
           (U \<in> TX \<longleftrightarrow> (\<forall>T\<in>\<T>. {p\<in>T. q_tri p \<in> U} \<in>
               subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T))"
-    sorry
+    sorry \<comment> \<open>Unpack existential from Theorem\\_78\\_1.\<close>
   \<comment> \<open>Step 2: Iteratively paste triangles along shared edges using Theorem 76.1 (\\<S>76).
      Book proof: "As long as two regions have edges bearing the same label, we can
      paste them together. Eventually either one has a single polygon (theorem proved)
