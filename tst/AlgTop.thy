@@ -13739,6 +13739,89 @@ definition top1_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<tim
 
 section \<open>\<S>76 Cutting and Pasting\<close>
 
+\<comment> \<open>Quotient uniqueness: two quotient maps on the same space with the same fibres
+   give homeomorphic quotient spaces. Follows from Theorem 22.2 applied both ways.\<close>
+lemma quotient_same_fibres_homeomorphic:
+  fixes X :: "'a set" and TX :: "'a set set"
+    and Y1 :: "'b set" and TY1 :: "'b set set"
+    and Y2 :: "'c set" and TY2 :: "'c set set"
+  assumes hp1: "top1_quotient_map_on X TX Y1 TY1 p1"
+      and hp2: "top1_quotient_map_on X TX Y2 TY2 p2"
+      and hfibres: "\<forall>x\<in>X. \<forall>y\<in>X. (p1 x = p1 y) \<longleftrightarrow> (p2 x = p2 y)"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+proof -
+  \<comment> \<open>p2 is constant on fibres of p1 (from hfibres).\<close>
+  have hp2_range: "\<forall>x\<in>X. p2 x \<in> Y2"
+    using hp2 unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
+  have hp2_const: "\<forall>x\<in>X. \<forall>y\<in>X. p1 x = p1 y \<longrightarrow> p2 x = p2 y"
+    using hfibres by (by100 blast)
+  \<comment> \<open>By Theorem 22.2: p2 factors through p1 as f: Y1 \\<to> Y2.\<close>
+  from Theorem_22_2[OF hp1 hp2_range hp2_const]
+  obtain f where hf_range: "\<forall>y\<in>Y1. f y \<in> Y2"
+      and hf_comp: "\<forall>x\<in>X. f (p1 x) = p2 x"
+      and hf_cont_iff: "top1_continuous_map_on Y1 TY1 Y2 TY2 f \<longleftrightarrow> top1_continuous_map_on X TX Y2 TY2 p2"
+      and hf_quot_iff: "top1_quotient_map_on Y1 TY1 Y2 TY2 f \<longleftrightarrow> top1_quotient_map_on X TX Y2 TY2 p2"
+    by (by100 blast)
+  \<comment> \<open>Similarly p1 factors through p2 as g: Y2 \\<to> Y1.\<close>
+  have hp1_range: "\<forall>x\<in>X. p1 x \<in> Y1"
+    using hp1 unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
+  have hp1_const: "\<forall>x\<in>X. \<forall>y\<in>X. p2 x = p2 y \<longrightarrow> p1 x = p1 y"
+    using hfibres by (by100 blast)
+  from Theorem_22_2[OF hp2 hp1_range hp1_const]
+  obtain g where hg_range: "\<forall>y\<in>Y2. g y \<in> Y1"
+      and hg_comp: "\<forall>x\<in>X. g (p2 x) = p1 x"
+      and hg_cont_iff: "top1_continuous_map_on Y2 TY2 Y1 TY1 g \<longleftrightarrow> top1_continuous_map_on X TX Y1 TY1 p1"
+      and hg_quot_iff: "top1_quotient_map_on Y2 TY2 Y1 TY1 g \<longleftrightarrow> top1_quotient_map_on X TX Y1 TY1 p1"
+    by (by100 blast)
+  \<comment> \<open>f is a quotient map (since p2 is).\<close>
+  have hf_quot: "top1_quotient_map_on Y1 TY1 Y2 TY2 f"
+    using hf_quot_iff hp2 by simp
+  \<comment> \<open>f is bijective: injective (from g \\<circ> f = id on Y1) and surjective (quotient maps are surjective).\<close>
+  have hf_surj: "f ` Y1 = Y2"
+  proof -
+    have "p2 ` X = Y2" using hp2 unfolding top1_quotient_map_on_def by (by100 blast)
+    have "p1 ` X = Y1" using hp1 unfolding top1_quotient_map_on_def by (by100 blast)
+    show ?thesis
+    proof
+      show "f ` Y1 \<subseteq> Y2" using hf_range by (by100 blast)
+    next
+      show "Y2 \<subseteq> f ` Y1"
+      proof
+        fix y2 assume "y2 \<in> Y2"
+        hence "\<exists>x\<in>X. p2 x = y2" using \<open>p2 ` X = Y2\<close> by (by100 blast)
+        then obtain x where "x \<in> X" "p2 x = y2" by (by100 blast)
+        hence "f (p1 x) = y2" using hf_comp by simp
+        moreover have "p1 x \<in> Y1" using hp1_range \<open>x \<in> X\<close> by (by100 blast)
+        ultimately show "y2 \<in> f ` Y1" by (by100 blast)
+      qed
+    qed
+  qed
+  have hgf_id: "\<forall>y\<in>Y1. g (f y) = y"
+  proof
+    fix y1 assume "y1 \<in> Y1"
+    have "p1 ` X = Y1" using hp1 unfolding top1_quotient_map_on_def by (by100 blast)
+    then obtain x where "x \<in> X" "p1 x = y1" using \<open>y1 \<in> Y1\<close> by (by100 blast)
+    have "f y1 = f (p1 x)" using \<open>p1 x = y1\<close> by simp
+    also have "\<dots> = p2 x" using hf_comp \<open>x \<in> X\<close> by simp
+    finally have "f y1 = p2 x" .
+    hence "g (f y1) = g (p2 x)" by simp
+    also have "\<dots> = p1 x" using hg_comp \<open>x \<in> X\<close> by simp
+    finally show "g (f y1) = y1" using \<open>p1 x = y1\<close> by simp
+  qed
+  have hf_inj: "inj_on f Y1"
+  proof (rule inj_onI)
+    fix y1 y1' assume "y1 \<in> Y1" "y1' \<in> Y1" "f y1 = f y1'"
+    have "g (f y1) = y1" using hgf_id \<open>y1 \<in> Y1\<close> by simp
+    have "g (f y1') = y1'" using hgf_id \<open>y1' \<in> Y1\<close> by simp
+    from \<open>f y1 = f y1'\<close> have "g (f y1) = g (f y1')" by simp
+    thus "y1 = y1'" using \<open>g (f y1) = y1\<close> \<open>g (f y1') = y1'\<close> by simp
+  qed
+  have "bij_betw f Y1 Y2" unfolding bij_betw_def using hf_inj hf_surj by simp
+  \<comment> \<open>Bijective quotient map = homeomorphism.\<close>
+  from top1_bij_quotient_map_on_imp_homeomorphism_on[OF hf_quot this]
+  show ?thesis by (by100 blast)
+qed
+
 (** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
     If X1 is the quotient space induced by scheme1 and X2 by scheme2, and scheme2
     is obtained from scheme1 via an elementary operation, then X1 \<cong> X2. **)
