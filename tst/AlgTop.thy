@@ -6506,7 +6506,16 @@ proof (rule ccontr)
       have hvi_inter: "?vi \<in> ?arcA \<inter> ?arcB" using hvi_inA hvi_inB by (by100 blast)
       have hvsi_inter: "?vsi \<in> ?arcA \<inter> ?arcB" using hvsi_inA hvsi_inB by (by100 blast)
       have hAB_eq: "?arcA \<inter> ?arcB = {?vi, ?vsi}"
-        sorry \<comment> \<open>card\\_subset\\_eq: {vi,vsi} \\<subseteq> A\\<inter>B, card(A\\<inter>B) \\<le> 2, card{vi,vsi}=2, finite.\<close>
+      proof -
+        have hsub: "{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB" using hvi_inter hvsi_inter by (by100 blast)
+        have hfin: "finite (?arcA \<inter> ?arcB)" using hAB_props by (by100 blast)
+        have "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
+        have "card (?arcA \<inter> ?arcB) \<ge> 2"
+          using card_mono[OF hfin hsub] \<open>card {?vi, ?vsi} = 2\<close> by linarith
+        have hAB_card2: "card (?arcA \<inter> ?arcB) = 2" using hAB_props \<open>card (?arcA \<inter> ?arcB) \<ge> 2\<close> by linarith
+        from card_subset_eq[OF hfin hsub] hAB_card2 \<open>card {?vi, ?vsi} = 2\<close>
+        show ?thesis by (by100 auto)
+      qed
       have hep_arcA: "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {?vi, ?vsi}"
         sorry \<comment> \<open>ep(A) \\<supseteq> {vi,vsi} (from A\\<inter>B \\<subseteq> ep(A) + hAB\\_eq), card(ep)=2.\<close>
       have hep_arcB: "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {?vi, ?vsi}"
