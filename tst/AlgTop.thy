@@ -6499,12 +6499,18 @@ proof (rule ccontr)
         using assms(2) harcA_in by (by100 blast)
       have harcB_arc: "top1_is_arc_on ?arcB (subspace_topology T TT ?arcB)"
         using assms(2) harcB_in by (by100 blast)
+      have hAB_props: "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)
+          \<and> ?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)
+          \<and> finite (?arcA \<inter> ?arcB) \<and> card (?arcA \<inter> ?arcB) \<le> 2"
+        using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] by (by100 blast)
+      have hvi_inter: "?vi \<in> ?arcA \<inter> ?arcB" using hvi_inA hvi_inB by (by100 blast)
+      have hvsi_inter: "?vsi \<in> ?arcA \<inter> ?arcB" using hvsi_inA hvsi_inB by (by100 blast)
       have hAB_eq: "?arcA \<inter> ?arcB = {?vi, ?vsi}"
-        sorry \<comment> \<open>From graph conditions: card(A \\<inter> B) \\<le> 2, {vi,vsi} \\<subseteq> A \\<inter> B, vi \\<noteq> vsi.\<close>
+        sorry \<comment> \<open>card\\_subset\\_eq: {vi,vsi} \\<subseteq> A\\<inter>B, card(A\\<inter>B) \\<le> 2, card{vi,vsi}=2, finite.\<close>
       have hep_arcA: "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {?vi, ?vsi}"
-        sorry \<comment> \<open>A \\<inter> B \\<subseteq> ep(A), {vi,vsi} \\<subseteq> ep(A), card(ep) = 2.\<close>
+        sorry \<comment> \<open>ep(A) \\<supseteq> {vi,vsi} (from A\\<inter>B \\<subseteq> ep(A) + hAB\\_eq), card(ep)=2.\<close>
       have hep_arcB: "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {?vi, ?vsi}"
-        sorry \<comment> \<open>Same for B.\<close>
+        sorry \<comment> \<open>Same via A\\<inter>B \\<subseteq> ep(B).\<close>
       have hSCC: "top1_simple_closed_curve_on T TT (?arcA \<union> ?arcB)"
         by (rule arcs_form_simple_closed_curve[OF hstrict hhaus harcA_arc harcA_sub
                harcB_arc harcB_sub hAB_eq hvi_ne hep_arcA hep_arcB])
