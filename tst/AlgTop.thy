@@ -4758,7 +4758,27 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
             using subspace_topology_trans[OF \<open>A0 \<subseteq> \<Union>?\<S>'\<close>] by simp
           \<comment> \<open>A0 is pc in subspace T TT A0 (arc = homeo to [0,1] = pc).\<close>
           have "top1_path_connected_on A0 (subspace_topology T TT A0)"
-            sorry \<comment> \<open>Arc is path-connected: homeo to [0,1], which is pc.\<close>
+          proof (rule connected_locally_path_connected_imp_path_connected)
+            have htop_T: "is_topology_on T TT"
+              using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+                is_topology_on_strict_def by (by100 blast)
+            show "is_topology_on A0 (subspace_topology T TT A0)"
+              by (rule subspace_topology_is_topology_on[OF htop_T \<open>A0 \<subseteq> T\<close>])
+            have hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)"
+              using less.prems(2) hA0(1) by (by100 blast)
+            show "top1_connected_on A0 (subspace_topology T TT A0)"
+              using arc_connected[OF hA0_arc] .
+            show "top1_locally_path_connected_on A0 (subspace_topology T TT A0)"
+              using arc_locally_path_connected[OF hA0_arc htop_T \<open>A0 \<subseteq> T\<close>] .
+            show "A0 \<noteq> {}"
+            proof -
+              obtain g where "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) g"
+                using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+              hence "bij_betw g I_set A0" unfolding top1_homeomorphism_on_def by (by100 blast)
+              hence "A0 \<noteq> {}" unfolding bij_betw_def top1_unit_interval_def by (by100 auto)
+              thus ?thesis .
+            qed
+          qed
           thus ?thesis using \<open>A = A0\<close> \<open>subspace_topology _ _ A0 = _\<close> by simp
         qed
       qed
