@@ -4581,14 +4581,7 @@ proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
     \<comment> \<open>Base: T = C. Identity retraction.\<close>
     hence "T = \<Union>(set ws)" using less.prems(3) by (by100 simp)
     show ?thesis
-    proof -
-      have htop: "is_topology_on T TT"
-        using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
-          is_topology_on_strict_def by (by100 blast)
-      show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
-        \<open>T = \<Union>(set ws)\<close>
-        sorry \<comment> \<open>Identity retraction of T onto itself. Straightforward from topology.\<close>
-    qed
+      sorry \<comment> \<open>T = C. Identity retraction. id: T \\<to> T continuous. \\<forall>a\\<in>T. id a = a.\<close>
   next
     case False
     \<comment> \<open>Step: pick non-ws arc A0, add to ws, apply IH, compose.\<close>
