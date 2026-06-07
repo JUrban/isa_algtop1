@@ -7057,7 +7057,25 @@ proof -
       then obtain A0 where h\<A>_eq: "\<A> = {A0}"
         using card_1_singletonE hfin' by (by100 metis)
       have "card ?V = 2"
-        sorry \<comment> \<open>Single arc A0 has 2 distinct endpoints. V = ep(A0). card = 2.\<close>
+      proof -
+        have "A0 \<in> \<A>" using h\<A>_eq by simp
+        have hA0_sub: "A0 \<subseteq> T" and hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)"
+          using harcs'[rule_format, OF \<open>A0 \<in> \<A>\<close>] by (by100 blast)+
+        obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+          using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+        have hep: "?ep A0 = {h 0, h 1}"
+          by (rule arc_endpoints_are_boundary[OF hstrict' hhaus' hA0_sub hA0_arc hh])
+        have "h 0 \<noteq> h 1"
+        proof
+          assume "h 0 = h 1"
+          have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          from inj_onD[OF this \<open>h 0 = h 1\<close>] show False unfolding top1_unit_interval_def by (by100 auto)
+        qed
+        hence "card (?ep A0) = 2" using hep by simp
+        have "?V = ?ep A0"
+          unfolding top1_graph_vertex_set_def using h\<A>_eq by (by100 blast)
+        thus ?thesis using \<open>card (?ep A0) = 2\<close> by simp
+      qed
       thus ?thesis using True by linarith
     next
       case False
