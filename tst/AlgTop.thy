@@ -14607,7 +14607,13 @@ inductive top1_elementary_scheme_operation :: "('a \<times> bool) list \<Rightar
      This is the book's Figure 77.2 operation from \\<S>77 Lemma 77.1 Step 2.\<close>
   cut_paste2: "top1_elementary_scheme_operation
       (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)
-      ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+      ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))" |
+  \<comment> \<open>Cut-paste for opposite-orientation labels (Figure 77.3).
+     Net effect: move u1 from before a to after a\\<inverse>.
+     u0 @ u1 @ [(a,T)] @ u2 @ [(a,F)] @ u3 \\<to> u0 @ [(a,T)] @ u2 @ [(a,F)] @ u1 @ u3.\<close>
+  cut_paste_opp: "top1_elementary_scheme_operation
+      (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)
+      (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
 
 \<comment> \<open>The scheme equivalence is the reflexive-transitive closure of elementary operations.\<close>
 definition top1_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
@@ -14917,6 +14923,13 @@ proof -
           sorry \<comment> \<open>The Figure 77.2 cut-flip-paste gives a new polygon whose quotient is Y1.\<close>
         from scheme_quotient_uniqueness[OF hY1 hY2 this]
         show ?thesis using cut_paste2 ht sorry
+      next
+        case (cut_paste_opp u0 u1 a u2 u3)
+        have "top1_quotient_of_scheme_on Y1 TY1
+            (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+          sorry \<comment> \<open>Figure 77.3: move u1 from before a to after a⁻¹. Same polygon, same fibres.\<close>
+        from scheme_quotient_uniqueness[OF hY1 hY2 this]
+        show ?thesis using cut_paste_opp ht sorry
       qed
     qed
     from huniv[OF hop assms(1) assms(2) hs ht]
