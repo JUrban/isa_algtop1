@@ -6503,8 +6503,79 @@ proof -
     \<comment> \<open>Step 4: Extract cycle arcs and derive False via hacyclic.\<close>
     \<comment> \<open>The arcs ?we(Suc i), ..., ?we(j) form a cycle of \\<ge> 2 arcs
        with consecutive sharing 1 vertex. hacyclic gives False.\<close>
-    show False
-      sorry \<comment> \<open>Extract cycle arcs from walk, show distinct + card=1, apply hacyclic.\<close>
+    \<comment> \<open>Take minimum revisit distance.\<close>
+    define dmin where "dmin = (LEAST d. \<exists>i' j'. i' < j' \<and> j' \<le> card ?V \<and> ?wv i' = ?wv j' \<and> j' - i' = d)"
+    \<comment> \<open>Use LEAST to find minimum revisit distance.\<close>
+    have "\<exists>d. \<exists>i' j'. i' < j' \<and> j' \<le> card ?V \<and> ?wv i' = ?wv j' \<and> j' - i' = d"
+      using hij by (by100 blast)
+    then obtain d0 where "d0 = dmin" and hd0: "\<exists>i' j'. i' < j' \<and> j' \<le> card ?V \<and> ?wv i' = ?wv j' \<and> j' - i' = dmin"
+    proof -
+      let ?P = "\<lambda>d. \<exists>i' j'. i' < j' \<and> j' \<le> card ?V \<and> ?wv i' = ?wv j' \<and> j' - i' = d"
+      have "?P (j - i)" using hij by (by100 blast)
+      from LeastI_ex[of ?P] \<open>\<exists>d. ?P d\<close>
+      have "?P (LEAST d. ?P d)" by (by100 blast)
+      hence "?P dmin" unfolding dmin_def .
+      thus ?thesis using that by simp
+    qed
+    from hd0 obtain i0 j0 where hij0: "i0 < j0" "j0 \<le> card ?V" "?wv i0 = ?wv j0" "j0 - i0 = dmin"
+      by (by100 blast)
+    have hmin: "\<forall>i' j'. i' < j' \<and> j' \<le> card ?V \<and> ?wv i' = ?wv j' \<longrightarrow> dmin \<le> j' - i'"
+    proof (intro allI impI)
+      fix i' j' assume h: "i' < j' \<and> j' \<le> card ?V \<and> ?wv i' = ?wv j'"
+      let ?P = "\<lambda>d. \<exists>i' j'. i' < j' \<and> j' \<le> card ?V \<and> ?wv i' = ?wv j' \<and> j' - i' = d"
+      have "?P (j' - i')" using h by (by100 blast)
+      hence "dmin \<le> j' - i'" unfolding dmin_def by (rule Least_le)
+      thus "dmin \<le> j' - i'" .
+    qed
+    \<comment> \<open>j0 - i0 \\<ge> 2 (walk never backtracks to same vertex in 1 step).\<close>
+    have hdmin_ge2: "dmin \<ge> 2"
+    proof -
+      have "?wv (Suc i0) \<noteq> ?wv i0"
+      proof -
+        let ?e' = "next_arc (?wv i0) (?we i0)"
+        have "?wv (Suc i0) = other_ep (?wv i0) ?e'" using hwalk_suc_fst by simp
+        moreover have "?e' \<in> \<A>" and "?wv i0 \<in> ?ep ?e'"
+          using hnext hwalk_props by (by100 blast)+
+        moreover have "other_ep (?wv i0) ?e' \<noteq> ?wv i0"
+          using hother \<open>?e' \<in> \<A>\<close> \<open>?wv i0 \<in> ?ep ?e'\<close> by (by100 blast)
+        ultimately show ?thesis by simp
+      qed
+      hence "Suc i0 \<noteq> j0" using hij0(3) by (by100 force)
+      thus ?thesis using hij0(1) hij0(4) by linarith
+    qed
+    \<comment> \<open>Extract cycle arcs.\<close>
+    let ?ws = "map (\<lambda>k. ?we (Suc i0 + k)) [0..<dmin]"
+    have hws_len: "length ?ws = dmin" by simp
+    have hws_ge2: "length ?ws \<ge> 2" using hdmin_ge2 by simp
+    have hws_sub: "set ?ws \<subseteq> \<A>"
+    proof -
+      have "\<forall>k < dmin. ?we (Suc i0 + k) \<in> \<A>" using hwalk_props by (by100 blast)
+      thus ?thesis by (by100 auto)
+    qed
+    \<comment> \<open>Consecutive arcs share a vertex from the walk structure.\<close>
+    have hwalk_shared: "\<forall>k. ?wv k \<in> ?we k \<and> ?wv k \<in> ?we (Suc k)"
+    proof
+      fix k
+      have "?wv k \<in> ?ep (?we k)" using hwalk_props by (by100 blast)
+      hence h1: "?wv k \<in> ?we k" unfolding top1_arc_endpoints_on_def by (by100 blast)
+      have "?we (Suc k) = next_arc (?wv k) (?we k)" using hwalk_suc_snd .
+      moreover have "?wv k \<in> ?ep (next_arc (?wv k) (?we k))"
+        using hnext hwalk_props by (by100 blast)
+      hence "?wv k \<in> next_arc (?wv k) (?we k)"
+        unfolding top1_arc_endpoints_on_def by (by100 blast)
+      ultimately have h2: "?wv k \<in> ?we (Suc k)" by simp
+      show "?wv k \<in> ?we k \<and> ?wv k \<in> ?we (Suc k)" using h1 h2 by (by100 blast)
+    qed
+    \<comment> \<open>Consecutive cycle arcs share exactly 1 vertex (from card \\<le> 1).\<close>
+    have hws_card1: "\<forall>idx < length ?ws. card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
+      sorry \<comment> \<open>Each consecutive pair shares the walk vertex (card \\<ge> 1 from hwalk\\_shared).
+         card \\<le> 1 from hinter. Distinct arcs from minimum revisit.\<close>
+    \<comment> \<open>Arcs are distinct.\<close>
+    have hws_dist: "distinct ?ws"
+      sorry \<comment> \<open>From minimum revisit: intermediate vertices distinct, hence arcs distinct.\<close>
+    \<comment> \<open>Apply hacyclic.\<close>
+    from hacyclic[rule_format, OF hws_ge2 hws_dist]
+    show False using hws_sub hws_card1 by (by100 blast)
   qed
   \<comment> \<open>From the leaf, do induction on card(\\<A>) to get V \\<ge> E + 1.
      Base (card=1): V = 2 \\<ge> 2 = 1+1.
