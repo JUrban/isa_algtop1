@@ -4763,9 +4763,51 @@ proof -
     define r where "r x = (if x \<in> C then x else \<gamma> (?hinv x))" for x
     \<comment> \<open>r is a retraction C \\<union> A \\<to> C.\<close>
     show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
-      sorry \<comment> \<open>Similar to card 1: pasting lemma.
-         r|C = id (continuous). r|A = \\<gamma> \\<circ> h\\<inverse> (continuous: composition).
-         Agreement at A \\<inter> C = {h 0, h 1}: r(h 0) = \\<gamma>(0) = h 0, r(h 1) = \\<gamma>(1) = h 1.\<close>
+    proof (intro exI[of _ r] conjI)
+      show "C \<subseteq> ?CuA" by (by100 blast)
+      show "\<forall>a \<in> C. r a = a" unfolding r_def by (by100 simp)
+      \<comment> \<open>Continuity via pasting lemma, same structure as card 1.\<close>
+      have hC_sub_CuA2: "C \<subseteq> ?CuA" by (by100 blast)
+      have hA_sub_CuA2: "A \<subseteq> ?CuA" by (by100 blast)
+      have hsubC: "subspace_topology ?CuA (subspace_topology X TX ?CuA) C = subspace_topology X TX C"
+        using subspace_topology_trans[OF hC_sub_CuA2] by simp
+      have hsubA: "subspace_topology ?CuA (subspace_topology X TX ?CuA) A = subspace_topology X TX A"
+        using subspace_topology_trans[OF hA_sub_CuA2] by simp
+      show "top1_continuous_map_on ?CuA (subspace_topology X TX ?CuA) C
+          (subspace_topology ?CuA (subspace_topology X TX ?CuA) C) r"
+        unfolding hsubC
+      proof (rule pasting_lemma_two_closed)
+        show "is_topology_on ?CuA (subspace_topology X TX ?CuA)"
+          by (rule subspace_topology_is_topology_on[OF htop hCuA_sub])
+        show "is_topology_on C (subspace_topology X TX C)"
+          by (rule subspace_topology_is_topology_on[OF htop hC_sub])
+        show "closedin_on ?CuA (subspace_topology X TX ?CuA) C"
+          using Theorem_17_2[OF htop hCuA_sub, of C] hC_closed by (by100 blast)
+        show "closedin_on ?CuA (subspace_topology X TX ?CuA) A"
+          using Theorem_17_2[OF htop hCuA_sub, of A] hA_closed by (by100 blast)
+        show "C \<union> A = ?CuA" by simp
+        show "\<forall>x \<in> ?CuA. r x \<in> C"
+          sorry \<comment> \<open>r maps into C: on C it's id (\\<in> C), on A it's \\<gamma>(h\\<inverse>(x)) \\<in> C (path image).\<close>
+        \<comment> \<open>r|C = id continuous (same as card 1).\<close>
+        show "top1_continuous_map_on C (subspace_topology ?CuA (subspace_topology X TX ?CuA) C) C (subspace_topology X TX C) r"
+          unfolding hsubC top1_continuous_map_on_def
+        proof (intro conjI ballI allI impI)
+          fix x assume "x \<in> C" thus "r x \<in> C" unfolding r_def by simp
+        next
+          fix V assume hV: "V \<in> subspace_topology X TX C"
+          then obtain U where "U \<in> TX" "V = C \<inter> U" unfolding subspace_topology_def by (by5000 auto)
+          hence "V \<subseteq> C" by (by100 blast)
+          have hr_id: "\<forall>x. x \<in> C \<longrightarrow> r x = x" unfolding r_def by simp
+          have "{x \<in> C. r x \<in> V} = {x \<in> C. x \<in> V}" using hr_id by (by5000 force)
+          also have "\<dots> = V" using \<open>V \<subseteq> C\<close> by (by100 blast)
+          finally show "{x \<in> C. r x \<in> V} \<in> subspace_topology X TX C" using hV by simp
+        qed
+        \<comment> \<open>r|A = \\<gamma> \\<circ> h\\<inverse> continuous.\<close>
+        show "top1_continuous_map_on A (subspace_topology ?CuA (subspace_topology X TX ?CuA) A) C (subspace_topology X TX C) r"
+          sorry \<comment> \<open>r|A = \\<gamma> \\<circ> h\\<inverse>. Both \\<gamma> and h\\<inverse> continuous. Composition continuous.
+             Need: on A \\<inter> C = {h 0, h 1}, r agrees with id: r(h 0) = \\<gamma>(0) = h 0, r(h 1) = \\<gamma>(1) = h 1.\<close>
+      qed
+    qed
   qed
 qed
 
