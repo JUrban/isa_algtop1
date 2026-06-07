@@ -5588,7 +5588,19 @@ proof -
   proof -
     have "set ws \<noteq> {}" using assms(7) by (by100 force)
     have hws_pc: "top1_path_connected_on ?C (subspace_topology T TT ?C)"
-      sorry \<comment> \<open>Cycle arc union is path-connected (arcs form a connected chain).\<close>
+    proof -
+      \<comment> \<open>C is the image of S1 under the SCC homeomorphism. S1 is pc. Continuous image of pc = pc.\<close>
+      from hC_SCC obtain f where hf: "top1_continuous_map_on top1_S1 top1_S1_topology T TT f"
+          "inj_on f top1_S1" "f ` top1_S1 = ?C"
+        unfolding top1_simple_closed_curve_on_def by (by100 blast)
+      have "\<forall>x \<in> top1_S1. f x \<in> T"
+        using hf(1) unfolding top1_continuous_map_on_def by (by100 blast)
+      have "subspace_topology T TT ?C = subspace_topology T TT ?C" by simp
+      show ?thesis
+        by (rule top1_path_connected_continuous_image[OF S1_path_connected hf(1)
+            \<open>\<forall>x \<in> top1_S1. f x \<in> T\<close> hf(3) hC_sub
+            \<open>subspace_topology T TT ?C = subspace_topology T TT ?C\<close> htop])
+    qed
     show ?thesis by (rule graph_cycle_retract[OF assms(1-6) assms(9) \<open>set ws \<noteq> {}\<close> hws_pc])
   qed
   \<comment> \<open>Apply scc\\_in\\_sc\\_false.\<close>
