@@ -6517,9 +6517,39 @@ proof (rule ccontr)
         show ?thesis by (by100 auto)
       qed
       have hep_arcA: "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {?vi, ?vsi}"
-        sorry \<comment> \<open>ep(A) \\<supseteq> {vi,vsi} (from A\\<inter>B \\<subseteq> ep(A) + hAB\\_eq), card(ep)=2.\<close>
+      proof -
+        have "{?vi, ?vsi} \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+          using hAB_props hAB_eq by (by100 blast)
+        moreover from h2ep[rule_format, OF harcA_in]
+        obtain a0 b0 where "a0 \<noteq> b0"
+            "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {a0, b0}"
+          by (by100 blast)
+        hence hcard_epA: "card (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)) = 2"
+          using \<open>a0 \<noteq> b0\<close> by (by100 simp)
+        have hfin_epA: "finite (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA))"
+          using hep_fin harcA_in by (by100 blast)
+        have hcard_vi: "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
+        moreover have "card {?vi, ?vsi} = card (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA))"
+          using hcard_epA hcard_vi by linarith
+        ultimately show ?thesis using card_subset_eq[OF hfin_epA] by (by100 blast)
+      qed
       have hep_arcB: "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {?vi, ?vsi}"
-        sorry \<comment> \<open>Same via A\\<inter>B \\<subseteq> ep(B).\<close>
+      proof -
+        have "{?vi, ?vsi} \<subseteq> top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)"
+          using hAB_props hAB_eq by (by100 blast)
+        moreover from h2ep[rule_format, OF harcB_in]
+        obtain a0 b0 where "a0 \<noteq> b0"
+            "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {a0, b0}"
+          by (by100 blast)
+        hence hcard_epB: "card (top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)) = 2"
+          using \<open>a0 \<noteq> b0\<close> by (by100 simp)
+        have hfin_epB: "finite (top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB))"
+          using hep_fin harcB_in by (by100 blast)
+        have hcard_vi: "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
+        moreover have "card {?vi, ?vsi} = card (top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB))"
+          using hcard_epB hcard_vi by linarith
+        ultimately show ?thesis using card_subset_eq[OF hfin_epB] by (by100 blast)
+      qed
       have hSCC: "top1_simple_closed_curve_on T TT (?arcA \<union> ?arcB)"
         by (rule arcs_form_simple_closed_curve[OF hstrict hhaus harcA_arc harcA_sub
                harcB_arc harcB_sub hAB_eq hvi_ne hep_arcA hep_arcB])
