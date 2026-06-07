@@ -4612,9 +4612,28 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
        Per expert audit 7: use A0 with A0 \<inter> C \<noteq> {} to maintain path-connectedness.\<close>
     let ?C = "\<Union>\<S>"
     obtain A0 where hA0: "A0 \<in> \<A>" "A0 \<notin> \<S>" "A0 \<inter> ?C \<noteq> {}"
-      sorry \<comment> \<open>Adjacent-outside-arc: \\<S> \\<subset> \\<A>, T connected, \\<Union>\\<A> = T.
-         If no outside arc meets C, then C and \\<Union>(\\<A> - \\<S>) partition T into
-         two non-empty disjoint closed sets, contradicting T connected.\<close>
+    proof -
+      \<comment> \<open>By contradiction: if no outside arc meets C, T is disconnected.\<close>
+      { assume hno: "\<forall>A \<in> \<A> - \<S>. A \<inter> ?C = {}"
+        have hT_eq: "?C \<union> \<Union>(\<A> - \<S>) = T"
+          using less.prems(3,7) by (by100 blast)
+        have hdisjoint: "?C \<inter> \<Union>(\<A> - \<S>) = {}"
+          using hno by (by100 blast)
+        have "?C \<noteq> {}" using less.prems(8) sorry \<comment> \<open>\\<S> \\<noteq> {} and arcs non-empty.\<close>
+        have "\<Union>(\<A> - \<S>) \<noteq> {}" using False less.prems(7) sorry \<comment> \<open>\\<A> \\<noteq> \\<S> and arcs non-empty.\<close>
+        \<comment> \<open>Both C and \\<Union>(\\<A>-\\<S>) are closed in T (coherent topology).\<close>
+        have "closedin_on T TT ?C" sorry \<comment> \<open>Finite union of compact arcs is closed.\<close>
+        have "closedin_on T TT (\<Union>(\<A> - \<S>))" sorry \<comment> \<open>Same.\<close>
+        \<comment> \<open>T is connected.\<close>
+        have "top1_connected_on T TT"
+          using less.prems(1) unfolding top1_is_tree_on_def by (by100 blast)
+        \<comment> \<open>Connected space cannot have two non-empty disjoint closed sets covering it.\<close>
+        have False sorry \<comment> \<open>Connected\\_on + two non-empty disjoint closed sets + union = T \\<Rightarrow> False.\<close>
+      }
+      \<comment> \<open>So \\<exists> adjacent arc.\<close>
+      hence "\<exists>A. A \<in> \<A> \<and> A \<notin> \<S> \<and> A \<inter> ?C \<noteq> {}" by (by100 blast)
+      thus ?thesis using that by (by100 blast)
+    qed
     let ?\<S>' = "insert A0 \<S>"
     have hcard_lt: "card (\<A> - ?\<S>') < card (\<A> - \<S>)"
     proof -
