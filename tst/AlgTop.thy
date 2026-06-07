@@ -7089,17 +7089,43 @@ proof -
         thus ?thesis using hcard_ge2 by linarith
       qed
       \<comment> \<open>Subspace topology: for A \\<in> \\<A>', subspace T' TT' A = subspace T TT A.\<close>
+      have hT'_sub: "?T' \<subseteq> T" using harcs' by (by100 blast)
       have hsub_trans: "\<forall>A\<in>?\<A>'. subspace_topology ?T' ?TT' A = subspace_topology T TT A"
-        sorry \<comment> \<open>subspace\\_topology\\_trans: A \\<subseteq> T' \\<subseteq> T.\<close>
+      proof (intro ballI)
+        fix A assume "A \<in> ?\<A>'"
+        hence "A \<subseteq> ?T'" by (by100 blast)
+        from subspace_topology_trans[OF this]
+        show "subspace_topology ?T' ?TT' A = subspace_topology T TT A" .
+      qed
       \<comment> \<open>All premises transfer to \\<A>' on T'.\<close>
-      have harcs_r: "\<forall>A\<in>?\<A>'. A \<subseteq> ?T' \<and> top1_is_arc_on A (subspace_topology ?T' ?TT' A)" sorry
+      have harcs_r: "\<forall>A\<in>?\<A>'. A \<subseteq> ?T' \<and> top1_is_arc_on A (subspace_topology ?T' ?TT' A)"
+      proof (intro ballI conjI)
+        fix A assume "A \<in> ?\<A>'"
+        thus "A \<subseteq> ?T'" by (by100 blast)
+        have "A \<in> \<A>" using \<open>A \<in> ?\<A>'\<close> by (by100 blast)
+        hence "top1_is_arc_on A (subspace_topology T TT A)" using harcs' by (by100 blast)
+        thus "top1_is_arc_on A (subspace_topology ?T' ?TT' A)"
+          using hsub_trans \<open>A \<in> ?\<A>'\<close> by simp
+      qed
       have hcover_r: "\<Union>?\<A>' = ?T'" by simp
       have hinter_r: "\<forall>A\<in>?\<A>'. \<forall>B\<in>?\<A>'. A \<noteq> B \<longrightarrow>
            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?T' ?TT' A)
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?T' ?TT' B)
-         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 1" sorry
-      have hstrict_r: "is_topology_on_strict ?T' ?TT'" sorry
-      have hhaus_r: "is_hausdorff_on ?T' ?TT'" sorry
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 1"
+      proof (intro ballI impI)
+        fix A B assume "A \<in> ?\<A>'" "B \<in> ?\<A>'" "A \<noteq> B"
+        hence "A \<in> \<A>" "B \<in> \<A>" by (by100 blast)+
+        from hinter'[rule_format, OF \<open>A \<in> \<A>\<close> \<open>B \<in> \<A>\<close> \<open>A \<noteq> B\<close>]
+        show "A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?T' ?TT' A)
+            \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?T' ?TT' B)
+            \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 1"
+          using hsub_trans \<open>A \<in> ?\<A>'\<close> \<open>B \<in> ?\<A>'\<close> by simp
+      qed
+      have htop': "is_topology_on T TT" using hstrict' unfolding is_topology_on_strict_def by (by100 blast)
+      have hstrict_r: "is_topology_on_strict ?T' ?TT'"
+        sorry \<comment> \<open>Subspace of strict is strict.\<close>
+      have hhaus_r: "is_hausdorff_on ?T' ?TT'"
+        sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff.\<close>
       have hacyclic_r: "\<forall>ws. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> ?\<A>' \<longrightarrow>
           (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow> False"
         using hacyclic' by (by100 blast)
@@ -7108,7 +7134,7 @@ proof -
       have hIH: "card (top1_graph_vertex_set ?T' ?TT' ?\<A>') \<ge> card ?\<A>' + 1" .
       \<comment> \<open>V'(on T') = V'(on T) because arc subspace topologies agree.\<close>
       have hV'_eq: "top1_graph_vertex_set ?T' ?TT' ?\<A>' = top1_graph_vertex_set T TT ?\<A>'"
-        sorry \<comment> \<open>From hsub\\_trans: endpoints defined by arc subspace topology.\<close>
+        unfolding top1_graph_vertex_set_def using hsub_trans by simp
       \<comment> \<open>V = V' + 1, E = E' + 1.\<close>
       have "?V = insert v (top1_graph_vertex_set T TT ?\<A>')" sorry
       have "v \<notin> top1_graph_vertex_set T TT ?\<A>'" sorry
