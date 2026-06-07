@@ -4792,12 +4792,53 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
     have hC'_eq: "\<Union>?\<S>' = ?C \<union> A0" by (by100 blast)
     hence hret_CuA: "top1_retract_of_on T TT (?C \<union> A0)" using hret_ext by simp
     \<comment> \<open>Compose with retraction C \<union> A0 \<to> C (attached-arc retract).\<close>
-    show ?thesis
-      sorry \<comment> \<open>attached_arc_retract: C \<union> A0 \<to> C.
-         Card 1: collapse A0 to attachment point (pasting lemma).
-         Card 2: map A0 along a path in C between the 2 attachment points.
-         (Per audit 7: card=2 is NOT a contradiction, use path-mapping instead.)
-         Then compose with hret_CuA.\<close>
+    \<comment> \<open>Local retraction C \\<union> A0 \\<to> C, then compose with hret\\_CuA.\<close>
+    have hlocal_retract: "top1_retract_of_on (?C \<union> A0) (subspace_topology T TT (?C \<union> A0)) ?C"
+      sorry \<comment> \<open>attached\\_arc\\_retract: C pc, A0 arc, A0 \\<inter> C \\<noteq> {}.
+         Card 1: const map on A0. Card 2: path-map on A0 along path in C.
+         Uses pasting lemma + path existence in pc C.\<close>
+    \<comment> \<open>Compose: r = r2 \\<circ> r1 where r1: T \\<to> C \\<union> A0, r2: C \\<union> A0 \\<to> C.\<close>
+    from hret_CuA obtain r1 where hr1: "top1_is_retraction_on T TT (?C \<union> A0) r1"
+      unfolding top1_retract_of_on_def by (by100 blast)
+    from hlocal_retract obtain r2
+      where hr2: "top1_is_retraction_on (?C \<union> A0) (subspace_topology T TT (?C \<union> A0)) ?C r2"
+      unfolding top1_retract_of_on_def by (by100 blast)
+    have hr1_cont: "top1_continuous_map_on T TT (?C \<union> A0) (subspace_topology T TT (?C \<union> A0)) r1"
+      using hr1 unfolding top1_is_retraction_on_def by (by100 blast)
+    have hr2_cont: "top1_continuous_map_on (?C \<union> A0) (subspace_topology T TT (?C \<union> A0))
+        ?C (subspace_topology (?C \<union> A0) (subspace_topology T TT (?C \<union> A0)) ?C) r2"
+      using hr2 unfolding top1_is_retraction_on_def by (by100 blast)
+    \<comment> \<open>Subspace transitivity: subspace (C\\<union>A0) (subspace T TT (C\\<union>A0)) C = subspace T TT C.\<close>
+    have hC_sub_CuA: "?C \<subseteq> ?C \<union> A0" by (by100 blast)
+    have "subspace_topology (?C \<union> A0) (subspace_topology T TT (?C \<union> A0)) ?C = subspace_topology T TT ?C"
+      using subspace_topology_trans[OF hC_sub_CuA] by simp
+    hence hr2_cont': "top1_continuous_map_on (?C \<union> A0) (subspace_topology T TT (?C \<union> A0))
+        ?C (subspace_topology T TT ?C) r2"
+      using hr2_cont by simp
+    have hcomp_cont: "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) (r2 \<circ> r1)"
+      using top1_continuous_map_on_comp[OF hr1_cont hr2_cont'] .
+    have hcomp_fix: "\<forall>a \<in> ?C. (r2 \<circ> r1) a = a"
+    proof (intro ballI)
+      fix a assume "a \<in> ?C"
+      hence "a \<in> ?C \<union> A0" by (by100 blast)
+      hence "r1 a = a" using hr1 unfolding top1_is_retraction_on_def by (by100 blast)
+      hence "(r2 \<circ> r1) a = r2 a" by (by100 simp)
+      also have "\<dots> = a" using hr2 \<open>a \<in> ?C\<close> unfolding top1_is_retraction_on_def by (by100 blast)
+      finally show "(r2 \<circ> r1) a = a" .
+    qed
+    have "?C \<subseteq> T"
+    proof -
+      have "\<forall>A \<in> \<S>. A \<subseteq> T" using less.prems(2,7) by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
+    show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+      using hcomp_cont hcomp_fix \<open>?C \<subseteq> T\<close>
+    proof (intro exI[of _ "r2 \<circ> r1"] conjI)
+      show "?C \<subseteq> T" using \<open>?C \<subseteq> T\<close> .
+      show "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) (r2 \<circ> r1)"
+        using hcomp_cont .
+      show "\<forall>a \<in> ?C. (r2 \<circ> r1) a = a" using hcomp_fix .
+    qed
   qed
 qed
 
