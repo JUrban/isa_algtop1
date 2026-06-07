@@ -15086,17 +15086,22 @@ proof -
     have hP'_eq: "(\<lambda>(x,y). (x + c, y)) ` P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
                   \<and> (\<Sum>i<n. coeffs i) = 1
                   \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}"
-    proof
-      show "(\<lambda>(x,y). (x + c, y)) ` P \<subseteq> {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
-                  \<and> (\<Sum>i<n. coeffs i) = 1
-                  \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}"
-        unfolding hP_eq vx'_def vy'_def sorry
-    next
-      show "{(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
-                  \<and> (\<Sum>i<n. coeffs i) = 1
-                  \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}
-            \<subseteq> (\<lambda>(x,y). (x + c, y)) ` P"
-        unfolding hP_eq vx'_def vy'_def sorry
+    proof -
+      have hsum_dist: "\<And>coeffs. (\<Sum>i<n. coeffs i) = 1 \<Longrightarrow>
+          (\<Sum>i<n. coeffs i * (vx i + c)) = (\<Sum>i<n. coeffs i * vx i) + c"
+      proof -
+        fix coeffs :: "nat \<Rightarrow> real" assume hsum1: "(\<Sum>i<n. coeffs i) = 1"
+        have "(\<Sum>i<n. coeffs i * (vx i + c)) = (\<Sum>i<n. coeffs i * vx i + coeffs i * c)"
+          by (rule sum.cong) (simp_all add: distrib_left)
+        also have "\<dots> = (\<Sum>i<n. coeffs i * vx i) + (\<Sum>i<n. coeffs i * c)"
+          by (rule sum.distrib)
+        also have "(\<Sum>i<n. coeffs i * c) = c * (\<Sum>i<n. coeffs i)"
+          by (simp add: sum_distrib_left mult.commute)
+        also have "\<dots> = c" using \<open>(\<Sum>i<n. coeffs i) = 1\<close> by simp
+        finally show "(\<Sum>i<n. coeffs i * (vx i + c)) = (\<Sum>i<n. coeffs i * vx i) + c" .
+      qed
+      show ?thesis unfolding hP_eq vx'_def vy'_def
+        using hsum_dist sorry
     qed
     show "top1_is_polygonal_region_on ((\<lambda>(x,y). (x + c, y)) ` P) n"
       unfolding top1_is_polygonal_region_on_def
