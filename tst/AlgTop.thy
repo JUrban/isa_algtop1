@@ -6652,8 +6652,20 @@ proof (rule ccontr)
         have "?S2 \<subseteq> \<A>" using harcA_in harcB_in by (by100 blast)
         have "?S2 \<noteq> {}" by (by100 simp)
         have hS2_pc: "top1_path_connected_on (\<Union>?S2) (subspace_topology T TT (\<Union>?S2))"
-          sorry \<comment> \<open>arcA \\<union> arcB is path-connected: both arcs are path-connected
-             and share endpoints {vi, vsi}.\<close>
+        proof -
+          \<comment> \<open>Use path\\_connected\\_finite\\_union\\_common\\_point with common point vi.\<close>
+          have htop_CuA: "is_topology_on (\<Union>?S2) (subspace_topology T TT (\<Union>?S2))"
+            sorry \<comment> \<open>Subspace of topology is topology.\<close>
+          have hfin: "finite ?S2" by (by100 simp)
+          have "\<forall>A \<in> ?S2. A \<subseteq> \<Union>?S2" by (by100 blast)
+          have hpc_each: "\<forall>A \<in> ?S2. top1_path_connected_on A (subspace_topology (\<Union>?S2) (subspace_topology T TT (\<Union>?S2)) A)"
+            sorry \<comment> \<open>Each arc is path-connected (homeomorphic to [0,1]).\<close>
+          have "\<forall>A \<in> ?S2. ?vi \<in> A" using hvi_inA hvi_inB by (by100 blast)
+          have "\<Union>?S2 = \<Union>?S2" by simp
+          from path_connected_finite_union_common_point[OF htop_CuA hfin
+              \<open>\<forall>A \<in> ?S2. A \<subseteq> \<Union>?S2\<close> hpc_each \<open>\<forall>A \<in> ?S2. ?vi \<in> A\<close>]
+          show ?thesis by simp
+        qed
         from graph_cycle_retract[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
             \<open>?S2 \<subseteq> \<A>\<close> \<open>?S2 \<noteq> {}\<close> hS2_pc]
         show ?thesis by (by100 simp)
