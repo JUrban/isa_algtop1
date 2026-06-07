@@ -15118,17 +15118,83 @@ qed
 
 section \<open>\<S>77 The Classification Theorem\<close>
 
+\<comment> \<open>Lemma 77.1 Step 1, subcase y2 = []: a y1 a ~ aa y1\\<inverse>.
+   Sequence: rotate \\<to> invert \\<to> flip\\_label a.
+   Requires: a does not appear in y1 (from proper scheme).\<close>
+lemma Lemma_77_1_step1_y2_empty:
+  assumes "\<forall>e \<in> set y1. fst e \<noteq> a"
+  shows "top1_scheme_equiv
+      ([(a, True)] @ y1 @ [(a, True)])
+      ([(a, True), (a, True)] @ rev (map top1_inverse_edge y1))"
+proof -
+  \<comment> \<open>Step 1: Rotate: [(a,T)] @ y1 @ [(a,T)] \\<to> y1 @ [(a,T),(a,T)].\<close>
+  have h1: "top1_elementary_scheme_operation
+      ([(a, True)] @ (y1 @ [(a, True)]))
+      ((y1 @ [(a, True)]) @ [(a, True)])"
+    by (rule top1_elementary_scheme_operation.rotate)
+  \<comment> \<open>Step 2: Invert: y1 @ [(a,T),(a,T)] \\<to> [(a,F),(a,F)] @ inv(y1).\<close>
+  have h2: "top1_elementary_scheme_operation
+      (y1 @ [(a, True), (a, True)])
+      (rev (map top1_inverse_edge (y1 @ [(a, True), (a, True)])))"
+    by (rule top1_elementary_scheme_operation.invert)
+  \<comment> \<open>Simplify: rev(map inv (y1 @ [(a,T),(a,T)])) = [(a,F),(a,F)] @ rev(map inv y1).\<close>
+  have h2_simp: "rev (map top1_inverse_edge (y1 @ [(a, True), (a, True)]))
+      = [(a, False), (a, False)] @ rev (map top1_inverse_edge y1)"
+    unfolding top1_inverse_edge_def by simp
+  \<comment> \<open>Step 3: flip\\_label a: [(a,F),(a,F)] @ inv(y1) \\<to> [(a,T),(a,T)] @ inv(y1).
+     (Since a not in y1, flip\\_label only affects the two a-edges.)\<close>
+  have h3: "top1_elementary_scheme_operation
+      ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1))
+      (map (\<lambda>(l,b). (l, if l = a then \<not>b else b))
+           ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1)))"
+    by (rule top1_elementary_scheme_operation.flip_label)
+  have h3_simp: "map (\<lambda>(l,b). (l, if l = a then \<not>b else b))
+      ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1))
+      = [(a, True), (a, True)] @ rev (map top1_inverse_edge y1)"
+  proof -
+    have "map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) [(a, False), (a, False)]
+        = [(a, True), (a, True)]" by simp
+    moreover have "map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) (rev (map top1_inverse_edge y1))
+        = rev (map top1_inverse_edge y1)"
+    proof (rule map_idI)
+      fix e assume "e \<in> set (rev (map top1_inverse_edge y1))"
+      hence "e \<in> set (map top1_inverse_edge y1)" by simp
+      then obtain e0 where "e0 \<in> set y1" "e = top1_inverse_edge e0" by (by100 auto)
+      hence "fst e = fst e0" unfolding top1_inverse_edge_def by (by100 simp)
+      have "fst e0 \<noteq> a" using assms \<open>e0 \<in> set y1\<close> by (by100 blast)
+      hence "fst e \<noteq> a" using \<open>fst e = fst e0\<close> by simp
+      thus "(case e of (l, b) \<Rightarrow> (l, if l = a then \<not> b else b)) = e"
+        using \<open>fst e \<noteq> a\<close> by (cases e) simp
+    qed
+    ultimately show ?thesis by simp
+  qed
+  \<comment> \<open>Chain: w \\<to> w1 \\<to> w2 \\<to> w3.\<close>
+  \<comment> \<open>Chain the 3 operations via rtranclp.\<close>
+  have step1: "top1_scheme_equiv ([(a, True)] @ y1 @ [(a, True)]) (y1 @ [(a, True), (a, True)])"
+    unfolding top1_scheme_equiv_def using h1 by simp
+  have step2: "top1_scheme_equiv (y1 @ [(a, True), (a, True)])
+      ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1))"
+    unfolding top1_scheme_equiv_def using h2 h2_simp by simp
+  have step3: "top1_scheme_equiv ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1))
+      ([(a, True), (a, True)] @ rev (map top1_inverse_edge y1))"
+    unfolding top1_scheme_equiv_def using h3 h3_simp by simp
+  \<comment> \<open>Chain: step1 \\<to> step2 \\<to> step3.\<close>
+  from step1 step2 have "top1_scheme_equiv ([(a, True)] @ y1 @ [(a, True)])
+      ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1))"
+    unfolding top1_scheme_equiv_def by (rule rtranclp_trans)
+  from this step3 show ?thesis
+    unfolding top1_scheme_equiv_def by (rule rtranclp_trans)
+qed
+
 \<comment> \<open>Lemma 77.1 (Munkres): If w = [y0] a [y1] a [y2] (proper scheme with a appearing twice
-   with same exponent), then w ~ aa [y0 y1\\<inverse> y2].
-   Here a has exponent +1 in both occurrences (projective type).\<close>
+   with same exponent), then w ~ aa [y0 y1\\<inverse> y2].\<close>
 lemma Lemma_77_1_projective_collection:
-  assumes "top1_scheme_equiv
-      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
-      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)"
+  assumes "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> a"
   shows "top1_scheme_equiv
       (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
-      ([(a, True), (a, True)] @ y0 @ map top1_inverse_edge (rev y1) @ y2)"
-  sorry \<comment> \<open>Book proof: cut/paste/permute sequence. See Munkres \\<S>77 Lemma 77.1.\<close>
+      ([(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+  sorry \<comment> \<open>Book proof: Step 1 (y0 empty) by Lemma\\_77\\_1\\_step1\\_y2\\_empty or cut-flip-paste.
+     Step 2 (general) by cut-flip-paste reducing to Step 1. See Munkres \\<S>77.\<close>
 
 \<comment> \<open>Lemma 77.3 (Munkres): If w = [w0] a b [w1] a\\<inverse> b\\<inverse> [w2] (torus-type with commutator),
    then w ~ (aba\\<inverse>b\\<inverse>) [w0 w1 w2].\<close>
