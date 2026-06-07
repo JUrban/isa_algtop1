@@ -5023,8 +5023,23 @@ next
     \<comment> \<open>A0 touches C at \\<le> 1 point. Pasting retraction: id on C, const on A0.\<close>
     \<comment> \<open>Find v \\<in> C such that A0 \\<inter> C \\<subseteq> {v}.\<close>
     have hC_ne: "?C \<noteq> {}"
-      sorry \<comment> \<open>C = \\<Union>(set ws), length ws \\<ge> 2 implies set ws \\<noteq> {},
-         each arc A \\<in> set ws is non-empty (homeomorphic to [0,1]).\<close>
+    proof -
+      from less.prems(8) have "length ws \<ge> 2" .
+      hence "ws \<noteq> []" by (by100 simp)
+      then obtain B rest where "ws = B # rest" by (cases ws) (by100 simp)+
+      hence "B \<in> set ws" by (by100 simp)
+      have "B \<subseteq> T \<and> top1_is_arc_on B (subspace_topology T TT B)"
+        using less.prems(3)[rule_format, of B] less.prems(2) \<open>B \<in> set ws\<close> by (by100 blast)
+      hence "top1_is_arc_on B (subspace_topology T TT B)" by (by100 blast)
+      then obtain g where "top1_homeomorphism_on I_set I_top B (subspace_topology T TT B) g"
+        unfolding top1_is_arc_on_def by (by100 blast)
+      hence "bij_betw g I_set B" unfolding top1_homeomorphism_on_def by (by100 blast)
+      hence "g ` I_set = B" unfolding bij_betw_def by (by100 blast)
+      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+      hence "g 0 \<in> B" using \<open>g ` I_set = B\<close> by (by100 blast)
+      hence "B \<noteq> {}" by (by100 blast)
+      thus ?thesis using \<open>B \<in> set ws\<close> by (by100 blast)
+    qed
     obtain v where hv: "A0 \<inter> ?C \<subseteq> {v}" "v \<in> ?C"
     proof (cases "A0 \<inter> ?C = {}")
       case True
