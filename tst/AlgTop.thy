@@ -4992,7 +4992,21 @@ next
   qed
   have hep_A0_fin: "finite (top1_arc_endpoints_on A0 (subspace_topology T TT A0))
       \<and> card (top1_arc_endpoints_on A0 (subspace_topology T TT A0)) \<le> 2"
-    sorry \<comment> \<open>ep(A0) = {h 0, h 1} for some homeomorphism h, hence finite with card \\<le> 2.\<close>
+  proof -
+    have hstrict: "is_topology_on_strict T TT"
+      using less.prems(7) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hhaus: "is_hausdorff_on T TT"
+      using less.prems(7) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+    have hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)"
+      using less.prems(3) hA0(1) by (by100 blast)
+    obtain h where hh: "top1_homeomorphism_on I_set I_top A0 (subspace_topology T TT A0) h"
+      using hA0_arc unfolding top1_is_arc_on_def by (by100 blast)
+    have hep_eq: "top1_arc_endpoints_on A0 (subspace_topology T TT A0) = {h 0, h 1}"
+      by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA0_sub hA0_arc hh])
+    have "finite {h 0, h 1}" by (by100 simp)
+    have "card {h 0, h 1} \<le> 2" by (by100 simp)
+    thus ?thesis using hep_eq by (by100 simp)
+  qed
   have hA0C_fin: "finite (A0 \<inter> ?C)"
     using finite_subset[OF hA0C_sub] hep_A0_fin by (by100 blast)
   have hA0C_card: "card (A0 \<inter> ?C) \<le> 2"
