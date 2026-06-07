@@ -6567,12 +6567,55 @@ proof -
       show "?wv k \<in> ?we k \<and> ?wv k \<in> ?we (Suc k)" using h1 h2 by (by100 blast)
     qed
     \<comment> \<open>Consecutive cycle arcs share exactly 1 vertex (from card \\<le> 1).\<close>
+    \<comment> \<open>Non-backtracking: consecutive walk arcs differ.\<close>
+    have hnonback: "\<forall>k. ?we (Suc k) \<noteq> ?we k"
+    proof
+      fix k
+      have "?we (Suc k) = next_arc (?wv k) (?we k)" using hwalk_suc_snd .
+      moreover have "next_arc (?wv k) (?we k) \<noteq> ?we k"
+        using hnext hwalk_props by (by100 blast)
+      ultimately show "?we (Suc k) \<noteq> ?we k" by simp
+    qed
+    \<comment> \<open>Intermediate vertices distinct (from minimum revisit).\<close>
+    have hv_dist: "\<forall>k l. Suc i0 \<le> k \<and> k < j0 \<and> Suc i0 \<le> l \<and> l < j0 \<and> k \<noteq> l
+        \<longrightarrow> ?wv k \<noteq> ?wv l"
+    proof (intro allI impI)
+      fix k l assume hkl: "Suc i0 \<le> k \<and> k < j0 \<and> Suc i0 \<le> l \<and> l < j0 \<and> k \<noteq> l"
+      show "?wv k \<noteq> ?wv l"
+      proof
+        assume "?wv k = ?wv l"
+        have "k < l \<or> l < k" using hkl by linarith
+        thus False
+        proof
+          assume "k < l"
+          have "l - k < dmin" using hkl hij0(4) by linarith
+          moreover have "k < l \<and> l \<le> card ?V \<and> ?wv k = ?wv l"
+            using \<open>k < l\<close> \<open>?wv k = ?wv l\<close> hkl hij0(2) by linarith
+          moreover from hmin[rule_format, OF this]
+          have "dmin \<le> l - k" .
+          ultimately show False using hij0(4) by linarith
+        next
+          assume "l < k"
+          have "k - l < dmin" using hkl hij0(4) by linarith
+          have "k - l < dmin" using hkl hij0(4) by linarith
+          have "?wv l = ?wv k" using \<open>?wv k = ?wv l\<close> by simp
+          have "k \<le> card ?V" using hkl hij0(2) by linarith
+          have "l < k \<and> k \<le> card ?V \<and> ?wv l = ?wv k"
+            using \<open>l < k\<close> \<open>?wv l = ?wv k\<close> \<open>k \<le> card ?V\<close> by (by100 blast)
+          from hmin[rule_format, OF this]
+          have "dmin \<le> k - l" .
+          with \<open>k - l < dmin\<close> show False by linarith
+        qed
+      qed
+    qed
+    \<comment> \<open>Consecutive cycle arcs share exactly 1 vertex (from card \\<le> 1 + walk structure).\<close>
     have hws_card1: "\<forall>idx < length ?ws. card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
-      sorry \<comment> \<open>Each consecutive pair shares the walk vertex (card \\<ge> 1 from hwalk\\_shared).
-         card \\<le> 1 from hinter. Distinct arcs from minimum revisit.\<close>
+      sorry \<comment> \<open>For non-wraparound: shared vertex from hwalk\\_shared + card \\<le> 1 from hinter + hnonback.
+         For wraparound: shared vertex wv(i0)=wv(j0) + distinctness from minimum revisit.\<close>
     \<comment> \<open>Arcs are distinct.\<close>
     have hws_dist: "distinct ?ws"
-      sorry \<comment> \<open>From minimum revisit: intermediate vertices distinct, hence arcs distinct.\<close>
+      sorry \<comment> \<open>From vertex distinctness + endpoint analysis: different arcs have different
+         arrived-at vertices, hence different arcs.\<close>
     \<comment> \<open>Apply hacyclic.\<close>
     from hacyclic[rule_format, OF hws_ge2 hws_dist]
     show False using hws_sub hws_card1 by (by100 blast)
