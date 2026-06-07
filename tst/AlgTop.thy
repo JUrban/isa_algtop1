@@ -7123,9 +7123,9 @@ proof -
       qed
       have htop': "is_topology_on T TT" using hstrict' unfolding is_topology_on_strict_def by (by100 blast)
       have hstrict_r: "is_topology_on_strict ?T' ?TT'"
-        sorry \<comment> \<open>Subspace of strict is strict.\<close>
+        by (rule subspace_topology_is_strict[OF hstrict' hT'_sub])
       have hhaus_r: "is_hausdorff_on ?T' ?TT'"
-        sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff.\<close>
+        by (rule hausdorff_subspace[OF hhaus' hT'_sub])
       have hacyclic_r: "\<forall>ws. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> ?\<A>' \<longrightarrow>
           (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow> False"
         using hacyclic' by (by100 blast)
@@ -7136,9 +7136,14 @@ proof -
       have hV'_eq: "top1_graph_vertex_set ?T' ?TT' ?\<A>' = top1_graph_vertex_set T TT ?\<A>'"
         unfolding top1_graph_vertex_set_def using hsub_trans by simp
       \<comment> \<open>V = V' + 1, E = E' + 1.\<close>
-      have "?V = insert v (top1_graph_vertex_set T TT ?\<A>')" sorry
-      have "v \<notin> top1_graph_vertex_set T TT ?\<A>'" sorry
-      have "card ?V = card (top1_graph_vertex_set T TT ?\<A>') + 1" sorry
+      have "?V = insert v (top1_graph_vertex_set T TT ?\<A>')"
+        sorry \<comment> \<open>V = ep(A0) \\<union> V'. v \\<in> ep(A0). ep(A0) \\ V' = {v}.\<close>
+      have "v \<notin> top1_graph_vertex_set T TT ?\<A>'"
+        sorry \<comment> \<open>v not endpoint of any arc in \\<A>'. v not in any arc in \\<A>' (from hv\\_only).\<close>
+      have hV_fin': "finite ?V"
+        unfolding top1_graph_vertex_set_def sorry
+      have "card ?V = card (top1_graph_vertex_set T TT ?\<A>') + 1"
+        sorry \<comment> \<open>From V = insert v V' and v \\<notin> V' and finite.\<close>
       have "card \<A> = card ?\<A>' + 1"
       proof -
         have "card (\<A> - {A0}) = card \<A> - 1" using hfin' hA0_in by simp
