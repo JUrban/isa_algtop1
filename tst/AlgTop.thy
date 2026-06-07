@@ -4756,7 +4756,7 @@ proof -
     \<comment> \<open>Get path \\<gamma> in C from h 0 to h 1 (C is path-connected).\<close>
     have "top1_path_connected_on C (subspace_topology X TX C)" using hC_pc .
     then obtain \<gamma> where h\<gamma>: "top1_is_path_on C (subspace_topology X TX C) (h 0) (h 1) \<gamma>"
-      sorry \<comment> \<open>Path existence from path-connectedness.\<close>
+      unfolding top1_path_connected_on_def using hh0_C hh1_C by (by100 blast)
     \<comment> \<open>h\\<inverse>: A \\<to> [0,1] is the inverse homeomorphism.\<close>
     let ?hinv = "inv_into I_set h"
     \<comment> \<open>Define r: r|C = id, r|A = \\<gamma> \\<circ> h\\<inverse>.\<close>
