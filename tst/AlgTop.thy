@@ -5247,9 +5247,113 @@ lemma cycle_arcs_form_scc:
           (\<forall>v w. ws ! i \<inter> ws ! ((i + 1) mod length ws) = {v} \<longrightarrow>
                  ws ! j \<inter> ws ! ((j + 1) mod length ws) = {w} \<longrightarrow> v \<noteq> w)"
   shows "top1_simple_closed_curve_on T TT (\<Union>(set ws))"
-  sorry \<comment> \<open>Proof plan: define shared vertices sv i. Show length \\<ge> 3.
-     Merge butlast ws into arc A1 by induction. Show A1 \\<inter> (last ws) = {a\\_start, a\\_end}.
-     Apply arcs\\_form\\_simple\\_closed\\_curve.\<close>
+proof -
+  let ?k = "length ws"
+  have hk_pos: "?k > 0" using assms(5) by linarith
+  \<comment> \<open>Define shared vertices: sv i = THE unique vertex in ws!i \\<inter> ws!((i+1) mod k).\<close>
+  define sv where "sv i = (THE v. ws ! i \<inter> ws ! ((i + 1) mod ?k) = {v})" for i
+  have hsv_eq: "\<forall>i < ?k. ws ! i \<inter> ws ! ((i + 1) mod ?k) = {sv i}"
+  proof (intro allI impI)
+    fix i assume "i < ?k"
+    from assms(7)[rule_format, OF this]
+    have hcard: "card (ws ! i \<inter> ws ! ((i + 1) mod ?k)) = 1" .
+    then obtain v where hv: "ws ! i \<inter> ws ! ((i + 1) mod ?k) = {v}" by (rule card_1_singletonE)
+    hence "(THE v. ws ! i \<inter> ws ! ((i + 1) mod ?k) = {v}) = v"
+      by (intro the_equality) (by100 auto)+
+    thus "ws ! i \<inter> ws ! ((i + 1) mod ?k) = {sv i}" unfolding sv_def using hv by simp
+  qed
+  have hsv_distinct: "\<forall>i < ?k. \<forall>j < ?k. i \<noteq> j \<longrightarrow> sv i \<noteq> sv j"
+  proof (intro allI impI)
+    fix i j assume "i < ?k" "j < ?k" "i \<noteq> j"
+    from assms(8)[rule_format, OF \<open>i < ?k\<close> \<open>j < ?k\<close> \<open>i \<noteq> j\<close>]
+    show "sv i \<noteq> sv j" using hsv_eq[rule_format, OF \<open>i < ?k\<close>] hsv_eq[rule_format, OF \<open>j < ?k\<close>]
+      by (by100 blast)
+  qed
+  \<comment> \<open>Length \\<ge> 3 (length 2 contradicts hsv\\_distinct).\<close>
+  have hlen_ge3: "?k \<ge> 3"
+  proof (rule ccontr)
+    assume "\<not> ?k \<ge> 3"
+    hence "?k = 2" using assms(5) by linarith
+    hence "ws ! 0 \<inter> ws ! 1 = {sv 0}" using hsv_eq[rule_format, of 0] by simp
+    moreover have "ws ! 1 \<inter> ws ! 0 = {sv 1}" using hsv_eq[rule_format, of 1] \<open>?k = 2\<close> by simp
+    ultimately have "{sv 0} = {sv 1}" by (by100 blast)
+    hence "sv 0 = sv 1" by simp
+    from hsv_distinct[rule_format, of 0 1] show False using \<open>?k = 2\<close> \<open>sv 0 = sv 1\<close> by simp
+  qed
+  \<comment> \<open>Endpoints of ws!i are {sv((i-1) mod k), sv i}.\<close>
+  have hep_eq: "\<forall>i < ?k. top1_arc_endpoints_on (ws ! i) (subspace_topology T TT (ws ! i))
+      = {sv ((i + ?k - 1) mod ?k), sv i}"
+    sorry \<comment> \<open>Each arc has 2 endpoints. sv i and sv((i-1) mod k) are both endpoints. They are distinct.\<close>
+  \<comment> \<open>Merge butlast ws into single arc A1 by induction.\<close>
+  have hmerge: "\<forall>n. 1 \<le> n \<and> n \<le> ?k - 1 \<longrightarrow>
+      top1_is_arc_on (\<Union>(set (take n ws))) (subspace_topology T TT (\<Union>(set (take n ws))))
+      \<and> \<Union>(set (take n ws)) \<subseteq> T
+      \<and> top1_arc_endpoints_on (\<Union>(set (take n ws))) (subspace_topology T TT (\<Union>(set (take n ws))))
+          = {sv (?k - 1), sv (n - 1)}"
+    sorry \<comment> \<open>Induction on n. Base: take 1 ws = ws!0. Step: arc\\_merge\\_at\\_endpoint.\<close>
+  \<comment> \<open>A1 = \\<Union>(set (butlast ws)) with endpoints {sv(k-1), sv(k-2)}.\<close>
+  have hbt: "take (?k - 1) ws = butlast ws" using assms(5) by (simp add: butlast_conv_take)
+  from hmerge[rule_format, of "?k - 1"]
+  have hA1: "top1_is_arc_on (\<Union>(set (butlast ws))) (subspace_topology T TT (\<Union>(set (butlast ws))))
+      \<and> \<Union>(set (butlast ws)) \<subseteq> T
+      \<and> top1_arc_endpoints_on (\<Union>(set (butlast ws))) (subspace_topology T TT (\<Union>(set (butlast ws))))
+          = {sv (?k - 1), sv (?k - 2)}"
+    using hlen_ge3 hbt by (simp add: numeral_2_eq_2)
+  \<comment> \<open>A2 = last ws, with endpoints {sv(k-2), sv(k-1)}.\<close>
+  have hA2_ep: "top1_arc_endpoints_on (last ws) (subspace_topology T TT (last ws))
+      = {sv (?k - 2), sv (?k - 1)}"
+  proof -
+    have hk1: "?k - 1 < ?k" using hk_pos by linarith
+    have "last ws = ws ! (?k - 1)" using last_conv_nth[of ws] hk_pos by simp
+    moreover from hep_eq[rule_format, OF hk1]
+    have "top1_arc_endpoints_on (ws ! (?k - 1)) (subspace_topology T TT (ws ! (?k - 1)))
+        = {sv ((?k - 1 + ?k - 1) mod ?k), sv (?k - 1)}" by simp
+    moreover have "(?k - 1 + ?k - 1) mod ?k = ?k - 2"
+    proof -
+      have "?k - 1 + ?k - 1 = ?k + (?k - 2)" using hlen_ge3 by linarith
+      hence "(?k - 1 + ?k - 1) mod ?k = (?k + (?k - 2)) mod ?k" by simp
+      also have "\<dots> = (?k - 2) mod ?k" by simp
+      also have "\<dots> = ?k - 2" using hlen_ge3 by simp
+      finally show ?thesis .
+    qed
+    ultimately show ?thesis by simp
+  qed
+  have hws_ne: "ws \<noteq> []" using assms(5) by (by100 force)
+  have hlast_in: "last ws \<in> set ws" using last_in_set[OF hws_ne] .
+  have hA2_arc: "top1_is_arc_on (last ws) (subspace_topology T TT (last ws))"
+    using assms(3) hlast_in by (by100 blast)
+  have hA2_sub: "last ws \<subseteq> T"
+    using assms(3) hlast_in by (by100 blast)
+  \<comment> \<open>A1 \\<inter> A2 = {sv(k-1), sv(k-2)} (both endpoints).\<close>
+  have hA1A2_inter: "\<Union>(set (butlast ws)) \<inter> last ws = {sv (?k - 1), sv (?k - 2)}"
+    sorry \<comment> \<open>Non-consecutive arcs disjoint (from hsv\\_distinct + hep\\_eq). Only ws!0 and ws!(k-2) contribute.\<close>
+  \<comment> \<open>sv(k-1) \\<noteq> sv(k-2).\<close>
+  have ha_ne: "sv (?k - 1) \<noteq> sv (?k - 2)"
+    using hsv_distinct[rule_format] hlen_ge3 by (by100 force)
+  \<comment> \<open>A1 \\<union> A2 = \\<Union>(set ws).\<close>
+  have hA1A2_union: "\<Union>(set (butlast ws)) \<union> last ws = \<Union>(set ws)"
+  proof -
+    have "ws = butlast ws @ [last ws]" using hws_ne by simp
+    hence "set ws = set (butlast ws @ [last ws])" by simp
+    also have "\<dots> = set (butlast ws) \<union> set [last ws]" by simp
+    also have "\<dots> = set (butlast ws) \<union> {last ws}" by simp
+    finally show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>Endpoint set of A1 = {sv(k-1), sv(k-2)} = A1 \\<inter> A2 endpoints.\<close>
+  have hA1_arc2: "top1_is_arc_on (\<Union>(set (butlast ws))) (subspace_topology T TT (\<Union>(set (butlast ws))))"
+    using hA1 by (by100 blast)
+  have hA1_sub2: "\<Union>(set (butlast ws)) \<subseteq> T" using hA1 by (by100 blast)
+  have hA1_ep2: "top1_arc_endpoints_on (\<Union>(set (butlast ws))) (subspace_topology T TT (\<Union>(set (butlast ws))))
+      = {sv (?k - 1), sv (?k - 2)}" using hA1 by (by100 blast)
+  \<comment> \<open>Normalize: A2 endpoints = {sv(k-2), sv(k-1)} = {sv(k-1), sv(k-2)} as sets.\<close>
+  have hA2_ep2: "top1_arc_endpoints_on (last ws) (subspace_topology T TT (last ws))
+      = {sv (?k - 1), sv (?k - 2)}" using hA2_ep by (by100 blast)
+  \<comment> \<open>Apply arcs\\_form\\_simple\\_closed\\_curve.\<close>
+  have "top1_simple_closed_curve_on T TT (\<Union>(set (butlast ws)) \<union> last ws)"
+    by (rule arcs_form_simple_closed_curve[OF assms(1) assms(2)
+        hA1_arc2 hA1_sub2 hA2_arc hA2_sub hA1A2_inter ha_ne hA1_ep2 hA2_ep2])
+  thus ?thesis using hA1A2_union by simp
+qed
 
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
    A "cycle" here means a sequence of \\<ge> 2 distinct arcs A1, ..., Ak such that
