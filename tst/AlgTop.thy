@@ -15100,8 +15100,46 @@ proof -
         also have "\<dots> = c" using \<open>(\<Sum>i<n. coeffs i) = 1\<close> by simp
         finally show "(\<Sum>i<n. coeffs i * (vx i + c)) = (\<Sum>i<n. coeffs i * vx i) + c" .
       qed
-      show ?thesis unfolding hP_eq vx'_def vy'_def
-        using hsum_dist sorry \<comment> \<open>Set equality: image of sum-defined set = sum-defined set with translated vertices.\<close>
+      show ?thesis
+      proof
+        show "(\<lambda>(x, y). (x + c, y)) ` P \<subseteq>
+            {(x, y) |x y. \<exists>coeffs. (\<forall>i<n. 0 \<le> coeffs i) \<and> (\<Sum>i<n. coeffs i) = 1
+                \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}"
+        proof
+          fix p assume "p \<in> (\<lambda>(x, y). (x + c, y)) ` P"
+          then obtain x y where hp: "p = (x + c, y)" "(x, y) \<in> P" by (by100 force)
+          then obtain coeffs where hc: "(\<forall>i<n. 0 \<le> coeffs i)" "(\<Sum>i<n. coeffs i) = 1"
+              "x = (\<Sum>i<n. coeffs i * vx i)" "y = (\<Sum>i<n. coeffs i * vy i)"
+            unfolding hP_eq by (by100 auto)
+          have hxc: "x + c = (\<Sum>i<n. coeffs i * vx' i)" unfolding vx'_def using hsum_dist[OF hc(2)] hc(3) by simp
+          have hyv: "y = (\<Sum>i<n. coeffs i * vy' i)" unfolding vy'_def using hc(4) by simp
+          have "\<exists>coeffs. (\<forall>i<n. 0 \<le> coeffs i) \<and> (\<Sum>i<n. coeffs i) = 1
+              \<and> (x + c) = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)"
+            using hc(1) hc(2) hxc hyv by (by100 blast)
+          thus "p \<in> {(x, y) |x y. \<exists>coeffs. (\<forall>i<n. 0 \<le> coeffs i) \<and> (\<Sum>i<n. coeffs i) = 1
+              \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}"
+            using hp(1) by (by100 blast)
+        qed
+      next
+        show "{(x, y) |x y. \<exists>coeffs. (\<forall>i<n. 0 \<le> coeffs i) \<and> (\<Sum>i<n. coeffs i) = 1
+                \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}
+              \<subseteq> (\<lambda>(x, y). (x + c, y)) ` P"
+        proof
+          fix p assume "p \<in> {(x, y) |x y. \<exists>coeffs. (\<forall>i<n. 0 \<le> coeffs i) \<and> (\<Sum>i<n. coeffs i) = 1
+              \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}"
+          then obtain x' y coeffs where hp: "p = (x', y)"
+              and hc: "(\<forall>i<n. 0 \<le> coeffs i)" "(\<Sum>i<n. coeffs i) = 1"
+              "x' = (\<Sum>i<n. coeffs i * vx' i)" "y = (\<Sum>i<n. coeffs i * vy' i)" by (by5000 auto)
+          have "x' = (\<Sum>i<n. coeffs i * vx i) + c"
+            using hc(3) unfolding vx'_def using hsum_dist[OF hc(2)] by simp
+          hence hx_orig: "x' - c = (\<Sum>i<n. coeffs i * vx i)" by simp
+          have hy_orig: "y = (\<Sum>i<n. coeffs i * vy i)" using hc(4) unfolding vy'_def by simp
+          have "(x' - c, y) \<in> P" unfolding hP_eq using hc(1) hc(2) hx_orig hy_orig by (by100 blast)
+          hence "(x' - c + c, y) = p" using hp by simp
+          hence "(\<lambda>(x,y). (x+c, y)) (x' - c, y) = p" by simp
+          thus "p \<in> (\<lambda>(x, y). (x + c, y)) ` P" using \<open>(x' - c, y) \<in> P\<close> by (by100 force)
+        qed
+      qed
     qed
     show "top1_is_polygonal_region_on ((\<lambda>(x,y). (x + c, y)) ` P) n"
       unfolding top1_is_polygonal_region_on_def
