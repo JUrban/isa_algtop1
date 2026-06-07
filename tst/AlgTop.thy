@@ -6654,8 +6654,12 @@ proof (rule ccontr)
         have hS2_pc: "top1_path_connected_on (\<Union>?S2) (subspace_topology T TT (\<Union>?S2))"
         proof -
           \<comment> \<open>Use path\\_connected\\_finite\\_union\\_common\\_point with common point vi.\<close>
+          have htop_T: "is_topology_on T TT"
+            using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+              is_topology_on_strict_def by (by100 blast)
           have htop_CuA: "is_topology_on (\<Union>?S2) (subspace_topology T TT (\<Union>?S2))"
-            sorry \<comment> \<open>Subspace of topology is topology.\<close>
+            by (rule subspace_topology_is_topology_on[OF htop_T])
+               (use harcA_sub harcB_sub in \<open>by100 blast\<close>)
           have hfin: "finite ?S2" by (by100 simp)
           have "\<forall>A \<in> ?S2. A \<subseteq> \<Union>?S2" by (by100 blast)
           have hpc_each: "\<forall>A \<in> ?S2. top1_path_connected_on A (subspace_topology (\<Union>?S2) (subspace_topology T TT (\<Union>?S2)) A)"
