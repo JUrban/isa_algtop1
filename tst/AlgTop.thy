@@ -14959,6 +14959,12 @@ proof -
   \<comment> \<open>Step 4: Place disjoint copies of the simplex in R² (translated apart).
      Define q by pasting all h0(T) on corresponding copies.
      The edge identifications recreate X from the disjoint union.\<close>
+  \<comment> \<open>Translation preserves polygonal region.\<close>
+  have htranslate_poly: "\<And>P n c. top1_is_polygonal_region_on P n \<Longrightarrow>
+      top1_is_polygonal_region_on ((\<lambda>(x,y). (x + c, y)) ` P) n"
+    sorry \<comment> \<open>Translate vertex positions: vx'(i) = vx(i) + c, vy'(i) = vy(i).
+       Convex hull of translated vertices = translation of convex hull.
+       All other conditions (vertex distinctness, non-degeneracy) preserved by translation.\<close>
   \<comment> \<open>Step 4: Construct disjoint copies of standard simplex in R², one per triangle.\<close>
   \<comment> \<open>Enumerate the triangles.\<close>
   obtain tlist where htlist: "set tlist = \<T>0" "distinct tlist"
@@ -14993,17 +14999,13 @@ proof -
   moreover have "\<forall>T \<in> ?\<T>. top1_is_polygonal_region_on T 3"
   proof (intro ballI)
     fix T assume "T \<in> ?\<T>"
-    then obtain i where "i < ?m" "T = \<Delta>copy i" sorry
+    then obtain i where "i < ?m" "T = \<Delta>copy i" by (by100 blast)
     \<comment> \<open>\\<Delta>copy i = translation of standard simplex. Translation preserves polygonal region.
        The standard simplex has vertices (vx j, vy j) for j < 3 (from h\\_simplex\\_poly).
        \\<Delta>copy i has vertices (vx j + 3*i, vy j). Same convex hull structure.\<close>
-    from h_simplex_poly obtain vx0 vy0 where
-        hvx: "top1_is_polygonal_region_on top1_standard_simplex 3"
-      sorry
-    \<comment> \<open>Define translated vertices: vx'(j) = vx0(j) + 3*i, vy'(j) = vy0(j).\<close>
-    \<comment> \<open>Show \\<Delta>copy i = convex hull of translated vertices.\<close>
     show "top1_is_polygonal_region_on T 3"
-      sorry \<comment> \<open>Verify polygonal\\_region\\_on conditions for translated vertices.\<close>
+      using \<open>T = \<Delta>copy i\<close> unfolding \<Delta>copy_def
+      using htranslate_poly[OF h_simplex_poly] by simp
   qed
   moreover have "\<forall>T \<in> ?\<T>. top1_continuous_map_on T
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q_map" sorry
