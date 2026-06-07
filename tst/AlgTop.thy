@@ -15073,6 +15073,20 @@ proof -
     \<comment> \<open>Translated vertices.\<close>
     define vx' where "vx' i = vx i + c" for i
     define vy' where "vy' = vy"
+    \<comment> \<open>Key arithmetic: \\<Sum>(\\<alpha>*(vx+c)) = \\<Sum>(\\<alpha>*vx) + c when \\<Sum>\\<alpha>=1.\<close>
+    have hsum_dist0: "\<And>coeffs :: nat \<Rightarrow> real. (\<Sum>i<n. coeffs i) = 1 \<Longrightarrow>
+        (\<Sum>i<n. coeffs i * (vx i + c)) = (\<Sum>i<n. coeffs i * vx i) + c"
+    proof -
+      fix coeffs :: "nat \<Rightarrow> real" assume "(\<Sum>i<n. coeffs i) = 1"
+      have "(\<Sum>i<n. coeffs i * (vx i + c)) = (\<Sum>i<n. coeffs i * vx i + coeffs i * c)"
+        by (rule sum.cong) (simp_all add: distrib_left)
+      also have "\<dots> = (\<Sum>i<n. coeffs i * vx i) + (\<Sum>i<n. coeffs i * c)"
+        by (rule sum.distrib)
+      also have "(\<Sum>i<n. coeffs i * c) = c * (\<Sum>i<n. coeffs i)"
+        by (simp add: sum_distrib_left mult.commute)
+      also have "\<dots> = c" using \<open>(\<Sum>i<n. coeffs i) = 1\<close> by simp
+      finally show "(\<Sum>i<n. coeffs i * (vx i + c)) = (\<Sum>i<n. coeffs i * vx i) + c" .
+    qed
     \<comment> \<open>Vertex distinctness.\<close>
     have hdist': "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j)"
       using hdist unfolding vx'_def vy'_def by simp
@@ -15080,8 +15094,28 @@ proof -
     have hndeg': "\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
                         \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1
                         \<and> vx' k = (\<Sum>i<n. coeffs i * vx' i) \<and> vy' k = (\<Sum>i<n. coeffs i * vy' i))"
-      sorry \<comment> \<open>Non-degeneracy: vx'(k)=\\<Sum>\\<alpha> vx'(i) with \\<Sum>\\<alpha>=1 \\<Rightarrow> vx(k)=\\<Sum>\\<alpha> vx(i) (subtract c).
-         Key: \\<Sum>(\\<alpha>*(vx+c)) = \\<Sum>(\\<alpha>*vx) + c. vy'=vy directly. Contradicts hndeg.\<close>
+    proof (intro allI impI notI)
+      fix k assume "k < n"
+      assume "\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1
+          \<and> vx' k = (\<Sum>i<n. coeffs i * vx' i) \<and> vy' k = (\<Sum>i<n. coeffs i * vy' i)"
+      then obtain coeffs where hc: "(\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)" "coeffs k = 0"
+          "(\<Sum>i<n. coeffs i) = 1"
+          "vx' k = (\<Sum>i<n. coeffs i * vx' i)" "vy' k = (\<Sum>i<n. coeffs i * vy' i)"
+        by (by100 blast)
+      \<comment> \<open>From hsum\\_dist: \\<Sum>(coeffs * vx') = \\<Sum>(coeffs * vx) + c.\<close>
+      have "(\<Sum>i<n. coeffs i * vx' i) = (\<Sum>i<n. coeffs i * vx i) + c"
+        unfolding vx'_def using hsum_dist0[OF hc(3)] by simp
+      hence "vx k = (\<Sum>i<n. coeffs i * vx i)"
+        using hc(4) unfolding vx'_def by linarith
+      moreover have "vy k = (\<Sum>i<n. coeffs i * vy i)"
+        using hc(5) unfolding vy'_def by simp
+      moreover have "(\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1"
+        using hc(1) hc(2) hc(3) by (by100 blast)
+      ultimately have "\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1
+          \<and> vx k = (\<Sum>i<n. coeffs i * vx i) \<and> vy k = (\<Sum>i<n. coeffs i * vy i)"
+        by (by100 blast)
+      with hndeg[rule_format, OF \<open>k < n\<close>] show False by simp
+    qed
     \<comment> \<open>Translated hull.\<close>
     have hP'_eq: "(\<lambda>(x,y). (x + c, y)) ` P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
                   \<and> (\<Sum>i<n. coeffs i) = 1
