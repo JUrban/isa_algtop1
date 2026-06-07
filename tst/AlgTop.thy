@@ -7578,13 +7578,37 @@ proof (rule ccontr)
       proof -
         have "card (?arcA \<inter> ?arcB) = 2" using hAB_card hAB_card_ge2 by linarith
         have hsub: "{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB" using hvi_inter hvsi_inter by (by100 blast)
-        show ?thesis using hAB_fin \<open>card (?arcA \<inter> ?arcB) = 2\<close> hsub hvi_ne
-          sorry \<comment> \<open>card 2 + subset of size 2 + finite \\<Rightarrow> equality.\<close>
+        have "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
+        from card_subset_eq[OF hAB_fin hsub] \<open>card (?arcA \<inter> ?arcB) = 2\<close> \<open>card {?vi, ?vsi} = 2\<close>
+        show ?thesis sorry \<comment> \<open>card\\_subset\\_eq: finite S, T \\<subseteq> S, card T = card S \\<Rightarrow> T = S.\<close>
       qed
+      \<comment> \<open>ep(arcA) and ep(arcB) both equal {vi, vsi}: each has card 2 and contains {vi, vsi}.\<close>
       have hep_arcA: "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {?vi, ?vsi}"
-        sorry \<comment> \<open>ep(arcA) \\<supseteq> {vi, vsi} (from A \\<inter> B \\<subseteq> ep(A)) + card(ep) = 2 \\<Rightarrow> eq.\<close>
+      proof -
+        have hsup: "{?vi, ?vsi} \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+          using hAB_inter_sub hAB_eq by (by100 blast)
+        have "finite (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA))"
+          sorry \<comment> \<open>Endpoints of an arc are finite (they form a 2-element set).\<close>
+        have "card (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)) = 2"
+          sorry \<comment> \<open>From h2ep and harcA\\_in.\<close>
+        have "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
+        from card_subset_eq[OF \<open>finite (top1_arc_endpoints_on ?arcA _)\<close> hsup]
+            \<open>card _ = 2\<close> \<open>card {?vi, ?vsi} = 2\<close>
+        show ?thesis sorry
+      qed
       have hep_arcB: "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {?vi, ?vsi}"
-        sorry \<comment> \<open>Same argument via A \\<inter> B \\<subseteq> ep(B).\<close>
+      proof -
+        have hsup: "{?vi, ?vsi} \<subseteq> top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)"
+          using hAB_inter_subB hAB_eq by (by100 blast)
+        have "finite (top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB))"
+          sorry
+        have "card (top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)) = 2"
+          sorry
+        have "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
+        from card_subset_eq[OF \<open>finite (top1_arc_endpoints_on ?arcB _)\<close> hsup]
+            \<open>card _ = 2\<close> \<open>card {?vi, ?vsi} = 2\<close>
+        show ?thesis sorry
+      qed
       \<comment> \<open>Step 1: arcA \\<union> arcB is a simple closed curve.\<close>
       have hSCC: "top1_simple_closed_curve_on T TT (?arcA \<union> ?arcB)"
         sorry \<comment> \<open>arcs\\_form\\_simple\\_closed\\_curve[OF hstrict hhaus harcA\\_arc harcA\\_sub
