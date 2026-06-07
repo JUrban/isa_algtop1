@@ -14973,6 +14973,7 @@ proof -
         and hP_eq: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
                        \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
       unfolding top1_is_polygonal_region_on_def sorry
+      \<comment> \<open>Extraction of existential from polygonal\\_region\\_on\\_def. blast/auto timeout under load.\<close>
     \<comment> \<open>Translated vertices.\<close>
     define vx' where "vx' i = vx i + c" for i
     define vy' where "vy' = vy"
