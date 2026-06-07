@@ -14980,8 +14980,16 @@ proof -
     "q_map p = (let i = (SOME i. i < ?m \<and> p \<in> \<Delta>copy i) in
                 h0 (tlist ! i) ((fst p - 3 * real i, snd p)))" for p
   \<comment> \<open>Show the required properties.\<close>
-  have "finite ?\<T>" sorry
-  moreover have "?\<T> \<noteq> {}" sorry
+  have "finite ?\<T>"
+  proof -
+    have "?\<T> = (\<lambda>i. \<Delta>copy i) ` {..<?m}" by (by100 blast)
+    thus ?thesis by simp
+  qed
+  moreover have "?\<T> \<noteq> {}"
+  proof -
+    have "\<Delta>copy 0 \<in> ?\<T>" using hm_pos by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
   moreover have "\<forall>T \<in> ?\<T>. top1_is_polygonal_region_on T 3" sorry
   moreover have "\<forall>T \<in> ?\<T>. top1_continuous_map_on T
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q_map" sorry
