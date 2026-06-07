@@ -13919,6 +13919,16 @@ qed
 
 section \<open>\<S>77 The Classification Theorem\<close>
 
+\<comment> \<open>Predicate: a scheme w is the standard n-fold torus scheme
+   a1 b1 a1\\<inverse> b1\\<inverse> ... an bn an\\<inverse> bn\\<inverse> (4n edges).\<close>
+definition top1_is_torus_scheme :: "(nat \<times> bool) list \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_is_torus_scheme w n \<longleftrightarrow> n > 0 \<and> w = top1_n_torus_scheme n"
+
+\<comment> \<open>Predicate: a scheme w is the standard m-fold projective scheme
+   a1 a1 a2 a2 ... am am (2m edges).\<close>
+definition top1_is_projective_scheme :: "(nat \<times> bool) list \<Rightarrow> nat \<Rightarrow> bool" where
+  "top1_is_projective_scheme w m \<longleftrightarrow> m > 0 \<and> w = top1_m_projective_scheme m"
+
 (** from \<S>77 Theorem 77.5: Classification theorem for compact surfaces.
     Every compact connected triangulable surface is homeomorphic to either:
     - the sphere S^2,
@@ -13959,16 +13969,13 @@ proof -
      Step 2a: Bring all vertices to one equivalence class.
      Step 2b: Collect pairs aa into adjacent positions (projective type).
      Step 2c: Pair remaining letters into commutator blocks aba\<inverse>b\<inverse> (torus type).\<close>
-  \<comment> \<open>AUDIT NOTE (B03): The predicates top1\\_is\\_torus\\_scheme,
-     top1\\_is\\_projective\\_scheme, top1\\_elementary\\_scheme\\_equiv are not yet
-     defined in the active source tree. They are placeholders inside a sorry block.
-     They should be defined as: torus scheme = a1 b1 a1\\<inverse> b1\\<inverse> ... an bn an\\<inverse> bn\\<inverse>,
-     projective scheme = a1 a1 ... am am, and scheme\\_equiv = rtranclp of elementary moves.\<close>
+  \<comment> \<open>NOTE: top1\\_is\\_torus\\_scheme, top1\\_is\\_projective\\_scheme now defined (\\<S>77 section).
+     top1\\_scheme\\_equiv = rtranclp of elementary operations (defined before \\<S>76).\<close>
   have hreduced: "(\<exists>w. scheme = w \<and> (\<forall>a\<in>set w. snd a) \<and> length w = 0)
       \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n
-            \<and> top1_elementary_scheme_equiv scheme w)
+            \<and> top1_scheme_equiv scheme w)
       \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m
-            \<and> top1_elementary_scheme_equiv scheme w)"
+            \<and> top1_scheme_equiv scheme w)"
     sorry \<comment> \<open>Reduction to normal form via elementary operations (Theorem 76).\<close>
   \<comment> \<open>Step 3: Each normal form corresponds to the standard surface.\<close>
   show ?thesis sorry \<comment> \<open>Normal form → homeomorphism type (S², T_n, or P_m).\<close>
