@@ -4708,8 +4708,28 @@ proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
           thus "r a = a" unfolding r_def using \<open>r1 a = a\<close> by (by100 simp)
         qed
         show "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) r"
-          sorry \<comment> \<open>r = (if r1 x \\<in> C then r1 x else v). Continuous because r1 is continuous
-             and the "correction" only affects points in A0 \\ C, mapped to v \\<in> C.\<close>
+        proof -
+          \<comment> \<open>r = g \\<circ> r1 where g(y) = if y \\<in> C then y else v.
+             r1: T \\<to> C \\<union> A0 continuous (from retraction).
+             g: C \\<union> A0 \\<to> C continuous (pasting: id on C, const on A0).
+             Composition is continuous.\<close>
+          have hr1_cont: "top1_continuous_map_on T TT (?C \<union> A0) (subspace_topology T TT (?C \<union> A0)) r1"
+            using hr1 unfolding top1_is_retraction_on_def by (by100 blast)
+          \<comment> \<open>g: C \\<union> A0 \\<to> C is continuous by pasting lemma.\<close>
+          define g where "g y = (if y \<in> ?C then y else v)" for y
+          have hg_cont: "top1_continuous_map_on (?C \<union> A0) (subspace_topology T TT (?C \<union> A0))
+              ?C (subspace_topology T TT ?C) g"
+            sorry \<comment> \<open>Pasting lemma: C, A0 closed in C \\<union> A0. g|C = id (cont). g|A0 = const v (cont).
+               Agreement at A0 \\<inter> C \\<subseteq> {v}: g(v) = v from both sides.\<close>
+          \<comment> \<open>r = g \\<circ> r1.\<close>
+          have hr_eq: "\<forall>x \<in> T. r x = g (r1 x)"
+            unfolding r_def g_def by simp
+          \<comment> \<open>Compose: g \\<circ> r1 continuous.\<close>
+          from top1_continuous_map_on_comp[OF hr1_cont hg_cont]
+          have "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) (g \<circ> r1)" .
+          \<comment> \<open>g \\<circ> r1 = r on T.\<close>
+          thus ?thesis sorry \<comment> \<open>Show g \\<circ> r1 = r on T (from hr\\_eq) \\<Rightarrow> same continuity.\<close>
+        qed
       qed
     next
       case False
