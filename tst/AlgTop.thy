@@ -14675,6 +14675,21 @@ proof -
   show ?thesis by (by100 blast)
 qed
 
+\<comment> \<open>Quotient-of-scheme uniqueness: any two quotient spaces of the same scheme are homeomorphic.
+   Proof: both are quotients of convex n-gons by the same identification pattern.
+   The n-gons are homeomorphic (convex compact in R²), and the homeomorphism respects
+   the boundary identifications. So the quotient spaces are homeomorphic.\<close>
+lemma scheme_quotient_uniqueness:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 scheme"
+      and "top1_quotient_of_scheme_on Y2 TY2 scheme"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+  sorry \<comment> \<open>Extract (P1,q1,vx1,vy1) and (P2,q2,vx2,vy2). Construct homeomorphism
+     P1 \\<to> P2 mapping vertices to vertices in order (piecewise-linear radial projection).
+     This homeomorphism respects boundary identifications. By Theorem 22.2, it descends
+     to a continuous map Y1 \\<to> Y2, which is a quotient map (by composition of quotient maps).
+     Bijective quotient map = homeomorphism.\<close>
+
 \<comment> \<open>Scheme rotation preserves quotient type: quotient(u@v) \\<cong> quotient(v@u).
    The edge identifications are the same up to cyclic shift.\<close>
 lemma scheme_rotate_homeomorphic:
@@ -14690,13 +14705,8 @@ proof -
      The quotient map q is unchanged. The scheme (v@u)!i = (u@v)!((i+|u|) mod n), so all
      identification conditions transfer. Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
   let ?n = "length u + length v"
-  \<comment> \<open>Extract quotient data for u@v.\<close>
-  from assms(3) obtain P1 q1 vx1 vy1 where
-      hP1: "top1_is_polygonal_region_on P1 ?n"
-      and hq1: "top1_quotient_map_on P1
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y1 TY1 q1"
-      and hscheme1: "top1_quotient_of_scheme_on Y1 TY1 (u @ v)"
-    sorry \<comment> \<open>Unfold top1\\_quotient\\_of\\_scheme\\_on for u@v.\<close>
+  \<comment> \<open>Strategy: Show Y1 is ALSO a quotient of v@u (same polygon, rotated vertices).
+     Then Y1 and Y2 are both quotients of v@u. Apply scheme\\_quotient\\_uniqueness.\<close>
   \<comment> \<open>The scheme v@u has the same length.\<close>
   have hlen_eq: "length (v @ u) = ?n" by simp
   have hlen_uv: "length (u @ v) = ?n" by simp
@@ -14735,14 +14745,13 @@ proof -
       ultimately show ?thesis by simp
     qed
   qed
-  \<comment> \<open>Define shifted vertex positions: vx'(i) = vx1((i + |u|) mod n), vy' similarly.\<close>
-  \<comment> \<open>The polygon P1 with these shifted vertices satisfies quotient\\_of\\_scheme for v@u,
-     using the SAME quotient map q1. So q1 is a quotient for both schemes on P1.
-     Apply quotient\\_same\\_fibres\\_homeomorphic to get Y1 \\<cong> Y2.\<close>
-  \<comment> \<open>Since q1 gives the same fibres for both u@v and v@u identifications
-     (cyclic shift doesn't change which boundary points are identified),
-     Y1 and any quotient of v@u are homeomorphic.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Y1 is also a quotient of v@u (same polygon, rotated vertex numbering).\<close>
+  have hY1_vu: "top1_quotient_of_scheme_on Y1 TY1 (v @ u)"
+    sorry \<comment> \<open>Extract (P,q,vx,vy) from assms(3). Define vx'(i)=vx((i+|u|) mod n), vy' similarly.
+       Same polygon P, same quotient map q. The shifted vertices + hshift show all scheme
+       conditions for v@u are satisfied. This is mechanical but detailed.\<close>
+  \<comment> \<open>Both Y1 and Y2 are quotients of v@u. Apply scheme\\_quotient\\_uniqueness.\<close>
+  show ?thesis by (rule scheme_quotient_uniqueness[OF assms(1) assms(2) hY1_vu assms(4)])
 qed
 
 \<comment> \<open>Scheme cancellation preserves quotient type: quotient(u@[a,a\\<inverse>]@v) \\<cong> quotient(u@v).
@@ -14762,7 +14771,20 @@ lemma scheme_invert_homeomorphic:
       and "top1_quotient_of_scheme_on Y1 TY1 w"
       and "top1_quotient_of_scheme_on Y2 TY2 (rev (map top1_inverse_edge w))"
   shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-  sorry \<comment> \<open>Reflect the polygon (reverse vertex order + flip orientations).
+proof -
+  \<comment> \<open>Book proof (Munkres \\<S>76 operation v): "Flip. Flipping the polygonal region over.
+     The order of the vertices is reversed, and so is the orientation of each edge."
+     Formal: Reflecting the polygon (reversing vertex order) gives a valid quotient
+     of rev(map inverse w). Then scheme\\_quotient\\_uniqueness gives Y1 \\<cong> Y2.\<close>
+  have hY1_inv: "top1_quotient_of_scheme_on Y1 TY1 (rev (map top1_inverse_edge w))"
+    sorry \<comment> \<open>Extract (P,q,vx,vy) from assms(3). Define reflected vertices:
+       vx'(i) = vx(n-1-i), vy'(i) = vy(n-1-i) (reverse order).
+       The same polygon P (reflection is a homeomorphism), same quotient map q.
+       Edge i in the reflected scheme = inverse of edge (n-1-i) in w.
+       All conditions transfer via the reversal.\<close>
+  show ?thesis by (rule scheme_quotient_uniqueness[OF assms(1) assms(2) hY1_inv assms(4)])
+qed
+  \<comment> \<open>Reflect the polygon (reverse vertex order + flip orientations).
      The reflection map commutes with the identification.\<close>
 
 (** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
