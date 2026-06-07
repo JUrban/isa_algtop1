@@ -7548,9 +7548,9 @@ proof (rule ccontr)
       proof
         assume heq: "?vi = ?vsi"
         \<comment> \<open>fst(walk i) = fst(walk(Suc i)), repeat at distance 1. But j-i = 2 is minimal.\<close>
-        have "Suc i \<le> card ?V" sorry \<comment> \<open>Walk stays in V range.\<close>
+        have "Suc i \<le> card ?V" using hij(2) hj_eq by linarith
         from hmin[rule_format, of i "Suc i"]
-        have "j - i \<le> Suc i - i" using hij(1) \<open>Suc i \<le> card ?V\<close> heq sorry
+        have "j - i \<le> Suc i - i" using hij(1) \<open>Suc i \<le> card ?V\<close> heq by (by100 blast)
         hence "j - i \<le> 1" by linarith
         thus False using \<open>j - i = 2\<close> by linarith
       qed
