@@ -6895,14 +6895,100 @@ proof -
         hence "?wv (i0 + k) = ?wv (Suc i0 + l)"
         proof -
           have "?wv (i0 + k) \<noteq> ?wv (i0 + l)"
-            sorry \<comment> \<open>From hne\\_k + cross-match: if equal, then wv(Suc i0+k) = wv(i0+l) = wv(i0+k), contradicting hne\\_k.\<close>
+          proof
+            assume "?wv (i0 + k) = ?wv (i0 + l)"
+            hence "?wv (Suc i0 + k) = ?wv (i0 + k)"
+              using \<open>?wv (Suc i0 + k) = ?wv (i0 + l)\<close> by simp
+            thus False using hne_k by simp
+          qed
           thus ?thesis using \<open>?wv (i0 + k) \<in> {?wv (i0 + l), ?wv (Suc i0 + l)}\<close> by (by100 blast)
         qed
         \<comment> \<open>From wv(Suc i0+k) = wv(i0+l): Suc i0+k and i0+l are walk positions
            with same vertex. If both in {Suc i0,...,j0-1}: hv\\_dist gives Suc i0+k = i0+l, so k+1=l.
            Boundary cases handled similarly.\<close>
         have "k + 1 = l \<or> l + 1 = k"
-          sorry \<comment> \<open>From wv(Suc i0+k) = wv(i0+l) + wv(i0+k) = wv(Suc i0+l) + hv\\_dist/hmin.\<close>
+        proof (rule ccontr)
+          assume "\<not> (k + 1 = l \<or> l + 1 = k)"
+          hence hkl_ne1: "Suc i0 + k \<noteq> i0 + l" and hkl_ne2: "i0 + k \<noteq> Suc i0 + l" by linarith+
+          \<comment> \<open>Apply hmin on pair 2: wv(i0+k) = wv(Suc i0+l), positions i0+k and Suc i0+l.\<close>
+          have hsk_le: "Suc i0 + k \<le> j0" using hk hij0(4) hij0(1) by linarith
+          have hsl_le: "Suc i0 + l \<le> j0" using hl hij0(4) hij0(1) by linarith
+          have hk_ge: "i0 + k \<ge> i0" by simp
+          have hl_ge: "i0 + l \<ge> i0" by simp
+          show False
+          proof (cases "i0 + k < Suc i0 + l")
+            case True
+            have "?wv (i0 + k) = ?wv (Suc i0 + l)"
+              using \<open>?wv (i0 + k) = ?wv (Suc i0 + l)\<close> .
+            have "i0 + k < Suc i0 + l \<and> Suc i0 + l \<le> card ?V \<and> ?wv (i0 + k) = ?wv (Suc i0 + l)"
+              using True hsl_le hij0(2) \<open>?wv (i0 + k) = ?wv (Suc i0 + l)\<close> by linarith
+            from hmin[rule_format, OF this]
+            have "dmin \<le> (Suc i0 + l) - (i0 + k)" .
+            \<comment> \<open>= l - k + 1. Also from pair 1: dmin \\<le> |Suc i0 + k - (i0 + l)| = |k - l + 1| = k - l + 1 (since k > l from True: k < l + 1 is False...).\<close>
+            \<comment> \<open>Actually: True says i0+k < Suc i0+l, so k < l + 1, so k \\<le> l. Distance = l - k + 1.\<close>
+            hence "dmin \<le> l - k + 1" by linarith
+            \<comment> \<open>Also apply hmin on pair 1 (in the reverse direction if needed).\<close>
+            have "Suc i0 + k \<le> card ?V" using hsk_le hij0(2) by linarith
+            show False
+            proof (cases "i0 + l < Suc i0 + k")
+              case True2: True
+              have "?wv (i0 + l) = ?wv (Suc i0 + k)" using \<open>?wv (Suc i0 + k) = ?wv (i0 + l)\<close> by simp
+              have "i0 + l < Suc i0 + k \<and> Suc i0 + k \<le> card ?V \<and> ?wv (i0 + l) = ?wv (Suc i0 + k)"
+                using True2 \<open>Suc i0 + k \<le> card ?V\<close> \<open>?wv (i0 + l) = ?wv (Suc i0 + k)\<close> by (by100 blast)
+              from hmin[rule_format, OF this]
+              have "dmin \<le> (Suc i0 + k) - (i0 + l)" .
+              hence "dmin \<le> k - l + 1" by linarith
+              \<comment> \<open>Now: dmin \\<le> l - k + 1 AND dmin \\<le> k - l + 1. Sum: 2*dmin \\<le> 2. So dmin \\<le> 1.\<close>
+              thus False using hdmin_ge2 \<open>dmin \<le> l - k + 1\<close> by linarith
+            next
+              case False2: False
+              \<comment> \<open>i0+l \\<ge> Suc i0+k. hkl\\_ne1: Suc i0+k \\<noteq> i0+l. So i0+l > Suc i0+k.\<close>
+              hence "Suc i0 + k < i0 + l" using hkl_ne1 by linarith
+              have "?wv (Suc i0 + k) = ?wv (i0 + l)" using \<open>?wv (Suc i0 + k) = ?wv (i0 + l)\<close> .
+              have "i0 + l \<le> j0" using hl hij0(4) hij0(1) by linarith
+              have "Suc i0 + k < i0 + l \<and> i0 + l \<le> card ?V \<and> ?wv (Suc i0 + k) = ?wv (i0 + l)"
+                using \<open>Suc i0 + k < i0 + l\<close> \<open>i0 + l \<le> j0\<close> hij0(2) \<open>?wv (Suc i0 + k) = ?wv (i0 + l)\<close> by linarith
+              from hmin[rule_format, OF this]
+              have "dmin \<le> (i0 + l) - (Suc i0 + k)" .
+              \<comment> \<open>= l - k - 1 \\<le> l - 1 < dmin. Contradiction.\<close>
+              hence "dmin \<le> l - 1" by linarith
+              thus False using hl by linarith
+            qed
+          next
+            case False
+            hence "Suc i0 + l \<le> i0 + k" using hkl_ne2 by linarith
+            hence "l + 1 \<le> k" by linarith
+            have "?wv (Suc i0 + l) = ?wv (i0 + k)" using \<open>?wv (i0 + k) = ?wv (Suc i0 + l)\<close> by simp
+            have "Suc i0 + l < i0 + k \<or> Suc i0 + l = i0 + k" using \<open>Suc i0 + l \<le> i0 + k\<close> by linarith
+            thus False
+            proof
+              assume "Suc i0 + l < i0 + k"
+              have "i0 + k \<le> card ?V" using hsk_le hij0(2) by linarith
+              have "Suc i0 + l < i0 + k \<and> i0 + k \<le> card ?V \<and> ?wv (Suc i0 + l) = ?wv (i0 + k)"
+                using \<open>Suc i0 + l < i0 + k\<close> \<open>i0 + k \<le> card ?V\<close> \<open>?wv (Suc i0 + l) = ?wv (i0 + k)\<close>
+                by (by100 blast)
+              from hmin[rule_format, OF this]
+              have "dmin \<le> (i0 + k) - (Suc i0 + l)" .
+              hence "dmin \<le> k - l - 1" by linarith
+              \<comment> \<open>And from pair 1 (Suc i0+k > i0+l since k > l):\<close>
+              have "i0 + l < Suc i0 + k" using \<open>l + 1 \<le> k\<close> by linarith
+              have "?wv (i0 + l) = ?wv (Suc i0 + k)" using \<open>?wv (Suc i0 + k) = ?wv (i0 + l)\<close> by simp
+              have "i0 + l < Suc i0 + k \<and> Suc i0 + k \<le> card ?V \<and> ?wv (i0 + l) = ?wv (Suc i0 + k)"
+                using \<open>i0 + l < Suc i0 + k\<close> hsk_le hij0(2) \<open>?wv (i0 + l) = ?wv (Suc i0 + k)\<close> by linarith
+              from hmin[rule_format, OF this]
+              have "dmin \<le> (Suc i0 + k) - (i0 + l)" .
+              hence "dmin \<le> k - l + 1" by linarith
+              \<comment> \<open>dmin \\<le> k - l - 1. With l \\<ge> 0 and k \\<ge> l+2: k - l - 1 \\<le> k - 1 < dmin.\<close>
+              have "k - l - 1 \<le> k" by linarith
+              hence "dmin \<le> k" using \<open>dmin \<le> k - l - 1\<close> by linarith
+              thus False using hk by linarith
+            next
+              assume "Suc i0 + l = i0 + k"
+              hence "l + 1 = k" by linarith
+              thus False using \<open>\<not> (k + 1 = l \<or> l + 1 = k)\<close> by simp
+            qed
+          qed
+        qed
         \<comment> \<open>Either way: consecutive arcs equal \\<Rightarrow> hnonback contradiction.\<close>
         thus False
         proof
