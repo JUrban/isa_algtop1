@@ -15420,13 +15420,15 @@ qed
 \<comment> \<open>Lemma 77.3 (Munkres): If w = [w0] a b [w1] a\\<inverse> b\\<inverse> [w2] (torus-type with commutator),
    then w ~ (aba\\<inverse>b\\<inverse>) [w0 w1 w2].\<close>
 lemma Lemma_77_3_torus_extraction:
-  assumes "top1_scheme_equiv
-      (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
-      (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)"
   shows "top1_scheme_equiv
       (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
       ([(a, True), (b, True), (a, False), (b, False)] @ w0 @ w1 @ w2)"
-  sorry \<comment> \<open>Book proof: cut/paste/permute sequence. See Munkres \\<S>77 Lemma 77.3.\<close>
+  sorry \<comment> \<open>Book proof (Munkres \\<S>77 Lemma 77.3): Three cuttings and pastings.
+     Step 1: cut\\_paste\\_opp on a moves w0's tail past a⁻¹.
+     Step 2: cut\\_paste\\_opp rearranges to get b and a⁻¹ adjacent.
+     Step 3: cut\\_paste\\_opp rearranges to get the full commutator block.
+     Step 4: rotate to bring commutator to front.
+     Each step uses cut\\_paste\\_opp + relabel. Very elaborate (book says "most elaborate").\<close>
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
