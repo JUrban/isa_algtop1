@@ -13900,9 +13900,15 @@ proof -
         case (cancel u a v)
         then show ?thesis using scheme_cancel_homeomorphic[OF hY1 hY2] hs ht by simp
       next
-        case (uncancel u a v)
-        \<comment> \<open>Uncancel = reverse of cancel. Use scheme\\_cancel\\_homeomorphic with Y1, Y2 swapped + inverse.\<close>
-        then show ?thesis sorry
+        case (uncancel u v a)
+        \<comment> \<open>Uncancel = reverse of cancel. s = u@v, t = u@[a, a\\<inverse>]@v.\<close>
+        have hs2: "top1_quotient_of_scheme_on Y1 TY1 (u @ v)" using hs uncancel by simp
+        have ht2: "top1_quotient_of_scheme_on Y2 TY2 (u @ [a, top1_inverse_edge a] @ v)"
+          using ht uncancel by simp
+        from scheme_cancel_homeomorphic[OF hY2 hY1 ht2 hs2]
+        obtain h where "top1_homeomorphism_on Y2 TY2 Y1 TY1 h" by (by100 blast)
+        from homeomorphism_inverse[OF this]
+        show ?thesis by (by100 blast)
       next
         case invert
         then show ?thesis using scheme_invert_homeomorphic[OF hY1 hY2] hs ht by simp
