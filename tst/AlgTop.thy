@@ -14943,13 +14943,31 @@ proof -
   \<comment> \<open>Step 4: Place disjoint copies of the simplex in R² (translated apart).
      Define q by pasting all h0(T) on corresponding copies.
      The edge identifications recreate X from the disjoint union.\<close>
-  show ?thesis
-  proof -
-    \<comment> \<open>Munkres 78.1: Place disjoint copies of standard 2-simplex in the plane.
-       The triangulation gives a finite set of triangles with edge identifications.
-       Define q by pasting the copies via the identification maps.\<close>
-    show ?thesis sorry \<comment> \<open>Disjoint simplex copies + pasting construction.\<close>
-  qed
+  \<comment> \<open>Step 4: Construct disjoint copies of standard simplex in R², one per triangle.\<close>
+  \<comment> \<open>Enumerate the triangles.\<close>
+  obtain tlist where htlist: "set tlist = \<T>0" "distinct tlist"
+    sorry \<comment> \<open>Finite set has a distinct list enumeration.\<close>
+  let ?m = "length tlist"
+  have hm_pos: "?m > 0" sorry
+  \<comment> \<open>Place the i-th simplex copy at position (3*i, 0) to ensure disjointness.\<close>
+  define \<Delta>copy :: "nat \<Rightarrow> (real \<times> real) set" where
+    "\<Delta>copy i = (\<lambda>(x,y). (x + 3 * real i, y)) ` top1_standard_simplex" for i
+  let ?\<T> = "{\<Delta>copy i | i. i < ?m}"
+  \<comment> \<open>Define q: on \\<Delta>copy i, apply h0(tlist!i) composed with the inverse translation.\<close>
+  define q_map :: "(real \<times> real) \<Rightarrow> 'a" where
+    "q_map p = (let i = (SOME i. i < ?m \<and> p \<in> \<Delta>copy i) in
+                h0 (tlist ! i) ((fst p - 3 * real i, snd p)))" for p
+  \<comment> \<open>Show the required properties.\<close>
+  have "finite ?\<T>" sorry
+  moreover have "?\<T> \<noteq> {}" sorry
+  moreover have "\<forall>T \<in> ?\<T>. top1_is_polygonal_region_on T 3" sorry
+  moreover have "\<forall>T \<in> ?\<T>. top1_continuous_map_on T
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q_map" sorry
+  moreover have "(\<Union>T\<in>?\<T>. q_map ` T) = X" sorry
+  moreover have "\<forall>U. U \<subseteq> X \<longrightarrow>
+      (U \<in> TX \<longleftrightarrow> (\<forall>T\<in>?\<T>. {p\<in>T. q_map p \<in> U} \<in>
+        subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T))" sorry
+  ultimately show ?thesis sorry
 qed
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
