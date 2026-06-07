@@ -4568,12 +4568,35 @@ lemma retract_attached_arc:
       and hA_arc: "top1_is_arc_on A (subspace_topology X TX A)"
       and hmeet: "A \<inter> C \<noteq> {}"
       and hinter_ep: "A \<inter> C \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)"
+      and hC_closed: "closedin_on X TX C"
   shows "top1_retract_of_on (C \<union> A) (subspace_topology X TX (C \<union> A)) C"
-  sorry \<comment> \<open>Per expert audit 7 \\<section>8:
-     Card 1: A \\<inter> C = {v}. r|C = id, r|A = const v. Pasting lemma.
-     Card 2: A \\<inter> C = {u,v} = ep(A). A is arc from u to v. C has path u\\<to>v (pc).
-       Map A along path: r|A = path \\<circ> h\\<inverse> where h: [0,1] \\<to> A. r|C = id.
-       Pasting: r continuous on C (id) and on A (path\\<circ>h\\<inverse>), agree at {u,v}.\<close>
+proof -
+  let ?CuA = "C \<union> A"
+  let ?TCuA = "subspace_topology X TX ?CuA"
+  let ?TC = "subspace_topology X TX C"
+  let ?CuA = "C \<union> A"
+  \<comment> \<open>A is closed in X (compact arc in Hausdorff).\<close>
+  have hA_compact: "top1_compact_on A (subspace_topology X TX A)"
+    using arc_compact[OF hA_arc] .
+  have hA_closed: "closedin_on X TX A"
+    by (rule Theorem_26_3[OF hhaus hA_sub hA_compact])
+  \<comment> \<open>Both C and A are closed in C \\<union> A (closed in X \\<Rightarrow> closed in subspace).\<close>
+  have hCuA_sub: "?CuA \<subseteq> X" using hC_sub hA_sub by (by100 blast)
+  \<comment> \<open>From A \\<inter> C \\<subseteq> ep(A), get the intersection structure.\<close>
+  from hmeet obtain v where hv: "v \<in> A" "v \<in> C" by (by100 blast)
+  \<comment> \<open>Get arc homeomorphism and endpoints.\<close>
+  obtain h where hh: "top1_homeomorphism_on I_set I_top A (subspace_topology X TX A) h"
+    using hA_arc unfolding top1_is_arc_on_def by (by100 blast)
+  have hep: "top1_arc_endpoints_on A (subspace_topology X TX A) = {h 0, h 1}"
+    by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA_sub hA_arc hh])
+  \<comment> \<open>A \\<inter> C \\<subseteq> {h 0, h 1}.\<close>
+  have hAC_sub_h: "A \<inter> C \<subseteq> {h 0, h 1}" using hinter_ep hep by (by100 blast)
+  \<comment> \<open>Case split: card(A \\<inter> C) = 1 or 2.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Card 1: r|C = id, r|A = const v. Pasting (Theorem\\_18\\_3).
+       Card 2: r|C = id, r|A = path\\<circ>h\\<inverse>. Path from pc of C.
+       Both cases use: C, A closed in C \\<union> A. Agreement at A \\<inter> C.\<close>
+qed
 
 \<comment> \<open>Graph connected subunion retract: in a tree with graph decomposition,
    a path-connected union of arcs from \\<A> is a retract of T.
@@ -4842,9 +4865,23 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
         qed
         thus ?thesis by (by100 blast)
       qed
+      have hC_closed: "closedin_on T TT ?C"
+      proof -
+        have "\<forall>A \<in> \<S>. closedin_on T TT A"
+        proof (intro ballI)
+          fix B assume "B \<in> \<S>"
+          hence "B \<in> \<A>" using less.prems(7) by (by100 blast)
+          have "B \<subseteq> T" using less.prems(2) \<open>B \<in> \<A>\<close> by (by100 blast)
+          have "top1_is_arc_on B (subspace_topology T TT B)" using less.prems(2) \<open>B \<in> \<A>\<close> by (by100 blast)
+          hence "top1_compact_on B (subspace_topology T TT B)" using arc_compact by (by100 blast)
+          thus "closedin_on T TT B" by (rule Theorem_26_3[OF hhaus \<open>B \<subseteq> T\<close>])
+        qed
+        have "finite \<S>" using finite_subset[OF less.prems(7) less.prems(5)] .
+        show ?thesis by (rule closedin_on_finite_Union[OF htop \<open>\<forall>A \<in> \<S>. closedin_on T TT A\<close> \<open>finite \<S>\<close>])
+      qed
       show ?thesis
         by (rule retract_attached_arc[OF htop hstrict hhaus \<open>?C \<subseteq> T\<close> \<open>A0 \<subseteq> T\<close>
-            less.prems(9) hA0_arc hA0(3) hA0C_sub_ep])
+            less.prems(9) hA0_arc hA0(3) hA0C_sub_ep hC_closed])
     qed
     \<comment> \<open>Compose: r = r2 \\<circ> r1 where r1: T \\<to> C \\<union> A0, r2: C \\<union> A0 \\<to> C.\<close>
     from hret_CuA obtain r1 where hr1: "top1_is_retraction_on T TT (?C \<union> A0) r1"
