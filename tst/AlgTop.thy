@@ -4714,7 +4714,37 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
     have "A0 \<subseteq> T" using less.prems(2) hA0(1) by (by100 blast)
     \<comment> \<open>C' = C \<union> A0 is path-connected (C pc, A0 pc, A0 \<inter> C \<noteq> {}).\<close>
     have hS'_pc: "top1_path_connected_on (\<Union>?\<S>') (subspace_topology T TT (\<Union>?\<S>'))"
-      sorry \<comment> \<open>Path-connected union: C is pc, A0 is pc (arc), A0 \<inter> C \<noteq> {}.\<close>
+    proof -
+      \<comment> \<open>C is pc, A0 is pc (arc), both contain a common point from A0 \\<inter> C.\<close>
+      from hA0(3) obtain p where "p \<in> A0 \<inter> ?C" by (by100 blast)
+      hence hp_A0: "p \<in> A0" and hp_C: "p \<in> ?C" by (by100 blast)+
+      \<comment> \<open>Use path\\_connected\\_finite\\_union\\_common\\_point with F = {C, A0}, common point p.\<close>
+      have hS'_eq: "\<Union>?\<S>' = ?C \<union> A0" by (by100 blast)
+      let ?F = "{?C, A0}"
+      have "finite ?F" by (by100 simp)
+      have "\<forall>A \<in> ?F. A \<subseteq> \<Union>?\<S>'" using hS'_eq by (by100 blast)
+      have "\<forall>A \<in> ?F. p \<in> A" using hp_A0 hp_C by (by100 blast)
+      have "\<Union>?\<S>' = \<Union>?F" using hS'_eq by (by100 auto)
+      have htop_S': "is_topology_on (\<Union>?\<S>') (subspace_topology T TT (\<Union>?\<S>'))"
+      proof -
+        have htop: "is_topology_on T TT"
+          using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+            is_topology_on_strict_def by (by100 blast)
+        have "?C \<subseteq> T"
+        proof -
+          have "\<forall>A \<in> \<S>. A \<subseteq> T" using less.prems(2,7) by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        have "\<Union>?\<S>' \<subseteq> T" using \<open>?C \<subseteq> T\<close> \<open>A0 \<subseteq> T\<close> hS'_eq by (by100 blast)
+        show ?thesis by (rule subspace_topology_is_topology_on[OF htop \<open>\<Union>?\<S>' \<subseteq> T\<close>])
+      qed
+      have "\<forall>A \<in> ?F. top1_path_connected_on A (subspace_topology (\<Union>?\<S>') (subspace_topology T TT (\<Union>?\<S>')) A)"
+        sorry \<comment> \<open>C is pc (from less.prems(9) + subspace transitivity).
+           A0 is pc (arc, homeomorphic to [0,1]).\<close>
+      from path_connected_finite_union_common_point[OF htop_S' \<open>finite ?F\<close>
+          \<open>\<forall>A \<in> ?F. A \<subseteq> \<Union>?\<S>'\<close> this \<open>\<forall>A \<in> ?F. p \<in> A\<close>]
+      show ?thesis using \<open>\<Union>?\<S>' = \<Union>?F\<close> by simp
+    qed
     \<comment> \<open>By IH: T retracts onto C \<union> A0.\<close>
     from less.hyps[OF hcard_lt less.prems(1-6) \<open>?\<S>' \<subseteq> \<A>\<close> \<open>?\<S>' \<noteq> {}\<close> hS'_pc]
     have hret_ext: "top1_retract_of_on T TT (\<Union>?\<S>')" .
