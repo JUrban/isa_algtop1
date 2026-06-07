@@ -4738,9 +4738,30 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
         have "\<Union>?\<S>' \<subseteq> T" using \<open>?C \<subseteq> T\<close> \<open>A0 \<subseteq> T\<close> hS'_eq by (by100 blast)
         show ?thesis by (rule subspace_topology_is_topology_on[OF htop \<open>\<Union>?\<S>' \<subseteq> T\<close>])
       qed
-      have "\<forall>A \<in> ?F. top1_path_connected_on A (subspace_topology (\<Union>?\<S>') (subspace_topology T TT (\<Union>?\<S>')) A)"
-        sorry \<comment> \<open>C is pc (from less.prems(9) + subspace transitivity).
-           A0 is pc (arc, homeomorphic to [0,1]).\<close>
+      have hpc_each: "\<forall>A \<in> ?F. top1_path_connected_on A (subspace_topology (\<Union>?\<S>') (subspace_topology T TT (\<Union>?\<S>')) A)"
+      proof (intro ballI)
+        fix A assume "A \<in> ?F"
+        hence "A = ?C \<or> A = A0" by (by100 blast)
+        thus "top1_path_connected_on A (subspace_topology (\<Union>?\<S>') (subspace_topology T TT (\<Union>?\<S>')) A)"
+        proof
+          assume "A = ?C"
+          have "?C \<subseteq> \<Union>?\<S>'" using hS'_eq by (by100 blast)
+          have "subspace_topology (\<Union>?\<S>') (subspace_topology T TT (\<Union>?\<S>')) ?C
+              = subspace_topology T TT ?C"
+            using subspace_topology_trans[OF \<open>?C \<subseteq> \<Union>?\<S>'\<close>] by simp
+          thus ?thesis using less.prems(9) \<open>A = ?C\<close> by simp
+        next
+          assume "A = A0"
+          have "A0 \<subseteq> \<Union>?\<S>'" using hS'_eq by (by100 blast)
+          have "subspace_topology (\<Union>?\<S>') (subspace_topology T TT (\<Union>?\<S>')) A0
+              = subspace_topology T TT A0"
+            using subspace_topology_trans[OF \<open>A0 \<subseteq> \<Union>?\<S>'\<close>] by simp
+          \<comment> \<open>A0 is pc in subspace T TT A0 (arc = homeo to [0,1] = pc).\<close>
+          have "top1_path_connected_on A0 (subspace_topology T TT A0)"
+            sorry \<comment> \<open>Arc is path-connected: homeo to [0,1], which is pc.\<close>
+          thus ?thesis using \<open>A = A0\<close> \<open>subspace_topology _ _ A0 = _\<close> by simp
+        qed
+      qed
       from path_connected_finite_union_common_point[OF htop_S' \<open>finite ?F\<close>
           \<open>\<forall>A \<in> ?F. A \<subseteq> \<Union>?\<S>'\<close> this \<open>\<forall>A \<in> ?F. p \<in> A\<close>]
       show ?thesis using \<open>\<Union>?\<S>' = \<Union>?F\<close> by simp
