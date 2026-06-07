@@ -6712,15 +6712,47 @@ proof -
       have hA_in: "?ws ! idx \<in> \<A>"
         using hws_sub nth_mem \<open>idx < length ?ws\<close> by (by100 blast)
       have hB_in: "?ws ! ((idx + 1) mod length ?ws) \<in> \<A>"
-        sorry
+      proof -
+        have "(idx + 1) mod length ?ws < length ?ws" using hws_len hdmin_ge2 by simp
+        hence "?ws ! ((idx + 1) mod length ?ws) \<in> set ?ws" using nth_mem by (by100 blast)
+        thus ?thesis using hws_sub by (by100 blast)
+      qed
       \<comment> \<open>They share a vertex (walk vertex).\<close>
       have hne: "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<noteq> {}"
-        sorry \<comment> \<open>Shared walk vertex: wv(Suc i0 + idx) for non-wrap, wv(i0) for wrap.\<close>
+      proof (cases "idx + 1 < dmin")
+        case True \<comment> \<open>Non-wraparound: shared vertex wv(Suc i0 + idx).\<close>
+        have "?wv (Suc i0 + idx) \<in> ?we (Suc i0 + idx)"
+          using hwalk_shared by (by100 blast)
+        moreover have "?wv (Suc i0 + idx) \<in> ?we (Suc i0 + Suc idx)"
+          using hwalk_shared[rule_format, of "Suc i0 + idx"] by simp
+        ultimately have "?wv (Suc i0 + idx) \<in> ?ws ! idx \<inter> ?ws ! (idx + 1)"
+          using hws_nth[rule_format, OF hidx] hws_nth[rule_format, OF True] by simp
+        hence "?ws ! idx \<inter> ?ws ! (idx + 1) \<noteq> {}" by (by100 blast)
+        moreover have "(idx + 1) mod length ?ws = idx + 1" using True hws_len by simp
+        ultimately show ?thesis by simp
+      next
+        case False \<comment> \<open>Wraparound: shared vertex wv(i0) = wv(j0).\<close>
+        hence "idx = dmin - 1" using hidx by linarith
+        have "Suc i0 + (dmin - 1) = j0" using hij0(4) hij0(1) hdmin_ge2 by linarith
+        have "?wv j0 \<in> ?we j0" using hwalk_shared by (by100 blast)
+        hence "?wv i0 \<in> ?we j0" using hij0(3) by simp
+        moreover have "?wv i0 \<in> ?we (Suc i0)" using hwalk_shared by (by100 blast)
+        ultimately have "?wv i0 \<in> ?ws ! idx \<inter> ?ws ! 0"
+          using hws_nth[rule_format, OF hidx] hws_nth[rule_format, of 0] hdmin_ge2
+              \<open>idx = dmin - 1\<close> \<open>Suc i0 + (dmin - 1) = j0\<close> by simp
+        hence "?ws ! idx \<inter> ?ws ! 0 \<noteq> {}" by (by100 blast)
+        moreover have "(idx + 1) mod length ?ws = 0" using \<open>idx = dmin - 1\<close> hws_len hdmin_ge2 by simp
+        ultimately show ?thesis by simp
+      qed
       \<comment> \<open>card \\<le> 1 from hinter, card \\<ge> 1 from non-empty.\<close>
       have hfin: "finite (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws))"
         using hinter[rule_format, OF hA_in hB_in hAB_ne] by (by100 blast)
       have "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<ge> 1"
-        sorry
+      proof -
+        have "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<noteq> 0"
+          using hfin hne by (by100 simp)
+        thus ?thesis by linarith
+      qed
       moreover have "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<le> 1"
         using hinter[rule_format, OF hA_in hB_in hAB_ne] by (by100 blast)
       ultimately show "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1" by linarith
