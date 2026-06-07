@@ -7013,7 +7013,13 @@ proof -
      Step (card\\<ge>2): remove the leaf arc. The remaining graph is still acyclic.
      By IH: V(remaining) \\<ge> E(remaining) + 1.
      The leaf vertex adds 1 to V without adding to E. So V \\<ge> E + 1.\<close>
-  show ?thesis sorry \<comment> \<open>Leaf induction: remove leaf, apply IH. Needs topological leaf removal infrastructure.\<close>
+  \<comment> \<open>Proof by strong induction on card(\\<A>).\<close>
+  show ?thesis using hfin hne harcs hcover hinter hstrict hhaus hacyclic
+  proof (induction "card \<A>" arbitrary: \<A> T TT rule: less_induct)
+    case (less \<A> T TT)
+    show ?case
+      sorry \<comment> \<open>Base: card 1. Step: leaf v, arc A0, remove A0, V'=V-1, E'=E-1, apply IH.\<close>
+  qed
 qed
 
 
