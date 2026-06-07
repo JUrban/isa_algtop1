@@ -4942,13 +4942,45 @@ next
          would again give a smaller cycle via IH).
      (c) Define r piecewise: id on cycle arcs, constant(attachment vertex) on non-cycle arcs.
      (d) Coherent topology \\<Rightarrow> r continuous. r|C = id \\<Rightarrow> retraction.\<close>
-  show ?case sorry \<comment> \<open>Retraction step case. Strategy documented above.
-     less.IH available for new cycles with fewer non-cycle arcs.
-     Decomposition planned:
-     1. hno\\_double: no double attachment (by contradiction via IH + scc\\_in\\_sc\\_false)
-     2. r definition: piecewise constant on non-cycle components
-     3. hr\\_cont: continuous via coherent topology
-     4. Assembly: retract from r + hr\\_cont + r|C = id\<close>
+  \<comment> \<open>Step case: pick any non-cycle arc A0, add it to ws, apply IH, then compose
+     with retraction C \\<union> A0 \\<to> C.\<close>
+  from False obtain A0 where hA0: "A0 \<in> \<A>" "A0 \<notin> set ws"
+  proof -
+    from False have "\<A> - set ws \<noteq> {}" using less.prems(2) by (by100 blast)
+    then obtain A0 where "A0 \<in> \<A> - set ws" by (by100 blast)
+    thus ?thesis using that by (by100 blast)
+  qed
+  let ?ws' = "ws @ [A0]"
+  have hws'_set: "set ?ws' = set ws \<union> {A0}" by (by100 simp)
+  \<comment> \<open>card(\\<A> - set ws') < card(\\<A> - set ws).\<close>
+  have hcard_lt: "card (\<A> - set ?ws') < card (\<A> - set ws)"
+  proof -
+    have "\<A> - set ?ws' = (\<A> - set ws) - {A0}" using hws'_set by (by100 blast)
+    have "A0 \<in> \<A> - set ws" using hA0 by (by100 blast)
+    have "finite (\<A> - set ws)" using less.prems(1) by (by100 blast)
+    show ?thesis using \<open>\<A> - set ?ws' = (\<A> - set ws) - {A0}\<close>
+        \<open>A0 \<in> \<A> - set ws\<close> \<open>finite (\<A> - set ws)\<close>
+      by (by100 simp)
+  qed
+  have hws'_sub: "set ?ws' \<subseteq> \<A>" using less.prems(2) hA0(1) by (by100 simp)
+  have hws'_len: "length ?ws' \<ge> 2" using less.prems(8) by (by100 simp)
+  have hA0_sub: "A0 \<subseteq> T" using less.prems(3) hA0(1) by (by100 blast)
+  have hws'_T: "\<Union>(set ?ws') \<subseteq> T" using less.prems(9) hA0_sub hws'_set by (by100 blast)
+  \<comment> \<open>Apply IH: T retracts onto C \\<union> A0.\<close>
+  from less.IH[OF hcard_lt less.prems(1) hws'_sub less.prems(3) less.prems(4)
+      less.prems(5) less.prems(6) less.prems(7) hws'_len hws'_T]
+  have hretract_ext: "top1_retract_of_on T TT (\<Union>(set ?ws'))" .
+  have hretract_CuA: "top1_retract_of_on T TT (?C \<union> A0)"
+    using hretract_ext hws'_set by (by100 simp)
+  \<comment> \<open>Compose with retraction C \\<union> A0 \\<to> C.
+     Key: A0 \\<inter> C \\<subseteq> ep(A0) (from graph conditions), so card(A0 \\<inter> C) \\<le> 2.
+     If card \\<le> 1: pasting lemma retraction (id on C, constant on A0).
+     If card = 2: both endpoints of A0 in C; contradicts tree property via IH + scc\\_in\\_sc\\_false.\<close>
+  have hretract_compose: "top1_retract_of_on T TT ?C"
+    sorry \<comment> \<open>Compose retraction T \\<to> C \\<union> A0 with retraction C \\<union> A0 \\<to> C.
+       The C \\<union> A0 \\<to> C retraction: if A0 touches C at \\<le> 1 point v, use pasting
+       (id on C, const v on A0). If A0 touches C at 2 points, derive False.\<close>
+  show ?case using hretract_compose .
   qed
 qed
 
