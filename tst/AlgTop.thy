@@ -4728,7 +4728,7 @@ proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
           from top1_continuous_map_on_comp[OF hr1_cont hg_cont]
           have "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) (g \<circ> r1)" .
           \<comment> \<open>g \\<circ> r1 = r on T.\<close>
-          thus ?thesis sorry \<comment> \<open>Show g \\<circ> r1 = r on T (from hr\\_eq) \\<Rightarrow> same continuity.\<close>
+          thus ?thesis sorry \<comment> \<open>g \\<circ> r1 = r on T (extensionally), so continuity transfers.\<close>
         qed
       qed
     next
