@@ -4990,10 +4990,18 @@ next
     qed
     thus ?thesis by (by100 blast)
   qed
+  have hep_A0_fin: "finite (top1_arc_endpoints_on A0 (subspace_topology T TT A0))
+      \<and> card (top1_arc_endpoints_on A0 (subspace_topology T TT A0)) \<le> 2"
+    sorry \<comment> \<open>ep(A0) = {h 0, h 1} for some homeomorphism h, hence finite with card \\<le> 2.\<close>
   have hA0C_fin: "finite (A0 \<inter> ?C)"
-    sorry \<comment> \<open>A0 \\<inter> C \\<subseteq> ep(A0), ep(A0) finite (2-element set from arc property).\<close>
+    using finite_subset[OF hA0C_sub] hep_A0_fin by (by100 blast)
   have hA0C_card: "card (A0 \<inter> ?C) \<le> 2"
-    sorry \<comment> \<open>Same: subset of 2-element ep(A0).\<close>
+  proof -
+    from card_mono[OF _ hA0C_sub] hep_A0_fin
+    have "card (A0 \<inter> ?C) \<le> card (top1_arc_endpoints_on A0 (subspace_topology T TT A0))"
+      by (by100 blast)
+    thus ?thesis using hep_A0_fin by linarith
+  qed
   \<comment> \<open>Case split: A0 touches C at \\<le> 1 point or at 2 points.\<close>
   have hretract_compose: "top1_retract_of_on T TT ?C"
   proof (cases "\<exists>v. A0 \<inter> ?C \<subseteq> {v}")
@@ -5001,7 +5009,8 @@ next
     \<comment> \<open>A0 touches C at \\<le> 1 point. Pasting retraction: id on C, const on A0.\<close>
     \<comment> \<open>Find v \\<in> C such that A0 \\<inter> C \\<subseteq> {v}.\<close>
     have hC_ne: "?C \<noteq> {}"
-      sorry \<comment> \<open>C = \\<Union>(set ws) with length ws \\<ge> 2 and arcs are non-empty.\<close>
+      sorry \<comment> \<open>C = \\<Union>(set ws), length ws \\<ge> 2 implies set ws \\<noteq> {},
+         each arc A \\<in> set ws is non-empty (homeomorphic to [0,1]).\<close>
     obtain v where hv: "A0 \<inter> ?C \<subseteq> {v}" "v \<in> ?C"
     proof (cases "A0 \<inter> ?C = {}")
       case True
