@@ -15258,36 +15258,89 @@ next
   have step2a: "top1_scheme_equiv
       (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
       ([(b, True)] @ y2 @ [(b, True)] @ y1 @ rev (map top1_inverse_edge y0))"
-    sorry \<comment> \<open>Direct from cut\\_paste2.\<close>
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.cut_paste2[of y0 a y1 y2 b] by simp
   \<comment> \<open>Step 2b: b y2 b (y1 y0\\<inverse>) \\<sim> bb y2\\<inverse> y1 y0\\<inverse> via cut\\_paste (Step 1).\<close>
   have step2b: "top1_scheme_equiv
       ([(b, True)] @ y2 @ [(b, True)] @ y1 @ rev (map top1_inverse_edge y0))
       ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))"
-    sorry \<comment> \<open>From cut\\_paste with u1=[], u2=y2, u3=y1@y0\\<inverse>.\<close>
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.cut_paste[of "[]" b y2 "y1 @ rev (map top1_inverse_edge y0)"]
+    by simp
   \<comment> \<open>Step 2c: bb y2\\<inverse> y1 y0\\<inverse> \\<sim> (y0 y1\\<inverse> y2) b\\<inverse> b\\<inverse> via invert.\<close>
   have step2c: "top1_scheme_equiv
       ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))
       (y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)])"
-    sorry \<comment> \<open>Invert reverses everything and flips orientations.\<close>
+  proof -
+    have "top1_elementary_scheme_operation
+        ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))
+        (rev (map top1_inverse_edge ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))))"
+      by (rule top1_elementary_scheme_operation.invert)
+    moreover have "rev (map top1_inverse_edge ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0)))
+        = y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)]"
+      sorry \<comment> \<open>List simplification: rev(map inv(bb @ y2\\<inverse> @ y1 @ y0\\<inverse>)) = y0 @ y1\\<inverse> @ y2 @ b\\<inverse>b\\<inverse>.\<close>
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by simp
+  qed
   \<comment> \<open>Step 2d: rotate to b\\<inverse> b\\<inverse> (y0 y1\\<inverse> y2).\<close>
   have step2d: "top1_scheme_equiv
       (y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)])
       ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
-    sorry \<comment> \<open>Rotate.\<close>
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.rotate[of
+        "y0 @ rev (map top1_inverse_edge y1) @ y2" "[(b, False), (b, False)]"]
+    by simp
   \<comment> \<open>Step 2e: flip\\_label b: b\\<inverse>b\\<inverse> \\<to> bb.\<close>
   have step2e: "top1_scheme_equiv
       ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
       ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
-    sorry \<comment> \<open>flip\\_label b (b \\<notin> y0, y1, y2).\<close>
+  proof -
+    have "top1_elementary_scheme_operation
+        ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        (map (\<lambda>(l, bo). (l, if l = b then \<not> bo else bo))
+             ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2))"
+      by (rule top1_elementary_scheme_operation.flip_label)
+    moreover have "map (\<lambda>(l, bo). (l, if l = b then \<not> bo else bo))
+        ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        = [(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2"
+      sorry \<comment> \<open>b \\<notin> y0, y1, y2 (from assms + b \\<noteq> a). Flip only affects the b-edges.\<close>
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by simp
+  qed
   \<comment> \<open>Step 2f: relabel b \\<to> a.\<close>
   have step2f: "top1_scheme_equiv
       ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
       ([(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
-    sorry \<comment> \<open>relabel b a (b \\<notin> y0, y1, y2).\<close>
+  proof -
+    have "top1_elementary_scheme_operation
+        ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        (map (\<lambda>(l, bo). (if l = b then a else l, bo))
+             ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2))"
+      by (rule top1_elementary_scheme_operation.relabel)
+    moreover have "map (\<lambda>(l, bo). (if l = b then a else l, bo))
+        ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        = [(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2"
+      sorry \<comment> \<open>b \\<notin> y0, y1, y2. Relabel only affects the b-edges.\<close>
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by simp
+  qed
   \<comment> \<open>Chain all steps.\<close>
-  from step2a step2b step2c step2d step2e step2f
-  show ?thesis unfolding top1_scheme_equiv_def
-    sorry \<comment> \<open>Transitivity of rtranclp, 6 steps.\<close>
+  \<comment> \<open>Chain all steps via transitivity.\<close>
+  from step2a step2b have s_ab: "top1_scheme_equiv
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+      ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))"
+    unfolding top1_scheme_equiv_def by (rule rtranclp_trans)
+  from s_ab step2c have s_abc: "top1_scheme_equiv
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+      (y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)])"
+    unfolding top1_scheme_equiv_def by (rule rtranclp_trans)
+  from s_abc step2d have s_abcd: "top1_scheme_equiv
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+      ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    unfolding top1_scheme_equiv_def by (rule rtranclp_trans)
+  from s_abcd step2e have s_abcde: "top1_scheme_equiv
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+      ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    unfolding top1_scheme_equiv_def by (rule rtranclp_trans)
+  from s_abcde step2f show ?thesis
+    unfolding top1_scheme_equiv_def by (rule rtranclp_trans)
 qed
 
 \<comment> \<open>Lemma 77.3 (Munkres): If w = [w0] a b [w1] a\\<inverse> b\\<inverse> [w2] (torus-type with commutator),
