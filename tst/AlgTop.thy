@@ -7140,10 +7140,14 @@ proof -
         sorry \<comment> \<open>V = ep(A0) \\<union> V'. v \\<in> ep(A0). ep(A0) \\ V' = {v}.\<close>
       have "v \<notin> top1_graph_vertex_set T TT ?\<A>'"
         sorry \<comment> \<open>v not endpoint of any arc in \\<A>'. v not in any arc in \\<A>' (from hv\\_only).\<close>
+      have hep_fin': "\<forall>A0\<in>\<A>. finite (?ep A0)"
+        sorry \<comment> \<open>Each arc has 2 endpoints.\<close>
       have hV_fin': "finite ?V"
-        unfolding top1_graph_vertex_set_def sorry
+        unfolding top1_graph_vertex_set_def using hfin' hep_fin' by (by100 blast)
       have "card ?V = card (top1_graph_vertex_set T TT ?\<A>') + 1"
-        sorry \<comment> \<open>From V = insert v V' and v \\<notin> V' and finite.\<close>
+        using \<open>?V = insert v (top1_graph_vertex_set T TT ?\<A>')\<close>
+            \<open>v \<notin> top1_graph_vertex_set T TT ?\<A>'\<close> hV_fin'
+        by (by100 simp)
       have "card \<A> = card ?\<A>' + 1"
       proof -
         have "card (\<A> - {A0}) = card \<A> - 1" using hfin' hA0_in by simp
