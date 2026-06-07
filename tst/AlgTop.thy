@@ -6256,36 +6256,10 @@ lemma acyclic_graph_has_leaf:
       and "\<A> \<noteq> {}"
   shows "\<exists>v\<in>top1_graph_vertex_set T TT \<A>.
       card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} \<le> 1"
-  using assms sorry \<comment> \<open>The walk argument from forest\\_euler\\_formula proves this.
-     TODO: Move the walk proof here to allow reuse in the induction step.\<close>
-
-\<comment> \<open>Forest Euler formula (purely combinatorial, no topology):
-   In a graph (finite vertex set V, finite arc set \\<A>, each arc has 2 distinct endpoints in V)
-   that is acyclic (no cycle of distinct arcs), V \\<ge> E + 1.
-   Proof: by induction on E. Key step: acyclic \\<Rightarrow> every arc is a bridge (removing disconnects).
-   Bridge removal splits into 2 components; IH on each gives V1 \\<ge> E1+1 and V2 \\<ge> E2+1,
-   so V = V1+V2 \\<ge> E1+E2+2 = (E-1)+2 = E+1.\<close>
-lemma forest_euler_formula:
-  fixes \<A> :: "'a set set"
-  assumes harcs: "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
-      and hcover: "\<Union>\<A> = T"
-      and hinter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
-           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
-         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 1"
-      and hfin: "finite \<A>"
-      and hstrict: "is_topology_on_strict T TT"
-      and hhaus: "is_hausdorff_on T TT"
-      \<comment> \<open>Acyclicity: no cycle of \\<ge> 2 distinct arcs forming a closed walk.\<close>
-      and hacyclic: "\<forall>ws. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> \<A> \<longrightarrow>
-          (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow> False"
-      and hne: "\<A> \<noteq> {}"
-  shows "card (top1_graph_vertex_set T TT \<A>) \<ge> card \<A> + 1"
 proof -
-  \<comment> \<open>Proof by induction on card(\\<A>). In the step case, pick any arc A0.
-     Since the graph is acyclic, A0 is a bridge: removing it splits the vertex set.
-     Each side has at least one more vertex than arcs (by IH on each component).
-     Together: V \\<ge> (E1+1) + (E2+1) = (E-1)+2 = E+1.\<close>
+  note harcs = assms(1) note hcover = assms(2) note hinter = assms(3)
+  note hfin = assms(4) note hstrict = assms(5) note hhaus = assms(6)
+  note hacyclic = assms(7) note hne = assms(8)
   let ?V = "top1_graph_vertex_set T TT \<A>"
   let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
   \<comment> \<open>Each arc has exactly 2 endpoints.\<close>
@@ -7029,6 +7003,39 @@ proof -
     from hacyclic[rule_format, OF hws_ge2 hws_dist]
     show False using hws_sub hws_card1 by (by100 blast)
   qed
+  from \<open>\<exists>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<le> 1\<close>
+  show ?thesis .
+qed
+
+
+\<comment> \<open>Forest Euler formula (purely combinatorial, no topology):
+   In a graph (finite vertex set V, finite arc set \\<A>, each arc has 2 distinct endpoints in V)
+   that is acyclic (no cycle of distinct arcs), V \\<ge> E + 1.
+   Proof: by induction on E. Key step: acyclic \\<Rightarrow> every arc is a bridge (removing disconnects).
+   Bridge removal splits into 2 components; IH on each gives V1 \\<ge> E1+1 and V2 \\<ge> E2+1,
+   so V = V1+V2 \\<ge> E1+E2+2 = (E-1)+2 = E+1.\<close>
+lemma forest_euler_formula:
+  fixes \<A> :: "'a set set"
+  assumes harcs: "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and hcover: "\<Union>\<A> = T"
+      and hinter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 1"
+      and hfin: "finite \<A>"
+      and hstrict: "is_topology_on_strict T TT"
+      and hhaus: "is_hausdorff_on T TT"
+      \<comment> \<open>Acyclicity: no cycle of \\<ge> 2 distinct arcs forming a closed walk.\<close>
+      and hacyclic: "\<forall>ws. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> \<A> \<longrightarrow>
+          (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow> False"
+      and hne: "\<A> \<noteq> {}"
+  shows "card (top1_graph_vertex_set T TT \<A>) \<ge> card \<A> + 1"
+proof -
+  let ?V = "top1_graph_vertex_set T TT \<A>"
+  let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
+  \<comment> \<open>Leaf existence from the walk argument (proved in acyclic\\_graph\\_has\\_leaf).\<close>
+  have hleaf: "\<exists>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<le> 1"
+    by (rule acyclic_graph_has_leaf[OF harcs hcover hinter hfin hstrict hhaus hacyclic hne])
   \<comment> \<open>From the leaf, do induction on card(\\<A>) to get V \\<ge> E + 1.
      Base (card=1): V = 2 \\<ge> 2 = 1+1.
      Step (card\\<ge>2): remove the leaf arc. The remaining graph is still acyclic.
