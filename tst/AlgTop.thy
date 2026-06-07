@@ -14761,8 +14761,24 @@ lemma scheme_cancel_homeomorphic:
       and "top1_quotient_of_scheme_on Y1 TY1 (u @ [a, top1_inverse_edge a] @ v)"
       and "top1_quotient_of_scheme_on Y2 TY2 (u @ v)"
   shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-  sorry \<comment> \<open>Fold the polygon along the two cancelling edges. The identified boundary
-     reduces to the shorter scheme. Quotient map factors through the fold.\<close>
+proof -
+  \<comment> \<open>Book proof (Munkres \\<S>76 operation vi): "Cancel. Replace w = y0 a a\\<inverse> y1 by y0 y1."
+     Formal: The (n+2)-gon for u@[a,a\\<inverse>]@v has two adjacent edges labeled a, a\\<inverse>.
+     These edges are identified in the quotient. "Folding" the polygon along these edges
+     gives an n-gon. The fold map is a quotient map P(n+2) \\<to> P(n) that preserves
+     all other edge identifications.
+     Compose: q1: P(n+2) \\<to> Y1, fold: P(n+2) \\<to> P(n), and q2\\<inverse>: P(n) \\<to> Y2.
+     The composition gives a homeomorphism Y1 \\<to> Y2.\<close>
+  \<comment> \<open>Step 1: Extract quotient data from assms(3) and assms(4).\<close>
+  \<comment> \<open>Step 2: Construct the fold map \\<phi>: P(n+2) \\<to> P(n) that collapses the two
+     cancelling edges (edge |u| and edge |u|+1) to a single vertex.\<close>
+  \<comment> \<open>Step 3: Show q2 \\<circ> \\<phi> has the same fibres as q1 on P(n+2).
+     Interior points: \\<phi> is bijective away from the fold line.
+     Boundary: the cancelling edges are already identified by q1 (same label, inverse direction).
+     Other edges: \\<phi> maps them linearly, preserving the identification pattern.\<close>
+  \<comment> \<open>Step 4: Apply quotient\\_same\\_fibres\\_homeomorphic (or Theorem 22.2 directly).\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Scheme inversion preserves quotient type: quotient(w) \\<cong> quotient(rev(map inverse w)).
    Reflecting the polygon preserves the quotient space.\<close>
