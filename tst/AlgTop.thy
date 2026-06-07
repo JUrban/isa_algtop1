@@ -14601,7 +14601,13 @@ inductive top1_elementary_scheme_operation :: "('a \<times> bool) list \<Rightar
      Formally: rotate one piece around and paste, cancelling u2 into u2\\<inverse>.\<close>
   cut_paste: "top1_elementary_scheme_operation
       (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)
-      (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+      (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)" |
+  \<comment> \<open>Cut-paste variant 2 (Figure 77.2): rearrange with a new label.
+     Transforms y0 a y1 a y2 into b y2 b (y1 y0\\<inverse>) where b is new.
+     This is the book's Figure 77.2 operation from \\<S>77 Lemma 77.1 Step 2.\<close>
+  cut_paste2: "top1_elementary_scheme_operation
+      (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)
+      ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
 
 \<comment> \<open>The scheme equivalence is the reflexive-transitive closure of elementary operations.\<close>
 definition top1_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
@@ -14897,6 +14903,9 @@ proof -
         \<comment> \<open>Cut-and-repaste: Munkres \\<S>76 Theorem 76.1.
            Cut the polygon, flip one piece, paste along the shared edge.
            The two quotient spaces are homeomorphic because the identifications are preserved.\<close>
+        then show ?thesis sorry
+      next
+        case (cut_paste2 u0 a u1 u2 b)
         then show ?thesis sorry
       qed
     qed
@@ -15241,8 +15250,44 @@ proof (cases "y0 = []")
   qed
 next
   case False
-  \<comment> \<open>Step 2: y0 non-empty. Cut-flip-paste reduces to Step 1.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 2: y0 non-empty. Book proof (Munkres Figure 77.2):
+     y0 a y1 a y2 \\<sim> b y2 b (y1 y0\\<inverse>) \\<sim> bb y2\\<inverse> y1 y0\\<inverse> \\<sim> aa y0 y1\\<inverse> y2.\<close>
+  \<comment> \<open>Choose a fresh label b \\<noteq> a (exists because labels are from an infinite type).\<close>
+  obtain b :: 'a where "b \<noteq> a" sorry
+  \<comment> \<open>Step 2a: y0 a y1 a y2 \\<sim> b y2 b (y1 y0\\<inverse>) via cut\\_paste2.\<close>
+  have step2a: "top1_scheme_equiv
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+      ([(b, True)] @ y2 @ [(b, True)] @ y1 @ rev (map top1_inverse_edge y0))"
+    sorry \<comment> \<open>Direct from cut\\_paste2.\<close>
+  \<comment> \<open>Step 2b: b y2 b (y1 y0\\<inverse>) \\<sim> bb y2\\<inverse> y1 y0\\<inverse> via cut\\_paste (Step 1).\<close>
+  have step2b: "top1_scheme_equiv
+      ([(b, True)] @ y2 @ [(b, True)] @ y1 @ rev (map top1_inverse_edge y0))
+      ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))"
+    sorry \<comment> \<open>From cut\\_paste with u1=[], u2=y2, u3=y1@y0\\<inverse>.\<close>
+  \<comment> \<open>Step 2c: bb y2\\<inverse> y1 y0\\<inverse> \\<sim> (y0 y1\\<inverse> y2) b\\<inverse> b\\<inverse> via invert.\<close>
+  have step2c: "top1_scheme_equiv
+      ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))
+      (y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)])"
+    sorry \<comment> \<open>Invert reverses everything and flips orientations.\<close>
+  \<comment> \<open>Step 2d: rotate to b\\<inverse> b\\<inverse> (y0 y1\\<inverse> y2).\<close>
+  have step2d: "top1_scheme_equiv
+      (y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)])
+      ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    sorry \<comment> \<open>Rotate.\<close>
+  \<comment> \<open>Step 2e: flip\\_label b: b\\<inverse>b\\<inverse> \\<to> bb.\<close>
+  have step2e: "top1_scheme_equiv
+      ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+      ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    sorry \<comment> \<open>flip\\_label b (b \\<notin> y0, y1, y2).\<close>
+  \<comment> \<open>Step 2f: relabel b \\<to> a.\<close>
+  have step2f: "top1_scheme_equiv
+      ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+      ([(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    sorry \<comment> \<open>relabel b a (b \\<notin> y0, y1, y2).\<close>
+  \<comment> \<open>Chain all steps.\<close>
+  from step2a step2b step2c step2d step2e step2f
+  show ?thesis unfolding top1_scheme_equiv_def
+    sorry \<comment> \<open>Transitivity of rtranclp, 6 steps.\<close>
 qed
 
 \<comment> \<open>Lemma 77.3 (Munkres): If w = [w0] a b [w1] a\\<inverse> b\\<inverse> [w2] (torus-type with commutator),
