@@ -14962,9 +14962,38 @@ proof -
   \<comment> \<open>Translation preserves polygonal region.\<close>
   have htranslate_poly: "\<And>P n c. top1_is_polygonal_region_on P n \<Longrightarrow>
       top1_is_polygonal_region_on ((\<lambda>(x,y). (x + c, y)) ` P) n"
-    sorry \<comment> \<open>Translate vertex positions: vx'(i) = vx(i) + c, vy'(i) = vy(i).
-       Convex hull of translated vertices = translation of convex hull.
-       All other conditions (vertex distinctness, non-degeneracy) preserved by translation.\<close>
+  proof -
+    fix P :: "(real \<times> real) set" and n :: nat and c :: real
+    assume hP: "top1_is_polygonal_region_on P n"
+    from hP obtain vx vy where hn: "n \<ge> 3"
+        and hdist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+        and hndeg: "\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
+                          \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1
+                          \<and> vx k = (\<Sum>i<n. coeffs i * vx i) \<and> vy k = (\<Sum>i<n. coeffs i * vy i))"
+        and hP_eq: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+      unfolding top1_is_polygonal_region_on_def sorry
+    \<comment> \<open>Translated vertices.\<close>
+    define vx' where "vx' i = vx i + c" for i
+    define vy' where "vy' = vy"
+    \<comment> \<open>Vertex distinctness.\<close>
+    have hdist': "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j)"
+      using hdist unfolding vx'_def vy'_def by simp
+    \<comment> \<open>Non-degeneracy.\<close>
+    have hndeg': "\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
+                        \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1
+                        \<and> vx' k = (\<Sum>i<n. coeffs i * vx' i) \<and> vy' k = (\<Sum>i<n. coeffs i * vy' i))"
+      sorry \<comment> \<open>Non-degeneracy: vx'(k)=\\<Sum>\\<alpha> vx'(i) \\<Rightarrow> vx(k)=\\<Sum>\\<alpha> vx(i) (subtract c).
+         Same for vy. Contradicts hndeg.\<close>
+    \<comment> \<open>Translated hull.\<close>
+    have hP'_eq: "(\<lambda>(x,y). (x + c, y)) ` P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                  \<and> (\<Sum>i<n. coeffs i) = 1
+                  \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}"
+      sorry \<comment> \<open>Translation of convex hull = convex hull of translated vertices.\<close>
+    show "top1_is_polygonal_region_on ((\<lambda>(x,y). (x + c, y)) ` P) n"
+      unfolding top1_is_polygonal_region_on_def
+      using hn hdist' hndeg' hP'_eq by (by100 blast)
+  qed
   \<comment> \<open>Step 4: Construct disjoint copies of standard simplex in R², one per triangle.\<close>
   \<comment> \<open>Enumerate the triangles.\<close>
   obtain tlist where htlist: "set tlist = \<T>0" "distinct tlist"
