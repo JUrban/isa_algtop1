@@ -4626,8 +4626,33 @@ proof -
     proof (intro exI[of _ r] conjI)
       show "C \<subseteq> ?CuA" by (by100 blast)
       show "\<forall>a \<in> C. r a = a" unfolding r_def by (by100 simp)
+      \<comment> \<open>Simplify codomain topology: subspace (C\\<union>A) (subspace X TX (C\\<union>A)) C = subspace X TX C.\<close>
+      have hC_sub_CuA: "C \<subseteq> ?CuA" by (by100 blast)
+      have "subspace_topology ?CuA (subspace_topology X TX ?CuA) C = subspace_topology X TX C"
+        using subspace_topology_trans[OF hC_sub_CuA] by simp
+      \<comment> \<open>Use pasting\\_lemma\\_two\\_closed: r continuous on C and A in subspace of C\\<union>A.\<close>
       show "top1_continuous_map_on ?CuA (subspace_topology X TX ?CuA) C (subspace_topology ?CuA (subspace_topology X TX ?CuA) C) r"
-        sorry \<comment> \<open>Pasting: r|C = id (cont), r|A = const v (cont), agree at A \\<inter> C = {v}.\<close>
+        unfolding \<open>subspace_topology ?CuA _ C = subspace_topology X TX C\<close>
+      proof (rule pasting_lemma_two_closed)
+        show "is_topology_on ?CuA (subspace_topology X TX ?CuA)"
+          by (rule subspace_topology_is_topology_on[OF htop hCuA_sub])
+        show "is_topology_on C (subspace_topology X TX C)"
+          by (rule subspace_topology_is_topology_on[OF htop hC_sub])
+        \<comment> \<open>C and A closed in C \\<union> A (from closed in X via Theorem\\_17\\_2).\<close>
+        show "closedin_on ?CuA (subspace_topology X TX ?CuA) C"
+          using Theorem_17_2[OF htop hCuA_sub, of C] hC_closed by (by100 blast)
+        show "closedin_on ?CuA (subspace_topology X TX ?CuA) A"
+          using Theorem_17_2[OF htop hCuA_sub, of A] hA_closed by (by100 blast)
+        show "C \<union> A = ?CuA" by simp
+        show "\<forall>x \<in> ?CuA. r x \<in> C" unfolding r_def using hv(2) by (by100 simp)
+        \<comment> \<open>r continuous on C: r|C = id, inclusion is continuous.\<close>
+        show "top1_continuous_map_on C (subspace_topology ?CuA (subspace_topology X TX ?CuA) C) C (subspace_topology X TX C) r"
+          unfolding \<open>subspace_topology ?CuA _ C = subspace_topology X TX C\<close>
+          sorry \<comment> \<open>r|C = id. Identity on C is continuous.\<close>
+        \<comment> \<open>r continuous on A: r|A = const v (continuous).\<close>
+        show "top1_continuous_map_on A (subspace_topology ?CuA (subspace_topology X TX ?CuA) A) C (subspace_topology X TX C) r"
+          sorry \<comment> \<open>r|A = const v. Constant map is continuous.\<close>
+      qed
     qed
   next
     case False
