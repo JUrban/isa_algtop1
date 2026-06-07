@@ -4999,18 +4999,29 @@ next
   proof (cases "\<exists>v. A0 \<inter> ?C \<subseteq> {v}")
     case True
     \<comment> \<open>A0 touches C at \\<le> 1 point. Pasting retraction: id on C, const on A0.\<close>
-    then obtain v where hv: "A0 \<inter> ?C \<subseteq> {v}" by (by100 blast)
-    \<comment> \<open>v is either the unique attachment point, or we pick any point of C.\<close>
-    have hv_C: "v \<in> ?C"
+    \<comment> \<open>Find v \\<in> C such that A0 \\<inter> C \\<subseteq> {v}.\<close>
+    have hC_ne: "?C \<noteq> {}"
+    proof -
+      from less.prems(8) have "length ws \<ge> 2" .
+      then obtain B where "B \<in> set ws" sorry
+      hence "B \<subseteq> T" "top1_is_arc_on B (subspace_topology T TT B)"
+        using less.prems(3) less.prems(2) sorry
+      hence "B \<noteq> {}" sorry \<comment> \<open>Arcs are non-empty.\<close>
+      thus ?thesis using \<open>B \<in> set ws\<close> sorry
+    qed
+    obtain v where hv: "A0 \<inter> ?C \<subseteq> {v}" "v \<in> ?C"
     proof (cases "A0 \<inter> ?C = {}")
-      case True thus ?thesis using hv sorry \<comment> \<open>A0 \\<inter> C = {} and A0 \\<inter> C \\<subseteq> {v}, so v is arbitrary.
-         Pick v from C: C \\<noteq> {} since ws has \\<ge> 2 elements hence \\<ge> 1 arc with \\<ge> 1 point.\<close>
+      case True
+      from hC_ne obtain w where "w \<in> ?C" by (by100 blast)
+      show ?thesis using that True \<open>w \<in> ?C\<close> sorry
     next
       case False
-      then obtain w where "w \<in> A0 \<inter> ?C" by (by100 blast)
-      hence "w \<in> {v}" using hv by (by100 blast)
-      hence "w = v" by (by100 simp)
-      thus ?thesis using \<open>w \<in> A0 \<inter> ?C\<close> by (by100 blast)
+      then obtain w where hw: "w \<in> A0 \<inter> ?C" by (by100 blast)
+      from True obtain v0 where "A0 \<inter> ?C \<subseteq> {v0}" by (by100 blast)
+      hence "w \<in> {v0}" using hw by (by100 blast)
+      hence "w = v0" by (by100 simp)
+      hence "v0 \<in> ?C" using hw by (by100 blast)
+      show ?thesis using that \<open>A0 \<inter> ?C \<subseteq> {v0}\<close> \<open>v0 \<in> ?C\<close> sorry
     qed
     \<comment> \<open>Define retraction r': C \\<union> A0 \\<to> C by id on C, const v on A0.\<close>
     define r' where "r' x = (if x \<in> ?C then x else v)" for x
@@ -5022,7 +5033,7 @@ next
       proof (cases "x \<in> ?C")
         case True thus ?thesis unfolding r'_def by (by100 simp)
       next
-        case False thus ?thesis unfolding r'_def using hv_C by (by100 simp)
+        case False thus ?thesis unfolding r'_def using hv(2) by (by100 simp)
       qed
     qed
     have hr'_range: "\<forall>x \<in> ?C \<union> A0. r' x \<in> ?C"
