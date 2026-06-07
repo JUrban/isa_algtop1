@@ -5719,7 +5719,197 @@ proof -
       \<and> \<Union>(set (take n ws)) \<subseteq> T
       \<and> top1_arc_endpoints_on (\<Union>(set (take n ws))) (subspace_topology T TT (\<Union>(set (take n ws))))
           = {sv (?k - 1), sv (n - 1)}"
-    sorry \<comment> \<open>Induction on n. Base: take 1 ws = ws!0. Step: arc\\_merge\\_at\\_endpoint.\<close>
+  proof (intro allI impI, goal_cases)
+    case (1 n)
+    hence hn1: "1 \<le> n" and hn2: "n \<le> ?k - 1" by (by100 blast)+
+    show ?case using hn1 hn2
+    proof (induction n rule: nat_induct_at_least)
+      case base
+      have hws_ne: "ws \<noteq> []" using assms(5) by (by100 force)
+      have "take 1 ws = [ws ! 0]"
+        using hws_ne by (simp add: take_Suc hd_conv_nth)
+      hence "\<Union>(set (take 1 ws)) = ws ! 0" by simp
+      moreover have "ws ! 0 \<in> set ws" using hk_pos by simp
+      moreover have "ws ! 0 \<subseteq> T" using assms(3) calculation(2) by (by100 blast)
+      moreover have "top1_is_arc_on (ws ! 0) (subspace_topology T TT (ws ! 0))"
+        using assms(3) calculation(2) by (by100 blast)
+      moreover have "top1_arc_endpoints_on (ws ! 0) (subspace_topology T TT (ws ! 0)) = {sv (?k - 1), sv 0}"
+      proof -
+        from hep_eq[rule_format, OF hk_pos]
+        have "top1_arc_endpoints_on (ws ! 0) (subspace_topology T TT (ws ! 0))
+            = {sv ((0 + ?k - 1) mod ?k), sv 0}" by simp
+        moreover have "(0 + ?k - 1) mod ?k = ?k - 1" using hk_pos by simp
+        ultimately show ?thesis by simp
+      qed
+      ultimately show ?case by simp
+    next
+      case (Suc n)
+      hence "n \<ge> 1" by linarith
+      have "n \<le> ?k - 1" using Suc.prems by linarith
+      have "Suc n \<le> ?k - 1" using Suc.prems .
+      hence "Suc n < ?k" by linarith
+      have "n < ?k" using \<open>n \<le> ?k - 1\<close> hk_pos by linarith
+      from Suc.IH[OF \<open>n \<le> ?k - 1\<close>]
+      have IH_arc: "top1_is_arc_on (\<Union>(set (take n ws))) (subspace_topology T TT (\<Union>(set (take n ws))))"
+        and IH_sub: "\<Union>(set (take n ws)) \<subseteq> T"
+        and IH_ep: "top1_arc_endpoints_on (\<Union>(set (take n ws))) (subspace_topology T TT (\<Union>(set (take n ws))))
+            = {sv (?k - 1), sv (n - 1)}" by (by100 blast)+
+      have hwsn: "ws ! n \<in> set ws" using \<open>n < ?k\<close> by simp
+      have hwsn_arc: "top1_is_arc_on (ws ! n) (subspace_topology T TT (ws ! n))"
+        using assms(3) hwsn by (by100 blast)
+      have hwsn_sub: "ws ! n \<subseteq> T" using assms(3) hwsn by (by100 blast)
+      have hwsn_ep: "top1_arc_endpoints_on (ws ! n) (subspace_topology T TT (ws ! n)) = {sv (n - 1), sv n}"
+      proof -
+        from hep_eq[rule_format, OF \<open>n < ?k\<close>]
+        show ?thesis
+        proof -
+          have "(n + ?k - 1) mod ?k = n - 1"
+          proof -
+            have "n + ?k - 1 = ?k + (n - 1)" using \<open>n \<ge> 1\<close> by linarith
+            hence "(n + ?k - 1) mod ?k = (n - 1) mod ?k" by simp
+            thus ?thesis using \<open>n \<ge> 1\<close> \<open>n < ?k\<close> by simp
+          qed
+          thus ?thesis using hep_eq[rule_format, OF \<open>n < ?k\<close>] by simp
+        qed
+      qed
+      \<comment> \<open>Intersection: \\<Union>(take n ws) \\<inter> ws!n = {sv(n-1)}.\<close>
+      have hinter_n: "(\<Union>(set (take n ws))) \<inter> ws ! n = {sv (n - 1)}"
+      proof -
+        have hws_n1: "ws ! (n - 1) \<inter> ws ! n = {sv (n - 1)}"
+        proof -
+          have "n - 1 < ?k" using \<open>n < ?k\<close> by linarith
+          from hsv_eq[rule_format, OF this]
+          have "ws ! (n - 1) \<inter> ws ! ((n - 1 + 1) mod ?k) = {sv (n - 1)}" .
+          moreover have "(n - 1 + 1) mod ?k = n" using \<open>n \<ge> 1\<close> \<open>n < ?k\<close> by simp
+          ultimately show ?thesis by simp
+        qed
+        have "\<forall>j. j < n - 1 \<longrightarrow> ws ! j \<inter> ws ! n = {}"
+        proof (intro allI impI)
+          fix j assume "j < n - 1"
+          hence "j < ?k" using \<open>n < ?k\<close> by linarith
+          have "j \<noteq> n" using \<open>j < n - 1\<close> by linarith
+          have "ws ! j \<noteq> ws ! n" using nth_eq_iff_index_eq[OF assms(6) \<open>j < ?k\<close> \<open>n < ?k\<close>] \<open>j \<noteq> n\<close> by simp
+          from assms(4)[rule_format, OF nth_mem[OF \<open>j < ?k\<close>] hwsn this]
+          have "ws ! j \<inter> ws ! n \<subseteq>
+              top1_arc_endpoints_on (ws ! j) (subspace_topology T TT (ws ! j))
+              \<inter> top1_arc_endpoints_on (ws ! n) (subspace_topology T TT (ws ! n))" by (by100 blast)
+          also have "\<dots> = {sv ((j + ?k - 1) mod ?k), sv j} \<inter> {sv (n - 1), sv n}"
+            using hep_eq[rule_format, OF \<open>j < ?k\<close>] hwsn_ep by simp
+          finally have hsub: "ws ! j \<inter> ws ! n \<subseteq> {sv ((j + ?k - 1) mod ?k), sv j} \<inter> {sv (n - 1), sv n}" .
+          have hjm1: "(j + ?k - 1) mod ?k = (if j = 0 then ?k - 1 else j - 1)"
+          proof (cases "j = 0")
+            case True thus ?thesis using hk_pos by simp
+          next
+            case False
+            hence "j + ?k - 1 = ?k + (j - 1)" by linarith
+            hence "(j + ?k - 1) mod ?k = (j - 1) mod ?k" by simp
+            also have "\<dots> = j - 1" using False \<open>j < ?k\<close> by simp
+            finally show ?thesis using False by simp
+          qed
+          have "sv ((j + ?k - 1) mod ?k) \<noteq> sv (n - 1)"
+          proof -
+            have "(j + ?k - 1) mod ?k \<noteq> n - 1"
+            proof (cases "j = 0")
+              case True hence "(j + ?k - 1) mod ?k = ?k - 1" using hjm1 by simp
+              thus ?thesis using \<open>Suc n \<le> ?k - 1\<close> by linarith
+            next
+              case False hence "(j + ?k - 1) mod ?k = j - 1" using hjm1 by simp
+              thus ?thesis using \<open>j < n - 1\<close> by linarith
+            qed
+            moreover have "(j + ?k - 1) mod ?k < ?k" using hk_pos by simp
+            moreover have "n - 1 < ?k" using \<open>n < ?k\<close> by linarith
+            ultimately show ?thesis using hsv_distinct[rule_format] by (by100 blast)
+          qed
+          moreover have "sv ((j + ?k - 1) mod ?k) \<noteq> sv n"
+          proof -
+            have "(j + ?k - 1) mod ?k \<noteq> n"
+            proof (cases "j = 0")
+              case True hence "(j + ?k - 1) mod ?k = ?k - 1" using hjm1 by simp
+              thus ?thesis using \<open>Suc n \<le> ?k - 1\<close> by linarith
+            next
+              case False hence "(j + ?k - 1) mod ?k = j - 1" using hjm1 by simp
+              thus ?thesis using \<open>j < n - 1\<close> by linarith
+            qed
+            moreover have "(j + ?k - 1) mod ?k < ?k" using hk_pos by simp
+            ultimately show ?thesis using hsv_distinct[rule_format, OF _ \<open>n < ?k\<close>] by (by100 blast)
+          qed
+          moreover have "sv j \<noteq> sv (n - 1)"
+          proof -
+            have "j \<noteq> n - 1" using \<open>j < n - 1\<close> by linarith
+            have "n - 1 < ?k" using \<open>n < ?k\<close> by linarith
+            show ?thesis using hsv_distinct[rule_format, OF \<open>j < ?k\<close> \<open>n - 1 < ?k\<close> \<open>j \<noteq> n - 1\<close>] .
+          qed
+          moreover have "sv j \<noteq> sv n"
+            using hsv_distinct[rule_format, OF \<open>j < ?k\<close> \<open>n < ?k\<close> \<open>j \<noteq> n\<close>] .
+          ultimately have "{sv ((j + ?k - 1) mod ?k), sv j} \<inter> {sv (n - 1), sv n} = {}" by (by100 blast)
+          thus "ws ! j \<inter> ws ! n = {}" using hsub by (by100 blast)
+        qed
+        show ?thesis
+        proof
+          show "\<Union>(set (take n ws)) \<inter> ws ! n \<subseteq> {sv (n - 1)}"
+          proof
+            fix x assume hx: "x \<in> \<Union>(set (take n ws)) \<inter> ws ! n"
+            hence "x \<in> \<Union>(set (take n ws))" "x \<in> ws ! n" by (by100 blast)+
+            then obtain A where "A \<in> set (take n ws)" "x \<in> A" by (by100 blast)
+            then obtain j where "j < length (take n ws)" "take n ws ! j = A"
+              using in_set_conv_nth by (by100 metis)
+            hence "j < n" using \<open>n < ?k\<close> by (simp add: min_def)
+            have "x \<in> ws ! j" using \<open>x \<in> A\<close> \<open>take n ws ! j = A\<close> \<open>j < n\<close> \<open>n < ?k\<close> by simp
+            show "x \<in> {sv (n - 1)}"
+            proof (cases "j = n - 1")
+              case True thus ?thesis using \<open>x \<in> ws ! j\<close> \<open>x \<in> ws ! n\<close> hws_n1 by (by100 blast)
+            next
+              case False hence "j < n - 1" using \<open>j < n\<close> by linarith
+              thus ?thesis using \<open>x \<in> ws ! j\<close> \<open>x \<in> ws ! n\<close>
+                  \<open>\<forall>j. j < n - 1 \<longrightarrow> ws ! j \<inter> ws ! n = {}\<close>[rule_format, OF \<open>j < n - 1\<close>]
+                by (by100 blast)
+            qed
+          qed
+        next
+          show "{sv (n - 1)} \<subseteq> \<Union>(set (take n ws)) \<inter> ws ! n"
+          proof -
+            have "sv (n - 1) \<in> ws ! (n - 1)" using hws_n1 by (by100 blast)
+            have "ws ! (n - 1) \<in> set (take n ws)"
+            proof -
+              have "n - 1 < n" using \<open>n \<ge> 1\<close> by linarith
+              hence "n - 1 < length (take n ws)" using \<open>n < ?k\<close> by (simp add: min_def)
+              hence "take n ws ! (n - 1) \<in> set (take n ws)" using nth_mem by (by100 blast)
+              moreover have "take n ws ! (n - 1) = ws ! (n - 1)"
+                using \<open>n - 1 < n\<close> \<open>n < ?k\<close> by simp
+              ultimately show ?thesis by simp
+            qed
+            hence "sv (n - 1) \<in> \<Union>(set (take n ws))" using \<open>sv (n - 1) \<in> ws ! (n - 1)\<close> by (by100 blast)
+            moreover have "sv (n - 1) \<in> ws ! n" using hws_n1 by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+        qed
+      qed
+      \<comment> \<open>Apply arc\\_merge\\_at\\_endpoint.\<close>
+      have hne1: "sv (?k - 1) \<noteq> sv (n - 1)"
+      proof -
+        have "?k - 1 \<noteq> n - 1" using \<open>Suc n \<le> ?k - 1\<close> by linarith
+        moreover have "?k - 1 < ?k" using hk_pos by linarith
+        moreover have "n - 1 < ?k" using \<open>n < ?k\<close> by linarith
+        ultimately show ?thesis using hsv_distinct[rule_format] by (by100 blast)
+      qed
+      have hne2: "sv n \<noteq> sv (n - 1)"
+      proof -
+        have "n \<noteq> n - 1" using \<open>n \<ge> 1\<close> by linarith
+        moreover have "n - 1 < ?k" using \<open>n < ?k\<close> by linarith
+        ultimately show ?thesis using hsv_distinct[rule_format, OF \<open>n < ?k\<close>] by (by100 blast)
+      qed
+      from arc_merge_at_endpoint[OF assms(1) assms(2) IH_arc hwsn_arc IH_sub hwsn_sub
+          hinter_n IH_ep hwsn_ep hne1 hne2]
+      have hmerge_result: "top1_is_arc_on (\<Union>(set (take n ws)) \<union> ws ! n)
+          (subspace_topology T TT (\<Union>(set (take n ws)) \<union> ws ! n))
+          \<and> top1_arc_endpoints_on (\<Union>(set (take n ws)) \<union> ws ! n)
+              (subspace_topology T TT (\<Union>(set (take n ws)) \<union> ws ! n)) = {sv (?k - 1), sv n}" .
+      have "set (take (Suc n) ws) = set (take n ws) \<union> {ws ! n}"
+        using \<open>Suc n < ?k\<close> by (simp add: take_Suc_conv_app_nth)
+      hence hunion: "\<Union>(set (take (Suc n) ws)) = \<Union>(set (take n ws)) \<union> ws ! n" by (by100 blast)
+      show ?case using hmerge_result hunion IH_sub hwsn_sub by simp
+    qed
+  qed
   \<comment> \<open>A1 = \\<Union>(set (butlast ws)) with endpoints {sv(k-1), sv(k-2)}.\<close>
   have hbt: "take (?k - 1) ws = butlast ws" using assms(5) by (simp add: butlast_conv_take)
   from hmerge[rule_format, of "?k - 1"]
