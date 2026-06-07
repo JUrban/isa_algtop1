@@ -7550,7 +7550,125 @@ proof (rule ccontr)
              If p = h(0): p \\<in> ep(arcA). Then D1 \\<inter> D2 = {h(0)}.
              But the split should give D1 = h([0, 1/2]) and D2 = h([1/2, 1]).
              D1 \\<inter> D2 = {h(1/2)} \\<noteq> {h(0)}. Contradiction.\<close>
-          show ?thesis sorry \<comment> \<open>p = h(1/2) \\<noteq> h(0) and \\<noteq> h(1) by injectivity.\<close>
+          \<comment> \<open>Use arc\\_both\\_endpoints\\_in\\_one\\_part: if both endpoints of arcA are in one half,
+             the other half = {p}, contradicting it being an arc.\<close>
+          have hh01_ne: "h 0 \<noteq> h 1"
+          proof -
+            have "inj_on h I_set"
+              using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+            have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+            have "(0::real) \<noteq> 1" by (by100 simp)
+            show ?thesis
+              using \<open>inj_on h I_set\<close> \<open>(0::real) \<in> I_set\<close> \<open>(1::real) \<in> I_set\<close> \<open>(0::real) \<noteq> 1\<close>
+              unfolding inj_on_def by (by100 blast)
+          qed
+          have hp_D1: "p \<in> D1" using hD_inter by (by100 blast)
+          have hp_D2: "p \<in> D2" using hD_inter by (by100 blast)
+          have hD1_sub: "D1 \<subseteq> T" using hD_union harcA_sub by (by100 blast)
+          have hD2_sub: "D2 \<subseteq> T" using hD_union harcA_sub by (by100 blast)
+          have hD1_conn: "top1_connected_on D1 (subspace_topology T TT D1)"
+            using arc_connected[OF hD1_arc] by (by100 blast)
+          have hD2_conn: "top1_connected_on D2 (subspace_topology T TT D2)"
+            using arc_connected[OF hD2_arc] by (by100 blast)
+          have "h ` I_set = ?arcA"
+            using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have "h 0 \<in> D1 \<union> D2"
+            using \<open>h ` I_set = ?arcA\<close> \<open>(0::real) \<in> I_set\<close> hD_union by (by100 blast)
+          have "h 1 \<in> D1 \<union> D2"
+            using \<open>h ` I_set = ?arcA\<close> \<open>(1::real) \<in> I_set\<close> hD_union by (by100 blast)
+          \<comment> \<open>Arcs have \\<ge> 2 points, so D1 \\<noteq> {p} and D2 \\<noteq> {p}.\<close>
+          have hD1_ne: "D1 \<noteq> {p}"
+          proof -
+            obtain g where hg: "top1_homeomorphism_on I_set I_top D1 (subspace_topology T TT D1) g"
+              using hD1_arc unfolding top1_is_arc_on_def by (by100 blast)
+            have "bij_betw g I_set D1" using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+            have "g ` I_set = D1" using \<open>bij_betw g I_set D1\<close> unfolding bij_betw_def by (by100 blast)
+            have "inj_on g I_set" using \<open>bij_betw g I_set D1\<close> unfolding bij_betw_def by (by100 blast)
+            have "g 0 \<in> D1" using \<open>g ` I_set = D1\<close> \<open>(0::real) \<in> I_set\<close> by (by100 blast)
+            have "g 1 \<in> D1" using \<open>g ` I_set = D1\<close> \<open>(1::real) \<in> I_set\<close> by (by100 blast)
+            have "(0::real) \<noteq> 1" by (by100 simp)
+            have "g 0 \<noteq> g 1"
+              using \<open>inj_on g I_set\<close> \<open>(0::real) \<in> I_set\<close> \<open>(1::real) \<in> I_set\<close> \<open>(0::real) \<noteq> 1\<close>
+              unfolding inj_on_def by (by100 blast)
+            thus ?thesis using \<open>g 0 \<in> D1\<close> \<open>g 1 \<in> D1\<close> by (by100 blast)
+          qed
+          have hD2_ne: "D2 \<noteq> {p}"
+          proof -
+            obtain g where hg: "top1_homeomorphism_on I_set I_top D2 (subspace_topology T TT D2) g"
+              using hD2_arc unfolding top1_is_arc_on_def by (by100 blast)
+            have "bij_betw g I_set D2" using hg unfolding top1_homeomorphism_on_def by (by100 blast)
+            have "g ` I_set = D2" using \<open>bij_betw g I_set D2\<close> unfolding bij_betw_def by (by100 blast)
+            have "inj_on g I_set" using \<open>bij_betw g I_set D2\<close> unfolding bij_betw_def by (by100 blast)
+            have "g 0 \<in> D2" using \<open>g ` I_set = D2\<close> \<open>(0::real) \<in> I_set\<close> by (by100 blast)
+            have "g 1 \<in> D2" using \<open>g ` I_set = D2\<close> \<open>(1::real) \<in> I_set\<close> by (by100 blast)
+            have "(0::real) \<noteq> 1" by (by100 simp)
+            have "g 0 \<noteq> g 1"
+              using \<open>inj_on g I_set\<close> \<open>(0::real) \<in> I_set\<close> \<open>(1::real) \<in> I_set\<close> \<open>(0::real) \<noteq> 1\<close>
+              unfolding inj_on_def by (by100 blast)
+            thus ?thesis using \<open>g 0 \<in> D2\<close> \<open>g 1 \<in> D2\<close> by (by100 blast)
+          qed
+          \<comment> \<open>Main: if p were an endpoint, both endpoints end up in one half.\<close>
+          show ?thesis
+          proof
+            assume "p \<in> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+            hence hp_ep: "p \<in> {h 0, h 1}"
+              using \<open>top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {h 0, h 1}\<close>
+              by (by100 simp)
+            have "h 0 \<in> D1 \<and> h 1 \<in> D1 \<or> h 0 \<in> D2 \<and> h 1 \<in> D2"
+            proof (cases "p = h 0")
+              case True
+              have hh0D1: "h 0 \<in> D1" using True hp_D1 by (by100 simp)
+              have hh0D2: "h 0 \<in> D2" using True hp_D2 by (by100 simp)
+              show ?thesis
+              proof (cases "h 1 \<in> D1")
+                case True thus ?thesis using hh0D1 by (by100 blast)
+              next
+                case False
+                hence "h 1 \<in> D2" using \<open>h 1 \<in> D1 \<union> D2\<close> by (by100 blast)
+                thus ?thesis using hh0D2 by (by100 blast)
+              qed
+            next
+              case False
+              hence "p = h 1" using hp_ep by (by100 blast)
+              have hh1D1: "h 1 \<in> D1" using \<open>p = h 1\<close> hp_D1 by (by100 simp)
+              have hh1D2: "h 1 \<in> D2" using \<open>p = h 1\<close> hp_D2 by (by100 simp)
+              show ?thesis
+              proof (cases "h 0 \<in> D1")
+                case True thus ?thesis using hh1D1 by (by100 blast)
+              next
+                case False
+                hence "h 0 \<in> D2" using \<open>h 0 \<in> D1 \<union> D2\<close> by (by100 blast)
+                thus ?thesis using hh1D2 by (by100 blast)
+              qed
+            qed
+            thus False
+            proof
+              assume hboth: "h 0 \<in> D1 \<and> h 1 \<in> D1"
+              have "h 0 \<in> D1" using hboth by (by100 blast)
+              have "h 1 \<in> D1" using hboth by (by100 blast)
+              from arc_both_endpoints_in_one_part[OF hstrict hhaus harcA_sub harcA_arc
+                  hD_union hD_inter hD1_conn hD1_sub
+                  \<open>top1_arc_endpoints_on ?arcA _ = {h 0, h 1}\<close> hh01_ne
+                  \<open>h 0 \<in> D1\<close> \<open>h 1 \<in> D1\<close>]
+              have "D2 = {p}" .
+              thus False using hD2_ne by (by100 simp)
+            next
+              assume hboth: "h 0 \<in> D2 \<and> h 1 \<in> D2"
+              have "h 0 \<in> D2" using hboth by (by100 blast)
+              have "h 1 \<in> D2" using hboth by (by100 blast)
+              have hD_union': "?arcA = D2 \<union> D1" using hD_union by (by100 blast)
+              have hD_inter': "D2 \<inter> D1 = {p}" using hD_inter by (by100 blast)
+              from arc_both_endpoints_in_one_part[OF hstrict hhaus harcA_sub harcA_arc
+                  hD_union' hD_inter' hD2_conn hD2_sub
+                  \<open>top1_arc_endpoints_on ?arcA _ = {h 0, h 1}\<close> hh01_ne
+                  \<open>h 0 \<in> D2\<close> \<open>h 1 \<in> D2\<close>]
+              have "D1 = {p}" .
+              thus False using hD1_ne by (by100 simp)
+            qed
+          qed
         qed
         \<comment> \<open>p \\<notin> any other arc: p \\<in> arcA, so p \\<in> arcA \\<inter> B for any B containing p. But
            arcA \\<inter> B \\<subseteq> ep(arcA) and p \\<notin> ep(arcA). So p \\<notin> B.\<close>
@@ -7592,6 +7710,8 @@ proof (rule ccontr)
              \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2)"
           "finite \<A>'"
         by (by100 blast)
+      have hgraph: "top1_is_graph_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
       have h\<A>'_coh: "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
           (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
         using graph_coherent_any_decomposition[OF hgraph h\<A>'(1) h\<A>'(2) h\<A>'(3) h\<A>'(4)]
