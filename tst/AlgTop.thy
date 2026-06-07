@@ -4572,9 +4572,59 @@ lemma graph_cycle_retract:
       and "length ws \<ge> 2"
       and "\<Union>(set ws) \<subseteq> T"
   shows "top1_retract_of_on T TT (\<Union>(set ws))"
-  sorry \<comment> \<open>Retraction of T onto \\<Union>(set ws). Collapse non-ws arcs to nearest ws vertex.
-     Route 1 (per plan): for each non-ws arc, map to attachment vertex.
-     Coherent topology \\<Rightarrow> continuous. Needs unique-attachment argument.\<close>
+  using assms
+proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
+  case (less \<A> ws)
+  show ?case
+  proof (cases "\<A> = set ws")
+    case True
+    \<comment> \<open>Base: T = C. Identity retraction.\<close>
+    hence "T = \<Union>(set ws)" using less.prems(3) by (by100 simp)
+    show ?thesis sorry \<comment> \<open>Identity retraction when T = C.\<close>
+  next
+    case False
+    \<comment> \<open>Step: pick non-ws arc A0, add to ws, apply IH, compose.\<close>
+    from False obtain A0 where hA0: "A0 \<in> \<A>" "A0 \<notin> set ws"
+    proof -
+      from False have "\<A> - set ws \<noteq> {}" using less.prems(7) by (by100 blast)
+      then obtain A0 where "A0 \<in> \<A> - set ws" by (by100 blast)
+      thus ?thesis using that by (by100 blast)
+    qed
+    let ?ws' = "ws @ [A0]"
+    have "card (\<A> - set ?ws') < card (\<A> - set ws)"
+    proof -
+      have "\<A> - set ?ws' = (\<A> - set ws) - {A0}" by (by100 auto)
+      have "A0 \<in> \<A> - set ws" using hA0 by (by100 blast)
+      have "finite (\<A> - set ws)" using less.prems(5) by (by100 blast)
+      have "card (\<A> - set ws) > 0"
+      proof -
+        have "A0 \<in> \<A> - set ws" using hA0 by (by100 blast)
+        have "\<A> - set ws \<noteq> {}" using \<open>A0 \<in> \<A> - set ws\<close> by (by100 blast)
+        thus ?thesis using \<open>finite (\<A> - set ws)\<close> by (by100 auto)
+      qed
+      show ?thesis using \<open>\<A> - set ?ws' = (\<A> - set ws) - {A0}\<close>
+          \<open>A0 \<in> \<A> - set ws\<close> \<open>finite (\<A> - set ws)\<close> \<open>card _ > 0\<close>
+        by (by100 simp)
+    qed
+    have "set ?ws' \<subseteq> \<A>" using less.prems(7) hA0(1) by (by100 simp)
+    have "length ?ws' \<ge> 2" using less.prems(8) by (by100 simp)
+    have "A0 \<subseteq> T" using less.prems(2) hA0(1) by (by100 blast)
+    have "\<Union>(set ?ws') \<subseteq> T" using less.prems(9) \<open>A0 \<subseteq> T\<close> by (by100 auto)
+    \<comment> \<open>By IH: T retracts onto C \\<union> A0.\<close>
+    from less.hyps[OF \<open>card _ < card _\<close> less.prems(1-6) \<open>set ?ws' \<subseteq> \<A>\<close>
+        \<open>length ?ws' \<ge> 2\<close> \<open>\<Union>(set ?ws') \<subseteq> T\<close>]
+    have "top1_retract_of_on T TT (\<Union>(set ?ws'))" .
+    hence hret_ext: "top1_retract_of_on T TT (\<Union>(set ws) \<union> A0)"
+    proof -
+      have "\<Union>(set ?ws') = A0 \<union> \<Union>(set ws)" by (by100 auto)
+      also have "\<dots> = \<Union>(set ws) \<union> A0" by (by100 blast)
+      finally show ?thesis using \<open>top1_retract_of_on T TT (\<Union>(set ?ws'))\<close> by simp
+    qed
+    \<comment> \<open>Compose with retraction C \\<union> A0 \\<to> C.\<close>
+    show ?thesis sorry \<comment> \<open>Pasting retraction: id on C, const on A0 (if A0 \\<inter> C has \\<le> 1 pt).
+       If A0 \\<inter> C has 2 pts: derive False (double attachment contradicts tree).\<close>
+  qed
+qed
 
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
    A "cycle" here means a sequence of \\<ge> 2 distinct arcs A1, ..., Ak such that
