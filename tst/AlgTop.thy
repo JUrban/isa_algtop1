@@ -15193,8 +15193,34 @@ lemma Lemma_77_1_projective_collection:
   shows "top1_scheme_equiv
       (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
       ([(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
-  sorry \<comment> \<open>Book proof: Step 1 (y0 empty) by Lemma\\_77\\_1\\_step1\\_y2\\_empty or cut-flip-paste.
-     Step 2 (general) by cut-flip-paste reducing to Step 1. See Munkres \\<S>77.\<close>
+proof (cases "y0 = []")
+  case True
+  \<comment> \<open>Step 1: y0 empty. Show a y1 a y2 ~ aa y1\\<inverse> y2.\<close>
+  show ?thesis
+  proof (cases "y1 = []")
+    case True
+    \<comment> \<open>y1 = []: a a y2 ~ aa y2. Trivially same (reflexivity).\<close>
+    show ?thesis using \<open>y0 = []\<close> True unfolding top1_scheme_equiv_def by simp
+  next
+    case False
+    show ?thesis
+    proof (cases "y2 = []")
+      case True
+      \<comment> \<open>y2 = []: a y1 a ~ aa y1\\<inverse>. Use Lemma\\_77\\_1\\_step1\\_y2\\_empty.\<close>
+      have "\<forall>e \<in> set y1. fst e \<noteq> a" using assms by (by100 blast)
+      from Lemma_77_1_step1_y2_empty[OF this]
+      show ?thesis using \<open>y0 = []\<close> True by simp
+    next
+      case False2: False
+      \<comment> \<open>Both y1, y2 non-empty: cut-flip-paste from Figure 77.1.\<close>
+      show ?thesis sorry
+    qed
+  qed
+next
+  case False
+  \<comment> \<open>Step 2: y0 non-empty. Cut-flip-paste reduces to Step 1.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Lemma 77.3 (Munkres): If w = [w0] a b [w1] a\\<inverse> b\\<inverse> [w2] (torus-type with commutator),
    then w ~ (aba\\<inverse>b\\<inverse>) [w0 w1 w2].\<close>
