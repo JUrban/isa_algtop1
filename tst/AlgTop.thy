@@ -6759,7 +6759,165 @@ proof -
     qed
     \<comment> \<open>Arcs are distinct.\<close>
     have hws_dist: "distinct ?ws"
-      sorry
+    proof (rule distinct_conv_nth[THEN iffD2], intro allI impI)
+      fix k l assume hkl: "k < length ?ws" "l < length ?ws" "k \<noteq> l"
+      hence hk: "k < dmin" and hl: "l < dmin" using hws_len by simp_all
+      show "?ws ! k \<noteq> ?ws ! l"
+      proof
+        assume heq: "?ws ! k = ?ws ! l"
+        \<comment> \<open>Same arc. The "arrived-at" vertex wv(Suc i0+k) is an endpoint.
+           wv(Suc i0+k) \\<noteq> wv(Suc i0+l) from hv\\_dist (both in {Suc i0,...,j0-1}).
+           But same arc has only 2 endpoints. Same arc + card \\<le> 1 means distinct arcs
+           have \\<le> 1 common vertex, so same arc means same endpoint set.
+           Cross-matching of arrived-at vs departed-from vertices forces |k-l|=1,
+           then non-backtracking gives contradiction.\<close>
+        \<comment> \<open>The arrived-at vertices differ (from hv\\_dist).\<close>
+        have hvk_ne_vl: "?wv (Suc i0 + k) \<noteq> ?wv (Suc i0 + l)"
+        proof -
+          \<comment> \<open>Both Suc i0+k and Suc i0+l are in {Suc i0,...,j0}.
+             If both < j0: hv\\_dist gives \\<noteq>. If one = j0: use wv(j0) = wv(i0)
+             and hmin to get contradiction with a shorter revisit.\<close>
+          have hk_le: "Suc i0 + k \<le> j0" using hk hij0(4) hij0(1) by linarith
+          have hl_le: "Suc i0 + l \<le> j0" using hl hij0(4) hij0(1) by linarith
+          have hkl_ne: "Suc i0 + k \<noteq> Suc i0 + l" using hkl(3) by linarith
+          show ?thesis
+          proof (cases "Suc i0 + k < j0 \<and> Suc i0 + l < j0")
+            case True
+            have "Suc i0 \<le> Suc i0 + k \<and> Suc i0 + k < j0 \<and> Suc i0 \<le> Suc i0 + l \<and> Suc i0 + l < j0 \<and> Suc i0 + k \<noteq> Suc i0 + l"
+              using True hkl_ne by linarith
+            thus ?thesis using hv_dist[rule_format] by (by100 blast)
+          next
+            case False
+            \<comment> \<open>One of them = j0. Use wv(j0) = wv(i0) and hmin.\<close>
+            hence "Suc i0 + k = j0 \<or> Suc i0 + l = j0" using hk_le hl_le by linarith
+            thus ?thesis
+            proof
+              assume "Suc i0 + k = j0"
+              hence "?wv (Suc i0 + k) = ?wv i0" using hij0(3) by simp
+              show ?thesis
+              proof
+                assume heqv: "?wv (Suc i0 + k) = ?wv (Suc i0 + l)"
+                hence "?wv i0 = ?wv (Suc i0 + l)" using \<open>?wv (Suc i0 + k) = ?wv i0\<close> by simp
+                have "Suc i0 + l < j0" using hl_le hkl_ne \<open>Suc i0 + k = j0\<close> by linarith
+                have "i0 < Suc i0 + l" by linarith
+                have "Suc i0 + l \<le> card ?V" using \<open>Suc i0 + l < j0\<close> hij0(2) by linarith
+                from hmin[rule_format, of i0 "Suc i0 + l"]
+                have "dmin \<le> (Suc i0 + l) - i0"
+                  using \<open>i0 < Suc i0 + l\<close> \<open>Suc i0 + l \<le> card ?V\<close> \<open>?wv i0 = ?wv (Suc i0 + l)\<close>
+                  by (by100 blast)
+                hence "dmin \<le> l + 1" by linarith
+                hence "l = dmin - 1" using hl by linarith
+                hence "Suc i0 + l = j0" using hij0(4) hij0(1) hdmin_ge2 by linarith
+                thus False using \<open>Suc i0 + l < j0\<close> by linarith
+              qed
+            next
+              assume "Suc i0 + l = j0"
+              hence "?wv (Suc i0 + l) = ?wv i0" using hij0(3) by simp
+              show ?thesis
+              proof
+                assume heqv: "?wv (Suc i0 + k) = ?wv (Suc i0 + l)"
+                hence "?wv (Suc i0 + k) = ?wv i0" using \<open>?wv (Suc i0 + l) = ?wv i0\<close> by simp
+                have "Suc i0 + k < j0" using hk_le hkl_ne \<open>Suc i0 + l = j0\<close> by linarith
+                have "i0 < Suc i0 + k" by linarith
+                have "Suc i0 + k \<le> card ?V" using \<open>Suc i0 + k < j0\<close> hij0(2) by linarith
+                have "?wv i0 = ?wv (Suc i0 + k)" using \<open>?wv (Suc i0 + k) = ?wv i0\<close> by simp
+                from hmin[rule_format, of i0 "Suc i0 + k"]
+                have "dmin \<le> (Suc i0 + k) - i0"
+                  using \<open>i0 < Suc i0 + k\<close> \<open>Suc i0 + k \<le> card ?V\<close> \<open>?wv i0 = ?wv (Suc i0 + k)\<close>
+                  by (by100 blast)
+                hence "dmin \<le> k + 1" by linarith
+                hence "k = dmin - 1" using hk by linarith
+                hence "Suc i0 + k = j0" using hij0(4) hij0(1) hdmin_ge2 by linarith
+                thus False using \<open>Suc i0 + k < j0\<close> by linarith
+              qed
+            qed
+          qed
+        qed
+        \<comment> \<open>Both are endpoints of the same arc we(Suc i0+k) = we(Suc i0+l).\<close>
+        have hek: "?ws ! k = ?we (Suc i0 + k)" using hws_nth[rule_format, OF hk] .
+        have hel: "?ws ! l = ?we (Suc i0 + l)" using hws_nth[rule_format, OF hl] .
+        \<comment> \<open>wv(i0+k) and wv(Suc i0+k) are the 2 endpoints of we(Suc i0+k).\<close>
+        have hep_k: "?wv (Suc i0 + k) \<in> ?ep (?we (Suc i0 + k))"
+          using hwalk_props by (by100 blast)
+        have hep_k2: "?wv (i0 + k) \<in> ?ep (?we (Suc i0 + k))"
+          using hnext hwalk_props hwalk_suc_snd[of "i0 + k"] by simp
+        have hne_k: "?wv (Suc i0 + k) \<noteq> ?wv (i0 + k)"
+        proof -
+          let ?ek = "next_arc (?wv (i0+k)) (?we (i0+k))"
+          have "?ek \<in> \<A>" using hnext hwalk_props by (by100 blast)
+          have "?wv (i0+k) \<in> ?ep ?ek" using hnext hwalk_props by (by100 blast)
+          have "?wv (Suc i0+k) = other_ep (?wv (i0+k)) ?ek" using hwalk_suc_fst[of "i0+k"] by simp
+          moreover have "other_ep (?wv (i0+k)) ?ek \<noteq> ?wv (i0+k)"
+            using hother \<open>?ek \<in> \<A>\<close> \<open>?wv (i0+k) \<in> ?ep ?ek\<close> by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        \<comment> \<open>ep = {wv(i0+k), wv(Suc i0+k)}.\<close>
+        have hep_set_k: "?ep (?we (Suc i0 + k)) = {?wv (i0 + k), ?wv (Suc i0 + k)}"
+        proof -
+          have "?we (Suc i0 + k) \<in> \<A>" using hwalk_props by (by100 blast)
+          from h2ep[rule_format, OF this]
+          obtain a b where "a \<noteq> b" "?ep (?we (Suc i0 + k)) = {a, b}" by (by100 blast)
+          thus ?thesis using hep_k hep_k2 hne_k by (by100 force)
+        qed
+        \<comment> \<open>Same for l.\<close>
+        have hep_l: "?wv (Suc i0 + l) \<in> ?ep (?we (Suc i0 + l))"
+          using hwalk_props by (by100 blast)
+        have hep_l2: "?wv (i0 + l) \<in> ?ep (?we (Suc i0 + l))"
+          using hnext hwalk_props hwalk_suc_snd[of "i0 + l"] by simp
+        have hne_l: "?wv (Suc i0 + l) \<noteq> ?wv (i0 + l)"
+        proof -
+          let ?el = "next_arc (?wv (i0+l)) (?we (i0+l))"
+          have "?el \<in> \<A>" using hnext hwalk_props by (by100 blast)
+          have "?wv (i0+l) \<in> ?ep ?el" using hnext hwalk_props by (by100 blast)
+          have "?wv (Suc i0+l) = other_ep (?wv (i0+l)) ?el" using hwalk_suc_fst[of "i0+l"] by simp
+          moreover have "other_ep (?wv (i0+l)) ?el \<noteq> ?wv (i0+l)"
+            using hother \<open>?el \<in> \<A>\<close> \<open>?wv (i0+l) \<in> ?ep ?el\<close> by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        have hep_set_l: "?ep (?we (Suc i0 + l)) = {?wv (i0 + l), ?wv (Suc i0 + l)}"
+        proof -
+          have "?we (Suc i0 + l) \<in> \<A>" using hwalk_props by (by100 blast)
+          from h2ep[rule_format, OF this]
+          obtain a b where "a \<noteq> b" "?ep (?we (Suc i0 + l)) = {a, b}" by (by100 blast)
+          thus ?thesis using hep_l hep_l2 hne_l by (by100 force)
+        qed
+        \<comment> \<open>Same arc \\<Rightarrow> same ep. So {wv(i0+k), wv(Suc i0+k)} = {wv(i0+l), wv(Suc i0+l)}.\<close>
+        have hep_same: "{?wv (i0 + k), ?wv (Suc i0 + k)} = {?wv (i0 + l), ?wv (Suc i0 + l)}"
+          using hep_set_k hep_set_l heq hek hel by simp
+        \<comment> \<open>Cross-matching: wv(Suc i0+k) \\<in> {wv(i0+l), wv(Suc i0+l)}.\<close>
+        have "?wv (Suc i0 + k) \<in> {?wv (i0 + l), ?wv (Suc i0 + l)}"
+          using hep_same hne_k by (by100 blast)
+        hence "?wv (Suc i0 + k) = ?wv (i0 + l)"
+          using hvk_ne_vl by (by100 blast)
+        \<comment> \<open>Similarly: wv(i0+k) = wv(Suc i0+l).\<close>
+        have "?wv (i0 + k) \<in> {?wv (i0 + l), ?wv (Suc i0 + l)}"
+          using hep_same by (by100 blast)
+        hence "?wv (i0 + k) = ?wv (Suc i0 + l)"
+        proof -
+          have "?wv (i0 + k) \<noteq> ?wv (i0 + l)"
+            sorry \<comment> \<open>From hne\\_k + cross-match: if equal, then wv(Suc i0+k) = wv(i0+l) = wv(i0+k), contradicting hne\\_k.\<close>
+          thus ?thesis using \<open>?wv (i0 + k) \<in> {?wv (i0 + l), ?wv (Suc i0 + l)}\<close> by (by100 blast)
+        qed
+        \<comment> \<open>From wv(Suc i0+k) = wv(i0+l): Suc i0+k and i0+l are walk positions
+           with same vertex. If both in {Suc i0,...,j0-1}: hv\\_dist gives Suc i0+k = i0+l, so k+1=l.
+           Boundary cases handled similarly.\<close>
+        have "k + 1 = l \<or> l + 1 = k"
+          sorry \<comment> \<open>From wv(Suc i0+k) = wv(i0+l) + wv(i0+k) = wv(Suc i0+l) + hv\\_dist/hmin.\<close>
+        \<comment> \<open>Either way: consecutive arcs equal \\<Rightarrow> hnonback contradiction.\<close>
+        thus False
+        proof
+          assume "k + 1 = l"
+          hence "Suc i0 + l = Suc (Suc i0 + k)" by linarith
+          hence "?we (Suc i0 + k) = ?we (Suc (Suc i0 + k))" using heq hek hel by simp
+          thus False using hnonback[rule_format, of "Suc i0 + k"] by simp
+        next
+          assume "l + 1 = k"
+          hence "Suc i0 + k = Suc (Suc i0 + l)" by linarith
+          hence "?we (Suc i0 + l) = ?we (Suc (Suc i0 + l))" using heq hek hel by simp
+          thus False using hnonback[rule_format, of "Suc i0 + l"] by simp
+        qed
+      qed
+    qed
     \<comment> \<open>Apply hacyclic.\<close>
     from hacyclic[rule_format, OF hws_ge2 hws_dist]
     show False using hws_sub hws_card1 by (by100 blast)
