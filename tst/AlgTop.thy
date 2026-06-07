@@ -13822,6 +13822,36 @@ proof -
   show ?thesis by (by100 blast)
 qed
 
+\<comment> \<open>Scheme rotation preserves quotient type: quotient(u@v) \\<cong> quotient(v@u).
+   The edge identifications are the same up to cyclic shift.\<close>
+lemma scheme_rotate_homeomorphic:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 (u @ v)"
+      and "top1_quotient_of_scheme_on Y2 TY2 (v @ u)"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+  sorry \<comment> \<open>Same polygon with rotated edge labeling. Use quotient\\_same\\_fibres\\_homeomorphic
+     after showing that u@v and v@u produce the same identification (cyclic shift).\<close>
+
+\<comment> \<open>Scheme cancellation preserves quotient type: quotient(u@[a,a\\<inverse>]@v) \\<cong> quotient(u@v).
+   Folding two adjacent inverse edges doesn't change the quotient space.\<close>
+lemma scheme_cancel_homeomorphic:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 (u @ [a, top1_inverse_edge a] @ v)"
+      and "top1_quotient_of_scheme_on Y2 TY2 (u @ v)"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+  sorry \<comment> \<open>Fold the polygon along the two cancelling edges. The identified boundary
+     reduces to the shorter scheme. Quotient map factors through the fold.\<close>
+
+\<comment> \<open>Scheme inversion preserves quotient type: quotient(w) \\<cong> quotient(rev(map inverse w)).
+   Reflecting the polygon preserves the quotient space.\<close>
+lemma scheme_invert_homeomorphic:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 w"
+      and "top1_quotient_of_scheme_on Y2 TY2 (rev (map top1_inverse_edge w))"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+  sorry \<comment> \<open>Reflect the polygon (reverse vertex order + flip orientations).
+     The reflection map commutes with the identification.\<close>
+
 (** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
     If X1 is the quotient space induced by scheme1 and X2 by scheme2, and scheme2
     is obtained from scheme1 via an elementary operation, then X1 \<cong> X2. **)
@@ -13865,21 +13895,17 @@ proof -
       show "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h" using hop
       proof (cases rule: top1_elementary_scheme_operation.cases)
         case (rotate u v)
-        \<comment> \<open>Rotate: s = u@v, t = v@u. Same polygon, different starting edge.
-           The quotient spaces of u@v and v@u are canonically homeomorphic.\<close>
-        then show ?thesis sorry
+        then show ?thesis using scheme_rotate_homeomorphic[OF hY1 hY2] hs ht by simp
       next
         case (cancel u a v)
-        \<comment> \<open>Cancel: s = u@[a, a\\<inverse>]@v, t = u@v. Fold two adjacent inverse edges.\<close>
-        then show ?thesis sorry
+        then show ?thesis using scheme_cancel_homeomorphic[OF hY1 hY2] hs ht by simp
       next
         case (uncancel u a v)
-        \<comment> \<open>Uncancel: s = u@v, t = u@[a, a\\<inverse>]@v. Reverse of cancel.\<close>
+        \<comment> \<open>Uncancel = reverse of cancel. Use scheme\\_cancel\\_homeomorphic with Y1, Y2 swapped + inverse.\<close>
         then show ?thesis sorry
       next
         case invert
-        \<comment> \<open>Invert: s = w, t = rev(map inverse w). Reflect the polygon.\<close>
-        then show ?thesis sorry
+        then show ?thesis using scheme_invert_homeomorphic[OF hY1 hY2] hs ht by simp
       qed
     qed
     from huniv[OF hop assms(1) assms(2) hs ht]
