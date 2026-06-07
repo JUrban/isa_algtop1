@@ -4643,8 +4643,32 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
           thus ?thesis using \<open>B \<in> \<A> - \<S>\<close> by (by100 blast)
         qed
         \<comment> \<open>Both C and \\<Union>(\\<A>-\\<S>) are closed in T (coherent topology).\<close>
-        have "closedin_on T TT ?C" sorry \<comment> \<open>Finite union of compact arcs is closed.\<close>
-        have "closedin_on T TT (\<Union>(\<A> - \<S>))" sorry \<comment> \<open>Same.\<close>
+        have hhaus: "is_hausdorff_on T TT"
+          using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have htop: "is_topology_on T TT"
+          using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+            is_topology_on_strict_def by (by100 blast)
+        \<comment> \<open>Each arc is compact (arc\\_compact) \\<Rightarrow> closed in Hausdorff T (Theorem\\_26\\_3).\<close>
+        have hclosed_arcs: "\<forall>A \<in> \<A>. closedin_on T TT A"
+        proof (intro ballI)
+          fix A assume "A \<in> \<A>"
+          have "A \<subseteq> T" using less.prems(2) \<open>A \<in> \<A>\<close> by (by100 blast)
+          have "top1_is_arc_on A (subspace_topology T TT A)" using less.prems(2) \<open>A \<in> \<A>\<close> by (by100 blast)
+          hence "top1_compact_on A (subspace_topology T TT A)" using arc_compact by (by100 blast)
+          thus "closedin_on T TT A" by (rule Theorem_26_3[OF hhaus \<open>A \<subseteq> T\<close>])
+        qed
+        have "closedin_on T TT ?C"
+        proof -
+          have "\<forall>A \<in> \<S>. closedin_on T TT A" using hclosed_arcs less.prems(7) by (by100 blast)
+          have "finite \<S>" using finite_subset[OF less.prems(7) less.prems(5)] .
+          show ?thesis by (rule closedin_on_finite_Union[OF htop \<open>\<forall>A \<in> \<S>. closedin_on T TT A\<close> \<open>finite \<S>\<close>])
+        qed
+        have "closedin_on T TT (\<Union>(\<A> - \<S>))"
+        proof -
+          have "\<forall>A \<in> \<A> - \<S>. closedin_on T TT A" using hclosed_arcs by (by100 blast)
+          have "finite (\<A> - \<S>)" using less.prems(5) by (by100 blast)
+          show ?thesis by (rule closedin_on_finite_Union[OF htop \<open>\<forall>A \<in> \<A> - \<S>. closedin_on T TT A\<close> \<open>finite (\<A> - \<S>)\<close>])
+        qed
         \<comment> \<open>T is connected.\<close>
         have "top1_connected_on T TT"
           using less.prems(1) unfolding top1_is_tree_on_def by (by100 blast)
