@@ -6251,7 +6251,7 @@ lemma forest_euler_formula:
       and hinter: "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
            A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
          \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 1"
       and hfin: "finite \<A>"
       and hstrict: "is_topology_on_strict T TT"
       and hhaus: "is_hausdorff_on T TT"
@@ -13773,11 +13773,32 @@ proof -
         top1_quotient_of_scheme_on Y1 TY1 s \<Longrightarrow>
         top1_quotient_of_scheme_on Y2 TY2 t \<Longrightarrow>
         \<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-      sorry \<comment> \<open>Induction on elementary\\_scheme\\_operation with 8 cases:
-         refl (quotient uniqueness), sym (inverse homeo), trans (composition),
-         rotate (cyclic permutation), cancel (edge cancellation),
-         relabel (label renaming), invert (reflection), cut (diagonal insertion).
-         Each case constructs a homeomorphism between quotient spaces.\<close>
+    proof -
+      fix s t and Y1 :: "'x set" and TY1 and Y2 :: "'x set" and TY2
+      assume hop: "top1_elementary_scheme_operation s t"
+          and hY1: "is_topology_on_strict Y1 TY1" and hY2: "is_topology_on_strict Y2 TY2"
+          and hs: "top1_quotient_of_scheme_on Y1 TY1 s"
+          and ht: "top1_quotient_of_scheme_on Y2 TY2 t"
+      show "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h" using hop
+      proof (cases rule: top1_elementary_scheme_operation.cases)
+        case (rotate u v)
+        \<comment> \<open>Rotate: s = u@v, t = v@u. Same polygon, different starting edge.
+           The quotient spaces of u@v and v@u are canonically homeomorphic.\<close>
+        then show ?thesis sorry
+      next
+        case (cancel u a v)
+        \<comment> \<open>Cancel: s = u@[a, a\\<inverse>]@v, t = u@v. Fold two adjacent inverse edges.\<close>
+        then show ?thesis sorry
+      next
+        case (uncancel u a v)
+        \<comment> \<open>Uncancel: s = u@v, t = u@[a, a\\<inverse>]@v. Reverse of cancel.\<close>
+        then show ?thesis sorry
+      next
+        case invert
+        \<comment> \<open>Invert: s = w, t = rev(map inverse w). Reflect the polygon.\<close>
+        then show ?thesis sorry
+      qed
+    qed
     from huniv[OF hop assms(1) assms(2) hs ht]
     show "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h" .
   qed
