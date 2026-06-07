@@ -7105,9 +7105,27 @@ proof -
         by (rule card_1_singletonE)
       hence hA0_in: "A0 \<in> \<A>" by (by100 blast)
       \<comment> \<open>v only in A0: v is an endpoint of A0 only.\<close>
+      have hv_in_A0: "v \<in> A0"
+      proof -
+        have "v \<in> ?ep A0" using hA0_eq by (by100 blast)
+        thus ?thesis unfolding top1_arc_endpoints_on_def by (by100 blast)
+      qed
       have hv_only: "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
-        sorry \<comment> \<open>v not endpoint of B (from hA0\\_eq). v not interior of B (interior points
-           not endpoints of A0, but v IS endpoint of A0 \\<Rightarrow> contradiction with hinter).\<close>
+      proof (intro ballI impI)
+        fix B assume "B \<in> \<A>" "B \<noteq> A0"
+        show "v \<notin> B"
+        proof
+          assume "v \<in> B"
+          hence "v \<in> A0 \<inter> B" using hv_in_A0 by (by100 blast)
+          have "A0 \<noteq> B" using \<open>B \<noteq> A0\<close> by simp
+          from hinter'[rule_format, OF hA0_in \<open>B \<in> \<A>\<close> \<open>A0 \<noteq> B\<close>]
+          have "A0 \<inter> B \<subseteq> ?ep B" by (by100 blast)
+          hence "v \<in> ?ep B" using \<open>v \<in> A0 \<inter> B\<close> by (by100 blast)
+          hence "B \<in> {A \<in> \<A>. v \<in> ?ep A}" using \<open>B \<in> \<A>\<close> by (by100 blast)
+          hence "B = A0" using hA0_eq by (by100 blast)
+          thus False using \<open>B \<noteq> A0\<close> by simp
+        qed
+      qed
       \<comment> \<open>\\<A>' = \\<A> \\ {A0}. V' = V \\ {v}.\<close>
       let ?\<A>' = "\<A> - {A0}"
       let ?T' = "\<Union>?\<A>'"
@@ -7175,18 +7193,43 @@ proof -
       have hV'_eq: "top1_graph_vertex_set ?T' ?TT' ?\<A>' = top1_graph_vertex_set T TT ?\<A>'"
         unfolding top1_graph_vertex_set_def using hsub_trans by simp
       \<comment> \<open>V = V' + 1, E = E' + 1.\<close>
-      have "?V = insert v (top1_graph_vertex_set T TT ?\<A>')"
-        sorry \<comment> \<open>V = ep(A0) \\<union> V'. v \\<in> ep(A0). ep(A0) \\ V' = {v}.\<close>
-      have "v \<notin> top1_graph_vertex_set T TT ?\<A>'"
-        sorry \<comment> \<open>v not endpoint of any arc in \\<A>'. v not in any arc in \\<A>' (from hv\\_only).\<close>
+      have hv_not_V': "v \<notin> top1_graph_vertex_set T TT ?\<A>'"
+      proof
+        assume "v \<in> top1_graph_vertex_set T TT ?\<A>'"
+        then obtain B where "B \<in> ?\<A>'" "v \<in> ?ep B"
+          unfolding top1_graph_vertex_set_def by (by100 blast)
+        hence "B \<in> \<A>" "B \<noteq> A0" by (by100 blast)+
+        have "v \<in> B" using \<open>v \<in> ?ep B\<close> unfolding top1_arc_endpoints_on_def by (by100 blast)
+        thus False using hv_only[rule_format, OF \<open>B \<in> \<A>\<close> \<open>B \<noteq> A0\<close>] by simp
+      qed
+      \<comment> \<open>V \\<supseteq> {v} \\<union> V', so card V \\<ge> card V' + 1.\<close>
+      have hV'_sub: "top1_graph_vertex_set T TT ?\<A>' \<subseteq> ?V"
+        unfolding top1_graph_vertex_set_def by (by100 blast)
       have hep_fin': "\<forall>A0\<in>\<A>. finite (?ep A0)"
-        sorry \<comment> \<open>Each arc has 2 endpoints.\<close>
+      proof (intro ballI)
+        fix B assume "B \<in> \<A>"
+        have "B \<subseteq> T" and "top1_is_arc_on B (subspace_topology T TT B)"
+          using harcs'[rule_format, OF \<open>B \<in> \<A>\<close>] by (by100 blast)+
+        obtain h where "top1_homeomorphism_on I_set I_top B (subspace_topology T TT B) h"
+          using \<open>top1_is_arc_on B _\<close> unfolding top1_is_arc_on_def by (by100 blast)
+        have "?ep B = {h 0, h 1}"
+          by (rule arc_endpoints_are_boundary[OF hstrict' hhaus' \<open>B \<subseteq> T\<close> \<open>top1_is_arc_on B _\<close> \<open>top1_homeomorphism_on _ _ _ _ h\<close>])
+        thus "finite (?ep B)" by simp
+      qed
       have hV_fin': "finite ?V"
         unfolding top1_graph_vertex_set_def using hfin' hep_fin' by (by100 blast)
-      have "card ?V = card (top1_graph_vertex_set T TT ?\<A>') + 1"
-        using \<open>?V = insert v (top1_graph_vertex_set T TT ?\<A>')\<close>
-            \<open>v \<notin> top1_graph_vertex_set T TT ?\<A>'\<close> hV_fin'
-        by (by100 simp)
+      have "card ?V \<ge> card (top1_graph_vertex_set T TT ?\<A>') + 1"
+      proof -
+        have "insert v (top1_graph_vertex_set T TT ?\<A>') \<subseteq> ?V"
+          using hV'_sub hv_V by (by100 blast)
+        have "finite (top1_graph_vertex_set T TT ?\<A>')"
+          using hV_fin' hV'_sub by (rule finite_subset[rotated])
+        hence "card (insert v (top1_graph_vertex_set T TT ?\<A>')) = card (top1_graph_vertex_set T TT ?\<A>') + 1"
+          using hv_not_V' by simp
+        moreover have "card (insert v (top1_graph_vertex_set T TT ?\<A>')) \<le> card ?V"
+          using card_mono[OF hV_fin' \<open>insert v _ \<subseteq> ?V\<close>] .
+        ultimately show ?thesis by linarith
+      qed
       have "card \<A> = card ?\<A>' + 1"
       proof -
         have "card (\<A> - {A0}) = card \<A> - 1" using hfin' hA0_in by simp
@@ -7194,7 +7237,7 @@ proof -
       qed
       have "card (top1_graph_vertex_set T TT ?\<A>') \<ge> card ?\<A>' + 1"
         using hIH hV'_eq by simp
-      thus ?thesis using \<open>card ?V = card (top1_graph_vertex_set T TT ?\<A>') + 1\<close>
+      thus ?thesis using \<open>card ?V \<ge> card (top1_graph_vertex_set T TT ?\<A>') + 1\<close>
           \<open>card \<A> = card ?\<A>' + 1\<close> by linarith
     qed
   qed
