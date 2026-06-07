@@ -4718,10 +4718,29 @@ proof -
     qed
   next
     case False
-    \<comment> \<open>Card 2: A meets C at 2 points. Map A along path in C.\<close>
-    show ?thesis
-      sorry \<comment> \<open>Path-mapping: get path \\<gamma> in C from h 0 to h 1 (from pc).
-         r|C = id, r|A = \\<gamma> \\<circ> h\\<inverse>. Continuous, agree at {h 0, h 1}.\<close>
+    \<comment> \<open>Card 2: A meets C at 2 points {h 0, h 1}. Map A along path in C.\<close>
+    \<comment> \<open>Both endpoints h 0, h 1 are in C.\<close>
+    have hh0_C: "h 0 \<in> C" and hh1_C: "h 1 \<in> C"
+    proof -
+      \<comment> \<open>A \\<inter> C \\<subseteq> {h 0, h 1}, A \\<inter> C \\<noteq> {v} for any single v (from False), A \\<inter> C \\<noteq> {}.
+         So A \\<inter> C = {h 0, h 1}.\<close>
+      have "A \<inter> C = {h 0, h 1}"
+        sorry \<comment> \<open>From False + hAC\\_sub\\_h + hmeet: card 2.\<close>
+      thus "h 0 \<in> C" "h 1 \<in> C" by (by100 blast)+
+    qed
+    \<comment> \<open>Get path \\<gamma> in C from h 0 to h 1 (C is path-connected).\<close>
+    have "top1_path_connected_on C (subspace_topology X TX C)" using hC_pc .
+    then obtain \<gamma> where h\<gamma>: "top1_is_path_on C (subspace_topology X TX C) (h 0) (h 1) \<gamma>"
+      sorry \<comment> \<open>Path existence from path-connectedness.\<close>
+    \<comment> \<open>h\\<inverse>: A \\<to> [0,1] is the inverse homeomorphism.\<close>
+    let ?hinv = "inv_into I_set h"
+    \<comment> \<open>Define r: r|C = id, r|A = \\<gamma> \\<circ> h\\<inverse>.\<close>
+    define r where "r x = (if x \<in> C then x else \<gamma> (?hinv x))" for x
+    \<comment> \<open>r is a retraction C \\<union> A \\<to> C.\<close>
+    show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+      sorry \<comment> \<open>Similar to card 1: pasting lemma.
+         r|C = id (continuous). r|A = \\<gamma> \\<circ> h\\<inverse> (continuous: composition).
+         Agreement at A \\<inter> C = {h 0, h 1}: r(h 0) = \\<gamma>(0) = h 0, r(h 1) = \\<gamma>(1) = h 1.\<close>
   qed
 qed
 
