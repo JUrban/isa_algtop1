@@ -15052,6 +15052,48 @@ qed
 
 section \<open>\<S>77 The Classification Theorem\<close>
 
+\<comment> \<open>Lemma 77.1 (Munkres): If w = [y0] a [y1] a [y2] (proper scheme with a appearing twice
+   with same exponent), then w ~ aa [y0 y1\\<inverse> y2].
+   Here a has exponent +1 in both occurrences (projective type).\<close>
+lemma Lemma_77_1_projective_collection:
+  assumes "top1_scheme_equiv
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)"
+  shows "top1_scheme_equiv
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+      ([(a, True), (a, True)] @ y0 @ map top1_inverse_edge (rev y1) @ y2)"
+  sorry \<comment> \<open>Book proof: cut/paste/permute sequence. See Munkres \\<S>77 Lemma 77.1.\<close>
+
+\<comment> \<open>Lemma 77.3 (Munkres): If w = [w0] a b [w1] a\\<inverse> b\\<inverse> [w2] (torus-type with commutator),
+   then w ~ (aba\\<inverse>b\\<inverse>) [w0 w1 w2].\<close>
+lemma Lemma_77_3_torus_extraction:
+  assumes "top1_scheme_equiv
+      (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
+      (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)"
+  shows "top1_scheme_equiv
+      (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
+      ([(a, True), (b, True), (a, False), (b, False)] @ w0 @ w1 @ w2)"
+  sorry \<comment> \<open>Book proof: cut/paste/permute sequence. See Munkres \\<S>77 Lemma 77.3.\<close>
+
+\<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
+   Every proper labelling scheme is equivalent to one of:
+   (1) aa\\<inverse>bb\\<inverse> (sphere, length 4)
+   (2) a1a1...amam (projective, m \\<ge> 1)
+   (3) a1b1a1\\<inverse>b1\\<inverse>...anbnanbnan\\<inverse>bn\\<inverse> (torus, n \\<ge> 1)\<close>
+lemma scheme_normal_form:
+  fixes scheme :: "(nat \<times> bool) list"
+  assumes "length scheme \<ge> 4"
+      and "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+      \<comment> \<open>Proper: each label appears exactly 0 or 2 times.\<close>
+  shows "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
+       \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w)
+       \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w)"
+  sorry \<comment> \<open>Munkres \\<S>77: Induction on length of scheme.
+     Step 1 (projective type): Use Lemma 77.1 to collect all same-exponent pairs.
+     Step 2 (torus type): Use Lemma 77.3 to extract commutator blocks.
+     Step 3: Handle base cases (length 4).
+     Each step uses elementary operations (rotate, cancel, cut, paste, relabel, flip).\<close>
+
 \<comment> \<open>Predicate: a scheme w is the standard n-fold torus scheme
    a1 b1 a1\\<inverse> b1\\<inverse> ... an bn an\\<inverse> bn\\<inverse> (4n edges).\<close>
 definition top1_is_torus_scheme :: "(nat \<times> bool) list \<Rightarrow> nat \<Rightarrow> bool" where
@@ -15120,7 +15162,9 @@ proof -
             \<and> top1_scheme_equiv scheme w)
       \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m
             \<and> top1_scheme_equiv scheme w)"
-    sorry \<comment> \<open>Reduction to normal form via elementary operations (Theorem 76).\<close>
+    sorry \<comment> \<open>From scheme\\_normal\\_form: scheme is proper (each label twice) and length \\<ge> 4.
+       Properness follows from the polygonal quotient structure. Length \\<ge> 4 from surface.
+       scheme\\_normal\\_form gives equivalence to sphere/torus/projective normal form.\<close>
   \<comment> \<open>Step 3: Each normal form corresponds to the standard surface.
      - Empty/sphere: cancellation gives S² (a@a⁻¹@b@b⁻¹ with cancellation).
      - Torus scheme: the standard n-torus IS the quotient of this scheme
