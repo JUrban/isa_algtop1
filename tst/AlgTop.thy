@@ -7505,120 +7505,111 @@ proof (rule ccontr)
          graph\\_cycle\\_retract gives T retracts onto arcA \\<union> arcB.
          scc\\_in\\_sc\\_false gives False.\<close>
       let ?arcA = "snd (walk (Suc i))" and ?arcB = "snd (walk (Suc i + 1))"
-      have harcA_in: "?arcA \<in> \<A>" using hwalk_props sorry
-      have harcB_in: "?arcB \<in> \<A>" using hwalk_props sorry
+      have harcA_in: "?arcA \<in> \<A>" using hwalk_props by (by100 blast)
+      have harcB_in: "?arcB \<in> \<A>" using hwalk_props by (by100 blast)
       have hAB_ne: "?arcA \<noteq> ?arcB"
       proof -
         have "snd (walk (Suc (Suc i))) \<noteq> snd (walk (Suc i))"
         proof -
           have "snd (walk (Suc (Suc i))) = next_arc (fst (walk (Suc i))) (snd (walk (Suc i)))"
-            using hwalk_suc_snd[of "Suc i"] sorry
+            using hwalk_suc_snd[of "Suc i"] by simp
           moreover have "next_arc (fst (walk (Suc i))) (snd (walk (Suc i))) \<noteq> snd (walk (Suc i))"
-            using hnext_arc hwalk_props sorry
-          ultimately show ?thesis sorry
+            using hnext_arc hwalk_props by (by100 blast)
+          ultimately show ?thesis by simp
         qed
-        thus ?thesis sorry
+        thus ?thesis by simp
       qed
-      have harcA_sub: "?arcA \<subseteq> T" using assms(2) harcA_in sorry
-      have harcB_sub: "?arcB \<subseteq> T" using assms(2) harcB_in sorry
+      have harcA_sub: "?arcA \<subseteq> T" using assms(2) harcA_in by (by100 blast)
+      have harcB_sub: "?arcB \<subseteq> T" using assms(2) harcB_in by (by100 blast)
       have harcA_arc: "top1_is_arc_on ?arcA (subspace_topology T TT ?arcA)"
-        using assms(2) harcA_in sorry
+        using assms(2) harcA_in by (by100 blast)
       have harcB_arc: "top1_is_arc_on ?arcB (subspace_topology T TT ?arcB)"
-        using assms(2) harcB_in sorry
+        using assms(2) harcB_in by (by100 blast)
       \<comment> \<open>Both arcs share vertices v\\_i = fst(walk i) and v\\_{i+1} = fst(walk(Suc i)).\<close>
       let ?vi = "fst (walk i)" and ?vsi = "fst (walk (Suc i))"
-      have hvi_inA: "?vi \<in> ?arcA" using hwalk_shared sorry
-      have hj_eq: "j = i + 2" using \<open>j - i = 2\<close> hij(1) sorry
+      have hvi_inA: "?vi \<in> ?arcA" using hwalk_shared by (by100 blast)
+      have hj_eq: "j = i + 2" using \<open>j - i = 2\<close> hij(1) by linarith
       have hvi_inB: "?vi \<in> ?arcB"
       proof -
-        have "fst (walk j) \<in> snd (walk j)" using hwalk_shared sorry
-        have "fst (walk j) = fst (walk i)" using hij(3) sorry
-        have "snd (walk j) = snd (walk (Suc i + 1))" using hj_eq sorry
-        show ?thesis sorry
+        have "fst (walk j) \<in> snd (walk j)" using hwalk_shared by (by100 blast)
+        moreover have "fst (walk j) = fst (walk i)" using hij(3) by simp
+        moreover have "snd (walk j) = snd (walk (Suc i + 1))" using hj_eq by simp
+        ultimately show ?thesis by simp
       qed
-      have hvsi_inA: "?vsi \<in> ?arcA" using hwalk_shared sorry
+      have hvsi_inA: "?vsi \<in> ?arcA" using hwalk_shared by (by100 blast)
       have hvsi_inB: "?vsi \<in> ?arcB"
       proof -
-        have "fst (walk (Suc i)) \<in> snd (walk (Suc (Suc i)))" using hwalk_shared sorry
-        show ?thesis sorry
+        have "fst (walk (Suc i)) \<in> snd (walk (Suc (Suc i)))" using hwalk_shared by (by100 blast)
+        have "snd (walk (Suc (Suc i))) = snd (walk (Suc i + 1))" by simp
+        thus ?thesis using \<open>fst (walk (Suc i)) \<in> snd (walk (Suc (Suc i)))\<close> by simp
       qed
       \<comment> \<open>v\\_i \\<noteq> v\\_{i+1} (from minimality of walk repeat: if equal, repeat at distance 1 < 2).\<close>
       have hvi_ne: "?vi \<noteq> ?vsi"
       proof
-        assume "?vi = ?vsi"
+        assume heq: "?vi = ?vsi"
         \<comment> \<open>fst(walk i) = fst(walk(Suc i)), repeat at distance 1. But j-i = 2 is minimal.\<close>
         have "Suc i \<le> card ?V" sorry \<comment> \<open>Walk stays in V range.\<close>
         from hmin[rule_format, of i "Suc i"]
-        have "j - i \<le> Suc i - i" using hij(1) \<open>Suc i \<le> card ?V\<close> \<open>?vi = ?vsi\<close> sorry
-        hence "j - i \<le> 1" sorry
-        thus False using \<open>j - i = 2\<close> sorry
+        have "j - i \<le> Suc i - i" using hij(1) \<open>Suc i \<le> card ?V\<close> heq sorry
+        hence "j - i \<le> 1" by linarith
+        thus False using \<open>j - i = 2\<close> by linarith
       qed
       \<comment> \<open>arcA \\<inter> arcB = {v\\_i, v\\_{i+1}} and ep(arcA) = ep(arcB) = {v\\_i, v\\_{i+1}}.\<close>
+      have hAB_props: "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)
+          \<and> ?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)
+          \<and> finite (?arcA \<inter> ?arcB) \<and> card (?arcA \<inter> ?arcB) \<le> 2"
+        using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] by (by100 blast)
       have hAB_inter_sub: "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
-        using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] sorry
-      have hAB_fin: "finite (?arcA \<inter> ?arcB)"
-        using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] sorry
-      have hAB_card: "card (?arcA \<inter> ?arcB) \<le> 2"
-        using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] sorry
-      have "?vi \<in> ?arcA \<inter> ?arcB" using hvi_inA hvi_inB sorry
-      have "?vsi \<in> ?arcA \<inter> ?arcB" using hvsi_inA hvsi_inB sorry
+        using hAB_props by (by100 blast)
+      have hAB_inter_subB: "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)"
+        using hAB_props by (by100 blast)
+      have hAB_fin: "finite (?arcA \<inter> ?arcB)" using hAB_props by (by100 blast)
+      have hAB_card: "card (?arcA \<inter> ?arcB) \<le> 2" using hAB_props by (by100 blast)
+      have hvi_inter: "?vi \<in> ?arcA \<inter> ?arcB" using hvi_inA hvi_inB by (by100 blast)
+      have hvsi_inter: "?vsi \<in> ?arcA \<inter> ?arcB" using hvsi_inA hvsi_inB by (by100 blast)
       have hAB_card_ge2: "card (?arcA \<inter> ?arcB) \<ge> 2"
       proof -
-        have "{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB"
-          using \<open>?vi \<in> ?arcA \<inter> ?arcB\<close> \<open>?vsi \<in> ?arcA \<inter> ?arcB\<close> sorry
-        have "card {?vi, ?vsi} = 2" using hvi_ne sorry
-        from card_mono[OF hAB_fin \<open>{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB\<close>]
-        show ?thesis using \<open>card {?vi, ?vsi} = 2\<close> sorry
+        have hsub: "{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB" using hvi_inter hvsi_inter by (by100 blast)
+        have "card {?vi, ?vsi} = 2" using hvi_ne by (by100 simp)
+        from card_mono[OF hAB_fin hsub]
+        show ?thesis using \<open>card {?vi, ?vsi} = 2\<close> by linarith
       qed
       have hAB_eq: "?arcA \<inter> ?arcB = {?vi, ?vsi}"
       proof -
-        have "card (?arcA \<inter> ?arcB) = 2" using hAB_card hAB_card_ge2 sorry
-        have "{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB"
-          using \<open>?vi \<in> ?arcA \<inter> ?arcB\<close> \<open>?vsi \<in> ?arcA \<inter> ?arcB\<close> sorry
-        show ?thesis using hAB_fin \<open>card (?arcA \<inter> ?arcB) = 2\<close>
-          \<open>{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB\<close> hvi_ne sorry
+        have "card (?arcA \<inter> ?arcB) = 2" using hAB_card hAB_card_ge2 by linarith
+        have hsub: "{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB" using hvi_inter hvsi_inter by (by100 blast)
+        show ?thesis using hAB_fin \<open>card (?arcA \<inter> ?arcB) = 2\<close> hsub hvi_ne
+          sorry \<comment> \<open>card 2 + subset of size 2 + finite \\<Rightarrow> equality.\<close>
       qed
       have hep_arcA: "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {?vi, ?vsi}"
-      proof -
-        have "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) \<supseteq> {?vi, ?vsi}"
-          using hAB_inter_sub hAB_eq sorry
-        have "card (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)) = 2" sorry
-        show ?thesis sorry
-      qed
+        sorry \<comment> \<open>ep(arcA) \\<supseteq> {vi, vsi} (from A \\<inter> B \\<subseteq> ep(A)) + card(ep) = 2 \\<Rightarrow> eq.\<close>
       have hep_arcB: "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {?vi, ?vsi}"
-      proof -
-        have "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)"
-          using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] sorry
-        have "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) \<supseteq> {?vi, ?vsi}"
-          using \<open>?arcA \<inter> ?arcB \<subseteq> _\<close> hAB_eq sorry
-        have "card (top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)) = 2" sorry
-        show ?thesis sorry
-      qed
+        sorry \<comment> \<open>Same argument via A \\<inter> B \\<subseteq> ep(B).\<close>
       \<comment> \<open>Step 1: arcA \\<union> arcB is a simple closed curve.\<close>
       have hSCC: "top1_simple_closed_curve_on T TT (?arcA \<union> ?arcB)"
-        sorry \<comment> \<open>By arcs\\_form\\_simple\\_closed\\_curve[OF hstrict hhaus harcA\\_arc harcA\\_sub
+        sorry \<comment> \<open>arcs\\_form\\_simple\\_closed\\_curve[OF hstrict hhaus harcA\\_arc harcA\\_sub
                harcB\\_arc harcB\\_sub hAB\\_eq hvi\\_ne hep\\_arcA hep\\_arcB].\<close>
       \<comment> \<open>Step 2: T retracts onto arcA \\<union> arcB (via graph\\_cycle\\_retract with ws = [arcA, arcB]).\<close>
       have hretract: "top1_retract_of_on T TT (?arcA \<union> ?arcB)"
       proof -
         let ?ws2 = "[?arcA, ?arcB]"
-        have "set ?ws2 \<subseteq> \<A>" using harcA_in harcB_in sorry
-        have "length ?ws2 \<ge> 2" sorry
-        have "\<Union>(set ?ws2) \<subseteq> T" using harcA_sub harcB_sub sorry
-        have "\<Union>(set ?ws2) = ?arcA \<union> ?arcB" sorry
+        have hws2_sub: "set ?ws2 \<subseteq> \<A>" using harcA_in harcB_in by (by100 simp)
+        have hws2_len: "length ?ws2 \<ge> 2" by (by100 simp)
+        have hws2_T: "\<Union>(set ?ws2) \<subseteq> T" using harcA_sub harcB_sub by (by100 blast)
+        have hws2_eq: "\<Union>(set ?ws2) = ?arcA \<union> ?arcB" by (by100 simp)
         from graph_cycle_retract[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
-            \<open>set ?ws2 \<subseteq> \<A>\<close> \<open>length ?ws2 \<ge> 2\<close> \<open>\<Union>(set ?ws2) \<subseteq> T\<close>]
-        show ?thesis using \<open>\<Union>(set ?ws2) = ?arcA \<union> ?arcB\<close> sorry
+            hws2_sub hws2_len hws2_T]
+        show ?thesis using hws2_eq sorry
       qed
       \<comment> \<open>Step 3: SC + SCC retract \\<Rightarrow> False.\<close>
       have hSC: "top1_simply_connected_on T TT"
-        using assms(1) unfolding top1_is_tree_on_def sorry
+        using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
       have htop_T: "is_topology_on T TT"
         using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
-          is_topology_on_strict_def sorry
+          is_topology_on_strict_def by (by100 blast)
       have hhaus_T: "is_hausdorff_on T TT"
-        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def sorry
-      have hC_sub: "?arcA \<union> ?arcB \<subseteq> T" using harcA_sub harcB_sub sorry
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have hC_sub: "?arcA \<union> ?arcB \<subseteq> T" using harcA_sub harcB_sub by (by100 blast)
       from scc_in_sc_false[OF hSC htop_T hhaus_T hSCC hretract hC_sub]
       show False .
     qed
