@@ -14682,8 +14682,68 @@ lemma scheme_rotate_homeomorphic:
       and "top1_quotient_of_scheme_on Y1 TY1 (u @ v)"
       and "top1_quotient_of_scheme_on Y2 TY2 (v @ u)"
   shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-  sorry \<comment> \<open>Same polygon with rotated edge labeling. Use quotient\\_same\\_fibres\\_homeomorphic
-     after showing that u@v and v@u produce the same identification (cyclic shift).\<close>
+proof -
+  \<comment> \<open>Book proof (Munkres \\<S>76 operation iv): "Permute. Renumbering the vertices of the
+     polygonal region so as to begin with a different vertex does not affect the quotient space."
+     Formal argument: u@v and v@u have the same length n = |u|+|v|. Define shifted vertex
+     positions vx'(i) = vx((i+|u|) mod n). The polygon P is unchanged (same convex hull).
+     The quotient map q is unchanged. The scheme (v@u)!i = (u@v)!((i+|u|) mod n), so all
+     identification conditions transfer. Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
+  let ?n = "length u + length v"
+  \<comment> \<open>Extract quotient data for u@v.\<close>
+  from assms(3) obtain P1 q1 vx1 vy1 where
+      hP1: "top1_is_polygonal_region_on P1 ?n"
+      and hq1: "top1_quotient_map_on P1
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y1 TY1 q1"
+      and hscheme1: "top1_quotient_of_scheme_on Y1 TY1 (u @ v)"
+    sorry \<comment> \<open>Unfold top1\\_quotient\\_of\\_scheme\\_on for u@v.\<close>
+  \<comment> \<open>The scheme v@u has the same length.\<close>
+  have hlen_eq: "length (v @ u) = ?n" by simp
+  have hlen_uv: "length (u @ v) = ?n" by simp
+  \<comment> \<open>Key: (v@u)!i = (u@v)!((i + length u) mod n) for i < n.\<close>
+  have hshift: "\<forall>i < ?n. (v @ u) ! i = (u @ v) ! ((i + length u) mod ?n)"
+  proof (intro allI impI)
+    fix i assume "i < ?n"
+    show "(v @ u) ! i = (u @ v) ! ((i + length u) mod ?n)"
+    proof (cases "i < length v")
+      case True
+      hence "(v @ u) ! i = v ! i" by (simp add: nth_append)
+      moreover have "(i + length u) mod ?n = i + length u"
+        using True by simp
+      moreover have "(u @ v) ! (i + length u) = v ! i"
+        using True by (simp add: nth_append)
+      ultimately show ?thesis by simp
+    next
+      case False
+      hence "i \<ge> length v" by linarith
+      hence "(v @ u) ! i = u ! (i - length v)" by (simp add: nth_append)
+      moreover have "(i + length u) mod ?n = i - length v"
+      proof -
+        have "i + length u = ?n + (i - length v)" using \<open>i \<ge> length v\<close> by linarith
+        hence "(i + length u) mod ?n = (?n + (i - length v)) mod ?n"
+          by (metis add.commute)
+        also have "\<dots> = (i - length v) mod ?n" by simp
+        also have "\<dots> = i - length v"
+          using \<open>i < ?n\<close> \<open>i \<ge> length v\<close> by simp
+        finally show ?thesis .
+      qed
+      moreover have "(u @ v) ! (i - length v) = u ! (i - length v)"
+      proof -
+        have "i - length v < length u" using \<open>i < ?n\<close> \<open>i \<ge> length v\<close> by linarith
+        thus ?thesis by (simp add: nth_append)
+      qed
+      ultimately show ?thesis by simp
+    qed
+  qed
+  \<comment> \<open>Define shifted vertex positions: vx'(i) = vx1((i + |u|) mod n), vy' similarly.\<close>
+  \<comment> \<open>The polygon P1 with these shifted vertices satisfies quotient\\_of\\_scheme for v@u,
+     using the SAME quotient map q1. So q1 is a quotient for both schemes on P1.
+     Apply quotient\\_same\\_fibres\\_homeomorphic to get Y1 \\<cong> Y2.\<close>
+  \<comment> \<open>Since q1 gives the same fibres for both u@v and v@u identifications
+     (cyclic shift doesn't change which boundary points are identified),
+     Y1 and any quotient of v@u are homeomorphic.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Scheme cancellation preserves quotient type: quotient(u@[a,a\\<inverse>]@v) \\<cong> quotient(u@v).
    Folding two adjacent inverse edges doesn't change the quotient space.\<close>
