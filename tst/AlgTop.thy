@@ -4629,8 +4629,24 @@ proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
       finally show ?thesis using \<open>top1_retract_of_on T TT (\<Union>(set ?ws'))\<close> by simp
     qed
     \<comment> \<open>Compose with retraction C \\<union> A0 \\<to> C.\<close>
-    show ?thesis sorry \<comment> \<open>Pasting retraction: id on C, const on A0 (if A0 \\<inter> C has \\<le> 1 pt).
-       If A0 \\<inter> C has 2 pts: derive False (double attachment contradicts tree).\<close>
+    \<comment> \<open>A0 \\<inter> C \\<subseteq> ep(A0) from graph conditions. card(ep(A0)) \\<le> 2.\<close>
+    let ?C = "\<Union>(set ws)"
+    have hA0C_sub_ep: "A0 \<inter> ?C \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+    proof -
+      have "\<forall>B \<in> set ws. A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+      proof (intro ballI)
+        fix B assume "B \<in> set ws"
+        hence "B \<in> \<A>" using less.prems(7) by (by100 blast)
+        have "A0 \<noteq> B" using hA0(2) \<open>B \<in> set ws\<close> by (by100 blast)
+        from less.prems(4)[rule_format, OF hA0(1) \<open>B \<in> \<A>\<close> \<open>A0 \<noteq> B\<close>]
+        show "A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" by (by100 blast)
+      qed
+      thus ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>Compose retraction T \\<to> C \\<union> A0 with pasting retraction C \\<union> A0 \\<to> C.\<close>
+    show ?thesis sorry \<comment> \<open>Pasting retraction: id on C, const on A0.
+       Card(A0 \\<inter> C) \\<le> 2 from hA0C\\_sub\\_ep. If \\<le> 1: pasting lemma.
+       If = 2: double attachment contradicts tree (IH + scc\\_in\\_sc\\_false).\<close>
   qed
 qed
 
