@@ -14990,7 +14990,21 @@ proof -
     have "\<Delta>copy 0 \<in> ?\<T>" using hm_pos by (by100 blast)
     thus ?thesis by (by100 blast)
   qed
-  moreover have "\<forall>T \<in> ?\<T>. top1_is_polygonal_region_on T 3" sorry
+  moreover have "\<forall>T \<in> ?\<T>. top1_is_polygonal_region_on T 3"
+  proof (intro ballI)
+    fix T assume "T \<in> ?\<T>"
+    then obtain i where "i < ?m" "T = \<Delta>copy i" sorry
+    \<comment> \<open>\\<Delta>copy i = translation of standard simplex. Translation preserves polygonal region.
+       The standard simplex has vertices (vx j, vy j) for j < 3 (from h\\_simplex\\_poly).
+       \\<Delta>copy i has vertices (vx j + 3*i, vy j). Same convex hull structure.\<close>
+    from h_simplex_poly obtain vx0 vy0 where
+        hvx: "top1_is_polygonal_region_on top1_standard_simplex 3"
+      sorry
+    \<comment> \<open>Define translated vertices: vx'(j) = vx0(j) + 3*i, vy'(j) = vy0(j).\<close>
+    \<comment> \<open>Show \\<Delta>copy i = convex hull of translated vertices.\<close>
+    show "top1_is_polygonal_region_on T 3"
+      sorry \<comment> \<open>Verify polygonal\\_region\\_on conditions for translated vertices.\<close>
+  qed
   moreover have "\<forall>T \<in> ?\<T>. top1_continuous_map_on T
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q_map" sorry
   moreover have "(\<Union>T\<in>?\<T>. q_map ` T) = X" sorry
