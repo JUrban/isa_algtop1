@@ -4612,8 +4612,9 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
        Per expert audit 7: use A0 with A0 \<inter> C \<noteq> {} to maintain path-connectedness.\<close>
     let ?C = "\<Union>\<S>"
     obtain A0 where hA0: "A0 \<in> \<A>" "A0 \<notin> \<S>" "A0 \<inter> ?C \<noteq> {}"
-      sorry \<comment> \<open>Adjacent-outside-arc lemma: \<S> \<subset> \<A>, T connected, \<Union>\<A> = T,
-         so some arc outside \<S> must meet \<Union>\<S> (otherwise T disconnected).\<close>
+      sorry \<comment> \<open>Adjacent-outside-arc: \\<S> \\<subset> \\<A>, T connected, \\<Union>\\<A> = T.
+         If no outside arc meets C, then C and \\<Union>(\\<A> - \\<S>) partition T into
+         two non-empty disjoint closed sets, contradicting T connected.\<close>
     let ?\<S>' = "insert A0 \<S>"
     have hcard_lt: "card (\<A> - ?\<S>') < card (\<A> - \<S>)"
     proof -
