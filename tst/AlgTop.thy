@@ -15038,8 +15038,9 @@ proof -
     have hndeg': "\<forall>k<n. \<not> (\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0)
                         \<and> coeffs k = 0 \<and> (\<Sum>i<n. coeffs i) = 1
                         \<and> vx' k = (\<Sum>i<n. coeffs i * vx' i) \<and> vy' k = (\<Sum>i<n. coeffs i * vy' i))"
-      sorry \<comment> \<open>Non-degeneracy: vx'(k)=\\<Sum>\\<alpha> vx'(i) \\<Rightarrow> vx(k)=\\<Sum>\\<alpha> vx(i) (subtract c).
-         Same for vy. Contradicts hndeg.\<close>
+      using hndeg unfolding vx'_def vy'_def
+      sorry \<comment> \<open>vx'(k) = \\<Sum>\\<alpha> vx'(i) with \\<Sum>\\<alpha>=1 implies vx(k) = \\<Sum>\\<alpha> vx(i) (subtract c).
+         vy'=vy. Contradicts hndeg. Key: \\<Sum>(\\<alpha>*(vx+c)) = \\<Sum>(\\<alpha>*vx) + c*\\<Sum>\\<alpha> = \\<Sum>(\\<alpha>*vx) + c.\<close>
     \<comment> \<open>Translated hull.\<close>
     have hP'_eq: "(\<lambda>(x,y). (x + c, y)) ` P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
                   \<and> (\<Sum>i<n. coeffs i) = 1
