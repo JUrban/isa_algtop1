@@ -6608,14 +6608,39 @@ proof -
         qed
       qed
     qed
-    \<comment> \<open>Consecutive cycle arcs share exactly 1 vertex (from card \\<le> 1 + walk structure).\<close>
+    \<comment> \<open>Walk arc at index: ws!idx = we(Suc i0 + idx).\<close>
+    have hws_nth: "\<forall>idx < dmin. ?ws ! idx = ?we (Suc i0 + idx)"
+    proof (intro allI impI)
+      fix idx assume "idx < dmin"
+      have "idx < length [0..<dmin]" using \<open>idx < dmin\<close> by simp
+      thus "?ws ! idx = ?we (Suc i0 + idx)"
+        using nth_map[OF \<open>idx < length [0..<dmin]\<close>, of "\<lambda>k. ?we (Suc i0 + k)"]
+        by simp
+    qed
+    \<comment> \<open>Consecutive walk arcs are distinct (non-backtracking).\<close>
+    have hcons_ne: "\<forall>idx < dmin. ?we (Suc i0 + idx) \<noteq> ?we (Suc i0 + Suc idx)"
+    proof (intro allI impI)
+      fix idx assume "idx < dmin"
+      show "?we (Suc i0 + idx) \<noteq> ?we (Suc i0 + Suc idx)"
+        using hnonback[rule_format, of "Suc i0 + idx"] by simp
+    qed
+    \<comment> \<open>Wraparound arcs distinct: we(j0) \\<noteq> we(Suc i0).\<close>
+    have hwrap_ne: "?we j0 \<noteq> ?we (Suc i0)"
+    proof (cases "dmin = 2")
+      case True
+      hence "j0 = Suc (Suc i0)" using hij0(1) hij0(4) by linarith
+      thus ?thesis using hnonback[rule_format, of "Suc i0"] by simp
+    next
+      case False hence "dmin \<ge> 3" using hdmin_ge2 by linarith
+      show ?thesis
+        sorry \<comment> \<open>dmin \\<ge> 3: same arc \\<Rightarrow> cross-vertex \\<Rightarrow> shorter revisit \\<Rightarrow> contradiction with hmin.\<close>
+    qed
+    \<comment> \<open>Consecutive cycle arcs share exactly 1 vertex.\<close>
     have hws_card1: "\<forall>idx < length ?ws. card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
-      sorry \<comment> \<open>For non-wraparound: shared vertex from hwalk\\_shared + card \\<le> 1 from hinter + hnonback.
-         For wraparound: shared vertex wv(i0)=wv(j0) + distinctness from minimum revisit.\<close>
+      sorry
     \<comment> \<open>Arcs are distinct.\<close>
     have hws_dist: "distinct ?ws"
-      sorry \<comment> \<open>From vertex distinctness + endpoint analysis: different arcs have different
-         arrived-at vertices, hence different arcs.\<close>
+      sorry
     \<comment> \<open>Apply hacyclic.\<close>
     from hacyclic[rule_format, OF hws_ge2 hws_dist]
     show False using hws_sub hws_card1 by (by100 blast)
