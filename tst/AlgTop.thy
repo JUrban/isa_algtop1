@@ -4554,6 +4554,28 @@ proof -
 qed
 
 
+\<comment> \<open>Graph cycle retract: in a tree with graph decomposition, any union of arcs from \\<A>
+   is a retract. Used for both the general sc\\_graph\\_no\\_cycle and the j-i=2 case.\<close>
+lemma graph_cycle_retract:
+  fixes T :: "'a set" and TT :: "'a set set"
+  assumes "top1_is_tree_on T TT"
+      and "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "finite \<A>"
+      and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
+          (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
+      and "set ws \<subseteq> \<A>"
+      and "length ws \<ge> 2"
+      and "\<Union>(set ws) \<subseteq> T"
+  shows "top1_retract_of_on T TT (\<Union>(set ws))"
+  sorry \<comment> \<open>Retraction of T onto \\<Union>(set ws). Collapse non-ws arcs to nearest ws vertex.
+     Route 1 (per plan): for each non-ws arc, map to attachment vertex.
+     Coherent topology \\<Rightarrow> continuous. Needs unique-attachment argument.\<close>
+
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
    A "cycle" here means a sequence of \\<ge> 2 distinct arcs A1, ..., Ak such that
    consecutive arcs share exactly 1 vertex, and the sequence forms a closed path.
@@ -4979,8 +5001,7 @@ proof -
   qed
   \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
   have hC_retract: "top1_retract_of_on T TT ?C"
-    sorry \<comment> \<open>Retraction construction: for each non-cycle arc, map to a cycle vertex.
-       Continuity from coherent topology. Needs tree-branch collapse argument.\<close>
+    by (rule graph_cycle_retract[OF assms(1-6) assms(9) assms(7) hC_sub])
   \<comment> \<open>Apply scc\\_in\\_sc\\_false.\<close>
   from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
   show False .
@@ -6554,8 +6575,15 @@ proof (rule ccontr)
         by (rule arcs_form_simple_closed_curve[OF hstrict hhaus harcA_arc harcA_sub
                harcB_arc harcB_sub hAB_eq hvi_ne hep_arcA hep_arcB])
       have hretract: "top1_retract_of_on T TT (?arcA \<union> ?arcB)"
-        sorry \<comment> \<open>Retraction of T onto arcA \\<union> arcB. Collapse each non-{arcA,arcB} arc to
-           its nearest cycle vertex. Needs graph\\_cycle\\_retract (not yet extracted as standalone).\<close>
+      proof -
+        let ?ws2 = "[?arcA, ?arcB]"
+        have "set ?ws2 \<subseteq> \<A>" using harcA_in harcB_in by (by100 simp)
+        have "length ?ws2 \<ge> 2" by (by100 simp)
+        have "\<Union>(set ?ws2) \<subseteq> T" using harcA_sub harcB_sub by (by100 auto)
+        from graph_cycle_retract[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
+            \<open>set ?ws2 \<subseteq> \<A>\<close> \<open>length ?ws2 \<ge> 2\<close> \<open>\<Union>(set ?ws2) \<subseteq> T\<close>]
+        show ?thesis by (by100 simp)
+      qed
       have hSC: "top1_simply_connected_on T TT"
         using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
       have htop_T: "is_topology_on T TT"
