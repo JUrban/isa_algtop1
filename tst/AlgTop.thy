@@ -4554,6 +4554,27 @@ proof -
 qed
 
 
+\<comment> \<open>Attached-arc retract: if C is path-connected, A is an arc meeting C,
+   then C \\<union> A retracts onto C.
+   Card 1 (A \\<inter> C = {v}): collapse A to v.
+   Card 2 (A \\<inter> C = {u,v}): map A along a path in C from u to v.\<close>
+lemma retract_attached_arc:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes htop: "is_topology_on X TX"
+      and hstrict: "is_topology_on_strict X TX"
+      and hhaus: "is_hausdorff_on X TX"
+      and hC_sub: "C \<subseteq> X" and hA_sub: "A \<subseteq> X"
+      and hC_pc: "top1_path_connected_on C (subspace_topology X TX C)"
+      and hA_arc: "top1_is_arc_on A (subspace_topology X TX A)"
+      and hmeet: "A \<inter> C \<noteq> {}"
+      and hinter_ep: "A \<inter> C \<subseteq> top1_arc_endpoints_on A (subspace_topology X TX A)"
+  shows "top1_retract_of_on (C \<union> A) (subspace_topology X TX (C \<union> A)) C"
+  sorry \<comment> \<open>Per expert audit 7 \\<section>8:
+     Card 1: A \\<inter> C = {v}. r|C = id, r|A = const v. Pasting lemma.
+     Card 2: A \\<inter> C = {u,v} = ep(A). A is arc from u to v. C has path u\\<to>v (pc).
+       Map A along path: r|A = path \\<circ> h\\<inverse> where h: [0,1] \\<to> A. r|C = id.
+       Pasting: r continuous on C (id) and on A (path\\<circ>h\\<inverse>), agree at {u,v}.\<close>
+
 \<comment> \<open>Graph connected subunion retract: in a tree with graph decomposition,
    a path-connected union of arcs from \\<A> is a retract of T.
    (Per expert audit 7: the old version without path-connectedness was false.)\<close>
@@ -4794,9 +4815,37 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
     \<comment> \<open>Compose with retraction C \<union> A0 \<to> C (attached-arc retract).\<close>
     \<comment> \<open>Local retraction C \\<union> A0 \\<to> C, then compose with hret\\_CuA.\<close>
     have hlocal_retract: "top1_retract_of_on (?C \<union> A0) (subspace_topology T TT (?C \<union> A0)) ?C"
-      sorry \<comment> \<open>attached\\_arc\\_retract: C pc, A0 arc, A0 \\<inter> C \\<noteq> {}.
-         Card 1: const map on A0. Card 2: path-map on A0 along path in C.
-         Uses pasting lemma + path existence in pc C.\<close>
+    proof -
+      have htop: "is_topology_on T TT"
+        using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+          is_topology_on_strict_def by (by100 blast)
+      have hstrict: "is_topology_on_strict T TT"
+        using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have hhaus: "is_hausdorff_on T TT"
+        using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      have "?C \<subseteq> T"
+      proof -
+        have "\<forall>A \<in> \<S>. A \<subseteq> T" using less.prems(2,7) by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      have hA0_arc: "top1_is_arc_on A0 (subspace_topology T TT A0)"
+        using less.prems(2) hA0(1) by (by100 blast)
+      have hA0C_sub_ep: "A0 \<inter> ?C \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+      proof -
+        have "\<forall>B \<in> \<S>. A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        proof (intro ballI)
+          fix B assume "B \<in> \<S>"
+          hence "B \<in> \<A>" using less.prems(7) by (by100 blast)
+          have "A0 \<noteq> B" using hA0(2) \<open>B \<in> \<S>\<close> by (by100 blast)
+          from less.prems(4)[rule_format, OF hA0(1) \<open>B \<in> \<A>\<close> \<open>A0 \<noteq> B\<close>]
+          show "A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" by (by100 blast)
+        qed
+        thus ?thesis by (by100 blast)
+      qed
+      show ?thesis
+        by (rule retract_attached_arc[OF htop hstrict hhaus \<open>?C \<subseteq> T\<close> \<open>A0 \<subseteq> T\<close>
+            less.prems(9) hA0_arc hA0(3) hA0C_sub_ep])
+    qed
     \<comment> \<open>Compose: r = r2 \\<circ> r1 where r1: T \\<to> C \\<union> A0, r2: C \\<union> A0 \\<to> C.\<close>
     from hret_CuA obtain r1 where hr1: "top1_is_retraction_on T TT (?C \<union> A0) r1"
       unfolding top1_retract_of_on_def by (by100 blast)
