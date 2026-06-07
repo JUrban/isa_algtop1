@@ -4580,8 +4580,15 @@ proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
     case True
     \<comment> \<open>Base: T = C. Identity retraction.\<close>
     hence "T = \<Union>(set ws)" using less.prems(3) by (by100 simp)
-    show ?thesis
-      sorry \<comment> \<open>T = C. Identity retraction. id: T \\<to> T continuous. \\<forall>a\\<in>T. id a = a.\<close>
+    have "top1_retract_of_on T TT T"
+      unfolding top1_retract_of_on_def top1_is_retraction_on_def
+    proof (intro exI[of _ id] conjI)
+      show "T \<subseteq> T" by (by100 blast)
+      show "top1_continuous_map_on T TT T (subspace_topology T TT T) id"
+        sorry \<comment> \<open>id: T \\<to> T continuous. Needs subspace\\_topology T TT T = TT.\<close>
+      show "\<forall>a\<in>T. id a = a" by (by100 simp)
+    qed
+    thus ?thesis using \<open>T = \<Union>(set ws)\<close> by simp
   next
     case False
     \<comment> \<open>Step: pick non-ws arc A0, add to ws, apply IH, compose.\<close>
