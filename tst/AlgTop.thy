@@ -14996,14 +14996,28 @@ proof -
      Each merge: paste two polygons along a common edge to get a larger polygon.\<close>
   \<comment> \<open>Step 3: After merging all triangles, we have a single polygon P with
      boundary identifications reproducing X.\<close>
+  \<comment> \<open>Step 1: By Theorem 78.1, X is a quotient of finitely many triangular regions.\<close>
+  from Theorem_78_1_triangulable_surface[OF assms(1) assms(3)]
+  obtain \<T> q_tri where h\<T>: "finite \<T>" "\<T> \<noteq> {}"
+      "\<forall>T \<in> \<T>. top1_is_polygonal_region_on T 3"
+      "\<forall>T \<in> \<T>. top1_continuous_map_on T
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q_tri"
+      "(\<Union>T\<in>\<T>. q_tri ` T) = X"
+      "\<forall>U. U \<subseteq> X \<longrightarrow>
+          (U \<in> TX \<longleftrightarrow> (\<forall>T\<in>\<T>. {p\<in>T. q_tri p \<in> U} \<in>
+              subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T))"
+    sorry
+  \<comment> \<open>Step 2: Iteratively paste triangles along shared edges using Theorem 76.1 (\\<S>76).
+     Book proof: "As long as two regions have edges bearing the same label, we can
+     paste them together. Eventually either one has a single polygon (theorem proved)
+     or several polygons with no shared labels. The latter gives a disconnected space,
+     contradicting X connected."
+     Formally: induction on card(\\<T>). If card = 1: done. If card > 1: find two regions
+     sharing a label, paste them (§76.1), reducing card by 1. Apply IH.\<close>
   show ?thesis
-  proof -
-    \<comment> \<open>Munkres 78.2: Iterative merging along spanning tree of dual graph.
-       The dual graph has triangles as vertices, edges where triangles share an edge.
-       Since X is connected, the dual graph is connected.
-       Walk a spanning tree, merging triangles along shared edges at each step.\<close>
-    show ?thesis sorry \<comment> \<open>Iterative merging construction.\<close>
-  qed
+    sorry \<comment> \<open>Induction on card(\\<T>). At each step: find shared edge label between two regions
+       (guaranteed by X connected). Paste them (Theorem 76.1). Result: fewer regions, same X.
+       When card = 1: X is quotient of a single polygon. Done.\<close>
 qed
 
 section \<open>\<S>77 The Classification Theorem\<close>
