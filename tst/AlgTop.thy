@@ -14946,9 +14946,15 @@ proof -
   \<comment> \<open>Step 4: Construct disjoint copies of standard simplex in R², one per triangle.\<close>
   \<comment> \<open>Enumerate the triangles.\<close>
   obtain tlist where htlist: "set tlist = \<T>0" "distinct tlist"
-    sorry \<comment> \<open>Finite set has a distinct list enumeration.\<close>
+    using finite_distinct_list[OF h\<T>0(1)] by (by100 blast)
   let ?m = "length tlist"
-  have hm_pos: "?m > 0" sorry
+  have h\<T>0_ne: "\<T>0 \<noteq> {}"
+  proof -
+    have "X \<noteq> {}" using assms(1) unfolding top1_is_surface_on_def sorry
+    thus ?thesis using h\<T>0(2) by (by100 blast)
+  qed
+  have hm_pos: "?m > 0"
+    using h\<T>0_ne htlist(1) by (by100 force)
   \<comment> \<open>Place the i-th simplex copy at position (3*i, 0) to ensure disjointness.\<close>
   define \<Delta>copy :: "nat \<Rightarrow> (real \<times> real) set" where
     "\<Delta>copy i = (\<lambda>(x,y). (x + 3 * real i, y)) ` top1_standard_simplex" for i
@@ -14967,7 +14973,7 @@ proof -
   moreover have "\<forall>U. U \<subseteq> X \<longrightarrow>
       (U \<in> TX \<longleftrightarrow> (\<forall>T\<in>?\<T>. {p\<in>T. q_map p \<in> U} \<in>
         subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T))" sorry
-  ultimately show ?thesis sorry
+  ultimately show ?thesis by (by100 blast)
 qed
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
