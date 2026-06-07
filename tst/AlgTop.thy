@@ -4585,7 +4585,23 @@ proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
     proof (intro exI[of _ id] conjI)
       show "T \<subseteq> T" by (by100 blast)
       show "top1_continuous_map_on T TT T (subspace_topology T TT T) id"
-        sorry \<comment> \<open>id: T \\<to> T continuous. Needs subspace\\_topology T TT T = TT.\<close>
+      proof -
+        have htop: "is_topology_on T TT"
+          using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+            is_topology_on_strict_def by (by100 blast)
+        \<comment> \<open>Use inclusion: id on T is the inclusion T \\<hookrightarrow> T, continuous by Theorem 18.2(2).\<close>
+        from Theorem_18_2(2)[OF htop htop htop, rule_format, of T]
+        have hincl: "top1_continuous_map_on T (subspace_topology T TT T) T TT id"
+          using Theorem_18_2(2)[OF htop htop htop, rule_format, of T] by (by100 blast)
+        \<comment> \<open>But we need id: (T, TT) \\<to> (T, subspace T TT T), not the other direction.
+           Since subspace\\_topology T TT T = TT, both are the same.\<close>
+        have hstrict: "is_topology_on_strict T TT"
+          using less.prems(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+        have "subspace_topology T TT T = TT"
+          by (rule subspace_topology_self_carrier)
+             (use hstrict in \<open>unfold is_topology_on_strict_def, by100 blast\<close>)
+        thus ?thesis using hincl by simp
+      qed
       show "\<forall>a\<in>T. id a = a" by (by100 simp)
     qed
     thus ?thesis using \<open>T = \<Union>(set ws)\<close> by simp
