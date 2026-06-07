@@ -6817,7 +6817,30 @@ proof (rule ccontr)
           have hfin: "finite ?S2" by (by100 simp)
           have "\<forall>A \<in> ?S2. A \<subseteq> \<Union>?S2" by (by100 blast)
           have hpc_each: "\<forall>A \<in> ?S2. top1_path_connected_on A (subspace_topology (\<Union>?S2) (subspace_topology T TT (\<Union>?S2)) A)"
-            sorry \<comment> \<open>Each arc is path-connected (homeomorphic to [0,1]).\<close>
+          proof (intro ballI)
+            fix A assume "A \<in> ?S2"
+            hence "A \<subseteq> \<Union>?S2" by (by100 blast)
+            have "subspace_topology (\<Union>?S2) (subspace_topology T TT (\<Union>?S2)) A = subspace_topology T TT A"
+              using subspace_topology_trans[OF \<open>A \<subseteq> \<Union>?S2\<close>] by simp
+            moreover have "top1_path_connected_on A (subspace_topology T TT A)"
+            proof (rule connected_locally_path_connected_imp_path_connected)
+              have "A \<in> \<A>" using \<open>A \<in> ?S2\<close> harcA_in harcB_in by (by100 blast)
+              have "A \<subseteq> T" using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)
+              have hA_arc: "top1_is_arc_on A (subspace_topology T TT A)"
+                using assms(2) \<open>A \<in> \<A>\<close> by (by100 blast)
+              show "is_topology_on A (subspace_topology T TT A)"
+                by (rule subspace_topology_is_topology_on[OF htop_T \<open>A \<subseteq> T\<close>])
+              show "top1_connected_on A (subspace_topology T TT A)"
+                using arc_connected[OF hA_arc] .
+              show "top1_locally_path_connected_on A (subspace_topology T TT A)"
+                using arc_locally_path_connected[OF hA_arc htop_T \<open>A \<subseteq> T\<close>] .
+              obtain g where "top1_homeomorphism_on I_set I_top A (subspace_topology T TT A) g"
+                using hA_arc unfolding top1_is_arc_on_def by (by100 blast)
+              hence "bij_betw g I_set A" unfolding top1_homeomorphism_on_def by (by100 blast)
+              thus "A \<noteq> {}" unfolding bij_betw_def top1_unit_interval_def by (by100 auto)
+            qed
+            ultimately show "top1_path_connected_on A (subspace_topology (\<Union>?S2) (subspace_topology T TT (\<Union>?S2)) A)" by simp
+          qed
           have "\<forall>A \<in> ?S2. ?vi \<in> A" using hvi_inA hvi_inB by (by100 blast)
           have "\<Union>?S2 = \<Union>?S2" by simp
           from path_connected_finite_union_common_point[OF htop_CuA hfin
