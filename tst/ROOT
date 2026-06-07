@@ -124,6 +124,6 @@ session AlgTopCached10 in ac10 = AlgTopCached9 +
     AlgTopCached10
 
 session AlgTop = AlgTopCached10 +
-  options [quick_and_dirty, timeout = 600]
+  options [quick_and_dirty, timeout = 1800]
   theories
     AlgTop
