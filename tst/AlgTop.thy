@@ -7014,14 +7014,116 @@ proof -
      By IH: V(remaining) \\<ge> E(remaining) + 1.
      The leaf vertex adds 1 to V without adding to E. So V \\<ge> E + 1.\<close>
   \<comment> \<open>V \\<ge> E + 1 by strong induction on card(\\<A>), using the leaf existence.\<close>
+  \<comment> \<open>V \\<ge> E + 1 by strong induction on card(\\<A>), using the leaf existence.\<close>
   show ?thesis using hfin hne harcs hcover hinter hstrict hhaus hacyclic
-      \<open>\<exists>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<le> 1\<close>
-  sorry \<comment> \<open>LEAF INDUCTION: Base (card=1) + Step (remove leaf arc, V'=V-1, E'=E-1, IH).
-     Key difficulty: IH needs all premises on restricted space.
-     Subspace of strict/Hausdorff is strict/Hausdorff.
-     Acyclicity transfers to subsets. Cover = union of arcs. Intersection transfers.
-     The walk argument (leaf existence) re-applies at each level because all premises transfer.
-     This is substantial Isabelle bookkeeping (~100-200 lines) but mathematically straightforward.\<close>
+  proof (induction "card \<A>" arbitrary: \<A> T TT rule: less_induct)
+    case (less \<A> T TT)
+    \<comment> \<open>Unpack the assumptions from less.prems.\<close>
+    note hfin' = less.prems(1)
+    note hne' = less.prems(2)
+    note harcs' = less.prems(3)
+    note hcover' = less.prems(4)
+    note hinter' = less.prems(5)
+    note hstrict' = less.prems(6)
+    note hhaus' = less.prems(7)
+    note hacyclic' = less.prems(8)
+    let ?ep = "\<lambda>A. top1_arc_endpoints_on A (subspace_topology T TT A)"
+    let ?V = "top1_graph_vertex_set T TT \<A>"
+    show ?case
+    proof (cases "card \<A> = 1")
+      case True
+      \<comment> \<open>Base: single arc has 2 distinct endpoints, so V = 2 \\<ge> 2.\<close>
+      then obtain A0 where h\<A>_eq: "\<A> = {A0}"
+        using card_1_singletonE hfin' by (by100 metis)
+      have "card ?V = 2"
+        sorry \<comment> \<open>Single arc A0 has 2 distinct endpoints. V = ep(A0). card = 2.\<close>
+      thus ?thesis using True by linarith
+    next
+      case False
+      hence hcard_ge2: "card \<A> \<ge> 2"
+      proof -
+        have "card \<A> \<noteq> 0" using hne' hfin' by (by100 simp)
+        thus ?thesis using False \<open>card \<A> \<noteq> 1\<close> by linarith
+      qed
+      \<comment> \<open>Leaf existence (re-derive from walk argument, same as outer proof).\<close>
+      have hleaf: "\<exists>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<le> 1"
+        sorry \<comment> \<open>Same walk argument as the outer proof, using the current \\<A>'s assumptions.\<close>
+      then obtain v where hv_V: "v \<in> ?V" "card {A \<in> \<A>. v \<in> ?ep A} \<le> 1"
+        by (by100 blast)
+      \<comment> \<open>Degree = 1 (\\<ge> 1 from V membership).\<close>
+      have "card {A \<in> \<A>. v \<in> ?ep A} \<ge> 1"
+      proof -
+        from hv_V(1) obtain A0 where "A0 \<in> \<A>" "v \<in> ?ep A0"
+          unfolding top1_graph_vertex_set_def by (by100 blast)
+        hence "A0 \<in> {A \<in> \<A>. v \<in> ?ep A}" by (by100 blast)
+        hence hne_deg: "{A \<in> \<A>. v \<in> ?ep A} \<noteq> {}" by (by100 blast)
+        have "finite {A \<in> \<A>. v \<in> ?ep A}" using hfin' by (by100 simp)
+        hence "card {A \<in> \<A>. v \<in> ?ep A} \<noteq> 0" using hne_deg by (by100 simp)
+        thus ?thesis by linarith
+      qed
+      hence "card {A \<in> \<A>. v \<in> ?ep A} = 1" using hv_V(2) by linarith
+      then obtain A0 where hA0_eq: "{A \<in> \<A>. v \<in> ?ep A} = {A0}"
+        by (rule card_1_singletonE)
+      hence hA0_in: "A0 \<in> \<A>" by (by100 blast)
+      \<comment> \<open>v only in A0: v is an endpoint of A0 only.\<close>
+      have hv_only: "\<forall>B\<in>\<A>. B \<noteq> A0 \<longrightarrow> v \<notin> B"
+        sorry \<comment> \<open>v not endpoint of B (from hA0\\_eq). v not interior of B (interior points
+           not endpoints of A0, but v IS endpoint of A0 \\<Rightarrow> contradiction with hinter).\<close>
+      \<comment> \<open>\\<A>' = \\<A> \\ {A0}. V' = V \\ {v}.\<close>
+      let ?\<A>' = "\<A> - {A0}"
+      let ?T' = "\<Union>?\<A>'"
+      let ?TT' = "subspace_topology T TT ?T'"
+      have h\<A>'_ne: "?\<A>' \<noteq> {}"
+      proof -
+        have "card \<A> \<ge> 2" using hcard_ge2 .
+        have "card {A0} = 1" by simp
+        hence "\<A> \<noteq> {A0}" using \<open>card \<A> \<ge> 2\<close> by (by100 force)
+        then obtain B where "B \<in> \<A>" "B \<noteq> A0" using hA0_in by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      have h\<A>'_fin: "finite ?\<A>'" using hfin' by (by100 simp)
+      have hcard': "card ?\<A>' < card \<A>"
+      proof -
+        have "A0 \<in> \<A>" using hA0_in .
+        have "card (\<A> - {A0}) = card \<A> - 1" using hfin' hA0_in by simp
+        thus ?thesis using hcard_ge2 by linarith
+      qed
+      \<comment> \<open>Subspace topology: for A \\<in> \\<A>', subspace T' TT' A = subspace T TT A.\<close>
+      have hsub_trans: "\<forall>A\<in>?\<A>'. subspace_topology ?T' ?TT' A = subspace_topology T TT A"
+        sorry \<comment> \<open>subspace\\_topology\\_trans: A \\<subseteq> T' \\<subseteq> T.\<close>
+      \<comment> \<open>All premises transfer to \\<A>' on T'.\<close>
+      have harcs_r: "\<forall>A\<in>?\<A>'. A \<subseteq> ?T' \<and> top1_is_arc_on A (subspace_topology ?T' ?TT' A)" sorry
+      have hcover_r: "\<Union>?\<A>' = ?T'" by simp
+      have hinter_r: "\<forall>A\<in>?\<A>'. \<forall>B\<in>?\<A>'. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology ?T' ?TT' A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology ?T' ?TT' B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 1" sorry
+      have hstrict_r: "is_topology_on_strict ?T' ?TT'" sorry
+      have hhaus_r: "is_hausdorff_on ?T' ?TT'" sorry
+      have hacyclic_r: "\<forall>ws. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> ?\<A>' \<longrightarrow>
+          (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow> False"
+        using hacyclic' by (by100 blast)
+      \<comment> \<open>Apply IH.\<close>
+      from less.hyps[OF hcard' h\<A>'_fin h\<A>'_ne harcs_r hcover_r hinter_r hstrict_r hhaus_r hacyclic_r]
+      have hIH: "card (top1_graph_vertex_set ?T' ?TT' ?\<A>') \<ge> card ?\<A>' + 1" .
+      \<comment> \<open>V'(on T') = V'(on T) because arc subspace topologies agree.\<close>
+      have hV'_eq: "top1_graph_vertex_set ?T' ?TT' ?\<A>' = top1_graph_vertex_set T TT ?\<A>'"
+        sorry \<comment> \<open>From hsub\\_trans: endpoints defined by arc subspace topology.\<close>
+      \<comment> \<open>V = V' + 1, E = E' + 1.\<close>
+      have "?V = insert v (top1_graph_vertex_set T TT ?\<A>')" sorry
+      have "v \<notin> top1_graph_vertex_set T TT ?\<A>'" sorry
+      have "card ?V = card (top1_graph_vertex_set T TT ?\<A>') + 1" sorry
+      have "card \<A> = card ?\<A>' + 1"
+      proof -
+        have "card (\<A> - {A0}) = card \<A> - 1" using hfin' hA0_in by simp
+        thus ?thesis using hcard_ge2 by linarith
+      qed
+      have "card (top1_graph_vertex_set T TT ?\<A>') \<ge> card ?\<A>' + 1"
+        using hIH hV'_eq by simp
+      thus ?thesis using \<open>card ?V = card (top1_graph_vertex_set T TT ?\<A>') + 1\<close>
+          \<open>card \<A> = card ?\<A>' + 1\<close> by linarith
+    qed
+  qed
 qed
 
 
