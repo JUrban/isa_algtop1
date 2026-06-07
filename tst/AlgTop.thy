@@ -15080,8 +15080,22 @@ proof -
       \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m
             \<and> top1_scheme_equiv scheme w)"
     sorry \<comment> \<open>Reduction to normal form via elementary operations (Theorem 76).\<close>
-  \<comment> \<open>Step 3: Each normal form corresponds to the standard surface.\<close>
-  show ?thesis sorry \<comment> \<open>Normal form → homeomorphism type (S², T_n, or P_m).\<close>
+  \<comment> \<open>Step 3: Each normal form corresponds to the standard surface.
+     - Empty/sphere: cancellation gives S² (a@a⁻¹@b@b⁻¹ with cancellation).
+     - Torus scheme: the standard n-torus IS the quotient of this scheme
+       (by definition top1\\_is\\_n\\_fold\\_torus\\_on). scheme\\_quotient\\_uniqueness gives homeo.
+     - Projective scheme: similarly, top1\\_is\\_m\\_fold\\_projective\\_on.
+     Plus: Theorem 76 preserves quotient homeomorphism type, so scheme\\_equiv gives homeo.\<close>
+  show ?thesis
+  proof -
+    \<comment> \<open>If scheme\\_equiv to a normal form: Theorem 76 gives homeomorphism preservation.
+       The normal form's quotient = the standard surface. So X \\<cong> standard surface.\<close>
+    from hreduced show ?thesis
+      sorry \<comment> \<open>Case analysis on 3 normal forms. Each case:
+         1. scheme\\_equiv gives homeomorphism via Theorem\\_76 (iterated).
+         2. Standard surface = quotient of normal form scheme (by definition).
+         3. scheme\\_quotient\\_uniqueness gives X \\<cong> standard surface.\<close>
+  qed
 qed
 
 
