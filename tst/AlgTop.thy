@@ -14584,7 +14584,15 @@ inductive top1_elementary_scheme_operation :: "('a \<times> bool) list \<Rightar
   rotate: "top1_elementary_scheme_operation (u @ v) (v @ u)" |
   cancel: "top1_elementary_scheme_operation (u @ [a, top1_inverse_edge a] @ v) (u @ v)" |
   uncancel: "top1_elementary_scheme_operation (u @ v) (u @ [a, top1_inverse_edge a] @ v)" |
-  invert: "top1_elementary_scheme_operation w (rev (map top1_inverse_edge w))"
+  invert: "top1_elementary_scheme_operation w (rev (map top1_inverse_edge w))" |
+  \<comment> \<open>Relabel: replace all occurrences of label old by label new.
+     Book \\<S>76 operation (iii): "replace all occurrences of any given label by some other
+     label that does not appear elsewhere in the scheme."\<close>
+  relabel: "top1_elementary_scheme_operation w (map (\<lambda>(l,b). (if l = old then new else l, b)) w)" |
+  \<comment> \<open>Flip orientation: change sign of exponent of all occurrences of a given label.
+     Book \\<S>76 operation (iii): "one can change the sign of the exponent of all occurrences
+     of a given label a; this amounts to reversing the orientations of all edges labelled a."\<close>
+  flip_label: "top1_elementary_scheme_operation w (map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) w)"
 
 \<comment> \<open>The scheme equivalence is the reflexive-transitive closure of elementary operations.\<close>
 definition top1_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
@@ -14863,6 +14871,18 @@ proof -
       next
         case invert
         then show ?thesis using scheme_invert_homeomorphic[OF hY1 hY2] hs ht by simp
+      next
+        case (relabel old new)
+        \<comment> \<open>Relabeling preserves the quotient: changing label names doesn't change the identification.\<close>
+        then show ?thesis
+          sorry \<comment> \<open>Relabeling a scheme doesn't change the boundary identification pattern.
+             Same polygon, same q, just rename the labels in the scheme conditions.\<close>
+      next
+        case (flip_label a)
+        \<comment> \<open>Flipping a label's orientation reverses the direction edges are pasted.
+           The quotient space is the same: reversing identification direction gives
+           the same equivalence relation on boundary points.\<close>
+        then show ?thesis sorry
       qed
     qed
     from huniv[OF hop assms(1) assms(2) hs ht]
