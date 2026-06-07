@@ -15101,7 +15101,7 @@ proof -
         finally show "(\<Sum>i<n. coeffs i * (vx i + c)) = (\<Sum>i<n. coeffs i * vx i) + c" .
       qed
       show ?thesis unfolding hP_eq vx'_def vy'_def
-        using hsum_dist sorry
+        using hsum_dist sorry \<comment> \<open>Set equality: image of sum-defined set = sum-defined set with translated vertices.\<close>
     qed
     show "top1_is_polygonal_region_on ((\<lambda>(x,y). (x + c, y)) ` P) n"
       unfolding top1_is_polygonal_region_on_def
