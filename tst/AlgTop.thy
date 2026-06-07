@@ -7013,13 +7013,15 @@ proof -
      Step (card\\<ge>2): remove the leaf arc. The remaining graph is still acyclic.
      By IH: V(remaining) \\<ge> E(remaining) + 1.
      The leaf vertex adds 1 to V without adding to E. So V \\<ge> E + 1.\<close>
-  \<comment> \<open>Proof by strong induction on card(\\<A>).\<close>
+  \<comment> \<open>V \\<ge> E + 1 by strong induction on card(\\<A>), using the leaf existence.\<close>
   show ?thesis using hfin hne harcs hcover hinter hstrict hhaus hacyclic
-  proof (induction "card \<A>" arbitrary: \<A> T TT rule: less_induct)
-    case (less \<A> T TT)
-    show ?case
-      sorry \<comment> \<open>Base: card 1. Step: leaf v, arc A0, remove A0, V'=V-1, E'=E-1, apply IH.\<close>
-  qed
+      \<open>\<exists>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<le> 1\<close>
+  sorry \<comment> \<open>LEAF INDUCTION: Base (card=1) + Step (remove leaf arc, V'=V-1, E'=E-1, IH).
+     Key difficulty: IH needs all premises on restricted space.
+     Subspace of strict/Hausdorff is strict/Hausdorff.
+     Acyclicity transfers to subsets. Cover = union of arcs. Intersection transfers.
+     The walk argument (leaf existence) re-applies at each level because all premises transfer.
+     This is substantial Isabelle bookkeeping (~100-200 lines) but mathematically straightforward.\<close>
 qed
 
 
