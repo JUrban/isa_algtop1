@@ -6387,7 +6387,124 @@ proof -
        2. ?we n \\<in> \\<A> for all n.
        3. ?wv n \\<noteq> ?wv m for n \\<noteq> m (injectivity, from acyclicity).
        4. After card V steps: injective function on {0..card V} into V. Pigeonhole \\<Rightarrow> False.\<close>
-    show False sorry \<comment> \<open>Walk properties + pigeonhole. Combinatorial but needs careful Isabelle work.\<close>
+    \<comment> \<open>Step 1: SOME properties for next\\_arc and other\\_ep.\<close>
+    have hnext: "\<forall>v\<in>?V. \<forall>e\<in>\<A>. v \<in> ?ep e \<longrightarrow>
+        next_arc v e \<in> \<A> \<and> v \<in> ?ep (next_arc v e) \<and> next_arc v e \<noteq> e"
+    proof (intro ballI impI)
+      fix v e assume "v \<in> ?V" "e \<in> \<A>" "v \<in> ?ep e"
+      from hdeg_ge2[rule_format, OF \<open>v \<in> ?V\<close>]
+      have "card {A \<in> \<A>. v \<in> ?ep A} \<ge> 2" .
+      hence "\<exists>e'\<in>\<A>. e' \<noteq> e \<and> v \<in> ?ep e'"
+      proof -
+        have he_in: "e \<in> {A \<in> \<A>. v \<in> ?ep A}" using \<open>e \<in> \<A>\<close> \<open>v \<in> ?ep e\<close> by (by100 blast)
+        have hfin_deg: "finite {A \<in> \<A>. v \<in> ?ep A}" using hfin by (by100 simp)
+        from \<open>card {A \<in> \<A>. v \<in> ?ep A} \<ge> 2\<close>
+        have "{A \<in> \<A>. v \<in> ?ep A} \<noteq> {e}"
+        proof -
+          have "card {e} = 1" by simp
+          thus ?thesis using \<open>card {A \<in> \<A>. v \<in> ?ep A} \<ge> 2\<close> by (by100 force)
+        qed
+        then obtain e' where "e' \<in> {A \<in> \<A>. v \<in> ?ep A}" "e' \<noteq> e"
+          using he_in by (by100 blast)
+        thus ?thesis by (by100 blast)
+      qed
+      hence "\<exists>e'. e' \<in> \<A> \<and> v \<in> ?ep e' \<and> e' \<noteq> e" by (by100 blast)
+      from someI_ex[OF this]
+      show "next_arc v e \<in> \<A> \<and> v \<in> ?ep (next_arc v e) \<and> next_arc v e \<noteq> e"
+        unfolding next_arc_def by (by100 blast)
+    qed
+    have hother: "\<forall>v. \<forall>e\<in>\<A>. v \<in> ?ep e \<longrightarrow> other_ep v e \<in> ?ep e \<and> other_ep v e \<noteq> v"
+    proof (intro allI ballI impI)
+      fix v e assume "e \<in> \<A>" "v \<in> ?ep e"
+      from h2ep[rule_format, OF \<open>e \<in> \<A>\<close>]
+      obtain a b where hab: "a \<noteq> b" "?ep e = {a, b}" by (by100 blast)
+      hence "\<exists>v'. v' \<in> ?ep e \<and> v' \<noteq> v" using \<open>v \<in> ?ep e\<close> by (by100 blast)
+      from someI_ex[OF this]
+      show "other_ep v e \<in> ?ep e \<and> other_ep v e \<noteq> v"
+        unfolding other_ep_def by (by100 blast)
+    qed
+    \<comment> \<open>Step 2: Walk invariant by induction.\<close>
+    have hwalk_suc_fst: "\<And>n. ?wv (Suc n) = other_ep (?wv n) (next_arc (?wv n) (?we n))"
+      unfolding walk_state_def by (simp add: case_prod_beta Let_def)
+    have hwalk_suc_snd: "\<And>n. ?we (Suc n) = next_arc (?wv n) (?we n)"
+      unfolding walk_state_def by (simp add: case_prod_beta Let_def)
+    have hwalk_props: "\<And>n. ?wv n \<in> ?V \<and> ?we n \<in> \<A> \<and> ?wv n \<in> ?ep (?we n)"
+    proof -
+      fix n show "?wv n \<in> ?V \<and> ?we n \<in> \<A> \<and> ?wv n \<in> ?ep (?we n)"
+      proof (induction n)
+        case 0
+        have "walk_state 0 = (other_ep v0 e0, e0)" unfolding walk_state_def by simp
+        hence h0v: "?wv 0 = other_ep v0 e0" and h0e: "?we 0 = e0" by simp_all
+        from hother[rule_format, OF he0(1) he0(2)]
+        have "other_ep v0 e0 \<in> ?ep e0" "other_ep v0 e0 \<noteq> v0" by (by100 blast)+
+        hence "?wv 0 \<in> ?ep e0" using h0v by simp
+        moreover have "?wv 0 \<in> ?V" unfolding top1_graph_vertex_set_def
+          using \<open>?wv 0 \<in> ?ep e0\<close> he0(1) by (by100 blast)
+        ultimately show ?case using h0e he0(1) by (by100 blast)
+      next
+        case (Suc n)
+        from Suc.IH have hv: "?wv n \<in> ?V" and he: "?we n \<in> \<A>" and hve: "?wv n \<in> ?ep (?we n)"
+          by (by100 blast)+
+        let ?e' = "next_arc (?wv n) (?we n)"
+        from hnext[rule_format, OF hv he hve]
+        have he': "?e' \<in> \<A>" and hve': "?wv n \<in> ?ep ?e'" by (by100 blast)+
+        from hother[rule_format, OF he' hve']
+        have hv': "other_ep (?wv n) ?e' \<in> ?ep ?e'" by (by100 blast)
+        have hsuc_fst: "?wv (Suc n) = other_ep (?wv n) ?e'" using hwalk_suc_fst by simp
+        have hsuc_snd: "?we (Suc n) = ?e'" using hwalk_suc_snd by simp
+        have "?wv (Suc n) \<in> ?V"
+        proof -
+          have "other_ep (?wv n) ?e' \<in> ?ep ?e'" using hv' .
+          hence "other_ep (?wv n) ?e' \<in> (\<Union>A\<in>\<A>. ?ep A)" using he' by (by100 blast)
+          thus ?thesis using hsuc_fst unfolding top1_graph_vertex_set_def by simp
+        qed
+        moreover have "?we (Suc n) \<in> \<A>" using hsuc_snd he' by simp
+        moreover have "?wv (Suc n) \<in> ?ep (?we (Suc n))"
+          using hsuc_fst hsuc_snd hv' by simp
+        ultimately show ?case by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Step 3: Pigeonhole — vertex repeats after card(V)+1 steps.\<close>
+    have "\<exists>i j. i < j \<and> j \<le> card ?V \<and> ?wv i = ?wv j"
+    proof (rule ccontr)
+      assume "\<not> (\<exists>i j. i < j \<and> j \<le> card ?V \<and> ?wv i = ?wv j)"
+      hence hinj: "\<forall>i j. i \<le> card ?V \<longrightarrow> j \<le> card ?V \<longrightarrow> i \<noteq> j \<longrightarrow> ?wv i \<noteq> ?wv j"
+      proof (intro allI impI)
+        fix i j assume "i \<le> card ?V" "j \<le> card ?V" "i \<noteq> j"
+        show "?wv i \<noteq> ?wv j"
+        proof (cases "i < j")
+          case True thus ?thesis using \<open>\<not> (\<exists>i j. i < j \<and> j \<le> card ?V \<and> ?wv i = ?wv j)\<close> \<open>j \<le> card ?V\<close>
+            by (by100 blast)
+        next
+          case False hence "j < i" using \<open>i \<noteq> j\<close> by linarith
+          show ?thesis
+          proof
+            assume "?wv i = ?wv j"
+            hence "?wv j = ?wv i" by simp
+            with \<open>j < i\<close> \<open>i \<le> card ?V\<close> have "\<exists>i j. i < j \<and> j \<le> card ?V \<and> ?wv i = ?wv j"
+              by (by100 blast)
+            with \<open>\<not> (\<exists>i j. i < j \<and> j \<le> card ?V \<and> ?wv i = ?wv j)\<close> show False by (by100 blast)
+          qed
+        qed
+      qed
+      have "inj_on ?wv {..card ?V}"
+        unfolding inj_on_def using hinj by (by100 blast)
+      moreover have "?wv ` {..card ?V} \<subseteq> ?V"
+      proof (intro image_subsetI)
+        fix n assume "n \<in> {..card ?V}"
+        thus "?wv n \<in> ?V" using hwalk_props by (by100 blast)
+      qed
+      moreover have "card {..card ?V} = card ?V + 1" by simp
+      ultimately have "card ?V + 1 \<le> card ?V"
+        using card_inj_on_le[OF \<open>inj_on _ _\<close> \<open>_ ` _ \<subseteq> ?V\<close> hV_fin] by linarith
+      thus False by linarith
+    qed
+    then obtain i j where hij: "i < j" "j \<le> card ?V" "?wv i = ?wv j" by (by100 blast)
+    \<comment> \<open>Step 4: Extract cycle arcs and derive False via hacyclic.\<close>
+    \<comment> \<open>The arcs ?we(Suc i), ..., ?we(j) form a cycle of \\<ge> 2 arcs
+       with consecutive sharing 1 vertex. hacyclic gives False.\<close>
+    show False
+      sorry \<comment> \<open>Extract cycle arcs from walk, show distinct + card=1, apply hacyclic.\<close>
   qed
   \<comment> \<open>From the leaf, do induction on card(\\<A>) to get V \\<ge> E + 1.
      Base (card=1): V = 2 \\<ge> 2 = 1+1.
