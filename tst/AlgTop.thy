@@ -5074,7 +5074,30 @@ next
       sorry \<comment> \<open>Pasting lemma: C closed, A0 closed, r'|C = id (cont), r'|A0 = const (cont),
          at intersection A0 \\<inter> C \\<subseteq> {v}: r'(v) = v from both sides.\<close>
     \<comment> \<open>Compose: T \\<to>\\<^sub>r\\<^sub>1 C \\<union> A0 \\<to>\\<^sub>r' C gives retraction T \\<to> C.\<close>
-    show ?thesis sorry \<comment> \<open>Composition of retractions. Uses hretract\\_CuA + hr'\\_cont + hr'\\_C.\<close>
+    \<comment> \<open>Compose: get r1 from hretract\\_CuA, then r' \\<circ> r1 is the retraction T \\<to> C.\<close>
+    show ?thesis
+    proof -
+      from hretract_CuA obtain r1 where hr1: "top1_is_retraction_on T TT (?C \<union> A0) r1"
+        unfolding top1_retract_of_on_def by (by100 blast)
+      have hr1_cont: "top1_continuous_map_on T TT (?C \<union> A0) (subspace_topology T TT (?C \<union> A0)) r1"
+        using top1_is_retraction_on_continuous[OF hr1] .
+      have hr1_fix: "\<forall>a \<in> ?C \<union> A0. r1 a = a"
+        using hr1 unfolding top1_is_retraction_on_def by (by100 blast)
+      \<comment> \<open>Compose r' \\<circ> r1.\<close>
+      have hcomp: "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) (r' \<circ> r1)"
+        using top1_continuous_map_on_comp[OF hr1_cont hr'_cont] sorry
+      have hcomp_fix: "\<forall>a \<in> ?C. (r' \<circ> r1) a = a"
+      proof (intro ballI)
+        fix a assume "a \<in> ?C"
+        hence "r1 a = a" using hr1_fix by (by100 blast)
+        hence "(r' \<circ> r1) a = r' a" by (by100 simp)
+        also have "\<dots> = a" using hr'_C \<open>a \<in> ?C\<close> by (by100 blast)
+        finally show "(r' \<circ> r1) a = a" .
+      qed
+      have "?C \<subseteq> T" using less.prems(9) by (by100 blast)
+      show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+        using hcomp hcomp_fix \<open>?C \<subseteq> T\<close> sorry
+    qed
   next
     case False
     \<comment> \<open>A0 touches C at 2 points: ep(A0) \\<subseteq> C.
