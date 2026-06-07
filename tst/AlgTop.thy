@@ -4672,8 +4672,48 @@ proof -
           thus "{x \<in> C. r x \<in> V} \<in> subspace_topology X TX C" using hV by simp
         qed
         show "top1_continuous_map_on A (subspace_topology ?CuA (subspace_topology X TX ?CuA) A) C (subspace_topology X TX C) r"
-          unfolding hsubA
-          sorry \<comment> \<open>r|A = const v: constant map (A, subspace X TX A) \\<to> (C, subspace X TX C).\<close>
+        proof -
+          \<comment> \<open>r|A = const v.\<close>
+          have hr_const: "\<forall>x. x \<in> A \<longrightarrow> r x = v" unfolding r_def using True by (by5000 force)
+          \<comment> \<open>Constant map v: A \\<to> C is continuous (Theorem\\_18\\_2(1)).\<close>
+          have hTA: "is_topology_on A (subspace_topology X TX A)"
+            by (rule subspace_topology_is_topology_on[OF htop hA_sub])
+          have hTC: "is_topology_on C (subspace_topology X TX C)"
+            by (rule subspace_topology_is_topology_on[OF htop hC_sub])
+          have "top1_continuous_map_on A (subspace_topology X TX A) C (subspace_topology X TX C) r"
+            unfolding top1_continuous_map_on_def
+          proof (intro conjI ballI allI impI)
+            fix x assume "x \<in> A" thus "r x \<in> C" using hr_const hv(2) by simp
+          next
+            fix V assume hV: "V \<in> subspace_topology X TX C"
+            have "{x \<in> A. r x \<in> V} = (if v \<in> V then A else {})"
+              using hr_const by (by5000 force)
+            moreover have "(if v \<in> V then A else {}) \<in> subspace_topology X TX A"
+            proof (cases "v \<in> V")
+              case True
+              have "A \<in> subspace_topology X TX A"
+              proof -
+                have "X \<in> TX" using htop unfolding is_topology_on_def by (by100 blast)
+                hence "A \<inter> X \<in> {A \<inter> U | U. U \<in> TX}" by (by100 blast)
+                moreover have "A \<inter> X = A" using hA_sub by (by100 blast)
+                ultimately show ?thesis unfolding subspace_topology_def by simp
+              qed
+              thus ?thesis using True by simp
+            next
+              case False
+              have "{} \<in> subspace_topology X TX A"
+              proof -
+                have "{} \<in> TX" using htop unfolding is_topology_on_def by (by100 blast)
+                hence "A \<inter> {} \<in> {A \<inter> U | U. U \<in> TX}" by (by100 blast)
+                moreover have "A \<inter> {} = {}" by (by100 blast)
+                ultimately show ?thesis unfolding subspace_topology_def by simp
+              qed
+              thus ?thesis using False by simp
+            qed
+            ultimately show "{x \<in> A. r x \<in> V} \<in> subspace_topology X TX A" by simp
+          qed
+          thus ?thesis using hsubA by simp
+        qed
       qed
     qed
   next
