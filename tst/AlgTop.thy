@@ -15087,8 +15087,19 @@ proof -
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
     using Theorem_78_2_connected_polygonal_quotient[OF assms(1) hconn assms(2)] by (by100 blast)
   \<comment> \<open>Step 1: From the polygonal quotient, extract the edge labeling scheme.\<close>
+  \<comment> \<open>Step 1: Extract edge scheme from the polygonal quotient.
+     The polygon P has n edges. The quotient map q identifies boundary edges in pairs.
+     For each pair of identified edges: assign a shared label. The direction (same or opposite)
+     determines the exponent (True/False). This gives the edge scheme.
+     The scheme satisfies quotient\\_of\\_scheme\\_on by construction.\<close>
   obtain scheme :: "(nat \<times> bool) list" where hsch: "top1_quotient_of_scheme_on X TX scheme"
-    sorry \<comment> \<open>Polygonal region with quotient map gives an edge scheme.\<close>
+    sorry \<comment> \<open>Extract scheme from polygonal quotient. Construction:
+       1. P has n vertices. Edge i goes from vertex i to vertex (i+1) mod n.
+       2. q identifies edge i with some edge j (possibly reversed).
+       3. Assign label k to both edges i and j. Direction: True if same, False if reversed.
+       4. The resulting list of (label, direction) pairs is the scheme.
+       5. Verify all conditions of quotient\\_of\\_scheme\\_on (P is the polygon, q is the map,
+          vertex positions are the polygon's vertices).\<close>
   \<comment> \<open>Step 2: Apply elementary operations (Theorem 76) to reduce scheme.
      Operations: relabel, rotate, cancel, cut, paste, flip.
      Step 2a: Bring all vertices to one equivalence class.
