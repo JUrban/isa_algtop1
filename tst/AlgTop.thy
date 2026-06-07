@@ -4826,9 +4826,76 @@ proof -
           finally show "{x \<in> C. r x \<in> V} \<in> subspace_topology X TX C" using hV by simp
         qed
         \<comment> \<open>r|A = \\<gamma> \\<circ> h\\<inverse> continuous.\<close>
-        show "top1_continuous_map_on A (subspace_topology ?CuA (subspace_topology X TX ?CuA) A) C (subspace_topology X TX C) r"
-          sorry \<comment> \<open>r|A = \\<gamma> \\<circ> h\\<inverse>. Both \\<gamma> and h\\<inverse> continuous. Composition continuous.
-             Need: on A \\<inter> C = {h 0, h 1}, r agrees with id: r(h 0) = \\<gamma>(0) = h 0, r(h 1) = \\<gamma>(1) = h 1.\<close>
+        \<comment> \<open>r = \\<gamma> \\<circ> h\\<inverse> on A (including at intersection {h 0, h 1}).\<close>
+        have hAC_eq: "A \<inter> C = {h 0, h 1}" using hAC_sub_h hh0_C hh1_C hh0_A hh1_A by (by100 blast)
+        have hr_on_A: "\<forall>x \<in> A. r x = \<gamma> (?hinv x)"
+        proof
+          fix x assume "x \<in> A"
+          show "r x = \<gamma> (?hinv x)"
+          proof (cases "x \<in> C")
+            case False
+            thus ?thesis unfolding r_def by simp
+          next
+            case True
+            hence "x \<in> A \<inter> C" using \<open>x \<in> A\<close> by (by100 blast)
+            hence hx_h01: "x \<in> {h 0, h 1}" using hAC_eq by simp
+            have "r x = x" unfolding r_def using True by simp
+            have h_inj: "inj_on h I_set"
+              using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+            have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
+            have hinv_h0: "?hinv (h 0) = 0"
+              using inv_into_f_f[OF h_inj h0_I] .
+            have hinv_h1: "?hinv (h 1) = 1"
+              using inv_into_f_f[OF h_inj h1_I] .
+            have h\<gamma>0: "\<gamma> 0 = h 0" using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+            have h\<gamma>1: "\<gamma> 1 = h 1" using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+            have "x = h 0 \<or> x = h 1" using hx_h01 by (by100 blast)
+            thus ?thesis
+            proof
+              assume "x = h 0"
+              hence "\<gamma> (?hinv x) = \<gamma> 0" using hinv_h0 by simp
+              also have "\<dots> = h 0" using h\<gamma>0 .
+              finally show ?thesis using \<open>r x = x\<close> \<open>x = h 0\<close> by simp
+            next
+              assume "x = h 1"
+              hence "\<gamma> (?hinv x) = \<gamma> 1" using hinv_h1 by simp
+              also have "\<dots> = h 1" using h\<gamma>1 .
+              finally show ?thesis using \<open>r x = x\<close> \<open>x = h 1\<close> by simp
+            qed
+          qed
+        qed
+        \<comment> \<open>r|A = \\<gamma> \\<circ> h\\<inverse>: continuous composition. Use subspace transitivity + composition.\<close>
+        have hA_sub_CuA2: "A \<subseteq> ?CuA" by (by100 blast)
+        have hsubA2: "subspace_topology ?CuA (subspace_topology X TX ?CuA) A = subspace_topology X TX A"
+          using subspace_topology_trans[OF hA_sub_CuA2] by simp
+        \<comment> \<open>r = \\<gamma> \\<circ> h\\<inverse> on A. Already proved as hr\\_on\\_A. Both continuous. Composition continuous.\<close>
+        have h\<gamma>_cont2: "top1_continuous_map_on I_set I_top C (subspace_topology X TX C) \<gamma>"
+          using h\<gamma> unfolding top1_is_path_on_def by (by100 blast)
+        have hhinv_cont2: "top1_continuous_map_on A (subspace_topology X TX A) I_set I_top ?hinv"
+          using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+        have hcomp2: "top1_continuous_map_on A (subspace_topology X TX A) C (subspace_topology X TX C) (\<gamma> \<circ> ?hinv)"
+          using top1_continuous_map_on_comp[OF hhinv_cont2 h\<gamma>_cont2] .
+        \<comment> \<open>r and \\<gamma> \\<circ> h\\<inverse> agree on A (from hr\\_on\\_A).\<close>
+        have "top1_continuous_map_on A (subspace_topology X TX A) C (subspace_topology X TX C) r"
+          unfolding top1_continuous_map_on_def
+        proof (intro conjI ballI allI impI)
+          fix x assume "x \<in> A"
+          show "r x \<in> C" using hr_on_A \<open>x \<in> A\<close>
+            hcomp2[unfolded top1_continuous_map_on_def] by (by100 force)
+        next
+          fix V assume hV: "V \<in> subspace_topology X TX C"
+          \<comment> \<open>{x \\<in> A. r x \\<in> V} = {x \\<in> A. (\\<gamma> \\<circ> h\\<inverse>) x \\<in> V} (since r = \\<gamma> \\<circ> h\\<inverse> on A).\<close>
+          have "\<forall>x \<in> A. (r x \<in> V) = ((\<gamma> \<circ> ?hinv) x \<in> V)"
+            using hr_on_A by (by100 simp)
+          hence "{x \<in> A. r x \<in> V} = {x \<in> A. (\<gamma> \<circ> ?hinv) x \<in> V}"
+            by (by5000 force)
+          also have "\<dots> \<in> subspace_topology X TX A"
+            using hcomp2 hV unfolding top1_continuous_map_on_def by (by100 blast)
+          finally show "{x \<in> A. r x \<in> V} \<in> subspace_topology X TX A" .
+        qed
+        thus "top1_continuous_map_on A (subspace_topology ?CuA (subspace_topology X TX ?CuA) A) C (subspace_topology X TX C) r"
+          unfolding hsubA2 .
       qed
     qed
   qed
