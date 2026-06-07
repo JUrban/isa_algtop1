@@ -4619,8 +4619,29 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
           using less.prems(3,7) by (by100 blast)
         have hdisjoint: "?C \<inter> \<Union>(\<A> - \<S>) = {}"
           using hno by (by100 blast)
-        have "?C \<noteq> {}" using less.prems(8) sorry \<comment> \<open>\\<S> \\<noteq> {} and arcs non-empty.\<close>
-        have "\<Union>(\<A> - \<S>) \<noteq> {}" using False less.prems(7) sorry \<comment> \<open>\\<A> \\<noteq> \\<S> and arcs non-empty.\<close>
+        have "?C \<noteq> {}"
+        proof -
+          from less.prems(8) obtain B where "B \<in> \<S>" by (by100 blast)
+          hence "B \<in> \<A>" using less.prems(7) by (by100 blast)
+          hence "top1_is_arc_on B (subspace_topology T TT B)" using less.prems(2) by (by100 blast)
+          then obtain g where "top1_homeomorphism_on I_set I_top B (subspace_topology T TT B) g"
+            unfolding top1_is_arc_on_def by (by100 blast)
+          hence "bij_betw g I_set B" unfolding top1_homeomorphism_on_def by (by100 blast)
+          hence "B \<noteq> {}" unfolding bij_betw_def top1_unit_interval_def by (by100 auto)
+          thus ?thesis using \<open>B \<in> \<S>\<close> by (by100 blast)
+        qed
+        have "\<Union>(\<A> - \<S>) \<noteq> {}"
+        proof -
+          from False have "\<A> - \<S> \<noteq> {}" using less.prems(7) by (by100 blast)
+          then obtain B where "B \<in> \<A> - \<S>" by (by100 blast)
+          hence "B \<in> \<A>" by (by100 blast)
+          hence "top1_is_arc_on B (subspace_topology T TT B)" using less.prems(2) by (by100 blast)
+          then obtain g where "top1_homeomorphism_on I_set I_top B (subspace_topology T TT B) g"
+            unfolding top1_is_arc_on_def by (by100 blast)
+          hence "bij_betw g I_set B" unfolding top1_homeomorphism_on_def by (by100 blast)
+          hence "B \<noteq> {}" unfolding bij_betw_def top1_unit_interval_def by (by100 auto)
+          thus ?thesis using \<open>B \<in> \<A> - \<S>\<close> by (by100 blast)
+        qed
         \<comment> \<open>Both C and \\<Union>(\\<A>-\\<S>) are closed in T (coherent topology).\<close>
         have "closedin_on T TT ?C" sorry \<comment> \<open>Finite union of compact arcs is closed.\<close>
         have "closedin_on T TT (\<Union>(\<A> - \<S>))" sorry \<comment> \<open>Same.\<close>
