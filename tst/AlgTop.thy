@@ -6238,6 +6238,27 @@ proof -
   show False .
 qed
 
+\<comment> \<open>Leaf existence in acyclic graphs: some vertex has degree \\<le> 1.
+   Extracted from forest\\_euler\\_formula's walk argument for reuse in induction.\<close>
+lemma acyclic_graph_has_leaf:
+  fixes \<A> :: "'a set set"
+  assumes "\<forall>A\<in>\<A>. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<Union>\<A> = T"
+      and "\<forall>A\<in>\<A>. \<forall>B\<in>\<A>. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 1"
+      and "finite \<A>"
+      and "is_topology_on_strict T TT"
+      and "is_hausdorff_on T TT"
+      and "\<forall>ws. length ws \<ge> 2 \<longrightarrow> distinct ws \<longrightarrow> set ws \<subseteq> \<A> \<longrightarrow>
+          (\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1) \<longrightarrow> False"
+      and "\<A> \<noteq> {}"
+  shows "\<exists>v\<in>top1_graph_vertex_set T TT \<A>.
+      card {A \<in> \<A>. v \<in> top1_arc_endpoints_on A (subspace_topology T TT A)} \<le> 1"
+  using assms sorry \<comment> \<open>The walk argument from forest\\_euler\\_formula proves this.
+     TODO: Move the walk proof here to allow reuse in the induction step.\<close>
+
 \<comment> \<open>Forest Euler formula (purely combinatorial, no topology):
    In a graph (finite vertex set V, finite arc set \\<A>, each arc has 2 distinct endpoints in V)
    that is acyclic (no cycle of distinct arcs), V \\<ge> E + 1.
@@ -7047,7 +7068,7 @@ proof -
       qed
       \<comment> \<open>Leaf existence (re-derive from walk argument, same as outer proof).\<close>
       have hleaf: "\<exists>v\<in>?V. card {A \<in> \<A>. v \<in> ?ep A} \<le> 1"
-        sorry \<comment> \<open>Same walk argument as the outer proof, using the current \\<A>'s assumptions.\<close>
+        by (rule acyclic_graph_has_leaf[OF harcs' hcover' hinter' hfin' hstrict' hhaus' hacyclic' hne'])
       then obtain v where hv_V: "v \<in> ?V" "card {A \<in> \<A>. v \<in> ?ep A} \<le> 1"
         by (by100 blast)
       \<comment> \<open>Degree = 1 (\\<ge> 1 from V membership).\<close>
