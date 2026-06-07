@@ -5283,7 +5283,131 @@ proof -
   \<comment> \<open>Endpoints of ws!i are {sv((i-1) mod k), sv i}.\<close>
   have hep_eq: "\<forall>i < ?k. top1_arc_endpoints_on (ws ! i) (subspace_topology T TT (ws ! i))
       = {sv ((i + ?k - 1) mod ?k), sv i}"
-    sorry \<comment> \<open>Each arc has 2 endpoints. sv i and sv((i-1) mod k) are both endpoints. They are distinct.\<close>
+  proof (intro allI impI)
+    fix i assume "i < ?k"
+    let ?ep = "top1_arc_endpoints_on (ws ! i) (subspace_topology T TT (ws ! i))"
+    have hwsi: "ws ! i \<in> set ws" using \<open>i < ?k\<close> by simp
+    have hwsi_A: "ws ! i \<subseteq> T \<and> top1_is_arc_on (ws ! i) (subspace_topology T TT (ws ! i))"
+      using assms(3) hwsi by (by100 blast)
+    \<comment> \<open>Arc has exactly 2 endpoints.\<close>
+    obtain a b where hab: "a \<noteq> b" "?ep = {a, b}"
+    proof -
+      obtain h where hh: "top1_homeomorphism_on I_set I_top (ws ! i) (subspace_topology T TT (ws ! i)) h"
+        using hwsi_A unfolding top1_is_arc_on_def by (by100 blast)
+      have "?ep = {h 0, h 1}"
+        by (rule arc_endpoints_are_boundary[OF assms(1) assms(2) _ _ hh]) (use hwsi_A in \<open>(by100 blast)+\<close>)
+      moreover have "h 0 \<noteq> h 1"
+      proof
+        assume "h 0 = h 1"
+        have "inj_on h I_set" using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        from inj_onD[OF this \<open>h 0 = h 1\<close>] show False unfolding top1_unit_interval_def by (by100 auto)
+      qed
+      ultimately show ?thesis using that by (by100 blast)
+    qed
+    \<comment> \<open>sv i \\<in> ep(ws!i): from hsv\\_eq, sv i is in ws!i \\<inter> ws!((i+1) mod k), hence in both.\<close>
+    have "sv i \<in> ws ! i" using hsv_eq[rule_format, OF \<open>i < ?k\<close>] by (by100 blast)
+    have hi1_mod: "(i+1) mod ?k < ?k" using hk_pos by simp
+    have hwsi1: "ws ! ((i+1) mod ?k) \<in> set ws" using nth_mem[OF hi1_mod] .
+    have hwsi_ne_i1: "ws ! i \<noteq> ws ! ((i+1) mod ?k)"
+    proof -
+      have "(i+1) mod ?k \<noteq> i"
+      proof (cases "i + 1 < ?k")
+        case True thus ?thesis by simp
+      next
+        case False hence "i + 1 = ?k" using \<open>i < ?k\<close> by linarith
+        thus ?thesis using assms(5) by simp
+      qed
+      thus ?thesis using nth_eq_iff_index_eq[OF assms(6) \<open>i < ?k\<close> hi1_mod] by simp
+    qed
+    from assms(4)[rule_format, OF hwsi hwsi1 hwsi_ne_i1]
+    have "sv i \<in> ?ep" using \<open>sv i \<in> ws ! i\<close> hsv_eq[rule_format, OF \<open>i < ?k\<close>] by (by100 blast)
+    \<comment> \<open>sv((i-1) mod k) \\<in> ep(ws!i): similarly.\<close>
+    have him1: "(i + ?k - 1) mod ?k < ?k" using hk_pos by simp
+    have "sv ((i + ?k - 1) mod ?k) \<in> ws ! i"
+    proof -
+      \<comment> \<open>((i-1) mod k + 1) mod k = i.\<close>
+      have hmod_eq: "((i + ?k - 1) mod ?k + 1) mod ?k = i"
+      proof -
+        have "((i + ?k - 1) mod ?k + 1) mod ?k = (i + ?k - 1 + 1) mod ?k"
+        proof -
+          have "Suc ((i + ?k - 1) mod ?k) mod ?k = Suc (i + ?k - 1) mod ?k"
+            by (rule mod_Suc_eq)
+          thus ?thesis by simp
+        qed
+        also have "i + ?k - 1 + 1 = i + ?k" using \<open>i < ?k\<close> hk_pos by linarith
+        finally have "((i + ?k - 1) mod ?k + 1) mod ?k = (i + ?k) mod ?k" .
+        also have "\<dots> = i" using \<open>i < ?k\<close> by simp
+        finally show ?thesis .
+      qed
+      from hsv_eq[rule_format, OF him1]
+      have "ws ! ((i + ?k - 1) mod ?k) \<inter> ws ! (((i + ?k - 1) mod ?k + 1) mod ?k)
+          = {sv ((i + ?k - 1) mod ?k)}" .
+      hence "ws ! ((i + ?k - 1) mod ?k) \<inter> ws ! i = {sv ((i + ?k - 1) mod ?k)}"
+        using hmod_eq by simp
+      thus ?thesis by (by100 blast)
+    qed
+    have hwsim1: "ws ! ((i + ?k - 1) mod ?k) \<in> set ws" using nth_mem[OF him1] .
+    have hwsi_ne_im1: "ws ! i \<noteq> ws ! ((i + ?k - 1) mod ?k)"
+    proof -
+      have "i \<noteq> (i + ?k - 1) mod ?k"
+      proof (cases "i = 0")
+        case True thus ?thesis using assms(5) by simp
+      next
+        case False
+        hence "(i + ?k - 1) mod ?k = i - 1"
+        proof -
+          have "i + ?k - 1 = ?k + (i - 1)" using False by linarith
+          hence "(i + ?k - 1) mod ?k = (i - 1) mod ?k" by simp
+          also have "\<dots> = i - 1" using False \<open>i < ?k\<close> by simp
+          finally show ?thesis .
+        qed
+        thus ?thesis using False by linarith
+      qed
+      thus ?thesis using nth_eq_iff_index_eq[OF assms(6) \<open>i < ?k\<close> him1] by simp
+    qed
+    have "sv ((i + ?k - 1) mod ?k) \<in> ws ! i \<inter> ws ! ((i + ?k - 1) mod ?k)"
+    proof -
+      from hsv_eq[rule_format, OF him1]
+      have "ws ! ((i + ?k - 1) mod ?k) \<inter> ws ! (((i + ?k - 1) mod ?k + 1) mod ?k)
+          = {sv ((i + ?k - 1) mod ?k)}" .
+      thus ?thesis using \<open>sv ((i + ?k - 1) mod ?k) \<in> ws ! i\<close> by (by100 blast)
+    qed
+    from assms(4)[rule_format, OF hwsi hwsim1 hwsi_ne_im1]
+    have "ws ! i \<inter> ws ! ((i + ?k - 1) mod ?k) \<subseteq> ?ep" by (by100 blast)
+    hence "sv ((i + ?k - 1) mod ?k) \<in> ?ep"
+      using \<open>sv ((i + ?k - 1) mod ?k) \<in> ws ! i \<inter> ws ! ((i + ?k - 1) mod ?k)\<close> by (by100 blast)
+    \<comment> \<open>They are distinct.\<close>
+    have "sv ((i + ?k - 1) mod ?k) \<noteq> sv i"
+    proof -
+      have "(i + ?k - 1) mod ?k \<noteq> i"
+      proof (cases "i = 0")
+        case True thus ?thesis using assms(5) by simp
+      next
+        case False
+        hence "(i + ?k - 1) mod ?k = i - 1"
+        proof -
+          have "i + ?k - 1 = ?k + (i - 1)" using False by linarith
+          hence "(i + ?k - 1) mod ?k = (i - 1) mod ?k" by simp
+          also have "\<dots> = i - 1" using False \<open>i < ?k\<close> by simp
+          finally show ?thesis .
+        qed
+        thus ?thesis using False by linarith
+      qed
+      thus ?thesis using hsv_distinct[rule_format, OF him1 \<open>i < ?k\<close>] by (by100 blast)
+    qed
+    \<comment> \<open>2-element set equality.\<close>
+    have "sv i \<in> {a, b}" using \<open>sv i \<in> ?ep\<close> hab(2) by simp
+    have "sv ((i + ?k - 1) mod ?k) \<in> {a, b}" using \<open>sv ((i + ?k - 1) mod ?k) \<in> ?ep\<close> hab(2) by simp
+    have "card {a, b} = 2" using hab(1) by simp
+    have "card {sv ((i + ?k - 1) mod ?k), sv i} = 2" using \<open>sv ((i + ?k - 1) mod ?k) \<noteq> sv i\<close> by simp
+    have "{sv ((i + ?k - 1) mod ?k), sv i} \<subseteq> {a, b}"
+      using \<open>sv i \<in> {a, b}\<close> \<open>sv ((i + ?k - 1) mod ?k) \<in> {a, b}\<close> by (by100 blast)
+    have "finite {a, b}" by simp
+    from card_subset_eq[OF this \<open>{sv ((i + ?k - 1) mod ?k), sv i} \<subseteq> {a, b}\<close>]
+    have "{sv ((i + ?k - 1) mod ?k), sv i} = {a, b}"
+      using \<open>card {sv ((i + ?k - 1) mod ?k), sv i} = 2\<close> \<open>card {a, b} = 2\<close> by simp
+    thus "?ep = {sv ((i + ?k - 1) mod ?k), sv i}" using hab(2) by simp
+  qed
   \<comment> \<open>Merge butlast ws into single arc A1 by induction.\<close>
   have hmerge: "\<forall>n. 1 \<le> n \<and> n \<le> ?k - 1 \<longrightarrow>
       top1_is_arc_on (\<Union>(set (take n ws))) (subspace_topology T TT (\<Union>(set (take n ws))))
