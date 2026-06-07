@@ -15086,7 +15086,18 @@ proof -
     have hP'_eq: "(\<lambda>(x,y). (x + c, y)) ` P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
                   \<and> (\<Sum>i<n. coeffs i) = 1
                   \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}"
-      sorry \<comment> \<open>Translation of convex hull = convex hull of translated vertices.\<close>
+    proof
+      show "(\<lambda>(x,y). (x + c, y)) ` P \<subseteq> {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                  \<and> (\<Sum>i<n. coeffs i) = 1
+                  \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}"
+        unfolding hP_eq vx'_def vy'_def sorry
+    next
+      show "{(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                  \<and> (\<Sum>i<n. coeffs i) = 1
+                  \<and> x = (\<Sum>i<n. coeffs i * vx' i) \<and> y = (\<Sum>i<n. coeffs i * vy' i)}
+            \<subseteq> (\<lambda>(x,y). (x + c, y)) ` P"
+        unfolding hP_eq vx'_def vy'_def sorry
+    qed
     show "top1_is_polygonal_region_on ((\<lambda>(x,y). (x + c, y)) ` P) n"
       unfolding top1_is_polygonal_region_on_def
       using hn hdist' hndeg' hP'_eq by (by100 blast)
