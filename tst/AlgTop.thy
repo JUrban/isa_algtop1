@@ -4628,7 +4628,26 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
         have "top1_connected_on T TT"
           using less.prems(1) unfolding top1_is_tree_on_def by (by100 blast)
         \<comment> \<open>Connected space cannot have two non-empty disjoint closed sets covering it.\<close>
-        have False sorry \<comment> \<open>Connected\\_on + two non-empty disjoint closed sets + union = T \\<Rightarrow> False.\<close>
+        \<comment> \<open>C is closed \\<Rightarrow> T \\ C is open. \\<Union>(\\<A>-\\<S>) = T \\ C (disjoint + cover).
+           So \\<Union>(\\<A>-\\<S>) is open. Similarly C is open. Separation \\<Rightarrow> \\<not> connected.\<close>
+        have "T - ?C \<in> TT"
+          using \<open>closedin_on T TT ?C\<close> unfolding closedin_on_def by (by100 blast)
+        have "T - \<Union>(\<A> - \<S>) \<in> TT"
+          using \<open>closedin_on T TT (\<Union>(\<A> - \<S>))\<close> unfolding closedin_on_def by (by100 blast)
+        have hC_sub_T: "?C \<subseteq> T" using hT_eq by (by100 blast)
+        have hR_sub_T: "\<Union>(\<A> - \<S>) \<subseteq> T" using hT_eq by (by100 blast)
+        have "T - ?C = \<Union>(\<A> - \<S>)" using hT_eq hdisjoint hC_sub_T hR_sub_T by (by100 blast)
+        have "T - \<Union>(\<A> - \<S>) = ?C" using hT_eq hdisjoint hC_sub_T hR_sub_T by (by100 blast)
+        hence "?C \<in> TT" using \<open>T - \<Union>(\<A> - \<S>) \<in> TT\<close> by simp
+        have "\<Union>(\<A> - \<S>) \<in> TT" using \<open>T - ?C \<in> TT\<close> \<open>T - ?C = \<Union>(\<A> - \<S>)\<close> by simp
+        \<comment> \<open>Now we have a separation: C and \\<Union>(\\<A>-\\<S>) are both open, non-empty, disjoint, cover T.\<close>
+        have "top1_is_separation_on T TT ?C (\<Union>(\<A> - \<S>))"
+          unfolding top1_is_separation_on_def
+          using \<open>?C \<in> TT\<close> \<open>\<Union>(\<A> - \<S>) \<in> TT\<close> \<open>?C \<noteq> {}\<close> \<open>\<Union>(\<A> - \<S>) \<noteq> {}\<close>
+            hdisjoint hT_eq by (by100 blast)
+        have False
+          using Lemma_23_1[of T TT] \<open>top1_connected_on T TT\<close>
+            \<open>top1_is_separation_on T TT ?C (\<Union>(\<A> - \<S>))\<close> by (by100 blast)
       }
       \<comment> \<open>So \\<exists> adjacent arc.\<close>
       hence "\<exists>A. A \<in> \<A> \<and> A \<notin> \<S> \<and> A \<inter> ?C \<noteq> {}" by (by100 blast)
