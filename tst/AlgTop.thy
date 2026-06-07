@@ -4931,8 +4931,24 @@ next
 
      This induction requires graph\\_cycle\\_retract to be reformulated with the
      induction built in. Currently sorry'd pending this reformulation.\<close>
-  show ?case sorry \<comment> \<open>Retraction by induction on card(\\<A> \\ set ws).
-     See strategy above. Now less.IH is available for new cycles with fewer NC arcs.\<close>
+  let ?C = "\<Union>(set ws)"
+  \<comment> \<open>Route 1 (per expert audit): collapse each connected component of T \\ C to its
+     unique attachment vertex on C.
+
+     Key steps:
+     (a) Non-cycle arcs form a forest (no cycles — any cycle in the non-cycle subgraph
+         would give a new cycle with fewer non-cycle arcs; IH retraction + scc\\_in\\_sc\\_false \\<Rightarrow> \\<bot>).
+     (b) Each tree of the forest attaches to C at exactly 1 vertex (double attachment
+         would again give a smaller cycle via IH).
+     (c) Define r piecewise: id on cycle arcs, constant(attachment vertex) on non-cycle arcs.
+     (d) Coherent topology \\<Rightarrow> r continuous. r|C = id \\<Rightarrow> retraction.\<close>
+  show ?case sorry \<comment> \<open>Retraction step case. Strategy documented above.
+     less.IH available for new cycles with fewer non-cycle arcs.
+     Decomposition planned:
+     1. hno\\_double: no double attachment (by contradiction via IH + scc\\_in\\_sc\\_false)
+     2. r definition: piecewise constant on non-cycle components
+     3. hr\\_cont: continuous via coherent topology
+     4. Assembly: retract from r + hr\\_cont + r|C = id\<close>
   qed
 qed
 
@@ -7485,253 +7501,125 @@ proof (rule ccontr)
          Need SCC construction for 2 arcs + retraction + scc\\_in\\_sc\\_false.
          This is independent of sc\\_graph\\_no\\_cycle (which handles card = 1 cycles).
          It's the "topological bridge for k = 2" case.\<close>
-      \<comment> \<open>Reduce to sc\\_graph\\_no\\_cycle via arc subdivision:
-         Split one arc at an interior point, creating a 3-arc cycle with card-1 intersections.\<close>
+      \<comment> \<open>Direct approach: arcA \\<union> arcB is an SCC (two arcs with same endpoints).
+         graph\\_cycle\\_retract gives T retracts onto arcA \\<union> arcB.
+         scc\\_in\\_sc\\_false gives False.\<close>
       let ?arcA = "snd (walk (Suc i))" and ?arcB = "snd (walk (Suc i + 1))"
-      have harcA_in: "?arcA \<in> \<A>" using hwalk_props by (by100 blast)
-      have harcB_in: "?arcB \<in> \<A>" using hwalk_props by (by100 blast)
+      have harcA_in: "?arcA \<in> \<A>" using hwalk_props sorry
+      have harcB_in: "?arcB \<in> \<A>" using hwalk_props sorry
       have hAB_ne: "?arcA \<noteq> ?arcB"
       proof -
         have "snd (walk (Suc (Suc i))) \<noteq> snd (walk (Suc i))"
         proof -
           have "snd (walk (Suc (Suc i))) = next_arc (fst (walk (Suc i))) (snd (walk (Suc i)))"
-            using hwalk_suc_snd[of "Suc i"] by simp
+            using hwalk_suc_snd[of "Suc i"] sorry
           moreover have "next_arc (fst (walk (Suc i))) (snd (walk (Suc i))) \<noteq> snd (walk (Suc i))"
-            using hnext_arc hwalk_props by (by100 blast)
-          ultimately show ?thesis by simp
+            using hnext_arc hwalk_props sorry
+          ultimately show ?thesis sorry
         qed
-        thus ?thesis by simp
+        thus ?thesis sorry
       qed
-      \<comment> \<open>Both arcs share vertices fst(walk i) and fst(walk(Suc i)).\<close>
-      have hvi_inA: "fst (walk i) \<in> ?arcA" using hwalk_shared by (by100 blast)
-      have hj_eq: "j = i + 2" using \<open>j - i = 2\<close> hij(1) by linarith
-      have hvi_inB: "fst (walk i) \<in> ?arcB"
-      proof -
-        have "fst (walk j) \<in> snd (walk j)" using hwalk_shared by (by100 blast)
-        moreover have "fst (walk j) = fst (walk i)" using hij(3) by simp
-        moreover have "snd (walk j) = snd (walk (Suc i + 1))" using hj_eq by simp
-        ultimately show ?thesis by simp
-      qed
-      have hvsi_inA: "fst (walk (Suc i)) \<in> ?arcA" using hwalk_shared by (by100 blast)
-      have hvsi_inB: "fst (walk (Suc i)) \<in> ?arcB"
-      proof -
-        have "fst (walk (Suc i)) \<in> snd (walk (Suc (Suc i)))" using hwalk_shared by (by100 blast)
-        have "snd (walk (Suc (Suc i))) = snd (walk (Suc i + 1))" by simp
-        thus ?thesis using \<open>fst (walk (Suc i)) \<in> snd (walk (Suc (Suc i)))\<close> by simp
-      qed
-      \<comment> \<open>Subdivide arcA at an interior point, then apply sc\\_graph\\_no\\_cycle to the 3-arc cycle.\<close>
-      \<comment> \<open>Subdivide arcA at an interior point p. Get D1, D2 with arcA = D1 \\<union> D2, D1 \\<inter> D2 = {p}.
-         New decomposition \\<A>' = (\\<A> - {arcA}) \\<union> {D1, D2}. Cycle [D1, arcB, D2] has card-1 intersections.
-         sc\\_graph\\_no\\_cycle on \\<A>' gives False.\<close>
-      have harcA_sub: "?arcA \<subseteq> T" using assms(2) harcA_in by (by100 blast)
+      have harcA_sub: "?arcA \<subseteq> T" using assms(2) harcA_in sorry
+      have harcB_sub: "?arcB \<subseteq> T" using assms(2) harcB_in sorry
       have harcA_arc: "top1_is_arc_on ?arcA (subspace_topology T TT ?arcA)"
-        using assms(2) harcA_in by (by100 blast)
-      \<comment> \<open>Get an interior point of arcA via arc\\_split\\_at\\_midpoint.\<close>
-      from arc_split_at_midpoint[OF hstrict hhaus harcA_sub harcA_arc]
-      obtain p D1 D2 where hp_in: "p \<in> ?arcA"
-          and hD_union: "?arcA = D1 \<union> D2" and hD_inter: "D1 \<inter> D2 = {p}"
-          and hD1_arc: "top1_is_arc_on D1 (subspace_topology T TT D1)"
-          and hD2_arc: "top1_is_arc_on D2 (subspace_topology T TT D2)"
-        by (by100 blast)
-      \<comment> \<open>Use graph\\_iterated\\_subdivision\\_exists to get \\<A>' with all graph conditions.\<close>
-      have hp_not_vertex: "p \<notin> top1_graph_vertex_set T TT \<A>"
+        using assms(2) harcA_in sorry
+      have harcB_arc: "top1_is_arc_on ?arcB (subspace_topology T TT ?arcB)"
+        using assms(2) harcB_in sorry
+      \<comment> \<open>Both arcs share vertices v\\_i = fst(walk i) and v\\_{i+1} = fst(walk(Suc i)).\<close>
+      let ?vi = "fst (walk i)" and ?vsi = "fst (walk (Suc i))"
+      have hvi_inA: "?vi \<in> ?arcA" using hwalk_shared sorry
+      have hj_eq: "j = i + 2" using \<open>j - i = 2\<close> hij(1) sorry
+      have hvi_inB: "?vi \<in> ?arcB"
       proof -
-        \<comment> \<open>p is interior to arcA: p \\<notin> ep(arcA).
-           p is not in any other arc (from graph conditions).
-           Hence p is not in any arc's endpoints.\<close>
-        have "p \<notin> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
-        proof -
-          \<comment> \<open>p = midpoint of arcA. Endpoints are h(0), h(1). p = h(1/2) \\<noteq> h(0), h(1).\<close>
-          obtain h where hh: "top1_homeomorphism_on I_set I_top ?arcA (subspace_topology T TT ?arcA) h"
-            using harcA_arc unfolding top1_is_arc_on_def by (by100 blast)
-          have "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {h 0, h 1}"
-            by (rule arc_endpoints_are_boundary[OF hstrict hhaus harcA_sub harcA_arc hh])
-          \<comment> \<open>arc\\_split\\_at\\_midpoint picks h(1/2). D1 \\<inter> D2 = {p}. p \\<in> D1 \\<inter> D2.
-             If p = h(0): p \\<in> ep(arcA). Then D1 \\<inter> D2 = {h(0)}.
-             But the split should give D1 = h([0, 1/2]) and D2 = h([1/2, 1]).
-             D1 \\<inter> D2 = {h(1/2)} \\<noteq> {h(0)}. Contradiction.\<close>
-          \<comment> \<open>Use arc\\_both\\_endpoints\\_in\\_one\\_part: if both endpoints of arcA are in one half,
-             the other half = {p}, contradicting it being an arc.\<close>
-          have hh01_ne: "h 0 \<noteq> h 1"
-          proof -
-            have "inj_on h I_set"
-              using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-            have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-            have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-            have "(0::real) \<noteq> 1" by (by100 simp)
-            show ?thesis
-              using \<open>inj_on h I_set\<close> \<open>(0::real) \<in> I_set\<close> \<open>(1::real) \<in> I_set\<close> \<open>(0::real) \<noteq> 1\<close>
-              unfolding inj_on_def by (by100 blast)
-          qed
-          have hp_D1: "p \<in> D1" using hD_inter by (by100 blast)
-          have hp_D2: "p \<in> D2" using hD_inter by (by100 blast)
-          have hD1_sub: "D1 \<subseteq> T" using hD_union harcA_sub by (by100 blast)
-          have hD2_sub: "D2 \<subseteq> T" using hD_union harcA_sub by (by100 blast)
-          have hD1_conn: "top1_connected_on D1 (subspace_topology T TT D1)"
-            using arc_connected[OF hD1_arc] by (by100 blast)
-          have hD2_conn: "top1_connected_on D2 (subspace_topology T TT D2)"
-            using arc_connected[OF hD2_arc] by (by100 blast)
-          have "h ` I_set = ?arcA"
-            using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-          have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-          have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-          have "h 0 \<in> D1 \<union> D2"
-            using \<open>h ` I_set = ?arcA\<close> \<open>(0::real) \<in> I_set\<close> hD_union by (by100 blast)
-          have "h 1 \<in> D1 \<union> D2"
-            using \<open>h ` I_set = ?arcA\<close> \<open>(1::real) \<in> I_set\<close> hD_union by (by100 blast)
-          \<comment> \<open>Arcs have \\<ge> 2 points, so D1 \\<noteq> {p} and D2 \\<noteq> {p}.\<close>
-          have hD1_ne: "D1 \<noteq> {p}"
-          proof -
-            obtain g where hg: "top1_homeomorphism_on I_set I_top D1 (subspace_topology T TT D1) g"
-              using hD1_arc unfolding top1_is_arc_on_def by (by100 blast)
-            have "bij_betw g I_set D1" using hg unfolding top1_homeomorphism_on_def by (by100 blast)
-            have "g ` I_set = D1" using \<open>bij_betw g I_set D1\<close> unfolding bij_betw_def by (by100 blast)
-            have "inj_on g I_set" using \<open>bij_betw g I_set D1\<close> unfolding bij_betw_def by (by100 blast)
-            have "g 0 \<in> D1" using \<open>g ` I_set = D1\<close> \<open>(0::real) \<in> I_set\<close> by (by100 blast)
-            have "g 1 \<in> D1" using \<open>g ` I_set = D1\<close> \<open>(1::real) \<in> I_set\<close> by (by100 blast)
-            have "(0::real) \<noteq> 1" by (by100 simp)
-            have "g 0 \<noteq> g 1"
-              using \<open>inj_on g I_set\<close> \<open>(0::real) \<in> I_set\<close> \<open>(1::real) \<in> I_set\<close> \<open>(0::real) \<noteq> 1\<close>
-              unfolding inj_on_def by (by100 blast)
-            thus ?thesis using \<open>g 0 \<in> D1\<close> \<open>g 1 \<in> D1\<close> by (by100 blast)
-          qed
-          have hD2_ne: "D2 \<noteq> {p}"
-          proof -
-            obtain g where hg: "top1_homeomorphism_on I_set I_top D2 (subspace_topology T TT D2) g"
-              using hD2_arc unfolding top1_is_arc_on_def by (by100 blast)
-            have "bij_betw g I_set D2" using hg unfolding top1_homeomorphism_on_def by (by100 blast)
-            have "g ` I_set = D2" using \<open>bij_betw g I_set D2\<close> unfolding bij_betw_def by (by100 blast)
-            have "inj_on g I_set" using \<open>bij_betw g I_set D2\<close> unfolding bij_betw_def by (by100 blast)
-            have "g 0 \<in> D2" using \<open>g ` I_set = D2\<close> \<open>(0::real) \<in> I_set\<close> by (by100 blast)
-            have "g 1 \<in> D2" using \<open>g ` I_set = D2\<close> \<open>(1::real) \<in> I_set\<close> by (by100 blast)
-            have "(0::real) \<noteq> 1" by (by100 simp)
-            have "g 0 \<noteq> g 1"
-              using \<open>inj_on g I_set\<close> \<open>(0::real) \<in> I_set\<close> \<open>(1::real) \<in> I_set\<close> \<open>(0::real) \<noteq> 1\<close>
-              unfolding inj_on_def by (by100 blast)
-            thus ?thesis using \<open>g 0 \<in> D2\<close> \<open>g 1 \<in> D2\<close> by (by100 blast)
-          qed
-          \<comment> \<open>Main: if p were an endpoint, both endpoints end up in one half.\<close>
-          show ?thesis
-          proof
-            assume "p \<in> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
-            hence hp_ep: "p \<in> {h 0, h 1}"
-              using \<open>top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {h 0, h 1}\<close>
-              by (by100 simp)
-            have "h 0 \<in> D1 \<and> h 1 \<in> D1 \<or> h 0 \<in> D2 \<and> h 1 \<in> D2"
-            proof (cases "p = h 0")
-              case True
-              have hh0D1: "h 0 \<in> D1" using True hp_D1 by (by100 simp)
-              have hh0D2: "h 0 \<in> D2" using True hp_D2 by (by100 simp)
-              show ?thesis
-              proof (cases "h 1 \<in> D1")
-                case True thus ?thesis using hh0D1 by (by100 blast)
-              next
-                case False
-                hence "h 1 \<in> D2" using \<open>h 1 \<in> D1 \<union> D2\<close> by (by100 blast)
-                thus ?thesis using hh0D2 by (by100 blast)
-              qed
-            next
-              case False
-              hence "p = h 1" using hp_ep by (by100 blast)
-              have hh1D1: "h 1 \<in> D1" using \<open>p = h 1\<close> hp_D1 by (by100 simp)
-              have hh1D2: "h 1 \<in> D2" using \<open>p = h 1\<close> hp_D2 by (by100 simp)
-              show ?thesis
-              proof (cases "h 0 \<in> D1")
-                case True thus ?thesis using hh1D1 by (by100 blast)
-              next
-                case False
-                hence "h 0 \<in> D2" using \<open>h 0 \<in> D1 \<union> D2\<close> by (by100 blast)
-                thus ?thesis using hh1D2 by (by100 blast)
-              qed
-            qed
-            thus False
-            proof
-              assume hboth: "h 0 \<in> D1 \<and> h 1 \<in> D1"
-              have "h 0 \<in> D1" using hboth by (by100 blast)
-              have "h 1 \<in> D1" using hboth by (by100 blast)
-              from arc_both_endpoints_in_one_part[OF hstrict hhaus harcA_sub harcA_arc
-                  hD_union hD_inter hD1_conn hD1_sub
-                  \<open>top1_arc_endpoints_on ?arcA _ = {h 0, h 1}\<close> hh01_ne
-                  \<open>h 0 \<in> D1\<close> \<open>h 1 \<in> D1\<close>]
-              have "D2 = {p}" .
-              thus False using hD2_ne by (by100 simp)
-            next
-              assume hboth: "h 0 \<in> D2 \<and> h 1 \<in> D2"
-              have "h 0 \<in> D2" using hboth by (by100 blast)
-              have "h 1 \<in> D2" using hboth by (by100 blast)
-              have hD_union': "?arcA = D2 \<union> D1" using hD_union by (by100 blast)
-              have hD_inter': "D2 \<inter> D1 = {p}" using hD_inter by (by100 blast)
-              from arc_both_endpoints_in_one_part[OF hstrict hhaus harcA_sub harcA_arc
-                  hD_union' hD_inter' hD2_conn hD2_sub
-                  \<open>top1_arc_endpoints_on ?arcA _ = {h 0, h 1}\<close> hh01_ne
-                  \<open>h 0 \<in> D2\<close> \<open>h 1 \<in> D2\<close>]
-              have "D1 = {p}" .
-              thus False using hD1_ne by (by100 simp)
-            qed
-          qed
-        qed
-        \<comment> \<open>p \\<notin> any other arc: p \\<in> arcA, so p \\<in> arcA \\<inter> B for any B containing p. But
-           arcA \\<inter> B \\<subseteq> ep(arcA) and p \\<notin> ep(arcA). So p \\<notin> B.\<close>
-        have "\<forall>A \<in> \<A>. p \<notin> top1_arc_endpoints_on A (subspace_topology T TT A)"
-        proof (intro ballI)
-          fix A assume "A \<in> \<A>"
-          show "p \<notin> top1_arc_endpoints_on A (subspace_topology T TT A)"
-          proof (cases "A = ?arcA")
-            case True thus ?thesis using \<open>p \<notin> top1_arc_endpoints_on ?arcA _\<close> by (by100 simp)
-          next
-            case False
-            have "p \<notin> A"
-            proof
-              assume "p \<in> A"
-              hence "p \<in> ?arcA \<inter> A" using hp_in by (by100 blast)
-              from assms(4)[rule_format, OF harcA_in \<open>A \<in> \<A>\<close> False]
-              have "?arcA \<inter> A \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
-                by (by100 blast)
-              hence "p \<in> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
-                using \<open>p \<in> ?arcA \<inter> A\<close> by (by100 blast)
-              thus False using \<open>p \<notin> top1_arc_endpoints_on ?arcA _\<close> by (by100 simp)
-            qed
-            thus ?thesis using \<open>p \<notin> A\<close> unfolding top1_arc_endpoints_on_def by (by100 blast)
-          qed
-        qed
-        thus ?thesis unfolding top1_graph_vertex_set_def by (by100 blast)
+        have "fst (walk j) \<in> snd (walk j)" using hwalk_shared sorry
+        have "fst (walk j) = fst (walk i)" using hij(3) sorry
+        have "snd (walk j) = snd (walk (Suc i + 1))" using hj_eq sorry
+        show ?thesis sorry
       qed
-      have hp_sub: "{p} \<subseteq> T" using hp_in harcA_sub by (by100 blast)
-      have "finite {p}" by (by100 simp)
-      have "\<forall>pp \<in> {p}. pp \<notin> top1_graph_vertex_set T TT \<A>"
-        using hp_not_vertex by (by100 simp)
-      from graph_iterated_subdivision_exists[OF hstrict hhaus assms(2) assms(3) assms(4) assms(5)
-          \<open>finite {p}\<close> hp_sub \<open>\<forall>pp \<in> {p}. pp \<notin> top1_graph_vertex_set T TT \<A>\<close>]
-      obtain \<A>' where h\<A>': "(\<forall>A\<in>\<A>'. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A))"
-          "\<Union>\<A>' = T"
-          "(\<forall>A\<in>\<A>'. \<forall>B\<in>\<A>'. A \<noteq> B \<longrightarrow>
-               A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
-             \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
-             \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2)"
-          "finite \<A>'"
-        by (by100 blast)
-      have hgraph: "top1_is_graph_on T TT"
-        using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
-      have h\<A>'_coh: "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
-          (\<forall>A\<in>\<A>'. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
-        using graph_coherent_any_decomposition[OF hgraph h\<A>'(1) h\<A>'(2) h\<A>'(3) h\<A>'(4)]
-        by (by100 blast)
-      \<comment> \<open>D1, D2, arcB are in \\<A>'. The cycle [D1, arcB, D2] has card-1 intersections.\<close>
-      have "D1 \<in> \<A>'" "D2 \<in> \<A>'" "?arcB \<in> \<A>'"
-        sorry \<comment> \<open>D1, D2 from subdivision of arcA; arcB unchanged.\<close>
-      let ?ws' = "[D1, ?arcB, D2]"
-      have "length ?ws' \<ge> 2" by (by100 simp)
-      have "distinct ?ws'" sorry \<comment> \<open>D1 \\<noteq> arcB \\<noteq> D2, D1 \\<noteq> D2.\<close>
-      have "set ?ws' \<subseteq> \<A>'" using \<open>D1 \<in> \<A>'\<close> \<open>D2 \<in> \<A>'\<close> \<open>?arcB \<in> \<A>'\<close> by (by100 simp)
-      have "\<forall>i < length ?ws'. card (?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws')) = 1"
-        sorry \<comment> \<open>D1 \\<inter> arcB, arcB \\<inter> D2, D2 \\<inter> D1 each have card 1.\<close>
-      have "\<forall>i < length ?ws'. \<forall>j < length ?ws'. i \<noteq> j \<longrightarrow>
-          (\<forall>v w. ?ws' ! i \<inter> ?ws' ! ((i + 1) mod length ?ws') = {v} \<longrightarrow>
-                 ?ws' ! j \<inter> ?ws' ! ((j + 1) mod length ?ws') = {w} \<longrightarrow> v \<noteq> w)"
-        sorry \<comment> \<open>Shared vertices: fst(walk(Suc i)), fst(walk i), p — all distinct.\<close>
-      from sc_graph_no_cycle[OF assms(1) h\<A>'(1) h\<A>'(2) h\<A>'(3) h\<A>'(4) h\<A>'_coh
-          \<open>length ?ws' \<ge> 2\<close> \<open>distinct ?ws'\<close> \<open>set ?ws' \<subseteq> \<A>'\<close>
-          \<open>\<forall>i < length ?ws'. card _ = 1\<close> \<open>\<forall>i < length ?ws'. \<forall>j < length ?ws'. _\<close>]
+      have hvsi_inA: "?vsi \<in> ?arcA" using hwalk_shared sorry
+      have hvsi_inB: "?vsi \<in> ?arcB"
+      proof -
+        have "fst (walk (Suc i)) \<in> snd (walk (Suc (Suc i)))" using hwalk_shared sorry
+        show ?thesis sorry
+      qed
+      \<comment> \<open>v\\_i \\<noteq> v\\_{i+1} (from minimality of walk repeat: if equal, repeat at distance 1 < 2).\<close>
+      have hvi_ne: "?vi \<noteq> ?vsi"
+      proof
+        assume "?vi = ?vsi"
+        \<comment> \<open>fst(walk i) = fst(walk(Suc i)), repeat at distance 1. But j-i = 2 is minimal.\<close>
+        have "Suc i \<le> card ?V" sorry \<comment> \<open>Walk stays in V range.\<close>
+        from hmin[rule_format, of i "Suc i"]
+        have "j - i \<le> Suc i - i" using hij(1) \<open>Suc i \<le> card ?V\<close> \<open>?vi = ?vsi\<close> sorry
+        hence "j - i \<le> 1" sorry
+        thus False using \<open>j - i = 2\<close> sorry
+      qed
+      \<comment> \<open>arcA \\<inter> arcB = {v\\_i, v\\_{i+1}} and ep(arcA) = ep(arcB) = {v\\_i, v\\_{i+1}}.\<close>
+      have hAB_inter_sub: "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)"
+        using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] sorry
+      have hAB_fin: "finite (?arcA \<inter> ?arcB)"
+        using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] sorry
+      have hAB_card: "card (?arcA \<inter> ?arcB) \<le> 2"
+        using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] sorry
+      have "?vi \<in> ?arcA \<inter> ?arcB" using hvi_inA hvi_inB sorry
+      have "?vsi \<in> ?arcA \<inter> ?arcB" using hvsi_inA hvsi_inB sorry
+      have hAB_card_ge2: "card (?arcA \<inter> ?arcB) \<ge> 2"
+      proof -
+        have "{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB"
+          using \<open>?vi \<in> ?arcA \<inter> ?arcB\<close> \<open>?vsi \<in> ?arcA \<inter> ?arcB\<close> sorry
+        have "card {?vi, ?vsi} = 2" using hvi_ne sorry
+        from card_mono[OF hAB_fin \<open>{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB\<close>]
+        show ?thesis using \<open>card {?vi, ?vsi} = 2\<close> sorry
+      qed
+      have hAB_eq: "?arcA \<inter> ?arcB = {?vi, ?vsi}"
+      proof -
+        have "card (?arcA \<inter> ?arcB) = 2" using hAB_card hAB_card_ge2 sorry
+        have "{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB"
+          using \<open>?vi \<in> ?arcA \<inter> ?arcB\<close> \<open>?vsi \<in> ?arcA \<inter> ?arcB\<close> sorry
+        show ?thesis using hAB_fin \<open>card (?arcA \<inter> ?arcB) = 2\<close>
+          \<open>{?vi, ?vsi} \<subseteq> ?arcA \<inter> ?arcB\<close> hvi_ne sorry
+      qed
+      have hep_arcA: "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {?vi, ?vsi}"
+      proof -
+        have "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) \<supseteq> {?vi, ?vsi}"
+          using hAB_inter_sub hAB_eq sorry
+        have "card (top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA)) = 2" sorry
+        show ?thesis sorry
+      qed
+      have hep_arcB: "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {?vi, ?vsi}"
+      proof -
+        have "?arcA \<inter> ?arcB \<subseteq> top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)"
+          using assms(4)[rule_format, OF harcA_in harcB_in hAB_ne] sorry
+        have "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) \<supseteq> {?vi, ?vsi}"
+          using \<open>?arcA \<inter> ?arcB \<subseteq> _\<close> hAB_eq sorry
+        have "card (top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB)) = 2" sorry
+        show ?thesis sorry
+      qed
+      \<comment> \<open>Step 1: arcA \\<union> arcB is a simple closed curve.\<close>
+      have hSCC: "top1_simple_closed_curve_on T TT (?arcA \<union> ?arcB)"
+        sorry \<comment> \<open>By arcs\\_form\\_simple\\_closed\\_curve[OF hstrict hhaus harcA\\_arc harcA\\_sub
+               harcB\\_arc harcB\\_sub hAB\\_eq hvi\\_ne hep\\_arcA hep\\_arcB].\<close>
+      \<comment> \<open>Step 2: T retracts onto arcA \\<union> arcB (via graph\\_cycle\\_retract with ws = [arcA, arcB]).\<close>
+      have hretract: "top1_retract_of_on T TT (?arcA \<union> ?arcB)"
+      proof -
+        let ?ws2 = "[?arcA, ?arcB]"
+        have "set ?ws2 \<subseteq> \<A>" using harcA_in harcB_in sorry
+        have "length ?ws2 \<ge> 2" sorry
+        have "\<Union>(set ?ws2) \<subseteq> T" using harcA_sub harcB_sub sorry
+        have "\<Union>(set ?ws2) = ?arcA \<union> ?arcB" sorry
+        from graph_cycle_retract[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
+            \<open>set ?ws2 \<subseteq> \<A>\<close> \<open>length ?ws2 \<ge> 2\<close> \<open>\<Union>(set ?ws2) \<subseteq> T\<close>]
+        show ?thesis using \<open>\<Union>(set ?ws2) = ?arcA \<union> ?arcB\<close> sorry
+      qed
+      \<comment> \<open>Step 3: SC + SCC retract \\<Rightarrow> False.\<close>
+      have hSC: "top1_simply_connected_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def sorry
+      have htop_T: "is_topology_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+          is_topology_on_strict_def sorry
+      have hhaus_T: "is_hausdorff_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def sorry
+      have hC_sub: "?arcA \<union> ?arcB \<subseteq> T" using harcA_sub harcB_sub sorry
+      from scc_in_sc_false[OF hSC htop_T hhaus_T hSCC hretract hC_sub]
       show False .
     qed
   qed
