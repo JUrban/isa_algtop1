@@ -4976,10 +4976,70 @@ next
      Key: A0 \\<inter> C \\<subseteq> ep(A0) (from graph conditions), so card(A0 \\<inter> C) \\<le> 2.
      If card \\<le> 1: pasting lemma retraction (id on C, constant on A0).
      If card = 2: both endpoints of A0 in C; contradicts tree property via IH + scc\\_in\\_sc\\_false.\<close>
+  \<comment> \<open>A0 \\<inter> C \\<subseteq> ep(A0) from graph conditions.\<close>
+  have hA0C_sub: "A0 \<inter> ?C \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+  proof -
+    have "\<forall>B \<in> set ws. A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+    proof (intro ballI)
+      fix B assume "B \<in> set ws"
+      hence "B \<in> \<A>" using less.prems(2) by (by100 blast)
+      have "A0 \<noteq> B" using hA0(2) \<open>B \<in> set ws\<close> by (by100 blast)
+      from less.prems(5)[rule_format, OF hA0(1) \<open>B \<in> \<A>\<close> \<open>A0 \<noteq> B\<close>]
+      show "A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
+        by (by100 blast)
+    qed
+    thus ?thesis by (by100 blast)
+  qed
+  have hA0C_fin: "finite (A0 \<inter> ?C)"
+    sorry \<comment> \<open>A0 \\<inter> C \\<subseteq> ep(A0), ep(A0) finite (2-element set from arc property).\<close>
+  have hA0C_card: "card (A0 \<inter> ?C) \<le> 2"
+    sorry \<comment> \<open>Same: subset of 2-element ep(A0).\<close>
+  \<comment> \<open>Case split: A0 touches C at \\<le> 1 point or at 2 points.\<close>
   have hretract_compose: "top1_retract_of_on T TT ?C"
-    sorry \<comment> \<open>Compose retraction T \\<to> C \\<union> A0 with retraction C \\<union> A0 \\<to> C.
-       The C \\<union> A0 \\<to> C retraction: if A0 touches C at \\<le> 1 point v, use pasting
-       (id on C, const v on A0). If A0 touches C at 2 points, derive False.\<close>
+  proof (cases "\<exists>v. A0 \<inter> ?C \<subseteq> {v}")
+    case True
+    \<comment> \<open>A0 touches C at \\<le> 1 point. Pasting retraction: id on C, const on A0.\<close>
+    then obtain v where hv: "A0 \<inter> ?C \<subseteq> {v}" by (by100 blast)
+    \<comment> \<open>v is either the unique attachment point, or we pick any point of C.\<close>
+    have hv_C: "v \<in> ?C"
+    proof (cases "A0 \<inter> ?C = {}")
+      case True thus ?thesis using hv sorry \<comment> \<open>A0 \\<inter> C = {} and A0 \\<inter> C \\<subseteq> {v}, so v is arbitrary.
+         Pick v from C: C \\<noteq> {} since ws has \\<ge> 2 elements hence \\<ge> 1 arc with \\<ge> 1 point.\<close>
+    next
+      case False
+      then obtain w where "w \<in> A0 \<inter> ?C" by (by100 blast)
+      hence "w \<in> {v}" using hv by (by100 blast)
+      hence "w = v" by (by100 simp)
+      thus ?thesis using \<open>w \<in> A0 \<inter> ?C\<close> by (by100 blast)
+    qed
+    \<comment> \<open>Define retraction r': C \\<union> A0 \\<to> C by id on C, const v on A0.\<close>
+    define r' where "r' x = (if x \<in> ?C then x else v)" for x
+    have hr'_C: "\<forall>x \<in> ?C. r' x = x" unfolding r'_def by (by100 simp)
+    have hr'_A0: "\<forall>x \<in> A0. r' x \<in> ?C"
+    proof (intro ballI)
+      fix x assume "x \<in> A0"
+      show "r' x \<in> ?C"
+      proof (cases "x \<in> ?C")
+        case True thus ?thesis unfolding r'_def by (by100 simp)
+      next
+        case False thus ?thesis unfolding r'_def using hv_C by (by100 simp)
+      qed
+    qed
+    have hr'_range: "\<forall>x \<in> ?C \<union> A0. r' x \<in> ?C"
+      using hr'_C hr'_A0 by (by100 blast)
+    \<comment> \<open>r' is continuous on C \\<union> A0 (pasting: id on C, const on A0, agree at intersection).\<close>
+    have hr'_cont: "top1_continuous_map_on (?C \<union> A0) (subspace_topology T TT (?C \<union> A0))
+        ?C (subspace_topology T TT ?C) r'"
+      sorry \<comment> \<open>Pasting lemma: C closed, A0 closed, r'|C = id (cont), r'|A0 = const (cont),
+         at intersection A0 \\<inter> C \\<subseteq> {v}: r'(v) = v from both sides.\<close>
+    \<comment> \<open>Compose: T \\<to>\\<^sub>r\\<^sub>1 C \\<union> A0 \\<to>\\<^sub>r' C gives retraction T \\<to> C.\<close>
+    show ?thesis sorry \<comment> \<open>Composition of retractions. Uses hretract\\_CuA + hr'\\_cont + hr'\\_C.\<close>
+  next
+    case False
+    \<comment> \<open>A0 touches C at 2 points: ep(A0) \\<subseteq> C.
+       This contradicts tree property: A0 + C-path forms SCC \\<Rightarrow> retract \\<Rightarrow> scc\\_in\\_sc\\_false.\<close>
+    show ?thesis sorry \<comment> \<open>Double attachment contradiction via IH + scc\\_in\\_sc\\_false.\<close>
+  qed
   show ?case using hretract_compose .
   qed
 qed
