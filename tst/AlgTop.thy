@@ -6686,7 +6686,45 @@ proof -
     qed
     \<comment> \<open>Consecutive cycle arcs share exactly 1 vertex.\<close>
     have hws_card1: "\<forall>idx < length ?ws. card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
-      sorry
+    proof (intro allI impI)
+      fix idx assume "idx < length ?ws"
+      hence hidx: "idx < dmin" using hws_len by simp
+      have hmod: "(idx + 1) mod dmin < dmin" using hdmin_ge2 by simp
+      \<comment> \<open>The two arcs are distinct.\<close>
+      have hAB_ne: "?ws ! idx \<noteq> ?ws ! ((idx + 1) mod length ?ws)"
+      proof (cases "idx + 1 < dmin")
+        case True
+        hence "(idx + 1) mod dmin = idx + 1" by simp
+        thus ?thesis
+          using hws_nth[rule_format, OF hidx] hws_nth[rule_format, OF True]
+              hcons_ne[rule_format, OF hidx] hws_len by simp
+      next
+        case False
+        hence "idx = dmin - 1" using hidx by linarith
+        hence "(idx + 1) mod dmin = 0" using hdmin_ge2 by simp
+        have "Suc i0 + (dmin - 1) = j0" using hij0(4) hij0(1) hdmin_ge2 by linarith
+        show ?thesis
+          using hws_nth[rule_format, OF hidx] hws_nth[rule_format, of 0] hwrap_ne
+              hws_len hdmin_ge2 \<open>idx = dmin - 1\<close> \<open>Suc i0 + (dmin - 1) = j0\<close>
+              \<open>(idx + 1) mod dmin = 0\<close> by simp
+      qed
+      \<comment> \<open>Both are in \\<A>.\<close>
+      have hA_in: "?ws ! idx \<in> \<A>"
+        using hws_sub nth_mem \<open>idx < length ?ws\<close> by (by100 blast)
+      have hB_in: "?ws ! ((idx + 1) mod length ?ws) \<in> \<A>"
+        sorry
+      \<comment> \<open>They share a vertex (walk vertex).\<close>
+      have hne: "?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws) \<noteq> {}"
+        sorry \<comment> \<open>Shared walk vertex: wv(Suc i0 + idx) for non-wrap, wv(i0) for wrap.\<close>
+      \<comment> \<open>card \\<le> 1 from hinter, card \\<ge> 1 from non-empty.\<close>
+      have hfin: "finite (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws))"
+        using hinter[rule_format, OF hA_in hB_in hAB_ne] by (by100 blast)
+      have "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<ge> 1"
+        sorry
+      moreover have "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) \<le> 1"
+        using hinter[rule_format, OF hA_in hB_in hAB_ne] by (by100 blast)
+      ultimately show "card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1" by linarith
+    qed
     \<comment> \<open>Arcs are distinct.\<close>
     have hws_dist: "distinct ?ws"
       sorry
