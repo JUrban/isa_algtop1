@@ -4592,10 +4592,50 @@ proof -
   \<comment> \<open>A \\<inter> C \\<subseteq> {h 0, h 1}.\<close>
   have hAC_sub_h: "A \<inter> C \<subseteq> {h 0, h 1}" using hinter_ep hep by (by100 blast)
   \<comment> \<open>Case split: card(A \\<inter> C) = 1 or 2.\<close>
+  \<comment> \<open>Get a path \\<gamma> in C connecting any two points of A \\<inter> C.
+     For card 1: \\<gamma> is trivial (constant). For card 2: \\<gamma> is a path from u to v.
+     In both cases, define r(x) = x on C, r(x) = \\<gamma>(h\\<inverse>(x)) on A.
+     This maps A onto a path in C while fixing C.\<close>
+  \<comment> \<open>h 0 and h 1 are the endpoints of A. A \\<inter> C \\<subseteq> {h 0, h 1}.\<close>
+  have hh0_A: "h 0 \<in> A" and hh1_A: "h 1 \<in> A"
+  proof -
+    have "bij_betw h I_set A" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+    hence "h ` I_set = A" unfolding bij_betw_def by (by100 blast)
+    have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    show "h 0 \<in> A" using \<open>h ` I_set = A\<close> \<open>0 \<in> I_set\<close> by (by100 blast)
+    show "h 1 \<in> A" using \<open>h ` I_set = A\<close> \<open>1 \<in> I_set\<close> by (by100 blast)
+  qed
+  \<comment> \<open>v \\<in> A \\<inter> C, so v \\<in> {h 0, h 1}.\<close>
+  have "v \<in> {h 0, h 1}" using hv hAC_sub_h by (by100 blast)
+  \<comment> \<open>Since C is pc and v \\<in> C, there's a path from v to any other point in A \\<inter> C.
+     For card 2: both h 0 and h 1 are in C, so there's a path h0 \\<to> h1 in C.\<close>
+  \<comment> \<open>Define retraction: r(x) = x for x \\<in> C, r(x) = v for x \\<in> A \\ C.\<close>
+  \<comment> \<open>This works for BOTH cases because:
+     - Card 1: A \\<inter> C = {v}, so on A \\<inter> C: id(v) = v = const(v). Agreement. \\<checkmark>
+     - Card 2: A \\<inter> C = {u,v}. We need r(u) = u and r(v) = v from the A side.
+       Constant map r|A = v fails at u (r(u) = v \\<noteq> u).
+       So card 2 needs the PATH MAP approach, not constant.\<close>
+  \<comment> \<open>For simplicity, handle card 1 first. Card 2 needs more work.\<close>
   show ?thesis
-    sorry \<comment> \<open>Card 1: r|C = id, r|A = const v. Pasting (Theorem\\_18\\_3).
-       Card 2: r|C = id, r|A = path\\<circ>h\\<inverse>. Path from pc of C.
-       Both cases use: C, A closed in C \\<union> A. Agreement at A \\<inter> C.\<close>
+  proof (cases "A \<inter> C = {v}")
+    case True
+    \<comment> \<open>Card 1: A meets C at exactly v. Collapse A to v.\<close>
+    define r where "r x = (if x \<in> C then x else v)" for x
+    show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
+    proof (intro exI[of _ r] conjI)
+      show "C \<subseteq> ?CuA" by (by100 blast)
+      show "\<forall>a \<in> C. r a = a" unfolding r_def by (by100 simp)
+      show "top1_continuous_map_on ?CuA (subspace_topology X TX ?CuA) C (subspace_topology ?CuA (subspace_topology X TX ?CuA) C) r"
+        sorry \<comment> \<open>Pasting: r|C = id (cont), r|A = const v (cont), agree at A \\<inter> C = {v}.\<close>
+    qed
+  next
+    case False
+    \<comment> \<open>Card 2: A meets C at 2 points. Map A along path in C.\<close>
+    show ?thesis
+      sorry \<comment> \<open>Path-mapping: get path \\<gamma> in C from h 0 to h 1 (from pc).
+         r|C = id, r|A = \\<gamma> \\<circ> h\\<inverse>. Continuous, agree at {h 0, h 1}.\<close>
+  qed
 qed
 
 \<comment> \<open>Graph connected subunion retract: in a tree with graph decomposition,
