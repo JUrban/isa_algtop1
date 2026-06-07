@@ -4787,7 +4787,30 @@ proof -
           using Theorem_17_2[OF htop hCuA_sub, of A] hA_closed by (by100 blast)
         show "C \<union> A = ?CuA" by simp
         show "\<forall>x \<in> ?CuA. r x \<in> C"
-          sorry \<comment> \<open>r maps into C: on C it's id (\\<in> C), on A it's \\<gamma>(h\\<inverse>(x)) \\<in> C (path image).\<close>
+        proof (intro ballI)
+          fix x assume "x \<in> ?CuA"
+          show "r x \<in> C"
+          proof (cases "x \<in> C")
+            case True thus ?thesis unfolding r_def by simp
+          next
+            case False
+            hence "x \<in> A" using \<open>x \<in> ?CuA\<close> by (by100 blast)
+            have "r x = \<gamma> (?hinv x)" unfolding r_def using False by simp
+            \<comment> \<open>\\<gamma> maps into C (from path definition: \\<gamma>: [0,1] \\<to> C).\<close>
+            have "\<gamma> (?hinv x) \<in> C"
+            proof -
+              \<comment> \<open>h\\<inverse>(x) \\<in> I\\_set since h is bij I\\_set A and x \\<in> A.\<close>
+              have "bij_betw h I_set A" using hh unfolding top1_homeomorphism_on_def by (by100 blast)
+              hence "?hinv x \<in> I_set" using \<open>x \<in> A\<close>
+                by (by100 simp) (metis bij_betw_imp_surj_on inv_into_into)
+              \<comment> \<open>\\<gamma> maps I\\_set to C (from is\\_path: continuous [0,1] \\<to> C, \\<gamma>(t) \\<in> C for t \\<in> I\\_set).\<close>
+              have "\<gamma> ` I_set \<subseteq> C"
+                using h\<gamma> unfolding top1_is_path_on_def top1_continuous_map_on_def by (by100 blast)
+              thus ?thesis using \<open>?hinv x \<in> I_set\<close> by (by100 blast)
+            qed
+            thus ?thesis using \<open>r x = \<gamma> (?hinv x)\<close> by simp
+          qed
+        qed
         \<comment> \<open>r|C = id continuous (same as card 1).\<close>
         show "top1_continuous_map_on C (subspace_topology ?CuA (subspace_topology X TX ?CuA) C) C (subspace_topology X TX C) r"
           unfolding hsubC top1_continuous_map_on_def
