@@ -14888,25 +14888,35 @@ proof -
         then show ?thesis using scheme_invert_homeomorphic[OF hY1 hY2] hs ht by simp
       next
         case (relabel old new)
-        \<comment> \<open>Relabeling preserves the quotient: changing label names doesn't change the identification.\<close>
-        then show ?thesis
-          sorry \<comment> \<open>Relabeling a scheme doesn't change the boundary identification pattern.
-             Same polygon, same q, just rename the labels in the scheme conditions.\<close>
+        \<comment> \<open>Relabeling preserves the quotient: same polygon, same q, renamed labels.
+           Y1 is also a quotient of the relabeled scheme. Then scheme\\_quotient\\_uniqueness.\<close>
+        have "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
+          sorry \<comment> \<open>Same (P,q,vx,vy): relabeling in scheme conditions doesn't change q-fibres.\<close>
+        from scheme_quotient_uniqueness[OF hY1 hY2 this]
+        show ?thesis using relabel ht sorry
       next
         case (flip_label a)
-        \<comment> \<open>Flipping a label's orientation reverses the direction edges are pasted.
-           The quotient space is the same: reversing identification direction gives
-           the same equivalence relation on boundary points.\<close>
-        then show ?thesis sorry
+        \<comment> \<open>Flipping orientations: same polygon, same q, flipped edge directions.
+           Y1 is also a quotient of the flipped scheme.\<close>
+        have "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) s)"
+          sorry \<comment> \<open>Same (P,q,vx,vy): flipping direction of identification doesn't change fibres.\<close>
+        from scheme_quotient_uniqueness[OF hY1 hY2 this]
+        show ?thesis using flip_label ht sorry
       next
         case (cut_paste u1 a u2 u3)
-        \<comment> \<open>Cut-and-repaste: Munkres \\<S>76 Theorem 76.1.
-           Cut the polygon, flip one piece, paste along the shared edge.
-           The two quotient spaces are homeomorphic because the identifications are preserved.\<close>
-        then show ?thesis sorry
+        \<comment> \<open>Cut-and-repaste: \\<S>76 Theorem 76.1. Cut, flip, paste preserves quotient.\<close>
+        have "top1_quotient_of_scheme_on Y1 TY1
+            (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+          sorry \<comment> \<open>The cut-flip-paste gives a new polygon whose quotient is the same space Y1.\<close>
+        from scheme_quotient_uniqueness[OF hY1 hY2 this]
+        show ?thesis using cut_paste ht sorry
       next
         case (cut_paste2 u0 a u1 u2 b)
-        then show ?thesis sorry
+        have "top1_quotient_of_scheme_on Y1 TY1
+            ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+          sorry \<comment> \<open>The Figure 77.2 cut-flip-paste gives a new polygon whose quotient is Y1.\<close>
+        from scheme_quotient_uniqueness[OF hY1 hY2 this]
+        show ?thesis using cut_paste2 ht sorry
       qed
     qed
     from huniv[OF hop assms(1) assms(2) hs ht]
