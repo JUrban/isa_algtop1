@@ -6480,11 +6480,46 @@ proof (rule ccontr)
         have "snd (walk (Suc (Suc i))) = snd (walk (Suc i + 1))" by simp
         thus ?thesis using \<open>fst (walk (Suc i)) \<in> snd (walk (Suc (Suc i)))\<close> by simp
       qed
-      \<comment> \<open>Subdivide arcA at an interior point, then apply sc\\_graph\\_no\\_cycle to the 3-arc cycle.\<close>
-      show False
-        sorry \<comment> \<open>Subdivision + sc\\_graph\\_no\\_cycle. All ingredients available:
-           arc\\_split\\_at\\_midpoint gives D1, D2. graph\\_coherent\\_any\\_decomposition gives coherent topology.
-           sc\\_graph\\_no\\_cycle applied to [D1, arcB, D2] with card-1 intersections gives False.\<close>
+      \<comment> \<open>Direct approach: arcA \\<union> arcB is an SCC, graph\\_cycle\\_retract gives retraction,
+         scc\\_in\\_sc\\_false gives False. No subdivision needed.\<close>
+      let ?vi = "fst (walk i)" and ?vsi = "fst (walk (Suc i))"
+      have hvi_ne: "?vi \<noteq> ?vsi"
+      proof
+        assume "?vi = ?vsi"
+        have "Suc i \<le> card ?V" using hij(2) hj_eq by linarith
+        from hmin[rule_format, of i "Suc i"]
+        have "j - i \<le> Suc i - i" using hij(1) \<open>Suc i \<le> card ?V\<close> \<open>?vi = ?vsi\<close> by (by100 blast)
+        hence "j - i \<le> 1" by linarith
+        thus False using \<open>j - i = 2\<close> by linarith
+      qed
+      \<comment> \<open>Derive intersection and endpoint equalities.\<close>
+      have harcA_sub: "?arcA \<subseteq> T" using assms(2) harcA_in by (by100 blast)
+      have harcB_sub: "?arcB \<subseteq> T" using assms(2) harcB_in by (by100 blast)
+      have harcA_arc: "top1_is_arc_on ?arcA (subspace_topology T TT ?arcA)"
+        using assms(2) harcA_in by (by100 blast)
+      have harcB_arc: "top1_is_arc_on ?arcB (subspace_topology T TT ?arcB)"
+        using assms(2) harcB_in by (by100 blast)
+      have hAB_eq: "?arcA \<inter> ?arcB = {?vi, ?vsi}"
+        sorry \<comment> \<open>From graph conditions: card(A \\<inter> B) \\<le> 2, {vi,vsi} \\<subseteq> A \\<inter> B, vi \\<noteq> vsi.\<close>
+      have hep_arcA: "top1_arc_endpoints_on ?arcA (subspace_topology T TT ?arcA) = {?vi, ?vsi}"
+        sorry \<comment> \<open>A \\<inter> B \\<subseteq> ep(A), {vi,vsi} \\<subseteq> ep(A), card(ep) = 2.\<close>
+      have hep_arcB: "top1_arc_endpoints_on ?arcB (subspace_topology T TT ?arcB) = {?vi, ?vsi}"
+        sorry \<comment> \<open>Same for B.\<close>
+      have hSCC: "top1_simple_closed_curve_on T TT (?arcA \<union> ?arcB)"
+        by (rule arcs_form_simple_closed_curve[OF hstrict hhaus harcA_arc harcA_sub
+               harcB_arc harcB_sub hAB_eq hvi_ne hep_arcA hep_arcB])
+      have hretract: "top1_retract_of_on T TT (?arcA \<union> ?arcB)"
+        sorry \<comment> \<open>Retraction of T onto arcA \\<union> arcB. Collapse each non-{arcA,arcB} arc to
+           its nearest cycle vertex. Needs graph\\_cycle\\_retract (not yet extracted as standalone).\<close>
+      have hSC: "top1_simply_connected_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def by (by100 blast)
+      have htop_T: "is_topology_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def
+          is_topology_on_strict_def by (by100 blast)
+      have hhaus_T: "is_hausdorff_on T TT"
+        using assms(1) unfolding top1_is_tree_on_def top1_is_graph_on_def by (by100 blast)
+      from scc_in_sc_false[OF hSC htop_T hhaus_T hSCC hretract]
+      show False using harcA_sub harcB_sub by (by100 blast)
     qed
   qed
 qed
