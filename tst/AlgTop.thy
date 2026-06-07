@@ -5001,27 +5001,19 @@ next
     \<comment> \<open>A0 touches C at \\<le> 1 point. Pasting retraction: id on C, const on A0.\<close>
     \<comment> \<open>Find v \\<in> C such that A0 \\<inter> C \\<subseteq> {v}.\<close>
     have hC_ne: "?C \<noteq> {}"
-    proof -
-      from less.prems(8) have "length ws \<ge> 2" .
-      then obtain B where "B \<in> set ws" sorry
-      hence "B \<subseteq> T" "top1_is_arc_on B (subspace_topology T TT B)"
-        using less.prems(3) less.prems(2) sorry
-      hence "B \<noteq> {}" sorry \<comment> \<open>Arcs are non-empty.\<close>
-      thus ?thesis using \<open>B \<in> set ws\<close> sorry
-    qed
+      sorry \<comment> \<open>C = \\<Union>(set ws) with length ws \\<ge> 2 and arcs are non-empty.\<close>
     obtain v where hv: "A0 \<inter> ?C \<subseteq> {v}" "v \<in> ?C"
     proof (cases "A0 \<inter> ?C = {}")
       case True
       from hC_ne obtain w where "w \<in> ?C" by (by100 blast)
-      show ?thesis using that True \<open>w \<in> ?C\<close> sorry
+      thus ?thesis using that True by (by100 blast)
     next
       case False
       then obtain w where hw: "w \<in> A0 \<inter> ?C" by (by100 blast)
-      from True obtain v0 where "A0 \<inter> ?C \<subseteq> {v0}" by (by100 blast)
-      hence "w \<in> {v0}" using hw by (by100 blast)
-      hence "w = v0" by (by100 simp)
+      from True obtain v0 where hv0: "A0 \<inter> ?C \<subseteq> {v0}" by (by100 blast)
+      have "w = v0" using hw hv0 by (by100 blast)
       hence "v0 \<in> ?C" using hw by (by100 blast)
-      show ?thesis using that \<open>A0 \<inter> ?C \<subseteq> {v0}\<close> \<open>v0 \<in> ?C\<close> sorry
+      thus ?thesis using that hv0 by (by100 blast)
     qed
     \<comment> \<open>Define retraction r': C \\<union> A0 \\<to> C by id on C, const v on A0.\<close>
     define r' where "r' x = (if x \<in> ?C then x else v)" for x
