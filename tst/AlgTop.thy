@@ -5231,6 +5231,26 @@ proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
   qed
 qed
 
+\<comment> \<open>A cycle of \\<ge> 2 arcs with consecutive sharing 1 vertex forms a simple closed curve.
+   Uses arc\\_merge\\_at\\_endpoint iteratively on butlast ws, then arcs\\_form\\_simple\\_closed\\_curve.\<close>
+lemma cycle_arcs_form_scc:
+  fixes T :: "'a set" and TT :: "'a set set" and ws :: "'a set list"
+  assumes "is_topology_on_strict T TT" and "is_hausdorff_on T TT"
+      and "\<forall>A\<in>set ws. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      and "\<forall>A\<in>set ws. \<forall>B\<in>set ws. A \<noteq> B \<longrightarrow>
+           A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+         \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+         \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      and "length ws \<ge> 2" and "distinct ws"
+      and "\<forall>i < length ws. card (ws ! i \<inter> ws ! ((i + 1) mod length ws)) = 1"
+      and "\<forall>i < length ws. \<forall>j < length ws. i \<noteq> j \<longrightarrow>
+          (\<forall>v w. ws ! i \<inter> ws ! ((i + 1) mod length ws) = {v} \<longrightarrow>
+                 ws ! j \<inter> ws ! ((j + 1) mod length ws) = {w} \<longrightarrow> v \<noteq> w)"
+  shows "top1_simple_closed_curve_on T TT (\<Union>(set ws))"
+  sorry \<comment> \<open>Proof plan: define shared vertices sv i. Show length \\<ge> 3.
+     Merge butlast ws into arc A1 by induction. Show A1 \\<inter> (last ws) = {a\\_start, a\\_end}.
+     Apply arcs\\_form\\_simple\\_closed\\_curve.\<close>
+
 \<comment> \<open>Combinatorial acyclicity transfer: SC graph \\<Rightarrow> no cycle of distinct arcs.
    A "cycle" here means a sequence of \\<ge> 2 distinct arcs A1, ..., Ak such that
    consecutive arcs share exactly 1 vertex, and the sequence forms a closed path.
@@ -5291,364 +5311,15 @@ proof -
   qed
   have hC_SCC: "top1_simple_closed_curve_on T TT ?C"
   proof -
-    \<comment> \<open>Strategy: Merge all but the last cycle arc into a single arc A1 (via arc\\_merge\\_at\\_endpoint).
-       Then A1 and the last arc A2 share 2 endpoints. Construct f: S1 \\<to> A1 \\<union> A2 = C
-       using the x-coordinate of S1: upper semicircle \\<to> A1, lower semicircle \\<to> A2.
-       f is continuous (pasting lemma), injective (disjoint interiors), surjective.\<close>
-    \<comment> \<open>Step 1: Merge arcs ws!0, ..., ws!(k-2) into a single arc A1.\<close>
-    obtain A1 a_start a_end where
-        hA1_arc: "top1_is_arc_on A1 (subspace_topology T TT A1)"
-        and hA1_sub: "A1 \<subseteq> T"
-        and hA1_union: "A1 = \<Union>(set (butlast ws))"
-        and hA1_ep: "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {a_start, a_end}"
-        and ha_ne: "a_start \<noteq> a_end"
-      sorry \<comment> \<open>Iterative arcs\\_concatenation\\_is\\_arc + arc\\_concat\\_endpoints on butlast ws.
-         Base (length 1): A1 = hd(butlast ws), endpoints from h2ep.
-         Step: merge current A1 with next arc at shared vertex (from hcard1).
-         ~40 lines of list induction. All cached lemmas available.\<close>
-    \<comment> \<open>Step 2: The last arc A2 = ws!(k-1) shares both endpoints with A1.\<close>
-    let ?A2 = "last ws"
-    have hA2_in: "?A2 \<in> \<A>"
-    proof -
-      have "ws \<noteq> []" using assms(7) by (by100 force)
-      have "?A2 \<in> set ws" using last_in_set[OF \<open>ws \<noteq> []\<close>] .
-      thus ?thesis using assms(9) by (by100 blast)
-    qed
-    have hA2_arc: "top1_is_arc_on ?A2 (subspace_topology T TT ?A2)"
-      using assms(2) hA2_in by (by100 blast)
-    have hA2_sub: "?A2 \<subseteq> T" using assms(2) hA2_in by (by100 blast)
-    have hA1A2_union: "A1 \<union> ?A2 = ?C"
-    proof -
-      have "ws \<noteq> []" using assms(7) by (by100 force)
-      hence "set ws = set (butlast ws) \<union> {last ws}"
-      proof -
-        have "ws = butlast ws @ [last ws]" using \<open>ws \<noteq> []\<close> by simp
-        hence "set ws = set (butlast ws @ [last ws])" by simp
-        thus ?thesis by simp
-      qed
-      hence "\<Union>(set ws) = \<Union>(set (butlast ws)) \<union> last ws" by (by100 force)
-      thus ?thesis using hA1_union by simp
-    qed
-    have hA1A2_inter: "A1 \<inter> ?A2 = {a_start, a_end}"
-      sorry \<comment> \<open>From cycle structure: first and last arcs share the cycle's start/end vertices.\<close>
-    \<comment> \<open>Step 3: Construct f: S1 \\<to> C using x-coordinate.
-       Upper semicircle (y \\<ge> 0): map to A1 via hA1 with parameter (1-x)/2.
-       Lower semicircle (y < 0): map to A2 via hA2 with parameter (x+1)/2.\<close>
-    \<comment> \<open>Get oriented homeomorphisms.\<close>
-    obtain hA where hhA: "top1_homeomorphism_on I_set I_top A1 (subspace_topology T TT A1) hA"
-        and hhA0: "hA 0 = a_start" and hhA1: "hA 1 = a_end"
-    proof -
-      obtain h0 where hh0: "top1_homeomorphism_on I_set I_top A1 (subspace_topology T TT A1) h0"
-        using hA1_arc unfolding top1_is_arc_on_def by (by100 blast)
-      have heps0: "top1_arc_endpoints_on A1 (subspace_topology T TT A1) = {h0 0, h0 1}"
-        by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA1_sub hA1_arc hh0])
-      have hab_h0: "{h0 0, h0 1} = {a_start, a_end}" using heps0 hA1_ep by simp
-      have "h0 0 \<noteq> h0 1"
-      proof
-        assume "h0 0 = h0 1"
-        hence "{h0 0, h0 1} = {h0 0}" by simp
-        hence "card {a_start, a_end} \<le> 1" using hab_h0 by simp
-        thus False using ha_ne by simp
-      qed
-      from doubleton_eq_iff[OF hab_h0 this]
-      show ?thesis
-      proof
-        assume "h0 0 = a_start \<and> h0 1 = a_end" thus ?thesis using that[OF hh0] by (by100 blast)
-      next
-        assume "h0 0 = a_end \<and> h0 1 = a_start"
-        have hcomp: "top1_homeomorphism_on I_set I_top A1 (subspace_topology T TT A1) (h0 \<circ> (\<lambda>t::real. 1-t))"
-          by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
-        have "(h0 \<circ> (\<lambda>t::real. 1-t)) 0 = a_start" unfolding comp_def
-          using \<open>h0 0 = a_end \<and> h0 1 = a_start\<close> by simp
-        moreover have "(h0 \<circ> (\<lambda>t::real. 1-t)) 1 = a_end" unfolding comp_def
-          using \<open>h0 0 = a_end \<and> h0 1 = a_start\<close> by simp
-        ultimately show ?thesis using that[OF hcomp] by (by100 blast)
-      qed
-    qed
-    \<comment> \<open>The last arc A2 has endpoints that include a\\_start and a\\_end (from the cycle structure).\<close>
-    have hA2_ep: "top1_arc_endpoints_on ?A2 (subspace_topology T TT ?A2) = {a_end, a_start}"
-      sorry \<comment> \<open>From cycle structure: last arc endpoints = {a\\_start, a\\_end}.\<close>
-    obtain hB where hhB: "top1_homeomorphism_on I_set I_top ?A2 (subspace_topology T TT ?A2) hB"
-        and hhB0: "hB 0 = a_end" and hhB1: "hB 1 = a_start"
-    proof -
-      obtain h0 where hh0: "top1_homeomorphism_on I_set I_top ?A2 (subspace_topology T TT ?A2) h0"
-        using hA2_arc unfolding top1_is_arc_on_def by (by100 blast)
-      have heps0: "top1_arc_endpoints_on ?A2 (subspace_topology T TT ?A2) = {h0 0, h0 1}"
-        by (rule arc_endpoints_are_boundary[OF hstrict hhaus hA2_sub hA2_arc hh0])
-      have hab_h0: "{h0 0, h0 1} = {a_end, a_start}" using heps0 hA2_ep by simp
-      have "h0 0 \<noteq> h0 1"
-      proof
-        assume "h0 0 = h0 1"
-        hence "{h0 0, h0 1} = {h0 0}" by simp
-        hence "card {a_end, a_start} \<le> 1" using hab_h0 by simp
-        thus False using ha_ne by simp
-      qed
-      from doubleton_eq_iff[OF hab_h0 this]
-      show ?thesis
-      proof
-        assume "h0 0 = a_end \<and> h0 1 = a_start" thus ?thesis using that[OF hh0] by (by100 blast)
-      next
-        assume "h0 0 = a_start \<and> h0 1 = a_end"
-        have hcomp: "top1_homeomorphism_on I_set I_top ?A2 (subspace_topology T TT ?A2) (h0 \<circ> (\<lambda>t::real. 1-t))"
-          by (rule homeomorphism_on_comp[OF unit_interval_reversal_homeomorphism hh0])
-        have "(h0 \<circ> (\<lambda>t::real. 1-t)) 0 = a_end" unfolding comp_def
-          using \<open>h0 0 = a_start \<and> h0 1 = a_end\<close> by simp
-        moreover have "(h0 \<circ> (\<lambda>t::real. 1-t)) 1 = a_start" unfolding comp_def
-          using \<open>h0 0 = a_start \<and> h0 1 = a_end\<close> by simp
-        ultimately show ?thesis using that[OF hcomp] by (by100 blast)
-      qed
-    qed
-    \<comment> \<open>Use loop\\_factors\\_through\\_S1: path product hA * hB is a loop. Factor through S1.\<close>
-    have hI_top: "is_topology_on I_set I_top" by (rule top1_unit_interval_topology_is_topology_on)
-    have hTA1: "is_topology_on A1 (subspace_topology T TT A1)"
-      by (rule subspace_topology_is_topology_on[OF htop hA1_sub])
-    have hTA2: "is_topology_on ?A2 (subspace_topology T TT ?A2)"
-      by (rule subspace_topology_is_topology_on[OF htop hA2_sub])
-    have hA_cont_T: "top1_continuous_map_on I_set I_top T TT hA"
-    proof -
-      have "top1_continuous_map_on I_set I_top A1 (subspace_topology T TT A1) hA"
-        using hhA unfolding top1_homeomorphism_on_def by (by100 blast)
-      have "top1_continuous_map_on I_set I_top A1 (subspace_topology T TT A1) hA
-          \<and> A1 \<subseteq> T \<and> subspace_topology T TT A1 = subspace_topology T TT A1"
-        using \<open>top1_continuous_map_on I_set I_top A1 (subspace_topology T TT A1) hA\<close> hA1_sub by simp
-      thus ?thesis using Theorem_18_2(6)[OF hI_top hTA1 htop, rule_format] by (by100 blast)
-    qed
-    have hB_cont_T: "top1_continuous_map_on I_set I_top T TT hB"
-    proof -
-      have "top1_continuous_map_on I_set I_top ?A2 (subspace_topology T TT ?A2) hB"
-        using hhB unfolding top1_homeomorphism_on_def by (by100 blast)
-      have "top1_continuous_map_on I_set I_top ?A2 (subspace_topology T TT ?A2) hB
-          \<and> ?A2 \<subseteq> T \<and> subspace_topology T TT ?A2 = subspace_topology T TT ?A2"
-        using \<open>top1_continuous_map_on I_set I_top ?A2 (subspace_topology T TT ?A2) hB\<close> hA2_sub by simp
-      thus ?thesis using Theorem_18_2(6)[OF hI_top hTA2 htop, rule_format] by (by100 blast)
-    qed
-    have hA_path: "top1_is_path_on T TT a_start a_end hA"
-      unfolding top1_is_path_on_def using hA_cont_T hhA0 hhA1 by (by100 blast)
-    have hB_path: "top1_is_path_on T TT a_end a_start hB"
-      unfolding top1_is_path_on_def using hB_cont_T hhB0 hhB1 by (by100 blast)
-    define gloop where "gloop = top1_path_product hA hB"
-    have hg_loop: "top1_is_loop_on T TT a_start gloop"
-    proof -
-      from top1_path_product_is_path[OF htop hA_path hB_path]
-      have "top1_is_path_on T TT a_start a_start gloop" unfolding gloop_def .
-      thus ?thesis unfolding top1_is_loop_on_def .
-    qed
-    from loop_factors_through_S1[OF htop hg_loop]
-    obtain hh where hh_cont: "top1_continuous_map_on top1_S1 top1_S1_topology T TT hh"
-        and hh_base: "hh (1, 0) = a_start"
-        and hh_lift: "\<forall>s\<in>I_set. gloop s = hh (top1_R_to_S1 s)"
-      by (by100 blast)
-    \<comment> \<open>hh is continuous by construction. Now prove injective and surjective onto C.\<close>
-    have hA_inj: "inj_on hA I_set" using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-    have hB_inj: "inj_on hB I_set" using hhB unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-    have hA_surj: "hA ` I_set = A1" using hhA unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-    have hB_surj: "hB ` I_set = ?A2" using hhB unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-    have hf_cont: "top1_continuous_map_on top1_S1 top1_S1_topology T TT hh" using hh_cont .
-    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by simp
-    have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by simp
-    \<comment> \<open>gloop is injective on [0,1): hA injective on [0,1/2], hB on (1/2,1), images disjoint.\<close>
-    have hg_inj_half: "inj_on gloop {s. 0 \<le> s \<and> s < 1}"
-    proof (rule inj_onI)
-      fix s1 s2 assume hs1: "s1 \<in> {s. 0 \<le> s \<and> s < 1}" and hs2: "s2 \<in> {s. 0 \<le> s \<and> s < 1}"
-        and hgs: "gloop s1 = gloop s2"
-      have hs1_ge: "s1 \<ge> 0" and hs1_lt: "s1 < 1" using hs1 by simp_all
-      have hs2_ge: "s2 \<ge> 0" and hs2_lt: "s2 < 1" using hs2 by simp_all
-      show "s1 = s2"
-      proof (cases "s1 \<le> 1/2")
-        case True note hs1_le = this
-        show ?thesis
-        proof (cases "s2 \<le> 1/2")
-          case True
-          have "gloop s1 = hA (2 * s1)" unfolding gloop_def top1_path_product_def using hs1_le by simp
-          have "gloop s2 = hA (2 * s2)" unfolding gloop_def top1_path_product_def using True by simp
-          hence "hA (2*s1) = hA (2*s2)" using hgs \<open>gloop s1 = hA (2*s1)\<close> by simp
-          have "2*s1 \<in> I_set" using hs1_ge hs1_le unfolding top1_unit_interval_def by (by100 auto)
-          have "2*s2 \<in> I_set" using hs2_ge True unfolding top1_unit_interval_def by (by100 auto)
-          from inj_onD[OF hA_inj \<open>hA (2*s1) = hA (2*s2)\<close> \<open>2*s1 \<in> I_set\<close> \<open>2*s2 \<in> I_set\<close>]
-          show ?thesis by simp
-        next
-          case False hence hs2_gt: "s2 > 1/2" by linarith
-          have "gloop s1 = hA (2*s1)" unfolding gloop_def top1_path_product_def using hs1_le by simp
-          hence "gloop s1 \<in> A1" using hA_surj hs1_ge hs1_le
-            unfolding top1_unit_interval_def by (by100 force)
-          have "\<not> (s2 \<le> 1/2)" using hs2_gt by linarith
-          hence "gloop s2 = hB (2*s2-1)" unfolding gloop_def top1_path_product_def by simp
-          have "2*s2-1 \<in> I_set" using hs2_gt hs2_lt unfolding top1_unit_interval_def by (by100 auto)
-          have "gloop s2 \<noteq> a_end"
-          proof
-            assume "gloop s2 = a_end"
-            hence "hB (2*s2-1) = hB 0" using \<open>gloop s2 = hB (2*s2-1)\<close> hhB0 by simp
-            from inj_onD[OF hB_inj this \<open>2*s2-1 \<in> I_set\<close> h0_I] show False using hs2_gt by linarith
-          qed
-          have "gloop s2 \<noteq> a_start"
-          proof
-            assume "gloop s2 = a_start"
-            hence "hB (2*s2-1) = hB 1" using \<open>gloop s2 = hB (2*s2-1)\<close> hhB1 by simp
-            from inj_onD[OF hB_inj this \<open>2*s2-1 \<in> I_set\<close> h1_I] show False using hs2_lt by linarith
-          qed
-          have "gloop s2 \<in> ?A2" using hB_surj \<open>gloop s2 = hB (2*s2-1)\<close> \<open>2*s2-1 \<in> I_set\<close> by (by100 blast)
-          have "gloop s1 \<in> A1 \<inter> ?A2" using \<open>gloop s1 \<in> A1\<close> \<open>gloop s2 \<in> ?A2\<close> hgs by (by100 force)
-          hence "gloop s1 \<in> {a_start, a_end}" using hA1A2_inter by simp
-          hence "gloop s2 = a_start \<or> gloop s2 = a_end" using hgs by (by100 force)
-          thus ?thesis using \<open>gloop s2 \<noteq> a_start\<close> \<open>gloop s2 \<noteq> a_end\<close> by simp
-        qed
-      next
-        case False hence hs1_gt: "s1 > 1/2" by linarith
-        show ?thesis
-        proof (cases "s2 \<le> 1/2")
-          case True
-          have "gloop s2 = hA (2*s2)" unfolding gloop_def top1_path_product_def using True by simp
-          hence "gloop s2 \<in> A1" using hA_surj hs2_ge True
-            unfolding top1_unit_interval_def by (by100 force)
-          have "\<not> (s1 \<le> 1/2)" using hs1_gt by linarith
-          hence "gloop s1 = hB (2*s1-1)" unfolding gloop_def top1_path_product_def by simp
-          have "2*s1-1 \<in> I_set" using hs1_gt hs1_lt unfolding top1_unit_interval_def by (by100 auto)
-          have "gloop s1 \<noteq> a_end"
-          proof
-            assume "gloop s1 = a_end"
-            hence "hB (2*s1-1) = hB 0" using \<open>gloop s1 = hB (2*s1-1)\<close> hhB0 by simp
-            from inj_onD[OF hB_inj this \<open>2*s1-1 \<in> I_set\<close> h0_I] show False using hs1_gt by linarith
-          qed
-          have "gloop s1 \<noteq> a_start"
-          proof
-            assume "gloop s1 = a_start"
-            hence "hB (2*s1-1) = hB 1" using \<open>gloop s1 = hB (2*s1-1)\<close> hhB1 by simp
-            from inj_onD[OF hB_inj this \<open>2*s1-1 \<in> I_set\<close> h1_I] show False using hs1_lt by linarith
-          qed
-          have "gloop s1 \<in> ?A2" using hB_surj \<open>gloop s1 = hB (2*s1-1)\<close> \<open>2*s1-1 \<in> I_set\<close> by (by100 blast)
-          have "gloop s2 \<in> A1 \<inter> ?A2" using \<open>gloop s2 \<in> A1\<close> \<open>gloop s1 \<in> ?A2\<close> hgs by (by100 force)
-          hence "gloop s2 \<in> {a_start, a_end}" using hA1A2_inter by simp
-          hence "gloop s1 = a_start \<or> gloop s1 = a_end" using hgs by (by100 force)
-          thus ?thesis using \<open>gloop s1 \<noteq> a_start\<close> \<open>gloop s1 \<noteq> a_end\<close> by simp
-        next
-          case False hence hs2_gt: "s2 > 1/2" by linarith
-          have "\<not> (s1 \<le> 1/2)" using hs1_gt by linarith
-          have "\<not> (s2 \<le> 1/2)" using hs2_gt by linarith
-          have "gloop s1 = hB (2*s1-1)" unfolding gloop_def top1_path_product_def using \<open>\<not> (s1 \<le> 1/2)\<close> by simp
-          have "gloop s2 = hB (2*s2-1)" unfolding gloop_def top1_path_product_def using \<open>\<not> (s2 \<le> 1/2)\<close> by simp
-          hence "hB (2*s1-1) = hB (2*s2-1)" using hgs \<open>gloop s1 = hB (2*s1-1)\<close> by simp
-          have "2*s1-1 \<in> I_set" using hs1_gt hs1_lt unfolding top1_unit_interval_def by (by100 auto)
-          have "2*s2-1 \<in> I_set" using hs2_gt hs2_lt unfolding top1_unit_interval_def by (by100 auto)
-          from inj_onD[OF hB_inj \<open>hB (2*s1-1) = hB (2*s2-1)\<close> \<open>2*s1-1 \<in> I_set\<close> \<open>2*s2-1 \<in> I_set\<close>]
-          show ?thesis by simp
-        qed
-      qed
-    qed
-    have hf_inj: "inj_on hh top1_S1"
-    proof (rule inj_onI)
-      fix p q assume hp: "p \<in> top1_S1" and hq: "q \<in> top1_S1" and hfpq: "hh p = hh q"
-      \<comment> \<open>Find preimages in [0,1), use gloop-injectivity.\<close>
-      from S1_point_to_angle[OF hp] obtain tp where htp: "top1_R_to_S1 tp = p" by (by100 blast)
-      from S1_point_to_angle[OF hq] obtain tq where htq: "top1_R_to_S1 tq = q" by (by100 blast)
-      define sp where "sp = tp - of_int \<lfloor>tp\<rfloor>"
-      define sq where "sq = tq - of_int \<lfloor>tq\<rfloor>"
-      have hsp_range: "0 \<le> sp \<and> sp < 1" unfolding sp_def by linarith
-      have hsq_range: "0 \<le> sq \<and> sq < 1" unfolding sq_def by linarith
-      have hsp_S1: "top1_R_to_S1 sp = p"
-        using htp top1_R_to_S1_int_shift[of "tp - of_int \<lfloor>tp\<rfloor>" "\<lfloor>tp\<rfloor>"] unfolding sp_def by simp
-      have hsq_S1: "top1_R_to_S1 sq = q"
-        using htq top1_R_to_S1_int_shift[of "tq - of_int \<lfloor>tq\<rfloor>" "\<lfloor>tq\<rfloor>"] unfolding sq_def by simp
-      have hsp_I: "sp \<in> I_set" using hsp_range unfolding top1_unit_interval_def by (by100 auto)
-      have hsq_I: "sq \<in> I_set" using hsq_range unfolding top1_unit_interval_def by (by100 auto)
-      have "gloop sp = hh p" using hh_lift[rule_format, OF hsp_I] hsp_S1 by simp
-      have "gloop sq = hh q" using hh_lift[rule_format, OF hsq_I] hsq_S1 by simp
-      hence "gloop sp = gloop sq" using \<open>gloop sp = hh p\<close> hfpq by simp
-      have hsp_mem: "sp \<in> {s. 0 \<le> s \<and> s < 1}" using hsp_range by simp
-      have hsq_mem: "sq \<in> {s. 0 \<le> s \<and> s < 1}" using hsq_range by simp
-      from inj_onD[OF hg_inj_half \<open>gloop sp = gloop sq\<close> hsp_mem hsq_mem]
-      have "sp = sq" .
-      show "p = q" using \<open>sp = sq\<close> hsp_S1 hsq_S1 by simp
-    qed
-    have hf_img: "hh ` top1_S1 = ?C"
-    proof
-      show "hh ` top1_S1 \<subseteq> ?C"
-      proof (intro image_subsetI)
-        fix p0 assume "p0 \<in> top1_S1"
-        from S1_point_to_angle[OF this] obtain theta where "top1_R_to_S1 theta = p0" by (by100 blast)
-        define s0 where "s0 = theta - of_int \<lfloor>theta\<rfloor>"
-        have "0 \<le> s0 \<and> s0 < 1" unfolding s0_def by linarith
-        hence "s0 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
-        have "top1_R_to_S1 s0 = p0"
-          using \<open>top1_R_to_S1 theta = p0\<close> top1_R_to_S1_int_shift[of "theta - of_int \<lfloor>theta\<rfloor>" "\<lfloor>theta\<rfloor>"]
-          unfolding s0_def by simp
-        hence "hh p0 = gloop s0" using hh_lift[rule_format, OF \<open>s0 \<in> I_set\<close>] by simp
-        \<comment> \<open>gloop(s0) \\<in> A1 \\<union> A2 = C.\<close>
-        show "hh p0 \<in> ?C"
-        proof (cases "s0 \<le> 1/2")
-          case True
-          have "gloop s0 = hA (2 * s0)" unfolding gloop_def top1_path_product_def using True by simp
-          have "2 * s0 \<in> I_set" using \<open>0 \<le> s0 \<and> s0 < 1\<close> True
-            unfolding top1_unit_interval_def by (by100 auto)
-          hence "gloop s0 \<in> A1" using hA_surj \<open>gloop s0 = hA (2*s0)\<close> by (by100 blast)
-          hence "gloop s0 \<in> ?C" using hA1A2_union by (by100 blast)
-          thus ?thesis using \<open>hh p0 = gloop s0\<close> by simp
-        next
-          case False
-          have "\<not> (s0 \<le> 1/2)" using False .
-          hence "gloop s0 = hB (2*s0-1)" unfolding gloop_def top1_path_product_def by simp
-          have "2*s0-1 \<in> I_set" using \<open>0 \<le> s0 \<and> s0 < 1\<close> False
-            unfolding top1_unit_interval_def by (by100 auto)
-          hence "gloop s0 \<in> ?A2" using hB_surj \<open>gloop s0 = hB (2*s0-1)\<close> by (by100 blast)
-          hence "gloop s0 \<in> ?C" using hA1A2_union by (by100 blast)
-          thus ?thesis using \<open>hh p0 = gloop s0\<close> by simp
-        qed
-      qed
-    next
-      show "?C \<subseteq> hh ` top1_S1"
-      proof
-        fix z assume "z \<in> ?C"
-        hence "z \<in> A1 \<union> ?A2" using hA1A2_union by simp
-        thus "z \<in> hh ` top1_S1"
-        proof
-          assume "z \<in> A1"
-          then obtain t where ht: "t \<in> I_set" "hA t = z" using hA_surj by (by100 blast)
-          have "t \<ge> 0 \<and> t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
-          hence ht2: "t/2 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
-          have "t/2 \<le> 1/2" using \<open>t \<ge> 0 \<and> t \<le> 1\<close> by linarith
-          hence "gloop (t/2) = hA (2 * (t/2))" unfolding gloop_def top1_path_product_def by simp
-          hence "gloop (t/2) = z" using ht(2) by simp
-          have "top1_R_to_S1 (t/2) \<in> top1_S1" unfolding top1_S1_def top1_R_to_S1_def by simp
-          moreover have "hh (top1_R_to_S1 (t/2)) = z"
-            using hh_lift[rule_format, OF ht2] \<open>gloop (t/2) = z\<close> by simp
-          ultimately show ?thesis by (by100 blast)
-        next
-          assume "z \<in> ?A2"
-          have "z \<in> hB ` I_set" using hB_surj \<open>z \<in> ?A2\<close> by simp
-          then obtain t where ht: "t \<in> I_set" "hB t = z" by (by100 blast)
-          have "t \<ge> 0 \<and> t \<le> 1" using ht(1) unfolding top1_unit_interval_def by (by100 auto)
-          show ?thesis
-          proof (cases "t = 0")
-            case True
-            hence "z = a_end" using ht(2) hhB0 by simp
-            have h12: "(1::real)/2 \<in> I_set" unfolding top1_unit_interval_def by (by100 auto)
-            have "gloop (1/2) = hA 1" unfolding gloop_def top1_path_product_def by simp
-            hence "gloop (1/2) = a_end" using hhA1 by simp
-            hence "gloop (1/2) = z" using \<open>z = a_end\<close> by simp
-            have "top1_R_to_S1 (1/2) \<in> top1_S1" unfolding top1_S1_def top1_R_to_S1_def by simp
-            moreover have "hh (top1_R_to_S1 (1/2)) = z"
-              using hh_lift[rule_format, OF h12] \<open>gloop (1/2) = z\<close> by simp
-            ultimately show ?thesis by (by100 blast)
-          next
-            case False
-            hence "t > 0" using \<open>t \<ge> 0 \<and> t \<le> 1\<close> by linarith
-            define s0 where "s0 = (t + 1) / (2::real)"
-            have hs0_gt: "\<not> (s0 \<le> 1/2)" using \<open>t > 0\<close> unfolding s0_def by simp
-            have hs0_I: "s0 \<in> I_set" using \<open>t \<ge> 0 \<and> t \<le> 1\<close> unfolding s0_def top1_unit_interval_def by (by100 auto)
-            have "gloop s0 = hB (2*s0-1)" unfolding gloop_def top1_path_product_def using hs0_gt by simp
-            have "2 * s0 = t + 1" unfolding s0_def by simp
-            hence "2 * s0 - 1 = t" by linarith
-            hence "gloop s0 = hB t" using \<open>gloop s0 = hB (2*s0-1)\<close> by simp
-            hence "gloop s0 = z" using ht(2) by simp
-            have "top1_R_to_S1 s0 \<in> top1_S1" unfolding top1_S1_def top1_R_to_S1_def by simp
-            moreover have "hh (top1_R_to_S1 s0) = z"
-              using hh_lift[rule_format, OF hs0_I] \<open>gloop s0 = z\<close> by simp
-            ultimately show ?thesis by (by100 blast)
-          qed
-        qed
-      qed
-    qed
-    show ?thesis unfolding top1_simple_closed_curve_on_def
-      using hf_cont hf_inj hf_img by (by100 blast)
+    have harcs_ws: "\<forall>A\<in>set ws. A \<subseteq> T \<and> top1_is_arc_on A (subspace_topology T TT A)"
+      using assms(2) assms(9) by (by100 blast)
+    have hinter_ws: "\<forall>A\<in>set ws. \<forall>B\<in>set ws. A \<noteq> B \<longrightarrow>
+         A \<inter> B \<subseteq> top1_arc_endpoints_on A (subspace_topology T TT A)
+       \<and> A \<inter> B \<subseteq> top1_arc_endpoints_on B (subspace_topology T TT B)
+       \<and> finite (A \<inter> B) \<and> card (A \<inter> B) \<le> 2"
+      using assms(4) assms(9) by (by100 blast)
+    show ?thesis by (rule cycle_arcs_form_scc[OF hstrict hhaus harcs_ws hinter_ws
+        assms(7) assms(8) hcard1 hdist_v])
   qed
   \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
   have hC_retract: "top1_retract_of_on T TT ?C"
