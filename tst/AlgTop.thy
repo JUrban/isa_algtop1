@@ -14592,7 +14592,16 @@ inductive top1_elementary_scheme_operation :: "('a \<times> bool) list \<Rightar
   \<comment> \<open>Flip orientation: change sign of exponent of all occurrences of a given label.
      Book \\<S>76 operation (iii): "one can change the sign of the exponent of all occurrences
      of a given label a; this amounts to reversing the orientations of all edges labelled a."\<close>
-  flip_label: "top1_elementary_scheme_operation w (map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) w)"
+  flip_label: "top1_elementary_scheme_operation w (map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) w)" |
+  \<comment> \<open>Cut-and-repaste: the combined effect of Munkres \\<S>76 Theorem 76.1 on a single polygon.
+     Cut at position between u1 and u2, introducing new label c.
+     Flip one piece. Paste along label a (which appears in both pieces).
+     Net effect on scheme: [u1] a [u2] a [u3] \\<sim> [u1] a a [u2\\<inverse>] [u3].
+     This brings two copies of label a (same orientation) together.
+     Formally: rotate one piece around and paste, cancelling u2 into u2\\<inverse>.\<close>
+  cut_paste: "top1_elementary_scheme_operation
+      (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)
+      (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
 
 \<comment> \<open>The scheme equivalence is the reflexive-transitive closure of elementary operations.\<close>
 definition top1_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
@@ -14882,6 +14891,12 @@ proof -
         \<comment> \<open>Flipping a label's orientation reverses the direction edges are pasted.
            The quotient space is the same: reversing identification direction gives
            the same equivalence relation on boundary points.\<close>
+        then show ?thesis sorry
+      next
+        case (cut_paste u1 a u2 u3)
+        \<comment> \<open>Cut-and-repaste: Munkres \\<S>76 Theorem 76.1.
+           Cut the polygon, flip one piece, paste along the shared edge.
+           The two quotient spaces are homeomorphic because the identifications are preserved.\<close>
         then show ?thesis sorry
       qed
     qed
@@ -15212,8 +15227,16 @@ proof (cases "y0 = []")
       show ?thesis using \<open>y0 = []\<close> True by simp
     next
       case False2: False
-      \<comment> \<open>Both y1, y2 non-empty: cut-flip-paste from Figure 77.1.\<close>
-      show ?thesis sorry
+      \<comment> \<open>Both y1, y2 non-empty: direct from cut\\_paste operation.\<close>
+      have "top1_elementary_scheme_operation
+          ([] @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+          ([] @ [(a, True), (a, True)] @ rev (map top1_inverse_edge y1) @ y2)"
+        by (rule top1_elementary_scheme_operation.cut_paste)
+      hence "top1_scheme_equiv
+          ([(a, True)] @ y1 @ [(a, True)] @ y2)
+          ([(a, True), (a, True)] @ rev (map top1_inverse_edge y1) @ y2)"
+        unfolding top1_scheme_equiv_def by simp
+      thus ?thesis using \<open>y0 = []\<close> by simp
     qed
   qed
 next
