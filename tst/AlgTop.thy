@@ -5450,7 +5450,176 @@ proof -
     using assms(3) hlast_in by (by100 blast)
   \<comment> \<open>A1 \\<inter> A2 = {sv(k-1), sv(k-2)} (both endpoints).\<close>
   have hA1A2_inter: "\<Union>(set (butlast ws)) \<inter> last ws = {sv (?k - 1), sv (?k - 2)}"
-    sorry \<comment> \<open>Non-consecutive arcs disjoint (from hsv\\_distinct + hep\\_eq). Only ws!0 and ws!(k-2) contribute.\<close>
+  proof -
+    have hlast_eq: "last ws = ws ! (?k - 1)" using last_conv_nth[of ws] hk_pos by simp
+    \<comment> \<open>\\<Union>(set (butlast ws)) \\<inter> ws!(k-1) = \\<Union>{ws!j \\<inter> ws!(k-1) | j < k-1}.\<close>
+    have hbt_set: "set (butlast ws) = {ws ! j | j. j < ?k - 1}"
+    proof
+      show "set (butlast ws) \<subseteq> {ws ! j |j. j < ?k - 1}"
+      proof
+        fix x assume "x \<in> set (butlast ws)"
+        then obtain j where "j < length (butlast ws)" "butlast ws ! j = x"
+          using in_set_conv_nth by (by100 metis)
+        hence "j < ?k - 1" "ws ! j = x" using hk_pos by (simp_all add: nth_butlast min_def)
+        thus "x \<in> {ws ! j |j. j < ?k - 1}" by (by100 blast)
+      qed
+    next
+      show "{ws ! j |j. j < ?k - 1} \<subseteq> set (butlast ws)"
+      proof
+        fix x assume "x \<in> {ws ! j |j. j < ?k - 1}"
+        then obtain j where "j < ?k - 1" "x = ws ! j" by (by100 blast)
+        hence "j < length (butlast ws)" using hk_pos by (simp add: min_def)
+        hence "butlast ws ! j \<in> set (butlast ws)" using nth_mem by (by100 blast)
+        moreover have "butlast ws ! j = ws ! j" using \<open>j < ?k - 1\<close> hk_pos by (simp add: nth_butlast)
+        ultimately show "x \<in> set (butlast ws)" using \<open>x = ws ! j\<close> by simp
+      qed
+    qed
+    have "\<Union>(set (butlast ws)) \<inter> last ws = (\<Union>j < ?k - 1. ws ! j \<inter> ws ! (?k - 1))"
+    proof -
+      have h1: "\<Union>(set (butlast ws)) = (\<Union>j \<in> {j. j < ?k - 1}. ws ! j)"
+      proof
+        show "\<Union>(set (butlast ws)) \<subseteq> (\<Union>j \<in> {j. j < ?k - 1}. ws ! j)"
+        proof
+          fix x assume "x \<in> \<Union>(set (butlast ws))"
+          then obtain A where "A \<in> set (butlast ws)" "x \<in> A" by (by100 blast)
+          hence "A \<in> {ws ! j |j. j < ?k - 1}" using hbt_set by (by100 blast)
+          then obtain j where "j < ?k - 1" "A = ws ! j" by (by100 blast)
+          thus "x \<in> (\<Union>j \<in> {j. j < ?k - 1}. ws ! j)" using \<open>x \<in> A\<close> by (by100 blast)
+        qed
+      next
+        show "(\<Union>j \<in> {j. j < ?k - 1}. ws ! j) \<subseteq> \<Union>(set (butlast ws))"
+        proof
+          fix x assume "x \<in> (\<Union>j \<in> {j. j < ?k - 1}. ws ! j)"
+          then obtain j where "j < ?k - 1" "x \<in> ws ! j" by (by100 blast)
+          hence "ws ! j \<in> {ws ! j |j. j < ?k - 1}" by (by100 blast)
+          hence "ws ! j \<in> set (butlast ws)" using hbt_set by (by100 blast)
+          thus "x \<in> \<Union>(set (butlast ws))" using \<open>x \<in> ws ! j\<close> by (by100 blast)
+        qed
+      qed
+      show ?thesis
+      proof
+        show "\<Union>(set (butlast ws)) \<inter> last ws \<subseteq> (\<Union>j < ?k - 1. ws ! j \<inter> ws ! (?k - 1))"
+        proof
+          fix x assume "x \<in> \<Union>(set (butlast ws)) \<inter> last ws"
+          hence "x \<in> \<Union>(set (butlast ws))" "x \<in> last ws" by (by100 blast)+
+          from \<open>x \<in> \<Union>(set (butlast ws))\<close> h1
+          obtain j where "j < ?k - 1" "x \<in> ws ! j" by (by100 blast)
+          hence "x \<in> ws ! j \<inter> ws ! (?k - 1)" using \<open>x \<in> last ws\<close> hlast_eq by simp
+          thus "x \<in> (\<Union>j < ?k - 1. ws ! j \<inter> ws ! (?k - 1))" using \<open>j < ?k - 1\<close> by (by100 blast)
+        qed
+      next
+        show "(\<Union>j < ?k - 1. ws ! j \<inter> ws ! (?k - 1)) \<subseteq> \<Union>(set (butlast ws)) \<inter> last ws"
+        proof
+          fix x assume "x \<in> (\<Union>j < ?k - 1. ws ! j \<inter> ws ! (?k - 1))"
+          then obtain j where "j < ?k - 1" "x \<in> ws ! j" "x \<in> ws ! (?k - 1)" by (by100 blast)
+          have "ws ! j \<in> set (butlast ws)" using hbt_set \<open>j < ?k - 1\<close> by (by100 blast)
+          hence "x \<in> \<Union>(set (butlast ws))" using \<open>x \<in> ws ! j\<close> by (by100 blast)
+          thus "x \<in> \<Union>(set (butlast ws)) \<inter> last ws" using \<open>x \<in> ws ! (?k - 1)\<close> hlast_eq by simp
+        qed
+      qed
+    qed
+    also have "\<dots> = {sv (?k - 1), sv (?k - 2)}"
+    proof -
+      \<comment> \<open>ws!0 \\<inter> ws!(k-1) = {sv(k-1)} (from cycle structure).\<close>
+      have hint_0: "ws ! 0 \<inter> ws ! (?k - 1) = {sv (?k - 1)}"
+      proof -
+        have "?k - 1 < ?k" using hk_pos by linarith
+        from hsv_eq[rule_format, OF this]
+        have "ws ! (?k - 1) \<inter> ws ! ((?k - 1 + 1) mod ?k) = {sv (?k - 1)}" .
+        moreover have "(?k - 1 + 1) mod ?k = 0" using hk_pos by simp
+        ultimately have "ws ! (?k - 1) \<inter> ws ! 0 = {sv (?k - 1)}" by simp
+        thus ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>ws!(k-2) \\<inter> ws!(k-1) = {sv(k-2)} (from hsv\\_eq at i=k-2).\<close>
+      have hint_k2: "ws ! (?k - 2) \<inter> ws ! (?k - 1) = {sv (?k - 2)}"
+      proof -
+        have "?k - 2 < ?k" using hlen_ge3 by linarith
+        from hsv_eq[rule_format, OF this]
+        have "ws ! (?k - 2) \<inter> ws ! ((?k - 2 + 1) mod ?k) = {sv (?k - 2)}" .
+        moreover have "(?k - 2 + 1) mod ?k = ?k - 1" using hlen_ge3 by simp
+        ultimately show ?thesis by simp
+      qed
+      \<comment> \<open>For 0 < j < k-2: ws!j \\<inter> ws!(k-1) = {} (endpoints disjoint).\<close>
+      have hint_mid: "\<forall>j. 0 < j \<and> j < ?k - 2 \<longrightarrow> ws ! j \<inter> ws ! (?k - 1) = {}"
+      proof (intro allI impI)
+        fix j assume hjp: "0 < j \<and> j < ?k - 2"
+        have hj_lt: "j < ?k" using hjp by linarith
+        have hk1_lt: "?k - 1 < ?k" using hk_pos by linarith
+        have "ws ! j \<in> set ws" using hj_lt by simp
+        have "ws ! (?k - 1) \<in> set ws" using hk1_lt by simp
+        have "j \<noteq> ?k - 1" using hjp by linarith
+        have "ws ! j \<noteq> ws ! (?k - 1)"
+          using nth_eq_iff_index_eq[OF assms(6) hj_lt hk1_lt] \<open>j \<noteq> ?k - 1\<close> by simp
+        from assms(4)[rule_format, OF \<open>ws ! j \<in> set ws\<close> \<open>ws ! (?k - 1) \<in> set ws\<close> this]
+        have "ws ! j \<inter> ws ! (?k - 1) \<subseteq>
+            top1_arc_endpoints_on (ws ! j) (subspace_topology T TT (ws ! j))
+            \<inter> top1_arc_endpoints_on (ws ! (?k - 1)) (subspace_topology T TT (ws ! (?k - 1)))"
+          by (by100 blast)
+        also have "\<dots> = {sv ((j + ?k - 1) mod ?k), sv j} \<inter> {sv (?k - 2), sv (?k - 1)}"
+        proof -
+          have "(?k - 1 + ?k - 1) mod ?k = ?k - 2"
+          proof -
+            have "?k - 1 + ?k - 1 = ?k + (?k - 2)" using hlen_ge3 by linarith
+            hence "(?k - 1 + ?k - 1) mod ?k = (?k - 2) mod ?k" by simp
+            thus ?thesis using hlen_ge3 by simp
+          qed
+          thus ?thesis using hep_eq[rule_format, OF hj_lt] hep_eq[rule_format, OF hk1_lt] by simp
+        qed
+        finally have hsub: "ws ! j \<inter> ws ! (?k - 1) \<subseteq> {sv ((j + ?k - 1) mod ?k), sv j} \<inter> {sv (?k - 2), sv (?k - 1)}" .
+        \<comment> \<open>All 4 sv indices are distinct.\<close>
+        have hjm1: "(j + ?k - 1) mod ?k = j - 1"
+        proof -
+          have "j + ?k - 1 = ?k + (j - 1)" using hjp by linarith
+          hence "(j + ?k - 1) mod ?k = (j - 1) mod ?k" by simp
+          thus ?thesis using hjp hj_lt by simp
+        qed
+        have "sv (j - 1) \<noteq> sv (?k - 2)"
+          using hsv_distinct[rule_format] hjp hj_lt hlen_ge3 by (by100 force)
+        moreover have "sv (j - 1) \<noteq> sv (?k - 1)"
+          using hsv_distinct[rule_format] hjp hj_lt hk1_lt by (by100 force)
+        moreover have "sv j \<noteq> sv (?k - 2)"
+          using hsv_distinct[rule_format] hjp hj_lt hlen_ge3 by (by100 force)
+        moreover have "sv j \<noteq> sv (?k - 1)"
+          using hsv_distinct[rule_format] hjp hj_lt hk1_lt by (by100 force)
+        ultimately have "{sv (j - 1), sv j} \<inter> {sv (?k - 2), sv (?k - 1)} = {}" by (by100 blast)
+        hence "{sv ((j + ?k - 1) mod ?k), sv j} \<inter> {sv (?k - 2), sv (?k - 1)} = {}"
+          using hjm1 by simp
+        thus "ws ! j \<inter> ws ! (?k - 1) = {}" using hsub by (by100 blast)
+      qed
+      \<comment> \<open>Combine: only j=0 and j=k-2 contribute.\<close>
+      have "(\<Union>j < ?k - 1. ws ! j \<inter> ws ! (?k - 1))
+          = (ws ! 0 \<inter> ws ! (?k - 1)) \<union> (ws ! (?k - 2) \<inter> ws ! (?k - 1))"
+      proof -
+        have "\<forall>j < ?k - 1. ws ! j \<inter> ws ! (?k - 1) \<subseteq> (ws ! 0 \<inter> ws ! (?k - 1)) \<union> (ws ! (?k - 2) \<inter> ws ! (?k - 1))"
+        proof (intro allI impI)
+          fix j assume "j < ?k - 1"
+          show "ws ! j \<inter> ws ! (?k - 1) \<subseteq> (ws ! 0 \<inter> ws ! (?k - 1)) \<union> (ws ! (?k - 2) \<inter> ws ! (?k - 1))"
+          proof (cases "j = 0")
+            case True thus ?thesis by (by100 blast)
+          next
+            case False
+            show ?thesis
+            proof (cases "j = ?k - 2")
+              case True thus ?thesis by (by100 blast)
+            next
+              case False2: False
+              hence "0 < j \<and> j < ?k - 2" using False \<open>j < ?k - 1\<close> by linarith
+              from hint_mid[rule_format, OF this] show ?thesis by simp
+            qed
+          qed
+        qed
+        moreover have "(ws ! 0 \<inter> ws ! (?k - 1)) \<subseteq> (\<Union>j < ?k - 1. ws ! j \<inter> ws ! (?k - 1))"
+          using hlen_ge3 by (by100 force)
+        moreover have "(ws ! (?k - 2) \<inter> ws ! (?k - 1)) \<subseteq> (\<Union>j < ?k - 1. ws ! j \<inter> ws ! (?k - 1))"
+          using hlen_ge3 by (by100 force)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      also have "\<dots> = {sv (?k - 1)} \<union> {sv (?k - 2)}" using hint_0 hint_k2 by simp
+      also have "\<dots> = {sv (?k - 1), sv (?k - 2)}" by (by100 blast)
+      finally show ?thesis .
+    qed
+    finally show ?thesis .
+  qed
   \<comment> \<open>sv(k-1) \\<noteq> sv(k-2).\<close>
   have ha_ne: "sv (?k - 1) \<noteq> sv (?k - 2)"
     using hsv_distinct[rule_format] hlen_ge3 by (by100 force)
