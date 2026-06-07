@@ -4554,8 +4554,9 @@ proof -
 qed
 
 
-\<comment> \<open>Graph cycle retract: in a tree with graph decomposition, any union of arcs from \\<A>
-   is a retract. Used for both the general sc\\_graph\\_no\\_cycle and the j-i=2 case.\<close>
+\<comment> \<open>Graph connected subunion retract: in a tree with graph decomposition,
+   a path-connected union of arcs from \\<A> is a retract of T.
+   (Per expert audit 7: the old version without path-connectedness was false.)\<close>
 lemma graph_cycle_retract:
   fixes T :: "'a set" and TT :: "'a set set"
   assumes "top1_is_tree_on T TT"
@@ -4568,18 +4569,18 @@ lemma graph_cycle_retract:
       and "finite \<A>"
       and "\<forall>C. C \<subseteq> T \<longrightarrow> (closedin_on T TT C \<longleftrightarrow>
           (\<forall>A\<in>\<A>. closedin_on A (subspace_topology T TT A) (A \<inter> C)))"
-      and "set ws \<subseteq> \<A>"
-      and "length ws \<ge> 2"
-      and "\<Union>(set ws) \<subseteq> T"
-  shows "top1_retract_of_on T TT (\<Union>(set ws))"
+      and "\<S> \<subseteq> \<A>"
+      and "\<S> \<noteq> {}"
+      and "top1_path_connected_on (\<Union>\<S>) (subspace_topology T TT (\<Union>\<S>))"
+  shows "top1_retract_of_on T TT (\<Union>\<S>)"
   using assms
-proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
-  case (less \<A> ws)
+proof (induction "card (\<A> - \<S>)" arbitrary: \<A> \<S> rule: less_induct)
+  case (less \<A> \<S>)
   show ?case
-  proof (cases "\<A> = set ws")
+  proof (cases "\<A> = \<S>")
     case True
     \<comment> \<open>Base: T = C. Identity retraction.\<close>
-    hence "T = \<Union>(set ws)" using less.prems(3) by (by100 simp)
+    hence "T = \<Union>\<S>" using less.prems(3) by (by100 simp)
     have "top1_retract_of_on T TT T"
       unfolding top1_retract_of_on_def top1_is_retraction_on_def
     proof (intro exI[of _ id] conjI)
@@ -4604,140 +4605,44 @@ proof (induction "card (\<A> - set ws)" arbitrary: \<A> ws rule: less_induct)
       qed
       show "\<forall>a\<in>T. id a = a" by (by100 simp)
     qed
-    thus ?thesis using \<open>T = \<Union>(set ws)\<close> by simp
+    thus ?thesis using \<open>T = \<Union>\<S>\<close> by simp
   next
     case False
-    \<comment> \<open>Step: pick non-ws arc A0, add to ws, apply IH, compose.\<close>
-    from False obtain A0 where hA0: "A0 \<in> \<A>" "A0 \<notin> set ws"
+    \<comment> \<open>Step: pick A0 \<in> \<A> - \<S> that meets C = \<Union>\<S> (adjacent outside arc).
+       Per expert audit 7: use A0 with A0 \<inter> C \<noteq> {} to maintain path-connectedness.\<close>
+    let ?C = "\<Union>\<S>"
+    obtain A0 where hA0: "A0 \<in> \<A>" "A0 \<notin> \<S>" "A0 \<inter> ?C \<noteq> {}"
+      sorry \<comment> \<open>Adjacent-outside-arc lemma: \<S> \<subset> \<A>, T connected, \<Union>\<A> = T,
+         so some arc outside \<S> must meet \<Union>\<S> (otherwise T disconnected).\<close>
+    let ?\<S>' = "insert A0 \<S>"
+    have hcard_lt: "card (\<A> - ?\<S>') < card (\<A> - \<S>)"
     proof -
-      from False have "\<A> - set ws \<noteq> {}" using less.prems(7) by (by100 blast)
-      then obtain A0 where "A0 \<in> \<A> - set ws" by (by100 blast)
-      thus ?thesis using that by (by100 blast)
+      have "\<A> - ?\<S>' = (\<A> - \<S>) - {A0}" by (by100 blast)
+      have "A0 \<in> \<A> - \<S>" using hA0(1-2) by (by100 blast)
+      have "finite (\<A> - \<S>)" using less.prems(5) by (by100 blast)
+      have "\<A> - \<S> \<noteq> {}" using \<open>A0 \<in> \<A> - \<S>\<close> by (by100 blast)
+      have "card (\<A> - \<S>) > 0" using \<open>finite (\<A> - \<S>)\<close> \<open>\<A> - \<S> \<noteq> {}\<close> by (by100 auto)
+      show ?thesis using \<open>\<A> - ?\<S>' = (\<A> - \<S>) - {A0}\<close>
+          \<open>A0 \<in> \<A> - \<S>\<close> \<open>finite (\<A> - \<S>)\<close> \<open>card _ > 0\<close> by (by100 simp)
     qed
-    let ?ws' = "ws @ [A0]"
-    have "card (\<A> - set ?ws') < card (\<A> - set ws)"
-    proof -
-      have "\<A> - set ?ws' = (\<A> - set ws) - {A0}" by (by100 auto)
-      have "A0 \<in> \<A> - set ws" using hA0 by (by100 blast)
-      have "finite (\<A> - set ws)" using less.prems(5) by (by100 blast)
-      have "card (\<A> - set ws) > 0"
-      proof -
-        have "A0 \<in> \<A> - set ws" using hA0 by (by100 blast)
-        have "\<A> - set ws \<noteq> {}" using \<open>A0 \<in> \<A> - set ws\<close> by (by100 blast)
-        thus ?thesis using \<open>finite (\<A> - set ws)\<close> by (by100 auto)
-      qed
-      show ?thesis using \<open>\<A> - set ?ws' = (\<A> - set ws) - {A0}\<close>
-          \<open>A0 \<in> \<A> - set ws\<close> \<open>finite (\<A> - set ws)\<close> \<open>card _ > 0\<close>
-        by (by100 simp)
-    qed
-    have "set ?ws' \<subseteq> \<A>" using less.prems(7) hA0(1) by (by100 simp)
-    have "length ?ws' \<ge> 2" using less.prems(8) by (by100 simp)
+    have "?\<S>' \<subseteq> \<A>" using less.prems(7) hA0(1) by (by100 blast)
+    have "?\<S>' \<noteq> {}" by (by100 simp)
     have "A0 \<subseteq> T" using less.prems(2) hA0(1) by (by100 blast)
-    have "\<Union>(set ?ws') \<subseteq> T" using less.prems(9) \<open>A0 \<subseteq> T\<close> by (by100 auto)
-    \<comment> \<open>By IH: T retracts onto C \\<union> A0.\<close>
-    from less.hyps[OF \<open>card _ < card _\<close> less.prems(1-6) \<open>set ?ws' \<subseteq> \<A>\<close>
-        \<open>length ?ws' \<ge> 2\<close> \<open>\<Union>(set ?ws') \<subseteq> T\<close>]
-    have "top1_retract_of_on T TT (\<Union>(set ?ws'))" .
-    hence hret_ext: "top1_retract_of_on T TT (\<Union>(set ws) \<union> A0)"
-    proof -
-      have "\<Union>(set ?ws') = A0 \<union> \<Union>(set ws)" by (by100 auto)
-      also have "\<dots> = \<Union>(set ws) \<union> A0" by (by100 blast)
-      finally show ?thesis using \<open>top1_retract_of_on T TT (\<Union>(set ?ws'))\<close> by simp
-    qed
-    \<comment> \<open>Compose with retraction C \\<union> A0 \\<to> C.\<close>
-    \<comment> \<open>A0 \\<inter> C \\<subseteq> ep(A0) from graph conditions. card(ep(A0)) \\<le> 2.\<close>
-    let ?C = "\<Union>(set ws)"
-    have hA0C_sub_ep: "A0 \<inter> ?C \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
-    proof -
-      have "\<forall>B \<in> set ws. A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)"
-      proof (intro ballI)
-        fix B assume "B \<in> set ws"
-        hence "B \<in> \<A>" using less.prems(7) by (by100 blast)
-        have "A0 \<noteq> B" using hA0(2) \<open>B \<in> set ws\<close> by (by100 blast)
-        from less.prems(4)[rule_format, OF hA0(1) \<open>B \<in> \<A>\<close> \<open>A0 \<noteq> B\<close>]
-        show "A0 \<inter> B \<subseteq> top1_arc_endpoints_on A0 (subspace_topology T TT A0)" by (by100 blast)
-      qed
-      thus ?thesis by (by100 blast)
-    qed
-    \<comment> \<open>Compose retraction T \\<to> C \\<union> A0 with pasting retraction C \\<union> A0 \\<to> C.\<close>
+    \<comment> \<open>C' = C \<union> A0 is path-connected (C pc, A0 pc, A0 \<inter> C \<noteq> {}).\<close>
+    have hS'_pc: "top1_path_connected_on (\<Union>?\<S>') (subspace_topology T TT (\<Union>?\<S>'))"
+      sorry \<comment> \<open>Path-connected union: C is pc, A0 is pc (arc), A0 \<inter> C \<noteq> {}.\<close>
+    \<comment> \<open>By IH: T retracts onto C \<union> A0.\<close>
+    from less.hyps[OF hcard_lt less.prems(1-6) \<open>?\<S>' \<subseteq> \<A>\<close> \<open>?\<S>' \<noteq> {}\<close> hS'_pc]
+    have hret_ext: "top1_retract_of_on T TT (\<Union>?\<S>')" .
+    have hC'_eq: "\<Union>?\<S>' = ?C \<union> A0" by (by100 blast)
+    hence hret_CuA: "top1_retract_of_on T TT (?C \<union> A0)" using hret_ext by simp
+    \<comment> \<open>Compose with retraction C \<union> A0 \<to> C (attached-arc retract).\<close>
     show ?thesis
-    proof (cases "\<exists>v. A0 \<inter> ?C \<subseteq> {v}")
-      case True
-      \<comment> \<open>A0 \\<inter> C has \\<le> 1 point. Pasting retraction.\<close>
-      have hC_ne: "?C \<noteq> {}"
-      proof -
-        have "ws \<noteq> []" using less.prems(8) by (by100 force)
-        then obtain B rest where "ws = B # rest" by (cases ws) (by100 simp)+
-        hence "B \<in> set ws" by (by100 simp)
-        have "B \<subseteq> T \<and> top1_is_arc_on B (subspace_topology T TT B)"
-          using less.prems(2)[rule_format, of B] less.prems(7) \<open>B \<in> set ws\<close> by (by100 blast)
-        then obtain g where "top1_homeomorphism_on I_set I_top B (subspace_topology T TT B) g"
-          unfolding top1_is_arc_on_def by (by100 blast)
-        hence "bij_betw g I_set B" unfolding top1_homeomorphism_on_def by (by100 blast)
-        hence "g ` I_set = B" unfolding bij_betw_def by (by100 blast)
-        have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-        hence "g 0 \<in> B" using \<open>g ` I_set = B\<close> by (by100 blast)
-        thus ?thesis using \<open>B \<in> set ws\<close> by (by100 blast)
-      qed
-      obtain v where hv: "A0 \<inter> ?C \<subseteq> {v}" "v \<in> ?C"
-      proof (cases "A0 \<inter> ?C = {}")
-        case True
-        from hC_ne obtain w where "w \<in> ?C" by (by100 blast)
-        thus ?thesis using that True by (by100 blast)
-      next
-        case False
-        then obtain w where hw: "w \<in> A0 \<inter> ?C" by (by100 blast)
-        from True obtain v0 where hv0: "A0 \<inter> ?C \<subseteq> {v0}" by (by100 blast)
-        have "w = v0" using hw hv0 by (by100 blast)
-        hence "v0 \<in> ?C" using hw by (by100 blast)
-        thus ?thesis using that hv0 by (by100 blast)
-      qed
-      \<comment> \<open>Extract r1 from hret\\_ext, define r' on C \\<union> A0, compose.\<close>
-      from hret_ext obtain r1 where hr1: "top1_is_retraction_on T TT (?C \<union> A0) r1"
-        unfolding top1_retract_of_on_def by (by100 blast)
-      define r where "r x = (if r1 x \<in> ?C then r1 x else v)" for x
-      show ?thesis unfolding top1_retract_of_on_def top1_is_retraction_on_def
-      proof (intro exI[of _ r] conjI)
-        show "?C \<subseteq> T" using less.prems(9) by (by100 blast)
-        show "\<forall>a \<in> ?C. r a = a"
-        proof (intro ballI)
-          fix a assume "a \<in> ?C"
-          hence "a \<in> ?C \<union> A0" by (by100 blast)
-          hence "r1 a = a" using hr1 unfolding top1_is_retraction_on_def by (by100 blast)
-          hence "r1 a \<in> ?C" using \<open>a \<in> ?C\<close> by simp
-          thus "r a = a" unfolding r_def using \<open>r1 a = a\<close> by (by100 simp)
-        qed
-        show "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) r"
-        proof -
-          \<comment> \<open>r = g \\<circ> r1 where g(y) = if y \\<in> C then y else v.
-             r1: T \\<to> C \\<union> A0 continuous (from retraction).
-             g: C \\<union> A0 \\<to> C continuous (pasting: id on C, const on A0).
-             Composition is continuous.\<close>
-          have hr1_cont: "top1_continuous_map_on T TT (?C \<union> A0) (subspace_topology T TT (?C \<union> A0)) r1"
-            using hr1 unfolding top1_is_retraction_on_def by (by100 blast)
-          \<comment> \<open>g: C \\<union> A0 \\<to> C is continuous by pasting lemma.\<close>
-          define g where "g y = (if y \<in> ?C then y else v)" for y
-          have hg_cont: "top1_continuous_map_on (?C \<union> A0) (subspace_topology T TT (?C \<union> A0))
-              ?C (subspace_topology T TT ?C) g"
-            sorry \<comment> \<open>Pasting lemma: C, A0 closed in C \\<union> A0. g|C = id (cont). g|A0 = const v (cont).
-               Agreement at A0 \\<inter> C \\<subseteq> {v}: g(v) = v from both sides.\<close>
-          \<comment> \<open>r = g \\<circ> r1.\<close>
-          have hr_eq: "\<forall>x \<in> T. r x = g (r1 x)"
-            unfolding r_def g_def by simp
-          \<comment> \<open>Compose: g \\<circ> r1 continuous.\<close>
-          from top1_continuous_map_on_comp[OF hr1_cont hg_cont]
-          have "top1_continuous_map_on T TT ?C (subspace_topology T TT ?C) (g \<circ> r1)" .
-          \<comment> \<open>g \\<circ> r1 = r on T.\<close>
-          thus ?thesis sorry \<comment> \<open>g \\<circ> r1 = r on T (extensionally), so continuity transfers.\<close>
-        qed
-      qed
-    next
-      case False
-      \<comment> \<open>card(A0 \\<inter> C) = 2: double attachment. Derive False.\<close>
-      show ?thesis
-        sorry \<comment> \<open>A0 has both endpoints in C. This contradicts tree/SC property:
-           A0 + path in C forms SCC. IH gives retraction. scc\\_in\\_sc\\_false.\<close>
-    qed
+      sorry \<comment> \<open>attached_arc_retract: C \<union> A0 \<to> C.
+         Card 1: collapse A0 to attachment point (pasting lemma).
+         Card 2: map A0 along a path in C between the 2 attachment points.
+         (Per audit 7: card=2 is NOT a contradiction, use path-mapping instead.)
+         Then compose with hret_CuA.\<close>
   qed
 qed
 
@@ -5162,7 +5067,12 @@ proof -
   qed
   \<comment> \<open>C is a retract of T. Collapse non-cycle arcs to cycle vertices.\<close>
   have hC_retract: "top1_retract_of_on T TT ?C"
-    by (rule graph_cycle_retract[OF assms(1-6) assms(9) assms(7) hC_sub])
+  proof -
+    have "set ws \<noteq> {}" using assms(7) by (by100 force)
+    have hws_pc: "top1_path_connected_on ?C (subspace_topology T TT ?C)"
+      sorry \<comment> \<open>Cycle arc union is path-connected (arcs form a connected chain).\<close>
+    show ?thesis by (rule graph_cycle_retract[OF assms(1-6) assms(9) \<open>set ws \<noteq> {}\<close> hws_pc])
+  qed
   \<comment> \<open>Apply scc\\_in\\_sc\\_false.\<close>
   from scc_in_sc_false[OF hSC htop hhaus hC_SCC hC_retract hC_sub]
   show False .
@@ -6737,12 +6647,14 @@ proof (rule ccontr)
                harcB_arc harcB_sub hAB_eq hvi_ne hep_arcA hep_arcB])
       have hretract: "top1_retract_of_on T TT (?arcA \<union> ?arcB)"
       proof -
-        let ?ws2 = "[?arcA, ?arcB]"
-        have "set ?ws2 \<subseteq> \<A>" using harcA_in harcB_in by (by100 simp)
-        have "length ?ws2 \<ge> 2" by (by100 simp)
-        have "\<Union>(set ?ws2) \<subseteq> T" using harcA_sub harcB_sub by (by100 auto)
+        let ?S2 = "{?arcA, ?arcB}"
+        have "?S2 \<subseteq> \<A>" using harcA_in harcB_in by (by100 blast)
+        have "?S2 \<noteq> {}" by (by100 simp)
+        have hS2_pc: "top1_path_connected_on (\<Union>?S2) (subspace_topology T TT (\<Union>?S2))"
+          sorry \<comment> \<open>arcA \\<union> arcB is path-connected: both arcs are path-connected
+             and share endpoints {vi, vsi}.\<close>
         from graph_cycle_retract[OF assms(1) assms(2) assms(3) assms(4) assms(5) assms(7)
-            \<open>set ?ws2 \<subseteq> \<A>\<close> \<open>length ?ws2 \<ge> 2\<close> \<open>\<Union>(set ?ws2) \<subseteq> T\<close>]
+            \<open>?S2 \<subseteq> \<A>\<close> \<open>?S2 \<noteq> {}\<close> hS2_pc]
         show ?thesis by (by100 simp)
       qed
       have hSC: "top1_simply_connected_on T TT"
