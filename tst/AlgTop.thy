@@ -6631,9 +6631,58 @@ proof -
       hence "j0 = Suc (Suc i0)" using hij0(1) hij0(4) by linarith
       thus ?thesis using hnonback[rule_format, of "Suc i0"] by simp
     next
-      case False hence "dmin \<ge> 3" using hdmin_ge2 by linarith
+      case False hence hdmin3: "dmin \<ge> 3" using hdmin_ge2 by linarith
       show ?thesis
-        sorry \<comment> \<open>dmin \\<ge> 3: same arc \\<Rightarrow> cross-vertex \\<Rightarrow> shorter revisit \\<Rightarrow> contradiction with hmin.\<close>
+      proof
+        assume heq: "?we j0 = ?we (Suc i0)"
+        \<comment> \<open>Both wv(i0) and wv(j0-1) are endpoints of we(j0) = we(Suc i0).
+           wv(i0) = wv(j0). wv(j0-1) \\<noteq> wv(j0) (from other\\_ep at step j0).
+           Similarly wv(Suc i0) \\<noteq> wv(i0). Arc has 2 endpoints = {wv(i0), wv(Suc i0)}.
+           So wv(j0-1) = wv(Suc i0). But Suc i0 and j0-1 have distance < dmin. Contradiction.\<close>
+        have hwvi0_ep: "?wv i0 \<in> ?ep (?we (Suc i0))"
+          using hnext hwalk_props hwalk_suc_snd by (by100 simp)
+        have hwvsi0_ep: "?wv (Suc i0) \<in> ?ep (?we (Suc i0))"
+          using hwalk_props by (by100 blast)
+        have hwvsi0_ne: "?wv (Suc i0) \<noteq> ?wv i0"
+          using hother hnext hwalk_props hwalk_suc_fst by (by100 simp)
+        have hep2: "?ep (?we (Suc i0)) = {?wv i0, ?wv (Suc i0)}"
+        proof -
+          have "?we (Suc i0) \<in> \<A>" using hwalk_props by (by100 blast)
+          from h2ep[rule_format, OF this]
+          obtain a b where "a \<noteq> b" "?ep (?we (Suc i0)) = {a, b}" by (by100 blast)
+          thus ?thesis using hwvi0_ep hwvsi0_ep hwvsi0_ne
+            by (by100 force)
+        qed
+        have "j0 = Suc (j0 - 1)" using hij0(1) by linarith
+        have hwvj01_ep: "?wv (j0 - 1) \<in> ?ep (?we j0)"
+          using hnext hwalk_props hwalk_suc_snd[of "j0 - 1"] \<open>j0 = Suc (j0 - 1)\<close>
+          by (by100 simp)
+        have "?wv (j0 - 1) \<noteq> ?wv j0"
+        proof -
+          let ?ej = "next_arc (?wv (j0-1)) (?we (j0-1))"
+          have "?ej \<in> \<A>" using hnext hwalk_props by (by100 blast)
+          have "?wv (j0-1) \<in> ?ep ?ej" using hnext hwalk_props by (by100 blast)
+          have "?wv j0 = other_ep (?wv (j0-1)) ?ej"
+            using hwalk_suc_fst[of "j0-1"] \<open>j0 = Suc (j0-1)\<close> by simp
+          moreover have "other_ep (?wv (j0-1)) ?ej \<noteq> ?wv (j0-1)"
+            using hother \<open>?ej \<in> \<A>\<close> \<open>?wv (j0-1) \<in> ?ep ?ej\<close> by (by100 blast)
+          ultimately show ?thesis by simp
+        qed
+        hence "?wv (j0 - 1) \<noteq> ?wv i0" using hij0(3) by simp
+        hence "?wv (j0 - 1) \<in> {?wv i0, ?wv (Suc i0)}"
+          using hwvj01_ep heq hep2 by simp
+        hence "?wv (j0 - 1) = ?wv (Suc i0)"
+          using \<open>?wv (j0 - 1) \<noteq> ?wv i0\<close> by (by100 blast)
+        \<comment> \<open>But Suc i0 and j0-1 have distance j0-1-(Suc i0) < dmin. hv\\_dist contradiction.\<close>
+        have "Suc i0 \<le> j0 - 1" using hdmin3 hij0(4) hij0(1) by linarith
+        have "j0 - 1 < j0" using hij0(1) by linarith
+        have "j0 - 1 \<noteq> Suc i0" using hdmin3 hij0(4) hij0(1) by linarith
+        have "Suc i0 \<le> j0 - 1 \<and> j0 - 1 < j0 \<and> Suc i0 \<le> Suc i0 \<and> Suc i0 < j0 \<and> j0 - 1 \<noteq> Suc i0"
+          using \<open>Suc i0 \<le> j0 - 1\<close> \<open>j0 - 1 < j0\<close> hdmin3 hij0(4) hij0(1) \<open>j0 - 1 \<noteq> Suc i0\<close>
+          by linarith
+        from hv_dist[rule_format, OF this]
+        show False using \<open>?wv (j0 - 1) = ?wv (Suc i0)\<close> by simp
+      qed
     qed
     \<comment> \<open>Consecutive cycle arcs share exactly 1 vertex.\<close>
     have hws_card1: "\<forall>idx < length ?ws. card (?ws ! idx \<inter> ?ws ! ((idx + 1) mod length ?ws)) = 1"
