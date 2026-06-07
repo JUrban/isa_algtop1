@@ -15214,6 +15214,7 @@ qed
    with same exponent), then w ~ aa [y0 y1\\<inverse> y2].\<close>
 lemma Lemma_77_1_projective_collection:
   assumes "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> a"
+      and "\<exists>b::'a. b \<noteq> a \<and> (\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b)"
   shows "top1_scheme_equiv
       (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
       ([(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
@@ -15253,7 +15254,8 @@ next
   \<comment> \<open>Step 2: y0 non-empty. Book proof (Munkres Figure 77.2):
      y0 a y1 a y2 \\<sim> b y2 b (y1 y0\\<inverse>) \\<sim> bb y2\\<inverse> y1 y0\\<inverse> \\<sim> aa y0 y1\\<inverse> y2.\<close>
   \<comment> \<open>Choose a fresh label b \\<noteq> a (exists because labels are from an infinite type).\<close>
-  obtain b :: 'a where "b \<noteq> a" sorry
+  obtain b :: 'a where hb: "b \<noteq> a" "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b"
+    using assms(2) by (by100 blast)
   \<comment> \<open>Step 2a: y0 a y1 a y2 \\<sim> b y2 b (y1 y0\\<inverse>) via cut\\_paste2.\<close>
   have step2a: "top1_scheme_equiv
       (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
@@ -15278,7 +15280,34 @@ next
       by (rule top1_elementary_scheme_operation.invert)
     moreover have "rev (map top1_inverse_edge ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0)))
         = y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)]"
-      sorry \<comment> \<open>List simplification: rev(map inv(bb @ y2\\<inverse> @ y1 @ y0\\<inverse>)) = y0 @ y1\\<inverse> @ y2 @ b\\<inverse>b\\<inverse>.\<close>
+    proof -
+      have hinv_inv: "\<And>x. top1_inverse_edge (top1_inverse_edge x) = x"
+        unfolding top1_inverse_edge_def by (by100 simp)
+      have hmap_inv_inv: "\<And>xs :: ('a \<times> bool) list. map top1_inverse_edge (map top1_inverse_edge xs) = xs"
+        by (simp add: hinv_inv map_idI)
+      have hrev_inv: "\<And>xs :: ('a \<times> bool) list. map top1_inverse_edge (rev (map top1_inverse_edge xs)) = rev xs"
+      proof -
+        fix xs :: "('a \<times> bool) list"
+        have "map top1_inverse_edge (rev (map top1_inverse_edge xs))
+            = rev (map top1_inverse_edge (map top1_inverse_edge xs))"
+          by (simp add: rev_map)
+        also have "\<dots> = rev xs" using hmap_inv_inv by simp
+        finally show "map top1_inverse_edge (rev (map top1_inverse_edge xs)) = rev xs" .
+      qed
+      have hcomp_id: "top1_inverse_edge \<circ> top1_inverse_edge = id"
+      proof (rule ext)
+        fix x show "(top1_inverse_edge \<circ> top1_inverse_edge) x = id x" using hinv_inv by simp
+      qed
+      have hmap_comp_id: "\<And>xs :: ('a \<times> bool) list. map (top1_inverse_edge \<circ> top1_inverse_edge) xs = xs"
+      proof -
+        fix xs :: "('a \<times> bool) list"
+        have "map (top1_inverse_edge \<circ> top1_inverse_edge) xs = map id xs"
+          by (rule arg_cong[of _ _ "\<lambda>f. map f xs"]) (rule hcomp_id)
+        thus "map (top1_inverse_edge \<circ> top1_inverse_edge) xs = xs" by simp
+      qed
+      show ?thesis
+        by (simp add: rev_map hmap_comp_id hrev_inv top1_inverse_edge_def)
+    qed
     ultimately show ?thesis unfolding top1_scheme_equiv_def by simp
   qed
   \<comment> \<open>Step 2d: rotate to b\\<inverse> b\\<inverse> (y0 y1\\<inverse> y2).\<close>
@@ -15302,7 +15331,15 @@ next
     moreover have "map (\<lambda>(l, bo). (l, if l = b then \<not> bo else bo))
         ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
         = [(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2"
-      sorry \<comment> \<open>b \\<notin> y0, y1, y2 (from assms + b \\<noteq> a). Flip only affects the b-edges.\<close>
+    proof -
+      have "\<And>xs. (\<forall>e \<in> set xs. fst e \<noteq> b) \<Longrightarrow>
+          map (\<lambda>(l, bo). (l, if l = b then \<not> bo else bo)) xs = xs"
+        by (rule map_idI) (by100 auto)
+      moreover have "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b" using hb(2) by (by100 blast)
+      moreover have "\<forall>e \<in> set (rev (map top1_inverse_edge y1)). fst e \<noteq> b"
+        using hb(2) unfolding top1_inverse_edge_def by (by100 auto)
+      ultimately show ?thesis by simp
+    qed
     ultimately show ?thesis unfolding top1_scheme_equiv_def by simp
   qed
   \<comment> \<open>Step 2f: relabel b \\<to> a.\<close>
@@ -15318,7 +15355,20 @@ next
     moreover have "map (\<lambda>(l, bo). (if l = b then a else l, bo))
         ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
         = [(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2"
-      sorry \<comment> \<open>b \\<notin> y0, y1, y2. Relabel only affects the b-edges.\<close>
+    proof -
+      have hmap_relabel: "\<And>xs :: ('a \<times> bool) list. (\<forall>e \<in> set xs. fst e \<noteq> b) \<Longrightarrow>
+          map (\<lambda>(l, bo). (if l = b then a else l, bo)) xs = xs"
+        by (rule map_idI) (by100 auto)
+      have "\<forall>e \<in> set y0. fst e \<noteq> b" using hb(2) by (by100 blast)
+      have "\<forall>e \<in> set (rev (map top1_inverse_edge y1)). fst e \<noteq> b"
+        using hb(2) unfolding top1_inverse_edge_def by (by100 auto)
+      have "\<forall>e \<in> set y2. fst e \<noteq> b" using hb(2) by (by100 blast)
+      show ?thesis
+        using hmap_relabel[OF \<open>\<forall>e \<in> set y0. fst e \<noteq> b\<close>]
+            hmap_relabel[OF \<open>\<forall>e \<in> set (rev (map top1_inverse_edge y1)). fst e \<noteq> b\<close>]
+            hmap_relabel[OF \<open>\<forall>e \<in> set y2. fst e \<noteq> b\<close>]
+        by simp
+    qed
     ultimately show ?thesis unfolding top1_scheme_equiv_def by simp
   qed
   \<comment> \<open>Chain all steps.\<close>
