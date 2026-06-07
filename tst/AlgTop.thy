@@ -4646,10 +4646,34 @@ proof -
         show "C \<union> A = ?CuA" by simp
         show "\<forall>x \<in> ?CuA. r x \<in> C" unfolding r_def using hv(2) by (by100 simp)
         \<comment> \<open>r continuous on C: r|C = id, inclusion is continuous.\<close>
+        have hC_sub_CuA2: "C \<subseteq> ?CuA" by (by100 blast)
+        have hA_sub_CuA2: "A \<subseteq> ?CuA" by (by100 blast)
+        have hsubC: "subspace_topology ?CuA (subspace_topology X TX ?CuA) C = subspace_topology X TX C"
+          using subspace_topology_trans[OF hC_sub_CuA2] by simp
+        have hsubA: "subspace_topology ?CuA (subspace_topology X TX ?CuA) A = subspace_topology X TX A"
+          using subspace_topology_trans[OF hA_sub_CuA2] by simp
         show "top1_continuous_map_on C (subspace_topology ?CuA (subspace_topology X TX ?CuA) C) C (subspace_topology X TX C) r"
-          sorry \<comment> \<open>r|C = id: C \\<to> C continuous. Direct from definition.\<close>
+          unfolding hsubC top1_continuous_map_on_def
+        proof (intro conjI ballI allI impI)
+          fix x assume "x \<in> C" thus "r x \<in> C" unfolding r_def by simp
+        next
+          fix V assume hV: "V \<in> subspace_topology X TX C"
+          then obtain U where "U \<in> TX" "V = C \<inter> U" unfolding subspace_topology_def
+            by (by5000 auto)
+          hence "V \<subseteq> C" by (by100 blast)
+          have "{x \<in> C. r x \<in> V} = V"
+          proof -
+            have hr_id: "\<forall>x. x \<in> C \<longrightarrow> r x = x" unfolding r_def by simp
+            have "{x \<in> C. r x \<in> V} = {x \<in> C. x \<in> V}"
+              using hr_id by (by5000 force)
+            also have "\<dots> = V" using \<open>V \<subseteq> C\<close> by (by100 blast)
+            finally show ?thesis .
+          qed
+          thus "{x \<in> C. r x \<in> V} \<in> subspace_topology X TX C" using hV by simp
+        qed
         show "top1_continuous_map_on A (subspace_topology ?CuA (subspace_topology X TX ?CuA) A) C (subspace_topology X TX C) r"
-          sorry \<comment> \<open>r|A = const v: A \\<to> C continuous. Theorem\\_18\\_2(1) + A \\<inter> C = {v}.\<close>
+          unfolding hsubA
+          sorry \<comment> \<open>r|A = const v: constant map (A, subspace X TX A) \\<to> (C, subspace X TX C).\<close>
       qed
     qed
   next
