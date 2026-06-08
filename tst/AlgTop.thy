@@ -3074,8 +3074,39 @@ proof -
             using intersection_of_subgroups_is_group[OF hK_grp_pre hgens_sub_K_loc] by (by100 simp)
           \<comment> \<open>Each \<phi>\_bar(ws!i) \<in> ?sg.\<close>
           have hmap_in_sg: "\<forall>i<length (map \<phi>_bar ws). (map \<phi>_bar ws) ! i \<in> ?sg"
-            sorry \<comment> \<open>Each ws!i is \<iota>A(s) \<Longrightarrow> \<phi>\_bar(\<iota>A(s)) is a generator \<in> ?sg.
-               Or ws!i = invgA(\<iota>A(s)) \<Longrightarrow> \<phi>\_bar(invgA(\<iota>A(s))) = invgAG(\<phi>\_bar(\<iota>A(s))) \<in> ?sg.\<close>
+          proof (intro allI impI)
+            fix i assume hi: "i < length (map \<phi>_bar ws)"
+            hence hi': "i < length ws" by (by100 simp)
+            from hws this have "ws!i \<in> ?\<iota>A ` ({..<m} - {0::nat})
+                \<or> (\<exists>s\<in>?\<iota>A ` ({..<m} - {0::nat}). ws!i = ?invgA s)" by (by100 blast)
+            thus "(map \<phi>_bar ws) ! i \<in> ?sg"
+            proof (elim disjE)
+              assume "ws!i \<in> ?\<iota>A ` ({..<m} - {0::nat})"
+              then obtain s where hs: "s \<in> {..<m} - {0::nat}" "ws!i = ?\<iota>A s" by (by100 blast)
+              hence "\<phi>_bar (?\<iota>A s) \<in> (\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat})" by (by100 blast)
+              hence "\<phi>_bar (?\<iota>A s) \<in> ?sg"
+                using subgroup_generated_contains[OF hK_grp_pre hgens_sub_K_loc] by (by100 blast)
+              thus ?thesis using hs(2) hi' by (by100 simp)
+            next
+              assume "\<exists>s\<in>?\<iota>A ` ({..<m} - {0::nat}). ws!i = ?invgA s"
+              then obtain s where hs: "s \<in> ?\<iota>A ` ({..<m} - {0::nat})" "ws!i = ?invgA s"
+                by (by100 blast)
+              then obtain j where hj: "j \<in> {..<m} - {0::nat}" "s = ?\<iota>A j" by (by100 blast)
+              have hs_in: "s \<in> ?AbelF" using h\<iota>A_in hj by (by100 auto)
+              have "\<phi>_bar (?invgA s) = ?invgAG (\<phi>_bar s)"
+                using hom_preserves_inv[OF hAbelF_grp hAbelG_grp h\<phi>_hom hs_in] by (by100 simp)
+              moreover have "\<phi>_bar s \<in> ?sg"
+              proof -
+                have "\<phi>_bar (?\<iota>A j) \<in> (\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat})" using hj(1) by (by100 blast)
+                thus ?thesis using hj(2) subgroup_generated_contains[OF hK_grp_pre hgens_sub_K_loc]
+                  by (by100 blast)
+              qed
+              hence "?invgAG (\<phi>_bar s) \<in> ?sg"
+                using hsg_grp unfolding top1_is_group_on_def by (by100 fast)
+              ultimately have "\<phi>_bar (?invgA s) \<in> ?sg" by (by100 simp)
+              thus ?thesis using hs(2) hi' by (by100 simp)
+            qed
+          qed
           \<comment> \<open>\<phi>\_bar(a) = \<phi>\_bar(foldr ws) = foldr (map \<phi>\_bar ws) in AbelG.\<close>
           have hws_in_F: "\<forall>i<length ws. ws!i \<in> ?AbelF"
           proof (intro allI impI)
