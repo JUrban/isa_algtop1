@@ -14963,7 +14963,14 @@ proof -
         by (induction k) (use hQ0 in simp, use hQstep in simp)
     qed
     \<comment> \<open>P = Q (n-1) (when n \\<ge> 3).\<close>
-    have "P = Q (n - 1)" unfolding hP Q_def sorry
+    have "P = Q (n - 1)"
+    proof -
+      have "{..<n} = {..n-1}" using hn by (by100 auto)
+      hence "(\<forall>i<n. P_cond i) = (\<forall>i\<le>n-1. P_cond i)" for P_cond by (by100 auto)
+      moreover have "(\<Sum>i<n. f i) = (\<Sum>i\<le>n-1. f i)" for f :: "nat \<Rightarrow> real"
+        using \<open>{..<n} = {..n-1}\<close> by (by100 auto)
+      ultimately show ?thesis unfolding hP Q_def by (by100 auto)
+    qed
     thus ?thesis using hQk by simp
   qed
   have hP_closed: "closed P" by (rule compact_imp_closed[OF hP_compact_direct])
