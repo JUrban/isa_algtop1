@@ -15576,14 +15576,15 @@ proof -
       (invgF (SOME g. g \<in> F \<and> C = top1_group_coset_on F mulF ?CF g))"
   let ?p = "\<lambda>f. top1_group_coset_on F mulF ?CF f"
 
-  from Theorem_69_4_concrete_free_abelian[OF hF_free]
-  obtain \<iota>A where h\<iota>A:
-    "top1_is_free_abelian_group_full_on ?AbelF ?mulA ?eA ?invgA \<iota>A ({..<m}::nat set)"
-    by (by100 blast)
-  \<comment> \<open>The generators of the free abelian group are the images of the free generators:
-     \<iota>A(s) = p(\<iota>(s)) for all s \<in> {..<m}. This follows from Theorem 69.4 (full version).\<close>
-  have h\<iota>A_eq: "\<forall>s \<in> {..<m}. \<iota>A s = ?p (\<iota> s)"
-    sorry \<comment> \<open>From Theorem\_69\_4: iotaH s = phi (iota s), instantiated to p.\<close>
+  \<comment> \<open>Define \<iota>A = p \<circ> \<iota>: the natural generators of Abel(F) are cosets of free generators.
+     Theorem 69.4 (full version) proves that these form a free abelian basis.\<close>
+  let ?\<iota>A = "\<lambda>s. ?p (\<iota> s)"
+  have h\<iota>A:
+    "top1_is_free_abelian_group_full_on ?AbelF ?mulA ?eA ?invgA ?\<iota>A ({..<m}::nat set)"
+    sorry \<comment> \<open>The natural generators p(\<iota>(s)) form a free abelian basis for F/[F,F].
+       This follows from Theorem\_69\_4 (which constructs exactly these generators)
+       and Theorem\_69\_4\_concrete\_free\_abelian (which gives the concrete carrier).
+       The Isabelle gap is connecting the abstract witness from 69.4 to the concrete quotient.\<close>
 
   have hAbelF_abel: "top1_is_abelian_group_on ?AbelF ?mulA ?eA ?invgA"
     using h\<iota>A unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
@@ -15879,7 +15880,7 @@ proof -
   \<comment> \<open>The relator image in Abel(F): p(relator) = \<iota>A(0)^2 \<cdot> ... \<cdot> \<iota>A(m-1)^2.
      In the abelian group, this equals (product of all generators)^2.\<close>
   \<comment> \<open>Define \<beta> = product of all generators in Abel(F).\<close>
-  let ?\<beta>_list = "map \<iota>A [0..<m]"
+  let ?\<beta>_list = "map ?\<iota>A [0..<m]"
   let ?\<beta>A = "foldr ?mulA ?\<beta>_list ?eA"
 
   \<comment> \<open>\<beta> \<in> AbelF.\<close>
