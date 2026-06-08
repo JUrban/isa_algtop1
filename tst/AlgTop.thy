@@ -2208,8 +2208,34 @@ proof -
                 using hom_preserves_inv[OF hAbelF_grp hZ_grp2 h\<epsilon>0_hom hrel_in] by (by100 simp)
               thus ?thesis using h\<epsilon>0_rel by (by100 simp)
             qed
+            have hrel_ne_invrel: "?invgA ?rel_in_AbelF \<noteq> ?rel_in_AbelF"
+            proof
+              assume heq: "?invgA ?rel_in_AbelF = ?rel_in_AbelF"
+              have "\<epsilon>0 (?invgA ?rel_in_AbelF) = -2" using h\<epsilon>_invrel .
+              moreover have "\<epsilon>0 ?rel_in_AbelF = 2" using h\<epsilon>0_rel .
+              ultimately have "(-2::int) = 2" using heq by (by100 simp)
+              thus False by (by100 simp)
+            qed
             have "map \<epsilon>0 ws = map (\<lambda>b. if b then (2::int) else -2) ?bs"
-              sorry \<comment> \<open>\<epsilon>_0(ws!i) = 2 if ws!i=rel, -2 if ws!i=invg(rel).\<close>
+            proof (rule list_eq_iff_nth_eq[THEN iffD2], intro conjI allI impI)
+              show "length (map \<epsilon>0 ws) = length (map (\<lambda>b. if b then (2::int) else -2) ?bs)"
+                by (by100 simp)
+              fix i assume hi: "i < length (map \<epsilon>0 ws)"
+              hence hi': "i < length ws" by (by100 simp)
+              from hws hi' have "ws!i \<in> {?rel_in_AbelF} \<or> (\<exists>s\<in>{?rel_in_AbelF}. ws!i = ?invgA s)"
+                by (by100 blast)
+              thus "map \<epsilon>0 ws ! i = map (\<lambda>b. if b then (2::int) else -2) ?bs ! i"
+              proof (elim disjE)
+                assume "ws!i \<in> {?rel_in_AbelF}"
+                hence "ws!i = ?rel_in_AbelF" by (by100 blast)
+                thus ?thesis using hi' h\<epsilon>0_rel by (by100 simp)
+              next
+                assume "\<exists>s\<in>{?rel_in_AbelF}. ws!i = ?invgA s"
+                hence hwsi: "ws!i = ?invgA ?rel_in_AbelF" by (by100 blast)
+                hence "(ws!i = ?rel_in_AbelF) = False" using hrel_ne_invrel by (by100 simp)
+                thus ?thesis using hi' h\<epsilon>_invrel hwsi by (by100 simp)
+              qed
+            qed
             hence "foldr (+) (map (\<lambda>b. if b then (2::int) else -2) ?bs) 0 = 0"
               using hsum by (by100 simp)
             hence "length (filter id ?bs) = length (filter Not ?bs)"
