@@ -17348,7 +17348,14 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           \<comment> \<open>After flip\\_label: scheme ~ [(fst s0,T),(fst s1,T),(fst s0,F),(fst s1,F)].
              This is a torus scheme of type n=1 (with labels fst s0, fst s1).
              Then relabel to standard labels gives top1\\_n\\_torus\\_scheme 1.\<close>
-          show ?thesis sorry
+          \<comment> \<open>Construct equivalence: scheme ~ flip\\_label(s) ~ relabel ~ torus n=1.\<close>
+          \<comment> \<open>The scheme is [(fst s0,d0),(fst s1,d1),(fst s0,\\<not>d0),(fst s1,\\<not>d1)] where d0=snd s0, d1=snd s1.\<close>
+          \<comment> \<open>After at most 2 flip\\_labels and 2 relabels: ~ [(0,T),(1,T),(0,F),(1,F)] = torus n=1.\<close>
+          have "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w"
+            sorry \<comment> \<open>Chain: scheme ~ flip\\_label(fst s0 if snd s0=F) ~ flip\\_label(fst s1 if snd s1=F)
+               ~ relabel(fst s0\\<to>0) ~ relabel(fst s1\\<to>1) ~ torus n=1.
+               All steps are elementary operations. Uses hsch4, fst/snd properties.\<close>
+          thus ?thesis by (by100 blast)
         qed
         thus ?thesis by (by100 blast)
       qed
