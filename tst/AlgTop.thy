@@ -14734,8 +14734,24 @@ next
   thus ?case sorry
 next
   case (flip_label w a)
-  \<comment> \<open>s = w, t = map (flip a) w. Flip orientation of label a. Same polygon and quotient map.\<close>
-  thus ?case sorry
+  \<comment> \<open>s = w, t = map (\\<lambda>(l,b). (l, if l = a then \\<not>b else b)) w.
+     Same polygon P, same quotient map q, same vertices. Only the scheme content changes.
+     Key: flip\\_label preserves fst, and snd(t!i)=snd(t!j) \\<longleftrightarrow> snd(s!i)=snd(s!j)
+     when fst(s!i) = fst(s!j) (because either both flip or neither flips).\<close>
+  let ?t = "map (\<lambda>(l, b). (l, if l = a then \<not> b else b)) w"
+  have hlen: "length ?t = length w" by simp
+  \<comment> \<open>Key facts about flip\\_label:
+     - length preserved: length ?t = length w
+     - fst preserved: fst (?t!i) = fst (w!i) for all i < length w
+     - snd correspondence: when fst(w!i) = fst(w!j), then
+       (snd(?t!i) = snd(?t!j)) \\<longleftrightarrow> (snd(w!i) = snd(w!j))
+       because either both labels are a (both flip) or neither is.\<close>
+  \<comment> \<open>The polygon P, quotient map q, and vertices vx, vy are IDENTICAL for w and ?t.
+     All geometric conditions (region, quotient map, vertices, hull, edge disjointness,
+     interior injectivity, counterclockwise, strict edge-side) are unchanged.
+     The scheme-content conditions (edge identification, boundary identification)
+     are preserved by the snd correspondence.\<close>
+  show ?case sorry
 next
   case (cut_paste u1 a u2 u3)
   \<comment> \<open>s = u1@[a]@u2@[a]@u3, t = u1@[a,a]@rev(inv(u2))@u3. Cut and paste.\<close>
