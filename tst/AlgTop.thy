@@ -16293,14 +16293,14 @@ proof -
      Step 2c: Pair remaining letters into commutator blocks aba\<inverse>b\<inverse> (torus type).\<close>
   \<comment> \<open>NOTE: top1\\_is\\_torus\\_scheme, top1\\_is\\_projective\\_scheme now defined (\\<S>77 section).
      top1\\_scheme\\_equiv = rtranclp of elementary operations (defined before \\<S>76).\<close>
-  have hreduced: "(\<exists>w. scheme = w \<and> (\<forall>a\<in>set w. snd a) \<and> length w = 0)
-      \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n
+  have hreduced: "(\<exists>n>0. \<exists>w. top1_is_torus_scheme w n
             \<and> top1_scheme_equiv scheme w)
       \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m
             \<and> top1_scheme_equiv scheme w)"
     sorry \<comment> \<open>From scheme\\_normal\\_form: scheme is proper (each label twice) and length \\<ge> 4.
        Properness follows from the polygonal quotient structure. Length \\<ge> 4 from surface.
-       scheme\\_normal\\_form gives equivalence to sphere/torus/projective normal form.\<close>
+       scheme\\_normal\\_form gives equivalence to torus or projective normal form.
+       (Sphere case eliminated: length 0 contradicts quotient\\_of\\_scheme\\_on requiring n \\<ge> 3.)\<close>
   \<comment> \<open>Step 3: Each normal form corresponds to the standard surface.
      - Empty/sphere: cancellation gives S² (a@a⁻¹@b@b⁻¹ with cancellation).
      - Torus scheme: the standard n-torus IS the quotient of this scheme
@@ -16343,17 +16343,7 @@ proof -
        The normal form's quotient = the standard surface. So X \\<cong> standard surface.\<close>
     from hreduced show ?thesis
     proof (elim disjE exE conjE)
-      \<comment> \<open>Case 1: scheme is empty (length 0) — gives S².\<close>
-      fix w assume hw: "scheme = w" "\<forall>a\<in>set w. snd a" "length w = 0"
-      \<comment> \<open>length scheme = 0, but quotient\\_of\\_scheme\\_on requires polygonal\\_region with n \\<ge> 3. Contradiction.\<close>
-      from hsch obtain P0 q0 where hP0: "top1_is_polygonal_region_on P0 (length scheme)"
-        by (rule quotient_of_scheme_extract)
-      hence "length scheme \<ge> 3"
-        unfolding top1_is_polygonal_region_on_def by (by100 blast)
-      hence False using hw by simp
-      thus ?thesis by simp
-    next
-      \<comment> \<open>Case 2: scheme \\<sim> torus normal form.\<close>
+      \<comment> \<open>Case 1: scheme \\<sim> torus normal form.\<close>
       fix n w assume hn: "n > 0" and htor: "top1_is_torus_scheme w n"
           and hequiv: "top1_scheme_equiv scheme w"
       \<comment> \<open>X is quotient of w (by scheme\\_equiv\\_preserves\\_quotient).\<close>
