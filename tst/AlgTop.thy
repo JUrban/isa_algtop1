@@ -15902,7 +15902,15 @@ proof -
     have "\<phi>_bar (?mulA ?\<beta>A ?\<beta>A) = ?mulAG (\<phi>_bar ?\<beta>A) (\<phi>_bar ?\<beta>A)"
       using h\<phi>_hom h\<beta>_in unfolding top1_group_hom_on_def by (by100 blast)
     moreover have "\<phi>_bar (?mulA ?\<beta>A ?\<beta>A) = ?eAG"
-      using hrel_eq_\<beta>2 sorry \<comment> \<open>rel\_image \<in> ker(\<phi>_bar) from \<supseteq> direction.\<close>
+    proof -
+      have "?rel_in_AbelF \<in> ?N_AbelF"
+        unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+      hence "?rel_in_AbelF \<in> top1_group_kernel_on ?AbelF ?eAG \<phi>_bar"
+        using hker_\<phi> by (by100 simp)
+      hence "\<phi>_bar ?rel_in_AbelF = ?eAG"
+        unfolding top1_group_kernel_on_def by (by100 blast)
+      thus ?thesis using hrel_eq_\<beta>2 by (by100 simp)
+    qed
     ultimately show ?thesis by (by100 simp)
   qed
 
@@ -15919,7 +15927,12 @@ proof -
   proof -
     have "?eAG \<in> ?AbelG" using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
     moreover have "top1_group_pow ?mulAG ?eAG ?eAG 1 = ?eAG"
-      using hAbelG_grp unfolding top1_is_group_on_def sorry
+    proof -
+      have "top1_group_pow ?mulAG ?eAG ?eAG 1 = ?mulAG ?eAG ?eAG"
+        by (by100 simp)
+      also have "\<dots> = ?eAG" using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
+      finally show ?thesis .
+    qed
     ultimately show ?thesis unfolding top1_torsion_subgroup_on_def by (by100 blast)
   qed
   have h\<beta>G_torsion: "?\<beta>G \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
@@ -15927,11 +15940,28 @@ proof -
     have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?eAG"
     proof -
       have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?mulAG ?\<beta>G ?\<beta>G"
-        using hAbelG_grp h\<beta>G_in sorry \<comment> \<open>pow(x,2) = x*x.\<close>
+      proof -
+        have h2: "(2::nat) = Suc (Suc 0)" by (by100 simp)
+        have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2
+            = ?mulAG ?\<beta>G (?mulAG ?\<beta>G ?eAG)"
+          unfolding h2 by (by100 simp)
+        also have "\<dots> = ?mulAG ?\<beta>G ?\<beta>G"
+        proof -
+          have "\<forall>x\<in>?AbelG. ?mulAG x ?eAG = x"
+            using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
+          hence "?mulAG ?\<beta>G ?eAG = ?\<beta>G" using h\<beta>G_in by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+        finally show ?thesis .
+      qed
       thus ?thesis using h\<beta>G_order2 by (by100 simp)
     qed
     hence "\<exists>n. n > 0 \<and> top1_group_pow ?mulAG ?eAG ?\<beta>G n = ?eAG"
-      sorry \<comment> \<open>Witness n=2.\<close>
+    proof -
+      assume h: "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?eAG"
+      have "(2::nat) > 0" by (by100 simp)
+      with h show ?thesis by (by100 blast)
+    qed
     thus ?thesis using h\<beta>G_in unfolding top1_torsion_subgroup_on_def by (by100 blast)
   qed
 
