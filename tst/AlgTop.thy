@@ -1273,6 +1273,67 @@ qed
 lemma singleton_Bex_simp: "{r. \<exists>w'\<in>{w}. r = (f :: 'b \<Rightarrow> 'a) w'} = {f w}"
   by (by100 blast)
 
+\<comment> \<open>In an abelian group, the product of squares equals the square of the product:
+   (a0^2)(a1^2)...(an^2) = (a0*a1*...*an)^2.\<close>
+lemma abelian_foldr_concat_double:
+  assumes "top1_is_abelian_group_on G mul e invg"
+      and "\<forall>i < length xs. xs ! i \<in> G"
+  shows "foldr mul (concat (map (\<lambda>x. [x, x]) xs)) e = mul (foldr mul xs e) (foldr mul xs e)"
+  using assms(2)
+proof (induct xs)
+  case Nil
+  have "e \<in> G" using assms(1) unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+    by (by100 blast)
+  hence "mul e e = e" using assms(1) unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+    by (by100 blast)
+  thus ?case by (by100 simp)
+next
+  case (Cons a xs)
+  have ha: "a \<in> G" using Cons(2) by (by100 auto)
+  have hxs: "\<forall>i<length xs. xs ! i \<in> G" using Cons(2) by (by100 auto)
+  have hIH: "foldr mul (concat (map (\<lambda>x. [x, x]) xs)) e = mul (foldr mul xs e) (foldr mul xs e)"
+    using Cons(1) hxs by (by100 blast)
+  have hG: "top1_is_group_on G mul e invg"
+    using assms(1) unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hcl: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y \<in> G"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hassoc: "\<And>x y z. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> z \<in> G \<Longrightarrow> mul (mul x y) z = mul x (mul y z)"
+    using hG unfolding top1_is_group_on_def by (by100 blast)
+  have hcomm: "\<And>x y. x \<in> G \<Longrightarrow> y \<in> G \<Longrightarrow> mul x y = mul y x"
+    using assms(1) unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 blast)
+  have hfxs: "foldr mul xs e \<in> G"
+    using foldr_mul_closed[OF hG] hxs by (by100 blast)
+  \<comment> \<open>LHS: foldr mul (a # a # concat(map...xs)) e = mul a (mul a (foldr ... xs))\<close>
+  have "foldr mul (concat (map (\<lambda>x. [x, x]) (a # xs))) e
+      = mul a (mul a (foldr mul (concat (map (\<lambda>x. [x, x]) xs)) e))"
+    by (by100 simp)
+  also have "\<dots> = mul a (mul a (mul (foldr mul xs e) (foldr mul xs e)))"
+    using hIH by (by100 simp)
+  \<comment> \<open>RHS: mul (mul a (foldr xs)) (mul a (foldr xs))\<close>
+  \<comment> \<open>Need: a*(a*(P*P)) = (a*P)*(a*P) where P = foldr xs.
+     a*(a*(P*P)) = a*((a*P)*P)     [assoc]
+                 = a*((P*a)*P)     [comm a P]
+                 = a*(P*(a*P))     [assoc]
+                 = (a*P)*(a*P)     [assoc]\<close>
+  also have "\<dots> = mul (mul a (foldr mul xs e)) (mul a (foldr mul xs e))"
+  proof -
+    have "mul a (mul a (mul (foldr mul xs e) (foldr mul xs e)))
+        = mul a (mul (mul a (foldr mul xs e)) (foldr mul xs e))"
+      using hassoc[OF ha hfxs hfxs] hassoc[OF ha _ hfxs] hcl ha hfxs by (by100 metis)
+    also have "\<dots> = mul a (mul (foldr mul xs e) (mul a (foldr mul xs e)))"
+      using hcomm[OF ha hfxs] hassoc hcl ha hfxs by (by100 metis)
+    also have "\<dots> = mul (mul a (foldr mul xs e)) (mul a (foldr mul xs e))"
+    proof -
+      have "mul a (foldr mul xs e) \<in> G" using hcl ha hfxs by (by100 blast)
+      thus ?thesis using hassoc ha hfxs by (by100 metis)
+    qed
+    finally show ?thesis .
+  qed
+  also have "\<dots> = mul (foldr mul (a # xs) e) (foldr mul (a # xs) e)"
+    by (by100 simp)
+  finally show ?case .
+qed
+
 theorem Theorem_75_4_H1_m_projective:
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_m_fold_projective_on X TX m"
@@ -1675,9 +1736,9 @@ proof -
      Then in abelian AbelF: a0^2*a1^2*...*a_{m-1}^2 = (a0*a1*...*a_{m-1})^2
      by foldr\_mul\_append + induction.\<close>
   have hrel_eq_\<beta>2: "?rel_in_AbelF = ?mulA ?\<beta>A ?\<beta>A"
-    sorry \<comment> \<open>Abelian rearrangement: \<iota>A(0)^2*...*\<iota>A(m-1)^2 = (\<iota>A(0)*...*\<iota>A(m-1))^2.
-       Uses: hpF\_hom (p is hom), hom\_word\_product, foldr\_mul\_append,
-       abelian commutativity of AbelF, induction on m.\<close>
+    sorry \<comment> \<open>Abelian rearrangement via abelian\_foldr\_concat\_double:
+       rel = p(word\_product) = foldr mulA [ιA 0,ιA 0,...] eA = β².
+       Uses: hom\_word\_product, abelian\_foldr\_concat\_double, p is hom.\<close>
 
   \<comment> \<open>\<phi>_bar(\<beta>) is a torsion element of order exactly 2 in Abel(G_0).\<close>
   let ?\<beta>G = "\<phi>_bar ?\<beta>A"
