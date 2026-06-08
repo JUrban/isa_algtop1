@@ -17070,11 +17070,36 @@ lemma scheme_normal_form:
   shows "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
        \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w)
        \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w)"
-  sorry \<comment> \<open>Munkres \\<S>77: Induction on length of scheme.
-     Step 1 (projective type): Use Lemma 77.1 to collect all same-exponent pairs.
-     Step 2 (torus type): Use Lemma 77.3 to extract commutator blocks.
-     Step 3: Handle base cases (length 4).
-     Each step uses elementary operations (rotate, cancel, cut, paste, relabel, flip).\<close>
+  using assms
+proof (induction "length scheme" arbitrary: scheme rule: less_induct)
+  case (less scheme)
+  \<comment> \<open>Classify: does the scheme have a label with same-direction occurrences (projective type)?
+     Or all labels have opposite-direction occurrences (torus type)?\<close>
+  show ?case
+  proof (cases "\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
+      \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)")
+    case True
+    \<comment> \<open>Projective type: at least one label appears twice with same direction.
+       Use Lemma 77.1 to collect same-direction pairs, then Lemma 77.4 if needed.\<close>
+    show ?thesis sorry
+  next
+    case False
+    \<comment> \<open>Torus type: all labels appear with opposite directions.
+       Step 1 (torus): extract commutator blocks using Lemma 77.3.\<close>
+    show ?thesis
+    proof (cases "length scheme = 4")
+      case True
+      \<comment> \<open>Base case: length 4 torus scheme = aba\\<inverse>b\\<inverse> or aa\\<inverse>bb\\<inverse>.\<close>
+      show ?thesis sorry
+    next
+      case False
+      \<comment> \<open>Length > 4: either has cancellable adjacent pair (shorter scheme) or
+         no adjacent same labels. Apply Lemma 77.3 to extract commutator.\<close>
+      have "length scheme > 4" using less.prems(1) False by linarith
+      show ?thesis sorry
+    qed
+  qed
+qed
 
 \<comment> \<open>Predicate: a scheme w is the standard n-fold torus scheme
    a1 b1 a1\\<inverse> b1\\<inverse> ... an bn an\\<inverse> bn\\<inverse> (4n edges).\<close>
