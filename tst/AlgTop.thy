@@ -1770,7 +1770,13 @@ proof -
       \<comment> \<open>\<epsilon>(rel) = \<epsilon>(\<beta>^2) = 2\<epsilon>(\<beta>) = 2 (if hrel\_eq\_\<beta>2 is proved).
          But more directly: \<epsilon>(rel) = 2 from the relator being each generator squared.\<close>
       have h\<epsilon>_rel: "\<epsilon> ?rel_in_AbelF = 2"
-        sorry \<comment> \<open>\<epsilon>(rel) = 2\<epsilon>(\<iota>A(0)) + 0 + ... = 2.\<close>
+      proof -
+        have "\<epsilon> ?rel_in_AbelF = \<epsilon> (?mulA ?\<beta>A ?\<beta>A)" using hrel_eq_\<beta>2 by (by100 simp)
+        also have "\<dots> = \<epsilon> ?\<beta>A + \<epsilon> ?\<beta>A"
+          using h\<epsilon>_hom h\<beta>_in unfolding top1_group_hom_on_def by (by100 blast)
+        also have "\<dots> = 2" using h\<epsilon>_\<beta> by (by100 simp)
+        finally show ?thesis .
+      qed
       \<comment> \<open>If \<beta> \<in> N\_AbelF = \<langle>rel\<rangle>, then \<epsilon>(\<beta>) \<in> \<epsilon>(N\_AbelF).
          \<epsilon>(N\_AbelF) \<subseteq> \<langle>\<epsilon>(rel)\<rangle> = 2Z. But \<epsilon>(\<beta>) = 1 \<notin> 2Z.\<close>
       have h\<epsilon>_N: "\<forall>x \<in> ?N_AbelF. even (\<epsilon> x)"
