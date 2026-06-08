@@ -15350,8 +15350,186 @@ proof -
     thus "q_map p = h0 (tlist ! i) (fst p - 3 * real i, snd p)"
       unfolding q_map_def Let_def using \<open>(SOME j. j < ?m \<and> p \<in> \<Delta>copy j) = i\<close> by simp
   qed
+  \<comment> \<open>Lift h0 continuity from subspace(X,TX,Ti) to TX.\<close>
+  have h_h0_cont_X: "\<And>i. i < ?m \<Longrightarrow> top1_continuous_map_on
+      top1_standard_simplex top1_standard_simplex_topology X TX (h0 (tlist ! i))"
+  proof -
+    fix i assume hi: "i < ?m"
+    have "tlist ! i \<in> set tlist" using hi by simp
+    hence "tlist ! i \<in> \<T>0" using htlist(1) by simp
+    hence hTi_sub: "tlist ! i \<subseteq> X" using h\<T>0(2) by (by100 blast)
+    have hhomeo: "top1_homeomorphism_on top1_standard_simplex top1_standard_simplex_topology
+        (tlist ! i) (subspace_topology X TX (tlist ! i)) (h0 (tlist ! i))"
+      using h\<T>0(3) \<open>tlist ! i \<in> \<T>0\<close> by (by100 blast)
+    hence hcont_sub: "top1_continuous_map_on top1_standard_simplex top1_standard_simplex_topology
+        (tlist ! i) (subspace_topology X TX (tlist ! i)) (h0 (tlist ! i))"
+      unfolding top1_homeomorphism_on_def by (by100 blast)
+    show "top1_continuous_map_on top1_standard_simplex top1_standard_simplex_topology X TX (h0 (tlist ! i))"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix s assume "s \<in> top1_standard_simplex"
+      have "h0 (tlist ! i) s \<in> tlist ! i"
+        using hcont_sub \<open>s \<in> top1_standard_simplex\<close>
+        unfolding top1_continuous_map_on_def by (by100 blast)
+      thus "h0 (tlist ! i) s \<in> X" using hTi_sub by (by100 blast)
+    next
+      fix V assume hV: "V \<in> TX"
+      have "V \<inter> tlist ! i \<in> subspace_topology X TX (tlist ! i)"
+        unfolding subspace_topology_def using hV by (by100 blast)
+      hence "{s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V \<inter> tlist ! i}
+          \<in> top1_standard_simplex_topology"
+        using hcont_sub unfolding top1_continuous_map_on_def by (by100 blast)
+      moreover have "{s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V}
+          = {s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V \<inter> tlist ! i}"
+      proof
+        show "{s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V}
+            \<subseteq> {s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V \<inter> tlist ! i}"
+        proof
+          fix s assume "s \<in> {s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V}"
+          hence "s \<in> top1_standard_simplex" "h0 (tlist ! i) s \<in> V" by (by100 auto)+
+          moreover have "h0 (tlist ! i) s \<in> tlist ! i"
+            using hcont_sub \<open>s \<in> top1_standard_simplex\<close>
+            unfolding top1_continuous_map_on_def by (by100 blast)
+          ultimately show "s \<in> {s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V \<inter> tlist ! i}"
+            by (by100 blast)
+        qed
+      next
+        show "{s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V \<inter> tlist ! i}
+            \<subseteq> {s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V}" by (by100 blast)
+      qed
+      ultimately show "{s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V}
+          \<in> top1_standard_simplex_topology" by simp
+    qed
+  qed
   have h\<T>_cont: "\<forall>T \<in> ?\<T>. top1_continuous_map_on T
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q_map" sorry
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q_map"
+  proof (intro ballI)
+    fix T assume "T \<in> ?\<T>"
+    then obtain i where hi: "i < ?m" "T = \<Delta>copy i" by (by100 blast)
+    show "top1_continuous_map_on T
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q_map"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix p assume hp: "p \<in> T"
+      hence "p \<in> \<Delta>copy i" using hi(2) by simp
+      have "q_map p = h0 (tlist ! i) (fst p - 3 * real i, snd p)"
+        using h_qmap_on_copy[OF hi(1) \<open>p \<in> \<Delta>copy i\<close>] .
+      moreover have "(fst p - 3 * real i, snd p) \<in> top1_standard_simplex"
+        using h_inv_trans[OF \<open>p \<in> \<Delta>copy i\<close>] .
+      ultimately show "q_map p \<in> X"
+        using continuous_map_maps_to[OF h_h0_cont_X[OF hi(1)]] by simp
+    next
+      fix V assume hV: "V \<in> TX"
+      \<comment> \<open>Need: {p \\<in> T. q\\_map p \\<in> V} \\<in> subspace R² T.
+         This equals {p \\<in> \\<Delta>copy i. h0(tlist!i)(invtrans(p)) \\<in> V}.
+         From h0 continuity: {s \\<in> \\<Delta>. h0 s \\<in> V} \\<in> standard\\_simplex\\_topology.
+         Translation preserves openness.\<close>
+      have hpre_ss: "{s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V}
+          \<in> top1_standard_simplex_topology"
+        using continuous_map_preimage_open[OF h_h0_cont_X[OF hi(1)] hV] .
+      \<comment> \<open>This preimage in standard\\_simplex\\_topology = subspace R² standard\\_simplex.
+         So there exists W open in R² with preimage = W \\<inter> standard\\_simplex.\<close>
+      then obtain W where hW: "W \<in> product_topology_on top1_open_sets top1_open_sets"
+          "{s \<in> top1_standard_simplex. h0 (tlist ! i) s \<in> V} = W \<inter> top1_standard_simplex"
+        unfolding top1_standard_simplex_topology_def subspace_topology_def by (by100 blast)
+      \<comment> \<open>Translate W by (3*i, 0) to get W' open in R².\<close>
+      define W' where "W' = (\<lambda>(x,y). (x + 3 * real i, y)) ` W"
+      \<comment> \<open>Translation preserves openness in product\\_topology. This is the key step.\<close>
+      have hW'_open: "W' \<in> product_topology_on top1_open_sets top1_open_sets"
+        unfolding product_topology_on_def topology_generated_by_basis_def
+      proof (intro CollectI conjI ballI)
+        show "W' \<subseteq> UNIV" by simp
+      next
+        fix p assume "p \<in> W'"
+        then obtain s where hs: "s \<in> W" "p = (\<lambda>(x,y). (x + 3 * real i, y)) s"
+          unfolding W'_def by (by100 blast)
+        have hW_open: "W \<in> topology_generated_by_basis UNIV (product_basis top1_open_sets top1_open_sets)"
+          using hW(1) unfolding product_topology_on_def .
+        hence "\<exists>b\<in>product_basis top1_open_sets top1_open_sets. s \<in> b \<and> b \<subseteq> W"
+          using \<open>s \<in> W\<close> unfolding topology_generated_by_basis_def by (by100 blast)
+        then obtain U0 V0 where hUV: "U0 \<in> top1_open_sets" "V0 \<in> top1_open_sets"
+            "s \<in> U0 \<times> V0" "U0 \<times> V0 \<subseteq> W"
+          unfolding product_basis_def by (by100 blast)
+        define U' where "U' = (\<lambda>x. x + 3 * real i) ` U0"
+        have hU'_open: "U' \<in> top1_open_sets"
+        proof -
+          have "open U0" using hUV(1) unfolding top1_open_sets_def by simp
+          have "open ((\<lambda>x::real. x - 3 * real i) -` U0)"
+            by (rule open_vimage[OF \<open>open U0\<close>]) (intro continuous_intros)
+          moreover have "(\<lambda>x::real. x - 3 * real i) -` U0 = (\<lambda>x. x + 3 * real i) ` U0"
+            by (by100 force)
+          ultimately have "open ((\<lambda>x. 3 * real i + x) ` U0)"
+            by (simp add: add.commute)
+          moreover have "(\<lambda>x. 3 * real i + x) ` U0 = U'"
+            unfolding U'_def by (by100 force)
+          ultimately show ?thesis unfolding top1_open_sets_def by simp
+        qed
+        have "p \<in> U' \<times> V0"
+          using hUV(3) hs(2) unfolding U'_def by (cases s) (by100 force)
+        moreover have "U' \<times> V0 \<subseteq> W'"
+        proof
+          fix q assume "q \<in> U' \<times> V0"
+          then obtain u v where "u \<in> U'" "v \<in> V0" "q = (u, v)" by (by100 blast)
+          then obtain u0 where "u0 \<in> U0" "u = u0 + 3 * real i"
+            unfolding U'_def by (by100 blast)
+          hence "(u0, v) \<in> U0 \<times> V0" using \<open>v \<in> V0\<close> by simp
+          hence "(u0, v) \<in> W" using hUV(4) by (by100 blast)
+          have "q = (\<lambda>(x,y). (x + 3 * real i, y)) (u0, v)"
+            using \<open>q = (u, v)\<close> \<open>u = u0 + 3 * real i\<close> by simp
+          thus "q \<in> W'" unfolding W'_def using \<open>(u0, v) \<in> W\<close> by (by100 blast)
+        qed
+        moreover have hU'V0_basis: "U' \<times> V0 \<in> product_basis top1_open_sets top1_open_sets"
+          unfolding product_basis_def using hU'_open hUV(2) by (by100 blast)
+        ultimately show "\<exists>b\<in>product_basis top1_open_sets top1_open_sets. p \<in> b \<and> b \<subseteq> W'"
+          apply (rule_tac bexI[of _ "U' \<times> V0"])
+          apply (by100 blast)
+          apply assumption
+          done
+      qed
+      \<comment> \<open>{p \\<in> T. q\\_map p \\<in> V} = W' \\<inter> T.\<close>
+      have hpre_eq: "{p \<in> T. q_map p \<in> V} = W' \<inter> T"
+      proof
+        show "{p \<in> T. q_map p \<in> V} \<subseteq> W' \<inter> T"
+        proof
+          fix p assume hp: "p \<in> {p \<in> T. q_map p \<in> V}"
+          hence "p \<in> T" "q_map p \<in> V" by (by100 auto)+
+          hence "p \<in> \<Delta>copy i" using hi(2) by simp
+          have "(fst p - 3 * real i, snd p) \<in> top1_standard_simplex"
+            using h_inv_trans[OF \<open>p \<in> \<Delta>copy i\<close>] .
+          moreover have "h0 (tlist ! i) (fst p - 3 * real i, snd p) \<in> V"
+            using h_qmap_on_copy[OF hi(1) \<open>p \<in> \<Delta>copy i\<close>] \<open>q_map p \<in> V\<close> by simp
+          ultimately have "(fst p - 3 * real i, snd p) \<in> W"
+            using hW(2) by (by100 blast)
+          have "p = (\<lambda>(x,y). (x + 3 * real i, y)) (fst p - 3 * real i, snd p)" by simp
+          hence "p \<in> W'" unfolding W'_def
+            using \<open>(fst p - 3 * real i, snd p) \<in> W\<close> by (by100 blast)
+          thus "p \<in> W' \<inter> T" using \<open>p \<in> T\<close> by (by100 blast)
+        qed
+      next
+        show "W' \<inter> T \<subseteq> {p \<in> T. q_map p \<in> V}"
+        proof
+          fix p assume hp: "p \<in> W' \<inter> T"
+          hence "p \<in> W'" "p \<in> T" by (by100 auto)+
+          hence "p \<in> \<Delta>copy i" using hi(2) by simp
+          from \<open>p \<in> W'\<close> obtain s where hs: "s \<in> W" "p = (\<lambda>(x,y). (x + 3 * real i, y)) s"
+            unfolding W'_def by (by100 blast)
+          have "fst p - 3 * real i = fst s" "snd p = snd s"
+            using hs(2) by (cases s, simp)+
+          hence hinv: "(fst p - 3 * real i, snd p) = s" by (cases s) simp
+          have "s \<in> top1_standard_simplex"
+            using h_inv_trans[OF \<open>p \<in> \<Delta>copy i\<close>] hinv by simp
+          hence "s \<in> W \<inter> top1_standard_simplex" using \<open>s \<in> W\<close> by simp
+          hence "h0 (tlist ! i) s \<in> V" using hW(2) by (by100 blast)
+          hence "h0 (tlist ! i) (fst p - 3 * real i, snd p) \<in> V" using hinv by simp
+          hence "q_map p \<in> V" using h_qmap_on_copy[OF hi(1) \<open>p \<in> \<Delta>copy i\<close>] by simp
+          thus "p \<in> {p \<in> T. q_map p \<in> V}" using \<open>p \<in> T\<close> by (by100 blast)
+        qed
+      qed
+      thus "{p \<in> T. q_map p \<in> V} \<in> subspace_topology UNIV
+          (product_topology_on top1_open_sets top1_open_sets) T"
+        unfolding subspace_topology_def using hW'_open by (by100 blast)
+    qed
+  qed
   have h\<T>_cov: "(\<Union>T\<in>?\<T>. q_map ` T) = X"
   proof
     show "(\<Union>T\<in>?\<T>. q_map ` T) \<subseteq> X"
