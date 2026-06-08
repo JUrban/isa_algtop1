@@ -1461,7 +1461,10 @@ proof -
   have hAbelF_grp: "top1_is_group_on ?AbelF ?mulA ?eA ?invgA"
     using hAbelF_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
   have hAbelF_invg_cl: "\<forall>x\<in>?AbelF. ?invgA x \<in> ?AbelF"
-    sorry \<comment> \<open>Group closure under inverse. Times out due to large let-expanded terms.\<close>
+  proof -
+    from hAbelF_grp[unfolded top1_is_group_on_def]
+    show ?thesis by (by100 fast)
+  qed
 
   \<comment> \<open>Step 4: Get the concrete abelianization of G_0.\<close>
   let ?CG = "top1_commutator_subgroup_on G0 mul0 e0 invg0"
