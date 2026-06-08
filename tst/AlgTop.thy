@@ -17213,14 +17213,36 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                So fst s3 = fst s1.\<close>
             show ?thesis sorry
           qed
+          have htorus: "\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+              \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))"
+            by (rule \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+              \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))\<close>)
           have "snd s0 \<noteq> snd s2"
-            using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
-              \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))\<close>
-              hsch4 \<open>fst s0 = fst s2\<close> sorry
+          proof
+            assume "snd s0 = snd s2"
+            have "(0::nat) < length scheme" "2 < length scheme" "(0::nat) \<noteq> 2"
+                "fst (scheme!0) = fst s0" "fst (scheme!2) = fst s0"
+                "snd (scheme!0) = snd (scheme!2)"
+              using \<open>length scheme = 4\<close> hsch4 \<open>fst s0 = fst s2\<close> \<open>snd s0 = snd s2\<close>
+              by (simp_all add: eval_nat_numeral)
+            hence "\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+                \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
+              by (intro exI[of _ "fst s0"] exI[of _ 0] exI[of _ 2]) (by100 blast)
+            with htorus show False by simp
+          qed
           have "snd s1 \<noteq> snd s3"
-            using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
-              \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))\<close>
-              hsch4 \<open>fst s1 = fst s3\<close> sorry
+          proof
+            assume "snd s1 = snd s3"
+            have "(1::nat) < length scheme" "3 < length scheme" "(1::nat) \<noteq> 3"
+                "fst (scheme!1) = fst s1" "fst (scheme!3) = fst s1"
+                "snd (scheme!1) = snd (scheme!3)"
+              using \<open>length scheme = 4\<close> hsch4 \<open>fst s1 = fst s3\<close> \<open>snd s1 = snd s3\<close>
+              by (simp_all add: eval_nat_numeral)
+            hence "\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+                \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
+              by (intro exI[of _ "fst s1"] exI[of _ 1] exI[of _ 3]) (by100 blast)
+            with htorus show False by simp
+          qed
           \<comment> \<open>After flip\\_label: scheme ~ [(fst s0,T),(fst s1,T),(fst s0,F),(fst s1,F)].
              This is a torus scheme of type n=1 (with labels fst s0, fst s1).
              Then relabel to standard labels gives top1\\_n\\_torus\\_scheme 1.\<close>
