@@ -17148,23 +17148,25 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
            Cancel to get length 2 scheme. Then uncancel to sphere.\<close>
         from True obtain i where hi: "i < 3" "fst (scheme!i) = fst (scheme!(i+1))" by (by100 blast)
         \<comment> \<open>Since torus type, the adjacent pair has opposite directions.\<close>
-        have hsnd: "snd (scheme!i) \<noteq> snd (scheme!(i+1))"
-          using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
-            \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))\<close>
-            hi \<open>length scheme = 4\<close> sorry
-        \<comment> \<open>Cancel the adjacent pair: scheme ~ shorter scheme of length 2.\<close>
-        \<comment> \<open>The shorter scheme has the remaining label (opposite directions) = sphere seed.\<close>
-        \<comment> \<open>Uncancel with fresh label to get sphere form.\<close>
-        show ?thesis sorry
+        \<comment> \<open>Cancel → length 2 → uncancel → sphere form [(a,T),(a,F),(b,T),(b,F)].\<close>
+        \<comment> \<open>All length 4 torus schemes with adjacent same-label are equivalent to sphere.\<close>
+        have "\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)]"
+          sorry \<comment> \<open>Cancel adjacent inverse pair \\<to> length 2 \\<to> uncancel with fresh label \\<to> sphere.\<close>
+        thus ?thesis by (by100 blast)
       next
         case no_adj: False
-        \<comment> \<open>No adjacent same-label \\<Rightarrow> labels alternate: a?b?a?b? pattern.
-           With torus type: opposite directions. So after rotation + flip\\_label,
-           we get [(a,T),(b,T),(a,F),(b,F)] = torus n=1.\<close>
-        \<comment> \<open>The scheme is equivalent to a torus scheme of type n=1.\<close>
-        show ?thesis sorry \<comment> \<open>Alternating pattern + rotation + flip\\_label \\<Rightarrow> torus n=1.
-           All 6 arrangements of 3 remaining elements after fixing first reduce to
-           sphere or torus via at most 2 elementary operations.\<close>
+        \<comment> \<open>No adjacent same-label \\<Rightarrow> labels alternate.
+           scheme = [(a,d1),(b,d2),(a,d3),(b,d4)] where a \\<noteq> b, d1\\<noteq>d3, d2\\<noteq>d4.
+           After rotate + flip\\_label + relabel: equivalent to torus n=1.\<close>
+        \<comment> \<open>With length 4, 2 labels, alternating: scheme ~ torus n=1.
+           This uses: the scheme is equivalent to [(a,T),(b,T),(a,F),(b,F)]
+           via at most rotate + flip\\_label + relabel.\<close>
+        have "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w"
+          sorry \<comment> \<open>Length 4 torus with alternating labels ~ standard torus n=1.
+             Proof: rotate to put first occurrence of some label at position 0,
+             labels must alternate (a,b,a,b), then flip\\_label if needed to get
+             standard directions, then relabel to standard labels.\<close>
+        thus ?thesis by (by100 blast)
       qed
     next
       case False
