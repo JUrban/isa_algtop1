@@ -14914,8 +14914,33 @@ proof -
         (\<forall>i\<le>k. 0 \<le> coeffs i) \<and> (\<Sum>i\<le>k. coeffs i) = 1
         \<and> x = (\<Sum>i\<le>k. coeffs i * vx i) \<and> y = (\<Sum>i\<le>k. coeffs i * vy i)}" for k
     \<comment> \<open>Base: Q 0 = {(vx 0, vy 0)} is compact (singleton).\<close>
+    have hQ0_eq: "Q 0 = {(vx 0, vy 0)}"
+    proof
+      show "Q 0 \<subseteq> {(vx 0, vy 0)}"
+        unfolding Q_def by (by5000 force)
+      show "{(vx 0, vy 0)} \<subseteq> Q 0"
+        unfolding Q_def
+      proof
+        fix p assume "p \<in> {(vx 0, vy 0)}"
+        hence "p = (vx 0, vy 0)" by simp
+        define coeffs :: "nat \<Rightarrow> real" where "coeffs = (\<lambda>_. 1)"
+        have "(\<forall>i\<le>(0::nat). (0::real) \<le> coeffs i) \<and> (\<Sum>i\<le>0. coeffs i) = 1
+            \<and> vx 0 = (\<Sum>i\<le>0. coeffs i * vx i) \<and> vy 0 = (\<Sum>i\<le>0. coeffs i * vy i)"
+          unfolding coeffs_def by simp
+        thus "p \<in> {(x, y). \<exists>coeffs. (\<forall>i\<le>0. 0 \<le> coeffs i) \<and> (\<Sum>i\<le>0. coeffs i) = 1
+            \<and> x = (\<Sum>i\<le>0. coeffs i * vx i) \<and> y = (\<Sum>i\<le>0. coeffs i * vy i)}"
+          unfolding \<open>p = (vx 0, vy 0)\<close> by (by100 blast)
+      qed
+    qed
     have hQ0: "compact (Q 0)"
-      sorry \<comment> \<open>Q 0 = {(vx 0, vy 0)} (singleton). Compact because finite.\<close>
+      unfolding hQ0_eq
+    proof (rule compactI)
+      fix C :: "(real \<times> real) set set"
+      assume "\<forall>c\<in>C. open c" and "{(vx 0, vy 0)} \<subseteq> \<Union>C"
+      then obtain U where "U \<in> C" "(vx 0, vy 0) \<in> U" by (by100 blast)
+      thus "\<exists>D\<subseteq>C. finite D \<and> {(vx 0, vy 0)} \<subseteq> \<Union>D"
+        by (intro exI[of _ "{U}"]) (by100 auto)
+    qed
     \<comment> \<open>Step: Q (Suc k) = {t*v\\_{k+1} + (1-t)*p | t \\<in> [0,1], p \\<in> Q k}.
        This is the continuous image of [0,1] \\<times> Q k, hence compact.\<close>
     have hQstep: "\<And>k. compact (Q k) \<Longrightarrow> compact (Q (Suc k))" sorry
