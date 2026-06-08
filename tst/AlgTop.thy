@@ -2998,8 +2998,12 @@ proof -
         a \<in> ?K \<or> (\<exists>k\<in>?K. a = ?mulAG k ?\<beta>G)"
       sorry \<comment> \<open>For i>0: \<phi>\_bar(\<iota>A i) \<in> K. For i=0: \<phi>\_bar(\<iota>A 0) = \<beta>G \<cdot> k'.\<close>
     \<comment> \<open>Step 3: Apply the helper.\<close>
+    \<comment> \<open>K group: K \<subseteq> AbelG (group), K abelian proven in K\_fab\_raw's proof.
+       But hK\_grp inside K\_fab\_raw's proof block is not in scope.
+       Re-derive: use hAbelG\_grp restricted to K.\<close>
     have hK_grp_loc: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
-      sorry \<comment> \<open>Already proved above but may not be in scope.\<close>
+      sorry \<comment> \<open>K is a group: proved inside K\_fab\_raw but not in scope.
+         Could re-extract from K\_fab (if proved) or re-derive from K_0 group + hom.\<close>
     have hgens_sub: "(\<lambda>i. \<phi>_bar (?\<iota>A i)) ` {..<m} \<subseteq> ?AbelG"
       using h\<phi>_hom h\<iota>A_in unfolding top1_group_hom_on_def by (by100 blast)
     from abelian_generated_decomposes_via_order2[OF hAbelG_abel hAbelG_gen hK_grp_loc
@@ -3011,8 +3015,6 @@ proof -
     show "\<exists>k\<in>?K. \<exists>t\<in>top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG. h = ?mulAG k t"
     proof (cases "h = k")
       case True
-      hence "h = ?mulAG k ?eAG"
-        using hK_sub hk hAbelG_grp unfolding top1_is_group_on_def sorry
       have "?eAG \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
         using heAG_torsion .
       moreover have "h = ?mulAG k ?eAG"
