@@ -17207,11 +17207,56 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             thus False using \<open>fst (scheme!1) = fst (scheme!2)\<close> by simp
           qed
           have "fst s1 = fst s3"
-          proof -
-            \<comment> \<open>Only 2 distinct labels. s3 must have label fst s0 or fst s1.
-               If fst s3 = fst s0 = fst s2: then fst s0 appears 3 times (0,2,3) \\<Rightarrow> contradicts proper.
-               So fst s3 = fst s1.\<close>
-            show ?thesis sorry
+          proof (rule ccontr)
+            assume "fst s1 \<noteq> fst s3"
+            \<comment> \<open>fst s3 \\<noteq> fst s1 and fst s3 \\<noteq> fst s0 (otherwise fst s0 appears at 0,2,3 = 3 times).
+               So fst s3 is a 3rd label. But scheme has only 2 labels (proper, length 4).
+               Contradiction: fst s3 appears only at position 3, card = 1.\<close>
+            have hproper_s0: "card {i. i < length scheme \<and> fst (scheme!i) = fst s0} \<in> {0, 2}"
+            proof -
+              from less.prems(2) have "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}" .
+              thus ?thesis by (by100 blast)
+            qed
+            have "fst s3 \<noteq> fst s0"
+            proof
+              assume "fst s3 = fst s0"
+              have "{0::nat, 2, 3} \<subseteq> {i. i < length scheme \<and> fst (scheme!i) = fst s0}"
+                using hsch4 \<open>length scheme = 4\<close> \<open>fst s0 = fst s2\<close> \<open>fst s3 = fst s0\<close>
+                by (simp add: eval_nat_numeral)
+              hence "card {0::nat, 2, 3} \<le> card {i. i < length scheme \<and> fst (scheme!i) = fst s0}"
+                by (intro card_mono) simp
+              hence "3 \<le> card {i. i < length scheme \<and> fst (scheme!i) = fst s0}" by simp
+              hence "card {i. i < length scheme \<and> fst (scheme!i) = fst s0} \<ge> 3" by simp
+              moreover from hproper_s0 have "card {i. i < length scheme \<and> fst (scheme!i) = fst s0} = 0
+                  \<or> card {i. i < length scheme \<and> fst (scheme!i) = fst s0} = 2" by (by100 blast)
+              ultimately show False by linarith
+            qed
+            \<comment> \<open>Now fst s3 \\<noteq> fst s0 and fst s3 \\<noteq> fst s1. So fst s3 appears only at position 3.
+               card = 1, but proper says {0, 2}. Contradiction.\<close>
+            have "{i. i < length scheme \<and> fst (scheme!i) = fst s3} = {3}"
+            proof
+              show "{i. i < length scheme \<and> fst (scheme!i) = fst s3} \<subseteq> {3}"
+              proof
+                fix j assume "j \<in> {i. i < length scheme \<and> fst (scheme!i) = fst s3}"
+                hence hj: "j < 4" "fst (scheme!j) = fst s3" using \<open>length scheme = 4\<close> by auto
+                show "j \<in> {3}"
+                proof -
+                  have "j \<in> {0,1,2,3}" using hj(1) by (simp add: eval_nat_numeral, by100 auto)
+                  moreover have "j = 0 \<Longrightarrow> fst s3 = fst s0" using hj(2) hsch4 by simp
+                  moreover have "j = 1 \<Longrightarrow> fst s3 = fst s1" using hj(2) hsch4 by simp
+                  moreover have "j = 2 \<Longrightarrow> fst s3 = fst s2" using hj(2) hsch4 by (simp add: eval_nat_numeral)
+                  ultimately show "j \<in> {3}" using \<open>fst s3 \<noteq> fst s0\<close> \<open>fst s1 \<noteq> fst s3\<close> \<open>fst s0 = fst s2\<close>
+                    by (simp add: eval_nat_numeral, by100 auto)
+                qed
+              qed
+            next
+              show "{3} \<subseteq> {i. i < length scheme \<and> fst (scheme!i) = fst s3}"
+                using hsch4 \<open>length scheme = 4\<close> by (simp add: eval_nat_numeral)
+            qed
+            hence "card {i. i < length scheme \<and> fst (scheme!i) = fst s3} = 1" by simp
+            moreover have "card {i. i < length scheme \<and> fst (scheme!i) = fst s3} \<in> {0, 2}"
+              using less.prems(2) by simp
+            ultimately show False by simp
           qed
           have htorus: "\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
               \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))"
