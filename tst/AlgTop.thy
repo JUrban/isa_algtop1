@@ -15761,7 +15761,19 @@ proof -
         by (rule scheme_equiv_preserves_quotient[OF hsch hequiv])
       hence "top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
         using hproj unfolding top1_is_projective_scheme_def by simp
-      show ?thesis sorry \<comment> \<open>m=1: dunce cap case. m\\<ge>2: quotient\\_of\\_scheme directly.\<close>
+      show ?thesis
+      proof (cases "m \<ge> 2")
+        case True
+        hence "top1_is_m_fold_projective_on X TX m"
+          unfolding top1_is_m_fold_projective_on_def
+          using \<open>top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)\<close> by simp
+        have "top1_homeomorphism_on X TX X TX id"
+          sorry \<comment> \<open>Same identity homeomorphism as torus case. TODO: factor out.\<close>
+        thus ?thesis using hm \<open>top1_is_m_fold_projective_on X TX m\<close> by (by5000 blast)
+      next
+        case False hence "m = 1" using hm by linarith
+        show ?thesis sorry \<comment> \<open>m=1: projective scheme = aa (2 edges). Quotient = RP². Need dunce\\_cap.\<close>
+      qed
     qed
   qed
 qed
