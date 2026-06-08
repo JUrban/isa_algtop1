@@ -1975,9 +1975,71 @@ proof -
      If a \<in> K_0 \<cap> N\_AbelF, then \<epsilon>_0(a) = 0 and a \<in> \<langle>rel\<rangle>.
      Since \<epsilon>_0(\<beta>) = 1, elements of \<langle>\<beta>^2\<rangle> have \<epsilon>_0 value in 2Z.
      a \<in> K_0 means \<epsilon>_0(a) = 0, so a = pow(\<beta>^2, 0) = eA.\<close>
+  \<comment> \<open>Re-derive \<epsilon>_0(\<beta>) = 1 at this level (was proved inside \<beta>\<noteq>e proof block).\<close>
+  have h\<epsilon>0_\<beta>: "\<epsilon>0 ?\<beta>A = 1"
+  proof -
+    have hZ_grp: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+      using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+        top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+    have "\<forall>i < length ?\<beta>_list. ?\<beta>_list ! i \<in> ?AbelF"
+      using h\<iota>A_in by (by100 auto)
+    hence "\<epsilon>0 ?\<beta>A = foldr (+) (map \<epsilon>0 ?\<beta>_list) (0::int)"
+      using hom_foldr_mul[OF hAbelF_grp hZ_grp h\<epsilon>0_hom] by (by100 blast)
+    also have "\<dots> = foldr (+) (map (\<epsilon>0 \<circ> ?\<iota>A) [0..<m]) 0" by (by100 simp)
+    also have "\<dots> = 1"
+    proof -
+      have hmap_eq: "map (\<epsilon>0 \<circ> ?\<iota>A) [0..<m] = map (\<lambda>i::nat. if i = 0 then (1::int) else 0) [0..<m]"
+        using h\<epsilon>0_0 h\<epsilon>0_rest by (by100 auto)
+      have "foldr (+) (map (\<lambda>i::nat. if i = 0 then (1::int) else 0) [0..<m]) 0 = 1"
+        using hm1 by (induct m, by100 simp, by100 simp)
+      thus ?thesis unfolding hmap_eq[symmetric] by (by100 simp)
+    qed
+    finally show ?thesis .
+  qed
+  have h\<epsilon>0_rel: "\<epsilon>0 ?rel_in_AbelF = 2"
+  proof -
+    have "\<epsilon>0 ?rel_in_AbelF = \<epsilon>0 (?mulA ?\<beta>A ?\<beta>A)" using hrel_eq_\<beta>2 by (by100 simp)
+    also have "\<dots> = \<epsilon>0 ?\<beta>A + \<epsilon>0 ?\<beta>A"
+      using h\<epsilon>0_hom h\<beta>_in unfolding top1_group_hom_on_def by (by100 blast)
+    also have "\<dots> = 2" using h\<epsilon>0_\<beta> by (by100 simp)
+    finally show ?thesis .
+  qed
   have hK0_ker_trivial: "{a \<in> ?AbelF. \<epsilon>0 a = 0} \<inter> ?N_AbelF = {?eA}"
-    sorry \<comment> \<open>K_0 \<cap> N\_AbelF = {eA}: \<epsilon>_0(pow(\<beta>,2k)) = 2k, so 2k=0 forces a=eA.
-       Uses: \<epsilon>_0(\<beta>)=1 (re-derive from h\<epsilon>0\_0+h\<epsilon>0\_rest), structure of N\_AbelF as cyclic.\<close>
+  proof (rule set_eqI, rule iffI)
+    fix a assume ha: "a \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0} \<inter> ?N_AbelF"
+    hence ha_in: "a \<in> ?AbelF" and h\<epsilon>0a: "\<epsilon>0 a = 0" and ha_N: "a \<in> ?N_AbelF" by (by100 blast)+
+    \<comment> \<open>a \<in> N\_AbelF. By subgroup\_generated\_word\_repr (abelian group version):
+       a is a word in {rel, invg(rel)}. In abelian group this means
+       a = pow(rel, k) for some k \<ge> 0, or a = pow(invg(rel), k).
+       Either way, \<epsilon>_0(a) = \<plusminus>k \<cdot> \<epsilon>_0(rel) = \<plusminus>2k.
+       Since \<epsilon>_0(a) = 0, k = 0, so a = eA.\<close>
+    \<comment> \<open>Use the preimage approach: {a \<in> AbelF | \<epsilon>_0(a) = 0} is a normal subgroup
+       that does NOT contain rel (since \<epsilon>_0(rel) = 2 \<noteq> 0).
+       N\_AbelF = normal\_closure({rel}). If a \<in> N\_AbelF \<cap> ker(\<epsilon>_0), then
+       \<epsilon>_0(a) = 0 but a is in the smallest normal subgroup containing rel.
+       Key: \<epsilon>_0 restricted to N\_AbelF is injective (since \<epsilon>_0(rel) generates 2Z
+       and the map from N\_AbelF to 2Z is injective for cyclic groups).\<close>
+    show "a \<in> {?eA}" sorry
+  next
+    fix a assume "a \<in> {?eA}"
+    hence "a = ?eA" by (by100 blast)
+    have "?eA \<in> ?AbelF" using hAbelF_grp unfolding top1_is_group_on_def by (by100 blast)
+    have "\<epsilon>0 ?eA = 0"
+    proof -
+      have "top1_group_hom_on ?AbelF ?mulA (UNIV::int set) (+) \<epsilon>0" using h\<epsilon>0_hom .
+      have hZ_grp: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+          top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+      hence "\<epsilon>0 ?eA = (0::int)"
+        using hom_preserves_id[OF hAbelF_grp hZ_grp h\<epsilon>0_hom] by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    have "?eA \<in> ?N_AbelF"
+      using hN_normal unfolding top1_normal_subgroup_on_def top1_is_group_on_def
+      by (by100 blast)
+    show "a \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0} \<inter> ?N_AbelF"
+      using \<open>a = ?eA\<close> \<open>?eA \<in> ?AbelF\<close> \<open>\<epsilon>0 ?eA = 0\<close> \<open>?eA \<in> ?N_AbelF\<close> by (by100 blast)
+  qed
 
   have h\<phi>_inj_K0: "inj_on \<phi>_bar {a \<in> ?AbelF. \<epsilon>0 a = 0}"
     sorry \<comment> \<open>From hK0\_ker\_trivial: \<phi>\_bar(a) = \<phi>\_bar(b) \<Longrightarrow> a\<cdot>b^{-1} \<in> ker \<cap> K_0 = {eA}.\<close>
