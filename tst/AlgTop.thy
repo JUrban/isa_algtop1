@@ -17178,10 +17178,36 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
            This uses: the scheme is equivalent to [(a,T),(b,T),(a,F),(b,F)]
            via at most rotate + flip\\_label + relabel.\<close>
         have "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w"
-          sorry \<comment> \<open>Length 4 torus with alternating labels ~ standard torus n=1.
-             Proof: rotate to put first occurrence of some label at position 0,
-             labels must alternate (a,b,a,b), then flip\\_label if needed to get
-             standard directions, then relabel to standard labels.\<close>
+        proof -
+          \<comment> \<open>The scheme has length 4, 2 distinct labels, alternating, opposite directions.
+             After flip\\_label and relabel: [(0,T),(1,T),(0,F),(1,F)] = torus n=1.\<close>
+          \<comment> \<open>Extract the 4 elements.\<close>
+          obtain s0 s1 s2 s3 where hsch4: "scheme = [s0, s1, s2, s3]"
+            using \<open>length scheme = 4\<close> by (cases scheme; simp; cases "tl scheme"; simp;
+              cases "tl (tl scheme)"; simp; cases "tl (tl (tl scheme))"; simp)
+          \<comment> \<open>Properties: alternating labels, opposite directions.\<close>
+          have "fst s0 \<noteq> fst s1"
+          proof -
+            from no_adj have "\<not> (fst (scheme!0) = fst (scheme!1))" by (by100 auto)
+            thus ?thesis using hsch4 by simp
+          qed
+          have "fst s0 = fst s2"
+            using less.prems(2) hsch4 \<open>fst s0 \<noteq> fst s1\<close> sorry
+          have "fst s1 = fst s3"
+            using less.prems(2) hsch4 \<open>fst s0 \<noteq> fst s1\<close> sorry
+          have "snd s0 \<noteq> snd s2"
+            using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+              \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))\<close>
+              hsch4 \<open>fst s0 = fst s2\<close> sorry
+          have "snd s1 \<noteq> snd s3"
+            using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+              \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))\<close>
+              hsch4 \<open>fst s1 = fst s3\<close> sorry
+          \<comment> \<open>After flip\\_label: scheme ~ [(fst s0,T),(fst s1,T),(fst s0,F),(fst s1,F)].
+             This is a torus scheme of type n=1 (with labels fst s0, fst s1).
+             Then relabel to standard labels gives top1\\_n\\_torus\\_scheme 1.\<close>
+          show ?thesis sorry
+        qed
         thus ?thesis by (by100 blast)
       qed
     next
