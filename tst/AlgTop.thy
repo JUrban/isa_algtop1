@@ -1631,6 +1631,43 @@ proof (intro conjI)
   qed
 qed
 
+\<comment> \<open>In an abelian group: pow(mul a b, n) = mul(pow(a,n))(pow(b,n)).\<close>
+lemma abelian_group_pow_mul:
+  assumes habel: "top1_is_abelian_group_on G mul e invg"
+      and ha: "a \<in> G" and hb: "b \<in> G"
+  shows "top1_group_pow mul e (mul a b) n = mul (top1_group_pow mul e a n) (top1_group_pow mul e b n)"
+proof (induct n)
+  case 0 thus ?case
+  proof -
+    have "e \<in> G"
+      using habel unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 blast)
+    have "mul e e = e"
+      using habel \<open>e \<in> G\<close> unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 blast)
+    thus ?thesis by (by100 simp)
+  qed
+next
+  case (Suc n)
+  have hgrp: "top1_is_group_on G mul e invg"
+    using habel unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hpow_a: "top1_group_pow mul e a n \<in> G"
+    using group_pow_in_group[OF hgrp ha] by (by100 blast)
+  have hpow_b: "top1_group_pow mul e b n \<in> G"
+    using group_pow_in_group[OF hgrp hb] by (by100 blast)
+  have hab: "mul a b \<in> G"
+    using hgrp ha hb unfolding top1_is_group_on_def by (by100 blast)
+  \<comment> \<open>pow(mul a b, Suc n) = mul (mul a b) (pow(mul a b, n))
+     = mul (mul a b) (mul(pow a n)(pow b n))  [IH]
+     Rearrange using abelian + assoc.\<close>
+  have "top1_group_pow mul e (mul a b) (Suc n)
+      = mul (mul a b) (top1_group_pow mul e (mul a b) n)"
+    by (by100 simp)
+  also have "\<dots> = mul (mul a b) (mul (top1_group_pow mul e a n) (top1_group_pow mul e b n))"
+    using Suc by (by100 simp)
+  also have "\<dots> = mul (top1_group_pow mul e a (Suc n)) (top1_group_pow mul e b (Suc n))"
+    sorry \<comment> \<open>Abelian rearrangement: mul(a\<cdot>b)(pa\<cdot>pb) = mul(a\<cdot>pa)(b\<cdot>pb).\<close>
+  finally show ?case .
+qed
+
 \<comment> \<open>A free abelian group is torsion-free: if pow(x,n) = e with n > 0, then x = e.
    Proof: use coordinate projections \<epsilon>_s. hom\_group\_pow gives \<epsilon>_s(pow(x,n)) = n\<cdot>\<epsilon>_s(x).
    If pow(x,n) = e, then n\<cdot>\<epsilon>_s(x) = 0 for all s, so \<epsilon>_s(x) = 0.
@@ -4398,11 +4435,74 @@ proof -
            In abelian group, torsion elements form a subgroup.\<close>
         have hk'_eq2: "k' = ?mulAG h ?\<beta>G" using hk'_eq hinv\<beta>_eq by (by100 simp)
         \<comment> \<open>Use abelian\_torsion\_product: product of torsion elements is torsion.\<close>
-        show ?thesis
-          sorry \<comment> \<open>Product of torsion elements in abelian group is torsion.
-             h torsion (order n\_h), \<beta>G torsion (order 2).
-             pow(mul(h,\<beta>G), 2*n\_h) = eAG by abelian pow-mul distributivity.
-             So k' = mul(h,\<beta>G) is torsion.\<close>
+        \<comment> \<open>pow(k', 2*n\_h) = mul(pow(h,2*n\_h))(pow(\<beta>G,2*n\_h)) = mul(eAG)(eAG) = eAG.\<close>
+        have hpow_k'_eq: "top1_group_pow ?mulAG ?eAG k' (n_h + n_h) =
+            ?mulAG (top1_group_pow ?mulAG ?eAG h (n_h + n_h))
+                   (top1_group_pow ?mulAG ?eAG ?\<beta>G (n_h + n_h))"
+          using abelian_group_pow_mul[OF hAbelG_abel hh h\<beta>G_in, of "n_h + n_h"]
+            hk'_eq2 by (by100 simp)
+        \<comment> \<open>pow(h, 2*n\_h) = eAG (since pow(h,n\_h)=eAG, use group\_pow\_add).\<close>
+        have hmul_ee: "?mulAG ?eAG ?eAG = ?eAG"
+          using hAbelG_grp unfolding top1_is_group_on_def by (by100 fast)
+        have hpow_h_nn: "top1_group_pow ?mulAG ?eAG h (n_h + n_h) = ?eAG"
+        proof -
+          have "top1_group_pow ?mulAG ?eAG h (n_h + n_h)
+              = ?mulAG (top1_group_pow ?mulAG ?eAG h n_h) (top1_group_pow ?mulAG ?eAG h n_h)"
+            using group_pow_add[OF hAbelG_grp hh] by (by100 blast)
+          thus ?thesis using hpow hmul_ee by (by100 simp)
+        qed
+        \<comment> \<open>pow(\<beta>G, 2*n\_h) = eAG (since pow(\<beta>G,2)=eAG, use group\_pow\_add).\<close>
+        \<comment> \<open>pow(\<beta>G, n\_h + n\_h) = eAG.\<close>
+        have hpow_\<beta>_nn: "top1_group_pow ?mulAG ?eAG ?\<beta>G (n_h + n_h) = ?eAG"
+        proof -
+          have "top1_group_pow ?mulAG ?eAG ?\<beta>G (n_h + n_h)
+              = ?mulAG (top1_group_pow ?mulAG ?eAG ?\<beta>G n_h) (top1_group_pow ?mulAG ?eAG ?\<beta>G n_h)"
+            using group_pow_add[OF hAbelG_grp h\<beta>G_in] by (by100 blast)
+          \<comment> \<open>pow(\<beta>G, n\_h) has order dividing 2 (since \<beta>G has order 2).
+             So pow(pow(\<beta>G,n\_h), 2) = pow(\<beta>G, 2*n\_h). But simpler:
+             pow(\<beta>G, n\_h)^2 = eAG because pow(\<beta>G,2)=eAG and by abelian\_group\_pow\_mul:
+             pow(\<beta>G, n\_h+n\_h) = mul(pow(\<beta>G,n\_h))(pow(\<beta>G,n\_h)).\<close>
+          \<comment> \<open>Use hom approach: the map x -> pow(x,n\_h) is NOT a hom, but
+             pow(\<beta>G, n\_h) = pow(\<beta>G, n\_h), and its square = pow(\<beta>G, 2*n\_h).
+             pow(\<beta>G, 2*n\_h) = pow(pow(\<beta>G,2), n\_h) = pow(eAG, n\_h) = eAG.
+             But formalizing pow(pow(x,m),n) = pow(x,m*n) needs a group\_pow\_mul lemma.\<close>
+          \<comment> \<open>Direct approach: mul(pow(\<beta>G,n\_h), pow(\<beta>G,n\_h)) = pow(\<beta>G, n\_h+n\_h) [by group\_pow\_add].
+             And pow(\<beta>G, n\_h+n\_h) = pow(\<beta>G, n\_h) \<cdot> pow(\<beta>G, n\_h) is what we have.
+             We need this = eAG.
+             Use abelian\_group\_pow\_mul on \<beta>G^2=eAG:
+             pow(\<beta>G, n\_h+n\_h) = pow(mul(\<beta>G)(\<beta>G), n\_h) [if we had pow\_mul\_comm].
+             Actually no, abelian\_group\_pow\_mul gives pow(mul a b, n) = mul(pow(a,n))(pow(b,n)).
+             Set a=b=\<beta>G: pow(mul \<beta>G \<beta>G, n\_h) = mul(pow(\<beta>G,n\_h))(pow(\<beta>G,n\_h)).
+             But mul \<beta>G \<beta>G = eAG, so pow(eAG, n\_h) = mul(pow(\<beta>G,n\_h))(pow(\<beta>G,n\_h)).
+             pow(eAG, n\_h) = eAG (pow of identity is identity).\<close>
+          have hpow_e: "top1_group_pow ?mulAG ?eAG ?eAG n_h = ?eAG"
+          proof (induct n_h)
+            case 0 thus ?case by (by100 simp)
+          next
+            case (Suc n)
+            have "top1_group_pow ?mulAG ?eAG ?eAG (Suc n) = ?mulAG ?eAG (top1_group_pow ?mulAG ?eAG ?eAG n)"
+              by (by100 simp)
+            also have "\<dots> = ?mulAG ?eAG ?eAG" using Suc by (by100 simp)
+            also have "\<dots> = ?eAG" using hmul_ee .
+            finally show ?case .
+          qed
+          from abelian_group_pow_mul[OF hAbelG_abel h\<beta>G_in h\<beta>G_in, of n_h]
+          have "top1_group_pow ?mulAG ?eAG (?mulAG ?\<beta>G ?\<beta>G) n_h
+              = ?mulAG (top1_group_pow ?mulAG ?eAG ?\<beta>G n_h) (top1_group_pow ?mulAG ?eAG ?\<beta>G n_h)"
+            by (by100 blast)
+          hence "top1_group_pow ?mulAG ?eAG ?eAG n_h
+              = ?mulAG (top1_group_pow ?mulAG ?eAG ?\<beta>G n_h) (top1_group_pow ?mulAG ?eAG ?\<beta>G n_h)"
+            using h\<beta>G_order2 by (by100 simp)
+          hence "?eAG = ?mulAG (top1_group_pow ?mulAG ?eAG ?\<beta>G n_h) (top1_group_pow ?mulAG ?eAG ?\<beta>G n_h)"
+            using hpow_e by (by100 simp)
+          thus ?thesis using group_pow_add[OF hAbelG_grp h\<beta>G_in, of n_h n_h] by (by100 simp)
+        qed
+        have "top1_group_pow ?mulAG ?eAG k' (n_h + n_h) = ?mulAG ?eAG ?eAG"
+          using hpow_k'_eq hpow_h_nn hpow_\<beta>_nn by (by100 simp)
+        also have "\<dots> = ?eAG" using hmul_ee .
+        finally have "top1_group_pow ?mulAG ?eAG k' (n_h + n_h) = ?eAG" .
+        moreover have "n_h + n_h > 0" using hn_pos by (by100 simp)
+        ultimately show ?thesis using hk'_in unfolding top1_torsion_subgroup_on_def by (by100 blast)
       qed
       hence "k' \<in> ?K \<inter> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
         using hk' by (by100 blast)
