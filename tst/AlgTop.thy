@@ -1780,7 +1780,8 @@ proof -
         have hM_normal: "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA ?M"
         proof -
           have h2Z_normal: "top1_normal_subgroup_on (UNIV::int set) (+) 0 uminus {n::int. even n}"
-            sorry \<comment> \<open>2Z is a normal subgroup of (Z,+).\<close>
+            unfolding top1_normal_subgroup_on_def top1_is_group_on_def
+            by (by100 fastforce)
           have "?M = {g \<in> ?AbelF. \<epsilon> g \<in> {n::int. even n}}" by (by100 auto)
           have hZ_grp2: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
             using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
