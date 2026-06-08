@@ -1403,6 +1403,40 @@ next
   finally show ?case .
 qed
 
+\<comment> \<open>word\_product with entries (g, x=g) reconstructs foldr when each x is g or invg(g).\<close>
+lemma word_product_rel_invrel_as_foldr:
+  fixes mul :: "'a \<Rightarrow> 'a \<Rightarrow> 'a" and e :: 'a and invg :: "'a \<Rightarrow> 'a" and g :: 'a
+  assumes hne: "invg g \<noteq> g"
+  shows "\<And>xs. (\<forall>i<length xs. xs!i = g \<or> xs!i = invg g) \<Longrightarrow>
+      top1_group_word_product mul e invg
+        (map (\<lambda>(s,b). (g, b)) (map (\<lambda>x. (()::unit, x = g)) xs))
+      = foldr mul xs e"
+proof -
+  fix xs :: "'a list"
+  show "(\<forall>i<length xs. xs!i = g \<or> xs!i = invg g) \<Longrightarrow>
+      top1_group_word_product mul e invg
+        (map (\<lambda>(s,b). (g, b)) (map (\<lambda>x. (()::unit, x = g)) xs))
+      = foldr mul xs e"
+  proof (induct xs)
+    case Nil show ?case by (by100 simp)
+  next
+    case (Cons x rest)
+    have hx: "x = g \<or> x = invg g" using Cons(2) by (by100 auto)
+    have hrest: "\<forall>i<length rest. rest!i = g \<or> rest!i = invg g" using Cons(2) by (by100 auto)
+    have hIH: "top1_group_word_product mul e invg
+        (map (\<lambda>(s,b). (g, b)) (map (\<lambda>x. (()::unit, x = g)) rest))
+      = foldr mul rest e" using Cons(1)[OF hrest] .
+    from hx show ?case
+    proof (elim disjE)
+      assume "x = g" thus ?thesis using hIH by (by100 simp)
+    next
+      assume "x = invg g"
+      hence "(x = g) = False" using hne by (by100 simp)
+      thus ?thesis using hIH \<open>x = invg g\<close> by (by100 simp)
+    qed
+  qed
+qed
+
 theorem Theorem_75_4_H1_m_projective:
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_m_fold_projective_on X TX m"
@@ -2231,6 +2265,23 @@ proof -
          In abelian group with equal rel/invrel counts, product = eA.\<close>
       \<comment> \<open>Use abelian\_word\_product\_zero\_net\_coeff with a single-generator word.
          Label type: unit. phi () = rel. Word: map (\<lambda>x. ((), x = rel)) ws.\<close>
+      have hrel_ne_invrel_outer: "?invgA ?rel_in_AbelF \<noteq> ?rel_in_AbelF"
+      proof
+        assume heq: "?invgA ?rel_in_AbelF = ?rel_in_AbelF"
+        have "\<epsilon>0 (?invgA ?rel_in_AbelF) = -2"
+        proof -
+          have hZ_grp: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+            using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+              top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+          have hrel_in: "?rel_in_AbelF \<in> ?AbelF" using hN_in_AbelF by (by100 blast)
+          have "\<epsilon>0 (?invgA ?rel_in_AbelF) = uminus (\<epsilon>0 ?rel_in_AbelF)"
+            using hom_preserves_inv[OF hAbelF_grp hZ_grp h\<epsilon>0_hom hrel_in] by (by100 simp)
+          thus ?thesis using h\<epsilon>0_rel by (by100 simp)
+        qed
+        moreover have "\<epsilon>0 ?rel_in_AbelF = 2" using h\<epsilon>0_rel .
+        ultimately have "(-2::int) = 2" using heq by (by100 simp)
+        thus False by (by100 simp)
+      qed
       let ?w = "map (\<lambda>x. (()::unit, x = ?rel_in_AbelF)) ws"
       let ?\<phi>w = "\<lambda>_::unit. ?rel_in_AbelF"
       have "top1_group_word_product ?mulA ?eA ?invgA (map (\<lambda>(s,b). (?\<phi>w s, b)) ?w) = ?eA"
@@ -2315,8 +2366,18 @@ proof -
             top1_group_word_product ?mulA ?eA ?invgA
               (map (\<lambda>(s,b). (?\<phi>w s, b)) (map (\<lambda>x. (()::unit, x = ?rel_in_AbelF)) xs))
             = foldr ?mulA xs ?eA"
-          sorry \<comment> \<open>Induction on xs: each step handles x=rel (True, simp)
-             or x=invgA(rel) (False, use hrel\_ne\_invrel + simp).\<close>
+        proof -
+          fix xs :: "int set list"
+          assume hxs: "\<forall>i<length xs. xs!i \<in> {?rel_in_AbelF} \<or> (\<exists>s\<in>{?rel_in_AbelF}. xs!i = ?invgA s)"
+          hence hxs': "\<forall>i<length xs. xs!i = ?rel_in_AbelF \<or> xs!i = ?invgA ?rel_in_AbelF"
+            by (by100 blast)
+          from word_product_rel_invrel_as_foldr[where g="?rel_in_AbelF" and invg="?invgA"
+              and mul="?mulA" and e="?eA"]
+          show "top1_group_word_product ?mulA ?eA ?invgA
+              (map (\<lambda>(s,b). (?\<phi>w s, b)) (map (\<lambda>x. (()::unit, x = ?rel_in_AbelF)) xs))
+            = foldr ?mulA xs ?eA"
+            using hrel_ne_invrel_outer hxs' by (by100 blast)
+        qed
         thus ?thesis using hws by (by100 blast)
       qed
       ultimately have "foldr ?mulA ws ?eA = ?eA" by (by100 simp)
