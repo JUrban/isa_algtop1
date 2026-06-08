@@ -14953,7 +14953,58 @@ proof -
         \<comment> \<open>(\\<subseteq>): every convex combo of k+2 points = t*v\\_{k+1} + (1-t)*(combo of first k+1).\<close>
         show "Q (Suc k) \<subseteq> f ` ({0..1} \<times> Q k)" sorry
         \<comment> \<open>(\\<supseteq>): t*v\\_{k+1} + (1-t)*p where p \\<in> Q k is a convex combo of k+2 points.\<close>
-        show "f ` ({0..1} \<times> Q k) \<subseteq> Q (Suc k)" sorry
+        show "f ` ({0..1} \<times> Q k) \<subseteq> Q (Suc k)"
+        proof
+          fix q assume "q \<in> f ` ({0..1} \<times> Q k)"
+          then obtain t p where ht: "t \<in> {0..1}" and hp: "p \<in> Q k" and hq: "q = f (t, p)"
+            by (by100 blast)
+          from hp obtain coeffs where hc: "(\<forall>i\<le>k. 0 \<le> coeffs i)" "(\<Sum>i\<le>k. coeffs i) = 1"
+              "fst p = (\<Sum>i\<le>k. coeffs i * vx i)" "snd p = (\<Sum>i\<le>k. coeffs i * vy i)"
+            unfolding Q_def by (by5000 auto)
+          \<comment> \<open>New coefficients: \\<beta> i = (1-t)*coeffs i for i \\<le> k, \\<beta> (k+1) = t.\<close>
+          define \<beta> where "\<beta> i = (if i = Suc k then t else (1-t) * coeffs i)" for i
+          have h\<beta>_pos: "\<forall>i\<le>Suc k. 0 \<le> \<beta> i"
+            using hc(1) ht unfolding \<beta>_def by (by100 auto)
+          have h\<beta>_sum: "(\<Sum>i\<le>Suc k. \<beta> i) = 1"
+          proof -
+            have "(\<Sum>i\<le>Suc k. \<beta> i) = (\<Sum>i\<le>k. \<beta> i) + \<beta> (Suc k)" by simp
+            also have "(\<Sum>i\<le>k. \<beta> i) = (\<Sum>i\<le>k. (1-t) * coeffs i)"
+              by (rule sum.cong) (simp_all add: \<beta>_def)
+            also have "\<dots> = (1-t) * (\<Sum>i\<le>k. coeffs i)"
+              by (simp add: sum_distrib_left)
+            also have "\<dots> = (1-t)" using hc(2) by simp
+            also have "\<beta> (Suc k) = t" unfolding \<beta>_def by simp
+            finally show ?thesis by simp
+          qed
+          have hx: "fst q = (\<Sum>i\<le>Suc k. \<beta> i * vx i)"
+          proof -
+            have "fst q = t * vx (Suc k) + (1-t) * fst p" using hq unfolding f_def by simp
+            also have "\<dots> = t * vx (Suc k) + (1-t) * (\<Sum>i\<le>k. coeffs i * vx i)"
+              using hc(3) by simp
+            also have "(1-t) * (\<Sum>i\<le>k. coeffs i * vx i) = (\<Sum>i\<le>k. (1-t) * coeffs i * vx i)"
+              by (simp add: sum_distrib_left mult.assoc)
+            also have "(\<Sum>i\<le>k. (1-t) * coeffs i * vx i) = (\<Sum>i\<le>k. \<beta> i * vx i)"
+              by (rule sum.cong) (simp_all add: \<beta>_def)
+            finally have "fst q = \<beta> (Suc k) * vx (Suc k) + (\<Sum>i\<le>k. \<beta> i * vx i)"
+              unfolding \<beta>_def by simp
+            thus ?thesis by simp
+          qed
+          have hy: "snd q = (\<Sum>i\<le>Suc k. \<beta> i * vy i)"
+          proof -
+            have "snd q = t * vy (Suc k) + (1-t) * snd p" using hq unfolding f_def by simp
+            also have "\<dots> = t * vy (Suc k) + (1-t) * (\<Sum>i\<le>k. coeffs i * vy i)"
+              using hc(4) by simp
+            also have "(1-t) * (\<Sum>i\<le>k. coeffs i * vy i) = (\<Sum>i\<le>k. (1-t) * coeffs i * vy i)"
+              by (simp add: sum_distrib_left mult.assoc)
+            also have "(\<Sum>i\<le>k. (1-t) * coeffs i * vy i) = (\<Sum>i\<le>k. \<beta> i * vy i)"
+              by (rule sum.cong) (simp_all add: \<beta>_def)
+            finally have "snd q = \<beta> (Suc k) * vy (Suc k) + (\<Sum>i\<le>k. \<beta> i * vy i)"
+              unfolding \<beta>_def by simp
+            thus ?thesis by simp
+          qed
+          show "q \<in> Q (Suc k)" unfolding Q_def
+            using h\<beta>_pos h\<beta>_sum hx hy sorry
+        qed
       qed
       have hf_cont: "continuous_on ({0..1} \<times> Q k) f"
       proof -
