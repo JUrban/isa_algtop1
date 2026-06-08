@@ -3029,7 +3029,22 @@ proof -
            The product \<iota>A 1 \<cdot> ... \<cdot> \<iota>A(m-1) has \<epsilon>_0 = 0, so its image \<in> K.
            Then k' = invgAG(\<phi>\_bar(product)) \<in> K (K closed under inv).
            So \<phi>\_bar(\<iota>A 0) = \<beta>G \<cdot> ... = mulAG (invgAG(k')) \<beta>G ... \<close>
-        show ?thesis sorry \<comment> \<open>Case i=0: decompose \<phi>\_bar(\<iota>A 0) as \<beta>G \<cdot> k' with k' \<in> K.\<close>
+        \<comment> \<open>\<beta> = \<iota>A(0) \<cdot> tail, so \<iota>A(0) = \<beta> \<cdot> tail^{-1}. After \<phi>\_bar: = \<beta>G \<cdot> invgAG(tail\_img).
+           tail = foldr mulA (map \<iota>A [1..<m]) eA has \<epsilon>_0 = 0, so tail\_img \<in> K.
+           invgAG(tail\_img) \<in> K (K closed under inv). So \<phi>\_bar(\<iota>A 0) = mulAG k' \<beta>G.\<close>
+        let ?tail = "foldr ?mulA (map ?\<iota>A [1..<m]) ?eA"
+        have "?\<beta>A = ?mulA (?\<iota>A 0) ?tail"
+          sorry \<comment> \<open>\<beta> = foldr mulA (map \<iota>A [0..<m]) eA = mulA (\<iota>A 0) (foldr mulA (map \<iota>A [1..<m]) eA).\<close>
+        have htail_K0: "?tail \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+          sorry \<comment> \<open>\<epsilon>_0(tail) = sum of \<epsilon>_0(\<iota>A i) for i=1..m-1 = 0.\<close>
+        have htail_img_K: "\<phi>_bar ?tail \<in> ?K" using htail_K0 by (by100 blast)
+        have hinv_tail_K: "?invgAG (\<phi>_bar ?tail) \<in> ?K"
+          sorry \<comment> \<open>K closed under inv (hinv\_cl\_K inside K\_fab, or hK\_grp\_outer).\<close>
+        \<comment> \<open>In abelian AbelG: \<phi>\_bar(\<iota>A 0) = mulAG (invgAG(\<phi>\_bar(tail))) \<beta>G.\<close>
+        have "a = ?mulAG (?invgAG (\<phi>_bar ?tail)) ?\<beta>G"
+          sorry \<comment> \<open>From \<beta> = \<iota>A(0) \<cdot> tail: \<phi>\_bar(\<iota>A 0) = \<phi>\_bar(\<beta>) \<cdot> \<phi>\_bar(tail^{-1})
+             = \<beta>G \<cdot> invgAG(\<phi>\_bar(tail)) = mulAG (invgAG(tail\_img)) \<beta>G (abelian).\<close>
+        thus ?thesis using hinv_tail_K by (by100 blast)
       qed
     qed
     \<comment> \<open>Step 3: Apply the helper.\<close>
