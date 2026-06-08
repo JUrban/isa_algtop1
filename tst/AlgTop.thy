@@ -1747,7 +1747,22 @@ proof -
         by (by100 blast)
       \<comment> \<open>\<epsilon>(\<beta>) = \<epsilon>(\<iota>A(0) \<cdot> ... \<cdot> \<iota>A(m-1)) = \<epsilon>(\<iota>A(0)) + ... = 1.\<close>
       have h\<epsilon>_\<beta>: "\<epsilon> ?\<beta>A = 1"
-        sorry \<comment> \<open>Hom preserves foldr product; \<epsilon>(\<iota>A(0))=1, rest=0.\<close>
+      proof -
+        have hZ_grp: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+          sorry \<comment> \<open>Z is a group under addition.\<close>
+        have "\<forall>i < length ?\<beta>_list. ?\<beta>_list ! i \<in> ?AbelF"
+          using h\<iota>A_in by (by100 auto)
+        hence "\<epsilon> ?\<beta>A = foldr (+) (map \<epsilon> ?\<beta>_list) (0::int)"
+          using hom_foldr_mul[OF hAbelF_grp hZ_grp h\<epsilon>_hom] by (by100 blast)
+        also have "\<dots> = foldr (+) (map (\<epsilon> \<circ> ?\<iota>A) [0..<m]) 0" by (by100 simp)
+        also have "\<dots> = 1"
+        proof -
+          have "\<forall>i\<in>{..<m}. (\<epsilon> \<circ> ?\<iota>A) i = (if i = 0 then 1 else 0)"
+            using h\<epsilon>_0 h\<epsilon>_rest by (by100 auto)
+          thus ?thesis sorry \<comment> \<open>foldr (+) [1,0,...,0] 0 = 1 for m\<ge>1.\<close>
+        qed
+        finally show ?thesis .
+      qed
       \<comment> \<open>\<epsilon>(rel) = \<epsilon>(\<beta>^2) = 2\<epsilon>(\<beta>) = 2 (if hrel\_eq\_\<beta>2 is proved).
          But more directly: \<epsilon>(rel) = 2 from the relator being each generator squared.\<close>
       have h\<epsilon>_rel: "\<epsilon> ?rel_in_AbelF = 2"
