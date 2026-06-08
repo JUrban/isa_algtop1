@@ -3065,7 +3065,11 @@ proof -
           \<comment> \<open>Each ws!i is \<iota>A(s) or invgA(\<iota>A(s)) for s \<in> {..<m}-{0}.
              So \<phi>\_bar(ws!i) is in ?sg.\<close>
           have hgens_sub_K_loc: "(\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}) \<subseteq> ?K"
-            sorry \<comment> \<open>Same as shown in ⊇ direction.\<close>
+          proof (rule image_subsetI)
+            fix s assume "s \<in> {..<m} - {0::nat}"
+            thus "\<phi>_bar (?\<iota>A s) \<in> ?K"
+              using h\<iota>A_in h\<epsilon>0_rest by (by100 auto)
+          qed
           have hsg_grp: "top1_is_group_on ?sg ?mulAG ?eAG ?invgAG"
             using intersection_of_subgroups_is_group[OF hK_grp_pre hgens_sub_K_loc] by (by100 simp)
           \<comment> \<open>Each \<phi>\_bar(ws!i) \<in> ?sg.\<close>
@@ -3074,10 +3078,25 @@ proof -
                Or ws!i = invgA(\<iota>A(s)) \<Longrightarrow> \<phi>\_bar(invgA(\<iota>A(s))) = invgAG(\<phi>\_bar(\<iota>A(s))) \<in> ?sg.\<close>
           \<comment> \<open>\<phi>\_bar(a) = \<phi>\_bar(foldr ws) = foldr (map \<phi>\_bar ws) in AbelG.\<close>
           have hws_in_F: "\<forall>i<length ws. ws!i \<in> ?AbelF"
-            sorry \<comment> \<open>ws!i \<in> \<iota>A(S) \<cup> invgA(\<iota>A(S)) \<subseteq> AbelF.\<close>
+          proof (intro allI impI)
+            fix i assume "i < length ws"
+            from hws this have "ws!i \<in> ?\<iota>A ` ({..<m} - {0::nat})
+                \<or> (\<exists>s\<in>?\<iota>A ` ({..<m} - {0::nat}). ws!i = ?invgA s)" by (by100 blast)
+            thus "ws!i \<in> ?AbelF"
+            proof (elim disjE)
+              assume "ws!i \<in> ?\<iota>A ` ({..<m} - {0::nat})"
+              thus ?thesis using h\<iota>A_in by (by100 auto)
+            next
+              assume "\<exists>s\<in>?\<iota>A ` ({..<m} - {0::nat}). ws!i = ?invgA s"
+              then obtain s where "s \<in> ?\<iota>A ` ({..<m} - {0::nat})" "ws!i = ?invgA s" by (by100 blast)
+              hence "s \<in> ?AbelF" using h\<iota>A_in by (by100 auto)
+              hence "?invgA s \<in> ?AbelF" using hAbelF_invg_cl by (by100 blast)
+              thus ?thesis using \<open>ws!i = ?invgA s\<close> by (by100 simp)
+            qed
+          qed
           have "x = \<phi>_bar (foldr ?mulA ws ?eA)" using ha(3) hprod by (by100 simp)
           also have "\<phi>_bar (foldr ?mulA ws ?eA) = foldr ?mulAG (map \<phi>_bar ws) ?eAG"
-            sorry \<comment> \<open>hom\_foldr\_mul: \<phi>\_bar maps foldr to foldr of images.\<close>
+            using hom_foldr_mul[OF hAbelF_grp hAbelG_grp h\<phi>_hom hws_in_F] by (by100 blast)
           finally have "x = foldr ?mulAG (map \<phi>_bar ws) ?eAG" .
           \<comment> \<open>foldr of sg elements \<in> sg.\<close>
           moreover have "foldr ?mulAG (map \<phi>_bar ws) ?eAG \<in> ?sg"
