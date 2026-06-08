@@ -17197,9 +17197,10 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             \<comment> \<open>fst s0 appears at position 0 but not 1, 2. In proper scheme with 2 occurrences,
                it must be at position 3. Then fst s2 = fst s1 (only other label).
                But positions 1,2 are adjacent with same label \\<Rightarrow> contradicts no\\_adj.\<close>
-            have "fst s2 = fst s1"
-              sorry \<comment> \<open>From properness: fst s2 appears only at pos 2 \\<Rightarrow> card=1 \\<Rightarrow> contradiction.
-                 So fst s2 must equal fst s0 or fst s1. Since \\<noteq> fst s0 by assumption: = fst s1.\<close>
+            \<comment> \<open>First show fst s3 = fst s0 (from properness of fst s0).\<close>
+            have "fst s3 = fst s0" sorry \<comment> \<open>Same card argument as fst s3 \\<noteq> fst s0 but constructive.\<close>
+            \<comment> \<open>Then fst s2 must equal fst s1 (the only other label).\<close>
+            have "fst s2 = fst s1" sorry \<comment> \<open>Uses fst s0 \\<noteq> fst s2, fst s3 = fst s0, properness.\<close>
             hence "fst (scheme!1) = fst (scheme!2)" using hsch4 by simp
             have h12: "\<not> (fst (scheme!1) = fst (scheme!(Suc 1)))"
               using no_adj by (by5000 force)
