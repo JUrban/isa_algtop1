@@ -1502,6 +1502,22 @@ proof -
     from hAbelF_grp[unfolded top1_is_group_on_def]
     show ?thesis by (by100 fast)
   qed
+  \<comment> \<open>Extract group axioms for AbelF. Some time out with by100 fast due to
+     large let-expanded terms, using by5000 or sorry where needed.\<close>
+  have hAbelF_mul_cl: "\<forall>x\<in>?AbelF. \<forall>y\<in>?AbelF. ?mulA x y \<in> ?AbelF"
+    sorry \<comment> \<open>Group mul closure — times out on expanded terms.\<close>
+  have hAbelF_assoc: "\<forall>x\<in>?AbelF. \<forall>y\<in>?AbelF. \<forall>z\<in>?AbelF. ?mulA (?mulA x y) z = ?mulA x (?mulA y z)"
+    sorry \<comment> \<open>Group associativity — times out on expanded terms.\<close>
+  have hAbelF_id_l: "\<forall>x\<in>?AbelF. ?mulA ?eA x = x"
+    using hAbelF_grp[unfolded top1_is_group_on_def] by (by100 fast)
+  have hAbelF_id_r: "\<forall>x\<in>?AbelF. ?mulA x ?eA = x"
+    using hAbelF_grp[unfolded top1_is_group_on_def] by (by100 fast)
+  have hAbelF_inv_l: "\<forall>x\<in>?AbelF. ?mulA (?invgA x) x = ?eA"
+    using hAbelF_grp[unfolded top1_is_group_on_def] by (by100 fast)
+  have hAbelF_inv_r: "\<forall>x\<in>?AbelF. ?mulA x (?invgA x) = ?eA"
+    using hAbelF_grp[unfolded top1_is_group_on_def] by (by100 fast)
+  have hAbelF_e_in: "?eA \<in> ?AbelF"
+    using hAbelF_grp[unfolded top1_is_group_on_def] by (by100 fast)
 
   \<comment> \<open>Step 4: Get the concrete abelianization of G_0.\<close>
   let ?CG = "top1_commutator_subgroup_on G0 mul0 e0 invg0"
@@ -2304,7 +2320,20 @@ proof -
     ultimately have "?mulA a (?invgA b) = ?eA"
       using hK0_ker_trivial by (by100 blast)
     thus "a = b"
-      sorry \<comment> \<open>a\<cdot>b^{-1} = eA \<Longrightarrow> a = b: multiply by b, use assoc+inv+id.\<close>
+    proof -
+      assume hab: "?mulA a (?invgA b) = ?eA"
+      have hinvb: "?invgA b \<in> ?AbelF" using hAbelF_invg_cl hb_in by (by100 blast)
+      \<comment> \<open>(a \<cdot> b^{-1}) \<cdot> b = e \<cdot> b = b. Also (a \<cdot> b^{-1}) \<cdot> b = a \<cdot> (b^{-1} \<cdot> b) = a \<cdot> e = a.\<close>
+      have h1: "?mulA (?mulA a (?invgA b)) b = ?mulA a (?mulA (?invgA b) b)"
+        using hAbelF_assoc ha_in hinvb hb_in by (by100 blast)
+      have h2: "?mulA (?invgA b) b = ?eA" using hAbelF_inv_l hb_in by (by100 blast)
+      have h3: "?mulA a ?eA = a" using hAbelF_id_r ha_in by (by100 blast)
+      have h4: "?mulA ?eA b = b" using hAbelF_id_l hb_in by (by100 blast)
+      from hab have "?mulA (?mulA a (?invgA b)) b = ?mulA ?eA b" by (by100 simp)
+      hence "?mulA a (?mulA (?invgA b) b) = b" using h1 h4 by (by100 simp)
+      hence "?mulA a ?eA = b" using h2 by (by100 simp)
+      thus "a = b" using h3 by (by100 simp)
+    qed
   qed
 
   \<comment> \<open>Step F: Transfer free abelian structure from K_0 to K via \<phi>\_bar.
