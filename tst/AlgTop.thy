@@ -1530,8 +1530,31 @@ proof -
     ultimately show "?mulA x y \<in> ?AbelF" by (by100 simp)
   qed
   have hAbelF_assoc: "\<forall>x\<in>?AbelF. \<forall>y\<in>?AbelF. \<forall>z\<in>?AbelF. ?mulA (?mulA x y) z = ?mulA x (?mulA y z)"
-    sorry \<comment> \<open>Associativity — 3-quantifier extraction times out.
-       Used via pre-extracted hAbelF\_assoc in a=b proof.\<close>
+  proof (intro ballI)
+    fix x y z assume hx: "x \<in> ?AbelF" and hy: "y \<in> ?AbelF" and hz: "z \<in> ?AbelF"
+    \<comment> \<open>Use foldr\_mul\_append with two different splits of [x,y,z].\<close>
+    have hxy: "\<forall>i<length [x,y]. [x,y]!i \<in> ?AbelF" using hx hy
+      by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+    have hz1: "\<forall>i<length [z]. [z]!i \<in> ?AbelF" using hz by (by100 auto)
+    have hx1: "\<forall>i<length [x]. [x]!i \<in> ?AbelF" using hx by (by100 auto)
+    have hyz: "\<forall>i<length [y,z]. [y,z]!i \<in> ?AbelF" using hy hz
+      by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+    have lhs: "foldr ?mulA ([x,y] @ [z]) ?eA = ?mulA (foldr ?mulA [x,y] ?eA) (foldr ?mulA [z] ?eA)"
+      using foldr_mul_append[OF hAbelF_grp hxy hz1] by (by100 blast)
+    have rhs: "foldr ?mulA ([x] @ [y,z]) ?eA = ?mulA (foldr ?mulA [x] ?eA) (foldr ?mulA [y,z] ?eA)"
+      using foldr_mul_append[OF hAbelF_grp hx1 hyz] by (by100 blast)
+    have "foldr ?mulA [x,y] ?eA = ?mulA x y"
+      using hAbelF_id_r hy by (by100 simp)
+    moreover have "foldr ?mulA [z] ?eA = z"
+      using hAbelF_id_r hz by (by100 simp)
+    moreover have "foldr ?mulA [x] ?eA = x"
+      using hAbelF_id_r hx by (by100 simp)
+    moreover have "foldr ?mulA [y,z] ?eA = ?mulA y z"
+      using hAbelF_id_r hz by (by100 simp)
+    moreover have "([x,y] @ [z]) = ([x] @ [y,z])" by (by100 simp)
+    ultimately show "?mulA (?mulA x y) z = ?mulA x (?mulA y z)"
+      using lhs rhs by (by100 simp)
+  qed
 
   \<comment> \<open>Step 4: Get the concrete abelianization of G_0.\<close>
   let ?CG = "top1_commutator_subgroup_on G0 mul0 e0 invg0"
