@@ -3034,7 +3034,12 @@ proof -
            invgAG(tail\_img) \<in> K (K closed under inv). So \<phi>\_bar(\<iota>A 0) = mulAG k' \<beta>G.\<close>
         let ?tail = "foldr ?mulA (map ?\<iota>A [1..<m]) ?eA"
         have "?\<beta>A = ?mulA (?\<iota>A 0) ?tail"
-          sorry \<comment> \<open>\<beta> = foldr mulA (map \<iota>A [0..<m]) eA = mulA (\<iota>A 0) (foldr mulA (map \<iota>A [1..<m]) eA).\<close>
+        proof -
+          have "[0..<m] = 0 # [1..<m]"
+            using upt_conv_Cons[of 0 m] hm1 by (by100 simp)
+          hence "map ?\<iota>A [0..<m] = ?\<iota>A 0 # map ?\<iota>A [1..<m]" by (by100 simp)
+          thus ?thesis by (by100 simp)
+        qed
         have htail_K0: "?tail \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
         proof -
           have htail_in: "?tail \<in> ?AbelF"
