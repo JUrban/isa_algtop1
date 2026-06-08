@@ -17252,7 +17252,17 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
           \<comment> \<open>The result has labels a\\_lab and fst(hd(prefix@suffix)), both with opposite directions.
              By flip\\_label and relabel if needed: ~ sphere form.\<close>
-          thus ?thesis sorry
+          \<comment> \<open>Rotate [(a\\_lab,T),(a\\_lab,F)] to front, then flip\\_label for sphere form.\<close>
+          moreover have "top1_scheme_equiv (prefix @ [(a_lab,True),(a_lab,False)] @ suffix)
+              ([(a_lab,True),(a_lab,False)] @ suffix @ prefix)"
+            unfolding top1_scheme_equiv_def
+            using top1_elementary_scheme_operation.rotate[of prefix "[(a_lab,True),(a_lab,False)] @ suffix"]
+            by (simp add: rtranclp.rtrancl_into_rtrancl)
+          ultimately have hchain: "top1_scheme_equiv scheme
+              ([(a_lab,True),(a_lab,False)] @ suffix @ prefix)"
+            unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+          \<comment> \<open>suffix@prefix has length 2, same label, opposite directions. ~ sphere form.\<close>
+          show ?thesis using hchain ha hlen_ps sorry
         qed
         thus ?thesis by (by100 blast)
       next
