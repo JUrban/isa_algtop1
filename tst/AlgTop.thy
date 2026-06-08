@@ -1774,7 +1774,19 @@ proof -
       \<comment> \<open>If \<beta> \<in> N\_AbelF = \<langle>rel\<rangle>, then \<epsilon>(\<beta>) \<in> \<epsilon>(N\_AbelF).
          \<epsilon>(N\_AbelF) \<subseteq> \<langle>\<epsilon>(rel)\<rangle> = 2Z. But \<epsilon>(\<beta>) = 1 \<notin> 2Z.\<close>
       have h\<epsilon>_N: "\<forall>x \<in> ?N_AbelF. even (\<epsilon> x)"
-        sorry \<comment> \<open>\<epsilon> maps N\_AbelF into 2Z since \<epsilon>(rel) = 2.\<close>
+      proof -
+        \<comment> \<open>The set M = {g \<in> AbelF. even(\<epsilon>(g))} is a normal subgroup containing rel.\<close>
+        let ?M = "{g \<in> ?AbelF. even (\<epsilon> g)}"
+        have hM_normal: "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA ?M"
+          sorry \<comment> \<open>Preimage of 2Z under hom \<epsilon>: AbelF \<rightarrow> Z is normal.\<close>
+        have hrel_in_M: "?rel_in_AbelF \<in> ?M"
+          using hN_in_AbelF h\<epsilon>_rel by (by100 auto)
+        have "{?rel_in_AbelF} \<subseteq> ?M" using hrel_in_M by (by100 blast)
+        have "?N_AbelF \<subseteq> ?M"
+          using normal_closure_least[OF hAbelF_grp hM_normal \<open>{?rel_in_AbelF} \<subseteq> ?M\<close>]
+          by (by100 simp)
+        thus ?thesis by (by100 blast)
+      qed
       from h\<epsilon>_N h\<epsilon>_\<beta> show ?thesis by (by100 auto)
     qed
     hence "?\<beta>A \<notin> top1_group_kernel_on ?AbelF ?eAG \<phi>_bar"
