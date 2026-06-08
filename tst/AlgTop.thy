@@ -3010,7 +3010,28 @@ proof -
     \<comment> \<open>Step 2: Each generator decomposes.\<close>
     have hgen_decomp: "\<forall>a \<in> (\<lambda>i. \<phi>_bar (?\<iota>A i)) ` {..<m}.
         a \<in> ?K \<or> (\<exists>k\<in>?K. a = ?mulAG k ?\<beta>G)"
-      sorry \<comment> \<open>For i>0: \<phi>\_bar(\<iota>A i) \<in> K. For i=0: \<phi>\_bar(\<iota>A 0) = \<beta>G \<cdot> k'.\<close>
+    proof (intro ballI)
+      fix a assume "a \<in> (\<lambda>i. \<phi>_bar (?\<iota>A i)) ` {..<m}"
+      then obtain i where hi: "i < m" "a = \<phi>_bar (?\<iota>A i)" by (by100 blast)
+      show "a \<in> ?K \<or> (\<exists>k\<in>?K. a = ?mulAG k ?\<beta>G)"
+      proof (cases "i = 0")
+        case False
+        \<comment> \<open>For i > 0: \<phi>\_bar(\<iota>A i) \<in> K since \<epsilon>_0(\<iota>A i) = 0.\<close>
+        hence "\<epsilon>0 (?\<iota>A i) = 0" using h\<epsilon>0_rest hi(1) by (by100 blast)
+        moreover have "?\<iota>A i \<in> ?AbelF" using h\<iota>A_in hi(1) by (by100 blast)
+        ultimately have "?\<iota>A i \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}" by (by100 blast)
+        hence "\<phi>_bar (?\<iota>A i) \<in> ?K" by (by100 blast)
+        thus ?thesis using hi(2) by (by100 blast)
+      next
+        case True
+        \<comment> \<open>For i = 0: \<iota>A 0 = \<beta> \<cdot> (\<iota>A 1 \<cdot> ... \<cdot> \<iota>A(m-1))^{-1}.
+           After \<phi>\_bar: \<phi>\_bar(\<iota>A 0) = \<beta>G \<cdot> (\<phi>\_bar(\<iota>A 1 \<cdot> ... \<cdot> \<iota>A(m-1)))^{-1}.
+           The product \<iota>A 1 \<cdot> ... \<cdot> \<iota>A(m-1) has \<epsilon>_0 = 0, so its image \<in> K.
+           Then k' = invgAG(\<phi>\_bar(product)) \<in> K (K closed under inv).
+           So \<phi>\_bar(\<iota>A 0) = \<beta>G \<cdot> ... = mulAG (invgAG(k')) \<beta>G ... \<close>
+        show ?thesis sorry \<comment> \<open>Case i=0: decompose \<phi>\_bar(\<iota>A 0) as \<beta>G \<cdot> k' with k' \<in> K.\<close>
+      qed
+    qed
     \<comment> \<open>Step 3: Apply the helper.\<close>
     \<comment> \<open>K group: K \<subseteq> AbelG (group), K abelian proven in K\_fab\_raw's proof.
        But hK\_grp inside K\_fab\_raw's proof block is not in scope.
