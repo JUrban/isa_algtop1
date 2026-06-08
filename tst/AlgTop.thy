@@ -1791,9 +1791,12 @@ proof (rule ccontr)
      By free\_abelian\_eval\_e\_zero\_net\_coeff (contrapositive),
      \<exists>s with unbalanced True/False count.
      \<epsilon>_s(x) = net count \<noteq> 0. Contradiction.\<close>
+  \<comment> \<open>Use coordinate projections + kernel iteration to show x = e.
+     For each s_0 \<in> S, x \<in> ker(\<epsilon>_{s_0}). The intersection over all s_0 is {e}.\<close>
   show False
-    sorry \<comment> \<open>Convert word repr to (s,b) format, use free\_abelian\_eval\_e\_zero\_net\_coeff contrapositive,
-       bridge to coordinate projections.\<close>
+    sorry \<comment> \<open>Coordinate separation: all \<epsilon>_{s_0}(x)=0 implies x=e.
+       Proof by induction on |S| using free\_abelian\_kernel\_coordinate
+       to strip one coordinate at a time.\<close>
 qed
 
 \<comment> \<open>The quotient of Z^m by 2\<beta> (where \<beta> = sum of generators) has:
