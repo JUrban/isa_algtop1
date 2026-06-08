@@ -6495,6 +6495,7 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           obtain prefix suffix where
               hdecomp: "scheme = prefix @ [scheme!i, top1_inverse_edge (scheme!i)] @ suffix"
               and hlen_ps: "length prefix + length suffix = 2"
+              and hlen_pf: "length prefix = i"
           proof
             show "scheme = take i scheme @ [scheme!i, top1_inverse_edge (scheme!i)] @ drop (i+2) scheme"
             proof -
@@ -6506,6 +6507,8 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             qed
             show "length (take i scheme) + length (drop (i+2) scheme) = 2"
               using \<open>length scheme = 4\<close> hi(1) by simp
+            show "length (take i scheme) = i"
+              using hi(1) \<open>length scheme = 4\<close> by simp
           qed
           \<comment> \<open>Rotate + cancel: scheme ~ prefix @ suffix (length 2).\<close>
           have "top1_scheme_equiv scheme (prefix @ suffix)"
@@ -6588,8 +6591,111 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             ultimately show ?thesis by (by100 blast)
           qed
           have he_ne_label: "fst e1 \<noteq> fst (scheme!i) \<and> fst e2 \<noteq> fst (scheme!i)"
-            sorry \<comment> \<open>e1, e2 are from positions other than i, i+1. Properness: label fst(scheme!i)
-               appears exactly twice (at i, i+1). So other elements have different label.\<close>
+          proof -
+            let ?lab = "fst (scheme!i)"
+            have hlab_card: "card {j. j < 4 \<and> fst (scheme ! j) = ?lab} = 2"
+            proof -
+              from less(3) have "card {j. j < length scheme \<and> fst (scheme ! j) = ?lab} \<in> {0, 2}"
+                by (by100 blast)
+              moreover have "i \<in> {j. j < length scheme \<and> fst (scheme ! j) = ?lab}"
+                using hi(1) \<open>length scheme = 4\<close> by (by100 simp)
+              hence "card {j. j < length scheme \<and> fst (scheme ! j) = ?lab} \<noteq> 0"
+                by (by100 auto)
+              ultimately have "card {j. j < length scheme \<and> fst (scheme ! j) = ?lab} = 2"
+                by (by100 blast)
+              thus ?thesis using \<open>length scheme = 4\<close> by (by100 simp)
+            qed
+            have hlab_only: "\<forall>k < 4. fst (scheme ! k) = ?lab \<longrightarrow> k = i \<or> k = i + 1"
+            proof (intro allI impI)
+              fix k assume hk: "k < 4" "fst (scheme ! k) = ?lab"
+              show "k = i \<or> k = i + 1"
+              proof (rule ccontr)
+                assume "\<not> (k = i \<or> k = i + 1)"
+                hence hk_ne: "k \<noteq> i" "k \<noteq> i + 1" by (by100 blast)+
+                have "{i, i+1, k} \<subseteq> {j. j < 4 \<and> fst (scheme ! j) = ?lab}"
+                  using hi(1) hk \<open>length scheme = 4\<close> hi(2) by (by100 auto)
+                moreover have "card {i, i+1, k} = 3"
+                  using hk_ne by (by100 auto)
+                moreover have "finite {j. j < 4 \<and> fst (scheme ! j) = ?lab}" by (by100 simp)
+                ultimately have "card {j. j < 4 \<and> fst (scheme ! j) = ?lab} \<ge> 3"
+                  by (metis card_mono le_antisym not_less_eq_eq)
+                thus False using hlab_card by (by100 simp)
+              qed
+            qed
+            \<comment> \<open>e1 from prefix or suffix: position \<noteq> i, \<noteq> i+1.\<close>
+            \<comment> \<open>Elements of prefix are at positions < i in scheme.\<close>
+            \<comment> \<open>Elements at positions < i in scheme have label \<noteq> ?lab.\<close>
+            have hpos_ne: "\<forall>k. k < length prefix \<longrightarrow> fst (scheme ! k) \<noteq> ?lab"
+            proof (intro allI impI)
+              fix k assume "k < length prefix"
+              hence "k < i" using hlen_pf by (by100 simp)
+              hence "k < 4" using hi(1) \<open>length scheme = 4\<close> by (by100 auto)
+              moreover have "k \<noteq> i" using \<open>k < i\<close> by (by100 simp)
+              moreover have "k \<noteq> i + 1" using \<open>k < i\<close> by (by100 simp)
+              ultimately show "fst (scheme ! k) \<noteq> ?lab" using hlab_only by (by100 blast)
+            qed
+            have hpf_ne: "\<forall>x \<in> set prefix. fst x \<noteq> ?lab"
+            proof (rule ballI)
+              fix x assume hx_pf: "x \<in> set prefix"
+              hence "\<exists>k. k < length prefix \<and> prefix ! k = x"
+                by (simp add: in_set_conv_nth)
+              then obtain k where hk: "k < length prefix" "prefix ! k = x"
+                by (by100 blast)
+              have "k < i" using hk(1) hlen_pf by (by100 simp)
+              have hsk: "scheme ! k = x"
+              proof -
+                have hk': "k < length prefix" using hk(1) .
+                have "(prefix @ [scheme ! i, top1_inverse_edge (scheme ! i)] @ suffix) ! k = prefix ! k"
+                  using nth_append[of prefix _ k] hk' by (by100 simp)
+                thus ?thesis using hdecomp hk(2) by (by100 simp)
+              qed
+              have "k < 4" using \<open>k < i\<close> hi(1) \<open>length scheme = 4\<close> by (by100 auto)
+              moreover have "k \<noteq> i" using \<open>k < i\<close> by (by100 simp)
+              moreover have "k \<noteq> i + 1" using \<open>k < i\<close> by (by100 simp)
+              ultimately have "fst (scheme ! k) \<noteq> ?lab" using hlab_only by (by100 blast)
+              thus "fst x \<noteq> ?lab" using hsk by (by100 simp)
+            qed
+            have hsf_ne: "\<forall>x \<in> set suffix. fst x \<noteq> ?lab"
+            proof (rule ballI)
+              fix x assume hx_sf: "x \<in> set suffix"
+              hence "\<exists>k. k < length suffix \<and> suffix ! k = x"
+                by (simp add: in_set_conv_nth)
+              then obtain k where hk: "k < length suffix" "suffix ! k = x"
+                by (by100 blast)
+              define k' where "k' = i + 2 + k"
+              have hsk: "scheme ! k' = x"
+              proof -
+                have "(prefix @ [scheme ! i, top1_inverse_edge (scheme ! i)] @ suffix) ! k' = suffix ! k"
+                proof -
+                  have "k' = length prefix + 2 + k" using hlen_pf unfolding k'_def by (by100 simp)
+                  have "(prefix @ [scheme ! i, top1_inverse_edge (scheme ! i)] @ suffix) ! k'
+                      = ([scheme ! i, top1_inverse_edge (scheme ! i)] @ suffix) ! (k' - length prefix)"
+                    using nth_append[of prefix _ k'] \<open>k' = length prefix + 2 + k\<close> by (by100 simp)
+                  also have "k' - length prefix = 2 + k" using \<open>k' = length prefix + 2 + k\<close> by (by100 simp)
+                  also have "([scheme ! i, top1_inverse_edge (scheme ! i)] @ suffix) ! (2 + k) = suffix ! k"
+                    using hk(1) by (by100 simp)
+                  finally show ?thesis .
+                qed
+                thus ?thesis using hdecomp hk(2) by (by100 simp)
+              qed
+              have "k' < 4" using hk(1) hlen_pf hlen_ps unfolding k'_def by (by100 auto)
+              moreover have "k' \<noteq> i" unfolding k'_def by (by100 simp)
+              moreover have "k' \<noteq> i + 1" unfolding k'_def by (by100 simp)
+              ultimately have "fst (scheme ! k') \<noteq> ?lab" using hlab_only by (by100 blast)
+              thus "fst x \<noteq> ?lab" using hsk by (by100 simp)
+            qed
+            have "fst e1 \<noteq> ?lab \<and> fst e2 \<noteq> ?lab"
+            proof -
+              from hsp_list have "e1 \<in> set (suffix @ prefix)" by (by100 simp)
+              hence "e1 \<in> set suffix \<or> e1 \<in> set prefix" by (by100 simp)
+              hence "fst e1 \<noteq> ?lab" using hpf_ne hsf_ne by (by100 blast)
+              moreover from hsp_list have "e2 \<in> set (suffix @ prefix)" by (by100 simp)
+              hence "e2 \<in> set suffix \<or> e2 \<in> set prefix" by (by100 simp)
+              hence "fst e2 \<noteq> ?lab" using hpf_ne hsf_ne by (by100 blast)
+              ultimately show ?thesis by (by100 blast)
+            qed
+            thus ?thesis by (by100 simp)
+          qed
           have "fst e1 = fst e2"
             sorry \<comment> \<open>Both have the other label. Properness: that label appears 0 or 2 times.
                Since it appears at least once (e1), card \\<noteq> 0 \\<Rightarrow> card = 2 \\<Rightarrow> exactly 2.
