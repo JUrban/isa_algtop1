@@ -14951,7 +14951,42 @@ proof -
       have hQ_eq: "Q (Suc k) = f ` ({0..1} \<times> Q k)"
       proof
         \<comment> \<open>(\\<subseteq>): every convex combo of k+2 points = t*v\\_{k+1} + (1-t)*(combo of first k+1).\<close>
-        show "Q (Suc k) \<subseteq> f ` ({0..1} \<times> Q k)" sorry
+        show "Q (Suc k) \<subseteq> f ` ({0..1} \<times> Q k)"
+        proof
+          fix q assume "q \<in> Q (Suc k)"
+          then obtain coeffs where hc: "(\<forall>i\<le>Suc k. 0 \<le> coeffs i)" "(\<Sum>i\<le>Suc k. coeffs i) = 1"
+              "fst q = (\<Sum>i\<le>Suc k. coeffs i * vx i)" "snd q = (\<Sum>i\<le>Suc k. coeffs i * vy i)"
+            unfolding Q_def by (by5000 auto)
+          define t where "t = coeffs (Suc k)"
+          have ht: "t \<in> {0..1}" using hc(1,2) unfolding t_def sorry
+          show "q \<in> f ` ({0..1} \<times> Q k)"
+          proof (cases "t = 1")
+            case True
+            \<comment> \<open>If t=1: all weight on v\\_{k+1}. q = v\\_{k+1}. Take any p \\<in> Q k.\<close>
+            show ?thesis sorry
+          next
+            case False
+            \<comment> \<open>t < 1: define \\<alpha> i = coeffs i / (1-t) for i \\<le> k.\<close>
+            have ht_lt: "t < 1" using ht False by simp
+            hence h1mt: "1 - t > 0" by simp
+            define \<alpha> where "\<alpha> i = coeffs i / (1 - t)" for i
+            have h\<alpha>_pos: "\<forall>i\<le>k. 0 \<le> \<alpha> i"
+              using hc(1) h1mt unfolding \<alpha>_def by (by100 auto)
+            have h\<alpha>_sum: "(\<Sum>i\<le>k. \<alpha> i) = 1"
+            proof -
+              have "(\<Sum>i\<le>k. \<alpha> i) = (\<Sum>i\<le>k. coeffs i) / (1-t)"
+                unfolding \<alpha>_def by (simp add: sum_divide_distrib)
+              also have "(\<Sum>i\<le>k. coeffs i) = 1 - t"
+                using hc(2) unfolding t_def by simp
+              finally show ?thesis using h1mt by simp
+            qed
+            define p where "p = ((\<Sum>i\<le>k. \<alpha> i * vx i), (\<Sum>i\<le>k. \<alpha> i * vy i))"
+            have hp: "p \<in> Q k" unfolding Q_def p_def
+              using h\<alpha>_pos h\<alpha>_sum by (by100 auto)
+            have "q = f (t, p)" unfolding f_def p_def sorry
+            thus ?thesis using ht hp by (by100 blast)
+          qed
+        qed
         \<comment> \<open>(\\<supseteq>): t*v\\_{k+1} + (1-t)*p where p \\<in> Q k is a convex combo of k+2 points.\<close>
         show "f ` ({0..1} \<times> Q k) \<subseteq> Q (Suc k)"
         proof
