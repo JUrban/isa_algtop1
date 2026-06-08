@@ -6561,7 +6561,32 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           \<comment> \<open>The elements e1, e2 are from the original scheme (minus the cancel pair).
              They must have the same label and opposite directions.\<close>
           have he_in: "e1 \<in> set scheme \<and> e2 \<in> set scheme"
-            sorry \<comment> \<open>e1, e2 \\<in> set(suffix@prefix) \\<subseteq> set(prefix)\\<union>set(suffix) \\<subseteq> set scheme.\<close>
+          proof -
+            from hsp_list have "e1 \<in> set (suffix @ prefix)" by (by100 simp)
+            hence "e1 \<in> set suffix \<or> e1 \<in> set prefix" by (by100 simp)
+            moreover have hpf_sub: "set prefix \<subseteq> set scheme"
+            proof (rule subsetI)
+              fix x assume "x \<in> set prefix"
+              hence "x \<in> set (prefix @ [scheme!i, top1_inverse_edge (scheme!i)] @ suffix)"
+                by (by100 simp)
+              thus "x \<in> set scheme" using hdecomp by (by100 simp)
+            qed
+            moreover have hsf_sub: "set suffix \<subseteq> set scheme"
+            proof (rule subsetI)
+              fix x assume "x \<in> set suffix"
+              hence "x \<in> set (prefix @ [scheme!i, top1_inverse_edge (scheme!i)] @ suffix)"
+                by (by100 simp)
+              thus "x \<in> set scheme" using hdecomp by (by100 simp)
+            qed
+            ultimately have "e1 \<in> set scheme" by (by100 blast)
+            moreover have "e2 \<in> set scheme"
+            proof -
+              from hsp_list have "e2 \<in> set (suffix @ prefix)" by (by100 simp)
+              hence "e2 \<in> set suffix \<or> e2 \<in> set prefix" by (by100 simp)
+              thus ?thesis using \<open>set prefix \<subseteq> set scheme\<close> \<open>set suffix \<subseteq> set scheme\<close> by (by100 blast)
+            qed
+            ultimately show ?thesis by (by100 blast)
+          qed
           have he_ne_label: "fst e1 \<noteq> fst (scheme!i) \<and> fst e2 \<noteq> fst (scheme!i)"
             sorry \<comment> \<open>e1, e2 are from positions other than i, i+1. Properness: label fst(scheme!i)
                appears exactly twice (at i, i+1). So other elements have different label.\<close>
