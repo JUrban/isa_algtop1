@@ -14704,6 +14704,20 @@ proof -
   show ?thesis by (by100 blast)
 qed
 
+\<comment> \<open>Elementary operations preserve quotient\\_of\\_scheme\\_on for the SAME space.
+   If Y is a quotient of scheme s, and s → t via an elementary operation,
+   then Y is also a quotient of scheme t (same polygon, adjusted vertex labeling).\<close>
+lemma elementary_operation_preserves_quotient:
+  assumes "top1_quotient_of_scheme_on Y TY s"
+      and "top1_elementary_scheme_operation s t"
+  shows "top1_quotient_of_scheme_on Y TY t"
+  sorry \<comment> \<open>For each elementary operation, the same polygon P with adjusted vertex positions
+     satisfies all quotient\\_of\\_scheme\\_on conditions for the new scheme t.
+     rotate: shift vertex indices. invert: reverse vertex order.
+     relabel/flip\\_label: rename/flip labels (doesn't change polygon).
+     cancel/uncancel: fold/unfold polygon.
+     cut\\_paste/cut\\_paste2/cut\\_paste\\_opp: rearrange polygon via cut-flip-paste.\<close>
+
 \<comment> \<open>Two convex n-gons in R² are homeomorphic via a boundary-preserving map.
    The homeomorphism maps vertex i of P1 to vertex i of P2, and maps each edge linearly.\<close>
 lemma convex_polygon_homeomorphism:
@@ -14926,8 +14940,10 @@ proof -
         case (relabel old new)
         \<comment> \<open>Relabeling preserves the quotient: same polygon, same q, renamed labels.
            Y1 is also a quotient of the relabeled scheme. Then scheme\\_quotient\\_uniqueness.\<close>
+        have hop_relabel: "top1_elementary_scheme_operation s (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
+          by (rule top1_elementary_scheme_operation.relabel)
         have hY1_relabel: "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
-          sorry \<comment> \<open>Same (P,q,vx,vy): relabeling in scheme conditions doesn't change q-fibres.\<close>
+          by (rule elementary_operation_preserves_quotient[OF hs hop_relabel])
         moreover have "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
           using ht relabel by simp
         ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
@@ -14936,7 +14952,7 @@ proof -
         \<comment> \<open>Flipping orientations: same polygon, same q, flipped edge directions.
            Y1 is also a quotient of the flipped scheme.\<close>
         have "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) s)"
-          sorry \<comment> \<open>Same (P,q,vx,vy): flipping direction of identification doesn't change fibres.\<close>
+          by (rule elementary_operation_preserves_quotient[OF hs top1_elementary_scheme_operation.flip_label])
         moreover have "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) s)"
           using ht flip_label by simp
         ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
@@ -14945,7 +14961,12 @@ proof -
         \<comment> \<open>Cut-and-repaste: \\<S>76 Theorem 76.1. Cut, flip, paste preserves quotient.\<close>
         have "top1_quotient_of_scheme_on Y1 TY1
             (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
-          sorry \<comment> \<open>The cut-flip-paste gives a new polygon whose quotient is the same space Y1.\<close>
+        proof -
+          have "top1_quotient_of_scheme_on Y1 TY1 (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
+            using hs cut_paste by simp
+          from elementary_operation_preserves_quotient[OF this top1_elementary_scheme_operation.cut_paste[of u1 a u2 u3]]
+          show ?thesis .
+        qed
         moreover have "top1_quotient_of_scheme_on Y2 TY2
             (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
           using ht cut_paste by simp
@@ -14954,7 +14975,12 @@ proof -
         case (cut_paste2 u0 a u1 u2 b)
         have "top1_quotient_of_scheme_on Y1 TY1
             ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
-          sorry \<comment> \<open>The Figure 77.2 cut-flip-paste gives a new polygon whose quotient is Y1.\<close>
+        proof -
+          have "top1_quotient_of_scheme_on Y1 TY1 (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)"
+            using hs cut_paste2 by simp
+          from elementary_operation_preserves_quotient[OF this top1_elementary_scheme_operation.cut_paste2[of u0 a u1 u2 b]]
+          show ?thesis .
+        qed
         moreover have "top1_quotient_of_scheme_on Y2 TY2
             ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
           using ht cut_paste2 by simp
@@ -14963,7 +14989,12 @@ proof -
         case (cut_paste_opp u0 u1 a u2 u3)
         have "top1_quotient_of_scheme_on Y1 TY1
             (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
-          sorry \<comment> \<open>Figure 77.3: move u1 from before a to after a⁻¹. Same polygon, same fibres.\<close>
+        proof -
+          have "top1_quotient_of_scheme_on Y1 TY1 (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
+            using hs cut_paste_opp by simp
+          from elementary_operation_preserves_quotient[OF this top1_elementary_scheme_operation.cut_paste_opp[of u0 u1 a u2 u3]]
+          show ?thesis .
+        qed
         moreover have "top1_quotient_of_scheme_on Y2 TY2
             (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
           using ht cut_paste_opp by simp
