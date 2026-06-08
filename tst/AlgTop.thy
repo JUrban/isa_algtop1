@@ -1347,10 +1347,7 @@ proof -
   let ?\<iota>A = "\<lambda>s. ?p (\<iota> s)"
   have h\<iota>A:
     "top1_is_free_abelian_group_full_on ?AbelF ?mulA ?eA ?invgA ?\<iota>A ({..<m}::nat set)"
-    sorry \<comment> \<open>The natural generators p(\<iota>(s)) form a free abelian basis for F/[F,F].
-       This follows from Theorem\_69\_4 (which constructs exactly these generators)
-       and Theorem\_69\_4\_concrete\_free\_abelian (which gives the concrete carrier).
-       The Isabelle gap is connecting the abstract witness from 69.4 to the concrete quotient.\<close>
+    using Theorem_69_4_concrete_image_basis[OF hF_free] by (by100 simp)
 
   have hAbelF_abel: "top1_is_abelian_group_on ?AbelF ?mulA ?eA ?invgA"
     using h\<iota>A unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
