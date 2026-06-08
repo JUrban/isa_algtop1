@@ -15503,20 +15503,9 @@ qed
 
 \<comment> \<open>§75 + §73 + §74.4 moved to AlgTopCached8.\<close>
 
-\<comment> \<open>Helper: extract the free group data from a single-relator presentation.\<close>
-lemma presented_by_single_relator_extract:
-  assumes "top1_group_presented_by_on G mul e invg S {w}"
-  obtains F mulF eF invgF \<iota> \<pi>F where
-    "top1_is_free_group_full_on F mulF eF invgF \<iota> S"
-    "top1_group_hom_on F mulF G mul \<pi>F"
-    "\<pi>F ` F = G"
-    "top1_group_kernel_on F e \<pi>F =
-       top1_normal_subgroup_generated_on F mulF eF invgF
-         {top1_group_word_product mulF eF invgF (map (\<lambda>(s,b). (\<iota> s, b)) w)}"
-proof -
-  show ?thesis using assms[unfolded top1_group_presented_by_on_def]
-    sorry \<comment> \<open>Structural: extract + simplify {r. \<exists>w'\<in>{w}. r=f(w')} = {f(w)}.\<close>
-qed
+\<comment> \<open>Helper: simplify set comprehension with singleton Bex.\<close>
+lemma singleton_Bex_simp: "{r. \<exists>w'\<in>{w}. r = (f :: 'b \<Rightarrow> 'a) w'} = {f w}"
+  by (by100 blast)
 
 theorem Theorem_75_4_H1_m_projective:
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
@@ -15562,7 +15551,8 @@ proof -
   \<comment> \<open>Step 2: Extract the free group F and surjection \<pi>: F \<rightarrow> G_0.\<close>
   have hG0: "top1_is_group_on G0 mul0 e0 invg0"
     using hpres unfolding top1_group_presented_by_on_def by (by100 blast)
-  \<comment> \<open>Extract the free group data from the presentation using the helper lemma.\<close>
+  \<comment> \<open>Extract the free group data from the presentation.
+     (Structural plumbing: unwrap presentation definition + simplify singleton Bex.)\<close>
   obtain F and mulF eF invgF and \<iota> and \<pi>F
     where hF_free: "top1_is_free_group_full_on F mulF eF invgF \<iota> ({..<m}::nat set)"
       and h\<pi>_hom: "top1_group_hom_on F mulF G0 mul0 \<pi>F"
@@ -15571,7 +15561,8 @@ proof -
           top1_normal_subgroup_generated_on F mulF eF invgF
             {top1_group_word_product mulF eF invgF
               (map (\<lambda>(s,b). (\<iota> s, b)) ?relator)}"
-    using presented_by_single_relator_extract[OF hpres] by (by100 blast)
+    using hpres[unfolded top1_group_presented_by_on_def] singleton_Bex_simp
+    sorry
 
   have hF_grp: "top1_is_group_on F mulF eF invgF"
     using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
@@ -15870,13 +15861,16 @@ proof -
      Order of c\<cdot>\<beta> mod 2\<beta>: if c odd, order 2; if c even, h \<in> \<langle>2\<beta>\<rangle>, so class is e.
      Torsion = {e, \<beta>} has order 2.\<close>
 
-  have hAbelG_torsion_card: "card (top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG) = 2"
-    sorry \<comment> \<open>Torsion of Z^m / \<langle>2\<beta>\<rangle> = Z/2Z, card 2.\<close>
+  \<comment> \<open>Step 13-14: The torsion and free part follow from the isomorphism
+     Abel(G_0) \<cong> Abel(F)/\<langle>2\<beta>\<rangle> and the structure of this quotient.
+     In Z^m / \<langle>2(\<alpha>_0+...+\<alpha>_{m-1})\<rangle>:
+     - Torsion = {0, \<beta>} where \<beta> = \<alpha>_0+...+\<alpha>_{m-1} (order 2), card = 2.
+     - Free part K = image of \<langle>\<alpha>_0,...,\<alpha>_{m-2}\<rangle>, rank m-1.
+     - K \<inter> torsion = {0}, every element decomposes as k + t.\<close>
 
-  \<comment> \<open>Step 14: The free part.
-     K = image of \<langle>\<iota>A(0), ..., \<iota>A(m-2)\<rangle> in the quotient.
-     These generators are independent modulo \<langle>2\<beta>\<rangle> (since 2\<beta> has nonzero \<iota>A(m-1)-component).
-     K is free abelian of rank m-1.\<close>
+  have hAbelG_torsion_card: "card (top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG) = 2"
+    sorry \<comment> \<open>Torsion of Z^m / \<langle>2\<beta>\<rangle> = Z/2Z, card 2.
+       Uses: hAbelG_iso, h\<iota>A (free abelian structure), coordinate projection.\<close>
 
   have hAbelG_free_part: "\<exists>(K :: (real \<Rightarrow> 'a) set set set set) (\<iota>_K :: nat \<Rightarrow> (real \<Rightarrow> 'a) set set set).
       K \<subseteq> ?AbelG
@@ -15884,7 +15878,8 @@ proof -
     \<and> K \<inter> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG = {?eAG}
     \<and> (\<forall>h\<in>?AbelG. \<exists>k\<in>K. \<exists>t\<in>top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG.
           h = ?mulAG k t)"
-    sorry \<comment> \<open>Free part is Z^{m-1}, complementary to torsion.\<close>
+    sorry \<comment> \<open>Free part Z^{m-1}, complementary to torsion.
+       Uses: hAbelG_iso, free\_abelian\_kernel\_coordinate, basis change \<beta>=\<Sigma>\<alpha>_i.\<close>
 
   \<comment> \<open>Step 15: Transfer to \<pi>_1. Since G_0 \<cong> \<pi>_1, Abel(G_0) is also
      an abelianization of \<pi>_1 (with the same structure).\<close>
