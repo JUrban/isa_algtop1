@@ -2729,9 +2729,15 @@ proof -
         hence hxG: "x \<in> ?AbelG" and hyG: "y \<in> ?AbelG" using hK_sub by (by100 blast)+
         \<comment> \<open>Use abelian\_subgroup\_is\_normal's commutativity proof pattern.\<close>
         have "\<forall>a\<in>?AbelG. \<forall>b\<in>?AbelG. ?mulAG a b = ?mulAG b a"
-          using hAbelG_abel
-          unfolding top1_is_abelian_group_on_def top1_is_group_on_def
-          sorry \<comment> \<open>Commutativity extraction from AbelG abelian — fast/blast timeout.\<close>
+        proof (intro ballI)
+          fix a b assume "a \<in> ?AbelG" "b \<in> ?AbelG"
+          then obtain ga gb where hga: "ga \<in> G0" "a = ?pG ga"
+            and hgb: "gb \<in> G0" "b = ?pG gb"
+            unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+          from quotient_by_commutator_is_abelian[OF hG0] hga(1) hgb(1)
+          have "?mulAG (?pG ga) (?pG gb) = ?mulAG (?pG gb) (?pG ga)" by (by100 blast)
+          thus "?mulAG a b = ?mulAG b a" using hga(2) hgb(2) by (by100 simp)
+        qed
         thus "?mulAG x y = ?mulAG y x" using hxG hyG by (by100 blast)
       qed
     qed
