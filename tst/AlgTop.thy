@@ -16035,7 +16035,8 @@ proof -
     case False
     \<comment> \<open>card(\\<T>) > 1. By connectedness of X, two triangles share an edge.
        Paste them (\\<S>76 Theorem 76.1) to get a larger polygon. Repeat.\<close>
-    have "card \<T> > 1" using False h\<T>(1,2) sorry
+    have "card \<T> \<noteq> 0" using h\<T>(2) h\<T>(1) by (by100 auto)
+    hence "card \<T> > 1" using False \<open>card \<T> \<noteq> 0\<close> by (by100 linarith)
     show ?thesis sorry \<comment> \<open>Induction on card(\\<T>) > 1. At each step, paste two adjacent
        regions sharing a label. When card = 1: done (base case above).\<close>
   qed
