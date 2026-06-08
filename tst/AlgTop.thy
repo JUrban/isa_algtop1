@@ -2777,10 +2777,21 @@ proof -
           then obtain gx gy gz where hgx: "gx \<in> G0" "x = ?pG gx"
             and hgy: "gy \<in> G0" "y = ?pG gy" and hgz: "gz \<in> G0" "z = ?pG gz"
             unfolding top1_quotient_group_carrier_on_def by (by100 blast)
-          from quotient_group_is_group[OF hG0 hCG_normal]
+          \<comment> \<open>Use foldr\_mul\_append trick to prove assoc without unfolding.\<close>
+          have hxy: "\<forall>i<length [x,y]. [x,y]!i \<in> ?AbelG"
+            using \<open>x \<in> ?AbelG\<close> \<open>y \<in> ?AbelG\<close> by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+          have hz1: "\<forall>i<length [z]. [z]!i \<in> ?AbelG" using \<open>z \<in> ?AbelG\<close> by (by100 auto)
+          have hx1: "\<forall>i<length [x]. [x]!i \<in> ?AbelG" using \<open>x \<in> ?AbelG\<close> by (by100 auto)
+          have hyz: "\<forall>i<length [y,z]. [y,z]!i \<in> ?AbelG"
+            using \<open>y \<in> ?AbelG\<close> \<open>z \<in> ?AbelG\<close> by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+          have lhs: "foldr ?mulAG ([x,y] @ [z]) ?eAG = ?mulAG (foldr ?mulAG [x,y] ?eAG) (foldr ?mulAG [z] ?eAG)"
+            using foldr_mul_append[OF hAbelG_grp hxy hz1] by (by100 blast)
+          have rhs: "foldr ?mulAG ([x] @ [y,z]) ?eAG = ?mulAG (foldr ?mulAG [x] ?eAG) (foldr ?mulAG [y,z] ?eAG)"
+            using foldr_mul_append[OF hAbelG_grp hx1 hyz] by (by100 blast)
+          have hidG_K: "\<forall>a\<in>?AbelG. ?mulAG a ?eAG = a"
+            using hAbelG_grp[unfolded top1_is_group_on_def] by (by100 fast)
           show "?mulAG (?mulAG x y) z = ?mulAG x (?mulAG y z)"
-            unfolding top1_is_group_on_def using hgx hgy hgz \<open>x \<in> ?AbelG\<close> \<open>y \<in> ?AbelG\<close> \<open>z \<in> ?AbelG\<close>
-            sorry \<comment> \<open>Extract assoc from quotient\_group\_is\_group.\<close>
+            using lhs rhs hidG_K \<open>x \<in> ?AbelG\<close> \<open>y \<in> ?AbelG\<close> \<open>z \<in> ?AbelG\<close> by (by100 simp)
         qed
         have hid_K: "\<forall>x\<in>?K. ?mulAG ?eAG x = x \<and> ?mulAG x ?eAG = x"
         proof (intro ballI)
