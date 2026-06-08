@@ -2025,7 +2025,21 @@ proof -
        Then \<epsilon>_0(a) = sum of \<epsilon>_0(ws!i) = sum of \<plusminus>2 = 2k.
        Since \<epsilon>_0(a) = 0, k = 0, and a = eA.\<close>
     have hN_sub_sg: "?N_AbelF \<subseteq> top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF}"
-      sorry \<comment> \<open>normal\_closure \<subseteq> subgroup\_generated in abelian group.\<close>
+    proof -
+      \<comment> \<open>In abelian group: every subgroup is normal, so subgroup\_generated = normal\_generated.
+         normal\_generated = \<Inter>{N | S\<subseteq>N, N normal}, subgroup\_generated = \<Inter>{H | S\<subseteq>H, H subgroup}.
+         Since normal \<Longrightarrow> subgroup: {N|normal} \<supseteq> ... and in abelian: subgroup \<Longrightarrow> normal.\<close>
+      \<comment> \<open>subgroup\_generated({rel}) is a normal subgroup of AbelF (abelian group).
+         Since N\_AbelF is the \<Inter> of all normal subgroups containing {rel},
+         and subgroup\_generated is one such, N\_AbelF \<subseteq> subgroup\_generated.\<close>
+      have "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA
+          (top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF})"
+        sorry \<comment> \<open>In abelian group: subgroup\_generated is a subgroup, hence normal.\<close>
+      moreover have "{?rel_in_AbelF} \<subseteq> top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF}"
+        using subgroup_generated_contains[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
+      ultimately show ?thesis
+        unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+    qed
     hence "a \<in> top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF}"
       using ha_N by (by100 blast)
     hence "a = ?eA \<or> (\<exists>ws. length ws > 0
