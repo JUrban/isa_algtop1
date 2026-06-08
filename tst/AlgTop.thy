@@ -14735,7 +14735,10 @@ lemma convex_polygon_homeomorphism:
       P2
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
   sorry \<comment> \<open>Construct \\<phi> by piecewise-linear map on centroid triangulation.
-     Edge preservation (maps vertex i to vertex i) follows by construction.\<close>
+     NOTE: homeomorphic\\_convex\\_compact from HOL-Analysis/Homeomorphism.thy would give this
+     directly, but Complex\\_Main does not import HOL-Analysis. Need direct construction:
+     triangulate both polygons from centroids, define affine map on each triangle,
+     paste, show continuity via top1\\_continuous\\_map\\_on\\_real2\\_subspace\\_general bridge.\<close>
 
 \<comment> \<open>Quotient-of-scheme uniqueness: any two quotient spaces of the same scheme are homeomorphic.
    Proof: both are quotients of convex n-gons by the same identification pattern.
