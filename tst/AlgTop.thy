@@ -2,6 +2,79 @@ theory AlgTop
   imports "AlgTopCached11.AlgTopCached11"
 begin
 
+\<comment> \<open>Hybrid of Theorem\_69\_4 + Theorem\_69\_4\_concrete\_free\_abelian:
+   concrete quotient carrier AND generator-image identity.
+   Proof follows the same pattern as the concrete version but keeps
+   \<iota>H = \<lambda>s. p(\<iota> s) explicit instead of hiding it behind \<exists>.\<close>
+lemma Theorem_69_4_concrete_image_basis:
+  assumes hfree: "top1_is_free_group_full_on G mul e invg \<iota> S"
+  shows "top1_is_free_abelian_group_full_on
+      (top1_quotient_group_carrier_on G mul (top1_commutator_subgroup_on G mul e invg))
+      (top1_quotient_group_mul_on mul)
+      (top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) e)
+      (\<lambda>C. top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg)
+         (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul
+            (top1_commutator_subgroup_on G mul e invg) g)))
+      (\<lambda>s. top1_group_coset_on G mul (top1_commutator_subgroup_on G mul e invg) (\<iota> s))
+      S"
+proof -
+  let ?N = "top1_commutator_subgroup_on G mul e invg"
+  let ?H = "top1_quotient_group_carrier_on G mul ?N"
+  let ?mulH = "top1_quotient_group_mul_on mul"
+  let ?eH = "top1_group_coset_on G mul ?N e"
+  let ?invH = "\<lambda>C. top1_group_coset_on G mul ?N
+       (invg (SOME g. g \<in> G \<and> C = top1_group_coset_on G mul ?N g))"
+  let ?p = "\<lambda>g. top1_group_coset_on G mul ?N g"
+  let ?\<iota>H = "\<lambda>s. ?p (\<iota> s)"
+  have hG: "top1_is_group_on G mul e invg"
+    using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+  have h_abel: "top1_is_abelianization_of ?H ?mulH ?eH ?invH G mul e invg ?p"
+    by (rule abelianization_concrete[OF hG])
+  \<comment> \<open>H is abelian.\<close>
+  have hH_abel: "top1_is_abelian_group_on ?H ?mulH ?eH ?invH"
+    using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+  \<comment> \<open>\<iota>H maps S into H.\<close>
+  have h\<iota>H_in: "\<forall>s\<in>S. ?\<iota>H s \<in> ?H"
+  proof (intro ballI)
+    fix s assume "s \<in> S"
+    hence "\<iota> s \<in> G" using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+    thus "?\<iota>H s \<in> ?H"
+      using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+  qed
+  \<comment> \<open>\<iota>H injective.\<close>
+  have h\<iota>H_inj: "inj_on ?\<iota>H S"
+    by (rule abelianization_injective_on_generators[OF hfree])
+  \<comment> \<open>\<iota>H(S) generates H.\<close>
+  have hH_gen: "?H = top1_subgroup_generated_on ?H ?mulH ?eH ?invH (?\<iota>H ` S)"
+  proof -
+    have hH_grp: "top1_is_group_on ?H ?mulH ?eH ?invH"
+      using hH_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
+    have h\<iota>S_sub: "\<iota> ` S \<subseteq> G"
+      using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have hG_gen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+      using hfree unfolding top1_is_free_group_full_on_def by (by100 blast)
+    have hphi_hom: "top1_group_hom_on G mul ?H ?mulH ?p"
+      using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+    have hphi_surj: "?p ` G = ?H"
+      using h_abel unfolding top1_is_abelianization_of_def by (by100 blast)
+    have "?H = top1_subgroup_generated_on ?H ?mulH ?eH ?invH (?p ` (\<iota> ` S))"
+      by (rule surj_hom_generated[OF hG hH_grp hphi_hom hphi_surj h\<iota>S_sub hG_gen])
+    moreover have "?p ` (\<iota> ` S) = ?\<iota>H ` S" by (by100 force)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Independence (no nontrivial integer relations).\<close>
+  have hH_indep: "\<And>c. finite {s\<in>S. c s \<noteq> 0} \<Longrightarrow> (\<exists>s\<in>S. c s \<noteq> 0) \<Longrightarrow>
+      foldr ?mulH (map (\<lambda>s.
+          if c s \<ge> 0 then top1_group_pow ?mulH ?eH (?\<iota>H s) (nat (c s))
+          else top1_group_pow ?mulH ?eH (?invH (?\<iota>H s)) (nat (- c s)))
+        (SOME xs. set xs = {s\<in>S. c s \<noteq> 0} \<and> distinct xs)) ?eH \<noteq> ?eH"
+    by (rule abelianization_independence_on_generators[OF hfree])
+  \<comment> \<open>Assemble.\<close>
+  show ?thesis
+    unfolding top1_is_free_abelian_group_full_on_def
+    using hH_abel h\<iota>H_in h\<iota>H_inj hH_gen hH_indep by (by100 blast)
+qed
+
 lemma m_projective_scheme_CW_data:
   assumes "top1_is_m_fold_projective_on X TX m"
       and "x0 \<in> X"

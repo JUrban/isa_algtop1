@@ -33,6 +33,7 @@ THEORIES=(
   ac8/AlgTopCached8.thy
   ac9/AlgTopCached9.thy
   ac10/AlgTopCached10.thy
+  ac11/AlgTopCached11.thy
   AlgTop.thy
 )
 

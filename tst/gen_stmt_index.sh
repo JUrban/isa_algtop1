@@ -14,7 +14,7 @@ THEORIES=(
   ac4/AlgTopCached4.thy ac5/AlgTopCached5.thy ac6/AlgTopCached6.thy
   ac7/AlgTopCached7.thy
   ac8/AlgTopCached8.thy ac9/AlgTopCached9.thy
-  ac10/AlgTopCached10.thy AlgTop.thy
+  ac10/AlgTopCached10.thy ac11/AlgTopCached11.thy AlgTop.thy
 )
 
 OUT=STMT_INDEX.txt
