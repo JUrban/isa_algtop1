@@ -14766,9 +14766,20 @@ proof -
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) P2
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
     by (by100 blast)
-  \<comment> \<open>q2 \\<circ> \\<phi>: P1 \\<to> Y2 is a quotient map with same fibres as q1.
-     Apply quotient\\_same\\_fibres\\_homeomorphic to get Y1 \\<cong> Y2.\<close>
-  show ?thesis sorry
+  \<comment> \<open>q2 \\<circ> \\<phi>: P1 \\<to> Y2 is a quotient map.\<close>
+  have h\<phi>_quot: "top1_quotient_map_on P1
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) P2
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
+    by (rule top1_homeomorphism_on_imp_quotient_map_on[OF h\<phi>])
+  have hcomp_quot: "top1_quotient_map_on P1
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y2 TY2 (q2 \<circ> \<phi>)"
+    by (rule top1_quotient_map_on_comp[OF h\<phi>_quot hq2])
+  \<comment> \<open>Need: fibres of q1 and q2\\<circ>\\<phi> agree. This requires \\<phi> to preserve vertex/edge correspondence.
+     Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
+  have hfibres: "\<forall>x\<in>P1. \<forall>y\<in>P1. (q1 x = q1 y) \<longleftrightarrow> ((q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y)"
+    sorry \<comment> \<open>Requires convex\\_polygon\\_homeomorphism to be vertex-preserving.\<close>
+  from quotient_same_fibres_homeomorphic[OF hq1 hcomp_quot hfibres]
+  show ?thesis .
 qed
 
 \<comment> \<open>scheme\\_equiv preserves homeomorphism type: equivalent schemes give homeomorphic quotients.\<close>
