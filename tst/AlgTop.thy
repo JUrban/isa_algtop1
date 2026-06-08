@@ -3870,6 +3870,60 @@ proof -
       using \<open>x = ?eAG\<close> by (by100 blast)
   qed
 
+  \<comment> \<open>Extracted: tail product and its properties (used in both decomposition and torsion classification).\<close>
+  let ?tail_outer = "foldr ?mulA (map ?\<iota>A [1..<m]) ?eA"
+  have htail_K0_outer: "?tail_outer \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+  proof -
+    have htail_in: "?tail_outer \<in> ?AbelF"
+    proof -
+      have "\<forall>i<length (map ?\<iota>A [1..<m]). (map ?\<iota>A [1..<m]) ! i \<in> ?AbelF"
+        using h\<iota>A_in by (by100 auto)
+      thus ?thesis using foldr_mul_closed[OF hAbelF_grp] by (by100 blast)
+    qed
+    have "\<epsilon>0 ?tail_outer = 0"
+    proof -
+      have hZ_grp_l: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+          top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+      have "\<forall>i<length (map ?\<iota>A [1..<m]). (map ?\<iota>A [1..<m]) ! i \<in> ?AbelF"
+        using h\<iota>A_in by (by100 auto)
+      hence "\<epsilon>0 ?tail_outer = foldr (+) (map \<epsilon>0 (map ?\<iota>A [1..<m])) (0::int)"
+        using hom_foldr_mul[OF hAbelF_grp hZ_grp_l h\<epsilon>0_hom] by (by100 blast)
+      also have "\<dots> = foldr (+) (map (\<epsilon>0 \<circ> ?\<iota>A) [1..<m]) 0" by (by100 simp)
+      also have "\<dots> = 0"
+      proof -
+        have "\<forall>i\<in>set [1..<m]. (\<epsilon>0 \<circ> ?\<iota>A) i = 0"
+          using h\<epsilon>0_rest by (by100 auto)
+        thus ?thesis by (induct m, by100 simp, by100 simp)
+      qed
+      finally show ?thesis .
+    qed
+    thus ?thesis using htail_in by (by100 blast)
+  qed
+  have hinv_tail_K_outer: "?invgAG (\<phi>_bar ?tail_outer) \<in> ?K"
+  proof -
+    have "?tail_outer \<in> ?AbelF" using htail_K0_outer by (by100 blast)
+    have "?invgAG (\<phi>_bar ?tail_outer) = \<phi>_bar (?invgA ?tail_outer)"
+      using hom_preserves_inv[OF hAbelF_grp hAbelG_grp h\<phi>_hom \<open>?tail_outer \<in> ?AbelF\<close>]
+      by (by100 simp)
+    moreover have "?invgA ?tail_outer \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+    proof -
+      have "?invgA ?tail_outer \<in> ?AbelF" using hAbelF_invg_cl \<open>?tail_outer \<in> ?AbelF\<close> by (by100 blast)
+      have hZ_grp_l: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+          top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+      have "\<epsilon>0 (?invgA ?tail_outer) = - \<epsilon>0 ?tail_outer"
+        using hom_preserves_inv[OF hAbelF_grp hZ_grp_l h\<epsilon>0_hom \<open>?tail_outer \<in> ?AbelF\<close>]
+        by (by100 simp)
+      hence "\<epsilon>0 (?invgA ?tail_outer) = 0" using htail_K0_outer by (by100 simp)
+      thus ?thesis using \<open>?invgA ?tail_outer \<in> ?AbelF\<close> by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 force)
+  qed
+  \<comment> \<open>\<phi>\_bar(\<iota>A 0) = mulAG (invgAG(\<phi>\_bar(tail))) \<beta>G (in abelian group).\<close>
+  have h\<iota>A0_decomp: "\<phi>_bar (?\<iota>A 0) = ?mulAG (?invgAG (\<phi>_bar ?tail_outer)) ?\<beta>G"
+    sorry \<comment> \<open>\<beta>=\<iota>A(0)\<cdot>tail, so \<iota>A(0)=\<beta>\<cdot>tail^{-1}, reorder in abelian.\<close>
+
   \<comment> \<open>Step I: Decomposition. Every h \<in> AbelG decomposes as k \<cdot> t.
      For h = \<phi>\_bar(a): a = (a - \<epsilon>_0(a)\<cdot>\<beta>) + \<epsilon>_0(a)\<cdot>\<beta>.
      First part \<in> K_0 (its \<epsilon>_0 value = \<epsilon>_0(a) - \<epsilon>_0(a)\<cdot>\<epsilon>_0(\<beta>) = 0).
@@ -4164,13 +4218,9 @@ proof -
            So we need a different approach for i=0.\<close>
         \<comment> \<open>Direct approach: \<phi>\_bar(\<iota>A 0) = mulAG k \<beta>G where k = invgAG(\<phi>\_bar(tail)) \<in> K.
            This was already proved inside hK\_decomp. Let's re-derive it.\<close>
-        let ?tail = "foldr ?mulA (map ?\<iota>A [1..<m]) ?eA"
-        have htail_K0: "?tail \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
-          sorry \<comment> \<open>Same proof as in hK\_decomp: \<epsilon>0(tail) = sum of \<epsilon>0(\<iota>A i) for i\<ge>1 = 0.\<close>
-        have "?invgAG (\<phi>_bar ?tail) \<in> ?K"
-          sorry \<comment> \<open>Same proof: invgA(tail) has \<epsilon>0 = 0, so its image is in K.\<close>
-        moreover have "a = ?mulAG (?invgAG (\<phi>_bar ?tail)) ?\<beta>G"
-          sorry \<comment> \<open>Same proof: \<beta> = \<iota>A(0)\<cdot>tail, so \<iota>A(0) = \<beta>\<cdot>tail^{-1}, abelian reorder.\<close>
+        have "?invgAG (\<phi>_bar ?tail_outer) \<in> ?K" using hinv_tail_K_outer .
+        moreover have "a = ?mulAG (?invgAG (\<phi>_bar ?tail_outer)) ?\<beta>G"
+          using hi(2) True h\<iota>A0_decomp by (by100 simp)
         ultimately show ?thesis by (by100 blast)
       qed
     qed
