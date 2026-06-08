@@ -2071,7 +2071,7 @@ proof -
           using subgroup_generated_subset[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
         show "top1_is_group_on (top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF})
             ?mulA ?eA ?invgA"
-          sorry \<comment> \<open>subgroup\_generated is a subgroup (group).\<close>
+          using intersection_of_subgroups_is_group[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
       qed
       moreover have "{?rel_in_AbelF} \<subseteq> top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF}"
         using subgroup_generated_contains[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
