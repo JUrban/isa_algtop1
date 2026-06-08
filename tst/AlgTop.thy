@@ -2885,7 +2885,8 @@ proof -
       fix x assume "x \<in> top1_subgroup_generated_on ?K ?mulAG ?eAG ?invgAG
           ((\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}))"
       thus "x \<in> ?K"
-        sorry \<comment> \<open>subgroup\_generated \<subseteq> K: gens \<in> K (cond 2), K is group.\<close>
+        sorry \<comment> \<open>Gens \<in> K (cond 2), K is group \<Longrightarrow> subgroup\_generated \<subseteq> K.
+           Need hK\_grp but it's in a different show block.\<close>
     next
       \<comment> \<open>(\<subseteq>) K \<subseteq> subgroup\_generated: every x \<in> K = \<phi>\_bar(a) for a \<in> K_0,
          and a is a word in \<iota>A(s) for s > 0 (by K_0 generation from hK0\_fab),
