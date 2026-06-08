@@ -3091,8 +3091,47 @@ proof -
         qed
         \<comment> \<open>In abelian AbelG: \<phi>\_bar(\<iota>A 0) = mulAG (invgAG(\<phi>\_bar(tail))) \<beta>G.\<close>
         have "a = ?mulAG (?invgAG (\<phi>_bar ?tail)) ?\<beta>G"
-          sorry \<comment> \<open>From \<beta> = \<iota>A(0) \<cdot> tail: \<phi>\_bar(\<iota>A 0) = \<phi>\_bar(\<beta>) \<cdot> \<phi>\_bar(tail^{-1})
-             = \<beta>G \<cdot> invgAG(\<phi>\_bar(tail)) = mulAG (invgAG(tail\_img)) \<beta>G (abelian).\<close>
+        proof -
+          have h\<iota>A0_in: "?\<iota>A 0 \<in> ?AbelF" using h\<iota>A_in hm1 by (by100 auto)
+          have htail_in: "?tail \<in> ?AbelF" using htail_K0 by (by100 blast)
+          \<comment> \<open>\<phi>\_bar(\<beta>) = mulAG(\<phi>\_bar(\<iota>A 0))(\<phi>\_bar(tail)).\<close>
+          have "\<phi>_bar ?\<beta>A = ?mulAG (\<phi>_bar (?\<iota>A 0)) (\<phi>_bar ?tail)"
+          proof -
+            have "\<phi>_bar (?mulA (?\<iota>A 0) ?tail) = ?mulAG (\<phi>_bar (?\<iota>A 0)) (\<phi>_bar ?tail)"
+              using h\<phi>_hom h\<iota>A0_in htail_in unfolding top1_group_hom_on_def by (by5000 blast)
+            thus ?thesis using \<open>?\<beta>A = ?mulA (?\<iota>A 0) ?tail\<close> by (by100 simp)
+          qed
+          hence h\<beta>G_eq: "?\<beta>G = ?mulAG a (\<phi>_bar ?tail)" using hi(2) True by (by100 simp)
+          \<comment> \<open>a = mulAG \<beta>G (invgAG(\<phi>\_bar(tail))).\<close>
+          have hphitail_in: "\<phi>_bar ?tail \<in> ?AbelG"
+            using h\<phi>_hom htail_in unfolding top1_group_hom_on_def by (by100 blast)
+          have ha_in: "a \<in> ?AbelG"
+          proof -
+            have "\<phi>_bar (?\<iota>A 0) \<in> ?AbelG"
+              using h\<phi>_hom h\<iota>A0_in unfolding top1_group_hom_on_def by (by5000 blast)
+            thus ?thesis using hi(2) True by (by100 simp)
+          qed
+          have hinvtail_in: "?invgAG (\<phi>_bar ?tail) \<in> ?AbelG"
+            using hAbelG_grp hphitail_in unfolding top1_is_group_on_def by (by100 fast)
+          \<comment> \<open>From \<beta>G = a \<cdot> tail\_img: a = \<beta>G \<cdot> tail\_img^{-1}.\<close>
+          have "?mulAG ?\<beta>G (?invgAG (\<phi>_bar ?tail)) = ?mulAG (?mulAG a (\<phi>_bar ?tail)) (?invgAG (\<phi>_bar ?tail))"
+            using h\<beta>G_eq by (by100 simp)
+          also have "\<dots> = ?mulAG a (?mulAG (\<phi>_bar ?tail) (?invgAG (\<phi>_bar ?tail)))"
+            using hAbelF_assoc sorry \<comment> \<open>Assoc in AbelG for a, tail\_img, inv(tail\_img).\<close>
+          also have "?mulAG (\<phi>_bar ?tail) (?invgAG (\<phi>_bar ?tail)) = ?eAG"
+            using hAbelG_grp hphitail_in unfolding top1_is_group_on_def by (by100 fast)
+          also have "?mulAG a ?eAG = a"
+            using hAbelG_grp ha_in unfolding top1_is_group_on_def by (by100 fast)
+          finally have "?mulAG ?\<beta>G (?invgAG (\<phi>_bar ?tail)) = a" .
+          \<comment> \<open>In abelian: mulAG \<beta>G k' = mulAG k' \<beta>G.\<close>
+          moreover have "?mulAG ?\<beta>G (?invgAG (\<phi>_bar ?tail)) = ?mulAG (?invgAG (\<phi>_bar ?tail)) ?\<beta>G"
+          proof -
+            have "?\<beta>G \<in> ?AbelG" using h\<beta>G_in .
+            thus ?thesis using quotient_by_commutator_is_abelian[OF hG0]
+              sorry \<comment> \<open>Commutativity in AbelG via quotient\_by\_commutator.\<close>
+          qed
+          ultimately show ?thesis by (by100 simp)
+        qed
         thus ?thesis using hinv_tail_K by (by100 blast)
       qed
     qed
