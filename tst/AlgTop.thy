@@ -16780,7 +16780,28 @@ proof -
   have s2: "top1_scheme_equiv
       ([(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1 @ w0)
       ([(a,True),(b,True),(c,True),(b,True),(a,True),(c,True)] @ w1 @ w0)"
-    sorry \<comment> \<open>Reverse of Lemma\\_77\\_1 for label c. Uses scheme\\_equiv\\_sym.\<close>
+  proof -
+    \<comment> \<open>Forward Lemma 77.1 (*) on label c:
+       [(a,T),(b,T)] c [(b,T),(a,T)] c (w1@w0) ~ cc [(a,T),(b,T)] inv([(b,T),(a,T)]) (w1@w0)
+       i.e., ab c ba c w1w0 ~ cc ab (ba)\\<inverse> w1w0 = cc ab a\\<inverse>b\\<inverse> w1w0.
+       Then apply scheme\\_equiv\\_sym to reverse.\<close>
+    have fwd: "top1_scheme_equiv
+        ([(a,True),(b,True)] @ [(c,True)] @ [(b,True),(a,True)] @ [(c,True)] @ (w1 @ w0))
+        ([(c,True),(c,True)] @ [(a,True),(b,True)] @ rev (map top1_inverse_edge [(b,True),(a,True)]) @ (w1 @ w0))"
+    proof (rule Lemma_77_1_projective_collection)
+      show "\<forall>e\<in>set [(a,True),(b,True)] \<union> set [(b,True),(a,True)] \<union> set (w1 @ w0). fst e \<noteq> c"
+        using assms by (by5000 auto)
+      show "\<exists>ba::'a. ba \<noteq> c \<and> (\<forall>e\<in>set [(a,True),(b,True)] \<union> set [(b,True),(a,True)] \<union> set (w1 @ w0). fst e \<noteq> ba)"
+        sorry
+    qed
+    moreover have "rev (map top1_inverse_edge [(b,True),(a,True)]) = [(a,False),(b,False)]"
+      unfolding top1_inverse_edge_def by simp
+    ultimately have fwd': "top1_scheme_equiv
+        ([(a,True),(b,True),(c,True),(b,True),(a,True),(c,True)] @ w1 @ w0)
+        ([(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1 @ w0)"
+      by simp
+    show ?thesis by (rule scheme_equiv_sym[OF fwd'])
+  qed
   \<comment> \<open>Step 3: Lemma 77.1 (*) forward on label b.
      [a] b [c] b [acw1w0] ~ bb [a] inv([c]) [acw1w0] = bb a c\\<inverse> a c w1 w0.\<close>
   have s3: "top1_scheme_equiv
@@ -16805,7 +16826,20 @@ proof -
   have s4: "top1_scheme_equiv
       ([(b,True),(b,True),(a,True),(c,False),(a,True),(c,True)] @ w1 @ w0)
       ([(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1 @ w0)"
-    sorry \<comment> \<open>Lemma\\_77\\_1 for label a with y0=[(b,T),(b,T)], y1=[(c,F)], y2=[(c,T)]@w1@w0.\<close>
+  proof -
+    have "top1_scheme_equiv
+        ([(b,True),(b,True)] @ [(a,True)] @ [(c,False)] @ [(a,True)] @ ([(c,True)] @ w1 @ w0))
+        ([(a,True),(a,True)] @ [(b,True),(b,True)] @ rev (map top1_inverse_edge [(c,False)]) @ ([(c,True)] @ w1 @ w0))"
+    proof (rule Lemma_77_1_projective_collection)
+      show "\<forall>e\<in>set [(b,True),(b,True)] \<union> set [(c,False)] \<union> set ([(c,True)] @ w1 @ w0). fst e \<noteq> a"
+        using assms by (by5000 auto)
+      show "\<exists>ba::'a. ba \<noteq> a \<and> (\<forall>e\<in>set [(b,True),(b,True)] \<union> set [(c,False)] \<union> set ([(c,True)] @ w1 @ w0). fst e \<noteq> ba)"
+        sorry
+    qed
+    moreover have "rev (map top1_inverse_edge [(c,False)]) = [(c,True)]"
+      unfolding top1_inverse_edge_def by simp
+    ultimately show ?thesis by simp
+  qed
   \<comment> \<open>Step 5: Rotate back.\<close>
   have s5: "top1_scheme_equiv
       ([(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1 @ w0)
