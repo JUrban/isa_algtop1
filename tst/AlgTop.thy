@@ -1437,6 +1437,15 @@ proof -
   qed
 qed
 
+\<comment> \<open>Reindex a free abelian group via a bijection on the index set.\<close>
+lemma free_abelian_reindex:
+  assumes hfab: "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
+      and hbij: "bij_betw f S' S"
+  shows "top1_is_free_abelian_group_full_on G mul e invg (\<iota> \<circ> f) S'"
+  sorry \<comment> \<open>Conditions: abelian (same), (\<iota>\<circ>f) maps S' into G (comp),
+     inj\_on (\<iota>\<circ>f) S' (from inj \<iota> + bij f), generation (image same),
+     independence (transfer via f bijection on support sets).\<close>
+
 theorem Theorem_75_4_H1_m_projective:
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_m_fold_projective_on X TX m"
@@ -2480,7 +2489,27 @@ proof -
   \<comment> \<open>Step G: Reindex {..<m}-{0} to {..<m-1} via the Suc bijection.\<close>
   have hK_fab: "top1_is_free_abelian_group_full_on ?K ?mulAG ?eAG ?invgAG
       ?\<gamma> {..<m-1}"
-    sorry \<comment> \<open>Suc: {..<m-1} \<rightarrow> {..<m}-{0} bijection + \<gamma> i = \<phi>\_bar(\<iota>A(Suc i)).\<close>
+  proof -
+    have hSuc_bij: "bij_betw Suc {..<m-1} ({..<m} - {0::nat})"
+      unfolding bij_betw_def
+    proof (intro conjI)
+      show "inj_on Suc {..<m - 1}" by (by100 simp)
+      show "Suc ` {..<m - 1} = {..<m} - {0}"
+      proof (rule set_eqI, rule iffI)
+        fix x assume "x \<in> Suc ` {..<m - 1}"
+        thus "x \<in> {..<m} - {0}" using hm1 by (by100 auto)
+      next
+        fix x assume "x \<in> {..<m} - {0}"
+        hence "x > 0" "x < m" by (by100 auto)+
+        hence "x - 1 < m - 1" "Suc (x - 1) = x" by (by100 auto)+
+        hence "x - 1 \<in> {..<m-1}" by (by100 simp)
+        hence "Suc (x - 1) \<in> Suc ` {..<m-1}" by (by100 blast)
+        thus "x \<in> Suc ` {..<m - 1}" using \<open>Suc (x - 1) = x\<close> by (by100 simp)
+      qed
+    qed
+    have "?\<gamma> = (\<lambda>s. \<phi>_bar (?\<iota>A s)) \<circ> Suc" by (by100 auto)
+    thus ?thesis using free_abelian_reindex[OF hK_fab_raw hSuc_bij] by (by100 simp)
+  qed
 
   \<comment> \<open>Step H: K \<inter> torsion = {eAG}.
      K is free abelian, free abelian groups are torsion-free.\<close>
