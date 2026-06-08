@@ -15002,8 +15002,13 @@ proof -
               unfolding \<beta>_def by simp
             thus ?thesis by simp
           qed
-          show "q \<in> Q (Suc k)" unfolding Q_def
-            using h\<beta>_pos h\<beta>_sum hx hy sorry
+          show "q \<in> Q (Suc k)"
+          proof -
+            have "\<exists>coeffs. (\<forall>i\<le>Suc k. 0 \<le> coeffs i) \<and> (\<Sum>i\<le>Suc k. coeffs i) = 1
+                \<and> fst q = (\<Sum>i\<le>Suc k. coeffs i * vx i) \<and> snd q = (\<Sum>i\<le>Suc k. coeffs i * vy i)"
+              using h\<beta>_pos h\<beta>_sum hx hy by (by100 blast)
+            thus ?thesis unfolding Q_def by (by100 auto)
+          qed
         qed
       qed
       have hf_cont: "continuous_on ({0..1} \<times> Q k) f"
