@@ -1749,7 +1749,9 @@ proof -
       have h\<epsilon>_\<beta>: "\<epsilon> ?\<beta>A = 1"
       proof -
         have hZ_grp: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
-          sorry \<comment> \<open>Z is a group under addition.\<close>
+          using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+            top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def
+          by (by100 blast)
         have "\<forall>i < length ?\<beta>_list. ?\<beta>_list ! i \<in> ?AbelF"
           using h\<iota>A_in by (by100 auto)
         hence "\<epsilon> ?\<beta>A = foldr (+) (map \<epsilon> ?\<beta>_list) (0::int)"
