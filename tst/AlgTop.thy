@@ -16762,10 +16762,61 @@ lemma Lemma_77_4_projective_absorbs_torus:
   shows "top1_scheme_equiv
       (w0 @ [(c, True), (c, True), (a, True), (b, True), (a, False), (b, False)] @ w1)
       (w0 @ [(a, True), (a, True), (b, True), (b, True), (c, True), (c, True)] @ w1)"
-  sorry \<comment> \<open>Book proof: rotate to bring cc aba\\<inverse>b\\<inverse> to front, then apply Lemma 77.1 (*) three
-     times (once reversed, once forward, once forward), then rotate back.
-     Each application of (*) collects one same-direction pair.
-     Requires a,b,c all distinct and not in w0,w1.\<close>
+proof -
+  \<comment> \<open>Step 1: Rotate to bring ccaba\\<inverse>b\\<inverse> to front.\<close>
+  have s1: "top1_scheme_equiv
+      (w0 @ [(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1)
+      ([(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1 @ w0)"
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.rotate
+      [of w0 "[(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1"]
+    by (simp add: rtranclp.rtrancl_into_rtrancl)
+  \<comment> \<open>Step 2: Lemma 77.1 (*) reversed on label c.
+     Forward (*): y0 c y1 c y2 ~ cc y0 inv(y1) y2
+     With y0 = [(a,T),(b,T)], y1 = [(b,T),(a,T)], y2 = w1@w0:
+     [(a,T),(b,T)] c [(b,T),(a,T)] c (w1@w0) ~ cc [(a,T),(b,T)] inv([(b,T),(a,T)]) (w1@w0)
+     = cc [(a,T),(b,T)] [(a,F),(b,F)] (w1@w0)
+     Reversed: cc ab a\\<inverse>b\\<inverse> w1 w0 ~ ab c ba c w1 w0.\<close>
+  have s2: "top1_scheme_equiv
+      ([(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1 @ w0)
+      ([(a,True),(b,True),(c,True),(b,True),(a,True),(c,True)] @ w1 @ w0)"
+    sorry \<comment> \<open>Reverse of Lemma\\_77\\_1 for label c. Uses scheme\\_equiv\\_sym.\<close>
+  \<comment> \<open>Step 3: Lemma 77.1 (*) forward on label b.
+     [a] b [c] b [acw1w0] ~ bb [a] inv([c]) [acw1w0] = bb a c\\<inverse> a c w1 w0.\<close>
+  have s3: "top1_scheme_equiv
+      ([(a,True),(b,True),(c,True),(b,True),(a,True),(c,True)] @ w1 @ w0)
+      ([(b,True),(b,True),(a,True),(c,False),(a,True),(c,True)] @ w1 @ w0)"
+  proof -
+    have "top1_scheme_equiv
+        ([(a,True)] @ [(b,True)] @ [(c,True)] @ [(b,True)] @ ([(a,True),(c,True)] @ w1 @ w0))
+        ([(b,True),(b,True)] @ [(a,True)] @ rev (map top1_inverse_edge [(c,True)]) @ ([(a,True),(c,True)] @ w1 @ w0))"
+    proof (rule Lemma_77_1_projective_collection)
+      show "\<forall>e\<in>set [(a,True)] \<union> set [(c,True)] \<union> set ([(a,True),(c,True)] @ w1 @ w0). fst e \<noteq> b"
+        using assms by (by5000 auto)
+      show "\<exists>ba::'a. ba \<noteq> b \<and> (\<forall>e\<in>set [(a,True)] \<union> set [(c,True)] \<union> set ([(a,True),(c,True)] @ w1 @ w0). fst e \<noteq> ba)"
+        sorry
+    qed
+    moreover have "rev (map top1_inverse_edge [(c,True)]) = [(c,False)]"
+      unfolding top1_inverse_edge_def by simp
+    ultimately show ?thesis by simp
+  qed
+  \<comment> \<open>Step 4: Lemma 77.1 (*) forward on label a.
+     [bb] a [c\\<inverse>] a [cw1w0] ~ aa [bb] inv([c\\<inverse>]) [cw1w0] = aa bb c c w1 w0.\<close>
+  have s4: "top1_scheme_equiv
+      ([(b,True),(b,True),(a,True),(c,False),(a,True),(c,True)] @ w1 @ w0)
+      ([(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1 @ w0)"
+    sorry \<comment> \<open>Lemma\\_77\\_1 for label a with y0=[(b,T),(b,T)], y1=[(c,F)], y2=[(c,T)]@w1@w0.\<close>
+  \<comment> \<open>Step 5: Rotate back.\<close>
+  have s5: "top1_scheme_equiv
+      ([(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1 @ w0)
+      (w0 @ [(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1)"
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.rotate
+      [of "[(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1" w0]
+    by (simp add: rtranclp.rtrancl_into_rtrancl)
+  from s1 s2 s3 s4 s5 show ?thesis
+    unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+qed
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
