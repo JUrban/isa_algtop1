@@ -2139,20 +2139,23 @@ proof -
       finally have hsum: "foldr (+) (map \<epsilon>0 ws) (0::int) = 0" using h\<epsilon>0a by (by100 simp)
       \<comment> \<open>Each \<epsilon>_0(ws!i) \<in> {2, -2}. Sum = 0 means equal counts.
          In abelian group with equal rel/invrel counts, product = eA.\<close>
-      \<comment> \<open>Build a word w with one generator (unit label) and True/False
-         indicating rel vs invg(rel). Apply abelian\_word\_product\_zero\_net\_coeff.\<close>
-      let ?bools = "map (\<lambda>x. x = ?rel_in_AbelF) ws"
-      \<comment> \<open>ws = map (\<lambda>b. if b then rel else invgA(rel)) ?bools.\<close>
-      have hws_eq: "ws = map (\<lambda>b. if b then ?rel_in_AbelF else ?invgA ?rel_in_AbelF) ?bools"
-        sorry \<comment> \<open>Each ws!i is rel or invgA(rel), reconstructed from booleans.\<close>
-      \<comment> \<open>The balanced condition: equal True/False count in ?bools for the single label.\<close>
-      have hbalanced: "length (filter (\<lambda>b. b) ?bools) = length (filter (\<lambda>b. \<not>b) ?bools)"
-        sorry \<comment> \<open>From hsum: \<epsilon>_0 gives 2 for True (rel), -2 for False (invg rel).
-           Sum = 0 means 2\<cdot>#True + (-2)\<cdot>#False = 0, i.e., #True = #False.\<close>
-      \<comment> \<open>In the abelian group, foldr with balanced True/False for a single generator = eA.\<close>
-      have "foldr ?mulA ws ?eA = ?eA"
-        sorry \<comment> \<open>Abelian product of balanced rel/invg(rel) pairs = eA.
-           Uses abelian\_word\_product\_zero\_net\_coeff or direct induction.\<close>
+      \<comment> \<open>Use abelian\_word\_product\_zero\_net\_coeff with a single-generator word.
+         Label type: unit. phi () = rel. Word: map (\<lambda>x. ((), x = rel)) ws.\<close>
+      let ?w = "map (\<lambda>x. (()::unit, x = ?rel_in_AbelF)) ws"
+      let ?\<phi>w = "\<lambda>_::unit. ?rel_in_AbelF"
+      have "top1_group_word_product ?mulA ?eA ?invgA (map (\<lambda>(s,b). (?\<phi>w s, b)) ?w) = ?eA"
+      proof (rule abelian_word_product_zero_net_coeff[OF hAbelF_abel])
+        show "\<forall>s \<in> fst ` set ?w. ?\<phi>w s \<in> ?AbelF"
+          using hN_in_AbelF by (by100 auto)
+        show "\<forall>s. length (filter (\<lambda>(t,b). t = s \<and> b) ?w)
+            = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) ?w)"
+          sorry \<comment> \<open>Balanced condition from hsum: \<epsilon>_0 sum = 0 means #True = #False.\<close>
+      qed
+      moreover have "top1_group_word_product ?mulA ?eA ?invgA (map (\<lambda>(s,b). (?\<phi>w s, b)) ?w)
+          = foldr ?mulA ws ?eA"
+        sorry \<comment> \<open>word\_product with phi() maps back to the original foldr.
+           Each ((), True) gives rel (= ws!i), each ((), False) gives invgA(rel) (= ws!i).\<close>
+      ultimately have "foldr ?mulA ws ?eA = ?eA" by (by100 simp)
       thus "a \<in> {?eA}" using hprod by (by100 blast)
     qed
   next
