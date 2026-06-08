@@ -14718,6 +14718,14 @@ lemma elementary_operation_preserves_quotient:
      cancel/uncancel: fold/unfold polygon.
      cut\\_paste/cut\\_paste2/cut\\_paste\\_opp: rearrange polygon via cut-flip-paste.\<close>
 
+\<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
+lemma scheme_equiv_preserves_quotient:
+  assumes "top1_quotient_of_scheme_on Y TY s"
+      and "top1_scheme_equiv s t"
+  shows "top1_quotient_of_scheme_on Y TY t"
+  using assms(2,1) unfolding top1_scheme_equiv_def
+  by (induction rule: rtranclp.induct) (auto intro: elementary_operation_preserves_quotient)
+
 \<comment> \<open>Two convex n-gons in R² are homeomorphic via a boundary-preserving map.
    The homeomorphism maps vertex i of P1 to vertex i of P2, and maps each edge linearly.\<close>
 lemma convex_polygon_homeomorphism:
@@ -14761,6 +14769,20 @@ proof -
   \<comment> \<open>q2 \\<circ> \\<phi>: P1 \\<to> Y2 is a quotient map with same fibres as q1.
      Apply quotient\\_same\\_fibres\\_homeomorphic to get Y1 \\<cong> Y2.\<close>
   show ?thesis sorry
+qed
+
+\<comment> \<open>scheme\\_equiv preserves homeomorphism type: equivalent schemes give homeomorphic quotients.\<close>
+lemma scheme_equiv_homeomorphic:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 s"
+      and "top1_quotient_of_scheme_on Y2 TY2 t"
+      and "top1_scheme_equiv s t"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+proof -
+  have "top1_quotient_of_scheme_on Y1 TY1 t"
+    by (rule scheme_equiv_preserves_quotient[OF assms(3) assms(5)])
+  from scheme_quotient_uniqueness[OF assms(1) assms(2) this assms(4)]
+  show ?thesis .
 qed
 
 \<comment> \<open>Scheme rotation preserves quotient type: quotient(u@v) \\<cong> quotient(v@u).
