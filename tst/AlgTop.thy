@@ -15711,14 +15711,29 @@ proof -
       show ?thesis sorry
     next
       \<comment> \<open>Case 2: scheme \\<sim> torus normal form.\<close>
-      fix n w assume "n > 0" "top1_is_torus_scheme w n" "top1_scheme_equiv scheme w"
-      \<comment> \<open>X is quotient of scheme. scheme \\<sim> w. Theorem 76 (iterated) gives X \\<cong> quotient(w).
-         quotient(w) = quotient(torus\\_scheme n) = n-fold torus by definition.\<close>
-      show ?thesis sorry
+      fix n w assume hn: "n > 0" and htor: "top1_is_torus_scheme w n"
+          and hequiv: "top1_scheme_equiv scheme w"
+      \<comment> \<open>X is quotient of w (by scheme\\_equiv\\_preserves\\_quotient).\<close>
+      have "top1_quotient_of_scheme_on X TX w"
+        by (rule scheme_equiv_preserves_quotient[OF hsch hequiv])
+      hence "top1_quotient_of_scheme_on X TX (top1_n_torus_scheme n)"
+        using htor unfolding top1_is_torus_scheme_def by simp
+      hence "top1_is_n_fold_torus_on X TX n"
+        using hn unfolding top1_is_n_fold_torus_on_def by simp
+      \<comment> \<open>X is itself an n-fold torus. Take T\\_n = X, h = id.\<close>
+      \<comment> \<open>X itself is an n-fold torus. Take T\\_n = X, h = id.\<close>
+      have "top1_homeomorphism_on X TX X TX id"
+        sorry \<comment> \<open>Identity homeomorphism on a strict topology.\<close>
+      thus ?thesis using hn \<open>top1_is_n_fold_torus_on X TX n\<close> sorry
     next
       \<comment> \<open>Case 3: scheme \\<sim> projective normal form.\<close>
-      fix m w assume "m > 0" "top1_is_projective_scheme w m" "top1_scheme_equiv scheme w"
-      show ?thesis sorry
+      fix m w assume hm: "m > 0" and hproj: "top1_is_projective_scheme w m"
+          and hequiv: "top1_scheme_equiv scheme w"
+      have "top1_quotient_of_scheme_on X TX w"
+        by (rule scheme_equiv_preserves_quotient[OF hsch hequiv])
+      hence "top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
+        using hproj unfolding top1_is_projective_scheme_def by simp
+      show ?thesis sorry \<comment> \<open>m=1: dunce cap case. m\\<ge>2: quotient\\_of\\_scheme directly.\<close>
     qed
   qed
 qed
