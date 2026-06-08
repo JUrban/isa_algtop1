@@ -16757,6 +16757,7 @@ qed
    w0 (cc)(aba\\<inverse>b\\<inverse>) w1 ~ w0 (aabbcc) w1.
    Proof: 5-step chain using Lemma 77.1 (*) and rotations.\<close>
 lemma Lemma_77_4_projective_absorbs_torus:
+  fixes a b c :: 'a and w0 w1 :: "('a \<times> bool) list"
   assumes "a \<noteq> b" "a \<noteq> c" "b \<noteq> c"
       and "\<forall>e \<in> set w0 \<union> set w1. fst e \<noteq> a \<and> fst e \<noteq> b \<and> fst e \<noteq> c"
       and "infinite (UNIV :: 'a set)"
@@ -16772,6 +16773,33 @@ proof -
     hence "UNIV \<noteq> S" using \<open>finite S\<close> by (by100 blast)
     thus "\<exists>x. x \<notin> S" by (by100 blast)
   qed
+  \<comment> \<open>Obtain a fresh label d \\<noteq> a,b,c and not in w0,w1.\<close>
+  obtain d :: 'a where hd: "d \<notin> fst ` (set w0 \<union> set w1) \<union> {a, b, c}"
+  proof -
+    have "finite (fst ` (set w0 \<union> set w1) \<union> {a, b, c} :: 'a set)" by simp
+    moreover have "\<not> finite (UNIV :: 'a set)" using assms(5) by simp
+    ultimately have "UNIV \<noteq> (fst ` (set w0 \<union> set w1) \<union> {a, b, c} :: 'a set)" by (by100 metis)
+    hence "\<exists>d :: 'a. d \<notin> fst ` (set w0 \<union> set w1) \<union> {a, b, c}" by (by100 blast)
+    thus ?thesis using that by (by100 blast)
+  qed
+  hence hd_ne: "d \<noteq> a" "d \<noteq> b" "d \<noteq> c" and hd_fresh: "\<forall>e \<in> set w0 \<union> set w1. fst e \<noteq> d"
+    by (by100 auto)+
+  \<comment> \<open>Pre-establish all three Lemma 77.1 applications.\<close>
+  have h771_c: "top1_scheme_equiv
+      ([(a,True),(b,True)] @ [(c,True)] @ [(b,True),(a,True)] @ [(c,True)] @ (w1 @ w0))
+      ([(c,True),(c,True)] @ [(a,True),(b,True)] @ rev (map top1_inverse_edge [(b,True),(a,True)]) @ (w1 @ w0))"
+    by (rule Lemma_77_1_projective_collection)
+       (use assms hd_ne hd_fresh in \<open>by100 auto\<close>)+
+  have h771_b: "top1_scheme_equiv
+      ([(a,True)] @ [(b,True)] @ [(c,True)] @ [(b,True)] @ ([(a,True),(c,True)] @ w1 @ w0))
+      ([(b,True),(b,True)] @ [(a,True)] @ rev (map top1_inverse_edge [(c,True)]) @ ([(a,True),(c,True)] @ w1 @ w0))"
+    by (rule Lemma_77_1_projective_collection)
+       (use assms hd_ne hd_fresh in \<open>by100 auto\<close>)+
+  have h771_a: "top1_scheme_equiv
+      ([(b,True),(b,True)] @ [(a,True)] @ [(c,False)] @ [(a,True)] @ ([(c,True)] @ w1 @ w0))
+      ([(a,True),(a,True)] @ [(b,True),(b,True)] @ rev (map top1_inverse_edge [(c,False)]) @ ([(c,True)] @ w1 @ w0))"
+    by (rule Lemma_77_1_projective_collection)
+       (use assms hd_ne hd_fresh in \<open>by100 auto\<close>)+
   \<comment> \<open>Step 1: Rotate to bring ccaba\\<inverse>b\\<inverse> to front.\<close>
   have s1: "top1_scheme_equiv
       (w0 @ [(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1)
@@ -16797,7 +16825,7 @@ proof -
     have fwd: "top1_scheme_equiv
         ([(a,True),(b,True)] @ [(c,True)] @ [(b,True),(a,True)] @ [(c,True)] @ (w1 @ w0))
         ([(c,True),(c,True)] @ [(a,True),(b,True)] @ rev (map top1_inverse_edge [(b,True),(a,True)]) @ (w1 @ w0))"
-      sorry \<comment> \<open>Lemma\\_77\\_1 forward on c. Fresh label exists from infinite type.\<close>
+      by (rule h771_c)
     moreover have "rev (map top1_inverse_edge [(b,True),(a,True)]) = [(a,False),(b,False)]"
       unfolding top1_inverse_edge_def by simp
     ultimately have fwd': "top1_scheme_equiv
@@ -16815,8 +16843,7 @@ proof -
     have "top1_scheme_equiv
         ([(a,True)] @ [(b,True)] @ [(c,True)] @ [(b,True)] @ ([(a,True),(c,True)] @ w1 @ w0))
         ([(b,True),(b,True)] @ [(a,True)] @ rev (map top1_inverse_edge [(c,True)]) @ ([(a,True),(c,True)] @ w1 @ w0))"
-      using Lemma_77_1_projective_collection[of "[(a,True)]" "[(c,True)]" "[(a,True),(c,True)] @ w1 @ w0" b]
-            assms hfresh sorry
+      by (rule h771_b)
     moreover have "rev (map top1_inverse_edge [(c,True)]) = [(c,False)]"
       unfolding top1_inverse_edge_def by simp
     ultimately show ?thesis by simp
@@ -16830,8 +16857,7 @@ proof -
     have "top1_scheme_equiv
         ([(b,True),(b,True)] @ [(a,True)] @ [(c,False)] @ [(a,True)] @ ([(c,True)] @ w1 @ w0))
         ([(a,True),(a,True)] @ [(b,True),(b,True)] @ rev (map top1_inverse_edge [(c,False)]) @ ([(c,True)] @ w1 @ w0))"
-      using Lemma_77_1_projective_collection[of "[(b,True),(b,True)]" "[(c,False)]" "[(c,True)] @ w1 @ w0" a]
-            assms hfresh sorry
+      by (rule h771_a)
     moreover have "rev (map top1_inverse_edge [(c,False)]) = [(c,True)]"
       unfolding top1_inverse_edge_def by simp
     ultimately show ?thesis by simp
