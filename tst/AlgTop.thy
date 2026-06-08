@@ -14948,7 +14948,13 @@ proof -
       fix k assume hIH: "compact (Q k)"
       \<comment> \<open>Q(Suc k) = image of [0,1] \\<times> Q(k) under the affine combination map.\<close>
       define f where "f = (\<lambda>(t::real, p::real\<times>real). (t * vx (Suc k) + (1-t) * fst p, t * vy (Suc k) + (1-t) * snd p))"
-      have hQ_eq: "Q (Suc k) = f ` ({0..1} \<times> Q k)" sorry
+      have hQ_eq: "Q (Suc k) = f ` ({0..1} \<times> Q k)"
+      proof
+        \<comment> \<open>(\\<subseteq>): every convex combo of k+2 points = t*v\\_{k+1} + (1-t)*(combo of first k+1).\<close>
+        show "Q (Suc k) \<subseteq> f ` ({0..1} \<times> Q k)" sorry
+        \<comment> \<open>(\\<supseteq>): t*v\\_{k+1} + (1-t)*p where p \\<in> Q k is a convex combo of k+2 points.\<close>
+        show "f ` ({0..1} \<times> Q k) \<subseteq> Q (Suc k)" sorry
+      qed
       have hf_cont: "continuous_on ({0..1} \<times> Q k) f"
       proof -
         have "f = (\<lambda>tp. (fst tp * vx (Suc k) + (1 - fst tp) * fst (snd tp),
