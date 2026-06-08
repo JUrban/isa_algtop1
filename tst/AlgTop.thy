@@ -1685,8 +1685,35 @@ proof (rule ccontr)
      if \<epsilon>_{s_0}(x) = 0 for all s_0 \<in> S, then x = e.\<close>
   \<comment> \<open>This needs: if x \<in> G, x \<noteq> e, then \<exists>s_0 \<in> S with \<epsilon>_{s_0}(x) \<noteq> 0.
      Equivalently: if all coordinates are 0, x = e.\<close>
+  \<comment> \<open>Step 3: x \<noteq> e, x \<in> G = subgroup\_generated(\<iota> ` S). Get word representation.\<close>
+  have hgen: "G = top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+    using hfab unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have h\<iota>_in: "\<forall>s \<in> S. \<iota> s \<in> G"
+    using hfab unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  have h\<iota>_sub: "\<iota> ` S \<subseteq> G" using h\<iota>_in by (by100 blast)
+  have hx_sg: "x \<in> top1_subgroup_generated_on G mul e invg (\<iota> ` S)"
+    using hx hgen by (by100 simp)
+  from subgroup_generated_word_repr[OF hgrp h\<iota>_sub hx_sg]
+  have "x = e \<or> (\<exists>ws. length ws > 0
+      \<and> (\<forall>i<length ws. ws!i \<in> \<iota> ` S \<or> (\<exists>s\<in>\<iota> ` S. ws!i = invg s))
+      \<and> foldr mul ws e = x)" by (by100 blast)
+  hence "\<exists>ws. length ws > 0
+      \<and> (\<forall>i<length ws. ws!i \<in> \<iota> ` S \<or> (\<exists>s\<in>\<iota> ` S. ws!i = invg s))
+      \<and> foldr mul ws e = x" using hne by (by100 blast)
+  then obtain ws where hlen: "length ws > 0"
+      and hws: "\<forall>i<length ws. ws!i \<in> \<iota> ` S \<or> (\<exists>s\<in>\<iota> ` S. ws!i = invg s)"
+      and hprod_ws: "foldr mul ws e = x" by (by100 blast)
+
+  \<comment> \<open>Convert to word-product format. Define w :: ('s \<times> bool) list.\<close>
+  \<comment> \<open>Each ws!i = \<iota>(s) (True) or invg(\<iota>(s)) (False) for some s \<in> S.\<close>
+  \<comment> \<open>Build a word w such that word\_product (map (\<lambda>(s,b). (\<iota> s, b)) w) = x.\<close>
+  \<comment> \<open>Then since x \<noteq> e = foldr mul ws e, word product \<noteq> e.
+     By free\_abelian\_eval\_e\_zero\_net\_coeff (contrapositive),
+     \<exists>s with unbalanced True/False count.
+     \<epsilon>_s(x) = net count \<noteq> 0. Contradiction.\<close>
   show False
-    sorry \<comment> \<open>From hcoords\_zero + hne: contradicts free abelian separating property.\<close>
+    sorry \<comment> \<open>Convert word repr to (s,b) format, use free\_abelian\_eval\_e\_zero\_net\_coeff contrapositive,
+       bridge to coordinate projections.\<close>
 qed
 
 \<comment> \<open>The quotient of Z^m by 2\<beta> (where \<beta> = sum of generators) has:
@@ -1730,8 +1757,100 @@ lemma abelian_generated_decomposes_via_order2:
       and hA_sub: "A \<subseteq> G"
       and hA_decomp: "\<forall>a\<in>A. a \<in> K \<or> (\<exists>k\<in>K. a = mul k t)"
   shows "\<forall>g\<in>G. \<exists>k\<in>K. g = k \<or> g = mul k t"
-  sorry \<comment> \<open>Induction on word representation: products/inverses of elements
-     of the form k or k\<cdot>t stay in K \<cup> K\<cdot>t in an abelian group where t^2=e.\<close>
+proof (intro ballI)
+  fix g assume hg: "g \<in> G"
+  have hgrp: "top1_is_group_on G mul e invg"
+    using habel unfolding top1_is_abelian_group_on_def by (by100 blast)
+  \<comment> \<open>g \<in> subgroup\_generated(A). Word representation.\<close>
+  have hg_sg: "g \<in> top1_subgroup_generated_on G mul e invg A"
+    using hg hgen by (by100 simp)
+  from subgroup_generated_word_repr[OF hgrp hA_sub hg_sg]
+  have "g = e \<or> (\<exists>ws. length ws > 0
+      \<and> (\<forall>i<length ws. ws!i \<in> A \<or> (\<exists>s\<in>A. ws!i = invg s))
+      \<and> foldr mul ws e = g)" by (by100 blast)
+  thus "\<exists>k\<in>K. g = k \<or> g = mul k t"
+  proof (elim disjE)
+    assume "g = e"
+    moreover have "e \<in> K" using hK_grp unfolding top1_is_group_on_def by (by100 blast)
+    ultimately show ?thesis by (by100 blast)
+  next
+    assume "\<exists>ws. length ws > 0
+        \<and> (\<forall>i<length ws. ws!i \<in> A \<or> (\<exists>s\<in>A. ws!i = invg s))
+        \<and> foldr mul ws e = g"
+    then obtain ws where hlen: "length ws > 0"
+        and hws: "\<forall>i<length ws. ws!i \<in> A \<or> (\<exists>s\<in>A. ws!i = invg s)"
+        and hprod: "foldr mul ws e = g" by (by100 blast)
+    \<comment> \<open>Each ws!i decomposes into K \<cup> K\<cdot>{t}:
+       - If ws!i \<in> A: ws!i \<in> K or ws!i = k\<cdot>t by hA\_decomp
+       - If ws!i = invg(a) for a \<in> A:
+         - If a \<in> K: invg(a) \<in> K
+         - If a = k\<cdot>t: invg(a) = invg(t)\<cdot>invg(k) = t\<cdot>invg(k) (abelian, invg(t)=t).
+           So invg(a) = mul(invg(k))(t) (abelian), invg(k) \<in> K.\<close>
+    \<comment> \<open>By induction on ws: foldr mul ws e \<in> K \<cup> K\<cdot>{t}.
+       Base: foldr mul [] e = e \<in> K.
+       Step: foldr mul (a#rest) e = mul a (foldr mul rest e).
+         a \<in> K \<cup> K\<cdot>{t}, foldr \<in> K \<cup> K\<cdot>{t} by IH.
+         - K\<cdot>K = K (K is subgroup)
+         - K\<cdot>(K\<cdot>t) = K\<cdot>t (K is subgroup, abelian)
+         - (K\<cdot>t)\<cdot>K = K\<cdot>t (abelian)
+         - (K\<cdot>t)\<cdot>(K\<cdot>t) = K\<cdot>t\<cdot>t = K (since t^2=e).\<close>
+    \<comment> \<open>invg(t) = t (since t^2 = e in group).\<close>
+    have ht_inv: "invg t = t"
+      sorry \<comment> \<open>From t^2=e: mul t t = e = mul t (invg t), left cancel gives t = invg t.\<close>
+    \<comment> \<open>Each ws!i decomposes.\<close>
+    have hws_decomp: "\<forall>i<length ws. \<exists>k\<in>K. ws!i = k \<or> ws!i = mul k t"
+    proof (intro allI impI)
+      fix i assume hi: "i < length ws"
+      from hws hi have "ws!i \<in> A \<or> (\<exists>s\<in>A. ws!i = invg s)" by (by100 blast)
+      thus "\<exists>k\<in>K. ws!i = k \<or> ws!i = mul k t"
+      proof (elim disjE)
+        assume "ws!i \<in> A"
+        from hA_decomp this show ?thesis by (by100 blast)
+      next
+        assume "\<exists>s\<in>A. ws!i = invg s"
+        then obtain a where ha: "a \<in> A" "ws!i = invg a" by (by100 blast)
+        from hA_decomp ha(1) have "a \<in> K \<or> (\<exists>k\<in>K. a = mul k t)" by (by100 blast)
+        thus ?thesis
+        proof (elim disjE)
+          assume "a \<in> K"
+          hence "invg a \<in> K" using hK_grp unfolding top1_is_group_on_def by (by100 fast)
+          thus ?thesis using ha(2) by (by100 blast)
+        next
+          assume "\<exists>k\<in>K. a = mul k t"
+          then obtain k0 where hk0: "k0 \<in> K" "a = mul k0 t" by (by100 blast)
+          \<comment> \<open>invg(a) = invg(mul k0 t) = mul(invg t)(invg k0) = mul t (invg k0) = mul(invg k0) t (abelian).\<close>
+          have "invg a = mul (invg k0) t"
+            sorry \<comment> \<open>invg(k0\<cdot>t) = invg(t)\<cdot>invg(k0) = t\<cdot>invg(k0) = invg(k0)\<cdot>t (abelian).\<close>
+          moreover have "invg k0 \<in> K" using hK_grp hk0(1) unfolding top1_is_group_on_def by (by100 fast)
+          ultimately have "ws!i = mul (invg k0) t" using ha(2) by (by100 simp)
+          thus ?thesis using \<open>invg k0 \<in> K\<close> by (by100 blast)
+        qed
+      qed
+    qed
+    \<comment> \<open>Induction: foldr mul ws e \<in> K \<union> K\<cdot>{t}.\<close>
+    have hfoldr_decomp: "\<forall>i<length ws. \<exists>k\<in>K. ws!i = k \<or> ws!i = mul k t \<Longrightarrow>
+        \<forall>i<length ws. ws!i \<in> G \<Longrightarrow>
+        \<exists>k\<in>K. foldr mul ws e = k \<or> foldr mul ws e = mul k t"
+      sorry \<comment> \<open>List induction: 4-case product closure in K \<union> K\<cdot>{t}.\<close>
+    \<comment> \<open>Apply the induction.\<close>
+    moreover have "\<forall>i<length ws. ws!i \<in> G"
+    proof (intro allI impI)
+      fix i assume "i < length ws"
+      from hws this have "ws!i \<in> A \<or> (\<exists>s\<in>A. ws!i = invg s)" by (by100 blast)
+      thus "ws!i \<in> G"
+      proof (elim disjE)
+        assume "ws!i \<in> A" thus ?thesis using hA_sub by (by100 blast)
+      next
+        assume "\<exists>s\<in>A. ws!i = invg s"
+        then obtain s where "s \<in> A" "ws!i = invg s" by (by100 blast)
+        hence "s \<in> G" using hA_sub by (by100 blast)
+        hence "invg s \<in> G" using hgrp unfolding top1_is_group_on_def by (by100 fast)
+        thus ?thesis using \<open>ws!i = invg s\<close> by (by100 simp)
+      qed
+    qed
+    ultimately show ?thesis using hprod hws_decomp by (by100 blast)
+  qed
+qed
 
 theorem Theorem_75_4_H1_m_projective:
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
