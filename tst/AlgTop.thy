@@ -14732,18 +14732,18 @@ proof -
       hP1: "top1_is_polygonal_region_on P1 (length scheme)"
       and hq1: "top1_quotient_map_on P1
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y1 TY1 q1"
-    sorry \<comment> \<open>Unfold quotient\\_of\\_scheme\\_on for Y1.\<close>
+    unfolding top1_quotient_of_scheme_on_def by (by5000 auto)
   from assms(4) obtain P2 q2 vx2 vy2 where
       hP2: "top1_is_polygonal_region_on P2 (length scheme)"
       and hq2: "top1_quotient_map_on P2
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) Y2 TY2 q2"
-    sorry \<comment> \<open>Unfold quotient\\_of\\_scheme\\_on for Y2.\<close>
+    unfolding top1_quotient_of_scheme_on_def by (by5000 auto)
   \<comment> \<open>Get homeomorphism \\<phi>: P1 \\<to> P2 from convex\\_polygon\\_homeomorphism.\<close>
   from convex_polygon_homeomorphism[OF hP1 hP2]
   obtain \<phi> where h\<phi>: "top1_homeomorphism_on P1
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) P2
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
-    sorry
+    by (by100 blast)
   \<comment> \<open>q2 \\<circ> \\<phi>: P1 \\<to> Y2 is a quotient map with same fibres as q1.
      Apply quotient\\_same\\_fibres\\_homeomorphic to get Y1 \\<cong> Y2.\<close>
   show ?thesis sorry
