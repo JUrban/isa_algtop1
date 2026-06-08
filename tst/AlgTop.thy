@@ -1460,6 +1460,8 @@ proof -
 
   have hAbelF_grp: "top1_is_group_on ?AbelF ?mulA ?eA ?invgA"
     using hAbelF_abel unfolding top1_is_abelian_group_on_def by (by100 blast)
+  have hAbelF_invg_cl: "\<forall>x\<in>?AbelF. ?invgA x \<in> ?AbelF"
+    sorry \<comment> \<open>Group closure under inverse. Times out due to large let-expanded terms.\<close>
 
   \<comment> \<open>Step 4: Get the concrete abelianization of G_0.\<close>
   let ?CG = "top1_commutator_subgroup_on G0 mul0 e0 invg0"
@@ -2120,7 +2122,7 @@ proof -
           assume "\<exists>s\<in>{?rel_in_AbelF}. ws!i = ?invgA s"
           then obtain s where "s \<in> {?rel_in_AbelF}" "ws!i = ?invgA s" by (by100 blast)
           hence "s \<in> ?AbelF" using hN_in_AbelF by (by100 blast)
-          have "?invgA s \<in> ?AbelF" sorry \<comment> \<open>Group closure under inverse.\<close>
+          have "?invgA s \<in> ?AbelF" using hAbelF_invg_cl \<open>s \<in> ?AbelF\<close> by (by100 blast)
           thus ?thesis using \<open>ws!i = ?invgA s\<close> by (by100 simp)
         qed
       qed
