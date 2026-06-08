@@ -3036,10 +3036,36 @@ proof -
         have "?\<beta>A = ?mulA (?\<iota>A 0) ?tail"
           sorry \<comment> \<open>\<beta> = foldr mulA (map \<iota>A [0..<m]) eA = mulA (\<iota>A 0) (foldr mulA (map \<iota>A [1..<m]) eA).\<close>
         have htail_K0: "?tail \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
-          sorry \<comment> \<open>\<epsilon>_0(tail) = sum of \<epsilon>_0(\<iota>A i) for i=1..m-1 = 0.\<close>
+        proof -
+          have htail_in: "?tail \<in> ?AbelF"
+          proof -
+            have "\<forall>i<length (map ?\<iota>A [1..<m]). (map ?\<iota>A [1..<m]) ! i \<in> ?AbelF"
+              using h\<iota>A_in by (by100 auto)
+            thus ?thesis using foldr_mul_closed[OF hAbelF_grp] by (by100 blast)
+          qed
+          have "\<epsilon>0 ?tail = 0"
+          proof -
+            have hZ_grp_l: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+              using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+                top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+            have "\<forall>i<length (map ?\<iota>A [1..<m]). (map ?\<iota>A [1..<m]) ! i \<in> ?AbelF"
+              using h\<iota>A_in by (by100 auto)
+            hence "\<epsilon>0 ?tail = foldr (+) (map \<epsilon>0 (map ?\<iota>A [1..<m])) (0::int)"
+              using hom_foldr_mul[OF hAbelF_grp hZ_grp_l h\<epsilon>0_hom] by (by100 blast)
+            also have "\<dots> = foldr (+) (map (\<epsilon>0 \<circ> ?\<iota>A) [1..<m]) 0" by (by100 simp)
+            also have "\<dots> = 0"
+            proof -
+              have "\<forall>i\<in>set [1..<m]. (\<epsilon>0 \<circ> ?\<iota>A) i = 0"
+                using h\<epsilon>0_rest by (by100 auto)
+              thus ?thesis by (induct m, by100 simp, by100 simp)
+            qed
+            finally show ?thesis .
+          qed
+          thus ?thesis using htail_in by (by100 blast)
+        qed
         have htail_img_K: "\<phi>_bar ?tail \<in> ?K" using htail_K0 by (by100 blast)
         have hinv_tail_K: "?invgAG (\<phi>_bar ?tail) \<in> ?K"
-          sorry \<comment> \<open>K closed under inv (hinv\_cl\_K inside K\_fab, or hK\_grp\_outer).\<close>
+          sorry \<comment> \<open>K closed under inv: hK\_grp\_outer + htail\_img\_K. Fast timeout.\<close>
         \<comment> \<open>In abelian AbelG: \<phi>\_bar(\<iota>A 0) = mulAG (invgAG(\<phi>\_bar(tail))) \<beta>G.\<close>
         have "a = ?mulAG (?invgAG (\<phi>_bar ?tail)) ?\<beta>G"
           sorry \<comment> \<open>From \<beta> = \<iota>A(0) \<cdot> tail: \<phi>\_bar(\<iota>A 0) = \<phi>\_bar(\<beta>) \<cdot> \<phi>\_bar(tail^{-1})
