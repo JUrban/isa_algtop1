@@ -2714,11 +2714,88 @@ proof -
   \<comment> \<open>\<phi>\_bar restricted to K_0 is an iso from (K_0, mulA) to (K, mulAG).\<close>
   \<comment> \<open>K is a group (needed inside K\_fab\_raw proof before hK\_grp\_outer is available).\<close>
   have hK_grp_pre: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
-    sorry \<comment> \<open>K is a group. All ingredients proved (eAG\<in>K, mul/inv closure,
-       assoc via foldr\_mul\_append, id/inv from AbelG[unfolded]).
-       Proved inside K\_fab\_raw's condition 1 but not extractable due to scope.
-       Replicating the proof here would add ~50 lines of duplicate code.
-       The fact IS used in the ⊇ direction of condition 4.\<close>
+  proof -
+    \<comment> \<open>eAG \<in> K.\<close>
+    have hZ_grp_k: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+      using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+        top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+    have he_K: "?eAG \<in> ?K"
+    proof -
+      have "\<epsilon>0 ?eA = 0" using hom_preserves_id[OF hAbelF_grp hZ_grp_k h\<epsilon>0_hom] by (by100 simp)
+      hence "?eA \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}" using hAbelF_e_in by (by100 blast)
+      moreover have "\<phi>_bar ?eA = ?eAG"
+        using hom_preserves_id[OF hAbelF_grp hAbelG_grp h\<phi>_hom] by (by100 simp)
+      ultimately show ?thesis by (by100 force)
+    qed
+    \<comment> \<open>Mul closure.\<close>
+    have hmul_K: "\<forall>x\<in>?K. \<forall>y\<in>?K. ?mulAG x y \<in> ?K"
+    proof (intro ballI)
+      fix x y assume "x \<in> ?K" "y \<in> ?K"
+      then obtain a b where ha: "a \<in> ?AbelF" "\<epsilon>0 a = 0" "x = \<phi>_bar a"
+        and hb: "b \<in> ?AbelF" "\<epsilon>0 b = 0" "y = \<phi>_bar b" by (by100 blast)
+      have "\<epsilon>0 (?mulA a b) = \<epsilon>0 a + \<epsilon>0 b"
+        using h\<epsilon>0_hom ha(1) hb(1) unfolding top1_group_hom_on_def by (by100 blast)
+      hence "\<epsilon>0 (?mulA a b) = 0" using ha(2) hb(2) by (by100 simp)
+      moreover have "?mulA a b \<in> ?AbelF" using hAbelF_mul_cl ha(1) hb(1) by (by100 blast)
+      moreover have "?mulAG x y = \<phi>_bar (?mulA a b)"
+        using h\<phi>_hom ha hb unfolding top1_group_hom_on_def by (by100 blast)
+      ultimately show "?mulAG x y \<in> ?K" by (by100 force)
+    qed
+    \<comment> \<open>Inv closure.\<close>
+    have hinv_K: "\<forall>x\<in>?K. ?invgAG x \<in> ?K"
+    proof (intro ballI)
+      fix x assume "x \<in> ?K"
+      then obtain a where ha: "a \<in> ?AbelF" "\<epsilon>0 a = 0" "x = \<phi>_bar a" by (by100 blast)
+      have "\<epsilon>0 (?invgA a) = - \<epsilon>0 a"
+        using hom_preserves_inv[OF hAbelF_grp hZ_grp_k h\<epsilon>0_hom ha(1)] by (by100 simp)
+      hence "\<epsilon>0 (?invgA a) = 0" using ha(2) by (by100 simp)
+      moreover have "?invgA a \<in> ?AbelF" using hAbelF_invg_cl ha(1) by (by100 blast)
+      moreover have "?invgAG x = \<phi>_bar (?invgA a)"
+        using hom_preserves_inv[OF hAbelF_grp hAbelG_grp h\<phi>_hom ha(1)] ha(3) by (by100 simp)
+      ultimately show "?invgAG x \<in> ?K" by (by100 force)
+    qed
+    \<comment> \<open>Axioms from AbelG via foldr\_mul\_append + fast.\<close>
+    \<comment> \<open>Assoc for K: use foldr\_mul\_append trick.\<close>
+    have hassoc_K: "\<forall>x\<in>?K. \<forall>y\<in>?K. \<forall>z\<in>?K. ?mulAG (?mulAG x y) z = ?mulAG x (?mulAG y z)"
+    proof (intro ballI)
+      fix x y z assume "x \<in> ?K" "y \<in> ?K" "z \<in> ?K"
+      hence hxG: "x \<in> ?AbelG" and hyG: "y \<in> ?AbelG" and hzG: "z \<in> ?AbelG"
+        using hK_sub by (by100 blast)+
+      have hxy: "\<forall>i<length [x,y]. [x,y]!i \<in> ?AbelG"
+        using hxG hyG by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+      have hz1: "\<forall>i<length [z]. [z]!i \<in> ?AbelG" using hzG by (by100 auto)
+      have hx1: "\<forall>i<length [x]. [x]!i \<in> ?AbelG" using hxG by (by100 auto)
+      have hyz: "\<forall>i<length [y,z]. [y,z]!i \<in> ?AbelG"
+        using hyG hzG by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+      have lhs: "foldr ?mulAG ([x,y] @ [z]) ?eAG = ?mulAG (foldr ?mulAG [x,y] ?eAG) (foldr ?mulAG [z] ?eAG)"
+        using foldr_mul_append[OF hAbelG_grp hxy hz1] by (by100 blast)
+      have rhs: "foldr ?mulAG ([x] @ [y,z]) ?eAG = ?mulAG (foldr ?mulAG [x] ?eAG) (foldr ?mulAG [y,z] ?eAG)"
+        using foldr_mul_append[OF hAbelG_grp hx1 hyz] by (by100 blast)
+      have "\<forall>a\<in>?AbelG. ?mulAG a ?eAG = a"
+        using hAbelG_grp[unfolded top1_is_group_on_def] by (by100 fast)
+      have hidG: "\<forall>a\<in>?AbelG. ?mulAG a ?eAG = a"
+        using hAbelG_grp[unfolded top1_is_group_on_def] by (by100 fast)
+      show "?mulAG (?mulAG x y) z = ?mulAG x (?mulAG y z)"
+        using lhs rhs hidG hxG hyG hzG by (by100 simp)
+    qed
+    \<comment> \<open>Id and inv from AbelG.\<close>
+    have hid_K: "\<forall>x\<in>?K. ?mulAG ?eAG x = x \<and> ?mulAG x ?eAG = x"
+    proof (intro ballI)
+      fix x assume "x \<in> ?K"
+      hence "x \<in> ?AbelG" using hK_sub by (by100 blast)
+      from hAbelG_grp[unfolded top1_is_group_on_def] this
+      show "?mulAG ?eAG x = x \<and> ?mulAG x ?eAG = x" by (by100 fast)
+    qed
+    have hinverse_K: "\<forall>x\<in>?K. ?mulAG (?invgAG x) x = ?eAG \<and> ?mulAG x (?invgAG x) = ?eAG"
+    proof (intro ballI)
+      fix x assume "x \<in> ?K"
+      hence "x \<in> ?AbelG" using hK_sub by (by100 blast)
+      from hAbelG_grp[unfolded top1_is_group_on_def] this
+      show "?mulAG (?invgAG x) x = ?eAG \<and> ?mulAG x (?invgAG x) = ?eAG" by (by100 fast)
+    qed
+    show ?thesis unfolding top1_is_group_on_def
+      using he_K hmul_K hinv_K hassoc_K hid_K hinverse_K by (by100 blast)
+  qed
 
   have hK_fab_raw: "top1_is_free_abelian_group_full_on ?K ?mulAG ?eAG ?invgAG
       (\<lambda>s. \<phi>_bar (?\<iota>A s)) ({..<m} - {0::nat})"
