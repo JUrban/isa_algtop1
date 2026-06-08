@@ -1442,9 +1442,51 @@ lemma free_abelian_reindex:
   assumes hfab: "top1_is_free_abelian_group_full_on G mul e invg \<iota> S"
       and hbij: "bij_betw f S' S"
   shows "top1_is_free_abelian_group_full_on G mul e invg (\<iota> \<circ> f) S'"
-  sorry \<comment> \<open>Conditions: abelian (same), (\<iota>\<circ>f) maps S' into G (comp),
-     inj\_on (\<iota>\<circ>f) S' (from inj \<iota> + bij f), generation (image same),
-     independence (transfer via f bijection on support sets).\<close>
+  unfolding top1_is_free_abelian_group_full_on_def
+proof (intro conjI)
+  \<comment> \<open>1. Abelian.\<close>
+  show "top1_is_abelian_group_on G mul e invg"
+    using hfab unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+  \<comment> \<open>2. Generators in G.\<close>
+  show "\<forall>s\<in>S'. (\<iota> \<circ> f) s \<in> G"
+  proof (intro ballI)
+    fix s assume "s \<in> S'"
+    hence "f s \<in> S" using hbij unfolding bij_betw_def by (by100 blast)
+    thus "(\<iota> \<circ> f) s \<in> G"
+      using hfab unfolding top1_is_free_abelian_group_full_on_def by (by100 auto)
+  qed
+  \<comment> \<open>3. Injective.\<close>
+  show "inj_on (\<iota> \<circ> f) S'"
+  proof -
+    have "inj_on \<iota> S" using hfab unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+    moreover have "inj_on f S'" using hbij unfolding bij_betw_def by (by100 blast)
+    moreover have "f ` S' \<subseteq> S" using hbij unfolding bij_betw_def by (by100 blast)
+    ultimately have "inj_on \<iota> (f ` S')" "inj_on f S'"
+      using inj_on_subset by (by100 blast)+
+    thus ?thesis using comp_inj_on by (by100 fast)
+  qed
+  \<comment> \<open>4. Generation: (\<iota>\<circ>f)(S') = \<iota>(f(S')) = \<iota>(S), so same subgroup.\<close>
+  show "G = top1_subgroup_generated_on G mul e invg ((\<iota> \<circ> f) ` S')"
+  proof -
+    have "(\<iota> \<circ> f) ` S' = \<iota> ` (f ` S')" by (by100 auto)
+    also have "f ` S' = S" using hbij unfolding bij_betw_def by (by100 blast)
+    finally have "(\<iota> \<circ> f) ` S' = \<iota> ` S" .
+    thus ?thesis using hfab unfolding top1_is_free_abelian_group_full_on_def by (by100 simp)
+  qed
+  \<comment> \<open>5. Independence: transfer via f bijection.
+     For any c: S' \<rightarrow> int with finite support, define c' = c \<circ> (inv f): S \<rightarrow> int.
+     The foldr product over S' with c equals the foldr product over S with c'.
+     Independence on S gives the result.\<close>
+  show "\<forall>c. finite {s \<in> S'. c s \<noteq> 0} \<longrightarrow>
+      (\<exists>s\<in>S'. c s \<noteq> 0) \<longrightarrow>
+      foldr mul
+       (map (\<lambda>s. if 0 \<le> c s then top1_group_pow mul e ((\<iota> \<circ> f) s) (nat (c s))
+                 else top1_group_pow mul e (invg ((\<iota> \<circ> f) s)) (nat (- c s)))
+         (SOME xs. set xs = {s \<in> S'. c s \<noteq> 0} \<and> distinct xs))
+       e \<noteq> e"
+    sorry \<comment> \<open>Independence transfer via f bijection on support sets.
+       Uses: free\_abelian\_independence\_transfer or direct reindexing.\<close>
+qed
 
 theorem Theorem_75_4_H1_m_projective:
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
