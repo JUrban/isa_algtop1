@@ -14753,6 +14753,80 @@ next
 qed
 
 \<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
+\<comment> \<open>Each elementary operation is reversible: if s → t, then t ~* s.\<close>
+lemma elementary_operation_reverse:
+  assumes "top1_elementary_scheme_operation s t"
+  shows "top1_scheme_equiv t s"
+  using assms
+proof (induction rule: top1_elementary_scheme_operation.induct)
+  case (rotate u v) \<comment> \<open>u@v → v@u. Reverse: rotate v@u → u@v.\<close>
+  show ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.rotate[of v u] by simp
+next
+  case (cancel u a v) \<comment> \<open>u@[a,inv a]@v → u@v. Reverse: uncancel.\<close>
+  show ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.uncancel[of u v a] by simp
+next
+  case (uncancel u v a) \<comment> \<open>u@v → u@[a,inv a]@v. Reverse: cancel.\<close>
+  show ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.cancel[of u a v] by simp
+next
+  case (invert w) \<comment> \<open>w → rev(inv w). Reverse: invert again (involutive).\<close>
+  have hinv_inv: "\<And>x. top1_inverse_edge (top1_inverse_edge x) = x"
+    unfolding top1_inverse_edge_def by simp
+  have "rev (map top1_inverse_edge (rev (map top1_inverse_edge w))) = w"
+  proof -
+    have "map top1_inverse_edge (map top1_inverse_edge w) = w"
+    proof (induction w)
+      case Nil thus ?case by simp
+    next
+      case (Cons a w) thus ?case using hinv_inv by simp
+    qed
+    thus ?thesis by (simp add: rev_map)
+  qed
+  thus ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.invert[of "rev (map top1_inverse_edge w)"] by simp
+next
+  case (relabel w old new) \<comment> \<open>Reverse of relabel. Use relabel(new→old) + fix collisions.\<close>
+  show ?case sorry
+next
+  case (flip_label w a) \<comment> \<open>flip is involutive: flip(flip(w)) = w.\<close>
+  let ?f = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
+  have hflip_invol: "?f (?f w) = w"
+  proof (induction w)
+    case Nil thus ?case by simp
+  next
+    case (Cons e w) obtain l bo where "e = (l, bo)" by (cases e)
+    thus ?case using Cons.IH by simp
+  qed
+  show ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.flip_label[of "?f w" a] hflip_invol by simp
+next
+  case (cut_paste u1 a u2 u3) \<comment> \<open>Reverse via cut\\_paste on result.\<close>
+  show ?case sorry
+next
+  case (cut_paste2 u0 a u1 u2 b) show ?case sorry
+next
+  case (cut_paste_opp u0 u1 a u2 u3)
+  \<comment> \<open>Reverse of cut\\_paste\\_opp: use flip\\_label a + cut\\_paste\\_opp + flip\\_label a.\<close>
+  show ?case sorry
+qed
+
+\<comment> \<open>scheme\\_equiv is symmetric.\<close>
+lemma scheme_equiv_sym:
+  assumes "top1_scheme_equiv s t"
+  shows "top1_scheme_equiv t s"
+  using assms unfolding top1_scheme_equiv_def
+proof (induction rule: rtranclp.induct)
+  case rtrancl_refl thus ?case by simp
+next
+  case (rtrancl_into_rtrancl a b c)
+  from elementary_operation_reverse[OF rtrancl_into_rtrancl.hyps(2)]
+  have "top1_scheme_equiv c b" .
+  from this rtrancl_into_rtrancl.IH show ?case
+    unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+qed
+
 lemma scheme_equiv_preserves_quotient:
   assumes "top1_quotient_of_scheme_on Y TY s"
       and "top1_scheme_equiv s t"
