@@ -2252,8 +2252,20 @@ proof -
       qed
       moreover have "top1_group_word_product ?mulA ?eA ?invgA (map (\<lambda>(s,b). (?\<phi>w s, b)) ?w)
           = foldr ?mulA ws ?eA"
-        sorry \<comment> \<open>word\_product with phi() maps back to the original foldr.
-           Each ((), True) gives rel (= ws!i), each ((), False) gives invgA(rel) (= ws!i).\<close>
+      proof -
+        \<comment> \<open>map (\<lambda>(s,b). (\<phi>w s, b)) ?w = map (\<lambda>x. (rel, x = rel)) ws.
+           word\_product processes True as mul(rel, ...) and False as mul(invgA(rel), ...).
+           foldr mulA ws eA processes each ws!i directly.
+           Since ws!i = rel when b=True and ws!i = invgA(rel) when b=False,
+           the two are the same.\<close>
+        have "\<And>xs. (\<forall>i<length xs. xs!i \<in> {?rel_in_AbelF} \<or> (\<exists>s\<in>{?rel_in_AbelF}. xs!i = ?invgA s)) \<Longrightarrow>
+            top1_group_word_product ?mulA ?eA ?invgA
+              (map (\<lambda>(s,b). (?\<phi>w s, b)) (map (\<lambda>x. (()::unit, x = ?rel_in_AbelF)) xs))
+            = foldr ?mulA xs ?eA"
+          sorry \<comment> \<open>Induction on xs: True entry gives mul(rel, rest) = mul(ws!i, rest);
+             False entry gives mul(invgA(rel), rest) = mul(ws!i, rest).\<close>
+        thus ?thesis using hws by (by100 blast)
+      qed
       ultimately have "foldr ?mulA ws ?eA = ?eA" by (by100 simp)
       thus "a \<in> {?eA}" using hprod by (by100 blast)
     qed
