@@ -14760,11 +14760,82 @@ lemma scheme_equiv_preserves_quotient:
   using assms(2,1) unfolding top1_scheme_equiv_def
   by (induction rule: rtranclp.induct) (auto intro: elementary_operation_preserves_quotient)
 
-\<comment> \<open>A polygonal region is compact (closed bounded subset of R², being a finite convex hull).\<close>
+\<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
 lemma polygonal_region_compact:
   assumes "top1_is_polygonal_region_on P n"
   shows "compact P"
-  sorry \<comment> \<open>P is a closed bounded subset of R² (finite convex hull). Hence compact by Heine-Borel.\<close>
+proof -
+  from assms obtain vx vy where hn: "n \<ge> 3"
+      and hP: "P = {(x, y). \<exists>coeffs. (\<forall>i<n. 0 \<le> coeffs i) \<and> (\<Sum>i<n. coeffs i) = 1
+                  \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+    unfolding top1_is_polygonal_region_on_def by (by5000 auto)
+  \<comment> \<open>P is bounded: all coordinates are convex combinations of finitely many vertex coordinates.\<close>
+  define M where "M = Max ((\<lambda>i. \<bar>vx i\<bar>) ` {..<n} \<union> (\<lambda>i. \<bar>vy i\<bar>) ` {..<n})"
+  have hfin: "finite ((\<lambda>i. \<bar>vx i\<bar>) ` {..<n} \<union> (\<lambda>i. \<bar>vy i\<bar>) ` {..<n})"
+    by simp
+  have hne: "(\<lambda>i. \<bar>vx i\<bar>) ` {..<n} \<union> (\<lambda>i. \<bar>vy i\<bar>) ` {..<n} \<noteq> {}"
+  proof -
+    have "(0::nat) < n" using hn by simp
+    hence "\<bar>vx 0\<bar> \<in> (\<lambda>i. \<bar>vx i\<bar>) ` {..<n}" by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
+  have hM_bound: "\<And>i. i < n \<Longrightarrow> \<bar>vx i\<bar> \<le> M \<and> \<bar>vy i\<bar> \<le> M"
+  proof -
+    fix i assume "i < n"
+    have "\<bar>vx i\<bar> \<in> (\<lambda>i. \<bar>vx i\<bar>) ` {..<n}" using \<open>i < n\<close> by (by100 blast)
+    hence "\<bar>vx i\<bar> \<le> M" unfolding M_def using hfin hne by (by100 auto)
+    moreover have "\<bar>vy i\<bar> \<in> (\<lambda>i. \<bar>vy i\<bar>) ` {..<n}" using \<open>i < n\<close> by (by100 blast)
+    hence "\<bar>vy i\<bar> \<le> M" unfolding M_def using hfin hne by (by100 auto)
+    ultimately show "\<bar>vx i\<bar> \<le> M \<and> \<bar>vy i\<bar> \<le> M" by simp
+  qed
+  have hP_bounded: "P \<subseteq> {- M .. M} \<times> {- M .. M}"
+  proof
+    fix p assume "p \<in> P"
+    then obtain x y coeffs where hp: "p = (x, y)"
+        and hcoeffs: "\<forall>i<n. (0::real) \<le> coeffs i" "(\<Sum>i<n. coeffs i) = 1"
+        and hx: "x = (\<Sum>i<n. coeffs i * vx i)" and hy: "y = (\<Sum>i<n. coeffs i * vy i)"
+      unfolding hP by (by5000 auto)
+    \<comment> \<open>|x| \\<le> \\<Sum> coeffs i * M = M. Similarly for y.\<close>
+    have "\<bar>x\<bar> \<le> M"
+    proof -
+      have "\<bar>x\<bar> \<le> (\<Sum>i<n. \<bar>coeffs i * vx i\<bar>)" unfolding hx
+        by (rule sum_abs)
+      also have "\<dots> \<le> (\<Sum>i<n. coeffs i * M)"
+      proof (rule sum_mono)
+        fix i assume "i \<in> {..<n}" hence "i < n" by simp
+        have "\<bar>coeffs i * vx i\<bar> = coeffs i * \<bar>vx i\<bar>"
+          using hcoeffs(1) \<open>i < n\<close> by (simp add: abs_mult)
+        also have "\<dots> \<le> coeffs i * M" using hM_bound[OF \<open>i < n\<close>] hcoeffs(1) \<open>i < n\<close>
+          by (intro mult_left_mono) (by100 auto)+
+        finally show "\<bar>coeffs i * vx i\<bar> \<le> coeffs i * M" .
+      qed
+      also have "\<dots> = M" using hcoeffs(2) by (simp add: sum_distrib_right[symmetric])
+      finally show ?thesis .
+    qed
+    have "\<bar>y\<bar> \<le> M"
+    proof -
+      have "\<bar>y\<bar> \<le> (\<Sum>i<n. \<bar>coeffs i * vy i\<bar>)" unfolding hy
+        by (rule sum_abs)
+      also have "\<dots> \<le> (\<Sum>i<n. coeffs i * M)"
+      proof (rule sum_mono)
+        fix i assume "i \<in> {..<n}" hence "i < n" by simp
+        have "\<bar>coeffs i * vy i\<bar> = coeffs i * \<bar>vy i\<bar>"
+          using hcoeffs(1) \<open>i < n\<close> by (simp add: abs_mult)
+        also have "\<dots> \<le> coeffs i * M" using hM_bound[OF \<open>i < n\<close>] hcoeffs(1) \<open>i < n\<close>
+          by (intro mult_left_mono) (by100 auto)+
+        finally show "\<bar>coeffs i * vy i\<bar> \<le> coeffs i * M" .
+      qed
+      also have "\<dots> = M" using hcoeffs(2) by (simp add: sum_distrib_right[symmetric])
+      finally show ?thesis .
+    qed
+    show "p \<in> {- M..M} \<times> {- M..M}" using \<open>\<bar>x\<bar> \<le> M\<close> \<open>\<bar>y\<bar> \<le> M\<close> hp by (by100 auto)
+  qed
+  \<comment> \<open>P is closed: it's the continuous preimage of {0} (a closed set) under a continuous map.\<close>
+  have hP_closed: "closed P" sorry
+  \<comment> \<open>Closed subset of compact {-M..M}\\<times>{-M..M} is compact.\<close>
+  show "compact P"
+    by (rule closed_subset_compact[OF compact_Icc_Times hP_closed hP_bounded])
+qed
 
 \<comment> \<open>Two convex n-gons in R² are homeomorphic via a boundary-preserving map.
    The homeomorphism maps vertex i of P1 to vertex i of P2, and maps each edge linearly.\<close>
