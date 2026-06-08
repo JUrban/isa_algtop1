@@ -17422,7 +17422,41 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             have hfr: "fr \<noteq> fst s0" "fr \<noteq> fst s1" "fr \<noteq> 0" "fr \<noteq> 1"
               unfolding fr_def using True \<open>fst s0 \<noteq> 0\<close> by simp_all
             \<comment> \<open>relabel fst s0\\<to>fr, then fst s1=0\\<to>1, then fr\\<to>0.\<close>
-            show ?thesis sorry \<comment> \<open>3-step relabel chain via fresh intermediate fr.\<close>
+            \<comment> \<open>scheme2 = [(fst s0,T),(0,T),(fst s0,F),(0,F)]. relabel fst s0\\<to>1:\\<close>
+            have h_r1: "top1_scheme_equiv scheme2
+                (map (\<lambda>(l,b). (if l = fst s0 then 1 else l, b)) scheme2)"
+              unfolding top1_scheme_equiv_def
+              using top1_elementary_scheme_operation.relabel[of scheme2 "fst s0" 1] by simp
+            have h_mid: "map (\<lambda>(l,b). (if l = fst s0 then 1 else l, b)) scheme2
+                = [(Suc 0,True),(0::nat,True),(Suc 0,False),(0,False)]"
+              unfolding hsch2 using \<open>fst s0 \<noteq> fst s1\<close> True by (simp add: eval_nat_numeral)
+            \<comment> \<open>[(1,T),(0,T),(1,F),(0,F)] ~ rotate ~ flip\\_label 1 ~ target.\<close>
+            have h_rot: "top1_elementary_scheme_operation
+                [(Suc 0,True),(0::nat,True),(Suc 0,False),(0,False)]
+                [(0,True),(Suc 0,False),(0,False),(Suc 0,True)]"
+              using top1_elementary_scheme_operation.rotate[of "[(Suc 0,True)]" "[(0,True),(Suc 0,False),(0,False)]"]
+              by simp
+            have h_flip: "top1_elementary_scheme_operation
+                [(0::nat,True),(Suc 0,False),(0,False),(Suc 0,True)]
+                (map (\<lambda>(l,b). (l, if l = Suc 0 then \<not>b else b)) [(0,True),(Suc 0,False),(0,False),(Suc 0,True)])"
+              by (rule top1_elementary_scheme_operation.flip_label)
+            have h_flip_simp: "map (\<lambda>(l,b). (l, if l = Suc (0::nat) then \<not>b else b)) [(0,True),(Suc 0,False),(0,False),(Suc 0,True)]
+                = [(0,True),(Suc 0,True),(0,False),(Suc 0,False)]"
+              by simp
+            have "[(0::nat,True),(Suc 0,True),(0,False),(Suc 0,False)] = top1_n_torus_scheme 1"
+              unfolding top1_n_torus_scheme_def by (simp add: eval_nat_numeral)
+            from h_r1 h_mid have s2_mid: "top1_scheme_equiv scheme2 [(Suc 0,True),(0::nat,True),(Suc 0,False),(0,False)]"
+              unfolding top1_scheme_equiv_def by simp
+            from s2_mid h_rot have s2_rot: "top1_scheme_equiv scheme2 [(0,True),(Suc 0,False),(0,False),(Suc 0,True)]"
+              unfolding top1_scheme_equiv_def by (meson rtranclp.rtrancl_into_rtrancl)
+            from h_flip have "top1_elementary_scheme_operation
+                [(0::nat,True),(Suc 0,False),(0,False),(Suc 0,True)]
+                [(0,True),(Suc 0,True),(0,False),(Suc 0,False)]"
+              using h_flip_simp by simp
+            with s2_rot have "top1_scheme_equiv scheme2 [(0,True),(Suc 0,True),(0,False),(Suc 0,False)]"
+              unfolding top1_scheme_equiv_def by (meson rtranclp.rtrancl_into_rtrancl)
+            thus ?thesis using \<open>[(0::nat,True),(Suc 0,True),(0,False),(Suc 0,False)] = top1_n_torus_scheme 1\<close>
+              by simp
           qed
           have "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w"
           proof -
