@@ -14950,7 +14950,16 @@ proof -
       define f where "f = (\<lambda>(t::real, p::real\<times>real). (t * vx (Suc k) + (1-t) * fst p, t * vy (Suc k) + (1-t) * snd p))"
       have hQ_eq: "Q (Suc k) = f ` ({0..1} \<times> Q k)" sorry
       have hf_cont: "continuous_on ({0..1} \<times> Q k) f"
-        unfolding f_def sorry \<comment> \<open>Continuous: affine combination of continuous projections.\<close>
+      proof -
+        have "f = (\<lambda>tp. (fst tp * vx (Suc k) + (1 - fst tp) * fst (snd tp),
+                         fst tp * vy (Suc k) + (1 - fst tp) * snd (snd tp)))"
+          unfolding f_def by (rule ext, simp add: case_prod_beta)
+        moreover have "continuous_on ({0..1} \<times> Q k)
+            (\<lambda>tp. (fst tp * vx (Suc k) + (1 - fst tp) * fst (snd tp),
+                   fst tp * vy (Suc k) + (1 - fst tp) * snd (snd tp)))"
+          by (intro continuous_intros)
+        ultimately show ?thesis by simp
+      qed
       have hdom_compact: "compact ({0..1::real} \<times> Q k)"
         by (rule compact_Times_general[OF compact_Icc hIH])
       show "compact (Q (Suc k))" unfolding hQ_eq
