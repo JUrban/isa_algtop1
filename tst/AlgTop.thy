@@ -15258,17 +15258,17 @@ proof -
     "q_map p = (let i = (SOME i. i < ?m \<and> p \<in> \<Delta>copy i) in
                 h0 (tlist ! i) ((fst p - 3 * real i, snd p)))" for p
   \<comment> \<open>Show the required properties.\<close>
-  have "finite ?\<T>"
+  have h\<T>_fin: "finite ?\<T>"
   proof -
     have "?\<T> = (\<lambda>i. \<Delta>copy i) ` {..<?m}" by (by100 blast)
     thus ?thesis by simp
   qed
-  moreover have "?\<T> \<noteq> {}"
+  have h\<T>_ne: "?\<T> \<noteq> {}"
   proof -
     have "\<Delta>copy 0 \<in> ?\<T>" using hm_pos by (by100 blast)
     thus ?thesis by (by100 blast)
   qed
-  moreover have "\<forall>T \<in> ?\<T>. top1_is_polygonal_region_on T 3"
+  have h\<T>_poly: "\<forall>T \<in> ?\<T>. top1_is_polygonal_region_on T 3"
   proof (intro ballI)
     fix T assume "T \<in> ?\<T>"
     then obtain i where "i < ?m" "T = \<Delta>copy i" by (by100 blast)
@@ -15279,13 +15279,134 @@ proof -
       using \<open>T = \<Delta>copy i\<close> unfolding \<Delta>copy_def
       using htranslate_poly[OF h_simplex_poly] by simp
   qed
-  moreover have "\<forall>T \<in> ?\<T>. top1_continuous_map_on T
+  \<comment> \<open>Infrastructure: disjointness, SOME resolution, inverse translation, h0 range.\<close>
+  have h_fst_bound: "\<And>i p. p \<in> \<Delta>copy i \<Longrightarrow> 3 * real i \<le> fst p \<and> fst p \<le> 3 * real i + 1"
+  proof -
+    fix i :: nat and p :: "real \<times> real" assume "p \<in> \<Delta>copy i"
+    then obtain x y where hxy: "(x, y) \<in> top1_standard_simplex" "p = (x + 3 * real i, y)"
+      unfolding \<Delta>copy_def by (by100 force)
+    have "x \<ge> 0" "x \<le> 1" using hxy(1) unfolding top1_standard_simplex_def by (by100 auto)+
+    thus "3 * real i \<le> fst p \<and> fst p \<le> 3 * real i + 1" using hxy(2) by simp
+  qed
+  have h_disjoint: "\<And>i j. i \<noteq> j \<Longrightarrow> \<Delta>copy i \<inter> \<Delta>copy j = {}"
+  proof -
+    fix i j :: nat assume hij: "i \<noteq> j"
+    show "\<Delta>copy i \<inter> \<Delta>copy j = {}"
+    proof (rule ccontr)
+      assume "\<Delta>copy i \<inter> \<Delta>copy j \<noteq> {}"
+      then obtain p where hp: "p \<in> \<Delta>copy i" "p \<in> \<Delta>copy j" by (by100 blast)
+      have "3 * real i \<le> fst p" "fst p \<le> 3 * real i + 1"
+        using h_fst_bound[OF hp(1)] by (by100 auto)+
+      have "3 * real j \<le> fst p" "fst p \<le> 3 * real j + 1"
+        using h_fst_bound[OF hp(2)] by (by100 auto)+
+      hence "3 * real i \<le> 3 * real j + 1" "3 * real j \<le> 3 * real i + 1"
+        using \<open>3 * real i \<le> fst p\<close> \<open>fst p \<le> 3 * real j + 1\<close>
+              \<open>3 * real j \<le> fst p\<close> \<open>fst p \<le> 3 * real i + 1\<close> by linarith+
+      hence "real i \<le> real j + 1/3" "real j \<le> real i + 1/3" by linarith+
+      hence "\<bar>real i - real j\<bar> \<le> 1/3" by linarith
+      hence "i = j" by linarith
+      thus False using hij by simp
+    qed
+  qed
+  have h_SOME: "\<And>i p. i < ?m \<Longrightarrow> p \<in> \<Delta>copy i \<Longrightarrow> (SOME j. j < ?m \<and> p \<in> \<Delta>copy j) = i"
+  proof -
+    fix i :: nat and p assume hi: "i < ?m" and hp: "p \<in> \<Delta>copy i"
+    have huniq: "\<And>j. j < ?m \<and> p \<in> \<Delta>copy j \<Longrightarrow> j = i"
+    proof -
+      fix j assume "j < ?m \<and> p \<in> \<Delta>copy j"
+      hence "p \<in> \<Delta>copy j" by simp
+      hence "\<Delta>copy i \<inter> \<Delta>copy j \<noteq> {}" using hp by (by100 blast)
+      thus "j = i" using h_disjoint by (by100 blast)
+    qed
+    show "(SOME j. j < ?m \<and> p \<in> \<Delta>copy j) = i"
+      by (rule some_equality) (use hi hp huniq in \<open>by100 blast\<close>)+
+  qed
+  have h_inv_trans: "\<And>i p. p \<in> \<Delta>copy i \<Longrightarrow> (fst p - 3 * real i, snd p) \<in> top1_standard_simplex"
+  proof -
+    fix i :: nat and p :: "real \<times> real" assume "p \<in> \<Delta>copy i"
+    then obtain x y where hxy: "(x, y) \<in> top1_standard_simplex" "p = (x + 3 * real i, y)"
+      unfolding \<Delta>copy_def by (by100 force)
+    have "fst p - 3 * real i = x" "snd p = y" using hxy(2) by simp+
+    thus "(fst p - 3 * real i, snd p) \<in> top1_standard_simplex" using hxy(1) by simp
+  qed
+  have h_h0_surj: "\<And>i. i < ?m \<Longrightarrow> h0 (tlist ! i) ` top1_standard_simplex = tlist ! i"
+  proof -
+    fix i assume "i < ?m"
+    have "tlist ! i \<in> set tlist" using \<open>i < ?m\<close> by simp
+    hence "tlist ! i \<in> \<T>0" using htlist(1) by simp
+    hence "top1_homeomorphism_on top1_standard_simplex top1_standard_simplex_topology
+        (tlist ! i) (subspace_topology X TX (tlist ! i)) (h0 (tlist ! i))"
+      using h\<T>0(3) by (by100 blast)
+    hence "bij_betw (h0 (tlist ! i)) top1_standard_simplex (tlist ! i)"
+      unfolding top1_homeomorphism_on_def by (by100 blast)
+    thus "h0 (tlist ! i) ` top1_standard_simplex = tlist ! i"
+      unfolding bij_betw_def by simp
+  qed
+  have h_qmap_on_copy: "\<And>i p. i < ?m \<Longrightarrow> p \<in> \<Delta>copy i \<Longrightarrow>
+      q_map p = h0 (tlist ! i) (fst p - 3 * real i, snd p)"
+  proof -
+    fix i :: nat and p assume "i < ?m" "p \<in> \<Delta>copy i"
+    have "(SOME j. j < ?m \<and> p \<in> \<Delta>copy j) = i" using h_SOME[OF \<open>i < ?m\<close> \<open>p \<in> \<Delta>copy i\<close>] .
+    thus "q_map p = h0 (tlist ! i) (fst p - 3 * real i, snd p)"
+      unfolding q_map_def Let_def using \<open>(SOME j. j < ?m \<and> p \<in> \<Delta>copy j) = i\<close> by simp
+  qed
+  have h\<T>_cont: "\<forall>T \<in> ?\<T>. top1_continuous_map_on T
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) X TX q_map" sorry
-  moreover have "(\<Union>T\<in>?\<T>. q_map ` T) = X" sorry
-  moreover have "\<forall>U. U \<subseteq> X \<longrightarrow>
+  have h\<T>_cov: "(\<Union>T\<in>?\<T>. q_map ` T) = X"
+  proof
+    show "(\<Union>T\<in>?\<T>. q_map ` T) \<subseteq> X"
+    proof
+      fix x assume "x \<in> (\<Union>T\<in>?\<T>. q_map ` T)"
+      then obtain T p where hT: "T \<in> ?\<T>" and hp: "p \<in> T" and hx: "x = q_map p" by (by100 blast)
+      from hT obtain i where hi: "i < ?m" "T = \<Delta>copy i" by (by100 blast)
+      have "q_map p = h0 (tlist ! i) (fst p - 3 * real i, snd p)"
+        using h_qmap_on_copy[OF hi(1)] hp hi(2) by simp
+      moreover have "(fst p - 3 * real i, snd p) \<in> top1_standard_simplex"
+        using h_inv_trans hp hi(2) by simp
+      ultimately have "x \<in> h0 (tlist ! i) ` top1_standard_simplex" using hx by (by100 blast)
+      hence "x \<in> tlist ! i" using h_h0_surj[OF hi(1)] by simp
+      moreover have "tlist ! i \<in> set tlist" using hi(1) by simp
+      hence "tlist ! i \<in> \<T>0" using htlist(1) by simp
+      hence "tlist ! i \<subseteq> X" using h\<T>0(2) by (by100 blast)
+      ultimately show "x \<in> X" by (by100 blast)
+    qed
+  next
+    show "X \<subseteq> (\<Union>T\<in>?\<T>. q_map ` T)"
+    proof
+      fix x assume "x \<in> X"
+      hence "x \<in> \<Union>\<T>0" using h\<T>0(2) by simp
+      then obtain T0i where hT0i: "T0i \<in> \<T>0" "x \<in> T0i" by (by100 blast)
+      have "T0i \<in> set tlist" using hT0i(1) htlist(1) by simp
+      then obtain i where hi: "i < ?m" "tlist ! i = T0i"
+        by (metis in_set_conv_nth)
+      have "x \<in> tlist ! i" using hT0i(2) hi(2) by simp
+      hence "x \<in> h0 (tlist ! i) ` top1_standard_simplex" using h_h0_surj[OF hi(1)] by simp
+      then obtain s where hs: "s \<in> top1_standard_simplex" "h0 (tlist ! i) s = x" by (by100 blast)
+      define p where "p = (fst s + 3 * real i, snd s)"
+      have hp_in: "p \<in> \<Delta>copy i"
+      proof -
+        have "p = (\<lambda>(x,y). (x + 3 * real i, y)) s" unfolding p_def by (cases s) simp
+        thus ?thesis unfolding \<Delta>copy_def using hs(1) by (by100 blast)
+      qed
+      have "fst p - 3 * real i = fst s" "snd p = snd s"
+        unfolding p_def by simp+
+      hence "q_map p = h0 (tlist ! i) s"
+        using h_qmap_on_copy[OF hi(1) hp_in] by simp
+      hence "q_map p = x" using hs(2) by simp
+      moreover have "\<Delta>copy i \<in> ?\<T>" using hi(1) by (by100 blast)
+      ultimately show "x \<in> (\<Union>T\<in>?\<T>. q_map ` T)" using hp_in by (by100 blast)
+    qed
+  qed
+  have h\<T>_quot: "\<forall>U. U \<subseteq> X \<longrightarrow>
       (U \<in> TX \<longleftrightarrow> (\<forall>T\<in>?\<T>. {p\<in>T. q_map p \<in> U} \<in>
         subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T))" sorry
-  ultimately show ?thesis by (by100 blast)
+  show ?thesis
+    apply (rule exI[of _ "?\<T>"])
+    apply (rule exI[of _ q_map])
+    using h\<T>_fin h\<T>_ne h\<T>_poly h\<T>_cont h\<T>_cov h\<T>_quot
+    apply (intro conjI)
+    apply assumption+
+    done
 qed
 
 (** from \<S>78 Theorem 78.2: connected compact triangulable surfaces are
@@ -15737,8 +15858,14 @@ proof -
     from hreduced show ?thesis
     proof (elim disjE exE conjE)
       \<comment> \<open>Case 1: scheme is empty (length 0) — gives S².\<close>
-      fix w assume "scheme = w" "\<forall>a\<in>set w. snd a" "length w = 0"
-      show ?thesis sorry
+      fix w assume hw: "scheme = w" "\<forall>a\<in>set w. snd a" "length w = 0"
+      \<comment> \<open>length scheme = 0, but quotient\\_of\\_scheme\\_on requires polygonal\\_region with n \\<ge> 3. Contradiction.\<close>
+      from hsch obtain P0 q0 where hP0: "top1_is_polygonal_region_on P0 (length scheme)"
+        by (rule quotient_of_scheme_extract)
+      hence "length scheme \<ge> 3"
+        unfolding top1_is_polygonal_region_on_def by (by100 blast)
+      hence False using hw by simp
+      thus ?thesis by simp
     next
       \<comment> \<open>Case 2: scheme \\<sim> torus normal form.\<close>
       fix n w assume hn: "n > 0" and htor: "top1_is_torus_scheme w n"
@@ -15770,8 +15897,19 @@ proof -
           using \<open>top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)\<close> by simp
         thus ?thesis using hm \<open>top1_is_m_fold_projective_on X TX m\<close> hid_homeo by (by5000 blast)
       next
-        case False hence "m = 1" using hm by linarith
-        show ?thesis sorry \<comment> \<open>m=1: projective scheme = aa (2 edges). Quotient = RP². Need dunce\\_cap.\<close>
+        case False hence hm1: "m = 1" using hm by linarith
+        \<comment> \<open>m=1: projective scheme has length 2, but quotient\\_of\\_scheme needs polygon with n \\<ge> 3. Contradiction.\<close>
+        have hlen2: "length (top1_m_projective_scheme 1) = 2"
+          unfolding top1_m_projective_scheme_def by simp
+        from \<open>top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)\<close>
+        have hqs1: "top1_quotient_of_scheme_on X TX (top1_m_projective_scheme 1)"
+          using hm1 by simp
+        from hqs1 obtain P0 q0 where "top1_is_polygonal_region_on P0 (length (top1_m_projective_scheme 1))"
+          by (rule quotient_of_scheme_extract)
+        hence "top1_is_polygonal_region_on P0 2" using hlen2 by simp
+        hence "2 \<ge> (3::nat)" unfolding top1_is_polygonal_region_on_def by (by100 blast)
+        hence False by simp
+        thus ?thesis by simp
       qed
     qed
   qed
