@@ -1273,6 +1273,43 @@ qed
 lemma singleton_Bex_simp: "{r. \<exists>w'\<in>{w}. r = (f :: 'b \<Rightarrow> 'a) w'} = {f w}"
   by (by100 blast)
 
+\<comment> \<open>If a list of booleans maps to ±c with sum 0, then #True = #False.\<close>
+lemma foldr_plus_map_bool:
+  "foldr (+) (map (\<lambda>b. if b then (c::int) else -c) bs) (0::int)
+   = c * (int (length (filter id bs)) - int (length (filter Not bs)))"
+proof (induct bs)
+  case Nil show ?case by (by100 simp)
+next
+  case (Cons b rest)
+  show ?case
+  proof (cases b)
+    case True
+    have "c + c * (int (length (filter id rest)) - int (length (filter Not rest)))
+        = c * (1 + int (length (filter id rest)) - int (length (filter Not rest)))"
+      by (by100 algebra)
+    thus ?thesis using Cons True unfolding id_def by (by100 simp)
+  next
+    case False
+    have "- c + c * (int (length (filter id rest)) - int (length (filter Not rest)))
+        = c * (int (length (filter id rest)) - (1 + int (length (filter Not rest))))"
+      by (by100 algebra)
+    thus ?thesis using Cons False unfolding id_def by (by100 simp)
+  qed
+qed
+
+lemma balanced_from_sum_zero:
+  fixes c :: int
+  assumes hc: "c > 0"
+      and hsum: "foldr (+) (map (\<lambda>b. if b then c else -c) bs) (0::int) = 0"
+  shows "length (filter id bs) = length (filter Not bs)"
+proof -
+  from hsum have "c * (int (length (filter id bs)) - int (length (filter Not bs))) = 0"
+    using foldr_plus_map_bool by (by100 simp)
+  hence "int (length (filter id bs)) - int (length (filter Not bs)) = 0"
+    using hc by (by100 simp)
+  thus ?thesis by (by100 simp)
+qed
+
 \<comment> \<open>In an abelian group, every subgroup is normal.\<close>
 lemma abelian_subgroup_is_normal:
   assumes hab: "top1_is_abelian_group_on G mul e invg"
