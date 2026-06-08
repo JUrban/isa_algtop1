@@ -17144,13 +17144,27 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         case True
         \<comment> \<open>Adjacent same-label pair (must be opposite direction since torus type).
            Cancel gives length 2 scheme, then uncancel to sphere form.\<close>
+        \<comment> \<open>Step: scheme has adjacent same-label pair at some position i.
+           Cancel to get length 2 scheme. Then uncancel to sphere.\<close>
+        from True obtain i where hi: "i < 3" "fst (scheme!i) = fst (scheme!(i+1))" by (by100 blast)
+        \<comment> \<open>Since torus type, the adjacent pair has opposite directions.\<close>
+        have hsnd: "snd (scheme!i) \<noteq> snd (scheme!(i+1))"
+          using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+            \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))\<close>
+            hi \<open>length scheme = 4\<close> sorry
+        \<comment> \<open>Cancel the adjacent pair: scheme ~ shorter scheme of length 2.\<close>
+        \<comment> \<open>The shorter scheme has the remaining label (opposite directions) = sphere seed.\<close>
+        \<comment> \<open>Uncancel with fresh label to get sphere form.\<close>
         show ?thesis sorry
       next
         case no_adj: False
-        \<comment> \<open>No adjacent same-label \\<Rightarrow> labels alternate. With torus type and length 4,
-           the scheme is a rotation of aba\\<inverse>b\\<inverse> (possibly with flipped b direction).
-           By flip\\_label if needed, get standard torus form.\<close>
-        show ?thesis sorry
+        \<comment> \<open>No adjacent same-label \\<Rightarrow> labels alternate: a?b?a?b? pattern.
+           With torus type: opposite directions. So after rotation + flip\\_label,
+           we get [(a,T),(b,T),(a,F),(b,F)] = torus n=1.\<close>
+        \<comment> \<open>The scheme is equivalent to a torus scheme of type n=1.\<close>
+        show ?thesis sorry \<comment> \<open>Alternating pattern + rotation + flip\\_label \\<Rightarrow> torus n=1.
+           All 6 arrangements of 3 remaining elements after fixing first reduce to
+           sphere or torus via at most 2 elementary operations.\<close>
       qed
     next
       case False
@@ -17166,10 +17180,35 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
            Apply IH to the shorter scheme.\<close>
         show ?thesis sorry
       next
-        case False
-        \<comment> \<open>No adjacent inverse pairs. The scheme has \\<ge> 2 distinct labels with opposite
-           directions and none adjacent. Book: choose a with closest opposite-direction
-           occurrences, find b between them, apply Lemma 77.3.\<close>
+        case no_adj_gt4: False
+        \<comment> \<open>No adjacent inverse pairs. Book proof:
+           1. Choose label a with closest opposite-direction occurrences.
+           2. Find label b between them (exists because length > 4 and no adjacent same).
+           3. By flip\\_label if needed, arrange as w0 a b w1 a\\<inverse> b\\<inverse> w2.
+           4. Apply Lemma 77.3: ~ aba\\<inverse>b\\<inverse> w0 w1 w2.
+           5. aba\\<inverse>b\\<inverse> w3 is a torus scheme with w3 shorter or equal length.
+           6. Continue extracting commutators (or apply IH if w3 cancels).\<close>
+        \<comment> \<open>Extract label a and positions of a, a\\<inverse>, label b between them.\<close>
+        have "\<exists>a b w0 w1 w2. a \<noteq> b \<and>
+            top1_scheme_equiv scheme
+              (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)"
+          sorry \<comment> \<open>Combinatorial: from torus-type proper scheme with no adjacent same-label
+             and length > 4, extract the commutator pattern.\<close>
+        then obtain a_lab b_lab w0' w1' w2' where hab: "a_lab \<noteq> b_lab"
+            and hequiv: "top1_scheme_equiv scheme
+              (w0' @ [(a_lab, True), (b_lab, True)] @ w1' @ [(a_lab, False), (b_lab, False)] @ w2')"
+          by (by100 blast)
+        \<comment> \<open>Apply Lemma 77.3.\<close>
+        from Lemma_77_3_torus_extraction[OF hab, of w0' w1' w2']
+        have "top1_scheme_equiv
+            (w0' @ [(a_lab, True), (b_lab, True)] @ w1' @ [(a_lab, False), (b_lab, False)] @ w2')
+            ([(a_lab, True), (b_lab, True), (a_lab, False), (b_lab, False)] @ w0' @ w1' @ w2')" .
+        \<comment> \<open>Chain: scheme ~ pattern ~ aba\\<inverse>b\\<inverse> w3.\<close>
+        hence "top1_scheme_equiv scheme
+            ([(a_lab, True), (b_lab, True), (a_lab, False), (b_lab, False)] @ w0' @ w1' @ w2')"
+          using hequiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+        \<comment> \<open>The result aba\\<inverse>b\\<inverse> w3 is a torus scheme. If w3 is empty: done (torus n=1).
+           If w3 nonempty: continue extracting commutators or apply IH.\<close>
         show ?thesis sorry
       qed
     qed
