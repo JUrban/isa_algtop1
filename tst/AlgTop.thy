@@ -17136,8 +17136,22 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
     show ?thesis
     proof (cases "length scheme = 4")
       case True
-      \<comment> \<open>Base case: length 4 torus scheme = aba\\<inverse>b\\<inverse> or aa\\<inverse>bb\\<inverse>.\<close>
-      show ?thesis sorry
+      \<comment> \<open>Base case: length 4 torus scheme.
+         If adjacent cancellable pair: cancel to length 2, then uncancel to sphere.
+         If no adjacent cancellable pair: labels alternate \\<Rightarrow> torus n=1.\<close>
+      show ?thesis
+      proof (cases "\<exists>i < 3. fst (scheme!i) = fst (scheme!(i+1))")
+        case True
+        \<comment> \<open>Adjacent same-label pair (must be opposite direction since torus type).
+           Cancel gives length 2 scheme, then uncancel to sphere form.\<close>
+        show ?thesis sorry
+      next
+        case no_adj: False
+        \<comment> \<open>No adjacent same-label \\<Rightarrow> labels alternate. With torus type and length 4,
+           the scheme is a rotation of aba\\<inverse>b\\<inverse> (possibly with flipped b direction).
+           By flip\\_label if needed, get standard torus form.\<close>
+        show ?thesis sorry
+      qed
     next
       case False
       \<comment> \<open>Length > 4: either has cancellable adjacent pair (shorter scheme) or
