@@ -2919,6 +2919,10 @@ proof -
     thus ?thesis using free_abelian_reindex[OF hK_fab_raw hSuc_bij] by (by100 simp)
   qed
 
+  \<comment> \<open>K is a group (extract from K\_fab or prove directly from K\_fab\_raw).\<close>
+  have hK_grp_outer: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
+    using hK_fab unfolding top1_is_free_abelian_group_full_on_def top1_is_abelian_group_on_def
+    by (by100 blast)
 
   \<comment> \<open>Both eAG and \<phi>_bar(\<beta>) are torsion elements.\<close>
   have heAG_torsion: "?eAG \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
@@ -3012,8 +3016,7 @@ proof -
        But hK\_grp inside K\_fab\_raw's proof block is not in scope.
        Re-derive: use hAbelG\_grp restricted to K.\<close>
     have hK_grp_loc: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
-      sorry \<comment> \<open>K is a group: proved inside K\_fab\_raw but not in scope.
-         Could re-extract from K\_fab (if proved) or re-derive from K_0 group + hom.\<close>
+      using hK_grp_outer .
     have hgens_sub: "(\<lambda>i. \<phi>_bar (?\<iota>A i)) ` {..<m} \<subseteq> ?AbelG"
       using h\<phi>_hom h\<iota>A_in unfolding top1_group_hom_on_def by (by100 blast)
     from abelian_generated_decomposes_via_order2[OF hAbelG_abel hAbelG_gen hK_grp_loc
