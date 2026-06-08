@@ -2738,9 +2738,35 @@ proof -
           ultimately show ?thesis by (by100 simp)
         qed
         have hmul_cl_K: "\<forall>x\<in>?K. \<forall>y\<in>?K. ?mulAG x y \<in> ?K"
-          sorry \<comment> \<open>\<phi>\_bar(a) \<cdot> \<phi>\_bar(b) = \<phi>\_bar(a \<cdot> b); K_0 closed under mul.\<close>
+        proof (intro ballI)
+          fix x y assume "x \<in> ?K" "y \<in> ?K"
+          then obtain a b where ha: "a \<in> ?AbelF" "\<epsilon>0 a = 0" "x = \<phi>_bar a"
+            and hb: "b \<in> ?AbelF" "\<epsilon>0 b = 0" "y = \<phi>_bar b" by (by100 blast)
+          have hab: "?mulA a b \<in> ?AbelF" using hAbelF_mul_cl ha(1) hb(1) by (by100 blast)
+          have "\<epsilon>0 (?mulA a b) = \<epsilon>0 a + \<epsilon>0 b"
+            using h\<epsilon>0_hom ha(1) hb(1) unfolding top1_group_hom_on_def by (by100 blast)
+          hence "\<epsilon>0 (?mulA a b) = 0" using ha(2) hb(2) by (by100 simp)
+          hence "?mulA a b \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}" using hab by (by100 blast)
+          moreover have "?mulAG x y = \<phi>_bar (?mulA a b)"
+            using h\<phi>_hom ha hb unfolding top1_group_hom_on_def by (by100 blast)
+          ultimately show "?mulAG x y \<in> ?K" by (by100 force)
+        qed
         have hinv_cl_K: "\<forall>x\<in>?K. ?invgAG x \<in> ?K"
-          sorry \<comment> \<open>\<phi>\_bar(a)^{-1} = \<phi>\_bar(a^{-1}); K_0 closed under inv.\<close>
+        proof (intro ballI)
+          fix x assume "x \<in> ?K"
+          then obtain a where ha: "a \<in> ?AbelF" "\<epsilon>0 a = 0" "x = \<phi>_bar a" by (by100 blast)
+          have hinva: "?invgA a \<in> ?AbelF" using hAbelF_invg_cl ha(1) by (by100 blast)
+          have hZ_grp_l: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+            using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+              top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+          have "\<epsilon>0 (?invgA a) = - \<epsilon>0 a"
+            using hom_preserves_inv[OF hAbelF_grp hZ_grp_l h\<epsilon>0_hom ha(1)] by (by100 simp)
+          hence "\<epsilon>0 (?invgA a) = 0" using ha(2) by (by100 simp)
+          hence "?invgA a \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}" using hinva by (by100 blast)
+          moreover have "?invgAG x = \<phi>_bar (?invgA a)"
+            using hom_preserves_inv[OF hAbelF_grp hAbelG_grp h\<phi>_hom ha(1)] ha(3) by (by100 simp)
+          ultimately show "?invgAG x \<in> ?K" by (by100 force)
+        qed
         \<comment> \<open>Group axioms (assoc, id, inv) inherited from AbelG since K \<subseteq> AbelG.\<close>
         show ?thesis
           unfolding top1_is_group_on_def
