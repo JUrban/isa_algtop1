@@ -1960,14 +1960,14 @@ proof -
   \<comment> \<open>Step B: K_0 = ker(\<epsilon>_0) is free abelian on {..<m}-{0}.\<close>
   let ?K0 = "{a \<in> ?AbelF. \<epsilon>0 a = 0}"
   have hK0_fab: "top1_is_free_abelian_group_full_on ?K0 ?mulA ?eA ?invgA ?\<iota>A ({..<m} - {0::nat})"
-    using free_abelian_kernel_coordinate[OF h\<iota>A \<open>0 \<in> {..<m}\<close> h\<epsilon>0_hom h\<epsilon>0_0 h\<epsilon>0_rest] sorry
+    using free_abelian_kernel_coordinate[OF h\<iota>A \<open>0 \<in> {..<m}\<close> h\<epsilon>0_hom h\<epsilon>0_0 h\<epsilon>0_rest] by (by100 simp)
 
   \<comment> \<open>Step C: \<phi>\_bar maps K_0 into AbelG. Define K = \<phi>\_bar ` K_0.\<close>
   let ?K = "\<phi>_bar ` ?K0"
 
   \<comment> \<open>Step D: K \<subseteq> AbelG.\<close>
   have hK_sub: "?K \<subseteq> ?AbelG"
-    sorry \<comment> \<open>\<phi>\_bar maps AbelF elements to AbelG.\<close>
+    using h\<phi>_hom unfolding top1_group_hom_on_def by (by100 blast)
 
   \<comment> \<open>Step E: \<phi>\_bar restricted to K_0 is injective: ker(\<phi>\_bar) \<cap> K_0 = {eA}.
      ker(\<phi>\_bar) = N\_AbelF \<subseteq> {a | even(\<epsilon>_0(a))} but K_0 = {a | \<epsilon>_0(a)=0}.
