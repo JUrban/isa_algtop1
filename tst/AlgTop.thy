@@ -2356,7 +2356,12 @@ proof -
       also have "?mulAG (\<phi>_bar a) (?invgAG (\<phi>_bar b)) = ?mulAG (\<phi>_bar a) (?invgAG (\<phi>_bar a))"
         using heq by (by100 simp)
       also have "\<dots> = ?eAG"
-        using hAbelG_grp h\<beta>G_in sorry \<comment> \<open>\<phi>\_bar(a) \<in> AbelG, so x \<cdot> x^{-1} = eAG.\<close>
+      proof -
+        have "\<phi>_bar a \<in> ?AbelG"
+          using h\<phi>_hom ha_in unfolding top1_group_hom_on_def by (by100 blast)
+        from hAbelG_grp[unfolded top1_is_group_on_def] this
+        show ?thesis by (by100 fast)
+      qed
       finally have "\<phi>_bar (?mulA a (?invgA b)) = ?eAG" .
       hence "?mulA a (?invgA b) \<in> top1_group_kernel_on ?AbelF ?eAG \<phi>_bar"
         using hab_in unfolding top1_group_kernel_on_def by (by100 blast)
