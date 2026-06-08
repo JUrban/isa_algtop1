@@ -2725,11 +2725,16 @@ proof -
         \<comment> \<open>K is a subgroup of AbelG: closed under mul, inv, contains e.\<close>
         have he_in_K: "?eAG \<in> ?K"
         proof -
+          have hZ_grp_loc: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+            using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+              top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+          have "\<epsilon>0 ?eA = 0"
+            using hom_preserves_id[OF hAbelF_grp hZ_grp_loc h\<epsilon>0_hom] by (by100 simp)
           have "?eA \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
-            using hAbelF_e_in sorry \<comment> \<open>\<epsilon>_0(eA) = 0.\<close>
+            using hAbelF_e_in \<open>\<epsilon>0 ?eA = 0\<close> by (by100 blast)
           hence "\<phi>_bar ?eA \<in> ?K" by (by100 blast)
           moreover have "\<phi>_bar ?eA = ?eAG"
-            sorry \<comment> \<open>Hom preserves identity.\<close>
+            using hom_preserves_id[OF hAbelF_grp hAbelG_grp h\<phi>_hom] by (by100 simp)
           ultimately show ?thesis by (by100 simp)
         qed
         have hmul_cl_K: "\<forall>x\<in>?K. \<forall>y\<in>?K. ?mulAG x y \<in> ?K"
