@@ -2361,6 +2361,11 @@ proof -
   have hK0_fab: "top1_is_free_abelian_group_full_on ?K0 ?mulA ?eA ?invgA ?\<iota>A ({..<m} - {0::nat})"
     using free_abelian_kernel_coordinate[OF h\<iota>A \<open>0 \<in> {..<m}\<close> h\<epsilon>0_hom h\<epsilon>0_0 h\<epsilon>0_rest] by (by100 simp)
 
+  \<comment> \<open>K_0 is a group (from free abelian).\<close>
+  have hK0_grp_outer: "top1_is_group_on ?K0 ?mulA ?eA ?invgA"
+    using hK0_fab unfolding top1_is_free_abelian_group_full_on_def
+      top1_is_abelian_group_on_def by (by100 blast)
+
   \<comment> \<open>Step C: \<phi>\_bar maps K_0 into AbelG. Define K = \<phi>\_bar ` K_0.\<close>
   let ?K = "\<phi>_bar ` ?K0"
 
@@ -3018,13 +3023,7 @@ proof -
               using h\<iota>A_in h\<epsilon>0_rest by (by100 auto)
           qed
           have hK0_grp_loc: "top1_is_group_on {a \<in> ?AbelF. \<epsilon>0 a = 0} ?mulA ?eA ?invgA"
-          proof -
-            from hAbelF_grp[unfolded top1_is_group_on_def]
-            have hCF_normal_loc: "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA
-                (top1_group_kernel_on ?AbelF (0::int) \<epsilon>0)"
-              sorry \<comment> \<open>Kernel is normal. Previously proved.\<close>
-            thus ?thesis sorry \<comment> \<open>K_0 = kernel \<Longrightarrow> K_0 is a group.\<close>
-          qed
+            using hK0_grp_outer .
           from subgroup_generated_word_repr[OF hK0_grp_loc h\<iota>A_sub_K0]
           show ?thesis
             using \<open>a \<in> top1_subgroup_generated_on _ _ _ _ _\<close> by (by100 blast)
@@ -3034,7 +3033,22 @@ proof -
           assume "a = ?eA"
           hence "x = ?eAG" using ha(3)
             hom_preserves_id[OF hAbelF_grp hAbelG_grp h\<phi>_hom] by (by100 simp)
-          thus ?thesis sorry \<comment> \<open>eAG \<in> subgroup\_generated (identity in any subgroup).\<close>
+          moreover have "?eAG \<in> top1_subgroup_generated_on ?K ?mulAG ?eAG ?invgAG
+              ((\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}))"
+          proof -
+            have hgens_sub_K: "(\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}) \<subseteq> ?K"
+            proof (rule image_subsetI)
+              fix s assume "s \<in> {..<m} - {0::nat}"
+              thus "\<phi>_bar (?\<iota>A s) \<in> ?K"
+                using h\<iota>A_in h\<epsilon>0_rest by (by100 auto)
+            qed
+            have hsg_grp: "top1_is_group_on (top1_subgroup_generated_on ?K ?mulAG ?eAG ?invgAG
+                ((\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}))) ?mulAG ?eAG ?invgAG"
+              using intersection_of_subgroups_is_group[OF hK_grp_pre hgens_sub_K] by (by100 simp)
+            from hsg_grp[unfolded top1_is_group_on_def]
+            show ?thesis by (by100 fast)
+          qed
+          ultimately show ?thesis by (by100 simp)
         next
           assume "\<exists>ws. length ws > 0
             \<and> (\<forall>i<length ws. ws!i \<in> ?\<iota>A ` ({..<m} - {0::nat})
