@@ -14820,9 +14820,7 @@ proof -
   qed
   \<comment> \<open>Y1 is also a quotient of v@u (same polygon, rotated vertex numbering).\<close>
   have hY1_vu: "top1_quotient_of_scheme_on Y1 TY1 (v @ u)"
-    sorry \<comment> \<open>Extract (P,q,vx,vy) from assms(3). Define vx'(i)=vx((i+|u|) mod n), vy' similarly.
-       Same polygon P, same quotient map q. The shifted vertices + hshift show all scheme
-       conditions for v@u are satisfied. This is mechanical but detailed.\<close>
+    by (rule elementary_operation_preserves_quotient[OF assms(3) top1_elementary_scheme_operation.rotate])
   \<comment> \<open>Both Y1 and Y2 are quotients of v@u. Apply scheme\\_quotient\\_uniqueness.\<close>
   show ?thesis by (rule scheme_quotient_uniqueness[OF assms(1) assms(2) hY1_vu assms(4)])
 qed
@@ -14866,7 +14864,8 @@ proof -
      Formal: Reflecting the polygon (reversing vertex order) gives a valid quotient
      of rev(map inverse w). Then scheme\\_quotient\\_uniqueness gives Y1 \\<cong> Y2.\<close>
   have hY1_inv: "top1_quotient_of_scheme_on Y1 TY1 (rev (map top1_inverse_edge w))"
-    sorry \<comment> \<open>Extract (P,q,vx,vy) from assms(3). Define reflected vertices:
+    by (rule elementary_operation_preserves_quotient[OF assms(3) top1_elementary_scheme_operation.invert])
+  \<comment> \<open>Originally: Extract (P,q,vx,vy) from assms(3). Define reflected vertices:
        vx'(i) = vx(n-1-i), vy'(i) = vy(n-1-i) (reverse order).
        The same polygon P (reflection is a homeomorphism), same quotient map q.
        Edge i in the reflected scheme = inverse of edge (n-1-i) in w.
