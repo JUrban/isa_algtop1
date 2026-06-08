@@ -2149,7 +2149,10 @@ proof -
           using hN_in_AbelF by (by100 auto)
         show "\<forall>s. length (filter (\<lambda>(t,b). t = s \<and> b) ?w)
             = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) ?w)"
-          sorry \<comment> \<open>Balanced condition from hsum: \<epsilon>_0 sum = 0 means #True = #False.\<close>
+          sorry \<comment> \<open>Balanced condition from hsum: \<epsilon>_0 sum = 0 means #True = #False.
+             For s = (): #True = #{i | ws!i = rel}, #False = #{i | ws!i = invg(rel)}.
+             \<epsilon>_0 sum = 2\<cdot>#True - 2\<cdot>#False = 0, so #True = #False.
+             For s \<noteq> (): both filters empty (all labels are ()).\<close>
       qed
       moreover have "top1_group_word_product ?mulA ?eA ?invgA (map (\<lambda>(s,b). (?\<phi>w s, b)) ?w)
           = foldr ?mulA ws ?eA"
