@@ -2715,7 +2715,9 @@ proof -
           unfolding top1_group_kernel_on_def by (by100 blast)
         moreover have "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA (top1_group_kernel_on ?AbelF (0::int) \<epsilon>0)"
           using kernel_is_normal_subgroup[OF hAbelF_grp hZ_grp h\<epsilon>0_hom] by (by100 simp)
-        ultimately show ?thesis unfolding top1_normal_subgroup_on_def sorry
+        ultimately have "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+          by (by100 simp)
+        thus ?thesis unfolding top1_normal_subgroup_on_def by (by100 fast)
       qed
       \<comment> \<open>K = \<phi>\_bar(K_0) is a group via hom image of subgroup.\<close>
       have hK_grp: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
