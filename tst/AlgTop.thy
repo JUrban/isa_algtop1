@@ -1736,9 +1736,32 @@ proof -
      Then in abelian AbelF: a0^2*a1^2*...*a_{m-1}^2 = (a0*a1*...*a_{m-1})^2
      by foldr\_mul\_append + induction.\<close>
   have hrel_eq_\<beta>2: "?rel_in_AbelF = ?mulA ?\<beta>A ?\<beta>A"
-    sorry \<comment> \<open>Abelian rearrangement via abelian\_foldr\_concat\_double:
-       rel = p(word\_product) = foldr mulA [ιA 0,ιA 0,...] eA = β².
-       Uses: hom\_word\_product, abelian\_foldr\_concat\_double, p is hom.\<close>
+  proof -
+    \<comment> \<open>The p-image of a word product in F equals the corresponding word product in AbelF.\<close>
+    have hpF_hom: "top1_group_hom_on F mulF ?AbelF ?mulA ?p"
+      using quotient_projection_properties(1)[OF hF_grp hCF_normal] by (by100 simp)
+    \<comment> \<open>rel\_in\_AbelF = p(rel\_in\_F). We compute this via the word product structure.
+       The relator scheme has all True entries, so word\_product = foldr of generators.
+       After applying p: each ι(i) maps to ιA(i) = p(ι(i)).\<close>
+    \<comment> \<open>Step 1: Show rel\_in\_AbelF = foldr mulA (concat (map (\<lambda>i. [ιA i, ιA i]) [0..<m])) eA.\<close>
+    have hstep1: "?rel_in_AbelF = foldr ?mulA (concat (map (\<lambda>i. [?\<iota>A i, ?\<iota>A i]) [0..<m])) ?eA"
+      sorry \<comment> \<open>p is hom + word\_product True-only = foldr + map through p gives ιA.
+         This is a chain of hom\_word\_product + wp\_true + map simplification.\<close>
+    \<comment> \<open>Step 2: Apply abelian\_foldr\_concat\_double to get β².\<close>
+    also have "\<dots> = ?mulA ?\<beta>A ?\<beta>A"
+    proof -
+      have "\<forall>i<length (map ?\<iota>A [0..<m]). (map ?\<iota>A [0..<m]) ! i \<in> ?AbelF"
+        using h\<iota>A_in by (by100 auto)
+      hence hcd: "foldr ?mulA (concat (map (\<lambda>x. [x, x]) (map ?\<iota>A [0..<m]))) ?eA
+          = ?mulA (foldr ?mulA (map ?\<iota>A [0..<m]) ?eA) (foldr ?mulA (map ?\<iota>A [0..<m]) ?eA)"
+        using abelian_foldr_concat_double[OF hAbelF_abel] by (by100 blast)
+      have "concat (map (\<lambda>i. [?\<iota>A i, ?\<iota>A i]) [0..<m])
+          = concat (map (\<lambda>x. [x, x]) (map ?\<iota>A [0..<m]))"
+        by (induct m, by100 simp, by100 simp)
+      thus ?thesis using hcd by (by100 simp)
+    qed
+    finally show ?thesis .
+  qed
 
   \<comment> \<open>\<phi>_bar(\<beta>) is a torsion element of order exactly 2 in Abel(G_0).\<close>
   let ?\<beta>G = "\<phi>_bar ?\<beta>A"
