@@ -16367,18 +16367,92 @@ next
     unfolding top1_scheme_equiv_def by (rule rtranclp_trans)
 qed
 
-\<comment> \<open>Lemma 77.3 (Munkres): If w = [w0] a b [w1] a\\<inverse> b\\<inverse> [w2] (torus-type with commutator),
-   then w ~ (aba\\<inverse>b\\<inverse>) [w0 w1 w2].\<close>
+\<comment> \<open>Key lemma: for w0=[], w2=[], we can extract the commutator to front.
+   a b w1 a\\<inverse> b\\<inverse> ~ a b a\\<inverse> b\\<inverse> w1.
+   6-step sequence: rotate, flip\\_label a, cut\\_paste\\_opp a, flip\\_label a, rotate, cut\\_paste\\_opp b.\<close>
+lemma Lemma_77_3_simple:
+  assumes hab: "a \<noteq> b"
+  shows "top1_scheme_equiv
+      ([(a, True), (b, True)] @ w1 @ [(a, False), (b, False)])
+      ([(a, True), (b, True), (a, False), (b, False)] @ w1)"
+proof -
+  let ?w = "[(a, True), (b, True)] @ w1 @ [(a, False), (b, False)]"
+  let ?flip_a = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
+  \<comment> \<open>Step 1: rotate.\<close>
+  have s1: "top1_elementary_scheme_operation ?w
+      (w1 @ [(a, False), (b, False), (a, True), (b, True)])"
+    using top1_elementary_scheme_operation.rotate[of "[(a,True),(b,True)]" "w1 @ [(a,False),(b,False)]"]
+    by simp
+  \<comment> \<open>Step 2: flip\\_label a.\<close>
+  have s2: "top1_elementary_scheme_operation
+      (w1 @ [(a, False), (b, False), (a, True), (b, True)])
+      (?flip_a w1 @ [(a, True), (b, False), (a, False), (b, True)])"
+  proof -
+    have hba: "b \<noteq> a" using hab by (by100 blast)
+    \<comment> \<open>First show the target equals the map result.\<close>
+    have htarget: "?flip_a w1 @ [(a, True), (b, False), (a, False), (b, True)]
+        = ?flip_a (w1 @ [(a, False), (b, False), (a, True), (b, True)])"
+      using hba by simp
+    show ?thesis unfolding htarget
+      by (rule top1_elementary_scheme_operation.flip_label)
+  qed
+  \<comment> \<open>Step 3: cut\\_paste\\_opp on a (move ?flip\\_a w1 from before a to after a\\<inverse>).\<close>
+  have s3: "top1_elementary_scheme_operation
+      (?flip_a w1 @ [(a, True), (b, False), (a, False), (b, True)])
+      ([(a, True), (b, False), (a, False)] @ ?flip_a w1 @ [(b, True)])"
+    using top1_elementary_scheme_operation.cut_paste_opp
+      [of "[]" "?flip_a w1" a "[(b, False)]" "[(b, True)]"] by simp
+  \<comment> \<open>Step 4: flip\\_label a (flip back: restores w1).\<close>
+  have s4: "top1_elementary_scheme_operation
+      ([(a, True), (b, False), (a, False)] @ ?flip_a w1 @ [(b, True)])
+      ([(a, False), (b, False), (a, True)] @ w1 @ [(b, True)])"
+  proof -
+    have hba: "b \<noteq> a" using hab by (by100 blast)
+    have hflip_invol: "?flip_a (?flip_a w1) = w1"
+    proof (induction w1)
+      case Nil thus ?case by simp
+    next
+      case (Cons e w1)
+      obtain l bo where he: "e = (l, bo)" by (cases e)
+      show ?case using Cons.IH by (simp add: he)
+    qed
+    have htarget: "[(a, False), (b, False), (a, True)] @ w1 @ [(b, True)]
+        = ?flip_a ([(a, True), (b, False), (a, False)] @ ?flip_a w1 @ [(b, True)])"
+      using hba hflip_invol by simp
+    show ?thesis unfolding htarget
+      by (rule top1_elementary_scheme_operation.flip_label)
+  qed
+  \<comment> \<open>Step 5: rotate.\<close>
+  have s5: "top1_elementary_scheme_operation
+      ([(a, False), (b, False), (a, True)] @ w1 @ [(b, True)])
+      ([(a, True)] @ w1 @ [(b, True), (a, False), (b, False)])"
+    using top1_elementary_scheme_operation.rotate
+      [of "[(a,False),(b,False)]" "[(a,True)] @ w1 @ [(b,True)]"] by simp
+  \<comment> \<open>Step 6: cut\\_paste\\_opp on b (move w1 from before b to after b\\<inverse>).\<close>
+  have s6: "top1_elementary_scheme_operation
+      ([(a, True)] @ w1 @ [(b, True), (a, False), (b, False)])
+      ([(a, True), (b, True), (a, False), (b, False)] @ w1)"
+    using top1_elementary_scheme_operation.cut_paste_opp
+      [of "[(a, True)]" w1 b "[(a, False)]" "[]"] by simp
+  \<comment> \<open>Chain all steps.\<close>
+  from s1 s2 s3 s4 s5 s6
+  show ?thesis unfolding top1_scheme_equiv_def
+    by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
+qed
+
+\<comment> \<open>Lemma 77.3 (Munkres): general case. w0 a b w1 a\\<inverse> b\\<inverse> w2 ~ (aba\\<inverse>b\\<inverse>) w0 w1 w2.
+   Proof: rotate w0 to end, apply simple case, rotate tail to fix order.\<close>
 lemma Lemma_77_3_torus_extraction:
+  assumes "a \<noteq> b"
   shows "top1_scheme_equiv
       (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
       ([(a, True), (b, True), (a, False), (b, False)] @ w0 @ w1 @ w2)"
-  sorry \<comment> \<open>Book proof (Munkres \\<S>77 Lemma 77.3): Three cuttings and pastings.
-     Step 1: cut\\_paste\\_opp on a moves w0's tail past a⁻¹.
-     Step 2: cut\\_paste\\_opp rearranges to get b and a⁻¹ adjacent.
-     Step 3: cut\\_paste\\_opp rearranges to get the full commutator block.
-     Step 4: rotate to bring commutator to front.
-     Each step uses cut\\_paste\\_opp + relabel. Very elaborate (book says "most elaborate").\<close>
+  sorry \<comment> \<open>General case needs the book's full 3 cuttings and pastings (with intermediate labels).
+     The simple case (Lemma\\_77\\_3\\_simple) handles w0=[], w2=[], but the general case
+     requires more: first cut\\_paste\\_opp to move w0, then the elaborate Figure 77.3-77.5
+     operations to rearrange the interior segments.
+     For scheme\\_normal\\_form, the simple case may suffice since the book applies Lemma 77.3
+     with w0 initially empty.\<close>
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
