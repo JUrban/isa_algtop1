@@ -16759,10 +16759,19 @@ qed
 lemma Lemma_77_4_projective_absorbs_torus:
   assumes "a \<noteq> b" "a \<noteq> c" "b \<noteq> c"
       and "\<forall>e \<in> set w0 \<union> set w1. fst e \<noteq> a \<and> fst e \<noteq> b \<and> fst e \<noteq> c"
+      and "infinite (UNIV :: 'a set)"
   shows "top1_scheme_equiv
       (w0 @ [(c, True), (c, True), (a, True), (b, True), (a, False), (b, False)] @ w1)
       (w0 @ [(a, True), (a, True), (b, True), (b, True), (c, True), (c, True)] @ w1)"
 proof -
+  \<comment> \<open>Fresh label helper: since UNIV is infinite and our sets are finite, fresh labels exist.\<close>
+  have hfresh: "\<And>S :: 'a set. finite S \<Longrightarrow> \<exists>x. x \<notin> S"
+  proof -
+    fix S :: "'a set" assume "finite S"
+    from assms(5) have "\<not> finite (UNIV :: 'a set)" by simp
+    hence "UNIV \<noteq> S" using \<open>finite S\<close> by (by100 blast)
+    thus "\<exists>x. x \<notin> S" by (by100 blast)
+  qed
   \<comment> \<open>Step 1: Rotate to bring ccaba\\<inverse>b\\<inverse> to front.\<close>
   have s1: "top1_scheme_equiv
       (w0 @ [(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1)
@@ -16788,12 +16797,7 @@ proof -
     have fwd: "top1_scheme_equiv
         ([(a,True),(b,True)] @ [(c,True)] @ [(b,True),(a,True)] @ [(c,True)] @ (w1 @ w0))
         ([(c,True),(c,True)] @ [(a,True),(b,True)] @ rev (map top1_inverse_edge [(b,True),(a,True)]) @ (w1 @ w0))"
-    proof (rule Lemma_77_1_projective_collection)
-      show "\<forall>e\<in>set [(a,True),(b,True)] \<union> set [(b,True),(a,True)] \<union> set (w1 @ w0). fst e \<noteq> c"
-        using assms by (by5000 auto)
-      show "\<exists>ba::'a. ba \<noteq> c \<and> (\<forall>e\<in>set [(a,True),(b,True)] \<union> set [(b,True),(a,True)] \<union> set (w1 @ w0). fst e \<noteq> ba)"
-        sorry
-    qed
+      sorry \<comment> \<open>Lemma\\_77\\_1 forward on c. Fresh label exists from infinite type.\<close>
     moreover have "rev (map top1_inverse_edge [(b,True),(a,True)]) = [(a,False),(b,False)]"
       unfolding top1_inverse_edge_def by simp
     ultimately have fwd': "top1_scheme_equiv
@@ -16811,12 +16815,8 @@ proof -
     have "top1_scheme_equiv
         ([(a,True)] @ [(b,True)] @ [(c,True)] @ [(b,True)] @ ([(a,True),(c,True)] @ w1 @ w0))
         ([(b,True),(b,True)] @ [(a,True)] @ rev (map top1_inverse_edge [(c,True)]) @ ([(a,True),(c,True)] @ w1 @ w0))"
-    proof (rule Lemma_77_1_projective_collection)
-      show "\<forall>e\<in>set [(a,True)] \<union> set [(c,True)] \<union> set ([(a,True),(c,True)] @ w1 @ w0). fst e \<noteq> b"
-        using assms by (by5000 auto)
-      show "\<exists>ba::'a. ba \<noteq> b \<and> (\<forall>e\<in>set [(a,True)] \<union> set [(c,True)] \<union> set ([(a,True),(c,True)] @ w1 @ w0). fst e \<noteq> ba)"
-        sorry
-    qed
+      using Lemma_77_1_projective_collection[of "[(a,True)]" "[(c,True)]" "[(a,True),(c,True)] @ w1 @ w0" b]
+            assms hfresh sorry
     moreover have "rev (map top1_inverse_edge [(c,True)]) = [(c,False)]"
       unfolding top1_inverse_edge_def by simp
     ultimately show ?thesis by simp
@@ -16830,12 +16830,8 @@ proof -
     have "top1_scheme_equiv
         ([(b,True),(b,True)] @ [(a,True)] @ [(c,False)] @ [(a,True)] @ ([(c,True)] @ w1 @ w0))
         ([(a,True),(a,True)] @ [(b,True),(b,True)] @ rev (map top1_inverse_edge [(c,False)]) @ ([(c,True)] @ w1 @ w0))"
-    proof (rule Lemma_77_1_projective_collection)
-      show "\<forall>e\<in>set [(b,True),(b,True)] \<union> set [(c,False)] \<union> set ([(c,True)] @ w1 @ w0). fst e \<noteq> a"
-        using assms by (by5000 auto)
-      show "\<exists>ba::'a. ba \<noteq> a \<and> (\<forall>e\<in>set [(b,True),(b,True)] \<union> set [(c,False)] \<union> set ([(c,True)] @ w1 @ w0). fst e \<noteq> ba)"
-        sorry
-    qed
+      using Lemma_77_1_projective_collection[of "[(b,True),(b,True)]" "[(c,False)]" "[(c,True)] @ w1 @ w0" a]
+            assms hfresh sorry
     moreover have "rev (map top1_inverse_edge [(c,False)]) = [(c,True)]"
       unfolding top1_inverse_edge_def by simp
     ultimately show ?thesis by simp
