@@ -14832,7 +14832,33 @@ proof -
   qed
   \<comment> \<open>P is closed: the set of convex combinations of finitely many fixed points is closed.
      (Limit of convergent sequence of convex combinations is a convex combination.)\<close>
-  have hP_closed: "closed P" sorry
+  \<comment> \<open>Show P is compact directly via inductive convex hull argument.\<close>
+  have hP_compact_direct: "compact P"
+  proof -
+    \<comment> \<open>Define partial convex hulls: Q k = conv({(vx i, vy i) | i \\<le> k}).\<close>
+    define Q where "Q k = {(x::real, y::real). \<exists>coeffs.
+        (\<forall>i\<le>k. 0 \<le> coeffs i) \<and> (\<Sum>i\<le>k. coeffs i) = 1
+        \<and> x = (\<Sum>i\<le>k. coeffs i * vx i) \<and> y = (\<Sum>i\<le>k. coeffs i * vy i)}" for k
+    \<comment> \<open>Base: Q 0 = {(vx 0, vy 0)} is compact (singleton).\<close>
+    have hQ0: "compact (Q 0)"
+    proof -
+      have "Q 0 = {(vx 0, vy 0)}" unfolding Q_def sorry
+      thus ?thesis sorry
+    qed
+    \<comment> \<open>Step: Q (Suc k) = {t*v\\_{k+1} + (1-t)*p | t \\<in> [0,1], p \\<in> Q k}.
+       This is the continuous image of [0,1] \\<times> Q k, hence compact.\<close>
+    have hQstep: "\<And>k. compact (Q k) \<Longrightarrow> compact (Q (Suc k))" sorry
+    \<comment> \<open>By induction: Q k is compact for all k.\<close>
+    have hQk: "\<And>k. compact (Q k)"
+    proof -
+      fix k show "compact (Q k)"
+        by (induction k) (use hQ0 in simp, use hQstep in simp)
+    qed
+    \<comment> \<open>P = Q (n-1) (when n \\<ge> 3).\<close>
+    have "P = Q (n - 1)" unfolding hP Q_def sorry
+    thus ?thesis using hQk by simp
+  qed
+  have hP_closed: "closed P" by (rule compact_imp_closed[OF hP_compact_direct])
   \<comment> \<open>Closed subset of compact {-M..M}\\<times>{-M..M} is compact.\<close>
   show "compact P"
     by (rule closed_subset_compact[OF compact_Icc_Times hP_closed hP_bounded])
