@@ -14943,7 +14943,19 @@ proof -
     qed
     \<comment> \<open>Step: Q (Suc k) = {t*v\\_{k+1} + (1-t)*p | t \\<in> [0,1], p \\<in> Q k}.
        This is the continuous image of [0,1] \\<times> Q k, hence compact.\<close>
-    have hQstep: "\<And>k. compact (Q k) \<Longrightarrow> compact (Q (Suc k))" sorry
+    have hQstep: "\<And>k. compact (Q k) \<Longrightarrow> compact (Q (Suc k))"
+    proof -
+      fix k assume hIH: "compact (Q k)"
+      \<comment> \<open>Q(Suc k) = image of [0,1] \\<times> Q(k) under the affine combination map.\<close>
+      define f where "f = (\<lambda>(t::real, p::real\<times>real). (t * vx (Suc k) + (1-t) * fst p, t * vy (Suc k) + (1-t) * snd p))"
+      have hQ_eq: "Q (Suc k) = f ` ({0..1} \<times> Q k)" sorry
+      have hf_cont: "continuous_on ({0..1} \<times> Q k) f"
+        unfolding f_def sorry \<comment> \<open>Continuous: affine combination of continuous projections.\<close>
+      have hdom_compact: "compact ({0..1::real} \<times> Q k)"
+        by (rule compact_Times_general[OF compact_Icc hIH])
+      show "compact (Q (Suc k))" unfolding hQ_eq
+        by (rule compact_continuous_image[OF hf_cont hdom_compact])
+    qed
     \<comment> \<open>By induction: Q k is compact for all k.\<close>
     have hQk: "\<And>k. compact (Q k)"
     proof -
