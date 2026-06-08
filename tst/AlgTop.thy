@@ -15580,6 +15580,10 @@ proof -
   obtain \<iota>A where h\<iota>A:
     "top1_is_free_abelian_group_full_on ?AbelF ?mulA ?eA ?invgA \<iota>A ({..<m}::nat set)"
     by (by100 blast)
+  \<comment> \<open>The generators of the free abelian group are the images of the free generators:
+     \<iota>A(s) = p(\<iota>(s)) for all s \<in> {..<m}. This follows from Theorem 69.4 (full version).\<close>
+  have h\<iota>A_eq: "\<forall>s \<in> {..<m}. \<iota>A s = ?p (\<iota> s)"
+    sorry \<comment> \<open>From Theorem\_69\_4: iotaH s = phi (iota s), instantiated to p.\<close>
 
   have hAbelF_abel: "top1_is_abelian_group_on ?AbelF ?mulA ?eA ?invgA"
     using h\<iota>A unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
