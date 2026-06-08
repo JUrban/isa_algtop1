@@ -14830,7 +14830,8 @@ proof -
     qed
     show "p \<in> {- M..M} \<times> {- M..M}" using \<open>\<bar>x\<bar> \<le> M\<close> \<open>\<bar>y\<bar> \<le> M\<close> hp by (by100 auto)
   qed
-  \<comment> \<open>P is closed: it's the continuous preimage of {0} (a closed set) under a continuous map.\<close>
+  \<comment> \<open>P is closed: the set of convex combinations of finitely many fixed points is closed.
+     (Limit of convergent sequence of convex combinations is a convex combination.)\<close>
   have hP_closed: "closed P" sorry
   \<comment> \<open>Closed subset of compact {-M..M}\\<times>{-M..M} is compact.\<close>
   show "compact P"
