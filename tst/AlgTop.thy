@@ -1778,7 +1778,17 @@ proof -
         \<comment> \<open>The set M = {g \<in> AbelF. even(\<epsilon>(g))} is a normal subgroup containing rel.\<close>
         let ?M = "{g \<in> ?AbelF. even (\<epsilon> g)}"
         have hM_normal: "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA ?M"
-          sorry \<comment> \<open>Preimage of 2Z under hom \<epsilon>: AbelF \<rightarrow> Z is normal.\<close>
+        proof -
+          have h2Z_normal: "top1_normal_subgroup_on (UNIV::int set) (+) 0 uminus {n::int. even n}"
+            sorry \<comment> \<open>2Z is a normal subgroup of (Z,+).\<close>
+          have "?M = {g \<in> ?AbelF. \<epsilon> g \<in> {n::int. even n}}" by (by100 auto)
+          have hZ_grp2: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+            using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+              top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def
+            by (by100 blast)
+          thus ?thesis using preimage_normal_subgroup[OF hAbelF_grp hZ_grp2 h\<epsilon>_hom h2Z_normal]
+            by (by100 simp)
+        qed
         have hrel_in_M: "?rel_in_AbelF \<in> ?M"
           using hN_in_AbelF h\<epsilon>_rel by (by100 auto)
         have "{?rel_in_AbelF} \<subseteq> ?M" using hrel_in_M by (by100 blast)
