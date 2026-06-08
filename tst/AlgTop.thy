@@ -2706,7 +2706,17 @@ proof -
     proof -
       \<comment> \<open>K_0 is a subgroup of AbelF (kernel of \<epsilon>_0 hom).\<close>
       have hK0_grp: "top1_is_group_on {a \<in> ?AbelF. \<epsilon>0 a = 0} ?mulA ?eA ?invgA"
-        sorry \<comment> \<open>Kernel of hom is a subgroup.\<close>
+      proof -
+        \<comment> \<open>{a | \<epsilon>_0(a) = 0} = kernel of \<epsilon>_0. Use kernel\_is\_normal\_subgroup.\<close>
+        have hZ_grp: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+          using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+            top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+        have "{a \<in> ?AbelF. \<epsilon>0 a = 0} = top1_group_kernel_on ?AbelF (0::int) \<epsilon>0"
+          unfolding top1_group_kernel_on_def by (by100 blast)
+        moreover have "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA (top1_group_kernel_on ?AbelF (0::int) \<epsilon>0)"
+          using kernel_is_normal_subgroup[OF hAbelF_grp hZ_grp h\<epsilon>0_hom] by (by100 simp)
+        ultimately show ?thesis unfolding top1_normal_subgroup_on_def sorry
+      qed
       \<comment> \<open>K = \<phi>\_bar(K_0) is a group via hom image of subgroup.\<close>
       have hK_grp: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
         sorry \<comment> \<open>Image of group under hom is a group (when hom is onto K).\<close>
