@@ -1664,7 +1664,50 @@ next
   also have "\<dots> = mul (mul a b) (mul (top1_group_pow mul e a n) (top1_group_pow mul e b n))"
     using Suc by (by100 simp)
   also have "\<dots> = mul (top1_group_pow mul e a (Suc n)) (top1_group_pow mul e b (Suc n))"
-    sorry \<comment> \<open>Abelian rearrangement: mul(a\<cdot>b)(pa\<cdot>pb) = mul(a\<cdot>pa)(b\<cdot>pb).\<close>
+  proof -
+    let ?pa = "top1_group_pow mul e a n"
+    let ?pb = "top1_group_pow mul e b n"
+    have hassoc: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)"
+      using hgrp[unfolded top1_is_group_on_def] by (by100 blast)
+    have hcomm: "\<forall>x\<in>G. \<forall>y\<in>G. mul x y = mul y x"
+      using habel[unfolded top1_is_abelian_group_on_def top1_is_group_on_def] by (by100 blast)
+    have hpa_pb: "mul ?pa ?pb \<in> G"
+      using hgrp hpow_a hpow_b unfolding top1_is_group_on_def by (by100 blast)
+    \<comment> \<open>Step 1: (a\<cdot>b)\<cdot>(pa\<cdot>pb) = a\<cdot>(b\<cdot>(pa\<cdot>pb)).\<close>
+    have h1: "mul (mul a b) (mul ?pa ?pb) = mul a (mul b (mul ?pa ?pb))"
+      using hassoc ha hb hpa_pb by (by100 blast)
+    \<comment> \<open>Step 2: b\<cdot>(pa\<cdot>pb) = (b\<cdot>pa)\<cdot>pb.\<close>
+    have h_bpa: "mul b ?pa \<in> G"
+      using hgrp hb hpow_a unfolding top1_is_group_on_def by (by100 blast)
+    have h2: "mul b (mul ?pa ?pb) = mul (mul b ?pa) ?pb"
+    proof -
+      from hassoc hb hpow_a hpow_b have "mul (mul b ?pa) ?pb = mul b (mul ?pa ?pb)"
+        by (by100 blast)
+      thus ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Step 3: b\<cdot>pa = pa\<cdot>b.\<close>
+    have h3: "mul b ?pa = mul ?pa b" using hcomm hb hpow_a by (by100 blast)
+    \<comment> \<open>Step 4: pa\<cdot>(b\<cdot>pb) = (pa\<cdot>b)\<cdot>pb — wait, we need pa\<cdot>b\<cdot>pb = pa\<cdot>(b\<cdot>pb).\<close>
+    have h_bpb: "mul b ?pb \<in> G"
+      using hgrp hb hpow_b unfolding top1_is_group_on_def by (by100 blast)
+    have h4: "mul (mul ?pa b) ?pb = mul ?pa (mul b ?pb)"
+      using hassoc hpow_a hb hpow_b by (by100 blast)
+    \<comment> \<open>Step 5: a\<cdot>(pa\<cdot>(b\<cdot>pb)) = (a\<cdot>pa)\<cdot>(b\<cdot>pb).\<close>
+    have h5: "mul a (mul ?pa (mul b ?pb)) = mul (mul a ?pa) (mul b ?pb)"
+    proof -
+      from hassoc ha hpow_a h_bpb have "mul (mul a ?pa) (mul b ?pb) = mul a (mul ?pa (mul b ?pb))"
+        by (by100 blast)
+      thus ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Chain: (a\<cdot>b)\<cdot>(pa\<cdot>pb) = a\<cdot>(b\<cdot>(pa\<cdot>pb)) = a\<cdot>((b\<cdot>pa)\<cdot>pb)
+       = a\<cdot>((pa\<cdot>b)\<cdot>pb) = a\<cdot>(pa\<cdot>(b\<cdot>pb)) = (a\<cdot>pa)\<cdot>(b\<cdot>pb).\<close>
+    have "mul (mul a b) (mul ?pa ?pb) = mul a (mul (mul b ?pa) ?pb)"
+      using h1 h2 by (by100 simp)
+    also have "\<dots> = mul a (mul (mul ?pa b) ?pb)" using h3 by (by100 simp)
+    also have "\<dots> = mul a (mul ?pa (mul b ?pb))" using h4 by (by100 simp)
+    also have "\<dots> = mul (mul a ?pa) (mul b ?pb)" using h5 by (by100 simp)
+    finally show ?thesis by (by100 simp)
+  qed
   finally show ?case .
 qed
 
