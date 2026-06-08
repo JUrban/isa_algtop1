@@ -2262,8 +2262,8 @@ proof -
             top1_group_word_product ?mulA ?eA ?invgA
               (map (\<lambda>(s,b). (?\<phi>w s, b)) (map (\<lambda>x. (()::unit, x = ?rel_in_AbelF)) xs))
             = foldr ?mulA xs ?eA"
-          sorry \<comment> \<open>Induction on xs: True entry gives mul(rel, rest) = mul(ws!i, rest);
-             False entry gives mul(invgA(rel), rest) = mul(ws!i, rest).\<close>
+          sorry \<comment> \<open>Induction on xs: each step handles x=rel (True, simp)
+             or x=invgA(rel) (False, use hrel\_ne\_invrel + simp).\<close>
         thus ?thesis using hws by (by100 blast)
       qed
       ultimately have "foldr ?mulA ws ?eA = ?eA" by (by100 simp)
