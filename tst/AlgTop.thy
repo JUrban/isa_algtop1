@@ -17376,23 +17376,40 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             by (cases "snd s1") simp_all
           \<comment> \<open>After flips: scheme2 = [(fst s0,T),(fst s1,T),(fst s0,F),(fst s1,F)].\<close>
           have hsch2: "scheme2 = [(fst s0,True),(fst s1,True),(fst s0,False),(fst s1,False)]"
-            unfolding scheme2_def scheme1_def using hsch4
-              \<open>fst s0 = fst s2\<close> \<open>fst s1 = fst s3\<close> \<open>fst s0 \<noteq> fst s1\<close>
-              \<open>snd s0 \<noteq> snd s2\<close> \<open>snd s1 \<noteq> snd s3\<close>
-            sorry
-          \<comment> \<open>Step 2: relabel fst s0 \\<to> 0, fst s1 \\<to> 1.\<close>
-          define scheme3 where "scheme3 = map (\<lambda>(l,b). (if l = fst s0 then 0 else l, b)) scheme2"
+          proof -
+            \<comment> \<open>After flip1: scheme1 has snd at position 0 = True.\<close>
+            have "s2 = (fst s0, \<not> snd s0)" using \<open>fst s0 = fst s2\<close> \<open>snd s0 \<noteq> snd s2\<close>
+              by (cases s2) simp
+            have "s3 = (fst s1, \<not> snd s1)" using \<open>fst s1 = fst s3\<close> \<open>snd s1 \<noteq> snd s3\<close>
+              by (cases s3) simp
+            have hsch_exp: "scheme = [(fst s0, snd s0), (fst s1, snd s1), (fst s0, \<not>snd s0), (fst s1, \<not>snd s1)]"
+              using hsch4 \<open>s2 = (fst s0, \<not> snd s0)\<close> \<open>s3 = (fst s1, \<not> snd s1)\<close>
+              by (cases s0, cases s1) simp
+            show ?thesis
+              unfolding scheme2_def scheme1_def hsch_exp
+              using \<open>fst s0 \<noteq> fst s1\<close> by (cases "snd s0"; cases "snd s1") simp_all
+          qed
+          \<comment> \<open>Step 2: relabel to standard labels 0, 1.
+             First relabel fst s1 \\<to> 1, then fst s0 \\<to> 0 (order avoids collision).\<close>
+          define scheme3 where "scheme3 = map (\<lambda>(l,b). (if l = fst s1 then 1 else l, b)) scheme2"
           have hequiv3: "top1_scheme_equiv scheme2 scheme3"
             unfolding scheme3_def top1_scheme_equiv_def
-            using top1_elementary_scheme_operation.relabel[of scheme2 "fst s0" 0] by simp
-          define scheme4 where "scheme4 = map (\<lambda>(l,b). (if l = fst s1 then 1 else l, b)) scheme3"
+            using top1_elementary_scheme_operation.relabel[of scheme2 "fst s1" 1] by simp
+          have hsch3: "scheme3 = [(fst s0,True),(1,True),(fst s0,False),(1,False)]"
+            unfolding scheme3_def hsch2 using \<open>fst s0 \<noteq> fst s1\<close> by simp
+          define scheme4 where "scheme4 = map (\<lambda>(l,b). (if l = fst s0 then 0 else l, b)) scheme3"
           have hequiv4: "top1_scheme_equiv scheme3 scheme4"
             unfolding scheme4_def top1_scheme_equiv_def
-            using top1_elementary_scheme_operation.relabel[of scheme3 "fst s1" 1] by simp
-          \<comment> \<open>After relabels: scheme4 = [(0,T),(1,T),(0,F),(1,F)] = torus n=1.\<close>
+            using top1_elementary_scheme_operation.relabel[of scheme3 "fst s0" 0] by simp
           have hsch4_target: "scheme4 = top1_n_torus_scheme 1"
-            unfolding scheme4_def scheme3_def hsch2 top1_n_torus_scheme_def
-            using \<open>fst s0 \<noteq> fst s1\<close> sorry
+          proof -
+            have "scheme4 = [(0,True),(if (1::nat) = fst s0 then 0 else 1,True),(0,False),(if (1::nat) = fst s0 then 0 else 1,False)]"
+              unfolding scheme4_def hsch3 by simp
+            moreover have "(1::nat) \<noteq> fst s0"
+              sorry \<comment> \<open>After relabeling fst s1\\<to>1, fst s0 \\<noteq> 1 because fst s0 \\<noteq> fst s1
+                 and the relabel only changes fst s1 occurrences.\<close>
+            ultimately show ?thesis unfolding top1_n_torus_scheme_def by simp
+          qed
           have "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w"
           proof -
             have "top1_scheme_equiv scheme (top1_n_torus_scheme 1)"
