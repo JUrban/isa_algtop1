@@ -1796,7 +1796,15 @@ proof (intro ballI)
          - (K\<cdot>t)\<cdot>(K\<cdot>t) = K\<cdot>t\<cdot>t = K (since t^2=e).\<close>
     \<comment> \<open>invg(t) = t (since t^2 = e in group).\<close>
     have ht_inv: "invg t = t"
-      sorry \<comment> \<open>From t^2=e: mul t t = e = mul t (invg t), left cancel gives t = invg t.\<close>
+    proof -
+      have "mul t t = e" using ht_ord2 .
+      have "mul t (invg t) = e"
+        using hgrp ht_in unfolding top1_is_group_on_def by (by100 fast)
+      hence heq: "mul t t = mul t (invg t)" using ht_ord2 by (by100 simp)
+      have hinvt_in: "invg t \<in> G" using hgrp ht_in unfolding top1_is_group_on_def by (by100 fast)
+      from group_left_cancel[OF hgrp ht_in hinvt_in ht_in heq]
+      show ?thesis by (by100 simp)
+    qed
     \<comment> \<open>Each ws!i decomposes.\<close>
     have hws_decomp: "\<forall>i<length ws. \<exists>k\<in>K. ws!i = k \<or> ws!i = mul k t"
     proof (intro allI impI)
@@ -1820,7 +1828,20 @@ proof (intro ballI)
           then obtain k0 where hk0: "k0 \<in> K" "a = mul k0 t" by (by100 blast)
           \<comment> \<open>invg(a) = invg(mul k0 t) = mul(invg t)(invg k0) = mul t (invg k0) = mul(invg k0) t (abelian).\<close>
           have "invg a = mul (invg k0) t"
-            sorry \<comment> \<open>invg(k0\<cdot>t) = invg(t)\<cdot>invg(k0) = t\<cdot>invg(k0) = invg(k0)\<cdot>t (abelian).\<close>
+          proof -
+            have hk0_in: "k0 \<in> G" using hk0(1) hK_sub by (by100 blast)
+            have "invg a = invg (mul k0 t)" using hk0(2) by (by100 simp)
+            also have "\<dots> = mul (invg t) (invg k0)"
+              using group_inv_mul[OF hgrp hk0_in ht_in] by (by100 blast)
+            also have "invg t = t" using ht_inv .
+            also have "mul t (invg k0) = mul (invg k0) t"
+            proof -
+              have "invg k0 \<in> G" using hgrp hk0_in unfolding top1_is_group_on_def by (by100 fast)
+              from habel[unfolded top1_is_abelian_group_on_def] this ht_in
+              show ?thesis by (by100 blast)
+            qed
+            finally show ?thesis .
+          qed
           moreover have "invg k0 \<in> K" using hK_grp hk0(1) unfolding top1_is_group_on_def by (by100 fast)
           ultimately have "ws!i = mul (invg k0) t" using ha(2) by (by100 simp)
           thus ?thesis using \<open>invg k0 \<in> K\<close> by (by100 blast)
@@ -1831,7 +1852,129 @@ proof (intro ballI)
     have hfoldr_decomp: "\<forall>i<length ws. \<exists>k\<in>K. ws!i = k \<or> ws!i = mul k t \<Longrightarrow>
         \<forall>i<length ws. ws!i \<in> G \<Longrightarrow>
         \<exists>k\<in>K. foldr mul ws e = k \<or> foldr mul ws e = mul k t"
-      sorry \<comment> \<open>List induction: 4-case product closure in K \<union> K\<cdot>{t}.\<close>
+    proof (induct ws)
+      case Nil
+      have "e \<in> K" using hK_grp unfolding top1_is_group_on_def by (by100 blast)
+      moreover have "foldr mul [] e = e" by (by100 simp)
+      ultimately show ?case by (by100 blast)
+    next
+      case (Cons a rest)
+      have hrest_dec: "\<forall>i<length rest. \<exists>k\<in>K. rest!i = k \<or> rest!i = mul k t"
+      proof (intro allI impI)
+        fix i assume hi: "i < length rest"
+        hence "Suc i < length (a # rest)" by (by100 simp)
+        from Cons(2)[rule_format, OF this] show "\<exists>k\<in>K. rest!i = k \<or> rest!i = mul k t"
+          by (by100 simp)
+      qed
+      have hrest_in: "\<forall>i<length rest. rest!i \<in> G"
+        using Cons(3) by (by100 auto)
+      from Cons(1)[OF hrest_dec hrest_in] obtain kr where hkr: "kr \<in> K"
+          and hkr_dec: "foldr mul rest e = kr \<or> foldr mul rest e = mul kr t"
+        by (by100 blast)
+      have ha_dec: "\<exists>k\<in>K. a = k \<or> a = mul k t"
+      proof -
+        have "0 < length (a # rest)" by (by100 simp)
+        from Cons(2)[rule_format, OF this] show ?thesis by (by100 simp)
+      qed
+      then obtain ka where hka: "ka \<in> K" and hka_dec: "a = ka \<or> a = mul ka t" by (by100 blast)
+      have hka_in: "ka \<in> G" using hka hK_sub by (by100 blast)
+      have hkr_in: "kr \<in> G" using hkr hK_sub by (by100 blast)
+      \<comment> \<open>K is closed under mul.\<close>
+      have hK_mul_cl: "\<forall>x\<in>K. \<forall>y\<in>K. mul x y \<in> K"
+        using hK_grp[unfolded top1_is_group_on_def] by (by100 blast)
+      have hmul_K: "mul ka kr \<in> K" using hK_mul_cl hka hkr by (by100 blast)
+      \<comment> \<open>Extract associativity, commutativity, identity from abelian group.\<close>
+      have hassoc_r: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul (mul x y) z = mul x (mul y z)"
+        using hgrp[unfolded top1_is_group_on_def] by (by100 blast)
+      have hassoc_l: "\<forall>x\<in>G. \<forall>y\<in>G. \<forall>z\<in>G. mul x (mul y z) = mul (mul x y) z"
+      proof (intro ballI)
+        fix x y z assume "x \<in> G" "y \<in> G" "z \<in> G"
+        from hassoc_r this have "mul (mul x y) z = mul x (mul y z)" by (by100 blast)
+        thus "mul x (mul y z) = mul (mul x y) z" by (by100 simp)
+      qed
+      have hcomm: "\<forall>x\<in>G. \<forall>y\<in>G. mul x y = mul y x"
+        using habel[unfolded top1_is_abelian_group_on_def top1_is_group_on_def] by (by100 blast)
+      have hid_r: "\<forall>x\<in>G. mul x e = x"
+        using hgrp[unfolded top1_is_group_on_def] by (by100 blast)
+      \<comment> \<open>4 cases.\<close>
+      show ?case
+      proof (cases "a = ka"; cases "foldr mul rest e = kr")
+        assume ha_eq: "a = ka" and hr_eq: "foldr mul rest e = kr"
+        \<comment> \<open>mul ka kr \<in> K.\<close>
+        have hmul_K: "mul ka kr \<in> K"
+        proof -
+          from hK_grp[unfolded top1_is_group_on_def] have "\<forall>x\<in>K. \<forall>y\<in>K. mul x y \<in> K" by (by100 blast)
+          thus ?thesis using hka hkr by (by100 blast)
+        qed
+        have "foldr mul (a # rest) e = mul ka kr"
+          using ha_eq hr_eq by (by100 simp)
+        thus ?case using hmul_K by (by100 blast)
+      next
+        assume ha_eq: "a = ka" and hr_neq: "foldr mul rest e \<noteq> kr"
+        hence hr_eq: "foldr mul rest e = mul kr t" using hkr_dec by (by100 blast)
+        \<comment> \<open>mul ka (mul kr t) = mul (mul ka kr) t.\<close>
+        have "mul ka kr \<in> K" using hmul_K .
+        moreover have "foldr mul (a # rest) e = mul (mul ka kr) t"
+        proof -
+          have "foldr mul (a # rest) e = mul ka (mul kr t)"
+            using ha_eq hr_eq by (by100 simp)
+          also have "\<dots> = mul (mul ka kr) t"
+            using hassoc_l hka_in hkr_in ht_in by (by100 blast)
+          finally show ?thesis .
+        qed
+        ultimately show ?case by (by100 blast)
+      next
+        assume ha_neq: "a \<noteq> ka" and hr_eq: "foldr mul rest e = kr"
+        hence ha_eq: "a = mul ka t" using hka_dec by (by100 blast)
+        have "mul ka kr \<in> K" using hmul_K .
+        moreover have "foldr mul (a # rest) e = mul (mul ka kr) t"
+        proof -
+          have "foldr mul (a # rest) e = mul (mul ka t) kr"
+            using ha_eq hr_eq by (by100 simp)
+          \<comment> \<open>Abelian: mul (mul ka t) kr = mul ka (mul t kr) = mul ka (mul kr t) = mul (mul ka kr) t.\<close>
+          also have "\<dots> = mul ka (mul t kr)"
+            using hassoc_r hka_in ht_in hkr_in by (by100 blast)
+          also have "mul t kr = mul kr t"
+            using hcomm ht_in hkr_in by (by100 blast)
+          also have "mul ka (mul kr t) = mul (mul ka kr) t"
+            using hassoc_l hka_in hkr_in ht_in by (by100 blast)
+          finally show ?thesis .
+        qed
+        ultimately show ?case by (by100 blast)
+      next
+        assume ha_neq: "a \<noteq> ka" and hr_neq: "foldr mul rest e \<noteq> kr"
+        hence ha_eq: "a = mul ka t" using hka_dec by (by100 blast)
+        hence hr_eq: "foldr mul rest e = mul kr t" using hkr_dec hr_neq by (by100 blast)
+        have "mul ka kr \<in> K" using hmul_K .
+        moreover have "foldr mul (a # rest) e = mul ka kr"
+        proof -
+          have "foldr mul (a # rest) e = mul (mul ka t) (mul kr t)"
+            using ha_eq hr_eq by (by100 simp)
+          \<comment> \<open>= mul ka (mul t (mul kr t)) = mul ka (mul (mul t kr) t)
+             = mul ka (mul (mul kr t) t) [comm] = mul ka (mul kr (mul t t))
+             = mul ka (mul kr e) = mul ka kr.\<close>
+          also have "\<dots> = mul ka (mul t (mul kr t))"
+          proof -
+            have "mul kr t \<in> G"
+              using hgrp hkr_in ht_in unfolding top1_is_group_on_def by (by100 blast)
+            from hassoc_r hka_in ht_in this
+            show ?thesis by (by100 blast)
+          qed
+          also have "mul t (mul kr t) = mul (mul t kr) t"
+            using hassoc_l ht_in hkr_in by (by100 blast)
+          also have "mul t kr = mul kr t"
+            using hcomm ht_in hkr_in by (by100 blast)
+          also have "mul (mul kr t) t = mul kr (mul t t)"
+            using hassoc_r hkr_in ht_in by (by100 blast)
+          also have "mul t t = e" using ht_ord2 .
+          also have "mul kr e = kr"
+            using hid_r hkr_in by (by100 blast)
+          finally have "foldr mul (a # rest) e = mul ka kr" .
+          thus ?thesis .
+        qed
+        ultimately show ?case by (by100 blast)
+      qed
+    qed
     \<comment> \<open>Apply the induction.\<close>
     moreover have "\<forall>i<length ws. ws!i \<in> G"
     proof (intro allI impI)
