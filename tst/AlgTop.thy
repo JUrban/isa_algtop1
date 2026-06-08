@@ -3070,7 +3070,25 @@ proof -
         qed
         have htail_img_K: "\<phi>_bar ?tail \<in> ?K" using htail_K0 by (by100 blast)
         have hinv_tail_K: "?invgAG (\<phi>_bar ?tail) \<in> ?K"
-          sorry \<comment> \<open>K closed under inv: hK\_grp\_outer + htail\_img\_K. Fast timeout.\<close>
+        proof -
+          have "?tail \<in> ?AbelF" using htail_K0 by (by100 blast)
+          have "?invgAG (\<phi>_bar ?tail) = \<phi>_bar (?invgA ?tail)"
+            using hom_preserves_inv[OF hAbelF_grp hAbelG_grp h\<phi>_hom \<open>?tail \<in> ?AbelF\<close>]
+            by (by100 simp)
+          moreover have "?invgA ?tail \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+          proof -
+            have "?invgA ?tail \<in> ?AbelF" using hAbelF_invg_cl \<open>?tail \<in> ?AbelF\<close> by (by100 blast)
+            have hZ_grp_l: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+              using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+                top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+            have "\<epsilon>0 (?invgA ?tail) = - \<epsilon>0 ?tail"
+              using hom_preserves_inv[OF hAbelF_grp hZ_grp_l h\<epsilon>0_hom \<open>?tail \<in> ?AbelF\<close>]
+              by (by100 simp)
+            hence "\<epsilon>0 (?invgA ?tail) = 0" using htail_K0 by (by100 simp)
+            thus ?thesis using \<open>?invgA ?tail \<in> ?AbelF\<close> by (by100 blast)
+          qed
+          ultimately show ?thesis by (by100 force)
+        qed
         \<comment> \<open>In abelian AbelG: \<phi>\_bar(\<iota>A 0) = mulAG (invgAG(\<phi>\_bar(tail))) \<beta>G.\<close>
         have "a = ?mulAG (?invgAG (\<phi>_bar ?tail)) ?\<beta>G"
           sorry \<comment> \<open>From \<beta> = \<iota>A(0) \<cdot> tail: \<phi>\_bar(\<iota>A 0) = \<phi>\_bar(\<beta>) \<cdot> \<phi>\_bar(tail^{-1})
