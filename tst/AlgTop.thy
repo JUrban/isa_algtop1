@@ -1319,7 +1319,7 @@ proof -
     using hpres unfolding top1_group_presented_by_on_def by (by100 blast)
   \<comment> \<open>Extract the free group data from the presentation.
      (Structural plumbing: unwrap presentation definition + simplify singleton Bex.)\<close>
-  obtain F and mulF eF invgF and \<iota> and \<pi>F
+  obtain F :: "int set" and mulF eF invgF and \<iota> :: "nat \<Rightarrow> int" and \<pi>F
     where hF_free: "top1_is_free_group_full_on F mulF eF invgF \<iota> ({..<m}::nat set)"
       and h\<pi>_hom: "top1_group_hom_on F mulF G0 mul0 \<pi>F"
       and h\<pi>_surj: "\<pi>F ` F = G0"
@@ -1327,8 +1327,21 @@ proof -
           top1_normal_subgroup_generated_on F mulF eF invgF
             {top1_group_word_product mulF eF invgF
               (map (\<lambda>(s,b). (\<iota> s, b)) ?relator)}"
-    using hpres[unfolded top1_group_presented_by_on_def] singleton_Bex_simp
-    sorry
+  proof -
+    have hsimp: "\<And>f. {r. \<exists>w'\<in>{?relator}. r = f w'} = {f ?relator}"
+      by (by100 blast)
+    show ?thesis
+      using hpres[unfolded top1_group_presented_by_on_def]
+      apply (elim conjE exE)
+      subgoal for F0 mulF0 eF0 invgF0 \<iota>0 \<pi>0
+        apply (rule that[of F0 mulF0 eF0 invgF0 \<iota>0 \<pi>0, simplified])
+        apply assumption
+        apply assumption
+        apply assumption
+        using hsimp apply (by100 simp)
+        done
+      done
+  qed
 
   have hF_grp: "top1_is_group_on F mulF eF invgF"
     using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
@@ -1647,8 +1660,14 @@ proof -
   let ?\<beta>A = "foldr ?mulA ?\<beta>_list ?eA"
 
   \<comment> \<open>\<beta> \<in> AbelF.\<close>
+  have h\<iota>A_in: "\<forall>s\<in>{..<m}. ?\<iota>A s \<in> ?AbelF"
+    using h\<iota>A unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
   have h\<beta>_in: "?\<beta>A \<in> ?AbelF"
-    sorry \<comment> \<open>Product of generators is in the group.\<close>
+  proof -
+    have "\<forall>i < length (map ?\<iota>A [0..<m]). (map ?\<iota>A [0..<m]) ! i \<in> ?AbelF"
+      using h\<iota>A_in by (by100 auto)
+    thus ?thesis using foldr_mul_closed[OF hAbelF_grp] by (by100 blast)
+  qed
 
   \<comment> \<open>The relator image equals \<beta>^2 in Abel(F).\<close>
   have hrel_eq_\<beta>2: "?rel_in_AbelF = ?mulA ?\<beta>A ?\<beta>A"
