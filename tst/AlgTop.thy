@@ -17390,25 +17390,25 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               using \<open>fst s0 \<noteq> fst s1\<close> by (cases "snd s0"; cases "snd s1") simp_all
           qed
           \<comment> \<open>Step 2: relabel to standard labels 0, 1.
-             First relabel fst s1 \\<to> 1, then fst s0 \\<to> 0 (order avoids collision).\<close>
-          define scheme3 where "scheme3 = map (\<lambda>(l,b). (if l = fst s1 then 1 else l, b)) scheme2"
+             First relabel fst s0 \\<to> 0, then fst s1 \\<to> 1.
+             After first relabel: fst s1 is unchanged (\\<noteq> fst s0), so fst s1 \\<noteq> 0.\<close>
+          define scheme3 where "scheme3 = map (\<lambda>(l,b). (if l = fst s0 then 0 else l, b)) scheme2"
           have hequiv3: "top1_scheme_equiv scheme2 scheme3"
             unfolding scheme3_def top1_scheme_equiv_def
-            using top1_elementary_scheme_operation.relabel[of scheme2 "fst s1" 1] by simp
-          have hsch3: "scheme3 = [(fst s0,True),(1,True),(fst s0,False),(1,False)]"
+            using top1_elementary_scheme_operation.relabel[of scheme2 "fst s0" 0] by simp
+          have hsch3: "scheme3 = [(0,True),(fst s1,True),(0,False),(fst s1,False)]"
             unfolding scheme3_def hsch2 using \<open>fst s0 \<noteq> fst s1\<close> by simp
-          define scheme4 where "scheme4 = map (\<lambda>(l,b). (if l = fst s0 then 0 else l, b)) scheme3"
+          define scheme4 where "scheme4 = map (\<lambda>(l,b). (if l = fst s1 then 1 else l, b)) scheme3"
           have hequiv4: "top1_scheme_equiv scheme3 scheme4"
             unfolding scheme4_def top1_scheme_equiv_def
-            using top1_elementary_scheme_operation.relabel[of scheme3 "fst s0" 0] by simp
+            using top1_elementary_scheme_operation.relabel[of scheme3 "fst s1" 1] by simp
           have hsch4_target: "scheme4 = top1_n_torus_scheme 1"
           proof -
-            have "scheme4 = [(0,True),(if (1::nat) = fst s0 then 0 else 1,True),(0,False),(if (1::nat) = fst s0 then 0 else 1,False)]"
-              unfolding scheme4_def hsch3 by simp
-            moreover have "(1::nat) \<noteq> fst s0"
-              sorry \<comment> \<open>After relabeling fst s1\\<to>1, fst s0 \\<noteq> 1 because fst s0 \\<noteq> fst s1
-                 and the relabel only changes fst s1 occurrences.\<close>
-            ultimately show ?thesis unfolding top1_n_torus_scheme_def by simp
+            have hfst_s1_ne_0: "fst s1 \<noteq> (0::nat)"
+              sorry \<comment> \<open>Relabel collision avoidance. When fst s1 = 0, need different relabel order.
+                 General fix: use 3-step relabel via fresh intermediate label.\<close>
+            show ?thesis unfolding scheme4_def hsch3 top1_n_torus_scheme_def
+              using hfst_s1_ne_0 by simp
           qed
           have "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w"
           proof -
