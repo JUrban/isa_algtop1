@@ -2919,6 +2919,50 @@ proof -
     thus ?thesis using free_abelian_reindex[OF hK_fab_raw hSuc_bij] by (by100 simp)
   qed
 
+
+  \<comment> \<open>Both eAG and \<phi>_bar(\<beta>) are torsion elements.\<close>
+  have heAG_torsion: "?eAG \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
+  proof -
+    have "?eAG \<in> ?AbelG" using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
+    moreover have "top1_group_pow ?mulAG ?eAG ?eAG 1 = ?eAG"
+    proof -
+      have "top1_group_pow ?mulAG ?eAG ?eAG 1 = ?mulAG ?eAG ?eAG"
+        by (by100 simp)
+      also have "\<dots> = ?eAG" using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
+      finally show ?thesis .
+    qed
+    ultimately show ?thesis unfolding top1_torsion_subgroup_on_def by (by100 blast)
+  qed
+  have h\<beta>G_torsion: "?\<beta>G \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
+  proof -
+    have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?eAG"
+    proof -
+      have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?mulAG ?\<beta>G ?\<beta>G"
+      proof -
+        have h2: "(2::nat) = Suc (Suc 0)" by (by100 simp)
+        have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2
+            = ?mulAG ?\<beta>G (?mulAG ?\<beta>G ?eAG)"
+          unfolding h2 by (by100 simp)
+        also have "\<dots> = ?mulAG ?\<beta>G ?\<beta>G"
+        proof -
+          have "\<forall>x\<in>?AbelG. ?mulAG x ?eAG = x"
+            using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
+          hence "?mulAG ?\<beta>G ?eAG = ?\<beta>G" using h\<beta>G_in by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+        finally show ?thesis .
+      qed
+      thus ?thesis using h\<beta>G_order2 by (by100 simp)
+    qed
+    hence "\<exists>n. n > 0 \<and> top1_group_pow ?mulAG ?eAG ?\<beta>G n = ?eAG"
+    proof -
+      assume h: "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?eAG"
+      have "(2::nat) > 0" by (by100 simp)
+      with h show ?thesis by (by100 blast)
+    qed
+    thus ?thesis using h\<beta>G_in unfolding top1_torsion_subgroup_on_def by (by100 blast)
+  qed
+
   \<comment> \<open>Step H: K \<inter> torsion = {eAG}.
      K is free abelian, free abelian groups are torsion-free.\<close>
   have hK_tors: "?K \<inter> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG = {?eAG}"
@@ -2970,7 +3014,7 @@ proof -
       hence "h = ?mulAG k ?eAG"
         using hK_sub hk hAbelG_grp unfolding top1_is_group_on_def sorry
       have "?eAG \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
-        sorry \<comment> \<open>e is torsion (pow(e,1)=e). Proved later as heAG\_torsion.\<close>
+        using heAG_torsion .
       moreover have "h = ?mulAG k ?eAG"
       proof -
         have "k \<in> ?AbelG" using hk hK_sub by (by100 blast)
@@ -2983,7 +3027,7 @@ proof -
       case False
       hence "h = ?mulAG k ?\<beta>G" using hkh by (by100 blast)
       have h\<beta>_tors_loc: "?\<beta>G \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
-        sorry \<comment> \<open>\<beta>G torsion (pow(\<beta>G,2)=eAG). Proved later as h\<beta>G\_torsion.\<close>
+        using h\<beta>G_torsion .
       show ?thesis
         apply (rule bexI[of _ k])
         apply (rule bexI[of _ "?\<beta>G"])
@@ -3006,48 +3050,6 @@ proof -
   have htorsion_subset: "top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG \<subseteq> {?eAG, ?\<beta>G}"
     using hAbelG_free_part sorry \<comment> \<open>Corollary of free part: decomposition + K torsion-free.\<close>
 
-  \<comment> \<open>Both eAG and \<phi>_bar(\<beta>) are torsion elements.\<close>
-  have heAG_torsion: "?eAG \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
-  proof -
-    have "?eAG \<in> ?AbelG" using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
-    moreover have "top1_group_pow ?mulAG ?eAG ?eAG 1 = ?eAG"
-    proof -
-      have "top1_group_pow ?mulAG ?eAG ?eAG 1 = ?mulAG ?eAG ?eAG"
-        by (by100 simp)
-      also have "\<dots> = ?eAG" using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
-      finally show ?thesis .
-    qed
-    ultimately show ?thesis unfolding top1_torsion_subgroup_on_def by (by100 blast)
-  qed
-  have h\<beta>G_torsion: "?\<beta>G \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
-  proof -
-    have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?eAG"
-    proof -
-      have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?mulAG ?\<beta>G ?\<beta>G"
-      proof -
-        have h2: "(2::nat) = Suc (Suc 0)" by (by100 simp)
-        have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2
-            = ?mulAG ?\<beta>G (?mulAG ?\<beta>G ?eAG)"
-          unfolding h2 by (by100 simp)
-        also have "\<dots> = ?mulAG ?\<beta>G ?\<beta>G"
-        proof -
-          have "\<forall>x\<in>?AbelG. ?mulAG x ?eAG = x"
-            using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
-          hence "?mulAG ?\<beta>G ?eAG = ?\<beta>G" using h\<beta>G_in by (by100 blast)
-          thus ?thesis by (by100 simp)
-        qed
-        finally show ?thesis .
-      qed
-      thus ?thesis using h\<beta>G_order2 by (by100 simp)
-    qed
-    hence "\<exists>n. n > 0 \<and> top1_group_pow ?mulAG ?eAG ?\<beta>G n = ?eAG"
-    proof -
-      assume h: "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?eAG"
-      have "(2::nat) > 0" by (by100 simp)
-      with h show ?thesis by (by100 blast)
-    qed
-    thus ?thesis using h\<beta>G_in unfolding top1_torsion_subgroup_on_def by (by100 blast)
-  qed
 
   have hAbelG_torsion_card: "card (top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG) = 2"
   proof -
