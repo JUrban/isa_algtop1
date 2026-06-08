@@ -2721,7 +2721,27 @@ proof -
       qed
       \<comment> \<open>K = \<phi>\_bar(K_0) is a group via hom image of subgroup.\<close>
       have hK_grp: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
-        sorry \<comment> \<open>Image of group under hom is a group (when hom is onto K).\<close>
+      proof -
+        \<comment> \<open>K is a subgroup of AbelG: closed under mul, inv, contains e.\<close>
+        have he_in_K: "?eAG \<in> ?K"
+        proof -
+          have "?eA \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+            using hAbelF_e_in sorry \<comment> \<open>\<epsilon>_0(eA) = 0.\<close>
+          hence "\<phi>_bar ?eA \<in> ?K" by (by100 blast)
+          moreover have "\<phi>_bar ?eA = ?eAG"
+            sorry \<comment> \<open>Hom preserves identity.\<close>
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have hmul_cl_K: "\<forall>x\<in>?K. \<forall>y\<in>?K. ?mulAG x y \<in> ?K"
+          sorry \<comment> \<open>\<phi>\_bar(a) \<cdot> \<phi>\_bar(b) = \<phi>\_bar(a \<cdot> b); K_0 closed under mul.\<close>
+        have hinv_cl_K: "\<forall>x\<in>?K. ?invgAG x \<in> ?K"
+          sorry \<comment> \<open>\<phi>\_bar(a)^{-1} = \<phi>\_bar(a^{-1}); K_0 closed under inv.\<close>
+        \<comment> \<open>Group axioms (assoc, id, inv) inherited from AbelG since K \<subseteq> AbelG.\<close>
+        show ?thesis
+          unfolding top1_is_group_on_def
+          using he_in_K hmul_cl_K hinv_cl_K hK_sub hAbelG_grp
+          unfolding top1_is_group_on_def sorry \<comment> \<open>Inherit axioms from AbelG; blast on large types.\<close>
+      qed
       \<comment> \<open>K is abelian since K \<subseteq> AbelG and AbelG is abelian.\<close>
       show ?thesis
         unfolding top1_is_abelian_group_on_def
