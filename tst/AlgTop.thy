@@ -17095,8 +17095,22 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
       case False
       \<comment> \<open>Length > 4: either has cancellable adjacent pair (shorter scheme) or
          no adjacent same labels. Apply Lemma 77.3 to extract commutator.\<close>
-      have "length scheme > 4" using less.prems(1) False by linarith
-      show ?thesis sorry
+      have hlen_gt4: "length scheme > 4" using less.prems(1) False by linarith
+      \<comment> \<open>Book proof: check if scheme has adjacent cancellable pair.\<close>
+      show ?thesis
+      proof (cases "\<exists>i. i + 1 < length scheme \<and> fst (scheme!i) = fst (scheme!(i+1))
+              \<and> snd (scheme!i) \<noteq> snd (scheme!(i+1))")
+        case True
+        \<comment> \<open>Adjacent inverse pair found: cancel to get shorter torus scheme.
+           Apply IH to the shorter scheme.\<close>
+        show ?thesis sorry
+      next
+        case False
+        \<comment> \<open>No adjacent inverse pairs. The scheme has \\<ge> 2 distinct labels with opposite
+           directions and none adjacent. Book: choose a with closest opposite-direction
+           occurrences, find b between them, apply Lemma 77.3.\<close>
+        show ?thesis sorry
+      qed
     qed
   qed
 qed
