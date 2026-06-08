@@ -2328,9 +2328,40 @@ proof -
     have ha_in: "a \<in> ?AbelF" and hb_in: "b \<in> ?AbelF" using ha hb by (by100 blast)+
     \<comment> \<open>\<phi>\_bar(a \<cdot> b^{-1}) = \<phi>\_bar(a) \<cdot> \<phi>\_bar(b)^{-1} = eAG.\<close>
     have "?mulA a (?invgA b) \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
-      sorry \<comment> \<open>K_0 is a subgroup: a,b \<in> K_0 \<Longrightarrow> a\<cdot>b^{-1} \<in> K_0.\<close>
+    proof -
+      have hinvb: "?invgA b \<in> ?AbelF" using hAbelF_invg_cl hb_in by (by100 blast)
+      have hab_in: "?mulA a (?invgA b) \<in> ?AbelF"
+        using hAbelF_mul_cl ha_in hinvb by (by100 blast)
+      have "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+          top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+      hence h\<epsilon>_inv: "\<epsilon>0 (?invgA b) = - \<epsilon>0 b"
+        using hom_preserves_inv[OF hAbelF_grp _ h\<epsilon>0_hom hb_in] by (by100 simp)
+      have "\<epsilon>0 (?mulA a (?invgA b)) = \<epsilon>0 a + \<epsilon>0 (?invgA b)"
+        using h\<epsilon>0_hom ha_in hinvb unfolding top1_group_hom_on_def by (by100 blast)
+      also have "\<dots> = 0 + (- 0)" using ha hb h\<epsilon>_inv by (by100 simp)
+      also have "\<dots> = 0" by (by100 simp)
+      finally show ?thesis using hab_in by (by100 blast)
+    qed
     moreover have "?mulA a (?invgA b) \<in> ?N_AbelF"
-      sorry \<comment> \<open>\<phi>\_bar(a\<cdot>b^{-1}) = eAG \<Longrightarrow> a\<cdot>b^{-1} \<in> ker(\<phi>\_bar) = N\_AbelF.\<close>
+    proof -
+      have hinvb: "?invgA b \<in> ?AbelF" using hAbelF_invg_cl hb_in by (by100 blast)
+      have hab_in: "?mulA a (?invgA b) \<in> ?AbelF"
+        using hAbelF_mul_cl ha_in hinvb by (by100 blast)
+      \<comment> \<open>\<phi>\_bar is a hom, so \<phi>\_bar(a \<cdot> b^{-1}) = \<phi>\_bar(a) \<cdot> \<phi>\_bar(b)^{-1} = \<phi>\_bar(a) \<cdot> invgAG(\<phi>\_bar(b)).\<close>
+      have "\<phi>_bar (?mulA a (?invgA b)) = ?mulAG (\<phi>_bar a) (\<phi>_bar (?invgA b))"
+        using h\<phi>_hom ha_in hinvb unfolding top1_group_hom_on_def by (by100 blast)
+      also have "\<phi>_bar (?invgA b) = ?invgAG (\<phi>_bar b)"
+        using hom_preserves_inv[OF hAbelF_grp hAbelG_grp h\<phi>_hom hb_in] by (by100 simp)
+      also have "?mulAG (\<phi>_bar a) (?invgAG (\<phi>_bar b)) = ?mulAG (\<phi>_bar a) (?invgAG (\<phi>_bar a))"
+        using heq by (by100 simp)
+      also have "\<dots> = ?eAG"
+        using hAbelG_grp h\<beta>G_in sorry \<comment> \<open>\<phi>\_bar(a) \<in> AbelG, so x \<cdot> x^{-1} = eAG.\<close>
+      finally have "\<phi>_bar (?mulA a (?invgA b)) = ?eAG" .
+      hence "?mulA a (?invgA b) \<in> top1_group_kernel_on ?AbelF ?eAG \<phi>_bar"
+        using hab_in unfolding top1_group_kernel_on_def by (by100 blast)
+      thus ?thesis using hker_\<phi> by (by100 simp)
+    qed
     ultimately have "?mulA a (?invgA b) = ?eA"
       using hK0_ker_trivial by (by100 blast)
     thus "a = b"
