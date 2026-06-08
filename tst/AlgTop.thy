@@ -2186,10 +2186,35 @@ proof -
           using hN_in_AbelF by (by100 auto)
         show "\<forall>s. length (filter (\<lambda>(t,b). t = s \<and> b) ?w)
             = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) ?w)"
-          sorry \<comment> \<open>Balanced condition from hsum: \<epsilon>_0 sum = 0 means #True = #False.
-             For s = (): #True = #{i | ws!i = rel}, #False = #{i | ws!i = invg(rel)}.
-             \<epsilon>_0 sum = 2\<cdot>#True - 2\<cdot>#False = 0, so #True = #False.
-             For s \<noteq> (): both filters empty (all labels are ()).\<close>
+        proof (intro allI)
+          fix s :: unit
+          \<comment> \<open>All first components are (), so the filter simplifies.\<close>
+          have "filter (\<lambda>(t,b). t = s \<and> b) ?w = filter (\<lambda>(t,b). b) ?w"
+            by (by100 auto)
+          moreover have "filter (\<lambda>(t,b). t = s \<and> \<not>b) ?w = filter (\<lambda>(t,b). \<not>b) ?w"
+            by (by100 auto)
+          moreover have "length (filter (\<lambda>(t,b). b) ?w) = length (filter (\<lambda>(t,b). \<not>b) ?w)"
+          proof -
+            \<comment> \<open>The boolean map: ws!i = rel iff (map (\<lambda>x. x=rel) ws)!i = True.\<close>
+            let ?bs = "map (\<lambda>x. x = ?rel_in_AbelF) ws"
+            \<comment> \<open>Connect \<epsilon>_0 sum to balanced\_from\_sum\_zero.\<close>
+            have h\<epsilon>_invrel: "\<epsilon>0 (?invgA ?rel_in_AbelF) = -2"
+              sorry \<comment> \<open>\<epsilon>_0(invg(rel)) = -\<epsilon>_0(rel) = -2 via hom\_preserves\_inv.\<close>
+            have "map \<epsilon>0 ws = map (\<lambda>b. if b then (2::int) else -2) ?bs"
+              sorry \<comment> \<open>\<epsilon>_0(ws!i) = 2 if ws!i=rel, -2 if ws!i=invg(rel).\<close>
+            hence "foldr (+) (map (\<lambda>b. if b then (2::int) else -2) ?bs) 0 = 0"
+              using hsum by (by100 simp)
+            hence "length (filter id ?bs) = length (filter Not ?bs)"
+              using balanced_from_sum_zero[of 2 ?bs] by (by100 simp)
+            moreover have "length (filter id ?bs) = length (filter (\<lambda>(t,b). b) ?w)"
+              sorry \<comment> \<open>filter id (map f xs) = filter (f ∘ ...) xs list identity.\<close>
+            moreover have "length (filter Not ?bs) = length (filter (\<lambda>(t,b). \<not>b) ?w)"
+              sorry \<comment> \<open>Similar list identity.\<close>
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          ultimately show "length (filter (\<lambda>(t, b). t = s \<and> b) ?w) =
+              length (filter (\<lambda>(t, b). t = s \<and> \<not> b) ?w)" by (by100 simp)
+        qed
       qed
       moreover have "top1_group_word_product ?mulA ?eA ?invgA (map (\<lambda>(s,b). (?\<phi>w s, b)) ?w)
           = foldr ?mulA ws ?eA"
