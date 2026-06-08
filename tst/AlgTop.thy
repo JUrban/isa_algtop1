@@ -2139,10 +2139,21 @@ proof -
       finally have hsum: "foldr (+) (map \<epsilon>0 ws) (0::int) = 0" using h\<epsilon>0a by (by100 simp)
       \<comment> \<open>Each \<epsilon>_0(ws!i) \<in> {2, -2}. Sum = 0 means equal counts.
          In abelian group with equal rel/invrel counts, product = eA.\<close>
-      show ?thesis sorry \<comment> \<open>From hsum + each \<epsilon>_0(ws!i) \<in> {2,-2}: derive a = eA.
-         Key: foldr(+)(map \<epsilon>_0 ws)(0) = 0 with each term \<plusminus>2 means
-         the word has balanced True/False for the single generator rel.
-         By abelian\_word\_product\_zero\_net\_coeff: a = eA.\<close>
+      \<comment> \<open>Build a word w with one generator (unit label) and True/False
+         indicating rel vs invg(rel). Apply abelian\_word\_product\_zero\_net\_coeff.\<close>
+      let ?bools = "map (\<lambda>x. x = ?rel_in_AbelF) ws"
+      \<comment> \<open>ws = map (\<lambda>b. if b then rel else invgA(rel)) ?bools.\<close>
+      have hws_eq: "ws = map (\<lambda>b. if b then ?rel_in_AbelF else ?invgA ?rel_in_AbelF) ?bools"
+        sorry \<comment> \<open>Each ws!i is rel or invgA(rel), reconstructed from booleans.\<close>
+      \<comment> \<open>The balanced condition: equal True/False count in ?bools for the single label.\<close>
+      have hbalanced: "length (filter (\<lambda>b. b) ?bools) = length (filter (\<lambda>b. \<not>b) ?bools)"
+        sorry \<comment> \<open>From hsum: \<epsilon>_0 gives 2 for True (rel), -2 for False (invg rel).
+           Sum = 0 means 2\<cdot>#True + (-2)\<cdot>#False = 0, i.e., #True = #False.\<close>
+      \<comment> \<open>In the abelian group, foldr with balanced True/False for a single generator = eA.\<close>
+      have "foldr ?mulA ws ?eA = ?eA"
+        sorry \<comment> \<open>Abelian product of balanced rel/invg(rel) pairs = eA.
+           Uses abelian\_word\_product\_zero\_net\_coeff or direct induction.\<close>
+      thus "a \<in> {?eA}" using hprod by (by100 blast)
     qed
   next
     fix a assume "a \<in> {?eA}"
