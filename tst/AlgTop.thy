@@ -1273,6 +1273,38 @@ qed
 lemma singleton_Bex_simp: "{r. \<exists>w'\<in>{w}. r = (f :: 'b \<Rightarrow> 'a) w'} = {f w}"
   by (by100 blast)
 
+\<comment> \<open>In an abelian group, every subgroup is normal.\<close>
+lemma abelian_subgroup_is_normal:
+  assumes hab: "top1_is_abelian_group_on G mul e invg"
+      and hsub: "H \<subseteq> G"
+      and hgrp: "top1_is_group_on H mul e invg"
+  shows "top1_normal_subgroup_on G mul e invg H"
+  unfolding top1_normal_subgroup_on_def
+proof (intro conjI)
+  show "H \<subseteq> G" by (rule hsub)
+  show "top1_is_group_on H mul e invg" by (rule hgrp)
+  show "\<forall>g\<in>G. \<forall>n\<in>H. mul (mul g n) (invg g) \<in> H"
+  proof (intro ballI)
+    fix g n assume hg: "g \<in> G" and hn: "n \<in> H"
+    have hn_G: "n \<in> G" using hn hsub by (by100 blast)
+    have hinvg: "invg g \<in> G" using hab hg
+      unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 blast)
+    have hcomm: "mul g n = mul n g"
+      using hab hg hn_G unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+      by (by100 blast)
+    have hassoc: "mul (mul n g) (invg g) = mul n (mul g (invg g))"
+      using hab hn_G hg hinvg
+      unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 blast)
+    have "mul g (invg g) = e"
+      using hab hg unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 blast)
+    hence "mul (mul g n) (invg g) = mul n e"
+      using hcomm hassoc by (by100 simp)
+    also have "\<dots> = n"
+      using hab hn_G unfolding top1_is_abelian_group_on_def top1_is_group_on_def by (by100 blast)
+    finally show "mul (mul g n) (invg g) \<in> H" using hn by (by100 simp)
+  qed
+qed
+
 \<comment> \<open>In an abelian group, the product of squares equals the square of the product:
    (a0^2)(a1^2)...(an^2) = (a0*a1*...*an)^2.\<close>
 lemma abelian_foldr_concat_double:
@@ -2034,7 +2066,13 @@ proof -
          and subgroup\_generated is one such, N\_AbelF \<subseteq> subgroup\_generated.\<close>
       have "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA
           (top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF})"
-        sorry \<comment> \<open>In abelian group: subgroup\_generated is a subgroup, hence normal.\<close>
+      proof (rule abelian_subgroup_is_normal[OF hAbelF_abel])
+        show "top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF} \<subseteq> ?AbelF"
+          using subgroup_generated_subset[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
+        show "top1_is_group_on (top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF})
+            ?mulA ?eA ?invgA"
+          sorry \<comment> \<open>subgroup\_generated is a subgroup (group).\<close>
+      qed
       moreover have "{?rel_in_AbelF} \<subseteq> top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF}"
         using subgroup_generated_contains[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
       ultimately show ?thesis
