@@ -14973,8 +14973,55 @@ proof -
           show "q \<in> f ` ({0..1} \<times> Q k)"
           proof (cases "t = 1")
             case True
-            \<comment> \<open>If t=1: all weight on v\\_{k+1}. q = v\\_{k+1}. Take any p \\<in> Q k.\<close>
-            show ?thesis sorry
+            \<comment> \<open>If t=1: q = v\\_{k+1}. f(1,p) = v\\_{k+1} for any p. Need Q k nonempty.\<close>
+            have "fst q = vx (Suc k) \<and> snd q = vy (Suc k)"
+            proof -
+              have hzero: "\<forall>i\<le>k. coeffs i = 0"
+              proof (rule ccontr)
+                assume "\<not> (\<forall>i\<le>k. coeffs i = 0)"
+                then obtain j where "j \<le> k" "coeffs j \<noteq> 0" by (by100 blast)
+                have "0 \<le> coeffs j" using hc(1) \<open>j \<le> k\<close> by simp
+                hence "coeffs j > 0" using \<open>coeffs j \<noteq> 0\<close> by linarith
+                hence "(\<Sum>i\<le>k. coeffs i) > 0"
+                  using hc(1) \<open>j \<le> k\<close> by (intro sum_pos2[of "{..k}" j]) (by100 auto)+
+                hence "1 - t > 0" using hc(2) unfolding t_def by simp
+                thus False using True by simp
+              qed
+              hence "(\<Sum>i\<le>k. coeffs i * vx i) = 0" "(\<Sum>i\<le>k. coeffs i * vy i) = 0"
+                by (simp_all add: sum.neutral)
+              thus ?thesis using hc(3,4) True unfolding t_def by simp
+            qed
+            \<comment> \<open>Q k is nonempty: (vx 0, vy 0) \\<in> Q 0 \\<subseteq> Q k.\<close>
+            have "(vx 0, vy 0) \<in> Q k"
+            proof -
+              define c0 :: "nat \<Rightarrow> real" where "c0 i = (if i = 0 then 1 else 0)" for i
+              have "(\<forall>i\<le>k. 0 \<le> c0 i)" unfolding c0_def by simp
+              moreover have "(\<Sum>i\<le>k. c0 i) = 1" unfolding c0_def by simp
+              moreover have "vx 0 = (\<Sum>i\<le>k. c0 i * vx i)"
+              proof -
+                have "(\<Sum>i\<le>k. c0 i * vx i) = c0 0 * vx 0 + (\<Sum>i\<in>{..k}-{0}. c0 i * vx i)"
+                  by (rule sum.remove) simp_all
+                also have "(\<Sum>i\<in>{..k}-{0}. c0 i * vx i) = 0"
+                  by (rule sum.neutral) (simp add: c0_def)
+                finally show ?thesis unfolding c0_def by simp
+              qed
+              moreover have "vy 0 = (\<Sum>i\<le>k. c0 i * vy i)"
+              proof -
+                have "(\<Sum>i\<le>k. c0 i * vy i) = c0 0 * vy 0 + (\<Sum>i\<in>{..k}-{0}. c0 i * vy i)"
+                  by (rule sum.remove) simp_all
+                also have "(\<Sum>i\<in>{..k}-{0}. c0 i * vy i) = 0"
+                  by (rule sum.neutral) (simp add: c0_def)
+                finally show ?thesis unfolding c0_def by simp
+              qed
+              ultimately show ?thesis unfolding Q_def by (by100 auto)
+            qed
+            hence "(1::real, (vx 0, vy 0)) \<in> {0..1} \<times> Q k" by simp
+            hence "f (1, (vx 0, vy 0)) \<in> f ` ({0..1} \<times> Q k)" by (by100 blast)
+            moreover have "f (1, (vx 0, vy 0)) = (vx (Suc k), vy (Suc k))"
+              unfolding f_def by simp
+            ultimately have "(vx (Suc k), vy (Suc k)) \<in> f ` ({0..1} \<times> Q k)" by simp
+            thus ?thesis using \<open>fst q = vx (Suc k) \<and> snd q = vy (Suc k)\<close>
+              by (cases q) (by100 auto)
           next
             case False
             \<comment> \<open>t < 1: define \\<alpha> i = coeffs i / (1-t) for i \\<le> k.\<close>
