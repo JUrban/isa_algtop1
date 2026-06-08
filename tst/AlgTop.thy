@@ -1490,10 +1490,42 @@ proof (intro conjI)
     \<comment> \<open>Define c' = c \<circ> (inv\_into S' f) on S. Then (\<iota> \<circ> f)(s') with c(s')
        equals \<iota>(f(s')) with c(s') = \<iota>(t) with c'(t) where t = f(s').\<close>
     let ?c' = "c \<circ> inv_into S' f"
+    have hfinj: "inj_on f S'" using hbij unfolding bij_betw_def by (by100 blast)
+    have hfsurj: "f ` S' = S" using hbij unfolding bij_betw_def by (by100 blast)
+    have hsupp_eq: "{s \<in> S. ?c' s \<noteq> 0} = f ` {s' \<in> S'. c s' \<noteq> 0}"
+    proof (rule set_eqI, rule iffI)
+      fix s assume hs: "s \<in> {s \<in> S. ?c' s \<noteq> 0}"
+      hence "s \<in> S" "c (inv_into S' f s) \<noteq> 0" by (by100 auto)+
+      have "inv_into S' f s \<in> S'"
+      proof -
+        from \<open>s \<in> S\<close> hfsurj have "s \<in> f ` S'" by (by100 simp)
+        thus ?thesis by (rule inv_into_into)
+      qed
+      moreover have "c (inv_into S' f s) \<noteq> 0" using \<open>c (inv_into S' f s) \<noteq> 0\<close> .
+      moreover have "f (inv_into S' f s) = s"
+      proof -
+        have "s \<in> f ` S'" using \<open>s \<in> S\<close> hfsurj by (by100 simp)
+        thus ?thesis by (rule f_inv_into_f)
+      qed
+      ultimately have "inv_into S' f s \<in> {s' \<in> S'. c s' \<noteq> 0}" "f (inv_into S' f s) = s"
+        by (by100 auto)+
+      thus "s \<in> f ` {s' \<in> S'. c s' \<noteq> 0}" by (by100 force)
+    next
+      fix s assume "s \<in> f ` {s' \<in> S'. c s' \<noteq> 0}"
+      then obtain s' where hs': "s' \<in> S'" "c s' \<noteq> 0" "s = f s'" by (by100 blast)
+      hence "s \<in> S" using hfsurj by (by100 blast)
+      moreover have "?c' s = c s'"
+        using inv_into_f_f[OF hfinj \<open>s' \<in> S'\<close>] hs' by (by100 simp)
+      ultimately show "s \<in> {s \<in> S. ?c' s \<noteq> 0}" using hs' by (by100 simp)
+    qed
     have hfin': "finite {s \<in> S. ?c' s \<noteq> 0}"
-      sorry \<comment> \<open>f maps support bijectively: {s\<in>S. c'(s)\<noteq>0} = f ` {s'\<in>S'. c(s')\<noteq>0}.\<close>
+      unfolding hsupp_eq using hfin by (by100 blast)
     have hex': "\<exists>s\<in>S. ?c' s \<noteq> 0"
-      sorry \<comment> \<open>Non-empty support transfers via f.\<close>
+    proof -
+      from hex obtain s' where "s' \<in> S'" "c s' \<noteq> 0" by (by100 blast)
+      hence "f s' \<in> {s \<in> S. ?c' s \<noteq> 0}" using hsupp_eq by (by100 blast)
+      thus ?thesis by (by100 blast)
+    qed
     \<comment> \<open>By independence on S: the foldr product for c' on S with \<iota> is \<noteq> e.\<close>
     have hindep: "foldr mul
        (map (\<lambda>s. if 0 \<le> ?c' s then top1_group_pow mul e (\<iota> s) (nat (?c' s))
