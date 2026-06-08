@@ -2199,7 +2199,15 @@ proof -
             let ?bs = "map (\<lambda>x. x = ?rel_in_AbelF) ws"
             \<comment> \<open>Connect \<epsilon>_0 sum to balanced\_from\_sum\_zero.\<close>
             have h\<epsilon>_invrel: "\<epsilon>0 (?invgA ?rel_in_AbelF) = -2"
-              sorry \<comment> \<open>\<epsilon>_0(invg(rel)) = -\<epsilon>_0(rel) = -2 via hom\_preserves\_inv.\<close>
+            proof -
+              have hZ_grp2: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+                using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+                  top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+              have hrel_in: "?rel_in_AbelF \<in> ?AbelF" using hN_in_AbelF by (by100 blast)
+              have "\<epsilon>0 (?invgA ?rel_in_AbelF) = uminus (\<epsilon>0 ?rel_in_AbelF)"
+                using hom_preserves_inv[OF hAbelF_grp hZ_grp2 h\<epsilon>0_hom hrel_in] by (by100 simp)
+              thus ?thesis using h\<epsilon>0_rel by (by100 simp)
+            qed
             have "map \<epsilon>0 ws = map (\<lambda>b. if b then (2::int) else -2) ?bs"
               sorry \<comment> \<open>\<epsilon>_0(ws!i) = 2 if ws!i=rel, -2 if ws!i=invg(rel).\<close>
             hence "foldr (+) (map (\<lambda>b. if b then (2::int) else -2) ?bs) 0 = 0"
