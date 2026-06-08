@@ -1734,7 +1734,30 @@ proof -
        Since \<beta> \<noteq> eA (proved above), k \<noteq> 0.
        But (2k-1)\<cdot>\<beta> = eA contradicts free abelian independence.\<close>
     have "?\<beta>A \<notin> ?N_AbelF"
-      sorry \<comment> \<open>\<beta> not in \<langle>2\<beta>\<rangle>: uses free abelian independence on the word (1-2k)\<cdot>\<beta>.\<close>
+    proof -
+      \<comment> \<open>Use coordinate projection: \<epsilon>: AbelF \<rightarrow> Z with \<epsilon>(\<iota>A(0)) = 1, \<epsilon>(\<iota>A(i)) = 0 for i > 0.
+         Then \<epsilon>(\<beta>) = 1 (odd), \<epsilon>(rel) = 2 (even).
+         The subgroup {g | \<epsilon>(g) even} contains rel but not \<beta>.
+         So \<beta> \<notin> normal\_closure({rel}).\<close>
+      have "0 \<in> ({..<m}::nat set)" using hm1 by (by100 simp)
+      from free_abelian_coordinate_projection[OF h\<iota>A this]
+      obtain \<epsilon> where h\<epsilon>_hom: "top1_group_hom_on ?AbelF ?mulA (UNIV::int set) (+) \<epsilon>"
+        and h\<epsilon>_0: "\<epsilon> (?\<iota>A 0) = 1"
+        and h\<epsilon>_rest: "\<forall>s\<in>{..<m}. s \<noteq> 0 \<longrightarrow> \<epsilon> (?\<iota>A s) = 0"
+        by (by100 blast)
+      \<comment> \<open>\<epsilon>(\<beta>) = \<epsilon>(\<iota>A(0) \<cdot> ... \<cdot> \<iota>A(m-1)) = \<epsilon>(\<iota>A(0)) + ... = 1.\<close>
+      have h\<epsilon>_\<beta>: "\<epsilon> ?\<beta>A = 1"
+        sorry \<comment> \<open>Hom preserves foldr product; \<epsilon>(\<iota>A(0))=1, rest=0.\<close>
+      \<comment> \<open>\<epsilon>(rel) = \<epsilon>(\<beta>^2) = 2\<epsilon>(\<beta>) = 2 (if hrel\_eq\_\<beta>2 is proved).
+         But more directly: \<epsilon>(rel) = 2 from the relator being each generator squared.\<close>
+      have h\<epsilon>_rel: "\<epsilon> ?rel_in_AbelF = 2"
+        sorry \<comment> \<open>\<epsilon>(rel) = 2\<epsilon>(\<iota>A(0)) + 0 + ... = 2.\<close>
+      \<comment> \<open>If \<beta> \<in> N\_AbelF = \<langle>rel\<rangle>, then \<epsilon>(\<beta>) \<in> \<epsilon>(N\_AbelF).
+         \<epsilon>(N\_AbelF) \<subseteq> \<langle>\<epsilon>(rel)\<rangle> = 2Z. But \<epsilon>(\<beta>) = 1 \<notin> 2Z.\<close>
+      have h\<epsilon>_N: "\<forall>x \<in> ?N_AbelF. even (\<epsilon> x)"
+        sorry \<comment> \<open>\<epsilon> maps N\_AbelF into 2Z since \<epsilon>(rel) = 2.\<close>
+      from h\<epsilon>_N h\<epsilon>_\<beta> show ?thesis by (by100 auto)
+    qed
     hence "?\<beta>A \<notin> top1_group_kernel_on ?AbelF ?eAG \<phi>_bar"
       using hker_\<phi> by (by100 simp)
     hence "\<phi>_bar ?\<beta>A \<noteq> ?eAG"
