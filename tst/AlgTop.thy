@@ -1759,9 +1759,11 @@ proof -
         also have "\<dots> = foldr (+) (map (\<epsilon> \<circ> ?\<iota>A) [0..<m]) 0" by (by100 simp)
         also have "\<dots> = 1"
         proof -
-          have "\<forall>i\<in>{..<m}. (\<epsilon> \<circ> ?\<iota>A) i = (if i = 0 then 1 else 0)"
+          have hmap_eq: "map (\<epsilon> \<circ> ?\<iota>A) [0..<m] = map (\<lambda>i::nat. if i = 0 then (1::int) else 0) [0..<m]"
             using h\<epsilon>_0 h\<epsilon>_rest by (by100 auto)
-          thus ?thesis sorry \<comment> \<open>foldr (+) [1,0,...,0] 0 = 1 for m\<ge>1.\<close>
+          have "foldr (+) (map (\<lambda>i::nat. if i = 0 then (1::int) else 0) [0..<m]) 0 = 1"
+            using hm1 by (induct m, by100 simp, by100 simp)
+          thus ?thesis unfolding hmap_eq[symmetric] by (by100 simp)
         qed
         finally show ?thesis .
       qed
