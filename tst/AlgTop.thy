@@ -1540,9 +1540,20 @@ proof (intro conjI)
                  else top1_group_pow mul e (invg ((\<iota> \<circ> f) s)) (nat (- c s)))
          (SOME xs. set xs = {s \<in> S'. c s \<noteq> 0} \<and> distinct xs))
        e \<noteq> e"
-      sorry \<comment> \<open>The two foldr products are equal: each term for s' in S' matches
-         a term for f(s') in S with the same coefficient (since c'(f(s'))=c(s')).
-         In the abelian group, the permutation of terms doesn't matter.\<close>
+    proof -
+      let ?g = "\<lambda>s. if 0 \<le> c s then top1_group_pow mul e ((\<iota> \<circ> f) s) (nat (c s))
+                   else top1_group_pow mul e (invg ((\<iota> \<circ> f) s)) (nat (- c s))"
+      let ?g' = "\<lambda>s. if 0 \<le> ?c' s then top1_group_pow mul e (\<iota> s) (nat (?c' s))
+                    else top1_group_pow mul e (invg (\<iota> s)) (nat (- ?c' s))"
+      \<comment> \<open>Key: ?g(s') = ?g'(f(s')) for s' \<in> supp(c) \<subseteq> S'.\<close>
+      have hterm_eq: "\<forall>s'\<in>{s' \<in> S'. c s' \<noteq> 0}. ?g s' = ?g' (f s')"
+        sorry \<comment> \<open>c'(f(s')) = c(inv\_into(f(s'))) = c(s') via inv\_into\_f\_f.\<close>
+      \<comment> \<open>foldr for ?g on supp\_S' = foldr for ?g' on supp\_S (same multiset of terms).\<close>
+      have "foldr mul (map ?g (SOME xs. set xs = {s \<in> S'. c s \<noteq> 0} \<and> distinct xs)) e
+          = foldr mul (map ?g' (SOME xs. set xs = {s \<in> S. ?c' s \<noteq> 0} \<and> distinct xs)) e"
+        sorry \<comment> \<open>Abelian: both products have same multiset of terms via f bijection.\<close>
+      thus ?thesis using hindep by (by100 simp)
+    qed
   qed
 qed
 
