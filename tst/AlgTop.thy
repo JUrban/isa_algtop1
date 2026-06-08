@@ -14840,15 +14840,13 @@ proof -
      all other edge identifications.
      Compose: q1: P(n+2) \\<to> Y1, fold: P(n+2) \\<to> P(n), and q2\\<inverse>: P(n) \\<to> Y2.
      The composition gives a homeomorphism Y1 \\<to> Y2.\<close>
-  \<comment> \<open>Step 1: Extract quotient data from assms(3) and assms(4).\<close>
-  \<comment> \<open>Step 2: Construct the fold map \\<phi>: P(n+2) \\<to> P(n) that collapses the two
-     cancelling edges (edge |u| and edge |u|+1) to a single vertex.\<close>
-  \<comment> \<open>Step 3: Show q2 \\<circ> \\<phi> has the same fibres as q1 on P(n+2).
-     Interior points: \\<phi> is bijective away from the fold line.
-     Boundary: the cancelling edges are already identified by q1 (same label, inverse direction).
-     Other edges: \\<phi> maps them linearly, preserving the identification pattern.\<close>
-  \<comment> \<open>Step 4: Apply quotient\\_same\\_fibres\\_homeomorphic (or Theorem 22.2 directly).\<close>
-  show ?thesis sorry
+  \<comment> \<open>By elementary\\_operation\\_preserves\\_quotient with the cancel rule:
+     Y1 is also a quotient of u@v. Then scheme\\_quotient\\_uniqueness gives Y1 \\<cong> Y2.\<close>
+  have "top1_quotient_of_scheme_on Y1 TY1 (u @ v)"
+    by (rule elementary_operation_preserves_quotient[OF assms(3)
+        top1_elementary_scheme_operation.cancel[of u a v]])
+  from scheme_quotient_uniqueness[OF assms(1) assms(2) this assms(4)]
+  show ?thesis .
 qed
 
 \<comment> \<open>Scheme inversion preserves quotient type: quotient(w) \\<cong> quotient(rev(map inverse w)).
