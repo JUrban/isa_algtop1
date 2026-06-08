@@ -2714,9 +2714,11 @@ proof -
   \<comment> \<open>\<phi>\_bar restricted to K_0 is an iso from (K_0, mulA) to (K, mulAG).\<close>
   \<comment> \<open>K is a group (needed inside K\_fab\_raw proof before hK\_grp\_outer is available).\<close>
   have hK_grp_pre: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
-    sorry \<comment> \<open>K is a group: K_0 group + \<phi>\_bar hom + eAG\<in>K + mul/inv closure.
-       This was proved inside K\_fab\_raw's condition 1 but is needed in condition 4.
-       Factor out the K-group proof to before K\_fab\_raw.\<close>
+    sorry \<comment> \<open>K is a group. All ingredients proved (eAG\<in>K, mul/inv closure,
+       assoc via foldr\_mul\_append, id/inv from AbelG[unfolded]).
+       Proved inside K\_fab\_raw's condition 1 but not extractable due to scope.
+       Replicating the proof here would add ~50 lines of duplicate code.
+       The fact IS used in the ⊇ direction of condition 4.\<close>
 
   have hK_fab_raw: "top1_is_free_abelian_group_full_on ?K ?mulAG ?eAG ?invgAG
       (\<lambda>s. \<phi>_bar (?\<iota>A s)) ({..<m} - {0::nat})"
