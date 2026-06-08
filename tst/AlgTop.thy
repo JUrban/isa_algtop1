@@ -15723,13 +15723,36 @@ proof -
       \<comment> \<open>X is itself an n-fold torus. Take T\\_n = X, h = id.\<close>
       \<comment> \<open>X itself is an n-fold torus. Take T\\_n = X, h = id.\<close>
       have hX_top: "is_topology_on X TX"
-        using assms(1) unfolding top1_is_surface_on_def is_topology_on_strict_def sorry
-      have "top1_homeomorphism_on X TX X TX id"
-        unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
-        using hX_top sorry
+        using hconn unfolding top1_connected_on_def by (by100 blast)
+      have hid_cont: "top1_continuous_map_on X TX X TX id"
+        by (rule top1_continuous_map_on_id[OF hX_top])
+      have hinv_eq: "\<forall>x\<in>X. inv_into X id x = x"
+      proof
+        fix x assume "x \<in> X"
+        have "inv_into X id (id x) = x" by (rule inv_into_f_f[OF inj_on_id \<open>x \<in> X\<close>])
+        thus "inv_into X id x = x" by simp
+      qed
+      have hinv_cont: "top1_continuous_map_on X TX X TX (inv_into X id)"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI allI impI)
+        fix x assume "x \<in> X" thus "inv_into X id x \<in> X" using hinv_eq by simp
+      next
+        fix V assume "V \<in> TX"
+        have "{x \<in> X. inv_into X id x \<in> V} = {x \<in> X. x \<in> V}"
+        proof (intro Collect_cong)
+          fix x show "(x \<in> X \<and> inv_into X id x \<in> V) = (x \<in> X \<and> x \<in> V)"
+            using hinv_eq by (by100 auto)
+        qed
+        also have "\<dots> = {x \<in> X. id x \<in> V}" by simp
+        finally show "{x \<in> X. inv_into X id x \<in> V} \<in> TX"
+          using hid_cont unfolding top1_continuous_map_on_def using \<open>V \<in> TX\<close> by simp
+      qed
+      have hid_homeo: "top1_homeomorphism_on X TX X TX id"
+        unfolding top1_homeomorphism_on_def
+        using hX_top hid_cont hinv_cont by simp
       show ?thesis
-        using hn \<open>top1_is_n_fold_torus_on X TX n\<close> \<open>top1_homeomorphism_on X TX X TX id\<close>
-        sorry
+        using hn \<open>top1_is_n_fold_torus_on X TX n\<close> hid_homeo
+        by (by5000 blast)
     next
       \<comment> \<open>Case 3: scheme \\<sim> projective normal form.\<close>
       fix m w assume hm: "m > 0" and hproj: "top1_is_projective_scheme w m"
