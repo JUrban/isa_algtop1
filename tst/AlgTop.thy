@@ -2079,10 +2079,179 @@ proof -
     finally show ?thesis .
   qed
   have hK0_ker_trivial: "{a \<in> ?AbelF. \<epsilon>0 a = 0} \<inter> ?N_AbelF = {?eA}"
-    sorry \<comment> \<open>K_0 \<inter> N_AbelF = {eA}: \<epsilon>_0 restricted to N_AbelF is injective
-       (\<epsilon>_0(rel) = 2, so \<epsilon>_0 maps cyclic \<langle>rel\<rangle> bijectively onto 2Z;
-       elements with \<epsilon>_0 = 0 must be eA). Full proof uses balanced_from_sum_zero
-       + abelian_word_product_zero_net_coeff but needs invgA(rel) \<noteq> rel side condition.\<close>
+  proof (rule set_eqI, rule iffI)
+    fix a assume ha: "a \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0} \<inter> ?N_AbelF"
+    hence ha_in: "a \<in> ?AbelF" and h\<epsilon>0a: "\<epsilon>0 a = 0" and ha_N: "a \<in> ?N_AbelF" by (by100 blast)+
+    \<comment> \<open>a \<in> N\_AbelF. By subgroup\_generated\_word\_repr (abelian group version):
+       a is a word in {rel, invg(rel)}. In abelian group this means
+       a = pow(rel, k) for some k \<ge> 0, or a = pow(invg(rel), k).
+       Either way, \<epsilon>_0(a) = \<plusminus>k \<cdot> \<epsilon>_0(rel) = \<plusminus>2k.
+       Since \<epsilon>_0(a) = 0, k = 0, so a = eA.\<close>
+    \<comment> \<open>Use the preimage approach: {a \<in> AbelF | \<epsilon>_0(a) = 0} is a normal subgroup
+       that does NOT contain rel (since \<epsilon>_0(rel) = 2 \<noteq> 0).
+       N\_AbelF = normal\_closure({rel}). If a \<in> N\_AbelF \<cap> ker(\<epsilon>_0), then
+       \<epsilon>_0(a) = 0 but a is in the smallest normal subgroup containing rel.
+       Key: \<epsilon>_0 restricted to N\_AbelF is injective (since \<epsilon>_0(rel) generates 2Z
+       and the map from N\_AbelF to 2Z is injective for cyclic groups).\<close>
+    \<comment> \<open>a \<in> N\_AbelF = normal\_closure({rel}) \<subseteq> subgroup\_generated({rel}).
+       By subgroup\_generated\_word\_repr: a = eA or a = foldr mulA ws eA
+       where each ws!i \<in> {rel, invgA(rel)}.
+       Then \<epsilon>_0(a) = sum of \<epsilon>_0(ws!i) = sum of \<plusminus>2 = 2k.
+       Since \<epsilon>_0(a) = 0, k = 0, and a = eA.\<close>
+    have hN_sub_sg: "?N_AbelF \<subseteq> top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF}"
+    proof -
+      \<comment> \<open>In abelian group: every subgroup is normal, so subgroup\_generated = normal\_generated.
+         normal\_generated = \<Inter>{N | S\<subseteq>N, N normal}, subgroup\_generated = \<Inter>{H | S\<subseteq>H, H subgroup}.
+         Since normal \<Longrightarrow> subgroup: {N|normal} \<supseteq> ... and in abelian: subgroup \<Longrightarrow> normal.\<close>
+      \<comment> \<open>subgroup\_generated({rel}) is a normal subgroup of AbelF (abelian group).
+         Since N\_AbelF is the \<Inter> of all normal subgroups containing {rel},
+         and subgroup\_generated is one such, N\_AbelF \<subseteq> subgroup\_generated.\<close>
+      have "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA
+          (top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF})"
+      proof (rule abelian_subgroup_is_normal[OF hAbelF_abel])
+        show "top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF} \<subseteq> ?AbelF"
+          using subgroup_generated_subset[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
+        show "top1_is_group_on (top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF})
+            ?mulA ?eA ?invgA"
+          using intersection_of_subgroups_is_group[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
+      qed
+      moreover have "{?rel_in_AbelF} \<subseteq> top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF}"
+        using subgroup_generated_contains[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
+      ultimately show ?thesis
+        unfolding top1_normal_subgroup_generated_on_def by (by100 blast)
+    qed
+    hence "a \<in> top1_subgroup_generated_on ?AbelF ?mulA ?eA ?invgA {?rel_in_AbelF}"
+      using ha_N by (by100 blast)
+    hence "a = ?eA \<or> (\<exists>ws. length ws > 0
+        \<and> (\<forall>i<length ws. ws!i \<in> {?rel_in_AbelF} \<or> (\<exists>s\<in>{?rel_in_AbelF}. ws!i = ?invgA s))
+        \<and> foldr ?mulA ws ?eA = a)"
+      using subgroup_generated_word_repr[OF hAbelF_grp] hN_in_AbelF by (by100 blast)
+    thus "a \<in> {?eA}"
+    proof (elim disjE)
+      assume "a = ?eA" thus ?thesis by (by100 blast)
+    next
+      assume "\<exists>ws. length ws > 0
+        \<and> (\<forall>i<length ws. ws!i \<in> {?rel_in_AbelF} \<or> (\<exists>s\<in>{?rel_in_AbelF}. ws!i = ?invgA s))
+        \<and> foldr ?mulA ws ?eA = a"
+      then obtain ws where hlen: "length ws > 0"
+        and hws: "\<forall>i<length ws. ws!i \<in> {?rel_in_AbelF} \<or> (\<exists>s\<in>{?rel_in_AbelF}. ws!i = ?invgA s)"
+        and hprod: "foldr ?mulA ws ?eA = a" by (by100 blast)
+      \<comment> \<open>Each ws!i is rel or invgA(rel). \<epsilon>_0(rel) = 2, \<epsilon>_0(invgA(rel)) = -2.
+         So \<epsilon>_0(foldr mulA ws eA) = sum of \<plusminus>2 = 2k for some k.
+         Since \<epsilon>_0(a) = 0, this sum = 0.\<close>
+      \<comment> \<open>But also: foldr mulA ws eA = a and \<epsilon>_0(a) = 0.
+         In the free abelian group, a = 0 iff all coordinates are 0.
+         Here a \<in> N\_AbelF which is generated by {rel = \<beta>\<twosuperior>}.
+         Since \<epsilon>_0(\<beta>\<twosuperior>) = 2 and the group is free abelian,
+         pow(\<beta>\<twosuperior>, k) = 0 iff k = 0.\<close>
+      \<comment> \<open>Apply \<epsilon>_0 to both sides of hprod: \<epsilon>_0(a) = \<epsilon>_0(foldr mulA ws eA).
+         Each ws!i is rel or invgA(rel), so \<epsilon>_0(ws!i) \<in> {2, -2}.
+         Sum = 0 means equal counts of rel and invg(rel).
+         In abelian group, paired rel\<cdot>invg(rel) cancel to eA.\<close>
+      \<comment> \<open>All ws elements are in AbelF.\<close>
+      have hws_in: "\<forall>i<length ws. ws!i \<in> ?AbelF"
+      proof (intro allI impI)
+        fix i assume hi: "i < length ws"
+        from hws hi have "ws!i \<in> {?rel_in_AbelF} \<or> (\<exists>s\<in>{?rel_in_AbelF}. ws!i = ?invgA s)"
+          by (by100 blast)
+        thus "ws!i \<in> ?AbelF"
+        proof (elim disjE)
+          assume "ws!i \<in> {?rel_in_AbelF}"
+          thus ?thesis using hN_in_AbelF by (by100 blast)
+        next
+          assume "\<exists>s\<in>{?rel_in_AbelF}. ws!i = ?invgA s"
+          then obtain s where "s \<in> {?rel_in_AbelF}" "ws!i = ?invgA s" by (by100 blast)
+          hence "s \<in> ?AbelF" using hN_in_AbelF by (by100 blast)
+          have "?invgA s \<in> ?AbelF" using hAbelF_invg_cl \<open>s \<in> ?AbelF\<close> by (by100 blast)
+          thus ?thesis using \<open>ws!i = ?invgA s\<close> by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>Apply \<epsilon>_0 to hprod.\<close>
+      have hZ_grp: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+          top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+      have "\<epsilon>0 a = \<epsilon>0 (foldr ?mulA ws ?eA)" using hprod by (by100 simp)
+      also have "\<dots> = foldr (+) (map \<epsilon>0 ws) (0::int)"
+        using hom_foldr_mul[OF hAbelF_grp hZ_grp h\<epsilon>0_hom hws_in] by (by100 blast)
+      finally have hsum: "foldr (+) (map \<epsilon>0 ws) (0::int) = 0" using h\<epsilon>0a by (by100 simp)
+      \<comment> \<open>Each \<epsilon>_0(ws!i) \<in> {2, -2}. Sum = 0 means equal counts.
+         In abelian group with equal rel/invrel counts, product = eA.\<close>
+      \<comment> \<open>Use abelian\_word\_product\_zero\_net\_coeff with a single-generator word.
+         Label type: unit. phi () = rel. Word: map (\<lambda>x. ((), x = rel)) ws.\<close>
+      let ?w = "map (\<lambda>x. (()::unit, x = ?rel_in_AbelF)) ws"
+      let ?\<phi>w = "\<lambda>_::unit. ?rel_in_AbelF"
+      have "top1_group_word_product ?mulA ?eA ?invgA (map (\<lambda>(s,b). (?\<phi>w s, b)) ?w) = ?eA"
+      proof (rule abelian_word_product_zero_net_coeff[OF hAbelF_abel])
+        show "\<forall>s \<in> fst ` set ?w. ?\<phi>w s \<in> ?AbelF"
+          using hN_in_AbelF by (by100 auto)
+        show "\<forall>s. length (filter (\<lambda>(t,b). t = s \<and> b) ?w)
+            = length (filter (\<lambda>(t,b). t = s \<and> \<not>b) ?w)"
+        proof (intro allI)
+          fix s :: unit
+          \<comment> \<open>All first components are (), so the filter simplifies.\<close>
+          have "filter (\<lambda>(t,b). t = s \<and> b) ?w = filter (\<lambda>(t,b). b) ?w"
+            by (by100 auto)
+          moreover have "filter (\<lambda>(t,b). t = s \<and> \<not>b) ?w = filter (\<lambda>(t,b). \<not>b) ?w"
+            by (by100 auto)
+          moreover have "length (filter (\<lambda>(t,b). b) ?w) = length (filter (\<lambda>(t,b). \<not>b) ?w)"
+          proof -
+            \<comment> \<open>The boolean map: ws!i = rel iff (map (\<lambda>x. x=rel) ws)!i = True.\<close>
+            let ?bs = "map (\<lambda>x. x = ?rel_in_AbelF) ws"
+            \<comment> \<open>Connect \<epsilon>_0 sum to balanced\_from\_sum\_zero.\<close>
+            have h\<epsilon>_invrel: "\<epsilon>0 (?invgA ?rel_in_AbelF) = -2"
+            proof -
+              have hZ_grp2: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+                using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+                  top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+              have hrel_in: "?rel_in_AbelF \<in> ?AbelF" using hN_in_AbelF by (by100 blast)
+              have "\<epsilon>0 (?invgA ?rel_in_AbelF) = uminus (\<epsilon>0 ?rel_in_AbelF)"
+                using hom_preserves_inv[OF hAbelF_grp hZ_grp2 h\<epsilon>0_hom hrel_in] by (by100 simp)
+              thus ?thesis using h\<epsilon>0_rel by (by100 simp)
+            qed
+            have "map \<epsilon>0 ws = map (\<lambda>b. if b then (2::int) else -2) ?bs"
+              sorry \<comment> \<open>\<epsilon>_0(ws!i) = 2 if ws!i=rel, -2 if ws!i=invg(rel).\<close>
+            hence "foldr (+) (map (\<lambda>b. if b then (2::int) else -2) ?bs) 0 = 0"
+              using hsum by (by100 simp)
+            hence "length (filter id ?bs) = length (filter Not ?bs)"
+              using balanced_from_sum_zero[of 2 ?bs] by (by100 simp)
+            moreover have "length (filter id ?bs) = length (filter (\<lambda>(t,b). b) ?w)"
+              sorry \<comment> \<open>filter id (map f xs) = filter (f ∘ ...) xs list identity.\<close>
+            moreover have "length (filter Not ?bs) = length (filter (\<lambda>(t,b). \<not>b) ?w)"
+              sorry \<comment> \<open>Similar list identity.\<close>
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          ultimately show "length (filter (\<lambda>(t, b). t = s \<and> b) ?w) =
+              length (filter (\<lambda>(t, b). t = s \<and> \<not> b) ?w)" by (by100 simp)
+        qed
+      qed
+      moreover have "top1_group_word_product ?mulA ?eA ?invgA (map (\<lambda>(s,b). (?\<phi>w s, b)) ?w)
+          = foldr ?mulA ws ?eA"
+        sorry \<comment> \<open>word\_product with phi() maps back to the original foldr.
+           Each ((), True) gives rel (= ws!i), each ((), False) gives invgA(rel) (= ws!i).\<close>
+      ultimately have "foldr ?mulA ws ?eA = ?eA" by (by100 simp)
+      thus "a \<in> {?eA}" using hprod by (by100 blast)
+    qed
+  next
+    fix a assume "a \<in> {?eA}"
+    hence "a = ?eA" by (by100 blast)
+    have "?eA \<in> ?AbelF" using hAbelF_grp unfolding top1_is_group_on_def by (by100 blast)
+    have "\<epsilon>0 ?eA = 0"
+    proof -
+      have "top1_group_hom_on ?AbelF ?mulA (UNIV::int set) (+) \<epsilon>0" using h\<epsilon>0_hom .
+      have hZ_grp: "top1_is_group_on (UNIV::int set) (+) 0 uminus"
+        using top1_Z_is_abelian_group unfolding top1_is_abelian_group_on_def
+          top1_Z_group_def top1_Z_mul_def top1_Z_id_def top1_Z_invg_def by (by100 blast)
+      hence "\<epsilon>0 ?eA = (0::int)"
+        using hom_preserves_id[OF hAbelF_grp hZ_grp h\<epsilon>0_hom] by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    have "?eA \<in> ?N_AbelF"
+      using hN_normal unfolding top1_normal_subgroup_on_def top1_is_group_on_def
+      by (by100 blast)
+    show "a \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0} \<inter> ?N_AbelF"
+      using \<open>a = ?eA\<close> \<open>?eA \<in> ?AbelF\<close> \<open>\<epsilon>0 ?eA = 0\<close> \<open>?eA \<in> ?N_AbelF\<close> by (by100 blast)
+  qed
+
 
   have h\<phi>_inj_K0: "inj_on \<phi>_bar {a \<in> ?AbelF. \<epsilon>0 a = 0}"
   proof (rule inj_onI)
@@ -2097,7 +2266,7 @@ proof -
     ultimately have "?mulA a (?invgA b) = ?eA"
       using hK0_ker_trivial by (by100 blast)
     thus "a = b"
-      sorry \<comment> \<open>a\<cdot>b^{-1} = e \<Longrightarrow> a = b in the group.\<close>
+      sorry \<comment> \<open>a\<cdot>b^{-1} = eA \<Longrightarrow> a = b: multiply by b, use assoc+inv+id.\<close>
   qed
 
   \<comment> \<open>Step F: Transfer free abelian structure from K_0 to K via \<phi>\_bar.
