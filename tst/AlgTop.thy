@@ -1716,7 +1716,14 @@ proof -
       show "\<forall>s b. (s, b) \<in> set ?w \<longrightarrow> (s, \<not>b) \<notin> set ?w" by (by100 auto)
     qed
     moreover have "top1_group_word_product ?mulA ?eA ?invgA (map (\<lambda>(s,b). (?\<iota>A s, b)) ?w) = ?\<beta>A"
-      sorry \<comment> \<open>word\_product of True-only entries = foldr product of generators.\<close>
+    proof -
+      have wp_true: "\<And>f xs. top1_group_word_product ?mulA ?eA ?invgA
+          (map (\<lambda>i. (f i, True)) xs) = foldr ?mulA (map f xs) ?eA"
+        by (rule list.induct, by100 simp, by100 simp)
+      have hmap: "map (\<lambda>(s,b). (?\<iota>A s, b)) ?w = map (\<lambda>i. (?\<iota>A i, True)) [0..<m]"
+        by (by100 auto)
+      show ?thesis unfolding hmap using wp_true[of ?\<iota>A "[0..<m]"] by (by100 simp)
+    qed
     ultimately show ?thesis by (by100 simp)
   qed
   have h\<beta>G_ne: "?\<beta>G \<noteq> ?eAG"
