@@ -14734,10 +14734,8 @@ lemma convex_polygon_homeomorphism:
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1)
       P2
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
-  sorry \<comment> \<open>Construct \\<phi> by radial projection from centroid: for each direction, map the
-     boundary point of P1 to the corresponding boundary point of P2 (same angular position
-     relative to vertex ordering). Continuous and bijective between compact Hausdorff spaces
-     \\<Rightarrow> homeomorphism.\<close>
+  sorry \<comment> \<open>Construct \\<phi> by piecewise-linear map on centroid triangulation.
+     Edge preservation (maps vertex i to vertex i) follows by construction.\<close>
 
 \<comment> \<open>Quotient-of-scheme uniqueness: any two quotient spaces of the same scheme are homeomorphic.
    Proof: both are quotients of convex n-gons by the same identification pattern.
@@ -14749,17 +14747,18 @@ lemma scheme_quotient_uniqueness:
       and "top1_quotient_of_scheme_on Y2 TY2 scheme"
   shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
 proof -
-  \<comment> \<open>Extract polygon data for both quotients.\<close>
-  from assms(3) obtain P1 q1 vx1 vy1 where
-      hP1: "top1_is_polygonal_region_on P1 (length scheme)"
+  \<comment> \<open>Extract full polygon data from both quotients (including vertices and identification).\<close>
+  let ?n = "length scheme"
+  from assms(3) obtain P1 q1 where
+      hP1: "top1_is_polygonal_region_on P1 ?n"
       and hq1: "top1_quotient_map_on P1
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y1 TY1 q1"
-    unfolding top1_quotient_of_scheme_on_def by (by5000 auto)
-  from assms(4) obtain P2 q2 vx2 vy2 where
-      hP2: "top1_is_polygonal_region_on P2 (length scheme)"
+    by (rule quotient_of_scheme_extract)
+  from assms(4) obtain P2 q2 where
+      hP2: "top1_is_polygonal_region_on P2 ?n"
       and hq2: "top1_quotient_map_on P2
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) Y2 TY2 q2"
-    unfolding top1_quotient_of_scheme_on_def by (by5000 auto)
+    by (rule quotient_of_scheme_extract)
   \<comment> \<open>Get homeomorphism \\<phi>: P1 \\<to> P2 from convex\\_polygon\\_homeomorphism.\<close>
   from convex_polygon_homeomorphism[OF hP1 hP2]
   obtain \<phi> where h\<phi>: "top1_homeomorphism_on P1
@@ -14774,10 +14773,15 @@ proof -
   have hcomp_quot: "top1_quotient_map_on P1
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y2 TY2 (q2 \<circ> \<phi>)"
     by (rule top1_quotient_map_on_comp[OF h\<phi>_quot hq2])
-  \<comment> \<open>Need: fibres of q1 and q2\\<circ>\\<phi> agree. This requires \\<phi> to preserve vertex/edge correspondence.
-     Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
+  \<comment> \<open>Fibres of q1 and q2\\<circ>\\<phi> agree: both identify boundary points according to the same scheme.
+     Interior points have singleton fibres under both maps.
+     Edge points: \\<phi> maps edge i of P1 to edge i of P2 (by h\\<phi>\\_edge), so the scheme
+     identification pattern is preserved.\<close>
   have hfibres: "\<forall>x\<in>P1. \<forall>y\<in>P1. (q1 x = q1 y) \<longleftrightarrow> ((q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y)"
-    sorry \<comment> \<open>Requires convex\\_polygon\\_homeomorphism to be vertex-preserving.\<close>
+    sorry \<comment> \<open>Uses h\\<phi>\\_edge + hq1\\_ident + hq1\\_inj + hq1\\_bd + matching conditions on P2.
+       Key: \\<phi> preserves the edge parametrization, so same-scheme identification \\<Rightarrow> same fibres.
+       The proof needs the vx1'/vy1' from \\<phi> to match the vx1/vy1 from q1, which requires
+       showing that the vertex functions are essentially unique (up to the polygon's geometry).\<close>
   from quotient_same_fibres_homeomorphic[OF hq1 hcomp_quot hfibres]
   show ?thesis .
 qed
