@@ -15722,9 +15722,14 @@ proof -
         using hn unfolding top1_is_n_fold_torus_on_def by simp
       \<comment> \<open>X is itself an n-fold torus. Take T\\_n = X, h = id.\<close>
       \<comment> \<open>X itself is an n-fold torus. Take T\\_n = X, h = id.\<close>
+      have hX_top: "is_topology_on X TX"
+        using assms(1) unfolding top1_is_surface_on_def is_topology_on_strict_def sorry
       have "top1_homeomorphism_on X TX X TX id"
-        sorry \<comment> \<open>Identity homeomorphism on a strict topology.\<close>
-      thus ?thesis using hn \<open>top1_is_n_fold_torus_on X TX n\<close> sorry
+        unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
+        using hX_top sorry
+      show ?thesis
+        using hn \<open>top1_is_n_fold_torus_on X TX n\<close> \<open>top1_homeomorphism_on X TX X TX id\<close>
+        sorry
     next
       \<comment> \<open>Case 3: scheme \\<sim> projective normal form.\<close>
       fix m w assume hm: "m > 0" and hproj: "top1_is_projective_scheme w m"
