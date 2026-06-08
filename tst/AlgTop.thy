@@ -14958,7 +14958,18 @@ proof -
               "fst q = (\<Sum>i\<le>Suc k. coeffs i * vx i)" "snd q = (\<Sum>i\<le>Suc k. coeffs i * vy i)"
             unfolding Q_def by (by5000 auto)
           define t where "t = coeffs (Suc k)"
-          have ht: "t \<in> {0..1}" using hc(1,2) unfolding t_def sorry
+          have ht: "t \<in> {0..1}"
+          proof -
+            have "0 \<le> t" using hc(1) unfolding t_def by simp
+            moreover have "t \<le> 1"
+            proof -
+              have "(\<Sum>i\<le>k. coeffs i) \<ge> 0"
+                using hc(1) by (intro sum_nonneg) (by100 auto)
+              hence "t = 1 - (\<Sum>i\<le>k. coeffs i)" using hc(2) unfolding t_def by simp
+              thus ?thesis using \<open>(\<Sum>i\<le>k. coeffs i) \<ge> 0\<close> by linarith
+            qed
+            ultimately show ?thesis by simp
+          qed
           show "q \<in> f ` ({0..1} \<times> Q k)"
           proof (cases "t = 1")
             case True
