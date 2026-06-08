@@ -16656,6 +16656,20 @@ proof -
     unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
 qed
 
+\<comment> \<open>Lemma 77.4 (Munkres): A projective pair + commutator = 3 projective pairs.
+   w0 (cc)(aba\\<inverse>b\\<inverse>) w1 ~ w0 (aabbcc) w1.
+   Proof: 5-step chain using Lemma 77.1 (*) and rotations.\<close>
+lemma Lemma_77_4_projective_absorbs_torus:
+  assumes "a \<noteq> b" "a \<noteq> c" "b \<noteq> c"
+      and "\<forall>e \<in> set w0 \<union> set w1. fst e \<noteq> a \<and> fst e \<noteq> b \<and> fst e \<noteq> c"
+  shows "top1_scheme_equiv
+      (w0 @ [(c, True), (c, True), (a, True), (b, True), (a, False), (b, False)] @ w1)
+      (w0 @ [(a, True), (a, True), (b, True), (b, True), (c, True), (c, True)] @ w1)"
+  sorry \<comment> \<open>Book proof: rotate to bring cc aba\\<inverse>b\\<inverse> to front, then apply Lemma 77.1 (*) three
+     times (once reversed, once forward, once forward), then rotate back.
+     Each application of (*) collects one same-direction pair.
+     Requires a,b,c all distinct and not in w0,w1.\<close>
+
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
    (1) aa\\<inverse>bb\\<inverse> (sphere, length 4)
