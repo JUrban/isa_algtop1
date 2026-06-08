@@ -3060,10 +3060,29 @@ proof -
             and hprod: "foldr ?mulA ws ?eA = a" by (by100 blast)
           \<comment> \<open>\<phi>\_bar(foldr ws) = foldr (map \<phi>\_bar ws) in AbelG.
              Each \<phi>\_bar(ws!i) is a generator or inverse of generator in sg.\<close>
-          show ?thesis sorry \<comment> \<open>Transfer word through \<phi>\_bar hom:
-             \<phi>\_bar(foldr mulA ws eA) = foldr mulAG (map \<phi>\_bar ws) eAG (hom\_foldr\_mul).
-             Each map \<phi>\_bar ws!i \<in> gens \<union> invgAG(gens) \<subseteq> sg.
-             Product of sg elements \<in> sg (sg is a group via intersection\_of\_subgroups).\<close>
+          let ?sg = "top1_subgroup_generated_on ?K ?mulAG ?eAG ?invgAG
+              ((\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}))"
+          \<comment> \<open>Each ws!i is \<iota>A(s) or invgA(\<iota>A(s)) for s \<in> {..<m}-{0}.
+             So \<phi>\_bar(ws!i) is in ?sg.\<close>
+          have hgens_sub_K_loc: "(\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}) \<subseteq> ?K"
+            sorry \<comment> \<open>Same as shown in ⊇ direction.\<close>
+          have hsg_grp: "top1_is_group_on ?sg ?mulAG ?eAG ?invgAG"
+            using intersection_of_subgroups_is_group[OF hK_grp_pre hgens_sub_K_loc] by (by100 simp)
+          \<comment> \<open>Each \<phi>\_bar(ws!i) \<in> ?sg.\<close>
+          have hmap_in_sg: "\<forall>i<length (map \<phi>_bar ws). (map \<phi>_bar ws) ! i \<in> ?sg"
+            sorry \<comment> \<open>Each ws!i is \<iota>A(s) \<Longrightarrow> \<phi>\_bar(\<iota>A(s)) is a generator \<in> ?sg.
+               Or ws!i = invgA(\<iota>A(s)) \<Longrightarrow> \<phi>\_bar(invgA(\<iota>A(s))) = invgAG(\<phi>\_bar(\<iota>A(s))) \<in> ?sg.\<close>
+          \<comment> \<open>\<phi>\_bar(a) = \<phi>\_bar(foldr ws) = foldr (map \<phi>\_bar ws) in AbelG.\<close>
+          have hws_in_F: "\<forall>i<length ws. ws!i \<in> ?AbelF"
+            sorry \<comment> \<open>ws!i \<in> \<iota>A(S) \<cup> invgA(\<iota>A(S)) \<subseteq> AbelF.\<close>
+          have "x = \<phi>_bar (foldr ?mulA ws ?eA)" using ha(3) hprod by (by100 simp)
+          also have "\<phi>_bar (foldr ?mulA ws ?eA) = foldr ?mulAG (map \<phi>_bar ws) ?eAG"
+            sorry \<comment> \<open>hom\_foldr\_mul: \<phi>\_bar maps foldr to foldr of images.\<close>
+          finally have "x = foldr ?mulAG (map \<phi>_bar ws) ?eAG" .
+          \<comment> \<open>foldr of sg elements \<in> sg.\<close>
+          moreover have "foldr ?mulAG (map \<phi>_bar ws) ?eAG \<in> ?sg"
+            using foldr_mul_closed[OF hsg_grp hmap_in_sg] by (by100 blast)
+          ultimately show ?thesis by (by100 simp)
         qed
       qed
     qed
