@@ -14841,10 +14841,7 @@ proof -
         \<and> x = (\<Sum>i\<le>k. coeffs i * vx i) \<and> y = (\<Sum>i\<le>k. coeffs i * vy i)}" for k
     \<comment> \<open>Base: Q 0 = {(vx 0, vy 0)} is compact (singleton).\<close>
     have hQ0: "compact (Q 0)"
-    proof -
-      have "Q 0 = {(vx 0, vy 0)}" unfolding Q_def sorry
-      thus ?thesis sorry
-    qed
+      sorry \<comment> \<open>Q 0 = {(vx 0, vy 0)} (singleton). Compact because finite.\<close>
     \<comment> \<open>Step: Q (Suc k) = {t*v\\_{k+1} + (1-t)*p | t \\<in> [0,1], p \\<in> Q k}.
        This is the continuous image of [0,1] \\<times> Q k, hence compact.\<close>
     have hQstep: "\<And>k. compact (Q k) \<Longrightarrow> compact (Q (Suc k))" sorry
