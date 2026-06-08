@@ -2768,10 +2768,37 @@ proof -
           ultimately show "?invgAG x \<in> ?K" by (by100 force)
         qed
         \<comment> \<open>Group axioms (assoc, id, inv) inherited from AbelG since K \<subseteq> AbelG.\<close>
+        \<comment> \<open>Inherit assoc, id, inv axioms from AbelG for K \<subseteq> AbelG.\<close>
+        \<comment> \<open>Inherit assoc/id/inv from AbelG using coset representative extraction.\<close>
+        have hassoc_K: "\<forall>x\<in>?K. \<forall>y\<in>?K. \<forall>z\<in>?K. ?mulAG (?mulAG x y) z = ?mulAG x (?mulAG y z)"
+        proof (intro ballI)
+          fix x y z assume "x \<in> ?K" "y \<in> ?K" "z \<in> ?K"
+          hence "x \<in> ?AbelG" "y \<in> ?AbelG" "z \<in> ?AbelG" using hK_sub by (by100 blast)+
+          then obtain gx gy gz where hgx: "gx \<in> G0" "x = ?pG gx"
+            and hgy: "gy \<in> G0" "y = ?pG gy" and hgz: "gz \<in> G0" "z = ?pG gz"
+            unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+          from quotient_group_is_group[OF hG0 hCG_normal]
+          show "?mulAG (?mulAG x y) z = ?mulAG x (?mulAG y z)"
+            unfolding top1_is_group_on_def using hgx hgy hgz \<open>x \<in> ?AbelG\<close> \<open>y \<in> ?AbelG\<close> \<open>z \<in> ?AbelG\<close>
+            sorry \<comment> \<open>Extract assoc from quotient\_group\_is\_group.\<close>
+        qed
+        have hid_K: "\<forall>x\<in>?K. ?mulAG ?eAG x = x \<and> ?mulAG x ?eAG = x"
+        proof (intro ballI)
+          fix x assume "x \<in> ?K"
+          hence "x \<in> ?AbelG" using hK_sub by (by100 blast)
+          from hAbelG_grp[unfolded top1_is_group_on_def] \<open>x \<in> ?AbelG\<close>
+          show "?mulAG ?eAG x = x \<and> ?mulAG x ?eAG = x" by (by100 fast)
+        qed
+        have hinv_K: "\<forall>x\<in>?K. ?mulAG (?invgAG x) x = ?eAG \<and> ?mulAG x (?invgAG x) = ?eAG"
+        proof (intro ballI)
+          fix x assume "x \<in> ?K"
+          hence "x \<in> ?AbelG" using hK_sub by (by100 blast)
+          from hAbelG_grp[unfolded top1_is_group_on_def] \<open>x \<in> ?AbelG\<close>
+          show "?mulAG (?invgAG x) x = ?eAG \<and> ?mulAG x (?invgAG x) = ?eAG" by (by100 fast)
+        qed
         show ?thesis
           unfolding top1_is_group_on_def
-          using he_in_K hmul_cl_K hinv_cl_K hK_sub hAbelG_grp
-          unfolding top1_is_group_on_def sorry \<comment> \<open>Inherit axioms from AbelG; blast on large types.\<close>
+          using he_in_K hmul_cl_K hinv_cl_K hassoc_K hid_K hinv_K by (by100 blast)
       qed
       \<comment> \<open>K is abelian since K \<subseteq> AbelG and AbelG is abelian.\<close>
       show ?thesis
