@@ -3005,10 +3005,52 @@ proof -
         \<comment> \<open>Then \<phi>\_bar(a) is eAG or foldr mulAG (map \<phi>\_bar ws) eAG.
            Each \<phi>\_bar(ws!i) is in {gen} \<union> invgAG({gen}), hence in subgroup\_generated.
            So \<phi>\_bar(a) \<in> subgroup\_generated.\<close>
-        thus ?thesis sorry \<comment> \<open>Word representation transfer via \<phi>\_bar hom.
-           Each step: \<phi>\_bar(\<iota>A s) \<in> sg (gen), \<phi>\_bar(invgA(\<iota>A s)) = invgAG(\<phi>\_bar(\<iota>A s)) \<in> sg (inv),
-           \<phi>\_bar(mulA a b) = mulAG(\<phi>\_bar a)(\<phi>\_bar b) \<in> sg (closure).
-           Induction on word representation.\<close>
+        \<comment> \<open>By subgroup\_generated\_word\_repr: a = eA or word.\<close>
+        hence "a = ?eA \<or> (\<exists>ws. length ws > 0
+            \<and> (\<forall>i<length ws. ws!i \<in> ?\<iota>A ` ({..<m} - {0::nat})
+                \<or> (\<exists>s\<in>?\<iota>A ` ({..<m} - {0::nat}). ws!i = ?invgA s))
+            \<and> foldr ?mulA ws ?eA = a)"
+        proof -
+          have h\<iota>A_sub_K0: "?\<iota>A ` ({..<m} - {0::nat}) \<subseteq> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+          proof (rule image_subsetI)
+            fix s assume "s \<in> {..<m} - {0::nat}"
+            thus "?\<iota>A s \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+              using h\<iota>A_in h\<epsilon>0_rest by (by100 auto)
+          qed
+          have hK0_grp_loc: "top1_is_group_on {a \<in> ?AbelF. \<epsilon>0 a = 0} ?mulA ?eA ?invgA"
+          proof -
+            from hAbelF_grp[unfolded top1_is_group_on_def]
+            have hCF_normal_loc: "top1_normal_subgroup_on ?AbelF ?mulA ?eA ?invgA
+                (top1_group_kernel_on ?AbelF (0::int) \<epsilon>0)"
+              sorry \<comment> \<open>Kernel is normal. Previously proved.\<close>
+            thus ?thesis sorry \<comment> \<open>K_0 = kernel \<Longrightarrow> K_0 is a group.\<close>
+          qed
+          from subgroup_generated_word_repr[OF hK0_grp_loc h\<iota>A_sub_K0]
+          show ?thesis
+            using \<open>a \<in> top1_subgroup_generated_on _ _ _ _ _\<close> by (by100 blast)
+        qed
+        thus ?thesis
+        proof (elim disjE)
+          assume "a = ?eA"
+          hence "x = ?eAG" using ha(3)
+            hom_preserves_id[OF hAbelF_grp hAbelG_grp h\<phi>_hom] by (by100 simp)
+          thus ?thesis sorry \<comment> \<open>eAG \<in> subgroup\_generated (identity in any subgroup).\<close>
+        next
+          assume "\<exists>ws. length ws > 0
+            \<and> (\<forall>i<length ws. ws!i \<in> ?\<iota>A ` ({..<m} - {0::nat})
+                \<or> (\<exists>s\<in>?\<iota>A ` ({..<m} - {0::nat}). ws!i = ?invgA s))
+            \<and> foldr ?mulA ws ?eA = a"
+          then obtain ws where hlen: "length ws > 0"
+            and hws: "\<forall>i<length ws. ws!i \<in> ?\<iota>A ` ({..<m} - {0::nat})
+                \<or> (\<exists>s\<in>?\<iota>A ` ({..<m} - {0::nat}). ws!i = ?invgA s)"
+            and hprod: "foldr ?mulA ws ?eA = a" by (by100 blast)
+          \<comment> \<open>\<phi>\_bar(foldr ws) = foldr (map \<phi>\_bar ws) in AbelG.
+             Each \<phi>\_bar(ws!i) is a generator or inverse of generator in sg.\<close>
+          show ?thesis sorry \<comment> \<open>Transfer word through \<phi>\_bar hom:
+             \<phi>\_bar(foldr mulA ws eA) = foldr mulAG (map \<phi>\_bar ws) eAG (hom\_foldr\_mul).
+             Each map \<phi>\_bar ws!i \<in> gens \<union> invgAG(gens) \<subseteq> sg.
+             Product of sg elements \<in> sg (sg is a group via intersection\_of\_subgroups).\<close>
+        qed
       qed
     qed
     \<comment> \<open>5. Independence.\<close>
