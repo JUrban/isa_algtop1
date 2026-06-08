@@ -1744,9 +1744,47 @@ proof -
        The relator scheme has all True entries, so word\_product = foldr of generators.
        After applying p: each ι(i) maps to ιA(i) = p(ι(i)).\<close>
     \<comment> \<open>Step 1: Show rel\_in\_AbelF = foldr mulA (concat (map (\<lambda>i. [ιA i, ιA i]) [0..<m])) eA.\<close>
-    have hstep1: "?rel_in_AbelF = foldr ?mulA (concat (map (\<lambda>i. [?\<iota>A i, ?\<iota>A i]) [0..<m])) ?eA"
-      sorry \<comment> \<open>p is hom + word\_product True-only = foldr + map through p gives ιA.
-         This is a chain of hom\_word\_product + wp\_true + map simplification.\<close>
+    \<comment> \<open>The relator scheme with all True entries produces a specific word product.
+       For True-only entries: word\_product = foldr mul (map fst ws) e.
+       The relator scheme maps (λi. [(i,T),(i,T)]) over [0..<m] and concatenates.\<close>
+    have wp_true_gen: "\<And>mul' e' invg' f xs.
+        top1_group_word_product mul' e' invg'
+          (concat (map (\<lambda>i. [(f i, True), (f i, True)]) xs))
+      = foldr mul' (concat (map (\<lambda>i. [f i, f i]) xs)) e'"
+      by (rule list.induct, by100 simp, by100 simp)
+    \<comment> \<open>rel\_in\_F as foldr in F.\<close>
+    have hrel_foldr_F: "?rel_in_F = foldr mulF (concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m])) eF"
+    proof -
+      have "map (\<lambda>(s,b). (\<iota> s, b)) ?relator = concat (map (\<lambda>i. [(\<iota> i, True), (\<iota> i, True)]) [0..<m])"
+        by (induct m, by100 simp, by100 simp)
+      thus ?thesis using wp_true_gen[of mulF eF invgF \<iota> "[0..<m]"] by (by100 simp)
+    qed
+    \<comment> \<open>p preserves foldr products.\<close>
+    have hrel_all_in_F: "\<forall>i<length (concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m])).
+        (concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m])) ! i \<in> F"
+    proof (intro allI impI)
+      fix i assume "i < length (concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m]))"
+      have "set (concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m])) \<subseteq> \<iota> ` {..<m}"
+        by (by100 auto)
+      hence "(concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m])) ! i \<in> \<iota> ` {..<m}"
+        using nth_mem \<open>i < length _\<close> by (by100 blast)
+      thus "(concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m])) ! i \<in> F"
+      proof -
+        assume h: "(concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m])) ! i \<in> \<iota> ` {..<m}"
+        have "\<iota> ` {..<m} \<subseteq> F"
+          using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
+        thus ?thesis using h by (by100 blast)
+      qed
+    qed
+    have "?p ?rel_in_F = ?p (foldr mulF (concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m])) eF)"
+      using hrel_foldr_F by (by100 simp)
+    also have "\<dots> = foldr ?mulA (map ?p (concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m]))) ?eA"
+      using hom_foldr_mul[OF hF_grp hAbelF_grp hpF_hom hrel_all_in_F] by (by100 blast)
+    also have "map ?p (concat (map (\<lambda>i. [\<iota> i, \<iota> i]) [0..<m]))
+        = concat (map (\<lambda>i. [?\<iota>A i, ?\<iota>A i]) [0..<m])"
+      by (induct m, by100 simp, by100 simp)
+    finally have hstep1: "?rel_in_AbelF = foldr ?mulA (concat (map (\<lambda>i. [?\<iota>A i, ?\<iota>A i]) [0..<m])) ?eA"
+      by (by100 simp)
     \<comment> \<open>Step 2: Apply abelian\_foldr\_concat\_double to get β².\<close>
     also have "\<dots> = ?mulA ?\<beta>A ?\<beta>A"
     proof -
