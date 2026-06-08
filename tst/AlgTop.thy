@@ -15503,6 +15503,21 @@ qed
 
 \<comment> \<open>§75 + §73 + §74.4 moved to AlgTopCached8.\<close>
 
+\<comment> \<open>Helper: extract the free group data from a single-relator presentation.\<close>
+lemma presented_by_single_relator_extract:
+  assumes "top1_group_presented_by_on G mul e invg S {w}"
+  obtains F mulF eF invgF \<iota> \<pi>F where
+    "top1_is_free_group_full_on F mulF eF invgF \<iota> S"
+    "top1_group_hom_on F mulF G mul \<pi>F"
+    "\<pi>F ` F = G"
+    "top1_group_kernel_on F e \<pi>F =
+       top1_normal_subgroup_generated_on F mulF eF invgF
+         {top1_group_word_product mulF eF invgF (map (\<lambda>(s,b). (\<iota> s, b)) w)}"
+proof -
+  show ?thesis using assms[unfolded top1_group_presented_by_on_def]
+    sorry \<comment> \<open>Structural: extract + simplify {r. \<exists>w'\<in>{w}. r=f(w')} = {f(w)}.\<close>
+qed
+
 theorem Theorem_75_4_H1_m_projective:
   fixes m :: nat and X :: "'a set" and TX :: "'a set set" and x0 :: 'a
   assumes "top1_is_m_fold_projective_on X TX m"
@@ -15547,30 +15562,16 @@ proof -
   \<comment> \<open>Step 2: Extract the free group F and surjection \<pi>: F \<rightarrow> G_0.\<close>
   have hG0: "top1_is_group_on G0 mul0 e0 invg0"
     using hpres unfolding top1_group_presented_by_on_def by (by100 blast)
-  \<comment> \<open>From the presentation, extract free group F, generators \<iota>, and surjection \<pi>_F.
-     (This is structural extraction from top1\_group\_presented\_by\_on.)\<close>
-  \<comment> \<open>Extract from the unfolded presentation. The set comprehension
-     {r. \<exists>w\<in>{relator}. r = word\_product(...)} simplifies to {word\_product(...)}.\<close>
-  have hset_simp: "\<And>\<iota>' mulF' eF' invgF'.
-      {r. \<exists>w\<in>{ ?relator }. r = top1_group_word_product mulF' eF' invgF'
-            (map (\<lambda>(s,b). (\<iota>' s, b)) w)}
-    = {top1_group_word_product mulF' eF' invgF'
-        (map (\<lambda>(s,b). (\<iota>' s, b)) ?relator)}"
-    by (by100 auto)
+  \<comment> \<open>Extract the free group data from the presentation using the helper lemma.\<close>
   obtain F and mulF eF invgF and \<iota> and \<pi>F
     where hF_free: "top1_is_free_group_full_on F mulF eF invgF \<iota> ({..<m}::nat set)"
       and h\<pi>_hom: "top1_group_hom_on F mulF G0 mul0 \<pi>F"
       and h\<pi>_surj: "\<pi>F ` F = G0"
-      and h\<pi>_ker_raw: "top1_group_kernel_on F e0 \<pi>F =
+      and h\<pi>_ker: "top1_group_kernel_on F e0 \<pi>F =
           top1_normal_subgroup_generated_on F mulF eF invgF
-            {r. \<exists>w\<in>{ ?relator }. r = top1_group_word_product mulF eF invgF
-                  (map (\<lambda>(s,b). (\<iota> s, b)) w)}"
-    using hpres[unfolded top1_group_presented_by_on_def] sorry
-  have h\<pi>_ker: "top1_group_kernel_on F e0 \<pi>F =
-      top1_normal_subgroup_generated_on F mulF eF invgF
-        {top1_group_word_product mulF eF invgF
-          (map (\<lambda>(s,b). (\<iota> s, b)) ?relator)}"
-    using h\<pi>_ker_raw hset_simp by (by100 simp)
+            {top1_group_word_product mulF eF invgF
+              (map (\<lambda>(s,b). (\<iota> s, b)) ?relator)}"
+    using presented_by_single_relator_extract[OF hpres] by (by100 blast)
 
   have hF_grp: "top1_is_group_on F mulF eF invgF"
     using hF_free unfolding top1_is_free_group_full_on_def by (by100 blast)
