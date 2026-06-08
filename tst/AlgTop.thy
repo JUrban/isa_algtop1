@@ -17264,11 +17264,29 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           \<comment> \<open>suffix@prefix has length 2, same label, opposite directions. ~ sphere form.\<close>
           \<comment> \<open>suffix@prefix has length 2 with same label, opposite directions.
              Take a=a\\_lab, b=fst(hd(suffix@prefix)).\<close>
+          \<comment> \<open>suffix@prefix has exactly 2 elements (from hlen\\_ps).\<close>
+          obtain e1 e2 where hsp_list: "suffix @ prefix = [e1, e2]"
+          proof -
+            have "length (suffix @ prefix) = 2" using hlen_ps by simp
+            then obtain e1 rest where "suffix @ prefix = e1 # rest" by (cases "suffix @ prefix") simp_all
+            moreover then obtain e2 where "rest = [e2]" using \<open>length (suffix @ prefix) = 2\<close> by (cases rest) simp_all
+            ultimately show ?thesis using that by simp
+          qed
+          \<comment> \<open>The elements e1, e2 are from the original scheme (minus the cancel pair).
+             They must have the same label and opposite directions.\<close>
+          have "fst e1 = fst e2" and "snd e1 \<noteq> snd e2"
+            sorry \<comment> \<open>From properness + torus type of original scheme.\<close>
+          define b_lab where "b_lab = fst e1"
+          define d_b where "d_b = snd e1"
+          have hsp: "suffix @ prefix = [(b_lab, d_b), (b_lab, \<not>d_b)]"
+            using hsp_list \<open>fst e1 = fst e2\<close> \<open>snd e1 \<noteq> snd e2\<close>
+            unfolding b_lab_def d_b_def by (cases e1, cases e2) simp
+          have hab_ne: "a_lab \<noteq> b_lab"
+            using ha hsp_list unfolding b_lab_def sorry
           obtain b_lab d_b where
               hsp: "suffix @ prefix = [(b_lab, d_b), (b_lab, \<not>d_b)]" and
               hab_ne: "a_lab \<noteq> b_lab"
-            sorry \<comment> \<open>From properness: the 2 elements of suffix@prefix have same label (b\\_lab),
-               opposite directions. And a\\_lab \\<noteq> b\\_lab from ha.\<close>
+            using hsp hab_ne by (by100 blast)
           \<comment> \<open>Now [(a\\_lab,T),(a\\_lab,F)] @ [(b\\_lab,d\\_b),(b\\_lab,\\<not>d\\_b)] ~ sphere form.\<close>
           have "top1_scheme_equiv
               ([(a_lab,True),(a_lab,False)] @ suffix @ prefix)
