@@ -14926,12 +14926,11 @@ proof -
         case (relabel old new)
         \<comment> \<open>Relabeling preserves the quotient: same polygon, same q, renamed labels.
            Y1 is also a quotient of the relabeled scheme. Then scheme\\_quotient\\_uniqueness.\<close>
-        have "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
+        have hY1_relabel: "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
           sorry \<comment> \<open>Same (P,q,vx,vy): relabeling in scheme conditions doesn't change q-fibres.\<close>
-        hence "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
+        moreover have "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
           using ht relabel by simp
-        from scheme_quotient_uniqueness[OF hY1 hY2 _ this]
-        show ?thesis sorry \<comment> \<open>Need quotient Y1 (relabeled scheme) as 3rd arg.\<close>
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
       next
         case (flip_label a)
         \<comment> \<open>Flipping orientations: same polygon, same q, flipped edge directions.
