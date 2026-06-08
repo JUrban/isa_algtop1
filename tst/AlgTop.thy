@@ -17181,10 +17181,46 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           \<comment> \<open>The adjacent pair at position i has opposite directions (torus type).
              So scheme![i+1] = top1\\_inverse\\_edge (scheme![i]).
              Rotate to bring it to front, cancel, uncancel with fresh.\<close>
+          \<comment> \<open>scheme!(i+1) = inv(scheme!i): same label + torus type \\<Rightarrow> opposite directions.\<close>
+          have hsnd_ne: "snd (scheme!i) \<noteq> snd (scheme!(i+1))"
+          proof
+            assume "snd (scheme!i) = snd (scheme!(i+1))"
+            have "i < length scheme" using hi(1) \<open>length scheme = 4\<close> by simp
+            have "i+1 < length scheme" using hi(1) \<open>length scheme = 4\<close> by simp
+            have "i \<noteq> i+1" by simp
+            have "fst (scheme!i) = fst (scheme!(i+1))" using hi(2) .
+            have "snd (scheme!i) = snd (scheme!(i+1))" by (rule \<open>snd (scheme!i) = snd (scheme!(i+1))\<close>)
+            hence "i < length scheme \<and> (i+1) < length scheme \<and> i \<noteq> (i+1) \<and>
+                fst (scheme!i) = fst (scheme!i) \<and> fst (scheme!(i+1)) = fst (scheme!i) \<and>
+                snd (scheme!i) = snd (scheme!(i+1))"
+              using \<open>i < length scheme\<close> \<open>i+1 < length scheme\<close> hi(2) by simp
+            hence "\<exists>label. \<exists>ia<length scheme. \<exists>j<length scheme. ia \<noteq> j
+                \<and> fst (scheme!ia) = label \<and> fst (scheme!j) = label \<and> snd (scheme!ia) = snd (scheme!j)"
+              by (by100 blast)
+            with \<open>\<not> (\<exists>label. _)\<close> show False by simp
+          qed
+          have hinv: "scheme!(i+1) = top1_inverse_edge (scheme!i)"
+            using hi(2) hsnd_ne unfolding top1_inverse_edge_def
+            by (cases "scheme!i", cases "scheme!(i+1)") simp
+          \<comment> \<open>Split the list at position i.\<close>
+          define prefix where "prefix = take i scheme"
+          define suffix where "suffix = drop (i + 2) scheme"
+          have hlen_i: "i + 1 < length scheme" using hi(1) \<open>length scheme = 4\<close> by simp
           obtain prefix suffix where
               hdecomp: "scheme = prefix @ [scheme!i, top1_inverse_edge (scheme!i)] @ suffix"
               and hlen_ps: "length prefix + length suffix = 2"
-            sorry \<comment> \<open>Decompose scheme at position i. The inverse\\_edge follows from torus type.\<close>
+          proof
+            show "scheme = take i scheme @ [scheme!i, top1_inverse_edge (scheme!i)] @ drop (i+2) scheme"
+            proof -
+              have "scheme = take i scheme @ scheme!i # drop (Suc i) scheme"
+                using id_take_nth_drop[of i scheme] hi(1) \<open>length scheme = 4\<close> by simp
+              also have "drop (Suc i) scheme = scheme!(i+1) # drop (Suc (Suc i)) scheme"
+                using Cons_nth_drop_Suc[of "Suc i" scheme] hlen_i by simp
+              finally show ?thesis using hinv by simp
+            qed
+            show "length (take i scheme) + length (drop (i+2) scheme) = 2"
+              using \<open>length scheme = 4\<close> hi(1) by simp
+          qed
           \<comment> \<open>Rotate + cancel: scheme ~ prefix @ suffix (length 2).\<close>
           have "top1_scheme_equiv scheme (prefix @ suffix)"
           proof -
