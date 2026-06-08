@@ -1946,17 +1946,21 @@ proof -
   \<comment> \<open>Define K generators: \<gamma>(i) = \<phi>\_bar(\<iota>A(Suc i)) for i < m-1.\<close>
   let ?\<gamma> = "\<lambda>i. \<phi>_bar (?\<iota>A (Suc i))"
 
+  \<comment> \<open>Use the coordinate projection \<epsilon>_0 (already obtained above for \<beta>\<noteq>e proof).
+     K_0 = ker(\<epsilon>_0) in AbelF is free abelian on {..<m}-{0} by free\_abelian\_kernel\_coordinate.
+     K = \<phi>\_bar(K_0) in AbelG is the desired free complement.\<close>
   have hAbelG_free_part: "\<exists>(K :: (real \<Rightarrow> 'a) set set set set) (\<iota>_K :: nat \<Rightarrow> (real \<Rightarrow> 'a) set set set).
       K \<subseteq> ?AbelG
     \<and> top1_is_free_abelian_group_full_on K ?mulAG ?eAG ?invgAG \<iota>_K {..<m-1}
     \<and> K \<inter> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG = {?eAG}
     \<and> (\<forall>h\<in>?AbelG. \<exists>k\<in>K. \<exists>t\<in>top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG.
           h = ?mulAG k t)"
-    sorry \<comment> \<open>Free part Z^{m-1}: K = \<langle>\<gamma>(0),...,\<gamma>(m-2)\<rangle> = \<langle>\<phi>\_bar(\<iota>A 1),...,\<phi>\_bar(\<iota>A(m-1))\<rangle>.
-       Independence: use difference-coordinate homs \<delta>_j with \<delta>_j(\<iota>A 0)=-1, \<delta>_j(\<iota>A(Suc j))=1.
-       These kill 2\<beta>, descend to quotient, separate coefficients.
-       Decomposition: \<iota>A 0 = \<beta> \<cdot> (\<iota>A 1 \<cdot> ... \<cdot> \<iota>A(m-1))^{-1}, so every generator
-       is in K \<cup> K\<cdot>\<beta>G. K\<inter>torsion={e}: free abelian groups are torsion-free.\<close>
+    sorry \<comment> \<open>Free part Z^{m-1} via free\_abelian\_kernel\_coordinate + \<phi>\_bar transfer.
+       K_0 = {a \<in> AbelF | \<epsilon>_0(a) = 0} is free abelian on {..<m}-{0} \<cong> {..<m-1}.
+       K = \<phi>\_bar(K_0) \<subseteq> AbelG.
+       Independence: \<phi>\_bar restricted to K_0 is injective (ker \<cap> K_0 = {eA}).
+       K\<inter>torsion = {eAG}: free abelian groups are torsion-free.
+       Decomposition: a = (a - \<epsilon>_0(a)\<cdot>\<beta>) + \<epsilon>_0(a)\<cdot>\<beta>, first part in K_0, second in \<langle>\<beta>\<rangle>.\<close>
 
   \<comment> \<open>Torsion classification as corollary of free part decomposition (expert audit 11):
      h torsion, h = k\<cdot>t with k\<in>K, t\<in>{e,\<beta>G}.
