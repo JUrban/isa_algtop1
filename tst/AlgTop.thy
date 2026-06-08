@@ -17198,9 +17198,65 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                it must be at position 3. Then fst s2 = fst s1 (only other label).
                But positions 1,2 are adjacent with same label \\<Rightarrow> contradicts no\\_adj.\<close>
             \<comment> \<open>First show fst s3 = fst s0 (from properness of fst s0).\<close>
-            have "fst s3 = fst s0" sorry \<comment> \<open>Same card argument as fst s3 \\<noteq> fst s0 but constructive.\<close>
-            \<comment> \<open>Then fst s2 must equal fst s1 (the only other label).\<close>
-            have "fst s2 = fst s1" sorry \<comment> \<open>Uses fst s0 \\<noteq> fst s2, fst s3 = fst s0, properness.\<close>
+            \<comment> \<open>Properness of fst s0: appears at exactly 2 positions.\<close>
+            have hcard_s0: "card {i. i < length scheme \<and> fst (scheme!i) = fst s0} = 0
+                \<or> card {i. i < length scheme \<and> fst (scheme!i) = fst s0} = 2"
+              using less.prems(2)[THEN spec, of "fst s0"] by (by100 blast)
+            have "0 \<in> {i. i < length scheme \<and> fst (scheme!i) = fst s0}"
+              using hsch4 \<open>length scheme = 4\<close> by simp
+            hence "card {i. i < length scheme \<and> fst (scheme!i) = fst s0} \<noteq> 0" by (by100 auto)
+            hence hcard_s0_2: "card {i. i < length scheme \<and> fst (scheme!i) = fst s0} = 2"
+              using hcard_s0 by linarith
+            \<comment> \<open>Positions with label fst s0: subset of {0,3} (not 1 by \\<noteq>fst s1, not 2 by assumption).\<close>
+            have hsub_03: "{i. i < length scheme \<and> fst (scheme!i) = fst s0} \<subseteq> {0, 3}"
+            proof
+              fix j assume "j \<in> {i. i < length scheme \<and> fst (scheme!i) = fst s0}"
+              hence hj: "j < 4" "fst (scheme!j) = fst s0" using \<open>length scheme = 4\<close> by auto
+              have "j \<noteq> 1"
+              proof assume "j = 1" hence "fst s1 = fst s0" using hj(2) hsch4 by simp
+                with \<open>fst s0 \<noteq> fst s1\<close> show False by simp qed
+              moreover have "j \<noteq> 2"
+              proof assume "j = 2" hence "fst s2 = fst s0" using hj(2) hsch4 by (simp add: eval_nat_numeral)
+                with \<open>fst s0 \<noteq> fst s2\<close> show False by simp qed
+              ultimately show "j \<in> {0, 3}" using hj(1) by (simp add: eval_nat_numeral) linarith
+            qed
+            \<comment> \<open>Card 2 subset of {0,3} with card {0,3} = 2 means equality.\<close>
+            have "card {0::nat, 3} = 2" by simp
+            hence "{i. i < length scheme \<and> fst (scheme!i) = fst s0} = {0, 3}"
+              using hsub_03 hcard_s0_2 card_subset_eq[of "{0::nat, 3}"] by simp
+            hence "3 \<in> {i. i < length scheme \<and> fst (scheme!i) = fst s0}" by simp
+            hence "fst s3 = fst s0" using hsch4 by (simp add: eval_nat_numeral)
+            \<comment> \<open>Then fst s2 = fst s1: fst s2 \\<noteq> fst s0 (assumption) and fst s2 \\<noteq> fst s3 = fst s0.
+               Properness of fst s2: appears at 2 positions. Not at 0 (fst s0) or 3 (fst s0).
+               So only at 1 and 2. Hence fst(scheme!1) = fst s2, i.e., fst s1 = fst s2.\<close>
+            have "fst s2 = fst s1"
+            proof -
+              have hcard_s2: "card {i. i < length scheme \<and> fst (scheme!i) = fst s2} = 0
+                  \<or> card {i. i < length scheme \<and> fst (scheme!i) = fst s2} = 2"
+                using less.prems(2)[THEN spec, of "fst s2"] by (by100 blast)
+              have "2 \<in> {i. i < length scheme \<and> fst (scheme!i) = fst s2}"
+                using hsch4 \<open>length scheme = 4\<close> by (simp add: eval_nat_numeral)
+              hence "card {i. i < length scheme \<and> fst (scheme!i) = fst s2} \<noteq> 0" by (by100 auto)
+              hence "card {i. i < length scheme \<and> fst (scheme!i) = fst s2} = 2"
+                using hcard_s2 by linarith
+              moreover have "{i. i < length scheme \<and> fst (scheme!i) = fst s2} \<subseteq> {1, 2}"
+              proof
+                fix j assume "j \<in> {i. i < length scheme \<and> fst (scheme!i) = fst s2}"
+                hence hj: "j < 4" "fst (scheme!j) = fst s2" using \<open>length scheme = 4\<close> by auto
+                have "j \<noteq> 0"
+                proof assume "j = 0" hence "fst s2 = fst s0" using hj(2) hsch4 by simp
+                  with \<open>fst s0 \<noteq> fst s2\<close> show False by simp qed
+                moreover have "j \<noteq> 3"
+                proof assume "j = 3" hence "fst s2 = fst s3" using hj(2) hsch4 by (simp add: eval_nat_numeral)
+                  hence "fst s2 = fst s0" using \<open>fst s3 = fst s0\<close> by simp
+                  with \<open>fst s0 \<noteq> fst s2\<close> show False by simp qed
+                ultimately show "j \<in> {1, 2}" using hj(1) by (simp add: eval_nat_numeral) linarith
+              qed
+              ultimately have "{i. i < length scheme \<and> fst (scheme!i) = fst s2} = {1, 2}"
+                using card_subset_eq[of "{1::nat, 2}"] by simp
+              hence "1 \<in> {i. i < length scheme \<and> fst (scheme!i) = fst s2}" by simp
+              thus "fst s2 = fst s1" using hsch4 by simp
+            qed
             hence "fst (scheme!1) = fst (scheme!2)" using hsch4 by simp
             have h12: "\<not> (fst (scheme!1) = fst (scheme!(Suc 1)))"
               using no_adj by (by5000 force)
