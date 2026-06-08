@@ -6697,9 +6697,49 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             thus ?thesis by (by100 simp)
           qed
           have "fst e1 = fst e2"
-            sorry \<comment> \<open>Both have the other label. Properness: that label appears 0 or 2 times.
-               Since it appears at least once (e1), card \\<noteq> 0 \\<Rightarrow> card = 2 \\<Rightarrow> exactly 2.
-               But there are exactly 2 elements (e1, e2) with this label.\<close>
+          proof -
+            \<comment> \<open>Since length scheme = 4, there are exactly 4 positions.
+               Positions i and i+1 have label fst(scheme!i).
+               The other 2 positions have elements e1 and e2 (from prefix/suffix).
+               By properness: fst(e1) appears 0 or 2 times. At least once (e1). So 2 times.
+               Those 2 times can't include i or i+1 (different label, by he\_ne\_label).
+               The other 2 positions have fst = fst(e1). Since e2 is at one of those: fst(e1) = fst(e2).\<close>
+            \<comment> \<open>Direct argument: scheme has 4 elements. 2 have label fst(scheme!i).
+               e1, e2 are the other 2. If fst(e1) \<noteq> fst(e2), then fst(e1) appears only once
+               (at e1's position). But properness requires 0 or 2 occurrences. Contradiction.\<close>
+            show ?thesis
+            proof (rule ccontr)
+              assume hne: "fst e1 \<noteq> fst e2"
+              \<comment> \<open>fst(e1) appears at e1's position and no other.\<close>
+              \<comment> \<open>e1's position: some k1 with scheme!k1 = e1.
+                 e2's position: some k2 with scheme!k2 = e2, fst(e2) \<noteq> fst(e1).
+                 i and i+1: label = fst(scheme!i) \<noteq> fst(e1).
+                 So fst(e1) appears exactly 1 time, contradicting properness.\<close>
+              from he_in have "e1 \<in> set scheme" by (by100 blast)
+              hence "\<exists>k1. k1 < length scheme \<and> scheme ! k1 = e1"
+                by (simp add: in_set_conv_nth)
+              then obtain k1 where hk1: "k1 < length scheme" "scheme ! k1 = e1" by (by100 blast)
+              have "card {j. j < length scheme \<and> fst (scheme ! j) = fst e1} \<in> {0, 2}"
+                using less(3) by (by100 blast)
+              moreover have "k1 \<in> {j. j < length scheme \<and> fst (scheme ! j) = fst e1}"
+                using hk1 by (by100 simp)
+              hence "card {j. j < length scheme \<and> fst (scheme ! j) = fst e1} \<noteq> 0"
+                by (by100 auto)
+              ultimately have hcard_e1: "card {j. j < length scheme \<and> fst (scheme ! j) = fst e1} = 2"
+                by (by100 blast)
+              \<comment> \<open>Positions with label fst(e1): exactly 2. Can't include i or i+1.\<close>
+              \<comment> \<open>The 2 positions must be among {0,1,2,3} - {i, i+1} which has 2 elements.\<close>
+              \<comment> \<open>These 2 positions correspond to e1 and e2's positions.
+                 But fst(e2) \<noteq> fst(e1) means e2's position is NOT among them.
+                 So only 1 position has label fst(e1): k1. Card = 1 \<noteq> 2. Contradiction.\<close>
+              have hcard1: "card {j. j < 4 \<and> fst (scheme ! j) = fst e1} = 2"
+                using hcard_e1 \<open>length scheme = 4\<close> by (by100 simp)
+              \<comment> \<open>Count: positions i, i+1 have different label. e2's position has different label.
+                 So at most 1 position (e1's) has label fst(e1).\<close>
+              \<comment> \<open>But card = 2 means at least 2 positions. Contradiction if only k1 has it.\<close>
+              show False sorry \<comment> \<open>Card = 2 but only k1 has label fst(e1). Contradiction.\<close>
+            qed
+          qed
           have "snd e1 \<noteq> snd e2"
             sorry \<comment> \<open>Torus type: same-label pair has opposite directions.\<close>
           define b_lab where "b_lab = fst e1"
