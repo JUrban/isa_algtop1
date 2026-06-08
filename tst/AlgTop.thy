@@ -14711,12 +14711,44 @@ lemma elementary_operation_preserves_quotient:
   assumes "top1_quotient_of_scheme_on Y TY s"
       and "top1_elementary_scheme_operation s t"
   shows "top1_quotient_of_scheme_on Y TY t"
-  sorry \<comment> \<open>For each elementary operation, the same polygon P with adjusted vertex positions
-     satisfies all quotient\\_of\\_scheme\\_on conditions for the new scheme t.
-     rotate: shift vertex indices. invert: reverse vertex order.
-     relabel/flip\\_label: rename/flip labels (doesn't change polygon).
-     cancel/uncancel: fold/unfold polygon.
-     cut\\_paste/cut\\_paste2/cut\\_paste\\_opp: rearrange polygon via cut-flip-paste.\<close>
+  using assms(2,1)
+proof (induction rule: top1_elementary_scheme_operation.induct)
+  case (rotate u v)
+  \<comment> \<open>s = u@v, t = v@u. Same polygon, vertices cyclically shifted.\<close>
+  thus ?case sorry
+next
+  case (cancel u a v)
+  \<comment> \<open>s = u@[a,a\\<inverse>]@v, t = u@v. Cancel adjacent inverse pair. Fold polygon.\<close>
+  thus ?case sorry
+next
+  case (uncancel u v a)
+  \<comment> \<open>s = u@v, t = u@[a,a\\<inverse>]@v. Insert cancellable pair. Unfold polygon.\<close>
+  thus ?case sorry
+next
+  case (invert w)
+  \<comment> \<open>s = w, t = rev(map inverse w). Reverse and invert all edges.\<close>
+  thus ?case sorry
+next
+  case (relabel w old new)
+  \<comment> \<open>s = w, t = map (rename old\\<to>new) w. Rename label. Same polygon and quotient map.\<close>
+  thus ?case sorry
+next
+  case (flip_label w a)
+  \<comment> \<open>s = w, t = map (flip a) w. Flip orientation of label a. Same polygon and quotient map.\<close>
+  thus ?case sorry
+next
+  case (cut_paste u1 a u2 u3)
+  \<comment> \<open>s = u1@[a]@u2@[a]@u3, t = u1@[a,a]@rev(inv(u2))@u3. Cut and paste.\<close>
+  thus ?case sorry
+next
+  case (cut_paste2 u0 a u1 u2 b)
+  \<comment> \<open>s = u0@[a]@u1@[a]@u2, t = [b]@u2@[b]@u1@rev(inv(u0)). Cut-paste variant.\<close>
+  thus ?case sorry
+next
+  case (cut_paste_opp u0 u1 a u2 u3)
+  \<comment> \<open>s = u0@u1@[a]@u2@[a\\<inverse>]@u3, t = u0@[a]@u2@[a\\<inverse>]@u1@u3. Move u1 past a.\<close>
+  thus ?case sorry
+qed
 
 \<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
 lemma scheme_equiv_preserves_quotient:
