@@ -1592,7 +1592,21 @@ proof (intro conjI)
         have habel: "top1_is_abelian_group_on G mul e invg"
           using hfab unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
         have hg'_in: "\<forall>x \<in> set (map f ?xs). ?g' x \<in> G"
-          sorry \<comment> \<open>Each g'(s) \<in> G: group\_pow\_in\_group' for \<iota>(s) \<in> G and invg(\<iota>(s)) \<in> G.\<close>
+        proof (intro ballI)
+          fix s assume "s \<in> set (map f ?xs)"
+          hence "s \<in> S" using hset_fxs hys_prop by (by100 auto)
+          have hG: "top1_is_group_on G mul e invg"
+            using habel unfolding top1_is_abelian_group_on_def by (by100 blast)
+          have "\<iota> s \<in> G"
+            using hfab \<open>s \<in> S\<close> unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+          hence hpow: "top1_group_pow mul e (\<iota> s) n \<in> G" for n
+            using group_pow_in_group'[OF hG] by (by100 blast)
+          have "invg (\<iota> s) \<in> G" using hG \<open>\<iota> s \<in> G\<close>
+            unfolding top1_is_group_on_def by (by100 fast)
+          hence hpow_inv: "top1_group_pow mul e (invg (\<iota> s)) n \<in> G" for n
+            using group_pow_in_group'[OF hG] by (by100 blast)
+          show "?g' s \<in> G" using hpow hpow_inv by (by100 simp)
+        qed
         have "foldr mul (map ?g' (map f ?xs)) e = foldr mul (map ?g' ?ys) e"
           using abelian_foldr_map_perm_distinct[OF habel hg'_in hdist_fxs]
             hys_prop hset_fxs by (by100 blast)
