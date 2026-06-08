@@ -17177,7 +17177,45 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         \<comment> \<open>Cancel → length 2 → uncancel → sphere form [(a,T),(a,F),(b,T),(b,F)].\<close>
         \<comment> \<open>All length 4 torus schemes with adjacent same-label are equivalent to sphere.\<close>
         have "\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)]"
-          sorry \<comment> \<open>Cancel adjacent inverse pair \\<to> length 2 \\<to> uncancel with fresh label \\<to> sphere.\<close>
+        proof -
+          \<comment> \<open>The adjacent pair at position i has opposite directions (torus type).
+             So scheme![i+1] = top1\\_inverse\\_edge (scheme![i]).
+             Rotate to bring it to front, cancel, uncancel with fresh.\<close>
+          obtain prefix suffix where
+              hdecomp: "scheme = prefix @ [scheme!i, top1_inverse_edge (scheme!i)] @ suffix"
+              and hlen_ps: "length prefix + length suffix = 2"
+            sorry \<comment> \<open>Decompose scheme at position i. The inverse\\_edge follows from torus type.\<close>
+          \<comment> \<open>Rotate + cancel: scheme ~ prefix @ suffix (length 2).\<close>
+          have "top1_scheme_equiv scheme (prefix @ suffix)"
+          proof -
+            have "top1_elementary_scheme_operation
+                (prefix @ [scheme!i, top1_inverse_edge (scheme!i)] @ suffix)
+                (prefix @ suffix)"
+              by (rule top1_elementary_scheme_operation.cancel)
+            thus ?thesis using hdecomp unfolding top1_scheme_equiv_def by simp
+          qed
+          \<comment> \<open>prefix @ suffix has length 2 = the other label pair. Uncancel to get sphere.\<close>
+          obtain a_lab where ha: "a_lab \<noteq> fst (hd (prefix @ suffix))"
+            sorry \<comment> \<open>Choose a fresh label for uncancellation.\<close>
+          have "top1_scheme_equiv (prefix @ suffix)
+              (prefix @ [(a_lab, True), top1_inverse_edge (a_lab, True)] @ suffix)"
+            unfolding top1_scheme_equiv_def
+            using top1_elementary_scheme_operation.uncancel[of prefix suffix "(a_lab, True)"] by simp
+          \<comment> \<open>Chain: scheme ~ cancel ~ uncancel → length 4 with two label pairs.\<close>
+          have hinv_simp: "top1_inverse_edge (a_lab, True) = (a_lab, False)"
+            unfolding top1_inverse_edge_def by simp
+          from \<open>top1_scheme_equiv (prefix @ suffix) _\<close>
+          have "top1_scheme_equiv (prefix @ suffix)
+              (prefix @ [(a_lab, True), (a_lab, False)] @ suffix)"
+            by (simp add: hinv_simp)
+          hence "top1_scheme_equiv scheme
+              (prefix @ [(a_lab, True), (a_lab, False)] @ suffix)"
+            using \<open>top1_scheme_equiv scheme (prefix @ suffix)\<close>
+            unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+          \<comment> \<open>The result has labels a\\_lab and fst(hd(prefix@suffix)), both with opposite directions.
+             By flip\\_label and relabel if needed: ~ sphere form.\<close>
+          thus ?thesis sorry
+        qed
         thus ?thesis by (by100 blast)
       next
         case no_adj: False
