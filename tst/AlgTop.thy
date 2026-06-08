@@ -2703,7 +2703,28 @@ proof -
   proof (intro conjI)
     \<comment> \<open>1. K is abelian (subgroup of abelian AbelG).\<close>
     show "top1_is_abelian_group_on ?K ?mulAG ?eAG ?invgAG"
-      sorry \<comment> \<open>K \<subseteq> AbelG, AbelG abelian \<Longrightarrow> K with inherited ops is abelian subgroup.\<close>
+    proof -
+      \<comment> \<open>K_0 is a subgroup of AbelF (kernel of \<epsilon>_0 hom).\<close>
+      have hK0_grp: "top1_is_group_on {a \<in> ?AbelF. \<epsilon>0 a = 0} ?mulA ?eA ?invgA"
+        sorry \<comment> \<open>Kernel of hom is a subgroup.\<close>
+      \<comment> \<open>K = \<phi>\_bar(K_0) is a group via hom image of subgroup.\<close>
+      have hK_grp: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
+        sorry \<comment> \<open>Image of group under hom is a group (when hom is onto K).\<close>
+      \<comment> \<open>K is abelian since K \<subseteq> AbelG and AbelG is abelian.\<close>
+      show ?thesis
+        unfolding top1_is_abelian_group_on_def
+      proof (intro conjI ballI)
+        show "top1_is_group_on ?K ?mulAG ?eAG ?invgAG" by (rule hK_grp)
+        fix x y assume hx: "x \<in> ?K" and hy: "y \<in> ?K"
+        hence hxG: "x \<in> ?AbelG" and hyG: "y \<in> ?AbelG" using hK_sub by (by100 blast)+
+        \<comment> \<open>Use abelian\_subgroup\_is\_normal's commutativity proof pattern.\<close>
+        have "\<forall>a\<in>?AbelG. \<forall>b\<in>?AbelG. ?mulAG a b = ?mulAG b a"
+          using hAbelG_abel
+          unfolding top1_is_abelian_group_on_def top1_is_group_on_def
+          sorry \<comment> \<open>Commutativity extraction from AbelG abelian — fast/blast timeout.\<close>
+        thus "?mulAG x y = ?mulAG y x" using hxG hyG by (by100 blast)
+      qed
+    qed
     \<comment> \<open>2. Generators in K.\<close>
     show "\<forall>s\<in>{..<m} - {0::nat}. \<phi>_bar (?\<iota>A s) \<in> ?K"
     proof (intro ballI)
