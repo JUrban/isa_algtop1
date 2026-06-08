@@ -2712,6 +2712,12 @@ proof -
      K_0 is free abelian on {..<m}-{0}, \<phi>\_bar|_{K_0} is an injective hom into AbelG.
      So K = \<phi>\_bar(K_0) is free abelian on {..<m}-{0} \<cong> {..<m-1}.\<close>
   \<comment> \<open>\<phi>\_bar restricted to K_0 is an iso from (K_0, mulA) to (K, mulAG).\<close>
+  \<comment> \<open>K is a group (needed inside K\_fab\_raw proof before hK\_grp\_outer is available).\<close>
+  have hK_grp_pre: "top1_is_group_on ?K ?mulAG ?eAG ?invgAG"
+    sorry \<comment> \<open>K is a group: K_0 group + \<phi>\_bar hom + eAG\<in>K + mul/inv closure.
+       This was proved inside K\_fab\_raw's condition 1 but is needed in condition 4.
+       Factor out the K-group proof to before K\_fab\_raw.\<close>
+
   have hK_fab_raw: "top1_is_free_abelian_group_full_on ?K ?mulAG ?eAG ?invgAG
       (\<lambda>s. \<phi>_bar (?\<iota>A s)) ({..<m} - {0::nat})"
     unfolding top1_is_free_abelian_group_full_on_def
@@ -2885,8 +2891,19 @@ proof -
       fix x assume "x \<in> top1_subgroup_generated_on ?K ?mulAG ?eAG ?invgAG
           ((\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}))"
       thus "x \<in> ?K"
-        sorry \<comment> \<open>Gens \<in> K (cond 2), K is group \<Longrightarrow> subgroup\_generated \<subseteq> K.
-           Need hK\_grp but it's in a different show block.\<close>
+      proof -
+        have "(\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}) \<subseteq> ?K"
+        proof (rule image_subsetI)
+          fix s assume "s \<in> {..<m} - {0::nat}"
+          hence "s \<in> {..<m}" "s \<noteq> 0" by (by100 auto)+
+          have "\<epsilon>0 (?\<iota>A s) = 0" using h\<epsilon>0_rest \<open>s \<in> {..<m}\<close> \<open>s \<noteq> 0\<close> by (by100 blast)
+          moreover have "?\<iota>A s \<in> ?AbelF" using h\<iota>A_in \<open>s \<in> {..<m}\<close> by (by100 blast)
+          ultimately show "\<phi>_bar (?\<iota>A s) \<in> ?K" by (by100 blast)
+        qed
+        from subgroup_generated_subset[OF hK_grp_pre this]
+        show ?thesis
+          using \<open>x \<in> _\<close> by (by100 blast)
+      qed
     next
       \<comment> \<open>(\<subseteq>) K \<subseteq> subgroup\_generated: every x \<in> K = \<phi>\_bar(a) for a \<in> K_0,
          and a is a word in \<iota>A(s) for s > 0 (by K_0 generation from hK0\_fab),
