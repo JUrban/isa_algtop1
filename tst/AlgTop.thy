@@ -14734,24 +14734,10 @@ next
   thus ?case sorry
 next
   case (flip_label w a)
-  \<comment> \<open>s = w, t = map (\\<lambda>(l,b). (l, if l = a then \\<not>b else b)) w.
-     Same polygon P, same quotient map q, same vertices. Only the scheme content changes.
-     Key: flip\\_label preserves fst, and snd(t!i)=snd(t!j) \\<longleftrightarrow> snd(s!i)=snd(s!j)
-     when fst(s!i) = fst(s!j) (because either both flip or neither flips).\<close>
-  let ?t = "map (\<lambda>(l, b). (l, if l = a then \<not> b else b)) w"
-  have hlen: "length ?t = length w" by simp
-  \<comment> \<open>Key facts about flip\\_label:
-     - length preserved: length ?t = length w
-     - fst preserved: fst (?t!i) = fst (w!i) for all i < length w
-     - snd correspondence: when fst(w!i) = fst(w!j), then
-       (snd(?t!i) = snd(?t!j)) \\<longleftrightarrow> (snd(w!i) = snd(w!j))
-       because either both labels are a (both flip) or neither is.\<close>
-  \<comment> \<open>The polygon P, quotient map q, and vertices vx, vy are IDENTICAL for w and ?t.
-     All geometric conditions (region, quotient map, vertices, hull, edge disjointness,
-     interior injectivity, counterclockwise, strict edge-side) are unchanged.
-     The scheme-content conditions (edge identification, boundary identification)
-     are preserved by the snd correspondence.\<close>
-  show ?case sorry
+  \<comment> \<open>s = w, t = map (flip a) w. Same polygon P, quotient map q, vertices.
+     The flip preserves fst and the snd-equality correspondence when labels match.
+     All 11 conditions of quotient\\_of\\_scheme\\_on transfer with the same witnesses.\<close>
+  thus ?case sorry
 next
   case (cut_paste u1 a u2 u3)
   \<comment> \<open>s = u1@[a]@u2@[a]@u3, t = u1@[a,a]@rev(inv(u2))@u3. Cut and paste.\<close>
@@ -14773,6 +14759,27 @@ lemma scheme_equiv_preserves_quotient:
   shows "top1_quotient_of_scheme_on Y TY t"
   using assms(2,1) unfolding top1_scheme_equiv_def
   by (induction rule: rtranclp.induct) (auto intro: elementary_operation_preserves_quotient)
+
+\<comment> \<open>A polygonal region is a convex set (it's defined as a convex hull).\<close>
+lemma polygonal_region_convex:
+  assumes "top1_is_polygonal_region_on P n"
+  shows "convex P"
+proof -
+  from assms obtain vx vy where hn: "n \<ge> 3"
+      and hP: "P = {(x, y). \<exists>coeffs. (\<forall>i<n. 0 \<le> coeffs i) \<and> (\<Sum>i<n. coeffs i) = 1
+                  \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+    unfolding top1_is_polygonal_region_on_def sorry
+  \<comment> \<open>P is the set of all convex combinations of vertices = convex hull = convex.
+     Proof: take two points with coeff vectors \\<alpha>, \\<beta>; their convex combination has
+     coeff vector (1-\\<mu>)\\<alpha> + \\<mu>\\<beta> which is still non-negative and sums to 1.\<close>
+  show "convex P" unfolding hP sorry
+qed
+
+\<comment> \<open>A polygonal region is compact (closed and bounded convex hull of finitely many points).\<close>
+lemma polygonal_region_compact:
+  assumes "top1_is_polygonal_region_on P n"
+  shows "compact P"
+  sorry
 
 \<comment> \<open>Two convex n-gons in R² are homeomorphic via a boundary-preserving map.
    The homeomorphism maps vertex i of P1 to vertex i of P2, and maps each edge linearly.\<close>
