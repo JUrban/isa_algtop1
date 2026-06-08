@@ -15868,9 +15868,76 @@ proof -
      - Free part K = image of \<langle>\<alpha>_0,...,\<alpha>_{m-2}\<rangle>, rank m-1.
      - K \<inter> torsion = {0}, every element decomposes as k + t.\<close>
 
+  \<comment> \<open>m \<ge> 1 from the definition of m-fold projective.\<close>
+  have hm1: "m \<ge> 1"
+    using assms(1) unfolding top1_is_m_fold_projective_on_def by (by100 auto)
+
+  \<comment> \<open>The relator image in Abel(F): p(relator) = \<iota>A(0)^2 \<cdot> ... \<cdot> \<iota>A(m-1)^2.
+     In the abelian group, this equals (product of all generators)^2.\<close>
+  \<comment> \<open>Define \<beta> = product of all generators in Abel(F).\<close>
+  let ?\<beta>_list = "map \<iota>A [0..<m]"
+  let ?\<beta>A = "foldr ?mulA ?\<beta>_list ?eA"
+
+  \<comment> \<open>\<beta> \<in> AbelF.\<close>
+  have h\<beta>_in: "?\<beta>A \<in> ?AbelF"
+    sorry \<comment> \<open>Product of generators is in the group.\<close>
+
+  \<comment> \<open>The relator image equals \<beta>^2 in Abel(F).\<close>
+  have hrel_eq_\<beta>2: "?rel_in_AbelF = ?mulA ?\<beta>A ?\<beta>A"
+    sorry \<comment> \<open>In abelian group: a0^2*a1^2*...*a_{m-1}^2 = (a0*...*a_{m-1})^2.\<close>
+
+  \<comment> \<open>\<phi>_bar(\<beta>) is a torsion element of order exactly 2 in Abel(G_0).\<close>
+  let ?\<beta>G = "\<phi>_bar ?\<beta>A"
+
+  have h\<beta>G_in: "?\<beta>G \<in> ?AbelG"
+    using h\<phi>_hom h\<beta>_in unfolding top1_group_hom_on_def by (by100 blast)
+
+  have h\<beta>G_order2: "?mulAG ?\<beta>G ?\<beta>G = ?eAG"
+  proof -
+    \<comment> \<open>\<phi>_bar(\<beta>^2) = \<phi>_bar(rel\_image) = eAG (since rel\_image \<in> ker(\<phi>_bar)).\<close>
+    have "\<phi>_bar (?mulA ?\<beta>A ?\<beta>A) = ?mulAG (\<phi>_bar ?\<beta>A) (\<phi>_bar ?\<beta>A)"
+      using h\<phi>_hom h\<beta>_in unfolding top1_group_hom_on_def by (by100 blast)
+    moreover have "\<phi>_bar (?mulA ?\<beta>A ?\<beta>A) = ?eAG"
+      using hrel_eq_\<beta>2 sorry \<comment> \<open>rel\_image \<in> ker(\<phi>_bar) from \<supseteq> direction.\<close>
+    ultimately show ?thesis by (by100 simp)
+  qed
+
+  have h\<beta>G_ne: "?\<beta>G \<noteq> ?eAG"
+    sorry \<comment> \<open>\<beta> \<notin> N\_AbelF: in free abelian, \<beta> is not a multiple of 2\<beta>.\<close>
+
+  \<comment> \<open>Every torsion element of Abel(G_0) is either eAG or \<phi>_bar(\<beta>).\<close>
+  have htorsion_subset: "top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG \<subseteq> {?eAG, ?\<beta>G}"
+    sorry \<comment> \<open>Uses free abelian independence: if pow(h,n)=e with h=\<phi>_bar(a),
+       then a must be a multiple of \<beta>, giving h \<in> {e, \<phi>_bar(\<beta>)}.\<close>
+
+  \<comment> \<open>Both eAG and \<phi>_bar(\<beta>) are torsion elements.\<close>
+  have heAG_torsion: "?eAG \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
+  proof -
+    have "?eAG \<in> ?AbelG" using hAbelG_grp unfolding top1_is_group_on_def by (by100 blast)
+    moreover have "top1_group_pow ?mulAG ?eAG ?eAG 1 = ?eAG"
+      using hAbelG_grp unfolding top1_is_group_on_def sorry
+    ultimately show ?thesis unfolding top1_torsion_subgroup_on_def by (by100 blast)
+  qed
+  have h\<beta>G_torsion: "?\<beta>G \<in> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG"
+  proof -
+    have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?eAG"
+    proof -
+      have "top1_group_pow ?mulAG ?eAG ?\<beta>G 2 = ?mulAG ?\<beta>G ?\<beta>G"
+        using hAbelG_grp h\<beta>G_in sorry \<comment> \<open>pow(x,2) = x*x.\<close>
+      thus ?thesis using h\<beta>G_order2 by (by100 simp)
+    qed
+    hence "\<exists>n. n > 0 \<and> top1_group_pow ?mulAG ?eAG ?\<beta>G n = ?eAG"
+      sorry \<comment> \<open>Witness n=2.\<close>
+    thus ?thesis using h\<beta>G_in unfolding top1_torsion_subgroup_on_def by (by100 blast)
+  qed
+
   have hAbelG_torsion_card: "card (top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG) = 2"
-    sorry \<comment> \<open>Torsion of Z^m / \<langle>2\<beta>\<rangle> = Z/2Z, card 2.
-       Uses: hAbelG_iso, h\<iota>A (free abelian structure), coordinate projection.\<close>
+  proof -
+    have "top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG = {?eAG, ?\<beta>G}"
+      using htorsion_subset heAG_torsion h\<beta>G_torsion by (by100 blast)
+    moreover have "?eAG \<noteq> ?\<beta>G" using h\<beta>G_ne by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
 
   have hAbelG_free_part: "\<exists>(K :: (real \<Rightarrow> 'a) set set set set) (\<iota>_K :: nat \<Rightarrow> (real \<Rightarrow> 'a) set set set).
       K \<subseteq> ?AbelG
