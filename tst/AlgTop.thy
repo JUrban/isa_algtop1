@@ -1976,7 +1976,8 @@ proof -
      Since \<epsilon>_0(\<beta>) = 1, elements of \<langle>\<beta>^2\<rangle> have \<epsilon>_0 value in 2Z.
      a \<in> K_0 means \<epsilon>_0(a) = 0, so a = pow(\<beta>^2, 0) = eA.\<close>
   have hK0_ker_trivial: "{a \<in> ?AbelF. \<epsilon>0 a = 0} \<inter> ?N_AbelF = {?eA}"
-    sorry \<comment> \<open>K_0 \<cap> ker(\<phi>\_bar) = {eA}: \<epsilon>_0 value 0 + membership in \<langle>2\<beta>\<rangle> forces eA.\<close>
+    sorry \<comment> \<open>K_0 \<cap> N\_AbelF = {eA}: \<epsilon>_0(pow(\<beta>,2k)) = 2k, so 2k=0 forces a=eA.
+       Uses: \<epsilon>_0(\<beta>)=1 (re-derive from h\<epsilon>0\_0+h\<epsilon>0\_rest), structure of N\_AbelF as cyclic.\<close>
 
   have h\<phi>_inj_K0: "inj_on \<phi>_bar {a \<in> ?AbelF. \<epsilon>0 a = 0}"
     sorry \<comment> \<open>From hK0\_ker\_trivial: \<phi>\_bar(a) = \<phi>\_bar(b) \<Longrightarrow> a\<cdot>b^{-1} \<in> ker \<cap> K_0 = {eA}.\<close>
