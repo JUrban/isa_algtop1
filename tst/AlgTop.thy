@@ -14760,26 +14760,11 @@ lemma scheme_equiv_preserves_quotient:
   using assms(2,1) unfolding top1_scheme_equiv_def
   by (induction rule: rtranclp.induct) (auto intro: elementary_operation_preserves_quotient)
 
-\<comment> \<open>A polygonal region is a convex set (it's defined as a convex hull).\<close>
-lemma polygonal_region_convex:
-  assumes "top1_is_polygonal_region_on P n"
-  shows "convex P"
-proof -
-  from assms obtain vx vy where hn: "n \<ge> 3"
-      and hP: "P = {(x, y). \<exists>coeffs. (\<forall>i<n. 0 \<le> coeffs i) \<and> (\<Sum>i<n. coeffs i) = 1
-                  \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
-    unfolding top1_is_polygonal_region_on_def sorry
-  \<comment> \<open>P is the set of all convex combinations of vertices = convex hull = convex.
-     Proof: take two points with coeff vectors \\<alpha>, \\<beta>; their convex combination has
-     coeff vector (1-\\<mu>)\\<alpha> + \\<mu>\\<beta> which is still non-negative and sums to 1.\<close>
-  show "convex P" unfolding hP sorry
-qed
-
-\<comment> \<open>A polygonal region is compact (closed and bounded convex hull of finitely many points).\<close>
+\<comment> \<open>A polygonal region is compact (closed bounded subset of R², being a finite convex hull).\<close>
 lemma polygonal_region_compact:
   assumes "top1_is_polygonal_region_on P n"
   shows "compact P"
-  sorry
+  sorry \<comment> \<open>P is a closed bounded subset of R² (finite convex hull). Hence compact by Heine-Borel.\<close>
 
 \<comment> \<open>Two convex n-gons in R² are homeomorphic via a boundary-preserving map.
    The homeomorphism maps vertex i of P1 to vertex i of P2, and maps each edge linearly.\<close>
@@ -16001,10 +15986,59 @@ proof -
      contradicting X connected."
      Formally: induction on card(\\<T>). If card = 1: done. If card > 1: find two regions
      sharing a label, paste them (§76.1), reducing card by 1. Apply IH.\<close>
+  \<comment> \<open>Base case: if card(\\<T>) = 1, the single triangle is already a polygon.\<close>
+  have hbase: "card \<T> = 1 \<Longrightarrow> ?thesis"
+  proof -
+    assume "card \<T> = 1"
+    then obtain T0 where hT0: "\<T> = {T0}" using card_1_singletonE by (by100 blast)
+    have hpoly: "top1_is_polygonal_region_on T0 3" using h\<T>(3) hT0 by (by100 blast)
+    \<comment> \<open>q\\_tri restricted to T0 is a quotient map from T0 to X.
+       Coverage: q\\_tri ` T0 = X (since \\<Union>\\<T> = X and \\<T> = {T0}).
+       Quotient topology: U \\<in> TX \\<longleftrightarrow> preimage in T0 is open (from h\\<T>(6)).\<close>
+    have hcov: "q_tri ` T0 = X" using h\<T>(5) hT0 by (by100 auto)
+    have hcont: "top1_continuous_map_on T0
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T0) X TX q_tri"
+      using h\<T>(4) hT0 by (by100 blast)
+    let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T0"
+    have hquot_cond: "\<And>U. U \<subseteq> X \<Longrightarrow> U \<in> TX \<longleftrightarrow> {p\<in>T0. q_tri p \<in> U} \<in> ?TP"
+    proof -
+      fix U assume "U \<subseteq> X"
+      from h\<T>(6)[rule_format, OF this]
+      have "U \<in> TX \<longleftrightarrow> (\<forall>T\<in>\<T>. {p\<in>T. q_tri p \<in> U} \<in>
+          subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T)" .
+      also have "\<dots> = ({p\<in>T0. q_tri p \<in> U} \<in> ?TP)"
+        using hT0 by simp
+      finally show "U \<in> TX \<longleftrightarrow> {p\<in>T0. q_tri p \<in> U} \<in> ?TP" .
+    qed
+    have hquot: "top1_quotient_map_on T0 ?TP X TX q_tri"
+      unfolding top1_quotient_map_on_def
+    proof (intro conjI allI impI)
+      show "is_topology_on T0 ?TP"
+        using subspace_topology_is_topology_on[OF product_topology_on_is_topology_on[OF
+          top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]] by simp
+      show "is_topology_on X TX"
+        using assms(1) unfolding top1_is_surface_on_def top1_connected_on_def by (by100 blast)
+      show "top1_continuous_map_on T0 ?TP X TX q_tri" by (rule hcont)
+      show "q_tri ` T0 = X" by (rule hcov)
+      fix V assume "V \<subseteq> X" "{p \<in> T0. q_tri p \<in> V} \<in> ?TP"
+      thus "V \<in> TX" using hquot_cond[OF \<open>V \<subseteq> X\<close>] by simp
+    qed
+    show ?thesis
+      apply (rule exI[of _ T0], rule exI[of _ 3], rule exI[of _ q_tri])
+      using hpoly hquot by (by100 blast)
+  qed
+  \<comment> \<open>Inductive step: if card > 1, find two adjacent triangles, paste them.\<close>
   show ?thesis
-    sorry \<comment> \<open>Induction on card(\\<T>). At each step: find shared edge label between two regions
-       (guaranteed by X connected). Paste them (Theorem 76.1). Result: fewer regions, same X.
-       When card = 1: X is quotient of a single polygon. Done.\<close>
+  proof (cases "card \<T> = 1")
+    case True thus ?thesis by (rule hbase)
+  next
+    case False
+    \<comment> \<open>card(\\<T>) > 1. By connectedness of X, two triangles share an edge.
+       Paste them (\\<S>76 Theorem 76.1) to get a larger polygon. Repeat.\<close>
+    have "card \<T> > 1" using False h\<T>(1,2) sorry
+    show ?thesis sorry \<comment> \<open>Induction on card(\\<T>) > 1. At each step, paste two adjacent
+       regions sharing a label. When card = 1: done (base case above).\<close>
+  qed
 qed
 
 section \<open>\<S>77 The Classification Theorem\<close>
