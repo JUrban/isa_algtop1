@@ -1557,7 +1557,61 @@ proof (intro conjI)
       \<comment> \<open>foldr for ?g on supp\_S' = foldr for ?g' on supp\_S (same multiset of terms).\<close>
       have "foldr mul (map ?g (SOME xs. set xs = {s \<in> S'. c s \<noteq> 0} \<and> distinct xs)) e
           = foldr mul (map ?g' (SOME xs. set xs = {s \<in> S. ?c' s \<noteq> 0} \<and> distinct xs)) e"
-        sorry \<comment> \<open>Abelian: both products have same multiset of terms via f bijection.\<close>
+      proof -
+        let ?xs = "SOME xs. set xs = {s \<in> S'. c s \<noteq> 0} \<and> distinct xs"
+        let ?ys = "SOME xs. set xs = {s \<in> S. ?c' s \<noteq> 0} \<and> distinct xs"
+        have hxs_prop: "set ?xs = {s \<in> S'. c s \<noteq> 0} \<and> distinct ?xs"
+          using finite_distinct_list[OF hfin] by (rule someI_ex)
+        have hys_prop: "set ?ys = {s \<in> S. ?c' s \<noteq> 0} \<and> distinct ?ys"
+          using finite_distinct_list[OF hfin'] by (rule someI_ex)
+        \<comment> \<open>map ?g ?xs = map (?g' \<circ> f) ?xs since ?g(s') = ?g'(f(s')).\<close>
+        have hmap_eq: "map ?g ?xs = map (?g' \<circ> f) ?xs"
+        proof (rule map_cong)
+          show "?xs = ?xs" ..
+          fix s' assume "s' \<in> set ?xs"
+          hence "s' \<in> {s' \<in> S'. c s' \<noteq> 0}" using hxs_prop by (by100 blast)
+          thus "?g s' = (?g' \<circ> f) s'" using hterm_eq by (by100 auto)
+        qed
+        \<comment> \<open>map (?g' \<circ> f) ?xs = map ?g' (map f ?xs).\<close>
+        have "map (?g' \<circ> f) ?xs = map ?g' (map f ?xs)" by (by100 simp)
+        \<comment> \<open>map f ?xs is a distinct list with set = supp\_S, same as ?ys.\<close>
+        have hdist_fxs: "distinct (map f ?xs)"
+        proof -
+          have hsub: "set ?xs \<subseteq> S'" using hxs_prop by (by100 auto)
+          have "inj_on f (set ?xs)"
+          proof (rule inj_onI)
+            fix x y assume "x \<in> set ?xs" "y \<in> set ?xs" "f x = f y"
+            hence "x \<in> S'" "y \<in> S'" using hsub by (by100 blast)+
+            thus "x = y" using \<open>f x = f y\<close> hfinj unfolding inj_on_def by (by100 blast)
+          qed
+          thus ?thesis using hxs_prop distinct_map by (by100 blast)
+        qed
+        have hset_fxs: "set (map f ?xs) = set ?ys"
+          using hxs_prop hys_prop hsupp_eq by (by100 auto)
+        \<comment> \<open>By abelian permutation: foldr on map f ?xs = foldr on ?ys.\<close>
+        have habel: "top1_is_abelian_group_on G mul e invg"
+          using hfab unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+        have hg'_in: "\<forall>x \<in> set (map f ?xs). ?g' x \<in> G"
+          sorry \<comment> \<open>Each g'(s) \<in> G: group\_pow\_in\_group' for \<iota>(s) \<in> G and invg(\<iota>(s)) \<in> G.\<close>
+        have "foldr mul (map ?g' (map f ?xs)) e = foldr mul (map ?g' ?ys) e"
+          using abelian_foldr_map_perm_distinct[OF habel hg'_in hdist_fxs]
+            hys_prop hset_fxs by (by100 blast)
+        \<comment> \<open>Chain: map g xs = map (g'\<circ>f) xs = map g' (map f xs), then foldr = foldr g' ys.\<close>
+        have hmap_eq2: "map ?g ?xs = map (?g' \<circ> f) ?xs"
+        proof (rule map_cong)
+          show "?xs = ?xs" ..
+          fix s' assume "s' \<in> set ?xs"
+          hence "s' \<in> {s' \<in> S'. c s' \<noteq> 0}" using hxs_prop by (by100 blast)
+          thus "?g s' = (?g' \<circ> f) s'" using hterm_eq by (by100 auto)
+        qed
+        have "foldr mul (map ?g ?xs) e = foldr mul (map (?g' \<circ> f) ?xs) e"
+          unfolding hmap_eq2 by (by100 simp)
+        also have "\<dots> = foldr mul (map ?g' (map f ?xs)) e" by (by100 simp)
+        also have "\<dots> = foldr mul (map ?g' ?ys) e"
+          using abelian_foldr_map_perm_distinct[OF habel hg'_in hdist_fxs]
+            hys_prop hset_fxs by (by100 blast)
+        finally show ?thesis .
+      qed
       thus ?thesis using hindep by (by100 simp)
     qed
   qed
