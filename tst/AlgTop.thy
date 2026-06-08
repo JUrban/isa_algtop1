@@ -3117,7 +3117,25 @@ proof -
           have "?mulAG ?\<beta>G (?invgAG (\<phi>_bar ?tail)) = ?mulAG (?mulAG a (\<phi>_bar ?tail)) (?invgAG (\<phi>_bar ?tail))"
             using h\<beta>G_eq by (by100 simp)
           also have "\<dots> = ?mulAG a (?mulAG (\<phi>_bar ?tail) (?invgAG (\<phi>_bar ?tail)))"
-            using hAbelF_assoc sorry \<comment> \<open>Assoc in AbelG for a, tail\_img, inv(tail\_img).\<close>
+          proof -
+            \<comment> \<open>Assoc in AbelG via foldr\_mul\_append.\<close>
+            have hab: "\<forall>i<length [a, \<phi>_bar ?tail]. [a, \<phi>_bar ?tail]!i \<in> ?AbelG"
+              using ha_in hphitail_in by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+            have hc: "\<forall>i<length [?invgAG (\<phi>_bar ?tail)]. [?invgAG (\<phi>_bar ?tail)]!i \<in> ?AbelG"
+              using hinvtail_in by (by100 auto)
+            have ha1: "\<forall>i<length [a]. [a]!i \<in> ?AbelG" using ha_in by (by100 auto)
+            have hbc: "\<forall>i<length [\<phi>_bar ?tail, ?invgAG (\<phi>_bar ?tail)]. [\<phi>_bar ?tail, ?invgAG (\<phi>_bar ?tail)]!i \<in> ?AbelG"
+              using hphitail_in hinvtail_in by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+            have lhs: "foldr ?mulAG ([a, \<phi>_bar ?tail] @ [?invgAG (\<phi>_bar ?tail)]) ?eAG
+                = ?mulAG (foldr ?mulAG [a, \<phi>_bar ?tail] ?eAG) (foldr ?mulAG [?invgAG (\<phi>_bar ?tail)] ?eAG)"
+              using foldr_mul_append[OF hAbelG_grp hab hc] by (by100 blast)
+            have rhs: "foldr ?mulAG ([a] @ [\<phi>_bar ?tail, ?invgAG (\<phi>_bar ?tail)]) ?eAG
+                = ?mulAG (foldr ?mulAG [a] ?eAG) (foldr ?mulAG [\<phi>_bar ?tail, ?invgAG (\<phi>_bar ?tail)] ?eAG)"
+              using foldr_mul_append[OF hAbelG_grp ha1 hbc] by (by100 blast)
+            have hidG: "\<forall>x\<in>?AbelG. ?mulAG x ?eAG = x"
+              using hAbelG_grp[unfolded top1_is_group_on_def] by (by100 fast)
+            show ?thesis using lhs rhs hidG ha_in hphitail_in hinvtail_in by (by100 simp)
+          qed
           also have "?mulAG (\<phi>_bar ?tail) (?invgAG (\<phi>_bar ?tail)) = ?eAG"
             using hAbelG_grp hphitail_in unfolding top1_is_group_on_def by (by100 fast)
           also have "?mulAG a ?eAG = a"
@@ -3127,8 +3145,14 @@ proof -
           moreover have "?mulAG ?\<beta>G (?invgAG (\<phi>_bar ?tail)) = ?mulAG (?invgAG (\<phi>_bar ?tail)) ?\<beta>G"
           proof -
             have "?\<beta>G \<in> ?AbelG" using h\<beta>G_in .
-            thus ?thesis using quotient_by_commutator_is_abelian[OF hG0]
-              sorry \<comment> \<open>Commutativity in AbelG via quotient\_by\_commutator.\<close>
+            have "?invgAG (\<phi>_bar ?tail) \<in> ?AbelG" using hinvtail_in .
+            then obtain gx gy where hgx: "gx \<in> G0" "?\<beta>G = ?pG gx"
+              and hgy: "gy \<in> G0" "?invgAG (\<phi>_bar ?tail) = ?pG gy"
+              using \<open>?\<beta>G \<in> ?AbelG\<close>
+              unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+            from quotient_by_commutator_is_abelian[OF hG0] hgx(1) hgy(1)
+            have "?mulAG (?pG gx) (?pG gy) = ?mulAG (?pG gy) (?pG gx)" by (by100 blast)
+            thus ?thesis using hgx(2) hgy(2) by (by100 simp)
           qed
           ultimately show ?thesis by (by100 simp)
         qed
