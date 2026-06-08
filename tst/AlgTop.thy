@@ -1949,18 +1949,71 @@ proof -
   \<comment> \<open>Use the coordinate projection \<epsilon>_0 (already obtained above for \<beta>\<noteq>e proof).
      K_0 = ker(\<epsilon>_0) in AbelF is free abelian on {..<m}-{0} by free\_abelian\_kernel\_coordinate.
      K = \<phi>\_bar(K_0) in AbelG is the desired free complement.\<close>
+  \<comment> \<open>Step A: Obtain coordinate projection \<epsilon>_0 at the proof level (not inside a block).\<close>
+  have "0 \<in> ({..<m}::nat set)" using hm1 by (by100 simp)
+  from free_abelian_coordinate_projection[OF h\<iota>A this]
+  obtain \<epsilon>0 where h\<epsilon>0_hom: "top1_group_hom_on ?AbelF ?mulA (UNIV::int set) (+) \<epsilon>0"
+    and h\<epsilon>0_0: "\<epsilon>0 (?\<iota>A 0) = 1"
+    and h\<epsilon>0_rest: "\<forall>s\<in>{..<m}. s \<noteq> 0 \<longrightarrow> \<epsilon>0 (?\<iota>A s) = 0"
+    by (by100 blast)
+
+  \<comment> \<open>Step B: K_0 = ker(\<epsilon>_0) is free abelian on {..<m}-{0}.\<close>
+  let ?K0 = "{a \<in> ?AbelF. \<epsilon>0 a = 0}"
+  have hK0_fab: "top1_is_free_abelian_group_full_on ?K0 ?mulA ?eA ?invgA ?\<iota>A ({..<m} - {0::nat})"
+    using free_abelian_kernel_coordinate[OF h\<iota>A \<open>0 \<in> {..<m}\<close> h\<epsilon>0_hom h\<epsilon>0_0 h\<epsilon>0_rest] sorry
+
+  \<comment> \<open>Step C: \<phi>\_bar maps K_0 into AbelG. Define K = \<phi>\_bar ` K_0.\<close>
+  let ?K = "\<phi>_bar ` ?K0"
+
+  \<comment> \<open>Step D: K \<subseteq> AbelG.\<close>
+  have hK_sub: "?K \<subseteq> ?AbelG"
+    sorry \<comment> \<open>\<phi>\_bar maps AbelF elements to AbelG.\<close>
+
+  \<comment> \<open>Step E: \<phi>\_bar restricted to K_0 is injective: ker(\<phi>\_bar) \<cap> K_0 = {eA}.
+     ker(\<phi>\_bar) = N\_AbelF \<subseteq> {a | even(\<epsilon>_0(a))} but K_0 = {a | \<epsilon>_0(a)=0}.
+     So ker \<cap> K_0 = {a \<in> K_0 | a \<in> N\_AbelF}.
+     If a \<in> K_0 \<cap> N\_AbelF, then \<epsilon>_0(a) = 0 and a \<in> \<langle>rel\<rangle>.
+     Since \<epsilon>_0(\<beta>) = 1, elements of \<langle>\<beta>^2\<rangle> have \<epsilon>_0 value in 2Z.
+     a \<in> K_0 means \<epsilon>_0(a) = 0, so a = pow(\<beta>^2, 0) = eA.\<close>
+  have hK0_ker_trivial: "{a \<in> ?AbelF. \<epsilon>0 a = 0} \<inter> ?N_AbelF = {?eA}"
+    sorry \<comment> \<open>K_0 \<cap> ker(\<phi>\_bar) = {eA}: \<epsilon>_0 value 0 + membership in \<langle>2\<beta>\<rangle> forces eA.\<close>
+
+  have h\<phi>_inj_K0: "inj_on \<phi>_bar {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+    sorry \<comment> \<open>From hK0\_ker\_trivial: \<phi>\_bar(a) = \<phi>\_bar(b) \<Longrightarrow> a\<cdot>b^{-1} \<in> ker \<cap> K_0 = {eA}.\<close>
+
+  \<comment> \<open>Step F: Transfer free abelian structure from K_0 to K via \<phi>\_bar.
+     K_0 is free abelian on {..<m}-{0}, \<phi>\_bar|_{K_0} is an injective hom into AbelG.
+     So K = \<phi>\_bar(K_0) is free abelian on {..<m}-{0} \<cong> {..<m-1}.\<close>
+  have hK_fab_raw: "top1_is_free_abelian_group_full_on ?K ?mulAG ?eAG ?invgAG
+      (\<lambda>s. \<phi>_bar (?\<iota>A s)) ({..<m} - {0::nat})"
+    sorry \<comment> \<open>Transfer via free\_abelian\_invariant\_under\_iso or direct argument.\<close>
+
+  \<comment> \<open>Step G: Reindex {..<m}-{0} to {..<m-1} via the Suc bijection.\<close>
+  have hK_fab: "top1_is_free_abelian_group_full_on ?K ?mulAG ?eAG ?invgAG
+      ?\<gamma> {..<m-1}"
+    sorry \<comment> \<open>Suc: {..<m-1} \<rightarrow> {..<m}-{0} bijection + \<gamma> i = \<phi>\_bar(\<iota>A(Suc i)).\<close>
+
+  \<comment> \<open>Step H: K \<inter> torsion = {eAG}.
+     K is free abelian, free abelian groups are torsion-free.\<close>
+  have hK_tors: "?K \<inter> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG = {?eAG}"
+    sorry \<comment> \<open>Free abelian groups have trivial torsion subgroup.\<close>
+
+  \<comment> \<open>Step I: Decomposition. Every h \<in> AbelG decomposes as k \<cdot> t.
+     For h = \<phi>\_bar(a): a = (a - \<epsilon>_0(a)\<cdot>\<beta>) + \<epsilon>_0(a)\<cdot>\<beta>.
+     First part \<in> K_0 (its \<epsilon>_0 value = \<epsilon>_0(a) - \<epsilon>_0(a)\<cdot>\<epsilon>_0(\<beta>) = 0).
+     Second part maps to pow(\<beta>G, \<epsilon>_0(a)) which is e or \<beta>G.\<close>
+  have hK_decomp: "\<forall>h\<in>?AbelG. \<exists>k\<in>?K. \<exists>t\<in>top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG.
+        h = ?mulAG k t"
+    sorry \<comment> \<open>Decomposition via \<epsilon>_0 splitting.\<close>
+
+  \<comment> \<open>Assemble free part existential.\<close>
   have hAbelG_free_part: "\<exists>(K :: (real \<Rightarrow> 'a) set set set set) (\<iota>_K :: nat \<Rightarrow> (real \<Rightarrow> 'a) set set set).
       K \<subseteq> ?AbelG
     \<and> top1_is_free_abelian_group_full_on K ?mulAG ?eAG ?invgAG \<iota>_K {..<m-1}
     \<and> K \<inter> top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG = {?eAG}
     \<and> (\<forall>h\<in>?AbelG. \<exists>k\<in>K. \<exists>t\<in>top1_torsion_subgroup_on ?AbelG ?mulAG ?eAG.
           h = ?mulAG k t)"
-    sorry \<comment> \<open>Free part Z^{m-1} via free\_abelian\_kernel\_coordinate + \<phi>\_bar transfer.
-       K_0 = {a \<in> AbelF | \<epsilon>_0(a) = 0} is free abelian on {..<m}-{0} \<cong> {..<m-1}.
-       K = \<phi>\_bar(K_0) \<subseteq> AbelG.
-       Independence: \<phi>\_bar restricted to K_0 is injective (ker \<cap> K_0 = {eA}).
-       K\<inter>torsion = {eAG}: free abelian groups are torsion-free.
-       Decomposition: a = (a - \<epsilon>_0(a)\<cdot>\<beta>) + \<epsilon>_0(a)\<cdot>\<beta>, first part in K_0, second in \<langle>\<beta>\<rangle>.\<close>
+    using hK_sub hK_fab hK_tors hK_decomp by (by100 blast)
 
   \<comment> \<open>Torsion classification as corollary of free part decomposition (expert audit 11):
      h torsion, h = k\<cdot>t with k\<in>K, t\<in>{e,\<beta>G}.
