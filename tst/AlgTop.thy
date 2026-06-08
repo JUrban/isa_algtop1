@@ -1547,7 +1547,13 @@ proof (intro conjI)
                     else top1_group_pow mul e (invg (\<iota> s)) (nat (- ?c' s))"
       \<comment> \<open>Key: ?g(s') = ?g'(f(s')) for s' \<in> supp(c) \<subseteq> S'.\<close>
       have hterm_eq: "\<forall>s'\<in>{s' \<in> S'. c s' \<noteq> 0}. ?g s' = ?g' (f s')"
-        sorry \<comment> \<open>c'(f(s')) = c(inv\_into(f(s'))) = c(s') via inv\_into\_f\_f.\<close>
+      proof (intro ballI)
+        fix s' assume "s' \<in> {s' \<in> S'. c s' \<noteq> 0}"
+        hence hs': "s' \<in> S'" by (by100 blast)
+        have "?c' (f s') = c s'"
+          using inv_into_f_f[OF hfinj hs'] by (by100 simp)
+        thus "?g s' = ?g' (f s')" by (by100 simp)
+      qed
       \<comment> \<open>foldr for ?g on supp\_S' = foldr for ?g' on supp\_S (same multiset of terms).\<close>
       have "foldr mul (map ?g (SOME xs. set xs = {s \<in> S'. c s \<noteq> 0} \<and> distinct xs)) e
           = foldr mul (map ?g' (SOME xs. set xs = {s \<in> S. ?c' s \<noteq> 0} \<and> distinct xs)) e"
