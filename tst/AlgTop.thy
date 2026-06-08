@@ -3922,7 +3922,72 @@ proof -
   qed
   \<comment> \<open>\<phi>\_bar(\<iota>A 0) = mulAG (invgAG(\<phi>\_bar(tail))) \<beta>G (in abelian group).\<close>
   have h\<iota>A0_decomp: "\<phi>_bar (?\<iota>A 0) = ?mulAG (?invgAG (\<phi>_bar ?tail_outer)) ?\<beta>G"
-    sorry \<comment> \<open>\<beta>=\<iota>A(0)\<cdot>tail, so \<iota>A(0)=\<beta>\<cdot>tail^{-1}, reorder in abelian.\<close>
+  proof -
+    have h\<beta>_split: "?\<beta>A = ?mulA (?\<iota>A 0) ?tail_outer"
+    proof -
+      have "[0..<m] = 0 # [1..<m]" using upt_conv_Cons[of 0 m] hm1 by (by100 simp)
+      hence "map ?\<iota>A [0..<m] = ?\<iota>A 0 # map ?\<iota>A [1..<m]" by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    have h\<iota>A0_in: "?\<iota>A 0 \<in> ?AbelF" using h\<iota>A_in hm1 by (by100 auto)
+    have htail_in: "?tail_outer \<in> ?AbelF" using htail_K0_outer by (by100 blast)
+    have "\<phi>_bar ?\<beta>A = ?mulAG (\<phi>_bar (?\<iota>A 0)) (\<phi>_bar ?tail_outer)"
+    proof -
+      have "\<phi>_bar (?mulA (?\<iota>A 0) ?tail_outer) = ?mulAG (\<phi>_bar (?\<iota>A 0)) (\<phi>_bar ?tail_outer)"
+        using h\<phi>_hom h\<iota>A0_in htail_in unfolding top1_group_hom_on_def by (by5000 blast)
+      thus ?thesis using h\<beta>_split by (by100 simp)
+    qed
+    hence h\<beta>G_eq: "?\<beta>G = ?mulAG (\<phi>_bar (?\<iota>A 0)) (\<phi>_bar ?tail_outer)" by (by100 simp)
+    \<comment> \<open>\<phi>\_bar(\<iota>A 0) = \<beta>G \<cdot> tail^{-1} = invgAG(tail) \<cdot> \<beta>G (abelian).\<close>
+    have hphitail_in: "\<phi>_bar ?tail_outer \<in> ?AbelG"
+      using h\<phi>_hom htail_in unfolding top1_group_hom_on_def by (by100 blast)
+    have h\<iota>A0_img_in: "\<phi>_bar (?\<iota>A 0) \<in> ?AbelG"
+      using h\<phi>_hom h\<iota>A0_in unfolding top1_group_hom_on_def by (by5000 blast)
+    have hinvtail_in: "?invgAG (\<phi>_bar ?tail_outer) \<in> ?AbelG"
+      using hAbelG_grp hphitail_in unfolding top1_is_group_on_def by (by100 fast)
+    \<comment> \<open>\<beta>G = \<phi>\_bar(\<iota>A 0) \<cdot> \<phi>\_bar(tail). Multiply both sides by invgAG(\<phi>\_bar(tail)) on right.\<close>
+    have "?mulAG ?\<beta>G (?invgAG (\<phi>_bar ?tail_outer))
+        = ?mulAG (?mulAG (\<phi>_bar (?\<iota>A 0)) (\<phi>_bar ?tail_outer)) (?invgAG (\<phi>_bar ?tail_outer))"
+      using h\<beta>G_eq by (by100 simp)
+    also have "\<dots> = ?mulAG (\<phi>_bar (?\<iota>A 0)) (?mulAG (\<phi>_bar ?tail_outer) (?invgAG (\<phi>_bar ?tail_outer)))"
+    proof -
+      have hkb: "\<forall>i<length [\<phi>_bar (?\<iota>A 0), \<phi>_bar ?tail_outer]. [\<phi>_bar (?\<iota>A 0), \<phi>_bar ?tail_outer]!i \<in> ?AbelG"
+        using h\<iota>A0_img_in hphitail_in by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+      have hinv_l: "\<forall>i<length [?invgAG (\<phi>_bar ?tail_outer)]. [?invgAG (\<phi>_bar ?tail_outer)]!i \<in> ?AbelG"
+        using hinvtail_in by (by100 auto)
+      have hb1: "\<forall>i<length [\<phi>_bar (?\<iota>A 0)]. [\<phi>_bar (?\<iota>A 0)]!i \<in> ?AbelG"
+        using h\<iota>A0_img_in by (by100 auto)
+      have hbi: "\<forall>i<length [\<phi>_bar ?tail_outer, ?invgAG (\<phi>_bar ?tail_outer)]. [\<phi>_bar ?tail_outer, ?invgAG (\<phi>_bar ?tail_outer)]!i \<in> ?AbelG"
+        using hphitail_in hinvtail_in by (intro allI impI, auto simp: nth_Cons split: nat.splits)
+      have lhs: "foldr ?mulAG ([\<phi>_bar (?\<iota>A 0), \<phi>_bar ?tail_outer] @ [?invgAG (\<phi>_bar ?tail_outer)]) ?eAG
+          = ?mulAG (foldr ?mulAG [\<phi>_bar (?\<iota>A 0), \<phi>_bar ?tail_outer] ?eAG) (foldr ?mulAG [?invgAG (\<phi>_bar ?tail_outer)] ?eAG)"
+        using foldr_mul_append[OF hAbelG_grp hkb hinv_l] by (by100 blast)
+      have rhs: "foldr ?mulAG ([\<phi>_bar (?\<iota>A 0)] @ [\<phi>_bar ?tail_outer, ?invgAG (\<phi>_bar ?tail_outer)]) ?eAG
+          = ?mulAG (foldr ?mulAG [\<phi>_bar (?\<iota>A 0)] ?eAG) (foldr ?mulAG [\<phi>_bar ?tail_outer, ?invgAG (\<phi>_bar ?tail_outer)] ?eAG)"
+        using foldr_mul_append[OF hAbelG_grp hb1 hbi] by (by100 blast)
+      have hidG: "\<forall>x\<in>?AbelG. ?mulAG x ?eAG = x"
+        using hAbelG_grp[unfolded top1_is_group_on_def] by (by100 fast)
+      show ?thesis using lhs rhs hidG h\<iota>A0_img_in hphitail_in hinvtail_in by (by100 simp)
+    qed
+    also have "?mulAG (\<phi>_bar ?tail_outer) (?invgAG (\<phi>_bar ?tail_outer)) = ?eAG"
+      using hAbelG_grp hphitail_in unfolding top1_is_group_on_def by (by100 fast)
+    also have "?mulAG (\<phi>_bar (?\<iota>A 0)) ?eAG = \<phi>_bar (?\<iota>A 0)"
+      using hAbelG_grp h\<iota>A0_img_in unfolding top1_is_group_on_def by (by100 fast)
+    finally have "?mulAG ?\<beta>G (?invgAG (\<phi>_bar ?tail_outer)) = \<phi>_bar (?\<iota>A 0)" .
+    \<comment> \<open>Abelian: mulAG \<beta>G k' = mulAG k' \<beta>G.\<close>
+    moreover have "?mulAG ?\<beta>G (?invgAG (\<phi>_bar ?tail_outer))
+        = ?mulAG (?invgAG (\<phi>_bar ?tail_outer)) ?\<beta>G"
+    proof -
+      obtain gx gy where hgx: "gx \<in> G0" "?\<beta>G = ?pG gx"
+          and hgy: "gy \<in> G0" "?invgAG (\<phi>_bar ?tail_outer) = ?pG gy"
+        using h\<beta>G_in hinvtail_in
+        unfolding top1_quotient_group_carrier_on_def by (by100 blast)
+      from quotient_by_commutator_is_abelian[OF hG0] hgx(1) hgy(1)
+      have "?mulAG (?pG gx) (?pG gy) = ?mulAG (?pG gy) (?pG gx)" by (by100 blast)
+      thus ?thesis using hgx(2) hgy(2) by (by100 simp)
+    qed
+    ultimately show ?thesis by (by100 simp)
+  qed
 
   \<comment> \<open>Step I: Decomposition. Every h \<in> AbelG decomposes as k \<cdot> t.
      For h = \<phi>\_bar(a): a = (a - \<epsilon>_0(a)\<cdot>\<beta>) + \<epsilon>_0(a)\<cdot>\<beta>.
