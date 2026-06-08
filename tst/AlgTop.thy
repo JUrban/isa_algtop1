@@ -17262,7 +17262,49 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               ([(a_lab,True),(a_lab,False)] @ suffix @ prefix)"
             unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
           \<comment> \<open>suffix@prefix has length 2, same label, opposite directions. ~ sphere form.\<close>
-          show ?thesis using hchain ha hlen_ps sorry
+          \<comment> \<open>suffix@prefix has length 2 with same label, opposite directions.
+             Take a=a\\_lab, b=fst(hd(suffix@prefix)).\<close>
+          obtain b_lab d_b where
+              hsp: "suffix @ prefix = [(b_lab, d_b), (b_lab, \<not>d_b)]" and
+              hab_ne: "a_lab \<noteq> b_lab"
+            sorry \<comment> \<open>From properness: the 2 elements of suffix@prefix have same label (b\\_lab),
+               opposite directions. And a\\_lab \\<noteq> b\\_lab from ha.\<close>
+          \<comment> \<open>Now [(a\\_lab,T),(a\\_lab,F)] @ [(b\\_lab,d\\_b),(b\\_lab,\\<not>d\\_b)] ~ sphere form.\<close>
+          have "top1_scheme_equiv
+              ([(a_lab,True),(a_lab,False)] @ suffix @ prefix)
+              ([(a_lab,True),(a_lab,False),(b_lab,True),(b_lab,False)])"
+          proof -
+            show ?thesis
+            proof (cases d_b)
+              case True
+              hence "suffix @ prefix = [(b_lab, True), (b_lab, False)]" using hsp by simp
+              thus ?thesis unfolding top1_scheme_equiv_def by simp
+            next
+              case False
+              hence "suffix @ prefix = [(b_lab, False), (b_lab, True)]" using hsp by simp
+              hence target_eq: "[(a_lab,True),(a_lab,False)] @ suffix @ prefix
+                  = [(a_lab,True),(a_lab,False),(b_lab,False),(b_lab,True)]" by simp
+              have hflip_result: "map (\<lambda>(l,bo). (l, if l = b_lab then \<not>bo else bo))
+                  [(a_lab,True),(a_lab,False),(b_lab,False),(b_lab,True)]
+                  = [(a_lab,True),(a_lab,False),(b_lab,True),(b_lab,False)]"
+                using hab_ne by simp
+              have "top1_elementary_scheme_operation
+                  [(a_lab,True),(a_lab,False),(b_lab,False),(b_lab,True)]
+                  [(a_lab,True),(a_lab,False),(b_lab,True),(b_lab,False)]"
+              proof -
+                have "top1_elementary_scheme_operation
+                    [(a_lab,True),(a_lab,False),(b_lab,False),(b_lab,True)]
+                    (map (\<lambda>(l,bo). (l, if l = b_lab then \<not>bo else bo))
+                         [(a_lab,True),(a_lab,False),(b_lab,False),(b_lab,True)])"
+                  by (rule top1_elementary_scheme_operation.flip_label)
+                thus ?thesis unfolding hflip_result .
+              qed
+              thus ?thesis unfolding target_eq top1_scheme_equiv_def by simp
+            qed
+          qed
+          hence "top1_scheme_equiv scheme [(a_lab,True),(a_lab,False),(b_lab,True),(b_lab,False)]"
+            using hchain unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+          thus ?thesis using hab_ne by (by100 blast)
         qed
         thus ?thesis by (by100 blast)
       next
