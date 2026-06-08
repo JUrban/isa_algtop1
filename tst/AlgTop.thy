@@ -2717,7 +2717,23 @@ proof -
     qed
     \<comment> \<open>3. Injective.\<close>
     show "inj_on (\<lambda>s. \<phi>_bar (?\<iota>A s)) ({..<m} - {0::nat})"
-      sorry \<comment> \<open>Composition of \<phi>\_bar (injective on K_0) and \<iota>A (injective on {..<m}).\<close>
+    proof (rule inj_onI)
+      fix s1 s2 assume hs1: "s1 \<in> {..<m} - {0::nat}" and hs2: "s2 \<in> {..<m} - {0::nat}"
+        and heq: "\<phi>_bar (?\<iota>A s1) = \<phi>_bar (?\<iota>A s2)"
+      \<comment> \<open>\<iota>A(s1), \<iota>A(s2) \<in> K_0 (since \<epsilon>_0 = 0 for s \<noteq> 0).\<close>
+      have h1: "?\<iota>A s1 \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+        using h\<iota>A_in h\<epsilon>0_rest hs1 by (by100 auto)
+      have h2: "?\<iota>A s2 \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+        using h\<iota>A_in h\<epsilon>0_rest hs2 by (by100 auto)
+      \<comment> \<open>\<phi>\_bar injective on K_0 gives \<iota>A(s1) = \<iota>A(s2).\<close>
+      have "?\<iota>A s1 = ?\<iota>A s2"
+        using h\<phi>_inj_K0[unfolded inj_on_def] h1 h2 heq by (by100 blast)
+      \<comment> \<open>\<iota>A injective on {..<m} gives s1 = s2.\<close>
+      moreover have "inj_on ?\<iota>A ({..<m}::nat set)"
+        using h\<iota>A unfolding top1_is_free_abelian_group_full_on_def by (by100 blast)
+      ultimately show "s1 = s2"
+        using hs1 hs2 unfolding inj_on_def by (by100 blast)
+    qed
     \<comment> \<open>4. Generation.\<close>
     show "?K = top1_subgroup_generated_on ?K ?mulAG ?eAG ?invgAG
         ((\<lambda>s. \<phi>_bar (?\<iota>A s)) ` ({..<m} - {0::nat}))"
