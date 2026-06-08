@@ -1504,10 +1504,6 @@ proof -
   qed
   \<comment> \<open>Extract group axioms for AbelF. Some time out with by100 fast due to
      large let-expanded terms, using by5000 or sorry where needed.\<close>
-  have hAbelF_mul_cl: "\<forall>x\<in>?AbelF. \<forall>y\<in>?AbelF. ?mulA x y \<in> ?AbelF"
-    sorry \<comment> \<open>Group mul closure — times out on expanded terms.\<close>
-  have hAbelF_assoc: "\<forall>x\<in>?AbelF. \<forall>y\<in>?AbelF. \<forall>z\<in>?AbelF. ?mulA (?mulA x y) z = ?mulA x (?mulA y z)"
-    sorry \<comment> \<open>Group associativity — times out on expanded terms.\<close>
   have hAbelF_id_l: "\<forall>x\<in>?AbelF. ?mulA ?eA x = x"
     using hAbelF_grp[unfolded top1_is_group_on_def] by (by100 fast)
   have hAbelF_id_r: "\<forall>x\<in>?AbelF. ?mulA x ?eA = x"
@@ -1518,6 +1514,24 @@ proof -
     using hAbelF_grp[unfolded top1_is_group_on_def] by (by100 fast)
   have hAbelF_e_in: "?eA \<in> ?AbelF"
     using hAbelF_grp[unfolded top1_is_group_on_def] by (by100 fast)
+  have hAbelF_mul_cl: "\<forall>x\<in>?AbelF. \<forall>y\<in>?AbelF. ?mulA x y \<in> ?AbelF"
+  proof (intro ballI)
+    fix x y assume hx: "x \<in> ?AbelF" and hy: "y \<in> ?AbelF"
+    have "\<forall>i<length [x, y]. [x, y] ! i \<in> ?AbelF"
+    proof (intro allI impI)
+      fix i assume "i < length [x, y]"
+      hence "i = 0 \<or> i = 1" by (by100 auto)
+      thus "[x, y] ! i \<in> ?AbelF" using hx hy by (by100 auto)
+    qed
+    from foldr_mul_closed[OF hAbelF_grp this]
+    have "foldr ?mulA [x, y] ?eA \<in> ?AbelF" .
+    hence "?mulA x (?mulA y ?eA) \<in> ?AbelF" by (by100 simp)
+    moreover have "?mulA y ?eA = y" using hAbelF_id_r hy by (by100 blast)
+    ultimately show "?mulA x y \<in> ?AbelF" by (by100 simp)
+  qed
+  have hAbelF_assoc: "\<forall>x\<in>?AbelF. \<forall>y\<in>?AbelF. \<forall>z\<in>?AbelF. ?mulA (?mulA x y) z = ?mulA x (?mulA y z)"
+    sorry \<comment> \<open>Associativity — 3-quantifier extraction times out.
+       Used via pre-extracted hAbelF\_assoc in a=b proof.\<close>
 
   \<comment> \<open>Step 4: Get the concrete abelianization of G_0.\<close>
   let ?CG = "top1_commutator_subgroup_on G0 mul0 e0 invg0"
