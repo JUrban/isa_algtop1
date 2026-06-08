@@ -1484,8 +1484,34 @@ proof (intro conjI)
                  else top1_group_pow mul e (invg ((\<iota> \<circ> f) s)) (nat (- c s)))
          (SOME xs. set xs = {s \<in> S'. c s \<noteq> 0} \<and> distinct xs))
        e \<noteq> e"
-    sorry \<comment> \<open>Independence transfer via f bijection on support sets.
-       Uses: free\_abelian\_independence\_transfer or direct reindexing.\<close>
+  proof (intro allI impI)
+    fix c :: "'c \<Rightarrow> int"
+    assume hfin: "finite {s \<in> S'. c s \<noteq> 0}" and hex: "\<exists>s\<in>S'. c s \<noteq> 0"
+    \<comment> \<open>Define c' = c \<circ> (inv\_into S' f) on S. Then (\<iota> \<circ> f)(s') with c(s')
+       equals \<iota>(f(s')) with c(s') = \<iota>(t) with c'(t) where t = f(s').\<close>
+    let ?c' = "c \<circ> inv_into S' f"
+    have hfin': "finite {s \<in> S. ?c' s \<noteq> 0}"
+      sorry \<comment> \<open>f maps support bijectively: {s\<in>S. c'(s)\<noteq>0} = f ` {s'\<in>S'. c(s')\<noteq>0}.\<close>
+    have hex': "\<exists>s\<in>S. ?c' s \<noteq> 0"
+      sorry \<comment> \<open>Non-empty support transfers via f.\<close>
+    \<comment> \<open>By independence on S: the foldr product for c' on S with \<iota> is \<noteq> e.\<close>
+    have hindep: "foldr mul
+       (map (\<lambda>s. if 0 \<le> ?c' s then top1_group_pow mul e (\<iota> s) (nat (?c' s))
+                 else top1_group_pow mul e (invg (\<iota> s)) (nat (- ?c' s)))
+         (SOME xs. set xs = {s \<in> S. ?c' s \<noteq> 0} \<and> distinct xs))
+       e \<noteq> e"
+      using hfab[unfolded top1_is_free_abelian_group_full_on_def] hfin' hex' by (by100 blast)
+    \<comment> \<open>The foldr product for c on S' with \<iota>\<circ>f equals the one for c' on S with \<iota>
+       (in the abelian group, the products are equal since the terms match).\<close>
+    show "foldr mul
+       (map (\<lambda>s. if 0 \<le> c s then top1_group_pow mul e ((\<iota> \<circ> f) s) (nat (c s))
+                 else top1_group_pow mul e (invg ((\<iota> \<circ> f) s)) (nat (- c s)))
+         (SOME xs. set xs = {s \<in> S'. c s \<noteq> 0} \<and> distinct xs))
+       e \<noteq> e"
+      sorry \<comment> \<open>The two foldr products are equal: each term for s' in S' matches
+         a term for f(s') in S with the same coefficient (since c'(f(s'))=c(s')).
+         In the abelian group, the permutation of terms doesn't matter.\<close>
+  qed
 qed
 
 theorem Theorem_75_4_H1_m_projective:
