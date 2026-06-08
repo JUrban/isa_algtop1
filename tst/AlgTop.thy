@@ -16520,6 +16520,9 @@ lemma Lemma_77_3_torus_extraction:
       (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
       ([(a, True), (b, True), (a, False), (b, False)] @ w0 @ w1 @ w2)"
 proof -
+  let ?flip_a = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
+  let ?flip_b = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = b then \<not> bo else bo)) xs"
+  have hab': "b \<noteq> a" using assms by (by100 blast)
   \<comment> \<open>Step 1: cut\\_paste\\_opp on a moves w0 past a\\<inverse>.\<close>
   have s1: "top1_scheme_equiv
       (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
@@ -16527,29 +16530,129 @@ proof -
     unfolding top1_scheme_equiv_def
     using top1_elementary_scheme_operation.cut_paste_opp[of "[]" w0 a "[(b,True)] @ w1" "[(b,False)] @ w2"]
     by (simp add: rtranclp.rtrancl_into_rtrancl)
-  \<comment> \<open>Step 2: apply w0-empty case to move w1 to after b\\<inverse>.
-     a b w1 a\\<inverse> w0 b\\<inverse> w2 = a b [w1 a\\<inverse> w0] b\\<inverse>... hmm, this isn't the right form.\<close>
-  \<comment> \<open>Alternative: use flip + cut\\_paste\\_opp trick to move w1 from between b,a\\<inverse> to between a,b.
-     Then cut\\_paste\\_opp on b to move everything to after b\\<inverse>.\<close>
-  \<comment> \<open>After step 1: [(a,T),(b,T)] @ w1 @ [(a,F)] @ w0 @ [(b,F)] @ w2.\<close>
-  \<comment> \<open>Step 2: Use the flip trick (steps 2a-2e from analysis) to move w1 from after b to after a.\<close>
+  \<comment> \<open>After step 1: a b w1 a\\<inverse> w0 b\\<inverse> w2.
+     Step 2 (flip trick on a, 5 ops): swap w1 past (b,T).
+     Result: a w1 b a\\<inverse> w0 b\\<inverse> w2.\<close>
   have s2: "top1_scheme_equiv
       ([(a, True), (b, True)] @ w1 @ [(a, False)] @ w0 @ [(b, False)] @ w2)
       ([(a, True)] @ w1 @ [(b, True), (a, False)] @ w0 @ [(b, False)] @ w2)"
-    sorry \<comment> \<open>Move w1 from between (b,T) and (a,F) to between (a,T) and (b,T).\<close>
-  \<comment> \<open>Step 3: cut\\_paste\\_opp on b moves w1 @ w0 from before b to after b\\<inverse>.\<close>
+  proof -
+    \<comment> \<open>rotate: move [(a,T),(b,T)] to end.\<close>
+    have r1: "top1_elementary_scheme_operation
+        ([(a,True),(b,True)] @ w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2)
+        (w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True),(b,True)])"
+      using top1_elementary_scheme_operation.rotate
+        [of "[(a,True),(b,True)]" "w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2"] by simp
+    \<comment> \<open>flip\\_label a.\<close>
+    have r2_eq: "?flip_a (w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True),(b,True)])
+        = ?flip_a w1 @ [(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False),(b,True)]"
+      using hab' by simp
+    have r2: "top1_elementary_scheme_operation
+        (w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True),(b,True)])
+        (?flip_a w1 @ [(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False),(b,True)])"
+      unfolding r2_eq[symmetric] by (rule top1_elementary_scheme_operation.flip_label)
+    \<comment> \<open>cut\\_paste\\_opp on a: move ?flip\\_a w1 from before a to after a\\<inverse>.\<close>
+    have r3: "top1_elementary_scheme_operation
+        (?flip_a w1 @ [(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False),(b,True)])
+        ([(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False)] @ ?flip_a w1 @ [(b,True)])"
+      using top1_elementary_scheme_operation.cut_paste_opp
+        [of "[]" "?flip_a w1" a "?flip_a w0 @ [(b,False)] @ ?flip_a w2" "[(b,True)]"] by simp
+    \<comment> \<open>flip\\_label a back.\<close>
+    have r4_eq: "?flip_a ([(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False)] @ ?flip_a w1 @ [(b,True)])
+        = [(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)]"
+    proof -
+      have hflip_invol: "\<And>xs :: ('a \<times> bool) list. ?flip_a (?flip_a xs) = xs"
+      proof -
+        fix xs :: "('a \<times> bool) list" show "?flip_a (?flip_a xs) = xs"
+        proof (induction xs)
+          case Nil thus ?case by simp
+        next
+          case (Cons e xs) obtain l bo where "e = (l, bo)" by (cases e)
+          thus ?case using Cons.IH by simp
+        qed
+      qed
+      thus ?thesis using hab' by simp
+    qed
+    have r4: "top1_elementary_scheme_operation
+        ([(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False)] @ ?flip_a w1 @ [(b,True)])
+        ([(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)])"
+      unfolding r4_eq[symmetric] by (rule top1_elementary_scheme_operation.flip_label)
+    \<comment> \<open>rotate: bring [(a,T)] w1 [(b,T)] to front.\<close>
+    have r5: "top1_elementary_scheme_operation
+        ([(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)])
+        ([(a,True)] @ w1 @ [(b,True),(a,False)] @ w0 @ [(b,False)] @ w2)"
+      using top1_elementary_scheme_operation.rotate
+        [of "[(a,False)] @ w0 @ [(b,False)] @ w2" "[(a,True)] @ w1 @ [(b,True)]"] by simp
+    from r1 r2 r3 r4 r5 show ?thesis unfolding top1_scheme_equiv_def
+      by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
+  qed
+  \<comment> \<open>Step 3 (flip trick on b, 5 ops): move w0 from between a\\<inverse>, b\\<inverse> to between b, a\\<inverse>.
+     Result: a w1 b w0 a\\<inverse> b\\<inverse> w2 (now a\\<inverse>b\\<inverse> are adjacent!).\<close>
   have s3: "top1_scheme_equiv
       ([(a, True)] @ w1 @ [(b, True), (a, False)] @ w0 @ [(b, False)] @ w2)
-      ([(a, True)] @ (w0 @ w1) @ [(b, True), (a, False), (b, False)] @ w2)"
-    sorry
-  \<comment> \<open>Step 4: cut\\_paste\\_opp on b (move w0 @ w1 to after b\\<inverse>).\<close>
+      ([(a, True)] @ w1 @ [(b, True)] @ w0 @ [(a, False), (b, False)] @ w2)"
+  proof -
+    \<comment> \<open>rotate: move prefix to end.\<close>
+    have r1: "top1_elementary_scheme_operation
+        ([(a,True)] @ w1 @ [(b,True),(a,False)] @ w0 @ [(b,False)] @ w2)
+        (w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True),(a,False)])"
+      using top1_elementary_scheme_operation.rotate
+        [of "[(a,True)] @ w1 @ [(b,True),(a,False)]" "w0 @ [(b,False)] @ w2"] by simp
+    \<comment> \<open>flip\\_label b.\<close>
+    have r2_eq: "?flip_b (w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True),(a,False)])
+        = ?flip_b w0 @ [(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False),(a,False)]"
+      using assms by simp
+    have r2: "top1_elementary_scheme_operation
+        (w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True),(a,False)])
+        (?flip_b w0 @ [(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False),(a,False)])"
+      unfolding r2_eq[symmetric] by (rule top1_elementary_scheme_operation.flip_label)
+    \<comment> \<open>cut\\_paste\\_opp on b: move ?flip\\_b w0 from before b to after b\\<inverse>.\<close>
+    have r3: "top1_elementary_scheme_operation
+        (?flip_b w0 @ [(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False),(a,False)])
+        ([(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False)] @ ?flip_b w0 @ [(a,False)])"
+      using top1_elementary_scheme_operation.cut_paste_opp
+        [of "[]" "?flip_b w0" b "?flip_b w2 @ [(a,True)] @ ?flip_b w1" "[(a,False)]"] by simp
+    \<comment> \<open>flip\\_label b back.\<close>
+    have hflip_b_invol: "\<And>xs :: ('a \<times> bool) list. ?flip_b (?flip_b xs) = xs"
+    proof -
+      fix xs :: "('a \<times> bool) list" show "?flip_b (?flip_b xs) = xs"
+      proof (induction xs)
+        case Nil thus ?case by simp
+      next
+        case (Cons e xs) obtain l bo where "e = (l, bo)" by (cases e)
+        thus ?case using Cons.IH by simp
+      qed
+    qed
+    have r4_eq: "?flip_b ([(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False)] @ ?flip_b w0 @ [(a,False)])
+        = [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False)]"
+      using assms hflip_b_invol by simp
+    have r4: "top1_elementary_scheme_operation
+        ([(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False)] @ ?flip_b w0 @ [(a,False)])
+        ([(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False)])"
+      unfolding r4_eq[symmetric] by (rule top1_elementary_scheme_operation.flip_label)
+    \<comment> \<open>rotate: bring the right part to front.\<close>
+    have r5: "top1_elementary_scheme_operation
+        ([(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False)])
+        ([(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False),(b,False)] @ w2)"
+      using top1_elementary_scheme_operation.rotate
+        [of "[(b,False)] @ w2" "[(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False)]"] by simp
+    from r1 r2 r3 r4 r5 show ?thesis unfolding top1_scheme_equiv_def
+      by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
+  qed
+  \<comment> \<open>Step 4: cut\\_paste\\_opp on b moves w1 from before b to after b\\<inverse>.
+     a [w1] b [w0] a\\<inverse> b\\<inverse> w2 \\<to> a b [w0] a\\<inverse> b\\<inverse> [w1] w2.\<close>
   have s4: "top1_scheme_equiv
-      ([(a, True)] @ (w0 @ w1) @ [(b, True), (a, False), (b, False)] @ w2)
-      ([(a, True), (b, True), (a, False), (b, False)] @ w0 @ w1 @ w2)"
+      ([(a, True)] @ w1 @ [(b, True)] @ w0 @ [(a, False), (b, False)] @ w2)
+      ([(a, True), (b, True)] @ w0 @ [(a, False), (b, False)] @ w1 @ w2)"
     unfolding top1_scheme_equiv_def
-    using top1_elementary_scheme_operation.cut_paste_opp[of "[(a,True)]" "w0 @ w1" b "[(a,False)]" w2]
+    using top1_elementary_scheme_operation.cut_paste_opp[of "[(a,True)]" w1 b "w0 @ [(a,False)]" w2]
     by (simp add: rtranclp.rtrancl_into_rtrancl)
-  from s1 s2 s3 s4 show ?thesis
+  \<comment> \<open>Step 5: apply Lemma\\_77\\_3\\_w0\\_empty: a b w0 a\\<inverse> b\\<inverse> (w1@w2) ~ a b a\\<inverse> b\\<inverse> w0 w1 w2.\<close>
+  have s5: "top1_scheme_equiv
+      ([(a, True), (b, True)] @ w0 @ [(a, False), (b, False)] @ w1 @ w2)
+      ([(a, True), (b, True), (a, False), (b, False)] @ w0 @ w1 @ w2)"
+    using Lemma_77_3_w0_empty[OF assms, of w0 "w1 @ w2"] by simp
+  from s1 s2 s3 s4 s5 show ?thesis
     unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
 qed
 
