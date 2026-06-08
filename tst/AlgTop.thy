@@ -14994,7 +14994,29 @@ proof -
             define p where "p = ((\<Sum>i\<le>k. \<alpha> i * vx i), (\<Sum>i\<le>k. \<alpha> i * vy i))"
             have hp: "p \<in> Q k" unfolding Q_def p_def
               using h\<alpha>_pos h\<alpha>_sum by (by100 auto)
-            have "q = f (t, p)" unfolding f_def p_def sorry
+            have "q = f (t, p)"
+            proof -
+              \<comment> \<open>fst q = t*vx(k+1) + (1-t) * Σα_i*vx_i\<close>
+              have hx: "fst q = t * vx (Suc k) + (1-t) * (\<Sum>i\<le>k. \<alpha> i * vx i)"
+              proof -
+                have "fst q = (\<Sum>i\<le>Suc k. coeffs i * vx i)" using hc(3) by simp
+                also have "\<dots> = (\<Sum>i\<le>k. coeffs i * vx i) + coeffs (Suc k) * vx (Suc k)" by simp
+                also have "(\<Sum>i\<le>k. coeffs i * vx i) = (1-t) * (\<Sum>i\<le>k. \<alpha> i * vx i)"
+                  unfolding \<alpha>_def using h1mt
+                  by (simp add: sum_distrib_left sum_divide_distrib)
+                finally show ?thesis unfolding t_def by (simp add: algebra_simps)
+              qed
+              have hy: "snd q = t * vy (Suc k) + (1-t) * (\<Sum>i\<le>k. \<alpha> i * vy i)"
+              proof -
+                have "snd q = (\<Sum>i\<le>Suc k. coeffs i * vy i)" using hc(4) by simp
+                also have "\<dots> = (\<Sum>i\<le>k. coeffs i * vy i) + coeffs (Suc k) * vy (Suc k)" by simp
+                also have "(\<Sum>i\<le>k. coeffs i * vy i) = (1-t) * (\<Sum>i\<le>k. \<alpha> i * vy i)"
+                  unfolding \<alpha>_def using h1mt
+                  by (simp add: sum_distrib_left sum_divide_distrib)
+                finally show ?thesis unfolding t_def by (simp add: algebra_simps)
+              qed
+              show ?thesis unfolding f_def p_def using hx hy by (cases q) simp
+            qed
             thus ?thesis using ht hp by (by100 blast)
           qed
         qed
