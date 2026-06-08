@@ -2241,9 +2241,9 @@ proof -
             hence "length (filter id ?bs) = length (filter Not ?bs)"
               using balanced_from_sum_zero[of 2 ?bs] by (by100 simp)
             moreover have "length (filter id ?bs) = length (filter (\<lambda>(t,b). b) ?w)"
-              sorry \<comment> \<open>filter id (map f xs) = filter (f ∘ ...) xs list identity.\<close>
+              unfolding id_def by (induct ws, by100 simp, by100 auto)
             moreover have "length (filter Not ?bs) = length (filter (\<lambda>(t,b). \<not>b) ?w)"
-              sorry \<comment> \<open>Similar list identity.\<close>
+              by (induct ws, by100 simp, by100 auto)
             ultimately show ?thesis by (by100 linarith)
           qed
           ultimately show "length (filter (\<lambda>(t, b). t = s \<and> b) ?w) =
