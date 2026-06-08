@@ -14808,8 +14808,24 @@ next
   case (cut_paste2 u0 a u1 u2 b) show ?case sorry
 next
   case (cut_paste_opp u0 u1 a u2 u3)
-  \<comment> \<open>Reverse of cut\\_paste\\_opp: use flip\\_label a + cut\\_paste\\_opp + flip\\_label a.\<close>
-  show ?case sorry
+  \<comment> \<open>Reverse: rotate + cut\\_paste\\_opp + rotate (3 elementary operations).\<close>
+  have r1: "top1_elementary_scheme_operation
+      (u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1 @ u3)
+      (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)"
+    using top1_elementary_scheme_operation.rotate
+      [of "u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1" u3] by simp
+  have r2: "top1_elementary_scheme_operation
+      (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)
+      ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1)"
+    using top1_elementary_scheme_operation.cut_paste_opp
+      [of "[]" "u3 @ u0" a u2 u1] by simp
+  have r3: "top1_elementary_scheme_operation
+      ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1)
+      (u0 @ u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3)"
+    using top1_elementary_scheme_operation.rotate
+      [of "[(a,True)] @ u2 @ [(a,False)] @ u3" "u0 @ u1"] by simp
+  show ?case unfolding top1_scheme_equiv_def
+    using r1 r2 r3 by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
 qed
 
 \<comment> \<open>scheme\\_equiv is symmetric.\<close>
