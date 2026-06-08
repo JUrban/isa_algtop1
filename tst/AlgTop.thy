@@ -15700,6 +15700,36 @@ proof -
        (by definition top1\\_is\\_n\\_fold\\_torus\\_on). scheme\\_quotient\\_uniqueness gives homeo.
      - Projective scheme: similarly, top1\\_is\\_m\\_fold\\_projective\\_on.
      Plus: Theorem 76 preserves quotient homeomorphism type, so scheme\\_equiv gives homeo.\<close>
+  \<comment> \<open>Identity homeomorphism on X (used in both torus and projective cases).\<close>
+  have hX_top: "is_topology_on X TX" using hconn unfolding top1_connected_on_def by (by100 blast)
+  have hid_homeo: "top1_homeomorphism_on X TX X TX id"
+  proof -
+    have hid_cont: "top1_continuous_map_on X TX X TX id"
+      by (rule top1_continuous_map_on_id[OF hX_top])
+    have "\<forall>x\<in>X. inv_into X id x = x"
+    proof
+      fix x assume "x \<in> X"
+      have "inv_into X id (id x) = x" by (rule inv_into_f_f[OF inj_on_id \<open>x \<in> X\<close>])
+      thus "inv_into X id x = x" by simp
+    qed
+    hence "top1_continuous_map_on X TX X TX (inv_into X id)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI allI impI)
+      fix x assume hxX: "x \<in> X" thus "inv_into X id x \<in> X" using \<open>\<forall>x\<in>X. inv_into X id x = x\<close> by simp
+    next
+      fix V assume "V \<in> TX"
+      have "{x \<in> X. inv_into X id x \<in> V} = {x \<in> X. id x \<in> V}"
+      proof
+        show "{x \<in> X. inv_into X id x \<in> V} \<subseteq> {x \<in> X. id x \<in> V}"
+          using \<open>\<forall>x\<in>X. inv_into X id x = x\<close> by (by100 auto)
+        show "{x \<in> X. id x \<in> V} \<subseteq> {x \<in> X. inv_into X id x \<in> V}"
+          using \<open>\<forall>x\<in>X. inv_into X id x = x\<close> by (by100 auto)
+      qed
+      thus "{x \<in> X. inv_into X id x \<in> V} \<in> TX"
+        using hid_cont unfolding top1_continuous_map_on_def using \<open>V \<in> TX\<close> by simp
+    qed
+    thus ?thesis unfolding top1_homeomorphism_on_def using hX_top hid_cont by simp
+  qed
   show ?thesis
   proof -
     \<comment> \<open>If scheme\\_equiv to a normal form: Theorem 76 gives homeomorphism preservation.
@@ -15721,35 +15751,6 @@ proof -
       hence "top1_is_n_fold_torus_on X TX n"
         using hn unfolding top1_is_n_fold_torus_on_def by simp
       \<comment> \<open>X is itself an n-fold torus. Take T\\_n = X, h = id.\<close>
-      \<comment> \<open>X itself is an n-fold torus. Take T\\_n = X, h = id.\<close>
-      have hX_top: "is_topology_on X TX"
-        using hconn unfolding top1_connected_on_def by (by100 blast)
-      have hid_cont: "top1_continuous_map_on X TX X TX id"
-        by (rule top1_continuous_map_on_id[OF hX_top])
-      have hinv_eq: "\<forall>x\<in>X. inv_into X id x = x"
-      proof
-        fix x assume "x \<in> X"
-        have "inv_into X id (id x) = x" by (rule inv_into_f_f[OF inj_on_id \<open>x \<in> X\<close>])
-        thus "inv_into X id x = x" by simp
-      qed
-      have hinv_cont: "top1_continuous_map_on X TX X TX (inv_into X id)"
-        unfolding top1_continuous_map_on_def
-      proof (intro conjI ballI allI impI)
-        fix x assume "x \<in> X" thus "inv_into X id x \<in> X" using hinv_eq by simp
-      next
-        fix V assume "V \<in> TX"
-        have "{x \<in> X. inv_into X id x \<in> V} = {x \<in> X. x \<in> V}"
-        proof (intro Collect_cong)
-          fix x show "(x \<in> X \<and> inv_into X id x \<in> V) = (x \<in> X \<and> x \<in> V)"
-            using hinv_eq by (by100 auto)
-        qed
-        also have "\<dots> = {x \<in> X. id x \<in> V}" by simp
-        finally show "{x \<in> X. inv_into X id x \<in> V} \<in> TX"
-          using hid_cont unfolding top1_continuous_map_on_def using \<open>V \<in> TX\<close> by simp
-      qed
-      have hid_homeo: "top1_homeomorphism_on X TX X TX id"
-        unfolding top1_homeomorphism_on_def
-        using hX_top hid_cont hinv_cont by simp
       show ?thesis
         using hn \<open>top1_is_n_fold_torus_on X TX n\<close> hid_homeo
         by (by5000 blast)
@@ -15767,9 +15768,7 @@ proof -
         hence "top1_is_m_fold_projective_on X TX m"
           unfolding top1_is_m_fold_projective_on_def
           using \<open>top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)\<close> by simp
-        have "top1_homeomorphism_on X TX X TX id"
-          sorry \<comment> \<open>Same identity homeomorphism as torus case. TODO: factor out.\<close>
-        thus ?thesis using hm \<open>top1_is_m_fold_projective_on X TX m\<close> by (by5000 blast)
+        thus ?thesis using hm \<open>top1_is_m_fold_projective_on X TX m\<close> hid_homeo by (by5000 blast)
       next
         case False hence "m = 1" using hm by linarith
         show ?thesis sorry \<comment> \<open>m=1: projective scheme = aa (2 edges). Quotient = RP². Need dunce\\_cap.\<close>
