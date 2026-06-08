@@ -17192,9 +17192,25 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             thus ?thesis using hsch4 by simp
           qed
           have "fst s0 = fst s2"
-            using less.prems(2) hsch4 \<open>fst s0 \<noteq> fst s1\<close> sorry
+          proof (rule ccontr)
+            assume "fst s0 \<noteq> fst s2"
+            \<comment> \<open>fst s0 appears at position 0 but not 1, 2. In proper scheme with 2 occurrences,
+               it must be at position 3. Then fst s2 = fst s1 (only other label).
+               But positions 1,2 are adjacent with same label \\<Rightarrow> contradicts no\\_adj.\<close>
+            have "fst s2 = fst s1" sorry
+            hence "fst (scheme!1) = fst (scheme!2)" using hsch4 by simp
+            have h12: "\<not> (fst (scheme!1) = fst (scheme!(Suc 1)))"
+              using no_adj by (by5000 force)
+            have "\<not> (fst (scheme!1) = fst (scheme!2))" using h12 by (simp add: numeral_2_eq_2)
+            thus False using \<open>fst (scheme!1) = fst (scheme!2)\<close> by simp
+          qed
           have "fst s1 = fst s3"
-            using less.prems(2) hsch4 \<open>fst s0 \<noteq> fst s1\<close> sorry
+          proof -
+            \<comment> \<open>Only 2 distinct labels. s3 must have label fst s0 or fst s1.
+               If fst s3 = fst s0 = fst s2: then fst s0 appears 3 times (0,2,3) \\<Rightarrow> contradicts proper.
+               So fst s3 = fst s1.\<close>
+            show ?thesis sorry
+          qed
           have "snd s0 \<noteq> snd s2"
             using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
               \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))\<close>
