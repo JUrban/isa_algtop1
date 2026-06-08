@@ -17195,8 +17195,10 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             thus ?thesis using hdecomp unfolding top1_scheme_equiv_def by simp
           qed
           \<comment> \<open>prefix @ suffix has length 2 = the other label pair. Uncancel to get sphere.\<close>
-          obtain a_lab where ha: "a_lab \<noteq> fst (hd (prefix @ suffix))"
-            sorry \<comment> \<open>Choose a fresh label for uncancellation.\<close>
+          obtain a_lab :: nat where ha: "a_lab \<noteq> fst (hd (prefix @ suffix))"
+          proof -
+            show ?thesis by (rule that[of "Suc (fst (hd (prefix @ suffix)))"]) simp
+          qed
           have "top1_scheme_equiv (prefix @ suffix)
               (prefix @ [(a_lab, True), top1_inverse_edge (a_lab, True)] @ suffix)"
             unfolding top1_scheme_equiv_def
