@@ -17389,31 +17389,45 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               unfolding scheme2_def scheme1_def hsch_exp
               using \<open>fst s0 \<noteq> fst s1\<close> by (cases "snd s0"; cases "snd s1") simp_all
           qed
-          \<comment> \<open>Step 2: relabel to standard labels 0, 1.
-             First relabel fst s0 \\<to> 0, then fst s1 \\<to> 1.
-             After first relabel: fst s1 is unchanged (\\<noteq> fst s0), so fst s1 \\<noteq> 0.\<close>
-          define scheme3 where "scheme3 = map (\<lambda>(l,b). (if l = fst s0 then 0 else l, b)) scheme2"
-          have hequiv3: "top1_scheme_equiv scheme2 scheme3"
-            unfolding scheme3_def top1_scheme_equiv_def
-            using top1_elementary_scheme_operation.relabel[of scheme2 "fst s0" 0] by simp
-          have hsch3: "scheme3 = [(0,True),(fst s1,True),(0,False),(fst s1,False)]"
-            unfolding scheme3_def hsch2 using \<open>fst s0 \<noteq> fst s1\<close> by simp
-          define scheme4 where "scheme4 = map (\<lambda>(l,b). (if l = fst s1 then 1 else l, b)) scheme3"
-          have hequiv4: "top1_scheme_equiv scheme3 scheme4"
-            unfolding scheme4_def top1_scheme_equiv_def
-            using top1_elementary_scheme_operation.relabel[of scheme3 "fst s1" 1] by simp
-          have hsch4_target: "scheme4 = top1_n_torus_scheme 1"
-          proof -
-            have hfst_s1_ne_0: "fst s1 \<noteq> (0::nat)"
-              sorry \<comment> \<open>Relabel collision avoidance. When fst s1 = 0, need different relabel order.
-                 General fix: use 3-step relabel via fresh intermediate label.\<close>
-            show ?thesis unfolding scheme4_def hsch3 top1_n_torus_scheme_def
-              using hfst_s1_ne_0 by simp
+          \<comment> \<open>Step 2: relabel to standard labels 0, 1 via elementary relabel operations.\<close>
+          have "top1_scheme_equiv scheme2 (top1_n_torus_scheme 1)"
+          proof (cases "fst s1 = (0::nat)")
+            case False
+            \<comment> \<open>fst s1 \\<noteq> 0: relabel fst s0\\<to>0, then fst s1\\<to>1 (no collision).\<close>
+            have h_r1: "top1_scheme_equiv scheme2
+                (map (\<lambda>(l,b). (if l = fst s0 then 0 else l, b)) scheme2)"
+              unfolding top1_scheme_equiv_def
+              using top1_elementary_scheme_operation.relabel[of scheme2 "fst s0" 0] by simp
+            have h_mid: "map (\<lambda>(l,b). (if l = fst s0 then 0 else l, b)) scheme2
+                = [(0,True),(fst s1,True),(0,False),(fst s1,False)]"
+              unfolding hsch2 using \<open>fst s0 \<noteq> fst s1\<close> by simp
+            have h_r2: "top1_scheme_equiv [(0,True),(fst s1,True),(0,False),(fst s1,False)]
+                (map (\<lambda>(l,b). (if l = fst s1 then 1 else l, b)) [(0,True),(fst s1,True),(0,False),(fst s1,False)])"
+              unfolding top1_scheme_equiv_def
+              using top1_elementary_scheme_operation.relabel
+                [of "[(0,True),(fst s1,True),(0,False),(fst s1,False)]" "fst s1" 1] by simp
+            have h_final: "map (\<lambda>(l,b). (if l = fst s1 then 1 else l, b)) [(0,True),(fst s1,True),(0,False),(fst s1,False)]
+                = top1_n_torus_scheme 1"
+              unfolding top1_n_torus_scheme_def using False by simp
+            from h_r1 have "top1_scheme_equiv scheme2 [(0,True),(fst s1,True),(0,False),(fst s1,False)]"
+              unfolding top1_scheme_equiv_def h_mid by simp
+            moreover from h_r2 have "top1_scheme_equiv [(0,True),(fst s1,True),(0,False),(fst s1,False)] (top1_n_torus_scheme 1)"
+              unfolding top1_scheme_equiv_def h_final by simp
+            ultimately show ?thesis unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+          next
+            case True
+            \<comment> \<open>fst s1 = 0: use 3-step relabel via intermediate label (fst s0 + 1).\<close>
+            hence "fst s0 \<noteq> 0" using \<open>fst s0 \<noteq> fst s1\<close> by simp
+            define fr where "fr = fst s0 + 1"
+            have hfr: "fr \<noteq> fst s0" "fr \<noteq> fst s1" "fr \<noteq> 0" "fr \<noteq> 1"
+              unfolding fr_def using True \<open>fst s0 \<noteq> 0\<close> by simp_all
+            \<comment> \<open>relabel fst s0\\<to>fr, then fst s1=0\\<to>1, then fr\\<to>0.\<close>
+            show ?thesis sorry \<comment> \<open>3-step relabel chain via fresh intermediate fr.\<close>
           qed
           have "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w"
           proof -
             have "top1_scheme_equiv scheme (top1_n_torus_scheme 1)"
-              using hequiv1 hequiv2 hequiv3 hequiv4 hsch4_target
+              using hequiv1 hequiv2 \<open>top1_scheme_equiv scheme2 (top1_n_torus_scheme 1)\<close>
               unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
             thus ?thesis
               unfolding top1_is_torus_scheme_def by (by100 blast)
