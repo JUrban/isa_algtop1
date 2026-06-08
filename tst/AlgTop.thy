@@ -2085,7 +2085,20 @@ proof -
        + abelian_word_product_zero_net_coeff but needs invgA(rel) \<noteq> rel side condition.\<close>
 
   have h\<phi>_inj_K0: "inj_on \<phi>_bar {a \<in> ?AbelF. \<epsilon>0 a = 0}"
-    sorry \<comment> \<open>From hK0\_ker\_trivial: \<phi>\_bar(a) = \<phi>\_bar(b) \<Longrightarrow> a\<cdot>b^{-1} \<in> ker \<cap> K_0 = {eA}.\<close>
+  proof (rule inj_onI)
+    fix a b assume ha: "a \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}" and hb: "b \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+       and heq: "\<phi>_bar a = \<phi>_bar b"
+    have ha_in: "a \<in> ?AbelF" and hb_in: "b \<in> ?AbelF" using ha hb by (by100 blast)+
+    \<comment> \<open>\<phi>\_bar(a \<cdot> b^{-1}) = \<phi>\_bar(a) \<cdot> \<phi>\_bar(b)^{-1} = eAG.\<close>
+    have "?mulA a (?invgA b) \<in> {a \<in> ?AbelF. \<epsilon>0 a = 0}"
+      sorry \<comment> \<open>K_0 is a subgroup: a,b \<in> K_0 \<Longrightarrow> a\<cdot>b^{-1} \<in> K_0.\<close>
+    moreover have "?mulA a (?invgA b) \<in> ?N_AbelF"
+      sorry \<comment> \<open>\<phi>\_bar(a\<cdot>b^{-1}) = eAG \<Longrightarrow> a\<cdot>b^{-1} \<in> ker(\<phi>\_bar) = N\_AbelF.\<close>
+    ultimately have "?mulA a (?invgA b) = ?eA"
+      using hK0_ker_trivial by (by100 blast)
+    thus "a = b"
+      sorry \<comment> \<open>a\<cdot>b^{-1} = e \<Longrightarrow> a = b in the group.\<close>
+  qed
 
   \<comment> \<open>Step F: Transfer free abelian structure from K_0 to K via \<phi>\_bar.
      K_0 is free abelian on {..<m}-{0}, \<phi>\_bar|_{K_0} is an injective hom into AbelG.
