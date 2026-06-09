@@ -4115,13 +4115,39 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         have hlen_ge4: "length shorter \<ge> 4"
           sorry
         \<comment> \<open>Apply IH.\<close>
-        from less(1)[of shorter, OF _ hlen_ge4 hproper_shorter]
-        have "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv shorter [(a, True), (a, False), (b, True), (b, False)])
+        have hlen_lt: "length shorter < length scheme"
+          using hlen_shorter hlen_gt4 by (by100 simp)
+        from less(1)[OF hlen_lt hlen_ge4 hproper_shorter]
+        have hIH: "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv shorter [(a, True), (a, False), (b, True), (b, False)])
            \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv shorter w)
-           \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv shorter w)"
-          sorry \<comment> \<open>Apply IH to shorter scheme.\<close>
+           \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv shorter w)" .
         \<comment> \<open>Chain: scheme ~ shorter ~ normal form.\<close>
-        thus ?thesis using hcancel unfolding top1_scheme_equiv_def sorry
+        show ?thesis
+        proof -
+          from hIH show ?thesis
+          proof (elim disjE)
+            assume "\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv shorter [(a, True), (a, False), (b, True), (b, False)]"
+            then obtain a b where "a \<noteq> b" "top1_scheme_equiv shorter [(a, True), (a, False), (b, True), (b, False)]"
+              by (by100 blast)
+            hence "top1_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)]"
+              using hcancel unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+            thus ?thesis using \<open>a \<noteq> b\<close> by (by100 blast)
+          next
+            assume "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv shorter w"
+            then obtain m' w where "m' > 0" "top1_is_projective_scheme w m'" "top1_scheme_equiv shorter w"
+              by (by100 blast)
+            hence "top1_scheme_equiv scheme w"
+              using hcancel unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+            thus ?thesis using \<open>m' > 0\<close> \<open>top1_is_projective_scheme w m'\<close> by (by100 blast)
+          next
+            assume "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv shorter w"
+            then obtain n' w where "n' > 0" "top1_is_torus_scheme w n'" "top1_scheme_equiv shorter w"
+              by (by100 blast)
+            hence "top1_scheme_equiv scheme w"
+              using hcancel unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+            thus ?thesis using \<open>n' > 0\<close> \<open>top1_is_torus_scheme w n'\<close> by (by100 blast)
+          qed
+        qed
       next
         case no_adj_gt4: False
         \<comment> \<open>No adjacent inverse pairs. Book proof:
