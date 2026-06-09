@@ -3045,14 +3045,86 @@ qed
 lemma projective_scheme_fst_bound:
   assumes "j < length (top1_m_projective_scheme m)"
   shows "fst ((top1_m_projective_scheme m) ! j) < m"
-  sorry
+proof -
+  have hlen: "length (top1_m_projective_scheme m) = 2 * m"
+    using projective_scheme_length by (by100 blast)
+  hence hj: "j < 2 * m" using assms by (by100 simp)
+  define k where "k = j div 2"
+  have hk: "k < m" using hj unfolding k_def by (by100 simp)
+  have "j = 2*k \<or> j = 2*k+1" unfolding k_def by (by100 presburger)
+  thus ?thesis
+  proof (elim disjE)
+    assume "j = 2*k"
+    hence "(top1_m_projective_scheme m) ! j = (k, True)"
+      using projective_scheme_nth_even[OF hk] by (by100 simp)
+    thus ?thesis using hk by (by100 simp)
+  next
+    assume "j = 2*k+1"
+    hence "(top1_m_projective_scheme m) ! j = (k, True)"
+      using projective_scheme_nth_odd[OF hk] by (by100 simp)
+    thus ?thesis using hk by (by100 simp)
+  qed
+qed
 
 \<comment> \<open>Properness of the projective normal-form scheme: each label appears exactly twice.\<close>
 lemma projective_scheme_proper:
   assumes "m > 0"
   shows "\<forall>label. card {i. i < length (top1_m_projective_scheme m) \<and>
       fst ((top1_m_projective_scheme m) ! i) = label} \<in> {0, 2}"
-  sorry
+proof (intro allI)
+  fix label :: nat
+  let ?w = "top1_m_projective_scheme m"
+  show "card {i. i < length ?w \<and> fst (?w ! i) = label} \<in> {0, 2}"
+  proof (cases "label < m")
+    case True
+    have hset: "{i. i < length ?w \<and> fst (?w ! i) = label} = {2*label, 2*label+1}"
+    proof (rule set_eqI, rule iffI)
+      fix i assume hi_in: "i \<in> {i. i < length ?w \<and> fst (?w ! i) = label}"
+      hence hi: "i < length ?w" "fst (?w ! i) = label" by (by100 simp)+
+      \<comment> \<open>i div 2 = label.\<close>
+      define k where "k = i div 2"
+      have "i < 2 * m" using hi(1) projective_scheme_length by (by100 simp)
+      hence hk: "k < m" unfolding k_def by (by100 simp)
+      have "i = 2*k \<or> i = 2*k+1" unfolding k_def by (by100 presburger)
+      hence "fst (?w ! i) = k"
+      proof (elim disjE)
+        assume "i = 2*k" thus ?thesis using projective_scheme_nth_even[OF hk] by (by100 simp)
+      next
+        assume "i = 2*k+1" thus ?thesis using projective_scheme_nth_odd[OF hk] by (by100 simp)
+      qed
+      hence "k = label" using hi(2) by (by100 simp)
+      hence "i = 2*label \<or> i = 2*label+1" unfolding k_def by (by100 presburger)
+      thus "i \<in> {2*label, 2*label+1}" by (by100 blast)
+    next
+      fix i assume "i \<in> {2*label, 2*label+1}"
+      hence "i = 2*label \<or> i = 2*label+1" by (by100 blast)
+      thus "i \<in> {i. i < length ?w \<and> fst (?w ! i) = label}"
+      proof (elim disjE)
+        assume "i = 2*label"
+        hence "?w ! i = (label, True)" using projective_scheme_nth_even[OF True] by (by100 simp)
+        moreover have "i < length ?w" using True projective_scheme_length \<open>i = 2*label\<close> by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      next
+        assume "i = 2*label+1"
+        hence "?w ! i = (label, True)" using projective_scheme_nth_odd[OF True] by (by100 simp)
+        moreover have "i < length ?w" using True projective_scheme_length \<open>i = 2*label+1\<close> by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+    qed
+    have "card {2*label, 2*label+1::nat} = 2" by (by100 simp)
+    thus ?thesis using hset by (by100 simp)
+  next
+    case False
+    have "{i. i < length ?w \<and> fst (?w ! i) = label} = {}"
+    proof (rule equals0I)
+      fix i assume "i \<in> {i. i < length ?w \<and> fst (?w ! i) = label}"
+      hence "i < length ?w" "fst (?w ! i) = label" by (by100 simp)+
+      from projective_scheme_fst_bound[OF this(1)] this(2) False
+      show False by (by100 simp)
+    qed
+    thus ?thesis by (by100 simp)
+  qed
+qed
 
 \<comment> \<open>Properness of the torus normal-form scheme: each label appears exactly twice.\<close>
 lemma torus_scheme_proper:
