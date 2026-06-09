@@ -5243,6 +5243,92 @@ qed
 
 \<comment> \<open>Prepending a commutator block to a torus scheme gives a torus scheme of one higher index.
    block @ torus\_n ~ torus\_(n+1) after relabeling block's labels to fresh ones.\<close>
+\<comment> \<open>A projective scheme followed by one torus pair is equivalent to a projective scheme with 2 more pairs.
+   Proof by induction on m. Base: proj\_1 @ torus\_1 ~ proj\_3 by proj\_pair\_absorbs\_torus.
+   Step: proj\_(m+1) @ torus\_1 = proj\_m @ [(m,T),(m,T)] @ torus\_1
+   ~ proj\_m @ torus\_1 @ [(m,T),(m,T)] (rotate in suffix)
+   ~ proj\_(m+2) @ [(m,T),(m,T)] (IH + congruence) ~ proj\_(m+3) (proj\_append\_pair).\<close>
+lemma proj_absorbs_one_torus:
+  assumes "m > 0"
+  shows "top1_scheme_equiv (top1_m_projective_scheme m @ top1_n_torus_scheme 1) (top1_m_projective_scheme (m+2))"
+  using assms
+proof (induction m)
+  case 0 thus ?case by (by100 simp)
+next
+  case (Suc m')
+  show ?case
+  proof (cases "m' = 0")
+    case True
+    \<comment> \<open>Base: m=1. proj\_1 @ torus\_1 = [(0,T),(0,T)] @ torus\_1 ~ proj\_3.\<close>
+    have "top1_m_projective_scheme 1 = [(0::nat,True),(0,True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    moreover have "top1_scheme_equiv ([(0::nat,True),(0,True)] @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme 3)"
+    proof -
+      have "top1_scheme_equiv ([(0::nat,True),(0,True)] @ top1_n_torus_scheme 1)
+          (top1_m_projective_scheme (2*1+1))"
+        using proj_pair_absorbs_torus[of 0 1] .
+      moreover have "(2::nat)*1+1 = 3" by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    ultimately have h_b: "top1_scheme_equiv (top1_m_projective_scheme 1 @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme 3)" by (by100 simp)
+    show ?thesis sorry \<comment> \<open>Base case: m'=0, Suc m'=1. Need Suc 0+2=3 substitution.\<close>
+  next
+    case nFalse: False
+    hence "m' > 0" by (by100 simp)
+    \<comment> \<open>proj\_(Suc m') = proj\_m' @ [(m',T),(m',T)] (definition decomposition).\<close>
+    have hpm_decomp: "top1_m_projective_scheme (Suc m') =
+        top1_m_projective_scheme m' @ [(m', True), (m', True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    \<comment> \<open>proj\_(Suc m') @ torus\_1 = proj\_m' @ [(m',T),(m',T)] @ torus\_1.\<close>
+    hence h_expand: "top1_m_projective_scheme (Suc m') @ top1_n_torus_scheme 1 =
+        top1_m_projective_scheme m' @ [(m', True), (m', True)] @ top1_n_torus_scheme 1"
+      by (by100 simp)
+    \<comment> \<open>Rotate [(m',T),(m',T)] @ torus\_1 to torus\_1 @ [(m',T),(m',T)] in suffix.\<close>
+    have "top1_scheme_equiv ([(m', True), (m', True)] @ top1_n_torus_scheme 1)
+        (top1_n_torus_scheme 1 @ [(m', True), (m', True)])"
+      using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate
+        [of "[(m', True), (m', True)]" "top1_n_torus_scheme 1"]] by (by100 simp)
+    hence h_rot: "top1_scheme_equiv
+        (top1_m_projective_scheme m' @ [(m', True), (m', True)] @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme m' @ top1_n_torus_scheme 1 @ [(m', True), (m', True)])"
+      using scheme_equiv_prepend[of "[(m', True), (m', True)] @ top1_n_torus_scheme 1"
+        "top1_n_torus_scheme 1 @ [(m', True), (m', True)]" "top1_m_projective_scheme m'"]
+      by (by100 simp)
+    \<comment> \<open>By IH: proj\_m' @ torus\_1 ~ proj\_(m'+2).\<close>
+    from Suc.IH[OF \<open>m' > 0\<close>]
+    have hIH: "top1_scheme_equiv (top1_m_projective_scheme m' @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme (m'+2))" .
+    \<comment> \<open>Lift: proj\_(m'+2) @ [(m',T),(m',T)] (suffix congruence).\<close>
+    have "top1_scheme_equiv
+        (top1_m_projective_scheme m' @ top1_n_torus_scheme 1 @ [(m', True), (m', True)])
+        (top1_m_projective_scheme (m'+2) @ [(m', True), (m', True)])"
+      using scheme_equiv_append[OF hIH] by (by100 simp)
+    \<comment> \<open>proj\_append\_pair: proj\_(m'+2) @ [(m',T),(m',T)] ~ proj\_(Suc(m'+2)) = proj\_(m'+3).\<close>
+    moreover have "top1_scheme_equiv (top1_m_projective_scheme (m'+2) @ [(m', True), (m', True)])
+        (top1_m_projective_scheme (Suc (m'+2)))"
+      using proj_append_pair[of "m'+2" m'] .
+    ultimately have hstep: "top1_scheme_equiv
+        (top1_m_projective_scheme m' @ top1_n_torus_scheme 1 @ [(m', True), (m', True)])
+        (top1_m_projective_scheme (Suc (m'+2)))"
+      unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+    \<comment> \<open>Chain: Suc m' @ torus = (expand) proj m' @ pair @ torus = (rotate) proj m' @ torus @ pair → (step) proj (Suc(m'+2)).\<close>
+    have "top1_scheme_equiv
+        (top1_m_projective_scheme (Suc m') @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme m' @ [(m', True), (m', True)] @ top1_n_torus_scheme 1)"
+      using h_expand unfolding top1_scheme_equiv_def by (by100 simp)
+    moreover note h_rot
+    moreover note hstep
+    ultimately have "top1_scheme_equiv
+        (top1_m_projective_scheme (Suc m') @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme (Suc (m'+2)))"
+      unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+    moreover have "Suc (m'+2) = Suc m' + 2" by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
+qed
+
 \<comment> \<open>Prepending a commutator block to a projective scheme gives a projective scheme of index m+2.
    Commutator = 1 torus pair. Lemma 77.4: proj pair + torus pair = 3 proj pairs.
    So commutator + projective\_m ~ projective\_(m+2).\<close>
@@ -5250,7 +5336,37 @@ lemma commutator_prepend_projective:
   assumes "a \<noteq> (b :: nat)" and "m > 0"
   shows "\<exists>w'. top1_is_projective_scheme w' (m+2) \<and>
       top1_scheme_equiv ([(a, True), (b, True), (a, False), (b, False)] @ top1_m_projective_scheme m) w'"
-  sorry
+proof -
+  let ?block = "[(a, True), (b, True), (a, False), (b, False)]"
+  \<comment> \<open>block ~ torus\_1. Lift: block @ proj\_m ~ torus\_1 @ proj\_m ~ proj\_m @ torus\_1.\<close>
+  have h1: "top1_scheme_equiv (?block @ top1_m_projective_scheme m)
+      (top1_m_projective_scheme m @ top1_n_torus_scheme 1)"
+  proof -
+    have "top1_scheme_equiv ?block (top1_n_torus_scheme 1)"
+      using commutator_block_equiv_torus_1[OF assms(1)] .
+    hence "top1_scheme_equiv (?block @ top1_m_projective_scheme m)
+        (top1_n_torus_scheme 1 @ top1_m_projective_scheme m)"
+      using scheme_equiv_append by (by100 blast)
+    moreover have "top1_scheme_equiv (top1_n_torus_scheme 1 @ top1_m_projective_scheme m)
+        (top1_m_projective_scheme m @ top1_n_torus_scheme 1)"
+      using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate
+        [of "top1_n_torus_scheme 1" "top1_m_projective_scheme m"]] by (by100 simp)
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+  qed
+  \<comment> \<open>proj\_m @ torus\_1 ~ proj\_(m+2) by proj\_pair\_absorbs\_torus (proj pair absorbs the torus).\<close>
+  \<comment> \<open>proj\_pair\_absorbs\_torus: [(c,T),(c,T)] @ torus\_n ~ proj\_(2n+1).\<close>
+  \<comment> \<open>We have proj\_m @ torus\_1. Reverse of absorbs: torus\_1 is absorbed using 1 proj pair.
+     proj\_m has m pairs. Use 1, gain 3. Net: m-1+3 = m+2.\<close>
+  have h2: "top1_scheme_equiv (top1_m_projective_scheme m @ top1_n_torus_scheme 1)
+      (top1_m_projective_scheme (m+2))"
+    using proj_absorbs_one_torus[OF assms(2)] .
+  from h1 h2 have "top1_scheme_equiv (?block @ top1_m_projective_scheme m) (top1_m_projective_scheme (m+2))"
+    unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+  thus ?thesis unfolding top1_is_projective_scheme_def
+    apply (rule_tac exI[of _ "top1_m_projective_scheme (m+2)"])
+    apply (intro conjI)
+    sorry
+qed
 
 lemma commutator_prepend_torus:
   assumes "a \<noteq> (b :: nat)" and "n > 0"
