@@ -6145,7 +6145,39 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               proof -
                 \<comment> \<open>R!k\_b = scheme!q\_b (rotation maps k\_b to q\_b).\<close>
                 have "R ! k_b = scheme ! q_b"
-                  sorry \<comment> \<open>Rotation indexing: drop/take + nth\_append.\<close>
+                proof (cases "q_b > p1")
+                  case True
+                  hence hkb_eq: "k_b = q_b - p1" unfolding k_b_def by (by100 simp)
+                  have "k_b < length (drop p1 scheme)" using hqb_props(1) True hkb_eq by (by100 simp)
+                  hence "(drop p1 scheme @ take p1 scheme) ! k_b = (drop p1 scheme) ! k_b"
+                    using nth_append[of "drop p1 scheme" "take p1 scheme" k_b] by (by100 simp)
+                  also have "\<dots> = scheme ! (p1 + k_b)" using hqb_props(1) hkb_eq True by (by100 simp)
+                  also have "p1 + k_b = q_b" using hkb_eq True by (by100 linarith)
+                  finally show ?thesis unfolding R_def by (by100 simp)
+                next
+                  case False
+                  hence hqb_le: "q_b \<le> p1" by (by100 simp)
+                  hence hkb_eq: "k_b = q_b + length scheme - p1" unfolding k_b_def by (by100 simp)
+                  have "length (drop p1 scheme) = length scheme - p1" by (by100 simp)
+                  have "k_b \<ge> length scheme - p1"
+                    using hqb_le hp1_lt hkb_eq by (by100 linarith)
+                  hence "k_b \<ge> length (drop p1 scheme)"
+                    using \<open>length (drop p1 scheme) = length scheme - p1\<close> by (by100 simp)
+                  hence "(drop p1 scheme @ take p1 scheme) ! k_b
+                      = (take p1 scheme) ! (k_b - length (drop p1 scheme))"
+                    using nth_append[of "drop p1 scheme" "take p1 scheme" k_b] by (by100 simp)
+                  also have "k_b - length (drop p1 scheme) = q_b"
+                    using hkb_eq hp1_lt by (by100 simp)
+                  also have "q_b \<noteq> p1"
+                  proof
+                    assume "q_b = p1"
+                    hence "b_lab = a_lab" using hqb_props(2) hclose(3) by (by100 simp)
+                    thus False using \<open>b_lab \<noteq> a_lab\<close> by (by100 simp)
+                  qed
+                  hence "q_b < p1" using hqb_le by (by100 linarith)
+                  hence "(take p1 scheme) ! q_b = scheme ! q_b" by (by100 simp)
+                  finally show ?thesis unfolding R_def .
+                qed
                 thus ?thesis using hqb_props(2) by (by100 simp)
               qed
               hence "fst (R_a ! k_b) = b_lab"
