@@ -3305,30 +3305,94 @@ lemma cancel_preserves_proper:
       and hpair: "fst (w ! j) = fst (w ! (j+1))"
   shows "\<forall>label. card {i. i < length (take j w @ drop (j+2) w)
       \<and> fst ((take j w @ drop (j+2) w) ! i) = label} \<in> {0, 2}"
-proof (intro allI)
-  fix label :: 'a
+proof -
   let ?w' = "take j w @ drop (j+2) w"
   let ?lab_j = "fst (w ! j)"
-  show "card {i. i < length ?w' \<and> fst (?w' ! i) = label} \<in> {0, 2}"
-  proof (cases "label = ?lab_j")
-    case True
-    \<comment> \<open>Cancelled label: count drops from 2 to 0.\<close>
-    \<comment> \<open>w had exactly 2 positions with this label: j and j+1 (by properness + hpair).\<close>
-    \<comment> \<open>w' has no positions with this label.\<close>
-    have "{i. i < length ?w' \<and> fst (?w' ! i) = label} = {}"
-      sorry
-    thus ?thesis by (by100 simp)
-  next
-    case False
-    \<comment> \<open>Other label: count unchanged.\<close>
-    \<comment> \<open>Positions with label l in w are all \<noteq> j and \<noteq> j+1.
-       They map to positions in w' with count preserved.\<close>
-    have "card {i. i < length ?w' \<and> fst (?w' ! i) = label}
-        = card {i. i < length w \<and> fst (w ! i) = label}"
-      sorry
-    moreover from hproper have "card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
-      by (by100 blast)
-    ultimately show ?thesis by (by100 simp)
+  \<comment> \<open>Key fact: the only positions in w with label ?lab\_j are j and j+1.\<close>
+  have honly_jj1: "{k. k < length w \<and> fst (w ! k) = ?lab_j} = {j, j+1}"
+  proof -
+    have hj_in: "j \<in> {k. k < length w \<and> fst (w ! k) = ?lab_j}" using hj by (by100 simp)
+    have hj1_in: "j+1 \<in> {k. k < length w \<and> fst (w ! k) = ?lab_j}"
+      using hj hpair by (by100 simp)
+    have hcard: "card {k. k < length w \<and> fst (w ! k) = ?lab_j} = 2"
+    proof -
+      from hproper have "card {k. k < length w \<and> fst (w ! k) = ?lab_j} \<in> {0, 2}" by (by100 blast)
+      moreover have "{k. k < length w \<and> fst (w ! k) = ?lab_j} \<noteq> {}" using hj_in by (by100 blast)
+      hence "card {k. k < length w \<and> fst (w ! k) = ?lab_j} \<noteq> 0" by (by100 simp)
+      ultimately show ?thesis by (by100 blast)
+    qed
+    have hfin: "finite {k. k < length w \<and> fst (w ! k) = ?lab_j}" by (by100 simp)
+    have hsub: "{j, j+1} \<subseteq> {k. k < length w \<and> fst (w ! k) = ?lab_j}"
+      using hj_in hj1_in by (by100 blast)
+    have hcard2: "card {j, j+1} = 2" by (by100 simp)
+    from card_seteq[OF hfin hsub] hcard hcard2
+    show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Nth of w': for i < j, w'!i = w!i. For i \<ge> j, w'!i = w!(i+2).\<close>
+  have hlen_w': "length ?w' = length w - 2" using hj by (by100 simp)
+  have hnth_lt: "\<forall>i. i < j \<longrightarrow> ?w' ! i = w ! i"
+  proof (intro allI impI)
+    fix i assume "i < j"
+    hence "i < length (take j w)" using hj by (by100 simp)
+    thus "?w' ! i = w ! i"
+      using nth_append[of "take j w" "drop (j+2) w" i] by (by100 simp)
+  qed
+  have hnth_ge: "\<forall>i. j \<le> i \<longrightarrow> i < length ?w' \<longrightarrow> ?w' ! i = w ! (i+2)"
+  proof (intro allI impI)
+    fix i assume "j \<le> i" "i < length ?w'"
+    have "\<not> i < length (take j w)" using \<open>j \<le> i\<close> hj by (by100 simp)
+    hence "?w' ! i = (drop (j+2) w) ! (i - j)"
+      using nth_append[of "take j w" "drop (j+2) w" i] hj by (by100 simp)
+    also have "\<dots> = w ! (j + 2 + (i - j))"
+      using nth_drop \<open>i < length ?w'\<close> hj \<open>j \<le> i\<close> by (by100 simp)
+    also have "j + 2 + (i - j) = i + 2" using \<open>j \<le> i\<close> by (by100 simp)
+    finally show "?w' ! i = w ! (i + 2)" .
+  qed
+  \<comment> \<open>Now prove for each label.\<close>
+  show ?thesis
+  proof (intro allI)
+    fix label :: 'a
+    show "card {i. i < length ?w' \<and> fst (?w' ! i) = label} \<in> {0, 2}"
+    proof (cases "label = ?lab_j")
+      case True
+      have "{i. i < length ?w' \<and> fst (?w' ! i) = label} = {}"
+      proof (rule equals0I)
+        fix i assume "i \<in> {i. i < length ?w' \<and> fst (?w' ! i) = label}"
+        hence hi: "i < length ?w'" "fst (?w' ! i) = label" by (by100 simp)+
+        show False
+        proof (cases "i < j")
+          case True
+          hence "?w' ! i = w ! i" using hnth_lt by (by100 blast)
+          hence "fst (w ! i) = label" using hi(2) by (by100 simp)
+          hence "fst (w ! i) = ?lab_j" using \<open>label = ?lab_j\<close> by (by100 simp)
+          hence "i \<in> {k. k < length w \<and> fst (w ! k) = ?lab_j}"
+            using hi(1) hlen_w' hj True by (by100 simp)
+          hence "i \<in> {j, j+1}" using honly_jj1 by (by100 blast)
+          thus False using True by (by100 simp)
+        next
+          case False
+          hence "j \<le> i" by (by100 simp)
+          hence "?w' ! i = w ! (i+2)" using hnth_ge hi(1) by (by100 blast)
+          hence "fst (w ! (i+2)) = ?lab_j" using hi(2) \<open>label = ?lab_j\<close> by (by100 simp)
+          have "i + 2 < length w" using hi(1) hlen_w' hj by (by100 simp)
+          hence "i+2 \<in> {k. k < length w \<and> fst (w ! k) = ?lab_j}"
+            using \<open>fst (w ! (i+2)) = ?lab_j\<close> by (by100 simp)
+          hence "i+2 \<in> {j, j+1}" using honly_jj1 by (by100 blast)
+          hence "i+2 = j \<or> i+2 = j+1" by (by100 blast)
+          thus False using \<open>j \<le> i\<close> by (by100 simp)
+        qed
+      qed
+      thus ?thesis by (by100 simp)
+    next
+      case False
+      \<comment> \<open>Other label: bijection between positions in w and w'.\<close>
+      have "card {i. i < length ?w' \<and> fst (?w' ! i) = label}
+          = card {i. i < length w \<and> fst (w ! i) = label}"
+        sorry
+      moreover from hproper have "card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+        by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
   qed
 qed
 
