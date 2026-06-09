@@ -4499,6 +4499,37 @@ proof -
   qed
 qed
 
+\<comment> \<open>Relabel target to avoid a specific label. From rest \<sim> target where rest avoids label a,
+   obtain target' \<sim> target that also avoids label a.\<close>
+lemma scheme_equiv_relabel_avoid:
+  fixes target :: "(nat \<times> bool) list" and a :: nat
+  shows "\<exists>target'. top1_scheme_equiv target target' \<and> (\<forall>e \<in> set target'. fst e \<noteq> a)"
+proof -
+  \<comment> \<open>Choose a fresh label that doesn't appear in target and differs from a.\<close>
+  have "finite (fst ` set target \<union> {a} :: nat set)" by (by100 simp)
+  from ex_new_if_finite[OF infinite_UNIV_nat this]
+  obtain fresh :: nat where hfresh: "fresh \<notin> fst ` set target \<union> {a}" by (by100 blast)
+  hence "fresh \<noteq> a" by (by100 blast)
+  \<comment> \<open>Relabel a \<to> fresh in target.\<close>
+  define target' where "target' = map (\<lambda>(l,b). (if l = a then fresh else l, b)) target"
+  have "top1_scheme_equiv target target'"
+    unfolding target'_def
+    using elementary_imp_equiv[OF top1_elementary_scheme_operation.relabel[of target a fresh]] by (by100 simp)
+  moreover have "\<forall>e \<in> set target'. fst e \<noteq> a"
+  proof (intro ballI)
+    fix e assume "e \<in> set target'"
+    then obtain e0 where "e0 \<in> set target" "e = (\<lambda>(l,b). (if l = a then fresh else l, b)) e0"
+      unfolding target'_def by (by100 force)
+    obtain l0 b0 where "e0 = (l0, b0)" by (cases e0)
+    hence "e = (if l0 = a then fresh else l0, b0)"
+      using \<open>e = (\<lambda>(l,b). (if l = a then fresh else l, b)) e0\<close> by (by100 simp)
+    hence "fst e = (if fst e0 = a then fresh else fst e0)"
+      using \<open>e0 = (l0, b0)\<close> by (by100 simp)
+    thus "fst e \<noteq> a" using \<open>fresh \<noteq> a\<close> by (by100 simp)
+  qed
+  ultimately show ?thesis by (by100 blast)
+qed
+
 \<comment> \<open>Helper: extract one projective pair from a proper scheme with a same-direction pair.
    Returns [(a,T),(a,T)] @ rest where rest is proper and shorter.\<close>
 lemma extract_projective_pair:
@@ -4876,14 +4907,22 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
            If a < m': relabel a \<to> fresh in rest first.\<close>
         \<comment> \<open>Step 4: [(a,T),(a,T)]@proj m' = [(a,T),(a,T),(0,T),(0,T),...,(m'-1,T),(m'-1,T)].
            Relabel a \<to> m': [(m',T),(m',T),(0,T),(0,T),...,(m'-1,T),(m'-1,T)] = proj (m'+1).\<close>
-        \<comment> \<open>Step 3: Congruence: context\_left makes this unconditional (no label avoidance needed).\<close>
-        have "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ w')"
-          using scheme_equiv_prepend[OF hm(3)] by (by100 blast)
-        hence hchain: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ w')"
+        \<comment> \<open>Step 3: Relabel w' (= proj m') to avoid label a, then apply congruence.\<close>
+        from scheme_equiv_relabel_avoid[of w' a]
+        obtain w_no_a where hw_no_a: "top1_scheme_equiv w' w_no_a" "\<forall>e \<in> set w_no_a. fst e \<noteq> a"
+          by (by100 blast)
+        have "top1_scheme_equiv rest w_no_a"
+          using hm(3) hw_no_a(1) unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+        hence "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ w_no_a)"
+          using scheme_equiv_prepend by (by100 blast)
+        hence hchain: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ w_no_a)"
           using scheme_equiv_trans[OF ha_rest(1)] by (by100 blast)
-        \<comment> \<open>Step 4: Relabel a \<to> m', rotate to standard form: [(a,T),(a,T)]@proj m' \<sim> proj (m'+1).\<close>
-        have "top1_scheme_equiv ([(a,True),(a,True)] @ w') (top1_m_projective_scheme (m'+1))"
-          sorry \<comment> \<open>Relabel a \<to> m', then rotate [(m',T),(m',T)]@proj m' to proj (m'+1).\<close>
+        \<comment> \<open>Step 4: [(a,T),(a,T)] @ w\_no\_a has label a only in pair (2 times).
+           w\_no\_a is equivalent to proj m' and avoids a.
+           Relabel to standard projective form.\<close>
+        have "top1_scheme_equiv ([(a,True),(a,True)] @ w_no_a) (top1_m_projective_scheme (m'+1))"
+          sorry \<comment> \<open>w\_no\_a \<sim> proj m' with m' pairs, all labels \<noteq> a. Pair adds label a.
+             Total: m'+1 pairs, m'+1 distinct labels. Relabel bijectively to {0..m'}.\<close>
         hence "top1_scheme_equiv scheme (top1_m_projective_scheme (m'+1))"
           using scheme_equiv_trans[OF hchain] by (by100 blast)
         moreover have "top1_is_projective_scheme (top1_m_projective_scheme (m'+1)) (m'+1)"
