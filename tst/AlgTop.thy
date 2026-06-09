@@ -7691,7 +7691,13 @@ proof -
   have hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme!i) = label} \<in> {0, 2}"
     sorry \<comment> \<open>From boundary injectivity of quotient\_of\_scheme\_on.\<close>
   have hlen_ge4: "length scheme \<ge> 4"
-    sorry \<comment> \<open>From polygon n \\<ge> 3, properness (even length), and surface structure.\<close>
+  proof -
+    from hsch obtain P0 q0 where "top1_is_polygonal_region_on P0 (length scheme)"
+      by (rule quotient_of_scheme_extract)
+    hence "length scheme \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
+    moreover have "even (length scheme)" using proper_scheme_even_length[OF hproper] .
+    ultimately show ?thesis by (by100 presburger)
+  qed
   \<comment> \<open>Apply scheme\_normal\_form: sphere, torus, or projective.\<close>
   from scheme_normal_form[OF hlen_ge4 hproper]
   have hNF: "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
