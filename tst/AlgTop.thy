@@ -5862,11 +5862,19 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           have "top1_scheme_equiv scheme (drop p1 scheme @ take p1 scheme)"
             using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate[of "take p1 scheme" "drop p1 scheme"]]
             by (by100 simp)
-          \<comment> \<open>Step 4b: After rotation, standardize directions and arrange commutator pattern.\<close>
-          \<comment> \<open>The rotated scheme has (a\_lab, dir) at front, (b\_lab, dir') at position 1,
-             (a\_lab, \\<not>dir) at position (p2-p1), and (b\_lab, \\<not>dir') somewhere after.
-             Flip a\_lab and b\_lab if needed, then use cut\_paste\_opp to bring b\<inverse> to a\<inverse>.\<close>
-          thus ?thesis sorry \<comment> \<open>Flip + cut\_paste\_opp arrangement.\<close>
+          \<comment> \<open>Step 4b: Flip a\_lab and b\_lab directions to True, then reverse cut\_paste\_opp.\<close>
+          \<comment> \<open>After rotation, the scheme has (a\_lab,dir\_a) at position 0, (b\_lab,dir\_b) at position 1,
+             (a\_lab,\\<not>dir\_a) at position (p2-p1), and (b\_lab,\\<not>dir\_b) at some position k > p2-p1.
+             Flip a\_lab if dir\_a=False, flip b\_lab if dir\_b=False.
+             Then apply reverse cut\_paste\_opp with a\_lab to move material between
+             (a\_lab,F) and (b\_lab,F) to before (a\_lab,T).
+             Result: before\_b\_inv @ [(a\_lab,T),(b\_lab,T)] @ middle @ [(a\_lab,F),(b\_lab,F)] @ after\_b\_inv.\<close>
+          \<comment> \<open>The whole chain: scheme \<sim> rotated \<sim> flipped \<sim> pattern.\<close>
+          thus ?thesis sorry \<comment> \<open>Flip + reverse-cut\_paste\_opp arrangement. Uses:
+             (1) flip\_label a\_lab if needed
+             (2) flip\_label b\_lab if needed
+             (3) scheme decomposition at the 4 key positions
+             (4) reverse cut\_paste\_opp = rotate+cut\_paste\_opp+rotate.\<close>
         qed
         then obtain a_lab b_lab w0' w1' w2' where hab: "a_lab \<noteq> b_lab"
             and hequiv: "top1_scheme_equiv scheme
