@@ -5879,9 +5879,111 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           \<comment> \<open>Step 4b-ii: Apply flip\_label a\_lab if dir\_a = False, then flip\_label b\_lab if dir\_b = False.
              After both flips: front is (a\_lab,T), next is (b\_lab,T), (a\_lab,F) at gap position.
              Then decompose and apply reverse cut\_paste\_opp.\<close>
-          \<comment> \<open>The full construction is detailed: decompose rotated+flipped scheme at 4 key positions,
-             then apply reverse cut\_paste\_opp chain (3 operations).\<close>
-          thus ?thesis sorry \<comment> \<open>Detailed flip + decomposition + reverse cut\_paste\_opp.\<close>
+          \<comment> \<open>Step 4b-iii: The flipped+rotated scheme has the form
+             [(a\_lab,T),(b\_lab,T)] @ mid @ [(a\_lab,F)] @ between @ [(b\_lab,F)] @ after.
+             Apply reverse cut\_paste\_opp to move 'between' before (a\_lab,T).\<close>
+          \<comment> \<open>For now: produce the existential directly via sorry for the chain construction.\<close>
+          have "\<exists>w0 w1 w2. top1_scheme_equiv scheme
+              (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2)"
+          proof -
+            \<comment> \<open>Step A: Flip a\_lab direction. scheme \<sim> R. Then R \<sim> R\_a (a\_lab has True at front).\<close>
+            define R_a where "R_a = (if dir_a then R else
+                map (\<lambda>(l,bo). (l, if l = a_lab then \<not>bo else bo)) R)"
+            have hRa_equiv: "top1_scheme_equiv scheme R_a"
+            proof (cases dir_a)
+              case True thus ?thesis unfolding R_a_def using hR_equiv by (by100 simp)
+            next
+              case False
+              hence "R_a = map (\<lambda>(l,bo). (l, if l = a_lab then \<not>bo else bo)) R" unfolding R_a_def by (by100 simp)
+              moreover have "top1_scheme_equiv R (map (\<lambda>(l,bo). (l, if l = a_lab then \<not>bo else bo)) R)"
+                using elementary_imp_equiv[OF top1_elementary_scheme_operation.flip_label[of R a_lab]] by (by100 simp)
+              ultimately show ?thesis using hR_equiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+            qed
+            \<comment> \<open>Step B: Flip b\_lab direction. R\_a \<sim> R\_ab (b\_lab has True at position 1).\<close>
+            define R_ab where "R_ab = (if dir_b then R_a else
+                map (\<lambda>(l,bo). (l, if l = b_lab then \<not>bo else bo)) R_a)"
+            have hRab_equiv: "top1_scheme_equiv scheme R_ab"
+            proof (cases dir_b)
+              case True thus ?thesis unfolding R_ab_def using hRa_equiv by (by100 simp)
+            next
+              case False
+              hence "R_ab = map (\<lambda>(l,bo). (l, if l = b_lab then \<not>bo else bo)) R_a" unfolding R_ab_def by (by100 simp)
+              moreover have "top1_scheme_equiv R_a (map (\<lambda>(l,bo). (l, if l = b_lab then \<not>bo else bo)) R_a)"
+                using elementary_imp_equiv[OF top1_elementary_scheme_operation.flip_label[of R_a b_lab]] by (by100 simp)
+              ultimately show ?thesis using hRa_equiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+            qed
+            \<comment> \<open>Step C: R\_ab has the form [(a\_lab,T),(b\_lab,T)] @ mid @ [(a\_lab,F)] @ between @ [(b\_lab,F)] @ after.\<close>
+            have hRab_len: "length R_ab = length scheme"
+              unfolding R_ab_def R_a_def R_def by (by100 simp)
+            have hp1_lt: "p1 < length scheme" using hclose(1,2) by (by100 linarith)
+            have hp1_1_lt: "p1 + 1 < length scheme" using hgap hclose(2) by (by100 linarith)
+            have hdrop_ne: "drop p1 scheme \<noteq> []" using hp1_lt by (by100 simp)
+            have hR_0: "R ! 0 = scheme ! p1"
+            proof -
+              have hlen_drop: "0 < length (drop p1 scheme)" using hp1_lt by (by100 simp)
+              have "(drop p1 scheme @ take p1 scheme) ! 0 = (drop p1 scheme) ! 0"
+                using nth_append[of "drop p1 scheme" "take p1 scheme" 0] hlen_drop by (by100 simp)
+              also have "\<dots> = scheme ! p1" using hp1_lt by (by100 simp)
+              finally show ?thesis unfolding R_def .
+            qed
+            have hR_1: "R ! 1 = scheme ! (p1+1)"
+            proof -
+              have hlen_drop: "1 < length (drop p1 scheme)" using hp1_1_lt by (by100 simp)
+              have "(drop p1 scheme @ take p1 scheme) ! 1 = (drop p1 scheme) ! 1"
+                using nth_append[of "drop p1 scheme" "take p1 scheme" 1] hlen_drop by (by100 simp)
+              also have "\<dots> = scheme ! (p1 + 1)" using hp1_1_lt by (by100 simp)
+              finally show ?thesis unfolding R_def .
+            qed
+            define gap where "gap = p2 - p1"
+            have hR_gap: "R ! gap = scheme ! p2"
+            proof -
+              have hlen_drop_gap: "gap < length (drop p1 scheme)" unfolding gap_def using hclose(1,2) by (by100 simp)
+              have "(drop p1 scheme @ take p1 scheme) ! gap = (drop p1 scheme) ! gap"
+                using nth_append[of "drop p1 scheme" "take p1 scheme" gap] hlen_drop_gap by (by100 simp)
+              also have "\<dots> = scheme ! (p1 + gap)"
+                using hclose(1,2) unfolding gap_def by (by100 simp)
+              also have "p1 + gap = p2" unfolding gap_def using hclose(1) by (by100 simp)
+              finally show ?thesis unfolding R_def .
+            qed
+            \<comment> \<open>After flips: R\_ab!0 = (a\_lab, True), R\_ab!1 = (b\_lab, True), R\_ab!gap = (a\_lab, False).\<close>
+            have hRab_0: "R_ab ! 0 = (a_lab, True)" sorry
+            have hRab_1: "R_ab ! 1 = (b_lab, True)" sorry
+            have hRab_gap: "R_ab ! gap = (a_lab, False)" sorry
+            have hgap_gt1: "gap > 1" using hgap unfolding gap_def by (by100 linarith)
+            \<comment> \<open>Step D: Find position of (b\_lab, False) in R\_ab. It is at some position k\_b > gap.\<close>
+            have "\<exists>k_b. k_b > gap \<and> k_b < length R_ab \<and> R_ab ! k_b = (b_lab, False)" sorry
+            then obtain k_b where hkb: "k_b > gap" "k_b < length R_ab" "R_ab ! k_b = (b_lab, False)"
+              sorry
+            \<comment> \<open>Step E: Decompose R\_ab at positions 0, 1, gap, k\_b.\<close>
+            define mid where "mid = take (gap - 2) (drop 2 R_ab)"
+            define between where "between = take (k_b - gap - 1) (drop (gap + 1) R_ab)"
+            define after where "after = drop (k_b + 1) R_ab"
+            have hRab_decomp: "R_ab = [(a_lab,True),(b_lab,True)] @ mid @ [(a_lab,False)]
+                @ between @ [(b_lab,False)] @ after" sorry
+            \<comment> \<open>Step F: Apply reverse cut\_paste\_opp with a\_lab.
+               u0 @ [(a\_lab,T)] @ u2 @ [(a\_lab,F)] @ u1 @ u3
+               \<to> u0 @ u1 @ [(a\_lab,T)] @ u2 @ [(a\_lab,F)] @ u3
+               with u0 = [], u2 = [(b\_lab,T)]@mid, u1 = between@[(b\_lab,F)], ... wait
+               Actually we want to move 'between' from between (a\_lab,F) and (b\_lab,F) to before (a\_lab,T).\<close>
+            \<comment> \<open>The reverse cut\_paste\_opp with c = a\_lab:
+               [] @ [(a\_lab,T)] @ [(b\_lab,T)]@mid @ [(a\_lab,F)] @ between @ [(b\_lab,F)]@after
+               \<to> between @ [(a\_lab,T)] @ [(b\_lab,T)]@mid @ [(a\_lab,F)] @ [(b\_lab,F)]@after
+               This moves 'between' from after (a\_lab,F) to before (a\_lab,T).\<close>
+            have "top1_scheme_equiv R_ab
+                (between @ [(a_lab,True),(b_lab,True)] @ mid @ [(a_lab,False),(b_lab,False)] @ after)"
+              sorry \<comment> \<open>Reverse cut\_paste\_opp: 3 elementary operations (rotate+cut\_paste\_opp+rotate).\<close>
+            hence "top1_scheme_equiv scheme
+                (between @ [(a_lab,True),(b_lab,True)] @ mid @ [(a_lab,False),(b_lab,False)] @ after)"
+              using hRab_equiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+            thus ?thesis by (by100 blast)
+          qed
+          then obtain w0 w1 w2 where "top1_scheme_equiv scheme
+              (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2)"
+            by (by100 blast)
+          thus ?thesis
+            apply (rule_tac x=a_lab in exI)
+            apply (rule_tac x=b_lab in exI)
+            using \<open>b_lab \<noteq> a_lab\<close> by (by100 blast)
         qed
         then obtain a_lab b_lab w0' w1' w2' where hab: "a_lab \<noteq> b_lab"
             and hequiv: "top1_scheme_equiv scheme
