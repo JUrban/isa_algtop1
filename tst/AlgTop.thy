@@ -6091,7 +6091,20 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               \<comment> \<open>By minimality: gap between b\_lab's positions \<ge> a\_lab's gap.\<close>
               \<comment> \<open>The two b\_lab positions are p1+1 and q\_b. Their linear gap (larger - smaller)
                  must be \<ge> p2-p1 = gap. So q\_b is NOT between p1+1 and p2.\<close>
-              have "q_b \<notin> {p1+2..p2}" sorry \<comment> \<open>From minimality: if q\_b \<in> this range, b\_lab gap < a\_lab gap.\<close>
+              have "q_b \<notin> {p1+2..p2}"
+              proof
+                assume "q_b \<in> {p1+2..p2}"
+                hence "p1 + 1 < q_b" "q_b \<le> p2" by (by100 simp)+
+                \<comment> \<open>b\_lab positions are p1+1 < q\_b, both < length scheme.\<close>
+                have "fst (scheme!(p1+1)) = b_lab" using b_lab_def by (by100 simp)
+                have "p1 + 1 < q_b \<and> q_b < length scheme \<and> fst (scheme!(p1+1)) = b_lab
+                    \<and> fst (scheme!q_b) = b_lab"
+                  using \<open>p1 + 1 < q_b\<close> hp1_1_lt hqb_props(1,2) \<open>fst (scheme!(p1+1)) = b_lab\<close>
+                  by (by100 blast)
+                hence "p2 - p1 \<le> q_b - (p1+1)" using hclose(7) by (by100 blast)
+                hence "q_b \<ge> p2 + 1" using \<open>p1 + 1 < q_b\<close> hclose(1) by (by100 linarith)
+                thus False using \<open>q_b \<le> p2\<close> by (by100 linarith)
+              qed
               \<comment> \<open>In R\_ab, q\_b maps to position (q\_b - p1) mod (length scheme).
                  Since q\_b \<notin> {p1+2..p2}, the R\_ab position is > gap.\<close>
               define k_b where "k_b = (if q_b > p1 then q_b - p1 else q_b + length scheme - p1)"
