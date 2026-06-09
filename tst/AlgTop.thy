@@ -3613,6 +3613,16 @@ proof -
   finally show "even (length w)" by (by100 presburger)
 qed
 
+\<comment> \<open>Length-4 projective base case: scheme ~ projective m=1 or m=2.\<close>
+lemma projective_len4_base:
+  fixes scheme :: "(nat \<times> bool) list"
+  assumes hlen: "length scheme = 4"
+      and hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+      and hproj: "\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
+          \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
+  shows "(\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w)"
+  sorry
+
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
    (1) aa\\<inverse>bb\\<inverse> (sphere, length 4)
@@ -3658,9 +3668,22 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
     show ?thesis
     proof (cases "length scheme = 4")
       case True
-      \<comment> \<open>Length 4 projective: scheme has 2 labels. One pair same direction (projective type).
-         Either aabb (projective m=2) or aab\\<inverse>b \<Rightarrow> Lemma 77.1 \<Rightarrow> abab (projective m=1, type 2).\<close>
-      show ?thesis sorry
+      \<comment> \<open>Length 4 projective: use Lemma 77.1 to bring projective pair to front.
+         Remainder has length 2 with one label. Two subcases:
+         (a) same direction \<Rightarrow> scheme ~ aabb ~ projective m=2
+         (b) opposite direction \<Rightarrow> scheme ~ aab\\<inverse>b ~ cancel \<Rightarrow> aa ~ projective m=1.\<close>
+      \<comment> \<open>Step 1: decompose scheme as y0 @ [(lab,d)] @ y1 @ [(lab,d)] @ y2.\<close>
+      \<comment> \<open>From projective type, there exists lab with 2 same-direction occurrences.\<close>
+      \<comment> \<open>Step 2: apply Lemma\\_77\\_1\\_projective\\_collection to bring pair to front.\<close>
+      \<comment> \<open>Step 3: remaining 2 elements have one other label. Subcase on direction.\<close>
+      \<comment> \<open>Step 4a: both True \<Rightarrow> relabel \<Rightarrow> projective m=2.\<close>
+      \<comment> \<open>Step 4b: one True, one False \<Rightarrow> inverse pair \<Rightarrow> cancel \<Rightarrow> aa \<Rightarrow> projective m=1.\<close>
+      \<comment> \<open>Use the length-4 projective base case lemma.\<close>
+      from projective_len4_base[OF True less(3)
+            \<open>\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme.
+                i \<noteq> j \<and> fst (scheme ! i) = label \<and> fst (scheme ! j) = label
+                \<and> snd (scheme ! i) = snd (scheme ! j)\<close>]
+      show ?thesis by (by100 blast)
     next
       case False
       hence hgt4: "length scheme > 4" using less(2) by (by100 simp)
