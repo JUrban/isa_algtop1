@@ -4482,21 +4482,18 @@ lemma elementary_operation_prepend:
   by (rule elementary_imp_equiv[OF top1_elementary_scheme_operation.context_left[OF hop]])
 
 \<comment> \<open>Main congruence: full chain through prefix.\<close>
-lemma scheme_equiv_prepend_pair:
-  fixes rest rest' :: "(nat \<times> bool) list" and a :: nat
+lemma scheme_equiv_prepend:
+  fixes rest rest' :: "('a \<times> bool) list" and prefix :: "('a \<times> bool) list"
   assumes "top1_scheme_equiv rest rest'"
-      and "\<forall>e \<in> set rest. fst e \<noteq> a"
-      and "\<forall>e \<in> set rest'. fst e \<noteq> a"
-  shows "top1_scheme_equiv ([(a, True), (a, True)] @ rest) ([(a, True), (a, True)] @ rest')"
+  shows "top1_scheme_equiv (prefix @ rest) (prefix @ rest')"
 proof -
   \<comment> \<open>With context\_left: lift each step of rest \<sim>* rest' through the prefix.\<close>
-  let ?prefix = "[(a, True), (a, True)]"
-  from assms(1) show ?thesis unfolding top1_scheme_equiv_def
+  from assms show ?thesis unfolding top1_scheme_equiv_def
   proof (induction rule: rtranclp.induct)
     case rtrancl_refl thus ?case by (by100 simp)
   next
     case (rtrancl_into_rtrancl x y z)
-    have "top1_elementary_scheme_operation (?prefix @ y) (?prefix @ z)"
+    have "top1_elementary_scheme_operation (prefix @ y) (prefix @ z)"
       by (rule top1_elementary_scheme_operation.context_left[OF rtrancl_into_rtrancl.hyps(2)])
     thus ?case using rtrancl_into_rtrancl.IH by (meson rtranclp.rtrancl_into_rtrancl)
   qed
@@ -4806,85 +4803,38 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         assume "\<exists>a' b'. a' \<noteq> b' \<and> top1_scheme_equiv rest [(a', True), (a', False), (b', True), (b', False)]"
         then obtain a' b' where hab: "a' \<noteq> b'" "top1_scheme_equiv rest [(a', True), (a', False), (b', True), (b', False)]"
           by (by100 blast)
-        \<comment> \<open>Relabel the sphere to avoid label a, then apply congruence.\<close>
-        \<comment> \<open>Find c, d with c \<noteq> d, c \<noteq> a, d \<noteq> a, and rest \<sim> [(c,T),(c,F),(d,T),(d,F)].\<close>
-        obtain c d where hcd: "c \<noteq> d" "c \<noteq> a" "d \<noteq> a"
-            "top1_scheme_equiv rest [(c, True), (c, False), (d, True), (d, False)]"
-        proof -
-          \<comment> \<open>If a' \<noteq> a and b' \<noteq> a: use a', b' directly.\<close>
-          \<comment> \<open>If a' = a: relabel a' to fresh in the sphere.\<close>
-          \<comment> \<open>If b' = a: relabel b' to fresh in the sphere.\<close>
-          have "\<exists>c0::nat. c0 \<notin> {a, b', a'}"
-          proof -
-            have "finite ({a, b', a'} :: nat set)" by (by100 simp)
-            from ex_new_if_finite[OF infinite_UNIV_nat this] show ?thesis by (by100 blast)
-          qed
-          then obtain c0 :: nat where "c0 \<notin> {a, b', a'}" by (by100 blast)
-          hence "c0 \<noteq> a" "c0 \<noteq> b'" "c0 \<noteq> a'" by (by100 simp)+
-          define c where "c = (if a' = a then c0 else a')"
-          define d where "d = (if b' = a then c0 else b')"
-          have "c \<noteq> a" unfolding c_def using \<open>c0 \<noteq> a\<close> by (by100 simp)
-          have "d \<noteq> a" unfolding d_def using \<open>c0 \<noteq> a\<close> by (by100 simp)
-          have "c \<noteq> d"
-            unfolding c_def d_def using hab(1) \<open>c0 \<noteq> b'\<close> \<open>c0 \<noteq> a'\<close> by (by100 simp)
-          have "top1_scheme_equiv rest [(c, True), (c, False), (d, True), (d, False)]"
-          proof -
-            \<comment> \<open>Chain: rest \<sim> [(a',T),(a',F),(b',T),(b',F)] \<sim> relabel(a'\<to>c) \<sim> relabel(b'\<to>d).\<close>
-            have s1: "top1_scheme_equiv [(a',True),(a',False),(b',True),(b',False)]
-                (map (\<lambda>(l,bo). (if l = a' then c else l, bo)) [(a',True),(a',False),(b',True),(b',False)])"
-              unfolding top1_scheme_equiv_def
-              using top1_elementary_scheme_operation.relabel[of "[(a',True),(a',False),(b',True),(b',False)]" a' c]
-              by (by100 simp)
-            have hmap1: "map (\<lambda>(l,bo). (if l = a' then c else l, bo)) [(a',True),(a',False),(b',True),(b',False)]
-                = [(c,True),(c,False),(b',True),(b',False)]"
-              using hab(1) by (by100 simp)
-            have s2: "top1_scheme_equiv [(c,True),(c,False),(b',True),(b',False)]
-                (map (\<lambda>(l,bo). (if l = b' then d else l, bo)) [(c,True),(c,False),(b',True),(b',False)])"
-              unfolding top1_scheme_equiv_def
-              using top1_elementary_scheme_operation.relabel[of "[(c,True),(c,False),(b',True),(b',False)]" b' d]
-              by (by100 simp)
-            have "c \<noteq> b'" unfolding c_def using hab(1) \<open>c0 \<noteq> b'\<close> by (by100 simp)
-            have hmap2: "map (\<lambda>(l,bo). (if l = b' then d else l, bo)) [(c,True),(c,False),(b',True),(b',False)]
-                = [(c,True),(c,False),(d,True),(d,False)]"
-              using \<open>c \<noteq> b'\<close> by (by100 simp)
-            from hab(2) s1[unfolded hmap1] s2[unfolded hmap2]
-            show ?thesis unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
-          qed
-          thus ?thesis using \<open>c \<noteq> d\<close> \<open>c \<noteq> a\<close> \<open>d \<noteq> a\<close> that by (by100 blast)
-        qed
-        have hne_sphere: "\<forall>e \<in> set [(c, True), (c, False), (d, True), (d, False)]. fst e \<noteq> a"
-          using hcd(2,3) by (by100 simp)
-        have "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ [(c,True),(c,False),(d,True),(d,False)])"
-          using scheme_equiv_prepend_pair[OF hcd(4) ha_rest(3) hne_sphere] by (by100 blast)
-        hence hchain: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ [(c,True),(c,False),(d,True),(d,False)])"
+        \<comment> \<open>With unconditional congruence: [(a,T),(a,T)]@rest \<sim> [(a,T),(a,T)]@sphere directly.\<close>
+        have "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])"
+          using scheme_equiv_prepend[OF hab(2)] by (by100 blast)
+        hence hchain: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])"
           using scheme_equiv_trans[OF ha_rest(1)] by (by100 blast)
-        \<comment> \<open>Cancel (c,T)(c,F) at positions 2,3; then (d,T)(d,F) at positions 2,3.\<close>
+        \<comment> \<open>Cancel (a',T)(a',F) at positions 2,3; then (b',T)(b',F) at positions 2,3.\<close>
         have "top1_scheme_equiv scheme ([(a,True),(a,True)])"
         proof -
           have s1: "top1_elementary_scheme_operation
-              ([(a,True),(a,True)] @ [(c,True), top1_inverse_edge (c,True)] @ [(d,True),(d,False)])
-              ([(a,True),(a,True)] @ [(d,True),(d,False)])"
+              ([(a,True),(a,True)] @ [(a',True), top1_inverse_edge (a',True)] @ [(b',True),(b',False)])
+              ([(a,True),(a,True)] @ [(b',True),(b',False)])"
             by (rule top1_elementary_scheme_operation.cancel)
-          have "(c, False) = top1_inverse_edge (c, True)"
+          have "(a', False) = top1_inverse_edge (a', True)"
             unfolding top1_inverse_edge_def by (by100 simp)
-          hence "top1_scheme_equiv ([(a,True),(a,True),(c,True),(c,False),(d,True),(d,False)])
-              ([(a,True),(a,True),(d,True),(d,False)])"
+          hence "top1_scheme_equiv ([(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)])
+              ([(a,True),(a,True),(b',True),(b',False)])"
             using s1 unfolding top1_scheme_equiv_def by (by100 simp)
           moreover have s2: "top1_elementary_scheme_operation
-              ([(a,True),(a,True)] @ [(d,True), top1_inverse_edge (d,True)] @ [])
+              ([(a,True),(a,True)] @ [(b',True), top1_inverse_edge (b',True)] @ [])
               ([(a,True),(a,True)] @ [])"
             by (rule top1_elementary_scheme_operation.cancel)
-          have "(d, False) = top1_inverse_edge (d, True)"
+          have "(b', False) = top1_inverse_edge (b', True)"
             unfolding top1_inverse_edge_def by (by100 simp)
-          hence "top1_scheme_equiv ([(a,True),(a,True),(d,True),(d,False)])
+          hence "top1_scheme_equiv ([(a,True),(a,True),(b',True),(b',False)])
               ([(a,True),(a,True)])"
             using s2 unfolding top1_scheme_equiv_def by (by100 simp)
-          ultimately have heq: "top1_scheme_equiv ([(a,True),(a,True),(c,True),(c,False),(d,True),(d,False)])
+          ultimately have heq: "top1_scheme_equiv ([(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)])
               ([(a,True),(a,True)])"
             using scheme_equiv_trans by (by100 blast)
-          have "[(a,True),(a,True)] @ [(c,True),(c,False),(d,True),(d,False)]
-              = [(a,True),(a,True),(c,True),(c,False),(d,True),(d,False)]" by (by100 simp)
-          hence "top1_scheme_equiv ([(a,True),(a,True)] @ [(c,True),(c,False),(d,True),(d,False)])
+          have "[(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)]
+              = [(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)]" by (by100 simp)
+          hence "top1_scheme_equiv ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])
               ([(a,True),(a,True)])"
             using heq by (by100 simp)
           thus ?thesis using scheme_equiv_trans[OF hchain] by (by100 blast)
@@ -4926,11 +4876,9 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
            If a < m': relabel a \<to> fresh in rest first.\<close>
         \<comment> \<open>Step 4: [(a,T),(a,T)]@proj m' = [(a,T),(a,T),(0,T),(0,T),...,(m'-1,T),(m'-1,T)].
            Relabel a \<to> m': [(m',T),(m',T),(0,T),(0,T),...,(m'-1,T),(m'-1,T)] = proj (m'+1).\<close>
-        \<comment> \<open>Step 3: Congruence: need no-a in proj m'. Proj m' uses labels 0..m'-1.\<close>
-        have hproj_no_a: "\<forall>e \<in> set w'. fst e \<noteq> a"
-          sorry \<comment> \<open>If a \<ge> m': direct. If a < m': relabel rest+proj to avoid a first.\<close>
+        \<comment> \<open>Step 3: Congruence: context\_left makes this unconditional (no label avoidance needed).\<close>
         have "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ w')"
-          using scheme_equiv_prepend_pair[OF hm(3) ha_rest(3) hproj_no_a] by (by100 blast)
+          using scheme_equiv_prepend[OF hm(3)] by (by100 blast)
         hence hchain: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ w')"
           using scheme_equiv_trans[OF ha_rest(1)] by (by100 blast)
         \<comment> \<open>Step 4: Relabel a \<to> m', rotate to standard form: [(a,T),(a,T)]@proj m' \<sim> proj (m'+1).\<close>
