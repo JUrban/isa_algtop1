@@ -535,8 +535,8 @@ proof -
     apply (rule exI, rule exI, rule exI, rule exI)
     apply (intro conjI)
     apply assumption+
-    sorry \<comment> \<open>Remaining: conditions where length w' differs from length w after unfolding,
-       plus identification/boundary conditions needing hfst+hsnd\_eq.\<close>
+    \<comment> \<open>Remaining goals should involve fst/snd of the flipped scheme. Use hfst and hsnd\_eq.\<close>
+    sorry
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
