@@ -504,10 +504,39 @@ qed
 lemma quotient_scheme_flip_label:
   assumes "top1_quotient_of_scheme_on Y TY w"
   shows "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) w)"
-  sorry \<comment> \<open>Same polygon P, quotient map q, vertices vx/vy. Conditions not involving
-     snd(scheme!i) transfer directly (length preserved). Conditions 7 (edge identification)
-     and 9 (boundary injectivity) transfer because fst(w'!i) = fst(w!i) and
-     (snd(w'!i)=snd(w'!j)) = (snd(w!i)=snd(w!j)) when fst(w!i)=fst(w!j).\<close>
+proof -
+  let ?f = "\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)"
+  let ?w' = "map ?f w"
+  have hlen: "length ?w' = length w" by (by100 simp)
+  have hfst: "\<And>i. i < length w \<Longrightarrow> fst (?w'!i) = fst (w!i)"
+  proof -
+    fix i assume "i < length w"
+    obtain l bo where "w!i = (l, bo)" by (cases "w!i")
+    thus "fst (?w'!i) = fst (w!i)" using \<open>i < length w\<close> by (by100 simp)
+  qed
+  have hsnd_eq: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow> fst (w!i) = fst (w!j) \<Longrightarrow>
+      (snd (?w'!i) = snd (?w'!j)) = (snd (w!i) = snd (w!j))"
+  proof -
+    fix i j assume hi: "i < length w" and hj: "j < length w" and hfst_eq: "fst (w!i) = fst (w!j)"
+    obtain li bi where hlbi: "w!i = (li, bi)" by (cases "w!i")
+    obtain lj bj where hlbj: "w!j = (lj, bj)" by (cases "w!j")
+    have "li = lj" using hfst_eq hlbi hlbj by (by100 simp)
+    show "(snd (?w'!i) = snd (?w'!j)) = (snd (w!i) = snd (w!j))"
+      using hi hj hlbi hlbj \<open>li = lj\<close> by (by100 simp)
+  qed
+  \<comment> \<open>The definition for w' is the same as for w (same P, q, vx, vy witnesses).
+     Conditions not referencing snd transfer via hlen. Conditions referencing snd
+     transfer via hfst+hsnd\_eq.\<close>
+  from assms show ?thesis
+    unfolding top1_quotient_of_scheme_on_def hlen
+    apply (elim conjE exE)
+    apply (intro conjI)
+    apply assumption \<comment> \<open>is\_topology\_on\_strict\<close>
+    apply (rule exI, rule exI, rule exI, rule exI)
+    apply (intro conjI)
+    apply assumption+
+    sorry \<comment> \<open>Remaining: C7 (identification) and C9 (boundary). Need hfst+hsnd\_eq rewrite.\<close>
+qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
    If Y is a quotient of scheme s, and s \<rightarrow> t via an elementary operation,
