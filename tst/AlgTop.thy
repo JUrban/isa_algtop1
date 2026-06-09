@@ -5746,7 +5746,8 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         \<comment> \<open>Extract label a and positions of a, a\\<inverse>, label b between them.\<close>
         have "\<exists>a b w0 w1 w2. a \<noteq> b \<and>
             top1_scheme_equiv scheme
-              (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)"
+              (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
+            \<and> length w0 + length w1 + length w2 + 4 = length scheme"
         proof -
           \<comment> \<open>Step 1: Find label a with minimal gap between its two positions.\<close>
           \<comment> \<open>From properness: every label appears 0 or 2 times. At least one label appears
@@ -5943,7 +5944,8 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
              Apply reverse cut\_paste\_opp to move 'between' before (a\_lab,T).\<close>
           \<comment> \<open>For now: produce the existential directly via sorry for the chain construction.\<close>
           have "\<exists>w0 w1 w2. top1_scheme_equiv scheme
-              (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2)"
+              (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2)
+              \<and> length w0 + length w1 + length w2 + 4 = length scheme"
           proof -
             \<comment> \<open>Step A: Flip a\_lab direction. scheme \<sim> R. Then R \<sim> R\_a (a\_lab has True at front).\<close>
             define R_a where "R_a = (if dir_a then R else
@@ -6328,20 +6330,29 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             hence "top1_scheme_equiv scheme
                 (between @ [(a_lab,True),(b_lab,True)] @ mid @ [(a_lab,False),(b_lab,False)] @ after)"
               using hRab_equiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
-            thus ?thesis by (by100 blast)
+            moreover have "length between + length mid + length after + 4 = length scheme"
+            proof -
+              have "length R_ab = 2 + length mid + 1 + length between + 1 + length after"
+                using hRab_decomp by (by100 simp)
+              thus ?thesis using hRab_len hR_len by (by100 linarith)
+            qed
+            ultimately show ?thesis by (by100 blast)
           qed
-          then obtain w0 w1 w2 where "top1_scheme_equiv scheme
+          then obtain w0 w1 w2 where hw_equiv: "top1_scheme_equiv scheme
               (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2)"
+              and hw_len: "length w0 + length w1 + length w2 + 4 = length scheme"
             by (by100 blast)
+          have "length w0 + length w1 + length w2 + 4 = length scheme" using hw_len .
           thus ?thesis
             apply (rule_tac x=a_lab in exI)
             apply (rule_tac x=b_lab in exI)
-            using \<open>b_lab \<noteq> a_lab\<close> by (by100 blast)
+            using \<open>b_lab \<noteq> a_lab\<close> hw_equiv hw_len by (by100 blast)
         qed
         then obtain a_lab b_lab w0' w1' w2' where hab: "a_lab \<noteq> b_lab"
             and hequiv: "top1_scheme_equiv scheme
               (w0' @ [(a_lab, True), (b_lab, True)] @ w1' @ [(a_lab, False), (b_lab, False)] @ w2')"
-          by (by100 blast)
+            and hlen_w: "length w0' + length w1' + length w2' + 4 = length scheme"
+          by blast
         \<comment> \<open>Apply Lemma 77.3.\<close>
         from Lemma_77_3_torus_extraction[OF hab, of w0' w1' w2']
         have "top1_scheme_equiv
@@ -6391,16 +6402,7 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           have hlen_shorter: "length shorter = length full - 2"
             unfolding shorter_def using hj(1) by (by100 simp)
           have hlen_full: "length full = length scheme"
-          proof -
-            \<comment> \<open>scheme \<sim> w0'@[(a,T),(b,T)]@w1'@[(a,F),(b,F)]@w2' \<sim> [(a,T),(b,T),(a,F),(b,F)]@w0'@w1'@w2'.
-               Length preserved at each step (rotation, flip, cut\_paste\_opp all preserve length;
-               Lemma 77.3 = rotation + cut\_paste\_opp preserves length).\<close>
-            have "length (w0' @ [(a_lab,True),(b_lab,True)] @ w1' @ [(a_lab,False),(b_lab,False)] @ w2') = length scheme"
-              sorry \<comment> \<open>scheme\_equiv via rotation+flip+cut\_paste\_opp preserves length.\<close>
-            moreover have "length full = length (w0' @ [(a_lab,True),(b_lab,True)] @ w1' @ [(a_lab,False),(b_lab,False)] @ w2')"
-              unfolding full_def by (by100 simp)
-            ultimately show ?thesis by (by100 simp)
-          qed
+            unfolding full_def using hlen_w by (by100 simp)
           hence hlt: "length shorter < length scheme"
             using hlen_shorter hj(1) by (by100 linarith)
           have hge4: "length shorter \<ge> 4"
