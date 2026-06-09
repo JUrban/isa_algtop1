@@ -693,9 +693,8 @@ proof -
     apply (rule_tac x="\<lambda>i. vx ((i + length u) mod ?n)" in exI)
     apply (rule_tac x="\<lambda>i. vy ((i + length u) mod ?n)" in exI)
     apply (intro conjI)
-    sorry \<comment> \<open>11 conditions with shifted vertices. C1-C2 by assumption.
-       C3-C11 each need shifted-index proofs. presburger times out in AlgTop context.
-       Helpers: mod\_less\_n, suc\_mod\_shift, shift\_mod\_inj, mod\_eq\_dvd, hshift.\<close>
+    sorry \<comment> \<open>11 conditions: C1-C2 by assumption. C3 shifted\_distinct. C4 shifted\_in\_P.
+       C5-C11 need further helpers. Proved: C3, C4 as standalone lemmas.\<close>
 qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
