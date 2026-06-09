@@ -4647,6 +4647,12 @@ next
   ultimately show ?case unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
 qed
 
+\<comment> \<open>A projective pair prepended to a torus scheme gives a projective scheme.
+   By repeated application of Lemma 77.4: 1 proj pair + n torus blocks \<to> (2n+1) proj pairs.\<close>
+lemma proj_pair_absorbs_torus:
+  "top1_scheme_equiv ([(a, True), (a, True)] @ top1_n_torus_scheme n) (top1_m_projective_scheme (2*n + 1))"
+  sorry \<comment> \<open>Induction on n using Lemma 77.4 + relabel\_avoid + proj\_append\_pair.\<close>
+
 \<comment> \<open>Appending any projective pair to proj m gives proj(Suc m) up to equivalence.\<close>
 lemma proj_append_pair:
   "top1_scheme_equiv (top1_m_projective_scheme m @ [(a, True), (a, True)]) (top1_m_projective_scheme (Suc m))"
@@ -5125,9 +5131,25 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           using scheme_equiv_prepend by (by100 blast)
         hence hchain_t: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ w_no_a)"
           using scheme_equiv_trans[OF ha_rest(1)] by (by100 blast)
+        \<comment> \<open>Chain: scheme \<sim> [(a,T),(a,T)]@w\_no\_a \<sim> [(a,T),(a,T)]@torus n' \<sim> proj(2n'+1).\<close>
+        have hw'_torus: "w' = top1_n_torus_scheme n'" using hn(2) unfolding top1_is_torus_scheme_def
+          by (by100 simp)
+        have "top1_scheme_equiv w_no_a (top1_n_torus_scheme n')"
+          using scheme_equiv_sym[OF hwt(1)] hw'_torus by (by100 simp)
+        hence "top1_scheme_equiv ([(a,True),(a,True)] @ w_no_a) ([(a,True),(a,True)] @ top1_n_torus_scheme n')"
+          using scheme_equiv_prepend by (by100 blast)
+        moreover have "top1_scheme_equiv ([(a,True),(a,True)] @ top1_n_torus_scheme n')
+            (top1_m_projective_scheme (2*n'+1))"
+          by (rule proj_pair_absorbs_torus)
+        ultimately have "top1_scheme_equiv scheme (top1_m_projective_scheme (2*n'+1))"
+          using hchain_t unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+        moreover have "top1_is_projective_scheme (top1_m_projective_scheme (2*n'+1)) (2*n'+1)"
+          unfolding top1_is_projective_scheme_def using hn(1) by (by100 simp)
+        have "(2*n'+1) > 0" using hn(1) by (by100 simp)
         hence "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
-          sorry \<comment> \<open>[(a,T),(a,T)] @ w\_no\_a where w\_no\_a \<sim> torus n' and avoids a.
-             Apply Lemma 77.4 n' times: proj pair + n' torus blocks \<to> (2n'+1) proj pairs.\<close>
+          using \<open>top1_scheme_equiv scheme (top1_m_projective_scheme (2*n'+1))\<close>
+              \<open>top1_is_projective_scheme (top1_m_projective_scheme (2*n'+1)) (2*n'+1)\<close>
+          by (by100 force)
         thus ?thesis by (by100 blast)
       qed
     qed
