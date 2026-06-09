@@ -3870,9 +3870,33 @@ proof -
   hence "fst ` set (y0 @ rev (map top1_inverse_edge y1) @ y2) \<subseteq> fst ` set w" by (by100 blast)
   moreover have "\<forall>label. card {i. i < length (y0 @ rev (map top1_inverse_edge y1) @ y2)
       \<and> fst ((y0 @ rev (map top1_inverse_edge y1) @ y2) ! i) = label} \<in> {0, 2}"
-    sorry \<comment> \<open>Properness: for label a, count=0 (no label a in rest).
-       For label l \<noteq> a: count in rest = count in y0 + count in y1 + count in y2
-       = count in w (a-positions don't contribute for l \<noteq> a) \<in> {0,2}.\<close>
+  proof (intro allI)
+    fix label
+    let ?rest = "y0 @ rev (map top1_inverse_edge y1) @ y2"
+    show "card {i. i < length ?rest \<and> fst (?rest ! i) = label} \<in> {0, 2}"
+    proof (cases "label = a")
+      case True
+      \<comment> \<open>Label a: count = 0 since all elements have fst \<noteq> a.\<close>
+      have "{i. i < length ?rest \<and> fst (?rest ! i) = a} = {}"
+      proof (rule ccontr)
+        assume "{i. i < length ?rest \<and> fst (?rest ! i) = a} \<noteq> {}"
+        then obtain i where "i < length ?rest" "fst (?rest ! i) = a" by (by100 blast)
+        hence "?rest ! i \<in> set ?rest" using nth_mem by (by100 blast)
+        hence "fst (?rest ! i) \<noteq> a"
+          using \<open>\<forall>e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2). fst e \<noteq> a\<close> by (by100 blast)
+        thus False using \<open>fst (?rest ! i) = a\<close> by (by100 simp)
+      qed
+      thus ?thesis using True by (by100 simp)
+    next
+      case False
+      \<comment> \<open>Label l \<noteq> a: count in rest = count in w \<in> {0,2}.
+         The proof goes through the internal y0/y1/y2 decomposition.
+         count(l, rest) = count(l, y0) + count(l, rev(inv(y1))) + count(l, y2)
+                        = count(l, y0) + count(l, y1) + count(l, y2)   [inv preserves fst]
+                        = count(l, w)   [since l \<noteq> a and a-positions don't contribute]\<close>
+      show ?thesis sorry \<comment> \<open>Counting argument: inv preserves fst, standard concat indexing.\<close>
+    qed
+  qed
   ultimately show ?thesis by (by100 blast)
 qed
 
