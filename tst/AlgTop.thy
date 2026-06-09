@@ -550,9 +550,14 @@ proof -
        = fst (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w ! j))
     = (fst (w ! i) = fst (w ! j))"
     using hfst_map by (by100 simp)
+  \<comment> \<open>The proof strategy: unfold the biconditional definition, extract topology + existential,
+     then show the existential for w' using the same witnesses.
+     For geometric conditions (not referencing scheme!i): they're identical.
+     For conditions 7,9 (referencing fst/snd of scheme): rewrite via hfst\_map/hsnd\_map.\<close>
   from assms show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    sorry
+    sorry \<comment> \<open>Blocked: definition formula too large for blast/fast (5s timeout).
+       Need: factor definition or use incremental tactic.\<close>
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
