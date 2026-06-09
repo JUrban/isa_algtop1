@@ -3627,6 +3627,39 @@ proof -
   finally show "even (length w)" by (by100 presburger)
 qed
 
+\<comment> \<open>Decompose a list at two known positions p1 < p2.\<close>
+lemma list_decomp_at_two_positions:
+  assumes hp1: "p1 < p2" and hp2: "p2 < length xs"
+  shows "xs = take p1 xs @ [xs ! p1] @ take (p2 - p1 - 1) (drop (p1 + 1) xs)
+      @ [xs ! p2] @ drop (p2 + 1) xs"
+proof -
+  have hp1_len: "p1 < length xs" using hp1 hp2 by (by100 simp)
+  \<comment> \<open>Step 1: split at p1.\<close>
+  have s1: "xs = take p1 xs @ xs ! p1 # drop (Suc p1) xs"
+    using id_take_nth_drop[OF hp1_len] .
+  \<comment> \<open>Step 2: split drop (Suc p1) xs at position p2 - p1 - 1.\<close>
+  let ?tail = "drop (Suc p1) xs"
+  have htail_len: "length ?tail = length xs - Suc p1" by (by100 simp)
+  have hp2_idx: "p2 - p1 - 1 < length ?tail" using hp1 hp2 by (by100 simp)
+  have htail_nth: "?tail ! (p2 - p1 - 1) = xs ! p2"
+    using hp1 hp2 by (by100 simp)
+  have s2: "?tail = take (p2 - p1 - 1) ?tail @ ?tail ! (p2 - p1 - 1) # drop (Suc (p2 - p1 - 1)) ?tail"
+    using id_take_nth_drop[OF hp2_idx] .
+  \<comment> \<open>Suc (p2 - p1 - 1) = p2 - p1 when p1 < p2.\<close>
+  have "Suc (p2 - p1 - 1) = p2 - p1" using hp1 by (by100 simp)
+  hence "drop (Suc (p2 - p1 - 1)) ?tail = drop (p2 - p1) (drop (Suc p1) xs)"
+    by (by100 simp)
+  also have "\<dots> = drop (p2 + 1) xs"
+  proof -
+    have "p2 - p1 + Suc p1 = Suc p2" using hp1 by (by100 simp)
+    thus ?thesis by (by100 simp)
+  qed
+  finally have hdrop_eq: "drop (Suc (p2 - p1 - 1)) ?tail = drop (p2 + 1) xs" .
+  \<comment> \<open>Combine.\<close>
+  from s1 s2 htail_nth hdrop_eq
+  show ?thesis by (by100 simp)
+qed
+
 \<comment> \<open>In any scheme where label a appears exactly at 2 positions with True direction
    and a does not appear elsewhere: Lemma 77.1 brings the pair to front.\<close>
 lemma bring_projective_pair_to_front:
@@ -3697,7 +3730,11 @@ proof -
   define y1 where "y1 = take (p2 - p1 - 1) (drop (p1 + 1) w)"
   define y2 where "y2 = drop (p2 + 1) w"
   have hdecomp: "w = y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2"
-    sorry
+  proof -
+    from list_decomp_at_two_positions[OF hp1_lt_p2 hp2_len]
+    have "w = take p1 w @ [w ! p1] @ take (p2 - p1 - 1) (drop (p1 + 1) w) @ [w ! p2] @ drop (p2 + 1) w" .
+    thus ?thesis unfolding y0_def y1_def y2_def using hp1_val hp2_val by (by100 simp)
+  qed
   \<comment> \<open>All elements in y0, y1, y2 have fst \<noteq> a.\<close>
   \<comment> \<open>Positions with label a = {p1, p2} (from card=2 + card\_seteq).\<close>
   have honly_p12: "{i. i < length w \<and> fst (w ! i) = a} = {p1, p2}"
