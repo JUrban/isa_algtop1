@@ -4797,9 +4797,45 @@ next
     have r4: "top1_scheme_equiv
         (top1_m_projective_scheme (2*n) @ [(fresh1,True),(fresh1,True),(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])
         (top1_m_projective_scheme (2*n+3))"
-      sorry \<comment> \<open>3 applications of proj\_append\_pair with suffix congruence.
-         Each step: proj(k) @ [(l,T),(l,T)] @ rest \<sim> proj(k+1) @ rest via
-         scheme\_equiv\_append[OF proj\_append\_pair]. Three such steps give proj(2n+3).\<close>
+    proof -
+      \<comment> \<open>Step 1: proj(2n) @ [(f1,T),(f1,T)] \<sim> proj(2n+1). Suffix: [(f2,T),(f2,T),(2n,T),(2n,T)].\<close>
+      from scheme_equiv_append[OF proj_append_pair[of "2*n" fresh1],
+          of "[(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)]"]
+      have "top1_scheme_equiv
+          (top1_m_projective_scheme (2*n) @ [(fresh1,True),(fresh1,True)] @ [(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc (2*n)) @ [(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])"
+        by (by100 simp)
+      hence s1: "top1_scheme_equiv
+          (top1_m_projective_scheme (2*n) @ [(fresh1,True),(fresh1,True),(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc (2*n)) @ [(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])"
+        by (by100 simp)
+      \<comment> \<open>Step 2: proj(2n+1) @ [(f2,T),(f2,T)] \<sim> proj(2n+2). Suffix: [(2n,T),(2n,T)].\<close>
+      from scheme_equiv_append[OF proj_append_pair[of "Suc (2*n)" fresh2],
+          of "[(2*n,True),(2*n,True)]"]
+      have "top1_scheme_equiv
+          (top1_m_projective_scheme (Suc (2*n)) @ [(fresh2,True),(fresh2,True)] @ [(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc (Suc (2*n))) @ [(2*n,True),(2*n,True)])"
+        by (by100 simp)
+      hence s2: "top1_scheme_equiv
+          (top1_m_projective_scheme (Suc (2*n)) @ [(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc (Suc (2*n))) @ [(2*n,True),(2*n,True)])"
+        by (by100 simp)
+      \<comment> \<open>Step 3: proj(2n+2) @ [(2n,T),(2n,T)] \<sim> proj(2n+3).\<close>
+      have s3: "top1_scheme_equiv
+          (top1_m_projective_scheme (Suc (Suc (2*n))) @ [(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc (Suc (Suc (2*n)))))"
+        by (rule proj_append_pair)
+      from s1 s2 have "top1_scheme_equiv
+          (top1_m_projective_scheme (2*n) @ [(fresh1,True),(fresh1,True),(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc (Suc (2*n))) @ [(2*n,True),(2*n,True)])"
+        unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+      from this s3 have "top1_scheme_equiv
+          (top1_m_projective_scheme (2*n) @ [(fresh1,True),(fresh1,True),(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc (Suc (Suc (2*n)))))"
+        unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+      moreover have "Suc (Suc (Suc (2*n))) = 2*n+3" by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
     from r1 r2 have "top1_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block)
         (top1_m_projective_scheme (2*n+1) @ [(fresh1,True),(fresh2,True),(fresh1,False),(fresh2,False)])"
       unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
