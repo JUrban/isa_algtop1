@@ -3656,7 +3656,37 @@ proof -
      scheme ~ scheme1 (flip) ~ rotated (rotate) ~ [(a,T),(a,T)]@rest (Lemma 77.1)
      ~ projective m=1 or m=2 (cancel or relabel).\<close>
 
-  show ?thesis sorry
+  \<comment> \<open>After flip: scheme1 has (a,T) at 2 positions. After rotation: (a,T) at position 0.
+     Second (a,T) at position 1, 2, or 3. Each case \<Rightarrow> [(a,T),(a,T)]@rest via rotation/Lemma 77.1.
+     Rest has 2 elements with label b: same-direction \<Rightarrow> projective m=2; opposite \<Rightarrow> cancel \<Rightarrow> m=1.\<close>
+  \<comment> \<open>Bring both a-copies to positions 0,1.\<close>
+  have "\<exists>rest. top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest) \<and> length rest = 2
+      \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)"
+    sorry
+  then obtain rest where hrest: "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
+      "length rest = 2" "\<forall>e \<in> set rest. fst e \<noteq> a" by (by100 blast)
+  \<comment> \<open>rest = [(b, d1), (b, d2)] for some b \<noteq> a.\<close>
+  obtain b d1 d2 where hrest_form: "rest = [(b, d1), (b, d2)]" "b \<noteq> a"
+    sorry
+  show ?thesis
+  proof (cases "d1 = d2")
+    case True
+    \<comment> \<open>Same direction: scheme ~ [(a,T),(a,T),(b,d1),(b,d1)] ~ projective m=2.\<close>
+    have "top1_scheme_equiv scheme (top1_m_projective_scheme 2)"
+      sorry
+    hence "top1_is_projective_scheme (top1_m_projective_scheme 2) 2"
+      unfolding top1_is_projective_scheme_def by (by100 simp)
+    show ?thesis sorry
+  next
+    case False
+    \<comment> \<open>Opposite direction: scheme ~ [(a,T),(a,T),(b,d1),(b,\\<not>d1)].
+       The pair (b,d1),(b,\\<not>d1) is inverse. Cancel \<Rightarrow> [(a,T),(a,T)] ~ projective m=1.\<close>
+    have "top1_scheme_equiv scheme (top1_m_projective_scheme 1)"
+      sorry
+    hence "top1_is_projective_scheme (top1_m_projective_scheme 1) 1"
+      unfolding top1_is_projective_scheme_def by (by100 simp)
+    show ?thesis sorry
+  qed
 qed
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
