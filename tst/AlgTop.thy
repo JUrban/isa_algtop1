@@ -2960,6 +2960,37 @@ proof -
   qed
 qed
 
+\<comment> \<open>Nth element of projective scheme: position 2k and 2k+1 both have label k.\<close>
+lemma projective_scheme_nth_even:
+  assumes "k < m"
+  shows "(top1_m_projective_scheme m) ! (2*k) = (k, True)"
+  sorry
+
+lemma projective_scheme_nth_odd:
+  assumes "k < m"
+  shows "(top1_m_projective_scheme m) ! (2*k+1) = (k, True)"
+  sorry
+
+\<comment> \<open>Fst of any element of projective scheme is < m.\<close>
+lemma projective_scheme_fst_bound:
+  assumes "j < length (top1_m_projective_scheme m)"
+  shows "fst ((top1_m_projective_scheme m) ! j) < m"
+  sorry
+
+\<comment> \<open>Properness of the projective normal-form scheme: each label appears exactly twice.\<close>
+lemma projective_scheme_proper:
+  assumes "m > 0"
+  shows "\<forall>label. card {i. i < length (top1_m_projective_scheme m) \<and>
+      fst ((top1_m_projective_scheme m) ! i) = label} \<in> {0, 2}"
+  sorry
+
+\<comment> \<open>Properness of the torus normal-form scheme: each label appears exactly twice.\<close>
+lemma torus_scheme_proper:
+  assumes "n > 0"
+  shows "\<forall>label. card {i. i < length (top1_n_torus_scheme n) \<and>
+      fst ((top1_n_torus_scheme n) ! i) = label} \<in> {0, 2}"
+  sorry
+
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
    (1) aa\\<inverse>bb\\<inverse> (sphere, length 4)
