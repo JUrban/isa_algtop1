@@ -3689,7 +3689,40 @@ proof -
     \<comment> \<open>Opposite direction: scheme ~ [(a,T),(a,T),(b,d1),(b,\\<not>d1)].
        The pair (b,d1),(b,\\<not>d1) is inverse. Cancel \<Rightarrow> [(a,T),(a,T)] ~ projective m=1.\<close>
     have "top1_scheme_equiv scheme (top1_m_projective_scheme 1)"
-      sorry
+    proof -
+      \<comment> \<open>d1 \<noteq> d2 and rest = [(b,d1),(b,d2)]. So d2 = \<not>d1.\<close>
+      have hd2: "d2 = (\<not> d1)" using False by (cases d1, cases d2) (by100 simp)+
+      \<comment> \<open>Step 1: scheme ~ [(a,T),(a,T),(b,d1),(b,\<not>d1)] from hrest.\<close>
+      have s1: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ [(b,d1), (b, \<not>d1)])"
+        using hrest(1) hrest_form(1) hd2 by (by100 simp)
+      \<comment> \<open>Step 2: cancel the inverse pair (b,d1),(b,\<not>d1).\<close>
+      have "top1_inverse_edge (b, d1) = (b, \<not>d1)"
+        unfolding top1_inverse_edge_def by (by100 simp)
+      have s2: "top1_elementary_scheme_operation
+          ([(a,True),(a,True)] @ [(b,d1), top1_inverse_edge (b,d1)] @ [])
+          ([(a,True),(a,True)] @ [])"
+        by (rule top1_elementary_scheme_operation.cancel)
+      hence s2': "top1_scheme_equiv ([(a,True),(a,True)] @ [(b,d1),(b, \<not>d1)]) [(a,True),(a,True)]"
+        using \<open>top1_inverse_edge (b, d1) = (b, \<not>d1)\<close>
+        unfolding top1_scheme_equiv_def by (by100 simp)
+      \<comment> \<open>Step 3: relabel a \<rightarrow> 0.\<close>
+      have s3: "top1_elementary_scheme_operation [(a,True),(a,True)]
+          (map (\<lambda>(l,b). (if l = a then 0 else l, b)) [(a,True),(a,True)])"
+        by (rule top1_elementary_scheme_operation.relabel)
+      have "map (\<lambda>(l,b). (if l = a then 0 else l, b)) [(a,True),(a,True)] = [(0,True),(0,True)]"
+        by (by100 simp)
+      hence s3': "top1_scheme_equiv [(a,True),(a,True)] [(0,True),(0,True)]"
+        using s3 unfolding top1_scheme_equiv_def by (by100 simp)
+      \<comment> \<open>[(0,T),(0,T)] = top1\\_m\\_projective\\_scheme 1.\<close>
+      have "[(0::nat,True),(0,True)] = top1_m_projective_scheme 1"
+        unfolding top1_m_projective_scheme_def by (by100 simp)
+      \<comment> \<open>Chain: scheme ~ aa@bb' ~ aa ~ [(0,T),(0,T)] = proj 1.\<close>
+      from s1 s2' have "top1_scheme_equiv scheme [(a,True),(a,True)]"
+        unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+      from this s3' have "top1_scheme_equiv scheme [(0,True),(0,True)]"
+        unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+      thus ?thesis using \<open>[(0::nat,True),(0,True)] = top1_m_projective_scheme 1\<close> by (by100 simp)
+    qed
     moreover have "top1_is_projective_scheme (top1_m_projective_scheme 1) 1"
       unfolding top1_is_projective_scheme_def by (by100 simp)
     ultimately have "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
