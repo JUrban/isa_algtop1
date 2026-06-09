@@ -5359,10 +5359,8 @@ proof -
     using proj_absorbs_one_torus[OF assms(2)] .
   from h1 h2 have "top1_scheme_equiv (?block @ top1_m_projective_scheme m) (top1_m_projective_scheme (m+2))"
     unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
-  thus ?thesis unfolding top1_is_projective_scheme_def
-    apply (rule_tac exI[of _ "top1_m_projective_scheme (m+2)"])
-    apply (intro conjI)
-    sorry
+  moreover have "m + 2 > 0" using assms(2) by (by100 simp)
+  ultimately show ?thesis unfolding top1_is_projective_scheme_def by (by100 blast)
 qed
 
 lemma commutator_prepend_torus:
