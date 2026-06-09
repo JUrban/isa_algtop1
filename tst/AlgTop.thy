@@ -4734,19 +4734,65 @@ next
     \<comment> \<open>Relabel 2*n \<to> fresh1 in the suffix (context\_left keeps prefix unchanged).\<close>
     have r1: "top1_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block)
         (top1_m_projective_scheme (2*n+1) @ [(fresh1,True),(2*n+1,True),(fresh1,False),(2*n+1,False)])"
-      sorry \<comment> \<open>context\_left + relabel 2*n \<to> fresh1 on suffix.\<close>
+    proof -
+      have "top1_elementary_scheme_operation ?block
+          (map (\<lambda>(l,b). (if l = 2*n then fresh1 else l, b)) ?block)"
+        by (rule top1_elementary_scheme_operation.relabel)
+      moreover have "map (\<lambda>(l,b). (if l = 2*n then fresh1 else l, b)) ?block
+          = [(fresh1,True),(2*n+1,True),(fresh1,False),(2*n+1,False)]" by (by100 simp)
+      ultimately have "top1_elementary_scheme_operation ?block [(fresh1,True),(2*n+1,True),(fresh1,False),(2*n+1,False)]"
+        by (by100 simp)
+      from top1_elementary_scheme_operation.context_left[OF this, of "top1_m_projective_scheme (2*n+1)"]
+      show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+    qed
     \<comment> \<open>Relabel 2*n+1 \<to> fresh2 in the suffix.\<close>
     have r2: "top1_scheme_equiv
         (top1_m_projective_scheme (2*n+1) @ [(fresh1,True),(2*n+1,True),(fresh1,False),(2*n+1,False)])
         (top1_m_projective_scheme (2*n+1) @ [(fresh1,True),(fresh2,True),(fresh1,False),(fresh2,False)])"
-      sorry \<comment> \<open>context\_left + relabel 2*n+1 \<to> fresh2 on suffix.\<close>
+    proof -
+      let ?suf1 = "[(fresh1,True),(2*n+1,True),(fresh1,False),(2*n+1,False)]"
+      have "top1_elementary_scheme_operation ?suf1
+          (map (\<lambda>(l,b). (if l = 2*n+1 then fresh2 else l, b)) ?suf1)"
+        by (rule top1_elementary_scheme_operation.relabel)
+      moreover have "fresh1 \<noteq> 2*n+1" using hf1 by (by100 blast)
+      hence "map (\<lambda>(l,b). (if l = 2*n+1 then fresh2 else l, b)) ?suf1
+          = [(fresh1,True),(fresh2,True),(fresh1,False),(fresh2,False)]" by (by100 simp)
+      ultimately have "top1_elementary_scheme_operation ?suf1 [(fresh1,True),(fresh2,True),(fresh1,False),(fresh2,False)]"
+        by (by100 simp)
+      from top1_elementary_scheme_operation.context_left[OF this, of "top1_m_projective_scheme (2*n+1)"]
+      show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+    qed
     \<comment> \<open>Step B: Split proj(2n+1) = proj(2n) @ [(2n,T),(2n,T)]. Apply Lemma 77.4.\<close>
     \<comment> \<open>proj(2n) @ [(2n,T),(2n,T),(fresh1,T),(fresh2,T),(fresh1,F),(fresh2,F)]
        \<to> proj(2n) @ [(fresh1,T),(fresh1,T),(fresh2,T),(fresh2,T),(2n,T),(2n,T)] via Lemma 77.4.\<close>
     have r3: "top1_scheme_equiv
         (top1_m_projective_scheme (2*n+1) @ [(fresh1,True),(fresh2,True),(fresh1,False),(fresh2,False)])
         (top1_m_projective_scheme (2*n) @ [(fresh1,True),(fresh1,True),(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])"
-      sorry \<comment> \<open>Split proj(2n+1) + Lemma 77.4 with c=2n, a=fresh1, b=fresh2.\<close>
+    proof -
+      \<comment> \<open>Split proj(2n+1) = proj(2n) @ [(2n,T),(2n,T)].\<close>
+      have hsplit: "top1_m_projective_scheme (2*n+1) = top1_m_projective_scheme (2*n) @ [(2*n,True),(2*n,True)]"
+        unfolding top1_m_projective_scheme_def by (by100 simp)
+      \<comment> \<open>LHS = proj(2n) @ [(2n,T),(2n,T),(fresh1,T),(fresh2,T),(fresh1,F),(fresh2,F)].\<close>
+      \<comment> \<open>Apply Lemma 77.4 with c=2n, a=fresh1, b=fresh2, w0=proj(2n), w1=[].\<close>
+      have "2*n \<noteq> fresh1" using hf1 by (by100 blast)
+      have "2*n \<noteq> fresh2" using hf2 by (by100 blast)
+      have "fresh1 \<noteq> fresh2" using hf2 by (by100 blast)
+      have hlabels: "\<forall>e \<in> set (top1_m_projective_scheme (2*n)) \<union> set ([] :: (nat \<times> bool) list).
+          fst e \<noteq> fresh1 \<and> fst e \<noteq> fresh2 \<and> fst e \<noteq> (2*n)"
+        sorry \<comment> \<open>proj(2n) uses labels {0..2n-1}; fresh1,fresh2,2n are all outside.\<close>
+      have "fresh1 \<noteq> 2*n" using \<open>2*n \<noteq> fresh1\<close> by (by100 simp)
+      have "fresh2 \<noteq> 2*n" using \<open>2*n \<noteq> fresh2\<close> by (by100 simp)
+      have "top1_scheme_equiv
+          (top1_m_projective_scheme (2*n) @ [(2*n,True),(2*n,True),(fresh1,True),(fresh2,True),(fresh1,False),(fresh2,False)] @ [])
+          (top1_m_projective_scheme (2*n) @ [(fresh1,True),(fresh1,True),(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)] @ [])"
+        using Lemma_77_4_projective_absorbs_torus[OF \<open>fresh1 \<noteq> fresh2\<close> \<open>fresh1 \<noteq> 2*n\<close> \<open>fresh2 \<noteq> 2*n\<close>
+            hlabels infinite_UNIV_nat] by (by100 blast)
+      hence "top1_scheme_equiv
+          (top1_m_projective_scheme (2*n) @ [(2*n,True),(2*n,True),(fresh1,True),(fresh2,True),(fresh1,False),(fresh2,False)])
+          (top1_m_projective_scheme (2*n) @ [(fresh1,True),(fresh1,True),(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])"
+        by (by100 simp)
+      thus ?thesis using hsplit by (by100 simp)
+    qed
     \<comment> \<open>Step C: Apply proj\_append\_pair 3 times to absorb the 3 new proj pairs.\<close>
     have r4: "top1_scheme_equiv
         (top1_m_projective_scheme (2*n) @ [(fresh1,True),(fresh1,True),(fresh2,True),(fresh2,True),(2*n,True),(2*n,True)])
