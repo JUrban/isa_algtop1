@@ -6070,7 +6070,46 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             define after where "after = drop (k_b + 1) R_ab"
             have hRab_decomp: "R_ab = [(a_lab,True),(b_lab,True)] @ mid @ [(a_lab,False)]
                 @ between @ [(b_lab,False)] @ after"
-              sorry \<comment> \<open>List decomposition at positions 0,1,gap,k\_b using hRab\_0/1/gap and hkb.\<close>
+            proof -
+              \<comment> \<open>Split at position gap: R\_ab = take gap R\_ab @ [R\_ab!gap] @ drop(gap+1) R\_ab.\<close>
+              have hgap_lt_Rab: "gap < length R_ab" using hgap_lt hRab_len hR_len by (by100 linarith)
+              have "R_ab = take gap R_ab @ R_ab!gap # drop (Suc gap) R_ab"
+                using id_take_nth_drop[of gap R_ab] hgap_lt_Rab by (by100 simp)
+              hence s1: "R_ab = take gap R_ab @ [(a_lab,False)] @ drop (gap+1) R_ab"
+                using hRab_gap by (by100 simp)
+              \<comment> \<open>take gap R\_ab = [R\_ab!0, R\_ab!1] @ mid. Split at positions 0 and 1.\<close>
+              have h2_le_gap: "2 \<le> gap" using hgap_gt1 by (by100 linarith)
+              have "take gap R_ab = take 2 R_ab @ drop 2 (take gap R_ab)"
+                using append_take_drop_id[of 2 "take gap R_ab"] h2_le_gap by (by100 simp)
+              moreover have "take 2 R_ab = [R_ab!0, R_ab!1]"
+                using h0_lt h1_lt hRab_len hR_len by (cases R_ab, by100 simp, cases "tl R_ab", by100 simp, by100 simp)
+              moreover have "drop 2 (take gap R_ab) = take (gap - 2) (drop 2 R_ab)"
+                using h2_le_gap by (simp add: drop_take)
+              ultimately have htake_gap: "take gap R_ab = [(a_lab,True),(b_lab,True)] @ mid"
+                using hRab_0 hRab_1 unfolding mid_def by (by100 simp)
+              \<comment> \<open>drop(gap+1) R\_ab: split at position k\_b-gap-1.\<close>
+              \<comment> \<open>Split drop(gap+1) R\_ab at position k\_b-gap-1.\<close>
+              have hkb_rel: "k_b - gap - 1 < length (drop (gap+1) R_ab)"
+                using hkb(1,2) by (by100 simp)
+              have "(drop (gap+1) R_ab) ! (k_b - gap - 1) = R_ab ! k_b"
+                using hkb(1,2) by (by100 simp)
+              hence hrel_blab: "(drop (gap+1) R_ab) ! (k_b - gap - 1) = (b_lab, False)"
+                using hkb(3) by (by100 simp)
+              let ?d = "drop (gap+1) R_ab"
+              have "?d = take (k_b-gap-1) ?d @ ?d!(k_b-gap-1) # drop (Suc (k_b-gap-1)) ?d"
+                using id_take_nth_drop[OF hkb_rel] by (by100 simp)
+              hence "?d = take (k_b-gap-1) ?d @ [(b_lab,False)] @ drop (Suc (k_b-gap-1)) ?d"
+                using hrel_blab by (by100 simp)
+              moreover have "Suc (k_b - gap - 1) = k_b - gap" using hkb(1) by (by100 linarith)
+              moreover have "drop (k_b - gap) ?d = drop (k_b+1) R_ab"
+              proof -
+                have "k_b - gap + (gap + 1) = k_b + 1" using hkb(1) by (by100 linarith)
+                thus ?thesis by (simp add: drop_drop)
+              qed
+              ultimately have hdrop_gap: "drop (gap+1) R_ab = between @ [(b_lab,False)] @ after"
+                unfolding between_def after_def by (by100 simp)
+              show ?thesis using s1 htake_gap hdrop_gap by (by100 simp)
+            qed
             \<comment> \<open>Step F: Apply reverse cut\_paste\_opp with a\_lab.
                u0 @ [(a\_lab,T)] @ u2 @ [(a\_lab,F)] @ u1 @ u3
                \<to> u0 @ u1 @ [(a\_lab,T)] @ u2 @ [(a\_lab,F)] @ u3
