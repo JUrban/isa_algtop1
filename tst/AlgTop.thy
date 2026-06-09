@@ -527,16 +527,16 @@ proof -
   \<comment> \<open>The definition for w' is the same as for w (same P, q, vx, vy witnesses).
      Conditions not referencing snd transfer via hlen. Conditions referencing snd
      transfer via hfst+hsnd\_eq.\<close>
+  \<comment> \<open>Extract topology from old quotient.\<close>
+  from assms have htopo: "is_topology_on_strict Y TY"
+    unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>The old quotient's existential witnesses work for the new scheme too.
+     All conditions either don't reference scheme!i at all, or reference fst/snd
+     which transfer via hfst and hsnd\_eq.\<close>
   from assms show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    apply (elim conjE exE)
-    apply (intro conjI)
-    apply assumption \<comment> \<open>is\_topology\_on\_strict\<close>
-    apply (rule exI, rule exI, rule exI, rule exI)
-    apply (intro conjI)
-    apply assumption+
-    \<comment> \<open>Remaining goals should involve fst/snd of the flipped scheme. Use hfst and hsnd\_eq.\<close>
-    sorry
+    sorry \<comment> \<open>Same witnesses P, q, vx, vy. Geometric conditions transfer directly.
+       Conditions 7,9 (identification/boundary) transfer via hfst+hsnd\_eq.\<close>
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
