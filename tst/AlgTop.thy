@@ -3386,9 +3386,38 @@ proof -
     next
       case False
       \<comment> \<open>Other label: bijection between positions in w and w'.\<close>
+      \<comment> \<open>No position in w with label = label is at j or j+1 (since label \<noteq> ?lab\_j).\<close>
+      have hno_jj1: "\<forall>k. k < length w \<longrightarrow> fst (w ! k) = label \<longrightarrow> k \<noteq> j \<and> k \<noteq> j+1"
+      proof (intro allI impI)
+        fix k assume hk: "k < length w" "fst (w ! k) = label"
+        have "k \<noteq> j"
+        proof
+          assume "k = j"
+          hence "label = ?lab_j" using hk(2) by (by100 simp)
+          thus False using False by (by100 simp)
+        qed
+        moreover have "k \<noteq> j+1"
+        proof
+          assume "k = j+1"
+          hence "fst (w ! (j+1)) = label" using hk(2) by (by100 simp)
+          hence "label = ?lab_j" using hpair by (by100 simp)
+          thus False using False by (by100 simp)
+        qed
+        ultimately show "k \<noteq> j \<and> k \<noteq> j+1" by (by100 blast)
+      qed
+      \<comment> \<open>Bijection: map i in w to i (if i<j) or i-2 (if i>j+1) in w'.\<close>
+      let ?f = "\<lambda>i. if i < j then i else i - 2"
+      have "bij_betw ?f {i. i < length w \<and> fst (w ! i) = label}
+          {i. i < length ?w' \<and> fst (?w' ! i) = label}"
+        sorry
+      hence "card {i. i < length w \<and> fst (w ! i) = label}
+          = card {i. i < length ?w' \<and> fst (?w' ! i) = label}"
+        using bij_betw_same_card by (by100 blast)
       have "card {i. i < length ?w' \<and> fst (?w' ! i) = label}
           = card {i. i < length w \<and> fst (w ! i) = label}"
-        sorry
+        using \<open>card {i. i < length w \<and> fst (w ! i) = label}
+            = card {i. i < length ?w' \<and> fst (?w' ! i) = label}\<close>
+        by (by100 simp)
       moreover from hproper have "card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
         by (by100 blast)
       ultimately show ?thesis by (by100 simp)
