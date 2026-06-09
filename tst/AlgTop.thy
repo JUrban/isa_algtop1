@@ -535,7 +535,7 @@ proof -
     apply (rule exI, rule exI, rule exI, rule exI)
     apply (intro conjI)
     apply assumption+
-    sorry \<comment> \<open>Remaining: C7 (identification) and C9 (boundary). Need hfst+hsnd\_eq rewrite.\<close>
+    sorry \<comment> \<open>C7+C9+extras: need hfst+hsnd\_eq for identification/boundary conditions.\<close>
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
@@ -6409,7 +6409,10 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         have "\<exists>a b w0 w1 w2. a \<noteq> b \<and>
             top1_scheme_equiv scheme
               (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
-            \<and> length w0 + length w1 + length w2 + 4 = length scheme"
+            \<and> length w0 + length w1 + length w2 + 4 = length scheme
+            \<and> (\<forall>l. length (filter (\<lambda>e. fst e = l)
+                (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2))
+              = length (filter (\<lambda>e. fst e = l) scheme))"
         proof -
           \<comment> \<open>Step 1: Find label a with minimal gap between its two positions.\<close>
           \<comment> \<open>From properness: every label appears 0 or 2 times. At least one label appears
@@ -6607,7 +6610,10 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           \<comment> \<open>For now: produce the existential directly via sorry for the chain construction.\<close>
           have "\<exists>w0 w1 w2. top1_scheme_equiv scheme
               (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2)
-              \<and> length w0 + length w1 + length w2 + 4 = length scheme"
+              \<and> length w0 + length w1 + length w2 + 4 = length scheme
+              \<and> (\<forall>l. length (filter (\<lambda>e. fst e = l)
+                  (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2))
+                = length (filter (\<lambda>e. fst e = l) scheme))"
           proof -
             \<comment> \<open>Step A: Flip a\_lab direction. scheme \<sim> R. Then R \<sim> R\_a (a\_lab has True at front).\<close>
             define R_a where "R_a = (if dir_a then R else
@@ -6998,22 +7004,56 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                 using hRab_decomp by (by100 simp)
               thus ?thesis using hRab_len hR_len by (by100 linarith)
             qed
+            moreover have "\<forall>l. length (filter (\<lambda>e. fst e = l)
+                (between @ [(a_lab, True), (b_lab, True)] @ mid @ [(a_lab, False), (b_lab, False)] @ after))
+              = length (filter (\<lambda>e. fst e = l) scheme)"
+            proof (intro allI)
+              fix l
+              \<comment> \<open>Chain: scheme \\<to> R (rotate) \\<to> R\_a (flip a) \\<to> R\_ab (flip b) \\<to> rearranged.
+                 Each step preserves fst-filter-counts.\<close>
+              have fc_R: "length (filter (\<lambda>e. fst e = l) R) = length (filter (\<lambda>e. fst e = l) scheme)"
+              proof -
+                have "length (filter (\<lambda>e. fst e = l) (take p1 scheme @ drop p1 scheme))
+                    = length (filter (\<lambda>e. fst e = l) (drop p1 scheme @ take p1 scheme))"
+                  using filter_count_rotate by (by100 blast)
+                thus ?thesis unfolding R_def by (by100 simp)
+              qed
+              have fc_Ra: "length (filter (\<lambda>e. fst e = l) R_a) = length (filter (\<lambda>e. fst e = l) R)"
+                unfolding R_a_def using filter_count_flip_label[of l a_lab R] by (by100 simp)
+              have fc_Rab: "length (filter (\<lambda>e. fst e = l) R_ab) = length (filter (\<lambda>e. fst e = l) R_a)"
+                unfolding R_ab_def using filter_count_flip_label[of l b_lab R_a] by (by100 simp)
+              \<comment> \<open>R\_ab is rearranged to between@[(a,T),(b,T)]@mid@[(a,F),(b,F)]@after by cut\_paste\_opp+rotate.
+                 These preserve filter-counts.\<close>
+              have fc_inter: "length (filter (\<lambda>e. fst e = l)
+                  (between @ [(a_lab, True), (b_lab, True)] @ mid @ [(a_lab, False), (b_lab, False)] @ after))
+                = length (filter (\<lambda>e. fst e = l) R_ab)"
+                unfolding hRab_decomp by (by100 simp)
+              show "length (filter (\<lambda>e. fst e = l)
+                  (between @ [(a_lab, True), (b_lab, True)] @ mid @ [(a_lab, False), (b_lab, False)] @ after))
+                = length (filter (\<lambda>e. fst e = l) scheme)"
+                using fc_R fc_Ra fc_Rab fc_inter by (by100 linarith)
+            qed
             ultimately show ?thesis by (by100 blast)
           qed
           then obtain w0 w1 w2 where hw_equiv: "top1_scheme_equiv scheme
               (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2)"
               and hw_len: "length w0 + length w1 + length w2 + 4 = length scheme"
+              and hw_filt: "\<forall>l. length (filter (\<lambda>e. fst e = l)
+                  (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2))
+                = length (filter (\<lambda>e. fst e = l) scheme)"
             by (by100 blast)
-          have "length w0 + length w1 + length w2 + 4 = length scheme" using hw_len .
           thus ?thesis
             apply (rule_tac x=a_lab in exI)
             apply (rule_tac x=b_lab in exI)
-            using \<open>b_lab \<noteq> a_lab\<close> hw_equiv hw_len by (by100 blast)
+            using \<open>b_lab \<noteq> a_lab\<close> hw_equiv hw_len hw_filt by (by100 blast)
         qed
         then obtain a_lab b_lab w0' w1' w2' where hab: "a_lab \<noteq> b_lab"
             and hequiv: "top1_scheme_equiv scheme
               (w0' @ [(a_lab, True), (b_lab, True)] @ w1' @ [(a_lab, False), (b_lab, False)] @ w2')"
             and hlen_w: "length w0' + length w1' + length w2' + 4 = length scheme"
+            and hfilt_w: "\<forall>l. length (filter (\<lambda>e. fst e = l)
+                (w0' @ [(a_lab, True), (b_lab, True)] @ w1' @ [(a_lab, False), (b_lab, False)] @ w2'))
+              = length (filter (\<lambda>e. fst e = l) scheme)"
           by blast
         \<comment> \<open>Apply Lemma 77.3.\<close>
         from Lemma_77_3_torus_extraction[OF hab, of w0' w1' w2']
@@ -7097,7 +7137,7 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             \<comment> \<open>inter has same filter-counts as scheme (extraction preserves fst-multiset).\<close>
             \<comment> \<open>This is the hard part: need to track through rotation+flip+cut\_paste\_opp.\<close>
             have "length (filter (\<lambda>e. fst e = label) inter) = length (filter (\<lambda>e. fst e = label) scheme)"
-              sorry
+              using hfilt_w unfolding inter_def by (by100 simp)
             hence "length (filter (\<lambda>e. fst e = label) full) = length (filter (\<lambda>e. fst e = label) scheme)"
               using hfilt_eq by (by100 simp)
             hence "card {i. i < length full \<and> fst (full!i) = label} = card {i. i < length scheme \<and> fst (scheme!i) = label}"
