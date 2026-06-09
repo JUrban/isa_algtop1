@@ -4914,8 +4914,10 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         then obtain m' w' where hm: "m' > 0" "top1_is_projective_scheme w' m'" "top1_scheme_equiv rest w'"
           by (by100 blast)
         \<comment> \<open>scheme \<sim> [(a,T),(a,T)] @ projective m'. Relabel a to m' and get projective (m'+1).\<close>
+        \<comment> \<open>Chain: scheme \<sim> [(a,T),(a,T)] @ rest \<sim> [(a,T),(a,T)] @ proj m' (congruence).
+           Need: relabel proj m' to avoid label a, then apply congruence.\<close>
         hence "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
-          sorry \<comment> \<open>Prepend one projective pair: projective m \<Rightarrow> projective (m+1).\<close>
+          sorry \<comment> \<open>Prepend proj pair: relabel to avoid a + congruence + relabel a\<to>m' + rotate.\<close>
         thus ?thesis by (by100 blast)
       next
         \<comment> \<open>Case 3: rest \<sim> torus n'. Apply Lemma 77.4 repeatedly:
