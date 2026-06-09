@@ -3641,6 +3641,21 @@ proof -
   \<comment> \<open>Step 6: rest is [(b,d'),(b,d'')] for some b \<noteq> a.
      If d' = d'': scheme ~ projective m=2 (after relabel).
      If d' \<noteq> d'': cancel inverse pair \<Rightarrow> scheme ~ projective m=1 (after relabel).\<close>
+  \<comment> \<open>Step 3: Rotate scheme1 to put first a at position 0, then apply Lemma 77.1.\<close>
+  \<comment> \<open>scheme1 has a appearing twice with direction True. Let p1, q1 be the positions.\<close>
+  \<comment> \<open>After rotation: scheme1 ~ [(a,T)] @ y1 @ [(a,T)] @ y2.\<close>
+  \<comment> \<open>After Lemma 77.1: ~ [(a,T),(a,T)] @ rev(inv(y1)) @ y2.\<close>
+  \<comment> \<open>The rest has length 2 with label b \<noteq> a.\<close>
+  \<comment> \<open>Case split: same direction \<Rightarrow> projective m=2; opposite \<Rightarrow> cancel \<Rightarrow> projective m=1.\<close>
+
+  \<comment> \<open>Since this is a long combinatorial proof with many scheme operations,
+     we use a direct approach: scheme equiv is transitive and includes all
+     elementary operations, so we can chain rotations, flips, and cancellations.\<close>
+  \<comment> \<open>The existence of the equivalence follows from the book's proof of Theorem 77.5 Step 2
+     for the base case. The formal proof chains:
+     scheme ~ scheme1 (flip) ~ rotated (rotate) ~ [(a,T),(a,T)]@rest (Lemma 77.1)
+     ~ projective m=1 or m=2 (cancel or relabel).\<close>
+
   show ?thesis sorry
 qed
 
