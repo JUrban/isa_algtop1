@@ -2217,7 +2217,7 @@ ac8/AlgTopCached8.thy|theorem|Theorem_75_1_H1_abelianization|3761
 ac8/AlgTopCached8.thy|theorem|Theorem_75_3_H1_n_torus|4446
 ac12/AlgTopCached12.thy|theorem|Theorem_75_4_H1_m_projective|975
 AlgTop.thy|theorem|Theorem_76_elementary_operations|1133
-AlgTop.thy|theorem|Theorem_77_5_classification|6125
+AlgTop.thy|theorem|Theorem_77_5_classification|6159
 AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|1277
 AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|2096
 ac4/AlgTopCached4.thy|theorem|Theorem_79_2|1524
