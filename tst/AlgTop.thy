@@ -3627,6 +3627,18 @@ proof -
   finally show "even (length w)" by (by100 presburger)
 qed
 
+\<comment> \<open>In any scheme where label a appears exactly at 2 positions with True direction
+   and a does not appear elsewhere: Lemma 77.1 brings the pair to front.\<close>
+lemma bring_projective_pair_to_front:
+  fixes w :: "(nat \<times> bool) list" and a :: nat
+  assumes "(a, True) \<in> set w"
+      and "card {i. i < length w \<and> fst (w ! i) = a} = 2"
+      and "\<forall>i < length w. fst (w ! i) = a \<longrightarrow> snd (w ! i) = True"
+  shows "\<exists>rest. top1_scheme_equiv w ([(a, True), (a, True)] @ rest)
+      \<and> length rest = length w - 2
+      \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)"
+  sorry
+
 \<comment> \<open>Length-4 projective base case: scheme ~ projective m=1 or m=2.\<close>
 lemma projective_len4_base:
   fixes scheme :: "(nat \<times> bool) list"
@@ -3676,7 +3688,22 @@ proof -
   \<comment> \<open>Bring both a-copies to positions 0,1.\<close>
   have "\<exists>rest. top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest) \<and> length rest = 2
       \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)"
-    sorry
+  proof -
+    \<comment> \<open>scheme1 satisfies conditions for bring\_projective\_pair\_to\_front.\<close>
+    have h1: "(a, True) \<in> set scheme1" sorry
+    have h2: "card {i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = 2" sorry
+    have h3: "\<forall>i < length scheme1. fst (scheme1 ! i) = a \<longrightarrow> snd (scheme1 ! i) = True" sorry
+    from bring_projective_pair_to_front[OF h1 h2 h3]
+    obtain rest where "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)"
+        "length rest = length scheme1 - 2" "\<forall>e \<in> set rest. fst e \<noteq> a" by (by100 blast)
+    moreover have "length scheme1 = 4" sorry
+    ultimately have "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)
+        \<and> length rest = 2 \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)" by (by100 simp)
+    hence "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)
+        \<and> length rest = 2 \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)"
+      using scheme_equiv_trans[OF hequiv1] by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
   then obtain rest where hrest: "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
       "length rest = 2" "\<forall>e \<in> set rest. fst e \<noteq> a" by (by100 blast)
   \<comment> \<open>rest = [(b, d1), (b, d2)] for some b \<noteq> a.\<close>
