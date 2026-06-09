@@ -4779,7 +4779,48 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         \<comment> \<open>Find c, d with c \<noteq> d, c \<noteq> a, d \<noteq> a, and rest \<sim> [(c,T),(c,F),(d,T),(d,F)].\<close>
         obtain c d where hcd: "c \<noteq> d" "c \<noteq> a" "d \<noteq> a"
             "top1_scheme_equiv rest [(c, True), (c, False), (d, True), (d, False)]"
-          sorry \<comment> \<open>From hab: rest \<sim> sphere(a',b'). Relabel a'\<to>fresh, b'\<to>fresh2 if either = a.\<close>
+        proof -
+          \<comment> \<open>If a' \<noteq> a and b' \<noteq> a: use a', b' directly.\<close>
+          \<comment> \<open>If a' = a: relabel a' to fresh in the sphere.\<close>
+          \<comment> \<open>If b' = a: relabel b' to fresh in the sphere.\<close>
+          have "\<exists>c0::nat. c0 \<notin> {a, b', a'}"
+          proof -
+            have "finite ({a, b', a'} :: nat set)" by (by100 simp)
+            from ex_new_if_finite[OF infinite_UNIV_nat this] show ?thesis by (by100 blast)
+          qed
+          then obtain c0 :: nat where "c0 \<notin> {a, b', a'}" by (by100 blast)
+          hence "c0 \<noteq> a" "c0 \<noteq> b'" "c0 \<noteq> a'" by (by100 simp)+
+          define c where "c = (if a' = a then c0 else a')"
+          define d where "d = (if b' = a then c0 else b')"
+          have "c \<noteq> a" unfolding c_def using \<open>c0 \<noteq> a\<close> by (by100 simp)
+          have "d \<noteq> a" unfolding d_def using \<open>c0 \<noteq> a\<close> by (by100 simp)
+          have "c \<noteq> d"
+            unfolding c_def d_def using hab(1) \<open>c0 \<noteq> b'\<close> \<open>c0 \<noteq> a'\<close> by (by100 simp)
+          have "top1_scheme_equiv rest [(c, True), (c, False), (d, True), (d, False)]"
+          proof -
+            \<comment> \<open>Chain: rest \<sim> [(a',T),(a',F),(b',T),(b',F)] \<sim> relabel(a'\<to>c) \<sim> relabel(b'\<to>d).\<close>
+            have s1: "top1_scheme_equiv [(a',True),(a',False),(b',True),(b',False)]
+                (map (\<lambda>(l,bo). (if l = a' then c else l, bo)) [(a',True),(a',False),(b',True),(b',False)])"
+              unfolding top1_scheme_equiv_def
+              using top1_elementary_scheme_operation.relabel[of "[(a',True),(a',False),(b',True),(b',False)]" a' c]
+              by (by100 simp)
+            have hmap1: "map (\<lambda>(l,bo). (if l = a' then c else l, bo)) [(a',True),(a',False),(b',True),(b',False)]
+                = [(c,True),(c,False),(b',True),(b',False)]"
+              using hab(1) by (by100 simp)
+            have s2: "top1_scheme_equiv [(c,True),(c,False),(b',True),(b',False)]
+                (map (\<lambda>(l,bo). (if l = b' then d else l, bo)) [(c,True),(c,False),(b',True),(b',False)])"
+              unfolding top1_scheme_equiv_def
+              using top1_elementary_scheme_operation.relabel[of "[(c,True),(c,False),(b',True),(b',False)]" b' d]
+              by (by100 simp)
+            have "c \<noteq> b'" unfolding c_def using hab(1) \<open>c0 \<noteq> b'\<close> by (by100 simp)
+            have hmap2: "map (\<lambda>(l,bo). (if l = b' then d else l, bo)) [(c,True),(c,False),(b',True),(b',False)]
+                = [(c,True),(c,False),(d,True),(d,False)]"
+              using \<open>c \<noteq> b'\<close> by (by100 simp)
+            from hab(2) s1[unfolded hmap1] s2[unfolded hmap2]
+            show ?thesis unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+          qed
+          thus ?thesis using \<open>c \<noteq> d\<close> \<open>c \<noteq> a\<close> \<open>d \<noteq> a\<close> that by (by100 blast)
+        qed
         have hne_sphere: "\<forall>e \<in> set [(c, True), (c, False), (d, True), (d, False)]. fst e \<noteq> a"
           using hcd(2,3) by (by100 simp)
         have "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ [(c,True),(c,False),(d,True),(d,False)])"
