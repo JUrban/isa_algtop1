@@ -3690,13 +3690,46 @@ proof -
       \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)"
   proof -
     \<comment> \<open>scheme1 satisfies conditions for bring\_projective\_pair\_to\_front.\<close>
-    have h1: "(a, True) \<in> set scheme1" sorry
-    have h2: "card {i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = 2" sorry
-    have h3: "\<forall>i < length scheme1. fst (scheme1 ! i) = a \<longrightarrow> snd (scheme1 ! i) = True" sorry
+    have hlen1: "length scheme1 = 4" unfolding scheme1_def using hlen by (by100 simp)
+    have hfst_preserved: "\<forall>i < length scheme1. fst (scheme1 ! i) = fst (scheme ! i)"
+      sorry \<comment> \<open>Flip preserves fst. Needs by5000 or manual nth/map decomposition.\<close>
+    have h2: "card {i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = 2"
+    proof -
+      have "{i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = {i. i < length scheme \<and> fst (scheme ! i) = a}"
+      proof (rule set_eqI, rule iffI)
+        fix i assume "i \<in> {i. i < length scheme1 \<and> fst (scheme1 ! i) = a}"
+        hence "i < length scheme1" "fst (scheme1 ! i) = a" by (by100 simp)+
+        have "i < length scheme" using \<open>i < length scheme1\<close> hlen1 hlen by (by100 simp)
+        have "fst (scheme1 ! i) = fst (scheme ! i)" using hfst_preserved \<open>i < length scheme1\<close> by (by100 blast)
+        hence "fst (scheme ! i) = a" using \<open>fst (scheme1 ! i) = a\<close> by (by100 simp)
+        thus "i \<in> {i. i < length scheme \<and> fst (scheme ! i) = a}"
+          using \<open>i < length scheme\<close> by (by100 blast)
+      next
+        fix i assume "i \<in> {i. i < length scheme \<and> fst (scheme ! i) = a}"
+        hence "i < length scheme" "fst (scheme ! i) = a" by (by100 simp)+
+        hence "i < length scheme1" using hlen1 hlen by (by100 simp)
+        hence "fst (scheme1 ! i) = fst (scheme ! i)" using hfst_preserved by (by100 blast)
+        hence "fst (scheme1 ! i) = a" using \<open>fst (scheme ! i) = a\<close> by (by100 simp)
+        thus "i \<in> {i. i < length scheme1 \<and> fst (scheme1 ! i) = a}" using \<open>i < length scheme1\<close> by (by100 simp)
+      qed
+      moreover from hproper have "card {i. i < length scheme \<and> fst (scheme ! i) = a} \<in> {0, 2}" by (by100 blast)
+      moreover have "p \<in> {i. i < length scheme \<and> fst (scheme ! i) = a}" using hp(1,4) by (by100 blast)
+      hence "{i. i < length scheme \<and> fst (scheme ! i) = a} \<noteq> {}" by (by100 blast)
+      hence "card {i. i < length scheme \<and> fst (scheme ! i) = a} \<noteq> 0" by (by100 simp)
+      ultimately have "card {i. i < length scheme \<and> fst (scheme ! i) = a} = 2" by (by100 blast)
+      with \<open>{i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = {i. i < length scheme \<and> fst (scheme ! i) = a}\<close>
+      show ?thesis by (by100 simp)
+    qed
+    have h1: "(a, True) \<in> set scheme1"
+      sorry \<comment> \<open>scheme1 has (a,True) at position p. Needs h3 (all a-copies are True).\<close>
+    have h3: "\<forall>i < length scheme1. fst (scheme1 ! i) = a \<longrightarrow> snd (scheme1 ! i) = True"
+      sorry \<comment> \<open>After flip: all a-copies have True direction.
+         Needs: positions with label a = {p,q} (from properness card=2).
+         At p,q: snd is the same (hp(6)). After flip: both become True.\<close>
     from bring_projective_pair_to_front[OF h1 h2 h3]
     obtain rest where "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)"
         "length rest = length scheme1 - 2" "\<forall>e \<in> set rest. fst e \<noteq> a" by (by100 blast)
-    moreover have "length scheme1 = 4" sorry
+    moreover have "length scheme1 = 4" unfolding scheme1_def using hlen by (by100 simp)
     ultimately have "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)
         \<and> length rest = 2 \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)" by (by100 simp)
     hence "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)
