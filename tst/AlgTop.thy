@@ -7277,7 +7277,58 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               \<comment> \<open>scheme ~ block @ [(c,d),(c,d)]. This is commutator + projective pair.\<close>
               have hsch_block_proj: "top1_scheme_equiv scheme ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ [(c,d),(c,d)])"
                 using hfull_equiv hfull_w3 hw3_exp hcd by (by100 simp)
-              \<comment> \<open>Use commutator\_prepend\_projective or direct argument.\<close>
+              \<comment> \<open>Convert [(c,d),(c,d)] to projective form [(0,T),(0,T)] via flip+relabel.\<close>
+              \<comment> \<open>Step 1: flip c if d=False.\<close>
+              have "top1_scheme_equiv [(c,d),(c,d)] [(c,True),(c,True)]"
+              proof (cases d)
+                case True thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+              next
+                case FalseD: False
+                have "top1_elementary_scheme_operation [(c,d),(c,d)]
+                    (map (\<lambda>(l,bo). (l, if l = c then \<not>bo else bo)) [(c,d),(c,d)])"
+                  by (rule top1_elementary_scheme_operation.flip_label)
+                moreover have "map (\<lambda>(l,bo). (l, if l = c then \<not>bo else bo)) [(c,d),(c,d)] = [(c,True),(c,True)]"
+                  using FalseD by (by100 simp)
+                ultimately show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+              qed
+              \<comment> \<open>Step 2: relabel c to 0.\<close>
+              moreover have "top1_scheme_equiv [(c,True),(c,True)] [(0::nat,True),(0,True)]"
+              proof -
+                have "top1_elementary_scheme_operation [(c,True),(c,True)]
+                    (map (\<lambda>(l,bo). (if l = c then 0 else l, bo)) [(c,True),(c,True)])"
+                  by (rule top1_elementary_scheme_operation.relabel)
+                moreover have "map (\<lambda>(l,bo). (if l = c then (0::nat) else l, bo)) [(c,True),(c,True)]
+                    = [(0,True),(0,True)]" by (by100 simp)
+                ultimately show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+              qed
+              ultimately have "top1_scheme_equiv [(c,d),(c,d)] [(0::nat,True),(0,True)]"
+                unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+              \<comment> \<open>[(0,T),(0,T)] = projective\_1.\<close>
+              have "[(0::nat,True),(0,True)] = top1_m_projective_scheme 1"
+                unfolding top1_m_projective_scheme_def by (by100 simp)
+              \<comment> \<open>Lift to block context: scheme ~ block @ projective\_1.\<close>
+              have "top1_scheme_equiv scheme ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ top1_m_projective_scheme 1)"
+              proof -
+                have "top1_scheme_equiv [(c,d),(c,d)] (top1_m_projective_scheme 1)"
+                  using \<open>top1_scheme_equiv [(c,d),(c,d)] [(0,True),(0,True)]\<close>
+                    \<open>[(0::nat,True),(0,True)] = top1_m_projective_scheme 1\<close> by (by100 simp)
+                from scheme_equiv_prepend[OF this, of "[(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)]"]
+                have "top1_scheme_equiv
+                    ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ [(c,d),(c,d)])
+                    ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ top1_m_projective_scheme 1)"
+                  by (by100 blast)
+                thus ?thesis using hsch_block_proj unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+              qed
+              \<comment> \<open>Apply commutator\_prepend\_projective: block @ projective\_1 ~ projective\_3.\<close>
+              have "\<exists>w'. top1_is_projective_scheme w' (1+2) \<and>
+                  top1_scheme_equiv ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ top1_m_projective_scheme 1) w'"
+                using commutator_prepend_projective[OF hab, of 1] by (by100 simp)
+              then obtain w' where hw': "top1_is_projective_scheme w' (1+2)"
+                  and hequiv': "top1_scheme_equiv ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ top1_m_projective_scheme 1) w'"
+                by (by100 blast)
+              have "top1_scheme_equiv scheme w'"
+                using \<open>top1_scheme_equiv scheme ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ top1_m_projective_scheme 1)\<close>
+                  hequiv' unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
               show ?thesis sorry
             next
               case nFalse: False
