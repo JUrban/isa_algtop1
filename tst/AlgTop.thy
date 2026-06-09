@@ -4037,7 +4037,10 @@ proof -
     have "fst e0 \<noteq> a" using hrest(3) he by (by100 simp)
     have "fst e1 \<noteq> a" using hrest(3) he by (by100 simp)
     \<comment> \<open>fst e0 = fst e1 (from properness of original scheme transferred through equivalence).\<close>
-    have "fst e0 = fst e1" sorry
+    have "fst e0 = fst e1"
+      sorry \<comment> \<open>The fst-multiset is preserved by flip\\_label + rotation + Lemma 77.1.
+         Original scheme has labels {a, a, b, b}. Equivalent has {a, a, fst e0, fst e1}.
+         So fst e0 = fst e1 = b.\<close>
     have "rest = [(fst e0, snd e0), (fst e0, snd e1)]" using he \<open>fst e0 = fst e1\<close>
       by (cases e0, cases e1) (by100 simp)
     thus ?thesis using \<open>fst e0 \<noteq> a\<close> by (rule that)
