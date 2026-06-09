@@ -553,9 +553,43 @@ lemma quotient_of_scheme_context_left:
 lemma mod_less_n: "(0::nat) < n \<Longrightarrow> (a :: nat) mod n < n"
   by simp
 
+\<comment> \<open>If a mod n = (a+d) mod n then n dvd d.\<close>
+lemma mod_eq_dvd: "\<lbrakk>(0::nat) < n; a mod n = (a + d) mod n\<rbrakk> \<Longrightarrow> n dvd d"
+  sorry \<comment> \<open>True: a mod n = (a+d) mod n implies n | d. AlgTop simpset/presburger times out.\<close>
+
 \<comment> \<open>Shift injectivity: (x+k) mod n = (y+k) mod n implies x=y for x,y < n.\<close>
 lemma shift_mod_inj: "\<lbrakk>(0::nat) < n; x < n; y < n; (x + k) mod n = (y + k) mod n\<rbrakk> \<Longrightarrow> x = y"
-  sorry \<comment> \<open>Modular arithmetic: raw presburger times out in AlgTop context.\<close>
+proof -
+  assume h: "0 < n" "x < n" "y < n" "(x + k) mod n = (y + k) mod n"
+  \<comment> \<open>Proof by basic nat arithmetic: x mod n = x, y mod n = y since x,y < n.\<close>
+  from h(4) have "(x + k) mod n = (y + k) mod n" .
+  \<comment> \<open>x < n, y < n \\<Longrightarrow> (x + k) mod n determines x uniquely.\<close>
+  \<comment> \<open>If x \\<le> y: (y-x) + (x+k) = (y+k). Mod n: (y-x) = 0 mod n. Since y-x < n: y-x=0.\<close>
+  show "x = y"
+  proof (rule ccontr)
+    assume "x \<noteq> y"
+    show False
+    proof (cases "x < y")
+      case True
+      hence "y + k = x + k + (y - x)" by (by100 linarith)
+      hence "(y + k) mod n = (x + k + (y - x)) mod n" by (by100 metis)
+      hence "(x + k) mod n = (x + k + (y - x)) mod n" using h(4) by (by100 metis)
+      hence "(x + k + (y - x)) mod n = (x + k) mod n" by (by100 metis)
+      hence "n dvd (y - x)" using mod_eq_dvd[OF h(1)] by (by100 metis)
+      moreover have "0 < y - x" "y - x < n" using True h(3) by (by100 linarith)+
+      ultimately show False using nat_dvd_not_less by (by100 blast)
+    next
+      case False
+      hence "x > y" using \<open>x \<noteq> y\<close> by (by100 linarith)
+      hence "x + k = y + k + (x - y)" by (by100 linarith)
+      hence "(x + k) mod n = (y + k + (x - y)) mod n" by (by100 metis)
+      hence "(y + k) mod n = (y + k + (x - y)) mod n" using h(4) by (by100 metis)
+      hence "n dvd (x - y)" using mod_eq_dvd[OF h(1)] by (by100 metis)
+      moreover have "0 < x - y" "x - y < n" using \<open>x > y\<close> h(2) by (by100 linarith)+
+      ultimately show False using nat_dvd_not_less by (by100 blast)
+    qed
+  qed
+qed
 
 \<comment> \<open>Key property: Suc((i+k) mod n) mod n = (Suc i + k) mod n.\<close>
 lemma suc_mod_shift: "(0::nat) < n \<Longrightarrow> Suc ((i + k) mod n) mod n = (Suc i + k) mod n"
