@@ -511,7 +511,7 @@ proof -
   \<comment> \<open>Rewriting rule: (fst(w'!i) = fst(w'!j)) = (fst(w!i) = fst(w!j)).\<close>
   have hfst_eq: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow>
       (fst (w'!i) = fst (w'!j)) = (fst (w!i) = fst (w!j))"
-    using assms(3) sorry
+    using assms(3) by (by100 metis)
   \<comment> \<open>Strategy: unfold definition for both sides. The formula for w' differs from w only
      in terms involving fst(scheme!i)/snd(scheme!i). Use hfst\_eq and assms(4) to rewrite.\<close>
   from assms(1) show ?thesis
@@ -539,7 +539,39 @@ proof -
     subgoal by assumption
     \<comment> \<open>C9: boundary injectivity. Rewrite fst/snd.\<close>
     subgoal premises prems for P q vx vy
-      using prems assms(3) assms(4) sorry
+    proof (intro allI ballI impI)
+      fix i j ta s
+      assume hi: "i < length w" and hj: "j < length w" and hta: "ta \<in> I_set" and hs: "s \<in> I_set"
+          and hq_eq: "q ((1 - ta) * vx i + ta * vx (Suc i mod length w),
+                (1 - ta) * vy i + ta * vy (Suc i mod length w)) =
+               q ((1 - s) * vx j + s * vx (Suc j mod length w),
+                (1 - s) * vy j + s * vy (Suc j mod length w))"
+      \<comment> \<open>From the old C9 (prems) with the same q equality: get the conclusion for w.\<close>
+      from prems have hC9_w: "\<forall>i<length w. \<forall>j<length w. \<forall>ta\<in>I_set. \<forall>s\<in>I_set.
+          q ((1-ta)*vx i+ta*vx(Suc i mod length w),(1-ta)*vy i+ta*vy(Suc i mod length w))
+        = q ((1-s)*vx j+s*vx(Suc j mod length w),(1-s)*vy j+s*vy(Suc j mod length w))
+        \<longrightarrow> (i=j \<and> ta=s) \<or> (fst(w!i)=fst(w!j) \<and> (if snd(w!i)=snd(w!j) then s=ta else s=1-ta))"
+        by (by100 blast)
+      from hC9_w[rule_format, OF hi hj hta hs hq_eq]
+      have "(i = j \<and> ta = s) \<or>
+            (fst (w!i) = fst (w!j) \<and> (if snd (w!i) = snd (w!j) then s = ta else s = 1 - ta))" .
+      thus "(i = j \<and> ta = s) \<or>
+            (fst (w'!i) = fst (w'!j) \<and> (if snd (w'!i) = snd (w'!j) then s = ta else s = 1 - ta))"
+      proof (elim disjE conjE)
+        assume "i = j" "ta = s" thus ?thesis by (by100 blast)
+      next
+        assume hfst_w: "fst (w!i) = fst (w!j)"
+            and hbranch: "if snd (w!i) = snd (w!j) then s = ta else s = 1 - ta"
+        have "fst (w'!i) = fst (w'!j)" using assms(3)[OF hi] assms(3)[OF hj] hfst_w by (by100 simp)
+        moreover have "(if snd (w'!i) = snd (w'!j) then s = ta else s = 1 - ta)"
+        proof -
+          have hsnd_iff: "(snd (w'!i) = snd (w'!j)) = (snd (w!i) = snd (w!j))"
+            using assms(4)[OF hi hj hfst_w] .
+          show ?thesis using hbranch hsnd_iff by (by100 presburger)
+        qed
+        ultimately show ?thesis by (by100 blast)
+      qed
+    qed
     \<comment> \<open>C10: counterclockwise\<close>
     subgoal by assumption
     \<comment> \<open>C11: strict edge-side\<close>
