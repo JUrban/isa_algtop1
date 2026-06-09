@@ -6608,7 +6608,27 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                (all preserve filter-counts on fst). So filter-count = scheme's. QED.\<close>
             \<comment> \<open>For now: rely on the fact that scheme\_equiv via these specific operations
                preserves fst-filter-counts. This is provable but needs a chain argument.\<close>
-            show "card {i. i < length full \<and> fst (full!i) = label} \<in> {0, 2}" sorry
+            \<comment> \<open>Proof: full and inter have the same filter-counts on fst, by simp on append.\<close>
+            define inter where "inter = w0' @ [(a_lab,True),(b_lab,True)] @ w1' @ [(a_lab,False),(b_lab,False)] @ w2'"
+            have hfilt_eq: "length (filter (\<lambda>e. fst e = label) full) = length (filter (\<lambda>e. fst e = label) inter)"
+              unfolding full_def inter_def by (by100 simp)
+            \<comment> \<open>inter has same filter-counts as scheme (extraction preserves fst-multiset).\<close>
+            \<comment> \<open>This is the hard part: need to track through rotation+flip+cut\_paste\_opp.\<close>
+            have "length (filter (\<lambda>e. fst e = label) inter) = length (filter (\<lambda>e. fst e = label) scheme)"
+              sorry
+            hence "length (filter (\<lambda>e. fst e = label) full) = length (filter (\<lambda>e. fst e = label) scheme)"
+              using hfilt_eq by (by100 simp)
+            hence "card {i. i < length full \<and> fst (full!i) = label} = card {i. i < length scheme \<and> fst (scheme!i) = label}"
+            proof -
+              assume h: "length (filter (\<lambda>e. fst e = label) full) = length (filter (\<lambda>e. fst e = label) scheme)"
+              have h1: "card {i. i < length full \<and> fst (full!i) = label} = length (filter (\<lambda>e. fst e = label) full)"
+                using length_filter_conv_card[of "\<lambda>e. fst e = label" full, symmetric] by (by100 simp)
+              have h2: "card {i. i < length scheme \<and> fst (scheme!i) = label} = length (filter (\<lambda>e. fst e = label) scheme)"
+                using length_filter_conv_card[of "\<lambda>e. fst e = label" scheme, symmetric] by (by100 simp)
+              show ?thesis using h h1 h2 by (by100 linarith)
+            qed
+            moreover from less(3) have "card {i. i < length scheme \<and> fst (scheme!i) = label} \<in> {0, 2}" by (by100 blast)
+            ultimately show "card {i. i < length full \<and> fst (full!i) = label} \<in> {0, 2}" by (by100 simp)
           qed
           have hproper_shorter: "\<forall>label. card {i. i < length shorter \<and> fst (shorter!i) = label} \<in> {0, 2}"
             using cancel_preserves_proper[OF hproper_full hj(1) hj(2)]
