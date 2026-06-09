@@ -3746,13 +3746,25 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           by (by100 blast)
         \<comment> \<open>scheme!(j+1) = inverse(scheme!j).\<close>
         have hjinv: "scheme!(j+1) = top1_inverse_edge (scheme!j)"
-          sorry
+          using hj(2) hj(3) unfolding top1_inverse_edge_def
+          by (cases "scheme!j", cases "scheme!(j+1)") (by100 simp)
         \<comment> \<open>Cancel: scheme ~ shorter scheme (remove positions j, j+1).\<close>
         define shorter where "shorter = take j scheme @ drop (j+2) scheme"
         have hcancel: "top1_scheme_equiv scheme shorter"
-          sorry
+        proof -
+          have hdecomp_j: "scheme = take j scheme @ [scheme!j, top1_inverse_edge (scheme!j)] @ drop (j+2) scheme"
+            sorry
+          have "top1_elementary_scheme_operation
+              (take j scheme @ [scheme!j, top1_inverse_edge (scheme!j)] @ drop (j+2) scheme)
+              (take j scheme @ drop (j+2) scheme)"
+            by (rule top1_elementary_scheme_operation.cancel)
+          hence "top1_elementary_scheme_operation scheme shorter"
+            using hdecomp_j unfolding shorter_def by (by100 simp)
+          thus ?thesis unfolding top1_scheme_equiv_def
+            by (by100 simp)
+        qed
         have hlen_shorter: "length shorter = length scheme - 2"
-          sorry
+          unfolding shorter_def using hj(1) by (by100 simp)
         \<comment> \<open>Shorter scheme is proper.\<close>
         have hproper_shorter: "\<forall>label. card {i. i < length shorter \<and> fst (shorter!i) = label} \<in> {0, 2}"
           sorry
