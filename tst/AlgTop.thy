@@ -4449,8 +4449,10 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         hence "top1_scheme_equiv scheme
             ([(a_lab, True), (b_lab, True), (a_lab, False), (b_lab, False)] @ w0' @ w1' @ w2')"
           using hequiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
-        \<comment> \<open>The result aba\\<inverse>b\\<inverse> w3 is a torus scheme. If w3 is empty: done (torus n=1).
-           If w3 nonempty: continue extracting commutators or apply IH.\<close>
+        \<comment> \<open>Book Step 1 continuation: scheme ~ [commutator] @ w3.
+           If w3 = []: torus n=1. Done.
+           If w3 has adjacent cancellable pair: cancel \<Rightarrow> shorter scheme \<Rightarrow> IH.
+           Otherwise: extract another commutator from w3, repeat.\<close>
         show ?thesis sorry
       qed
     qed
