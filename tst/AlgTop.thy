@@ -549,8 +549,13 @@ lemma elementary_operation_preserves_quotient:
   using assms(2,1)
 proof (induction rule: top1_elementary_scheme_operation.induct)
   case (rotate u v)
-  \<comment> \<open>s = u@v, t = v@u. Same polygon, vertices cyclically shifted.\<close>
-  thus ?case sorry
+  \<comment> \<open>s = u@v, t = v@u. Same polygon P, vertices cyclically shifted.
+     Define vx'(i) = vx((i + |u|) mod n), vy' similarly. P is unchanged (convex hull
+     is permutation-invariant). The quotient map q and all identifications shift accordingly.\<close>
+  let ?n = "length u + length v"
+  \<comment> \<open>The scheme\_rotate\_homeomorphic already has the proof that Y1 quotient of u@v
+     implies Y1 is also a quotient of v@u. We use the same argument here.\<close>
+  from rotate.prems show ?case sorry \<comment> \<open>Needs: define shifted vx'/vy', verify all 11 conditions mod shift.\<close>
 next
   case (cancel u a v)
   \<comment> \<open>s = u@[a,a\\<inverse>]@v, t = u@v. Cancel adjacent inverse pair. Fold polygon.\<close>
