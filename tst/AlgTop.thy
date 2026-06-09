@@ -7186,9 +7186,98 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               case True
               \<comment> \<open>length w3 = 2 (even, > 0, < 4). Proper \<Rightarrow> one label, both same direction
                  (no adjacent inverse pair). This is a projective pair.\<close>
-              have "length w3 = 2" using True \<open>length w3 \<ge> 2\<close> heven_w3 by (by100 presburger)
-              \<comment> \<open>w3 = [e1, e2] with fst e1 = fst e2, snd e1 = snd e2 (proper + no inv pair).\<close>
-              \<comment> \<open>scheme ~ [commutator] @ [projective pair] ~ projective 3.\<close>
+              have hlen2: "length w3 = 2" using True \<open>length w3 \<ge> 2\<close> heven_w3 by (by100 presburger)
+              \<comment> \<open>w3 = [e1, e2]. Extract the elements.\<close>
+              obtain e1 e2 where hw3_exp: "w3 = [e1, e2]"
+              proof -
+                have "w3 = w3!0 # w3!1 # []"
+                  using hlen2 by (cases w3, by100 simp, cases "tl w3", by100 simp, by100 simp)
+                thus ?thesis using that by (by100 blast)
+              qed
+              \<comment> \<open>Properness: fst e1 = fst e2 (otherwise count = 1 \\<notin> \{0,2\}).\<close>
+              \<comment> \<open>Derive properness of w3 from properness of full (same argument as ge4 case).\<close>
+              have hproper_w3_local: "\<forall>label. card {i. i < length w3 \<and> fst (w3!i) = label} \<in> {0, 2}"
+              proof (intro allI)
+                fix label
+                have hfc_decomp: "length (filter (\<lambda>e. fst e = label) full)
+                    = length (filter (\<lambda>e. fst e = label) [(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)])
+                    + length (filter (\<lambda>e. fst e = label) w3)"
+                  unfolding hfull_w3 by (by100 simp)
+                have hfc_full_len: "length (filter (\<lambda>e. fst e = label) full) \<in> {0, 2}"
+                proof -
+                  have "card {i. i < length full \<and> fst (full!i) = label} = length (filter (\<lambda>e. fst e = label) full)"
+                    using length_filter_conv_card[of "\<lambda>e. fst e = label" full, symmetric] by (by100 simp)
+                  moreover have "card {i. i < length full \<and> fst (full!i) = label} \<in> {0, 2}"
+                    using hproper_full by (by100 blast)
+                  ultimately show ?thesis by (by100 simp)
+                qed
+                have hfc_block: "length (filter (\<lambda>e. fst e = label) [(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)])
+                    \<in> {0, 2}" using hab by (by100 simp)
+                have "length (filter (\<lambda>e. fst e = label) full) = 0 \<or> length (filter (\<lambda>e. fst e = label) full) = 2"
+                  using hfc_full_len by (by100 blast)
+                moreover have "length (filter (\<lambda>e. fst e = label) [(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)]) = 0
+                    \<or> length (filter (\<lambda>e. fst e = label) [(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)]) = 2"
+                  using hfc_block by (by100 blast)
+                ultimately have "length (filter (\<lambda>e. fst e = label) w3) = 0 \<or> length (filter (\<lambda>e. fst e = label) w3) = 2"
+                  using hfc_decomp by (by100 linarith)
+                hence "length (filter (\<lambda>e. fst e = label) w3) \<in> {0, 2}" by (by100 blast)
+                thus "card {i. i < length w3 \<and> fst (w3!i) = label} \<in> {0, 2}"
+                proof -
+                  have "card {i. i < length w3 \<and> fst (w3!i) = label} = length (filter (\<lambda>e. fst e = label) w3)"
+                    using length_filter_conv_card[of "\<lambda>e. fst e = label" w3, symmetric] by (by100 simp)
+                  thus ?thesis using \<open>length (filter (\<lambda>e. fst e = label) w3) \<in> {0, 2}\<close> by (by100 simp)
+                qed
+              qed
+              have hfst_eq: "fst e1 = fst e2"
+              proof (rule ccontr)
+                assume hne: "fst e1 \<noteq> fst e2"
+                have "length (filter (\<lambda>e. fst e = fst e1) w3) = 1"
+                  unfolding hw3_exp using hne by (by100 simp)
+                moreover have "length (filter (\<lambda>e. fst e = fst e1) w3) \<in> {0, 2}"
+                proof -
+                  have "card {i. i < length w3 \<and> fst (w3!i) = fst e1} \<in> {0, 2}"
+                    using hproper_w3_local by (by100 blast)
+                  moreover have "card {i. i < length w3 \<and> fst (w3!i) = fst e1}
+                      = length (filter (\<lambda>e. fst e = fst e1) w3)"
+                    using length_filter_conv_card[of "\<lambda>e. fst e = fst e1" w3, symmetric] by (by100 simp)
+                  ultimately show ?thesis by (by100 simp)
+                qed
+                ultimately show False by (by100 simp)
+              qed
+              \<comment> \<open>No adjacent inverse pair in full: e1, e2 are NOT inverse pair.\<close>
+              have hsnd_eq: "snd e1 = snd e2"
+              proof (rule ccontr)
+                assume hne: "snd e1 \<noteq> snd e2"
+                \<comment> \<open>Position in full: block has length 4, w3 starts at position 4.\<close>
+                have hfull_len: "length full = length scheme"
+                  unfolding full_def using hlen_w by (by100 simp)
+                have "full!(4) = e1" "full!(5) = e2"
+                  unfolding hfull_w3 hw3_exp by (by100 simp)+
+                moreover have "fst (full!4) = fst (full!5)"
+                  using hfst_eq unfolding hfull_w3 hw3_exp by (by100 simp)
+                moreover have "snd (full!4) \<noteq> snd (full!5)"
+                  using hne unfolding hfull_w3 hw3_exp by (by100 simp)
+                moreover have "4 + 1 < length full"
+                  using hfull_len hlen_w3 hlen2 by (by100 linarith)
+                ultimately have "\<exists>j. j + 1 < length full \<and> fst (full!j) = fst (full!(j+1))
+                    \<and> snd (full!j) \<noteq> snd (full!(j+1))"
+                  by (rule_tac exI[of _ 4]) (by100 simp)
+                with \<open>\<not>(\<exists>j. j + 1 < length full \<and> fst (full ! j) = fst (full ! (j + 1)) \<and> snd (full ! j) \<noteq> snd (full ! (j + 1)))\<close>
+                show False by (by100 blast)
+              qed
+              \<comment> \<open>So w3 = [(c,d),(c,d)] — a projective pair.\<close>
+              obtain c d where hcd: "e1 = (c, d)" "e2 = (c, d)"
+              proof -
+                obtain c1 d1 where "e1 = (c1, d1)" by (cases e1)
+                moreover obtain c2 d2 where "e2 = (c2, d2)" by (cases e2)
+                moreover have "c1 = c2" using hfst_eq \<open>e1 = (c1,d1)\<close> \<open>e2 = (c2,d2)\<close> by (by100 simp)
+                moreover have "d1 = d2" using hsnd_eq \<open>e1 = (c1,d1)\<close> \<open>e2 = (c2,d2)\<close> by (by100 simp)
+                ultimately show ?thesis using that by (by100 blast)
+              qed
+              \<comment> \<open>scheme ~ block @ [(c,d),(c,d)]. This is commutator + projective pair.\<close>
+              have hsch_block_proj: "top1_scheme_equiv scheme ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ [(c,d),(c,d)])"
+                using hfull_equiv hfull_w3 hw3_exp hcd by (by100 simp)
+              \<comment> \<open>Use commutator\_prepend\_projective or direct argument.\<close>
               show ?thesis sorry
             next
               case nFalse: False
