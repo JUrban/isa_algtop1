@@ -497,6 +497,19 @@ proof -
   show ?thesis .
 qed
 
+\<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
+   and the same snd-equality pattern for same-label pairs, then quotient\_of\_scheme\_on
+   is equivalent for both. This factors out the geometric conditions from the scheme-specific ones.\<close>
+lemma quotient_of_scheme_transfer:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+      and "length w' = length w"
+      and "\<And>i. i < length w \<Longrightarrow> fst (w'!i) = fst (w!i)"
+      and "\<And>i j. \<lbrakk>i < length w; j < length w; fst (w!i) = fst (w!j)\<rbrakk> \<Longrightarrow>
+           (snd (w'!i) = snd (w'!j)) = (snd (w!i) = snd (w!j))"
+  shows "top1_quotient_of_scheme_on Y TY w'"
+  sorry \<comment> \<open>Same witnesses P, q, vx, vy. Geometric conditions transfer via length.
+     Conditions 7,9 transfer via the fst/snd assumptions.\<close>
+
 \<comment> \<open>Flipping the orientation of all edges with a given label preserves quotient\_of\_scheme\_on.
    Same polygon P, same quotient map q, same vertex positions vx/vy.
    The identification conditions use snd(scheme!i) = snd(scheme!j) which is preserved
@@ -554,10 +567,8 @@ proof -
      then show the existential for w' using the same witnesses.
      For geometric conditions (not referencing scheme!i): they're identical.
      For conditions 7,9 (referencing fst/snd of scheme): rewrite via hfst\_map/hsnd\_map.\<close>
-  from assms show ?thesis
-    unfolding top1_quotient_of_scheme_on_def hlen
-    sorry \<comment> \<open>Blocked: definition formula too large for blast/fast (5s timeout).
-       Need: factor definition or use incremental tactic.\<close>
+  show ?thesis
+    by (rule quotient_of_scheme_transfer[OF assms hlen hfst hsnd_eq])
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
