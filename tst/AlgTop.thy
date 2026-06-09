@@ -3740,7 +3740,33 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         case True
         \<comment> \<open>Adjacent inverse pair found: cancel to get shorter torus scheme.
            Apply IH to the shorter scheme.\<close>
-        show ?thesis sorry
+        \<comment> \<open>Get adjacent inverse pair.\<close>
+        from True obtain j where hj: "j + 1 < length scheme"
+            "fst (scheme!j) = fst (scheme!(j+1))" "snd (scheme!j) \<noteq> snd (scheme!(j+1))"
+          by (by100 blast)
+        \<comment> \<open>scheme!(j+1) = inverse(scheme!j).\<close>
+        have hjinv: "scheme!(j+1) = top1_inverse_edge (scheme!j)"
+          sorry
+        \<comment> \<open>Cancel: scheme ~ shorter scheme (remove positions j, j+1).\<close>
+        define shorter where "shorter = take j scheme @ drop (j+2) scheme"
+        have hcancel: "top1_scheme_equiv scheme shorter"
+          sorry
+        have hlen_shorter: "length shorter = length scheme - 2"
+          sorry
+        \<comment> \<open>Shorter scheme is proper.\<close>
+        have hproper_shorter: "\<forall>label. card {i. i < length shorter \<and> fst (shorter!i) = label} \<in> {0, 2}"
+          sorry
+        \<comment> \<open>Length of shorter \\<ge> 4 (cancel reduces by 2; properness prevents odd lengths).\<close>
+        have hlen_ge4: "length shorter \<ge> 4"
+          sorry
+        \<comment> \<open>Apply IH.\<close>
+        from less(1)[of shorter, OF _ hlen_ge4 hproper_shorter]
+        have "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv shorter [(a, True), (a, False), (b, True), (b, False)])
+           \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv shorter w)
+           \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv shorter w)"
+          sorry \<comment> \<open>Apply IH to shorter scheme.\<close>
+        \<comment> \<open>Chain: scheme ~ shorter ~ normal form.\<close>
+        thus ?thesis using hcancel unfolding top1_scheme_equiv_def sorry
       next
         case no_adj_gt4: False
         \<comment> \<open>No adjacent inverse pairs. Book proof:
