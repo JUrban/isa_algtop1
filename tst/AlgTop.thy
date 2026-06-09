@@ -533,10 +533,24 @@ proof -
   \<comment> \<open>The old quotient's existential witnesses work for the new scheme too.
      All conditions either don't reference scheme!i at all, or reference fst/snd
      which transfer via hfst and hsnd\_eq.\<close>
+  \<comment> \<open>The flip doesn't change fst, and the snd equality is preserved (by hsnd\_eq).
+     So the identification pattern is the same. Therefore the same witnesses work.\<close>
+  have hfst_map: "\<And>i. i < length w \<Longrightarrow>
+      fst (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w ! i) = fst (w ! i)"
+    using hfst by (by100 blast)
+  have hsnd_map: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow> fst (w!i) = fst (w!j) \<Longrightarrow>
+      (snd (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w ! i)
+       = snd (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w ! j))
+    = (snd (w ! i) = snd (w ! j))"
+    using hsnd_eq by (by100 blast)
   from assms show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    sorry \<comment> \<open>Same witnesses. Geometric conditions (no scheme!i) match directly.
-       Conditions 7,9: fst(map fl w!i) = fst(w!i) by hfst, snd equality by hsnd\_eq.\<close>
+    apply (elim conjE exE)
+    apply (intro conjI exI)
+    \<comment> \<open>Close goals one at a time, using assumption for geometric conditions.\<close>
+    sorry \<comment> \<open>Remaining: C7, C9, and some geometric conditions that schematic exI couldn't match.
+       Root cause: exI introduces schematics that don't unify correctly with all 11 conditions.
+       Need explicit witness instantiation.\<close>
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
