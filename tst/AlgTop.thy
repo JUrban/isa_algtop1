@@ -5269,7 +5269,7 @@ next
       unfolding top1_m_projective_scheme_def by (by100 simp)
     ultimately have h_b: "top1_scheme_equiv (top1_m_projective_scheme 1 @ top1_n_torus_scheme 1)
         (top1_m_projective_scheme 3)" by (by100 simp)
-    show ?thesis sorry \<comment> \<open>Need Suc 0 substitution. h\_b has proj\_1@torus\_1~proj\_3.\<close>
+    show ?thesis sorry \<comment> \<open>Base: h\_b gives proj\_1@torus\_1~proj\_3. Needs m'=0 arithmetic.\<close>
   next
     case nFalse: False
     hence "m' > 0" by (by100 simp)
