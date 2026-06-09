@@ -3894,7 +3894,50 @@ proof -
          count(l, rest) = count(l, y0) + count(l, rev(inv(y1))) + count(l, y2)
                         = count(l, y0) + count(l, y1) + count(l, y2)   [inv preserves fst]
                         = count(l, w)   [since l \<noteq> a and a-positions don't contribute]\<close>
-      show ?thesis sorry \<comment> \<open>Counting argument: inv preserves fst, standard concat indexing.\<close>
+      \<comment> \<open>Use filter-length: count(l, rest) = count(l, w) via filter decomposition.\<close>
+      let ?P = "\<lambda>e. fst e = label"
+      have hfilt_rest: "length (filter ?P ?rest)
+          = length (filter ?P y0) + length (filter ?P (rev (map top1_inverse_edge y1))) + length (filter ?P y2)"
+        by (by100 simp)
+      \<comment> \<open>filter commutes with rev, and inv preserves fst.\<close>
+      have "filter ?P (rev (map top1_inverse_edge y1)) = rev (filter ?P (map top1_inverse_edge y1))"
+        using rev_filter[of ?P "map top1_inverse_edge y1", symmetric] .
+      hence "length (filter ?P (rev (map top1_inverse_edge y1))) = length (filter ?P (map top1_inverse_edge y1))"
+        by (by100 simp)
+      moreover have "length (filter ?P (map top1_inverse_edge y1)) = length (filter ?P y1)"
+      proof -
+        \<comment> \<open>length\_filter\_map gives: length(filter P (map f xs)) = length(filter (P\<circ>f) xs).
+           Then P \<circ> inv = P (since inv preserves fst) gives the result.\<close>
+        have "?P \<circ> top1_inverse_edge = ?P"
+          by (rule ext) (simp add: top1_inverse_edge_def comp_def split: prod.splits)
+        thus ?thesis by simp
+      qed
+      ultimately have "length (filter ?P (rev (map top1_inverse_edge y1))) = length (filter ?P y1)"
+        by (by100 simp)
+      hence hcount_rest: "length (filter ?P ?rest)
+          = length (filter ?P y0) + length (filter ?P y1) + length (filter ?P y2)"
+        using hfilt_rest by (by100 simp)
+      \<comment> \<open>For w: the two a-positions don't contribute to filter (since label \<noteq> a).\<close>
+      have "length (filter ?P w) = length (filter ?P (y0 @ [(a,True)] @ y1 @ [(a,True)] @ y2))"
+        using hdecomp by (by100 simp)
+      also have "\<dots> = length (filter ?P y0) + length (filter ?P [(a,True)]) + length (filter ?P y1)
+          + length (filter ?P [(a,True)]) + length (filter ?P y2)"
+        by (by100 simp)
+      also have "filter ?P [(a,True)] = []" using False by (by100 simp)
+      hence "length (filter ?P [(a,True)]) = 0" by (by100 simp)
+      hence "length (filter ?P y0) + length (filter ?P [(a,True)]) + length (filter ?P y1)
+          + length (filter ?P [(a,True)]) + length (filter ?P y2)
+          = length (filter ?P y0) + length (filter ?P y1) + length (filter ?P y2)" by (by100 simp)
+      finally have hcount_w: "length (filter ?P w) = length (filter ?P y0) + length (filter ?P y1) + length (filter ?P y2)" .
+      \<comment> \<open>So count(label, rest) = count(label, w).\<close>
+      have "length (filter ?P ?rest) = length (filter ?P w)"
+        using hcount_rest hcount_w by (by100 simp)
+      \<comment> \<open>Convert to card via length\_filter\_conv\_card.\<close>
+      hence "card {i. i < length ?rest \<and> fst (?rest ! i) = label}
+           = card {i. i < length w \<and> fst (w ! i) = label}"
+        using length_filter_conv_card[of ?P ?rest] length_filter_conv_card[of ?P w] by (by100 simp)
+      moreover from hproper_w have "card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}" by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
     qed
   qed
   ultimately show ?thesis by (by100 blast)
