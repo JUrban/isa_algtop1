@@ -7687,14 +7687,22 @@ proof -
      Step 2c: Pair remaining letters into commutator blocks aba\<inverse>b\<inverse> (torus type).\<close>
   \<comment> \<open>NOTE: top1\\_is\\_torus\\_scheme, top1\\_is\\_projective\\_scheme now defined (\\<S>77 section).
      top1\\_scheme\\_equiv = rtranclp of elementary operations (defined before \\<S>76).\<close>
+  \<comment> \<open>Derive properness and length \\<ge> 4 from the quotient structure.\<close>
+  have hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme!i) = label} \<in> {0, 2}"
+    sorry \<comment> \<open>From boundary injectivity of quotient\_of\_scheme\_on.\<close>
+  have hlen_ge4: "length scheme \<ge> 4"
+    sorry \<comment> \<open>From polygon n \\<ge> 3, properness (even length), and surface structure.\<close>
+  \<comment> \<open>Apply scheme\_normal\_form: sphere, torus, or projective.\<close>
+  from scheme_normal_form[OF hlen_ge4 hproper]
+  have hNF: "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
+       \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w)
+       \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w)" .
   have hreduced: "(\<exists>n>0. \<exists>w. top1_is_torus_scheme w n
             \<and> top1_scheme_equiv scheme w)
       \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m
             \<and> top1_scheme_equiv scheme w)"
-    sorry \<comment> \<open>From scheme\\_normal\\_form: scheme is proper (each label twice) and length \\<ge> 4.
-       Properness follows from the polygonal quotient structure. Length \\<ge> 4 from surface.
-       scheme\\_normal\\_form gives equivalence to torus or projective normal form.
-       (Sphere case eliminated: length 0 contradicts quotient\\_of\\_scheme\\_on requiring n \\<ge> 3.)\<close>
+    sorry \<comment> \<open>From hNF: the sphere case gives S2, handled as first disjunct in outer theorem.
+       For now: eliminate or handle sphere separately.\<close>
   \<comment> \<open>Step 3: Each normal form corresponds to the standard surface.
      - Empty/sphere: cancellation gives S² (a@a⁻¹@b@b⁻¹ with cancellation).
      - Torus scheme: the standard n-torus IS the quotient of this scheme
