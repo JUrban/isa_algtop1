@@ -364,6 +364,20 @@ lemma valid_equiv_implies_equiv:
   unfolding top1_valid_scheme_equiv_def top1_scheme_equiv_def
   by (induction rule: rtranclp.induct) (by100 simp, meson rtranclp.rtrancl_into_rtrancl valid_implies_elementary)
 
+\<comment> \<open>Scheme equivalence: transitivity and lifting from elementary operations.
+   These avoid the meson/rtranclp\_trans timeout on complex list types.\<close>
+lemma scheme_equiv_trans:
+  "top1_scheme_equiv a b \<Longrightarrow> top1_scheme_equiv b c \<Longrightarrow> top1_scheme_equiv a c"
+  unfolding top1_scheme_equiv_def by (rule rtranclp_trans)
+
+lemma elementary_imp_equiv:
+  "top1_elementary_scheme_operation a b \<Longrightarrow> top1_scheme_equiv a b"
+  unfolding top1_scheme_equiv_def
+  by (rule rtranclp.rtrancl_into_rtrancl[OF rtranclp.rtrancl_refl])
+
+lemma scheme_equiv_refl: "top1_scheme_equiv a a"
+  unfolding top1_scheme_equiv_def by (rule rtranclp.rtrancl_refl)
+
 section \<open>\<S>76 Cutting and Pasting\<close>
 
 \<comment> \<open>Quotient uniqueness: two quotient maps on the same space with the same fibres
@@ -3684,23 +3698,31 @@ proof -
         case True thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
       next
         case False
-        have "top1_elementary_scheme_operation
-            [(a,True),(a,True),(b,d1),(b,d1)]
-            (map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,d1),(b,d1)])"
-          by (rule top1_elementary_scheme_operation.flip_label)
-        moreover have "map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,d1),(b,d1)]
-            = [(a,True),(a,True),(b, \<not>d1),(b, \<not>d1)]"
-          using hrest_form(2) by (by100 simp)
-        ultimately have hop: "top1_elementary_scheme_operation
-            [(a,True),(a,True),(b,d1),(b,d1)] [(a,True),(a,True),(b, \<not>d1),(b, \<not>d1)]"
-          sorry
-        have "(\<not>d1) = True" using False by (by100 simp)
-        hence "top1_elementary_scheme_operation
+        have hop: "top1_scheme_equiv
             [(a,True),(a,True),(b,d1),(b,d1)] [(a,True),(a,True),(b,True),(b,True)]"
-          using hop by (by100 simp)
-        thus ?thesis
-          unfolding top1_scheme_equiv_def
-          by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
+        proof -
+          have "d1 = False" using False by (by100 simp)
+          hence "[(a,True),(a,True),(b,d1),(b,d1)] = [(a,True),(a,True),(b,False),(b,False)]"
+            by (by100 simp)
+          moreover have "top1_scheme_equiv [(a,True),(a,True),(b,False),(b,False)]
+              [(a,True),(a,True),(b,True),(b,True)]"
+          proof (rule elementary_imp_equiv)
+            have "map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,False),(b,False)]
+                = [(a,True),(a,True),(b,True),(b,True)]"
+              using hrest_form(2) by (by100 simp)
+            have hmap: "map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,False),(b,False)]
+                = [(a,True),(a,True),(b,True),(b,True)]"
+              using hrest_form(2) by (by100 simp)
+            from top1_elementary_scheme_operation.flip_label[of "[(a,True),(a,True),(b,False),(b,False)]" b]
+            have "top1_elementary_scheme_operation [(a,True),(a,True),(b,False),(b,False)]
+                (map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,False),(b,False)])" .
+            show "top1_elementary_scheme_operation [(a,True),(a,True),(b,False),(b,False)]
+                [(a,True),(a,True),(b,True),(b,True)]"
+              by (subst hmap[symmetric]) (rule top1_elementary_scheme_operation.flip_label)
+          qed
+          ultimately show ?thesis by (by100 simp)
+        qed
+        show ?thesis using hop .
       qed
       \<comment> \<open>Step 3: relabel to standard labels 0, 1.\<close>
       \<comment> \<open>Use fresh temp label to avoid collisions.\<close>
@@ -3742,10 +3764,18 @@ proof -
         unfolding top1_m_projective_scheme_def by (simp add: eval_nat_numeral)
       \<comment> \<open>Chain everything.\<close>
       \<comment> \<open>Chain using scheme\\_equiv transitivity (avoid meson on complex types).\<close>
+      have s1': "top1_scheme_equiv scheme [(a,True),(a,True),(b,d1),(b,d1)]"
+        using s1 by (by100 simp)
       have c1: "top1_scheme_equiv scheme [(a,True),(a,True),(b,True),(b,True)]"
-        sorry
+        using scheme_equiv_trans[OF s1' s2] .
+      have r12: "top1_scheme_equiv [(a,True),(a,True),(b,True),(b,True)]
+          [(0,True),(0,True),(temp,True),(temp,True)]"
+        using scheme_equiv_trans[OF r1' r2'] .
+      have r123: "top1_scheme_equiv [(a,True),(a,True),(b,True),(b,True)]
+          [(0,True),(0,True),(1,True),(1,True)]"
+        using scheme_equiv_trans[OF r12 r3'] .
       have c2: "top1_scheme_equiv scheme [(0,True),(0,True),(1,True),(1,True)]"
-        sorry
+        using scheme_equiv_trans[OF c1 r123] .
       thus ?thesis using \<open>[(0::nat,True),(0,True),(1,True),(1,True)] = top1_m_projective_scheme 2\<close>
         by (by100 simp)
     qed
