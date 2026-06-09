@@ -684,17 +684,9 @@ proof -
   qed
   from assms show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    apply (elim conjE exE)
-    apply (intro conjI)
-    apply assumption
-    \<comment> \<open>Provide SHIFTED witnesses.\<close>
-    apply (rule_tac x=P in exI)
-    apply (rule_tac x=q in exI)
-    apply (rule_tac x="\<lambda>i. vx ((i + length u) mod ?n)" in exI)
-    apply (rule_tac x="\<lambda>i. vy ((i + length u) mod ?n)" in exI)
-    apply (intro conjI)
-    sorry \<comment> \<open>11 conditions: C1-C2 by assumption. C3 shifted\_distinct. C4 shifted\_in\_P.
-       C5-C11 need further helpers. Proved: C3, C4 as standalone lemmas.\<close>
+    sorry \<comment> \<open>Rotate 11 conditions. C1-C2 by assumption. C3 shifted\_distinct. C4 shifted\_in\_P.
+       C5-C11 need further helpers. Approach: Isar proof with explicit witness extraction
+       followed by individual have steps for each condition.\<close>
 qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
