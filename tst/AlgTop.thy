@@ -5858,7 +5858,15 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           \<comment> \<open>Detailed construction: rotate scheme to bring (a\_lab,dir) to front,
              flip if needed so a has True direction, find b's inverse,
              use cut\_paste\_opp to bring b\<inverse> adjacent to a\<inverse>.\<close>
-          thus ?thesis sorry \<comment> \<open>Rotation + flip + cut\_paste\_opp + arrangement.\<close>
+          \<comment> \<open>Step 4a: Rotate scheme to bring p1 to front.\<close>
+          have "top1_scheme_equiv scheme (drop p1 scheme @ take p1 scheme)"
+            using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate[of "take p1 scheme" "drop p1 scheme"]]
+            by (by100 simp)
+          \<comment> \<open>Step 4b: After rotation, standardize directions and arrange commutator pattern.\<close>
+          \<comment> \<open>The rotated scheme has (a\_lab, dir) at front, (b\_lab, dir') at position 1,
+             (a\_lab, \\<not>dir) at position (p2-p1), and (b\_lab, \\<not>dir') somewhere after.
+             Flip a\_lab and b\_lab if needed, then use cut\_paste\_opp to bring b\<inverse> to a\<inverse>.\<close>
+          thus ?thesis sorry \<comment> \<open>Flip + cut\_paste\_opp arrangement.\<close>
         qed
         then obtain a_lab b_lab w0' w1' w2' where hab: "a_lab \<noteq> b_lab"
             and hequiv: "top1_scheme_equiv scheme
