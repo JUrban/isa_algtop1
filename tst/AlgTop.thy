@@ -3220,7 +3220,35 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             using hsp_list \<open>fst e1 = fst e2\<close> \<open>snd e1 \<noteq> snd e2\<close>
             unfolding b_lab_def d_b_def by (cases e1, cases e2) simp
           have hab_ne: "a_lab \<noteq> b_lab"
-            using ha hsp_list unfolding b_lab_def sorry
+          proof -
+            have "hd (prefix @ suffix) \<in> set (prefix @ suffix)"
+            proof -
+              have "prefix @ suffix \<noteq> []"
+              proof
+                assume "prefix @ suffix = []"
+                hence "length (prefix @ suffix) = 0" by (by100 simp)
+                hence "length prefix + length suffix = 0" by (by100 simp)
+                thus False using hlen_ps by (by100 simp)
+              qed
+              hence "hd (prefix @ suffix) \<in> set (prefix @ suffix)"
+                using list.set_sel(1) by (by100 blast)
+              thus ?thesis .
+            qed
+            hence "hd (prefix @ suffix) \<in> set prefix \<union> set suffix" by (by100 simp)
+            hence "hd (prefix @ suffix) \<in> set suffix \<union> set prefix" by (by100 blast)
+            hence "hd (prefix @ suffix) \<in> set (suffix @ prefix)" by (by100 simp)
+            hence "hd (prefix @ suffix) \<in> set [e1, e2]" using hsp_list by (by100 simp)
+            hence "hd (prefix @ suffix) = e1 \<or> hd (prefix @ suffix) = e2" by (by100 simp)
+            hence "fst (hd (prefix @ suffix)) = fst e1"
+              using \<open>fst e1 = fst e2\<close>
+            proof (elim disjE)
+              assume "hd (prefix @ suffix) = e1" thus ?thesis by (by100 simp)
+            next
+              assume "hd (prefix @ suffix) = e2" thus ?thesis using \<open>fst e1 = fst e2\<close> by (by100 simp)
+            qed
+            hence "a_lab \<noteq> fst e1" using ha by (by100 simp)
+            thus ?thesis unfolding b_lab_def by (by100 simp)
+          qed
           obtain b_lab d_b where
               hsp: "suffix @ prefix = [(b_lab, d_b), (b_lab, \<not>d_b)]" and
               hab_ne: "a_lab \<noteq> b_lab"
