@@ -683,7 +683,7 @@ exists_top1_dyadic_between_01                  i/Top1_Ch4.thy                   
 expansion_E_open                               i/Top1_Ch5_8.thy                     line 7915
 expansion_lf_from_auxiliary                    i/Top1_Ch5_8.thy                     line 7945
 exterior_ball_connected_R2                     h/AlgTopHelpers.thy                  line 39
-extract_projective_pair                        AlgTop.thy                           line 4507
+extract_projective_pair                        AlgTop.thy                           line 4504
 false_from_disjoint_nonempty                   fib/AlgIsoFixedBase.thy              line 1223
 filter_eq_replicate                            ag/AlgTopGroups.thy                  line 3396
 filter_pred_eq                                 ag/AlgTopGroups.thy                  line 4547
@@ -1333,13 +1333,13 @@ SCC_pi1_iso_Z                                  fib/AlgIsoFixedBase.thy          
 sc_graph_no_cycle                              ac11/AlgTopCached11.thy              line 6151
 scheme_cancel_homeomorphic                     AlgTop.thy                           line 1106
 scheme_equiv_homeomorphic                      AlgTop.thy                           line 1029
-scheme_equiv_prepend_pair                      AlgTop.thy                           line 4485
+scheme_equiv_prepend                           AlgTop.thy                           line 4485
 scheme_equiv_preserves_quotient                AlgTop.thy                           line 627
 scheme_equiv_refl                              AlgTop.thy                           line 382
 scheme_equiv_sym                               AlgTop.thy                           line 613
 scheme_equiv_trans                             AlgTop.thy                           line 373
 scheme_invert_homeomorphic                     AlgTop.thy                           line 1130
-scheme_normal_form                             AlgTop.thy                           line 4698
+scheme_normal_form                             AlgTop.thy                           line 4695
 scheme_quotient_CW_data                        at/AlgTopChain.thy                   line 3602
 scheme_quotient_hausdorff                      at/AlgTopChain.thy                   line 2902
 scheme_quotient_uniqueness                     AlgTop.thy                           line 983
@@ -2175,7 +2175,7 @@ Theorem_75_1_H1_abelianization                 ac8/AlgTopCached8.thy            
 Theorem_75_3_H1_n_torus                        ac8/AlgTopCached8.thy                line 4446
 Theorem_75_4_H1_m_projective                   ac12/AlgTopCached12.thy              line 975
 Theorem_76_elementary_operations               AlgTop.thy                           line 1155
-Theorem_77_5_classification                    AlgTop.thy                           line 6504
+Theorem_77_5_classification                    AlgTop.thy                           line 6452
 Theorem_78_1_triangulable_surface              AlgTop.thy                           line 1303
 Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 2122
 Theorem_79_2                                   ac4/AlgTopCached4.thy                line 1524
