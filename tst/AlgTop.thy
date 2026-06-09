@@ -3816,8 +3816,21 @@ proof -
   then obtain rest where hrest: "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
       "length rest = 2" "\<forall>e \<in> set rest. fst e \<noteq> a" by (by100 blast)
   \<comment> \<open>rest = [(b, d1), (b, d2)] for some b \<noteq> a.\<close>
+  \<comment> \<open>rest has length 2 with all labels \<noteq> a. From properness of the original scheme:
+     the equivalent scheme [(a,T),(a,T)]@rest is proper (same labels via operations that
+     preserve label multiset). So label of rest!0 appears 2 times total, both in rest.\<close>
   obtain b d1 d2 where hrest_form: "rest = [(b, d1), (b, d2)]" "b \<noteq> a"
-    sorry
+  proof -
+    obtain e0 e1 where he: "rest = [e0, e1]"
+      using hrest(2) by (cases rest, by100 simp, cases "tl rest", by100 simp, by100 simp)
+    have "fst e0 \<noteq> a" using hrest(3) he by (by100 simp)
+    have "fst e1 \<noteq> a" using hrest(3) he by (by100 simp)
+    \<comment> \<open>fst e0 = fst e1 (from properness of original scheme transferred through equivalence).\<close>
+    have "fst e0 = fst e1" sorry
+    have "rest = [(fst e0, snd e0), (fst e0, snd e1)]" using he \<open>fst e0 = fst e1\<close>
+      by (cases e0, cases e1) (by100 simp)
+    thus ?thesis using \<open>fst e0 \<noteq> a\<close> by (rule that)
+  qed
   show ?thesis
   proof (cases "d1 = d2")
     case True
