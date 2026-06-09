@@ -740,7 +740,17 @@ proof -
     also have "\<dots> = \<sigma> (Suc i mod ?n)" unfolding \<sigma>_def by (by100 simp)
     finally show "Suc (\<sigma> i) mod ?n = \<sigma> (Suc i mod ?n)" .
   qed
-  show ?thesis sorry \<comment> \<open>From quotient\_of\_scheme\_transfer\_bij[OF assms hlen hbij hfst\_bij hsnd\_bij hsuc\_bij].\<close>
+  \<comment> \<open>Need length (u@v) = length u + length v for unification.\<close>
+  have hlen_uv: "length (u @ v) = ?n" by (by100 simp)
+  have hbij': "bij_betw \<sigma> {..<length (u @ v)} {..<length (u @ v)}"
+    using hbij hlen_uv by (by100 simp)
+  have hfst_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> fst ((v @ u) ! i) = fst ((u @ v) ! (\<sigma> i))"
+    using hfst_bij hlen_uv by (by100 simp)
+  have hsnd_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> snd ((v @ u) ! i) = snd ((u @ v) ! (\<sigma> i))"
+    using hsnd_bij hlen_uv by (by100 simp)
+  have hsuc_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> Suc (\<sigma> i) mod length (u @ v) = \<sigma> (Suc i mod length (u @ v))"
+    using hsuc_bij hlen_uv by (by100 simp)
+  show ?thesis sorry \<comment> \<open>Application of transfer\_bij: type issue between length u+length v and length (u@v).\<close>
 qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
