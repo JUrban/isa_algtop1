@@ -572,7 +572,8 @@ i/Top1_Ch5_8.thy|lemma|closure_pointwise_bounded|14941
 ac10/AlgTopCached10.thy|lemma|coherent_topology_is_strict|18570
 AlgTop.thy|lemma|commutator_block_equiv_torus_1|5136
 ac/AlgTopCached.thy|lemma|commutator_conjugate|8124
-AlgTop.thy|lemma|commutator_prepend_torus|5216
+AlgTop.thy|lemma|commutator_prepend_projective|5219
+AlgTop.thy|lemma|commutator_prepend_torus|5225
 ac/AlgTopCached.thy|lemma|commutator_subgroup_is_normal|8171
 at/AlgTopChain.thy|lemma|commutator_zero_exponent|448
 i/Top1_Ch5_8.thy|lemma|compact_closed_FIP_inter_ne|781
@@ -1396,7 +1397,7 @@ AlgTop.thy|lemma|scheme_equiv_relabel_avoid|4583
 AlgTop.thy|lemma|scheme_equiv_sym|655
 AlgTop.thy|lemma|scheme_equiv_trans|373
 AlgTop.thy|lemma|scheme_invert_homeomorphic|1172
-AlgTop.thy|lemma|scheme_normal_form|5260
+AlgTop.thy|lemma|scheme_normal_form|5269
 at/AlgTopChain.thy|lemma|scheme_quotient_CW_data|3602
 at/AlgTopChain.thy|lemma|scheme_quotient_hausdorff|2902
 AlgTop.thy|lemma|scheme_quotient_uniqueness|1025
@@ -2229,7 +2230,7 @@ ac8/AlgTopCached8.thy|theorem|Theorem_75_1_H1_abelianization|3761
 ac8/AlgTopCached8.thy|theorem|Theorem_75_3_H1_n_torus|4446
 ac12/AlgTopCached12.thy|theorem|Theorem_75_4_H1_m_projective|975
 AlgTop.thy|theorem|Theorem_76_elementary_operations|1197
-AlgTop.thy|theorem|Theorem_77_5_classification|7252
+AlgTop.thy|theorem|Theorem_77_5_classification|7261
 AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|1345
 AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|2164
 ac4/AlgTopCached4.thy|theorem|Theorem_79_2|1524

@@ -5213,6 +5213,15 @@ qed
 
 \<comment> \<open>Prepending a commutator block to a torus scheme gives a torus scheme of one higher index.
    block @ torus\_n ~ torus\_(n+1) after relabeling block's labels to fresh ones.\<close>
+\<comment> \<open>Prepending a commutator block to a projective scheme gives a projective scheme of index m+2.
+   Commutator = 1 torus pair. Lemma 77.4: proj pair + torus pair = 3 proj pairs.
+   So commutator + projective\_m ~ projective\_(m+2).\<close>
+lemma commutator_prepend_projective:
+  assumes "a \<noteq> (b :: nat)" and "m > 0"
+  shows "\<exists>w'. top1_is_projective_scheme w' (m+2) \<and>
+      top1_scheme_equiv ([(a, True), (b, True), (a, False), (b, False)] @ top1_m_projective_scheme m) w'"
+  sorry
+
 lemma commutator_prepend_torus:
   assumes "a \<noteq> (b :: nat)" and "n > 0"
   shows "top1_scheme_equiv ([(a, True), (b, True), (a, False), (b, False)] @ top1_n_torus_scheme n)
