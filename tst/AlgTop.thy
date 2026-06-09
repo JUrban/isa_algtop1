@@ -3673,7 +3673,82 @@ proof -
     case True
     \<comment> \<open>Same direction: scheme ~ [(a,T),(a,T),(b,d1),(b,d1)] ~ projective m=2.\<close>
     have "top1_scheme_equiv scheme (top1_m_projective_scheme 2)"
-      sorry
+    proof -
+      \<comment> \<open>Step 1: scheme ~ [(a,T),(a,T),(b,d1),(b,d1)] from hrest + d1=d2.\<close>
+      have s1: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ [(b,d1),(b,d1)])"
+        using hrest(1) hrest_form(1) True by (by100 simp)
+      \<comment> \<open>Step 2: flip\_label b if d1 = False.\<close>
+      have s2: "top1_scheme_equiv ([(a,True),(a,True),(b,d1),(b,d1)])
+          [(a,True),(a,True),(b,True),(b,True)]"
+      proof (cases d1)
+        case True thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+      next
+        case False
+        have "top1_elementary_scheme_operation
+            [(a,True),(a,True),(b,d1),(b,d1)]
+            (map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,d1),(b,d1)])"
+          by (rule top1_elementary_scheme_operation.flip_label)
+        moreover have "map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,d1),(b,d1)]
+            = [(a,True),(a,True),(b, \<not>d1),(b, \<not>d1)]"
+          using hrest_form(2) by (by100 simp)
+        ultimately have hop: "top1_elementary_scheme_operation
+            [(a,True),(a,True),(b,d1),(b,d1)] [(a,True),(a,True),(b, \<not>d1),(b, \<not>d1)]"
+          sorry
+        have "(\<not>d1) = True" using False by (by100 simp)
+        hence "top1_elementary_scheme_operation
+            [(a,True),(a,True),(b,d1),(b,d1)] [(a,True),(a,True),(b,True),(b,True)]"
+          using hop by (by100 simp)
+        thus ?thesis
+          unfolding top1_scheme_equiv_def
+          by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
+      qed
+      \<comment> \<open>Step 3: relabel to standard labels 0, 1.\<close>
+      \<comment> \<open>Use fresh temp label to avoid collisions.\<close>
+      define temp :: nat where "temp = Suc (max a b)"
+      have htemp_ne_a: "temp \<noteq> a" unfolding temp_def by (by100 simp)
+      have htemp_ne_b: "temp \<noteq> b" unfolding temp_def by (by100 simp)
+      \<comment> \<open>Relabel b \<rightarrow> temp.\<close>
+      have r1: "top1_elementary_scheme_operation [(a,True),(a,True),(b,True),(b,True)]
+          (map (\<lambda>(l,bo). (if l = b then temp else l, bo)) [(a,True),(a,True),(b,True),(b,True)])"
+        by (rule top1_elementary_scheme_operation.relabel)
+      have "map (\<lambda>(l,bo). (if l = b then temp else l, bo)) [(a,True),(a,True),(b,True),(b,True)]
+          = [(a,True),(a,True),(temp,True),(temp,True)]"
+        using hrest_form(2) by (by100 simp)
+      hence r1': "top1_scheme_equiv [(a,True),(a,True),(b,True),(b,True)]
+          [(a,True),(a,True),(temp,True),(temp,True)]"
+        using r1 unfolding top1_scheme_equiv_def by (by100 simp)
+      \<comment> \<open>Relabel a \<rightarrow> 0.\<close>
+      have r2: "top1_elementary_scheme_operation [(a,True),(a,True),(temp,True),(temp,True)]
+          (map (\<lambda>(l,bo). (if l = a then 0 else l, bo)) [(a,True),(a,True),(temp,True),(temp,True)])"
+        by (rule top1_elementary_scheme_operation.relabel)
+      have "map (\<lambda>(l,bo). (if l = a then 0 else l, bo)) [(a,True),(a,True),(temp,True),(temp,True)]
+          = [(0,True),(0,True),(temp,True),(temp,True)]"
+        using htemp_ne_a by (by100 simp)
+      hence r2': "top1_scheme_equiv [(a,True),(a,True),(temp,True),(temp,True)]
+          [(0,True),(0,True),(temp,True),(temp,True)]"
+        using r2 unfolding top1_scheme_equiv_def by (by100 simp)
+      \<comment> \<open>Relabel temp \<rightarrow> 1.\<close>
+      have r3: "top1_elementary_scheme_operation [(0,True),(0,True),(temp,True),(temp,True)]
+          (map (\<lambda>(l,bo). (if l = temp then 1 else l, bo)) [(0,True),(0,True),(temp,True),(temp,True)])"
+        by (rule top1_elementary_scheme_operation.relabel)
+      have "map (\<lambda>(l,bo). (if l = temp then 1 else l, bo)) [(0,True),(0,True),(temp,True),(temp,True)]
+          = [(0,True),(0,True),(1,True),(1,True)]"
+        using htemp_ne_a htemp_ne_b temp_def by (by100 simp)
+      hence r3': "top1_scheme_equiv [(0,True),(0,True),(temp,True),(temp,True)]
+          [(0,True),(0,True),(1,True),(1,True)]"
+        using r3 unfolding top1_scheme_equiv_def by (by100 simp)
+      \<comment> \<open>[(0,T),(0,T),(1,T),(1,T)] = top1\_m\_projective\_scheme 2.\<close>
+      have "[(0::nat,True),(0,True),(1,True),(1,True)] = top1_m_projective_scheme 2"
+        unfolding top1_m_projective_scheme_def by (simp add: eval_nat_numeral)
+      \<comment> \<open>Chain everything.\<close>
+      \<comment> \<open>Chain using scheme\\_equiv transitivity (avoid meson on complex types).\<close>
+      have c1: "top1_scheme_equiv scheme [(a,True),(a,True),(b,True),(b,True)]"
+        sorry
+      have c2: "top1_scheme_equiv scheme [(0,True),(0,True),(1,True),(1,True)]"
+        sorry
+      thus ?thesis using \<open>[(0::nat,True),(0,True),(1,True),(1,True)] = top1_m_projective_scheme 2\<close>
+        by (by100 simp)
+    qed
     moreover have "top1_is_projective_scheme (top1_m_projective_scheme 2) 2"
       unfolding top1_is_projective_scheme_def by (by100 simp)
     ultimately have "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
