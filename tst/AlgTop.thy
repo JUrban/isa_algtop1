@@ -4779,7 +4779,30 @@ next
       have "fresh1 \<noteq> fresh2" using hf2 by (by100 blast)
       have hlabels: "\<forall>e \<in> set (top1_m_projective_scheme (2*n)) \<union> set ([] :: (nat \<times> bool) list).
           fst e \<noteq> fresh1 \<and> fst e \<noteq> fresh2 \<and> fst e \<noteq> (2*n)"
-        sorry \<comment> \<open>proj(2n) uses labels {0..2n-1}; fresh1,fresh2,2n are all outside.\<close>
+      proof (intro ballI conjI)
+        fix e assume "e \<in> set (top1_m_projective_scheme (2*n)) \<union> set ([] :: (nat \<times> bool) list)"
+        hence "e \<in> set (top1_m_projective_scheme (2*n))" by (by100 simp)
+        \<comment> \<open>proj(2n) \<subseteq> proj(2n+1) (prefix). So labels of proj(2n) \<subseteq> labels of proj(2n+1).\<close>
+        hence "e \<in> set (top1_m_projective_scheme (2*n+1))"
+          unfolding top1_m_projective_scheme_def by (by100 force)
+        hence "fst e \<in> fst ` set (top1_m_projective_scheme (2*n+1))" by (by100 blast)
+        thus "fst e \<noteq> fresh1" using hf1 by (by100 blast)
+        thus "fst e \<noteq> fresh2" using hf2 \<open>fst e \<in> fst ` set (top1_m_projective_scheme (2*n+1))\<close> by (by100 blast)
+        \<comment> \<open>fst e \<noteq> 2*n: proj(2n) uses labels {0..2n-1}. All fst \<le> 2n-1 < 2n.\<close>
+        show "fst e \<noteq> 2*n"
+        proof -
+          from \<open>e \<in> set (top1_m_projective_scheme (2*n))\<close>
+          obtain i where "i < length (top1_m_projective_scheme (2*n))"
+              "top1_m_projective_scheme (2*n) ! i = e"
+            by (simp add: in_set_conv_nth) (by100 blast)
+          have "length (top1_m_projective_scheme (2*n)) = 2*(2*n)"
+            using projective_scheme_length by (by100 simp)
+          hence "i < 2*(2*n)" using \<open>i < length _\<close> by (by100 simp)
+          hence "fst e = i div 2" using projective_scheme_nth[of i "2*n"] \<open>_ ! i = e\<close> by (by100 simp)
+          moreover have "i div 2 < 2*n" using \<open>i < 2*(2*n)\<close> by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      qed
       have "fresh1 \<noteq> 2*n" using \<open>2*n \<noteq> fresh1\<close> by (by100 simp)
       have "fresh2 \<noteq> 2*n" using \<open>2*n \<noteq> fresh2\<close> by (by100 simp)
       have "top1_scheme_equiv
