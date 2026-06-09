@@ -527,8 +527,8 @@ closure_pointwise_bounded                      i/Top1_Ch5_8.thy                 
 coherent_topology_is_strict                    ac10/AlgTopCached10.thy              line 18570
 commutator_block_equiv_torus_1                 AlgTop.thy                           line 5166
 commutator_conjugate                           ac/AlgTopCached.thy                  line 8124
-commutator_prepend_projective                  AlgTop.thy                           line 5335
-commutator_prepend_torus                       AlgTop.thy                           line 5371
+commutator_prepend_projective                  AlgTop.thy                           line 5332
+commutator_prepend_torus                       AlgTop.thy                           line 5368
 commutator_subgroup_is_normal                  ac/AlgTopCached.thy                  line 8171
 commutator_zero_exponent                       at/AlgTopChain.thy                   line 448
 compact_closed_FIP_inter_ne                    i/Top1_Ch5_8.thy                     line 781
@@ -1353,7 +1353,7 @@ scheme_equiv_relabel_avoid                     AlgTop.thy                       
 scheme_equiv_sym                               AlgTop.thy                           line 685
 scheme_equiv_trans                             AlgTop.thy                           line 373
 scheme_invert_homeomorphic                     AlgTop.thy                           line 1202
-scheme_normal_form                             AlgTop.thy                           line 5415
+scheme_normal_form                             AlgTop.thy                           line 5412
 scheme_quotient_CW_data                        at/AlgTopChain.thy                   line 3602
 scheme_quotient_hausdorff                      at/AlgTopChain.thy                   line 2902
 scheme_quotient_uniqueness                     AlgTop.thy                           line 1055
@@ -2189,7 +2189,7 @@ Theorem_75_1_H1_abelianization                 ac8/AlgTopCached8.thy            
 Theorem_75_3_H1_n_torus                        ac8/AlgTopCached8.thy                line 4446
 Theorem_75_4_H1_m_projective                   ac12/AlgTopCached12.thy              line 975
 Theorem_76_elementary_operations               AlgTop.thy                           line 1227
-Theorem_77_5_classification                    AlgTop.thy                           line 7606
+Theorem_77_5_classification                    AlgTop.thy                           line 7603
 Theorem_78_1_triangulable_surface              AlgTop.thy                           line 1375
 Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 2194
 Theorem_79_2                                   ac4/AlgTopCached4.thy                line 1524

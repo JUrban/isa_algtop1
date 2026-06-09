@@ -5269,7 +5269,8 @@ next
       unfolding top1_m_projective_scheme_def by (by100 simp)
     ultimately have h_b: "top1_scheme_equiv (top1_m_projective_scheme 1 @ top1_n_torus_scheme 1)
         (top1_m_projective_scheme 3)" by (by100 simp)
-    show ?thesis sorry \<comment> \<open>Base: h\_b gives proj\_1@torus\_1~proj\_3. Needs m'=0 arithmetic.\<close>
+    from True have "Suc m' = 1" "Suc m' + 2 = 3" by (by100 simp)+
+    with h_b show ?thesis by (by100 metis)
   next
     case nFalse: False
     hence "m' > 0" by (by100 simp)
