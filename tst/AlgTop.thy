@@ -6141,10 +6141,7 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                 thus ?thesis using \<open>q_b < p1\<close> hp1_lt hRab_len by (by100 linarith)
               qed
               have hkb_lt_R: "k_b < length R" using \<open>k_b < length R_ab\<close> hRab_len hR_len by (by100 linarith)
-              have "fst (R ! k_b) = b_lab"
-              proof -
-                \<comment> \<open>R!k\_b = scheme!q\_b (rotation maps k\_b to q\_b).\<close>
-                have "R ! k_b = scheme ! q_b"
+              have hR_kb: "R ! k_b = scheme ! q_b"
                 proof (cases "q_b > p1")
                   case True
                   hence hkb_eq: "k_b = q_b - p1" unfolding k_b_def by (by100 simp)
@@ -6178,8 +6175,7 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                   hence "(take p1 scheme) ! q_b = scheme ! q_b" by (by100 simp)
                   finally show ?thesis unfolding R_def .
                 qed
-                thus ?thesis using hqb_props(2) by (by100 simp)
-              qed
+              have "fst (R ! k_b) = b_lab" using hR_kb hqb_props(2) by (by100 simp)
               hence "fst (R_a ! k_b) = b_lab"
                 using hRa_nth[OF hkb_lt_R] \<open>b_lab \<noteq> a_lab\<close>
                 by (cases dir_a, by100 simp, cases "R ! k_b", by100 simp)
@@ -6189,7 +6185,48 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               \<comment> \<open>Direction: torus type means b\_lab has opposite dirs at its two positions.
                  Position 1 has True (after flip). So k\_b has False.\<close>
               have "snd (R_ab ! k_b) \<noteq> snd (R_ab ! 1)"
-                sorry \<comment> \<open>Torus type: b\_lab at positions 1 and k\_b have opposite directions.\<close>
+              proof
+                assume heq: "snd (R_ab ! k_b) = snd (R_ab ! 1)"
+                \<comment> \<open>Both R\_ab positions have fst = b\_lab. If snd is equal, this gives
+                   a same-direction pair for b\_lab, contradicting torus type.
+                   Track snd through flips: flip b\_lab affects BOTH equally (both have fst=b\_lab),
+                   flip a\_lab affects NEITHER (a\_lab \<noteq> b\_lab). So snd equality in R\_ab
+                   implies snd equality in R, hence in scheme.\<close>
+                \<comment> \<open>R\_ab!i for fst=b\_lab: flip a\_lab is identity, flip b\_lab negates both.\<close>
+                have "snd (R ! k_b) = snd (R ! 1)"
+                proof -
+                  \<comment> \<open>R\_a!i = R!i when fst(R!i) \<noteq> a\_lab (flip a doesn't touch b\_lab).\<close>
+                  have "snd (R_a ! k_b) = snd (R ! k_b)"
+                    using hRa_nth[OF hkb_lt_R] \<open>fst (R ! k_b) = b_lab\<close> \<open>b_lab \<noteq> a_lab\<close>
+                    by (cases dir_a, by100 simp, cases "R ! k_b", by100 simp)
+                  have hR1_fst: "fst (R ! 1) = b_lab" using hR_1 b_lab_def by (by100 simp)
+                  have "snd (R_a ! 1) = snd (R ! 1)"
+                    using hRa_nth[OF h1_lt] hR1_fst \<open>b_lab \<noteq> a_lab\<close>
+                    by (cases dir_a, by100 simp, cases "R ! 1", by100 simp)
+                  \<comment> \<open>R\_ab!i for fst=b\_lab: flip b\_lab negates both equally.\<close>
+                  have hRa1_fst: "fst (R_a ! 1) = b_lab"
+                    using hRa_nth[OF h1_lt] hR1_fst \<open>b_lab \<noteq> a_lab\<close>
+                    by (cases dir_a, by100 simp, cases "R ! 1", by100 simp)
+                  have hsnd_kb: "snd (R_ab ! k_b) = (if dir_b then snd (R_a ! k_b) else \<not> snd (R_a ! k_b))"
+                    using hRab_nth[OF hkb_lt_R] \<open>fst (R_a ! k_b) = b_lab\<close>
+                    by (cases dir_b, by100 simp, cases "R_a ! k_b", by100 simp)
+                  have hsnd_1: "snd (R_ab ! 1) = (if dir_b then snd (R_a ! 1) else \<not> snd (R_a ! 1))"
+                    using hRab_nth[OF h1_lt] hRa1_fst
+                    by (cases dir_b, by100 simp, cases "R_a ! 1", by100 simp)
+                  from heq hsnd_kb hsnd_1
+                  have "snd (R_a ! k_b) = snd (R_a ! 1)" by (cases dir_b) (by100 simp)+
+                  thus ?thesis using \<open>snd (R_a ! k_b) = snd (R ! k_b)\<close> \<open>snd (R_a ! 1) = snd (R ! 1)\<close>
+                    by (by100 simp)
+                qed
+                \<comment> \<open>R!1 = scheme!(p1+1), R!k\_b = scheme!q\_b. So snd(scheme!(p1+1)) = snd(scheme!q\_b).\<close>
+                hence "snd (scheme!(p1+1)) = snd (scheme!q_b)"
+                  using hR_1 hR_kb by (by100 simp)
+                \<comment> \<open>This gives a same-direction pair for b\_lab, contradicting torus type.\<close>
+                hence "\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+                    \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
+                  using hp1_1_lt hqb_props b_lab_def by (by100 blast)
+                thus False using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. _)\<close> by (by100 blast)
+              qed
               hence "snd (R_ab ! k_b) = False" using hRab_1 by (by100 simp)
               have "R_ab ! k_b = (b_lab, False)"
                 using \<open>fst (R_ab ! k_b) = b_lab\<close> \<open>snd (R_ab ! k_b) = False\<close>
