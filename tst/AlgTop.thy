@@ -3699,8 +3699,35 @@ proof -
   have hdecomp: "w = y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2"
     sorry
   \<comment> \<open>All elements in y0, y1, y2 have fst \<noteq> a.\<close>
+  \<comment> \<open>Positions with label a = {p1, p2} (from card=2 + card\_seteq).\<close>
+  have honly_p12: "{i. i < length w \<and> fst (w ! i) = a} = {p1, p2}"
+  proof -
+    have "card {p1, p2} = 2" using hp1_lt_p2 by (by100 simp)
+    have "p1 \<in> {i. i < length w \<and> fst (w ! i) = a}"
+      using hp1_len hp1_val by (by100 simp)
+    moreover have "p2 \<in> {i. i < length w \<and> fst (w ! i) = a}"
+      using hp2_len hp2_val by (by100 simp)
+    ultimately have "{p1, p2} \<subseteq> {i. i < length w \<and> fst (w ! i) = a}" by (by100 blast)
+    have "finite {i. i < length w \<and> fst (w ! i) = a}" by (by100 simp)
+    from card_seteq[OF this \<open>{p1, p2} \<subseteq> _\<close>] hcard \<open>card {p1, p2} = 2\<close>
+    show ?thesis by (by100 simp)
+  qed
   have hcond1: "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> a"
-    sorry
+  proof (intro ballI)
+    fix e assume "e \<in> set y0 \<union> set y1 \<union> set y2"
+    \<comment> \<open>e is at some position k \<noteq> p1 and \<noteq> p2 in w. fst(w!k) \<noteq> a by honly\_p12.\<close>
+    hence "e \<in> set w" using hdecomp by (by100 simp)
+    then obtain k where "k < length w" "w ! k = e" by (simp add: in_set_conv_nth) (by100 blast)
+    show "fst e \<noteq> a"
+    proof
+      assume "fst e = a"
+      hence "k \<in> {i. i < length w \<and> fst (w ! i) = a}" using \<open>k < length w\<close> \<open>w ! k = e\<close> by (by100 blast)
+      hence "k = p1 \<or> k = p2" using honly_p12 by (by100 blast)
+      \<comment> \<open>But w!k = e \<in> y0\<union>y1\<union>y2, and these exclude positions p1, p2.\<close>
+      \<comment> \<open>Need: positions in y0,y1,y2 are \<noteq> p1, \<noteq> p2.\<close>
+      thus False sorry
+    qed
+  qed
   \<comment> \<open>Fresh label exists.\<close>
   have hcond2: "\<exists>b::nat. b \<noteq> a \<and> (\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b)"
   proof -
