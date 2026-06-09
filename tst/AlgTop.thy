@@ -3585,9 +3585,44 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
       \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)")
     case True
     \<comment> \<open>Projective type: Book Step 2.
-       Use Corollary 77.2 (iterated Lemma 77.1) to collect same-direction pairs,
-       then Lemma 77.4 to absorb torus blocks into projective blocks.\<close>
-    show ?thesis sorry
+       Use Lemma 77.1 to bring one same-direction pair to front.
+       Then: remainder is shorter (after potential cancellation) or has fewer projective pairs.
+       By IH or repeated extraction: reach normal form.\<close>
+    \<comment> \<open>Get the label appearing twice with same direction.\<close>
+    from True obtain lab p q where hlab: "p < length scheme" "q < length scheme" "p \<noteq> q"
+        "fst (scheme!p) = lab" "fst (scheme!q) = lab"
+        "snd (scheme!p) = snd (scheme!q)"
+      by (by100 blast)
+    \<comment> \<open>By properness, lab appears exactly twice (at p and q).\<close>
+    \<comment> \<open>Decompose scheme as y0 @ [(lab, d)] @ y1 @ [(lab, d)] @ y2.\<close>
+    \<comment> \<open>Apply Lemma 77.1: scheme ~ [(lab,d),(lab,d)] @ y0 @ rev(inv(y1)) @ y2.\<close>
+    \<comment> \<open>The result is [(lab,d),(lab,d)] @ rest where rest has length scheme - 2.\<close>
+    \<comment> \<open>If rest is empty: length scheme = 2 (contradicts length \<ge> 4)... wait, the pair
+       only takes 2 positions but the scheme has the pair PLUS rest.
+       Actually: scheme has length \<ge> 4, the pair takes 2 positions,
+       so rest has length \<ge> 2.\<close>
+    \<comment> \<open>Apply IH to rest (shorter scheme) or analyze directly.\<close>
+    \<comment> \<open>Book: if length 4 \<Rightarrow> projective m=1 or m=2 directly.
+       If length > 4: Corollary 77.2 gives (a1a1)...(akak)w1, then 77.3 + 77.4.\<close>
+    show ?thesis
+    proof (cases "length scheme = 4")
+      case True
+      \<comment> \<open>Length 4 projective: scheme has 2 labels. One pair same direction (projective type).
+         Either aabb (projective m=2) or aab\\<inverse>b \<Rightarrow> Lemma 77.1 \<Rightarrow> abab (projective m=1, type 2).\<close>
+      show ?thesis sorry
+    next
+      case False
+      hence hgt4: "length scheme > 4" using less(2) by (by100 simp)
+      \<comment> \<open>Length > 4: apply Lemma 77.1 once to bring one projective pair to front.
+         scheme ~ [(a,d),(a,d)] @ rest. rest has length scheme - 2 \<ge> 4.
+         If rest is projective type: IH (shorter) gives rest ~ normal form.
+         If rest is torus type:
+           - if rest has adjacent cancellable pair: cancel \<Rightarrow> shorter \<Rightarrow> IH
+           - if not: apply Lemma 77.3 to extract commutator from rest,
+             then Lemma 77.4 to absorb commutator into projective blocks.
+             Result: more projective pairs + shorter torus remainder.\<close>
+      show ?thesis sorry
+    qed
   next
     case False
     \<comment> \<open>Torus type: all labels appear with opposite directions.
