@@ -3297,6 +3297,16 @@ proof (intro allI)
   qed
 qed
 
+\<comment> \<open>Cancelling a matched pair preserves properness.\<close>
+lemma cancel_preserves_proper:
+  fixes w :: "('a \<times> bool) list"
+  assumes hproper: "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+      and hj: "j + 1 < length w"
+      and hpair: "fst (w ! j) = fst (w ! (j+1))"
+  shows "\<forall>label. card {i. i < length (take j w @ drop (j+2) w)
+      \<and> fst ((take j w @ drop (j+2) w) ! i) = label} \<in> {0, 2}"
+  sorry
+
 \<comment> \<open>A proper scheme has even length (each label contributes 0 or 2 to the count).\<close>
 lemma proper_scheme_even_length:
   assumes "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
@@ -4174,7 +4184,8 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           unfolding shorter_def using hj(1) by (by100 simp)
         \<comment> \<open>Shorter scheme is proper.\<close>
         have hproper_shorter: "\<forall>label. card {i. i < length shorter \<and> fst (shorter!i) = label} \<in> {0, 2}"
-          sorry
+          using cancel_preserves_proper[OF less(3) hj(1) hj(2)]
+          unfolding shorter_def by (by100 blast)
         \<comment> \<open>Length of shorter \\<ge> 4 (cancel reduces by 2; properness prevents odd lengths).\<close>
         have hlen_ge4: "length shorter \<ge> 4"
         proof -
