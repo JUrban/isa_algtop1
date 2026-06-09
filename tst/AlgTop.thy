@@ -5259,21 +5259,17 @@ next
   show ?case
   proof (cases "m' = 0")
     case True
-    \<comment> \<open>Base: m=1. proj\_1 @ torus\_1 = [(0,T),(0,T)] @ torus\_1 ~ proj\_3.\<close>
-    have "top1_m_projective_scheme 1 = [(0::nat,True),(0,True)]"
+    \<comment> \<open>Base: m=1 (i.e. m'=0). proj\_1 @ torus\_1 ~ proj\_3.\<close>
+    have "top1_scheme_equiv ([(0::nat,True),(0,True)] @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme (2*1+1))"
+      using proj_pair_absorbs_torus[of 0 1] .
+    hence "top1_scheme_equiv ([(0::nat,True),(0,True)] @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme 3)" by (by100 simp)
+    moreover have "top1_m_projective_scheme 1 = [(0::nat,True),(0,True)]"
       unfolding top1_m_projective_scheme_def by (by100 simp)
-    moreover have "top1_scheme_equiv ([(0::nat,True),(0,True)] @ top1_n_torus_scheme 1)
-        (top1_m_projective_scheme 3)"
-    proof -
-      have "top1_scheme_equiv ([(0::nat,True),(0,True)] @ top1_n_torus_scheme 1)
-          (top1_m_projective_scheme (2*1+1))"
-        using proj_pair_absorbs_torus[of 0 1] .
-      moreover have "(2::nat)*1+1 = 3" by (by100 simp)
-      ultimately show ?thesis by (by100 simp)
-    qed
     ultimately have h_b: "top1_scheme_equiv (top1_m_projective_scheme 1 @ top1_n_torus_scheme 1)
         (top1_m_projective_scheme 3)" by (by100 simp)
-    show ?thesis sorry \<comment> \<open>Base case: m'=0, Suc m'=1. Need Suc 0+2=3 substitution.\<close>
+    show ?thesis sorry \<comment> \<open>Need Suc 0 substitution. h\_b has proj\_1@torus\_1~proj\_3.\<close>
   next
     case nFalse: False
     hence "m' > 0" by (by100 simp)
