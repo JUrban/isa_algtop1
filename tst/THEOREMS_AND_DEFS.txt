@@ -713,6 +713,7 @@ ac/AlgTopCached.thy|lemma|doubleton_eq_iff|48487
 ac2/AlgTopCached2.thy|lemma|dunce_cap_hausdorff|80
 ac2/AlgTopCached2.thy|lemma|dunce_cap_skeleton_is_circle|570
 AlgTop.thy|lemma|elementary_imp_equiv|373
+AlgTop.thy|lemma|elementary_operation_prepend|4450
 AlgTop.thy|lemma|elementary_operation_preserves_quotient|469
 AlgTop.thy|lemma|elementary_operation_reverse|516
 fib/AlgIsoFixedBase.thy|lemma|element_of_three_subset|1210
@@ -727,7 +728,7 @@ i/Top1_Ch4.thy|lemma|exists_top1_dyadic_between_01|6793
 i/Top1_Ch5_8.thy|lemma|expansion_E_open|7915
 i/Top1_Ch5_8.thy|lemma|expansion_lf_from_auxiliary|7945
 h/AlgTopHelpers.thy|lemma|exterior_ball_connected_R2|39
-AlgTop.thy|lemma|extract_projective_pair|4378
+AlgTop.thy|lemma|extract_projective_pair|4476
 fib/AlgIsoFixedBase.thy|lemma|false_from_disjoint_nonempty|1223
 ag/AlgTopGroups.thy|lemma|filter_eq_replicate|3396
 ag/AlgTopGroups.thy|lemma|filter_pred_eq|4547
@@ -1270,7 +1271,7 @@ i/Top1_Ch5_8.thy|lemma|product_topology_coord_open|20217
 i/Top1_Ch2.thy|lemma|product_topology_is_strict|8829
 i/Top1_Ch2.thy|lemma|product_topology_on_is_topology_on|3046
 i/Top1_Ch9_13.thy|lemma|product_topology_on_open_sets|57
-AlgTop.thy|lemma|projective_len4_base|3873
+AlgTop.thy|lemma|projective_len4_base|3947
 AlgTop.thy|lemma|projective_scheme_fst_bound|3110
 ac2/AlgTopCached2.thy|lemma|projective_scheme_length|1150
 ac2/AlgTopCached2.thy|lemma|projective_scheme_nth|1154
@@ -1377,13 +1378,13 @@ fib/AlgIsoFixedBase.thy|lemma|SCC_pi1_iso_Z|14
 ac11/AlgTopCached11.thy|lemma|sc_graph_no_cycle|6151
 AlgTop.thy|lemma|scheme_cancel_homeomorphic|1084
 AlgTop.thy|lemma|scheme_equiv_homeomorphic|1007
-AlgTop.thy|lemma|scheme_equiv_prepend_pair|4368
+AlgTop.thy|lemma|scheme_equiv_prepend_pair|4464
 AlgTop.thy|lemma|scheme_equiv_preserves_quotient|605
 AlgTop.thy|lemma|scheme_equiv_refl|378
 AlgTop.thy|lemma|scheme_equiv_sym|591
 AlgTop.thy|lemma|scheme_equiv_trans|369
 AlgTop.thy|lemma|scheme_invert_homeomorphic|1108
-AlgTop.thy|lemma|scheme_normal_form|4560
+AlgTop.thy|lemma|scheme_normal_form|4667
 at/AlgTopChain.thy|lemma|scheme_quotient_CW_data|3602
 at/AlgTopChain.thy|lemma|scheme_quotient_hausdorff|2902
 AlgTop.thy|lemma|scheme_quotient_uniqueness|961
@@ -2216,7 +2217,7 @@ ac8/AlgTopCached8.thy|theorem|Theorem_75_1_H1_abelianization|3761
 ac8/AlgTopCached8.thy|theorem|Theorem_75_3_H1_n_torus|4446
 ac12/AlgTopCached12.thy|theorem|Theorem_75_4_H1_m_projective|975
 AlgTop.thy|theorem|Theorem_76_elementary_operations|1133
-AlgTop.thy|theorem|Theorem_77_5_classification|5627
+AlgTop.thy|theorem|Theorem_77_5_classification|5735
 AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|1277
 AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|2096
 ac4/AlgTopCached4.thy|theorem|Theorem_79_2|1524
