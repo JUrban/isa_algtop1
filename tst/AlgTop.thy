@@ -3656,9 +3656,65 @@ proof -
     also have "\<dots> = w ! p'" using hp' by (by100 simp)
     finally show ?thesis using hp'(2) by (by100 simp)
   qed
-  \<comment> \<open>w' starts with (a,True). Decompose as [(a,True)] @ y1 @ [(a,True)] @ y2
-     using the second a-position. Then apply Lemma 77.1.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Actually, we don't need to rotate. Apply Lemma 77.1 directly to w.\<close>
+  \<comment> \<open>Find second a-position q'.\<close>
+  have "card ({i. i < length w \<and> fst (w ! i) = a} - {p'}) = 1"
+  proof -
+    have "finite {i. i < length w \<and> fst (w ! i) = a}" by (by100 simp)
+    moreover have "p' \<in> {i. i < length w \<and> fst (w ! i) = a}" using hp' by (by100 simp)
+    ultimately have "card ({i. i < length w \<and> fst (w ! i) = a} - {p'})
+        = card {i. i < length w \<and> fst (w ! i) = a} - 1" by (by100 simp)
+    thus ?thesis using hcard by (by100 simp)
+  qed
+  hence "card ({i. i < length w \<and> fst (w ! i) = a} - {p'}) \<noteq> 0" by (by100 simp)
+  moreover have "finite ({i. i < length w \<and> fst (w ! i) = a} - {p'})" by (by100 simp)
+  ultimately have "{i. i < length w \<and> fst (w ! i) = a} - {p'} \<noteq> {}" by (by100 force)
+  then obtain q' where "q' \<in> {i. i < length w \<and> fst (w ! i) = a} - {p'}" by (by100 blast)
+  hence hq': "q' < length w" "fst (w ! q') = a" "q' \<noteq> p'" by (by100 simp)+
+  have hq'_dir: "snd (w ! q') = True" using hdir hq'(1,2) by (by100 blast)
+  hence hq'_val: "w ! q' = (a, True)" using hq'(2) by (cases "w ! q'") (by100 simp)
+  \<comment> \<open>WLOG p' < q' (by symmetry, swap if needed). Actually just decompose.\<close>
+  \<comment> \<open>If p' < q': y0 = take p' w, y1 = take(q'-p'-1)(drop(p'+1) w), y2 = drop(q'+1) w.
+     If p' > q': swap and use q' as first position.\<close>
+  \<comment> \<open>For simplicity, take the SMALLER index as the first a-position.\<close>
+  define p1 where "p1 = min p' q'"
+  define p2 where "p2 = max p' q'"
+  have hp1_lt_p2: "p1 < p2" using hq'(3) unfolding p1_def p2_def by (by100 simp)
+  have hp1_val: "w ! p1 = (a, True)"
+  proof -
+    have "p1 = p' \<or> p1 = q'" unfolding p1_def min_def by (by100 simp)
+    thus ?thesis using hp'(2) hq'_val by (by100 blast)
+  qed
+  have hp2_val: "w ! p2 = (a, True)"
+  proof -
+    have "p2 = p' \<or> p2 = q'" unfolding p2_def max_def by (by100 simp)
+    thus ?thesis using hp'(2) hq'_val by (by100 blast)
+  qed
+  have hp1_len: "p1 < length w" unfolding p1_def using hp'(1) hq'(1) by (by100 simp)
+  have hp2_len: "p2 < length w" unfolding p2_def using hp'(1) hq'(1) by (by100 simp)
+  \<comment> \<open>Decompose: w = (take p1 w) @ [(a,T)] @ (take(p2-p1-1)(drop(p1+1) w)) @ [(a,T)] @ (drop(p2+1) w).\<close>
+  define y0 where "y0 = take p1 w"
+  define y1 where "y1 = take (p2 - p1 - 1) (drop (p1 + 1) w)"
+  define y2 where "y2 = drop (p2 + 1) w"
+  have hdecomp: "w = y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2"
+    sorry
+  \<comment> \<open>All elements in y0, y1, y2 have fst \<noteq> a.\<close>
+  have hcond1: "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> a"
+    sorry
+  \<comment> \<open>Fresh label exists.\<close>
+  have hcond2: "\<exists>b::nat. b \<noteq> a \<and> (\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b)"
+    sorry
+  \<comment> \<open>Apply Lemma 77.1.\<close>
+  from Lemma_77_1_projective_collection[OF hcond1 hcond2]
+  have "top1_scheme_equiv (y0 @ [(a,True)] @ y1 @ [(a,True)] @ y2)
+      ([(a,True),(a,True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)" .
+  hence "top1_scheme_equiv w ([(a,True),(a,True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    using hdecomp by (by100 simp)
+  moreover have "length (y0 @ rev (map top1_inverse_edge y1) @ y2) = length w - 2"
+    sorry
+  moreover have "\<forall>e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2). fst e \<noteq> a"
+    sorry
+  ultimately show ?thesis by (by100 blast)
 qed
 
 \<comment> \<open>Length-4 projective base case: scheme ~ projective m=1 or m=2.\<close>
