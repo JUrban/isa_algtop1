@@ -535,7 +535,8 @@ proof -
     apply (rule exI, rule exI, rule exI, rule exI)
     apply (intro conjI)
     apply assumption+
-    sorry \<comment> \<open>C7+C9+extras: need hfst+hsnd\_eq for identification/boundary conditions.\<close>
+    sorry \<comment> \<open>Remaining: conditions where length w' differs from length w after unfolding,
+       plus identification/boundary conditions needing hfst+hsnd\_eq.\<close>
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
