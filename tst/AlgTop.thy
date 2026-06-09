@@ -7443,7 +7443,14 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                   hequiv' unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
               have "1 + 2 = (3::nat)" by (by100 simp)
               hence hw'3: "top1_is_projective_scheme w' 3" using hw' by (by100 metis)
-              show ?thesis sorry \<comment> \<open>Trivial packaging: hsch\_w'+hw'3 into projective disjunct.\<close>
+              have "\<exists>m>(0::nat). \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
+              proof -
+                have "(3::nat) > 0" by (by100 simp)
+                moreover have "top1_is_projective_scheme w' 3 \<and> top1_scheme_equiv scheme w'"
+                  using hsch_w' hw'3 by (by100 blast)
+                ultimately show ?thesis by (by100 blast)
+              qed
+              thus ?thesis by (by100 blast)
             next
               case nFalse: False
               hence hge4_w3: "length w3 \<ge> 4" by (by100 linarith)
