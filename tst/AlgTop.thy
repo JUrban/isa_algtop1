@@ -3670,7 +3670,8 @@ lemma bring_projective_pair_to_front:
       and hne: "w \<noteq> []"
   shows "\<exists>rest. top1_scheme_equiv w ([(a, True), (a, True)] @ rest)
       \<and> length rest = length w - 2
-      \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)"
+      \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)
+      \<and> fst ` set rest \<subseteq> fst ` set w"
 proof -
   \<comment> \<open>Find first position of (a,True).\<close>
   from hain obtain p' where hp': "p' < length w" "w ! p' = (a, True)"
@@ -3842,6 +3843,29 @@ proof -
       assume "e \<in> set y2" thus ?thesis using hcond1 by (by100 blast)
     qed
   qed
+  moreover have "\<forall>e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2). fst e \<in> fst ` set w"
+  proof (intro ballI)
+    fix e assume "e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    hence "e \<in> set y0 \<or> e \<in> set (rev (map top1_inverse_edge y1)) \<or> e \<in> set y2" by (by100 simp)
+    thus "fst e \<in> fst ` set w"
+    proof (elim disjE)
+      assume "e \<in> set y0"
+      hence "e \<in> set w" using hdecomp by (by100 simp)
+      thus ?thesis by (by100 blast)
+    next
+      assume "e \<in> set (rev (map top1_inverse_edge y1))"
+      hence "e \<in> set (map top1_inverse_edge y1)" by (by100 simp)
+      then obtain e' where "e' \<in> set y1" "e = top1_inverse_edge e'" by (by100 force)
+      hence "e' \<in> set w" using hdecomp by (by100 simp)
+      hence "fst e' \<in> fst ` set w" by (by100 blast)
+      thus ?thesis using \<open>e = top1_inverse_edge e'\<close> unfolding top1_inverse_edge_def by (by100 simp)
+    next
+      assume "e \<in> set y2"
+      hence "e \<in> set w" using hdecomp by (by100 simp)
+      thus ?thesis by (by100 blast)
+    qed
+  qed
+  hence "fst ` set (y0 @ rev (map top1_inverse_edge y1) @ y2) \<subseteq> fst ` set w" by (by100 blast)
   ultimately show ?thesis by (by100 blast)
 qed
 
@@ -3893,7 +3917,7 @@ proof -
      Rest has 2 elements with label b: same-direction \<Rightarrow> projective m=2; opposite \<Rightarrow> cancel \<Rightarrow> m=1.\<close>
   \<comment> \<open>Bring both a-copies to positions 0,1.\<close>
   have "\<exists>rest. top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest) \<and> length rest = 2
-      \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)"
+      \<and> (\<forall>e \<in> set rest. fst e \<noteq> a) \<and> fst ` set rest \<subseteq> fst ` set scheme"
   proof -
     \<comment> \<open>scheme1 satisfies conditions for bring\_projective\_pair\_to\_front.\<close>
     have hlen1: "length scheme1 = 4" unfolding scheme1_def using hlen by (by100 simp)
@@ -4014,33 +4038,162 @@ proof -
       thus False using hlen1 by (by100 simp)
     qed
     from bring_projective_pair_to_front[OF h1 h2 h3 this]
-    obtain rest where "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)"
-        "length rest = length scheme1 - 2" "\<forall>e \<in> set rest. fst e \<noteq> a" by (by100 blast)
-    moreover have "length scheme1 = 4" unfolding scheme1_def using hlen by (by100 simp)
-    ultimately have "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)
-        \<and> length rest = 2 \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)" by (by100 simp)
-    hence "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)
-        \<and> length rest = 2 \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)"
-      using scheme_equiv_trans[OF hequiv1] by (by100 blast)
+    obtain rest where hrest_eq: "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)"
+        and hrest_len: "length rest = length scheme1 - 2"
+        and hrest_ne: "\<forall>e \<in> set rest. fst e \<noteq> a"
+        and hrest_fst: "fst ` set rest \<subseteq> fst ` set scheme1"
+      by (by100 blast)
+    have "length scheme1 = 4" unfolding scheme1_def using hlen by (by100 simp)
+    hence "length rest = 2" using hrest_len by (by100 simp)
+    have "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
+      using scheme_equiv_trans[OF hequiv1 hrest_eq] by (by100 blast)
+    moreover have "fst ` set scheme1 \<subseteq> fst ` set scheme"
+    proof (intro subsetI)
+      fix l assume "l \<in> fst ` set scheme1"
+      then obtain e where "e \<in> set scheme1" "fst e = l" by (by100 blast)
+      then obtain i where "i < length scheme1" "scheme1 ! i = e"
+        by (simp add: in_set_conv_nth) (by100 blast)
+      hence "fst (scheme1 ! i) = l" using \<open>fst e = l\<close> by (by100 simp)
+      hence "fst (scheme ! i) = l" using hfst_preserved \<open>i < length scheme1\<close> by (by100 simp)
+      have "i < length scheme" using \<open>i < length scheme1\<close> hlen1 hlen by (by100 simp)
+      hence "scheme ! i \<in> set scheme" by (by100 simp)
+      thus "l \<in> fst ` set scheme" using \<open>fst (scheme ! i) = l\<close> by (by100 force)
+    qed
+    hence "fst ` set rest \<subseteq> fst ` set scheme" using hrest_fst by (by100 blast)
+    ultimately have "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)
+        \<and> length rest = 2 \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)
+        \<and> fst ` set rest \<subseteq> fst ` set scheme"
+      using \<open>length rest = 2\<close> hrest_ne by (by100 blast)
     thus ?thesis by (by100 blast)
   qed
   then obtain rest where hrest: "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
-      "length rest = 2" "\<forall>e \<in> set rest. fst e \<noteq> a" by (by100 blast)
+      "length rest = 2" "\<forall>e \<in> set rest. fst e \<noteq> a"
+      "fst ` set rest \<subseteq> fst ` set scheme" by (by100 blast)
+  \<comment> \<open>Positions with label a in scheme are exactly {p,q} (re-derive in outer scope).\<close>
+  have honly_pq: "{k. k < length scheme \<and> fst (scheme ! k) = a} = {p, q}"
+  proof -
+    have "card {p, q} = 2" using hp(3) by (by100 simp)
+    have "{p, q} \<subseteq> {k. k < length scheme \<and> fst (scheme ! k) = a}"
+      using hp(1,2,4,5) by (by100 blast)
+    have "finite {k. k < length scheme \<and> fst (scheme ! k) = a}" by (by100 simp)
+    from hproper have "card {k. k < length scheme \<and> fst (scheme ! k) = a} \<in> {0, 2}" by (by100 blast)
+    moreover have "{k. k < length scheme \<and> fst (scheme ! k) = a} \<noteq> {}"
+      using hp(1,4) by (by100 blast)
+    hence "card {k. k < length scheme \<and> fst (scheme ! k) = a} \<noteq> 0" by (by100 simp)
+    ultimately have "card {k. k < length scheme \<and> fst (scheme ! k) = a} = 2" by (by100 blast)
+    from card_seteq[OF \<open>finite {k. k < length scheme \<and> fst (scheme ! k) = a}\<close>
+        \<open>{p, q} \<subseteq> {k. k < length scheme \<and> fst (scheme ! k) = a}\<close>]
+        this \<open>card {p, q} = 2\<close>
+    show ?thesis by (by100 simp)
+  qed
   \<comment> \<open>rest = [(b, d1), (b, d2)] for some b \<noteq> a.\<close>
-  \<comment> \<open>rest has length 2 with all labels \<noteq> a. From properness of the original scheme:
-     the equivalent scheme [(a,T),(a,T)]@rest is proper (same labels via operations that
-     preserve label multiset). So label of rest!0 appears 2 times total, both in rest.\<close>
   obtain b d1 d2 where hrest_form: "rest = [(b, d1), (b, d2)]" "b \<noteq> a"
   proof -
     obtain e0 e1 where he: "rest = [e0, e1]"
       using hrest(2) by (cases rest, by100 simp, cases "tl rest", by100 simp, by100 simp)
     have "fst e0 \<noteq> a" using hrest(3) he by (by100 simp)
     have "fst e1 \<noteq> a" using hrest(3) he by (by100 simp)
-    \<comment> \<open>fst e0 = fst e1 (from properness of original scheme transferred through equivalence).\<close>
+    \<comment> \<open>fst e0 = fst e1: from properness, scheme has exactly one non-a label.\<close>
     have "fst e0 = fst e1"
-      sorry \<comment> \<open>The fst-multiset is preserved by flip\\_label + rotation + Lemma 77.1.
-         Original scheme has labels {a, a, b, b}. Equivalent has {a, a, fst e0, fst e1}.
-         So fst e0 = fst e1 = b.\<close>
+    proof -
+      \<comment> \<open>Get a non-{p,q} position r1.\<close>
+      have hpq_sub: "{p, q} \<subseteq> {0..<4::nat}" using hp(1,2) hlen by (by100 simp)
+      have hcard_pq: "card {p, q} = 2" using hp(3) by (by100 simp)
+      have "card ({0..<4::nat} - {p, q}) = 2"
+      proof -
+        have "card {0..<4::nat} = 4" by (by100 simp)
+        have "finite {p, q}" by (by100 simp)
+        have "card ({0..<4::nat} - {p, q}) = card {0..<4::nat} - card {p, q}"
+          using card_Diff_subset[OF \<open>finite {p, q}\<close> hpq_sub] .
+        thus ?thesis using hcard_pq by (by100 simp)
+      qed
+      hence "({0..<4::nat} - {p, q}) \<noteq> {}" by (by100 force)
+      then obtain r1 where hr1: "r1 \<in> {0..<4::nat} - {p, q}" by (by100 blast)
+      hence hr1_props: "r1 < 4" "r1 \<noteq> p" "r1 \<noteq> q" by (by100 simp)+
+      have "fst (scheme ! r1) \<noteq> a"
+      proof -
+        have "r1 \<notin> {p, q}" using hr1_props(2,3) by (by100 blast)
+        hence "r1 \<notin> {k. k < length scheme \<and> fst (scheme ! k) = a}" using honly_pq by (by100 blast)
+        moreover have "r1 < length scheme" using hr1_props(1) hlen by (by100 simp)
+        ultimately show ?thesis by (by100 blast)
+      qed
+      \<comment> \<open>By properness: every non-a label in scheme appears 0 or 2 times.
+         fst(scheme!r1) is one such label, appearing at least once (position r1).
+         So it must appear exactly 2 times. With only 2 non-{p,q} positions total,
+         both must have this same label.\<close>
+      define b0 where "b0 = fst (scheme ! r1)"
+      have "b0 \<noteq> a" using \<open>fst (scheme ! r1) \<noteq> a\<close> unfolding b0_def by (by100 simp)
+      \<comment> \<open>fst ` set scheme \<subseteq> {a, b0}: every element is at position p or q (fst=a) or at a non-{p,q} position.\<close>
+      have hfst_sub: "fst ` set scheme \<subseteq> {a, b0}"
+      proof (intro subsetI)
+        fix l assume "l \<in> fst ` set scheme"
+        then obtain e where "e \<in> set scheme" "fst e = l" by (by100 blast)
+        then obtain k where "k < length scheme" "scheme ! k = e"
+          by (simp add: in_set_conv_nth) (by100 blast)
+        hence "fst (scheme ! k) = l" using \<open>fst e = l\<close> by (by100 simp)
+        show "l \<in> {a, b0}"
+        proof (cases "k \<in> {p, q}")
+          case True
+          hence "fst (scheme ! k) = a" using hp(4,5) by (by100 blast)
+          thus ?thesis using \<open>fst (scheme ! k) = l\<close> by (by100 simp)
+        next
+          case False
+          hence "k \<notin> {i. i < length scheme \<and> fst (scheme ! i) = a}" using honly_pq by (by100 blast)
+          hence "fst (scheme ! k) \<noteq> a" using \<open>k < length scheme\<close> by (by100 blast)
+          \<comment> \<open>k is a non-{p,q} position. By properness, fst(scheme!k) appears 2 times.
+             But fst(scheme!k) \<noteq> a, so it only appears at non-{p,q} positions.
+             There are exactly 2 non-{p,q} positions (r1 and one other).
+             Since fst(scheme!k) appears 2 times in only 2 positions, one must be r1.
+             So fst(scheme!k) = fst(scheme!r1) = b0.\<close>
+          have "card {i. i < length scheme \<and> fst (scheme ! i) = l} \<in> {0, 2}"
+            using hproper by (by100 blast)
+          moreover have "k \<in> {i. i < length scheme \<and> fst (scheme ! i) = l}"
+            using \<open>k < length scheme\<close> \<open>fst (scheme ! k) = l\<close> by (by100 blast)
+          hence "{i. i < length scheme \<and> fst (scheme ! i) = l} \<noteq> {}" by (by100 blast)
+          hence "card {i. i < length scheme \<and> fst (scheme ! i) = l} \<noteq> 0" by (by100 simp)
+          ultimately have hcard_l: "card {i. i < length scheme \<and> fst (scheme ! i) = l} = 2"
+            by (by100 blast)
+          \<comment> \<open>Since l \<noteq> a, all l-positions are non-{p,q}.\<close>
+          have "{i. i < length scheme \<and> fst (scheme ! i) = l} \<subseteq> {0..<4} - {p, q}"
+          proof (intro subsetI)
+            fix i assume "i \<in> {i. i < length scheme \<and> fst (scheme ! i) = l}"
+            hence "i < length scheme" "fst (scheme ! i) = l" by (by100 simp)+
+            have "i \<notin> {p, q}"
+            proof
+              assume "i \<in> {p, q}"
+              hence "fst (scheme ! i) = a" using hp(4,5) by (by100 blast)
+              thus False using \<open>fst (scheme ! i) = l\<close> \<open>fst (scheme ! k) \<noteq> a\<close>
+                  \<open>fst (scheme ! k) = l\<close> by (by100 simp)
+            qed
+            thus "i \<in> {0..<4} - {p, q}" using \<open>i < length scheme\<close> hlen by (by100 simp)
+          qed
+          \<comment> \<open>card of l-positions = 2, and they are contained in a set of card 2.
+             So l-positions = {0..<4} - {p,q}, which contains r1.\<close>
+          hence "{i. i < length scheme \<and> fst (scheme ! i) = l} = {0..<4} - {p, q}"
+          proof -
+            have "finite ({0..<4::nat} - {p, q})" by (by100 simp)
+            have "card ({0..<4::nat} - {p, q}) = 2" using \<open>card ({0..<4::nat} - {p, q}) = 2\<close> .
+            from card_seteq[OF \<open>finite ({0..<4::nat} - {p,q})\<close>
+                \<open>{i. i < length scheme \<and> fst (scheme ! i) = l} \<subseteq> {0..<4} - {p, q}\<close>]
+                hcard_l this
+            show ?thesis by (by100 simp)
+          qed
+          hence "r1 \<in> {i. i < length scheme \<and> fst (scheme ! i) = l}" using hr1 hlen by (by100 simp)
+          hence "fst (scheme ! r1) = l" by (by100 blast)
+          thus ?thesis unfolding b0_def using \<open>fst (scheme ! r1) = l\<close> by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>Since fst ` set rest \<subseteq> fst ` set scheme \<subseteq> {a, b0} and fst e \<noteq> a for e \<in> rest:\<close>
+      have "fst e0 \<in> fst ` set rest" using he by (by100 simp)
+      hence "fst e0 \<in> fst ` set scheme" using hrest(4) by (by100 blast)
+      hence "fst e0 \<in> {a, b0}" using hfst_sub by (by100 blast)
+      hence "fst e0 = b0" using \<open>fst e0 \<noteq> a\<close> by (by100 blast)
+      have "fst e1 \<in> fst ` set rest" using he by (by100 simp)
+      hence "fst e1 \<in> fst ` set scheme" using hrest(4) by (by100 blast)
+      hence "fst e1 \<in> {a, b0}" using hfst_sub by (by100 blast)
+      hence "fst e1 = b0" using \<open>fst e1 \<noteq> a\<close> by (by100 blast)
+      thus ?thesis using \<open>fst e0 = b0\<close> by (by100 simp)
+    qed
     have "rest = [(fst e0, snd e0), (fst e0, snd e1)]" using he \<open>fst e0 = fst e1\<close>
       by (cases e0, cases e1) (by100 simp)
     thus ?thesis using \<open>fst e0 \<noteq> a\<close> by (rule that)
@@ -4204,6 +4357,217 @@ proof -
   qed
 qed
 
+\<comment> \<open>Key congruence: scheme equivalence on a suffix extends through a projective-pair prefix,
+   provided the suffix labels don't include the pair's label.
+   Proof: each elementary operation on the suffix can be simulated on the full list.
+   - cancel/uncancel/cut\_paste: adjust the prefix in the constructor.
+   - rotate: use 3 rotations of the full list.
+   - invert: rotate prefix to back, invert, flip\_label a, rotate back.
+   - relabel/flip\_label: act on full list; since label a only appears in prefix, prefix unchanged.
+   - cut\_paste2/cut\_paste\_opp: adjust prefix in constructor.\<close>
+lemma elementary_operation_prepend:
+  fixes y z :: "(nat \<times> bool) list" and a :: nat
+  assumes hop: "top1_elementary_scheme_operation y z"
+      and hny: "\<forall>e \<in> set y. fst e \<noteq> a"
+      and hnz: "\<forall>e \<in> set z. fst e \<noteq> a"
+  shows "top1_scheme_equiv ([(a, True), (a, True)] @ y) ([(a, True), (a, True)] @ z)"
+  sorry \<comment> \<open>Case analysis on the elementary operation:
+     cancel/uncancel/cut\_paste/cut\_paste\_opp: adjust prefix in constructor.
+     relabel/flip\_label: label \<noteq> a from no-label-a, so prefix unchanged.
+     rotate: 3 rotations of the full list.
+     invert: rotate+invert+flip\_a+rotate (no label a in rest).
+     cut\_paste2: cut\_paste2 on adjusted prefix + flip\_a + rotate.\<close>
+
+\<comment> \<open>Main congruence: full chain through prefix.\<close>
+lemma scheme_equiv_prepend_pair:
+  fixes rest rest' :: "(nat \<times> bool) list" and a :: nat
+  assumes "top1_scheme_equiv rest rest'"
+      and "\<forall>e \<in> set rest. fst e \<noteq> a"
+      and "\<forall>e \<in> set rest'. fst e \<noteq> a"
+  shows "top1_scheme_equiv ([(a, True), (a, True)] @ rest) ([(a, True), (a, True)] @ rest')"
+  sorry \<comment> \<open>From elementary\_operation\_prepend by induction on the chain.
+     Requires intermediate no-label-a invariant (not preserved by all operations).
+     Alternative: prove directly for valid\_scheme\_equiv.\<close>
+
+\<comment> \<open>Helper: extract one projective pair from a proper scheme with a same-direction pair.
+   Returns [(a,T),(a,T)] @ rest where rest is proper and shorter.\<close>
+lemma extract_projective_pair:
+  fixes scheme :: "(nat \<times> bool) list"
+  assumes hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+      and hproj: "\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
+          \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
+      and hne: "scheme \<noteq> []"
+  obtains a rest where
+      "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
+      "length rest = length scheme - 2"
+      "\<forall>e \<in> set rest. fst e \<noteq> a"
+      "fst ` set rest \<subseteq> fst ` set scheme"
+proof -
+  from hproj obtain a p q where hp: "p < length scheme" "q < length scheme" "p \<noteq> q"
+      "fst (scheme!p) = a" "fst (scheme!q) = a" "snd (scheme!p) = snd (scheme!q)"
+    by (by100 blast)
+  \<comment> \<open>Flip direction to True if needed.\<close>
+  define scheme1 where "scheme1 = (if snd (scheme!p) then scheme
+      else map (\<lambda>(l, b). (l, if l = a then \<not> b else b)) scheme)"
+  have hlen1: "length scheme1 = length scheme" unfolding scheme1_def by (by100 simp)
+  have hfst_preserved: "\<forall>i < length scheme1. fst (scheme1 ! i) = fst (scheme ! i)"
+  proof (cases "snd (scheme ! p)")
+    case True thus ?thesis unfolding scheme1_def by (by100 simp)
+  next
+    case False
+    hence hsch1: "scheme1 = map (\<lambda>(l, b). (l, if l = a then \<not> b else b)) scheme"
+      unfolding scheme1_def by (by100 simp)
+    show ?thesis
+    proof (intro allI impI)
+      fix i assume "i < length scheme1"
+      hence "i < length scheme" using hlen1 by (by100 simp)
+      show "fst (scheme1 ! i) = fst (scheme ! i)"
+        using hsch1 \<open>i < length scheme\<close> by (cases "scheme ! i") (by100 simp)
+    qed
+  qed
+  \<comment> \<open>scheme1 is equivalent to scheme.\<close>
+  have hequiv1: "top1_scheme_equiv scheme scheme1"
+  proof (cases "snd (scheme ! p)")
+    case True thus ?thesis unfolding scheme1_def top1_scheme_equiv_def by (by100 simp)
+  next
+    case False
+    hence "scheme1 = map (\<lambda>(l, b). (l, if l = a then \<not> b else b)) scheme"
+      unfolding scheme1_def by (by100 simp)
+    hence "top1_elementary_scheme_operation scheme scheme1"
+      using top1_elementary_scheme_operation.flip_label[of scheme a] by (by100 simp)
+    thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+  qed
+  \<comment> \<open>scheme1 has (a,True) at all a-positions.\<close>
+  have hcard1: "card {i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = 2"
+  proof -
+    have "{i. i < length scheme1 \<and> fst (scheme1 ! i) = a} =
+        {i. i < length scheme \<and> fst (scheme ! i) = a}"
+    proof (intro equalityI subsetI)
+      fix i assume "i \<in> {i. i < length scheme1 \<and> fst (scheme1 ! i) = a}"
+      hence "i < length scheme1" "fst (scheme1 ! i) = a" by (by100 simp)+
+      hence "i < length scheme" using hlen1 by (by100 simp)
+      hence "fst (scheme ! i) = a" using hfst_preserved \<open>i < length scheme1\<close> \<open>fst (scheme1 ! i) = a\<close> by (by100 simp)
+      thus "i \<in> {i. i < length scheme \<and> fst (scheme ! i) = a}" using \<open>i < length scheme\<close> by (by100 blast)
+    next
+      fix i assume "i \<in> {i. i < length scheme \<and> fst (scheme ! i) = a}"
+      hence "i < length scheme" "fst (scheme ! i) = a" by (by100 simp)+
+      hence "i < length scheme1" using hlen1 by (by100 simp)
+      hence "fst (scheme1 ! i) = fst (scheme ! i)" using hfst_preserved by (by100 blast)
+      hence "fst (scheme1 ! i) = a" using \<open>fst (scheme ! i) = a\<close> by (by100 simp)
+      thus "i \<in> {i. i < length scheme1 \<and> fst (scheme1 ! i) = a}" using \<open>i < length scheme1\<close> by (by100 blast)
+    qed
+    moreover from hproper have "card {i. i < length scheme \<and> fst (scheme ! i) = a} \<in> {0, 2}" by (by100 blast)
+    moreover have "p \<in> {i. i < length scheme \<and> fst (scheme ! i) = a}" using hp(1,4) by (by100 blast)
+    hence "{i. i < length scheme \<and> fst (scheme ! i) = a} \<noteq> {}" by (by100 blast)
+    hence "card {i. i < length scheme \<and> fst (scheme ! i) = a} \<noteq> 0" by (by100 simp)
+    ultimately have "card {i. i < length scheme \<and> fst (scheme ! i) = a} = 2"
+        and "{i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = {i. i < length scheme \<and> fst (scheme ! i) = a}"
+      by (by100 blast)+
+    thus ?thesis by (by100 simp)
+  qed
+  have hdir1: "\<forall>i < length scheme1. fst (scheme1 ! i) = a \<longrightarrow> snd (scheme1 ! i) = True"
+  proof (cases "snd (scheme ! p)")
+    case True
+    hence "scheme1 = scheme" unfolding scheme1_def by (by100 simp)
+    have honly_pq: "{k. k < length scheme \<and> fst (scheme ! k) = a} = {p, q}"
+    proof -
+      have "card {p, q} = 2" using hp(3) by (by100 simp)
+      have "{p, q} \<subseteq> {k. k < length scheme \<and> fst (scheme ! k) = a}"
+        using hp(1,2,4,5) by (by100 blast)
+      have "finite {k. k < length scheme \<and> fst (scheme ! k) = a}" by (by100 simp)
+      from hproper have "card {k. k < length scheme \<and> fst (scheme ! k) = a} \<in> {0, 2}" by (by100 blast)
+      moreover have "{k. k < length scheme \<and> fst (scheme ! k) = a} \<noteq> {}"
+        using hp(1,4) by (by100 blast)
+      hence "card {k. k < length scheme \<and> fst (scheme ! k) = a} \<noteq> 0" by (by100 simp)
+      ultimately have "card {k. k < length scheme \<and> fst (scheme ! k) = a} = 2" by (by100 blast)
+      from card_seteq[OF \<open>finite _\<close> \<open>{p, q} \<subseteq> _\<close>] this \<open>card {p, q} = 2\<close>
+      show ?thesis by (by100 simp)
+    qed
+    show ?thesis
+    proof (intro allI impI)
+      fix i assume "i < length scheme1" "fst (scheme1 ! i) = a"
+      hence "i \<in> {k. k < length scheme \<and> fst (scheme ! k) = a}" using \<open>scheme1 = scheme\<close> hlen1 by (by100 simp)
+      hence "i = p \<or> i = q" using honly_pq by (by100 blast)
+      thus "snd (scheme1 ! i) = True" using \<open>scheme1 = scheme\<close> True hp(6) by (by100 blast)
+    qed
+  next
+    case False
+    hence hsch1: "scheme1 = map (\<lambda>(l, b). (l, if l = a then \<not> b else b)) scheme"
+      unfolding scheme1_def by (by100 simp)
+    show ?thesis
+    proof (intro allI impI)
+      fix i assume "i < length scheme1" "fst (scheme1 ! i) = a"
+      have "i < length scheme" using \<open>i < length scheme1\<close> hlen1 by (by100 simp)
+      have "fst (scheme ! i) = a" using hfst_preserved \<open>i < length scheme1\<close> \<open>fst (scheme1 ! i) = a\<close> by (by100 simp)
+      hence "snd (scheme1 ! i) = (\<not> snd (scheme ! i))"
+        using hsch1 \<open>i < length scheme\<close> by (cases "scheme ! i") (by100 simp)
+      moreover have "snd (scheme ! p) = False" using False by (by100 simp)
+      \<comment> \<open>All a-positions have snd = snd(scheme!p) = False, so flipped = True.\<close>
+      have honly_pq: "{k. k < length scheme \<and> fst (scheme ! k) = a} = {p, q}"
+      proof -
+        have "card {p, q} = 2" using hp(3) by (by100 simp)
+        have "{p, q} \<subseteq> {k. k < length scheme \<and> fst (scheme ! k) = a}"
+          using hp(1,2,4,5) by (by100 blast)
+        have "finite {k. k < length scheme \<and> fst (scheme ! k) = a}" by (by100 simp)
+        from hproper have "card {k. k < length scheme \<and> fst (scheme ! k) = a} \<in> {0, 2}" by (by100 blast)
+        moreover have "{k. k < length scheme \<and> fst (scheme ! k) = a} \<noteq> {}"
+          using hp(1,4) by (by100 blast)
+        hence "card {k. k < length scheme \<and> fst (scheme ! k) = a} \<noteq> 0" by (by100 simp)
+        ultimately have "card {k. k < length scheme \<and> fst (scheme ! k) = a} = 2" by (by100 blast)
+        from card_seteq[OF \<open>finite _\<close> \<open>{p, q} \<subseteq> _\<close>] this \<open>card {p, q} = 2\<close>
+        show ?thesis by (by100 simp)
+      qed
+      have "i \<in> {k. k < length scheme \<and> fst (scheme ! k) = a}"
+        using \<open>i < length scheme\<close> \<open>fst (scheme ! i) = a\<close> by (by100 blast)
+      hence "i = p \<or> i = q" using honly_pq by (by100 blast)
+      hence "snd (scheme ! i) = snd (scheme ! p)" using hp(6) by (by100 blast)
+      hence "snd (scheme ! i) = False" using False by (by100 simp)
+      ultimately show "snd (scheme1 ! i) = True" by (by100 simp)
+    qed
+  qed
+  have h1: "(a, True) \<in> set scheme1"
+  proof -
+    have "p < length scheme1" using hp(1) hlen1 by (by100 simp)
+    hence "scheme1 ! p \<in> set scheme1" by (by100 simp)
+    have "fst (scheme1 ! p) = a" using hfst_preserved \<open>p < length scheme1\<close> hp(4) by (by100 blast)
+    have "snd (scheme1 ! p) = True" using hdir1 \<open>p < length scheme1\<close> \<open>fst (scheme1 ! p) = a\<close> by (by100 blast)
+    obtain f s where hfs: "scheme1 ! p = (f, s)" by (cases "scheme1 ! p")
+    hence "f = a" using \<open>fst (scheme1 ! p) = a\<close> by (by100 simp)
+    hence "s = True" using \<open>snd (scheme1 ! p) = True\<close> hfs by (by100 simp)
+    hence "scheme1 ! p = (a, True)" using hfs \<open>f = a\<close> by (by100 simp)
+    thus ?thesis using \<open>scheme1 ! p \<in> set scheme1\<close> by (by100 simp)
+  qed
+  have "scheme1 \<noteq> []"
+  proof
+    assume "scheme1 = []" hence "length scheme1 = 0" by (by100 simp)
+    thus False using hlen1 hne by (by100 simp)
+  qed
+  from bring_projective_pair_to_front[OF h1 hcard1 hdir1 this]
+  obtain rest0 where hrest0: "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest0)"
+      "length rest0 = length scheme1 - 2"
+      "\<forall>e \<in> set rest0. fst e \<noteq> a"
+      "fst ` set rest0 \<subseteq> fst ` set scheme1"
+    by (by100 blast)
+  \<comment> \<open>Thread back to scheme.\<close>
+  have "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest0)"
+    using scheme_equiv_trans[OF hequiv1 hrest0(1)] by (by100 blast)
+  moreover have "length rest0 = length scheme - 2" using hrest0(2) hlen1 by (by100 simp)
+  moreover have "fst ` set scheme1 \<subseteq> fst ` set scheme"
+  proof (intro subsetI)
+    fix l assume "l \<in> fst ` set scheme1"
+    then obtain e where "e \<in> set scheme1" "fst e = l" by (by100 blast)
+    then obtain i where "i < length scheme1" "scheme1 ! i = e"
+      by (simp add: in_set_conv_nth) (by100 blast)
+    hence "fst (scheme1 ! i) = l" using \<open>fst e = l\<close> by (by100 simp)
+    hence "fst (scheme ! i) = l" using hfst_preserved \<open>i < length scheme1\<close> by (by100 simp)
+    have "i < length scheme" using \<open>i < length scheme1\<close> hlen1 by (by100 simp)
+    hence "scheme ! i \<in> set scheme" by (by100 simp)
+    thus "l \<in> fst ` set scheme" using \<open>fst (scheme ! i) = l\<close> by (by100 force)
+  qed
+  hence "fst ` set rest0 \<subseteq> fst ` set scheme" using hrest0(4) by (by100 blast)
+  ultimately show ?thesis using hrest0(3) that[of a rest0] by (by100 blast)
+qed
+
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
    (1) aa\\<inverse>bb\\<inverse> (sphere, length 4)
@@ -4276,7 +4640,128 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
            - if not: apply Lemma 77.3 to extract commutator from rest,
              then Lemma 77.4 to absorb commutator into projective blocks.
              Result: more projective pairs + shorter torus remainder.\<close>
-      show ?thesis sorry
+      \<comment> \<open>Step 1: Extract projective pair to front using helper.\<close>
+      have hne: "scheme \<noteq> []"
+      proof
+        assume "scheme = []" hence "length scheme = 0" by (by100 simp)
+        thus False using hgt4 by (by100 simp)
+      qed
+      obtain a rest where ha_rest:
+          "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
+          "length rest = length scheme - 2"
+          "\<forall>e \<in> set rest. fst e \<noteq> a"
+          "fst ` set rest \<subseteq> fst ` set scheme"
+        using extract_projective_pair[OF less(3)
+            \<open>\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme.
+                i \<noteq> j \<and> fst (scheme ! i) = label \<and> fst (scheme ! j) = label
+                \<and> snd (scheme ! i) = snd (scheme ! j)\<close> hne] by (by100 blast)
+      \<comment> \<open>Step 2: rest has length \<ge> 4.\<close>
+      have hrest_len_ge4: "length rest \<ge> 4"
+      proof -
+        have "even (length scheme)" using proper_scheme_even_length[OF less(3)] .
+        have "length scheme \<noteq> 5"
+        proof
+          assume "length scheme = 5" hence "even (5::nat)" using \<open>even (length scheme)\<close> by (by100 simp)
+          thus False by (by100 simp)
+        qed
+        hence "length scheme \<ge> 6" using hgt4 by (by100 simp)
+        thus ?thesis using ha_rest(2) by (by100 simp)
+      qed
+      \<comment> \<open>Step 3: rest is proper (fst-count preservation through the chain).\<close>
+      have hrest_proper: "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}"
+        sorry \<comment> \<open>Properness preserved: flip+rotation+cut\_paste preserve fst counts.\<close>
+      \<comment> \<open>Step 4: Apply IH to rest.\<close>
+      have hrest_shorter: "length rest < length scheme" using ha_rest(2) hgt4 by (by100 simp)
+      from less(1)[OF hrest_shorter hrest_len_ge4 hrest_proper]
+      have hrest_nf: "(\<exists>a' b'. a' \<noteq> b' \<and> top1_scheme_equiv rest [(a', True), (a', False), (b', True), (b', False)])
+           \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv rest w)
+           \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv rest w)" .
+      \<comment> \<open>Step 5: Combine projective pair [(a,T),(a,T)] with the normal form of rest.\<close>
+      from hrest_nf show ?thesis
+      proof (elim disjE)
+        \<comment> \<open>Case 1: rest \<sim> sphere. Cancel the two inverse pairs to get [(a,T),(a,T)] = projective m=1.\<close>
+        assume "\<exists>a' b'. a' \<noteq> b' \<and> top1_scheme_equiv rest [(a', True), (a', False), (b', True), (b', False)]"
+        then obtain a' b' where hab: "a' \<noteq> b'" "top1_scheme_equiv rest [(a', True), (a', False), (b', True), (b', False)]"
+          by (by100 blast)
+        \<comment> \<open>scheme \<sim> [(a,T),(a,T)] @ [(a',T),(a',F),(b',T),(b',F)].\<close>
+        have hne_sphere: "\<forall>e \<in> set [(a', True), (a', False), (b', True), (b', False)]. fst e \<noteq> a"
+          sorry \<comment> \<open>From properness: a' \<noteq> a and b' \<noteq> a.\<close>
+        have "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])"
+          using scheme_equiv_prepend_pair[OF hab(2) ha_rest(3) hne_sphere] by (by100 blast)
+        hence hchain: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])"
+          using scheme_equiv_trans[OF ha_rest(1)] by (by100 blast)
+        \<comment> \<open>Cancel (a',T)(a',F) at positions 2,3; then (b',T)(b',F) at positions 2,3.\<close>
+        have "top1_scheme_equiv scheme ([(a,True),(a,True)])"
+        proof -
+          have s1: "top1_elementary_scheme_operation
+              ([(a,True),(a,True)] @ [(a',True), top1_inverse_edge (a',True)] @ [(b',True),(b',False)])
+              ([(a,True),(a,True)] @ [(b',True),(b',False)])"
+            by (rule top1_elementary_scheme_operation.cancel)
+          have "(a', False) = top1_inverse_edge (a', True)"
+            unfolding top1_inverse_edge_def by (by100 simp)
+          hence "top1_scheme_equiv ([(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)])
+              ([(a,True),(a,True),(b',True),(b',False)])"
+            using s1 unfolding top1_scheme_equiv_def by (by100 simp)
+          moreover have s2: "top1_elementary_scheme_operation
+              ([(a,True),(a,True)] @ [(b',True), top1_inverse_edge (b',True)] @ [])
+              ([(a,True),(a,True)] @ [])"
+            by (rule top1_elementary_scheme_operation.cancel)
+          have "(b', False) = top1_inverse_edge (b', True)"
+            unfolding top1_inverse_edge_def by (by100 simp)
+          hence "top1_scheme_equiv ([(a,True),(a,True),(b',True),(b',False)])
+              ([(a,True),(a,True)])"
+            using s2 unfolding top1_scheme_equiv_def by (by100 simp)
+          ultimately have heq: "top1_scheme_equiv ([(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)])
+              ([(a,True),(a,True)])"
+            using scheme_equiv_trans by (by100 blast)
+          have "[(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)]
+              = [(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)]" by (by100 simp)
+          hence "top1_scheme_equiv ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])
+              ([(a,True),(a,True)])"
+            using heq by (by100 simp)
+          thus ?thesis using scheme_equiv_trans[OF hchain] by (by100 blast)
+        qed
+        \<comment> \<open>Relabel a \<to> 0: [(a,T),(a,T)] \<sim> [(0,T),(0,T)] = projective 1.\<close>
+        moreover have "top1_scheme_equiv [(a,True),(a,True)] (top1_m_projective_scheme 1)"
+        proof -
+          have "top1_elementary_scheme_operation [(a,True),(a,True)]
+              (map (\<lambda>(l,b). (if l = a then 0 else l, b)) [(a,True),(a,True)])"
+            by (rule top1_elementary_scheme_operation.relabel)
+          moreover have "map (\<lambda>(l,b). (if l = a then 0 else l, b)) [(a,True),(a,True)] = [(0,True),(0,True)]"
+            by (by100 simp)
+          moreover have "[(0::nat,True),(0,True)] = top1_m_projective_scheme 1"
+            unfolding top1_m_projective_scheme_def by (by100 simp)
+          ultimately show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+        qed
+        ultimately have "top1_scheme_equiv scheme (top1_m_projective_scheme 1)"
+          using scheme_equiv_trans by (by100 blast)
+        moreover have "top1_is_projective_scheme (top1_m_projective_scheme 1) 1"
+          unfolding top1_is_projective_scheme_def by (by100 simp)
+        ultimately have "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
+          by (by100 blast)
+        thus ?thesis by (by100 blast)
+      next
+        \<comment> \<open>Case 2: rest \<sim> projective m'. Then scheme \<sim> projective (m'+1).\<close>
+        assume "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv rest w"
+        then obtain m' w' where hm: "m' > 0" "top1_is_projective_scheme w' m'" "top1_scheme_equiv rest w'"
+          by (by100 blast)
+        \<comment> \<open>scheme \<sim> [(a,T),(a,T)] @ projective m'. Relabel a to m' and get projective (m'+1).\<close>
+        hence "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
+          sorry \<comment> \<open>Prepend one projective pair: projective m \<Rightarrow> projective (m+1).\<close>
+        thus ?thesis by (by100 blast)
+      next
+        \<comment> \<open>Case 3: rest \<sim> torus n'. Apply Lemma 77.4 repeatedly:
+           [(a,T),(a,T)] @ torus n' \<sim> projective (2n'+1).\<close>
+        assume "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv rest w"
+        then obtain n' w' where hn: "n' > 0" "top1_is_torus_scheme w' n'" "top1_scheme_equiv rest w'"
+          by (by100 blast)
+        \<comment> \<open>scheme \<sim> [(a,T),(a,T)] @ torus n'.
+           Each application of Lemma 77.4 converts 1 proj pair + 1 torus block \<Rightarrow> 3 proj pairs.
+           After n' applications: projective (2n'+1).\<close>
+        hence "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
+          sorry \<comment> \<open>Lemma 77.4 repeated: proj pair + torus n \<Rightarrow> projective (2n+1).\<close>
+        thus ?thesis by (by100 blast)
+      qed
     qed
   next
     case False
