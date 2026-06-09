@@ -3584,8 +3584,9 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
   proof (cases "\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
       \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)")
     case True
-    \<comment> \<open>Projective type: at least one label appears twice with same direction.
-       Use Lemma 77.1 to collect same-direction pairs, then Lemma 77.4 if needed.\<close>
+    \<comment> \<open>Projective type: Book Step 2.
+       Use Corollary 77.2 (iterated Lemma 77.1) to collect same-direction pairs,
+       then Lemma 77.4 to absorb torus blocks into projective blocks.\<close>
     show ?thesis sorry
   next
     case False
