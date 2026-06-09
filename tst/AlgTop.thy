@@ -4647,6 +4647,46 @@ next
   ultimately show ?case unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
 qed
 
+\<comment> \<open>Appending any projective pair to proj m gives proj(Suc m) up to equivalence.\<close>
+lemma proj_append_pair:
+  "top1_scheme_equiv (top1_m_projective_scheme m @ [(a, True), (a, True)]) (top1_m_projective_scheme (Suc m))"
+proof -
+  \<comment> \<open>Relabel\_avoid on proj m to avoid a, then relabel a \<to> m.\<close>
+  from scheme_equiv_relabel_avoid[of "top1_m_projective_scheme m" a]
+  obtain pm_no_a where hpm: "top1_scheme_equiv (top1_m_projective_scheme m) pm_no_a"
+      "\<forall>e \<in> set pm_no_a. fst e \<noteq> a" by (by100 blast)
+  \<comment> \<open>Suffix congruence: proj m @ pair \<sim> pm\_no\_a @ pair.\<close>
+  have "top1_scheme_equiv (top1_m_projective_scheme m @ [(a,True),(a,True)])
+      (pm_no_a @ [(a,True),(a,True)])"
+    using scheme_equiv_append[OF hpm(1)] by (by100 blast)
+  \<comment> \<open>Relabel a \<to> m in the full scheme. pm\_no\_a avoids a, so only pair changes.\<close>
+  moreover have "top1_scheme_equiv (pm_no_a @ [(a,True),(a,True)])
+      (pm_no_a @ [(m,True),(m,True)])"
+  proof -
+    have "top1_elementary_scheme_operation (pm_no_a @ [(a,True),(a,True)])
+        (map (\<lambda>(l,b). (if l = a then m else l, b)) (pm_no_a @ [(a,True),(a,True)]))"
+      by (rule top1_elementary_scheme_operation.relabel)
+    moreover have "map (\<lambda>(l,b). (if l = a then m else l, b)) pm_no_a = pm_no_a"
+      using hpm(2) by (intro map_idI) (by100 force)
+    hence "map (\<lambda>(l,b). (if l = a then m else l, b)) (pm_no_a @ [(a,True),(a,True)])
+        = pm_no_a @ [(m,True),(m,True)]" by (by100 simp)
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+  qed
+  \<comment> \<open>Reverse suffix congruence: pm\_no\_a @ [(m,T),(m,T)] \<sim> proj m @ [(m,T),(m,T)].\<close>
+  moreover have "top1_scheme_equiv (pm_no_a @ [(m,True),(m,True)])
+      (top1_m_projective_scheme m @ [(m,True),(m,True)])"
+    using scheme_equiv_append[OF scheme_equiv_sym[OF hpm(1)]] by (by100 blast)
+  \<comment> \<open>proj m @ [(m,T),(m,T)] = proj(Suc m) by definition.\<close>
+  moreover have "top1_m_projective_scheme m @ [(m,True),(m,True)] = top1_m_projective_scheme (Suc m)"
+    unfolding top1_m_projective_scheme_def by (by100 simp)
+  ultimately have "top1_scheme_equiv (top1_m_projective_scheme m @ [(a,True),(a,True)])
+      (top1_m_projective_scheme m @ [(m,True),(m,True)])"
+    unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+  moreover have "top1_m_projective_scheme m @ [(m,True),(m,True)] = top1_m_projective_scheme (Suc m)"
+    unfolding top1_m_projective_scheme_def by (by100 simp)
+  ultimately show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+qed
+
 \<comment> \<open>Helper: extract one projective pair from a proper scheme with a same-direction pair.
    Returns [(a,T),(a,T)] @ rest where rest is proper and shorter.\<close>
 lemma extract_projective_pair:
@@ -5043,8 +5083,19 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           by (by100 simp)
         \<comment> \<open>w\_no\_a @ [(a,T),(a,T)] is a projective-form scheme. Relabel to standard.\<close>
         have "top1_scheme_equiv (w_no_a @ [(a,True),(a,True)]) (top1_m_projective_scheme (m'+1))"
-          sorry \<comment> \<open>w\_no\_a has m' proper pairs avoiding a. Append (a,T)(a,T) gives m'+1 pairs.
-             Relabel fresh\<to>m', then reorder \<to> proj(m'+1).\<close>
+        proof -
+          \<comment> \<open>w\_no\_a \<sim> proj m' (from hw\_no\_a(1) + hm(3)). Suffix congruence + proj\_append\_pair.\<close>
+          have "top1_scheme_equiv w_no_a (top1_m_projective_scheme m')"
+            using scheme_equiv_sym[OF hw_no_a(1)] unfolding hw' .
+          hence "top1_scheme_equiv (w_no_a @ [(a,True),(a,True)]) (top1_m_projective_scheme m' @ [(a,True),(a,True)])"
+            using scheme_equiv_append by (by100 blast)
+          moreover have "top1_scheme_equiv (top1_m_projective_scheme m' @ [(a,True),(a,True)])
+              (top1_m_projective_scheme (Suc m'))"
+            by (rule proj_append_pair)
+          ultimately have "top1_scheme_equiv (w_no_a @ [(a,True),(a,True)]) (top1_m_projective_scheme (Suc m'))"
+            unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+          thus ?thesis by (by100 simp)
+        qed
         hence "top1_scheme_equiv ([(a,True),(a,True)] @ w_no_a) (top1_m_projective_scheme (m'+1))"
           using \<open>top1_scheme_equiv ([(a,True),(a,True)] @ w_no_a) (w_no_a @ [(a,True),(a,True)])\<close>
           unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
