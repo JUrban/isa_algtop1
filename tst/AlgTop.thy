@@ -643,6 +643,22 @@ proof (intro allI impI)
   from assms(2)[rule_format, OF hlt] show "(vx ((i+k) mod n), vy ((i+k) mod n)) \<in> P" .
 qed
 
+\<comment> \<open>Generalized transfer: quotient\_of\_scheme\_on is preserved when the EQUALITY PATTERN
+   of fst/snd is preserved via a bijection sigma on vertex indices.
+   Witnesses: vx'(i) = vx(sigma(i)), vy'(i) = vy(sigma(i)).
+   Covers rotate (cyclic shift), invert (reversal), relabel (injective rename).\<close>
+lemma quotient_of_scheme_transfer_bij:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+      and "length w' = length w"
+      and "bij_betw \<sigma> {..<length w} {..<length w}"
+      and "\<And>i. i < length w \<Longrightarrow> fst (w'!i) = fst (w!(\<sigma> i))"
+      and "\<And>i. i < length w \<Longrightarrow> snd (w'!i) = snd (w!(\<sigma> i))"
+      and "\<And>i. i < length w \<Longrightarrow> Suc (\<sigma> i) mod (length w) = \<sigma> (Suc i mod (length w))"
+  shows "top1_quotient_of_scheme_on Y TY w'"
+  sorry \<comment> \<open>Same P, q. Witnesses: vx'(i) = vx(sigma(i)), vy'(i) = vy(sigma(i)).
+     All geometric conditions transfer via the bijection.
+     Conditions 7,9 use the pattern-preservation properties.\<close>
+
 \<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
    Same polygon P. Shifted vertices: vx'(i) = vx((i+k) mod n).
    The convex hull is invariant. Edge identification shifts consistently.\<close>
@@ -750,8 +766,15 @@ proof -
     using hsnd_bij hlen_uv by (by100 simp)
   have hsuc_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> Suc (\<sigma> i) mod length (u @ v) = \<sigma> (Suc i mod length (u @ v))"
     using hsuc_bij hlen_uv by (by100 simp)
-  show ?thesis sorry \<comment> \<open>Rule application of transfer\_bij fails due to schematic unification.
-     All premises proved. Need manual instantiation or method improvement.\<close>
+  have h_inst: "top1_quotient_of_scheme_on Y TY (u @ v) \<Longrightarrow>
+      length (v @ u) = length (u @ v) \<Longrightarrow>
+      bij_betw \<sigma> {..<length (u @ v)} {..<length (u @ v)} \<Longrightarrow>
+      (\<And>i. i < length (u @ v) \<Longrightarrow> fst ((v @ u) ! i) = fst ((u @ v) ! (\<sigma> i))) \<Longrightarrow>
+      (\<And>i. i < length (u @ v) \<Longrightarrow> snd ((v @ u) ! i) = snd ((u @ v) ! (\<sigma> i))) \<Longrightarrow>
+      (\<And>i. i < length (u @ v) \<Longrightarrow> Suc (\<sigma> i) mod length (u @ v) = \<sigma> (Suc i mod length (u @ v))) \<Longrightarrow>
+      top1_quotient_of_scheme_on Y TY (v @ u)"
+    by (rule quotient_of_scheme_transfer_bij)
+  show ?thesis using h_inst[OF assms hlen hbij' hfst_bij' hsnd_bij' hsuc_bij'] .
 qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
@@ -836,21 +859,7 @@ proof -
     done
   qed
 
-\<comment> \<open>Generalized transfer: quotient\_of\_scheme\_on is preserved when the EQUALITY PATTERN
-   of fst/snd is preserved. This handles relabel (injective), invert, and rotate
-   where individual values change but the identification pattern is the same.
-   The SAME P, q witnesses are used, but vx/vy may be permuted via a bijection sigma.\<close>
-lemma quotient_of_scheme_transfer_bij:
-  assumes "top1_quotient_of_scheme_on Y TY w"
-      and "length w' = length w"
-      and "bij_betw \<sigma> {..<length w} {..<length w}"
-      and "\<And>i. i < length w \<Longrightarrow> fst (w'!i) = fst (w!(\<sigma> i))"
-      and "\<And>i. i < length w \<Longrightarrow> snd (w'!i) = snd (w!(\<sigma> i))"
-      and "\<And>i. i < length w \<Longrightarrow> Suc (\<sigma> i) mod (length w) = \<sigma> (Suc i mod (length w))"
-  shows "top1_quotient_of_scheme_on Y TY w'"
-  sorry \<comment> \<open>Same P, q. Witnesses: vx'(i) = vx(sigma(i)), vy'(i) = vy(sigma(i)).
-     All geometric conditions transfer via the bijection.
-     Conditions 7,9 use the pattern-preservation properties.\<close>
+\<comment> \<open>Placeholder: quotient\_of\_scheme\_transfer\_bij was moved before quotient\_of\_scheme\_rotate.\<close>
 
 \<comment> \<open>Flipping the orientation of all edges with a given label preserves quotient\_of\_scheme\_on.
    Same polygon P, same quotient map q, same vertex positions vx/vy.
