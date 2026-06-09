@@ -4516,6 +4516,34 @@ proof -
     unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
 qed
 
+\<comment> \<open>Relabel target to avoid a specific label.\<close>
+lemma scheme_equiv_relabel_avoid:
+  fixes target :: "(nat \<times> bool) list" and a :: nat
+  shows "\<exists>target'. top1_scheme_equiv target target' \<and> (\<forall>e \<in> set target'. fst e \<noteq> a)"
+proof -
+  have "finite (fst ` set target \<union> {a} :: nat set)" by (by100 simp)
+  from ex_new_if_finite[OF infinite_UNIV_nat this]
+  obtain fresh :: nat where hfresh: "fresh \<notin> fst ` set target \<union> {a}" by (by100 blast)
+  hence "fresh \<noteq> a" by (by100 blast)
+  define target' where "target' = map (\<lambda>(l,b). (if l = a then fresh else l, b)) target"
+  have "top1_scheme_equiv target target'"
+    unfolding target'_def
+    using elementary_imp_equiv[OF top1_elementary_scheme_operation.relabel[of target a fresh]] by (by100 simp)
+  moreover have "\<forall>e \<in> set target'. fst e \<noteq> a"
+  proof (intro ballI)
+    fix e assume "e \<in> set target'"
+    then obtain e0 where "e0 \<in> set target" "e = (\<lambda>(l,b). (if l = a then fresh else l, b)) e0"
+      unfolding target'_def by (by100 force)
+    obtain l0 b0 where "e0 = (l0, b0)" by (cases e0)
+    hence "e = (if l0 = a then fresh else l0, b0)"
+      using \<open>e = (\<lambda>(l,b). (if l = a then fresh else l, b)) e0\<close> by (by100 simp)
+    hence "fst e = (if fst e0 = a then fresh else fst e0)"
+      using \<open>e0 = (l0, b0)\<close> by (by100 simp)
+    thus "fst e \<noteq> a" using \<open>fresh \<noteq> a\<close> by (by100 simp)
+  qed
+  ultimately show ?thesis by (by100 blast)
+qed
+
 \<comment> \<open>Any scheme of the form [(l0,T),(l0,T),...,(lm,T),(lm,T)] with distinct labels
    is equivalent to the standard projective scheme proj(m+1) via relabeling.\<close>
 lemma projective_form_equiv_standard:
@@ -4577,39 +4605,46 @@ next
   \<comment> \<open>Relabel f m \<to> m (via relabel\_avoid if needed), then proj m @ [(m,T),(m,T)] = proj(Suc m).\<close>
   moreover have "top1_scheme_equiv (top1_m_projective_scheme m @ [(f m, True), (f m, True)])
       (top1_m_projective_scheme (Suc m))"
-    sorry \<comment> \<open>Relabel f(m) \<to> m + proj m @ [(m,T),(m,T)] = proj(Suc m).\<close>
-  ultimately show ?case unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
-qed
-
-\<comment> \<open>Relabel target to avoid a specific label. From rest \<sim> target where rest avoids label a,
-   obtain target' \<sim> target that also avoids label a.\<close>
-lemma scheme_equiv_relabel_avoid:
-  fixes target :: "(nat \<times> bool) list" and a :: nat
-  shows "\<exists>target'. top1_scheme_equiv target target' \<and> (\<forall>e \<in> set target'. fst e \<noteq> a)"
-proof -
-  \<comment> \<open>Choose a fresh label that doesn't appear in target and differs from a.\<close>
-  have "finite (fst ` set target \<union> {a} :: nat set)" by (by100 simp)
-  from ex_new_if_finite[OF infinite_UNIV_nat this]
-  obtain fresh :: nat where hfresh: "fresh \<notin> fst ` set target \<union> {a}" by (by100 blast)
-  hence "fresh \<noteq> a" by (by100 blast)
-  \<comment> \<open>Relabel a \<to> fresh in target.\<close>
-  define target' where "target' = map (\<lambda>(l,b). (if l = a then fresh else l, b)) target"
-  have "top1_scheme_equiv target target'"
-    unfolding target'_def
-    using elementary_imp_equiv[OF top1_elementary_scheme_operation.relabel[of target a fresh]] by (by100 simp)
-  moreover have "\<forall>e \<in> set target'. fst e \<noteq> a"
-  proof (intro ballI)
-    fix e assume "e \<in> set target'"
-    then obtain e0 where "e0 \<in> set target" "e = (\<lambda>(l,b). (if l = a then fresh else l, b)) e0"
-      unfolding target'_def by (by100 force)
-    obtain l0 b0 where "e0 = (l0, b0)" by (cases e0)
-    hence "e = (if l0 = a then fresh else l0, b0)"
-      using \<open>e = (\<lambda>(l,b). (if l = a then fresh else l, b)) e0\<close> by (by100 simp)
-    hence "fst e = (if fst e0 = a then fresh else fst e0)"
-      using \<open>e0 = (l0, b0)\<close> by (by100 simp)
-    thus "fst e \<noteq> a" using \<open>fresh \<noteq> a\<close> by (by100 simp)
+  proof -
+    \<comment> \<open>Relabel\_avoid on proj m to avoid f(m), then relabel f(m) \<to> m.\<close>
+    from scheme_equiv_relabel_avoid[of "top1_m_projective_scheme m" "f m"]
+    obtain pm_no_fm where hpm: "top1_scheme_equiv (top1_m_projective_scheme m) pm_no_fm"
+        "\<forall>e \<in> set pm_no_fm. fst e \<noteq> f m" by (by100 blast)
+    \<comment> \<open>Suffix congruence: proj m @ [(f m,T),(f m,T)] \<sim> pm\_no\_fm @ [(f m,T),(f m,T)].\<close>
+    have "top1_scheme_equiv (top1_m_projective_scheme m @ [(f m,True),(f m,True)])
+        (pm_no_fm @ [(f m,True),(f m,True)])"
+      using scheme_equiv_append[OF hpm(1)] by (by100 blast)
+    \<comment> \<open>Relabel f(m) \<to> m in the full scheme. f(m) only appears in the suffix pair
+       (since pm\_no\_fm avoids f(m)). So result = pm\_no\_fm @ [(m,T),(m,T)].\<close>
+    moreover have "top1_scheme_equiv (pm_no_fm @ [(f m,True),(f m,True)])
+        (pm_no_fm @ [(m,True),(m,True)])"
+    proof -
+      \<comment> \<open>Relabel f(m) \<to> m in the full scheme. Since pm\_no\_fm avoids f(m),
+         only the suffix pair is affected.\<close>
+      have "top1_elementary_scheme_operation (pm_no_fm @ [(f m,True),(f m,True)])
+          (map (\<lambda>(l,b). (if l = f m then m else l, b)) (pm_no_fm @ [(f m,True),(f m,True)]))"
+        by (rule top1_elementary_scheme_operation.relabel)
+      moreover have "map (\<lambda>(l,b). (if l = f m then m else l, b)) pm_no_fm = pm_no_fm"
+        using hpm(2) by (intro map_idI) (by100 force)
+      hence "map (\<lambda>(l,b). (if l = f m then m else l, b)) (pm_no_fm @ [(f m,True),(f m,True)])
+          = pm_no_fm @ [(m,True),(m,True)]" by (by100 simp)
+      ultimately show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+    qed
+    \<comment> \<open>pm\_no\_fm \<sim> proj m (reverse of relabel\_avoid). So pm\_no\_fm @ [(m,T),(m,T)] \<sim> proj m @ [(m,T),(m,T)].\<close>
+    moreover have "top1_scheme_equiv (pm_no_fm @ [(m,True),(m,True)])
+        (top1_m_projective_scheme m @ [(m,True),(m,True)])"
+      using scheme_equiv_append[OF scheme_equiv_sym[OF hpm(1)]] by (by100 blast)
+    \<comment> \<open>proj m @ [(m,T),(m,T)] = proj(Suc m) by definition.\<close>
+    moreover have "top1_m_projective_scheme m @ [(m,True),(m,True)] = top1_m_projective_scheme (Suc m)"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    ultimately have "top1_scheme_equiv (top1_m_projective_scheme m @ [(f m, True), (f m, True)])
+        (top1_m_projective_scheme m @ [(m, True), (m, True)])"
+      unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+    moreover have "top1_m_projective_scheme m @ [(m,True),(m,True)] = top1_m_projective_scheme (Suc m)"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
   qed
-  ultimately show ?thesis by (by100 blast)
+  ultimately show ?case unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
 qed
 
 \<comment> \<open>Helper: extract one projective pair from a proper scheme with a same-direction pair.
