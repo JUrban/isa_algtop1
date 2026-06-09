@@ -3820,9 +3820,28 @@ proof -
   hence "top1_scheme_equiv w ([(a,True),(a,True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
     using hdecomp by (by100 simp)
   moreover have "length (y0 @ rev (map top1_inverse_edge y1) @ y2) = length w - 2"
-    sorry
+  proof -
+    have "length w = length y0 + 1 + length y1 + 1 + length y2"
+      using hdecomp by (by100 simp)
+    thus ?thesis by (by100 simp)
+  qed
   moreover have "\<forall>e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2). fst e \<noteq> a"
-    sorry
+  proof (intro ballI)
+    fix e assume "e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    hence "e \<in> set y0 \<or> e \<in> set (rev (map top1_inverse_edge y1)) \<or> e \<in> set y2" by (by100 simp)
+    thus "fst e \<noteq> a"
+    proof (elim disjE)
+      assume "e \<in> set y0" thus ?thesis using hcond1 by (by100 blast)
+    next
+      assume "e \<in> set (rev (map top1_inverse_edge y1))"
+      hence "e \<in> set (map top1_inverse_edge y1)" by (by100 simp)
+      then obtain e0 where "e0 \<in> set y1" "e = top1_inverse_edge e0" by (by100 force)
+      hence "fst e0 \<noteq> a" using hcond1 by (by100 blast)
+      thus ?thesis using \<open>e = top1_inverse_edge e0\<close> unfolding top1_inverse_edge_def by (by100 simp)
+    next
+      assume "e \<in> set y2" thus ?thesis using hcond1 by (by100 blast)
+    qed
+  qed
   ultimately show ?thesis by (by100 blast)
 qed
 
