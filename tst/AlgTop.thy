@@ -545,17 +545,7 @@ proof -
     using hsnd_eq by (by100 blast)
   from assms show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    apply (elim conjE exE)
-    apply (intro conjI)
-    apply assumption
-    \<comment> \<open>Use explicit rule\_tac for witness instantiation.\<close>
-    apply (rule_tac x=P in exI)
-    apply (rule_tac x=q in exI)
-    apply (rule_tac x=vx in exI)
-    apply (rule_tac x=vy in exI)
-    apply (intro conjI)
-    apply assumption+
-    sorry
+    sorry \<comment> \<open>TODO: prove by extracting witnesses via obtain + rebuilding with hfst\_map/hsnd\_map.\<close>
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
