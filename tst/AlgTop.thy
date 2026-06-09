@@ -6068,7 +6068,8 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             define between where "between = take (k_b - gap - 1) (drop (gap + 1) R_ab)"
             define after where "after = drop (k_b + 1) R_ab"
             have hRab_decomp: "R_ab = [(a_lab,True),(b_lab,True)] @ mid @ [(a_lab,False)]
-                @ between @ [(b_lab,False)] @ after" sorry
+                @ between @ [(b_lab,False)] @ after"
+              sorry \<comment> \<open>List decomposition at positions 0,1,gap,k\_b using hRab\_0/1/gap and hkb.\<close>
             \<comment> \<open>Step F: Apply reverse cut\_paste\_opp with a\_lab.
                u0 @ [(a\_lab,T)] @ u2 @ [(a\_lab,F)] @ u1 @ u3
                \<to> u0 @ u1 @ [(a\_lab,T)] @ u2 @ [(a\_lab,F)] @ u3
@@ -6080,7 +6081,39 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                This moves 'between' from after (a\_lab,F) to before (a\_lab,T).\<close>
             have "top1_scheme_equiv R_ab
                 (between @ [(a_lab,True),(b_lab,True)] @ mid @ [(a_lab,False),(b_lab,False)] @ after)"
-              sorry \<comment> \<open>Reverse cut\_paste\_opp: 3 elementary operations (rotate+cut\_paste\_opp+rotate).\<close>
+            proof -
+              \<comment> \<open>R\_ab = [] @ [(a\_lab,T)] @ [(b\_lab,T)]@mid @ [(a\_lab,F)] @ between @ [(b\_lab,F)]@after
+                 This is: u0 @ [(c,T)] @ u2 @ [(c,F)] @ u1 @ u3 with c=a\_lab,
+                 u0=[], u2=[(b\_lab,T)]@mid, u1=between, u3=[(b\_lab,F)]@after.
+                 Reverse cut\_paste\_opp (3 steps): ~ u0 @ u1 @ [(c,T)] @ u2 @ [(c,F)] @ u3
+                 = between @ [(a\_lab,T),(b\_lab,T)] @ mid @ [(a\_lab,F),(b\_lab,F)] @ after.\<close>
+              define u0 :: "(nat \<times> bool) list" where "u0 = []"
+              define u2 where "u2 = [(b_lab,True)] @ mid"
+              define u1 where "u1 = between"
+              define u3 where "u3 = [(b_lab,False)] @ after"
+              have hRab_eq: "R_ab = u0 @ [(a_lab,True)] @ u2 @ [(a_lab,False)] @ u1 @ u3"
+                using hRab_decomp unfolding u0_def u2_def u1_def u3_def by (by100 simp)
+              \<comment> \<open>3 elementary operations: rotate + cut\_paste\_opp + rotate.\<close>
+              have r1: "top1_elementary_scheme_operation
+                  (u0 @ [(a_lab,True)] @ u2 @ [(a_lab,False)] @ u1 @ u3)
+                  (u3 @ u0 @ [(a_lab,True)] @ u2 @ [(a_lab,False)] @ u1)"
+                using top1_elementary_scheme_operation.rotate
+                  [of "u0 @ [(a_lab,True)] @ u2 @ [(a_lab,False)] @ u1" u3] by simp
+              have r2: "top1_elementary_scheme_operation
+                  (u3 @ u0 @ [(a_lab,True)] @ u2 @ [(a_lab,False)] @ u1)
+                  ([(a_lab,True)] @ u2 @ [(a_lab,False)] @ u3 @ u0 @ u1)"
+                using top1_elementary_scheme_operation.cut_paste_opp
+                  [of "[]" "u3 @ u0" a_lab u2 u1] by simp
+              have r3: "top1_elementary_scheme_operation
+                  ([(a_lab,True)] @ u2 @ [(a_lab,False)] @ u3 @ u0 @ u1)
+                  (u0 @ u1 @ [(a_lab,True)] @ u2 @ [(a_lab,False)] @ u3)"
+                using top1_elementary_scheme_operation.rotate
+                  [of "[(a_lab,True)] @ u2 @ [(a_lab,False)] @ u3" "u0 @ u1"] by simp
+              have "top1_scheme_equiv R_ab (u0 @ u1 @ [(a_lab,True)] @ u2 @ [(a_lab,False)] @ u3)"
+                unfolding hRab_eq top1_scheme_equiv_def
+                using r1 r2 r3 by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
+              thus ?thesis unfolding u0_def u1_def u2_def u3_def by (by100 simp)
+            qed
             hence "top1_scheme_equiv scheme
                 (between @ [(a_lab,True),(b_lab,True)] @ mid @ [(a_lab,False),(b_lab,False)] @ after)"
               using hRab_equiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
