@@ -655,9 +655,34 @@ lemma quotient_of_scheme_transfer_bij:
       and "\<And>i. i < length w \<Longrightarrow> snd (w'!i) = snd (w!(\<sigma> i))"
       and "\<And>i. i < length w \<Longrightarrow> Suc (\<sigma> i) mod (length w) = \<sigma> (Suc i mod (length w))"
   shows "top1_quotient_of_scheme_on Y TY w'"
-  sorry \<comment> \<open>Same P, q. Witnesses: vx'(i) = vx(sigma(i)), vy'(i) = vy(sigma(i)).
-     All geometric conditions transfer via the bijection.
-     Conditions 7,9 use the pattern-preservation properties.\<close>
+proof -
+  \<comment> \<open>Key: fst equality pattern is preserved via sigma.\<close>
+  have hfst_eq: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow>
+      (fst (w'!i) = fst (w'!j)) = (fst (w!(\<sigma> i)) = fst (w!(\<sigma> j)))"
+    using assms(4) by (by100 metis)
+  have hsnd_eq: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow>
+      fst (w!(\<sigma> i)) = fst (w!(\<sigma> j)) \<Longrightarrow>
+      (snd (w'!i) = snd (w'!j)) = (snd (w!(\<sigma> i)) = snd (w!(\<sigma> j)))"
+    using assms(5) by (by100 metis)
+  \<comment> \<open>Since sigma is a bijection, (fst(w!(sigma i)) = fst(w!(sigma j))) = (fst(w!i') = fst(w!j'))
+     where i'=sigma(i), j'=sigma(j). So the fst/snd equality pattern over w' at positions i,j
+     equals the pattern over w at positions sigma(i), sigma(j).\<close>
+  from assms(1) show ?thesis
+    unfolding top1_quotient_of_scheme_on_def assms(2)
+    apply (elim conjE exE)
+    apply (intro conjI)
+    apply assumption \<comment> \<open>is\_topology\_on\_strict\<close>
+    \<comment> \<open>Shifted witnesses: vx'(i) = vx(sigma(i)).\<close>
+    apply (rule_tac x=P in exI)
+    apply (rule_tac x=q in exI)
+    apply (rule_tac x="\<lambda>i. vx (\<sigma> i)" in exI)
+    apply (rule_tac x="\<lambda>i. vy (\<sigma> i)" in exI)
+    apply (intro conjI)
+    \<comment> \<open>C1-C2 by assumption.\<close>
+    subgoal by assumption
+    subgoal by assumption
+    sorry \<comment> \<open>C3-C11: need sigma properties. Presburger times out (1s) in AlgTop context.\<close>
+  qed
 
 \<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
    Same polygon P. Shifted vertices: vx'(i) = vx((i+k) mod n).
