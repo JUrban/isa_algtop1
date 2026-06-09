@@ -4512,6 +4512,27 @@ lemma elementary_operation_prepend:
   by (rule elementary_imp_equiv[OF top1_elementary_scheme_operation.context_left[OF hop]])
 
 \<comment> \<open>Main congruence: full chain through prefix.\<close>
+\<comment> \<open>Filter-count preservation: rotation preserves length(filter P ...).\<close>
+lemma filter_count_rotate:
+  "length (filter P (u @ v)) = length (filter P (v @ u))"
+  by (by100 simp)
+
+\<comment> \<open>Filter-count preservation: flip\_label preserves length(filter (\<lambda>e. fst e = l) ...).\<close>
+lemma filter_count_flip_label:
+  "length (filter (\<lambda>e. fst e = l) (map (\<lambda>(la,b). (la, if la = a then \<not>b else b)) w))
+   = length (filter (\<lambda>e. fst e = l) w)"
+proof -
+  have "(\<lambda>e. fst e = l) \<circ> (\<lambda>(la,b). (la, if la = a then \<not>b else b)) = (\<lambda>e. fst e = l)"
+    by (rule ext) (simp split: prod.splits)
+  thus ?thesis by (simp add: filter_map)
+qed
+
+\<comment> \<open>Filter-count preservation: cut\_paste\_opp preserves length(filter P ...).\<close>
+lemma filter_count_cut_paste_opp:
+  "length (filter P (u0 @ u1 @ x @ u2 @ y @ u3))
+   = length (filter P (u0 @ x @ u2 @ y @ u1 @ u3))"
+  by (by100 simp)
+
 lemma scheme_equiv_prepend:
   fixes rest rest' :: "('a \<times> bool) list" and prefix :: "('a \<times> bool) list"
   assumes "top1_scheme_equiv rest rest'"
