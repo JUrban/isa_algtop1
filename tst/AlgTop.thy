@@ -5870,11 +5870,18 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
              (a\_lab,F) and (b\_lab,F) to before (a\_lab,T).
              Result: before\_b\_inv @ [(a\_lab,T),(b\_lab,T)] @ middle @ [(a\_lab,F),(b\_lab,F)] @ after\_b\_inv.\<close>
           \<comment> \<open>The whole chain: scheme \<sim> rotated \<sim> flipped \<sim> pattern.\<close>
-          thus ?thesis sorry \<comment> \<open>Flip + reverse-cut\_paste\_opp arrangement. Uses:
-             (1) flip\_label a\_lab if needed
-             (2) flip\_label b\_lab if needed
-             (3) scheme decomposition at the 4 key positions
-             (4) reverse cut\_paste\_opp = rotate+cut\_paste\_opp+rotate.\<close>
+          \<comment> \<open>Step 4b-i: Flip a\_lab direction to True (if not already).\<close>
+          define R where "R = drop p1 scheme @ take p1 scheme"
+          have hR_equiv: "top1_scheme_equiv scheme R" using \<open>top1_scheme_equiv scheme (drop p1 scheme @ take p1 scheme)\<close>
+            unfolding R_def .
+          define dir_a where "dir_a = snd (scheme!p1)"
+          define dir_b where "dir_b = snd (scheme!(p1+1))"
+          \<comment> \<open>Step 4b-ii: Apply flip\_label a\_lab if dir\_a = False, then flip\_label b\_lab if dir\_b = False.
+             After both flips: front is (a\_lab,T), next is (b\_lab,T), (a\_lab,F) at gap position.
+             Then decompose and apply reverse cut\_paste\_opp.\<close>
+          \<comment> \<open>The full construction is detailed: decompose rotated+flipped scheme at 4 key positions,
+             then apply reverse cut\_paste\_opp chain (3 operations).\<close>
+          thus ?thesis sorry \<comment> \<open>Detailed flip + decomposition + reverse cut\_paste\_opp.\<close>
         qed
         then obtain a_lab b_lab w0' w1' w2' where hab: "a_lab \<noteq> b_lab"
             and hequiv: "top1_scheme_equiv scheme
