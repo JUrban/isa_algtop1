@@ -3120,7 +3120,76 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               \<comment> \<open>Count: positions i, i+1 have different label. e2's position has different label.
                  So at most 1 position (e1's) has label fst(e1).\<close>
               \<comment> \<open>But card = 2 means at least 2 positions. Contradiction if only k1 has it.\<close>
-              show False sorry \<comment> \<open>Card = 2 but only k1 has label fst(e1). Contradiction.\<close>
+              \<comment> \<open>Get k2, show the set \<subseteq> {k1} using label contradictions + presburger, then card \<le> 1.\<close>
+              from he_in have "e2 \<in> set scheme" by (by100 blast)
+              hence "\<exists>k2. k2 < length scheme \<and> scheme ! k2 = e2" by (simp add: in_set_conv_nth)
+              then obtain k2 where hk2: "k2 < length scheme" "scheme ! k2 = e2" by (by100 blast)
+              have hset_sub: "{j. j < 4 \<and> fst (scheme ! j) = fst e1} \<subseteq> {k1}"
+              proof (rule subsetI)
+                fix j assume hj_in: "j \<in> {j. j < 4 \<and> fst (scheme ! j) = fst e1}"
+                hence hj: "j < 4" "fst (scheme ! j) = fst e1" by (by100 simp)+
+                have hjni: "j \<noteq> i"
+                proof assume "j = i"
+                  hence "fst e1 = fst (scheme ! i)" using hj(2) by (by100 simp)
+                  moreover from he_ne_label have "fst e1 \<noteq> fst (scheme ! i)" by (by100 blast)
+                  ultimately show False by (by100 simp)
+                qed
+                have hjni1: "j \<noteq> i + 1"
+                proof assume "j = i + 1"
+                  hence "fst e1 = fst (scheme ! (i+1))" using hj(2) by (by100 simp)
+                  hence "fst e1 = fst (scheme ! i)" using hi(2) by (by100 simp)
+                  moreover from he_ne_label have "fst e1 \<noteq> fst (scheme ! i)" by (by100 blast)
+                  ultimately show False by (by100 simp)
+                qed
+                have hjnk2: "j \<noteq> k2"
+                proof assume "j = k2"
+                  hence "fst e1 = fst e2" using hj(2) hk2(2) by (by100 simp)
+                  thus False using hne by (by100 simp)
+                qed
+                have hk2ni: "k2 \<noteq> i"
+                proof assume "k2 = i"
+                  hence "fst e2 = fst (scheme ! i)" using hk2(2) by (by100 simp)
+                  moreover from he_ne_label have "fst e2 \<noteq> fst (scheme ! i)" by (by100 blast)
+                  ultimately show False by (by100 simp)
+                qed
+                have hk2ni1: "k2 \<noteq> i + 1"
+                proof assume "k2 = i + 1"
+                  hence "fst e2 = fst (scheme ! (i+1))" using hk2(2) by (by100 simp)
+                  hence "fst e2 = fst (scheme ! i)" using hi(2) by (by100 simp)
+                  moreover from he_ne_label have "fst e2 \<noteq> fst (scheme ! i)" by (by100 blast)
+                  ultimately show False by (by100 simp)
+                qed
+                have hk1ni: "k1 \<noteq> i"
+                proof assume "k1 = i"
+                  hence "fst e1 = fst (scheme ! i)" using hk1(2) by (by100 simp)
+                  moreover from he_ne_label have "fst e1 \<noteq> fst (scheme ! i)" by (by100 blast)
+                  ultimately show False by (by100 simp)
+                qed
+                have hk1ni1: "k1 \<noteq> i + 1"
+                proof assume "k1 = i + 1"
+                  hence "fst e1 = fst (scheme ! (i+1))" using hk1(2) by (by100 simp)
+                  hence "fst e1 = fst (scheme ! i)" using hi(2) by (by100 simp)
+                  moreover from he_ne_label have "fst e1 \<noteq> fst (scheme ! i)" by (by100 blast)
+                  ultimately show False by (by100 simp)
+                qed
+                have hk1nk2: "k1 \<noteq> k2"
+                proof assume "k1 = k2"
+                  hence "fst e1 = fst e2" using hk1(2) hk2(2) by (by100 simp)
+                  thus False using hne by (by100 simp)
+                qed
+                have "i < 3" using hi(1) by (by100 simp)
+                have "k2 < 4" using hk2(1) \<open>length scheme = 4\<close> by (by100 simp)
+                have "k1 < 4" using hk1(1) \<open>length scheme = 4\<close> by (by100 simp)
+                from hj(1) \<open>k1 < 4\<close> \<open>k2 < 4\<close> \<open>i < 3\<close>
+                    hjni hjni1 hjnk2 hk1ni hk1ni1 hk1nk2 hk2ni hk2ni1
+                have "j = k1" by (by100 presburger)
+                thus "j \<in> {k1}" by (by100 simp)
+              qed
+              have "card {j. j < 4 \<and> fst (scheme ! j) = fst e1} \<le> card {k1}"
+                by (rule card_mono) (by100 simp, rule hset_sub)
+              hence "card {j. j < 4 \<and> fst (scheme ! j) = fst e1} \<le> 1" by (by100 simp)
+              show False using hcard1 \<open>card {j. j < 4 \<and> fst (scheme ! j) = fst e1} \<le> 1\<close>
+                by (by100 simp)
             qed
           qed
           have "snd e1 \<noteq> snd e2"
