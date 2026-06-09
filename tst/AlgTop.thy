@@ -3621,7 +3621,28 @@ lemma projective_len4_base:
       and hproj: "\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
           \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
   shows "(\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w)"
-  sorry
+proof -
+  \<comment> \<open>Step 1: Get the projective label and standardize its direction to True.\<close>
+  from hproj obtain a p q where hp: "p < length scheme" "q < length scheme" "p \<noteq> q"
+      "fst (scheme!p) = a" "fst (scheme!q) = a" "snd (scheme!p) = snd (scheme!q)"
+    by (by100 blast)
+  have hp4: "p < 4" "q < 4" using hp(1,2) hlen by (by100 simp)+
+  \<comment> \<open>Step 2: Flip direction of a to True if needed.\<close>
+  define scheme1 where "scheme1 = (if snd (scheme!p) then scheme
+      else map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) scheme)"
+  have hequiv1: "top1_scheme_equiv scheme scheme1"
+    unfolding scheme1_def top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.flip_label[of scheme a]
+    by (cases "snd (scheme!p)") (by100 simp)+
+  \<comment> \<open>scheme1 has label a appearing twice with direction True.\<close>
+  \<comment> \<open>Step 3: Decompose scheme1 as y0 @ [(a,T)] @ y1 @ [(a,T)] @ y2.\<close>
+  \<comment> \<open>Step 4: Apply Lemma\\_77\\_1\\_projective\\_collection.\<close>
+  \<comment> \<open>Step 5: Get [(a,T),(a,T)] @ rest. Analyze rest.\<close>
+  \<comment> \<open>Step 6: rest is [(b,d'),(b,d'')] for some b \<noteq> a.
+     If d' = d'': scheme ~ projective m=2 (after relabel).
+     If d' \<noteq> d'': cancel inverse pair \<Rightarrow> scheme ~ projective m=1 (after relabel).\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
