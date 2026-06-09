@@ -6391,7 +6391,16 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           have hlen_shorter: "length shorter = length full - 2"
             unfolding shorter_def using hj(1) by (by100 simp)
           have hlen_full: "length full = length scheme"
-            sorry \<comment> \<open>Lemma 77.3 preserves length; so does rotation, flip.\<close>
+          proof -
+            \<comment> \<open>scheme \<sim> w0'@[(a,T),(b,T)]@w1'@[(a,F),(b,F)]@w2' \<sim> [(a,T),(b,T),(a,F),(b,F)]@w0'@w1'@w2'.
+               Length preserved at each step (rotation, flip, cut\_paste\_opp all preserve length;
+               Lemma 77.3 = rotation + cut\_paste\_opp preserves length).\<close>
+            have "length (w0' @ [(a_lab,True),(b_lab,True)] @ w1' @ [(a_lab,False),(b_lab,False)] @ w2') = length scheme"
+              sorry \<comment> \<open>scheme\_equiv via rotation+flip+cut\_paste\_opp preserves length.\<close>
+            moreover have "length full = length (w0' @ [(a_lab,True),(b_lab,True)] @ w1' @ [(a_lab,False),(b_lab,False)] @ w2')"
+              unfolding full_def by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
           hence hlt: "length shorter < length scheme"
             using hlen_shorter hj(1) by (by100 linarith)
           have hge4: "length shorter \<ge> 4"
