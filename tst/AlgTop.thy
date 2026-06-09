@@ -507,8 +507,45 @@ lemma quotient_of_scheme_transfer:
       and "\<And>i j. \<lbrakk>i < length w; j < length w; fst (w!i) = fst (w!j)\<rbrakk> \<Longrightarrow>
            (snd (w'!i) = snd (w'!j)) = (snd (w!i) = snd (w!j))"
   shows "top1_quotient_of_scheme_on Y TY w'"
-  sorry \<comment> \<open>Same witnesses P, q, vx, vy. Geometric conditions transfer via length.
-     Conditions 7,9 transfer via the fst/snd assumptions.\<close>
+proof -
+  \<comment> \<open>Rewriting rule: (fst(w'!i) = fst(w'!j)) = (fst(w!i) = fst(w!j)).\<close>
+  have hfst_eq: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow>
+      (fst (w'!i) = fst (w'!j)) = (fst (w!i) = fst (w!j))"
+    using assms(3) sorry
+  \<comment> \<open>Strategy: unfold definition for both sides. The formula for w' differs from w only
+     in terms involving fst(scheme!i)/snd(scheme!i). Use hfst\_eq and assms(4) to rewrite.\<close>
+  from assms(1) show ?thesis
+    unfolding top1_quotient_of_scheme_on_def assms(2)
+    apply (elim conjE exE)
+    apply (intro conjI)
+    apply assumption  \<comment> \<open>is\_topology\_on\_strict\<close>
+    apply (rule_tac x=P in exI)
+    apply (rule_tac x=q in exI)
+    apply (rule_tac x=vx in exI)
+    apply (rule_tac x=vy in exI)
+    apply (intro conjI)
+    \<comment> \<open>C1-C6: geometric conditions. Don't reference scheme. Same witnesses + same length.\<close>
+    \<comment> \<open>11 subgoals (one per condition). Close each:\<close>
+    subgoal by assumption \<comment> \<open>C1: polygonal region\<close>
+    subgoal by assumption \<comment> \<open>C2: quotient map\<close>
+    subgoal by assumption \<comment> \<open>C3: vertices distinct\<close>
+    subgoal by assumption \<comment> \<open>C4: vertices in P\<close>
+    subgoal by assumption \<comment> \<open>C5: P = convex hull\<close>
+    subgoal by assumption \<comment> \<open>C6: non-adjacent\<close>
+    \<comment> \<open>C7: identification. Rewrite fst(w'!i) to fst(w!i), snd equality similarly.\<close>
+    subgoal premises prems for P q vx vy
+      using prems assms(3) assms(4) by (by100 presburger)
+    \<comment> \<open>C8: interior injectivity\<close>
+    subgoal by assumption
+    \<comment> \<open>C9: boundary injectivity. Rewrite fst/snd.\<close>
+    subgoal premises prems for P q vx vy
+      using prems assms(3) assms(4) sorry
+    \<comment> \<open>C10: counterclockwise\<close>
+    subgoal by assumption
+    \<comment> \<open>C11: strict edge-side\<close>
+    subgoal by assumption
+    done
+  qed
 
 \<comment> \<open>Flipping the orientation of all edges with a given label preserves quotient\_of\_scheme\_on.
    Same polygon P, same quotient map q, same vertex positions vx/vy.
