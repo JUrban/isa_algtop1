@@ -3301,7 +3301,65 @@ qed
 lemma proper_scheme_even_length:
   assumes "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
   shows "even (length w)"
-  sorry
+proof -
+  \<comment> \<open>Total length = sum over distinct labels of their counts.
+     Each count \<in> {0, 2}. So total = 2 * (number of labels with count 2) = even.\<close>
+  \<comment> \<open>Formalize: the set of labels appearing in w is finite.\<close>
+  let ?labels = "fst ` set w"
+  have hfin_lab: "finite ?labels" by (by100 simp)
+  \<comment> \<open>For labels NOT in ?labels: count = 0.\<close>
+  \<comment> \<open>Total length = sum over ?labels of count.\<close>
+  \<comment> \<open>Each count is 2 (since label \<in> ?labels means it appears, so count \<noteq> 0, hence = 2).\<close>
+  \<comment> \<open>Total = 2 * card(?labels) = even.\<close>
+  have "length w = card {0..<length w}" by (by100 simp)
+  \<comment> \<open>{0..<length w} partitions by label. Sum of partition sizes = total.\<close>
+  \<comment> \<open>This is a partition-of-unity argument on finite sets.\<close>
+  also have "\<dots> = (\<Sum>l \<in> ?labels. card {i. i < length w \<and> fst (w ! i) = l})"
+  proof -
+    \<comment> \<open>{0..<length w} = \<Union>l\<in>?labels. {i. i < length w \<and> fst(w!i) = l}.\<close>
+    have hpart: "{0..<length w} = (\<Union>l \<in> ?labels. {i. i < length w \<and> fst (w ! i) = l})"
+    proof (rule set_eqI, rule iffI)
+      fix i assume "i \<in> {0..<length w}"
+      hence hi: "i < length w" by (by100 simp)
+      have "w ! i \<in> set w" using hi by (by100 simp)
+      hence "fst (w ! i) \<in> ?labels" by (by100 blast)
+      thus "i \<in> (\<Union>l \<in> ?labels. {i. i < length w \<and> fst (w ! i) = l})" using hi by (by100 blast)
+    next
+      fix i assume "i \<in> (\<Union>l \<in> ?labels. {i. i < length w \<and> fst (w ! i) = l})"
+      thus "i \<in> {0..<length w}" by (by100 simp)
+    qed
+    have hdisj: "\<forall>l1 \<in> ?labels. \<forall>l2 \<in> ?labels. l1 \<noteq> l2
+        \<longrightarrow> {i. i < length w \<and> fst (w ! i) = l1} \<inter> {i. i < length w \<and> fst (w ! i) = l2} = {}"
+      by (by100 blast)
+    have hfin_parts: "\<forall>l \<in> ?labels. finite {i. i < length w \<and> fst (w ! i) = l}"
+      by (by100 simp)
+    have "card (\<Union>l \<in> ?labels. {i. i < length w \<and> fst (w ! i) = l})
+        = (\<Sum>l \<in> ?labels. card {i. i < length w \<and> fst (w ! i) = l})"
+    proof (rule card_UN_disjoint)
+      show "finite ?labels" using hfin_lab .
+      show "\<forall>l\<in>?labels. finite {i. i < length w \<and> fst (w ! i) = l}" using hfin_parts .
+      show "\<forall>i\<in>?labels. \<forall>j\<in>?labels. i \<noteq> j
+          \<longrightarrow> {ia. ia < length w \<and> fst (w ! ia) = i} \<inter> {ia. ia < length w \<and> fst (w ! ia) = j} = {}"
+        by (by100 blast)
+    qed
+    thus ?thesis using hpart by (by100 simp)
+  qed
+  also have "\<dots> = (\<Sum>l \<in> ?labels. 2)"
+  proof (rule sum.cong)
+    show "?labels = ?labels" by (by100 simp)
+    fix l assume "l \<in> ?labels"
+    then obtain x where "x \<in> set w" "fst x = l" by (by100 blast)
+    hence "\<exists>j. j < length w \<and> w ! j = x" by (simp add: in_set_conv_nth)
+    then obtain j where "j < length w" "w ! j = x" by (by100 blast)
+    hence "j < length w" "fst (w ! j) = l" using \<open>fst x = l\<close> by (by100 simp)+
+    hence "{i. i < length w \<and> fst (w ! i) = l} \<noteq> {}" by (by100 blast)
+    hence "card {i. i < length w \<and> fst (w ! i) = l} \<noteq> 0" by (by100 simp)
+    moreover from assms have "card {i. i < length w \<and> fst (w ! i) = l} \<in> {0, 2}" by (by100 blast)
+    ultimately show "card {i. i < length w \<and> fst (w ! i) = l} = 2" by (by100 blast)
+  qed
+  also have "\<dots> = 2 * card ?labels" by (by100 simp)
+  finally show "even (length w)" by (by100 presburger)
+qed
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
