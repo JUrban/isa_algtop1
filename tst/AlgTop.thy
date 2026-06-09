@@ -6355,7 +6355,70 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
            If w3 = []: torus n=1. Done.
            If w3 has adjacent cancellable pair: cancel \<Rightarrow> shorter scheme \<Rightarrow> IH.
            Otherwise: extract another commutator from w3, repeat.\<close>
-        show ?thesis sorry
+        \<comment> \<open>Continuation: scheme \<sim> [block] @ w3. Check for adjacent inverse pairs.\<close>
+        define full where "full = [(a_lab, True), (b_lab, True), (a_lab, False), (b_lab, False)] @ w0' @ w1' @ w2'"
+        have hfull_equiv: "top1_scheme_equiv scheme full"
+          using \<open>top1_scheme_equiv scheme
+            ([(a_lab, True), (b_lab, True), (a_lab, False), (b_lab, False)] @ w0' @ w1' @ w2')\<close>
+          unfolding full_def .
+        \<comment> \<open>full has same length as scheme and is proper.\<close>
+        \<comment> \<open>Check if full has an adjacent inverse pair anywhere.\<close>
+        show ?thesis
+        proof (cases "\<exists>j. j + 1 < length full \<and> fst (full!j) = fst (full!(j+1))
+                \<and> snd (full!j) \<noteq> snd (full!(j+1))")
+          case True
+          \<comment> \<open>Adjacent inverse pair found: cancel \<to> shorter \<to> IH.\<close>
+          then obtain j where hj: "j + 1 < length full"
+              "fst (full!j) = fst (full!(j+1))" "snd (full!j) \<noteq> snd (full!(j+1))"
+            by (by100 blast)
+          define shorter where "shorter = take j full @ drop (j+2) full"
+          have hjinv: "full!(j+1) = top1_inverse_edge (full!j)"
+            using hj(2) hj(3) unfolding top1_inverse_edge_def
+            by (cases "full!j", cases "full!(j+1)") (by100 simp)
+          have "top1_scheme_equiv full shorter"
+          proof -
+            have "full = take j full @ [full!j, top1_inverse_edge (full!j)] @ drop (j+2) full"
+              using id_take_nth_drop[of j full] hj(1) hjinv
+              using Cons_nth_drop_Suc[of "Suc j" full] by (by100 simp)
+            hence "top1_elementary_scheme_operation full shorter"
+              unfolding shorter_def
+              using top1_elementary_scheme_operation.cancel[of "take j full" "full!j" "drop (j+2) full"]
+              by (by100 simp)
+            thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+          qed
+          hence "top1_scheme_equiv scheme shorter"
+            using hfull_equiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+          have hlen_shorter: "length shorter = length full - 2"
+            unfolding shorter_def using hj(1) by (by100 simp)
+          have hlen_full: "length full = length scheme"
+            sorry \<comment> \<open>Lemma 77.3 preserves length; so does rotation, flip.\<close>
+          hence hlt: "length shorter < length scheme"
+            using hlen_shorter hj(1) by (by100 linarith)
+          have hge4: "length shorter \<ge> 4"
+          proof -
+            have "even (length scheme)" using proper_scheme_even_length[OF less(3)] .
+            hence "length scheme \<ge> 6" using hlen_gt4 by (by100 presburger)
+            thus ?thesis using hlen_shorter hlen_full by (by100 linarith)
+          qed
+          have hproper_shorter: "\<forall>label. card {i. i < length shorter \<and> fst (shorter!i) = label} \<in> {0, 2}"
+            sorry \<comment> \<open>Cancel preserves properness (cancel\_preserves\_proper on full).\<close>
+          from less(1)[OF hlt hge4 hproper_shorter]
+          have "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv shorter [(a, True), (a, False), (b, True), (b, False)])
+               \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv shorter w)
+               \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv shorter w)" .
+          have "top1_scheme_equiv scheme shorter"
+            using hfull_equiv \<open>top1_scheme_equiv full shorter\<close>
+            unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+          thus ?thesis using \<open>(\<exists>a b. _) \<or> (\<exists>m>0. _) \<or> (\<exists>n>0. _)\<close>
+            unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+        next
+          case False
+          \<comment> \<open>No adjacent inverse pair in full. Then full is torus-type.
+             Since full has the commutator block at front and w3 as remainder,
+             this means w3 has no adjacent inverse pair either.
+             Continue extracting commutators (or show full = torus directly).\<close>
+          show ?thesis sorry \<comment> \<open>Needs accumulator-style induction or secondary measure.\<close>
+        qed
       qed
     qed
   qed
