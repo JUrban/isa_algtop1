@@ -6002,7 +6002,7 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             \<comment> \<open>Step D: Find position of (b\_lab, False) in R\_ab. It is at some position k\_b > gap.\<close>
             have "\<exists>k_b. k_b > gap \<and> k_b < length R_ab \<and> R_ab ! k_b = (b_lab, False)" sorry
             then obtain k_b where hkb: "k_b > gap" "k_b < length R_ab" "R_ab ! k_b = (b_lab, False)"
-              sorry
+              by (by100 blast)
             \<comment> \<open>Step E: Decompose R\_ab at positions 0, 1, gap, k\_b.\<close>
             define mid where "mid = take (gap - 2) (drop 2 R_ab)"
             define between where "between = take (k_b - gap - 1) (drop (gap + 1) R_ab)"
