@@ -6140,7 +6140,28 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                 hence "k_b = q_b + length scheme - p1" unfolding k_b_def using False by (by100 simp)
                 thus ?thesis using \<open>q_b < p1\<close> hp1_lt hRab_len by (by100 linarith)
               qed
-              have "R_ab ! k_b = (b_lab, False)" sorry \<comment> \<open>From rotation+flip preserving fst; torus type gives False.\<close>
+              have hkb_lt_R: "k_b < length R" using \<open>k_b < length R_ab\<close> hRab_len hR_len by (by100 linarith)
+              have "fst (R ! k_b) = b_lab"
+              proof -
+                \<comment> \<open>R!k\_b = scheme!q\_b (rotation maps k\_b to q\_b).\<close>
+                have "R ! k_b = scheme ! q_b"
+                  sorry \<comment> \<open>Rotation indexing: drop/take + nth\_append.\<close>
+                thus ?thesis using hqb_props(2) by (by100 simp)
+              qed
+              hence "fst (R_a ! k_b) = b_lab"
+                using hRa_nth[OF hkb_lt_R] \<open>b_lab \<noteq> a_lab\<close>
+                by (cases dir_a, by100 simp, cases "R ! k_b", by100 simp)
+              hence "fst (R_ab ! k_b) = b_lab"
+                using hRab_nth[OF hkb_lt_R]
+                by (cases dir_b, by100 simp, cases "R_a ! k_b", by100 simp)
+              \<comment> \<open>Direction: torus type means b\_lab has opposite dirs at its two positions.
+                 Position 1 has True (after flip). So k\_b has False.\<close>
+              have "snd (R_ab ! k_b) \<noteq> snd (R_ab ! 1)"
+                sorry \<comment> \<open>Torus type: b\_lab at positions 1 and k\_b have opposite directions.\<close>
+              hence "snd (R_ab ! k_b) = False" using hRab_1 by (by100 simp)
+              have "R_ab ! k_b = (b_lab, False)"
+                using \<open>fst (R_ab ! k_b) = b_lab\<close> \<open>snd (R_ab ! k_b) = False\<close>
+                by (cases "R_ab ! k_b") (by100 simp)
               thus ?thesis using \<open>k_b > gap\<close> \<open>k_b < length R_ab\<close> by (by100 blast)
             qed
             then obtain k_b where hkb: "k_b > gap" "k_b < length R_ab" "R_ab ! k_b = (b_lab, False)"
