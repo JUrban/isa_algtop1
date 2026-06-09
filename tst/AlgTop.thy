@@ -7829,7 +7829,15 @@ proof -
      top1\\_scheme\\_equiv = rtranclp of elementary operations (defined before \\<S>76).\<close>
   \<comment> \<open>Derive properness and length \\<ge> 4 from the quotient structure.\<close>
   have hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme!i) = label} \<in> {0, 2}"
-    sorry \<comment> \<open>From boundary injectivity of quotient\_of\_scheme\_on.\<close>
+  proof -
+    \<comment> \<open>From the definition: condition 9 (boundary injectivity) constrains edge identifications
+       to same-label edges. This forces each label to appear 0 or 2 times.
+       Specifically: if label L appears at positions i1, i2, ..., then for each pair (ik, il),
+       q identifies edges ik and il. By injectivity, each edge is identified with at most one other.
+       So each label appears at most 2 times. And condition 7 requires identification for all
+       same-label pairs, so if a label appears, it must appear exactly twice.\<close>
+    from hsch show ?thesis sorry
+  qed
   have hlen_ge4: "length scheme \<ge> 4"
   proof -
     from hsch obtain P0 q0 where "top1_is_polygonal_region_on P0 (length scheme)"
