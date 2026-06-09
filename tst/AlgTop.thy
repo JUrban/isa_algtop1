@@ -3631,13 +3631,35 @@ qed
    and a does not appear elsewhere: Lemma 77.1 brings the pair to front.\<close>
 lemma bring_projective_pair_to_front:
   fixes w :: "(nat \<times> bool) list" and a :: nat
-  assumes "(a, True) \<in> set w"
-      and "card {i. i < length w \<and> fst (w ! i) = a} = 2"
-      and "\<forall>i < length w. fst (w ! i) = a \<longrightarrow> snd (w ! i) = True"
+  assumes hain: "(a, True) \<in> set w"
+      and hcard: "card {i. i < length w \<and> fst (w ! i) = a} = 2"
+      and hdir: "\<forall>i < length w. fst (w ! i) = a \<longrightarrow> snd (w ! i) = True"
+      and hne: "w \<noteq> []"
   shows "\<exists>rest. top1_scheme_equiv w ([(a, True), (a, True)] @ rest)
       \<and> length rest = length w - 2
       \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)"
-  sorry
+proof -
+  \<comment> \<open>Find first position of (a,True).\<close>
+  from hain obtain p' where hp': "p' < length w" "w ! p' = (a, True)"
+    by (simp add: in_set_conv_nth) (by100 blast)
+  \<comment> \<open>Rotate to position 0.\<close>
+  let ?w' = "drop p' w @ take p' w"
+  have hrot: "top1_scheme_equiv w ?w'"
+    using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate[of "take p' w" "drop p' w"]]
+    by (by100 simp)
+  have hlen': "length ?w' = length w" by (by100 simp)
+  have hw'_0: "?w' ! 0 = (a, True)"
+  proof -
+    have "drop p' w \<noteq> []" using hp'(1) by (by100 simp)
+    hence "?w' ! 0 = (drop p' w) ! 0"
+      using nth_append[of "drop p' w" "take p' w" 0] by (by100 simp)
+    also have "\<dots> = w ! p'" using hp' by (by100 simp)
+    finally show ?thesis using hp'(2) by (by100 simp)
+  qed
+  \<comment> \<open>w' starts with (a,True). Decompose as [(a,True)] @ y1 @ [(a,True)] @ y2
+     using the second a-position. Then apply Lemma 77.1.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Length-4 projective base case: scheme ~ projective m=1 or m=2.\<close>
 lemma projective_len4_base:
@@ -3802,7 +3824,12 @@ proof -
       hence "scheme1 ! p = (a, True)" using hfs \<open>f = a\<close> by (by100 simp)
       thus ?thesis using \<open>scheme1 ! p \<in> set scheme1\<close> by (by100 simp)
     qed
-    from bring_projective_pair_to_front[OF h1 h2 h3]
+    have "scheme1 \<noteq> []"
+    proof
+      assume "scheme1 = []" hence "length scheme1 = 0" by (by100 simp)
+      thus False using hlen1 by (by100 simp)
+    qed
+    from bring_projective_pair_to_front[OF h1 h2 h3 this]
     obtain rest where "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)"
         "length rest = length scheme1 - 2" "\<forall>e \<in> set rest. fst e \<noteq> a" by (by100 blast)
     moreover have "length scheme1 = 4" unfolding scheme1_def using hlen by (by100 simp)
