@@ -7703,12 +7703,7 @@ proof -
   have hNF: "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
        \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w)
        \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w)" .
-  have hreduced: "(\<exists>n>0. \<exists>w. top1_is_torus_scheme w n
-            \<and> top1_scheme_equiv scheme w)
-      \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m
-            \<and> top1_scheme_equiv scheme w)"
-    sorry \<comment> \<open>From hNF: the sphere case gives S2, handled as first disjunct in outer theorem.
-       For now: eliminate or handle sphere separately.\<close>
+  \<comment> \<open>We use hNF directly in the proof below, handling all 3 cases (sphere, projective, torus).\<close>
   \<comment> \<open>Step 3: Each normal form corresponds to the standard surface.
      - Empty/sphere: cancellation gives S² (a@a⁻¹@b@b⁻¹ with cancellation).
      - Torus scheme: the standard n-torus IS the quotient of this scheme
@@ -7749,8 +7744,15 @@ proof -
   proof -
     \<comment> \<open>If scheme\\_equiv to a normal form: Theorem 76 gives homeomorphism preservation.
        The normal form's quotient = the standard surface. So X \\<cong> standard surface.\<close>
-    from hreduced show ?thesis
+    from hNF show ?thesis
     proof (elim disjE exE conjE)
+      \<comment> \<open>Case 0: sphere case. scheme ~ [(a,T),(a,F),(b,T),(b,F)].\<close>
+      fix a_s b_s assume hab_s: "a_s \<noteq> b_s"
+          and hequiv_s: "top1_scheme_equiv scheme [(a_s, True), (a_s, False), (b_s, True), (b_s, False)]"
+      \<comment> \<open>X is quotient of the sphere scheme. The sphere scheme's quotient is S2.
+         So X \\<cong> S2 (the first disjunct of the theorem).\<close>
+      show ?thesis sorry \<comment> \<open>Sphere case: X \\<cong> S2.\<close>
+    next
       \<comment> \<open>Case 1: scheme \\<sim> torus normal form.\<close>
       fix n w assume hn: "n > 0" and htor: "top1_is_torus_scheme w n"
           and hequiv: "top1_scheme_equiv scheme w"
