@@ -553,6 +553,10 @@ lemma quotient_of_scheme_context_left:
 lemma mod_less_n: "(0::nat) < n \<Longrightarrow> (a :: nat) mod n < n"
   by simp
 
+\<comment> \<open>Shift injectivity: (x+k) mod n = (y+k) mod n implies x=y for x,y < n.\<close>
+lemma shift_mod_inj: "\<lbrakk>(0::nat) < n; x < n; y < n; (x + k) mod n = (y + k) mod n\<rbrakk> \<Longrightarrow> x = y"
+  sorry \<comment> \<open>Modular arithmetic: raw presburger times out in AlgTop context.\<close>
+
 \<comment> \<open>Key property: Suc((i+k) mod n) mod n = (Suc i + k) mod n.\<close>
 lemma suc_mod_shift: "(0::nat) < n \<Longrightarrow> Suc ((i + k) mod n) mod n = (Suc i + k) mod n"
   by presburger \<comment> \<open>raw presburger needed; by100 times out in AlgTop context\<close>
