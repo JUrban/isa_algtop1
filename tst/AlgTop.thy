@@ -497,6 +497,68 @@ proof -
   show ?thesis .
 qed
 
+\<comment> \<open>Cancel transfer: quotient\_of\_scheme\_on is preserved by cancellation.
+   If Y is quotient of u@[a,inv(a)]@v, then Y is also quotient of u@v.
+   The polygon folds: the two cancelled edges merge.\<close>
+lemma quotient_of_scheme_cancel:
+  assumes "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
+  shows "top1_quotient_of_scheme_on Y TY (u @ v)"
+  sorry
+
+\<comment> \<open>Uncancel: reverse of cancel. Same polygon, unfold.\<close>
+lemma quotient_of_scheme_uncancel:
+  assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
+  shows "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
+  sorry
+
+\<comment> \<open>Invert: quotient preserved by reversal+inversion. Reflected polygon.\<close>
+lemma quotient_of_scheme_invert:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+  shows "top1_quotient_of_scheme_on Y TY (rev (map top1_inverse_edge w))"
+  sorry
+
+\<comment> \<open>Relabel: quotient preserved by label renaming. Same polygon, renamed edges.\<close>
+lemma quotient_of_scheme_relabel:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+  shows "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (if l = old then new else l, b)) w)"
+  sorry
+
+\<comment> \<open>Cut-paste: quotient preserved by cut-and-repaste operation.\<close>
+lemma quotient_of_scheme_cut_paste:
+  assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
+  shows "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+  sorry
+
+\<comment> \<open>Cut-paste2: quotient preserved by second cut-paste variant.\<close>
+lemma quotient_of_scheme_cut_paste2:
+  assumes "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)"
+  shows "top1_quotient_of_scheme_on Y TY ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+  sorry
+
+\<comment> \<open>Cut-paste opposite: quotient preserved by opposite-direction cut-paste.\<close>
+lemma quotient_of_scheme_cut_paste_opp:
+  assumes "top1_quotient_of_scheme_on Y TY (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
+  shows "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+  sorry
+
+\<comment> \<open>Context-left: quotient preserved when applying an operation to a suffix.\<close>
+lemma quotient_of_scheme_context_left:
+  assumes "top1_quotient_of_scheme_on Y TY (prefix @ y)"
+      and "top1_elementary_scheme_operation y z"
+      and "\<And>Y TY. top1_quotient_of_scheme_on Y TY y \<Longrightarrow> top1_quotient_of_scheme_on Y TY z"
+  shows "top1_quotient_of_scheme_on Y TY (prefix @ z)"
+  sorry
+
+\<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
+   Same polygon P. Shifted vertices: vx'(i) = vx((i+k) mod n).
+   The convex hull is invariant. Edge identification shifts consistently.\<close>
+lemma quotient_of_scheme_rotate:
+  assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
+  shows "top1_quotient_of_scheme_on Y TY (v @ u)"
+  sorry \<comment> \<open>Same P. Define vx'(i) = vx((i + length u) mod n), vy' similarly.
+     All 11 conditions: C1-C6 geometric (same P), C7-C9 shift indices consistently,
+     C10-C11 cyclic permutation preserves cross-product signs.\<close>
+
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
    and the same snd-equality pattern for same-label pairs, then quotient\_of\_scheme\_on
    is equivalent for both. This factors out the geometric conditions from the scheme-specific ones.\<close>
@@ -656,23 +718,19 @@ proof (induction rule: top1_elementary_scheme_operation.induct)
   let ?n = "length u + length v"
   \<comment> \<open>The scheme\_rotate\_homeomorphic already has the proof that Y1 quotient of u@v
      implies Y1 is also a quotient of v@u. We use the same argument here.\<close>
-  from rotate.prems show ?case sorry \<comment> \<open>Needs: define shifted vx'/vy', verify all 11 conditions mod shift.\<close>
+  from quotient_of_scheme_rotate[OF rotate.prems] show ?case .
 next
   case (cancel u a v)
-  \<comment> \<open>s = u@[a,a\\<inverse>]@v, t = u@v. Cancel adjacent inverse pair. Fold polygon.\<close>
-  thus ?case sorry
+  from quotient_of_scheme_cancel[OF cancel.prems] show ?case .
 next
   case (uncancel u v a)
-  \<comment> \<open>s = u@v, t = u@[a,a\\<inverse>]@v. Insert cancellable pair. Unfold polygon.\<close>
-  thus ?case sorry
+  from quotient_of_scheme_uncancel[OF uncancel.prems] show ?case .
 next
   case (invert w)
-  \<comment> \<open>s = w, t = rev(map inverse w). Reverse and invert all edges.\<close>
-  thus ?case sorry
+  from quotient_of_scheme_invert[OF invert.prems] show ?case .
 next
   case (relabel w old new)
-  \<comment> \<open>s = w, t = map (rename old\\<to>new) w. Rename label. Same polygon and quotient map.\<close>
-  thus ?case sorry
+  from quotient_of_scheme_relabel[OF relabel.prems] show ?case .
 next
   case (flip_label w a)
   \<comment> \<open>s = w, t = map (flip a) w. Same polygon P, quotient map q, vertices.
@@ -681,20 +739,19 @@ next
   from quotient_scheme_flip_label[OF flip_label.prems] show ?case .
 next
   case (cut_paste u1 a u2 u3)
-  \<comment> \<open>s = u1@[a]@u2@[a]@u3, t = u1@[a,a]@rev(inv(u2))@u3. Cut and paste.\<close>
-  thus ?case sorry
+  from quotient_of_scheme_cut_paste[OF cut_paste.prems] show ?case .
 next
   case (cut_paste2 u0 a u1 u2 b)
-  \<comment> \<open>s = u0@[a]@u1@[a]@u2, t = [b]@u2@[b]@u1@rev(inv(u0)). Cut-paste variant.\<close>
-  thus ?case sorry
+  from quotient_of_scheme_cut_paste2[OF cut_paste2.prems] show ?case .
 next
   case (cut_paste_opp u0 u1 a u2 u3)
-  \<comment> \<open>s = u0@u1@[a]@u2@[a\\<inverse>]@u3, t = u0@[a]@u2@[a\\<inverse>]@u1@u3. Move u1 past a.\<close>
-  thus ?case sorry
+  from quotient_of_scheme_cut_paste_opp[OF cut_paste_opp.prems] show ?case .
 next
   case (context_left y z prefix)
-  \<comment> \<open>s = prefix@y, t = prefix@z, y \<to> z. Quotient preservation lifts through prefix.\<close>
-  thus ?case sorry
+  \<comment> \<open>IH: quotient\_of\_scheme y \\<Longrightarrow> quotient\_of\_scheme z.
+     Need: quotient of prefix@y \\<Longrightarrow> quotient of prefix@z.\<close>
+  from quotient_of_scheme_context_left[OF context_left.prems context_left.hyps]
+  show ?case sorry \<comment> \<open>Need to thread IH through context\_left helper.\<close>
 qed
 
 \<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
