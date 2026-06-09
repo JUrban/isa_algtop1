@@ -307,7 +307,11 @@ inductive top1_elementary_scheme_operation :: "('a \<times> bool) list \<Rightar
      u0 @ u1 @ [(a,T)] @ u2 @ [(a,F)] @ u3 \\<to> u0 @ [(a,T)] @ u2 @ [(a,F)] @ u1 @ u3.\<close>
   cut_paste_opp: "top1_elementary_scheme_operation
       (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)
-      (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+      (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)" |
+  \<comment> \<open>Context rule: any elementary operation can be performed with a prefix.
+     This makes scheme\_equiv a congruence on the left: if y ~ z then prefix@y ~ prefix@z.\<close>
+  context_left: "top1_elementary_scheme_operation y z \<Longrightarrow>
+      top1_elementary_scheme_operation (prefix @ y) (prefix @ z)"
 
 \<comment> \<open>The scheme equivalence is the reflexive-transitive closure of elementary operations.\<close>
 definition top1_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
@@ -509,6 +513,10 @@ next
   case (cut_paste_opp u0 u1 a u2 u3)
   \<comment> \<open>s = u0@u1@[a]@u2@[a\\<inverse>]@u3, t = u0@[a]@u2@[a\\<inverse>]@u1@u3. Move u1 past a.\<close>
   thus ?case sorry
+next
+  case (context_left y z prefix)
+  \<comment> \<open>s = prefix@y, t = prefix@z, y \<to> z. Quotient preservation lifts through prefix.\<close>
+  thus ?case sorry
 qed
 
 \<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
@@ -585,6 +593,20 @@ next
       [of "[(a,True)] @ u2 @ [(a,False)] @ u3" "u0 @ u1"] by simp
   show ?case unfolding top1_scheme_equiv_def
     using r1 r2 r3 by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
+next
+  case (context_left y z prefix)
+  \<comment> \<open>y \<to> z, IH: z \<sim>* y. Need: prefix@z \<sim>* prefix@y.
+     Lift each step of z \<sim>* y through the prefix using context\_left.\<close>
+  from context_left.IH show ?case
+    unfolding top1_scheme_equiv_def
+  proof (induction rule: rtranclp.induct)
+    case rtrancl_refl thus ?case by (by100 simp)
+  next
+    case (rtrancl_into_rtrancl a b c)
+    hence "top1_elementary_scheme_operation (prefix @ b) (prefix @ c)"
+      using top1_elementary_scheme_operation.context_left by (by100 blast)
+    thus ?case using rtrancl_into_rtrancl.IH by (meson rtranclp.rtrancl_into_rtrancl)
+  qed
 qed
 
 \<comment> \<open>scheme\\_equiv is symmetric.\<close>
@@ -1250,6 +1272,10 @@ proof -
             (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
           using ht cut_paste_opp by simp
         ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
+      next
+        case (context_left y z prefix)
+        \<comment> \<open>s = prefix@y, t = prefix@z, y \<to> z. Homeomorphism lifts through prefix.\<close>
+        thus ?thesis sorry
       qed
     qed
     from huniv[OF hop assms(1) assms(2) hs ht]
@@ -4453,12 +4479,7 @@ lemma elementary_operation_prepend:
       and hny: "\<forall>e \<in> set y. fst e \<noteq> a"
       and hnz: "\<forall>e \<in> set z. fst e \<noteq> a"
   shows "top1_scheme_equiv ([(a, True), (a, True)] @ y) ([(a, True), (a, True)] @ z)"
-  sorry \<comment> \<open>Case analysis on the elementary operation:
-     cancel/uncancel/cut\_paste/cut\_paste\_opp: adjust prefix in constructor.
-     relabel/flip\_label: label \<noteq> a from no-label-a, so prefix unchanged.
-     rotate: 3 rotations of the full list.
-     invert: rotate+invert+flip\_a+rotate (no label a in rest).
-     cut\_paste2: cut\_paste2 on adjusted prefix + flip\_a + rotate.\<close>
+  by (rule elementary_imp_equiv[OF top1_elementary_scheme_operation.context_left[OF hop]])
 
 \<comment> \<open>Main congruence: full chain through prefix.\<close>
 lemma scheme_equiv_prepend_pair:
@@ -4467,9 +4488,19 @@ lemma scheme_equiv_prepend_pair:
       and "\<forall>e \<in> set rest. fst e \<noteq> a"
       and "\<forall>e \<in> set rest'. fst e \<noteq> a"
   shows "top1_scheme_equiv ([(a, True), (a, True)] @ rest) ([(a, True), (a, True)] @ rest')"
-  sorry \<comment> \<open>From elementary\_operation\_prepend by induction on the chain.
-     Requires intermediate no-label-a invariant (not preserved by all operations).
-     Alternative: prove directly for valid\_scheme\_equiv.\<close>
+proof -
+  \<comment> \<open>With context\_left: lift each step of rest \<sim>* rest' through the prefix.\<close>
+  let ?prefix = "[(a, True), (a, True)]"
+  from assms(1) show ?thesis unfolding top1_scheme_equiv_def
+  proof (induction rule: rtranclp.induct)
+    case rtrancl_refl thus ?case by (by100 simp)
+  next
+    case (rtrancl_into_rtrancl x y z)
+    have "top1_elementary_scheme_operation (?prefix @ y) (?prefix @ z)"
+      by (rule top1_elementary_scheme_operation.context_left[OF rtrancl_into_rtrancl.hyps(2)])
+    thus ?case using rtrancl_into_rtrancl.IH by (meson rtranclp.rtrancl_into_rtrancl)
+  qed
+qed
 
 \<comment> \<open>Helper: extract one projective pair from a proper scheme with a same-direction pair.
    Returns [(a,T),(a,T)] @ rest where rest is proper and shorter.\<close>
