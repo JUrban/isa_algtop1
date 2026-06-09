@@ -481,9 +481,21 @@ lemma quotient_transport_by_homeomorphism:
       and hh: "top1_homeomorphism_on P TP P' TP' h"
       and hfibres: "\<forall>x\<in>P. \<forall>y\<in>P. (q x = q y) \<longleftrightarrow> (q' (h x) = q' (h y))"
   shows "\<exists>H. top1_homeomorphism_on Y TY Y' TY' H"
-  sorry \<comment> \<open>Define p2 = q' \<circ> h : P \<to> Y'. Then p2 is a quotient map (composition of
-     homeomorphism + quotient map). Fibre agreement gives q and p2 same fibres.
-     Apply quotient\_same\_fibres\_homeomorphic.\<close>
+proof -
+  \<comment> \<open>h is a quotient map P \<to> P'.\<close>
+  have hh_quot: "top1_quotient_map_on P TP P' TP' h"
+    using top1_homeomorphism_on_imp_quotient_map_on[OF hh] .
+  \<comment> \<open>Define p2 = q' \<circ> h : P \<to> Y'. Composition of quotient maps = quotient map.\<close>
+  define p2 where "p2 = q' \<circ> h"
+  have hp2: "top1_quotient_map_on P TP Y' TY' p2"
+    unfolding p2_def using top1_quotient_map_on_comp[OF hh_quot hq'] .
+  \<comment> \<open>Fibre agreement: q and p2 have the same fibres on P.\<close>
+  have "\<forall>x\<in>P. \<forall>y\<in>P. (q x = q y) \<longleftrightarrow> (p2 x = p2 y)"
+    unfolding p2_def comp_def using hfibres by (by100 blast)
+  \<comment> \<open>Apply quotient\_same\_fibres\_homeomorphic.\<close>
+  from quotient_same_fibres_homeomorphic[OF hq hp2 this]
+  show ?thesis .
+qed
 
 \<comment> \<open>Elementary operations preserve quotient\\_of\\_scheme\\_on for the SAME space.
    If Y is a quotient of scheme s, and s → t via an elementary operation,
