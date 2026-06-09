@@ -554,9 +554,25 @@ lemma quotient_of_scheme_context_left:
 lemma quotient_of_scheme_rotate:
   assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
   shows "top1_quotient_of_scheme_on Y TY (v @ u)"
-  sorry \<comment> \<open>Same P. Define vx'(i) = vx((i + length u) mod n), vy' similarly.
-     All 11 conditions: C1-C6 geometric (same P), C7-C9 shift indices consistently,
-     C10-C11 cyclic permutation preserves cross-product signs.\<close>
+proof -
+  let ?n = "length u + length v"
+  let ?k = "length u"
+  have hlen: "length (v @ u) = length (u @ v)" by (by100 simp)
+  \<comment> \<open>Key shift property.\<close>
+  have hshift: "\<And>i. i < ?n \<Longrightarrow> (v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)" sorry
+  from assms show ?thesis
+    unfolding top1_quotient_of_scheme_on_def hlen
+    apply (elim conjE exE)
+    apply (intro conjI)
+    apply assumption
+    \<comment> \<open>Provide SHIFTED witnesses.\<close>
+    apply (rule_tac x=P in exI)
+    apply (rule_tac x=q in exI)
+    apply (rule_tac x="\<lambda>i. vx ((i + length u) mod ?n)" in exI)
+    apply (rule_tac x="\<lambda>i. vy ((i + length u) mod ?n)" in exI)
+    apply (intro conjI)
+    sorry
+qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
    and the same snd-equality pattern for same-label pairs, then quotient\_of\_scheme\_on
