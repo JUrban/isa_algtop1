@@ -5809,26 +5809,85 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             \<comment> \<open>Pick a triple with minimum first component (gap).\<close>
             obtain g p1 p2 where hmin: "(g, p1, p2) \<in> ?pairs"
                 "\<forall>(g',p1',p2') \<in> ?pairs. g \<le> g'"
-              sorry \<comment> \<open>Minimum of finite non-empty set of naturals.\<close>
+            proof -
+              \<comment> \<open>The set of first components (gaps) is finite non-empty nat, so has a minimum.\<close>
+              let ?gaps = "fst ` ?pairs"
+              have "finite ?gaps" using hpairs_fin by (by100 simp)
+              have "?gaps \<noteq> {}" using hpairs_ne by (by100 force)
+              define gmin where "gmin = Min ?gaps"
+              have "gmin \<in> ?gaps" unfolding gmin_def using Min_in[OF \<open>finite ?gaps\<close> \<open>?gaps \<noteq> {}\<close>] .
+              hence "\<exists>p1 p2. (gmin, p1, p2) \<in> ?pairs" by (by100 force)
+              then obtain p1 p2 where "(gmin, p1, p2) \<in> ?pairs" by (by100 blast)
+              moreover have "\<forall>(g',p1',p2') \<in> ?pairs. gmin \<le> g'"
+              proof (intro ballI)
+                fix x assume "x \<in> ?pairs"
+                obtain g' p1' p2' where "x = (g', p1', p2')" by (cases x) (by100 force)
+                hence "g' \<in> ?gaps" using \<open>x \<in> ?pairs\<close> by (by100 force)
+                hence "gmin \<le> g'" unfolding gmin_def using Min_le[OF \<open>finite ?gaps\<close>] by (by100 blast)
+                thus "case x of (g', p1', p2') \<Rightarrow> gmin \<le> g'"
+                  using \<open>x = (g', p1', p2')\<close> by (by100 simp)
+              qed
+              ultimately show ?thesis using that[of gmin p1 p2] by (by100 blast)
+            qed
             define a_lab where "a_lab = fst (scheme!p1)"
             \<comment> \<open>From hmin: p1 < p2, p2 < length scheme, same label, g = p2 - p1.\<close>
-            have "p1 < p2" "p2 < length scheme" "fst (scheme!p2) = a_lab" "g = p2 - p1"
-              using hmin(1) unfolding a_lab_def sorry
+            have hmin_props: "p1 < p2" "p2 < length scheme" "fst (scheme!p1) = fst (scheme!p2)" "g = p2 - p1"
+              using hmin(1) by (by100 force)+
+            have "fst (scheme!p2) = a_lab" using hmin_props(3) unfolding a_lab_def by (by100 simp)
+            have hp1_lt: "p1 < length scheme" using hmin_props(1,2) by (by100 linarith)
             \<comment> \<open>Opposite directions from torus type.\<close>
-            have "snd (scheme!p1) \<noteq> snd (scheme!p2)" sorry
+            have "snd (scheme!p1) \<noteq> snd (scheme!p2)"
+            proof
+              assume "snd (scheme!p1) = snd (scheme!p2)"
+              hence "\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+                  \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
+                apply (rule_tac x="fst (scheme!p1)" in exI)
+                apply (rule_tac x=p1 in exI)
+                using hmin_props(1,2) hp1_lt \<open>fst (scheme!p2) = a_lab\<close>
+                unfolding a_lab_def by (by100 force)
+              thus False using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. _)\<close> by (by100 blast)
+            qed
             \<comment> \<open>No same-label between: from properness (only 2 occurrences).\<close>
-            have "\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab" sorry
+            have "\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab"
+            proof (intro allI impI)
+              fix k assume hk: "p1 < k \<and> k < p2"
+              have hfin_a: "finite {i. i < length scheme \<and> fst (scheme!i) = a_lab}" by (by100 simp)
+              have hcard_a: "card {i. i < length scheme \<and> fst (scheme!i) = a_lab} = 2"
+              proof -
+                from less(3) have "card {i. i < length scheme \<and> fst (scheme!i) = a_lab} \<in> {0, 2}"
+                  by (by100 blast)
+                moreover have "p1 \<in> {i. i < length scheme \<and> fst (scheme!i) = a_lab}"
+                  using hp1_lt unfolding a_lab_def by (by100 blast)
+                hence "{i. i < length scheme \<and> fst (scheme!i) = a_lab} \<noteq> {}" by (by100 blast)
+                hence "card {i. i < length scheme \<and> fst (scheme!i) = a_lab} \<noteq> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 blast)
+              qed
+              have "{p1, p2} \<subseteq> {i. i < length scheme \<and> fst (scheme!i) = a_lab}"
+                using hmin_props(1,2) \<open>fst (scheme!p2) = a_lab\<close> unfolding a_lab_def by (by100 force)
+              have "card {p1, p2} = 2" using hmin_props(1) by (by100 simp)
+              from card_seteq[OF hfin_a \<open>{p1,p2} \<subseteq> _\<close>] hcard_a this
+              have "{i. i < length scheme \<and> fst (scheme!i) = a_lab} = {p1, p2}" by (by100 simp)
+              moreover have "k \<noteq> p1" "k \<noteq> p2" using hk by (by100 linarith)+
+              ultimately have "k \<notin> {i. i < length scheme \<and> fst (scheme!i) = a_lab}" by (by100 blast)
+              moreover have "k < length scheme" using hk hmin_props(2) by (by100 linarith)
+              ultimately show "fst (scheme!k) \<noteq> a_lab" by (by100 blast)
+            qed
             \<comment> \<open>Minimality: for any other same-label pair, gap \<ge> g = p2-p1.\<close>
             have "\<forall>l q1 q2. q1 < q2 \<and> q2 < length scheme \<and> fst (scheme!q1) = l
                 \<and> fst (scheme!q2) = l \<longrightarrow> p2 - p1 \<le> q2 - q1"
-              sorry
+            proof (intro allI impI)
+              fix l q1 q2 assume hq: "q1 < q2 \<and> q2 < length scheme \<and> fst (scheme!q1) = l \<and> fst (scheme!q2) = l"
+              hence "(q2 - q1, q1, q2) \<in> ?pairs" by (by100 force)
+              from hmin(2) this have "g \<le> q2 - q1" by (by100 force)
+              thus "p2 - p1 \<le> q2 - q1" using hmin_props(4) by (by100 simp)
+            qed
             show ?thesis
               using \<open>p1 < p2\<close> \<open>p2 < length scheme\<close> \<open>fst (scheme!p2) = a_lab\<close>
                   \<open>snd (scheme!p1) \<noteq> snd (scheme!p2)\<close>
                   \<open>\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab\<close>
                   \<open>\<forall>l q1 q2. q1 < q2 \<and> q2 < length scheme \<and> fst (scheme!q1) = l
                       \<and> fst (scheme!q2) = l \<longrightarrow> p2 - p1 \<le> q2 - q1\<close>
-              unfolding a_lab_def sorry
+              unfolding a_lab_def by blast
           qed
           then obtain a_lab p1 p2 where hclose:
               "p1 < p2" "p2 < length scheme"
