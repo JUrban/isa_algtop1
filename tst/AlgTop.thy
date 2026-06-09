@@ -5946,8 +5946,37 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               finally show ?thesis unfolding R_def .
             qed
             \<comment> \<open>After flips: R\_ab!0 = (a\_lab, True), R\_ab!1 = (b\_lab, True), R\_ab!gap = (a\_lab, False).\<close>
-            have hRab_0: "R_ab ! 0 = (a_lab, True)" sorry
-            have hRab_1: "R_ab ! 1 = (b_lab, True)" sorry
+            have hR_len: "length R = length scheme" unfolding R_def by (by100 simp)
+            have hRa_len: "length R_a = length R" unfolding R_a_def by (by100 simp)
+            have h0_lt: "0 < length R" using hp1_lt hR_len by (by100 linarith)
+            have h1_lt: "1 < length R" using hp1_1_lt hR_len by (by100 linarith)
+            have hgap_lt: "gap < length R" unfolding gap_def using hclose(2) hR_len by (by100 linarith)
+            \<comment> \<open>R\_a!i = flip-a applied to R!i.\<close>
+            have hRa_nth: "\<And>i. i < length R \<Longrightarrow>
+                R_a ! i = (if dir_a then R ! i else (\<lambda>(l,bo). (l, if l = a_lab then \<not>bo else bo)) (R ! i))"
+              unfolding R_a_def by (by100 simp)
+            \<comment> \<open>R\_ab!i = flip-b applied to R\_a!i.\<close>
+            have hRab_nth: "\<And>i. i < length R \<Longrightarrow>
+                R_ab ! i = (if dir_b then R_a ! i else (\<lambda>(l,bo). (l, if l = b_lab then \<not>bo else bo)) (R_a ! i))"
+              unfolding R_ab_def using hRa_len by (by100 simp)
+            have hRab_0: "R_ab ! 0 = (a_lab, True)"
+            proof -
+              have "R ! 0 = (a_lab, dir_a)"
+                using hR_0 hclose(3) unfolding dir_a_def
+                by (cases "scheme ! p1") (by100 simp)
+              hence "R_a ! 0 = (a_lab, True)" using hRa_nth[OF h0_lt] by (cases dir_a) (by100 simp)+
+              moreover have "a_lab \<noteq> b_lab" using \<open>b_lab \<noteq> a_lab\<close> by (by100 simp)
+              ultimately show ?thesis using hRab_nth[OF h0_lt] by (cases dir_b) (by100 simp)+
+            qed
+            have hRab_1: "R_ab ! 1 = (b_lab, True)"
+            proof -
+              have "R ! 1 = (b_lab, dir_b)"
+                using hR_1 unfolding b_lab_def dir_b_def
+                by (cases "scheme ! (p1+1)") (by100 simp)
+              hence "R_a ! 1 = (b_lab, dir_b)"
+                using hRa_nth[OF h1_lt] \<open>b_lab \<noteq> a_lab\<close> by (cases dir_a) (by100 simp)+
+              thus ?thesis using hRab_nth[OF h1_lt] by (cases dir_b) (by100 simp)+
+            qed
             have hRab_gap: "R_ab ! gap = (a_lab, False)" sorry
             have hgap_gt1: "gap > 1" using hgap unfolding gap_def by (by100 linarith)
             \<comment> \<open>Step D: Find position of (b\_lab, False) in R\_ab. It is at some position k\_b > gap.\<close>
