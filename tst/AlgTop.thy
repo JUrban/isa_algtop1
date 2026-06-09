@@ -667,6 +667,10 @@ proof -
   \<comment> \<open>Since sigma is a bijection, (fst(w!(sigma i)) = fst(w!(sigma j))) = (fst(w!i') = fst(w!j'))
      where i'=sigma(i), j'=sigma(j). So the fst/snd equality pattern over w' at positions i,j
      equals the pattern over w at positions sigma(i), sigma(j).\<close>
+  have h\<sigma>_lt: "\<And>i. i < length w \<Longrightarrow> \<sigma> i < length w"
+    using assms(3) unfolding bij_betw_def by (by100 blast)
+  have h\<sigma>_inj: "inj_on \<sigma> {..<length w}"
+    using assms(3) unfolding bij_betw_def by (by100 blast)
   from assms(1) show ?thesis
     unfolding top1_quotient_of_scheme_on_def assms(2)
     apply (elim conjE exE)
@@ -681,7 +685,9 @@ proof -
     \<comment> \<open>C1-C2 by assumption.\<close>
     subgoal by assumption
     subgoal by assumption
-    sorry \<comment> \<open>C3-C11: need sigma properties. Presburger times out (1s) in AlgTop context.\<close>
+    sorry \<comment> \<open>C3-C11: 9 conditions. Each needs sigma(i) < n + inj + Suc shift.
+       Presburger times out (1s) in AlgTop context for C3, C7, C9.
+       h\_sigma\_lt, h\_sigma\_inj, hfst\_eq, hsnd\_eq available.\<close>
   qed
 
 \<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
