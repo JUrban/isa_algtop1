@@ -4499,6 +4499,33 @@ proof -
   qed
 qed
 
+\<comment> \<open>Suffix congruence: xs \<sim> ys implies xs@suffix \<sim> ys@suffix.\<close>
+lemma scheme_equiv_append:
+  fixes xs ys :: "('a \<times> bool) list" and suffix :: "('a \<times> bool) list"
+  assumes "top1_scheme_equiv xs ys"
+  shows "top1_scheme_equiv (xs @ suffix) (ys @ suffix)"
+proof -
+  \<comment> \<open>Chain: xs@suffix \<sim> suffix@xs \<sim> suffix@ys \<sim> ys@suffix.\<close>
+  have r1: "top1_scheme_equiv (xs @ suffix) (suffix @ xs)"
+    using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate[of xs suffix]] by (by100 simp)
+  have r2: "top1_scheme_equiv (suffix @ xs) (suffix @ ys)"
+    using scheme_equiv_prepend[OF assms] by (by100 blast)
+  have r3: "top1_scheme_equiv (suffix @ ys) (ys @ suffix)"
+    using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate[of suffix ys]] by (by100 simp)
+  from r1 r2 r3 show ?thesis
+    unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+qed
+
+\<comment> \<open>Any scheme of the form [(l0,T),(l0,T),...,(lm,T),(lm,T)] with distinct labels
+   is equivalent to the standard projective scheme proj(m+1) via relabeling.\<close>
+lemma projective_form_equiv_standard:
+  fixes w :: "(nat \<times> bool) list"
+  assumes "length w = 2 * m"
+      and "\<forall>i < m. w!(2*i) = (f i, True) \<and> w!(2*i+1) = (f i, True)"
+      and "inj_on f {..<m}"
+  shows "top1_scheme_equiv w (top1_m_projective_scheme m)"
+  sorry \<comment> \<open>Bijective relabeling f(i) \<to> i for each i < m.\<close>
+
 \<comment> \<open>Relabel target to avoid a specific label. From rest \<sim> target where rest avoids label a,
    obtain target' \<sim> target that also avoids label a.\<close>
 lemma scheme_equiv_relabel_avoid:
@@ -4920,9 +4947,17 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         \<comment> \<open>Step 4: [(a,T),(a,T)] @ w\_no\_a has label a only in pair (2 times).
            w\_no\_a is equivalent to proj m' and avoids a.
            Relabel to standard projective form.\<close>
-        have "top1_scheme_equiv ([(a,True),(a,True)] @ w_no_a) (top1_m_projective_scheme (m'+1))"
-          sorry \<comment> \<open>w\_no\_a \<sim> proj m' with m' pairs, all labels \<noteq> a. Pair adds label a.
-             Total: m'+1 pairs, m'+1 distinct labels. Relabel bijectively to {0..m'}.\<close>
+        \<comment> \<open>Step 4: rotate + relabel fresh \<to> m' + projective\_form\_equiv\_standard.\<close>
+        have "top1_scheme_equiv ([(a,True),(a,True)] @ w_no_a) (w_no_a @ [(a,True),(a,True)])"
+          using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate[of "[(a,True),(a,True)]" w_no_a]]
+          by (by100 simp)
+        \<comment> \<open>w\_no\_a @ [(a,T),(a,T)] is a projective-form scheme. Relabel to standard.\<close>
+        have "top1_scheme_equiv (w_no_a @ [(a,True),(a,True)]) (top1_m_projective_scheme (m'+1))"
+          sorry \<comment> \<open>w\_no\_a has m' proper pairs avoiding a. Append (a,T)(a,T) gives m'+1 pairs.
+             Relabel fresh\<to>m', then reorder \<to> proj(m'+1).\<close>
+        hence "top1_scheme_equiv ([(a,True),(a,True)] @ w_no_a) (top1_m_projective_scheme (m'+1))"
+          using \<open>top1_scheme_equiv ([(a,True),(a,True)] @ w_no_a) (w_no_a @ [(a,True),(a,True)])\<close>
+          unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
         hence "top1_scheme_equiv scheme (top1_m_projective_scheme (m'+1))"
           using scheme_equiv_trans[OF hchain] by (by100 blast)
         moreover have "top1_is_projective_scheme (top1_m_projective_scheme (m'+1)) (m'+1)"
