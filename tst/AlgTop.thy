@@ -6108,8 +6108,38 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               \<comment> \<open>In R\_ab, q\_b maps to position (q\_b - p1) mod (length scheme).
                  Since q\_b \<notin> {p1+2..p2}, the R\_ab position is > gap.\<close>
               define k_b where "k_b = (if q_b > p1 then q_b - p1 else q_b + length scheme - p1)"
-              have "k_b > gap" sorry
-              have "k_b < length R_ab" sorry
+              have "k_b > gap"
+              proof (cases "q_b > p1")
+                case True
+                hence "k_b = q_b - p1" unfolding k_b_def by (by100 simp)
+                moreover have "q_b > p2" using \<open>q_b \<notin> {p1+2..p2}\<close> hqb_props(3) True by (by100 simp)
+                ultimately show ?thesis unfolding gap_def using hclose(1) by (by100 linarith)
+              next
+                case False
+                hence "q_b \<le> p1" by (by100 simp)
+                hence "k_b = q_b + length scheme - p1" unfolding k_b_def by (by100 simp)
+                moreover have "gap < length scheme - p1" unfolding gap_def using hclose(1,2) by (by100 linarith)
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              have "k_b < length R_ab"
+              proof (cases "q_b > p1")
+                case True
+                hence "k_b = q_b - p1" unfolding k_b_def by (by100 simp)
+                thus ?thesis using hqb_props(1) hRab_len by (by100 linarith)
+              next
+                case False
+                hence "q_b \<le> p1" by (by100 simp)
+                have "q_b \<noteq> p1"
+                proof
+                  assume "q_b = p1"
+                  hence "fst (scheme!p1) = b_lab" using hqb_props(2) by (by100 simp)
+                  hence "a_lab = b_lab" using hclose(3) by (by100 simp)
+                  thus False using \<open>b_lab \<noteq> a_lab\<close> by (by100 simp)
+                qed
+                hence "q_b < p1" using \<open>q_b \<le> p1\<close> by (by100 linarith)
+                hence "k_b = q_b + length scheme - p1" unfolding k_b_def using False by (by100 simp)
+                thus ?thesis using \<open>q_b < p1\<close> hp1_lt hRab_len by (by100 linarith)
+              qed
               have "R_ab ! k_b = (b_lab, False)" sorry \<comment> \<open>From rotation+flip preserving fst; torus type gives False.\<close>
               thus ?thesis using \<open>k_b > gap\<close> \<open>k_b < length R_ab\<close> by (by100 blast)
             qed
