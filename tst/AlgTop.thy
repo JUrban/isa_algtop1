@@ -2799,6 +2799,21 @@ definition top1_is_torus_scheme :: "(nat \<times> bool) list \<Rightarrow> nat \
 definition top1_is_projective_scheme :: "(nat \<times> bool) list \<Rightarrow> nat \<Rightarrow> bool" where
   "top1_is_projective_scheme w m \<longleftrightarrow> m > 0 \<and> w = top1_m_projective_scheme m"
 
+\<comment> \<open>Helper: in a proper length-4 torus-type scheme, the two non-adjacent-pair elements
+   have the same label but opposite directions.\<close>
+lemma proper_len4_torus_pair_props:
+  fixes scheme :: "(nat \<times> bool) list" and e1 e2 :: "nat \<times> bool"
+  assumes hlen: "length scheme = 4"
+      and hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+      and htorus: "\<not> (\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
+          \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))"
+      and hfst_eq: "fst e1 = fst e2"
+      and he1_in: "e1 \<in> set scheme" and he2_in: "e2 \<in> set scheme"
+      and he_ne_lab: "fst e1 \<noteq> fst (scheme ! i)"
+      and hi: "i < 3" "fst (scheme!i) = fst (scheme!(i+1))"
+  shows "snd e1 \<noteq> snd e2"
+  sorry
+
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
    (1) aa\\<inverse>bb\\<inverse> (sphere, length 4)
@@ -3193,39 +3208,12 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             qed
           qed
           have "snd e1 \<noteq> snd e2"
-          proof (rule ccontr)
-            assume "\<not> snd e1 \<noteq> snd e2"
-            hence hsame: "snd e1 = snd e2" by (by100 simp)
-            hence "e1 = e2" using \<open>fst e1 = fst e2\<close> by (cases e1, cases e2) (by100 simp)
-            \<comment> \<open>Card of label fst(e1) = 2, so \<exists> two distinct positions.\<close>
-            have hcard2: "card {j. j < length scheme \<and> fst (scheme!j) = fst e1} = 2"
-            proof -
-              from less(3) have "card {j. j < length scheme \<and> fst (scheme!j) = fst e1} \<in> {0, 2}"
-                by (by100 blast)
-              moreover from he_in have "e1 \<in> set scheme" by (by100 blast)
-              hence "\<exists>k. k < length scheme \<and> scheme!k = e1" by (simp add: in_set_conv_nth)
-              then obtain k1 where "k1 < length scheme" "scheme!k1 = e1" by (by100 blast)
-              hence "{j. j < length scheme \<and> fst (scheme!j) = fst e1} \<noteq> {}" by (by100 blast)
-              hence "card {j. j < length scheme \<and> fst (scheme!j) = fst e1} \<noteq> 0" by (by100 simp)
-              ultimately show ?thesis by (by100 blast)
-            qed
-            \<comment> \<open>Get two distinct positions with label fst(e1).\<close>
-            then obtain p q where hp: "p < length scheme" "fst (scheme!p) = fst e1"
-                and hq: "q < length scheme" "fst (scheme!q) = fst e1" and hpq: "p \<noteq> q"
-              sorry \<comment> \<open>card = 2 implies \<exists> two distinct elements.\<close>
-            \<comment> \<open>Both are NOT at position i or i+1 (different label).\<close>
-            \<comment> \<open>So both are at non-{i,i+1} positions, i.e. in set(prefix\<union>suffix)={e1,e2}={e1}.\<close>
-            \<comment> \<open>Hence snd(scheme!p) = snd e1 = snd(scheme!q). Same label, same dir, p\<noteq>q: contradicts torus.\<close>
-            have "fst (scheme!p) = fst (scheme!q)" using hp(2) hq(2) by (by100 simp)
-            moreover have "snd (scheme!p) = snd (scheme!q)"
-              sorry \<comment> \<open>Both scheme!p, scheme!q \<in> {e1} since not at i,i+1 positions.\<close>
-            ultimately show False
-              using hp(1) hq(1) hpq
-                \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme.
-                    i \<noteq> j \<and> fst (scheme ! i) = label \<and> fst (scheme ! j) = label
-                    \<and> snd (scheme ! i) = snd (scheme ! j))\<close>
-              by (by100 blast)
-          qed
+            using proper_len4_torus_pair_props[OF \<open>length scheme = 4\<close> less(3)]
+            using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme.
+                i \<noteq> j \<and> fst (scheme ! i) = label \<and> fst (scheme ! j) = label
+                \<and> snd (scheme ! i) = snd (scheme ! j))\<close>
+            using \<open>fst e1 = fst e2\<close> he_in he_ne_label hi
+            by (by100 blast)
           define b_lab where "b_lab = fst e1"
           define d_b where "d_b = snd e1"
           have hsp: "suffix @ prefix = [(b_lab, d_b), (b_lab, \<not>d_b)]"
