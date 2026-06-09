@@ -3749,20 +3749,49 @@ proof -
     from card_seteq[OF this \<open>{p1, p2} \<subseteq> _\<close>] hcard \<open>card {p1, p2} = 2\<close>
     show ?thesis by (by100 simp)
   qed
+  \<comment> \<open>Elements at positions \<noteq> p1, \<noteq> p2 have fst \<noteq> a.\<close>
+  have hother_ne_a: "\<forall>k < length w. k \<noteq> p1 \<longrightarrow> k \<noteq> p2 \<longrightarrow> fst (w ! k) \<noteq> a"
+  proof (intro allI impI)
+    fix k assume "k < length w" "k \<noteq> p1" "k \<noteq> p2"
+    hence "k \<notin> {p1, p2}" by (by100 blast)
+    hence "k \<notin> {i. i < length w \<and> fst (w ! i) = a}" using honly_p12 by (by100 blast)
+    thus "fst (w ! k) \<noteq> a" using \<open>k < length w\<close> by (by100 blast)
+  qed
   have hcond1: "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> a"
   proof (intro ballI)
     fix e assume "e \<in> set y0 \<union> set y1 \<union> set y2"
-    \<comment> \<open>e is at some position k \<noteq> p1 and \<noteq> p2 in w. fst(w!k) \<noteq> a by honly\_p12.\<close>
-    hence "e \<in> set w" using hdecomp by (by100 simp)
-    then obtain k where "k < length w" "w ! k = e" by (simp add: in_set_conv_nth) (by100 blast)
-    show "fst e \<noteq> a"
-    proof
-      assume "fst e = a"
-      hence "k \<in> {i. i < length w \<and> fst (w ! i) = a}" using \<open>k < length w\<close> \<open>w ! k = e\<close> by (by100 blast)
-      hence "k = p1 \<or> k = p2" using honly_p12 by (by100 blast)
-      \<comment> \<open>But w!k = e \<in> y0\<union>y1\<union>y2, and these exclude positions p1, p2.\<close>
-      \<comment> \<open>Need: positions in y0,y1,y2 are \<noteq> p1, \<noteq> p2.\<close>
-      thus False sorry
+    thus "fst e \<noteq> a"
+    proof (elim UnE)
+      assume "e \<in> set y0"
+      then obtain i where "i < length y0" "y0 ! i = e" by (simp add: in_set_conv_nth) (by100 blast)
+      hence "i < p1" unfolding y0_def by (by100 simp)
+      have "w ! i = e" using \<open>i < p1\<close> \<open>y0 ! i = e\<close> unfolding y0_def using hp1_len by (by100 simp)
+      moreover have "i \<noteq> p1" "i \<noteq> p2" using \<open>i < p1\<close> hp1_lt_p2 by (by100 simp)+
+      moreover have "i < length w" using \<open>i < p1\<close> hp1_len by (by100 simp)
+      ultimately show "fst e \<noteq> a" using hother_ne_a by (by100 blast)
+    next
+      assume "e \<in> set y1"
+      then obtain i where "i < length y1" "y1 ! i = e" by (simp add: in_set_conv_nth) (by100 blast)
+      hence "i < p2 - p1 - 1" unfolding y1_def by (by100 simp)
+      define k where "k = p1 + 1 + i"
+      have "w ! k = e" unfolding k_def y1_def
+        using \<open>i < length y1\<close> \<open>y1 ! i = e\<close> y1_def hp1_len by (by100 simp)
+      moreover have "k \<noteq> p1" unfolding k_def by (by100 simp)
+      moreover have "k \<noteq> p2" unfolding k_def using \<open>i < p2 - p1 - 1\<close> by (by100 simp)
+      moreover have "k < length w" unfolding k_def using \<open>i < p2 - p1 - 1\<close> hp2_len by (by100 simp)
+      ultimately show "fst e \<noteq> a" using hother_ne_a by (by100 blast)
+    next
+      assume "e \<in> set y2"
+      then obtain i where "i < length y2" "y2 ! i = e" by (simp add: in_set_conv_nth) (by100 blast)
+      define k where "k = p2 + 1 + i"
+      have "w ! k = e" unfolding k_def y2_def
+        using \<open>i < length y2\<close> \<open>y2 ! i = e\<close> y2_def hp2_len by (by100 simp)
+      moreover have "k \<noteq> p1" unfolding k_def using hp1_lt_p2 by (by100 simp)
+      moreover have "k \<noteq> p2" unfolding k_def by (by100 simp)
+      have "length y2 = length w - (p2 + 1)" unfolding y2_def by (by100 simp)
+      have "k < length w" unfolding k_def using \<open>i < length y2\<close> hp2_len \<open>length y2 = length w - (p2 + 1)\<close> by (by100 simp)
+      from hother_ne_a[rule_format, OF this \<open>k \<noteq> p1\<close> \<open>k \<noteq> p2\<close>]
+      show "fst e \<noteq> a" using \<open>w ! k = e\<close> by (by100 simp)
     qed
   qed
   \<comment> \<open>Fresh label exists.\<close>
