@@ -4524,7 +4524,16 @@ lemma projective_form_equiv_standard:
       and "\<forall>i < m. w!(2*i) = (f i, True) \<and> w!(2*i+1) = (f i, True)"
       and "inj_on f {..<m}"
   shows "top1_scheme_equiv w (top1_m_projective_scheme m)"
-  sorry \<comment> \<open>Bijective relabeling f(i) \<to> i for each i < m.\<close>
+  using assms
+proof (induction m arbitrary: w f)
+  case 0 thus ?case unfolding top1_scheme_equiv_def top1_m_projective_scheme_def by (by100 simp)
+next
+  case (Suc m)
+  \<comment> \<open>w has Suc m pairs. Split off the last pair: w = w' @ [(f m, True), (f m, True)].\<close>
+  \<comment> \<open>By IH: w' \<sim> proj m. Then w = w' @ [(f m,T),(f m,T)] \<sim> proj m @ [(f m,T),(f m,T)] (suffix congruence).\<close>
+  \<comment> \<open>Relabel f m \<to> m (possibly via relabel\_avoid): proj m @ [(m,T),(m,T)] = proj (Suc m).\<close>
+  show ?case sorry
+qed
 
 \<comment> \<open>Relabel target to avoid a specific label. From rest \<sim> target where rest avoids label a,
    obtain target' \<sim> target that also avoids label a.\<close>
@@ -6511,6 +6520,13 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             \<comment> \<open>Direct: count in full = count in block + count in w0'@w1'@w2'.
                count in intermediate = count in w0'@w1'@w2' + count in block.
                These are equal. And count in intermediate = count in scheme (sorry for now).\<close>
+            \<comment> \<open>full = [block] @ w0'@w1'@w2'. Filter-count of full = filter-count of block + w0'@w1'@w2'.
+               intermediate = w0'@[a,b]@w1'@[a\<inverse>,b\<inverse>]@w2'. Same elements as full.
+               So filter-count of full = filter-count of intermediate.
+               And intermediate was produced from scheme via rotation+flip+cut\_paste\_opp
+               (all preserve filter-counts on fst). So filter-count = scheme's. QED.\<close>
+            \<comment> \<open>For now: rely on the fact that scheme\_equiv via these specific operations
+               preserves fst-filter-counts. This is provable but needs a chain argument.\<close>
             show "card {i. i < length full \<and> fst (full!i) = label} \<in> {0, 2}" sorry
           qed
           have hproper_shorter: "\<forall>label. card {i. i < length shorter \<and> fst (shorter!i) = label} \<in> {0, 2}"
