@@ -548,6 +548,15 @@ lemma quotient_of_scheme_context_left:
   shows "top1_quotient_of_scheme_on Y TY (prefix @ z)"
   sorry
 
+\<comment> \<open>Helper: a mod n < n for n > 0. Needed because by100 simp can't fire mod\_less\_divisor
+   in the large AlgTop simpset within 1s.\<close>
+lemma mod_less_n: "(0::nat) < n \<Longrightarrow> (a :: nat) mod n < n"
+  by simp
+
+\<comment> \<open>Key property: Suc((i+k) mod n) mod n = (Suc i + k) mod n.\<close>
+lemma suc_mod_shift: "(0::nat) < n \<Longrightarrow> Suc ((i + k) mod n) mod n = (Suc i + k) mod n"
+  by presburger \<comment> \<open>raw presburger needed; by100 times out in AlgTop context\<close>
+
 \<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
    Same polygon P. Shifted vertices: vx'(i) = vx((i+k) mod n).
    The convex hull is invariant. Edge identification shifts consistently.\<close>
