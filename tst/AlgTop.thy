@@ -6060,8 +6060,46 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             have hgap_gt1: "gap > 1" using hgap unfolding gap_def by (by100 linarith)
             \<comment> \<open>Step D: Find position of (b\_lab, False) in R\_ab. It is at some position k\_b > gap.\<close>
             have "\<exists>k_b. k_b > gap \<and> k_b < length R_ab \<and> R_ab ! k_b = (b_lab, False)"
-              sorry \<comment> \<open>Minimality of a\_lab's gap: b\_lab's 2nd occurrence in R\_ab is at position > gap.
-                 If it were \<le> gap, then in scheme, b\_lab's gap < a\_lab's gap, contradicting hclose(7).\<close>
+            proof -
+              \<comment> \<open>b\_lab appears exactly twice in scheme. Properness gives card = 2.\<close>
+              have hcard_b: "card {i. i < length scheme \<and> fst (scheme!i) = b_lab} = 2"
+              proof -
+                from less(3) have "card {i. i < length scheme \<and> fst (scheme!i) = b_lab} \<in> {0, 2}"
+                  by (by100 blast)
+                moreover have "p1+1 \<in> {i. i < length scheme \<and> fst (scheme!i) = b_lab}"
+                  using hp1_1_lt b_lab_def by (by100 blast)
+                hence "{i. i < length scheme \<and> fst (scheme!i) = b_lab} \<noteq> {}" by (by100 blast)
+                hence "card {i. i < length scheme \<and> fst (scheme!i) = b_lab} \<noteq> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 blast)
+              qed
+              \<comment> \<open>Position p1+1 is one occurrence. Get the other, call it q\_b.\<close>
+              have hp1_1_in: "p1 + 1 \<in> {i. i < length scheme \<and> fst (scheme!i) = b_lab}"
+                using hp1_1_lt b_lab_def by (by100 blast)
+              have hfin_b: "finite {i. i < length scheme \<and> fst (scheme!i) = b_lab}" by (by100 simp)
+              have "card ({i. i < length scheme \<and> fst (scheme!i) = b_lab} - {p1+1}) = 1"
+                using hfin_b hp1_1_in hcard_b by (by100 simp)
+              have "{i. i < length scheme \<and> fst (scheme!i) = b_lab} - {p1+1} \<noteq> {}"
+              proof
+                assume "{i. i < length scheme \<and> fst (scheme!i) = b_lab} - {p1+1} = {}"
+                hence "card ({i. i < length scheme \<and> fst (scheme!i) = b_lab} - {p1+1}) = 0" by (by100 simp)
+                thus False using \<open>card ({i. i < length scheme \<and> fst (scheme!i) = b_lab} - {p1+1}) = 1\<close> by (by100 simp)
+              qed
+              then obtain q_b where hqb: "q_b \<in> {i. i < length scheme \<and> fst (scheme!i) = b_lab} - {p1+1}"
+                by (by100 blast)
+              hence hqb_props: "q_b < length scheme" "fst (scheme!q_b) = b_lab" "q_b \<noteq> p1 + 1"
+                by (by100 simp)+
+              \<comment> \<open>By minimality: gap between b\_lab's positions \<ge> a\_lab's gap.\<close>
+              \<comment> \<open>The two b\_lab positions are p1+1 and q\_b. Their linear gap (larger - smaller)
+                 must be \<ge> p2-p1 = gap. So q\_b is NOT between p1+1 and p2.\<close>
+              have "q_b \<notin> {p1+2..p2}" sorry \<comment> \<open>From minimality: if q\_b \<in> this range, b\_lab gap < a\_lab gap.\<close>
+              \<comment> \<open>In R\_ab, q\_b maps to position (q\_b - p1) mod (length scheme).
+                 Since q\_b \<notin> {p1+2..p2}, the R\_ab position is > gap.\<close>
+              define k_b where "k_b = (if q_b > p1 then q_b - p1 else q_b + length scheme - p1)"
+              have "k_b > gap" sorry
+              have "k_b < length R_ab" sorry
+              have "R_ab ! k_b = (b_lab, False)" sorry \<comment> \<open>From rotation+flip preserving fst; torus type gives False.\<close>
+              thus ?thesis using \<open>k_b > gap\<close> \<open>k_b < length R_ab\<close> by (by100 blast)
+            qed
             then obtain k_b where hkb: "k_b > gap" "k_b < length R_ab" "R_ab ! k_b = (b_lab, False)"
               by (by100 blast)
             \<comment> \<open>Step E: Decompose R\_ab at positions 0, 1, gap, k\_b.\<close>
