@@ -3305,7 +3305,32 @@ lemma cancel_preserves_proper:
       and hpair: "fst (w ! j) = fst (w ! (j+1))"
   shows "\<forall>label. card {i. i < length (take j w @ drop (j+2) w)
       \<and> fst ((take j w @ drop (j+2) w) ! i) = label} \<in> {0, 2}"
-  sorry
+proof (intro allI)
+  fix label :: 'a
+  let ?w' = "take j w @ drop (j+2) w"
+  let ?lab_j = "fst (w ! j)"
+  show "card {i. i < length ?w' \<and> fst (?w' ! i) = label} \<in> {0, 2}"
+  proof (cases "label = ?lab_j")
+    case True
+    \<comment> \<open>Cancelled label: count drops from 2 to 0.\<close>
+    \<comment> \<open>w had exactly 2 positions with this label: j and j+1 (by properness + hpair).\<close>
+    \<comment> \<open>w' has no positions with this label.\<close>
+    have "{i. i < length ?w' \<and> fst (?w' ! i) = label} = {}"
+      sorry
+    thus ?thesis by (by100 simp)
+  next
+    case False
+    \<comment> \<open>Other label: count unchanged.\<close>
+    \<comment> \<open>Positions with label l in w are all \<noteq> j and \<noteq> j+1.
+       They map to positions in w' with count preserved.\<close>
+    have "card {i. i < length ?w' \<and> fst (?w' ! i) = label}
+        = card {i. i < length w \<and> fst (w ! i) = label}"
+      sorry
+    moreover from hproper have "card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+      by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+qed
 
 \<comment> \<open>A proper scheme has even length (each label contributes 0 or 2 to the count).\<close>
 lemma proper_scheme_even_length:
