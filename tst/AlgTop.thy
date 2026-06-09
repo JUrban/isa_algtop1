@@ -7438,10 +7438,12 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               then obtain w' where hw': "top1_is_projective_scheme w' (1+2)"
                   and hequiv': "top1_scheme_equiv ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ top1_m_projective_scheme 1) w'"
                 by (by100 blast)
-              have "top1_scheme_equiv scheme w'"
+              have hsch_w': "top1_scheme_equiv scheme w'"
                 using \<open>top1_scheme_equiv scheme ([(a_lab,True),(b_lab,True),(a_lab,False),(b_lab,False)] @ top1_m_projective_scheme 1)\<close>
                   hequiv' unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
-              show ?thesis sorry
+              have "1 + 2 = (3::nat)" by (by100 simp)
+              hence hw'3: "top1_is_projective_scheme w' 3" using hw' by (by100 metis)
+              show ?thesis sorry \<comment> \<open>Have hsch\_w' and hw'3. Need to package as projective disjunct.\<close>
             next
               case nFalse: False
               hence hge4_w3: "length w3 \<ge> 4" by (by100 linarith)
@@ -7563,8 +7565,19 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                    So: commutator @ projective\_m first extract a projective pair from projective\_m,
                    then absorb the commutator. Net: projective\_(m-1+3) = projective\_(m+2).\<close>
                 have hw_is: "w = top1_m_projective_scheme m" using hwm unfolding top1_is_projective_scheme_def by (by100 blast)
-                \<comment> \<open>scheme ~ block @ projective\_m. Need: ~ projective\_(m+2).\<close>
-                show ?thesis sorry
+                \<comment> \<open>Apply commutator\_prepend\_projective.\<close>
+                from commutator_prepend_projective[OF hab \<open>m > 0\<close>]
+                have "\<exists>w'. top1_is_projective_scheme w' (m+2) \<and>
+                    top1_scheme_equiv (block @ top1_m_projective_scheme m) w'"
+                  unfolding block_def by (by100 blast)
+                then obtain w' where hw'_proj: "top1_is_projective_scheme w' (m+2)"
+                    and hw'_equiv: "top1_scheme_equiv (block @ top1_m_projective_scheme m) w'"
+                  by (by100 blast)
+                have "top1_scheme_equiv scheme w'"
+                  using \<open>top1_scheme_equiv scheme (block @ w)\<close> hw'_equiv hw_is
+                  unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+                have "m + 2 > 0" using \<open>m > 0\<close> by (by100 simp)
+                thus ?thesis using \<open>top1_scheme_equiv scheme w'\<close> hw'_proj by (by100 blast)
               next
                 \<comment> \<open>Case 3: w3 ~ torus n. Then scheme ~ block @ torus\_n.
                    This is a torus\_(n+1) (after relabeling).\<close>
