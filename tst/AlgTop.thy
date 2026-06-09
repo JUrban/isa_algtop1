@@ -5977,7 +5977,27 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                 using hRa_nth[OF h1_lt] \<open>b_lab \<noteq> a_lab\<close> by (cases dir_a) (by100 simp)+
               thus ?thesis using hRab_nth[OF h1_lt] by (cases dir_b) (by100 simp)+
             qed
-            have hRab_gap: "R_ab ! gap = (a_lab, False)" sorry
+            have hRab_gap: "R_ab ! gap = (a_lab, False)"
+            proof -
+              have hR_gap_val: "R ! gap = (a_lab, \<not> dir_a)"
+                using hR_gap hclose(3,4,5) unfolding dir_a_def
+                by (cases "scheme ! p1", cases "scheme ! p2") (by100 simp)
+              have "R_a ! gap = (a_lab, False)"
+              proof (cases dir_a)
+                case True
+                hence "R_a ! gap = R ! gap" using hRa_nth[OF hgap_lt] by (by100 simp)
+                thus ?thesis using hR_gap_val True by (by100 simp)
+              next
+                case False
+                hence "R_a ! gap = (\<lambda>(l,bo). (l, if l = a_lab then \<not>bo else bo)) (R ! gap)"
+                  using hRa_nth[OF hgap_lt] by (by100 simp)
+                also have "\<dots> = (a_lab, \<not> (\<not> dir_a))" using hR_gap_val by (by100 simp)
+                also have "\<dots> = (a_lab, False)" using False by (by100 simp)
+                finally show ?thesis .
+              qed
+              moreover have "a_lab \<noteq> b_lab" using \<open>b_lab \<noteq> a_lab\<close> by (by100 simp)
+              ultimately show ?thesis using hRab_nth[OF hgap_lt] by (cases dir_b) (by100 simp)+
+            qed
             have hgap_gt1: "gap > 1" using hgap unfolding gap_def by (by100 linarith)
             \<comment> \<open>Step D: Find position of (b\_lab, False) in R\_ab. It is at some position k\_b > gap.\<close>
             have "\<exists>k_b. k_b > gap \<and> k_b < length R_ab \<and> R_ab ! k_b = (b_lab, False)" sorry
