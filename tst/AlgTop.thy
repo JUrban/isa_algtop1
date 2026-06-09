@@ -611,9 +611,9 @@ proof -
     apply (rule_tac x="\<lambda>i. vx ((i + length u) mod ?n)" in exI)
     apply (rule_tac x="\<lambda>i. vy ((i + length u) mod ?n)" in exI)
     apply (intro conjI)
-    sorry \<comment> \<open>11 conditions with shifted vertices. Each needs mod arithmetic for the index shift.
-       C1-C2: by assumption. C3-C6: shifted geometric conditions. C7,C9: shifted scheme.
-       C8: interior injectivity (shifted edge points). C10-C11: cyclic cross products.\<close>
+    sorry \<comment> \<open>11 conditions with shifted vx'/vy'. C1-C2 by assumption. C3-C11 need mod arithmetic.
+       Sledgehammer found no proofs in 20s per condition (shifted vertex terms too complex).
+       Proved helpers: mod\_less\_n, suc\_mod\_shift, hshift.\<close>
 qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
