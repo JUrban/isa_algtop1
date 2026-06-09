@@ -554,9 +554,27 @@ lemma quotient_of_scheme_context_left:
 lemma quotient_of_scheme_rotate:
   assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
   shows "top1_quotient_of_scheme_on Y TY (v @ u)"
-  sorry \<comment> \<open>Same P. Define vx'(i) = vx((i + length u) mod n), vy' similarly.
-     All 11 conditions: C1-C6 geometric (same P), C7-C9 shift indices consistently,
-     C10-C11 cyclic permutation preserves cross-product signs.\<close>
+proof -
+  let ?n = "length u + length v"
+  let ?k = "length v"
+  \<comment> \<open>Key: (v@u)!i = (u@v)!((i + length u) mod n) for all i < n.\<close>
+  have hshift: "\<And>i. i < ?n \<Longrightarrow> (v @ u) ! i = (u @ v) ! ((i + length u) mod ?n)" sorry
+  \<comment> \<open>The shift preserves fst:\<close>
+  have hfst: "\<And>i. i < ?n \<Longrightarrow> fst ((v@u)!i) = fst ((u@v)!((i + length u) mod ?n))"
+    using hshift sorry
+  \<comment> \<open>The shift preserves snd equality for same-label pairs:\<close>
+  have hsnd_eq: "\<And>i j. i < ?n \<Longrightarrow> j < ?n \<Longrightarrow>
+      fst ((u@v)!((i+length u) mod ?n)) = fst ((u@v)!((j+length u) mod ?n)) \<Longrightarrow>
+      (snd ((v@u)!i) = snd ((v@u)!j)) = (snd ((u@v)!((i+length u) mod ?n)) = snd ((u@v)!((j+length u) mod ?n)))"
+    using hshift sorry
+  \<comment> \<open>Need a rotate version of the transfer lemma. The issue: the transfer lemma requires
+     fst(w'!i) = fst(w!i), but rotation gives fst((v@u)!i) = fst((u@v)!((i+k) mod n)),
+     which is a shifted index, not the same index.\<close>
+  \<comment> \<open>Direct approach: unfold the definition, provide shifted witnesses, verify each condition.\<close>
+  from assms show ?thesis
+    unfolding top1_quotient_of_scheme_on_def
+    sorry
+qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
    and the same snd-equality pattern for same-label pairs, then quotient\_of\_scheme\_on
