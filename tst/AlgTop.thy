@@ -2,6 +2,1202 @@ theory AlgTop
   imports "AlgTopCached12.AlgTopCached12"
 begin
 
+
+lemma m_projective_scheme_CW_data:
+  assumes "top1_is_m_fold_projective_on X TX m"
+      and "x0 \<in> X"
+  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a) (a :: 'a).
+      closedin_on X TX A
+    \<and> a \<in> A
+    \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<m}::nat set) a
+    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
+    \<and> h ` top1_S1 \<subseteq> A"
+proof -
+  from assms(1) have hcases: "(m = 1 \<and> top1_is_dunce_cap_on X TX (2::nat))
+      \<or> (2 \<le> m \<and> top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m))"
+    unfolding top1_is_m_fold_projective_on_def by (by100 blast)
+  show ?thesis
+  proof (cases "m = 1")
+    case True
+    \<comment> \<open>m = 1: X is the dunce cap with n=2 (real projective plane).
+       A = q(S1) is a single circle (S1/Z2 \<cong> S1), h = q (quotient map).\<close>
+    have hdc: "top1_is_dunce_cap_on X TX (2::nat)"
+      using hcases True by (by5000 auto)
+    obtain q where hq_quot: "top1_quotient_map_on top1_B2 top1_B2_topology X TX q"
+        and hq_S1: "\<forall>z\<in>top1_S1. \<forall>z'\<in>top1_S1.
+              q z = q z' \<longleftrightarrow>
+              (\<exists>k::nat. k < 2 \<and>
+                 z' = (cos (2*pi*real k/real 2) * fst z - sin (2*pi*real k/real 2) * snd z,
+                       sin (2*pi*real k/real 2) * fst z + cos (2*pi*real k/real 2) * snd z))"
+        and hq_inj: "inj_on q (top1_B2 - top1_S1)"
+        and hq_sep: "\<forall>z\<in>top1_B2 - top1_S1. \<forall>z'\<in>top1_S1. q z \<noteq> q z'"
+      using hdc unfolding top1_is_dunce_cap_on_def
+      apply (elim exE conjE)
+      apply (rule that)
+      apply assumption+
+      done
+    \<comment> \<open>A = q(S1): the image of the circle under the quotient map.\<close>
+    define A where "A = q ` top1_S1"
+    \<comment> \<open>q is continuous B2 \<rightarrow> X (from quotient map).\<close>
+    have hq_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX q"
+      using hq_quot unfolding top1_quotient_map_on_def by (by100 blast)
+    \<comment> \<open>Step 1: A is closed in X (image of compact S1 under continuous map to Hausdorff X).\<close>
+    have hB2_compact: "top1_compact_on top1_B2 top1_B2_topology" by (rule B2_compact)
+    have hX_haus: "is_hausdorff_on X TX"
+      by (rule dunce_cap_hausdorff[OF hdc])
+    have hS1_closed: "closedin_on top1_B2 top1_B2_topology top1_S1" by (rule S1_closed_in_B2)
+    have hA_cl: "closedin_on X TX A"
+      unfolding A_def
+      by (rule compact_hausdorff_continuous_closed_map[OF hB2_compact hX_haus hq_cont hS1_closed])
+    \<comment> \<open>Step 2: A is a wedge of 1 circle (A \<cong> S1).
+       S1/Z2 (antipodal identification) is homeomorphic to S1.
+       The map z \<mapsto> z^2 (squaring as complex numbers) gives the homeomorphism.\<close>
+    \<comment> \<open>Define basepoint a = q(1,0) \<in> A.\<close>
+    define a where "a = q (1::real, 0::real)"
+    have ha_A: "a \<in> A"
+    proof -
+      have "(1::real, 0::real) \<in> top1_S1" unfolding top1_S1_def by (by100 simp)
+      thus ?thesis unfolding a_def A_def by (by100 blast)
+    qed
+    have hA_wedge: "top1_is_wedge_of_circles_on A (subspace_topology X TX A)
+        ({..<1}::nat set) a"
+    proof -
+      let ?TA = "subspace_topology X TX A"
+      \<comment> \<open>A \<cong> S1 (from dunce\_cap\_skeleton\_is\_circle).\<close>
+      from dunce_cap_skeleton_is_circle[OF hdc hq_quot hq_S1]
+      obtain f where hf_homeo: "top1_homeomorphism_on top1_S1 top1_S1_topology
+          (q ` top1_S1) (subspace_topology X TX (q ` top1_S1)) f" by (by100 blast)
+      hence hf_homeo': "top1_homeomorphism_on top1_S1 top1_S1_topology A ?TA f"
+        unfolding A_def by (by100 simp)
+      have hA_sub: "A \<subseteq> X" using hA_cl unfolding closedin_on_def by (by100 blast)
+      have hA_strict: "is_topology_on_strict A ?TA"
+      proof -
+        have "is_topology_on_strict X TX"
+          using hdc unfolding top1_is_dunce_cap_on_def by (by100 blast)
+        from subspace_topology_is_strict[OF this hA_sub] show ?thesis .
+      qed
+      have hA_haus: "is_hausdorff_on A ?TA"
+        using conjunct2[OF conjunct2[OF Theorem_17_11]] hX_haus hA_sub by (by100 blast)
+      \<comment> \<open>Build the wedge structure: C(0) = A.\<close>
+      define C :: "nat \<Rightarrow> 'a set" where "C = (\<lambda>_. A)"
+      have hC_props: "\<forall>j\<in>{..<1::nat}. C j \<subseteq> A \<and> a \<in> C j \<and> (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C j) ?TA h)"
+        unfolding C_def using ha_A hf_homeo' by (by100 blast)
+      moreover have "(\<Union>a\<in>{..<1::nat}. C a) = A"
+      proof -
+        have "{..<1::nat} = {0}" by (by100 auto)
+        thus ?thesis unfolding C_def by (by100 simp)
+      qed
+      moreover have "\<forall>j\<in>{..<1::nat}. \<forall>k\<in>{..<1::nat}. j \<noteq> k \<longrightarrow> C j \<inter> C k = {a}"
+      proof (intro ballI impI)
+        fix j' k' :: nat assume "j' \<in> {..<1}" "k' \<in> {..<1}" "j' \<noteq> k'"
+        hence "j' = 0" "k' = 0" by (by100 simp)+
+        thus "C j' \<inter> C k' = {a}" using \<open>j' \<noteq> k'\<close> by (by100 simp)
+      qed
+      moreover have "\<forall>D. D \<subseteq> A \<longrightarrow>
+          (closedin_on A ?TA D \<longleftrightarrow> (\<forall>j\<in>{..<1::nat}. closedin_on (C j) ?TA (C j \<inter> D)))"
+      proof -
+        \<comment> \<open>With C(0) = A and {..<1} = {0}, the condition reduces to:
+           D closed in A iff A \<inter> D closed in A. Since D \<subseteq> A, A \<inter> D = D.\<close>
+        have hC0: "C 0 = A" unfolding C_def by (by100 simp)
+        have hone: "{..<1::nat} = {0}" by (by100 auto)
+        show ?thesis
+        proof (intro allI impI iffI ballI)
+          fix D j assume "D \<subseteq> A" "closedin_on A ?TA D" "j \<in> {..<1::nat}"
+          hence "j = 0" by (by100 simp)
+          hence "C j \<inter> D = D" using \<open>D \<subseteq> A\<close> hC0 by (by100 blast)
+          thus "closedin_on (C j) ?TA (C j \<inter> D)" using \<open>closedin_on A ?TA D\<close> \<open>j = 0\<close> hC0 by (by100 simp)
+        next
+          fix D assume "D \<subseteq> A" "\<forall>j\<in>{..<1::nat}. closedin_on (C j) ?TA (C j \<inter> D)"
+          hence "closedin_on (C 0) ?TA (C 0 \<inter> D)" unfolding hone by (by100 simp)
+          have "C 0 \<inter> D = D" using \<open>D \<subseteq> A\<close> hC0 by (by100 blast)
+          thus "closedin_on A ?TA D" using \<open>closedin_on (C 0) ?TA (C 0 \<inter> D)\<close> hC0 \<open>C 0 \<inter> D = D\<close>
+            by (by100 simp)
+        qed
+      qed
+      ultimately have hcoh_and_cover_and_disj:
+        "(\<forall>D. D \<subseteq> A \<longrightarrow> (closedin_on A ?TA D \<longleftrightarrow> (\<forall>j\<in>{..<1::nat}. closedin_on (C j) ?TA (C j \<inter> D))))
+       \<and> (\<Union>j\<in>{..<1::nat}. C j) = A
+       \<and> (\<forall>j\<in>{..<1::nat}. \<forall>k\<in>{..<1::nat}. j \<noteq> k \<longrightarrow> C j \<inter> C k = {a})"
+        by (by100 blast)
+      have "top1_is_wedge_of_circles_on A ?TA ({..<1}::nat set) a"
+        unfolding top1_is_wedge_of_circles_on_def
+      proof (intro conjI)
+        show "is_topology_on_strict A ?TA" by (rule hA_strict)
+        show "is_hausdorff_on A ?TA" by (rule hA_haus)
+        show "a \<in> A" by (rule ha_A)
+        show "\<exists>Ca. (\<forall>j\<in>{..<1::nat}. Ca j \<subseteq> A \<and> a \<in> Ca j \<and>
+            (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (Ca j)
+                  (subspace_topology A ?TA (Ca j)) h))
+          \<and> (\<Union>j\<in>{..<1::nat}. Ca j) = A
+          \<and> (\<forall>j\<in>{..<1::nat}. \<forall>k\<in>{..<1::nat}. j \<noteq> k \<longrightarrow> Ca j \<inter> Ca k = {a})
+          \<and> (\<forall>D. D \<subseteq> A \<longrightarrow> (closedin_on A ?TA D \<longleftrightarrow>
+              (\<forall>j\<in>{..<1::nat}. closedin_on (Ca j) (subspace_topology A ?TA (Ca j)) (Ca j \<inter> D))))"
+        proof -
+          \<comment> \<open>Key: subspace\_topology A TA A = TA when TA is topology on A.\<close>
+          have hTA_sub: "?TA \<subseteq> Pow A"
+            using hA_strict unfolding is_topology_on_strict_def by (by100 blast)
+          have hTA_self: "subspace_topology A ?TA A = ?TA"
+          proof (rule set_eqI, rule iffI)
+            fix U assume "U \<in> subspace_topology A ?TA A"
+            then obtain V where "V \<in> ?TA" "U = A \<inter> V" unfolding subspace_topology_def by (by100 blast)
+            have "V \<subseteq> A" using \<open>V \<in> ?TA\<close> hTA_sub by (by100 blast)
+            hence "A \<inter> V = V" by (by100 blast)
+            thus "U \<in> ?TA" using \<open>V \<in> ?TA\<close> \<open>U = A \<inter> V\<close> by (by100 simp)
+          next
+            fix U assume "U \<in> ?TA"
+            have "U \<subseteq> A" using \<open>U \<in> ?TA\<close> hTA_sub by (by100 blast)
+            hence "A \<inter> U = U" by (by100 blast)
+            have "\<exists>V. V \<in> ?TA \<and> U = A \<inter> V" using \<open>U \<in> ?TA\<close> \<open>A \<inter> U = U\<close> by (by100 blast)
+            thus "U \<in> subspace_topology A ?TA A" unfolding subspace_topology_def by (by100 blast)
+          qed
+          have hCj_eq: "\<And>j. j \<in> {..<1::nat} \<Longrightarrow> subspace_topology A ?TA (C j) = ?TA"
+            unfolding C_def using hTA_self by (by100 simp)
+          hence hC_match: "\<forall>j\<in>{..<1::nat}. C j \<subseteq> A \<and> a \<in> C j \<and>
+              (\<exists>h. top1_homeomorphism_on top1_S1 top1_S1_topology (C j)
+                    (subspace_topology A ?TA (C j)) h)"
+            using hC_props by (by100 simp)
+          \<comment> \<open>Similarly for coherent topology.\<close>
+          have hcoh_match: "\<forall>D. D \<subseteq> A \<longrightarrow> (closedin_on A ?TA D \<longleftrightarrow>
+              (\<forall>j\<in>{..<1::nat}. closedin_on (C j) (subspace_topology A ?TA (C j)) (C j \<inter> D)))"
+            using hcoh_and_cover_and_disj \<open>\<And>j. j \<in> {..<1::nat} \<Longrightarrow> subspace_topology A ?TA (C j) = ?TA\<close>
+            by (by100 simp)
+          show ?thesis
+            apply (rule exI[of _ C])
+            using hC_match hcoh_and_cover_and_disj hcoh_match by (by5000 blast)
+        qed
+      qed
+      thus ?thesis .
+    qed
+    \<comment> \<open>Step 4: q(S1) \<subseteq> A by definition.\<close>
+    have hq_S1_A: "q ` top1_S1 \<subseteq> A" unfolding A_def by (by100 blast)
+    \<comment> \<open>Match: {..<m} = {..<1} since m = 1.\<close>
+    have hm1: "({..<m}::nat set) = {..<1}" using True by (by100 simp)
+    show ?thesis unfolding hm1
+      apply (rule exI[of _ A], rule exI[of _ q], rule exI[of _ a])
+      apply (intro conjI)
+      apply (rule hA_cl)
+      apply (rule ha_A)
+      apply (rule hA_wedge)
+      apply (rule hq_cont)
+      apply (rule hq_S1_A)
+      done
+  next
+    case False
+    \<comment> \<open>m \<ge> 2: X is a quotient of the projective scheme.
+       Use scheme\_quotient\_CW\_data to extract CW structure.
+       Then show the 1-skeleton is a wedge of m circles.\<close>
+    have hm2: "2 \<le> m" using hcases False by (by100 blast)
+    have hscheme: "top1_quotient_of_scheme_on X TX (top1_m_projective_scheme m)"
+      using hcases False by (by100 blast)
+    let ?scheme = "top1_m_projective_scheme m"
+    have hlen: "length ?scheme \<ge> 3"
+    proof -
+      have "length ?scheme = 2 * m"
+        unfolding top1_m_projective_scheme_def
+        by (induction m, simp, simp)
+      thus ?thesis using hm2 by (by100 simp)
+    qed
+    \<comment> \<open>Vertex connectivity for projective scheme.\<close>
+    have hvc: "\<forall>(q::real\<times>real\<Rightarrow>'a) (vx::nat\<Rightarrow>real) (vy::nat\<Rightarrow>real).
+        (\<forall>i<length ?scheme. \<forall>j<length ?scheme.
+          fst (?scheme!i) = fst (?scheme!j) \<longrightarrow>
+          (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
+             (1-t) * vy i + t * vy (Suc i mod length ?scheme))
+           = (if snd (?scheme!i) = snd (?scheme!j)
+              then q ((1-t) * vx j + t * vx (Suc j mod length ?scheme),
+                      (1-t) * vy j + t * vy (Suc j mod length ?scheme))
+              else q (t * vx j + (1-t) * vx (Suc j mod length ?scheme),
+                      t * vy j + (1-t) * vy (Suc j mod length ?scheme)))))
+        \<longrightarrow> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))"
+      using projective_scheme_vertex_connectivity[OF hm2] by (by100 simp)
+    \<comment> \<open>Extract CW data from scheme.\<close>
+    obtain A0 h0 where
+        hA0_cl: "closedin_on X TX A0"
+        and hh0_cont: "top1_continuous_map_on top1_B2 top1_B2_topology X TX h0"
+        and hh0_S1: "h0 ` top1_S1 \<subseteq> A0"
+    proof -
+      from scheme_quotient_CW_data[OF hscheme hlen hvc]
+      show ?thesis
+        apply (elim exE conjE)
+        apply (rule that)
+        apply assumption+
+        done
+    qed
+    \<comment> \<open>Step: Show A0 is a wedge of m circles.
+       For the projective scheme a1a1a2a2...amam:
+       - Each label i gives a circle C(i) = image of edge 2i under q0.
+       - Edges 2i and 2i+1 have the same label and direction, so they're identified.
+       - All vertices map to a0. Each C(i) starts and ends at a0, forming a circle.
+       - Different labels give circles sharing only a0.\<close>
+    have hA0_wedge: "\<exists>a0. a0 \<in> A0 \<and> top1_is_wedge_of_circles_on A0 (subspace_topology X TX A0) ({..<m}::nat set) a0"
+      sorry \<comment> \<open>1-skeleton of projective scheme quotient is wedge of m circles.\<close>
+    then obtain a0 where ha0_A: "a0 \<in> A0"
+        and ha0_wedge: "top1_is_wedge_of_circles_on A0 (subspace_topology X TX A0) ({..<m}::nat set) a0"
+      by (by100 blast)
+    show ?thesis
+      apply (rule exI[of _ A0], rule exI[of _ h0], rule exI[of _ a0])
+      apply (intro conjI)
+      apply (rule hA0_cl)
+      apply (rule ha0_A)
+      apply (rule ha0_wedge)
+      apply (rule hh0_cont)
+      apply (rule hh0_S1)
+      done
+  qed
+qed
+
+
+
+(** Theorem 71.3: fully proved and cached in ac9/AlgTopCached9.thy. **)
+
+
+
+
+\<comment> \<open>free\_group\_hom\_subset\_injective + Theorem\_71\_3\_pi1\_free moved to AlgTopCached9.\<close>
+
+
+\<comment> \<open>Theorem 71.3 (book-faithful) is now Theorem\_71\_3 in AlgTopCached9.
+   It states: \\<pi>\\_1(X, p) is free on J (the actual book statement).
+   The old int-set packaging wrapper (Theorem\_71\_3\_wedge\_of\_circles\_general)
+   was unused dead code and has been removed.\<close>
+
+
+
+
+
+\<comment> \<open>§71 helpers + §74 moved to AlgTopCached8.\<close>
+
+\<comment> \<open>Elementary scheme operations (Munkres \\<S>76).
+   A scheme is a list of (edge\\_name, direction) pairs representing a polygonal identification.
+   Elementary operations preserve the quotient homeomorphism type.\<close>
+
+definition top1_inverse_edge :: "'a \<times> bool \<Rightarrow> 'a \<times> bool" where
+  "top1_inverse_edge e = (fst e, \<not> snd e)"
+
+inductive top1_elementary_scheme_operation :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
+  rotate: "top1_elementary_scheme_operation (u @ v) (v @ u)" |
+  cancel: "top1_elementary_scheme_operation (u @ [a, top1_inverse_edge a] @ v) (u @ v)" |
+  uncancel: "top1_elementary_scheme_operation (u @ v) (u @ [a, top1_inverse_edge a] @ v)" |
+  invert: "top1_elementary_scheme_operation w (rev (map top1_inverse_edge w))" |
+  \<comment> \<open>Relabel: replace all occurrences of label old by label new.
+     Book \\<S>76 operation (iii): "replace all occurrences of any given label by some other
+     label that does not appear elsewhere in the scheme."\<close>
+  relabel: "top1_elementary_scheme_operation w (map (\<lambda>(l,b). (if l = old then new else l, b)) w)" |
+  \<comment> \<open>Flip orientation: change sign of exponent of all occurrences of a given label.
+     Book \\<S>76 operation (iii): "one can change the sign of the exponent of all occurrences
+     of a given label a; this amounts to reversing the orientations of all edges labelled a."\<close>
+  flip_label: "top1_elementary_scheme_operation w (map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) w)" |
+  \<comment> \<open>Cut-and-repaste: the combined effect of Munkres \\<S>76 Theorem 76.1 on a single polygon.
+     Cut at position between u1 and u2, introducing new label c.
+     Flip one piece. Paste along label a (which appears in both pieces).
+     Net effect on scheme: [u1] a [u2] a [u3] \\<sim> [u1] a a [u2\\<inverse>] [u3].
+     This brings two copies of label a (same orientation) together.
+     Formally: rotate one piece around and paste, cancelling u2 into u2\\<inverse>.\<close>
+  cut_paste: "top1_elementary_scheme_operation
+      (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)
+      (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)" |
+  \<comment> \<open>Cut-paste variant 2 (Figure 77.2): rearrange with a new label.
+     Transforms y0 a y1 a y2 into b y2 b (y1 y0\\<inverse>) where b is new.
+     This is the book's Figure 77.2 operation from \\<S>77 Lemma 77.1 Step 2.\<close>
+  cut_paste2: "top1_elementary_scheme_operation
+      (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)
+      ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))" |
+  \<comment> \<open>Cut-paste for opposite-orientation labels (Figure 77.3).
+     Net effect: move u1 from before a to after a\\<inverse>.
+     u0 @ u1 @ [(a,T)] @ u2 @ [(a,F)] @ u3 \\<to> u0 @ [(a,T)] @ u2 @ [(a,F)] @ u1 @ u3.\<close>
+  cut_paste_opp: "top1_elementary_scheme_operation
+      (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)
+      (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+
+\<comment> \<open>The scheme equivalence is the reflexive-transitive closure of elementary operations.\<close>
+definition top1_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
+  "top1_scheme_equiv = top1_elementary_scheme_operation\<^sup>*\<^sup>*"
+
+section \<open>\<S>76 Cutting and Pasting\<close>
+
+\<comment> \<open>Quotient uniqueness: two quotient maps on the same space with the same fibres
+   give homeomorphic quotient spaces. Follows from Theorem 22.2 applied both ways.\<close>
+lemma quotient_same_fibres_homeomorphic:
+  fixes X :: "'a set" and TX :: "'a set set"
+    and Y1 :: "'b set" and TY1 :: "'b set set"
+    and Y2 :: "'c set" and TY2 :: "'c set set"
+  assumes hp1: "top1_quotient_map_on X TX Y1 TY1 p1"
+      and hp2: "top1_quotient_map_on X TX Y2 TY2 p2"
+      and hfibres: "\<forall>x\<in>X. \<forall>y\<in>X. (p1 x = p1 y) \<longleftrightarrow> (p2 x = p2 y)"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+proof -
+  \<comment> \<open>p2 is constant on fibres of p1 (from hfibres).\<close>
+  have hp2_range: "\<forall>x\<in>X. p2 x \<in> Y2"
+    using hp2 unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
+  have hp2_const: "\<forall>x\<in>X. \<forall>y\<in>X. p1 x = p1 y \<longrightarrow> p2 x = p2 y"
+    using hfibres by (by100 blast)
+  \<comment> \<open>By Theorem 22.2: p2 factors through p1 as f: Y1 \\<to> Y2.\<close>
+  from Theorem_22_2[OF hp1 hp2_range hp2_const]
+  obtain f where hf_range: "\<forall>y\<in>Y1. f y \<in> Y2"
+      and hf_comp: "\<forall>x\<in>X. f (p1 x) = p2 x"
+      and hf_cont_iff: "top1_continuous_map_on Y1 TY1 Y2 TY2 f \<longleftrightarrow> top1_continuous_map_on X TX Y2 TY2 p2"
+      and hf_quot_iff: "top1_quotient_map_on Y1 TY1 Y2 TY2 f \<longleftrightarrow> top1_quotient_map_on X TX Y2 TY2 p2"
+    by (by100 blast)
+  \<comment> \<open>Similarly p1 factors through p2 as g: Y2 \\<to> Y1.\<close>
+  have hp1_range: "\<forall>x\<in>X. p1 x \<in> Y1"
+    using hp1 unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
+  have hp1_const: "\<forall>x\<in>X. \<forall>y\<in>X. p2 x = p2 y \<longrightarrow> p1 x = p1 y"
+    using hfibres by (by100 blast)
+  from Theorem_22_2[OF hp2 hp1_range hp1_const]
+  obtain g where hg_range: "\<forall>y\<in>Y2. g y \<in> Y1"
+      and hg_comp: "\<forall>x\<in>X. g (p2 x) = p1 x"
+      and hg_cont_iff: "top1_continuous_map_on Y2 TY2 Y1 TY1 g \<longleftrightarrow> top1_continuous_map_on X TX Y1 TY1 p1"
+      and hg_quot_iff: "top1_quotient_map_on Y2 TY2 Y1 TY1 g \<longleftrightarrow> top1_quotient_map_on X TX Y1 TY1 p1"
+    by (by100 blast)
+  \<comment> \<open>f is a quotient map (since p2 is).\<close>
+  have hf_quot: "top1_quotient_map_on Y1 TY1 Y2 TY2 f"
+    using hf_quot_iff hp2 by simp
+  \<comment> \<open>f is bijective: injective (from g \\<circ> f = id on Y1) and surjective (quotient maps are surjective).\<close>
+  have hf_surj: "f ` Y1 = Y2"
+  proof -
+    have "p2 ` X = Y2" using hp2 unfolding top1_quotient_map_on_def by (by100 blast)
+    have "p1 ` X = Y1" using hp1 unfolding top1_quotient_map_on_def by (by100 blast)
+    show ?thesis
+    proof
+      show "f ` Y1 \<subseteq> Y2" using hf_range by (by100 blast)
+    next
+      show "Y2 \<subseteq> f ` Y1"
+      proof
+        fix y2 assume "y2 \<in> Y2"
+        hence "\<exists>x\<in>X. p2 x = y2" using \<open>p2 ` X = Y2\<close> by (by100 blast)
+        then obtain x where "x \<in> X" "p2 x = y2" by (by100 blast)
+        hence "f (p1 x) = y2" using hf_comp by simp
+        moreover have "p1 x \<in> Y1" using hp1_range \<open>x \<in> X\<close> by (by100 blast)
+        ultimately show "y2 \<in> f ` Y1" by (by100 blast)
+      qed
+    qed
+  qed
+  have hgf_id: "\<forall>y\<in>Y1. g (f y) = y"
+  proof
+    fix y1 assume "y1 \<in> Y1"
+    have "p1 ` X = Y1" using hp1 unfolding top1_quotient_map_on_def by (by100 blast)
+    then obtain x where "x \<in> X" "p1 x = y1" using \<open>y1 \<in> Y1\<close> by (by100 blast)
+    have "f y1 = f (p1 x)" using \<open>p1 x = y1\<close> by simp
+    also have "\<dots> = p2 x" using hf_comp \<open>x \<in> X\<close> by simp
+    finally have "f y1 = p2 x" .
+    hence "g (f y1) = g (p2 x)" by simp
+    also have "\<dots> = p1 x" using hg_comp \<open>x \<in> X\<close> by simp
+    finally show "g (f y1) = y1" using \<open>p1 x = y1\<close> by simp
+  qed
+  have hf_inj: "inj_on f Y1"
+  proof (rule inj_onI)
+    fix y1 y1' assume "y1 \<in> Y1" "y1' \<in> Y1" "f y1 = f y1'"
+    have "g (f y1) = y1" using hgf_id \<open>y1 \<in> Y1\<close> by simp
+    have "g (f y1') = y1'" using hgf_id \<open>y1' \<in> Y1\<close> by simp
+    from \<open>f y1 = f y1'\<close> have "g (f y1) = g (f y1')" by simp
+    thus "y1 = y1'" using \<open>g (f y1) = y1\<close> \<open>g (f y1') = y1'\<close> by simp
+  qed
+  have "bij_betw f Y1 Y2" unfolding bij_betw_def using hf_inj hf_surj by simp
+  \<comment> \<open>Bijective quotient map = homeomorphism.\<close>
+  from top1_bij_quotient_map_on_imp_homeomorphism_on[OF hf_quot this]
+  show ?thesis by (by100 blast)
+qed
+
+\<comment> \<open>Elementary operations preserve quotient\\_of\\_scheme\\_on for the SAME space.
+   If Y is a quotient of scheme s, and s → t via an elementary operation,
+   then Y is also a quotient of scheme t (same polygon, adjusted vertex labeling).\<close>
+lemma elementary_operation_preserves_quotient:
+  assumes "top1_quotient_of_scheme_on Y TY s"
+      and "top1_elementary_scheme_operation s t"
+  shows "top1_quotient_of_scheme_on Y TY t"
+  using assms(2,1)
+proof (induction rule: top1_elementary_scheme_operation.induct)
+  case (rotate u v)
+  \<comment> \<open>s = u@v, t = v@u. Same polygon, vertices cyclically shifted.\<close>
+  thus ?case sorry
+next
+  case (cancel u a v)
+  \<comment> \<open>s = u@[a,a\\<inverse>]@v, t = u@v. Cancel adjacent inverse pair. Fold polygon.\<close>
+  thus ?case sorry
+next
+  case (uncancel u v a)
+  \<comment> \<open>s = u@v, t = u@[a,a\\<inverse>]@v. Insert cancellable pair. Unfold polygon.\<close>
+  thus ?case sorry
+next
+  case (invert w)
+  \<comment> \<open>s = w, t = rev(map inverse w). Reverse and invert all edges.\<close>
+  thus ?case sorry
+next
+  case (relabel w old new)
+  \<comment> \<open>s = w, t = map (rename old\\<to>new) w. Rename label. Same polygon and quotient map.\<close>
+  thus ?case sorry
+next
+  case (flip_label w a)
+  \<comment> \<open>s = w, t = map (flip a) w. Same polygon P, quotient map q, vertices.
+     The flip preserves fst and the snd-equality correspondence when labels match.
+     All 11 conditions of quotient\\_of\\_scheme\\_on transfer with the same witnesses.\<close>
+  thus ?case sorry
+next
+  case (cut_paste u1 a u2 u3)
+  \<comment> \<open>s = u1@[a]@u2@[a]@u3, t = u1@[a,a]@rev(inv(u2))@u3. Cut and paste.\<close>
+  thus ?case sorry
+next
+  case (cut_paste2 u0 a u1 u2 b)
+  \<comment> \<open>s = u0@[a]@u1@[a]@u2, t = [b]@u2@[b]@u1@rev(inv(u0)). Cut-paste variant.\<close>
+  thus ?case sorry
+next
+  case (cut_paste_opp u0 u1 a u2 u3)
+  \<comment> \<open>s = u0@u1@[a]@u2@[a\\<inverse>]@u3, t = u0@[a]@u2@[a\\<inverse>]@u1@u3. Move u1 past a.\<close>
+  thus ?case sorry
+qed
+
+\<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
+\<comment> \<open>Each elementary operation is reversible: if s → t, then t ~* s.\<close>
+lemma elementary_operation_reverse:
+  assumes "top1_elementary_scheme_operation s t"
+  shows "top1_scheme_equiv t s"
+  using assms
+proof (induction rule: top1_elementary_scheme_operation.induct)
+  case (rotate u v) \<comment> \<open>u@v → v@u. Reverse: rotate v@u → u@v.\<close>
+  show ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.rotate[of v u] by simp
+next
+  case (cancel u a v) \<comment> \<open>u@[a,inv a]@v → u@v. Reverse: uncancel.\<close>
+  show ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.uncancel[of u v a] by simp
+next
+  case (uncancel u v a) \<comment> \<open>u@v → u@[a,inv a]@v. Reverse: cancel.\<close>
+  show ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.cancel[of u a v] by simp
+next
+  case (invert w) \<comment> \<open>w → rev(inv w). Reverse: invert again (involutive).\<close>
+  have hinv_inv: "\<And>x. top1_inverse_edge (top1_inverse_edge x) = x"
+    unfolding top1_inverse_edge_def by simp
+  have "rev (map top1_inverse_edge (rev (map top1_inverse_edge w))) = w"
+  proof -
+    have "map top1_inverse_edge (map top1_inverse_edge w) = w"
+    proof (induction w)
+      case Nil thus ?case by simp
+    next
+      case (Cons a w) thus ?case using hinv_inv by simp
+    qed
+    thus ?thesis by (simp add: rev_map)
+  qed
+  thus ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.invert[of "rev (map top1_inverse_edge w)"] by simp
+next
+  case (relabel w old new) \<comment> \<open>Reverse of relabel. Use relabel(new→old) + fix collisions.\<close>
+  show ?case sorry
+next
+  case (flip_label w a) \<comment> \<open>flip is involutive: flip(flip(w)) = w.\<close>
+  let ?f = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
+  have hflip_invol: "?f (?f w) = w"
+  proof (induction w)
+    case Nil thus ?case by simp
+  next
+    case (Cons e w) obtain l bo where "e = (l, bo)" by (cases e)
+    thus ?case using Cons.IH by simp
+  qed
+  show ?case unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.flip_label[of "?f w" a] hflip_invol by simp
+next
+  case (cut_paste u1 a u2 u3) \<comment> \<open>Reverse via cut\\_paste on result.\<close>
+  show ?case sorry
+next
+  case (cut_paste2 u0 a u1 u2 b) show ?case sorry
+next
+  case (cut_paste_opp u0 u1 a u2 u3)
+  \<comment> \<open>Reverse: rotate + cut\\_paste\\_opp + rotate (3 elementary operations).\<close>
+  have r1: "top1_elementary_scheme_operation
+      (u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1 @ u3)
+      (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)"
+    using top1_elementary_scheme_operation.rotate
+      [of "u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1" u3] by simp
+  have r2: "top1_elementary_scheme_operation
+      (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)
+      ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1)"
+    using top1_elementary_scheme_operation.cut_paste_opp
+      [of "[]" "u3 @ u0" a u2 u1] by simp
+  have r3: "top1_elementary_scheme_operation
+      ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1)
+      (u0 @ u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3)"
+    using top1_elementary_scheme_operation.rotate
+      [of "[(a,True)] @ u2 @ [(a,False)] @ u3" "u0 @ u1"] by simp
+  show ?case unfolding top1_scheme_equiv_def
+    using r1 r2 r3 by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
+qed
+
+\<comment> \<open>scheme\\_equiv is symmetric.\<close>
+lemma scheme_equiv_sym:
+  assumes "top1_scheme_equiv s t"
+  shows "top1_scheme_equiv t s"
+  using assms unfolding top1_scheme_equiv_def
+proof (induction rule: rtranclp.induct)
+  case rtrancl_refl thus ?case by simp
+next
+  case (rtrancl_into_rtrancl a b c)
+  from elementary_operation_reverse[OF rtrancl_into_rtrancl.hyps(2)]
+  have "top1_scheme_equiv c b" .
+  from this rtrancl_into_rtrancl.IH show ?case
+    unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+qed
+
+lemma scheme_equiv_preserves_quotient:
+  assumes "top1_quotient_of_scheme_on Y TY s"
+      and "top1_scheme_equiv s t"
+  shows "top1_quotient_of_scheme_on Y TY t"
+  using assms(2,1) unfolding top1_scheme_equiv_def
+  by (induction rule: rtranclp.induct) (auto intro: elementary_operation_preserves_quotient)
+
+\<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
+lemma polygonal_region_compact:
+  assumes "top1_is_polygonal_region_on P n"
+  shows "compact P"
+proof -
+  from assms obtain vx vy where hn: "n \<ge> 3"
+      and hP: "P = {(x, y). \<exists>coeffs. (\<forall>i<n. 0 \<le> coeffs i) \<and> (\<Sum>i<n. coeffs i) = 1
+                  \<and> x = (\<Sum>i<n. coeffs i * vx i) \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+    unfolding top1_is_polygonal_region_on_def by (by5000 auto)
+  \<comment> \<open>P is bounded: all coordinates are convex combinations of finitely many vertex coordinates.\<close>
+  define M where "M = Max ((\<lambda>i. \<bar>vx i\<bar>) ` {..<n} \<union> (\<lambda>i. \<bar>vy i\<bar>) ` {..<n})"
+  have hfin: "finite ((\<lambda>i. \<bar>vx i\<bar>) ` {..<n} \<union> (\<lambda>i. \<bar>vy i\<bar>) ` {..<n})"
+    by simp
+  have hne: "(\<lambda>i. \<bar>vx i\<bar>) ` {..<n} \<union> (\<lambda>i. \<bar>vy i\<bar>) ` {..<n} \<noteq> {}"
+  proof -
+    have "(0::nat) < n" using hn by simp
+    hence "\<bar>vx 0\<bar> \<in> (\<lambda>i. \<bar>vx i\<bar>) ` {..<n}" by (by100 blast)
+    thus ?thesis by (by100 blast)
+  qed
+  have hM_bound: "\<And>i. i < n \<Longrightarrow> \<bar>vx i\<bar> \<le> M \<and> \<bar>vy i\<bar> \<le> M"
+  proof -
+    fix i assume "i < n"
+    have "\<bar>vx i\<bar> \<in> (\<lambda>i. \<bar>vx i\<bar>) ` {..<n}" using \<open>i < n\<close> by (by100 blast)
+    hence "\<bar>vx i\<bar> \<le> M" unfolding M_def using hfin hne by (by100 auto)
+    moreover have "\<bar>vy i\<bar> \<in> (\<lambda>i. \<bar>vy i\<bar>) ` {..<n}" using \<open>i < n\<close> by (by100 blast)
+    hence "\<bar>vy i\<bar> \<le> M" unfolding M_def using hfin hne by (by100 auto)
+    ultimately show "\<bar>vx i\<bar> \<le> M \<and> \<bar>vy i\<bar> \<le> M" by simp
+  qed
+  have hP_bounded: "P \<subseteq> {- M .. M} \<times> {- M .. M}"
+  proof
+    fix p assume "p \<in> P"
+    then obtain x y coeffs where hp: "p = (x, y)"
+        and hcoeffs: "\<forall>i<n. (0::real) \<le> coeffs i" "(\<Sum>i<n. coeffs i) = 1"
+        and hx: "x = (\<Sum>i<n. coeffs i * vx i)" and hy: "y = (\<Sum>i<n. coeffs i * vy i)"
+      unfolding hP by (by5000 auto)
+    \<comment> \<open>|x| \\<le> \\<Sum> coeffs i * M = M. Similarly for y.\<close>
+    have "\<bar>x\<bar> \<le> M"
+    proof -
+      have "\<bar>x\<bar> \<le> (\<Sum>i<n. \<bar>coeffs i * vx i\<bar>)" unfolding hx
+        by (rule sum_abs)
+      also have "\<dots> \<le> (\<Sum>i<n. coeffs i * M)"
+      proof (rule sum_mono)
+        fix i assume "i \<in> {..<n}" hence "i < n" by simp
+        have "\<bar>coeffs i * vx i\<bar> = coeffs i * \<bar>vx i\<bar>"
+          using hcoeffs(1) \<open>i < n\<close> by (simp add: abs_mult)
+        also have "\<dots> \<le> coeffs i * M" using hM_bound[OF \<open>i < n\<close>] hcoeffs(1) \<open>i < n\<close>
+          by (intro mult_left_mono) (by100 auto)+
+        finally show "\<bar>coeffs i * vx i\<bar> \<le> coeffs i * M" .
+      qed
+      also have "\<dots> = M" using hcoeffs(2) by (simp add: sum_distrib_right[symmetric])
+      finally show ?thesis .
+    qed
+    have "\<bar>y\<bar> \<le> M"
+    proof -
+      have "\<bar>y\<bar> \<le> (\<Sum>i<n. \<bar>coeffs i * vy i\<bar>)" unfolding hy
+        by (rule sum_abs)
+      also have "\<dots> \<le> (\<Sum>i<n. coeffs i * M)"
+      proof (rule sum_mono)
+        fix i assume "i \<in> {..<n}" hence "i < n" by simp
+        have "\<bar>coeffs i * vy i\<bar> = coeffs i * \<bar>vy i\<bar>"
+          using hcoeffs(1) \<open>i < n\<close> by (simp add: abs_mult)
+        also have "\<dots> \<le> coeffs i * M" using hM_bound[OF \<open>i < n\<close>] hcoeffs(1) \<open>i < n\<close>
+          by (intro mult_left_mono) (by100 auto)+
+        finally show "\<bar>coeffs i * vy i\<bar> \<le> coeffs i * M" .
+      qed
+      also have "\<dots> = M" using hcoeffs(2) by (simp add: sum_distrib_right[symmetric])
+      finally show ?thesis .
+    qed
+    show "p \<in> {- M..M} \<times> {- M..M}" using \<open>\<bar>x\<bar> \<le> M\<close> \<open>\<bar>y\<bar> \<le> M\<close> hp by (by100 auto)
+  qed
+  \<comment> \<open>P is closed: the set of convex combinations of finitely many fixed points is closed.
+     (Limit of convergent sequence of convex combinations is a convex combination.)\<close>
+  \<comment> \<open>Show P is compact directly via inductive convex hull argument.\<close>
+  have hP_compact_direct: "compact P"
+  proof -
+    \<comment> \<open>Define partial convex hulls: Q k = conv({(vx i, vy i) | i \\<le> k}).\<close>
+    define Q where "Q k = {(x::real, y::real). \<exists>coeffs.
+        (\<forall>i\<le>k. 0 \<le> coeffs i) \<and> (\<Sum>i\<le>k. coeffs i) = 1
+        \<and> x = (\<Sum>i\<le>k. coeffs i * vx i) \<and> y = (\<Sum>i\<le>k. coeffs i * vy i)}" for k
+    \<comment> \<open>Base: Q 0 = {(vx 0, vy 0)} is compact (singleton).\<close>
+    have hQ0_eq: "Q 0 = {(vx 0, vy 0)}"
+    proof
+      show "Q 0 \<subseteq> {(vx 0, vy 0)}"
+        unfolding Q_def by (by5000 force)
+      show "{(vx 0, vy 0)} \<subseteq> Q 0"
+        unfolding Q_def
+      proof
+        fix p assume "p \<in> {(vx 0, vy 0)}"
+        hence "p = (vx 0, vy 0)" by simp
+        define coeffs :: "nat \<Rightarrow> real" where "coeffs = (\<lambda>_. 1)"
+        have "(\<forall>i\<le>(0::nat). (0::real) \<le> coeffs i) \<and> (\<Sum>i\<le>0. coeffs i) = 1
+            \<and> vx 0 = (\<Sum>i\<le>0. coeffs i * vx i) \<and> vy 0 = (\<Sum>i\<le>0. coeffs i * vy i)"
+          unfolding coeffs_def by simp
+        thus "p \<in> {(x, y). \<exists>coeffs. (\<forall>i\<le>0. 0 \<le> coeffs i) \<and> (\<Sum>i\<le>0. coeffs i) = 1
+            \<and> x = (\<Sum>i\<le>0. coeffs i * vx i) \<and> y = (\<Sum>i\<le>0. coeffs i * vy i)}"
+          unfolding \<open>p = (vx 0, vy 0)\<close> by (by100 blast)
+      qed
+    qed
+    have hQ0: "compact (Q 0)"
+      unfolding hQ0_eq
+    proof (rule compactI)
+      fix C :: "(real \<times> real) set set"
+      assume "\<forall>c\<in>C. open c" and "{(vx 0, vy 0)} \<subseteq> \<Union>C"
+      then obtain U where "U \<in> C" "(vx 0, vy 0) \<in> U" by (by100 blast)
+      thus "\<exists>D\<subseteq>C. finite D \<and> {(vx 0, vy 0)} \<subseteq> \<Union>D"
+        by (intro exI[of _ "{U}"]) (by100 auto)
+    qed
+    \<comment> \<open>Step: Q (Suc k) = {t*v\\_{k+1} + (1-t)*p | t \\<in> [0,1], p \\<in> Q k}.
+       This is the continuous image of [0,1] \\<times> Q k, hence compact.\<close>
+    have hQstep: "\<And>k. compact (Q k) \<Longrightarrow> compact (Q (Suc k))"
+    proof -
+      fix k assume hIH: "compact (Q k)"
+      \<comment> \<open>Q(Suc k) = image of [0,1] \\<times> Q(k) under the affine combination map.\<close>
+      define f where "f = (\<lambda>(t::real, p::real\<times>real). (t * vx (Suc k) + (1-t) * fst p, t * vy (Suc k) + (1-t) * snd p))"
+      have hQ_eq: "Q (Suc k) = f ` ({0..1} \<times> Q k)"
+      proof
+        \<comment> \<open>(\\<subseteq>): every convex combo of k+2 points = t*v\\_{k+1} + (1-t)*(combo of first k+1).\<close>
+        show "Q (Suc k) \<subseteq> f ` ({0..1} \<times> Q k)"
+        proof
+          fix q assume "q \<in> Q (Suc k)"
+          then obtain coeffs where hc: "(\<forall>i\<le>Suc k. 0 \<le> coeffs i)" "(\<Sum>i\<le>Suc k. coeffs i) = 1"
+              "fst q = (\<Sum>i\<le>Suc k. coeffs i * vx i)" "snd q = (\<Sum>i\<le>Suc k. coeffs i * vy i)"
+            unfolding Q_def by (by5000 auto)
+          define t where "t = coeffs (Suc k)"
+          have ht: "t \<in> {0..1}"
+          proof -
+            have "0 \<le> t" using hc(1) unfolding t_def by simp
+            moreover have "t \<le> 1"
+            proof -
+              have "(\<Sum>i\<le>k. coeffs i) \<ge> 0"
+                using hc(1) by (intro sum_nonneg) (by100 auto)
+              hence "t = 1 - (\<Sum>i\<le>k. coeffs i)" using hc(2) unfolding t_def by simp
+              thus ?thesis using \<open>(\<Sum>i\<le>k. coeffs i) \<ge> 0\<close> by linarith
+            qed
+            ultimately show ?thesis by simp
+          qed
+          show "q \<in> f ` ({0..1} \<times> Q k)"
+          proof (cases "t = 1")
+            case True
+            \<comment> \<open>If t=1: q = v\\_{k+1}. f(1,p) = v\\_{k+1} for any p. Need Q k nonempty.\<close>
+            have "fst q = vx (Suc k) \<and> snd q = vy (Suc k)"
+            proof -
+              have hzero: "\<forall>i\<le>k. coeffs i = 0"
+              proof (rule ccontr)
+                assume "\<not> (\<forall>i\<le>k. coeffs i = 0)"
+                then obtain j where "j \<le> k" "coeffs j \<noteq> 0" by (by100 blast)
+                have "0 \<le> coeffs j" using hc(1) \<open>j \<le> k\<close> by simp
+                hence "coeffs j > 0" using \<open>coeffs j \<noteq> 0\<close> by linarith
+                hence "(\<Sum>i\<le>k. coeffs i) > 0"
+                  using hc(1) \<open>j \<le> k\<close> by (intro sum_pos2[of "{..k}" j]) (by100 auto)+
+                hence "1 - t > 0" using hc(2) unfolding t_def by simp
+                thus False using True by simp
+              qed
+              hence "(\<Sum>i\<le>k. coeffs i * vx i) = 0" "(\<Sum>i\<le>k. coeffs i * vy i) = 0"
+                by (simp_all add: sum.neutral)
+              thus ?thesis using hc(3,4) True unfolding t_def by simp
+            qed
+            \<comment> \<open>Q k is nonempty: (vx 0, vy 0) \\<in> Q 0 \\<subseteq> Q k.\<close>
+            have "(vx 0, vy 0) \<in> Q k"
+            proof -
+              define c0 :: "nat \<Rightarrow> real" where "c0 i = (if i = 0 then 1 else 0)" for i
+              have "(\<forall>i\<le>k. 0 \<le> c0 i)" unfolding c0_def by simp
+              moreover have "(\<Sum>i\<le>k. c0 i) = 1" unfolding c0_def by simp
+              moreover have "vx 0 = (\<Sum>i\<le>k. c0 i * vx i)"
+              proof -
+                have "(\<Sum>i\<le>k. c0 i * vx i) = c0 0 * vx 0 + (\<Sum>i\<in>{..k}-{0}. c0 i * vx i)"
+                  by (rule sum.remove) simp_all
+                also have "(\<Sum>i\<in>{..k}-{0}. c0 i * vx i) = 0"
+                  by (rule sum.neutral) (simp add: c0_def)
+                finally show ?thesis unfolding c0_def by simp
+              qed
+              moreover have "vy 0 = (\<Sum>i\<le>k. c0 i * vy i)"
+              proof -
+                have "(\<Sum>i\<le>k. c0 i * vy i) = c0 0 * vy 0 + (\<Sum>i\<in>{..k}-{0}. c0 i * vy i)"
+                  by (rule sum.remove) simp_all
+                also have "(\<Sum>i\<in>{..k}-{0}. c0 i * vy i) = 0"
+                  by (rule sum.neutral) (simp add: c0_def)
+                finally show ?thesis unfolding c0_def by simp
+              qed
+              ultimately show ?thesis unfolding Q_def by (by100 auto)
+            qed
+            hence "(1::real, (vx 0, vy 0)) \<in> {0..1} \<times> Q k" by simp
+            hence "f (1, (vx 0, vy 0)) \<in> f ` ({0..1} \<times> Q k)" by (by100 blast)
+            moreover have "f (1, (vx 0, vy 0)) = (vx (Suc k), vy (Suc k))"
+              unfolding f_def by simp
+            ultimately have "(vx (Suc k), vy (Suc k)) \<in> f ` ({0..1} \<times> Q k)" by simp
+            thus ?thesis using \<open>fst q = vx (Suc k) \<and> snd q = vy (Suc k)\<close>
+              by (cases q) (by100 auto)
+          next
+            case False
+            \<comment> \<open>t < 1: define \\<alpha> i = coeffs i / (1-t) for i \\<le> k.\<close>
+            have ht_lt: "t < 1" using ht False by simp
+            hence h1mt: "1 - t > 0" by simp
+            define \<alpha> where "\<alpha> i = coeffs i / (1 - t)" for i
+            have h\<alpha>_pos: "\<forall>i\<le>k. 0 \<le> \<alpha> i"
+              using hc(1) h1mt unfolding \<alpha>_def by (by100 auto)
+            have h\<alpha>_sum: "(\<Sum>i\<le>k. \<alpha> i) = 1"
+            proof -
+              have "(\<Sum>i\<le>k. \<alpha> i) = (\<Sum>i\<le>k. coeffs i) / (1-t)"
+                unfolding \<alpha>_def by (simp add: sum_divide_distrib)
+              also have "(\<Sum>i\<le>k. coeffs i) = 1 - t"
+                using hc(2) unfolding t_def by simp
+              finally show ?thesis using h1mt by simp
+            qed
+            define p where "p = ((\<Sum>i\<le>k. \<alpha> i * vx i), (\<Sum>i\<le>k. \<alpha> i * vy i))"
+            have hp: "p \<in> Q k" unfolding Q_def p_def
+              using h\<alpha>_pos h\<alpha>_sum by (by100 auto)
+            have "q = f (t, p)"
+            proof -
+              \<comment> \<open>fst q = t*vx(k+1) + (1-t) * Σα_i*vx_i\<close>
+              have hx: "fst q = t * vx (Suc k) + (1-t) * (\<Sum>i\<le>k. \<alpha> i * vx i)"
+              proof -
+                have "fst q = (\<Sum>i\<le>Suc k. coeffs i * vx i)" using hc(3) by simp
+                also have "\<dots> = (\<Sum>i\<le>k. coeffs i * vx i) + coeffs (Suc k) * vx (Suc k)" by simp
+                also have "(\<Sum>i\<le>k. coeffs i * vx i) = (1-t) * (\<Sum>i\<le>k. \<alpha> i * vx i)"
+                  unfolding \<alpha>_def using h1mt
+                  by (simp add: sum_distrib_left sum_divide_distrib)
+                finally show ?thesis unfolding t_def by (simp add: algebra_simps)
+              qed
+              have hy: "snd q = t * vy (Suc k) + (1-t) * (\<Sum>i\<le>k. \<alpha> i * vy i)"
+              proof -
+                have "snd q = (\<Sum>i\<le>Suc k. coeffs i * vy i)" using hc(4) by simp
+                also have "\<dots> = (\<Sum>i\<le>k. coeffs i * vy i) + coeffs (Suc k) * vy (Suc k)" by simp
+                also have "(\<Sum>i\<le>k. coeffs i * vy i) = (1-t) * (\<Sum>i\<le>k. \<alpha> i * vy i)"
+                  unfolding \<alpha>_def using h1mt
+                  by (simp add: sum_distrib_left sum_divide_distrib)
+                finally show ?thesis unfolding t_def by (simp add: algebra_simps)
+              qed
+              show ?thesis unfolding f_def p_def using hx hy by (cases q) simp
+            qed
+            thus ?thesis using ht hp by (by100 blast)
+          qed
+        qed
+        \<comment> \<open>(\\<supseteq>): t*v\\_{k+1} + (1-t)*p where p \\<in> Q k is a convex combo of k+2 points.\<close>
+        show "f ` ({0..1} \<times> Q k) \<subseteq> Q (Suc k)"
+        proof
+          fix q assume "q \<in> f ` ({0..1} \<times> Q k)"
+          then obtain t p where ht: "t \<in> {0..1}" and hp: "p \<in> Q k" and hq: "q = f (t, p)"
+            by (by100 blast)
+          from hp obtain coeffs where hc: "(\<forall>i\<le>k. 0 \<le> coeffs i)" "(\<Sum>i\<le>k. coeffs i) = 1"
+              "fst p = (\<Sum>i\<le>k. coeffs i * vx i)" "snd p = (\<Sum>i\<le>k. coeffs i * vy i)"
+            unfolding Q_def by (by5000 auto)
+          \<comment> \<open>New coefficients: \\<beta> i = (1-t)*coeffs i for i \\<le> k, \\<beta> (k+1) = t.\<close>
+          define \<beta> where "\<beta> i = (if i = Suc k then t else (1-t) * coeffs i)" for i
+          have h\<beta>_pos: "\<forall>i\<le>Suc k. 0 \<le> \<beta> i"
+            using hc(1) ht unfolding \<beta>_def by (by100 auto)
+          have h\<beta>_sum: "(\<Sum>i\<le>Suc k. \<beta> i) = 1"
+          proof -
+            have "(\<Sum>i\<le>Suc k. \<beta> i) = (\<Sum>i\<le>k. \<beta> i) + \<beta> (Suc k)" by simp
+            also have "(\<Sum>i\<le>k. \<beta> i) = (\<Sum>i\<le>k. (1-t) * coeffs i)"
+              by (rule sum.cong) (simp_all add: \<beta>_def)
+            also have "\<dots> = (1-t) * (\<Sum>i\<le>k. coeffs i)"
+              by (simp add: sum_distrib_left)
+            also have "\<dots> = (1-t)" using hc(2) by simp
+            also have "\<beta> (Suc k) = t" unfolding \<beta>_def by simp
+            finally show ?thesis by simp
+          qed
+          have hx: "fst q = (\<Sum>i\<le>Suc k. \<beta> i * vx i)"
+          proof -
+            have "fst q = t * vx (Suc k) + (1-t) * fst p" using hq unfolding f_def by simp
+            also have "\<dots> = t * vx (Suc k) + (1-t) * (\<Sum>i\<le>k. coeffs i * vx i)"
+              using hc(3) by simp
+            also have "(1-t) * (\<Sum>i\<le>k. coeffs i * vx i) = (\<Sum>i\<le>k. (1-t) * coeffs i * vx i)"
+              by (simp add: sum_distrib_left mult.assoc)
+            also have "(\<Sum>i\<le>k. (1-t) * coeffs i * vx i) = (\<Sum>i\<le>k. \<beta> i * vx i)"
+              by (rule sum.cong) (simp_all add: \<beta>_def)
+            finally have "fst q = \<beta> (Suc k) * vx (Suc k) + (\<Sum>i\<le>k. \<beta> i * vx i)"
+              unfolding \<beta>_def by simp
+            thus ?thesis by simp
+          qed
+          have hy: "snd q = (\<Sum>i\<le>Suc k. \<beta> i * vy i)"
+          proof -
+            have "snd q = t * vy (Suc k) + (1-t) * snd p" using hq unfolding f_def by simp
+            also have "\<dots> = t * vy (Suc k) + (1-t) * (\<Sum>i\<le>k. coeffs i * vy i)"
+              using hc(4) by simp
+            also have "(1-t) * (\<Sum>i\<le>k. coeffs i * vy i) = (\<Sum>i\<le>k. (1-t) * coeffs i * vy i)"
+              by (simp add: sum_distrib_left mult.assoc)
+            also have "(\<Sum>i\<le>k. (1-t) * coeffs i * vy i) = (\<Sum>i\<le>k. \<beta> i * vy i)"
+              by (rule sum.cong) (simp_all add: \<beta>_def)
+            finally have "snd q = \<beta> (Suc k) * vy (Suc k) + (\<Sum>i\<le>k. \<beta> i * vy i)"
+              unfolding \<beta>_def by simp
+            thus ?thesis by simp
+          qed
+          show "q \<in> Q (Suc k)"
+          proof -
+            have "\<exists>coeffs. (\<forall>i\<le>Suc k. 0 \<le> coeffs i) \<and> (\<Sum>i\<le>Suc k. coeffs i) = 1
+                \<and> fst q = (\<Sum>i\<le>Suc k. coeffs i * vx i) \<and> snd q = (\<Sum>i\<le>Suc k. coeffs i * vy i)"
+              using h\<beta>_pos h\<beta>_sum hx hy by (by100 blast)
+            thus ?thesis unfolding Q_def by (by100 auto)
+          qed
+        qed
+      qed
+      have hf_cont: "continuous_on ({0..1} \<times> Q k) f"
+      proof -
+        have "f = (\<lambda>tp. (fst tp * vx (Suc k) + (1 - fst tp) * fst (snd tp),
+                         fst tp * vy (Suc k) + (1 - fst tp) * snd (snd tp)))"
+          unfolding f_def by (rule ext, simp add: case_prod_beta)
+        moreover have "continuous_on ({0..1} \<times> Q k)
+            (\<lambda>tp. (fst tp * vx (Suc k) + (1 - fst tp) * fst (snd tp),
+                   fst tp * vy (Suc k) + (1 - fst tp) * snd (snd tp)))"
+          by (intro continuous_intros)
+        ultimately show ?thesis by simp
+      qed
+      have hdom_compact: "compact ({0..1::real} \<times> Q k)"
+        by (rule compact_Times_general[OF compact_Icc hIH])
+      show "compact (Q (Suc k))" unfolding hQ_eq
+        by (rule compact_continuous_image[OF hf_cont hdom_compact])
+    qed
+    \<comment> \<open>By induction: Q k is compact for all k.\<close>
+    have hQk: "\<And>k. compact (Q k)"
+    proof -
+      fix k show "compact (Q k)"
+        by (induction k) (use hQ0 in simp, use hQstep in simp)
+    qed
+    \<comment> \<open>P = Q (n-1) (when n \\<ge> 3).\<close>
+    have "P = Q (n - 1)"
+    proof -
+      have "{..<n} = {..n-1}" using hn by (by100 auto)
+      hence "(\<forall>i<n. P_cond i) = (\<forall>i\<le>n-1. P_cond i)" for P_cond by (by100 auto)
+      moreover have "(\<Sum>i<n. f i) = (\<Sum>i\<le>n-1. f i)" for f :: "nat \<Rightarrow> real"
+        using \<open>{..<n} = {..n-1}\<close> by (by100 auto)
+      ultimately show ?thesis unfolding hP Q_def by (by100 auto)
+    qed
+    thus ?thesis using hQk by simp
+  qed
+  have hP_closed: "closed P" by (rule compact_imp_closed[OF hP_compact_direct])
+  \<comment> \<open>Closed subset of compact {-M..M}\\<times>{-M..M} is compact.\<close>
+  show "compact P"
+    by (rule closed_subset_compact[OF compact_Icc_Times hP_closed hP_bounded])
+qed
+
+\<comment> \<open>Two convex n-gons in R² are homeomorphic via a boundary-preserving map.
+   The homeomorphism maps vertex i of P1 to vertex i of P2, and maps each edge linearly.\<close>
+lemma convex_polygon_homeomorphism:
+  assumes "top1_is_polygonal_region_on P1 n" and "top1_is_polygonal_region_on P2 n"
+  shows "\<exists>\<phi>. top1_homeomorphism_on P1
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1)
+      P2
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
+  sorry \<comment> \<open>Construct \\<phi> by piecewise-linear map on centroid triangulation.
+     NOTE: homeomorphic\\_convex\\_compact from HOL-Analysis/Homeomorphism.thy would give this
+     directly, but Complex\\_Main does not import HOL-Analysis. Need direct construction:
+     triangulate both polygons from centroids, define affine map on each triangle,
+     paste, show continuity via top1\\_continuous\\_map\\_on\\_real2\\_subspace\\_general bridge.\<close>
+
+\<comment> \<open>Quotient-of-scheme uniqueness: any two quotient spaces of the same scheme are homeomorphic.
+   Proof: both are quotients of convex n-gons by the same identification pattern.
+   The n-gons are homeomorphic (convex compact in R²), and the homeomorphism respects
+   the boundary identifications. So the quotient spaces are homeomorphic.\<close>
+lemma scheme_quotient_uniqueness:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 scheme"
+      and "top1_quotient_of_scheme_on Y2 TY2 scheme"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+proof -
+  \<comment> \<open>Extract full polygon data from both quotients (including vertices and identification).\<close>
+  let ?n = "length scheme"
+  from assms(3) obtain P1 q1 where
+      hP1: "top1_is_polygonal_region_on P1 ?n"
+      and hq1: "top1_quotient_map_on P1
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y1 TY1 q1"
+    by (rule quotient_of_scheme_extract)
+  from assms(4) obtain P2 q2 where
+      hP2: "top1_is_polygonal_region_on P2 ?n"
+      and hq2: "top1_quotient_map_on P2
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) Y2 TY2 q2"
+    by (rule quotient_of_scheme_extract)
+  \<comment> \<open>Get homeomorphism \\<phi>: P1 \\<to> P2 from convex\\_polygon\\_homeomorphism.\<close>
+  from convex_polygon_homeomorphism[OF hP1 hP2]
+  obtain \<phi> where h\<phi>: "top1_homeomorphism_on P1
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) P2
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
+    by (by100 blast)
+  \<comment> \<open>q2 \\<circ> \\<phi>: P1 \\<to> Y2 is a quotient map.\<close>
+  have h\<phi>_quot: "top1_quotient_map_on P1
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) P2
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
+    by (rule top1_homeomorphism_on_imp_quotient_map_on[OF h\<phi>])
+  have hcomp_quot: "top1_quotient_map_on P1
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y2 TY2 (q2 \<circ> \<phi>)"
+    by (rule top1_quotient_map_on_comp[OF h\<phi>_quot hq2])
+  \<comment> \<open>Fibres of q1 and q2\\<circ>\\<phi> agree: both identify boundary points according to the same scheme.
+     Interior points have singleton fibres under both maps.
+     Edge points: \\<phi> maps edge i of P1 to edge i of P2 (by h\\<phi>\\_edge), so the scheme
+     identification pattern is preserved.\<close>
+  have hfibres: "\<forall>x\<in>P1. \<forall>y\<in>P1. (q1 x = q1 y) \<longleftrightarrow> ((q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y)"
+    sorry \<comment> \<open>Uses h\\<phi>\\_edge + hq1\\_ident + hq1\\_inj + hq1\\_bd + matching conditions on P2.
+       Key: \\<phi> preserves the edge parametrization, so same-scheme identification \\<Rightarrow> same fibres.
+       The proof needs the vx1'/vy1' from \\<phi> to match the vx1/vy1 from q1, which requires
+       showing that the vertex functions are essentially unique (up to the polygon's geometry).\<close>
+  from quotient_same_fibres_homeomorphic[OF hq1 hcomp_quot hfibres]
+  show ?thesis .
+qed
+
+\<comment> \<open>scheme\\_equiv preserves homeomorphism type: equivalent schemes give homeomorphic quotients.\<close>
+lemma scheme_equiv_homeomorphic:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 s"
+      and "top1_quotient_of_scheme_on Y2 TY2 t"
+      and "top1_scheme_equiv s t"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+proof -
+  have "top1_quotient_of_scheme_on Y1 TY1 t"
+    by (rule scheme_equiv_preserves_quotient[OF assms(3) assms(5)])
+  from scheme_quotient_uniqueness[OF assms(1) assms(2) this assms(4)]
+  show ?thesis .
+qed
+
+\<comment> \<open>Scheme rotation preserves quotient type: quotient(u@v) \\<cong> quotient(v@u).
+   The edge identifications are the same up to cyclic shift.\<close>
+lemma scheme_rotate_homeomorphic:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 (u @ v)"
+      and "top1_quotient_of_scheme_on Y2 TY2 (v @ u)"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+proof -
+  \<comment> \<open>Book proof (Munkres \\<S>76 operation iv): "Permute. Renumbering the vertices of the
+     polygonal region so as to begin with a different vertex does not affect the quotient space."
+     Formal argument: u@v and v@u have the same length n = |u|+|v|. Define shifted vertex
+     positions vx'(i) = vx((i+|u|) mod n). The polygon P is unchanged (same convex hull).
+     The quotient map q is unchanged. The scheme (v@u)!i = (u@v)!((i+|u|) mod n), so all
+     identification conditions transfer. Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
+  let ?n = "length u + length v"
+  \<comment> \<open>Strategy: Show Y1 is ALSO a quotient of v@u (same polygon, rotated vertices).
+     Then Y1 and Y2 are both quotients of v@u. Apply scheme\\_quotient\\_uniqueness.\<close>
+  \<comment> \<open>The scheme v@u has the same length.\<close>
+  have hlen_eq: "length (v @ u) = ?n" by simp
+  have hlen_uv: "length (u @ v) = ?n" by simp
+  \<comment> \<open>Key: (v@u)!i = (u@v)!((i + length u) mod n) for i < n.\<close>
+  have hshift: "\<forall>i < ?n. (v @ u) ! i = (u @ v) ! ((i + length u) mod ?n)"
+  proof (intro allI impI)
+    fix i assume "i < ?n"
+    show "(v @ u) ! i = (u @ v) ! ((i + length u) mod ?n)"
+    proof (cases "i < length v")
+      case True
+      hence "(v @ u) ! i = v ! i" by (simp add: nth_append)
+      moreover have "(i + length u) mod ?n = i + length u"
+        using True by simp
+      moreover have "(u @ v) ! (i + length u) = v ! i"
+        using True by (simp add: nth_append)
+      ultimately show ?thesis by simp
+    next
+      case False
+      hence "i \<ge> length v" by linarith
+      hence "(v @ u) ! i = u ! (i - length v)" by (simp add: nth_append)
+      moreover have "(i + length u) mod ?n = i - length v"
+      proof -
+        have "i + length u = ?n + (i - length v)" using \<open>i \<ge> length v\<close> by linarith
+        hence "(i + length u) mod ?n = (?n + (i - length v)) mod ?n"
+          by (metis add.commute)
+        also have "\<dots> = (i - length v) mod ?n" by simp
+        also have "\<dots> = i - length v"
+          using \<open>i < ?n\<close> \<open>i \<ge> length v\<close> by simp
+        finally show ?thesis .
+      qed
+      moreover have "(u @ v) ! (i - length v) = u ! (i - length v)"
+      proof -
+        have "i - length v < length u" using \<open>i < ?n\<close> \<open>i \<ge> length v\<close> by linarith
+        thus ?thesis by (simp add: nth_append)
+      qed
+      ultimately show ?thesis by simp
+    qed
+  qed
+  \<comment> \<open>Y1 is also a quotient of v@u (same polygon, rotated vertex numbering).\<close>
+  have hY1_vu: "top1_quotient_of_scheme_on Y1 TY1 (v @ u)"
+    by (rule elementary_operation_preserves_quotient[OF assms(3) top1_elementary_scheme_operation.rotate])
+  \<comment> \<open>Both Y1 and Y2 are quotients of v@u. Apply scheme\\_quotient\\_uniqueness.\<close>
+  show ?thesis by (rule scheme_quotient_uniqueness[OF assms(1) assms(2) hY1_vu assms(4)])
+qed
+
+\<comment> \<open>Scheme cancellation preserves quotient type: quotient(u@[a,a\\<inverse>]@v) \\<cong> quotient(u@v).
+   Folding two adjacent inverse edges doesn't change the quotient space.\<close>
+lemma scheme_cancel_homeomorphic:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 (u @ [a, top1_inverse_edge a] @ v)"
+      and "top1_quotient_of_scheme_on Y2 TY2 (u @ v)"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+proof -
+  \<comment> \<open>Book proof (Munkres \\<S>76 operation vi): "Cancel. Replace w = y0 a a\\<inverse> y1 by y0 y1."
+     Formal: The (n+2)-gon for u@[a,a\\<inverse>]@v has two adjacent edges labeled a, a\\<inverse>.
+     These edges are identified in the quotient. "Folding" the polygon along these edges
+     gives an n-gon. The fold map is a quotient map P(n+2) \\<to> P(n) that preserves
+     all other edge identifications.
+     Compose: q1: P(n+2) \\<to> Y1, fold: P(n+2) \\<to> P(n), and q2\\<inverse>: P(n) \\<to> Y2.
+     The composition gives a homeomorphism Y1 \\<to> Y2.\<close>
+  \<comment> \<open>By elementary\\_operation\\_preserves\\_quotient with the cancel rule:
+     Y1 is also a quotient of u@v. Then scheme\\_quotient\\_uniqueness gives Y1 \\<cong> Y2.\<close>
+  have "top1_quotient_of_scheme_on Y1 TY1 (u @ v)"
+    by (rule elementary_operation_preserves_quotient[OF assms(3)
+        top1_elementary_scheme_operation.cancel[of u a v]])
+  from scheme_quotient_uniqueness[OF assms(1) assms(2) this assms(4)]
+  show ?thesis .
+qed
+
+\<comment> \<open>Scheme inversion preserves quotient type: quotient(w) \\<cong> quotient(rev(map inverse w)).
+   Reflecting the polygon preserves the quotient space.\<close>
+lemma scheme_invert_homeomorphic:
+  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
+      and "top1_quotient_of_scheme_on Y1 TY1 w"
+      and "top1_quotient_of_scheme_on Y2 TY2 (rev (map top1_inverse_edge w))"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+proof -
+  \<comment> \<open>Book proof (Munkres \\<S>76 operation v): "Flip. Flipping the polygonal region over.
+     The order of the vertices is reversed, and so is the orientation of each edge."
+     Formal: Reflecting the polygon (reversing vertex order) gives a valid quotient
+     of rev(map inverse w). Then scheme\\_quotient\\_uniqueness gives Y1 \\<cong> Y2.\<close>
+  have hY1_inv: "top1_quotient_of_scheme_on Y1 TY1 (rev (map top1_inverse_edge w))"
+    by (rule elementary_operation_preserves_quotient[OF assms(3) top1_elementary_scheme_operation.invert])
+  \<comment> \<open>Originally: Extract (P,q,vx,vy) from assms(3). Define reflected vertices:
+       vx'(i) = vx(n-1-i), vy'(i) = vy(n-1-i) (reverse order).
+       The same polygon P (reflection is a homeomorphism), same quotient map q.
+       Edge i in the reflected scheme = inverse of edge (n-1-i) in w.
+       All conditions transfer via the reversal.\<close>
+  show ?thesis by (rule scheme_quotient_uniqueness[OF assms(1) assms(2) hY1_inv assms(4)])
+qed
+  \<comment> \<open>Reflect the polygon (reverse vertex order + flip orientations).
+     The reflection map commutes with the identification.\<close>
+
+(** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
+    If X1 is the quotient space induced by scheme1 and X2 by scheme2, and scheme2
+    is obtained from scheme1 via an elementary operation, then X1 \<cong> X2. **)
+theorem Theorem_76_elementary_operations:
+  fixes scheme1 scheme2 :: "('a \<times> bool) list"
+    and X1 X2 :: "'x set" and TX1 TX2 :: "'x set set"
+  assumes "is_topology_on_strict X1 TX1" and "is_topology_on_strict X2 TX2"
+      and "top1_elementary_scheme_operation scheme1 scheme2"
+      and "top1_quotient_of_scheme_on X1 TX1 scheme1
+         \<and> top1_quotient_of_scheme_on X2 TX2 scheme2"
+  shows "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
+proof -
+  \<comment> \<open>Munkres §76: Each elementary operation (rotate, cancel, relabel, cut, paste, invert)
+     corresponds to a topological operation on the polygonal region that preserves the
+     homeomorphism type of the quotient space.
+     Proof by induction on the derivation of top1_elementary_scheme_operation.\<close>
+  \<comment> \<open>Each case: rotate preserves the polygon; cancel removes a pair of edges;
+     relabel renames consistently; cut/paste split/join polygons; invert reverses.\<close>
+  \<comment> \<open>Prove the strong version: for ALL quotient spaces of related schemes, homeo.\<close>
+  have hcases: "\<And>s t. top1_elementary_scheme_operation s t \<Longrightarrow>
+      top1_quotient_of_scheme_on X1 TX1 s \<Longrightarrow>
+      top1_quotient_of_scheme_on X2 TX2 t \<Longrightarrow>
+      \<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
+  proof -
+    fix s t assume hop: "top1_elementary_scheme_operation s t"
+        and hs: "top1_quotient_of_scheme_on X1 TX1 s"
+        and ht: "top1_quotient_of_scheme_on X2 TX2 t"
+    \<comment> \<open>First prove for ANY pair of quotient spaces (needed for sym/trans cases).\<close>
+    have huniv: "\<And>s t (Y1 :: 'x set) TY1 (Y2 :: 'x set) TY2.
+        top1_elementary_scheme_operation s t \<Longrightarrow>
+        is_topology_on_strict Y1 TY1 \<Longrightarrow> is_topology_on_strict Y2 TY2 \<Longrightarrow>
+        top1_quotient_of_scheme_on Y1 TY1 s \<Longrightarrow>
+        top1_quotient_of_scheme_on Y2 TY2 t \<Longrightarrow>
+        \<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+    proof -
+      fix s t and Y1 :: "'x set" and TY1 and Y2 :: "'x set" and TY2
+      assume hop: "top1_elementary_scheme_operation s t"
+          and hY1: "is_topology_on_strict Y1 TY1" and hY2: "is_topology_on_strict Y2 TY2"
+          and hs: "top1_quotient_of_scheme_on Y1 TY1 s"
+          and ht: "top1_quotient_of_scheme_on Y2 TY2 t"
+      show "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h" using hop
+      proof (cases rule: top1_elementary_scheme_operation.cases)
+        case (rotate u v)
+        then show ?thesis using scheme_rotate_homeomorphic[OF hY1 hY2] hs ht by simp
+      next
+        case (cancel u a v)
+        then show ?thesis using scheme_cancel_homeomorphic[OF hY1 hY2] hs ht by simp
+      next
+        case (uncancel u v a)
+        \<comment> \<open>Uncancel = reverse of cancel. s = u@v, t = u@[a, a\\<inverse>]@v.\<close>
+        have hs2: "top1_quotient_of_scheme_on Y1 TY1 (u @ v)" using hs uncancel by simp
+        have ht2: "top1_quotient_of_scheme_on Y2 TY2 (u @ [a, top1_inverse_edge a] @ v)"
+          using ht uncancel by simp
+        from scheme_cancel_homeomorphic[OF hY2 hY1 ht2 hs2]
+        obtain h where "top1_homeomorphism_on Y2 TY2 Y1 TY1 h" by (by100 blast)
+        from homeomorphism_inverse[OF this]
+        show ?thesis by (by100 blast)
+      next
+        case invert
+        then show ?thesis using scheme_invert_homeomorphic[OF hY1 hY2] hs ht by simp
+      next
+        case (relabel old new)
+        \<comment> \<open>Relabeling preserves the quotient: same polygon, same q, renamed labels.
+           Y1 is also a quotient of the relabeled scheme. Then scheme\\_quotient\\_uniqueness.\<close>
+        have hop_relabel: "top1_elementary_scheme_operation s (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
+          by (rule top1_elementary_scheme_operation.relabel)
+        have hY1_relabel: "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
+          by (rule elementary_operation_preserves_quotient[OF hs hop_relabel])
+        moreover have "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
+          using ht relabel by simp
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
+      next
+        case (flip_label a)
+        \<comment> \<open>Flipping orientations: same polygon, same q, flipped edge directions.
+           Y1 is also a quotient of the flipped scheme.\<close>
+        have "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) s)"
+          by (rule elementary_operation_preserves_quotient[OF hs top1_elementary_scheme_operation.flip_label])
+        moreover have "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) s)"
+          using ht flip_label by simp
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
+      next
+        case (cut_paste u1 a u2 u3)
+        \<comment> \<open>Cut-and-repaste: \\<S>76 Theorem 76.1. Cut, flip, paste preserves quotient.\<close>
+        have "top1_quotient_of_scheme_on Y1 TY1
+            (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+        proof -
+          have "top1_quotient_of_scheme_on Y1 TY1 (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
+            using hs cut_paste by simp
+          from elementary_operation_preserves_quotient[OF this top1_elementary_scheme_operation.cut_paste[of u1 a u2 u3]]
+          show ?thesis .
+        qed
+        moreover have "top1_quotient_of_scheme_on Y2 TY2
+            (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+          using ht cut_paste by simp
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
+      next
+        case (cut_paste2 u0 a u1 u2 b)
+        have "top1_quotient_of_scheme_on Y1 TY1
+            ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+        proof -
+          have "top1_quotient_of_scheme_on Y1 TY1 (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)"
+            using hs cut_paste2 by simp
+          from elementary_operation_preserves_quotient[OF this top1_elementary_scheme_operation.cut_paste2[of u0 a u1 u2 b]]
+          show ?thesis .
+        qed
+        moreover have "top1_quotient_of_scheme_on Y2 TY2
+            ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+          using ht cut_paste2 by simp
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
+      next
+        case (cut_paste_opp u0 u1 a u2 u3)
+        have "top1_quotient_of_scheme_on Y1 TY1
+            (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+        proof -
+          have "top1_quotient_of_scheme_on Y1 TY1 (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
+            using hs cut_paste_opp by simp
+          from elementary_operation_preserves_quotient[OF this top1_elementary_scheme_operation.cut_paste_opp[of u0 u1 a u2 u3]]
+          show ?thesis .
+        qed
+        moreover have "top1_quotient_of_scheme_on Y2 TY2
+            (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+          using ht cut_paste_opp by simp
+        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
+      qed
+    qed
+    from huniv[OF hop assms(1) assms(2) hs ht]
+    show "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h" .
+  qed
+  show ?thesis using hcases[OF assms(3)] assms(4) by (by100 blast)
+qed
+
+
+
+\<comment> \<open>§75 + §73 + §74.4 moved to AlgTopCached8.\<close>
+
+\<comment> \<open>Helper: simplify set comprehension with singleton Bex.\<close>
 \<comment> \<open>The quotient of Z^m by 2\<beta> (where \<beta> = sum of generators) has:
    - torsion subgroup of order 2 (generated by q(\<beta>))
    - free complement of rank m-1 (generated by q(\<iota>(Suc i)), i < m-1)
@@ -30,7 +1226,6 @@ lemma free_abelian_quotient_by_twice_sum_structure:
      Uses: free\_abelian\_coordinate\_projection, free\_abelian\_kernel\_coordinate,
      difference-coordinate homs \<delta>_j, Lemma\_67\_7\_free\_abelian\_extension,
      abelian\_word\_product\_zero\_net\_coeff.\<close>
-
 
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
