@@ -4775,40 +4775,44 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         assume "\<exists>a' b'. a' \<noteq> b' \<and> top1_scheme_equiv rest [(a', True), (a', False), (b', True), (b', False)]"
         then obtain a' b' where hab: "a' \<noteq> b'" "top1_scheme_equiv rest [(a', True), (a', False), (b', True), (b', False)]"
           by (by100 blast)
-        \<comment> \<open>scheme \<sim> [(a,T),(a,T)] @ [(a',T),(a',F),(b',T),(b',F)].\<close>
-        have hne_sphere: "\<forall>e \<in> set [(a', True), (a', False), (b', True), (b', False)]. fst e \<noteq> a"
-          sorry \<comment> \<open>From properness: a' \<noteq> a and b' \<noteq> a.\<close>
-        have "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])"
-          using scheme_equiv_prepend_pair[OF hab(2) ha_rest(3) hne_sphere] by (by100 blast)
-        hence hchain: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])"
+        \<comment> \<open>Relabel the sphere to avoid label a, then apply congruence.\<close>
+        \<comment> \<open>Find c, d with c \<noteq> d, c \<noteq> a, d \<noteq> a, and rest \<sim> [(c,T),(c,F),(d,T),(d,F)].\<close>
+        obtain c d where hcd: "c \<noteq> d" "c \<noteq> a" "d \<noteq> a"
+            "top1_scheme_equiv rest [(c, True), (c, False), (d, True), (d, False)]"
+          sorry \<comment> \<open>From hab: rest \<sim> sphere(a',b'). Relabel a'\<to>fresh, b'\<to>fresh2 if either = a.\<close>
+        have hne_sphere: "\<forall>e \<in> set [(c, True), (c, False), (d, True), (d, False)]. fst e \<noteq> a"
+          using hcd(2,3) by (by100 simp)
+        have "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ [(c,True),(c,False),(d,True),(d,False)])"
+          using scheme_equiv_prepend_pair[OF hcd(4) ha_rest(3) hne_sphere] by (by100 blast)
+        hence hchain: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ [(c,True),(c,False),(d,True),(d,False)])"
           using scheme_equiv_trans[OF ha_rest(1)] by (by100 blast)
-        \<comment> \<open>Cancel (a',T)(a',F) at positions 2,3; then (b',T)(b',F) at positions 2,3.\<close>
+        \<comment> \<open>Cancel (c,T)(c,F) at positions 2,3; then (d,T)(d,F) at positions 2,3.\<close>
         have "top1_scheme_equiv scheme ([(a,True),(a,True)])"
         proof -
           have s1: "top1_elementary_scheme_operation
-              ([(a,True),(a,True)] @ [(a',True), top1_inverse_edge (a',True)] @ [(b',True),(b',False)])
-              ([(a,True),(a,True)] @ [(b',True),(b',False)])"
+              ([(a,True),(a,True)] @ [(c,True), top1_inverse_edge (c,True)] @ [(d,True),(d,False)])
+              ([(a,True),(a,True)] @ [(d,True),(d,False)])"
             by (rule top1_elementary_scheme_operation.cancel)
-          have "(a', False) = top1_inverse_edge (a', True)"
+          have "(c, False) = top1_inverse_edge (c, True)"
             unfolding top1_inverse_edge_def by (by100 simp)
-          hence "top1_scheme_equiv ([(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)])
-              ([(a,True),(a,True),(b',True),(b',False)])"
+          hence "top1_scheme_equiv ([(a,True),(a,True),(c,True),(c,False),(d,True),(d,False)])
+              ([(a,True),(a,True),(d,True),(d,False)])"
             using s1 unfolding top1_scheme_equiv_def by (by100 simp)
           moreover have s2: "top1_elementary_scheme_operation
-              ([(a,True),(a,True)] @ [(b',True), top1_inverse_edge (b',True)] @ [])
+              ([(a,True),(a,True)] @ [(d,True), top1_inverse_edge (d,True)] @ [])
               ([(a,True),(a,True)] @ [])"
             by (rule top1_elementary_scheme_operation.cancel)
-          have "(b', False) = top1_inverse_edge (b', True)"
+          have "(d, False) = top1_inverse_edge (d, True)"
             unfolding top1_inverse_edge_def by (by100 simp)
-          hence "top1_scheme_equiv ([(a,True),(a,True),(b',True),(b',False)])
+          hence "top1_scheme_equiv ([(a,True),(a,True),(d,True),(d,False)])
               ([(a,True),(a,True)])"
             using s2 unfolding top1_scheme_equiv_def by (by100 simp)
-          ultimately have heq: "top1_scheme_equiv ([(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)])
+          ultimately have heq: "top1_scheme_equiv ([(a,True),(a,True),(c,True),(c,False),(d,True),(d,False)])
               ([(a,True),(a,True)])"
             using scheme_equiv_trans by (by100 blast)
-          have "[(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)]
-              = [(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)]" by (by100 simp)
-          hence "top1_scheme_equiv ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])
+          have "[(a,True),(a,True)] @ [(c,True),(c,False),(d,True),(d,False)]
+              = [(a,True),(a,True),(c,True),(c,False),(d,True),(d,False)]" by (by100 simp)
+          hence "top1_scheme_equiv ([(a,True),(a,True)] @ [(c,True),(c,False),(d,True),(d,False)])
               ([(a,True),(a,True)])"
             using heq by (by100 simp)
           thus ?thesis using scheme_equiv_trans[OF hchain] by (by100 blast)
