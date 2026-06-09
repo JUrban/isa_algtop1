@@ -4532,7 +4532,44 @@ next
   \<comment> \<open>w has Suc m pairs. Split off the last pair: w = w' @ [(f m, True), (f m, True)].\<close>
   \<comment> \<open>By IH: w' \<sim> proj m. Then w = w' @ [(f m,T),(f m,T)] \<sim> proj m @ [(f m,T),(f m,T)] (suffix congruence).\<close>
   \<comment> \<open>Relabel f m \<to> m (possibly via relabel\_avoid): proj m @ [(m,T),(m,T)] = proj (Suc m).\<close>
-  show ?case sorry
+  \<comment> \<open>w has length 2*(m+1). Define w' = take (2*m) w (first m pairs).\<close>
+  define w' where "w' = take (2*m) w"
+  have hlen_w: "length w = 2 * Suc m" using Suc.prems(1) by (by100 simp)
+  hence hlen_w': "length w' = 2 * m" unfolding w'_def by (by100 simp)
+  \<comment> \<open>The last pair is [(f m, T), (f m, T)].\<close>
+  have hlast: "w = w' @ [(f m, True), (f m, True)]"
+  proof -
+    have "w = take (2*m) w @ drop (2*m) w" by (by100 simp)
+    moreover have "drop (2*m) w = [(f m, True), (f m, True)]"
+    proof -
+      have "length (drop (2*m) w) = 2" using hlen_w by (by100 simp)
+      moreover have "(drop (2*m) w)!0 = w!(2*m)" using hlen_w by (by100 simp)
+      moreover have "(drop (2*m) w)!1 = w!(2*m+1)" using hlen_w by (by100 simp)
+      moreover have "w!(2*m) = (f m, True)" using Suc.prems(2)[rule_format, of m] by (by100 simp)
+      moreover have "w!(2*m+1) = (f m, True)" using Suc.prems(2)[rule_format, of m] by (by100 simp)
+      ultimately show ?thesis
+        by (cases "drop (2*m) w", by100 simp, cases "tl (drop (2*m) w)", by100 simp, by100 simp)
+    qed
+    ultimately show ?thesis unfolding w'_def by (by100 simp)
+  qed
+  \<comment> \<open>IH conditions for w'.\<close>
+  define g where "g i = f i" for i
+  have hw'_struct: "\<forall>i < m. w'!(2*i) = (g i, True) \<and> w'!(2*i+1) = (g i, True)"
+    sorry
+  have hg_inj: "inj_on g {..<m}"
+    unfolding g_def using Suc.prems(3) by (rule inj_on_subset) (by100 simp)
+  \<comment> \<open>Apply IH: w' \<sim> proj m.\<close>
+  from Suc.IH[OF hlen_w' hw'_struct hg_inj]
+  have "top1_scheme_equiv w' (top1_m_projective_scheme m)" unfolding g_def .
+  \<comment> \<open>Suffix congruence: w = w' @ [(f m,T),(f m,T)] \<sim> proj m @ [(f m,T),(f m,T)].\<close>
+  hence "top1_scheme_equiv w (top1_m_projective_scheme m @ [(f m, True), (f m, True)])"
+    using scheme_equiv_append[of w' "top1_m_projective_scheme m" "[(f m, True), (f m, True)]"]
+    hlast by (by100 simp)
+  \<comment> \<open>Relabel f m \<to> m (via relabel\_avoid if needed), then proj m @ [(m,T),(m,T)] = proj(Suc m).\<close>
+  moreover have "top1_scheme_equiv (top1_m_projective_scheme m @ [(f m, True), (f m, True)])
+      (top1_m_projective_scheme (Suc m))"
+    sorry \<comment> \<open>Relabel f(m) \<to> m + proj m @ [(m,T),(m,T)] = proj(Suc m).\<close>
+  ultimately show ?case unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
 qed
 
 \<comment> \<open>Relabel target to avoid a specific label. From rest \<sim> target where rest avoids label a,
