@@ -616,6 +616,29 @@ qed
 lemma suc_mod_shift: "(0::nat) < n \<Longrightarrow> Suc ((i + k) mod n) mod n = (Suc i + k) mod n"
   by presburger \<comment> \<open>raw presburger needed; by100 times out in AlgTop context\<close>
 
+\<comment> \<open>Shifted distinctness: if vertices are distinct, they're still distinct after cyclic shift.\<close>
+lemma shifted_distinct:
+  assumes "(0::nat) < n" and "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+  shows "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx ((i+k) mod n), vy ((i+k) mod n)) \<noteq> (vx ((j+k) mod n), vy ((j+k) mod n))"
+proof (intro allI impI)
+  fix i j assume hi: "i < n" and hj: "j < n" and hne: "i \<noteq> j"
+  have h1: "(i+k) mod n < n" by (rule mod_less_n[OF assms(1)])
+  have h2: "(j+k) mod n < n" by (rule mod_less_n[OF assms(1)])
+  have h3: "(i+k) mod n \<noteq> (j+k) mod n" using shift_mod_inj[OF assms(1) hi hj] hne by (by100 metis)
+  show "(vx ((i+k) mod n), vy ((i+k) mod n)) \<noteq> (vx ((j+k) mod n), vy ((j+k) mod n))"
+    using assms(2) h1 h2 h3 by (by100 blast)
+qed
+
+\<comment> \<open>Shifted membership: if vertex i is in P, then vertex (i+k) mod n is in P.\<close>
+lemma shifted_in_P:
+  assumes "(0::nat) < n" and "\<forall>i<n. (vx i, vy i) \<in> P"
+  shows "\<forall>i<n. (vx ((i+k) mod n), vy ((i+k) mod n)) \<in> P"
+proof (intro allI impI)
+  fix i assume "i < n"
+  have hlt: "(i+k) mod n < n" using mod_less_n[OF assms(1)] .
+  from assms(2)[rule_format, OF hlt] show "(vx ((i+k) mod n), vy ((i+k) mod n)) \<in> P" .
+qed
+
 \<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
    Same polygon P. Shifted vertices: vx'(i) = vx((i+k) mod n).
    The convex hull is invariant. Edge identification shifts consistently.\<close>
