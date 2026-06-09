@@ -543,9 +543,16 @@ proof -
        = snd (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w ! j))
     = (snd (w ! i) = snd (w ! j))"
     using hsnd_eq by (by100 blast)
+  \<comment> \<open>Proof: the definition for ?w' holds with the SAME witnesses as for w.\<close>
+  \<comment> \<open>Key: after unfolding, the goal's fst/snd terms can be rewritten to match the assumption's.\<close>
+  have hfst_eq_full: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow>
+      (fst (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w ! i)
+       = fst (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w ! j))
+    = (fst (w ! i) = fst (w ! j))"
+    using hfst_map by (by100 simp)
   from assms show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    sorry \<comment> \<open>TODO: prove by extracting witnesses via obtain + rebuilding with hfst\_map/hsnd\_map.\<close>
+    sorry
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
