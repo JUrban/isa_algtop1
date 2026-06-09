@@ -3674,18 +3674,32 @@ proof -
     \<comment> \<open>Same direction: scheme ~ [(a,T),(a,T),(b,d1),(b,d1)] ~ projective m=2.\<close>
     have "top1_scheme_equiv scheme (top1_m_projective_scheme 2)"
       sorry
-    hence "top1_is_projective_scheme (top1_m_projective_scheme 2) 2"
+    moreover have "top1_is_projective_scheme (top1_m_projective_scheme 2) 2"
       unfolding top1_is_projective_scheme_def by (by100 simp)
-    show ?thesis sorry
+    ultimately have "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
+    proof -
+      assume h1: "top1_scheme_equiv scheme (top1_m_projective_scheme 2)"
+        and h2: "top1_is_projective_scheme (top1_m_projective_scheme 2) 2"
+      have "(2::nat) > 0" by (by100 simp)
+      thus ?thesis using h1 h2 by (by100 blast)
+    qed
+    thus ?thesis by (by100 blast)
   next
     case False
     \<comment> \<open>Opposite direction: scheme ~ [(a,T),(a,T),(b,d1),(b,\\<not>d1)].
        The pair (b,d1),(b,\\<not>d1) is inverse. Cancel \<Rightarrow> [(a,T),(a,T)] ~ projective m=1.\<close>
     have "top1_scheme_equiv scheme (top1_m_projective_scheme 1)"
       sorry
-    hence "top1_is_projective_scheme (top1_m_projective_scheme 1) 1"
+    moreover have "top1_is_projective_scheme (top1_m_projective_scheme 1) 1"
       unfolding top1_is_projective_scheme_def by (by100 simp)
-    show ?thesis sorry
+    ultimately have "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
+    proof -
+      assume h1: "top1_scheme_equiv scheme (top1_m_projective_scheme 1)"
+        and h2: "top1_is_projective_scheme (top1_m_projective_scheme 1) 1"
+      have "(1::nat) > 0" by (by100 simp)
+      thus ?thesis using h1 h2 by (by100 blast)
+    qed
+    thus ?thesis by (by100 blast)
   qed
 qed
 
