@@ -5217,7 +5217,45 @@ lemma commutator_prepend_torus:
   assumes "a \<noteq> (b :: nat)" and "n > 0"
   shows "top1_scheme_equiv ([(a, True), (b, True), (a, False), (b, False)] @ top1_n_torus_scheme n)
       (top1_n_torus_scheme (Suc n))"
-  sorry
+proof -
+  let ?block = "[(a, True), (b, True), (a, False), (b, False)]"
+  let ?tn = "top1_n_torus_scheme n"
+  \<comment> \<open>Step 1: Relabel a to 2*n and b to 2*n+1 in the block (via congruence on the prefix).\<close>
+  \<comment> \<open>Use scheme\_equiv\_relabel\_avoid to get fresh labels, then relabel to target.\<close>
+  \<comment> \<open>Actually: relabel a\\<to>2*n in the full scheme, then relabel b\\<to>2*n+1.\<close>
+  define target_block where "target_block = [(2*n, True), (2*n+1, True), (2*n, False), (2*n+1, False)]"
+  \<comment> \<open>The target torus\_(Suc n) = torus\_n @ target\_block.\<close>
+  have htorus_suc: "top1_n_torus_scheme (Suc n) = ?tn @ target_block"
+    unfolding top1_n_torus_scheme_def target_block_def
+    by (by100 simp)
+  \<comment> \<open>Step 2: Show block @ torus\_n ~ target\_block @ torus\_n via relabeling.
+     Relabel a\\<to>2*n in the full scheme (preserves torus\_n since a,b are fresh from 0..2n-1).
+     Then relabel b\\<to>2*n+1.\<close>
+  \<comment> \<open>Key: the relabeled block @ torus\_n has the right form.\<close>
+  have hblock_target: "top1_scheme_equiv ?block target_block"
+  proof -
+    have "top1_scheme_equiv ?block (top1_n_torus_scheme 1)"
+      using commutator_block_equiv_torus_1[OF assms(1)] .
+    moreover have "top1_scheme_equiv (top1_n_torus_scheme 1) target_block"
+    proof -
+      have "2 * n \<noteq> 2 * n + 1" by (by100 simp)
+      from commutator_block_equiv_torus_1[OF this]
+      have "top1_scheme_equiv [(2*n,True),(2*n+1,True),(2*n,False),(2*n+1,False)] (top1_n_torus_scheme 1)" .
+      from scheme_equiv_sym[OF this] show ?thesis unfolding target_block_def .
+    qed
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+  qed
+  have "top1_scheme_equiv (?block @ ?tn) (target_block @ ?tn)"
+    using scheme_equiv_append[OF hblock_target] by (by100 blast)
+  \<comment> \<open>Step 3: Rotate target\_block from front to back.\<close>
+  moreover have "top1_scheme_equiv (target_block @ ?tn) (?tn @ target_block)"
+    using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate[of target_block ?tn]]
+    by (by100 simp)
+  \<comment> \<open>Step 4: torus\_n @ target\_block = torus\_(Suc n).\<close>
+  ultimately have "top1_scheme_equiv (?block @ ?tn) (?tn @ target_block)"
+    unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+  thus ?thesis using htorus_suc by (by100 simp)
+qed
 
 lemma scheme_normal_form:
   fixes scheme :: "(nat \<times> bool) list"
