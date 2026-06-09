@@ -3127,11 +3127,107 @@ proof (intro allI)
 qed
 
 \<comment> \<open>Properness of the torus normal-form scheme: each label appears exactly twice.\<close>
+lemma torus_scheme_length: "length (top1_n_torus_scheme n) = 4 * n"
+  unfolding top1_n_torus_scheme_def by (induct n) (by100 simp)+
+
+lemma torus_scheme_fst_bound:
+  assumes "j < length (top1_n_torus_scheme n)"
+  shows "fst ((top1_n_torus_scheme n) ! j) < 2 * n"
+proof -
+  have hj: "j < 4 * n" using assms torus_scheme_length by (by100 simp)
+  define k where "k = j div 4"
+  have hk: "k < n" using hj unfolding k_def by (by100 simp)
+  define r where "r = j mod 4"
+  have hr: "r < 4" unfolding r_def by (by100 simp)
+  have hj_eq: "j = 4*k + r" unfolding k_def r_def by (by100 presburger)
+  \<comment> \<open>Case-split on r \<in> {0,1,2,3}.\<close>
+  from hr have "r = 0 \<or> r = 1 \<or> r = 2 \<or> r = 3" by (by100 presburger)
+  thus ?thesis
+  proof (elim disjE)
+    assume "r = 0"
+    hence "j = 4*k" using hj_eq by (by100 simp)
+    hence "fst ((top1_n_torus_scheme n) ! j) = fst ((top1_n_torus_scheme n) ! (4*k))" by (by100 simp)
+    also have "\<dots> = 2*k" using torus_scheme_nth(1)[OF hk] by (by100 simp)
+    finally show ?thesis using hk by (by100 simp)
+  next
+    assume "r = 1"
+    hence "j = 4*k + 1" using hj_eq by (by100 simp)
+    hence "fst ((top1_n_torus_scheme n) ! j) = fst ((top1_n_torus_scheme n) ! (4*k+1))" by (by100 simp)
+    also have "\<dots> = 2*k+1" using torus_scheme_nth(2)[OF hk] by (by100 simp)
+    finally show ?thesis using hk by (by100 simp)
+  next
+    assume "r = 2"
+    hence "j = 4*k + 2" using hj_eq by (by100 simp)
+    hence "fst ((top1_n_torus_scheme n) ! j) = fst ((top1_n_torus_scheme n) ! (4*k+2))" by (by100 simp)
+    also have "\<dots> = 2*k" using torus_scheme_nth(3)[OF hk] by (by100 simp)
+    finally show ?thesis using hk by (by100 simp)
+  next
+    assume "r = 3"
+    hence "j = 4*k + 3" using hj_eq by (by100 simp)
+    hence "fst ((top1_n_torus_scheme n) ! j) = fst ((top1_n_torus_scheme n) ! (4*k+3))" by (by100 simp)
+    also have "\<dots> = 2*k+1" using torus_scheme_nth(4)[OF hk] by (by100 simp)
+    finally show ?thesis using hk by (by100 simp)
+  qed
+qed
+
 lemma torus_scheme_proper:
   assumes "n > 0"
   shows "\<forall>label. card {i. i < length (top1_n_torus_scheme n) \<and>
       fst ((top1_n_torus_scheme n) ! i) = label} \<in> {0, 2}"
-  sorry
+proof (intro allI)
+  fix label :: nat
+  let ?w = "top1_n_torus_scheme n"
+  show "card {i. i < length ?w \<and> fst (?w ! i) = label} \<in> {0, 2}"
+  proof (cases "label < 2 * n")
+    case True
+    \<comment> \<open>Label appears at exactly 2 positions: determined by label mod 2 and label div 2.\<close>
+    define k where "k = label div 2"
+    have hk: "k < n" using True unfolding k_def by (by100 simp)
+    \<comment> \<open>If label is even (label = 2*k): positions 4*k and 4*k+2.
+       If label is odd (label = 2*k+1): positions 4*k+1 and 4*k+3.\<close>
+    have hset: "{i. i < length ?w \<and> fst (?w ! i) = label} =
+        (if even label then {4*k, 4*k+2} else {4*k+1, 4*k+3})"
+    proof (rule set_eqI, rule iffI)
+      fix i assume hi_in: "i \<in> {i. i < length ?w \<and> fst (?w ! i) = label}"
+      hence hi: "i < length ?w" "fst (?w ! i) = label" by (by100 simp)+
+      define k' where "k' = i div 4"
+      define r where "r = i mod 4"
+      have hi4: "i < 4*n" using hi(1) torus_scheme_length by (by100 simp)
+      have hk': "k' < n" using hi4 unfolding k'_def by (by100 simp)
+      have hr: "r < 4" unfolding r_def by (by100 simp)
+      have hi_eq: "i = 4*k' + r" unfolding k'_def r_def by (by100 presburger)
+      \<comment> \<open>From fst(?w!i) = label and torus\_scheme\_nth, determine k' and r.\<close>
+      from hr have "r = 0 \<or> r = 1 \<or> r = 2 \<or> r = 3" by (by100 presburger)
+      hence hk'_eq: "k' = k \<and> (if even label then i = 4*k \<or> i = 4*k+2 else i = 4*k+1 \<or> i = 4*k+3)"
+        sorry
+      show "i \<in> (if even label then {4*k, 4*k+2} else {4*k+1, 4*k+3})"
+      proof (cases "even label")
+        case True thus ?thesis using hk'_eq by (by100 simp)
+      next
+        case False thus ?thesis using hk'_eq by (by100 simp)
+      qed
+    next
+      fix i assume "i \<in> (if even label then {4*k, 4*k+2} else {4*k+1, 4*k+3})"
+      \<comment> \<open>Direct: use torus\_scheme\_nth to show fst = label.\<close>
+      thus "i \<in> {i. i < length ?w \<and> fst (?w ! i) = label}"
+        using hk torus_scheme_nth[OF hk] torus_scheme_length k_def True
+        sorry
+    qed
+    moreover have "card (if even label then {4*k, 4*k+2} else {4*k+1, 4*k+3}) = 2"
+      by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  next
+    case False
+    have "{i. i < length ?w \<and> fst (?w ! i) = label} = {}"
+    proof (rule equals0I)
+      fix i assume "i \<in> {i. i < length ?w \<and> fst (?w ! i) = label}"
+      hence "i < length ?w" "fst (?w ! i) = label" by (by100 simp)+
+      from torus_scheme_fst_bound[OF this(1)] this(2) False
+      show False by (by100 simp)
+    qed
+    thus ?thesis by (by100 simp)
+  qed
+qed
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
