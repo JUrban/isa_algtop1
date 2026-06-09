@@ -5702,8 +5702,46 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         have "\<exists>a b w0 w1 w2. a \<noteq> b \<and>
             top1_scheme_equiv scheme
               (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)"
-          sorry \<comment> \<open>Combinatorial: from torus-type proper scheme with no adjacent same-label
-             and length > 4, extract the commutator pattern.\<close>
+        proof -
+          \<comment> \<open>Step 1: Find label a with minimal gap between its two positions.\<close>
+          \<comment> \<open>From properness: every label appears 0 or 2 times. At least one label appears
+             (length > 4). Each appearing label has 2 positions.
+             Choose a with smallest gap |pos2 - pos1|.\<close>
+          have "\<exists>a_lab p1 p2. p1 < p2 \<and> p2 < length scheme
+              \<and> fst (scheme!p1) = a_lab \<and> fst (scheme!p2) = a_lab
+              \<and> snd (scheme!p1) \<noteq> snd (scheme!p2)
+              \<and> (\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab)"
+            sorry \<comment> \<open>Existence of closest same-label pair with opposite directions.
+               From properness (each label 2x), torus type (opposite dirs),
+               no adjacent same (gap > 1), and finiteness (pick minimal gap).\<close>
+          then obtain a_lab p1 p2 where hclose:
+              "p1 < p2" "p2 < length scheme"
+              "fst (scheme!p1) = a_lab" "fst (scheme!p2) = a_lab"
+              "snd (scheme!p1) \<noteq> snd (scheme!p2)"
+              "\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab"
+            by (by100 blast)
+          \<comment> \<open>Step 2: p2 > p1 + 1 (no adjacent same-label from no\_adj\_gt4).\<close>
+          have hgap: "p2 > p1 + 1"
+          proof (rule ccontr)
+            assume "\<not> p2 > p1 + 1"
+            hence "p2 = p1 + 1" using hclose(1) by (by100 simp)
+            hence "fst (scheme!p1) = fst (scheme!(p1+1))" using hclose(3,4) by (by100 simp)
+            moreover have "snd (scheme!p1) \<noteq> snd (scheme!(p1+1))"
+              using hclose(5) \<open>p2 = p1 + 1\<close> by (by100 simp)
+            moreover have "p1 + 1 < length scheme" using hclose(2) \<open>p2 = p1 + 1\<close> by (by100 simp)
+            ultimately show False using no_adj_gt4 by (by100 blast)
+          qed
+          \<comment> \<open>Step 3: Element at p1+1 has label b \<noteq> a\_lab.\<close>
+          define b_lab where "b_lab = fst (scheme!(p1+1))"
+          have "b_lab \<noteq> a_lab"
+            using hclose(6)[rule_format, of "p1+1"] hgap unfolding b_lab_def by (by100 simp)
+          \<comment> \<open>Step 4: Rotate + flip to standard form, then use cut\_paste\_opp.
+             This produces the required pattern w0@[(a,T),(b,T)]@w1@[(a,F),(b,F)]@w2.\<close>
+          \<comment> \<open>Detailed construction: rotate scheme to bring (a\_lab,dir) to front,
+             flip if needed so a has True direction, find b's inverse,
+             use cut\_paste\_opp to bring b\<inverse> adjacent to a\<inverse>.\<close>
+          thus ?thesis sorry \<comment> \<open>Rotation + flip + cut\_paste\_opp + arrangement.\<close>
+        qed
         then obtain a_lab b_lab w0' w1' w2' where hab: "a_lab \<noteq> b_lab"
             and hequiv: "top1_scheme_equiv scheme
               (w0' @ [(a_lab, True), (b_lab, True)] @ w1' @ [(a_lab, False), (b_lab, False)] @ w2')"
