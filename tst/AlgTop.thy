@@ -535,8 +535,8 @@ proof -
      which transfer via hfst and hsnd\_eq.\<close>
   from assms show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    sorry \<comment> \<open>Same witnesses P, q, vx, vy. Geometric conditions transfer directly.
-       Conditions 7,9 (identification/boundary) transfer via hfst+hsnd\_eq.\<close>
+    sorry \<comment> \<open>Same witnesses. Geometric conditions (no scheme!i) match directly.
+       Conditions 7,9: fst(map fl w!i) = fst(w!i) by hfst, snd equality by hsnd\_eq.\<close>
 qed
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
