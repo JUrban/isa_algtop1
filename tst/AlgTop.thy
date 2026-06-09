@@ -2964,12 +2964,82 @@ qed
 lemma projective_scheme_nth_even:
   assumes "k < m"
   shows "(top1_m_projective_scheme m) ! (2*k) = (k, True)"
-  sorry
+  using assms
+proof (induct m)
+  case 0 thus ?case by (by100 simp)
+next
+  case (Suc n)
+  show ?case
+  proof (cases "k < n")
+    case True
+    \<comment> \<open>IH: (proj n) ! (2*k) = (k, True). proj (Suc n) = proj n @ [(n,T),(n,T)].\<close>
+    have "top1_m_projective_scheme (Suc n) = top1_m_projective_scheme n @ [(n, True), (n, True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    moreover have h2k: "2*k < length (top1_m_projective_scheme n)"
+      using True projective_scheme_length by (by100 simp)
+    ultimately have "(top1_m_projective_scheme (Suc n)) ! (2*k) = (top1_m_projective_scheme n) ! (2*k)"
+      using nth_append[of "top1_m_projective_scheme n" _ "2*k"] h2k by (by100 simp)
+    thus ?thesis using Suc(1)[OF True] by (by100 simp)
+  next
+    case False
+    hence "k = n" using Suc(2) by (by100 simp)
+    have "top1_m_projective_scheme (Suc n) = top1_m_projective_scheme n @ [(n, True), (n, True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    moreover have "length (top1_m_projective_scheme n) = 2 * n"
+      using projective_scheme_length by (by100 blast)
+    ultimately have "(top1_m_projective_scheme (Suc n)) ! (2*n) = (n, True)"
+    proof -
+      assume happ: "top1_m_projective_scheme (Suc n) = top1_m_projective_scheme n @ [(n, True), (n, True)]"
+        and hlen_n: "length (top1_m_projective_scheme n) = 2 * n"
+      have "\<not> 2*n < 2*n" by (by100 simp)
+      hence "(top1_m_projective_scheme n @ [(n, True), (n, True)]) ! (2*n) = [(n, True), (n, True)] ! (2*n - 2*n)"
+        using nth_append[of "top1_m_projective_scheme n" "[(n,True),(n,True)]" "2*n"] hlen_n
+        by (by100 simp)
+      also have "\<dots> = (n, True)" by (by100 simp)
+      finally show ?thesis using happ by (by100 simp)
+    qed
+    thus ?thesis using \<open>k = n\<close> by (by100 simp)
+  qed
+qed
 
 lemma projective_scheme_nth_odd:
   assumes "k < m"
   shows "(top1_m_projective_scheme m) ! (2*k+1) = (k, True)"
-  sorry
+  using assms
+proof (induct m)
+  case 0 thus ?case by (by100 simp)
+next
+  case (Suc n)
+  show ?case
+  proof (cases "k < n")
+    case True
+    have "top1_m_projective_scheme (Suc n) = top1_m_projective_scheme n @ [(n, True), (n, True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    moreover have h2k1: "2*k+1 < length (top1_m_projective_scheme n)"
+      using True projective_scheme_length by (by100 simp)
+    ultimately have "(top1_m_projective_scheme (Suc n)) ! (2*k+1) = (top1_m_projective_scheme n) ! (2*k+1)"
+      using nth_append[of "top1_m_projective_scheme n" _ "2*k+1"] h2k1 by (by100 simp)
+    thus ?thesis using Suc(1)[OF True] by (by100 simp)
+  next
+    case False
+    hence "k = n" using Suc(2) by (by100 simp)
+    have happ: "top1_m_projective_scheme (Suc n) = top1_m_projective_scheme n @ [(n, True), (n, True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    have hlen_n: "length (top1_m_projective_scheme n) = 2 * n"
+      using projective_scheme_length by (by100 blast)
+    have "(top1_m_projective_scheme (Suc n)) ! (2*n+1) = (n, True)"
+    proof -
+      have "\<not> 2*n+1 < 2*n" by (by100 simp)
+      hence "(top1_m_projective_scheme n @ [(n, True), (n, True)]) ! (2*n+1) = [(n, True), (n, True)] ! (2*n+1 - 2*n)"
+        using nth_append[of "top1_m_projective_scheme n" "[(n,True),(n,True)]" "2*n+1"] hlen_n
+        by (by100 simp)
+      also have "2*n+1 - 2*n = (1::nat)" by (by100 simp)
+      also have "[(n, True), (n, True)] ! 1 = (n, True)" by (by100 simp)
+      finally show ?thesis using happ by (by100 simp)
+    qed
+    thus ?thesis using \<open>k = n\<close> by (by100 simp)
+  qed
+qed
 
 \<comment> \<open>Fst of any element of projective scheme is < m.\<close>
 lemma projective_scheme_fst_bound:
