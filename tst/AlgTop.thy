@@ -4939,8 +4939,19 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         \<comment> \<open>scheme \<sim> [(a,T),(a,T)] @ torus n'.
            Each application of Lemma 77.4 converts 1 proj pair + 1 torus block \<Rightarrow> 3 proj pairs.
            After n' applications: projective (2n'+1).\<close>
+        \<comment> \<open>Relabel torus n' to avoid label a, then apply congruence + Lemma 77.4.\<close>
+        from scheme_equiv_relabel_avoid[of w' a]
+        obtain w_no_a where hwt: "top1_scheme_equiv w' w_no_a" "\<forall>e \<in> set w_no_a. fst e \<noteq> a"
+          by (by100 blast)
+        have "top1_scheme_equiv rest w_no_a"
+          using hn(3) hwt(1) unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+        hence "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ w_no_a)"
+          using scheme_equiv_prepend by (by100 blast)
+        hence hchain_t: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ w_no_a)"
+          using scheme_equiv_trans[OF ha_rest(1)] by (by100 blast)
         hence "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
-          sorry \<comment> \<open>Lemma 77.4 repeated: proj pair + torus n \<Rightarrow> projective (2n+1).\<close>
+          sorry \<comment> \<open>[(a,T),(a,T)] @ w\_no\_a where w\_no\_a \<sim> torus n' and avoids a.
+             Apply Lemma 77.4 n' times: proj pair + n' torus blocks \<to> (2n'+1) proj pairs.\<close>
         thus ?thesis by (by100 blast)
       qed
     qed
