@@ -3297,6 +3297,12 @@ proof (intro allI)
   qed
 qed
 
+\<comment> \<open>A proper scheme has even length (each label contributes 0 or 2 to the count).\<close>
+lemma proper_scheme_even_length:
+  assumes "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+  shows "even (length w)"
+  sorry
+
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
    (1) aa\\<inverse>bb\\<inverse> (sphere, length 4)
@@ -4113,7 +4119,14 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           sorry
         \<comment> \<open>Length of shorter \\<ge> 4 (cancel reduces by 2; properness prevents odd lengths).\<close>
         have hlen_ge4: "length shorter \<ge> 4"
-          sorry
+        proof -
+          \<comment> \<open>Properness \<Longrightarrow> even length. length > 4 and even \<Longrightarrow> length \<ge> 6.
+             shorter = length - 2 \<ge> 4.\<close>
+          have "even (length scheme)"
+            using proper_scheme_even_length[OF less(3)] .
+          hence "length scheme \<ge> 6" using hlen_gt4 by (by100 presburger)
+          thus ?thesis using hlen_shorter by (by100 simp)
+        qed
         \<comment> \<open>Apply IH.\<close>
         have hlen_lt: "length shorter < length scheme"
           using hlen_shorter hlen_gt4 by (by100 simp)
