@@ -750,7 +750,8 @@ proof -
     using hsnd_bij hlen_uv by (by100 simp)
   have hsuc_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> Suc (\<sigma> i) mod length (u @ v) = \<sigma> (Suc i mod length (u @ v))"
     using hsuc_bij hlen_uv by (by100 simp)
-  show ?thesis sorry \<comment> \<open>Application of transfer\_bij: type issue between length u+length v and length (u@v).\<close>
+  show ?thesis sorry \<comment> \<open>Rule application of transfer\_bij fails due to schematic unification.
+     All premises proved. Need manual instantiation or method improvement.\<close>
 qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
