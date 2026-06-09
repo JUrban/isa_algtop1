@@ -3668,10 +3668,12 @@ lemma bring_projective_pair_to_front:
       and hcard: "card {i. i < length w \<and> fst (w ! i) = a} = 2"
       and hdir: "\<forall>i < length w. fst (w ! i) = a \<longrightarrow> snd (w ! i) = True"
       and hne: "w \<noteq> []"
+      and hproper_w: "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
   shows "\<exists>rest. top1_scheme_equiv w ([(a, True), (a, True)] @ rest)
       \<and> length rest = length w - 2
       \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)
-      \<and> fst ` set rest \<subseteq> fst ` set w"
+      \<and> fst ` set rest \<subseteq> fst ` set w
+      \<and> (\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2})"
 proof -
   \<comment> \<open>Find first position of (a,True).\<close>
   from hain obtain p' where hp': "p' < length w" "w ! p' = (a, True)"
@@ -3866,6 +3868,11 @@ proof -
     qed
   qed
   hence "fst ` set (y0 @ rev (map top1_inverse_edge y1) @ y2) \<subseteq> fst ` set w" by (by100 blast)
+  moreover have "\<forall>label. card {i. i < length (y0 @ rev (map top1_inverse_edge y1) @ y2)
+      \<and> fst ((y0 @ rev (map top1_inverse_edge y1) @ y2) ! i) = label} \<in> {0, 2}"
+    sorry \<comment> \<open>Properness: for label a, count=0 (no label a in rest).
+       For label l \<noteq> a: count in rest = count in y0 + count in y1 + count in y2
+       = count in w (a-positions don't contribute for l \<noteq> a) \<in> {0,2}.\<close>
   ultimately show ?thesis by (by100 blast)
 qed
 
@@ -4037,12 +4044,20 @@ proof -
       assume "scheme1 = []" hence "length scheme1 = 0" by (by100 simp)
       thus False using hlen1 by (by100 simp)
     qed
-    from bring_projective_pair_to_front[OF h1 h2 h3 this]
+    have hproper1: "\<forall>label. card {i. i < length scheme1 \<and> fst (scheme1 ! i) = label} \<in> {0, 2}"
+    proof -
+      have "\<And>label. {i. i < length scheme1 \<and> fst (scheme1 ! i) = label}
+          = {i. i < length scheme \<and> fst (scheme ! i) = label}"
+        using hfst_preserved hlen1 hlen by (by100 force)
+      thus ?thesis using hproper by (by100 simp)
+    qed
+    from bring_projective_pair_to_front[OF h1 h2 h3 \<open>scheme1 \<noteq> []\<close> hproper1]
     obtain rest where hrest_eq: "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)"
         and hrest_len: "length rest = length scheme1 - 2"
         and hrest_ne: "\<forall>e \<in> set rest. fst e \<noteq> a"
         and hrest_fst: "fst ` set rest \<subseteq> fst ` set scheme1"
-      by (by100 blast)
+        and hrest_proper: "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}"
+      by blast
     have "length scheme1 = 4" unfolding scheme1_def using hlen by (by100 simp)
     hence "length rest = 2" using hrest_len by (by100 simp)
     have "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
@@ -4402,6 +4417,7 @@ lemma extract_projective_pair:
       "length rest = length scheme - 2"
       "\<forall>e \<in> set rest. fst e \<noteq> a"
       "fst ` set rest \<subseteq> fst ` set scheme"
+      "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}"
 proof -
   from hproj obtain a p q where hp: "p < length scheme" "q < length scheme" "p \<noteq> q"
       "fst (scheme!p) = a" "fst (scheme!q) = a" "snd (scheme!p) = snd (scheme!q)"
@@ -4542,12 +4558,20 @@ proof -
     assume "scheme1 = []" hence "length scheme1 = 0" by (by100 simp)
     thus False using hlen1 hne by (by100 simp)
   qed
-  from bring_projective_pair_to_front[OF h1 hcard1 hdir1 this]
+  have hproper1: "\<forall>label. card {i. i < length scheme1 \<and> fst (scheme1 ! i) = label} \<in> {0, 2}"
+  proof -
+    have "\<And>label. {i. i < length scheme1 \<and> fst (scheme1 ! i) = label}
+        = {i. i < length scheme \<and> fst (scheme ! i) = label}"
+      using hfst_preserved hlen1 by (by100 force)
+    thus ?thesis using hproper by (by100 simp)
+  qed
+  from bring_projective_pair_to_front[OF h1 hcard1 hdir1 \<open>scheme1 \<noteq> []\<close> hproper1]
   obtain rest0 where hrest0: "top1_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest0)"
       "length rest0 = length scheme1 - 2"
       "\<forall>e \<in> set rest0. fst e \<noteq> a"
       "fst ` set rest0 \<subseteq> fst ` set scheme1"
-    by (by100 blast)
+      "\<forall>label. card {i. i < length rest0 \<and> fst (rest0 ! i) = label} \<in> {0, 2}"
+    by blast
   \<comment> \<open>Thread back to scheme.\<close>
   have "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest0)"
     using scheme_equiv_trans[OF hequiv1 hrest0(1)] by (by100 blast)
@@ -4565,7 +4589,7 @@ proof -
     thus "l \<in> fst ` set scheme" using \<open>fst (scheme ! i) = l\<close> by (by100 force)
   qed
   hence "fst ` set rest0 \<subseteq> fst ` set scheme" using hrest0(4) by (by100 blast)
-  ultimately show ?thesis using hrest0(3) that[of a rest0] by (by100 blast)
+  ultimately show ?thesis using hrest0(3) hrest0(5) that[of a rest0] by (by100 blast)
 qed
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
@@ -4651,6 +4675,7 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           "length rest = length scheme - 2"
           "\<forall>e \<in> set rest. fst e \<noteq> a"
           "fst ` set rest \<subseteq> fst ` set scheme"
+          "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}"
         using extract_projective_pair[OF less(3)
             \<open>\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme.
                 i \<noteq> j \<and> fst (scheme ! i) = label \<and> fst (scheme ! j) = label
@@ -4667,9 +4692,9 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         hence "length scheme \<ge> 6" using hgt4 by (by100 simp)
         thus ?thesis using ha_rest(2) by (by100 simp)
       qed
-      \<comment> \<open>Step 3: rest is proper (fst-count preservation through the chain).\<close>
+      \<comment> \<open>Step 3: rest is proper (from extract\_projective\_pair).\<close>
       have hrest_proper: "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}"
-        sorry \<comment> \<open>Properness preserved: flip+rotation+cut\_paste preserve fst counts.\<close>
+        using ha_rest(5) .
       \<comment> \<open>Step 4: Apply IH to rest.\<close>
       have hrest_shorter: "length rest < length scheme" using ha_rest(2) hgt4 by (by100 simp)
       from less(1)[OF hrest_shorter hrest_len_ge4 hrest_proper]
