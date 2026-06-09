@@ -6417,8 +6417,17 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             thus ?thesis using hlen_shorter hlen_full by (by100 linarith)
           qed
           have hproper_full: "\<forall>label. card {i. i < length full \<and> fst (full!i) = label} \<in> {0, 2}"
-            sorry \<comment> \<open>full = Lemma 77.3 rearrangement of intermediate = permutation of scheme.
-               Properness preserved since fst-multiset is unchanged (just reordering).\<close>
+          proof (intro allI)
+            fix label
+            \<comment> \<open>full and the intermediate w0'@[a,b]@w1'@[a\\<inverse>,b\\<inverse>]@w2' have the same elements
+               (Lemma 77.3 is just rearranging). So filter-counts are equal.
+               And the intermediate has the same filter-counts as scheme (extraction preserves them).
+               But we need a separate argument since we don't track multisets.\<close>
+            \<comment> \<open>Direct: count in full = count in block + count in w0'@w1'@w2'.
+               count in intermediate = count in w0'@w1'@w2' + count in block.
+               These are equal. And count in intermediate = count in scheme (sorry for now).\<close>
+            show "card {i. i < length full \<and> fst (full!i) = label} \<in> {0, 2}" sorry
+          qed
           have hproper_shorter: "\<forall>label. card {i. i < length shorter \<and> fst (shorter!i) = label} \<in> {0, 2}"
             using cancel_preserves_proper[OF hproper_full hj(1) hj(2)]
             unfolding shorter_def by (by100 blast)
