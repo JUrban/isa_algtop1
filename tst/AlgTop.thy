@@ -4651,7 +4651,46 @@ qed
    By repeated application of Lemma 77.4: 1 proj pair + n torus blocks \<to> (2n+1) proj pairs.\<close>
 lemma proj_pair_absorbs_torus:
   "top1_scheme_equiv ([(a, True), (a, True)] @ top1_n_torus_scheme n) (top1_m_projective_scheme (2*n + 1))"
-  sorry \<comment> \<open>Induction on n using Lemma 77.4 + relabel\_avoid + proj\_append\_pair.\<close>
+proof (induction n arbitrary: a)
+  case 0
+  \<comment> \<open>Base: [(a,T),(a,T)] @ [] = [(a,T),(a,T)] \<sim> proj 1.\<close>
+  have "top1_m_projective_scheme 1 = [(0,True),(0,True)]"
+    unfolding top1_m_projective_scheme_def by (by100 simp)
+  moreover have "top1_scheme_equiv [(a,True),(a,True)] [(0::nat,True),(0,True)]"
+  proof -
+    have "top1_elementary_scheme_operation [(a,True),(a,True)]
+        (map (\<lambda>(l,b). (if l = a then 0 else l, b)) [(a,True),(a,True)])"
+      by (rule top1_elementary_scheme_operation.relabel)
+    moreover have "map (\<lambda>(l,b). (if l = a then 0 else l, b)) [(a,True),(a,True)] = [(0,True),(0,True)]"
+      by (by100 simp)
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+  qed
+  ultimately show ?case unfolding top1_n_torus_scheme_def by (by100 simp)
+next
+  case (Suc n)
+  \<comment> \<open>Suc: [(a,T),(a,T)] @ torus(Suc n) = [(a,T),(a,T)] @ torus n @ [block].
+     IH: [(a,T),(a,T)] @ torus n \<sim> proj(2n+1).
+     Suffix congruence: ... @ block \<sim> proj(2n+1) @ block.
+     Then absorb block into proj via Lemma 77.4.\<close>
+  have htorus_suc: "top1_n_torus_scheme (Suc n) = top1_n_torus_scheme n
+      @ [(2*n, True), (2*n+1, True), (2*n, False), (2*n+1, False)]"
+    unfolding top1_n_torus_scheme_def by (by100 simp)
+  \<comment> \<open>IH gives: [(a,T),(a,T)] @ torus n \<sim> proj(2n+1).\<close>
+  from Suc.IH have hIH: "top1_scheme_equiv ([(a,True),(a,True)] @ top1_n_torus_scheme n)
+      (top1_m_projective_scheme (2*n+1))" .
+  \<comment> \<open>Suffix congruence: append torus block.\<close>
+  let ?block = "[(2*n, True), (2*n+1, True), (2*n, False), (2*n+1, False)]"
+  have "top1_scheme_equiv ([(a,True),(a,True)] @ top1_n_torus_scheme n @ ?block)
+      (top1_m_projective_scheme (2*n+1) @ ?block)"
+    using scheme_equiv_append[OF hIH, of ?block] by (by100 simp)
+  hence s1: "top1_scheme_equiv ([(a,True),(a,True)] @ top1_n_torus_scheme (Suc n))
+      (top1_m_projective_scheme (2*n+1) @ ?block)"
+    using htorus_suc by (by100 simp)
+  \<comment> \<open>Absorb: proj(2n+1) @ [torus\_block] \<sim> proj(2n+3) via Lemma 77.4 + relabeling.\<close>
+  have s2: "top1_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block) (top1_m_projective_scheme (2*(Suc n)+1))"
+    sorry \<comment> \<open>Lemma 77.4: last proj pair + torus block \<to> 3 proj pairs. Needs label management.\<close>
+  from s1 s2 show ?case unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+qed
 
 \<comment> \<open>Appending any projective pair to proj m gives proj(Suc m) up to equivalence.\<close>
 lemma proj_append_pair:
