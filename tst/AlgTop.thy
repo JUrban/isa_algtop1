@@ -497,8 +497,20 @@ proof -
   show ?thesis .
 qed
 
-\<comment> \<open>Elementary operations preserve quotient\\_of\\_scheme\\_on for the SAME space.
-   If Y is a quotient of scheme s, and s → t via an elementary operation,
+\<comment> \<open>Flipping the orientation of all edges with a given label preserves quotient\_of\_scheme\_on.
+   Same polygon P, same quotient map q, same vertex positions vx/vy.
+   The identification conditions use snd(scheme!i) = snd(scheme!j) which is preserved
+   when both i and j have the same label (both flip or neither does).\<close>
+lemma quotient_scheme_flip_label:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+  shows "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) w)"
+  sorry \<comment> \<open>Same polygon P, quotient map q, vertices vx/vy. Conditions not involving
+     snd(scheme!i) transfer directly (length preserved). Conditions 7 (edge identification)
+     and 9 (boundary injectivity) transfer because fst(w'!i) = fst(w!i) and
+     (snd(w'!i)=snd(w'!j)) = (snd(w!i)=snd(w!j)) when fst(w!i)=fst(w!j).\<close>
+
+\<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
+   If Y is a quotient of scheme s, and s \<rightarrow> t via an elementary operation,
    then Y is also a quotient of scheme t (same polygon, adjusted vertex labeling).\<close>
 lemma elementary_operation_preserves_quotient:
   assumes "top1_quotient_of_scheme_on Y TY s"
@@ -529,8 +541,8 @@ next
   case (flip_label w a)
   \<comment> \<open>s = w, t = map (flip a) w. Same polygon P, quotient map q, vertices.
      The flip preserves fst and the snd-equality correspondence when labels match.
-     All 11 conditions of quotient\\_of\\_scheme\\_on transfer with the same witnesses.\<close>
-  thus ?case sorry
+     All 11 conditions of quotient\_of\_scheme\_on transfer with the same witnesses.\<close>
+  from quotient_scheme_flip_label[OF flip_label.prems] show ?case .
 next
   case (cut_paste u1 a u2 u3)
   \<comment> \<open>s = u1@[a]@u2@[a]@u3, t = u1@[a,a]@rev(inv(u2))@u3. Cut and paste.\<close>
@@ -5118,6 +5130,95 @@ qed
    (1) aa\\<inverse>bb\\<inverse> (sphere, length 4)
    (2) a1a1...amam (projective, m \\<ge> 1)
    (3) a1b1a1\\<inverse>b1\\<inverse>...anbnanbnan\\<inverse>bn\\<inverse> (torus, n \\<ge> 1)\<close>
+
+\<comment> \<open>A commutator block [(a,T),(b,T),(a,F),(b,F)] with a \\<noteq> b is equivalent to torus n=1.
+   Proof: relabel a\\<to>0, b\\<to>1 (handling the b=0 case via intermediate label).\<close>
+lemma commutator_block_equiv_torus_1:
+  assumes "a \<noteq> (b :: nat)"
+  shows "top1_scheme_equiv [(a, True), (b, True), (a, False), (b, False)] (top1_n_torus_scheme 1)"
+proof -
+  define w where "w = [(a, True), (b, True), (a, False), (b, False)]"
+  \<comment> \<open>Case split on b: if b\\<noteq>0, relabel a\\<to>0 then b\\<to>1. If b=0, relabel a\\<to>1 directly.\<close>
+  have "top1_scheme_equiv w (top1_n_torus_scheme 1)"
+  proof (cases "b = (0::nat)")
+    case bne0: False
+    \<comment> \<open>relabel a\\<to>0\<close>
+    have s1: "top1_scheme_equiv w (map (\<lambda>(l,bo). (if l = a then 0 else l, bo)) w)"
+      unfolding top1_scheme_equiv_def
+      using top1_elementary_scheme_operation.relabel[of w a 0] by (by100 simp)
+    have h1: "map (\<lambda>(l,bo). (if l = a then 0 else l, bo)) w = [(0,True),(b,True),(0,False),(b,False)]"
+      unfolding w_def using assms by (by100 simp)
+    \<comment> \<open>relabel b\\<to>1\<close>
+    have s2: "top1_scheme_equiv [(0,True),(b,True),(0,False),(b,False)]
+        (map (\<lambda>(l,bo). (if l = b then 1 else l, bo)) [(0,True),(b,True),(0,False),(b,False)])"
+      unfolding top1_scheme_equiv_def
+      using top1_elementary_scheme_operation.relabel[of "[(0,True),(b,True),(0,False),(b,False)]" b 1]
+      by (by100 simp)
+    have h2: "map (\<lambda>(l,bo). (if l = b then 1 else l, bo)) [(0,True),(b,True),(0,False),(b,False)]
+        = [(0,True),(1,True),(0,False),(1,False)]"
+      using bne0 by (by100 simp)
+    have h3: "[(0::nat,True),(1,True),(0,False),(1,False)] = top1_n_torus_scheme 1"
+      unfolding top1_n_torus_scheme_def by (by100 simp)
+    have "top1_scheme_equiv w [(0,True),(b,True),(0,False),(b,False)]"
+      using s1 h1 by (by100 simp)
+    moreover have "top1_scheme_equiv [(0,True),(b,True),(0,False),(b,False)] (top1_n_torus_scheme 1)"
+      using s2 h2 h3 by (by100 simp)
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+  next
+    case btrue: True
+    \<comment> \<open>b=0. relabel a\\<to>1, then rotate+flip to get standard form.\<close>
+    have s1: "top1_scheme_equiv w (map (\<lambda>(l,bo). (if l = a then 1 else l, bo)) w)"
+      unfolding top1_scheme_equiv_def
+      using top1_elementary_scheme_operation.relabel[of w a 1] by (by100 simp)
+    have h1: "map (\<lambda>(l,bo). (if l = a then 1 else l, bo)) w = [(1,True),(0::nat,True),(1,False),(0,False)]"
+      unfolding w_def using assms btrue by (by100 simp)
+    \<comment> \<open>rotate by 1: [(0,T),(1,F),(0,F),(1,T)]\<close>
+    have s2: "top1_scheme_equiv [(1::nat,True),(0,True),(1,False),(0,False)]
+        [(0,True),(1,False),(0,False),(1::nat,True)]"
+    proof -
+      have "top1_elementary_scheme_operation
+          ([(1::nat,True)] @ [(0,True),(1,False),(0,False)])
+          ([(0,True),(1,False),(0,False)] @ [(1::nat,True)])"
+        by (rule top1_elementary_scheme_operation.rotate)
+      thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+    qed
+    \<comment> \<open>flip\_label 1: [(0,T),(1,T),(0,F),(1,F)]\<close>
+    have s3: "top1_scheme_equiv [(0::nat,True),(1,False),(0,False),(1,True)]
+        [(0,True),(1::nat,True),(0,False),(1,False)]"
+    proof -
+      have "top1_elementary_scheme_operation
+          [(0::nat,True),(1,False),(0,False),(1,True)]
+          (map (\<lambda>(l,bo). (l, if l = 1 then \<not>bo else bo)) [(0::nat,True),(1,False),(0,False),(1,True)])"
+        by (rule top1_elementary_scheme_operation.flip_label)
+      moreover have "map (\<lambda>(l,bo). (l, if l = (1::nat) then \<not>bo else bo)) [(0,True),(1,False),(0,False),(1,True)]
+          = [(0,True),(1,True),(0,False),(1,False)]" by (by100 simp)
+      ultimately show ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+    qed
+    have h3: "[(0::nat,True),(1,True),(0,False),(1,False)] = top1_n_torus_scheme 1"
+      unfolding top1_n_torus_scheme_def by (by100 simp)
+    have "top1_scheme_equiv w [(1,True),(0::nat,True),(1,False),(0,False)]"
+      using s1 h1 by (by100 simp)
+    moreover have "top1_scheme_equiv [(1::nat,True),(0,True),(1,False),(0,False)] (top1_n_torus_scheme 1)"
+    proof -
+      from s2 have "top1_scheme_equiv [(1::nat,True),(0,True),(1,False),(0,False)]
+          [(0,True),(1,False),(0,False),(1,True)]" .
+      moreover from s3 h3 have "top1_scheme_equiv [(0::nat,True),(1,False),(0,False),(1,True)] (top1_n_torus_scheme 1)"
+        by (by100 simp)
+      ultimately show ?thesis unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+    qed
+    ultimately show ?thesis unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+  qed
+  thus ?thesis unfolding w_def .
+qed
+
+\<comment> \<open>Prepending a commutator block to a torus scheme gives a torus scheme of one higher index.
+   block @ torus\_n ~ torus\_(n+1) after relabeling block's labels to fresh ones.\<close>
+lemma commutator_prepend_torus:
+  assumes "a \<noteq> (b :: nat)" and "n > 0"
+  shows "top1_scheme_equiv ([(a, True), (b, True), (a, False), (b, False)] @ top1_n_torus_scheme n)
+      (top1_n_torus_scheme (Suc n))"
+  sorry
+
 lemma scheme_normal_form:
   fixes scheme :: "(nat \<times> bool) list"
   assumes "length scheme \<ge> 4"
@@ -6953,7 +7054,152 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
              Since full has the commutator block at front and w3 as remainder,
              this means w3 has no adjacent inverse pair either.
              Continue extracting commutators (or show full = torus directly).\<close>
-          show ?thesis sorry \<comment> \<open>Needs accumulator-style induction or secondary measure.\<close>
+          \<comment> \<open>No adjacent inverse pair. Apply IH to w3 = w0'@w1'@w2' (shorter than scheme).
+             Combine result with the commutator block.\<close>
+          define w3 where "w3 = w0' @ w1' @ w2'"
+          have hfull_w3: "full = [(a_lab, True), (b_lab, True), (a_lab, False), (b_lab, False)] @ w3"
+            unfolding full_def w3_def by (by100 simp)
+          have hlen_w3: "length w3 + 4 = length scheme" using hlen_w unfolding w3_def by (by100 simp)
+          hence hlt_w3: "length w3 < length scheme" by (by100 linarith)
+          have heven_scheme: "even (length scheme)" using proper_scheme_even_length[OF less(3)] .
+          hence heven_w3: "even (length w3)" using hlen_w3 by (by100 presburger)
+          show ?thesis
+          proof (cases "w3 = []")
+            case True
+            \<comment> \<open>w3 is empty: full = one commutator block = torus n=1.\<close>
+            have hfull_block: "full = [(a_lab, True), (b_lab, True), (a_lab, False), (b_lab, False)]"
+              using hfull_w3 True by (by100 simp)
+            have hblock_torus: "top1_scheme_equiv full (top1_n_torus_scheme 1)"
+              using commutator_block_equiv_torus_1[OF hab] hfull_block by (by100 simp)
+            have "top1_scheme_equiv scheme (top1_n_torus_scheme 1)"
+              using hfull_equiv hblock_torus unfolding top1_scheme_equiv_def
+              by (meson rtranclp_trans)
+            hence "\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w"
+              unfolding top1_is_torus_scheme_def by (by100 blast)
+            thus ?thesis by (by100 blast)
+          next
+            case False
+            hence "length w3 > 0" by (by100 simp)
+            hence "length w3 \<ge> 2" using heven_w3 by (by100 presburger)
+            show ?thesis
+            proof (cases "length w3 < 4")
+              case True
+              \<comment> \<open>length w3 = 2 (even, > 0, < 4). Proper \<Rightarrow> one label, both same direction
+                 (no adjacent inverse pair). This is a projective pair.\<close>
+              have "length w3 = 2" using True \<open>length w3 \<ge> 2\<close> heven_w3 by (by100 presburger)
+              \<comment> \<open>w3 = [e1, e2] with fst e1 = fst e2, snd e1 = snd e2 (proper + no inv pair).\<close>
+              \<comment> \<open>scheme ~ [commutator] @ [projective pair] ~ projective 3.\<close>
+              show ?thesis sorry
+            next
+              case nFalse: False
+              hence hge4_w3: "length w3 \<ge> 4" by (by100 linarith)
+              \<comment> \<open>Properness of w3: labels from the block have count 0 in w3, others have count 2.\<close>
+              have hproper_w3: "\<forall>label. card {i. i < length w3 \<and> fst (w3!i) = label} \<in> {0, 2}"
+                sorry
+              \<comment> \<open>Apply IH to w3.\<close>
+              from less(1)[OF hlt_w3 hge4_w3 hproper_w3]
+              have hIH: "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv w3 [(a, True), (a, False), (b, True), (b, False)])
+                   \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv w3 w)
+                   \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv w3 w)" .
+              \<comment> \<open>Combine with the commutator block using congruence.\<close>
+              define block where "block = [(a_lab, True), (b_lab, True), (a_lab, False), (b_lab, False)]"
+              have hfull_block: "full = block @ w3" unfolding block_def using hfull_w3 by (by100 simp)
+              \<comment> \<open>From scheme ~ full = block @ w3, and w3 ~ normal\_form,
+                 we get scheme ~ block @ normal\_form using congruence.\<close>
+              from hIH show ?thesis
+              proof (elim disjE exE conjE)
+                \<comment> \<open>Case 1: w3 ~ sphere (one torus). Then scheme ~ block @ sphere = torus 2? No.
+                   Actually sphere means w3 ~ [(a,T),(a,F),(b,T),(b,F)] which is ALSO a commutator.
+                   So scheme ~ block1 @ block2 = torus 2.\<close>
+                fix c d assume hcd: "c \<noteq> d" and hw3_sph: "top1_scheme_equiv w3 [(c, True), (c, False), (d, True), (d, False)]"
+                have "top1_scheme_equiv full (block @ [(c, True), (c, False), (d, True), (d, False)])"
+                  using scheme_equiv_prepend[OF hw3_sph, of block] hfull_block
+                  unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+                hence "top1_scheme_equiv scheme (block @ [(c, True), (c, False), (d, True), (d, False)])"
+                  using hfull_equiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+                \<comment> \<open>Cancel the sphere: [(c,T),(c,F),(d,T),(d,F)] has two cancellable pairs.
+                   block @ sphere ~ block @ [(d,T),(d,F)] ~ block ~ torus 1.\<close>
+                \<comment> \<open>cancel c-pair: need top1\_inverse\_edge (c,True) = (c,False)\<close>
+                have hinv_c: "top1_inverse_edge (c,True) = (c,False)"
+                  unfolding top1_inverse_edge_def by (by100 simp)
+                have hcancel1: "top1_elementary_scheme_operation
+                    (block @ [(c,True),(c,False),(d,True),(d,False)])
+                    (block @ [(d,True),(d,False)])"
+                proof -
+                  have "top1_elementary_scheme_operation
+                      ([] @ [(c,True), top1_inverse_edge (c,True)] @ [(d,True),(d,False)])
+                      ([] @ [(d,True),(d,False)])"
+                    by (rule top1_elementary_scheme_operation.cancel)
+                  hence "top1_elementary_scheme_operation
+                      ([(c,True),(c,False),(d,True),(d,False)])
+                      ([(d,True),(d,False)])"
+                    using hinv_c by (by100 simp)
+                  from top1_elementary_scheme_operation.context_left[OF this, of block]
+                  show ?thesis by (by100 simp)
+                qed
+                have hinv_d: "top1_inverse_edge (d,True) = (d,False)"
+                  unfolding top1_inverse_edge_def by (by100 simp)
+                have hcancel2: "top1_elementary_scheme_operation
+                    (block @ [(d,True),(d,False)])
+                    block"
+                proof -
+                  have "top1_elementary_scheme_operation
+                      ([] @ [(d,True), top1_inverse_edge (d,True)] @ [])
+                      ([] @ [])"
+                    by (rule top1_elementary_scheme_operation.cancel)
+                  hence "top1_elementary_scheme_operation [(d,True),(d,False)] []"
+                    using hinv_d by (by100 simp)
+                  from top1_elementary_scheme_operation.context_left[OF this, of block]
+                  show ?thesis by (by100 simp)
+                qed
+                have "top1_scheme_equiv scheme block"
+                  using \<open>top1_scheme_equiv scheme (block @ [(c, True), (c, False), (d, True), (d, False)])\<close>
+                    hcancel1 hcancel2 unfolding top1_scheme_equiv_def
+                  by (meson rtranclp.rtrancl_into_rtrancl rtranclp_trans)
+                hence "top1_scheme_equiv scheme (top1_n_torus_scheme 1)"
+                  using commutator_block_equiv_torus_1[OF hab] unfolding block_def top1_scheme_equiv_def
+                  by (meson rtranclp_trans)
+                thus ?thesis unfolding top1_is_torus_scheme_def by (by100 blast)
+              next
+                \<comment> \<open>Case 2: w3 ~ projective m. Then scheme ~ block @ projective.
+                   Use proj\_pair\_absorbs\_torus: commutator + projective → projective (m+2).\<close>
+                fix m w assume "m > 0" and hwm: "top1_is_projective_scheme w m"
+                    and hw3_proj: "top1_scheme_equiv w3 w"
+                have "top1_scheme_equiv full (block @ w)"
+                  using scheme_equiv_prepend[OF hw3_proj, of block] hfull_block
+                  unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+                hence "top1_scheme_equiv scheme (block @ w)"
+                  using hfull_equiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+                \<comment> \<open>block @ projective\_m ~ projective\_(m+2).
+                   The commutator block is one torus pair. By Lemma 77.4 (proj\_pair\_absorbs\_torus),
+                   one projective pair absorbs one torus pair into 3 projective pairs.
+                   So: commutator @ projective\_m first extract a projective pair from projective\_m,
+                   then absorb the commutator. Net: projective\_(m-1+3) = projective\_(m+2).\<close>
+                have hw_is: "w = top1_m_projective_scheme m" using hwm unfolding top1_is_projective_scheme_def by (by100 blast)
+                \<comment> \<open>scheme ~ block @ projective\_m. Need: ~ projective\_(m+2).\<close>
+                show ?thesis sorry
+              next
+                \<comment> \<open>Case 3: w3 ~ torus n. Then scheme ~ block @ torus\_n.
+                   This is a torus\_(n+1) (after relabeling).\<close>
+                fix n w assume "n > 0" and hwn: "top1_is_torus_scheme w n"
+                    and hw3_tor: "top1_scheme_equiv w3 w"
+                have "top1_scheme_equiv full (block @ w)"
+                  using scheme_equiv_prepend[OF hw3_tor, of block] hfull_block
+                  unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+                hence "top1_scheme_equiv scheme (block @ w)"
+                  using hfull_equiv unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
+                \<comment> \<open>block @ torus\_n = commutator @ torus\_n ~ torus\_(n+1).\<close>
+                have hw_is: "w = top1_n_torus_scheme n" using hwn unfolding top1_is_torus_scheme_def by (by100 blast)
+                have "top1_scheme_equiv (block @ w) (top1_n_torus_scheme (Suc n))"
+                  using commutator_prepend_torus[OF hab \<open>n > 0\<close>] hw_is unfolding block_def
+                  by (by100 simp)
+                hence "top1_scheme_equiv scheme (top1_n_torus_scheme (Suc n))"
+                  using \<open>top1_scheme_equiv scheme (block @ w)\<close> unfolding top1_scheme_equiv_def
+                  by (meson rtranclp_trans)
+                thus ?thesis unfolding top1_is_torus_scheme_def by (by100 blast)
+              qed
+            qed
+          qed
         qed
       qed
     qed
