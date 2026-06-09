@@ -467,6 +467,24 @@ proof -
   show ?thesis by (by100 blast)
 qed
 
+\<comment> \<open>Quotient transport: if P \<sim> P' (homeomorphism) and the boundary identifications
+   match (fibre agreement), then the quotient surfaces are homeomorphic.
+   This is the main §76 tool: each elementary operation only needs to provide
+   a polygon homeomorphism + fibre agreement.\<close>
+lemma quotient_transport_by_homeomorphism:
+  fixes P :: "'a set" and TP :: "'a set set"
+    and P' :: "'a set" and TP' :: "'a set set"
+    and Y :: "'b set" and TY :: "'b set set"
+    and Y' :: "'c set" and TY' :: "'c set set"
+  assumes hq: "top1_quotient_map_on P TP Y TY q"
+      and hq': "top1_quotient_map_on P' TP' Y' TY' q'"
+      and hh: "top1_homeomorphism_on P TP P' TP' h"
+      and hfibres: "\<forall>x\<in>P. \<forall>y\<in>P. (q x = q y) \<longleftrightarrow> (q' (h x) = q' (h y))"
+  shows "\<exists>H. top1_homeomorphism_on Y TY Y' TY' H"
+  sorry \<comment> \<open>Define p2 = q' \<circ> h : P \<to> Y'. Then p2 is a quotient map (composition of
+     homeomorphism + quotient map). Fibre agreement gives q and p2 same fibres.
+     Apply quotient\_same\_fibres\_homeomorphic.\<close>
+
 \<comment> \<open>Elementary operations preserve quotient\\_of\\_scheme\\_on for the SAME space.
    If Y is a quotient of scheme s, and s → t via an elementary operation,
    then Y is also a quotient of scheme t (same polygon, adjusted vertex labeling).\<close>
