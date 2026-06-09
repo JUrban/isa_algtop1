@@ -3753,7 +3753,13 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         have hcancel: "top1_scheme_equiv scheme shorter"
         proof -
           have hdecomp_j: "scheme = take j scheme @ [scheme!j, top1_inverse_edge (scheme!j)] @ drop (j+2) scheme"
-            sorry
+          proof -
+            have "scheme = take j scheme @ scheme!j # drop (Suc j) scheme"
+              using id_take_nth_drop[of j scheme] hj(1) by (by100 simp)
+            also have "drop (Suc j) scheme = scheme!(j+1) # drop (Suc (Suc j)) scheme"
+              using Cons_nth_drop_Suc[of "Suc j" scheme] hj(1) by (by100 simp)
+            finally show ?thesis using hjinv by (by100 simp)
+          qed
           have "top1_elementary_scheme_operation
               (take j scheme @ [scheme!j, top1_inverse_edge (scheme!j)] @ drop (j+2) scheme)
               (take j scheme @ drop (j+2) scheme)"
