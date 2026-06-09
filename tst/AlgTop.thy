@@ -2799,20 +2799,166 @@ definition top1_is_torus_scheme :: "(nat \<times> bool) list \<Rightarrow> nat \
 definition top1_is_projective_scheme :: "(nat \<times> bool) list \<Rightarrow> nat \<Rightarrow> bool" where
   "top1_is_projective_scheme w m \<longleftrightarrow> m > 0 \<and> w = top1_m_projective_scheme m"
 
+\<comment> \<open>Position-to-element: if xs = prefix @ mid @ suffix and k < length xs
+   and k < length prefix or k \<ge> length prefix + length mid,
+   then xs!k \<in> set prefix \<union> set suffix.\<close>
+lemma nth_outside_mid:
+  assumes "xs = prefix @ mid @ suffix"
+      and "k < length xs"
+      and "k < length prefix \<or> k \<ge> length prefix + length mid"
+  shows "xs ! k \<in> set prefix \<union> set suffix"
+  using assms
+proof (elim disjE)
+  assume hk_pf: "k < length prefix"
+  have "xs ! k = (prefix @ mid @ suffix) ! k" using assms(1) by (by100 simp)
+  also have "\<dots> = prefix ! k"
+    using nth_append[of prefix "mid @ suffix" k] hk_pf by (by100 simp)
+  finally have "xs ! k = prefix ! k" .
+  have "prefix ! k \<in> set prefix" using hk_pf by (by100 simp)
+  hence "xs ! k \<in> set prefix" using \<open>xs ! k = prefix ! k\<close> by (by100 simp)
+  thus ?thesis by (by100 blast)
+next
+  assume hk_sf: "k \<ge> length prefix + length mid"
+  have hk_off: "k - length prefix - length mid < length suffix"
+    using assms(1,2) hk_sf by (by100 simp)
+  have "xs ! k = (prefix @ mid @ suffix) ! k" using assms(1) by (by100 simp)
+  also have "\<dots> = (mid @ suffix) ! (k - length prefix)"
+  proof -
+    have "\<not> k < length prefix" using hk_sf by (by100 simp)
+    thus ?thesis using nth_append[of prefix "mid @ suffix" k] by (by100 simp)
+  qed
+  also have "\<dots> = suffix ! (k - length prefix - length mid)"
+  proof -
+    have "\<not> k - length prefix < length mid" using hk_sf by (by100 simp)
+    thus ?thesis using nth_append[of mid suffix "k - length prefix"] by (by100 simp)
+  qed
+  finally have "xs ! k = suffix ! (k - length prefix - length mid)" .
+  have "suffix ! (k - length prefix - length mid) \<in> set suffix"
+    using hk_off by (by100 simp)
+  hence "xs ! k \<in> set suffix"
+    using \<open>xs ! k = suffix ! (k - length prefix - length mid)\<close> by (by100 simp)
+  thus ?thesis by (by100 blast)
+qed
+
 \<comment> \<open>Helper: in a proper length-4 torus-type scheme, the two non-adjacent-pair elements
    have the same label but opposite directions.\<close>
 lemma proper_len4_torus_pair_props:
   fixes scheme :: "(nat \<times> bool) list" and e1 e2 :: "nat \<times> bool"
+      and prefix suffix :: "(nat \<times> bool) list"
   assumes hlen: "length scheme = 4"
-      and hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
       and htorus: "\<not> (\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
           \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))"
       and hfst_eq: "fst e1 = fst e2"
-      and he1_in: "e1 \<in> set scheme" and he2_in: "e2 \<in> set scheme"
-      and he_ne_lab: "fst e1 \<noteq> fst (scheme ! i)"
       and hi: "i < 3" "fst (scheme!i) = fst (scheme!(i+1))"
+      and hdecomp: "scheme = prefix @ [scheme!i, top1_inverse_edge (scheme!i)] @ suffix"
+      and hlen_pf: "length prefix = i"
+      and hsp: "suffix @ prefix = [e1, e2]"
   shows "snd e1 \<noteq> snd e2"
-  sorry
+proof -
+  \<comment> \<open>Construct 2 concrete non-{i,i+1} positions.\<close>
+  define p0 :: nat where "p0 = (if i = 0 then 2 else 0)"
+  define p1 :: nat where "p1 = (if i \<le> 1 then 3 else 1)"
+  have hp0: "p0 < 4" "p0 \<noteq> i" "p0 \<noteq> i + 1"
+    using hi(1) unfolding p0_def by (by100 simp)+
+  have hp1: "p1 < 4" "p1 \<noteq> i" "p1 \<noteq> i + 1"
+    using hi(1) unfolding p1_def by (by100 simp)+
+  have hp0p1: "p0 \<noteq> p1"
+    using hi(1) unfolding p0_def p1_def by (by100 simp)
+  \<comment> \<open>scheme!p0 and scheme!p1 are in set prefix \<union> set suffix.\<close>
+  have hp0_in: "scheme!p0 \<in> set prefix \<union> set suffix"
+  proof -
+    have hmid_len: "length [scheme!i, top1_inverse_edge (scheme!i)] = 2" by (by100 simp)
+    have hcond: "p0 < length prefix \<or> p0 \<ge> length prefix + length [scheme!i, top1_inverse_edge (scheme!i)]"
+      using hp0(2,3) hp0(1) hi(1) hlen_pf hmid_len by (by100 presburger)
+    have "p0 < length scheme" using hp0(1) hlen by (by100 simp)
+    from nth_outside_mid[OF hdecomp this hcond]
+    show ?thesis .
+  qed
+  have hp1_in: "scheme!p1 \<in> set prefix \<union> set suffix"
+  proof -
+    have hmid_len1: "length [scheme!i, top1_inverse_edge (scheme!i)] = 2" by (by100 simp)
+    have hcond: "p1 < length prefix \<or> p1 \<ge> length prefix + length [scheme!i, top1_inverse_edge (scheme!i)]"
+      using hp1(2,3) hp1(1) hi(1) hlen_pf hmid_len1 by (by100 presburger)
+    have "p1 < length scheme" using hp1(1) hlen by (by100 simp)
+    from nth_outside_mid[OF hdecomp this hcond]
+    show ?thesis .
+  qed
+  \<comment> \<open>Elements of prefix \<union> suffix = {e1, e2}.\<close>
+  have hsp_set: "\<forall>x \<in> set prefix \<union> set suffix. x = e1 \<or> x = e2"
+  proof (rule ballI)
+    fix x assume "x \<in> set prefix \<union> set suffix"
+    hence "x \<in> set suffix \<or> x \<in> set prefix" by (by100 blast)
+    hence "x \<in> set (suffix @ prefix)" by (by100 simp)
+    hence "x \<in> set [e1, e2]" using hsp by (by100 simp)
+    thus "x = e1 \<or> x = e2" by (by100 simp)
+  qed
+  have hp0_e: "scheme!p0 = e1 \<or> scheme!p0 = e2" using hp0_in hsp_set by (by100 blast)
+  have hp1_e: "scheme!p1 = e1 \<or> scheme!p1 = e2" using hp1_in hsp_set by (by100 blast)
+  \<comment> \<open>Both have label fst e1.\<close>
+  have hlab_p0: "fst (scheme!p0) = fst e1"
+    using hp0_e hfst_eq
+    proof (elim disjE)
+      assume "scheme!p0 = e1" thus ?thesis by (by100 simp)
+    next
+      assume "scheme!p0 = e2" thus ?thesis using hfst_eq by (by100 simp)
+    qed
+  have hlab_p1: "fst (scheme!p1) = fst e1"
+    using hp1_e hfst_eq
+    proof (elim disjE)
+      assume "scheme!p1 = e1" thus ?thesis by (by100 simp)
+    next
+      assume "scheme!p1 = e2" thus ?thesis using hfst_eq by (by100 simp)
+    qed
+  \<comment> \<open>Torus: p0 \<noteq> p1, same label \<Longrightarrow> different direction.\<close>
+  have hsnd_ne: "snd (scheme!p0) \<noteq> snd (scheme!p1)"
+  proof
+    assume "snd (scheme!p0) = snd (scheme!p1)"
+    hence "\<exists>lab. \<exists>p<length scheme. \<exists>q<length scheme. p \<noteq> q
+        \<and> fst (scheme!p) = lab \<and> fst (scheme!q) = lab
+        \<and> snd (scheme!p) = snd (scheme!q)"
+    proof -
+      have "p0 < length scheme" using hp0(1) hlen by (by100 simp)
+      moreover have "p1 < length scheme" using hp1(1) hlen by (by100 simp)
+      ultimately show ?thesis
+        using hp0p1 hlab_p0 hlab_p1 \<open>snd (scheme!p0) = snd (scheme!p1)\<close>
+        by (by100 blast)
+    qed
+    thus False using htorus by (by100 blast)
+  qed
+  \<comment> \<open>Since scheme!p0 \<in> {e1,e2} and scheme!p1 \<in> {e1,e2} and snd differ,
+     the set {scheme!p0, scheme!p1} = {e1, e2}.\<close>
+  show "snd e1 \<noteq> snd e2"
+  proof (rule ccontr)
+    assume "\<not> snd e1 \<noteq> snd e2"
+    hence hsame: "snd e1 = snd e2" by (by100 simp)
+    \<comment> \<open>Then e1 = e2 (same fst, same snd). All elements in {e1, e2} = {e1} have same snd.
+       scheme!p0 and scheme!p1 are both in {e1}, so snd equal. Contradicts hsnd\_ne.\<close>
+    have "e1 = e2" using hfst_eq hsame
+    proof (cases e1, cases e2)
+      fix a1 b1 a2 b2
+      assume "e1 = (a1, b1)" "e2 = (a2, b2)"
+      thus ?thesis using hfst_eq hsame by (by100 simp)
+    qed
+    hence "snd (scheme!p0) = snd (scheme!p1)"
+    proof -
+      from hp0_e have "scheme!p0 = e1 \<or> scheme!p0 = e2" .
+      hence "snd (scheme!p0) = snd e1"
+      proof (elim disjE)
+        assume "scheme!p0 = e1" thus ?thesis by (by100 simp)
+      next
+        assume "scheme!p0 = e2" thus ?thesis using \<open>e1 = e2\<close> by (by100 simp)
+      qed
+      moreover from hp1_e have "snd (scheme!p1) = snd e1"
+      proof (elim disjE)
+        assume "scheme!p1 = e1" thus ?thesis by (by100 simp)
+      next
+        assume "scheme!p1 = e2" thus ?thesis using \<open>e1 = e2\<close> by (by100 simp)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+    thus False using hsnd_ne by (by100 simp)
+  qed
+qed
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
@@ -3208,11 +3354,11 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             qed
           qed
           have "snd e1 \<noteq> snd e2"
-            using proper_len4_torus_pair_props[OF \<open>length scheme = 4\<close> less(3)]
-            using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme.
-                i \<noteq> j \<and> fst (scheme ! i) = label \<and> fst (scheme ! j) = label
-                \<and> snd (scheme ! i) = snd (scheme ! j))\<close>
-            using \<open>fst e1 = fst e2\<close> he_in he_ne_label hi
+            using proper_len4_torus_pair_props[OF \<open>length scheme = 4\<close>
+                \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme.
+                    i \<noteq> j \<and> fst (scheme ! i) = label \<and> fst (scheme ! j) = label
+                    \<and> snd (scheme ! i) = snd (scheme ! j))\<close>
+                \<open>fst e1 = fst e2\<close> hi(1) hi(2) hdecomp hlen_pf hsp_list]
             by (by100 blast)
           define b_lab where "b_lab = fst e1"
           define d_b where "d_b = snd e1"
