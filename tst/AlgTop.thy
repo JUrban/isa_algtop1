@@ -6411,8 +6411,12 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             hence "length scheme \<ge> 6" using hlen_gt4 by (by100 presburger)
             thus ?thesis using hlen_shorter hlen_full by (by100 linarith)
           qed
+          have hproper_full: "\<forall>label. card {i. i < length full \<and> fst (full!i) = label} \<in> {0, 2}"
+            sorry \<comment> \<open>full = Lemma 77.3 rearrangement of intermediate = permutation of scheme.
+               Properness preserved since fst-multiset is unchanged (just reordering).\<close>
           have hproper_shorter: "\<forall>label. card {i. i < length shorter \<and> fst (shorter!i) = label} \<in> {0, 2}"
-            sorry \<comment> \<open>Cancel preserves properness (cancel\_preserves\_proper on full).\<close>
+            using cancel_preserves_proper[OF hproper_full hj(1) hj(2)]
+            unfolding shorter_def by (by100 blast)
           from less(1)[OF hlt hge4 hproper_shorter]
           have "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv shorter [(a, True), (a, False), (b, True), (b, False)])
                \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv shorter w)
