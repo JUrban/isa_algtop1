@@ -4926,8 +4926,22 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
            If a < m': relabel a \<to> fresh in rest first.\<close>
         \<comment> \<open>Step 4: [(a,T),(a,T)]@proj m' = [(a,T),(a,T),(0,T),(0,T),...,(m'-1,T),(m'-1,T)].
            Relabel a \<to> m': [(m',T),(m',T),(0,T),(0,T),...,(m'-1,T),(m'-1,T)] = proj (m'+1).\<close>
-        hence "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
-          sorry \<comment> \<open>Congruence (proved) + relabel + rotate = proj (m'+1).\<close>
+        \<comment> \<open>Step 3: Congruence: need no-a in proj m'. Proj m' uses labels 0..m'-1.\<close>
+        have hproj_no_a: "\<forall>e \<in> set w'. fst e \<noteq> a"
+          sorry \<comment> \<open>If a \<ge> m': direct. If a < m': relabel rest+proj to avoid a first.\<close>
+        have "top1_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ w')"
+          using scheme_equiv_prepend_pair[OF hm(3) ha_rest(3) hproj_no_a] by (by100 blast)
+        hence hchain: "top1_scheme_equiv scheme ([(a,True),(a,True)] @ w')"
+          using scheme_equiv_trans[OF ha_rest(1)] by (by100 blast)
+        \<comment> \<open>Step 4: Relabel a \<to> m', rotate to standard form: [(a,T),(a,T)]@proj m' \<sim> proj (m'+1).\<close>
+        have "top1_scheme_equiv ([(a,True),(a,True)] @ w') (top1_m_projective_scheme (m'+1))"
+          sorry \<comment> \<open>Relabel a \<to> m', then rotate [(m',T),(m',T)]@proj m' to proj (m'+1).\<close>
+        hence "top1_scheme_equiv scheme (top1_m_projective_scheme (m'+1))"
+          using scheme_equiv_trans[OF hchain] by (by100 blast)
+        moreover have "top1_is_projective_scheme (top1_m_projective_scheme (m'+1)) (m'+1)"
+          unfolding top1_is_projective_scheme_def using hm(1) by (by100 simp)
+        ultimately have "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
+          using hm(1) by (by100 blast)
         thus ?thesis by (by100 blast)
       next
         \<comment> \<open>Case 3: rest \<sim> torus n'. Apply Lemma 77.4 repeatedly:
