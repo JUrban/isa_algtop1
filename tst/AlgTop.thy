@@ -616,6 +616,10 @@ qed
 lemma suc_mod_shift: "(0::nat) < n \<Longrightarrow> Suc ((i + k) mod n) mod n = (Suc i + k) mod n"
   by presburger \<comment> \<open>raw presburger needed; by100 times out in AlgTop context\<close>
 
+\<comment> \<open>Mod add left: (a + b) mod n = (a mod n + b) mod n.\<close>
+lemma mod_add_left: "((a::nat) + b) mod n = (a mod n + b) mod n"
+  by (rule mod_add_left_eq[symmetric])
+
 \<comment> \<open>Shifted distinctness: if vertices are distinct, they're still distinct after cyclic shift.\<close>
 lemma shifted_distinct:
   assumes "(0::nat) < n" and "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
@@ -682,12 +686,61 @@ proof -
       ultimately show ?thesis by (by100 simp)
     qed
   qed
-  \<comment> \<open>Proof: same definition with shifted witnesses vx'(i) = vx((i+k) mod n), vy' similarly.
-     Use the proved transfer lemma pattern: extract, transform, reassemble.\<close>
-  from assms show ?thesis
-    unfolding top1_quotient_of_scheme_on_def hlen
-    sorry \<comment> \<open>Rotate: 11 conditions with shifted vx/vy. Helpers:
-       shifted\_distinct (C3), shifted\_in\_P (C4), hshift, mod\_less\_n, suc\_mod\_shift.\<close>
+  \<comment> \<open>Apply the generalized bij transfer with sigma(i) = (i + length u) mod n.\<close>
+  have hn_pos: "(0::nat) < ?n"
+  proof -
+    from assms obtain P0 q0 where "top1_is_polygonal_region_on P0 (length (u @ v))"
+      by (rule quotient_of_scheme_extract)
+    hence h3: "length (u @ v) \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
+    have "length (u @ v) = length u + length v" by (by100 simp)
+    with h3 show ?thesis by (by100 linarith)
+  qed
+  define \<sigma> where "\<sigma> = (\<lambda>i. (i + ?k) mod ?n)"
+  have hbij: "bij_betw \<sigma> {..<?n} {..<?n}"
+  proof -
+    have hinj: "inj_on \<sigma> {..<?n}"
+    proof (rule inj_onI)
+      fix x y assume "x \<in> {..<?n}" "y \<in> {..<?n}" "\<sigma> x = \<sigma> y"
+      from this have "x < ?n" "y < ?n" "(x + ?k) mod ?n = (y + ?k) mod ?n" unfolding \<sigma>_def by (by100 simp)+
+      thus "x = y" using shift_mod_inj[OF hn_pos] by (by100 metis)
+    qed
+    have himg: "\<sigma> ` {..<?n} \<subseteq> {..<?n}"
+    proof
+      fix y assume "y \<in> \<sigma> ` {..<?n}"
+      then obtain x where "x < ?n" "y = \<sigma> x" by (by100 blast)
+      hence "y = (x + ?k) mod ?n" unfolding \<sigma>_def by (by100 simp)
+      moreover have "(x + ?k) mod ?n < ?n" by (rule mod_less_n[OF hn_pos])
+      ultimately have "y < ?n" by (by100 simp)
+      thus "y \<in> {..<?n}" by (by100 simp)
+    qed
+    have hcard: "card (\<sigma> ` {..<?n}) = card {..<?n}"
+      using card_image[OF hinj] by (by100 simp)
+    have "\<sigma> ` {..<?n} = {..<?n}"
+      using card_subset_eq[OF finite_lessThan himg hcard] by (by100 blast)
+    thus ?thesis unfolding bij_betw_def using hinj by (by100 blast)
+  qed
+  have hfst_bij: "\<And>i. i < ?n \<Longrightarrow> fst ((v @ u)!i) = fst ((u @ v)!(\<sigma> i))"
+  proof -
+    fix i assume "i < ?n"
+    from hshift[OF this] have "(v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)" .
+    thus "fst ((v @ u)!i) = fst ((u @ v)!(\<sigma> i))" unfolding \<sigma>_def by (by100 simp)
+  qed
+  have hsnd_bij: "\<And>i. i < ?n \<Longrightarrow> snd ((v @ u)!i) = snd ((u @ v)!(\<sigma> i))"
+  proof -
+    fix i assume "i < ?n"
+    from hshift[OF this] have "(v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)" .
+    thus "snd ((v @ u)!i) = snd ((u @ v)!(\<sigma> i))" unfolding \<sigma>_def by (by100 simp)
+  qed
+  have hsuc_bij: "\<And>i. i < ?n \<Longrightarrow> Suc (\<sigma> i) mod ?n = \<sigma> (Suc i mod ?n)"
+  proof -
+    fix i assume "i < ?n"
+    have "Suc (\<sigma> i) mod ?n = Suc ((i + ?k) mod ?n) mod ?n" unfolding \<sigma>_def by (by100 simp)
+    also have "\<dots> = (Suc i + ?k) mod ?n" using suc_mod_shift[OF hn_pos] .
+    also have "\<dots> = (Suc i mod ?n + ?k) mod ?n" by (rule mod_add_left)
+    also have "\<dots> = \<sigma> (Suc i mod ?n)" unfolding \<sigma>_def by (by100 simp)
+    finally show "Suc (\<sigma> i) mod ?n = \<sigma> (Suc i mod ?n)" .
+  qed
+  show ?thesis sorry \<comment> \<open>From quotient\_of\_scheme\_transfer\_bij[OF assms hlen hbij hfst\_bij hsnd\_bij hsuc\_bij].\<close>
 qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
@@ -771,6 +824,22 @@ proof -
     subgoal by assumption
     done
   qed
+
+\<comment> \<open>Generalized transfer: quotient\_of\_scheme\_on is preserved when the EQUALITY PATTERN
+   of fst/snd is preserved. This handles relabel (injective), invert, and rotate
+   where individual values change but the identification pattern is the same.
+   The SAME P, q witnesses are used, but vx/vy may be permuted via a bijection sigma.\<close>
+lemma quotient_of_scheme_transfer_bij:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+      and "length w' = length w"
+      and "bij_betw \<sigma> {..<length w} {..<length w}"
+      and "\<And>i. i < length w \<Longrightarrow> fst (w'!i) = fst (w!(\<sigma> i))"
+      and "\<And>i. i < length w \<Longrightarrow> snd (w'!i) = snd (w!(\<sigma> i))"
+      and "\<And>i. i < length w \<Longrightarrow> Suc (\<sigma> i) mod (length w) = \<sigma> (Suc i mod (length w))"
+  shows "top1_quotient_of_scheme_on Y TY w'"
+  sorry \<comment> \<open>Same P, q. Witnesses: vx'(i) = vx(sigma(i)), vy'(i) = vy(sigma(i)).
+     All geometric conditions transfer via the bijection.
+     Conditions 7,9 use the pattern-preservation properties.\<close>
 
 \<comment> \<open>Flipping the orientation of all edges with a given label preserves quotient\_of\_scheme\_on.
    Same polygon P, same quotient map q, same vertex positions vx/vy.
