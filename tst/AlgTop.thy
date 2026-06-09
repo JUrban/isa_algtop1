@@ -3409,7 +3409,80 @@ proof -
       let ?f = "\<lambda>i. if i < j then i else i - 2"
       have "bij_betw ?f {i. i < length w \<and> fst (w ! i) = label}
           {i. i < length ?w' \<and> fst (?w' ! i) = label}"
-        sorry
+        unfolding bij_betw_def
+      proof (intro conjI)
+        show "inj_on ?f {i. i < length w \<and> fst (w ! i) = label}"
+        proof (rule inj_onI)
+          fix x y
+          assume hx: "x \<in> {i. i < length w \<and> fst (w ! i) = label}"
+            and hy: "y \<in> {i. i < length w \<and> fst (w ! i) = label}"
+            and heq: "?f x = ?f y"
+          from hno_jj1 hx have "x \<noteq> j" "x \<noteq> j+1" by (by100 blast)+
+          from hno_jj1 hy have "y \<noteq> j" "y \<noteq> j+1" by (by100 blast)+
+          \<comment> \<open>Case split: both < j, both \<ge> j+2, or mixed.\<close>
+          have "x < j \<or> x \<ge> j+2" using \<open>x \<noteq> j\<close> \<open>x \<noteq> j+1\<close> by (by100 presburger)
+          moreover have "y < j \<or> y \<ge> j+2" using \<open>y \<noteq> j\<close> \<open>y \<noteq> j+1\<close> by (by100 presburger)
+          ultimately show "x = y" using heq by (by100 presburger)
+        qed
+        show "?f ` {i. i < length w \<and> fst (w ! i) = label}
+            = {i. i < length ?w' \<and> fst (?w' ! i) = label}"
+        proof (rule set_eqI, rule iffI)
+          fix y assume "y \<in> ?f ` {i. i < length w \<and> fst (w ! i) = label}"
+          then obtain x where hx: "x < length w" "fst (w ! x) = label" "y = ?f x"
+            by (by100 blast)
+          from hno_jj1 hx(1,2) have "x \<noteq> j" "x \<noteq> j+1" by (by100 blast)+
+          hence hx_cases: "x < j \<or> x \<ge> j+2" by (by100 presburger)
+          show "y \<in> {i. i < length ?w' \<and> fst (?w' ! i) = label}"
+          proof (cases "x < j")
+            case True
+            hence hy_eq: "y = x" using hx(3) by (by100 simp)
+            have "?w' ! x = w ! x" using hnth_lt True by (by100 blast)
+            hence "fst (?w' ! x) = fst (w ! x)" by (by100 simp)
+            hence "fst (?w' ! y) = label" using hy_eq hx(2) by (by100 simp)
+            moreover have "y < length ?w'" using hx(1) hlen_w' hj True hy_eq by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          next
+            case False
+            hence "x \<ge> j + 2" using hx_cases by (by100 blast)
+            hence "y = x - 2" using hx(3) by (by100 simp)
+            moreover have "x - 2 < length ?w'" using hx(1) hlen_w' hj \<open>x \<ge> j+2\<close> by (by100 simp)
+            moreover have "x - 2 \<ge> j" using \<open>x \<ge> j+2\<close> by (by100 simp)
+            from hnth_ge[rule_format, OF \<open>x - 2 \<ge> j\<close> \<open>x - 2 < length ?w'\<close>]
+            have "?w' ! (x-2) = w ! ((x-2)+2)" .
+            hence "fst (?w' ! (x-2)) = fst (w ! (x-2+2))" by (by100 simp)
+            have "x - 2 + 2 = x" using \<open>x \<ge> j+2\<close> by (by100 simp)
+            hence "fst (?w' ! (x-2)) = fst (w ! x)"
+              using \<open>fst (?w' ! (x-2)) = fst (w ! (x-2+2))\<close> by (by100 simp)
+            ultimately show ?thesis using hx(2) by (by100 simp)
+          qed
+        next
+          fix y assume hy: "y \<in> {i. i < length ?w' \<and> fst (?w' ! i) = label}"
+          hence hy_props: "y < length ?w'" "fst (?w' ! y) = label" by (by100 simp)+
+          \<comment> \<open>Find x such that ?f x = y.\<close>
+          show "y \<in> ?f ` {i. i < length w \<and> fst (w ! i) = label}"
+          proof (cases "y < j")
+            case True
+            hence "?w' ! y = w ! y" using hnth_lt by (by100 blast)
+            hence "fst (w ! y) = label" using hy_props(2) by (by100 simp)
+            moreover have "y < length w" using hy_props(1) hlen_w' hj by (by100 simp)
+            ultimately have "y \<in> {i. i < length w \<and> fst (w ! i) = label}" by (by100 simp)
+            moreover have "?f y = y" using True by (by100 simp)
+            ultimately show ?thesis by (by100 force)
+          next
+            case False
+            hence "y \<ge> j" by (by100 simp)
+            let ?x = "y + 2"
+            have "?w' ! y = w ! (y+2)" using hnth_ge \<open>y \<ge> j\<close> hy_props(1) by (by100 blast)
+            hence "fst (w ! (y+2)) = label" using hy_props(2) by (by100 simp)
+            moreover have "y+2 < length w" using hy_props(1) hlen_w' hj by (by100 simp)
+            moreover have "y + 2 \<ge> j + 2" using \<open>y \<ge> j\<close> by (by100 simp)
+            hence "?f (y+2) = y" by (by100 simp)
+            moreover have "y+2 \<in> {i. i < length w \<and> fst (w ! i) = label}"
+              using \<open>fst (w ! (y+2)) = label\<close> \<open>y+2 < length w\<close> by (by100 simp)
+            ultimately show ?thesis by (by100 force)
+          qed
+        qed
+      qed
       hence "card {i. i < length w \<and> fst (w ! i) = label}
           = card {i. i < length ?w' \<and> fst (?w' ! i) = label}"
         using bij_betw_same_card by (by100 blast)
