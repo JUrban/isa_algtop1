@@ -670,9 +670,9 @@ proof -
     apply (rule_tac x="\<lambda>i. vx ((i + length u) mod ?n)" in exI)
     apply (rule_tac x="\<lambda>i. vy ((i + length u) mod ?n)" in exI)
     apply (intro conjI)
-    sorry \<comment> \<open>11 conditions with shifted vertices. C1-C2 by assumption. C3 needs shift\_mod\_inj.
-       C4 needs mod\_less\_n. C5 needs sum reindexing. C6-C11 need suc\_mod\_shift + hshift.
-       Helpers available: mod\_less\_n, suc\_mod\_shift, shift\_mod\_inj, hshift.\<close>
+    sorry \<comment> \<open>11 conditions with shifted vertices. Helpers available:
+       mod\_less\_n, suc\_mod\_shift, shift\_mod\_inj, mod\_eq\_dvd, hshift.
+       C1-C2: by assumption. C3-C11: each needs manual proof with mod arithmetic.\<close>
 qed
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
