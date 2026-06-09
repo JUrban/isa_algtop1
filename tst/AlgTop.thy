@@ -3703,7 +3703,23 @@ proof -
     sorry
   \<comment> \<open>Fresh label exists.\<close>
   have hcond2: "\<exists>b::nat. b \<noteq> a \<and> (\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b)"
-    sorry
+  proof -
+    \<comment> \<open>The set of labels in y0\<union>y1\<union>y2 is finite (subset of scheme labels).\<close>
+    let ?all_labels = "insert a (fst ` set w)"
+    have "finite ?all_labels" by (by100 simp)
+    then obtain b :: nat where "b \<notin> ?all_labels"
+      using ex_new_if_finite[of ?all_labels] infinite_UNIV_nat by (by100 blast)
+    hence "b \<noteq> a" by (by100 blast)
+    moreover have "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b"
+    proof (intro ballI)
+      fix e assume "e \<in> set y0 \<union> set y1 \<union> set y2"
+      hence "e \<in> set w" using hdecomp by (by100 simp)
+      hence "fst e \<in> fst ` set w" by (by100 blast)
+      hence "fst e \<in> ?all_labels" by (by100 blast)
+      thus "fst e \<noteq> b" using \<open>b \<notin> ?all_labels\<close> by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
   \<comment> \<open>Apply Lemma 77.1.\<close>
   from Lemma_77_1_projective_collection[OF hcond1 hcond2]
   have "top1_scheme_equiv (y0 @ [(a,True)] @ y1 @ [(a,True)] @ y2)
