@@ -5758,14 +5758,78 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               \<and> (\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab)
               \<and> (\<forall>l q1 q2. q1 < q2 \<and> q2 < length scheme \<and> fst (scheme!q1) = l
                   \<and> fst (scheme!q2) = l \<longrightarrow> p2 - p1 \<le> q2 - q1)"
-            sorry \<comment> \<open>Pick label with MINIMUM gap between its two positions.
-               (1) Define gaps = {q2-q1 | label l has positions q1<q2, q2<length scheme}
-               (2) gaps is non-empty (length > 4 means at least 3 labels)
-               (3) gaps is finite
-               (4) Pick minimum gap g = Min gaps
-               (5) Get corresponding label a\_lab and positions p1, p2
-               (6) Opposite dirs from torus type; no same-label between from properness;
-                   minimality from Min.\<close>
+          proof -
+            \<comment> \<open>Define the set of all same-label pairs (as triples (gap, pos1, pos2)).\<close>
+            let ?pairs = "{(q2-q1, q1, q2) | q1 q2.
+                q1 < q2 \<and> q2 < length scheme \<and> fst (scheme!q1) = fst (scheme!q2)}"
+            \<comment> \<open>This set is non-empty: scheme has length > 4, so at least 3 labels, each appearing twice.\<close>
+            have hpairs_ne: "?pairs \<noteq> {}"
+            proof -
+              \<comment> \<open>Position 0 has some label l. By properness, l appears at exactly 2 positions.
+                 The second position q > 0 gives a pair in ?pairs.\<close>
+              have "0 < length scheme" using hlen_gt4 by (by100 linarith)
+              define l where "l = fst (scheme ! 0)"
+              have "card {i. i < length scheme \<and> fst (scheme!i) = l} = 2"
+              proof -
+                from less(3) have "card {i. i < length scheme \<and> fst (scheme!i) = l} \<in> {0, 2}"
+                  by (by100 blast)
+                moreover have "0 \<in> {i. i < length scheme \<and> fst (scheme!i) = l}"
+                  using \<open>0 < length scheme\<close> unfolding l_def by (by100 blast)
+                hence "{i. i < length scheme \<and> fst (scheme!i) = l} \<noteq> {}" by (by100 blast)
+                hence "card {i. i < length scheme \<and> fst (scheme!i) = l} \<noteq> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 blast)
+              qed
+              \<comment> \<open>card = 2 and 0 is one element \<Rightarrow> there exists another.\<close>
+              have "finite {i. i < length scheme \<and> fst (scheme!i) = l}" by (by100 simp)
+              have h0_in_l: "0 \<in> {i. i < length scheme \<and> fst (scheme!i) = l}"
+                using \<open>0 < length scheme\<close> unfolding l_def by (by100 blast)
+              have "card ({i. i < length scheme \<and> fst (scheme!i) = l} - {0}) = 1"
+                using \<open>card {i. i < length scheme \<and> fst (scheme!i) = l} = 2\<close> h0_in_l
+                by (by100 simp)
+              hence "{i. i < length scheme \<and> fst (scheme!i) = l} - {0} \<noteq> {}" by (by100 force)
+              then obtain q where hq_props: "q \<in> {i. i < length scheme \<and> fst (scheme!i) = l} - {0}"
+                by (by100 blast)
+              hence "q \<noteq> 0" "q < length scheme" "fst (scheme!q) = l" by (by100 simp)+
+              \<comment> \<open>Either 0 < q (so (q-0, 0, q) \<in> ?pairs) or q < 0 (impossible since q is nat).\<close>
+              have "0 < q" using \<open>q \<noteq> 0\<close> by (by100 simp)
+              hence "(q - 0, 0, q) \<in> ?pairs"
+                using \<open>q < length scheme\<close> \<open>fst (scheme!q) = l\<close> \<open>0 < length scheme\<close>
+                unfolding l_def by (by100 force)
+              thus ?thesis by (by100 blast)
+            qed
+            \<comment> \<open>This set is finite (bounded by length scheme).\<close>
+            have hpairs_fin: "finite ?pairs"
+            proof -
+              have "?pairs \<subseteq> (\<lambda>(q1,q2). (q2-q1, q1, q2)) ` {(q1,q2). q1 < length scheme \<and> q2 < length scheme}"
+                by (by100 force)
+              moreover have "finite {(q1,q2). q1 < length scheme \<and> q2 < length scheme}"
+                by (by100 simp)
+              ultimately show ?thesis using finite_subset by (by100 blast)
+            qed
+            \<comment> \<open>Pick a triple with minimum first component (gap).\<close>
+            obtain g p1 p2 where hmin: "(g, p1, p2) \<in> ?pairs"
+                "\<forall>(g',p1',p2') \<in> ?pairs. g \<le> g'"
+              sorry \<comment> \<open>Minimum of finite non-empty set of naturals.\<close>
+            define a_lab where "a_lab = fst (scheme!p1)"
+            \<comment> \<open>From hmin: p1 < p2, p2 < length scheme, same label, g = p2 - p1.\<close>
+            have "p1 < p2" "p2 < length scheme" "fst (scheme!p2) = a_lab" "g = p2 - p1"
+              using hmin(1) unfolding a_lab_def sorry
+            \<comment> \<open>Opposite directions from torus type.\<close>
+            have "snd (scheme!p1) \<noteq> snd (scheme!p2)" sorry
+            \<comment> \<open>No same-label between: from properness (only 2 occurrences).\<close>
+            have "\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab" sorry
+            \<comment> \<open>Minimality: for any other same-label pair, gap \<ge> g = p2-p1.\<close>
+            have "\<forall>l q1 q2. q1 < q2 \<and> q2 < length scheme \<and> fst (scheme!q1) = l
+                \<and> fst (scheme!q2) = l \<longrightarrow> p2 - p1 \<le> q2 - q1"
+              sorry
+            show ?thesis
+              using \<open>p1 < p2\<close> \<open>p2 < length scheme\<close> \<open>fst (scheme!p2) = a_lab\<close>
+                  \<open>snd (scheme!p1) \<noteq> snd (scheme!p2)\<close>
+                  \<open>\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab\<close>
+                  \<open>\<forall>l q1 q2. q1 < q2 \<and> q2 < length scheme \<and> fst (scheme!q1) = l
+                      \<and> fst (scheme!q2) = l \<longrightarrow> p2 - p1 \<le> q2 - q1\<close>
+              unfolding a_lab_def sorry
+          qed
           then obtain a_lab p1 p2 where hclose:
               "p1 < p2" "p2 < length scheme"
               "fst (scheme!p1) = a_lab" "fst (scheme!p2) = a_lab"
