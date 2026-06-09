@@ -5755,89 +5755,25 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           have "\<exists>a_lab p1 p2. p1 < p2 \<and> p2 < length scheme
               \<and> fst (scheme!p1) = a_lab \<and> fst (scheme!p2) = a_lab
               \<and> snd (scheme!p1) \<noteq> snd (scheme!p2)
-              \<and> (\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab)"
-          proof -
-            \<comment> \<open>Pick any element. Its label appears exactly twice (properness).
-               Torus type gives opposite directions. Properness gives no third occurrence.\<close>
-            have hlen_pos: "0 < length scheme" using hlen_gt4 by (by100 linarith)
-            define a_lab where "a_lab = fst (scheme ! 0)"
-            have h0_in: "0 \<in> {i. i < length scheme \<and> fst (scheme ! i) = a_lab}"
-              using hlen_pos unfolding a_lab_def by (by100 blast)
-            have hcard_a: "card {i. i < length scheme \<and> fst (scheme ! i) = a_lab} = 2"
-            proof -
-              from less(3) have "card {i. i < length scheme \<and> fst (scheme ! i) = a_lab} \<in> {0, 2}"
-                by (by100 blast)
-              moreover from h0_in have "{i. i < length scheme \<and> fst (scheme ! i) = a_lab} \<noteq> {}"
-                by (by100 blast)
-              hence "card {i. i < length scheme \<and> fst (scheme ! i) = a_lab} \<noteq> 0" by (by100 simp)
-              ultimately show ?thesis by (by100 blast)
-            qed
-            \<comment> \<open>Get two positions p, q from the 2-element set.\<close>
-            let ?S = "{i. i < length scheme \<and> fst (scheme ! i) = a_lab}"
-            have hfin: "finite ?S" by (by100 simp)
-            have hne: "?S \<noteq> {}" using h0_in by (by100 blast)
-            then obtain p where hp: "p \<in> ?S" by (by100 blast)
-            have hcard_rem: "card (?S - {p}) = 1"
-              using hfin hp hcard_a by (by100 simp)
-            hence "?S - {p} \<noteq> {}" by (by100 force)
-            then obtain q where hq: "q \<in> ?S - {p}" by (by100 blast)
-            define p1 where "p1 = min p q"
-            define p2 where "p2 = max p q"
-            have hpq: "p < length scheme" "fst (scheme!p) = a_lab"
-                "q < length scheme" "fst (scheme!q) = a_lab" "p \<noteq> q"
-              using hp hq by (by100 simp)+
-            hence "p1 < p2" unfolding p1_def p2_def by (by100 simp)
-            have "p1 < length scheme" unfolding p1_def using hpq by (by100 simp)
-            have "p2 < length scheme" unfolding p2_def using hpq by (by100 simp)
-            have "fst (scheme!p1) = a_lab"
-              unfolding p1_def min_def using hpq by (by100 simp)
-            have "fst (scheme!p2) = a_lab"
-              unfolding p2_def max_def using hpq by (by100 simp)
-            \<comment> \<open>Opposite directions from torus type.\<close>
-            have "snd (scheme!p1) \<noteq> snd (scheme!p2)"
-            proof
-              assume "snd (scheme!p1) = snd (scheme!p2)"
-              hence "\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
-                  \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
-                using \<open>p1 < length scheme\<close> \<open>p2 < length scheme\<close> \<open>p1 < p2\<close>
-                    \<open>fst (scheme!p1) = a_lab\<close> \<open>fst (scheme!p2) = a_lab\<close>
-                by (rule_tac x=a_lab in exI) (by100 blast)
-              thus False using \<open>\<not> (\<exists>label. \<exists>i<length scheme. \<exists>j<length scheme. _)\<close> by (by100 blast)
-            qed
-            \<comment> \<open>No same-label between: from properness, only 2 positions have label a\_lab.\<close>
-            have hS_eq: "?S = {p, q}"
-            proof -
-              have "card {p, q} = 2" using hpq(5) by (by100 simp)
-              have "{p, q} \<subseteq> ?S" using hp hq by (by100 blast)
-              from card_seteq[OF hfin this] hcard_a \<open>card {p,q} = 2\<close>
-              show ?thesis by (by100 simp)
-            qed
-            have "\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab"
-            proof (intro allI impI)
-              fix k assume "p1 < k \<and> k < p2"
-              have "p1 \<le> p" "p1 \<le> q" unfolding p1_def by (by100 simp)+
-              have "p \<le> p2" "q \<le> p2" unfolding p2_def by (by100 simp)+
-              have "k \<noteq> p" using \<open>p1 < k \<and> k < p2\<close> \<open>p1 \<le> p\<close> \<open>p \<le> p2\<close> \<open>p1 < p2\<close> hpq(5)
-                unfolding p1_def p2_def by (by100 linarith)
-              have "k \<noteq> q" using \<open>p1 < k \<and> k < p2\<close> \<open>p1 \<le> q\<close> \<open>q \<le> p2\<close> \<open>p1 < p2\<close> hpq(5)
-                unfolding p1_def p2_def by (by100 linarith)
-              from \<open>k \<noteq> p\<close> \<open>k \<noteq> q\<close> have "k \<notin> {p, q}" by (by100 blast)
-              hence "k \<notin> ?S" using hS_eq by (by100 simp)
-              moreover have "k < length scheme" using \<open>p1 < k \<and> k < p2\<close> \<open>p2 < length scheme\<close>
-                by (by100 linarith)
-              ultimately show "fst (scheme!k) \<noteq> a_lab" by (by100 blast)
-            qed
-            show ?thesis
-              using \<open>p1 < p2\<close> \<open>p2 < length scheme\<close> \<open>fst (scheme!p1) = a_lab\<close>
-                  \<open>fst (scheme!p2) = a_lab\<close> \<open>snd (scheme!p1) \<noteq> snd (scheme!p2)\<close>
-                  \<open>\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab\<close> by (by100 blast)
-          qed
+              \<and> (\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab)
+              \<and> (\<forall>l q1 q2. q1 < q2 \<and> q2 < length scheme \<and> fst (scheme!q1) = l
+                  \<and> fst (scheme!q2) = l \<longrightarrow> p2 - p1 \<le> q2 - q1)"
+            sorry \<comment> \<open>Pick label with MINIMUM gap between its two positions.
+               (1) Define gaps = {q2-q1 | label l has positions q1<q2, q2<length scheme}
+               (2) gaps is non-empty (length > 4 means at least 3 labels)
+               (3) gaps is finite
+               (4) Pick minimum gap g = Min gaps
+               (5) Get corresponding label a\_lab and positions p1, p2
+               (6) Opposite dirs from torus type; no same-label between from properness;
+                   minimality from Min.\<close>
           then obtain a_lab p1 p2 where hclose:
               "p1 < p2" "p2 < length scheme"
               "fst (scheme!p1) = a_lab" "fst (scheme!p2) = a_lab"
               "snd (scheme!p1) \<noteq> snd (scheme!p2)"
               "\<forall>k. p1 < k \<and> k < p2 \<longrightarrow> fst (scheme!k) \<noteq> a_lab"
-            by (by100 blast)
+              "\<forall>l q1 q2. q1 < q2 \<and> q2 < length scheme \<and> fst (scheme!q1) = l
+                  \<and> fst (scheme!q2) = l \<longrightarrow> p2 - p1 \<le> q2 - q1"
+            by blast
           \<comment> \<open>Step 2: p2 > p1 + 1 (no adjacent same-label from no\_adj\_gt4).\<close>
           have hgap: "p2 > p1 + 1"
           proof (rule ccontr)
