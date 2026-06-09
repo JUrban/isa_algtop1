@@ -4916,8 +4916,18 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         \<comment> \<open>scheme \<sim> [(a,T),(a,T)] @ projective m'. Relabel a to m' and get projective (m'+1).\<close>
         \<comment> \<open>Chain: scheme \<sim> [(a,T),(a,T)] @ rest \<sim> [(a,T),(a,T)] @ proj m' (congruence).
            Need: relabel proj m' to avoid label a, then apply congruence.\<close>
+        have hw': "w' = top1_m_projective_scheme m'" using hm(2) unfolding top1_is_projective_scheme_def
+          by (by100 simp)
+        \<comment> \<open>Step 1: scheme \<sim> [(a,T),(a,T)] @ rest (from ha\_rest).\<close>
+        \<comment> \<open>Step 2: rest \<sim> proj m' (from hm(3)).\<close>
+        \<comment> \<open>Step 3: Apply congruence: [(a,T),(a,T)]@rest \<sim> [(a,T),(a,T)]@proj m'.
+           Need: a \<notin> labels of rest (ha\_rest(3)) AND a \<notin> labels of proj m'.
+           If a \<ge> m': a \<notin> {0..m'-1} = labels of proj m'. Direct.
+           If a < m': relabel a \<to> fresh in rest first.\<close>
+        \<comment> \<open>Step 4: [(a,T),(a,T)]@proj m' = [(a,T),(a,T),(0,T),(0,T),...,(m'-1,T),(m'-1,T)].
+           Relabel a \<to> m': [(m',T),(m',T),(0,T),(0,T),...,(m'-1,T),(m'-1,T)] = proj (m'+1).\<close>
         hence "\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w"
-          sorry \<comment> \<open>Prepend proj pair: relabel to avoid a + congruence + relabel a\<to>m' + rotate.\<close>
+          sorry \<comment> \<open>Congruence (proved) + relabel + rotate = proj (m'+1).\<close>
         thus ?thesis by (by100 blast)
       next
         \<comment> \<open>Case 3: rest \<sim> torus n'. Apply Lemma 77.4 repeatedly:
