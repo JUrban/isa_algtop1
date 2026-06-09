@@ -544,8 +544,7 @@ lemma quotient_of_scheme_cut_paste_opp:
 \<comment> \<open>Context-left: quotient preserved when applying an operation to a suffix.\<close>
 lemma quotient_of_scheme_context_left:
   assumes "top1_quotient_of_scheme_on Y TY (prefix @ y)"
-      and "top1_elementary_scheme_operation y z"
-      and "\<And>Y TY. top1_quotient_of_scheme_on Y TY y \<Longrightarrow> top1_quotient_of_scheme_on Y TY z"
+      and "top1_quotient_of_scheme_on Y TY y \<Longrightarrow> top1_quotient_of_scheme_on Y TY z"
   shows "top1_quotient_of_scheme_on Y TY (prefix @ z)"
   sorry
 
@@ -750,8 +749,7 @@ next
   case (context_left y z prefix)
   \<comment> \<open>IH: quotient\_of\_scheme y \\<Longrightarrow> quotient\_of\_scheme z.
      Need: quotient of prefix@y \\<Longrightarrow> quotient of prefix@z.\<close>
-  from quotient_of_scheme_context_left[OF context_left.prems context_left.hyps]
-  show ?case sorry \<comment> \<open>Need to thread IH through context\_left helper.\<close>
+  show ?case using quotient_of_scheme_context_left[OF context_left.prems context_left.IH] .
 qed
 
 \<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
