@@ -4555,7 +4555,16 @@ next
   \<comment> \<open>IH conditions for w'.\<close>
   define g where "g i = f i" for i
   have hw'_struct: "\<forall>i < m. w'!(2*i) = (g i, True) \<and> w'!(2*i+1) = (g i, True)"
-    sorry
+  proof (intro allI impI)
+    fix i assume "i < m"
+    hence "2*i < 2*m" "2*i+1 < 2*m" by (by100 simp)+
+    have "w'!(2*i) = w!(2*i)" unfolding w'_def using \<open>2*i < 2*m\<close> hlen_w by (by100 simp)
+    moreover have "w'!(2*i+1) = w!(2*i+1)" unfolding w'_def using \<open>2*i+1 < 2*m\<close> hlen_w by (by100 simp)
+    moreover from Suc.prems(2)[rule_format, of i] \<open>i < m\<close>
+    have "w!(2*i) = (f i, True) \<and> w!(2*i+1) = (f i, True)" by (by100 simp)
+    ultimately show "w'!(2*i) = (g i, True) \<and> w'!(2*i+1) = (g i, True)"
+      unfolding g_def by (by100 simp)
+  qed
   have hg_inj: "inj_on g {..<m}"
     unfolding g_def using Suc.prems(3) by (rule inj_on_subset) (by100 simp)
   \<comment> \<open>Apply IH: w' \<sim> proj m.\<close>
