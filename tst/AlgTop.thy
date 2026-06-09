@@ -313,6 +313,57 @@ inductive top1_elementary_scheme_operation :: "('a \<times> bool) list \<Rightar
 definition top1_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
   "top1_scheme_equiv = top1_elementary_scheme_operation\<^sup>*\<^sup>*"
 
+\<comment> \<open>Labels appearing in a scheme.\<close>
+definition scheme_labels :: "('a \<times> bool) list \<Rightarrow> 'a set" where
+  "scheme_labels w = fst ` set w"
+
+\<comment> \<open>Valid elementary operation: same as above but with freshness side conditions
+   where the book requires them (relabel, uncancel, cut\\_paste2).
+   Per expert audit 13 step 0.\<close>
+inductive top1_valid_scheme_operation :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
+  v_rotate: "top1_valid_scheme_operation (u @ v) (v @ u)" |
+  v_cancel: "top1_valid_scheme_operation (u @ [a, top1_inverse_edge a] @ v) (u @ v)" |
+  v_uncancel: "fst a \<notin> scheme_labels (u @ v) \<Longrightarrow>
+    top1_valid_scheme_operation (u @ v) (u @ [a, top1_inverse_edge a] @ v)" |
+  v_invert: "top1_valid_scheme_operation w (rev (map top1_inverse_edge w))" |
+  v_relabel: "\<lbrakk> new = old \<or> new \<notin> scheme_labels w \<rbrakk> \<Longrightarrow>
+    top1_valid_scheme_operation w (map (\<lambda>(l,b). (if l = old then new else l, b)) w)" |
+  v_flip_label: "top1_valid_scheme_operation w (map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) w)" |
+  v_cut_paste: "top1_valid_scheme_operation
+      (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)
+      (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)" |
+  v_cut_paste2: "\<lbrakk> b \<notin> scheme_labels (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2) \<rbrakk> \<Longrightarrow>
+    top1_valid_scheme_operation
+      (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)
+      ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))" |
+  v_cut_paste_opp: "top1_valid_scheme_operation
+      (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)
+      (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+
+\<comment> \<open>Valid scheme equivalence.\<close>
+definition top1_valid_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
+  "top1_valid_scheme_equiv = top1_valid_scheme_operation\<^sup>*\<^sup>*"
+
+\<comment> \<open>Every valid operation is also an unrestricted operation.\<close>
+lemma valid_implies_elementary:
+  "top1_valid_scheme_operation w w' \<Longrightarrow> top1_elementary_scheme_operation w w'"
+  by (induction rule: top1_valid_scheme_operation.induct)
+     (rule top1_elementary_scheme_operation.rotate
+     ,rule top1_elementary_scheme_operation.cancel
+     ,rule top1_elementary_scheme_operation.uncancel
+     ,rule top1_elementary_scheme_operation.invert
+     ,rule top1_elementary_scheme_operation.relabel
+     ,rule top1_elementary_scheme_operation.flip_label
+     ,rule top1_elementary_scheme_operation.cut_paste
+     ,rule top1_elementary_scheme_operation.cut_paste2
+     ,rule top1_elementary_scheme_operation.cut_paste_opp)
+
+\<comment> \<open>Valid equivalence implies unrestricted equivalence.\<close>
+lemma valid_equiv_implies_equiv:
+  "top1_valid_scheme_equiv w w' \<Longrightarrow> top1_scheme_equiv w w'"
+  unfolding top1_valid_scheme_equiv_def top1_scheme_equiv_def
+  by (induction rule: rtranclp.induct) (by100 simp, meson rtranclp.rtrancl_into_rtrancl valid_implies_elementary)
+
 section \<open>\<S>76 Cutting and Pasting\<close>
 
 \<comment> \<open>Quotient uniqueness: two quotient maps on the same space with the same fibres
