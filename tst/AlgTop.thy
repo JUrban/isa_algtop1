@@ -555,7 +555,28 @@ lemma mod_less_n: "(0::nat) < n \<Longrightarrow> (a :: nat) mod n < n"
 
 \<comment> \<open>If a mod n = (a+d) mod n then n dvd d.\<close>
 lemma mod_eq_dvd: "\<lbrakk>(0::nat) < n; a mod n = (a + d) mod n\<rbrakk> \<Longrightarrow> n dvd d"
-  sorry \<comment> \<open>True: a mod n = (a+d) mod n implies n | d. AlgTop simpset/presburger times out.\<close>
+proof -
+  assume hn: "0 < n" and heq: "a mod n = (a + d) mod n"
+  \<comment> \<open>div/mod decomposition: a = q*n + r, a+d = q'*n + r with same r.
+     So d = (q'-q)*n, hence n dvd d.\<close>
+  define q where "q = a div n"
+  define q' where "q' = (a + d) div n"
+  define r where "r = a mod n"
+  have ha: "a = q * n + r" unfolding q_def r_def by simp
+  have had: "a + d = q' * n + r" unfolding q'_def r_def using heq by simp
+  have "q * n + r + d = q' * n + r" using ha had by (by100 linarith)
+  hence heq2: "q * n + d = q' * n" by (by100 linarith)
+  hence hle_prod: "q * n \<le> q' * n" by (by100 linarith)
+  have hle: "q \<le> q'"
+  proof (rule ccontr)
+    assume "\<not> q \<le> q'"
+    hence "q > q'" by (by100 linarith)
+    hence "q * n > q' * n" using hn by (by100 simp)
+    with hle_prod show False by (by100 linarith)
+  qed
+  from heq2 hle have hd: "d = (q' - q) * n" by (simp add: diff_mult_distrib)
+  show "n dvd d" unfolding hd by (by100 simp)
+qed
 
 \<comment> \<open>Shift injectivity: (x+k) mod n = (y+k) mod n implies x=y for x,y < n.\<close>
 lemma shift_mod_inj: "\<lbrakk>(0::nat) < n; x < n; y < n; (x + k) mod n = (y + k) mod n\<rbrakk> \<Longrightarrow> x = y"
