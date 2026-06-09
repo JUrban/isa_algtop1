@@ -3199,7 +3199,43 @@ proof (intro allI)
       \<comment> \<open>From fst(?w!i) = label and torus\_scheme\_nth, determine k' and r.\<close>
       from hr have "r = 0 \<or> r = 1 \<or> r = 2 \<or> r = 3" by (by100 presburger)
       hence hk'_eq: "k' = k \<and> (if even label then i = 4*k \<or> i = 4*k+2 else i = 4*k+1 \<or> i = 4*k+3)"
-        sorry
+      proof (elim disjE)
+        assume "r = 0"
+        hence "i = 4*k'" using hi_eq by (by100 simp)
+        hence "fst (?w ! (4*k')) = label" using hi(2) by (by100 simp)
+        hence "2*k' = label" using torus_scheme_nth(1)[OF hk'] by (by100 simp)
+        hence "k' = k" unfolding k_def by (by100 presburger)
+        moreover have "i = 4*k" using \<open>i = 4*k'\<close> \<open>k' = k\<close> by (by100 simp)
+        moreover have "even label" using \<open>2*k' = label\<close> by (by100 presburger)
+        ultimately show ?thesis by (by100 simp)
+      next
+        assume "r = 1"
+        hence "i = 4*k'+1" using hi_eq by (by100 simp)
+        hence "fst (?w ! (4*k'+1)) = label" using hi(2) by (by100 simp)
+        hence "2*k'+1 = label" using torus_scheme_nth(2)[OF hk'] by (by100 simp)
+        hence "k' = k" unfolding k_def by (by100 presburger)
+        moreover have "i = 4*k+1" using \<open>i = 4*k'+1\<close> \<open>k' = k\<close> by (by100 simp)
+        moreover have "odd label" using \<open>2*k'+1 = label\<close> by (by100 presburger)
+        ultimately show ?thesis by (by100 simp)
+      next
+        assume "r = 2"
+        hence "i = 4*k'+2" using hi_eq by (by100 simp)
+        hence "fst (?w ! (4*k'+2)) = label" using hi(2) by (by100 simp)
+        hence "2*k' = label" using torus_scheme_nth(3)[OF hk'] by (by100 simp)
+        hence "k' = k" unfolding k_def by (by100 presburger)
+        moreover have "i = 4*k+2" using \<open>i = 4*k'+2\<close> \<open>k' = k\<close> by (by100 simp)
+        moreover have "even label" using \<open>2*k' = label\<close> by (by100 presburger)
+        ultimately show ?thesis by (by100 simp)
+      next
+        assume "r = 3"
+        hence "i = 4*k'+3" using hi_eq by (by100 simp)
+        hence "fst (?w ! (4*k'+3)) = label" using hi(2) by (by100 simp)
+        hence "2*k'+1 = label" using torus_scheme_nth(4)[OF hk'] by (by100 simp)
+        hence "k' = k" unfolding k_def by (by100 presburger)
+        moreover have "i = 4*k+3" using \<open>i = 4*k'+3\<close> \<open>k' = k\<close> by (by100 simp)
+        moreover have "odd label" using \<open>2*k'+1 = label\<close> by (by100 presburger)
+        ultimately show ?thesis by (by100 simp)
+      qed
       show "i \<in> (if even label then {4*k, 4*k+2} else {4*k+1, 4*k+3})"
       proof (cases "even label")
         case True thus ?thesis using hk'_eq by (by100 simp)
@@ -3207,11 +3243,43 @@ proof (intro allI)
         case False thus ?thesis using hk'_eq by (by100 simp)
       qed
     next
-      fix i assume "i \<in> (if even label then {4*k, 4*k+2} else {4*k+1, 4*k+3})"
-      \<comment> \<open>Direct: use torus\_scheme\_nth to show fst = label.\<close>
-      thus "i \<in> {i. i < length ?w \<and> fst (?w ! i) = label}"
-        using hk torus_scheme_nth[OF hk] torus_scheme_length k_def True
-        sorry
+      fix i assume hi_rhs: "i \<in> (if even label then {4*k, 4*k+2} else {4*k+1, 4*k+3})"
+      show "i \<in> {i. i < length ?w \<and> fst (?w ! i) = label}"
+      proof (cases "even label")
+        case True
+        hence "i = 4*k \<or> i = 4*k+2" using hi_rhs by (by100 simp)
+        thus ?thesis
+        proof (elim disjE)
+          assume "i = 4*k"
+          hence "?w ! i = (2*k, True)" using torus_scheme_nth(1)[OF hk] by (by100 simp)
+          moreover have "label = 2*k" using True k_def by (by100 simp)
+          moreover have "i < length ?w" using hk torus_scheme_length \<open>i = 4*k\<close> by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        next
+          assume "i = 4*k+2"
+          hence "?w ! i = (2*k, False)" using torus_scheme_nth(3)[OF hk] by (by100 simp)
+          moreover have "label = 2*k" using True k_def by (by100 simp)
+          moreover have "i < length ?w" using hk torus_scheme_length \<open>i = 4*k+2\<close> by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      next
+        case False
+        hence "i = 4*k+1 \<or> i = 4*k+3" using hi_rhs by (by100 simp)
+        thus ?thesis
+        proof (elim disjE)
+          assume "i = 4*k+1"
+          hence "?w ! i = (2*k+1, True)" using torus_scheme_nth(2)[OF hk] by (by100 simp)
+          moreover have "label = 2*k+1" using False k_def by (by100 simp)
+          moreover have "i < length ?w" using hk torus_scheme_length \<open>i = 4*k+1\<close> by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        next
+          assume "i = 4*k+3"
+          hence "?w ! i = (2*k+1, False)" using torus_scheme_nth(4)[OF hk] by (by100 simp)
+          moreover have "label = 2*k+1" using False k_def by (by100 simp)
+          moreover have "i < length ?w" using hk torus_scheme_length \<open>i = 4*k+3\<close> by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+      qed
     qed
     moreover have "card (if even label then {4*k, 4*k+2} else {4*k+1, 4*k+3}) = 2"
       by (by100 simp)
