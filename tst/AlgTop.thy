@@ -559,7 +559,38 @@ proof -
   let ?k = "length u"
   have hlen: "length (v @ u) = length (u @ v)" by (by100 simp)
   \<comment> \<open>Key shift property.\<close>
-  have hshift: "\<And>i. i < ?n \<Longrightarrow> (v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)" sorry
+  have hshift: "\<And>i. i < ?n \<Longrightarrow> (v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)"
+  proof -
+    fix i assume hi: "i < ?n"
+    show "(v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)"
+    proof (cases "i < length v")
+      case True
+      hence "(v @ u) ! i = v ! i" using nth_append[of v u i] by (by100 simp)
+      moreover have "(i + ?k) mod ?n = i + ?k"
+        using True by (by100 simp)
+      moreover have "(u @ v) ! (i + ?k) = v ! i"
+        using True nth_append[of u v "i + ?k"] by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    next
+      case False
+      hence hge: "i \<ge> length v" by (by100 linarith)
+      hence "(v @ u) ! i = u ! (i - length v)" using nth_append[of v u i] by (by100 simp)
+      moreover have "(i + ?k) mod ?n = i - length v"
+      proof -
+        have "i + ?k = ?n + (i - length v)" using hge by (by100 linarith)
+        hence "(i + ?k) mod ?n = (?n + (i - length v)) mod ?n" by (by100 metis)
+        also have "\<dots> = (i - length v) mod ?n" by (by100 simp)
+        also have "\<dots> = i - length v" using hi hge by (by100 simp)
+        finally show ?thesis .
+      qed
+      moreover have "(u @ v) ! (i - length v) = u ! (i - length v)"
+      proof -
+        have "i - length v < length u" using hi hge by (by100 linarith)
+        thus ?thesis using nth_append[of u v "i - length v"] by (by100 simp)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+  qed
   from assms show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
     apply (elim conjE exE)
