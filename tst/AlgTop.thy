@@ -7929,32 +7929,13 @@ proof -
      For each pair of identified edges: assign a shared label. The direction (same or opposite)
      determines the exponent (True/False). This gives the edge scheme.
      The scheme satisfies quotient\\_of\\_scheme\\_on by construction.\<close>
-  obtain scheme :: "(nat \<times> bool) list" where hsch: "top1_quotient_of_scheme_on X TX scheme"
-    sorry \<comment> \<open>Extract scheme from polygonal quotient. Construction:
-       1. P has n vertices. Edge i goes from vertex i to vertex (i+1) mod n.
-       2. q identifies edge i with some edge j (possibly reversed).
-       3. Assign label k to both edges i and j. Direction: True if same, False if reversed.
-       4. The resulting list of (label, direction) pairs is the scheme.
-       5. Verify all conditions of quotient\\_of\\_scheme\\_on (P is the polygon, q is the map,
-          vertex positions are the polygon's vertices).\<close>
-  \<comment> \<open>Step 2: Apply elementary operations (Theorem 76) to reduce scheme.
-     Operations: relabel, rotate, cancel, cut, paste, flip.
-     Step 2a: Bring all vertices to one equivalence class.
-     Step 2b: Collect pairs aa into adjacent positions (projective type).
-     Step 2c: Pair remaining letters into commutator blocks aba\<inverse>b\<inverse> (torus type).\<close>
-  \<comment> \<open>NOTE: top1\\_is\\_torus\\_scheme, top1\\_is\\_projective\\_scheme now defined (\\<S>77 section).
-     top1\\_scheme\\_equiv = rtranclp of elementary operations (defined before \\<S>76).\<close>
-  \<comment> \<open>Derive properness and length \\<ge> 4 from the quotient structure.\<close>
-  have hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme!i) = label} \<in> {0, 2}"
-  proof -
-    \<comment> \<open>From the definition: condition 9 (boundary injectivity) constrains edge identifications
-       to same-label edges. This forces each label to appear 0 or 2 times.
-       Specifically: if label L appears at positions i1, i2, ..., then for each pair (ik, il),
-       q identifies edges ik and il. By injectivity, each edge is identified with at most one other.
-       So each label appears at most 2 times. And condition 7 requires identification for all
-       same-label pairs, so if a label appears, it must appear exactly twice.\<close>
-    from hsch show ?thesis sorry
-  qed
+  obtain scheme :: "(nat \<times> bool) list" where
+      hsch: "top1_quotient_of_scheme_on X TX scheme"
+      and hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme!i) = label} \<in> {0, 2}"
+    sorry \<comment> \<open>Extract proper scheme from polygonal quotient.
+       Construction: P has n edges. q identifies edges in pairs (from surface = no boundary).
+       Each pair gets a shared label. Properness: each label appears exactly 0 or 2 times
+       (from the pairing structure of edge identifications on a closed surface).\<close>
   have hlen_ge4: "length scheme \<ge> 4"
   proof -
     from hsch obtain P0 q0 where "top1_is_polygonal_region_on P0 (length scheme)"
