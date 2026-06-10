@@ -2949,6 +2949,53 @@ qed
 
 \<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
 \<comment> \<open>Each elementary operation is reversible: if s → t, then t ~* s.\<close>
+\<comment> \<open>Relabel reverse: relabel(old\\<to>new) followed by relabel(new\\<to>old) gives back the original.
+   Freshness ensures no label collisions.\<close>
+lemma relabel_reverse:
+  assumes "new \<notin> fst ` set w" and "new \<noteq> old"
+  shows "top1_scheme_equiv (map (\<lambda>(x,b). (if x = old then new else x, b)) w) w"
+proof -
+  let ?t = "map (\<lambda>(x,b). (if x = old then new else x, b)) w"
+  \<comment> \<open>After relabeling old\\<to>new, the label 'old' no longer appears in ?t.\<close>
+  have hold_fresh: "old \<notin> fst ` set ?t"
+  proof
+    assume "old \<in> fst ` set ?t"
+    then obtain e where he: "e \<in> set ?t" "fst e = old" by (by100 blast)
+    from he(1) obtain e0 where he0: "e0 \<in> set w" "e = (case e0 of (x,b) \<Rightarrow> (if x = old then new else x, b))"
+      by (by100 auto)
+    obtain l b where hlb: "e0 = (l, b)" by (cases e0)
+    have "fst e = (if l = old then new else l)" using he0(2) hlb by (by100 simp)
+    with he(2) have "l \<noteq> old" using assms(2) by (by100 fastforce)
+    hence "fst e = l" using \<open>fst e = (if l = old then new else l)\<close> by (by100 simp)
+    with he(2) have "l = old" by (by100 simp)
+    with \<open>l \<noteq> old\<close> show False by (by100 simp)
+  qed
+  \<comment> \<open>Applying relabel(new\\<to>old) to ?t gives back w.\<close>
+  have hrev_eq: "map (\<lambda>(x,b). (if x = new then old else x, b)) ?t = w"
+  proof -
+    have "map (\<lambda>(x,b). (if x = new then old else x, b)) ?t
+        = map ((\<lambda>(x,b). (if x = new then old else x, b)) \<circ> (\<lambda>(x,b). (if x = old then new else x, b))) w"
+      by (by100 simp)
+    also have "\<dots> = map id w"
+    proof (rule map_cong)
+      fix e assume he: "e \<in> set w"
+      obtain l b where hlb: "e = (l, b)" by (cases e)
+      have "l \<in> fst ` set w" using he hlb by (by100 force)
+      hence "l \<noteq> new" using assms(1) by (by100 blast)
+      show "((\<lambda>(x,b). (if x = new then old else x, b)) \<circ> (\<lambda>(x,b). (if x = old then new else x, b))) e = id e"
+        using hlb \<open>l \<noteq> new\<close> by (by100 auto)
+    qed (by100 simp)
+    finally show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>The relabel constructor gives the elementary operation.\<close>
+  have hdiff: "old \<noteq> new" using assms(2) by (by100 simp)
+  have "top1_elementary_scheme_operation ?t (map (\<lambda>(x,b). (if x = new then old else x, b)) ?t)"
+    apply (rule top1_elementary_scheme_operation.relabel)
+    done
+  hence "top1_elementary_scheme_operation ?t w" using hrev_eq by (by100 simp)
+  thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
+qed
+
 lemma elementary_operation_reverse:
   assumes "top1_elementary_scheme_operation s t"
   shows "top1_scheme_equiv t s"
@@ -2982,8 +3029,8 @@ next
   thus ?case unfolding top1_scheme_equiv_def
     using top1_elementary_scheme_operation.invert[of "rev (map top1_inverse_edge w)"] by simp
 next
-  case (relabel w old new) \<comment> \<open>Reverse of relabel: apply relabel(new\\<to>old) to the result.\<close>
-  show ?case sorry
+  case (relabel w old new) \<comment> \<open>Reverse: relabel\\_reverse, but can't access freshness from case.\<close>
+  from relabel_reverse[of new w old] show ?case sorry
 next
   case (flip_label w a) \<comment> \<open>flip is involutive: flip(flip(w)) = w.\<close>
   let ?f = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
