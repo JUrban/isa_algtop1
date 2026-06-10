@@ -158,27 +158,366 @@ lemma map_relabel_id:
   shows "map (\<lambda>(l,b). (if l = old then new else l, b)) w = w"
   using assms by (induction w) (by100 auto)+
 
+\<comment> \<open>Helper: labels after a single relabel step.\<close>
+lemma fst_set_single_relabel:
+  assumes "old \<in> fst ` set w" "new \<notin> fst ` set w" "old \<noteq> new"
+  shows "fst ` set (map (\<lambda>(l,b). (if l = old then new else l, b)) w) =
+         (fst ` set w - {old}) \<union> {new}"
+proof (rule set_eqI, rule iffI)
+  fix x
+  assume "x \<in> fst ` set (map (\<lambda>(l, b). (if l = old then new else l, b)) w)"
+  then obtain l b where hlb: "(l, b) \<in> set w" and hx: "x = (if l = old then new else l)"
+    by (by100 fastforce)
+  show "x \<in> (fst ` set w - {old}) \<union> {new}"
+  proof (cases "l = old")
+    case True then show ?thesis using hx by (by100 simp)
+  next
+    case False
+    then have "x = l" using hx by (by100 simp)
+    moreover have "l \<in> fst ` set w" using hlb by (by100 force)
+    ultimately show ?thesis using False by (by100 blast)
+  qed
+next
+  fix x
+  assume "x \<in> (fst ` set w - {old}) \<union> {new}"
+  then show "x \<in> fst ` set (map (\<lambda>(l, b). (if l = old then new else l, b)) w)"
+  proof
+    assume "x \<in> fst ` set w - {old}"
+    then obtain l b where hlb: "(l, b) \<in> set w" "x = l" "l \<noteq> old"
+      by (by100 fastforce)
+    then have "(if l = old then new else l, b) \<in> set (map (\<lambda>(l, b). (if l = old then new else l, b)) w)"
+      by (by100 force)
+    thus ?thesis using hlb by (by100 force)
+  next
+    assume "x \<in> {new}"
+    then have "x = new" by (by100 simp)
+    from assms(1) obtain b where "(old, b) \<in> set w" by (by100 fastforce)
+    then have "(new, b) \<in> set (map (\<lambda>(l, b). (if l = old then new else l, b)) w)"
+      by (by100 force)
+    thus ?thesis using \<open>x = new\<close> by (by100 force)
+  qed
+qed
+
+\<comment> \<open>Helper: if \<rho> is identity on all labels, map \<rho> is identity.\<close>
+lemma map_id_on_labels:
+  assumes "\<forall>l \<in> fst ` set w. \<rho> l = l"
+  shows "map (\<lambda>(l,b). (\<rho> l, b)) w = w"
+  using assms by (induction w) (by100 auto)+
+
+\<comment> \<open>Helper: composing map \<sigma> with single relabel l\<rightarrow>\<rho>(l) gives map \<rho>,
+   when \<sigma> is identity on \<rho>(l) and \<rho> on everything else.\<close>
+lemma map_sigma_after_relabel:
+  fixes w :: "(nat \<times> bool) list"
+  assumes "\<rho> l \<notin> fst ` set w"
+  shows "map (\<lambda>(la,b). ((if la = \<rho> l then \<rho> l else \<rho> la), b))
+           (map (\<lambda>(la,b). (if la = l then \<rho> l else la, b)) w) =
+         map (\<lambda>(la,b). (\<rho> la, b)) w"
+proof -
+  have key: "\<And>a. a \<in> fst ` set w \<Longrightarrow>
+    (if (if a = l then \<rho> l else a) = \<rho> l then \<rho> l else \<rho> (if a = l then \<rho> l else a)) = \<rho> a"
+  proof -
+    fix a assume ha: "a \<in> fst ` set w"
+    show "(if (if a = l then \<rho> l else a) = \<rho> l then \<rho> l else \<rho> (if a = l then \<rho> l else a)) = \<rho> a"
+    proof (cases "a = l")
+      case True then show ?thesis by (by100 simp)
+    next
+      case False
+      have "a \<noteq> \<rho> l" using ha assms by (by100 blast)
+      then show ?thesis using False by (by100 simp)
+    qed
+  qed
+  show ?thesis using key by (induction w) (by100 auto)+
+qed
+
+\<comment> \<open>Partial relabeling: rename labels in S (\<subseteq> labels(w)) via \<rho>, leaving others fixed.
+   Induction on card S. Key enabler for disjoint relabeling.\<close>
+lemma valid_scheme_relabel_partial:
+  fixes w :: "(nat \<times> bool) list" and S :: "nat set"
+  assumes "finite S" "S \<subseteq> fst ` set w"
+      "inj_on \<rho> (fst ` set w)" "\<rho> ` S \<inter> fst ` set w = {}"
+      "\<forall>l \<in> fst ` set w - S. \<rho> l = l"
+  shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<rho> l, b)) w)"
+  using assms
+proof (induction "card S" arbitrary: w \<rho> S)
+  case 0
+  then have "S = {}" by (by100 simp)
+  then have "\<forall>l \<in> fst ` set w. \<rho> l = l" using 0 by (by100 auto)
+  then have "map (\<lambda>(l,b). (\<rho> l, b)) w = w" by (rule map_id_on_labels)
+  then show ?case unfolding top1_valid_scheme_equiv_def by (by100 simp)
+next
+  case (Suc n)
+  have "S \<noteq> {}" using Suc.hyps(2) by (by100 force)
+  then obtain l where hl: "l \<in> S" by (by100 blast)
+  have hcard_S': "card (S - {l}) = n"
+    using Suc.hyps(2) Suc.prems(1) hl by (by100 simp)
+  have hl_in: "l \<in> fst ` set w" using hl Suc.prems(2) by (by100 blast)
+  have hrl_out: "\<rho> l \<notin> fst ` set w" using hl Suc.prems(4) by (by100 blast)
+  have hrl_ne: "\<rho> l \<noteq> l" using hl_in hrl_out by (by100 blast)
+  define w' where "w' = map (\<lambda>(la,b). (if la = l then \<rho> l else la, b)) w"
+  have step1: "top1_valid_scheme_equiv w w'"
+    unfolding w'_def
+    using valid_equiv_fresh_relabel[OF hrl_out hrl_ne] .
+  have hw'_labels: "fst ` set w' = (fst ` set w - {l}) \<union> {\<rho> l}"
+    unfolding w'_def using fst_set_single_relabel[OF hl_in hrl_out hrl_ne[symmetric]] .
+  define \<sigma> where "\<sigma> = (\<lambda>la. if la = \<rho> l then \<rho> l else \<rho> la)"
+  define S' where "S' = S - {l}"
+  have key_eq: "map (\<lambda>(la,b). (\<sigma> la, b)) w' = map (\<lambda>(la,b). (\<rho> la, b)) w"
+    unfolding w'_def \<sigma>_def
+    using map_sigma_after_relabel[of \<rho> l w] hrl_out by (by100 simp)
+  have fin': "finite S'" using Suc.prems(1) S'_def by (by100 simp)
+  have sub': "S' \<subseteq> fst ` set w'"
+    unfolding S'_def hw'_labels using Suc.prems(2) by (by100 blast)
+  have inj': "inj_on \<sigma> (fst ` set w')"
+  proof (rule inj_onI)
+    fix x y assume hx: "x \<in> fst ` set w'" and hy: "y \<in> fst ` set w'" and heq: "\<sigma> x = \<sigma> y"
+    \<comment> \<open>Helper: derive x = y by case analysis on whether x or y equals \\<rho> l.\<close>
+    have hx_cases: "x = \<rho> l \<or> x \<in> fst ` set w \<and> x \<noteq> l" using hx hw'_labels by (by100 blast)
+    have hy_cases: "y = \<rho> l \<or> y \<in> fst ` set w \<and> y \<noteq> l" using hy hw'_labels by (by100 blast)
+    have sx_eq: "x \<noteq> \<rho> l \<Longrightarrow> \<sigma> x = \<rho> x" unfolding \<sigma>_def by (by100 simp)
+    have sy_eq: "y \<noteq> \<rho> l \<Longrightarrow> \<sigma> y = \<rho> y" unfolding \<sigma>_def by (by100 simp)
+    have srl: "\<sigma> (\<rho> l) = \<rho> l" unfolding \<sigma>_def by (by100 simp)
+    show "x = y"
+    proof (cases "x = \<rho> l")
+      case xrl: True
+      show ?thesis
+      proof (cases "y = \<rho> l")
+        case True then show ?thesis using xrl by (by100 simp)
+      next
+        case yne: False
+        then have "y \<in> fst ` set w" using hy_cases by (by100 blast)
+        have "\<sigma> y = \<rho> y" using sy_eq yne .
+        then have "\<rho> y = \<rho> l" using heq xrl srl by (by100 simp)
+        then have "y = l" using Suc.prems(3) \<open>y \<in> fst ` set w\<close> hl_in
+          unfolding inj_on_def by (by100 blast)
+        then show ?thesis using yne hy hw'_labels by (by100 blast)
+      qed
+    next
+      case xne: False
+      then have "x \<in> fst ` set w" using hx_cases by (by100 blast)
+      have "\<sigma> x = \<rho> x" using sx_eq xne .
+      show ?thesis
+      proof (cases "y = \<rho> l")
+        case yrl: True
+        then have "\<rho> x = \<rho> l" using \<open>\<sigma> x = \<rho> x\<close> heq srl by (by100 simp)
+        then have "x = l" using Suc.prems(3) \<open>x \<in> fst ` set w\<close> hl_in
+          unfolding inj_on_def by (by100 blast)
+        then show ?thesis using xne hx hw'_labels by (by100 blast)
+      next
+        case yne: False
+        then have "y \<in> fst ` set w" using hy_cases by (by100 blast)
+        have "\<sigma> y = \<rho> y" using sy_eq yne .
+        then have "\<rho> x = \<rho> y" using \<open>\<sigma> x = \<rho> x\<close> heq by (by100 simp)
+        then show ?thesis using Suc.prems(3) \<open>x \<in> fst ` set w\<close> \<open>y \<in> fst ` set w\<close>
+          unfolding inj_on_def by (by100 blast)
+      qed
+    qed
+  qed
+  have disj': "\<sigma> ` S' \<inter> fst ` set w' = {}"
+  proof (rule ccontr)
+    assume "\<sigma> ` S' \<inter> fst ` set w' \<noteq> {}"
+    then obtain x where hx_S: "x \<in> S'" and hsx_w: "\<sigma> x \<in> fst ` set w'" by (by100 blast)
+    have hx_w: "x \<in> fst ` set w" and hx_ne: "x \<noteq> l"
+      using hx_S Suc.prems(2) unfolding S'_def by (by100 blast)+
+    have "x \<noteq> \<rho> l" using hx_w hrl_out by (by100 blast)
+    then have hsx: "\<sigma> x = \<rho> x" unfolding \<sigma>_def by (by100 simp)
+    have "\<rho> x \<in> \<rho> ` S" using hx_S S'_def by (by100 blast)
+    then have "\<rho> x \<notin> fst ` set w" using Suc.prems(4) by (by100 blast)
+    then have "\<sigma> x \<notin> fst ` set w" using hsx by (by100 simp)
+    have "\<rho> x \<noteq> \<rho> l"
+    proof
+      assume "\<rho> x = \<rho> l"
+      then have "x = l" using Suc.prems(3) hx_w hl_in
+        unfolding inj_on_def by (by100 blast)
+      then show False using hx_ne by (by100 blast)
+    qed
+    then have "\<sigma> x \<noteq> \<rho> l" using hsx by (by100 simp)
+    then have "\<sigma> x \<notin> fst ` set w'" using \<open>\<sigma> x \<notin> fst ` set w\<close> hw'_labels by (by100 blast)
+    then show False using hsx_w by (by100 blast)
+  qed
+  have id': "\<forall>la \<in> fst ` set w' - S'. \<sigma> la = la"
+  proof
+    fix la assume hla: "la \<in> fst ` set w' - S'"
+    show "\<sigma> la = la"
+    proof (cases "la = \<rho> l")
+      case True then show ?thesis unfolding \<sigma>_def by (by100 simp)
+    next
+      case False
+      then have "la \<in> fst ` set w - {l}" using hla hw'_labels by (by100 blast)
+      then have hla_w: "la \<in> fst ` set w" and hla_ne: "la \<noteq> l" by (by100 blast)+
+      have "la \<notin> S'" using hla by (by100 blast)
+      then have "la \<notin> S" using hla_ne unfolding S'_def by (by100 blast)
+      then have "\<rho> la = la" using hla_w Suc.prems(5) by (by100 blast)
+      then show ?thesis using False unfolding \<sigma>_def by (by100 simp)
+    qed
+  qed
+  have step2: "top1_valid_scheme_equiv w' (map (\<lambda>(la,b). (\<sigma> la, b)) w')"
+    using Suc.hyps(1)[of S' w' \<sigma>] hcard_S' fin' sub' inj' disj' id'
+    unfolding S'_def \<sigma>_def w'_def by (by100 blast)
+  from step1 step2 have "top1_valid_scheme_equiv w (map (\<lambda>(la,b). (\<sigma> la, b)) w')"
+    by (rule valid_equiv_trans)
+  then show ?case using key_eq by (by100 simp)
+qed
+
 \<comment> \<open>Disjoint relabeling: if all target labels are fresh (disjoint from source),
-   then the relabeling is a valid equivalence. Proof by finite induction on labels.\<close>
+   then the relabeling is a valid equivalence. Corollary of partial relabeling.\<close>
 lemma valid_scheme_relabel_disjoint:
   fixes w :: "(nat \<times> bool) list"
   assumes "inj_on \<rho> (scheme_labels w)"
       and "\<rho> ` (scheme_labels w) \<inter> scheme_labels w = {}"
   shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<rho> l, b)) w)"
-  sorry \<comment> \<open>Finite induction on scheme\\_labels w. Each step: one fresh relabel + IH.
-     Plan verified but formal induction setup needs careful handling of
-     the changing \\<rho> and scheme\\_labels after each rename step.\<close>
+proof -
+  have "finite (fst ` set w)" by (by100 simp)
+  moreover have "fst ` set w \<subseteq> fst ` set w" by (by100 blast)
+  moreover have "inj_on \<rho> (fst ` set w)" using assms(1) unfolding scheme_labels_def .
+  moreover have "\<rho> ` (fst ` set w) \<inter> fst ` set w = {}" using assms(2) unfolding scheme_labels_def .
+  moreover have "\<forall>l \<in> fst ` set w - fst ` set w. \<rho> l = l" by (by100 blast)
+  ultimately show ?thesis by (rule valid_scheme_relabel_partial)
+qed
 
 \<comment> \<open>Alpha-renaming: a bijective relabeling is a valid equivalence (per expert audit 20).
    Proof: induction on the number of labels that differ from identity.\<close>
+lemma scheme_labels_map_relabel:
+  "scheme_labels (map (\<lambda>(l,b). (\<sigma> l, b)) w) = \<sigma> ` scheme_labels w"
+  unfolding scheme_labels_def by (by100 force)
+
+\<comment> \<open>Helper: existence of fresh label set (nat-indexed, above all existing labels).\<close>
+lemma fresh_nat_set:
+  fixes S :: "nat set"
+  assumes "finite S" "finite T"
+  shows "\<exists>\<sigma> :: nat \<Rightarrow> nat. inj_on \<sigma> S \<and> \<sigma> ` S \<inter> (S \<union> T) = {} \<and> finite (\<sigma> ` S)"
+proof -
+  define M where "M = Max (S \<union> T) + 1"
+  define \<sigma> where "\<sigma> = (\<lambda>x. x + M)"
+  have "inj_on \<sigma> S" unfolding \<sigma>_def inj_on_def by (by100 simp)
+  moreover have "\<sigma> ` S \<inter> (S \<union> T) = {}"
+  proof (rule ccontr)
+    assume "\<sigma> ` S \<inter> (S \<union> T) \<noteq> {}"
+    then obtain x where hx: "x \<in> S" and hsx: "\<sigma> x \<in> S \<union> T" by (by100 blast)
+    have "\<sigma> x = x + M" unfolding \<sigma>_def by (by100 simp)
+    moreover have "x + M > Max (S \<union> T)"
+      unfolding M_def by (by100 simp)
+    moreover have "\<sigma> x \<le> Max (S \<union> T)"
+      using Max_ge_iff[of "S \<union> T"] hsx assms by (by100 simp)
+    ultimately show False by (by100 simp)
+  qed
+  moreover have "finite (\<sigma> ` S)" using assms(1) by (by100 simp)
+  ultimately show ?thesis by (by100 blast)
+qed
+
+\<comment> \<open>Helper: composing two relabelings on a list.\<close>
+lemma map_relabel_compose:
+  "map (\<lambda>(l,b). (\<sigma>2 l, b)) (map (\<lambda>(l,b). (\<sigma>1 l, b)) w) =
+   map (\<lambda>(l,b). (\<sigma>2 (\<sigma>1 l), b)) w"
+  by (induction w) (by100 auto)+
+
+\<comment> \<open>Alpha-renaming: a bijective relabeling is a valid equivalence.
+   Two-phase proof: w \\<to> (fresh labels) \\<to> map \\<rho> w.\<close>
 lemma valid_scheme_alpha_rename:
   fixes w :: "(nat \<times> bool) list"
   assumes "bij_betw \<rho> (scheme_labels w) L"
   shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<rho> l, b)) w)"
-  sorry \<comment> \<open>Two-phase proof with fresh intermediates. Needs:
-     (1) valid\\_scheme\\_relabel\\_all\\_fresh for disjoint relabeling,
-     (2) Composition of two disjoint relabelings gives \\<rho>.
-     Deferred: substantial combinatorial proof over finite label sets.\<close>
+proof -
+  define S where "S = scheme_labels w"
+  have hfin_S: "finite S" unfolding S_def scheme_labels_def by (by100 simp)
+  have "L = \<rho> ` S" using assms unfolding bij_betw_def S_def by (by100 blast)
+  then have hfin_L: "finite L" using hfin_S by (by100 simp)
+  \<comment> \<open>Phase 1: find fresh labels F disjoint from S \\<union> L.\<close>
+  from fresh_nat_set[OF hfin_S hfin_L]
+  obtain \<sigma>1 :: "nat \<Rightarrow> nat" where
+    h\<sigma>1_inj: "inj_on \<sigma>1 S" and h\<sigma>1_disj: "\<sigma>1 ` S \<inter> (S \<union> L) = {}"
+    and h\<sigma>1_fin: "finite (\<sigma>1 ` S)" by (by100 blast)
+  define F where "F = \<sigma>1 ` S"
+  have hF_disj_S: "F \<inter> S = {}" using h\<sigma>1_disj unfolding F_def by (by100 blast)
+  have hF_disj_L: "F \<inter> L = {}" using h\<sigma>1_disj unfolding F_def by (by100 blast)
+  \<comment> \<open>Phase 1 application: w \\<sim> map \\<sigma>1 w via disjoint relabeling.\<close>
+  have step1: "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<sigma>1 l, b)) w)"
+  proof (rule valid_scheme_relabel_disjoint)
+    show "inj_on \<sigma>1 (scheme_labels w)" using h\<sigma>1_inj S_def by (by100 simp)
+    show "\<sigma>1 ` scheme_labels w \<inter> scheme_labels w = {}"
+      using h\<sigma>1_disj unfolding S_def by (by100 blast)
+  qed
+  define w1 where "w1 = map (\<lambda>(l,b). (\<sigma>1 l, b)) w"
+  have hw1_labels: "scheme_labels w1 = F"
+    unfolding w1_def F_def S_def
+    using scheme_labels_map_relabel[of \<sigma>1 w] unfolding scheme_labels_def by (by100 simp)
+  \<comment> \<open>Phase 2: define \\<sigma>2 : F \\<to> L via \\<rho> \\<circ> \\<sigma>1\\<inverse>.
+     Concretely: \\<sigma>2(f) = \\<rho>(the unique s \\<in> S with \\<sigma>1(s) = f).\<close>
+  have hbij_\<sigma>1: "bij_betw \<sigma>1 S F"
+    unfolding F_def bij_betw_def using h\<sigma>1_inj by (by100 blast)
+  define \<sigma>1_inv where "\<sigma>1_inv = the_inv_into S \<sigma>1"
+  have h\<sigma>1_inv_f: "\<And>f. f \<in> F \<Longrightarrow> \<sigma>1 (\<sigma>1_inv f) = f"
+    unfolding \<sigma>1_inv_def F_def using f_the_inv_into_f[OF h\<sigma>1_inj] by (by100 blast)
+  have h\<sigma>1_inv_in: "\<And>f. f \<in> F \<Longrightarrow> \<sigma>1_inv f \<in> S"
+    unfolding \<sigma>1_inv_def F_def using the_inv_into_into[OF h\<sigma>1_inj] by (by100 blast)
+  have h\<sigma>1_inv: "\<And>f. f \<in> F \<Longrightarrow> \<sigma>1 (\<sigma>1_inv f) = f \<and> \<sigma>1_inv f \<in> S"
+    using h\<sigma>1_inv_f h\<sigma>1_inv_in by (by100 blast)
+  define \<sigma>2 where "\<sigma>2 = (\<lambda>f. \<rho> (\<sigma>1_inv f))"
+  have h\<sigma>2_on_F: "\<And>f. f \<in> F \<Longrightarrow> \<sigma>2 f = \<rho> (\<sigma>1_inv f)" unfolding \<sigma>2_def by (by100 simp)
+  \<comment> \<open>Phase 2: \\<sigma>2 is a disjoint relabeling of w1.\<close>
+  have h\<sigma>2_inj: "inj_on \<sigma>2 F"
+  proof (rule inj_onI)
+    fix x y assume hx: "x \<in> F" and hy: "y \<in> F" and heq: "\<sigma>2 x = \<sigma>2 y"
+    have "\<rho> (\<sigma>1_inv x) = \<rho> (\<sigma>1_inv y)" using heq unfolding \<sigma>2_def by (by100 simp)
+    moreover have "\<sigma>1_inv x \<in> S" using h\<sigma>1_inv hx by (by100 blast)
+    moreover have "\<sigma>1_inv y \<in> S" using h\<sigma>1_inv hy by (by100 blast)
+    moreover have "inj_on \<rho> S" using assms unfolding bij_betw_def S_def by (by100 blast)
+    ultimately have "\<sigma>1_inv x = \<sigma>1_inv y"
+      unfolding inj_on_def by (by100 blast)
+    then have "\<sigma>1 (\<sigma>1_inv x) = \<sigma>1 (\<sigma>1_inv y)" by (by100 simp)
+    then show "x = y" using h\<sigma>1_inv_f hx hy by (by100 simp)
+  qed
+  have h\<sigma>2_image: "\<sigma>2 ` F = L"
+  proof (rule set_eqI, rule iffI)
+    fix x assume "x \<in> \<sigma>2 ` F"
+    then obtain f where hf: "f \<in> F" and hx: "x = \<sigma>2 f" by (by100 blast)
+    have "\<sigma>1_inv f \<in> S" using h\<sigma>1_inv hf by (by100 blast)
+    then show "x \<in> L" using hx assms unfolding \<sigma>2_def bij_betw_def S_def by (by100 blast)
+  next
+    fix x assume "x \<in> L"
+    then obtain s where hs: "s \<in> S" and hx: "\<rho> s = x"
+      using assms unfolding bij_betw_def S_def by (by100 blast)
+    define f where "f = \<sigma>1 s"
+    have "f \<in> F" using hs unfolding f_def F_def by (by100 blast)
+    moreover have "\<sigma>2 f = x"
+    proof -
+      have "\<sigma>1_inv f = s"
+        unfolding f_def \<sigma>1_inv_def using the_inv_into_f_eq[OF h\<sigma>1_inj] hs by (by100 blast)
+      then show ?thesis unfolding \<sigma>2_def using hx by (by100 simp)
+    qed
+    ultimately show "x \<in> \<sigma>2 ` F" by (by100 blast)
+  qed
+  have h\<sigma>2_disj: "\<sigma>2 ` F \<inter> F = {}"
+    using h\<sigma>2_image hF_disj_L by (by100 blast)
+  have step2: "top1_valid_scheme_equiv w1 (map (\<lambda>(l,b). (\<sigma>2 l, b)) w1)"
+  proof (rule valid_scheme_relabel_disjoint)
+    show "inj_on \<sigma>2 (scheme_labels w1)" using h\<sigma>2_inj hw1_labels by (by100 simp)
+    show "\<sigma>2 ` scheme_labels w1 \<inter> scheme_labels w1 = {}"
+      using h\<sigma>2_disj hw1_labels by (by100 simp)
+  qed
+  \<comment> \<open>Key: map \\<sigma>2 (map \\<sigma>1 w) = map \\<rho> w.\<close>
+  have key_eq: "map (\<lambda>(l,b). (\<sigma>2 l, b)) w1 = map (\<lambda>(l,b). (\<rho> l, b)) w"
+  proof -
+    have "map (\<lambda>(l,b). (\<sigma>2 l, b)) w1 = map (\<lambda>(l,b). (\<sigma>2 (\<sigma>1 l), b)) w"
+      unfolding w1_def using map_relabel_compose by (by100 simp)
+    moreover have "\<And>s. s \<in> S \<Longrightarrow> \<sigma>2 (\<sigma>1 s) = \<rho> s"
+    proof -
+      fix s assume hs: "s \<in> S"
+      have "\<sigma>1 s \<in> F" using hs unfolding F_def by (by100 blast)
+      have h\<sigma>1s_F: "\<sigma>1 s \<in> F" using hs unfolding F_def by (by100 blast)
+      have "\<sigma>1 (\<sigma>1_inv (\<sigma>1 s)) = \<sigma>1 s" using h\<sigma>1_inv_f h\<sigma>1s_F by (by100 blast)
+      moreover have "\<sigma>1_inv (\<sigma>1 s) \<in> S" using h\<sigma>1_inv_in h\<sigma>1s_F by (by100 blast)
+      ultimately have "\<sigma>1_inv (\<sigma>1 s) = s"
+        using h\<sigma>1_inj hs unfolding inj_on_def by (by100 blast)
+      then show "\<sigma>2 (\<sigma>1 s) = \<rho> s" unfolding \<sigma>2_def by (by100 simp)
+    qed
+    then have "map (\<lambda>(l,b). (\<sigma>2 (\<sigma>1 l), b)) w = map (\<lambda>(l,b). (\<rho> l, b)) w"
+      unfolding S_def scheme_labels_def by (induction w) (by100 auto)+
+    ultimately show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Combine via transitivity.\<close>
+  from step1[folded w1_def] step2 key_eq valid_equiv_trans
+  show ?thesis by (by100 force)
+qed
 
 \<comment> \<open>Scheme equivalence: transitivity and lifting from elementary operations.
    These avoid the meson/rtranclp\_trans timeout on complex list types.\<close>
