@@ -558,7 +558,15 @@ proof -
   define vy' where "vy' = (\<lambda>i. -(vy (\<sigma> i)))"
   \<comment> \<open>Key properties of \\<rho> and \\<sigma>.\<close>
   have h\<rho>_inv: "\<And>p. \<rho> (\<rho> p) = p" unfolding \<rho>_def by (by100 auto)
-  have h\<rho>_bij: "bij \<rho>" sorry \<comment> \<open>\\<rho> is self-inverse hence bijective.\<close>
+  have h\<rho>_bij: "bij \<rho>"
+  proof (rule bijI)
+    show "inj \<rho>" unfolding inj_def \<rho>_def by (by100 auto)
+    show "surj \<rho>"
+    proof (rule surjI)
+      fix y :: "real \<times> real"
+      show "\<rho> (\<rho> y) = y" by (rule h\<rho>_inv)
+    qed
+  qed
   have h\<sigma>_lt: "\<And>i. i < ?n \<Longrightarrow> \<sigma> i < ?n"
     unfolding \<sigma>_def
   proof -
