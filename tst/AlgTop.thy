@@ -3900,7 +3900,16 @@ proof -
       = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n)))"
     using AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
       [OF hC1_1 hn3 hC4_1 hC5_1 hC10_1 hvert_hp_1 hstrict_hp_1]
-    sorry \<comment> \<open>Extract 1st and 4th conjuncts from the lemma's 4-part conjunction.\<close>
+  proof -
+    from AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
+        [OF hC1_1 hn3 hC4_1 hC5_1 hC10_1 hvert_hp_1 hstrict_hp_1]
+    show ?thesis
+      apply (elim exE conjE)
+      apply (intro exI conjI)
+       apply assumption
+      apply assumption
+      done
+  qed
   then obtain \<psi>1 where
     h\<psi>1_homeo: "top1_homeomorphism_on P1 (?TP P1) top1_B2 top1_B2_topology \<psi>1"
     and h\<psi>1_edge: "\<forall>i<?n. \<forall>t\<in>I_set. \<psi>1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
@@ -3918,9 +3927,16 @@ proof -
     \<and> (\<forall>i<?n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
         (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
       = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n)))"
-    using AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
-      [OF hC1_2 hn3 hC4_2 hC5_2 hC10_2 hvert_hp_2 hstrict_hp_2]
-    sorry \<comment> \<open>Same extraction for P2.\<close>
+  proof -
+    from AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
+        [OF hC1_2 hn3 hC4_2 hC5_2 hC10_2 hvert_hp_2 hstrict_hp_2]
+    show ?thesis
+      apply (elim exE conjE)
+      apply (intro exI conjI)
+       apply assumption
+      apply assumption
+      done
+  qed
   then obtain \<psi>2 where
     h\<psi>2_homeo: "top1_homeomorphism_on P2 (?TP P2) top1_B2 top1_B2_topology \<psi>2"
     and h\<psi>2_edge: "\<forall>i<?n. \<forall>t\<in>I_set. \<psi>2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
