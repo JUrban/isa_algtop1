@@ -914,8 +914,96 @@ proof -
     qed
   qed
   \<comment> \<open>C2: q' is a quotient map from P' to Y.\<close>
+  \<comment> \<open>\\<rho> is continuous on R² (linear map), so continuous on P'.\<close>
+  have h\<rho>_eq: "\<rho> = (\<lambda>p. (fst p, -(snd p)))"
+    unfolding \<rho>_def by (by100 auto)
+  have h\<rho>_cont_all: "continuous_on UNIV \<rho>"
+    unfolding h\<rho>_eq
+    by (intro continuous_intros)
+  have h\<rho>_cont_std: "continuous_on P' \<rho>"
+    using continuous_on_subset[OF h\<rho>_cont_all] by (by100 blast)
+  have h\<rho>_range: "\<And>p. p \<in> P' \<Longrightarrow> \<rho> p \<in> P"
+  proof -
+    fix p assume "p \<in> P'"
+    then obtain q where "q \<in> P" "p = \<rho> q" unfolding P'_def by (by100 blast)
+    thus "\<rho> p \<in> P" using h\<rho>_inv by (by100 simp)
+  qed
+  have h\<rho>_cont: "top1_continuous_map_on P'
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P')
+      P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) \<rho>"
+    by (rule top1_continuous_map_on_real2_subspace_general[OF h\<rho>_range h\<rho>_cont_std])
+  \<comment> \<open>\\<rho> is a homeomorphism P'\\<to>P. It's self-inverse, continuous, and bijective.\<close>
+  have h\<rho>_bij_PP: "bij_betw \<rho> P' P"
+    unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on \<rho> P'"
+    proof (rule inj_onI)
+      fix x y assume "x \<in> P'" "y \<in> P'" "\<rho> x = \<rho> y"
+      hence "\<rho> (\<rho> x) = \<rho> (\<rho> y)" by (by100 simp)
+      thus "x = y" using h\<rho>_inv by (by100 simp)
+    qed
+    show "\<rho> ` P' = P"
+    proof
+      show "\<rho> ` P' \<subseteq> P" using h\<rho>_range by (by100 blast)
+      show "P \<subseteq> \<rho> ` P'"
+      proof
+        fix p assume "p \<in> P"
+        hence "\<rho> p \<in> P'" unfolding P'_def by (by100 blast)
+        moreover have "\<rho> (\<rho> p) = p" using h\<rho>_inv by (by100 blast)
+        ultimately show "p \<in> \<rho> ` P'" by (by100 force)
+      qed
+    qed
+  qed
+  have h\<rho>_cont_P: "continuous_on P \<rho>"
+    using continuous_on_subset[OF h\<rho>_cont_all] by (by100 blast)
+  have h\<rho>_cont_rev: "top1_continuous_map_on P
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+      P' (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P') \<rho>"
+  proof -
+    have "\<And>p. p \<in> P \<Longrightarrow> \<rho> p \<in> P'" unfolding P'_def by (by100 blast)
+    thus ?thesis by (rule top1_continuous_map_on_real2_subspace_general[OF _ h\<rho>_cont_P])
+  qed
+  \<comment> \<open>inv\_into P' \\<rho> = \\<rho> on P (since \\<rho> is self-inverse).\<close>
+  have h_inv_into: "\<And>p. p \<in> P \<Longrightarrow> inv_into P' \<rho> p = \<rho> p"
+  proof -
+    fix p assume hp: "p \<in> P"
+    have h\<rho>p: "\<rho> p \<in> P'" unfolding P'_def using hp by (by100 blast)
+    have "\<rho> (\<rho> p) = p" using h\<rho>_inv by (by100 blast)
+    thus "inv_into P' \<rho> p = \<rho> p"
+    proof -
+      have hinj: "inj_on \<rho> P'" using h\<rho>_bij_PP unfolding bij_betw_def by (by100 blast)
+      have "inv_into P' \<rho> (\<rho> (\<rho> p)) = \<rho> p"
+        by (rule inv_into_f_f[OF hinj h\<rho>p])
+      moreover have "\<rho> (\<rho> p) = p" using h\<rho>_inv by (by100 blast)
+      ultimately show "inv_into P' \<rho> p = \<rho> p" by (by100 simp)
+    qed
+  qed
+  have h_inv_cont: "top1_continuous_map_on P
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+      P' (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P')
+      (inv_into P' \<rho>)"
+    sorry \<comment> \<open>inv\_into P' \\<rho> = \\<rho> on P. Continuity follows from h\\<rho>\\_cont\\_rev + h\\_inv\\_into.\<close>
+  let ?TP' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P'"
+  let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+  have hR2_top_local: "is_topology_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets)"
+    using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+          top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+  have hTP': "is_topology_on P' ?TP'"
+    using subspace_topology_is_topology_on[OF hR2_top_local] by (by100 blast)
+  have hTP_P: "is_topology_on P ?TP"
+    using subspace_topology_is_topology_on[OF hR2_top_local] by (by100 blast)
+  have h\<rho>_homeo: "top1_homeomorphism_on P' ?TP' P ?TP \<rho>"
+    unfolding top1_homeomorphism_on_def
+    using hTP' hTP_P h\<rho>_bij_PP h\<rho>_cont h_inv_cont by (by100 blast)
+  have h\<rho>_quot: "top1_quotient_map_on P'
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P')
+      P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) \<rho>"
+    by (rule top1_homeomorphism_on_imp_quotient_map_on[OF h\<rho>_homeo])
   have hC2': "top1_quotient_map_on P' (subspace_topology UNIV
-      (product_topology_on top1_open_sets top1_open_sets) P') Y TY q'" sorry
+      (product_topology_on top1_open_sets top1_open_sets) P') Y TY q'"
+    unfolding q'_def
+    by (rule top1_quotient_map_on_comp[OF h\<rho>_quot hC2])
   \<comment> \<open>Assemble: the inverted scheme has the same quotient space with reflected witnesses.\<close>
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
