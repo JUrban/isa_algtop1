@@ -2996,6 +2996,21 @@ proof -
   thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
 qed
 
+\<comment> \<open>Inversion: recover freshness from a relabel constructor application.\<close>
+lemma relabel_operation_freshness:
+  assumes "top1_elementary_scheme_operation w (map (\<lambda>(x, b). (if x = old then new else x, b)) w)"
+  shows "new \<notin> fst ` set w \<and> new \<noteq> old"
+  using assms
+  apply (cases rule: top1_elementary_scheme_operation.cases)
+  sorry
+
+\<comment> \<open>Relabel reverse: uses freshness recovered by inversion.\<close>
+lemma relabel_operation_reverse:
+  assumes "top1_elementary_scheme_operation w (map (\<lambda>(x, b). (if x = old then new else x, b)) w)"
+  shows "top1_scheme_equiv (map (\<lambda>(x, b). (if x = old then new else x, b)) w) w"
+  using relabel_reverse[OF conjunct1[OF relabel_operation_freshness[OF assms]]
+                          conjunct2[OF relabel_operation_freshness[OF assms]]] .
+
 lemma elementary_operation_reverse:
   assumes "top1_elementary_scheme_operation s t"
   shows "top1_scheme_equiv t s"
@@ -3030,11 +3045,7 @@ next
     using top1_elementary_scheme_operation.invert[of "rev (map top1_inverse_edge w)"] by simp
 next
   case (relabel w old new)
-  \<comment> \<open>The relabel constructor gives freshness: new \\<notin> fst ` set w, new \\<noteq> old.
-     These are recoverable since they're premises of the only matching constructor.\<close>
-  have hfresh: "new \<notin> fst ` set w" sorry
-  have hdiff: "new \<noteq> old" sorry
-  from relabel_reverse[OF hfresh hdiff] show ?case .
+  from relabel_operation_reverse show ?case sorry
 next
   case (flip_label w a) \<comment> \<open>flip is involutive: flip(flip(w)) = w.\<close>
   let ?f = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
