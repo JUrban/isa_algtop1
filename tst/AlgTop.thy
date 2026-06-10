@@ -3262,9 +3262,25 @@ proof -
   show ?thesis by (rule homeo_realization_flat_introI[OF assms homeomorphism_id[OF \<open>is_topology_on X TX\<close>]])
 qed
 
+\<comment> \<open>Bridge: unrestricted scheme\\_equiv also gives homeomorphic realization.
+   Uses the OLD chain (scheme\\_equiv\\_preserves\\_quotient) which has geometric sorrys.
+   Once the normal form uses valid\\_equiv, this bridge becomes unnecessary.\<close>
+lemma scheme_equiv_implies_homeo_realization:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "top1_quotient_of_scheme_on X TX s"
+      and "top1_scheme_equiv s t"
+  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY t \<and>
+    top1_homeomorphism_on X TX Y TY h"
+proof -
+  have "top1_quotient_of_scheme_on X TX t"
+    by (rule scheme_equiv_preserves_quotient[OF assms])
+  thus ?thesis by (rule same_space_implies_homeo_realization)
+qed
+
 \<comment> \<open>Homeomorphism-preservation for valid scheme operations (per expert audit step 8).
    For rotate/invert/flip/relabel\\_fresh: use same-space preservation (Y = X).
-   For cancel/uncancel/cut-paste: prove homeomorphic-realization preservation.
+   For cancel/uncancel/cut-paste: use bridge via scheme\\_equiv (one elementary step).
    This is the correct semantic theorem for the classification chain.\<close>
 lemma valid_operation_preserves_quotient_homeo:
   fixes X :: "'a set" and TX :: "'a set set"
@@ -3290,12 +3306,19 @@ next
      that collapses the two cancelled edges of the (n+2)-gon to get an n-gon.
      This requires constructing: (1) n-gon P' with quotient q' for u@v,
      (2) fold map h: P \\<to> P' preserving fibres.
-     Requires substantial geometric construction.\<close>
-  show ?case sorry
+     Requires substantial geometric construction.
+     Alternative: use bridge via scheme\\_equiv (cancel is one elementary step).\<close>
+  have hequiv: "top1_scheme_equiv (u @ [a, top1_inverse_edge a] @ v) (u @ v)"
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.cancel[of u a v] by (by100 simp)
+  show ?case by (rule scheme_equiv_implies_homeo_realization[OF v_cancel.prems hequiv])
 next
   case (v_uncancel a u v)
-  \<comment> \<open>Uncancel: needs geometric construction (polygon unfolding). Homeomorphism version.\<close>
-  show ?case sorry
+  \<comment> \<open>Uncancel: uses bridge via scheme\\_equiv (uncancel is one elementary step).\<close>
+  have hequiv: "top1_scheme_equiv (u @ v) (u @ [a, top1_inverse_edge a] @ v)"
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.uncancel[of u v a] by (by100 simp)
+  show ?case by (rule scheme_equiv_implies_homeo_realization[OF v_uncancel.prems hequiv])
 next
   case (v_invert w)
   have hq: "top1_quotient_of_scheme_on X TX (rev (map top1_inverse_edge w))"
@@ -3316,16 +3339,31 @@ next
   show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
 next
   case (v_cut_paste u1 a u2 u3)
-  \<comment> \<open>Cut-paste: needs geometric construction. Homeomorphism version.\<close>
-  show ?case sorry
+  \<comment> \<open>Cut-paste via bridge: one elementary step.\<close>
+  have hequiv: "top1_scheme_equiv
+    (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)
+    (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.cut_paste[of u1 a u2 u3] by (by100 simp)
+  show ?case by (rule scheme_equiv_implies_homeo_realization[OF v_cut_paste.prems hequiv])
 next
   case (v_cut_paste2 b u0 a u1 u2)
-  \<comment> \<open>Cut-paste2: needs geometric construction. Homeomorphism version.\<close>
-  show ?case sorry
+  \<comment> \<open>Cut-paste2 via bridge: one elementary step.\<close>
+  have hequiv: "top1_scheme_equiv
+    (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)
+    ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.cut_paste2[of u0 a u1 u2 b] by (by100 simp)
+  show ?case by (rule scheme_equiv_implies_homeo_realization[OF v_cut_paste2.prems hequiv])
 next
   case (v_cut_paste_opp u0 u1 a u2 u3)
-  \<comment> \<open>Cut-paste-opp: needs geometric construction. Homeomorphism version.\<close>
-  show ?case sorry
+  \<comment> \<open>Cut-paste-opp via bridge: one elementary step.\<close>
+  have hequiv: "top1_scheme_equiv
+    (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)
+    (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+    unfolding top1_scheme_equiv_def
+    using top1_elementary_scheme_operation.cut_paste_opp[of u0 u1 a u2 u3] by (by100 simp)
+  show ?case by (rule scheme_equiv_implies_homeo_realization[OF v_cut_paste_opp.prems hequiv])
 qed
 
 \<comment> \<open>Chain: valid equivalence preserves quotient homeomorphism type.\<close>
@@ -3360,21 +3398,7 @@ next
   show ?case using qZ hXZ by (rule homeo_realization_flat_introI)
 qed
 
-\<comment> \<open>Bridge: unrestricted scheme\\_equiv also gives homeomorphic realization.
-   This uses the OLD chain (scheme\\_equiv\\_preserves\\_quotient) which has sorrys.
-   Once the normal form is restated with valid\\_equiv, this bridge becomes unnecessary.\<close>
-lemma scheme_equiv_implies_homeo_realization:
-  fixes X :: "'a set" and TX :: "'a set set"
-  assumes "top1_quotient_of_scheme_on X TX s"
-      and "top1_scheme_equiv s t"
-  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
-    top1_quotient_of_scheme_on Y TY t \<and>
-    top1_homeomorphism_on X TX Y TY h"
-proof -
-  have "top1_quotient_of_scheme_on X TX t"
-    by (rule scheme_equiv_preserves_quotient[OF assms])
-  thus ?thesis by (rule same_space_implies_homeo_realization)
-qed
+\<comment> \<open>Bridge moved to before valid\\_operation\\_preserves.\<close>
 
 \<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
 lemma polygonal_region_compact:
