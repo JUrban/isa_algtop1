@@ -2197,7 +2197,7 @@ proof -
   have h\<phi>_cont: "top1_continuous_map_on P1 (?TP P1) P2 (?TP P2) \<phi>" sorry
   \<comment> \<open>Step 7: P1 compact, P2 Hausdorff \\<Longrightarrow> \\<phi> is homeomorphism by Theorem 26.6.\<close>
   have hP1_compact: "top1_compact_on P1 (?TP P1)"
-    sorry \<comment> \<open>Bridge: polygonal\\_region\\_compact gives compact P1, need top1\\_compact\\_on bridge.\<close>
+    using compact_R2_bridge[OF polygonal_region_compact[OF assms(1)]] .
   have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set)
       (product_topology_on top1_open_sets top1_open_sets)"
     using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
@@ -2208,7 +2208,12 @@ proof -
     using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
   have hausdorff_subspace: "\<And>X (T :: (real \<times> real) set set) Y. is_hausdorff_on X T \<Longrightarrow> Y \<subseteq> X \<Longrightarrow>
       is_hausdorff_on Y (subspace_topology X T Y)"
-    sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff. Standard topology fact via neighborhoods.\<close>
+  proof -
+    fix X :: "(real \<times> real) set" and T Y
+    assume "is_hausdorff_on X T" "Y \<subseteq> X"
+    thus "is_hausdorff_on Y (subspace_topology X T Y)"
+      using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
+  qed
   have hP2_haus: "is_hausdorff_on P2 (?TP P2)"
     by (rule hausdorff_subspace[OF top1_R2_is_hausdorff]) (by100 blast)
   have "top1_homeomorphism_on P1 (?TP P1) P2 (?TP P2) \<phi>"
