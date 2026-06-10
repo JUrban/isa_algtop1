@@ -129,6 +129,28 @@ lemma valid_equiv_implies_equiv:
   unfolding top1_valid_scheme_equiv_def top1_scheme_equiv_def
   by (induction rule: rtranclp.induct) (by100 simp, meson rtranclp.rtrancl_into_rtrancl valid_implies_elementary)
 
+\<comment> \<open>Valid equivalence: single fresh relabel is a valid equivalence step.\<close>
+lemma valid_equiv_fresh_relabel:
+  assumes "new \<notin> fst ` set w" and "new \<noteq> old"
+  shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (if l = old then new else l, b)) w)"
+  unfolding top1_valid_scheme_equiv_def
+  using top1_valid_scheme_operation.v_relabel[OF assms]
+        rtranclp.rtrancl_into_rtrancl[OF rtranclp.rtrancl_refl]
+  by (by100 simp)
+
+\<comment> \<open>Valid equivalence: transitivity.\<close>
+lemma valid_equiv_trans:
+  "top1_valid_scheme_equiv a b \<Longrightarrow> top1_valid_scheme_equiv b c \<Longrightarrow> top1_valid_scheme_equiv a c"
+  unfolding top1_valid_scheme_equiv_def by (rule rtranclp_trans)
+
+\<comment> \<open>Alpha-renaming: a bijective relabeling is a valid equivalence (per expert audit 20).
+   Proof: apply fresh relabels sequentially via intermediate fresh labels.\<close>
+lemma valid_scheme_alpha_rename:
+  fixes w :: "(nat \<times> bool) list"
+  assumes "bij_betw \<rho> (scheme_labels w) L"
+  shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<rho> l, b)) w)"
+  sorry \<comment> \<open>Combinatorial: sequence of fresh relabels. Needs induction on label set.\<close>
+
 \<comment> \<open>Scheme equivalence: transitivity and lifting from elementary operations.
    These avoid the meson/rtranclp\_trans timeout on complex list types.\<close>
 lemma scheme_equiv_trans:
