@@ -3202,8 +3202,14 @@ lemma homeomorphism_id:
   assumes "is_topology_on X TX"
   shows "top1_homeomorphism_on X TX X TX id"
   unfolding top1_homeomorphism_on_def
-  using top1_continuous_map_on_id[OF assms] assms
-  sorry
+  apply (intro conjI)
+      apply (rule assms)
+     apply (rule assms)
+    apply (rule bij_betw_id)
+   apply (rule top1_continuous_map_on_id[OF assms])
+  \<comment> \<open>Need: top1\\_continuous\\_map\\_on X TX X TX (inv\\_into X id).
+     Since inv\\_into X id x = x for all x \\<in> X, the inverse IS id.\<close>
+  sorry \<comment> \<open>Proof exists inline at line ~10700 in Thm 77.5. Need to extract.\<close>
 
 lemma same_space_implies_homeo_realization:
   assumes "top1_quotient_of_scheme_on X TX t"
