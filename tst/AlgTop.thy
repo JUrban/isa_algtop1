@@ -835,8 +835,12 @@ proof -
   \<comment> \<open>Step 1: w \\<to> w\_sigma (reindexing with shifted witnesses).
      Same P, q. Witnesses: vx' = vx\\<circ>\\<sigma>, vy' = vy\\<circ>\\<sigma>.
      All conditions transfer because \\<sigma> is a bijection with the Suc-shift property.\<close>
+  \<comment> \<open>Step 1: reindexing w \\<to> w\_sigma.
+     The key: both sides of the definition have the SAME structure with 11 conditions.
+     We provide witnesses P, q, vx\\<circ>\\<sigma>, vy\\<circ>\\<sigma> and show each condition transfers
+     via the bijection \\<sigma>.\<close>
   have h_step1: "top1_quotient_of_scheme_on Y TY w_\<sigma>"
-    using assms(1) sorry \<comment> \<open>Reindexing: same P, q, shifted vx/vy via sigma bijection.\<close>
+    using assms(1) sorry \<comment> \<open>Reindexing: P, q same; vx'=vx\\<circ>\\<sigma>, vy'=vy\\<circ>\\<sigma>. Definition too large for automated provers.\<close>
   \<comment> \<open>Step 2: w\_sigma \\<to> w' via original transfer (fst/snd match at each position).\<close>
   have hfst_ws: "\<And>i. i < length w_\<sigma> \<Longrightarrow> fst (w'!i) = fst (w_\<sigma>!i)"
   proof -
