@@ -4888,8 +4888,12 @@ proof -
         ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
       next
         case (context_left y z prefix)
-        \<comment> \<open>s = prefix@y, t = prefix@z, y \<to> z. Homeomorphism lifts through prefix.\<close>
-        thus ?thesis sorry
+        \<comment> \<open>s = prefix@y, t = prefix@z, y \<to> z.
+           Apply the operation to Y1's quotient: Y1 also realizes t.
+           Then both Y1 and Y2 realize the same scheme, giving homeomorphism.\<close>
+        have "top1_quotient_of_scheme_on Y1 TY1 t"
+          by (rule elementary_operation_preserves_quotient[OF hs hop])
+        then show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] ht by (by100 blast)
       qed
     qed
     from huniv[OF hop assms(1) assms(2) hs ht]
