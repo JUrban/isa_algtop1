@@ -1324,10 +1324,47 @@ proof -
                     (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n)))))
             else q' (t * vx (\<sigma> j) + (1-t) * vx (\<sigma> (Suc j mod ?n)),
                     t * (-(vy (\<sigma> j))) + (1-t) * (-(vy (\<sigma> (Suc j mod ?n)))))))"
-    sorry \<comment> \<open>Key proof: map to orig C7 at (n-1-i, n-1-j) with param (1-t).
-       q'(new\\_edge(i,t)) = q(orig\\_edge(n-1-i,1-t)) via \\<rho> definition.
-       fst(w'!i) = fst(w!(n-1-i)) [hfst], snd(w'!i)=snd(w'!j) iff snd(w!(n-1-i))=snd(w!(n-1-j)) [hsnd].
-       The same/opposite direction cases match after parameter reversal.\<close>
+  proof (intro allI impI ballI)
+    fix i j t assume hi: "i < ?n" and hj: "j < ?n" and ht: "t \<in> I_set"
+      and hfst_eq: "fst (?w' ! i) = fst (?w' ! j)"
+    let ?i' = "?n - 1 - i" and ?j' = "?n - 1 - j"
+    have hi': "?i' < ?n" and hj': "?j' < ?n" using hi hj by (by100 linarith)+
+    have hfst_orig: "fst (w ! ?i') = fst (w ! ?j')"
+      using hfst_eq hfst[OF hi] hfst[OF hj] by (by100 simp)
+    have hsnd_iff: "(snd (?w' ! i) = snd (?w' ! j)) = (snd (w ! ?i') = snd (w ! ?j'))"
+      using hsnd[OF hi] hsnd[OF hj] by (by100 simp)
+    have h_si: "\<sigma> (Suc i mod ?n) = ?i'" using h\<sigma>_suc[OF hi] by (by100 simp)
+    have h_sj: "\<sigma> (Suc j mod ?n) = ?j'" using h\<sigma>_suc[OF hj] by (by100 simp)
+    have hSi': "Suc ?i' mod ?n = \<sigma> i" using hSuc_n1i[OF hi] .
+    have hSj': "Suc ?j' mod ?n = \<sigma> j" using hSuc_n1i[OF hj] .
+    have h1t: "1-t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 simp)
+    \<comment> \<open>q'(a,b) = q(a,-b).\<close>
+    have hq': "\<And>a b::real. q' (a, b) = q (a, -b)"
+      unfolding q'_def \<rho>_def by (by100 simp)
+    \<comment> \<open>Apply orig C7 at (i', j') with param (1-t), then rewrite.\<close>
+    from hC7[rule_format, OF hi' hj' hfst_orig h1t]
+    have horig: "q ((1-(1-t)) * vx ?i' + (1-t) * vx (Suc ?i' mod ?n),
+                    (1-(1-t)) * vy ?i' + (1-t) * vy (Suc ?i' mod ?n))
+      = (if snd (w!?i') = snd (w!?j')
+         then q ((1-(1-t)) * vx ?j' + (1-t) * vx (Suc ?j' mod ?n),
+                 (1-(1-t)) * vy ?j' + (1-t) * vy (Suc ?j' mod ?n))
+         else q ((1-t) * vx ?j' + (1-(1-t)) * vx (Suc ?j' mod ?n),
+                 (1-t) * vy ?j' + (1-(1-t)) * vy (Suc ?j' mod ?n)))" .
+    have horig2: "q (t * vx ?i' + (1-t) * vx (\<sigma> i), t * vy ?i' + (1-t) * vy (\<sigma> i))
+      = (if snd (w!?i') = snd (w!?j')
+         then q (t * vx ?j' + (1-t) * vx (\<sigma> j), t * vy ?j' + (1-t) * vy (\<sigma> j))
+         else q ((1-t) * vx ?j' + t * vx (\<sigma> j), (1-t) * vy ?j' + t * vy (\<sigma> j)))"
+      using horig hSi' hSj' by (by100 simp)
+    \<comment> \<open>The final step: convert q expressions to q' using hq' and h\\_si, h\\_sj.\<close>
+    show "q' ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+              (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n)))))
+         = (if snd (?w'!i) = snd (?w'!j)
+            then q' ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
+                    (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n)))))
+            else q' (t * vx (\<sigma> j) + (1-t) * vx (\<sigma> (Suc j mod ?n)),
+                    t * (-(vy (\<sigma> j))) + (1-t) * (-(vy (\<sigma> (Suc j mod ?n))))))"
+      using horig2 hq' h_si h_sj hsnd_iff sorry
+  qed
   \<comment> \<open>C8': interior injectivity.\<close>
   have hC8': "\<forall>p\<in>P'. (\<forall>i<?n. \<forall>t\<in>I_set.
                 p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
