@@ -1270,7 +1270,45 @@ proof -
                            cy = (\<Sum>j<?n. (-(vy (\<sigma> j)))) / real ?n
          in (vx (\<sigma> i) - cx) * ((-(vy (\<sigma> (Suc i mod ?n)))) - cy)
           - ((-(vy (\<sigma> i))) - cy) * (vx (\<sigma> (Suc i mod ?n)) - cx) > 0"
-    sorry
+  proof (intro allI impI)
+    fix i assume hi: "i < ?n"
+    let ?i' = "?n - 1 - i"
+    \<comment> \<open>Centroids: cx' = cx (sum reindexing), cy' = -cy.\<close>
+    have hcx: "(\<Sum>j<?n. vx (\<sigma> j)) = (\<Sum>j<?n. vx j)" using hsum_reindex by (by100 blast)
+    have hcy: "(\<Sum>j<?n. (-(vy (\<sigma> j)))) = -(\<Sum>j<?n. vy j)"
+    proof -
+      have "(\<Sum>j<?n. (-(vy (\<sigma> j)))) = -(\<Sum>j<?n. vy (\<sigma> j))" by (rule sum_negf)
+      also have "(\<Sum>j<?n. vy (\<sigma> j)) = (\<Sum>j<?n. vy j)" using hsum_reindex by (by100 blast)
+      finally show ?thesis .
+    qed
+    \<comment> \<open>Apply original C10 at position n-1-i.\<close>
+    have hi': "?i' < ?n" using hn1i_lt[OF hi] .
+    from hC10[rule_format, OF hi']
+    have horig: "let cx = (\<Sum>j<?n. vx j) / real ?n; cy = (\<Sum>j<?n. vy j) / real ?n
+         in (vx ?i' - cx) * (vy (Suc ?i' mod ?n) - cy) - (vy ?i' - cy) * (vx (Suc ?i' mod ?n) - cx) > 0" .
+    have h1: "Suc ?i' mod ?n = \<sigma> i" using hSuc_n1i[OF hi] .
+    have h2: "?i' = \<sigma> (Suc i mod ?n)" using h\<sigma>_suc[OF hi] by (by100 simp)
+    \<comment> \<open>The original expression at i' with cx,cy = the reflected expression at i with cx,-cy.\<close>
+    let ?cx = "(\<Sum>j<?n. vx j) / real ?n"
+    let ?cy = "(\<Sum>j<?n. vy j) / real ?n"
+    let ?a = "vx (\<sigma> i)" and ?b = "vy (\<sigma> i)" and ?c = "vx ?i'" and ?d = "vy ?i'"
+    \<comment> \<open>The original C10 at i' gives the cross product > 0.
+       After substitution h1 (Suc i' mod n = \\<sigma> i): uses \\<sigma> i and i'.\<close>
+    have horig2: "(vx ?i' - ?cx) * (vy (\<sigma> i) - ?cy)
+        - (vy ?i' - ?cy) * (vx (\<sigma> i) - ?cx) > 0"
+      using horig h1 by (by100 simp)
+    \<comment> \<open>The reflected cross product = original cross product (algebraic identity).\<close>
+    have halg: "(?a - ?cx) * ((-?d) - (-?cy)) - ((-?b) - (-?cy)) * (?c - ?cx)
+             = (?c - ?cx) * (?b - ?cy) - (?d - ?cy) * (?a - ?cx)"
+      by (by100 argo)
+    have hresult: "(?a - ?cx) * ((-?d) - (-?cy)) - ((-?b) - (-?cy)) * (?c - ?cx) > 0"
+      using horig2 halg by (by100 linarith)
+    show "let cx = (\<Sum>j<?n. vx (\<sigma> j)) / real ?n;
+              cy = (\<Sum>j<?n. (-(vy (\<sigma> j)))) / real ?n
+         in (vx (\<sigma> i) - cx) * ((-(vy (\<sigma> (Suc i mod ?n)))) - cy)
+          - ((-(vy (\<sigma> i))) - cy) * (vx (\<sigma> (Suc i mod ?n)) - cx) > 0"
+      using hresult hcx hcy h2 by (by100 simp)
+  qed
   \<comment> \<open>C11': strict edge-side.\<close>
   have hC11': "\<forall>i<?n. \<forall>k<?n.
           k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
