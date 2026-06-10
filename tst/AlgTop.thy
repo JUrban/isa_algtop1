@@ -1034,7 +1034,11 @@ proof -
       (product_topology_on top1_open_sets top1_open_sets) P') Y TY q'"
     unfolding q'_def
     by (rule top1_quotient_map_on_comp[OF h\<rho>_quot hC2])
-  \<comment> \<open>Assemble: the inverted scheme has the same quotient space with reflected witnesses.\<close>
+  \<comment> \<open>Assemble: provide P', q', vx\\<circ>\\<sigma>, -(vy\\<circ>\\<sigma>) as witnesses.
+     Conditions C3-C11 need to be proved for the inverted scheme.
+     C1 and C2 are already proved (hC1', hC2').
+     C3-C11 require relating the reflected/reversed conditions to the original ones.
+     For now: sorry the full assembly (11 conditions).\<close>
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
     using htopo hC1' hC2' sorry
