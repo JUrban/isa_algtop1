@@ -3029,8 +3029,12 @@ next
   thus ?case unfolding top1_scheme_equiv_def
     using top1_elementary_scheme_operation.invert[of "rev (map top1_inverse_edge w)"] by simp
 next
-  case (relabel w old new) \<comment> \<open>Reverse: relabel\\_reverse, but can't access freshness from case.\<close>
-  from relabel_reverse[of new w old] show ?case sorry
+  case (relabel w old new)
+  \<comment> \<open>The relabel constructor gives freshness: new \\<notin> fst ` set w, new \\<noteq> old.
+     These are recoverable since they're premises of the only matching constructor.\<close>
+  have hfresh: "new \<notin> fst ` set w" sorry
+  have hdiff: "new \<noteq> old" sorry
+  from relabel_reverse[OF hfresh hdiff] show ?case .
 next
   case (flip_label w a) \<comment> \<open>flip is involutive: flip(flip(w)) = w.\<close>
   let ?f = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
