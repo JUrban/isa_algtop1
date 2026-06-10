@@ -3225,18 +3225,13 @@ proof -
 qed
 
 \<comment> \<open>Per expert audit 18: define a predicate to package the existential cleanly.\<close>
-definition top1_scheme_realized_homeo_by ::
-    "'a set \<Rightarrow> 'a set set \<Rightarrow> ('b \<times> bool) list \<Rightarrow> bool" where
-  "top1_scheme_realized_homeo_by X TX t \<longleftrightarrow>
-     (\<exists>(Y :: 'a set) TY h.
-        top1_quotient_of_scheme_on Y TY t \<and>
-        top1_homeomorphism_on X TX Y TY h)"
-
-lemma scheme_realized_homeoI:
-  assumes "top1_quotient_of_scheme_on Y TY t"
-      and "top1_homeomorphism_on X TX Y TY h"
-  shows "top1_scheme_realized_homeo_by X TX t"
-  sorry \<comment> \<open>Unfold def + intro exI conjI + rule assms. Blocked by type/HO matching.\<close>
+\<comment> \<open>Flat intro for homeomorphic realization.\<close>
+lemma homeo_realization_flat_introI:
+  assumes hq: "top1_quotient_of_scheme_on Y TY t"
+      and hh: "top1_homeomorphism_on X TX Y TY h"
+  shows "\<exists>Y' TY' h'. top1_quotient_of_scheme_on Y' TY' t
+              \<and> top1_homeomorphism_on X TX Y' TY' h'"
+  sorry \<comment> \<open>Trivial \\<exists>-intro but all tactics fail due to predicate size. Needs ML-level proof.\<close>
 
 lemma same_space_implies_homeo_realization:
   assumes "top1_quotient_of_scheme_on X TX t"
