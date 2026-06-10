@@ -733,6 +733,26 @@ proof -
   \<comment> \<open>Edge point correspondence: new edge i at parameter t uses vertices \\<sigma>(i) and \\<sigma>(Suc i mod n).
      For 0 < Suc i < n: \\<sigma>(Suc i mod n) = n-1-i, \\<sigma>(i) = n-i [for i>0] or 0 [for i=0].
      The new edge i at parameter t = \\<rho>(original edge (n-1-i) at parameter (1-t)).\<close>
+  \<comment> \<open>Suc(n-1-i) mod n = \\<sigma>(i): the "next vertex" after n-1-i wraps around.\<close>
+  have hSuc_n1i: "\<And>i. i < ?n \<Longrightarrow> Suc (?n - 1 - i) mod ?n = \<sigma> i"
+  proof -
+    fix i assume hi: "i < ?n"
+    show "Suc (?n - 1 - i) mod ?n = \<sigma> i"
+    proof (cases "i = 0")
+      case True
+      hence "Suc (?n - 1 - i) = ?n" using hn3 by (by100 linarith)
+      thus ?thesis unfolding \<sigma>_def using True by (by100 simp)
+    next
+      case False
+      hence "Suc (?n - 1 - i) = ?n - i" using hi by (by100 linarith)
+      moreover have "?n - i < ?n" using False hi by (by100 linarith)
+      ultimately have "Suc (?n - 1 - i) mod ?n = ?n - i" by (by100 simp)
+      also have "?n - i = \<sigma> i" using h\<sigma>_pos[of i] False hi by (by100 simp)
+      finally show ?thesis .
+    qed
+  qed
+  \<comment> \<open>n-1-i < n when i < n.\<close>
+  have hn1i_lt: "\<And>i. i < ?n \<Longrightarrow> ?n - 1 - i < ?n" by (by100 linarith)
   \<comment> \<open>vx'/vy' in terms of \\<rho> and \\<sigma>.\<close>
   have hv'_eq: "\<And>i. (vx' i, vy' i) = (vx (\<sigma> i), -(vy (\<sigma> i)))"
     unfolding vx'_def vy'_def by (by100 simp)
@@ -1256,7 +1276,58 @@ proof -
           k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
           (vx (\<sigma> k) - vx (\<sigma> i)) * ((-(vy (\<sigma> (Suc i mod ?n)))) - (-(vy (\<sigma> i))))
           - ((-(vy (\<sigma> k))) - (-(vy (\<sigma> i)))) * (vx (\<sigma> (Suc i mod ?n)) - vx (\<sigma> i)) < 0"
-    sorry
+  proof (intro allI impI)
+    fix i k assume hi: "i < ?n" and hk: "k < ?n" and hki: "k \<noteq> i"
+      and hkSi: "k \<noteq> Suc i mod ?n"
+    \<comment> \<open>Map to original C11 at (n-1-i, \\<sigma> k).\<close>
+    let ?i' = "?n - 1 - i"
+    have hi': "?i' < ?n" using hn1i_lt[OF hi] .
+    have hsk: "\<sigma> k < ?n" using h\<sigma>_lt[OF hk] .
+    \<comment> \<open>Non-adjacency: \\<sigma> k \\<noteq> n-1-i and \\<sigma> k \\<noteq> Suc(n-1-i) mod n.\<close>
+    have hsk_ne_i': "\<sigma> k \<noteq> ?i'"
+    proof -
+      have "?i' = \<sigma> (Suc i mod ?n)" using h\<sigma>_suc[OF hi] by (by100 simp)
+      moreover have "Suc i mod ?n < ?n"
+      proof -
+        have "0 < ?n" using hn_pos .
+        thus ?thesis by (rule mod_less_divisor)
+      qed
+      moreover have "\<sigma> k \<noteq> \<sigma> (Suc i mod ?n)"
+        using h\<sigma>_inj hk \<open>Suc i mod ?n < ?n\<close> hkSi
+        unfolding inj_on_def by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    have hsk_ne_Si': "\<sigma> k \<noteq> Suc ?i' mod ?n"
+    proof -
+      have "Suc ?i' mod ?n = \<sigma> i" using hSuc_n1i[OF hi] .
+      moreover have "\<sigma> k \<noteq> \<sigma> i"
+        using h\<sigma>_inj hi hk hki unfolding inj_on_def by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Apply original C11.\<close>
+    from hC11[rule_format, OF hi' hsk hsk_ne_i' hsk_ne_Si']
+    have horig: "(vx (\<sigma> k) - vx ?i') * (vy (Suc ?i' mod ?n) - vy ?i')
+        - (vy (\<sigma> k) - vy ?i') * (vx (Suc ?i' mod ?n) - vx ?i') < 0" .
+    \<comment> \<open>Rewrite using Suc(n-1-i) mod n = \\<sigma>(i) and n-1-i = \\<sigma>(Suc i mod n).\<close>
+    have h1: "Suc ?i' mod ?n = \<sigma> i" using hSuc_n1i[OF hi] .
+    have h2: "?i' = \<sigma> (Suc i mod ?n)" using h\<sigma>_suc[OF hi] by (by100 simp)
+    \<comment> \<open>The LHS of the goal equals the original expression (algebraic identity).
+       Substitute \\<sigma>(Suc i mod n) = n-1-i and Suc(n-1-i) mod n = \\<sigma>(i).\<close>
+    \<comment> \<open>The LHS equals the original expression after substitution + algebraic identity.\<close>
+    let ?a = "vx (\<sigma> i)" and ?b = "vy (\<sigma> i)" and ?c = "vx ?i'" and ?d = "vy ?i'"
+        and ?e = "vx (\<sigma> k)" and ?f = "vy (\<sigma> k)"
+    have hLHS: "(vx (\<sigma> k) - vx (\<sigma> i)) * ((-(vy (\<sigma> (Suc i mod ?n)))) - (-(vy (\<sigma> i))))
+        - ((-(vy (\<sigma> k))) - (-(vy (\<sigma> i)))) * (vx (\<sigma> (Suc i mod ?n)) - vx (\<sigma> i))
+        = (?e - ?a) * (?b - ?d) - (?b - ?f) * (?c - ?a)" using h2 by (by100 simp)
+    have hRHS: "(?e - ?c) * (?b - ?d) - (?f - ?d) * (?a - ?c) < 0" using horig h1 by (by100 simp)
+    \<comment> \<open>Algebraic identity: (e-a)(b-d) - (b-f)(c-a) = (e-c)(b-d) - (f-d)(a-c).\<close>
+    have halg: "(?e - ?a) * (?b - ?d) - (?b - ?f) * (?c - ?a)
+             = (?e - ?c) * (?b - ?d) - (?f - ?d) * (?a - ?c)"
+      by (by100 argo)
+    show "(vx (\<sigma> k) - vx (\<sigma> i)) * ((-(vy (\<sigma> (Suc i mod ?n)))) - (-(vy (\<sigma> i))))
+        - ((-(vy (\<sigma> k))) - (-(vy (\<sigma> i)))) * (vx (\<sigma> (Suc i mod ?n)) - vx (\<sigma> i)) < 0"
+      using hLHS hRHS halg by (by100 linarith)
+  qed
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
     apply (intro conjI)
