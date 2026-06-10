@@ -607,7 +607,113 @@ lemma reflected_not_on_edges_imp_original:
   shows "\<forall>j<n. \<forall>t\<in>I_set.
         \<rho> p \<noteq> ((1-t) * vx j + t * vx (Suc j mod n),
               (1-t) * vy j + t * vy (Suc j mod n))"
-  sorry
+proof (intro allI impI ballI)
+  fix j t assume hj: "j < n" and ht: "t \<in> I_set"
+  have hn_pos: "0 < n" using hn by (by100 linarith)
+  \<comment> \<open>\\<sigma> properties.\<close>
+  have h\<sigma>_lt: "\<And>i. i < n \<Longrightarrow> \<sigma> i < n" unfolding \<sigma>_def using hn_pos by (rule mod_less_divisor)
+  have h\<sigma>_0: "\<sigma> 0 = 0" unfolding \<sigma>_def by (by100 simp)
+  have h\<sigma>_pos: "\<And>i. 0 < i \<Longrightarrow> i < n \<Longrightarrow> \<sigma> i = n - i" unfolding \<sigma>_def by (by100 simp)
+  have h\<sigma>_inv: "\<And>i. i < n \<Longrightarrow> \<sigma> (\<sigma> i) = i"
+  proof -
+    fix i assume hi: "i < n"
+    show "\<sigma> (\<sigma> i) = i"
+    proof (cases "i = 0")
+      case True thus ?thesis unfolding \<sigma>_def using hn_pos by (by100 simp)
+    next
+      case False
+      have "\<sigma> i = n - i" using h\<sigma>_pos[of i] False hi by (by100 simp)
+      hence "\<sigma> (\<sigma> i) = \<sigma> (n - i)" by (by100 simp)
+      also have "\<dots> = (n - (n - i)) mod n" unfolding \<sigma>_def by (by100 simp)
+      also have "n - (n - i) = i" using hi by (by100 linarith)
+      also have "i mod n = i" using hi by (by100 simp)
+      finally show ?thesis .
+    qed
+  qed
+  have h\<sigma>_suc: "\<And>i. i < n \<Longrightarrow> \<sigma> (Suc i mod n) = n - 1 - i"
+  proof -
+    fix i assume hi: "i < n"
+    show "\<sigma> (Suc i mod n) = n - 1 - i"
+    proof (cases "Suc i < n")
+      case True
+      have "\<sigma> (Suc i mod n) = \<sigma> (Suc i)" using True by (by100 simp)
+      also have "\<dots> = n - Suc i" using h\<sigma>_pos[of "Suc i"] True by (by100 simp)
+      also have "\<dots> = n - 1 - i" using True by (by100 linarith)
+      finally show ?thesis .
+    next
+      case False
+      hence "i = n - 1" using hi by (by100 linarith)
+      have "Suc i = n" using \<open>i = n - 1\<close> hn by (by100 linarith)
+      hence "Suc i mod n = 0" by (by100 simp)
+      hence "\<sigma> (Suc i mod n) = \<sigma> 0" by (by100 simp)
+      also have "\<dots> = 0" using h\<sigma>_0 .
+      also have "(0::nat) = n - 1 - i" using \<open>i = n - 1\<close> by (by100 linarith)
+      finally show ?thesis .
+    qed
+  qed
+  have hSuc_n1j: "Suc (n - 1 - j) mod n = \<sigma> j"
+  proof (cases "j = 0")
+    case True thus ?thesis unfolding \<sigma>_def using hn_pos by (by100 simp)
+  next
+    case False
+    have "Suc (n - 1 - j) = n - j" using hj False by (by100 linarith)
+    moreover have "n - j < n" using False hj by (by100 linarith)
+    ultimately have "Suc (n - 1 - j) mod n = n - j" by (by100 simp)
+    also have "n - j = \<sigma> j" using h\<sigma>_pos[of j] False hj by (by100 simp)
+    finally show ?thesis .
+  qed
+  \<comment> \<open>\\<rho> properties.\<close>
+  have h\<rho>_p: "\<And>a b::real. \<rho> (a, b) = (a, -b)" unfolding \<rho>_def by (by100 simp)
+  have h\<rho>_inv: "\<And>q. \<rho> (\<rho> q) = q" unfolding \<rho>_def by (by100 auto)
+  \<comment> \<open>1-t \\<in> I\\_set.\<close>
+  have h1t: "1-t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 simp)
+  \<comment> \<open>k = n-1-j.\<close>
+  let ?k = "n - 1 - j"
+  have hk: "?k < n" using hj by (by100 linarith)
+  have h_sk: "\<sigma> (Suc ?k mod n) = j" using h\<sigma>_suc[OF hk] hj by (by100 linarith)
+  \<comment> \<open>From hne at (?k, 1-t): p \\<noteq> reflected edge at (?k, 1-t).\<close>
+  from hne[rule_format, OF hk h1t]
+  have hp_ne: "p \<noteq> ((1-(1-t)) * vx (\<sigma> ?k) + (1-t) * vx (\<sigma> (Suc ?k mod n)),
+              (1-(1-t)) * (-(vy (\<sigma> ?k))) + (1-t) * (-(vy (\<sigma> (Suc ?k mod n)))))" .
+  \<comment> \<open>Simplify: 1-(1-t)=t, \\<sigma>(Suc k mod n)=j.\<close>
+  hence hp_ne2: "p \<noteq> (t * vx (\<sigma> ?k) + (1-t) * vx j,
+              t * (-(vy (\<sigma> ?k))) + (1-t) * (-(vy j)))"
+    using h_sk by (by100 simp)
+  show "\<rho> p \<noteq> ((1-t) * vx j + t * vx (Suc j mod n),
+              (1-t) * vy j + t * vy (Suc j mod n))"
+  proof
+    assume heq: "\<rho> p = ((1-t) * vx j + t * vx (Suc j mod n),
+              (1-t) * vy j + t * vy (Suc j mod n))"
+    \<comment> \<open>p = \\<rho>(\\<rho>(p)) = \\<rho>(orig\\_edge(j,t)).\<close>
+    have "p = \<rho> (\<rho> p)" using h\<rho>_inv by (by100 metis)
+    hence "p = \<rho> ((1-t) * vx j + t * vx (Suc j mod n),
+              (1-t) * vy j + t * vy (Suc j mod n))" using heq by (by100 simp)
+    hence hp_val: "p = ((1-t) * vx j + t * vx (Suc j mod n),
+              -((1-t) * vy j + t * vy (Suc j mod n)))"
+      using h\<rho>_p by (by100 simp)
+    \<comment> \<open>Replace Suc j mod n with \\<sigma>(?k) via hSuc\\_n1j.\<close>
+    have h_Sj_sigma: "Suc j mod n = \<sigma> ?k"
+    proof (cases "j < n - 1")
+      case True
+      have "0 < ?k" using True by (by100 linarith)
+      have "\<sigma> ?k = n - ?k" using h\<sigma>_pos[OF \<open>0 < ?k\<close> hk] by (by100 simp)
+      also have "n - ?k = Suc j" using True hj by (by100 linarith)
+      finally show ?thesis using True by (by100 simp)
+    next
+      case False
+      hence "j = n - 1" using hj by (by100 linarith)
+      hence "?k = 0" by (by100 linarith)
+      have "Suc j = n" using \<open>j = n - 1\<close> hn by (by100 linarith)
+      thus ?thesis using \<open>?k = 0\<close> h\<sigma>_0 by (by100 simp)
+    qed
+    from hp_val have "p = ((1-t) * vx j + t * vx (\<sigma> ?k),
+              -((1-t) * vy j + t * vy (\<sigma> ?k)))" using h_Sj_sigma by (by100 simp)
+    \<comment> \<open>Commute and distribute negation to match hp\\_ne2.\<close>
+    hence "p = (t * vx (\<sigma> ?k) + (1-t) * vx j,
+              t * (-(vy (\<sigma> ?k))) + (1-t) * (-(vy j)))" by (by100 argo)
+    with hp_ne2 show False by (by100 simp)
+  qed
+qed
 
 lemma quotient_of_scheme_invert:
   assumes "top1_quotient_of_scheme_on Y TY w"
