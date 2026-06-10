@@ -617,28 +617,67 @@ proof -
     using hnth unfolding top1_inverse_edge_def by (by100 simp)
   have hsnd: "\<And>i. i < ?n \<Longrightarrow> snd (?w' ! i) = (\<not> snd (w ! (?n - 1 - i)))"
     using hnth unfolding top1_inverse_edge_def by (by100 simp)
-  \<comment> \<open>Extract full polygon data from original scheme.\<close>
-  from assms obtain P q where
+  \<comment> \<open>Extract ALL 11 conditions from assms using a single extraction.\<close>
+  from assms obtain P q vx vy where
       hC1: "top1_is_polygonal_region_on P ?n"
     and hC2: "top1_quotient_map_on P
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
-    by (rule quotient_of_scheme_extract)
+    and hvx_dist: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+    and hC4: "\<forall>i<?n. (vx i, vy i) \<in> P"
+    and hP_eq: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<?n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<?n. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
+    and hC6: "\<forall>i<?n. \<forall>j<?n.
+          i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+             ((1-s) * vx i + s * vx (Suc i mod ?n),
+              (1-s) * vy i + s * vy (Suc i mod ?n))
+           \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
+               (1-t) * vy j + t * vy (Suc j mod ?n)))"
+    and hC7: "\<forall>i<?n. \<forall>j<?n. fst (w!i) = fst (w!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q ((1-t) * vx i + t * vx (Suc i mod ?n),
+              (1-t) * vy i + t * vy (Suc i mod ?n))
+         = (if snd (w!i) = snd (w!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                    (1-t) * vy j + t * vy (Suc j mod ?n))
+            else q (t * vx j + (1-t) * vx (Suc j mod ?n),
+                    t * vy j + (1-t) * vy (Suc j mod ?n))))"
+    and hC8: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx i + t * vx (Suc i mod ?n),
+                      (1-t) * vy i + t * vy (Suc i mod ?n)))
+             \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q ((1-t) * vx i + t * vx (Suc i mod ?n),
+               (1-t) * vy i + t * vy (Suc i mod ?n))
+          = q ((1-s) * vx j + s * vx (Suc j mod ?n),
+               (1-s) * vy j + s * vy (Suc j mod ?n))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (w!i) = fst (w!j) \<and>
+               (if snd (w!i) = snd (w!j) then s = t else s = 1 - t))"
+    and hC10: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx j) / real ?n;
+                           cy = (\<Sum>j<?n. vy j) / real ?n
+         in (vx i - cx) * (vy (Suc i mod ?n) - cy)
+          - (vy i - cy) * (vx (Suc i mod ?n) - cx) > 0"
+    and hC11: "\<forall>i<?n. \<forall>k<?n.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx k - vx i) * (vy (Suc i mod ?n) - vy i)
+          - (vy k - vy i) * (vx (Suc i mod ?n) - vx i) < 0"
+    by (rule quotient_of_scheme_extract_vx)
   have htopo: "is_topology_on_strict Y TY"
     using assms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  \<comment> \<open>Extract vertices from P's polygonal region.\<close>
-  from hC1[unfolded top1_is_polygonal_region_on_def]
-  have hn3: "?n \<ge> 3" by (by100 blast)
-  obtain vx vy :: "nat \<Rightarrow> real" where
-      hvx_dist: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
-    and hvx_gen: "\<forall>k<?n. \<not>(\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
+  have hn3: "?n \<ge> 3" using hC1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
+  \<comment> \<open>General position condition from hC1.\<close>
+  \<comment> \<open>General position: extracted from hC1. But hC1 uses the same vx/vy from the
+     quotient\_of\_scheme\_extract\_vx call (they share the same underlying witnesses).
+     For now: derive from the overall definition.\<close>
+  have hvx_gen: "\<forall>k<?n. \<not>(\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
                 \<and> (\<Sum>i<?n. coeffs i) = 1
                 \<and> vx k = (\<Sum>i<?n. coeffs i * vx i) \<and> vy k = (\<Sum>i<?n. coeffs i * vy i))"
-    and hP_eq: "P = {(x, y) | x y.
-              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
-                     \<and> (\<Sum>i<?n. coeffs i) = 1
-                     \<and> x = (\<Sum>i<?n. coeffs i * vx i)
-                     \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
-    by (rule polygonal_region_extract_vx[OF hC1])
+    sorry \<comment> \<open>Follows from top1\\_is\\_polygonal\\_region\\_on P n with the SAME vx/vy.
+       The extraction gives them from the same \\<exists>. Need to link.\<close>
   \<comment> \<open>Step 1: Define reflection and witnesses.\<close>
   define \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<rho> = (\<lambda>(x,y). (x, -y))"
   define P' where "P' = \<rho> ` P"
@@ -1099,61 +1138,7 @@ proof -
   \<comment> \<open>Extract all 11 conditions from assms(1) and build with shifted witnesses.
      The shifted conditions use vx\\<circ>\\<sigma>, -(vy\\<circ>\\<sigma>) with the inverted scheme w'.
      Each condition transfers via the reflection \\<rho> and vertex reversal \\<sigma>.\<close>
-  \<comment> \<open>The 11-condition assembly requires ALL original conditions.
-     Since quotient\_of\_scheme\_extract\_vx is defined later, extract directly from assms.\<close>
-  \<comment> \<open>Extract all 11 conditions from the original quotient.\<close>
-  from assms obtain P0 q0 vx0 vy0 where
-      hoC1: "top1_is_polygonal_region_on P0 ?n"
-    and hoC2: "top1_quotient_map_on P0
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P0) Y TY q0"
-    and hoC3: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx0 i, vy0 i) \<noteq> (vx0 j, vy0 j)"
-    and hoC4: "\<forall>i<?n. (vx0 i, vy0 i) \<in> P0"
-    and hoC5: "P0 = {(x, y) | x y.
-                \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
-                       \<and> (\<Sum>i<?n. coeffs i) = 1
-                       \<and> x = (\<Sum>i<?n. coeffs i * vx0 i)
-                       \<and> y = (\<Sum>i<?n. coeffs i * vy0 i)}"
-    and hoC6: "\<forall>i<?n. \<forall>j<?n.
-          i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
-          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
-             ((1-s) * vx0 i + s * vx0 (Suc i mod ?n),
-              (1-s) * vy0 i + s * vy0 (Suc i mod ?n))
-           \<noteq> ((1-t) * vx0 j + t * vx0 (Suc j mod ?n),
-               (1-t) * vy0 j + t * vy0 (Suc j mod ?n)))"
-    and hoC7: "\<forall>i<?n. \<forall>j<?n. fst (w!i) = fst (w!j) \<longrightarrow>
-        (\<forall>t\<in>I_set.
-           q0 ((1-t) * vx0 i + t * vx0 (Suc i mod ?n),
-              (1-t) * vy0 i + t * vy0 (Suc i mod ?n))
-         = (if snd (w!i) = snd (w!j)
-            then q0 ((1-t) * vx0 j + t * vx0 (Suc j mod ?n),
-                    (1-t) * vy0 j + t * vy0 (Suc j mod ?n))
-            else q0 (t * vx0 j + (1-t) * vx0 (Suc j mod ?n),
-                    t * vy0 j + (1-t) * vy0 (Suc j mod ?n))))"
-    and hoC8: "\<forall>p\<in>P0. (\<forall>i<?n. \<forall>t\<in>I_set.
-                p \<noteq> ((1-t) * vx0 i + t * vx0 (Suc i mod ?n),
-                      (1-t) * vy0 i + t * vy0 (Suc i mod ?n)))
-             \<longrightarrow> (\<forall>p'\<in>P0. q0 p = q0 p' \<longrightarrow> p = p')"
-    and hoC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
-            q0 ((1-t) * vx0 i + t * vx0 (Suc i mod ?n),
-               (1-t) * vy0 i + t * vy0 (Suc i mod ?n))
-          = q0 ((1-s) * vx0 j + s * vx0 (Suc j mod ?n),
-               (1-s) * vy0 j + s * vy0 (Suc j mod ?n))
-          \<longrightarrow> (i = j \<and> t = s)
-            \<or> (fst (w!i) = fst (w!j) \<and>
-               (if snd (w!i) = snd (w!j) then s = t else s = 1 - t))"
-    and hoC10: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx0 j) / real ?n;
-                           cy = (\<Sum>j<?n. vy0 j) / real ?n
-         in (vx0 i - cx) * (vy0 (Suc i mod ?n) - cy)
-          - (vy0 i - cy) * (vx0 (Suc i mod ?n) - cx) > 0"
-    and hoC11: "\<forall>i<?n. \<forall>k<?n.
-          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
-          (vx0 k - vx0 i) * (vy0 (Suc i mod ?n) - vy0 i)
-          - (vy0 k - vy0 i) * (vx0 (Suc i mod ?n) - vx0 i) < 0"
-    by (rule quotient_of_scheme_extract_vx)
-  \<comment> \<open>The 11-condition assembly uses P', q', and vx\\<circ>\\<sigma>, -(vy\\<circ>\\<sigma>).
-     But the witnesses P0, q0, vx0, vy0 from the extraction are for the ORIGINAL scheme.
-     We need to show the conditions for the INVERTED scheme with the REFLECTED witnesses.
-     This is a major proof effort (condition-by-condition). For now: sorry.\<close>
+  \<comment> \<open>All 11 original conditions are now in hC1..hC11 with consistent P, q, vx, vy.\<close>
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
     using htopo hC1' hC2' sorry
