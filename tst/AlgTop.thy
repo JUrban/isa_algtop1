@@ -165,8 +165,12 @@ lemma valid_scheme_relabel_disjoint:
   assumes "inj_on \<rho> (scheme_labels w)"
       and "\<rho> ` (scheme_labels w) \<inter> scheme_labels w = {}"
   shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<rho> l, b)) w)"
-  sorry \<comment> \<open>Induction on card(scheme\\_labels w). Base: empty scheme. Step: rename one label,
-     show modified scheme satisfies IH premises (injectivity and disjointness maintained).\<close>
+  sorry \<comment> \<open>Induction on card(scheme\\_labels w) with less\\_induct.
+     Base: empty labels → w = [] → reflexive.
+     Step: pick l \\<in> labels. Rename l → \\<rho>(l) (fresh by disjointness).
+     Modified scheme has labels (S-\\{l\\}) \\<union> \\{\\<rho>(l)\\}. The remaining rename
+     has fewer labels (\\<rho> restricted to S-\\{l\\}). IH conditions hold:
+     inj\\_on maintained, disjointness maintained. Compose via valid\\_equiv\\_trans.\<close>
 
 \<comment> \<open>Alpha-renaming: a bijective relabeling is a valid equivalence (per expert audit 20).
    Proof: induction on the number of labels that differ from identity.\<close>
