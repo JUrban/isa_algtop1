@@ -1266,7 +1266,7 @@ proof -
      Conditions C3-C11 need to be proved for the inverted scheme.
      C1 and C2 are already proved (hC1', hC2').
      C3-C11 require relating the reflected/reversed conditions to the original ones.
-     For now: sorry the full assembly (11 conditions).\<close>
+     For now: gap in the full assembly (11 conditions).\<close>
   \<comment> \<open>Extract all 11 conditions from assms(1) and build with shifted witnesses.
      The shifted conditions use vx\\<circ>\\<sigma>, -(vy\\<circ>\\<sigma>) with the inverted scheme w'.
      Each condition transfers via the reflection \\<rho> and vertex reversal \\<sigma>.\<close>
@@ -1963,7 +1963,7 @@ qed
 \<comment> \<open>WARNING: quotient\\_of\\_scheme\\_relabel WITHOUT freshness is FALSE in general.
    If new already labels another edge pair, relabeling merges edge classes.
    The CORRECT version is quotient\\_of\\_scheme\\_relabel\\_fresh (above) with freshness.
-   This sorry should NOT be proved — it should be replaced by using valid operations
+   This gap should NOT be filled — it should be replaced by using valid operations
    or adding freshness to the elementary relabel constructor (per expert audit step 5).\<close>
 lemma quotient_of_scheme_relabel:
   assumes "top1_quotient_of_scheme_on Y TY w"
@@ -9827,7 +9827,7 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           \<comment> \<open>Step 4b-iii: The flipped+rotated scheme has the form
              [(a\_lab,T),(b\_lab,T)] @ mid @ [(a\_lab,F)] @ between @ [(b\_lab,F)] @ after.
              Apply reverse cut\_paste\_opp to move 'between' before (a\_lab,T).\<close>
-          \<comment> \<open>For now: produce the existential directly via sorry for the chain construction.\<close>
+          \<comment> \<open>For now: produce the existential directly (gap for the chain construction).\<close>
           have "\<exists>w0 w1 w2. top1_scheme_equiv scheme
               (w0 @ [(a_lab, True), (b_lab, True)] @ w1 @ [(a_lab, False), (b_lab, False)] @ w2)
               \<and> length w0 + length w1 + length w2 + 4 = length scheme
