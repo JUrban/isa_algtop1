@@ -1209,10 +1209,75 @@ proof -
        (1-t)*vx(\\<sigma> i) + t*vx(\\<sigma>(Suc i mod n)) = (1-t)*vx(\\<sigma> i) + t*vx(n-1-i)
        and the corresponding y-component is negated.
        This equals \\<rho>(original edge point at (n-1-i) with parameter (1-t)).\<close>
-  \<comment> \<open>For now: sorry the remaining 6 conditions.\<close>
+  \<comment> \<open>C6': non-adjacent edges don't share interior points.\<close>
+  have hC6': "\<forall>i<?n. \<forall>j<?n.
+          i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+             ((1-s) * vx (\<sigma> i) + s * vx (\<sigma> (Suc i mod ?n)),
+              (1-s) * (-(vy (\<sigma> i))) + s * (-(vy (\<sigma> (Suc i mod ?n)))))
+           \<noteq> ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
+               (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n))))))"
+    sorry
+  \<comment> \<open>C7': identification pattern for the inverted scheme.\<close>
+  have hC7': "\<forall>i<?n. \<forall>j<?n. fst (?w'!i) = fst (?w'!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q' ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+              (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n)))))
+         = (if snd (?w'!i) = snd (?w'!j)
+            then q' ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
+                    (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n)))))
+            else q' (t * vx (\<sigma> j) + (1-t) * vx (\<sigma> (Suc j mod ?n)),
+                    t * (-(vy (\<sigma> j))) + (1-t) * (-(vy (\<sigma> (Suc j mod ?n)))))))"
+    sorry
+  \<comment> \<open>C8': interior injectivity.\<close>
+  have hC8': "\<forall>p\<in>P'. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+                      (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n))))))
+             \<longrightarrow> (\<forall>p'\<in>P'. q' p = q' p' \<longrightarrow> p = p')"
+    sorry
+  \<comment> \<open>C9': boundary injectivity.\<close>
+  have hC9': "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q' ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+               (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n)))))
+          = q' ((1-s) * vx (\<sigma> j) + s * vx (\<sigma> (Suc j mod ?n)),
+               (1-s) * (-(vy (\<sigma> j))) + s * (-(vy (\<sigma> (Suc j mod ?n)))))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (?w'!i) = fst (?w'!j) \<and>
+               (if snd (?w'!i) = snd (?w'!j) then s = t else s = 1 - t))"
+    sorry
+  \<comment> \<open>C10': counterclockwise.\<close>
+  have hC10': "\<forall>i<?n. let cx = (\<Sum>j<?n. vx (\<sigma> j)) / real ?n;
+                           cy = (\<Sum>j<?n. (-(vy (\<sigma> j)))) / real ?n
+         in (vx (\<sigma> i) - cx) * ((-(vy (\<sigma> (Suc i mod ?n)))) - cy)
+          - ((-(vy (\<sigma> i))) - cy) * (vx (\<sigma> (Suc i mod ?n)) - cx) > 0"
+    sorry
+  \<comment> \<open>C11': strict edge-side.\<close>
+  have hC11': "\<forall>i<?n. \<forall>k<?n.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx (\<sigma> k) - vx (\<sigma> i)) * ((-(vy (\<sigma> (Suc i mod ?n)))) - (-(vy (\<sigma> i))))
+          - ((-(vy (\<sigma> k))) - (-(vy (\<sigma> i)))) * (vx (\<sigma> (Suc i mod ?n)) - vx (\<sigma> i)) < 0"
+    sorry
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    using htopo hC1' hC2' hC3' hC4' hC5' sorry
+    apply (intro conjI)
+    apply (rule htopo)
+    apply (rule exI[of _ P'])
+    apply (rule exI[of _ q'])
+    apply (rule exI[of _ "\<lambda>i. vx (\<sigma> i)"])
+    apply (rule exI[of _ "\<lambda>i. -(vy (\<sigma> i))"])
+    apply (intro conjI)
+    subgoal using hC1' by assumption
+    subgoal using hC2' by assumption
+    subgoal using hC3' by assumption
+    subgoal using hC4' by assumption
+    subgoal using hC5' by assumption
+    subgoal using hC6' by assumption
+    subgoal using hC7' by assumption
+    subgoal using hC8' by assumption
+    subgoal using hC9' by assumption
+    subgoal using hC10' by assumption
+    subgoal using hC11' by assumption
+    done
 qed
 
 \<comment> \<open>Relabel with fresh label: proved via same witnesses, fst-equality pattern preserved.\<close>
