@@ -1219,7 +1219,90 @@ proof -
                      \<and> (\<Sum>i<?n. coeffs i) = 1
                      \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
                      \<and> y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))}"
-    sorry \<comment> \<open>Same argument as hconv' in hC1': P'=\\<rho>(P), \\<rho> linear, \\<sigma> permutation.\<close>
+  proof (rule set_eqI)
+    fix p :: "real \<times> real"
+    have hq': "\<And>a b::real. \<rho> (a, b) = (a, -b)" unfolding \<rho>_def by (by100 simp)
+    show "(p \<in> P') = (p \<in> {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i)) \<and> y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))})"
+    proof
+      assume "p \<in> P'"
+      then obtain a b where hab: "(a, b) \<in> P" "p = (a, -b)"
+        unfolding P'_def \<rho>_def by (by100 auto)
+      from hab(1)[unfolded hP_eq] obtain coeffs where
+        hc: "(\<forall>i<?n. coeffs i \<ge> 0)" "(\<Sum>i<?n. coeffs i) = 1"
+            "a = (\<Sum>i<?n. coeffs i * vx i)" "b = (\<Sum>i<?n. coeffs i * vy i)"
+        by (by100 blast)
+      define coeffs' where "coeffs' = coeffs \<circ> \<sigma>"
+      have hnn: "\<forall>i<?n. coeffs' i \<ge> 0"
+        using hc(1) h\<sigma>_lt unfolding coeffs'_def by (by100 fastforce)
+      have hsum: "(\<Sum>i<?n. coeffs' i) = 1"
+        using hsum_reindex[of coeffs] hc(2) unfolding coeffs'_def by (by100 simp)
+      have hvx: "a = (\<Sum>i<?n. coeffs' i * vx (\<sigma> i))"
+        using hsum_reindex[of "\<lambda>j. coeffs j * vx j"] hc(3)
+        unfolding coeffs'_def by (by100 simp)
+      have hvy: "-b = (\<Sum>i<?n. coeffs' i * (-(vy (\<sigma> i))))"
+      proof -
+        have "(\<Sum>i<?n. coeffs' i * (-(vy (\<sigma> i)))) = (\<Sum>i<?n. -(coeffs' i * vy (\<sigma> i)))"
+          by (rule sum.cong) (by100 simp)+
+        also have "\<dots> = -(\<Sum>i<?n. coeffs' i * vy (\<sigma> i))" by (rule sum_negf)
+        finally have "(\<Sum>i<?n. coeffs' i * (-(vy (\<sigma> i)))) = -(\<Sum>i<?n. coeffs' i * vy (\<sigma> i))" .
+        also have "(\<Sum>i<?n. coeffs' i * vy (\<sigma> i)) = (\<Sum>i<?n. coeffs (\<sigma> i) * vy (\<sigma> i))"
+          unfolding coeffs'_def by (by100 simp)
+        also have "\<dots> = (\<Sum>j<?n. coeffs j * vy j)"
+          using hsum_reindex[of "\<lambda>j. coeffs j * vy j"] by (by100 simp)
+        finally show ?thesis using hc(4) by (by100 simp)
+      qed
+      show "p \<in> {(x, y) |x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i)) \<and> y = (\<Sum>i<?n. coeffs i * - vy (\<sigma> i))}"
+        using hab(2) hnn hsum hvx hvy by (by100 blast)
+    next
+      assume "p \<in> {(x, y) |x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i)) \<and> y = (\<Sum>i<?n. coeffs i * - vy (\<sigma> i))}"
+      then obtain x y coeffs where hp: "p = (x, y)"
+        and hc: "(\<forall>i<?n. 0 \<le> coeffs i)" "(\<Sum>i<?n. coeffs i) = 1"
+            "x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))" "y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))"
+        by (by100 blast)
+      define coeffs0 where "coeffs0 = coeffs \<circ> \<sigma>"
+      have hnn: "\<forall>i<?n. coeffs0 i \<ge> 0"
+        using hc(1) h\<sigma>_lt unfolding coeffs0_def by (by100 fastforce)
+      have hsum: "(\<Sum>i<?n. coeffs0 i) = 1"
+        using hsum_reindex[of coeffs] hc(2) unfolding coeffs0_def by (by100 simp)
+      have hx: "x = (\<Sum>i<?n. coeffs0 i * vx i)"
+      proof -
+        have "(\<Sum>i<?n. coeffs0 i * vx i) = (\<Sum>i<?n. coeffs (\<sigma> i) * vx i)"
+          unfolding coeffs0_def by (by100 simp)
+        also have "\<dots> = (\<Sum>j<?n. coeffs (\<sigma> (\<sigma> j)) * vx (\<sigma> j))"
+          using sum.reindex_bij_betw[OF h\<sigma>_bij, of "\<lambda>i. coeffs (\<sigma> i) * vx i"] by (by100 simp)
+        also have "\<dots> = (\<Sum>j<?n. coeffs j * vx (\<sigma> j))"
+        proof (rule sum.cong)
+          fix j assume "j \<in> {..<?n}" thus "coeffs (\<sigma> (\<sigma> j)) * vx (\<sigma> j) = coeffs j * vx (\<sigma> j)"
+            using h\<sigma>_inv by (by100 simp)
+        qed (by100 simp)
+        finally show ?thesis using hc(3) by (by100 simp)
+      qed
+      have hy_neg: "-y = (\<Sum>i<?n. coeffs0 i * vy i)"
+      proof -
+        have "y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))" using hc(4) .
+        hence "-y = -(\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))" by (by100 simp)
+        also have "(\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i)))) = (\<Sum>i<?n. -(coeffs i * vy (\<sigma> i)))"
+          by (rule sum.cong) (by100 simp)+
+        also have "\<dots> = -(\<Sum>i<?n. coeffs i * vy (\<sigma> i))" by (rule sum_negf)
+        finally have "-y = (\<Sum>i<?n. coeffs i * vy (\<sigma> i))" by (by100 linarith)
+        also have "\<dots> = (\<Sum>i<?n. coeffs (\<sigma> (\<sigma> i)) * vy (\<sigma> i))"
+        proof (rule sum.cong)
+          fix i assume "i \<in> {..<?n}" thus "coeffs i * vy (\<sigma> i) = coeffs (\<sigma> (\<sigma> i)) * vy (\<sigma> i)"
+            using h\<sigma>_inv by (by100 simp)
+        qed (by100 simp)
+        also have "\<dots> = (\<Sum>j<?n. coeffs (\<sigma> j) * vy j)"
+          using sum.reindex_bij_betw[OF h\<sigma>_bij, of "\<lambda>i. coeffs (\<sigma> i) * vy i"] by (by100 simp)
+        finally show ?thesis unfolding coeffs0_def by (by100 simp)
+      qed
+      have "(x, -y) \<in> P" unfolding hP_eq using hnn hsum hx hy_neg by (by100 blast)
+      hence "\<rho> (x, -y) \<in> P'" unfolding P'_def by (by100 blast)
+      moreover have "\<rho> (x, -y) = (x, y)" unfolding \<rho>_def by (by100 simp)
+      ultimately show "p \<in> P'" using hp by (by100 simp)
+    qed
+  qed
   \<comment> \<open>C6'-C11': For these conditions, the key insight is:
      New edge i at parameter t corresponds to \\<rho>(original edge (n-1-i) at parameter (1-t)).
      The label at new position i comes from original position (n-1-i).
