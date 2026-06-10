@@ -574,10 +574,19 @@ proof -
   \<comment> \<open>vx'/vy' in terms of \\<rho> and \\<sigma>.\<close>
   have hv'_eq: "\<And>i. (vx' i, vy' i) = (vx (\<sigma> i), -(vy (\<sigma> i)))"
     unfolding vx'_def vy'_def by (by100 simp)
-  \<comment> \<open>Step 2: Show all 11 conditions for w' with witnesses P', q', vx', vy'.\<close>
+  \<comment> \<open>Step 2: Show all 11 conditions for w' with witnesses P', q', vx', vy'.
+     Each condition transfers via \\<rho> reflection and vertex reversal.\<close>
+  have hn_pos: "0 < ?n"
+    using hC1 unfolding top1_is_polygonal_region_on_def by (by100 linarith)
+  \<comment> \<open>C1: P' is a polygonal region.\<close>
+  have hC1': "top1_is_polygonal_region_on P' ?n" sorry
+  \<comment> \<open>C2: q' is a quotient map from P' to Y.\<close>
+  have hC2': "top1_quotient_map_on P' (subspace_topology UNIV
+      (product_topology_on top1_open_sets top1_open_sets) P') Y TY q'" sorry
+  \<comment> \<open>Assemble: the inverted scheme has the same quotient space with reflected witnesses.\<close>
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    sorry
+    using htopo hC1' hC2' sorry
 qed
 
 \<comment> \<open>Relabel with fresh label: proved via same witnesses, fst-equality pattern preserved.\<close>
