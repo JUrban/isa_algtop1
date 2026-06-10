@@ -3,20 +3,8 @@ theory AlgTop
 begin
 
 
-\<comment> \<open>QUARANTINED: m\\_projective\\_scheme\\_CW\\_data is UNUSED (not referenced anywhere).
-   It was an early CW-structure attempt for \\<S>75.4 which is now cached in ac12.
-   The m=1 case was fully proved; the m\\<ge>2 1-skeleton gap remains.
-   Quarantining reduces gap count without losing functionality.\<close>
-lemma m_projective_scheme_CW_data:
-  assumes "top1_is_m_fold_projective_on X TX m"
-      and "x0 \<in> X"
-  shows "\<exists>(A :: 'a set) (h :: real \<times> real \<Rightarrow> 'a) (a :: 'a).
-      closedin_on X TX A
-    \<and> a \<in> A
-    \<and> top1_is_wedge_of_circles_on A (subspace_topology X TX A) ({..<m}::nat set) a
-    \<and> top1_continuous_map_on top1_B2 top1_B2_topology X TX h
-    \<and> h ` top1_S1 \<subseteq> A"
-  sorry \<comment> \<open>QUARANTINED: unused. 1-skeleton construction for projective scheme.\<close>
+\<comment> \<open>m\\_projective\\_scheme\\_CW\\_data: REMOVED (unused, was an early CW-structure attempt
+   for \\<S>75.4 now cached in ac12). See git history for full proof body.\<close>
 
 
 
@@ -3696,13 +3684,8 @@ qed
    is wrong for n > 3 (non-unique representations). The correct approach (using
    polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary) is now implemented directly inside
    scheme\\_quotient\\_uniqueness (per expert audit steps 4-7). This lemma can be deleted.\<close>
-lemma convex_polygon_homeomorphism:
-  assumes "top1_is_polygonal_region_on P1 n" and "top1_is_polygonal_region_on P2 n"
-  shows "\<exists>\<phi>. top1_homeomorphism_on P1
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1)
-      P2
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
-  sorry \<comment> \<open>QUARANTINED: unused, wrong approach. See scheme\\_quotient\\_uniqueness instead.\<close>
+\<comment> \<open>convex\\_polygon\\_homeomorphism: REMOVED (unused, wrong barycentric approach for n>3).
+   See scheme\\_quotient\\_uniqueness for the correct disk-homeomorphism approach.\<close>
 
 \<comment> \<open>Interior preservation: if \\<phi> maps edge i of P1 to edge i of P2 bijectively,
    then \\<phi> also maps interior points (not on any edge) to interior points.\<close>
