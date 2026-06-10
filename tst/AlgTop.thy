@@ -643,166 +643,6 @@ proof (intro allI impI)
   from assms(2)[rule_format, OF hlt] show "(vx ((i+k) mod n), vy ((i+k) mod n)) \<in> P" .
 qed
 
-\<comment> \<open>Generalized transfer: quotient\_of\_scheme\_on is preserved when the EQUALITY PATTERN
-   of fst/snd is preserved via a bijection sigma on vertex indices.
-   Witnesses: vx'(i) = vx(sigma(i)), vy'(i) = vy(sigma(i)).
-   Covers rotate (cyclic shift), invert (reversal), relabel (injective rename).\<close>
-lemma quotient_of_scheme_transfer_bij:
-  assumes "top1_quotient_of_scheme_on Y TY w"
-      and "length w' = length w"
-      and "bij_betw \<sigma> {..<length w} {..<length w}"
-      and "\<And>i. i < length w \<Longrightarrow> fst (w'!i) = fst (w!(\<sigma> i))"
-      and "\<And>i. i < length w \<Longrightarrow> snd (w'!i) = snd (w!(\<sigma> i))"
-      and "\<And>i. i < length w \<Longrightarrow> Suc (\<sigma> i) mod (length w) = \<sigma> (Suc i mod (length w))"
-  shows "top1_quotient_of_scheme_on Y TY w'"
-proof -
-  \<comment> \<open>Key: fst equality pattern is preserved via sigma.\<close>
-  have hfst_eq: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow>
-      (fst (w'!i) = fst (w'!j)) = (fst (w!(\<sigma> i)) = fst (w!(\<sigma> j)))"
-    using assms(4) by (by100 metis)
-  have hsnd_eq: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow>
-      fst (w!(\<sigma> i)) = fst (w!(\<sigma> j)) \<Longrightarrow>
-      (snd (w'!i) = snd (w'!j)) = (snd (w!(\<sigma> i)) = snd (w!(\<sigma> j)))"
-    using assms(5) by (by100 metis)
-  \<comment> \<open>Since sigma is a bijection, (fst(w!(sigma i)) = fst(w!(sigma j))) = (fst(w!i') = fst(w!j'))
-     where i'=sigma(i), j'=sigma(j). So the fst/snd equality pattern over w' at positions i,j
-     equals the pattern over w at positions sigma(i), sigma(j).\<close>
-  have h\<sigma>_lt: "\<And>i. i < length w \<Longrightarrow> \<sigma> i < length w"
-    using assms(3) unfolding bij_betw_def by (by100 blast)
-  have h\<sigma>_inj: "inj_on \<sigma> {..<length w}"
-    using assms(3) unfolding bij_betw_def by (by100 blast)
-  \<comment> \<open>Extract topology.\<close>
-  from assms(1) have htopo: "is_topology_on_strict Y TY"
-    unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  \<comment> \<open>The quotient has the form: is\_topo \\<and> (\\<exists>P q vx vy. C1\\<and>...\\<and>C11).
-     Extract the existential part, then rebuild with shifted witnesses.\<close>
-  \<comment> \<open>Key idea: define w\_sigma = map (\\<lambda>i. w!(sigma i)) [0..<n], which is w permuted by sigma.
-     Then w\_sigma has the SAME identification pattern as w (just at different positions).
-     And w' has fst/snd matching w\_sigma at each position (by assms 4,5).
-     So quotient\_of\_scheme\_transfer can convert from w\_sigma to w'.
-     And w and w\_sigma have the same quotient (sigma is just a relabeling of vertex positions).\<close>
-  \<comment> \<open>For now: sorry.\<close>
-  from assms show ?thesis sorry
-qed
-
-\<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
-   Same polygon P. Shifted vertices: vx'(i) = vx((i+k) mod n).
-   The convex hull is invariant. Edge identification shifts consistently.\<close>
-lemma quotient_of_scheme_rotate:
-  assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
-  shows "top1_quotient_of_scheme_on Y TY (v @ u)"
-proof -
-  let ?n = "length u + length v"
-  let ?k = "length u"
-  have hlen: "length (v @ u) = length (u @ v)" by (by100 simp)
-  \<comment> \<open>Key shift property.\<close>
-  have hshift: "\<And>i. i < ?n \<Longrightarrow> (v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)"
-  proof -
-    fix i assume hi: "i < ?n"
-    show "(v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)"
-    proof (cases "i < length v")
-      case True
-      hence "(v @ u) ! i = v ! i" using nth_append[of v u i] by (by100 simp)
-      moreover have "(i + ?k) mod ?n = i + ?k"
-        using True by (by100 simp)
-      moreover have "(u @ v) ! (i + ?k) = v ! i"
-        using True nth_append[of u v "i + ?k"] by (by100 simp)
-      ultimately show ?thesis by (by100 simp)
-    next
-      case False
-      hence hge: "i \<ge> length v" by (by100 linarith)
-      hence "(v @ u) ! i = u ! (i - length v)" using nth_append[of v u i] by (by100 simp)
-      moreover have "(i + ?k) mod ?n = i - length v"
-      proof -
-        have "i + ?k = ?n + (i - length v)" using hge by (by100 linarith)
-        hence "(i + ?k) mod ?n = (?n + (i - length v)) mod ?n" by (by100 metis)
-        also have "\<dots> = (i - length v) mod ?n" by (by100 simp)
-        also have "\<dots> = i - length v" using hi hge by (by100 simp)
-        finally show ?thesis .
-      qed
-      moreover have "(u @ v) ! (i - length v) = u ! (i - length v)"
-      proof -
-        have "i - length v < length u" using hi hge by (by100 linarith)
-        thus ?thesis using nth_append[of u v "i - length v"] by (by100 simp)
-      qed
-      ultimately show ?thesis by (by100 simp)
-    qed
-  qed
-  \<comment> \<open>Apply the generalized bij transfer with sigma(i) = (i + length u) mod n.\<close>
-  have hn_pos: "(0::nat) < ?n"
-  proof -
-    from assms obtain P0 q0 where "top1_is_polygonal_region_on P0 (length (u @ v))"
-      by (rule quotient_of_scheme_extract)
-    hence h3: "length (u @ v) \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
-    have "length (u @ v) = length u + length v" by (by100 simp)
-    with h3 show ?thesis by (by100 linarith)
-  qed
-  define \<sigma> where "\<sigma> = (\<lambda>i. (i + ?k) mod ?n)"
-  have hbij: "bij_betw \<sigma> {..<?n} {..<?n}"
-  proof -
-    have hinj: "inj_on \<sigma> {..<?n}"
-    proof (rule inj_onI)
-      fix x y assume "x \<in> {..<?n}" "y \<in> {..<?n}" "\<sigma> x = \<sigma> y"
-      from this have "x < ?n" "y < ?n" "(x + ?k) mod ?n = (y + ?k) mod ?n" unfolding \<sigma>_def by (by100 simp)+
-      thus "x = y" using shift_mod_inj[OF hn_pos] by (by100 metis)
-    qed
-    have himg: "\<sigma> ` {..<?n} \<subseteq> {..<?n}"
-    proof
-      fix y assume "y \<in> \<sigma> ` {..<?n}"
-      then obtain x where "x < ?n" "y = \<sigma> x" by (by100 blast)
-      hence "y = (x + ?k) mod ?n" unfolding \<sigma>_def by (by100 simp)
-      moreover have "(x + ?k) mod ?n < ?n" by (rule mod_less_n[OF hn_pos])
-      ultimately have "y < ?n" by (by100 simp)
-      thus "y \<in> {..<?n}" by (by100 simp)
-    qed
-    have hcard: "card (\<sigma> ` {..<?n}) = card {..<?n}"
-      using card_image[OF hinj] by (by100 simp)
-    have "\<sigma> ` {..<?n} = {..<?n}"
-      using card_subset_eq[OF finite_lessThan himg hcard] by (by100 blast)
-    thus ?thesis unfolding bij_betw_def using hinj by (by100 blast)
-  qed
-  have hfst_bij: "\<And>i. i < ?n \<Longrightarrow> fst ((v @ u)!i) = fst ((u @ v)!(\<sigma> i))"
-  proof -
-    fix i assume "i < ?n"
-    from hshift[OF this] have "(v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)" .
-    thus "fst ((v @ u)!i) = fst ((u @ v)!(\<sigma> i))" unfolding \<sigma>_def by (by100 simp)
-  qed
-  have hsnd_bij: "\<And>i. i < ?n \<Longrightarrow> snd ((v @ u)!i) = snd ((u @ v)!(\<sigma> i))"
-  proof -
-    fix i assume "i < ?n"
-    from hshift[OF this] have "(v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)" .
-    thus "snd ((v @ u)!i) = snd ((u @ v)!(\<sigma> i))" unfolding \<sigma>_def by (by100 simp)
-  qed
-  have hsuc_bij: "\<And>i. i < ?n \<Longrightarrow> Suc (\<sigma> i) mod ?n = \<sigma> (Suc i mod ?n)"
-  proof -
-    fix i assume "i < ?n"
-    have "Suc (\<sigma> i) mod ?n = Suc ((i + ?k) mod ?n) mod ?n" unfolding \<sigma>_def by (by100 simp)
-    also have "\<dots> = (Suc i + ?k) mod ?n" using suc_mod_shift[OF hn_pos] .
-    also have "\<dots> = (Suc i mod ?n + ?k) mod ?n" by (rule mod_add_left)
-    also have "\<dots> = \<sigma> (Suc i mod ?n)" unfolding \<sigma>_def by (by100 simp)
-    finally show "Suc (\<sigma> i) mod ?n = \<sigma> (Suc i mod ?n)" .
-  qed
-  \<comment> \<open>Need length (u@v) = length u + length v for unification.\<close>
-  have hlen_uv: "length (u @ v) = ?n" by (by100 simp)
-  have hbij': "bij_betw \<sigma> {..<length (u @ v)} {..<length (u @ v)}"
-    using hbij hlen_uv by (by100 simp)
-  have hfst_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> fst ((v @ u) ! i) = fst ((u @ v) ! (\<sigma> i))"
-    using hfst_bij hlen_uv by (by100 simp)
-  have hsnd_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> snd ((v @ u) ! i) = snd ((u @ v) ! (\<sigma> i))"
-    using hsnd_bij hlen_uv by (by100 simp)
-  have hsuc_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> Suc (\<sigma> i) mod length (u @ v) = \<sigma> (Suc i mod length (u @ v))"
-    using hsuc_bij hlen_uv by (by100 simp)
-  have h_inst: "top1_quotient_of_scheme_on Y TY (u @ v) \<Longrightarrow>
-      length (v @ u) = length (u @ v) \<Longrightarrow>
-      bij_betw \<sigma> {..<length (u @ v)} {..<length (u @ v)} \<Longrightarrow>
-      (\<And>i. i < length (u @ v) \<Longrightarrow> fst ((v @ u) ! i) = fst ((u @ v) ! (\<sigma> i))) \<Longrightarrow>
-      (\<And>i. i < length (u @ v) \<Longrightarrow> snd ((v @ u) ! i) = snd ((u @ v) ! (\<sigma> i))) \<Longrightarrow>
-      (\<And>i. i < length (u @ v) \<Longrightarrow> Suc (\<sigma> i) mod length (u @ v) = \<sigma> (Suc i mod length (u @ v))) \<Longrightarrow>
-      top1_quotient_of_scheme_on Y TY (v @ u)"
-    by (rule quotient_of_scheme_transfer_bij)
-  show ?thesis using h_inst[OF assms hlen hbij' hfst_bij' hsnd_bij' hsuc_bij'] .
-qed
-
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
    and the same snd-equality pattern for same-label pairs, then quotient\_of\_scheme\_on
    is equivalent for both. This factors out the geometric conditions from the scheme-specific ones.\<close>
@@ -947,6 +787,193 @@ proof -
   show ?thesis
     by (rule quotient_of_scheme_transfer[OF assms hlen hfst hsnd_eq])
 qed
+\<comment> \<open>Generalized transfer: quotient\_of\_scheme\_on is preserved when the EQUALITY PATTERN
+   of fst/snd is preserved via a bijection sigma on vertex indices.
+   Witnesses: vx'(i) = vx(sigma(i)), vy'(i) = vy(sigma(i)).
+   Covers rotate (cyclic shift), invert (reversal), relabel (injective rename).\<close>
+lemma quotient_of_scheme_transfer_bij:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+      and "length w' = length w"
+      and "bij_betw \<sigma> {..<length w} {..<length w}"
+      and "\<And>i. i < length w \<Longrightarrow> fst (w'!i) = fst (w!(\<sigma> i))"
+      and "\<And>i. i < length w \<Longrightarrow> snd (w'!i) = snd (w!(\<sigma> i))"
+      and "\<And>i. i < length w \<Longrightarrow> Suc (\<sigma> i) mod (length w) = \<sigma> (Suc i mod (length w))"
+  shows "top1_quotient_of_scheme_on Y TY w'"
+proof -
+  \<comment> \<open>Key: fst equality pattern is preserved via sigma.\<close>
+  have hfst_eq: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow>
+      (fst (w'!i) = fst (w'!j)) = (fst (w!(\<sigma> i)) = fst (w!(\<sigma> j)))"
+    using assms(4) by (by100 metis)
+  have hsnd_eq: "\<And>i j. i < length w \<Longrightarrow> j < length w \<Longrightarrow>
+      fst (w!(\<sigma> i)) = fst (w!(\<sigma> j)) \<Longrightarrow>
+      (snd (w'!i) = snd (w'!j)) = (snd (w!(\<sigma> i)) = snd (w!(\<sigma> j)))"
+    using assms(5) by (by100 metis)
+  \<comment> \<open>Since sigma is a bijection, (fst(w!(sigma i)) = fst(w!(sigma j))) = (fst(w!i') = fst(w!j'))
+     where i'=sigma(i), j'=sigma(j). So the fst/snd equality pattern over w' at positions i,j
+     equals the pattern over w at positions sigma(i), sigma(j).\<close>
+  have h\<sigma>_lt: "\<And>i. i < length w \<Longrightarrow> \<sigma> i < length w"
+    using assms(3) unfolding bij_betw_def by (by100 blast)
+  have h\<sigma>_inj: "inj_on \<sigma> {..<length w}"
+    using assms(3) unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Extract topology.\<close>
+  from assms(1) have htopo: "is_topology_on_strict Y TY"
+    unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>The quotient has the form: is\_topo \\<and> (\\<exists>P q vx vy. C1\\<and>...\\<and>C11).
+     Extract the existential part, then rebuild with shifted witnesses.\<close>
+  \<comment> \<open>Key idea: define w\_sigma = map (\\<lambda>i. w!(sigma i)) [0..<n], which is w permuted by sigma.
+     Then w\_sigma has the SAME identification pattern as w (just at different positions).
+     And w' has fst/snd matching w\_sigma at each position (by assms 4,5).
+     So quotient\_of\_scheme\_transfer can convert from w\_sigma to w'.
+     And w and w\_sigma have the same quotient (sigma is just a relabeling of vertex positions).\<close>
+  have h\<sigma>_lt: "\<And>i. i < length w \<Longrightarrow> \<sigma> i < length w"
+    using assms(3) unfolding bij_betw_def by (by100 blast)
+  \<comment> \<open>Two-step: w \\<to> w\_sigma \\<to> w'.\<close>
+  define w_\<sigma> where "w_\<sigma> = map (\<lambda>i. w ! (\<sigma> i)) [0..<length w]"
+  have hlen_w\<sigma>: "length w_\<sigma> = length w" unfolding w_\<sigma>_def by (by100 simp)
+  have hnth_w\<sigma>: "\<And>i. i < length w \<Longrightarrow> w_\<sigma> ! i = w ! (\<sigma> i)"
+    unfolding w_\<sigma>_def by (by100 simp)
+  \<comment> \<open>Step 1: w \\<to> w\_sigma (reindexing — sorry, the hard geometric step).\<close>
+  have h_step1: "top1_quotient_of_scheme_on Y TY w_\<sigma>" using assms(1) sorry
+  \<comment> \<open>Step 2: w\_sigma \\<to> w' via original transfer (fst/snd match at each position).\<close>
+  have hfst_ws: "\<And>i. i < length w_\<sigma> \<Longrightarrow> fst (w'!i) = fst (w_\<sigma>!i)"
+  proof -
+    fix i assume "i < length w_\<sigma>"
+    hence hi: "i < length w" using hlen_w\<sigma> by (by100 simp)
+    have "fst (w'!i) = fst (w!(\<sigma> i))" using assms(4)[OF hi] .
+    also have "\<dots> = fst (w_\<sigma>!i)" using hnth_w\<sigma>[OF hi] by (by100 simp)
+    finally show "fst (w'!i) = fst (w_\<sigma>!i)" .
+  qed
+  have hsnd_ws: "\<And>i j. \<lbrakk>i < length w_\<sigma>; j < length w_\<sigma>; fst (w_\<sigma>!i) = fst (w_\<sigma>!j)\<rbrakk> \<Longrightarrow>
+      (snd (w'!i) = snd (w'!j)) = (snd (w_\<sigma>!i) = snd (w_\<sigma>!j))"
+  proof -
+    fix i j assume hi: "i < length w_\<sigma>" and hj: "j < length w_\<sigma>"
+    have hi': "i < length w" using hi hlen_w\<sigma> by (by100 simp)
+    have hj': "j < length w" using hj hlen_w\<sigma> by (by100 simp)
+    show "(snd (w'!i) = snd (w'!j)) = (snd (w_\<sigma>!i) = snd (w_\<sigma>!j))"
+      using assms(5)[OF hi'] assms(5)[OF hj'] hnth_w\<sigma>[OF hi'] hnth_w\<sigma>[OF hj'] by (by100 metis)
+  qed
+  show ?thesis
+    by (rule quotient_of_scheme_transfer[OF h_step1 _ hfst_ws hsnd_ws]) (simp add: assms(2) hlen_w\<sigma>)
+qed
+
+\<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
+   Same polygon P. Shifted vertices: vx'(i) = vx((i+k) mod n).
+   The convex hull is invariant. Edge identification shifts consistently.\<close>
+lemma quotient_of_scheme_rotate:
+  assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
+  shows "top1_quotient_of_scheme_on Y TY (v @ u)"
+proof -
+  let ?n = "length u + length v"
+  let ?k = "length u"
+  have hlen: "length (v @ u) = length (u @ v)" by (by100 simp)
+  \<comment> \<open>Key shift property.\<close>
+  have hshift: "\<And>i. i < ?n \<Longrightarrow> (v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)"
+  proof -
+    fix i assume hi: "i < ?n"
+    show "(v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)"
+    proof (cases "i < length v")
+      case True
+      hence "(v @ u) ! i = v ! i" using nth_append[of v u i] by (by100 simp)
+      moreover have "(i + ?k) mod ?n = i + ?k"
+        using True by (by100 simp)
+      moreover have "(u @ v) ! (i + ?k) = v ! i"
+        using True nth_append[of u v "i + ?k"] by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    next
+      case False
+      hence hge: "i \<ge> length v" by (by100 linarith)
+      hence "(v @ u) ! i = u ! (i - length v)" using nth_append[of v u i] by (by100 simp)
+      moreover have "(i + ?k) mod ?n = i - length v"
+      proof -
+        have "i + ?k = ?n + (i - length v)" using hge by (by100 linarith)
+        hence "(i + ?k) mod ?n = (?n + (i - length v)) mod ?n" by (by100 metis)
+        also have "\<dots> = (i - length v) mod ?n" by (by100 simp)
+        also have "\<dots> = i - length v" using hi hge by (by100 simp)
+        finally show ?thesis .
+      qed
+      moreover have "(u @ v) ! (i - length v) = u ! (i - length v)"
+      proof -
+        have "i - length v < length u" using hi hge by (by100 linarith)
+        thus ?thesis using nth_append[of u v "i - length v"] by (by100 simp)
+      qed
+      ultimately show ?thesis by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>Apply the generalized bij transfer with sigma(i) = (i + length u) mod n.\<close>
+  have hn_pos: "(0::nat) < ?n"
+  proof -
+    from assms obtain P0 q0 where "top1_is_polygonal_region_on P0 (length (u @ v))"
+      by (rule quotient_of_scheme_extract)
+    hence h3: "length (u @ v) \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
+    have "length (u @ v) = length u + length v" by (by100 simp)
+    with h3 show ?thesis by (by100 linarith)
+  qed
+  define \<sigma> where "\<sigma> = (\<lambda>i. (i + ?k) mod ?n)"
+  have hbij: "bij_betw \<sigma> {..<?n} {..<?n}"
+  proof -
+    have hinj: "inj_on \<sigma> {..<?n}"
+    proof (rule inj_onI)
+      fix x y assume "x \<in> {..<?n}" "y \<in> {..<?n}" "\<sigma> x = \<sigma> y"
+      from this have "x < ?n" "y < ?n" "(x + ?k) mod ?n = (y + ?k) mod ?n" unfolding \<sigma>_def by (by100 simp)+
+      thus "x = y" using shift_mod_inj[OF hn_pos] by (by100 metis)
+    qed
+    have himg: "\<sigma> ` {..<?n} \<subseteq> {..<?n}"
+    proof
+      fix y assume "y \<in> \<sigma> ` {..<?n}"
+      then obtain x where "x < ?n" "y = \<sigma> x" by (by100 blast)
+      hence "y = (x + ?k) mod ?n" unfolding \<sigma>_def by (by100 simp)
+      moreover have "(x + ?k) mod ?n < ?n" by (rule mod_less_n[OF hn_pos])
+      ultimately have "y < ?n" by (by100 simp)
+      thus "y \<in> {..<?n}" by (by100 simp)
+    qed
+    have hcard: "card (\<sigma> ` {..<?n}) = card {..<?n}"
+      using card_image[OF hinj] by (by100 simp)
+    have "\<sigma> ` {..<?n} = {..<?n}"
+      using card_subset_eq[OF finite_lessThan himg hcard] by (by100 blast)
+    thus ?thesis unfolding bij_betw_def using hinj by (by100 blast)
+  qed
+  have hfst_bij: "\<And>i. i < ?n \<Longrightarrow> fst ((v @ u)!i) = fst ((u @ v)!(\<sigma> i))"
+  proof -
+    fix i assume "i < ?n"
+    from hshift[OF this] have "(v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)" .
+    thus "fst ((v @ u)!i) = fst ((u @ v)!(\<sigma> i))" unfolding \<sigma>_def by (by100 simp)
+  qed
+  have hsnd_bij: "\<And>i. i < ?n \<Longrightarrow> snd ((v @ u)!i) = snd ((u @ v)!(\<sigma> i))"
+  proof -
+    fix i assume "i < ?n"
+    from hshift[OF this] have "(v @ u) ! i = (u @ v) ! ((i + ?k) mod ?n)" .
+    thus "snd ((v @ u)!i) = snd ((u @ v)!(\<sigma> i))" unfolding \<sigma>_def by (by100 simp)
+  qed
+  have hsuc_bij: "\<And>i. i < ?n \<Longrightarrow> Suc (\<sigma> i) mod ?n = \<sigma> (Suc i mod ?n)"
+  proof -
+    fix i assume "i < ?n"
+    have "Suc (\<sigma> i) mod ?n = Suc ((i + ?k) mod ?n) mod ?n" unfolding \<sigma>_def by (by100 simp)
+    also have "\<dots> = (Suc i + ?k) mod ?n" using suc_mod_shift[OF hn_pos] .
+    also have "\<dots> = (Suc i mod ?n + ?k) mod ?n" by (rule mod_add_left)
+    also have "\<dots> = \<sigma> (Suc i mod ?n)" unfolding \<sigma>_def by (by100 simp)
+    finally show "Suc (\<sigma> i) mod ?n = \<sigma> (Suc i mod ?n)" .
+  qed
+  \<comment> \<open>Need length (u@v) = length u + length v for unification.\<close>
+  have hlen_uv: "length (u @ v) = ?n" by (by100 simp)
+  have hbij': "bij_betw \<sigma> {..<length (u @ v)} {..<length (u @ v)}"
+    using hbij hlen_uv by (by100 simp)
+  have hfst_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> fst ((v @ u) ! i) = fst ((u @ v) ! (\<sigma> i))"
+    using hfst_bij hlen_uv by (by100 simp)
+  have hsnd_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> snd ((v @ u) ! i) = snd ((u @ v) ! (\<sigma> i))"
+    using hsnd_bij hlen_uv by (by100 simp)
+  have hsuc_bij': "\<And>i. i < length (u @ v) \<Longrightarrow> Suc (\<sigma> i) mod length (u @ v) = \<sigma> (Suc i mod length (u @ v))"
+    using hsuc_bij hlen_uv by (by100 simp)
+  have h_inst: "top1_quotient_of_scheme_on Y TY (u @ v) \<Longrightarrow>
+      length (v @ u) = length (u @ v) \<Longrightarrow>
+      bij_betw \<sigma> {..<length (u @ v)} {..<length (u @ v)} \<Longrightarrow>
+      (\<And>i. i < length (u @ v) \<Longrightarrow> fst ((v @ u) ! i) = fst ((u @ v) ! (\<sigma> i))) \<Longrightarrow>
+      (\<And>i. i < length (u @ v) \<Longrightarrow> snd ((v @ u) ! i) = snd ((u @ v) ! (\<sigma> i))) \<Longrightarrow>
+      (\<And>i. i < length (u @ v) \<Longrightarrow> Suc (\<sigma> i) mod length (u @ v) = \<sigma> (Suc i mod length (u @ v))) \<Longrightarrow>
+      top1_quotient_of_scheme_on Y TY (v @ u)"
+    by (rule quotient_of_scheme_transfer_bij)
+  show ?thesis using h_inst[OF assms hlen hbij' hfst_bij' hsnd_bij' hsuc_bij'] .
+qed
+
 
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
    If Y is a quotient of scheme s, and s \<rightarrow> t via an elementary operation,
