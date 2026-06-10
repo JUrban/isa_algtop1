@@ -3747,42 +3747,184 @@ lemma scheme_quotient_uniqueness:
       and "top1_quotient_of_scheme_on Y2 TY2 scheme"
   shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
 proof -
-  \<comment> \<open>Extract full polygon data from both quotients (including vertices and identification).\<close>
   let ?n = "length scheme"
-  from assms(3) obtain P1 q1 where
-      hP1: "top1_is_polygonal_region_on P1 ?n"
-      and hq1: "top1_quotient_map_on P1
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y1 TY1 q1"
-    by (rule quotient_of_scheme_extract)
-  from assms(4) obtain P2 q2 where
-      hP2: "top1_is_polygonal_region_on P2 ?n"
-      and hq2: "top1_quotient_map_on P2
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) Y2 TY2 q2"
-    by (rule quotient_of_scheme_extract)
-  \<comment> \<open>Get homeomorphism \\<phi>: P1 \\<to> P2 from convex\\_polygon\\_homeomorphism.\<close>
-  from convex_polygon_homeomorphism[OF hP1 hP2]
-  obtain \<phi> where h\<phi>: "top1_homeomorphism_on P1
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) P2
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
-    by (by100 blast)
-  \<comment> \<open>q2 \\<circ> \\<phi>: P1 \\<to> Y2 is a quotient map.\<close>
-  have h\<phi>_quot: "top1_quotient_map_on P1
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) P2
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
+  let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+  \<comment> \<open>Step 1: Extract ALL 11 conditions from both quotients.\<close>
+  from assms(3) obtain P1 q1 vx1 vy1 where
+      hC1_1: "top1_is_polygonal_region_on P1 ?n"
+    and hC2_1: "top1_quotient_map_on P1 (?TP P1) Y1 TY1 q1"
+    and hC3_1: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx1 i, vy1 i) \<noteq> (vx1 j, vy1 j)"
+    and hC4_1: "\<forall>i<?n. (vx1 i, vy1 i) \<in> P1"
+    and hC5_1: "P1 = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx1 i)
+                     \<and> y = (\<Sum>i<?n. coeffs i * vy1 i)}"
+    and hC7_1: "\<forall>i<?n. \<forall>j<?n. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+              (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q1 ((1-t) * vx1 j + t * vx1 (Suc j mod ?n),
+                    (1-t) * vy1 j + t * vy1 (Suc j mod ?n))
+            else q1 (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
+                    t * vy1 j + (1-t) * vy1 (Suc j mod ?n))))"
+    and hC8_1: "\<forall>p\<in>P1. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+                      (1-t) * vy1 i + t * vy1 (Suc i mod ?n)))
+             \<longrightarrow> (\<forall>p'\<in>P1. q1 p = q1 p' \<longrightarrow> p = p')"
+    and hC9_1: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+               (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
+          = q1 ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
+               (1-s) * vy1 j + s * vy1 (Suc j mod ?n))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+    and hC10_1: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx1 j) / real ?n;
+                             cy = (\<Sum>j<?n. vy1 j) / real ?n
+         in (vx1 i - cx) * (vy1 (Suc i mod ?n) - cy)
+          - (vy1 i - cy) * (vx1 (Suc i mod ?n) - cx) > 0"
+    and hC11_1: "\<forall>i<?n. \<forall>k<?n.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i)
+          - (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i) < 0"
+    by (rule quotient_of_scheme_extract_vx)
+  from assms(4) obtain P2 q2 vx2 vy2 where
+      hC1_2: "top1_is_polygonal_region_on P2 ?n"
+    and hC2_2: "top1_quotient_map_on P2 (?TP P2) Y2 TY2 q2"
+    and hC4_2: "\<forall>i<?n. (vx2 i, vy2 i) \<in> P2"
+    and hC5_2: "P2 = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx2 i)
+                     \<and> y = (\<Sum>i<?n. coeffs i * vy2 i)}"
+    and hC7_2: "\<forall>i<?n. \<forall>j<?n. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+              (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q2 ((1-t) * vx2 j + t * vx2 (Suc j mod ?n),
+                    (1-t) * vy2 j + t * vy2 (Suc j mod ?n))
+            else q2 (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
+                    t * vy2 j + (1-t) * vy2 (Suc j mod ?n))))"
+    and hC8_2: "\<forall>p\<in>P2. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+                      (1-t) * vy2 i + t * vy2 (Suc i mod ?n)))
+             \<longrightarrow> (\<forall>p'\<in>P2. q2 p = q2 p' \<longrightarrow> p = p')"
+    and hC9_2: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+               (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
+          = q2 ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
+               (1-s) * vy2 j + s * vy2 (Suc j mod ?n))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+    and hC10_2: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx2 j) / real ?n;
+                             cy = (\<Sum>j<?n. vy2 j) / real ?n
+         in (vx2 i - cx) * (vy2 (Suc i mod ?n) - cy)
+          - (vy2 i - cy) * (vx2 (Suc i mod ?n) - cx) > 0"
+    and hC11_2: "\<forall>i<?n. \<forall>k<?n.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i)
+          - (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) < 0"
+    by (rule quotient_of_scheme_extract_vx)
+  have hn3: "?n \<ge> 3" using hC1_1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
+  \<comment> \<open>Step 2: Derive non-strict side conditions (needed for disk homeomorphism).\<close>
+  have hside_le_1: "\<forall>i<?n. \<forall>k<?n.
+      (vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i)
+      - (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i) \<le> 0"
+  proof (intro allI impI)
+    fix i k assume "i < ?n" "k < ?n"
+    show "(vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i) -
+          (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i) \<le> 0"
+    proof (cases "k = i")
+      case True thus ?thesis by (by100 simp)
+    next
+      case False
+      show ?thesis
+      proof (cases "k = Suc i mod ?n")
+        case True
+        hence "(vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i) =
+               (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i)" by (by100 simp)
+        thus ?thesis by (by100 simp)
+      next
+        case False2: False
+        from hC11_1 \<open>i < ?n\<close> \<open>k < ?n\<close> False False2
+        have "(vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i) -
+              (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i) < 0" by (by100 blast)
+        thus ?thesis by (by100 linarith)
+      qed
+    qed
+  qed
+  have hside_le_2: "\<forall>i<?n. \<forall>k<?n.
+      (vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i)
+      - (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) \<le> 0"
+  proof (intro allI impI)
+    fix i k assume "i < ?n" "k < ?n"
+    show "(vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i) -
+          (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) \<le> 0"
+    proof (cases "k = i")
+      case True thus ?thesis by (by100 simp)
+    next
+      case False
+      show ?thesis
+      proof (cases "k = Suc i mod ?n")
+        case True
+        hence "(vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i) =
+               (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i)" by (by100 simp)
+        thus ?thesis by (by100 simp)
+      next
+        case False2: False
+        from hC11_2 \<open>i < ?n\<close> \<open>k < ?n\<close> \<open>k \<noteq> i\<close> False2
+        have "(vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i) -
+              (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) < 0" by (by100 blast)
+        thus ?thesis by (by100 linarith)
+      qed
+    qed
+  qed
+  \<comment> \<open>Step 3: Get edge-preserving homeomorphisms P1 \\<to> B² \\<to> P2 via disk lemma.\<close>
+  \<comment> \<open>Apply polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary to both polygons.
+     The lemma uses cross2 from AlgTopChain. Need to convert our conditions.\<close>
+  obtain \<psi>1 where
+    h\<psi>1_homeo: "top1_homeomorphism_on P1 (?TP P1) top1_B2 top1_B2_topology \<psi>1"
+    and h\<psi>1_edge: "\<forall>i<?n. \<forall>t\<in>I_set. \<psi>1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+        (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
+      = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n))"
+    sorry \<comment> \<open>From polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary + cross2 conversion.\<close>
+  obtain \<psi>2 where
+    h\<psi>2_homeo: "top1_homeomorphism_on P2 (?TP P2) top1_B2 top1_B2_topology \<psi>2"
+    and h\<psi>2_edge: "\<forall>i<?n. \<forall>t\<in>I_set. \<psi>2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+        (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
+      = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n))"
+    sorry \<comment> \<open>Same for P2.\<close>
+  \<comment> \<open>Step 4: Compose \\<psi>2\\<inverse> \\<circ> \\<psi>1 to get edge-preserving \\<phi>: P1 \\<to> P2.\<close>
+  from homeomorphism_inverse[OF h\<psi>2_homeo]
+  have h\<psi>2_inv: "top1_homeomorphism_on top1_B2 top1_B2_topology P2 (?TP P2) (inv_into P2 \<psi>2)" .
+  define \<phi> where "\<phi> = (inv_into P2 \<psi>2) \<circ> \<psi>1"
+  from homeomorphism_comp[OF h\<psi>1_homeo h\<psi>2_inv]
+  have h\<phi>: "top1_homeomorphism_on P1 (?TP P1) P2 (?TP P2) \<phi>" unfolding \<phi>_def .
+  \<comment> \<open>Step 5: \\<phi> preserves edge parametrization.\<close>
+  have h\<phi>_edge: "\<forall>i<?n. \<forall>t\<in>I_set.
+      \<phi> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+         (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
+      = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+         (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
+    sorry \<comment> \<open>\\<psi>1 and \\<psi>2 map corresponding edge points to the same S¹ point,
+       so \\<psi>2\\<inverse> \\<circ> \\<psi>1 maps edge i of P1 to edge i of P2.\<close>
+  \<comment> \<open>Step 6: q2 \\<circ> \\<phi> is a quotient map P1 \\<to> Y2.\<close>
+  have h\<phi>_quot: "top1_quotient_map_on P1 (?TP P1) P2 (?TP P2) \<phi>"
     by (rule top1_homeomorphism_on_imp_quotient_map_on[OF h\<phi>])
-  have hcomp_quot: "top1_quotient_map_on P1
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y2 TY2 (q2 \<circ> \<phi>)"
-    by (rule top1_quotient_map_on_comp[OF h\<phi>_quot hq2])
-  \<comment> \<open>Fibres of q1 and q2\\<circ>\\<phi> agree: both identify boundary points according to the same scheme.
-     Interior points have singleton fibres under both maps.
-     Edge points: \\<phi> maps edge i of P1 to edge i of P2 (by h\\<phi>\\_edge), so the scheme
-     identification pattern is preserved.\<close>
+  have hcomp_quot: "top1_quotient_map_on P1 (?TP P1) Y2 TY2 (q2 \<circ> \<phi>)"
+    by (rule top1_quotient_map_on_comp[OF h\<phi>_quot hC2_2])
+  \<comment> \<open>Step 7: Fibres of q1 and q2\\<circ>\\<phi> agree (key step, uses edge preservation).
+     Interior points: both maps are injective (C8), so fibres match.
+     Edge points: \\<phi> preserves edge parametrization, so the scheme identification
+     pattern is preserved. q1 identifies edges i,j iff scheme says so, and
+     q2\\<circ>\\<phi> identifies the same edges because \\<phi> maps edge i to edge i.\<close>
   have hfibres: "\<forall>x\<in>P1. \<forall>y\<in>P1. (q1 x = q1 y) \<longleftrightarrow> ((q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y)"
-    sorry \<comment> \<open>Uses h\\<phi>\\_edge + hq1\\_ident + hq1\\_inj + hq1\\_bd + matching conditions on P2.
-       Key: \\<phi> preserves the edge parametrization, so same-scheme identification \\<Rightarrow> same fibres.
-       The proof needs the vx1'/vy1' from \\<phi> to match the vx1/vy1 from q1, which requires
-       showing that the vertex functions are essentially unique (up to the polygon's geometry).\<close>
-  from quotient_same_fibres_homeomorphic[OF hq1 hcomp_quot hfibres]
+    sorry
+  from quotient_same_fibres_homeomorphic[OF hC2_1 hcomp_quot hfibres]
   show ?thesis .
 qed
 
