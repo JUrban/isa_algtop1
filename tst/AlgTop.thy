@@ -3279,7 +3279,14 @@ proof (induction rule: top1_valid_scheme_operation.induct)
   show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
 next
   case (v_cancel u a v)
-  \<comment> \<open>Cancel: needs geometric construction (polygon folding). Homeomorphism version.\<close>
+  \<comment> \<open>Cancel: u@[a,inv(a)]@v \\<to> u@v. Book proof (\\<S>76 operation vi):
+     The quotient of u@[a,inv(a)]@v is homeomorphic to the quotient of u@v
+     because the two cancelled edges fold trivially.
+     Proof approach: use quotient\\_transport\\_by\\_homeomorphism with a folding map
+     that collapses the two cancelled edges of the (n+2)-gon to get an n-gon.
+     This requires constructing: (1) n-gon P' with quotient q' for u@v,
+     (2) fold map h: P \\<to> P' preserving fibres.
+     Requires substantial geometric construction.\<close>
   show ?case sorry
 next
   case (v_uncancel a u v)
