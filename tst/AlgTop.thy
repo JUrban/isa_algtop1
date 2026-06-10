@@ -511,11 +511,49 @@ lemma quotient_of_scheme_uncancel:
   shows "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
   sorry
 
-\<comment> \<open>Invert: quotient preserved by reversal+inversion. Reflected polygon.\<close>
+\<comment> \<open>Invert: quotient preserved by reversal+inversion. Per the textbook:
+   "flipping the polygonal region over": reverse vertex order, reverse edge orientations.
+   Reflection \\<rho>(x,y)=(x,-y) reverses both vertex order (from counterclockwise to clockwise)
+   and the cross-product signs (making counterclockwise again after reversal).
+   Vertex numbering: \\<sigma>(i) = (n-i) mod n. Label at new position i = label at old position (n-1-i).
+   New edge i at parameter t = \\<rho>(old edge (n-1-i) at parameter (1-t)).\<close>
 lemma quotient_of_scheme_invert:
   assumes "top1_quotient_of_scheme_on Y TY w"
   shows "top1_quotient_of_scheme_on Y TY (rev (map top1_inverse_edge w))"
-  sorry
+proof -
+  let ?n = "length w"
+  let ?w' = "rev (map top1_inverse_edge w)"
+  have hlen: "length ?w' = ?n" by (by100 simp)
+  \<comment> \<open>The inverted scheme: w'!i = inverse\_edge(w!(n-1-i)).\<close>
+  have hnth: "\<And>i. i < ?n \<Longrightarrow>
+      ?w' ! i = top1_inverse_edge (w ! (?n - 1 - i))"
+  proof -
+    fix i assume hi: "i < ?n"
+    have h1: "rev (map top1_inverse_edge w) ! i
+        = (map top1_inverse_edge w) ! (?n - 1 - i)"
+      using rev_nth[of i "map top1_inverse_edge w"] hi by (by100 simp)
+    have h2: "?n - 1 - i < ?n" using hi by (by100 linarith)
+    have "(map top1_inverse_edge w) ! (?n - 1 - i) = top1_inverse_edge (w ! (?n - 1 - i))"
+      using h2 by (by100 simp)
+    with h1 show "?w' ! i = top1_inverse_edge (w ! (?n - 1 - i))" by (by100 simp)
+  qed
+  have hfst: "\<And>i. i < ?n \<Longrightarrow> fst (?w' ! i) = fst (w ! (?n - 1 - i))"
+    using hnth unfolding top1_inverse_edge_def by (by100 simp)
+  have hsnd: "\<And>i. i < ?n \<Longrightarrow> snd (?w' ! i) = (\<not> snd (w ! (?n - 1 - i)))"
+    using hnth unfolding top1_inverse_edge_def by (by100 simp)
+  \<comment> \<open>Extract full polygon data from original scheme.\<close>
+  from assms obtain P q where
+      hC1: "top1_is_polygonal_region_on P ?n"
+    and hC2: "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+    by (rule quotient_of_scheme_extract)
+  have htopo: "is_topology_on_strict Y TY"
+    using assms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 1: The inverted scheme has the same quotient space via reflected polygon.
+     Witnesses: P' = \\<rho>(P), q' = q \\<circ> \\<rho>, vx'(i) = vx((n-i) mod n), vy'(i) = -vy((n-i) mod n).
+     This requires showing all 11 conditions. For now: sorry the whole thing.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Relabel with fresh label: proved via same witnesses, fst-equality pattern preserved.\<close>
 lemma quotient_of_scheme_relabel_fresh:
@@ -2134,7 +2172,8 @@ proof -
     using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
   have hTP2: "is_topology_on P2 (?TP P2)"
     using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
-  have hP2_haus: "is_hausdorff_on P2 (?TP P2)" sorry
+  have hP2_haus: "is_hausdorff_on P2 (?TP P2)"
+    sorry \<comment> \<open>Subspace of R2 Hausdorff. Uses top1\\_R2\\_is\\_hausdorff + Theorem\\_17\\_11(3).\<close>
   have "top1_homeomorphism_on P1 (?TP P1) P2 (?TP P2) \<phi>"
     by (rule Theorem_26_6[OF hTP1 hTP2 hP1_compact hP2_haus h\<phi>_cont h\<phi>_bij])
   thus ?thesis by (by100 blast)
