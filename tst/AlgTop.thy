@@ -3226,16 +3226,44 @@ qed
 
 \<comment> \<open>Flat intro for homeomorphic realization.\<close>
 lemma homeo_realization_flat_introI:
+  fixes X :: "'a set" and TX :: "'a set set" and Y :: "'a set" and TY :: "'a set set" and h :: "'a \<Rightarrow> 'a"
   assumes hq: "top1_quotient_of_scheme_on Y TY t"
       and hh: "top1_homeomorphism_on X TX Y TY h"
-  shows "\<exists>Y' TY' h'. top1_quotient_of_scheme_on Y' TY' t
-              \<and> top1_homeomorphism_on X TX Y' TY' h'"
-  sorry \<comment> \<open>Trivial but all tactics fail. See PLAN\\_zero\\_sorry-expert-audit18 section 2.\<close>
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h' :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' t \<and>
+    top1_homeomorphism_on X TX Y' TY' h'"
+proof -
+  have H0: "top1_quotient_of_scheme_on Y TY t \<and>
+     top1_homeomorphism_on X TX Y TY h"
+    using hq hh by (by100 blast)
+  have H1: "\<exists>h'. top1_quotient_of_scheme_on Y TY t \<and>
+        top1_homeomorphism_on X TX Y TY h'"
+  proof (rule exI[where x = h])
+    show "top1_quotient_of_scheme_on Y TY t \<and>
+          top1_homeomorphism_on X TX Y TY h"
+      using H0 .
+  qed
+  have H2: "\<exists>TY' h'. top1_quotient_of_scheme_on Y TY' t \<and>
+            top1_homeomorphism_on X TX Y TY' h'"
+  proof (rule exI[where x = TY])
+    show "\<exists>h'. top1_quotient_of_scheme_on Y TY t \<and>
+            top1_homeomorphism_on X TX Y TY h'"
+      using H1 .
+  qed
+  show ?thesis
+  proof (rule exI[where x = Y])
+    show "\<exists>TY' h'. top1_quotient_of_scheme_on Y TY' t \<and>
+                top1_homeomorphism_on X TX Y TY' h'"
+      using H2 .
+  qed
+qed
 
 lemma same_space_implies_homeo_realization:
+  fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_quotient_of_scheme_on X TX t"
-  shows "\<exists>Y TY h. top1_quotient_of_scheme_on Y TY t \<and>
-              top1_homeomorphism_on X TX Y TY h"
+  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY t \<and>
+    top1_homeomorphism_on X TX Y TY h"
 proof -
   have "is_topology_on X TX"
     using assms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
@@ -3247,10 +3275,12 @@ qed
    For cancel/uncancel/cut-paste: prove homeomorphic-realization preservation.
    This is the correct semantic theorem for the classification chain.\<close>
 lemma valid_operation_preserves_quotient_homeo:
+  fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_quotient_of_scheme_on X TX s"
       and "top1_valid_scheme_operation s t"
-  shows "\<exists>Y TY h. top1_quotient_of_scheme_on Y TY t \<and>
-              top1_homeomorphism_on X TX Y TY h"
+  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY t \<and>
+    top1_homeomorphism_on X TX Y TY h"
   using assms(2,1)
 proof (induction rule: top1_valid_scheme_operation.induct)
   case (v_rotate u v)
@@ -3300,10 +3330,12 @@ qed
 
 \<comment> \<open>Chain: valid equivalence preserves quotient homeomorphism type.\<close>
 lemma valid_equiv_preserves_quotient_homeo:
+  fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_quotient_of_scheme_on X TX s"
       and "top1_valid_scheme_equiv s t"
-  shows "\<exists>Y TY h. top1_quotient_of_scheme_on Y TY t \<and>
-              top1_homeomorphism_on X TX Y TY h"
+  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY t \<and>
+    top1_homeomorphism_on X TX Y TY h"
   using assms(2,1) unfolding top1_valid_scheme_equiv_def
   sorry \<comment> \<open>Chain: rtranclp induction + valid\\_op\\_preserves + homeomorphism\\_comp.
      Proof plan verified in audit 18 section 4 but sorry-leaking blocks inline.\<close>
