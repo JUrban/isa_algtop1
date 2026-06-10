@@ -145,15 +145,39 @@ lemma valid_equiv_trans:
 
 \<comment> \<open>Alpha-renaming: a bijective relabeling is a valid equivalence (per expert audit 20).
    Proof: apply fresh relabels sequentially via intermediate fresh labels.\<close>
+\<comment> \<open>Helper: renaming one label in a scheme using map.\<close>
+lemma map_relabel_comp:
+  "map (\<lambda>(l,b). (if l = new then target else l, b))
+       (map (\<lambda>(l,b). (if l = old then new else l, b)) w)
+   = map (\<lambda>(l,b). (if l = old then target else if l = new then target else l, b)) w"
+  by (by100 auto)
+
+\<comment> \<open>Helper: if old \\<notin> fst ` set w, then relabeling old does nothing.\<close>
+lemma map_relabel_id:
+  assumes "old \<notin> fst ` set w"
+  shows "map (\<lambda>(l,b). (if l = old then new else l, b)) w = w"
+  using assms by (induction w) (by100 auto)+
+
+\<comment> \<open>Disjoint relabeling: if all target labels are fresh (disjoint from source),
+   then the relabeling is a valid equivalence. Proof by induction on the label set.\<close>
+lemma valid_scheme_relabel_disjoint:
+  fixes w :: "(nat \<times> bool) list"
+  assumes "inj_on \<rho> (scheme_labels w)"
+      and "\<rho> ` (scheme_labels w) \<inter> scheme_labels w = {}"
+  shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<rho> l, b)) w)"
+  sorry \<comment> \<open>Induction on card(scheme\\_labels w). Base: empty scheme. Step: rename one label,
+     show modified scheme satisfies IH premises (injectivity and disjointness maintained).\<close>
+
+\<comment> \<open>Alpha-renaming: a bijective relabeling is a valid equivalence (per expert audit 20).
+   Proof: induction on the number of labels that differ from identity.\<close>
 lemma valid_scheme_alpha_rename:
   fixes w :: "(nat \<times> bool) list"
   assumes "bij_betw \<rho> (scheme_labels w) L"
   shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<rho> l, b)) w)"
-  sorry \<comment> \<open>Combinatorial: two-phase approach with fresh intermediates.
-     Phase 1: rename each old label to a fresh intermediate (valid: fresh \\<notin> current labels).
-     Phase 2: rename each intermediate to \\<rho>(old label) (valid: target \\<notin> current labels).
-     Both phases use valid\\_equiv\\_fresh\\_relabel + valid\\_equiv\\_trans.
-     Needs: existence of sufficiently many fresh labels (infinite type nat).\<close>
+  sorry \<comment> \<open>Two-phase proof with fresh intermediates. Needs:
+     (1) valid\\_scheme\\_relabel\\_all\\_fresh for disjoint relabeling,
+     (2) Composition of two disjoint relabelings gives \\<rho>.
+     Deferred: substantial combinatorial proof over finite label sets.\<close>
 
 \<comment> \<open>Scheme equivalence: transitivity and lifting from elementary operations.
    These avoid the meson/rtranclp\_trans timeout on complex list types.\<close>
