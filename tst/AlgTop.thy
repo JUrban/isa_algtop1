@@ -1495,6 +1495,31 @@ proof -
       show ?thesis using horig2 hLHS hRHS_same hRHS_opp h_si h_sj hsnd_iff by (by100 presburger)
     qed
   qed
+  \<comment> \<open>Helpers for edge set transfer.\<close>
+  have h_1t_I: "\<And>t::real. t \<in> I_set \<Longrightarrow> 1-t \<in> I_set"
+    unfolding top1_unit_interval_def by (by100 simp)
+  have h_Suc_j_sigma: "\<And>j. j < ?n \<Longrightarrow> Suc j mod ?n = \<sigma> (?n - 1 - j)"
+  proof -
+    fix j assume hj: "j < ?n"
+    show "Suc j mod ?n = \<sigma> (?n - 1 - j)"
+    proof (cases "j < ?n - 1")
+      case True
+      have "0 < ?n - 1 - j" using True by (by100 linarith)
+      have "?n - 1 - j < ?n" using True hj by (by100 linarith)
+      have "\<sigma> (?n - 1 - j) = ?n - (?n - 1 - j)"
+        using h\<sigma>_pos[OF \<open>0 < ?n - 1 - j\<close> \<open>?n - 1 - j < ?n\<close>] by (by100 simp)
+      also have "?n - (?n - 1 - j) = Suc j" using True hj by (by100 linarith)
+      finally show ?thesis using True by (by100 simp)
+    next
+      case False
+      hence "j = ?n - 1" using hj by (by100 linarith)
+      hence "?n - 1 - j = 0" by (by100 linarith)
+      have "Suc j = ?n" using \<open>j = ?n - 1\<close> hn3 by (by100 linarith)
+      hence "Suc j mod ?n = 0" by (by100 simp)
+      also have "0 = \<sigma> 0" using h\<sigma>_0 by (by100 simp)
+      finally show ?thesis using \<open>?n - 1 - j = 0\<close> by (by100 simp)
+    qed
+  qed
   \<comment> \<open>Edge set transfer: reflected edges cover same set as original edges.\<close>
   have h_edge_transfer: "\<And>p. (\<forall>i<?n. \<forall>t\<in>I_set.
                 p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
