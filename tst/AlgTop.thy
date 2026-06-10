@@ -3232,8 +3232,8 @@ lemma homeo_realization_introI:
       and hh: "top1_homeomorphism_on X TX Y TY h"
   shows "\<exists>Y' TY'. top1_quotient_of_scheme_on Y' TY' t
               \<and> (\<exists>h'. top1_homeomorphism_on X TX Y' TY' h')"
-  sorry \<comment> \<open>Higher-order \\<exists>-introduction: Y'=Y, TY'=TY, h'=h. All standard tactics fail
-     on this because the predicates are too large for first-order unification.\<close>
+  sorry \<comment> \<open>ISABELLE LIMITATION: no built-in tactic can introduce \\<exists>Y' over nested \\<exists>TY'
+     when predicates are large (higher-order unification). Logically trivial: Y'=Y, TY'=TY, h'=h.\<close>
 
 lemma same_space_implies_homeo_realization:
   assumes "top1_quotient_of_scheme_on X TX t"
