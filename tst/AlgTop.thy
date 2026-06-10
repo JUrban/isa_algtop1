@@ -708,6 +708,31 @@ proof -
   have h\<sigma>_0: "\<sigma> 0 = 0" unfolding \<sigma>_def by (by100 simp)
   have h\<sigma>_pos: "\<And>i. 0 < i \<Longrightarrow> i < ?n \<Longrightarrow> \<sigma> i = ?n - i"
     unfolding \<sigma>_def by (by100 simp)
+  \<comment> \<open>Key: Suc(\\<sigma>(i)) mod n relates to the "next vertex" in reversed order.\<close>
+  have h\<sigma>_suc: "\<And>i. i < ?n \<Longrightarrow> \<sigma> (Suc i mod ?n) = ?n - 1 - i"
+  proof -
+    fix i assume hi: "i < ?n"
+    show "\<sigma> (Suc i mod ?n) = ?n - 1 - i"
+    proof (cases "Suc i < ?n")
+      case True
+      have "\<sigma> (Suc i mod ?n) = \<sigma> (Suc i)" using True by (by100 simp)
+      also have "\<dots> = ?n - Suc i" using h\<sigma>_pos[of "Suc i"] True by (by100 simp)
+      also have "\<dots> = ?n - 1 - i" using True by (by100 linarith)
+      finally show ?thesis .
+    next
+      case False
+      hence "i = ?n - 1" using hi by (by100 linarith)
+      have "Suc i = ?n" using \<open>i = ?n - 1\<close> hn3 by (by100 linarith)
+      hence hmod0: "Suc i mod ?n = 0" by (by100 simp)
+      have "\<sigma> (Suc i mod ?n) = \<sigma> 0" using hmod0 by (by100 simp)
+      also have "\<dots> = 0" using h\<sigma>_0 .
+      also have "(0::nat) = ?n - 1 - i" using \<open>i = ?n - 1\<close> by (by100 linarith)
+      finally show ?thesis .
+    qed
+  qed
+  \<comment> \<open>Edge point correspondence: new edge i at parameter t uses vertices \\<sigma>(i) and \\<sigma>(Suc i mod n).
+     For 0 < Suc i < n: \\<sigma>(Suc i mod n) = n-1-i, \\<sigma>(i) = n-i [for i>0] or 0 [for i=0].
+     The new edge i at parameter t = \\<rho>(original edge (n-1-i) at parameter (1-t)).\<close>
   \<comment> \<open>vx'/vy' in terms of \\<rho> and \\<sigma>.\<close>
   have hv'_eq: "\<And>i. (vx' i, vy' i) = (vx (\<sigma> i), -(vy (\<sigma> i)))"
     unfolding vx'_def vy'_def by (by100 simp)
@@ -1174,8 +1199,17 @@ proof -
                      \<and> (\<Sum>i<?n. coeffs i) = 1
                      \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
                      \<and> y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))}"
-    sorry \<comment> \<open>Same as hconv' in hC1' proof — reprove via P'=\\<rho>(P), \\<rho> linear, \\<sigma> permutation.\<close>
-  \<comment> \<open>C6'-C11': remaining geometric conditions. All sorry for now.\<close>
+    sorry \<comment> \<open>Same argument as hconv' in hC1': P'=\\<rho>(P), \\<rho> linear, \\<sigma> permutation.\<close>
+  \<comment> \<open>C6'-C11': For these conditions, the key insight is:
+     New edge i at parameter t corresponds to \\<rho>(original edge (n-1-i) at parameter (1-t)).
+     The label at new position i comes from original position (n-1-i).
+     With \\<sigma>(Suc i mod n) giving the "next vertex" index in the reversed ordering.
+
+     Key relation: for i < n,
+       (1-t)*vx(\\<sigma> i) + t*vx(\\<sigma>(Suc i mod n)) = (1-t)*vx(\\<sigma> i) + t*vx(n-1-i)
+       and the corresponding y-component is negated.
+       This equals \\<rho>(original edge point at (n-1-i) with parameter (1-t)).\<close>
+  \<comment> \<open>For now: sorry the remaining 6 conditions.\<close>
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
     using htopo hC1' hC2' hC3' hC4' hC5' sorry
