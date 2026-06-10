@@ -3343,7 +3343,22 @@ proof (induction rule: rtranclp.induct)
   then show ?case by (rule same_space_implies_homeo_realization)
 next
   case (rtrancl_into_rtrancl a b c)
-  show ?case sorry \<comment> \<open>IH decomposition blocked by \\<exists>-matching with large predicates.\<close>
+  \<comment> \<open>Step: IH gives \\<exists>Y TY h for 'a'; valid\\_op gives \\<exists>Z TZ g for 'b\\<to>c'; compose.\<close>
+  from rtrancl_into_rtrancl.IH[OF rtrancl_into_rtrancl.prems]
+  have hIH: "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY b \<and> top1_homeomorphism_on X TX Y TY h" .
+  then obtain Y :: "'a set" and TY :: "'a set set" and hy :: "'a \<Rightarrow> 'a" where
+      qY: "top1_quotient_of_scheme_on Y TY b"
+    and hXY: "top1_homeomorphism_on X TX Y TY hy"
+    by (by100 blast)
+  from valid_operation_preserves_quotient_homeo[OF qY rtrancl_into_rtrancl.hyps(2)]
+  obtain Z :: "'a set" and TZ :: "'a set set" and gz :: "'a \<Rightarrow> 'a" where
+      qZ: "top1_quotient_of_scheme_on Z TZ c"
+    and hYZ: "top1_homeomorphism_on Y TY Z TZ gz"
+    by (by100 blast)
+  have hXZ: "top1_homeomorphism_on X TX Z TZ (gz \<circ> hy)"
+    using homeomorphism_comp[OF hXY hYZ] .
+  show ?case using qZ hXZ by (rule homeo_realization_flat_introI)
 qed
 
 \<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
