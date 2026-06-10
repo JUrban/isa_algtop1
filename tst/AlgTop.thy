@@ -1444,7 +1444,82 @@ proof -
           \<longrightarrow> (i = j \<and> t = s)
             \<or> (fst (?w'!i) = fst (?w'!j) \<and>
                (if snd (?w'!i) = snd (?w'!j) then s = t else s = 1 - t))"
-    sorry
+  proof (intro allI impI ballI)
+    fix i j t s assume hi: "i < ?n" and hj: "j < ?n" and ht: "t \<in> I_set" and hs: "s \<in> I_set"
+      and hq_eq: "q' ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+               (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n)))))
+          = q' ((1-s) * vx (\<sigma> j) + s * vx (\<sigma> (Suc j mod ?n)),
+               (1-s) * (-(vy (\<sigma> j))) + s * (-(vy (\<sigma> (Suc j mod ?n)))))"
+    let ?i' = "?n - 1 - i" and ?j' = "?n - 1 - j"
+    have hi': "?i' < ?n" and hj': "?j' < ?n" using hi hj by (by100 linarith)+
+    have h_si: "\<sigma> (Suc i mod ?n) = ?i'" using h\<sigma>_suc[OF hi] by (by100 simp)
+    have h_sj: "\<sigma> (Suc j mod ?n) = ?j'" using h\<sigma>_suc[OF hj] by (by100 simp)
+    have hSi': "Suc ?i' mod ?n = \<sigma> i" using hSuc_n1i[OF hi] .
+    have hSj': "Suc ?j' mod ?n = \<sigma> j" using hSuc_n1i[OF hj] .
+    have hq': "\<And>a b::real. q' (a, b) = q (a, -b)"
+      unfolding q'_def \<rho>_def by (by100 simp)
+    have h1t: "1-t \<in> I_set" and h1s: "1-s \<in> I_set"
+      using ht hs unfolding top1_unit_interval_def by (by100 simp)+
+    \<comment> \<open>Convert q' equality to q equality via hq'.\<close>
+    have hq_orig: "q (t * vx ?i' + (1-t) * vx (\<sigma> i), t * vy ?i' + (1-t) * vy (\<sigma> i))
+        = q (s * vx ?j' + (1-s) * vx (\<sigma> j), s * vy ?j' + (1-s) * vy (\<sigma> j))"
+    proof -
+      have hqi: "q' ((1-t) * vx (\<sigma> i) + t * vx ?i', (1-t) * (-(vy (\<sigma> i))) + t * (-(vy ?i')))
+        = q ((1-t) * vx (\<sigma> i) + t * vx ?i', -((1-t) * (-(vy (\<sigma> i))) + t * (-(vy ?i'))))"
+        using hq' by (by100 simp)
+      have hqj: "q' ((1-s) * vx (\<sigma> j) + s * vx ?j', (1-s) * (-(vy (\<sigma> j))) + s * (-(vy ?j')))
+        = q ((1-s) * vx (\<sigma> j) + s * vx ?j', -((1-s) * (-(vy (\<sigma> j))) + s * (-(vy ?j'))))"
+        using hq' by (by100 simp)
+      from hq_eq have "q ((1-t) * vx (\<sigma> i) + t * vx ?i', -((1-t) * (-(vy (\<sigma> i))) + t * (-(vy ?i'))))
+        = q ((1-s) * vx (\<sigma> j) + s * vx ?j', -((1-s) * (-(vy (\<sigma> j))) + s * (-(vy ?j'))))"
+        using hqi hqj h_si h_sj by (by100 simp)
+      thus ?thesis by (by100 argo)
+    qed
+    \<comment> \<open>Apply orig C9 at (i', j') with params (1-t, 1-s).\<close>
+    have hq_orig2: "q ((1-(1-t)) * vx ?i' + (1-t) * vx (Suc ?i' mod ?n),
+               (1-(1-t)) * vy ?i' + (1-t) * vy (Suc ?i' mod ?n))
+          = q ((1-(1-s)) * vx ?j' + (1-s) * vx (Suc ?j' mod ?n),
+               (1-(1-s)) * vy ?j' + (1-s) * vy (Suc ?j' mod ?n))"
+      using hq_orig hSi' hSj' by (by100 simp)
+    from hC9[rule_format, OF hi' hj' h1t h1s hq_orig2]
+    have hC9_result: "(?i' = ?j' \<and> (1-t) = (1-s))
+            \<or> (fst (w!?i') = fst (w!?j') \<and>
+               (if snd (w!?i') = snd (w!?j') then (1-s) = (1-t) else (1-s) = 1 - (1-t)))" .
+    \<comment> \<open>Convert back: i'=j' \\<Longleftrightarrow> i=j, 1-t=1-s \\<Longleftrightarrow> t=s, fst/snd transfer.\<close>
+    show "(i = j \<and> t = s)
+            \<or> (fst (?w'!i) = fst (?w'!j) \<and>
+               (if snd (?w'!i) = snd (?w'!j) then s = t else s = 1 - t))"
+    proof (cases "?i' = ?j'")
+      case True
+      hence hij: "i = j" using hi hj by (by100 linarith)
+      from hC9_result True have "1 - t = 1 - s" by (by100 force)
+      hence hts: "t = s" by (by100 linarith)
+      show ?thesis using hij hts by (by100 blast)
+    next
+      case False
+      with hC9_result have "fst (w!?i') = fst (w!?j') \<and>
+               (if snd (w!?i') = snd (w!?j') then (1-s) = (1-t) else (1-s) = 1 - (1-t))"
+        by (by100 blast)
+      hence hfst_w: "fst (w!?i') = fst (w!?j')"
+        and hsnd_w: "if snd (w!?i') = snd (w!?j') then (1-s) = (1-t) else (1-s) = 1 - (1-t)"
+        by (by100 blast)+
+      have hfst_w': "fst (?w'!i) = fst (?w'!j)"
+        using hfst_w hfst[OF hi] hfst[OF hj] by (by100 simp)
+      have hsnd_iff: "(snd (?w'!i) = snd (?w'!j)) = (snd (w!?i') = snd (w!?j'))"
+        using hsnd[OF hi] hsnd[OF hj] by (by100 simp)
+      have "if snd (?w'!i) = snd (?w'!j) then s = t else s = 1 - t"
+      proof (cases "snd (w!?i') = snd (w!?j')")
+        case True with hsnd_w have "1-s = 1-t" by (by100 simp)
+        hence "s = t" by (by100 linarith)
+        thus ?thesis using True hsnd_iff by (by100 simp)
+      next
+        case False with hsnd_w have "1-s = 1-(1-t)" by (by100 simp)
+        hence "s = 1-t" by (by100 linarith)
+        thus ?thesis using False hsnd_iff by (by100 simp)
+      qed
+      with hfst_w' show ?thesis by (by100 blast)
+    qed
+  qed
   \<comment> \<open>C10': counterclockwise.\<close>
   have hC10': "\<forall>i<?n. let cx = (\<Sum>j<?n. vx (\<sigma> j)) / real ?n;
                            cy = (\<Sum>j<?n. (-(vy (\<sigma> j)))) / real ?n
