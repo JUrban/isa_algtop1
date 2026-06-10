@@ -653,7 +653,18 @@ lemma quotient_of_scheme_extract_vx:
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
     "\<forall>i<length scheme. \<forall>j<length scheme. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
     "\<forall>i<length scheme. (vx i, vy i) \<in> P"
-    \<comment> \<open>C5, C6 removed due to parse issues.\<close>
+    "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
+    "\<forall>i<length scheme. \<forall>j<length scheme.
+          i \<noteq> j \<longrightarrow> Suc i mod length scheme \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length scheme \<longrightarrow>
+          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+             ((1-s) * vx i + s * vx (Suc i mod length scheme),
+              (1-s) * vy i + s * vy (Suc i mod length scheme))
+           \<noteq> ((1-t) * vx j + t * vx (Suc j mod length scheme),
+               (1-t) * vy j + t * vy (Suc j mod length scheme)))"
     "\<forall>i<length scheme. \<forall>j<length scheme. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
         (\<forall>t\<in>I_set.
            q ((1-t) * vx i + t * vx (Suc i mod length scheme),
@@ -887,24 +898,436 @@ proof -
      via the bijection \\<sigma>.\<close>
   have h_step1: "top1_quotient_of_scheme_on Y TY w_\<sigma>"
   proof -
-    \<comment> \<open>Extract P, q, vx, vy from the old quotient.\<close>
+    \<comment> \<open>Extract all 11 conditions from the original quotient.\<close>
     from assms(1) obtain P q vx vy where
         hC1: "top1_is_polygonal_region_on P (length w)"
-      and hC2: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+      and hC2: "top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
       and hC3: "\<forall>i<length w. \<forall>j<length w. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
       and hC4: "\<forall>i<length w. (vx i, vy i) \<in> P"
+      and hC5: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length w. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length w. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length w. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length w. coeffs i * vy i)}"
+      and hC6: "\<forall>i<length w. \<forall>j<length w.
+          i \<noteq> j \<longrightarrow> Suc i mod length w \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length w \<longrightarrow>
+          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+             ((1-s) * vx i + s * vx (Suc i mod length w),
+              (1-s) * vy i + s * vy (Suc i mod length w))
+           \<noteq> ((1-t) * vx j + t * vx (Suc j mod length w),
+               (1-t) * vy j + t * vy (Suc j mod length w)))"
+      and hC7: "\<forall>i<length w. \<forall>j<length w. fst (w!i) = fst (w!j) \<longrightarrow>
+          (\<forall>t\<in>I_set.
+             q ((1-t) * vx i + t * vx (Suc i mod length w),
+                (1-t) * vy i + t * vy (Suc i mod length w))
+           = (if snd (w!i) = snd (w!j)
+              then q ((1-t) * vx j + t * vx (Suc j mod length w),
+                      (1-t) * vy j + t * vy (Suc j mod length w))
+              else q (t * vx j + (1-t) * vx (Suc j mod length w),
+                      t * vy j + (1-t) * vy (Suc j mod length w))))"
+      and hC8: "\<forall>p\<in>P. (\<forall>i<length w. \<forall>t\<in>I_set.
+                  p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length w),
+                        (1-t) * vy i + t * vy (Suc i mod length w)))
+               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+      and hC9: "\<forall>i<length w. \<forall>j<length w. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+              q ((1-t) * vx i + t * vx (Suc i mod length w),
+                 (1-t) * vy i + t * vy (Suc i mod length w))
+            = q ((1-s) * vx j + s * vx (Suc j mod length w),
+                 (1-s) * vy j + s * vy (Suc j mod length w))
+            \<longrightarrow> (i = j \<and> t = s)
+              \<or> (fst (w!i) = fst (w!j) \<and>
+                 (if snd (w!i) = snd (w!j) then s = t else s = 1 - t))"
+      and hC10: "\<forall>i<length w. let cx = (\<Sum>j<length w. vx j) / real (length w);
+                                 cy = (\<Sum>j<length w. vy j) / real (length w)
+           in (vx i - cx) * (vy (Suc i mod length w) - cy)
+            - (vy i - cy) * (vx (Suc i mod length w) - cx) > 0"
+      and hC11: "\<forall>i<length w. \<forall>k<length w.
+            k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length w \<longrightarrow>
+            (vx k - vx i) * (vy (Suc i mod length w) - vy i)
+            - (vy k - vy i) * (vx (Suc i mod length w) - vx i) < 0"
       by (rule quotient_of_scheme_extract_vx)
-    \<comment> \<open>Shifted versions of C3 and C4 (using h\\<sigma>\\_lt and h\\<sigma>\\_inj).\<close>
-    have hC3': "\<forall>i<length w. \<forall>j<length w. i \<noteq> j \<longrightarrow> (vx (\<sigma> i), vy (\<sigma> i)) \<noteq> (vx (\<sigma> j), vy (\<sigma> j))"
+    \<comment> \<open>Prove shifted versions of C3 and C4.\<close>
+    have hC3': "\<forall>i<length w. \<forall>j<length w. i \<noteq> j \<longrightarrow>
+        (vx (\<sigma> i), vy (\<sigma> i)) \<noteq> (vx (\<sigma> j), vy (\<sigma> j))"
       using hC3 h\<sigma>_lt h\<sigma>_inj unfolding inj_on_def by (by100 blast)
     have hC4': "\<forall>i<length w. (vx (\<sigma> i), vy (\<sigma> i)) \<in> P"
       using hC4 h\<sigma>_lt by (by100 blast)
-    \<comment> \<open>Now rebuild the definition for w\_sigma with shifted witnesses vx\\<circ>\\<sigma>, vy\\<circ>\\<sigma>.
-       Conditions C1, C2 are the same (same P, q). C3, C4 are proved above.
-       C5-C11 still need shifted versions. For now: sorry.\<close>
+    \<comment> \<open>Key helpers for shifted conditions.\<close>
+    let ?n = "length w"
+    have hSuc_shift: "\<And>i. i < ?n \<Longrightarrow> \<sigma> (Suc i mod ?n) = Suc (\<sigma> i) mod ?n"
+      using assms(6) by (by100 simp)
+    have hSuc_mod_lt: "\<And>i. i < ?n \<Longrightarrow> Suc i mod ?n < ?n"
+    proof -
+      fix i assume "i < ?n"
+      hence "0 < ?n" by (by100 linarith)
+      thus "Suc i mod ?n < ?n" by (rule mod_less_divisor)
+    qed
+    have h\<sigma>_surj: "\<And>j. j < ?n \<Longrightarrow> \<exists>i<?n. \<sigma> i = j"
+    proof -
+      fix j assume hj: "j < ?n"
+      have "\<sigma> ` {..<?n} = {..<?n}" using assms(3) unfolding bij_betw_def by (by100 blast)
+      hence "j \<in> \<sigma> ` {..<?n}" using hj by (by100 blast)
+      thus "\<exists>i<?n. \<sigma> i = j" by (by100 blast)
+    qed
+    \<comment> \<open>Sum reindexing via bijection: \\<Sum>j<n. f(\\<sigma> j) = \\<Sum>j<n. f j.\<close>
+    have hsum_reindex: "\<And>g :: nat \<Rightarrow> real. (\<Sum>j<?n. g (\<sigma> j)) = (\<Sum>j<?n. g j)"
+      using sum.reindex_bij_betw[OF assms(3)] by (by100 simp)
+    \<comment> \<open>Key pattern: each shifted condition uses \\<sigma>(Suc i mod n) in the goal (from the witness
+       \\<lambda>i. vx(\\<sigma> i) applied to Suc i mod n). Internally we convert to Suc(\\<sigma> i) mod n
+       via hSuc\_shift to match the original condition at position \\<sigma> i.\<close>
+    \<comment> \<open>Non-adjacency transfer helper: i \\<noteq> j \\<and> Suc i \\<noteq> j \\<and> i \\<noteq> Suc j implies the same for \\<sigma> i, \\<sigma> j.\<close>
+    have h_nonadj: "\<And>i j. \<lbrakk>i < ?n; j < ?n; i \<noteq> j; Suc i mod ?n \<noteq> j; i \<noteq> Suc j mod ?n\<rbrakk> \<Longrightarrow>
+        \<sigma> i \<noteq> \<sigma> j \<and> Suc (\<sigma> i) mod ?n \<noteq> \<sigma> j \<and> \<sigma> i \<noteq> Suc (\<sigma> j) mod ?n"
+    proof (intro conjI)
+      fix i j assume hi: "i < ?n" and hj: "j < ?n" and hij: "i \<noteq> j"
+        and hSij: "Suc i mod ?n \<noteq> j" and hijS: "i \<noteq> Suc j mod ?n"
+      show "\<sigma> i \<noteq> \<sigma> j"
+        using h\<sigma>_inj hi hj hij unfolding inj_on_def by (by100 blast)
+      show "Suc (\<sigma> i) mod ?n \<noteq> \<sigma> j"
+      proof
+        assume "Suc (\<sigma> i) mod ?n = \<sigma> j"
+        hence "\<sigma> (Suc i mod ?n) = \<sigma> j" using hSuc_shift[OF hi] by (by100 simp)
+        hence "Suc i mod ?n = j"
+          using h\<sigma>_inj hSuc_mod_lt[OF hi] hj unfolding inj_on_def by (by100 blast)
+        with hSij show False by (by100 simp)
+      qed
+      show "\<sigma> i \<noteq> Suc (\<sigma> j) mod ?n"
+      proof
+        assume "\<sigma> i = Suc (\<sigma> j) mod ?n"
+        hence "\<sigma> i = \<sigma> (Suc j mod ?n)" using hSuc_shift[OF hj] by (by100 simp)
+        hence "i = Suc j mod ?n"
+          using h\<sigma>_inj hi hSuc_mod_lt[OF hj] unfolding inj_on_def by (by100 blast)
+        with hijS show False by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Prove shifted C11 in \\<sigma>-composed form (matching the goal after \\<lambda>-witness).\<close>
+    have hC11': "\<forall>i<?n. \<forall>k<?n.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx (\<sigma> k) - vx (\<sigma> i)) * (vy (\<sigma> (Suc i mod ?n)) - vy (\<sigma> i))
+          - (vy (\<sigma> k) - vy (\<sigma> i)) * (vx (\<sigma> (Suc i mod ?n)) - vx (\<sigma> i)) < 0"
+    proof (intro allI impI)
+      fix i k assume hi: "i < ?n" and hk: "k < ?n" and hki: "k \<noteq> i"
+        and hksuc: "k \<noteq> Suc i mod ?n"
+      have hski: "\<sigma> k \<noteq> \<sigma> i"
+        using h\<sigma>_inj hi hk hki unfolding inj_on_def by (by100 blast)
+      have hsksuc: "\<sigma> k \<noteq> Suc (\<sigma> i) mod ?n"
+      proof
+        assume "\<sigma> k = Suc (\<sigma> i) mod ?n"
+        hence "\<sigma> k = \<sigma> (Suc i mod ?n)" using hSuc_shift[OF hi] by (by100 simp)
+        hence "k = Suc i mod ?n"
+          using h\<sigma>_inj hk hSuc_mod_lt[OF hi] unfolding inj_on_def by (by100 blast)
+        with hksuc show False by (by100 simp)
+      qed
+      have "vy (\<sigma> (Suc i mod ?n)) = vy (Suc (\<sigma> i) mod ?n)"
+        using hSuc_shift[OF hi] by (by100 simp)
+      moreover have "vx (\<sigma> (Suc i mod ?n)) = vx (Suc (\<sigma> i) mod ?n)"
+        using hSuc_shift[OF hi] by (by100 simp)
+      ultimately show "(vx (\<sigma> k) - vx (\<sigma> i)) * (vy (\<sigma> (Suc i mod ?n)) - vy (\<sigma> i))
+          - (vy (\<sigma> k) - vy (\<sigma> i)) * (vx (\<sigma> (Suc i mod ?n)) - vx (\<sigma> i)) < 0"
+        using hC11[rule_format, OF h\<sigma>_lt[OF hi] h\<sigma>_lt[OF hk] hski hsksuc] by (by100 simp)
+    qed
+    \<comment> \<open>Prove shifted C6 in \\<sigma>-composed form.\<close>
+    have hC6': "\<forall>i<?n. \<forall>j<?n.
+        i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+        (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+           ((1-s) * vx (\<sigma> i) + s * vx (\<sigma> (Suc i mod ?n)),
+            (1-s) * vy (\<sigma> i) + s * vy (\<sigma> (Suc i mod ?n)))
+         \<noteq> ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
+             (1-t) * vy (\<sigma> j) + t * vy (\<sigma> (Suc j mod ?n))))"
+    proof (intro allI impI ballI)
+      fix i j and s t :: real
+      assume hi: "i < ?n" and hj: "j < ?n" and hij: "i \<noteq> j"
+        and hSij: "Suc i mod ?n \<noteq> j" and hijS: "i \<noteq> Suc j mod ?n"
+        and hs: "s \<in> {0<..<1::real}" and ht: "t \<in> {0<..<1::real}"
+      from h_nonadj[OF hi hj hij hSij hijS]
+      obtain hsij: "\<sigma> i \<noteq> \<sigma> j" and hsSij: "Suc (\<sigma> i) mod ?n \<noteq> \<sigma> j"
+        and hsijS: "\<sigma> i \<noteq> Suc (\<sigma> j) mod ?n" by (by100 blast)
+      have hri: "vx (\<sigma> (Suc i mod ?n)) = vx (Suc (\<sigma> i) mod ?n)"
+        using hSuc_shift[OF hi] by (by100 simp)
+      have hrj: "vx (\<sigma> (Suc j mod ?n)) = vx (Suc (\<sigma> j) mod ?n)"
+        using hSuc_shift[OF hj] by (by100 simp)
+      have hri2: "vy (\<sigma> (Suc i mod ?n)) = vy (Suc (\<sigma> i) mod ?n)"
+        using hSuc_shift[OF hi] by (by100 simp)
+      have hrj2: "vy (\<sigma> (Suc j mod ?n)) = vy (Suc (\<sigma> j) mod ?n)"
+        using hSuc_shift[OF hj] by (by100 simp)
+      show "((1-s) * vx (\<sigma> i) + s * vx (\<sigma> (Suc i mod ?n)),
+             (1-s) * vy (\<sigma> i) + s * vy (\<sigma> (Suc i mod ?n)))
+          \<noteq> ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
+              (1-t) * vy (\<sigma> j) + t * vy (\<sigma> (Suc j mod ?n)))"
+        using hC6[rule_format, OF h\<sigma>_lt[OF hi] h\<sigma>_lt[OF hj] hsij hsSij hsijS hs ht]
+              hri hrj hri2 hrj2 by (by100 simp)
+    qed
+    \<comment> \<open>Prove shifted C8 in \\<sigma>-composed form.\<close>
+    have hC8': "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+                  p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+                        (1-t) * vy (\<sigma> i) + t * vy (\<sigma> (Suc i mod ?n))))
+               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    proof (intro ballI impI allI)
+      fix p p' assume hp: "p \<in> P" and hp': "p' \<in> P" and hq: "q p = q p'"
+        and hne: "\<forall>i<?n. \<forall>t\<in>I_set.
+                  p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+                        (1-t) * vy (\<sigma> i) + t * vy (\<sigma> (Suc i mod ?n)))"
+      have hne_orig: "\<forall>j<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
+                    (1-t) * vy j + t * vy (Suc j mod ?n))"
+      proof (intro allI impI ballI)
+        fix j t assume hj: "j < ?n" and ht: "t \<in> I_set"
+        from h\<sigma>_surj[OF hj] obtain i where hi: "i < ?n" and hsij: "\<sigma> i = j" by (by100 blast)
+        have "p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+                    (1-t) * vy (\<sigma> i) + t * vy (\<sigma> (Suc i mod ?n)))"
+          using hne[rule_format, OF hi ht] .
+        moreover have "\<sigma> (Suc i mod ?n) = Suc j mod ?n"
+          using hSuc_shift[OF hi] hsij by (by100 simp)
+        ultimately show "p \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
+                    (1-t) * vy j + t * vy (Suc j mod ?n))"
+          using hsij by (by100 simp)
+      qed
+      show "p = p'" using hC8[rule_format, OF hp] hne_orig hp' hq by (by100 blast)
+    qed
+    \<comment> \<open>Prove shifted C10 in \\<sigma>-composed form.\<close>
+    have hC10': "\<forall>i<?n. let cx = (\<Sum>j<?n. vx (\<sigma> j)) / real ?n;
+                             cy = (\<Sum>j<?n. vy (\<sigma> j)) / real ?n
+         in (vx (\<sigma> i) - cx) * (vy (\<sigma> (Suc i mod ?n)) - cy)
+          - (vy (\<sigma> i) - cy) * (vx (\<sigma> (Suc i mod ?n)) - cx) > 0"
+    proof (intro allI impI)
+      fix i assume hi: "i < ?n"
+      have hcx: "(\<Sum>j<?n. vx (\<sigma> j)) = (\<Sum>j<?n. vx j)" using hsum_reindex by (by100 blast)
+      have hcy: "(\<Sum>j<?n. vy (\<sigma> j)) = (\<Sum>j<?n. vy j)" using hsum_reindex by (by100 blast)
+      have hri: "vx (\<sigma> (Suc i mod ?n)) = vx (Suc (\<sigma> i) mod ?n)"
+        using hSuc_shift[OF hi] by (by100 simp)
+      have hri2: "vy (\<sigma> (Suc i mod ?n)) = vy (Suc (\<sigma> i) mod ?n)"
+        using hSuc_shift[OF hi] by (by100 simp)
+      show "let cx = (\<Sum>j<?n. vx (\<sigma> j)) / real ?n;
+                cy = (\<Sum>j<?n. vy (\<sigma> j)) / real ?n
+           in (vx (\<sigma> i) - cx) * (vy (\<sigma> (Suc i mod ?n)) - cy)
+            - (vy (\<sigma> i) - cy) * (vx (\<sigma> (Suc i mod ?n)) - cx) > 0"
+        using hC10[rule_format, OF h\<sigma>_lt[OF hi]] hcx hcy hri hri2 by (by100 simp)
+    qed
+    \<comment> \<open>Build the goal from shifted witnesses.\<close>
     show ?thesis
       unfolding top1_quotient_of_scheme_on_def hlen_w\<sigma>
-      sorry
+      apply (intro conjI)
+      apply (rule htopo)
+      apply (rule exI[of _ P])
+      apply (rule exI[of _ q])
+      apply (rule exI[of _ "\<lambda>i. vx (\<sigma> i)"])
+      apply (rule exI[of _ "\<lambda>i. vy (\<sigma> i)"])
+      apply (intro conjI)
+      subgoal using hC1 by assumption \<comment> \<open>C1: polygonal region\<close>
+      subgoal using hC2 by assumption \<comment> \<open>C2: quotient map\<close>
+      subgoal using hC3' by assumption \<comment> \<open>C3: shifted vertices distinct\<close>
+      subgoal using hC4' by assumption \<comment> \<open>C4: shifted vertices in P\<close>
+      subgoal \<comment> \<open>C5: convex hull — reindexing coefficients via bij.\<close>
+      proof -
+        \<comment> \<open>Key: for any coeffs, \\<Sum>coeffs i * vx(\\<sigma> i) = \\<Sum>(coeffs\\<circ>\\<sigma>) i * vx(\\<sigma> i)
+           which by reindexing = \\<Sum>j. (coeffs\\<circ>\\<sigma>)(\\<sigma>\\<inverse> j) * vx j = \\<Sum>j. coeffs j * vx j.
+           So we transform coefficients: coeffs \\<mapsto> coeffs\\<circ>\\<sigma> gives \\<supseteq>, coeffs\\<circ>\\<sigma>\\<inverse> gives \\<subseteq>.\<close>
+        \<comment> \<open>Direction 1 (original \\<to> shifted): given coeffs for vx, use coeffs\\<circ>\\<sigma> for vx\\<circ>\\<sigma>.\<close>
+        have hdir1: "\<And>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<Longrightarrow> (\<Sum>i<?n. coeffs i) = 1 \<Longrightarrow>
+          \<exists>coeffs'. (\<forall>i<?n. 0 \<le> coeffs' i) \<and> (\<Sum>i<?n. coeffs' i) = 1
+            \<and> (\<Sum>i<?n. coeffs' i * vx (\<sigma> i)) = (\<Sum>i<?n. coeffs i * vx i)
+            \<and> (\<Sum>i<?n. coeffs' i * vy (\<sigma> i)) = (\<Sum>i<?n. coeffs i * vy i)"
+        proof -
+          fix coeffs :: "nat \<Rightarrow> real"
+          assume hnn: "\<forall>i<?n. 0 \<le> coeffs i" and hsum: "(\<Sum>i<?n. coeffs i) = 1"
+          let ?coeffs' = "coeffs \<circ> \<sigma>"
+          have hnn': "\<forall>i<?n. 0 \<le> ?coeffs' i" using hnn h\<sigma>_lt by (by100 fastforce)
+          have hsum': "(\<Sum>i<?n. ?coeffs' i) = 1"
+            using hsum_reindex[of "coeffs"] hsum by (by100 simp)
+          have "(\<Sum>i<?n. ?coeffs' i * vx (\<sigma> i)) = (\<Sum>i<?n. coeffs (\<sigma> i) * vx (\<sigma> i))"
+            by (by100 simp)
+          also have "\<dots> = (\<Sum>j<?n. coeffs j * vx j)"
+            using sum.reindex_bij_betw[OF assms(3), of "\<lambda>j. coeffs j * vx j"] by (by100 simp)
+          finally have hvx: "(\<Sum>i<?n. ?coeffs' i * vx (\<sigma> i)) = (\<Sum>j<?n. coeffs j * vx j)" .
+          have "(\<Sum>i<?n. ?coeffs' i * vy (\<sigma> i)) = (\<Sum>i<?n. coeffs (\<sigma> i) * vy (\<sigma> i))"
+            by (by100 simp)
+          also have "\<dots> = (\<Sum>j<?n. coeffs j * vy j)"
+            using sum.reindex_bij_betw[OF assms(3), of "\<lambda>j. coeffs j * vy j"] by (by100 simp)
+          finally have hvy: "(\<Sum>i<?n. ?coeffs' i * vy (\<sigma> i)) = (\<Sum>j<?n. coeffs j * vy j)" .
+          show "\<exists>coeffs'. (\<forall>i<?n. 0 \<le> coeffs' i) \<and> (\<Sum>i<?n. coeffs' i) = 1
+            \<and> (\<Sum>i<?n. coeffs' i * vx (\<sigma> i)) = (\<Sum>i<?n. coeffs i * vx i)
+            \<and> (\<Sum>i<?n. coeffs' i * vy (\<sigma> i)) = (\<Sum>i<?n. coeffs i * vy i)"
+            using hnn' hsum' hvx hvy by (by100 blast)
+        qed
+        \<comment> \<open>Direction 2 (shifted \\<to> original): given coeffs' for vx\\<circ>\\<sigma>, reindex via \\<sigma>.
+           Key: \\<Sum>coeffs'(inv(\\<sigma>) i) * vx i = \\<Sum>coeffs' j * vx(\\<sigma> j) by reindexing with \\<sigma>.\<close>
+        have h_inv_lt: "\<And>i. i < ?n \<Longrightarrow> inv_into {..<?n} \<sigma> i < ?n"
+          using bij_betw_inv_into[OF assms(3)] unfolding bij_betw_def by (by100 blast)
+        have h_inv_\<sigma>: "\<And>j. j < ?n \<Longrightarrow> inv_into {..<?n} \<sigma> (\<sigma> j) = j"
+          using inv_into_f_f[OF h\<sigma>_inj] by (by100 simp)
+        have hdir2: "\<And>coeffs'. (\<forall>i<?n. 0 \<le> coeffs' i) \<Longrightarrow> (\<Sum>i<?n. coeffs' i) = 1 \<Longrightarrow>
+          \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+            \<and> (\<Sum>i<?n. coeffs i * vx i) = (\<Sum>i<?n. coeffs' i * vx (\<sigma> i))
+            \<and> (\<Sum>i<?n. coeffs i * vy i) = (\<Sum>i<?n. coeffs' i * vy (\<sigma> i))"
+        proof -
+          fix coeffs' :: "nat \<Rightarrow> real"
+          assume hnn: "\<forall>i<?n. 0 \<le> coeffs' i" and hsum: "(\<Sum>i<?n. coeffs' i) = 1"
+          let ?coeffs = "coeffs' \<circ> (inv_into {..<?n} \<sigma>)"
+          have hnn': "\<forall>i<?n. 0 \<le> ?coeffs i"
+            using hnn h_inv_lt by (by100 fastforce)
+          have hsum': "(\<Sum>i<?n. ?coeffs i) = 1"
+          proof -
+            have "(\<Sum>i<?n. ?coeffs i) = (\<Sum>j<?n. coeffs' (inv_into {..<?n} \<sigma> (\<sigma> j)))"
+              using sum.reindex_bij_betw[OF assms(3), of "\<lambda>i. coeffs' (inv_into {..<?n} \<sigma> i)"]
+              by (by100 simp)
+            also have "\<dots> = (\<Sum>j<?n. coeffs' j)"
+            proof (rule sum.cong)
+              fix j assume "j \<in> {..<?n}" thus "coeffs' (inv_into {..<?n} \<sigma> (\<sigma> j)) = coeffs' j"
+                using h_inv_\<sigma> by (by100 simp)
+            qed (by100 simp)
+            finally show ?thesis using hsum by (by100 simp)
+          qed
+          have hvx: "(\<Sum>i<?n. ?coeffs i * vx i) = (\<Sum>i<?n. coeffs' i * vx (\<sigma> i))"
+          proof -
+            have "(\<Sum>i<?n. ?coeffs i * vx i)
+                = (\<Sum>j<?n. coeffs' (inv_into {..<?n} \<sigma> (\<sigma> j)) * vx (\<sigma> j))"
+              using sum.reindex_bij_betw[OF assms(3),
+                of "\<lambda>i. coeffs' (inv_into {..<?n} \<sigma> i) * vx i"] by (by100 simp)
+            also have "\<dots> = (\<Sum>j<?n. coeffs' j * vx (\<sigma> j))"
+            proof (rule sum.cong)
+              fix j assume "j \<in> {..<?n}"
+              thus "coeffs' (inv_into {..<?n} \<sigma> (\<sigma> j)) * vx (\<sigma> j) = coeffs' j * vx (\<sigma> j)"
+                using h_inv_\<sigma> by (by100 simp)
+            qed (by100 simp)
+            finally show ?thesis .
+          qed
+          have hvy: "(\<Sum>i<?n. ?coeffs i * vy i) = (\<Sum>i<?n. coeffs' i * vy (\<sigma> i))"
+          proof -
+            have "(\<Sum>i<?n. ?coeffs i * vy i)
+                = (\<Sum>j<?n. coeffs' (inv_into {..<?n} \<sigma> (\<sigma> j)) * vy (\<sigma> j))"
+              using sum.reindex_bij_betw[OF assms(3),
+                of "\<lambda>i. coeffs' (inv_into {..<?n} \<sigma> i) * vy i"] by (by100 simp)
+            also have "\<dots> = (\<Sum>j<?n. coeffs' j * vy (\<sigma> j))"
+            proof (rule sum.cong)
+              fix j assume "j \<in> {..<?n}"
+              thus "coeffs' (inv_into {..<?n} \<sigma> (\<sigma> j)) * vy (\<sigma> j) = coeffs' j * vy (\<sigma> j)"
+                using h_inv_\<sigma> by (by100 simp)
+            qed (by100 simp)
+            finally show ?thesis .
+          qed
+          show "\<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+            \<and> (\<Sum>i<?n. coeffs i * vx i) = (\<Sum>i<?n. coeffs' i * vx (\<sigma> i))
+            \<and> (\<Sum>i<?n. coeffs i * vy i) = (\<Sum>i<?n. coeffs' i * vy (\<sigma> i))"
+            using hnn' hsum' hvx hvy by (by100 blast)
+        qed
+        \<comment> \<open>Combine both directions to show set equality.\<close>
+        show ?thesis
+        proof (rule set_eqI)
+          fix p :: "real \<times> real"
+          obtain x y where hxy: "p = (x, y)" by (cases p)
+          show "(p \<in> P) = (p \<in> {(x, y) |x y.
+                \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1 \<and>
+                   x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i)) \<and> y = (\<Sum>i<?n. coeffs i * vy (\<sigma> i))})"
+          proof
+            assume "p \<in> P"
+            hence "p \<in> {(x, y) |x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<?n. coeffs i * vx i) \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
+              using hC5 by (by100 blast)
+            then obtain coeffs where hcoeffs:
+              "(\<forall>i<?n. 0 \<le> coeffs i)" "(\<Sum>i<?n. coeffs i) = 1"
+              "x = (\<Sum>i<?n. coeffs i * vx i)" "y = (\<Sum>i<?n. coeffs i * vy i)"
+              using hxy by (by100 blast)
+            from hdir1[OF hcoeffs(1) hcoeffs(2)] obtain coeffs' where hcoeffs':
+              "(\<forall>i<?n. 0 \<le> coeffs' i)" "(\<Sum>i<?n. coeffs' i) = 1"
+              "(\<Sum>i<?n. coeffs' i * vx (\<sigma> i)) = (\<Sum>i<?n. coeffs i * vx i)"
+              "(\<Sum>i<?n. coeffs' i * vy (\<sigma> i)) = (\<Sum>i<?n. coeffs i * vy i)"
+              by (by100 blast)
+            have hx': "x = (\<Sum>i<?n. coeffs' i * vx (\<sigma> i))"
+              using hcoeffs(3) hcoeffs'(3) by (by100 simp)
+            have hy': "y = (\<Sum>i<?n. coeffs' i * vy (\<sigma> i))"
+              using hcoeffs(4) hcoeffs'(4) by (by100 simp)
+            show "p \<in> {(x, y) |x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+                \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i)) \<and> y = (\<Sum>i<?n. coeffs i * vy (\<sigma> i))}"
+              using hxy hcoeffs'(1,2) hx' hy' by (by100 blast)
+          next
+            assume "p \<in> {(x, y) |x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+                \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i)) \<and> y = (\<Sum>i<?n. coeffs i * vy (\<sigma> i))}"
+            then obtain coeffs' where hcoeffs':
+              "(\<forall>i<?n. 0 \<le> coeffs' i)" "(\<Sum>i<?n. coeffs' i) = 1"
+              "x = (\<Sum>i<?n. coeffs' i * vx (\<sigma> i))" "y = (\<Sum>i<?n. coeffs' i * vy (\<sigma> i))"
+              using hxy by (by100 blast)
+            from hdir2[OF hcoeffs'(1) hcoeffs'(2)] obtain coeffs where hcoeffs:
+              "(\<forall>i<?n. 0 \<le> coeffs i)" "(\<Sum>i<?n. coeffs i) = 1"
+              "(\<Sum>i<?n. coeffs i * vx i) = (\<Sum>i<?n. coeffs' i * vx (\<sigma> i))"
+              "(\<Sum>i<?n. coeffs i * vy i) = (\<Sum>i<?n. coeffs' i * vy (\<sigma> i))"
+              by (by100 blast)
+            have hx: "x = (\<Sum>i<?n. coeffs i * vx i)"
+              using hcoeffs(3) hcoeffs'(3) by (by100 simp)
+            have hy: "y = (\<Sum>i<?n. coeffs i * vy i)"
+              using hcoeffs(4) hcoeffs'(4) by (by100 simp)
+            show "p \<in> P" using hC5 hxy hcoeffs(1,2) hx hy by (by100 blast)
+          qed
+        qed
+      qed
+      subgoal using hC6' by assumption \<comment> \<open>C6: non-adjacent edges\<close>
+      subgoal \<comment> \<open>C7: identification\<close>
+      proof (intro allI impI ballI)
+        fix i j t
+        assume hi: "i < ?n" and hj: "j < ?n" and ht: "t \<in> I_set"
+          and hfst: "fst (w_\<sigma> ! i) = fst (w_\<sigma> ! j)"
+        have hfst_w: "fst (w ! (\<sigma> i)) = fst (w ! (\<sigma> j))"
+          using hfst hnth_w\<sigma>[OF hi] hnth_w\<sigma>[OF hj] by (by100 simp)
+        have hSuc_i: "\<sigma> (Suc i mod ?n) = Suc (\<sigma> i) mod ?n" using hSuc_shift[OF hi] .
+        have hSuc_j: "\<sigma> (Suc j mod ?n) = Suc (\<sigma> j) mod ?n" using hSuc_shift[OF hj] .
+        have hsnd_eq: "(snd (w_\<sigma> ! i) = snd (w_\<sigma> ! j)) = (snd (w ! (\<sigma> i)) = snd (w ! (\<sigma> j)))"
+          using hnth_w\<sigma>[OF hi] hnth_w\<sigma>[OF hj] by (by100 simp)
+        have hfact: "q ((1-t) * vx (\<sigma> i) + t * vx (Suc (\<sigma> i) mod ?n),
+                        (1-t) * vy (\<sigma> i) + t * vy (Suc (\<sigma> i) mod ?n))
+             = (if snd (w ! (\<sigma> i)) = snd (w ! (\<sigma> j))
+                then q ((1-t) * vx (\<sigma> j) + t * vx (Suc (\<sigma> j) mod ?n),
+                        (1-t) * vy (\<sigma> j) + t * vy (Suc (\<sigma> j) mod ?n))
+                else q (t * vx (\<sigma> j) + (1-t) * vx (Suc (\<sigma> j) mod ?n),
+                        t * vy (\<sigma> j) + (1-t) * vy (Suc (\<sigma> j) mod ?n)))"
+          using hC7[rule_format, OF h\<sigma>_lt[OF hi] h\<sigma>_lt[OF hj] hfst_w ht] .
+        show "q ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+                  (1-t) * vy (\<sigma> i) + t * vy (\<sigma> (Suc i mod ?n)))
+             = (if snd (w_\<sigma> ! i) = snd (w_\<sigma> ! j)
+                then q ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
+                        (1-t) * vy (\<sigma> j) + t * vy (\<sigma> (Suc j mod ?n)))
+                else q (t * vx (\<sigma> j) + (1-t) * vx (\<sigma> (Suc j mod ?n)),
+                        t * vy (\<sigma> j) + (1-t) * vy (\<sigma> (Suc j mod ?n))))"
+          using hfact hSuc_i hSuc_j hsnd_eq by (by100 simp)
+      qed
+      subgoal using hC8' by assumption \<comment> \<open>C8: interior injectivity\<close>
+      subgoal \<comment> \<open>C9: boundary injectivity\<close>
+      proof (intro allI impI ballI)
+        fix i j t s
+        assume hi: "i < ?n" and hj: "j < ?n" and ht: "t \<in> I_set" and hs: "s \<in> I_set"
+          and hq: "q ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+                      (1-t) * vy (\<sigma> i) + t * vy (\<sigma> (Suc i mod ?n)))
+                 = q ((1-s) * vx (\<sigma> j) + s * vx (\<sigma> (Suc j mod ?n)),
+                      (1-s) * vy (\<sigma> j) + s * vy (\<sigma> (Suc j mod ?n)))"
+        have hSuc_i: "\<sigma> (Suc i mod ?n) = Suc (\<sigma> i) mod ?n" using hSuc_shift[OF hi] .
+        have hSuc_j: "\<sigma> (Suc j mod ?n) = Suc (\<sigma> j) mod ?n" using hSuc_shift[OF hj] .
+        have hq_orig: "q ((1-t) * vx (\<sigma> i) + t * vx (Suc (\<sigma> i) mod ?n),
+                          (1-t) * vy (\<sigma> i) + t * vy (Suc (\<sigma> i) mod ?n))
+                     = q ((1-s) * vx (\<sigma> j) + s * vx (Suc (\<sigma> j) mod ?n),
+                          (1-s) * vy (\<sigma> j) + s * vy (Suc (\<sigma> j) mod ?n))"
+          using hq hSuc_i hSuc_j by (by100 simp)
+        have hfact: "((\<sigma> i) = (\<sigma> j) \<and> t = s)
+          \<or> (fst (w ! (\<sigma> i)) = fst (w ! (\<sigma> j)) \<and>
+             (if snd (w ! (\<sigma> i)) = snd (w ! (\<sigma> j)) then s = t else s = 1 - t))"
+          using hC9[rule_format, OF h\<sigma>_lt[OF hi] h\<sigma>_lt[OF hj] ht hs hq_orig] .
+        show "(i = j \<and> t = s)
+          \<or> (fst (w_\<sigma> ! i) = fst (w_\<sigma> ! j) \<and>
+             (if snd (w_\<sigma> ! i) = snd (w_\<sigma> ! j) then s = t else s = 1 - t))"
+        proof (cases "\<sigma> i = \<sigma> j")
+          case True
+          hence "i = j" using h\<sigma>_inj hi hj unfolding inj_on_def by (by100 blast)
+          with hfact True show ?thesis
+            using hnth_w\<sigma>[OF hi] hnth_w\<sigma>[OF hj] by (by100 simp)
+        next
+          case False
+          with hfact have "fst (w ! (\<sigma> i)) = fst (w ! (\<sigma> j)) \<and>
+             (if snd (w ! (\<sigma> i)) = snd (w ! (\<sigma> j)) then s = t else s = 1 - t)"
+            by (by100 blast)
+          thus ?thesis using hnth_w\<sigma>[OF hi] hnth_w\<sigma>[OF hj] by (by100 simp)
+        qed
+      qed
+      subgoal using hC10' by assumption \<comment> \<open>C10: counterclockwise\<close>
+      subgoal using hC11' by assumption \<comment> \<open>C11: strict edge-side\<close>
+      done
   qed
   \<comment> \<open>Step 2: w\_sigma \\<to> w' via original transfer (fst/snd match at each position).\<close>
   have hfst_ws: "\<And>i. i < length w_\<sigma> \<Longrightarrow> fst (w'!i) = fst (w_\<sigma>!i)"
