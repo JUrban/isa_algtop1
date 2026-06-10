@@ -1318,7 +1318,27 @@ proof -
                 p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
                       (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n))))))
              \<longrightarrow> (\<forall>p'\<in>P'. q' p = q' p' \<longrightarrow> p = p')"
-    sorry
+  proof (intro ballI impI allI)
+    fix p p' assume hp: "p \<in> P'" and hp': "p' \<in> P'" and hq: "q' p = q' p'"
+      and hne: "\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+                      (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n)))))"
+    \<comment> \<open>\\<rho>(p) \\<in> P and \\<rho>(p') \\<in> P.\<close>
+    have h\<rho>p: "\<rho> p \<in> P" using hp h\<rho>_range by (by100 blast)
+    have h\<rho>p': "\<rho> p' \<in> P" using hp' h\<rho>_range by (by100 blast)
+    \<comment> \<open>q(\\<rho>(p)) = q(\\<rho>(p')) from q' definition.\<close>
+    have hq_rho: "q (\<rho> p) = q (\<rho> p')" using hq unfolding q'_def by (by100 simp)
+    \<comment> \<open>\\<rho>(p) is not on any original edge — use edge set equality via \\<sigma>.\<close>
+    have hne_orig: "\<forall>j<?n. \<forall>t\<in>I_set.
+        \<rho> p \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
+              (1-t) * vy j + t * vy (Suc j mod ?n))"
+      sorry \<comment> \<open>From hne via \\<sigma> surjection + \\<rho> involution on edge points.\<close>
+    \<comment> \<open>Apply original C8: \\<rho>(p) = \\<rho>(p').\<close>
+    have "\<rho> p = \<rho> p'"
+      using hC8 h\<rho>p hne_orig h\<rho>p' hq_rho by (by100 blast)
+    \<comment> \<open>\\<rho> injective \\<Longrightarrow> p = p'.\<close>
+    thus "p = p'" using h\<rho>_inv by (by100 metis)
+  qed
   \<comment> \<open>C9': boundary injectivity.\<close>
   have hC9': "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
             q' ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
