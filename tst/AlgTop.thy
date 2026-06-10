@@ -549,6 +549,13 @@ proof -
     by (rule quotient_of_scheme_extract)
   have htopo: "is_topology_on_strict Y TY"
     using assms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Extract vertices from P's polygonal region.\<close>
+  from hC1[unfolded top1_is_polygonal_region_on_def]
+  have hn3: "?n \<ge> 3" by (by100 blast)
+  obtain vx vy :: "nat \<Rightarrow> real" where
+      hvx_dist: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+    and hvx_P: "top1_is_polygonal_region_on P ?n"
+    sorry \<comment> \<open>Extract vertices from hC1. The dist condition is the first conjunct.\<close>
   \<comment> \<open>Step 1: Define reflection and witnesses.\<close>
   define \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<rho> = (\<lambda>(x,y). (x, -y))"
   define P' where "P' = \<rho> ` P"
