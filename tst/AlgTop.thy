@@ -982,7 +982,37 @@ proof -
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
       P' (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P')
       (inv_into P' \<rho>)"
-    sorry \<comment> \<open>inv\_into P' \\<rho> = \\<rho> on P. Continuity follows from h\\<rho>\\_cont\\_rev + h\\_inv\\_into.\<close>
+  proof -
+    \<comment> \<open>inv\_into P' \\<rho> agrees with \\<rho> on P.\<close>
+    have "\<And>p. p \<in> P \<Longrightarrow> inv_into P' \<rho> p = \<rho> p" using h_inv_into .
+    \<comment> \<open>Since they agree on P, continuity transfers from h\\<rho>\\_cont\\_rev.\<close>
+    show ?thesis
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI)
+      fix p assume hp: "p \<in> P"
+      have "inv_into P' \<rho> p = \<rho> p" using h_inv_into[OF hp] .
+      moreover have "\<rho> p \<in> P'" unfolding P'_def using hp by (by100 blast)
+      ultimately show "inv_into P' \<rho> p \<in> P'" by (by100 simp)
+    next
+      fix V assume "V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P'"
+      \<comment> \<open>Preimage of V under inv\_into = preimage of V under \\<rho> (agree on P).\<close>
+      have "{x \<in> P. inv_into P' \<rho> x \<in> V} = {x \<in> P. \<rho> x \<in> V}"
+      proof
+        show "{x \<in> P. inv_into P' \<rho> x \<in> V} \<subseteq> {x \<in> P. \<rho> x \<in> V}"
+          using h_inv_into by (by100 auto)
+        show "{x \<in> P. \<rho> x \<in> V} \<subseteq> {x \<in> P. inv_into P' \<rho> x \<in> V}"
+          using h_inv_into by (by100 auto)
+      qed
+      moreover have "{x \<in> P. \<rho> x \<in> V} \<in>
+          subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+        using h\<rho>_cont_rev[unfolded top1_continuous_map_on_def]
+            \<open>V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P'\<close>
+        by (by100 blast)
+      ultimately show "{x \<in> P. inv_into P' \<rho> x \<in> V} \<in>
+          subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+        by (by100 simp)
+    qed
+  qed
   let ?TP' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P'"
   let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
   have hR2_top_local: "is_topology_on (UNIV :: (real \<times> real) set)
