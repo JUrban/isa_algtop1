@@ -3246,8 +3246,9 @@ next
   show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_relabel new old w)
-  \<comment> \<open>Valid relabel: new = old (identity) or new fresh (relabel\\_fresh).\<close>
-  show ?case sorry
+  \<comment> \<open>Valid relabel: new fresh and new \\<noteq> old. Use relabel\\_fresh.\<close>
+  from quotient_of_scheme_relabel_fresh[OF v_relabel.prems v_relabel.hyps]
+  show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_flip_label w a)
   from quotient_scheme_flip_label[OF v_flip_label.prems]
