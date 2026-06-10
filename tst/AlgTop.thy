@@ -2226,7 +2226,7 @@ lemma quotient_of_scheme_cut_paste2:
 lemma quotient_of_scheme_cut_paste_opp:
   assumes "top1_quotient_of_scheme_on Y TY (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
   shows "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
-  sorry \<comment> \<open>Proved below as quotient\\_of\\_scheme\\_cut\\_paste\\_opp\\_proof.\<close>
+  sorry \<comment> \<open>Same-space preservation; needs new polygon witnesses (transfer\\_bij won't work).\<close>
 
 \<comment> \<open>Context-left: quotient preserved when applying an operation to a suffix.\<close>
 lemma quotient_of_scheme_context_left:
@@ -3695,8 +3695,13 @@ proof -
   define cx2 where "cx2 = (\<Sum>i<n. vx2 i) / real n"
   define cy2 where "cy2 = (\<Sum>i<n. vy2 i) / real n"
   \<comment> \<open>Step 3: Define \\<phi> via convex-combination transfer.
-     Every point p \\<in> P1 has unique barycentric coordinates coeffs w.r.t. the vertices.
-     \\<phi>(p) = the point in P2 with the SAME barycentric coordinates.\<close>
+     NOTE: SOME+barycentric approach is WRONG for n > 3 (non-unique representations).
+     Correct approach: use polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary to compose
+     P1 \\<to> B² \\<to> P2 via the specific edge-preserving disk homeomorphisms.
+     This requires CCW + strict side conditions, which are available from quotient\\_of\\_scheme\\_on
+     but NOT from top1\\_is\\_polygonal\\_region\\_on alone.
+     The fix: either strengthen the assumptions, or prove this inside scheme\\_quotient\\_uniqueness
+     where all conditions are available.\<close>
   define \<phi> where "\<phi> = (\<lambda>p. let coeffs = SOME coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
                          \<and> fst p = (\<Sum>i<n. coeffs i * vx1 i) \<and> snd p = (\<Sum>i<n. coeffs i * vy1 i)
                     in ((\<Sum>i<n. coeffs i * vx2 i), (\<Sum>i<n. coeffs i * vy2 i)))"
