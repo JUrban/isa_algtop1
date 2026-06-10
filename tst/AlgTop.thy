@@ -10920,9 +10920,21 @@ proof -
       \<comment> \<open>Case 0: sphere case. scheme ~ [(a,T),(a,F),(b,T),(b,F)].\<close>
       fix a_s b_s assume hab_s: "a_s \<noteq> b_s"
           and hequiv_s: "top1_scheme_equiv scheme [(a_s, True), (a_s, False), (b_s, True), (b_s, False)]"
-      \<comment> \<open>X is quotient of the sphere scheme. The sphere scheme's quotient is S2.
-         So X \\<cong> S2 (the first disjunct of the theorem).\<close>
-      show ?thesis sorry \<comment> \<open>Sphere case: X \\<cong> S2.\<close>
+      \<comment> \<open>Step 1: X is homeomorphic to some quotient Y of the sphere scheme.\<close>
+      from scheme_equiv_implies_homeo_realization[OF hsch hequiv_s]
+      obtain Y :: "'a set" and TY :: "'a set set" and h :: "'a \<Rightarrow> 'a" where
+        hY: "top1_quotient_of_scheme_on Y TY [(a_s, True), (a_s, False), (b_s, True), (b_s, False)]"
+        and hXY: "top1_homeomorphism_on X TX Y TY h"
+        by (by100 blast)
+      \<comment> \<open>Step 2: Y (quotient of sphere scheme) \\<cong> S2.
+         Needs sphere\\_scheme\\_realizes\\_sphere lemma (geometric construction).\<close>
+      have "\<exists>g. top1_homeomorphism_on Y TY top1_S2 top1_S2_topology g"
+        sorry \<comment> \<open>Sphere scheme realizes S2. See audit 20 step 6.\<close>
+      then obtain g where hYS: "top1_homeomorphism_on Y TY top1_S2 top1_S2_topology g" by (by100 blast)
+      \<comment> \<open>Step 3: X \\<cong> Y \\<cong> S2 by composition.\<close>
+      from homeomorphism_comp[OF hXY hYS]
+      have "top1_homeomorphism_on X TX top1_S2 top1_S2_topology (g \<circ> h)" .
+      thus ?thesis by (by100 blast)
     next
       \<comment> \<open>Case 1: scheme \\<sim> torus normal form.\<close>
       fix n w assume hn: "n > 0" and htor: "top1_is_torus_scheme w n"
