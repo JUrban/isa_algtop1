@@ -3230,7 +3230,7 @@ lemma homeo_realization_flat_introI:
       and hh: "top1_homeomorphism_on X TX Y TY h"
   shows "\<exists>Y' TY' h'. top1_quotient_of_scheme_on Y' TY' t
               \<and> top1_homeomorphism_on X TX Y' TY' h'"
-  sorry \<comment> \<open>Trivial \\<exists>-intro but all tactics fail due to predicate size. Needs ML-level proof.\<close>
+  sorry \<comment> \<open>Trivial but all tactics fail. See PLAN\\_zero\\_sorry-expert-audit18 section 2.\<close>
 
 lemma same_space_implies_homeo_realization:
   assumes "top1_quotient_of_scheme_on X TX t"
