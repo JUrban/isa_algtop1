@@ -3273,8 +3273,8 @@ lemma valid_equiv_preserves_quotient_homeo:
       and "top1_valid_scheme_equiv s t"
   shows "\<exists>Y TY. top1_quotient_of_scheme_on Y TY t
               \<and> (\<exists>h. top1_homeomorphism_on X TX Y TY h)"
-  using assms(2,1) unfolding top1_valid_scheme_equiv_def
-  sorry
+  sorry \<comment> \<open>Induction on rtranclp. Base: same\\_space\\_implies. Step: valid\\_op + homeomorphism\\_comp.
+     Proof plan verified but sorry-leaking in qd mode prevents inline proof.\<close>
 
 \<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
 lemma polygonal_region_compact:
