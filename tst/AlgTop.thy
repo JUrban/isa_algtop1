@@ -159,13 +159,15 @@ lemma map_relabel_id:
   using assms by (induction w) (by100 auto)+
 
 \<comment> \<open>Disjoint relabeling: if all target labels are fresh (disjoint from source),
-   then the relabeling is a valid equivalence. Proof by induction on the label set.\<close>
+   then the relabeling is a valid equivalence. Proof by finite induction on labels.\<close>
 lemma valid_scheme_relabel_disjoint:
   fixes w :: "(nat \<times> bool) list"
   assumes "inj_on \<rho> (scheme_labels w)"
       and "\<rho> ` (scheme_labels w) \<inter> scheme_labels w = {}"
   shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<rho> l, b)) w)"
-  sorry \<comment> \<open>Induction on labels: pick l, rename l\\<to>\\<rho>(l), IH on rest. ~100 lines needed.\<close>
+  sorry \<comment> \<open>Finite induction on scheme\\_labels w. Each step: one fresh relabel + IH.
+     Plan verified but formal induction setup needs careful handling of
+     the changing \\<rho> and scheme\\_labels after each rename step.\<close>
 
 \<comment> \<open>Alpha-renaming: a bijective relabeling is a valid equivalence (per expert audit 20).
    Proof: induction on the number of labels that differ from identity.\<close>
