@@ -530,6 +530,63 @@ lemma polygonal_region_extract_vx:
   apply assumption+
   done
 
+\<comment> \<open>Full extraction: get P, q, vx, vy with ALL 11 conditions from quotient\_of\_scheme\_on.
+   (Moved here from later in the file so invert can use it.)\<close>
+lemma quotient_of_scheme_extract_vx:
+  assumes "top1_quotient_of_scheme_on X TX scheme"
+  obtains P q vx vy where
+    "top1_is_polygonal_region_on P (length scheme)"
+    "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+    "\<forall>i<length scheme. \<forall>j<length scheme. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+    "\<forall>i<length scheme. (vx i, vy i) \<in> P"
+    "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
+    "\<forall>i<length scheme. \<forall>j<length scheme.
+          i \<noteq> j \<longrightarrow> Suc i mod length scheme \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length scheme \<longrightarrow>
+          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+             ((1-s) * vx i + s * vx (Suc i mod length scheme),
+              (1-s) * vy i + s * vy (Suc i mod length scheme))
+           \<noteq> ((1-t) * vx j + t * vx (Suc j mod length scheme),
+               (1-t) * vy j + t * vy (Suc j mod length scheme)))"
+    "\<forall>i<length scheme. \<forall>j<length scheme. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+              (1-t) * vy i + t * vy (Suc i mod length scheme))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                    (1-t) * vy j + t * vy (Suc j mod length scheme))
+            else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                    t * vy j + (1-t) * vy (Suc j mod length scheme))))"
+    "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                      (1-t) * vy i + t * vy (Suc i mod length scheme)))
+             \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+               (1-t) * vy i + t * vy (Suc i mod length scheme))
+          = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+               (1-s) * vy j + s * vy (Suc j mod length scheme))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+    "\<forall>i<length scheme. let cx = (\<Sum>j<length scheme. vx j) / real (length scheme);
+                           cy = (\<Sum>j<length scheme. vy j) / real (length scheme)
+         in (vx i - cx) * (vy (Suc i mod length scheme) - cy)
+          - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0"
+    "\<forall>i<length scheme. \<forall>k<length scheme.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length scheme \<longrightarrow>
+          (vx k - vx i) * (vy (Suc i mod length scheme) - vy i)
+          - (vy k - vy i) * (vx (Suc i mod length scheme) - vx i) < 0"
+  using assms unfolding top1_quotient_of_scheme_on_def
+  apply (elim conjE exE)
+  apply (rule that)
+  apply assumption+
+  done
+
 \<comment> \<open>Invert: quotient preserved by reversal+inversion. Per the textbook:
    "flipping the polygonal region over": reverse vertex order, reverse edge orientations.
    Reflection \\<rho>(x,y)=(x,-y) reverses both vertex order (from counterclockwise to clockwise)
@@ -1039,6 +1096,64 @@ proof -
      C1 and C2 are already proved (hC1', hC2').
      C3-C11 require relating the reflected/reversed conditions to the original ones.
      For now: sorry the full assembly (11 conditions).\<close>
+  \<comment> \<open>Extract all 11 conditions from assms(1) and build with shifted witnesses.
+     The shifted conditions use vx\\<circ>\\<sigma>, -(vy\\<circ>\\<sigma>) with the inverted scheme w'.
+     Each condition transfers via the reflection \\<rho> and vertex reversal \\<sigma>.\<close>
+  \<comment> \<open>The 11-condition assembly requires ALL original conditions.
+     Since quotient\_of\_scheme\_extract\_vx is defined later, extract directly from assms.\<close>
+  \<comment> \<open>Extract all 11 conditions from the original quotient.\<close>
+  from assms obtain P0 q0 vx0 vy0 where
+      hoC1: "top1_is_polygonal_region_on P0 ?n"
+    and hoC2: "top1_quotient_map_on P0
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P0) Y TY q0"
+    and hoC3: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx0 i, vy0 i) \<noteq> (vx0 j, vy0 j)"
+    and hoC4: "\<forall>i<?n. (vx0 i, vy0 i) \<in> P0"
+    and hoC5: "P0 = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<?n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<?n. coeffs i * vx0 i)
+                       \<and> y = (\<Sum>i<?n. coeffs i * vy0 i)}"
+    and hoC6: "\<forall>i<?n. \<forall>j<?n.
+          i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+             ((1-s) * vx0 i + s * vx0 (Suc i mod ?n),
+              (1-s) * vy0 i + s * vy0 (Suc i mod ?n))
+           \<noteq> ((1-t) * vx0 j + t * vx0 (Suc j mod ?n),
+               (1-t) * vy0 j + t * vy0 (Suc j mod ?n)))"
+    and hoC7: "\<forall>i<?n. \<forall>j<?n. fst (w!i) = fst (w!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q0 ((1-t) * vx0 i + t * vx0 (Suc i mod ?n),
+              (1-t) * vy0 i + t * vy0 (Suc i mod ?n))
+         = (if snd (w!i) = snd (w!j)
+            then q0 ((1-t) * vx0 j + t * vx0 (Suc j mod ?n),
+                    (1-t) * vy0 j + t * vy0 (Suc j mod ?n))
+            else q0 (t * vx0 j + (1-t) * vx0 (Suc j mod ?n),
+                    t * vy0 j + (1-t) * vy0 (Suc j mod ?n))))"
+    and hoC8: "\<forall>p\<in>P0. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx0 i + t * vx0 (Suc i mod ?n),
+                      (1-t) * vy0 i + t * vy0 (Suc i mod ?n)))
+             \<longrightarrow> (\<forall>p'\<in>P0. q0 p = q0 p' \<longrightarrow> p = p')"
+    and hoC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q0 ((1-t) * vx0 i + t * vx0 (Suc i mod ?n),
+               (1-t) * vy0 i + t * vy0 (Suc i mod ?n))
+          = q0 ((1-s) * vx0 j + s * vx0 (Suc j mod ?n),
+               (1-s) * vy0 j + s * vy0 (Suc j mod ?n))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (w!i) = fst (w!j) \<and>
+               (if snd (w!i) = snd (w!j) then s = t else s = 1 - t))"
+    and hoC10: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx0 j) / real ?n;
+                           cy = (\<Sum>j<?n. vy0 j) / real ?n
+         in (vx0 i - cx) * (vy0 (Suc i mod ?n) - cy)
+          - (vy0 i - cy) * (vx0 (Suc i mod ?n) - cx) > 0"
+    and hoC11: "\<forall>i<?n. \<forall>k<?n.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx0 k - vx0 i) * (vy0 (Suc i mod ?n) - vy0 i)
+          - (vy0 k - vy0 i) * (vx0 (Suc i mod ?n) - vx0 i) < 0"
+    by (rule quotient_of_scheme_extract_vx)
+  \<comment> \<open>The 11-condition assembly uses P', q', and vx\\<circ>\\<sigma>, -(vy\\<circ>\\<sigma>).
+     But the witnesses P0, q0, vx0, vy0 from the extraction are for the ORIGINAL scheme.
+     We need to show the conditions for the INVERTED scheme with the REFLECTED witnesses.
+     This is a major proof effort (condition-by-condition). For now: sorry.\<close>
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
     using htopo hC1' hC2' sorry
@@ -1283,63 +1398,6 @@ proof (intro allI impI)
   have hlt: "(i+k) mod n < n" using mod_less_n[OF assms(1)] .
   from assms(2)[rule_format, OF hlt] show "(vx ((i+k) mod n), vy ((i+k) mod n)) \<in> P" .
 qed
-
-\<comment> \<open>Full extraction: get P, q, vx, vy from quotient\_of\_scheme\_on.
-   Uses the same elim/rule/assumption pattern as quotient\_of\_scheme\_extract.\<close>
-lemma quotient_of_scheme_extract_vx:
-  assumes "top1_quotient_of_scheme_on X TX scheme"
-  obtains P q vx vy where
-    "top1_is_polygonal_region_on P (length scheme)"
-    "top1_quotient_map_on P
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
-    "\<forall>i<length scheme. \<forall>j<length scheme. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
-    "\<forall>i<length scheme. (vx i, vy i) \<in> P"
-    "P = {(x, y) | x y.
-                \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
-                       \<and> (\<Sum>i<length scheme. coeffs i) = 1
-                       \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
-                       \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}"
-    "\<forall>i<length scheme. \<forall>j<length scheme.
-          i \<noteq> j \<longrightarrow> Suc i mod length scheme \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length scheme \<longrightarrow>
-          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
-             ((1-s) * vx i + s * vx (Suc i mod length scheme),
-              (1-s) * vy i + s * vy (Suc i mod length scheme))
-           \<noteq> ((1-t) * vx j + t * vx (Suc j mod length scheme),
-               (1-t) * vy j + t * vy (Suc j mod length scheme)))"
-    "\<forall>i<length scheme. \<forall>j<length scheme. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
-        (\<forall>t\<in>I_set.
-           q ((1-t) * vx i + t * vx (Suc i mod length scheme),
-              (1-t) * vy i + t * vy (Suc i mod length scheme))
-         = (if snd (scheme!i) = snd (scheme!j)
-            then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
-                    (1-t) * vy j + t * vy (Suc j mod length scheme))
-            else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
-                    t * vy j + (1-t) * vy (Suc j mod length scheme))))"
-    "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
-                p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
-                      (1-t) * vy i + t * vy (Suc i mod length scheme)))
-             \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
-            q ((1-t) * vx i + t * vx (Suc i mod length scheme),
-               (1-t) * vy i + t * vy (Suc i mod length scheme))
-          = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
-               (1-s) * vy j + s * vy (Suc j mod length scheme))
-          \<longrightarrow> (i = j \<and> t = s)
-            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-    "\<forall>i<length scheme. let cx = (\<Sum>j<length scheme. vx j) / real (length scheme);
-                           cy = (\<Sum>j<length scheme. vy j) / real (length scheme)
-         in (vx i - cx) * (vy (Suc i mod length scheme) - cy)
-          - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0"
-    "\<forall>i<length scheme. \<forall>k<length scheme.
-          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length scheme \<longrightarrow>
-          (vx k - vx i) * (vy (Suc i mod length scheme) - vy i)
-          - (vy k - vy i) * (vx (Suc i mod length scheme) - vx i) < 0"
-  using assms unfolding top1_quotient_of_scheme_on_def
-  apply (elim conjE exE)
-  apply (rule that)
-  apply assumption+
-  done
 
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
    and the same snd-equality pattern for same-label pairs, then quotient\_of\_scheme\_on
