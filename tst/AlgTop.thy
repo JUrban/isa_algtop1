@@ -1138,10 +1138,47 @@ proof -
   \<comment> \<open>Extract all 11 conditions from assms(1) and build with shifted witnesses.
      The shifted conditions use vx\\<circ>\\<sigma>, -(vy\\<circ>\\<sigma>) with the inverted scheme w'.
      Each condition transfers via the reflection \\<rho> and vertex reversal \\<sigma>.\<close>
-  \<comment> \<open>All 11 original conditions are now in hC1..hC11 with consistent P, q, vx, vy.\<close>
+  \<comment> \<open>All 11 original conditions are now in hC1..hC11 with consistent P, q, vx, vy.
+     Prove each shifted condition C3'-C11' for the inverted scheme.\<close>
+  \<comment> \<open>C3': shifted vertices distinct.\<close>
+  have hC3': "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow>
+      (vx (\<sigma> i), -(vy (\<sigma> i))) \<noteq> (vx (\<sigma> j), -(vy (\<sigma> j)))"
+  proof (intro allI impI)
+    fix i j assume hi: "i < ?n" and hj: "j < ?n" and hij: "i \<noteq> j"
+    have "\<sigma> i \<noteq> \<sigma> j" using h\<sigma>_inj hi hj hij unfolding inj_on_def by (by100 blast)
+    hence hneq: "(vx (\<sigma> i), vy (\<sigma> i)) \<noteq> (vx (\<sigma> j), vy (\<sigma> j))"
+      using hvx_dist h\<sigma>_lt[OF hi] h\<sigma>_lt[OF hj] by (by100 blast)
+    show "(vx (\<sigma> i), -(vy (\<sigma> i))) \<noteq> (vx (\<sigma> j), -(vy (\<sigma> j)))"
+    proof
+      assume "(vx (\<sigma> i), - vy (\<sigma> i)) = (vx (\<sigma> j), - vy (\<sigma> j))"
+      hence "vx (\<sigma> i) = vx (\<sigma> j)" "vy (\<sigma> i) = vy (\<sigma> j)" by (by100 simp)+
+      with hneq show False by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>C4': shifted vertices in P'.\<close>
+  have hC4': "\<forall>i<?n. (vx (\<sigma> i), -(vy (\<sigma> i))) \<in> P'"
+  proof (intro allI impI)
+    fix i assume hi: "i < ?n"
+    have "(vx (\<sigma> i), vy (\<sigma> i)) \<in> P" using hC4 h\<sigma>_lt[OF hi] by (by100 blast)
+    hence "\<rho> (vx (\<sigma> i), vy (\<sigma> i)) \<in> P'" unfolding P'_def by (by100 blast)
+    thus "(vx (\<sigma> i), -(vy (\<sigma> i))) \<in> P'"
+    proof -
+      have "\<rho> (vx (\<sigma> i), vy (\<sigma> i)) = (vx (\<sigma> i), -(vy (\<sigma> i)))"
+        unfolding \<rho>_def by (by100 simp)
+      with \<open>\<rho> (vx (\<sigma> i), vy (\<sigma> i)) \<in> P'\<close> show ?thesis by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>C5': P' = convex hull — already proved as hconv' inside hC1'. Reprove for assembly.\<close>
+  have hC5': "P' = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
+                     \<and> y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))}"
+    sorry \<comment> \<open>Same as hconv' in hC1' proof — reprove via P'=\\<rho>(P), \\<rho> linear, \\<sigma> permutation.\<close>
+  \<comment> \<open>C6'-C11': remaining geometric conditions. All sorry for now.\<close>
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
-    using htopo hC1' hC2' sorry
+    using htopo hC1' hC2' hC3' hC4' hC5' sorry
 qed
 
 \<comment> \<open>Relabel with fresh label: proved via same witnesses, fst-equality pattern preserved.\<close>
