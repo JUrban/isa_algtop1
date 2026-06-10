@@ -1363,7 +1363,51 @@ proof -
                     (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n)))))
             else q' (t * vx (\<sigma> j) + (1-t) * vx (\<sigma> (Suc j mod ?n)),
                     t * (-(vy (\<sigma> j))) + (1-t) * (-(vy (\<sigma> (Suc j mod ?n))))))"
-      using horig2 hq' h_si h_sj hsnd_iff sorry
+    proof -
+      \<comment> \<open>Convert q' to q: LHS.\<close>
+      have hLHS: "q' ((1-t) * vx (\<sigma> i) + t * vx ?i',
+                      (1-t) * (-(vy (\<sigma> i))) + t * (-(vy ?i')))
+        = q (t * vx ?i' + (1-t) * vx (\<sigma> i), t * vy ?i' + (1-t) * vy (\<sigma> i))"
+      proof -
+        have "q' ((1-t) * vx (\<sigma> i) + t * vx ?i',
+                   (1-t) * (-(vy (\<sigma> i))) + t * (-(vy ?i')))
+          = q ((1-t) * vx (\<sigma> i) + t * vx ?i',
+               -((1-t) * (-(vy (\<sigma> i))) + t * (-(vy ?i'))))"
+          using hq' by (by100 simp)
+        also have "-((1-t) * (-(vy (\<sigma> i))) + t * (-(vy ?i')))
+          = t * vy ?i' + (1-t) * vy (\<sigma> i)" by (by100 argo)
+        finally show ?thesis by (by100 argo)
+      qed
+      \<comment> \<open>Convert q' to q: RHS same-direction case.\<close>
+      have hRHS_same: "q' ((1-t) * vx (\<sigma> j) + t * vx ?j',
+                      (1-t) * (-(vy (\<sigma> j))) + t * (-(vy ?j')))
+        = q (t * vx ?j' + (1-t) * vx (\<sigma> j), t * vy ?j' + (1-t) * vy (\<sigma> j))"
+      proof -
+        have "q' ((1-t) * vx (\<sigma> j) + t * vx ?j',
+                   (1-t) * (-(vy (\<sigma> j))) + t * (-(vy ?j')))
+          = q ((1-t) * vx (\<sigma> j) + t * vx ?j',
+               -((1-t) * (-(vy (\<sigma> j))) + t * (-(vy ?j'))))"
+          using hq' by (by100 simp)
+        also have "-((1-t) * (-(vy (\<sigma> j))) + t * (-(vy ?j')))
+          = t * vy ?j' + (1-t) * vy (\<sigma> j)" by (by100 argo)
+        finally show ?thesis by (by100 argo)
+      qed
+      \<comment> \<open>Convert q' to q: RHS opposite-direction case.\<close>
+      have hRHS_opp: "q' (t * vx (\<sigma> j) + (1-t) * vx ?j',
+                      t * (-(vy (\<sigma> j))) + (1-t) * (-(vy ?j')))
+        = q ((1-t) * vx ?j' + t * vx (\<sigma> j), (1-t) * vy ?j' + t * vy (\<sigma> j))"
+      proof -
+        have "q' (t * vx (\<sigma> j) + (1-t) * vx ?j',
+                   t * (-(vy (\<sigma> j))) + (1-t) * (-(vy ?j')))
+          = q (t * vx (\<sigma> j) + (1-t) * vx ?j',
+               -(t * (-(vy (\<sigma> j))) + (1-t) * (-(vy ?j'))))"
+          using hq' by (by100 simp)
+        also have "-(t * (-(vy (\<sigma> j))) + (1-t) * (-(vy ?j')))
+          = (1-t) * vy ?j' + t * vy (\<sigma> j)" by (by100 argo)
+        finally show ?thesis by (by100 argo)
+      qed
+      show ?thesis using horig2 hLHS hRHS_same hRHS_opp h_si h_sj hsnd_iff by (by100 presburger)
+    qed
   qed
   \<comment> \<open>C8': interior injectivity.\<close>
   have hC8': "\<forall>p\<in>P'. (\<forall>i<?n. \<forall>t\<in>I_set.
