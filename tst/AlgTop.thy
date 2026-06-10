@@ -4247,8 +4247,101 @@ proof -
     fix x y assume hxP: "x \<in> P1" and hyP: "y \<in> P1"
     \<comment> \<open>Backward: q2(\\<phi>(x)) = q2(\\<phi>(y)) \\<Longrightarrow> q1 x = q1 y. Symmetric argument.\<close>
     assume heq2: "(q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y"
-    show "q1 x = q1 y"
-      sorry \<comment> \<open>Symmetric to forward direction using C8\\_2, C9\\_2, C7\\_1.\<close>
+    \<comment> \<open>Symmetric to forward, but using C8\\_2 on \\<phi>(x),\\<phi>(y) \\<in> P2, then pulling back to P1.\<close>
+    have h\<phi>xP: "\<phi> x \<in> P2" using h\<phi>_img hxP by (by100 blast)
+    have h\<phi>yP: "\<phi> y \<in> P2" using h\<phi>_img hyP by (by100 blast)
+    have heq2': "q2 (\<phi> x) = q2 (\<phi> y)" using heq2 by (by100 simp)
+    consider
+      (x_int) "\<forall>i<?n. \<forall>t\<in>I_set. x \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+            (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
+      | (x_bdy) "\<exists>i<?n. \<exists>t\<in>I_set. x = ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+            (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
+      by (by100 blast)
+    thus "q1 x = q1 y"
+    proof cases
+      case x_int
+      \<comment> \<open>x interior \\<Longrightarrow> \\<phi>(x) interior \\<Longrightarrow> q2 injective at \\<phi>(x) \\<Longrightarrow> \\<phi>(x)=\\<phi>(y) \\<Longrightarrow> x=y.\<close>
+      from h\<phi>_int hxP x_int
+      have "\<forall>i<?n. \<forall>t\<in>I_set. \<phi> x \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+          (1-t) * vy2 i + t * vy2 (Suc i mod ?n))" .
+      from hC8_2 h\<phi>xP this have "\<forall>p'\<in>P2. q2 (\<phi> x) = q2 p' \<longrightarrow> \<phi> x = p'" by (by100 blast)
+      hence "\<phi> x = \<phi> y" using h\<phi>yP heq2' by (by100 blast)
+      hence "x = y" using bij_betw_imp_inj_on[OF h\<phi>_bij] hxP hyP
+        unfolding inj_on_def by (by100 blast)
+      thus ?thesis by (by100 simp)
+    next
+      case x_bdy
+      then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set"
+        and hx_eq: "x = ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+                         (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
+        by (by100 blast)
+      consider
+        (y_int) "\<forall>j<?n. \<forall>s\<in>I_set. y \<noteq> ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
+              (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
+        | (y_bdy) "\<exists>j<?n. \<exists>s\<in>I_set. y = ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
+              (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
+        by (by100 blast)
+      thus ?thesis
+      proof cases
+        case y_int
+        from h\<phi>_int hyP y_int
+        have "\<forall>i<?n. \<forall>t\<in>I_set. \<phi> y \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+            (1-t) * vy2 i + t * vy2 (Suc i mod ?n))" .
+        from hC8_2 h\<phi>yP this have "\<forall>p'\<in>P2. q2 (\<phi> y) = q2 p' \<longrightarrow> \<phi> y = p'" by (by100 blast)
+        hence "\<phi> y = \<phi> x" using h\<phi>xP heq2'[symmetric] by (by100 blast)
+        hence "y = x" using bij_betw_imp_inj_on[OF h\<phi>_bij] hxP hyP
+          unfolding inj_on_def by (by100 blast)
+        thus ?thesis by (by100 simp)
+      next
+        case y_bdy
+        then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set"
+          and hy_eq: "y = ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
+                           (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
+          by (by100 blast)
+        \<comment> \<open>\\<phi>(x) = e2(i,t), \\<phi>(y) = e2(j,s). From C9\\_2 + C7\\_1: same argument as forward.\<close>
+        have h\<phi>x: "\<phi> x = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+                           (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
+          using h\<phi>_edge[rule_format, OF hi ht] hx_eq by (by100 simp)
+        have h\<phi>y: "\<phi> y = ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
+                           (1-s) * vy2 j + s * vy2 (Suc j mod ?n))"
+          using h\<phi>_edge[rule_format, OF hj hs] hy_eq by (by100 simp)
+        from hC9_2 hi hj ht hs heq2'[unfolded h\<phi>x h\<phi>y]
+        have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+            (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+          by (by100 blast)
+        from hcond show ?thesis
+        proof (elim disjE conjE)
+          assume "i = j" "t = s"
+          thus ?thesis using hx_eq hy_eq by (by100 simp)
+        next
+          assume hlabel: "fst (scheme!i) = fst (scheme!j)"
+            and hdir: "if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t"
+          \<comment> \<open>Use C7\\_1 (same scheme!) to get q1(e1(i,t)) = q1(e1(j,s)).\<close>
+          from hC7_1 hi hj hlabel ht
+          have hq1: "q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+                        (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
+              = (if snd (scheme!i) = snd (scheme!j)
+                 then q1 ((1-t) * vx1 j + t * vx1 (Suc j mod ?n),
+                         (1-t) * vy1 j + t * vy1 (Suc j mod ?n))
+                 else q1 (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
+                         t * vy1 j + (1-t) * vy1 (Suc j mod ?n)))"
+            by (by100 blast)
+          show ?thesis
+          proof (cases "snd (scheme!i) = snd (scheme!j)")
+            case True
+            hence "s = t" using hdir by (by100 simp)
+            thus ?thesis using hq1 True hx_eq hy_eq by (by100 simp)
+          next
+            case False
+            hence "s = 1 - t" using hdir by (by100 simp)
+            hence "y = (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
+                        t * vy1 j + (1-t) * vy1 (Suc j mod ?n))"
+              using hy_eq by (by100 simp)
+            thus ?thesis using hq1 False hx_eq by (by100 simp)
+          qed
+        qed
+      qed
+    qed
   qed
   from quotient_same_fibres_homeomorphic[OF hC2_1 hcomp_quot hfibres]
   show ?thesis .
