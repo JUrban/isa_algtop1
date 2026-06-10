@@ -2200,13 +2200,15 @@ proof -
     done
 qed
 
-\<comment> \<open>Relabel without freshness (used by the induction case). The call site ensures freshness
-   via the elementary\_operation constructor, but accessing it through the induction case
-   mechanism is tricky. For now: sorry. The proved version is relabel\_fresh above.\<close>
+\<comment> \<open>WARNING: quotient\\_of\\_scheme\\_relabel WITHOUT freshness is FALSE in general.
+   If new already labels another edge pair, relabeling merges edge classes.
+   The CORRECT version is quotient\\_of\\_scheme\\_relabel\\_fresh (above) with freshness.
+   This sorry should NOT be proved — it should be replaced by using valid operations
+   or adding freshness to the elementary relabel constructor (per expert audit step 5).\<close>
 lemma quotient_of_scheme_relabel:
   assumes "top1_quotient_of_scheme_on Y TY w"
   shows "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (if l = old then new else l, b)) w)"
-  sorry
+  sorry \<comment> \<open>FALSE without freshness. Keep sorry; replace with valid\\_operation refactoring.\<close>
 
 \<comment> \<open>Cut-paste: quotient preserved by cut-and-repaste operation.\<close>
 lemma quotient_of_scheme_cut_paste:
@@ -3753,88 +3755,17 @@ proof -
     by (rule closed_subset_compact[OF compact_Icc_Times hP_closed hP_bounded])
 qed
 
-\<comment> \<open>Two convex n-gons in R² are homeomorphic via a boundary-preserving map.
-   The homeomorphism maps vertex i of P1 to vertex i of P2, and maps each edge linearly.\<close>
+\<comment> \<open>QUARANTINED: convex\\_polygon\\_homeomorphism is UNUSED and its barycentric/SOME approach
+   is wrong for n > 3 (non-unique representations). The correct approach (using
+   polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary) is now implemented directly inside
+   scheme\\_quotient\\_uniqueness (per expert audit steps 4-7). This lemma can be deleted.\<close>
 lemma convex_polygon_homeomorphism:
   assumes "top1_is_polygonal_region_on P1 n" and "top1_is_polygonal_region_on P2 n"
   shows "\<exists>\<phi>. top1_homeomorphism_on P1
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1)
       P2
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
-proof -
-  let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
-  \<comment> \<open>Step 1: Extract vertices from both polygons.\<close>
-  \<comment> \<open>Vertex extraction via polygonal\_region\_extract\_vx.\<close>
-  obtain vx1 vy1 :: "nat \<Rightarrow> real" where
-    hv1_dist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx1 i, vy1 i) \<noteq> (vx1 j, vy1 j)"
-    and hv1_gen: "\<forall>k<n. \<not>(\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
-                \<and> (\<Sum>i<n. coeffs i) = 1
-                \<and> vx1 k = (\<Sum>i<n. coeffs i * vx1 i) \<and> vy1 k = (\<Sum>i<n. coeffs i * vy1 i))"
-    and hP1_eq: "P1 = {(x, y) | x y.
-              \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
-                     \<and> (\<Sum>i<n. coeffs i) = 1
-                     \<and> x = (\<Sum>i<n. coeffs i * vx1 i)
-                     \<and> y = (\<Sum>i<n. coeffs i * vy1 i)}"
-    by (rule polygonal_region_extract_vx[OF assms(1)])
-  obtain vx2 vy2 :: "nat \<Rightarrow> real" where
-    hv2_dist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx2 i, vy2 i) \<noteq> (vx2 j, vy2 j)"
-    and hv2_gen: "\<forall>k<n. \<not>(\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
-                \<and> (\<Sum>i<n. coeffs i) = 1
-                \<and> vx2 k = (\<Sum>i<n. coeffs i * vx2 i) \<and> vy2 k = (\<Sum>i<n. coeffs i * vy2 i))"
-    and hP2_eq: "P2 = {(x, y) | x y.
-              \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
-                     \<and> (\<Sum>i<n. coeffs i) = 1
-                     \<and> x = (\<Sum>i<n. coeffs i * vx2 i)
-                     \<and> y = (\<Sum>i<n. coeffs i * vy2 i)}"
-    by (rule polygonal_region_extract_vx[OF assms(2)])
-  have hn: "n \<ge> 3" using assms(1) unfolding top1_is_polygonal_region_on_def by (by100 blast)
-  \<comment> \<open>Step 2: Define centroids.\<close>
-  define cx1 where "cx1 = (\<Sum>i<n. vx1 i) / real n"
-  define cy1 where "cy1 = (\<Sum>i<n. vy1 i) / real n"
-  define cx2 where "cx2 = (\<Sum>i<n. vx2 i) / real n"
-  define cy2 where "cy2 = (\<Sum>i<n. vy2 i) / real n"
-  \<comment> \<open>Step 3: Define \\<phi> via convex-combination transfer.
-     NOTE: SOME+barycentric approach is WRONG for n > 3 (non-unique representations).
-     Correct approach: use polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary to compose
-     P1 \\<to> B² \\<to> P2 via the specific edge-preserving disk homeomorphisms.
-     This requires CCW + strict side conditions, which are available from quotient\\_of\\_scheme\\_on
-     but NOT from top1\\_is\\_polygonal\\_region\\_on alone.
-     The fix: either strengthen the assumptions, or prove this inside scheme\\_quotient\\_uniqueness
-     where all conditions are available.\<close>
-  define \<phi> where "\<phi> = (\<lambda>p. let coeffs = SOME coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
-                         \<and> fst p = (\<Sum>i<n. coeffs i * vx1 i) \<and> snd p = (\<Sum>i<n. coeffs i * vy1 i)
-                    in ((\<Sum>i<n. coeffs i * vx2 i), (\<Sum>i<n. coeffs i * vy2 i)))"
-  \<comment> \<open>Step 4: Show \\<phi> maps P1 into P2.\<close>
-  have h\<phi>_range: "\<phi> ` P1 \<subseteq> P2" sorry
-  \<comment> \<open>Step 5: Show \\<phi> is bijective.\<close>
-  have h\<phi>_bij: "bij_betw \<phi> P1 P2" sorry
-  \<comment> \<open>Step 6: Show \\<phi> is continuous.\<close>
-  have h\<phi>_cont: "top1_continuous_map_on P1 (?TP P1) P2 (?TP P2) \<phi>" sorry
-  \<comment> \<open>Step 7: P1 compact, P2 Hausdorff \\<Longrightarrow> \\<phi> is homeomorphism by Theorem 26.6.\<close>
-  have hP1_compact: "top1_compact_on P1 (?TP P1)"
-    using compact_R2_bridge[OF polygonal_region_compact[OF assms(1)]] .
-  have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set)
-      (product_topology_on top1_open_sets top1_open_sets)"
-    using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
-          top1_open_sets_is_topology_on_UNIV] by (by100 simp)
-  have hTP1: "is_topology_on P1 (?TP P1)"
-    using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
-  have hTP2: "is_topology_on P2 (?TP P2)"
-    using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
-  have hausdorff_subspace: "\<And>X (T :: (real \<times> real) set set) Y. is_hausdorff_on X T \<Longrightarrow> Y \<subseteq> X \<Longrightarrow>
-      is_hausdorff_on Y (subspace_topology X T Y)"
-  proof -
-    fix X :: "(real \<times> real) set" and T Y
-    assume "is_hausdorff_on X T" "Y \<subseteq> X"
-    thus "is_hausdorff_on Y (subspace_topology X T Y)"
-      using conjunct2[OF conjunct2[OF Theorem_17_11]] by (by100 blast)
-  qed
-  have hP2_haus: "is_hausdorff_on P2 (?TP P2)"
-    by (rule hausdorff_subspace[OF top1_R2_is_hausdorff]) (by100 blast)
-  have "top1_homeomorphism_on P1 (?TP P1) P2 (?TP P2) \<phi>"
-    by (rule Theorem_26_6[OF hTP1 hTP2 hP1_compact hP2_haus h\<phi>_cont h\<phi>_bij])
-  thus ?thesis by (by100 blast)
-qed
+  sorry \<comment> \<open>QUARANTINED: unused, wrong approach. See scheme\\_quotient\\_uniqueness instead.\<close>
 
 \<comment> \<open>Interior preservation: if \\<phi> maps edge i of P1 to edge i of P2 bijectively,
    then \\<phi> also maps interior points (not on any edge) to interior points.\<close>
