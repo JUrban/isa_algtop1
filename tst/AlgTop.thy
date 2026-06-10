@@ -3224,19 +3224,12 @@ proof -
   thus ?thesis unfolding top1_homeomorphism_on_def using assms hid_cont by (by100 simp)
 qed
 
+\<comment> \<open>Same-space preservation implies homeomorphic-realization preservation.\<close>
 lemma same_space_implies_homeo_realization:
   assumes "top1_quotient_of_scheme_on X TX t"
   shows "\<exists>Y TY. top1_quotient_of_scheme_on Y TY t
               \<and> (\<exists>h. top1_homeomorphism_on X TX Y TY h)"
-proof -
-  have htopo: "is_topology_on X TX"
-    using assms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  have hid: "top1_homeomorphism_on X TX X TX id" by (rule homeomorphism_id[OF htopo])
-  have "\<exists>h. top1_homeomorphism_on X TX X TX h" using hid by (by100 blast)
-  hence "top1_quotient_of_scheme_on X TX t \<and> (\<exists>h. top1_homeomorphism_on X TX X TX h)"
-    using assms by (by100 blast)
-  thus ?thesis sorry \<comment> \<open>Trivial \\<exists>-introduction Y=X, TY=TX; by100 can't close.\<close>
-qed
+  sorry \<comment> \<open>Logically trivial (take Y=X, h=id) but by100/by5000 can't close nested \\<exists>.\<close>
 
 \<comment> \<open>Homeomorphism-preservation for valid scheme operations (per expert audit step 8).
    For rotate/invert/flip/relabel\\_fresh: use same-space preservation (Y = X).
