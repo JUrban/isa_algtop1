@@ -593,6 +593,22 @@ lemma quotient_of_scheme_extract_vx:
    and the cross-product signs (making counterclockwise again after reversal).
    Vertex numbering: \\<sigma>(i) = (n-i) mod n. Label at new position i = label at old position (n-1-i).
    New edge i at parameter t = \\<rho>(old edge (n-1-i) at parameter (1-t)).\<close>
+\<comment> \<open>Edge set transport under reflection+reversal:
+   If p avoids all reflected edges, then \\<rho>(p) avoids all original edges.
+   This is the key geometric fact for the C8' interior-injectivity condition of invert.\<close>
+lemma reflected_not_on_edges_imp_original:
+  fixes n :: nat and vx vy :: "nat \<Rightarrow> real"
+  assumes hn: "n \<ge> 3"
+  defines "\<sigma> \<equiv> \<lambda>i. (n - i) mod n"
+  defines "\<rho> \<equiv> \<lambda>(x::real, y::real). (x, -y)"
+  assumes hne: "\<forall>i<n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod n)),
+                      (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod n)))))"
+  shows "\<forall>j<n. \<forall>t\<in>I_set.
+        \<rho> p \<noteq> ((1-t) * vx j + t * vx (Suc j mod n),
+              (1-t) * vy j + t * vy (Suc j mod n))"
+  sorry
+
 lemma quotient_of_scheme_invert:
   assumes "top1_quotient_of_scheme_on Y TY w"
   shows "top1_quotient_of_scheme_on Y TY (rev (map top1_inverse_edge w))"
@@ -1520,14 +1536,15 @@ proof -
       finally show ?thesis using \<open>?n - 1 - j = 0\<close> by (by100 simp)
     qed
   qed
-  \<comment> \<open>Edge set transfer: reflected edges cover same set as original edges.\<close>
+  \<comment> \<open>Edge set transfer via standalone lemma.\<close>
   have h_edge_transfer: "\<And>p. (\<forall>i<?n. \<forall>t\<in>I_set.
                 p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
                       (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n))))))
     \<Longrightarrow> (\<forall>j<?n. \<forall>t\<in>I_set.
         \<rho> p \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
               (1-t) * vy j + t * vy (Suc j mod ?n)))"
-    sorry
+    using reflected_not_on_edges_imp_original[OF hn3]
+    unfolding \<sigma>_def \<rho>_def by (by100 blast)
   \<comment> \<open>C8': interior injectivity.\<close>
   have hC8': "\<forall>p\<in>P'. (\<forall>i<?n. \<forall>t\<in>I_set.
                 p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
