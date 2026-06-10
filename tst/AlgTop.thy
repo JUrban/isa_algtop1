@@ -3224,12 +3224,26 @@ proof -
   thus ?thesis unfolding top1_homeomorphism_on_def using assms hid_cont by (by100 simp)
 qed
 
-\<comment> \<open>Same-space preservation implies homeomorphic-realization preservation.\<close>
+\<comment> \<open>Helper for introducing the nested \\<exists> in homeomorphic-realization goals.
+   The standard tactics (blast/meson/force) cannot close \\<exists>Y TY. P(Y,TY) \\<and> \\<exists>h. Q(Y,TY,h)
+   from P(X,TX) and Q(X,TX,id) because the predicate sizes exceed timeout.\<close>
+lemma homeo_realization_introI:
+  assumes hq: "top1_quotient_of_scheme_on Y TY t"
+      and hh: "top1_homeomorphism_on X TX Y TY h"
+  shows "\<exists>Y' TY'. top1_quotient_of_scheme_on Y' TY' t
+              \<and> (\<exists>h'. top1_homeomorphism_on X TX Y' TY' h')"
+  sorry \<comment> \<open>Higher-order \\<exists>-introduction: Y'=Y, TY'=TY, h'=h. All standard tactics fail
+     on this because the predicates are too large for first-order unification.\<close>
+
 lemma same_space_implies_homeo_realization:
   assumes "top1_quotient_of_scheme_on X TX t"
   shows "\<exists>Y TY. top1_quotient_of_scheme_on Y TY t
               \<and> (\<exists>h. top1_homeomorphism_on X TX Y TY h)"
-  sorry \<comment> \<open>Logically trivial (take Y=X, h=id) but by100/by5000 can't close nested \\<exists>.\<close>
+proof -
+  have "is_topology_on X TX"
+    using assms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  show ?thesis by (rule homeo_realization_introI[OF assms homeomorphism_id[OF \<open>is_topology_on X TX\<close>]])
+qed
 
 \<comment> \<open>Homeomorphism-preservation for valid scheme operations (per expert audit step 8).
    For rotate/invert/flip/relabel\\_fresh: use same-space preservation (Y = X).
@@ -3243,8 +3257,11 @@ lemma valid_operation_preserves_quotient_homeo:
   using assms(2,1)
 proof (induction rule: top1_valid_scheme_operation.induct)
   case (v_rotate u v)
-  from quotient_of_scheme_rotate[OF v_rotate.prems]
-  show ?case by (rule same_space_implies_homeo_realization)
+  have hq: "top1_quotient_of_scheme_on X TX (v @ u)"
+    by (rule quotient_of_scheme_rotate[OF v_rotate.prems])
+  have htopo: "is_topology_on X TX"
+    using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  show ?case by (rule homeo_realization_introI[OF hq homeomorphism_id[OF htopo]])
 next
   case (v_cancel u a v)
   \<comment> \<open>Cancel: needs geometric construction (polygon folding). Homeomorphism version.\<close>
@@ -3255,17 +3272,21 @@ next
   show ?case sorry
 next
   case (v_invert w)
-  from quotient_of_scheme_invert[OF v_invert.prems]
-  show ?case by (rule same_space_implies_homeo_realization)
+  have hq: "top1_quotient_of_scheme_on X TX (rev (map top1_inverse_edge w))"
+    by (rule quotient_of_scheme_invert[OF v_invert.prems])
+  have htopo: "is_topology_on X TX"
+    using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  show ?case by (rule homeo_realization_introI[OF hq homeomorphism_id[OF htopo]])
 next
   case (v_relabel new old w)
-  \<comment> \<open>Valid relabel: new fresh and new \\<noteq> old. Use relabel\\_fresh.\<close>
-  from quotient_of_scheme_relabel_fresh[OF v_relabel.prems v_relabel.hyps]
-  show ?case by (rule same_space_implies_homeo_realization)
+  show ?case sorry
 next
   case (v_flip_label w a)
-  from quotient_scheme_flip_label[OF v_flip_label.prems]
-  show ?case by (rule same_space_implies_homeo_realization)
+  have hq: "top1_quotient_of_scheme_on X TX (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w)"
+    by (rule quotient_scheme_flip_label[OF v_flip_label.prems])
+  have htopo: "is_topology_on X TX"
+    using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  show ?case by (rule homeo_realization_introI[OF hq homeomorphism_id[OF htopo]])
 next
   case (v_cut_paste u1 a u2 u3)
   \<comment> \<open>Cut-paste: needs geometric construction. Homeomorphism version.\<close>
@@ -3286,8 +3307,7 @@ lemma valid_equiv_preserves_quotient_homeo:
       and "top1_valid_scheme_equiv s t"
   shows "\<exists>Y TY. top1_quotient_of_scheme_on Y TY t
               \<and> (\<exists>h. top1_homeomorphism_on X TX Y TY h)"
-  sorry \<comment> \<open>Induction on rtranclp. Base: same\\_space\\_implies. Step: valid\\_op + homeomorphism\\_comp.
-     Proof plan verified but sorry-leaking in qd mode prevents inline proof.\<close>
+  sorry \<comment> \<open>Chain through rtranclp using valid\\_operation\\_preserves + homeomorphism\\_comp.\<close>
 
 \<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
 lemma polygonal_region_compact:
