@@ -2086,11 +2086,46 @@ lemma convex_polygon_homeomorphism:
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1)
       P2
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) \<phi>"
-  sorry \<comment> \<open>Construct \\<phi> by piecewise-linear map on centroid triangulation.
-     NOTE: homeomorphic\\_convex\\_compact from HOL-Analysis/Homeomorphism.thy would give this
-     directly, but Complex\\_Main does not import HOL-Analysis. Need direct construction:
-     triangulate both polygons from centroids, define affine map on each triangle,
-     paste, show continuity via top1\\_continuous\\_map\\_on\\_real2\\_subspace\\_general bridge.\<close>
+proof -
+  let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+  \<comment> \<open>Step 1: Extract vertices from both polygons.\<close>
+  from assms(1) obtain vx1 vy1 :: "nat \<Rightarrow> real" where
+    hv1_dist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx1 i, vy1 i) \<noteq> (vx1 j, vy1 j)"
+    and hP1: "P1 = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<n. coeffs i * vx1 i) \<and> y = (\<Sum>i<n. coeffs i * vy1 i)}"
+    sorry
+  from assms(2) obtain vx2 vy2 :: "nat \<Rightarrow> real" where
+    hv2_dist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx2 i, vy2 i) \<noteq> (vx2 j, vy2 j)"
+    and hP2: "P2 = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<n. coeffs i * vx2 i) \<and> y = (\<Sum>i<n. coeffs i * vy2 i)}"
+    sorry
+  have hn: "n \<ge> 3" using assms(1) unfolding top1_is_polygonal_region_on_def by (by100 blast)
+  \<comment> \<open>Step 2: Define centroids.\<close>
+  define cx1 where "cx1 = (\<Sum>i<n. vx1 i) / real n"
+  define cy1 where "cy1 = (\<Sum>i<n. vy1 i) / real n"
+  define cx2 where "cx2 = (\<Sum>i<n. vx2 i) / real n"
+  define cy2 where "cy2 = (\<Sum>i<n. vy2 i) / real n"
+  \<comment> \<open>Step 3: Define \\<phi> via convex-combination transfer.
+     Every point p \\<in> P1 has unique barycentric coordinates coeffs w.r.t. the vertices.
+     \\<phi>(p) = the point in P2 with the SAME barycentric coordinates.\<close>
+  define \<phi> where "\<phi> = (\<lambda>p. let coeffs = SOME coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+                         \<and> fst p = (\<Sum>i<n. coeffs i * vx1 i) \<and> snd p = (\<Sum>i<n. coeffs i * vy1 i)
+                    in ((\<Sum>i<n. coeffs i * vx2 i), (\<Sum>i<n. coeffs i * vy2 i)))"
+  \<comment> \<open>Step 4: Show \\<phi> maps P1 into P2.\<close>
+  have h\<phi>_range: "\<phi> ` P1 \<subseteq> P2" sorry
+  \<comment> \<open>Step 5: Show \\<phi> is bijective.\<close>
+  have h\<phi>_bij: "bij_betw \<phi> P1 P2" sorry
+  \<comment> \<open>Step 6: Show \\<phi> is continuous.\<close>
+  have h\<phi>_cont: "top1_continuous_map_on P1 (?TP P1) P2 (?TP P2) \<phi>" sorry
+  \<comment> \<open>Step 7: P1 compact, P2 Hausdorff \\<Longrightarrow> \\<phi> is homeomorphism by Theorem 26.6.\<close>
+  have hP1_compact: "top1_compact_on P1 (?TP P1)" sorry
+  have hP2_haus: "is_hausdorff_on P2 (?TP P2)" sorry
+  have hTP1: "is_topology_on P1 (?TP P1)" sorry
+  have hTP2: "is_topology_on P2 (?TP P2)" sorry
+  have "top1_homeomorphism_on P1 (?TP P1) P2 (?TP P2) \<phi>"
+    by (rule Theorem_26_6[OF hTP1 hTP2 hP1_compact hP2_haus h\<phi>_cont h\<phi>_bij])
+  thus ?thesis by (by100 blast)
+qed
 
 \<comment> \<open>Quotient-of-scheme uniqueness: any two quotient spaces of the same scheme are homeomorphic.
    Proof: both are quotients of convex n-gons by the same identification pattern.
