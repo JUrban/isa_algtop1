@@ -670,7 +670,147 @@ proof -
   \<comment> \<open>C1: P' = \\<rho>(P) is a polygonal region with the same number of vertices.
      Vertices: (vx(\\<sigma>(i)), -vy(\\<sigma>(i))). Since \\<sigma> permutes {..<n} and \\<rho> is linear,
      the convex hull is \\<rho>(P).\<close>
-  have hC1': "top1_is_polygonal_region_on P' ?n" sorry
+  have hC1': "top1_is_polygonal_region_on P' ?n"
+    unfolding top1_is_polygonal_region_on_def
+  proof (intro conjI)
+    show "?n \<ge> 3" using hn3 .
+    \<comment> \<open>Witnesses: vx\\<circ>\\<sigma>, -(vy\\<circ>\\<sigma>). Need distinct + general position + P' = convex hull.\<close>
+    show "\<exists>(vx'::nat\<Rightarrow>real) vy'. (\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j))
+       \<and> (\<forall>k<?n. \<not>(\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
+                \<and> (\<Sum>i<?n. coeffs i) = 1
+                \<and> vx' k = (\<Sum>i<?n. coeffs i * vx' i) \<and> vy' k = (\<Sum>i<?n. coeffs i * vy' i)))
+       \<and> P' = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx' i)
+                     \<and> y = (\<Sum>i<?n. coeffs i * vy' i)}"
+    proof (rule exI[of _ "\<lambda>i. vx (\<sigma> i)"], rule exI[of _ "\<lambda>i. -(vy (\<sigma> i))"])
+      \<comment> \<open>Distinct: follows from \\<sigma> injective + original distinct.\<close>
+      have hdist': "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow>
+          (vx (\<sigma> i), -(vy (\<sigma> i))) \<noteq> (vx (\<sigma> j), -(vy (\<sigma> j)))"
+      proof (intro allI impI)
+        fix i j assume hi: "i < ?n" and hj: "j < ?n" and hij: "i \<noteq> j"
+        have "\<sigma> i \<noteq> \<sigma> j" using h\<sigma>_inj hi hj hij unfolding inj_on_def by (by100 blast)
+        moreover have "\<sigma> i < ?n" using h\<sigma>_lt[OF hi] .
+        moreover have "\<sigma> j < ?n" using h\<sigma>_lt[OF hj] .
+        ultimately have "(vx (\<sigma> i), vy (\<sigma> i)) \<noteq> (vx (\<sigma> j), vy (\<sigma> j))"
+          using hvx_dist by (by100 blast)
+        thus "(vx (\<sigma> i), -(vy (\<sigma> i))) \<noteq> (vx (\<sigma> j), -(vy (\<sigma> j)))"
+          by (by100 fastforce)
+      qed
+      \<comment> \<open>General position: follows from \\<sigma> bijection + original general position.\<close>
+      have hgenpos': "\<forall>k<?n. \<not>(\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
+                \<and> (\<Sum>i<?n. coeffs i) = 1
+                \<and> vx (\<sigma> k) = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
+                \<and> -(vy (\<sigma> k)) = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i)))))"
+      proof (intro allI impI notI)
+        fix k assume hk: "k < ?n"
+        assume "\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
+                \<and> (\<Sum>i<?n. coeffs i) = 1
+                \<and> vx (\<sigma> k) = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
+                \<and> -(vy (\<sigma> k)) = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))"
+        then obtain coeffs where hcoeffs:
+          "\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0" "coeffs k = 0"
+          "(\<Sum>i<?n. coeffs i) = 1"
+          "vx (\<sigma> k) = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))"
+          "-(vy (\<sigma> k)) = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))"
+          by (by100 blast)
+        \<comment> \<open>The y-condition simplifies: vy(\\<sigma> k) = \\<Sum> coeffs i * vy(\\<sigma> i).\<close>
+        have hvy_eq: "vy (\<sigma> k) = (\<Sum>i<?n. coeffs i * vy (\<sigma> i))"
+        proof -
+          have "(\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i)))) = -(\<Sum>i<?n. coeffs i * vy (\<sigma> i))"
+            using sum_negf by (by100 simp)
+          with hcoeffs(5) show ?thesis by (by100 linarith)
+        qed
+        \<comment> \<open>Reindex: define coeffs' j = coeffs(\\<sigma> j) for j < n.
+           Then coeffs' maps {..<n}\\{\\<sigma> k} nonnegatively, coeffs'(\\<sigma> k) = 0,
+           and vx(\\<sigma> k) = \\<Sum> coeffs' j * vx j, vy(\\<sigma> k) = \\<Sum> coeffs' j * vy j.
+           This contradicts hvx\\_gen at position \\<sigma> k.\<close>
+        define coeffs' where "coeffs' = coeffs \<circ> \<sigma>"
+        have hsk: "\<sigma> k < ?n" using h\<sigma>_lt[OF hk] .
+        have hcoeffs'_nn: "\<forall>j<?n. j \<noteq> \<sigma> k \<longrightarrow> coeffs' j \<ge> 0"
+        proof (intro allI impI)
+          fix j assume hj: "j < ?n" and hjk: "j \<noteq> \<sigma> k"
+          \<comment> \<open>j = \\<sigma>(\\<sigma>\\<inverse>(j)), and \\<sigma>\\<inverse>(j) \\<noteq> k since j \\<noteq> \\<sigma> k.\<close>
+          have "\<exists>i<?n. \<sigma> i = j \<and> i \<noteq> k"
+          proof -
+            have "j \<in> \<sigma> ` {..<?n}" using hj h\<sigma>_bij unfolding bij_betw_def by (by100 blast)
+            then obtain i where "i < ?n" "\<sigma> i = j" by (by100 blast)
+            moreover have "i \<noteq> k" using \<open>\<sigma> i = j\<close> hjk by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          then obtain i where hi: "i < ?n" and hsi: "\<sigma> i = j" and hik: "i \<noteq> k" by (by100 blast)
+          have "coeffs' j = coeffs (\<sigma> j)" unfolding coeffs'_def by (by100 simp)
+          also have "\<sigma> j = \<sigma> (\<sigma> i)" using hsi h\<sigma>_inv[OF hi] by (by100 simp)
+          also have "\<dots> = i" using h\<sigma>_inv[OF hi] .
+          finally have heq: "coeffs' j = coeffs i" .
+          have "coeffs i \<ge> 0" using hcoeffs(1)[rule_format, OF hi hik] .
+          thus "coeffs' j \<ge> 0" using heq by (by100 simp)
+        qed
+        have hcoeffs'_k: "coeffs' (\<sigma> k) = 0"
+        proof -
+          have "coeffs' (\<sigma> k) = coeffs (\<sigma> (\<sigma> k))" unfolding coeffs'_def by (by100 simp)
+          also have "\<sigma> (\<sigma> k) = k" using h\<sigma>_inv[OF hk] .
+          finally show ?thesis using hcoeffs(2) by (by100 simp)
+        qed
+        have hcoeffs'_sum: "(\<Sum>j<?n. coeffs' j) = 1"
+        proof -
+          have "(\<Sum>j<?n. coeffs' j) = (\<Sum>j<?n. coeffs (\<sigma> j))"
+            unfolding coeffs'_def by (by100 simp)
+          also have "\<dots> = (\<Sum>j<?n. coeffs j)" using hsum_reindex by (by100 blast)
+          finally show ?thesis using hcoeffs(3) by (by100 simp)
+        qed
+        have hcoeffs'_vx: "vx (\<sigma> k) = (\<Sum>j<?n. coeffs' j * vx j)"
+        proof -
+          have "(\<Sum>j<?n. coeffs' j * vx j) = (\<Sum>j<?n. coeffs (\<sigma> j) * vx j)"
+            unfolding coeffs'_def by (by100 simp)
+          also have "\<dots> = (\<Sum>i<?n. coeffs (\<sigma> (\<sigma> i)) * vx (\<sigma> i))"
+            using sum.reindex_bij_betw[OF h\<sigma>_bij, of "\<lambda>j. coeffs (\<sigma> j) * vx j"]
+            by (by100 simp)
+          also have "\<dots> = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))"
+          proof (rule sum.cong)
+            fix i assume "i \<in> {..<?n}" thus "coeffs (\<sigma> (\<sigma> i)) * vx (\<sigma> i) = coeffs i * vx (\<sigma> i)"
+              using h\<sigma>_inv by (by100 simp)
+          qed (by100 simp)
+          finally show ?thesis using hcoeffs(4) by (by100 simp)
+        qed
+        have hcoeffs'_vy: "vy (\<sigma> k) = (\<Sum>j<?n. coeffs' j * vy j)"
+        proof -
+          have "(\<Sum>j<?n. coeffs' j * vy j) = (\<Sum>j<?n. coeffs (\<sigma> j) * vy j)"
+            unfolding coeffs'_def by (by100 simp)
+          also have "\<dots> = (\<Sum>i<?n. coeffs (\<sigma> (\<sigma> i)) * vy (\<sigma> i))"
+            using sum.reindex_bij_betw[OF h\<sigma>_bij, of "\<lambda>j. coeffs (\<sigma> j) * vy j"]
+            by (by100 simp)
+          also have "\<dots> = (\<Sum>i<?n. coeffs i * vy (\<sigma> i))"
+          proof (rule sum.cong)
+            fix i assume "i \<in> {..<?n}" thus "coeffs (\<sigma> (\<sigma> i)) * vy (\<sigma> i) = coeffs i * vy (\<sigma> i)"
+              using h\<sigma>_inv by (by100 simp)
+          qed (by100 simp)
+          finally show ?thesis using hvy_eq by (by100 simp)
+        qed
+        from hvx_gen[rule_format, OF hsk]
+        show False
+          using hcoeffs'_nn hcoeffs'_k hcoeffs'_sum hcoeffs'_vx hcoeffs'_vy by (by100 blast)
+      qed
+      \<comment> \<open>P' = convex hull: P' = \\<rho>(P) = \\<rho>(conv hull {v\\_i}) = conv hull {\\<rho>(v\\_i)}.\<close>
+      have hconv': "P' = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
+                     \<and> y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))}"
+        sorry
+      show "(\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow>
+            (vx (\<sigma> i), - vy (\<sigma> i)) \<noteq> (vx (\<sigma> j), - vy (\<sigma> j)))
+         \<and> (\<forall>k<?n. \<not>(\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> 0 \<le> coeffs i) \<and> coeffs k = 0
+                  \<and> (\<Sum>i<?n. coeffs i) = 1
+                  \<and> vx (\<sigma> k) = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
+                  \<and> - vy (\<sigma> k) = (\<Sum>i<?n. coeffs i * - vy (\<sigma> i))))
+         \<and> P' = {(x, y) |x y.
+                    \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+                           \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
+                           \<and> y = (\<Sum>i<?n. coeffs i * - vy (\<sigma> i))}"
+        using hdist' hgenpos' hconv' by (by100 blast)
+    qed
+  qed
   \<comment> \<open>C2: q' is a quotient map from P' to Y.\<close>
   have hC2': "top1_quotient_map_on P' (subspace_topology UNIV
       (product_topology_on top1_open_sets top1_open_sets) P') Y TY q'" sorry
