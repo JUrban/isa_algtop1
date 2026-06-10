@@ -3196,6 +3196,79 @@ lemma scheme_equiv_preserves_quotient:
   using assms(2,1) unfolding top1_scheme_equiv_def
   by (induction rule: rtranclp.induct) (auto intro: elementary_operation_preserves_quotient)
 
+\<comment> \<open>Same-space preservation implies homeomorphic-realization preservation (take Y=X, h=id).\<close>
+\<comment> \<open>Identity is a homeomorphism on any topological space.\<close>
+lemma homeomorphism_id:
+  assumes "is_topology_on X TX"
+  shows "top1_homeomorphism_on X TX X TX id"
+  unfolding top1_homeomorphism_on_def
+  using top1_continuous_map_on_id[OF assms] assms
+  sorry
+
+lemma same_space_implies_homeo_realization:
+  assumes "top1_quotient_of_scheme_on X TX t"
+  shows "\<exists>Y TY. top1_quotient_of_scheme_on Y TY t
+              \<and> (\<exists>h. top1_homeomorphism_on X TX Y TY h)"
+  using assms homeomorphism_id
+  sorry
+
+\<comment> \<open>Homeomorphism-preservation for valid scheme operations (per expert audit step 8).
+   For rotate/invert/flip/relabel\\_fresh: use same-space preservation (Y = X).
+   For cancel/uncancel/cut-paste: prove homeomorphic-realization preservation.
+   This is the correct semantic theorem for the classification chain.\<close>
+lemma valid_operation_preserves_quotient_homeo:
+  assumes "top1_quotient_of_scheme_on X TX s"
+      and "top1_valid_scheme_operation s t"
+  shows "\<exists>Y TY. top1_quotient_of_scheme_on Y TY t
+              \<and> (\<exists>h. top1_homeomorphism_on X TX Y TY h)"
+  using assms(2,1)
+proof (induction rule: top1_valid_scheme_operation.induct)
+  case (v_rotate u v)
+  from quotient_of_scheme_rotate[OF v_rotate.prems]
+  show ?case by (rule same_space_implies_homeo_realization)
+next
+  case (v_cancel u a v)
+  \<comment> \<open>Cancel: needs geometric construction (polygon folding). Homeomorphism version.\<close>
+  show ?case sorry
+next
+  case (v_uncancel a u v)
+  \<comment> \<open>Uncancel: needs geometric construction (polygon unfolding). Homeomorphism version.\<close>
+  show ?case sorry
+next
+  case (v_invert w)
+  from quotient_of_scheme_invert[OF v_invert.prems]
+  show ?case by (rule same_space_implies_homeo_realization)
+next
+  case (v_relabel new old w)
+  \<comment> \<open>Valid relabel: new = old (identity) or new fresh (relabel\\_fresh).\<close>
+  show ?case sorry
+next
+  case (v_flip_label w a)
+  from quotient_scheme_flip_label[OF v_flip_label.prems]
+  show ?case by (rule same_space_implies_homeo_realization)
+next
+  case (v_cut_paste u1 a u2 u3)
+  \<comment> \<open>Cut-paste: needs geometric construction. Homeomorphism version.\<close>
+  show ?case sorry
+next
+  case (v_cut_paste2 b u0 a u1 u2)
+  \<comment> \<open>Cut-paste2: needs geometric construction. Homeomorphism version.\<close>
+  show ?case sorry
+next
+  case (v_cut_paste_opp u0 u1 a u2 u3)
+  \<comment> \<open>Cut-paste-opp: needs geometric construction. Homeomorphism version.\<close>
+  show ?case sorry
+qed
+
+\<comment> \<open>Chain: valid equivalence preserves quotient homeomorphism type.\<close>
+lemma valid_equiv_preserves_quotient_homeo:
+  assumes "top1_quotient_of_scheme_on X TX s"
+      and "top1_valid_scheme_equiv s t"
+  shows "\<exists>Y TY. top1_quotient_of_scheme_on Y TY t
+              \<and> (\<exists>h. top1_homeomorphism_on X TX Y TY h)"
+  using assms(2,1) unfolding top1_valid_scheme_equiv_def
+  sorry
+
 \<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
 lemma polygonal_region_compact:
   assumes "top1_is_polygonal_region_on P n"
