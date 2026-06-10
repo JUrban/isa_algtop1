@@ -673,11 +673,14 @@ proof -
   \<comment> \<open>General position: extracted from hC1. But hC1 uses the same vx/vy from the
      quotient\_of\_scheme\_extract\_vx call (they share the same underlying witnesses).
      For now: derive from the overall definition.\<close>
+  \<comment> \<open>hvx\\_gen follows from hC11 (strict edge-side): if vertex k were a convex combination
+     of the others, it would be in the polygon interior, but C11 says non-adjacent vertices
+     are strictly on the interior side of each edge, which prevents this.
+     For now: sorry. This is a non-trivial convex geometry fact.\<close>
   have hvx_gen: "\<forall>k<?n. \<not>(\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
                 \<and> (\<Sum>i<?n. coeffs i) = 1
                 \<and> vx k = (\<Sum>i<?n. coeffs i * vx i) \<and> vy k = (\<Sum>i<?n. coeffs i * vy i))"
-    sorry \<comment> \<open>Follows from top1\\_is\\_polygonal\\_region\\_on P n with the SAME vx/vy.
-       The extraction gives them from the same \\<exists>. Need to link.\<close>
+    sorry
   \<comment> \<open>Step 1: Define reflection and witnesses.\<close>
   define \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<rho> = (\<lambda>(x,y). (x, -y))"
   define P' where "P' = \<rho> ` P"
