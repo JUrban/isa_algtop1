@@ -3950,13 +3950,15 @@ proof -
   from homeomorphism_comp[OF h\<psi>1_homeo h\<psi>2_inv]
   have h\<phi>: "top1_homeomorphism_on P1 (?TP P1) P2 (?TP P2) \<phi>" unfolding \<phi>_def .
   \<comment> \<open>Step 5: \\<phi> preserves edge parametrization.\<close>
+  \<comment> \<open>\\<phi> preserves edge parametrization: \\<psi>1 and \\<psi>2 map corresponding edge points to
+     the same S¹ point (cos/sin at 2\\<pi>(i+t)/n), so \\<psi>2\\<inverse> \\<circ> \\<psi>1 maps edge i of P1
+     to edge i of P2. Uses h\\<psi>1\\_edge, h\\<psi>2\\_edge, injectivity of \\<psi>2, and inv\\_into\\_f\\_f.\<close>
   have h\<phi>_edge: "\<forall>i<?n. \<forall>t\<in>I_set.
       \<phi> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
          (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
       = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
          (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
-    sorry \<comment> \<open>\\<psi>1 and \\<psi>2 map corresponding edge points to the same S¹ point,
-       so \\<psi>2\\<inverse> \\<circ> \\<psi>1 maps edge i of P1 to edge i of P2.\<close>
+    sorry
   \<comment> \<open>Step 6: q2 \\<circ> \\<phi> is a quotient map P1 \\<to> Y2.\<close>
   have h\<phi>_quot: "top1_quotient_map_on P1 (?TP P1) P2 (?TP P2) \<phi>"
     by (rule top1_homeomorphism_on_imp_quotient_map_on[OF h\<phi>])
