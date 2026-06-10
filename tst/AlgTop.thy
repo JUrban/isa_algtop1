@@ -149,7 +149,11 @@ lemma valid_scheme_alpha_rename:
   fixes w :: "(nat \<times> bool) list"
   assumes "bij_betw \<rho> (scheme_labels w) L"
   shows "top1_valid_scheme_equiv w (map (\<lambda>(l,b). (\<rho> l, b)) w)"
-  sorry \<comment> \<open>Combinatorial: sequence of fresh relabels. Needs induction on label set.\<close>
+  sorry \<comment> \<open>Combinatorial: two-phase approach with fresh intermediates.
+     Phase 1: rename each old label to a fresh intermediate (valid: fresh \\<notin> current labels).
+     Phase 2: rename each intermediate to \\<rho>(old label) (valid: target \\<notin> current labels).
+     Both phases use valid\\_equiv\\_fresh\\_relabel + valid\\_equiv\\_trans.
+     Needs: existence of sufficiently many fresh labels (infinite type nat).\<close>
 
 \<comment> \<open>Scheme equivalence: transitivity and lifting from elementary operations.
    These avoid the meson/rtranclp\_trans timeout on complex list types.\<close>
