@@ -2169,21 +2169,20 @@ lemma convex_polygon_homeomorphism:
 proof -
   let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
   \<comment> \<open>Step 1: Extract vertices from both polygons.\<close>
-  from assms(1) obtain vx1 vy1 :: "nat \<Rightarrow> real" where
+  \<comment> \<open>Vertex extraction: sorry for now (set comprehension syntax matching issue).
+     The vertex functions vx1,vy1,vx2,vy2 exist from the definition but extracting
+     them with the right syntactic form requires careful matching.\<close>
+  obtain vx1 vy1 :: "nat \<Rightarrow> real" where
     hv1_dist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx1 i, vy1 i) \<noteq> (vx1 j, vy1 j)"
-    and hv1_gen: "\<forall>k<n. \<not>(\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
-                  \<and> (\<Sum>i<n. coeffs i) = 1
-                  \<and> vx1 k = (\<Sum>i<n. coeffs i * vx1 i) \<and> vy1 k = (\<Sum>i<n. coeffs i * vy1 i))"
-    and hP1: "P1 = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
-                       \<and> x = (\<Sum>i<n. coeffs i * vx1 i) \<and> y = (\<Sum>i<n. coeffs i * vy1 i)}"
+    and hP1_mem: "\<forall>p. p \<in> P1 \<longleftrightarrow>
+        (\<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+                     \<and> fst p = (\<Sum>i<n. coeffs i * vx1 i) \<and> snd p = (\<Sum>i<n. coeffs i * vy1 i))"
     sorry
-  from assms(2) obtain vx2 vy2 :: "nat \<Rightarrow> real" where
+  obtain vx2 vy2 :: "nat \<Rightarrow> real" where
     hv2_dist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx2 i, vy2 i) \<noteq> (vx2 j, vy2 j)"
-    and hv2_gen: "\<forall>k<n. \<not>(\<exists>coeffs. (\<forall>i<n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
-                  \<and> (\<Sum>i<n. coeffs i) = 1
-                  \<and> vx2 k = (\<Sum>i<n. coeffs i * vx2 i) \<and> vy2 k = (\<Sum>i<n. coeffs i * vy2 i))"
-    and hP2: "P2 = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
-                       \<and> x = (\<Sum>i<n. coeffs i * vx2 i) \<and> y = (\<Sum>i<n. coeffs i * vy2 i)}"
+    and hP2_mem: "\<forall>p. p \<in> P2 \<longleftrightarrow>
+        (\<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0) \<and> (\<Sum>i<n. coeffs i) = 1
+                     \<and> fst p = (\<Sum>i<n. coeffs i * vx2 i) \<and> snd p = (\<Sum>i<n. coeffs i * vy2 i))"
     sorry
   have hn: "n \<ge> 3" using assms(1) unfolding top1_is_polygonal_region_on_def by (by100 blast)
   \<comment> \<open>Step 2: Define centroids.\<close>
