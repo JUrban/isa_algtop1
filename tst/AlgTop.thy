@@ -3886,18 +3886,47 @@ proof -
   \<comment> \<open>Step 3: Get edge-preserving homeomorphisms P1 \\<to> B² \\<to> P2 via disk lemma.\<close>
   \<comment> \<open>Apply polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary to both polygons.
      The lemma uses cross2 from AlgTopChain. Need to convert our conditions.\<close>
-  obtain \<psi>1 where
+  \<comment> \<open>Convert hside\\_le\\_1 and hC11\\_1 to cross2 form.\<close>
+  have hvert_hp_1: "\<forall>i<?n. \<forall>k<?n. AlgTopChain.cross2 (vx1 k - vx1 i, vy1 k - vy1 i)
+      (vx1 (Suc i mod ?n) - vx1 i, vy1 (Suc i mod ?n) - vy1 i) \<le> 0"
+    using hside_le_1 unfolding AlgTopChain.cross2_def by (by100 simp)
+  have hstrict_hp_1: "\<forall>i<?n. \<forall>k<?n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+      AlgTopChain.cross2 (vx1 k - vx1 i, vy1 k - vy1 i)
+          (vx1 (Suc i mod ?n) - vx1 i, vy1 (Suc i mod ?n) - vy1 i) < 0"
+    using hC11_1 unfolding AlgTopChain.cross2_def by (by100 simp)
+  have hdisk1: "\<exists>\<psi>. top1_homeomorphism_on P1 (?TP P1) top1_B2 top1_B2_topology \<psi>
+    \<and> (\<forall>i<?n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+        (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
+      = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n)))"
+    using AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
+      [OF hC1_1 hn3 hC4_1 hC5_1 hC10_1 hvert_hp_1 hstrict_hp_1]
+    sorry \<comment> \<open>Extract 1st and 4th conjuncts from the lemma's 4-part conjunction.\<close>
+  then obtain \<psi>1 where
     h\<psi>1_homeo: "top1_homeomorphism_on P1 (?TP P1) top1_B2 top1_B2_topology \<psi>1"
     and h\<psi>1_edge: "\<forall>i<?n. \<forall>t\<in>I_set. \<psi>1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
         (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
       = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n))"
-    sorry \<comment> \<open>From polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary + cross2 conversion.\<close>
-  obtain \<psi>2 where
+    by (by100 blast)
+  have hvert_hp_2: "\<forall>i<?n. \<forall>k<?n. AlgTopChain.cross2 (vx2 k - vx2 i, vy2 k - vy2 i)
+      (vx2 (Suc i mod ?n) - vx2 i, vy2 (Suc i mod ?n) - vy2 i) \<le> 0"
+    using hside_le_2 unfolding AlgTopChain.cross2_def by (by100 simp)
+  have hstrict_hp_2: "\<forall>i<?n. \<forall>k<?n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+      AlgTopChain.cross2 (vx2 k - vx2 i, vy2 k - vy2 i)
+          (vx2 (Suc i mod ?n) - vx2 i, vy2 (Suc i mod ?n) - vy2 i) < 0"
+    using hC11_2 unfolding AlgTopChain.cross2_def by (by100 simp)
+  have hdisk2: "\<exists>\<psi>. top1_homeomorphism_on P2 (?TP P2) top1_B2 top1_B2_topology \<psi>
+    \<and> (\<forall>i<?n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+        (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
+      = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n)))"
+    using AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
+      [OF hC1_2 hn3 hC4_2 hC5_2 hC10_2 hvert_hp_2 hstrict_hp_2]
+    sorry \<comment> \<open>Same extraction for P2.\<close>
+  then obtain \<psi>2 where
     h\<psi>2_homeo: "top1_homeomorphism_on P2 (?TP P2) top1_B2 top1_B2_topology \<psi>2"
     and h\<psi>2_edge: "\<forall>i<?n. \<forall>t\<in>I_set. \<psi>2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
         (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
       = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n))"
-    sorry \<comment> \<open>Same for P2.\<close>
+    by (by100 blast)
   \<comment> \<open>Step 4: Compose \\<psi>2\\<inverse> \\<circ> \\<psi>1 to get edge-preserving \\<phi>: P1 \\<to> P2.\<close>
   from homeomorphism_inverse[OF h\<psi>2_homeo]
   have h\<psi>2_inv: "top1_homeomorphism_on top1_B2 top1_B2_topology P2 (?TP P2) (inv_into P2 \<psi>2)" .
