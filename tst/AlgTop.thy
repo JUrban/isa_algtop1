@@ -671,7 +671,18 @@ proof -
     using assms(3) unfolding bij_betw_def by (by100 blast)
   have h\<sigma>_inj: "inj_on \<sigma> {..<length w}"
     using assms(3) unfolding bij_betw_def by (by100 blast)
-  from assms show ?thesis sorry \<comment> \<open>Same P, q, shifted vx/vy. Blocked by prover timeouts.\<close>
+  \<comment> \<open>Extract topology.\<close>
+  from assms(1) have htopo: "is_topology_on_strict Y TY"
+    unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>The quotient has the form: is\_topo \\<and> (\\<exists>P q vx vy. C1\\<and>...\\<and>C11).
+     Extract the existential part, then rebuild with shifted witnesses.\<close>
+  \<comment> \<open>Key idea: define w\_sigma = map (\\<lambda>i. w!(sigma i)) [0..<n], which is w permuted by sigma.
+     Then w\_sigma has the SAME identification pattern as w (just at different positions).
+     And w' has fst/snd matching w\_sigma at each position (by assms 4,5).
+     So quotient\_of\_scheme\_transfer can convert from w\_sigma to w'.
+     And w and w\_sigma have the same quotient (sigma is just a relabeling of vertex positions).\<close>
+  \<comment> \<open>For now: sorry.\<close>
+  from assms show ?thesis sorry
 qed
 
 \<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
