@@ -1300,7 +1300,19 @@ proof -
            (1-s) * (-(vy (\<sigma> i))) + s * (-(vy (\<sigma> (Suc i mod ?n)))))
         \<noteq> ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
             (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n)))))"
-      using hne_simp h_si h_sj sorry
+    proof
+      assume "((1-s) * vx (\<sigma> i) + s * vx (\<sigma> (Suc i mod ?n)),
+           (1-s) * (-(vy (\<sigma> i))) + s * (-(vy (\<sigma> (Suc i mod ?n)))))
+        = ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
+            (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n)))))"
+      hence "(1-s) * vx (\<sigma> i) + s * vx ?i' = (1-t) * vx (\<sigma> j) + t * vx ?j'
+        \<and> (1-s) * (-(vy (\<sigma> i))) + s * (-(vy ?i')) = (1-t) * (-(vy (\<sigma> j))) + t * (-(vy ?j'))"
+        using h_si h_sj by (by100 simp)
+      hence "s * vx ?i' + (1-s) * vx (\<sigma> i) = t * vx ?j' + (1-t) * vx (\<sigma> j)
+        \<and> s * vy ?i' + (1-s) * vy (\<sigma> i) = t * vy ?j' + (1-t) * vy (\<sigma> j)"
+        by (by100 argo)
+      with hne_simp show False by (by100 simp)
+    qed
   qed
   \<comment> \<open>C7': identification pattern for the inverted scheme.\<close>
   have hC7': "\<forall>i<?n. \<forall>j<?n. fst (?w'!i) = fst (?w'!j) \<longrightarrow>
