@@ -2981,6 +2981,18 @@ proof -
     by (rule quotient_of_scheme_transfer[OF h_step1 _ hfst_ws hsnd_ws]) (simp add: assms(2) hlen_w\<sigma>)
 qed
 
+\<comment> \<open>Edge preservation for composed disk homeomorphisms: if \\<psi>1 and \\<psi>2 both map
+   edge i at parameter t to the same S¹ point, then inv(\\<psi>2) \\<circ> \\<psi>1 maps edge i of P1
+   to edge i of P2. This is the core argument for scheme\\_quotient\\_uniqueness.\<close>
+lemma composed_disk_homeo_edge_preserving:
+  fixes \<psi>1 \<psi>2 :: "'a \<Rightarrow> 'b" and P2 :: "'a set"
+  assumes h\<psi>2_inj: "inj_on \<psi>2 P2"
+      and h_eq: "\<psi>1 p1 = \<psi>2 p2"
+      and h_in: "p2 \<in> P2"
+  shows "(inv_into P2 \<psi>2 \<circ> \<psi>1) p1 = p2"
+  using assms inv_into_f_f[OF h\<psi>2_inj h_in] unfolding comp_def
+  by (by100 simp)
+
 \<comment> \<open>NOTE: transfer\\_bij approach FAILS for cut\\_paste\\_opp because the permutation \\<sigma>
    does NOT preserve edge adjacency (Suc(\\<sigma>(i)) mod n \\<noteq> \\<sigma>(Suc(i) mod n) at region
    boundaries, e.g. i=a0-1 gives Suc(a0-1)=a0 but \\<sigma>(a0)=a0+b \\<noteq> a0=Suc(\\<sigma>(a0-1))).
@@ -3963,7 +3975,7 @@ proof -
          (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
       = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
          (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
-    sorry \<comment> \<open>Verified proof plan (blocked by sorry-leaking in qd mode):
+    sorry \<comment> \<open>Edge preservation. Needs edge points \\<in> P2 (convex combo) + inv\\_into\\_f\\_f.\<close> \<comment> \<open>Verified proof plan (blocked by sorry-leaking in qd mode):
        For each i,t: let p1=edge1(i,t), p2=edge2(i,t), s=(cos/sin at 2\\<pi>(i+t)/n).
        1. p2 \\<in> P2 (convex combination of vertices)
        2. \\<psi>1(p1) = s (h\\<psi>1\\_edge)
