@@ -3338,8 +3338,13 @@ lemma valid_equiv_preserves_quotient_homeo:
     top1_quotient_of_scheme_on Y TY t \<and>
     top1_homeomorphism_on X TX Y TY h"
   using assms(2,1) unfolding top1_valid_scheme_equiv_def
-  sorry \<comment> \<open>Chain: rtranclp induction + valid\\_op\\_preserves + homeomorphism\\_comp.
-     Proof plan verified in audit 18 section 4 but sorry-leaking blocks inline.\<close>
+proof (induction rule: rtranclp.induct)
+  case rtrancl_refl
+  then show ?case by (rule same_space_implies_homeo_realization)
+next
+  case (rtrancl_into_rtrancl a b c)
+  show ?case sorry \<comment> \<open>IH decomposition blocked by \\<exists>-matching with large predicates.\<close>
+qed
 
 \<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
 lemma polygonal_region_compact:
