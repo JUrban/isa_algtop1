@@ -3836,6 +3836,54 @@ proof -
   thus ?thesis by (by100 blast)
 qed
 
+\<comment> \<open>Interior preservation: if \\<phi> maps edge i of P1 to edge i of P2 bijectively,
+   then \\<phi> also maps interior points (not on any edge) to interior points.\<close>
+lemma edge_preserving_homeo_interior:
+  assumes hbij: "bij_betw \<phi> P1 P2"
+      and hedge: "\<forall>i<n. \<forall>t\<in>I_set.
+          \<phi> ((1-t) * vx1 i + t * vx1 (Suc i mod n),
+             (1-t) * vy1 i + t * vy1 (Suc i mod n))
+          = ((1-t) * vx2 i + t * vx2 (Suc i mod n),
+             (1-t) * vy2 i + t * vy2 (Suc i mod n))"
+      and hn3: "n \<ge> 3"
+      and hP1_hull: "P1 = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<n. coeffs i * vx1 i)
+                     \<and> y = (\<Sum>i<n. coeffs i * vy1 i)}"
+      and hx: "x \<in> P1"
+      and hint: "\<forall>i<n. \<forall>t\<in>I_set.
+          x \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod n),
+                (1-t) * vy1 i + t * vy1 (Suc i mod n))"
+  shows "\<forall>i<n. \<forall>t\<in>I_set.
+      \<phi> x \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod n),
+            (1-t) * vy2 i + t * vy2 (Suc i mod n))"
+proof (intro allI impI ballI notI)
+  fix i t assume hi: "i < n" and ht: "t \<in> I_set"
+  assume "(\<phi> x) = ((1-t) * vx2 i + t * vx2 (Suc i mod n),
+            (1-t) * vy2 i + t * vy2 (Suc i mod n))"
+  \<comment> \<open>But \\<phi>(edge1(i,t)) = edge2(i,t) by hedge. Since \\<phi> is injective, x = edge1(i,t).\<close>
+  have h_edge_eq: "\<phi> ((1-t) * vx1 i + t * vx1 (Suc i mod n),
+             (1-t) * vy1 i + t * vy1 (Suc i mod n))
+        = ((1-t) * vx2 i + t * vx2 (Suc i mod n),
+           (1-t) * vy2 i + t * vy2 (Suc i mod n))"
+    using hedge[rule_format, OF hi ht] .
+  hence "\<phi> x = \<phi> ((1-t) * vx1 i + t * vx1 (Suc i mod n),
+                   (1-t) * vy1 i + t * vy1 (Suc i mod n))"
+    using \<open>(\<phi> x) = _\<close> by (by100 simp)
+  hence "x = ((1-t) * vx1 i + t * vx1 (Suc i mod n),
+              (1-t) * vy1 i + t * vy1 (Suc i mod n))"
+  proof -
+    have "inj_on \<phi> P1" using bij_betw_imp_inj_on[OF hbij] .
+    have "((1-t) * vx1 i + t * vx1 (Suc i mod n),
+            (1-t) * vy1 i + t * vy1 (Suc i mod n)) \<in> P1"
+      by (rule edge_point_in_polygon_witness[OF hn3 hi ht hP1_hull])
+    from \<open>inj_on \<phi> P1\<close> hx this \<open>\<phi> x = \<phi> _\<close>
+    show ?thesis unfolding inj_on_def by (by100 blast)
+  qed
+  thus False using hint hi ht by (by100 blast)
+qed
+
 \<comment> \<open>Quotient-of-scheme uniqueness: any two quotient spaces of the same scheme are homeomorphic.
    Proof: both are quotients of convex n-gons by the same identification pattern.
    The n-gons are homeomorphic (convex compact in R²), and the homeomorphism respects
