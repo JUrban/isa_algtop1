@@ -2993,6 +2993,93 @@ lemma composed_disk_homeo_edge_preserving:
   using assms inv_into_f_f[OF h\<psi>2_inj h_in] unfolding comp_def
   by (by100 simp)
 
+\<comment> \<open>Helper: split a sum over {..<n} at two distinct positions i,j.\<close>
+lemma sum_split_two:
+  fixes f :: "nat \<Rightarrow> 'a::comm_monoid_add"
+  assumes "i < n" "j < n" "i \<noteq> j"
+  shows "(\<Sum>k<n. f k) = f i + f j + (\<Sum>k\<in>{..<n}-{i}-{j}. f k)"
+proof -
+  have "i \<in> {..<n}" "j \<in> {..<n}" using assms by (by100 simp)+
+  have h1: "(\<Sum>k<n. f k) = f i + (\<Sum>k\<in>{..<n}-{i}. f k)"
+    using sum.remove[OF _ \<open>i \<in> {..<n}\<close>, of f] by (by100 simp)
+  have hji: "j \<in> {..<n}-{i}" using \<open>j \<in> {..<n}\<close> assms(3) by (by100 blast)
+  have hfin2: "finite ({..<n}-{i})" by (by100 simp)
+  have h2: "(\<Sum>k\<in>{..<n}-{i}. f k) = f j + (\<Sum>k\<in>({..<n}-{i})-{j}. f k)"
+    using sum.remove[OF hfin2 hji] .
+  have "({..<n}-{i})-{j} = {..<n}-{i}-{j}" by (by100 blast)
+  hence h2': "(\<Sum>k\<in>{..<n}-{i}. f k) = f j + (\<Sum>k\<in>{..<n}-{i}-{j}. f k)"
+    using h2 by (by100 simp)
+  from h1 h2' have "(\<Sum>k<n. f k) = f i + (f j + (\<Sum>k\<in>{..<n}-{i}-{j}. f k))" by (by100 simp)
+  thus ?thesis using add.assoc[of "f i" "f j"] by (by100 simp)
+qed
+
+\<comment> \<open>Edge point is in the polygon: the convex combination (1-t)*v\\_i + t*v\\_{i+1} is in P
+   when P is the convex hull of the vertices. Witness: coeffs(i) = 1-t, coeffs(Suc i mod n) = t,
+   rest 0. Uses n \\<ge> 3 to ensure i \\<noteq> Suc i mod n.\<close>
+lemma edge_point_in_polygon_witness:
+  assumes "n \<ge> 3" and "i < n" and "t \<in> I_set"
+      and hP: "P = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                     \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+  shows "((1-t) * vx i + t * vx (Suc i mod n),
+          (1-t) * vy i + t * vy (Suc i mod n)) \<in> P"
+proof -
+  let ?si = "Suc i mod n"
+  have hsi: "?si < n" using assms(1) by (by100 simp)
+  have hne: "i \<noteq> ?si"
+  proof (cases "Suc i < n")
+    case True thus ?thesis by (by100 simp)
+  next
+    case False hence "Suc i = n" using assms(2) by (by100 simp)
+    hence "?si = 0" by (by100 simp)
+    moreover have "i > 0" using \<open>Suc i = n\<close> assms(1) by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  define coeffs :: "nat \<Rightarrow> real" where
+    "coeffs = (\<lambda>k. if k = i then 1 - t else if k = ?si then t else 0)"
+  have hnn: "\<forall>j<n. coeffs j \<ge> 0"
+  proof (intro allI impI)
+    fix j assume "j < n"
+    show "coeffs j \<ge> 0" unfolding coeffs_def
+      using assms(3) unfolding top1_unit_interval_def by (by100 auto)
+  qed
+  have hsum: "(\<Sum>j<n. coeffs j) = 1"
+  proof -
+    have "(\<Sum>j<n. coeffs j) = coeffs i + coeffs ?si + (\<Sum>j\<in>{..<n}-{i}-{?si}. coeffs j)"
+      by (rule sum_split_two[OF assms(2) hsi hne])
+    also have "coeffs i = 1 - t" unfolding coeffs_def by (by100 simp)
+    also have "coeffs ?si = t" unfolding coeffs_def using hne by (by100 simp)
+    also have "(\<Sum>j\<in>{..<n}-{i}-{?si}. coeffs j) = 0"
+      unfolding coeffs_def using hne by (by100 auto)
+    finally show ?thesis by (by100 simp)
+  qed
+  have hx: "(1-t) * vx i + t * vx ?si = (\<Sum>j<n. coeffs j * vx j)"
+  proof -
+    have "(\<Sum>j<n. coeffs j * vx j) = coeffs i * vx i + coeffs ?si * vx ?si
+        + (\<Sum>j\<in>{..<n}-{i}-{?si}. coeffs j * vx j)"
+      by (rule sum_split_two[OF assms(2) hsi hne])
+    also have "coeffs i * vx i = (1-t) * vx i" unfolding coeffs_def by (by100 simp)
+    also have "coeffs ?si * vx ?si = t * vx ?si" unfolding coeffs_def using hne by (by100 simp)
+    also have "(\<Sum>j\<in>{..<n}-{i}-{?si}. coeffs j * vx j) = 0"
+      unfolding coeffs_def using hne by (by100 auto)
+    finally show ?thesis by (by100 simp)
+  qed
+  have hy: "(1-t) * vy i + t * vy ?si = (\<Sum>j<n. coeffs j * vy j)"
+  proof -
+    have "(\<Sum>j<n. coeffs j * vy j) = coeffs i * vy i + coeffs ?si * vy ?si
+        + (\<Sum>j\<in>{..<n}-{i}-{?si}. coeffs j * vy j)"
+      by (rule sum_split_two[OF assms(2) hsi hne])
+    also have "coeffs i * vy i = (1-t) * vy i" unfolding coeffs_def by (by100 simp)
+    also have "coeffs ?si * vy ?si = t * vy ?si" unfolding coeffs_def using hne by (by100 simp)
+    also have "(\<Sum>j\<in>{..<n}-{i}-{?si}. coeffs j * vy j) = 0"
+      unfolding coeffs_def using hne by (by100 auto)
+    finally show ?thesis by (by100 simp)
+  qed
+  show ?thesis unfolding hP using hnn hsum hx hy by (by100 blast)
+qed
+
 \<comment> \<open>NOTE: transfer\\_bij approach FAILS for cut\\_paste\\_opp because the permutation \\<sigma>
    does NOT preserve edge adjacency (Suc(\\<sigma>(i)) mod n \\<noteq> \\<sigma>(Suc(i) mod n) at region
    boundaries, e.g. i=a0-1 gives Suc(a0-1)=a0 but \\<sigma>(a0)=a0+b \\<noteq> a0=Suc(\\<sigma>(a0-1))).
