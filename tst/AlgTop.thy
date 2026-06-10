@@ -549,10 +549,17 @@ proof -
     by (rule quotient_of_scheme_extract)
   have htopo: "is_topology_on_strict Y TY"
     using assms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  \<comment> \<open>Step 1: The inverted scheme has the same quotient space via reflected polygon.
-     Witnesses: P' = \\<rho>(P), q' = q \\<circ> \\<rho>, vx'(i) = vx((n-i) mod n), vy'(i) = -vy((n-i) mod n).
-     This requires showing all 11 conditions. For now: sorry the whole thing.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 1: Define reflection and witnesses.\<close>
+  define \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<rho> = (\<lambda>(x,y). (x, -y))"
+  define P' where "P' = \<rho> ` P"
+  define q' where "q' = q \<circ> \<rho>"
+  define \<sigma> :: "nat \<Rightarrow> nat" where "\<sigma> = (\<lambda>i. ((?n) - i) mod (?n))"
+  define vx' where "vx' = (\<lambda>i. vx (\<sigma> i))"
+  define vy' where "vy' = (\<lambda>i. -(vy (\<sigma> i)))"
+  \<comment> \<open>Step 2: Show all 11 conditions for w' with witnesses P', q', vx', vy'.\<close>
+  show ?thesis
+    unfolding top1_quotient_of_scheme_on_def hlen
+    sorry
 qed
 
 \<comment> \<open>Relabel with fresh label: proved via same witnesses, fst-equality pattern preserved.\<close>
