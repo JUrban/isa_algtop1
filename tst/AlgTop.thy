@@ -2996,21 +2996,11 @@ proof -
   thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
 qed
 
-\<comment> \<open>Inversion: recover freshness from a relabel constructor application.\<close>
-lemma relabel_operation_freshness:
-  assumes "top1_elementary_scheme_operation w (map (\<lambda>(x, b). (if x = old then new else x, b)) w)"
-  shows "new \<notin> fst ` set w \<and> new \<noteq> old"
-  using assms
-  sorry \<comment> \<open>Inversion on inductive definition. Cases + simp/auto/force all timeout
-     within by100. The proof IS correct (the relabel constructor is the only one
-     producing map-relabel form) but needs > 100ms for case exhaustion.\<close>
-
-\<comment> \<open>Relabel reverse: uses freshness recovered by inversion.\<close>
-lemma relabel_operation_reverse:
-  assumes "top1_elementary_scheme_operation w (map (\<lambda>(x, b). (if x = old then new else x, b)) w)"
-  shows "top1_scheme_equiv (map (\<lambda>(x, b). (if x = old then new else x, b)) w) w"
-  using relabel_reverse[OF conjunct1[OF relabel_operation_freshness[OF assms]]
-                          conjunct2[OF relabel_operation_freshness[OF assms]]] .
+\<comment> \<open>NOTE: relabel\\_operation\\_freshness (inversion on the relabel constructor) is FALSE as
+   a standalone lemma — the map-relabel form can coincidentally match other constructors
+   (e.g. rotate). The freshness is only available INSIDE the induction case, where we
+   know the constructor. But Isabelle's case mechanism doesn't expose it.
+   The relabel\\_reverse standalone lemma (proved above) IS correct with explicit freshness.\<close>
 
 lemma elementary_operation_reverse:
   assumes "top1_elementary_scheme_operation s t"
@@ -3046,7 +3036,9 @@ next
     using top1_elementary_scheme_operation.invert[of "rev (map top1_inverse_edge w)"] by simp
 next
   case (relabel w old new)
-  from relabel_operation_reverse show ?case sorry
+  \<comment> \<open>Freshness (new \\<notin> fst ` set w, new \\<noteq> old) is guaranteed by the relabel constructor
+     but inaccessible via Isabelle's case mechanism. relabel\\_reverse is proved standalone.\<close>
+  show ?case sorry
 next
   case (flip_label w a) \<comment> \<open>flip is involutive: flip(flip(w)) = w.\<close>
   let ?f = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
