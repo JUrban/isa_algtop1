@@ -667,7 +667,9 @@ proof -
   qed
   have hsum_reindex: "\<And>g :: nat \<Rightarrow> real. (\<Sum>j<?n. g (\<sigma> j)) = (\<Sum>j<?n. g j)"
     using sum.reindex_bij_betw[OF h\<sigma>_bij] by (by100 simp)
-  \<comment> \<open>C1: P' is a polygonal region.\<close>
+  \<comment> \<open>C1: P' = \\<rho>(P) is a polygonal region with the same number of vertices.
+     Vertices: (vx(\\<sigma>(i)), -vy(\\<sigma>(i))). Since \\<sigma> permutes {..<n} and \\<rho> is linear,
+     the convex hull is \\<rho>(P).\<close>
   have hC1': "top1_is_polygonal_region_on P' ?n" sorry
   \<comment> \<open>C2: q' is a quotient map from P' to Y.\<close>
   have hC2': "top1_quotient_map_on P' (subspace_topology UNIV
