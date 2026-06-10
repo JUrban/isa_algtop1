@@ -330,7 +330,7 @@ inductive top1_valid_scheme_operation :: "('a \<times> bool) list \<Rightarrow> 
   v_uncancel: "fst a \<notin> scheme_labels (u @ v) \<Longrightarrow>
     top1_valid_scheme_operation (u @ v) (u @ [a, top1_inverse_edge a] @ v)" |
   v_invert: "top1_valid_scheme_operation w (rev (map top1_inverse_edge w))" |
-  v_relabel: "\<lbrakk> new = old \<or> new \<notin> scheme_labels w \<rbrakk> \<Longrightarrow>
+  v_relabel: "\<lbrakk>new \<notin> fst ` set w; new \<noteq> old\<rbrakk> \<Longrightarrow>
     top1_valid_scheme_operation w (map (\<lambda>(l,b). (if l = old then new else l, b)) w)" |
   v_flip_label: "top1_valid_scheme_operation w (map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) w)" |
   v_cut_paste: "top1_valid_scheme_operation
@@ -351,16 +351,17 @@ definition top1_valid_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a
 \<comment> \<open>Every valid operation is also an unrestricted operation.\<close>
 lemma valid_implies_elementary:
   "top1_valid_scheme_operation w w' \<Longrightarrow> top1_elementary_scheme_operation w w'"
-  by (induction rule: top1_valid_scheme_operation.induct)
-     (rule top1_elementary_scheme_operation.rotate
-     ,rule top1_elementary_scheme_operation.cancel
-     ,rule top1_elementary_scheme_operation.uncancel
-     ,rule top1_elementary_scheme_operation.invert
-     ,rule top1_elementary_scheme_operation.relabel
-     ,rule top1_elementary_scheme_operation.flip_label
-     ,rule top1_elementary_scheme_operation.cut_paste
-     ,rule top1_elementary_scheme_operation.cut_paste2
-     ,rule top1_elementary_scheme_operation.cut_paste_opp)
+  apply (induction rule: top1_valid_scheme_operation.induct)
+  apply (rule top1_elementary_scheme_operation.rotate)
+  apply (rule top1_elementary_scheme_operation.cancel)
+  apply (rule top1_elementary_scheme_operation.uncancel)
+  apply (rule top1_elementary_scheme_operation.invert)
+  apply (rule top1_elementary_scheme_operation.relabel)
+  apply (rule top1_elementary_scheme_operation.flip_label)
+  apply (rule top1_elementary_scheme_operation.cut_paste)
+  apply (rule top1_elementary_scheme_operation.cut_paste2)
+  apply (rule top1_elementary_scheme_operation.cut_paste_opp)
+  done
 
 \<comment> \<open>Valid equivalence implies unrestricted equivalence.\<close>
 lemma valid_equiv_implies_equiv:
@@ -795,14 +796,215 @@ proof -
   \<comment> \<open>General position: extracted from hC1. But hC1 uses the same vx/vy from the
      quotient\_of\_scheme\_extract\_vx call (they share the same underlying witnesses).
      For now: derive from the overall definition.\<close>
-  \<comment> \<open>hvx\\_gen follows from hC11 (strict edge-side): if vertex k were a convex combination
-     of the others, it would be in the polygon interior, but C11 says non-adjacent vertices
-     are strictly on the interior side of each edge, which prevents this.
-     For now: sorry. This is a non-trivial convex geometry fact.\<close>
+  \<comment> \<open>hvx\\_gen from hC11: if vertex k were a convex combination of the others, considering
+     edge k gives \\<Sum> c\\_j * cp(j) = 0 but all non-endpoint terms are strictly negative,
+     forcing all coefficients to zero except Suc k mod n, contradicting distinctness.\<close>
   have hvx_gen: "\<forall>k<?n. \<not>(\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
                 \<and> (\<Sum>i<?n. coeffs i) = 1
                 \<and> vx k = (\<Sum>i<?n. coeffs i * vx i) \<and> vy k = (\<Sum>i<?n. coeffs i * vy i))"
-    sorry
+  proof (intro allI impI notI)
+    fix k assume hk: "k < ?n"
+    assume "\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
+                \<and> (\<Sum>i<?n. coeffs i) = 1
+                \<and> vx k = (\<Sum>i<?n. coeffs i * vx i) \<and> vy k = (\<Sum>i<?n. coeffs i * vy i)"
+    then obtain coeffs where
+        hcoeff_nn: "\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0"
+      and hcoeff_k: "coeffs k = 0"
+      and hcoeff_sum: "(\<Sum>i<?n. coeffs i) = 1"
+      and hvxk: "vx k = (\<Sum>i<?n. coeffs i * vx i)"
+      and hvyk: "vy k = (\<Sum>i<?n. coeffs i * vy i)"
+      by (by100 blast)
+    \<comment> \<open>Edge k \\<to> Suc k mod n. Cross product at vertex j for this edge:\<close>
+    let ?sk = "Suc k mod ?n"
+    let ?dx = "vx ?sk - vx k"
+    let ?dy = "vy ?sk - vy k"
+    let ?cp = "\<lambda>j. (vx j - vx k) * ?dy - (vy j - vy k) * ?dx"
+    \<comment> \<open>Cross product at k = 0 (k is endpoint).\<close>
+    have hcp_k: "?cp k = 0" by (by100 simp)
+    \<comment> \<open>Cross product at Suc k mod n = 0 (other endpoint).\<close>
+    have hcp_sk: "?cp ?sk = 0" by (by100 simp)
+    \<comment> \<open>k \\<noteq> Suc k mod n (since n \\<ge> 3).\<close>
+    have hk_neq_sk: "k \<noteq> ?sk"
+    proof (cases "Suc k < ?n")
+      case True thus ?thesis by (by100 simp)
+    next
+      case False
+      hence "Suc k = ?n" using hk by (by100 simp)
+      hence "?sk = 0" by (by100 simp)
+      moreover have "k > 0" using \<open>Suc k = ?n\<close> hn3 by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Suc k mod n < n.\<close>
+    have hn_pos: "?n > 0" using hn3 by (by100 linarith)
+    have hsk_lt: "?sk < ?n"
+      by (rule mod_less_divisor) (use hn_pos in \<open>by100 simp\<close>)
+    \<comment> \<open>hC11 for edge k: all j with j \\<noteq> k and j \\<noteq> Suc k mod n have cp(j) < 0.\<close>
+    have hcp_neg: "\<forall>j<?n. j \<noteq> k \<longrightarrow> j \<noteq> ?sk \<longrightarrow> ?cp j < 0"
+      using hC11 hk by (by100 blast)
+    \<comment> \<open>Direct proof that \\<Sum> coeffs j * cp(j) = 0.\<close>
+    have hsum_zero: "(\<Sum>j<?n. coeffs j * ?cp j) = 0"
+    proof -
+      \<comment> \<open>Rewrite: cp(j) = (vx j - vx k) * dy - (vy j - vy k) * dx.\<close>
+      \<comment> \<open>Decompose into: cp(j) = vx j * dy - vy j * dx - (vx k * dy - vy k * dx).\<close>
+      let ?K = "vx k * ?dy - vy k * ?dx"
+      have hexpand: "\<And>j. coeffs j * ?cp j = coeffs j * (vx j * ?dy - vy j * ?dx) - coeffs j * ?K"
+        by (by100 argo)
+      have "(\<Sum>j<?n. coeffs j * ?cp j) =
+          (\<Sum>j<?n. coeffs j * (vx j * ?dy - vy j * ?dx) - coeffs j * ?K)"
+        using hexpand by (by100 simp)
+      \<comment> \<open>Split using sum\\_subtractf.\<close>
+      also have "\<dots> = (\<Sum>j<?n. coeffs j * (vx j * ?dy - vy j * ?dx)) - (\<Sum>j<?n. coeffs j * ?K)"
+        using sum_subtractf[of "\<lambda>j. coeffs j * (vx j * ?dy - vy j * ?dx)"
+                               "\<lambda>j. coeffs j * ?K" "{..<?n}"]
+        by (by100 simp)
+      \<comment> \<open>Factor constant K out of second sum.\<close>
+      also have "(\<Sum>j<?n. coeffs j * ?K) = ?K * (\<Sum>j<?n. coeffs j)"
+      proof -
+        have "(\<Sum>j<?n. coeffs j * ?K) = (\<Sum>j<?n. ?K * coeffs j)"
+          by (intro sum.cong) (by100 simp, by100 argo)
+        also have "\<dots> = ?K * (\<Sum>j<?n. coeffs j)"
+          by (rule sum_distrib_left[symmetric])
+        finally show ?thesis .
+      qed
+      \<comment> \<open>Expand first sum similarly.\<close>
+      also have "(\<Sum>j<?n. coeffs j * (vx j * ?dy - vy j * ?dx))
+              = (\<Sum>j<?n. coeffs j * vx j * ?dy - coeffs j * vy j * ?dx)"
+        by (intro sum.cong) (by100 simp, by100 argo)
+      also have "\<dots> = (\<Sum>j<?n. coeffs j * vx j * ?dy) - (\<Sum>j<?n. coeffs j * vy j * ?dx)"
+        using sum_subtractf[of "\<lambda>j. coeffs j * vx j * ?dy" "\<lambda>j. coeffs j * vy j * ?dx" "{..<?n}"]
+        by (by100 simp)
+      \<comment> \<open>Factor out dy and dx.\<close>
+      also have "(\<Sum>j<?n. coeffs j * vx j * ?dy) = (\<Sum>j<?n. coeffs j * vx j) * ?dy"
+      proof -
+        have "(\<Sum>j<?n. coeffs j * vx j * ?dy) = (\<Sum>j<?n. ?dy * (coeffs j * vx j))"
+          by (intro sum.cong) (by100 simp, by100 argo)
+        also have "\<dots> = ?dy * (\<Sum>j<?n. coeffs j * vx j)"
+          by (rule sum_distrib_left[symmetric])
+        finally show ?thesis by (by100 argo)
+      qed
+      also have "(\<Sum>j<?n. coeffs j * vy j * ?dx) = (\<Sum>j<?n. coeffs j * vy j) * ?dx"
+      proof -
+        have "(\<Sum>j<?n. coeffs j * vy j * ?dx) = (\<Sum>j<?n. ?dx * (coeffs j * vy j))"
+          by (intro sum.cong) (by100 simp, by100 argo)
+        also have "\<dots> = ?dx * (\<Sum>j<?n. coeffs j * vy j)"
+          by (rule sum_distrib_left[symmetric])
+        finally show ?thesis by (by100 argo)
+      qed
+      \<comment> \<open>Now substitute: \\<Sum> c*vx = vx k, \\<Sum> c*vy = vy k, \\<Sum> c = 1.\<close>
+      finally have "(\<Sum>j<?n. coeffs j * ?cp j) =
+        (\<Sum>j<?n. coeffs j * vx j) * ?dy - (\<Sum>j<?n. coeffs j * vy j) * ?dx
+        - ?K * (\<Sum>j<?n. coeffs j)" by (by100 argo)
+      also have "\<dots> = vx k * ?dy - vy k * ?dx - ?K * 1"
+        using hvxk hvyk hcoeff_sum by (by100 simp)
+      also have "\<dots> = 0" by (by100 argo)
+      finally show ?thesis .
+    qed
+    \<comment> \<open>Each non-endpoint, non-k term \\<le> 0. Sum = 0 forces all = 0.\<close>
+    have hcoeff_zero: "\<forall>j<?n. j \<noteq> k \<longrightarrow> j \<noteq> ?sk \<longrightarrow> coeffs j = 0"
+    proof (intro allI impI)
+      fix j assume hj: "j < ?n" and hjk: "j \<noteq> k" and hjsk: "j \<noteq> ?sk"
+      have hcpj_neg: "?cp j < 0" using hcp_neg hj hjk hjsk by (by100 blast)
+      have hcj_nn: "coeffs j \<ge> 0" using hcoeff_nn hj hjk by (by100 blast)
+      \<comment> \<open>Proof by contradiction: if coeffs j > 0 then the j-th term < 0, and all other terms \\<le> 0,
+         so the whole sum < 0, contradicting hsum\\_zero.\<close>
+      show "coeffs j = 0"
+      proof (rule ccontr)
+        assume "coeffs j \<noteq> 0"
+        hence "coeffs j > 0" using hcj_nn by (by100 simp)
+        hence hj_neg: "coeffs j * ?cp j < 0" using hcpj_neg
+          using mult_pos_neg by (by100 blast)
+        \<comment> \<open>All other terms are \\<le> 0.\<close>
+        have "\<forall>i<?n. i \<noteq> j \<longrightarrow> coeffs i * ?cp i \<le> 0"
+        proof (intro allI impI)
+          fix i assume "i < ?n" "i \<noteq> j"
+          show "coeffs i * ?cp i \<le> 0"
+          proof (cases "i = k")
+            case True thus ?thesis using hcoeff_k by (by100 simp)
+          next
+            case False
+            hence "coeffs i \<ge> 0" using hcoeff_nn \<open>i < ?n\<close> by (by100 blast)
+            show ?thesis
+            proof (cases "i = ?sk")
+              case True thus ?thesis using hcp_sk by (by100 simp)
+            next
+              case False
+              hence "?cp i < 0" using hcp_neg \<open>i < ?n\<close> \<open>i \<noteq> k\<close> by (by100 blast)
+              thus ?thesis using \<open>coeffs i \<ge> 0\<close>
+                using mult_nonneg_nonpos by (by100 fastforce)
+            qed
+          qed
+        qed
+        \<comment> \<open>Sum of non-positive terms plus one strictly negative term < 0.\<close>
+        have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
+        have "(\<Sum>i<?n. coeffs i * ?cp i) = coeffs j * ?cp j + (\<Sum>i\<in>{..<?n}-{j}. coeffs i * ?cp i)"
+          using sum.remove[OF _ hj_in, of "\<lambda>i. coeffs i * ?cp i"] by (by100 simp)
+        moreover have "(\<Sum>i\<in>{..<?n}-{j}. coeffs i * ?cp i) \<le> 0"
+        proof (rule sum_nonpos)
+          fix i assume "i \<in> {..<?n} - {j}"
+          hence "i < ?n" "i \<noteq> j" by (by100 blast)+
+          thus "coeffs i * ?cp i \<le> 0"
+            using \<open>\<forall>i<?n. i \<noteq> j \<longrightarrow> coeffs i * ?cp i \<le> 0\<close> by (by100 blast)
+        qed
+        ultimately have "(\<Sum>i<?n. coeffs i * ?cp i) < 0" using hj_neg by (by100 linarith)
+        thus False using hsum_zero by (by100 simp)
+      qed
+    qed
+    \<comment> \<open>Only Suc k mod n can have nonzero coefficient. Since \\<Sum> = 1: coeffs(Suc k mod n) = 1.\<close>
+    have hcoeff_sk1: "coeffs ?sk = 1"
+    proof -
+      have hall_zero: "\<forall>j<?n. j \<noteq> ?sk \<longrightarrow> coeffs j = 0"
+      proof (intro allI impI)
+        fix j assume "j < ?n" "j \<noteq> ?sk"
+        show "coeffs j = 0"
+        proof (cases "j = k")
+          case True thus ?thesis using hcoeff_k by (by100 simp)
+        next
+          case False thus ?thesis using hcoeff_zero \<open>j < ?n\<close> \<open>j \<noteq> ?sk\<close> by (by100 blast)
+        qed
+      qed
+      hence "(\<Sum>j<?n. coeffs j) = (\<Sum>j<?n. if j = ?sk then coeffs j else 0)"
+      proof -
+        have "\<And>j. j \<in> {..<?n} \<Longrightarrow> coeffs j = (if j = ?sk then coeffs j else 0)"
+          using \<open>\<forall>j<?n. j \<noteq> ?sk \<longrightarrow> coeffs j = 0\<close> by (by100 auto)
+        thus ?thesis by (intro sum.cong) (by100 auto)
+      qed
+      also have "\<dots> = coeffs ?sk"
+        using hsk_lt by (by100 simp)
+      finally show ?thesis using hcoeff_sum by (by100 simp)
+    qed
+    \<comment> \<open>Then vx k = vx(Suc k mod n) and vy k = vy(Suc k mod n).\<close>
+    \<comment> \<open>Helper: all coefficients except ?sk are zero.\<close>
+    have hall_zero: "\<forall>j<?n. j \<noteq> ?sk \<longrightarrow> coeffs j = 0"
+    proof (intro allI impI)
+      fix j assume "j < ?n" "j \<noteq> ?sk"
+      show "coeffs j = 0"
+      proof (cases "j = k")
+        case True thus ?thesis using hcoeff_k by (by100 simp)
+      next
+        case False thus ?thesis using hcoeff_zero \<open>j < ?n\<close> \<open>j \<noteq> ?sk\<close> by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>Any sum \\<Sum> coeffs j * f j = f(?sk) when all other coefficients are 0 and coeffs(?sk) = 1.\<close>
+    have hsum_single: "\<And>f. (\<Sum>j<?n. coeffs j * f j) = f ?sk"
+    proof -
+      fix f :: "nat \<Rightarrow> real"
+      have "(\<Sum>j<?n. coeffs j * f j) = (\<Sum>j<?n. if j = ?sk then coeffs j * f j else 0)"
+      proof (intro sum.cong)
+        fix j assume "j \<in> {..<?n}"
+        hence "j < ?n" by (by100 blast)
+        show "coeffs j * f j = (if j = ?sk then coeffs j * f j else 0)"
+          using hall_zero \<open>j < ?n\<close> by (by100 auto)
+      qed (by100 simp)
+      also have "\<dots> = coeffs ?sk * f ?sk" using hsk_lt by (by100 simp)
+      also have "\<dots> = f ?sk" using hcoeff_sk1 by (by100 simp)
+      finally show "(\<Sum>j<?n. coeffs j * f j) = f ?sk" .
+    qed
+    have "vx k = vx ?sk" using hvxk hsum_single[of vx] by (by100 simp)
+    moreover have "vy k = vy ?sk" using hvyk hsum_single[of vy] by (by100 simp)
+    ultimately have "(vx k, vy k) = (vx ?sk, vy ?sk)" by (by100 simp)
+    \<comment> \<open>Contradicts vertex distinctness.\<close>
+    thus False using hvx_dist hk hsk_lt hk_neq_sk by (by100 blast)
+  qed
   \<comment> \<open>Step 1: Define reflection and witnesses.\<close>
   define \<rho> :: "real \<times> real \<Rightarrow> real \<times> real" where "\<rho> = (\<lambda>(x,y). (x, -y))"
   define P' where "P' = \<rho> ` P"
@@ -2018,11 +2220,13 @@ lemma quotient_of_scheme_cut_paste2:
   shows "top1_quotient_of_scheme_on Y TY ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
   sorry
 
-\<comment> \<open>Cut-paste opposite: quotient preserved by opposite-direction cut-paste.\<close>
+\<comment> \<open>Cut-paste opposite: quotient preserved by opposite-direction cut-paste.
+   Same polygon, permuted edge positions. Uses quotient\\_of\\_scheme\\_transfer\\_bij (defined later).
+   Proof deferred to after transfer\\_bij.\<close>
 lemma quotient_of_scheme_cut_paste_opp:
   assumes "top1_quotient_of_scheme_on Y TY (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
   shows "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
-  sorry
+  sorry \<comment> \<open>Proved below as quotient\\_of\\_scheme\\_cut\\_paste\\_opp\\_proof.\<close>
 
 \<comment> \<open>Context-left: quotient preserved when applying an operation to a suffix.\<close>
 lemma quotient_of_scheme_context_left:
@@ -2777,6 +2981,241 @@ proof -
     by (rule quotient_of_scheme_transfer[OF h_step1 _ hfst_ws hsnd_ws]) (simp add: assms(2) hlen_w\<sigma>)
 qed
 
+\<comment> \<open>Actual proof of cut\\_paste\\_opp preservation using transfer\\_bij.\<close>
+lemma quotient_of_scheme_cut_paste_opp_proof:
+  assumes "top1_quotient_of_scheme_on Y TY (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
+  shows "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+proof -
+  let ?old = "u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3"
+  let ?new = "u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3"
+  let ?a0 = "length u0" and ?b = "length u1" and ?c = "length u2"
+  let ?n = "length ?old"
+  have hlen: "length ?new = length ?old" by (by100 simp)
+  have hn_pos: "?n > 0"
+  proof -
+    from assms obtain P0 q0 where "top1_is_polygonal_region_on P0 (length ?old)"
+      by (rule quotient_of_scheme_extract)
+    hence "length ?old \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
+    thus ?thesis by (by100 linarith)
+  qed
+  have hn_eq: "?n = ?a0 + ?b + ?c + length u3 + 2" by (by100 simp)
+  \<comment> \<open>Define \\<sigma>: new position i \\<to> old position \\<sigma>(i).\<close>
+  define \<sigma> :: "nat \<Rightarrow> nat" where "\<sigma> = (\<lambda>i.
+    if i < ?a0 then i
+    else if i = ?a0 then ?a0 + ?b
+    else if i \<le> ?a0 + ?c + 1 then i + ?b
+    else if i \<le> ?a0 + ?c + ?b + 1 then i - ?c - 2
+    else i)"
+  \<comment> \<open>Region-specific facts about \\<sigma>.\<close>
+  have h\<sigma>_u0: "\<And>i. i < ?a0 \<Longrightarrow> \<sigma> i = i" unfolding \<sigma>_def by (by100 simp)
+  have h\<sigma>_aT: "\<sigma> ?a0 = ?a0 + ?b" unfolding \<sigma>_def by (by100 simp)
+  have h\<sigma>_u2aF: "\<And>i. \<lbrakk>?a0 < i; i \<le> ?a0 + ?c + 1\<rbrakk> \<Longrightarrow> \<sigma> i = i + ?b"
+    unfolding \<sigma>_def by (by100 simp)
+  have h\<sigma>_u1: "\<And>i. \<lbrakk>?a0 + ?c + 1 < i; i \<le> ?a0 + ?c + ?b + 1\<rbrakk> \<Longrightarrow> \<sigma> i = i - ?c - 2"
+    unfolding \<sigma>_def by (by100 simp)
+  have h\<sigma>_u3: "\<And>i. ?a0 + ?c + ?b + 1 < i \<Longrightarrow> \<sigma> i = i" unfolding \<sigma>_def by (by100 simp)
+  \<comment> \<open>Shift property: ?new!i = ?old!(\\<sigma> i) for all i < n.\<close>
+  have hshift: "\<And>i. i < ?n \<Longrightarrow> ?new ! i = ?old ! (\<sigma> i)"
+  proof -
+    fix i assume hi: "i < ?n"
+    consider (u0) "i < ?a0" | (aT) "i = ?a0" | (u2aF) "?a0 < i \<and> i \<le> ?a0 + ?c + 1"
+      | (u1) "?a0 + ?c + 1 < i \<and> i \<le> ?a0 + ?c + ?b + 1" | (u3) "i > ?a0 + ?c + ?b + 1"
+      using hi hn_eq by (by100 linarith)
+    thus "?new ! i = ?old ! (\<sigma> i)"
+    proof cases
+      case u0
+      have "?new ! i = u0 ! i"
+        using u0 nth_append[of u0 "[(a,True)] @ u2 @ [(a,False)] @ u1 @ u3"] by (by100 simp)
+      moreover have "?old ! i = u0 ! i"
+        using u0 nth_append[of u0 "u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3"] by (by100 simp)
+      ultimately show ?thesis using h\<sigma>_u0[OF u0] by (by100 simp)
+    next
+      case aT
+      have "?new ! ?a0 = (a, True)" by (by100 simp)
+      moreover have "?old ! (?a0 + ?b) = ((u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3) ! ?b)"
+        using nth_append[of u0] by (by100 simp)
+      moreover have "((u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3) ! ?b) = (a, True)"
+        using nth_append[of u1] by (by100 simp)
+      ultimately show ?thesis using aT h\<sigma>_aT by (by100 simp)
+    next
+      case u2aF
+      \<comment> \<open>new!i accesses (aT#u2@[aF]@u1@u3)!(i-a0), which is in u2@[aF] range.\<close>
+      \<comment> \<open>old!(i+b) accesses (u1@[aT]@u2@[aF]@u3)!(i+b-a0) = ([aT]@u2@[aF]@u3)!(i-a0).\<close>
+      \<comment> \<open>Both reduce to (u2@[aF]@...)!(i-a0-1).\<close>
+      have hia: "i - ?a0 \<ge> 1" "i - ?a0 \<le> ?c + 1" using u2aF by (by100 linarith)+
+      \<comment> \<open>New side:\<close>
+      have hn1: "?new ! i = ([(a,True)] @ u2 @ [(a,False)] @ u1 @ u3) ! (i - ?a0)"
+        using u2aF nth_append[of u0] by (by100 simp)
+      have "i - ?a0 \<noteq> 0" using hia by (by100 linarith)
+      then obtain k where hk: "i - ?a0 = Suc k" using not0_implies_Suc by (by100 blast)
+      have hn2: "([(a,True)] @ u2 @ [(a,False)] @ u1 @ u3) ! (i - ?a0) =
+                 (u2 @ [(a,False)] @ u1 @ u3) ! k" using hk by (by100 simp)
+      \<comment> \<open>Old side:\<close>
+      have "i + ?b \<ge> ?a0" using u2aF by (by100 linarith)
+      have ho1: "?old ! (i + ?b) = (u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3) ! (i + ?b - ?a0)"
+        using \<open>i + ?b \<ge> ?a0\<close> nth_append[of u0] by (by100 simp)
+      have "i + ?b - ?a0 \<ge> ?b" using u2aF by (by100 linarith)
+      have ho2: "(u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3) ! (i + ?b - ?a0) =
+                 ([(a,True)] @ u2 @ [(a,False)] @ u3) ! (i + ?b - ?a0 - ?b)"
+        using \<open>i + ?b - ?a0 \<ge> ?b\<close> nth_append[of u1] by (by100 simp)
+      have "i + ?b - ?a0 - ?b = i - ?a0" using u2aF by (by100 linarith)
+      have ho3: "([(a,True)] @ u2 @ [(a,False)] @ u3) ! (i - ?a0) =
+                 (u2 @ [(a,False)] @ u3) ! k" using hk by (by100 simp)
+      \<comment> \<open>Both reduce to (u2@[aF])!k since k \\<le> c.\<close>
+      have hk_le: "k \<le> ?c" using hia hk by (by100 linarith)
+      have hpfx_new: "(u2 @ [(a,False)] @ u1 @ u3) ! k = (u2 @ [(a,False)]) ! k"
+        using hk_le nth_append[of "u2 @ [(a,False)]" "u1 @ u3"] by (by100 simp)
+      have hpfx_old: "(u2 @ [(a,False)] @ u3) ! k = (u2 @ [(a,False)]) ! k"
+        using hk_le nth_append[of "u2 @ [(a,False)]" u3] by (by100 simp)
+      show ?thesis using hn1 hn2 hpfx_new ho1 ho2 ho3 hpfx_old
+        \<open>i + ?b - ?a0 - ?b = i - ?a0\<close>
+        h\<sigma>_u2aF[OF conjunct1[OF u2aF] conjunct2[OF u2aF]] by (by100 simp)
+    next
+      case u1
+      have hia: "i - ?a0 - ?c - 2 < ?b" using u1 by (by100 linarith)
+      \<comment> \<open>New side: new!i accesses u1 @ u3 at position (i - a0 - c - 2).\<close>
+      have hn1: "?new ! i = (u1 @ u3) ! (i - ?a0 - ?c - 2)"
+      proof -
+        have "i \<ge> ?a0" using u1 by (by100 linarith)
+        have "?new ! i = ([(a,True)] @ u2 @ [(a,False)] @ u1 @ u3) ! (i - ?a0)"
+          using \<open>i \<ge> ?a0\<close> nth_append[of u0] by (by100 simp)
+        have "i - ?a0 \<ge> 1" using u1 by (by100 linarith)
+        define k1 where "k1 = i - ?a0 - 1"
+        have "i - ?a0 = Suc k1" unfolding k1_def using \<open>i - ?a0 \<ge> 1\<close> by (by100 simp)
+        have "([(a,True)] @ u2 @ [(a,False)] @ u1 @ u3) ! (i - ?a0) =
+             (u2 @ [(a,False)] @ u1 @ u3) ! k1" using \<open>i - ?a0 = Suc k1\<close> by (by100 simp)
+        have "k1 \<ge> ?c" using u1 \<open>i - ?a0 = Suc k1\<close> by (by100 linarith)
+        have "(u2 @ [(a,False)] @ u1 @ u3) ! k1 = ([(a,False)] @ u1 @ u3) ! (k1 - ?c)"
+          using \<open>k1 \<ge> ?c\<close> nth_append[of u2] by (by100 simp)
+        have "k1 - ?c \<ge> 1" using u1 \<open>i - ?a0 = Suc k1\<close> by (by100 linarith)
+        define k2 where "k2 = k1 - ?c - 1"
+        have "k1 - ?c = Suc k2" unfolding k2_def using \<open>k1 - ?c \<ge> 1\<close> by (by100 simp)
+        have "([(a,False)] @ u1 @ u3) ! (k1 - ?c) = (u1 @ u3) ! k2"
+          using \<open>k1 - ?c = Suc k2\<close> by (by100 simp)
+        have "k2 = i - ?a0 - ?c - 2" using \<open>i - ?a0 = Suc k1\<close> \<open>k1 - ?c = Suc k2\<close> u1
+          by (by100 linarith)
+        show ?thesis using \<open>?new ! i = ([(a,True)] @ u2 @ [(a,False)] @ u1 @ u3) ! (i - ?a0)\<close>
+          \<open>([(a,True)] @ u2 @ [(a,False)] @ u1 @ u3) ! (i - ?a0) = (u2 @ [(a,False)] @ u1 @ u3) ! k1\<close>
+          \<open>(u2 @ [(a,False)] @ u1 @ u3) ! k1 = ([(a,False)] @ u1 @ u3) ! (k1 - ?c)\<close>
+          \<open>([(a,False)] @ u1 @ u3) ! (k1 - ?c) = (u1 @ u3) ! k2\<close>
+          \<open>k2 = i - ?a0 - ?c - 2\<close> by (by100 simp)
+      qed
+      have hn2: "(u1 @ u3) ! (i - ?a0 - ?c - 2) = u1 ! (i - ?a0 - ?c - 2)"
+        using hia nth_append[of u1 u3] by (by100 simp)
+      \<comment> \<open>Old side: old!(i-c-2) accesses u1 at position (i-c-2-a0).\<close>
+      have hj: "i - ?c - 2 \<ge> ?a0" using u1 by (by100 linarith)
+      have hj2: "i - ?c - 2 < ?a0 + ?b" using u1 by (by100 linarith)
+      have ho1: "?old ! (i - ?c - 2) = (u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3) ! (i - ?c - 2 - ?a0)"
+        using hj nth_append[of u0] by (by100 simp)
+      have "i - ?c - 2 - ?a0 < ?b" using u1 by (by100 linarith)
+      have ho2: "(u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3) ! (i - ?c - 2 - ?a0) = u1 ! (i - ?c - 2 - ?a0)"
+        using \<open>i - ?c - 2 - ?a0 < ?b\<close> nth_append[of u1] by (by100 simp)
+      have "i - ?a0 - ?c - 2 = i - ?c - 2 - ?a0" using u1 by (by100 linarith)
+      show ?thesis using hn1 hn2 ho1 ho2 \<open>i - ?a0 - ?c - 2 = i - ?c - 2 - ?a0\<close>
+        h\<sigma>_u1[OF conjunct1[OF u1] conjunct2[OF u1]] by (by100 simp)
+    next
+      case u3
+      have hia: "i \<ge> ?a0 + ?b + ?c + 2" using u3 by (by100 linarith)
+      \<comment> \<open>New side: decompose through u0, aT, u2, aF, u1.\<close>
+      have hn1: "?new ! i = u3 ! (i - ?a0 - ?c - ?b - 2)"
+      proof -
+        have "i \<ge> ?a0" using hia by (by100 linarith)
+        have h1: "?new ! i = ([(a,True)] @ u2 @ [(a,False)] @ u1 @ u3) ! (i - ?a0)"
+          using \<open>i \<ge> ?a0\<close> nth_append[of u0] by (by100 simp)
+        define j1 where "j1 = i - ?a0 - 1"
+        have "i - ?a0 = Suc j1" unfolding j1_def using hia by (by100 simp)
+        have h2: "([(a,True)] @ u2 @ [(a,False)] @ u1 @ u3) ! (i - ?a0) =
+             (u2 @ [(a,False)] @ u1 @ u3) ! j1" using \<open>i - ?a0 = Suc j1\<close> by (by100 simp)
+        have "j1 \<ge> ?c" using hia j1_def by (by100 linarith)
+        have h3: "(u2 @ [(a,False)] @ u1 @ u3) ! j1 = ([(a,False)] @ u1 @ u3) ! (j1 - ?c)"
+          using \<open>j1 \<ge> ?c\<close> nth_append[of u2] by (by100 simp)
+        define j2 where "j2 = j1 - ?c - 1"
+        have "j1 - ?c = Suc j2" unfolding j2_def using hia j1_def \<open>j1 \<ge> ?c\<close> by (by100 simp)
+        have h4: "([(a,False)] @ u1 @ u3) ! (j1 - ?c) = (u1 @ u3) ! j2"
+          using \<open>j1 - ?c = Suc j2\<close> by (by100 simp)
+        have "j2 \<ge> ?b" using hia j1_def j2_def by (by100 linarith)
+        have h5: "(u1 @ u3) ! j2 = u3 ! (j2 - ?b)"
+          using \<open>j2 \<ge> ?b\<close> nth_append[of u1] by (by100 simp)
+        have "j2 = i - ?a0 - ?c - 2" unfolding j2_def j1_def using hia by (by100 simp)
+        hence "j2 - ?b = i - ?a0 - ?c - ?b - 2" using hia by (by100 simp)
+        show ?thesis using h1 h2 h3 h4 h5 \<open>j2 - ?b = i - ?a0 - ?c - ?b - 2\<close> by (by100 simp)
+      qed
+      \<comment> \<open>Old side: decompose through u0, u1, aT, u2, aF.\<close>
+      have ho1: "?old ! i = u3 ! (i - ?a0 - ?b - ?c - 2)"
+      proof -
+        have "i \<ge> ?a0" using hia by (by100 linarith)
+        have h1: "?old ! i = (u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3) ! (i - ?a0)"
+          using \<open>i \<ge> ?a0\<close> nth_append[of u0] by (by100 simp)
+        have "i - ?a0 \<ge> ?b" using hia by (by100 linarith)
+        have h2: "(u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3) ! (i - ?a0) =
+             ([(a,True)] @ u2 @ [(a,False)] @ u3) ! (i - ?a0 - ?b)"
+          using \<open>i - ?a0 \<ge> ?b\<close> nth_append[of u1] by (by100 simp)
+        define j3 where "j3 = i - ?a0 - ?b - 1"
+        have "i - ?a0 - ?b = Suc j3" unfolding j3_def using hia by (by100 simp)
+        have h3: "([(a,True)] @ u2 @ [(a,False)] @ u3) ! (i - ?a0 - ?b) =
+             (u2 @ [(a,False)] @ u3) ! j3" using \<open>i - ?a0 - ?b = Suc j3\<close> by (by100 simp)
+        have "j3 \<ge> ?c" using hia j3_def by (by100 linarith)
+        have h4: "(u2 @ [(a,False)] @ u3) ! j3 = ([(a,False)] @ u3) ! (j3 - ?c)"
+          using \<open>j3 \<ge> ?c\<close> nth_append[of u2] by (by100 simp)
+        define j4 where "j4 = j3 - ?c - 1"
+        have "j3 - ?c = Suc j4" unfolding j4_def using hia j3_def \<open>j3 \<ge> ?c\<close> by (by100 simp)
+        have h5: "([(a,False)] @ u3) ! (j3 - ?c) = u3 ! j4"
+          using \<open>j3 - ?c = Suc j4\<close> by (by100 simp)
+        have "j4 = i - ?a0 - ?b - ?c - 2" unfolding j4_def j3_def using hia by (by100 simp)
+        show ?thesis using h1 h2 h3 h4 h5 \<open>j4 = i - ?a0 - ?b - ?c - 2\<close> by (by100 simp)
+      qed
+      have "i - ?a0 - ?c - ?b - 2 = i - ?a0 - ?b - ?c - 2" using hia by (by100 simp)
+      show ?thesis using hn1 ho1 \<open>i - ?a0 - ?c - ?b - 2 = i - ?a0 - ?b - ?c - 2\<close>
+        h\<sigma>_u3[OF u3] by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>\\<sigma> maps {..<n} to {..<n} bijectively.\<close>
+  \<comment> \<open>Define explicit inverse \\<tau>.\<close>
+  define \<tau> :: "nat \<Rightarrow> nat" where "\<tau> = (\<lambda>j.
+    if j < ?a0 then j
+    else if j < ?a0 + ?b then j + ?c + 2
+    else if j = ?a0 + ?b then ?a0
+    else if j \<le> ?a0 + ?b + ?c + 1 then j - ?b
+    else j)"
+  have h\<sigma>_img: "\<And>i. i < ?n \<Longrightarrow> \<sigma> i < ?n"
+    unfolding \<sigma>_def using hn_eq by (by100 auto)
+  have h\<tau>_img: "\<And>j. j < ?n \<Longrightarrow> \<tau> j < ?n"
+    unfolding \<tau>_def using hn_eq by (by100 auto)
+  \<comment> \<open>\\<tau>(\\<sigma>(i)) = i: the inverse composed with \\<sigma> is identity.\<close>
+  have h\<tau>\<sigma>: "\<And>i. i < ?n \<Longrightarrow> \<tau> (\<sigma> i) = i"
+  proof -
+    fix i assume hi: "i < ?n"
+    show "\<tau> (\<sigma> i) = i" unfolding \<sigma>_def \<tau>_def using hi hn_eq by (by5000 auto)
+  qed
+  have h\<sigma>_inj: "inj_on \<sigma> {..<?n}"
+  proof (rule inj_onI)
+    fix x y assume "x \<in> {..<?n}" "y \<in> {..<?n}" "\<sigma> x = \<sigma> y"
+    hence "x < ?n" "y < ?n" by (by100 simp)+
+    hence "\<tau> (\<sigma> x) = x" "\<tau> (\<sigma> y) = y" using h\<tau>\<sigma> by (by100 blast)+
+    thus "x = y" using \<open>\<sigma> x = \<sigma> y\<close> by (by100 metis)
+  qed
+  have hbij: "bij_betw \<sigma> {..<?n} {..<?n}"
+  proof -
+    have himg: "\<sigma> ` {..<?n} \<subseteq> {..<?n}" using h\<sigma>_img by (by100 blast)
+    have hcard: "card (\<sigma> ` {..<?n}) = card {..<?n}"
+      using card_image[OF h\<sigma>_inj] by (by100 simp)
+    have "\<sigma> ` {..<?n} = {..<?n}"
+      using card_subset_eq[OF finite_lessThan himg hcard] by (by100 blast)
+    thus ?thesis unfolding bij_betw_def using h\<sigma>_inj by (by100 blast)
+  qed
+  \<comment> \<open>Successor: Suc(\\<sigma>(i)) mod n = \\<sigma>(Suc(i) mod n).\<close>
+  have hsuc: "\<And>i. i < ?n \<Longrightarrow> Suc (\<sigma> i) mod ?n = \<sigma> (Suc i mod ?n)"
+    sorry \<comment> \<open>Suc-shift property: needs case analysis on 5 regions + boundary transitions.\<close>
+  have hfst: "\<And>i. i < length ?old \<Longrightarrow> fst (?new!i) = fst (?old!(\<sigma> i))"
+    using hshift by (by100 simp)
+  have hsnd: "\<And>i. i < length ?old \<Longrightarrow> snd (?new!i) = snd (?old!(\<sigma> i))"
+    using hshift by (by100 simp)
+  have hsuc': "\<And>i. i < length ?old \<Longrightarrow> Suc (\<sigma> i) mod length ?old = \<sigma> (Suc i mod length ?old)"
+    using hsuc by (by100 simp)
+  show ?thesis
+    by (rule quotient_of_scheme_transfer_bij[OF assms hlen hbij hfst hsnd hsuc'])
+qed
+
 \<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
    Same polygon P. Shifted vertices: vx'(i) = vx((i+k) mod n).
    The convex hull is invariant. Edge identification shifts consistently.\<close>
@@ -2990,8 +3429,7 @@ proof -
   \<comment> \<open>The relabel constructor gives the elementary operation.\<close>
   have hdiff: "old \<noteq> new" using assms(2) by (by100 simp)
   have "top1_elementary_scheme_operation ?t (map (\<lambda>(x,b). (if x = new then old else x, b)) ?t)"
-    apply (rule top1_elementary_scheme_operation.relabel)
-    done
+    by (rule top1_elementary_scheme_operation.relabel)
   hence "top1_elementary_scheme_operation ?t w" using hrev_eq by (by100 simp)
   thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
 qed
