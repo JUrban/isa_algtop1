@@ -797,7 +797,109 @@ proof -
               \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
                      \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
                      \<and> y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))}"
-        sorry
+      proof (rule set_eqI)
+        fix p :: "real \<times> real"
+        show "(p \<in> P') = (p \<in> {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
+                     \<and> y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))})"
+        proof
+          \<comment> \<open>Forward: p \\<in> P' \\<Longrightarrow> p \\<in> convex hull of reflected vertices.\<close>
+          assume "p \<in> P'"
+          hence "\<exists>q. q \<in> P \<and> p = \<rho> q" unfolding P'_def by (by100 blast)
+          then obtain a b where hab: "(a, b) \<in> P" "p = (a, -b)" unfolding \<rho>_def by (by100 auto)
+          from hab(1)[unfolded hP_eq] obtain coeffs where
+            hc: "(\<forall>i<?n. coeffs i \<ge> 0)" "(\<Sum>i<?n. coeffs i) = 1"
+                "a = (\<Sum>i<?n. coeffs i * vx i)" "b = (\<Sum>i<?n. coeffs i * vy i)"
+            by (by100 blast)
+          \<comment> \<open>Reindex: coeffs'(i) = coeffs(\\<sigma>(i)). Then sums reindex.\<close>
+          define coeffs' where "coeffs' = coeffs \<circ> \<sigma>"
+          have hc'_nn: "\<forall>i<?n. coeffs' i \<ge> 0"
+            using hc(1) h\<sigma>_lt unfolding coeffs'_def by (by100 fastforce)
+          have hc'_sum: "(\<Sum>i<?n. coeffs' i) = 1"
+            using hsum_reindex[of coeffs] hc(2) unfolding coeffs'_def by (by100 simp)
+          have hc'_vx: "a = (\<Sum>i<?n. coeffs' i * vx (\<sigma> i))"
+          proof -
+            have "(\<Sum>i<?n. coeffs' i * vx (\<sigma> i)) = (\<Sum>i<?n. coeffs (\<sigma> i) * vx (\<sigma> i))"
+              unfolding coeffs'_def by (by100 simp)
+            also have "\<dots> = (\<Sum>j<?n. coeffs j * vx j)"
+              using hsum_reindex[of "\<lambda>j. coeffs j * vx j"] by (by100 simp)
+            finally show ?thesis using hc(3) by (by100 simp)
+          qed
+          have hc'_vy: "-b = (\<Sum>i<?n. coeffs' i * (-(vy (\<sigma> i))))"
+          proof -
+            have "(\<Sum>i<?n. coeffs' i * (-(vy (\<sigma> i)))) = -(\<Sum>i<?n. coeffs' i * vy (\<sigma> i))"
+              using sum_negf by (by100 simp)
+            also have "(\<Sum>i<?n. coeffs' i * vy (\<sigma> i)) = (\<Sum>i<?n. coeffs (\<sigma> i) * vy (\<sigma> i))"
+              unfolding coeffs'_def by (by100 simp)
+            also have "\<dots> = (\<Sum>j<?n. coeffs j * vy j)"
+              using hsum_reindex[of "\<lambda>j. coeffs j * vy j"] by (by100 simp)
+            finally show ?thesis using hc(4) by (by100 simp)
+          qed
+          have "fst p = a" "snd p = -b" using hab(2) by (by100 simp)+
+          show "p \<in> {(x, y) |x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
+                     \<and> y = (\<Sum>i<?n. coeffs i * - vy (\<sigma> i))}"
+            using hab(2) hc'_nn hc'_sum hc'_vx hc'_vy by (by100 blast)
+        next
+          \<comment> \<open>Backward: same argument in reverse.\<close>
+          assume "p \<in> {(x, y) |x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))
+                     \<and> y = (\<Sum>i<?n. coeffs i * - vy (\<sigma> i))}"
+          then obtain x y coeffs where hp_xy: "p = (x, y)"
+            and hc: "(\<forall>i<?n. 0 \<le> coeffs i)" "(\<Sum>i<?n. coeffs i) = 1"
+                "x = (\<Sum>i<?n. coeffs i * vx (\<sigma> i))"
+                "y = (\<Sum>i<?n. coeffs i * (- vy (\<sigma> i)))"
+            by (by100 blast)
+          \<comment> \<open>The point (x, -y) is in P (via reindexed coefficients).\<close>
+          define coeffs0 where "coeffs0 = coeffs \<circ> \<sigma>"
+          have hc0_nn: "\<forall>i<?n. coeffs0 i \<ge> 0"
+            using hc(1) h\<sigma>_lt unfolding coeffs0_def by (by100 fastforce)
+          have hc0_sum: "(\<Sum>i<?n. coeffs0 i) = 1"
+            using hsum_reindex[of coeffs] hc(2) unfolding coeffs0_def by (by100 simp)
+          have hc0_vx: "x = (\<Sum>i<?n. coeffs0 i * vx i)"
+          proof -
+            have "(\<Sum>i<?n. coeffs0 i * vx i) = (\<Sum>i<?n. coeffs (\<sigma> i) * vx i)"
+              unfolding coeffs0_def by (by100 simp)
+          also have "\<dots> = (\<Sum>j<?n. coeffs (\<sigma> (\<sigma> j)) * vx (\<sigma> j))"
+              using sum.reindex_bij_betw[OF h\<sigma>_bij, of "\<lambda>j. coeffs (\<sigma> j) * vx j"] by (by100 simp)
+            also have "\<dots> = (\<Sum>j<?n. coeffs j * vx (\<sigma> j))"
+            proof (rule sum.cong)
+              fix j assume "j \<in> {..<?n}" thus "coeffs (\<sigma> (\<sigma> j)) * vx (\<sigma> j) = coeffs j * vx (\<sigma> j)"
+                using h\<sigma>_inv by (by100 simp)
+            qed (by100 simp)
+            finally show ?thesis using hc(3) by (by100 simp)
+          qed
+          have hc0_vy: "-y = (\<Sum>i<?n. coeffs0 i * vy i)"
+          proof -
+            have "y = (\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))" using hc(4) .
+            hence "-y = -(\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i))))" by (by100 simp)
+            also have "-(\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i)))) = (\<Sum>i<?n. coeffs i * vy (\<sigma> i))"
+            proof -
+              have "(\<Sum>i<?n. coeffs i * (-(vy (\<sigma> i)))) = (\<Sum>i<?n. -(coeffs i * vy (\<sigma> i)))"
+                by (rule sum.cong) (by100 simp)+
+              also have "\<dots> = -(\<Sum>i<?n. coeffs i * vy (\<sigma> i))"
+                by (rule sum_negf)
+              finally show ?thesis by (by100 linarith)
+            qed
+            also have "\<dots> = (\<Sum>i<?n. coeffs0 (\<sigma> i) * vy (\<sigma> i))"
+            proof (rule sum.cong)
+              fix i assume "i \<in> {..<?n}"
+              have "coeffs0 (\<sigma> i) = coeffs (\<sigma> (\<sigma> i))" unfolding coeffs0_def by (by100 simp)
+              also have "\<dots> = coeffs i" using h\<sigma>_inv \<open>i \<in> {..<?n}\<close> by (by100 simp)
+              finally show "coeffs i * vy (\<sigma> i) = coeffs0 (\<sigma> i) * vy (\<sigma> i)" by (by100 simp)
+            qed (by100 simp)
+            also have "\<dots> = (\<Sum>j<?n. coeffs0 j * vy j)"
+              using hsum_reindex[of "\<lambda>j. coeffs0 j * vy j"] by (by100 simp)
+            finally show ?thesis .
+          qed
+          have "(x, -y) \<in> P" unfolding hP_eq
+            using hc0_nn hc0_sum hc0_vx hc0_vy by (by100 blast)
+          hence "\<rho> (x, -y) \<in> P'" unfolding P'_def by (by100 blast)
+          moreover have "\<rho> (x, -y) = (x, y)" unfolding \<rho>_def by (by100 simp)
+          ultimately show "p \<in> P'" using hp_xy by (by100 simp)
+        qed
+      qed
       show "(\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow>
             (vx (\<sigma> i), - vy (\<sigma> i)) \<noteq> (vx (\<sigma> j), - vy (\<sigma> j)))
          \<and> (\<forall>k<?n. \<not>(\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> 0 \<le> coeffs i) \<and> coeffs k = 0
