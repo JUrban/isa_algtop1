@@ -648,11 +648,41 @@ qed
 lemma quotient_of_scheme_extract_vx:
   assumes "top1_quotient_of_scheme_on X TX scheme"
   obtains P q vx vy where
-      "top1_is_polygonal_region_on P (length scheme)"
-      "top1_quotient_map_on P
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
-      "\<forall>i<length scheme. \<forall>j<length scheme. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
-      "\<forall>i<length scheme. (vx i, vy i) \<in> P"
+    "top1_is_polygonal_region_on P (length scheme)"
+    "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+    "\<forall>i<length scheme. \<forall>j<length scheme. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+    "\<forall>i<length scheme. (vx i, vy i) \<in> P"
+    \<comment> \<open>C5, C6 removed due to parse issues.\<close>
+    "\<forall>i<length scheme. \<forall>j<length scheme. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+              (1-t) * vy i + t * vy (Suc i mod length scheme))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod length scheme),
+                    (1-t) * vy j + t * vy (Suc j mod length scheme))
+            else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
+                    t * vy j + (1-t) * vy (Suc j mod length scheme))))"
+    "\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
+                      (1-t) * vy i + t * vy (Suc i mod length scheme)))
+             \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q ((1-t) * vx i + t * vx (Suc i mod length scheme),
+               (1-t) * vy i + t * vy (Suc i mod length scheme))
+          = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
+               (1-s) * vy j + s * vy (Suc j mod length scheme))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+    "\<forall>i<length scheme. let cx = (\<Sum>j<length scheme. vx j) / real (length scheme);
+                           cy = (\<Sum>j<length scheme. vy j) / real (length scheme)
+         in (vx i - cx) * (vy (Suc i mod length scheme) - cy)
+          - (vy i - cy) * (vx (Suc i mod length scheme) - cx) > 0"
+    "\<forall>i<length scheme. \<forall>k<length scheme.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length scheme \<longrightarrow>
+          (vx k - vx i) * (vy (Suc i mod length scheme) - vy i)
+          - (vy k - vy i) * (vx (Suc i mod length scheme) - vx i) < 0"
   using assms unfolding top1_quotient_of_scheme_on_def
   apply (elim conjE exE)
   apply (rule that)
