@@ -643,6 +643,22 @@ proof (intro allI impI)
   from assms(2)[rule_format, OF hlt] show "(vx ((i+k) mod n), vy ((i+k) mod n)) \<in> P" .
 qed
 
+\<comment> \<open>Full extraction: get P, q, vx, vy from quotient\_of\_scheme\_on.
+   Uses the same elim/rule/assumption pattern as quotient\_of\_scheme\_extract.\<close>
+lemma quotient_of_scheme_extract_vx:
+  assumes "top1_quotient_of_scheme_on X TX scheme"
+  obtains P q vx vy where
+      "top1_is_polygonal_region_on P (length scheme)"
+      "top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q"
+      "\<forall>i<length scheme. \<forall>j<length scheme. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+      "\<forall>i<length scheme. (vx i, vy i) \<in> P"
+  using assms unfolding top1_quotient_of_scheme_on_def
+  apply (elim conjE exE)
+  apply (rule that)
+  apply assumption+
+  done
+
 \<comment> \<open>Transfer lemma: if two schemes have the same length, same fst at each position,
    and the same snd-equality pattern for same-label pairs, then quotient\_of\_scheme\_on
    is equivalent for both. This factors out the geometric conditions from the scheme-specific ones.\<close>
@@ -840,7 +856,26 @@ proof -
      We provide witnesses P, q, vx\\<circ>\\<sigma>, vy\\<circ>\\<sigma> and show each condition transfers
      via the bijection \\<sigma>.\<close>
   have h_step1: "top1_quotient_of_scheme_on Y TY w_\<sigma>"
-    using assms(1) sorry \<comment> \<open>Reindexing: P, q same; vx'=vx\\<circ>\\<sigma>, vy'=vy\\<circ>\\<sigma>. Definition too large for automated provers.\<close>
+  proof -
+    \<comment> \<open>Extract P, q, vx, vy from the old quotient.\<close>
+    from assms(1) obtain P q vx vy where
+        hC1: "top1_is_polygonal_region_on P (length w)"
+      and hC2: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+      and hC3: "\<forall>i<length w. \<forall>j<length w. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+      and hC4: "\<forall>i<length w. (vx i, vy i) \<in> P"
+      by (rule quotient_of_scheme_extract_vx)
+    \<comment> \<open>Shifted versions of C3 and C4 (using h\\<sigma>\\_lt and h\\<sigma>\\_inj).\<close>
+    have hC3': "\<forall>i<length w. \<forall>j<length w. i \<noteq> j \<longrightarrow> (vx (\<sigma> i), vy (\<sigma> i)) \<noteq> (vx (\<sigma> j), vy (\<sigma> j))"
+      using hC3 h\<sigma>_lt h\<sigma>_inj unfolding inj_on_def by (by100 blast)
+    have hC4': "\<forall>i<length w. (vx (\<sigma> i), vy (\<sigma> i)) \<in> P"
+      using hC4 h\<sigma>_lt by (by100 blast)
+    \<comment> \<open>Now rebuild the definition for w\_sigma with shifted witnesses vx\\<circ>\\<sigma>, vy\\<circ>\\<sigma>.
+       Conditions C1, C2 are the same (same P, q). C3, C4 are proved above.
+       C5-C11 still need shifted versions. For now: sorry.\<close>
+    show ?thesis
+      unfolding top1_quotient_of_scheme_on_def hlen_w\<sigma>
+      sorry
+  qed
   \<comment> \<open>Step 2: w\_sigma \\<to> w' via original transfer (fst/snd match at each position).\<close>
   have hfst_ws: "\<And>i. i < length w_\<sigma> \<Longrightarrow> fst (w'!i) = fst (w_\<sigma>!i)"
   proof -
