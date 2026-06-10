@@ -832,8 +832,11 @@ proof -
   have hlen_w\<sigma>: "length w_\<sigma> = length w" unfolding w_\<sigma>_def by (by100 simp)
   have hnth_w\<sigma>: "\<And>i. i < length w \<Longrightarrow> w_\<sigma> ! i = w ! (\<sigma> i)"
     unfolding w_\<sigma>_def by (by100 simp)
-  \<comment> \<open>Step 1: w \\<to> w\_sigma (reindexing — sorry, the hard geometric step).\<close>
-  have h_step1: "top1_quotient_of_scheme_on Y TY w_\<sigma>" using assms(1) sorry
+  \<comment> \<open>Step 1: w \\<to> w\_sigma (reindexing with shifted witnesses).
+     Same P, q. Witnesses: vx' = vx\\<circ>\\<sigma>, vy' = vy\\<circ>\\<sigma>.
+     All conditions transfer because \\<sigma> is a bijection with the Suc-shift property.\<close>
+  have h_step1: "top1_quotient_of_scheme_on Y TY w_\<sigma>"
+    using assms(1) sorry \<comment> \<open>Reindexing: same P, q, shifted vx/vy via sigma bijection.\<close>
   \<comment> \<open>Step 2: w\_sigma \\<to> w' via original transfer (fst/snd match at each position).\<close>
   have hfst_ws: "\<And>i. i < length w_\<sigma> \<Longrightarrow> fst (w'!i) = fst (w_\<sigma>!i)"
   proof -
