@@ -3356,6 +3356,22 @@ next
   show ?case using qZ hXZ by (rule homeo_realization_flat_introI)
 qed
 
+\<comment> \<open>Bridge: unrestricted scheme\\_equiv also gives homeomorphic realization.
+   This uses the OLD chain (scheme\\_equiv\\_preserves\\_quotient) which has sorrys.
+   Once the normal form is restated with valid\\_equiv, this bridge becomes unnecessary.\<close>
+lemma scheme_equiv_implies_homeo_realization:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "top1_quotient_of_scheme_on X TX s"
+      and "top1_scheme_equiv s t"
+  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY t \<and>
+    top1_homeomorphism_on X TX Y TY h"
+proof -
+  have "top1_quotient_of_scheme_on X TX t"
+    by (rule scheme_equiv_preserves_quotient[OF assms])
+  thus ?thesis by (rule same_space_implies_homeo_realization)
+qed
+
 \<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
 lemma polygonal_region_compact:
   assumes "top1_is_polygonal_region_on P n"
