@@ -1237,7 +1237,71 @@ proof -
               (1-s) * (-(vy (\<sigma> i))) + s * (-(vy (\<sigma> (Suc i mod ?n)))))
            \<noteq> ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
                (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n))))))"
-    sorry
+  proof (intro allI impI ballI)
+    fix i j and s t :: real
+    assume hi: "i < ?n" and hj: "j < ?n" and hij: "i \<noteq> j"
+      and hSij: "Suc i mod ?n \<noteq> j" and hijS: "i \<noteq> Suc j mod ?n"
+      and hs: "s \<in> {0<..<1::real}" and ht: "t \<in> {0<..<1::real}"
+    let ?i' = "?n - 1 - i" and ?j' = "?n - 1 - j"
+    have hi': "?i' < ?n" using hn1i_lt[OF hi] .
+    have hj': "?j' < ?n" using hn1i_lt[OF hj] .
+    have hij': "?i' \<noteq> ?j'"
+    proof
+      assume "?i' = ?j'"
+      hence "i = j" using hi hj by (by100 linarith)
+      with hij show False by (by100 simp)
+    qed
+    \<comment> \<open>Non-adjacency at original positions.\<close>
+    have hSij': "Suc ?i' mod ?n \<noteq> ?j'"
+    proof -
+      have "Suc ?i' mod ?n = \<sigma> i" using hSuc_n1i[OF hi] .
+      have "?j' = \<sigma> (Suc j mod ?n)" using h\<sigma>_suc[OF hj] by (by100 simp)
+      have "Suc j mod ?n < ?n" using hn_pos by (rule mod_less_divisor)
+      hence "\<sigma> i \<noteq> \<sigma> (Suc j mod ?n)"
+        using h\<sigma>_inj hi hijS unfolding inj_on_def by (by100 blast)
+      thus ?thesis using \<open>Suc ?i' mod ?n = \<sigma> i\<close> \<open>?j' = \<sigma> (Suc j mod ?n)\<close> by (by100 simp)
+    qed
+    have hijS': "?i' \<noteq> Suc ?j' mod ?n"
+    proof -
+      have "Suc ?j' mod ?n = \<sigma> j" using hSuc_n1i[OF hj] .
+      have "?i' = \<sigma> (Suc i mod ?n)" using h\<sigma>_suc[OF hi] by (by100 simp)
+      have "Suc i mod ?n < ?n" using hn_pos by (rule mod_less_divisor)
+      hence "\<sigma> (Suc i mod ?n) \<noteq> \<sigma> j"
+        using h\<sigma>_inj hj hSij unfolding inj_on_def by (by100 blast)
+      thus ?thesis using \<open>?i' = \<sigma> (Suc i mod ?n)\<close> \<open>Suc ?j' mod ?n = \<sigma> j\<close> by (by100 simp)
+    qed
+    \<comment> \<open>Original C6 at (i',j') with parameters (1-s,1-t) \\<in> (0,1).\<close>
+    have h1s: "1-s \<in> {0<..<1::real}" using hs by (by100 auto)
+    have h1t: "1-t \<in> {0<..<1::real}" using ht by (by100 auto)
+    from hC6[rule_format, OF hi' hj' hij' hSij' hijS' h1s h1t]
+    have hne_orig: "((1-(1-s)) * vx ?i' + (1-s) * vx (Suc ?i' mod ?n),
+              (1-(1-s)) * vy ?i' + (1-s) * vy (Suc ?i' mod ?n))
+           \<noteq> ((1-(1-t)) * vx ?j' + (1-t) * vx (Suc ?j' mod ?n),
+               (1-(1-t)) * vy ?j' + (1-t) * vy (Suc ?j' mod ?n))" .
+    \<comment> \<open>Simplify: 1-(1-s) = s, Suc i' mod n = \\<sigma> i, i' = \\<sigma>(Si).\<close>
+    have hne_simp: "(s * vx ?i' + (1-s) * vx (\<sigma> i), s * vy ?i' + (1-s) * vy (\<sigma> i))
+           \<noteq> (t * vx ?j' + (1-t) * vx (\<sigma> j), t * vy ?j' + (1-t) * vy (\<sigma> j))"
+      using hne_orig hSuc_n1i[OF hi] hSuc_n1i[OF hj] by (by100 simp)
+    \<comment> \<open>The reflected edge point: x-same, y-negated. If original \\<noteq>, reflected \\<noteq>.\<close>
+    have h_si: "\<sigma> (Suc i mod ?n) = ?i'" using h\<sigma>_suc[OF hi] by (by100 simp)
+    have h_sj: "\<sigma> (Suc j mod ?n) = ?j'" using h\<sigma>_suc[OF hj] by (by100 simp)
+    \<comment> \<open>The new edge at (i,s) has x = (1-s)*vx(\\<sigma> i) + s*vx(i') and y negated.\<close>
+    have hx_eq_i: "(1-s) * vx (\<sigma> i) + s * vx (\<sigma> (Suc i mod ?n))
+                 = (1-s) * vx (\<sigma> i) + s * vx ?i'" using h_si by (by100 simp)
+    have hx_eq_j: "(1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n))
+                 = (1-t) * vx (\<sigma> j) + t * vx ?j'" using h_sj by (by100 simp)
+    \<comment> \<open>The x-components are: (1-s)*vx(\\<sigma> i) + s*vx(i') vs s*vx(i') + (1-s)*vx(\\<sigma> i) — same.\<close>
+    have hx_match_i: "(1-s) * vx (\<sigma> i) + s * vx ?i' = s * vx ?i' + (1-s) * vx (\<sigma> i)"
+      by (by100 linarith)
+    have hx_match_j: "(1-t) * vx (\<sigma> j) + t * vx ?j' = t * vx ?j' + (1-t) * vx (\<sigma> j)"
+      by (by100 linarith)
+    \<comment> \<open>If the x-components match (commuted), the points differ iff the original differs.\<close>
+    show "((1-s) * vx (\<sigma> i) + s * vx (\<sigma> (Suc i mod ?n)),
+           (1-s) * (-(vy (\<sigma> i))) + s * (-(vy (\<sigma> (Suc i mod ?n)))))
+        \<noteq> ((1-t) * vx (\<sigma> j) + t * vx (\<sigma> (Suc j mod ?n)),
+            (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n)))))"
+      using hne_simp h_si h_sj sorry
+  qed
   \<comment> \<open>C7': identification pattern for the inverted scheme.\<close>
   have hC7': "\<forall>i<?n. \<forall>j<?n. fst (?w'!i) = fst (?w'!j) \<longrightarrow>
         (\<forall>t\<in>I_set.
