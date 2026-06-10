@@ -2118,7 +2118,8 @@ proof -
   \<comment> \<open>Step 6: Show \\<phi> is continuous.\<close>
   have h\<phi>_cont: "top1_continuous_map_on P1 (?TP P1) P2 (?TP P2) \<phi>" sorry
   \<comment> \<open>Step 7: P1 compact, P2 Hausdorff \\<Longrightarrow> \\<phi> is homeomorphism by Theorem 26.6.\<close>
-  have hP1_compact: "top1_compact_on P1 (?TP P1)" sorry
+  have hP1_compact: "top1_compact_on P1 (?TP P1)"
+    sorry \<comment> \<open>Bridge: polygonal\\_region\\_compact gives compact P1, need top1\\_compact\\_on bridge.\<close>
   have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set)
       (product_topology_on top1_open_sets top1_open_sets)"
     using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
