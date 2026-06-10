@@ -4221,8 +4221,23 @@ proof -
                    else q2 (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
                            t * vy2 j + (1-t) * vy2 (Suc j mod ?n)))"
               by (by100 blast)
-            \<comment> \<open>Now use hdir to match with \\<phi>(y).\<close>
-            thus ?thesis using h\<phi>x h\<phi>y hdir sorry
+            \<comment> \<open>Case split on direction match to rewrite q2 equality.\<close>
+            thus ?thesis
+            proof (cases "snd (scheme!i) = snd (scheme!j)")
+              case True
+              \<comment> \<open>Same direction: s = t, so \\<phi>(y) = e2(j,t) = e2(j,s).\<close>
+              hence "s = t" using hdir by (by100 simp)
+              thus ?thesis using \<open>q2 _ = _\<close> True h\<phi>x h\<phi>y by (by100 simp)
+            next
+              case False
+              \<comment> \<open>Opposite direction: s = 1-t, so e2(j,s) = (t*vx2 j + (1-t)*vx2(Sj), ...).\<close>
+              hence "s = 1 - t" using hdir by (by100 simp)
+              \<comment> \<open>(1-s) = t, s = 1-t, so (1-s)*vx2 j + s*vx2(Sj) = t*vx2 j + (1-t)*vx2(Sj).\<close>
+              hence "\<phi> y = (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
+                           t * vy2 j + (1-t) * vy2 (Suc j mod ?n))"
+                using h\<phi>y by (by100 simp)
+              thus ?thesis using \<open>q2 _ = _\<close> False h\<phi>x by (by100 simp)
+            qed
           qed
         qed
       qed
