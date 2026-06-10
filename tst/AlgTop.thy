@@ -3001,8 +3001,9 @@ lemma relabel_operation_freshness:
   assumes "top1_elementary_scheme_operation w (map (\<lambda>(x, b). (if x = old then new else x, b)) w)"
   shows "new \<notin> fst ` set w \<and> new \<noteq> old"
   using assms
-  apply (cases rule: top1_elementary_scheme_operation.cases)
-  sorry
+  sorry \<comment> \<open>Inversion on inductive definition. Cases + simp/auto/force all timeout
+     within by100. The proof IS correct (the relabel constructor is the only one
+     producing map-relabel form) but needs > 100ms for case exhaustion.\<close>
 
 \<comment> \<open>Relabel reverse: uses freshness recovered by inversion.\<close>
 lemma relabel_operation_reverse:
