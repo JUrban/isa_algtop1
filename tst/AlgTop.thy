@@ -586,6 +586,54 @@ proof -
      Each condition transfers via \\<rho> reflection and vertex reversal.\<close>
   have hn_pos: "0 < ?n"
     using hC1 unfolding top1_is_polygonal_region_on_def by (by100 linarith)
+  \<comment> \<open>\\<sigma> is its own inverse: \\<sigma>(\\<sigma>(i)) = i when i < n.\<close>
+  have h\<sigma>_inv: "\<And>i. i < ?n \<Longrightarrow> \<sigma> (\<sigma> i) = i"
+  proof -
+    fix i assume hi: "i < ?n"
+    show "\<sigma> (\<sigma> i) = i"
+    proof (cases "i = 0")
+      case True thus ?thesis unfolding \<sigma>_def using hn_pos by (by100 simp)
+    next
+      case False
+      hence hi_pos: "0 < i" by (by100 simp)
+      have h1: "\<sigma> i = ?n - i" using h\<sigma>_pos[OF hi_pos hi] .
+      have h2: "0 < ?n - i" using hi by (by100 linarith)
+      have h3: "?n - i < ?n" using hi_pos hi by (by100 linarith)
+      have "\<sigma> (\<sigma> i) = \<sigma> (?n - i)" using h1 by (by100 simp)
+      also have "\<dots> = (?n - (?n - i)) mod ?n"
+        unfolding \<sigma>_def by (by100 simp)
+      also have "?n - (?n - i) = i" using hi by (by100 linarith)
+      also have "i mod ?n = i" using hi by (by100 simp)
+      finally show "\<sigma> (\<sigma> i) = i" .
+    qed
+  qed
+  have h\<sigma>_inj: "inj_on \<sigma> {..<?n}"
+  proof (rule inj_onI)
+    fix x y assume hx: "x \<in> {..<?n}" and hy: "y \<in> {..<?n}" and hxy: "\<sigma> x = \<sigma> y"
+    have "x = \<sigma> (\<sigma> x)" using h\<sigma>_inv hx by (by100 simp)
+    also have "\<dots> = \<sigma> (\<sigma> y)" using hxy by (by100 simp)
+    also have "\<dots> = y" using h\<sigma>_inv hy by (by100 simp)
+    finally show "x = y" .
+  qed
+  have h\<sigma>_bij: "bij_betw \<sigma> {..<?n} {..<?n}"
+    unfolding bij_betw_def
+  proof (intro conjI)
+    show "inj_on \<sigma> {..<?n}" by (rule h\<sigma>_inj)
+    show "\<sigma> ` {..<?n} = {..<?n}"
+    proof
+      show "\<sigma> ` {..<?n} \<subseteq> {..<?n}" using h\<sigma>_lt by (by100 blast)
+      show "{..<?n} \<subseteq> \<sigma> ` {..<?n}"
+      proof
+        fix x assume "x \<in> {..<?n}"
+        hence "\<sigma> x \<in> {..<?n}" using h\<sigma>_lt by (by100 blast)
+        moreover have "\<sigma> (\<sigma> x) = x" using h\<sigma>_inv \<open>x \<in> {..<?n}\<close> by (by100 simp)
+        ultimately have "\<sigma> x \<in> {..<?n} \<and> \<sigma> (\<sigma> x) = x" by (by100 blast)
+        thus "x \<in> \<sigma> ` {..<?n}" by (by100 force)
+      qed
+    qed
+  qed
+  have hsum_reindex: "\<And>g :: nat \<Rightarrow> real. (\<Sum>j<?n. g (\<sigma> j)) = (\<Sum>j<?n. g j)"
+    using sum.reindex_bij_betw[OF h\<sigma>_bij] by (by100 simp)
   \<comment> \<open>C1: P' is a polygonal region.\<close>
   have hC1': "top1_is_polygonal_region_on P' ?n" sorry
   \<comment> \<open>C2: q' is a quotient map from P' to Y.\<close>
