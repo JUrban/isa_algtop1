@@ -177,6 +177,43 @@ proof -
   from r1 r2 r3 show ?thesis using valid_equiv_trans by (by100 blast)
 qed
 
+\<comment> \<open>Single valid operation implies valid equivalence.\<close>
+lemma valid_imp_equiv:
+  "top1_valid_scheme_operation s t \<Longrightarrow> top1_valid_scheme_equiv s t"
+  unfolding top1_valid_scheme_equiv_def by (by100 simp)
+
+\<comment> \<open>Valid relabel to avoid a label: replace all occurrences with a fresh one.\<close>
+lemma valid_equiv_relabel_avoid:
+  fixes target :: "(nat \<times> bool) list" and a :: nat
+  shows "\<exists>target'. top1_valid_scheme_equiv target target' \<and> (\<forall>e \<in> set target'. fst e \<noteq> a)"
+proof -
+  have "finite (fst ` set target \<union> {a} :: nat set)" by (by100 simp)
+  from ex_new_if_finite[OF infinite_UNIV_nat this]
+  obtain fresh :: nat where hfresh: "fresh \<notin> fst ` set target \<union> {a}" by (by100 blast)
+  hence "fresh \<noteq> a" and "fresh \<notin> fst ` set target" by (by100 blast)+
+  define target' where "target' = map (\<lambda>(l,b). (if l = a then fresh else l, b)) target"
+  have "top1_valid_scheme_equiv target target'"
+  proof (cases "a \<in> fst ` set target")
+    case True
+    have "top1_valid_scheme_operation target (map (\<lambda>(l, b). (if l = a then fresh else l, b)) target)"
+      by (rule top1_valid_scheme_operation.v_relabel[OF \<open>fresh \<notin> fst ` set target\<close> \<open>fresh \<noteq> a\<close>])
+    then show ?thesis unfolding target'_def by (rule valid_imp_equiv)
+  next
+    case False
+    then have "target' = target" unfolding target'_def
+      by (induction target) (by100 auto)+
+    then show ?thesis unfolding top1_valid_scheme_equiv_def by (by100 simp)
+  qed
+  moreover have "\<forall>e \<in> set target'. fst e \<noteq> a"
+  proof
+    fix e assume "e \<in> set target'"
+    then obtain l b where hlb: "(l,b) \<in> set target" "e = (if l = a then fresh else l, b)"
+      unfolding target'_def by (by100 auto)
+    then show "fst e \<noteq> a" using \<open>fresh \<noteq> a\<close> by (by100 auto)
+  qed
+  ultimately show ?thesis by (by100 blast)
+qed
+
 \<comment> \<open>Alpha-renaming: a bijective relabeling is a valid equivalence (per expert audit 20).
    Proof: apply fresh relabels sequentially via intermediate fresh labels.\<close>
 \<comment> \<open>Helper: renaming one label in a scheme using map.\<close>
