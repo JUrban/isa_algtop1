@@ -671,24 +671,8 @@ proof -
     using assms(3) unfolding bij_betw_def by (by100 blast)
   have h\<sigma>_inj: "inj_on \<sigma> {..<length w}"
     using assms(3) unfolding bij_betw_def by (by100 blast)
-  from assms(1) show ?thesis
-    unfolding top1_quotient_of_scheme_on_def assms(2)
-    apply (elim conjE exE)
-    apply (intro conjI)
-    apply assumption \<comment> \<open>is\_topology\_on\_strict\<close>
-    \<comment> \<open>Shifted witnesses: vx'(i) = vx(sigma(i)).\<close>
-    apply (rule_tac x=P in exI)
-    apply (rule_tac x=q in exI)
-    apply (rule_tac x="\<lambda>i. vx (\<sigma> i)" in exI)
-    apply (rule_tac x="\<lambda>i. vy (\<sigma> i)" in exI)
-    apply (intro conjI)
-    \<comment> \<open>C1-C2 by assumption.\<close>
-    subgoal by assumption
-    subgoal by assumption
-    sorry \<comment> \<open>C3-C11: 9 conditions. Each needs sigma(i) < n + inj + Suc shift.
-       Presburger times out (1s) in AlgTop context for C3, C7, C9.
-       h\_sigma\_lt, h\_sigma\_inj, hfst\_eq, hsnd\_eq available.\<close>
-  qed
+  from assms show ?thesis sorry \<comment> \<open>Same P, q, shifted vx/vy. Blocked by prover timeouts.\<close>
+qed
 
 \<comment> \<open>Rotate transfer: quotient\_of\_scheme\_on is preserved by rotation (cyclic shift).
    Same polygon P. Shifted vertices: vx'(i) = vx((i+k) mod n).
