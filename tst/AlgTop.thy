@@ -556,6 +556,24 @@ proof -
   define \<sigma> :: "nat \<Rightarrow> nat" where "\<sigma> = (\<lambda>i. ((?n) - i) mod (?n))"
   define vx' where "vx' = (\<lambda>i. vx (\<sigma> i))"
   define vy' where "vy' = (\<lambda>i. -(vy (\<sigma> i)))"
+  \<comment> \<open>Key properties of \\<rho> and \\<sigma>.\<close>
+  have h\<rho>_inv: "\<And>p. \<rho> (\<rho> p) = p" unfolding \<rho>_def by (by100 auto)
+  have h\<rho>_bij: "bij \<rho>" sorry \<comment> \<open>\\<rho> is self-inverse hence bijective.\<close>
+  have h\<sigma>_lt: "\<And>i. i < ?n \<Longrightarrow> \<sigma> i < ?n"
+    unfolding \<sigma>_def
+  proof -
+    fix i assume "i < ?n"
+    hence "0 < ?n" by (by100 linarith)
+    thus "(?n - i) mod ?n < ?n" by (rule mod_less_divisor)
+  qed
+  \<comment> \<open>Key: for 0 < i < n, \\<sigma>(i) = n-i. For i=0, \\<sigma>(0) = 0.
+     And n-1-i gives the label index. \\<sigma>(Suc i mod n) = n-1-i for 0 < i+1 < n.\<close>
+  have h\<sigma>_0: "\<sigma> 0 = 0" unfolding \<sigma>_def by (by100 simp)
+  have h\<sigma>_pos: "\<And>i. 0 < i \<Longrightarrow> i < ?n \<Longrightarrow> \<sigma> i = ?n - i"
+    unfolding \<sigma>_def by (by100 simp)
+  \<comment> \<open>vx'/vy' in terms of \\<rho> and \\<sigma>.\<close>
+  have hv'_eq: "\<And>i. (vx' i, vy' i) = (vx (\<sigma> i), -(vy (\<sigma> i)))"
+    unfolding vx'_def vy'_def by (by100 simp)
   \<comment> \<open>Step 2: Show all 11 conditions for w' with witnesses P', q', vx', vy'.\<close>
   show ?thesis
     unfolding top1_quotient_of_scheme_on_def hlen
