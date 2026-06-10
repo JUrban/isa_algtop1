@@ -681,6 +681,7 @@ proof -
      And w' has fst/snd matching w\_sigma at each position (by assms 4,5).
      So quotient\_of\_scheme\_transfer can convert from w\_sigma to w'.
      And w and w\_sigma have the same quotient (sigma is just a relabeling of vertex positions).\<close>
+  \<comment> \<open>For now: sorry.\<close>
   from assms show ?thesis sorry
 qed
 
