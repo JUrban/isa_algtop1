@@ -3306,7 +3306,8 @@ next
   show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
 next
   case (v_relabel new old w)
-  show ?case sorry
+  from quotient_of_scheme_relabel_fresh[OF v_relabel.prems v_relabel(1) v_relabel(2)]
+  show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_flip_label w a)
   have hq: "top1_quotient_of_scheme_on X TX (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w)"
