@@ -3201,15 +3201,28 @@ lemma scheme_equiv_preserves_quotient:
 lemma homeomorphism_id:
   assumes "is_topology_on X TX"
   shows "top1_homeomorphism_on X TX X TX id"
-  unfolding top1_homeomorphism_on_def
-  apply (intro conjI)
-      apply (rule assms)
-     apply (rule assms)
-    apply (rule bij_betw_id)
-   apply (rule top1_continuous_map_on_id[OF assms])
-  \<comment> \<open>Need: top1\\_continuous\\_map\\_on X TX X TX (inv\\_into X id).
-     Since inv\\_into X id x = x for all x \\<in> X, the inverse IS id.\<close>
-  sorry \<comment> \<open>Proof exists inline at line ~10700 in Thm 77.5. Need to extract.\<close>
+proof -
+  have hid_cont: "top1_continuous_map_on X TX X TX id"
+    by (rule top1_continuous_map_on_id[OF assms])
+  have hinv: "\<forall>x\<in>X. inv_into X id x = x"
+  proof
+    fix x assume "x \<in> X"
+    have "inv_into X id (id x) = x" by (rule inv_into_f_f[OF inj_on_id \<open>x \<in> X\<close>])
+    thus "inv_into X id x = x" by simp
+  qed
+  have "top1_continuous_map_on X TX X TX (inv_into X id)"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI allI impI)
+    fix x assume "x \<in> X" thus "inv_into X id x \<in> X" using hinv by (by100 simp)
+  next
+    fix V assume hV: "V \<in> TX"
+    have "{x \<in> X. inv_into X id x \<in> V} = {x \<in> X. id x \<in> V}"
+      using hinv by (by100 auto)
+    thus "{x \<in> X. inv_into X id x \<in> V} \<in> TX"
+      using hid_cont hV unfolding top1_continuous_map_on_def by (by100 simp)
+  qed
+  thus ?thesis unfolding top1_homeomorphism_on_def using assms hid_cont by (by100 simp)
+qed
 
 lemma same_space_implies_homeo_realization:
   assumes "top1_quotient_of_scheme_on X TX t"
