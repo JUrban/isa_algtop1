@@ -3963,7 +3963,7 @@ proof -
          (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
       = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
          (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
-    sorry \<comment> \<open>Proof plan (verified, blocked by sorry-leaking in qd mode):
+    sorry \<comment> \<open>Verified proof plan (blocked by sorry-leaking in qd mode):
        For each i,t: let p1=edge1(i,t), p2=edge2(i,t), s=(cos/sin at 2\\<pi>(i+t)/n).
        1. p2 \\<in> P2 (convex combination of vertices)
        2. \\<psi>1(p1) = s (h\\<psi>1\\_edge)
