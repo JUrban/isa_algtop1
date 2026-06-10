@@ -1495,6 +1495,14 @@ proof -
       show ?thesis using horig2 hLHS hRHS_same hRHS_opp h_si h_sj hsnd_iff by (by100 presburger)
     qed
   qed
+  \<comment> \<open>Edge set transfer: reflected edges cover same set as original edges.\<close>
+  have h_edge_transfer: "\<And>p. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
+                      (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n))))))
+    \<Longrightarrow> (\<forall>j<?n. \<forall>t\<in>I_set.
+        \<rho> p \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
+              (1-t) * vy j + t * vy (Suc j mod ?n)))"
+    sorry
   \<comment> \<open>C8': interior injectivity.\<close>
   have hC8': "\<forall>p\<in>P'. (\<forall>i<?n. \<forall>t\<in>I_set.
                 p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
@@ -1514,7 +1522,7 @@ proof -
     have hne_orig: "\<forall>j<?n. \<forall>t\<in>I_set.
         \<rho> p \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
               (1-t) * vy j + t * vy (Suc j mod ?n))"
-      sorry \<comment> \<open>From hne via \\<sigma> surjection + \\<rho> involution on edge points.\<close>
+      by (rule h_edge_transfer[OF hne])
     \<comment> \<open>Apply original C8: \\<rho>(p) = \\<rho>(p').\<close>
     have "\<rho> p = \<rho> p'"
       using hC8 h\<rho>p hne_orig h\<rho>p' hq_rho by (by100 blast)
