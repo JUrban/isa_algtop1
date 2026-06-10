@@ -4130,8 +4130,111 @@ proof -
      Edge points: \\<phi> preserves edge parametrization, so the scheme identification
      pattern is preserved. q1 identifies edges i,j iff scheme says so, and
      q2\\<circ>\\<phi> identifies the same edges because \\<phi> maps edge i to edge i.\<close>
+  \<comment> \<open>Helper: \\<phi> is bijective (from homeomorphism).\<close>
+  have h\<phi>_bij: "bij_betw \<phi> P1 P2"
+    using h\<phi> unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
+    by (by100 blast)
+  \<comment> \<open>Helper: \\<phi> preserves interior (not-on-boundary) of P1 to interior of P2.\<close>
+  have h\<phi>_int: "\<And>x. \<lbrakk>x \<in> P1; \<forall>i<?n. \<forall>t\<in>I_set.
+      x \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+            (1-t) * vy1 i + t * vy1 (Suc i mod ?n))\<rbrakk> \<Longrightarrow>
+      \<forall>i<?n. \<forall>t\<in>I_set.
+      \<phi> x \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+            (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
+    by (rule edge_preserving_homeo_interior[OF h\<phi>_bij h\<phi>_edge hn3 hC5_1])
+  \<comment> \<open>\\<phi> maps P1 into P2 (from bij\\_betw).\<close>
+  have h\<phi>_img: "\<And>x. x \<in> P1 \<Longrightarrow> \<phi> x \<in> P2"
+    using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
   have hfibres: "\<forall>x\<in>P1. \<forall>y\<in>P1. (q1 x = q1 y) \<longleftrightarrow> ((q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y)"
-    sorry
+  proof (intro ballI iffI)
+    fix x y assume hxP: "x \<in> P1" and hyP: "y \<in> P1"
+    \<comment> \<open>Forward: q1 x = q1 y \\<Longrightarrow> q2(\\<phi>(x)) = q2(\\<phi>(y)).\<close>
+    {
+      assume heq: "q1 x = q1 y"
+      \<comment> \<open>Case split: is x on a boundary edge?\<close>
+      consider
+        (x_int) "\<forall>i<?n. \<forall>t\<in>I_set. x \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+              (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
+        | (x_bdy) "\<exists>i<?n. \<exists>t\<in>I_set. x = ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+              (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
+        by (by100 blast)
+      hence "(q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y"
+      proof cases
+        case x_int
+        \<comment> \<open>x is interior: C8\\_1 says q1 injective at x, so x = y.\<close>
+        from hC8_1 hxP x_int have "\<forall>p'\<in>P1. q1 x = q1 p' \<longrightarrow> x = p'" by (by100 blast)
+        hence "x = y" using hyP heq by (by100 blast)
+        thus ?thesis by (by100 simp)
+      next
+        case x_bdy
+        then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set"
+          and hx_eq: "x = ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+                           (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
+          by (by100 blast)
+        \<comment> \<open>Is y on a boundary edge?\<close>
+        consider
+          (y_int) "\<forall>j<?n. \<forall>s\<in>I_set. y \<noteq> ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
+                (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
+          | (y_bdy) "\<exists>j<?n. \<exists>s\<in>I_set. y = ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
+                (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
+          by (by100 blast)
+        thus ?thesis
+        proof cases
+          case y_int
+          \<comment> \<open>y interior: C8\\_1 says q1 injective at y, so y = x.\<close>
+          from hC8_1 hyP y_int have "\<forall>p'\<in>P1. q1 y = q1 p' \<longrightarrow> y = p'" by (by100 blast)
+          hence "y = x" using hxP heq[symmetric] by (by100 blast)
+          thus ?thesis by (by100 simp)
+        next
+          case y_bdy
+          \<comment> \<open>Both on boundary: use C7/C9 — identification depends only on scheme.\<close>
+          then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set"
+            and hy_eq: "y = ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
+                             (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
+            by (by100 blast)
+          \<comment> \<open>From q1(e1(i,t)) = q1(e1(j,s)) and C9\\_1: get label/direction condition.\<close>
+          from hC9_1 hi hj ht hs heq[unfolded hx_eq hy_eq]
+          have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+              (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+            by (by100 blast)
+          \<comment> \<open>Need: q2(\\<phi>(x)) = q2(\\<phi>(y)), i.e. q2(e2(i,t)) = q2(e2(j,s)).\<close>
+          have h\<phi>x: "\<phi> x = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+                             (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
+            using h\<phi>_edge[rule_format, OF hi ht] hx_eq by (by100 simp)
+          have h\<phi>y: "\<phi> y = ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
+                             (1-s) * vy2 j + s * vy2 (Suc j mod ?n))"
+            using h\<phi>_edge[rule_format, OF hj hs] hy_eq by (by100 simp)
+          \<comment> \<open>From hcond, derive q2(e2(i,t)) = q2(e2(j,s)) using C7\\_2.\<close>
+          from hcond show ?thesis
+          proof (elim disjE conjE)
+            assume "i = j" "t = s"
+            thus ?thesis using h\<phi>x h\<phi>y by (by100 simp)
+          next
+            assume hlabel: "fst (scheme!i) = fst (scheme!j)"
+              and hdir: "if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t"
+            from hC7_2 hi hj hlabel ht
+            have "q2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+                      (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
+                = (if snd (scheme!i) = snd (scheme!j)
+                   then q2 ((1-t) * vx2 j + t * vx2 (Suc j mod ?n),
+                           (1-t) * vy2 j + t * vy2 (Suc j mod ?n))
+                   else q2 (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
+                           t * vy2 j + (1-t) * vy2 (Suc j mod ?n)))"
+              by (by100 blast)
+            \<comment> \<open>Now use hdir to match with \\<phi>(y).\<close>
+            thus ?thesis using h\<phi>x h\<phi>y hdir sorry
+          qed
+        qed
+      qed
+    }
+    thus "q1 x = q1 y \<Longrightarrow> (q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y" .
+  next
+    fix x y assume hxP: "x \<in> P1" and hyP: "y \<in> P1"
+    \<comment> \<open>Backward: q2(\\<phi>(x)) = q2(\\<phi>(y)) \\<Longrightarrow> q1 x = q1 y. Symmetric argument.\<close>
+    assume heq2: "(q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y"
+    show "q1 x = q1 y"
+      sorry \<comment> \<open>Symmetric to forward direction using C8\\_2, C9\\_2, C7\\_1.\<close>
+  qed
   from quotient_same_fibres_homeomorphic[OF hC2_1 hcomp_quot hfibres]
   show ?thesis .
 qed
