@@ -517,7 +517,121 @@ lemma quotient_of_scheme_invert:
   shows "top1_quotient_of_scheme_on Y TY (rev (map top1_inverse_edge w))"
   sorry
 
-\<comment> \<open>Relabel: quotient preserved by label renaming. Same polygon, renamed edges.\<close>
+\<comment> \<open>Relabel with fresh label: proved via same witnesses, fst-equality pattern preserved.\<close>
+lemma quotient_of_scheme_relabel_fresh:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+      and "new \<notin> fst ` set w"
+      and "new \<noteq> old"
+  shows "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (if l = old then new else l, b)) w)"
+proof -
+  let ?w' = "map (\<lambda>(l,b). (if l = old then new else l, b)) w"
+  have hlen: "length ?w' = length w" by (by100 simp)
+  have hfst: "\<And>i. i < length w \<Longrightarrow> fst (?w'!i) = (if fst (w!i) = old then new else fst (w!i))"
+  proof -
+    fix i assume hi: "i < length w"
+    obtain l b where hlb: "w ! i = (l, b)" by (cases "w ! i")
+    have "?w' ! i = (\<lambda>(l,b). (if l = old then new else l, b)) (w ! i)"
+      using hi by (by100 simp)
+    also have "\<dots> = (if l = old then new else l, b)" using hlb by (by100 simp)
+    finally show "fst (?w' ! i) = (if fst (w ! i) = old then new else fst (w ! i))"
+      using hlb by (by100 simp)
+  qed
+  \<comment> \<open>fst equality pattern is preserved: since 'new' is fresh, relabeling old\\<to>new
+     doesn't create new equalities or destroy existing ones.\<close>
+  have hfst_eq: "\<And>i j. \<lbrakk>i < length w; j < length w\<rbrakk> \<Longrightarrow>
+      (fst (?w'!i) = fst (?w'!j)) = (fst (w!i) = fst (w!j))"
+  proof -
+    fix i j assume hi: "i < length w" and hj: "j < length w"
+    have h_new_i: "fst (w!i) \<noteq> new" using assms(2) hi by (by100 fastforce)
+    have h_new_j: "fst (w!j) \<noteq> new" using assms(2) hj by (by100 fastforce)
+    have hfi: "fst (?w'!i) = (if fst (w!i) = old then new else fst (w!i))" using hfst[OF hi] .
+    have hfj: "fst (?w'!j) = (if fst (w!j) = old then new else fst (w!j))" using hfst[OF hj] .
+    show "(fst (?w'!i) = fst (?w'!j)) = (fst (w!i) = fst (w!j))"
+      unfolding hfi hfj using h_new_i h_new_j assms(3) by (by100 auto)
+  qed
+  \<comment> \<open>snd equality pattern: snd is unchanged, and the fst-equality condition is preserved.\<close>
+  have hsnd_nth: "\<And>i. i < length w \<Longrightarrow> snd (?w'!i) = snd (w!i)"
+  proof -
+    fix i assume hi: "i < length w"
+    obtain l b where hlb: "w ! i = (l, b)" by (cases "w ! i")
+    have "?w' ! i = (\<lambda>(l,b). (if l = old then new else l, b)) (w ! i)"
+      using hi by (by100 simp)
+    also have "\<dots> = (if l = old then new else l, b)" using hlb by (by100 simp)
+    finally show "snd (?w' ! i) = snd (w ! i)" using hlb by (by100 simp)
+  qed
+  have hsnd: "\<And>i j. \<lbrakk>i < length w; j < length w; fst (w!i) = fst (w!j)\<rbrakk> \<Longrightarrow>
+      (snd (?w'!i) = snd (?w'!j)) = (snd (w!i) = snd (w!j))"
+    using hsnd_nth by (by100 simp)
+  \<comment> \<open>fst at each position: NOT the same as original (old\\<to>new), so can't use transfer directly.
+     But we can still use transfer by noting the fst-equality pattern is preserved.\<close>
+  \<comment> \<open>For the transfer, we need fst(?w'!i) = fst(w!i). This is FALSE (old\\<to>new).
+     But transfer only needs fst-EQUALITY preservation + snd-EQUALITY preservation.
+     Actually, looking at the transfer lemma, it requires fst(?w'!i) = fst(w!i) at each position.
+     Since relabel changes fst, we can't use transfer. But the original definition's
+     C7 and C9 conditions only depend on the EQUALITY PATTERN of fst and snd,
+     not on the actual values. So we can prove this by showing the same witnesses work.\<close>
+  \<comment> \<open>Actually, the quotient\_of\_scheme\_on definition's conditions C7 and C9 reference
+     fst(scheme!i) and snd(scheme!i) directly. With relabeled scheme, these change.
+     But C7 says: if fst(w'!i) = fst(w'!j), then identify edges i and j.
+     Since the fst-equality pattern is preserved (hfst\_eq), this holds iff the original C7 holds.
+     The snd direction is also preserved by hsnd. So the proof should work.\<close>
+  show ?thesis
+    unfolding top1_quotient_of_scheme_on_def hlen
+    using assms(1)[unfolded top1_quotient_of_scheme_on_def]
+    apply (elim conjE exE)
+    apply (intro conjI)
+    apply assumption  \<comment> \<open>is\_topology\_on\_strict\<close>
+    apply (rule_tac x=P in exI)
+    apply (rule_tac x=q in exI)
+    apply (rule_tac x=vx in exI)
+    apply (rule_tac x=vy in exI)
+    apply (intro conjI)
+    apply assumption  \<comment> \<open>C1\<close>
+    apply assumption  \<comment> \<open>C2\<close>
+    apply assumption  \<comment> \<open>C3\<close>
+    apply assumption  \<comment> \<open>C4\<close>
+    apply assumption  \<comment> \<open>C5\<close>
+    apply assumption  \<comment> \<open>C6\<close>
+    \<comment> \<open>C7: identification. Rewrite fst/snd equality via hfst\_eq/hsnd.\<close>
+    subgoal premises prems
+      using prems(8) hfst_eq hsnd by (by100 presburger)
+    apply assumption  \<comment> \<open>C8\<close>
+    \<comment> \<open>C9: boundary injectivity. Rewrite using hfst\_eq and hsnd.\<close>
+    subgoal premises prems for P q vx vy
+    proof (intro allI ballI impI)
+      fix i j ta s
+      assume hi: "i < length w" and hj: "j < length w" and hta: "ta \<in> I_set" and hs: "s \<in> I_set"
+        and hq_eq: "q ((1 - ta) * vx i + ta * vx (Suc i mod length w),
+              (1 - ta) * vy i + ta * vy (Suc i mod length w)) =
+             q ((1 - s) * vx j + s * vx (Suc j mod length w),
+              (1 - s) * vy j + s * vy (Suc j mod length w))"
+      \<comment> \<open>prems(10) is original C9 with 'w' scheme. OF instantiation to get conclusion.\<close>
+      have hC9_w: "(i = j \<and> ta = s) \<or> (fst (w!i) = fst (w!j) \<and>
+             (if snd (w!i) = snd (w!j) then s = ta else s = 1 - ta))"
+        using prems(10) hi hj hta hs hq_eq by (by100 blast)
+      show "(i = j \<and> ta = s) \<or> (fst (?w'!i) = fst (?w'!j) \<and>
+             (if snd (?w'!i) = snd (?w'!j) then s = ta else s = 1 - ta))"
+      proof (cases "i = j \<and> ta = s")
+        case True thus ?thesis by (by100 blast)
+      next
+        case False
+        with hC9_w have "fst (w!i) = fst (w!j) \<and>
+             (if snd (w!i) = snd (w!j) then s = ta else s = 1 - ta)" by (by100 blast)
+        moreover have "(fst (?w'!i) = fst (?w'!j)) = (fst (w!i) = fst (w!j))"
+          using hfst_eq[OF hi hj] .
+        moreover have "(snd (?w'!i) = snd (?w'!j)) = (snd (w!i) = snd (w!j))"
+          using hsnd_nth[OF hi] hsnd_nth[OF hj] by (by100 simp)
+        ultimately show ?thesis by (by100 presburger)
+      qed
+    qed
+    apply assumption  \<comment> \<open>C10\<close>
+    apply assumption  \<comment> \<open>C11\<close>
+    done
+qed
+
+\<comment> \<open>Relabel without freshness (used by the induction case). The call site ensures freshness
+   via the elementary\_operation constructor, but accessing it through the induction case
+   mechanism is tricky. For now: sorry. The proved version is relabel\_fresh above.\<close>
 lemma quotient_of_scheme_relabel:
   assumes "top1_quotient_of_scheme_on Y TY w"
   shows "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (if l = old then new else l, b)) w)"
