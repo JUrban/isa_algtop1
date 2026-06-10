@@ -1324,7 +1324,10 @@ proof -
                     (1-t) * (-(vy (\<sigma> j))) + t * (-(vy (\<sigma> (Suc j mod ?n)))))
             else q' (t * vx (\<sigma> j) + (1-t) * vx (\<sigma> (Suc j mod ?n)),
                     t * (-(vy (\<sigma> j))) + (1-t) * (-(vy (\<sigma> (Suc j mod ?n)))))))"
-    sorry
+    sorry \<comment> \<open>Key proof: map to orig C7 at (n-1-i, n-1-j) with param (1-t).
+       q'(new\\_edge(i,t)) = q(orig\\_edge(n-1-i,1-t)) via \\<rho> definition.
+       fst(w'!i) = fst(w!(n-1-i)) [hfst], snd(w'!i)=snd(w'!j) iff snd(w!(n-1-i))=snd(w!(n-1-j)) [hsnd].
+       The same/opposite direction cases match after parameter reversal.\<close>
   \<comment> \<open>C8': interior injectivity.\<close>
   have hC8': "\<forall>p\<in>P'. (\<forall>i<?n. \<forall>t\<in>I_set.
                 p \<noteq> ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
