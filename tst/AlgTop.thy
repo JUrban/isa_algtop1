@@ -3953,12 +3953,19 @@ proof -
   \<comment> \<open>\\<phi> preserves edge parametrization: \\<psi>1 and \\<psi>2 map corresponding edge points to
      the same S¹ point (cos/sin at 2\\<pi>(i+t)/n), so \\<psi>2\\<inverse> \\<circ> \\<psi>1 maps edge i of P1
      to edge i of P2. Uses h\\<psi>1\\_edge, h\\<psi>2\\_edge, injectivity of \\<psi>2, and inv\\_into\\_f\\_f.\<close>
+  have h\<psi>2_bij: "bij_betw \<psi>2 P2 top1_B2"
+    using h\<psi>2_homeo unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
+    by (by100 blast)
+  have h\<psi>2_inj: "inj_on \<psi>2 P2"
+    using h\<psi>2_bij unfolding bij_betw_def by (by100 blast)
   have h\<phi>_edge: "\<forall>i<?n. \<forall>t\<in>I_set.
       \<phi> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
          (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
       = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
          (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
-    sorry
+    sorry \<comment> \<open>Proof: \\<psi>1(p1) = \\<psi>2(p2) (both give cos/sin at same angle), so
+       \\<psi>2\\<inverse>(\\<psi>1(p1)) = p2 by inv\\_into\\_f\\_f. Needs: edge points \\<in> P2 (convex combo),
+       \\<psi>2 injective (from homeomorphism), \\<psi>1/\\<psi>2 edge facts.\<close>
   \<comment> \<open>Step 6: q2 \\<circ> \\<phi> is a quotient map P1 \\<to> Y2.\<close>
   have h\<phi>_quot: "top1_quotient_map_on P1 (?TP P1) P2 (?TP P2) \<phi>"
     by (rule top1_homeomorphism_on_imp_quotient_map_on[OF h\<phi>])
