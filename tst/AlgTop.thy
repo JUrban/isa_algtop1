@@ -102,7 +102,10 @@ inductive top1_valid_scheme_operation :: "('a \<times> bool) list \<Rightarrow> 
       ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))" |
   v_cut_paste_opp: "top1_valid_scheme_operation
       (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)
-      (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+      (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)" |
+  \<comment> \<open>Context rule: valid operations can be performed with a prefix.\<close>
+  v_context_left: "top1_valid_scheme_operation y z \<Longrightarrow>
+      top1_valid_scheme_operation (prefix @ y) (prefix @ z)"
 
 \<comment> \<open>Valid scheme equivalence.\<close>
 definition top1_valid_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
@@ -121,6 +124,8 @@ lemma valid_implies_elementary:
   apply (rule top1_elementary_scheme_operation.cut_paste)
   apply (rule top1_elementary_scheme_operation.cut_paste2)
   apply (rule top1_elementary_scheme_operation.cut_paste_opp)
+  apply (rule top1_elementary_scheme_operation.context_left)
+  apply assumption
   done
 
 \<comment> \<open>Valid equivalence implies unrestricted equivalence.\<close>
@@ -142,6 +147,35 @@ lemma valid_equiv_fresh_relabel:
 lemma valid_equiv_trans:
   "top1_valid_scheme_equiv a b \<Longrightarrow> top1_valid_scheme_equiv b c \<Longrightarrow> top1_valid_scheme_equiv a c"
   unfolding top1_valid_scheme_equiv_def by (rule rtranclp_trans)
+
+\<comment> \<open>Valid equivalence: prefix congruence (uses v\\_context\\_left).\<close>
+lemma valid_equiv_prepend:
+  "top1_valid_scheme_equiv rest rest' \<Longrightarrow> top1_valid_scheme_equiv (prefix @ rest) (prefix @ rest')"
+  unfolding top1_valid_scheme_equiv_def
+proof (induction rule: rtranclp.induct)
+  case rtrancl_refl thus ?case by (by100 simp)
+next
+  case (rtrancl_into_rtrancl x y z)
+  have "top1_valid_scheme_operation (prefix @ y) (prefix @ z)"
+    by (rule top1_valid_scheme_operation.v_context_left[OF rtrancl_into_rtrancl.hyps(2)])
+  thus ?case using rtrancl_into_rtrancl.IH by (meson rtranclp.rtrancl_into_rtrancl)
+qed
+
+\<comment> \<open>Valid equivalence: suffix congruence (via rotate + prepend + rotate).\<close>
+lemma valid_equiv_append:
+  "top1_valid_scheme_equiv xs ys \<Longrightarrow> top1_valid_scheme_equiv (xs @ suffix) (ys @ suffix)"
+proof -
+  assume h: "top1_valid_scheme_equiv xs ys"
+  have r1: "top1_valid_scheme_equiv (xs @ suffix) (suffix @ xs)"
+    unfolding top1_valid_scheme_equiv_def
+    using top1_valid_scheme_operation.v_rotate[of xs suffix] by (by100 simp)
+  have r2: "top1_valid_scheme_equiv (suffix @ xs) (suffix @ ys)"
+    by (rule valid_equiv_prepend[OF h])
+  have r3: "top1_valid_scheme_equiv (suffix @ ys) (ys @ suffix)"
+    unfolding top1_valid_scheme_equiv_def
+    using top1_valid_scheme_operation.v_rotate[of suffix ys] by (by100 simp)
+  from r1 r2 r3 show ?thesis using valid_equiv_trans by (by100 blast)
+qed
 
 \<comment> \<open>Alpha-renaming: a bijective relabeling is a valid equivalence (per expert audit 20).
    Proof: apply fresh relabels sequentially via intermediate fresh labels.\<close>
@@ -3754,6 +3788,16 @@ next
     unfolding top1_scheme_equiv_def
     using top1_elementary_scheme_operation.cut_paste_opp[of u0 u1 a u2 u3] by (by100 simp)
   show ?case by (rule scheme_equiv_implies_homeo_realization[OF v_cut_paste_opp.prems hequiv])
+next
+  case (v_context_left y z prefix)
+  \<comment> \<open>IH gives homeomorphic realization for y \\<to> z.
+     Use elementary\\_operation\\_preserves\\_quotient: X realizes prefix@z too.
+     Then scheme\\_quotient\\_uniqueness gives the homeomorphism.\<close>
+  have hop: "top1_elementary_scheme_operation (prefix @ y) (prefix @ z)"
+    using v_context_left.hyps by (rule top1_elementary_scheme_operation.context_left[OF valid_implies_elementary])
+  have "top1_quotient_of_scheme_on X TX (prefix @ z)"
+    by (rule elementary_operation_preserves_quotient[OF v_context_left.prems hop])
+  then show ?case by (rule same_space_implies_homeo_realization)
 qed
 
 \<comment> \<open>Chain: valid equivalence preserves quotient homeomorphism type.\<close>
