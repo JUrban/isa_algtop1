@@ -2206,8 +2206,11 @@ proof -
     using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
   have hTP2: "is_topology_on P2 (?TP P2)"
     using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
+  have hausdorff_subspace: "\<And>X (T :: (real \<times> real) set set) Y. is_hausdorff_on X T \<Longrightarrow> Y \<subseteq> X \<Longrightarrow>
+      is_hausdorff_on Y (subspace_topology X T Y)"
+    sorry \<comment> \<open>Subspace of Hausdorff is Hausdorff. Standard topology fact via neighborhoods.\<close>
   have hP2_haus: "is_hausdorff_on P2 (?TP P2)"
-    sorry \<comment> \<open>Subspace of R2 Hausdorff. Uses top1\\_R2\\_is\\_hausdorff + Theorem\\_17\\_11(3).\<close>
+    by (rule hausdorff_subspace[OF top1_R2_is_hausdorff]) (by100 blast)
   have "top1_homeomorphism_on P1 (?TP P1) P2 (?TP P2) \<phi>"
     by (rule Theorem_26_6[OF hTP1 hTP2 hP1_compact hP2_haus h\<phi>_cont h\<phi>_bij])
   thus ?thesis by (by100 blast)
