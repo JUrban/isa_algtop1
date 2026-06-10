@@ -1670,7 +1670,7 @@ next
   thus ?case unfolding top1_scheme_equiv_def
     using top1_elementary_scheme_operation.invert[of "rev (map top1_inverse_edge w)"] by simp
 next
-  case (relabel w old new) \<comment> \<open>Reverse of relabel. Use relabel(new→old) + fix collisions.\<close>
+  case (relabel w old new) \<comment> \<open>Reverse of relabel: apply relabel(new\\<to>old) to the result.\<close>
   show ?case sorry
 next
   case (flip_label w a) \<comment> \<open>flip is involutive: flip(flip(w)) = w.\<close>
