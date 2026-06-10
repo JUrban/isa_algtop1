@@ -2119,9 +2119,15 @@ proof -
   have h\<phi>_cont: "top1_continuous_map_on P1 (?TP P1) P2 (?TP P2) \<phi>" sorry
   \<comment> \<open>Step 7: P1 compact, P2 Hausdorff \\<Longrightarrow> \\<phi> is homeomorphism by Theorem 26.6.\<close>
   have hP1_compact: "top1_compact_on P1 (?TP P1)" sorry
+  have hR2_top: "is_topology_on (UNIV :: (real \<times> real) set)
+      (product_topology_on top1_open_sets top1_open_sets)"
+    using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV
+          top1_open_sets_is_topology_on_UNIV] by (by100 simp)
+  have hTP1: "is_topology_on P1 (?TP P1)"
+    using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
+  have hTP2: "is_topology_on P2 (?TP P2)"
+    using subspace_topology_is_topology_on[OF hR2_top] by (by100 blast)
   have hP2_haus: "is_hausdorff_on P2 (?TP P2)" sorry
-  have hTP1: "is_topology_on P1 (?TP P1)" sorry
-  have hTP2: "is_topology_on P2 (?TP P2)" sorry
   have "top1_homeomorphism_on P1 (?TP P1) P2 (?TP P2) \<phi>"
     by (rule Theorem_26_6[OF hTP1 hTP2 hP1_compact hP2_haus h\<phi>_cont h\<phi>_bij])
   thus ?thesis by (by100 blast)
