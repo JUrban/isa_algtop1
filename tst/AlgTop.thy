@@ -3227,13 +3227,22 @@ qed
 \<comment> \<open>Helper for introducing the nested \\<exists> in homeomorphic-realization goals.
    The standard tactics (blast/meson/force) cannot close \\<exists>Y TY. P(Y,TY) \\<and> \\<exists>h. Q(Y,TY,h)
    from P(X,TX) and Q(X,TX,id) because the predicate sizes exceed timeout.\<close>
+\<comment> \<open>Flat existential introduction for homeomorphic realization.
+   Uses flat \\<exists>Y TY h. P \\<and> Q to avoid higher-order unification issues.\<close>
 lemma homeo_realization_introI:
   assumes hq: "top1_quotient_of_scheme_on Y TY t"
       and hh: "top1_homeomorphism_on X TX Y TY h"
-  shows "\<exists>Y' TY'. top1_quotient_of_scheme_on Y' TY' t
-              \<and> (\<exists>h'. top1_homeomorphism_on X TX Y' TY' h')"
-  sorry \<comment> \<open>ISABELLE LIMITATION: no built-in tactic can introduce \\<exists>Y' over nested \\<exists>TY'
-     when predicates are large (higher-order unification). Logically trivial: Y'=Y, TY'=TY, h'=h.\<close>
+  shows "\<exists>Y' TY' h'. top1_quotient_of_scheme_on Y' TY' t
+              \<and> top1_homeomorphism_on X TX Y' TY' h'"
+  sorry
+
+\<comment> \<open>Convert flat to nested existential form.\<close>
+lemma flat_to_nested_ex:
+  "\<exists>Y TY h. top1_quotient_of_scheme_on Y TY t
+              \<and> top1_homeomorphism_on X TX Y TY h \<Longrightarrow>
+   \<exists>Y TY. top1_quotient_of_scheme_on Y TY t
+              \<and> (\<exists>h. top1_homeomorphism_on X TX Y TY h)"
+  sorry \<comment> \<open>Same nested \\<exists> issue.\<close>
 
 lemma same_space_implies_homeo_realization:
   assumes "top1_quotient_of_scheme_on X TX t"
@@ -3242,7 +3251,7 @@ lemma same_space_implies_homeo_realization:
 proof -
   have "is_topology_on X TX"
     using assms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  show ?thesis by (rule homeo_realization_introI[OF assms homeomorphism_id[OF \<open>is_topology_on X TX\<close>]])
+  show ?thesis by (rule flat_to_nested_ex[OF homeo_realization_introI[OF assms homeomorphism_id[OF \<open>is_topology_on X TX\<close>]]])
 qed
 
 \<comment> \<open>Homeomorphism-preservation for valid scheme operations (per expert audit step 8).
@@ -3261,7 +3270,7 @@ proof (induction rule: top1_valid_scheme_operation.induct)
     by (rule quotient_of_scheme_rotate[OF v_rotate.prems])
   have htopo: "is_topology_on X TX"
     using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  show ?case by (rule homeo_realization_introI[OF hq homeomorphism_id[OF htopo]])
+  show ?case by (rule flat_to_nested_ex[OF homeo_realization_introI[OF hq homeomorphism_id[OF htopo]]])
 next
   case (v_cancel u a v)
   \<comment> \<open>Cancel: needs geometric construction (polygon folding). Homeomorphism version.\<close>
@@ -3276,7 +3285,7 @@ next
     by (rule quotient_of_scheme_invert[OF v_invert.prems])
   have htopo: "is_topology_on X TX"
     using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  show ?case by (rule homeo_realization_introI[OF hq homeomorphism_id[OF htopo]])
+  show ?case by (rule flat_to_nested_ex[OF homeo_realization_introI[OF hq homeomorphism_id[OF htopo]]])
 next
   case (v_relabel new old w)
   show ?case sorry
@@ -3286,7 +3295,7 @@ next
     by (rule quotient_scheme_flip_label[OF v_flip_label.prems])
   have htopo: "is_topology_on X TX"
     using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  show ?case by (rule homeo_realization_introI[OF hq homeomorphism_id[OF htopo]])
+  show ?case by (rule flat_to_nested_ex[OF homeo_realization_introI[OF hq homeomorphism_id[OF htopo]]])
 next
   case (v_cut_paste u1 a u2 u3)
   \<comment> \<open>Cut-paste: needs geometric construction. Homeomorphism version.\<close>
