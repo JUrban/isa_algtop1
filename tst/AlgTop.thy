@@ -3626,16 +3626,9 @@ proof -
               k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length w \<longrightarrow>
               (vx k - vx i) * (vy (Suc i mod length w) - vy i)
               - (vy k - vy i) * (vx (Suc i mod length w) - vx i) < 0)"
-    proof -
-      \<comment> \<open>Use quotient\\_of\\_scheme\\_extract (from cached session) which gives P and q.\<close>
-      from quotient_of_scheme_extract[OF hassms]
-      obtain P0 q0 where
-          hP0: "top1_is_polygonal_region_on P0 n"
-          and hq0: "top1_quotient_map_on P0 (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P0) Y TY q0"
-        unfolding n_def by (by100 blast)
-      \<comment> \<open>Witnesses: vx'(i)=vx0(i+2), vy'(i)=vy0(i+2), P'=convex hull, q'=q0.\<close>
-      show ?thesis sorry \<comment> \<open>Verify 11 conditions with index shift.\<close>
-    qed
+      \<comment> \<open>Use quotient\\_of\\_scheme\\_extract\\_vx to get full polygon data, then construct witnesses.\<close>
+      using hassms[unfolded top1_quotient_of_scheme_on_def]
+      sorry
   qed
 qed
 
@@ -4025,7 +4018,9 @@ next
   then show ?case by (rule same_space_implies_homeo_realization)
 next
   case v_cancel_reverse
-  show ?case sorry \<comment> \<open>Cancel-reverse quotient preservation. Same as uncancel.\<close>
+  \<comment> \<open>v\\_cancel\\_reverse: u@v -> u@[a,inv a]@v. Same as uncancel.\<close>
+  from quotient_of_scheme_uncancel_proved[OF v_cancel_reverse.prems]
+  show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_invert w)
   have hq: "top1_quotient_of_scheme_on X TX (rev (map top1_inverse_edge w))"
