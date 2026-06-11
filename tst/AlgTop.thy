@@ -8942,6 +8942,20 @@ proof -
   qed
 qed
 
+\<comment> \<open>Valid version of projective\\_len4\\_base.
+   Uses valid\\_extract\\_projective\\_pair for the core decomposition.\<close>
+lemma valid_projective_len4_base:
+  fixes scheme :: "(nat \<times> bool) list"
+  assumes hlen: "length scheme = 4"
+      and hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+      and hproj: "\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
+          \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
+  shows "(\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv scheme w)"
+  sorry \<comment> \<open>4-element projective: decompose into 2 labels, alpha-rename to standard form.
+     Needs valid version of the old 494-line proof (or simpler via alpha-rename).
+     Key difficulty: multiple relabel calls need freshness proofs.
+     Deferred until the normal form upgrade chain is fully connected.\<close>
+
 \<comment> \<open>Key congruence: scheme equivalence on a suffix extends through a projective-pair prefix,
    provided the suffix labels don't include the pair's label.
    Proof: each elementary operation on the suffix can be simulated on the full list.
