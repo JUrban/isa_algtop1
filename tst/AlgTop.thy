@@ -855,13 +855,7 @@ qed
 lemma quotient_of_scheme_cancel:
   assumes "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
   shows "top1_quotient_of_scheme_on Y TY (u @ v)"
-  sorry \<comment> \<open>Geometric construction: fold cancelled edges of (n+2)-gon to get n-gon.
-     Proof plan: extract witnesses from old quotient (use quotient\\_of\\_scheme\\_extract\\_vx
-     which is defined below), define new vertices by skipping the cancelled pair
-     (vx'(i) = vx(i) for i \\<le> |u|, vx(i+2) for i > |u|),
-     new polygon P' = convex hull, q' = q restricted. Verify conditions by index shift.
-     NOTE: quotient\\_of\\_scheme\\_extract\\_vx is at line 941, after this lemma.
-     To prove: either move this lemma after extract\\_vx, or unfold definition directly.\<close>
+  sorry \<comment> \<open>MOVED: see quotient\\_of\\_scheme\\_cancel\\_proved after quotient\\_of\\_scheme\\_rotate.\<close>
 
 \<comment> \<open>Uncancel: reverse of cancel. Same polygon, unfold.\<close>
 lemma quotient_of_scheme_uncancel:
@@ -3564,6 +3558,54 @@ proof -
 qed
 
 
+\<comment> \<open>Cancel at front: fold edges 0,1 of (n+2)-gon to get n-gon.
+   The cancel pair at positions 0,1 means edges 0,1 are identified.
+   New polygon: skip vertex v\\_1. Needs extract\\_vx infrastructure.\<close>
+lemma quotient_of_scheme_cancel_front:
+  assumes "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
+  shows "top1_quotient_of_scheme_on Y TY w"
+  sorry \<comment> \<open>Geometric: fold front cancel pair. Extract polygon, skip vertex 1, verify conditions.\<close>
+
+\<comment> \<open>Cancel (proved via reduction to front-cancel + rotation).\<close>
+lemma quotient_of_scheme_cancel_proved:
+  assumes "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
+  shows "top1_quotient_of_scheme_on Y TY (u @ v)"
+proof -
+  have "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ v @ u)"
+    using quotient_of_scheme_rotate[OF assms] by simp
+  from quotient_of_scheme_cancel_front[OF this]
+  have "top1_quotient_of_scheme_on Y TY (v @ u)" .
+  from quotient_of_scheme_rotate[OF this]
+  show ?thesis by simp
+qed
+
+\<comment> \<open>Uncancel at front: insert cancel pair at front.\<close>
+lemma quotient_of_scheme_uncancel_front:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+  shows "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
+  sorry \<comment> \<open>Geometric: unfold front position. Reverse of cancel\\_front.\<close>
+
+\<comment> \<open>Uncancel (proved via reduction to front-uncancel + rotation).\<close>
+lemma quotient_of_scheme_uncancel_proved:
+  assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
+  shows "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
+proof -
+  have "top1_quotient_of_scheme_on Y TY (v @ u)"
+    using quotient_of_scheme_rotate[OF assms] by simp
+  from quotient_of_scheme_uncancel_front[OF this, of a]
+  have h1: "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ v @ u)" .
+  \<comment> \<open>Rotate: [a,inv a] @ (v@u) -> (v@u) @ [a,inv a].\<close>
+  from quotient_of_scheme_rotate[OF h1]
+  have h2: "top1_quotient_of_scheme_on Y TY ((v @ u) @ [a, top1_inverse_edge a])" by simp
+  \<comment> \<open>Rewrite: (v@u)@[a,inv a] = v @ (u @ [a,inv a]).\<close>
+  hence h3: "top1_quotient_of_scheme_on Y TY (v @ (u @ [a, top1_inverse_edge a]))" by simp
+  \<comment> \<open>Rotate: v @ (u@[a,inv a]) -> (u@[a,inv a]) @ v.\<close>
+  from quotient_of_scheme_rotate[OF h3]
+  have h4: "top1_quotient_of_scheme_on Y TY ((u @ [a, top1_inverse_edge a]) @ v)" by simp
+  \<comment> \<open>Rewrite: (u@[a,inv a])@v = u@[a,inv a]@v.\<close>
+  thus ?thesis by simp
+qed
+
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
    If Y is a quotient of scheme s, and s \<rightarrow> t via an elementary operation,
    then Y is also a quotient of scheme t (same polygon, adjusted vertex labeling).\<close>
@@ -3900,13 +3942,13 @@ next
      Step 4: Use quotient\\_transport\\_by\\_homeomorphism.\<close>
   \<comment> \<open>For now: use the old same-space lemma which is in the dead chain but still available.\<close>
   have "top1_quotient_of_scheme_on X TX (u @ v)"
-    by (rule quotient_of_scheme_cancel[OF v_cancel.prems])
+    by (rule quotient_of_scheme_cancel_proved[OF v_cancel.prems])
   then show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_uncancel a u v)
   \<comment> \<open>Uncancel: §76(vii). Insert cancel pair. Reverse of cancel.\<close>
   have "top1_quotient_of_scheme_on X TX (u @ [a, top1_inverse_edge a] @ v)"
-    by (rule quotient_of_scheme_uncancel[OF v_uncancel.prems])
+    by (rule quotient_of_scheme_uncancel_proved[OF v_uncancel.prems])
   then show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_invert w)
