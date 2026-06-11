@@ -1287,7 +1287,89 @@ proof -
       \<comment> \<open>4. Finite intersection.\<close>
       fix F :: "(real \<times> real) set set" assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> TY"
       show "\<Inter>F \<in> TY"
-        sorry \<comment> \<open>Similar to union but with finite intersection. Needs bchoice + \\<Inter> open + saturated.\<close>
+      proof -
+        have hFfin: "finite F" and hFne: "F \<noteq> {}" and hFsub: "F \<subseteq> TY" using hF by auto
+        have "\<forall>u\<in>F. \<exists>V. V \<subseteq> P \<and> (\<forall>x\<in>V. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> V) \<and> u = q ` V \<and> V \<in> ?TP"
+          using hFsub unfolding TY_def by (by100 blast)
+        from bchoice[OF this]
+        obtain f where hf: "\<forall>u\<in>F. f u \<subseteq> P \<and> (\<forall>x\<in>f u. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> f u) \<and> u = q ` f u \<and> f u \<in> ?TP"
+          by (by100 auto)
+        define V where "V = \<Inter>(f ` F)"
+        have hV_sub: "V \<subseteq> P"
+        proof -
+          from hFne obtain u0 where hu0F: "u0 \<in> F" by (by100 blast)
+          have "f u0 \<subseteq> P" using hf hu0F by (by100 force)
+          moreover have "V \<subseteq> f u0" unfolding V_def using \<open>u0 \<in> F\<close> by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        have hV_sat: "\<forall>x\<in>V. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> V"
+        proof (intro ballI allI impI)
+          fix x y assume hx: "x \<in> V" and hy: "y \<in> P \<and> q y = q x"
+          show "y \<in> V" unfolding V_def
+          proof (rule InterI)
+            fix W assume "W \<in> f ` F"
+            then obtain u where hu: "u \<in> F" "W = f u" by (by100 blast)
+            have "x \<in> f u" using hx hu(1) unfolding V_def by (by100 blast)
+            hence "y \<in> f u" using hf hu(1) hy by (by100 blast)
+            thus "y \<in> W" using hu(2) by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>q`V = \\<Inter>F: uses saturation to distribute image over intersection.\<close>
+        have hV_image: "\<Inter>F = q ` V"
+        proof (rule set_eqI, rule iffI)
+          fix x assume hx: "x \<in> \<Inter>F"
+          \<comment> \<open>x \\<in> every u \\<in> F, so x = q(p\\_u) for some p\\_u \\<in> f u.
+             Pick any u0 \\<in> F. p\\_{u0} \\<in> f u0. For any other u \\<in> F:
+             x \\<in> u = q`(f u), so x = q(p\\_u) for some p\\_u \\<in> f u.
+             q(p\\_{u0}) = x = q(p\\_u). By saturation of f u: p\\_{u0} \\<in> f u.
+             So p\\_{u0} \\<in> \\<Inter>(f ` F) = V.\<close>
+          from hFne obtain u0 where hu0: "u0 \<in> F" by (by100 blast)
+          from hx hu0 have "x \<in> u0" by (by100 blast)
+          have "u0 = q ` f u0" using hf hu0 by (by100 blast)
+          hence "x \<in> q ` f u0" using \<open>x \<in> u0\<close> by (by100 simp)
+          from this obtain p0 where hp0: "p0 \<in> f u0" "x = q p0" by (by100 blast)
+          have "p0 \<in> V" unfolding V_def
+          proof (rule InterI)
+            fix W assume "W \<in> f ` F"
+            then obtain u where hu: "u \<in> F" "W = f u" by (by100 blast)
+            have "x \<in> u" using hx hu(1) by (by100 blast)
+            have "u = q ` f u" using hf hu(1) by (by100 blast)
+            hence "x \<in> q ` f u" using \<open>x \<in> u\<close> by (by100 simp)
+            then obtain pu where hpu: "pu \<in> f u" "x = q pu" by (by100 blast)
+            have "q p0 = q pu" using hp0(2) hpu(2) by (by100 simp)
+            have "f u0 \<subseteq> P" using hf hu0 by (by100 force)
+            hence "p0 \<in> P" using hp0(1) by (by100 blast)
+            \<comment> \<open>By saturation of f u: pu \\<in> f u, q(p0)=q(pu), p0 \\<in> P \\<Longrightarrow> p0 \\<in> f u.\<close>
+            have sat_u: "\<forall>x\<in>f u. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> f u"
+              using hf hu(1) by (by100 blast)
+            have "p0 \<in> f u" using sat_u hpu(1) \<open>p0 \<in> P\<close> \<open>q p0 = q pu\<close> by (by100 blast)
+            thus "p0 \<in> W" using hu(2) by (by100 simp)
+          qed
+          thus "x \<in> q ` V" using hp0(2) by (by100 blast)
+        next
+          fix x assume "x \<in> q ` V"
+          then obtain p where hp: "p \<in> V" "x = q p" by (by100 blast)
+          show "x \<in> \<Inter>F"
+          proof (rule InterI)
+            fix u assume hu: "u \<in> F"
+            have "p \<in> f u" using hp(1) hu unfolding V_def by (by100 blast)
+            hence "q p \<in> q ` f u" by (by100 blast)
+            hence "q p \<in> u" using hf hu by (by100 blast)
+            thus "x \<in> u" using hp(2) by (by100 simp)
+          qed
+        qed
+        have hV_open: "V \<in> ?TP"
+        proof -
+          have "f ` F \<subseteq> ?TP" using hf by (by100 blast)
+          moreover have "finite (f ` F)" using hFfin by (by100 simp)
+          moreover have "f ` F \<noteq> {}" using hFne by (by100 simp)
+          ultimately have "\<Inter>(f ` F) \<in> ?TP"
+            using htopo_P unfolding is_topology_on_def by (by100 blast)
+          thus ?thesis unfolding V_def .
+        qed
+        show ?thesis unfolding TY_def
+          using hV_sub hV_sat hV_image hV_open by (by100 blast)
+      qed
     qed
     moreover have "TY \<subseteq> Pow Y"
     proof
