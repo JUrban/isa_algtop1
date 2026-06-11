@@ -60,8 +60,22 @@ proof -
        - opposite direction: q(edge\\_i(t)) = q(edge\\_j(1-t))
      For interior points (not on any edge): q = id (no identification).\<close>
   \<comment> \<open>Define q via representatives: for each boundary point, pick canonical edge/param.\<close>
+  \<comment> \<open>Edge point helper: point on edge i at parameter t.\<close>
+  define edge_pt where "edge_pt i t = ((1-t)*vx i + t*vx(Suc i mod ?n),
+                                        (1-t)*vy i + t*vy(Suc i mod ?n))" for i t
+  \<comment> \<open>For each edge position i, find the partner position (same label, other occurrence).
+     For a proper scheme, each label appears 0 or 2 times.\<close>
+  define partner where "partner i = (SOME j. j < ?n \<and> j \<noteq> i \<and> fst(scheme!i) = fst(scheme!j))" for i
+  \<comment> \<open>Is edge i the canonical one (lower index) of its pair?\<close>
+  define is_canonical where "is_canonical i = (i \<le> partner i)" for i
+  \<comment> \<open>Quotient map: for points on non-canonical edges, map to canonical partner.
+     For interior points and canonical edge points: identity.\<close>
   define q :: "(real \<times> real) \<Rightarrow> (real \<times> real)" where
-    "q p = p" for p \<comment> \<open>Placeholder. Real q identifies boundary edges per scheme.\<close>
+    "q p = (if \<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i
+            then let (i,t) = (SOME (i,t). i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i)
+                 in let j = partner i
+                 in if snd(scheme!i) = snd(scheme!j) then edge_pt j t else edge_pt j (1-t)
+            else p)" for p
   \<comment> \<open>Y = image of P under q.\<close>
   define Y where "Y = q ` P"
   define TY where "TY = {U. \<exists>V. V \<subseteq> P \<and> (\<forall>x \<in> V. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> V) \<and> U = q ` V
