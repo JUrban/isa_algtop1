@@ -8163,6 +8163,46 @@ proof -
   ultimately show ?thesis by (by100 blast)
 qed
 
+\<comment> \<open>Valid version of bring\\_projective\\_pair\\_to\\_front.
+   Reuses the old proof's combinatorial facts, replays only the 2 operations validly.\<close>
+lemma valid_bring_projective_pair_to_front:
+  fixes w :: "(nat \<times> bool) list" and a :: nat
+  assumes hain: "(a, True) \<in> set w"
+      and hcard: "card {i. i < length w \<and> fst (w ! i) = a} = 2"
+      and hdir: "\<forall>i < length w. fst (w ! i) = a \<longrightarrow> snd (w ! i) = True"
+      and hne: "w \<noteq> []"
+      and hproper_w: "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+  shows "\<exists>rest. top1_valid_scheme_equiv w ([(a, True), (a, True)] @ rest)
+      \<and> length rest = length w - 2
+      \<and> (\<forall>e \<in> set rest. fst e \<noteq> a)
+      \<and> fst ` set rest \<subseteq> fst ` set w
+      \<and> (\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2})"
+proof -
+  \<comment> \<open>Get the same rest as the old proof.\<close>
+  from bring_projective_pair_to_front[OF assms]
+  obtain rest where hold: "top1_scheme_equiv w ([(a, True), (a, True)] @ rest)"
+      "length rest = length w - 2" "\<forall>e \<in> set rest. fst e \<noteq> a"
+      "fst ` set rest \<subseteq> fst ` set w"
+      "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}" by blast
+  \<comment> \<open>Replay the operation chain validly.
+     Old chain: rotate to first (a,T), then Lemma 77.1.\<close>
+  from hain obtain p' where hp': "p' < length w" "w ! p' = (a, True)"
+    by (simp add: in_set_conv_nth) (by100 blast)
+  \<comment> \<open>Rotate to first (a,True).\<close>
+  let ?w' = "drop p' w @ take p' w"
+  have hrot: "top1_valid_scheme_equiv w ?w'"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate[of "take p' w" "drop p' w"]]
+    by (by100 simp)
+  \<comment> \<open>?w' has (a,True) at position 0. It has exactly 2 occurrences of a, both True.
+     Decompose: ?w' = [(a,T)] @ y0 @ [(a,T)] @ y1 for some y0, y1.
+     Apply valid\\_Lemma\\_77\\_1 to get [(a,T),(a,T)] @ y0 @ inv(y1).\<close>
+  have "top1_valid_scheme_equiv ?w' ([(a, True), (a, True)] @ rest)"
+    sorry \<comment> \<open>Decomposition + valid\\_Lemma\\_77\\_1\\_projective\\_collection.\<close>
+  from valid_equiv_trans[OF hrot this]
+  have "top1_valid_scheme_equiv w ([(a, True), (a, True)] @ rest)" .
+  with hold(2-5) show ?thesis by (by100 blast)
+qed
+
 \<comment> \<open>Length-4 projective base case: scheme ~ projective m=1 or m=2.\<close>
 lemma projective_len4_base:
   fixes scheme :: "(nat \<times> bool) list"
