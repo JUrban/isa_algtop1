@@ -549,10 +549,11 @@ proof -
     \<comment> \<open>So cross = 2*sin(\\<pi>/n)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos(\\<pi>/n)].
        Need cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) < cos(\\<pi>/n) for the cross product to be < 0.\<close>
     \<comment> \<open>Assembly: cross = 2*sin((\\<beta>-\\<alpha>)/2)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos((\\<beta>-\\<alpha>)/2)].\<close>
-    have "(?\<beta> - ?\<alpha>)/2 = pi/real ?n"
-      sorry \<comment> \<open>(\\<beta>-\\<alpha>)/2 = (2\\<pi>/n)/2 = \\<pi>/n. Depends on i<n-1 vs i=n-1 case.\<close>
+    \<comment> \<open>hsin\\_half: sin((\\<beta>-\\<alpha>)/2) > 0. We don't need (\\<beta>-\\<alpha>)/2 = \\<pi>/n exactly;
+       just that sin of the half-angle is positive. From hba: sin(\\<beta>-\\<alpha>) = sin(2\\<pi>/n) > 0.
+       And the half-angle is in (0, \\<pi>) since the full angle is in (0, 2\\<pi>).\<close>
     have hsin_half: "sin ((?\<beta> - ?\<alpha>)/2) > 0"
-      sorry \<comment> \<open>sin(\\<pi>/n) > 0 since 0 < \\<pi>/n < \\<pi>.\<close>
+      sorry \<comment> \<open>sin((\\<beta>-\\<alpha>)/2) > 0. Half of an angle with positive sine in the right range.\<close>
     have hcos_lt: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) < cos ((?\<beta> - ?\<alpha>)/2)"
       sorry \<comment> \<open>The key cosine comparison. Uses k \\<noteq> i, k \\<noteq> Suc i mod n.\<close>
     show "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
