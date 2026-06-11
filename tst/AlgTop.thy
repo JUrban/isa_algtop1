@@ -1212,7 +1212,24 @@ proof -
   \<comment> \<open>Assembly: introduce witnesses P, q, vx, vy and combine all conditions.\<close>
   \<comment> \<open>Assemble: pack all conditions into the existential.\<close>
   have htopo: "is_topology_on_strict Y TY"
-    sorry \<comment> \<open>TY is a valid topology on Y.\<close>
+  proof -
+    let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+    \<comment> \<open>TY is the quotient topology: U \\<in> TY iff q\\<inverse>(U) \\<cap> P is open in P.\<close>
+    \<comment> \<open>Standard: quotient topology is a topology on the quotient set.\<close>
+    have htopo_P: "is_topology_on P ?TP"
+      sorry \<comment> \<open>Subspace topology on P is a topology.\<close>
+    have hY_eq: "Y = q ` P" unfolding Y_def by (by100 simp)
+    \<comment> \<open>is\\_topology\\_on Y TY: Y = \\<Union>TY, TY closed under \\<union> and finite \\<inter>.\<close>
+    have "is_topology_on Y TY"
+      sorry \<comment> \<open>Standard quotient topology is a topology.\<close>
+    moreover have "TY \<subseteq> Pow Y"
+    proof
+      fix U assume "U \<in> TY"
+      then obtain V where "V \<subseteq> P" "U = q ` V" unfolding TY_def by (by100 blast)
+      thus "U \<in> Pow Y" unfolding Y_def using \<open>V \<subseteq> P\<close> by (by100 auto)
+    qed
+    ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
+  qed
   show ?thesis
     sorry \<comment> \<open>Assembly: all conditions available. Needs matching with definition.\<close>
 qed
