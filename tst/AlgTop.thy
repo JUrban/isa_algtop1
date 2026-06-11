@@ -8951,10 +8951,44 @@ lemma valid_projective_len4_base:
       and hproj: "\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
           \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
   shows "(\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv scheme w)"
-  sorry \<comment> \<open>4-element projective: decompose into 2 labels, alpha-rename to standard form.
-     Needs valid version of the old 494-line proof (or simpler via alpha-rename).
-     Key difficulty: multiple relabel calls need freshness proofs.
-     Deferred until the normal form upgrade chain is fully connected.\<close>
+proof -
+  \<comment> \<open>Step 1: Flip projective label to True.\<close>
+  from hproj obtain a p q where hp: "p < length scheme" "q < length scheme" "p \<noteq> q"
+      "fst (scheme!p) = a" "fst (scheme!q) = a" "snd (scheme!p) = snd (scheme!q)"
+    by (by100 blast)
+  define scheme1 where "scheme1 = (if snd (scheme!p) then scheme
+      else map (\<lambda>(l, b). (l, if l = a then \<not> b else b)) scheme)"
+  have hequiv1: "top1_valid_scheme_equiv scheme scheme1"
+  proof (cases "snd (scheme ! p)")
+    case True thus ?thesis unfolding scheme1_def top1_valid_scheme_equiv_def by (by100 simp)
+  next
+    case False thus ?thesis unfolding scheme1_def
+      using valid_imp_equiv[OF top1_valid_scheme_operation.v_flip_label[of scheme a]]
+      by (by100 simp)
+  qed
+  \<comment> \<open>scheme1 conditions for valid\\_bring.\<close>
+  have hlen1: "length scheme1 = 4" unfolding scheme1_def using hlen by (by100 simp)
+  have h1_in: "(a, True) \<in> set scheme1" sorry
+  have h1_card: "card {i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = 2" sorry
+  have h1_dir: "\<forall>i < length scheme1. fst (scheme1 ! i) = a \<longrightarrow> snd (scheme1 ! i) = True" sorry
+  have h1_ne: "scheme1 \<noteq> []" using hlen1 by (by100 auto)
+  have h1_proper: "\<forall>label. card {i. i < length scheme1 \<and> fst (scheme1 ! i) = label} \<in> {0, 2}" sorry
+  \<comment> \<open>Step 2: Bring to front.\<close>
+  from valid_bring_projective_pair_to_front_full[OF h1_in h1_card h1_dir h1_ne h1_proper]
+  obtain rest where hrest: "top1_valid_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)"
+      "length rest = length scheme1 - 2" "\<forall>e \<in> set rest. fst e \<noteq> a"
+      "fst ` set rest \<subseteq> fst ` set scheme1"
+      "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}" by blast
+  have hrest_len: "length rest = 2" using hrest(2) hlen1 by (by100 simp)
+  \<comment> \<open>Step 3: rest has 2 elements. The result [(a,T),(a,T)] @ rest is projective m=1 or m=2.\<close>
+  \<comment> \<open>We use valid\\_proj\\_append\\_pair (defined later in file, but usable since scheme is nat).\<close>
+  have "top1_valid_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
+    using valid_equiv_trans[OF hequiv1 hrest(1)] .
+  \<comment> \<open>If rest is projective (same direction): [(a,T),(a,T),(b,d),(b,d)] \\<sim> proj\\_2.
+     If rest is torus (opposite direction): cancel gives [(a,T),(a,T)] \\<sim> proj\\_1.
+     Detailed case analysis deferred.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Key congruence: scheme equivalence on a suffix extends through a projective-pair prefix,
    provided the suffix labels don't include the pair's label.
