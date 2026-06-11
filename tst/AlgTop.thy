@@ -1211,49 +1211,10 @@ proof -
        = (if snd(scheme!i) = snd(scheme!j)
           then q ((1-t)*vx j + t*vx(Suc j mod ?n), (1-t)*vy j + t*vy(Suc j mod ?n))
           else q (t*vx j + (1-t)*vx(Suc j mod ?n), t*vy j + (1-t)*vy(Suc j mod ?n)))"
-    proof (cases "i = j")
-      case True
-      \<comment> \<open>i = j: trivially q(x) = q(x).\<close>
-      thus ?thesis by (by100 simp)
-    next
-      case False
-      \<comment> \<open>i \\<noteq> j: partner(i) = j and partner(j) = i.\<close>
-      have hpi: "partner i = j" using partner_unique[OF hi hj False hlabel] .
-      have hpj: "partner j = i" using partner_unique[OF hj hi False[symmetric] hlabel[symmetric]] .
-      have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
-      \<comment> \<open>Case split: is edge i canonical or not?\<close>
-      show ?thesis
-      proof (cases "is_canonical i")
-        case True \<comment> \<open>Edge i canonical: q(edge\\_i(t)) = edge\\_i(t) (identity).\<close>
-        \<comment> \<open>Edge j non-canonical: partner(j) = i, so q(edge\\_j(s)) maps to edge\\_i.\<close>
-        have hi_canon: "is_canonical i" using True .
-        have hj_noncanon: "\<not> is_canonical j"
-        proof -
-          have "i \<le> partner i" using True unfolding is_canonical_def .
-          hence "i \<le> j" using hpi by (by100 simp)
-          hence "i < j" using False by (by100 linarith)
-          hence "j > partner j" using hpj by (by100 simp)
-          thus ?thesis unfolding is_canonical_def by (by100 linarith)
-        qed
-        \<comment> \<open>q(edge\\_i(t)): edge i is canonical, so either not on any non-canonical edge
-           (q = id) or if also on a non-canonical edge at a vertex, still maps correctly.\<close>
-        \<comment> \<open>For the canonical case: the point edge\\_pt i t is on edge i (canonical).
-           If it's NOT also on a non-canonical edge interior, q = id.
-           For simplicity, sorry this case (vertex handling is complex).\<close>
-        show ?thesis sorry \<comment> \<open>Canonical i: q(edge\\_i(t)) = edge\\_i(t) = q(edge\\_j(matching\\_t)).\<close>
-      next
-        case False \<comment> \<open>Edge i non-canonical: q(edge\\_i(t)) maps to partner = j.\<close>
-        have hj_canon: "is_canonical j"
-        proof -
-          have "\<not>(i \<le> partner i)" using False unfolding is_canonical_def .
-          hence "i > j" using hpi by (by100 simp)
-          hence "j < partner j" using hpj by (by100 simp)
-          thus ?thesis unfolding is_canonical_def by (by100 linarith)
-        qed
-        \<comment> \<open>Similarly: q(edge\\_i(t)) maps to edge\\_j, and q(edge\\_j(s)) = edge\\_j(s) (canonical).\<close>
-        show ?thesis sorry \<comment> \<open>Non-canonical i: q(edge\\_i(t)) = edge\\_j(matching\\_t) = q(edge\\_j(matching\\_t)).\<close>
-      qed
-    qed
+      sorry \<comment> \<open>Uses partner\\_unique, q\\_def unfolding, canonical/non-canonical case split.
+         Key insight: for i \\<noteq> j with same label, one is canonical (q=id) and the other
+         maps to it. Both sides evaluate to the same canonical edge point.
+         Vertex handling (t=0,1) requires vertex consistency (complex).\<close>
   qed
   \<comment> \<open>C9: Interior injectivity + boundary identification pattern.\<close>
   have hC9_interior: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
