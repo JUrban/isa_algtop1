@@ -1145,7 +1145,41 @@ proof -
   have hC9_interior: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
               p \<noteq> ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n)))
            \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    sorry \<comment> \<open>Interior points map injectively (q = id on interior).\<close>
+  proof (intro ballI impI allI)
+    fix p p' assume hp: "p \<in> P" and hp': "p' \<in> P"
+      and hinterior: "\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))"
+      and hqeq: "q p = q p'"
+    \<comment> \<open>q(p) = p: p is not on any edge, so the \\<exists> in q\\_def is false.\<close>
+    have hqp: "q p = p"
+    proof -
+      have "\<not>(\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i)"
+      proof
+        assume "\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i"
+        then obtain i t where "i < ?n" "0 \<le> t" "t \<le> 1" "p = edge_pt i t" by (by100 blast)
+        have "t \<in> I_set" using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>
+          unfolding top1_unit_interval_def by (by100 simp)
+        have "p = ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))"
+          using \<open>p = edge_pt i t\<close> unfolding edge_pt_def by (by100 simp)
+        thus False using hinterior \<open>i < ?n\<close> \<open>t \<in> I_set\<close> by (by100 blast)
+      qed
+      thus ?thesis unfolding q_def by (by100 auto)
+    qed
+    \<comment> \<open>Now p = q(p) = q(p'). If p' is also not on any non-canonical edge, q(p') = p'.\<close>
+    show "p = p'"
+    proof (cases "\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p' = edge_pt i t \<and> \<not> is_canonical i")
+      case False
+      hence "q p' = p'" unfolding q_def by (by100 auto)
+      thus ?thesis using hqeq hqp by (by100 simp)
+    next
+      case True
+      \<comment> \<open>p' is on a non-canonical edge. q(p') is on a canonical edge.
+         But p = q(p') is interior (not on any edge). Contradiction.\<close>
+      \<comment> \<open>Need: partner(i) < n, q(p') = edge\\_pt(partner i, ...).
+         Then q(p') is on edge partner(i), contradicting p = q(p') being interior.\<close>
+      show ?thesis sorry \<comment> \<open>Needs partner infrastructure. q(p') on canonical edge \\<noteq> interior p.\<close>
+    qed
+  qed
   have hC9_boundary: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
           q ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))
         = q ((1-s)*vx j + s*vx(Suc j mod ?n), (1-s)*vy j + s*vy(Suc j mod ?n))
