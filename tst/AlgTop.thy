@@ -577,8 +577,26 @@ proof -
       \<comment> \<open>Step 2: Apply cos A - cos B = -2*sin((A+B)/2)*sin((A-B)/2).\<close>
       have cos_diff_eq: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2)
           = - 2 * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2)"
-        sorry \<comment> \<open>cos\\_diff\\_cos + sin\\_minus. All steps verified mathematically;
-           by100 times out on trig expression simplification.\<close>
+      proof -
+        define A where "A = (?\<beta> + ?\<alpha> - 2*?\<gamma>)/(2::real)"
+        define B where "B = (?\<beta> - ?\<alpha>)/(2::real)"
+        \<comment> \<open>cos A - cos B = 2*sin((A+B)/2)*sin((B-A)/2).\<close>
+        have step: "cos A - cos B = 2 * sin ((A+B)/2) * sin ((B-A)/2)"
+          unfolding A_def B_def by (rule cos_diff_cos)
+        have eq1: "(A+B)/2 = (?\<beta> - ?\<gamma>)/2" unfolding A_def B_def by (by100 algebra)
+        have eq2: "(B-A)/2 = (?\<gamma> - ?\<alpha>)/2" unfolding A_def B_def by (by100 algebra)
+        have mid: "cos A - cos B = 2 * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<gamma> - ?\<alpha>)/2)"
+          using step by (subst (asm) eq1, subst (asm) eq2) (by100 assumption)
+        \<comment> \<open>sin((\\<gamma>-\\<alpha>)/2) = -sin((\\<alpha>-\\<gamma>)/2).\<close>
+        have neg: "(?\<gamma> - ?\<alpha>)/2 = -((?\<alpha> - ?\<gamma>)/2)" by (by100 algebra)
+        have "sin ((?\<gamma> - ?\<alpha>)/2) = - sin ((?\<alpha> - ?\<gamma>)/2)"
+          by (subst neg, rule sin_minus)
+        hence hsneg: "sin ((?\<gamma> - ?\<alpha>)/2) = - sin ((?\<alpha> - ?\<gamma>)/2)" .
+        have "2 * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<gamma> - ?\<alpha>)/2)
+            = - (2 * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2))"
+          by (subst hsneg, simp only: mult_minus_right)
+        with mid show ?thesis unfolding A_def B_def by (by100 linarith)
+      qed
       \<comment> \<open>Step 3: cross = -4*sin((\\<beta>-\\<alpha>)/2)*sin((\\<beta>-\\<gamma>)/2)*sin((\\<alpha>-\\<gamma>)/2).\<close>
       have cross_product: "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)
         = - 4 * sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2)"
