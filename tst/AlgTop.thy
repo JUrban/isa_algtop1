@@ -9007,7 +9007,120 @@ next
      Uses valid\\_Lemma\\_77\\_4 after relabeling block to fresh labels.\<close>
   have s2: "top1_valid_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block)
       (top1_m_projective_scheme (2*(Suc n)+1))"
-    sorry
+  proof -
+    \<comment> \<open>Fresh labels for the block (disjoint from all existing labels).\<close>
+    have hfin: "finite (fst ` set (top1_m_projective_scheme (2*n+1)) \<union> {2*n, 2*n+1} :: nat set)"
+      by (by100 simp)
+    from ex_new_if_finite[OF infinite_UNIV_nat hfin]
+    obtain f1 :: nat where hf1: "f1 \<notin> fst ` set (top1_m_projective_scheme (2*n+1)) \<union> {2*n, 2*n+1}"
+      by (by100 blast)
+    have hfin2: "finite (fst ` set (top1_m_projective_scheme (2*n+1)) \<union> {2*n, 2*n+1, f1} :: nat set)"
+      by (by100 simp)
+    from ex_new_if_finite[OF infinite_UNIV_nat hfin2]
+    obtain f2 :: nat where hf2: "f2 \<notin> fst ` set (top1_m_projective_scheme (2*n+1)) \<union> {2*n, 2*n+1, f1}"
+      by (by100 blast)
+    \<comment> \<open>Step A: relabel 2n \\<to> f1 in block via v\\_context\\_left.\<close>
+    have "f1 \<notin> fst ` set ?block" using hf1 by (by100 simp)
+    moreover have "f1 \<noteq> 2*n" using hf1 by (by100 blast)
+    ultimately have "top1_valid_scheme_operation ?block
+        (map (\<lambda>(l,b). (if l = 2*n then f1 else l, b)) ?block)"
+      by (rule top1_valid_scheme_operation.v_relabel)
+    have hf1_fresh_block: "f1 \<notin> fst ` set ?block"
+      using hf1 by (by100 auto)
+    have hf1_ne: "f1 \<noteq> 2*n" using hf1 by (by100 blast)
+    have "top1_valid_scheme_operation ?block (map (\<lambda>(l,b). (if l = 2*n then f1 else l, b)) ?block)"
+      by (rule top1_valid_scheme_operation.v_relabel[OF hf1_fresh_block hf1_ne])
+    moreover have "map (\<lambda>(l,b). (if l = 2*n then f1 else l, b)) ?block
+        = [(f1,True),(2*n+1,True),(f1,False),(2*n+1,False)]" by (by100 simp)
+    ultimately have "top1_valid_scheme_operation ?block [(f1,True),(2*n+1,True),(f1,False),(2*n+1,False)]"
+      by (by100 simp)
+    from top1_valid_scheme_operation.v_context_left[OF this, of "top1_m_projective_scheme (2*n+1)"]
+    have rA: "top1_valid_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block)
+        (top1_m_projective_scheme (2*n+1) @ [(f1,True),(2*n+1,True),(f1,False),(2*n+1,False)])"
+      by (rule valid_imp_equiv)
+    \<comment> \<open>Step B: relabel 2n+1 \\<to> f2 in new block via v\\_context\\_left.\<close>
+    let ?blk1 = "[(f1,True),(2*n+1,True),(f1,False),(2*n+1,False)]"
+    have "f2 \<notin> fst ` set ?blk1" using hf2 by (by100 simp)
+    moreover have "f2 \<noteq> 2*n+1" using hf2 by (by100 blast)
+    ultimately have "top1_valid_scheme_operation ?blk1 (map (\<lambda>(l,b). (if l = 2*n+1 then f2 else l, b)) ?blk1)"
+      by (rule top1_valid_scheme_operation.v_relabel)
+    moreover have "f1 \<noteq> 2*n+1" using hf1 by (by100 blast)
+    hence "map (\<lambda>(l,b). (if l = 2*n+1 then f2 else l, b)) ?blk1
+        = [(f1,True),(f2,True),(f1,False),(f2,False)]" by (by100 simp)
+    ultimately have "top1_valid_scheme_operation ?blk1 [(f1,True),(f2,True),(f1,False),(f2,False)]"
+      by (by100 simp)
+    from top1_valid_scheme_operation.v_context_left[OF this, of "top1_m_projective_scheme (2*n+1)"]
+    have rB: "top1_valid_scheme_equiv
+        (top1_m_projective_scheme (2*n+1) @ [(f1,True),(2*n+1,True),(f1,False),(2*n+1,False)])
+        (top1_m_projective_scheme (2*n+1) @ [(f1,True),(f2,True),(f1,False),(f2,False)])"
+      by (rule valid_imp_equiv)
+    \<comment> \<open>Step C: Decompose proj\\_(2n+1) = proj\\_(2n) @ [(2n,T),(2n,T)].
+       Apply valid\\_Lemma\\_77\\_4 with c=2n, a=f1, b=f2.\<close>
+    have hdecomp: "top1_m_projective_scheme (2*n+1) = top1_m_projective_scheme (2*n) @ [(2*n,True),(2*n,True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    have rC: "top1_valid_scheme_equiv
+        (top1_m_projective_scheme (2*n) @ [(2*n,True),(2*n,True),(f1,True),(f2,True),(f1,False),(f2,False)])
+        (top1_m_projective_scheme (2*n) @ [(f1,True),(f1,True),(f2,True),(f2,True),(2*n,True),(2*n,True)])"
+    proof -
+      have "f1 \<noteq> f2" using hf2 by (by100 blast)
+      moreover have "f1 \<noteq> 2*n" using hf1 by (by100 blast)
+      moreover have "f2 \<noteq> 2*n" using hf2 by (by100 blast)
+      moreover have "\<forall>e \<in> set (top1_m_projective_scheme (2*n)) \<union> set ([] :: (nat \<times> bool) list).
+          fst e \<noteq> f1 \<and> fst e \<noteq> f2 \<and> fst e \<noteq> (2*n)"
+      proof (intro ballI conjI)
+        fix e assume "e \<in> set (top1_m_projective_scheme (2*n)) \<union> set ([] :: (nat \<times> bool) list)"
+        hence "e \<in> set (top1_m_projective_scheme (2*n))" by (by100 simp)
+        hence "fst e \<in> fst ` set (top1_m_projective_scheme (2*n))" by (by100 blast)
+        hence "fst e \<in> fst ` set (top1_m_projective_scheme (2*n+1))"
+          unfolding top1_m_projective_scheme_def by (by100 auto)
+        thus "fst e \<noteq> f1" using hf1 by (by100 blast)
+        thus "fst e \<noteq> f2" using hf2 \<open>fst e \<in> fst ` set (top1_m_projective_scheme (2*n+1))\<close>
+          by (by100 blast)
+        have "fst e < 2*n" using \<open>e \<in> set (top1_m_projective_scheme (2*n))\<close>
+          unfolding top1_m_projective_scheme_def by (by100 auto)
+        thus "fst e \<noteq> 2*n" by (by100 simp)
+      qed
+      moreover have "infinite (UNIV :: nat set)" by (by100 simp)
+      ultimately show ?thesis
+        using valid_Lemma_77_4_projective_absorbs_torus
+          [of f1 f2 "2*n" "top1_m_projective_scheme (2*n)" "[]"]
+        by (by100 simp)
+    qed
+    \<comment> \<open>Step D: Relabel f1 \\<to> 2n+1, f2 \\<to> 2n+2 to get standard projective labels.\<close>
+    \<comment> \<open>Step D: Three successive valid\\_proj\\_append\\_pair to absorb pairs.\<close>
+    have rD1: "top1_valid_scheme_equiv
+        (top1_m_projective_scheme (2*n) @ [(f1,True),(f1,True)])
+        (top1_m_projective_scheme (Suc(2*n)))"
+      by (rule valid_proj_append_pair)
+    have rD2: "top1_valid_scheme_equiv
+        (top1_m_projective_scheme (Suc(2*n)) @ [(f2,True),(f2,True)])
+        (top1_m_projective_scheme (Suc(Suc(2*n))))"
+      by (rule valid_proj_append_pair)
+    have rD3: "top1_valid_scheme_equiv
+        (top1_m_projective_scheme (Suc(Suc(2*n))) @ [(2*n,True),(2*n,True)])
+        (top1_m_projective_scheme (Suc(Suc(Suc(2*n)))))"
+      by (rule valid_proj_append_pair)
+    have rD: "top1_valid_scheme_equiv
+        (top1_m_projective_scheme (2*n) @ [(f1,True),(f1,True),(f2,True),(f2,True),(2*n,True),(2*n,True)])
+        (top1_m_projective_scheme (Suc(Suc(Suc(2*n)))))"
+      sorry \<comment> \<open>Three applications of valid\\_proj\\_append\\_pair via suffix congruence.\<close>
+    \<comment> \<open>Assemble: proj\\_(2n) @ [(2n,T)²,(2n+1,T)²,(2n+2,T)²] = proj\\_(2n+3) = proj\\_(2*(Suc n)+1).\<close>
+    have hfinal: "Suc(Suc(Suc(2*n))) = 2*(Suc n)+1" by (by100 simp)
+    from rA rB have "top1_valid_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block)
+        (top1_m_projective_scheme (2*n+1) @ [(f1,True),(f2,True),(f1,False),(f2,False)])"
+      using valid_equiv_trans by (by100 blast)
+    moreover have "top1_m_projective_scheme (2*n+1) @ [(f1,True),(f2,True),(f1,False),(f2,False)]
+        = top1_m_projective_scheme (2*n) @ [(2*n,True),(2*n,True),(f1,True),(f2,True),(f1,False),(f2,False)]"
+      using hdecomp by (by100 simp)
+    ultimately have "top1_valid_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block)
+        (top1_m_projective_scheme (2*n) @ [(2*n,True),(2*n,True),(f1,True),(f2,True),(f1,False),(f2,False)])"
+      by (by100 simp)
+    from valid_equiv_trans[OF this rC] valid_equiv_trans rD
+    have "top1_valid_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block)
+        (top1_m_projective_scheme (Suc(Suc(Suc(2*n)))))"
+      by (by100 blast)
+    thus ?thesis unfolding hfinal .
+  qed
   from valid_equiv_trans[OF s1' s2]
   show ?case .
 qed
