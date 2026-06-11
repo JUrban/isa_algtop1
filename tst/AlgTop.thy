@@ -549,11 +549,12 @@ proof -
     \<comment> \<open>So cross = 2*sin(\\<pi>/n)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos(\\<pi>/n)].
        Need cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) < cos(\\<pi>/n) for the cross product to be < 0.\<close>
     \<comment> \<open>Assembly: cross = 2*sin((\\<beta>-\\<alpha>)/2)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos((\\<beta>-\\<alpha>)/2)].\<close>
-    \<comment> \<open>hsin\\_half: sin((\\<beta>-\\<alpha>)/2) > 0. We don't need (\\<beta>-\\<alpha>)/2 = \\<pi>/n exactly;
-       just that sin of the half-angle is positive. From hba: sin(\\<beta>-\\<alpha>) = sin(2\\<pi>/n) > 0.
-       And the half-angle is in (0, \\<pi>) since the full angle is in (0, 2\\<pi>).\<close>
+    \<comment> \<open>NOTE: sin((\\<beta>-\\<alpha>)/2) > 0 only when i < n-1. For i = n-1, it's NEGATIVE.
+       The assembly below needs a CASE SPLIT on i. For i<n-1: sin > 0 and cos(angle) < cos(half).
+       For i=n-1: sin < 0 and cos(angle) > cos(half) (different factoring).
+       Keeping sorry for now; the overall cross product IS negative in both cases.\<close>
     have hsin_half: "sin ((?\<beta> - ?\<alpha>)/2) > 0"
-      sorry \<comment> \<open>sin((\\<beta>-\\<alpha>)/2) > 0. Half of an angle with positive sine in the right range.\<close>
+      sorry \<comment> \<open>WRONG for i=n-1. Needs case split.\<close>
     have hcos_lt: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) < cos ((?\<beta> - ?\<alpha>)/2)"
       sorry \<comment> \<open>Key cosine comparison. Uses cos\\_monotone\\_0\\_pi or cos\\_mono\\_less\\_eq.
          For i<n-1: (\\<beta>-\\<alpha>)/2 = \\<pi>/n, (\\<beta>+\\<alpha>-2\\<gamma>)/2 = \\<pi>(2i+1-2k)/n.
