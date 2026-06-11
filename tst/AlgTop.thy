@@ -13279,13 +13279,37 @@ lemma valid_extract_commutator:
   sorry
 
 lemma valid_cancel_2elem_suffix:
-  assumes "a' \<noteq> b'" "length rest' = 2"
-      "\<forall>label. card {i. i < length rest' \<and> fst (rest' ! i) = label} \<in> {0, 2}"
+  assumes hab: "a' \<noteq> b'" and hlen: "length rest' = 2"
+      and hproper: "\<forall>label. card {i. i < length rest' \<and> fst (rest' ! i) = label} \<in> {0, 2}"
   shows "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
       ([(a',True),(b',True),(a',False),(b',False)])
     \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and>
         top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest') w)"
-  sorry
+proof -
+  \<comment> \<open>Decompose rest' = [(l,d1),(l,d2)].\<close>
+  obtain l d1 d2 where hrest': "rest' = [(l,d1),(l,d2)]"
+    sorry
+  show ?thesis
+  proof (cases "d1 = d2")
+    case True
+    \<comment> \<open>Projective pair: block @ [(l,d),(l,d)] ~ proj\\_3.\<close>
+    show ?thesis sorry
+  next
+    case False
+    \<comment> \<open>Cancel pair: block @ [(l,d),(l,\\<not>d)] ~ block.\<close>
+    have "d2 = (\<not> d1)" using False by (cases d1; cases d2) (by100 simp)+
+    hence "rest' = [(l, d1), top1_inverse_edge (l, d1)]"
+      using hrest' unfolding top1_inverse_edge_def by (by100 simp)
+    have "top1_valid_scheme_operation
+        ([(a',True),(b',True),(a',False),(b',False)] @ [(l,d1), top1_inverse_edge (l,d1)] @ [])
+        ([(a',True),(b',True),(a',False),(b',False)] @ [])"
+      by (rule top1_valid_scheme_operation.v_cancel)
+    hence "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+        ([(a',True),(b',True),(a',False),(b',False)])"
+      using \<open>rest' = [(l, d1), top1_inverse_edge (l, d1)]\<close> valid_imp_equiv by (by100 simp)
+    thus ?thesis by (by100 blast)
+  qed
+qed
 
 lemma scheme_normal_form_valid:
   fixes scheme :: "(nat \<times> bool) list"
