@@ -966,8 +966,155 @@ proof -
             (1 - s) * vy i + s * vy (Suc i mod ?n))
          \<noteq> ((1 - t) * vx j + t * vx (Suc j mod ?n),
              (1 - t) * vy j + t * vy (Suc j mod ?n)))"
-    sorry \<comment> \<open>Follows from C11. Edge interior point = convex combo of adjacent vertices.
-       If two non-adjacent edges intersect, some vertex would be on wrong side of an edge.\<close>
+  proof (intro allI impI ballI)
+    fix i j s t
+    assume hi: "i < ?n" and hj: "j < ?n" and hij: "i \<noteq> j"
+       and hij1: "(Suc i mod ?n) \<noteq> j" and hji1: "i \<noteq> (Suc j mod ?n)"
+       and hs: "s \<in> open01" and ht: "t \<in> open01"
+    have hs01: "0 < s" "s < 1" using hs unfolding open01_def by (by100 auto)+
+    have ht01: "0 < t" "t < 1" using ht unfolding open01_def by (by100 auto)+
+    \<comment> \<open>Proof by contradiction: assume edges i and j have a common interior point p.\<close>
+    show "((1 - s) * vx i + s * vx (Suc i mod ?n),
+            (1 - s) * vy i + s * vy (Suc i mod ?n))
+         \<noteq> ((1 - t) * vx j + t * vx (Suc j mod ?n),
+             (1 - t) * vy j + t * vy (Suc j mod ?n))"
+    proof
+      assume heq: "((1 - s) * vx i + s * vx (Suc i mod ?n),
+            (1 - s) * vy i + s * vy (Suc i mod ?n))
+         = ((1 - t) * vx j + t * vx (Suc j mod ?n),
+             (1 - t) * vy j + t * vy (Suc j mod ?n))"
+      \<comment> \<open>Let p = the common point. p is on edge i (param s) and edge j (param t).\<close>
+      \<comment> \<open>Cross product of (p - v\\_i) with (v\\_{i+1} - v\\_i):
+         From edge i: p - v\\_i = s*(v\\_{i+1} - v\\_i), so cross = 0.
+         From edge j: cross = (1-t)*C11(j) + t*C11(j+1) < 0. Contradiction.\<close>
+      \<comment> \<open>Step 1: C11 gives cross(j,i) < 0 and cross(j+1,i) < 0.\<close>
+      have hj_ne_i: "j \<noteq> i" using hij by (by100 simp)
+      have hj_ne_i1: "j \<noteq> Suc i mod ?n" using hij1 by (by100 simp)
+      have hj1_ne_i: "Suc j mod ?n \<noteq> i" using hji1 by (by100 simp)
+      have hj1_ne_i1: "Suc j mod ?n \<noteq> Suc i mod ?n"
+      proof
+        assume "Suc j mod ?n = Suc i mod ?n"
+        hence "Suc j mod ?n = Suc i mod ?n" .
+        \<comment> \<open>Since j < n and i < n: Suc j < 2n and Suc i < 2n.
+           Suc j mod n = Suc i mod n implies either Suc j = Suc i or |Suc j - Suc i| = n.\<close>
+        have "j < ?n" "i < ?n" using hi hj by auto
+        hence "Suc j \<le> ?n" "Suc i \<le> ?n" by auto
+        \<comment> \<open>If Suc j \\<le> n and Suc i \\<le> n, and mod n equal: Suc j = Suc i (only possible).\<close>
+        have "j = i"
+        proof (cases "Suc j < ?n")
+          case True hence "Suc j mod ?n = Suc j" by (by100 simp)
+          show ?thesis
+          proof (cases "Suc i < ?n")
+            case True2: True hence "Suc i mod ?n = Suc i" by (by100 simp)
+            from \<open>Suc j mod ?n = Suc i mod ?n\<close> True \<open>Suc j mod ?n = Suc j\<close> True2 \<open>Suc i mod ?n = Suc i\<close>
+            show ?thesis by (by100 simp)
+          next
+            case False hence "Suc i = ?n" using \<open>Suc i \<le> ?n\<close> by (by100 linarith)
+            hence "Suc i mod ?n = 0" by (by100 simp)
+            from \<open>Suc j mod ?n = Suc i mod ?n\<close> \<open>Suc j mod ?n = Suc j\<close> this
+            have "Suc j = 0" by (by100 simp)
+            thus ?thesis by (by100 simp)
+          qed
+        next
+          case False hence "Suc j = ?n" using \<open>Suc j \<le> ?n\<close> by (by100 linarith)
+          hence "Suc j mod ?n = 0" by (by100 simp)
+          show ?thesis
+          proof (cases "Suc i < ?n")
+            case True hence "Suc i mod ?n = Suc i" by (by100 simp)
+            from \<open>Suc j mod ?n = Suc i mod ?n\<close> \<open>Suc j mod ?n = 0\<close> this
+            have "Suc i = 0" by (by100 simp)
+            thus ?thesis by (by100 simp)
+          next
+            case False hence "Suc i = ?n" using \<open>Suc i \<le> ?n\<close> by (by100 linarith)
+            from \<open>Suc j = ?n\<close> this show ?thesis by (by100 simp)
+          qed
+        qed
+        thus False using hij by (by100 simp)
+      qed
+      have hn_gt0: "?n > 0" using assms by (by100 linarith)
+      have hj1_lt: "Suc j mod ?n < ?n" using hn_gt0 by (by100 simp)
+      \<comment> \<open>Apply C11 to vertices j and Suc j mod n.\<close>
+      have hcross_j: "(vx j - vx i)*(vy(Suc i mod ?n) - vy i) - (vy j - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
+        using hC11 hi hj hj_ne_i hj_ne_i1 by (by100 blast)
+      have hcross_j1: "(vx(Suc j mod ?n) - vx i)*(vy(Suc i mod ?n) - vy i) - (vy(Suc j mod ?n) - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
+        using hC11 hi hj1_lt hj1_ne_i hj1_ne_i1 by (by100 blast)
+      \<comment> \<open>Step 2: cross((1-t)*v\\_j + t*v\\_{j+1} - v\\_i, v\\_{i+1} - v\\_i) < 0.\<close>
+      define dx where "dx = vx(Suc i mod ?n) - vx i"
+      define dy where "dy = vy(Suc i mod ?n) - vy i"
+      have cross_j_eq: "(vx j - vx i)*dy - (vy j - vy i)*dx < 0"
+        using hcross_j unfolding dx_def dy_def .
+      have cross_j1_eq: "(vx(Suc j mod ?n) - vx i)*dy - (vy(Suc j mod ?n) - vy i)*dx < 0"
+        using hcross_j1 unfolding dx_def dy_def .
+      \<comment> \<open>The point from edge j: (1-t)*v\\_j + t*v\\_{j+1}. Its cross product with edge i direction:\<close>
+      have cross_p_from_j:
+        "((1-t)*(vx j - vx i) + t*(vx(Suc j mod ?n) - vx i))*dy
+       - ((1-t)*(vy j - vy i) + t*(vy(Suc j mod ?n) - vy i))*dx < 0"
+      proof -
+        \<comment> \<open>Expand: ((1-t)*a + t*b)*dy - ((1-t)*c + t*d)*dx
+           = (1-t)*(a*dy - c*dx) + t*(b*dy - d*dx).\<close>
+        have expand: "((1-t)*(vx j - vx i) + t*(vx(Suc j mod ?n) - vx i))*dy
+           - ((1-t)*(vy j - vy i) + t*(vy(Suc j mod ?n) - vy i))*dx
+           = (1-t)*((vx j - vx i)*dy - (vy j - vy i)*dx)
+           + t*((vx(Suc j mod ?n) - vx i)*dy - (vy(Suc j mod ?n) - vy i)*dx)"
+          by (by100 algebra)
+        have "(1-t) > 0" using ht01 by (by100 linarith)
+        moreover have "t > 0" using ht01 by (by100 linarith)
+        moreover have "(vx j - vx i)*dy - (vy j - vy i)*dx < 0" using cross_j_eq .
+        moreover have "(vx(Suc j mod ?n) - vx i)*dy - (vy(Suc j mod ?n) - vy i)*dx < 0" using cross_j1_eq .
+        ultimately have h_neg1: "(1-t)*((vx j - vx i)*dy - (vy j - vy i)*dx) < 0"
+          and h_neg2: "t*((vx(Suc j mod ?n) - vx i)*dy - (vy(Suc j mod ?n) - vy i)*dx) < 0"
+          using mult_pos_neg[of "1-t" "(vx j - vx i)*dy - (vy j - vy i)*dx"]
+                mult_pos_neg[of t "(vx(Suc j mod ?n) - vx i)*dy - (vy(Suc j mod ?n) - vy i)*dx"]
+          by (by100 linarith)+
+        thus ?thesis using expand by (by100 linarith)
+      qed
+      \<comment> \<open>Step 3: The same point is on edge i: p - v\\_i = s*(v\\_{i+1} - v\\_i).\<close>
+      \<comment> \<open>From heq: (1-s)*vx i + s*vx(i+1) = (1-t)*vx j + t*vx(j+1).
+         So: (1-t)*(vx j - vx i) + t*(vx(j+1) - vx i) = s*(vx(i+1) - vx i) = s*dx.
+         Similarly for vy.\<close>
+      have heqx: "(1-s)*vx i + s*vx(Suc i mod ?n) = (1-t)*vx j + t*vx(Suc j mod ?n)"
+      proof -
+        from heq have "fst ((1-s)*vx i + s*vx(Suc i mod ?n), (1-s)*vy i + s*vy(Suc i mod ?n))
+            = fst ((1-t)*vx j + t*vx(Suc j mod ?n), (1-t)*vy j + t*vy(Suc j mod ?n))"
+          by (by100 simp)
+        thus ?thesis by (by100 simp)
+      qed
+      have heqy: "(1-s)*vy i + s*vy(Suc i mod ?n) = (1-t)*vy j + t*vy(Suc j mod ?n)"
+      proof -
+        from heq have "snd ((1-s)*vx i + s*vx(Suc i mod ?n), (1-s)*vy i + s*vy(Suc i mod ?n))
+            = snd ((1-t)*vx j + t*vx(Suc j mod ?n), (1-t)*vy j + t*vy(Suc j mod ?n))"
+          by (by100 simp)
+        thus ?thesis by (by100 simp)
+      qed
+      have px_eq: "(1-t)*(vx j - vx i) + t*(vx(Suc j mod ?n) - vx i) = s * dx"
+      proof -
+        have "(1-t)*(vx j - vx i) + t*(vx(Suc j mod ?n) - vx i)
+            = (1-t)*vx j + t*vx(Suc j mod ?n) - vx i" by (by100 algebra)
+        also have "\<dots> = (1-s)*vx i + s*vx(Suc i mod ?n) - vx i" using heqx by (by100 linarith)
+        also have "\<dots> = s*(vx(Suc i mod ?n) - vx i)" by (by100 algebra)
+        finally show ?thesis unfolding dx_def by (by100 simp)
+      qed
+      have py_eq: "(1-t)*(vy j - vy i) + t*(vy(Suc j mod ?n) - vy i) = s * dy"
+      proof -
+        have "(1-t)*(vy j - vy i) + t*(vy(Suc j mod ?n) - vy i)
+            = (1-t)*vy j + t*vy(Suc j mod ?n) - vy i" by (by100 algebra)
+        also have "\<dots> = (1-s)*vy i + s*vy(Suc i mod ?n) - vy i" using heqy by (by100 linarith)
+        also have "\<dots> = s*(vy(Suc i mod ?n) - vy i)" by (by100 algebra)
+        finally show ?thesis unfolding dy_def by (by100 simp)
+      qed
+      \<comment> \<open>Substituting: s*dx*dy - s*dy*dx = 0. But from cross\\_p: should be < 0.\<close>
+      \<comment> \<open>From px\\_eq and py\\_eq: the cross\\_p expression equals s*dx*dy - s*dy*dx = 0.\<close>
+      have "((1-t)*(vx j - vx i) + t*(vx(Suc j mod ?n) - vx i))*dy
+         - ((1-t)*(vy j - vy i) + t*(vy(Suc j mod ?n) - vy i))*dx
+         = s*dx*dy - s*dy*dx"
+        using px_eq py_eq by (by100 algebra)
+      also have "\<dots> = 0" by (by100 algebra)
+      finally have "((1-t)*(vx j - vx i) + t*(vx(Suc j mod ?n) - vx i))*dy
+         - ((1-t)*(vy j - vy i) + t*(vy(Suc j mod ?n) - vy i))*dx = 0" .
+      \<comment> \<open>But cross\\_p\\_from\\_j says this is < 0. Contradiction.\<close>
+      thus False using cross_p_from_j by (by100 linarith)
+    qed
+  qed
   show ?thesis sorry \<comment> \<open>Remaining: C2 (quotient map), C8 (identification), C9 (injectivity).
      These require the proper definition of q (not identity).\<close>
 qed
