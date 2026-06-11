@@ -201,11 +201,18 @@ lemma front_uncancel_realization_homeo:
 
 \<comment> \<open>Cancel same-space: REMOVED (dead code). Replaced by front\\_cancel\\_realization\\_homeo.\<close>
 
-\<comment> \<open>Uncancel at front: insert cancel pair at front.\<close>
+\<comment> \<open>Uncancel at front: insert cancel pair at front.
+   Given quotient of w (n-gon P, quotient map q, vertices vx/vy),
+   construct (n+2)-gon P' with spur at vertex 0 that gives quotient of [a,inv a]@w.
+   The spur edges (0 and 1) are identified, collapsing back to Y.
+   Strategy: add two spur vertices near v0 (between v0 and centroid),
+   extend q to the spur by mapping both spur edges to the point q(v0).
+   The 11 conditions transfer: edges 0,1 are the cancel pair (same image);
+   edges i+2 match original edges i.\<close>
 lemma quotient_of_scheme_uncancel_front:
   assumes "top1_quotient_of_scheme_on Y TY w"
   shows "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
-  sorry \<comment> \<open>Geometric: unfold front position. Reverse of cancel\\_front.\<close>
+  sorry \<comment> \<open>Geometric spur construction. See strategy above.\<close>
 
 \<comment> \<open>Uncancel (proved via reduction to front-uncancel + rotation).\<close>
 lemma quotient_of_scheme_uncancel_proved:
