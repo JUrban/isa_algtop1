@@ -154,9 +154,144 @@ proof -
   have hextreme: "\<forall>k<?n. \<not> (\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
             \<and> (\<Sum>i<?n. coeffs i) = 1
             \<and> vx k = (\<Sum>i<?n. coeffs i * vx i) \<and> vy k = (\<Sum>i<?n. coeffs i * vy i))"
-    sorry \<comment> \<open>Regular polygon vertices are extreme points of their convex hull.
-       Proof: each vertex is the unique point maximizing the dot product with
-       its radial direction (cos(2\\<pi>k/n), sin(2\\<pi>k/n)). Standard convex geometry.\<close>
+  proof (intro allI impI notI)
+    fix k assume hk: "k < ?n"
+    assume "\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
+            \<and> (\<Sum>i<?n. coeffs i) = 1
+            \<and> vx k = (\<Sum>i<?n. coeffs i * vx i) \<and> vy k = (\<Sum>i<?n. coeffs i * vy i)"
+    then obtain coeffs where
+        hcoeff_pos: "\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0"
+      and hk0: "coeffs k = 0"
+      and hsum1: "(\<Sum>i<?n. coeffs i) = 1"
+      and hvx: "vx k = (\<Sum>i<?n. coeffs i * vx i)"
+      and hvy: "vy k = (\<Sum>i<?n. coeffs i * vy i)" by (by100 blast)
+    \<comment> \<open>Dot product with radial direction of vertex k:
+       d(k) = vx(k)*vx(k) + vy(k)*vy(k) = cos^2 + sin^2 = 1.
+       For any other vertex i \\<noteq> k:
+       d(i) = vx(k)*vx(i) + vy(k)*vy(i) = cos(2\\<pi>k/n)*cos(2\\<pi>i/n) + sin(2\\<pi>k/n)*sin(2\\<pi>i/n)
+            = cos(2\\<pi>(k-i)/n) < 1 (since k \\<noteq> i mod n gives nonzero angle).\<close>
+    define dot where "dot i = vx k * vx i + vy k * vy i" for i
+    have hdk: "dot k = 1" unfolding dot_def vx_def vy_def
+      using sin_cos_squared_add[of "2*pi*real k/real ?n"] by (by100 simp)
+    \<comment> \<open>Convex combination of dot products equals dot product of convex combination.\<close>
+    have "(\<Sum>i<?n. coeffs i * dot i) = vx k * (\<Sum>i<?n. coeffs i * vx i) + vy k * (\<Sum>i<?n. coeffs i * vy i)"
+      unfolding dot_def by (simp add: sum_distrib_left algebra_simps sum.distrib)
+    also have "\<dots> = vx k * vx k + vy k * vy k" using hvx hvy by (by100 simp)
+    also have "\<dots> = 1" unfolding vx_def vy_def
+      using sin_cos_squared_add[of "2*pi*real k/real ?n"] by (by100 simp)
+    finally have hsum_dot: "(\<Sum>i<?n. coeffs i * dot i) = 1" .
+    \<comment> \<open>But dot i < 1 for all i \\<noteq> k (cosine of nonzero angle).\<close>
+    have hdot_lt: "\<forall>i<?n. i \<noteq> k \<longrightarrow> dot i < 1"
+    proof (intro allI impI)
+      fix i assume "i < ?n" "i \<noteq> k"
+      have hn_pos': "real ?n > 0" using assms by (by100 linarith)
+      have "dot i = cos (2*pi*real k/real ?n - 2*pi*real i/real ?n)"
+        unfolding dot_def vx_def vy_def
+        using cos_diff[of "2*pi*real k/real ?n" "2*pi*real i/real ?n"] by (by100 simp)
+      also have "\<dots> = cos (2*pi*(real k - real i)/real ?n)"
+        using hn_pos' by (simp add: diff_divide_distrib algebra_simps)
+      finally have hdot_eq: "dot i = cos (2*pi*(real k - real i)/real ?n)" .
+      \<comment> \<open>The angle 2\\<pi>(k-i)/n is not a multiple of 2\\<pi> (since 0 < |k-i| < n).\<close>
+      have "cos (2*pi*(real k - real i)/real ?n) < 1"
+      proof -
+        \<comment> \<open>The angle \\<theta> = 2\\<pi>(k-i)/n is not a multiple of 2\\<pi>.\<close>
+        have "real k - real i \<noteq> 0" using \<open>i \<noteq> k\<close> by (by100 simp)
+        hence hangle_ne0: "2*pi*(real k - real i)/real ?n \<noteq> 0"
+          using pi_gt_zero hn_pos' by (by100 simp)
+        \<comment> \<open>|k-i| < n, so |\\<theta>| < 2\\<pi>. Hence \\<theta> is not a nonzero multiple of 2\\<pi>.\<close>
+        have habs_diff: "\<bar>real k - real i\<bar> < real ?n" using \<open>i < ?n\<close> hk by (by100 simp)
+        have "\<bar>2*pi*(real k - real i)/real ?n\<bar> = 2*pi * \<bar>real k - real i\<bar> / real ?n"
+          using pi_gt_zero hn_pos' by (simp add: abs_mult)
+        also have "\<dots> < 2*pi"
+        proof -
+          have "\<bar>real k - real i\<bar> / real ?n < real ?n / real ?n"
+            using habs_diff hn_pos'
+            by (intro divide_strict_right_mono) (by100 auto)+
+          hence "\<bar>real k - real i\<bar> / real ?n < 1" using hn_pos' by (by100 simp)
+          have h2pi: "2*pi > 0" using pi_gt_zero by (by100 simp)
+          have "2*pi * (\<bar>real k - real i\<bar> / real ?n) < 2*pi * 1"
+            using \<open>\<bar>real k - real i\<bar> / real ?n < 1\<close> h2pi
+            by (rule mult_strict_left_mono)
+          hence "2*pi * \<bar>real k - real i\<bar> / real ?n < 2*pi"
+            by (by100 simp)
+          thus ?thesis by (by100 simp)
+        qed
+        finally have habs_lt: "\<bar>2*pi*(real k - real i)/real ?n\<bar> < 2*pi" .
+        \<comment> \<open>So \\<theta> \\<in> (-2\\<pi>, 2\\<pi>) \\<setminus> \\{0\\}. cos is < 1 on this set.\<close>
+        \<comment> \<open>cos \\<le> 1 always. cos = 1 implies \\<theta> = 0 (modulo 2\\<pi>).\<close>
+        let ?\<theta> = "2*pi*(real k - real i)/real ?n"
+        have "cos ?\<theta> \<noteq> 1"
+        proof
+          assume hcos1: "cos ?\<theta> = 1"
+          have hsin0: "sin ?\<theta> = 0"
+          proof -
+            from sin_cos_squared_add[of ?\<theta>]
+            have "(sin ?\<theta>)\<^sup>2 = 1 - (cos ?\<theta>)\<^sup>2" by (by100 linarith)
+            also have "\<dots> = 0" using hcos1 by (by100 simp)
+            finally show ?thesis by (by100 simp)
+          qed
+          have hcos_eq: "cos 0 = cos ?\<theta>" using hcos1 by (by100 simp)
+          have hsin_eq: "sin 0 = sin ?\<theta>" using hsin0 by (by100 simp)
+          from cos_sin_eq_imp[OF hcos_eq hsin_eq]
+          obtain kk :: int where hkk: "0 - ?\<theta> = real_of_int kk * 2 * pi" by (by100 blast)
+          hence "?\<theta> = -(real_of_int kk) * (2*pi)" by (by100 linarith)
+          hence "\<bar>real_of_int kk\<bar> * (2*pi) < 2*pi"
+            using habs_lt by (simp add: abs_mult abs_minus_commute)
+          hence "\<bar>real_of_int kk\<bar> < 1" using pi_gt_zero by (by100 simp)
+          hence "kk = 0" by (by100 linarith)
+          hence "?\<theta> = 0" using \<open>?\<theta> = -(real_of_int kk) * (2*pi)\<close> by (by100 simp)
+          thus False using hangle_ne0 by (by100 simp)
+        qed
+        from this show ?thesis using cos_le_one[of ?\<theta>] by (by100 linarith)
+      qed
+      thus "dot i < 1" using hdot_eq by (by100 simp)
+    qed
+    \<comment> \<open>Since coeffs k = 0 and sum coeffs = 1, there exists i \\<noteq> k with coeffs i > 0.\<close>
+    have "\<exists>i<?n. i \<noteq> k \<and> coeffs i > 0"
+    proof (rule ccontr)
+      assume "\<not> (\<exists>i<?n. i \<noteq> k \<and> coeffs i > 0)"
+      hence "\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<le> 0" by (by100 auto)
+      hence hall0: "\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i = 0" using hcoeff_pos by (by100 force)
+      hence "\<forall>i<?n. coeffs i = 0" using hk0 by (by100 force)
+      hence "(\<Sum>i<?n. coeffs i) = 0" by (by100 simp)
+      thus False using hsum1 by (by100 simp)
+    qed
+    \<comment> \<open>Then the weighted sum of dot products is < 1, contradicting = 1.\<close>
+    then obtain i0 where hi0: "i0 < ?n" "i0 \<noteq> k" "coeffs i0 > 0" by (by100 blast)
+    have "(\<Sum>i<?n. coeffs i * dot i) < (\<Sum>i<?n. coeffs i * 1)"
+    proof -
+      \<comment> \<open>Each term: coeffs i * dot i \\<le> coeffs i * 1 (since dot i \\<le> 1 and coeffs i \\<ge> 0).\<close>
+      have hle: "\<forall>i<?n. coeffs i * dot i \<le> coeffs i * 1"
+      proof (intro allI impI)
+        fix i assume "i < ?n"
+        show "coeffs i * dot i \<le> coeffs i * 1"
+        proof (cases "i = k")
+          case True thus ?thesis using hk0 by (by100 simp)
+        next
+          case False
+          hence "coeffs i \<ge> 0" using hcoeff_pos \<open>i < ?n\<close> by (by100 blast)
+          moreover have "dot i \<le> 1"
+          proof -
+            have "dot i = cos (2*pi*real k/real ?n - 2*pi*real i/real ?n)"
+              unfolding dot_def vx_def vy_def
+              using cos_diff[of "2*pi*real k/real ?n" "2*pi*real i/real ?n"] by (by100 simp)
+            thus ?thesis using cos_le_one by (by100 simp)
+          qed
+          ultimately show ?thesis using mult_left_mono[of "dot i" 1 "coeffs i"] by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>The i0 term is strictly less: coeffs i0 * dot i0 < coeffs i0 * 1.\<close>
+      have hdot_i0_lt: "dot i0 < 1" using hdot_lt hi0(1) hi0(2) by (by100 blast)
+      have hstrict: "coeffs i0 * dot i0 < coeffs i0 * 1"
+        using hi0(3) hdot_i0_lt by (by100 simp)
+      \<comment> \<open>Sum with one strict and rest \\<le> gives strict overall.\<close>
+      show ?thesis
+        using sum_strict_mono_ex1[of "{..<(length scheme)}" "\<lambda>i. coeffs i * dot i" "\<lambda>i. coeffs i * 1"]
+              hle hstrict hi0(1) by (by100 force)
+    qed
+    also have "\<dots> = 1" using hsum1 by (by100 simp)
+    finally show False using hsum_dot by (by100 simp)
+  qed
   have hC1: "top1_is_polygonal_region_on P ?n"
     unfolding top1_is_polygonal_region_on_def
     using assms hC3 hextreme hC5 by (by100 blast)
