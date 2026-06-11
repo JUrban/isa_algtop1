@@ -1242,14 +1242,46 @@ proof -
       qed
     next
       \<comment> \<open>3. Arbitrary union.\<close>
-      fix U :: "(real \<times> real) set set" assume "U \<subseteq> TY"
+      fix U :: "(real \<times> real) set set" assume hU: "U \<subseteq> TY"
       show "\<Union>U \<in> TY"
-        sorry \<comment> \<open>Union of saturated opens is saturated open.\<close>
+      proof -
+        \<comment> \<open>For each u \\<in> U, get the witness V\\_u.\<close>
+        have "\<forall>u\<in>U. \<exists>V. V \<subseteq> P \<and> (\<forall>x\<in>V. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> V) \<and> u = q ` V \<and> V \<in> ?TP"
+          using hU unfolding TY_def by (by100 blast)
+        from bchoice[OF this]
+        obtain f where hf: "\<forall>u\<in>U. f u \<subseteq> P \<and> (\<forall>x\<in>f u. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> f u) \<and> u = q ` f u \<and> f u \<in> ?TP"
+          by (by100 auto)
+        define V where "V = \<Union>(f ` U)"
+        have hV_sub: "V \<subseteq> P" unfolding V_def using hf by (by100 auto)
+        have hV_sat: "\<forall>x\<in>V. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> V"
+          unfolding V_def using hf by (by100 blast)
+        have hV_image: "\<Union>U = q ` V"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> \<Union>U"
+          then obtain u where hu: "u \<in> U" "x \<in> u" by (by100 blast)
+          hence "x \<in> q ` f u" using hf by (by100 blast)
+          thus "x \<in> q ` V" unfolding V_def using hu(1) by (by100 blast)
+        next
+          fix x assume "x \<in> q ` V"
+          then obtain p where hp: "p \<in> V" "x = q p" by (by100 blast)
+          from hp(1) obtain u where hu: "u \<in> U" "p \<in> f u" unfolding V_def by (by100 blast)
+          have "x \<in> u" using hp(2) hu(2) hf hu(1) by (by100 blast)
+          thus "x \<in> \<Union>U" using hu(1) by (by100 blast)
+        qed
+        have hV_open: "V \<in> ?TP"
+        proof -
+          have "f ` U \<subseteq> ?TP" using hf by (by100 blast)
+          hence "\<Union>(f ` U) \<in> ?TP" using htopo_P unfolding is_topology_on_def by (by100 blast)
+          thus ?thesis unfolding V_def .
+        qed
+        show ?thesis unfolding TY_def
+          using hV_sub hV_sat hV_image hV_open by (by100 blast)
+      qed
     next
       \<comment> \<open>4. Finite intersection.\<close>
-      fix F :: "(real \<times> real) set set" assume "finite F \<and> F \<noteq> {} \<and> F \<subseteq> TY"
+      fix F :: "(real \<times> real) set set" assume hF: "finite F \<and> F \<noteq> {} \<and> F \<subseteq> TY"
       show "\<Inter>F \<in> TY"
-        sorry \<comment> \<open>Finite intersection of saturated opens is saturated open.\<close>
+        sorry \<comment> \<open>Similar to union but with finite intersection. Needs bchoice + \\<Inter> open + saturated.\<close>
     qed
     moreover have "TY \<subseteq> Pow Y"
     proof
