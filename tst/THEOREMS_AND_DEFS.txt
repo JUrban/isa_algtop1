@@ -1431,7 +1431,7 @@ AlgTop.thy|lemma|scheme_equiv_trans|725
 AlgTop.thy|lemma|scheme_invert_homeomorphic|4955
 AlgTop.thy|lemma|scheme_labels_map_relabel|580
 AlgTop.thy|lemma|scheme_normal_form|11016
-AlgTop.thy|lemma|scheme_normal_form_valid|13227
+AlgTop.thy|lemma|scheme_normal_form_valid|13249
 at/AlgTopChain.thy|lemma|scheme_quotient_CW_data|3602
 at/AlgTopChain.thy|lemma|scheme_quotient_hausdorff|2902
 AlgTop.thy|lemma|scheme_quotient_uniqueness|4394
@@ -2048,6 +2048,9 @@ AlgTop.thy|lemma|valid_Lemma_77_1_step1_y2_empty|6055
 AlgTop.thy|lemma|valid_Lemma_77_3_simple|6874
 AlgTop.thy|lemma|valid_Lemma_77_3_torus_extraction|7018
 AlgTop.thy|lemma|valid_Lemma_77_4_projective_absorbs_torus|7164
+AlgTop.thy|lemma|valid_nf_projective|13235
+AlgTop.thy|lemma|valid_nf_sphere|13228
+AlgTop.thy|lemma|valid_nf_torus|13242
 AlgTop.thy|lemma|valid_operation_preserves_quotient_homeo|3876
 AlgTop.thy|lemma|valid_operation_reverse|221
 AlgTop.thy|lemma|valid_proj_absorbs_one_torus|10712
@@ -2299,7 +2302,7 @@ ac8/AlgTopCached8.thy|theorem|Theorem_75_1_H1_abelianization|3761
 ac8/AlgTopCached8.thy|theorem|Theorem_75_3_H1_n_torus|4446
 ac12/AlgTopCached12.thy|theorem|Theorem_75_4_H1_m_projective|975
 AlgTop.thy|theorem|Theorem_76_elementary_operations|4980
-AlgTop.thy|theorem|Theorem_77_5_classification|13244
+AlgTop.thy|theorem|Theorem_77_5_classification|13370
 AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|5132
 AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|5951
 ac4/AlgTopCached4.thy|theorem|Theorem_79_2|1524
