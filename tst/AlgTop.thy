@@ -295,7 +295,21 @@ proof -
   have hC1: "top1_is_polygonal_region_on P ?n"
     unfolding top1_is_polygonal_region_on_def
     using assms hC3 hextreme hC5 by (by100 blast)
-  show ?thesis sorry
+  \<comment> \<open>C10: CCW orientation. For regular polygon, cross product
+     (v\\_i - centroid) \\<times> (v\\_{i+1} - centroid) = sin(2\\<pi>/n) > 0.\<close>
+  have hC10: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx j)/real ?n; cy = (\<Sum>j<?n. vy j)/real ?n
+       in (vx i - cx)*(vy(Suc i mod ?n) - cy) - (vy i - cy)*(vx(Suc i mod ?n) - cx) > 0"
+    sorry \<comment> \<open>Regular polygon vertices are CCW. Cross product = sin(2\\<pi>/n) > 0.\<close>
+  \<comment> \<open>C11: strict convexity. Every non-adjacent vertex is on the right of each edge.\<close>
+  have hC11: "\<forall>i<?n. \<forall>k<?n.
+        k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+        (vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
+    sorry \<comment> \<open>Regular polygon is strictly convex.\<close>
+  \<comment> \<open>C6: non-adjacent edge interiors don't intersect (strict convexity implies this).\<close>
+  have hC6: "True"
+    sorry \<comment> \<open>C6 placeholder. Non-adjacent edges don't intersect.\<close>
+  show ?thesis sorry \<comment> \<open>Remaining: C2 (quotient map), C8 (identification), C9 (injectivity).
+     These require the proper definition of q (not identity).\<close>
 qed
 
 \<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
