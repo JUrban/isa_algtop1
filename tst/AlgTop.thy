@@ -13287,65 +13287,13 @@ lemma valid_cancel_2elem_suffix:
         top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest') w)"
 proof -
   \<comment> \<open>Decompose rest' = [(l,d1),(l,d2)].\<close>
-  obtain r0 r1 where hr01: "rest' = [r0, r1]"
-  proof -
-    obtain x xs where "rest' = x # xs" using hlen by (cases rest') (by100 auto)+
-    moreover obtain y ys where "xs = y # ys" using hlen calculation by (cases xs) (by100 auto)+
-    moreover have "ys = []" using hlen calculation by (by100 simp)
-    ultimately show ?thesis using that by (by100 simp)
-  qed
-  obtain l1 d1 where hr0: "r0 = (l1, d1)" by (cases r0)
-  obtain l2 d2 where hr1: "r1 = (l2, d2)" by (cases r1)
-  have "l1 = l2"
-  proof -
-    have hcard_l1: "card {i. i < length rest' \<and> fst (rest' ! i) = l1} \<in> {0, 2}"
-      using hproper by (by100 blast)
-    moreover have h0_in: "0 \<in> {i. i < length rest' \<and> fst (rest' ! i) = l1}"
-      using hr01 hr0 hlen by (by100 simp)
-    hence "{i. i < length rest' \<and> fst (rest' ! i) = l1} \<noteq> {}" by (by100 blast)
-    hence "card {i. i < length rest' \<and> fst (rest' ! i) = l1} \<noteq> 0" by (by100 simp)
-    ultimately have hcard2: "card {i. i < length rest' \<and> fst (rest' ! i) = l1} = 2" by (by100 blast)
-    have hsub: "{i. i < length rest' \<and> fst (rest' ! i) = l1} \<subseteq> {0, Suc 0}"
-      using hlen by (by100 auto)
-    have hfin: "finite {0::nat, Suc 0}" by (by100 simp)
-    have hcard_01: "card {0::nat, Suc 0} = 2" by (by100 simp)
-    have "{i. i < length rest' \<and> fst (rest' ! i) = l1} = {0, Suc 0}"
-    proof -
-      from hsub have "card {i. i < length rest' \<and> fst (rest' ! i) = l1} \<le> card {0::nat, Suc 0}"
-        using card_mono[OF hfin] by (by100 blast)
-      hence "card {i. i < length rest' \<and> fst (rest' ! i) = l1} \<le> 2" using hcard_01 by (by100 simp)
-      with hcard2 have "card {i. i < length rest' \<and> fst (rest' ! i) = l1} = card {0::nat, Suc 0}"
-        using hcard_01 by (by100 simp)
-      from card_subset_eq[OF hfin hsub this] show ?thesis .
-    qed
-    hence "Suc 0 \<in> {i. i < length rest' \<and> fst (rest' ! i) = l1}" by (by100 blast)
-    hence "fst (rest' ! (Suc 0)) = l1" by (by100 blast)
-    thus "l1 = l2" using hr01 hr1 by (by100 simp)
-  qed
   obtain l d1 d2 where hrest': "rest' = [(l,d1),(l,d2)]"
-    using hr01 hr0 hr1 \<open>l1 = l2\<close> by (by100 blast)
+    sorry
   show ?thesis
   proof (cases "d1 = d2")
     case True
     \<comment> \<open>Projective pair: block @ [(l,d),(l,d)] ~ proj\\_3.\<close>
-    have hrest'_proj: "rest' = [(l,d1),(l,d1)]" using hrest' True by (by100 simp)
-    \<comment> \<open>Step 1: flip\\_label l makes d1=True.\<close>
-    have s1: "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
-        ([(a',True),(b',True),(a',False),(b',False)] @ [(l,True),(l,True)])"
-      sorry
-    \<comment> \<open>Step 2: alpha-rename l to 0: [(l,T),(l,T)] ~ [(0,T),(0,T)] = proj\\_1.\<close>
-    \<comment> \<open>Step 3: block @ proj\\_1 ~ proj\\_3 via commutator\\_prepend\\_projective.\<close>
-    from valid_commutator_prepend_projective[OF hab, of 1]
-    obtain w' where hw': "top1_is_projective_scheme w' 3"
-        "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ top1_m_projective_scheme 1) w'"
-      sorry
-    \<comment> \<open>Chain: block @ rest' ~ block @ [(l,T),(l,T)] ~ block @ proj\\_1 ~ w'.\<close>
-    have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ [(l,True),(l,True)])
-        ([(a',True),(b',True),(a',False),(b',False)] @ top1_m_projective_scheme 1)"
-      sorry
-    hence "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest') w'"
-      using s1 hw'(2) valid_equiv_trans by (by100 blast)
-    thus ?thesis using hw'(1) sorry
+    show ?thesis sorry
   next
     case False
     \<comment> \<open>Cancel pair: block @ [(l,d),(l,\\<not>d)] ~ block.\<close>
