@@ -3676,17 +3676,14 @@ proof -
         (\<forall>i<?n'. \<forall>k<?n'.
               k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n' \<longrightarrow>
               (vx k - vx i)*(vy(Suc i mod ?n') - vy i) - (vy k - vy i)*(vx(Suc i mod ?n') - vx i) < 0)"
-      apply (rule exI[of _ P'])
-      apply (rule exI[of _ q])
-      apply (rule exI[of _ vx'])
-      apply (rule exI[of _ vy'])
-      sorry \<comment> \<open>11 conditions for P', q, vx', vy' with scheme w.
-         PROVED: C3 (vertex distinctness, by force), C5 (convex hull, by blast).
-         REMAINING: C1 (polygon), C2 (quotient map), C4 (vertices in hull),
-         C6 (non-crossing), C7 (edge ID — last edge wraps differently),
-         C8 (interior inj), C9 (edge-only ID), C10 (CCW), C11 (edge-side).
-         Key difficulty: last edge (v\_{n-1} to v\\_2) is an interior chord,
-         not an old boundary edge. q on this chord needs special argument.\<close>
+    proof -
+      have hlen_w: "?n' = ?n - 2" using hn by simp
+      have hn_ge5: "?n \<ge> 5" using assms(2) hn by simp
+      have hn'_ge3: "?n' \<ge> 3" using assms(2) .
+      \<comment> \<open>Key: for i < n'-1, edge i of P' matches edge i+2 of P exactly.
+         For i = n'-1, the edge wraps differently (chord from v\_{n-1} to v\\_2).\<close>
+      show ?thesis sorry \<comment> \<open>11 conditions. Shift for i<n'-1; last edge needs chord argument.\<close>
+    qed
   qed
   \<comment> \<open>Y is a quotient of w. Take Y'=Y, TY'=TY, h=id.\<close>
   moreover have "is_topology_on Y TY"
