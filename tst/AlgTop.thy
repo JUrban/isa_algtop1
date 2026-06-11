@@ -3993,9 +3993,16 @@ next
   then show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_context_left y z prefix)
-  \<comment> \<open>Context-left: valid operation on suffix lifts to full scheme.
-     Need: quotient of prefix@y + valid\\_op(y,z) => \\<exists>quotient of prefix@z \\<cong> X.\<close>
-  \<comment> \<open>Lift via elementary\\_operation\\_preserves\\_quotient + valid\\_implies\\_elementary.\<close>
+  \<comment> \<open>Context-left: valid operation y \\<to> z lifts to prefix@y \\<to> prefix@z.
+     Key insight: for each valid operation on the suffix, the corresponding
+     same-space lemma works on the FULL scheme (prefix@suffix) because:
+     - rotate suffix: 3 full-scheme rotations
+     - cancel/uncancel suffix: cancel\\_proved on prefix@u'@[a,inv a]@v'
+     - invert suffix: rotate + invert + rotate
+     - relabel/flip: work on full scheme (label-only, position-independent)
+     - cut\\_paste: works on prefix@... (same-position cut)
+     - context\\_left: recursive (IH from the induction on valid\\_operation)\<close>
+  \<comment> \<open>For now: use the general elementary\\_operation\\_preserves\\_quotient.\<close>
   have hop: "top1_elementary_scheme_operation (prefix @ y) (prefix @ z)"
     using v_context_left.hyps by (rule top1_elementary_scheme_operation.context_left[OF valid_implies_elementary])
   have "top1_quotient_of_scheme_on X TX (prefix @ z)"
