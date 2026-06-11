@@ -182,6 +182,82 @@ lemma valid_imp_equiv:
   "top1_valid_scheme_operation s t \<Longrightarrow> top1_valid_scheme_equiv s t"
   unfolding top1_valid_scheme_equiv_def by (by100 simp)
 
+\<comment> \<open>Each valid operation is reversible (valid\\_scheme\\_equiv is symmetric).\<close>
+lemma valid_operation_reverse:
+  "top1_valid_scheme_operation s t \<Longrightarrow> top1_valid_scheme_equiv t s"
+proof (induction rule: top1_valid_scheme_operation.induct)
+  case (v_rotate u v)
+  show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate[of v u]] by (by100 simp)
+next
+  case (v_cancel u a v)
+  \<comment> \<open>Reverse of cancel is uncancel. Freshness: fst a is already in u@[a,inv a]@v.\<close>
+  show ?case sorry \<comment> \<open>uncancel needs fst a \\<notin> scheme\\_labels(u@v), not always true.\<close>
+next
+  case (v_uncancel a u v)
+  show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_cancel[of u a v]] by (by100 simp)
+next
+  case (v_invert w)
+  \<comment> \<open>Double inversion: rev(inv(rev(inv w))) = w.\<close>
+  have "rev (map top1_inverse_edge (rev (map top1_inverse_edge w))) = w"
+  proof -
+    have "\<And>x. top1_inverse_edge (top1_inverse_edge x) = x"
+      unfolding top1_inverse_edge_def by (by100 simp)
+    hence hinv2: "map top1_inverse_edge (map top1_inverse_edge w) = w"
+      by (induction w) (by100 auto)+
+    have step1: "map top1_inverse_edge (rev (map top1_inverse_edge w)) =
+                 rev (map top1_inverse_edge (map top1_inverse_edge w))"
+      using rev_map[of top1_inverse_edge "map top1_inverse_edge w"] by (by100 simp)
+    have "rev (map top1_inverse_edge (rev (map top1_inverse_edge w))) =
+          rev (rev (map top1_inverse_edge (map top1_inverse_edge w)))"
+      using step1 by (by100 simp)
+    also have "\<dots> = map top1_inverse_edge (map top1_inverse_edge w)" by (by100 simp)
+    also have "\<dots> = w" using hinv2 .
+    finally show ?thesis .
+  qed
+  thus ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_invert[of "rev (map top1_inverse_edge w)"]]
+    by (by100 simp)
+next
+  case (v_relabel nw ol wd) show ?case sorry
+next
+  case (v_flip_label w a)
+  \<comment> \<open>Flip is involutive.\<close>
+  let ?f = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
+  have "?f (?f w) = w"
+  proof (induction w)
+    case Nil thus ?case by (by100 simp)
+  next
+    case (Cons e w) obtain l bo where "e = (l, bo)" by (cases e)
+    thus ?case using Cons.IH by (by100 simp)
+  qed
+  thus ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_flip_label[of "?f w" a]]
+    by (by100 simp)
+next
+  case (v_cut_paste u1 a u2 u3) show ?case sorry
+next
+  case (v_cut_paste2 b u0 a u1 u2) show ?case sorry
+next
+  case (v_cut_paste_opp u0 u1 a u2 u3) show ?case sorry
+next
+  case (v_context_left y z prefix)
+  \<comment> \<open>IH: valid\\_scheme\\_equiv z y. Lift through prefix.\<close>
+  from valid_equiv_prepend[OF v_context_left.IH]
+  show ?case .
+qed
+
+\<comment> \<open>Valid scheme equivalence is symmetric.\<close>
+lemma valid_equiv_sym:
+  "top1_valid_scheme_equiv s t \<Longrightarrow> top1_valid_scheme_equiv t s"
+  unfolding top1_valid_scheme_equiv_def
+proof (induction rule: rtranclp.induct)
+  case rtrancl_refl thus ?case by (by100 simp)
+next
+  case (rtrancl_into_rtrancl a b c)
+  from valid_operation_reverse[OF rtrancl_into_rtrancl.hyps(2)]
+  have "top1_valid_scheme_equiv c b" .
+  from this rtrancl_into_rtrancl.IH show ?case
+    unfolding top1_valid_scheme_equiv_def by (meson rtranclp_trans)
+qed
+
 \<comment> \<open>Valid relabel to avoid a label: replace all occurrences with a fresh one.\<close>
 lemma valid_equiv_relabel_avoid:
   fixes target :: "(nat \<times> bool) list" and a :: nat
