@@ -4,6 +4,17 @@ begin
 
 \<comment> \<open>valid\\_operation\\_reverse, valid\\_equiv\\_sym: cached in AlgTopCached14.\<close>
 \<comment> \<open>§77 normal form chain (scheme\\_normal\\_form\\_valid + all valid helpers): cached in AlgTopCached14.\<close>
+
+\<comment> \<open>Helper: quotient\\_of\\_scheme\\_on implies length \\<ge> 3 (from polygonal region).\<close>
+lemma quotient_scheme_length_ge3:
+  "top1_quotient_of_scheme_on Y TY w \<Longrightarrow> length w \<ge> 3"
+proof -
+  assume "top1_quotient_of_scheme_on Y TY w"
+  then obtain P q vx vy where "top1_is_polygonal_region_on P (length w)"
+    by (rule quotient_of_scheme_extract_vx)
+  thus "length w \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
+qed
+
 \<comment> \<open>Cut-paste: quotient preserved by cut-and-repaste operation.\<close>
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
@@ -755,38 +766,45 @@ proof -
     done
 qed
 
-\<comment> \<open>Uncancel at front — homeomorphic-realization form.\<close>
+\<comment> \<open>Uncancel at front — derived from cancel + existence + uniqueness (per audit 22 §5.3).
+   Given quotient of w, produce quotient of [a,inv a]@w homeomorphic to it.
+   Strategy:
+   (1) scheme\\_quotient\\_exists gives Y1 as quotient of [a,inv a]@w
+   (2) front\\_cancel gives Y2 as quotient of w with Y1 \\<cong> Y2
+   (3) scheme\\_quotient\\_uniqueness gives Y2 \\<cong> Y (both quotients of w)
+   (4) Compose: Y \\<cong> Y2 \\<cong> Y1, giving the required homeomorphism.\<close>
 lemma front_uncancel_realization_homeo:
   fixes Y :: "'a set" and TY :: "'a set set"
   assumes "top1_quotient_of_scheme_on Y TY w"
+      and "length w \<ge> 3"
   shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
     top1_quotient_of_scheme_on Y' TY' ([a, top1_inverse_edge a] @ w) \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
-  sorry \<comment> \<open>§76(vii): Uncancel front. Insert cancel spur into polygon.\<close>
+  sorry \<comment> \<open>Derive from cancel + existence + uniqueness per audit 22 §5.3.
+     Uses: scheme\\_quotient\\_exists (for existence of quotient of [a,inv a]@w),
+     front\\_cancel (for homeomorphism between quotients),
+     scheme\\_quotient\\_uniqueness (for uniqueness up to homeomorphism).
+     Type issue: scheme\\_quotient\\_exists gives (real\\<times>real) quotients;
+     need to bridge to polymorphic 'a via uniqueness.\<close>
 
-\<comment> \<open>Cancel same-space: REMOVED (dead code). Replaced by front\\_cancel\\_realization\\_homeo.\<close>
-
-\<comment> \<open>Uncancel at front: insert cancel pair at front.
-   Given quotient of w (n-gon P, quotient map q, vertices vx/vy),
-   construct (n+2)-gon P' with spur at vertex 0 that gives quotient of [a,inv a]@w.
-   The spur edges (0 and 1) are identified, collapsing back to Y.
-   Strategy: add two spur vertices near v0 (between v0 and centroid),
-   extend q to the spur by mapping both spur edges to the point q(v0).
-   The 11 conditions transfer: edges 0,1 are the cancel pair (same image);
-   edges i+2 match original edges i.\<close>
+\<comment> \<open>Uncancel same-space: derived from homeomorphic uncancel (take Y'=Y via uniqueness).\<close>
 lemma quotient_of_scheme_uncancel_front:
   assumes "top1_quotient_of_scheme_on Y TY w"
+      and "length w \<ge> 3"
   shows "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
-  sorry \<comment> \<open>Geometric spur construction. See strategy above.\<close>
+  sorry \<comment> \<open>Derive from front\\_uncancel\\_realization\\_homeo + uniqueness.
+     Or keep as separate geometric construction (spur insertion).\<close>
 
 \<comment> \<open>Uncancel (proved via reduction to front-uncancel + rotation).\<close>
 lemma quotient_of_scheme_uncancel_proved:
   assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
   shows "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
 proof -
-  have "top1_quotient_of_scheme_on Y TY (v @ u)"
+  have hvu: "top1_quotient_of_scheme_on Y TY (v @ u)"
     using quotient_of_scheme_rotate[OF assms] by simp
-  from quotient_of_scheme_uncancel_front[OF this, of a]
+  have hlen: "length (v @ u) \<ge> 3"
+    using quotient_scheme_length_ge3[OF hvu] .
+  from quotient_of_scheme_uncancel_front[OF hvu hlen, of a]
   have h1: "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ v @ u)" .
   \<comment> \<open>Rotate: [a,inv a] @ (v@u) -> (v@u) @ [a,inv a].\<close>
   from quotient_of_scheme_rotate[OF h1]
@@ -938,7 +956,9 @@ next
   \<comment> \<open>Uncancel: §76(vii). Use front\\_uncancel\\_realization\\_homeo via rotation.\<close>
   have h1: "top1_quotient_of_scheme_on X TX (v @ u)"
     using quotient_of_scheme_rotate[OF v_uncancel.prems] by simp
-  from front_uncancel_realization_homeo[OF h1, of a]
+  have hlen_vu: "length (v @ u) \<ge> 3"
+    using quotient_scheme_length_ge3[OF h1] .
+  from front_uncancel_realization_homeo[OF h1 hlen_vu, of a]
   obtain Y' :: "'a set" and TY' :: "'a set set" and h1' :: "'a \<Rightarrow> 'a" where
       hY': "top1_quotient_of_scheme_on Y' TY' ([a, top1_inverse_edge a] @ v @ u)"
       and hh1': "top1_homeomorphism_on X TX Y' TY' h1'"
