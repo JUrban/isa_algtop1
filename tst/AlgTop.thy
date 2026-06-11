@@ -856,10 +856,12 @@ lemma quotient_of_scheme_cancel:
   assumes "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
   shows "top1_quotient_of_scheme_on Y TY (u @ v)"
   sorry \<comment> \<open>Geometric construction: fold cancelled edges of (n+2)-gon to get n-gon.
-     Proof plan: extract witnesses from old quotient, define new vertices by skipping
-     the cancelled pair (vx'(i) = vx(i) for i \\<le> |u|, vx(i+2) for i > |u|),
-     new polygon P' = convex hull, q' = q restricted. Verify 11 conditions.
-     Uses: quotient\\_transport\\_by\\_homeomorphism or direct construction.\<close>
+     Proof plan: extract witnesses from old quotient (use quotient\\_of\\_scheme\\_extract\\_vx
+     which is defined below), define new vertices by skipping the cancelled pair
+     (vx'(i) = vx(i) for i \\<le> |u|, vx(i+2) for i > |u|),
+     new polygon P' = convex hull, q' = q restricted. Verify conditions by index shift.
+     NOTE: quotient\\_of\\_scheme\\_extract\\_vx is at line 941, after this lemma.
+     To prove: either move this lemma after extract\\_vx, or unfold definition directly.\<close>
 
 \<comment> \<open>Uncancel: reverse of cancel. Same polygon, unfold.\<close>
 lemma quotient_of_scheme_uncancel:
