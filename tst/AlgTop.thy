@@ -13341,12 +13341,23 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
     show ?thesis
     proof (cases "length scheme = 4")
       case True
-      \<comment> \<open>Base case: length 4, torus.\<close>
-      show ?thesis sorry
+      \<comment> \<open>Base case: length 4, torus. The scheme is a commutator block (up to rotation/flip).
+         Use the fact that valid operations include all needed transformations.\<close>
+      show ?thesis sorry \<comment> \<open>Torus base: 4-element torus scheme ~ torus\\_1 or sphere.\<close>
     next
       case False
-      \<comment> \<open>Step: length > 4, torus.\<close>
-      show ?thesis sorry
+      \<comment> \<open>Step: length > 4, torus. Check for adjacent cancel, or extract commutator.\<close>
+      show ?thesis
+      proof (cases "\<exists>i < length scheme - 1. scheme ! i = top1_inverse_edge (scheme ! (i+1))")
+        case True
+        \<comment> \<open>Adjacent cancellable pair. Cancel to shorter scheme, apply IH.\<close>
+        show ?thesis sorry
+      next
+        case adj_False: False
+        \<comment> \<open>No adjacent cancel. All pairs have opposite direction and are separated.
+           Apply Lemma 77.3 to extract commutator block aba\\<inverse>b\\<inverse>, IH on rest.\<close>
+        show ?thesis sorry
+      qed
     qed
   qed
 qed
