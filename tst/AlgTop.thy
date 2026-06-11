@@ -13476,14 +13476,32 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
                 ([(a',True),(b',True),(a',False),(b',False)] @ w)"
               using valid_equiv_prepend[OF h(3)] by (by100 blast)
-            show ?thesis sorry
+            hence "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                ([(a',True),(b',True),(a',False),(b',False)] @ top1_m_projective_scheme m)"
+              using hw_eq by (by100 simp)
+            from valid_commutator_prepend_projective[OF hext(1) h(1)]
+            obtain w' where hw': "top1_is_projective_scheme w' (m+2)"
+                "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ top1_m_projective_scheme m) w'"
+              by (by100 blast)
+            have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest') w'"
+              using valid_equiv_trans \<open>top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                  ([(a',True),(b',True),(a',False),(b',False)] @ top1_m_projective_scheme m)\<close> hw'(2)
+              by (by100 blast)
+            hence "top1_valid_scheme_equiv scheme w'"
+              using valid_equiv_trans[OF hext(2)] by (by100 blast)
+            have "m+2 > 0" by (by100 simp)
+            from valid_nf_projective[OF this hw'(1) \<open>top1_valid_scheme_equiv scheme w'\<close>]
+            show ?thesis .
           next
             fix n w assume h: "n > 0" "top1_is_torus_scheme w n" "top1_valid_scheme_equiv rest' w"
             \<comment> \<open>block @ torus\\_n ~ torus\\_(n+1) via valid\\_commutator\\_prepend\\_torus.\<close>
             have hw_eq: "w = top1_n_torus_scheme n" using h(2) unfolding top1_is_torus_scheme_def by (by100 blast)
             have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                ([(a',True),(b',True),(a',False),(b',False)] @ w)"
+              using valid_equiv_prepend[OF h(3)] by (by100 blast)
+            hence "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
                 ([(a',True),(b',True),(a',False),(b',False)] @ top1_n_torus_scheme n)"
-              sorry
+              using hw_eq by (by100 simp)
             moreover from valid_commutator_prepend_torus[OF hext(1) h(1)]
             have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ top1_n_torus_scheme n)
                 (top1_n_torus_scheme (Suc n))" .
