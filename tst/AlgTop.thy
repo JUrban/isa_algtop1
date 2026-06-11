@@ -3676,7 +3676,7 @@ proof -
         (\<forall>i<?n'. \<forall>k<?n'.
               k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n' \<longrightarrow>
               (vx k - vx i)*(vy(Suc i mod ?n') - vy i) - (vy k - vy i)*(vx(Suc i mod ?n') - vx i) < 0)"
-      sorry \<comment> \<open>Witnesses: P', q, vx', vy'. Each condition transfers from hC1-hC11 via index shift.\<close>
+      sorry \<comment> \<open>Witness P', q, vx', vy'. Conditions transfer from hC1-hC11 by i -> i+2.\<close>
   qed
   \<comment> \<open>Y is a quotient of w. Take Y'=Y, TY'=TY, h=id.\<close>
   moreover have "is_topology_on Y TY"
