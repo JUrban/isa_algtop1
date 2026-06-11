@@ -8968,11 +8968,108 @@ proof -
   qed
   \<comment> \<open>scheme1 conditions for valid\\_bring.\<close>
   have hlen1: "length scheme1 = 4" unfolding scheme1_def using hlen by (by100 simp)
-  have h1_in: "(a, True) \<in> set scheme1" sorry
-  have h1_card: "card {i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = 2" sorry
-  have h1_dir: "\<forall>i < length scheme1. fst (scheme1 ! i) = a \<longrightarrow> snd (scheme1 ! i) = True" sorry
+  have hfst_preserved: "\<forall>i < length scheme1. fst (scheme1 ! i) = fst (scheme ! i)"
+  proof (cases "snd (scheme ! p)")
+    case True thus ?thesis unfolding scheme1_def by (by100 simp)
+  next
+    case False show ?thesis
+    proof (intro allI impI)
+      fix i assume "i < length scheme1"
+      hence "i < length scheme" using hlen1 hlen by (by100 simp)
+      obtain l b where hlb: "scheme ! i = (l, b)" by (cases "scheme ! i")
+      show "fst (scheme1 ! i) = fst (scheme ! i)"
+        using False \<open>i < length scheme\<close> hlb unfolding scheme1_def by (by100 simp)
+    qed
+  qed
   have h1_ne: "scheme1 \<noteq> []" using hlen1 by (by100 auto)
-  have h1_proper: "\<forall>label. card {i. i < length scheme1 \<and> fst (scheme1 ! i) = label} \<in> {0, 2}" sorry
+  have h1_proper: "\<forall>label. card {i. i < length scheme1 \<and> fst (scheme1 ! i) = label} \<in> {0, 2}"
+  proof -
+    have "\<And>label. {i. i < length scheme1 \<and> fst (scheme1 ! i) = label}
+        = {i. i < length scheme \<and> fst (scheme ! i) = label}"
+      using hfst_preserved hlen1 hlen by (by100 force)
+    thus ?thesis using hproper by (by100 simp)
+  qed
+  have h1_card: "card {i. i < length scheme1 \<and> fst (scheme1 ! i) = a} = 2"
+  proof -
+    have "{i. i < length scheme1 \<and> fst (scheme1 ! i) = a}
+        = {i. i < length scheme \<and> fst (scheme ! i) = a}"
+      using hfst_preserved hlen1 hlen by (by100 force)
+    moreover have "p \<in> {i. i < length scheme \<and> fst (scheme ! i) = a}" using hp(1,4) by (by100 blast)
+    hence "{i. i < length scheme \<and> fst (scheme ! i) = a} \<noteq> {}" by (by100 blast)
+    hence "card {i. i < length scheme \<and> fst (scheme ! i) = a} \<noteq> 0" by (by100 simp)
+    moreover from hproper have "card {i. i < length scheme \<and> fst (scheme ! i) = a} \<in> {0, 2}" by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have h1_dir: "\<forall>i < length scheme1. fst (scheme1 ! i) = a \<longrightarrow> snd (scheme1 ! i) = True"
+  proof (cases "snd (scheme ! p)")
+    case True
+    hence "scheme1 = scheme" unfolding scheme1_def by (by100 simp)
+    have honly_pq: "{k. k < length scheme \<and> fst (scheme ! k) = a} = {p, q}"
+    proof -
+      have "card {p, q} = 2" using hp(3) by (by100 simp)
+      have "{p, q} \<subseteq> {k. k < length scheme \<and> fst (scheme ! k) = a}" using hp(1,2,4,5) by (by100 blast)
+      have "finite {k. k < length scheme \<and> fst (scheme ! k) = a}" by (by100 simp)
+      have "{k. k < length scheme1 \<and> fst (scheme1 ! k) = a}
+          = {k. k < length scheme \<and> fst (scheme ! k) = a}"
+        using \<open>scheme1 = scheme\<close> hlen1 hlen by (by100 simp)
+      hence hcard_a: "card {k. k < length scheme \<and> fst (scheme ! k) = a} = 2"
+        using h1_card by (by100 simp)
+      from card_subset_eq[OF \<open>finite _\<close> \<open>{p,q} \<subseteq> _\<close>] \<open>card {p,q} = 2\<close> hcard_a
+      show ?thesis by (by100 simp)
+    qed
+    show ?thesis
+    proof (intro allI impI)
+      fix i assume "i < length scheme1" "fst (scheme1 ! i) = a"
+      hence "i \<in> {k. k < length scheme \<and> fst (scheme ! k) = a}" using \<open>scheme1 = scheme\<close> hlen1 hlen by (by100 blast)
+      hence "i = p \<or> i = q" using honly_pq by (by100 blast)
+      thus "snd (scheme1 ! i) = True" using \<open>scheme1 = scheme\<close> True hp(6) by (by100 blast)
+    qed
+  next
+    case False
+    hence hsch1: "scheme1 = map (\<lambda>(l, b). (l, if l = a then \<not> b else b)) scheme"
+      unfolding scheme1_def by (by100 simp)
+    show ?thesis
+    proof (intro allI impI)
+      fix i assume "i < length scheme1" "fst (scheme1 ! i) = a"
+      hence "i < length scheme" using hlen1 hlen by (by100 simp)
+      obtain l b where hlb: "scheme ! i = (l, b)" by (cases "scheme ! i")
+      have "scheme1 ! i = (l, if l = a then \<not> b else b)" using hsch1 \<open>i < length scheme\<close> hlb by (by100 simp)
+      hence "fst (scheme1 ! i) = l" by (by100 simp)
+      hence "l = a" using \<open>fst (scheme1 ! i) = a\<close> by (by100 simp)
+      have "i = p \<or> i = q"
+      proof -
+        have "{k. k < length scheme1 \<and> fst (scheme1 ! k) = a}
+            = {k. k < length scheme \<and> fst (scheme ! k) = a}"
+          using hfst_preserved hlen1 hlen by (by100 force)
+        hence hcard_a: "card {k. k < length scheme \<and> fst (scheme ! k) = a} = 2"
+          using h1_card by (by100 simp)
+        have "card {p, q} = 2" using hp(3) by (by100 simp)
+        have hpq_sub: "{p, q} \<subseteq> {k. k < length scheme \<and> fst (scheme ! k) = a}" using hp(1,2,4,5) by (by100 blast)
+        have hfin_a: "finite {k. k < length scheme \<and> fst (scheme ! k) = a}" by (by100 simp)
+        have "{k. k < length scheme \<and> fst (scheme ! k) = a} = {p, q}"
+          using card_subset_eq[OF hfin_a hpq_sub] hcard_a \<open>card {p,q} = 2\<close> by (by100 simp)
+        have "fst (scheme ! i) = a" using hlb \<open>l = a\<close> by (by100 simp)
+        hence "i \<in> {k. k < length scheme \<and> fst (scheme ! k) = a}" using \<open>i < length scheme\<close> by (by100 blast)
+        thus ?thesis using \<open>_ = {p, q}\<close> by (by100 blast)
+      qed
+      hence "snd (scheme ! i) = snd (scheme ! p)" using hp(6) by (by100 blast)
+      hence "b = False" using hlb False by (by100 simp)
+      hence "scheme1 ! i = (a, True)" using \<open>scheme1 ! i = (l, if l = a then \<not> b else b)\<close> \<open>l = a\<close> by (by100 simp)
+      thus "snd (scheme1 ! i) = True" by (by100 simp)
+    qed
+  qed
+  have h1_in: "(a, True) \<in> set scheme1"
+  proof -
+    have "p < length scheme1" using hp(1) hlen1 hlen by (by100 simp)
+    hence "scheme1 ! p \<in> set scheme1" by (by100 simp)
+    have "fst (scheme1 ! p) = a" using hfst_preserved \<open>p < length scheme1\<close> hp(4) by (by100 blast)
+    have "snd (scheme1 ! p) = True" using h1_dir \<open>p < length scheme1\<close> \<open>fst (scheme1 ! p) = a\<close> by (by100 blast)
+    obtain f s where hfs: "scheme1 ! p = (f, s)" by (cases "scheme1 ! p")
+    have "f = a" using hfs \<open>fst (scheme1 ! p) = a\<close> by (by100 simp)
+    have "s = True" using hfs \<open>snd (scheme1 ! p) = True\<close> by (by100 simp)
+    hence "scheme1 ! p = (a, True)" using hfs \<open>f = a\<close> by (by100 simp)
+    thus ?thesis using \<open>scheme1 ! p \<in> set scheme1\<close> by (by100 simp)
+  qed
   \<comment> \<open>Step 2: Bring to front.\<close>
   from valid_bring_projective_pair_to_front_full[OF h1_in h1_card h1_dir h1_ne h1_proper]
   obtain rest where hrest: "top1_valid_scheme_equiv scheme1 ([(a, True), (a, True)] @ rest)"
