@@ -13384,7 +13384,11 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
       case True
       \<comment> \<open>Base case: length 4, torus. The scheme is a commutator block (up to rotation/flip).
          Use the fact that valid operations include all needed transformations.\<close>
-      show ?thesis sorry \<comment> \<open>Torus base: 4-element torus scheme ~ torus\\_1 or sphere.\<close>
+      \<comment> \<open>Torus base: use old scheme\\_normal\\_form for combinatorial analysis,
+         then construct valid equiv via old result + valid\\_equiv\\_implies\\_equiv inverse.
+         Since the old proof's operations (rotate, flip, cancel) are ALL valid,
+         the valid\\_equiv also holds. We sorry the gap.\<close>
+      show ?thesis sorry
     next
       case False
       \<comment> \<open>Step: length > 4, torus. Check for adjacent cancel, or extract commutator.\<close>
@@ -13456,8 +13460,18 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           \<comment> \<open>rest' non-empty: IH on rest', chain with commutator\\_prepend.\<close>
           have hgt4: "length scheme > 4" using less(2) False by (by100 simp)
           have hrest_lt: "length rest' < length scheme" using hext(3) hgt4 by (by100 simp)
-          have hrest_ge4: "length rest' \<ge> 4"
-            using hext(3) hgt4 notempty proper_scheme_even_length[OF hext(4)] sorry
+          have hrest_even: "even (length rest')" using proper_scheme_even_length[OF hext(4)] .
+          have hrest_ge1: "length rest' \<ge> 1"
+            using notempty by (cases rest') (by100 auto)+
+          have hrest_ge2: "length rest' \<ge> 2" using hrest_ge1 hrest_even by (by100 presburger)
+          show ?thesis
+          proof (cases "length rest' < 4")
+            case True
+            \<comment> \<open>rest' has length 2. It's a cancel pair. Cancel to get torus\\_1.\<close>
+            show ?thesis sorry
+          next
+            case len_ge4: False
+            hence hrest_ge4: "length rest' \<ge> 4" by (by100 simp)
           from less(1)[OF hrest_lt hrest_ge4 hext(4)]
           have hIH_r: "(\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv rest' [(a,True),(a,False),(b,True),(b,False)])
              \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv rest' w)
@@ -13515,6 +13529,7 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
               unfolding top1_is_torus_scheme_def by (by100 simp)
             from valid_nf_torus[OF \<open>Suc n > 0\<close> this \<open>top1_valid_scheme_equiv scheme (top1_n_torus_scheme (Suc n))\<close>]
             show ?thesis .
+          qed
           qed
         qed
       qed
