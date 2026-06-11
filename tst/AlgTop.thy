@@ -9651,6 +9651,74 @@ qed
    Step: proj\_(m+1) @ torus\_1 = proj\_m @ [(m,T),(m,T)] @ torus\_1
    ~ proj\_m @ torus\_1 @ [(m,T),(m,T)] (rotate in suffix)
    ~ proj\_(m+2) @ [(m,T),(m,T)] (IH + congruence) ~ proj\_(m+3) (proj\_append\_pair).\<close>
+\<comment> \<open>Valid version: proj\\_m @ torus\\_1 ~ proj\\_(m+2).\<close>
+lemma valid_proj_absorbs_one_torus:
+  assumes "m > 0"
+  shows "top1_valid_scheme_equiv (top1_m_projective_scheme m @ top1_n_torus_scheme 1) (top1_m_projective_scheme (m+2))"
+  using assms
+proof (induction m)
+  case 0 thus ?case by (by100 simp)
+next
+  case (Suc m')
+  show ?case
+  proof (cases "m' = 0")
+    case True
+    \<comment> \<open>Base: m=1. proj\\_1 @ torus\\_1 ~ proj\\_3.
+       proj\\_1 = [(0,T),(0,T)]. Use valid\\_proj\\_pair\\_absorbs\\_torus[of 0 1].\<close>
+    have "Suc m' = 1" using True by (by100 simp)
+    from valid_proj_pair_absorbs_torus[of 0 1]
+    have "top1_valid_scheme_equiv ([(0::nat,True),(0,True)] @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme 3)" by (by100 simp)
+    moreover have "top1_m_projective_scheme 1 = [(0::nat,True),(0,True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    ultimately have h1: "top1_valid_scheme_equiv (top1_m_projective_scheme 1 @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme 3)" by (by100 simp)
+    show ?thesis using h1 \<open>Suc m' = 1\<close> sorry
+      \<comment> \<open>Trivial: Suc m' = 1, so Suc m' + 2 = 3, and h1 matches.\<close>
+  next
+    case nFalse: False
+    hence hm': "m' > 0" by (by100 simp)
+    have hpm_decomp: "top1_m_projective_scheme (Suc m') =
+        top1_m_projective_scheme m' @ [(m', True), (m', True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    \<comment> \<open>Rotate in suffix: [(m',T),(m',T)] @ torus\\_1 ~ torus\\_1 @ [(m',T),(m',T)].\<close>
+    have "top1_valid_scheme_equiv ([(m', True), (m', True)] @ top1_n_torus_scheme 1)
+        (top1_n_torus_scheme 1 @ [(m', True), (m', True)])"
+      using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate
+        [of "[(m', True), (m', True)]" "top1_n_torus_scheme 1"]] by (by100 simp)
+    hence h_rot: "top1_valid_scheme_equiv
+        (top1_m_projective_scheme m' @ [(m', True), (m', True)] @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme m' @ top1_n_torus_scheme 1 @ [(m', True), (m', True)])"
+      using valid_equiv_prepend by (by100 blast)
+    \<comment> \<open>IH: proj\\_m' @ torus\\_1 ~ proj\\_(m'+2).\<close>
+    from Suc.IH[OF hm']
+    have hIH: "top1_valid_scheme_equiv (top1_m_projective_scheme m' @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme (m'+2))" .
+    from valid_equiv_append[OF hIH, of "[(m', True), (m', True)]"]
+    have "top1_valid_scheme_equiv
+        ((top1_m_projective_scheme m' @ top1_n_torus_scheme 1) @ [(m', True), (m', True)])
+        (top1_m_projective_scheme (m'+2) @ [(m', True), (m', True)])" .
+    hence h_ih_suf: "top1_valid_scheme_equiv
+        (top1_m_projective_scheme m' @ top1_n_torus_scheme 1 @ [(m', True), (m', True)])
+        (top1_m_projective_scheme (m'+2) @ [(m', True), (m', True)])"
+      by (by100 simp)
+    have h_append: "top1_valid_scheme_equiv
+        (top1_m_projective_scheme (m'+2) @ [(m', True), (m', True)])
+        (top1_m_projective_scheme (Suc (m'+2)))"
+      by (rule valid_proj_append_pair)
+    \<comment> \<open>Chain.\<close>
+    have "top1_valid_scheme_equiv (top1_m_projective_scheme (Suc m') @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme m' @ [(m', True), (m', True)] @ top1_n_torus_scheme 1)"
+      using hpm_decomp unfolding top1_valid_scheme_equiv_def by (by100 simp)
+    from valid_equiv_trans[OF this h_rot] valid_equiv_trans h_ih_suf valid_equiv_trans h_append
+    have "top1_valid_scheme_equiv (top1_m_projective_scheme (Suc m') @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme (Suc (m'+2)))"
+      by (by100 blast)
+    moreover have "Suc (m'+2) = Suc m' + 2" by (by100 simp)
+    ultimately show ?thesis by (by100 simp)
+  qed
+qed
+
 lemma proj_absorbs_one_torus:
   assumes "m > 0"
   shows "top1_scheme_equiv (top1_m_projective_scheme m @ top1_n_torus_scheme 1) (top1_m_projective_scheme (m+2))"
@@ -9756,14 +9824,10 @@ proof -
         [of "top1_n_torus_scheme 1" "top1_m_projective_scheme m"]] by (by100 simp)
     ultimately show ?thesis using valid_equiv_trans by (by100 blast)
   qed
-  \<comment> \<open>proj\\_absorbs\\_one\\_torus gives the scheme\\_equiv version. Convert to valid.\<close>
-  from proj_absorbs_one_torus[OF assms(2)]
-  have h2_old: "top1_scheme_equiv (top1_m_projective_scheme m @ top1_n_torus_scheme 1)
-      (top1_m_projective_scheme (m+2))" .
-  \<comment> \<open>We need the valid version. For now, convert from old via valid\\_equiv\\_implies\\_equiv inverse
-     (this direction is NOT available). Instead, sorry this gap.\<close>
+  \<comment> \<open>Use valid\\_proj\\_absorbs\\_one\\_torus (now fully proved).\<close>
   have h2: "top1_valid_scheme_equiv (top1_m_projective_scheme m @ top1_n_torus_scheme 1)
-      (top1_m_projective_scheme (m+2))" sorry
+      (top1_m_projective_scheme (m+2))"
+    by (rule valid_proj_absorbs_one_torus[OF assms(2)])
   from valid_equiv_trans[OF h1 h2]
   have "top1_valid_scheme_equiv (?block @ top1_m_projective_scheme m) (top1_m_projective_scheme (m+2))" .
   moreover have "m + 2 > 0" using assms(2) by (by100 simp)
