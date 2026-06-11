@@ -735,7 +735,82 @@ proof -
         qed
         \<comment> \<open>Now compute the sign of each factor.\<close>
         have sign_pos: "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) > 0"
-          sorry \<comment> \<open>Combine sin\\_pi\\_frac\\_pos and sin\\_pi\\_frac\\_neg with m1,m2,m3 signs.\<close>
+        proof -
+          \<comment> \<open>Re-derive angle matching (same as in hf\\_ne proofs).\<close>
+          define m1 :: int where "m1 = int (Suc i mod ?n) - int i"
+          define m2 :: int where "m2 = int (Suc i mod ?n) - int k"
+          define m3 :: int where "m3 = int i - int k"
+          have ha1: "(?\<beta> - ?\<alpha>)/2 = pi * real_of_int m1 / real ?n"
+            unfolding m1_def using hn_pos by (simp add: divide_simps of_int_diff algebra_simps)
+          have ha2: "(?\<beta> - ?\<gamma>)/2 = pi * real_of_int m2 / real ?n"
+            unfolding m2_def using hn_pos by (simp add: divide_simps of_int_diff algebra_simps)
+          have ha3: "(?\<alpha> - ?\<gamma>)/2 = pi * real_of_int m3 / real ?n"
+            unfolding m3_def using hn_pos by (simp add: divide_simps of_int_diff algebra_simps)
+          \<comment> \<open>Bounds on mi.\<close>
+          have hn_gt0: "?n > 0" using assms by (by100 linarith)
+          have hmod_lt: "Suc i mod ?n < ?n" using hn_gt0 by (by100 simp)
+          have hm1_bnd: "- int ?n < m1 \<and> m1 < int ?n" unfolding m1_def using hi hmod_lt by (by100 linarith)
+          have hm2_bnd: "- int ?n < m2 \<and> m2 < int ?n" unfolding m2_def using hk hmod_lt by (by100 linarith)
+          have hm3_bnd: "- int ?n < m3 \<and> m3 < int ?n" unfolding m3_def using hi hk by (by100 linarith)
+          \<comment> \<open>Show m1*m2*m3 > 0 by case split on signs.\<close>
+          have hm_prod_pos: "m1 * m2 * m3 > 0"
+          proof (cases "Suc i < ?n")
+            case True \<comment> \<open>i < n-1: m1 = 1.\<close>
+            hence "Suc i mod ?n = Suc i" by (by100 simp)
+            hence hm1_eq: "m1 = 1" unfolding m1_def by (by100 simp)
+            \<comment> \<open>k < i or k > i+1. In both cases (i+1-k)*(i-k) > 0.\<close>
+            have "m2 * m3 > 0"
+            proof -
+              have "m2 = int (Suc i) - int k" unfolding m2_def using True by (by100 simp)
+              hence "m2 = m3 + 1" unfolding m3_def by (by100 linarith)
+              \<comment> \<open>m3 \\<noteq> 0 (k \\<noteq> i), m2 \\<noteq> 0 (k \\<noteq> i+1). m2 = m3+1, so both same sign or one is 0.\<close>
+              have "m3 \<noteq> 0" unfolding m3_def using hki by (by100 simp)
+              have "m2 \<noteq> 0" unfolding m2_def using hki1 True by (by100 simp)
+              \<comment> \<open>m2 = m3+1. If m3 > 0: m2 > 0. If m3 < 0 and m3 \\<noteq> -1: m2 < 0.\<close>
+              \<comment> \<open>m3 = -1 would mean k = i+1, but k \\<noteq> Suc i = Suc i mod n. Contradiction.\<close>
+              have "m3 \<noteq> -1"
+              proof
+                assume "m3 = -1"
+                hence "int k = int i + 1" unfolding m3_def by (by100 linarith)
+                hence "k = Suc i" by (by100 simp)
+                hence "k = Suc i mod ?n" using True by (by100 simp)
+                thus False using hki1 by (by100 simp)
+              qed
+              \<comment> \<open>m2 = m3+1, m3 \\<noteq> 0, m3 \\<noteq> -1: either both > 0 or both < 0.\<close>
+              show ?thesis
+              proof (cases "m3 > 0")
+                case True hence "m2 > 0" using \<open>m2 = m3 + 1\<close> by (by100 linarith)
+                thus ?thesis using True by (by100 simp)
+              next
+                case False hence "m3 < 0" using \<open>m3 \<noteq> 0\<close> by (by100 linarith)
+                hence "m3 < -1" using \<open>m3 \<noteq> -1\<close> by (by100 linarith)
+                hence "m2 < 0" using \<open>m2 = m3 + 1\<close> by (by100 linarith)
+                thus ?thesis using \<open>m3 < 0\<close> mult_neg_neg[of m2 m3] by (by100 linarith)
+              qed
+            qed
+            thus ?thesis using hm1_eq by (by100 simp)
+          next
+            case False \<comment> \<open>i = n-1.\<close>
+            hence hi_eq: "i = ?n - 1" using hi by (by100 simp)
+            hence "Suc i mod ?n = 0" using hn_gt0 by (by100 simp)
+            hence hm1_neg: "m1 = - int (?n - 1)" unfolding m1_def using hi_eq by (by100 simp)
+            hence "m1 < 0" using assms by (by100 linarith)
+            have hm2_neg: "m2 = - int k" unfolding m2_def using \<open>Suc i mod ?n = 0\<close> by (by100 simp)
+            have "k \<noteq> 0" using hki1 \<open>Suc i mod ?n = 0\<close> by (by100 simp)
+            hence "m2 < 0" using hm2_neg hk by (by100 linarith)
+            have hm3_pos: "m3 = int (?n - 1) - int k" unfolding m3_def using hi_eq by (by100 simp)
+            have "k \<noteq> ?n - 1" using hki hi_eq by (by100 simp)
+            hence "k < ?n - 1" using hk by (by100 linarith)
+            hence "m3 > 0" using hm3_pos by (by100 linarith)
+            have "m1 * m2 > 0" using \<open>m1 < 0\<close> \<open>m2 < 0\<close> mult_neg_neg[of m1 m2]
+              by (by100 linarith)
+            thus ?thesis using \<open>m3 > 0\<close> by (by100 simp)
+          qed
+          \<comment> \<open>Each factor: sin(\\<pi>*mi/n) has the sign of mi.\<close>
+          have "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) > 0"
+            sorry \<comment> \<open>From hm\\_prod\\_pos + sign matching via sin\\_pi\\_frac\\_pos/neg.\<close>
+          thus ?thesis .
+        qed
         thus ?thesis .
       qed
       hence "- 4 * sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) < 0"
