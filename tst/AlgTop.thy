@@ -13468,7 +13468,22 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
           proof (cases "length rest' < 4")
             case True
             \<comment> \<open>rest' has length 2. It's a cancel pair. Cancel to get torus\\_1.\<close>
-            show ?thesis sorry
+            \<comment> \<open>rest' has exactly 1 label pair with opposite directions.
+               Cancel: block @ rest' ~ block ~ torus\\_1.\<close>
+            have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                ([(a',True),(b',True),(a',False),(b',False)])"
+              sorry
+            hence "top1_valid_scheme_equiv scheme ([(a',True),(b',True),(a',False),(b',False)])"
+              using valid_equiv_trans[OF hext(2)] by (by100 blast)
+            moreover have "top1_valid_scheme_equiv [(a',True),(b',True),(a',False),(b',False)] (top1_n_torus_scheme 1)"
+              by (rule valid_commutator_block_equiv_torus_1[OF hext(1)])
+            ultimately have "top1_valid_scheme_equiv scheme (top1_n_torus_scheme 1)"
+              using valid_equiv_trans by (by100 blast)
+            have "(1::nat) > 0" by (by100 simp)
+            have "top1_is_torus_scheme (top1_n_torus_scheme 1) 1"
+              unfolding top1_is_torus_scheme_def by (by100 simp)
+            from valid_nf_torus[OF \<open>1 > 0\<close> this \<open>top1_valid_scheme_equiv scheme (top1_n_torus_scheme 1)\<close>]
+            show ?thesis .
           next
             case len_ge4: False
             hence hrest_ge4: "length rest' \<ge> 4" by (by100 simp)
