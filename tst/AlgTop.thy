@@ -13392,7 +13392,34 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
       proof (cases "\<exists>i < length scheme - 1. scheme ! i = top1_inverse_edge (scheme ! (i+1))")
         case True
         \<comment> \<open>Adjacent cancellable pair. Cancel to shorter scheme, apply IH.\<close>
-        show ?thesis sorry
+        \<comment> \<open>Cancel adjacent pair. Combinatorial analysis needed.\<close>
+        have hcancel: "\<exists>shorter. top1_valid_scheme_equiv scheme shorter \<and>
+            length shorter < length scheme \<and> length shorter \<ge> 4 \<and>
+            (\<forall>label. card {i. i < length shorter \<and> fst (shorter ! i) = label} \<in> {0, 2})"
+          sorry
+        then obtain shorter where hs: "top1_valid_scheme_equiv scheme shorter"
+            "length shorter < length scheme" "length shorter \<ge> 4"
+            "\<forall>label. card {i. i < length shorter \<and> fst (shorter ! i) = label} \<in> {0, 2}"
+          by (by100 blast)
+        from less(1)[OF hs(2) hs(3) hs(4)]
+        have hIH_s: "(\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv shorter [(a,True),(a,False),(b,True),(b,False)])
+           \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv shorter w)
+           \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv shorter w)" .
+        from hIH_s show ?thesis
+        proof (elim disjE exE conjE)
+          fix a' b' assume h: "a' \<noteq> b'" "top1_valid_scheme_equiv shorter [(a',True),(a',False),(b',True),(b',False)]"
+          have "top1_valid_scheme_equiv scheme [(a',True),(a',False),(b',True),(b',False)]"
+            using valid_equiv_trans[OF hs(1) h(2)] .
+          from valid_nf_sphere[OF h(1) this] show ?thesis .
+        next
+          fix m w assume h: "m > 0" "top1_is_projective_scheme w m" "top1_valid_scheme_equiv shorter w"
+          have "top1_valid_scheme_equiv scheme w" using valid_equiv_trans[OF hs(1) h(3)] .
+          from valid_nf_projective[OF h(1) h(2) this] show ?thesis .
+        next
+          fix n w assume h: "n > 0" "top1_is_torus_scheme w n" "top1_valid_scheme_equiv shorter w"
+          have "top1_valid_scheme_equiv scheme w" using valid_equiv_trans[OF hs(1) h(3)] .
+          from valid_nf_torus[OF h(1) h(2) this] show ?thesis .
+        qed
       next
         case adj_False: False
         \<comment> \<open>No adjacent cancel. All pairs have opposite direction and are separated.
