@@ -9896,7 +9896,72 @@ proof -
     ultimately show ?thesis by (by100 simp)
   qed
   have h1_dir: "\<forall>i < length scheme1. fst (scheme1 ! i) = a0 \<longrightarrow> snd (scheme1 ! i) = True"
-    sorry \<comment> \<open>True direction: from flip or original. Needs same 50-line case analysis as old proof.\<close>
+  proof (cases "snd (scheme ! p)")
+    case True
+    hence "scheme1 = scheme" unfolding scheme1_def by (by100 simp)
+    \<comment> \<open>Both a0-positions (p and q) have same direction (hp(6)), which is True.\<close>
+    have honly_pq: "{k. k < length scheme \<and> fst (scheme ! k) = a0} = {p, q}"
+    proof -
+      have "card {p, q} = 2" using hp(3) by (by100 simp)
+      have "{p, q} \<subseteq> {k. k < length scheme \<and> fst (scheme ! k) = a0}"
+        using hp(1,2,4,5) by (by100 blast)
+      have "finite {k. k < length scheme \<and> fst (scheme ! k) = a0}" by (by100 simp)
+      from card_seteq[OF this \<open>{p, q} \<subseteq> _\<close>] h1_card[unfolded \<open>scheme1 = scheme\<close> hlen1] \<open>card {p, q} = 2\<close>
+      show ?thesis by (by100 simp)
+    qed
+    show ?thesis
+    proof (intro allI impI)
+      fix i assume "i < length scheme1" "fst (scheme1 ! i) = a0"
+      hence "i \<in> {k. k < length scheme \<and> fst (scheme ! k) = a0}" using \<open>scheme1 = scheme\<close> hlen1 by (by100 blast)
+      hence "i = p \<or> i = q" using honly_pq by (by100 blast)
+      thus "snd (scheme1 ! i) = True" using \<open>scheme1 = scheme\<close> True hp(6) by (by100 blast)
+    qed
+  next
+    case False
+    hence hsch1: "scheme1 = map (\<lambda>(l, b). (l, if l = a0 then \<not> b else b)) scheme"
+      unfolding scheme1_def by (by100 simp)
+    show ?thesis
+    proof (intro allI impI)
+      fix i assume "i < length scheme1" "fst (scheme1 ! i) = a0"
+      hence "i < length scheme" using hlen1 by (by100 simp)
+      obtain l b where hlb: "scheme ! i = (l, b)" by (cases "scheme ! i")
+      have "scheme1 ! i = (l, if l = a0 then \<not> b else b)"
+        using hsch1 \<open>i < length scheme\<close> hlb by (by100 simp)
+      hence "fst (scheme1 ! i) = l" by (by100 simp)
+      hence "l = a0" using \<open>fst (scheme1 ! i) = a0\<close> by (by100 simp)
+      hence "scheme1 ! i = (a0, \<not> b)" using \<open>scheme1 ! i = (l, if l = a0 then \<not> b else b)\<close>
+        by (by100 simp)
+      \<comment> \<open>b must be False (since all a0-positions have same direction as scheme!p which is False).\<close>
+      have "fst (scheme ! i) = a0" using hlb \<open>l = a0\<close> by (by100 simp)
+      have "i = p \<or> i = q"
+      proof -
+        have honly_pq: "{k. k < length scheme \<and> fst (scheme ! k) = a0} = {p, q}"
+        proof -
+          have "card {p, q} = 2" using hp(3) by (by100 simp)
+          have "{p, q} \<subseteq> {k. k < length scheme \<and> fst (scheme ! k) = a0}"
+            using hp(1,2,4,5) by (by100 blast)
+          have "finite {k. k < length scheme \<and> fst (scheme ! k) = a0}" by (by100 simp)
+          have hcard_a0: "card {k. k < length scheme \<and> fst (scheme ! k) = a0} = 2"
+          proof -
+            have "{k. k < length scheme1 \<and> fst (scheme1 ! k) = a0}
+                = {k. k < length scheme \<and> fst (scheme ! k) = a0}"
+              using hfst_preserved hlen1 by (by100 force)
+            thus ?thesis using h1_card by (by100 simp)
+          qed
+          have hfin_a0: "finite {k. k < length scheme \<and> fst (scheme ! k) = a0}" by (by100 simp)
+          from card_subset_eq[OF hfin_a0 \<open>{p, q} \<subseteq> _\<close>]
+          show ?thesis using hcard_a0 \<open>card {p, q} = 2\<close> by (by100 simp)
+        qed
+        have "i \<in> {k. k < length scheme \<and> fst (scheme ! k) = a0}"
+          using \<open>i < length scheme\<close> \<open>fst (scheme ! i) = a0\<close> by (by100 blast)
+        thus ?thesis using honly_pq by (by100 blast)
+      qed
+      hence "snd (scheme ! i) = snd (scheme ! p)" using hp(6) by (by100 blast)
+      hence "b = False" using hlb False by (by100 simp)
+      hence "scheme1 ! i = (a0, True)" using \<open>scheme1 ! i = (a0, \<not> b)\<close> by (by100 simp)
+      thus "snd (scheme1 ! i) = True" by (by100 simp)
+    qed
+  qed
   have h1_in: "(a0, True) \<in> set scheme1"
   proof -
     have "p < length scheme1" using hp(1) hlen1 by (by100 simp)
