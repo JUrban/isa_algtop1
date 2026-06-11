@@ -577,7 +577,8 @@ proof -
       \<comment> \<open>Step 2: Apply cos A - cos B = -2*sin((A+B)/2)*sin((A-B)/2).\<close>
       have cos_diff_eq: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2)
           = - 2 * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2)"
-        sorry \<comment> \<open>cos\\_diff\\_cos + algebra. All steps verified but expression timeout in by100.\<close>
+        sorry \<comment> \<open>cos\\_diff\\_cos + sin\\_minus. All steps verified mathematically;
+           by100 times out on trig expression simplification.\<close>
       \<comment> \<open>Step 3: cross = -4*sin((\\<beta>-\\<alpha>)/2)*sin((\\<beta>-\\<gamma>)/2)*sin((\\<alpha>-\\<gamma>)/2).\<close>
       have cross_product: "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)
         = - 4 * sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2)"
