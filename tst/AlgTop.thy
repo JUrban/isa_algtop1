@@ -8917,6 +8917,26 @@ qed
    (2) a1a1...amam (projective, m \\<ge> 1)
    (3) a1b1a1\\<inverse>b1\\<inverse>...anbnanbnan\\<inverse>bn\\<inverse> (torus, n \\<ge> 1)\<close>
 
+\<comment> \<open>Valid version: commutator block is validly equivalent to torus n=1, via alpha-rename.\<close>
+lemma valid_commutator_block_equiv_torus_1:
+  assumes "a \<noteq> (b :: nat)"
+  shows "top1_valid_scheme_equiv [(a, True), (b, True), (a, False), (b, False)] (top1_n_torus_scheme 1)"
+proof -
+  define w where "w = [(a, True), (b, True), (a, False), (b, False)]"
+  define \<rho> :: "nat \<Rightarrow> nat" where "\<rho> = (\<lambda>x. if x = a then 0 else if x = b then 1 else x)"
+  have hw_labels: "scheme_labels w = {a, b}"
+    unfolding w_def scheme_labels_def by (by100 auto)
+  have hbij: "bij_betw \<rho> (scheme_labels w) {0, 1}"
+    unfolding bij_betw_def \<rho>_def hw_labels using assms by (by100 auto)
+  from valid_scheme_alpha_rename[OF hbij]
+  have "top1_valid_scheme_equiv w (map (\<lambda>(l,bo). (\<rho> l, bo)) w)" .
+  moreover have "map (\<lambda>(l,bo). (\<rho> l, bo)) w = [(0,True),(1,True),(0,False),(1,False)]"
+    unfolding w_def \<rho>_def using assms by (by100 auto)
+  moreover have "[(0::nat,True),(1,True),(0,False),(1,False)] = top1_n_torus_scheme 1"
+    unfolding top1_n_torus_scheme_def by (by100 simp)
+  ultimately show ?thesis unfolding w_def by (by100 simp)
+qed
+
 \<comment> \<open>A commutator block [(a,T),(b,T),(a,F),(b,F)] with a \\<noteq> b is equivalent to torus n=1.
    Proof: relabel a\\<to>0, b\\<to>1 (handling the b=0 case via intermediate label).\<close>
 lemma commutator_block_equiv_torus_1:
@@ -9085,6 +9105,44 @@ qed
 \<comment> \<open>Prepending a commutator block to a projective scheme gives a projective scheme of index m+2.
    Commutator = 1 torus pair. Lemma 77.4: proj pair + torus pair = 3 proj pairs.
    So commutator + projective\_m ~ projective\_(m+2).\<close>
+\<comment> \<open>Valid version: prepending commutator block to projective scheme.\<close>
+lemma valid_commutator_prepend_projective:
+  assumes "a \<noteq> (b :: nat)" and "m > 0"
+  shows "\<exists>w'. top1_is_projective_scheme w' (m+2) \<and>
+      top1_valid_scheme_equiv ([(a, True), (b, True), (a, False), (b, False)] @ top1_m_projective_scheme m) w'"
+proof -
+  \<comment> \<open>Use old commutator\\_prepend\\_projective result and convert via valid\\_equiv\\_implies\\_equiv.\<close>
+  \<comment> \<open>Actually, we need the VALID direction, not the old direction.\<close>
+  \<comment> \<open>Direct approach: block ~ torus\\_1, then rotate, then absorb.\<close>
+  let ?block = "[(a, True), (b, True), (a, False), (b, False)]"
+  have h1: "top1_valid_scheme_equiv (?block @ top1_m_projective_scheme m)
+      (top1_m_projective_scheme m @ top1_n_torus_scheme 1)"
+  proof -
+    from valid_commutator_block_equiv_torus_1[OF assms(1)]
+    have "top1_valid_scheme_equiv ?block (top1_n_torus_scheme 1)" .
+    hence "top1_valid_scheme_equiv (?block @ top1_m_projective_scheme m)
+        (top1_n_torus_scheme 1 @ top1_m_projective_scheme m)"
+      using valid_equiv_append by (by100 blast)
+    moreover have "top1_valid_scheme_equiv (top1_n_torus_scheme 1 @ top1_m_projective_scheme m)
+        (top1_m_projective_scheme m @ top1_n_torus_scheme 1)"
+      using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate
+        [of "top1_n_torus_scheme 1" "top1_m_projective_scheme m"]] by (by100 simp)
+    ultimately show ?thesis using valid_equiv_trans by (by100 blast)
+  qed
+  \<comment> \<open>proj\\_absorbs\\_one\\_torus gives the scheme\\_equiv version. Convert to valid.\<close>
+  from proj_absorbs_one_torus[OF assms(2)]
+  have h2_old: "top1_scheme_equiv (top1_m_projective_scheme m @ top1_n_torus_scheme 1)
+      (top1_m_projective_scheme (m+2))" .
+  \<comment> \<open>We need the valid version. For now, convert from old via valid\\_equiv\\_implies\\_equiv inverse
+     (this direction is NOT available). Instead, sorry this gap.\<close>
+  have h2: "top1_valid_scheme_equiv (top1_m_projective_scheme m @ top1_n_torus_scheme 1)
+      (top1_m_projective_scheme (m+2))" sorry
+  from valid_equiv_trans[OF h1 h2]
+  have "top1_valid_scheme_equiv (?block @ top1_m_projective_scheme m) (top1_m_projective_scheme (m+2))" .
+  moreover have "m + 2 > 0" using assms(2) by (by100 simp)
+  ultimately show ?thesis unfolding top1_is_projective_scheme_def by (by100 blast)
+qed
+
 lemma commutator_prepend_projective:
   assumes "a \<noteq> (b :: nat)" and "m > 0"
   shows "\<exists>w'. top1_is_projective_scheme w' (m+2) \<and>
@@ -9117,6 +9175,40 @@ proof -
     unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
   moreover have "m + 2 > 0" using assms(2) by (by100 simp)
   ultimately show ?thesis unfolding top1_is_projective_scheme_def by (by100 blast)
+qed
+
+\<comment> \<open>Valid version: prepending a commutator block gives torus (n+1).\<close>
+lemma valid_commutator_prepend_torus:
+  assumes "a \<noteq> (b :: nat)" and "n > 0"
+  shows "top1_valid_scheme_equiv ([(a, True), (b, True), (a, False), (b, False)] @ top1_n_torus_scheme n)
+      (top1_n_torus_scheme (Suc n))"
+proof -
+  let ?block = "[(a, True), (b, True), (a, False), (b, False)]"
+  let ?tn = "top1_n_torus_scheme n"
+  define target_block where "target_block = [(2*n, True), (2*n+1, True), (2*n, False), (2*n+1, False)]"
+  have htorus_suc: "top1_n_torus_scheme (Suc n) = ?tn @ target_block"
+    unfolding top1_n_torus_scheme_def target_block_def by (by100 simp)
+  \<comment> \<open>block ~ target\\_block via alpha-rename.\<close>
+  have hblock_target: "top1_valid_scheme_equiv ?block target_block"
+  proof -
+    from valid_commutator_block_equiv_torus_1[OF assms(1)]
+    have s1: "top1_valid_scheme_equiv ?block (top1_n_torus_scheme 1)" .
+    have "2 * n \<noteq> 2 * n + (1::nat)" by (by100 simp)
+    from valid_commutator_block_equiv_torus_1[OF this]
+    have s2: "top1_valid_scheme_equiv [(2*n,True),(2*n+1,True),(2*n,False),(2*n+1,False)]
+                                     (top1_n_torus_scheme 1)" .
+    from valid_equiv_sym[OF s2]
+    have s3: "top1_valid_scheme_equiv (top1_n_torus_scheme 1) target_block"
+      unfolding target_block_def .
+    from valid_equiv_trans[OF s1 s3] show ?thesis .
+  qed
+  have "top1_valid_scheme_equiv (?block @ ?tn) (target_block @ ?tn)"
+    using valid_equiv_append[OF hblock_target] by (by100 blast)
+  moreover have "top1_valid_scheme_equiv (target_block @ ?tn) (?tn @ target_block)"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate[of target_block ?tn]] by (by100 simp)
+  ultimately have "top1_valid_scheme_equiv (?block @ ?tn) (?tn @ target_block)"
+    using valid_equiv_trans by (by100 blast)
+  thus ?thesis using htorus_suc by (by100 simp)
 qed
 
 lemma commutator_prepend_torus:
