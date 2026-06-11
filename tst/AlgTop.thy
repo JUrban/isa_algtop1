@@ -13422,9 +13422,83 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
         qed
       next
         case adj_False: False
-        \<comment> \<open>No adjacent cancel. All pairs have opposite direction and are separated.
-           Apply Lemma 77.3 to extract commutator block aba\\<inverse>b\\<inverse>, IH on rest.\<close>
-        show ?thesis sorry
+        \<comment> \<open>No adjacent cancel. Lemma 77.3: extract commutator block, IH on rest.\<close>
+        \<comment> \<open>The combinatorial analysis (finding torus pair positions, decomposing scheme)
+           and applying valid\\_Lemma\\_77\\_3\\_torus\\_extraction needs ~300 lines.
+           Package as existence sorry, then chain IH.\<close>
+        have hextract: "\<exists>a' b' rest'. a' \<noteq> b' \<and>
+            top1_valid_scheme_equiv scheme ([(a',True),(b',True),(a',False),(b',False)] @ rest') \<and>
+            length rest' = length scheme - 4 \<and>
+            (\<forall>label. card {i. i < length rest' \<and> fst (rest' ! i) = label} \<in> {0, 2})"
+          sorry
+        then obtain a' b' rest' where hext: "a' \<noteq> b'"
+            "top1_valid_scheme_equiv scheme ([(a',True),(b',True),(a',False),(b',False)] @ rest')"
+            "length rest' = length scheme - 4"
+            "\<forall>label. card {i. i < length rest' \<and> fst (rest' ! i) = label} \<in> {0, 2}"
+          by (by100 blast)
+        show ?thesis
+        proof (cases "rest' = []")
+          case True
+          \<comment> \<open>rest' empty: scheme ~ commutator block = torus\\_1.\<close>
+          have "top1_valid_scheme_equiv scheme ([(a',True),(b',True),(a',False),(b',False)])"
+            using hext(2) True by (by100 simp)
+          moreover have "top1_valid_scheme_equiv [(a',True),(b',True),(a',False),(b',False)] (top1_n_torus_scheme 1)"
+            by (rule valid_commutator_block_equiv_torus_1[OF hext(1)])
+          ultimately have hchain_t1: "top1_valid_scheme_equiv scheme (top1_n_torus_scheme 1)"
+            using valid_equiv_trans by (by100 blast)
+          have "(1::nat) > 0" by (by100 simp)
+          have "top1_is_torus_scheme (top1_n_torus_scheme 1) 1"
+            unfolding top1_is_torus_scheme_def by (by100 simp)
+          from valid_nf_torus[OF \<open>1 > 0\<close> this hchain_t1]
+          show ?thesis .
+        next
+          case notempty: False
+          \<comment> \<open>rest' non-empty: IH on rest', chain with commutator\\_prepend.\<close>
+          have hgt4: "length scheme > 4" using less(2) False by (by100 simp)
+          have hrest_lt: "length rest' < length scheme" using hext(3) hgt4 by (by100 simp)
+          have hrest_ge4: "length rest' \<ge> 4"
+            using hext(3) hgt4 notempty proper_scheme_even_length[OF hext(4)] sorry
+          from less(1)[OF hrest_lt hrest_ge4 hext(4)]
+          have hIH_r: "(\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv rest' [(a,True),(a,False),(b,True),(b,False)])
+             \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv rest' w)
+             \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv rest' w)" .
+          from hIH_r show ?thesis
+          proof (elim disjE exE conjE)
+            \<comment> \<open>rest' ~ sphere: scheme ~ block @ sphere. Sphere is empty torus?
+               Actually: commutator + sphere = torus\\_1 by itself (cancel the sphere part).
+               But this case shouldn't arise for length > 4 with non-empty rest'...\<close>
+            fix a'' b'' assume h: "a'' \<noteq> b''" "top1_valid_scheme_equiv rest' [(a'',True),(a'',False),(b'',True),(b'',False)]"
+            show ?thesis sorry
+          next
+            fix m w assume h: "m > 0" "top1_is_projective_scheme w m" "top1_valid_scheme_equiv rest' w"
+            \<comment> \<open>block @ proj\\_m ~ proj\\_(m+2) via valid\\_commutator\\_prepend\\_projective.\<close>
+            have hw_eq: "w = top1_m_projective_scheme m" using h(2) unfolding top1_is_projective_scheme_def by (by100 blast)
+            have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                ([(a',True),(b',True),(a',False),(b',False)] @ w)"
+              using valid_equiv_prepend[OF h(3)] by (by100 blast)
+            show ?thesis sorry
+          next
+            fix n w assume h: "n > 0" "top1_is_torus_scheme w n" "top1_valid_scheme_equiv rest' w"
+            \<comment> \<open>block @ torus\\_n ~ torus\\_(n+1) via valid\\_commutator\\_prepend\\_torus.\<close>
+            have hw_eq: "w = top1_n_torus_scheme n" using h(2) unfolding top1_is_torus_scheme_def by (by100 blast)
+            have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                ([(a',True),(b',True),(a',False),(b',False)] @ top1_n_torus_scheme n)"
+              sorry
+            moreover from valid_commutator_prepend_torus[OF hext(1) h(1)]
+            have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ top1_n_torus_scheme n)
+                (top1_n_torus_scheme (Suc n))" .
+            ultimately have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                (top1_n_torus_scheme (Suc n))"
+              using valid_equiv_trans by (by100 blast)
+            hence "top1_valid_scheme_equiv scheme (top1_n_torus_scheme (Suc n))"
+              using valid_equiv_trans[OF hext(2)] by (by100 blast)
+            have "Suc n > 0" by (by100 simp)
+            have "top1_is_torus_scheme (top1_n_torus_scheme (Suc n)) (Suc n)"
+              unfolding top1_is_torus_scheme_def by (by100 simp)
+            from valid_nf_torus[OF \<open>Suc n > 0\<close> this \<open>top1_valid_scheme_equiv scheme (top1_n_torus_scheme (Suc n))\<close>]
+            show ?thesis .
+          qed
+        qed
       qed
     qed
   qed
