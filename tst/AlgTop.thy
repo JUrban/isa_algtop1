@@ -600,7 +600,32 @@ proof -
         \<comment> \<open>Helper: sin(\\<pi>*m/n) \\<noteq> 0 for 0 < |m| < n (integer m, n \\<ge> 3).\<close>
         have sin_pi_frac_ne: "\<And>m::int. m \<noteq> 0 \<Longrightarrow> \<bar>m\<bar> < int ?n \<Longrightarrow>
             sin (pi * real_of_int m / real ?n) \<noteq> 0"
-          sorry \<comment> \<open>sin(\\<pi>m/n)\\<noteq>0 for 0<|m|<n. Proof: sin=0 iff angle=k\\<pi>, iff m=kn; |m|<n gives k=0.\<close>
+        proof -
+          fix m :: int assume hm0: "m \<noteq> 0" and hm_bnd: "\<bar>m\<bar> < int ?n"
+          show "sin (pi * real_of_int m / real ?n) \<noteq> 0"
+          proof
+            assume hsin0: "sin (pi * real_of_int m / real ?n) = 0"
+            \<comment> \<open>By sin\\_zero\\_iff\\_int2: \\<exists>k. angle = k*\\<pi>.\<close>
+            from hsin0[unfolded sin_zero_iff_int2]
+            obtain kk :: int where hkk: "pi * real_of_int m / real ?n = real_of_int kk * pi"
+              by (by100 blast)
+            \<comment> \<open>Cancel \\<pi>: m/n = kk. Since |m| < n: |kk| < 1, so kk = 0, m = 0.\<close>
+            \<comment> \<open>pi * m / n = kk * pi \\<Longrightarrow> m = kk * n.\<close>
+            have "pi * real_of_int m = real_of_int kk * pi * real ?n"
+              using hkk hn_pos by (simp add: field_simps)
+            hence "real_of_int m = real_of_int kk * real ?n"
+              using pi_gt_zero by (by100 simp)
+            hence "\<bar>real_of_int m\<bar> = \<bar>real_of_int kk\<bar> * real ?n"
+              using hn_pos by (simp add: abs_mult)
+            hence "\<bar>real_of_int kk\<bar> * real ?n < real ?n"
+              using hm_bnd by (by100 linarith)
+            hence "\<bar>real_of_int kk\<bar> < 1" using hn_pos by (by100 simp)
+            hence "kk = 0" by (by100 linarith)
+            hence "real_of_int m = 0"
+              using \<open>real_of_int m = real_of_int kk * real ?n\<close> by (by100 simp)
+            thus False using hm0 by (by100 simp)
+          qed
+        qed
         have hf1_ne: "sin ((?\<beta> - ?\<alpha>)/2) \<noteq> 0"
           sorry \<comment> \<open>Apply sin\\_pi\\_frac\\_ne with m = Suc i mod n - i.\<close>
         have hf2_ne: "sin ((?\<beta> - ?\<gamma>)/2) \<noteq> 0"
