@@ -469,30 +469,45 @@ proof -
     qed
   qed
   \<comment> \<open>C11: strict convexity. Every non-adjacent vertex is on the right of each edge.\<close>
+  \<comment> \<open>C11 helper: the cross product for regular polygon vertices on the unit circle.
+     For points at angles \\<alpha>, \\<beta>, \\<gamma> on the unit circle, the signed area of
+     triangle (cos \\<alpha>, sin \\<alpha>), (cos \\<beta>, sin \\<beta>), (cos \\<gamma>, sin \\<gamma>) is
+     (1/2)(sin(\\<beta>-\\<alpha>) + sin(\\<gamma>-\\<beta>) + sin(\\<alpha>-\\<gamma>)).
+     We need: (cos \\<gamma> - cos \\<alpha>)(sin \\<beta> - sin \\<alpha>) - (sin \\<gamma> - sin \\<alpha>)(cos \\<beta> - cos \\<alpha>) < 0
+     which equals sin(\\<beta>-\\<gamma>) + sin(\\<gamma>-\\<alpha>) - sin(\\<beta>-\\<alpha>).\<close>
+  have cross_unit_circle:
+    "\<And>a b c :: real. (cos c - cos a)*(sin b - sin a) - (sin c - sin a)*(cos b - cos a)
+      = sin (b - c) + sin (c - a) - sin (b - a)"
+    sorry \<comment> \<open>Trig expansion: each product gives cos*sin - sin*cos = sin(diff) terms.\<close>
   have hC11: "\<forall>i<?n. \<forall>k<?n.
         k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
         (vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
   proof (intro allI impI)
     fix i k assume hi: "i < ?n" and hk: "k < ?n" and hki: "k \<noteq> i" and hki1: "k \<noteq> Suc i mod ?n"
-    \<comment> \<open>The cross product (v\\_k - v\\_i) \\<times> (v\\_{i+1} - v\\_i) = sin(\\<theta>\\_{i+1} - \\<theta>\\_k) - sin(\\<theta>\\_{i+1} - \\<theta>\\_i)
-       where \\<theta>\\_j = 2\\<pi>j/n. This equals sin(2\\<pi>(i+1-k)/n) + sin(2\\<pi>(k-i)/n) - sin(2\\<pi>/n).
-       For 2 \\<le> k-i mod n \\<le> n-1, this is negative (vertex k is on the right of edge i\\<to>i+1).\<close>
-    let ?\<theta>i = "2*pi*real i/real ?n"
-    let ?\<theta>k = "2*pi*real k/real ?n"
-    let ?\<theta>i1 = "2*pi*real (Suc i mod ?n)/real ?n"
-    \<comment> \<open>Expand cross product into trig.\<close>
+    let ?\<alpha> = "2*pi*real i/real ?n"
+    let ?\<beta> = "2*pi*real (Suc i mod ?n)/real ?n"
+    let ?\<gamma> = "2*pi*real k/real ?n"
     have cross_eq: "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i)
-        = sin (?\<theta>i1 - ?\<theta>k) + sin (?\<theta>k - ?\<theta>i) - sin (?\<theta>i1 - ?\<theta>i)"
-      unfolding vx_def vy_def
-      sorry \<comment> \<open>Expand using sin\\_diff: cos(a)*sin(b)-sin(a)*cos(b) = sin(b-a).\<close>
-    \<comment> \<open>sin(\\<theta>\\_{i+1} - \\<theta>\\_i) = sin(2\\<pi>/n) > 0.\<close>
-    have hi1_minus_i: "sin (?\<theta>i1 - ?\<theta>i) = sin (2*pi/real ?n)"
-      sorry \<comment> \<open>Same as in hcross proof.\<close>
-    \<comment> \<open>The sum sin(\\<theta>\\_{i+1}-\\<theta>\\_k) + sin(\\<theta>\\_k - \\<theta>\\_i) < sin(2\\<pi>/n).
-       This follows because both terms contribute angles that sum to 2\\<pi>/n
-       but with the convex combination \\<open>strictly less\\<close> by Jensen/AM-GM.\<close>
+        = sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)"
+      sorry \<comment> \<open>Cross product on unit circle = sin differences. Uses cross\\_unit\\_circle.\<close>
+    \<comment> \<open>sin(\\<beta>-\\<alpha>) = sin(2\\<pi>/n) from hcross.\<close>
+    have hba: "sin (?\<beta> - ?\<alpha>) = sin (2*pi/real ?n)" using hcross[OF hi] cross_unit_circle
+      sorry \<comment> \<open>Same identity as in hcross.\<close>
+    \<comment> \<open>Apply sin\\_plus\\_sin: sin(\\<beta>-\\<gamma>) + sin(\\<gamma>-\\<alpha>)
+       = 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>+\\<alpha>-2\\<gamma>)/2).
+       Since \\<beta>-\\<alpha> corresponds to 2\\<pi>/n, this gives
+       = 2*sin(\\<pi>/n)*cos(something).\<close>
+    have sum_eq: "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>)
+        = 2 * sin ((?\<beta> - ?\<alpha>)/2) * cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2)"
+      using sin_plus_sin[of "?\<beta> - ?\<gamma>" "?\<gamma> - ?\<alpha>"]
+      sorry \<comment> \<open>Algebra: ((\\<beta>-\\<gamma>)+(\\<gamma>-\\<alpha>))/2 = (\\<beta>-\\<alpha>)/2, ((\\<beta>-\\<gamma>)-(\\<gamma>-\\<alpha>))/2 = (\\<beta>+\\<alpha>-2\\<gamma>)/2.\<close>
+    \<comment> \<open>Also sin(2\\<pi>/n) = 2*sin(\\<pi>/n)*cos(\\<pi>/n).\<close>
+    have double_angle: "sin (2*pi/real ?n) = 2 * sin (pi/real ?n) * cos (pi/real ?n)"
+      using sin_double[of "pi/real ?n"] by (by100 simp)
+    \<comment> \<open>So cross = 2*sin(\\<pi>/n)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos(\\<pi>/n)].
+       Need cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) < cos(\\<pi>/n) for the cross product to be < 0.\<close>
     show "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
-      sorry \<comment> \<open>Final assembly: cross\\_eq + trig inequality.\<close>
+      sorry \<comment> \<open>Final: assemble cross\\_eq + sum\\_eq + double\\_angle + cosine comparison.\<close>
   qed
   \<comment> \<open>C6: non-adjacent edge interiors don't intersect (strict convexity implies this).\<close>
   have hC6: "True"
