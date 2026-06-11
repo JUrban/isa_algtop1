@@ -9084,7 +9084,164 @@ proof -
   \<comment> \<open>If rest is projective (same direction): [(a,T),(a,T),(b,d),(b,d)] \\<sim> proj\\_2.
      If rest is torus (opposite direction): cancel gives [(a,T),(a,T)] \\<sim> proj\\_1.
      Detailed case analysis deferred.\<close>
-  show ?thesis sorry
+  \<comment> \<open>rest has 2 elements, proper. Decompose rest = [r0, r1].\<close>
+  obtain r0 r1 where hrest_eq: "rest = [r0, r1]"
+  proof -
+    from hrest_len obtain x xs where "rest = x # xs" by (cases rest) (by100 auto)+
+    then obtain y ys where "xs = y # ys" using hrest_len by (cases xs) (by100 auto)+
+    hence "ys = []" using hrest_len \<open>rest = x # xs\<close> by (by100 simp)
+    thus ?thesis using that \<open>rest = x # xs\<close> \<open>xs = y # ys\<close> by (by100 simp)
+  qed
+  \<comment> \<open>Both elements have the same label (from properness + length 2).\<close>
+  obtain b d1 d2 where hr0: "r0 = (b, d1)" and hr1: "r1 = (b, d2)" and hb_ne_a: "b \<noteq> a"
+  proof -
+    obtain b1 d1 where "r0 = (b1, d1)" by (cases r0)
+    obtain b2 d2 where "r1 = (b2, d2)" by (cases r1)
+    have "b1 = b2"
+    proof -
+      have "card {i. i < length rest \<and> fst (rest ! i) = b1} \<in> {0, 2}" using hrest(5) by (by100 blast)
+      have "0 < length rest" "fst (rest ! 0) = b1" using hrest_eq \<open>r0 = (b1, d1)\<close> by (by100 simp)+
+      hence "{i. i < length rest \<and> fst (rest ! i) = b1} \<noteq> {}" by (by100 blast)
+      hence "card {i. i < length rest \<and> fst (rest ! i) = b1} \<noteq> 0" by (by100 simp)
+      hence hcard_b1: "card {i. i < length rest \<and> fst (rest ! i) = b1} = 2"
+        using \<open>card _ \<in> {0, 2}\<close> by (by100 blast)
+      have hsub: "{i. i < length rest \<and> fst (rest ! i) = b1} \<subseteq> {0, 1}"
+        using hrest_len by (by100 auto)
+      have hfin01: "finite {0::nat, 1}" by (by100 simp)
+      have hcard01: "card {0::nat, 1} = 2" by (by100 simp)
+      from card_subset_eq[OF hfin01 hsub]
+      have "{i. i < length rest \<and> fst (rest ! i) = b1} = {0, 1}"
+        using hcard_b1 hcard01 by (by100 simp)
+      hence "1 \<in> {i. i < length rest \<and> fst (rest ! i) = b1}" by (by100 blast)
+      hence "fst (rest ! 1) = b1" by (by100 blast)
+      thus "b1 = b2" using hrest_eq \<open>r1 = (b2, d2)\<close> by (by100 simp)
+    qed
+    moreover have "b1 \<noteq> a" using hrest(3) hrest_eq \<open>r0 = (b1, d1)\<close> by (by100 simp)
+    ultimately show ?thesis using that \<open>r0 = (b1, d1)\<close> \<open>r1 = (b2, d2)\<close> by (by100 blast)
+  qed
+  show ?thesis
+  proof (cases "d1 = d2")
+    case True
+    \<comment> \<open>Same direction: [(a,T),(a,T),(b,d),(b,d)] is projective m=2 via alpha-rename.\<close>
+    \<comment> \<open>First flip b to True if needed.\<close>
+    have "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True),(b,True),(b,True)])"
+    proof (cases "d1 = True")
+      case True
+      hence "rest = [(b,True),(b,True)]" using hrest_eq hr0 hr1 \<open>d1 = d2\<close> by (by100 simp)
+      thus ?thesis unfolding top1_valid_scheme_equiv_def by (by100 simp)
+    next
+      case False
+      hence "d1 = False" by (by100 simp)
+      hence "rest = [(b,False),(b,False)]" using hrest_eq hr0 hr1 \<open>d1 = d2\<close> by (by100 simp)
+      \<comment> \<open>Flip label b: [(a,T),(a,T),(b,F),(b,F)] ~ [(a,T),(a,T),(b,T),(b,T)].\<close>
+      have hop: "top1_valid_scheme_operation [(a,True),(a,True),(b,False),(b,False)]
+          (map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,False),(b,False)])"
+        by (rule top1_valid_scheme_operation.v_flip_label)
+      have hmap: "map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,False),(b,False)]
+          = [(a,True),(a,True),(b,True),(b,True)]" using hb_ne_a by (by100 simp)
+      from valid_imp_equiv[OF hop[unfolded hmap]]
+      show ?thesis using \<open>rest = [(b,False),(b,False)]\<close> by (by100 simp)
+    qed
+    hence "top1_valid_scheme_equiv scheme ([(a,True),(a,True),(b,True),(b,True)])"
+      using valid_equiv_trans \<open>top1_valid_scheme_equiv scheme ([(a,True),(a,True)] @ rest)\<close> by (by100 blast)
+    \<comment> \<open>Alpha-rename {a,b} to {0,1}: this IS proj\\_2.\<close>
+    moreover have "top1_valid_scheme_equiv [(a,True),(a,True),(b,True),(b,True)] (top1_m_projective_scheme 2)"
+    proof -
+      define \<rho> :: "nat \<Rightarrow> nat" where "\<rho> = (\<lambda>x. if x = a then 0 else if x = b then 1 else x)"
+      have "bij_betw \<rho> (scheme_labels [(a,True),(a,True),(b,True),(b,True)]) {0, 1}"
+        unfolding bij_betw_def \<rho>_def scheme_labels_def using hb_ne_a by (by100 auto)
+      from valid_scheme_alpha_rename[OF this]
+      have "top1_valid_scheme_equiv [(a,True),(a,True),(b,True),(b,True)]
+          (map (\<lambda>(l,bo). (\<rho> l, bo)) [(a,True),(a,True),(b,True),(b,True)])" .
+      moreover have "map (\<lambda>(l,bo). (\<rho> l, bo)) [(a,True),(a,True),(b,True),(b,True)]
+          = [(0,True),(0,True),(1,True),(1,True)]" unfolding \<rho>_def using hb_ne_a by (by100 simp)
+      moreover have "[(0::nat,True),(0,True),(1,True),(1,True)] = top1_m_projective_scheme 2"
+        unfolding top1_m_projective_scheme_def by code_simp
+      ultimately show ?thesis by (by100 simp)
+    qed
+    ultimately have "top1_valid_scheme_equiv scheme (top1_m_projective_scheme 2)"
+      using valid_equiv_trans by (by100 blast)
+    moreover have "(2::nat) > 0" by (by100 simp)
+    moreover have "top1_is_projective_scheme (top1_m_projective_scheme 2) 2"
+      unfolding top1_is_projective_scheme_def by (by100 simp)
+    ultimately show ?thesis by (by100 fast)
+  next
+    case False
+    \<comment> \<open>Opposite directions: rest = [(b,T),(b,F)] or [(b,F),(b,T)].
+       Cancel the b-pair: [(a,T),(a,T),(b,T),(b,F)] ~ [(a,T),(a,T)] by
+       rotating b to form [b, inv(b)] adjacent, then cancel.\<close>
+    have "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)])"
+    proof -
+      have hrest_torus: "rest = [(b, d1), (b, d2)]" using hrest_eq hr0 hr1 by (by100 simp)
+      have "d1 = True \<and> d2 = False \<or> d1 = False \<and> d2 = True" using False by (by100 blast)
+      hence hrest_inv: "rest = [(b, True), (b, False)] \<or> rest = [(b, False), (b, True)]"
+        using hrest_torus by (by100 blast)
+      \<comment> \<open>Either way, [(a,T),(a,T)] @ rest contains (b,T) and inv(b,T) = (b,F).
+         Use: rotate to separate, then cancel.\<close>
+      show ?thesis
+      proof (cases "d1 = True")
+        case True
+        hence "rest = [(b, True), (b, False)]" using hrest_torus False by (by100 simp)
+        \<comment> \<open>[(a,T),(a,T),(b,T),(b,F)]: the last two are (b,T) and inv(b,T).
+           Cancel: [(a,T),(a,T)] @ [(b,T), inv(b,T)] \\<to> [(a,T),(a,T)] @ [].\<close>
+        have "top1_valid_scheme_operation
+            ([(a,True),(a,True)] @ [(b,True), top1_inverse_edge (b,True)] @ [])
+            ([(a,True),(a,True)] @ [])"
+          by (rule top1_valid_scheme_operation.v_cancel)
+        moreover have "top1_inverse_edge (b, True) = (b, False)"
+          unfolding top1_inverse_edge_def by (by100 simp)
+        ultimately have "top1_valid_scheme_operation
+            ([(a,True),(a,True),(b,True),(b,False)]) ([(a,True),(a,True)])"
+          by (by100 simp)
+        from valid_imp_equiv[OF this]
+        show ?thesis using \<open>rest = [(b,True),(b,False)]\<close> by (by100 simp)
+      next
+        case False2: False
+        hence "d1 = False" by (by100 simp)
+        hence "rest = [(b, False), (b, True)]" using hrest_torus False by (by100 simp)
+        \<comment> \<open>[(a,T),(a,T),(b,F),(b,T)]: rotate to [(b,T),(a,T),(a,T),(b,F)],
+           then cancel [(b,T),inv(b,T)] = cancel at different position.
+           Actually: use flip\\_label b first to get [(a,T),(a,T),(b,T),(b,F)], then cancel.\<close>
+        have hop_flip: "top1_valid_scheme_operation [(a,True),(a,True),(b,False),(b,True)]
+            (map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,False),(b,True)])"
+          by (rule top1_valid_scheme_operation.v_flip_label)
+        have hmap_flip: "map (\<lambda>(l,bo). (l, if l = b then \<not>bo else bo)) [(a,True),(a,True),(b,False),(b,True)]
+            = [(a,True),(a,True),(b,True),(b,False)]" using hb_ne_a by (by100 simp)
+        have s1: "top1_valid_scheme_equiv ([(a,True),(a,True),(b,False),(b,True)])
+            ([(a,True),(a,True),(b,True),(b,False)])"
+          using valid_imp_equiv[OF hop_flip[unfolded hmap_flip]] .
+        have "top1_valid_scheme_operation
+            ([(a,True),(a,True)] @ [(b,True), top1_inverse_edge (b,True)] @ [])
+            ([(a,True),(a,True)] @ [])"
+          by (rule top1_valid_scheme_operation.v_cancel)
+        hence s2: "top1_valid_scheme_equiv ([(a,True),(a,True),(b,True),(b,False)]) ([(a,True),(a,True)])"
+          unfolding top1_inverse_edge_def using valid_imp_equiv by (by100 simp)
+        from valid_equiv_trans[OF s1 s2]
+        show ?thesis using \<open>rest = [(b,False),(b,True)]\<close> by (by100 simp)
+      qed
+    qed
+    hence "top1_valid_scheme_equiv scheme ([(a,True),(a,True)])"
+      using valid_equiv_trans \<open>top1_valid_scheme_equiv scheme ([(a,True),(a,True)] @ rest)\<close> by (by100 blast)
+    \<comment> \<open>[(a,T),(a,T)] is proj\\_1 via alpha-rename.\<close>
+    moreover have "top1_valid_scheme_equiv [(a,True),(a,True)] (top1_m_projective_scheme 1)"
+    proof -
+      define \<rho> :: "nat \<Rightarrow> nat" where "\<rho> = (\<lambda>x. if x = a then 0 else x)"
+      have "bij_betw \<rho> (scheme_labels [(a,True),(a,True)]) {0}"
+        unfolding bij_betw_def \<rho>_def scheme_labels_def by (by100 auto)
+      from valid_scheme_alpha_rename[OF this]
+      have "top1_valid_scheme_equiv [(a,True),(a,True)] (map (\<lambda>(l,bo). (\<rho> l, bo)) [(a,True),(a,True)])" .
+      moreover have "map (\<lambda>(l,bo). (\<rho> l, bo)) [(a,True),(a,True)] = [(0,True),(0,True)]"
+        unfolding \<rho>_def by (by100 simp)
+      moreover have "[(0::nat,True),(0,True)] = top1_m_projective_scheme 1"
+        unfolding top1_m_projective_scheme_def by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
+    ultimately have "top1_valid_scheme_equiv scheme (top1_m_projective_scheme 1)"
+      using valid_equiv_trans by (by100 blast)
+    moreover have "top1_is_projective_scheme (top1_m_projective_scheme 1) 1"
+      unfolding top1_is_projective_scheme_def by (by100 simp)
+    ultimately show ?thesis by (by100 blast)
+  qed
 qed
 
 \<comment> \<open>Key congruence: scheme equivalence on a suffix extends through a projective-pair prefix,
