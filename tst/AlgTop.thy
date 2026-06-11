@@ -3893,8 +3893,7 @@ next
   case (v_cancel u a v)
   \<comment> \<open>Cancel: §76 operation (vi). Fold cancelled edge pair.
      Direct proof target (Route B): \\<exists>Y TY h. quotient(Y, u@v) \\<and> homeo(X, Y).
-     Geometric: the (n+2)-gon folds along the cancelled edge pair to give an n-gon.
-     Uses quotient\\_transport\\_by\\_homeomorphism with a folding map.\<close>
+     Geometric: the (n+2)-gon folds along the cancelled edge pair to give an n-gon.\<close>
   show ?case sorry \<comment> \<open>§76(vi): Cancel preserves quotient homeo type. Geometric polygon folding.\<close>
 next
   case (v_uncancel a u v)
