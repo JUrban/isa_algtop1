@@ -13246,6 +13246,47 @@ lemma valid_nf_torus:
    \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv scheme w)"
   by (by100 blast)
 
+\<comment> \<open>Remaining combinatorial helpers for scheme\\_normal\\_form\\_valid.
+   These are the targets for closing the NF sorrys.\<close>
+lemma valid_torus_len4_base:
+  assumes "length scheme = 4"
+      "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+      "\<not>(\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
+          \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))"
+  shows "(\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
+       \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv scheme w)"
+  sorry
+
+lemma valid_cancel_adjacent_proper:
+  assumes "length scheme \<ge> 6"
+      "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+      "\<exists>i < length scheme - 1. scheme ! i = top1_inverse_edge (scheme ! (i+1))"
+  shows "\<exists>shorter. top1_valid_scheme_equiv scheme shorter \<and>
+      length shorter < length scheme \<and> length shorter \<ge> 4 \<and>
+      (\<forall>label. card {i. i < length shorter \<and> fst (shorter ! i) = label} \<in> {0, 2})"
+  sorry
+
+lemma valid_extract_commutator:
+  assumes "length scheme \<ge> 8"
+      "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+      "\<not>(\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
+          \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j))"
+      "\<not>(\<exists>i < length scheme - 1. scheme ! i = top1_inverse_edge (scheme ! (i+1)))"
+  shows "\<exists>a' b' rest'. a' \<noteq> b' \<and>
+      top1_valid_scheme_equiv scheme ([(a',True),(b',True),(a',False),(b',False)] @ rest') \<and>
+      length rest' = length scheme - 4 \<and>
+      (\<forall>label. card {i. i < length rest' \<and> fst (rest' ! i) = label} \<in> {0, 2})"
+  sorry
+
+lemma valid_cancel_2elem_suffix:
+  assumes "a' \<noteq> b'" "length rest' = 2"
+      "\<forall>label. card {i. i < length rest' \<and> fst (rest' ! i) = label} \<in> {0, 2}"
+  shows "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+      ([(a',True),(b',True),(a',False),(b',False)])
+    \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and>
+        top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest') w)"
+  sorry
+
 lemma scheme_normal_form_valid:
   fixes scheme :: "(nat \<times> bool) list"
   assumes "length scheme \<ge> 4"
