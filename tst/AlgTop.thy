@@ -407,13 +407,11 @@ proof -
       hence "Suc i = ?n" using hi by (by100 simp)
       hence "Suc i mod ?n = 0" by (by100 simp)
       hence h_mod0: "Suc i mod ?n = 0" by (by100 simp)
-      \<comment> \<open>Direct: sin(?b - ?a) = sin(2\\<pi>*0/n - 2\\<pi>*i/n) = sin(-2\\<pi>*(n-1)/n) = sin(2\\<pi>/n).\<close>
-      have "sin (?b - ?a) = sin (2*pi*real (Suc i mod ?n)/real ?n - 2*pi*real i/real ?n)"
-        by (by100 simp)
-      also have "\<dots> = sin (2*pi*real 0/real ?n - 2*pi*real i/real ?n)"
+      \<comment> \<open>Direct: sin(?b - ?a) = sin(-2\\<pi>*(n-1)/n) = sin(2\\<pi>/n).\<close>
+      have hba_neg: "?b - ?a = - (2*pi*real i/real ?n)"
         using h_mod0 by (by100 simp)
-      also have "\<dots> = sin (- (2*pi*real i/real ?n))" by (by100 simp)
-      also have "\<dots> = - sin (2*pi*real i/real ?n)" by (by100 simp)
+      have "sin (?b - ?a) = - sin (2*pi*real i/real ?n)"
+        unfolding hba_neg by (by100 simp)
       also have "\<dots> = - sin (2*pi*real (?n - 1)/real ?n)"
         using \<open>i = ?n - 1\<close> by (by100 simp)
       also have "\<dots> = - sin (2*pi - 2*pi/real ?n)"
@@ -424,7 +422,7 @@ proof -
           using sin_minus[of "2*pi/real ?n"] by (simp add: sin_diff)
         thus ?thesis by (by100 simp)
       qed
-      finally show ?thesis sorry
+      finally show ?thesis .
     qed
     show "vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n) = sin (2*pi/real ?n)"
       using step1 step2 step3 by (by100 simp)
@@ -448,7 +446,27 @@ proof -
        (vy (Suc i mod ?n) - (\<Sum>j<?n. vy j) / real ?n) -
        (vy i - (\<Sum>j<?n. vy j) / real ?n) *
        (vx (Suc i mod ?n) - (\<Sum>j<?n. vx j) / real ?n) > 0"
-      sorry \<comment> \<open>Assembly: cx=cy=0, cross product = sin(2\\<pi>/n) > 0. Simp/linarith timeout.\<close>
+    proof -
+      have "vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n) > 0"
+        using h3 h4 by (by100 linarith)
+      moreover have "(vx i - (\<Sum>j<?n. vx j) / real ?n) *
+         (vy (Suc i mod ?n) - (\<Sum>j<?n. vy j) / real ?n) -
+         (vy i - (\<Sum>j<?n. vy j) / real ?n) *
+         (vx (Suc i mod ?n) - (\<Sum>j<?n. vx j) / real ?n)
+         = vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n)"
+      proof -
+        have "(\<Sum>j<?n. vx j) / real ?n = (0::real)" using h1 .
+        moreover have "(\<Sum>j<?n. vy j) / real ?n = (0::real)" using h2 .
+        ultimately have sx: "(\<Sum>j<?n. vx j) / real ?n = (0::real)"
+          and sy: "(\<Sum>j<?n. vy j) / real ?n = (0::real)" by auto
+        show ?thesis
+          apply (subst sx)+
+          apply (subst sy)+
+          apply (simp only: diff_0_right mult_1_right)
+          done
+      qed
+      ultimately show ?thesis by (by100 linarith)
+    qed
   qed
   \<comment> \<open>C11: strict convexity. Every non-adjacent vertex is on the right of each edge.\<close>
   have hC11: "\<forall>i<?n. \<forall>k<?n.
