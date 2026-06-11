@@ -13327,9 +13327,25 @@ proof -
   show ?thesis
   proof (cases "d1 = d2")
     case True
-    \<comment> \<open>Projective pair: block @ [(l,d),(l,d)] ~ proj\\_3.
-       Needs: flip to True + alpha-rename to proj\\_1 + commutator\\_prepend\\_projective.\<close>
-    show ?thesis sorry
+    \<comment> \<open>Projective pair: block @ [(l,d),(l,d)] ~ proj\\_3.\<close>
+    have hrest'_proj: "rest' = [(l,d1),(l,d1)]" using hrest' True by (by100 simp)
+    \<comment> \<open>Step 1: flip\\_label l makes d1=True.\<close>
+    have s1: "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+        ([(a',True),(b',True),(a',False),(b',False)] @ [(l,True),(l,True)])"
+      sorry
+    \<comment> \<open>Step 2: alpha-rename l to 0: [(l,T),(l,T)] ~ [(0,T),(0,T)] = proj\\_1.\<close>
+    \<comment> \<open>Step 3: block @ proj\\_1 ~ proj\\_3 via commutator\\_prepend\\_projective.\<close>
+    from valid_commutator_prepend_projective[OF hab, of 1]
+    obtain w' where hw': "top1_is_projective_scheme w' 3"
+        "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ top1_m_projective_scheme 1) w'"
+      sorry
+    \<comment> \<open>Chain: block @ rest' ~ block @ [(l,T),(l,T)] ~ block @ proj\\_1 ~ w'.\<close>
+    have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ [(l,True),(l,True)])
+        ([(a',True),(b',True),(a',False),(b',False)] @ top1_m_projective_scheme 1)"
+      sorry
+    hence "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest') w'"
+      using s1 hw'(2) valid_equiv_trans by (by100 blast)
+    thus ?thesis using hw'(1) sorry
   next
     case False
     \<comment> \<open>Cancel pair: block @ [(l,d),(l,\\<not>d)] ~ block.\<close>
