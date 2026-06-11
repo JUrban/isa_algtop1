@@ -1210,10 +1210,11 @@ proof -
              (if snd(scheme!i) = snd(scheme!j) then s=t else s=1-t))"
     sorry \<comment> \<open>Boundary identification is exactly as specified by the scheme.\<close>
   \<comment> \<open>Assembly: introduce witnesses P, q, vx, vy and combine all conditions.\<close>
+  \<comment> \<open>Assemble: pack all conditions into the existential.\<close>
+  have htopo: "is_topology_on_strict Y TY"
+    sorry \<comment> \<open>TY is a valid topology on Y.\<close>
   show ?thesis
-    sorry \<comment> \<open>Assembly: introduce Y, TY, P, q, vx, vy as witnesses.
-       All conditions available: hC1-hC6, hC8, hC9\\_interior, hC9\\_boundary, hC10, hC11, hC2.
-       Needs careful matching with top1\\_quotient\\_of\\_scheme\\_on\\_def.\<close>
+    sorry \<comment> \<open>Assembly: all conditions available. Needs matching with definition.\<close>
 qed
 
 \<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
