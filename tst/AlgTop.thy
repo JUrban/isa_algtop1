@@ -1200,7 +1200,25 @@ proof -
          But p = q(p') is interior (not on any edge). Contradiction.\<close>
       \<comment> \<open>Need: partner(i) < n, q(p') = edge\\_pt(partner i, ...).
          Then q(p') is on edge partner(i), contradicting p = q(p') being interior.\<close>
-      show ?thesis sorry \<comment> \<open>Needs partner infrastructure. q(p') on canonical edge \\<noteq> interior p.\<close>
+      \<comment> \<open>p' on non-canonical edge: q(p') enters the THEN branch of q\\_def.
+         q(p') = edge\\_pt(partner(SOME...), t') for some t'.
+         This is a point on a canonical edge. But p is interior (not on any edge).
+         So p \\<noteq> q(p'), contradicting p = q(p) = q(p').\<close>
+      \<comment> \<open>Key: any value returned by the THEN branch of q is an edge point.\<close>
+      have q_then_on_edge: "\<And>p0. (\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i) \<Longrightarrow>
+        \<exists>j t'. j < ?n \<and> 0 \<le> t' \<and> t' \<le> 1 \<and> q p0 = edge_pt j t'"
+        sorry \<comment> \<open>From q\\_def: THEN branch returns edge\\_pt(partner(...), ...) with valid index.\<close>
+      from True obtain i t where hit: "i < ?n" "0 \<le> t" "t \<le> 1" "p' = edge_pt i t" "\<not> is_canonical i"
+        by (by100 blast)
+      have hex: "\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p' = edge_pt i t \<and> \<not> is_canonical i"
+        using hit by (by100 blast)
+      from q_then_on_edge[OF hex]
+      obtain j t' where hjt: "j < ?n" "0 \<le> t'" "t' \<le> 1" "q p' = edge_pt j t'" by (by100 blast)
+      have "t' \<in> I_set" using hjt unfolding top1_unit_interval_def by (by100 simp)
+      have "q p' = ((1-t')*vx j + t'*vx(Suc j mod ?n), (1-t')*vy j + t'*vy(Suc j mod ?n))"
+        using hjt(4) unfolding edge_pt_def by (by100 simp)
+      hence "p \<noteq> q p'" using hinterior hjt(1) \<open>t' \<in> I_set\<close> by (by100 blast)
+      thus ?thesis using hqeq hqp by (by100 simp)
     qed
   qed
   have hC9_boundary: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
