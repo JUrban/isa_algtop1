@@ -9701,8 +9701,18 @@ next
       unfolding top1_m_projective_scheme_def by (by100 simp)
     ultimately have h1: "top1_valid_scheme_equiv (top1_m_projective_scheme 1 @ top1_n_torus_scheme 1)
         (top1_m_projective_scheme 3)" by (by100 simp)
-    show ?thesis using h1 \<open>Suc m' = 1\<close> sorry
-      \<comment> \<open>Trivial: Suc m' = 1, so Suc m' + 2 = 3, and h1 matches.\<close>
+    have heq: "m' = 0" using True .
+    \<comment> \<open>Goal: valid\\_equiv (proj (Suc m') @ torus 1) (proj (Suc m' + 2)) with m'=0.\<close>
+    have "m' = 0" by (rule True)
+    from valid_proj_pair_absorbs_torus[of 0 1]
+    have h: "top1_valid_scheme_equiv
+        ([(0::nat, True), (0, True)] @ top1_n_torus_scheme 1)
+        (top1_m_projective_scheme (2 * 1 + 1))" .
+    have hpm1: "top1_m_projective_scheme (Suc 0) = [(0::nat, True), (0, True)]"
+      unfolding top1_m_projective_scheme_def by (by100 simp)
+    have hpm3: "(2::nat) * 1 + 1 = Suc 0 + 2" by (by100 simp)
+    from h[folded hpm1, unfolded hpm3] \<open>m' = 0\<close>
+    show ?thesis by (by100 blast)
   next
     case nFalse: False
     hence hm': "m' > 0" by (by100 simp)
