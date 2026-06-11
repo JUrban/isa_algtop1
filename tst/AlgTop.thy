@@ -8497,6 +8497,59 @@ next
 qed
 
 \<comment> \<open>Appending any projective pair to proj m gives proj(Suc m) up to equivalence.\<close>
+\<comment> \<open>Valid version: appending a projective pair [(a,T),(a,T)] to proj\_m gives proj\_(Suc m).
+   Proof: alpha-rename a to m (the next label) if needed.\<close>
+lemma valid_proj_append_pair:
+  "top1_valid_scheme_equiv (top1_m_projective_scheme m @ [(a, True), (a, True)]) (top1_m_projective_scheme (Suc m))"
+proof -
+  \<comment> \<open>The target: proj\\_Suc m = proj\\_m @ [(m,T),(m,T)].\<close>
+  have hdef: "top1_m_projective_scheme (Suc m) = top1_m_projective_scheme m @ [(m, True), (m, True)]"
+    unfolding top1_m_projective_scheme_def by (by100 simp)
+  \<comment> \<open>Alpha-rename the source to match: relabel all labels in source to get target.\<close>
+  \<comment> \<open>Source labels: {0,...,m-1} \\<union> {a}. Target labels: {0,...,m}. Need bijection.\<close>
+  \<comment> \<open>Case 1: a = m. Then source = target. Done.\<close>
+  show ?thesis
+  proof (cases "a = m")
+    case True
+    then show ?thesis unfolding hdef top1_valid_scheme_equiv_def by (by100 simp)
+  next
+    case ha_ne: False
+    \<comment> \<open>Case 2: a \\<noteq> m. Relabel a \\<to> m in source.\<close>
+    \<comment> \<open>First avoid: get a version of proj\\_m without label a.\<close>
+    from valid_equiv_relabel_avoid[of "top1_m_projective_scheme m" a]
+    obtain pm' where hpm': "top1_valid_scheme_equiv (top1_m_projective_scheme m) pm'"
+        "\<forall>e \<in> set pm'. fst e \<noteq> a" by (by100 blast)
+    \<comment> \<open>Step 1: proj\\_m @ [(a,T),(a,T)] ~ pm' @ [(a,T),(a,T)].\<close>
+    have s1: "top1_valid_scheme_equiv (top1_m_projective_scheme m @ [(a,True),(a,True)])
+        (pm' @ [(a,True),(a,True)])"
+      using valid_equiv_append[OF hpm'(1)] by (by100 blast)
+    \<comment> \<open>Step 2: relabel a \\<to> m in pm' @ [(a,T),(a,T)]. m is fresh because:
+       labels(pm') \\<subseteq> {0,...,m-1} \\<union> {fresh} (all < m or = fresh > m), so m \\<notin> labels(pm').
+       And m \\<noteq> a by case assumption.\<close>
+    have hm_fresh: "m \<notin> fst ` set (pm' @ [(a,True),(a,True)])"
+      sorry \<comment> \<open>Need: m \\<notin> labels(pm') and m \\<noteq> a. The latter is ha\\_ne.
+         labels(pm') \\<subseteq> (labels(proj\\_m) - {a}) \\<union> {fresh}, and m \\<notin> labels(proj\\_m) (= {0..m-1}),
+         and m \\<noteq> fresh. So m \\<notin> labels(pm'). Together with m \\<noteq> a: m \\<notin> labels(pm' @ pair).\<close>
+    have hrelabel: "top1_valid_scheme_operation (pm' @ [(a,True),(a,True)])
+        (map (\<lambda>(l,b). (if l = a then m else l, b)) (pm' @ [(a,True),(a,True)]))"
+      by (rule top1_valid_scheme_operation.v_relabel[OF hm_fresh ha_ne[symmetric]])
+    have hmap_eq: "map (\<lambda>(l,b). (if l = a then m else l, b)) (pm' @ [(a,True),(a,True)])
+        = pm' @ [(m,True),(m,True)]"
+      using hpm'(2) by (induction pm') (by100 auto)+
+    have s2: "top1_valid_scheme_equiv (pm' @ [(a,True),(a,True)]) (pm' @ [(m,True),(m,True)])"
+      using valid_imp_equiv[OF hrelabel] hmap_eq by (by100 simp)
+    \<comment> \<open>Step 3: pm' @ [(m,T),(m,T)] ~ proj\\_m @ [(m,T),(m,T)] = proj\\_Suc\\_m.\<close>
+    have s3: "top1_valid_scheme_equiv (pm' @ [(m,True),(m,True)])
+        (top1_m_projective_scheme m @ [(m,True),(m,True)])"
+      using valid_equiv_append[OF valid_equiv_sym[OF hpm'(1)]] by (by100 blast)
+    from valid_equiv_trans[OF s1 s2] valid_equiv_trans s3
+    have "top1_valid_scheme_equiv (top1_m_projective_scheme m @ [(a, True), (a, True)])
+          (top1_m_projective_scheme m @ [(m, True), (m, True)])"
+      by (by100 blast)
+    then show ?thesis using hdef by (by100 simp)
+  qed
+qed
+
 lemma proj_append_pair:
   "top1_scheme_equiv (top1_m_projective_scheme m @ [(a, True), (a, True)]) (top1_m_projective_scheme (Suc m))"
 proof -
