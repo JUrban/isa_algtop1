@@ -6051,6 +6051,86 @@ section \<open>\<S>77 The Classification Theorem\<close>
 \<comment> \<open>Lemma 77.1 Step 1, subcase y2 = []: a y1 a ~ aa y1\\<inverse>.
    Sequence: rotate \\<to> invert \\<to> flip\\_label a.
    Requires: a does not appear in y1 (from proper scheme).\<close>
+\<comment> \<open>Valid version of step1\\_y2\\_empty.\<close>
+lemma valid_Lemma_77_1_step1_y2_empty:
+  assumes "\<forall>e \<in> set y1. fst e \<noteq> a"
+  shows "top1_valid_scheme_equiv
+      ([(a, True)] @ y1 @ [(a, True)])
+      ([(a, True), (a, True)] @ rev (map top1_inverse_edge y1))"
+proof -
+  \<comment> \<open>Step 1: Rotate: [(a,T)] @ y1 @ [(a,T)] \\<to> y1 @ [(a,T),(a,T)].\<close>
+  have s1: "top1_valid_scheme_equiv
+      ([(a, True)] @ y1 @ [(a, True)])
+      (y1 @ [(a, True), (a, True)])"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate
+      [of "[(a, True)]" "y1 @ [(a, True)]"]] by (by100 simp)
+  \<comment> \<open>Step 2: Invert: y1 @ [(a,T),(a,T)] \\<to> [(a,F),(a,F)] @ inv(y1).\<close>
+  have s2: "top1_valid_scheme_equiv
+      (y1 @ [(a, True), (a, True)])
+      ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1))"
+  proof -
+    have "top1_valid_scheme_operation (y1 @ [(a, True), (a, True)])
+        (rev (map top1_inverse_edge (y1 @ [(a, True), (a, True)])))"
+      by (rule top1_valid_scheme_operation.v_invert)
+    moreover have "rev (map top1_inverse_edge (y1 @ [(a, True), (a, True)]))
+        = [(a, False), (a, False)] @ rev (map top1_inverse_edge y1)"
+      unfolding top1_inverse_edge_def by simp
+    ultimately show ?thesis using valid_imp_equiv by (by100 simp)
+  qed
+  \<comment> \<open>Step 3: flip\\_label a: [(a,F),(a,F)] \\<to> [(a,T),(a,T)].\<close>
+  have s3: "top1_valid_scheme_equiv
+      ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1))
+      ([(a, True), (a, True)] @ rev (map top1_inverse_edge y1))"
+  proof -
+    have "top1_valid_scheme_operation
+        ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1))
+        (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo))
+             ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1)))"
+      by (rule top1_valid_scheme_operation.v_flip_label)
+    moreover have "map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo))
+        ([(a, False), (a, False)] @ rev (map top1_inverse_edge y1))
+        = [(a, True), (a, True)] @ rev (map top1_inverse_edge y1)"
+    proof -
+      have "\<forall>e \<in> set (rev (map top1_inverse_edge y1)). fst e \<noteq> a"
+      proof
+        fix e assume "e \<in> set (rev (map top1_inverse_edge y1))"
+        then obtain e0 where he0: "e0 \<in> set y1" "e = top1_inverse_edge e0" by (by100 auto)
+        have "fst e = fst e0" using he0(2) unfolding top1_inverse_edge_def by (by100 simp)
+        moreover have "fst e0 \<noteq> a" using he0(1) assms by (by100 blast)
+        ultimately show "fst e \<noteq> a" by (by100 simp)
+      qed
+      define ry1 where "ry1 = rev (map top1_inverse_edge y1)"
+      have hry1_fresh: "\<forall>e \<in> set ry1. fst e \<noteq> a"
+      proof
+        fix e assume "e \<in> set ry1"
+        then obtain e0 where he0: "e0 \<in> set y1" "e = top1_inverse_edge e0"
+          unfolding ry1_def by (by100 auto)
+        have "fst e = fst e0" using he0(2) unfolding top1_inverse_edge_def by (by100 simp)
+        have "fst e0 \<noteq> a" using he0(1) assms(1) by (by100 blast)
+        thus "fst e \<noteq> a" using \<open>fst e = fst e0\<close> by (by100 simp)
+      qed
+      from hry1_fresh have "map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) ry1 = ry1"
+      proof (induction ry1)
+        case Nil thus ?case by (by100 simp)
+      next
+        case (Cons x xs)
+        obtain l bo where hlbo: "x = (l, bo)" by (cases x)
+        have "fst x \<noteq> a" using Cons.prems by (by100 simp)
+        hence "l \<noteq> a" using hlbo by (by100 simp)
+        hence "(case x of (l, bo) \<Rightarrow> (l, if l = a then \<not> bo else bo)) = x"
+          using hlbo by (by100 simp)
+        thus ?case using Cons by (by100 simp)
+      qed
+      hence "map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) (rev (map top1_inverse_edge y1))
+          = rev (map top1_inverse_edge y1)" unfolding ry1_def .
+      thus ?thesis by simp
+    qed
+    ultimately show ?thesis using valid_imp_equiv by (by100 simp)
+  qed
+  from s1 s2 s3 show ?thesis
+    using valid_equiv_trans by (by100 blast)
+qed
+
 lemma Lemma_77_1_step1_y2_empty:
   assumes "\<forall>e \<in> set y1. fst e \<noteq> a"
   shows "top1_scheme_equiv
@@ -6118,6 +6198,209 @@ qed
 
 \<comment> \<open>Lemma 77.1 (Munkres): If w = [y0] a [y1] a [y2] (proper scheme with a appearing twice
    with same exponent), then w ~ aa [y0 y1\\<inverse> y2].\<close>
+\<comment> \<open>Valid version of Lemma 77.1: projective collection.\<close>
+lemma valid_Lemma_77_1_projective_collection:
+  assumes "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> a"
+      and "\<exists>b::'a. b \<noteq> a \<and> (\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b)"
+  shows "top1_valid_scheme_equiv
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+      ([(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+proof (cases "y0 = []")
+  case True
+  show ?thesis
+  proof (cases "y1 = []")
+    case True
+    show ?thesis using \<open>y0 = []\<close> True unfolding top1_valid_scheme_equiv_def by simp
+  next
+    case False
+    show ?thesis
+    proof (cases "y2 = []")
+      case True
+      \<comment> \<open>y0=[], y2=[]: a y1 a ~ aa y1\\<inverse>. From Lemma\\_77\\_1\\_step1\\_y2\\_empty via old chain.\<close>
+      have "\<forall>e \<in> set y1. fst e \<noteq> a" using assms by (by100 blast)
+      from valid_Lemma_77_1_step1_y2_empty[OF this]
+      show ?thesis using \<open>y0 = []\<close> True by simp
+    next
+      case False2: False
+      \<comment> \<open>y0=[], y1,y2 non-empty: direct cut\\_paste.\<close>
+      have "top1_valid_scheme_operation
+          ([] @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+          ([] @ [(a, True), (a, True)] @ rev (map top1_inverse_edge y1) @ y2)"
+        by (rule top1_valid_scheme_operation.v_cut_paste)
+      hence "top1_valid_scheme_equiv
+          ([(a, True)] @ y1 @ [(a, True)] @ y2)
+          ([(a, True), (a, True)] @ rev (map top1_inverse_edge y1) @ y2)"
+        using valid_imp_equiv by (by100 simp)
+      thus ?thesis using \<open>y0 = []\<close> by (by100 simp)
+    qed
+  qed
+next
+  case False
+  obtain b :: 'a where hb: "b \<noteq> a" "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b"
+    using assms(2) by (by100 blast)
+  \<comment> \<open>Step 2a: cut\\_paste2 with fresh b.\<close>
+  have hb_fresh: "b \<notin> scheme_labels (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)"
+    unfolding scheme_labels_def using hb by (by100 auto)
+  have step2a: "top1_valid_scheme_equiv
+      (y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2)
+      ([(b, True)] @ y2 @ [(b, True)] @ y1 @ rev (map top1_inverse_edge y0))"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_cut_paste2[OF hb_fresh]]
+    by (by100 simp)
+  \<comment> \<open>Step 2b: cut\\_paste.\<close>
+  have step2b: "top1_valid_scheme_equiv
+      ([(b, True)] @ y2 @ [(b, True)] @ y1 @ rev (map top1_inverse_edge y0))
+      ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_cut_paste
+      [of "[]" b y2 "y1 @ rev (map top1_inverse_edge y0)"]]
+    by (by100 simp)
+  \<comment> \<open>Step 2c: invert.\<close>
+  have step2c: "top1_valid_scheme_equiv
+      ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))
+      (y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)])"
+  proof -
+    have "top1_valid_scheme_operation
+        ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))
+        (rev (map top1_inverse_edge ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))))"
+      by (rule top1_valid_scheme_operation.v_invert)
+    moreover have "rev (map top1_inverse_edge ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0)))
+        = y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)]"
+    proof -
+      have hinv_inv: "\<And>x :: ('a \<times> bool). top1_inverse_edge (top1_inverse_edge x) = x"
+        unfolding top1_inverse_edge_def by (by100 simp)
+      have hcomp_id: "top1_inverse_edge \<circ> (top1_inverse_edge :: ('a \<times> bool) \<Rightarrow> _) = id"
+        by (rule ext) (simp add: hinv_inv)
+      have hmap_inv_inv: "\<And>xs :: ('a \<times> bool) list. map top1_inverse_edge (map top1_inverse_edge xs) = xs"
+      proof -
+        fix xs :: "('a \<times> bool) list"
+        have "map top1_inverse_edge (map top1_inverse_edge xs) = map (top1_inverse_edge \<circ> top1_inverse_edge) xs"
+          by (by100 simp)
+        also have "\<dots> = map id xs" using hcomp_id by simp
+        also have "\<dots> = xs" by simp
+        finally show "map top1_inverse_edge (map top1_inverse_edge xs) = xs" .
+      qed
+      have hrev_inv: "\<And>xs :: ('a \<times> bool) list. map top1_inverse_edge (rev (map top1_inverse_edge xs)) = rev xs"
+      proof -
+        fix xs :: "('a \<times> bool) list"
+        have "map top1_inverse_edge (rev (map top1_inverse_edge xs))
+            = rev (map top1_inverse_edge (map top1_inverse_edge xs))"
+          by (simp add: rev_map)
+        also have "\<dots> = rev xs" using hmap_inv_inv by simp
+        finally show "map top1_inverse_edge (rev (map top1_inverse_edge xs)) = rev xs" .
+      qed
+      have hmap_comp_inv: "\<And>xs :: ('a \<times> bool) list. map (top1_inverse_edge \<circ> top1_inverse_edge) xs = xs"
+        using hcomp_id by simp
+      show ?thesis
+        by (simp add: rev_map hmap_comp_inv hrev_inv top1_inverse_edge_def)
+    qed
+    ultimately have "top1_valid_scheme_operation
+        ([(b, True), (b, True)] @ rev (map top1_inverse_edge y2) @ y1 @ rev (map top1_inverse_edge y0))
+        (y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)])"
+      by (by100 simp)
+    thus ?thesis by (rule valid_imp_equiv)
+  qed
+  \<comment> \<open>Step 2d: rotate.\<close>
+  have step2d: "top1_valid_scheme_equiv
+      (y0 @ rev (map top1_inverse_edge y1) @ y2 @ [(b, False), (b, False)])
+      ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate[of
+        "y0 @ rev (map top1_inverse_edge y1) @ y2" "[(b, False), (b, False)]"]]
+    by (by100 simp)
+  \<comment> \<open>Step 2e: flip\\_label b.\<close>
+  have step2e: "top1_valid_scheme_equiv
+      ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+      ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+  proof -
+    have "top1_valid_scheme_operation
+        ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        (map (\<lambda>(l, bo). (l, if l = b then \<not> bo else bo))
+             ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2))"
+      by (rule top1_valid_scheme_operation.v_flip_label)
+    moreover have "map (\<lambda>(l, bo). (l, if l = b then \<not> bo else bo))
+        ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        = [(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2"
+    proof -
+      have "\<And>xs. (\<forall>e \<in> set xs. fst e \<noteq> b) \<Longrightarrow>
+          map (\<lambda>(l, bo). (l, if l = b then \<not> bo else bo)) xs = xs"
+        by (rule map_idI) (by100 auto)
+      moreover have "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b" using hb(2) by (by100 blast)
+      moreover have "\<forall>e \<in> set (rev (map top1_inverse_edge y1)). fst e \<noteq> b"
+        using hb(2) unfolding top1_inverse_edge_def by (by100 auto)
+      ultimately show ?thesis by simp
+    qed
+    ultimately have "top1_valid_scheme_operation
+        ([(b, False), (b, False)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+      by (by100 simp)
+    thus ?thesis by (rule valid_imp_equiv)
+  qed
+  \<comment> \<open>Step 2f: relabel b \\<to> a (valid since a \\<notin> labels).\<close>
+  have step2f: "top1_valid_scheme_equiv
+      ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+      ([(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+  proof -
+    \<comment> \<open>a is fresh in the current scheme (a \\<notin> labels of y0, y1, y2, and a \\<noteq> b).\<close>
+    have hfst_inv_map: "\<And>xs :: ('a \<times> bool) list. fst ` set (map top1_inverse_edge xs) = fst ` set xs"
+    proof -
+      fix xs :: "('a \<times> bool) list"
+      show "fst ` set (map top1_inverse_edge xs) = fst ` set xs"
+      proof (induction xs)
+        case Nil thus ?case by (by100 simp)
+      next
+        case (Cons x xs)
+        obtain l bo where hlbo: "x = (l, bo)" by (cases x)
+        have "top1_inverse_edge (l, bo) = (l, \<not>bo)" unfolding top1_inverse_edge_def by (by100 simp)
+        thus ?case using hlbo Cons.IH by (by100 auto)
+      qed
+    qed
+    have hfst_inv: "\<And>xs :: ('a \<times> bool) list. fst ` set (rev (map top1_inverse_edge xs)) = fst ` set xs"
+      using hfst_inv_map by (by100 simp)
+    have ha_fresh: "a \<notin> fst ` set ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    proof -
+      have "a \<noteq> b" using hb(1) by (by100 blast)
+      have "a \<notin> fst ` set y0" using assms(1) by (by100 blast)
+      have "a \<notin> fst ` set y1" using assms(1) by (by100 blast)
+      hence "a \<notin> fst ` set (rev (map top1_inverse_edge y1))" using hfst_inv[of y1] by (by100 simp)
+      have "a \<notin> fst ` set y2" using assms(1) by (by100 blast)
+      show ?thesis using \<open>a \<noteq> b\<close> \<open>a \<notin> fst ` set y0\<close> \<open>a \<notin> fst ` set (rev (map top1_inverse_edge y1))\<close>
+          \<open>a \<notin> fst ` set y2\<close> by (by100 auto)
+    qed
+    have "top1_valid_scheme_operation
+        ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        (map (\<lambda>(l, bo). (if l = b then a else l, bo))
+             ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2))"
+      by (rule top1_valid_scheme_operation.v_relabel[OF ha_fresh hb(1)[symmetric]])
+    moreover have "map (\<lambda>(l, bo). (if l = b then a else l, bo))
+        ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        = [(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2"
+    proof -
+      have "\<And>xs. (\<forall>e \<in> set xs. fst e \<noteq> b) \<Longrightarrow>
+          map (\<lambda>(l, bo). (if l = b then a else l, bo)) xs = xs"
+        by (rule map_idI) (by100 auto)
+      have "\<forall>e \<in> set y0. fst e \<noteq> b" using hb(2) by (by100 blast)
+      have "\<forall>e \<in> set (rev (map top1_inverse_edge y1)). fst e \<noteq> b"
+        using hb(2) unfolding top1_inverse_edge_def by (by100 auto)
+      have "\<forall>e \<in> set y2. fst e \<noteq> b" using hb(2) by (by100 blast)
+      have hmap_relabel: "\<And>xs :: ('a \<times> bool) list. (\<forall>e \<in> set xs. fst e \<noteq> b) \<Longrightarrow>
+          map (\<lambda>(l, bo). (if l = b then a else l, bo)) xs = xs"
+        by (rule map_idI) (by100 auto)
+      show ?thesis
+        using hmap_relabel[OF \<open>\<forall>e \<in> set y0. fst e \<noteq> b\<close>]
+            hmap_relabel[OF \<open>\<forall>e \<in> set (rev (map top1_inverse_edge y1)). fst e \<noteq> b\<close>]
+            hmap_relabel[OF \<open>\<forall>e \<in> set y2. fst e \<noteq> b\<close>]
+        by simp
+    qed
+    ultimately have "top1_valid_scheme_operation
+        ([(b, True), (b, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)
+        ([(a, True), (a, True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+      by (by100 simp)
+    thus ?thesis by (rule valid_imp_equiv)
+  qed
+  \<comment> \<open>Chain all steps.\<close>
+  from step2a step2b step2c step2d step2e step2f
+  show ?thesis
+    using valid_equiv_trans by (by100 blast)
+qed
+
 lemma Lemma_77_1_projective_collection:
   assumes "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> a"
       and "\<exists>b::'a. b \<noteq> a \<and> (\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b)"
