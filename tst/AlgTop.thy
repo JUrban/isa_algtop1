@@ -856,19 +856,19 @@ proof -
   show ?thesis .
 qed
 
-\<comment> \<open>Cancel transfer: quotient\_of\_scheme\_on is preserved by cancellation.
-   If Y is quotient of u@[a,inv(a)]@v, then Y is also quotient of u@v.
-   The polygon folds: the two cancelled edges merge.\<close>
+\<comment> \<open>Cancel/uncancel same-space preservation.
+   PROVED versions (quotient\\_of\\_scheme\\_cancel\\_proved, quotient\\_of\\_scheme\\_uncancel\\_proved)
+   are defined after quotient\\_of\\_scheme\\_rotate, reducing to cancel\\_front/uncancel\\_front
+   via rotation. Forward declarations below are only used by dead code.\<close>
 lemma quotient_of_scheme_cancel:
   assumes "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
   shows "top1_quotient_of_scheme_on Y TY (u @ v)"
-  sorry \<comment> \<open>MOVED: see quotient\\_of\\_scheme\\_cancel\\_proved after quotient\\_of\\_scheme\\_rotate.\<close>
+  using assms sorry
 
-\<comment> \<open>Uncancel: reverse of cancel. Same polygon, unfold.\<close>
 lemma quotient_of_scheme_uncancel:
   assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
   shows "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
-  sorry
+  using assms sorry
 
 \<comment> \<open>Extract vertices from a polygonal region.\<close>
 lemma polygonal_region_extract_vx:
