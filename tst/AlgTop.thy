@@ -472,7 +472,14 @@ proof -
   have hC11: "\<forall>i<?n. \<forall>k<?n.
         k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
         (vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
-    sorry \<comment> \<open>Regular polygon is strictly convex.\<close>
+  proof (intro allI impI)
+    fix i k assume hi: "i < ?n" and hk: "k < ?n" and hki: "k \<noteq> i" and hki1: "k \<noteq> Suc i mod ?n"
+    \<comment> \<open>The cross product (v\\_k - v\\_i) \\<times> (v\\_{i+1} - v\\_i) = sin(\\<theta>\\_{i+1} - \\<theta>\\_k) - sin(\\<theta>\\_{i+1} - \\<theta>\\_i)
+       where \\<theta>\\_j = 2\\<pi>j/n. This equals sin(2\\<pi>(i+1-k)/n) + sin(2\\<pi>(k-i)/n) - sin(2\\<pi>/n).
+       For 2 \\<le> k-i mod n \\<le> n-1, this is negative (vertex k is on the right of edge i\\<to>i+1).\<close>
+    show "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
+      sorry
+  qed
   \<comment> \<open>C6: non-adjacent edge interiors don't intersect (strict convexity implies this).\<close>
   have hC6: "True"
     sorry \<comment> \<open>C6 placeholder. Non-adjacent edges don't intersect.\<close>
