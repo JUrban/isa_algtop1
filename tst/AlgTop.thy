@@ -9103,7 +9103,40 @@ next
     have rD: "top1_valid_scheme_equiv
         (top1_m_projective_scheme (2*n) @ [(f1,True),(f1,True),(f2,True),(f2,True),(2*n,True),(2*n,True)])
         (top1_m_projective_scheme (Suc(Suc(Suc(2*n)))))"
-      sorry \<comment> \<open>Three applications of valid\\_proj\\_append\\_pair via suffix congruence.\<close>
+    proof -
+      \<comment> \<open>Step 1: absorb [(f1,T),(f1,T)].\<close>
+      have "top1_valid_scheme_equiv
+          (top1_m_projective_scheme (2*n) @ [(f1,True),(f1,True)])
+          (top1_m_projective_scheme (Suc(2*n)))"
+        by (rule valid_proj_append_pair)
+      from valid_equiv_append[OF this, of "[(f2,True),(f2,True),(2*n,True),(2*n,True)]"]
+      have d1: "top1_valid_scheme_equiv
+          ((top1_m_projective_scheme (2*n) @ [(f1,True),(f1,True)]) @ [(f2,True),(f2,True),(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc(2*n)) @ [(f2,True),(f2,True),(2*n,True),(2*n,True)])" .
+      \<comment> \<open>Step 2: absorb [(f2,T),(f2,T)].\<close>
+      have "top1_valid_scheme_equiv
+          (top1_m_projective_scheme (Suc(2*n)) @ [(f2,True),(f2,True)])
+          (top1_m_projective_scheme (Suc(Suc(2*n))))"
+        by (rule valid_proj_append_pair)
+      from valid_equiv_append[OF this, of "[(2*n,True),(2*n,True)]"]
+      have d2: "top1_valid_scheme_equiv
+          ((top1_m_projective_scheme (Suc(2*n)) @ [(f2,True),(f2,True)]) @ [(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc(Suc(2*n))) @ [(2*n,True),(2*n,True)])" .
+      \<comment> \<open>Step 3: absorb [(2n,T),(2n,T)].\<close>
+      have d3: "top1_valid_scheme_equiv
+          (top1_m_projective_scheme (Suc(Suc(2*n))) @ [(2*n,True),(2*n,True)])
+          (top1_m_projective_scheme (Suc(Suc(Suc(2*n)))))"
+        by (rule valid_proj_append_pair)
+      \<comment> \<open>List reassociations.\<close>
+      have ha1: "(top1_m_projective_scheme (2*n) @ [(f1,True),(f1,True)]) @ [(f2,True),(f2,True),(2*n,True),(2*n,True)]
+          = top1_m_projective_scheme (2*n) @ [(f1,True),(f1,True),(f2,True),(f2,True),(2*n,True),(2*n,True)]"
+        by (by100 simp)
+      have ha2: "(top1_m_projective_scheme (Suc(2*n)) @ [(f2,True),(f2,True)]) @ [(2*n,True),(2*n,True)]
+          = top1_m_projective_scheme (Suc(2*n)) @ [(f2,True),(f2,True),(2*n,True),(2*n,True)]"
+        by (by100 simp)
+      from d1[unfolded ha1] d2[unfolded ha2] d3
+      show ?thesis using valid_equiv_trans by (by100 blast)
+    qed
     \<comment> \<open>Assemble: proj\\_(2n) @ [(2n,T)²,(2n+1,T)²,(2n+2,T)²] = proj\\_(2n+3) = proj\\_(2*(Suc n)+1).\<close>
     have hfinal: "Suc(Suc(Suc(2*n))) = 2*(Suc n)+1" by (by100 simp)
     from rA rB have "top1_valid_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block)
