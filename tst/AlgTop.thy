@@ -8165,7 +8165,7 @@ qed
 
 \<comment> \<open>Valid version of bring\\_projective\\_pair\\_to\\_front.
    Reuses the old proof's combinatorial facts, replays only the 2 operations validly.\<close>
-lemma valid_bring_projective_pair_to_front:
+lemma valid_bring_projective_pair_to_front_full:
   fixes w :: "(nat \<times> bool) list" and a :: nat
   assumes hain: "(a, True) \<in> set w"
       and hcard: "card {i. i < length w \<and> fst (w ! i) = a} = 2"
@@ -8178,34 +8178,272 @@ lemma valid_bring_projective_pair_to_front:
       \<and> fst ` set rest \<subseteq> fst ` set w
       \<and> (\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2})"
 proof -
-  \<comment> \<open>Get the same rest as the old proof.\<close>
-  from bring_projective_pair_to_front[OF assms]
-  obtain rest where hold: "top1_scheme_equiv w ([(a, True), (a, True)] @ rest)"
-      "length rest = length w - 2" "\<forall>e \<in> set rest. fst e \<noteq> a"
-      "fst ` set rest \<subseteq> fst ` set w"
-      "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}" by blast
-  \<comment> \<open>Replay the operation chain validly.
-     Old chain: rotate to first (a,T), then Lemma 77.1.\<close>
+  \<comment> \<open>Find first position of (a,True).\<close>
   from hain obtain p' where hp': "p' < length w" "w ! p' = (a, True)"
     by (simp add: in_set_conv_nth) (by100 blast)
-  \<comment> \<open>Rotate to first (a,True).\<close>
+  \<comment> \<open>Rotate to position 0.\<close>
   let ?w' = "drop p' w @ take p' w"
   have hrot: "top1_valid_scheme_equiv w ?w'"
     using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate[of "take p' w" "drop p' w"]]
     by (by100 simp)
-  \<comment> \<open>?w' has (a,True) at position 0. It has exactly 2 occurrences of a, both True.
-     Decompose: ?w' = [(a,T)] @ y0 @ [(a,T)] @ y1 for some y0, y1.
-     Apply valid\\_Lemma\\_77\\_1 to get [(a,T),(a,T)] @ y0 @ inv(y1).\<close>
-  \<comment> \<open>The decomposition and valid\\_Lemma\\_77\\_1 call.
-     We know w = y0@[(a,T)]@y1@[(a,T)]@y2 from the old proof's analysis.
-     We cannot access y0,y1,y2 directly, but we can prove the valid equiv
-     by noting the old proof's chain uses ONLY Lemma 77.1 (plus pure combinatorics).
-     Since valid\\_Lemma\\_77\\_1 is proved, the same chain works validly.\<close>
-  have "top1_valid_scheme_equiv ?w' ([(a, True), (a, True)] @ rest)"
-    sorry \<comment> \<open>Needs the 250-line combinatorial decomposition from old proof + valid\\_Lemma\\_77\\_1.\<close>
-  from valid_equiv_trans[OF hrot this]
-  have "top1_valid_scheme_equiv w ([(a, True), (a, True)] @ rest)" .
-  with hold(2-5) show ?thesis by (by100 blast)
+  have hlen': "length ?w' = length w" by (by100 simp)
+  have hw'_0: "?w' ! 0 = (a, True)"
+  proof -
+    have "drop p' w \<noteq> []" using hp'(1) by (by100 simp)
+    hence "?w' ! 0 = (drop p' w) ! 0"
+      using nth_append[of "drop p' w" "take p' w" 0] by (by100 simp)
+    also have "\<dots> = w ! p'" using hp' by (by100 simp)
+    finally show ?thesis using hp'(2) by (by100 simp)
+  qed
+  \<comment> \<open>Actually, we don't need to rotate. Apply Lemma 77.1 directly to w.\<close>
+  \<comment> \<open>Find second a-position q'.\<close>
+  have "card ({i. i < length w \<and> fst (w ! i) = a} - {p'}) = 1"
+  proof -
+    have "finite {i. i < length w \<and> fst (w ! i) = a}" by (by100 simp)
+    moreover have "p' \<in> {i. i < length w \<and> fst (w ! i) = a}" using hp' by (by100 simp)
+    ultimately have "card ({i. i < length w \<and> fst (w ! i) = a} - {p'})
+        = card {i. i < length w \<and> fst (w ! i) = a} - 1" by (by100 simp)
+    thus ?thesis using hcard by (by100 simp)
+  qed
+  hence "card ({i. i < length w \<and> fst (w ! i) = a} - {p'}) \<noteq> 0" by (by100 simp)
+  moreover have "finite ({i. i < length w \<and> fst (w ! i) = a} - {p'})" by (by100 simp)
+  ultimately have "{i. i < length w \<and> fst (w ! i) = a} - {p'} \<noteq> {}" by (by100 force)
+  then obtain q' where "q' \<in> {i. i < length w \<and> fst (w ! i) = a} - {p'}" by (by100 blast)
+  hence hq': "q' < length w" "fst (w ! q') = a" "q' \<noteq> p'" by (by100 simp)+
+  have hq'_dir: "snd (w ! q') = True" using hdir hq'(1,2) by (by100 blast)
+  hence hq'_val: "w ! q' = (a, True)" using hq'(2) by (cases "w ! q'") (by100 simp)
+  \<comment> \<open>WLOG p' < q' (by symmetry, swap if needed). Actually just decompose.\<close>
+  \<comment> \<open>If p' < q': y0 = take p' w, y1 = take(q'-p'-1)(drop(p'+1) w), y2 = drop(q'+1) w.
+     If p' > q': swap and use q' as first position.\<close>
+  \<comment> \<open>For simplicity, take the SMALLER index as the first a-position.\<close>
+  define p1 where "p1 = min p' q'"
+  define p2 where "p2 = max p' q'"
+  have hp1_lt_p2: "p1 < p2" using hq'(3) unfolding p1_def p2_def by (by100 simp)
+  have hp1_val: "w ! p1 = (a, True)"
+  proof -
+    have "p1 = p' \<or> p1 = q'" unfolding p1_def min_def by (by100 simp)
+    thus ?thesis using hp'(2) hq'_val by (by100 blast)
+  qed
+  have hp2_val: "w ! p2 = (a, True)"
+  proof -
+    have "p2 = p' \<or> p2 = q'" unfolding p2_def max_def by (by100 simp)
+    thus ?thesis using hp'(2) hq'_val by (by100 blast)
+  qed
+  have hp1_len: "p1 < length w" unfolding p1_def using hp'(1) hq'(1) by (by100 simp)
+  have hp2_len: "p2 < length w" unfolding p2_def using hp'(1) hq'(1) by (by100 simp)
+  \<comment> \<open>Decompose: w = (take p1 w) @ [(a,T)] @ (take(p2-p1-1)(drop(p1+1) w)) @ [(a,T)] @ (drop(p2+1) w).\<close>
+  define y0 where "y0 = take p1 w"
+  define y1 where "y1 = take (p2 - p1 - 1) (drop (p1 + 1) w)"
+  define y2 where "y2 = drop (p2 + 1) w"
+  have hdecomp: "w = y0 @ [(a, True)] @ y1 @ [(a, True)] @ y2"
+  proof -
+    from list_decomp_at_two_positions[OF hp1_lt_p2 hp2_len]
+    have "w = take p1 w @ [w ! p1] @ take (p2 - p1 - 1) (drop (p1 + 1) w) @ [w ! p2] @ drop (p2 + 1) w" .
+    thus ?thesis unfolding y0_def y1_def y2_def using hp1_val hp2_val by (by100 simp)
+  qed
+  \<comment> \<open>All elements in y0, y1, y2 have fst \<noteq> a.\<close>
+  \<comment> \<open>Positions with label a = {p1, p2} (from card=2 + card\_seteq).\<close>
+  have honly_p12: "{i. i < length w \<and> fst (w ! i) = a} = {p1, p2}"
+  proof -
+    have "card {p1, p2} = 2" using hp1_lt_p2 by (by100 simp)
+    have "p1 \<in> {i. i < length w \<and> fst (w ! i) = a}"
+      using hp1_len hp1_val by (by100 simp)
+    moreover have "p2 \<in> {i. i < length w \<and> fst (w ! i) = a}"
+      using hp2_len hp2_val by (by100 simp)
+    ultimately have "{p1, p2} \<subseteq> {i. i < length w \<and> fst (w ! i) = a}" by (by100 blast)
+    have "finite {i. i < length w \<and> fst (w ! i) = a}" by (by100 simp)
+    from card_seteq[OF this \<open>{p1, p2} \<subseteq> _\<close>] hcard \<open>card {p1, p2} = 2\<close>
+    show ?thesis by (by100 simp)
+  qed
+  \<comment> \<open>Elements at positions \<noteq> p1, \<noteq> p2 have fst \<noteq> a.\<close>
+  have hother_ne_a: "\<forall>k < length w. k \<noteq> p1 \<longrightarrow> k \<noteq> p2 \<longrightarrow> fst (w ! k) \<noteq> a"
+  proof (intro allI impI)
+    fix k assume "k < length w" "k \<noteq> p1" "k \<noteq> p2"
+    hence "k \<notin> {p1, p2}" by (by100 blast)
+    hence "k \<notin> {i. i < length w \<and> fst (w ! i) = a}" using honly_p12 by (by100 blast)
+    thus "fst (w ! k) \<noteq> a" using \<open>k < length w\<close> by (by100 blast)
+  qed
+  have hcond1: "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> a"
+  proof (intro ballI)
+    fix e assume "e \<in> set y0 \<union> set y1 \<union> set y2"
+    thus "fst e \<noteq> a"
+    proof (elim UnE)
+      assume "e \<in> set y0"
+      then obtain i where "i < length y0" "y0 ! i = e" by (simp add: in_set_conv_nth) (by100 blast)
+      hence "i < p1" unfolding y0_def by (by100 simp)
+      have "w ! i = e" using \<open>i < p1\<close> \<open>y0 ! i = e\<close> unfolding y0_def using hp1_len by (by100 simp)
+      moreover have "i \<noteq> p1" "i \<noteq> p2" using \<open>i < p1\<close> hp1_lt_p2 by (by100 simp)+
+      moreover have "i < length w" using \<open>i < p1\<close> hp1_len by (by100 simp)
+      ultimately show "fst e \<noteq> a" using hother_ne_a by (by100 blast)
+    next
+      assume "e \<in> set y1"
+      then obtain i where "i < length y1" "y1 ! i = e" by (simp add: in_set_conv_nth) (by100 blast)
+      hence "i < p2 - p1 - 1" unfolding y1_def by (by100 simp)
+      define k where "k = p1 + 1 + i"
+      have "w ! k = e" unfolding k_def y1_def
+        using \<open>i < length y1\<close> \<open>y1 ! i = e\<close> y1_def hp1_len by (by100 simp)
+      moreover have "k \<noteq> p1" unfolding k_def by (by100 simp)
+      moreover have "k \<noteq> p2" unfolding k_def using \<open>i < p2 - p1 - 1\<close> by (by100 simp)
+      moreover have "k < length w" unfolding k_def using \<open>i < p2 - p1 - 1\<close> hp2_len by (by100 simp)
+      ultimately show "fst e \<noteq> a" using hother_ne_a by (by100 blast)
+    next
+      assume "e \<in> set y2"
+      then obtain i where "i < length y2" "y2 ! i = e" by (simp add: in_set_conv_nth) (by100 blast)
+      define k where "k = p2 + 1 + i"
+      have "w ! k = e" unfolding k_def y2_def
+        using \<open>i < length y2\<close> \<open>y2 ! i = e\<close> y2_def hp2_len by (by100 simp)
+      moreover have "k \<noteq> p1" unfolding k_def using hp1_lt_p2 by (by100 simp)
+      moreover have "k \<noteq> p2" unfolding k_def by (by100 simp)
+      have "length y2 = length w - (p2 + 1)" unfolding y2_def by (by100 simp)
+      have "k < length w" unfolding k_def using \<open>i < length y2\<close> hp2_len \<open>length y2 = length w - (p2 + 1)\<close> by (by100 simp)
+      from hother_ne_a[rule_format, OF this \<open>k \<noteq> p1\<close> \<open>k \<noteq> p2\<close>]
+      show "fst e \<noteq> a" using \<open>w ! k = e\<close> by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>Fresh label exists.\<close>
+  have hcond2: "\<exists>b::nat. b \<noteq> a \<and> (\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b)"
+  proof -
+    \<comment> \<open>The set of labels in y0\<union>y1\<union>y2 is finite (subset of scheme labels).\<close>
+    let ?all_labels = "insert a (fst ` set w)"
+    have "finite ?all_labels" by (by100 simp)
+    then obtain b :: nat where "b \<notin> ?all_labels"
+      using ex_new_if_finite[of ?all_labels] infinite_UNIV_nat by (by100 blast)
+    hence "b \<noteq> a" by (by100 blast)
+    moreover have "\<forall>e \<in> set y0 \<union> set y1 \<union> set y2. fst e \<noteq> b"
+    proof (intro ballI)
+      fix e assume "e \<in> set y0 \<union> set y1 \<union> set y2"
+      hence "e \<in> set w" using hdecomp by (by100 simp)
+      hence "fst e \<in> fst ` set w" by (by100 blast)
+      hence "fst e \<in> ?all_labels" by (by100 blast)
+      thus "fst e \<noteq> b" using \<open>b \<notin> ?all_labels\<close> by (by100 blast)
+    qed
+    ultimately show ?thesis by (by100 blast)
+  qed
+  \<comment> \<open>Apply Lemma 77.1.\<close>
+  from valid_Lemma_77_1_projective_collection[OF hcond1 hcond2]
+  have "top1_valid_scheme_equiv (y0 @ [(a,True)] @ y1 @ [(a,True)] @ y2)
+      ([(a,True),(a,True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)" .
+  hence "top1_valid_scheme_equiv w ([(a,True),(a,True)] @ y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    using hdecomp by (by100 simp)
+  moreover have "length (y0 @ rev (map top1_inverse_edge y1) @ y2) = length w - 2"
+  proof -
+    have "length w = length y0 + 1 + length y1 + 1 + length y2"
+      using hdecomp by (by100 simp)
+    thus ?thesis by (by100 simp)
+  qed
+  moreover have "\<forall>e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2). fst e \<noteq> a"
+  proof (intro ballI)
+    fix e assume "e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    hence "e \<in> set y0 \<or> e \<in> set (rev (map top1_inverse_edge y1)) \<or> e \<in> set y2" by (by100 simp)
+    thus "fst e \<noteq> a"
+    proof (elim disjE)
+      assume "e \<in> set y0" thus ?thesis using hcond1 by (by100 blast)
+    next
+      assume "e \<in> set (rev (map top1_inverse_edge y1))"
+      hence "e \<in> set (map top1_inverse_edge y1)" by (by100 simp)
+      then obtain e0 where "e0 \<in> set y1" "e = top1_inverse_edge e0" by (by100 force)
+      hence "fst e0 \<noteq> a" using hcond1 by (by100 blast)
+      thus ?thesis using \<open>e = top1_inverse_edge e0\<close> unfolding top1_inverse_edge_def by (by100 simp)
+    next
+      assume "e \<in> set y2" thus ?thesis using hcond1 by (by100 blast)
+    qed
+  qed
+  moreover have "\<forall>e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2). fst e \<in> fst ` set w"
+  proof (intro ballI)
+    fix e assume "e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2)"
+    hence "e \<in> set y0 \<or> e \<in> set (rev (map top1_inverse_edge y1)) \<or> e \<in> set y2" by (by100 simp)
+    thus "fst e \<in> fst ` set w"
+    proof (elim disjE)
+      assume "e \<in> set y0"
+      hence "e \<in> set w" using hdecomp by (by100 simp)
+      thus ?thesis by (by100 blast)
+    next
+      assume "e \<in> set (rev (map top1_inverse_edge y1))"
+      hence "e \<in> set (map top1_inverse_edge y1)" by (by100 simp)
+      then obtain e' where "e' \<in> set y1" "e = top1_inverse_edge e'" by (by100 force)
+      hence "e' \<in> set w" using hdecomp by (by100 simp)
+      hence "fst e' \<in> fst ` set w" by (by100 blast)
+      thus ?thesis using \<open>e = top1_inverse_edge e'\<close> unfolding top1_inverse_edge_def by (by100 simp)
+    next
+      assume "e \<in> set y2"
+      hence "e \<in> set w" using hdecomp by (by100 simp)
+      thus ?thesis by (by100 blast)
+    qed
+  qed
+  hence "fst ` set (y0 @ rev (map top1_inverse_edge y1) @ y2) \<subseteq> fst ` set w" by (by100 blast)
+  moreover have "\<forall>label. card {i. i < length (y0 @ rev (map top1_inverse_edge y1) @ y2)
+      \<and> fst ((y0 @ rev (map top1_inverse_edge y1) @ y2) ! i) = label} \<in> {0, 2}"
+  proof (intro allI)
+    fix label
+    let ?rest = "y0 @ rev (map top1_inverse_edge y1) @ y2"
+    show "card {i. i < length ?rest \<and> fst (?rest ! i) = label} \<in> {0, 2}"
+    proof (cases "label = a")
+      case True
+      \<comment> \<open>Label a: count = 0 since all elements have fst \<noteq> a.\<close>
+      have "{i. i < length ?rest \<and> fst (?rest ! i) = a} = {}"
+      proof (rule ccontr)
+        assume "{i. i < length ?rest \<and> fst (?rest ! i) = a} \<noteq> {}"
+        then obtain i where "i < length ?rest" "fst (?rest ! i) = a" by (by100 blast)
+        hence "?rest ! i \<in> set ?rest" using nth_mem by (by100 blast)
+        hence "fst (?rest ! i) \<noteq> a"
+          using \<open>\<forall>e \<in> set (y0 @ rev (map top1_inverse_edge y1) @ y2). fst e \<noteq> a\<close> by (by100 blast)
+        thus False using \<open>fst (?rest ! i) = a\<close> by (by100 simp)
+      qed
+      thus ?thesis using True by (by100 simp)
+    next
+      case False
+      \<comment> \<open>Label l \<noteq> a: count in rest = count in w \<in> {0,2}.
+         The proof goes through the internal y0/y1/y2 decomposition.
+         count(l, rest) = count(l, y0) + count(l, rev(inv(y1))) + count(l, y2)
+                        = count(l, y0) + count(l, y1) + count(l, y2)   [inv preserves fst]
+                        = count(l, w)   [since l \<noteq> a and a-positions don't contribute]\<close>
+      \<comment> \<open>Use filter-length: count(l, rest) = count(l, w) via filter decomposition.\<close>
+      let ?P = "\<lambda>e. fst e = label"
+      have hfilt_rest: "length (filter ?P ?rest)
+          = length (filter ?P y0) + length (filter ?P (rev (map top1_inverse_edge y1))) + length (filter ?P y2)"
+        by (by100 simp)
+      \<comment> \<open>filter commutes with rev, and inv preserves fst.\<close>
+      have "filter ?P (rev (map top1_inverse_edge y1)) = rev (filter ?P (map top1_inverse_edge y1))"
+        using rev_filter[of ?P "map top1_inverse_edge y1", symmetric] .
+      hence "length (filter ?P (rev (map top1_inverse_edge y1))) = length (filter ?P (map top1_inverse_edge y1))"
+        by (by100 simp)
+      moreover have "length (filter ?P (map top1_inverse_edge y1)) = length (filter ?P y1)"
+      proof -
+        \<comment> \<open>length\_filter\_map gives: length(filter P (map f xs)) = length(filter (P\<circ>f) xs).
+           Then P \<circ> inv = P (since inv preserves fst) gives the result.\<close>
+        have "?P \<circ> top1_inverse_edge = ?P"
+          by (rule ext) (simp add: top1_inverse_edge_def comp_def split: prod.splits)
+        thus ?thesis by simp
+      qed
+      ultimately have "length (filter ?P (rev (map top1_inverse_edge y1))) = length (filter ?P y1)"
+        by (by100 simp)
+      hence hcount_rest: "length (filter ?P ?rest)
+          = length (filter ?P y0) + length (filter ?P y1) + length (filter ?P y2)"
+        using hfilt_rest by (by100 simp)
+      \<comment> \<open>For w: the two a-positions don't contribute to filter (since label \<noteq> a).\<close>
+      have "length (filter ?P w) = length (filter ?P (y0 @ [(a,True)] @ y1 @ [(a,True)] @ y2))"
+        using hdecomp by (by100 simp)
+      also have "\<dots> = length (filter ?P y0) + length (filter ?P [(a,True)]) + length (filter ?P y1)
+          + length (filter ?P [(a,True)]) + length (filter ?P y2)"
+        by (by100 simp)
+      also have "filter ?P [(a,True)] = []" using False by (by100 simp)
+      hence "length (filter ?P [(a,True)]) = 0" by (by100 simp)
+      hence "length (filter ?P y0) + length (filter ?P [(a,True)]) + length (filter ?P y1)
+          + length (filter ?P [(a,True)]) + length (filter ?P y2)
+          = length (filter ?P y0) + length (filter ?P y1) + length (filter ?P y2)" by (by100 simp)
+      finally have hcount_w: "length (filter ?P w) = length (filter ?P y0) + length (filter ?P y1) + length (filter ?P y2)" .
+      \<comment> \<open>So count(label, rest) = count(label, w).\<close>
+      have "length (filter ?P ?rest) = length (filter ?P w)"
+        using hcount_rest hcount_w by (by100 simp)
+      \<comment> \<open>Convert to card via length\_filter\_conv\_card.\<close>
+      hence "card {i. i < length ?rest \<and> fst (?rest ! i) = label}
+           = card {i. i < length w \<and> fst (w ! i) = label}"
+        using length_filter_conv_card[of ?P ?rest] length_filter_conv_card[of ?P w] by (by100 simp)
+      moreover from hproper_w have "card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}" by (by100 blast)
+      ultimately show ?thesis by (by100 simp)
+    qed
+  qed
+  ultimately show ?thesis by (by100 blast)
 qed
 
 \<comment> \<open>Length-4 projective base case: scheme ~ projective m=1 or m=2.\<close>
@@ -9597,20 +9835,10 @@ lemma valid_extract_projective_pair:
       "fst ` set rest \<subseteq> fst ` set scheme"
       "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}"
 proof -
-  from extract_projective_pair[OF assms]
-  obtain a rest where hold: "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
-      "length rest = length scheme - 2" "\<forall>e \<in> set rest. fst e \<noteq> a"
-      "fst ` set rest \<subseteq> fst ` set scheme"
-      "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}" by (by100 blast)
-  \<comment> \<open>Need to replay the equivalence with valid operations.
-     The old proof uses: flip\\_label (valid) and cut\\_paste/cut\\_paste2 (valid) and properness checks.
-     Since the specific a and rest are determined by combinatorial analysis (not topology),
-     we defer the valid equivalence proof for now.\<close>
-  \<comment> \<open>Replay: flip\\_label + valid\\_bring\\_projective\\_pair\\_to\\_front.\<close>
+  \<comment> \<open>Step 1: Flip label to True direction.\<close>
   from hproj obtain a0 p q where hp: "p < length scheme" "q < length scheme" "p \<noteq> q"
       "fst (scheme!p) = a0" "fst (scheme!q) = a0" "snd (scheme!p) = snd (scheme!q)"
     by (by100 blast)
-  \<comment> \<open>Step 1: flip\\_label to True direction.\<close>
   define scheme1 where "scheme1 = (if snd (scheme!p) then scheme
       else map (\<lambda>(l, b). (l, if l = a0 then \<not> b else b)) scheme)"
   have hequiv1: "top1_valid_scheme_equiv scheme scheme1"
@@ -9624,12 +9852,94 @@ proof -
       using top1_valid_scheme_operation.v_flip_label[of scheme a0] by (by100 simp)
     thus ?thesis by (rule valid_imp_equiv)
   qed
-  \<comment> \<open>scheme1 satisfies conditions for bring\\_to\\_front. The same a and rest apply.
-     Since the old proof produces the same a, rest from this intermediate, we chain.\<close>
-  have hvalid: "top1_valid_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
-    sorry \<comment> \<open>Needs: valid\\_equiv\\_trans[OF hequiv1 valid\\_bring[...scheme1...]].
-       The bring sorry on scheme1 delegates to the decomposition sorry.\<close>
-  from hvalid hold(2-5) that show ?thesis by (by100 blast)
+  \<comment> \<open>Step 2: scheme1 satisfies conditions for valid\\_bring\\_projective\\_pair\\_to\\_front\\_full.
+     The combinatorial properties (card=2, True direction, properness) transfer from the old proof.\<close>
+  \<comment> \<open>We need: (a0, True) \\<in> set scheme1, card=2 for a0, all a0 entries True, proper.\<close>
+  \<comment> \<open>Combinatorial conditions for scheme1.\<close>
+  have hlen1: "length scheme1 = length scheme" unfolding scheme1_def by (by100 simp)
+  have hfst_preserved: "\<forall>i < length scheme1. fst (scheme1 ! i) = fst (scheme ! i)"
+  proof (cases "snd (scheme ! p)")
+    case True thus ?thesis unfolding scheme1_def by (by100 simp)
+  next
+    case False
+    show ?thesis
+    proof (intro allI impI)
+      fix i assume "i < length scheme1"
+      hence "i < length scheme" using hlen1 by (by100 simp)
+      obtain l b where hlb: "scheme ! i = (l, b)" by (cases "scheme ! i")
+      show "fst (scheme1 ! i) = fst (scheme ! i)"
+        using False \<open>i < length scheme\<close> hlb unfolding scheme1_def by (by100 simp)
+    qed
+  qed
+  have h1_ne: "scheme1 \<noteq> []"
+  proof -
+    from hne have "length scheme > 0" by (by100 simp)
+    hence "length scheme1 > 0" using hlen1 by (by100 simp)
+    thus ?thesis by (by100 simp)
+  qed
+  have h1_proper: "\<forall>label. card {i. i < length scheme1 \<and> fst (scheme1 ! i) = label} \<in> {0, 2}"
+  proof -
+    have "\<And>label. {i. i < length scheme1 \<and> fst (scheme1 ! i) = label}
+        = {i. i < length scheme \<and> fst (scheme ! i) = label}"
+      using hfst_preserved hlen1 by (by100 force)
+    thus ?thesis using hproper by (by100 simp)
+  qed
+  have h1_card: "card {i. i < length scheme1 \<and> fst (scheme1 ! i) = a0} = 2"
+  proof -
+    have "{i. i < length scheme1 \<and> fst (scheme1 ! i) = a0}
+        = {i. i < length scheme \<and> fst (scheme ! i) = a0}"
+      using hfst_preserved hlen1 by (by100 force)
+    moreover have "p \<in> {i. i < length scheme \<and> fst (scheme ! i) = a0}" using hp(1,4) by (by100 blast)
+    hence "{i. i < length scheme \<and> fst (scheme ! i) = a0} \<noteq> {}" by (by100 blast)
+    hence "card {i. i < length scheme \<and> fst (scheme ! i) = a0} \<noteq> 0" by (by100 simp)
+    moreover from hproper have "card {i. i < length scheme \<and> fst (scheme ! i) = a0} \<in> {0, 2}" by (by100 blast)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have h1_dir: "\<forall>i < length scheme1. fst (scheme1 ! i) = a0 \<longrightarrow> snd (scheme1 ! i) = True"
+    sorry \<comment> \<open>True direction: from flip or original. Needs same 50-line case analysis as old proof.\<close>
+  have h1_in: "(a0, True) \<in> set scheme1"
+  proof -
+    have "p < length scheme1" using hp(1) hlen1 by (by100 simp)
+    hence "scheme1 ! p \<in> set scheme1" by (by100 simp)
+    moreover have "fst (scheme1 ! p) = a0" using hfst_preserved \<open>p < length scheme1\<close> hp(4) by (by100 blast)
+    moreover have "snd (scheme1 ! p) = True" using h1_dir \<open>p < length scheme1\<close> calculation(2) by (by100 blast)
+    ultimately have "(a0, True) \<in> set scheme1"
+    proof -
+      assume hfst: "fst (scheme1 ! p) = a0"
+         and hsnd: "snd (scheme1 ! p) = True"
+         and hin: "scheme1 ! p \<in> set scheme1"
+      obtain f s where hfs: "scheme1 ! p = (f, s)" by (cases "scheme1 ! p")
+      have "f = a0" using hfst hfs by (by100 simp)
+      have "s = True" using hsnd hfs by (by100 simp)
+      hence "scheme1 ! p = (a0, True)" using hfs \<open>f = a0\<close> by (by100 simp)
+      thus "(a0, True) \<in> set scheme1" using hin by (by100 simp)
+    qed
+    thus ?thesis .
+  qed
+  from valid_bring_projective_pair_to_front_full[OF h1_in h1_card h1_dir h1_ne h1_proper]
+  obtain rest where hrest: "top1_valid_scheme_equiv scheme1 ([(a0, True), (a0, True)] @ rest)"
+      "length rest = length scheme1 - 2" "\<forall>e \<in> set rest. fst e \<noteq> a0"
+      "fst ` set rest \<subseteq> fst ` set scheme1"
+      "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}" by blast
+  \<comment> \<open>Chain: scheme \\<sim> scheme1 \\<sim> [(a0,T),(a0,T)] @ rest.\<close>
+  from valid_equiv_trans[OF hequiv1 hrest(1)]
+  have "top1_valid_scheme_equiv scheme ([(a0, True), (a0, True)] @ rest)" .
+  moreover have "length rest = length scheme - 2"
+    using hrest(2) unfolding scheme1_def by (by100 simp)
+  moreover have "fst ` set rest \<subseteq> fst ` set scheme"
+  proof -
+    have "fst ` set scheme1 \<subseteq> fst ` set scheme"
+    proof (cases "snd (scheme ! p)")
+      case True thus ?thesis unfolding scheme1_def by (by100 simp)
+    next
+      case False
+      hence "scheme1 = map (\<lambda>(l, b). (l, if l = a0 then \<not> b else b)) scheme"
+        unfolding scheme1_def by (by100 simp)
+      thus ?thesis by (by100 force)
+    qed
+    thus ?thesis using hrest(4) by (by100 blast)
+  qed
+  ultimately show ?thesis using hrest(3) hrest(5) that[of a0 rest] by (by100 blast)
 qed
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
