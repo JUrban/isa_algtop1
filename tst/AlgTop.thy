@@ -3676,7 +3676,24 @@ proof -
         (\<forall>i<?n'. \<forall>k<?n'.
               k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n' \<longrightarrow>
               (vx k - vx i)*(vy(Suc i mod ?n') - vy i) - (vy k - vy i)*(vx(Suc i mod ?n') - vx i) < 0)"
-      sorry \<comment> \<open>Witness P', q, vx', vy'. Conditions transfer from hC1-hC11 by i -> i+2.\<close>
+      apply (rule exI[of _ P'])
+      apply (rule exI[of _ q])
+      apply (rule exI[of _ vx'])
+      apply (rule exI[of _ vy'])
+      apply (intro conjI)
+      subgoal sorry \<comment> \<open>C1: polygonal region\<close>
+      subgoal sorry \<comment> \<open>C2: quotient map\<close>
+      subgoal \<comment> \<open>C3: vertex distinctness\<close>
+        using hC3 hn unfolding vx'_def vy'_def by (by100 force)
+      subgoal sorry \<comment> \<open>C4: vertices in P'\<close>
+      subgoal unfolding P'_def by (by100 blast) \<comment> \<open>C5: P' = convex hull by definition\<close>
+      subgoal sorry \<comment> \<open>C6: non-crossing\<close>
+      subgoal sorry \<comment> \<open>C7: edge identification\<close>
+      subgoal sorry \<comment> \<open>C8: interior injectivity\<close>
+      subgoal sorry \<comment> \<open>C9: edge-only identification\<close>
+      subgoal sorry \<comment> \<open>C10: counterclockwise\<close>
+      subgoal sorry \<comment> \<open>C11: strict edge-side\<close>
+      done
   qed
   \<comment> \<open>Y is a quotient of w. Take Y'=Y, TY'=TY, h=id.\<close>
   moreover have "is_topology_on Y TY"
