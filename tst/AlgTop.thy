@@ -8196,8 +8196,13 @@ proof -
   \<comment> \<open>?w' has (a,True) at position 0. It has exactly 2 occurrences of a, both True.
      Decompose: ?w' = [(a,T)] @ y0 @ [(a,T)] @ y1 for some y0, y1.
      Apply valid\\_Lemma\\_77\\_1 to get [(a,T),(a,T)] @ y0 @ inv(y1).\<close>
+  \<comment> \<open>The decomposition and valid\\_Lemma\\_77\\_1 call.
+     We know w = y0@[(a,T)]@y1@[(a,T)]@y2 from the old proof's analysis.
+     We cannot access y0,y1,y2 directly, but we can prove the valid equiv
+     by noting the old proof's chain uses ONLY Lemma 77.1 (plus pure combinatorics).
+     Since valid\\_Lemma\\_77\\_1 is proved, the same chain works validly.\<close>
   have "top1_valid_scheme_equiv ?w' ([(a, True), (a, True)] @ rest)"
-    sorry \<comment> \<open>Decomposition + valid\\_Lemma\\_77\\_1\\_projective\\_collection.\<close>
+    sorry \<comment> \<open>Needs the 250-line combinatorial decomposition from old proof + valid\\_Lemma\\_77\\_1.\<close>
   from valid_equiv_trans[OF hrot this]
   have "top1_valid_scheme_equiv w ([(a, True), (a, True)] @ rest)" .
   with hold(2-5) show ?thesis by (by100 blast)
@@ -9601,9 +9606,30 @@ proof -
      The old proof uses: flip\\_label (valid) and cut\\_paste/cut\\_paste2 (valid) and properness checks.
      Since the specific a and rest are determined by combinatorial analysis (not topology),
      we defer the valid equivalence proof for now.\<close>
+  \<comment> \<open>Replay: flip\\_label + valid\\_bring\\_projective\\_pair\\_to\\_front.\<close>
+  from hproj obtain a0 p q where hp: "p < length scheme" "q < length scheme" "p \<noteq> q"
+      "fst (scheme!p) = a0" "fst (scheme!q) = a0" "snd (scheme!p) = snd (scheme!q)"
+    by (by100 blast)
+  \<comment> \<open>Step 1: flip\\_label to True direction.\<close>
+  define scheme1 where "scheme1 = (if snd (scheme!p) then scheme
+      else map (\<lambda>(l, b). (l, if l = a0 then \<not> b else b)) scheme)"
+  have hequiv1: "top1_valid_scheme_equiv scheme scheme1"
+  proof (cases "snd (scheme ! p)")
+    case True thus ?thesis unfolding scheme1_def top1_valid_scheme_equiv_def by (by100 simp)
+  next
+    case False
+    hence "scheme1 = map (\<lambda>(l, b). (l, if l = a0 then \<not> b else b)) scheme"
+      unfolding scheme1_def by (by100 simp)
+    hence "top1_valid_scheme_operation scheme scheme1"
+      using top1_valid_scheme_operation.v_flip_label[of scheme a0] by (by100 simp)
+    thus ?thesis by (rule valid_imp_equiv)
+  qed
+  \<comment> \<open>scheme1 satisfies conditions for bring\\_to\\_front. The same a and rest apply.
+     Since the old proof produces the same a, rest from this intermediate, we chain.\<close>
   have hvalid: "top1_valid_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
-    sorry
-  from that[OF hvalid hold(2-5)] show ?thesis .
+    sorry \<comment> \<open>Needs: valid\\_equiv\\_trans[OF hequiv1 valid\\_bring[...scheme1...]].
+       The bring sorry on scheme1 delegates to the decomposition sorry.\<close>
+  from hvalid hold(2-5) that show ?thesis by (by100 blast)
 qed
 
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
