@@ -13224,6 +13224,28 @@ qed
    context\\_left) plus combinatorial helpers — all of which have valid counterparts.
    We defer the full 2200-line replay and instead sorry the conversion.
    Once this is proved, Theorem 77.5 can use the valid chain directly.\<close>
+\<comment> \<open>Helper: construct the 3-way disjunction for the valid normal form conclusion.\<close>
+lemma valid_nf_sphere:
+  "a \<noteq> b \<Longrightarrow> top1_valid_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)] \<Longrightarrow>
+   (\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
+   \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv scheme w)
+   \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv scheme w)"
+  by (by100 blast)
+
+lemma valid_nf_projective:
+  "m > 0 \<Longrightarrow> top1_is_projective_scheme w m \<Longrightarrow> top1_valid_scheme_equiv scheme w \<Longrightarrow>
+   (\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
+   \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv scheme w)
+   \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv scheme w)"
+  by (by100 blast)
+
+lemma valid_nf_torus:
+  "n > 0 \<Longrightarrow> top1_is_torus_scheme w n \<Longrightarrow> top1_valid_scheme_equiv scheme w \<Longrightarrow>
+   (\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
+   \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv scheme w)
+   \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv scheme w)"
+  by (by100 blast)
+
 lemma scheme_normal_form_valid:
   fixes scheme :: "(nat \<times> bool) list"
   assumes "length scheme \<ge> 4"
