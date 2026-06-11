@@ -298,10 +298,82 @@ proof -
   \<comment> \<open>C10: CCW orientation. For regular polygon, cross product
      (v\\_i - centroid) \\<times> (v\\_{i+1} - centroid) = sin(2\\<pi>/n) > 0.\<close>
   \<comment> \<open>Centroid of regular n-gon is (0,0): sum of n-th roots of unity = 0.\<close>
+  \<comment> \<open>Sum of n-th roots of unity = 0 (complex geometric series).
+     Proof: cis(2\\<pi>k/n) = (cis(2\\<pi>/n))^k by DeMoivre.
+     \\<Sum>k<n (cis(2\\<pi>/n))^k = (1 - (cis(2\\<pi>/n))^n)/(1 - cis(2\\<pi>/n)) = 0
+     since (cis(2\\<pi>/n))^n = cis(2\\<pi>) = 1.\<close>
+  \<comment> \<open>Prove \\<Sum>k<n. cis(2\\<pi>k/n) = 0 via geometric series, then extract Re/Im.\<close>
+  have hn_pos: "real ?n > 0" using assms by (by100 linarith)
+  have hsin_pos: "sin (2 * pi / real ?n) > 0"
+  proof -
+    have "2 * pi / real ?n > 0" using pi_gt_zero hn_pos by (by100 simp)
+    moreover have "2 * pi / real ?n < pi"
+    proof -
+      have "real ?n \<ge> 3" using assms by (by100 simp)
+      hence "2 * pi / real ?n \<le> 2 * pi / 3" using pi_gt_zero
+        by (intro divide_left_mono) (by100 auto)+
+      also have "\<dots> < pi" using pi_gt_zero by (by100 simp)
+      finally show ?thesis .
+    qed
+    ultimately show ?thesis using sin_gt_zero by (by100 blast)
+  qed
+  have hroots: "(\<Sum>k<?n. cis (2*pi*real k/real ?n)) = (0 :: complex)"
+  proof -
+    let ?w = "cis (2*pi/real ?n) :: complex"
+    \<comment> \<open>Each term is ?w^k.\<close>
+    have hw_k: "\<And>k. ?w ^ k = cis (real k * (2*pi/real ?n))"
+      using DeMoivre by (by100 blast)
+    have hw_k': "\<And>k. cis (2*pi*real k/real ?n) = ?w ^ k"
+      sorry \<comment> \<open>DeMoivre + commutativity.\<close>
+    have sum_eq: "(\<Sum>k<?n. cis (2*pi*real k/real ?n)) = (\<Sum>k<?n. ?w ^ k)"
+      using hw_k' by (intro sum.cong) (by100 simp)+
+    \<comment> \<open>?w^n = cis(2\\<pi>) = 1.\<close>
+    have hw_n: "?w ^ ?n = 1"
+    proof -
+      have "?w ^ ?n = cis (real ?n * (2*pi/real ?n))" using DeMoivre by (by100 blast)
+      also have "real ?n * (2*pi/real ?n) = 2*pi" using hn_pos by (by100 simp)
+      also have "cis (2*pi) = 1"
+        using cis_2pi by (by100 simp)
+      finally show ?thesis .
+    qed
+    \<comment> \<open>?w \\<noteq> 1 (since 0 < 2\\<pi>/n < 2\\<pi>).\<close>
+    have hw_ne1: "?w \<noteq> 1"
+    proof
+      assume "?w = 1"
+      \<comment> \<open>cis(2\\<pi>/n)=1 implies 2\\<pi>/n = 2k\\<pi> for some integer k.
+         Since 0 < 2\\<pi>/n < 2\\<pi> (for n\\<ge>3), only k=0 possible, giving 2\\<pi>/n=0, contradiction.\<close>
+      hence "sin (2*pi/real ?n) = 0"
+        by (simp add: complex_eq_iff cis.simps)
+      thus False using hsin_pos by (by100 linarith)
+    qed
+    \<comment> \<open>Geometric series: (1 - ?w) * \\<Sum>k\\<le>n-1. ?w^k = 1 - ?w^n = 0.\<close>
+    have "(1 - ?w) * (\<Sum>k\<le>?n - 1. ?w ^ k) = 1 - ?w ^ (Suc (?n - 1))"
+      by (rule sum_gp_basic)
+    also have "Suc (?n - 1) = ?n" using assms by (by100 simp)
+    also have "1 - ?w ^ ?n = 0" using hw_n by (by100 simp)
+    finally have "(1 - ?w) * (\<Sum>k\<le>?n - 1. ?w ^ k) = 0" .
+    hence "(\<Sum>k\<le>?n - 1. ?w ^ k) = 0" using hw_ne1 by (by100 force)
+    \<comment> \<open>Convert from {..n-1} to {..<n}.\<close>
+    moreover have "{..?n - 1} = {..<?n}" using assms by (by100 auto)
+    ultimately have "(\<Sum>k<?n. ?w ^ k) = 0" by (by100 simp)
+    thus ?thesis using sum_eq by (by100 simp)
+  qed
   have hcx0: "(\<Sum>j<?n. vx j) = 0"
-    sorry \<comment> \<open>Re(\\<Sum>k<n. cis(2\\<pi>k/n)) = Re(0) = 0 by geometric series.\<close>
+  proof -
+    have "(\<Sum>j<?n. vx j) = Re (\<Sum>j<?n. cis (2*pi*real j/real ?n))"
+      unfolding vx_def by (simp add: Re_sum cis.simps)
+    also have "\<dots> = Re 0" using hroots by (by100 simp)
+    also have "\<dots> = 0" by (by100 simp)
+    finally show ?thesis .
+  qed
   have hcy0: "(\<Sum>j<?n. vy j) = 0"
-    sorry \<comment> \<open>Im(\\<Sum>k<n. cis(2\\<pi>k/n)) = Im(0) = 0 by geometric series.\<close>
+  proof -
+    have "(\<Sum>j<?n. vy j) = Im (\<Sum>j<?n. cis (2*pi*real j/real ?n))"
+      unfolding vy_def by (simp add: Im_sum cis.simps)
+    also have "\<dots> = Im 0" using hroots by (by100 simp)
+    also have "\<dots> = 0" by (by100 simp)
+    finally show ?thesis .
+  qed
   \<comment> \<open>Cross product vx(i)*vy(i+1) - vy(i)*vx(i+1) = sin(2\\<pi>/n) for regular polygon.\<close>
   have hcross: "\<And>i. i < ?n \<Longrightarrow> vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n) = sin (2 * pi / real ?n)"
   proof -
@@ -351,20 +423,7 @@ proof -
     show "vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n) = sin (2*pi/real ?n)"
       using step1 step2 step3 by (by100 simp)
   qed
-  have hsin_pos: "sin (2 * pi / real ?n) > 0"
-  proof -
-    have hn_pos: "real ?n > 0" using assms by (by100 linarith)
-    have "2 * pi / real ?n > 0" using pi_gt_zero hn_pos by (by100 simp)
-    moreover have "2 * pi / real ?n < pi"
-    proof -
-      have "real ?n \<ge> 3" using assms by (by100 simp)
-      hence "2 * pi / real ?n \<le> 2 * pi / 3" using pi_gt_zero
-        by (intro divide_left_mono) (by100 auto)+
-      also have "\<dots> < pi" using pi_gt_zero by (by100 simp)
-      finally show ?thesis .
-    qed
-    ultimately show ?thesis using sin_gt_zero by (by100 blast)
-  qed
+  \<comment> \<open>hsin\\_pos already proved above. hcross uses it for C10 assembly.\<close>
   have hC10: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx j)/real ?n; cy = (\<Sum>j<?n. vy j)/real ?n
        in (vx i - cx)*(vy(Suc i mod ?n) - cy) - (vy i - cy)*(vx(Suc i mod ?n) - cx) > 0"
   proof (intro allI impI, unfold Let_def)
