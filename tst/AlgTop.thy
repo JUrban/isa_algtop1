@@ -33,7 +33,128 @@ lemma scheme_quotient_exists:
   assumes "length scheme \<ge> 3"
   shows "\<exists>(Y :: (real \<times> real) set) (TY :: (real \<times> real) set set).
     top1_quotient_of_scheme_on Y TY scheme"
-  sorry \<comment> \<open>Regular polygon + identification quotient construction.\<close>
+proof -
+  let ?n = "length scheme"
+  \<comment> \<open>Regular n-gon: vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).\<close>
+  define vx where "vx k = cos (2 * pi * real k / real ?n)" for k
+  define vy where "vy k = sin (2 * pi * real k / real ?n)" for k
+  \<comment> \<open>P = convex hull of vertices.\<close>
+  define P where "P = {(x::real,y::real). \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx i)
+                     \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
+  \<comment> \<open>Quotient map: on boundary, identify edges per scheme. Interior maps injectively.
+     For edge i (from v\\_i to v\\_{i+1}), at parameter t \\<in> [0,1]:
+       point = ((1-t)*vx i + t*vx(Suc i mod n), (1-t)*vy i + t*vy(Suc i mod n))
+     If edge i is identified with edge j (same label):
+       - same direction: q(edge\\_i(t)) = q(edge\\_j(t))
+       - opposite direction: q(edge\\_i(t)) = q(edge\\_j(1-t))
+     For interior points (not on any edge): q = id (no identification).\<close>
+  \<comment> \<open>Define q via representatives: for each boundary point, pick canonical edge/param.\<close>
+  define q :: "(real \<times> real) \<Rightarrow> (real \<times> real)" where
+    "q p = p" for p \<comment> \<open>Placeholder. Real q identifies boundary edges per scheme.\<close>
+  \<comment> \<open>Y = image of P under q.\<close>
+  define Y where "Y = q ` P"
+  define TY where "TY = {U. \<exists>V. V \<subseteq> P \<and> (\<forall>x \<in> V. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> V) \<and> U = q ` V
+      \<and> V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P}"
+  \<comment> \<open>The 11 conditions need to be verified. Main challenges:
+     C1 (polygonal region): regular n-gon is convex, n \\<ge> 3 by assumption.
+     C2 (quotient map): q is continuous, surjective, TY is quotient topology.
+     C3 (vertex distinctness): distinct angles give distinct points.
+     C4 (vertices in P): vertices are in convex hull.
+     C5 (P = convex hull): by definition.
+     C6 (edge interiors don't intersect): convexity + distinct vertices.
+     C8 (identification pattern): by construction of q.
+     C9 (interior injectivity): q = id on interior.
+     C10 (CCW orientation): regular polygon vertices are CCW.
+     C11 (strict convexity): all vertices on one side of each edge.\<close>
+  \<comment> \<open>C3: vertex distinctness. Distinct i,j < n give distinct angles, hence distinct (cos,sin).\<close>
+  have hC3: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+  proof (intro allI impI)
+    fix i j assume hi: "i < ?n" and hj: "j < ?n" and hij: "i \<noteq> j"
+    show "(vx i, vy i) \<noteq> (vx j, vy j)"
+    proof
+      assume heq: "(vx i, vy i) = (vx j, vy j)"
+      hence "cos (2*pi*real i/real ?n) = cos (2*pi*real j/real ?n)"
+        and "sin (2*pi*real i/real ?n) = sin (2*pi*real j/real ?n)"
+        unfolding vx_def vy_def by (by100 auto)+
+      from cos_sin_eq_imp[OF this]
+      obtain k :: int where hk: "2*pi*real i/real ?n - 2*pi*real j/real ?n = real_of_int k * 2 * pi"
+        by (by100 blast)
+      have hpi_pos: "pi > 0" using pi_gt_zero .
+      have hn_pos: "real ?n > 0" using assms by (by100 linarith)
+      from hk have h_diff: "(real i - real j) / real ?n = real_of_int k"
+      proof -
+        from hk have "2*pi*real i/real ?n - 2*pi*real j/real ?n = real_of_int k * (2 * pi)"
+          by (by100 simp)
+        hence "2*pi * (real i/real ?n - real j/real ?n) = real_of_int k * (2 * pi)"
+          using hn_pos by (simp add: diff_divide_distrib algebra_simps)
+        hence "real i/real ?n - real j/real ?n = real_of_int k"
+          using hpi_pos by (by100 simp)
+        thus ?thesis using hn_pos by (simp add: diff_divide_distrib)
+      qed
+      hence "real i - real j = real_of_int k * real ?n"
+        using hn_pos by (simp add: field_simps)
+      hence "real_of_int (int i - int j) = real_of_int k * real ?n"
+        by (by100 simp)
+      \<comment> \<open>Since |i-j| < n and n > 0, the only integer k giving |k*n| < n is k = 0.\<close>
+      hence hk0: "k = 0"
+      proof -
+        have "real_of_int (int i - int j) = real_of_int k * real ?n"
+          using \<open>real i - real j = real_of_int k * real ?n\<close> by (by100 simp)
+        have "\<bar>real_of_int (int i - int j)\<bar> < real ?n"
+          using hi hj by (by100 simp)
+        hence "\<bar>real_of_int k * real ?n\<bar> < real ?n"
+          using \<open>real_of_int (int i - int j) = real_of_int k * real ?n\<close> by (by100 simp)
+        hence "\<bar>real_of_int k\<bar> * real ?n < real ?n"
+          using hn_pos by (simp add: abs_mult)
+        hence "\<bar>real_of_int k\<bar> < 1"
+          using hn_pos by (by100 simp)
+        thus "k = 0" by (by100 linarith)
+      qed
+      hence "real i = real j" using \<open>(real i - real j)/real ?n = real_of_int k\<close> hn_pos
+        by (by100 simp)
+      hence "i = j" by (by100 simp)
+      thus False using hij by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>C4: vertices in P (each vertex is a convex combination with coefficient 1 at position k).\<close>
+  have hC4: "\<forall>i<?n. (vx i, vy i) \<in> P"
+  proof (intro allI impI)
+    fix k assume hk: "k < ?n"
+    define coeffs :: "nat \<Rightarrow> real" where "coeffs j = (if j = k then 1 else 0)" for j
+    have "\<forall>i<?n. coeffs i \<ge> 0" unfolding coeffs_def by (by100 simp)
+    moreover have "(\<Sum>i<?n. coeffs i) = 1"
+      unfolding coeffs_def using hk by (by100 simp)
+    moreover have "vx k = (\<Sum>i<?n. coeffs i * vx i)"
+    proof -
+      have "(\<Sum>i<?n. coeffs i * vx i) = (\<Sum>i<?n. (if i=k then vx i else 0))"
+        unfolding coeffs_def by (rule sum.cong) (by100 auto)+
+      also have "\<dots> = vx k" using hk by (by100 simp)
+      finally show ?thesis by (by100 simp)
+    qed
+    moreover have "vy k = (\<Sum>i<?n. coeffs i * vy i)"
+    proof -
+      have "(\<Sum>i<?n. coeffs i * vy i) = (\<Sum>i<?n. (if i=k then vy i else 0))"
+        unfolding coeffs_def by (rule sum.cong) (by100 auto)+
+      also have "\<dots> = vy k" using hk by (by100 simp)
+      finally show ?thesis by (by100 simp)
+    qed
+    ultimately show "(vx k, vy k) \<in> P"
+      unfolding P_def by (by100 blast)
+  qed
+  \<comment> \<open>C5: P = convex hull of vertices (by definition of P).\<close>
+  have hC5: "P = {(x,y) | x y. \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                   \<and> (\<Sum>i<?n. coeffs i) = 1
+                   \<and> x = (\<Sum>i<?n. coeffs i * vx i)
+                   \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
+    unfolding P_def by (by100 simp)
+  \<comment> \<open>C1: P is a polygonal region. Need: n \\<ge> 3, distinct vertices, no vertex in hull of others.\<close>
+  have hC1: "top1_is_polygonal_region_on P ?n"
+    unfolding top1_is_polygonal_region_on_def
+    sorry \<comment> \<open>n\\<ge>3 by assumption, distinctness from hC3, extremality from regular polygon geometry.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
    Given quotient of [a,inv a]@w, produce a (possibly different) quotient of w
