@@ -563,8 +563,24 @@ proof -
                = 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>-\\<alpha>)/2) [sum\\_eq+da2]
                = 2*sin((\\<beta>-\\<alpha>)/2)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos((\\<beta>-\\<alpha>)/2)] < 0.
          Since sin((\\<beta>-\\<alpha>)/2) > 0 and cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) < cos((\\<beta>-\\<alpha>)/2).\<close>
-      show ?thesis using cross_eq hba double_angle sum_eq hsin_half hcos_lt
-        sorry \<comment> \<open>Assembly timeout. All pieces proved; needs factoring step.\<close>
+      \<comment> \<open>Step 1: sin(\\<beta>-\\<alpha>) = 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>-\\<alpha>)/2) [double angle].\<close>
+      have da2: "sin (?\<beta> - ?\<alpha>) = 2 * sin ((?\<beta> - ?\<alpha>)/2) * cos ((?\<beta> - ?\<alpha>)/2)"
+        sorry \<comment> \<open>sin\\_double for (\\<beta>-\\<alpha>)/2.\<close>
+      \<comment> \<open>Step 2: cross = 2*sin(half)*[cos(angle) - cos(half)].\<close>
+      have step2: "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)
+        = 2 * sin ((?\<beta> - ?\<alpha>)/2) * (cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2))"
+        using sum_eq da2 by (by100 algebra)
+      \<comment> \<open>Step 3: bracket < 0, prefactor > 0, product < 0.\<close>
+      have "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2) < 0"
+        using hcos_lt by (by100 linarith)
+      hence neg_bracket: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2) < 0"
+        by (by100 linarith)
+      have "2 * sin ((?\<beta> - ?\<alpha>)/2) > 0" using hsin_half by (by100 linarith)
+      hence "2 * sin ((?\<beta> - ?\<alpha>)/2) * (cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2)) < 0"
+        using neg_bracket mult_pos_neg[of "2 * sin ((?\<beta> - ?\<alpha>)/2)" "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2)"]
+        by (by100 linarith)
+      hence "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>) < 0" using step2 by (by100 linarith)
+      thus ?thesis using cross_eq by (by100 linarith)
     qed
   qed
   \<comment> \<open>C6: non-adjacent edge interiors don't intersect (strict convexity implies this).\<close>
