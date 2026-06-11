@@ -105,6 +105,18 @@ inductive top1_valid_scheme_operation :: "('a \<times> bool) list \<Rightarrow> 
       (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)" |
   \<comment> \<open>Reverse cancel: insert a cancel pair (no freshness needed since it cancels).\<close>
   v_cancel_reverse: "top1_valid_scheme_operation (u @ v) (u @ [a, top1_inverse_edge a] @ v)" |
+  \<comment> \<open>Reverse cut-paste: undo the cut-paste by re-cutting.\<close>
+  v_cut_paste_reverse: "top1_valid_scheme_operation
+      (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)
+      (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)" |
+  \<comment> \<open>Reverse cut-paste2.\<close>
+  v_cut_paste2_reverse: "top1_valid_scheme_operation
+      ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))
+      (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)" |
+  \<comment> \<open>Cut-paste2 without freshness (needed for reverse of v\\_cut\\_paste2\\_reverse).\<close>
+  v_cut_paste2_nonfresh: "top1_valid_scheme_operation
+      (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)
+      ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))" |
   \<comment> \<open>Context rule: valid operations can be performed with a prefix.\<close>
   v_context_left: "top1_valid_scheme_operation y z \<Longrightarrow>
       top1_valid_scheme_operation (prefix @ y) (prefix @ z)"
@@ -113,29 +125,8 @@ inductive top1_valid_scheme_operation :: "('a \<times> bool) list \<Rightarrow> 
 definition top1_valid_scheme_equiv :: "('a \<times> bool) list \<Rightarrow> ('a \<times> bool) list \<Rightarrow> bool" where
   "top1_valid_scheme_equiv = top1_valid_scheme_operation\<^sup>*\<^sup>*"
 
-\<comment> \<open>Every valid operation is also an unrestricted operation.\<close>
-lemma valid_implies_elementary:
-  "top1_valid_scheme_operation w w' \<Longrightarrow> top1_elementary_scheme_operation w w'"
-  apply (induction rule: top1_valid_scheme_operation.induct)
-  apply (rule top1_elementary_scheme_operation.rotate)
-  apply (rule top1_elementary_scheme_operation.cancel)
-  apply (rule top1_elementary_scheme_operation.uncancel)
-  apply (rule top1_elementary_scheme_operation.invert)
-  apply (rule top1_elementary_scheme_operation.relabel)
-  apply (rule top1_elementary_scheme_operation.flip_label)
-  apply (rule top1_elementary_scheme_operation.cut_paste)
-  apply (rule top1_elementary_scheme_operation.cut_paste2)
-  apply (rule top1_elementary_scheme_operation.cut_paste_opp)
-  apply (rule top1_elementary_scheme_operation.uncancel)
-  apply (rule top1_elementary_scheme_operation.context_left)
-  apply assumption
-  done
-
-\<comment> \<open>Valid equivalence implies unrestricted equivalence.\<close>
-lemma valid_equiv_implies_equiv:
-  "top1_valid_scheme_equiv w w' \<Longrightarrow> top1_scheme_equiv w w'"
-  unfolding top1_valid_scheme_equiv_def top1_scheme_equiv_def
-  by (induction rule: rtranclp.induct) (by100 simp, meson rtranclp.rtrancl_into_rtrancl valid_implies_elementary)
+\<comment> \<open>valid\\_implies\\_elementary and valid\\_equiv\\_implies\\_equiv: moved to AlgTop.thy
+   (they need sorry for new v\\_cut\\_paste\\_reverse / v\\_cut\\_paste2\\_reverse cases).\<close>
 
 \<comment> \<open>Valid equivalence: single fresh relabel is a valid equivalence step.\<close>
 lemma valid_equiv_fresh_relabel:
