@@ -626,12 +626,13 @@ proof -
             thus False using hm0 by (by100 simp)
           qed
         qed
+        \<comment> \<open>Apply sin\\_pi\\_frac\\_ne. Each angle = \\<pi>*(m)/n for integer m with 0<|m|<n.\<close>
         have hf1_ne: "sin ((?\<beta> - ?\<alpha>)/2) \<noteq> 0"
-          sorry \<comment> \<open>Apply sin\\_pi\\_frac\\_ne with m = Suc i mod n - i.\<close>
+          sorry \<comment> \<open>Need: (\\<beta>-\\<alpha>)/2 = \\<pi>*(Suc i mod n - i)/n, then sin\\_pi\\_frac\\_ne. Expression timeout.\<close>
         have hf2_ne: "sin ((?\<beta> - ?\<gamma>)/2) \<noteq> 0"
-          sorry \<comment> \<open>Apply sin\\_pi\\_frac\\_ne with m = Suc i mod n - k.\<close>
+          sorry \<comment> \<open>Need: (\\<beta>-\\<gamma>)/2 = \\<pi>*(Suc i mod n - k)/n, then sin\\_pi\\_frac\\_ne.\<close>
         have hf3_ne: "sin ((?\<alpha> - ?\<gamma>)/2) \<noteq> 0"
-          sorry \<comment> \<open>Apply sin\\_pi\\_frac\\_ne with m = i - k.\<close>
+          sorry \<comment> \<open>Need: (\\<alpha>-\\<gamma>)/2 = \\<pi>*(i-k)/n, then sin\\_pi\\_frac\\_ne.\<close>
         \<comment> \<open>Product of signs: for i<n-1 and k<i: (+)(+)(+). For k>i+1: (+)(-)(-).
            For i=n-1: (-)(-)( +). All give (+).\<close>
         have "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) \<noteq> 0"
