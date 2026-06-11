@@ -3602,80 +3602,11 @@ lemma front_uncancel_realization_homeo:
     top1_homeomorphism_on Y TY Y' TY' h"
   sorry \<comment> \<open>§76(vii): Uncancel front. Insert cancel spur into polygon.\<close>
 
-\<comment> \<open>Cancel at front — same-space form. DEAD CODE (only used by cancel\\_proved which is dead).
-   Kept for backward compatibility.\<close>
+\<comment> \<open>Cancel at front — same-space form. DEAD CODE. Replaced by front\\_cancel\\_realization\\_homeo.\<close>
 lemma quotient_of_scheme_cancel_front:
   assumes "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
   shows "top1_quotient_of_scheme_on Y TY w"
-proof -
-  define scheme where "scheme = [a, top1_inverse_edge a] @ w"
-  define n where "n = length scheme"
-  have hn: "n = length w + 2" unfolding n_def scheme_def by simp
-  have hassms: "top1_quotient_of_scheme_on Y TY scheme" using assms(1) unfolding scheme_def .
-  have hn3: "n \<ge> 3"
-  proof -
-    from hassms obtain P0 q0 where "top1_is_polygonal_region_on P0 (length scheme)"
-      by (rule quotient_of_scheme_extract)
-    thus ?thesis unfolding n_def top1_is_polygonal_region_on_def by (by100 blast)
-  qed
-  \<comment> \<open>Step 1: The old quotient gives us the topology.\<close>
-  have htopo: "is_topology_on_strict Y TY"
-    using hassms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  \<comment> \<open>Step 2: Define new polygon by skipping vertex 1.\<close>
-  \<comment> \<open>Step 3: Show all 11 conditions of quotient\\_of\\_scheme\\_on for w.\<close>
-  \<comment> \<open>For each condition on the new polygon P'(vx', vy') with scheme w:
-     - vx'(i) = vx(i+2), vy'(i) = vy(i+2). n' = n-2 = length w.
-     - Edge i of P' corresponds to edge i+2 of P.
-     - w!i = scheme!(i+2) since scheme = [a, inv a] @ w.
-     - All conditions transfer from P to P' by the index shift i -> i+2.\<close>
-  show ?thesis unfolding top1_quotient_of_scheme_on_def
-  proof (intro conjI)
-    show "is_topology_on_strict Y TY" by (rule htopo)
-  next
-    \<comment> \<open>The main existential: construct P', q, vx', vy' witnesses.\<close>
-    show "\<exists>P q vx vy. top1_is_polygonal_region_on P (length w)
-        \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q
-        \<and> (\<forall>i<length w. \<forall>j<length w. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
-        \<and> (\<forall>i<length w. (vx i, vy i) \<in> P)
-        \<and> P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<length w. coeffs i \<ge> 0) \<and> (\<Sum>i<length w. coeffs i) = 1
-                       \<and> x = (\<Sum>i<length w. coeffs i * vx i) \<and> y = (\<Sum>i<length w. coeffs i * vy i)}
-        \<and> (\<forall>i<length w. \<forall>j<length w.
-              i \<noteq> j \<longrightarrow> Suc i mod length w \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length w \<longrightarrow>
-              (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
-                 ((1-s) * vx i + s * vx (Suc i mod length w), (1-s) * vy i + s * vy (Suc i mod length w))
-               \<noteq> ((1-t) * vx j + t * vx (Suc j mod length w), (1-t) * vy j + t * vy (Suc j mod length w))))
-        \<and> (\<forall>i<length w. \<forall>j<length w. fst (w!i) = fst (w!j) \<longrightarrow>
-              (\<forall>t\<in>I_set. q ((1-t) * vx i + t * vx (Suc i mod length w),
-                             (1-t) * vy i + t * vy (Suc i mod length w))
-               = (if snd (w!i) = snd (w!j)
-                  then q ((1-t) * vx j + t * vx (Suc j mod length w),
-                          (1-t) * vy j + t * vy (Suc j mod length w))
-                  else q (t * vx j + (1-t) * vx (Suc j mod length w),
-                          t * vy j + (1-t) * vy (Suc j mod length w)))))
-        \<and> (\<forall>p\<in>P. (\<forall>i<length w. \<forall>t\<in>I_set.
-                    p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length w),
-                          (1-t) * vy i + t * vy (Suc i mod length w)))
-               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p'))
-        \<and> (\<forall>i<length w. \<forall>j<length w. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
-              q ((1-t) * vx i + t * vx (Suc i mod length w),
-                 (1-t) * vy i + t * vy (Suc i mod length w))
-            = q ((1-s) * vx j + s * vx (Suc j mod length w),
-                 (1-s) * vy j + s * vy (Suc j mod length w))
-            \<longrightarrow> (i = j \<and> t = s) \<or> (fst (w!i) = fst (w!j) \<and>
-                 (if snd (w!i) = snd (w!j) then s = t else s = 1 - t)))
-        \<and> (\<forall>i<length w. let cx = (\<Sum>j<length w. vx j) / real (length w);
-                             cy = (\<Sum>j<length w. vy j) / real (length w)
-             in (vx i - cx) * (vy (Suc i mod length w) - cy)
-              - (vy i - cy) * (vx (Suc i mod length w) - cx) > 0)
-        \<and> (\<forall>i<length w. \<forall>k<length w.
-              k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length w \<longrightarrow>
-              (vx k - vx i) * (vy (Suc i mod length w) - vy i)
-              - (vy k - vy i) * (vx (Suc i mod length w) - vx i) < 0)"
-      \<comment> \<open>Use quotient\\_of\\_scheme\\_extract\\_vx to get full polygon data, then construct witnesses.\<close>
-      using hassms[unfolded top1_quotient_of_scheme_on_def]
-      sorry
-  qed
-qed
+  using assms sorry \<comment> \<open>Dead code. Same-space cancel, replaced by front\\_cancel\\_realization\\_homeo.\<close>
 
 \<comment> \<open>Cancel (proved via reduction to front-cancel + rotation).\<close>
 lemma quotient_of_scheme_cancel_proved:
