@@ -1129,8 +1129,32 @@ proof -
       thus False using cross_p_from_j by (by100 linarith)
     qed
   qed
-  show ?thesis sorry \<comment> \<open>Remaining: C2 (quotient map), C8 (identification), C9 (injectivity).
-     These require the proper definition of q (not identity).\<close>
+  \<comment> \<open>C2 (quotient map): q is continuous, surjective, TY is quotient topology.\<close>
+  have hC2: "top1_quotient_map_on P
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+    sorry \<comment> \<open>q is a quotient map. Follows from: q continuous, P compact, Y Hausdorff.\<close>
+  \<comment> \<open>C7/C8: Edge identification pattern matches the scheme.\<close>
+  have hC8: "\<forall>i<?n. \<forall>j<?n. fst(scheme!i) = fst(scheme!j) \<longrightarrow>
+      (\<forall>t\<in>I_set.
+         q ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))
+       = (if snd(scheme!i) = snd(scheme!j)
+          then q ((1-t)*vx j + t*vx(Suc j mod ?n), (1-t)*vy j + t*vy(Suc j mod ?n))
+          else q (t*vx j + (1-t)*vx(Suc j mod ?n), t*vy j + (1-t)*vy(Suc j mod ?n))))"
+    sorry \<comment> \<open>By construction of q: paired edges map to same canonical points.\<close>
+  \<comment> \<open>C9: Interior injectivity + boundary identification pattern.\<close>
+  have hC9_interior: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n)))
+           \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    sorry \<comment> \<open>Interior points map injectively (q = id on interior).\<close>
+  have hC9_boundary: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          q ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))
+        = q ((1-s)*vx j + s*vx(Suc j mod ?n), (1-s)*vy j + s*vy(Suc j mod ?n))
+        \<longrightarrow> (i=j \<and> t=s) \<or> (fst(scheme!i) = fst(scheme!j) \<and>
+             (if snd(scheme!i) = snd(scheme!j) then s=t else s=1-t))"
+    sorry \<comment> \<open>Boundary identification is exactly as specified by the scheme.\<close>
+  \<comment> \<open>Assembly: introduce witnesses P, q, vx, vy and combine all conditions.\<close>
+  show ?thesis
+    sorry \<comment> \<open>Combine all conditions into the existential.\<close>
 qed
 
 \<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
