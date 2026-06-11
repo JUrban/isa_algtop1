@@ -565,7 +565,7 @@ proof -
          Since sin((\\<beta>-\\<alpha>)/2) > 0 and cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) < cos((\\<beta>-\\<alpha>)/2).\<close>
       \<comment> \<open>Step 1: sin(\\<beta>-\\<alpha>) = 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>-\\<alpha>)/2) [double angle].\<close>
       have da2: "sin (?\<beta> - ?\<alpha>) = 2 * sin ((?\<beta> - ?\<alpha>)/2) * cos ((?\<beta> - ?\<alpha>)/2)"
-        sorry \<comment> \<open>sin\\_double for (\\<beta>-\\<alpha>)/2.\<close>
+        sorry \<comment> \<open>sin\\_double. Timeout on expression simplification.\<close>
       \<comment> \<open>Step 2: cross = 2*sin(half)*[cos(angle) - cos(half)].\<close>
       have step2: "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)
         = 2 * sin ((?\<beta> - ?\<alpha>)/2) * (cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2))"
