@@ -40,6 +40,7 @@ lemma quotient_of_scheme_cut_paste_opp:
 lemma scheme_quotient_exists:
   fixes scheme :: "(nat \<times> bool) list"
   assumes "length scheme \<ge> 3"
+      and hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
   shows "\<exists>(Y :: (real \<times> real) set) (TY :: (real \<times> real) set set).
     top1_quotient_of_scheme_on Y TY scheme"
 proof -
@@ -68,6 +69,28 @@ proof -
   define partner where "partner i = (SOME j. j < ?n \<and> j \<noteq> i \<and> fst(scheme!i) = fst(scheme!j))" for i
   \<comment> \<open>Is edge i the canonical one (lower index) of its pair?\<close>
   define is_canonical where "is_canonical i = (i \<le> partner i)" for i
+  \<comment> \<open>Partner properties (from properness of scheme).\<close>
+  have partner_props: "\<And>i. i < ?n \<Longrightarrow> card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)} = 2 \<Longrightarrow>
+      partner i < ?n \<and> partner i \<noteq> i \<and> fst(scheme!(partner i)) = fst(scheme!i)"
+  proof -
+    fix i assume hi: "i < ?n" and hcard: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)} = 2"
+    \<comment> \<open>The set has exactly 2 elements, one of which is i. The other is partner(i).\<close>
+    have "i \<in> {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)}" using hi by (by100 simp)
+    hence "\<exists>j. j \<in> {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)} \<and> j \<noteq> i"
+    proof -
+      have "card ({j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)} - {i}) = 1"
+        using hcard \<open>i \<in> _\<close> by (by100 simp)
+      hence "{j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)} - {i} \<noteq> {}" by (by100 force)
+      thus ?thesis by (by100 blast)
+    qed
+    then obtain j where hj: "j < ?n" "j \<noteq> i" "fst(scheme!j) = fst(scheme!i)" by (by100 blast)
+    have hex: "\<exists>j. j < ?n \<and> j \<noteq> i \<and> fst(scheme!i) = fst(scheme!j)"
+      using hj(1) hj(2) hj(3)[symmetric] by (by100 blast)
+    have "partner i < ?n \<and> partner i \<noteq> i \<and> fst(scheme!i) = fst(scheme!(partner i))"
+      unfolding partner_def using someI_ex[OF hex] by (by100 blast)
+    thus "partner i < ?n \<and> partner i \<noteq> i \<and> fst(scheme!(partner i)) = fst(scheme!i)"
+      by (by100 simp)
+  qed
   \<comment> \<open>Quotient map: for points on non-canonical edges, map to canonical partner.
      For interior points and canonical edge points: identity.\<close>
   define q :: "(real \<times> real) \<Rightarrow> (real \<times> real)" where
