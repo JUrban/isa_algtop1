@@ -1217,7 +1217,13 @@ proof -
     \<comment> \<open>TY is the quotient topology: U \\<in> TY iff q\\<inverse>(U) \\<cap> P is open in P.\<close>
     \<comment> \<open>Standard: quotient topology is a topology on the quotient set.\<close>
     have htopo_P: "is_topology_on P ?TP"
-      sorry \<comment> \<open>Subspace topology on P is a topology.\<close>
+    proof -
+      have "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+        by (by100 simp)
+      thus ?thesis
+        by (rule subspace_topology_is_topology_on) (by100 simp)
+    qed
     have hY_eq: "Y = q ` P" unfolding Y_def by (by100 simp)
     \<comment> \<open>is\\_topology\\_on Y TY: Y = \\<Union>TY, TY closed under \\<union> and finite \\<inter>.\<close>
     have "is_topology_on Y TY"
