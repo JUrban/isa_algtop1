@@ -2554,10 +2554,9 @@ qed
    The CORRECT version is quotient\\_of\\_scheme\\_relabel\\_fresh (above) with freshness.
    This gap should NOT be filled — it should be replaced by using valid operations
    or adding freshness to the elementary relabel constructor (per expert audit step 5).\<close>
-lemma quotient_of_scheme_relabel:
-  assumes "top1_quotient_of_scheme_on Y TY w"
-  shows "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (if l = old then new else l, b)) w)"
-  sorry \<comment> \<open>FALSE without freshness. Keep sorry; replace with valid\\_operation refactoring.\<close>
+\<comment> \<open>quotient\\_of\\_scheme\\_relabel: REMOVED. Was FALSE without freshness.
+   The correct version is quotient\\_of\\_scheme\\_relabel\\_fresh (above).
+   No live code depends on this lemma (elementary\\_operation\\_preserves\\_quotient is dead).\<close>
 
 \<comment> \<open>Cut-paste: quotient preserved by cut-and-repaste operation.\<close>
 lemma quotient_of_scheme_cut_paste:
@@ -2579,12 +2578,9 @@ lemma quotient_of_scheme_cut_paste_opp:
   shows "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
   sorry \<comment> \<open>Same-space preservation; needs new polygon witnesses (transfer\\_bij won't work).\<close>
 
-\<comment> \<open>Context-left: quotient preserved when applying an operation to a suffix.\<close>
-lemma quotient_of_scheme_context_left:
-  assumes "top1_quotient_of_scheme_on Y TY (prefix @ y)"
-      and "top1_quotient_of_scheme_on Y TY y \<Longrightarrow> top1_quotient_of_scheme_on Y TY z"
-  shows "top1_quotient_of_scheme_on Y TY (prefix @ z)"
-  sorry
+\<comment> \<open>quotient\\_of\\_scheme\\_context\\_left: REMOVED. Was dead code (only called by
+   elementary\\_operation\\_preserves\\_quotient which is dead). Context-left is handled
+   directly in valid\\_operation\\_preserves\\_quotient\\_homeo as closure infrastructure.\<close>
 
 \<comment> \<open>Helper: a mod n < n for n > 0. Needed because by100 simp can't fire mod\_less\_divisor
    in the large AlgTop simpset within 1s.\<close>
@@ -3749,7 +3745,7 @@ next
   from quotient_of_scheme_invert[OF invert.prems] show ?case .
 next
   case (relabel w old new)
-  from quotient_of_scheme_relabel[OF relabel.prems] show ?case .
+  show ?case sorry \<comment> \<open>Dead code. Unrestricted relabel is FALSE without freshness.\<close>
 next
   case (flip_label w a)
   \<comment> \<open>s = w, t = map (flip a) w. Same polygon P, quotient map q, vertices.
@@ -3769,7 +3765,7 @@ next
   case (context_left y z prefix)
   \<comment> \<open>IH: quotient\_of\_scheme y \\<Longrightarrow> quotient\_of\_scheme z.
      Need: quotient of prefix@y \\<Longrightarrow> quotient of prefix@z.\<close>
-  show ?case using quotient_of_scheme_context_left[OF context_left.prems context_left.IH] .
+  show ?case sorry \<comment> \<open>Dead code. Context-left same-space removed.\<close>
 qed
 
 \<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
@@ -4141,10 +4137,8 @@ next
 next
   case (v_context_left y z prefix)
   \<comment> \<open>Context-left: valid operation y \\<to> z lifts to prefix@y \\<to> prefix@z.
-     Per expert audit 21 step 3: context\\_left is closure infrastructure,
-     not a primitive geometric move. Should be handled at the chain level.
-     Direct sorry avoids dependency on elementary\\_operation\\_preserves\\_quotient
-     (which includes FALSE unrestricted relabel).\<close>
+     Per audit 21: closure infrastructure, not primitive geometric move.
+     Decoupled from old chain (no dependency on FALSE relabel).\<close>
   show ?case sorry \<comment> \<open>Context-left quotient preservation. NOT via old chain.\<close>
 qed
 
