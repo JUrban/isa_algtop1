@@ -12631,6 +12631,23 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
   qed
 qed
 
+\<comment> \<open>Valid version of scheme\\_normal\\_form.
+   The old proof uses only valid operations (rotate, cancel, uncancel, flip, relabel, cut\\_paste\\_opp,
+   context\\_left) plus combinatorial helpers — all of which have valid counterparts.
+   We defer the full 2200-line replay and instead sorry the conversion.
+   Once this is proved, Theorem 77.5 can use the valid chain directly.\<close>
+lemma scheme_normal_form_valid:
+  fixes scheme :: "(nat \<times> bool) list"
+  assumes "length scheme \<ge> 4"
+      and "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+  shows "(\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
+       \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv scheme w)
+       \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv scheme w)"
+  sorry \<comment> \<open>Full proof: replay scheme\\_normal\\_form with valid operations.
+     All helpers proved: valid\\_extract\\_projective\\_pair, valid\\_commutator\\_prepend\\_*,
+     valid\\_Lemma\\_77\\_1/4, valid\\_proj\\_pair\\_absorbs\\_torus.
+     Remaining blocker: valid\\_projective\\_len4\\_base (494-line mechanical copy with timeout issue).\<close>
+
 (** from \<S>77 Theorem 77.5: Classification theorem for compact surfaces.
     Every compact connected triangulable surface is homeomorphic to either:
     - the sphere S^2,
@@ -12685,10 +12702,34 @@ proof -
     ultimately show ?thesis by (by100 presburger)
   qed
   \<comment> \<open>Apply scheme\_normal\_form: sphere, torus, or projective.\<close>
-  from scheme_normal_form[OF hlen_ge4 hproper]
+  \<comment> \<open>Use valid normal form (avoids old §76 chain).\<close>
+  from scheme_normal_form_valid[OF hlen_ge4 hproper]
+  have hNF_valid: "(\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
+       \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv scheme w)
+       \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv scheme w)" .
+  \<comment> \<open>Convert to old scheme\\_equiv for backward compatibility with downstream.\<close>
   have hNF: "(\<exists>a b. a \<noteq> b \<and> top1_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
        \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_scheme_equiv scheme w)
-       \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w)" .
+       \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_scheme_equiv scheme w)"
+  proof -
+    from hNF_valid show ?thesis
+    proof (elim disjE exE conjE)
+      fix a b assume "a \<noteq> b" "top1_valid_scheme_equiv scheme [(a,True),(a,False),(b,True),(b,False)]"
+      from valid_equiv_implies_equiv[OF this(2)]
+      have "top1_scheme_equiv scheme [(a,True),(a,False),(b,True),(b,False)]" .
+      with \<open>a \<noteq> b\<close> show ?thesis by (by100 blast)
+    next
+      fix m w assume "m > 0" "top1_is_projective_scheme w m" "top1_valid_scheme_equiv scheme w"
+      from valid_equiv_implies_equiv[OF this(3)]
+      have "top1_scheme_equiv scheme w" .
+      with \<open>m > 0\<close> \<open>top1_is_projective_scheme w m\<close> show ?thesis by (by100 blast)
+    next
+      fix n w assume "n > 0" "top1_is_torus_scheme w n" "top1_valid_scheme_equiv scheme w"
+      from valid_equiv_implies_equiv[OF this(3)]
+      have "top1_scheme_equiv scheme w" .
+      with \<open>n > 0\<close> \<open>top1_is_torus_scheme w n\<close> show ?thesis by (by100 blast)
+    qed
+  qed
   \<comment> \<open>We use hNF directly in the proof below, handling all 3 cases (sphere, projective, torus).\<close>
   \<comment> \<open>Step 3: Each normal form corresponds to the standard surface.
      - Empty/sphere: cancellation gives S² (a@a⁻¹@b@b⁻¹ with cancellation).
