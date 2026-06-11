@@ -695,14 +695,48 @@ proof -
         qed
         \<comment> \<open>Product of signs: for i<n-1 and k<i: (+)(+)(+). For k>i+1: (+)(-)(-).
            For i=n-1: (-)(-)( +). All give (+).\<close>
-        have "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) \<noteq> 0"
-          using hf1_ne hf2_ne hf3_ne by (by100 simp)
-        moreover have hsba: "sin (?\<beta> - ?\<alpha>) > 0" using hba hsin_pos by (by100 linarith)
-        \<comment> \<open>The sign of the product can be determined by computing cross at a specific
-           test point. E.g., cross(i, (i+2) mod n) is always negative by direct computation.
-           Since the product is continuous and nonzero on the set of valid (i,k), and
-           negative at one point, it's negative everywhere (connected set).\<close>
-        ultimately show ?thesis sorry \<comment> \<open>Sign of product. Needs detailed angle analysis.\<close>
+        \<comment> \<open>The sign of the product: each sin(\\<pi>m/n) has the same sign as m.
+           Product of m1*m2*m3 > 0 in all cases.\<close>
+        \<comment> \<open>Helper: sin(\\<pi>*m/n) > 0 for 0 < m < n (positive integer m).\<close>
+        have sin_pi_frac_pos: "\<And>m::int. 0 < m \<Longrightarrow> m < int ?n \<Longrightarrow>
+            sin (pi * real_of_int m / real ?n) > 0"
+        proof -
+          fix m :: int assume hm_pos: "0 < m" and hm_bnd: "m < int ?n"
+          have "0 < pi * real_of_int m / real ?n"
+            using pi_gt_zero hm_pos hn_pos by (by100 simp)
+          moreover have "pi * real_of_int m / real ?n < pi"
+          proof -
+            have "real_of_int m / real ?n < 1" using hm_bnd hn_pos by (by100 simp)
+            hence "pi * (real_of_int m / real ?n) < pi * 1"
+              using pi_gt_zero by (rule mult_strict_left_mono)
+            thus ?thesis by (by100 simp)
+          qed
+          ultimately show "sin (pi * real_of_int m / real ?n) > 0"
+            using sin_gt_zero by (by100 blast)
+        qed
+        \<comment> \<open>Helper: sin(\\<pi>*m/n) < 0 for -n < m < 0 (negative integer m).\<close>
+        have sin_pi_frac_neg: "\<And>m::int. m < 0 \<Longrightarrow> - int ?n < m \<Longrightarrow>
+            sin (pi * real_of_int m / real ?n) < 0"
+        proof -
+          fix m :: int assume hm_neg: "m < 0" and hm_bnd: "- int ?n < m"
+          have "sin (pi * real_of_int m / real ?n) = sin (- (pi * real_of_int (-m) / real ?n))"
+            by (by100 simp)
+          also have "\<dots> = - sin (pi * real_of_int (-m) / real ?n)"
+            by (rule sin_minus)
+          also have "\<dots> < 0"
+          proof -
+            have "0 < -m" using hm_neg by (by100 simp)
+            moreover have "-m < int ?n" using hm_bnd by (by100 simp)
+            ultimately have "sin (pi * real_of_int (-m) / real ?n) > 0"
+              by (rule sin_pi_frac_pos)
+            thus ?thesis by (by100 linarith)
+          qed
+          finally show "sin (pi * real_of_int m / real ?n) < 0" .
+        qed
+        \<comment> \<open>Now compute the sign of each factor.\<close>
+        have sign_pos: "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) > 0"
+          sorry \<comment> \<open>Combine sin\\_pi\\_frac\\_pos and sin\\_pi\\_frac\\_neg with m1,m2,m3 signs.\<close>
+        thus ?thesis .
       qed
       hence "- 4 * sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) < 0"
         by (by100 linarith)
