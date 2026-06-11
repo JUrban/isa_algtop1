@@ -13482,7 +13482,46 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
                Actually: commutator + sphere = torus\\_1 by itself (cancel the sphere part).
                But this case shouldn't arise for length > 4 with non-empty rest'...\<close>
             fix a'' b'' assume h: "a'' \<noteq> b''" "top1_valid_scheme_equiv rest' [(a'',True),(a'',False),(b'',True),(b'',False)]"
-            show ?thesis sorry
+            \<comment> \<open>block @ rest' ~ block @ sphere. Cancel sphere pairs → just block → torus\\_1.\<close>
+            have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                ([(a',True),(b',True),(a',False),(b',False)] @ [(a'',True),(a'',False),(b'',True),(b'',False)])"
+              using valid_equiv_prepend[OF h(2)] by (by100 blast)
+            \<comment> \<open>Cancel a''a''^{-1}: by v\\_cancel.\<close>
+            moreover have "top1_valid_scheme_equiv
+                ([(a',True),(b',True),(a',False),(b',False)] @ [(a'',True),(a'',False),(b'',True),(b'',False)])
+                ([(a',True),(b',True),(a',False),(b',False)] @ [(b'',True),(b'',False)])"
+            proof -
+              have "top1_valid_scheme_operation
+                  ([(a',True),(b',True),(a',False),(b',False)] @ [(a'',True), top1_inverse_edge (a'',True)] @ [(b'',True),(b'',False)])
+                  ([(a',True),(b',True),(a',False),(b',False)] @ [(b'',True),(b'',False)])"
+                by (rule top1_valid_scheme_operation.v_cancel)
+              thus ?thesis unfolding top1_inverse_edge_def using valid_imp_equiv by (by100 simp)
+            qed
+            \<comment> \<open>Cancel b''b''^{-1}.\<close>
+            moreover have "top1_valid_scheme_equiv
+                ([(a',True),(b',True),(a',False),(b',False)] @ [(b'',True),(b'',False)])
+                ([(a',True),(b',True),(a',False),(b',False)])"
+            proof -
+              have "top1_valid_scheme_operation
+                  ([(a',True),(b',True),(a',False),(b',False)] @ [(b'',True), top1_inverse_edge (b'',True)] @ [])
+                  ([(a',True),(b',True),(a',False),(b',False)] @ [])"
+                by (rule top1_valid_scheme_operation.v_cancel)
+              thus ?thesis unfolding top1_inverse_edge_def using valid_imp_equiv by (by100 simp)
+            qed
+            ultimately have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                ([(a',True),(b',True),(a',False),(b',False)])"
+              using valid_equiv_trans by (by100 blast)
+            hence "top1_valid_scheme_equiv scheme ([(a',True),(b',True),(a',False),(b',False)])"
+              using valid_equiv_trans[OF hext(2)] by (by100 blast)
+            moreover have "top1_valid_scheme_equiv [(a',True),(b',True),(a',False),(b',False)] (top1_n_torus_scheme 1)"
+              by (rule valid_commutator_block_equiv_torus_1[OF hext(1)])
+            ultimately have "top1_valid_scheme_equiv scheme (top1_n_torus_scheme 1)"
+              using valid_equiv_trans by (by100 blast)
+            have "(1::nat) > 0" by (by100 simp)
+            have "top1_is_torus_scheme (top1_n_torus_scheme 1) 1"
+              unfolding top1_is_torus_scheme_def by (by100 simp)
+            from valid_nf_torus[OF \<open>1 > 0\<close> this \<open>top1_valid_scheme_equiv scheme (top1_n_torus_scheme 1)\<close>]
+            show ?thesis .
           next
             fix m w assume h: "m > 0" "top1_is_projective_scheme w m" "top1_valid_scheme_equiv rest' w"
             \<comment> \<open>block @ proj\\_m ~ proj\\_(m+2) via valid\\_commutator\\_prepend\\_projective.\<close>
