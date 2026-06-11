@@ -3634,9 +3634,15 @@ proof -
   have hq': "top1_quotient_map_on P'
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P') Y TY q" sorry
   \<comment> \<open>Verify: vertices are distinct.\<close>
-  have hdist': "\<forall>i<n'. \<forall>j<n'. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j)" sorry
+  have hdist': "\<forall>i<n'. \<forall>j<n'. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j)"
+  proof (intro allI impI)
+    fix i j assume "i < n'" "j < n'" "i \<noteq> j"
+    hence "i+2 < n" "j+2 < n" "i+2 \<noteq> j+2" unfolding n'_def by (by100 simp)+
+    from hdist[rule_format, OF this]
+    show "(vx' i, vy' i) \<noteq> (vx' j, vy' j)" unfolding vx'_def vy'_def .
+  qed
   \<comment> \<open>Verify: vertices in P'.\<close>
-  have hvx_in': "\<forall>i<n'. (vx' i, vy' i) \<in> P'" sorry
+  have hvx_in': "\<forall>i<n'. (vx' i, vy' i) \<in> P'" sorry \<comment> \<open>Each vertex is in the convex hull.\<close>
   \<comment> \<open>Verify: edge identifications for scheme w.\<close>
   have hedge_id': "\<forall>i<n'. \<forall>j<n'. fst (w!i) = fst (w!j) \<longrightarrow>
       (\<forall>t\<in>I_set.
