@@ -3564,7 +3564,93 @@ qed
 lemma quotient_of_scheme_cancel_front:
   assumes "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
   shows "top1_quotient_of_scheme_on Y TY w"
-  sorry \<comment> \<open>Geometric: fold front cancel pair. Extract polygon, skip vertex 1, verify conditions.\<close>
+proof -
+  define scheme where "scheme = [a, top1_inverse_edge a] @ w"
+  define n where "n = length scheme"
+  have hn: "n = length w + 2" unfolding n_def scheme_def by simp
+  have hn_ge: "n \<ge> 2" unfolding n_def scheme_def by simp
+  \<comment> \<open>Extract polygon, quotient map, vertices.\<close>
+  from quotient_of_scheme_extract_vx[OF assms[folded scheme_def]]
+  obtain P q vx vy where
+      hP: "top1_is_polygonal_region_on P n"
+      and hq: "top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+      and hdist: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+      and hvx_in: "\<forall>i<n. (vx i, vy i) \<in> P"
+      and hP_hull: "P = {(x,y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                     \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+      and hno_cross: "\<forall>i<n. \<forall>j<n.
+          i \<noteq> j \<longrightarrow> Suc i mod n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod n \<longrightarrow>
+          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+             ((1-s) * vx i + s * vx (Suc i mod n),
+              (1-s) * vy i + s * vy (Suc i mod n))
+           \<noteq> ((1-t) * vx j + t * vx (Suc j mod n),
+               (1-t) * vy j + t * vy (Suc j mod n)))"
+      and hedge_id: "\<forall>i<n. \<forall>j<n. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+          (\<forall>t\<in>I_set.
+             q ((1-t) * vx i + t * vx (Suc i mod n),
+                (1-t) * vy i + t * vy (Suc i mod n))
+           = (if snd (scheme!i) = snd (scheme!j)
+              then q ((1-t) * vx j + t * vx (Suc j mod n),
+                      (1-t) * vy j + t * vy (Suc j mod n))
+              else q (t * vx j + (1-t) * vx (Suc j mod n),
+                      t * vy j + (1-t) * vy (Suc j mod n))))"
+      and hint_inj: "\<forall>p\<in>P. (\<forall>i<n. \<forall>t\<in>I_set.
+                  p \<noteq> ((1-t) * vx i + t * vx (Suc i mod n),
+                        (1-t) * vy i + t * vy (Suc i mod n)))
+               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+      and hedge_full: "\<forall>i<n. \<forall>j<n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q ((1-t) * vx i + t * vx (Suc i mod n),
+               (1-t) * vy i + t * vy (Suc i mod n))
+          = q ((1-s) * vx j + s * vx (Suc j mod n),
+               (1-s) * vy j + s * vy (Suc j mod n))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+               ((snd (scheme!i) = snd (scheme!j) \<and> t = s)
+              \<or> (snd (scheme!i) \<noteq> snd (scheme!j) \<and> t + s = 1)))"
+    unfolding n_def sorry \<comment> \<open>Extract all conditions from quotient\\_of\\_scheme\\_extract\\_vx.\<close>
+  \<comment> \<open>Cancel pair: edges 0 and 1 have label fst a with opposite dirs.
+     By hedge\\_id with i=0, j=1: q maps edge 0 and edge 1 in reverse.
+     In particular, q(v\\_0) = q(v\\_2) and q(v\\_1) is the midpoint identification.
+     New polygon P': vertices v\\_0, v\\_2, v\\_3, ..., v\\_{n-1} (skip v\\_1).
+     New vertex functions: vx'(i) = vx(i+2), vy'(i) = vy(i+2) for i < n-2.
+     New polygon: convex hull. New quotient: q restricted.
+     Edge i of P' goes from vx'(i) to vx'(i+1 mod (n-2)) = from vx(i+2) to vx(i+3 mod n).
+     This corresponds to edge i+2 of P. So the scheme for P' is w (positions 2..n-1 of scheme).\<close>
+  define n' where "n' = n - 2"
+  define vx' where "vx' i = vx (i + 2)" for i
+  define vy' where "vy' i = vy (i + 2)" for i
+  \<comment> \<open>The new polygon has vertices (vx' 0, vy' 0), ..., (vx' (n'-1), vy' (n'-1)).\<close>
+  \<comment> \<open>Define P' as convex hull.\<close>
+  define P' where "P' = {(x::real,y::real). \<exists>coeffs. (\<forall>i<n'. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<n'. coeffs i) = 1
+                     \<and> x = (\<Sum>i<n'. coeffs i * vx' i)
+                     \<and> y = (\<Sum>i<n'. coeffs i * vy' i)}"
+  \<comment> \<open>Verify: P' is a valid polygonal region.\<close>
+  have hP': "top1_is_polygonal_region_on P' n'" sorry
+  \<comment> \<open>Verify: q restricted to P' is a quotient map.\<close>
+  have hq': "top1_quotient_map_on P'
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P') Y TY q" sorry
+  \<comment> \<open>Verify: vertices are distinct.\<close>
+  have hdist': "\<forall>i<n'. \<forall>j<n'. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j)" sorry
+  \<comment> \<open>Verify: vertices in P'.\<close>
+  have hvx_in': "\<forall>i<n'. (vx' i, vy' i) \<in> P'" sorry
+  \<comment> \<open>Verify: edge identifications for scheme w.\<close>
+  have hedge_id': "\<forall>i<n'. \<forall>j<n'. fst (w!i) = fst (w!j) \<longrightarrow>
+      (\<forall>t\<in>I_set.
+         q ((1-t) * vx' i + t * vx' (Suc i mod n'),
+            (1-t) * vy' i + t * vy' (Suc i mod n'))
+       = (if snd (w!i) = snd (w!j)
+          then q ((1-t) * vx' j + t * vx' (Suc j mod n'),
+                  (1-t) * vy' j + t * vy' (Suc j mod n'))
+          else q (t * vx' j + (1-t) * vx' (Suc j mod n'),
+                  t * vy' j + (1-t) * vy' (Suc j mod n'))))" sorry
+  \<comment> \<open>Verify other conditions (interior injectivity, edge non-crossing, etc.).\<close>
+  \<comment> \<open>Pack all into quotient\\_of\\_scheme\\_on predicate.\<close>
+  show ?thesis sorry \<comment> \<open>Pack verified conditions into quotient\\_of\\_scheme\\_on for scheme w.\<close>
+qed
 
 \<comment> \<open>Cancel (proved via reduction to front-cancel + rotation).\<close>
 lemma quotient_of_scheme_cancel_proved:
