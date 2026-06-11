@@ -13287,9 +13287,50 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
          \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv rest w)" .
       from hIH show ?thesis
       proof (elim disjE exE conjE)
-        fix a' b' assume "a' \<noteq> b'" "top1_valid_scheme_equiv rest [(a',True),(a',False),(b',True),(b',False)]"
-        \<comment> \<open>rest ~ sphere. Cancel sphere in [(a,T),(a,T)] @ rest to get proj\\_1.\<close>
-        show ?thesis sorry
+        fix a' b' assume hab': "a' \<noteq> b'" "top1_valid_scheme_equiv rest [(a',True),(a',False),(b',True),(b',False)]"
+        \<comment> \<open>rest ~ sphere. Cancel both pairs.\<close>
+        have s1: "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest)
+            ([(a,True),(a,True)] @ [(a',True),(a',False),(b',True),(b',False)])"
+          using valid_equiv_prepend[OF hab'(2)] by (by100 blast)
+        have "top1_valid_scheme_operation
+            ([(a,True),(a,True)] @ [(a',True), top1_inverse_edge (a',True)] @ [(b',True),(b',False)])
+            ([(a,True),(a,True)] @ [(b',True),(b',False)])"
+          by (rule top1_valid_scheme_operation.v_cancel)
+        hence s2: "top1_valid_scheme_equiv
+            ([(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)])
+            ([(a,True),(a,True),(b',True),(b',False)])"
+          unfolding top1_inverse_edge_def using valid_imp_equiv by (by100 simp)
+        have "top1_valid_scheme_operation
+            ([(a,True),(a,True)] @ [(b',True), top1_inverse_edge (b',True)] @ [])
+            ([(a,True),(a,True)] @ [])"
+          by (rule top1_valid_scheme_operation.v_cancel)
+        hence s3: "top1_valid_scheme_equiv ([(a,True),(a,True),(b',True),(b',False)]) ([(a,True),(a,True)])"
+          unfolding top1_inverse_edge_def using valid_imp_equiv by (by100 simp)
+        have s1': "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest)
+            ([(a,True),(a,True),(a',True),(a',False),(b',True),(b',False)])"
+          using s1 by (by100 simp)
+        from valid_equiv_trans[OF s1' s2]
+        have s12: "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True),(b',True),(b',False)])" .
+        from valid_equiv_trans[OF s12 s3]
+        have "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)])" .
+        hence hchain_sph: "top1_valid_scheme_equiv scheme ([(a,True),(a,True)])"
+          using valid_equiv_trans[OF ha(1)] by (by100 blast)
+        define \<rho>a :: "nat \<Rightarrow> nat" where "\<rho>a = (\<lambda>x. if x = a then 0 else x)"
+        have "bij_betw \<rho>a (scheme_labels [(a,True),(a,True)]) {0}"
+          unfolding bij_betw_def \<rho>a_def scheme_labels_def by (by100 auto)
+        from valid_scheme_alpha_rename[OF this]
+        have "top1_valid_scheme_equiv [(a,True),(a,True)] (map (\<lambda>(l,bo). (\<rho>a l, bo)) [(a,True),(a,True)])" .
+        hence "top1_valid_scheme_equiv [(a,True),(a,True)] [(0,True),(0,True)]"
+          unfolding \<rho>a_def by (by100 simp)
+        hence "top1_valid_scheme_equiv [(a,True),(a,True)] (top1_m_projective_scheme 1)"
+          unfolding top1_m_projective_scheme_def by (by100 simp)
+        hence hchain_p1: "top1_valid_scheme_equiv scheme (top1_m_projective_scheme 1)"
+          using valid_equiv_trans[OF hchain_sph] by (by100 blast)
+        have hgt0_1: "(1::nat) > 0" by (by100 simp)
+        have hproj_1: "top1_is_projective_scheme (top1_m_projective_scheme 1) 1"
+          unfolding top1_is_projective_scheme_def by (by100 simp)
+        from valid_nf_projective[OF hgt0_1 hproj_1 hchain_p1]
+        show ?thesis .
       next
         fix m w assume hm: "m > 0" "top1_is_projective_scheme w m" "top1_valid_scheme_equiv rest w"
         \<comment> \<open>rest ~ proj\\_m. Then [(a,T),(a,T)] @ proj\\_m ~ proj\\_(m+1) via rotate + append.\<close>
