@@ -3602,24 +3602,7 @@ lemma front_uncancel_realization_homeo:
     top1_homeomorphism_on Y TY Y' TY' h"
   sorry \<comment> \<open>§76(vii): Uncancel front. Insert cancel spur into polygon.\<close>
 
-\<comment> \<open>Cancel at front — same-space form. DEAD CODE. Replaced by front\\_cancel\\_realization\\_homeo.\<close>
-lemma quotient_of_scheme_cancel_front:
-  assumes "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
-  shows "top1_quotient_of_scheme_on Y TY w"
-  using assms sorry \<comment> \<open>Dead code. Same-space cancel, replaced by front\\_cancel\\_realization\\_homeo.\<close>
-
-\<comment> \<open>Cancel (proved via reduction to front-cancel + rotation).\<close>
-lemma quotient_of_scheme_cancel_proved:
-  assumes "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
-  shows "top1_quotient_of_scheme_on Y TY (u @ v)"
-proof -
-  have "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ v @ u)"
-    using quotient_of_scheme_rotate[OF assms] by simp
-  from quotient_of_scheme_cancel_front[OF this]
-  have "top1_quotient_of_scheme_on Y TY (v @ u)" .
-  from quotient_of_scheme_rotate[OF this]
-  show ?thesis by simp
-qed
+\<comment> \<open>Cancel same-space: REMOVED (dead code). Replaced by front\\_cancel\\_realization\\_homeo.\<close>
 
 \<comment> \<open>Uncancel at front: insert cancel pair at front.\<close>
 lemma quotient_of_scheme_uncancel_front:
@@ -3711,25 +3694,12 @@ qed
    know the constructor. But Isabelle's case mechanism doesn't expose it.
    The relabel\\_reverse standalone lemma (proved above) IS correct with explicit freshness.\<close>
 
-lemma elementary_operation_reverse:
-  assumes "top1_elementary_scheme_operation s t"
-  shows "top1_scheme_equiv t s"
-  using assms sorry \<comment> \<open>DEAD CODE. Only used by dead scheme\\_equiv\\_sym.\<close>
+\<comment> \<open>elementary\\_operation\\_reverse: REMOVED (dead code).\<close>
 
-\<comment> \<open>scheme\\_equiv is symmetric.\<close>
+\<comment> \<open>scheme\\_equiv\\_sym: kept for backward compat with old helpers (dead code chain).\<close>
 lemma scheme_equiv_sym:
-  assumes "top1_scheme_equiv s t"
-  shows "top1_scheme_equiv t s"
-  using assms unfolding top1_scheme_equiv_def
-proof (induction rule: rtranclp.induct)
-  case rtrancl_refl thus ?case by simp
-next
-  case (rtrancl_into_rtrancl a b c)
-  from elementary_operation_reverse[OF rtrancl_into_rtrancl.hyps(2)]
-  have "top1_scheme_equiv c b" .
-  from this rtrancl_into_rtrancl.IH show ?case
-    unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
-qed
+  "top1_scheme_equiv s t \<Longrightarrow> top1_scheme_equiv t s"
+  sorry \<comment> \<open>Dead code. Old helpers use this but no live code calls them.\<close>
 
 lemma scheme_equiv_preserves_quotient:
   assumes "top1_quotient_of_scheme_on Y TY s"
