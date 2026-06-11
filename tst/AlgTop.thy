@@ -646,11 +646,53 @@ proof -
         qed
         \<comment> \<open>Apply sin\\_pi\\_frac\\_ne. Each angle = \\<pi>*(m)/n for integer m with 0<|m|<n.\<close>
         have hf1_ne: "sin ((?\<beta> - ?\<alpha>)/2) \<noteq> 0"
-          sorry \<comment> \<open>Need: (\\<beta>-\\<alpha>)/2 = \\<pi>*(Suc i mod n - i)/n, then sin\\_pi\\_frac\\_ne. Expression timeout.\<close>
+        proof -
+          define m1 :: int where "m1 = int (Suc i mod ?n) - int i"
+          have "Suc i mod ?n \<noteq> i"
+          proof
+            assume "Suc i mod ?n = i"
+            hence "Suc i mod ?n = i mod ?n" using hi by (by100 simp)
+            hence "Suc i mod ?n = i mod ?n" .
+            hence "(Suc i - i) mod ?n = 0" using assms by (simp add: mod_eq_dvd_iff_nat)
+            hence "?n dvd 1" by (by100 simp)
+            thus False using assms by (by100 simp)
+          qed
+          hence hm1_ne: "m1 \<noteq> 0"
+            unfolding m1_def by (by100 simp)
+          have hm1_bnd: "\<bar>m1\<bar> < int ?n"
+          proof -
+            have "?n > 0" using assms by (by100 linarith)
+            hence "Suc i mod ?n < ?n" by (by100 simp)
+            thus ?thesis unfolding m1_def using hi by (by100 linarith)
+          qed
+          have hangle: "(?\<beta> - ?\<alpha>)/2 = pi * real_of_int m1 / real ?n"
+            unfolding m1_def using hn_pos by (simp add: divide_simps of_int_diff algebra_simps)
+          show ?thesis unfolding hangle using sin_pi_frac_ne[OF hm1_ne hm1_bnd] .
+        qed
         have hf2_ne: "sin ((?\<beta> - ?\<gamma>)/2) \<noteq> 0"
-          sorry \<comment> \<open>Need: (\\<beta>-\\<gamma>)/2 = \\<pi>*(Suc i mod n - k)/n, then sin\\_pi\\_frac\\_ne.\<close>
+        proof -
+          define m2 :: int where "m2 = int (Suc i mod ?n) - int k"
+          have hm2_ne: "m2 \<noteq> 0"
+            unfolding m2_def using hki1 by (by100 simp)
+          have hm2_bnd: "\<bar>m2\<bar> < int ?n"
+          proof -
+            have "?n > 0" using assms by (by100 linarith)
+            hence "Suc i mod ?n < ?n" by (by100 simp)
+            thus ?thesis unfolding m2_def using hk by (by100 linarith)
+          qed
+          have hangle: "(?\<beta> - ?\<gamma>)/2 = pi * real_of_int m2 / real ?n"
+            unfolding m2_def using hn_pos by (simp add: divide_simps of_int_diff algebra_simps)
+          show ?thesis unfolding hangle using sin_pi_frac_ne[OF hm2_ne hm2_bnd] .
+        qed
         have hf3_ne: "sin ((?\<alpha> - ?\<gamma>)/2) \<noteq> 0"
-          sorry \<comment> \<open>Need: (\\<alpha>-\\<gamma>)/2 = \\<pi>*(i-k)/n, then sin\\_pi\\_frac\\_ne.\<close>
+        proof -
+          define m3 :: int where "m3 = int i - int k"
+          have hm3_ne: "m3 \<noteq> 0" using hki unfolding m3_def by (by100 simp)
+          have hm3_bnd: "\<bar>m3\<bar> < int ?n" using hi hk unfolding m3_def by (by100 simp)
+          have hangle: "(?\<alpha> - ?\<gamma>)/2 = pi * real_of_int m3 / real ?n"
+            unfolding m3_def using hn_pos by (simp add: divide_simps of_int_diff algebra_simps)
+          show ?thesis unfolding hangle using sin_pi_frac_ne[OF hm3_ne hm3_bnd] .
+        qed
         \<comment> \<open>Product of signs: for i<n-1 and k<i: (+)(+)(+). For k>i+1: (+)(-)(-).
            For i=n-1: (-)(-)( +). All give (+).\<close>
         have "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) \<noteq> 0"
