@@ -8978,6 +8978,40 @@ qed
 
 \<comment> \<open>A projective pair prepended to a torus scheme gives a projective scheme.
    By repeated application of Lemma 77.4: 1 proj pair + n torus blocks \<to> (2n+1) proj pairs.\<close>
+\<comment> \<open>Valid version: [(a,T),(a,T)] @ torus\\_n ~ proj\\_(2n+1).\<close>
+lemma valid_proj_pair_absorbs_torus:
+  "top1_valid_scheme_equiv ([(a, True), (a, True)] @ top1_n_torus_scheme n) (top1_m_projective_scheme (2*n + 1))"
+proof (induction n arbitrary: a)
+  case 0
+  have "top1_valid_scheme_equiv ([(a, True), (a, True)]) (top1_m_projective_scheme 1)"
+    using valid_proj_append_pair[of 0 a] unfolding top1_m_projective_scheme_def by (by100 simp)
+  thus ?case unfolding top1_n_torus_scheme_def by (by100 simp)
+next
+  case (Suc n)
+  \<comment> \<open>torus\\_(Suc n) = torus\\_n @ block.\<close>
+  have htorus_suc: "top1_n_torus_scheme (Suc n) = top1_n_torus_scheme n
+      @ [(2*n, True), (2*n+1, True), (2*n, False), (2*n+1, False)]"
+    unfolding top1_n_torus_scheme_def by (by100 simp)
+  let ?block = "[(2*n, True), (2*n+1, True), (2*n, False), (2*n+1, False)]"
+  \<comment> \<open>IH: [(a,T),(a,T)] @ torus\\_n ~ proj\\_(2n+1).\<close>
+  from Suc.IH have hIH: "top1_valid_scheme_equiv ([(a,True),(a,True)] @ top1_n_torus_scheme n)
+      (top1_m_projective_scheme (2*n+1))" .
+  \<comment> \<open>Suffix congruence: append block.\<close>
+  have s1: "top1_valid_scheme_equiv ([(a,True),(a,True)] @ top1_n_torus_scheme n @ ?block)
+      (top1_m_projective_scheme (2*n+1) @ ?block)"
+    using valid_equiv_append[OF hIH] by (by100 simp)
+  hence s1': "top1_valid_scheme_equiv ([(a,True),(a,True)] @ top1_n_torus_scheme (Suc n))
+      (top1_m_projective_scheme (2*n+1) @ ?block)"
+    using htorus_suc by (by100 simp)
+  \<comment> \<open>Absorption: proj\\_(2n+1) @ block ~ proj\\_(2n+3).
+     Uses valid\\_Lemma\\_77\\_4 after relabeling block to fresh labels.\<close>
+  have s2: "top1_valid_scheme_equiv (top1_m_projective_scheme (2*n+1) @ ?block)
+      (top1_m_projective_scheme (2*(Suc n)+1))"
+    sorry
+  from valid_equiv_trans[OF s1' s2]
+  show ?case .
+qed
+
 lemma proj_pair_absorbs_torus:
   "top1_scheme_equiv ([(a, True), (a, True)] @ top1_n_torus_scheme n) (top1_m_projective_scheme (2*n + 1))"
 proof (induction n arbitrary: a)
