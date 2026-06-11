@@ -478,7 +478,31 @@ proof -
   have cross_unit_circle:
     "\<And>a b c :: real. (cos c - cos a)*(sin b - sin a) - (sin c - sin a)*(cos b - cos a)
       = sin (b - c) + sin (c - a) - sin (b - a)"
-    sorry \<comment> \<open>Trig expansion: each product gives cos*sin - sin*cos = sin(diff) terms.\<close>
+  proof -
+    fix a b c :: real
+    \<comment> \<open>Expand LHS: cos(c)*sin(b) - cos(c)*sin(a) - cos(a)*sin(b) + cos(a)*sin(a)
+       - sin(c)*cos(b) + sin(c)*cos(a) + sin(a)*cos(b) - sin(a)*cos(a)
+       = [cos(c)*sin(b) - sin(c)*cos(b)]   = sin(b-c)
+       + [sin(c)*cos(a) - cos(c)*sin(a)]   = sin(c-a)
+       - [cos(a)*sin(b) - sin(a)*cos(b)]   = -sin(b-a)
+       + [cos(a)*sin(a) - sin(a)*cos(a)]   = 0.\<close>
+    have "cos c * sin b - sin c * cos b = sin (b - c)"
+      using sin_diff[of b c] by (by100 simp)
+    moreover have "sin c * cos a - cos c * sin a = sin (c - a)"
+      using sin_diff[of c a] by (by100 simp)
+    moreover have "cos a * sin b - sin a * cos b = sin (b - a)"
+      using sin_diff[of b a] by (by100 simp)
+    ultimately have h1: "sin (b - c) = cos c * sin b - sin c * cos b"
+      and h2: "sin (c - a) = sin c * cos a - cos c * sin a"
+      and h3: "sin (b - a) = cos a * sin b - sin a * cos b" by auto
+    have expand: "(cos c - cos a)*(sin b - sin a) - (sin c - sin a)*(cos b - cos a)
+      = cos c * sin b - cos c * sin a - cos a * sin b + cos a * sin a
+      - (sin c * cos b - sin c * cos a - sin a * cos b + sin a * cos a)"
+      by (by100 algebra)
+    show "(cos c - cos a)*(sin b - sin a) - (sin c - sin a)*(cos b - cos a)
+      = sin (b - c) + sin (c - a) - sin (b - a)"
+      unfolding expand h1 h2 h3 by (by100 algebra)
+  qed
   have hC11: "\<forall>i<?n. \<forall>k<?n.
         k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
         (vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
