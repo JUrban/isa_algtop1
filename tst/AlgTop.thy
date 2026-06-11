@@ -3552,6 +3552,17 @@ proof -
 qed
 
 
+\<comment> \<open>Scheme quotient existence: every scheme of length \\<ge> 3 has a quotient realization.
+   Construction: regular n-gon P with vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).
+   Quotient map q identifies boundary edges according to the scheme.
+   This is a key missing lemma — once proved, all geometric gaps become easy.\<close>
+lemma scheme_quotient_exists:
+  fixes scheme :: "(nat \<times> bool) list"
+  assumes "length scheme \<ge> 3"
+  shows "\<exists>(Y :: (real \<times> real) set) (TY :: (real \<times> real) set set).
+    top1_quotient_of_scheme_on Y TY scheme"
+  sorry \<comment> \<open>Regular polygon + identification quotient construction.\<close>
+
 \<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
    Given quotient of [a,inv a]@w, produce a (possibly different) quotient of w
    that is homeomorphic. This is WEAKER than same-space preservation.\<close>
