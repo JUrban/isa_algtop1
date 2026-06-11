@@ -587,14 +587,18 @@ proof -
            sin(\\<pi>*m/n) > 0 for 0 < m < n; sin(\\<pi>*m/n) < 0 for -n < m < 0.
            Product of signs is always (+) for non-adjacent vertices.\<close>
         \<comment> \<open>Factor 1: sin((\\<beta>-\\<alpha>)/2). Nonzero since vertices i and i+1 are distinct.\<close>
+        \<comment> \<open>sin(\\<pi>*m/n) \\<noteq> 0 when 0 < |m| < n. Proof: sin = 0 iff angle = k\\<pi>.
+           \\<pi>*m/n = k\\<pi> iff m = kn. Since |m| < n, k = 0, so m = 0. Contradiction.\<close>
+        \<comment> \<open>Helper: sin(\\<pi>*m/n) \\<noteq> 0 for 0 < |m| < n (integer m, n \\<ge> 3).\<close>
+        have sin_pi_frac_ne: "\<And>m::int. m \<noteq> 0 \<Longrightarrow> \<bar>m\<bar> < int ?n \<Longrightarrow>
+            sin (pi * real_of_int m / real ?n) \<noteq> 0"
+          sorry \<comment> \<open>sin(\\<pi>m/n)\\<noteq>0 for 0<|m|<n. Proof: sin=0 iff angle=k\\<pi>, iff m=kn; |m|<n gives k=0.\<close>
         have hf1_ne: "sin ((?\<beta> - ?\<alpha>)/2) \<noteq> 0"
-          sorry \<comment> \<open>\\<beta> \\<noteq> \\<alpha> mod 2\\<pi>, so half-angle \\<noteq> 0 mod \\<pi>.\<close>
-        \<comment> \<open>Factor 2: sin((\\<beta>-\\<gamma>)/2). Nonzero since k \\<noteq> Suc i mod n.\<close>
+          sorry \<comment> \<open>Apply sin\\_pi\\_frac\\_ne with m = Suc i mod n - i.\<close>
         have hf2_ne: "sin ((?\<beta> - ?\<gamma>)/2) \<noteq> 0"
-          sorry \<comment> \<open>\\<beta> \\<noteq> \\<gamma> since k \\<noteq> Suc i mod n.\<close>
-        \<comment> \<open>Factor 3: sin((\\<alpha>-\\<gamma>)/2). Nonzero since k \\<noteq> i.\<close>
+          sorry \<comment> \<open>Apply sin\\_pi\\_frac\\_ne with m = Suc i mod n - k.\<close>
         have hf3_ne: "sin ((?\<alpha> - ?\<gamma>)/2) \<noteq> 0"
-          sorry \<comment> \<open>\\<alpha> \\<noteq> \\<gamma> since k \\<noteq> i.\<close>
+          sorry \<comment> \<open>Apply sin\\_pi\\_frac\\_ne with m = i - k.\<close>
         \<comment> \<open>Product of signs: for i<n-1 and k<i: (+)(+)(+). For k>i+1: (+)(-)(-).
            For i=n-1: (-)(-)( +). All give (+).\<close>
         have "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) \<noteq> 0"
