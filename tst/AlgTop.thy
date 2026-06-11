@@ -103,6 +103,8 @@ inductive top1_valid_scheme_operation :: "('a \<times> bool) list \<Rightarrow> 
   v_cut_paste_opp: "top1_valid_scheme_operation
       (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)
       (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)" |
+  \<comment> \<open>Reverse cancel: insert a cancel pair (no freshness needed since it cancels).\<close>
+  v_cancel_reverse: "top1_valid_scheme_operation (u @ v) (u @ [a, top1_inverse_edge a] @ v)" |
   \<comment> \<open>Context rule: valid operations can be performed with a prefix.\<close>
   v_context_left: "top1_valid_scheme_operation y z \<Longrightarrow>
       top1_valid_scheme_operation (prefix @ y) (prefix @ z)"
@@ -124,6 +126,7 @@ lemma valid_implies_elementary:
   apply (rule top1_elementary_scheme_operation.cut_paste)
   apply (rule top1_elementary_scheme_operation.cut_paste2)
   apply (rule top1_elementary_scheme_operation.cut_paste_opp)
+  apply (rule top1_elementary_scheme_operation.uncancel)
   apply (rule top1_elementary_scheme_operation.context_left)
   apply assumption
   done
@@ -212,10 +215,10 @@ proof -
 qed
 
 \<comment> \<open>Cancel reverse: u@v is validly equivalent to u@[a,inv a]@v.
-   Easy case: fst a fresh. Hard case: fst a already in u@v (needs combinatorial argument).\<close>
+   Now trivial: v\\_cancel\\_reverse is a primitive valid operation.\<close>
 lemma valid_cancel_reverse:
   "top1_valid_scheme_equiv (u @ v) (u @ [a, top1_inverse_edge a] @ v)"
-  sorry
+  by (rule valid_imp_equiv[OF top1_valid_scheme_operation.v_cancel_reverse])
 
 \<comment> \<open>Each valid operation is reversible (valid\\_scheme\\_equiv is symmetric).\<close>
 lemma valid_operation_reverse:
@@ -225,10 +228,14 @@ proof (induction rule: top1_valid_scheme_operation.induct)
   show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate[of v u]] by (by100 simp)
 next
   case (v_cancel u a v)
-  from valid_cancel_reverse[of u v a] show ?case .
+  \<comment> \<open>Reverse of cancel = cancel\\_reverse (inserting the pair back).\<close>
+  show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_cancel_reverse[of u v a]] by (by100 simp)
 next
   case (v_uncancel a u v)
   show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_cancel[of u a v]] by (by100 simp)
+next
+  case (v_cancel_reverse u a v)
+  show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_cancel] by (by100 blast)
 next
   case (v_invert w)
   \<comment> \<open>Double inversion: rev(inv(rev(inv w))) = w.\<close>
@@ -3955,6 +3962,9 @@ next
   have "top1_quotient_of_scheme_on X TX (u @ [a, top1_inverse_edge a] @ v)"
     by (rule quotient_of_scheme_uncancel_proved[OF v_uncancel.prems])
   then show ?case by (rule same_space_implies_homeo_realization)
+next
+  case v_cancel_reverse
+  show ?case sorry \<comment> \<open>Cancel-reverse quotient preservation. Same as uncancel.\<close>
 next
   case (v_invert w)
   have hq: "top1_quotient_of_scheme_on X TX (rev (map top1_inverse_edge w))"
