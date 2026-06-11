@@ -3556,9 +3556,19 @@ proof -
 qed
 
 
-\<comment> \<open>Cancel at front: fold edges 0,1 of (n+2)-gon to get n-gon.
-   The cancel pair at positions 0,1 means edges 0,1 are identified.
-   New polygon: skip vertex v\\_1. Needs extract\\_vx infrastructure.\<close>
+\<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
+   Given quotient of [a,inv a]@w, produce a (possibly different) quotient of w
+   that is homeomorphic. This is WEAKER than same-space preservation.\<close>
+lemma front_cancel_realization_homeo:
+  fixes Y :: "'a set" and TY :: "'a set set"
+  assumes "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' w \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+  sorry \<comment> \<open>§76(vi): Cancel front. Construct n-gon from (n+2)-gon by folding cancelled edges.
+     Use quotient\\_transport\\_by\\_homeomorphism with polygon folding map.\<close>
+
+\<comment> \<open>Cancel at front — same-space form (derives from homeo-realization + uniqueness).\<close>
 lemma quotient_of_scheme_cancel_front:
   assumes "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
   shows "top1_quotient_of_scheme_on Y TY w"
@@ -4006,10 +4016,18 @@ next
      Step 2: Define new polygon P' by skipping vertex at position |u|+1.
      Step 3: Show P' is a valid polygonal region for scheme u@v.
      Step 4: Use quotient\\_transport\\_by\\_homeomorphism.\<close>
-  \<comment> \<open>For now: use the old same-space lemma which is in the dead chain but still available.\<close>
-  have "top1_quotient_of_scheme_on X TX (u @ v)"
-    by (rule quotient_of_scheme_cancel_proved[OF v_cancel.prems])
-  then show ?case by (rule same_space_implies_homeo_realization)
+  \<comment> \<open>Use direct homeo-realization via rotation + front\\_cancel\\_realization\\_homeo.\<close>
+  have h1: "top1_quotient_of_scheme_on X TX ([a, top1_inverse_edge a] @ v @ u)"
+    using quotient_of_scheme_rotate[OF v_cancel.prems] by simp
+  from front_cancel_realization_homeo[OF h1]
+  obtain Y' :: "'a set" and TY' :: "'a set set" and h1' :: "'a \<Rightarrow> 'a" where
+      hY': "top1_quotient_of_scheme_on Y' TY' (v @ u)"
+      and hh1': "top1_homeomorphism_on X TX Y' TY' h1'"
+    by (by100 blast)
+  \<comment> \<open>Rotate v@u to u@v.\<close>
+  have "top1_quotient_of_scheme_on Y' TY' (u @ v)"
+    using quotient_of_scheme_rotate[OF hY'] by simp
+  thus ?case using hh1' by (rule homeo_realization_flat_introI)
 next
   case (v_uncancel a u v)
   \<comment> \<open>Uncancel: §76(vii). Insert cancel pair. Reverse of cancel.\<close>
