@@ -6871,6 +6871,292 @@ proof -
     unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
 qed
 
+lemma valid_Lemma_77_3_simple:
+  assumes hab: "a \<noteq> b"
+  shows "top1_valid_scheme_equiv
+      ([(a, True), (b, True)] @ w1 @ [(a, False), (b, False)])
+      ([(a, True), (b, True), (a, False), (b, False)] @ w1)"
+proof -
+  let ?w = "[(a, True), (b, True)] @ w1 @ [(a, False), (b, False)]"
+  let ?flip_a = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
+  \<comment> \<open>Step 1: rotate.\<close>
+  have s1: "top1_valid_scheme_operation ?w
+      (w1 @ [(a, False), (b, False), (a, True), (b, True)])"
+    using top1_valid_scheme_operation.v_rotate[of "[(a,True),(b,True)]" "w1 @ [(a,False),(b,False)]"]
+    by simp
+  \<comment> \<open>Step 2: flip\\_label a.\<close>
+  have s2: "top1_valid_scheme_operation
+      (w1 @ [(a, False), (b, False), (a, True), (b, True)])
+      (?flip_a w1 @ [(a, True), (b, False), (a, False), (b, True)])"
+  proof -
+    have hba: "b \<noteq> a" using hab by (by100 blast)
+    \<comment> \<open>First show the target equals the map result.\<close>
+    have htarget: "?flip_a w1 @ [(a, True), (b, False), (a, False), (b, True)]
+        = ?flip_a (w1 @ [(a, False), (b, False), (a, True), (b, True)])"
+      using hba by simp
+    show ?thesis unfolding htarget
+      by (rule top1_valid_scheme_operation.v_flip_label)
+  qed
+  \<comment> \<open>Step 3: cut\\_paste\\_opp on a (move ?flip\\_a w1 from before a to after a\\<inverse>).\<close>
+  have s3: "top1_valid_scheme_operation
+      (?flip_a w1 @ [(a, True), (b, False), (a, False), (b, True)])
+      ([(a, True), (b, False), (a, False)] @ ?flip_a w1 @ [(b, True)])"
+    using top1_valid_scheme_operation.v_cut_paste_opp
+      [of "[]" "?flip_a w1" a "[(b, False)]" "[(b, True)]"] by simp
+  \<comment> \<open>Step 4: flip\\_label a (flip back: restores w1).\<close>
+  have s4: "top1_valid_scheme_operation
+      ([(a, True), (b, False), (a, False)] @ ?flip_a w1 @ [(b, True)])
+      ([(a, False), (b, False), (a, True)] @ w1 @ [(b, True)])"
+  proof -
+    have hba: "b \<noteq> a" using hab by (by100 blast)
+    have hflip_invol: "?flip_a (?flip_a w1) = w1"
+    proof (induction w1)
+      case Nil thus ?case by simp
+    next
+      case (Cons e w1)
+      obtain l bo where he: "e = (l, bo)" by (cases e)
+      show ?case using Cons.IH by (simp add: he)
+    qed
+    have htarget: "[(a, False), (b, False), (a, True)] @ w1 @ [(b, True)]
+        = ?flip_a ([(a, True), (b, False), (a, False)] @ ?flip_a w1 @ [(b, True)])"
+      using hba hflip_invol by simp
+    show ?thesis unfolding htarget
+      by (rule top1_valid_scheme_operation.v_flip_label)
+  qed
+  \<comment> \<open>Step 5: rotate.\<close>
+  have s5: "top1_valid_scheme_operation
+      ([(a, False), (b, False), (a, True)] @ w1 @ [(b, True)])
+      ([(a, True)] @ w1 @ [(b, True), (a, False), (b, False)])"
+    using top1_valid_scheme_operation.v_rotate
+      [of "[(a,False),(b,False)]" "[(a,True)] @ w1 @ [(b,True)]"] by simp
+  \<comment> \<open>Step 6: cut\\_paste\\_opp on b (move w1 from before b to after b\\<inverse>).\<close>
+  have s6: "top1_valid_scheme_operation
+      ([(a, True)] @ w1 @ [(b, True), (a, False), (b, False)])
+      ([(a, True), (b, True), (a, False), (b, False)] @ w1)"
+    using top1_valid_scheme_operation.v_cut_paste_opp
+      [of "[(a, True)]" w1 b "[(a, False)]" "[]"] by simp
+  \<comment> \<open>Chain all steps.\<close>
+  from s1 s2 s3 s4 s5 s6
+  show ?thesis unfolding top1_valid_scheme_equiv_def
+    by (by100 simp)
+qed
+
+\<comment> \<open>Extended simple case: a b w1 a\\<inverse> b\\<inverse> w2 ~ a b a\\<inverse> b\\<inverse> w1 w2 (w0=[], general w2).
+   Same 6-step proof as Lemma\\_77\\_3\\_simple — the tail w2 passes through all steps.\<close>
+lemma valid_valid_Lemma_77_3_w0_empty:
+  assumes hab: "a \<noteq> b"
+  shows "top1_valid_scheme_equiv
+      ([(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
+      ([(a, True), (b, True), (a, False), (b, False)] @ w1 @ w2)"
+proof -
+  let ?flip_a = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
+  have hba: "b \<noteq> a" using hab by (by100 blast)
+  have hflip_invol: "\<And>xs. ?flip_a (?flip_a xs) = xs"
+  proof -
+    fix xs :: "('a \<times> bool) list"
+    show "?flip_a (?flip_a xs) = xs"
+    proof (induction xs)
+      case Nil thus ?case by simp
+    next
+      case (Cons e xs) obtain l bo where "e = (l, bo)" by (cases e)
+      thus ?case using Cons.IH by simp
+    qed
+  qed
+  \<comment> \<open>Step 1: rotate.\<close>
+  have s1: "top1_valid_scheme_operation
+      ([(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
+      (w1 @ [(a, False), (b, False)] @ w2 @ [(a, True), (b, True)])"
+    using top1_valid_scheme_operation.v_rotate[of "[(a,True),(b,True)]" "w1 @ [(a,False),(b,False)] @ w2"]
+    by simp
+  \<comment> \<open>Step 2: flip\\_label a.\<close>
+  have s2: "top1_valid_scheme_operation
+      (w1 @ [(a, False), (b, False)] @ w2 @ [(a, True), (b, True)])
+      (?flip_a w1 @ [(a, True), (b, False)] @ ?flip_a w2 @ [(a, False), (b, True)])"
+  proof -
+    have htarget: "?flip_a w1 @ [(a, True), (b, False)] @ ?flip_a w2 @ [(a, False), (b, True)]
+        = ?flip_a (w1 @ [(a, False), (b, False)] @ w2 @ [(a, True), (b, True)])"
+      using hba by simp
+    show ?thesis unfolding htarget
+      by (rule top1_valid_scheme_operation.v_flip_label)
+  qed
+  \<comment> \<open>Step 3: cut\\_paste\\_opp on a.\<close>
+  have s3: "top1_valid_scheme_operation
+      (?flip_a w1 @ [(a, True), (b, False)] @ ?flip_a w2 @ [(a, False), (b, True)])
+      ([(a, True), (b, False)] @ ?flip_a w2 @ [(a, False)] @ ?flip_a w1 @ [(b, True)])"
+    using top1_valid_scheme_operation.v_cut_paste_opp
+      [of "[]" "?flip_a w1" a "[(b, False)] @ ?flip_a w2" "[(b, True)]"] by simp
+  \<comment> \<open>Step 4: flip\\_label a (restores w1 and w2).\<close>
+  have s4: "top1_valid_scheme_operation
+      ([(a, True), (b, False)] @ ?flip_a w2 @ [(a, False)] @ ?flip_a w1 @ [(b, True)])
+      ([(a, False), (b, False)] @ w2 @ [(a, True)] @ w1 @ [(b, True)])"
+  proof -
+    have htarget: "[(a, False), (b, False)] @ w2 @ [(a, True)] @ w1 @ [(b, True)]
+        = ?flip_a ([(a, True), (b, False)] @ ?flip_a w2 @ [(a, False)] @ ?flip_a w1 @ [(b, True)])"
+      using hba hflip_invol by simp
+    show ?thesis unfolding htarget
+      by (rule top1_valid_scheme_operation.v_flip_label)
+  qed
+  \<comment> \<open>Step 5: rotate.\<close>
+  have s5: "top1_valid_scheme_operation
+      ([(a, False), (b, False)] @ w2 @ [(a, True)] @ w1 @ [(b, True)])
+      ([(a, True)] @ w1 @ [(b, True), (a, False), (b, False)] @ w2)"
+    using top1_valid_scheme_operation.v_rotate
+      [of "[(a,False),(b,False)] @ w2" "[(a,True)] @ w1 @ [(b,True)]"] by simp
+  \<comment> \<open>Step 6: cut\\_paste\\_opp on b.\<close>
+  have s6: "top1_valid_scheme_operation
+      ([(a, True)] @ w1 @ [(b, True), (a, False), (b, False)] @ w2)
+      ([(a, True), (b, True), (a, False), (b, False)] @ w1 @ w2)"
+    using top1_valid_scheme_operation.v_cut_paste_opp
+      [of "[(a, True)]" w1 b "[(a, False)]" w2] by simp
+  from s1 s2 s3 s4 s5 s6
+  show ?thesis unfolding top1_valid_scheme_equiv_def
+    by (by100 simp)
+qed
+
+\<comment> \<open>Lemma 77.3 (Munkres): general case. w0 a b w1 a\\<inverse> b\\<inverse> w2 ~ (aba\\<inverse>b\\<inverse>) w0 w1 w2.
+   Proof: cut\\_paste\\_opp to move w0, then w0-empty case, then cut\\_paste\\_opp on b.\<close>
+lemma valid_Lemma_77_3_torus_extraction:
+  assumes "a \<noteq> b"
+  shows "top1_valid_scheme_equiv
+      (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
+      ([(a, True), (b, True), (a, False), (b, False)] @ w0 @ w1 @ w2)"
+proof -
+  let ?flip_a = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
+  let ?flip_b = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = b then \<not> bo else bo)) xs"
+  have hab': "b \<noteq> a" using assms by (by100 blast)
+  \<comment> \<open>Step 1: cut\\_paste\\_opp on a moves w0 past a\\<inverse>.\<close>
+  have s1: "top1_valid_scheme_equiv
+      (w0 @ [(a, True), (b, True)] @ w1 @ [(a, False), (b, False)] @ w2)
+      ([(a, True), (b, True)] @ w1 @ [(a, False)] @ w0 @ [(b, False)] @ w2)"
+    unfolding top1_valid_scheme_equiv_def
+    using top1_valid_scheme_operation.v_cut_paste_opp[of "[]" w0 a "[(b,True)] @ w1" "[(b,False)] @ w2"]
+    by (simp add: rtranclp.rtrancl_into_rtrancl)
+  \<comment> \<open>After step 1: a b w1 a\\<inverse> w0 b\\<inverse> w2.
+     Step 2 (flip trick on a, 5 ops): swap w1 past (b,T).
+     Result: a w1 b a\\<inverse> w0 b\\<inverse> w2.\<close>
+  have s2: "top1_valid_scheme_equiv
+      ([(a, True), (b, True)] @ w1 @ [(a, False)] @ w0 @ [(b, False)] @ w2)
+      ([(a, True)] @ w1 @ [(b, True), (a, False)] @ w0 @ [(b, False)] @ w2)"
+  proof -
+    \<comment> \<open>rotate: move [(a,T),(b,T)] to end.\<close>
+    have r1: "top1_valid_scheme_operation
+        ([(a,True),(b,True)] @ w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2)
+        (w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True),(b,True)])"
+      using top1_valid_scheme_operation.v_rotate
+        [of "[(a,True),(b,True)]" "w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2"] by simp
+    \<comment> \<open>flip\\_label a.\<close>
+    have r2_eq: "?flip_a (w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True),(b,True)])
+        = ?flip_a w1 @ [(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False),(b,True)]"
+      using hab' by simp
+    have r2: "top1_valid_scheme_operation
+        (w1 @ [(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True),(b,True)])
+        (?flip_a w1 @ [(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False),(b,True)])"
+      unfolding r2_eq[symmetric] by (rule top1_valid_scheme_operation.v_flip_label)
+    \<comment> \<open>cut\\_paste\\_opp on a: move ?flip\\_a w1 from before a to after a\\<inverse>.\<close>
+    have r3: "top1_valid_scheme_operation
+        (?flip_a w1 @ [(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False),(b,True)])
+        ([(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False)] @ ?flip_a w1 @ [(b,True)])"
+      using top1_valid_scheme_operation.v_cut_paste_opp
+        [of "[]" "?flip_a w1" a "?flip_a w0 @ [(b,False)] @ ?flip_a w2" "[(b,True)]"] by simp
+    \<comment> \<open>flip\\_label a back.\<close>
+    have r4_eq: "?flip_a ([(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False)] @ ?flip_a w1 @ [(b,True)])
+        = [(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)]"
+    proof -
+      have hflip_invol: "\<And>xs :: ('a \<times> bool) list. ?flip_a (?flip_a xs) = xs"
+      proof -
+        fix xs :: "('a \<times> bool) list" show "?flip_a (?flip_a xs) = xs"
+        proof (induction xs)
+          case Nil thus ?case by simp
+        next
+          case (Cons e xs) obtain l bo where "e = (l, bo)" by (cases e)
+          thus ?case using Cons.IH by simp
+        qed
+      qed
+      thus ?thesis using hab' by simp
+    qed
+    have r4: "top1_valid_scheme_operation
+        ([(a,True)] @ ?flip_a w0 @ [(b,False)] @ ?flip_a w2 @ [(a,False)] @ ?flip_a w1 @ [(b,True)])
+        ([(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)])"
+      unfolding r4_eq[symmetric] by (rule top1_valid_scheme_operation.v_flip_label)
+    \<comment> \<open>rotate: bring [(a,T)] w1 [(b,T)] to front.\<close>
+    have r5: "top1_valid_scheme_operation
+        ([(a,False)] @ w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)])
+        ([(a,True)] @ w1 @ [(b,True),(a,False)] @ w0 @ [(b,False)] @ w2)"
+      using top1_valid_scheme_operation.v_rotate
+        [of "[(a,False)] @ w0 @ [(b,False)] @ w2" "[(a,True)] @ w1 @ [(b,True)]"] by simp
+    from r1 r2 r3 r4 r5 show ?thesis unfolding top1_valid_scheme_equiv_def
+      by (by100 simp)
+  qed
+  \<comment> \<open>Step 3 (flip trick on b, 5 ops): move w0 from between a\\<inverse>, b\\<inverse> to between b, a\\<inverse>.
+     Result: a w1 b w0 a\\<inverse> b\\<inverse> w2 (now a\\<inverse>b\\<inverse> are adjacent!).\<close>
+  have s3: "top1_valid_scheme_equiv
+      ([(a, True)] @ w1 @ [(b, True), (a, False)] @ w0 @ [(b, False)] @ w2)
+      ([(a, True)] @ w1 @ [(b, True)] @ w0 @ [(a, False), (b, False)] @ w2)"
+  proof -
+    \<comment> \<open>rotate: move prefix to end.\<close>
+    have r1: "top1_valid_scheme_operation
+        ([(a,True)] @ w1 @ [(b,True),(a,False)] @ w0 @ [(b,False)] @ w2)
+        (w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True),(a,False)])"
+      using top1_valid_scheme_operation.v_rotate
+        [of "[(a,True)] @ w1 @ [(b,True),(a,False)]" "w0 @ [(b,False)] @ w2"] by simp
+    \<comment> \<open>flip\\_label b.\<close>
+    have r2_eq: "?flip_b (w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True),(a,False)])
+        = ?flip_b w0 @ [(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False),(a,False)]"
+      using assms by simp
+    have r2: "top1_valid_scheme_operation
+        (w0 @ [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True),(a,False)])
+        (?flip_b w0 @ [(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False),(a,False)])"
+      unfolding r2_eq[symmetric] by (rule top1_valid_scheme_operation.v_flip_label)
+    \<comment> \<open>cut\\_paste\\_opp on b: move ?flip\\_b w0 from before b to after b\\<inverse>.\<close>
+    have r3: "top1_valid_scheme_operation
+        (?flip_b w0 @ [(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False),(a,False)])
+        ([(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False)] @ ?flip_b w0 @ [(a,False)])"
+      using top1_valid_scheme_operation.v_cut_paste_opp
+        [of "[]" "?flip_b w0" b "?flip_b w2 @ [(a,True)] @ ?flip_b w1" "[(a,False)]"] by simp
+    \<comment> \<open>flip\\_label b back.\<close>
+    have hflip_b_invol: "\<And>xs :: ('a \<times> bool) list. ?flip_b (?flip_b xs) = xs"
+    proof -
+      fix xs :: "('a \<times> bool) list" show "?flip_b (?flip_b xs) = xs"
+      proof (induction xs)
+        case Nil thus ?case by simp
+      next
+        case (Cons e xs) obtain l bo where "e = (l, bo)" by (cases e)
+        thus ?case using Cons.IH by simp
+      qed
+    qed
+    have r4_eq: "?flip_b ([(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False)] @ ?flip_b w0 @ [(a,False)])
+        = [(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False)]"
+      using assms hflip_b_invol by simp
+    have r4: "top1_valid_scheme_operation
+        ([(b,True)] @ ?flip_b w2 @ [(a,True)] @ ?flip_b w1 @ [(b,False)] @ ?flip_b w0 @ [(a,False)])
+        ([(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False)])"
+      unfolding r4_eq[symmetric] by (rule top1_valid_scheme_operation.v_flip_label)
+    \<comment> \<open>rotate: bring the right part to front.\<close>
+    have r5: "top1_valid_scheme_operation
+        ([(b,False)] @ w2 @ [(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False)])
+        ([(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False),(b,False)] @ w2)"
+      using top1_valid_scheme_operation.v_rotate
+        [of "[(b,False)] @ w2" "[(a,True)] @ w1 @ [(b,True)] @ w0 @ [(a,False)]"] by simp
+    from r1 r2 r3 r4 r5 show ?thesis unfolding top1_valid_scheme_equiv_def
+      by (by100 simp)
+  qed
+  \<comment> \<open>Step 4: cut\\_paste\\_opp on b moves w1 from before b to after b\\<inverse>.
+     a [w1] b [w0] a\\<inverse> b\\<inverse> w2 \\<to> a b [w0] a\\<inverse> b\\<inverse> [w1] w2.\<close>
+  have s4: "top1_valid_scheme_equiv
+      ([(a, True)] @ w1 @ [(b, True)] @ w0 @ [(a, False), (b, False)] @ w2)
+      ([(a, True), (b, True)] @ w0 @ [(a, False), (b, False)] @ w1 @ w2)"
+    unfolding top1_valid_scheme_equiv_def
+    using top1_valid_scheme_operation.v_cut_paste_opp[of "[(a,True)]" w1 b "w0 @ [(a,False)]" w2]
+    by (simp add: rtranclp.rtrancl_into_rtrancl)
+  \<comment> \<open>Step 5: apply Lemma\\_77\\_3\\_w0\\_empty: a b w0 a\\<inverse> b\\<inverse> (w1@w2) ~ a b a\\<inverse> b\\<inverse> w0 w1 w2.\<close>
+  have s5: "top1_valid_scheme_equiv
+      ([(a, True), (b, True)] @ w0 @ [(a, False), (b, False)] @ w1 @ w2)
+      ([(a, True), (b, True), (a, False), (b, False)] @ w0 @ w1 @ w2)"
+    using valid_valid_Lemma_77_3_w0_empty[OF assms, of w0 "w1 @ w2"] by (by100 simp)
+  from s1 s2 s3 s4 s5 show ?thesis
+    using valid_equiv_trans by (by100 blast)
+qed
+
 \<comment> \<open>Lemma 77.4 (Munkres): A projective pair + commutator = 3 projective pairs.
    w0 (cc)(aba\\<inverse>b\\<inverse>) w1 ~ w0 (aabbcc) w1.
    Proof: 5-step chain using Lemma 77.1 (*) and rotations.\<close>
