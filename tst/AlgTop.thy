@@ -152,9 +152,14 @@ proof -
       have hlen_w: "?n' = ?n - 2" using hn by simp
       have hn_ge5: "?n \<ge> 5" using assms(2) hn by simp
       have hn'_ge3: "?n' \<ge> 3" using assms(2) .
-      \<comment> \<open>Key: for i < n'-1, edge i of P' matches edge i+2 of P exactly.
-         For i = n'-1, the edge wraps differently (chord from v\_{n-1} to v\\_2).\<close>
-      show ?thesis sorry \<comment> \<open>11 conditions. Shift for i<n'-1; last edge needs chord argument.\<close>
+      \<comment> \<open>NOTE: same-space approach (Y is quotient of w via P') is FLAWED:
+         q(P') \\<noteq> Y because the triangle (v0,v1,v2) interior maps injectively
+         to Y-points not in q(P'). Need homeomorphic realization instead:
+         (1) Define Y' = q(P') with quotient topology from P'.
+         (2) Show Y' is a quotient of w.
+         (3) Show Y \\<cong> Y' via retraction collapsing the folded triangle.
+         For now, sorry. Restructure to homeo realization approach needed.\<close>
+      show ?thesis sorry
     qed
   qed
   \<comment> \<open>Y is a quotient of w. Take Y'=Y, TY'=TY, h=id.\<close>
