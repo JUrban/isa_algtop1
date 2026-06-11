@@ -2,6 +2,123 @@ theory AlgTop
   imports "AlgTopCached13.AlgTopCached13"
 begin
 
+\<comment> \<open>Each valid operation is reversible (valid\\_scheme\\_equiv is symmetric).\<close>
+lemma valid_operation_reverse:
+  "top1_valid_scheme_operation s t \<Longrightarrow> top1_valid_scheme_equiv t s"
+proof (induction rule: top1_valid_scheme_operation.induct)
+  case (v_rotate u v)
+  show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate[of v u]] by (by100 simp)
+next
+  case (v_cancel u a v)
+  \<comment> \<open>Reverse of cancel = cancel\\_reverse (inserting the pair back).\<close>
+  show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_cancel_reverse[of u v a]] by (by100 simp)
+next
+  case (v_uncancel a u v)
+  show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_cancel[of u a v]] by (by100 simp)
+next
+  case (v_cancel_reverse u a v)
+  show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_cancel] by (by100 blast)
+next
+  case (v_invert w)
+  \<comment> \<open>Double inversion: rev(inv(rev(inv w))) = w.\<close>
+  have "rev (map top1_inverse_edge (rev (map top1_inverse_edge w))) = w"
+  proof -
+    have "\<And>x. top1_inverse_edge (top1_inverse_edge x) = x"
+      unfolding top1_inverse_edge_def by (by100 simp)
+    hence hinv2: "map top1_inverse_edge (map top1_inverse_edge w) = w"
+      by (induction w) (by100 auto)+
+    have step1: "map top1_inverse_edge (rev (map top1_inverse_edge w)) =
+                 rev (map top1_inverse_edge (map top1_inverse_edge w))"
+      using rev_map[of top1_inverse_edge "map top1_inverse_edge w"] by (by100 simp)
+    have "rev (map top1_inverse_edge (rev (map top1_inverse_edge w))) =
+          rev (rev (map top1_inverse_edge (map top1_inverse_edge w)))"
+      using step1 by (by100 simp)
+    also have "\<dots> = map top1_inverse_edge (map top1_inverse_edge w)" by (by100 simp)
+    also have "\<dots> = w" using hinv2 .
+    finally show ?thesis .
+  qed
+  thus ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_invert[of "rev (map top1_inverse_edge w)"]]
+    by (by100 simp)
+next
+  case (v_relabel nw ol wd)
+  from valid_relabel_reverse[OF v_relabel.hyps] show ?case .
+next
+  case (v_flip_label w a)
+  \<comment> \<open>Flip is involutive.\<close>
+  let ?f = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
+  have "?f (?f w) = w"
+  proof (induction w)
+    case Nil thus ?case by (by100 simp)
+  next
+    case (Cons e w) obtain l bo where "e = (l, bo)" by (cases e)
+    thus ?case using Cons.IH by (by100 simp)
+  qed
+  thus ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_flip_label[of "?f w" a]]
+    by (by100 simp)
+next
+  case (v_cut_paste u1 a u2 u3) show ?case sorry
+next
+  case (v_cut_paste2 b u0 a u1 u2) show ?case sorry
+next
+  case (v_cut_paste_opp u0 u1 a u2 u3)
+  \<comment> \<open>Reverse of cut\\_paste\\_opp via: rotate + cut\\_paste\\_opp + rotate.
+     Result: u0 @ [(a,T)] @ u2 @ [(a,F)] @ u1 @ u3.
+     (1) Rotate by |u3|: u3 @ u0 @ [(a,T)] @ u2 @ [(a,F)] @ u1.
+     (2) cut\\_paste\\_opp with u0'=[], u1'=u3@u0: [(a,T)] @ u2 @ [(a,F)] @ u3 @ u0 @ u1.
+     (3) Rotate back: u0 @ u1 @ [(a,T)] @ u2 @ [(a,F)] @ u3. Done.\<close>
+  let ?r = "u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1 @ u3"
+  let ?orig = "u0 @ u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3"
+  have r1: "top1_valid_scheme_equiv ?r (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate
+      [of "u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1" u3]] by (by100 simp)
+  have r2: "top1_valid_scheme_equiv (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)
+            ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1)"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_cut_paste_opp
+      [of "[]" "u3 @ u0" a u2 u1]] by (by100 simp)
+  have r3: "top1_valid_scheme_equiv ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1) ?orig"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate
+      [of "[(a,True)] @ u2 @ [(a,False)] @ u3" "u0 @ u1"]] by (by100 simp)
+  from r1 r2 r3 show ?case using valid_equiv_trans by (by100 blast)
+next
+  case (v_context_left y z prefix)
+  \<comment> \<open>IH: valid\\_scheme\\_equiv z y. Lift through prefix.\<close>
+  from valid_equiv_prepend[OF v_context_left.IH]
+  show ?case .
+qed
+
+\<comment> \<open>Valid scheme equivalence is symmetric.\<close>
+lemma valid_equiv_sym:
+  "top1_valid_scheme_equiv s t \<Longrightarrow> top1_valid_scheme_equiv t s"
+  unfolding top1_valid_scheme_equiv_def
+proof (induction rule: rtranclp.induct)
+  case rtrancl_refl thus ?case by (by100 simp)
+next
+  case (rtrancl_into_rtrancl a b c)
+  from valid_operation_reverse[OF rtrancl_into_rtrancl.hyps(2)]
+  have "top1_valid_scheme_equiv c b" .
+  from this rtrancl_into_rtrancl.IH show ?case
+    unfolding top1_valid_scheme_equiv_def by (meson rtranclp_trans)
+qed
+
+\<comment> \<open>Cut-paste: quotient preserved by cut-and-repaste operation.\<close>
+lemma quotient_of_scheme_cut_paste:
+  assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
+  shows "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+  sorry
+
+\<comment> \<open>Cut-paste2: quotient preserved by second cut-paste variant.\<close>
+lemma quotient_of_scheme_cut_paste2:
+  assumes "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)"
+  shows "top1_quotient_of_scheme_on Y TY ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+  sorry
+
+\<comment> \<open>Cut-paste opposite: quotient preserved by opposite-direction cut-paste.
+   Same polygon, permuted edge positions. Uses quotient\\_of\\_scheme\\_transfer\\_bij (defined later).
+   Proof deferred to after transfer\\_bij.\<close>
+lemma quotient_of_scheme_cut_paste_opp:
+  assumes "top1_quotient_of_scheme_on Y TY (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
+  shows "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+  sorry \<comment> \<open>Same-space preservation; needs new polygon witnesses (transfer\\_bij won't work).\<close>
 
 \<comment> \<open>Scheme quotient existence: every scheme of length \\<ge> 3 has a quotient realization.
    Construction: regular n-gon P with vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).
@@ -11356,8 +11473,6 @@ proof -
 qed
 
 
-
-
-
 end
+
 
