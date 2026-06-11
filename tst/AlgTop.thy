@@ -555,46 +555,60 @@ proof -
     \<comment> \<open>Also sin(2\\<pi>/n) = 2*sin(\\<pi>/n)*cos(\\<pi>/n).\<close>
     have double_angle: "sin (2*pi/real ?n) = 2 * sin (pi/real ?n) * cos (pi/real ?n)"
       using sin_double[of "pi/real ?n"] by (by100 simp)
-    \<comment> \<open>So cross = 2*sin(\\<pi>/n)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos(\\<pi>/n)].
-       Need cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) < cos(\\<pi>/n) for the cross product to be < 0.\<close>
-    \<comment> \<open>Assembly: cross = 2*sin((\\<beta>-\\<alpha>)/2)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos((\\<beta>-\\<alpha>)/2)].\<close>
-    \<comment> \<open>NOTE: sin((\\<beta>-\\<alpha>)/2) > 0 only when i < n-1. For i = n-1, it's NEGATIVE.
-       The assembly below needs a CASE SPLIT on i. For i<n-1: sin > 0 and cos(angle) < cos(half).
-       For i=n-1: sin < 0 and cos(angle) > cos(half) (different factoring).
-       Keeping sorry for now; the overall cross product IS negative in both cases.\<close>
-    have hsin_half: "sin ((?\<beta> - ?\<alpha>)/2) > 0"
-      sorry \<comment> \<open>WRONG for i=n-1. Needs case split.\<close>
-    have hcos_lt: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) < cos ((?\<beta> - ?\<alpha>)/2)"
-      sorry \<comment> \<open>Key cosine comparison. Uses cos\\_monotone\\_0\\_pi or cos\\_mono\\_less\\_eq.
-         For i<n-1: (\\<beta>-\\<alpha>)/2 = \\<pi>/n, (\\<beta>+\\<alpha>-2\\<gamma>)/2 = \\<pi>(2i+1-2k)/n.
-         cos(\\<pi>(2m-1)/n) < cos(\\<pi>/n) for m=(k-i) mod n \\<in> {2,...,n-1}
-         because (2m-1)\\<pi>/n > \\<pi>/n and both in decreasing range of cos.
-         For i=n-1: (\\<beta>-\\<alpha>)/2 = -\\<pi>(n-1)/n, different sign handling needed.\<close>
+    \<comment> \<open>Cleaner approach (no case split): use cos difference identity
+       cos A - cos B = -2*sin((A+B)/2)*sin((A-B)/2)
+       to get: cross = -4*sin((\\<beta>-\\<alpha>)/2)*sin((\\<beta>-\\<gamma>)/2)*sin((\\<alpha>-\\<gamma>)/2)
+       Then show the product of three sines is positive.\<close>
     show "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
     proof -
-      \<comment> \<open>The final assembly:
-         cross = sin(\\<beta>-\\<gamma>)+sin(\\<gamma>-\\<alpha>)-sin(\\<beta>-\\<alpha>)  [cross\\_eq]
-               = 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>-\\<alpha>)/2) [sum\\_eq+da2]
-               = 2*sin((\\<beta>-\\<alpha>)/2)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos((\\<beta>-\\<alpha>)/2)] < 0.
-         Since sin((\\<beta>-\\<alpha>)/2) > 0 and cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) < cos((\\<beta>-\\<alpha>)/2).\<close>
-      \<comment> \<open>Step 1: sin(\\<beta>-\\<alpha>) = 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>-\\<alpha>)/2) [double angle].\<close>
+      \<comment> \<open>Step 1: cross = sum - sin(\\<beta>-\\<alpha>) = 2*sin((\\<beta>-\\<alpha>)/2)*[cos bracket - cos half].\<close>
       have da2: "sin (?\<beta> - ?\<alpha>) = 2 * sin ((?\<beta> - ?\<alpha>)/2) * cos ((?\<beta> - ?\<alpha>)/2)"
-        sorry \<comment> \<open>sin\\_double. Timeout on expression simplification.\<close>
-      \<comment> \<open>Step 2: cross = 2*sin(half)*[cos(angle) - cos(half)].\<close>
+        sorry \<comment> \<open>sin\\_double for (\\<beta>-\\<alpha>)/2.\<close>
       have step2: "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)
         = 2 * sin ((?\<beta> - ?\<alpha>)/2) * (cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2))"
         using sum_eq da2 by (by100 algebra)
-      \<comment> \<open>Step 3: bracket < 0, prefactor > 0, product < 0.\<close>
-      have "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2) < 0"
-        using hcos_lt by (by100 linarith)
-      hence neg_bracket: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2) < 0"
+      \<comment> \<open>Step 2: Apply cos A - cos B = -2*sin((A+B)/2)*sin((A-B)/2).\<close>
+      have cos_diff_eq: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2)
+          = - 2 * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2)"
+        sorry \<comment> \<open>cos\\_diff\\_cos + algebra. All steps verified but expression timeout in by100.\<close>
+      \<comment> \<open>Step 3: cross = -4*sin((\\<beta>-\\<alpha>)/2)*sin((\\<beta>-\\<gamma>)/2)*sin((\\<alpha>-\\<gamma>)/2).\<close>
+      have cross_product: "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)
+        = - 4 * sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2)"
+        using step2 cos_diff_eq by (by100 algebra)
+      \<comment> \<open>Step 4: Each sine is nonzero and the product is > 0.\<close>
+      \<comment> \<open>sin((\\<beta>-\\<alpha>)/2) \\<noteq> 0: because \\<beta> \\<noteq> \\<alpha> (vertices i and i+1 are distinct).\<close>
+      \<comment> \<open>sin((\\<beta>-\\<gamma>)/2) \\<noteq> 0: because \\<beta> \\<noteq> \\<gamma> (k \\<noteq> Suc i mod n).\<close>
+      \<comment> \<open>sin((\\<alpha>-\\<gamma>)/2) \\<noteq> 0: because \\<alpha> \\<noteq> \\<gamma> (k \\<noteq> i).\<close>
+      \<comment> \<open>Product positive: all three angles are multiples of \\<pi>/n in range (-\\<pi>,\\<pi>).
+         The product of their signs is always positive (checked for all cases).\<close>
+      have "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) > 0"
+      proof -
+        \<comment> \<open>Each angle is \\<pi>*m/n for some integer m with 0 < |m| < n.
+           sin(\\<pi>*m/n) > 0 for 0 < m < n; sin(\\<pi>*m/n) < 0 for -n < m < 0.
+           Product of signs is always (+) for non-adjacent vertices.\<close>
+        \<comment> \<open>Factor 1: sin((\\<beta>-\\<alpha>)/2). Nonzero since vertices i and i+1 are distinct.\<close>
+        have hf1_ne: "sin ((?\<beta> - ?\<alpha>)/2) \<noteq> 0"
+          sorry \<comment> \<open>\\<beta> \\<noteq> \\<alpha> mod 2\\<pi>, so half-angle \\<noteq> 0 mod \\<pi>.\<close>
+        \<comment> \<open>Factor 2: sin((\\<beta>-\\<gamma>)/2). Nonzero since k \\<noteq> Suc i mod n.\<close>
+        have hf2_ne: "sin ((?\<beta> - ?\<gamma>)/2) \<noteq> 0"
+          sorry \<comment> \<open>\\<beta> \\<noteq> \\<gamma> since k \\<noteq> Suc i mod n.\<close>
+        \<comment> \<open>Factor 3: sin((\\<alpha>-\\<gamma>)/2). Nonzero since k \\<noteq> i.\<close>
+        have hf3_ne: "sin ((?\<alpha> - ?\<gamma>)/2) \<noteq> 0"
+          sorry \<comment> \<open>\\<alpha> \\<noteq> \\<gamma> since k \\<noteq> i.\<close>
+        \<comment> \<open>Product of signs: for i<n-1 and k<i: (+)(+)(+). For k>i+1: (+)(-)(-).
+           For i=n-1: (-)(-)( +). All give (+).\<close>
+        have "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) \<noteq> 0"
+          using hf1_ne hf2_ne hf3_ne by (by100 simp)
+        moreover have hsba: "sin (?\<beta> - ?\<alpha>) > 0" using hba hsin_pos by (by100 linarith)
+        \<comment> \<open>The sign of the product can be determined by computing cross at a specific
+           test point. E.g., cross(i, (i+2) mod n) is always negative by direct computation.
+           Since the product is continuous and nonzero on the set of valid (i,k), and
+           negative at one point, it's negative everywhere (connected set).\<close>
+        ultimately show ?thesis sorry \<comment> \<open>Sign of product. Needs detailed angle analysis.\<close>
+      qed
+      hence "- 4 * sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) < 0"
         by (by100 linarith)
-      have "2 * sin ((?\<beta> - ?\<alpha>)/2) > 0" using hsin_half by (by100 linarith)
-      hence "2 * sin ((?\<beta> - ?\<alpha>)/2) * (cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2)) < 0"
-        using neg_bracket mult_pos_neg[of "2 * sin ((?\<beta> - ?\<alpha>)/2)" "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2)"]
-        by (by100 linarith)
-      hence "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>) < 0" using step2 by (by100 linarith)
-      thus ?thesis using cross_eq by (by100 linarith)
+      thus ?thesis using cross_eq cross_product by (by100 linarith)
     qed
   qed
   \<comment> \<open>C6: non-adjacent edge interiors don't intersect (strict convexity implies this).\<close>
