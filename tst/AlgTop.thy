@@ -859,16 +859,7 @@ qed
 \<comment> \<open>Cancel/uncancel same-space preservation.
    PROVED versions (quotient\\_of\\_scheme\\_cancel\\_proved, quotient\\_of\\_scheme\\_uncancel\\_proved)
    are defined after quotient\\_of\\_scheme\\_rotate, reducing to cancel\\_front/uncancel\\_front
-   via rotation. Forward declarations below are only used by dead code.\<close>
-lemma quotient_of_scheme_cancel:
-  assumes "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
-  shows "top1_quotient_of_scheme_on Y TY (u @ v)"
-  using assms sorry
-
-lemma quotient_of_scheme_uncancel:
-  assumes "top1_quotient_of_scheme_on Y TY (u @ v)"
-  shows "top1_quotient_of_scheme_on Y TY (u @ [a, top1_inverse_edge a] @ v)"
-  using assms sorry
+   via rotation. Original declarations removed (no longer referenced).\<close>
 
 \<comment> \<open>Extract vertices from a polygonal region.\<close>
 lemma polygonal_region_extract_vx:
@@ -3700,10 +3691,10 @@ proof (induction rule: top1_elementary_scheme_operation.induct)
   from quotient_of_scheme_rotate[OF rotate.prems] show ?case .
 next
   case (cancel u a v)
-  from quotient_of_scheme_cancel[OF cancel.prems] show ?case .
+  from quotient_of_scheme_cancel_proved[OF cancel.prems] show ?case .
 next
   case (uncancel u v a)
-  from quotient_of_scheme_uncancel[OF uncancel.prems] show ?case .
+  from quotient_of_scheme_uncancel_proved[OF uncancel.prems] show ?case .
 next
   case (invert w)
   from quotient_of_scheme_invert[OF invert.prems] show ?case .
