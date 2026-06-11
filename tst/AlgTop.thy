@@ -1154,7 +1154,10 @@ proof -
     sorry \<comment> \<open>Boundary identification is exactly as specified by the scheme.\<close>
   \<comment> \<open>Assembly: introduce witnesses P, q, vx, vy and combine all conditions.\<close>
   show ?thesis
-    sorry \<comment> \<open>Combine all conditions into the existential.\<close>
+    unfolding top1_quotient_of_scheme_on_def
+    apply (intro conjI exI[of _ P] exI[of _ q] exI[of _ vx] exI[of _ vy])
+    using hC1 hC2 hC3 hC4 hC5 hC6 hC8 hC9_interior hC9_boundary hC10 hC11
+    sorry \<comment> \<open>Assembly: need to match the 11 conditions with the existential.\<close>
 qed
 
 \<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
