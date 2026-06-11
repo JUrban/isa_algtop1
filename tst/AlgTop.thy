@@ -182,6 +182,35 @@ lemma valid_imp_equiv:
   "top1_valid_scheme_operation s t \<Longrightarrow> top1_valid_scheme_equiv s t"
   unfolding top1_valid_scheme_equiv_def by (by100 simp)
 
+\<comment> \<open>Valid relabel is reversible: fresh relabel can be undone.\<close>
+lemma valid_relabel_reverse:
+  assumes "nw \<notin> fst ` set wd" and "nw \<noteq> ol"
+  shows "top1_valid_scheme_equiv (map (\<lambda>(x,b). (if x = ol then nw else x, b)) wd) wd"
+proof -
+  define t where "t = map (\<lambda>(x,b). (if x = ol then nw else x, b)) wd"
+  have hol_fresh: "ol \<notin> fst ` set t"
+  proof
+    assume "ol \<in> fst ` set t"
+    then obtain l b where "(l, b) \<in> set wd" "ol = (if l = ol then nw else l)"
+      unfolding t_def by (by100 fastforce)
+    then show False using assms(2) by (cases "l = ol") (by100 auto)+
+  qed
+  have hrev_eq: "map (\<lambda>(x,b). (if x = nw then ol else x, b)) t = wd"
+    unfolding t_def using assms(1)
+  proof (induction wd)
+    case Nil thus ?case by (by100 simp)
+  next
+    case (Cons e ws)
+    obtain l b where hlb: "e = (l, b)" by (cases e)
+    have "l \<noteq> nw" using Cons.prems hlb by (by100 force)
+    thus ?case using hlb Cons.IH Cons.prems by (by100 simp)
+  qed
+  have "top1_valid_scheme_operation t (map (\<lambda>(x,b). (if x = nw then ol else x, b)) t)"
+    by (rule top1_valid_scheme_operation.v_relabel[OF hol_fresh assms(2)[symmetric]])
+  hence "top1_valid_scheme_operation t wd" using hrev_eq by (by100 simp)
+  thus ?thesis unfolding t_def by (rule valid_imp_equiv)
+qed
+
 \<comment> \<open>Each valid operation is reversible (valid\\_scheme\\_equiv is symmetric).\<close>
 lemma valid_operation_reverse:
   "top1_valid_scheme_operation s t \<Longrightarrow> top1_valid_scheme_equiv t s"
@@ -217,7 +246,8 @@ next
   thus ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_invert[of "rev (map top1_inverse_edge w)"]]
     by (by100 simp)
 next
-  case (v_relabel nw ol wd) show ?case sorry
+  case (v_relabel nw ol wd)
+  from valid_relabel_reverse[OF v_relabel.hyps] show ?case .
 next
   case (v_flip_label w a)
   \<comment> \<open>Flip is involutive.\<close>
