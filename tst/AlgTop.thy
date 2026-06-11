@@ -344,76 +344,12 @@ qed
 \<comment> \<open>Elementary operations preserve quotient\_of\_scheme\_on for the SAME space.
    If Y is a quotient of scheme s, and s \<rightarrow> t via an elementary operation,
    then Y is also a quotient of scheme t (same polygon, adjusted vertex labeling).\<close>
-lemma elementary_operation_preserves_quotient:
-  assumes "top1_quotient_of_scheme_on Y TY s"
-      and "top1_elementary_scheme_operation s t"
-  shows "top1_quotient_of_scheme_on Y TY t"
-  using assms sorry \<comment> \<open>DEAD CODE. No live caller. Contains FALSE relabel case.\<close>
+\<comment> \<open>elementary\\_operation\\_preserves\\_quotient, relabel\\_reverse, scheme\\_equiv\\_preserves\\_quotient:
+   DELETED (dead old chain, per expert audit 21).\<close>
 
-\<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
-\<comment> \<open>Each elementary operation is reversible: if s → t, then t ~* s.\<close>
-\<comment> \<open>Relabel reverse: relabel(old\\<to>new) followed by relabel(new\\<to>old) gives back the original.
-   Freshness ensures no label collisions.\<close>
-lemma relabel_reverse:
-  assumes "new \<notin> fst ` set w" and "new \<noteq> old"
-  shows "top1_scheme_equiv (map (\<lambda>(x,b). (if x = old then new else x, b)) w) w"
-proof -
-  let ?t = "map (\<lambda>(x,b). (if x = old then new else x, b)) w"
-  \<comment> \<open>After relabeling old\\<to>new, the label 'old' no longer appears in ?t.\<close>
-  have hold_fresh: "old \<notin> fst ` set ?t"
-  proof
-    assume "old \<in> fst ` set ?t"
-    then obtain e where he: "e \<in> set ?t" "fst e = old" by (by100 blast)
-    from he(1) obtain e0 where he0: "e0 \<in> set w" "e = (case e0 of (x,b) \<Rightarrow> (if x = old then new else x, b))"
-      by (by100 auto)
-    obtain l b where hlb: "e0 = (l, b)" by (cases e0)
-    have "fst e = (if l = old then new else l)" using he0(2) hlb by (by100 simp)
-    with he(2) have "l \<noteq> old" using assms(2) by (by100 fastforce)
-    hence "fst e = l" using \<open>fst e = (if l = old then new else l)\<close> by (by100 simp)
-    with he(2) have "l = old" by (by100 simp)
-    with \<open>l \<noteq> old\<close> show False by (by100 simp)
-  qed
-  \<comment> \<open>Applying relabel(new\\<to>old) to ?t gives back w.\<close>
-  have hrev_eq: "map (\<lambda>(x,b). (if x = new then old else x, b)) ?t = w"
-  proof -
-    have "map (\<lambda>(x,b). (if x = new then old else x, b)) ?t
-        = map ((\<lambda>(x,b). (if x = new then old else x, b)) \<circ> (\<lambda>(x,b). (if x = old then new else x, b))) w"
-      by (by100 simp)
-    also have "\<dots> = map id w"
-    proof (rule map_cong)
-      fix e assume he: "e \<in> set w"
-      obtain l b where hlb: "e = (l, b)" by (cases e)
-      have "l \<in> fst ` set w" using he hlb by (by100 force)
-      hence "l \<noteq> new" using assms(1) by (by100 blast)
-      show "((\<lambda>(x,b). (if x = new then old else x, b)) \<circ> (\<lambda>(x,b). (if x = old then new else x, b))) e = id e"
-        using hlb \<open>l \<noteq> new\<close> by (by100 auto)
-    qed (by100 simp)
-    finally show ?thesis by (by100 simp)
-  qed
-  \<comment> \<open>The relabel constructor gives the elementary operation.\<close>
-  have hdiff: "old \<noteq> new" using assms(2) by (by100 simp)
-  have "top1_elementary_scheme_operation ?t (map (\<lambda>(x,b). (if x = new then old else x, b)) ?t)"
-    by (rule top1_elementary_scheme_operation.relabel)
-  hence "top1_elementary_scheme_operation ?t w" using hrev_eq by (by100 simp)
-  thus ?thesis unfolding top1_scheme_equiv_def by (by100 simp)
-qed
-
-\<comment> \<open>NOTE: relabel\\_operation\\_freshness (inversion on the relabel constructor) is FALSE as
-   a standalone lemma — the map-relabel form can coincidentally match other constructors
-   (e.g. rotate). The freshness is only available INSIDE the induction case, where we
-   know the constructor. But Isabelle's case mechanism doesn't expose it.
-   The relabel\\_reverse standalone lemma (proved above) IS correct with explicit freshness.\<close>
-
-\<comment> \<open>elementary\\_operation\\_reverse: REMOVED (dead code).\<close>
-
-\<comment> \<open>scheme\\_equiv\\_sym: DELETED (dead code, per expert audit 21 step 1).\<close>
-
-lemma scheme_equiv_preserves_quotient:
-  assumes "top1_quotient_of_scheme_on Y TY s"
-      and "top1_scheme_equiv s t"
-  shows "top1_quotient_of_scheme_on Y TY t"
-  using assms(2,1) unfolding top1_scheme_equiv_def
-  by (induction rule: rtranclp.induct) (auto intro: elementary_operation_preserves_quotient)
+\<comment> \<open>Old chain (relabel\\_reverse, elementary\\_operation\\_reverse, scheme\\_equiv\\_sym,
+   scheme\\_equiv\\_preserves\\_quotient): ALL DELETED per expert audit 21 step 1.
+   Valid versions in cached session: valid\\_relabel\\_reverse, valid\\_equiv\\_sym.\<close>
 
 \<comment> \<open>Same-space preservation implies homeomorphic-realization preservation (take Y=X, h=id).\<close>
 \<comment> \<open>Identity is a homeomorphism on any topological space.\<close>
@@ -489,26 +425,9 @@ proof -
   show ?thesis by (rule homeo_realization_flat_introI[OF assms homeomorphism_id[OF \<open>is_topology_on X TX\<close>]])
 qed
 
-\<comment> \<open>Bridge: unrestricted scheme\\_equiv also gives homeomorphic realization.
-   Uses the OLD chain (scheme\\_equiv\\_preserves\\_quotient) which has geometric gaps.
-   The normal form now uses valid\\_equiv; this bridge is used for the hard cases in
-   valid\\_operation\\_preserves\\_quotient\\_homeo (cancel/uncancel/cut-paste).\<close>
-lemma scheme_equiv_implies_homeo_realization:
-  fixes X :: "'a set" and TX :: "'a set set"
-  assumes "top1_quotient_of_scheme_on X TX s"
-      and "top1_scheme_equiv s t"
-  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
-    top1_quotient_of_scheme_on Y TY t \<and>
-    top1_homeomorphism_on X TX Y TY h"
-proof -
-  have "top1_quotient_of_scheme_on X TX t"
-    by (rule scheme_equiv_preserves_quotient[OF assms])
-  thus ?thesis by (rule same_space_implies_homeo_realization)
-qed
+\<comment> \<open>scheme\\_equiv\\_implies\\_homeo\\_realization: DELETED (old bridge, unused).\<close>
 
 \<comment> \<open>Homeomorphism-preservation for valid scheme operations (per expert audit step 8).
-   For rotate/invert/flip/relabel\\_fresh: use same-space preservation (Y = X).
-   For cancel/uncancel/cut-paste: use bridge via scheme\\_equiv (one elementary step).
    This is the correct semantic theorem for the classification chain.\<close>
 lemma valid_operation_preserves_quotient_homeo:
   fixes X :: "'a set" and TX :: "'a set set"
@@ -1518,133 +1437,10 @@ proof -
   show ?thesis .
 qed
 
-\<comment> \<open>scheme\\_equiv preserves homeomorphism type: equivalent schemes give homeomorphic quotients.\<close>
-lemma scheme_equiv_homeomorphic:
-  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
-      and "top1_quotient_of_scheme_on Y1 TY1 s"
-      and "top1_quotient_of_scheme_on Y2 TY2 t"
-      and "top1_scheme_equiv s t"
-  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-proof -
-  have "top1_quotient_of_scheme_on Y1 TY1 t"
-    by (rule scheme_equiv_preserves_quotient[OF assms(3) assms(5)])
-  from scheme_quotient_uniqueness[OF assms(1) assms(2) this assms(4)]
-  show ?thesis .
-qed
+\<comment> \<open>Old bridge lemmas (scheme\\_equiv\\_homeomorphic, scheme\\_rotate/cancel/invert\\_homeomorphic):
+   DELETED per expert audit 21. Superseded by valid\\_equiv\\_preserves\\_quotient\\_homeo.\<close>
 
-\<comment> \<open>Scheme rotation preserves quotient type: quotient(u@v) \\<cong> quotient(v@u).
-   The edge identifications are the same up to cyclic shift.\<close>
-lemma scheme_rotate_homeomorphic:
-  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
-      and "top1_quotient_of_scheme_on Y1 TY1 (u @ v)"
-      and "top1_quotient_of_scheme_on Y2 TY2 (v @ u)"
-  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-proof -
-  \<comment> \<open>Book proof (Munkres \\<S>76 operation iv): "Permute. Renumbering the vertices of the
-     polygonal region so as to begin with a different vertex does not affect the quotient space."
-     Formal argument: u@v and v@u have the same length n = |u|+|v|. Define shifted vertex
-     positions vx'(i) = vx((i+|u|) mod n). The polygon P is unchanged (same convex hull).
-     The quotient map q is unchanged. The scheme (v@u)!i = (u@v)!((i+|u|) mod n), so all
-     identification conditions transfer. Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
-  let ?n = "length u + length v"
-  \<comment> \<open>Strategy: Show Y1 is ALSO a quotient of v@u (same polygon, rotated vertices).
-     Then Y1 and Y2 are both quotients of v@u. Apply scheme\\_quotient\\_uniqueness.\<close>
-  \<comment> \<open>The scheme v@u has the same length.\<close>
-  have hlen_eq: "length (v @ u) = ?n" by simp
-  have hlen_uv: "length (u @ v) = ?n" by simp
-  \<comment> \<open>Key: (v@u)!i = (u@v)!((i + length u) mod n) for i < n.\<close>
-  have hshift: "\<forall>i < ?n. (v @ u) ! i = (u @ v) ! ((i + length u) mod ?n)"
-  proof (intro allI impI)
-    fix i assume "i < ?n"
-    show "(v @ u) ! i = (u @ v) ! ((i + length u) mod ?n)"
-    proof (cases "i < length v")
-      case True
-      hence "(v @ u) ! i = v ! i" by (simp add: nth_append)
-      moreover have "(i + length u) mod ?n = i + length u"
-        using True by simp
-      moreover have "(u @ v) ! (i + length u) = v ! i"
-        using True by (simp add: nth_append)
-      ultimately show ?thesis by simp
-    next
-      case False
-      hence "i \<ge> length v" by linarith
-      hence "(v @ u) ! i = u ! (i - length v)" by (simp add: nth_append)
-      moreover have "(i + length u) mod ?n = i - length v"
-      proof -
-        have "i + length u = ?n + (i - length v)" using \<open>i \<ge> length v\<close> by linarith
-        hence "(i + length u) mod ?n = (?n + (i - length v)) mod ?n"
-          by (metis add.commute)
-        also have "\<dots> = (i - length v) mod ?n" by simp
-        also have "\<dots> = i - length v"
-          using \<open>i < ?n\<close> \<open>i \<ge> length v\<close> by simp
-        finally show ?thesis .
-      qed
-      moreover have "(u @ v) ! (i - length v) = u ! (i - length v)"
-      proof -
-        have "i - length v < length u" using \<open>i < ?n\<close> \<open>i \<ge> length v\<close> by linarith
-        thus ?thesis by (simp add: nth_append)
-      qed
-      ultimately show ?thesis by simp
-    qed
-  qed
-  \<comment> \<open>Y1 is also a quotient of v@u (same polygon, rotated vertex numbering).\<close>
-  have hY1_vu: "top1_quotient_of_scheme_on Y1 TY1 (v @ u)"
-    by (rule elementary_operation_preserves_quotient[OF assms(3) top1_elementary_scheme_operation.rotate])
-  \<comment> \<open>Both Y1 and Y2 are quotients of v@u. Apply scheme\\_quotient\\_uniqueness.\<close>
-  show ?thesis by (rule scheme_quotient_uniqueness[OF assms(1) assms(2) hY1_vu assms(4)])
-qed
-
-\<comment> \<open>Scheme cancellation preserves quotient type: quotient(u@[a,a\\<inverse>]@v) \\<cong> quotient(u@v).
-   Folding two adjacent inverse edges doesn't change the quotient space.\<close>
-lemma scheme_cancel_homeomorphic:
-  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
-      and "top1_quotient_of_scheme_on Y1 TY1 (u @ [a, top1_inverse_edge a] @ v)"
-      and "top1_quotient_of_scheme_on Y2 TY2 (u @ v)"
-  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-proof -
-  \<comment> \<open>Book proof (Munkres \\<S>76 operation vi): "Cancel. Replace w = y0 a a\\<inverse> y1 by y0 y1."
-     Formal: The (n+2)-gon for u@[a,a\\<inverse>]@v has two adjacent edges labeled a, a\\<inverse>.
-     These edges are identified in the quotient. "Folding" the polygon along these edges
-     gives an n-gon. The fold map is a quotient map P(n+2) \\<to> P(n) that preserves
-     all other edge identifications.
-     Compose: q1: P(n+2) \\<to> Y1, fold: P(n+2) \\<to> P(n), and q2\\<inverse>: P(n) \\<to> Y2.
-     The composition gives a homeomorphism Y1 \\<to> Y2.\<close>
-  \<comment> \<open>By elementary\\_operation\\_preserves\\_quotient with the cancel rule:
-     Y1 is also a quotient of u@v. Then scheme\\_quotient\\_uniqueness gives Y1 \\<cong> Y2.\<close>
-  have "top1_quotient_of_scheme_on Y1 TY1 (u @ v)"
-    by (rule elementary_operation_preserves_quotient[OF assms(3)
-        top1_elementary_scheme_operation.cancel[of u a v]])
-  from scheme_quotient_uniqueness[OF assms(1) assms(2) this assms(4)]
-  show ?thesis .
-qed
-
-\<comment> \<open>Scheme inversion preserves quotient type: quotient(w) \\<cong> quotient(rev(map inverse w)).
-   Reflecting the polygon preserves the quotient space.\<close>
-lemma scheme_invert_homeomorphic:
-  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
-      and "top1_quotient_of_scheme_on Y1 TY1 w"
-      and "top1_quotient_of_scheme_on Y2 TY2 (rev (map top1_inverse_edge w))"
-  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-proof -
-  \<comment> \<open>Book proof (Munkres \\<S>76 operation v): "Flip. Flipping the polygonal region over.
-     The order of the vertices is reversed, and so is the orientation of each edge."
-     Formal: Reflecting the polygon (reversing vertex order) gives a valid quotient
-     of rev(map inverse w). Then scheme\\_quotient\\_uniqueness gives Y1 \\<cong> Y2.\<close>
-  have hY1_inv: "top1_quotient_of_scheme_on Y1 TY1 (rev (map top1_inverse_edge w))"
-    by (rule elementary_operation_preserves_quotient[OF assms(3) top1_elementary_scheme_operation.invert])
-  \<comment> \<open>Originally: Extract (P,q,vx,vy) from assms(3). Define reflected vertices:
-       vx'(i) = vx(n-1-i), vy'(i) = vy(n-1-i) (reverse order).
-       The same polygon P (reflection is a homeomorphism), same quotient map q.
-       Edge i in the reflected scheme = inverse of edge (n-1-i) in w.
-       All conditions transfer via the reversal.\<close>
-  show ?thesis by (rule scheme_quotient_uniqueness[OF assms(1) assms(2) hY1_inv assms(4)])
-qed
-  \<comment> \<open>Reflect the polygon (reverse vertex order + flip orientations).
-     The reflection map commutes with the identification.\<close>
-
-(** from \<S>76: elementary operations on schemes preserve the resulting quotient space.
-    If X1 is the quotient space induced by scheme1 and X2 by scheme2, and scheme2
-    is obtained from scheme1 via an elementary operation, then X1 \<cong> X2. **)
+\<comment> \<open>§76 book theorem (old formulation, kept per policy). Valid version: valid\\_equiv\\_preserves\\_quotient\\_homeo.\<close>
 theorem Theorem_76_elementary_operations:
   fixes scheme1 scheme2 :: "('a \<times> bool) list"
     and X1 X2 :: "'x set" and TX1 TX2 :: "'x set set"
@@ -1653,141 +1449,7 @@ theorem Theorem_76_elementary_operations:
       and "top1_quotient_of_scheme_on X1 TX1 scheme1
          \<and> top1_quotient_of_scheme_on X2 TX2 scheme2"
   shows "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
-proof -
-  \<comment> \<open>Munkres §76: Each elementary operation (rotate, cancel, relabel, cut, paste, invert)
-     corresponds to a topological operation on the polygonal region that preserves the
-     homeomorphism type of the quotient space.
-     Proof by induction on the derivation of top1_elementary_scheme_operation.\<close>
-  \<comment> \<open>Each case: rotate preserves the polygon; cancel removes a pair of edges;
-     relabel renames consistently; cut/paste split/join polygons; invert reverses.\<close>
-  \<comment> \<open>Prove the strong version: for ALL quotient spaces of related schemes, homeo.\<close>
-  have hcases: "\<And>s t. top1_elementary_scheme_operation s t \<Longrightarrow>
-      top1_quotient_of_scheme_on X1 TX1 s \<Longrightarrow>
-      top1_quotient_of_scheme_on X2 TX2 t \<Longrightarrow>
-      \<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
-  proof -
-    fix s t assume hop: "top1_elementary_scheme_operation s t"
-        and hs: "top1_quotient_of_scheme_on X1 TX1 s"
-        and ht: "top1_quotient_of_scheme_on X2 TX2 t"
-    \<comment> \<open>First prove for ANY pair of quotient spaces (needed for sym/trans cases).\<close>
-    have huniv: "\<And>s t (Y1 :: 'x set) TY1 (Y2 :: 'x set) TY2.
-        top1_elementary_scheme_operation s t \<Longrightarrow>
-        is_topology_on_strict Y1 TY1 \<Longrightarrow> is_topology_on_strict Y2 TY2 \<Longrightarrow>
-        top1_quotient_of_scheme_on Y1 TY1 s \<Longrightarrow>
-        top1_quotient_of_scheme_on Y2 TY2 t \<Longrightarrow>
-        \<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-    proof -
-      fix s t and Y1 :: "'x set" and TY1 and Y2 :: "'x set" and TY2
-      assume hop: "top1_elementary_scheme_operation s t"
-          and hY1: "is_topology_on_strict Y1 TY1" and hY2: "is_topology_on_strict Y2 TY2"
-          and hs: "top1_quotient_of_scheme_on Y1 TY1 s"
-          and ht: "top1_quotient_of_scheme_on Y2 TY2 t"
-      show "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h" using hop
-      proof (cases rule: top1_elementary_scheme_operation.cases)
-        case (rotate u v)
-        then show ?thesis using scheme_rotate_homeomorphic[OF hY1 hY2] hs ht by simp
-      next
-        case (cancel u a v)
-        then show ?thesis using scheme_cancel_homeomorphic[OF hY1 hY2] hs ht by simp
-      next
-        case (uncancel u v a)
-        \<comment> \<open>Uncancel = reverse of cancel. s = u@v, t = u@[a, a\\<inverse>]@v.\<close>
-        have hs2: "top1_quotient_of_scheme_on Y1 TY1 (u @ v)" using hs uncancel by simp
-        have ht2: "top1_quotient_of_scheme_on Y2 TY2 (u @ [a, top1_inverse_edge a] @ v)"
-          using ht uncancel by simp
-        from scheme_cancel_homeomorphic[OF hY2 hY1 ht2 hs2]
-        obtain h where "top1_homeomorphism_on Y2 TY2 Y1 TY1 h" by (by100 blast)
-        from homeomorphism_inverse[OF this]
-        show ?thesis by (by100 blast)
-      next
-        case invert
-        then show ?thesis using scheme_invert_homeomorphic[OF hY1 hY2] hs ht by simp
-      next
-        case (relabel old new)
-        \<comment> \<open>Relabeling preserves the quotient: same polygon, same q, renamed labels.
-           Y1 is also a quotient of the relabeled scheme. Then scheme\\_quotient\\_uniqueness.\<close>
-        have hop_relabel: "top1_elementary_scheme_operation s (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
-          by (rule top1_elementary_scheme_operation.relabel)
-        have hY1_relabel: "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
-          by (rule elementary_operation_preserves_quotient[OF hs hop_relabel])
-        moreover have "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,b). (if l = old then new else l, b)) s)"
-          using ht relabel by simp
-        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
-      next
-        case (flip_label a)
-        \<comment> \<open>Flipping orientations: same polygon, same q, flipped edge directions.
-           Y1 is also a quotient of the flipped scheme.\<close>
-        have "top1_quotient_of_scheme_on Y1 TY1 (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) s)"
-          by (rule elementary_operation_preserves_quotient[OF hs top1_elementary_scheme_operation.flip_label])
-        moreover have "top1_quotient_of_scheme_on Y2 TY2 (map (\<lambda>(l,bo). (l, if l = a then \<not>bo else bo)) s)"
-          using ht flip_label by simp
-        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
-      next
-        case (cut_paste u1 a u2 u3)
-        \<comment> \<open>Cut-and-repaste: \\<S>76 Theorem 76.1. Cut, flip, paste preserves quotient.\<close>
-        have "top1_quotient_of_scheme_on Y1 TY1
-            (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
-        proof -
-          have "top1_quotient_of_scheme_on Y1 TY1 (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
-            using hs cut_paste by simp
-          from elementary_operation_preserves_quotient[OF this top1_elementary_scheme_operation.cut_paste[of u1 a u2 u3]]
-          show ?thesis .
-        qed
-        moreover have "top1_quotient_of_scheme_on Y2 TY2
-            (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
-          using ht cut_paste by simp
-        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
-      next
-        case (cut_paste2 u0 a u1 u2 b)
-        have "top1_quotient_of_scheme_on Y1 TY1
-            ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
-        proof -
-          have "top1_quotient_of_scheme_on Y1 TY1 (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)"
-            using hs cut_paste2 by simp
-          from elementary_operation_preserves_quotient[OF this top1_elementary_scheme_operation.cut_paste2[of u0 a u1 u2 b]]
-          show ?thesis .
-        qed
-        moreover have "top1_quotient_of_scheme_on Y2 TY2
-            ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
-          using ht cut_paste2 by simp
-        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
-      next
-        case (cut_paste_opp u0 u1 a u2 u3)
-        have "top1_quotient_of_scheme_on Y1 TY1
-            (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
-        proof -
-          have "top1_quotient_of_scheme_on Y1 TY1 (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
-            using hs cut_paste_opp by simp
-          from elementary_operation_preserves_quotient[OF this top1_elementary_scheme_operation.cut_paste_opp[of u0 u1 a u2 u3]]
-          show ?thesis .
-        qed
-        moreover have "top1_quotient_of_scheme_on Y2 TY2
-            (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
-          using ht cut_paste_opp by simp
-        ultimately show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] by (by100 blast)
-      next
-        case (context_left y z prefix)
-        \<comment> \<open>s = prefix@y, t = prefix@z, y \<to> z.
-           Apply the operation to Y1's quotient: Y1 also realizes t.
-           Then both Y1 and Y2 realize the same scheme, giving homeomorphism.\<close>
-        have "top1_quotient_of_scheme_on Y1 TY1 t"
-          by (rule elementary_operation_preserves_quotient[OF hs hop])
-        then show ?thesis using scheme_quotient_uniqueness[OF hY1 hY2] ht by (by100 blast)
-      qed
-    qed
-    from huniv[OF hop assms(1) assms(2) hs ht]
-    show "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h" .
-  qed
-  show ?thesis using hcases[OF assms(3)] assms(4) by (by100 blast)
-qed
-
-
-
-\<comment> \<open>§75 + §73 + §74.4 moved to AlgTopCached8.\<close>
-
-\<comment> \<open>NOTE: free\_abelian\_quotient\_by\_twice\_sum\_structure was here but is unused —
-   its content is fully proved inside Theorem\_75\_4 (certified in AlgTopCached12).
-   Removed per expert audit 13 recommendation.\<close>
+  sorry \<comment> \<open>Old chain; live proof is via valid\\_equiv\\_preserves\\_quotient\\_homeo.\<close>
 
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
@@ -6156,50 +5818,8 @@ proof -
   qed
 qed
 
-\<comment> \<open>Suffix congruence: xs \<sim> ys implies xs@suffix \<sim> ys@suffix.\<close>
-lemma scheme_equiv_append:
-  fixes xs ys :: "('a \<times> bool) list" and suffix :: "('a \<times> bool) list"
-  assumes "top1_scheme_equiv xs ys"
-  shows "top1_scheme_equiv (xs @ suffix) (ys @ suffix)"
-proof -
-  \<comment> \<open>Chain: xs@suffix \<sim> suffix@xs \<sim> suffix@ys \<sim> ys@suffix.\<close>
-  have r1: "top1_scheme_equiv (xs @ suffix) (suffix @ xs)"
-    using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate[of xs suffix]] by (by100 simp)
-  have r2: "top1_scheme_equiv (suffix @ xs) (suffix @ ys)"
-    using scheme_equiv_prepend[OF assms] by (by100 blast)
-  have r3: "top1_scheme_equiv (suffix @ ys) (ys @ suffix)"
-    using elementary_imp_equiv[OF top1_elementary_scheme_operation.rotate[of suffix ys]] by (by100 simp)
-  from r1 r2 r3 show ?thesis
-    unfolding top1_scheme_equiv_def by (meson rtranclp_trans)
-qed
-
-\<comment> \<open>Relabel target to avoid a specific label.\<close>
-lemma scheme_equiv_relabel_avoid:
-  fixes target :: "(nat \<times> bool) list" and a :: nat
-  shows "\<exists>target'. top1_scheme_equiv target target' \<and> (\<forall>e \<in> set target'. fst e \<noteq> a)"
-proof -
-  have "finite (fst ` set target \<union> {a} :: nat set)" by (by100 simp)
-  from ex_new_if_finite[OF infinite_UNIV_nat this]
-  obtain fresh :: nat where hfresh: "fresh \<notin> fst ` set target \<union> {a}" by (by100 blast)
-  hence "fresh \<noteq> a" by (by100 blast)
-  define target' where "target' = map (\<lambda>(l,b). (if l = a then fresh else l, b)) target"
-  have "top1_scheme_equiv target target'"
-    unfolding target'_def
-    using elementary_imp_equiv[OF top1_elementary_scheme_operation.relabel[of target a fresh]] by (by100 simp)
-  moreover have "\<forall>e \<in> set target'. fst e \<noteq> a"
-  proof (intro ballI)
-    fix e assume "e \<in> set target'"
-    then obtain e0 where "e0 \<in> set target" "e = (\<lambda>(l,b). (if l = a then fresh else l, b)) e0"
-      unfolding target'_def by (by100 force)
-    obtain l0 b0 where "e0 = (l0, b0)" by (cases e0)
-    hence "e = (if l0 = a then fresh else l0, b0)"
-      using \<open>e = (\<lambda>(l,b). (if l = a then fresh else l, b)) e0\<close> by (by100 simp)
-    hence "fst e = (if fst e0 = a then fresh else fst e0)"
-      using \<open>e0 = (l0, b0)\<close> by (by100 simp)
-    thus "fst e \<noteq> a" using \<open>fresh \<noteq> a\<close> by (by100 simp)
-  qed
-  ultimately show ?thesis by (by100 blast)
-qed
+\<comment> \<open>scheme\\_equiv\\_append, scheme\\_equiv\\_relabel\\_avoid (OLD): DELETED.
+   Valid versions: valid\\_equiv\\_append, valid\\_equiv\\_relabel\\_avoid (in cached session).\<close>
 
 \<comment> \<open>Any scheme of the form [(l0,T),(l0,T),...,(lm,T),(lm,T)] with distinct labels
    is equivalent to the standard projective scheme proj(m+1) via relabeling.\<close>
