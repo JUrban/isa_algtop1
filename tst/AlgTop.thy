@@ -1207,7 +1207,58 @@ proof -
       \<comment> \<open>Key: any value returned by the THEN branch of q is an edge point.\<close>
       have q_then_on_edge: "\<And>p0. (\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i) \<Longrightarrow>
         \<exists>j t'. j < ?n \<and> 0 \<le> t' \<and> t' \<le> 1 \<and> q p0 = edge_pt j t'"
-        sorry \<comment> \<open>From q\\_def: THEN branch returns edge\\_pt(partner(...), ...) with valid index.\<close>
+      proof -
+        fix p0 assume hex: "\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i"
+        \<comment> \<open>SOME picks (i',t') satisfying the condition.\<close>
+        define sel where "sel = (SOME (i,t). i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i)"
+        define i' where "i' = fst sel"
+        define t' where "t' = snd sel"
+        have hsel: "i' < ?n \<and> 0 \<le> t' \<and> t' \<le> 1 \<and> p0 = edge_pt i' t' \<and> \<not> is_canonical i'"
+        proof -
+          from hex have "\<exists>p. (\<lambda>(i,t). i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i) p"
+            by (by100 auto)
+          from someI_ex[OF this] show ?thesis
+            unfolding sel_def i'_def t'_def by (by100 auto)
+        qed
+        \<comment> \<open>partner i' < n (from partner\\_props + properness).\<close>
+        have hcard: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} = 2"
+        proof -
+          have hi'_in: "i' \<in> {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')}" using hsel by (by100 simp)
+          have hfin: "finite {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')}" by (by100 simp)
+          have hne: "{j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<noteq> {}"
+            using hi'_in by (by100 blast)
+          have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<noteq> 0"
+            using hfin hne by (by100 simp)
+          hence "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<ge> 1" by (by100 linarith)
+          moreover have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<in> {0, 2}"
+          proof -
+            from hproper have "card {i. i < length scheme \<and> fst (scheme ! i) = fst (scheme ! i')} \<in> {0, 2}" by (by100 blast)
+            moreover have "{i. i < length scheme \<and> fst (scheme ! i) = fst (scheme ! i')} = {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')}"
+              by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          ultimately have hge1: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<ge> 1"
+            and hin02: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<in> {0, 2}" by auto
+          show ?thesis
+          proof (cases "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} = 0")
+            case True thus ?thesis using hge1 by (by100 linarith)
+          next
+            case False thus ?thesis using hin02 by (by100 blast)
+          qed
+        qed
+        from partner_props[OF conjunct1[OF hsel] hcard]
+        have hpartner: "partner i' < ?n" by (by100 blast)
+        \<comment> \<open>q p0 = edge\\_pt(partner i', s) where s \\<in> {t', 1-t'}.\<close>
+        define j where "j = partner i'"
+        define s where "s = (if snd(scheme!i') = snd(scheme!j) then t' else 1 - t')"
+        have "q p0 = edge_pt j s"
+          unfolding q_def using hex
+          sorry \<comment> \<open>Unfold q\\_def: condition is true, SOME picks sel, partner gives j, direction gives s.\<close>
+        moreover have "j < ?n" using hpartner unfolding j_def by (by100 simp)
+        moreover have "0 \<le> s" "s \<le> 1" using hsel unfolding s_def by (by100 auto)+
+        ultimately show "\<exists>j t'. j < ?n \<and> 0 \<le> t' \<and> t' \<le> 1 \<and> q p0 = edge_pt j t'"
+          by (by100 blast)
+      qed
       from True obtain i t where hit: "i < ?n" "0 \<le> t" "t \<le> 1" "p' = edge_pt i t" "\<not> is_canonical i"
         by (by100 blast)
       have hex: "\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p' = edge_pt i t \<and> \<not> is_canonical i"
