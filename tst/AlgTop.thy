@@ -1163,7 +1163,16 @@ proof -
        = (if snd(scheme!i) = snd(scheme!j)
           then q ((1-t)*vx j + t*vx(Suc j mod ?n), (1-t)*vy j + t*vy(Suc j mod ?n))
           else q (t*vx j + (1-t)*vx(Suc j mod ?n), t*vy j + (1-t)*vy(Suc j mod ?n))))"
-    sorry \<comment> \<open>By construction of q: paired edges map to same canonical points.\<close>
+  proof (intro allI impI ballI)
+    fix i j t assume hi: "i < ?n" and hj: "j < ?n" and hlabel: "fst(scheme!i) = fst(scheme!j)"
+      and ht: "t \<in> I_set"
+    \<comment> \<open>Need: q(edge\\_pt i t) = (if same\\_dir then q(edge\\_pt j t) else q(edge\\_pt j (1-t))).\<close>
+    show "q ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))
+       = (if snd(scheme!i) = snd(scheme!j)
+          then q ((1-t)*vx j + t*vx(Suc j mod ?n), (1-t)*vy j + t*vy(Suc j mod ?n))
+          else q (t*vx j + (1-t)*vx(Suc j mod ?n), t*vy j + (1-t)*vy(Suc j mod ?n)))"
+      sorry \<comment> \<open>Case split on i=j, i canonical, j canonical. Uses q\\_def + partner\\_props.\<close>
+  qed
   \<comment> \<open>C9: Interior injectivity + boundary identification pattern.\<close>
   have hC9_interior: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
               p \<noteq> ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n)))
