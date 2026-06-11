@@ -3691,9 +3691,34 @@ proof -
   \<comment> \<open>Y is a quotient of w. Take Y'=Y, TY'=TY, h=id.\<close>
   moreover have "is_topology_on Y TY"
     using hassms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  ultimately have "\<exists>(Y'::'a set) TY' h. top1_quotient_of_scheme_on Y' TY' w \<and> top1_homeomorphism_on Y TY Y' TY' h"
-    sorry \<comment> \<open>Identity homeomorphism: Y \\<cong> Y via id. Needs homeomorphism\\_id.\<close>
-  thus ?thesis .
+  \<comment> \<open>Construct identity homeomorphism inline (homeomorphism\\_id is defined later).\<close>
+  moreover have "top1_homeomorphism_on Y TY Y TY id"
+  proof -
+    have hid_cont: "top1_continuous_map_on Y TY Y TY id"
+      by (rule top1_continuous_map_on_id[OF \<open>is_topology_on Y TY\<close>])
+    have hinv: "\<forall>x\<in>Y. inv_into Y id x = x"
+    proof
+      fix x assume "x \<in> Y"
+      thus "inv_into Y id x = x" using inv_into_f_f[OF inj_on_id \<open>x \<in> Y\<close>] by simp
+    qed
+    have "top1_continuous_map_on Y TY Y TY (inv_into Y id)"
+      unfolding top1_continuous_map_on_def
+    proof (intro conjI ballI allI impI)
+      fix x assume "x \<in> Y" thus "inv_into Y id x \<in> Y" using hinv by (by100 simp)
+    next
+      fix V assume hV: "V \<in> TY"
+      have "{x \<in> Y. inv_into Y id x \<in> V} = {x \<in> Y. id x \<in> V}"
+        using hinv by (by100 auto)
+      thus "{x \<in> Y. inv_into Y id x \<in> V} \<in> TY"
+        using hid_cont hV unfolding top1_continuous_map_on_def by (by100 simp)
+    qed
+    thus ?thesis unfolding top1_homeomorphism_on_def
+      using \<open>is_topology_on Y TY\<close> hid_cont by (by100 simp)
+  qed
+  ultimately show ?thesis
+    apply (intro exI[of _ Y] exI[of _ TY] exI[of _ id] conjI)
+    apply assumption+
+    done
 qed
 
 \<comment> \<open>Uncancel at front — homeomorphic-realization form.\<close>
