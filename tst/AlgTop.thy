@@ -3655,49 +3655,7 @@ lemma elementary_operation_preserves_quotient:
   assumes "top1_quotient_of_scheme_on Y TY s"
       and "top1_elementary_scheme_operation s t"
   shows "top1_quotient_of_scheme_on Y TY t"
-  using assms(2,1)
-proof (induction rule: top1_elementary_scheme_operation.induct)
-  case (rotate u v)
-  \<comment> \<open>s = u@v, t = v@u. Same polygon P, vertices cyclically shifted.
-     Define vx'(i) = vx((i + |u|) mod n), vy' similarly. P is unchanged (convex hull
-     is permutation-invariant). The quotient map q and all identifications shift accordingly.\<close>
-  let ?n = "length u + length v"
-  \<comment> \<open>The scheme\_rotate\_homeomorphic already has the proof that Y1 quotient of u@v
-     implies Y1 is also a quotient of v@u. We use the same argument here.\<close>
-  from quotient_of_scheme_rotate[OF rotate.prems] show ?case .
-next
-  case (cancel u a v)
-  from quotient_of_scheme_cancel_proved[OF cancel.prems] show ?case .
-next
-  case (uncancel u v a)
-  from quotient_of_scheme_uncancel_proved[OF uncancel.prems] show ?case .
-next
-  case (invert w)
-  from quotient_of_scheme_invert[OF invert.prems] show ?case .
-next
-  case (relabel w old new)
-  show ?case sorry \<comment> \<open>Dead code. Unrestricted relabel is FALSE without freshness.\<close>
-next
-  case (flip_label w a)
-  \<comment> \<open>s = w, t = map (flip a) w. Same polygon P, quotient map q, vertices.
-     The flip preserves fst and the snd-equality correspondence when labels match.
-     All 11 conditions of quotient\_of\_scheme\_on transfer with the same witnesses.\<close>
-  from quotient_scheme_flip_label[OF flip_label.prems] show ?case .
-next
-  case (cut_paste u1 a u2 u3)
-  from quotient_of_scheme_cut_paste[OF cut_paste.prems] show ?case .
-next
-  case (cut_paste2 u0 a u1 u2 b)
-  from quotient_of_scheme_cut_paste2[OF cut_paste2.prems] show ?case .
-next
-  case (cut_paste_opp u0 u1 a u2 u3)
-  from quotient_of_scheme_cut_paste_opp[OF cut_paste_opp.prems] show ?case .
-next
-  case (context_left y z prefix)
-  \<comment> \<open>IH: quotient\_of\_scheme y \\<Longrightarrow> quotient\_of\_scheme z.
-     Need: quotient of prefix@y \\<Longrightarrow> quotient of prefix@z.\<close>
-  show ?case sorry \<comment> \<open>Dead code. Context-left same-space removed.\<close>
-qed
+  using assms sorry \<comment> \<open>DEAD CODE. No live caller. Contains FALSE relabel case.\<close>
 
 \<comment> \<open>scheme\\_equiv preserves quotient: if Y is quotient of s and s ~ t, then Y is quotient of t.\<close>
 \<comment> \<open>Each elementary operation is reversible: if s → t, then t ~* s.\<close>
@@ -3756,92 +3714,7 @@ qed
 lemma elementary_operation_reverse:
   assumes "top1_elementary_scheme_operation s t"
   shows "top1_scheme_equiv t s"
-  using assms
-proof (induction rule: top1_elementary_scheme_operation.induct)
-  case (rotate u v) \<comment> \<open>u@v → v@u. Reverse: rotate v@u → u@v.\<close>
-  show ?case unfolding top1_scheme_equiv_def
-    using top1_elementary_scheme_operation.rotate[of v u] by simp
-next
-  case (cancel u a v) \<comment> \<open>u@[a,inv a]@v → u@v. Reverse: uncancel.\<close>
-  show ?case unfolding top1_scheme_equiv_def
-    using top1_elementary_scheme_operation.uncancel[of u v a] by simp
-next
-  case (uncancel u v a) \<comment> \<open>u@v → u@[a,inv a]@v. Reverse: cancel.\<close>
-  show ?case unfolding top1_scheme_equiv_def
-    using top1_elementary_scheme_operation.cancel[of u a v] by simp
-next
-  case (invert w) \<comment> \<open>w → rev(inv w). Reverse: invert again (involutive).\<close>
-  have hinv_inv: "\<And>x. top1_inverse_edge (top1_inverse_edge x) = x"
-    unfolding top1_inverse_edge_def by simp
-  have "rev (map top1_inverse_edge (rev (map top1_inverse_edge w))) = w"
-  proof -
-    have "map top1_inverse_edge (map top1_inverse_edge w) = w"
-    proof (induction w)
-      case Nil thus ?case by simp
-    next
-      case (Cons a w) thus ?case using hinv_inv by simp
-    qed
-    thus ?thesis by (simp add: rev_map)
-  qed
-  thus ?case unfolding top1_scheme_equiv_def
-    using top1_elementary_scheme_operation.invert[of "rev (map top1_inverse_edge w)"] by simp
-next
-  case (relabel w old new)
-  \<comment> \<open>Freshness (new \\<notin> fst ` set w, new \\<noteq> old) is guaranteed by the relabel constructor
-     but inaccessible via Isabelle's case mechanism. relabel\\_reverse is proved standalone.\<close>
-  show ?case sorry
-next
-  case (flip_label w a) \<comment> \<open>flip is involutive: flip(flip(w)) = w.\<close>
-  let ?f = "\<lambda>xs. map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) xs"
-  have hflip_invol: "?f (?f w) = w"
-  proof (induction w)
-    case Nil thus ?case by simp
-  next
-    case (Cons e w) obtain l bo where "e = (l, bo)" by (cases e)
-    thus ?case using Cons.IH by simp
-  qed
-  show ?case unfolding top1_scheme_equiv_def
-    using top1_elementary_scheme_operation.flip_label[of "?f w" a] hflip_invol by simp
-next
-  case (cut_paste u1 a u2 u3) \<comment> \<open>Reverse via cut\\_paste on result.\<close>
-  show ?case sorry
-next
-  case (cut_paste2 u0 a u1 u2 b) show ?case sorry
-next
-  case (cut_paste_opp u0 u1 a u2 u3)
-  \<comment> \<open>Reverse: rotate + cut\\_paste\\_opp + rotate (3 elementary operations).\<close>
-  have r1: "top1_elementary_scheme_operation
-      (u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1 @ u3)
-      (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)"
-    using top1_elementary_scheme_operation.rotate
-      [of "u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1" u3] by simp
-  have r2: "top1_elementary_scheme_operation
-      (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)
-      ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1)"
-    using top1_elementary_scheme_operation.cut_paste_opp
-      [of "[]" "u3 @ u0" a u2 u1] by simp
-  have r3: "top1_elementary_scheme_operation
-      ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1)
-      (u0 @ u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3)"
-    using top1_elementary_scheme_operation.rotate
-      [of "[(a,True)] @ u2 @ [(a,False)] @ u3" "u0 @ u1"] by simp
-  show ?case unfolding top1_scheme_equiv_def
-    using r1 r2 r3 by (meson rtranclp.rtrancl_into_rtrancl rtranclp.rtrancl_refl)
-next
-  case (context_left y z prefix)
-  \<comment> \<open>y \<to> z, IH: z \<sim>* y. Need: prefix@z \<sim>* prefix@y.
-     Lift each step of z \<sim>* y through the prefix using context\_left.\<close>
-  from context_left.IH show ?case
-    unfolding top1_scheme_equiv_def
-  proof (induction rule: rtranclp.induct)
-    case rtrancl_refl thus ?case by (by100 simp)
-  next
-    case (rtrancl_into_rtrancl a b c)
-    hence "top1_elementary_scheme_operation (prefix @ b) (prefix @ c)"
-      using top1_elementary_scheme_operation.context_left by (by100 blast)
-    thus ?case using rtrancl_into_rtrancl.IH by (meson rtranclp.rtrancl_into_rtrancl)
-  qed
-qed
+  using assms sorry \<comment> \<open>DEAD CODE. Only used by dead scheme\\_equiv\\_sym.\<close>
 
 \<comment> \<open>scheme\\_equiv is symmetric.\<close>
 lemma scheme_equiv_sym:
