@@ -563,7 +563,14 @@ proof -
     proof -
       \<comment> \<open>Step 1: cross = sum - sin(\\<beta>-\\<alpha>) = 2*sin((\\<beta>-\\<alpha>)/2)*[cos bracket - cos half].\<close>
       have da2: "sin (?\<beta> - ?\<alpha>) = 2 * sin ((?\<beta> - ?\<alpha>)/2) * cos ((?\<beta> - ?\<alpha>)/2)"
-        sorry \<comment> \<open>sin\\_double for (\\<beta>-\\<alpha>)/2.\<close>
+      proof -
+        have h2ne: "(2::real) \<noteq> 0" by (by100 simp)
+        have h2x2: "(2::real) * ((?\<beta> - ?\<alpha>) / 2) = ?\<beta> - ?\<alpha>"
+          using nonzero_mult_div_cancel_left[OF h2ne, of "?\<beta> - ?\<alpha>"] by (by100 simp)
+        have "sin (2 * ((?\<beta> - ?\<alpha>) / 2)) = 2 * sin ((?\<beta> - ?\<alpha>) / 2) * cos ((?\<beta> - ?\<alpha>) / 2)"
+          by (rule sin_double)
+        thus ?thesis by (subst (asm) h2x2) (by100 assumption)
+      qed
       have step2: "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)
         = 2 * sin ((?\<beta> - ?\<alpha>)/2) * (cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) - cos ((?\<beta> - ?\<alpha>)/2))"
         using sum_eq da2 by (by100 algebra)
