@@ -3627,16 +3627,63 @@ proof -
           (vx k - vx i) * (vy (Suc i mod ?n) - vy i)
           - (vy k - vy i) * (vx (Suc i mod ?n) - vx i) < 0"
     by (rule quotient_of_scheme_extract_vx)
-  \<comment> \<open>Now I have all 11 conditions for the old polygon with scheme [a,inv a]@w.
-     Need to construct a quotient of w and show it's homeomorphic to Y.\<close>
-  \<comment> \<open>The cancel pair at edges 0,1 means: fst(scheme!0) = fst(scheme!1) = fst a,
-     snd(scheme!0) \\<noteq> snd(scheme!1). By hC7, q identifies edges 0,1 (reversed).
-     The "folding" collapses v\\_0, v\\_1, v\\_2 into the quotient.
-     Key: q(v\\_0) = q(v\\_2) (vertices at ends of cancel pair map to same point).\<close>
-  \<comment> \<open>TODO: Construct P' = convex hull of (vx(i+2), vy(i+2)) for i<length w.
-     Show quotient\\_of\\_scheme\\_on Y TY w with these witnesses.
-     Then use same\\_space\\_implies\\_homeo\\_realization for the identity homeomorphism.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Now construct the same-space quotient of w using shifted vertices.\<close>
+  let ?n' = "length w"
+  \<comment> \<open>Shifted vertices: skip first 2.\<close>
+  define vx' where "vx' i = vx (i + 2)" for i
+  define vy' where "vy' i = vy (i + 2)" for i
+  \<comment> \<open>New polygon: convex hull of shifted vertices.\<close>
+  define P' where "P' = {(x::real,y::real). \<exists>coeffs. (\<forall>i<?n'. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n'. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n'. coeffs i * vx' i)
+                     \<and> y = (\<Sum>i<?n'. coeffs i * vy' i)}"
+  \<comment> \<open>Index correspondence: w!i = scheme!(i+2).\<close>
+  have hscheme_shift: "\<And>i. i < ?n' \<Longrightarrow> w ! i = scheme ! (i + 2)"
+    unfolding scheme_def by (by100 simp)
+  \<comment> \<open>Show quotient\\_of\\_scheme\\_on Y TY w using P', q, vx', vy'.\<close>
+  have "top1_quotient_of_scheme_on Y TY w"
+    unfolding top1_quotient_of_scheme_on_def
+  proof (intro conjI)
+    show "is_topology_on_strict Y TY"
+      using hassms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  next
+    show "\<exists>P q vx vy. top1_is_polygonal_region_on P ?n' \<and>
+        top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q \<and>
+        (\<forall>i<?n'. \<forall>j<?n'. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)) \<and>
+        (\<forall>i<?n'. (vx i, vy i) \<in> P) \<and>
+        P = {(x,y) | x y. \<exists>coeffs. (\<forall>i<?n'. coeffs i \<ge> 0) \<and> (\<Sum>i<?n'. coeffs i) = 1
+                       \<and> x = (\<Sum>i<?n'. coeffs i * vx i) \<and> y = (\<Sum>i<?n'. coeffs i * vy i)} \<and>
+        (\<forall>i<?n'. \<forall>j<?n'.
+              i \<noteq> j \<longrightarrow> Suc i mod ?n' \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n' \<longrightarrow>
+              (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+                 ((1-s)*vx i + s*vx(Suc i mod ?n'), (1-s)*vy i + s*vy(Suc i mod ?n'))
+               \<noteq> ((1-t)*vx j + t*vx(Suc j mod ?n'), (1-t)*vy j + t*vy(Suc j mod ?n')))) \<and>
+        (\<forall>i<?n'. \<forall>j<?n'. fst(w!i) = fst(w!j) \<longrightarrow>
+              (\<forall>t\<in>I_set. q((1-t)*vx i + t*vx(Suc i mod ?n'), (1-t)*vy i + t*vy(Suc i mod ?n'))
+               = (if snd(w!i) = snd(w!j)
+                  then q((1-t)*vx j + t*vx(Suc j mod ?n'), (1-t)*vy j + t*vy(Suc j mod ?n'))
+                  else q(t*vx j + (1-t)*vx(Suc j mod ?n'), t*vy j + (1-t)*vy(Suc j mod ?n'))))) \<and>
+        (\<forall>p\<in>P. (\<forall>i<?n'. \<forall>t\<in>I_set.
+                    p \<noteq> ((1-t)*vx i + t*vx(Suc i mod ?n'), (1-t)*vy i + t*vy(Suc i mod ?n')))
+               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')) \<and>
+        (\<forall>i<?n'. \<forall>j<?n'. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+              q((1-t)*vx i + t*vx(Suc i mod ?n'), (1-t)*vy i + t*vy(Suc i mod ?n'))
+            = q((1-s)*vx j + s*vx(Suc j mod ?n'), (1-s)*vy j + s*vy(Suc j mod ?n'))
+            \<longrightarrow> (i=j \<and> t=s) \<or> (fst(w!i) = fst(w!j) \<and>
+                 (if snd(w!i) = snd(w!j) then s=t else s=1-t))) \<and>
+        (\<forall>i<?n'. let cx = (\<Sum>j<?n'. vx j)/real ?n'; cy = (\<Sum>j<?n'. vy j)/real ?n'
+             in (vx i - cx)*(vy(Suc i mod ?n') - cy) - (vy i - cy)*(vx(Suc i mod ?n') - cx) > 0) \<and>
+        (\<forall>i<?n'. \<forall>k<?n'.
+              k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n' \<longrightarrow>
+              (vx k - vx i)*(vy(Suc i mod ?n') - vy i) - (vy k - vy i)*(vx(Suc i mod ?n') - vx i) < 0)"
+      sorry \<comment> \<open>Witnesses: P', q, vx', vy'. Each condition transfers from hC1-hC11 via index shift.\<close>
+  qed
+  \<comment> \<open>Y is a quotient of w. Take Y'=Y, TY'=TY, h=id.\<close>
+  moreover have "is_topology_on Y TY"
+    using hassms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  ultimately have "\<exists>(Y'::'a set) TY' h. top1_quotient_of_scheme_on Y' TY' w \<and> top1_homeomorphism_on Y TY Y' TY' h"
+    sorry \<comment> \<open>Identity homeomorphism: Y \\<cong> Y via id. Needs homeomorphism\\_id.\<close>
+  thus ?thesis .
 qed
 
 \<comment> \<open>Uncancel at front — homeomorphic-realization form.\<close>
