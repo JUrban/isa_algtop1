@@ -271,7 +271,25 @@ next
 next
   case (v_cut_paste2 b u0 a u1 u2) show ?case sorry
 next
-  case (v_cut_paste_opp u0 u1 a u2 u3) show ?case sorry
+  case (v_cut_paste_opp u0 u1 a u2 u3)
+  \<comment> \<open>Reverse of cut\\_paste\\_opp via: rotate + cut\\_paste\\_opp + rotate.
+     Result: u0 @ [(a,T)] @ u2 @ [(a,F)] @ u1 @ u3.
+     (1) Rotate by |u3|: u3 @ u0 @ [(a,T)] @ u2 @ [(a,F)] @ u1.
+     (2) cut\\_paste\\_opp with u0'=[], u1'=u3@u0: [(a,T)] @ u2 @ [(a,F)] @ u3 @ u0 @ u1.
+     (3) Rotate back: u0 @ u1 @ [(a,T)] @ u2 @ [(a,F)] @ u3. Done.\<close>
+  let ?r = "u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1 @ u3"
+  let ?orig = "u0 @ u1 @ [(a,True)] @ u2 @ [(a,False)] @ u3"
+  have r1: "top1_valid_scheme_equiv ?r (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate
+      [of "u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1" u3]] by (by100 simp)
+  have r2: "top1_valid_scheme_equiv (u3 @ u0 @ [(a,True)] @ u2 @ [(a,False)] @ u1)
+            ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1)"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_cut_paste_opp
+      [of "[]" "u3 @ u0" a u2 u1]] by (by100 simp)
+  have r3: "top1_valid_scheme_equiv ([(a,True)] @ u2 @ [(a,False)] @ u3 @ u0 @ u1) ?orig"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate
+      [of "[(a,True)] @ u2 @ [(a,False)] @ u3" "u0 @ u1"]] by (by100 simp)
+  from r1 r2 r3 show ?case using valid_equiv_trans by (by100 blast)
 next
   case (v_context_left y z prefix)
   \<comment> \<open>IH: valid\\_scheme\\_equiv z y. Lift through prefix.\<close>
