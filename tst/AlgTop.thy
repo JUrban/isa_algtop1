@@ -957,8 +957,9 @@ proof -
     qed
   qed
   \<comment> \<open>C6: non-adjacent edge interiors don't intersect (strict convexity implies this).\<close>
-  have hC6: "True"
-    sorry \<comment> \<open>C6 placeholder. Non-adjacent edges don't intersect.\<close>
+  \<comment> \<open>C6: non-adjacent edge interiors don't intersect. Follows from strict convexity (C11).
+     Parse issue with interval notation in this context. Keeping as sorry.\<close>
+  have hC6_trivial: "True" sorry
   show ?thesis sorry \<comment> \<open>Remaining: C2 (quotient map), C8 (identification), C9 (injectivity).
      These require the proper definition of q (not identity).\<close>
 qed
