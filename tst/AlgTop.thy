@@ -211,6 +211,12 @@ proof -
   thus ?thesis unfolding t_def by (rule valid_imp_equiv)
 qed
 
+\<comment> \<open>Cancel reverse: u@v is validly equivalent to u@[a,inv a]@v.
+   Easy case: fst a fresh. Hard case: fst a already in u@v (needs combinatorial argument).\<close>
+lemma valid_cancel_reverse:
+  "top1_valid_scheme_equiv (u @ v) (u @ [a, top1_inverse_edge a] @ v)"
+  sorry
+
 \<comment> \<open>Each valid operation is reversible (valid\\_scheme\\_equiv is symmetric).\<close>
 lemma valid_operation_reverse:
   "top1_valid_scheme_operation s t \<Longrightarrow> top1_valid_scheme_equiv t s"
@@ -219,8 +225,7 @@ proof (induction rule: top1_valid_scheme_operation.induct)
   show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate[of v u]] by (by100 simp)
 next
   case (v_cancel u a v)
-  \<comment> \<open>Reverse of cancel is uncancel. Freshness: fst a is already in u@[a,inv a]@v.\<close>
-  show ?case sorry \<comment> \<open>uncancel needs fst a \\<notin> scheme\\_labels(u@v), not always true.\<close>
+  from valid_cancel_reverse[of u v a] show ?case .
 next
   case (v_uncancel a u v)
   show ?case using valid_imp_equiv[OF top1_valid_scheme_operation.v_cancel[of u a v]] by (by100 simp)
