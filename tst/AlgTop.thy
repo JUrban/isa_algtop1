@@ -15,25 +15,23 @@ proof -
   thus "length w \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
 qed
 
-\<comment> \<open>Cut-paste: quotient preserved by cut-and-repaste operation.\<close>
+\<comment> \<open>Cut-paste preservation: all three should ideally be derived from one polygon
+   cut-reglue theorem (per audit 22 §5.5). Currently separate same-space sorrys.
+   The final proof should use homeomorphic realization, not same-space.\<close>
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
   shows "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
-  sorry
+  sorry \<comment> \<open>Cut-paste §76(iv). Needs polygon cut-reglue (audit 22 §5.5).\<close>
 
-\<comment> \<open>Cut-paste2: quotient preserved by second cut-paste variant.\<close>
 lemma quotient_of_scheme_cut_paste2:
   assumes "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)"
   shows "top1_quotient_of_scheme_on Y TY ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
-  sorry
+  sorry \<comment> \<open>Cut-paste2 §76(v). Same polygon cut-reglue.\<close>
 
-\<comment> \<open>Cut-paste opposite: quotient preserved by opposite-direction cut-paste.
-   Same polygon, permuted edge positions. Uses quotient\\_of\\_scheme\\_transfer\\_bij (defined later).
-   Proof deferred to after transfer\\_bij.\<close>
 lemma quotient_of_scheme_cut_paste_opp:
   assumes "top1_quotient_of_scheme_on Y TY (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
   shows "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
-  sorry \<comment> \<open>Same-space preservation; needs new polygon witnesses (transfer\\_bij won't work).\<close>
+  sorry \<comment> \<open>Cut-paste-opp §76(ix). Same polygon cut-reglue.\<close>
 
 \<comment> \<open>Scheme quotient existence: every scheme of length \\<ge> 3 has a quotient realization.
    Construction: regular n-gon P with vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).
