@@ -555,7 +555,11 @@ proof -
     have hsin_half: "sin ((?\<beta> - ?\<alpha>)/2) > 0"
       sorry \<comment> \<open>sin((\\<beta>-\\<alpha>)/2) > 0. Half of an angle with positive sine in the right range.\<close>
     have hcos_lt: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) < cos ((?\<beta> - ?\<alpha>)/2)"
-      sorry \<comment> \<open>The key cosine comparison. Uses k \\<noteq> i, k \\<noteq> Suc i mod n.\<close>
+      sorry \<comment> \<open>Key cosine comparison. Uses cos\\_monotone\\_0\\_pi or cos\\_mono\\_less\\_eq.
+         For i<n-1: (\\<beta>-\\<alpha>)/2 = \\<pi>/n, (\\<beta>+\\<alpha>-2\\<gamma>)/2 = \\<pi>(2i+1-2k)/n.
+         cos(\\<pi>(2m-1)/n) < cos(\\<pi>/n) for m=(k-i) mod n \\<in> {2,...,n-1}
+         because (2m-1)\\<pi>/n > \\<pi>/n and both in decreasing range of cos.
+         For i=n-1: (\\<beta>-\\<alpha>)/2 = -\\<pi>(n-1)/n, different sign handling needed.\<close>
     show "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
     proof -
       \<comment> \<open>The final assembly:
