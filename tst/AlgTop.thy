@@ -943,11 +943,12 @@ next
     thus ?thesis using hh1' by (rule homeo_realization_flat_introI)
   next
     case False
-    \<comment> \<open>Short scheme: length(u@v) < 3. The result has \\<le> 2 edges.
-       The polygon model requires \\<ge> 3 sides, so quotient\\_of\\_scheme\\_on can't hold.
-       But the NF proof only applies cancel when length \\<ge> 6, so this case
-       never arises in practice. Sorry for completeness.\<close>
-    show ?thesis sorry \<comment> \<open>Short scheme cancel: length(u@v) < 3. Degenerate case.\<close>
+    \<comment> \<open>Short scheme: length(u@v) < 3. Statement is genuinely FALSE here
+       (e.g. [a,inv a,b,inv b] has a 4-gon quotient, but [b,inv b] has no 2-gon quotient).
+       Per audit 22 §5.2: either add length(t) \\<ge> 3 precondition, or prove impossible
+       under downstream proper-scheme assumptions.
+       For now: sorry (never arises in the classification chain).\<close>
+    show ?thesis sorry \<comment> \<open>Genuinely false for length(u@v)=2. Needs precondition.\<close>
   qed
 next
   case (v_uncancel a u v)
