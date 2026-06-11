@@ -1252,8 +1252,20 @@ proof -
         define j where "j = partner i'"
         define s where "s = (if snd(scheme!i') = snd(scheme!j) then t' else 1 - t')"
         have "q p0 = edge_pt j s"
-          unfolding q_def using hex
-          sorry \<comment> \<open>Unfold q\\_def: condition is true, SOME picks sel, partner gives j, direction gives s.\<close>
+        proof -
+          \<comment> \<open>q\\_def: q p0 = if \\<exists>... then let (i,t) = SOME... in ... else p0.
+             The \\<exists> is true (hex), so q enters the THEN branch.\<close>
+          have q_eq: "q p0 = (let (i,t) = sel
+                 in let j' = partner i
+                 in if snd(scheme!i) = snd(scheme!j') then edge_pt j' t else edge_pt j' (1-t))"
+            unfolding q_def sel_def using hex by (by100 auto)
+          \<comment> \<open>sel = (i', t'), so the let destructures to i = i', t = t'.\<close>
+          have "sel = (i', t')" unfolding i'_def t'_def by (by100 simp)
+          hence "q p0 = (let j' = partner i'
+                 in if snd(scheme!i') = snd(scheme!j') then edge_pt j' t' else edge_pt j' (1-t'))"
+            using q_eq by (by100 simp)
+          thus ?thesis unfolding j_def s_def by (by100 simp)
+        qed
         moreover have "j < ?n" using hpartner unfolding j_def by (by100 simp)
         moreover have "0 \<le> s" "s \<le> 1" using hsel unfolding s_def by (by100 auto)+
         ultimately show "\<exists>j t'. j < ?n \<and> 0 \<le> t' \<and> t' \<le> 1 \<and> q p0 = edge_pt j t'"
