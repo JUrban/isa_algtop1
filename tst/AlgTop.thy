@@ -323,8 +323,14 @@ proof -
     \<comment> \<open>Each term is ?w^k.\<close>
     have hw_k: "\<And>k. ?w ^ k = cis (real k * (2*pi/real ?n))"
       using DeMoivre by (by100 blast)
-    have hw_k': "\<And>k. cis (2*pi*real k/real ?n) = ?w ^ k"
-      sorry \<comment> \<open>DeMoivre + commutativity.\<close>
+    have hw_k': "\<And>k::nat. cis (2*pi*real k/real ?n) = ?w ^ k"
+    proof -
+      fix k :: nat
+      have eq: "(2::real)*pi*real k/real ?n = real k * (2*pi/real ?n)"
+        by (by100 algebra)
+      show "cis (2*pi*real k/real ?n) = ?w ^ k"
+        unfolding eq using hw_k[of k] by (by100 simp)
+    qed
     have sum_eq: "(\<Sum>k<?n. cis (2*pi*real k/real ?n)) = (\<Sum>k<?n. ?w ^ k)"
       using hw_k' by (intro sum.cong) (by100 simp)+
     \<comment> \<open>?w^n = cis(2\\<pi>) = 1.\<close>
