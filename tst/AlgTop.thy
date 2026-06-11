@@ -3565,8 +3565,36 @@ lemma front_cancel_realization_homeo:
   shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
     top1_quotient_of_scheme_on Y' TY' w \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
-  sorry \<comment> \<open>§76(vi): Cancel front. Construct n-gon from (n+2)-gon by folding cancelled edges.
-     Use quotient\\_transport\\_by\\_homeomorphism with polygon folding map.\<close>
+proof -
+  define scheme where "scheme = [a, top1_inverse_edge a] @ w"
+  define n where "n = length scheme"
+  have hn: "n = length w + 2" unfolding n_def scheme_def by simp
+  have hassms: "top1_quotient_of_scheme_on Y TY scheme" using assms unfolding scheme_def .
+  \<comment> \<open>Step 1: Extract old polygon data.\<close>
+  from quotient_of_scheme_extract[OF hassms]
+  obtain P q where
+      hP: "top1_is_polygonal_region_on P n"
+      and hq: "top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+    unfolding n_def by (by100 blast)
+  \<comment> \<open>Step 2: The cancelled edges (0,1) are identified by q.
+     Edge 0: from v\\_0 to v\\_1 with label a.
+     Edge 1: from v\\_1 to v\\_2 with label inv(a).
+     q maps edge 0 forward = edge 1 backward (opposite directions).
+     So q(v\\_0) = q(v\\_2) and edge 0/1 form a "spur" that folds.\<close>
+  \<comment> \<open>Step 3: Construct the new polygon P' with n-2 vertices.
+     The simplest approach: P' is the convex hull of circle-points
+     cos(2\\<pi>i/(n-2)), sin(2\\<pi>i/(n-2)) for i=0..n-3.
+     This is a FRESH regular polygon, not derived from P.\<close>
+  \<comment> \<open>Step 4: Define q' on P' using the scheme w.
+     For each pair of edges in w with the same label, q' identifies them.
+     q' is the quotient map that makes P'/q' a quotient of scheme w.\<close>
+  \<comment> \<open>Step 5: Apply quotient\\_transport\\_by\\_homeomorphism.
+     Construct h: P \\<to> P' that maps boundary correctly.
+     Show fibre agreement: q(x)=q(y) iff q'(h(x))=q'(h(y)).
+     Conclude Y \\<cong> Y'.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Uncancel at front — homeomorphic-realization form.\<close>
 lemma front_uncancel_realization_homeo:
