@@ -297,9 +297,94 @@ proof -
     using assms hC3 hextreme hC5 by (by100 blast)
   \<comment> \<open>C10: CCW orientation. For regular polygon, cross product
      (v\\_i - centroid) \\<times> (v\\_{i+1} - centroid) = sin(2\\<pi>/n) > 0.\<close>
+  \<comment> \<open>Centroid of regular n-gon is (0,0): sum of n-th roots of unity = 0.\<close>
+  have hcx0: "(\<Sum>j<?n. vx j) = 0"
+    sorry \<comment> \<open>Re(\\<Sum>k<n. cis(2\\<pi>k/n)) = Re(0) = 0 by geometric series.\<close>
+  have hcy0: "(\<Sum>j<?n. vy j) = 0"
+    sorry \<comment> \<open>Im(\\<Sum>k<n. cis(2\\<pi>k/n)) = Im(0) = 0 by geometric series.\<close>
+  \<comment> \<open>Cross product vx(i)*vy(i+1) - vy(i)*vx(i+1) = sin(2\\<pi>/n) for regular polygon.\<close>
+  have hcross: "\<And>i. i < ?n \<Longrightarrow> vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n) = sin (2 * pi / real ?n)"
+  proof -
+    fix i assume hi: "i < ?n"
+    let ?a = "2*pi*real i/real ?n"
+    let ?b = "2*pi*real (Suc i mod ?n)/real ?n"
+    have step1: "vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n)
+        = cos ?a * sin ?b - sin ?a * cos ?b" unfolding vx_def vy_def by (by100 simp)
+    have step2: "cos ?a * sin ?b - sin ?a * cos ?b = sin (?b - ?a)"
+      using sin_diff[of ?b ?a] by (by100 simp)
+    \<comment> \<open>Key: ?b - ?a = 2\\<pi> * (Suc i mod n - i) / n = 2\\<pi>/n (or 2\\<pi>*(n-i+1?)/n for wraparound).\<close>
+    have step3: "sin (?b - ?a) = sin (2*pi/real ?n)"
+    proof (cases "Suc i < ?n")
+      case True
+      \<comment> \<open>i < n-1: Suc i mod n = Suc i, so b-a = 2\\<pi>(i+1)/n - 2\\<pi>i/n = 2\\<pi>/n.\<close>
+      have "Suc i mod ?n = Suc i" using True by (by100 simp)
+      hence "?b - ?a = 2*pi*(real (Suc i))/real ?n - 2*pi*real i/real ?n" by (by100 simp)
+      also have "\<dots> = 2*pi/real ?n"
+        using assms by (simp add: of_nat_Suc divide_simps algebra_simps)
+      finally show ?thesis by (by100 simp)
+    next
+      case False
+      \<comment> \<open>i = n-1: Suc i mod n = 0, b-a = -2\\<pi>(n-1)/n. sin(-2\\<pi>(n-1)/n) = sin(2\\<pi>/n).\<close>
+      hence "i = ?n - 1" using hi by (by100 simp)
+      hence "Suc i = ?n" using hi by (by100 simp)
+      hence "Suc i mod ?n = 0" by (by100 simp)
+      hence h_mod0: "Suc i mod ?n = 0" by (by100 simp)
+      \<comment> \<open>Direct: sin(?b - ?a) = sin(2\\<pi>*0/n - 2\\<pi>*i/n) = sin(-2\\<pi>*(n-1)/n) = sin(2\\<pi>/n).\<close>
+      have "sin (?b - ?a) = sin (2*pi*real (Suc i mod ?n)/real ?n - 2*pi*real i/real ?n)"
+        by (by100 simp)
+      also have "\<dots> = sin (2*pi*real 0/real ?n - 2*pi*real i/real ?n)"
+        using h_mod0 by (by100 simp)
+      also have "\<dots> = sin (- (2*pi*real i/real ?n))" by (by100 simp)
+      also have "\<dots> = - sin (2*pi*real i/real ?n)" by (by100 simp)
+      also have "\<dots> = - sin (2*pi*real (?n - 1)/real ?n)"
+        using \<open>i = ?n - 1\<close> by (by100 simp)
+      also have "\<dots> = - sin (2*pi - 2*pi/real ?n)"
+        using assms by (simp add: divide_simps algebra_simps of_nat_diff)
+      also have "\<dots> = sin (2*pi/real ?n)"
+      proof -
+        have "sin (2*pi - 2*pi/real ?n) = - sin (2*pi/real ?n)"
+          using sin_minus[of "2*pi/real ?n"] by (simp add: sin_diff)
+        thus ?thesis by (by100 simp)
+      qed
+      finally show ?thesis sorry
+    qed
+    show "vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n) = sin (2*pi/real ?n)"
+      using step1 step2 step3 by (by100 simp)
+  qed
+  have hsin_pos: "sin (2 * pi / real ?n) > 0"
+  proof -
+    have hn_pos: "real ?n > 0" using assms by (by100 linarith)
+    have "2 * pi / real ?n > 0" using pi_gt_zero hn_pos by (by100 simp)
+    moreover have "2 * pi / real ?n < pi"
+    proof -
+      have "real ?n \<ge> 3" using assms by (by100 simp)
+      hence "2 * pi / real ?n \<le> 2 * pi / 3" using pi_gt_zero
+        by (intro divide_left_mono) (by100 auto)+
+      also have "\<dots> < pi" using pi_gt_zero by (by100 simp)
+      finally show ?thesis .
+    qed
+    ultimately show ?thesis using sin_gt_zero by (by100 blast)
+  qed
   have hC10: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx j)/real ?n; cy = (\<Sum>j<?n. vy j)/real ?n
        in (vx i - cx)*(vy(Suc i mod ?n) - cy) - (vy i - cy)*(vx(Suc i mod ?n) - cx) > 0"
-    sorry \<comment> \<open>Regular polygon vertices are CCW. Cross product = sin(2\\<pi>/n) > 0.\<close>
+  proof (intro allI impI, unfold Let_def)
+    fix i assume hi: "i < ?n"
+    \<comment> \<open>Goal: (vx i - cx)*(vy(i+1) - cy) - (vy i - cy)*(vx(i+1) - cx) > 0, where cx=\\<Sum>vx/n, cy=\\<Sum>vy/n.\<close>
+    have "(\<Sum>j<?n. vx j) / real ?n = 0" using hcx0 by (by100 simp)
+    moreover have "(\<Sum>j<?n. vy j) / real ?n = 0" using hcy0 by (by100 simp)
+    moreover have "vx i * vy(Suc i mod ?n) - vy i * vx(Suc i mod ?n) = sin (2*pi/real ?n)"
+      using hcross[OF hi] .
+    moreover note hsin_pos
+    ultimately have h1: "(\<Sum>j<?n. vx j) / real ?n = 0"
+      and h2: "(\<Sum>j<?n. vy j) / real ?n = 0"
+      and h3: "vx i * vy(Suc i mod ?n) - vy i * vx(Suc i mod ?n) = sin (2*pi/real ?n)"
+      and h4: "sin (2*pi/real ?n) > 0" by auto
+    show "(vx i - (\<Sum>j<?n. vx j) / real ?n) *
+       (vy (Suc i mod ?n) - (\<Sum>j<?n. vy j) / real ?n) -
+       (vy i - (\<Sum>j<?n. vy j) / real ?n) *
+       (vx (Suc i mod ?n) - (\<Sum>j<?n. vx j) / real ?n) > 0"
+      sorry \<comment> \<open>Assembly: cx=cy=0, cross product = sin(2\\<pi>/n) > 0. Simp/linarith timeout.\<close>
+  qed
   \<comment> \<open>C11: strict convexity. Every non-adjacent vertex is on the right of each edge.\<close>
   have hC11: "\<forall>i<?n. \<forall>k<?n.
         k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
