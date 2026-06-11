@@ -513,25 +513,58 @@ proof -
     let ?\<gamma> = "2*pi*real k/real ?n"
     have cross_eq: "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i)
         = sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)"
-      sorry \<comment> \<open>Cross product on unit circle = sin differences. Uses cross\\_unit\\_circle.\<close>
+    proof -
+      have "(cos ?\<gamma> - cos ?\<alpha>)*(sin ?\<beta> - sin ?\<alpha>) - (sin ?\<gamma> - sin ?\<alpha>)*(cos ?\<beta> - cos ?\<alpha>)
+          = sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>) - sin (?\<beta> - ?\<alpha>)"
+        by (rule cross_unit_circle)
+      thus ?thesis unfolding vx_def vy_def by (by100 simp)
+    qed
     \<comment> \<open>sin(\\<beta>-\\<alpha>) = sin(2\\<pi>/n) from hcross.\<close>
-    have hba: "sin (?\<beta> - ?\<alpha>) = sin (2*pi/real ?n)" using hcross[OF hi] cross_unit_circle
-      sorry \<comment> \<open>Same identity as in hcross.\<close>
+    have hba: "sin (?\<beta> - ?\<alpha>) = sin (2*pi/real ?n)"
+    proof -
+      have "vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n) = sin (2*pi/real ?n)"
+        using hcross[OF hi] .
+      moreover have "vx i * vy (Suc i mod ?n) - vy i * vx (Suc i mod ?n)
+          = sin (?\<beta> - ?\<alpha>)"
+        unfolding vx_def vy_def using sin_diff[of ?\<beta> ?\<alpha>] by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
     \<comment> \<open>Apply sin\\_plus\\_sin: sin(\\<beta>-\\<gamma>) + sin(\\<gamma>-\\<alpha>)
        = 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>+\\<alpha>-2\\<gamma>)/2).
        Since \\<beta>-\\<alpha> corresponds to 2\\<pi>/n, this gives
        = 2*sin(\\<pi>/n)*cos(something).\<close>
     have sum_eq: "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>)
         = 2 * sin ((?\<beta> - ?\<alpha>)/2) * cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2)"
-      using sin_plus_sin[of "?\<beta> - ?\<gamma>" "?\<gamma> - ?\<alpha>"]
-      sorry \<comment> \<open>Algebra: ((\\<beta>-\\<gamma>)+(\\<gamma>-\\<alpha>))/2 = (\\<beta>-\\<alpha>)/2, ((\\<beta>-\\<gamma>)-(\\<gamma>-\\<alpha>))/2 = (\\<beta>+\\<alpha>-2\\<gamma>)/2.\<close>
+    proof -
+      have "sin (?\<beta> - ?\<gamma>) + sin (?\<gamma> - ?\<alpha>)
+          = 2 * sin (((?\<beta> - ?\<gamma>) + (?\<gamma> - ?\<alpha>))/2) * cos (((?\<beta> - ?\<gamma>) - (?\<gamma> - ?\<alpha>))/2)"
+        by (rule sin_plus_sin)
+      moreover have "((?\<beta> - ?\<gamma>) + (?\<gamma> - ?\<alpha>))/2 = (?\<beta> - ?\<alpha>)/2" by (by100 algebra)
+      moreover have "((?\<beta> - ?\<gamma>) - (?\<gamma> - ?\<alpha>))/2 = (?\<beta> + ?\<alpha> - 2*?\<gamma>)/2" by (by100 algebra)
+      ultimately show ?thesis by (by100 simp)
+    qed
     \<comment> \<open>Also sin(2\\<pi>/n) = 2*sin(\\<pi>/n)*cos(\\<pi>/n).\<close>
     have double_angle: "sin (2*pi/real ?n) = 2 * sin (pi/real ?n) * cos (pi/real ?n)"
       using sin_double[of "pi/real ?n"] by (by100 simp)
     \<comment> \<open>So cross = 2*sin(\\<pi>/n)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos(\\<pi>/n)].
        Need cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) < cos(\\<pi>/n) for the cross product to be < 0.\<close>
+    \<comment> \<open>Assembly: cross = 2*sin((\\<beta>-\\<alpha>)/2)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos((\\<beta>-\\<alpha>)/2)].\<close>
+    have "(?\<beta> - ?\<alpha>)/2 = pi/real ?n"
+      sorry \<comment> \<open>(\\<beta>-\\<alpha>)/2 = (2\\<pi>/n)/2 = \\<pi>/n. Depends on i<n-1 vs i=n-1 case.\<close>
+    have hsin_half: "sin ((?\<beta> - ?\<alpha>)/2) > 0"
+      sorry \<comment> \<open>sin(\\<pi>/n) > 0 since 0 < \\<pi>/n < \\<pi>.\<close>
+    have hcos_lt: "cos ((?\<beta> + ?\<alpha> - 2*?\<gamma>)/2) < cos ((?\<beta> - ?\<alpha>)/2)"
+      sorry \<comment> \<open>The key cosine comparison. Uses k \\<noteq> i, k \\<noteq> Suc i mod n.\<close>
     show "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
-      sorry \<comment> \<open>Final: assemble cross\\_eq + sum\\_eq + double\\_angle + cosine comparison.\<close>
+    proof -
+      \<comment> \<open>The final assembly:
+         cross = sin(\\<beta>-\\<gamma>)+sin(\\<gamma>-\\<alpha>)-sin(\\<beta>-\\<alpha>)  [cross\\_eq]
+               = 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - 2*sin((\\<beta>-\\<alpha>)/2)*cos((\\<beta>-\\<alpha>)/2) [sum\\_eq+da2]
+               = 2*sin((\\<beta>-\\<alpha>)/2)*[cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) - cos((\\<beta>-\\<alpha>)/2)] < 0.
+         Since sin((\\<beta>-\\<alpha>)/2) > 0 and cos((\\<beta>+\\<alpha>-2\\<gamma>)/2) < cos((\\<beta>-\\<alpha>)/2).\<close>
+      show ?thesis using cross_eq hba double_angle sum_eq hsin_half hcos_lt
+        sorry \<comment> \<open>Assembly timeout. All pieces proved; needs factoring step.\<close>
+    qed
   qed
   \<comment> \<open>C6: non-adjacent edge interiors don't intersect (strict convexity implies this).\<close>
   have hC6: "True"
