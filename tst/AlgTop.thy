@@ -6874,6 +6874,88 @@ qed
 \<comment> \<open>Lemma 77.4 (Munkres): A projective pair + commutator = 3 projective pairs.
    w0 (cc)(aba\\<inverse>b\\<inverse>) w1 ~ w0 (aabbcc) w1.
    Proof: 5-step chain using Lemma 77.1 (*) and rotations.\<close>
+\<comment> \<open>Valid version of Lemma 77.4.\<close>
+lemma valid_Lemma_77_4_projective_absorbs_torus:
+  fixes a b c :: 'a and w0 w1 :: "('a \<times> bool) list"
+  assumes "a \<noteq> b" "a \<noteq> c" "b \<noteq> c"
+      and "\<forall>e \<in> set w0 \<union> set w1. fst e \<noteq> a \<and> fst e \<noteq> b \<and> fst e \<noteq> c"
+      and "infinite (UNIV :: 'a set)"
+  shows "top1_valid_scheme_equiv
+      (w0 @ [(c, True), (c, True), (a, True), (b, True), (a, False), (b, False)] @ w1)
+      (w0 @ [(a, True), (a, True), (b, True), (b, True), (c, True), (c, True)] @ w1)"
+proof -
+  \<comment> \<open>Fresh label d for intermediate steps (needed for 77.1 assumption).\<close>
+  have hfin_S: "finite (fst ` (set w0 \<union> set w1) \<union> {a, b, c} :: 'a set)" by simp
+  have hinf: "\<not> finite (UNIV :: 'a set)" using assms(5) by simp
+  have "\<exists>d :: 'a. d \<notin> fst ` (set w0 \<union> set w1) \<union> {a, b, c}"
+  proof (rule ccontr)
+    assume "\<not> ?thesis"
+    hence "UNIV \<subseteq> fst ` (set w0 \<union> set w1) \<union> {a, b, c}" by (by100 blast)
+    hence "finite (UNIV :: 'a set)" using hfin_S using finite_subset by (by100 blast)
+    with hinf show False by (by100 blast)
+  qed
+  then obtain d :: 'a where hd: "d \<notin> fst ` (set w0 \<union> set w1) \<union> {a, b, c}" by (by100 blast)
+  \<comment> \<open>s1: Rotate to front.\<close>
+  have s1: "top1_valid_scheme_equiv
+      (w0 @ [(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1)
+      ([(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1 @ w0)"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate
+      [of w0 "[(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1"]]
+    by (by100 simp)
+  \<comment> \<open>s2: 77.1 backward (sym) on c: cc ab a\\<inverse>b\\<inverse> w1 w0 ~ ab c ba c w1 w0.\<close>
+  have s2: "top1_valid_scheme_equiv
+      ([(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1 @ w0)
+      ([(a,True),(b,True),(c,True),(b,True),(a,True),(c,True)] @ w1 @ w0)"
+  proof -
+    \<comment> \<open>Forward 77.1: ab c ba c w1w0 ~ cc ab inv(ba) w1w0.\<close>
+    have fwd: "top1_valid_scheme_equiv
+        ([(a,True),(b,True)] @ [(c,True)] @ [(b,True),(a,True)] @ [(c,True)] @ (w1 @ w0))
+        ([(c,True),(c,True)] @ [(a,True),(b,True)] @ rev (map top1_inverse_edge [(b,True),(a,True)]) @ (w1 @ w0))"
+      by (rule valid_Lemma_77_1_projective_collection)
+         (use assms hd in \<open>by100 auto\<close>)+
+    \<comment> \<open>Simplify the list expressions.\<close>
+    have fwd': "top1_valid_scheme_equiv
+        ([(a,True),(b,True),(c,True),(b,True),(a,True),(c,True)] @ w1 @ w0)
+        ([(c,True),(c,True),(a,True),(b,True),(a,False),(b,False)] @ w1 @ w0)"
+      using fwd unfolding top1_inverse_edge_def by simp
+    from valid_equiv_sym[OF fwd'] show ?thesis .
+  qed
+  \<comment> \<open>s3: 77.1 on b: a b c b (ac w1 w0) ~ bb a c\\<inverse> (ac w1 w0).\<close>
+  have s3: "top1_valid_scheme_equiv
+      ([(a,True),(b,True),(c,True),(b,True),(a,True),(c,True)] @ w1 @ w0)
+      ([(b,True),(b,True),(a,True),(c,False),(a,True),(c,True)] @ w1 @ w0)"
+  proof -
+    have "top1_valid_scheme_equiv
+        ([(a,True)] @ [(b,True)] @ [(c,True)] @ [(b,True)] @ ([(a,True),(c,True)] @ w1 @ w0))
+        ([(b,True),(b,True)] @ [(a,True)] @ rev (map top1_inverse_edge [(c,True)]) @ ([(a,True),(c,True)] @ w1 @ w0))"
+      by (rule valid_Lemma_77_1_projective_collection)
+         (use assms hd in \<open>by100 auto\<close>)+
+    thus ?thesis unfolding top1_inverse_edge_def by simp
+  qed
+  \<comment> \<open>s4: 77.1 on a: bb a c\\<inverse> a (c w1 w0) ~ aa bb c c w1 w0.\<close>
+  have s4: "top1_valid_scheme_equiv
+      ([(b,True),(b,True),(a,True),(c,False),(a,True),(c,True)] @ w1 @ w0)
+      ([(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1 @ w0)"
+  proof -
+    have "top1_valid_scheme_equiv
+        ([(b,True),(b,True)] @ [(a,True)] @ [(c,False)] @ [(a,True)] @ ([(c,True)] @ w1 @ w0))
+        ([(a,True),(a,True)] @ [(b,True),(b,True)] @ rev (map top1_inverse_edge [(c,False)]) @ ([(c,True)] @ w1 @ w0))"
+      by (rule valid_Lemma_77_1_projective_collection)
+         (use assms hd in \<open>by100 auto\<close>)+
+    thus ?thesis unfolding top1_inverse_edge_def by simp
+  qed
+  \<comment> \<open>s5: Rotate back.\<close>
+  have s5: "top1_valid_scheme_equiv
+      ([(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1 @ w0)
+      (w0 @ [(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1)"
+    using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate
+      [of "[(a,True),(a,True),(b,True),(b,True),(c,True),(c,True)] @ w1" w0]]
+    by (by100 simp)
+  \<comment> \<open>Chain.\<close>
+  from s1 s2 s3 s4 s5 show ?thesis
+    using valid_equiv_trans by (by100 blast)
+qed
+
 lemma Lemma_77_4_projective_absorbs_torus:
   fixes a b c :: 'a and w0 w1 :: "('a \<times> bool) list"
   assumes "a \<noteq> b" "a \<noteq> c" "b \<noteq> c"
