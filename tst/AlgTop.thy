@@ -1221,7 +1221,36 @@ proof -
     have hY_eq: "Y = q ` P" unfolding Y_def by (by100 simp)
     \<comment> \<open>is\\_topology\\_on Y TY: Y = \\<Union>TY, TY closed under \\<union> and finite \\<inter>.\<close>
     have "is_topology_on Y TY"
-      sorry \<comment> \<open>Standard quotient topology is a topology.\<close>
+      unfolding is_topology_on_def
+    proof (intro conjI allI impI)
+      \<comment> \<open>1. \\<emptyset> \\<in> TY.\<close>
+      show "{} \<in> TY" unfolding TY_def
+      proof (intro CollectI exI[of _ "{}"] conjI)
+        show "({} :: (real \<times> real) set) \<subseteq> P" by (by100 simp)
+        show "\<forall>x\<in>{}. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> {}" by (by100 simp)
+        show "{} = q ` {}" by (by100 simp)
+        show "{} \<in> ?TP" using htopo_P unfolding is_topology_on_def by (by100 blast)
+      qed
+    next
+      \<comment> \<open>2. Y \\<in> TY.\<close>
+      show "Y \<in> TY" unfolding TY_def
+      proof (intro CollectI exI[of _ P] conjI)
+        show "P \<subseteq> P" by (by100 simp)
+        show "\<forall>x\<in>P. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> P" by (by100 simp)
+        show "Y = q ` P" unfolding Y_def by (by100 simp)
+        show "P \<in> ?TP" using htopo_P unfolding is_topology_on_def by (by100 blast)
+      qed
+    next
+      \<comment> \<open>3. Arbitrary union.\<close>
+      fix U :: "(real \<times> real) set set" assume "U \<subseteq> TY"
+      show "\<Union>U \<in> TY"
+        sorry \<comment> \<open>Union of saturated opens is saturated open.\<close>
+    next
+      \<comment> \<open>4. Finite intersection.\<close>
+      fix F :: "(real \<times> real) set set" assume "finite F \<and> F \<noteq> {} \<and> F \<subseteq> TY"
+      show "\<Inter>F \<in> TY"
+        sorry \<comment> \<open>Finite intersection of saturated opens is saturated open.\<close>
+    qed
     moreover have "TY \<subseteq> Pow Y"
     proof
       fix U assume "U \<in> TY"
