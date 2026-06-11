@@ -150,9 +150,16 @@ proof -
                    \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
     unfolding P_def by (by100 simp)
   \<comment> \<open>C1: P is a polygonal region. Need: n \\<ge> 3, distinct vertices, no vertex in hull of others.\<close>
+  \<comment> \<open>Extremality: no vertex is in convex hull of the others.\<close>
+  have hextreme: "\<forall>k<?n. \<not> (\<exists>coeffs. (\<forall>i<?n. i \<noteq> k \<longrightarrow> coeffs i \<ge> 0) \<and> coeffs k = 0
+            \<and> (\<Sum>i<?n. coeffs i) = 1
+            \<and> vx k = (\<Sum>i<?n. coeffs i * vx i) \<and> vy k = (\<Sum>i<?n. coeffs i * vy i))"
+    sorry \<comment> \<open>Regular polygon vertices are extreme points of their convex hull.
+       Proof: each vertex is the unique point maximizing the dot product with
+       its radial direction (cos(2\\<pi>k/n), sin(2\\<pi>k/n)). Standard convex geometry.\<close>
   have hC1: "top1_is_polygonal_region_on P ?n"
     unfolding top1_is_polygonal_region_on_def
-    sorry \<comment> \<open>n\\<ge>3 by assumption, distinctness from hC3, extremality from regular polygon geometry.\<close>
+    using assms hC3 hextreme hC5 by (by100 blast)
   show ?thesis sorry
 qed
 
