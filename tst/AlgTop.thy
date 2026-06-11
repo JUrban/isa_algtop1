@@ -91,6 +91,46 @@ proof -
     thus "partner i < ?n \<and> partner i \<noteq> i \<and> fst(scheme!(partner i)) = fst(scheme!i)"
       by (by100 simp)
   qed
+  \<comment> \<open>Partner uniqueness: for proper scheme, partner is the unique other edge with same label.\<close>
+  have partner_unique: "\<And>i j. i < ?n \<Longrightarrow> j < ?n \<Longrightarrow> i \<noteq> j \<Longrightarrow> fst(scheme!i) = fst(scheme!j) \<Longrightarrow>
+      partner i = j"
+  proof -
+    fix i j assume hi: "i < ?n" and hj: "j < ?n" and hij: "i \<noteq> j" and hlabel: "fst(scheme!i) = fst(scheme!j)"
+    \<comment> \<open>The set {k. k < n \\<and> fst(scheme!k) = fst(scheme!i)} has exactly 2 elements: i and j.\<close>
+    have hcard: "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} = 2"
+    proof -
+      have "i \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}" using hi by (by100 simp)
+      have hfin: "finite {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}" by (by100 simp)
+      have hne: "{k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} \<noteq> {}" using \<open>i \<in> _\<close> by (by100 blast)
+      have "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} \<noteq> 0" using hfin hne by (by100 simp)
+      hence "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} \<ge> 1" by (by100 linarith)
+      moreover have "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} \<in> {0, 2}"
+        using hproper by (by100 blast)
+      ultimately show ?thesis
+      proof (cases "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} = 0")
+        case True thus ?thesis using \<open>_ \<ge> 1\<close> by (by100 linarith)
+      next
+        case False thus ?thesis using \<open>_ \<in> {0,2}\<close> by (by100 blast)
+      qed
+    qed
+    \<comment> \<open>The set is exactly {i, j}.\<close>
+    have hset: "{k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} = {i, j}"
+    proof -
+      have "i \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}" using hi by (by100 simp)
+      have "j \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}" using hj hlabel by (by100 simp)
+      have "card {i, j} = 2" using hij by (by100 simp)
+      have "{i, j} \<subseteq> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}"
+        using \<open>i \<in> _\<close> \<open>j \<in> _\<close> by (by100 blast)
+      have hfin: "finite {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}" by (by100 simp)
+      from card_subset_eq[OF hfin \<open>{i,j} \<subseteq> _\<close>]
+      show ?thesis using hcard \<open>card {i,j} = 2\<close> by (by100 simp)
+    qed
+    \<comment> \<open>partner(i) is the unique k \\<noteq> i with same label. Since the set is {i,j}, partner(i) = j.\<close>
+    have "partner i \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} \<and> partner i \<noteq> i"
+      using partner_props[OF hi hcard] hlabel by (by100 blast)
+    hence "partner i \<in> {i, j} \<and> partner i \<noteq> i" using hset by (by100 blast)
+    thus "partner i = j" by (by100 blast)
+  qed
   \<comment> \<open>Quotient map: for points on non-canonical edges, map to canonical partner.
      For interior points and canonical edge points: identity.\<close>
   define q :: "(real \<times> real) \<Rightarrow> (real \<times> real)" where
@@ -1171,7 +1211,49 @@ proof -
        = (if snd(scheme!i) = snd(scheme!j)
           then q ((1-t)*vx j + t*vx(Suc j mod ?n), (1-t)*vy j + t*vy(Suc j mod ?n))
           else q (t*vx j + (1-t)*vx(Suc j mod ?n), t*vy j + (1-t)*vy(Suc j mod ?n)))"
-      sorry \<comment> \<open>Case split on i=j, i canonical, j canonical. Uses q\\_def + partner\\_props.\<close>
+    proof (cases "i = j")
+      case True
+      \<comment> \<open>i = j: trivially q(x) = q(x).\<close>
+      thus ?thesis by (by100 simp)
+    next
+      case False
+      \<comment> \<open>i \\<noteq> j: partner(i) = j and partner(j) = i.\<close>
+      have hpi: "partner i = j" using partner_unique[OF hi hj False hlabel] .
+      have hpj: "partner j = i" using partner_unique[OF hj hi False[symmetric] hlabel[symmetric]] .
+      have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+      \<comment> \<open>Case split: is edge i canonical or not?\<close>
+      show ?thesis
+      proof (cases "is_canonical i")
+        case True \<comment> \<open>Edge i canonical: q(edge\\_i(t)) = edge\\_i(t) (identity).\<close>
+        \<comment> \<open>Edge j non-canonical: partner(j) = i, so q(edge\\_j(s)) maps to edge\\_i.\<close>
+        have hi_canon: "is_canonical i" using True .
+        have hj_noncanon: "\<not> is_canonical j"
+        proof -
+          have "i \<le> partner i" using True unfolding is_canonical_def .
+          hence "i \<le> j" using hpi by (by100 simp)
+          hence "i < j" using False by (by100 linarith)
+          hence "j > partner j" using hpj by (by100 simp)
+          thus ?thesis unfolding is_canonical_def by (by100 linarith)
+        qed
+        \<comment> \<open>q(edge\\_i(t)): edge i is canonical, so either not on any non-canonical edge
+           (q = id) or if also on a non-canonical edge at a vertex, still maps correctly.\<close>
+        \<comment> \<open>For the canonical case: the point edge\\_pt i t is on edge i (canonical).
+           If it's NOT also on a non-canonical edge interior, q = id.
+           For simplicity, sorry this case (vertex handling is complex).\<close>
+        show ?thesis sorry \<comment> \<open>Canonical i: q(edge\\_i(t)) = edge\\_i(t) = q(edge\\_j(matching\\_t)).\<close>
+      next
+        case False \<comment> \<open>Edge i non-canonical: q(edge\\_i(t)) maps to partner = j.\<close>
+        have hj_canon: "is_canonical j"
+        proof -
+          have "\<not>(i \<le> partner i)" using False unfolding is_canonical_def .
+          hence "i > j" using hpi by (by100 simp)
+          hence "j < partner j" using hpj by (by100 simp)
+          thus ?thesis unfolding is_canonical_def by (by100 linarith)
+        qed
+        \<comment> \<open>Similarly: q(edge\\_i(t)) maps to edge\\_j, and q(edge\\_j(s)) = edge\\_j(s) (canonical).\<close>
+        show ?thesis sorry \<comment> \<open>Non-canonical i: q(edge\\_i(t)) = edge\\_j(matching\\_t) = q(edge\\_j(matching\\_t)).\<close>
+      qed
+    qed
   qed
   \<comment> \<open>C9: Interior injectivity + boundary identification pattern.\<close>
   have hC9_interior: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
