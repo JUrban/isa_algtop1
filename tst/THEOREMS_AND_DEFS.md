@@ -2260,7 +2260,7 @@ Theorem_75_1_H1_abelianization                 ac8/AlgTopCached8.thy            
 Theorem_75_3_H1_n_torus                        ac8/AlgTopCached8.thy                line 4446
 Theorem_75_4_H1_m_projective                   ac12/AlgTopCached12.thy              line 975
 Theorem_76_elementary_operations               AlgTop.thy                           line 4980
-Theorem_77_5_classification                    AlgTop.thy                           line 13530
+Theorem_77_5_classification                    AlgTop.thy                           line 13599
 Theorem_78_1_triangulable_surface              AlgTop.thy                           line 5132
 Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 5951
 Theorem_79_2                                   ac4/AlgTopCached4.thy                line 1524

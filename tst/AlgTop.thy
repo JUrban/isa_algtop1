@@ -13470,9 +13470,21 @@ proof (induction "length scheme" arbitrary: scheme rule: less_induct)
             \<comment> \<open>rest' has length 2. It's a cancel pair. Cancel to get torus\\_1.\<close>
             \<comment> \<open>rest' has exactly 1 label pair with opposite directions.
                Cancel: block @ rest' ~ block ~ torus\\_1.\<close>
-            have "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+            \<comment> \<open>Decompose rest' = [x, inv x] for some x.\<close>
+            have "\<exists>x. rest' = [x, top1_inverse_edge x]"
+              sorry \<comment> \<open>From length=2 + proper + torus type.\<close>
+            then obtain x where hx: "rest' = [x, top1_inverse_edge x]" by (by100 blast)
+            have "top1_valid_scheme_operation
+                ([(a',True),(b',True),(a',False),(b',False)] @ [x, top1_inverse_edge x] @ [])
+                ([(a',True),(b',True),(a',False),(b',False)] @ [])"
+              by (rule top1_valid_scheme_operation.v_cancel)
+            hence "top1_valid_scheme_equiv
+                ([(a',True),(b',True),(a',False),(b',False)] @ [x, top1_inverse_edge x])
                 ([(a',True),(b',True),(a',False),(b',False)])"
-              sorry
+              using valid_imp_equiv by (by100 simp)
+            hence "top1_valid_scheme_equiv ([(a',True),(b',True),(a',False),(b',False)] @ rest')
+                ([(a',True),(b',True),(a',False),(b',False)])"
+              using hx by (by100 simp)
             hence "top1_valid_scheme_equiv scheme ([(a',True),(b',True),(a',False),(b',False)])"
               using valid_equiv_trans[OF hext(2)] by (by100 blast)
             moreover have "top1_valid_scheme_equiv [(a',True),(b',True),(a',False),(b',False)] (top1_n_torus_scheme 1)"
