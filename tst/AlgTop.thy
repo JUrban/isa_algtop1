@@ -3575,32 +3575,67 @@ lemma front_cancel_realization_homeo:
     top1_homeomorphism_on Y TY Y' TY' h"
 proof -
   define scheme where "scheme = [a, top1_inverse_edge a] @ w"
-  define n where "n = length scheme"
-  have hn: "n = length w + 2" unfolding n_def scheme_def by simp
+  let ?n = "length scheme"
+  have hn: "?n = length w + 2" unfolding scheme_def by simp
   have hassms: "top1_quotient_of_scheme_on Y TY scheme" using assms(1) unfolding scheme_def .
-  \<comment> \<open>Step 1: Extract old polygon data.\<close>
-  from quotient_of_scheme_extract[OF hassms]
-  obtain P q where
-      hP: "top1_is_polygonal_region_on P n"
-      and hq: "top1_quotient_map_on P
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
-    unfolding n_def by (by100 blast)
-  \<comment> \<open>Step 2: The cancelled edges (0,1) are identified by q.
-     Edge 0: from v\\_0 to v\\_1 with label a.
-     Edge 1: from v\\_1 to v\\_2 with label inv(a).
-     q maps edge 0 forward = edge 1 backward (opposite directions).
-     So q(v\\_0) = q(v\\_2) and edge 0/1 form a "spur" that folds.\<close>
-  \<comment> \<open>Step 3: Construct the new polygon P' with n-2 vertices.
-     The simplest approach: P' is the convex hull of circle-points
-     cos(2\\<pi>i/(n-2)), sin(2\\<pi>i/(n-2)) for i=0..n-3.
-     This is a FRESH regular polygon, not derived from P.\<close>
-  \<comment> \<open>Step 4: Define q' on P' using the scheme w.
-     For each pair of edges in w with the same label, q' identifies them.
-     q' is the quotient map that makes P'/q' a quotient of scheme w.\<close>
-  \<comment> \<open>Step 5: Apply quotient\\_transport\\_by\\_homeomorphism.
-     Construct h: P \\<to> P' that maps boundary correctly.
-     Show fibre agreement: q(x)=q(y) iff q'(h(x))=q'(h(y)).
-     Conclude Y \\<cong> Y'.\<close>
+  \<comment> \<open>Extract ALL 11 conditions from old quotient.\<close>
+  from hassms obtain P q vx vy where
+      hC1: "top1_is_polygonal_region_on P ?n"
+    and hC2: "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+    and hC3: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+    and hC4: "\<forall>i<?n. (vx i, vy i) \<in> P"
+    and hC5: "P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<?n. coeffs i) = 1
+                       \<and> x = (\<Sum>i<?n. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
+    and hC6: "\<forall>i<?n. \<forall>j<?n.
+          i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+          (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+             ((1-s) * vx i + s * vx (Suc i mod ?n),
+              (1-s) * vy i + s * vy (Suc i mod ?n))
+           \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
+               (1-t) * vy j + t * vy (Suc j mod ?n)))"
+    and hC7: "\<forall>i<?n. \<forall>j<?n. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q ((1-t) * vx i + t * vx (Suc i mod ?n),
+              (1-t) * vy i + t * vy (Suc i mod ?n))
+         = (if snd (scheme!i) = snd (scheme!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                    (1-t) * vy j + t * vy (Suc j mod ?n))
+            else q (t * vx j + (1-t) * vx (Suc j mod ?n),
+                    t * vy j + (1-t) * vy (Suc j mod ?n))))"
+    and hC8: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx i + t * vx (Suc i mod ?n),
+                      (1-t) * vy i + t * vy (Suc i mod ?n)))
+             \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+            q ((1-t) * vx i + t * vx (Suc i mod ?n),
+               (1-t) * vy i + t * vy (Suc i mod ?n))
+          = q ((1-s) * vx j + s * vx (Suc j mod ?n),
+               (1-s) * vy j + s * vy (Suc j mod ?n))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+    and hC10: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx j) / real ?n;
+                           cy = (\<Sum>j<?n. vy j) / real ?n
+         in (vx i - cx) * (vy (Suc i mod ?n) - cy)
+          - (vy i - cy) * (vx (Suc i mod ?n) - cx) > 0"
+    and hC11: "\<forall>i<?n. \<forall>k<?n.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx k - vx i) * (vy (Suc i mod ?n) - vy i)
+          - (vy k - vy i) * (vx (Suc i mod ?n) - vx i) < 0"
+    by (rule quotient_of_scheme_extract_vx)
+  \<comment> \<open>Now I have all 11 conditions for the old polygon with scheme [a,inv a]@w.
+     Need to construct a quotient of w and show it's homeomorphic to Y.\<close>
+  \<comment> \<open>The cancel pair at edges 0,1 means: fst(scheme!0) = fst(scheme!1) = fst a,
+     snd(scheme!0) \\<noteq> snd(scheme!1). By hC7, q identifies edges 0,1 (reversed).
+     The "folding" collapses v\\_0, v\\_1, v\\_2 into the quotient.
+     Key: q(v\\_0) = q(v\\_2) (vertices at ends of cancel pair map to same point).\<close>
+  \<comment> \<open>TODO: Construct P' = convex hull of (vx(i+2), vy(i+2)) for i<length w.
+     Show quotient\\_of\\_scheme\\_on Y TY w with these witnesses.
+     Then use same\\_space\\_implies\\_homeo\\_realization for the identity homeomorphism.\<close>
   show ?thesis sorry
 qed
 
