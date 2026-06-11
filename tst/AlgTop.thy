@@ -3568,7 +3568,17 @@ lemma front_cancel_realization_homeo:
   sorry \<comment> \<open>§76(vi): Cancel front. Construct n-gon from (n+2)-gon by folding cancelled edges.
      Use quotient\\_transport\\_by\\_homeomorphism with polygon folding map.\<close>
 
-\<comment> \<open>Cancel at front — same-space form (derives from homeo-realization + uniqueness).\<close>
+\<comment> \<open>Uncancel at front — homeomorphic-realization form.\<close>
+lemma front_uncancel_realization_homeo:
+  fixes Y :: "'a set" and TY :: "'a set set"
+  assumes "top1_quotient_of_scheme_on Y TY w"
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' ([a, top1_inverse_edge a] @ w) \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+  sorry \<comment> \<open>§76(vii): Uncancel front. Insert cancel spur into polygon.\<close>
+
+\<comment> \<open>Cancel at front — same-space form. DEAD CODE (only used by cancel\\_proved which is dead).
+   Kept for backward compatibility.\<close>
 lemma quotient_of_scheme_cancel_front:
   assumes "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
   shows "top1_quotient_of_scheme_on Y TY w"
@@ -4030,10 +4040,23 @@ next
   thus ?case using hh1' by (rule homeo_realization_flat_introI)
 next
   case (v_uncancel a u v)
-  \<comment> \<open>Uncancel: §76(vii). Insert cancel pair. Reverse of cancel.\<close>
-  have "top1_quotient_of_scheme_on X TX (u @ [a, top1_inverse_edge a] @ v)"
-    by (rule quotient_of_scheme_uncancel_proved[OF v_uncancel.prems])
-  then show ?case by (rule same_space_implies_homeo_realization)
+  \<comment> \<open>Uncancel: §76(vii). Use front\\_uncancel\\_realization\\_homeo via rotation.\<close>
+  have h1: "top1_quotient_of_scheme_on X TX (v @ u)"
+    using quotient_of_scheme_rotate[OF v_uncancel.prems] by simp
+  from front_uncancel_realization_homeo[OF h1, of a]
+  obtain Y' :: "'a set" and TY' :: "'a set set" and h1' :: "'a \<Rightarrow> 'a" where
+      hY': "top1_quotient_of_scheme_on Y' TY' ([a, top1_inverse_edge a] @ v @ u)"
+      and hh1': "top1_homeomorphism_on X TX Y' TY' h1'"
+    by (by100 blast)
+  have "top1_quotient_of_scheme_on Y' TY' ((v @ u) @ [a, top1_inverse_edge a])"
+    using quotient_of_scheme_rotate[OF hY'] by simp
+  hence "top1_quotient_of_scheme_on Y' TY' (v @ (u @ [a, top1_inverse_edge a]))"
+    by simp
+  hence "top1_quotient_of_scheme_on Y' TY' ((u @ [a, top1_inverse_edge a]) @ v)"
+    using quotient_of_scheme_rotate by (by100 fastforce)
+  hence "top1_quotient_of_scheme_on Y' TY' (u @ [a, top1_inverse_edge a] @ v)"
+    by simp
+  thus ?case using hh1' by (rule homeo_realization_flat_introI)
 next
   case v_cancel_reverse
   \<comment> \<open>v\\_cancel\\_reverse: u@v -> u@[a,inv a]@v. Same as uncancel.\<close>
