@@ -13253,10 +13253,103 @@ lemma scheme_normal_form_valid:
   shows "(\<exists>a b. a \<noteq> b \<and> top1_valid_scheme_equiv scheme [(a, True), (a, False), (b, True), (b, False)])
        \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv scheme w)
        \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv scheme w)"
-  sorry \<comment> \<open>Full proof: replay scheme\\_normal\\_form with valid operations.
-     All helpers proved: valid\\_extract\\_projective\\_pair, valid\\_commutator\\_prepend\\_*,
-     valid\\_Lemma\\_77\\_1/4, valid\\_proj\\_pair\\_absorbs\\_torus.
-     Remaining blocker: valid\\_projective\\_len4\\_base (494-line mechanical copy with timeout issue).\<close>
+  using assms
+proof (induction "length scheme" arbitrary: scheme rule: less_induct)
+  case (less scheme)
+  show ?case
+  proof (cases "\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
+      \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)")
+    case True
+    \<comment> \<open>Projective type.\<close>
+    show ?thesis
+    proof (cases "length scheme = 4")
+      case True
+      \<comment> \<open>Base case: length 4, projective.\<close>
+      from valid_projective_len4_base[OF True less(3) \<open>\<exists>label. _\<close>]
+      obtain m w where hm: "m > 0" "top1_is_projective_scheme w m" "top1_valid_scheme_equiv scheme w"
+        by (by100 blast)
+      from valid_nf_projective[OF hm] show ?thesis .
+    next
+      case False
+      \<comment> \<open>Step: length > 4, projective. Extract pair, IH on rest.\<close>
+      have hne: "scheme \<noteq> []" using less(2) by (by100 auto)
+      from valid_extract_projective_pair[OF less(3) \<open>\<exists>label. _\<close> hne]
+      obtain a rest where ha: "top1_valid_scheme_equiv scheme ([(a,True),(a,True)] @ rest)"
+          "length rest = length scheme - 2" "\<forall>e \<in> set rest. fst e \<noteq> a"
+          "fst ` set rest \<subseteq> fst ` set scheme"
+          "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}" by blast
+      have hrest_lt: "length rest < length scheme" using ha(2) less(2) by (by100 simp)
+      have hrest_ge4: "length rest \<ge> 4"
+        using ha(2) False less(2) proper_scheme_even_length[OF ha(5)] by (by100 presburger)
+      from less(1)[OF hrest_lt hrest_ge4 ha(5)]
+      have hIH: "(\<exists>a' b'. a' \<noteq> b' \<and> top1_valid_scheme_equiv rest [(a',True),(a',False),(b',True),(b',False)])
+         \<or> (\<exists>m>0. \<exists>w. top1_is_projective_scheme w m \<and> top1_valid_scheme_equiv rest w)
+         \<or> (\<exists>n>0. \<exists>w. top1_is_torus_scheme w n \<and> top1_valid_scheme_equiv rest w)" .
+      from hIH show ?thesis
+      proof (elim disjE exE conjE)
+        fix a' b' assume "a' \<noteq> b'" "top1_valid_scheme_equiv rest [(a',True),(a',False),(b',True),(b',False)]"
+        \<comment> \<open>rest ~ sphere. Cancel sphere in [(a,T),(a,T)] @ rest to get proj\\_1.\<close>
+        show ?thesis sorry
+      next
+        fix m w assume hm: "m > 0" "top1_is_projective_scheme w m" "top1_valid_scheme_equiv rest w"
+        \<comment> \<open>rest ~ proj\\_m. Then [(a,T),(a,T)] @ proj\\_m ~ proj\\_(m+1) via rotate + append.\<close>
+        have hw_eq: "w = top1_m_projective_scheme m" using hm(2) unfolding top1_is_projective_scheme_def by (by100 blast)
+        have s1: "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ w)"
+          using valid_equiv_prepend[OF hm(3)] by (by100 blast)
+        have s2: "top1_valid_scheme_equiv ([(a,True),(a,True)] @ w) (w @ [(a,True),(a,True)])"
+          using valid_imp_equiv[OF top1_valid_scheme_operation.v_rotate[of "[(a,True),(a,True)]" w]] by (by100 simp)
+        have s3: "top1_valid_scheme_equiv (w @ [(a,True),(a,True)]) (top1_m_projective_scheme (Suc m))"
+          using hw_eq valid_proj_append_pair by (by100 simp)
+        from valid_equiv_trans[OF s1 s2] valid_equiv_trans s3
+        have "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) (top1_m_projective_scheme (Suc m))"
+          by (by100 blast)
+        hence hchain: "top1_valid_scheme_equiv scheme (top1_m_projective_scheme (Suc m))"
+          using valid_equiv_trans[OF ha(1)] by (by100 blast)
+        have hgt0: "Suc m > 0" by (by100 simp)
+        have hproj_sm: "top1_is_projective_scheme (top1_m_projective_scheme (Suc m)) (Suc m)"
+          unfolding top1_is_projective_scheme_def by (by100 simp)
+        from valid_nf_projective[OF hgt0 hproj_sm hchain]
+        show ?thesis .
+      next
+        fix n w assume hn: "n > 0" "top1_is_torus_scheme w n" "top1_valid_scheme_equiv rest w"
+        have hw_eq: "w = top1_n_torus_scheme n" using hn(2) unfolding top1_is_torus_scheme_def by (by100 blast)
+        have "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ w)"
+          using valid_equiv_prepend[OF hn(3)] by (by100 blast)
+        hence "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) ([(a,True),(a,True)] @ top1_n_torus_scheme n)"
+          using hw_eq by (by100 simp)
+        moreover have "top1_valid_scheme_equiv ([(a,True),(a,True)] @ top1_n_torus_scheme n)
+            (top1_m_projective_scheme (2*n+1))"
+          by (rule valid_proj_pair_absorbs_torus)
+        ultimately have "top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) (top1_m_projective_scheme (2*n+1))"
+          using valid_equiv_trans by (by100 blast)
+        hence "top1_valid_scheme_equiv scheme (top1_m_projective_scheme (2*n+1))"
+          using valid_equiv_trans[OF ha(1)] by (by100 blast)
+        moreover have "2*n+1 > 0" by (by100 simp)
+        have hgt0_n: "2*n+1 > 0" by (by100 simp)
+        have hproj_2n1: "top1_is_projective_scheme (top1_m_projective_scheme (2*n+1)) (2*n+1)"
+          unfolding top1_is_projective_scheme_def by (by100 simp)
+        have hchain_n: "top1_valid_scheme_equiv scheme (top1_m_projective_scheme (2*n+1))"
+          using valid_equiv_trans[OF ha(1)] \<open>top1_valid_scheme_equiv ([(a,True),(a,True)] @ rest) (top1_m_projective_scheme (2*n+1))\<close>
+          by (by100 blast)
+        from valid_nf_projective[OF hgt0_n hproj_2n1 hchain_n]
+        show ?thesis .
+      qed
+    qed
+  next
+    case False
+    \<comment> \<open>Torus type.\<close>
+    show ?thesis
+    proof (cases "length scheme = 4")
+      case True
+      \<comment> \<open>Base case: length 4, torus.\<close>
+      show ?thesis sorry
+    next
+      case False
+      \<comment> \<open>Step: length > 4, torus.\<close>
+      show ?thesis sorry
+    qed
+  qed
+qed
 
 (** from \<S>77 Theorem 77.5: Classification theorem for compact surfaces.
     Every compact connected triangulable surface is homeomorphic to either:
