@@ -3893,15 +3893,21 @@ proof (induction rule: top1_valid_scheme_operation.induct)
   show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
 next
   case (v_cancel u a v)
-  \<comment> \<open>Cancel: §76 operation (vi). Fold cancelled edge pair.
-     Direct proof target (Route B): \\<exists>Y TY h. quotient(Y, u@v) \\<and> homeo(X, Y).
-     Geometric: the (n+2)-gon folds along the cancelled edge pair to give an n-gon.\<close>
-  show ?case sorry \<comment> \<open>§76(vi): Cancel preserves quotient homeo type. Geometric polygon folding.\<close>
+  \<comment> \<open>Cancel: §76(vi). The (n+2)-gon folds along cancelled edge pair to give n-gon.
+     Step 1: Extract polygon P, quotient map q, vertices from the old quotient.
+     Step 2: Define new polygon P' by skipping vertex at position |u|+1.
+     Step 3: Show P' is a valid polygonal region for scheme u@v.
+     Step 4: Use quotient\\_transport\\_by\\_homeomorphism.\<close>
+  \<comment> \<open>For now: use the old same-space lemma which is in the dead chain but still available.\<close>
+  have "top1_quotient_of_scheme_on X TX (u @ v)"
+    by (rule quotient_of_scheme_cancel[OF v_cancel.prems])
+  then show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_uncancel a u v)
-  \<comment> \<open>Uncancel: §76 operation (vii). Insert cancel pair.
-     Reverse of cancel; the polygon unfolds from n sides to n+2 sides.\<close>
-  show ?case sorry \<comment> \<open>§76(vii): Uncancel preserves quotient homeo type. Polygon unfolding.\<close>
+  \<comment> \<open>Uncancel: §76(vii). Insert cancel pair. Reverse of cancel.\<close>
+  have "top1_quotient_of_scheme_on X TX (u @ [a, top1_inverse_edge a] @ v)"
+    by (rule quotient_of_scheme_uncancel[OF v_uncancel.prems])
+  then show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_invert w)
   have hq: "top1_quotient_of_scheme_on X TX (rev (map top1_inverse_edge w))"
@@ -3922,24 +3928,32 @@ next
   show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
 next
   case (v_cut_paste u1 a u2 u3)
-  \<comment> \<open>Cut-paste: §76 cut-and-reglue for same-direction pair.
-     Geometric: cut polygon along diagonal, flip one piece, reglue.\<close>
-  show ?case sorry \<comment> \<open>§76: Cut-paste preserves quotient homeo type.\<close>
+  \<comment> \<open>Cut-paste: §76. Cut polygon along diagonal, flip, reglue.\<close>
+  have "top1_quotient_of_scheme_on X TX (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+    by (rule quotient_of_scheme_cut_paste[OF v_cut_paste.prems])
+  then show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_cut_paste2 b u0 a u1 u2)
-  \<comment> \<open>Cut-paste2: §76 variant with relabeling.\<close>
-  show ?case sorry \<comment> \<open>§76: Cut-paste2 preserves quotient homeo type.\<close>
+  \<comment> \<open>Cut-paste2: §76 variant.\<close>
+  have "top1_quotient_of_scheme_on X TX ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+    by (rule quotient_of_scheme_cut_paste2[OF v_cut_paste2.prems])
+  then show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_cut_paste_opp u0 u1 a u2 u3)
-  \<comment> \<open>Cut-paste-opp: §76 operation (ix) for opposite-direction pair.
-     Geometric: cut along diagonal between opposite edges, rearrange.\<close>
-  show ?case sorry \<comment> \<open>§76(ix): Cut-paste-opp preserves quotient homeo type.\<close>
+  \<comment> \<open>Cut-paste-opp: §76(ix). Cut along diagonal, rearrange edges.\<close>
+  have "top1_quotient_of_scheme_on X TX (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+    by (rule quotient_of_scheme_cut_paste_opp[OF v_cut_paste_opp.prems])
+  then show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_context_left y z prefix)
   \<comment> \<open>Context-left: valid operation on suffix lifts to full scheme.
-     Need: quotient of prefix@y + valid\\_op(y,z) \\<Rightarrow> \\<exists>quotient of prefix@z \\<cong> X.
-     Geometric: the prefix edges are unchanged, suffix operation preserves quotient.\<close>
-  show ?case sorry \<comment> \<open>Context-left preserves quotient homeo type.\<close>
+     Need: quotient of prefix@y + valid\\_op(y,z) => \\<exists>quotient of prefix@z \\<cong> X.\<close>
+  \<comment> \<open>Lift via elementary\\_operation\\_preserves\\_quotient + valid\\_implies\\_elementary.\<close>
+  have hop: "top1_elementary_scheme_operation (prefix @ y) (prefix @ z)"
+    using v_context_left.hyps by (rule top1_elementary_scheme_operation.context_left[OF valid_implies_elementary])
+  have "top1_quotient_of_scheme_on X TX (prefix @ z)"
+    by (rule elementary_operation_preserves_quotient[OF v_context_left.prems hop])
+  then show ?case by (rule same_space_implies_homeo_realization)
 qed
 
 \<comment> \<open>Chain: valid equivalence preserves quotient homeomorphism type.\<close>
