@@ -3691,7 +3691,9 @@ proof -
   \<comment> \<open>Y is a quotient of w. Take Y'=Y, TY'=TY, h=id.\<close>
   moreover have "is_topology_on Y TY"
     using hassms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  ultimately show ?thesis sorry \<comment> \<open>quotient(Y,w) + id homeo. 4/5 conditions proved; inv\\_into id issue.\<close>
+  ultimately have "\<exists>(Y'::'a set) TY' h. top1_quotient_of_scheme_on Y' TY' w \<and> top1_homeomorphism_on Y TY Y' TY' h"
+    sorry \<comment> \<open>Identity homeomorphism: Y \\<cong> Y via id. Needs homeomorphism\\_id.\<close>
+  thus ?thesis .
 qed
 
 \<comment> \<open>Uncancel at front — homeomorphic-realization form.\<close>
