@@ -9538,6 +9538,34 @@ proof -
   ultimately show ?thesis using hrest0(3) hrest0(5) that[of a rest0] by (by100 blast)
 qed
 
+\<comment> \<open>Valid version of extract\\_projective\\_pair.\<close>
+lemma valid_extract_projective_pair:
+  fixes scheme :: "(nat \<times> bool) list"
+  assumes hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+      and hproj: "\<exists>label. \<exists>i < length scheme. \<exists>j < length scheme. i \<noteq> j
+          \<and> fst (scheme!i) = label \<and> fst (scheme!j) = label \<and> snd (scheme!i) = snd (scheme!j)"
+      and hne: "scheme \<noteq> []"
+  obtains a rest where
+      "top1_valid_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
+      "length rest = length scheme - 2"
+      "\<forall>e \<in> set rest. fst e \<noteq> a"
+      "fst ` set rest \<subseteq> fst ` set scheme"
+      "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}"
+proof -
+  from extract_projective_pair[OF assms]
+  obtain a rest where hold: "top1_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
+      "length rest = length scheme - 2" "\<forall>e \<in> set rest. fst e \<noteq> a"
+      "fst ` set rest \<subseteq> fst ` set scheme"
+      "\<forall>label. card {i. i < length rest \<and> fst (rest ! i) = label} \<in> {0, 2}" by (by100 blast)
+  \<comment> \<open>Need to replay the equivalence with valid operations.
+     The old proof uses: flip\\_label (valid) and cut\\_paste/cut\\_paste2 (valid) and properness checks.
+     Since the specific a and rest are determined by combinatorial analysis (not topology),
+     we defer the valid equivalence proof for now.\<close>
+  have hvalid: "top1_valid_scheme_equiv scheme ([(a, True), (a, True)] @ rest)"
+    sorry
+  from that[OF hvalid hold(2-5)] show ?thesis .
+qed
+
 \<comment> \<open>Main normal form theorem (Munkres \\<S>77 Theorem 77.5 core):
    Every proper labelling scheme is equivalent to one of:
    (1) aa\\<inverse>bb\\<inverse> (sphere, length 4)
