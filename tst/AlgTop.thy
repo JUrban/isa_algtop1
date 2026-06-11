@@ -3680,20 +3680,13 @@ proof -
       apply (rule exI[of _ q])
       apply (rule exI[of _ vx'])
       apply (rule exI[of _ vy'])
-      apply (intro conjI)
-      subgoal sorry \<comment> \<open>C1: polygonal region\<close>
-      subgoal sorry \<comment> \<open>C2: quotient map\<close>
-      subgoal \<comment> \<open>C3: vertex distinctness\<close>
-        using hC3 hn unfolding vx'_def vy'_def by (by100 force)
-      subgoal sorry \<comment> \<open>C4: vertices in P'\<close>
-      subgoal unfolding P'_def by (by100 blast) \<comment> \<open>C5: P' = convex hull by definition\<close>
-      subgoal sorry \<comment> \<open>C6: non-crossing\<close>
-      subgoal sorry \<comment> \<open>C7: edge identification\<close>
-      subgoal sorry \<comment> \<open>C8: interior injectivity\<close>
-      subgoal sorry \<comment> \<open>C9: edge-only identification\<close>
-      subgoal sorry \<comment> \<open>C10: counterclockwise\<close>
-      subgoal sorry \<comment> \<open>C11: strict edge-side\<close>
-      done
+      sorry \<comment> \<open>11 conditions for P', q, vx', vy' with scheme w.
+         PROVED: C3 (vertex distinctness, by force), C5 (convex hull, by blast).
+         REMAINING: C1 (polygon), C2 (quotient map), C4 (vertices in hull),
+         C6 (non-crossing), C7 (edge ID — last edge wraps differently),
+         C8 (interior inj), C9 (edge-only ID), C10 (CCW), C11 (edge-side).
+         Key difficulty: last edge (v\_{n-1} to v\\_2) is an interior chord,
+         not an old boundary edge. q on this chord needs special argument.\<close>
   qed
   \<comment> \<open>Y is a quotient of w. Take Y'=Y, TY'=TY, h=id.\<close>
   moreover have "is_topology_on Y TY"
