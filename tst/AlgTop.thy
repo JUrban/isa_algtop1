@@ -477,8 +477,22 @@ proof -
     \<comment> \<open>The cross product (v\\_k - v\\_i) \\<times> (v\\_{i+1} - v\\_i) = sin(\\<theta>\\_{i+1} - \\<theta>\\_k) - sin(\\<theta>\\_{i+1} - \\<theta>\\_i)
        where \\<theta>\\_j = 2\\<pi>j/n. This equals sin(2\\<pi>(i+1-k)/n) + sin(2\\<pi>(k-i)/n) - sin(2\\<pi>/n).
        For 2 \\<le> k-i mod n \\<le> n-1, this is negative (vertex k is on the right of edge i\\<to>i+1).\<close>
+    let ?\<theta>i = "2*pi*real i/real ?n"
+    let ?\<theta>k = "2*pi*real k/real ?n"
+    let ?\<theta>i1 = "2*pi*real (Suc i mod ?n)/real ?n"
+    \<comment> \<open>Expand cross product into trig.\<close>
+    have cross_eq: "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i)
+        = sin (?\<theta>i1 - ?\<theta>k) + sin (?\<theta>k - ?\<theta>i) - sin (?\<theta>i1 - ?\<theta>i)"
+      unfolding vx_def vy_def
+      sorry \<comment> \<open>Expand using sin\\_diff: cos(a)*sin(b)-sin(a)*cos(b) = sin(b-a).\<close>
+    \<comment> \<open>sin(\\<theta>\\_{i+1} - \\<theta>\\_i) = sin(2\\<pi>/n) > 0.\<close>
+    have hi1_minus_i: "sin (?\<theta>i1 - ?\<theta>i) = sin (2*pi/real ?n)"
+      sorry \<comment> \<open>Same as in hcross proof.\<close>
+    \<comment> \<open>The sum sin(\\<theta>\\_{i+1}-\\<theta>\\_k) + sin(\\<theta>\\_k - \\<theta>\\_i) < sin(2\\<pi>/n).
+       This follows because both terms contribute angles that sum to 2\\<pi>/n
+       but with the convex combination \\<open>strictly less\\<close> by Jensen/AM-GM.\<close>
     show "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
-      sorry
+      sorry \<comment> \<open>Final assembly: cross\\_eq + trig inequality.\<close>
   qed
   \<comment> \<open>C6: non-adjacent edge interiors don't intersect (strict convexity implies this).\<close>
   have hC6: "True"
