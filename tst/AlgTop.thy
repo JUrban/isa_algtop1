@@ -957,9 +957,17 @@ proof -
     qed
   qed
   \<comment> \<open>C6: non-adjacent edge interiors don't intersect (strict convexity implies this).\<close>
-  \<comment> \<open>C6: non-adjacent edge interiors don't intersect. Follows from strict convexity (C11).
-     Parse issue with interval notation in this context. Keeping as sorry.\<close>
-  have hC6_trivial: "True" sorry
+  \<comment> \<open>C6: non-adjacent edge interiors don't intersect. Follows from C11.\<close>
+  define open01 :: "real set" where "open01 = {0<..<1}"
+  have hC6: "\<forall>i<?n. \<forall>j<?n.
+        i \<noteq> j \<longrightarrow> (Suc i mod ?n) \<noteq> j \<longrightarrow> i \<noteq> (Suc j mod ?n) \<longrightarrow>
+        (\<forall>s\<in>open01. \<forall>t\<in>open01.
+           ((1 - s) * vx i + s * vx (Suc i mod ?n),
+            (1 - s) * vy i + s * vy (Suc i mod ?n))
+         \<noteq> ((1 - t) * vx j + t * vx (Suc j mod ?n),
+             (1 - t) * vy j + t * vy (Suc j mod ?n)))"
+    sorry \<comment> \<open>Follows from C11. Edge interior point = convex combo of adjacent vertices.
+       If two non-adjacent edges intersect, some vertex would be on wrong side of an edge.\<close>
   show ?thesis sorry \<comment> \<open>Remaining: C2 (quotient map), C8 (identification), C9 (injectivity).
      These require the proper definition of q (not identity).\<close>
 qed
