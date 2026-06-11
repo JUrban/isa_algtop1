@@ -807,8 +807,146 @@ proof -
             thus ?thesis using \<open>m3 > 0\<close> by (by100 simp)
           qed
           \<comment> \<open>Each factor: sin(\\<pi>*mi/n) has the sign of mi.\<close>
+          \<comment> \<open>Sign matching: for each factor, mi > 0 gives sin > 0; mi < 0 gives sin < 0.\<close>
+          have hm1_ne: "m1 \<noteq> 0" using hf1_ne unfolding ha1
+            using sin_pi_frac_ne[of m1] hm1_bnd by (by100 force)
+          have hm2_ne: "m2 \<noteq> 0" using hf2_ne unfolding ha2
+            using sin_pi_frac_ne[of m2] hm2_bnd by (by100 force)
+          have hm3_ne: "m3 \<noteq> 0" using hf3_ne unfolding ha3
+            using sin_pi_frac_ne[of m3] hm3_bnd by (by100 force)
+          have s1: "sgn (sin ((?\<beta> - ?\<alpha>)/2)) = sgn m1"
+          proof (cases "m1 > 0")
+            case True thus ?thesis unfolding ha1
+              using sin_pi_frac_pos[OF True] hm1_bnd by (by100 simp)
+          next
+            case False hence "m1 < 0" using hm1_ne by (by100 linarith)
+            thus ?thesis unfolding ha1
+              using sin_pi_frac_neg[of m1] hm1_bnd by (by100 simp)
+          qed
+          have s2: "sgn (sin ((?\<beta> - ?\<gamma>)/2)) = sgn m2"
+          proof (cases "m2 > 0")
+            case True thus ?thesis unfolding ha2
+              using sin_pi_frac_pos[OF True] hm2_bnd by (by100 simp)
+          next
+            case False hence "m2 < 0" using hm2_ne by (by100 linarith)
+            thus ?thesis unfolding ha2
+              using sin_pi_frac_neg[of m2] hm2_bnd by (by100 simp)
+          qed
+          have s3: "sgn (sin ((?\<alpha> - ?\<gamma>)/2)) = sgn m3"
+          proof (cases "m3 > 0")
+            case True thus ?thesis unfolding ha3
+              using sin_pi_frac_pos[OF True] hm3_bnd by (by100 simp)
+          next
+            case False hence "m3 < 0" using hm3_ne by (by100 linarith)
+            thus ?thesis unfolding ha3
+              using sin_pi_frac_neg[of m3] hm3_bnd by (by100 simp)
+          qed
+          \<comment> \<open>Product of sines has same sign as product of mi.\<close>
+          \<comment> \<open>Product of sines: directly case-split on sign of each mi.\<close>
           have "sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2) > 0"
-            sorry \<comment> \<open>From hm\\_prod\\_pos + sign matching via sin\\_pi\\_frac\\_pos/neg.\<close>
+          proof (cases "m1 > 0")
+            case hm1p: True
+            hence hs1: "sin ((?\<beta> - ?\<alpha>)/2) > 0" unfolding ha1
+              using sin_pi_frac_pos[OF hm1p] hm1_bnd by (by100 linarith)
+            show ?thesis
+            proof (cases "m2 > 0")
+              case hm2p: True
+              hence hs2: "sin ((?\<beta> - ?\<gamma>)/2) > 0" unfolding ha2
+                using sin_pi_frac_pos[OF hm2p] hm2_bnd by (by100 linarith)
+              have "m1 * m2 > 0" using hm1p hm2p by (by100 simp)
+              have "m3 > 0"
+              proof (rule ccontr)
+                assume "\<not> m3 > 0"
+                hence "m3 \<le> 0" by (by100 simp)
+                hence "m1 * m2 * m3 \<le> 0" using \<open>m1 * m2 > 0\<close>
+                  using mult_nonneg_nonpos[of "m1*m2" m3] by (by100 linarith)
+                thus False using hm_prod_pos by (by100 linarith)
+              qed
+              hence hs3: "sin ((?\<alpha> - ?\<gamma>)/2) > 0" unfolding ha3
+                using sin_pi_frac_pos[of m3] hm3_bnd by (by100 linarith)
+              define sp where "sp = sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2)"
+              have "sp > 0" unfolding sp_def
+                using hs2 hs3 mult_pos_pos[of "sin ((?\<beta> - ?\<gamma>)/2)" "sin ((?\<alpha> - ?\<gamma>)/2)"]
+                by (by100 linarith)
+              hence "sin ((?\<beta> - ?\<alpha>)/2) * sp > 0"
+                using hs1 mult_pos_pos[of "sin ((?\<beta> - ?\<alpha>)/2)" sp] by (by100 linarith)
+              thus ?thesis unfolding sp_def by (simp add: mult.assoc)
+            next
+              case hm2n: False hence "m2 < 0" using hm2_ne by (by100 linarith)
+              hence hs2: "sin ((?\<beta> - ?\<gamma>)/2) < 0" unfolding ha2
+                using sin_pi_frac_neg[of m2] hm2_bnd by (by100 linarith)
+              have "m1 * m2 < 0" using hm1p \<open>m2 < 0\<close>
+                using mult_pos_neg[of m1 m2] by (by100 linarith)
+              have "m3 < 0"
+              proof (rule ccontr)
+                assume "\<not> m3 < 0"
+                hence "m3 \<ge> 0" by (by100 simp)
+                hence "m1 * m2 * m3 \<le> 0" using \<open>m1 * m2 < 0\<close>
+                  using mult_nonpos_nonneg[of "m1*m2" m3] by (by100 linarith)
+                thus False using hm_prod_pos by (by100 linarith)
+              qed
+              hence hs3: "sin ((?\<alpha> - ?\<gamma>)/2) < 0" unfolding ha3
+                using sin_pi_frac_neg[of m3] hm3_bnd by (by100 linarith)
+              define s23 where "s23 = sin ((?\<beta> - ?\<gamma>)/2) * sin ((?\<alpha> - ?\<gamma>)/2)"
+              have "s23 > 0" unfolding s23_def
+                using hs2 hs3 mult_neg_neg[of "sin ((?\<beta> - ?\<gamma>)/2)" "sin ((?\<alpha> - ?\<gamma>)/2)"]
+                by (by100 linarith)
+              hence "sin ((?\<beta> - ?\<alpha>)/2) * s23 > 0"
+                using hs1 mult_pos_pos[of "sin ((?\<beta> - ?\<alpha>)/2)" s23] by (by100 linarith)
+              thus ?thesis unfolding s23_def by (simp add: mult.assoc)
+            qed
+          next
+            case hm1n: False hence "m1 < 0" using hm1_ne by (by100 linarith)
+            hence hs1: "sin ((?\<beta> - ?\<alpha>)/2) < 0" unfolding ha1
+              using sin_pi_frac_neg[of m1] hm1_bnd by (by100 linarith)
+            \<comment> \<open>m1 < 0 and m1*m2*m3 > 0: either m2>0,m3<0 or m2<0,m3>0.\<close>
+            show ?thesis
+            proof (cases "m2 > 0")
+              case hm2p: True
+              hence hs2: "sin ((?\<beta> - ?\<gamma>)/2) > 0" unfolding ha2
+                using sin_pi_frac_pos[OF hm2p] hm2_bnd by (by100 linarith)
+              have "m1 * m2 < 0" using \<open>m1 < 0\<close> hm2p
+                using mult_neg_pos[of m1 m2] by (by100 linarith)
+              have "m3 < 0"
+              proof (rule ccontr)
+                assume "\<not> m3 < 0" hence "m3 \<ge> 0" by (by100 simp)
+                hence "m1 * m2 * m3 \<le> 0" using \<open>m1 * m2 < 0\<close>
+                  using mult_nonpos_nonneg[of "m1*m2" m3] by (by100 linarith)
+                thus False using hm_prod_pos by (by100 linarith)
+              qed
+              hence hs3: "sin ((?\<alpha> - ?\<gamma>)/2) < 0" unfolding ha3
+                using sin_pi_frac_neg[of m3] hm3_bnd by (by100 linarith)
+              define sp where "sp = sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<alpha> - ?\<gamma>)/2)"
+              have "sp > 0" unfolding sp_def
+                using hs1 hs3 mult_neg_neg[of "sin ((?\<beta> - ?\<alpha>)/2)" "sin ((?\<alpha> - ?\<gamma>)/2)"]
+                by (by100 linarith)
+              hence "sp * sin ((?\<beta> - ?\<gamma>)/2) > 0"
+                using hs2 mult_pos_pos[of sp "sin ((?\<beta> - ?\<gamma>)/2)"] by (by100 linarith)
+              thus ?thesis unfolding sp_def by (simp add: mult.assoc mult.commute mult.left_commute)
+            next
+              case hm2n: False hence "m2 < 0" using hm2_ne by (by100 linarith)
+              hence hs2: "sin ((?\<beta> - ?\<gamma>)/2) < 0" unfolding ha2
+                using sin_pi_frac_neg[of m2] hm2_bnd by (by100 linarith)
+              have "m1 * m2 > 0" using \<open>m1 < 0\<close> \<open>m2 < 0\<close>
+                using mult_neg_neg[of m1 m2] by (by100 linarith)
+              have "m3 > 0"
+              proof (rule ccontr)
+                assume "\<not> m3 > 0" hence "m3 \<le> 0" by (by100 simp)
+                hence "m1 * m2 * m3 \<le> 0" using \<open>m1 * m2 > 0\<close>
+                  using mult_nonneg_nonpos[of "m1*m2" m3] by (by100 linarith)
+                thus False using hm_prod_pos by (by100 linarith)
+              qed
+              hence hs3: "sin ((?\<alpha> - ?\<gamma>)/2) > 0" unfolding ha3
+                using sin_pi_frac_pos[of m3] hm3_bnd by (by100 linarith)
+              define sp where "sp = sin ((?\<beta> - ?\<alpha>)/2) * sin ((?\<beta> - ?\<gamma>)/2)"
+              have "sp > 0" unfolding sp_def
+                using hs1 hs2 mult_neg_neg[of "sin ((?\<beta> - ?\<alpha>)/2)" "sin ((?\<beta> - ?\<gamma>)/2)"]
+                by (by100 linarith)
+              hence "sp * sin ((?\<alpha> - ?\<gamma>)/2) > 0"
+                using hs3 mult_pos_pos[of sp "sin ((?\<alpha> - ?\<gamma>)/2)"] by (by100 linarith)
+              thus ?thesis unfolding sp_def by (simp add: mult.assoc)
+            qed
+          qed
           thus ?thesis .
         qed
         thus ?thesis .
