@@ -3148,7 +3148,9 @@ proof -
     thus ?thesis .
   qed
   \<comment> \<open>P' \\<subseteq> P (sub-polygon is inside original polygon).\<close>
-  have hP'_sub: "P' \<subseteq> P" sorry \<comment> \<open>Convex hull of subset of vertices is subset of convex hull.\<close>
+  have hP'_sub: "P' \<subseteq> P"
+    sorry \<comment> \<open>Convex hull of subset of vertices \\<subseteq> convex hull. Extend coefficients by
+       setting coeffs'(0) = coeffs'(1) = 0, coeffs'(i+2) = coeffs(i).\<close>
   \<comment> \<open>C1': P' is a polygonal region.\<close>
   have hC1': "top1_is_polygonal_region_on P' ?n'" sorry \<comment> \<open>From hn'_ge3 and convexity of P'.\<close>
   \<comment> \<open>C3': distinct vertices (from original C3 with shift).\<close>
