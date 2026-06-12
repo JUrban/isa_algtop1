@@ -4581,14 +4581,53 @@ proof -
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1)
           P2
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) f"
-      sorry \<comment> \<open>Standard topology (Munkres Corollary 22.3):
-         (1) P1 compact (polygonal\\_region\\_compact) \\<to> R2-subspace Hausdorff.
-         (2) Continuous (assumption) + compact\\<to>Hausdorff = closed map
-             (compact\\_hausdorff\\_continuous\\_closed\\_map).
-         (3) Closed surjection = quotient map: if f\\<inverse>(V) open then
-             X\\\\f\\<inverse>(V) = f\\<inverse>(Y\\\\V) closed, so f(f\\<inverse>(Y\\\\V)) = Y\\\\V closed, so V open.
-         Proof needs: is\\_topology\\_on for both subspaces, top1\\_continuous\\_map\\_on from
-         continuous\\_on, and the quotient-map definition unfolding.\<close>
+    proof -
+      fix P1 P2 :: "(real \<times> real) set" and f :: "(real \<times> real) \<Rightarrow> (real \<times> real)" and n1 n2 :: nat
+      assume hC1_1: "top1_is_polygonal_region_on P1 n1"
+         and hC1_2: "top1_is_polygonal_region_on P2 n2"
+         and hf_cont: "continuous_on P1 f"
+         and hf_surj: "f ` P1 = P2"
+         and hf_range: "\<forall>x\<in>P1. f x \<in> P2"
+      let ?TP1 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1"
+      let ?TP2 = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2"
+      \<comment> \<open>Topologies.\<close>
+      have htopo_R2: "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+        by (by100 simp)
+      have htopo1: "is_topology_on P1 ?TP1"
+        by (rule subspace_topology_is_topology_on[OF htopo_R2]) (by100 simp)
+      have htopo2: "is_topology_on P2 ?TP2"
+        by (rule subspace_topology_is_topology_on[OF htopo_R2]) (by100 simp)
+      \<comment> \<open>P1 is compact.\<close>
+      have hn1_ge3: "n1 \<ge> 3" using hC1_1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
+      have hcompact: "top1_compact_on P1 ?TP1"
+        by (rule AlgTopChain.polygonal_region_compact[OF hC1_1 hn1_ge3])
+      \<comment> \<open>P2 subspace is Hausdorff.\<close>
+      have hR2_haus: "is_hausdorff_on (UNIV::(real\<times>real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using top1_R2_is_hausdorff .
+      have hhaus: "is_hausdorff_on P2 ?TP2"
+        using hausdorff_subspace[OF hR2_haus] by (by100 blast)
+      \<comment> \<open>f is continuous (top1 version).\<close>
+      have hf_cont_top1: "top1_continuous_map_on P1 ?TP1 P2 ?TP2 f"
+        sorry \<comment> \<open>From continuous\\_on and subspace topology.\<close>
+      \<comment> \<open>f is a closed map (compact \\<to> Hausdorff continuous).\<close>
+      have hf_closed: "top1_closed_map_on P1 ?TP1 P2 ?TP2 f"
+        sorry \<comment> \<open>From compact\\_hausdorff\\_continuous\\_closed\\_map.\<close>
+      \<comment> \<open>Closed surjection is a quotient map (Munkres Cor. 22.3).\<close>
+      show "top1_quotient_map_on P1 ?TP1 P2 ?TP2 f"
+        unfolding top1_quotient_map_on_def
+      proof (intro conjI allI impI)
+        show "is_topology_on P1 ?TP1" using htopo1 .
+        show "is_topology_on P2 ?TP2" using htopo2 .
+        show "top1_continuous_map_on P1 ?TP1 P2 ?TP2 f" using hf_cont_top1 .
+        show "f ` P1 = P2" using hf_surj .
+        \<comment> \<open>Quotient condition: if f\\<inverse>(V) is open in P1 then V is open in P2.\<close>
+        fix V assume hV_sub: "V \<subseteq> P2" and hV_preimg: "{x \<in> P1. f x \<in> V} \<in> ?TP1"
+        \<comment> \<open>P2 \\\\ V is closed in P2 (complement of preimage).\<close>
+        show "V \<in> ?TP2"
+          sorry \<comment> \<open>P1 \\\\ f\\<inverse>(V) = f\\<inverse>(P2\\\\V) is closed. By closed map: f(f\\<inverse>(P2\\\\V)) = P2\\\\V is closed. So V is open.\<close>
+      qed
+    qed
     \<comment> \<open>Extract polygons and quotient maps from both quotients.\<close>
     let ?n = "length ([a, top1_inverse_edge a] @ w)"
     let ?m = "length w"
