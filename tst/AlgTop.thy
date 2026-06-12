@@ -1228,9 +1228,119 @@ proof -
         case hint: True \<comment> \<open>Edge interior: q enters the edge-interior branch.\<close>
         \<comment> \<open>The edge\\_pt(i,t) is NOT a vertex (0<t<1), so q enters either edge-interior or else.\<close>
         have hnotvertex_i: "\<not>(\<exists>k<?n. (1-t)*vx i + t*vx(Suc i mod ?n) = vx k \<and> (1-t)*vy i + t*vy(Suc i mod ?n) = vy k)"
-          sorry \<comment> \<open>Interior edge point (0<t<1) \\<noteq> vertex. For k=i: t=0. For k=i+1: t=1.
-             For other k: C11 cross product < 0 but collinearity gives 0. Contradiction.
-             by100 algebra timeouts on the detailed steps.\<close>
+        proof
+          assume "\<exists>k<?n. (1-t)*vx i + t*vx(Suc i mod ?n) = vx k \<and> (1-t)*vy i + t*vy(Suc i mod ?n) = vy k"
+          then obtain k where hk: "k < ?n"
+            and hxeq: "(1-t)*vx i + t*vx(Suc i mod ?n) = vx k"
+            and hyeq: "(1-t)*vy i + t*vy(Suc i mod ?n) = vy k" by (by100 blast)
+          \<comment> \<open>Abbreviate for by100 algebra compatibility.\<close>
+          define a where "a = vx i" define b where "b = vx(Suc i mod ?n)" define c where "c = vx k"
+          define a' where "a' = vy i" define b' where "b' = vy(Suc i mod ?n)" define c' where "c' = vy k"
+          have hab: "(1-t)*a + t*b = c" using hxeq unfolding a_def b_def c_def by (by100 simp)
+          have hab': "(1-t)*a' + t*b' = c'" using hyeq unfolding a'_def b'_def c'_def by (by100 simp)
+          \<comment> \<open>Collinearity: c - a = t*(b-a), c' - a' = t*(b'-a').\<close>
+          have hcolx: "c - a = t*(b - a)"
+          proof -
+            have "(1-t)*a = a - t*a" by (by100 algebra)
+            hence "a - t*a + t*b = c" using hab by (by100 linarith)
+            hence "c - a = t*b - t*a" by (by100 linarith)
+            thus ?thesis by (simp only: right_diff_distrib[symmetric])
+          qed
+          have hcoly: "c' - a' = t*(b' - a')"
+          proof -
+            have "(1-t)*a' = a' - t*a'" by (by100 algebra)
+            hence "a' - t*a' + t*b' = c'" using hab' by (by100 linarith)
+            hence "c' - a' = t*b' - t*a'" by (by100 linarith)
+            thus ?thesis by (simp only: right_diff_distrib[symmetric])
+          qed
+          \<comment> \<open>Cross product = 0 from collinearity.\<close>
+          have hcross0: "(c - a)*(b' - a') - (c' - a')*(b - a) = 0"
+            unfolding hcolx hcoly by (by100 algebra)
+          \<comment> \<open>But C11 says cross < 0 for k \\<noteq> i, k \\<noteq> Suc i mod n.\<close>
+          have "k = i \<or> k = Suc i mod ?n"
+          proof (rule ccontr)
+            assume "\<not>(k = i \<or> k = Suc i mod ?n)"
+            hence "k \<noteq> i" "k \<noteq> Suc i mod ?n" by (by100 auto)+
+            have "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
+              using hC11 hi hk \<open>k \<noteq> i\<close> \<open>k \<noteq> Suc i mod ?n\<close> by (by100 blast)
+            hence "(c - a)*(b' - a') - (c' - a')*(b - a) < 0"
+              unfolding c_def a_def b'_def a'_def c'_def b_def by (by100 simp)
+            thus False using hcross0 by (by100 linarith)
+          qed
+          \<comment> \<open>k = i gives t = 0; k = Suc i mod n gives t = 1. Both contradict 0 < t < 1.\<close>
+          thus False
+          proof
+            assume "k = i" hence "c = a" unfolding c_def a_def by (by100 simp)
+            hence ht_ba: "t*(b - a) = 0" using hcolx by (by100 linarith)
+            have "c' = a'" unfolding c'_def a'_def using \<open>k = i\<close> by (by100 simp)
+            hence ht_ba': "t*(b' - a') = 0" using hcoly by (by100 linarith)
+            have htp: "t > 0" using hint by (by100 blast)
+            from ht_ba have "t = 0 \<or> b - a = 0" using mult_eq_0_iff by (by100 blast)
+            hence hba: "b = a" using htp by (by100 linarith)
+            from ht_ba' have "t = 0 \<or> b' - a' = 0" using mult_eq_0_iff by (by100 blast)
+            hence hba': "b' = a'" using htp by (by100 linarith)
+            have "b = a \<and> b' = a'" using hba hba' by (by100 auto)
+            hence "(a, a') = (b, b')" by (by100 simp)
+            hence "(vx i, vy i) = (vx(Suc i mod ?n), vy(Suc i mod ?n))"
+              unfolding a_def a'_def b_def b'_def by (by100 simp)
+            have hn_gt0: "?n > 0" using assms by (by100 linarith)
+            have hmod_lt: "Suc i mod ?n < ?n" using hn_gt0 by (by100 simp)
+            have hmod_ne: "i \<noteq> Suc i mod ?n"
+            proof
+              assume "i = Suc i mod ?n"
+              hence "Suc i mod ?n = i mod ?n" using hi by (by100 simp)
+              hence "(Suc i - i) mod ?n = 0" using assms by (simp add: mod_eq_dvd_iff_nat)
+              hence "?n dvd 1" by (by100 simp)
+              thus False using assms by (by100 simp)
+            qed
+            show False using hC3 hi hmod_lt hmod_ne
+              \<open>(vx i, vy i) = (vx(Suc i mod ?n), vy(Suc i mod ?n))\<close> by (by100 blast)
+          next
+            assume "k = Suc i mod ?n" hence "c = b" unfolding c_def b_def by (by100 simp)
+            have hn_gt0: "?n > 0" using assms by (by100 linarith)
+            have hmod_lt: "Suc i mod ?n < ?n" using hn_gt0 by (by100 simp)
+            have hmod_ne: "i \<noteq> Suc i mod ?n"
+            proof
+              assume "i = Suc i mod ?n"
+              hence "Suc i mod ?n = i mod ?n" using hi by (by100 simp)
+              hence "(Suc i - i) mod ?n = 0" using assms by (simp add: mod_eq_dvd_iff_nat)
+              hence "?n dvd 1" by (by100 simp)
+              thus False using assms by (by100 simp)
+            qed
+            have "a = b"
+            proof -
+              have "(1-t)*a + t*b = b" using hab \<open>c = b\<close> by (by100 simp)
+              hence "(1-t)*a = b - t*b" by (by100 linarith)
+              have "(1-t)*b = b - t*b" by (by100 algebra)
+              hence "(1-t)*a = (1-t)*b" using \<open>(1-t)*a = b - t*b\<close> by (by100 linarith)
+              hence "(1-t)*a - (1-t)*b = 0" by (by100 linarith)
+              hence h_prod0: "(1-t)*(a - b) = 0"
+                using right_diff_distrib[of "1-t" a b] by (by100 linarith)
+              have "1-t > 0" using hint by (by100 linarith)
+              from h_prod0 have "1-t = 0 \<or> a - b = 0" using mult_eq_0_iff by (by100 blast)
+              hence "a - b = 0" using \<open>1-t > 0\<close> by (by100 linarith)
+              thus "a = b" by (by100 linarith)
+            qed
+            moreover have "a' = b'"
+            proof -
+              have "c' = b'" unfolding c'_def b'_def using \<open>k = Suc i mod ?n\<close> by (by100 simp)
+              hence "(1-t)*a' + t*b' = b'" using hab' by (by100 simp)
+              hence "(1-t)*a' = b' - t*b'" by (by100 linarith)
+              have "(1-t)*b' = b' - t*b'" by (by100 algebra)
+              hence "(1-t)*a' = (1-t)*b'" using \<open>(1-t)*a' = b' - t*b'\<close> by (by100 linarith)
+              hence "(1-t)*a' - (1-t)*b' = 0" by (by100 linarith)
+              hence h_prod0': "(1-t)*(a' - b') = 0"
+                using right_diff_distrib[of "1-t" a' b'] by (by100 linarith)
+              from h_prod0' have "1-t = 0 \<or> a' - b' = 0" using mult_eq_0_iff by (by100 blast)
+              have h1t: "1-t > 0" using hint by (by100 linarith)
+              from \<open>1-t = 0 \<or> a' - b' = 0\<close> h1t have "a' - b' = 0" by (by100 linarith)
+              thus "a' = b'" by (by100 linarith)
+            qed
+            ultimately have "(vx i, vy i) = (vx(Suc i mod ?n), vy(Suc i mod ?n))"
+              unfolding a_def a'_def b_def b'_def by (by100 simp)
+            thus False using hC3 hi hmod_lt hmod_ne by (by100 blast)
+          qed
+        qed
         show ?thesis sorry \<comment> \<open>Interior case: both sides map to same canonical edge point.\<close>
       next
         case hvert: False \<comment> \<open>Vertex: t = 0 or t = 1. q enters the vertex branch.\<close>
