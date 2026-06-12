@@ -5234,7 +5234,88 @@ proof -
             then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set"
               and hy: "y = ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
               by (by100 blast)
-            show ?thesis sorry \<comment> \<open>Forward boundary-boundary case. Needs C7/C9/freshness analysis.\<close>
+            \<comment> \<open>Both x, y on boundary at (i,t) and (j,s). Case split on interior vs vertex parameters.\<close>
+            show ?thesis
+            proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
+              case True
+              \<comment> \<open>Both parameters in (0,1): use C9\\_e for the identification structure.\<close>
+              hence ht_open: "t \<in> {0<..<(1::real)}" and hs_open: "s \<in> {0<..<(1::real)}" by (by100 auto)+
+              from hC9e[rule_format, OF hi hj ht_open hs_open] heq[unfolded hx hy]
+              have hcond: "(i=j \<and> t=s) \<or> (fst(([a, top1_inverse_edge a] @ w)!i)=fst(([a, top1_inverse_edge a] @ w)!j)
+                   \<and> (if snd(([a, top1_inverse_edge a] @ w)!i)=snd(([a, top1_inverse_edge a] @ w)!j) then s=t else s=1-t))"
+                by (by100 blast)
+              from hcond show ?thesis
+              proof (elim disjE conjE)
+                assume "i = j" "t = s"
+                thus ?thesis using hx hy by (by100 simp)
+              next
+                assume hlabel: "fst(([a, top1_inverse_edge a] @ w)!i)=fst(([a, top1_inverse_edge a] @ w)!j)"
+                  and hdir: "if snd(([a, top1_inverse_edge a] @ w)!i)=snd(([a, top1_inverse_edge a] @ w)!j) then s=t else s=1-t"
+                \<comment> \<open>Sub-case: both edges \\<ge> 2 (w-labels, mapped by hf\\_edge to P\\_m edges).\<close>
+                \<comment> \<open>Sub-case analysis: which edges are i and j?\<close>
+                show ?thesis
+                proof (cases "i \<ge> 2 \<and> j \<ge> 2")
+                  case True
+                  hence hi2: "i \<ge> 2" and hj2: "j \<ge> 2" by (by100 auto)+
+                  \<comment> \<open>Index shift: for i,j \\<ge> 2, define i'=i-2, j'=j-2.\<close>
+                  define i' where "i' = i - 2"
+                  define j' where "j' = j - 2"
+                  have hi'_eq: "i = i' + 2" using hi2 unfolding i'_def by (by100 linarith)
+                  have hj'_eq: "j = j' + 2" using hj2 unfolding j'_def by (by100 linarith)
+                  have hi'_m: "i' < ?m" using hi hn_eq i'_def hi2 by (by100 linarith)
+                  have hj'_m: "j' < ?m" using hj hn_eq j'_def hj2 by (by100 linarith)
+                  \<comment> \<open>Both on w-edges: f maps to P\\_m edges, C7\\_m gives matching.\<close>
+                  have hfx: "(q_m \<circ> f) x = q_m ((1-t)*vx_m i'+t*vx_m(Suc i' mod ?m),(1-t)*vy_m i'+t*vy_m(Suc i' mod ?m))"
+                    using hf_edge[rule_format, OF conjI[OF hi2 hi]] ht hx i'_def by (by100 simp)
+                  have hfy: "(q_m \<circ> f) y = q_m ((1-s)*vx_m j'+s*vx_m(Suc j' mod ?m),(1-s)*vy_m j'+s*vy_m(Suc j' mod ?m))"
+                    using hf_edge[rule_format, OF conjI[OF hj2 hj]] hs hy j'_def by (by100 simp)
+                  have happ_i: "([a, top1_inverse_edge a] @ w) ! i = w ! i'"
+                    unfolding hi'_eq by (by100 simp)
+                  have happ_j: "([a, top1_inverse_edge a] @ w) ! j = w ! j'"
+                    unfolding hj'_eq by (by100 simp)
+                  have hlabel_w: "fst(w!i') = fst(w!j')"
+                    using hlabel happ_i happ_j by (by100 simp)
+                  have hdir_w: "snd(w!i') = snd(w!j') \<longleftrightarrow> snd(([a, top1_inverse_edge a] @ w)!i) = snd(([a, top1_inverse_edge a] @ w)!j)"
+                    using happ_i happ_j by (by100 simp)
+                  \<comment> \<open>Apply C7\\_m to get q\\_m matching.\<close>
+                  from hC7m[rule_format, OF hi'_m hj'_m hlabel_w]
+                  have hq_m_eq: "\<forall>t'\<in>I_set.
+                    q_m ((1-t')*vx_m i'+t'*vx_m(Suc i' mod ?m),(1-t')*vy_m i'+t'*vy_m(Suc i' mod ?m))
+                    = (if snd(w!i')=snd(w!j')
+                       then q_m ((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),(1-t')*vy_m j'+t'*vy_m(Suc j' mod ?m))
+                       else q_m (t'*vx_m j'+(1-t')*vx_m(Suc j' mod ?m),t'*vy_m j'+(1-t')*vy_m(Suc j' mod ?m)))"
+                    by (by100 blast)
+                  show ?thesis
+                  proof (cases "snd(w!i') = snd(w!j')")
+                    case True
+                    hence "s = t" using hdir True hdir_w by (by100 simp)
+                    from hq_m_eq[rule_format, OF ht] True
+                    show ?thesis using hfx hfy \<open>s = t\<close> by (by100 simp)
+                  next
+                    case False
+                    hence "s = 1 - t" using hdir False hdir_w by (by100 simp)
+                    from hq_m_eq[rule_format, OF ht] False
+                    have "q_m ((1-t)*vx_m i'+t*vx_m(Suc i' mod ?m),(1-t)*vy_m i'+t*vy_m(Suc i' mod ?m))
+                      = q_m (t*vx_m j'+(1-t)*vx_m(Suc j' mod ?m),t*vy_m j'+(1-t)*vy_m(Suc j' mod ?m))"
+                      by (by100 simp)
+                    moreover have "(1-s)*vx_m j'+s*vx_m(Suc j' mod ?m) = t*vx_m j'+(1-t)*vx_m(Suc j' mod ?m)"
+                      using \<open>s = 1-t\<close> by (by100 algebra)
+                    moreover have "(1-s)*vy_m j'+s*vy_m(Suc j' mod ?m) = t*vy_m j'+(1-t)*vy_m(Suc j' mod ?m)"
+                      using \<open>s = 1-t\<close> by (by100 algebra)
+                    ultimately show ?thesis using hfx hfy by (by100 simp)
+                  qed
+                next
+                  case False
+                  \<comment> \<open>At least one edge is 0 or 1 (cancel pair). Since labels match and a is fresh,
+                     both must be in \\{0,1\\}. The fold gives f(x) = f(y).\<close>
+                  show ?thesis sorry \<comment> \<open>Cancel pair or cross-cancel: freshness + fold.\<close>
+                qed
+              qed
+            next
+              case False
+              \<comment> \<open>Vertex case: at least one parameter is 0 or 1.\<close>
+              show ?thesis sorry \<comment> \<open>Vertex case. Follows from C7 at endpoints.\<close>
+            qed
           qed
         qed
       }
