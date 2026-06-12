@@ -3459,7 +3459,11 @@ proof -
             have "(\<Sum>i\<in>{..<?n'}-{j}. coeffs i * cross_k i) \<le> 0"
               by (rule sum_nonpos) (use hle_all in \<open>by100 blast\<close>)
             moreover have "(\<Sum>i<?n'. coeffs i * cross_k i) = coeffs j * cross_k j + (\<Sum>i\<in>{..<?n'}-{j}. coeffs i * cross_k i)"
-              using hj sorry
+            proof -
+              have "j \<in> {..<?n'}" using hj by (by100 simp)
+              from sum.remove[OF finite_lessThan this, of "\<lambda>i. coeffs i * cross_k i"]
+              show ?thesis by (by100 simp)
+            qed
             ultimately show ?thesis by (by100 linarith)
           qed
           moreover have "coeffs j * cross_k j \<le> 0" using hcross_le hj by (by100 blast)
@@ -3473,7 +3477,31 @@ proof -
       proof -
         have "(\<Sum>j<?n'. coeffs j) = coeffs k + coeffs (Suc k mod ?n') +
             (\<Sum>j\<in>{..<?n'} - {k} - {Suc k mod ?n'}. coeffs j)"
-          sorry \<comment> \<open>Sum split: extract k and Suc k mod n' from the sum.\<close>
+        proof -
+          have hk_in: "k \<in> {..<?n'}" using hk by (by100 simp)
+          from sum.remove[OF finite_lessThan hk_in, of coeffs]
+          have "(\<Sum>j<?n'. coeffs j) = coeffs k + (\<Sum>j\<in>{..<?n'}-{k}. coeffs j)"
+            by (by100 simp)
+          moreover have "Suc k mod ?n' \<in> {..<?n'} - {k}"
+          proof -
+            have hn'_pos3: "(0::nat) < ?n'" using hn'_ge3 by (by100 linarith)
+            have "Suc k mod ?n' < ?n'" by (rule mod_less_divisor[OF hn'_pos3])
+            moreover have "Suc k mod ?n' \<noteq> k"
+            proof (cases "Suc k < ?n'")
+              case True thus ?thesis by (by100 simp)
+            next
+              case False hence "Suc k = ?n'" using hk by (by100 linarith)
+              hence "Suc k mod ?n' = 0" by (by100 simp)
+              moreover have "k \<ge> 2" using hn'_ge3 \<open>Suc k = ?n'\<close> by (by100 linarith)
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+          from sum.remove[OF _ this, of coeffs]
+          have "(\<Sum>j\<in>{..<?n'}-{k}. coeffs j) = coeffs (Suc k mod ?n') + (\<Sum>j\<in>{..<?n'}-{k}-{Suc k mod ?n'}. coeffs j)"
+            by (by100 simp)
+          ultimately show ?thesis by (by100 linarith)
+        qed
         moreover have "(\<Sum>j\<in>{..<?n'} - {k} - {Suc k mod ?n'}. coeffs j) = 0"
           by (rule sum.neutral, use honly_Sk in \<open>by100 force\<close>)
         ultimately show ?thesis using hsum hzero by (by100 linarith)
