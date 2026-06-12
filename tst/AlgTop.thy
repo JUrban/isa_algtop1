@@ -4428,6 +4428,7 @@ qed
 lemma scheme_quotient_transfer_along_homeomorphism:
   assumes hq: "top1_quotient_of_scheme_on Y TY s"
       and hh: "top1_homeomorphism_on Y TY Y' TY' h"
+      and htopo_strict': "is_topology_on_strict Y' TY'"
   shows "top1_quotient_of_scheme_on Y' TY' s"
 proof -
   let ?n = "length s"
@@ -4464,10 +4465,7 @@ proof -
   \<comment> \<open>Define q' = h \\<circ> q: P \\<to> Y'.\<close>
   define q' where "q' = h \<circ> q"
   \<comment> \<open>Topology of Y'.\<close>
-  have htopo': "is_topology_on_strict Y' TY'"
-    sorry \<comment> \<open>From homeomorphism: is\\_topology\\_on Y' TY' + TY' \\<subseteq> Pow Y'.
-       Need either strict version from hq transferred through h, or derive TY' \\<subseteq> Pow Y'
-       from the continuous\\_map\\_on definition of h.\<close>
+  have htopo': "is_topology_on_strict Y' TY'" using htopo_strict' .
   \<comment> \<open>C2': q' = h \\<circ> q is a quotient map from P to Y' (composition of quotient + homeomorphism).\<close>
   have hh_quot: "top1_quotient_map_on Y TY Y' TY' h"
     by (rule top1_homeomorphism_on_imp_quotient_map_on[OF hh])
@@ -4926,7 +4924,7 @@ proof -
      The inverse homeomorphism Y\\_w \\<to> Y transfers the quotient structure.\<close>
   from homeomorphism_inverse[OF hcomp]
   have hinv: "top1_homeomorphism_on Y_w TY_w Y TY (inv_into Y (h_collapse \<circ> h_bridge))" .
-  from scheme_quotient_transfer_along_homeomorphism[OF hY_w hinv]
+  from scheme_quotient_transfer_along_homeomorphism[OF hY_w hinv htopo_Y]
   have "top1_quotient_of_scheme_on Y TY w" .
   \<comment> \<open>Y is a quotient of w (same space!) with original topology. Identity is the homeomorphism.\<close>
   thus ?thesis by (rule same_space_implies_homeo_realization)
