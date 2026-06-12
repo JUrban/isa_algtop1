@@ -5347,7 +5347,9 @@ proof -
                   \<comment> \<open>From C9\\_e: i=j\\<and>t=s or labels match with s=1-t (since snd differ).\<close>
                   \<comment> \<open>Case i=0,j=1 or i=1,j=0: f maps to spur fold \\<to> same value.\<close>
                   \<comment> \<open>Both i,j \\<in> \\{0,1\\}. snd for edges 0 and 1: snd(scheme!0) = True, snd(scheme!1) = False.\<close>
-                  show ?thesis sorry \<comment> \<open>Cancel pair fold. i,j \\<in> \\{0,1\\}, use hf\\_spur0/1 + hdir.\<close>
+                  show ?thesis sorry \<comment> \<open>Cancel pair fold. i,j \\<in> \\{0,1\\}.
+                     Both map to spur: f(edge0@t)=(1-t)*u0+t*cm, f(edge1@(1-t))=same.
+                     Freshness proved; just needs spur fold algebra + Suc normalization.\<close>
                 qed
               qed
             next
