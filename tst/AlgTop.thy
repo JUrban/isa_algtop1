@@ -5601,7 +5601,76 @@ proof -
             and hy: "y = ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
             by (by100 blast)
           \<comment> \<open>Both on boundary. Case analysis on edge types and parameters.\<close>
-          show ?thesis sorry \<comment> \<open>Backward boundary-boundary case. Mirror of forward direction.\<close>
+          \<comment> \<open>Both on boundary. Mirror of forward direction using C9\\_m + C7\\_e.\<close>
+          show ?thesis
+          proof (cases "i \<ge> 2 \<and> j \<ge> 2")
+            case True
+            hence hi2: "i \<ge> 2" and hj2: "j \<ge> 2" by (by100 auto)+
+            \<comment> \<open>Both on w-edges. f maps to P\\_m edges. Use C9\\_m + C7\\_e.\<close>
+            define i' where "i' = i - 2" define j' where "j' = j - 2"
+            have hi'_eq: "i = i' + 2" using hi2 i'_def by (by100 linarith)
+            have hj'_eq: "j = j' + 2" using hj2 j'_def by (by100 linarith)
+            have hi'_m: "i' < ?m" using hi hn_eq i'_def hi2 by (by100 linarith)
+            have hj'_m: "j' < ?m" using hj hn_eq j'_def hj2 by (by100 linarith)
+            have happ_i: "([a, top1_inverse_edge a] @ w) ! i = w ! i'"
+              unfolding hi'_eq by (by100 simp)
+            have happ_j: "([a, top1_inverse_edge a] @ w) ! j = w ! j'"
+              unfolding hj'_eq by (by100 simp)
+            have hfx: "f x = ((1-t)*vx_m i'+t*vx_m(Suc i' mod ?m),(1-t)*vy_m i'+t*vy_m(Suc i' mod ?m))"
+              using hf_edge[rule_format, OF conjI[OF hi2 hi]] ht hx i'_def by (by100 simp)
+            have hfy: "f y = ((1-s)*vx_m j'+s*vx_m(Suc j' mod ?m),(1-s)*vy_m j'+s*vy_m(Suc j' mod ?m))"
+              using hf_edge[rule_format, OF conjI[OF hj2 hj]] hs hy j'_def by (by100 simp)
+            show ?thesis
+            proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
+              case True
+              hence ht_open: "t \<in> {0<..<(1::real)}" and hs_open: "s \<in> {0<..<(1::real)}" by (by100 auto)+
+              from hC9m[rule_format, OF hi'_m hj'_m ht_open hs_open] heq[simplified hfx hfy comp_def]
+              have "(i'=j' \<and> t=s) \<or> (fst(w!i')=fst(w!j') \<and>
+                  (if snd(w!i')=snd(w!j') then s=t else s=1-t))"
+                by (by100 blast)
+              thus ?thesis
+              proof (elim disjE conjE)
+                assume "i' = j'" "t = s"
+                hence "i = j" using i'_def j'_def hi2 hj2 by (by100 linarith)
+                thus ?thesis using hx hy \<open>t = s\<close> by (by100 simp)
+              next
+                assume hlabel_w: "fst(w!i') = fst(w!j')"
+                  and hdir_w: "if snd(w!i') = snd(w!j') then s=t else s=1-t"
+                \<comment> \<open>Derive label match for extended scheme, then use C7\\_e.\<close>
+                \<comment> \<open>Use pre-computed happ\\_i, happ\\_j.\<close>
+                have hlabel_e: "fst(([a, top1_inverse_edge a] @ w)!i)=fst(([a, top1_inverse_edge a] @ w)!j)"
+                  using hlabel_w happ_i happ_j by (by100 simp)
+                from hC7e[rule_format, OF hi hj hlabel_e ht]
+                show ?thesis
+                proof (cases "snd(w!i') = snd(w!j')")
+                  case True
+                  hence "s = t" using hdir_w by (by100 simp)
+                  moreover have "snd(([a, top1_inverse_edge a] @ w)!i)=snd(([a, top1_inverse_edge a] @ w)!j)"
+                    using True happ_i happ_j by (by100 simp)
+                  ultimately show ?thesis
+                    using hC7e[rule_format, OF hi hj hlabel_e ht] hx hy by (by100 simp)
+                next
+                  case False
+                  hence "s = 1 - t" using hdir_w by (by100 simp)
+                  moreover have "\<not>snd(([a, top1_inverse_edge a] @ w)!i)=snd(([a, top1_inverse_edge a] @ w)!j)"
+                    using False happ_i happ_j by (by100 simp)
+                  moreover have "q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+                    = q_e (t*vx_e j+(1-t)*vx_e(Suc j mod ?n),t*vy_e j+(1-t)*vy_e(Suc j mod ?n))"
+                    using hC7e[rule_format, OF hi hj hlabel_e ht] calculation(2) by (by100 simp)
+                  moreover have "y = (t*vx_e j+(1-t)*vx_e(Suc j mod ?n),t*vy_e j+(1-t)*vy_e(Suc j mod ?n))"
+                    using hy \<open>s=1-t\<close> by (by100 simp)
+                  ultimately show ?thesis using hx by (by100 simp)
+                qed
+              qed
+            next
+              case False
+              show ?thesis sorry \<comment> \<open>Backward vertex case (both w-edges).\<close>
+            qed
+          next
+            case False
+            \<comment> \<open>At least one edge is 0 or 1 (cancel pair or mixed).\<close>
+            show ?thesis sorry \<comment> \<open>Backward cancel/mixed case. Uses C8\\_m on spur + C7\\_e.\<close>
+          qed
         qed
       qed
     qed
