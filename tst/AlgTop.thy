@@ -4643,7 +4643,19 @@ proof -
             using hf_closed[unfolded top1_closed_map_on_def] hpreimg_closed sorry
           \<comment> \<open>f(P1 \\\\ f\\<inverse>(V)) = P2 \\\\ V (by surjectivity).\<close>
           moreover have "f ` (P1 - {x \<in> P1. f x \<in> V}) = P2 - V"
-            using hf_surj hV_sub sorry
+          proof (rule set_eqI, rule iffI)
+            fix y assume "y \<in> f ` (P1 - {x \<in> P1. f x \<in> V})"
+            then obtain x where hx: "x \<in> P1" "f x \<notin> V" "y = f x" by (by100 blast)
+            have "y \<in> P2" using hx(1) hx(3) hf_range by (by100 blast)
+            thus "y \<in> P2 - V" using hx(2,3) by (by100 blast)
+          next
+            fix y assume hy: "y \<in> P2 - V"
+            hence "y \<in> P2" "y \<notin> V" by (by100 auto)+
+            from \<open>y \<in> P2\<close> obtain x where "x \<in> P1" "f x = y"
+              using hf_surj by (by100 force)
+            moreover have "f x \<notin> V" using \<open>y \<notin> V\<close> \<open>f x = y\<close> by (by100 simp)
+            ultimately show "y \<in> f ` (P1 - {x \<in> P1. f x \<in> V})" by (by100 blast)
+          qed
           \<comment> \<open>P2 \\\\ V closed \\<Longrightarrow> V open.\<close>
           ultimately have "closedin_on P2 ?TP2 (P2 - V)" by (by100 simp)
           thus "V \<in> ?TP2"
