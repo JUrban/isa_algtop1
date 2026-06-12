@@ -4533,7 +4533,50 @@ proof -
           = h (q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)))"
         unfolding q'_def comp_def by (by100 simp)
       moreover have "((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> P"
-        sorry \<comment> \<open>Edge point in P: convex combination of vx(i),vx(Suc i mod n) which are in P.\<close>
+      proof -
+        have hn3: "?n \<ge> 3" using hC1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
+        have hn_pos: "0 < ?n" using hn3 by (by100 linarith)
+        have hSi: "Suc i mod ?n < ?n" by (rule mod_less_divisor[OF hn_pos])
+        define coeffs :: "nat \<Rightarrow> real" where "coeffs k = (if k = i then 1-t else if k = Suc i mod ?n then t else 0)" for k
+        have "(\<forall>k<?n. coeffs k \<ge> 0)"
+          unfolding coeffs_def using ht by (by100 auto)
+        moreover have "(\<Sum>k<?n. coeffs k) = 1"
+        proof -
+          have "{..<?n} = {i, Suc i mod ?n} \<union> ({..<?n} - {i, Suc i mod ?n})" using hi hSi by (by100 blast)
+          have "(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k) = 0"
+            by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
+          have "i \<noteq> Suc i mod ?n"
+          proof (cases "Suc i < ?n")
+            case True thus ?thesis by (by100 simp)
+          next
+            case False hence "Suc i = ?n" using hi by (by100 linarith)
+            hence "Suc i mod ?n = 0" by (by100 simp)
+            moreover have "i \<ge> 2" using hn3 \<open>Suc i = ?n\<close> by (by100 linarith)
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          hence hcoeff_sum: "coeffs i + coeffs (Suc i mod ?n) = 1" unfolding coeffs_def by (by100 simp)
+          have "(\<Sum>k<?n. coeffs k) = coeffs i + coeffs (Suc i mod ?n) + (\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k)"
+          proof -
+            have hi_in: "i \<in> {..<?n}" using hi by (by100 simp)
+            from sum.remove[OF finite_lessThan hi_in, of coeffs]
+            have "(\<Sum>k<?n. coeffs k) = coeffs i + (\<Sum>k\<in>{..<?n}-{i}. coeffs k)" by (by100 simp)
+            moreover have "Suc i mod ?n \<in> {..<?n} - {i}" using hSi \<open>i \<noteq> Suc i mod ?n\<close> by (by100 simp)
+            from sum.remove[OF _ this, of coeffs]
+            have "(\<Sum>k\<in>{..<?n}-{i}. coeffs k) = coeffs (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k)"
+              by (by100 simp)
+            ultimately have "(\<Sum>k<?n. coeffs k) = coeffs i + coeffs (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k)"
+              by (by100 linarith)
+            moreover have "{..<?n}-{i}-{Suc i mod ?n} = {..<?n} - {i, Suc i mod ?n}" by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          thus ?thesis using hcoeff_sum \<open>(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k) = 0\<close> by (by100 linarith)
+        qed
+        moreover have "(1-t)*vx i+t*vx(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vx k)"
+          sorry \<comment> \<open>Most terms are 0; only i and Suc i mod n contribute.\<close>
+        moreover have "(1-t)*vy i+t*vy(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vy k)"
+          sorry
+        ultimately show ?thesis unfolding hC5 by (by100 blast)
+      qed
       hence "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> Y"
         using q_range by (by100 blast)
       moreover have "((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> P"
