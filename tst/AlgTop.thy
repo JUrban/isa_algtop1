@@ -3418,377 +3418,8 @@ qed
 
 \<comment> \<open>scheme\\_equiv\\_implies\\_homeo\\_realization: DELETED (old bridge, unused).\<close>
 
-\<comment> \<open>Homeomorphism-preservation for valid scheme operations (per expert audit step 8).
-   This is the correct semantic theorem for the classification chain.\<close>
-lemma valid_operation_preserves_quotient_homeo:
-  fixes X :: "'a set" and TX :: "'a set set"
-  assumes "top1_quotient_of_scheme_on X TX s"
-      and "top1_valid_scheme_operation s t"
-  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
-    top1_quotient_of_scheme_on Y TY t \<and>
-    top1_homeomorphism_on X TX Y TY h"
-  using assms(2,1)
-proof (induction rule: top1_valid_scheme_operation.induct)
-  case (v_rotate u v)
-  have hq: "top1_quotient_of_scheme_on X TX (v @ u)"
-    by (rule quotient_of_scheme_rotate[OF v_rotate.prems])
-  have htopo: "is_topology_on X TX"
-    using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
-next
-  case (v_cancel u a v)
-  \<comment> \<open>Cancel: §76(vi). The (n+2)-gon folds along cancelled edge pair to give n-gon.
-     Step 1: Extract polygon P, quotient map q, vertices from the old quotient.
-     Step 2: Define new polygon P' by skipping vertex at position |u|+1.
-     Step 3: Show P' is a valid polygonal region for scheme u@v.
-     Step 4: Use quotient\\_transport\\_by\\_homeomorphism.\<close>
-  \<comment> \<open>Use homeo-realization: rotate to front, apply cancel, rotate back.\<close>
-  show ?case
-  proof (cases "length (u @ v) \<ge> 3")
-    case True
-    have h1: "top1_quotient_of_scheme_on X TX ([a, top1_inverse_edge a] @ v @ u)"
-      using quotient_of_scheme_rotate[OF v_cancel.prems] by simp
-    have hlen: "length (v @ u) \<ge> 3" using True by simp
-    from front_cancel_realization_homeo[OF h1 hlen]
-    obtain Y' :: "'a set" and TY' :: "'a set set" and h1' :: "'a \<Rightarrow> 'a" where
-        hY': "top1_quotient_of_scheme_on Y' TY' (v @ u)"
-        and hh1': "top1_homeomorphism_on X TX Y' TY' h1'"
-      by (by100 blast)
-    have "top1_quotient_of_scheme_on Y' TY' (u @ v)"
-      using quotient_of_scheme_rotate[OF hY'] by simp
-    thus ?thesis using hh1' by (rule homeo_realization_flat_introI)
-  next
-    case False
-    \<comment> \<open>Short scheme: length(u@v) < 3.\<close>
-    have hlen_src: "length (u @ [a, top1_inverse_edge a] @ v) \<ge> 3"
-      using quotient_scheme_length_ge3[OF v_cancel.prems] .
-    hence hlen_uv: "length (u @ v) \<ge> 1" by (by100 simp)
-    show ?thesis
-    proof (cases "length (u @ v) = 0")
-      case True
-      \<comment> \<open>length(u@v) = 0: source has length 2 < 3, so premise is false.\<close>
-      hence "length (u @ [a, top1_inverse_edge a] @ v) = 2" by (by100 simp)
-      hence False using hlen_src by (by100 linarith)
-      thus ?thesis by (by100 simp)
-    next
-      case False2: False
-      \<comment> \<open>length(u@v) \\<in> {1, 2}: genuinely false for length(u@v) = 2.
-         For proper schemes: length(u@v) is even (from even source length - 2).
-         So length(u@v) = 2 is the only remaining case (length 1 = odd, can't be proper).
-         Target has length 2 < 3, so quotient\\_on is impossible.
-         Never arises in the classification chain (even proper schemes only).\<close>
-      show ?thesis sorry \<comment> \<open>Genuinely false for length(u@v)=2. Needs precondition.\<close>
-    qed
-  qed
-next
-  case (v_uncancel a u v)
-  \<comment> \<open>Uncancel: §76(vii). Use front\\_uncancel\\_realization\\_homeo via rotation.\<close>
-  have h1: "top1_quotient_of_scheme_on X TX (v @ u)"
-    using quotient_of_scheme_rotate[OF v_uncancel.prems] by simp
-  have hlen_vu: "length (v @ u) \<ge> 3"
-    using quotient_scheme_length_ge3[OF h1] .
-  from front_uncancel_realization_homeo[OF h1 hlen_vu, of a]
-  obtain Y' :: "'a set" and TY' :: "'a set set" and h1' :: "'a \<Rightarrow> 'a" where
-      hY': "top1_quotient_of_scheme_on Y' TY' ([a, top1_inverse_edge a] @ v @ u)"
-      and hh1': "top1_homeomorphism_on X TX Y' TY' h1'"
-    by (by100 blast)
-  have "top1_quotient_of_scheme_on Y' TY' ((v @ u) @ [a, top1_inverse_edge a])"
-    using quotient_of_scheme_rotate[OF hY'] by simp
-  hence "top1_quotient_of_scheme_on Y' TY' (v @ (u @ [a, top1_inverse_edge a]))"
-    by simp
-  hence "top1_quotient_of_scheme_on Y' TY' ((u @ [a, top1_inverse_edge a]) @ v)"
-    using quotient_of_scheme_rotate by (by100 fastforce)
-  hence "top1_quotient_of_scheme_on Y' TY' (u @ [a, top1_inverse_edge a] @ v)"
-    by simp
-  thus ?case using hh1' by (rule homeo_realization_flat_introI)
-next
-  case v_cancel_reverse
-  \<comment> \<open>v\\_cancel\\_reverse: u@v -> u@[a,inv a]@v. Same as uncancel.\<close>
-  from quotient_of_scheme_uncancel_proved[OF v_cancel_reverse.prems]
-  show ?case by (rule same_space_implies_homeo_realization)
-next
-  case (v_cut_paste_reverse u1_r a_r u2_r u3_r)
-  \<comment> \<open>Reverse of cut-paste: same geometric argument (edge permutation) in reverse direction.\<close>
-  have "top1_quotient_of_scheme_on X TX (u1_r @ [(a_r, True)] @ u2_r @ [(a_r, True)] @ u3_r)"
-    sorry \<comment> \<open>Same-space: quotient\\_scheme\\_edge\\_permutation with \\<sigma>\\<inverse>.
-       The source scheme is a permutation of the target (with u2 reversal).\<close>
-  thus ?case by (rule same_space_implies_homeo_realization_early)
-next
-  case (v_cut_paste2_reverse b_r u2_r u1_r u0_r a_r)
-  \<comment> \<open>Reverse of cut-paste2: same geometric argument in reverse direction.\<close>
-  have "top1_quotient_of_scheme_on X TX (u0_r @ [(a_r, True)] @ u1_r @ [(a_r, True)] @ u2_r)"
-    sorry \<comment> \<open>Same-space: quotient\\_scheme\\_edge\\_permutation with \\<sigma>\\<inverse>.\<close>
-  thus ?case by (rule same_space_implies_homeo_realization_early)
-next
-  case (v_invert w)
-  have hq: "top1_quotient_of_scheme_on X TX (rev (map top1_inverse_edge w))"
-    by (rule quotient_of_scheme_invert[OF v_invert.prems])
-  have htopo: "is_topology_on X TX"
-    using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
-next
-  case (v_relabel new old w)
-  from quotient_of_scheme_relabel_fresh[OF v_relabel.prems v_relabel(1) v_relabel(2)]
-  show ?case by (rule same_space_implies_homeo_realization)
-next
-  case (v_flip_label w a)
-  have hq: "top1_quotient_of_scheme_on X TX (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w)"
-    by (rule quotient_scheme_flip_label[OF v_flip_label.prems])
-  have htopo: "is_topology_on X TX"
-    using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
-next
-  case (v_cut_paste u1 a u2 u3)
-  \<comment> \<open>Cut-paste: §76(iv). Homeomorphic realization via polygon cut-reglue.\<close>
-  from quotient_of_scheme_cut_paste[OF v_cut_paste.prems] show ?case .
-next
-  case (v_cut_paste2 b u0 a u1 u2)
-  \<comment> \<open>Cut-paste2: §76(v) variant.\<close>
-  from quotient_of_scheme_cut_paste2[OF v_cut_paste2.prems] show ?case .
-next
-  case (v_cut_paste2_nonfresh u0 a u1 u2 b)
-  \<comment> \<open>Cut-paste2 without freshness. Same underlying lemma.\<close>
-  from quotient_of_scheme_cut_paste2[OF v_cut_paste2_nonfresh.prems] show ?case .
-next
-  case (v_cut_paste_opp u0 u1 a u2 u3)
-  \<comment> \<open>Cut-paste-opp: §76(ix). Homeomorphic realization.\<close>
-  from quotient_of_scheme_cut_paste_opp[OF v_cut_paste_opp.prems] show ?case .
-next
-  case (v_context_left y z prefix)
-  \<comment> \<open>Context-left: valid operation y \\<to> z lifts to prefix@y \\<to> prefix@z.
-     Per audit 22 option 2: nested case analysis on inner operation y \\<to> z.
-     For v\\_relabel (fresh): relabeling the suffix is the same as relabeling
-     the full scheme when the label only appears in the suffix (from properness).
-     Other cases: admitted (not exercised in the normal form chain for proper schemes).\<close>
-  from v_context_left.hyps
-  show ?case
-  proof (cases rule: top1_valid_scheme_operation.cases)
-    case (v_relabel new old)
-    \<comment> \<open>Inner operation is fresh relabeling: rename old \\<to> new in suffix y.
-       If old \\<notin> labels(prefix) and new \\<notin> labels(prefix), this is a full-scheme relabel.\<close>
-    have hfresh: "new \<notin> fst ` set y" and hne: "new \<noteq> old"
-      and hz_eq: "z = map (\<lambda>(l, b). (if l = old then new else l, b)) y"
-      using v_relabel by (by100 auto)+
-    \<comment> \<open>If old does not appear in prefix, the context-left relabel = full-scheme relabel.\<close>
-    show ?thesis
-    proof (cases "old \<notin> fst ` set prefix \<and> new \<notin> fst ` set prefix")
-      case True
-      hence hold_fresh: "old \<notin> fst ` set prefix" and hnew_fresh: "new \<notin> fst ` set prefix"
-        by (by100 auto)+
-      \<comment> \<open>prefix@y \\<to> prefix@z is the same as map(rename) applied to prefix@y.
-         Since old \\<notin> prefix: map(rename) doesn't change the prefix.
-         Since new \\<notin> prefix: the full rename is fresh in prefix@y.\<close>
-      have hfull_map: "prefix @ z = map (\<lambda>(l, b). (if l = old then new else l, b)) (prefix @ y)"
-      proof -
-        have "map (\<lambda>(l, b). (if l = old then new else l, b)) prefix = prefix"
-          using hold_fresh by (induction prefix) (by100 auto)+
-        thus ?thesis using hz_eq by (by100 simp)
-      qed
-      have hfull_fresh: "new \<notin> fst ` set (prefix @ y)"
-        using hfresh hnew_fresh by (by100 auto)
-      from quotient_of_scheme_relabel_fresh[OF v_context_left.prems hfull_fresh hne]
-      have "top1_quotient_of_scheme_on X TX (prefix @ z)" using hfull_map by (by100 simp)
-      thus ?thesis by (rule same_space_implies_homeo_realization)
-    next
-      case False
-      \<comment> \<open>old or new appears in prefix: non-trivial case.
-         For PROPER schemes this can't happen (label appears exactly 2 times,
-         all in the suffix). For the classification chain, all schemes are proper.\<close>
-      show ?thesis sorry \<comment> \<open>Non-fresh prefix case of context-left relabel.
-         Blocked: would need properness assumption to eliminate.\<close>
-    qed
-  next
-    \<comment> \<open>Other inner operations: not exercised by the normal form chain.
-       The classification proof (scheme\\_normal\\_form\\_valid in AlgTopCached14)
-       only uses v\\_context\\_left with inner operation = v\\_relabel (fresh).
-       For proper schemes, the fresh-prefix case (proved above) always holds.
-       These remaining sub-cases are structural completeness requirements.\<close>
-    case (v_rotate u_r v_r)
-    \<comment> \<open>Inner rotate: y = u\\_r@v\\_r \\<to> z = v\\_r@u\\_r. Cannot express as full-scheme rotate.\<close>
-    show ?thesis sorry \<comment> \<open>prefix@u\\_r@v\\_r \\<to> prefix@v\\_r@u\\_r: not a rotation of the full scheme.\<close>
-  next case (v_cancel u_c a_c v_c)
-    \<comment> \<open>Inner cancel: y = u\\_c@[a\\_c,inv a\\_c]@v\\_c \\<to> z = u\\_c@v\\_c.
-       Full scheme: (prefix@u\\_c)@[a\\_c,inv a\\_c]@v\\_c \\<to> (prefix@u\\_c)@v\\_c.
-       This is a v\\_cancel on the full scheme with u' = prefix@u\\_c.\<close>
-    have hy: "y = u_c @ [a_c, top1_inverse_edge a_c] @ v_c"
-      and hz: "z = u_c @ v_c" using v_cancel by (by100 auto)+
-    show ?thesis
-    proof (cases "length ((prefix @ u_c) @ v_c) \<ge> 3")
-      case True
-      have hprems_eq: "prefix @ y = (prefix @ u_c) @ [a_c, top1_inverse_edge a_c] @ v_c"
-        using hy by (by100 simp)
-      have h1: "top1_quotient_of_scheme_on X TX
-          ([a_c, top1_inverse_edge a_c] @ v_c @ prefix @ u_c)"
-      proof -
-        have "top1_quotient_of_scheme_on X TX ((prefix @ u_c) @ ([a_c, top1_inverse_edge a_c] @ v_c))"
-          using v_context_left.prems hprems_eq by (by100 simp)
-        from quotient_of_scheme_rotate[OF this]
-        show ?thesis by (by100 simp)
-      qed
-      have hlen: "length (v_c @ prefix @ u_c) \<ge> 3" using True by (by100 simp)
-      from front_cancel_realization_homeo[OF h1 hlen]
-      obtain Y'c :: "'a set" and TY'c :: "'a set set" and h'c :: "'a \<Rightarrow> 'a" where
-          hY'c: "top1_quotient_of_scheme_on Y'c TY'c (v_c @ prefix @ u_c)"
-          and hh'c: "top1_homeomorphism_on X TX Y'c TY'c h'c"
-        by (by100 blast)
-      have "top1_quotient_of_scheme_on Y'c TY'c ((prefix @ u_c) @ v_c)"
-        using quotient_of_scheme_rotate[OF hY'c] by (by100 simp)
-      hence "top1_quotient_of_scheme_on Y'c TY'c (prefix @ u_c @ v_c)"
-        by (by100 simp)
-      hence "top1_quotient_of_scheme_on Y'c TY'c (prefix @ z)" using hz by (by100 simp)
-      thus ?thesis using hh'c by (rule homeo_realization_flat_introI)
-    next
-      case False
-      \<comment> \<open>Short case: length((prefix@u\\_c)@v\\_c) < 3. Genuinely false for length = 2.
-         For proper schemes, never arises (even length sources).\<close>
-      have "length ((prefix @ u_c) @ [a_c, top1_inverse_edge a_c] @ v_c) \<ge> 3"
-        using quotient_scheme_length_ge3[OF v_context_left.prems] hy by (by100 simp)
-      hence "length ((prefix @ u_c) @ v_c) \<ge> 1" by (by100 simp)
-      show ?thesis sorry \<comment> \<open>Genuinely false for length((prefix@u\\_c)@v\\_c)=2.\<close>
-    qed
-  next case (v_uncancel a_u u_u v_u)
-    \<comment> \<open>Inner uncancel: y = u\\_u@v\\_u \\<to> z = u\\_u@[a\\_u,inv a\\_u]@v\\_u.
-       Full scheme: prefix@u\\_u@v\\_u \\<to> prefix@u\\_u@[a\\_u,inv a\\_u]@v\\_u.
-       This is a v\\_cancel\\_reverse on the full scheme.\<close>
-    have hy: "y = u_u @ v_u" and hz: "z = u_u @ [a_u, top1_inverse_edge a_u] @ v_u"
-      using v_uncancel by (by100 auto)+
-    have "top1_quotient_of_scheme_on X TX ((prefix @ u_u) @ v_u)"
-      using v_context_left.prems hy by (by100 simp)
-    from quotient_of_scheme_uncancel_proved[OF this, of a_u]
-    have "top1_quotient_of_scheme_on X TX ((prefix @ u_u) @ [a_u, top1_inverse_edge a_u] @ v_u)" .
-    hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz by (by100 simp)
-    thus ?thesis by (rule same_space_implies_homeo_realization)
-  next case (v_cancel_reverse u_cr v_cr a_cr)
-    \<comment> \<open>Same as v\\_uncancel above but via v\\_cancel\\_reverse.\<close>
-    have hy: "y = u_cr @ v_cr" and hz: "z = u_cr @ [a_cr, top1_inverse_edge a_cr] @ v_cr"
-      using v_cancel_reverse by (by100 auto)+
-    have "top1_quotient_of_scheme_on X TX ((prefix @ u_cr) @ v_cr)"
-      using v_context_left.prems hy by (by100 simp)
-    from quotient_of_scheme_uncancel_proved[OF this, of a_cr]
-    have "top1_quotient_of_scheme_on X TX ((prefix @ u_cr) @ [a_cr, top1_inverse_edge a_cr] @ v_cr)" .
-    hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz by (by100 simp)
-    thus ?thesis by (rule same_space_implies_homeo_realization)
-  next case (v_cut_paste_reverse u1_cpr a_cpr u2_cpr u3_cpr)
-    \<comment> \<open>Inner cut-paste-reverse in suffix = full-scheme v\\_cut\\_paste\\_reverse with u1' = prefix@u1.\<close>
-    have hy_r: "y = u1_cpr @ [(a_cpr, True), (a_cpr, True)] @ rev (map top1_inverse_edge u2_cpr) @ u3_cpr"
-      and hz_r: "z = u1_cpr @ [(a_cpr, True)] @ u2_cpr @ [(a_cpr, True)] @ u3_cpr"
-      using v_cut_paste_reverse by (by100 auto)+
-    have "top1_quotient_of_scheme_on X TX
-        ((prefix @ u1_cpr) @ [(a_cpr, True), (a_cpr, True)] @ rev (map top1_inverse_edge u2_cpr) @ u3_cpr)"
-      using v_context_left.prems hy_r by (by100 simp)
-    hence "top1_quotient_of_scheme_on X TX
-        ((prefix @ u1_cpr) @ [(a_cpr, True)] @ u2_cpr @ [(a_cpr, True)] @ u3_cpr)"
-      sorry \<comment> \<open>Same-space: reverse edge permutation (same sorry as v\\_cut\\_paste\\_reverse outer case).\<close>
-    hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz_r by (by100 simp)
-    thus ?thesis by (rule same_space_implies_homeo_realization)
-  next case (v_cut_paste2_reverse b_cpr u2_cpr u1_cpr u0_cpr a_cpr)
-    \<comment> \<open>Inner cut-paste2-reverse: similar pattern.\<close>
-    have hy_r: "y = [(b_cpr, True)] @ u2_cpr @ [(b_cpr, True)] @ u1_cpr @ rev (map top1_inverse_edge u0_cpr)"
-      and hz_r: "z = u0_cpr @ [(a_cpr, True)] @ u1_cpr @ [(a_cpr, True)] @ u2_cpr"
-      using v_cut_paste2_reverse by (by100 auto)+
-    show ?thesis sorry \<comment> \<open>Full-scheme cut-paste2-reverse: prefix splitting differs.\<close>
-  next case v_invert
-    \<comment> \<open>Inner invert: y = w \\<to> z = rev(inv w).
-       Cannot express as full-scheme invert (prefix is not inverted).\<close>
-    show ?thesis sorry
-  next case (v_flip_label a_fl)
-    \<comment> \<open>Inner operation flips direction of label a\\_fl in suffix y.
-       If a\\_fl \\<notin> labels(prefix): equivalent to full-scheme flip.\<close>
-    have hz_fl: "z = map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) y" using v_flip_label by (by100 auto)
-    show ?thesis
-    proof (cases "a_fl \<notin> fst ` set prefix")
-      case True
-      have "prefix @ z = map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) (prefix @ y)"
-      proof -
-        have "map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) prefix = prefix"
-          using True by (induction prefix) (by100 auto)+
-        thus ?thesis using hz_fl by (by100 simp)
-      qed
-      from quotient_scheme_flip_label[OF v_context_left.prems]
-      have "top1_quotient_of_scheme_on X TX (map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) (prefix @ y))" .
-      hence "top1_quotient_of_scheme_on X TX (prefix @ z)"
-        using \<open>prefix @ z = _\<close> by (by100 simp)
-      thus ?thesis by (rule same_space_implies_homeo_realization)
-    next
-      case False show ?thesis sorry \<comment> \<open>a\\_fl in prefix: non-trivial.\<close>
-    qed
-  next case (v_cut_paste u1_cp a_cp u2_cp u3_cp)
-    \<comment> \<open>Inner cut-paste in suffix = full-scheme cut-paste with u1' = prefix@u1.\<close>
-    have hy: "y = u1_cp @ [(a_cp, True)] @ u2_cp @ [(a_cp, True)] @ u3_cp"
-      and hz: "z = u1_cp @ [(a_cp, True), (a_cp, True)] @ rev (map top1_inverse_edge u2_cp) @ u3_cp"
-      using v_cut_paste by (by100 auto)+
-    have "top1_quotient_of_scheme_on X TX
-        ((prefix @ u1_cp) @ [(a_cp, True)] @ u2_cp @ [(a_cp, True)] @ u3_cp)"
-      using v_context_left.prems hy by (by100 simp)
-    from quotient_of_scheme_cut_paste[OF this]
-    obtain Y'cp :: "'a set" and TY'cp :: "'a set set" and h'cp :: "'a \<Rightarrow> 'a" where
-        hY'cp: "top1_quotient_of_scheme_on Y'cp TY'cp
-          ((prefix @ u1_cp) @ [(a_cp, True), (a_cp, True)] @ rev (map top1_inverse_edge u2_cp) @ u3_cp)"
-        and hh'cp: "top1_homeomorphism_on X TX Y'cp TY'cp h'cp"
-      by (by100 blast)
-    have "top1_quotient_of_scheme_on Y'cp TY'cp (prefix @ z)" using hY'cp hz by (by100 simp)
-    thus ?thesis using hh'cp by (rule homeo_realization_flat_introI)
-  next case (v_cut_paste2 b_cp u0_cp a_cp2 u1_cp2 u2_cp)
-    \<comment> \<open>Inner cut-paste2 in suffix = full-scheme cut-paste2 with u0' = prefix@u0.\<close>
-    have hy: "y = u0_cp @ [(a_cp2, True)] @ u1_cp2 @ [(a_cp2, True)] @ u2_cp"
-      and hz: "z = [(b_cp, True)] @ u2_cp @ [(b_cp, True)] @ u1_cp2 @ rev (map top1_inverse_edge u0_cp)"
-      using v_cut_paste2 by (by100 auto)+
-    show ?thesis sorry \<comment> \<open>Full-scheme cut-paste2 with different prefix splitting.\<close>
-  next case (v_cut_paste2_nonfresh u0_nf a_nf u1_nf u2_nf b_nf)
-    show ?thesis sorry \<comment> \<open>Same as v\\_cut\\_paste2.\<close>
-  next case (v_cut_paste_opp u0_opp u1_opp a_opp u2_opp u3_opp)
-    \<comment> \<open>Inner cut-paste-opp in suffix = full-scheme cut-paste-opp with u0' = prefix@u0.\<close>
-    have hy: "y = u0_opp @ u1_opp @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u3_opp"
-      and hz: "z = u0_opp @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u1_opp @ u3_opp"
-      using v_cut_paste_opp by (by100 auto)+
-    have "top1_quotient_of_scheme_on X TX
-        ((prefix @ u0_opp) @ u1_opp @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u3_opp)"
-      using v_context_left.prems hy by (by100 simp)
-    from quotient_of_scheme_cut_paste_opp[OF this]
-    obtain Y'opp :: "'a set" and TY'opp :: "'a set set" and h'opp :: "'a \<Rightarrow> 'a" where
-        hY'opp: "top1_quotient_of_scheme_on Y'opp TY'opp
-          ((prefix @ u0_opp) @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u1_opp @ u3_opp)"
-        and hh'opp: "top1_homeomorphism_on X TX Y'opp TY'opp h'opp"
-      by (by100 blast)
-    have "top1_quotient_of_scheme_on Y'opp TY'opp (prefix @ z)" using hY'opp hz by (by100 simp)
-    thus ?thesis using hh'opp by (rule homeo_realization_flat_introI)
-  next case v_context_left show ?thesis sorry
-  qed
-qed
 
-\<comment> \<open>Chain: valid equivalence preserves quotient homeomorphism type.\<close>
-lemma valid_equiv_preserves_quotient_homeo:
-  fixes X :: "'a set" and TX :: "'a set set"
-  assumes "top1_quotient_of_scheme_on X TX s"
-      and "top1_valid_scheme_equiv s t"
-  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
-    top1_quotient_of_scheme_on Y TY t \<and>
-    top1_homeomorphism_on X TX Y TY h"
-  using assms(2,1) unfolding top1_valid_scheme_equiv_def
-proof (induction rule: rtranclp.induct)
-  case rtrancl_refl
-  then show ?case by (rule same_space_implies_homeo_realization)
-next
-  case (rtrancl_into_rtrancl a b c)
-  \<comment> \<open>Step: IH gives \\<exists>Y TY h for 'a'; valid\\_op gives \\<exists>Z TZ g for 'b\\<to>c'; compose.\<close>
-  from rtrancl_into_rtrancl.IH[OF rtrancl_into_rtrancl.prems]
-  have hIH: "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
-    top1_quotient_of_scheme_on Y TY b \<and> top1_homeomorphism_on X TX Y TY h" .
-  then obtain Y :: "'a set" and TY :: "'a set set" and hy :: "'a \<Rightarrow> 'a" where
-      qY: "top1_quotient_of_scheme_on Y TY b"
-    and hXY: "top1_homeomorphism_on X TX Y TY hy"
-    by (by100 blast)
-  from valid_operation_preserves_quotient_homeo[OF qY rtrancl_into_rtrancl.hyps(2)]
-  obtain Z :: "'a set" and TZ :: "'a set set" and gz :: "'a \<Rightarrow> 'a" where
-      qZ: "top1_quotient_of_scheme_on Z TZ c"
-    and hYZ: "top1_homeomorphism_on Y TY Z TZ gz"
-    by (by100 blast)
-  have hXZ: "top1_homeomorphism_on X TX Z TZ (gz \<circ> hy)"
-    using homeomorphism_comp[OF hXY hYZ] .
-  show ?case using qZ hXZ by (rule homeo_realization_flat_introI)
-qed
-
-\<comment> \<open>Bridge moved to before valid\\_operation\\_preserves.\<close>
+\<comment> \<open>=== Lemmas moved before valid\_op to break circular dependency potential ==\<close>
 
 \<comment> \<open>A polygonal region is compact (continuous image of a compact simplex).\<close>
 lemma polygonal_region_compact:
@@ -5265,6 +4896,379 @@ proof -
   from scheme_quotient_transfer_along_homeomorphism[OF hY_ext hcomp htopo_Y]
   show ?thesis .
 qed
+
+\<comment> \<open>Homeomorphism-preservation for valid scheme operations (per expert audit step 8).
+   This is the correct semantic theorem for the classification chain.\<close>
+lemma valid_operation_preserves_quotient_homeo:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "top1_quotient_of_scheme_on X TX s"
+      and "top1_valid_scheme_operation s t"
+  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY t \<and>
+    top1_homeomorphism_on X TX Y TY h"
+  using assms(2,1)
+proof (induction rule: top1_valid_scheme_operation.induct)
+  case (v_rotate u v)
+  have hq: "top1_quotient_of_scheme_on X TX (v @ u)"
+    by (rule quotient_of_scheme_rotate[OF v_rotate.prems])
+  have htopo: "is_topology_on X TX"
+    using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
+next
+  case (v_cancel u a v)
+  \<comment> \<open>Cancel: §76(vi). The (n+2)-gon folds along cancelled edge pair to give n-gon.
+     Step 1: Extract polygon P, quotient map q, vertices from the old quotient.
+     Step 2: Define new polygon P' by skipping vertex at position |u|+1.
+     Step 3: Show P' is a valid polygonal region for scheme u@v.
+     Step 4: Use quotient\\_transport\\_by\\_homeomorphism.\<close>
+  \<comment> \<open>Use homeo-realization: rotate to front, apply cancel, rotate back.\<close>
+  show ?case
+  proof (cases "length (u @ v) \<ge> 3")
+    case True
+    have h1: "top1_quotient_of_scheme_on X TX ([a, top1_inverse_edge a] @ v @ u)"
+      using quotient_of_scheme_rotate[OF v_cancel.prems] by simp
+    have hlen: "length (v @ u) \<ge> 3" using True by simp
+    from front_cancel_realization_homeo[OF h1 hlen]
+    obtain Y' :: "'a set" and TY' :: "'a set set" and h1' :: "'a \<Rightarrow> 'a" where
+        hY': "top1_quotient_of_scheme_on Y' TY' (v @ u)"
+        and hh1': "top1_homeomorphism_on X TX Y' TY' h1'"
+      by (by100 blast)
+    have "top1_quotient_of_scheme_on Y' TY' (u @ v)"
+      using quotient_of_scheme_rotate[OF hY'] by simp
+    thus ?thesis using hh1' by (rule homeo_realization_flat_introI)
+  next
+    case False
+    \<comment> \<open>Short scheme: length(u@v) < 3.\<close>
+    have hlen_src: "length (u @ [a, top1_inverse_edge a] @ v) \<ge> 3"
+      using quotient_scheme_length_ge3[OF v_cancel.prems] .
+    hence hlen_uv: "length (u @ v) \<ge> 1" by (by100 simp)
+    show ?thesis
+    proof (cases "length (u @ v) = 0")
+      case True
+      \<comment> \<open>length(u@v) = 0: source has length 2 < 3, so premise is false.\<close>
+      hence "length (u @ [a, top1_inverse_edge a] @ v) = 2" by (by100 simp)
+      hence False using hlen_src by (by100 linarith)
+      thus ?thesis by (by100 simp)
+    next
+      case False2: False
+      \<comment> \<open>length(u@v) \\<in> {1, 2}: genuinely false for length(u@v) = 2.
+         For proper schemes: length(u@v) is even (from even source length - 2).
+         So length(u@v) = 2 is the only remaining case (length 1 = odd, can't be proper).
+         Target has length 2 < 3, so quotient\\_on is impossible.
+         Never arises in the classification chain (even proper schemes only).\<close>
+      show ?thesis sorry \<comment> \<open>Genuinely false for length(u@v)=2. Needs precondition.\<close>
+    qed
+  qed
+next
+  case (v_uncancel a u v)
+  \<comment> \<open>Uncancel: §76(vii). Use front\\_uncancel\\_realization\\_homeo via rotation.\<close>
+  have h1: "top1_quotient_of_scheme_on X TX (v @ u)"
+    using quotient_of_scheme_rotate[OF v_uncancel.prems] by simp
+  have hlen_vu: "length (v @ u) \<ge> 3"
+    using quotient_scheme_length_ge3[OF h1] .
+  from front_uncancel_realization_homeo[OF h1 hlen_vu, of a]
+  obtain Y' :: "'a set" and TY' :: "'a set set" and h1' :: "'a \<Rightarrow> 'a" where
+      hY': "top1_quotient_of_scheme_on Y' TY' ([a, top1_inverse_edge a] @ v @ u)"
+      and hh1': "top1_homeomorphism_on X TX Y' TY' h1'"
+    by (by100 blast)
+  have "top1_quotient_of_scheme_on Y' TY' ((v @ u) @ [a, top1_inverse_edge a])"
+    using quotient_of_scheme_rotate[OF hY'] by simp
+  hence "top1_quotient_of_scheme_on Y' TY' (v @ (u @ [a, top1_inverse_edge a]))"
+    by simp
+  hence "top1_quotient_of_scheme_on Y' TY' ((u @ [a, top1_inverse_edge a]) @ v)"
+    using quotient_of_scheme_rotate by (by100 fastforce)
+  hence "top1_quotient_of_scheme_on Y' TY' (u @ [a, top1_inverse_edge a] @ v)"
+    by simp
+  thus ?case using hh1' by (rule homeo_realization_flat_introI)
+next
+  case v_cancel_reverse
+  \<comment> \<open>v\\_cancel\\_reverse: u@v -> u@[a,inv a]@v. Same as uncancel.\<close>
+  from quotient_of_scheme_uncancel_proved[OF v_cancel_reverse.prems]
+  show ?case by (rule same_space_implies_homeo_realization)
+next
+  case (v_cut_paste_reverse u1_r a_r u2_r u3_r)
+  \<comment> \<open>Reverse of cut-paste: same geometric argument (edge permutation) in reverse direction.\<close>
+  have "top1_quotient_of_scheme_on X TX (u1_r @ [(a_r, True)] @ u2_r @ [(a_r, True)] @ u3_r)"
+    sorry \<comment> \<open>Same-space: quotient\\_scheme\\_edge\\_permutation with \\<sigma>\\<inverse>.
+       The source scheme is a permutation of the target (with u2 reversal).\<close>
+  thus ?case by (rule same_space_implies_homeo_realization_early)
+next
+  case (v_cut_paste2_reverse b_r u2_r u1_r u0_r a_r)
+  \<comment> \<open>Reverse of cut-paste2: same geometric argument in reverse direction.\<close>
+  have "top1_quotient_of_scheme_on X TX (u0_r @ [(a_r, True)] @ u1_r @ [(a_r, True)] @ u2_r)"
+    sorry \<comment> \<open>Same-space: quotient\\_scheme\\_edge\\_permutation with \\<sigma>\\<inverse>.\<close>
+  thus ?case by (rule same_space_implies_homeo_realization_early)
+next
+  case (v_invert w)
+  have hq: "top1_quotient_of_scheme_on X TX (rev (map top1_inverse_edge w))"
+    by (rule quotient_of_scheme_invert[OF v_invert.prems])
+  have htopo: "is_topology_on X TX"
+    using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
+next
+  case (v_relabel new old w)
+  from quotient_of_scheme_relabel_fresh[OF v_relabel.prems v_relabel(1) v_relabel(2)]
+  show ?case by (rule same_space_implies_homeo_realization)
+next
+  case (v_flip_label w a)
+  have hq: "top1_quotient_of_scheme_on X TX (map (\<lambda>(l, bo). (l, if l = a then \<not> bo else bo)) w)"
+    by (rule quotient_scheme_flip_label[OF v_flip_label.prems])
+  have htopo: "is_topology_on X TX"
+    using hq unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
+next
+  case (v_cut_paste u1 a u2 u3)
+  \<comment> \<open>Cut-paste: §76(iv). Homeomorphic realization via polygon cut-reglue.\<close>
+  from quotient_of_scheme_cut_paste[OF v_cut_paste.prems] show ?case .
+next
+  case (v_cut_paste2 b u0 a u1 u2)
+  \<comment> \<open>Cut-paste2: §76(v) variant.\<close>
+  from quotient_of_scheme_cut_paste2[OF v_cut_paste2.prems] show ?case .
+next
+  case (v_cut_paste2_nonfresh u0 a u1 u2 b)
+  \<comment> \<open>Cut-paste2 without freshness. Same underlying lemma.\<close>
+  from quotient_of_scheme_cut_paste2[OF v_cut_paste2_nonfresh.prems] show ?case .
+next
+  case (v_cut_paste_opp u0 u1 a u2 u3)
+  \<comment> \<open>Cut-paste-opp: §76(ix). Homeomorphic realization.\<close>
+  from quotient_of_scheme_cut_paste_opp[OF v_cut_paste_opp.prems] show ?case .
+next
+  case (v_context_left y z prefix)
+  \<comment> \<open>Context-left: valid operation y \\<to> z lifts to prefix@y \\<to> prefix@z.
+     Per audit 22 option 2: nested case analysis on inner operation y \\<to> z.
+     For v\\_relabel (fresh): relabeling the suffix is the same as relabeling
+     the full scheme when the label only appears in the suffix (from properness).
+     Other cases: admitted (not exercised in the normal form chain for proper schemes).\<close>
+  from v_context_left.hyps
+  show ?case
+  proof (cases rule: top1_valid_scheme_operation.cases)
+    case (v_relabel new old)
+    \<comment> \<open>Inner operation is fresh relabeling: rename old \\<to> new in suffix y.
+       If old \\<notin> labels(prefix) and new \\<notin> labels(prefix), this is a full-scheme relabel.\<close>
+    have hfresh: "new \<notin> fst ` set y" and hne: "new \<noteq> old"
+      and hz_eq: "z = map (\<lambda>(l, b). (if l = old then new else l, b)) y"
+      using v_relabel by (by100 auto)+
+    \<comment> \<open>If old does not appear in prefix, the context-left relabel = full-scheme relabel.\<close>
+    show ?thesis
+    proof (cases "old \<notin> fst ` set prefix \<and> new \<notin> fst ` set prefix")
+      case True
+      hence hold_fresh: "old \<notin> fst ` set prefix" and hnew_fresh: "new \<notin> fst ` set prefix"
+        by (by100 auto)+
+      \<comment> \<open>prefix@y \\<to> prefix@z is the same as map(rename) applied to prefix@y.
+         Since old \\<notin> prefix: map(rename) doesn't change the prefix.
+         Since new \\<notin> prefix: the full rename is fresh in prefix@y.\<close>
+      have hfull_map: "prefix @ z = map (\<lambda>(l, b). (if l = old then new else l, b)) (prefix @ y)"
+      proof -
+        have "map (\<lambda>(l, b). (if l = old then new else l, b)) prefix = prefix"
+          using hold_fresh by (induction prefix) (by100 auto)+
+        thus ?thesis using hz_eq by (by100 simp)
+      qed
+      have hfull_fresh: "new \<notin> fst ` set (prefix @ y)"
+        using hfresh hnew_fresh by (by100 auto)
+      from quotient_of_scheme_relabel_fresh[OF v_context_left.prems hfull_fresh hne]
+      have "top1_quotient_of_scheme_on X TX (prefix @ z)" using hfull_map by (by100 simp)
+      thus ?thesis by (rule same_space_implies_homeo_realization)
+    next
+      case False
+      \<comment> \<open>old or new appears in prefix: non-trivial case.
+         For PROPER schemes this can't happen (label appears exactly 2 times,
+         all in the suffix). For the classification chain, all schemes are proper.\<close>
+      show ?thesis sorry \<comment> \<open>Non-fresh prefix case of context-left relabel.
+         Blocked: would need properness assumption to eliminate.\<close>
+    qed
+  next
+    \<comment> \<open>Other inner operations: not exercised by the normal form chain.
+       The classification proof (scheme\\_normal\\_form\\_valid in AlgTopCached14)
+       only uses v\\_context\\_left with inner operation = v\\_relabel (fresh).
+       For proper schemes, the fresh-prefix case (proved above) always holds.
+       These remaining sub-cases are structural completeness requirements.\<close>
+    case (v_rotate u_r v_r)
+    \<comment> \<open>Inner rotate: y = u\\_r@v\\_r \\<to> z = v\\_r@u\\_r. Cannot express as full-scheme rotate.\<close>
+    show ?thesis sorry \<comment> \<open>prefix@u\\_r@v\\_r \\<to> prefix@v\\_r@u\\_r: not a rotation of the full scheme.\<close>
+  next case (v_cancel u_c a_c v_c)
+    \<comment> \<open>Inner cancel: y = u\\_c@[a\\_c,inv a\\_c]@v\\_c \\<to> z = u\\_c@v\\_c.
+       Full scheme: (prefix@u\\_c)@[a\\_c,inv a\\_c]@v\\_c \\<to> (prefix@u\\_c)@v\\_c.
+       This is a v\\_cancel on the full scheme with u' = prefix@u\\_c.\<close>
+    have hy: "y = u_c @ [a_c, top1_inverse_edge a_c] @ v_c"
+      and hz: "z = u_c @ v_c" using v_cancel by (by100 auto)+
+    show ?thesis
+    proof (cases "length ((prefix @ u_c) @ v_c) \<ge> 3")
+      case True
+      have hprems_eq: "prefix @ y = (prefix @ u_c) @ [a_c, top1_inverse_edge a_c] @ v_c"
+        using hy by (by100 simp)
+      have h1: "top1_quotient_of_scheme_on X TX
+          ([a_c, top1_inverse_edge a_c] @ v_c @ prefix @ u_c)"
+      proof -
+        have "top1_quotient_of_scheme_on X TX ((prefix @ u_c) @ ([a_c, top1_inverse_edge a_c] @ v_c))"
+          using v_context_left.prems hprems_eq by (by100 simp)
+        from quotient_of_scheme_rotate[OF this]
+        show ?thesis by (by100 simp)
+      qed
+      have hlen: "length (v_c @ prefix @ u_c) \<ge> 3" using True by (by100 simp)
+      from front_cancel_realization_homeo[OF h1 hlen]
+      obtain Y'c :: "'a set" and TY'c :: "'a set set" and h'c :: "'a \<Rightarrow> 'a" where
+          hY'c: "top1_quotient_of_scheme_on Y'c TY'c (v_c @ prefix @ u_c)"
+          and hh'c: "top1_homeomorphism_on X TX Y'c TY'c h'c"
+        by (by100 blast)
+      have "top1_quotient_of_scheme_on Y'c TY'c ((prefix @ u_c) @ v_c)"
+        using quotient_of_scheme_rotate[OF hY'c] by (by100 simp)
+      hence "top1_quotient_of_scheme_on Y'c TY'c (prefix @ u_c @ v_c)"
+        by (by100 simp)
+      hence "top1_quotient_of_scheme_on Y'c TY'c (prefix @ z)" using hz by (by100 simp)
+      thus ?thesis using hh'c by (rule homeo_realization_flat_introI)
+    next
+      case False
+      \<comment> \<open>Short case: length((prefix@u\\_c)@v\\_c) < 3. Genuinely false for length = 2.
+         For proper schemes, never arises (even length sources).\<close>
+      have "length ((prefix @ u_c) @ [a_c, top1_inverse_edge a_c] @ v_c) \<ge> 3"
+        using quotient_scheme_length_ge3[OF v_context_left.prems] hy by (by100 simp)
+      hence "length ((prefix @ u_c) @ v_c) \<ge> 1" by (by100 simp)
+      show ?thesis sorry \<comment> \<open>Genuinely false for length((prefix@u\\_c)@v\\_c)=2.\<close>
+    qed
+  next case (v_uncancel a_u u_u v_u)
+    \<comment> \<open>Inner uncancel: y = u\\_u@v\\_u \\<to> z = u\\_u@[a\\_u,inv a\\_u]@v\\_u.
+       Full scheme: prefix@u\\_u@v\\_u \\<to> prefix@u\\_u@[a\\_u,inv a\\_u]@v\\_u.
+       This is a v\\_cancel\\_reverse on the full scheme.\<close>
+    have hy: "y = u_u @ v_u" and hz: "z = u_u @ [a_u, top1_inverse_edge a_u] @ v_u"
+      using v_uncancel by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX ((prefix @ u_u) @ v_u)"
+      using v_context_left.prems hy by (by100 simp)
+    from quotient_of_scheme_uncancel_proved[OF this, of a_u]
+    have "top1_quotient_of_scheme_on X TX ((prefix @ u_u) @ [a_u, top1_inverse_edge a_u] @ v_u)" .
+    hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz by (by100 simp)
+    thus ?thesis by (rule same_space_implies_homeo_realization)
+  next case (v_cancel_reverse u_cr v_cr a_cr)
+    \<comment> \<open>Same as v\\_uncancel above but via v\\_cancel\\_reverse.\<close>
+    have hy: "y = u_cr @ v_cr" and hz: "z = u_cr @ [a_cr, top1_inverse_edge a_cr] @ v_cr"
+      using v_cancel_reverse by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX ((prefix @ u_cr) @ v_cr)"
+      using v_context_left.prems hy by (by100 simp)
+    from quotient_of_scheme_uncancel_proved[OF this, of a_cr]
+    have "top1_quotient_of_scheme_on X TX ((prefix @ u_cr) @ [a_cr, top1_inverse_edge a_cr] @ v_cr)" .
+    hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz by (by100 simp)
+    thus ?thesis by (rule same_space_implies_homeo_realization)
+  next case (v_cut_paste_reverse u1_cpr a_cpr u2_cpr u3_cpr)
+    \<comment> \<open>Inner cut-paste-reverse in suffix = full-scheme v\\_cut\\_paste\\_reverse with u1' = prefix@u1.\<close>
+    have hy_r: "y = u1_cpr @ [(a_cpr, True), (a_cpr, True)] @ rev (map top1_inverse_edge u2_cpr) @ u3_cpr"
+      and hz_r: "z = u1_cpr @ [(a_cpr, True)] @ u2_cpr @ [(a_cpr, True)] @ u3_cpr"
+      using v_cut_paste_reverse by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX
+        ((prefix @ u1_cpr) @ [(a_cpr, True), (a_cpr, True)] @ rev (map top1_inverse_edge u2_cpr) @ u3_cpr)"
+      using v_context_left.prems hy_r by (by100 simp)
+    hence "top1_quotient_of_scheme_on X TX
+        ((prefix @ u1_cpr) @ [(a_cpr, True)] @ u2_cpr @ [(a_cpr, True)] @ u3_cpr)"
+      sorry \<comment> \<open>Same-space: reverse edge permutation (same sorry as v\\_cut\\_paste\\_reverse outer case).\<close>
+    hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz_r by (by100 simp)
+    thus ?thesis by (rule same_space_implies_homeo_realization)
+  next case (v_cut_paste2_reverse b_cpr u2_cpr u1_cpr u0_cpr a_cpr)
+    \<comment> \<open>Inner cut-paste2-reverse: similar pattern.\<close>
+    have hy_r: "y = [(b_cpr, True)] @ u2_cpr @ [(b_cpr, True)] @ u1_cpr @ rev (map top1_inverse_edge u0_cpr)"
+      and hz_r: "z = u0_cpr @ [(a_cpr, True)] @ u1_cpr @ [(a_cpr, True)] @ u2_cpr"
+      using v_cut_paste2_reverse by (by100 auto)+
+    show ?thesis sorry \<comment> \<open>Full-scheme cut-paste2-reverse: prefix splitting differs.\<close>
+  next case v_invert
+    \<comment> \<open>Inner invert: y = w \\<to> z = rev(inv w).
+       Cannot express as full-scheme invert (prefix is not inverted).\<close>
+    show ?thesis sorry
+  next case (v_flip_label a_fl)
+    \<comment> \<open>Inner operation flips direction of label a\\_fl in suffix y.
+       If a\\_fl \\<notin> labels(prefix): equivalent to full-scheme flip.\<close>
+    have hz_fl: "z = map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) y" using v_flip_label by (by100 auto)
+    show ?thesis
+    proof (cases "a_fl \<notin> fst ` set prefix")
+      case True
+      have "prefix @ z = map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) (prefix @ y)"
+      proof -
+        have "map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) prefix = prefix"
+          using True by (induction prefix) (by100 auto)+
+        thus ?thesis using hz_fl by (by100 simp)
+      qed
+      from quotient_scheme_flip_label[OF v_context_left.prems]
+      have "top1_quotient_of_scheme_on X TX (map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) (prefix @ y))" .
+      hence "top1_quotient_of_scheme_on X TX (prefix @ z)"
+        using \<open>prefix @ z = _\<close> by (by100 simp)
+      thus ?thesis by (rule same_space_implies_homeo_realization)
+    next
+      case False show ?thesis sorry \<comment> \<open>a\\_fl in prefix: non-trivial.\<close>
+    qed
+  next case (v_cut_paste u1_cp a_cp u2_cp u3_cp)
+    \<comment> \<open>Inner cut-paste in suffix = full-scheme cut-paste with u1' = prefix@u1.\<close>
+    have hy: "y = u1_cp @ [(a_cp, True)] @ u2_cp @ [(a_cp, True)] @ u3_cp"
+      and hz: "z = u1_cp @ [(a_cp, True), (a_cp, True)] @ rev (map top1_inverse_edge u2_cp) @ u3_cp"
+      using v_cut_paste by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX
+        ((prefix @ u1_cp) @ [(a_cp, True)] @ u2_cp @ [(a_cp, True)] @ u3_cp)"
+      using v_context_left.prems hy by (by100 simp)
+    from quotient_of_scheme_cut_paste[OF this]
+    obtain Y'cp :: "'a set" and TY'cp :: "'a set set" and h'cp :: "'a \<Rightarrow> 'a" where
+        hY'cp: "top1_quotient_of_scheme_on Y'cp TY'cp
+          ((prefix @ u1_cp) @ [(a_cp, True), (a_cp, True)] @ rev (map top1_inverse_edge u2_cp) @ u3_cp)"
+        and hh'cp: "top1_homeomorphism_on X TX Y'cp TY'cp h'cp"
+      by (by100 blast)
+    have "top1_quotient_of_scheme_on Y'cp TY'cp (prefix @ z)" using hY'cp hz by (by100 simp)
+    thus ?thesis using hh'cp by (rule homeo_realization_flat_introI)
+  next case (v_cut_paste2 b_cp u0_cp a_cp2 u1_cp2 u2_cp)
+    \<comment> \<open>Inner cut-paste2 in suffix = full-scheme cut-paste2 with u0' = prefix@u0.\<close>
+    have hy: "y = u0_cp @ [(a_cp2, True)] @ u1_cp2 @ [(a_cp2, True)] @ u2_cp"
+      and hz: "z = [(b_cp, True)] @ u2_cp @ [(b_cp, True)] @ u1_cp2 @ rev (map top1_inverse_edge u0_cp)"
+      using v_cut_paste2 by (by100 auto)+
+    show ?thesis sorry \<comment> \<open>Full-scheme cut-paste2 with different prefix splitting.\<close>
+  next case (v_cut_paste2_nonfresh u0_nf a_nf u1_nf u2_nf b_nf)
+    show ?thesis sorry \<comment> \<open>Same as v\\_cut\\_paste2.\<close>
+  next case (v_cut_paste_opp u0_opp u1_opp a_opp u2_opp u3_opp)
+    \<comment> \<open>Inner cut-paste-opp in suffix = full-scheme cut-paste-opp with u0' = prefix@u0.\<close>
+    have hy: "y = u0_opp @ u1_opp @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u3_opp"
+      and hz: "z = u0_opp @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u1_opp @ u3_opp"
+      using v_cut_paste_opp by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX
+        ((prefix @ u0_opp) @ u1_opp @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u3_opp)"
+      using v_context_left.prems hy by (by100 simp)
+    from quotient_of_scheme_cut_paste_opp[OF this]
+    obtain Y'opp :: "'a set" and TY'opp :: "'a set set" and h'opp :: "'a \<Rightarrow> 'a" where
+        hY'opp: "top1_quotient_of_scheme_on Y'opp TY'opp
+          ((prefix @ u0_opp) @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u1_opp @ u3_opp)"
+        and hh'opp: "top1_homeomorphism_on X TX Y'opp TY'opp h'opp"
+      by (by100 blast)
+    have "top1_quotient_of_scheme_on Y'opp TY'opp (prefix @ z)" using hY'opp hz by (by100 simp)
+    thus ?thesis using hh'opp by (rule homeo_realization_flat_introI)
+  next case v_context_left show ?thesis sorry
+  qed
+qed
+
+\<comment> \<open>Chain: valid equivalence preserves quotient homeomorphism type.\<close>
+lemma valid_equiv_preserves_quotient_homeo:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "top1_quotient_of_scheme_on X TX s"
+      and "top1_valid_scheme_equiv s t"
+  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY t \<and>
+    top1_homeomorphism_on X TX Y TY h"
+  using assms(2,1) unfolding top1_valid_scheme_equiv_def
+proof (induction rule: rtranclp.induct)
+  case rtrancl_refl
+  then show ?case by (rule same_space_implies_homeo_realization)
+next
+  case (rtrancl_into_rtrancl a b c)
+  \<comment> \<open>Step: IH gives \\<exists>Y TY h for 'a'; valid\\_op gives \\<exists>Z TZ g for 'b\\<to>c'; compose.\<close>
+  from rtrancl_into_rtrancl.IH[OF rtrancl_into_rtrancl.prems]
+  have hIH: "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY b \<and> top1_homeomorphism_on X TX Y TY h" .
+  then obtain Y :: "'a set" and TY :: "'a set set" and hy :: "'a \<Rightarrow> 'a" where
+      qY: "top1_quotient_of_scheme_on Y TY b"
+    and hXY: "top1_homeomorphism_on X TX Y TY hy"
+    by (by100 blast)
+  from valid_operation_preserves_quotient_homeo[OF qY rtrancl_into_rtrancl.hyps(2)]
+  obtain Z :: "'a set" and TZ :: "'a set set" and gz :: "'a \<Rightarrow> 'a" where
+      qZ: "top1_quotient_of_scheme_on Z TZ c"
+    and hYZ: "top1_homeomorphism_on Y TY Z TZ gz"
+    by (by100 blast)
+  have hXZ: "top1_homeomorphism_on X TX Z TZ (gz \<circ> hy)"
+    using homeomorphism_comp[OF hXY hYZ] .
+  show ?case using qZ hXZ by (rule homeo_realization_flat_introI)
+qed
+
+\<comment> \<open>Bridge moved to before valid\\_operation\\_preserves.\<close>
+
 
 \<comment> \<open>Old bridge lemmas (scheme\\_equiv\\_homeomorphic, scheme\\_rotate/cancel/invert\\_homeomorphic):
    DELETED per expert audit 21. Superseded by valid\\_equiv\\_preserves\\_quotient\\_homeo.\<close>
