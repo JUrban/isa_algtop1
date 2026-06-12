@@ -3644,11 +3644,130 @@ proof -
   define TY' where "TY' = {U. \<exists>V. V \<subseteq> P' \<and> (\<forall>x \<in> V. \<forall>y. y \<in> P' \<and> q' y = q' x \<longrightarrow> y \<in> V)
       \<and> U = q' ` V \<and> V \<in> ?TP'}"
   \<comment> \<open>Key properties of q' (to be proved):\<close>
+  \<comment> \<open>C4': vertices of P' are in P'.\<close>
+  have hC4': "\<forall>i<?n'. (vx' i, vy' i) \<in> P'"
+  proof (intro allI impI)
+    fix i assume hi: "i < ?n'"
+    define coeffs :: "nat \<Rightarrow> real" where "coeffs j = (if j = i then 1 else 0)" for j
+    have "(\<forall>j<?n'. coeffs j \<ge> 0)" unfolding coeffs_def by (by100 simp)
+    moreover have "(\<Sum>j<?n'. coeffs j) = 1"
+    proof -
+      have "(\<Sum>j<?n'. coeffs j) = (\<Sum>j\<in>{i}. coeffs j) + (\<Sum>j\<in>{..<?n'}-{i}. coeffs j)"
+        using sum.remove[OF finite_lessThan, of i ?n' coeffs] hi by (by100 simp)
+      also have "(\<Sum>j\<in>{..<?n'}-{i}. coeffs j) = 0"
+        by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
+      finally show ?thesis unfolding coeffs_def by (by100 simp)
+    qed
+    moreover have "vx' i = (\<Sum>j<?n'. coeffs j * vx' j)"
+    proof -
+      have "(\<Sum>j<?n'. coeffs j * vx' j) = coeffs i * vx' i + (\<Sum>j\<in>{..<?n'}-{i}. coeffs j * vx' j)"
+        using sum.remove[OF finite_lessThan, of i ?n' "\<lambda>j. coeffs j * vx' j"] hi by (by100 simp)
+      also have "(\<Sum>j\<in>{..<?n'}-{i}. coeffs j * vx' j) = 0"
+        by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
+      finally show ?thesis unfolding coeffs_def by (by100 simp)
+    qed
+    moreover have "vy' i = (\<Sum>j<?n'. coeffs j * vy' j)"
+    proof -
+      have "(\<Sum>j<?n'. coeffs j * vy' j) = coeffs i * vy' i + (\<Sum>j\<in>{..<?n'}-{i}. coeffs j * vy' j)"
+        using sum.remove[OF finite_lessThan, of i ?n' "\<lambda>j. coeffs j * vy' j"] hi by (by100 simp)
+      also have "(\<Sum>j\<in>{..<?n'}-{i}. coeffs j * vy' j) = 0"
+        by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
+      finally show ?thesis unfolding coeffs_def by (by100 simp)
+    qed
+    ultimately show "(vx' i, vy' i) \<in> P'" unfolding P'_def by (by100 blast)
+  qed
+  \<comment> \<open>C10': CCW orientation of P' vertices.\<close>
+  have hC10': "\<forall>i<?n'. let cx = (\<Sum>j<?n'. vx' j) / real ?n'; cy = (\<Sum>j<?n'. vy' j) / real ?n'
+       in (vx' i - cx) * (vy' (Suc i mod ?n') - cy)
+        - (vy' i - cy) * (vx' (Suc i mod ?n') - cx) > 0"
+    sorry \<comment> \<open>From C10 of original polygon. Shifted vertices are consecutive CCW subset.\<close>
+  \<comment> \<open>C11': strict convexity of P'.\<close>
+  have hC11': "\<forall>i<?n'. \<forall>k<?n'. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n' \<longrightarrow>
+        (vx' k - vx' i) * (vy' (Suc i mod ?n') - vy' i)
+        - (vy' k - vy' i) * (vx' (Suc i mod ?n') - vx' i) < 0"
+  proof (intro allI impI)
+    fix i k assume hi: "i < ?n'" and hk: "k < ?n'" and hne: "k \<noteq> i" and hne2: "k \<noteq> Suc i mod ?n'"
+    show "(vx' k - vx' i) * (vy' (Suc i mod ?n') - vy' i)
+        - (vy' k - vy' i) * (vx' (Suc i mod ?n') - vx' i) < 0"
+    proof (cases "Suc i < ?n'")
+      case True
+      \<comment> \<open>Non-diagonal edge: i < n'-1, so Suc i mod n' = Suc i, and edge i of P' = original edge i+2.\<close>
+      hence hSi: "Suc i mod ?n' = Suc i" by (by100 simp)
+      have hi2: "i + 2 < ?n" using hi hn by (by100 linarith)
+      have hk2: "k + 2 < ?n" using hk hn by (by100 linarith)
+      have hne2': "k + 2 \<noteq> i + 2" using hne by (by100 simp)
+      have hi3: "i + 3 < ?n" using True hn by (by100 linarith)
+      have hSi2: "Suc (i+2) mod ?n = i + 3"
+      proof -
+        have "Suc (i + 2) = i + 3" by arith
+        hence "(i + 3) mod ?n = i + 3" using hi3 by (by100 simp)
+        thus ?thesis using \<open>Suc (i + 2) = i + 3\<close> by (by100 presburger)
+      qed
+      have hne3: "k + 2 \<noteq> Suc (i+2) mod ?n"
+      proof -
+        have "k \<noteq> Suc i" using hne2 hSi by (by100 simp)
+        hence "k + 2 \<noteq> i + 3" by (by100 linarith)
+        thus ?thesis using hSi2 by (by100 linarith)
+      qed
+      from hC11[rule_format, OF hi2 hk2 hne2' hne3]
+      have "(vx (k+2) - vx (i+2)) * (vy (Suc (i+2) mod ?n) - vy (i+2))
+          - (vy (k+2) - vy (i+2)) * (vx (Suc (i+2) mod ?n) - vx (i+2)) < 0" .
+      thus ?thesis unfolding vx'_def vy'_def
+        using hSi hSi2 sorry \<comment> \<open>Suc/mod arithmetic: Suc i mod n' + 2 = Suc(i+2) mod n.\<close>
+    next
+      case False
+      \<comment> \<open>Diagonal edge: i = n'-1. Edge goes from v\\_{n-1} to v\\_2.\<close>
+      hence "Suc i = ?n'" using hi by (by100 linarith)
+      hence hSi: "Suc i mod ?n' = 0" by (by100 simp)
+      \<comment> \<open>Cross product: (v'(k) - v'(n'-1)) \\<times> (v'(0) - v'(n'-1)) < 0.
+         = (v(k+2) - v(n-1)) \\<times> (v(2) - v(n-1)) < 0.
+         All interior vertices are strictly on one side of the chord v\\_{n-1}\\<to>v\\_2.\<close>
+      show ?thesis sorry \<comment> \<open>Diagonal edge strict convexity: follows from CCW ordering
+         and the fact that v\\_3,...,v\\_{n-2} are all strictly inside the chord v\\_{n-1}v\\_2.\<close>
+    qed
+  qed
+  \<comment> \<open>C6': non-adjacent edges of P' don't share interior points.\<close>
+  have hC6': "\<forall>i<?n'. \<forall>j<?n'.
+        i \<noteq> j \<longrightarrow> Suc i mod ?n' \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n' \<longrightarrow>
+        (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+           ((1-s) * vx' i + s * vx' (Suc i mod ?n'), (1-s) * vy' i + s * vy' (Suc i mod ?n'))
+         \<noteq> ((1-t) * vx' j + t * vx' (Suc j mod ?n'), (1-t) * vy' j + t * vy' (Suc j mod ?n')))"
+    sorry \<comment> \<open>From C6/C11 of original polygon + diagonal edge argument.\<close>
+  \<comment> \<open>C2': q' is a quotient map from P' to Y'.\<close>
+  have hC2': "top1_quotient_map_on P' ?TP' Y' TY' q'"
+    sorry \<comment> \<open>TY' is the quotient topology by construction (definition of TY').\<close>
+  \<comment> \<open>C7': q' identifies edges of P' according to scheme w.\<close>
+  have hC7': "\<forall>i<?n'. \<forall>j<?n'. fst (w!i) = fst (w!j) \<longrightarrow>
+      (\<forall>t\<in>I_set.
+         q' ((1-t) * vx' i + t * vx' (Suc i mod ?n'),
+            (1-t) * vy' i + t * vy' (Suc i mod ?n'))
+       = (if snd (w!i) = snd (w!j)
+          then q' ((1-t) * vx' j + t * vx' (Suc j mod ?n'),
+                  (1-t) * vy' j + t * vy' (Suc j mod ?n'))
+          else q' (t * vx' j + (1-t) * vx' (Suc j mod ?n'),
+                  t * vy' j + (1-t) * vy' (Suc j mod ?n'))))"
+    sorry \<comment> \<open>For edges 0..n'-2: q' = q, and w!(i) = scheme!(i+2), so C7 of original applies.
+       For edge n'-1 (diagonal): q' uses reroute to match original edge n-1 identification.\<close>
+  \<comment> \<open>C8': interior points of P' have singleton q'-fibre.\<close>
+  have hC8': "\<forall>p\<in>P'. (\<forall>i<?n'. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t) * vx' i + t * vx' (Suc i mod ?n'),
+                    (1-t) * vy' i + t * vy' (Suc i mod ?n')))
+           \<longrightarrow> (\<forall>p'\<in>P'. q' p = q' p' \<longrightarrow> p = p')"
+    sorry \<comment> \<open>Interior of P' \\<subseteq> interior of P, and q' = q on interior of P'. By C8 of original.\<close>
+  \<comment> \<open>C9': boundary identification for interior edge points.\<close>
+  have hC9': "\<forall>i<?n'. \<forall>j<?n'. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+          q' ((1-t) * vx' i + t * vx' (Suc i mod ?n'),
+             (1-t) * vy' i + t * vy' (Suc i mod ?n'))
+        = q' ((1-s) * vx' j + s * vx' (Suc j mod ?n'),
+             (1-s) * vy' j + s * vy' (Suc j mod ?n'))
+        \<longrightarrow> (i = j \<and> t = s)
+          \<or> (fst (w!i) = fst (w!j) \<and>
+             (if snd (w!i) = snd (w!j) then s = t else s = 1 - t))"
+    sorry \<comment> \<open>From C9 of original polygon via shifted indices + q' on diagonal.\<close>
+  \<comment> \<open>Assembly: 11 conditions.\<close>
   have hquot_w: "top1_quotient_of_scheme_on Y' TY' w"
-    sorry \<comment> \<open>Use modified quotient map q' on P'. All 11 conditions transfer:
-       C7: edges 0..n'-2 from original C7, diagonal edge from q' definition.
-       C8/C9: interior injectivity transfers since P' interior \\<subseteq> P interior.
-       C1,C3-C5,C10,C11: already proved (hC1', hC3', hC5').\<close>
+    unfolding top1_quotient_of_scheme_on_def
+    sorry \<comment> \<open>Assemble: htopo' + \\<exists>P' q' vx' vy'. C1'\\<and>C2'\\<and>C3'\\<and>C4'\\<and>C5'\\<and>C6'\\<and>C7'\\<and>C8'\\<and>C9'\\<and>C10'\\<and>C11'.\<close>
   \<comment> \<open>Step 2: Y \\<cong> Y'. The map from Y to Y' collapses the spur.
      Since q' on P' agrees with q except on the diagonal, and the diagonal maps to
      the same q-values as the original edge (which is in Y'), Y' = Y as quotient spaces.\<close>
