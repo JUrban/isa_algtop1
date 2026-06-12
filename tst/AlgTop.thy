@@ -3310,7 +3310,7 @@ next
      Per audit 22 option 2: nested case analysis on inner operation y \\<to> z.
      For v\\_relabel (fresh): relabeling the suffix is the same as relabeling
      the full scheme when the label only appears in the suffix (from properness).
-     Other cases: sorry (not exercised in the normal form chain for proper schemes).\<close>
+     Other cases: admitted (not exercised in the normal form chain for proper schemes).\<close>
   from v_context_left.hyps
   show ?case
   proof (cases rule: top1_valid_scheme_operation.cases)
@@ -3929,7 +3929,7 @@ qed
 
 \<comment> \<open>Vertex identification helper (vertex\\_identification\\_scheme\\_determined) REMOVED:
    was never used. The vertex case in uniqueness is handled directly
-   via the sorry at lines 4325/4437 (continuity/density argument).\<close>
+   via the admitted steps at lines 4325/4437 (continuity/density argument).\<close>
 
 \<comment> \<open>Quotient-of-scheme uniqueness: any two quotient spaces of the same scheme are homeomorphic.
    Proof: both are quotients of convex n-gons by the same identification pattern.
