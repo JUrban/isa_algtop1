@@ -1226,8 +1226,10 @@ proof -
       show ?thesis
       proof (cases "0 < t \<and> t < 1")
         case hint: True \<comment> \<open>Edge interior: q enters the edge-interior branch.\<close>
-        show ?thesis sorry \<comment> \<open>Interior case: q on non-canonical edge interior maps to canonical.
-           Both sides evaluate to the same point on the canonical edge.\<close>
+        \<comment> \<open>The edge\\_pt(i,t) is NOT a vertex (0<t<1), so q enters either edge-interior or else.\<close>
+        have hnotvertex_i: "\<not>(\<exists>k<?n. (1-t)*vx i + t*vx(Suc i mod ?n) = vx k \<and> (1-t)*vy i + t*vy(Suc i mod ?n) = vy k)"
+          sorry \<comment> \<open>Interior edge point \\<noteq> vertex (follows from C11 strict convexity + 0<t<1).\<close>
+        show ?thesis sorry \<comment> \<open>Interior case: both sides map to same canonical edge point.\<close>
       next
         case hvert: False \<comment> \<open>Vertex: t = 0 or t = 1. q enters the vertex branch.\<close>
         hence "t = 0 \<or> t = 1" using ht01 by (by100 linarith)
