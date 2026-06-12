@@ -4421,6 +4421,23 @@ qed
    then shows Y (quotient of [a,inv a]@w) \\<cong> Y\\_w via spur collapse.
    Properness needed for scheme\\_quotient\\_exists.
    Placed after scheme\\_quotient\\_uniqueness so it can use it.\<close>
+
+\<comment> \<open>Transfer quotient\\_of\\_scheme\\_on along a homeomorphism (expert audit 24 §6).
+   If Y is a quotient of scheme s, and Y \\<cong> Y', then Y' is also a quotient of s.
+   Proof: define q' = h \\<circ> q: P \\<to> Y'. All 11 conditions transfer through h.\<close>
+lemma scheme_quotient_transfer_along_homeomorphism:
+  assumes hq: "top1_quotient_of_scheme_on Y TY s"
+      and hh: "top1_homeomorphism_on Y TY Y' TY' h"
+  shows "top1_quotient_of_scheme_on Y' TY' s"
+  sorry \<comment> \<open>Proof: extract (P, q, vx, vy) from hq. Define q' = h \\<circ> q.
+     C1,C3-C5,C10,C11: don't reference q, transfer directly.
+     C2: q' = h \\<circ> q. h is homeomorphism, q is quotient map,
+         composition of quotient map with homeomorphism = quotient map.
+     C7: q'(edge(i,t)) = h(q(edge(i,t))). Since h preserves equality:
+         q(e1) = q(e2) iff h(q(e1)) = h(q(e2)). So C7 transfers.
+     C8: q' injective on interior = h \\<circ> q injective = true (both injective).
+     C9: boundary identification transfers similarly to C7.\<close>
+
 lemma front_cancel_proper:
   fixes Y :: "'a set" and TY :: "'a set set"
     and a :: "nat \<times> bool" and w :: "(nat \<times> bool) list"
@@ -4760,9 +4777,14 @@ proof -
   \<comment> \<open>Type bridge: construct 'a-typed quotient of w from Y\\_w via inverse homeomorphism.
      Define q' = (inv of composed homeo) \\<circ> q\\_w: P\\_w \\<to> Y. Then Y with quotient topology
      of q' is an 'a-typed quotient of w, and id: Y \\<to> Y is the homeomorphism.\<close>
-  show ?thesis sorry \<comment> \<open>Type bridge: construct 'a-typed quotient via inv\\_into composed with q\\_w.
-     The quotient\\_of\\_scheme\\_on conditions transfer through the homeomorphism inverse.
-     This is a standard transfer argument but needs formal inv\\_into properties.\<close>
+  \<comment> \<open>Type bridge via scheme\\_quotient\\_transfer\\_along\\_homeomorphism (expert audit 24 §6).
+     The inverse homeomorphism Y\\_w \\<to> Y transfers the quotient structure.\<close>
+  from homeomorphism_inverse[OF hcomp]
+  have hinv: "top1_homeomorphism_on Y_w TY_w Y TY (inv_into Y (h_collapse \<circ> h_bridge))" .
+  from scheme_quotient_transfer_along_homeomorphism[OF hY_w hinv]
+  have "top1_quotient_of_scheme_on Y TY w" .
+  \<comment> \<open>Y is a quotient of w (same space!) with original topology. Identity is the homeomorphism.\<close>
+  thus ?thesis by (rule same_space_implies_homeo_realization)
 qed
 
 \<comment> \<open>Old bridge lemmas (scheme\\_equiv\\_homeomorphic, scheme\\_rotate/cancel/invert\\_homeomorphic):
