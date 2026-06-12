@@ -3296,6 +3296,8 @@ proof -
           and hvx: "vx' k = (\<Sum>i<?n'. coeffs i * vx' i)"
           and hvy: "vy' k = (\<Sum>i<?n'. coeffs i * vy' i)"
         by (by100 blast)
+      \<comment> \<open>Helper: Suc(k+2) in terms of k+3 for modular arithmetic.\<close>
+      have hSuc_k2: "Suc (k + 2) = k + 3" by arith
       \<comment> \<open>Use C11 of original polygon: edge k+2 from v\\_{k+2} to v\\_{k+3}.
          Cross product: for all j+2 \\<noteq> k+2 and j+2 \\<noteq> k+3:
          (vx(j+2) - vx(k+2)) * (vy(k+3) - vy(k+2)) - (vy(j+2) - vy(k+2)) * (vx(k+3) - vx(k+2)) < 0
@@ -3333,18 +3335,40 @@ proof -
         define dx where "dx = vx (Suc(k+2) mod ?n) - vx (k+2)"
         define dy where "dy = vy (Suc(k+2) mod ?n) - vy (k+2)"
         have hck_expand: "\<And>j. cross_k j = (vx (j+2) - vx (k+2)) * dy - (vy (j+2) - vy (k+2)) * dx"
-          unfolding cross_k_def dx_def dy_def sorry
+          unfolding cross_k_def dx_def dy_def by (by100 argo)
         \<comment> \<open>\\<Sum> c\\_j * cross\\_k(j) = dy * (\\<Sum> c\\_j * vx(j+2) - vx(k+2)) - dx * (\\<Sum> c\\_j * vy(j+2) - vy(k+2)).\<close>
         have "(\<Sum>j<?n'. coeffs j * cross_k j) =
             dy * ((\<Sum>j<?n'. coeffs j * vx (j+2)) - vx (k+2)) -
             dx * ((\<Sum>j<?n'. coeffs j * vy (j+2)) - vy (k+2))"
-          sorry
+        proof -
+          have "(\<Sum>j<?n'. coeffs j * cross_k j) = (\<Sum>j<?n'. coeffs j * ((vx(j+2) - vx(k+2)) * dy - (vy(j+2) - vy(k+2)) * dx))"
+            by (rule sum.cong) (use hck_expand in \<open>by100 simp\<close>)+
+          also have "\<dots> = (\<Sum>j<?n'. (coeffs j * (vx(j+2) - vx(k+2))) * dy - (coeffs j * (vy(j+2) - vy(k+2))) * dx)"
+            by (rule sum.cong) (by100 argo)+
+          also have "\<dots> = (\<Sum>j<?n'. (coeffs j * (vx(j+2) - vx(k+2)))) * dy - (\<Sum>j<?n'. (coeffs j * (vy(j+2) - vy(k+2)))) * dx"
+            sorry \<comment> \<open>Sum distributes over subtraction: \\<Sum>(a-b) = \\<Sum>a - \\<Sum>b.\<close>
+          also have "\<dots> = ((\<Sum>j<?n'. coeffs j * vx(j+2)) - vx(k+2) * (\<Sum>j<?n'. coeffs j)) * dy -
+                          ((\<Sum>j<?n'. coeffs j * vy(j+2)) - vy(k+2) * (\<Sum>j<?n'. coeffs j)) * dx"
+            sorry \<comment> \<open>Sum distributes: \\<Sum>c*(v-v\\_k) = \\<Sum>c*v - v\\_k * \\<Sum>c.\<close>
+          also have "\<dots> = dy * ((\<Sum>j<?n'. coeffs j * vx (j+2)) - vx (k+2)) -
+                          dx * ((\<Sum>j<?n'. coeffs j * vy (j+2)) - vy (k+2))"
+            using hsum sorry
+          finally show ?thesis .
+        qed
         \<comment> \<open>\\<Sum> c\\_j * vx(j+2) = \\<Sum> c\\_j * vx'(j) = vx'(k) = vx(k+2).\<close>
         moreover have "(\<Sum>j<?n'. coeffs j * vx (j+2)) = vx (k+2)"
-          using hvx unfolding vx'_def sorry
+        proof -
+          have "vx (k+2) = (\<Sum>j<?n'. coeffs j * vx' j)" using hvx unfolding vx'_def by (by100 simp)
+          also have "\<dots> = (\<Sum>j<?n'. coeffs j * vx (j+2))" unfolding vx'_def by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
         moreover have "(\<Sum>j<?n'. coeffs j * vy (j+2)) = vy (k+2)"
-          using hvy unfolding vy'_def sorry
-        ultimately show ?thesis sorry
+        proof -
+          have "vy (k+2) = (\<Sum>j<?n'. coeffs j * vy' j)" using hvy unfolding vy'_def by (by100 simp)
+          also have "\<dots> = (\<Sum>j<?n'. coeffs j * vy (j+2))" unfolding vy'_def by (by100 simp)
+          finally show ?thesis by (by100 simp)
+        qed
+        ultimately show ?thesis by (by100 simp)
       qed
       \<comment> \<open>cross\\_k(k) = 0 (v\\_{k+2} is on the edge).\<close>
       have hcross_k: "cross_k k = 0" unfolding cross_k_def by (by100 simp)
@@ -3399,7 +3423,27 @@ proof -
         have "j + 2 \<noteq> k + 2" using hjk by (by100 simp)
         \<comment> \<open>j + 2 \\<noteq> Suc(k+2) mod n: need Suc k mod n' to correspond to shifted index.\<close>
         have "j + 2 \<noteq> Suc (k+2) mod ?n"
-          sorry \<comment> \<open>From hjSk: j \\<noteq> Suc k mod n' implies j+2 \\<noteq> Suc(k+2) mod n.\<close>
+        proof (cases "Suc k < ?n'")
+          case True
+          hence hSk_eq: "Suc k mod ?n' = Suc k" by (by100 simp)
+          hence "j \<noteq> Suc k" using hjSk by (by100 simp)
+          have hk3: "k + 3 < ?n" using True hn by (by100 linarith)
+          have "j + 2 \<noteq> k + 3" using \<open>j \<noteq> Suc k\<close> by (by100 linarith)
+          moreover have "Suc (k + 2) mod ?n = k + 3"
+            using hk3 hSuc_k2 by (by100 simp)
+          ultimately show ?thesis by (by100 linarith)
+        next
+          case False
+          hence "Suc k = ?n'" using hk by (by100 linarith)
+          hence "k + 3 = ?n" using hn by (by100 linarith)
+          hence "Suc (k+2) mod ?n = 0"
+          proof -
+            have "(k + 3) mod ?n = 0" using \<open>k + 3 = ?n\<close> by (by100 simp)
+            thus ?thesis using hSuc_k2 by (by100 presburger)
+          qed
+          moreover have "j + 2 \<ge> 2" by (by100 simp)
+          ultimately show ?thesis by (by100 linarith)
+        qed
         from hcross_strict[rule_format, OF hj \<open>j+2 \<noteq> k+2\<close> this]
         have hlt: "cross_k j < 0" .
         \<comment> \<open>From hcross\\_sum = 0, hcross\\_le (all terms \\<le> 0): each term = 0.\<close>
