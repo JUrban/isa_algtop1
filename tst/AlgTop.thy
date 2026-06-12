@@ -3470,10 +3470,36 @@ proof -
       qed
       \<comment> \<open>Only coefficient at j = Suc k mod n' can be nonzero. So c\\_{Suc k mod n'} = 1.\<close>
       have hcSk: "coeffs (Suc k mod ?n') = 1"
-        sorry
+      proof -
+        have "(\<Sum>j<?n'. coeffs j) = coeffs k + coeffs (Suc k mod ?n') +
+            (\<Sum>j\<in>{..<?n'} - {k} - {Suc k mod ?n'}. coeffs j)"
+          sorry \<comment> \<open>Sum split: extract k and Suc k mod n' from the sum.\<close>
+        moreover have "(\<Sum>j\<in>{..<?n'} - {k} - {Suc k mod ?n'}. coeffs j) = 0"
+          by (rule sum.neutral, use honly_Sk in \<open>by100 force\<close>)
+        ultimately show ?thesis using hsum hzero by (by100 linarith)
+      qed
       \<comment> \<open>v'(k) = v'(Suc k mod n'), contradicting C3' (distinct vertices).\<close>
       have "vx' k = vx' (Suc k mod ?n') \<and> vy' k = vy' (Suc k mod ?n')"
-        sorry \<comment> \<open>From hvx, hvy, and hcSk: only Suc k mod n' has nonzero coeff.\<close>
+      proof -
+        have honly: "\<And>j. j < ?n' \<Longrightarrow> j \<noteq> Suc k mod ?n' \<Longrightarrow> coeffs j = 0"
+        proof -
+          fix j assume hj: "j < ?n'" and hjSk: "j \<noteq> Suc k mod ?n'"
+          show "coeffs j = 0"
+          proof (cases "j = k")
+            case True thus ?thesis using hzero by (by100 simp)
+          next
+            case False
+            from honly_Sk[rule_format] hj False hjSk show ?thesis by (by100 blast)
+          qed
+        qed
+        have "(\<Sum>j<?n'. coeffs j * vx' j) = coeffs (Suc k mod ?n') * vx' (Suc k mod ?n')"
+          sorry \<comment> \<open>All other terms are 0.\<close>
+        hence "vx' k = vx' (Suc k mod ?n')" using hvx hcSk by (by100 simp)
+        moreover have "(\<Sum>j<?n'. coeffs j * vy' j) = coeffs (Suc k mod ?n') * vy' (Suc k mod ?n')"
+          sorry
+        hence "vy' k = vy' (Suc k mod ?n')" using hvy hcSk by (by100 simp)
+        ultimately show ?thesis by (by100 blast)
+      qed
       hence hvk_eq: "(vx' k, vy' k) = (vx' (Suc k mod ?n'), vy' (Suc k mod ?n'))"
         by (by100 simp)
       moreover have "k \<noteq> Suc k mod ?n'"
