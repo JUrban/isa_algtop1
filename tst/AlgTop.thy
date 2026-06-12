@@ -3358,7 +3358,38 @@ proof -
       qed
       \<comment> \<open>Each cross\\_k(j) \\<le> 0 (from strict + zero cases).\<close>
       have hcross_le: "\<forall>j<?n'. coeffs j * cross_k j \<le> 0"
-        sorry
+      proof (intro allI impI)
+        fix j assume hj: "j < ?n'"
+        show "coeffs j * cross_k j \<le> 0"
+        proof (cases "j = k")
+          case True thus ?thesis using hzero by (by100 simp)
+        next
+          case False
+          hence hcj: "coeffs j \<ge> 0" using hge hj by (by100 blast)
+          have "cross_k j \<le> 0"
+          proof (cases "j + 2 = k + 2")
+            case True hence "j = k" by (by100 simp) thus ?thesis using False by (by100 simp)
+          next
+            case False2: False
+            show ?thesis
+            proof (cases "j + 2 = Suc(k+2) mod ?n")
+              case True
+              \<comment> \<open>j+2 is the next vertex after edge k+2: cross = 0.\<close>
+              hence "vx (j+2) = vx (Suc(k+2) mod ?n)" by (by100 simp)
+              moreover have "vy (j+2) = vy (Suc(k+2) mod ?n)" using True by (by100 simp)
+              ultimately have "cross_k j = 0" unfolding cross_k_def by (by100 simp)
+              thus ?thesis by (by100 linarith)
+            next
+              case False3: False
+              have "cross_k j < 0" using hcross_strict hj False2 False3 by (by100 blast)
+              thus ?thesis by (by100 linarith)
+            qed
+          qed
+          have "coeffs j * cross_k j \<le> coeffs j * 0"
+            apply (rule mult_left_mono) using \<open>cross_k j \<le> 0\<close> hcj by (by100 linarith)+
+          thus ?thesis by (by100 simp)
+        qed
+      qed
       \<comment> \<open>Since \\<Sigma> c\\_j * cross\\_k(j) = 0 with each term \\<le> 0 and c\\_j \\<ge> 0:
          c\\_j = 0 for all j with cross\\_k(j) < 0.\<close>
       have honly_Sk: "\<forall>j<?n'. j \<noteq> k \<longrightarrow> j \<noteq> Suc k mod ?n' \<longrightarrow> coeffs j = 0"
