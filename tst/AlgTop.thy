@@ -3346,13 +3346,52 @@ proof -
           also have "\<dots> = (\<Sum>j<?n'. (coeffs j * (vx(j+2) - vx(k+2))) * dy - (coeffs j * (vy(j+2) - vy(k+2))) * dx)"
             by (rule sum.cong) (by100 argo)+
           also have "\<dots> = (\<Sum>j<?n'. (coeffs j * (vx(j+2) - vx(k+2)))) * dy - (\<Sum>j<?n'. (coeffs j * (vy(j+2) - vy(k+2)))) * dx"
-            sorry \<comment> \<open>Sum distributes over subtraction: \\<Sum>(a-b) = \\<Sum>a - \\<Sum>b.\<close>
+          proof -
+            have "(\<Sum>j<?n'. (coeffs j * (vx(j+2) - vx(k+2))) * dy - (coeffs j * (vy(j+2) - vy(k+2))) * dx)
+                = (\<Sum>j<?n'. (coeffs j * (vx(j+2) - vx(k+2))) * dy) - (\<Sum>j<?n'. (coeffs j * (vy(j+2) - vy(k+2))) * dx)"
+              by (rule sum_subtractf)
+            also have "(\<Sum>j<?n'. (coeffs j * (vx(j+2) - vx(k+2))) * dy) = (\<Sum>j<?n'. coeffs j * (vx(j+2) - vx(k+2))) * dy"
+              by (rule sum_distrib_right[symmetric])
+            also have "(\<Sum>j<?n'. (coeffs j * (vy(j+2) - vy(k+2))) * dx) = (\<Sum>j<?n'. coeffs j * (vy(j+2) - vy(k+2))) * dx"
+              by (rule sum_distrib_right[symmetric])
+            finally show ?thesis by (by100 linarith)
+          qed
           also have "\<dots> = ((\<Sum>j<?n'. coeffs j * vx(j+2)) - vx(k+2) * (\<Sum>j<?n'. coeffs j)) * dy -
                           ((\<Sum>j<?n'. coeffs j * vy(j+2)) - vy(k+2) * (\<Sum>j<?n'. coeffs j)) * dx"
-            sorry \<comment> \<open>Sum distributes: \\<Sum>c*(v-v\\_k) = \\<Sum>c*v - v\\_k * \\<Sum>c.\<close>
+          proof -
+            have hvx_dist: "(\<Sum>j<?n'. coeffs j * (vx(j+2) - vx(k+2))) = (\<Sum>j<?n'. coeffs j * vx(j+2)) - vx(k+2) * (\<Sum>j<?n'. coeffs j)"
+            proof -
+              have "(\<Sum>j<?n'. coeffs j * (vx(j+2) - vx(k+2))) = (\<Sum>j<?n'. coeffs j * vx(j+2) - coeffs j * vx(k+2))"
+                by (rule sum.cong) (by100 argo)+
+              also have "\<dots> = (\<Sum>j<?n'. coeffs j * vx(j+2)) - (\<Sum>j<?n'. coeffs j * vx(k+2))"
+                by (rule sum_subtractf)
+              also have "(\<Sum>j<?n'. coeffs j * vx(k+2)) = vx(k+2) * (\<Sum>j<?n'. coeffs j)"
+              proof -
+                have "(\<Sum>j<?n'. coeffs j * vx(k+2)) = (\<Sum>j<?n'. coeffs j) * vx(k+2)"
+                  by (rule sum_distrib_right[symmetric])
+                thus ?thesis by (by100 argo)
+              qed
+              finally show ?thesis by (by100 linarith)
+            qed
+            have hvy_dist: "(\<Sum>j<?n'. coeffs j * (vy(j+2) - vy(k+2))) = (\<Sum>j<?n'. coeffs j * vy(j+2)) - vy(k+2) * (\<Sum>j<?n'. coeffs j)"
+            proof -
+              have "(\<Sum>j<?n'. coeffs j * (vy(j+2) - vy(k+2))) = (\<Sum>j<?n'. coeffs j * vy(j+2) - coeffs j * vy(k+2))"
+                by (rule sum.cong) (by100 argo)+
+              also have "\<dots> = (\<Sum>j<?n'. coeffs j * vy(j+2)) - (\<Sum>j<?n'. coeffs j * vy(k+2))"
+                by (rule sum_subtractf)
+              also have "(\<Sum>j<?n'. coeffs j * vy(k+2)) = vy(k+2) * (\<Sum>j<?n'. coeffs j)"
+              proof -
+                have "(\<Sum>j<?n'. coeffs j * vy(k+2)) = (\<Sum>j<?n'. coeffs j) * vy(k+2)"
+                  by (rule sum_distrib_right[symmetric])
+                thus ?thesis by (by100 argo)
+              qed
+              finally show ?thesis by (by100 linarith)
+            qed
+            show ?thesis using hvx_dist hvy_dist by (by100 simp)
+          qed
           also have "\<dots> = dy * ((\<Sum>j<?n'. coeffs j * vx (j+2)) - vx (k+2)) -
                           dx * ((\<Sum>j<?n'. coeffs j * vy (j+2)) - vy (k+2))"
-            using hsum sorry
+            using hsum by (by100 simp)
           finally show ?thesis .
         qed
         \<comment> \<open>\\<Sum> c\\_j * vx(j+2) = \\<Sum> c\\_j * vx'(j) = vx'(k) = vx(k+2).\<close>
