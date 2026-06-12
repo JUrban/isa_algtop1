@@ -4838,8 +4838,38 @@ proof -
             (1-t) * vy_e i + t * vy_e (Suc i mod ?n))
         = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n))"
       by auto
-    \<comment> \<open>Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e where \\<tau>: B2 \\<to> B2 is the spur collapse map.
-       For now, sorry the full construction. The disk homeomorphisms are available.\<close>
+    \<comment> \<open>Obtain disk homeomorphism for P\\_m.\<close>
+    have hvert_hp_m: "\<forall>i<?m. \<forall>k<?m. AlgTopChain.cross2 (vx_m k - vx_m i, vy_m k - vy_m i)
+        (vx_m (Suc i mod ?m) - vx_m i, vy_m (Suc i mod ?m) - vy_m i) \<le> 0"
+    proof (intro allI impI)
+      fix i k assume hi: "i < ?m" and hk: "k < ?m"
+      show "AlgTopChain.cross2 (vx_m k - vx_m i, vy_m k - vy_m i)
+          (vx_m (Suc i mod ?m) - vx_m i, vy_m (Suc i mod ?m) - vy_m i) \<le> 0"
+      proof (cases "k = i \<or> k = Suc i mod ?m")
+        case True thus ?thesis unfolding AlgTopChain.cross2_def by (by100 auto)
+      next
+        case False
+        from hC11m[rule_format, OF hi hk] False
+        have "(vx_m k - vx_m i) * (vy_m (Suc i mod ?m) - vy_m i)
+            - (vy_m k - vy_m i) * (vx_m (Suc i mod ?m) - vx_m i) < 0" by (by100 blast)
+        thus ?thesis unfolding AlgTopChain.cross2_def by (by100 simp)
+      qed
+    qed
+    have hstrict_hp_m: "\<forall>i<?m. \<forall>k<?m. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?m \<longrightarrow>
+        AlgTopChain.cross2 (vx_m k - vx_m i, vy_m k - vy_m i)
+            (vx_m (Suc i mod ?m) - vx_m i, vy_m (Suc i mod ?m) - vy_m i) < 0"
+      using hC11m unfolding AlgTopChain.cross2_def by (by100 simp)
+    from AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
+        [OF hC1m hm3 hC4m hC5m hC10m hvert_hp_m hstrict_hp_m]
+    obtain \<psi>_m where
+      h\<psi>m_homeo: "top1_homeomorphism_on P_m (?TP P_m) top1_B2 top1_B2_topology \<psi>_m"
+      and h\<psi>m_edge: "\<forall>j<?m. \<forall>t\<in>I_set.
+        \<psi>_m ((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
+            (1-t) * vy_m j + t * vy_m (Suc j mod ?m))
+        = (cos (2*pi*(real j + t)/real ?m), sin (2*pi*(real j + t)/real ?m))"
+      by auto
+    \<comment> \<open>Both disk homeomorphisms now available: \\<psi>\\_e: P\\_e \\<to> B2 and \\<psi>\\_m: P\\_m \\<to> B2.
+       Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e where \\<tau>: B2 \\<to> B2 is the spur collapse map.\<close>
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
       sorry \<comment> \<open>Fan construction + fibre matching via \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.
