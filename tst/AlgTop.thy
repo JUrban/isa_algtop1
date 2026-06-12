@@ -4627,7 +4627,12 @@ proof -
   have hcomp: "top1_homeomorphism_on Y TY Y_w TY_w (h_collapse \<circ> h_bridge)" .
   \<comment> \<open>Y\\_w is (real\\<times>real)-typed but result needs 'a-typed. The homeomorphism Y \\<to> Y\\_w
      provides the bridge: Y' = Y\\_w (as an 'a set via type coercion through the homeo).\<close>
-  show ?thesis sorry \<comment> \<open>Type bridge: package (real\\<times>real) result as 'a-typed existential.\<close>
+  \<comment> \<open>Type bridge: construct 'a-typed quotient of w from Y\\_w via inverse homeomorphism.
+     Define q' = (inv of composed homeo) \\<circ> q\\_w: P\\_w \\<to> Y. Then Y with quotient topology
+     of q' is an 'a-typed quotient of w, and id: Y \\<to> Y is the homeomorphism.\<close>
+  show ?thesis sorry \<comment> \<open>Type bridge: construct 'a-typed quotient via inv\\_into composed with q\\_w.
+     The quotient\\_of\\_scheme\\_on conditions transfer through the homeomorphism inverse.
+     This is a standard transfer argument but needs formal inv\\_into properties.\<close>
 qed
 
 \<comment> \<open>Old bridge lemmas (scheme\\_equiv\\_homeomorphic, scheme\\_rotate/cancel/invert\\_homeomorphic):
