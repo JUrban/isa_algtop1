@@ -1215,10 +1215,26 @@ proof -
        = (if snd(scheme!i) = snd(scheme!j)
           then q ((1-t)*vx j + t*vx(Suc j mod ?n), (1-t)*vy j + t*vy(Suc j mod ?n))
           else q (t*vx j + (1-t)*vx(Suc j mod ?n), t*vy j + (1-t)*vy(Suc j mod ?n)))"
-      sorry \<comment> \<open>Uses partner\\_unique, q\\_def unfolding, canonical/non-canonical case split.
-         Key insight: for i \\<noteq> j with same label, one is canonical (q=id) and the other
-         maps to it. Both sides evaluate to the same canonical edge point.
-         Vertex handling (t=0,1) requires vertex consistency (complex).\<close>
+    proof (cases "i = j")
+      case True thus ?thesis by (by100 simp)
+    next
+      case hij: False
+      have hpi: "partner i = j" using partner_unique[OF hi hj hij hlabel] .
+      have hpj: "partner j = i" using partner_unique[OF hj hi hij[symmetric] hlabel[symmetric]] .
+      have ht01: "0 \<le> t" "t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)+
+      \<comment> \<open>Case split on whether t is a vertex (0 or 1) or interior.\<close>
+      show ?thesis
+      proof (cases "0 < t \<and> t < 1")
+        case hint: True \<comment> \<open>Edge interior: q enters the edge-interior branch.\<close>
+        show ?thesis sorry \<comment> \<open>Interior case: q on non-canonical edge interior maps to canonical.
+           Both sides evaluate to the same point on the canonical edge.\<close>
+      next
+        case hvert: False \<comment> \<open>Vertex: t = 0 or t = 1. q enters the vertex branch.\<close>
+        hence "t = 0 \<or> t = 1" using ht01 by (by100 linarith)
+        thus ?thesis sorry \<comment> \<open>Vertex case: q(v\\_i) or q(v\\_{i+1}) via vtgt.
+           vtgt handles the identification correctly by construction.\<close>
+      qed
+    qed
   qed
   \<comment> \<open>C9: Interior injectivity + boundary identification pattern.\<close>
   have hC9_interior: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
