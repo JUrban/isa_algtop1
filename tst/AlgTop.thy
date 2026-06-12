@@ -4535,7 +4535,7 @@ proof -
           = h (q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)))"
         unfolding q'_def comp_def by (by100 simp)
       moreover have "((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> P"
-        sorry \<comment> \<open>Edge point is in P (convex combination).\<close>
+        sorry \<comment> \<open>Edge point in P: convex combination of vx(i),vx(Suc i mod n) which are in P.\<close>
       hence "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> Y"
         using q_range by (by100 blast)
       moreover have "((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> P"
