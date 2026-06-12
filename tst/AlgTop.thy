@@ -4581,11 +4581,39 @@ proof -
       by (rule quotient_of_scheme_extract)
     \<comment> \<open>The spur collapse homeomorphism uses disk homeomorphisms + arc collapsing.
        Both polygons have disk homeomorphisms (polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary).
-       The collapse map \\<tau>: B\\<twosuperior> \\<to> B\\<twosuperior> collapses the first 2 arcs and rescales the rest.
+       The collapse map \\<tau>: B2 \\<to> B2 collapses the first 2 arcs and rescales the rest.
        Composition: f = \\<psi>\\_w\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_ext gives P\\_ext \\<to> P\\_w.
        Then q\\_w \\<circ> f has the same fibres as q\\_ext (by fibre matching argument).
        quotient\\_same\\_fibres\\_homeomorphic gives Y\\_ext \\<cong> Y\\_w.\<close>
-    show ?thesis sorry \<comment> \<open>Disk homeo + arc collapse + fibre matching → quotient\\_same\\_fibres\\_homeomorphic.\<close>
+    \<comment> \<open>Construct spur-collapse map f: P\\_ext \\<to> P\\_w.
+       f collapses the first 2 edges of P\\_ext (the cancelling pair) and maps
+       the remaining edges to the corresponding edges of P\\_w.
+       Construction: \\<psi>\\_w\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_ext where
+       \\<psi>\\_ext: P\\_ext \\<to> B2 and \\<psi>\\_w: P\\_w \\<to> B2 are disk homeomorphisms,
+       and \\<tau>: B2 \\<to> B2 collapses the first 2 arcs.\<close>
+    have "\<exists>f. continuous_on P_ext f \<and> f ` P_ext = P_w
+        \<and> (\<forall>x\<in>P_ext. \<forall>y\<in>P_ext. (q_ext x = q_ext y) \<longleftrightarrow> (q_w (f x) = q_w (f y)))"
+      sorry \<comment> \<open>Spur collapse map: disk homeo + arc collapse + fibre matching.
+         The map f: P\\_ext \\<to> P\\_w is:
+         (1) \\<psi>\\_ext: P\\_ext \\<to> B2 (from polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary)
+         (2) \\<tau>: B2 \\<to> B2 (collapse first 2/(n) of S1, rescale rest)
+         (3) \\<psi>\\_w\\<inverse>: B2 \\<to> P\\_w
+         Fibre matching: edges 0,1 of P\\_ext are identified by q\\_ext (cancelling pair)
+         and collapsed by f (both map to same point). Edges 2..n-1 map to P\\_w edges
+         0..n-3 preserving the w-identification pattern.\<close>
+    then obtain f where
+        hf_cont: "continuous_on P_ext f"
+      and hf_surj: "f ` P_ext = P_w"
+      and hf_fibres: "\<forall>x\<in>P_ext. \<forall>y\<in>P_ext. (q_ext x = q_ext y) \<longleftrightarrow> ((q_w \<circ> f) x = (q_w \<circ> f) y)"
+      by (by100 auto)
+    \<comment> \<open>q\\_w \\<circ> f is a quotient map from P\\_ext to Y\\_w (composition of continuous surjection
+       f: P\\_ext \\<to> P\\_w with quotient map q\\_w: P\\_w \\<to> Y\\_w).\<close>
+    have hcomp_quot: "top1_quotient_map_on P_ext (?TP P_ext) Y_w TY_w (q_w \<circ> f)"
+      sorry \<comment> \<open>Composition of continuous surjection f and quotient map q\\_w.
+         Uses top1\\_quotient\\_map\\_on\\_comp or direct construction.\<close>
+    \<comment> \<open>Apply quotient\\_same\\_fibres\\_homeomorphic: q\\_ext and q\\_w\\<circ>f have same fibres \\<Longrightarrow> Y\\_ext \\<cong> Y\\_w.\<close>
+    from quotient_same_fibres_homeomorphic[OF hC2_ext hcomp_quot hf_fibres]
+    show ?thesis .
   qed
   then obtain h_collapse where
       hcollapse: "top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h_collapse" by (by100 blast)
