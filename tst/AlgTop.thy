@@ -4914,11 +4914,36 @@ proof -
        - Edge 1 at t: \\<psi>\\_e maps to angle 2\\<pi>(1+t)/n.
          \\<tau> maps to spur: (1-t)*\\<psi>\\_m(c\\_m) + t*\\<psi>\\_m(u0) = (1-t)*p\\_cm + t*(1,0).
          \\<psi>\\_m\\<inverse> maps to (1-t)*c\\_m + t*u0.\<close>
+    \<comment> \<open>Define f via disk homeomorphisms: f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.
+       For the boundary behavior, \\<tau> rescales good arcs and folds cancel arcs.
+       Define \\<tau> on boundary by angle mapping, extend to interior by cone from origin.\<close>
+    \<comment> \<open>Boundary angle thresholds.\<close>
+    define \<theta>_cancel where "\<theta>_cancel = 4 * pi / real ?n"
+    \<comment> \<open>\\<tau> on boundary S1: for angle \\<theta> \\<in> [\\<theta>\\_cancel, 2\\<pi>), rescale to [0, 2\\<pi>).
+       For \\<theta> \\<in> [0, \\<theta>\\_cancel), map to spur.\<close>
+    define \<tau>_boundary :: "real \<Rightarrow> real \<times> real" where
+      "\<tau>_boundary \<theta> = (if \<theta> \<ge> \<theta>_cancel then
+         (cos ((\<theta> - \<theta>_cancel) * real ?n / real ?m), sin ((\<theta> - \<theta>_cancel) * real ?n / real ?m))
+       else
+         let t_fold = min (\<theta> * real ?n / (2*pi)) ((4*pi/real ?n - \<theta>) * real ?n / (2*pi))
+         in ((1 - t_fold) * 1 + t_fold * fst p_cm, (1 - t_fold) * 0 + t_fold * snd p_cm))" for \<theta>
+    \<comment> \<open>Extend \\<tau> to B2 by cone from origin: \\<tau>(r, \\<theta>) = r * \\<tau>\\_boundary(\\<theta>).\<close>
+    define \<tau> :: "real \<times> real \<Rightarrow> real \<times> real" where
+      "\<tau> p = (if p = (0, 0) then (0, 0)
+       else let r = sqrt (fst p ^ 2 + snd p ^ 2);
+                \<theta> = (if snd p \<ge> 0 then arccos (fst p / r) else 2*pi - arccos (fst p / r))
+            in (r * fst (\<tau>_boundary \<theta>), r * snd (\<tau>_boundary \<theta>)))" for p
+    \<comment> \<open>Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.\<close>
+    define spur_f where "spur_f p = inv_into P_m \<psi>_m (\<tau> (\<psi>_e p))" for p
+    \<comment> \<open>Provide spur\\_f as witness. Sorry all properties (cone extension is NOT injective
+       on interior — this definition needs refinement for the full proof, but the
+       structure is correct for boundary behavior).\<close>
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
-      sorry \<comment> \<open>Spur collapse via \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e with \\<tau>: B2 \\<to> B2.
-         Disk homeomorphisms \\<psi>\\_e and \\<psi>\\_m now available.
-         Remaining: define \\<tau>: B2 \\<to> B2 that collapses cancel arcs and rescales.
+      sorry \<comment> \<open>Spur collapse via spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.
+         NOTE: The cone extension of \\<tau> is NOT injective on interior (known issue).
+         The correct \\<tau> needs a non-cone interior extension (fan construction or
+         sector-squeezing). The boundary behavior is correct.
          All fibre matching cases verified algebraically (sessions 2-4).\<close>
     then obtain f where
         hf_cont: "continuous_on P_e f"
