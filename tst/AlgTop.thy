@@ -4572,7 +4572,7 @@ proof -
           thus ?thesis using hcoeff_sum \<open>(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k) = 0\<close> by (by100 linarith)
         qed
         moreover have "(1-t)*vx i+t*vx(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vx k)"
-          sorry \<comment> \<open>Most terms are 0; only i and Suc i mod n contribute.\<close>
+          sorry \<comment> \<open>Sum with only 2 nonzero terms: sum.remove + sum.neutral.\<close>
         moreover have "(1-t)*vy i+t*vy(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vy k)"
           sorry
         ultimately show ?thesis unfolding hC5 by (by100 blast)
