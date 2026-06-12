@@ -1228,7 +1228,9 @@ proof -
         case hint: True \<comment> \<open>Edge interior: q enters the edge-interior branch.\<close>
         \<comment> \<open>The edge\\_pt(i,t) is NOT a vertex (0<t<1), so q enters either edge-interior or else.\<close>
         have hnotvertex_i: "\<not>(\<exists>k<?n. (1-t)*vx i + t*vx(Suc i mod ?n) = vx k \<and> (1-t)*vy i + t*vy(Suc i mod ?n) = vy k)"
-          sorry \<comment> \<open>Interior edge point \\<noteq> vertex (follows from C11 strict convexity + 0<t<1).\<close>
+          sorry \<comment> \<open>Interior edge point (0<t<1) \\<noteq> vertex. For k=i: t=0. For k=i+1: t=1.
+             For other k: C11 cross product < 0 but collinearity gives 0. Contradiction.
+             by100 algebra timeouts on the detailed steps.\<close>
         show ?thesis sorry \<comment> \<open>Interior case: both sides map to same canonical edge point.\<close>
       next
         case hvert: False \<comment> \<open>Vertex: t = 0 or t = 1. q enters the vertex branch.\<close>
