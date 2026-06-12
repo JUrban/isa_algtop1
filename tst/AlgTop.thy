@@ -1310,8 +1310,32 @@ proof -
             unfolding q_def using True by (by100 auto)
           \<comment> \<open>vtgt k < n (need partner properties).\<close>
           have "vtgt k < ?n"
-            sorry \<comment> \<open>From vtgt\\_def + partner\\_props. If canonical: vtgt k = k < n.
-               If non-canonical: vtgt k = partner k or Suc(partner k) mod n, both < n.\<close>
+          proof (cases "is_canonical k")
+            case True hence "vtgt k = k" unfolding vtgt_def by (by100 simp)
+            thus ?thesis using hk(1) by (by100 simp)
+          next
+            case False
+            hence hk_noncanon: "\<not> is_canonical k" .
+            have hk_card: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} = 2"
+            proof -
+              have "k \<in> {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)}" using hk(1) by (by100 simp)
+              have "finite {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)}" by (by100 simp)
+              have "{j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} \<noteq> {}" using \<open>k \<in> _\<close> by (by100 blast)
+              have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} \<noteq> 0"
+                using \<open>finite _\<close> \<open>_ \<noteq> {}\<close> by (by100 simp)
+              moreover have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} \<in> {0, 2}"
+                using hproper by (by100 blast)
+              ultimately show ?thesis
+                by (cases "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} = 0") (by100 blast)+
+            qed
+            from partner_props[OF hk(1) hk_card]
+            have "partner k < ?n" by (by100 blast)
+            have "?n > 0" using assms by (by100 linarith)
+            have "vtgt k = (if snd(scheme!k) = snd(scheme!(partner k)) then partner k else Suc (partner k) mod ?n)"
+              unfolding vtgt_def using hk_noncanon by (by100 simp)
+            hence "vtgt k = partner k \<or> vtgt k = Suc (partner k) mod ?n" by (by100 simp)
+            thus ?thesis using \<open>partner k < ?n\<close> \<open>?n > 0\<close> by (by100 auto)
+          qed
           hence "q p0 = edge_pt (vtgt k) 0" using hq_eq unfolding edge_pt_def by (by100 simp)
           thus ?thesis using \<open>vtgt k < ?n\<close> by (by100 force)
         next
@@ -1350,7 +1374,22 @@ proof -
             from someI_ex[OF this] show ?thesis unfolding sel_def i'_def t'_def by (by100 auto)
           qed
           have hpartner: "partner i' < ?n"
-            sorry \<comment> \<open>Same hcard proof as before.\<close>
+          proof -
+            have hcard: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} = 2"
+            proof -
+              have "i' \<in> {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')}" using hsel by (by100 simp)
+              have "finite {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')}" by (by100 simp)
+              have "{j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<noteq> {}" using \<open>i' \<in> _\<close> by (by100 blast)
+              have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<noteq> 0"
+                using \<open>finite _\<close> \<open>_ \<noteq> {}\<close> by (by100 simp)
+              moreover have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<in> {0, 2}"
+                using hproper by (by100 blast)
+              ultimately show ?thesis
+                by (cases "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} = 0") (by100 blast)+
+            qed
+            have "i' < ?n" using hsel by (by100 blast)
+            from partner_props[OF this hcard] show ?thesis by (by100 blast)
+          qed
           define j where "j = partner i'" define s where "s = (if snd(scheme!i') = snd(scheme!j) then t' else 1 - t')"
           have q_eq: "q p0 = (let (i,t) = sel in let j' = partner i
                  in if snd(scheme!i) = snd(scheme!j') then edge_pt j' t else edge_pt j' (1-t))"
