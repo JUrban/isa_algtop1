@@ -5867,7 +5867,49 @@ theorem Theorem_76_elementary_operations:
       and "top1_quotient_of_scheme_on X1 TX1 scheme1
          \<and> top1_quotient_of_scheme_on X2 TX2 scheme2"
   shows "\<exists>h. top1_homeomorphism_on X1 TX1 X2 TX2 h"
-  sorry \<comment> \<open>Old chain; live proof is via valid\\_equiv\\_preserves\\_quotient\\_homeo.\<close>
+proof -
+  \<comment> \<open>Step 1: elementary \\<to> valid operation (mostly direct correspondence).\<close>
+  \<comment> \<open>Proof strategy: convert elementary to valid operation, apply preservation + uniqueness.\<close>
+  from assms(4) have hX1: "top1_quotient_of_scheme_on X1 TX1 scheme1" by (by100 blast)
+  from assms(4) have hX2: "top1_quotient_of_scheme_on X2 TX2 scheme2" by (by100 blast)
+  \<comment> \<open>Elementary \\<to> valid (by cases; most are identical).\<close>
+  from assms(3) have hvalid: "top1_valid_scheme_operation scheme1 scheme2"
+  proof (induction rule: top1_elementary_scheme_operation.induct)
+    case rotate show ?case by (rule top1_valid_scheme_operation.v_rotate)
+  next
+    case cancel show ?case by (rule top1_valid_scheme_operation.v_cancel)
+  next
+    case uncancel show ?case by (rule top1_valid_scheme_operation.v_cancel_reverse)
+  next
+    case invert show ?case by (rule top1_valid_scheme_operation.v_invert)
+  next
+    case relabel show ?case sorry \<comment> \<open>Relabel: needs freshness for v\\_relabel; or label merge argument.\<close>
+  next
+    case flip_label show ?case by (rule top1_valid_scheme_operation.v_flip_label)
+  next
+    case cut_paste show ?case by (rule top1_valid_scheme_operation.v_cut_paste)
+  next
+    case cut_paste2 show ?case by (rule top1_valid_scheme_operation.v_cut_paste2_nonfresh)
+  next
+    case cut_paste_opp show ?case by (rule top1_valid_scheme_operation.v_cut_paste_opp)
+  next
+    case (context_left y z prefix)
+    from context_left.IH
+    show ?case by (rule top1_valid_scheme_operation.v_context_left)
+  qed
+  \<comment> \<open>Valid op preservation + uniqueness.\<close>
+  from valid_operation_preserves_quotient_homeo[OF hX1 hvalid]
+  obtain Y :: "'x set" and TY :: "'x set set" and g :: "'x \<Rightarrow> 'x" where
+      hY: "top1_quotient_of_scheme_on Y TY scheme2"
+    and hg: "top1_homeomorphism_on X1 TX1 Y TY g"
+    by (by100 blast)
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using hY unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  from scheme_quotient_uniqueness[OF htopo_Y assms(2) hY hX2]
+  obtain h2 where hh2: "top1_homeomorphism_on Y TY X2 TX2 h2" by (by100 blast)
+  from homeomorphism_comp[OF hg hh2]
+  show ?thesis by (by100 blast)
+qed
 
 section \<open>*\<S>78 Constructing Compact Surfaces\<close>
 
