@@ -4793,6 +4793,57 @@ proof -
         qed
       qed
     qed
+    \<comment> \<open>Bridge: top1\\_continuous\\_map\\_on (subspace) \\<to> continuous\\_on (HOL-Analysis).
+       Reverse of top1\\_continuous\\_map\\_on\\_real2\\_subspace\\_general.\<close>
+    have continuous_on_from_top1:
+      "\<And>S T (f :: real \<times> real \<Rightarrow> real \<times> real).
+        top1_continuous_map_on S
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S)
+          T (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) f
+        \<Longrightarrow> continuous_on S f"
+    proof -
+      fix S T :: "(real \<times> real) set" and f :: "real \<times> real \<Rightarrow> real \<times> real"
+      assume hcont: "top1_continuous_map_on S
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S)
+          T (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T) f"
+      show "continuous_on S f"
+        unfolding continuous_on_open_invariant
+      proof (intro allI impI)
+        fix B :: "(real \<times> real) set" assume hB: "open B"
+        \<comment> \<open>B is open in \\<real>2. So B \\<in> product\\_topology\\_on.\<close>
+        have "B \<in> product_topology_on top1_open_sets top1_open_sets"
+        proof -
+          have "B \<in> top1_open_sets" using hB unfolding top1_open_sets_def by (by100 blast)
+          thus ?thesis using product_topology_on_open_sets by (by100 simp)
+        qed
+        hence "T \<inter> B \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T"
+          unfolding subspace_topology_def by (by100 auto)
+        from hcont[unfolded top1_continuous_map_on_def]
+        have "\<forall>V. V \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T
+            \<longrightarrow> {x \<in> S. f x \<in> V} \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+          by (by100 blast)
+        hence "{x \<in> S. f x \<in> T \<inter> B} \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+          using \<open>T \<inter> B \<in> _\<close> by (by100 blast)
+        then obtain A where "A \<in> product_topology_on top1_open_sets top1_open_sets"
+            and "{x \<in> S. f x \<in> T \<inter> B} = S \<inter> A"
+          unfolding subspace_topology_def by (by100 auto)
+        have "open A"
+        proof -
+          have "A \<in> top1_open_sets"
+            using \<open>A \<in> product_topology_on top1_open_sets top1_open_sets\<close>
+            product_topology_on_open_sets by (by100 simp)
+          thus ?thesis unfolding top1_open_sets_def by (by100 blast)
+        qed
+        moreover have "f -` B \<inter> S = {x \<in> S. f x \<in> T \<inter> B}"
+        proof -
+          have "\<forall>x \<in> S. f x \<in> T"
+            using hcont unfolding top1_continuous_map_on_def by (by100 blast)
+          thus ?thesis by (by100 blast)
+        qed
+        hence "A \<inter> S = f -` B \<inter> S" using \<open>{x \<in> S. f x \<in> T \<inter> B} = S \<inter> A\<close> by (by100 blast)
+        ultimately show "\<exists>A. open A \<and> A \<inter> S = f -` B \<inter> S" by (by100 blast)
+      qed
+    qed
     \<comment> \<open>Fan construction: define f using the vertex map.\<close>
     \<comment> \<open>f maps each triangle of the fan from v\\_e(1) to the corresponding triangle
        of the fan from c\\_m. The vertex map is:
