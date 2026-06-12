@@ -1275,7 +1275,7 @@ AlgTop.thy|lemma|quotient_of_scheme_cut_paste_opp|94
 ac/AlgTopCached.thy|lemma|quotient_of_scheme_extract|31345
 wh/AlgTopWedgeHelpers.thy|lemma|quotient_of_scheme_extract_full|329
 AlgTop.thy|lemma|quotient_of_scheme_uncancel_front|3260
-AlgTop.thy|lemma|quotient_of_scheme_uncancel_front_proper|5720
+AlgTop.thy|lemma|quotient_of_scheme_uncancel_front_proper|5207
 AlgTop.thy|lemma|quotient_of_scheme_uncancel_proved|3284
 ac/AlgTopCached.thy|lemma|quotient_projection_properties|8976
 AlgTop.thy|lemma|quotient_scheme_length_ge3|9
@@ -2190,10 +2190,10 @@ ac8/AlgTopCached8.thy|theorem|Theorem_74_4_fund_group_m_projective|8230
 ac8/AlgTopCached8.thy|theorem|Theorem_75_1_H1_abelianization|3787
 ac8/AlgTopCached8.thy|theorem|Theorem_75_3_H1_n_torus|4472
 ac12/AlgTopCached12.thy|theorem|Theorem_75_4_H1_m_projective|975
-AlgTop.thy|theorem|Theorem_76_elementary_operations|5763
-AlgTop.thy|theorem|Theorem_77_5_classification|6698
-AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|5781
-AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|6600
+AlgTop.thy|theorem|Theorem_76_elementary_operations|5349
+AlgTop.thy|theorem|Theorem_77_5_classification|6326
+AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|5409
+AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|6228
 ac4/AlgTopCached4.thy|theorem|Theorem_79_2|1524
 ac4/AlgTopCached4.thy|theorem|Theorem_79_4|2333
 ac4/AlgTopCached4.thy|theorem|Theorem_80_1_universal_unique|3345

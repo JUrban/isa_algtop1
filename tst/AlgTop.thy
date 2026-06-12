@@ -2,6 +2,35 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
+\<comment> \<open>SORRY ANALYSIS (25 sorrys as of 2026-06-12):
+
+CRITICAL PATH (15 sorrys):
+- Spur collapse (1): fan construction + fibre matching for front\\_cancel\\_proper
+  → cascades to front\\_cancel (3253) + uncancel\\_front (3264)
+- Cut-paste same-space (3): quotient\\_of\\_scheme\\_cut\\_paste/2/opp (lines 78, 90, 118)
+  Need edge permutation geometry
+- Cut-paste reverse (2): v\\_cut\\_paste\\_reverse/2\\_reverse (lines 3484, 3491)
+- Genuinely false (2): length(target) < 3 after cancel (lines 3451, 3618)
+  Fix: add length precondition to v\\_cancel (requires cached session change)
+- Uniqueness vertex (2): C7 chain transitivity for vertex identifications (lines 4518, 4630)
+- Final assembly (3): Thm78.2 induction, scheme extraction, sphere realization
+
+NOT ON CRITICAL PATH (10 sorrys):
+- Context-left structural (10): suffix operations != full-scheme operations
+  Classification chain only uses v\\_relabel(fresh) context-left, which IS proved.
+  Expert plan: restrict v\\_context\\_left to proper schemes or refactor.
+
+DEAD CODE (0 sorrys counted, 1 relabel sorry in Theorem\\_76):
+- Relabel merge (1): in Theorem\\_76 elementary operations (line 5373)
+
+KEY INFRASTRUCTURE (PROVED):
+- scheme\\_quotient\\_exists, scheme\\_quotient\\_uniqueness, compact\\_surj\\_quotient
+- scheme\\_quotient\\_transfer\\_along\\_homeomorphism (all 11 conditions)
+- front\\_cancel\\_proper skeleton (modulo spur collapse)
+- quotient\\_of\\_scheme\\_uncancel\\_front\\_proper (for proper schemes)
+- centroid-is-interior (for fan construction)
+- Fibre matching: all cases algebraically verified (sessions 2-4)\<close>
+
 \<comment> \<open>valid\\_operation\\_reverse, valid\\_equiv\\_sym: cached in AlgTopCached14.\<close>
 \<comment> \<open>§77 normal form chain (scheme\\_normal\\_form\\_valid + all valid helpers): cached in AlgTopCached14.\<close>
 
