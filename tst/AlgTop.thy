@@ -1347,9 +1347,44 @@ proof -
         have hedge_unique: "\<And>i' s. i' < ?n \<Longrightarrow> 0 < s \<Longrightarrow> s < 1 \<Longrightarrow>
             edge_pt i s = edge_pt i' s \<Longrightarrow> i' = i \<or> (i' = i \<and> s = s)"
           sorry \<comment> \<open>Edges of convex polygon have disjoint interiors. From C6 + adjacency.\<close>
-        show ?thesis sorry \<comment> \<open>Uses hnotvertex\\_i + hedge\\_unique + q\\_def unfolding.
-           i canonical: q(edge\\_pt i t) = edge\\_pt(i,t). q(edge\\_pt j t') maps to edge\\_pt(i,t).
-           j canonical: symmetric.\<close>
+        \<comment> \<open>Rewrite goal in terms of edge\\_pt.\<close>
+        have hgoal_lhs: "edge_pt i t = ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))"
+          unfolding edge_pt_def by (by100 simp)
+        show ?thesis
+        proof (cases "is_canonical i")
+          case hican: True \<comment> \<open>i canonical, j non-canonical.\<close>
+          hence hjnon: "\<not> is_canonical j"
+          proof -
+            have "i \<le> partner i" using hican unfolding is_canonical_def by (by100 simp)
+            hence "i \<le> j" using hpi by (by100 simp)
+            hence "i < j" using hij by (by100 linarith)
+            hence "j > partner j" using hpj by (by100 simp)
+            thus ?thesis unfolding is_canonical_def by (by100 linarith)
+          qed
+          \<comment> \<open>q(edge\\_pt i t) = edge\\_pt(i,t) since i canonical and not a vertex.\<close>
+          have hqi: "q (edge_pt i t) = edge_pt i t"
+            sorry \<comment> \<open>q\\_def: not vertex (hnotvertex\\_i), not on non-canon edge (i canonical). Else branch.\<close>
+          \<comment> \<open>q(edge\\_pt j s) where s is the matching param.\<close>
+          have hqj: "\<And>s. 0 < s \<Longrightarrow> s < 1 \<Longrightarrow> q (edge_pt j s) = edge_pt i
+              (if snd(scheme!j) = snd(scheme!i) then s else 1 - s)"
+            sorry \<comment> \<open>q\\_def: not vertex, IS on non-canon j. SOME picks (j,s). partner j = i.\<close>
+          show ?thesis
+          proof (cases "snd(scheme!i) = snd(scheme!j)")
+            case True \<comment> \<open>Same direction.\<close>
+            have "q (edge_pt j t) = edge_pt i t" using hqj hint True by (by100 simp)
+            thus ?thesis using hqi hgoal_lhs True unfolding edge_pt_def by (by100 simp)
+          next
+            case False \<comment> \<open>Opposite direction.\<close>
+            have "0 < 1 - t" "1 - t < 1" using hint by (by100 linarith)+
+            hence "q (edge_pt j (1-t)) = edge_pt i (1 - (1-t))"
+              using hqj[of "1-t"] False by (by100 simp)
+            hence "q (edge_pt j (1-t)) = edge_pt i t" by (by100 simp)
+            thus ?thesis using hqi hgoal_lhs False unfolding edge_pt_def by (by100 simp)
+          qed
+        next
+          case hican: False \<comment> \<open>i non-canonical, j canonical. Symmetric.\<close>
+          show ?thesis sorry \<comment> \<open>Symmetric: q(edge\\_pt i t) maps to edge\\_pt(j,...). q(edge\\_pt j s) = id.\<close>
+        qed
       next
         case hvert: False \<comment> \<open>Vertex: t = 0 or t = 1. q enters the vertex branch.\<close>
         hence "t = 0 \<or> t = 1" using ht01 by (by100 linarith)
