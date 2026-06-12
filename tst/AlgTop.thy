@@ -3492,11 +3492,36 @@ proof -
             from honly_Sk[rule_format] hj False hjSk show ?thesis by (by100 blast)
           qed
         qed
+        have hn'_pos2: "(0::nat) < ?n'" using hn'_ge3 by (by100 linarith)
+        have "Suc k mod ?n' < ?n'" by (rule mod_less_divisor[OF hn'_pos2])
+        hence hSk_in: "Suc k mod ?n' \<in> {..<?n'}" by (by100 simp)
         have "(\<Sum>j<?n'. coeffs j * vx' j) = coeffs (Suc k mod ?n') * vx' (Suc k mod ?n')"
-          sorry \<comment> \<open>All other terms are 0.\<close>
+        proof -
+          from sum.remove[OF finite_lessThan hSk_in, of "\<lambda>j. coeffs j * vx' j"]
+          have "(\<Sum>j<?n'. coeffs j * vx' j) = coeffs (Suc k mod ?n') * vx' (Suc k mod ?n') +
+              (\<Sum>j\<in>{..<?n'} - {Suc k mod ?n'}. coeffs j * vx' j)"
+            by (by100 simp)
+          hence "(\<Sum>j<?n'. coeffs j * vx' j) = (\<Sum>j\<in>{Suc k mod ?n'}. coeffs j * vx' j) +
+              (\<Sum>j\<in>{..<?n'} - {Suc k mod ?n'}. coeffs j * vx' j)"
+            by (by100 simp)
+          moreover have "(\<Sum>j\<in>{..<?n'} - {Suc k mod ?n'}. coeffs j * vx' j) = 0"
+            by (rule sum.neutral, use honly in \<open>by100 force\<close>)
+          ultimately show ?thesis by (by100 simp)
+        qed
         hence "vx' k = vx' (Suc k mod ?n')" using hvx hcSk by (by100 simp)
         moreover have "(\<Sum>j<?n'. coeffs j * vy' j) = coeffs (Suc k mod ?n') * vy' (Suc k mod ?n')"
-          sorry
+        proof -
+          from sum.remove[OF finite_lessThan hSk_in, of "\<lambda>j. coeffs j * vy' j"]
+          have "(\<Sum>j<?n'. coeffs j * vy' j) = coeffs (Suc k mod ?n') * vy' (Suc k mod ?n') +
+              (\<Sum>j\<in>{..<?n'} - {Suc k mod ?n'}. coeffs j * vy' j)"
+            by (by100 simp)
+          hence "(\<Sum>j<?n'. coeffs j * vy' j) = (\<Sum>j\<in>{Suc k mod ?n'}. coeffs j * vy' j) +
+              (\<Sum>j\<in>{..<?n'} - {Suc k mod ?n'}. coeffs j * vy' j)"
+            by (by100 simp)
+          moreover have "(\<Sum>j\<in>{..<?n'} - {Suc k mod ?n'}. coeffs j * vy' j) = 0"
+            by (rule sum.neutral, use honly in \<open>by100 force\<close>)
+          ultimately show ?thesis by (by100 simp)
+        qed
         hence "vy' k = vy' (Suc k mod ?n')" using hvy hcSk by (by100 simp)
         ultimately show ?thesis by (by100 blast)
       qed
