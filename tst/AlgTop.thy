@@ -5161,9 +5161,9 @@ proof -
            \<longrightarrow> f p \<in> P_m
              \<and> (\<forall>j<?m. \<forall>s\<in>I_set.
                   f p \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m)))
-             \<and> (\<forall>t'\<in>{0<..<(1::real)}.
+             \<and> (\<forall>t'\<in>I_set.
                   f p \<noteq> ((1-t')*vx_m 0+t'*cx_m,(1-t')*vy_m 0+t'*cy_m)))
-        \<comment> \<open>Interior injectivity.\<close>
+        \<comment> \<open>Interior injectivity (includes: no interior point maps to a boundary/spur/vertex target).\<close>
         \<and> (\<forall>p\<in>P_e. \<forall>p'\<in>P_e.
              (\<forall>i<?n. \<forall>t\<in>I_set. p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
            \<longrightarrow> (\<forall>i<?n. \<forall>t\<in>I_set. p' \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
@@ -5187,7 +5187,7 @@ proof -
          \<longrightarrow> f p \<in> P_m
            \<and> (\<forall>j<?m. \<forall>s\<in>I_set.
                 f p \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m)))
-           \<and> (\<forall>t'\<in>{0<..<(1::real)}.
+           \<and> (\<forall>t'\<in>I_set.
                 f p \<noteq> ((1-t')*vx_m 0+t'*cx_m,(1-t')*vy_m 0+t'*cy_m))"
       and hf_int_inj: "\<forall>p\<in>P_e. \<forall>p'\<in>P_e.
            (\<forall>i<?n. \<forall>t\<in>I_set. p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
@@ -5450,7 +5450,72 @@ proof -
           case y_bdy
           \<comment> \<open>x interior, y on boundary. f(x) is interior, f(y) is either on an edge or on spur.
              In either case, f(x) \\<noteq> f(y) since interior doesn't overlap with edges/spur.\<close>
-          show ?thesis sorry \<comment> \<open>x interior, y boundary backward case.\<close>
+          \<comment> \<open>x interior, y on boundary. f(x)=f(y). But f(x) avoids edges and spur of P\\_m,
+             while f(y) is on an edge or spur \\<to> contradiction.\<close>
+          then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set"
+            and hy: "y = ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
+            by (by100 blast)
+          \<comment> \<open>Precompute mod facts.\<close>
+          have hmod1: "Suc 0 mod ?n = 1" using hn5 by (by100 simp)
+          have hmod2: "(2::nat) < ?n" using hn5 by (by100 linarith)
+          have hmod2': "Suc (Suc 0) mod ?n = 2" using hmod2 by (by100 simp)
+          have h1s_I: "1-s \<in> I_set"
+          proof -
+            from hs have "0 \<le> s" "s \<le> 1" unfolding top1_unit_interval_def by (by100 auto)+
+            thus ?thesis unfolding top1_unit_interval_def by (by100 auto)
+          qed
+          \<comment> \<open>All three sub-cases lead to f(x) \\<noteq> f(y), contradicting f(x)=f(y).\<close>
+          have "f x \<noteq> f y"
+          proof (cases "j \<ge> 2")
+            case True
+            \<comment> \<open>f(y) on P\\_m edge j-2 at param s. f(x) not on any P\\_m edge.\<close>
+            define j' where "j' = j - 2"
+            have hj'_m: "j' < ?m" using hj hn_eq j'_def True by (by100 linarith)
+            have hj_eq: "j = j' + 2" using True j'_def by (by100 linarith)
+            have "f y = ((1-s)*vx_m j'+s*vx_m(Suc j' mod ?m),(1-s)*vy_m j'+s*vy_m(Suc j' mod ?m))"
+              using hf_edge[rule_format, OF conjI[OF True hj]] hs hy j'_def by (by100 simp)
+            moreover from hfx_int(2) hj'_m hs
+            have "f x \<noteq> ((1-s)*vx_m j'+s*vx_m(Suc j' mod ?m),(1-s)*vy_m j'+s*vy_m(Suc j' mod ?m))"
+              by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          next
+            case False
+            hence hj01: "j = 0 \<or> j = 1" using hj hn5 by (by100 linarith)
+            show ?thesis
+            proof (cases "j = 0")
+              case True
+              \<comment> \<open>f(y) = spur at param s. f(x) avoids all spur points.\<close>
+              have hy': "y = ((1-s)*vx_e 0+s*vx_e 1,(1-s)*vy_e 0+s*vy_e 1)"
+                using hy True hmod1 by (by100 simp)
+              hence "f y = ((1-s)*vx_m 0+s*cx_m,(1-s)*vy_m 0+s*cy_m)"
+                using hf_spur0 hs by (by100 blast)
+              \<comment> \<open>Derive: f(x) avoids all spur points (from hf\\_int\\_range).\<close>
+              moreover have hfx_nospur: "\<forall>t'\<in>I_set. f x \<noteq> ((1-t')*vx_m 0+t'*cx_m,(1-t')*vy_m 0+t'*cy_m)"
+                using hf_int_range hxP x_int by (by100 blast)
+              hence "f x \<noteq> ((1-s)*vx_m 0+s*cx_m,(1-s)*vy_m 0+s*cy_m)"
+                using hs by (by100 blast)
+              ultimately show ?thesis by (by100 simp)
+            next
+              case False
+              hence "j = 1" using hj01 by (by100 blast)
+              \<comment> \<open>f(y) = (1-s)*c\\_m + s*u0 = spur at param 1-s.\<close>
+              have hy': "y = ((1-s)*vx_e 1+s*vx_e 2,(1-s)*vy_e 1+s*vy_e 2)"
+                using hy \<open>j=1\<close> hmod2' by (by100 simp)
+              hence hfy: "f y = ((1-s)*cx_m+s*vx_m 0,(1-s)*cy_m+s*vy_m 0)"
+                using hf_spur1 hs by (by100 blast)
+              \<comment> \<open>Rewrite as spur point at parameter 1-s.\<close>
+              have "(1-s)*cx_m+s*vx_m 0 = (1-(1-s))*vx_m 0+(1-s)*cx_m" by (by100 algebra)
+              moreover have "(1-s)*cy_m+s*vy_m 0 = (1-(1-s))*vy_m 0+(1-s)*cy_m" by (by100 algebra)
+              ultimately have "f y = ((1-(1-s))*vx_m 0+(1-s)*cx_m,(1-(1-s))*vy_m 0+(1-s)*cy_m)"
+                using hfy by (by100 simp)
+              moreover have "\<forall>t'\<in>I_set. f x \<noteq> ((1-t')*vx_m 0+t'*cx_m,(1-t')*vy_m 0+t'*cy_m)"
+                using hf_int_range hxP x_int by (by100 blast)
+              hence "f x \<noteq> ((1-(1-s))*vx_m 0+(1-s)*cx_m,(1-(1-s))*vy_m 0+(1-s)*cy_m)"
+                using h1s_I by (by100 blast)
+              ultimately show ?thesis by (by100 simp)
+            qed
+          qed
+          thus ?thesis using \<open>f x = f y\<close> by (by100 simp)
         qed
       next
         case x_bdy
