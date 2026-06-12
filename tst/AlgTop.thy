@@ -3097,9 +3097,10 @@ proof -
      (2) Show Y' with quotient topology is a quotient of w.
      (3) Show Y \\<cong> Y' via spur collapse homeomorphism.
      Note: Y' \\<neq> Y in general (Y includes points from the spur triangle v\\_0-v\\_1-v\\_2).\<close>
-  define Y' where "Y' = q ` P'"
+  \<comment> \<open>Y' and TY' will be defined using q' (modified quotient map) after q' is defined.\<close>
+  define Y'_q where "Y'_q = q ` P'"
   let ?TP' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P'"
-  define TY' where "TY' = {U. \<exists>V. V \<subseteq> P' \<and> (\<forall>x \<in> V. \<forall>y. y \<in> P' \<and> q y = q x \<longrightarrow> y \<in> V)
+  define TY'_q where "TY'_q = {U. \<exists>V. V \<subseteq> P' \<and> (\<forall>x \<in> V. \<forall>y. y \<in> P' \<and> q y = q x \<longrightarrow> y \<in> V)
       \<and> U = q ` V \<and> V \<in> ?TP'}"
   have hlen_w: "?n' = ?n - 2" using hn by (by100 simp)
   have hn_ge5: "?n \<ge> 5" using assms(2) hn by (by100 simp)
@@ -3623,14 +3624,26 @@ proof -
      (v\\_{n-1} \\<to> v\\_0), using the affine correspondence.
      On interior of P': q' = q (injective by C8).
      Then q' satisfies C7 for w by construction, and (Y', TY') is a quotient of w.\<close>
-  \<comment> \<open>Define q': modified quotient map on P' that reroutes the diagonal.\<close>
+  \<comment> \<open>Define rerouting: map diagonal point to corresponding original edge n-1 point.
+     The diagonal goes from v\\_{n-1} to v\\_2. At parameter t:
+       diagonal(t) = (1-t)*v\\_{n-1} + t*v\\_2
+       reroute(t) = (1-t)*v\\_{n-1} + t*v\\_0
+     Since q(v\\_0) = q(v\\_2) (hv0\\_v2), this rerouting is "compatible" with q.\<close>
+  define on_diag :: "(real \<times> real) \<Rightarrow> bool" where
+    "on_diag p = (\<exists>t. 0 \<le> t \<and> t \<le> 1 \<and> p = ((1-t) * vx (?n-1) + t * vx 2, (1-t) * vy (?n-1) + t * vy 2))"
+  define diag_t :: "(real \<times> real) \<Rightarrow> real" where
+    "diag_t p = (SOME t. 0 \<le> t \<and> t \<le> 1 \<and> p = ((1-t) * vx (?n-1) + t * vx 2, (1-t) * vy (?n-1) + t * vy 2))"
+  define reroute :: "(real \<times> real) \<Rightarrow> (real \<times> real)" where
+    "reroute p = ((1 - diag_t p) * vx (?n-1) + diag_t p * vx 0,
+                  (1 - diag_t p) * vy (?n-1) + diag_t p * vy 0)"
+  \<comment> \<open>Modified quotient map: reroute diagonal points, identity elsewhere.\<close>
   define q' :: "(real \<times> real) \<Rightarrow> 'a" where
-    "q' p = (if \<exists>t. 0 \<le> t \<and> t \<le> 1 \<and> p = ((1-t) * vx (Suc ?n' mod ?n' + 2) + t * vx' 0,
-                                              (1-t) * vy (Suc ?n' mod ?n' + 2) + t * vy' 0)
-             then q ((1-t) * vx (?n - 1) + t * vx 0, (1-t) * vy (?n - 1) + t * vy 0)
-             else q p)" for p
-  \<comment> \<open>TODO: this definition is ill-typed (free 't' in else branch).
-     Need a clean formulation. Leaving as sorry for now.\<close>
+    "q' p = (if on_diag p then q (reroute p) else q p)" for p
+  \<comment> \<open>Y' and TY' using the modified quotient map q'.\<close>
+  define Y' where "Y' = q' ` P'"
+  define TY' where "TY' = {U. \<exists>V. V \<subseteq> P' \<and> (\<forall>x \<in> V. \<forall>y. y \<in> P' \<and> q' y = q' x \<longrightarrow> y \<in> V)
+      \<and> U = q' ` V \<and> V \<in> ?TP'}"
+  \<comment> \<open>Key properties of q' (to be proved):\<close>
   have hquot_w: "top1_quotient_of_scheme_on Y' TY' w"
     sorry \<comment> \<open>Use modified quotient map q' on P'. All 11 conditions transfer:
        C7: edges 0..n'-2 from original C7, diagonal edge from q' definition.
