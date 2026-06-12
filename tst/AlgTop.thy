@@ -4612,7 +4612,14 @@ proof -
         sorry \<comment> \<open>From continuous\\_on and subspace topology.\<close>
       \<comment> \<open>f is a closed map (compact \\<to> Hausdorff continuous).\<close>
       have hf_closed: "top1_closed_map_on P1 ?TP1 P2 ?TP2 f"
-        sorry \<comment> \<open>From compact\\_hausdorff\\_continuous\\_closed\\_map.\<close>
+        unfolding top1_closed_map_on_def
+      proof (intro conjI allI impI ballI)
+        fix x assume "x \<in> P1" thus "f x \<in> P2" using hf_range by (by100 blast)
+      next
+        fix A assume hA: "closedin_on P1 ?TP1 A"
+        from compact_hausdorff_continuous_closed_map[OF hcompact hhaus hf_cont_top1 hA]
+        show "closedin_on P2 ?TP2 (f ` A)" .
+      qed
       \<comment> \<open>Closed surjection is a quotient map (Munkres Cor. 22.3).\<close>
       show "top1_quotient_map_on P1 ?TP1 P2 ?TP2 f"
         unfolding top1_quotient_map_on_def
@@ -4624,8 +4631,24 @@ proof -
         \<comment> \<open>Quotient condition: if f\\<inverse>(V) is open in P1 then V is open in P2.\<close>
         fix V assume hV_sub: "V \<subseteq> P2" and hV_preimg: "{x \<in> P1. f x \<in> V} \<in> ?TP1"
         \<comment> \<open>P2 \\\\ V is closed in P2 (complement of preimage).\<close>
+        \<comment> \<open>Munkres Cor. 22.3: P1 \\\\ f\\<inverse>(V) = f\\<inverse>(P2\\\\V) is closed. By closed map:
+           f(f\\<inverse>(P2\\\\V)) = P2\\\\V is closed in P2. So V is open in P2.\<close>
         show "V \<in> ?TP2"
-          sorry \<comment> \<open>P1 \\\\ f\\<inverse>(V) = f\\<inverse>(P2\\\\V) is closed. By closed map: f(f\\<inverse>(P2\\\\V)) = P2\\\\V is closed. So V is open.\<close>
+        proof -
+          \<comment> \<open>Complement of preimage is closed.\<close>
+          have hpreimg_closed: "closedin_on P1 ?TP1 (P1 - {x \<in> P1. f x \<in> V})"
+            sorry \<comment> \<open>Open complement is closed: {x. f x \\<in> V} open \\<Longrightarrow> P1 \\\\ {x. f x \\<in> V} closed.\<close>
+          \<comment> \<open>By closed map: image of closed set is closed.\<close>
+          have "closedin_on P2 ?TP2 (f ` (P1 - {x \<in> P1. f x \<in> V}))"
+            using hf_closed[unfolded top1_closed_map_on_def] hpreimg_closed sorry
+          \<comment> \<open>f(P1 \\\\ f\\<inverse>(V)) = P2 \\\\ V (by surjectivity).\<close>
+          moreover have "f ` (P1 - {x \<in> P1. f x \<in> V}) = P2 - V"
+            using hf_surj hV_sub sorry
+          \<comment> \<open>P2 \\\\ V closed \\<Longrightarrow> V open.\<close>
+          ultimately have "closedin_on P2 ?TP2 (P2 - V)" by (by100 simp)
+          thus "V \<in> ?TP2"
+            sorry \<comment> \<open>Closed complement \\<Longrightarrow> open: standard.\<close>
+        qed
       qed
     qed
     \<comment> \<open>Extract polygons and quotient maps from both quotients.\<close>
