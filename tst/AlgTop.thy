@@ -5715,6 +5715,47 @@ proof -
   thus ?thesis by (rule same_space_implies_homeo_realization)
 qed
 
+\<comment> \<open>Uncancel for proper schemes: derived from front\\_cancel\\_proper + existence + uniqueness + transfer.
+   No extra sorry beyond the spur collapse (which is inside front\\_cancel\\_proper).\<close>
+lemma quotient_of_scheme_uncancel_front_proper:
+  fixes a :: "nat \<times> bool" and w :: "(nat \<times> bool) list"
+  assumes "top1_quotient_of_scheme_on Y TY w"
+      and "length w \<ge> 3"
+      and hproper: "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+      and hfresh: "fst a \<notin> fst ` set w"
+  shows "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
+proof -
+  let ?ext = "[a, top1_inverse_edge a] @ w"
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using assms(1) unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 1: scheme\\_quotient\\_exists for the extended scheme.\<close>
+  have hlen_ext: "length ?ext \<ge> 3" using assms(2) by (by100 simp)
+  have hproper_ext: "\<forall>label. card {i. i < length ?ext \<and> fst (?ext ! i) = label} \<in> {0, 2}"
+    sorry \<comment> \<open>Properness of [a,inv a]@w from properness of w + freshness of a.
+       Same proof as in front\\_cancel\\_proper (hproper\\_ext block).\<close>
+  from scheme_quotient_exists[OF hlen_ext hproper_ext]
+  obtain Y_ext :: "(real \<times> real) set" and TY_ext :: "(real \<times> real) set set" where
+      hY_ext: "top1_quotient_of_scheme_on Y_ext TY_ext ?ext" by (by100 blast)
+  have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
+    using hY_ext unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 2: front\\_cancel\\_proper gives Y\\_ext \\<cong> some quotient of w.\<close>
+  from front_cancel_proper[OF hY_ext assms(2) hproper hfresh]
+  obtain Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set" and h1 where
+      hY_w: "top1_quotient_of_scheme_on Y_w TY_w w"
+    and hh1: "top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h1" by (by100 blast)
+  have htopo_w: "is_topology_on_strict Y_w TY_w"
+    using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 3: uniqueness gives Y\\_w \\<cong> Y (both quotients of w).\<close>
+  from scheme_quotient_uniqueness[OF htopo_w htopo_Y hY_w assms(1)]
+  obtain h2 where hh2: "top1_homeomorphism_on Y_w TY_w Y TY h2" by (by100 blast)
+  \<comment> \<open>Step 4: Compose: Y\\_ext \\<to> Y\\_w \\<to> Y.\<close>
+  from homeomorphism_comp[OF hh1 hh2]
+  have hcomp: "top1_homeomorphism_on Y_ext TY_ext Y TY (h2 \<circ> h1)" .
+  \<comment> \<open>Step 5: Transfer quotient of ?ext from Y\\_ext to Y.\<close>
+  from scheme_quotient_transfer_along_homeomorphism[OF hY_ext hcomp htopo_Y]
+  show ?thesis .
+qed
+
 \<comment> \<open>Old bridge lemmas (scheme\\_equiv\\_homeomorphic, scheme\\_rotate/cancel/invert\\_homeomorphic):
    DELETED per expert audit 21. Superseded by valid\\_equiv\\_preserves\\_quotient\\_homeo.\<close>
 
