@@ -4567,6 +4567,24 @@ proof -
      The homeomorphism collapses the spur (cancelling pair) to get w-quotient.\<close>
   have "\<exists>h_collapse. top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h_collapse"
   proof -
+    \<comment> \<open>Helper: continuous surjection between polygonal regions is a quotient map.
+       Uses: polygonal regions are compact (polygonal\\_region\\_compact),
+       subspace topology of R2 is Hausdorff, compact\\<to>Hausdorff continuous = closed map,
+       closed surjection = quotient map.\<close>
+    have compact_surj_quotient: "\<And>P1 P2 f n1 n2.
+        top1_is_polygonal_region_on P1 n1 \<Longrightarrow>
+        top1_is_polygonal_region_on P2 n2 \<Longrightarrow>
+        continuous_on P1 f \<Longrightarrow>
+        f ` P1 = P2 \<Longrightarrow>
+        (\<forall>x\<in>P1. f x \<in> P2) \<Longrightarrow>
+        top1_quotient_map_on P1
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1)
+          P2
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) f"
+      sorry \<comment> \<open>Standard topology: compact \\<to> Hausdorff continuous surjection is a quotient map.
+         P1 compact from polygonal\\_region\\_compact. R2 subspace is Hausdorff.
+         compact\\_hausdorff\\_continuous\\_closed\\_map gives closed map.
+         Closed surjection is quotient map (Munkres Corollary 22.3).\<close>
     \<comment> \<open>Extract polygons and quotient maps from both quotients.\<close>
     let ?n = "length ([a, top1_inverse_edge a] @ w)"
     let ?m = "length w"
@@ -4609,11 +4627,9 @@ proof -
     \<comment> \<open>q\\_w \\<circ> f is a quotient map from P\\_ext to Y\\_w (composition of continuous surjection
        f: P\\_ext \\<to> P\\_w with quotient map q\\_w: P\\_w \\<to> Y\\_w).\<close>
     \<comment> \<open>f is a quotient map (compact \\<to> Hausdorff continuous surjection = quotient map).\<close>
+    have hf_range: "\<forall>x\<in>P_ext. f x \<in> P_w" using hf_surj by (by100 blast)
     have hf_quot: "top1_quotient_map_on P_ext (?TP P_ext) P_w (?TP P_w) f"
-      sorry \<comment> \<open>f: P\\_ext \\<to> P\\_w is a quotient map because:
-         P\\_ext is compact (polygonal\\_region\\_compact), \\<R>\\<twosuperior> subspace is Hausdorff,
-         f is continuous (hf\\_cont) and surjective (hf\\_surj).
-         Compact \\<to> Hausdorff continuous surjection is automatically a quotient map.\<close>
+      by (rule compact_surj_quotient[OF hC1_ext hC1_w hf_cont hf_surj hf_range])
     have hcomp_quot: "top1_quotient_map_on P_ext (?TP P_ext) Y_w TY_w (q_w \<circ> f)"
       by (rule top1_quotient_map_on_comp[OF hf_quot hC2_w])
     \<comment> \<open>Apply quotient\\_same\\_fibres\\_homeomorphic: q\\_ext and q\\_w\\<circ>f have same fibres \\<Longrightarrow> Y\\_ext \\<cong> Y\\_w.\<close>
