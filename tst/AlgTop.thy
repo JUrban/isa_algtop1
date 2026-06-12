@@ -3746,14 +3746,23 @@ proof -
                   (1-t) * vy' j + t * vy' (Suc j mod ?n'))
           else q' (t * vx' j + (1-t) * vx' (Suc j mod ?n'),
                   t * vy' j + (1-t) * vy' (Suc j mod ?n'))))"
-    sorry \<comment> \<open>For edges 0..n'-2: q' = q, and w!(i) = scheme!(i+2), so C7 of original applies.
-       For edge n'-1 (diagonal): q' uses reroute to match original edge n-1 identification.\<close>
+    sorry \<comment> \<open>C7' proof outline:
+       Case i < n'-1 (non-diagonal): Suc i mod n' = Suc i. Edge point
+         = ((1-t)*vx(i+2) + t*vx(i+3), ...). NOT on diagonal, so q' = q.
+         By hscheme\\_shift: w!i = scheme!(i+2). From C7 of original at edges i+2, j+2.
+       Case i = n'-1 (diagonal): Edge point = ((1-t)*vx(n-1) + t*vx(2), ...).
+         IS on diagonal, so q' = q \\<circ> reroute. reroute maps to ((1-t)*vx(n-1) + t*vx(0), ...).
+         By hscheme\\_shift: w!(n'-1) = scheme!(n-1). From C7 of original at edge n-1.
+       Similarly for j = n'-1.\<close>
   \<comment> \<open>C8': interior points of P' have singleton q'-fibre.\<close>
   have hC8': "\<forall>p\<in>P'. (\<forall>i<?n'. \<forall>t\<in>I_set.
               p \<noteq> ((1-t) * vx' i + t * vx' (Suc i mod ?n'),
                     (1-t) * vy' i + t * vy' (Suc i mod ?n')))
            \<longrightarrow> (\<forall>p'\<in>P'. q' p = q' p' \<longrightarrow> p = p')"
-    sorry \<comment> \<open>Interior of P' \\<subseteq> interior of P, and q' = q on interior of P'. By C8 of original.\<close>
+    sorry \<comment> \<open>Interior of P' \\<subseteq> interior of P. Interior points are NOT on the diagonal
+       (diagonal is on boundary of P'), so q' p = q p (from q'_def, on_diag = False).
+       By C8 of original polygon: q injective on P interior \\<supseteq> P' interior.
+       Need: P' interior point is not on any ORIGINAL edge either (since C8 uses I_set).\<close>
   \<comment> \<open>C9': boundary identification for interior edge points.\<close>
   have hC9': "\<forall>i<?n'. \<forall>j<?n'. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           q' ((1-t) * vx' i + t * vx' (Suc i mod ?n'),
