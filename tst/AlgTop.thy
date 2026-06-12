@@ -3111,11 +3111,65 @@ proof -
      (cutting off the spur v\\_0, v\\_1, v\\_2). In the quotient, q(v\\_0) = q(v\\_2), so
      the diagonal maps under q to the same arc as original edge n-1 (v\\_{n-1} \\<to> v\\_0).
      Each condition of top1\\_quotient\\_of\\_scheme\\_on transfers from P to P' using this.\<close>
+  \<comment> \<open>Key vertex identification from cancelling pair: q(v\\_0) = q(v\\_2).\<close>
+  have hv0_v2: "q (vx 0, vy 0) = q (vx 2, vy 2)"
+  proof -
+    \<comment> \<open>Edge 0 and edge 1 have the same label (cancelling pair).\<close>
+    have hlabel: "fst (scheme!0) = fst (scheme!1)"
+    proof -
+      have "fst (scheme!0) = fst a" unfolding scheme_def by (by100 simp)
+      have "fst (scheme!1) = fst (top1_inverse_edge a)" unfolding scheme_def by (by100 simp)
+      have "fst (top1_inverse_edge a) = fst a" unfolding top1_inverse_edge_def by (by100 simp)
+      thus ?thesis using \<open>fst (scheme!0) = fst a\<close> \<open>fst (scheme!1) = _\<close> by (by100 simp)
+    qed
+    \<comment> \<open>Opposite direction.\<close>
+    have hdir: "snd (scheme!0) \<noteq> snd (scheme!1)"
+    proof -
+      have "snd (scheme!0) = snd a" unfolding scheme_def by (by100 simp)
+      have "snd (scheme!1) = snd (top1_inverse_edge a)" unfolding scheme_def by (by100 simp)
+      have "snd (top1_inverse_edge a) = (\<not> snd a)" unfolding top1_inverse_edge_def by (by100 simp)
+      thus ?thesis using \<open>snd (scheme!0) = snd a\<close> \<open>snd (scheme!1) = _\<close> by (by100 simp)
+    qed
+    \<comment> \<open>0 \\<in> I\\_set (needed for C7 instantiation at t=0).\<close>
+    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+    have h0_lt: "(0::nat) < ?n" using hn_ge5 by (by100 linarith)
+    have h1_lt: "(1::nat) < ?n" using hn_ge5 by (by100 linarith)
+    \<comment> \<open>C7 at t=0: q(edge(0,0)) = q(edge(1,1-0)) = q(edge(1,1)).\<close>
+    have hSuc0: "Suc 0 mod ?n = 1" using hn_ge5 by (by100 simp)
+    have hSuc1: "Suc 1 mod ?n = 2" using hn_ge5 by (by100 simp)
+    from hC7[rule_format, OF h0_lt h1_lt hlabel h0_I]
+    have hC7_inst: "q ((1-0) * vx 0 + 0 * vx (Suc 0 mod ?n), (1-0) * vy 0 + 0 * vy (Suc 0 mod ?n))
+        = (if snd (scheme!0) = snd (scheme!1)
+           then q ((1-0) * vx 1 + 0 * vx (Suc 1 mod ?n), (1-0) * vy 1 + 0 * vy (Suc 1 mod ?n))
+           else q (0 * vx 1 + (1-0) * vx (Suc 1 mod ?n), 0 * vy 1 + (1-0) * vy (Suc 1 mod ?n)))" .
+    \<comment> \<open>Simplify: LHS = q(vx 0, vy 0). RHS with opposite dir = q(vx 2, vy 2).\<close>
+    have "q (vx 0, vy 0) = q (vx 2, vy 2)"
+      using hC7_inst hdir hSuc0 hSuc1 by (by100 simp)
+    thus ?thesis .
+  qed
+  \<comment> \<open>P' \\<subseteq> P (sub-polygon is inside original polygon).\<close>
+  have hP'_sub: "P' \<subseteq> P" sorry \<comment> \<open>Convex hull of subset of vertices is subset of convex hull.\<close>
+  \<comment> \<open>C1': P' is a polygonal region.\<close>
+  have hC1': "top1_is_polygonal_region_on P' ?n'" sorry \<comment> \<open>From hn'_ge3 and convexity of P'.\<close>
+  \<comment> \<open>C3': distinct vertices (from original C3 with shift).\<close>
+  have hC3': "\<forall>i<?n'. \<forall>j<?n'. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j)"
+  proof (intro allI impI)
+    fix i j assume hi: "i < ?n'" and hj: "j < ?n'" and hij: "i \<noteq> j"
+    have hi2: "i + 2 < ?n" using hi hn by (by100 linarith)
+    have hj2: "j + 2 < ?n" using hj hn by (by100 linarith)
+    have hij2: "i + 2 \<noteq> j + 2" using hij by (by100 simp)
+    from hC3[rule_format, OF hi2 hj2 hij2]
+    show "(vx' i, vy' i) \<noteq> (vx' j, vy' j)" unfolding vx'_def vy'_def by (by100 simp)
+  qed
+  \<comment> \<open>C5': P' = convex hull (by definition).\<close>
+  have hC5': "P' = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n'. coeffs i \<ge> 0) \<and> (\<Sum>i<?n'. coeffs i) = 1
+      \<and> x = (\<Sum>i<?n'. coeffs i * vx' i) \<and> y = (\<Sum>i<?n'. coeffs i * vy' i)}"
+    unfolding P'_def by (by100 simp)
+  \<comment> \<open>Assembly: 11 conditions for quotient\\_of\\_scheme\\_on.\<close>
   have hquot_w: "top1_quotient_of_scheme_on Y' TY' w"
-    sorry \<comment> \<open>11 conditions for sub-polygon P' with shifted vertices.
-       All conditions transfer from original polygon P. Key insight: edge n-3 of P'
-       (the diagonal v\\_{n-1} \\<to> v\\_2) maps under q to same arc as original edge n-1
-       because q(v\\_0) = q(v\\_2) from the cancelling pair identification.\<close>
+    sorry \<comment> \<open>11 conditions. Easy: C1', C3' (above), C4' (vertex in hull), C5' (above).
+       Medium: C6' (edge disjoint), C10' (CCW), C11' (strict convexity).
+       Hard: C2' (quotient map), C7' (identification — diagonal edge), C8' (interior inj), C9' (boundary).\<close>
   \<comment> \<open>Step 2: Y \\<cong> Y'. The spur (triangle v\\_0-v\\_1-v\\_2 region in Y \\ Y') collapses
      because the cancelling edges are identified. The retraction Y \\<to> Y' is continuous
      and a homotopy equivalence (in fact a homeomorphism on the quotient level).\<close>
