@@ -15,6 +15,45 @@ proof -
   thus "length w \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
 qed
 
+\<comment> \<open>Identity homeomorphism + same-space helper (moved here for use by cut-paste lemmas).\<close>
+lemma homeomorphism_id_early:
+  assumes "is_topology_on X TX"
+  shows "top1_homeomorphism_on X TX X TX id"
+proof -
+  have hid_cont: "top1_continuous_map_on X TX X TX id"
+    by (rule top1_continuous_map_on_id[OF assms])
+  have hinv: "\<forall>x\<in>X. inv_into X id x = x"
+  proof
+    fix x assume "x \<in> X"
+    thus "inv_into X id x = x" using inv_into_f_f[OF inj_on_id \<open>x \<in> X\<close>] by simp
+  qed
+  have "top1_continuous_map_on X TX X TX (inv_into X id)"
+    unfolding top1_continuous_map_on_def
+  proof (intro conjI ballI allI impI)
+    fix x assume "x \<in> X" thus "inv_into X id x \<in> X" using hinv by (by100 simp)
+  next
+    fix V assume hV: "V \<in> TX"
+    have "{x \<in> X. inv_into X id x \<in> V} = {x \<in> X. id x \<in> V}"
+      using hinv by (by100 auto)
+    thus "{x \<in> X. inv_into X id x \<in> V} \<in> TX"
+      using hid_cont hV unfolding top1_continuous_map_on_def by (by100 simp)
+  qed
+  thus ?thesis unfolding top1_homeomorphism_on_def using assms hid_cont by (by100 simp)
+qed
+
+lemma same_space_implies_homeo_realization_early:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "top1_quotient_of_scheme_on X TX t"
+  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY t \<and>
+    top1_homeomorphism_on X TX Y TY h"
+proof -
+  have "is_topology_on X TX"
+    using assms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  show ?thesis
+    using assms homeomorphism_id_early[OF \<open>is_topology_on X TX\<close>] by (by100 blast)
+qed
+
 \<comment> \<open>Key geometric helper: quotient preservation under edge permutation.
    Given a quotient of scheme s and s' = \\<sigma>-permutation of s (same edges, different order),
    Y is also a quotient of s'. The proof constructs a fresh polygon P' and quotient map
@@ -35,43 +74,18 @@ lemma quotient_scheme_edge_permutation:
    The quotient of the cut-paste rearranged scheme is homeomorphic to the original.
    Book: Munkres §76, Theorem 76.1. Cut along diagonal, rearrange, paste.
    Uses quotient\\_scheme\\_same\\_labels\\_rearrange for the same-space construction.\<close>
+\<comment> \<open>Cut-paste §76(iv): homeomorphic realization via polygon\\_cut\\_reglue (Munkres Theorem 76.1).
+   Per audit 22 §5.5: one geometric theorem for all three cut-paste variants.\<close>
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
   shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
     top1_quotient_of_scheme_on Y' TY' (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3) \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
 proof -
-  \<comment> \<open>Same-space via disk homeomorphism with arc permutation + edge reversal for u2.
-     The u2 block is reversed and inverted. On the disk: arcs for u2 are reflected.
-     The arc permutation \\<tau> on B² maps each arc to its new position, with reversal
-     for the u2 arcs. The composition \\<phi> = \\<psi>1\\<inverse> \\<circ> \\<tau>\\<inverse> \\<circ> \\<psi>2: P2 \\<to> P1 gives
-     q2 = q1 \\<circ> \\<phi> with the correct edge identification for the rearranged scheme.\<close>
-  have htopo_Y: "is_topology_on_strict Y TY"
-    using assms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   have "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
-    sorry \<comment> \<open>Core: disk homeo composition with arc permutation (reversal for u2 block).\<close>
-  moreover have "is_topology_on Y TY"
-    using htopo_Y unfolding is_topology_on_strict_def by (by100 blast)
-  moreover have "top1_homeomorphism_on Y TY Y TY id"
-  proof -
-    have "top1_continuous_map_on Y TY Y TY id"
-      by (rule top1_continuous_map_on_id[OF \<open>is_topology_on Y TY\<close>])
-    moreover have "bij_betw id Y Y" by (by100 simp)
-    moreover have "top1_continuous_map_on Y TY Y TY (inv_into Y id)"
-    proof -
-      have "\<forall>x\<in>Y. inv_into Y id x = x"
-      proof
-        fix x assume "x \<in> Y"
-        thus "inv_into Y id x = x" using inv_into_f_f[OF inj_on_id \<open>x \<in> Y\<close>] by simp
-      qed
-      hence "\<And>V. {x \<in> Y. inv_into Y id x \<in> V} = {x \<in> Y. x \<in> V}" by (by100 auto)
-      thus ?thesis using \<open>top1_continuous_map_on Y TY Y TY id\<close>
-        unfolding top1_continuous_map_on_def by (by100 auto)
-    qed
-    ultimately show ?thesis unfolding top1_homeomorphism_on_def
-      using \<open>is_topology_on Y TY\<close> by (by100 blast)
-  qed
-  ultimately show ?thesis by (by100 blast)
+    sorry \<comment> \<open>Munkres §76(iv): cut along diagonal, flip u2 piece, recombine.
+       Uses quotient\\_scheme\\_edge\\_permutation with \\<sigma> that swaps u2 block (reversed).\<close>
+  thus ?thesis by (rule same_space_implies_homeo_realization_early)
 qed
 
 lemma quotient_of_scheme_cut_paste2:
@@ -80,32 +94,9 @@ lemma quotient_of_scheme_cut_paste2:
     top1_quotient_of_scheme_on Y' TY' ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0)) \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
 proof -
-  have htopo_Y: "is_topology_on_strict Y TY"
-    using assms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   have "top1_quotient_of_scheme_on Y TY ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
-    sorry \<comment> \<open>Core: disk homeo composition with arc permutation + relabeling.\<close>
-  moreover have "is_topology_on Y TY"
-    using htopo_Y unfolding is_topology_on_strict_def by (by100 blast)
-  moreover have "top1_homeomorphism_on Y TY Y TY id"
-  proof -
-    have "top1_continuous_map_on Y TY Y TY id"
-      by (rule top1_continuous_map_on_id[OF \<open>is_topology_on Y TY\<close>])
-    moreover have "bij_betw id Y Y" by (by100 simp)
-    moreover have "top1_continuous_map_on Y TY Y TY (inv_into Y id)"
-    proof -
-      have "\<forall>x\<in>Y. inv_into Y id x = x"
-      proof
-        fix x assume "x \<in> Y"
-        thus "inv_into Y id x = x" using inv_into_f_f[OF inj_on_id \<open>x \<in> Y\<close>] by simp
-      qed
-      hence "\<And>V. {x \<in> Y. inv_into Y id x \<in> V} = {x \<in> Y. x \<in> V}" by (by100 auto)
-      thus ?thesis using \<open>top1_continuous_map_on Y TY Y TY id\<close>
-        unfolding top1_continuous_map_on_def by (by100 auto)
-    qed
-    ultimately show ?thesis unfolding top1_homeomorphism_on_def
-      using \<open>is_topology_on Y TY\<close> by (by100 blast)
-  qed
-  ultimately show ?thesis by (by100 blast)
+    sorry \<comment> \<open>Munkres §76(v): cut, relabel, recombine with fresh label b.\<close>
+  thus ?thesis by (rule same_space_implies_homeo_realization_early)
 qed
 
 lemma quotient_of_scheme_cut_paste_opp:
@@ -114,45 +105,10 @@ lemma quotient_of_scheme_cut_paste_opp:
     top1_quotient_of_scheme_on Y' TY' (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3) \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
 proof -
-  \<comment> \<open>The cut-paste-opp rearranges edges without reversal. Same labels, different positions.
-     By quotient\\_scheme\\_same\\_labels\\_rearrange: Y is also a quotient of the rearranged scheme.\<close>
-  let ?s = "u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3"
-  let ?s' = "u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3"
-  have hlen: "length ?s' = length ?s" by (by100 simp)
-  \<comment> \<open>s' is a permutation of s (block swap: move u1 past [(a,T)]@u2@[(a,F)]).\<close>
-  have hlen: "length ?s' = length ?s" by (by100 simp)
-  have hperm: "\<exists>\<sigma>. bij_betw \<sigma> {..< length ?s} {..< length ?s} \<and>
-      (\<forall>k < length ?s. ?s' ! k = ?s ! \<sigma> k)"
-    sorry \<comment> \<open>Block swap permutation \\<sigma> on positions. Explicit construction:
-       \\<sigma>(k) = k for k < |u0|; \\<sigma>(|u0|) = |u0|+|u1|; \\<sigma>(k) = k+|u1| for |u0|<k\\<le>|u0|+|u2|;
-       \\<sigma>(|u0|+|u2|+1) = |u0|+|u1|+|u2|+1; \\<sigma>(k) = k-|u2|-2 for |u0|+|u2|+1<k<|u0|+|u2|+2+|u1|;
-       \\<sigma>(k) = k for k \\<ge> |u0|+|u2|+2+|u1|. Bijection: clear from disjoint image ranges.
-       Element matching: nth\\_append case analysis (mechanical but verbose).\<close>
-  from quotient_scheme_edge_permutation[OF assms hlen hperm]
-  have hquot: "top1_quotient_of_scheme_on Y TY ?s'" .
-  have htopo: "is_topology_on Y TY"
-    using assms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  \<comment> \<open>Same-space result: Y' = Y, h = id.\<close>
-  have "top1_homeomorphism_on Y TY Y TY id"
-  proof -
-    have "top1_continuous_map_on Y TY Y TY id"
-      by (rule top1_continuous_map_on_id[OF htopo])
-    moreover have "bij_betw id Y Y" by (by100 simp)
-    moreover have "top1_continuous_map_on Y TY Y TY (inv_into Y id)"
-    proof -
-      have "\<forall>x\<in>Y. inv_into Y id x = x"
-      proof
-        fix x assume "x \<in> Y"
-        thus "inv_into Y id x = x" using inv_into_f_f[OF inj_on_id \<open>x \<in> Y\<close>] by simp
-      qed
-      hence "\<And>V. {x \<in> Y. inv_into Y id x \<in> V} = {x \<in> Y. x \<in> V}" by (by100 auto)
-      thus ?thesis using \<open>top1_continuous_map_on Y TY Y TY id\<close>
-        unfolding top1_continuous_map_on_def by (by100 auto)
-    qed
-    ultimately show ?thesis unfolding top1_homeomorphism_on_def
-      using htopo by (by100 blast)
-  qed
-  with hquot show ?thesis by (by100 blast)
+  have "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+    sorry \<comment> \<open>Munkres §76(ix): move u1 block past identified edge pair.
+       Uses quotient\\_scheme\\_edge\\_permutation with block-swap \\<sigma>.\<close>
+  thus ?thesis by (rule same_space_implies_homeo_realization_early)
 qed
 
 \<comment> \<open>Scheme quotient existence: every scheme of length \\<ge> 3 has a quotient realization.
