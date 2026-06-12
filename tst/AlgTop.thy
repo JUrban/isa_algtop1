@@ -3015,6 +3015,68 @@ proof -
   qed
 qed
 
+\<comment> \<open>Cancel at front for PROPER schemes — per expert audit 23 §5.
+   Uses scheme\\_quotient\\_exists for w to get a canonical quotient Y\\_w,
+   then shows Y (quotient of [a,inv a]@w) \\<cong> Y\\_w.
+   The homeomorphism is the spur collapse.
+   Properness needed for scheme\\_quotient\\_exists.\<close>
+lemma front_cancel_proper:
+  fixes Y :: "'a set" and TY :: "'a set set"
+    and a :: "nat \<times> bool" and w :: "(nat \<times> bool) list"
+  assumes "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
+      and "length w \<ge> 3"
+      and hproper: "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' w \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+proof -
+  \<comment> \<open>Step 1: scheme\\_quotient\\_exists gives Y\\_w :: (real\\<times>real) quotient of w.\<close>
+  have "\<exists>(Y_w :: (real \<times> real) set) (TY_w :: (real \<times> real) set set).
+      top1_quotient_of_scheme_on Y_w TY_w w"
+    using scheme_quotient_exists[of w] assms(2) hproper by (by100 blast)
+  then obtain Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set" where
+      hY_w: "top1_quotient_of_scheme_on Y_w TY_w w" by (by100 blast)
+  \<comment> \<open>Step 2: Y (quotient of [a,inv a]@w, type 'a) \\<cong> Y\\_w (quotient of w, type real\\<times>real).
+     The homeomorphism is the spur collapse: the cancelling pair collapses to nothing,
+     giving a quotient of w that is homeomorphic to the original.\<close>
+  \<comment> \<open>Step 2a: Extract (real\\<times>real) quotient of [a,inv a]@w.\<close>
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using assms(1) unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>scheme\\_quotient\\_exists also gives a (real\\<times>real) quotient of [a,inv a]@w.\<close>
+  have hproper_ext: "\<forall>label. card {i. i < length ([a, top1_inverse_edge a] @ w) \<and>
+      fst (([a, top1_inverse_edge a] @ w) ! i) = label} \<in> {0, 2}"
+    sorry \<comment> \<open>Properness of [a,inv a]@w from properness of w + label 'a' appears exactly 2 times.\<close>
+  have hlen_ext: "length ([a, top1_inverse_edge a] @ w) \<ge> 3"
+    using assms(2) by (by100 simp)
+  from scheme_quotient_exists[OF hlen_ext hproper_ext]
+  obtain Y_ext :: "(real \<times> real) set" and TY_ext :: "(real \<times> real) set set" where
+      hY_ext: "top1_quotient_of_scheme_on Y_ext TY_ext ([a, top1_inverse_edge a] @ w)" by (by100 blast)
+  \<comment> \<open>Step 2b: scheme\\_quotient\\_uniqueness: Y \\<cong> Y\\_ext (both quotients of [a,inv a]@w).\<close>
+  have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
+    using hY_ext unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have "\<exists>h_bridge :: 'a \<Rightarrow> (real \<times> real). top1_homeomorphism_on Y TY Y_ext TY_ext h_bridge"
+    sorry \<comment> \<open>scheme\\_quotient\\_uniqueness[OF htopo\\_Y htopo\\_ext assms(1) hY\\_ext].
+       Forward reference — uniqueness lemma defined later in file.\<close>
+  then obtain h_bridge :: "'a \<Rightarrow> (real \<times> real)" where
+      hbridge: "top1_homeomorphism_on Y TY Y_ext TY_ext h_bridge" by (by100 blast)
+  \<comment> \<open>Step 2c: Y\\_ext \\<cong> Y\\_w (spur collapse in the (real\\<times>real) world).
+     This is the geometric content: the (real\\<times>real) quotient of [a,inv a]@w is
+     homeomorphic to the (real\\<times>real) quotient of w via spur collapse.\<close>
+  have "\<exists>h_collapse. top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h_collapse"
+    sorry \<comment> \<open>Spur collapse homeomorphism in the concrete (real\\<times>real) setting.
+       Both Y\\_ext and Y\\_w are quotients of regular polygons. The homeomorphism
+       comes from the disk homeomorphism composition that collapses the spur arcs.\<close>
+  then obtain h_collapse where
+      hcollapse: "top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h_collapse" by (by100 blast)
+  \<comment> \<open>Step 3: Compose: Y \\<cong> Y\\_ext \\<cong> Y\\_w, and Y\\_w is a quotient of w.\<close>
+  from homeomorphism_comp[OF hbridge hcollapse]
+  have "top1_homeomorphism_on Y TY Y_w TY_w (h_collapse \<circ> h_bridge)" .
+  \<comment> \<open>Step 4: Bridge types. Y\\_w is (real\\<times>real), but we need 'a.
+     Use quotient\\_same\\_fibres\\_homeomorphic via the composed map.\<close>
+  show ?thesis sorry \<comment> \<open>Type bridge: (real\\<times>real) quotient of w \\<to> 'a-typed quotient.
+     The homeomorphism Y \\<to> Y\\_w gives the bridge.\<close>
+qed
+
 \<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
    Given quotient of [a,inv a]@w, produce a (possibly different) quotient of w
    that is homeomorphic. This is WEAKER than same-space preservation.\<close>
