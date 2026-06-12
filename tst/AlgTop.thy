@@ -3233,11 +3233,18 @@ next
   from quotient_of_scheme_uncancel_proved[OF v_cancel_reverse.prems]
   show ?case by (rule same_space_implies_homeo_realization)
 next
-  case v_cut_paste_reverse
-  show ?case sorry \<comment> \<open>Cut-paste-reverse quotient preservation.\<close>
+  case (v_cut_paste_reverse u1_r a_r u2_r u3_r)
+  \<comment> \<open>Reverse of cut-paste: same geometric argument (edge permutation) in reverse direction.\<close>
+  have "top1_quotient_of_scheme_on X TX (u1_r @ [(a_r, True)] @ u2_r @ [(a_r, True)] @ u3_r)"
+    sorry \<comment> \<open>Same-space: quotient\\_scheme\\_edge\\_permutation with \\<sigma>\\<inverse>.
+       The source scheme is a permutation of the target (with u2 reversal).\<close>
+  thus ?case by (rule same_space_implies_homeo_realization_early)
 next
-  case v_cut_paste2_reverse
-  show ?case sorry \<comment> \<open>Cut-paste2-reverse quotient preservation.\<close>
+  case (v_cut_paste2_reverse b_r u2_r u1_r u0_r a_r)
+  \<comment> \<open>Reverse of cut-paste2: same geometric argument in reverse direction.\<close>
+  have "top1_quotient_of_scheme_on X TX (u0_r @ [(a_r, True)] @ u1_r @ [(a_r, True)] @ u2_r)"
+    sorry \<comment> \<open>Same-space: quotient\\_scheme\\_edge\\_permutation with \\<sigma>\\<inverse>.\<close>
+  thus ?case by (rule same_space_implies_homeo_realization_early)
 next
   case (v_invert w)
   have hq: "top1_quotient_of_scheme_on X TX (rev (map top1_inverse_edge w))"
@@ -3388,10 +3395,24 @@ next
     hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz by (by100 simp)
     thus ?thesis by (rule same_space_implies_homeo_realization)
   next case (v_cut_paste_reverse u1_cpr a_cpr u2_cpr u3_cpr)
-    \<comment> \<open>Inner cut-paste-reverse: reverse direction. The full-scheme operation is v\\_cut\\_paste\\_reverse.\<close>
-    show ?thesis sorry \<comment> \<open>Depends on cut-paste-reverse sorry in valid\\_operation\\_preserves.\<close>
+    \<comment> \<open>Inner cut-paste-reverse in suffix = full-scheme v\\_cut\\_paste\\_reverse with u1' = prefix@u1.\<close>
+    have hy_r: "y = u1_cpr @ [(a_cpr, True), (a_cpr, True)] @ rev (map top1_inverse_edge u2_cpr) @ u3_cpr"
+      and hz_r: "z = u1_cpr @ [(a_cpr, True)] @ u2_cpr @ [(a_cpr, True)] @ u3_cpr"
+      using v_cut_paste_reverse by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX
+        ((prefix @ u1_cpr) @ [(a_cpr, True), (a_cpr, True)] @ rev (map top1_inverse_edge u2_cpr) @ u3_cpr)"
+      using v_context_left.prems hy_r by (by100 simp)
+    hence "top1_quotient_of_scheme_on X TX
+        ((prefix @ u1_cpr) @ [(a_cpr, True)] @ u2_cpr @ [(a_cpr, True)] @ u3_cpr)"
+      sorry \<comment> \<open>Same-space: reverse edge permutation (same sorry as v\\_cut\\_paste\\_reverse outer case).\<close>
+    hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz_r by (by100 simp)
+    thus ?thesis by (rule same_space_implies_homeo_realization)
   next case (v_cut_paste2_reverse b_cpr u2_cpr u1_cpr u0_cpr a_cpr)
-    show ?thesis sorry \<comment> \<open>Same dependency on cut-paste2-reverse.\<close>
+    \<comment> \<open>Inner cut-paste2-reverse: similar pattern.\<close>
+    have hy_r: "y = [(b_cpr, True)] @ u2_cpr @ [(b_cpr, True)] @ u1_cpr @ rev (map top1_inverse_edge u0_cpr)"
+      and hz_r: "z = u0_cpr @ [(a_cpr, True)] @ u1_cpr @ [(a_cpr, True)] @ u2_cpr"
+      using v_cut_paste2_reverse by (by100 auto)+
+    show ?thesis sorry \<comment> \<open>Full-scheme cut-paste2-reverse: prefix splitting differs.\<close>
   next case v_invert
     \<comment> \<open>Inner invert: y = w \\<to> z = rev(inv w).
        Cannot express as full-scheme invert (prefix is not inverted).\<close>
