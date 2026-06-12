@@ -210,9 +210,26 @@ lemma quotient_of_scheme_cut_paste_opp:
     top1_quotient_of_scheme_on Y' TY' (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3) \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
 proof -
-  have "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+  let ?s = "u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3"
+  let ?s' = "u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3"
+  \<comment> \<open>Expert approach (audit 23 §4/§7): canonical quotients + uniqueness.
+     Step 1: Get canonical (real\\<times>real) quotients of both s and s'.
+     Step 2: Show the canonical quotients are homeomorphic (geometric cut-paste).
+     Step 3: Use scheme\\_quotient\\_uniqueness to bridge Y (type 'a) to canonical (real\\<times>real).
+     Step 4: Compose homeomorphisms.\<close>
+  have htopo_strict: "is_topology_on_strict Y TY"
+    using assms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have htopo: "is_topology_on Y TY"
+    using htopo_strict unfolding is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>Step 1: canonical quotients.\<close>
+  have hlen_s: "length ?s \<ge> 3"
+    using quotient_scheme_length_ge3[OF assms] .
+  have hlen_s': "length ?s' = length ?s" by (by100 simp)
+  \<comment> \<open>scheme\\_quotient\\_exists needs properness, which we don't have in general.
+     Fall back to edge-permutation approach (same-space, no properness needed).\<close>
+  have "top1_quotient_of_scheme_on Y TY ?s'"
     sorry \<comment> \<open>Munkres §76(ix): move u1 block past identified edge pair.
-       Uses quotient\\_scheme\\_edge\\_permutation with block-swap \\<sigma>.\<close>
+       Via quotient\\_scheme\\_edge\\_permutation (disk homeo + arc permutation).\<close>
   thus ?thesis by (rule same_space_implies_homeo_realization_early)
 qed
 
