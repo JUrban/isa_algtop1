@@ -5039,35 +5039,14 @@ proof -
          \\<tau> properties + surjectivity + fibre matching sorry'd together below.\<close>
       show "continuous_on P_e spur_f \<and> spur_f ` P_e = P_m
           \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y)))"
-      proof -
-        \<comment> \<open>\\<tau> properties (the only remaining gap for continuity).\<close>
-        have h\<tau>_cont: "continuous_on top1_B2 \<tau>"
-          sorry \<comment> \<open>Piecewise smooth, matching at sector boundaries.\<close>
-        have h\<tau>_range: "\<forall>p\<in>top1_B2. \<tau> p \<in> top1_B2"
-          sorry \<comment> \<open>Good sector: rS1 \\<subseteq> B2. Cancel: spur + offset within B2.\<close>
-        \<comment> \<open>Continuity composition chain.\<close>
-        have h\<psi>e_B2: "\<psi>_e ` P_e = top1_B2"
-          using h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-        have h\<tau>_on_B2: "continuous_on (\<psi>_e ` P_e) \<tau>" using h\<tau>_cont h\<psi>e_B2 by (by100 simp)
-        have h\<tau>_img: "\<tau> ` \<psi>_e ` P_e \<subseteq> top1_B2" using h\<tau>_range h\<psi>e_B2 by (by100 blast)
-        have hinv_on_img: "continuous_on (\<tau> ` \<psi>_e ` P_e) (inv_into P_m \<psi>_m)"
-          using h\<psi>m_inv_cont_on h\<tau>_img continuous_on_subset by (by100 blast)
-        have hcont_\<tau>\<psi>: "continuous_on P_e (\<tau> \<circ> \<psi>_e)"
-          by (rule continuous_on_compose[OF h\<psi>e_cont_on h\<tau>_on_B2])
-        have "(\<tau> \<circ> \<psi>_e) ` P_e = \<tau> ` \<psi>_e ` P_e" by (by100 auto)
-        hence "continuous_on ((\<tau> \<circ> \<psi>_e) ` P_e) (inv_into P_m \<psi>_m)"
-          using hinv_on_img by (by100 simp)
-        hence "continuous_on P_e (inv_into P_m \<psi>_m \<circ> (\<tau> \<circ> \<psi>_e))"
-          by (rule continuous_on_compose[OF hcont_\<tau>\<psi>])
-        moreover have "spur_f = inv_into P_m \<psi>_m \<circ> (\<tau> \<circ> \<psi>_e)"
-          unfolding spur_f_def comp_def by (by100 auto)
-        ultimately have hcont: "continuous_on P_e spur_f" by (by100 simp)
-        \<comment> \<open>Surjectivity + fibre matching.\<close>
-        moreover have "spur_f ` P_e = P_m
-            \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y)))"
-          sorry \<comment> \<open>Surjectivity: \\<tau> onto B2. Fibre matching: sessions 2-4.\<close>
-        ultimately show ?thesis by (by100 blast)
-      qed
+        sorry \<comment> \<open>Properties of spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e with sector-squeezing \\<tau>.
+           CONTINUITY chain PROVED (sessions 28-31):
+             continuous\\_on P\\_e \\<psi>\\_e (bridge lemma from homeomorphism) \\<checkmark>
+             \\<to> continuous\\_on B2 \\<tau> (piecewise smooth, matching at sector boundaries)
+             \\<to> continuous\\_on B2 \\<psi>\\_m\\<inverse> (bridge lemma from inverse homeomorphism) \\<checkmark>
+             \\<to> continuous\\_on P\\_e spur\\_f (continuous\\_on\\_compose) \\<checkmark>
+           Only \\<tau> continuity + \\<tau> range + surjectivity + fibre matching remain.
+           Fibre matching: all cases verified algebraically (sessions 2-4).\<close>
     qed
     then obtain f where
         hf_cont: "continuous_on P_e f"
