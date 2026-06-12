@@ -4637,10 +4637,13 @@ proof -
         proof -
           \<comment> \<open>Complement of preimage is closed.\<close>
           have hpreimg_closed: "closedin_on P1 ?TP1 (P1 - {x \<in> P1. f x \<in> V})"
-            sorry \<comment> \<open>Open complement is closed: {x. f x \\<in> V} open \\<Longrightarrow> P1 \\\\ {x. f x \\<in> V} closed.\<close>
+          proof -
+            have "P1 - (P1 - {x \<in> P1. f x \<in> V}) = {x \<in> P1. f x \<in> V}" by (by100 blast)
+            thus ?thesis unfolding closedin_on_def using hV_preimg by (by100 simp)
+          qed
           \<comment> \<open>By closed map: image of closed set is closed.\<close>
           have "closedin_on P2 ?TP2 (f ` (P1 - {x \<in> P1. f x \<in> V}))"
-            using hf_closed[unfolded top1_closed_map_on_def] hpreimg_closed sorry
+            using hf_closed hpreimg_closed unfolding top1_closed_map_on_def by (by100 blast)
           \<comment> \<open>f(P1 \\\\ f\\<inverse>(V)) = P2 \\\\ V (by surjectivity).\<close>
           moreover have "f ` (P1 - {x \<in> P1. f x \<in> V}) = P2 - V"
           proof (rule set_eqI, rule iffI)
@@ -4658,8 +4661,9 @@ proof -
           qed
           \<comment> \<open>P2 \\\\ V closed \\<Longrightarrow> V open.\<close>
           ultimately have "closedin_on P2 ?TP2 (P2 - V)" by (by100 simp)
-          thus "V \<in> ?TP2"
-            sorry \<comment> \<open>Closed complement \\<Longrightarrow> open: standard.\<close>
+          hence "P2 - (P2 - V) \<in> ?TP2" unfolding closedin_on_def by (by100 blast)
+          moreover have "P2 - (P2 - V) = V" using hV_sub by (by100 blast)
+          ultimately show "V \<in> ?TP2" by (by100 simp)
         qed
       qed
     qed
