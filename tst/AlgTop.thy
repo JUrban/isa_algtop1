@@ -1363,11 +1363,65 @@ proof -
           qed
           \<comment> \<open>q(edge\\_pt i t) = edge\\_pt(i,t) since i canonical and not a vertex.\<close>
           have hqi: "q (edge_pt i t) = edge_pt i t"
-            sorry \<comment> \<open>q\\_def: not vertex (hnotvertex\\_i), not on non-canon edge (i canonical). Else branch.\<close>
+          proof -
+            \<comment> \<open>Not a vertex.\<close>
+            have hv: "\<not>(\<exists>k<?n. edge_pt i t = (vx k, vy k))"
+              using hnotvertex_i unfolding edge_pt_def by (by100 simp)
+            \<comment> \<open>Not on any non-canonical edge interior.\<close>
+            have he: "\<not>(\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i')"
+            proof
+              assume "\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i'"
+              then obtain i' t' where hi': "i' < ?n" "0 < t'" "t' < 1" "edge_pt i t = edge_pt i' t'" "\<not> is_canonical i'"
+                by (by100 blast)
+              \<comment> \<open>Edges i and i' share interior point. By C6 + adjacency: i = i'.\<close>
+              have "i = i'"
+                sorry \<comment> \<open>Convex polygon: edges have disjoint interiors. Uses C6 + C11.\<close>
+              thus False using hican hi'(5) by (by100 simp)
+            qed
+            show ?thesis unfolding q_def using hv he by (by100 auto)
+          qed
           \<comment> \<open>q(edge\\_pt j s) where s is the matching param.\<close>
           have hqj: "\<And>s. 0 < s \<Longrightarrow> s < 1 \<Longrightarrow> q (edge_pt j s) = edge_pt i
               (if snd(scheme!j) = snd(scheme!i) then s else 1 - s)"
-            sorry \<comment> \<open>q\\_def: not vertex, IS on non-canon j. SOME picks (j,s). partner j = i.\<close>
+          proof -
+            fix s :: real assume hs: "0 < s" "s < 1"
+            \<comment> \<open>edge\\_pt(j,s) is not a vertex.\<close>
+            have hvj: "\<not>(\<exists>k<?n. edge_pt j s = (vx k, vy k))"
+              sorry \<comment> \<open>Same as hnotvertex\\_i but for edge j. Uses C11 + 0<s<1.\<close>
+            \<comment> \<open>edge\\_pt(j,s) IS on non-canonical edge j.\<close>
+            have hexj: "\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i'"
+              using hj hs hjnon by (by100 blast)
+            \<comment> \<open>q enters edge-interior branch. SOME picks (j', s'). By uniqueness j' = j, s' = s.\<close>
+            define sel where "sel = (SOME (i',t'). i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i')"
+            define j' where "j' = fst sel" define s' where "s' = snd sel"
+            have hsel: "j' < ?n \<and> 0 < s' \<and> s' < 1 \<and> edge_pt j s = edge_pt j' s' \<and> \<not> is_canonical j'"
+            proof -
+              from hexj have "\<exists>p. (\<lambda>(i',t'). i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i') p"
+                by (by100 auto)
+              from someI_ex[OF this] show ?thesis unfolding sel_def j'_def s'_def by (by100 auto)
+            qed
+            \<comment> \<open>By edge uniqueness: j' = j and s' = s.\<close>
+            have "j' = j \<and> s' = s"
+              sorry \<comment> \<open>Convex polygon edge uniqueness: edge\\_pt j s = edge\\_pt j' s' with 0<s,s'<1 gives j'=j, s'=s.\<close>
+            hence "partner j' = partner j" and "snd(scheme!j') = snd(scheme!j)" by (by100 auto)+
+            hence "q (edge_pt j s) = edge_pt (partner j) (if snd(scheme!j) = snd(scheme!(partner j)) then s else 1-s)"
+            proof -
+              have "q (edge_pt j s) = (let (i',t') = sel in let jj = partner i' in
+                  if snd(scheme!i') = snd(scheme!jj) then edge_pt jj t' else edge_pt jj (1-t'))"
+                unfolding q_def sel_def using hexj hvj by (by100 auto)
+              also have "\<dots> = (let jj = partner j' in
+                  if snd(scheme!j') = snd(scheme!jj) then edge_pt jj s' else edge_pt jj (1-s'))"
+              proof -
+                have "sel = (j', s')" unfolding j'_def s'_def by (by100 simp)
+                thus ?thesis by (by100 simp)
+              qed
+              also have "\<dots> = (if snd(scheme!j) = snd(scheme!(partner j)) then edge_pt (partner j) s else edge_pt (partner j) (1-s))"
+                using \<open>j' = j \<and> s' = s\<close> by (by100 simp)
+              finally show ?thesis by (by100 simp)
+            qed
+            thus "q (edge_pt j s) = edge_pt i (if snd(scheme!j) = snd(scheme!i) then s else 1 - s)"
+              using hpj by (by100 simp)
+          qed
           show ?thesis
           proof (cases "snd(scheme!i) = snd(scheme!j)")
             case True \<comment> \<open>Same direction.\<close>
