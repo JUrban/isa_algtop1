@@ -3765,9 +3765,44 @@ proof -
              (if snd (w!i) = snd (w!j) then s = t else s = 1 - t))"
     sorry \<comment> \<open>From C9 of original polygon via shifted indices + q' on diagonal.\<close>
   \<comment> \<open>Assembly: 11 conditions.\<close>
+  have htopo': "is_topology_on_strict Y' TY'"
+    sorry \<comment> \<open>TY' is a quotient topology, hence a strict topology on Y'.\<close>
   have hquot_w: "top1_quotient_of_scheme_on Y' TY' w"
     unfolding top1_quotient_of_scheme_on_def
-    sorry \<comment> \<open>Assemble: htopo' + \\<exists>P' q' vx' vy'. C1'\\<and>C2'\\<and>C3'\\<and>C4'\\<and>C5'\\<and>C6'\\<and>C7'\\<and>C8'\\<and>C9'\\<and>C10'\\<and>C11'.\<close>
+  proof (intro conjI exI)
+    show "is_topology_on_strict Y' TY'" using htopo' .
+    show "top1_is_polygonal_region_on P' ?n'" using hC1' .
+    show "top1_quotient_map_on P' ?TP' Y' TY' q'" using hC2' .
+    show "\<forall>i<?n'. \<forall>j<?n'. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j)" using hC3' .
+    show "\<forall>i<?n'. (vx' i, vy' i) \<in> P'" using hC4' .
+    show "P' = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n'. 0 \<le> coeffs i) \<and> (\<Sum>i<?n'. coeffs i) = 1
+        \<and> x = (\<Sum>i<?n'. coeffs i * vx' i) \<and> y = (\<Sum>i<?n'. coeffs i * vy' i)}"
+      using hC5' by (by100 simp)
+    show "\<forall>i<?n'. \<forall>j<?n'. i \<noteq> j \<longrightarrow> Suc i mod ?n' \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n' \<longrightarrow>
+        (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+           ((1-s) * vx' i + s * vx' (Suc i mod ?n'), (1-s) * vy' i + s * vy' (Suc i mod ?n'))
+         \<noteq> ((1-t) * vx' j + t * vx' (Suc j mod ?n'), (1-t) * vy' j + t * vy' (Suc j mod ?n')))"
+      using hC6' .
+    show "\<forall>i<?n'. \<forall>j<?n'. fst (w!i) = fst (w!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q' ((1-t) * vx' i + t * vx' (Suc i mod ?n'), (1-t) * vy' i + t * vy' (Suc i mod ?n'))
+         = (if snd (w!i) = snd (w!j)
+            then q' ((1-t) * vx' j + t * vx' (Suc j mod ?n'), (1-t) * vy' j + t * vy' (Suc j mod ?n'))
+            else q' (t * vx' j + (1-t) * vx' (Suc j mod ?n'), t * vy' j + (1-t) * vy' (Suc j mod ?n'))))"
+      using hC7' .
+    show "\<forall>p\<in>P'. (\<forall>i<?n'. \<forall>t\<in>I_set. p \<noteq> ((1-t) * vx' i + t * vx' (Suc i mod ?n'), (1-t) * vy' i + t * vy' (Suc i mod ?n')))
+         \<longrightarrow> (\<forall>p'\<in>P'. q' p = q' p' \<longrightarrow> p = p')" using hC8' .
+    show "\<forall>i<?n'. \<forall>j<?n'. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+        q' ((1-t) * vx' i + t * vx' (Suc i mod ?n'), (1-t) * vy' i + t * vy' (Suc i mod ?n'))
+      = q' ((1-s) * vx' j + s * vx' (Suc j mod ?n'), (1-s) * vy' j + s * vy' (Suc j mod ?n'))
+      \<longrightarrow> (i = j \<and> t = s) \<or> (fst (w!i) = fst (w!j) \<and> (if snd (w!i) = snd (w!j) then s = t else s = 1 - t))"
+      using hC9' .
+    show "\<forall>i<?n'. let cx = (\<Sum>j<?n'. vx' j) / real ?n'; cy = (\<Sum>j<?n'. vy' j) / real ?n'
+         in (vx' i - cx) * (vy' (Suc i mod ?n') - cy) - (vy' i - cy) * (vx' (Suc i mod ?n') - cx) > 0"
+      using hC10' .
+    show "\<forall>i<?n'. \<forall>k<?n'. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n' \<longrightarrow>
+        (vx' k - vx' i) * (vy' (Suc i mod ?n') - vy' i) - (vy' k - vy' i) * (vx' (Suc i mod ?n') - vx' i) < 0"
+      using hC11' .
+  qed
   \<comment> \<open>Step 2: Y \\<cong> Y'. The map from Y to Y' collapses the spur.
      Since q' on P' agrees with q except on the diagonal, and the diagonal maps to
      the same q-values as the original edge (which is in Y'), Y' = Y as quotient spaces.\<close>
