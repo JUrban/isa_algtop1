@@ -4898,9 +4898,25 @@ proof -
     qed
     \<comment> \<open>Both disk homeomorphisms + inverse available.
        Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e where \\<tau>: B2 \\<to> B2 is the spur collapse map.\<close>
+    \<comment> \<open>Target of centroid in B2 coordinates.\<close>
+    define p_cm where "p_cm = \<psi>_m (cx_m, cy_m)"
+    \<comment> \<open>\\<tau> on the boundary S1:
+       - Good arcs (edges \\<ge>2 of P\\_e): angle 2\\<pi>(k+t)/n \\<to> angle 2\\<pi>(k-2+t)/m on S1
+       - Cancel arcs (edges 0,1): angle 2\\<pi>t/n \\<to> spur point (1-t')*(1,0) + t'*p\\_cm
+       where t' parameterizes the fold.\<close>
+    \<comment> \<open>For now, sorry \\<tau>. The key property: f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e should satisfy:
+       - Edge k (k\\<ge>2) at t: \\<psi>\\_e maps to angle 2\\<pi>(k+t)/n on S1.
+         \\<tau> rescales to angle 2\\<pi>(k-2+t)/m on S1.
+         \\<psi>\\_m\\<inverse> maps back to edge\\_m(k-2, t).
+       - Edge 0 at t: \\<psi>\\_e maps to angle 2\\<pi>t/n.
+         \\<tau> maps to spur: (1-t)*\\<psi>\\_m(u0) + t*\\<psi>\\_m(c\\_m) = (1-t)*(1,0) + t*p\\_cm.
+         \\<psi>\\_m\\<inverse> maps to (1-t)*u0 + t*c\\_m.
+       - Edge 1 at t: \\<psi>\\_e maps to angle 2\\<pi>(1+t)/n.
+         \\<tau> maps to spur: (1-t)*\\<psi>\\_m(c\\_m) + t*\\<psi>\\_m(u0) = (1-t)*p\\_cm + t*(1,0).
+         \\<psi>\\_m\\<inverse> maps to (1-t)*c\\_m + t*u0.\<close>
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
-      sorry \<comment> \<open>Fan construction + fibre matching via \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.
+      sorry \<comment> \<open>Spur collapse via \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e with \\<tau>: B2 \\<to> B2.
          Disk homeomorphisms \\<psi>\\_e and \\<psi>\\_m now available.
          Remaining: define \\<tau>: B2 \\<to> B2 that collapses cancel arcs and rescales.
          All fibre matching cases verified algebraically (sessions 2-4).\<close>
