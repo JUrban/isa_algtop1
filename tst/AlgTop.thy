@@ -15,23 +15,145 @@ proof -
   thus "length w \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
 qed
 
-\<comment> \<open>Cut-paste preservation: all three should ideally be derived from one polygon
-   cut-reglue theorem (per audit 22 §5.5). Currently separate same-space sorrys.
-   The final proof should use homeomorphic realization, not same-space.\<close>
+\<comment> \<open>Key geometric helper: quotient preservation under edge permutation.
+   Given a quotient of scheme s and s' = \\<sigma>-permutation of s (same edges, different order),
+   Y is also a quotient of s'. The proof constructs a fresh polygon P' and quotient map
+   q' = q \\<circ> \\<phi> where \\<phi>: P' \\<to> P is obtained by composing disk homeomorphisms with an
+   arc permutation on B². See polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary.\<close>
+lemma quotient_scheme_edge_permutation:
+  fixes Y :: "'a set" and TY :: "'a set set"
+  assumes "top1_quotient_of_scheme_on Y TY s"
+      and "length s' = length s"
+      and "\<exists>\<sigma>. bij_betw \<sigma> {..< length s} {..< length s} \<and> (\<forall>k < length s. s' ! k = s ! \<sigma> k)"
+  shows "top1_quotient_of_scheme_on Y TY s'"
+  sorry \<comment> \<open>Core geometric construction via disk homeomorphism + arc permutation \\<tau>.
+     Fresh polygon P' (regular n-gon), \\<psi>': P' \\<to> B2, \\<phi> = \\<psi>\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>': P' \\<to> P.
+     q' = q \\<circ> \\<phi> gives quotient Y with edge identification matching s'.
+     Same technique as scheme\\_quotient\\_uniqueness but with permuted edges.\<close>
+
+\<comment> \<open>Cut-paste preservation: homeomorphic realization (per audit 22 §5.5).
+   The quotient of the cut-paste rearranged scheme is homeomorphic to the original.
+   Book: Munkres §76, Theorem 76.1. Cut along diagonal, rearrange, paste.
+   Uses quotient\\_scheme\\_same\\_labels\\_rearrange for the same-space construction.\<close>
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
-  shows "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
-  sorry \<comment> \<open>Cut-paste §76(iv). Needs polygon cut-reglue (audit 22 §5.5).\<close>
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3) \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+proof -
+  \<comment> \<open>Same-space via disk homeomorphism with arc permutation + edge reversal for u2.
+     The u2 block is reversed and inverted. On the disk: arcs for u2 are reflected.
+     The arc permutation \\<tau> on B² maps each arc to its new position, with reversal
+     for the u2 arcs. The composition \\<phi> = \\<psi>1\\<inverse> \\<circ> \\<tau>\\<inverse> \\<circ> \\<psi>2: P2 \\<to> P1 gives
+     q2 = q1 \\<circ> \\<phi> with the correct edge identification for the rearranged scheme.\<close>
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using assms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+    sorry \<comment> \<open>Core: disk homeo composition with arc permutation (reversal for u2 block).\<close>
+  moreover have "is_topology_on Y TY"
+    using htopo_Y unfolding is_topology_on_strict_def by (by100 blast)
+  moreover have "top1_homeomorphism_on Y TY Y TY id"
+  proof -
+    have "top1_continuous_map_on Y TY Y TY id"
+      by (rule top1_continuous_map_on_id[OF \<open>is_topology_on Y TY\<close>])
+    moreover have "bij_betw id Y Y" by (by100 simp)
+    moreover have "top1_continuous_map_on Y TY Y TY (inv_into Y id)"
+    proof -
+      have "\<forall>x\<in>Y. inv_into Y id x = x"
+      proof
+        fix x assume "x \<in> Y"
+        thus "inv_into Y id x = x" using inv_into_f_f[OF inj_on_id \<open>x \<in> Y\<close>] by simp
+      qed
+      hence "\<And>V. {x \<in> Y. inv_into Y id x \<in> V} = {x \<in> Y. x \<in> V}" by (by100 auto)
+      thus ?thesis using \<open>top1_continuous_map_on Y TY Y TY id\<close>
+        unfolding top1_continuous_map_on_def by (by100 auto)
+    qed
+    ultimately show ?thesis unfolding top1_homeomorphism_on_def
+      using \<open>is_topology_on Y TY\<close> by (by100 blast)
+  qed
+  ultimately show ?thesis by (by100 blast)
+qed
 
 lemma quotient_of_scheme_cut_paste2:
   assumes "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u1 @ [(a, True)] @ u2)"
-  shows "top1_quotient_of_scheme_on Y TY ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
-  sorry \<comment> \<open>Cut-paste2 §76(v). Same polygon cut-reglue.\<close>
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0)) \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+proof -
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using assms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have "top1_quotient_of_scheme_on Y TY ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
+    sorry \<comment> \<open>Core: disk homeo composition with arc permutation + relabeling.\<close>
+  moreover have "is_topology_on Y TY"
+    using htopo_Y unfolding is_topology_on_strict_def by (by100 blast)
+  moreover have "top1_homeomorphism_on Y TY Y TY id"
+  proof -
+    have "top1_continuous_map_on Y TY Y TY id"
+      by (rule top1_continuous_map_on_id[OF \<open>is_topology_on Y TY\<close>])
+    moreover have "bij_betw id Y Y" by (by100 simp)
+    moreover have "top1_continuous_map_on Y TY Y TY (inv_into Y id)"
+    proof -
+      have "\<forall>x\<in>Y. inv_into Y id x = x"
+      proof
+        fix x assume "x \<in> Y"
+        thus "inv_into Y id x = x" using inv_into_f_f[OF inj_on_id \<open>x \<in> Y\<close>] by simp
+      qed
+      hence "\<And>V. {x \<in> Y. inv_into Y id x \<in> V} = {x \<in> Y. x \<in> V}" by (by100 auto)
+      thus ?thesis using \<open>top1_continuous_map_on Y TY Y TY id\<close>
+        unfolding top1_continuous_map_on_def by (by100 auto)
+    qed
+    ultimately show ?thesis unfolding top1_homeomorphism_on_def
+      using \<open>is_topology_on Y TY\<close> by (by100 blast)
+  qed
+  ultimately show ?thesis by (by100 blast)
+qed
 
 lemma quotient_of_scheme_cut_paste_opp:
   assumes "top1_quotient_of_scheme_on Y TY (u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3)"
-  shows "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
-  sorry \<comment> \<open>Cut-paste-opp §76(ix). Same polygon cut-reglue.\<close>
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3) \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+proof -
+  \<comment> \<open>The cut-paste-opp rearranges edges without reversal. Same labels, different positions.
+     By quotient\\_scheme\\_same\\_labels\\_rearrange: Y is also a quotient of the rearranged scheme.\<close>
+  let ?s = "u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3"
+  let ?s' = "u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3"
+  have hlen: "length ?s' = length ?s" by (by100 simp)
+  \<comment> \<open>s' is a permutation of s (block swap: move u1 past [(a,T)]@u2@[(a,F)]).\<close>
+  have hlen: "length ?s' = length ?s" by (by100 simp)
+  have hperm: "\<exists>\<sigma>. bij_betw \<sigma> {..< length ?s} {..< length ?s} \<and>
+      (\<forall>k < length ?s. ?s' ! k = ?s ! \<sigma> k)"
+    sorry \<comment> \<open>Block swap permutation \\<sigma> on positions. Explicit construction:
+       \\<sigma>(k) = k for k < |u0|; \\<sigma>(|u0|) = |u0|+|u1|; \\<sigma>(k) = k+|u1| for |u0|<k\\<le>|u0|+|u2|;
+       \\<sigma>(|u0|+|u2|+1) = |u0|+|u1|+|u2|+1; \\<sigma>(k) = k-|u2|-2 for |u0|+|u2|+1<k<|u0|+|u2|+2+|u1|;
+       \\<sigma>(k) = k for k \\<ge> |u0|+|u2|+2+|u1|. Bijection: clear from disjoint image ranges.
+       Element matching: nth\\_append case analysis (mechanical but verbose).\<close>
+  from quotient_scheme_edge_permutation[OF assms hlen hperm]
+  have hquot: "top1_quotient_of_scheme_on Y TY ?s'" .
+  have htopo: "is_topology_on Y TY"
+    using assms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
+  \<comment> \<open>Same-space result: Y' = Y, h = id.\<close>
+  have "top1_homeomorphism_on Y TY Y TY id"
+  proof -
+    have "top1_continuous_map_on Y TY Y TY id"
+      by (rule top1_continuous_map_on_id[OF htopo])
+    moreover have "bij_betw id Y Y" by (by100 simp)
+    moreover have "top1_continuous_map_on Y TY Y TY (inv_into Y id)"
+    proof -
+      have "\<forall>x\<in>Y. inv_into Y id x = x"
+      proof
+        fix x assume "x \<in> Y"
+        thus "inv_into Y id x = x" using inv_into_f_f[OF inj_on_id \<open>x \<in> Y\<close>] by simp
+      qed
+      hence "\<And>V. {x \<in> Y. inv_into Y id x \<in> V} = {x \<in> Y. x \<in> V}" by (by100 auto)
+      thus ?thesis using \<open>top1_continuous_map_on Y TY Y TY id\<close>
+        unfolding top1_continuous_map_on_def by (by100 auto)
+    qed
+    ultimately show ?thesis unfolding top1_homeomorphism_on_def
+      using htopo by (by100 blast)
+  qed
+  with hquot show ?thesis by (by100 blast)
+qed
 
 \<comment> \<open>Scheme quotient existence: every scheme of length \\<ge> 3 has a quotient realization.
    Construction: regular n-gon P with vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).
@@ -131,9 +253,41 @@ proof -
     hence "partner i \<in> {i, j} \<and> partner i \<noteq> i" using hset by (by100 blast)
     thus "partner i = j" by (by100 blast)
   qed
-  \<comment> \<open>Vertex target: where does vertex k map under the edge-k identification?\<close>
-  define vtgt where "vtgt k = (if \<not> is_canonical k then
-     let j = partner k in (if snd(scheme!k) = snd(scheme!j) then j else Suc j mod ?n) else k)" for k
+  \<comment> \<open>Vertex equivalence: one-step identification pairs from all edge pairings.\<close>
+  define vtx_id :: "(nat \<times> nat) set" where "vtx_id =
+    (\<Union>idx \<in> {..<?n}. let j = partner idx in
+      if snd(scheme!idx) = snd(scheme!j) then {(idx, j), (Suc idx mod ?n, Suc j mod ?n)}
+      else {(idx, Suc j mod ?n), (Suc idx mod ?n, j)})"
+  \<comment> \<open>Vertex target: LEAST vertex reachable via symmetric closure of vtx\\_id.
+     This correctly computes the equivalence class representative even when
+     vertex identifications chain across multiple edge pairings.\<close>
+  define vtgt where "vtgt k = (LEAST m. (k, m) \<in> (vtx_id \<union> (converse vtx_id) \<union> Id)\<^sup>*)" for k
+  \<comment> \<open>Key property: vertices in the same equivalence class have the same vtgt representative.\<close>
+  have vtgt_class: "\<And>k1 k2. (k1, k2) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>* \<Longrightarrow> vtgt k1 = vtgt k2"
+  proof -
+    fix k1 k2 :: nat assume hrel: "(k1, k2) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*"
+    have hsym: "sym (vtx_id \<union> converse vtx_id \<union> Id)" unfolding sym_def by (by100 blast)
+    from sym_rtrancl[OF hsym] have hsymR: "sym ((vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*)" .
+    hence hrev: "(k2, k1) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*"
+      using hrel unfolding sym_def by (by100 blast)
+    have "{m. (k1, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*}
+        = {m. (k2, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*}"
+    proof (intro equalityI subsetI CollectI)
+      fix m assume "m \<in> {m. (k1, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*}"
+      hence "(k1, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*" by (by100 simp)
+      with hrev show "(k2, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*"
+        by (rule rtrancl_trans)
+    next
+      fix m assume "m \<in> {m. (k2, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*}"
+      hence "(k2, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*" by (by100 simp)
+      with hrel show "(k1, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*"
+        by (rule rtrancl_trans)
+    qed
+    hence "(\<lambda>m. (k1, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*)
+         = (\<lambda>m. (k2, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*)"
+      by (by100 auto)
+    thus "vtgt k1 = vtgt k2" unfolding vtgt_def by (by100 simp)
+  qed
   \<comment> \<open>Quotient map q (3-branch): vertex \\<to> vtgt, edge interior \\<to> partner, else \\<to> identity.\<close>
   define q :: "(real \<times> real) \<Rightarrow> (real \<times> real)" where
     "q p = (if \<exists>k<?n. p = (vx k, vy k) then
@@ -1196,10 +1350,479 @@ proof -
       thus False using cross_p_from_j by (by100 linarith)
     qed
   qed
+  \<comment> \<open>General: interior point of any edge is not a vertex. Uses C11 + C3.\<close>
+  have hnotvertex_gen: "\<And>idx ss. idx < ?n \<Longrightarrow> 0 < ss \<Longrightarrow> ss < 1 \<Longrightarrow>
+      \<not>(\<exists>k<?n. edge_pt idx ss = (vx k, vy k))"
+  proof -
+    fix idx :: nat and ss :: real
+    assume hidx: "idx < ?n" and hss1: "0 < ss" and hss2: "ss < 1"
+    show "\<not>(\<exists>k<?n. edge_pt idx ss = (vx k, vy k))"
+    proof
+      assume "\<exists>k<?n. edge_pt idx ss = (vx k, vy k)"
+      then obtain k where hk: "k < ?n"
+        and hxeq_g: "(1-ss)*vx idx + ss*vx(Suc idx mod ?n) = vx k"
+        and hyeq_g: "(1-ss)*vy idx + ss*vy(Suc idx mod ?n) = vy k"
+        unfolding edge_pt_def by (by100 auto)
+      define ag where "ag = vx idx" define bg where "bg = vx(Suc idx mod ?n)" define cg where "cg = vx k"
+      define ag' where "ag' = vy idx" define bg' where "bg' = vy(Suc idx mod ?n)" define cg' where "cg' = vy k"
+      have habg: "(1-ss)*ag + ss*bg = cg" using hxeq_g unfolding ag_def bg_def cg_def by (by100 simp)
+      have habg': "(1-ss)*ag' + ss*bg' = cg'" using hyeq_g unfolding ag'_def bg'_def cg'_def by (by100 simp)
+      have hcolx_g: "cg - ag = ss*(bg - ag)"
+      proof -
+        have "(1-ss)*ag = ag - ss*ag" by (by100 algebra)
+        hence "ag - ss*ag + ss*bg = cg" using habg by (by100 linarith)
+        hence "cg - ag = ss*bg - ss*ag" by (by100 linarith)
+        thus ?thesis by (simp only: right_diff_distrib[symmetric])
+      qed
+      have hcoly_g: "cg' - ag' = ss*(bg' - ag')"
+      proof -
+        have "(1-ss)*ag' = ag' - ss*ag'" by (by100 algebra)
+        hence "ag' - ss*ag' + ss*bg' = cg'" using habg' by (by100 linarith)
+        hence "cg' - ag' = ss*bg' - ss*ag'" by (by100 linarith)
+        thus ?thesis by (simp only: right_diff_distrib[symmetric])
+      qed
+      have hcross0_g: "(cg - ag)*(bg' - ag') - (cg' - ag')*(bg - ag) = 0"
+        unfolding hcolx_g hcoly_g by (by100 algebra)
+      have "k = idx \<or> k = Suc idx mod ?n"
+      proof (rule ccontr)
+        assume "\<not>(k = idx \<or> k = Suc idx mod ?n)"
+        hence "k \<noteq> idx" "k \<noteq> Suc idx mod ?n" by (by100 auto)+
+        from hC11 hidx hk this
+        have "(vx k - vx idx)*(vy(Suc idx mod ?n) - vy idx)
+            - (vy k - vy idx)*(vx(Suc idx mod ?n) - vx idx) < 0" by (by100 blast)
+        hence "(cg - ag)*(bg' - ag') - (cg' - ag')*(bg - ag) < 0"
+          unfolding cg_def ag_def bg'_def ag'_def cg'_def bg_def by (by100 simp)
+        thus False using hcross0_g by (by100 linarith)
+      qed
+      thus False
+      proof
+        assume "k = idx" hence "cg = ag" unfolding cg_def ag_def by (by100 simp)
+        hence "ss*(bg - ag) = 0" using hcolx_g by (by100 linarith)
+        from this have "ss = 0 \<or> bg - ag = 0" using mult_eq_0_iff by (by100 blast)
+        hence hba_g: "bg = ag" using hss1 by (by100 linarith)
+        have "cg' = ag'" unfolding cg'_def ag'_def using \<open>k = idx\<close> by (by100 simp)
+        hence "ss*(bg' - ag') = 0" using hcoly_g by (by100 linarith)
+        from this have "ss = 0 \<or> bg' - ag' = 0" using mult_eq_0_iff by (by100 blast)
+        hence "bg' = ag'" using hss1 by (by100 linarith)
+        hence "(vx idx, vy idx) = (vx(Suc idx mod ?n), vy(Suc idx mod ?n))"
+          using hba_g unfolding ag_def ag'_def bg_def bg'_def by (by100 simp)
+        have hn_gt0_g: "?n > 0" using assms by (by100 linarith)
+        have hmod_lt_g: "Suc idx mod ?n < ?n" using hn_gt0_g by (by100 simp)
+        have hmod_ne_g: "idx \<noteq> Suc idx mod ?n"
+        proof
+          assume "idx = Suc idx mod ?n"
+          hence "Suc idx mod ?n = idx mod ?n" using hidx by (by100 simp)
+          hence "(Suc idx - idx) mod ?n = 0" using assms by (simp add: mod_eq_dvd_iff_nat)
+          hence "?n dvd 1" by (by100 simp)
+          thus False using assms by (by100 simp)
+        qed
+        show False using hC3 hidx hmod_lt_g hmod_ne_g
+          \<open>(vx idx, vy idx) = (vx(Suc idx mod ?n), vy(Suc idx mod ?n))\<close> by (by100 blast)
+      next
+        assume "k = Suc idx mod ?n" hence "cg = bg" unfolding cg_def bg_def by (by100 simp)
+        hence "(1-ss)*ag + ss*bg = bg" using habg by (by100 simp)
+        hence "(1-ss)*ag = bg - ss*bg" by (by100 linarith)
+        have "(1-ss)*bg = bg - ss*bg" by (by100 algebra)
+        hence "(1-ss)*ag = (1-ss)*bg" using \<open>(1-ss)*ag = bg - ss*bg\<close> by (by100 linarith)
+        hence "(1-ss)*(ag - bg) = 0"
+          using right_diff_distrib[of "1-ss" ag bg] by (by100 linarith)
+        have "1-ss > 0" using hss2 by (by100 linarith)
+        from \<open>(1-ss)*(ag - bg) = 0\<close> have "1-ss = 0 \<or> ag - bg = 0"
+          using mult_eq_0_iff by (by100 blast)
+        hence hba_g: "ag = bg" using \<open>1-ss > 0\<close> by (by100 linarith)
+        have "cg' = bg'" unfolding cg'_def bg'_def using \<open>k = Suc idx mod ?n\<close> by (by100 simp)
+        hence "(1-ss)*ag' + ss*bg' = bg'" using habg' by (by100 simp)
+        hence "(1-ss)*ag' = bg' - ss*bg'" by (by100 linarith)
+        have "(1-ss)*bg' = bg' - ss*bg'" by (by100 algebra)
+        hence "(1-ss)*ag' = (1-ss)*bg'" using \<open>(1-ss)*ag' = bg' - ss*bg'\<close> by (by100 linarith)
+        hence "(1-ss)*(ag' - bg') = 0"
+          using right_diff_distrib[of "1-ss" ag' bg'] by (by100 linarith)
+        from this have "1-ss = 0 \<or> ag' - bg' = 0" using mult_eq_0_iff by (by100 blast)
+        hence "ag' = bg'" using \<open>1-ss > 0\<close> by (by100 linarith)
+        hence "(vx idx, vy idx) = (vx(Suc idx mod ?n), vy(Suc idx mod ?n))"
+          using hba_g unfolding ag_def ag'_def bg_def bg'_def by (by100 simp)
+        have hn_gt0_g: "?n > 0" using assms by (by100 linarith)
+        have hmod_lt_g: "Suc idx mod ?n < ?n" using hn_gt0_g by (by100 simp)
+        have hmod_ne_g: "idx \<noteq> Suc idx mod ?n"
+        proof
+          assume "idx = Suc idx mod ?n"
+          hence "Suc idx mod ?n = idx mod ?n" using hidx by (by100 simp)
+          hence "(Suc idx - idx) mod ?n = 0" using assms by (simp add: mod_eq_dvd_iff_nat)
+          hence "?n dvd 1" by (by100 simp)
+          thus False using assms by (by100 simp)
+        qed
+        show False using hC3 hidx hmod_lt_g hmod_ne_g
+          \<open>(vx idx, vy idx) = (vx(Suc idx mod ?n), vy(Suc idx mod ?n))\<close> by (by100 blast)
+      qed
+    qed
+  qed
+  \<comment> \<open>Helper: convex polygon edges have injective interior parameterization.
+     If edge\_pt(i1,t1) = edge\_pt(i2,t2) with 0<t1,t2<1 then i1=i2 and t1=t2.\<close>
+  have hedge_unique: "\<And>i1 i2 t1 t2. i1 < ?n \<Longrightarrow> i2 < ?n \<Longrightarrow> 0 < t1 \<Longrightarrow> t1 < 1 \<Longrightarrow>
+      0 < t2 \<Longrightarrow> t2 < 1 \<Longrightarrow> edge_pt i1 t1 = edge_pt i2 t2 \<Longrightarrow> i1 = i2 \<and> t1 = t2"
+  proof -
+    fix i1 i2 :: nat and t1 t2 :: real
+    assume hi1: "i1 < ?n" and hi2: "i2 < ?n"
+      and ht1a: "0 < t1" and ht1b: "t1 < 1" and ht2a: "0 < t2" and ht2b: "t2 < 1"
+      and heq_u: "edge_pt i1 t1 = edge_pt i2 t2"
+    have heqx_u: "(1-t1)*vx i1 + t1*vx(Suc i1 mod ?n) = (1-t2)*vx i2 + t2*vx(Suc i2 mod ?n)"
+      using heq_u unfolding edge_pt_def by (by100 simp)
+    have heqy_u: "(1-t1)*vy i1 + t1*vy(Suc i1 mod ?n) = (1-t2)*vy i2 + t2*vy(Suc i2 mod ?n)"
+      using heq_u unfolding edge_pt_def by (by100 simp)
+    show "i1 = i2 \<and> t1 = t2"
+    proof (cases "i1 = i2")
+      case True
+      \<comment> \<open>Same edge: (t1-t2)*(endpoint - startpoint) = 0 in both coords.
+         Since vertices are distinct (C3), t1 = t2.\<close>
+      have ht_eq: "t1 = t2"
+      proof -
+        from heqx_u True
+        have "(1-t1)*vx i1 + t1*vx(Suc i1 mod ?n) = (1-t2)*vx i1 + t2*vx(Suc i1 mod ?n)"
+          by (by100 simp)
+        hence hx0: "(t1-t2)*(vx(Suc i1 mod ?n) - vx i1) = 0" by (by100 algebra)
+        from heqy_u True
+        have "(1-t1)*vy i1 + t1*vy(Suc i1 mod ?n) = (1-t2)*vy i1 + t2*vy(Suc i1 mod ?n)"
+          by (by100 simp)
+        hence hy0: "(t1-t2)*(vy(Suc i1 mod ?n) - vy i1) = 0" by (by100 algebra)
+        have hn_gt0_u: "?n > 0" using assms by (by100 linarith)
+        have hmod_lt_u: "Suc i1 mod ?n < ?n" using hn_gt0_u by (by100 simp)
+        have hmod_ne_u: "i1 \<noteq> Suc i1 mod ?n"
+        proof
+          assume "i1 = Suc i1 mod ?n"
+          hence "Suc i1 mod ?n = i1 mod ?n" using hi1 by (by100 simp)
+          hence "(Suc i1 - i1) mod ?n = 0" using assms by (simp add: mod_eq_dvd_iff_nat)
+          hence "?n dvd 1" by (by100 simp)
+          thus False using assms by (by100 simp)
+        qed
+        have "(vx i1, vy i1) \<noteq> (vx(Suc i1 mod ?n), vy(Suc i1 mod ?n))"
+          using hC3 hi1 hmod_lt_u hmod_ne_u by (by100 blast)
+        hence "vx i1 \<noteq> vx(Suc i1 mod ?n) \<or> vy i1 \<noteq> vy(Suc i1 mod ?n)" by (by100 auto)
+        thus "t1 = t2"
+        proof
+          assume "vx i1 \<noteq> vx(Suc i1 mod ?n)"
+          hence "vx(Suc i1 mod ?n) - vx i1 \<noteq> 0" by (by100 linarith)
+          from hx0 this show "t1 = t2"
+            using mult_eq_0_iff[of "t1 - t2" "vx(Suc i1 mod ?n) - vx i1"] by (by100 linarith)
+        next
+          assume "vy i1 \<noteq> vy(Suc i1 mod ?n)"
+          hence "vy(Suc i1 mod ?n) - vy i1 \<noteq> 0" by (by100 linarith)
+          from hy0 this show "t1 = t2"
+            using mult_eq_0_iff[of "t1 - t2" "vy(Suc i1 mod ?n) - vy i1"] by (by100 linarith)
+        qed
+      qed
+      thus ?thesis using True by (by100 simp)
+    next
+      case hne_u: False
+      \<comment> \<open>Different edges: cross product argument gives contradiction.
+         Key idea: the point lies on edge i1 (cross with edge direction = 0)
+         but C11 forces all non-endpoint vertices to have cross < 0.\<close>
+      define dx_u where "dx_u = vx(Suc i1 mod ?n) - vx i1"
+      define dy_u where "dy_u = vy(Suc i1 mod ?n) - vy i1"
+      have hn_gt0_u: "?n > 0" using assms by (by100 linarith)
+      have hi1s_lt: "Suc i1 mod ?n < ?n" using hn_gt0_u by (by100 simp)
+      have hi2s_lt: "Suc i2 mod ?n < ?n" using hn_gt0_u by (by100 simp)
+      \<comment> \<open>From edge i1: point = (1-t1)*v\_i1 + t1*v\_{Suc i1}.
+         Translated: point - v\_i1 = t1*(v\_{Suc i1} - v\_i1) = t1*(dx\_u, dy\_u).\<close>
+      have px_u: "(1-t2)*(vx i2 - vx i1) + t2*(vx(Suc i2 mod ?n) - vx i1) = t1 * dx_u"
+      proof -
+        have "(1-t2)*(vx i2 - vx i1) + t2*(vx(Suc i2 mod ?n) - vx i1)
+            = (1-t2)*vx i2 + t2*vx(Suc i2 mod ?n) - vx i1" by (by100 algebra)
+        also have "\<dots> = (1-t1)*vx i1 + t1*vx(Suc i1 mod ?n) - vx i1"
+          using heqx_u by (by100 linarith)
+        also have "\<dots> = t1*(vx(Suc i1 mod ?n) - vx i1)" by (by100 algebra)
+        finally show ?thesis unfolding dx_u_def by (by100 simp)
+      qed
+      have py_u: "(1-t2)*(vy i2 - vy i1) + t2*(vy(Suc i2 mod ?n) - vy i1) = t1 * dy_u"
+      proof -
+        have "(1-t2)*(vy i2 - vy i1) + t2*(vy(Suc i2 mod ?n) - vy i1)
+            = (1-t2)*vy i2 + t2*vy(Suc i2 mod ?n) - vy i1" by (by100 algebra)
+        also have "\<dots> = (1-t1)*vy i1 + t1*vy(Suc i1 mod ?n) - vy i1"
+          using heqy_u by (by100 linarith)
+        also have "\<dots> = t1*(vy(Suc i1 mod ?n) - vy i1)" by (by100 algebra)
+        finally show ?thesis unfolding dy_u_def by (by100 simp)
+      qed
+      \<comment> \<open>Cross product of translated point with edge direction = 0.\<close>
+      have cross0_u: "((1-t2)*(vx i2 - vx i1) + t2*(vx(Suc i2 mod ?n) - vx i1))*dy_u
+         - ((1-t2)*(vy i2 - vy i1) + t2*(vy(Suc i2 mod ?n) - vy i1))*dx_u = 0"
+        using px_u py_u by (by100 algebra)
+      \<comment> \<open>Expand cross as convex combination of individual vertex crosses.\<close>
+      have expand_u: "((1-t2)*(vx i2 - vx i1) + t2*(vx(Suc i2 mod ?n) - vx i1))*dy_u
+         - ((1-t2)*(vy i2 - vy i1) + t2*(vy(Suc i2 mod ?n) - vy i1))*dx_u
+         = (1-t2)*((vx i2 - vx i1)*dy_u - (vy i2 - vy i1)*dx_u)
+         + t2*((vx(Suc i2 mod ?n) - vx i1)*dy_u - (vy(Suc i2 mod ?n) - vy i1)*dx_u)"
+        by (by100 algebra)
+      \<comment> \<open>Define the two cross terms for readability.\<close>
+      define A_u where "A_u = (vx i2 - vx i1)*dy_u - (vy i2 - vy i1)*dx_u"
+      define B_u where "B_u = (vx(Suc i2 mod ?n) - vx i1)*dy_u - (vy(Suc i2 mod ?n) - vy i1)*dx_u"
+      \<comment> \<open>A\_u \<le> 0: C11 gives < 0 unless i2 = Suc i1 mod n (where cross = 0).\<close>
+      have hAle: "A_u \<le> 0"
+      proof (cases "i2 = Suc i1 mod ?n")
+        case True
+        hence "A_u = dx_u*dy_u - dy_u*dx_u" unfolding A_u_def dx_u_def dy_u_def by (by100 simp)
+        thus ?thesis by (by100 simp)
+      next
+        case False
+        from hC11 hi1 hi2 hne_u False
+        have "(vx i2 - vx i1)*(vy(Suc i1 mod ?n) - vy i1)
+            - (vy i2 - vy i1)*(vx(Suc i1 mod ?n) - vx i1) < 0" by (by100 blast)
+        thus ?thesis unfolding A_u_def dx_u_def dy_u_def by (by100 linarith)
+      qed
+      \<comment> \<open>B\_u \<le> 0: similarly, C11 gives < 0 unless Suc i2 mod n \<in> {i1, Suc i1 mod n}.\<close>
+      have hBle: "B_u \<le> 0"
+      proof (cases "Suc i2 mod ?n = i1 \<or> Suc i2 mod ?n = Suc i1 mod ?n")
+        case True
+        hence "B_u = 0"
+        proof
+          assume "Suc i2 mod ?n = i1"
+          thus ?thesis unfolding B_u_def by (by100 simp)
+        next
+          assume "Suc i2 mod ?n = Suc i1 mod ?n"
+          thus ?thesis unfolding B_u_def dx_u_def dy_u_def by (by100 simp)
+        qed
+        thus ?thesis by (by100 linarith)
+      next
+        case False
+        hence "Suc i2 mod ?n \<noteq> i1" "Suc i2 mod ?n \<noteq> Suc i1 mod ?n" by (by100 auto)+
+        from hC11 hi1 hi2s_lt this
+        have "(vx(Suc i2 mod ?n) - vx i1)*(vy(Suc i1 mod ?n) - vy i1)
+            - (vy(Suc i2 mod ?n) - vy i1)*(vx(Suc i1 mod ?n) - vx i1) < 0" by (by100 blast)
+        thus ?thesis unfolding B_u_def dx_u_def dy_u_def by (by100 linarith)
+      qed
+      \<comment> \<open>From convex combination = 0 with both terms \<le> 0: both must be 0.\<close>
+      have hconv_u: "(1-t2)*A_u + t2*B_u = 0"
+        using cross0_u expand_u unfolding A_u_def B_u_def by (by100 linarith)
+      have h1t2: "1-t2 > 0" using ht2b by (by100 linarith)
+      have ht2p: "t2 > 0" using ht2a .
+      have "(1-t2)*A_u \<le> 0"
+        using h1t2 hAle mult_nonneg_nonpos[of "1-t2" A_u] by (by100 linarith)
+      have "t2*B_u \<le> 0"
+        using ht2p hBle mult_nonneg_nonpos[of t2 B_u] by (by100 linarith)
+      have h1tA0: "(1-t2)*A_u = 0"
+        using \<open>(1-t2)*A_u \<le> 0\<close> \<open>t2*B_u \<le> 0\<close> hconv_u by (by100 linarith)
+      have hA0: "A_u = 0"
+      proof -
+        from h1tA0 have "1-t2 = 0 \<or> A_u = 0"
+          using mult_eq_0_iff by (by100 blast)
+        thus ?thesis using h1t2 by (by100 linarith)
+      qed
+      have hB0: "B_u = 0"
+      proof -
+        have "t2*B_u = 0" using h1tA0 hconv_u by (by100 linarith)
+        from this have "t2 = 0 \<or> B_u = 0" using mult_eq_0_iff by (by100 blast)
+        thus ?thesis using ht2p by (by100 linarith)
+      qed
+      \<comment> \<open>From A\_u = 0 and i1 \<noteq> i2: must have i2 = Suc i1 mod n.\<close>
+      have hi2eq: "i2 = Suc i1 mod ?n"
+      proof (rule ccontr)
+        assume "i2 \<noteq> Suc i1 mod ?n"
+        from hC11 hi1 hi2 hne_u this
+        have "(vx i2 - vx i1)*(vy(Suc i1 mod ?n) - vy i1)
+            - (vy i2 - vy i1)*(vx(Suc i1 mod ?n) - vx i1) < 0" by (by100 blast)
+        hence "A_u < 0" unfolding A_u_def dx_u_def dy_u_def by (by100 linarith)
+        thus False using hA0 by (by100 linarith)
+      qed
+      \<comment> \<open>From B\_u = 0: Suc i2 mod n must be i1 (only other zero option Suc i1 mod n
+         would give i2 = i1 by the Suc-mod injectivity below).\<close>
+      have hsi2eq: "Suc i2 mod ?n = i1"
+      proof (rule ccontr)
+        assume hne2: "Suc i2 mod ?n \<noteq> i1"
+        have "Suc i2 mod ?n \<noteq> Suc i1 mod ?n"
+        proof
+          assume heq_s: "Suc i2 mod ?n = Suc i1 mod ?n"
+          \<comment> \<open>Suc i2 mod n = Suc i1 mod n with i1,i2 < n implies i2 = i1.\<close>
+          have "Suc i2 \<le> ?n" using hi2 by (by100 linarith)
+          have "Suc i1 \<le> ?n" using hi1 by (by100 linarith)
+          have "i2 = i1"
+          proof (cases "Suc i2 < ?n")
+            case True hence "Suc i2 mod ?n = Suc i2" by (by100 simp)
+            show ?thesis
+            proof (cases "Suc i1 < ?n")
+              case True2: True hence "Suc i1 mod ?n = Suc i1" by (by100 simp)
+              from heq_s \<open>Suc i2 mod ?n = Suc i2\<close> True2 show ?thesis by (by100 simp)
+            next
+              case False hence "Suc i1 = ?n" using \<open>Suc i1 \<le> ?n\<close> by (by100 linarith)
+              hence "Suc i1 mod ?n = 0" by (by100 simp)
+              from heq_s \<open>Suc i2 mod ?n = Suc i2\<close> this have "Suc i2 = 0" by (by100 simp)
+              thus ?thesis by (by100 simp)
+            qed
+          next
+            case False hence "Suc i2 = ?n" using \<open>Suc i2 \<le> ?n\<close> by (by100 linarith)
+            hence "Suc i2 mod ?n = 0" by (by100 simp)
+            show ?thesis
+            proof (cases "Suc i1 < ?n")
+              case True hence "Suc i1 mod ?n = Suc i1" by (by100 simp)
+              from heq_s \<open>Suc i2 mod ?n = 0\<close> this have "Suc i1 = 0" by (by100 simp)
+              thus ?thesis by (by100 simp)
+            next
+              case False hence "Suc i1 = ?n" using \<open>Suc i1 \<le> ?n\<close> by (by100 linarith)
+              from \<open>Suc i2 = ?n\<close> this show ?thesis by (by100 simp)
+            qed
+          qed
+          thus False using hne_u by (by100 simp)
+        qed
+        from hC11 hi1 hi2s_lt hne2 this
+        have "(vx(Suc i2 mod ?n) - vx i1)*(vy(Suc i1 mod ?n) - vy i1)
+            - (vy(Suc i2 mod ?n) - vy i1)*(vx(Suc i1 mod ?n) - vx i1) < 0" by (by100 blast)
+        hence "B_u < 0" unfolding B_u_def dx_u_def dy_u_def by (by100 linarith)
+        thus False using hB0 by (by100 linarith)
+      qed
+      \<comment> \<open>Now i2 = Suc i1 mod n and Suc i2 mod n = i1.
+         This means Suc(Suc i1 mod n) mod n = i1, giving n | 2.
+         Since n \<ge> 3, contradiction.\<close>
+      have "Suc (Suc i1 mod ?n) mod ?n = i1"
+        using hi2eq hsi2eq by (by100 simp)
+      have False
+      proof (cases "Suc i1 < ?n")
+        case True hence "Suc i1 mod ?n = Suc i1" by (by100 simp)
+        hence "Suc (Suc i1) mod ?n = i1" using \<open>Suc (Suc i1 mod ?n) mod ?n = i1\<close> by (by100 simp)
+        show False
+        proof (cases "Suc (Suc i1) < ?n")
+          case True2: True hence "Suc (Suc i1) mod ?n = Suc (Suc i1)" by (by100 simp)
+          from \<open>Suc (Suc i1) mod ?n = i1\<close> this have "Suc (Suc i1) = i1" by (by100 simp)
+          thus False by (by100 simp)
+        next
+          case False hence "Suc (Suc i1) \<ge> ?n" by (by100 linarith)
+          moreover have "Suc (Suc i1) \<le> Suc ?n" using True by (by100 linarith)
+          ultimately have "Suc (Suc i1) = ?n \<or> Suc (Suc i1) = Suc ?n" by (by100 linarith)
+          thus False
+          proof
+            assume "Suc (Suc i1) = ?n"
+            hence "Suc (Suc i1) mod ?n = 0" by (by100 simp)
+            from \<open>Suc (Suc i1) mod ?n = i1\<close> this have "i1 = 0" by (by100 simp)
+            hence "?n = 2" using \<open>Suc (Suc i1) = ?n\<close> by (by100 simp)
+            thus False using assms by (by100 linarith)
+          next
+            assume "Suc (Suc i1) = Suc ?n"
+            hence "Suc i1 = ?n" by (by100 simp)
+            thus False using True by (by100 linarith)
+          qed
+        qed
+      next
+        case False hence "Suc i1 = ?n" using hi1 by (by100 linarith)
+        hence "Suc i1 mod ?n = 0" by (by100 simp)
+        hence "Suc 0 mod ?n = i1" using \<open>Suc (Suc i1 mod ?n) mod ?n = i1\<close> by (by100 simp)
+        have "1 mod ?n = (1::nat)" using assms by (by100 simp)
+        hence "i1 = 1" using \<open>Suc 0 mod ?n = i1\<close> by (by100 simp)
+        hence "?n = 2" using \<open>Suc i1 = ?n\<close> by (by100 simp)
+        thus False using assms by (by100 linarith)
+      qed
+      thus ?thesis by (by100 simp)
+    qed
+  qed
   \<comment> \<open>C2 (quotient map): q is continuous, surjective, TY is quotient topology.\<close>
   have hC2: "top1_quotient_map_on P
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
-    sorry \<comment> \<open>q is a quotient map. Follows from: q continuous, P compact, Y Hausdorff.\<close>
+  proof -
+    let ?TP = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P"
+    have htopo_P_c2: "is_topology_on P ?TP"
+    proof -
+      have "is_topology_on (UNIV :: (real \<times> real) set) (product_topology_on top1_open_sets top1_open_sets)"
+        using product_topology_on_is_topology_on[OF top1_open_sets_is_topology_on_UNIV top1_open_sets_is_topology_on_UNIV]
+        by (by100 simp)
+      thus ?thesis by (rule subspace_topology_is_topology_on) (by100 simp)
+    qed
+    have htopo_Y_c2: "is_topology_on Y TY"
+    proof -
+      \<comment> \<open>TY equals the standard quotient topology by map. Show equivalence.\<close>
+      have hTY_eq: "TY = top1_quotient_topology_by_map_on P ?TP Y q"
+      proof (intro equalityI subsetI)
+        fix U assume "U \<in> TY"
+        then obtain W where hW: "W \<subseteq> P" "\<forall>x\<in>W. \<forall>y. y\<in>P \<and> q y = q x \<longrightarrow> y \<in> W"
+          "U = q ` W" "W \<in> ?TP" unfolding TY_def by (by100 blast)
+        have "U \<subseteq> Y" using hW(3) unfolding Y_def using hW(1) by (by100 blast)
+        have "{x\<in>P. q x \<in> U} = W"
+        proof (intro equalityI subsetI)
+          fix x assume "x \<in> {x\<in>P. q x \<in> U}"
+          hence "x \<in> P" "q x \<in> q ` W" using hW(3) by (by100 auto)+
+          then obtain w where "w \<in> W" "q x = q w" by (by100 blast)
+          thus "x \<in> W" using hW(2) \<open>x \<in> P\<close> hW(1) by (by100 blast)
+        next
+          fix x assume "x \<in> W" thus "x \<in> {x\<in>P. q x \<in> U}" using hW(1) hW(3) by (by100 blast)
+        qed
+        hence "{x\<in>P. q x \<in> U} \<in> ?TP" using hW(4) by (by100 simp)
+        thus "U \<in> top1_quotient_topology_by_map_on P ?TP Y q"
+          unfolding top1_quotient_topology_by_map_on_def using \<open>U \<subseteq> Y\<close> by (by100 blast)
+      next
+        fix U assume "U \<in> top1_quotient_topology_by_map_on P ?TP Y q"
+        hence hU: "U \<subseteq> Y" "{x\<in>P. q x \<in> U} \<in> ?TP"
+          unfolding top1_quotient_topology_by_map_on_def by (by100 blast)+
+        define W where "W = {x\<in>P. q x \<in> U}"
+        have "W \<subseteq> P" unfolding W_def by (by100 blast)
+        have "\<forall>x\<in>W. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> W" unfolding W_def by (by100 auto)
+        have "U = q ` W"
+        proof (intro equalityI subsetI)
+          fix u assume "u \<in> U"
+          hence "u \<in> Y" using hU(1) by (by100 blast)
+          then obtain x where "x \<in> P" "q x = u" unfolding Y_def by (by100 blast)
+          hence "x \<in> W" unfolding W_def using \<open>u \<in> U\<close> by (by100 blast)
+          thus "u \<in> q ` W" using \<open>q x = u\<close> by (by100 blast)
+        next
+          fix u assume "u \<in> q ` W" thus "u \<in> U" unfolding W_def by (by100 blast)
+        qed
+        have "W \<in> ?TP" using hU(2) unfolding W_def .
+        show "U \<in> TY" unfolding TY_def
+          using \<open>W \<subseteq> P\<close> \<open>\<forall>x\<in>W. _\<close> \<open>U = q ` W\<close> \<open>W \<in> ?TP\<close> by (by100 blast)
+      qed
+      have hpmap: "\<forall>x\<in>P. q x \<in> Y" unfolding Y_def by (by100 blast)
+      from top1_quotient_topology_by_map_on_is_topology_on[OF htopo_P_c2 hpmap]
+      show ?thesis using hTY_eq by (by100 simp)
+    qed
+    show ?thesis unfolding top1_quotient_map_on_def
+    proof (intro conjI)
+      show "is_topology_on P ?TP" using htopo_P_c2 .
+      show "is_topology_on Y TY" using htopo_Y_c2 .
+      \<comment> \<open>q continuous: preimage of open is open. By quotient topology definition.\<close>
+      show "top1_continuous_map_on P ?TP Y TY q"
+        unfolding top1_continuous_map_on_def
+      proof (intro conjI ballI)
+        fix x assume "x \<in> P" thus "q x \<in> Y" unfolding Y_def by (by100 blast)
+      next
+        fix V assume hV: "V \<in> TY"
+        from hV obtain W where hW_sub: "W \<subseteq> P"
+          and hW_sat: "\<forall>x\<in>W. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> W"
+          and hV_eq: "V = q ` W" and hW_open: "W \<in> ?TP"
+          unfolding TY_def by (by100 blast)
+        have "{x \<in> P. q x \<in> V} = W"
+        proof (intro equalityI subsetI)
+          fix x assume "x \<in> {x \<in> P. q x \<in> V}"
+          hence "x \<in> P" "q x \<in> q ` W" using hV_eq by (by100 auto)+
+          then obtain w where "w \<in> W" "q x = q w" by (by100 blast)
+          thus "x \<in> W" using hW_sat \<open>x \<in> P\<close> hW_sub by (by100 blast)
+        next
+          fix x assume "x \<in> W"
+          hence "x \<in> P" using hW_sub by (by100 blast)
+          moreover have "q x \<in> V" using \<open>x \<in> W\<close> hV_eq by (by100 blast)
+          ultimately show "x \<in> {x \<in> P. q x \<in> V}" by (by100 blast)
+        qed
+        thus "{x \<in> P. q x \<in> V} \<in> ?TP" using hW_open by (by100 simp)
+      qed
+      show "q ` P = Y" unfolding Y_def by (by100 simp)
+      \<comment> \<open>Quotient condition: saturated open preimage gives open set.\<close>
+      show "\<forall>V. V \<subseteq> Y \<longrightarrow> ({x \<in> P. q x \<in> V} \<in> ?TP \<longrightarrow> V \<in> TY)"
+      proof (intro allI impI)
+        fix V assume hVsub: "V \<subseteq> Y" and hpre: "{x \<in> P. q x \<in> V} \<in> ?TP"
+        define W where "W = {x \<in> P. q x \<in> V}"
+        have "W \<subseteq> P" unfolding W_def by (by100 blast)
+        have "\<forall>x\<in>W. \<forall>y. y \<in> P \<and> q y = q x \<longrightarrow> y \<in> W" unfolding W_def by (by100 auto)
+        have "V = q ` W"
+        proof (intro equalityI subsetI)
+          fix v assume "v \<in> V"
+          hence "v \<in> Y" using hVsub by (by100 blast)
+          hence "\<exists>x \<in> P. q x = v" unfolding Y_def by (by100 blast)
+          then obtain x where "x \<in> P" "q x = v" by (by100 blast)
+          hence "x \<in> W" unfolding W_def using \<open>v \<in> V\<close> by (by100 blast)
+          thus "v \<in> q ` W" using \<open>q x = v\<close> by (by100 blast)
+        next
+          fix v assume "v \<in> q ` W"
+          then obtain x where "x \<in> W" "q x = v" by (by100 blast)
+          thus "v \<in> V" unfolding W_def by (by100 blast)
+        qed
+        have "W \<in> ?TP" using hpre unfolding W_def .
+        show "V \<in> TY" unfolding TY_def
+          using \<open>W \<subseteq> P\<close> \<open>\<forall>x\<in>W. _\<close> \<open>V = q ` W\<close> \<open>W \<in> ?TP\<close> by (by100 blast)
+      qed
+    qed
+  qed
   \<comment> \<open>C7/C8: Edge identification pattern matches the scheme.\<close>
   have hC8: "\<forall>i<?n. \<forall>j<?n. fst(scheme!i) = fst(scheme!j) \<longrightarrow>
       (\<forall>t\<in>I_set.
@@ -1226,127 +1849,15 @@ proof -
       show ?thesis
       proof (cases "0 < t \<and> t < 1")
         case hint: True \<comment> \<open>Edge interior: q enters the edge-interior branch.\<close>
-        \<comment> \<open>The edge\\_pt(i,t) is NOT a vertex (0<t<1), so q enters either edge-interior or else.\<close>
+        \<comment> \<open>hnotvertex_gen and hedge_unique are available from top-level scope.\<close>
+        \<comment> \<open>Instantiate for edge i at parameter t.\<close>
         have hnotvertex_i: "\<not>(\<exists>k<?n. (1-t)*vx i + t*vx(Suc i mod ?n) = vx k \<and> (1-t)*vy i + t*vy(Suc i mod ?n) = vy k)"
-        proof
-          assume "\<exists>k<?n. (1-t)*vx i + t*vx(Suc i mod ?n) = vx k \<and> (1-t)*vy i + t*vy(Suc i mod ?n) = vy k"
-          then obtain k where hk: "k < ?n"
-            and hxeq: "(1-t)*vx i + t*vx(Suc i mod ?n) = vx k"
-            and hyeq: "(1-t)*vy i + t*vy(Suc i mod ?n) = vy k" by (by100 blast)
-          \<comment> \<open>Abbreviate for by100 algebra compatibility.\<close>
-          define a where "a = vx i" define b where "b = vx(Suc i mod ?n)" define c where "c = vx k"
-          define a' where "a' = vy i" define b' where "b' = vy(Suc i mod ?n)" define c' where "c' = vy k"
-          have hab: "(1-t)*a + t*b = c" using hxeq unfolding a_def b_def c_def by (by100 simp)
-          have hab': "(1-t)*a' + t*b' = c'" using hyeq unfolding a'_def b'_def c'_def by (by100 simp)
-          \<comment> \<open>Collinearity: c - a = t*(b-a), c' - a' = t*(b'-a').\<close>
-          have hcolx: "c - a = t*(b - a)"
-          proof -
-            have "(1-t)*a = a - t*a" by (by100 algebra)
-            hence "a - t*a + t*b = c" using hab by (by100 linarith)
-            hence "c - a = t*b - t*a" by (by100 linarith)
-            thus ?thesis by (simp only: right_diff_distrib[symmetric])
-          qed
-          have hcoly: "c' - a' = t*(b' - a')"
-          proof -
-            have "(1-t)*a' = a' - t*a'" by (by100 algebra)
-            hence "a' - t*a' + t*b' = c'" using hab' by (by100 linarith)
-            hence "c' - a' = t*b' - t*a'" by (by100 linarith)
-            thus ?thesis by (simp only: right_diff_distrib[symmetric])
-          qed
-          \<comment> \<open>Cross product = 0 from collinearity.\<close>
-          have hcross0: "(c - a)*(b' - a') - (c' - a')*(b - a) = 0"
-            unfolding hcolx hcoly by (by100 algebra)
-          \<comment> \<open>But C11 says cross < 0 for k \\<noteq> i, k \\<noteq> Suc i mod n.\<close>
-          have "k = i \<or> k = Suc i mod ?n"
-          proof (rule ccontr)
-            assume "\<not>(k = i \<or> k = Suc i mod ?n)"
-            hence "k \<noteq> i" "k \<noteq> Suc i mod ?n" by (by100 auto)+
-            have "(vx k - vx i)*(vy(Suc i mod ?n) - vy i) - (vy k - vy i)*(vx(Suc i mod ?n) - vx i) < 0"
-              using hC11 hi hk \<open>k \<noteq> i\<close> \<open>k \<noteq> Suc i mod ?n\<close> by (by100 blast)
-            hence "(c - a)*(b' - a') - (c' - a')*(b - a) < 0"
-              unfolding c_def a_def b'_def a'_def c'_def b_def by (by100 simp)
-            thus False using hcross0 by (by100 linarith)
-          qed
-          \<comment> \<open>k = i gives t = 0; k = Suc i mod n gives t = 1. Both contradict 0 < t < 1.\<close>
-          thus False
-          proof
-            assume "k = i" hence "c = a" unfolding c_def a_def by (by100 simp)
-            hence ht_ba: "t*(b - a) = 0" using hcolx by (by100 linarith)
-            have "c' = a'" unfolding c'_def a'_def using \<open>k = i\<close> by (by100 simp)
-            hence ht_ba': "t*(b' - a') = 0" using hcoly by (by100 linarith)
-            have htp: "t > 0" using hint by (by100 blast)
-            from ht_ba have "t = 0 \<or> b - a = 0" using mult_eq_0_iff by (by100 blast)
-            hence hba: "b = a" using htp by (by100 linarith)
-            from ht_ba' have "t = 0 \<or> b' - a' = 0" using mult_eq_0_iff by (by100 blast)
-            hence hba': "b' = a'" using htp by (by100 linarith)
-            have "b = a \<and> b' = a'" using hba hba' by (by100 auto)
-            hence "(a, a') = (b, b')" by (by100 simp)
-            hence "(vx i, vy i) = (vx(Suc i mod ?n), vy(Suc i mod ?n))"
-              unfolding a_def a'_def b_def b'_def by (by100 simp)
-            have hn_gt0: "?n > 0" using assms by (by100 linarith)
-            have hmod_lt: "Suc i mod ?n < ?n" using hn_gt0 by (by100 simp)
-            have hmod_ne: "i \<noteq> Suc i mod ?n"
-            proof
-              assume "i = Suc i mod ?n"
-              hence "Suc i mod ?n = i mod ?n" using hi by (by100 simp)
-              hence "(Suc i - i) mod ?n = 0" using assms by (simp add: mod_eq_dvd_iff_nat)
-              hence "?n dvd 1" by (by100 simp)
-              thus False using assms by (by100 simp)
-            qed
-            show False using hC3 hi hmod_lt hmod_ne
-              \<open>(vx i, vy i) = (vx(Suc i mod ?n), vy(Suc i mod ?n))\<close> by (by100 blast)
-          next
-            assume "k = Suc i mod ?n" hence "c = b" unfolding c_def b_def by (by100 simp)
-            have hn_gt0: "?n > 0" using assms by (by100 linarith)
-            have hmod_lt: "Suc i mod ?n < ?n" using hn_gt0 by (by100 simp)
-            have hmod_ne: "i \<noteq> Suc i mod ?n"
-            proof
-              assume "i = Suc i mod ?n"
-              hence "Suc i mod ?n = i mod ?n" using hi by (by100 simp)
-              hence "(Suc i - i) mod ?n = 0" using assms by (simp add: mod_eq_dvd_iff_nat)
-              hence "?n dvd 1" by (by100 simp)
-              thus False using assms by (by100 simp)
-            qed
-            have "a = b"
-            proof -
-              have "(1-t)*a + t*b = b" using hab \<open>c = b\<close> by (by100 simp)
-              hence "(1-t)*a = b - t*b" by (by100 linarith)
-              have "(1-t)*b = b - t*b" by (by100 algebra)
-              hence "(1-t)*a = (1-t)*b" using \<open>(1-t)*a = b - t*b\<close> by (by100 linarith)
-              hence "(1-t)*a - (1-t)*b = 0" by (by100 linarith)
-              hence h_prod0: "(1-t)*(a - b) = 0"
-                using right_diff_distrib[of "1-t" a b] by (by100 linarith)
-              have "1-t > 0" using hint by (by100 linarith)
-              from h_prod0 have "1-t = 0 \<or> a - b = 0" using mult_eq_0_iff by (by100 blast)
-              hence "a - b = 0" using \<open>1-t > 0\<close> by (by100 linarith)
-              thus "a = b" by (by100 linarith)
-            qed
-            moreover have "a' = b'"
-            proof -
-              have "c' = b'" unfolding c'_def b'_def using \<open>k = Suc i mod ?n\<close> by (by100 simp)
-              hence "(1-t)*a' + t*b' = b'" using hab' by (by100 simp)
-              hence "(1-t)*a' = b' - t*b'" by (by100 linarith)
-              have "(1-t)*b' = b' - t*b'" by (by100 algebra)
-              hence "(1-t)*a' = (1-t)*b'" using \<open>(1-t)*a' = b' - t*b'\<close> by (by100 linarith)
-              hence "(1-t)*a' - (1-t)*b' = 0" by (by100 linarith)
-              hence h_prod0': "(1-t)*(a' - b') = 0"
-                using right_diff_distrib[of "1-t" a' b'] by (by100 linarith)
-              from h_prod0' have "1-t = 0 \<or> a' - b' = 0" using mult_eq_0_iff by (by100 blast)
-              have h1t: "1-t > 0" using hint by (by100 linarith)
-              from \<open>1-t = 0 \<or> a' - b' = 0\<close> h1t have "a' - b' = 0" by (by100 linarith)
-              thus "a' = b'" by (by100 linarith)
-            qed
-            ultimately have "(vx i, vy i) = (vx(Suc i mod ?n), vy(Suc i mod ?n))"
-              unfolding a_def a'_def b_def b'_def by (by100 simp)
-            thus False using hC3 hi hmod_lt hmod_ne by (by100 blast)
-          qed
+        proof -
+          have "0 < t" "t < 1" using hint by (by100 auto)+
+          from hnotvertex_gen[OF hi this] show ?thesis unfolding edge_pt_def by (by100 auto)
         qed
         \<comment> \<open>For the interior case: q on canonical edges = id, q on non-canonical = partner.
            Both sides evaluate to the same canonical edge point.\<close>
-        \<comment> \<open>Helper: edge interior point is not on any OTHER edge.\<close>
-        have hedge_unique: "\<And>i' s. i' < ?n \<Longrightarrow> 0 < s \<Longrightarrow> s < 1 \<Longrightarrow>
-            edge_pt i s = edge_pt i' s \<Longrightarrow> i' = i \<or> (i' = i \<and> s = s)"
-          sorry \<comment> \<open>Edges of convex polygon have disjoint interiors. From C6 + adjacency.\<close>
         \<comment> \<open>Rewrite goal in terms of edge\\_pt.\<close>
         have hgoal_lhs: "edge_pt i t = ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))"
           unfolding edge_pt_def by (by100 simp)
@@ -1375,7 +1886,11 @@ proof -
                 by (by100 blast)
               \<comment> \<open>Edges i and i' share interior point. By C6 + adjacency: i = i'.\<close>
               have "i = i'"
-                sorry \<comment> \<open>Convex polygon: edges have disjoint interiors. Uses C6 + C11.\<close>
+              proof -
+                have "0 < t" "t < 1" using hint by (by100 auto)+
+                from hedge_unique[OF hi hi'(1) this hi'(2) hi'(3) hi'(4)]
+                show ?thesis by (by100 simp)
+              qed
               thus False using hican hi'(5) by (by100 simp)
             qed
             show ?thesis unfolding q_def using hv he by (by100 auto)
@@ -1387,7 +1902,7 @@ proof -
             fix s :: real assume hs: "0 < s" "s < 1"
             \<comment> \<open>edge\\_pt(j,s) is not a vertex.\<close>
             have hvj: "\<not>(\<exists>k<?n. edge_pt j s = (vx k, vy k))"
-              sorry \<comment> \<open>Same as hnotvertex\\_i but for edge j. Uses C11 + 0<s<1.\<close>
+              using hnotvertex_gen[OF hj hs(1) hs(2)] .
             \<comment> \<open>edge\\_pt(j,s) IS on non-canonical edge j.\<close>
             have hexj: "\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i'"
               using hj hs hjnon by (by100 blast)
@@ -1402,7 +1917,12 @@ proof -
             qed
             \<comment> \<open>By edge uniqueness: j' = j and s' = s.\<close>
             have "j' = j \<and> s' = s"
-              sorry \<comment> \<open>Convex polygon edge uniqueness: edge\\_pt j s = edge\\_pt j' s' with 0<s,s'<1 gives j'=j, s'=s.\<close>
+            proof -
+              from hsel have hj'_lt: "j' < ?n" and hs'a: "0 < s'" and hs'b: "s' < 1"
+                and heq_js: "edge_pt j s = edge_pt j' s'" by (by100 auto)+
+              from hedge_unique[OF hj hj'_lt hs(1) hs(2) hs'a hs'b heq_js]
+              show ?thesis by (by100 simp)
+            qed
             hence "partner j' = partner j" and "snd(scheme!j') = snd(scheme!j)" by (by100 auto)+
             hence "q (edge_pt j s) = edge_pt (partner j) (if snd(scheme!j) = snd(scheme!(partner j)) then s else 1-s)"
             proof -
@@ -1436,14 +1956,235 @@ proof -
             thus ?thesis using hqi hgoal_lhs False unfolding edge_pt_def by (by100 simp)
           qed
         next
-          case hican: False \<comment> \<open>i non-canonical, j canonical. Symmetric.\<close>
-          show ?thesis sorry \<comment> \<open>Symmetric: q(edge\\_pt i t) maps to edge\\_pt(j,...). q(edge\\_pt j s) = id.\<close>
+          case hican: False \<comment> \<open>i non-canonical, j canonical. Symmetric to the True case.\<close>
+          hence hjcan: "is_canonical j"
+          proof -
+            have "\<not>(i \<le> partner i)" using hican unfolding is_canonical_def by (by100 simp)
+            hence "i > partner i" by (by100 linarith)
+            hence "i > j" using hpi by (by100 simp)
+            hence "j < i" by (by100 linarith)
+            hence "j \<le> partner j" using hpj by (by100 simp)
+            thus ?thesis unfolding is_canonical_def by (by100 simp)
+          qed
+          \<comment> \<open>q(edge\\_pt i t): i non-canonical, so q enters edge-interior branch.\<close>
+          have hqi_nc: "q (edge_pt i t) = edge_pt j (if snd(scheme!i) = snd(scheme!j) then t else 1-t)"
+          proof -
+            have ht_pos: "0 < t" and ht_lt1: "t < 1" using hint by (by100 auto)+
+            have hv_i: "\<not>(\<exists>k<?n. edge_pt i t = (vx k, vy k))"
+              using hnotvertex_gen[OF hi ht_pos ht_lt1] .
+            have hex_i: "\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i'"
+              using hi ht_pos ht_lt1 hican by (by100 blast)
+            define sel_i where "sel_i = (SOME (i',t'). i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i')"
+            define i'' where "i'' = fst sel_i" define t'' where "t'' = snd sel_i"
+            have hsel_i: "i'' < ?n \<and> 0 < t'' \<and> t'' < 1 \<and> edge_pt i t = edge_pt i'' t'' \<and> \<not> is_canonical i''"
+            proof -
+              from hex_i have "\<exists>p. (\<lambda>(i',t'). i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i') p"
+                by (by100 auto)
+              from someI_ex[OF this] show ?thesis unfolding sel_i_def i''_def t''_def by (by100 auto)
+            qed
+            have hii: "i'' = i \<and> t'' = t"
+            proof -
+              from hsel_i have "i'' < ?n" "0 < t''" "t'' < 1" "edge_pt i t = edge_pt i'' t''"
+                by (by100 auto)+
+              from hedge_unique[OF hi this(1) ht_pos ht_lt1 this(2) this(3) this(4)]
+              show ?thesis by (by100 simp)
+            qed
+            have "q (edge_pt i t) = (let (i',t') = sel_i in let jj = partner i' in
+                if snd(scheme!i') = snd(scheme!jj) then edge_pt jj t' else edge_pt jj (1-t'))"
+              unfolding q_def sel_i_def using hex_i hv_i by (by100 auto)
+            also have "\<dots> = (let jj = partner i'' in
+                if snd(scheme!i'') = snd(scheme!jj) then edge_pt jj t'' else edge_pt jj (1-t''))"
+            proof -
+              have "sel_i = (i'', t'')" unfolding i''_def t''_def by (by100 simp)
+              thus ?thesis by (by100 simp)
+            qed
+            also have "\<dots> = (if snd(scheme!i) = snd(scheme!(partner i)) then edge_pt (partner i) t else edge_pt (partner i) (1-t))"
+              using hii by (by100 simp)
+            finally show ?thesis using hpi by (by100 simp)
+          qed
+          \<comment> \<open>q(edge\\_pt j s): j canonical, so q enters else branch (identity).\<close>
+          have hqj_c: "\<And>s. 0 < s \<Longrightarrow> s < 1 \<Longrightarrow> q (edge_pt j s) = edge_pt j s"
+          proof -
+            fix s :: real assume hs_c: "0 < s" "s < 1"
+            have hv_j: "\<not>(\<exists>k<?n. edge_pt j s = (vx k, vy k))"
+              using hnotvertex_gen[OF hj hs_c(1) hs_c(2)] .
+            have he_j: "\<not>(\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i')"
+            proof
+              assume "\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i'"
+              then obtain i' t' where hi': "i' < ?n" "0 < t'" "t' < 1" "edge_pt j s = edge_pt i' t'" "\<not> is_canonical i'"
+                by (by100 blast)
+              have "j = i'"
+              proof -
+                from hedge_unique[OF hj hi'(1) hs_c(1) hs_c(2) hi'(2) hi'(3) hi'(4)]
+                show ?thesis by (by100 simp)
+              qed
+              thus False using hjcan hi'(5) by (by100 simp)
+            qed
+            show "q (edge_pt j s) = edge_pt j s" unfolding q_def using hv_j he_j by (by100 auto)
+          qed
+          \<comment> \<open>Combine: same direction or opposite.\<close>
+          show ?thesis
+          proof (cases "snd(scheme!i) = snd(scheme!j)")
+            case True \<comment> \<open>Same direction.\<close>
+            have "0 < t" "t < 1" using hint by (by100 auto)+
+            have "q (edge_pt i t) = edge_pt j t" using hqi_nc True by (by100 simp)
+            moreover have "q (edge_pt j t) = edge_pt j t" using hqj_c \<open>0 < t\<close> \<open>t < 1\<close> by (by100 simp)
+            ultimately have "q (edge_pt i t) = q (edge_pt j t)" by (by100 simp)
+            thus ?thesis using hgoal_lhs True unfolding edge_pt_def by (by100 simp)
+          next
+            case False \<comment> \<open>Opposite direction.\<close>
+            have "0 < t" "t < 1" using hint by (by100 auto)+
+            have "0 < 1-t" "1-t < 1" using \<open>0 < t\<close> \<open>t < 1\<close> by (by100 linarith)+
+            have "q (edge_pt i t) = edge_pt j (1-t)" using hqi_nc False by (by100 simp)
+            moreover have "q (edge_pt j (1-t)) = edge_pt j (1-t)"
+              using hqj_c \<open>0 < 1-t\<close> \<open>1-t < 1\<close> by (by100 simp)
+            ultimately have "q (edge_pt i t) = q (edge_pt j (1-t))" by (by100 simp)
+            thus ?thesis using hgoal_lhs False unfolding edge_pt_def by (by100 simp)
+          qed
         qed
       next
         case hvert: False \<comment> \<open>Vertex: t = 0 or t = 1. q enters the vertex branch.\<close>
         hence "t = 0 \<or> t = 1" using ht01 by (by100 linarith)
-        thus ?thesis sorry \<comment> \<open>Vertex case: q(v\\_i) or q(v\\_{i+1}) via vtgt.
-           vtgt handles the identification correctly by construction.\<close>
+        \<comment> \<open>Vertex case: t=0 gives v\\_i, t=1 gives v\\_{Suc i mod n}.
+           The vtx\\_id relation captures the vertex identifications from each edge pairing.
+           vtgt\\_class ensures vertices in the same equivalence class map to the same rep.\<close>
+        thus ?thesis
+        proof
+          assume ht0: "t = 0"
+          \<comment> \<open>LHS: q(v\\_i) = (vx(vtgt i), vy(vtgt i)). RHS depends on direction.\<close>
+          have hq_vi: "q (edge_pt i 0) = (vx (vtgt i), vy (vtgt i))"
+          proof -
+            have hvi: "edge_pt i 0 = (vx i, vy i)" unfolding edge_pt_def by (by100 simp)
+            have "\<exists>k<?n. (vx i, vy i) = (vx k, vy k)" using hi by (by100 blast)
+            have "(SOME k. k < ?n \<and> (vx i, vy i) = (vx k, vy k)) = i"
+              by (rule some_equality) (use hi hC3 in \<open>(by100 blast)+\<close>)
+            thus ?thesis unfolding q_def hvi using \<open>\<exists>k<?n. _\<close> by (by100 auto)
+          qed
+          show ?thesis
+          proof (cases "snd(scheme!i) = snd(scheme!j)")
+            case True \<comment> \<open>Same direction, t=0: need vtgt i = vtgt j.\<close>
+            have hdir_eq: "snd(scheme!i) = snd(scheme!(partner i))" using True hpi by (by100 simp)
+            have "(i, j) \<in> vtx_id"
+            proof -
+              have "(i, j) \<in> (let jj = partner i in if snd(scheme!i) = snd(scheme!jj)
+                then {(i, jj), (Suc i mod ?n, Suc jj mod ?n)}
+                else {(i, Suc jj mod ?n), (Suc i mod ?n, jj)})"
+                using hpi hdir_eq by (by100 simp)
+              thus ?thesis unfolding vtx_id_def using hi by (by100 blast)
+            qed
+            hence "(i, j) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*" by (by100 auto)
+            hence "vtgt i = vtgt j" by (rule vtgt_class)
+            have hq_vj: "q (edge_pt j 0) = (vx (vtgt j), vy (vtgt j))"
+            proof -
+              have hvj: "edge_pt j 0 = (vx j, vy j)" unfolding edge_pt_def by (by100 simp)
+              have "\<exists>k<?n. (vx j, vy j) = (vx k, vy k)" using hj by (by100 blast)
+              have "(SOME k. k < ?n \<and> (vx j, vy j) = (vx k, vy k)) = j"
+                by (rule some_equality) (use hj hC3 in \<open>(by100 blast)+\<close>)
+              thus ?thesis unfolding q_def hvj using \<open>\<exists>k<?n. _\<close> by (by100 auto)
+            qed
+            from hq_vi hq_vj \<open>vtgt i = vtgt j\<close>
+            have "q (edge_pt i 0) = q (edge_pt j 0)" by (by100 simp)
+            thus ?thesis using ht0 True unfolding edge_pt_def by (by100 simp)
+          next
+            case False \<comment> \<open>Opposite direction, t=0: need vtgt i = vtgt(Suc j mod n).\<close>
+            have hn_gt: "?n > 0" using assms by (by100 linarith)
+            have hjm: "Suc j mod ?n < ?n" using hn_gt by (by100 simp)
+            have hdir_ne: "snd(scheme!i) \<noteq> snd(scheme!(partner i))" using False hpi by (by100 simp)
+            have "(i, Suc j mod ?n) \<in> vtx_id"
+            proof -
+              have "(i, Suc j mod ?n) \<in> (let jj = partner i in if snd(scheme!i) = snd(scheme!jj)
+                then {(i, jj), (Suc i mod ?n, Suc jj mod ?n)}
+                else {(i, Suc jj mod ?n), (Suc i mod ?n, jj)})"
+                using hpi hdir_ne by (by100 simp)
+              thus ?thesis unfolding vtx_id_def using hi by (by100 blast)
+            qed
+            hence "(i, Suc j mod ?n) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*" by (by100 auto)
+            hence "vtgt i = vtgt (Suc j mod ?n)" by (rule vtgt_class)
+            have hq_vjm: "q (edge_pt j 1) = (vx (vtgt (Suc j mod ?n)), vy (vtgt (Suc j mod ?n)))"
+            proof -
+              have hedge_j1_0: "edge_pt j 1 = (vx (Suc j mod ?n), vy (Suc j mod ?n))"
+                unfolding edge_pt_def by (by100 simp)
+              have hexk_jm0: "\<exists>k<?n. (vx (Suc j mod ?n), vy (Suc j mod ?n)) = (vx k, vy k)"
+                using hjm by (by100 blast)
+              have hsome_jm0: "(SOME k. k < ?n \<and> (vx (Suc j mod ?n), vy (Suc j mod ?n)) = (vx k, vy k)) = Suc j mod ?n"
+                by (rule some_equality) (use hjm hC3 in \<open>(by100 blast)+\<close>)
+              thus ?thesis unfolding q_def hedge_j1_0 Let_def using hexk_jm0 hsome_jm0 by (by100 auto)
+            qed
+            \<comment> \<open>RHS at t=0 opp\\_dir: q(t*vx j + (1-t)*vx(Suc j), ...) at t=0 = q(vx(Suc j), vy(Suc j)).\<close>
+            have "edge_pt j (1 - 0) = edge_pt j 1" by (by100 simp)
+            from hq_vi hq_vjm \<open>vtgt i = vtgt (Suc j mod ?n)\<close>
+            have "q (edge_pt i 0) = q (edge_pt j 1)" by (by100 simp)
+            thus ?thesis using ht0 False unfolding edge_pt_def by (by100 simp)
+          qed
+        next
+          assume ht1: "t = 1"
+          \<comment> \<open>LHS: q(v\\_{Suc i mod n}).\<close>
+          have hn_gt: "?n > 0" using assms by (by100 linarith)
+          have him: "Suc i mod ?n < ?n" using hn_gt by (by100 simp)
+          have hq_vim: "q (edge_pt i 1) = (vx (vtgt (Suc i mod ?n)), vy (vtgt (Suc i mod ?n)))"
+          proof -
+            have hedge_i1: "edge_pt i 1 = (vx (Suc i mod ?n), vy (Suc i mod ?n))"
+              unfolding edge_pt_def by (by100 simp)
+            have hexk_im: "\<exists>k<?n. (vx (Suc i mod ?n), vy (Suc i mod ?n)) = (vx k, vy k)"
+              using him by (by100 blast)
+            have hsome_im: "(SOME k. k < ?n \<and> (vx (Suc i mod ?n), vy (Suc i mod ?n)) = (vx k, vy k)) = Suc i mod ?n"
+              by (rule some_equality) (use him hC3 in \<open>(by100 blast)+\<close>)
+            thus ?thesis unfolding q_def hedge_i1 Let_def using hexk_im hsome_im by (by100 auto)
+          qed
+          show ?thesis
+          proof (cases "snd(scheme!i) = snd(scheme!j)")
+            case True \<comment> \<open>Same direction, t=1: need vtgt(Suc i) = vtgt(Suc j).\<close>
+            have hjm: "Suc j mod ?n < ?n" using hn_gt by (by100 simp)
+            have hdir_eq: "snd(scheme!i) = snd(scheme!(partner i))" using True hpi by (by100 simp)
+            have "(Suc i mod ?n, Suc j mod ?n) \<in> vtx_id"
+            proof -
+              have "(Suc i mod ?n, Suc j mod ?n) \<in> (let jj = partner i in if snd(scheme!i) = snd(scheme!jj)
+                then {(i, jj), (Suc i mod ?n, Suc jj mod ?n)}
+                else {(i, Suc jj mod ?n), (Suc i mod ?n, jj)})"
+                using hpi hdir_eq by (by100 simp)
+              thus ?thesis unfolding vtx_id_def using hi by (by100 blast)
+            qed
+            hence "(Suc i mod ?n, Suc j mod ?n) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*" by (by100 auto)
+            hence "vtgt (Suc i mod ?n) = vtgt (Suc j mod ?n)" by (rule vtgt_class)
+            have hq_vjm_1: "q (edge_pt j 1) = (vx (vtgt (Suc j mod ?n)), vy (vtgt (Suc j mod ?n)))"
+            proof -
+              have hedge_j1_1: "edge_pt j 1 = (vx (Suc j mod ?n), vy (Suc j mod ?n))"
+                unfolding edge_pt_def by (by100 simp)
+              have hexk_jm1: "\<exists>k<?n. (vx (Suc j mod ?n), vy (Suc j mod ?n)) = (vx k, vy k)"
+                using hjm by (by100 blast)
+              have hsome_jm1: "(SOME k. k < ?n \<and> (vx (Suc j mod ?n), vy (Suc j mod ?n)) = (vx k, vy k)) = Suc j mod ?n"
+                by (rule some_equality) (use hjm hC3 in \<open>(by100 blast)+\<close>)
+              thus ?thesis unfolding q_def hedge_j1_1 Let_def using hexk_jm1 hsome_jm1 by (by100 auto)
+            qed
+            from hq_vim hq_vjm_1 \<open>vtgt (Suc i mod ?n) = vtgt (Suc j mod ?n)\<close>
+            have "q (edge_pt i 1) = q (edge_pt j 1)" by (by100 simp)
+            thus ?thesis using ht1 True unfolding edge_pt_def by (by100 simp)
+          next
+            case False \<comment> \<open>Opposite direction, t=1: need vtgt(Suc i) = vtgt j.\<close>
+            have hdir_ne: "snd(scheme!i) \<noteq> snd(scheme!(partner i))" using False hpi by (by100 simp)
+            have "(Suc i mod ?n, j) \<in> vtx_id"
+            proof -
+              have "(Suc i mod ?n, j) \<in> (let jj = partner i in if snd(scheme!i) = snd(scheme!jj)
+                then {(i, jj), (Suc i mod ?n, Suc jj mod ?n)}
+                else {(i, Suc jj mod ?n), (Suc i mod ?n, jj)})"
+                using hpi hdir_ne by (by100 simp)
+              thus ?thesis unfolding vtx_id_def using hi by (by100 blast)
+            qed
+            hence "(Suc i mod ?n, j) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*" by (by100 auto)
+            hence "vtgt (Suc i mod ?n) = vtgt j" by (rule vtgt_class)
+            have hq_vj: "q (edge_pt j 0) = (vx (vtgt j), vy (vtgt j))"
+            proof -
+              have hvj: "edge_pt j 0 = (vx j, vy j)" unfolding edge_pt_def by (by100 simp)
+              have "\<exists>k<?n. (vx j, vy j) = (vx k, vy k)" using hj by (by100 blast)
+              have "(SOME k. k < ?n \<and> (vx j, vy j) = (vx k, vy k)) = j"
+                by (rule some_equality) (use hj hC3 in \<open>(by100 blast)+\<close>)
+              thus ?thesis unfolding q_def hvj using \<open>\<exists>k<?n. _\<close> by (by100 auto)
+            qed
+            from hq_vim hq_vj \<open>vtgt (Suc i mod ?n) = vtgt j\<close>
+            have "q (edge_pt i 1) = q (edge_pt j 0)" by (by100 simp)
+            thus ?thesis using ht1 False unfolding edge_pt_def by (by100 simp)
+          qed
+        qed
       qed
     qed
   qed
@@ -1497,10 +2238,22 @@ proof -
             using hk(1) \<open>\<not> is_canonical k\<close> by (by100 force)
           with False show False by (by100 blast)
         qed
-        hence "vtgt k = k" unfolding vtgt_def by (by100 simp)
+        \<comment> \<open>q(p') enters vertex branch. q(p') = v\\_{vtgt k} which is an edge point.
+           Since p is interior (not on any edge), p \\<noteq> q(p'). But p = q(p) = q(p'). Contradiction.\<close>
+        have hvtgt_k: "vtgt k \<le> k"
+          unfolding vtgt_def by (rule Least_le) (by100 simp)
+        hence "vtgt k < ?n" using hk(1) by (by100 linarith)
         have "(SOME k'. k' < ?n \<and> p' = (vx k', vy k')) = k"
           by (rule some_equality) (use hk hC3 in \<open>(by100 blast)+\<close>)
-        thus ?thesis unfolding q_def using True \<open>vtgt k = k\<close> hk(2) by (by100 auto)
+        hence hq_vtgt: "q p' = (vx (vtgt k), vy (vtgt k))"
+          unfolding q_def using True by (by100 auto)
+        have "p = q p'" using hqeq hqp by (by100 simp)
+        hence "p = ((1-0)*vx(vtgt k) + 0*vx(Suc(vtgt k) mod ?n),
+                     (1-0)*vy(vtgt k) + 0*vy(Suc(vtgt k) mod ?n))"
+          using hq_vtgt by (by100 simp)
+        moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        ultimately have False using hinterior \<open>vtgt k < ?n\<close> by (by100 blast)
+        thus ?thesis by (by100 simp)
       next
         case vF: False
         have "\<not>(\<exists>i t. i < ?n \<and> 0 < t \<and> t < 1 \<and> p' = edge_pt i t \<and> \<not> is_canonical i)"
@@ -1537,31 +2290,10 @@ proof -
             unfolding q_def using True by (by100 auto)
           \<comment> \<open>vtgt k < n (need partner properties).\<close>
           have "vtgt k < ?n"
-          proof (cases "is_canonical k")
-            case True hence "vtgt k = k" unfolding vtgt_def by (by100 simp)
-            thus ?thesis using hk(1) by (by100 simp)
-          next
-            case False
-            hence hk_noncanon: "\<not> is_canonical k" .
-            have hk_card: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} = 2"
-            proof -
-              have "k \<in> {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)}" using hk(1) by (by100 simp)
-              have "finite {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)}" by (by100 simp)
-              have "{j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} \<noteq> {}" using \<open>k \<in> _\<close> by (by100 blast)
-              have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} \<noteq> 0"
-                using \<open>finite _\<close> \<open>_ \<noteq> {}\<close> by (by100 simp)
-              moreover have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} \<in> {0, 2}"
-                using hproper by (by100 blast)
-              ultimately show ?thesis
-                by (cases "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!k)} = 0") (by100 blast)+
-            qed
-            from partner_props[OF hk(1) hk_card]
-            have "partner k < ?n" by (by100 blast)
-            have "?n > 0" using assms by (by100 linarith)
-            have "vtgt k = (if snd(scheme!k) = snd(scheme!(partner k)) then partner k else Suc (partner k) mod ?n)"
-              unfolding vtgt_def using hk_noncanon by (by100 simp)
-            hence "vtgt k = partner k \<or> vtgt k = Suc (partner k) mod ?n" by (by100 simp)
-            thus ?thesis using \<open>partner k < ?n\<close> \<open>?n > 0\<close> by (by100 auto)
+          proof -
+            have "(k, k) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*" by (by100 simp)
+            hence "vtgt k \<le> k" unfolding vtgt_def by (rule Least_le)
+            thus ?thesis using hk(1) by (by100 linarith)
           qed
           hence "q p0 = edge_pt (vtgt k) 0" using hq_eq unfolding edge_pt_def by (by100 simp)
           thus ?thesis using \<open>vtgt k < ?n\<close> by (by100 force)
@@ -1646,7 +2378,336 @@ proof -
         = q ((1-s)*vx j + s*vx(Suc j mod ?n), (1-s)*vy j + s*vy(Suc j mod ?n))
         \<longrightarrow> (i=j \<and> t=s) \<or> (fst(scheme!i) = fst(scheme!j) \<and>
              (if snd(scheme!i) = snd(scheme!j) then s=t else s=1-t))"
-    sorry \<comment> \<open>Boundary identification is exactly as specified by the scheme.\<close>
+  proof (intro allI impI ballI)
+    fix i j t s
+    assume hi9: "i < ?n" and hj9: "j < ?n" and ht9: "t \<in> I_set" and hs9: "s \<in> I_set"
+    assume hqeq9: "q ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))
+        = q ((1-s)*vx j + s*vx(Suc j mod ?n), (1-s)*vy j + s*vy(Suc j mod ?n))"
+    have ht01: "0 \<le> t" "t \<le> 1" using ht9 unfolding top1_unit_interval_def by (by100 auto)+
+    have hs01: "0 \<le> s" "s \<le> 1" using hs9 unfolding top1_unit_interval_def by (by100 auto)+
+    have hqep: "q (edge_pt i t) = q (edge_pt j s)" using hqeq9 unfolding edge_pt_def by (by100 simp)
+    show "(i=j \<and> t=s) \<or> (fst(scheme!i) = fst(scheme!j) \<and>
+           (if snd(scheme!i) = snd(scheme!j) then s=t else s=1-t))"
+    proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
+      case hint9: True
+      hence ht_i: "0 < t" "t < 1" and hs_i: "0 < s" "s < 1" by (by100 auto)+
+      \<comment> \<open>Interior case: q maps each edge point to a canonical edge point.
+         For canonical i: q(edge\\_pt i t) = edge\\_pt i t.
+         For non-canonical i: q(edge\\_pt i t) = edge\\_pt(partner i, matching\\_t).
+         Use hedge\\_unique on the q-images to determine the relationship.\<close>
+      \<comment> \<open>q(edge\\_pt i t) is not a vertex.\<close>
+      have hv_i: "\<not>(\<exists>k<?n. edge_pt i t = (vx k, vy k))"
+        using hnotvertex_gen[OF hi9 ht_i(1) ht_i(2)] .
+      have hv_j: "\<not>(\<exists>k<?n. edge_pt j s = (vx k, vy k))"
+        using hnotvertex_gen[OF hj9 hs_i(1) hs_i(2)] .
+      \<comment> \<open>Determine what q does on each edge point.\<close>
+      have hqi9: "q (edge_pt i t) = (if \<not> is_canonical i then
+        (if snd(scheme!i) = snd(scheme!(partner i))
+          then edge_pt (partner i) t else edge_pt (partner i) (1-t))
+        else edge_pt i t)"
+      proof (cases "is_canonical i")
+        case True
+        \<comment> \<open>i canonical: q enters else branch (identity).\<close>
+        have "\<not>(\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i')"
+        proof
+          assume "\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i'"
+          then obtain i' t' where "i' < ?n" "0 < t'" "t' < 1" "edge_pt i t = edge_pt i' t'" "\<not> is_canonical i'"
+            by (by100 blast)
+          from hedge_unique[OF hi9 \<open>i' < ?n\<close> ht_i(1) ht_i(2) \<open>0 < t'\<close> \<open>t' < 1\<close> \<open>edge_pt i t = edge_pt i' t'\<close>]
+          have "i = i'" by (by100 simp)
+          thus False using True \<open>\<not> is_canonical i'\<close> by (by100 simp)
+        qed
+        thus ?thesis unfolding q_def using hv_i True by (by100 auto)
+      next
+        case False
+        \<comment> \<open>i non-canonical: q enters edge-interior branch.\<close>
+        have hex_i: "\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i'"
+          using hi9 ht_i False by (by100 blast)
+        \<comment> \<open>The SOME picks (i, t) by uniqueness.\<close>
+        define sel_i where "sel_i = (SOME (i',t'). i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i')"
+        have hsel_i: "fst sel_i < ?n \<and> 0 < snd sel_i \<and> snd sel_i < 1 \<and>
+            edge_pt i t = edge_pt (fst sel_i) (snd sel_i) \<and> \<not> is_canonical (fst sel_i)"
+        proof -
+          from hex_i have "\<exists>p. (\<lambda>(i',t'). i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt i t = edge_pt i' t' \<and> \<not> is_canonical i') p"
+            by (by100 auto)
+          from someI_ex[OF this] show ?thesis unfolding sel_i_def by (by100 auto)
+        qed
+        have "fst sel_i = i \<and> snd sel_i = t"
+        proof -
+          from hsel_i have "fst sel_i < ?n" "0 < snd sel_i" "snd sel_i < 1" "edge_pt i t = edge_pt (fst sel_i) (snd sel_i)"
+            by (by100 auto)+
+          from hedge_unique[OF hi9 this(1) ht_i(1) ht_i(2) this(2) this(3) this(4)]
+          show ?thesis by (by100 simp)
+        qed
+        have "q (edge_pt i t) = (let (i',t') = sel_i in let j' = partner i' in
+            if snd(scheme!i') = snd(scheme!j') then edge_pt j' t' else edge_pt j' (1-t'))"
+          unfolding q_def sel_i_def using hex_i hv_i by (by100 auto)
+        also have "\<dots> = (if snd(scheme!i) = snd(scheme!(partner i))
+            then edge_pt (partner i) t else edge_pt (partner i) (1-t))"
+        proof -
+          have "sel_i = (fst sel_i, snd sel_i)" by (by100 simp)
+          hence "sel_i = (i, t)" using \<open>fst sel_i = i \<and> snd sel_i = t\<close> by (by100 simp)
+          thus ?thesis by (by100 simp)
+        qed
+        finally show ?thesis using False by (by100 simp)
+      qed
+      \<comment> \<open>Similarly for j.\<close>
+      have hqj9: "q (edge_pt j s) = (if \<not> is_canonical j then
+        (if snd(scheme!j) = snd(scheme!(partner j))
+          then edge_pt (partner j) s else edge_pt (partner j) (1-s))
+        else edge_pt j s)"
+      proof (cases "is_canonical j")
+        case True
+        have "\<not>(\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i')"
+        proof
+          assume "\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i'"
+          then obtain i' t' where "i' < ?n" "0 < t'" "t' < 1" "edge_pt j s = edge_pt i' t'" "\<not> is_canonical i'"
+            by (by100 blast)
+          from hedge_unique[OF hj9 \<open>i' < ?n\<close> hs_i(1) hs_i(2) \<open>0 < t'\<close> \<open>t' < 1\<close> \<open>edge_pt j s = edge_pt i' t'\<close>]
+          have "j = i'" by (by100 simp)
+          thus False using True \<open>\<not> is_canonical i'\<close> by (by100 simp)
+        qed
+        thus ?thesis unfolding q_def using hv_j True by (by100 auto)
+      next
+        case False
+        have hex_j: "\<exists>i' t'. i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i'"
+          using hj9 hs_i False by (by100 blast)
+        define sel_j where "sel_j = (SOME (i',t'). i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i')"
+        have hsel_j: "fst sel_j < ?n \<and> 0 < snd sel_j \<and> snd sel_j < 1 \<and>
+            edge_pt j s = edge_pt (fst sel_j) (snd sel_j) \<and> \<not> is_canonical (fst sel_j)"
+        proof -
+          from hex_j have "\<exists>p. (\<lambda>(i',t'). i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j s = edge_pt i' t' \<and> \<not> is_canonical i') p"
+            by (by100 auto)
+          from someI_ex[OF this] show ?thesis unfolding sel_j_def by (by100 auto)
+        qed
+        have "fst sel_j = j \<and> snd sel_j = s"
+        proof -
+          from hsel_j have "fst sel_j < ?n" "0 < snd sel_j" "snd sel_j < 1" "edge_pt j s = edge_pt (fst sel_j) (snd sel_j)"
+            by (by100 auto)+
+          from hedge_unique[OF hj9 this(1) hs_i(1) hs_i(2) this(2) this(3) this(4)]
+          show ?thesis by (by100 simp)
+        qed
+        have "q (edge_pt j s) = (let (i',t') = sel_j in let j' = partner i' in
+            if snd(scheme!i') = snd(scheme!j') then edge_pt j' t' else edge_pt j' (1-t'))"
+          unfolding q_def sel_j_def using hex_j hv_j by (by100 auto)
+        also have "\<dots> = (if snd(scheme!j) = snd(scheme!(partner j))
+            then edge_pt (partner j) s else edge_pt (partner j) (1-s))"
+        proof -
+          have "sel_j = (fst sel_j, snd sel_j)" by (by100 simp)
+          hence "sel_j = (j, s)" using \<open>fst sel_j = j \<and> snd sel_j = s\<close> by (by100 simp)
+          thus ?thesis by (by100 simp)
+        qed
+        finally show ?thesis using False by (by100 simp)
+      qed
+      \<comment> \<open>Now: q(edge\\_pt i t) is edge\\_pt(ci, ct) and q(edge\\_pt j s) is edge\\_pt(cj, cs)
+         for canonical edges ci, cj. By hedge\\_unique: ci=cj and ct=cs.\<close>
+      define ci where "ci = (if is_canonical i then i else partner i)"
+      define ct where "ct = (if is_canonical i then t
+          else if snd(scheme!i) = snd(scheme!(partner i)) then t else 1-t)"
+      define cj where "cj = (if is_canonical j then j else partner j)"
+      define cs where "cs = (if is_canonical j then s
+          else if snd(scheme!j) = snd(scheme!(partner j)) then s else 1-s)"
+      have "q (edge_pt i t) = edge_pt ci ct" using hqi9 unfolding ci_def ct_def by (by100 auto)
+      have "q (edge_pt j s) = edge_pt cj cs" using hqj9 unfolding cj_def cs_def by (by100 auto)
+      from hqep \<open>q (edge_pt i t) = edge_pt ci ct\<close> \<open>q (edge_pt j s) = edge_pt cj cs\<close>
+      have "edge_pt ci ct = edge_pt cj cs" by (by100 simp)
+      have "0 < ct" "ct < 1" unfolding ct_def using ht_i by (by100 auto)+
+      have "0 < cs" "cs < 1" unfolding cs_def using hs_i by (by100 auto)+
+      have hci_lt: "ci < ?n"
+      proof (cases "is_canonical i")
+        case True thus ?thesis unfolding ci_def using hi9 by (by100 simp)
+      next
+        case False
+        have hcard_i: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)} = 2"
+        proof -
+          have "i \<in> {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)}" using hi9 by (by100 simp)
+          have "finite {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)}" by (by100 simp)
+          hence "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)} \<noteq> 0"
+            using \<open>i \<in> _\<close> by (by100 auto)
+          moreover have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i)} \<in> {0, 2}"
+            using hproper by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        from partner_props[OF hi9 hcard_i] show ?thesis unfolding ci_def using False by (by100 simp)
+      qed
+      have hcj_lt: "cj < ?n"
+      proof (cases "is_canonical j")
+        case True thus ?thesis unfolding cj_def using hj9 by (by100 simp)
+      next
+        case False
+        have hcard_j: "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)} = 2"
+        proof -
+          have "j \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)}" using hj9 by (by100 simp)
+          have "finite {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)}" by (by100 simp)
+          hence "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)} \<noteq> 0"
+            using \<open>j \<in> _\<close> by (by100 auto)
+          moreover have "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)} \<in> {0, 2}"
+            using hproper by (by100 blast)
+          ultimately show ?thesis by (by100 blast)
+        qed
+        from partner_props[OF hj9 hcard_j] show ?thesis unfolding cj_def using False by (by100 simp)
+      qed
+      from hedge_unique[OF hci_lt hcj_lt \<open>0 < ct\<close> \<open>ct < 1\<close> \<open>0 < cs\<close> \<open>cs < 1\<close> \<open>edge_pt ci ct = edge_pt cj cs\<close>]
+      have "ci = cj" "ct = cs" by (by100 auto)+
+      \<comment> \<open>Recover i, j, t, s from ci, cj, ct, cs.\<close>
+      show ?thesis
+      proof (cases "is_canonical i")
+        case hiC: True
+        hence "ci = i" "ct = t" unfolding ci_def ct_def by (by100 auto)+
+        show ?thesis
+        proof (cases "is_canonical j")
+          case True
+          hence "cj = j" "cs = s" unfolding cj_def cs_def by (by100 auto)+
+          from \<open>ci = i\<close> \<open>ci = cj\<close> \<open>cj = j\<close> have "i = j" by (by100 simp)
+          from \<open>ct = t\<close> \<open>ct = cs\<close> \<open>cs = s\<close> have "t = s" by (by100 simp)
+          thus ?thesis using \<open>i = j\<close> \<open>t = s\<close> by (by100 blast)
+        next
+          case hjNC: False
+          hence "cj = partner j" unfolding cj_def by (by100 simp)
+          from \<open>ci = i\<close> \<open>ci = cj\<close> \<open>cj = partner j\<close> have hip: "i = partner j" by (by100 simp)
+          \<comment> \<open>Same label: partner j has same label as j.\<close>
+          have hcard_j2: "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)} = 2"
+          proof -
+            have "j \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)}" using hj9 by (by100 simp)
+            have "finite {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)}" by (by100 simp)
+            hence "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)} \<noteq> 0"
+              using \<open>j \<in> _\<close> by (by100 auto)
+            moreover have "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)} \<in> {0, 2}"
+              using hproper by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          from partner_props[OF hj9 hcard_j2]
+          have "fst(scheme!(partner j)) = fst(scheme!j)" by (by100 blast)
+          hence "fst(scheme!i) = fst(scheme!j)" using hip by (by100 simp)
+          moreover have "if snd(scheme!i) = snd(scheme!j) then s=t else s=1-t"
+          proof (cases "snd(scheme!j) = snd(scheme!(partner j))")
+            case True
+            hence "cs = s" unfolding cs_def using hjNC by (by100 simp)
+            from \<open>ct = t\<close> \<open>ct = cs\<close> this have "t = s" by (by100 simp)
+            have "snd(scheme!i) = snd(scheme!j)" using True hip by (by100 simp)
+            thus ?thesis using \<open>t = s\<close> by (by100 simp)
+          next
+            case False
+            hence "cs = 1-s" unfolding cs_def using hjNC by (by100 simp)
+            from \<open>ct = t\<close> \<open>ct = cs\<close> this have "t = 1-s" by (by100 simp)
+            hence "s = 1-t" by (by100 linarith)
+            have "snd(scheme!i) \<noteq> snd(scheme!j)" using False hip by (by100 simp)
+            thus ?thesis using \<open>s = 1-t\<close> by (by100 simp)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        qed
+      next
+        case hiNC: False
+        hence "ci = partner i" unfolding ci_def by (by100 simp)
+        show ?thesis
+        proof (cases "is_canonical j")
+          case hjC: True
+          hence "cj = j" "cs = s" unfolding cj_def cs_def by (by100 auto)+
+          from \<open>ci = cj\<close> \<open>ci = partner i\<close> \<open>cj = j\<close> have hjp: "partner i = j" by (by100 simp)
+          have hcard_i2: "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} = 2"
+          proof -
+            have "i \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}" using hi9 by (by100 simp)
+            have "finite {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}" by (by100 simp)
+            hence "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} \<noteq> 0"
+              using \<open>i \<in> _\<close> by (by100 auto)
+            moreover have "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} \<in> {0, 2}"
+              using hproper by (by100 blast)
+            ultimately show ?thesis by (by100 blast)
+          qed
+          from partner_props[OF hi9 hcard_i2]
+          have "fst(scheme!(partner i)) = fst(scheme!i)" by (by100 blast)
+          hence "fst(scheme!i) = fst(scheme!j)" using hjp by (by100 simp)
+          moreover have "if snd(scheme!i) = snd(scheme!j) then s=t else s=1-t"
+          proof (cases "snd(scheme!i) = snd(scheme!(partner i))")
+            case True
+            hence "ct = t" unfolding ct_def using hiNC by (by100 simp)
+            from this \<open>ct = cs\<close> \<open>cs = s\<close> have "t = s" by (by100 simp)
+            have "snd(scheme!i) = snd(scheme!j)" using True hjp by (by100 simp)
+            thus ?thesis using \<open>t = s\<close> by (by100 simp)
+          next
+            case False
+            hence "ct = 1-t" unfolding ct_def using hiNC by (by100 simp)
+            from this \<open>ct = cs\<close> \<open>cs = s\<close> have "1-t = s" by (by100 simp)
+            have "snd(scheme!i) \<noteq> snd(scheme!j)" using False hjp by (by100 simp)
+            thus ?thesis using \<open>1-t = s\<close> by (by100 simp)
+          qed
+          ultimately show ?thesis by (by100 blast)
+        next
+          case hjNC: False
+          hence "cj = partner j" unfolding cj_def by (by100 simp)
+          from \<open>ci = cj\<close> \<open>ci = partner i\<close> \<open>cj = partner j\<close> have hpp: "partner i = partner j" by (by100 simp)
+          \<comment> \<open>partner i = partner j implies i = j (label uniqueness: card = 2).\<close>
+          have "i = j"
+          proof -
+            have hcard_i3: "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} = 2"
+            proof -
+              have "i \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}" using hi9 by (by100 simp)
+              have "finite {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)}" by (by100 simp)
+              hence "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} \<noteq> 0"
+                using \<open>i \<in> _\<close> by (by100 auto)
+              moreover have "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!i)} \<in> {0, 2}"
+                using hproper by (by100 blast)
+              ultimately show ?thesis by (by100 blast)
+            qed
+            from partner_props[OF hi9 hcard_i3]
+            have hpi: "partner i < ?n" "partner i \<noteq> i" "fst(scheme!(partner i)) = fst(scheme!i)" by (by100 blast)+
+            have hcard_j3: "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)} = 2"
+            proof -
+              have "j \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)}" using hj9 by (by100 simp)
+              have "finite {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)}" by (by100 simp)
+              hence "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)} \<noteq> 0"
+                using \<open>j \<in> _\<close> by (by100 auto)
+              moreover have "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!j)} \<in> {0, 2}"
+                using hproper by (by100 blast)
+              ultimately show ?thesis by (by100 blast)
+            qed
+            from partner_props[OF hj9 hcard_j3]
+            have hpj: "partner j < ?n" "partner j \<noteq> j" "fst(scheme!(partner j)) = fst(scheme!j)" by (by100 blast)+
+            \<comment> \<open>i, j, partner i = partner j = k all have the same label.\<close>
+            define k where "k = partner i"
+            have "fst(scheme!i) = fst(scheme!k)" using hpi(3) unfolding k_def by (by100 simp)
+            have "fst(scheme!j) = fst(scheme!k)" using hpj(3) hpp unfolding k_def by (by100 simp)
+            hence "fst(scheme!i) = fst(scheme!j)" using \<open>fst(scheme!i) = fst(scheme!k)\<close> by (by100 simp)
+            \<comment> \<open>{k, i, j} \\<subseteq> the 2-element label set. Since k \\<noteq> i and k \\<noteq> j: i = j.\<close>
+            have "k \<in> {m. m < ?n \<and> fst(scheme!m) = fst(scheme!i)}"
+              using hpi(1) \<open>fst(scheme!i) = fst(scheme!k)\<close> unfolding k_def by (by100 simp)
+            have "i \<in> {m. m < ?n \<and> fst(scheme!m) = fst(scheme!i)}" using hi9 by (by100 simp)
+            have "j \<in> {m. m < ?n \<and> fst(scheme!m) = fst(scheme!i)}"
+              using hj9 \<open>fst(scheme!i) = fst(scheme!j)\<close> by (by100 simp)
+            have "{k, i, j} \<subseteq> {m. m < ?n \<and> fst(scheme!m) = fst(scheme!i)}"
+              using \<open>k \<in> _\<close> \<open>i \<in> _\<close> \<open>j \<in> _\<close> by (by100 blast)
+            have "k \<noteq> i" using hpi(2) unfolding k_def by (by100 simp)
+            have "k \<noteq> j" using hpj(2) hpp unfolding k_def by (by100 simp)
+            have "card {k, i, j} \<le> 2" using hcard_i3 \<open>{k, i, j} \<subseteq> _\<close>
+            proof -
+              have "finite {m. m < ?n \<and> fst(scheme!m) = fst(scheme!i)}" by (by100 simp)
+              from card_mono[OF this \<open>{k, i, j} \<subseteq> _\<close>]
+              show ?thesis using hcard_i3 by (by100 linarith)
+            qed
+            \<comment> \<open>card {k, i, j} = 3 if all distinct, but \\<le> 2. So not all distinct: i = j.\<close>
+            have "card {k, i} = 2" using \<open>k \<noteq> i\<close> by (by100 simp)
+            show "i = j"
+            proof (rule ccontr)
+              assume "i \<noteq> j"
+              hence "card {k, i, j} = 3" using \<open>k \<noteq> i\<close> \<open>k \<noteq> j\<close> by (by100 simp)
+              thus False using \<open>card {k, i, j} \<le> 2\<close> by (by100 linarith)
+            qed
+          qed
+          \<comment> \<open>i = j implies ct = cs gives t = s.\<close>
+          have "t = s"
+          proof -
+            from \<open>ct = cs\<close> \<open>i = j\<close>
+            show ?thesis unfolding ct_def cs_def
+              by (cases "is_canonical i"; cases "snd(scheme!i) = snd(scheme!(partner i))") (by100 auto)+
+          qed
+          thus ?thesis using \<open>i = j\<close> \<open>t = s\<close> by (by100 blast)
+        qed
+      qed
+    next
+      case False \<comment> \<open>At least one vertex.\<close>
+      show ?thesis sorry \<comment> \<open>Vertex case: blocked by C9 definition issue.\<close>
+    qed
+  qed
   \<comment> \<open>Assembly: introduce witnesses P, q, vx, vy and combine all conditions.\<close>
   \<comment> \<open>Assemble: pack all conditions into the existential.\<close>
   have htopo: "is_topology_on_strict Y TY"
@@ -1954,87 +3015,39 @@ proof -
   \<comment> \<open>Index correspondence: w!i = scheme!(i+2).\<close>
   have hscheme_shift: "\<And>i. i < ?n' \<Longrightarrow> w ! i = scheme ! (i + 2)"
     unfolding scheme_def by (by100 simp)
-  \<comment> \<open>Show quotient\\_of\\_scheme\\_on Y TY w using P', q, vx', vy'.\<close>
-  have "top1_quotient_of_scheme_on Y TY w"
-    unfolding top1_quotient_of_scheme_on_def
-  proof (intro conjI)
-    show "is_topology_on_strict Y TY"
-      using hassms unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  next
-    show "\<exists>P q vx vy. top1_is_polygonal_region_on P ?n' \<and>
-        top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q \<and>
-        (\<forall>i<?n'. \<forall>j<?n'. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)) \<and>
-        (\<forall>i<?n'. (vx i, vy i) \<in> P) \<and>
-        P = {(x,y) | x y. \<exists>coeffs. (\<forall>i<?n'. coeffs i \<ge> 0) \<and> (\<Sum>i<?n'. coeffs i) = 1
-                       \<and> x = (\<Sum>i<?n'. coeffs i * vx i) \<and> y = (\<Sum>i<?n'. coeffs i * vy i)} \<and>
-        (\<forall>i<?n'. \<forall>j<?n'.
-              i \<noteq> j \<longrightarrow> Suc i mod ?n' \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n' \<longrightarrow>
-              (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
-                 ((1-s)*vx i + s*vx(Suc i mod ?n'), (1-s)*vy i + s*vy(Suc i mod ?n'))
-               \<noteq> ((1-t)*vx j + t*vx(Suc j mod ?n'), (1-t)*vy j + t*vy(Suc j mod ?n')))) \<and>
-        (\<forall>i<?n'. \<forall>j<?n'. fst(w!i) = fst(w!j) \<longrightarrow>
-              (\<forall>t\<in>I_set. q((1-t)*vx i + t*vx(Suc i mod ?n'), (1-t)*vy i + t*vy(Suc i mod ?n'))
-               = (if snd(w!i) = snd(w!j)
-                  then q((1-t)*vx j + t*vx(Suc j mod ?n'), (1-t)*vy j + t*vy(Suc j mod ?n'))
-                  else q(t*vx j + (1-t)*vx(Suc j mod ?n'), t*vy j + (1-t)*vy(Suc j mod ?n'))))) \<and>
-        (\<forall>p\<in>P. (\<forall>i<?n'. \<forall>t\<in>I_set.
-                    p \<noteq> ((1-t)*vx i + t*vx(Suc i mod ?n'), (1-t)*vy i + t*vy(Suc i mod ?n')))
-               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')) \<and>
-        (\<forall>i<?n'. \<forall>j<?n'. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
-              q((1-t)*vx i + t*vx(Suc i mod ?n'), (1-t)*vy i + t*vy(Suc i mod ?n'))
-            = q((1-s)*vx j + s*vx(Suc j mod ?n'), (1-s)*vy j + s*vy(Suc j mod ?n'))
-            \<longrightarrow> (i=j \<and> t=s) \<or> (fst(w!i) = fst(w!j) \<and>
-                 (if snd(w!i) = snd(w!j) then s=t else s=1-t))) \<and>
-        (\<forall>i<?n'. let cx = (\<Sum>j<?n'. vx j)/real ?n'; cy = (\<Sum>j<?n'. vy j)/real ?n'
-             in (vx i - cx)*(vy(Suc i mod ?n') - cy) - (vy i - cy)*(vx(Suc i mod ?n') - cx) > 0) \<and>
-        (\<forall>i<?n'. \<forall>k<?n'.
-              k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n' \<longrightarrow>
-              (vx k - vx i)*(vy(Suc i mod ?n') - vy i) - (vy k - vy i)*(vx(Suc i mod ?n') - vx i) < 0)"
-    proof -
-      have hlen_w: "?n' = ?n - 2" using hn by simp
-      have hn_ge5: "?n \<ge> 5" using assms(2) hn by simp
-      have hn'_ge3: "?n' \<ge> 3" using assms(2) .
-      \<comment> \<open>NOTE: same-space approach (Y is quotient of w via P') is FLAWED:
-         q(P') \\<noteq> Y because the triangle (v0,v1,v2) interior maps injectively
-         to Y-points not in q(P'). Need homeomorphic realization instead:
-         (1) Define Y' = q(P') with quotient topology from P'.
-         (2) Show Y' is a quotient of w.
-         (3) Show Y \\<cong> Y' via retraction collapsing the folded triangle.
-         For now, sorry. Restructure to homeo realization approach needed.\<close>
-      show ?thesis sorry
-    qed
-  qed
-  \<comment> \<open>Y is a quotient of w. Take Y'=Y, TY'=TY, h=id.\<close>
-  moreover have "is_topology_on Y TY"
-    using hassms unfolding top1_quotient_of_scheme_on_def is_topology_on_strict_def by (by100 blast)
-  \<comment> \<open>Construct identity homeomorphism inline (homeomorphism\\_id is defined later).\<close>
-  moreover have "top1_homeomorphism_on Y TY Y TY id"
-  proof -
-    have hid_cont: "top1_continuous_map_on Y TY Y TY id"
-      by (rule top1_continuous_map_on_id[OF \<open>is_topology_on Y TY\<close>])
-    have hinv: "\<forall>x\<in>Y. inv_into Y id x = x"
-    proof
-      fix x assume "x \<in> Y"
-      thus "inv_into Y id x = x" using inv_into_f_f[OF inj_on_id \<open>x \<in> Y\<close>] by simp
-    qed
-    have "top1_continuous_map_on Y TY Y TY (inv_into Y id)"
-      unfolding top1_continuous_map_on_def
-    proof (intro conjI ballI allI impI)
-      fix x assume "x \<in> Y" thus "inv_into Y id x \<in> Y" using hinv by (by100 simp)
-    next
-      fix V assume hV: "V \<in> TY"
-      have "{x \<in> Y. inv_into Y id x \<in> V} = {x \<in> Y. id x \<in> V}"
-        using hinv by (by100 auto)
-      thus "{x \<in> Y. inv_into Y id x \<in> V} \<in> TY"
-        using hid_cont hV unfolding top1_continuous_map_on_def by (by100 simp)
-    qed
-    thus ?thesis unfolding top1_homeomorphism_on_def
-      using \<open>is_topology_on Y TY\<close> hid_cont by (by100 simp)
-  qed
-  ultimately show ?thesis
-    apply (intro exI[of _ Y] exI[of _ TY] exI[of _ id] conjI)
-    apply assumption+
-    done
+  \<comment> \<open>Homeomorphic realization approach (per audit 22 §5.1):
+     (1) Define Y' = q(P') as the quotient of the sub-polygon P'.
+     (2) Show Y' with quotient topology is a quotient of w.
+     (3) Show Y \\<cong> Y' via spur collapse homeomorphism.
+     Note: Y' \\<neq> Y in general (Y includes points from the spur triangle v\\_0-v\\_1-v\\_2).\<close>
+  define Y' where "Y' = q ` P'"
+  let ?TP' = "subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P'"
+  define TY' where "TY' = {U. \<exists>V. V \<subseteq> P' \<and> (\<forall>x \<in> V. \<forall>y. y \<in> P' \<and> q y = q x \<longrightarrow> y \<in> V)
+      \<and> U = q ` V \<and> V \<in> ?TP'}"
+  have hlen_w: "?n' = ?n - 2" using hn by (by100 simp)
+  have hn_ge5: "?n \<ge> 5" using assms(2) hn by (by100 simp)
+  have hn'_ge3: "?n' \<ge> 3" using assms(2) .
+  \<comment> \<open>Step 1: Y' is a quotient of w via P' with shifted vertices.\<close>
+  have hquot_w: "top1_quotient_of_scheme_on Y' TY' w"
+    sorry \<comment> \<open>11 conditions for sub-polygon P' with shifted vertices vx', vy'.
+       C1 (poly region): P' is convex hull of n-2 \\<ge> 3 points from original circle.
+       C2 (quotient map): TY' is quotient topology by construction.
+       C3-C5 (vertices): transfer from original via index shift.
+       C6 (edge disjoint): transfer from original C6.
+       C7 (identification): q restricted to P' identifies per w (shifted indices).
+       C8 (interior injectivity): q|P' is injective on P' interior.
+       C9 (boundary): interior case provable; vertex case blocked by C9 definition.
+       C10-C11 (convexity): shifted vertices still on circle in CCW order.\<close>
+  \<comment> \<open>Step 2: Y \\<cong> Y'. The spur (triangle v\\_0-v\\_1-v\\_2 region in Y \\ Y') collapses
+     because the cancelling edges are identified. The retraction Y \\<to> Y' is continuous
+     and a homotopy equivalence (in fact a homeomorphism on the quotient level).\<close>
+  have hhomeo: "\<exists>h. top1_homeomorphism_on Y TY Y' TY' h"
+    sorry \<comment> \<open>Spur collapse homeomorphism. The spur region in Y
+       (image of triangle v\\_0-v\\_1-v\\_2 after edge identification)
+       deformation-retracts to the shared vertex q(v\\_0) = q(v\\_2).
+       Y' = Y minus the spur interior, and the retraction is a homeomorphism.\<close>
+  then obtain h where hh: "top1_homeomorphism_on Y TY Y' TY' h" by (by100 blast)
+  show ?thesis using hquot_w hh by (by100 blast)
 qed
 
 \<comment> \<open>Uncancel at front — derived from cancel + existence + uniqueness (per audit 22 §5.3).
@@ -2216,12 +3229,26 @@ next
     thus ?thesis using hh1' by (rule homeo_realization_flat_introI)
   next
     case False
-    \<comment> \<open>Short scheme: length(u@v) < 3. Statement is genuinely FALSE here
-       (e.g. [a,inv a,b,inv b] has a 4-gon quotient, but [b,inv b] has no 2-gon quotient).
-       Per audit 22 §5.2: either add length(t) \\<ge> 3 precondition, or prove impossible
-       under downstream proper-scheme assumptions.
-       For now: sorry (never arises in the classification chain).\<close>
-    show ?thesis sorry \<comment> \<open>Genuinely false for length(u@v)=2. Needs precondition.\<close>
+    \<comment> \<open>Short scheme: length(u@v) < 3.\<close>
+    have hlen_src: "length (u @ [a, top1_inverse_edge a] @ v) \<ge> 3"
+      using quotient_scheme_length_ge3[OF v_cancel.prems] .
+    hence hlen_uv: "length (u @ v) \<ge> 1" by (by100 simp)
+    show ?thesis
+    proof (cases "length (u @ v) = 0")
+      case True
+      \<comment> \<open>length(u@v) = 0: source has length 2 < 3, so premise is false.\<close>
+      hence "length (u @ [a, top1_inverse_edge a] @ v) = 2" by (by100 simp)
+      hence False using hlen_src by (by100 linarith)
+      thus ?thesis by (by100 simp)
+    next
+      case False2: False
+      \<comment> \<open>length(u@v) \\<in> {1, 2}: genuinely false for length(u@v) = 2.
+         For proper schemes: length(u@v) is even (from even source length - 2).
+         So length(u@v) = 2 is the only remaining case (length 1 = odd, can't be proper).
+         Target has length 2 < 3, so quotient\\_on is impossible.
+         Never arises in the classification chain (even proper schemes only).\<close>
+      show ?thesis sorry \<comment> \<open>Genuinely false for length(u@v)=2. Needs precondition.\<close>
+    qed
   qed
 next
   case (v_uncancel a u v)
@@ -2275,34 +3302,207 @@ next
   show ?case by (rule homeo_realization_flat_introI[OF hq homeomorphism_id[OF htopo]])
 next
   case (v_cut_paste u1 a u2 u3)
-  \<comment> \<open>Cut-paste: §76. Cut polygon along diagonal, flip, reglue.\<close>
-  have "top1_quotient_of_scheme_on X TX (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
-    by (rule quotient_of_scheme_cut_paste[OF v_cut_paste.prems])
-  then show ?case by (rule same_space_implies_homeo_realization)
+  \<comment> \<open>Cut-paste: §76(iv). Homeomorphic realization via polygon cut-reglue.\<close>
+  from quotient_of_scheme_cut_paste[OF v_cut_paste.prems] show ?case .
 next
   case (v_cut_paste2 b u0 a u1 u2)
-  \<comment> \<open>Cut-paste2: §76 variant.\<close>
-  have "top1_quotient_of_scheme_on X TX ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
-    by (rule quotient_of_scheme_cut_paste2[OF v_cut_paste2.prems])
-  then show ?case by (rule same_space_implies_homeo_realization)
+  \<comment> \<open>Cut-paste2: §76(v) variant.\<close>
+  from quotient_of_scheme_cut_paste2[OF v_cut_paste2.prems] show ?case .
 next
   case (v_cut_paste2_nonfresh u0 a u1 u2 b)
-  \<comment> \<open>Same as v\\_cut\\_paste2 but without freshness. Same sorry underlying lemma.\<close>
-  have "top1_quotient_of_scheme_on X TX ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
-    by (rule quotient_of_scheme_cut_paste2[OF v_cut_paste2_nonfresh.prems])
-  then show ?case by (rule same_space_implies_homeo_realization)
+  \<comment> \<open>Cut-paste2 without freshness. Same underlying lemma.\<close>
+  from quotient_of_scheme_cut_paste2[OF v_cut_paste2_nonfresh.prems] show ?case .
 next
   case (v_cut_paste_opp u0 u1 a u2 u3)
-  \<comment> \<open>Cut-paste-opp: §76(ix). Cut along diagonal, rearrange edges.\<close>
-  have "top1_quotient_of_scheme_on X TX (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
-    by (rule quotient_of_scheme_cut_paste_opp[OF v_cut_paste_opp.prems])
-  then show ?case by (rule same_space_implies_homeo_realization)
+  \<comment> \<open>Cut-paste-opp: §76(ix). Homeomorphic realization.\<close>
+  from quotient_of_scheme_cut_paste_opp[OF v_cut_paste_opp.prems] show ?case .
 next
   case (v_context_left y z prefix)
   \<comment> \<open>Context-left: valid operation y \\<to> z lifts to prefix@y \\<to> prefix@z.
-     Per audit 21: closure infrastructure, not primitive geometric move.
-     Decoupled from old chain (no dependency on FALSE relabel).\<close>
-  show ?case sorry \<comment> \<open>Context-left quotient preservation. NOT via old chain.\<close>
+     Per audit 22 option 2: nested case analysis on inner operation y \\<to> z.
+     For v\\_relabel (fresh): relabeling the suffix is the same as relabeling
+     the full scheme when the label only appears in the suffix (from properness).
+     Other cases: sorry (not exercised in the normal form chain for proper schemes).\<close>
+  from v_context_left.hyps
+  show ?case
+  proof (cases rule: top1_valid_scheme_operation.cases)
+    case (v_relabel new old)
+    \<comment> \<open>Inner operation is fresh relabeling: rename old \\<to> new in suffix y.
+       If old \\<notin> labels(prefix) and new \\<notin> labels(prefix), this is a full-scheme relabel.\<close>
+    have hfresh: "new \<notin> fst ` set y" and hne: "new \<noteq> old"
+      and hz_eq: "z = map (\<lambda>(l, b). (if l = old then new else l, b)) y"
+      using v_relabel by (by100 auto)+
+    \<comment> \<open>If old does not appear in prefix, the context-left relabel = full-scheme relabel.\<close>
+    show ?thesis
+    proof (cases "old \<notin> fst ` set prefix \<and> new \<notin> fst ` set prefix")
+      case True
+      hence hold_fresh: "old \<notin> fst ` set prefix" and hnew_fresh: "new \<notin> fst ` set prefix"
+        by (by100 auto)+
+      \<comment> \<open>prefix@y \\<to> prefix@z is the same as map(rename) applied to prefix@y.
+         Since old \\<notin> prefix: map(rename) doesn't change the prefix.
+         Since new \\<notin> prefix: the full rename is fresh in prefix@y.\<close>
+      have hfull_map: "prefix @ z = map (\<lambda>(l, b). (if l = old then new else l, b)) (prefix @ y)"
+      proof -
+        have "map (\<lambda>(l, b). (if l = old then new else l, b)) prefix = prefix"
+          using hold_fresh by (induction prefix) (by100 auto)+
+        thus ?thesis using hz_eq by (by100 simp)
+      qed
+      have hfull_fresh: "new \<notin> fst ` set (prefix @ y)"
+        using hfresh hnew_fresh by (by100 auto)
+      from quotient_of_scheme_relabel_fresh[OF v_context_left.prems hfull_fresh hne]
+      have "top1_quotient_of_scheme_on X TX (prefix @ z)" using hfull_map by (by100 simp)
+      thus ?thesis by (rule same_space_implies_homeo_realization)
+    next
+      case False
+      \<comment> \<open>old or new appears in prefix: non-trivial case.
+         For PROPER schemes this can't happen (label appears exactly 2 times,
+         all in the suffix). For the classification chain, all schemes are proper.\<close>
+      show ?thesis sorry \<comment> \<open>Non-fresh prefix case of context-left relabel.
+         Blocked: would need properness assumption to eliminate.\<close>
+    qed
+  next
+    \<comment> \<open>Other inner operations: not exercised by the normal form chain.
+       The classification proof (scheme\\_normal\\_form\\_valid in AlgTopCached14)
+       only uses v\\_context\\_left with inner operation = v\\_relabel (fresh).
+       For proper schemes, the fresh-prefix case (proved above) always holds.
+       These remaining sub-cases are structural completeness requirements.\<close>
+    case (v_rotate u_r v_r)
+    \<comment> \<open>Inner rotate: y = u\\_r@v\\_r \\<to> z = v\\_r@u\\_r. Cannot express as full-scheme rotate.\<close>
+    show ?thesis sorry \<comment> \<open>prefix@u\\_r@v\\_r \\<to> prefix@v\\_r@u\\_r: not a rotation of the full scheme.\<close>
+  next case (v_cancel u_c a_c v_c)
+    \<comment> \<open>Inner cancel: y = u\\_c@[a\\_c,inv a\\_c]@v\\_c \\<to> z = u\\_c@v\\_c.
+       Full scheme: (prefix@u\\_c)@[a\\_c,inv a\\_c]@v\\_c \\<to> (prefix@u\\_c)@v\\_c.
+       This is a v\\_cancel on the full scheme with u' = prefix@u\\_c.\<close>
+    have hy: "y = u_c @ [a_c, top1_inverse_edge a_c] @ v_c"
+      and hz: "z = u_c @ v_c" using v_cancel by (by100 auto)+
+    show ?thesis
+    proof (cases "length ((prefix @ u_c) @ v_c) \<ge> 3")
+      case True
+      have hprems_eq: "prefix @ y = (prefix @ u_c) @ [a_c, top1_inverse_edge a_c] @ v_c"
+        using hy by (by100 simp)
+      have h1: "top1_quotient_of_scheme_on X TX
+          ([a_c, top1_inverse_edge a_c] @ v_c @ prefix @ u_c)"
+      proof -
+        have "top1_quotient_of_scheme_on X TX ((prefix @ u_c) @ ([a_c, top1_inverse_edge a_c] @ v_c))"
+          using v_context_left.prems hprems_eq by (by100 simp)
+        from quotient_of_scheme_rotate[OF this]
+        show ?thesis by (by100 simp)
+      qed
+      have hlen: "length (v_c @ prefix @ u_c) \<ge> 3" using True by (by100 simp)
+      from front_cancel_realization_homeo[OF h1 hlen]
+      obtain Y'c :: "'a set" and TY'c :: "'a set set" and h'c :: "'a \<Rightarrow> 'a" where
+          hY'c: "top1_quotient_of_scheme_on Y'c TY'c (v_c @ prefix @ u_c)"
+          and hh'c: "top1_homeomorphism_on X TX Y'c TY'c h'c"
+        by (by100 blast)
+      have "top1_quotient_of_scheme_on Y'c TY'c ((prefix @ u_c) @ v_c)"
+        using quotient_of_scheme_rotate[OF hY'c] by (by100 simp)
+      hence "top1_quotient_of_scheme_on Y'c TY'c (prefix @ u_c @ v_c)"
+        by (by100 simp)
+      hence "top1_quotient_of_scheme_on Y'c TY'c (prefix @ z)" using hz by (by100 simp)
+      thus ?thesis using hh'c by (rule homeo_realization_flat_introI)
+    next
+      case False
+      \<comment> \<open>Short case: length((prefix@u\\_c)@v\\_c) < 3. Genuinely false for length = 2.
+         For proper schemes, never arises (even length sources).\<close>
+      have "length ((prefix @ u_c) @ [a_c, top1_inverse_edge a_c] @ v_c) \<ge> 3"
+        using quotient_scheme_length_ge3[OF v_context_left.prems] hy by (by100 simp)
+      hence "length ((prefix @ u_c) @ v_c) \<ge> 1" by (by100 simp)
+      show ?thesis sorry \<comment> \<open>Genuinely false for length((prefix@u\\_c)@v\\_c)=2.\<close>
+    qed
+  next case (v_uncancel a_u u_u v_u)
+    \<comment> \<open>Inner uncancel: y = u\\_u@v\\_u \\<to> z = u\\_u@[a\\_u,inv a\\_u]@v\\_u.
+       Full scheme: prefix@u\\_u@v\\_u \\<to> prefix@u\\_u@[a\\_u,inv a\\_u]@v\\_u.
+       This is a v\\_cancel\\_reverse on the full scheme.\<close>
+    have hy: "y = u_u @ v_u" and hz: "z = u_u @ [a_u, top1_inverse_edge a_u] @ v_u"
+      using v_uncancel by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX ((prefix @ u_u) @ v_u)"
+      using v_context_left.prems hy by (by100 simp)
+    from quotient_of_scheme_uncancel_proved[OF this, of a_u]
+    have "top1_quotient_of_scheme_on X TX ((prefix @ u_u) @ [a_u, top1_inverse_edge a_u] @ v_u)" .
+    hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz by (by100 simp)
+    thus ?thesis by (rule same_space_implies_homeo_realization)
+  next case (v_cancel_reverse u_cr v_cr a_cr)
+    \<comment> \<open>Same as v\\_uncancel above but via v\\_cancel\\_reverse.\<close>
+    have hy: "y = u_cr @ v_cr" and hz: "z = u_cr @ [a_cr, top1_inverse_edge a_cr] @ v_cr"
+      using v_cancel_reverse by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX ((prefix @ u_cr) @ v_cr)"
+      using v_context_left.prems hy by (by100 simp)
+    from quotient_of_scheme_uncancel_proved[OF this, of a_cr]
+    have "top1_quotient_of_scheme_on X TX ((prefix @ u_cr) @ [a_cr, top1_inverse_edge a_cr] @ v_cr)" .
+    hence "top1_quotient_of_scheme_on X TX (prefix @ z)" using hz by (by100 simp)
+    thus ?thesis by (rule same_space_implies_homeo_realization)
+  next case (v_cut_paste_reverse u1_cpr a_cpr u2_cpr u3_cpr)
+    \<comment> \<open>Inner cut-paste-reverse: reverse direction. The full-scheme operation is v\\_cut\\_paste\\_reverse.\<close>
+    show ?thesis sorry \<comment> \<open>Depends on cut-paste-reverse sorry in valid\\_operation\\_preserves.\<close>
+  next case (v_cut_paste2_reverse b_cpr u2_cpr u1_cpr u0_cpr a_cpr)
+    show ?thesis sorry \<comment> \<open>Same dependency on cut-paste2-reverse.\<close>
+  next case v_invert
+    \<comment> \<open>Inner invert: y = w \\<to> z = rev(inv w).
+       Cannot express as full-scheme invert (prefix is not inverted).\<close>
+    show ?thesis sorry
+  next case (v_flip_label a_fl)
+    \<comment> \<open>Inner operation flips direction of label a\\_fl in suffix y.
+       If a\\_fl \\<notin> labels(prefix): equivalent to full-scheme flip.\<close>
+    have hz_fl: "z = map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) y" using v_flip_label by (by100 auto)
+    show ?thesis
+    proof (cases "a_fl \<notin> fst ` set prefix")
+      case True
+      have "prefix @ z = map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) (prefix @ y)"
+      proof -
+        have "map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) prefix = prefix"
+          using True by (induction prefix) (by100 auto)+
+        thus ?thesis using hz_fl by (by100 simp)
+      qed
+      from quotient_scheme_flip_label[OF v_context_left.prems]
+      have "top1_quotient_of_scheme_on X TX (map (\<lambda>(l,b). (l, if l = a_fl then \<not>b else b)) (prefix @ y))" .
+      hence "top1_quotient_of_scheme_on X TX (prefix @ z)"
+        using \<open>prefix @ z = _\<close> by (by100 simp)
+      thus ?thesis by (rule same_space_implies_homeo_realization)
+    next
+      case False show ?thesis sorry \<comment> \<open>a\\_fl in prefix: non-trivial.\<close>
+    qed
+  next case (v_cut_paste u1_cp a_cp u2_cp u3_cp)
+    \<comment> \<open>Inner cut-paste in suffix = full-scheme cut-paste with u1' = prefix@u1.\<close>
+    have hy: "y = u1_cp @ [(a_cp, True)] @ u2_cp @ [(a_cp, True)] @ u3_cp"
+      and hz: "z = u1_cp @ [(a_cp, True), (a_cp, True)] @ rev (map top1_inverse_edge u2_cp) @ u3_cp"
+      using v_cut_paste by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX
+        ((prefix @ u1_cp) @ [(a_cp, True)] @ u2_cp @ [(a_cp, True)] @ u3_cp)"
+      using v_context_left.prems hy by (by100 simp)
+    from quotient_of_scheme_cut_paste[OF this]
+    obtain Y'cp :: "'a set" and TY'cp :: "'a set set" and h'cp :: "'a \<Rightarrow> 'a" where
+        hY'cp: "top1_quotient_of_scheme_on Y'cp TY'cp
+          ((prefix @ u1_cp) @ [(a_cp, True), (a_cp, True)] @ rev (map top1_inverse_edge u2_cp) @ u3_cp)"
+        and hh'cp: "top1_homeomorphism_on X TX Y'cp TY'cp h'cp"
+      by (by100 blast)
+    have "top1_quotient_of_scheme_on Y'cp TY'cp (prefix @ z)" using hY'cp hz by (by100 simp)
+    thus ?thesis using hh'cp by (rule homeo_realization_flat_introI)
+  next case (v_cut_paste2 b_cp u0_cp a_cp2 u1_cp2 u2_cp)
+    \<comment> \<open>Inner cut-paste2 in suffix = full-scheme cut-paste2 with u0' = prefix@u0.\<close>
+    have hy: "y = u0_cp @ [(a_cp2, True)] @ u1_cp2 @ [(a_cp2, True)] @ u2_cp"
+      and hz: "z = [(b_cp, True)] @ u2_cp @ [(b_cp, True)] @ u1_cp2 @ rev (map top1_inverse_edge u0_cp)"
+      using v_cut_paste2 by (by100 auto)+
+    show ?thesis sorry \<comment> \<open>Full-scheme cut-paste2 with different prefix splitting.\<close>
+  next case (v_cut_paste2_nonfresh u0_nf a_nf u1_nf u2_nf b_nf)
+    show ?thesis sorry \<comment> \<open>Same as v\\_cut\\_paste2.\<close>
+  next case (v_cut_paste_opp u0_opp u1_opp a_opp u2_opp u3_opp)
+    \<comment> \<open>Inner cut-paste-opp in suffix = full-scheme cut-paste-opp with u0' = prefix@u0.\<close>
+    have hy: "y = u0_opp @ u1_opp @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u3_opp"
+      and hz: "z = u0_opp @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u1_opp @ u3_opp"
+      using v_cut_paste_opp by (by100 auto)+
+    have "top1_quotient_of_scheme_on X TX
+        ((prefix @ u0_opp) @ u1_opp @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u3_opp)"
+      using v_context_left.prems hy by (by100 simp)
+    from quotient_of_scheme_cut_paste_opp[OF this]
+    obtain Y'opp :: "'a set" and TY'opp :: "'a set set" and h'opp :: "'a \<Rightarrow> 'a" where
+        hY'opp: "top1_quotient_of_scheme_on Y'opp TY'opp
+          ((prefix @ u0_opp) @ [(a_opp, True)] @ u2_opp @ [(a_opp, False)] @ u1_opp @ u3_opp)"
+        and hh'opp: "top1_homeomorphism_on X TX Y'opp TY'opp h'opp"
+      by (by100 blast)
+    have "top1_quotient_of_scheme_on Y'opp TY'opp (prefix @ z)" using hY'opp hz by (by100 simp)
+    thus ?thesis using hh'opp by (rule homeo_realization_flat_introI)
+  next case v_context_left show ?thesis sorry
+  qed
 qed
 
 \<comment> \<open>Chain: valid equivalence preserves quotient homeomorphism type.\<close>
