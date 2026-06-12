@@ -4566,8 +4566,27 @@ proof -
      Both are quotients of regular polygons via scheme\\_quotient\\_exists.
      The homeomorphism collapses the spur (cancelling pair) to get w-quotient.\<close>
   have "\<exists>h_collapse. top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h_collapse"
-    sorry \<comment> \<open>Spur collapse: (real\\<times>real) quotient of [a,inv a]@w \\<cong> (real\\<times>real) quotient of w.
-       The cancelling pair collapses a spur in the n-gon quotient to match the (n-2)-gon quotient.\<close>
+  proof -
+    \<comment> \<open>Extract polygons and quotient maps from both quotients.\<close>
+    let ?n = "length ([a, top1_inverse_edge a] @ w)"
+    let ?m = "length w"
+    let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+    from hY_ext obtain P_ext q_ext where
+        hC1_ext: "top1_is_polygonal_region_on P_ext ?n"
+      and hC2_ext: "top1_quotient_map_on P_ext (?TP P_ext) Y_ext TY_ext q_ext"
+      by (rule quotient_of_scheme_extract)
+    from hY_w obtain P_w q_w where
+        hC1_w: "top1_is_polygonal_region_on P_w ?m"
+      and hC2_w: "top1_quotient_map_on P_w (?TP P_w) Y_w TY_w q_w"
+      by (rule quotient_of_scheme_extract)
+    \<comment> \<open>The spur collapse homeomorphism uses disk homeomorphisms + arc collapsing.
+       Both polygons have disk homeomorphisms (polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary).
+       The collapse map \\<tau>: B\\<twosuperior> \\<to> B\\<twosuperior> collapses the first 2 arcs and rescales the rest.
+       Composition: f = \\<psi>\\_w\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_ext gives P\\_ext \\<to> P\\_w.
+       Then q\\_w \\<circ> f has the same fibres as q\\_ext (by fibre matching argument).
+       quotient\\_same\\_fibres\\_homeomorphic gives Y\\_ext \\<cong> Y\\_w.\<close>
+    show ?thesis sorry \<comment> \<open>Disk homeo + arc collapse + fibre matching → quotient\\_same\\_fibres\\_homeomorphic.\<close>
+  qed
   then obtain h_collapse where
       hcollapse: "top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h_collapse" by (by100 blast)
   \<comment> \<open>Step 5: Compose and package result.\<close>
