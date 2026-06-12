@@ -3285,8 +3285,90 @@ proof -
     show "\<forall>k<?n'. \<not> (\<exists>coeffs. (\<forall>i<?n'. i \<noteq> k \<longrightarrow> 0 \<le> coeffs i) \<and> coeffs k = 0
           \<and> (\<Sum>i<?n'. coeffs i) = 1
           \<and> vx' k = (\<Sum>i<?n'. coeffs i * vx' i) \<and> vy' k = (\<Sum>i<?n'. coeffs i * vy' i))"
-      sorry \<comment> \<open>Non-degeneracy: each shifted vertex is not a convex comb of the others.
-         Follows from C11 (strict convexity) of original polygon.\<close>
+    proof (intro allI impI notI)
+      fix k assume hk: "k < ?n'"
+      assume "\<exists>coeffs. (\<forall>i<?n'. i \<noteq> k \<longrightarrow> 0 \<le> coeffs i) \<and> coeffs k = 0
+          \<and> (\<Sum>i<?n'. coeffs i) = 1
+          \<and> vx' k = (\<Sum>i<?n'. coeffs i * vx' i) \<and> vy' k = (\<Sum>i<?n'. coeffs i * vy' i)"
+      then obtain coeffs where
+          hge: "\<forall>i<?n'. i \<noteq> k \<longrightarrow> 0 \<le> coeffs i" and hzero: "coeffs k = 0"
+          and hsum: "(\<Sum>i<?n'. coeffs i) = 1"
+          and hvx: "vx' k = (\<Sum>i<?n'. coeffs i * vx' i)"
+          and hvy: "vy' k = (\<Sum>i<?n'. coeffs i * vy' i)"
+        by (by100 blast)
+      \<comment> \<open>Use C11 of original polygon: edge k+2 from v\\_{k+2} to v\\_{k+3}.
+         Cross product: for all j+2 \\<noteq> k+2 and j+2 \\<noteq> k+3:
+         (vx(j+2) - vx(k+2)) * (vy(k+3) - vy(k+2)) - (vy(j+2) - vy(k+2)) * (vx(k+3) - vx(k+2)) < 0
+         Since v\\_{k+2} = \\<Sigma> c\\_j * v\\_{j+2} with c\\_k = 0:
+         0 = \\<Sigma> c\\_j * cross\\_j, but each c\\_j * cross\\_j \\<le> 0 (strict for j \\<noteq> k+1).
+         So c\\_j = 0 for j \\<noteq> k+1-2, hence c\\_{k-1} = 1, giving v\\_{k+2} = v\\_{k+3} = contradiction.\<close>
+      \<comment> \<open>Cross product for edge k+2 of original polygon.\<close>
+      have hk2: "k + 2 < ?n" using hk hn by (by100 linarith)
+      \<comment> \<open>Suc(k+2) mod n: if k < n'-1 then k+3, else if k = n'-1 then 0.\<close>
+      have hn_pos: "?n > 0" using hn_ge5 by (by100 linarith)
+      have hSk2: "Suc (k+2) mod ?n < ?n" using mod_less_divisor[OF hn_pos] by (by100 simp)
+      have hSk2_ne_k2: "Suc (k+2) mod ?n \<noteq> k + 2"
+      proof -
+        have "Suc (k+2) mod ?n = (k + 3) mod ?n" by (by100 presburger)
+        moreover have "(k + 3) mod ?n \<noteq> k + 2"
+        proof (cases "k + 3 < ?n")
+          case True thus ?thesis by (by100 simp)
+        next
+          case False
+          hence "k + 3 = ?n" using hk hn by (by100 linarith)
+          hence "(k + 3) mod ?n = 0" by (by100 simp)
+          moreover have "k + 2 \<ge> 2" by (by100 simp)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>For each j \\<noteq> k with j+2 \\<noteq> k+2 and j+2 \\<noteq> k+3:
+         cross(v\\_{j+2}, edge k+2) < 0.\<close>
+      \<comment> \<open>Use edge k+2 of ORIGINAL polygon: from v\\_{k+2} to v\\_{Suc(k+2) mod n}.\<close>
+      define cross_k where "cross_k j = (vx (j+2) - vx (k+2)) * (vy (Suc(k+2) mod ?n) - vy (k+2))
+          - (vy (j+2) - vy (k+2)) * (vx (Suc(k+2) mod ?n) - vx (k+2))" for j
+      \<comment> \<open>Key: 0 = \\<Sigma> c\\_j * cross\\_k(j) since v'(k) = \\<Sigma> c\\_j * v'(j).\<close>
+      have hcross_sum: "(\<Sum>j<?n'. coeffs j * cross_k j) = 0"
+        sorry
+      \<comment> \<open>cross\\_k(k) = 0 (v\\_{k+2} is on the edge).\<close>
+      have hcross_k: "cross_k k = 0" unfolding cross_k_def by (by100 simp)
+      \<comment> \<open>For j \\<noteq> k with j+2 \\<noteq> k+2 and j+2 \\<noteq> Suc(k+2) mod n: cross\\_k(j) < 0 by C11.\<close>
+      have hcross_strict: "\<forall>j<?n'. j + 2 \<noteq> k + 2 \<longrightarrow> j + 2 \<noteq> Suc(k+2) mod ?n \<longrightarrow> cross_k j < 0"
+      proof (intro allI impI)
+        fix j assume "j < ?n'" "j + 2 \<noteq> k + 2" "j + 2 \<noteq> Suc(k+2) mod ?n"
+        have "j + 2 < ?n" using \<open>j < ?n'\<close> hn by (by100 linarith)
+        from hC11[rule_format, OF hk2 \<open>j+2 < ?n\<close> \<open>j+2 \<noteq> k+2\<close> \<open>j+2 \<noteq> Suc(k+2) mod ?n\<close>]
+        show "cross_k j < 0" unfolding cross_k_def by (by100 simp)
+      qed
+      \<comment> \<open>Each cross\\_k(j) \\<le> 0 (from strict + zero cases).\<close>
+      have hcross_le: "\<forall>j<?n'. coeffs j * cross_k j \<le> 0"
+        sorry
+      \<comment> \<open>Since \\<Sigma> c\\_j * cross\\_k(j) = 0 with each term \\<le> 0 and c\\_j \\<ge> 0:
+         c\\_j = 0 for all j with cross\\_k(j) < 0.\<close>
+      have honly_Sk: "\<forall>j<?n'. j \<noteq> k \<longrightarrow> j \<noteq> Suc k mod ?n' \<longrightarrow> coeffs j = 0"
+        sorry
+      \<comment> \<open>Only coefficient at j = Suc k mod n' can be nonzero. So c\\_{Suc k mod n'} = 1.\<close>
+      have hcSk: "coeffs (Suc k mod ?n') = 1"
+        sorry
+      \<comment> \<open>v'(k) = v'(Suc k mod n'), contradicting C3' (distinct vertices).\<close>
+      have "vx' k = vx' (Suc k mod ?n') \<and> vy' k = vy' (Suc k mod ?n')"
+        sorry \<comment> \<open>From hvx, hvy, and hcSk: only Suc k mod n' has nonzero coeff.\<close>
+      hence hvk_eq: "(vx' k, vy' k) = (vx' (Suc k mod ?n'), vy' (Suc k mod ?n'))"
+        by (by100 simp)
+      moreover have "k \<noteq> Suc k mod ?n'"
+      proof (cases "Suc k < ?n'")
+        case True thus ?thesis by (by100 simp)
+      next
+        case False
+        hence "Suc k = ?n'" using hk by (by100 linarith)
+        hence "Suc k mod ?n' = 0" by (by100 simp)
+        moreover have "k \<ge> 2" using hn'_ge3 \<open>Suc k = ?n'\<close> by (by100 linarith)
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      moreover have hn'_pos: "?n' > 0" using hn'_ge3 by (by100 linarith)
+      moreover have "Suc k mod ?n' < ?n'" using mod_less_divisor[OF hn'_pos] .
+      ultimately show False using hC3' hk by (by100 blast)
+    qed
     show "P' = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n'. 0 \<le> coeffs i) \<and> (\<Sum>i<?n'. coeffs i) = 1
           \<and> x = (\<Sum>i<?n'. coeffs i * vx' i) \<and> y = (\<Sum>i<?n'. coeffs i * vy' i)}"
       unfolding P'_def by (by100 simp)
