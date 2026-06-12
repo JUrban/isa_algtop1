@@ -5519,7 +5519,90 @@ proof -
         qed
       next
         case x_bdy
-        show ?thesis sorry \<comment> \<open>x boundary backward case.\<close>
+        \<comment> \<open>x on boundary edge i at param t. Need case analysis on y.\<close>
+        then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set"
+          and hx: "x = ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))"
+          by (by100 blast)
+        consider (y_int) "\<forall>j<?n. \<forall>s\<in>I_set. y \<noteq> ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
+          | (y_bdy) "\<exists>j<?n. \<exists>s\<in>I_set. y = ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
+          by (by100 blast)
+        thus ?thesis
+        proof cases
+          case y_int
+          \<comment> \<open>y interior, x on boundary. Symmetric to the x\\_int y\\_bdy case above:
+             f(y) is interior to P\\_m, f(x) is on edge or spur. f(y)\\<noteq>f(x).
+             q\\_m(f(x))=q\\_m(f(y)) and C8\\_m on f(y) \\<to> f(x)=f(y). Contradiction.\<close>
+          \<comment> \<open>f(y) interior to P\\_m. C8\\_m: q\\_m injective at f(y). So f(x)=f(y).\<close>
+          from hf_int_range hyP y_int
+          have hfy_int: "f y \<in> P_m"
+            "\<forall>j<?m. \<forall>s\<in>I_set. f y \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+            "\<forall>t'\<in>I_set. f y \<noteq> ((1-t')*vx_m 0+t'*cx_m,(1-t')*vy_m 0+t'*cy_m)"
+            by (by100 blast)+
+          from hC8m[rule_format] hfy_int(1) hfy_int(2)
+          have "\<forall>p'\<in>P_m. q_m (f y) = q_m p' \<longrightarrow> f y = p'" by (by100 blast)
+          moreover have "f x \<in> P_m" using hf_surj hxP by (by100 blast)
+          moreover have "q_m (f y) = q_m (f x)" using heq by (by100 simp)
+          ultimately have "f y = f x" by (by100 blast)
+          hence hfxy: "f x = f y" by (by100 simp)
+          \<comment> \<open>f(x) is on edge/spur, f(y) avoids both \\<to> contradiction.\<close>
+          have hmod1: "Suc 0 mod ?n = 1" using hn5 by (by100 simp)
+          have hmod2: "(2::nat) < ?n" using hn5 by (by100 linarith)
+          have hmod2': "Suc (Suc 0) mod ?n = 2" using hmod2 by (by100 simp)
+          have h1t_I: "1-t \<in> I_set"
+          proof -
+            from ht have "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by (by100 auto)+
+            thus ?thesis unfolding top1_unit_interval_def by (by100 auto)
+          qed
+          have "f x \<noteq> f y"
+          proof (cases "i \<ge> 2")
+            case True
+            define i' where "i' = i - 2"
+            have hi'_m: "i' < ?m" using hi hn_eq i'_def True by (by100 linarith)
+            have "f x = ((1-t)*vx_m i'+t*vx_m(Suc i' mod ?m),(1-t)*vy_m i'+t*vy_m(Suc i' mod ?m))"
+              using hf_edge[rule_format, OF conjI[OF True hi]] ht hx i'_def by (by100 simp)
+            moreover from hfy_int(2) hi'_m ht
+            have "f y \<noteq> ((1-t)*vx_m i'+t*vx_m(Suc i' mod ?m),(1-t)*vy_m i'+t*vy_m(Suc i' mod ?m))"
+              by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          next
+            case False
+            hence "i = 0 \<or> i = 1" using hi hn5 by (by100 linarith)
+            thus ?thesis
+            proof (elim disjE)
+              assume "i = 0"
+              have "x = ((1-t)*vx_e 0+t*vx_e 1,(1-t)*vy_e 0+t*vy_e 1)"
+                using hx \<open>i=0\<close> hmod1 by (by100 simp)
+              hence "f x = ((1-t)*vx_m 0+t*cx_m,(1-t)*vy_m 0+t*cy_m)"
+                using hf_spur0 ht by (by100 blast)
+              moreover from hfy_int(3) ht
+              have "f y \<noteq> ((1-t)*vx_m 0+t*cx_m,(1-t)*vy_m 0+t*cy_m)"
+                by (by100 blast)
+              ultimately show ?thesis by (by100 simp)
+            next
+              assume "i = 1"
+              have "x = ((1-t)*vx_e 1+t*vx_e 2,(1-t)*vy_e 1+t*vy_e 2)"
+                using hx \<open>i=1\<close> hmod2' by (by100 simp)
+              hence hfx: "f x = ((1-t)*cx_m+t*vx_m 0,(1-t)*cy_m+t*vy_m 0)"
+                using hf_spur1 ht by (by100 blast)
+              have "(1-t)*cx_m+t*vx_m 0 = (1-(1-t))*vx_m 0+(1-t)*cx_m" by (by100 algebra)
+              moreover have "(1-t)*cy_m+t*vy_m 0 = (1-(1-t))*vy_m 0+(1-t)*cy_m" by (by100 algebra)
+              ultimately have "f x = ((1-(1-t))*vx_m 0+(1-t)*cx_m,(1-(1-t))*vy_m 0+(1-t)*cy_m)"
+                using hfx by (by100 simp)
+              moreover from hfy_int(3) h1t_I
+              have "f y \<noteq> ((1-(1-t))*vx_m 0+(1-t)*cx_m,(1-(1-t))*vy_m 0+(1-t)*cy_m)"
+                by (by100 blast)
+              ultimately show ?thesis by (by100 simp)
+            qed
+          qed
+          thus ?thesis using hfxy by (by100 simp)
+        next
+          case y_bdy
+          then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set"
+            and hy: "y = ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
+            by (by100 blast)
+          \<comment> \<open>Both on boundary. Case analysis on edge types and parameters.\<close>
+          show ?thesis sorry \<comment> \<open>Backward boundary-boundary case. Mirror of forward direction.\<close>
+        qed
       qed
     qed
     \<comment> \<open>q\\_w \\<circ> f is a quotient map from P\\_ext to Y\\_w (composition of continuous surjection
