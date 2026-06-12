@@ -4814,7 +4814,7 @@ proof -
         have "B \<in> product_topology_on top1_open_sets top1_open_sets"
         proof -
           have "B \<in> top1_open_sets" using hB unfolding top1_open_sets_def by (by100 blast)
-          thus ?thesis using product_topology_on_open_sets by (by100 simp)
+          thus ?thesis unfolding product_topology_on_open_sets .
         qed
         hence "T \<inter> B \<in> subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) T"
           unfolding subspace_topology_def by (by100 auto)
@@ -4831,7 +4831,7 @@ proof -
         proof -
           have "A \<in> top1_open_sets"
             using \<open>A \<in> product_topology_on top1_open_sets top1_open_sets\<close>
-            product_topology_on_open_sets by (by100 simp)
+            unfolding product_topology_on_open_sets .
           thus ?thesis unfolding top1_open_sets_def by (by100 blast)
         qed
         moreover have "f -` B \<inter> S = {x \<in> S. f x \<in> T \<inter> B}"
@@ -4947,7 +4947,31 @@ proof -
         = ((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
            (1-t) * vy_m j + t * vy_m (Suc j mod ?m))" by (by100 simp)
     qed
-    \<comment> \<open>Both disk homeomorphisms + inverse available.
+    \<comment> \<open>Extract continuous\\_on from homeomorphisms via the bridge lemma.\<close>
+    \<comment> \<open>B2 topology = subspace topology (needed for bridge lemma).\<close>
+    have hB2_eq: "top1_B2_topology = subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2"
+      unfolding top1_B2_topology_def by (by100 simp)
+    have h\<psi>e_cont_on: "continuous_on P_e \<psi>_e"
+    proof (rule continuous_on_from_top1)
+      have "top1_continuous_map_on P_e (?TP P_e) top1_B2 top1_B2_topology \<psi>_e"
+        using h\<psi>e_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+      thus "top1_continuous_map_on P_e
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
+          top1_B2
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2) \<psi>_e"
+        unfolding hB2_eq[symmetric] by (by100 simp)
+    qed
+    have h\<psi>m_inv_cont_on: "continuous_on top1_B2 (inv_into P_m \<psi>_m)"
+    proof (rule continuous_on_from_top1)
+      have "top1_continuous_map_on top1_B2 top1_B2_topology P_m (?TP P_m) (inv_into P_m \<psi>_m)"
+        using h\<psi>m_inv unfolding top1_homeomorphism_on_def by (by100 blast)
+      thus "top1_continuous_map_on top1_B2
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2)
+          P_m (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_m)
+          (inv_into P_m \<psi>_m)"
+        unfolding hB2_eq[symmetric] by (by100 simp)
+    qed
+    \<comment> \<open>Both disk homeomorphisms + inverse + continuous\\_on available.
        Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e where \\<tau>: B2 \\<to> B2 is the spur collapse map.\<close>
     \<comment> \<open>Target of centroid in B2 coordinates.\<close>
     define p_cm where "p_cm = \<psi>_m (cx_m, cy_m)"
