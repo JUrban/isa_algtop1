@@ -2902,6 +2902,342 @@ proof -
   qed
 qed
 
+
+\<comment> \<open>Transfer quotient\\_of\\_scheme\\_on along a homeomorphism (expert audit 24 §6).
+   If Y is a quotient of scheme s, and Y \\<cong> Y', then Y' is also a quotient of s.
+   Proof: define q' = h \\<circ> q: P \\<to> Y'. All 11 conditions transfer through h.\<close>
+lemma scheme_quotient_transfer_along_homeomorphism:
+  assumes hq: "top1_quotient_of_scheme_on Y TY s"
+      and hh: "top1_homeomorphism_on Y TY Y' TY' h"
+      and htopo_strict': "is_topology_on_strict Y' TY'"
+  shows "top1_quotient_of_scheme_on Y' TY' s"
+proof -
+  let ?n = "length s"
+  let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+  \<comment> \<open>Extract quotient witness from Y.\<close>
+  from hq obtain P q vx vy where
+      hC1: "top1_is_polygonal_region_on P ?n"
+    and hC2: "top1_quotient_map_on P (?TP P) Y TY q"
+    and hC3: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+    and hC4: "\<forall>i<?n. (vx i, vy i) \<in> P"
+    and hC5: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
+                   \<and> x = (\<Sum>i<?n. coeffs i * vx i) \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
+    and hC6: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+        (\<forall>s'\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+           ((1-s') * vx i + s' * vx (Suc i mod ?n), (1-s') * vy i + s' * vy (Suc i mod ?n))
+         \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n), (1-t) * vy j + t * vy (Suc j mod ?n)))"
+    and hC7: "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+         = (if snd(s!i) = snd(s!j)
+            then q ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+            else q (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
+    and hC8: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
+           \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
+          q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+        = q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
+        \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
+    and hC10: "\<forall>i<?n. let cx=(\<Sum>j<?n. vx j)/real ?n; cy=(\<Sum>j<?n. vy j)/real ?n
+         in (vx i-cx)*(vy(Suc i mod ?n)-cy)-(vy i-cy)*(vx(Suc i mod ?n)-cx) > 0"
+    and hC11: "\<forall>i<?n. \<forall>k<?n. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?n \<longrightarrow>
+          (vx k-vx i)*(vy(Suc i mod ?n)-vy i)-(vy k-vy i)*(vx(Suc i mod ?n)-vx i) < 0"
+    by (rule quotient_of_scheme_extract_vx)
+  \<comment> \<open>Define q' = h \\<circ> q: P \\<to> Y'.\<close>
+  define q' where "q' = h \<circ> q"
+  \<comment> \<open>Topology of Y'.\<close>
+  have htopo': "is_topology_on_strict Y' TY'" using htopo_strict' .
+  \<comment> \<open>C2': q' = h \\<circ> q is a quotient map from P to Y' (composition of quotient + homeomorphism).\<close>
+  have hh_quot: "top1_quotient_map_on Y TY Y' TY' h"
+    by (rule top1_homeomorphism_on_imp_quotient_map_on[OF hh])
+  have hC2': "top1_quotient_map_on P (?TP P) Y' TY' q'"
+    unfolding q'_def by (rule top1_quotient_map_on_comp[OF hC2 hh_quot])
+  \<comment> \<open>C7': h preserves equality, so q'(e1) = q'(e2) iff q(e1) = q(e2).\<close>
+  have hC7': "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
+      (\<forall>t\<in>I_set. q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+       = (if snd(s!i) = snd(s!j)
+          then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+          else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
+  proof (intro allI impI ballI)
+    fix i j t assume hi: "i < ?n" and hj: "j < ?n" and hlabel: "fst(s!i) = fst(s!j)" and ht: "t \<in> I_set"
+    from hC7[rule_format, OF hi hj hlabel ht]
+    have hq_eq: "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+         = (if snd(s!i) = snd(s!j)
+            then q ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+            else q (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n)))" .
+    \<comment> \<open>Apply h to both sides.\<close>
+    show "q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+       = (if snd(s!i) = snd(s!j)
+          then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+          else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n)))"
+      unfolding q'_def comp_def using hq_eq by (by100 presburger)
+  qed
+  \<comment> \<open>h is injective on Y (from homeomorphism = bijection).\<close>
+  have h_inj: "inj_on h Y"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  \<comment> \<open>q maps P to Y (from quotient map).\<close>
+  have q_range: "\<forall>p\<in>P. q p \<in> Y"
+    using hC2 unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
+  \<comment> \<open>C8': h \\<circ> q injective on interior (h injective + q injective).\<close>
+  have hC8': "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
+           \<longrightarrow> (\<forall>p'\<in>P. q' p = q' p' \<longrightarrow> p = p')"
+  proof (intro ballI impI allI)
+    fix p p' assume hp: "p \<in> P" and hp': "p' \<in> P"
+        and hint: "\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))"
+        and heq: "q' p = q' p'"
+    have hqeq: "q p = q p'"
+    proof -
+      from heq have "h (q p) = h (q p')" unfolding q'_def comp_def by (by100 simp)
+      moreover have "q p \<in> Y" using q_range hp by (by100 blast)
+      moreover have "q p' \<in> Y" using q_range hp' by (by100 blast)
+      ultimately show ?thesis using h_inj unfolding inj_on_def by (by100 blast)
+    qed
+    show "p = p'" using hC8 hp hint hp' hqeq by (by100 blast)
+  qed
+  \<comment> \<open>C9': similarly, h preserves the boundary identification pattern.\<close>
+  have hC9': "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
+        q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+      = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
+      \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
+  proof (intro allI impI ballI)
+    fix i j t s' assume hi: "i < ?n" and hj: "j < ?n"
+      and ht: "t \<in> {0<..<(1::real)}" and hs: "s' \<in> {0<..<(1::real)}"
+      and heq: "q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+        = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))"
+    \<comment> \<open>h(q(e1)) = h(q(e2)). Since h injective on Y and both q(e1), q(e2) \\<in> Y: q(e1) = q(e2).\<close>
+    have "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+        = q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))"
+    proof -
+      from heq have "h (q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
+          = h (q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)))"
+        unfolding q'_def comp_def by (by100 simp)
+      moreover have "((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> P"
+      proof -
+        have hn3: "?n \<ge> 3" using hC1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
+        have hn_pos: "0 < ?n" using hn3 by (by100 linarith)
+        have hSi: "Suc i mod ?n < ?n" by (rule mod_less_divisor[OF hn_pos])
+        define coeffs :: "nat \<Rightarrow> real" where "coeffs k = (if k = i then 1-t else if k = Suc i mod ?n then t else 0)" for k
+        have hineq: "i \<noteq> Suc i mod ?n"
+        proof (cases "Suc i < ?n")
+          case True thus ?thesis by (by100 simp)
+        next
+          case False hence "Suc i = ?n" using hi by (by100 linarith)
+          hence "Suc i mod ?n = 0" by (by100 simp)
+          moreover have "i \<ge> 2" using hn3 \<open>Suc i = ?n\<close> by (by100 linarith)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        have "(\<forall>k<?n. coeffs k \<ge> 0)"
+          unfolding coeffs_def using ht by (by100 auto)
+        moreover have "(\<Sum>k<?n. coeffs k) = 1"
+        proof -
+          have "{..<?n} = {i, Suc i mod ?n} \<union> ({..<?n} - {i, Suc i mod ?n})" using hi hSi by (by100 blast)
+          have "(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k) = 0"
+            by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
+          have "i \<noteq> Suc i mod ?n"
+          proof (cases "Suc i < ?n")
+            case True thus ?thesis by (by100 simp)
+          next
+            case False hence "Suc i = ?n" using hi by (by100 linarith)
+            hence "Suc i mod ?n = 0" by (by100 simp)
+            moreover have "i \<ge> 2" using hn3 \<open>Suc i = ?n\<close> by (by100 linarith)
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          hence hcoeff_sum: "coeffs i + coeffs (Suc i mod ?n) = 1" unfolding coeffs_def by (by100 simp)
+          have "(\<Sum>k<?n. coeffs k) = coeffs i + coeffs (Suc i mod ?n) + (\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k)"
+          proof -
+            have hi_in: "i \<in> {..<?n}" using hi by (by100 simp)
+            from sum.remove[OF finite_lessThan hi_in, of coeffs]
+            have "(\<Sum>k<?n. coeffs k) = coeffs i + (\<Sum>k\<in>{..<?n}-{i}. coeffs k)" by (by100 simp)
+            moreover have "Suc i mod ?n \<in> {..<?n} - {i}" using hSi \<open>i \<noteq> Suc i mod ?n\<close> by (by100 simp)
+            from sum.remove[OF _ this, of coeffs]
+            have "(\<Sum>k\<in>{..<?n}-{i}. coeffs k) = coeffs (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k)"
+              by (by100 simp)
+            ultimately have "(\<Sum>k<?n. coeffs k) = coeffs i + coeffs (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k)"
+              by (by100 linarith)
+            moreover have "{..<?n}-{i}-{Suc i mod ?n} = {..<?n} - {i, Suc i mod ?n}" by (by100 blast)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          thus ?thesis using hcoeff_sum \<open>(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k) = 0\<close> by (by100 linarith)
+        qed
+        moreover have "(1-t)*vx i+t*vx(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vx k)"
+        proof -
+          have hi_in: "i \<in> {..<?n}" using hi by (by100 simp)
+          have hSi_in: "Suc i mod ?n \<in> {..<?n} - {i}" using hSi hineq by (by100 simp)
+          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k * vx k) = 0"
+            by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
+          have hrest2: "(\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vx k) = 0"
+          proof -
+            have "{..<?n}-{i}-{Suc i mod ?n} = {..<?n} - {i, Suc i mod ?n}" by (by100 blast)
+            thus ?thesis using hrest_zero by (by100 simp)
+          qed
+          from sum.remove[OF finite_lessThan hi_in, of "\<lambda>k. coeffs k * vx k"]
+          have hsum1: "(\<Sum>k<?n. coeffs k * vx k) = coeffs i * vx i + (\<Sum>k\<in>{..<?n}-{i}. coeffs k * vx k)"
+            by (by100 simp)
+          from sum.remove[OF _ hSi_in, of "\<lambda>k. coeffs k * vx k"]
+          have hsum2: "(\<Sum>k\<in>{..<?n}-{i}. coeffs k * vx k) = coeffs (Suc i mod ?n) * vx (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vx k)"
+            by (by100 simp)
+          have "(\<Sum>k<?n. coeffs k * vx k) = coeffs i * vx i + coeffs (Suc i mod ?n) * vx (Suc i mod ?n)"
+            using hsum1 hsum2 hrest2 by (by100 linarith)
+          moreover have "coeffs i = 1-t" unfolding coeffs_def by (by100 simp)
+          moreover have "coeffs (Suc i mod ?n) = t" unfolding coeffs_def using hineq by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        moreover have "(1-t)*vy i+t*vy(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vy k)"
+        proof -
+          have hi_in: "i \<in> {..<?n}" using hi by (by100 simp)
+          have hSi_in: "Suc i mod ?n \<in> {..<?n} - {i}" using hSi hineq by (by100 simp)
+          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k * vy k) = 0"
+            by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
+          have hrest2: "(\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vy k) = 0"
+          proof -
+            have "{..<?n}-{i}-{Suc i mod ?n} = {..<?n} - {i, Suc i mod ?n}" by (by100 blast)
+            thus ?thesis using hrest_zero by (by100 simp)
+          qed
+          from sum.remove[OF finite_lessThan hi_in, of "\<lambda>k. coeffs k * vy k"]
+          have hsum1: "(\<Sum>k<?n. coeffs k * vy k) = coeffs i * vy i + (\<Sum>k\<in>{..<?n}-{i}. coeffs k * vy k)"
+            by (by100 simp)
+          from sum.remove[OF _ hSi_in, of "\<lambda>k. coeffs k * vy k"]
+          have hsum2: "(\<Sum>k\<in>{..<?n}-{i}. coeffs k * vy k) = coeffs (Suc i mod ?n) * vy (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vy k)"
+            by (by100 simp)
+          have "(\<Sum>k<?n. coeffs k * vy k) = coeffs i * vy i + coeffs (Suc i mod ?n) * vy (Suc i mod ?n)"
+            using hsum1 hsum2 hrest2 by (by100 linarith)
+          moreover have "coeffs i = 1-t" unfolding coeffs_def by (by100 simp)
+          moreover have "coeffs (Suc i mod ?n) = t" unfolding coeffs_def using hineq by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        ultimately show ?thesis unfolding hC5 by (by100 blast)
+      qed
+      hence "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> Y"
+        using q_range by (by100 blast)
+      moreover have "((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> P"
+      proof -
+        have hn3_j: "?n \<ge> 3" using hC1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
+        have hn_pos_j: "0 < ?n" using hn3_j by (by100 linarith)
+        have hSj: "Suc j mod ?n < ?n" by (rule mod_less_divisor[OF hn_pos_j])
+        have hineq_j: "j \<noteq> Suc j mod ?n"
+        proof (cases "Suc j < ?n")
+          case True thus ?thesis by (by100 simp)
+        next
+          case False hence "Suc j = ?n" using hj by (by100 linarith)
+          hence "Suc j mod ?n = 0" by (by100 simp)
+          moreover have "j \<ge> 2" using hn3_j \<open>Suc j = ?n\<close> by (by100 linarith)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        define cj :: "nat \<Rightarrow> real" where "cj k = (if k = j then 1-s' else if k = Suc j mod ?n then s' else 0)" for k
+        have hcj_nn: "\<forall>k<?n. cj k \<ge> 0"
+          unfolding cj_def using hs by (by100 auto)
+        moreover have hcj_sum: "(\<Sum>k<?n. cj k) = 1"
+        proof -
+          have "(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k) = 0"
+            by (rule sum.neutral) (use cj_def in \<open>by100 simp\<close>)
+          have hpair: "cj j + cj (Suc j mod ?n) = 1" unfolding cj_def using hineq_j by (by100 simp)
+          have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
+          have hSj_in: "Suc j mod ?n \<in> {..<?n} - {j}" using hSj hineq_j by (by100 simp)
+          from sum.remove[OF finite_lessThan hj_in, of cj]
+          have "(\<Sum>k<?n. cj k) = cj j + (\<Sum>k\<in>{..<?n}-{j}. cj k)" by (by100 simp)
+          moreover from sum.remove[OF _ hSj_in, of cj]
+          have "(\<Sum>k\<in>{..<?n}-{j}. cj k) = cj (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k)"
+            by (by100 simp)
+          ultimately have "(\<Sum>k<?n. cj k) = cj j + cj (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k)"
+            by (by100 linarith)
+          moreover have "{..<?n}-{j}-{Suc j mod ?n} = {..<?n} - {j, Suc j mod ?n}" by (by100 blast)
+          ultimately have "(\<Sum>k<?n. cj k) = cj j + cj (Suc j mod ?n) + (\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k)"
+            by (by100 simp)
+          thus ?thesis using hpair \<open>(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k) = 0\<close> by (by100 linarith)
+        qed
+        moreover have "(1-s')*vx j+s'*vx(Suc j mod ?n) = (\<Sum>k<?n. cj k * vx k)"
+        proof -
+          have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
+          have hSj_in: "Suc j mod ?n \<in> {..<?n} - {j}" using hSj hineq_j by (by100 simp)
+          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k * vx k) = 0"
+            by (rule sum.neutral) (use cj_def in \<open>by100 simp\<close>)
+          have "(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vx k) = 0"
+          proof -
+            have "{..<?n}-{j}-{Suc j mod ?n} = {..<?n} - {j, Suc j mod ?n}" by (by100 blast)
+            thus ?thesis using hrest_zero by (by100 simp)
+          qed
+          from sum.remove[OF finite_lessThan hj_in, of "\<lambda>k. cj k * vx k"]
+          have s1: "(\<Sum>k<?n. cj k * vx k) = cj j * vx j + (\<Sum>k\<in>{..<?n}-{j}. cj k * vx k)"
+            by (by100 simp)
+          from sum.remove[OF _ hSj_in, of "\<lambda>k. cj k * vx k"]
+          have s2: "(\<Sum>k\<in>{..<?n}-{j}. cj k * vx k) = cj (Suc j mod ?n) * vx (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vx k)"
+            by (by100 simp)
+          have "(\<Sum>k<?n. cj k * vx k) = cj j * vx j + cj (Suc j mod ?n) * vx (Suc j mod ?n)"
+            using s1 s2 \<open>(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vx k) = 0\<close> by (by100 linarith)
+          moreover have "cj j = 1-s'" unfolding cj_def by (by100 simp)
+          moreover have "cj (Suc j mod ?n) = s'" unfolding cj_def using hineq_j by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        moreover have "(1-s')*vy j+s'*vy(Suc j mod ?n) = (\<Sum>k<?n. cj k * vy k)"
+        proof -
+          have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
+          have hSj_in: "Suc j mod ?n \<in> {..<?n} - {j}" using hSj hineq_j by (by100 simp)
+          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k * vy k) = 0"
+            by (rule sum.neutral) (use cj_def in \<open>by100 simp\<close>)
+          have "(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vy k) = 0"
+          proof -
+            have "{..<?n}-{j}-{Suc j mod ?n} = {..<?n} - {j, Suc j mod ?n}" by (by100 blast)
+            thus ?thesis using hrest_zero by (by100 simp)
+          qed
+          from sum.remove[OF finite_lessThan hj_in, of "\<lambda>k. cj k * vy k"]
+          have s1: "(\<Sum>k<?n. cj k * vy k) = cj j * vy j + (\<Sum>k\<in>{..<?n}-{j}. cj k * vy k)"
+            by (by100 simp)
+          from sum.remove[OF _ hSj_in, of "\<lambda>k. cj k * vy k"]
+          have s2: "(\<Sum>k\<in>{..<?n}-{j}. cj k * vy k) = cj (Suc j mod ?n) * vy (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vy k)"
+            by (by100 simp)
+          have "(\<Sum>k<?n. cj k * vy k) = cj j * vy j + cj (Suc j mod ?n) * vy (Suc j mod ?n)"
+            using s1 s2 \<open>(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vy k) = 0\<close> by (by100 linarith)
+          moreover have "cj j = 1-s'" unfolding cj_def by (by100 simp)
+          moreover have "cj (Suc j mod ?n) = s'" unfolding cj_def using hineq_j by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        ultimately show ?thesis unfolding hC5 by (by100 blast)
+      qed
+      hence "q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> Y"
+        using q_range by (by100 blast)
+      ultimately show ?thesis using h_inj unfolding inj_on_def by (by100 blast)
+    qed
+    from hC9[rule_format, OF hi hj ht hs this]
+    show "(i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))" .
+  qed
+  \<comment> \<open>Assembly.\<close>
+  show ?thesis unfolding top1_quotient_of_scheme_on_def
+  proof (intro conjI exI)
+    show "is_topology_on_strict Y' TY'" using htopo' .
+    show "top1_is_polygonal_region_on P ?n" using hC1 .
+    show "top1_quotient_map_on P (?TP P) Y' TY' q'" using hC2' .
+    show "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)" using hC3 .
+    show "\<forall>i<?n. (vx i, vy i) \<in> P" using hC4 .
+    show "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+        \<and> x = (\<Sum>i<?n. coeffs i * vx i) \<and> y = (\<Sum>i<?n. coeffs i * vy i)}" using hC5 by (by100 simp)
+    show "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+        (\<forall>s'\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+           ((1-s') * vx i + s' * vx (Suc i mod ?n), (1-s') * vy i + s' * vy (Suc i mod ?n))
+         \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n), (1-t) * vy j + t * vy (Suc j mod ?n)))"
+      using hC6 .
+    show "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+         = (if snd(s!i) = snd(s!j)
+            then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+            else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
+      using hC7' .
+    show "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
+           \<longrightarrow> (\<forall>p'\<in>P. q' p = q' p' \<longrightarrow> p = p')" using hC8' .
+    show "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
+        q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+      = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
+      \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
+      using hC9' .
+    show "\<forall>i<?n. let cx=(\<Sum>j<?n. vx j)/real ?n; cy=(\<Sum>j<?n. vy j)/real ?n
+         in (vx i-cx)*(vy(Suc i mod ?n)-cy)-(vy i-cy)*(vx(Suc i mod ?n)-cx) > 0" using hC10 .
+    show "\<forall>i<?n. \<forall>k<?n. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?n \<longrightarrow>
+          (vx k-vx i)*(vy(Suc i mod ?n)-vy i)-(vy k-vy i)*(vx(Suc i mod ?n)-vx i) < 0" using hC11 .
+  qed
+qed
+
 \<comment> \<open>front\\_cancel\\_proper is defined after scheme\\_quotient\\_uniqueness (line ~4828).\<close>
 
 \<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
@@ -4306,340 +4642,6 @@ qed
    Properness needed for scheme\\_quotient\\_exists.
    Placed after scheme\\_quotient\\_uniqueness so it can use it.\<close>
 
-\<comment> \<open>Transfer quotient\\_of\\_scheme\\_on along a homeomorphism (expert audit 24 §6).
-   If Y is a quotient of scheme s, and Y \\<cong> Y', then Y' is also a quotient of s.
-   Proof: define q' = h \\<circ> q: P \\<to> Y'. All 11 conditions transfer through h.\<close>
-lemma scheme_quotient_transfer_along_homeomorphism:
-  assumes hq: "top1_quotient_of_scheme_on Y TY s"
-      and hh: "top1_homeomorphism_on Y TY Y' TY' h"
-      and htopo_strict': "is_topology_on_strict Y' TY'"
-  shows "top1_quotient_of_scheme_on Y' TY' s"
-proof -
-  let ?n = "length s"
-  let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
-  \<comment> \<open>Extract quotient witness from Y.\<close>
-  from hq obtain P q vx vy where
-      hC1: "top1_is_polygonal_region_on P ?n"
-    and hC2: "top1_quotient_map_on P (?TP P) Y TY q"
-    and hC3: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
-    and hC4: "\<forall>i<?n. (vx i, vy i) \<in> P"
-    and hC5: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
-                   \<and> x = (\<Sum>i<?n. coeffs i * vx i) \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
-    and hC6: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
-        (\<forall>s'\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
-           ((1-s') * vx i + s' * vx (Suc i mod ?n), (1-s') * vy i + s' * vy (Suc i mod ?n))
-         \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n), (1-t) * vy j + t * vy (Suc j mod ?n)))"
-    and hC7: "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
-        (\<forall>t\<in>I_set. q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-         = (if snd(s!i) = snd(s!j)
-            then q ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
-            else q (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
-    and hC8: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
-              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
-           \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
-          q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-        = q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
-        \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
-    and hC10: "\<forall>i<?n. let cx=(\<Sum>j<?n. vx j)/real ?n; cy=(\<Sum>j<?n. vy j)/real ?n
-         in (vx i-cx)*(vy(Suc i mod ?n)-cy)-(vy i-cy)*(vx(Suc i mod ?n)-cx) > 0"
-    and hC11: "\<forall>i<?n. \<forall>k<?n. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?n \<longrightarrow>
-          (vx k-vx i)*(vy(Suc i mod ?n)-vy i)-(vy k-vy i)*(vx(Suc i mod ?n)-vx i) < 0"
-    by (rule quotient_of_scheme_extract_vx)
-  \<comment> \<open>Define q' = h \\<circ> q: P \\<to> Y'.\<close>
-  define q' where "q' = h \<circ> q"
-  \<comment> \<open>Topology of Y'.\<close>
-  have htopo': "is_topology_on_strict Y' TY'" using htopo_strict' .
-  \<comment> \<open>C2': q' = h \\<circ> q is a quotient map from P to Y' (composition of quotient + homeomorphism).\<close>
-  have hh_quot: "top1_quotient_map_on Y TY Y' TY' h"
-    by (rule top1_homeomorphism_on_imp_quotient_map_on[OF hh])
-  have hC2': "top1_quotient_map_on P (?TP P) Y' TY' q'"
-    unfolding q'_def by (rule top1_quotient_map_on_comp[OF hC2 hh_quot])
-  \<comment> \<open>C7': h preserves equality, so q'(e1) = q'(e2) iff q(e1) = q(e2).\<close>
-  have hC7': "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
-      (\<forall>t\<in>I_set. q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-       = (if snd(s!i) = snd(s!j)
-          then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
-          else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
-  proof (intro allI impI ballI)
-    fix i j t assume hi: "i < ?n" and hj: "j < ?n" and hlabel: "fst(s!i) = fst(s!j)" and ht: "t \<in> I_set"
-    from hC7[rule_format, OF hi hj hlabel ht]
-    have hq_eq: "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-         = (if snd(s!i) = snd(s!j)
-            then q ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
-            else q (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n)))" .
-    \<comment> \<open>Apply h to both sides.\<close>
-    show "q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-       = (if snd(s!i) = snd(s!j)
-          then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
-          else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n)))"
-      unfolding q'_def comp_def using hq_eq by (by100 presburger)
-  qed
-  \<comment> \<open>h is injective on Y (from homeomorphism = bijection).\<close>
-  have h_inj: "inj_on h Y"
-    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-  \<comment> \<open>q maps P to Y (from quotient map).\<close>
-  have q_range: "\<forall>p\<in>P. q p \<in> Y"
-    using hC2 unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
-  \<comment> \<open>C8': h \\<circ> q injective on interior (h injective + q injective).\<close>
-  have hC8': "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
-              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
-           \<longrightarrow> (\<forall>p'\<in>P. q' p = q' p' \<longrightarrow> p = p')"
-  proof (intro ballI impI allI)
-    fix p p' assume hp: "p \<in> P" and hp': "p' \<in> P"
-        and hint: "\<forall>i<?n. \<forall>t\<in>I_set.
-              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))"
-        and heq: "q' p = q' p'"
-    have hqeq: "q p = q p'"
-    proof -
-      from heq have "h (q p) = h (q p')" unfolding q'_def comp_def by (by100 simp)
-      moreover have "q p \<in> Y" using q_range hp by (by100 blast)
-      moreover have "q p' \<in> Y" using q_range hp' by (by100 blast)
-      ultimately show ?thesis using h_inj unfolding inj_on_def by (by100 blast)
-    qed
-    show "p = p'" using hC8 hp hint hp' hqeq by (by100 blast)
-  qed
-  \<comment> \<open>C9': similarly, h preserves the boundary identification pattern.\<close>
-  have hC9': "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
-        q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-      = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
-      \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
-  proof (intro allI impI ballI)
-    fix i j t s' assume hi: "i < ?n" and hj: "j < ?n"
-      and ht: "t \<in> {0<..<(1::real)}" and hs: "s' \<in> {0<..<(1::real)}"
-      and heq: "q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-        = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))"
-    \<comment> \<open>h(q(e1)) = h(q(e2)). Since h injective on Y and both q(e1), q(e2) \\<in> Y: q(e1) = q(e2).\<close>
-    have "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-        = q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))"
-    proof -
-      from heq have "h (q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
-          = h (q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)))"
-        unfolding q'_def comp_def by (by100 simp)
-      moreover have "((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> P"
-      proof -
-        have hn3: "?n \<ge> 3" using hC1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
-        have hn_pos: "0 < ?n" using hn3 by (by100 linarith)
-        have hSi: "Suc i mod ?n < ?n" by (rule mod_less_divisor[OF hn_pos])
-        define coeffs :: "nat \<Rightarrow> real" where "coeffs k = (if k = i then 1-t else if k = Suc i mod ?n then t else 0)" for k
-        have hineq: "i \<noteq> Suc i mod ?n"
-        proof (cases "Suc i < ?n")
-          case True thus ?thesis by (by100 simp)
-        next
-          case False hence "Suc i = ?n" using hi by (by100 linarith)
-          hence "Suc i mod ?n = 0" by (by100 simp)
-          moreover have "i \<ge> 2" using hn3 \<open>Suc i = ?n\<close> by (by100 linarith)
-          ultimately show ?thesis by (by100 linarith)
-        qed
-        have "(\<forall>k<?n. coeffs k \<ge> 0)"
-          unfolding coeffs_def using ht by (by100 auto)
-        moreover have "(\<Sum>k<?n. coeffs k) = 1"
-        proof -
-          have "{..<?n} = {i, Suc i mod ?n} \<union> ({..<?n} - {i, Suc i mod ?n})" using hi hSi by (by100 blast)
-          have "(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k) = 0"
-            by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
-          have "i \<noteq> Suc i mod ?n"
-          proof (cases "Suc i < ?n")
-            case True thus ?thesis by (by100 simp)
-          next
-            case False hence "Suc i = ?n" using hi by (by100 linarith)
-            hence "Suc i mod ?n = 0" by (by100 simp)
-            moreover have "i \<ge> 2" using hn3 \<open>Suc i = ?n\<close> by (by100 linarith)
-            ultimately show ?thesis by (by100 linarith)
-          qed
-          hence hcoeff_sum: "coeffs i + coeffs (Suc i mod ?n) = 1" unfolding coeffs_def by (by100 simp)
-          have "(\<Sum>k<?n. coeffs k) = coeffs i + coeffs (Suc i mod ?n) + (\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k)"
-          proof -
-            have hi_in: "i \<in> {..<?n}" using hi by (by100 simp)
-            from sum.remove[OF finite_lessThan hi_in, of coeffs]
-            have "(\<Sum>k<?n. coeffs k) = coeffs i + (\<Sum>k\<in>{..<?n}-{i}. coeffs k)" by (by100 simp)
-            moreover have "Suc i mod ?n \<in> {..<?n} - {i}" using hSi \<open>i \<noteq> Suc i mod ?n\<close> by (by100 simp)
-            from sum.remove[OF _ this, of coeffs]
-            have "(\<Sum>k\<in>{..<?n}-{i}. coeffs k) = coeffs (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k)"
-              by (by100 simp)
-            ultimately have "(\<Sum>k<?n. coeffs k) = coeffs i + coeffs (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k)"
-              by (by100 linarith)
-            moreover have "{..<?n}-{i}-{Suc i mod ?n} = {..<?n} - {i, Suc i mod ?n}" by (by100 blast)
-            ultimately show ?thesis by (by100 simp)
-          qed
-          thus ?thesis using hcoeff_sum \<open>(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k) = 0\<close> by (by100 linarith)
-        qed
-        moreover have "(1-t)*vx i+t*vx(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vx k)"
-        proof -
-          have hi_in: "i \<in> {..<?n}" using hi by (by100 simp)
-          have hSi_in: "Suc i mod ?n \<in> {..<?n} - {i}" using hSi hineq by (by100 simp)
-          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k * vx k) = 0"
-            by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
-          have hrest2: "(\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vx k) = 0"
-          proof -
-            have "{..<?n}-{i}-{Suc i mod ?n} = {..<?n} - {i, Suc i mod ?n}" by (by100 blast)
-            thus ?thesis using hrest_zero by (by100 simp)
-          qed
-          from sum.remove[OF finite_lessThan hi_in, of "\<lambda>k. coeffs k * vx k"]
-          have hsum1: "(\<Sum>k<?n. coeffs k * vx k) = coeffs i * vx i + (\<Sum>k\<in>{..<?n}-{i}. coeffs k * vx k)"
-            by (by100 simp)
-          from sum.remove[OF _ hSi_in, of "\<lambda>k. coeffs k * vx k"]
-          have hsum2: "(\<Sum>k\<in>{..<?n}-{i}. coeffs k * vx k) = coeffs (Suc i mod ?n) * vx (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vx k)"
-            by (by100 simp)
-          have "(\<Sum>k<?n. coeffs k * vx k) = coeffs i * vx i + coeffs (Suc i mod ?n) * vx (Suc i mod ?n)"
-            using hsum1 hsum2 hrest2 by (by100 linarith)
-          moreover have "coeffs i = 1-t" unfolding coeffs_def by (by100 simp)
-          moreover have "coeffs (Suc i mod ?n) = t" unfolding coeffs_def using hineq by (by100 simp)
-          ultimately show ?thesis by (by100 simp)
-        qed
-        moreover have "(1-t)*vy i+t*vy(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vy k)"
-        proof -
-          have hi_in: "i \<in> {..<?n}" using hi by (by100 simp)
-          have hSi_in: "Suc i mod ?n \<in> {..<?n} - {i}" using hSi hineq by (by100 simp)
-          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k * vy k) = 0"
-            by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
-          have hrest2: "(\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vy k) = 0"
-          proof -
-            have "{..<?n}-{i}-{Suc i mod ?n} = {..<?n} - {i, Suc i mod ?n}" by (by100 blast)
-            thus ?thesis using hrest_zero by (by100 simp)
-          qed
-          from sum.remove[OF finite_lessThan hi_in, of "\<lambda>k. coeffs k * vy k"]
-          have hsum1: "(\<Sum>k<?n. coeffs k * vy k) = coeffs i * vy i + (\<Sum>k\<in>{..<?n}-{i}. coeffs k * vy k)"
-            by (by100 simp)
-          from sum.remove[OF _ hSi_in, of "\<lambda>k. coeffs k * vy k"]
-          have hsum2: "(\<Sum>k\<in>{..<?n}-{i}. coeffs k * vy k) = coeffs (Suc i mod ?n) * vy (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vy k)"
-            by (by100 simp)
-          have "(\<Sum>k<?n. coeffs k * vy k) = coeffs i * vy i + coeffs (Suc i mod ?n) * vy (Suc i mod ?n)"
-            using hsum1 hsum2 hrest2 by (by100 linarith)
-          moreover have "coeffs i = 1-t" unfolding coeffs_def by (by100 simp)
-          moreover have "coeffs (Suc i mod ?n) = t" unfolding coeffs_def using hineq by (by100 simp)
-          ultimately show ?thesis by (by100 simp)
-        qed
-        ultimately show ?thesis unfolding hC5 by (by100 blast)
-      qed
-      hence "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> Y"
-        using q_range by (by100 blast)
-      moreover have "((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> P"
-      proof -
-        have hn3_j: "?n \<ge> 3" using hC1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
-        have hn_pos_j: "0 < ?n" using hn3_j by (by100 linarith)
-        have hSj: "Suc j mod ?n < ?n" by (rule mod_less_divisor[OF hn_pos_j])
-        have hineq_j: "j \<noteq> Suc j mod ?n"
-        proof (cases "Suc j < ?n")
-          case True thus ?thesis by (by100 simp)
-        next
-          case False hence "Suc j = ?n" using hj by (by100 linarith)
-          hence "Suc j mod ?n = 0" by (by100 simp)
-          moreover have "j \<ge> 2" using hn3_j \<open>Suc j = ?n\<close> by (by100 linarith)
-          ultimately show ?thesis by (by100 linarith)
-        qed
-        define cj :: "nat \<Rightarrow> real" where "cj k = (if k = j then 1-s' else if k = Suc j mod ?n then s' else 0)" for k
-        have hcj_nn: "\<forall>k<?n. cj k \<ge> 0"
-          unfolding cj_def using hs by (by100 auto)
-        moreover have hcj_sum: "(\<Sum>k<?n. cj k) = 1"
-        proof -
-          have "(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k) = 0"
-            by (rule sum.neutral) (use cj_def in \<open>by100 simp\<close>)
-          have hpair: "cj j + cj (Suc j mod ?n) = 1" unfolding cj_def using hineq_j by (by100 simp)
-          have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
-          have hSj_in: "Suc j mod ?n \<in> {..<?n} - {j}" using hSj hineq_j by (by100 simp)
-          from sum.remove[OF finite_lessThan hj_in, of cj]
-          have "(\<Sum>k<?n. cj k) = cj j + (\<Sum>k\<in>{..<?n}-{j}. cj k)" by (by100 simp)
-          moreover from sum.remove[OF _ hSj_in, of cj]
-          have "(\<Sum>k\<in>{..<?n}-{j}. cj k) = cj (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k)"
-            by (by100 simp)
-          ultimately have "(\<Sum>k<?n. cj k) = cj j + cj (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k)"
-            by (by100 linarith)
-          moreover have "{..<?n}-{j}-{Suc j mod ?n} = {..<?n} - {j, Suc j mod ?n}" by (by100 blast)
-          ultimately have "(\<Sum>k<?n. cj k) = cj j + cj (Suc j mod ?n) + (\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k)"
-            by (by100 simp)
-          thus ?thesis using hpair \<open>(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k) = 0\<close> by (by100 linarith)
-        qed
-        moreover have "(1-s')*vx j+s'*vx(Suc j mod ?n) = (\<Sum>k<?n. cj k * vx k)"
-        proof -
-          have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
-          have hSj_in: "Suc j mod ?n \<in> {..<?n} - {j}" using hSj hineq_j by (by100 simp)
-          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k * vx k) = 0"
-            by (rule sum.neutral) (use cj_def in \<open>by100 simp\<close>)
-          have "(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vx k) = 0"
-          proof -
-            have "{..<?n}-{j}-{Suc j mod ?n} = {..<?n} - {j, Suc j mod ?n}" by (by100 blast)
-            thus ?thesis using hrest_zero by (by100 simp)
-          qed
-          from sum.remove[OF finite_lessThan hj_in, of "\<lambda>k. cj k * vx k"]
-          have s1: "(\<Sum>k<?n. cj k * vx k) = cj j * vx j + (\<Sum>k\<in>{..<?n}-{j}. cj k * vx k)"
-            by (by100 simp)
-          from sum.remove[OF _ hSj_in, of "\<lambda>k. cj k * vx k"]
-          have s2: "(\<Sum>k\<in>{..<?n}-{j}. cj k * vx k) = cj (Suc j mod ?n) * vx (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vx k)"
-            by (by100 simp)
-          have "(\<Sum>k<?n. cj k * vx k) = cj j * vx j + cj (Suc j mod ?n) * vx (Suc j mod ?n)"
-            using s1 s2 \<open>(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vx k) = 0\<close> by (by100 linarith)
-          moreover have "cj j = 1-s'" unfolding cj_def by (by100 simp)
-          moreover have "cj (Suc j mod ?n) = s'" unfolding cj_def using hineq_j by (by100 simp)
-          ultimately show ?thesis by (by100 simp)
-        qed
-        moreover have "(1-s')*vy j+s'*vy(Suc j mod ?n) = (\<Sum>k<?n. cj k * vy k)"
-        proof -
-          have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
-          have hSj_in: "Suc j mod ?n \<in> {..<?n} - {j}" using hSj hineq_j by (by100 simp)
-          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k * vy k) = 0"
-            by (rule sum.neutral) (use cj_def in \<open>by100 simp\<close>)
-          have "(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vy k) = 0"
-          proof -
-            have "{..<?n}-{j}-{Suc j mod ?n} = {..<?n} - {j, Suc j mod ?n}" by (by100 blast)
-            thus ?thesis using hrest_zero by (by100 simp)
-          qed
-          from sum.remove[OF finite_lessThan hj_in, of "\<lambda>k. cj k * vy k"]
-          have s1: "(\<Sum>k<?n. cj k * vy k) = cj j * vy j + (\<Sum>k\<in>{..<?n}-{j}. cj k * vy k)"
-            by (by100 simp)
-          from sum.remove[OF _ hSj_in, of "\<lambda>k. cj k * vy k"]
-          have s2: "(\<Sum>k\<in>{..<?n}-{j}. cj k * vy k) = cj (Suc j mod ?n) * vy (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vy k)"
-            by (by100 simp)
-          have "(\<Sum>k<?n. cj k * vy k) = cj j * vy j + cj (Suc j mod ?n) * vy (Suc j mod ?n)"
-            using s1 s2 \<open>(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vy k) = 0\<close> by (by100 linarith)
-          moreover have "cj j = 1-s'" unfolding cj_def by (by100 simp)
-          moreover have "cj (Suc j mod ?n) = s'" unfolding cj_def using hineq_j by (by100 simp)
-          ultimately show ?thesis by (by100 simp)
-        qed
-        ultimately show ?thesis unfolding hC5 by (by100 blast)
-      qed
-      hence "q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> Y"
-        using q_range by (by100 blast)
-      ultimately show ?thesis using h_inj unfolding inj_on_def by (by100 blast)
-    qed
-    from hC9[rule_format, OF hi hj ht hs this]
-    show "(i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))" .
-  qed
-  \<comment> \<open>Assembly.\<close>
-  show ?thesis unfolding top1_quotient_of_scheme_on_def
-  proof (intro conjI exI)
-    show "is_topology_on_strict Y' TY'" using htopo' .
-    show "top1_is_polygonal_region_on P ?n" using hC1 .
-    show "top1_quotient_map_on P (?TP P) Y' TY' q'" using hC2' .
-    show "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)" using hC3 .
-    show "\<forall>i<?n. (vx i, vy i) \<in> P" using hC4 .
-    show "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
-        \<and> x = (\<Sum>i<?n. coeffs i * vx i) \<and> y = (\<Sum>i<?n. coeffs i * vy i)}" using hC5 by (by100 simp)
-    show "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
-        (\<forall>s'\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
-           ((1-s') * vx i + s' * vx (Suc i mod ?n), (1-s') * vy i + s' * vy (Suc i mod ?n))
-         \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n), (1-t) * vy j + t * vy (Suc j mod ?n)))"
-      using hC6 .
-    show "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
-        (\<forall>t\<in>I_set. q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-         = (if snd(s!i) = snd(s!j)
-            then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
-            else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
-      using hC7' .
-    show "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
-              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
-           \<longrightarrow> (\<forall>p'\<in>P. q' p = q' p' \<longrightarrow> p = p')" using hC8' .
-    show "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
-        q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
-      = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
-      \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
-      using hC9' .
-    show "\<forall>i<?n. let cx=(\<Sum>j<?n. vx j)/real ?n; cy=(\<Sum>j<?n. vy j)/real ?n
-         in (vx i-cx)*(vy(Suc i mod ?n)-cy)-(vy i-cy)*(vx(Suc i mod ?n)-cx) > 0" using hC10 .
-    show "\<forall>i<?n. \<forall>k<?n. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?n \<longrightarrow>
-          (vx k-vx i)*(vy(Suc i mod ?n)-vy i)-(vy k-vy i)*(vx(Suc i mod ?n)-vx i) < 0" using hC11 .
-  qed
-qed
 
 lemma front_cancel_proper:
   fixes Y :: "'a set" and TY :: "'a set set"
