@@ -65,10 +65,64 @@ lemma quotient_scheme_edge_permutation:
       and "length s' = length s"
       and "\<exists>\<sigma>. bij_betw \<sigma> {..< length s} {..< length s} \<and> (\<forall>k < length s. s' ! k = s ! \<sigma> k)"
   shows "top1_quotient_of_scheme_on Y TY s'"
-  sorry \<comment> \<open>Core geometric construction via disk homeomorphism + arc permutation \\<tau>.
-     Fresh polygon P' (regular n-gon), \\<psi>': P' \\<to> B2, \\<phi> = \\<psi>\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>': P' \\<to> P.
-     q' = q \\<circ> \\<phi> gives quotient Y with edge identification matching s'.
-     Same technique as scheme\\_quotient\\_uniqueness but with permuted edges.\<close>
+proof -
+  let ?n = "length s"
+  let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+  \<comment> \<open>Step 1: Extract polygon P1, quotient map q1, vertices vx1/vy1 from the assumption.\<close>
+  from assms(1) obtain P1 q1 vx1 vy1 where
+      hC1_1: "top1_is_polygonal_region_on P1 ?n"
+    and hC2_1: "top1_quotient_map_on P1 (?TP P1) Y TY q1"
+    and hC3_1: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx1 i, vy1 i) \<noteq> (vx1 j, vy1 j)"
+    and hC4_1: "\<forall>i<?n. (vx1 i, vy1 i) \<in> P1"
+    and hC5_1: "P1 = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx1 i) \<and> y = (\<Sum>i<?n. coeffs i * vy1 i)}"
+    and hC7_1: "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+           (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
+         = (if snd (s!i) = snd (s!j)
+            then q1 ((1-t) * vx1 j + t * vx1 (Suc j mod ?n),
+                    (1-t) * vy1 j + t * vy1 (Suc j mod ?n))
+            else q1 (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
+                    t * vy1 j + (1-t) * vy1 (Suc j mod ?n))))"
+    and hC8_1: "\<forall>p\<in>P1. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+                      (1-t) * vy1 i + t * vy1 (Suc i mod ?n)))
+             \<longrightarrow> (\<forall>p'\<in>P1. q1 p = q1 p' \<longrightarrow> p = p')"
+    and hC9_1: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>ss\<in>I_set.
+            q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+               (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
+          = q1 ((1-ss) * vx1 j + ss * vx1 (Suc j mod ?n),
+               (1-ss) * vy1 j + ss * vy1 (Suc j mod ?n))
+          \<longrightarrow> (i = j \<and> t = ss)
+            \<or> (fst (s!i) = fst (s!j) \<and>
+               (if snd (s!i) = snd (s!j) then ss = t else ss = 1 - t))"
+    and hC10_1: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx1 j) / real ?n;
+                             cy = (\<Sum>j<?n. vy1 j) / real ?n
+         in (vx1 i - cx) * (vy1 (Suc i mod ?n) - cy)
+          - (vy1 i - cy) * (vx1 (Suc i mod ?n) - cx) > 0"
+    and hC11_1: "\<forall>i<?n. \<forall>k<?n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i)
+          - (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i) < 0"
+    by (rule quotient_of_scheme_extract_vx)
+  \<comment> \<open>Step 2: Get the permutation \\<sigma>.\<close>
+  from assms(3) obtain \<sigma> where
+    h\<sigma>_bij: "bij_betw \<sigma> {..< ?n} {..< ?n}"
+    and h\<sigma>_match: "\<forall>k < ?n. s' ! k = s ! \<sigma> k"
+    by (by100 blast)
+  have hn3: "?n \<ge> 3" using assms(1) quotient_scheme_length_ge3 by (by100 simp)
+  \<comment> \<open>Step 3: Construct fresh polygon P2 (regular n-gon) and disk homeomorphisms.
+     Then \\<phi> = \\<psi>1\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>2 where \\<tau> permutes arcs per \\<sigma>.
+     Define q2 = q1 \\<circ> \\<phi> and verify all 11 conditions for (P2, q2, vx2, vy2, s').
+     This follows the scheme\\_quotient\\_uniqueness technique with permuted edges.\<close>
+  show ?thesis sorry \<comment> \<open>Geometric core: construct P2, \\<phi>, q2 = q1\\<circ>\\<phi>, verify 11 conditions.
+     The fibre-matching argument from scheme\\_quotient\\_uniqueness applies:
+     q1\\<circ>\\<phi> on edge k of P2 = q1 on edge \\<sigma>(k) of P1.
+     Edge \\<sigma>(k) of P1 has label s!\\<sigma>(k) = s'!k.
+     So q1\\<circ>\\<phi> identifies edges of P2 according to s'.
+     Interior: q1\\<circ>\\<phi> is injective (both q1 and \\<phi> are injective on interiors).
+     Boundary: identifications match s' (from \\<sigma>-matching and C7/C9 of P1).\<close>
+qed
 
 \<comment> \<open>Cut-paste preservation: homeomorphic realization (per audit 22 §5.5).
    The quotient of the cut-paste rearranged scheme is homeomorphic to the original.
