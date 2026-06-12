@@ -4675,51 +4675,79 @@ proof -
     let ?n = "length ([a, top1_inverse_edge a] @ w)"
     let ?m = "length w"
     let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
-    from hY_ext obtain P_ext q_ext where
-        hC1_ext: "top1_is_polygonal_region_on P_ext ?n"
-      and hC2_ext: "top1_quotient_map_on P_ext (?TP P_ext) Y_ext TY_ext q_ext"
-      by (rule quotient_of_scheme_extract)
-    from hY_w obtain P_w q_w where
-        hC1_w: "top1_is_polygonal_region_on P_w ?m"
-      and hC2_w: "top1_quotient_map_on P_w (?TP P_w) Y_w TY_w q_w"
-      by (rule quotient_of_scheme_extract)
     \<comment> \<open>The spur collapse homeomorphism uses disk homeomorphisms + arc collapsing.
        Both polygons have disk homeomorphisms (polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary).
        The collapse map \\<tau>: B2 \\<to> B2 collapses the first 2 arcs and rescales the rest.
-       Composition: f = \\<psi>\\_w\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_ext gives P\\_ext \\<to> P\\_w.
-       Then q\\_w \\<circ> f has the same fibres as q\\_ext (by fibre matching argument).
+       Composition: f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e gives P\\_e \\<to> P\\_m.
+       Then q\\_m \\<circ> f has the same fibres as q\\_e (by fibre matching argument).
        quotient\\_same\\_fibres\\_homeomorphic gives Y\\_ext \\<cong> Y\\_w.\<close>
-    \<comment> \<open>Construct spur-collapse map f: P\\_ext \\<to> P\\_w.
-       f collapses the first 2 edges of P\\_ext (the cancelling pair) and maps
-       the remaining edges to the corresponding edges of P\\_w.
-       Construction: \\<psi>\\_w\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_ext where
-       \\<psi>\\_ext: P\\_ext \\<to> B2 and \\<psi>\\_w: P\\_w \\<to> B2 are disk homeomorphisms,
-       and \\<tau>: B2 \\<to> B2 collapses the first 2 arcs.\<close>
-    have "\<exists>f. continuous_on P_ext f \<and> f ` P_ext = P_w
-        \<and> (\<forall>x\<in>P_ext. \<forall>y\<in>P_ext. (q_ext x = q_ext y) \<longleftrightarrow> (q_w (f x) = q_w (f y)))"
-      sorry \<comment> \<open>Spur collapse map: disk homeo + arc collapse + fibre matching.
-         The map f: P\\_ext \\<to> P\\_w is:
-         (1) \\<psi>\\_ext: P\\_ext \\<to> B2 (from polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary)
-         (2) \\<tau>: B2 \\<to> B2 (collapse first 2/(n) of S1, rescale rest)
-         (3) \\<psi>\\_w\\<inverse>: B2 \\<to> P\\_w
-         Fibre matching: edges 0,1 of P\\_ext are identified by q\\_ext (cancelling pair)
-         and collapsed by f (both map to same point). Edges 2..n-1 map to P\\_w edges
-         0..n-3 preserving the w-identification pattern.\<close>
+    \<comment> \<open>Extract full conditions for both polygons to get disk homeomorphisms.\<close>
+    from hY_ext obtain P_e q_e vx_e vy_e where
+        hC1e: "top1_is_polygonal_region_on P_e ?n"
+      and hC2e: "top1_quotient_map_on P_e (?TP P_e) Y_ext TY_ext q_e"
+      and hC3e: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx_e i, vy_e i) \<noteq> (vx_e j, vy_e j)"
+      and hC4e: "\<forall>i<?n. (vx_e i, vy_e i) \<in> P_e"
+      and hC5e: "P_e = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx_e i)
+                     \<and> y = (\<Sum>i<?n. coeffs i * vy_e i)}"
+      and hC7e: "\<forall>i<?n. \<forall>j<?n. fst (([a, top1_inverse_edge a] @ w)!i) = fst (([a, top1_inverse_edge a] @ w)!j) \<longrightarrow>
+          (\<forall>t\<in>I_set. q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+           = (if snd(([a, top1_inverse_edge a] @ w)!i) = snd(([a, top1_inverse_edge a] @ w)!j)
+              then q_e ((1-t)*vx_e j+t*vx_e(Suc j mod ?n),(1-t)*vy_e j+t*vy_e(Suc j mod ?n))
+              else q_e (t*vx_e j+(1-t)*vx_e(Suc j mod ?n),t*vy_e j+(1-t)*vy_e(Suc j mod ?n))))"
+      and hC8e: "\<forall>p\<in>P_e. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
+             \<longrightarrow> (\<forall>p'\<in>P_e. q_e p = q_e p' \<longrightarrow> p = p')"
+      and hC9e: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+            q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+          = q_e ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))
+          \<longrightarrow> (i=j \<and> t=s) \<or> (fst(([a, top1_inverse_edge a] @ w)!i)=fst(([a, top1_inverse_edge a] @ w)!j)
+               \<and> (if snd(([a, top1_inverse_edge a] @ w)!i)=snd(([a, top1_inverse_edge a] @ w)!j) then s=t else s=1-t))"
+      and hC10e: "\<forall>i<?n. let cx=(\<Sum>j<?n. vx_e j)/real ?n; cy=(\<Sum>j<?n. vy_e j)/real ?n
+           in (vx_e i-cx)*(vy_e(Suc i mod ?n)-cy)-(vy_e i-cy)*(vx_e(Suc i mod ?n)-cx) > 0"
+      and hC11e: "\<forall>i<?n. \<forall>k<?n. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?n \<longrightarrow>
+            (vx_e k-vx_e i)*(vy_e(Suc i mod ?n)-vy_e i)-(vy_e k-vy_e i)*(vx_e(Suc i mod ?n)-vx_e i) < 0"
+      by (rule quotient_of_scheme_extract_vx)
+    from hY_w obtain P_m q_m vx_m vy_m where
+        hC1m: "top1_is_polygonal_region_on P_m ?m"
+      and hC2m: "top1_quotient_map_on P_m (?TP P_m) Y_w TY_w q_m"
+      and hC4m: "\<forall>i<?m. (vx_m i, vy_m i) \<in> P_m"
+      and hC5m: "P_m = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?m. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?m. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?m. coeffs i * vx_m i)
+                     \<and> y = (\<Sum>i<?m. coeffs i * vy_m i)}"
+      and hC7m: "\<forall>i<?m. \<forall>j<?m. fst (w!i) = fst (w!j) \<longrightarrow>
+          (\<forall>t\<in>I_set. q_m ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m))
+           = (if snd(w!i)=snd(w!j)
+              then q_m ((1-t)*vx_m j+t*vx_m(Suc j mod ?m),(1-t)*vy_m j+t*vy_m(Suc j mod ?m))
+              else q_m (t*vx_m j+(1-t)*vx_m(Suc j mod ?m),t*vy_m j+(1-t)*vy_m(Suc j mod ?m))))"
+      and hC10m: "\<forall>i<?m. let cx=(\<Sum>j<?m. vx_m j)/real ?m; cy=(\<Sum>j<?m. vy_m j)/real ?m
+           in (vx_m i-cx)*(vy_m(Suc i mod ?m)-cy)-(vy_m i-cy)*(vx_m(Suc i mod ?m)-cx) > 0"
+      and hC11m: "\<forall>i<?m. \<forall>k<?m. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?m \<longrightarrow>
+            (vx_m k-vx_m i)*(vy_m(Suc i mod ?m)-vy_m i)-(vy_m k-vy_m i)*(vx_m(Suc i mod ?m)-vx_m i) < 0"
+      by (rule quotient_of_scheme_extract_vx)
+    \<comment> \<open>Spur collapse map f: P\\_e \\<to> P\\_m.
+       Constructed via disk homeomorphisms + arc collapsing.
+       Phase 1: extract \\<psi>\\_e and \\<psi>\\_m from polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary.\<close>
+    have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
+        \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
+      sorry \<comment> \<open>TODO: construct f via \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.\<close>
     then obtain f where
-        hf_cont: "continuous_on P_ext f"
-      and hf_surj: "f ` P_ext = P_w"
-      and hf_fibres: "\<forall>x\<in>P_ext. \<forall>y\<in>P_ext. (q_ext x = q_ext y) \<longleftrightarrow> ((q_w \<circ> f) x = (q_w \<circ> f) y)"
+        hf_cont: "continuous_on P_e f"
+      and hf_surj: "f ` P_e = P_m"
+      and hf_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> ((q_m \<circ> f) x = (q_m \<circ> f) y)"
       by (by100 auto)
     \<comment> \<open>q\\_w \\<circ> f is a quotient map from P\\_ext to Y\\_w (composition of continuous surjection
        f: P\\_ext \\<to> P\\_w with quotient map q\\_w: P\\_w \\<to> Y\\_w).\<close>
     \<comment> \<open>f is a quotient map (compact \\<to> Hausdorff continuous surjection = quotient map).\<close>
-    have hf_range: "\<forall>x\<in>P_ext. f x \<in> P_w" using hf_surj by (by100 blast)
-    have hf_quot: "top1_quotient_map_on P_ext (?TP P_ext) P_w (?TP P_w) f"
-      by (rule compact_surj_quotient[OF hC1_ext hC1_w hf_cont hf_surj hf_range])
-    have hcomp_quot: "top1_quotient_map_on P_ext (?TP P_ext) Y_w TY_w (q_w \<circ> f)"
-      by (rule top1_quotient_map_on_comp[OF hf_quot hC2_w])
+    have hf_range: "\<forall>x\<in>P_e. f x \<in> P_m" using hf_surj by (by100 blast)
+    have hf_quot: "top1_quotient_map_on P_e (?TP P_e) P_m (?TP P_m) f"
+      by (rule compact_surj_quotient[OF hC1e hC1m hf_cont hf_surj hf_range])
+    have hcomp_quot: "top1_quotient_map_on P_e (?TP P_e) Y_w TY_w (q_m \<circ> f)"
+      by (rule top1_quotient_map_on_comp[OF hf_quot hC2m])
     \<comment> \<open>Apply quotient\\_same\\_fibres\\_homeomorphic: q\\_ext and q\\_w\\<circ>f have same fibres \\<Longrightarrow> Y\\_ext \\<cong> Y\\_w.\<close>
-    from quotient_same_fibres_homeomorphic[OF hC2_ext hcomp_quot hf_fibres]
+    from quotient_same_fibres_homeomorphic[OF hC2e hcomp_quot hf_fibres]
     show ?thesis .
   qed
   then obtain h_collapse where
