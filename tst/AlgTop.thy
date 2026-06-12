@@ -3329,7 +3329,23 @@ proof -
           - (vy (j+2) - vy (k+2)) * (vx (Suc(k+2) mod ?n) - vx (k+2))" for j
       \<comment> \<open>Key: 0 = \\<Sigma> c\\_j * cross\\_k(j) since v'(k) = \\<Sigma> c\\_j * v'(j).\<close>
       have hcross_sum: "(\<Sum>j<?n'. coeffs j * cross_k j) = 0"
-        sorry
+      proof -
+        define dx where "dx = vx (Suc(k+2) mod ?n) - vx (k+2)"
+        define dy where "dy = vy (Suc(k+2) mod ?n) - vy (k+2)"
+        have hck_expand: "\<And>j. cross_k j = (vx (j+2) - vx (k+2)) * dy - (vy (j+2) - vy (k+2)) * dx"
+          unfolding cross_k_def dx_def dy_def sorry
+        \<comment> \<open>\\<Sum> c\\_j * cross\\_k(j) = dy * (\\<Sum> c\\_j * vx(j+2) - vx(k+2)) - dx * (\\<Sum> c\\_j * vy(j+2) - vy(k+2)).\<close>
+        have "(\<Sum>j<?n'. coeffs j * cross_k j) =
+            dy * ((\<Sum>j<?n'. coeffs j * vx (j+2)) - vx (k+2)) -
+            dx * ((\<Sum>j<?n'. coeffs j * vy (j+2)) - vy (k+2))"
+          sorry
+        \<comment> \<open>\\<Sum> c\\_j * vx(j+2) = \\<Sum> c\\_j * vx'(j) = vx'(k) = vx(k+2).\<close>
+        moreover have "(\<Sum>j<?n'. coeffs j * vx (j+2)) = vx (k+2)"
+          using hvx unfolding vx'_def sorry
+        moreover have "(\<Sum>j<?n'. coeffs j * vy (j+2)) = vy (k+2)"
+          using hvy unfolding vy'_def sorry
+        ultimately show ?thesis sorry
+      qed
       \<comment> \<open>cross\\_k(k) = 0 (v\\_{k+2} is on the edge).\<close>
       have hcross_k: "cross_k k = 0" unfolding cross_k_def by (by100 simp)
       \<comment> \<open>For j \\<noteq> k with j+2 \\<noteq> k+2 and j+2 \\<noteq> Suc(k+2) mod n: cross\\_k(j) < 0 by C11.\<close>
