@@ -4581,10 +4581,14 @@ proof -
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1)
           P2
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) f"
-      sorry \<comment> \<open>Standard topology: compact \\<to> Hausdorff continuous surjection is a quotient map.
-         P1 compact from polygonal\\_region\\_compact. R2 subspace is Hausdorff.
-         compact\\_hausdorff\\_continuous\\_closed\\_map gives closed map.
-         Closed surjection is quotient map (Munkres Corollary 22.3).\<close>
+      sorry \<comment> \<open>Standard topology (Munkres Corollary 22.3):
+         (1) P1 compact (polygonal\\_region\\_compact) \\<to> R2-subspace Hausdorff.
+         (2) Continuous (assumption) + compact\\<to>Hausdorff = closed map
+             (compact\\_hausdorff\\_continuous\\_closed\\_map).
+         (3) Closed surjection = quotient map: if f\\<inverse>(V) open then
+             X\\\\f\\<inverse>(V) = f\\<inverse>(Y\\\\V) closed, so f(f\\<inverse>(Y\\\\V)) = Y\\\\V closed, so V open.
+         Proof needs: is\\_topology\\_on for both subspaces, top1\\_continuous\\_map\\_on from
+         continuous\\_on, and the quotient-map definition unfolding.\<close>
     \<comment> \<open>Extract polygons and quotient maps from both quotients.\<close>
     let ?n = "length ([a, top1_inverse_edge a] @ w)"
     let ?m = "length w"
