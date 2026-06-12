@@ -4961,6 +4961,174 @@ proof -
     \<comment> \<open>Centroid of P\\_m (interior point for the fan target).\<close>
     define cx_m where "cx_m = (\<Sum>j<?m. vx_m j) / real ?m"
     define cy_m where "cy_m = (\<Sum>j<?m. vy_m j) / real ?m"
+    \<comment> \<open>Centroid is in P\\_m (convex combination with equal weights 1/m).\<close>
+    have hcm_in_Pm: "(cx_m, cy_m) \<in> P_m"
+    proof -
+      define coeffs :: "nat \<Rightarrow> real" where "coeffs j = 1 / real ?m" for j
+      have hnn: "\<forall>j<?m. coeffs j \<ge> 0" unfolding coeffs_def using hm3 by (by100 simp)
+      have hm_pos: "?m > 0" using hm3 by (by100 linarith)
+      have hsum: "(\<Sum>j<?m. coeffs j) = 1"
+        unfolding coeffs_def using hm_pos by (by100 simp)
+      have hx: "cx_m = (\<Sum>j<?m. coeffs j * vx_m j)"
+        unfolding coeffs_def cx_m_def
+        using sum_divide_distrib[of vx_m "{..<?m}" "real ?m", symmetric]
+        by (by100 simp)
+      have hy: "cy_m = (\<Sum>j<?m. coeffs j * vy_m j)"
+        unfolding coeffs_def cy_m_def
+        using sum_divide_distrib[of vy_m "{..<?m}" "real ?m", symmetric]
+        by (by100 simp)
+      show ?thesis unfolding hC5m using hnn hsum hx hy by (by100 blast)
+    qed
+    \<comment> \<open>Centroid is strictly interior to P\\_m (not on any edge).
+       From C11\\_m: all non-adjacent vertices are strictly on the interior side.
+       The centroid (average of ALL vertices) inherits the strict inequality.\<close>
+    have hcm_interior: "\<forall>i<?m. \<forall>t\<in>I_set.
+      (cx_m, cy_m) \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m))"
+    proof (intro allI impI ballI)
+      fix i t assume hi: "i < ?m" and ht: "t \<in> I_set"
+      \<comment> \<open>Signed cross product of centroid relative to edge i.\<close>
+      define dx where "dx = vx_m (Suc i mod ?m) - vx_m i"
+      define dy where "dy = vy_m (Suc i mod ?m) - vy_m i"
+      define cross_cm where "cross_cm = (cx_m - vx_m i) * dy - (cy_m - vy_m i) * dx"
+      \<comment> \<open>Express cross\\_cm as (1/m) * \\<Sum> cross products from C11.\<close>
+      have hm_pos: "?m > 0" using hm3 by (by100 linarith)
+      have hm_ne0: "real ?m \<noteq> (0::real)" using hm_pos by (by100 simp)
+      have hcx_diff: "cx_m - vx_m i = (\<Sum>j<?m. vx_m j - vx_m i) / real ?m"
+      proof -
+        have h1: "(\<Sum>j<?m. vx_m j - vx_m i) = (\<Sum>j<?m. vx_m j) - real ?m * vx_m i"
+          using sum_subtractf[of vx_m "\<lambda>_. vx_m i" "{..<?m}"] by (by100 simp)
+        have "real ?m * vx_m i / real ?m = vx_m i" using hm_ne0 by (by100 simp)
+        hence h2: "((\<Sum>j<?m. vx_m j) - real ?m * vx_m i) / real ?m = (\<Sum>j<?m. vx_m j) / real ?m - vx_m i"
+          using diff_divide_distrib[of "(\<Sum>j<?m. vx_m j)" "real ?m * vx_m i" "real ?m"] by (by100 simp)
+        show ?thesis unfolding cx_m_def using h1 h2 by (by100 simp)
+      qed
+      have hcy_diff: "cy_m - vy_m i = (\<Sum>j<?m. vy_m j - vy_m i) / real ?m"
+      proof -
+        have h1: "(\<Sum>j<?m. vy_m j - vy_m i) = (\<Sum>j<?m. vy_m j) - real ?m * vy_m i"
+          using sum_subtractf[of vy_m "\<lambda>_. vy_m i" "{..<?m}"] by (by100 simp)
+        have "real ?m * vy_m i / real ?m = vy_m i" using hm_ne0 by (by100 simp)
+        hence h2: "((\<Sum>j<?m. vy_m j) - real ?m * vy_m i) / real ?m = (\<Sum>j<?m. vy_m j) / real ?m - vy_m i"
+          using diff_divide_distrib[of "(\<Sum>j<?m. vy_m j)" "real ?m * vy_m i" "real ?m"] by (by100 simp)
+        show ?thesis unfolding cy_m_def using h1 h2 by (by100 simp)
+      qed
+      have "cross_cm = (\<Sum>j<?m. (vx_m j - vx_m i) * dy - (vy_m j - vy_m i) * dx) / real ?m"
+      proof -
+        \<comment> \<open>Step 1: cross\\_cm in terms of centroid diffs.\<close>
+        have h1: "cross_cm = (cx_m - vx_m i) * dy - (cy_m - vy_m i) * dx"
+          unfolding cross_cm_def by (by100 simp)
+        \<comment> \<open>Step 2: substitute centroid diff = sum/m.\<close>
+        have h2: "cross_cm = (\<Sum>j<?m. vx_m j - vx_m i) / real ?m * dy - (\<Sum>j<?m. vy_m j - vy_m i) / real ?m * dx"
+          using h1 hcx_diff hcy_diff by (by100 simp)
+        \<comment> \<open>Step 3: (A/m)*dy = (A*dy)/m and (B/m)*dx = (B*dx)/m.\<close>
+        have "((\<Sum>j<?m. vx_m j - vx_m i) * dy - (\<Sum>j<?m. vy_m j - vy_m i) * dx) / real ?m
+            = (\<Sum>j<?m. vx_m j - vx_m i) / real ?m * dy - (\<Sum>j<?m. vy_m j - vy_m i) / real ?m * dx"
+          using hm_ne0 diff_divide_distrib[of "(\<Sum>j<?m. vx_m j - vx_m i) * dy" "(\<Sum>j<?m. vy_m j - vy_m i) * dx" "real ?m"]
+          by (by100 simp)
+        hence h3: "cross_cm = ((\<Sum>j<?m. vx_m j - vx_m i) * dy - (\<Sum>j<?m. vy_m j - vy_m i) * dx) / real ?m"
+          using h2 by (by100 linarith)
+        \<comment> \<open>Step 4: Σ(a*dy) - Σ(b*dx) = Σ(a*dy - b*dx) via sum\\_subtractf.\<close>
+        have "(\<Sum>j<?m. (vx_m j - vx_m i) * dy) - (\<Sum>j<?m. (vy_m j - vy_m i) * dx)
+            = (\<Sum>j<?m. (vx_m j - vx_m i) * dy - (vy_m j - vy_m i) * dx)"
+          using sum_subtractf[of "\<lambda>j. (vx_m j - vx_m i) * dy" "\<lambda>j. (vy_m j - vy_m i) * dx" "{..<?m}", symmetric]
+          by (by100 simp)
+        \<comment> \<open>Step 5: Σ(a - b) * dy = Σ(a*dy) etc. via sum\\_distrib\\_right.\<close>
+        moreover have "(\<Sum>j<?m. vx_m j - vx_m i) * dy = (\<Sum>j<?m. (vx_m j - vx_m i) * dy)"
+          using sum_distrib_right[of "\<lambda>j. vx_m j - vx_m i" "{..<?m}" dy, symmetric] by (by100 simp)
+        moreover have "(\<Sum>j<?m. vy_m j - vy_m i) * dx = (\<Sum>j<?m. (vy_m j - vy_m i) * dx)"
+          using sum_distrib_right[of "\<lambda>j. vy_m j - vy_m i" "{..<?m}" dx, symmetric] by (by100 simp)
+        ultimately show ?thesis using h3 by (by100 simp)
+      qed
+      \<comment> \<open>Each term for j \\<noteq> i, j \\<noteq> Suc i mod m is < 0 (from C11\\_m).\<close>
+      moreover have "(\<Sum>j<?m. (vx_m j - vx_m i) * dy - (vy_m j - vy_m i) * dx) < 0"
+      proof -
+        define f_cross where "f_cross j = (vx_m j - vx_m i) * dy - (vy_m j - vy_m i) * dx" for j
+        have hfi: "f_cross i = 0" unfolding f_cross_def by (by100 simp)
+        have hSi: "Suc i mod ?m < ?m" using hm_pos by (by100 simp)
+        have hfSi: "f_cross (Suc i mod ?m) = 0" unfolding f_cross_def dx_def dy_def by (by100 algebra)
+        have hineq_m: "i \<noteq> Suc i mod ?m"
+        proof (cases "Suc i < ?m")
+          case True thus ?thesis by (by100 simp)
+        next
+          case False hence "Suc i = ?m" using hi by (by100 linarith)
+          hence "Suc i mod ?m = 0" by (by100 simp)
+          moreover have "i \<ge> 2" using hm3 \<open>Suc i = ?m\<close> by (by100 linarith)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        \<comment> \<open>C11\\_m: all other terms are < 0.\<close>
+        have hneg: "\<forall>k\<in>{..<?m} - {i, Suc i mod ?m}. f_cross k < 0"
+        proof (intro ballI)
+          fix k assume hk: "k \<in> {..<?m} - {i, Suc i mod ?m}"
+          hence "k < ?m" "k \<noteq> i" "k \<noteq> Suc i mod ?m" by (by100 auto)+
+          from hC11m[rule_format, OF hi \<open>k < ?m\<close> \<open>k \<noteq> i\<close> \<open>k \<noteq> Suc i mod ?m\<close>]
+          show "f_cross k < 0" unfolding f_cross_def dx_def dy_def by (by100 linarith)
+        qed
+        \<comment> \<open>The remaining set is nonempty (since m \\<ge> 3 and we removed 2).\<close>
+        have hS_ne: "{..<?m} - {i, Suc i mod ?m} \<noteq> {}"
+        proof -
+          have "card ({..<?m} - {i, Suc i mod ?m}) = ?m - 2"
+            using hi hSi hineq_m by (by100 simp)
+          hence "card ({..<?m} - {i, Suc i mod ?m}) \<ge> 1" using hm3 by (by100 linarith)
+          thus ?thesis by (by100 force)
+        qed
+        \<comment> \<open>Extract f(i) and f(Suc i mod m) from the sum.\<close>
+        have hi_in: "i \<in> {..<?m}" using hi by (by100 simp)
+        from sum.remove[OF finite_lessThan hi_in, of f_cross]
+        have hs1: "(\<Sum>j<?m. f_cross j) = f_cross i + (\<Sum>j\<in>{..<?m}-{i}. f_cross j)" by (by100 simp)
+        have hSi_in: "Suc i mod ?m \<in> {..<?m} - {i}" using hSi hineq_m by (by100 simp)
+        from sum.remove[OF _ hSi_in, of f_cross]
+        have hs2: "(\<Sum>j\<in>{..<?m}-{i}. f_cross j) = f_cross (Suc i mod ?m) + (\<Sum>j\<in>{..<?m}-{i}-{Suc i mod ?m}. f_cross j)"
+          by (by100 simp)
+        have hset_eq: "{..<?m}-{i}-{Suc i mod ?m} = {..<?m} - {i, Suc i mod ?m}" by (by100 blast)
+        \<comment> \<open>The remaining sum is < 0 (all terms < 0, nonempty).\<close>
+        have "(\<Sum>j\<in>{..<?m} - {i, Suc i mod ?m}. f_cross j) < 0"
+        proof -
+          from hS_ne obtain k where hk: "k \<in> {..<?m} - {i, Suc i mod ?m}" by (by100 blast)
+          from sum.remove[OF _ hk, of f_cross]
+          have "(\<Sum>j\<in>{..<?m} - {i, Suc i mod ?m}. f_cross j) = f_cross k + (\<Sum>j\<in>{..<?m} - {i, Suc i mod ?m} - {k}. f_cross j)"
+            by (by100 simp)
+          moreover have "f_cross k < 0" using hneg hk by (by100 blast)
+          moreover have "(\<Sum>j\<in>{..<?m} - {i, Suc i mod ?m} - {k}. f_cross j) \<le> 0"
+            by (rule sum_nonpos) (use hneg in \<open>by100 force\<close>)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        \<comment> \<open>Combine: total sum = 0 + 0 + (negative) < 0.\<close>
+        hence "(\<Sum>j\<in>{..<?m}-{i}-{Suc i mod ?m}. f_cross j) < 0" using hset_eq by (by100 simp)
+        hence "(\<Sum>j<?m. f_cross j) < 0" using hs1 hs2 hfi hfSi by (by100 linarith)
+        thus "(\<Sum>j<?m. (vx_m j - vx_m i) * dy - (vy_m j - vy_m i) * dx) < 0"
+          unfolding f_cross_def .
+      qed
+      ultimately have hcross_neg: "cross_cm < 0"
+      proof -
+        assume heq: "cross_cm = (\<Sum>j<?m. (vx_m j - vx_m i) * dy - (vy_m j - vy_m i) * dx) / real ?m"
+          and hlt: "(\<Sum>j<?m. (vx_m j - vx_m i) * dy - (vy_m j - vy_m i) * dx) < 0"
+        have "real ?m > 0" using hm_pos by (by100 simp)
+        hence "(\<Sum>j<?m. (vx_m j - vx_m i) * dy - (vy_m j - vy_m i) * dx) / real ?m < 0"
+          using hlt divide_less_0_iff by (by100 blast)
+        thus ?thesis using heq by (by100 linarith)
+      qed
+      \<comment> \<open>Edge point has cross product = 0.\<close>
+      moreover have "((1-t)*vx_m i+t*vx_m(Suc i mod ?m) - vx_m i) * dy
+        - ((1-t)*vy_m i+t*vy_m(Suc i mod ?m) - vy_m i) * dx = 0"
+        unfolding dx_def dy_def by (by100 algebra)
+      \<comment> \<open>If centroid = edge point, their cross products would match. But < 0 \\<noteq> 0.\<close>
+      ultimately show "(cx_m, cy_m) \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m))"
+      proof -
+        assume hlt: "cross_cm < 0"
+        assume hedge: "((1-t)*vx_m i+t*vx_m(Suc i mod ?m) - vx_m i) * dy
+          - ((1-t)*vy_m i+t*vy_m(Suc i mod ?m) - vy_m i) * dx = 0"
+        show ?thesis
+        proof
+          assume heq: "(cx_m, cy_m) = ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m))"
+          hence "cx_m = (1-t)*vx_m i+t*vx_m(Suc i mod ?m)" "cy_m = (1-t)*vy_m i+t*vy_m(Suc i mod ?m)"
+            by (by100 simp)+
+          hence "cross_cm = ((1-t)*vx_m i+t*vx_m(Suc i mod ?m) - vx_m i) * dy
+            - ((1-t)*vy_m i+t*vy_m(Suc i mod ?m) - vy_m i) * dx"
+            unfolding cross_cm_def by (by100 simp)
+          hence "cross_cm = 0" using hedge by (by100 linarith)
+          thus False using hlt by (by100 linarith)
+        qed
+      qed
+    qed
     \<comment> \<open>Fan construction: define f using the vertex map.\<close>
     \<comment> \<open>f maps each triangle of the fan from v\\_e(1) to the corresponding triangle
        of the fan from c\\_m. The vertex map is:
