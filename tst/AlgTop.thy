@@ -3393,7 +3393,37 @@ proof -
       \<comment> \<open>Since \\<Sigma> c\\_j * cross\\_k(j) = 0 with each term \\<le> 0 and c\\_j \\<ge> 0:
          c\\_j = 0 for all j with cross\\_k(j) < 0.\<close>
       have honly_Sk: "\<forall>j<?n'. j \<noteq> k \<longrightarrow> j \<noteq> Suc k mod ?n' \<longrightarrow> coeffs j = 0"
-        sorry
+      proof (intro allI impI)
+        fix j assume hj: "j < ?n'" and hjk: "j \<noteq> k" and hjSk: "j \<noteq> Suc k mod ?n'"
+        \<comment> \<open>cross\\_k(j) < 0 (j is non-adjacent to edge k in P').\<close>
+        have "j + 2 \<noteq> k + 2" using hjk by (by100 simp)
+        \<comment> \<open>j + 2 \\<noteq> Suc(k+2) mod n: need Suc k mod n' to correspond to shifted index.\<close>
+        have "j + 2 \<noteq> Suc (k+2) mod ?n"
+          sorry \<comment> \<open>From hjSk: j \\<noteq> Suc k mod n' implies j+2 \\<noteq> Suc(k+2) mod n.\<close>
+        from hcross_strict[rule_format, OF hj \<open>j+2 \<noteq> k+2\<close> this]
+        have hlt: "cross_k j < 0" .
+        \<comment> \<open>From hcross\\_sum = 0, hcross\\_le (all terms \\<le> 0): each term = 0.\<close>
+        have "coeffs j * cross_k j = 0"
+        proof -
+          have hle_all: "\<forall>i\<in>{..<?n'}. coeffs i * cross_k i \<le> 0"
+            using hcross_le by (by100 blast)
+          have "(\<Sum>i<?n'. coeffs i * cross_k i) \<le> (\<Sum>i<?n'. (0::real))"
+            by (rule sum_mono) (use hle_all in \<open>by100 blast\<close>)
+          hence hle_sum: "(\<Sum>i<?n'. coeffs i * cross_k i) \<le> 0" by (by100 simp)
+          have "coeffs j * cross_k j \<ge> (\<Sum>i<?n'. coeffs i * cross_k i)"
+          proof -
+            have "(\<Sum>i\<in>{..<?n'}-{j}. coeffs i * cross_k i) \<le> 0"
+              by (rule sum_nonpos) (use hle_all in \<open>by100 blast\<close>)
+            moreover have "(\<Sum>i<?n'. coeffs i * cross_k i) = coeffs j * cross_k j + (\<Sum>i\<in>{..<?n'}-{j}. coeffs i * cross_k i)"
+              using hj sorry
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          moreover have "coeffs j * cross_k j \<le> 0" using hcross_le hj by (by100 blast)
+          ultimately show "coeffs j * cross_k j = 0" using hcross_sum by (by100 linarith)
+        qed
+        \<comment> \<open>coeffs(j) * cross\\_k(j) = 0 with cross\\_k(j) < 0 \\<Longrightarrow> coeffs(j) = 0.\<close>
+        thus "coeffs j = 0" using hlt by (by100 simp)
+      qed
       \<comment> \<open>Only coefficient at j = Suc k mod n' can be nonzero. So c\\_{Suc k mod n'} = 1.\<close>
       have hcSk: "coeffs (Suc k mod ?n') = 1"
         sorry
