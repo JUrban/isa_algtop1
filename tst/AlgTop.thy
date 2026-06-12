@@ -4944,6 +4944,13 @@ proof -
            = (if snd(w!i)=snd(w!j)
               then q_m ((1-t)*vx_m j+t*vx_m(Suc j mod ?m),(1-t)*vy_m j+t*vy_m(Suc j mod ?m))
               else q_m (t*vx_m j+(1-t)*vx_m(Suc j mod ?m),t*vy_m j+(1-t)*vy_m(Suc j mod ?m))))"
+      and hC8m: "\<forall>p\<in>P_m. (\<forall>i<?m. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m)))
+             \<longrightarrow> (\<forall>p'\<in>P_m. q_m p = q_m p' \<longrightarrow> p = p')"
+      and hC9m: "\<forall>i<?m. \<forall>j<?m. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+            q_m ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m))
+          = q_m ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m))
+          \<longrightarrow> (i=j \<and> t=s) \<or> (fst(w!i)=fst(w!j) \<and> (if snd(w!i)=snd(w!j) then s=t else s=1-t))"
       and hC10m: "\<forall>i<?m. let cx=(\<Sum>j<?m. vx_m j)/real ?m; cy=(\<Sum>j<?m. vy_m j)/real ?m
            in (vx_m i-cx)*(vy_m(Suc i mod ?m)-cy)-(vy_m i-cy)*(vx_m(Suc i mod ?m)-cx) > 0"
       and hC11m: "\<forall>i<?m. \<forall>k<?m. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?m \<longrightarrow>
@@ -5135,14 +5142,147 @@ proof -
     \<comment> \<open>f maps each triangle of the fan from v\\_e(1) to the corresponding triangle
        of the fan from c\\_m. The vertex map is:
        v\\_e(0) \\<to> u\\_m(0), v\\_e(1) \\<to> c\\_m, v\\_e(k) \\<to> u\\_m(k-2) for k\\<ge>2.\<close>
+    \<comment> \<open>Fan construction: define f with structural properties (geometric sorry).
+       Then derive fibre matching algebraically from structural properties + C conditions.\<close>
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
-        \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
-      sorry \<comment> \<open>Fan construction: PL map from fan(v\\_e(1)) to fan(c\\_m).\<close>
+        \<comment> \<open>Edge map: edges 2..n-1 of P\\_e map to edges 0..m-1 of P\\_m.\<close>
+        \<and> (\<forall>k. 2 \<le> k \<and> k < ?n \<longrightarrow> (\<forall>t\<in>I_set.
+             f ((1-t)*vx_e k+t*vx_e(Suc k mod ?n),(1-t)*vy_e k+t*vy_e(Suc k mod ?n))
+             = ((1-t)*vx_m(k-2)+t*vx_m(Suc(k-2) mod ?m),(1-t)*vy_m(k-2)+t*vy_m(Suc(k-2) mod ?m))))
+        \<comment> \<open>Edge 0 maps to spur: straight line from u0 to centroid.\<close>
+        \<and> (\<forall>t\<in>I_set. f ((1-t)*vx_e 0+t*vx_e 1,(1-t)*vy_e 0+t*vy_e 1)
+             = ((1-t)*vx_m 0+t*cx_m,(1-t)*vy_m 0+t*cy_m))
+        \<comment> \<open>Edge 1 maps to reversed spur.\<close>
+        \<and> (\<forall>t\<in>I_set. f ((1-t)*vx_e 1+t*vx_e 2,(1-t)*vy_e 1+t*vy_e 2)
+             = ((1-t)*cx_m+t*vx_m 0,(1-t)*cy_m+t*vy_m 0))
+        \<comment> \<open>Interior maps to interior of P\\_m.\<close>
+        \<and> (\<forall>p\<in>P_e. (\<forall>i<?n. \<forall>t\<in>I_set.
+             p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
+           \<longrightarrow> f p \<in> P_m
+             \<and> (\<forall>j<?m. \<forall>s\<in>I_set.
+                  f p \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m)))
+             \<and> (\<forall>t'\<in>{0<..<(1::real)}.
+                  f p \<noteq> ((1-t')*vx_m 0+t'*cx_m,(1-t')*vy_m 0+t'*cy_m)))
+        \<comment> \<open>Interior injectivity.\<close>
+        \<and> (\<forall>p\<in>P_e. \<forall>p'\<in>P_e.
+             (\<forall>i<?n. \<forall>t\<in>I_set. p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
+           \<longrightarrow> (\<forall>i<?n. \<forall>t\<in>I_set. p' \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
+           \<longrightarrow> f p = f p' \<longrightarrow> p = p')"
+      sorry \<comment> \<open>Fan construction: PL map from fan(v\\_e(1)) to fan(c\\_m).
+         Continuity: PL on a triangulation. Surjectivity: fan covers P\\_m.
+         Edge map: affine on each triangle. Spur: v0\\<to>u0, v1\\<to>c\\_m, v2\\<to>u0.
+         Interior: fan-to-fan bijection. See analysis in memory.\<close>
     then obtain f where
         hf_cont: "continuous_on P_e f"
       and hf_surj: "f ` P_e = P_m"
-      and hf_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> ((q_m \<circ> f) x = (q_m \<circ> f) y)"
-      by (by100 auto)
+      and hf_edge: "\<forall>k. 2 \<le> k \<and> k < ?n \<longrightarrow> (\<forall>t\<in>I_set.
+           f ((1-t)*vx_e k+t*vx_e(Suc k mod ?n),(1-t)*vy_e k+t*vy_e(Suc k mod ?n))
+           = ((1-t)*vx_m(k-2)+t*vx_m(Suc(k-2) mod ?m),(1-t)*vy_m(k-2)+t*vy_m(Suc(k-2) mod ?m)))"
+      and hf_spur0: "\<forall>t\<in>I_set. f ((1-t)*vx_e 0+t*vx_e 1,(1-t)*vy_e 0+t*vy_e 1)
+           = ((1-t)*vx_m 0+t*cx_m,(1-t)*vy_m 0+t*cy_m)"
+      and hf_spur1: "\<forall>t\<in>I_set. f ((1-t)*vx_e 1+t*vx_e 2,(1-t)*vy_e 1+t*vy_e 2)
+           = ((1-t)*cx_m+t*vx_m 0,(1-t)*cy_m+t*vy_m 0)"
+      and hf_int_range: "\<forall>p\<in>P_e. (\<forall>i<?n. \<forall>t\<in>I_set.
+           p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
+         \<longrightarrow> f p \<in> P_m
+           \<and> (\<forall>j<?m. \<forall>s\<in>I_set.
+                f p \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m)))
+           \<and> (\<forall>t'\<in>{0<..<(1::real)}.
+                f p \<noteq> ((1-t')*vx_m 0+t'*cx_m,(1-t')*vy_m 0+t'*cy_m))"
+      and hf_int_inj: "\<forall>p\<in>P_e. \<forall>p'\<in>P_e.
+           (\<forall>i<?n. \<forall>t\<in>I_set. p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
+         \<longrightarrow> (\<forall>i<?n. \<forall>t\<in>I_set. p' \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
+         \<longrightarrow> f p = f p' \<longrightarrow> p = p'"
+      by auto
+    \<comment> \<open>Derive fibre matching from structural properties + C conditions.\<close>
+    \<comment> \<open>Derive fibre matching from structural properties + C conditions.\<close>
+    have hf_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> ((q_m \<circ> f) x = (q_m \<circ> f) y)"
+    proof (intro ballI iffI)
+      fix x y assume hxP: "x \<in> P_e" and hyP: "y \<in> P_e"
+      \<comment> \<open>Forward direction: q\\_e(x) = q\\_e(y) \\<Longrightarrow> q\\_m(f(x)) = q\\_m(f(y)).\<close>
+      {
+        assume heq: "q_e x = q_e y"
+        \<comment> \<open>Case: x interior (not on any edge).\<close>
+        consider (x_int) "\<forall>i<?n. \<forall>t\<in>I_set. x \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))"
+          | (x_bdy) "\<exists>i<?n. \<exists>t\<in>I_set. x = ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))"
+          by (by100 blast)
+        hence "(q_m \<circ> f) x = (q_m \<circ> f) y"
+        proof cases
+          case x_int
+          \<comment> \<open>x interior: C8\\_e gives x = y, so f(x) = f(y).\<close>
+          from hC8e hxP x_int have "\<forall>p'\<in>P_e. q_e x = q_e p' \<longrightarrow> x = p'" by (by100 blast)
+          hence "x = y" using hyP heq by (by100 blast)
+          thus ?thesis by (by100 simp)
+        next
+          case x_bdy
+          then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set"
+            and hx: "x = ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))"
+            by (by100 blast)
+          \<comment> \<open>y interior \\<Longrightarrow> C8\\_e at y gives y = x.\<close>
+          consider (y_int) "\<forall>j<?n. \<forall>s\<in>I_set. y \<noteq> ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
+            | (y_bdy) "\<exists>j<?n. \<exists>s\<in>I_set. y = ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
+            by (by100 blast)
+          thus ?thesis
+          proof cases
+            case y_int
+            from hC8e hyP y_int have "\<forall>p'\<in>P_e. q_e y = q_e p' \<longrightarrow> y = p'" by (by100 blast)
+            hence "y = x" using hxP heq[symmetric] by (by100 blast)
+            thus ?thesis by (by100 simp)
+          next
+            case y_bdy
+            \<comment> \<open>Both x, y on boundary. Full case analysis on edge indices.\<close>
+            then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set"
+              and hy: "y = ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
+              by (by100 blast)
+            show ?thesis sorry \<comment> \<open>Forward boundary-boundary case. Needs C7/C9/freshness analysis.\<close>
+          qed
+        qed
+      }
+      thus "q_e x = q_e y \<Longrightarrow> (q_m \<circ> f) x = (q_m \<circ> f) y" .
+    next
+      fix x y assume hxP: "x \<in> P_e" and hyP: "y \<in> P_e"
+      \<comment> \<open>Backward direction: q\\_m(f(x)) = q\\_m(f(y)) \\<Longrightarrow> q\\_e(x) = q\\_e(y).\<close>
+      assume heq: "(q_m \<circ> f) x = (q_m \<circ> f) y"
+      \<comment> \<open>Backward: q\\_m(f(x)) = q\\_m(f(y)) \\<Longrightarrow> q\\_e(x) = q\\_e(y).\<close>
+      consider (x_int) "\<forall>i<?n. \<forall>t\<in>I_set. x \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))"
+        | (x_bdy) "\<exists>i<?n. \<exists>t\<in>I_set. x = ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))"
+        by (by100 blast)
+      thus "q_e x = q_e y"
+      proof cases
+        case x_int
+        \<comment> \<open>x interior to P\\_e. f(x) is interior to P\\_m (by hf\\_int\\_range).
+           C8\\_m on f(x): q\\_m injective at f(x).
+           So q\\_m(f(x)) = q\\_m(f(y)) \\<Longrightarrow> f(x) = f(y).\<close>
+        from hf_int_range hxP x_int
+        have hfx_int: "f x \<in> P_m"
+          "\<forall>j<?m. \<forall>s\<in>I_set. f x \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+          by (by100 blast)+
+        from hC8m[rule_format, OF \<open>f x \<in> P_m\<close>] hfx_int(2)
+        have "\<forall>p'\<in>P_m. q_m (f x) = q_m p' \<longrightarrow> f x = p'" by (by100 blast)
+        moreover have "f y \<in> P_m" using hf_surj hyP by (by100 blast)
+        ultimately have "f x = f y" using heq by (by100 simp)
+        \<comment> \<open>y must also be interior (otherwise f(y) can't equal f(x)).\<close>
+        consider (y_int) "\<forall>i<?n. \<forall>t\<in>I_set. y \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))"
+          | (y_bdy) "\<exists>i<?n. \<exists>t\<in>I_set. y = ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))"
+          by (by100 blast)
+        thus ?thesis
+        proof cases
+          case y_int
+          \<comment> \<open>Both interior: f injective \\<Longrightarrow> x = y \\<Longrightarrow> q\\_e(x) = q\\_e(y).\<close>
+          from hf_int_inj hxP hyP x_int y_int \<open>f x = f y\<close>
+          have "x = y" by (by100 blast)
+          thus ?thesis by (by100 simp)
+        next
+          case y_bdy
+          \<comment> \<open>x interior, y on boundary. f(x) is interior, f(y) is either on an edge or on spur.
+             In either case, f(x) \\<noteq> f(y) since interior doesn't overlap with edges/spur.\<close>
+          show ?thesis sorry \<comment> \<open>x interior, y boundary backward case.\<close>
+        qed
+      next
+        case x_bdy
+        show ?thesis sorry \<comment> \<open>x boundary backward case.\<close>
+      qed
+    qed
     \<comment> \<open>q\\_w \\<circ> f is a quotient map from P\\_ext to Y\\_w (composition of continuous surjection
        f: P\\_ext \\<to> P\\_w with quotient map q\\_w: P\\_w \\<to> Y\\_w).\<close>
     \<comment> \<open>f is a quotient map (compact \\<to> Hausdorff continuous surjection = quotient map).\<close>
