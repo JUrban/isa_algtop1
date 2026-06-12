@@ -31318,7 +31318,9 @@ definition top1_quotient_of_scheme_on ::
       \<comment> \<open>No extra identifications: boundary identifications are ONLY the scheme-specified ones.
           If two boundary edge points have the same q-value, they must be the same point
           or on same-label edges at corresponding parameters.\<close>
-      \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+      \<comment> \<open>C9 uses open interval (0,1): vertex identifications are determined by C7 at endpoints
+          and may involve transitive chains across different label pairs.\<close>
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
               q ((1-t) * vx i + t * vx (Suc i mod length scheme),
                  (1-t) * vy i + t * vy (Suc i mod length scheme))
             = q ((1-s) * vx j + s * vx (Suc j mod length scheme),

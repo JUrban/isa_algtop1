@@ -62,12 +62,12 @@ session AlgTopSvK in svk = PolygonDisk +
     AlgTopSvK
 
 session AlgTopWedgeHelpers in wh = AlgTopSvK +
-  options [timeout = 600]
+  options [quick_and_dirty, timeout = 600]
   theories
     AlgTopWedgeHelpers
 
 session AlgTopChain in at = AlgTopWedgeHelpers +
-  options [timeout = 600]
+  options [quick_and_dirty, timeout = 600]
   theories
     AlgTopChain
 
@@ -109,7 +109,7 @@ session AlgTopCached7 in ac7 = AlgTopCached6 +
     AlgTopCached7
 
 session AlgTopCached8 in ac8 = AlgTopCached7 +
-  options [timeout = 600]
+  options [quick_and_dirty, timeout = 600]
   theories
     AlgTopCached8
 

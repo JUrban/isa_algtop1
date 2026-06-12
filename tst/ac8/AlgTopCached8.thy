@@ -657,7 +657,7 @@ theorem Theorem_74_2_scheme_presentation:
           \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
           \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
           \<and> (\<forall>i<length scheme. \<forall>j<length scheme. q (vx i, vy i) = q (vx j, vy j))
-          \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
               q ((1-t) * vx i + t * vx (Suc i mod length scheme),
                  (1-t) * vy i + t * vy (Suc i mod length scheme))
             = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -695,7 +695,7 @@ proof -
     hq: "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q" and
     hverts: "\<forall>i<length scheme. (vxP i, vyP i) \<in> P" and
     hvert_id: "\<forall>i<length scheme. \<forall>j<length scheme. q (vxP i, vyP i) = q (vxP j, vyP j)" and
-    hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           q ((1-t) * vxP i + t * vxP (Suc i mod length scheme),
              (1-t) * vyP i + t * vyP (Suc i mod length scheme))
         = q ((1-s) * vxP j + s * vxP (Suc j mod length scheme),
@@ -735,7 +735,7 @@ proof -
                       (1-t) * vyC j + t * vyC (Suc j mod length scheme))
               else qC (t * vxC j + (1-t) * vxC (Suc j mod length scheme),
                       t * vyC j + (1-t) * vyC (Suc j mod length scheme))))"
-      and hno_C: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+      and hno_C: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           qC ((1-t) * vxC i + t * vxC (Suc i mod length scheme),
              (1-t) * vyC i + t * vyC (Suc i mod length scheme))
         = qC ((1-s) * vxC j + s * vxC (Suc j mod length scheme),
@@ -901,10 +901,18 @@ proof -
         have heq: "qC (edge_pt (i_of \<alpha>) t) = qC (edge_pt (i_of \<beta>) s)"
           using hxt hxs by (by100 simp)
         \<comment> \<open>By hno\_C: either (i_of \<alpha> = i_of \<beta> \<and> t = s) or same label. But labels differ!\<close>
-        from hno_C have hcase: "(i_of \<alpha> = i_of \<beta> \<and> t = s)
+        have hcase: "(i_of \<alpha> = i_of \<beta> \<and> t = s)
           \<or> (fst (scheme!(i_of \<alpha>)) = fst (scheme!(i_of \<beta>)) \<and>
              (if snd (scheme!(i_of \<alpha>)) = snd (scheme!(i_of \<beta>)) then s = t else s = 1 - t))"
-          using hi\<alpha>(1) hi\<beta>(1) ht hs heq unfolding edge_pt_def by (by100 blast)
+        proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
+          case True
+          hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
+          from hno_C[rule_format, OF hi\<alpha>(1) hi\<beta>(1) this]
+          show ?thesis using heq unfolding edge_pt_def by (by100 blast)
+        next
+          case False
+          show ?thesis sorry \<comment> \<open>Vertex case: C7 at endpoints.\<close>
+        qed
         \<comment> \<open>The second disjunct is impossible since labels differ.\<close>
         have "i_of \<alpha> = i_of \<beta> \<and> t = s" using hcase hlabel_ne by (by100 blast)
         \<comment> \<open>But i_of \<alpha> = i_of \<beta> implies same label, contradiction.\<close>
@@ -1059,11 +1067,20 @@ proof -
         hence "qC (edge_pt (i_of \<alpha>) t1) = qC (edge_pt (i_of \<alpha>) t2)"
           unfolding f_\<alpha>_def by (by100 simp)
         \<comment> \<open>By hno\_C with i = j = i\_of \<alpha>: t1 = t2.\<close>
-        hence "(i_of \<alpha> = i_of \<alpha> \<and> t1 = t2)
-          \<or> (fst (scheme!(i_of \<alpha>)) = fst (scheme!(i_of \<alpha>)) \<and>
-             (if snd (scheme!(i_of \<alpha>)) = snd (scheme!(i_of \<alpha>)) then t2 = t1 else t2 = 1 - t1))"
-          using hno_C hi\<alpha>(1) ht1(1) ht2(1) unfolding edge_pt_def by (by100 blast)
-        hence "t1 = t2" by (by100 auto)
+        hence "t1 = t2"
+        proof (cases "0 < t1 \<and> t1 < 1 \<and> 0 < t2 \<and> t2 < 1")
+          case True
+          hence "t1 \<in> {0<..<(1::real)}" "t2 \<in> {0<..<(1::real)}" by (by100 auto)+
+          from hno_C[rule_format, OF hi\<alpha>(1) hi\<alpha>(1) this]
+          have "(i_of \<alpha> = i_of \<alpha> \<and> t1 = t2)
+            \<or> (fst (scheme!(i_of \<alpha>)) = fst (scheme!(i_of \<alpha>)) \<and>
+               (if snd (scheme!(i_of \<alpha>)) = snd (scheme!(i_of \<alpha>)) then t2 = t1 else t2 = 1 - t1))"
+            using \<open>qC _ = qC _\<close> unfolding edge_pt_def by (by100 blast)
+          thus "t1 = t2" by (by100 auto)
+        next
+          case False
+          show "t1 = t2" sorry \<comment> \<open>Vertex case.\<close>
+        qed
         thus "z1 = z2" using ht1(2) ht2(2) by (by100 simp)
       qed
       \<comment> \<open>g is a bijection from S1 to C(\<alpha>).\<close>
@@ -1396,11 +1413,20 @@ proof -
         finally have hfeq: "f_\<alpha> t1 = f_\<alpha> t2" .
         hence "qC (edge_pt (i_of \<alpha>) t1) = qC (edge_pt (i_of \<alpha>) t2)"
           unfolding f_\<alpha>_def by (by100 simp)
-        hence "(i_of \<alpha> = i_of \<alpha> \<and> t1 = t2)
-          \<or> (fst (scheme!(i_of \<alpha>)) = fst (scheme!(i_of \<alpha>)) \<and>
-             (if snd (scheme!(i_of \<alpha>)) = snd (scheme!(i_of \<alpha>)) then t2 = t1 else t2 = 1 - t1))"
-          using hno_C hi\<alpha>(1) ht1(1) ht2(1) unfolding edge_pt_def by (by100 blast)
-        hence "t1 = t2" by (by100 auto)
+        hence "t1 = t2"
+        proof (cases "0 < t1 \<and> t1 < 1 \<and> 0 < t2 \<and> t2 < 1")
+          case True
+          hence "t1 \<in> {0<..<(1::real)}" "t2 \<in> {0<..<(1::real)}" by (by100 auto)+
+          from hno_C[rule_format, OF hi\<alpha>(1) hi\<alpha>(1) this]
+          have "(i_of \<alpha> = i_of \<alpha> \<and> t1 = t2)
+            \<or> (fst (scheme!(i_of \<alpha>)) = fst (scheme!(i_of \<alpha>)) \<and>
+               (if snd (scheme!(i_of \<alpha>)) = snd (scheme!(i_of \<alpha>)) then t2 = t1 else t2 = 1 - t1))"
+            using \<open>qC _ = qC _\<close> unfolding edge_pt_def by (by100 blast)
+          thus "t1 = t2" by (by100 auto)
+        next
+          case False
+          show "t1 = t2" sorry \<comment> \<open>Vertex case.\<close>
+        qed
         thus "z1 = z2" using ht1(2) ht2(2) by (by100 simp)
       qed
       \<comment> \<open>By Theorem 26.6: compact + Hausdorff + continuous bijection = homeomorphism.\<close>
@@ -3405,7 +3431,7 @@ proof -
       \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q
       \<and> (\<forall>i<length ?scheme. (vx i, vy i) \<in> P)
       \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q (vx i, vy i) = q (vx j, vy j))
-      \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+      \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
                (1-t) * vy i + t * vy (Suc i mod length ?scheme))
           = q ((1-s) * vx j + s * vx (Suc j mod length ?scheme),
@@ -3439,7 +3465,7 @@ proof -
             p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
                   (1-t) * vy i + t * vy (Suc i mod length ?scheme)))
        \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')" and
-      hno_extra_loc: "\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+      hno_extra_loc: "\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
                (1-t) * vy i + t * vy (Suc i mod length ?scheme))
           = q ((1-s) * vx j + s * vx (Suc j mod length ?scheme),
@@ -8283,7 +8309,7 @@ next
     \<and> top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) X TX q'
     \<and> (\<forall>i<length ?scheme. (vx i, vy i) \<in> P)
     \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. q' (vx i, vy i) = q' (vx j, vy j))
-    \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    \<and> (\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
         q' ((1-t) * vx i + t * vx (Suc i mod length ?scheme),
            (1-t) * vy i + t * vy (Suc i mod length ?scheme))
       = q' ((1-s) * vx j + s * vx (Suc j mod length ?scheme),
@@ -8316,7 +8342,7 @@ next
             p \<noteq> ((1-t) * vx0 i + t * vx0 (Suc i mod length ?scheme),
                   (1-t) * vy0 i + t * vy0 (Suc i mod length ?scheme)))
        \<longrightarrow> (\<forall>p'\<in>P0. q0 p = q0 p' \<longrightarrow> p = p')"
-      and hno_extra0: "\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+      and hno_extra0: "\<forall>i<length ?scheme. \<forall>j<length ?scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           q0 ((1-t) * vx0 i + t * vx0 (Suc i mod length ?scheme),
              (1-t) * vy0 i + t * vy0 (Suc i mod length ?scheme))
         = q0 ((1-s) * vx0 j + s * vx0 (Suc j mod length ?scheme),

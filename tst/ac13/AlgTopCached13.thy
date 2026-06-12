@@ -808,7 +808,7 @@ lemma quotient_of_scheme_extract_vx:
                 p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                       (1-t) * vy i + t * vy (Suc i mod length scheme)))
              \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q ((1-t) * vx i + t * vx (Suc i mod length scheme),
                (1-t) * vy i + t * vy (Suc i mod length scheme))
           = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -1014,7 +1014,7 @@ proof -
                 p \<noteq> ((1-t) * vx i + t * vx (Suc i mod ?n),
                       (1-t) * vy i + t * vy (Suc i mod ?n)))
              \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q ((1-t) * vx i + t * vx (Suc i mod ?n),
                (1-t) * vy i + t * vy (Suc i mod ?n))
           = q ((1-s) * vx j + s * vx (Suc j mod ?n),
@@ -2122,7 +2122,7 @@ proof -
     thus "p = p'" using h\<rho>_inv by (by100 metis)
   qed
   \<comment> \<open>C9': boundary injectivity.\<close>
-  have hC9': "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+  have hC9': "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q' ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
                (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n)))))
           = q' ((1-s) * vx (\<sigma> j) + s * vx (\<sigma> (Suc j mod ?n)),
@@ -2131,7 +2131,8 @@ proof -
             \<or> (fst (?w'!i) = fst (?w'!j) \<and>
                (if snd (?w'!i) = snd (?w'!j) then s = t else s = 1 - t))"
   proof (intro allI impI ballI)
-    fix i j t s assume hi: "i < ?n" and hj: "j < ?n" and ht: "t \<in> I_set" and hs: "s \<in> I_set"
+    fix i j t s assume hi: "i < ?n" and hj: "j < ?n"
+      and ht: "t \<in> {0<..<(1::real)}" and hs: "s \<in> {0<..<(1::real)}"
       and hq_eq: "q' ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
                (1-t) * (-(vy (\<sigma> i))) + t * (-(vy (\<sigma> (Suc i mod ?n)))))
           = q' ((1-s) * vx (\<sigma> j) + s * vx (\<sigma> (Suc j mod ?n)),
@@ -2144,8 +2145,8 @@ proof -
     have hSj': "Suc ?j' mod ?n = \<sigma> j" using hSuc_n1i[OF hj] .
     have hq': "\<And>a b::real. q' (a, b) = q (a, -b)"
       unfolding q'_def \<rho>_def by (by100 simp)
-    have h1t: "1-t \<in> I_set" and h1s: "1-s \<in> I_set"
-      using ht hs unfolding top1_unit_interval_def by (by100 simp)+
+    have h1t: "1-t \<in> {0<..<(1::real)}" and h1s: "1-s \<in> {0<..<(1::real)}"
+      using ht hs by (by100 auto)+
     \<comment> \<open>Convert q' equality to q equality via hq'.\<close>
     have hq_orig: "q (t * vx ?i' + (1-t) * vx (\<sigma> i), t * vy ?i' + (1-t) * vy (\<sigma> i))
         = q (s * vx ?j' + (1-s) * vx (\<sigma> j), s * vy ?j' + (1-s) * vy (\<sigma> j))"
@@ -2413,7 +2414,8 @@ proof -
     subgoal premises prems for P q vx vy
     proof (intro allI ballI impI)
       fix i j ta s
-      assume hi: "i < length w" and hj: "j < length w" and hta: "ta \<in> I_set" and hs: "s \<in> I_set"
+      assume hi: "i < length w" and hj: "j < length w"
+        and hta: "ta \<in> {0<..<(1::real)}" and hs: "s \<in> {0<..<(1::real)}"
         and hq_eq: "q ((1 - ta) * vx i + ta * vx (Suc i mod length w),
               (1 - ta) * vy i + ta * vy (Suc i mod length w)) =
              q ((1 - s) * vx j + s * vx (Suc j mod length w),
@@ -2595,13 +2597,14 @@ proof -
     subgoal premises prems for P q vx vy
     proof (intro allI ballI impI)
       fix i j ta s
-      assume hi: "i < length w" and hj: "j < length w" and hta: "ta \<in> I_set" and hs: "s \<in> I_set"
+      assume hi: "i < length w" and hj: "j < length w"
+        and hta: "ta \<in> {0<..<(1::real)}" and hs: "s \<in> {0<..<(1::real)}"
           and hq_eq: "q ((1 - ta) * vx i + ta * vx (Suc i mod length w),
                 (1 - ta) * vy i + ta * vy (Suc i mod length w)) =
                q ((1 - s) * vx j + s * vx (Suc j mod length w),
                 (1 - s) * vy j + s * vy (Suc j mod length w))"
       \<comment> \<open>From the old C9 (prems) with the same q equality: get the conclusion for w.\<close>
-      from prems have hC9_w: "\<forall>i<length w. \<forall>j<length w. \<forall>ta\<in>I_set. \<forall>s\<in>I_set.
+      from prems have hC9_w: "\<forall>i<length w. \<forall>j<length w. \<forall>ta\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           q ((1-ta)*vx i+ta*vx(Suc i mod length w),(1-ta)*vy i+ta*vy(Suc i mod length w))
         = q ((1-s)*vx j+s*vx(Suc j mod length w),(1-s)*vy j+s*vy(Suc j mod length w))
         \<longrightarrow> (i=j \<and> ta=s) \<or> (fst(w!i)=fst(w!j) \<and> (if snd(w!i)=snd(w!j) then s=ta else s=1-ta))"
@@ -2781,7 +2784,7 @@ proof -
                   p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length w),
                         (1-t) * vy i + t * vy (Suc i mod length w)))
                \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-      and hC9: "\<forall>i<length w. \<forall>j<length w. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+      and hC9: "\<forall>i<length w. \<forall>j<length w. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
               q ((1-t) * vx i + t * vx (Suc i mod length w),
                  (1-t) * vy i + t * vy (Suc i mod length w))
             = q ((1-s) * vx j + s * vx (Suc j mod length w),
@@ -3144,7 +3147,8 @@ proof -
       subgoal \<comment> \<open>C9: boundary injectivity\<close>
       proof (intro allI impI ballI)
         fix i j t s
-        assume hi: "i < ?n" and hj: "j < ?n" and ht: "t \<in> I_set" and hs: "s \<in> I_set"
+        assume hi: "i < ?n" and hj: "j < ?n"
+          and ht: "t \<in> {0<..<(1::real)}" and hs: "s \<in> {0<..<(1::real)}"
           and hq: "q ((1-t) * vx (\<sigma> i) + t * vx (\<sigma> (Suc i mod ?n)),
                       (1-t) * vy (\<sigma> i) + t * vy (\<sigma> (Suc i mod ?n)))
                  = q ((1-s) * vx (\<sigma> j) + s * vx (\<sigma> (Suc j mod ?n)),

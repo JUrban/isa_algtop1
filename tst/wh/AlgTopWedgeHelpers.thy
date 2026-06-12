@@ -316,7 +316,7 @@ definition top1_is_polygonal_quotient_strict_on :: "'a set \<Rightarrow> 'a set 
                     p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                           (1-t) * vy i + t * vy (Suc i mod length scheme)))
                \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p'))
-      \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+      \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q ((1-t) * vx i + t * vx (Suc i mod length scheme),
                (1-t) * vy i + t * vy (Suc i mod length scheme))
           = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -353,7 +353,7 @@ lemma quotient_of_scheme_extract_full:
               p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                     (1-t) * vy i + t * vy (Suc i mod length scheme)))
          \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
               q ((1-t) * vx i + t * vx (Suc i mod length scheme),
                  (1-t) * vy i + t * vy (Suc i mod length scheme))
             = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -388,7 +388,7 @@ proof -
           p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                 (1-t) * vy i + t * vy (Suc i mod length scheme)))
        \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')" and
-    h7: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    h7: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
               q ((1-t) * vx i + t * vx (Suc i mod length scheme),
                  (1-t) * vy i + t * vy (Suc i mod length scheme))
             = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -452,7 +452,7 @@ proof -
               p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                     (1-t) * vy i + t * vy (Suc i mod length scheme)))
            \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-      and hno_extra_full: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+      and hno_extra_full: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
               q ((1-t) * vx i + t * vx (Suc i mod length scheme),
                  (1-t) * vy i + t * vy (Suc i mod length scheme))
             = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -540,7 +540,7 @@ proof -
                 (1-t) * vy i + t * vy (Suc i mod length scheme)))
        \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
       by (rule hinterior_full)
-    have hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    have hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           q ((1-t) * vx i + t * vx (Suc i mod length scheme),
              (1-t) * vy i + t * vy (Suc i mod length scheme))
         = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -877,14 +877,22 @@ proof -
                 by (by100 blast)
               from hx(6) obtain j s where hj: "j < length scheme" "s \<in> I_set" "b = ?edge j s"
                 by (by100 blast)
-              \<comment> \<open>Apply hno\_extra: q(edge\_i(t)) = q(edge\_j(s)) \<Rightarrow> diagonal or scheme pair.\<close>
-              from hno_extra[rule_format, OF hi(1) hj(1) hi(2) hj(2)]
-              have "q a = q b \<longrightarrow> (i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+              \<comment> \<open>Apply hno\_extra: q(edge\_i(t)) = q(edge\_j(s)) \<Rightarrow> diagonal or scheme pair.
+                 C9 only applies to interior edge points (0 < t < 1). Vertex case sorry'd.\<close>
+              have "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
                   (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-                using hi(3) hj(3) by simp
-              hence "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-                  (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-                using hx(4) by (by100 blast)
+              proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
+                case True
+                hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
+                from hno_extra[rule_format, OF hi(1) hj(1) this]
+                have "q a = q b \<longrightarrow> (i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                    (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+                  using hi(3) hj(3) by simp
+                thus ?thesis using hx(4) by (by100 blast)
+              next
+                case False
+                show ?thesis sorry \<comment> \<open>Vertex case: derive from C7 at endpoints.\<close>
+              qed
               thus "x \<in> ?D \<union> \<Union>?curves"
               proof
                 assume "i = j \<and> t = s"

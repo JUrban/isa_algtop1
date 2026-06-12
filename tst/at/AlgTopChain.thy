@@ -2922,7 +2922,7 @@ proof -
           p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                 (1-t) * vy i + t * vy (Suc i mod length scheme)))
        \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')" and
-    hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    hno_extra: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           q ((1-t) * vx i + t * vx (Suc i mod length scheme),
              (1-t) * vy i + t * vy (Suc i mod length scheme))
         = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -3079,9 +3079,20 @@ proof -
           have "q ((1-t) * vx i + t * vx (Suc i mod ?n), (1-t) * vy i + t * vy (Suc i mod ?n))
               = q ((1-s) * vx j + s * vx (Suc j mod ?n), (1-s) * vy j + s * vy (Suc j mod ?n))"
             using hc(2) hp_eq hc_eq by (by100 simp)
-          from hno_extra[rule_format, OF hi hj ht hs this]
           have "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-                (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))" .
+                (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+          proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
+            case True
+            hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
+            have hq_match: "q ((1-t) * vx i + t * vx (Suc i mod ?n), (1-t) * vy i + t * vy (Suc i mod ?n))
+                = q ((1-s) * vx j + s * vx (Suc j mod ?n), (1-s) * vy j + s * vy (Suc j mod ?n))"
+              using hc(2) hp_eq hc_eq by (by100 simp)
+            from hno_extra[rule_format, OF hi hj \<open>t \<in> {0<..<1}\<close> \<open>s \<in> {0<..<1}\<close> hq_match]
+            show ?thesis .
+          next
+            case False
+            show ?thesis sorry \<comment> \<open>Vertex case: derive from C7 at endpoints.\<close>
+          qed
           thus ?thesis
           proof
             assume "i = j \<and> t = s"
@@ -3641,7 +3652,7 @@ lemma scheme_quotient_CW_data:
                       (1-t) * vy j + t * vy (Suc j mod length scheme))
               else q (t * vx j + (1-t) * vx (Suc j mod length scheme),
                       t * vy j + (1-t) * vy (Suc j mod length scheme)))))
-    \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           q ((1-t) * vx i + t * vx (Suc i mod length scheme),
              (1-t) * vy i + t * vy (Suc i mod length scheme))
         = q ((1-s) * vx j + s * vx (Suc j mod length scheme),
@@ -3684,7 +3695,7 @@ proof -
           p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length scheme),
                 (1-t) * vy i + t * vy (Suc i mod length scheme)))
        \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')" and
-    hno_extra_cw: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    hno_extra_cw: "\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           q ((1-t) * vx i + t * vx (Suc i mod length scheme),
              (1-t) * vy i + t * vy (Suc i mod length scheme))
         = q ((1-s) * vx j + s * vx (Suc j mod length scheme),

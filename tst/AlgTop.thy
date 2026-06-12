@@ -109,7 +109,7 @@ proof -
                 p \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
                       (1-t) * vy1 i + t * vy1 (Suc i mod ?n)))
              \<longrightarrow> (\<forall>p'\<in>P1. q1 p = q1 p' \<longrightarrow> p = p')"
-    and hC9_1: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>ss\<in>I_set.
+    and hC9_1: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>ss\<in>{0<..<(1::real)}.
             q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
                (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
           = q1 ((1-ss) * vx1 j + ss * vx1 (Suc j mod ?n),
@@ -2451,24 +2451,26 @@ proof -
       thus ?thesis using hqeq hqp by (by100 simp)
     qed
   qed
-  have hC9_boundary: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+  have hC9_boundary: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
           q ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))
         = q ((1-s)*vx j + s*vx(Suc j mod ?n), (1-s)*vy j + s*vy(Suc j mod ?n))
         \<longrightarrow> (i=j \<and> t=s) \<or> (fst(scheme!i) = fst(scheme!j) \<and>
              (if snd(scheme!i) = snd(scheme!j) then s=t else s=1-t))"
   proof (intro allI impI ballI)
     fix i j t s
-    assume hi9: "i < ?n" and hj9: "j < ?n" and ht9: "t \<in> I_set" and hs9: "s \<in> I_set"
+    assume hi9: "i < ?n" and hj9: "j < ?n"
+      and ht9: "t \<in> {0<..<(1::real)}" and hs9: "s \<in> {0<..<(1::real)}"
     assume hqeq9: "q ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))
         = q ((1-s)*vx j + s*vx(Suc j mod ?n), (1-s)*vy j + s*vy(Suc j mod ?n))"
-    have ht01: "0 \<le> t" "t \<le> 1" using ht9 unfolding top1_unit_interval_def by (by100 auto)+
-    have hs01: "0 \<le> s" "s \<le> 1" using hs9 unfolding top1_unit_interval_def by (by100 auto)+
+    have ht_i: "0 < t" "t < 1" using ht9 by (by100 auto)+
+    have hs_i: "0 < s" "s < 1" using hs9 by (by100 auto)+
+    have ht01: "0 \<le> t" "t \<le> 1" using ht_i by (by100 linarith)+
+    have hs01: "0 \<le> s" "s \<le> 1" using hs_i by (by100 linarith)+
     have hqep: "q (edge_pt i t) = q (edge_pt j s)" using hqeq9 unfolding edge_pt_def by (by100 simp)
     show "(i=j \<and> t=s) \<or> (fst(scheme!i) = fst(scheme!j) \<and>
            (if snd(scheme!i) = snd(scheme!j) then s=t else s=1-t))"
-    proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
-      case hint9: True
-      hence ht_i: "0 < t" "t < 1" and hs_i: "0 < s" "s < 1" by (by100 auto)+
+    \<comment> \<open>Both t, s \\<in> (0,1) so we're always in the interior case.\<close>
+    proof -
       \<comment> \<open>Interior case: q maps each edge point to a canonical edge point.
          For canonical i: q(edge\\_pt i t) = edge\\_pt i t.
          For non-canonical i: q(edge\\_pt i t) = edge\\_pt(partner i, matching\\_t).
@@ -2781,9 +2783,6 @@ proof -
           thus ?thesis using \<open>i = j\<close> \<open>t = s\<close> by (by100 blast)
         qed
       qed
-    next
-      case False \<comment> \<open>At least one vertex.\<close>
-      show ?thesis sorry \<comment> \<open>Vertex case: blocked by C9 definition issue.\<close>
     qed
   qed
   \<comment> \<open>Assembly: introduce witnesses P, q, vx, vy and combine all conditions.\<close>
@@ -2994,7 +2993,7 @@ proof -
                       (1-t) * vy i + t * vy (Suc i mod ?n)))
              \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
       using hC9_interior .
-    show "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    show "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q ((1-t) * vx i + t * vx (Suc i mod ?n),
                (1-t) * vy i + t * vy (Suc i mod ?n))
           = q ((1-s) * vx j + s * vx (Suc j mod ?n),
@@ -3063,7 +3062,7 @@ proof -
                 p \<noteq> ((1-t) * vx i + t * vx (Suc i mod ?n),
                       (1-t) * vy i + t * vy (Suc i mod ?n)))
              \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q ((1-t) * vx i + t * vx (Suc i mod ?n),
                (1-t) * vy i + t * vy (Suc i mod ?n))
           = q ((1-s) * vx j + s * vx (Suc j mod ?n),
@@ -4060,7 +4059,7 @@ proof -
                 p \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
                       (1-t) * vy1 i + t * vy1 (Suc i mod ?n)))
              \<longrightarrow> (\<forall>p'\<in>P1. q1 p = q1 p' \<longrightarrow> p = p')"
-    and hC9_1: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    and hC9_1: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
                (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
           = q1 ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
@@ -4099,7 +4098,7 @@ proof -
                 p \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
                       (1-t) * vy2 i + t * vy2 (Suc i mod ?n)))
              \<longrightarrow> (\<forall>p'\<in>P2. q2 p = q2 p' \<longrightarrow> p = p')"
-    and hC9_2: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>I_set. \<forall>s\<in>I_set.
+    and hC9_2: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             q2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
                (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
           = q2 ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
@@ -4332,11 +4331,22 @@ proof -
             and hy_eq: "y = ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
                              (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
             by (by100 blast)
-          \<comment> \<open>From q1(e1(i,t)) = q1(e1(j,s)) and C9\\_1: get label/direction condition.\<close>
-          from hC9_1 hi hj ht hs heq[unfolded hx_eq hy_eq]
+          \<comment> \<open>From q1(e1(i,t)) = q1(e1(j,s)) and C9\\_1: get label/direction condition.
+             C9 now only applies to interior edge points (0 < t < 1).
+             Vertex case (t=0 or t=1) needs separate C7-based argument.\<close>
           have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-            by (by100 blast)
+          proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
+            case True
+            hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
+            from hC9_1 hi hj this heq[unfolded hx_eq hy_eq]
+            show ?thesis by (by100 blast)
+          next
+            case False
+            \<comment> \<open>At least one vertex: use C7 at endpoints + transitivity.\<close>
+            show ?thesis sorry \<comment> \<open>Vertex case: derive from C7 at t=0/1 + transitivity.
+               q1 identifies vertices transitively via C7. Same chain gives q2 identification.\<close>
+          qed
           \<comment> \<open>Need: q2(\\<phi>(x)) = q2(\\<phi>(y)), i.e. q2(e2(i,t)) = q2(e2(j,s)).\<close>
           have h\<phi>x: "\<phi> x = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
                              (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
@@ -4445,10 +4455,17 @@ proof -
         have h\<phi>y: "\<phi> y = ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
                            (1-s) * vy2 j + s * vy2 (Suc j mod ?n))"
           using h\<phi>_edge[rule_format, OF hj hs] hy_eq by (by100 simp)
-        from hC9_2 hi hj ht hs heq2'[unfolded h\<phi>x h\<phi>y]
         have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
             (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-          by (by100 blast)
+        proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
+          case True
+          hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
+          from hC9_2 hi hj this heq2'[unfolded h\<phi>x h\<phi>y]
+          show ?thesis by (by100 blast)
+        next
+          case False
+          show ?thesis sorry \<comment> \<open>Vertex case: same argument as forward direction.\<close>
+        qed
         from hcond show ?thesis
         proof (elim disjE conjE)
           assume "i = j" "t = s"
