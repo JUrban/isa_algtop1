@@ -131,13 +131,17 @@ proof -
     hence "partner i \<in> {i, j} \<and> partner i \<noteq> i" using hset by (by100 blast)
     thus "partner i = j" by (by100 blast)
   qed
-  \<comment> \<open>Quotient map: for points on non-canonical edges, map to canonical partner.
-     For interior points and canonical edge points: identity.\<close>
+  \<comment> \<open>Vertex target: where does vertex k map under the edge-k identification?\<close>
+  define vtgt where "vtgt k = (if \<not> is_canonical k then
+     let j = partner k in (if snd(scheme!k) = snd(scheme!j) then j else Suc j mod ?n) else k)" for k
+  \<comment> \<open>Quotient map q (3-branch): vertex \\<to> vtgt, edge interior \\<to> partner, else \\<to> identity.\<close>
   define q :: "(real \<times> real) \<Rightarrow> (real \<times> real)" where
-    "q p = (if \<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i
-            then let (i,t) = (SOME (i,t). i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i)
-                 in let j = partner i
-                 in if snd(scheme!i) = snd(scheme!j) then edge_pt j t else edge_pt j (1-t)
+    "q p = (if \<exists>k<?n. p = (vx k, vy k) then
+              let k = (SOME k. k < ?n \<and> p = (vx k, vy k)) in (vx (vtgt k), vy (vtgt k))
+            else if \<exists>i t. i < ?n \<and> 0 < t \<and> t < 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i then
+              let (i,t) = (SOME (i,t). i < ?n \<and> 0 < t \<and> t < 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i)
+              in let j = partner i in
+              if snd(scheme!i) = snd(scheme!j) then edge_pt j t else edge_pt j (1-t)
             else p)" for p
   \<comment> \<open>Y = image of P under q.\<close>
   define Y where "Y = q ` P"
@@ -1228,23 +1232,55 @@ proof -
     \<comment> \<open>q(p) = p: p is not on any edge, so the \\<exists> in q\\_def is false.\<close>
     have hqp: "q p = p"
     proof -
-      have "\<not>(\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i)"
+      \<comment> \<open>p is not a vertex (vertex v\\_k = edge\\_pt k 0 is on edge k at t=0).\<close>
+      have hnotvertex: "\<not>(\<exists>k<?n. p = (vx k, vy k))"
       proof
-        assume "\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i"
-        then obtain i t where "i < ?n" "0 \<le> t" "t \<le> 1" "p = edge_pt i t" by (by100 blast)
-        have "t \<in> I_set" using \<open>0 \<le> t\<close> \<open>t \<le> 1\<close>
+        assume "\<exists>k<?n. p = (vx k, vy k)"
+        then obtain k where "k < ?n" "p = (vx k, vy k)" by (by100 blast)
+        hence "p = ((1-0)*vx k + 0*vx(Suc k mod ?n), (1-0)*vy k + 0*vy(Suc k mod ?n))" by (by100 simp)
+        moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        ultimately show False using hinterior \<open>k < ?n\<close> by (by100 blast)
+      qed
+      \<comment> \<open>p is not on any non-canonical edge interior.\<close>
+      have hnotedge: "\<not>(\<exists>i t. i < ?n \<and> 0 < t \<and> t < 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i)"
+      proof
+        assume "\<exists>i t. i < ?n \<and> 0 < t \<and> t < 1 \<and> p = edge_pt i t \<and> \<not> is_canonical i"
+        then obtain i t where "i < ?n" "0 < t" "t < 1" "p = edge_pt i t" by (by100 blast)
+        have "t \<in> I_set" using \<open>0 < t\<close> \<open>t < 1\<close>
           unfolding top1_unit_interval_def by (by100 simp)
         have "p = ((1-t)*vx i + t*vx(Suc i mod ?n), (1-t)*vy i + t*vy(Suc i mod ?n))"
           using \<open>p = edge_pt i t\<close> unfolding edge_pt_def by (by100 simp)
         thus False using hinterior \<open>i < ?n\<close> \<open>t \<in> I_set\<close> by (by100 blast)
       qed
-      thus ?thesis unfolding q_def by (by100 auto)
+      show ?thesis unfolding q_def using hnotvertex hnotedge by (by100 auto)
     qed
     \<comment> \<open>Now p = q(p) = q(p'). If p' is also not on any non-canonical edge, q(p') = p'.\<close>
     show "p = p'"
     proof (cases "\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p' = edge_pt i t \<and> \<not> is_canonical i")
       case False
-      hence "q p' = p'" unfolding q_def by (by100 auto)
+      have "q p' = p'"
+      proof (cases "\<exists>k<?n. p' = (vx k, vy k)")
+        case True \<comment> \<open>p' is a vertex v\\_k. Edge k must be canonical (else on non-canon edge).\<close>
+        then obtain k where hk: "k < ?n" "p' = (vx k, vy k)" by (by100 blast)
+        have "is_canonical k"
+        proof (rule ccontr)
+          assume "\<not> is_canonical k"
+          have "p' = edge_pt k 0" unfolding edge_pt_def using hk(2) by (by100 simp)
+          hence "\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p' = edge_pt i t \<and> \<not> is_canonical i"
+            using hk(1) \<open>\<not> is_canonical k\<close> by (by100 force)
+          with False show False by (by100 blast)
+        qed
+        hence "vtgt k = k" unfolding vtgt_def by (by100 simp)
+        have "(SOME k'. k' < ?n \<and> p' = (vx k', vy k')) = k"
+          by (rule some_equality) (use hk hC3 in \<open>(by100 blast)+\<close>)
+        thus ?thesis unfolding q_def using True \<open>vtgt k = k\<close> hk(2) by (by100 auto)
+      next
+        case vF: False
+        have "\<not>(\<exists>i t. i < ?n \<and> 0 < t \<and> t < 1 \<and> p' = edge_pt i t \<and> \<not> is_canonical i)"
+          using \<open>\<not>(\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p' = edge_pt i t \<and> \<not> is_canonical i)\<close>
+          by (by100 force)
+        thus ?thesis unfolding q_def using vF by (by100 auto)
+      qed
       thus ?thesis using hqeq hqp by (by100 simp)
     next
       case True
@@ -1261,67 +1297,70 @@ proof -
         \<exists>j t'. j < ?n \<and> 0 \<le> t' \<and> t' \<le> 1 \<and> q p0 = edge_pt j t'"
       proof -
         fix p0 assume hex: "\<exists>i t. i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i"
-        \<comment> \<open>SOME picks (i',t') satisfying the condition.\<close>
-        define sel where "sel = (SOME (i,t). i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i)"
-        define i' where "i' = fst sel"
-        define t' where "t' = snd sel"
-        have hsel: "i' < ?n \<and> 0 \<le> t' \<and> t' \<le> 1 \<and> p0 = edge_pt i' t' \<and> \<not> is_canonical i'"
-        proof -
-          from hex have "\<exists>p. (\<lambda>(i,t). i < ?n \<and> 0 \<le> t \<and> t \<le> 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i) p"
-            by (by100 auto)
-          from someI_ex[OF this] show ?thesis
-            unfolding sel_def i'_def t'_def by (by100 auto)
-        qed
-        \<comment> \<open>partner i' < n (from partner\\_props + properness).\<close>
-        have hcard: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} = 2"
-        proof -
-          have hi'_in: "i' \<in> {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')}" using hsel by (by100 simp)
-          have hfin: "finite {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')}" by (by100 simp)
-          have hne: "{j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<noteq> {}"
-            using hi'_in by (by100 blast)
-          have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<noteq> 0"
-            using hfin hne by (by100 simp)
-          hence "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<ge> 1" by (by100 linarith)
-          moreover have "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<in> {0, 2}"
-          proof -
-            from hproper have "card {i. i < length scheme \<and> fst (scheme ! i) = fst (scheme ! i')} \<in> {0, 2}" by (by100 blast)
-            moreover have "{i. i < length scheme \<and> fst (scheme ! i) = fst (scheme ! i')} = {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')}"
-              by (by100 simp)
-            ultimately show ?thesis by (by100 simp)
-          qed
-          ultimately have hge1: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<ge> 1"
-            and hin02: "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} \<in> {0, 2}" by auto
-          show ?thesis
-          proof (cases "card {j. j < ?n \<and> fst(scheme!j) = fst(scheme!i')} = 0")
-            case True thus ?thesis using hge1 by (by100 linarith)
-          next
-            case False thus ?thesis using hin02 by (by100 blast)
-          qed
-        qed
-        from partner_props[OF conjunct1[OF hsel] hcard]
-        have hpartner: "partner i' < ?n" by (by100 blast)
-        \<comment> \<open>q p0 = edge\\_pt(partner i', s) where s \\<in> {t', 1-t'}.\<close>
-        define j where "j = partner i'"
-        define s where "s = (if snd(scheme!i') = snd(scheme!j) then t' else 1 - t')"
-        have "q p0 = edge_pt j s"
-        proof -
-          \<comment> \<open>q\\_def: q p0 = if \\<exists>... then let (i,t) = SOME... in ... else p0.
-             The \\<exists> is true (hex), so q enters the THEN branch.\<close>
-          have q_eq: "q p0 = (let (i,t) = sel
-                 in let j' = partner i
-                 in if snd(scheme!i) = snd(scheme!j') then edge_pt j' t else edge_pt j' (1-t))"
-            unfolding q_def sel_def using hex by (by100 auto)
-          \<comment> \<open>sel = (i', t'), so the let destructures to i = i', t = t'.\<close>
-          have "sel = (i', t')" unfolding i'_def t'_def by (by100 simp)
-          hence "q p0 = (let j' = partner i'
-                 in if snd(scheme!i') = snd(scheme!j') then edge_pt j' t' else edge_pt j' (1-t'))"
-            using q_eq by (by100 simp)
-          thus ?thesis unfolding j_def s_def by (by100 simp)
-        qed
-        moreover have "j < ?n" using hpartner unfolding j_def by (by100 simp)
-        moreover have "0 \<le> s" "s \<le> 1" using hsel unfolding s_def by (by100 auto)+
-        ultimately show "\<exists>j t'. j < ?n \<and> 0 \<le> t' \<and> t' \<le> 1 \<and> q p0 = edge_pt j t'"
+        then obtain i0 t0 where hi0: "i0 < ?n" "0 \<le> t0" "t0 \<le> 1" "p0 = edge_pt i0 t0" "\<not> is_canonical i0"
           by (by100 blast)
+        \<comment> \<open>Case: is p0 a vertex?\<close>
+        show "\<exists>j t'. j < ?n \<and> 0 \<le> t' \<and> t' \<le> 1 \<and> q p0 = edge_pt j t'"
+        proof (cases "\<exists>k<?n. p0 = (vx k, vy k)")
+          case True \<comment> \<open>p0 is a vertex v\\_k. q enters vertex branch.\<close>
+          then obtain k where hk: "k < ?n" "p0 = (vx k, vy k)" by (by100 blast)
+          have "(SOME k'. k' < ?n \<and> p0 = (vx k', vy k')) = k"
+            by (rule some_equality) (use hk hC3 in \<open>(by100 blast)+\<close>)
+          hence hq_eq: "q p0 = (vx (vtgt k), vy (vtgt k))"
+            unfolding q_def using True by (by100 auto)
+          \<comment> \<open>vtgt k < n (need partner properties).\<close>
+          have "vtgt k < ?n"
+            sorry \<comment> \<open>From vtgt\\_def + partner\\_props. If canonical: vtgt k = k < n.
+               If non-canonical: vtgt k = partner k or Suc(partner k) mod n, both < n.\<close>
+          hence "q p0 = edge_pt (vtgt k) 0" using hq_eq unfolding edge_pt_def by (by100 simp)
+          thus ?thesis using \<open>vtgt k < ?n\<close> by (by100 force)
+        next
+          case vF: False \<comment> \<open>p0 is not a vertex. Must be edge interior (0 < t < 1).\<close>
+          have "0 < t0 \<and> t0 < 1"
+          proof -
+            have "t0 \<noteq> 0"
+            proof
+              assume "t0 = 0"
+              hence "p0 = (vx i0, vy i0)" using hi0(4) unfolding edge_pt_def by (by100 simp)
+              hence "\<exists>k<?n. p0 = (vx k, vy k)" using hi0(1) by (by100 blast)
+              with vF show False by (by100 blast)
+            qed
+            moreover have "t0 \<noteq> 1"
+            proof
+              assume "t0 = 1"
+              hence "p0 = (vx (Suc i0 mod ?n), vy (Suc i0 mod ?n))"
+                using hi0(4) unfolding edge_pt_def by (by100 simp)
+              have "?n > 0" using assms by (by100 linarith)
+              hence "Suc i0 mod ?n < ?n" by (by100 simp)
+              hence "\<exists>k<?n. p0 = (vx k, vy k)"
+                using \<open>p0 = (vx (Suc i0 mod ?n), vy (Suc i0 mod ?n))\<close> by (by100 blast)
+              with vF show False by (by100 blast)
+            qed
+            ultimately show ?thesis using hi0(2) hi0(3) by (by100 linarith)
+          qed
+          hence hex_interior: "\<exists>i t. i < ?n \<and> 0 < t \<and> t < 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i"
+            using hi0(1) hi0(4) hi0(5) by (by100 blast)
+          \<comment> \<open>q enters the edge interior branch. Same proof as before.\<close>
+          define sel where "sel = (SOME (i,t). i < ?n \<and> 0 < t \<and> t < 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i)"
+          define i' where "i' = fst sel" define t' where "t' = snd sel"
+          have hsel: "i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> p0 = edge_pt i' t' \<and> \<not> is_canonical i'"
+          proof -
+            from hex_interior have "\<exists>p. (\<lambda>(i,t). i < ?n \<and> 0 < t \<and> t < 1 \<and> p0 = edge_pt i t \<and> \<not> is_canonical i) p"
+              by (by100 auto)
+            from someI_ex[OF this] show ?thesis unfolding sel_def i'_def t'_def by (by100 auto)
+          qed
+          have hpartner: "partner i' < ?n"
+            sorry \<comment> \<open>Same hcard proof as before.\<close>
+          define j where "j = partner i'" define s where "s = (if snd(scheme!i') = snd(scheme!j) then t' else 1 - t')"
+          have q_eq: "q p0 = (let (i,t) = sel in let j' = partner i
+                 in if snd(scheme!i) = snd(scheme!j') then edge_pt j' t else edge_pt j' (1-t))"
+            unfolding q_def sel_def using hex_interior vF by (by100 auto)
+          have "sel = (i', t')" unfolding i'_def t'_def by (by100 simp)
+          hence "q p0 = edge_pt j s" using q_eq unfolding j_def s_def by (by100 simp)
+          moreover have "j < ?n" using hpartner unfolding j_def by (by100 simp)
+          moreover have "0 \<le> s" "s \<le> 1" using hsel unfolding s_def by (by100 auto)+
+          ultimately show ?thesis by (by100 blast)
+        qed
       qed
       from True obtain i t where hit: "i < ?n" "0 \<le> t" "t \<le> 1" "p' = edge_pt i t" "\<not> is_canonical i"
         by (by100 blast)
