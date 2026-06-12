@@ -5194,6 +5194,13 @@ proof -
          \<longrightarrow> (\<forall>i<?n. \<forall>t\<in>I_set. p' \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
          \<longrightarrow> f p = f p' \<longrightarrow> p = p'"
       by auto
+    \<comment> \<open>Boundary fibre matching: for boundary points, q\\_e fibres = q\\_m\\<circ>f fibres.
+       Covers vertex cases that can't be derived from C9 alone.\<close>
+    have hf_bdy_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e.
+         (\<exists>i<?n. \<exists>t\<in>I_set. x = ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
+       \<longrightarrow> (\<exists>j<?n. \<exists>s\<in>I_set. y = ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n)))
+       \<longrightarrow> ((q_e x = q_e y) = (q_m (f x) = q_m (f y)))"
+      sorry \<comment> \<open>Boundary fibre matching: follows from fan construction vertex map + C7 chains.\<close>
     \<comment> \<open>Derive fibre matching from structural properties + C conditions.\<close>
     \<comment> \<open>Derive fibre matching from structural properties + C conditions.\<close>
     have hf_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> ((q_m \<circ> f) x = (q_m \<circ> f) y)"
@@ -5407,7 +5414,10 @@ proof -
             next
               case False
               \<comment> \<open>Vertex case: at least one parameter is 0 or 1.\<close>
-              show ?thesis sorry \<comment> \<open>Vertex case. Follows from C7 at endpoints.\<close>
+              \<comment> \<open>Vertex case: use hf\\_bdy\\_fibres (boundary fibre matching).\<close>
+              have "q_m (f x) = q_m (f y)"
+                using hf_bdy_fibres[rule_format, OF hxP hyP] hi ht hx hj hs hy heq by (by100 blast)
+              thus ?thesis by (by100 simp)
             qed
           qed
         qed
@@ -5664,7 +5674,12 @@ proof -
               qed
             next
               case False
-              show ?thesis sorry \<comment> \<open>Backward vertex case (both w-edges).\<close>
+              \<comment> \<open>Backward vertex case: use hf\\_bdy\\_fibres.\<close>
+              have hbdy_iff: "(q_e x = q_e y) = (q_m (f x) = q_m (f y))"
+                using hf_bdy_fibres hxP hyP hi ht hx hj hs hy by (by100 blast)
+              have "q_e x = q_e y"
+                using hbdy_iff heq by (by100 simp)
+              thus ?thesis .
             qed
           next
             case False
@@ -5673,12 +5688,12 @@ proof -
                1) i\\<in>\\{0,1\\}, j\\<ge>2 (spur vs P\\_m edge): impossible (spur interior, edge boundary)
                2) i\\<ge>2, j\\<in>\\{0,1\\} (symmetric to 1)
                3) Both \\<in> \\{0,1\\}: spur fold gives cancel pair identification\<close>
-            show ?thesis sorry \<comment> \<open>Backward cancel/mixed case.
-               Sub-case 1-2: f(spur) interior to P\\_m, f(w-edge) on P\\_m boundary.
-               C8\\_m at spur point gives f(x)=f(y), contradicting interior\\<noteq>boundary.
-               Sub-case 3: C8\\_m at spur gives f(x)=f(y), then spur fold gives
-               cancel pair identification via C7\\_e.
-               Vertex sub-cases sorry'd (same as forward vertex).\<close>
+            \<comment> \<open>At least one edge \\<in> \\{0,1\\}. All sub-cases covered by hf\\_bdy\\_fibres.\<close>
+            have hbdy_iff: "(q_e x = q_e y) = (q_m (f x) = q_m (f y))"
+              using hf_bdy_fibres hxP hyP hi ht hx hj hs hy by (by100 blast)
+            have "q_e x = q_e y"
+              using hbdy_iff heq by (by100 simp)
+            thus ?thesis .
           qed
         qed
       qed
