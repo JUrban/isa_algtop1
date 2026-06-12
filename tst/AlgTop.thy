@@ -3766,7 +3766,9 @@ proof -
     sorry \<comment> \<open>From C9 of original polygon via shifted indices + q' on diagonal.\<close>
   \<comment> \<open>Assembly: 11 conditions.\<close>
   have htopo': "is_topology_on_strict Y' TY'"
-    sorry \<comment> \<open>TY' is a quotient topology, hence a strict topology on Y'.\<close>
+    sorry \<comment> \<open>TY' is quotient topology of q' on P'. Proof follows same pattern as
+       htopo in scheme\\_quotient\\_exists (lines 2952-3012): \\<emptyset>\\<in>TY', Y'\\<in>TY',
+       union closure via bchoice, finite intersection via bchoice.\<close>
   have hquot_w: "top1_quotient_of_scheme_on Y' TY' w"
     unfolding top1_quotient_of_scheme_on_def
   proof (intro conjI exI)
