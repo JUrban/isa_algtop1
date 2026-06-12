@@ -2918,13 +2918,17 @@ lemma front_cancel_realization_homeo:
      See front\\_cancel\\_proper for the expert-recommended approach using
      scheme\\_quotient\\_exists + uniqueness + spur collapse.\<close>
 
-\<comment> \<open>Uncancel at front — derived from cancel + existence + uniqueness (per audit 22 §5.3).
-   Given quotient of w, produce quotient of [a,inv a]@w homeomorphic to it.
-   Strategy:
-   (1) scheme\\_quotient\\_exists gives Y1 as quotient of [a,inv a]@w
-   (2) front\\_cancel gives Y2 as quotient of w with Y1 \\<cong> Y2
-   (3) scheme\\_quotient\\_uniqueness gives Y2 \\<cong> Y (both quotients of w)
-   (4) Compose: Y \\<cong> Y2 \\<cong> Y1, giving the required homeomorphism.\<close>
+\<comment> \<open>Uncancel same-space: if Y is quotient of w, then Y is also quotient of [a,inv a]@w.
+   The additional cancelling pair creates a spur that collapses to nothing.
+   Proof deferred — needs geometric spur insertion or canonical quotients + transfer lemma.\<close>
+lemma quotient_of_scheme_uncancel_front:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+      and "length w \<ge> 3"
+  shows "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
+  sorry \<comment> \<open>Needs geometric spur insertion or transfer lemma.\<close>
+
+\<comment> \<open>Uncancel at front — homeomorphic realization.
+   Derived from quotient\\_of\\_scheme\\_uncancel\\_front (same-space version).\<close>
 lemma front_uncancel_realization_homeo:
   fixes Y :: "'a set" and TY :: "'a set set"
   assumes "top1_quotient_of_scheme_on Y TY w"
@@ -2932,20 +2936,13 @@ lemma front_uncancel_realization_homeo:
   shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
     top1_quotient_of_scheme_on Y' TY' ([a, top1_inverse_edge a] @ w) \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
-  sorry \<comment> \<open>Derive from cancel + existence + uniqueness per audit 22 §5.3.
-     Uses: scheme\\_quotient\\_exists (for existence of quotient of [a,inv a]@w),
-     front\\_cancel (for homeomorphism between quotients),
-     scheme\\_quotient\\_uniqueness (for uniqueness up to homeomorphism).
-     Type issue: scheme\\_quotient\\_exists gives (real\\<times>real) quotients;
-     need to bridge to polymorphic 'a via uniqueness.\<close>
-
-\<comment> \<open>Uncancel same-space: derived from homeomorphic uncancel (take Y'=Y via uniqueness).\<close>
-lemma quotient_of_scheme_uncancel_front:
-  assumes "top1_quotient_of_scheme_on Y TY w"
-      and "length w \<ge> 3"
-  shows "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
-  sorry \<comment> \<open>Derive from front\\_uncancel\\_realization\\_homeo + uniqueness.
-     Or keep as separate geometric construction (spur insertion).\<close>
+proof -
+  \<comment> \<open>Y is already a quotient of [a,inv a]@w by the same-space uncancel.\<close>
+  from quotient_of_scheme_uncancel_front[OF assms(1) assms(2), of a]
+  have "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)" .
+  \<comment> \<open>Take Y' = Y with identity homeomorphism.\<close>
+  thus ?thesis by (rule same_space_implies_homeo_realization_early)
+qed
 
 \<comment> \<open>Uncancel (proved via reduction to front-uncancel + rotation).\<close>
 lemma quotient_of_scheme_uncancel_proved:
@@ -4425,6 +4422,15 @@ proof -
         have hn_pos: "0 < ?n" using hn3 by (by100 linarith)
         have hSi: "Suc i mod ?n < ?n" by (rule mod_less_divisor[OF hn_pos])
         define coeffs :: "nat \<Rightarrow> real" where "coeffs k = (if k = i then 1-t else if k = Suc i mod ?n then t else 0)" for k
+        have hineq: "i \<noteq> Suc i mod ?n"
+        proof (cases "Suc i < ?n")
+          case True thus ?thesis by (by100 simp)
+        next
+          case False hence "Suc i = ?n" using hi by (by100 linarith)
+          hence "Suc i mod ?n = 0" by (by100 simp)
+          moreover have "i \<ge> 2" using hn3 \<open>Suc i = ?n\<close> by (by100 linarith)
+          ultimately show ?thesis by (by100 linarith)
+        qed
         have "(\<forall>k<?n. coeffs k \<ge> 0)"
           unfolding coeffs_def using ht by (by100 auto)
         moreover have "(\<Sum>k<?n. coeffs k) = 1"
@@ -4459,15 +4465,139 @@ proof -
           thus ?thesis using hcoeff_sum \<open>(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k) = 0\<close> by (by100 linarith)
         qed
         moreover have "(1-t)*vx i+t*vx(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vx k)"
-          sorry \<comment> \<open>Sum with only 2 nonzero terms: sum.remove + sum.neutral.\<close>
+        proof -
+          have hi_in: "i \<in> {..<?n}" using hi by (by100 simp)
+          have hSi_in: "Suc i mod ?n \<in> {..<?n} - {i}" using hSi hineq by (by100 simp)
+          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k * vx k) = 0"
+            by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
+          have hrest2: "(\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vx k) = 0"
+          proof -
+            have "{..<?n}-{i}-{Suc i mod ?n} = {..<?n} - {i, Suc i mod ?n}" by (by100 blast)
+            thus ?thesis using hrest_zero by (by100 simp)
+          qed
+          from sum.remove[OF finite_lessThan hi_in, of "\<lambda>k. coeffs k * vx k"]
+          have hsum1: "(\<Sum>k<?n. coeffs k * vx k) = coeffs i * vx i + (\<Sum>k\<in>{..<?n}-{i}. coeffs k * vx k)"
+            by (by100 simp)
+          from sum.remove[OF _ hSi_in, of "\<lambda>k. coeffs k * vx k"]
+          have hsum2: "(\<Sum>k\<in>{..<?n}-{i}. coeffs k * vx k) = coeffs (Suc i mod ?n) * vx (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vx k)"
+            by (by100 simp)
+          have "(\<Sum>k<?n. coeffs k * vx k) = coeffs i * vx i + coeffs (Suc i mod ?n) * vx (Suc i mod ?n)"
+            using hsum1 hsum2 hrest2 by (by100 linarith)
+          moreover have "coeffs i = 1-t" unfolding coeffs_def by (by100 simp)
+          moreover have "coeffs (Suc i mod ?n) = t" unfolding coeffs_def using hineq by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
         moreover have "(1-t)*vy i+t*vy(Suc i mod ?n) = (\<Sum>k<?n. coeffs k * vy k)"
-          sorry
+        proof -
+          have hi_in: "i \<in> {..<?n}" using hi by (by100 simp)
+          have hSi_in: "Suc i mod ?n \<in> {..<?n} - {i}" using hSi hineq by (by100 simp)
+          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {i, Suc i mod ?n}. coeffs k * vy k) = 0"
+            by (rule sum.neutral) (use coeffs_def in \<open>by100 simp\<close>)
+          have hrest2: "(\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vy k) = 0"
+          proof -
+            have "{..<?n}-{i}-{Suc i mod ?n} = {..<?n} - {i, Suc i mod ?n}" by (by100 blast)
+            thus ?thesis using hrest_zero by (by100 simp)
+          qed
+          from sum.remove[OF finite_lessThan hi_in, of "\<lambda>k. coeffs k * vy k"]
+          have hsum1: "(\<Sum>k<?n. coeffs k * vy k) = coeffs i * vy i + (\<Sum>k\<in>{..<?n}-{i}. coeffs k * vy k)"
+            by (by100 simp)
+          from sum.remove[OF _ hSi_in, of "\<lambda>k. coeffs k * vy k"]
+          have hsum2: "(\<Sum>k\<in>{..<?n}-{i}. coeffs k * vy k) = coeffs (Suc i mod ?n) * vy (Suc i mod ?n) + (\<Sum>k\<in>{..<?n}-{i}-{Suc i mod ?n}. coeffs k * vy k)"
+            by (by100 simp)
+          have "(\<Sum>k<?n. coeffs k * vy k) = coeffs i * vy i + coeffs (Suc i mod ?n) * vy (Suc i mod ?n)"
+            using hsum1 hsum2 hrest2 by (by100 linarith)
+          moreover have "coeffs i = 1-t" unfolding coeffs_def by (by100 simp)
+          moreover have "coeffs (Suc i mod ?n) = t" unfolding coeffs_def using hineq by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
         ultimately show ?thesis unfolding hC5 by (by100 blast)
       qed
       hence "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> Y"
         using q_range by (by100 blast)
       moreover have "((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> P"
-        sorry
+      proof -
+        have hn3_j: "?n \<ge> 3" using hC1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
+        have hn_pos_j: "0 < ?n" using hn3_j by (by100 linarith)
+        have hSj: "Suc j mod ?n < ?n" by (rule mod_less_divisor[OF hn_pos_j])
+        have hineq_j: "j \<noteq> Suc j mod ?n"
+        proof (cases "Suc j < ?n")
+          case True thus ?thesis by (by100 simp)
+        next
+          case False hence "Suc j = ?n" using hj by (by100 linarith)
+          hence "Suc j mod ?n = 0" by (by100 simp)
+          moreover have "j \<ge> 2" using hn3_j \<open>Suc j = ?n\<close> by (by100 linarith)
+          ultimately show ?thesis by (by100 linarith)
+        qed
+        define cj :: "nat \<Rightarrow> real" where "cj k = (if k = j then 1-s' else if k = Suc j mod ?n then s' else 0)" for k
+        have hcj_nn: "\<forall>k<?n. cj k \<ge> 0"
+          unfolding cj_def using hs by (by100 auto)
+        moreover have hcj_sum: "(\<Sum>k<?n. cj k) = 1"
+        proof -
+          have "(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k) = 0"
+            by (rule sum.neutral) (use cj_def in \<open>by100 simp\<close>)
+          have hpair: "cj j + cj (Suc j mod ?n) = 1" unfolding cj_def using hineq_j by (by100 simp)
+          have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
+          have hSj_in: "Suc j mod ?n \<in> {..<?n} - {j}" using hSj hineq_j by (by100 simp)
+          from sum.remove[OF finite_lessThan hj_in, of cj]
+          have "(\<Sum>k<?n. cj k) = cj j + (\<Sum>k\<in>{..<?n}-{j}. cj k)" by (by100 simp)
+          moreover from sum.remove[OF _ hSj_in, of cj]
+          have "(\<Sum>k\<in>{..<?n}-{j}. cj k) = cj (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k)"
+            by (by100 simp)
+          ultimately have "(\<Sum>k<?n. cj k) = cj j + cj (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k)"
+            by (by100 linarith)
+          moreover have "{..<?n}-{j}-{Suc j mod ?n} = {..<?n} - {j, Suc j mod ?n}" by (by100 blast)
+          ultimately have "(\<Sum>k<?n. cj k) = cj j + cj (Suc j mod ?n) + (\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k)"
+            by (by100 simp)
+          thus ?thesis using hpair \<open>(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k) = 0\<close> by (by100 linarith)
+        qed
+        moreover have "(1-s')*vx j+s'*vx(Suc j mod ?n) = (\<Sum>k<?n. cj k * vx k)"
+        proof -
+          have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
+          have hSj_in: "Suc j mod ?n \<in> {..<?n} - {j}" using hSj hineq_j by (by100 simp)
+          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k * vx k) = 0"
+            by (rule sum.neutral) (use cj_def in \<open>by100 simp\<close>)
+          have "(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vx k) = 0"
+          proof -
+            have "{..<?n}-{j}-{Suc j mod ?n} = {..<?n} - {j, Suc j mod ?n}" by (by100 blast)
+            thus ?thesis using hrest_zero by (by100 simp)
+          qed
+          from sum.remove[OF finite_lessThan hj_in, of "\<lambda>k. cj k * vx k"]
+          have s1: "(\<Sum>k<?n. cj k * vx k) = cj j * vx j + (\<Sum>k\<in>{..<?n}-{j}. cj k * vx k)"
+            by (by100 simp)
+          from sum.remove[OF _ hSj_in, of "\<lambda>k. cj k * vx k"]
+          have s2: "(\<Sum>k\<in>{..<?n}-{j}. cj k * vx k) = cj (Suc j mod ?n) * vx (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vx k)"
+            by (by100 simp)
+          have "(\<Sum>k<?n. cj k * vx k) = cj j * vx j + cj (Suc j mod ?n) * vx (Suc j mod ?n)"
+            using s1 s2 \<open>(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vx k) = 0\<close> by (by100 linarith)
+          moreover have "cj j = 1-s'" unfolding cj_def by (by100 simp)
+          moreover have "cj (Suc j mod ?n) = s'" unfolding cj_def using hineq_j by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        moreover have "(1-s')*vy j+s'*vy(Suc j mod ?n) = (\<Sum>k<?n. cj k * vy k)"
+        proof -
+          have hj_in: "j \<in> {..<?n}" using hj by (by100 simp)
+          have hSj_in: "Suc j mod ?n \<in> {..<?n} - {j}" using hSj hineq_j by (by100 simp)
+          have hrest_zero: "(\<Sum>k\<in>{..<?n} - {j, Suc j mod ?n}. cj k * vy k) = 0"
+            by (rule sum.neutral) (use cj_def in \<open>by100 simp\<close>)
+          have "(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vy k) = 0"
+          proof -
+            have "{..<?n}-{j}-{Suc j mod ?n} = {..<?n} - {j, Suc j mod ?n}" by (by100 blast)
+            thus ?thesis using hrest_zero by (by100 simp)
+          qed
+          from sum.remove[OF finite_lessThan hj_in, of "\<lambda>k. cj k * vy k"]
+          have s1: "(\<Sum>k<?n. cj k * vy k) = cj j * vy j + (\<Sum>k\<in>{..<?n}-{j}. cj k * vy k)"
+            by (by100 simp)
+          from sum.remove[OF _ hSj_in, of "\<lambda>k. cj k * vy k"]
+          have s2: "(\<Sum>k\<in>{..<?n}-{j}. cj k * vy k) = cj (Suc j mod ?n) * vy (Suc j mod ?n) + (\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vy k)"
+            by (by100 simp)
+          have "(\<Sum>k<?n. cj k * vy k) = cj j * vy j + cj (Suc j mod ?n) * vy (Suc j mod ?n)"
+            using s1 s2 \<open>(\<Sum>k\<in>{..<?n}-{j}-{Suc j mod ?n}. cj k * vy k) = 0\<close> by (by100 linarith)
+          moreover have "cj j = 1-s'" unfolding cj_def by (by100 simp)
+          moreover have "cj (Suc j mod ?n) = s'" unfolding cj_def using hineq_j by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        ultimately show ?thesis unfolding hC5 by (by100 blast)
+      qed
       hence "q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> Y"
         using q_range by (by100 blast)
       ultimately show ?thesis using h_inj unfolding inj_on_def by (by100 blast)
@@ -4817,12 +4947,27 @@ proof -
       and hC11m: "\<forall>i<?m. \<forall>k<?m. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?m \<longrightarrow>
             (vx_m k-vx_m i)*(vy_m(Suc i mod ?m)-vy_m i)-(vy_m k-vy_m i)*(vx_m(Suc i mod ?m)-vx_m i) < 0"
       by (rule quotient_of_scheme_extract_vx)
-    \<comment> \<open>Spur collapse map f: P\\_e \\<to> P\\_m.
-       Constructed via disk homeomorphisms + arc collapsing.
-       Phase 1: extract \\<psi>\\_e and \\<psi>\\_m from polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary.\<close>
+    \<comment> \<open>Spur collapse map f: P\\_e \\<to> P\\_m via fan construction.
+       Fan from vertex v\\_e(1) of P\\_e to centroid c\\_m of P\\_m:
+       Triangle (v\\_e(1), v\\_e(k), v\\_e(k+1)) maps affinely to (c\\_m, u(k-2), u(k-1)).
+       Key properties:
+       - Edges 0,1 (cancelling pair) collapse to spur from u0 to c\\_m and back
+       - Edges i\\<ge>2 map to edges i-2 of P\\_m preserving parameter
+       - Interior maps homeomorphically (fan-to-fan bijection)
+       - Fibre matching: q\\_e-fibres = (q\\_m\\<circ>f)-fibres\<close>
+    have hm3: "?m \<ge> 3" using assms(2) .
+    have hn_eq: "?n = ?m + 2" by (by100 simp)
+    have hn5: "?n \<ge> 5" using hm3 hn_eq by (by100 linarith)
+    \<comment> \<open>Centroid of P\\_m (interior point for the fan target).\<close>
+    define cx_m where "cx_m = (\<Sum>j<?m. vx_m j) / real ?m"
+    define cy_m where "cy_m = (\<Sum>j<?m. vy_m j) / real ?m"
+    \<comment> \<open>Fan construction: define f using the vertex map.\<close>
+    \<comment> \<open>f maps each triangle of the fan from v\\_e(1) to the corresponding triangle
+       of the fan from c\\_m. The vertex map is:
+       v\\_e(0) \\<to> u\\_m(0), v\\_e(1) \\<to> c\\_m, v\\_e(k) \\<to> u\\_m(k-2) for k\\<ge>2.\<close>
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
-      sorry \<comment> \<open>TODO: construct f via \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.\<close>
+      sorry \<comment> \<open>Fan construction: PL map from fan(v\\_e(1)) to fan(c\\_m).\<close>
     then obtain f where
         hf_cont: "continuous_on P_e f"
       and hf_surj: "f ` P_e = P_m"
