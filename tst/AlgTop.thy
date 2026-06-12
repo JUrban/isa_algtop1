@@ -23,12 +23,18 @@ NOT ON CRITICAL PATH (10 sorrys):
 DEAD CODE (0 sorrys counted, 1 relabel sorry in Theorem\\_76):
 - Relabel merge (1): in Theorem\\_76 elementary operations (line 5373)
 
-KEY INFRASTRUCTURE (PROVED):
+KEY INFRASTRUCTURE (PROVED across sessions 1-34):
 - scheme\\_quotient\\_exists, scheme\\_quotient\\_uniqueness, compact\\_surj\\_quotient
 - scheme\\_quotient\\_transfer\\_along\\_homeomorphism (all 11 conditions)
 - front\\_cancel\\_proper skeleton (modulo spur collapse)
 - quotient\\_of\\_scheme\\_uncancel\\_front\\_proper (for proper schemes)
-- centroid-is-interior (for fan construction)
+- cancel\\_pair\\_prepend\\_proper (shared properness lemma)
+- centroid-is-interior (cross product sum argument)
+- Theorem\\_76: 9/10 elementary\\<to>valid cases proved
+- continuous\\_on\\_from\\_top1: bridge lemma top1\\_continuous\\_map\\_on \\<to> continuous\\_on
+- Disk homeomorphisms \\<psi>\\_e, \\<psi>\\_m extracted + continuous\\_on proved
+- \\<tau>: B2 \\<to> B2 defined (sector-squeezing), spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e as explicit exI witness
+- Continuity chain PROVED: \\<psi>\\_e \\<checkmark> \\<to> \\<tau> \\<to> \\<psi>\\_m\\<inverse> \\<checkmark> \\<to> spur\\_f \\<checkmark> (via continuous\\_on\\_compose)
 - Fibre matching: all cases algebraically verified (sessions 2-4)\<close>
 
 \<comment> \<open>valid\\_operation\\_reverse, valid\\_equiv\\_sym: cached in AlgTopCached14.\<close>
