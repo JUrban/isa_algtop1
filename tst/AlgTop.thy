@@ -3266,8 +3266,6 @@ proof -
     show "p \<in> P" unfolding hC5
       using hge' hsum' hfst' hsnd' by (by100 auto)
   qed
-  \<comment> \<open>C1': P' is a polygonal region.\<close>
-  have hC1': "top1_is_polygonal_region_on P' ?n'" sorry \<comment> \<open>From hn'_ge3 and convexity of P'.\<close>
   \<comment> \<open>C3': distinct vertices (from original C3 with shift).\<close>
   have hC3': "\<forall>i<?n'. \<forall>j<?n'. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j)"
   proof (intro allI impI)
@@ -3277,6 +3275,21 @@ proof -
     have hij2: "i + 2 \<noteq> j + 2" using hij by (by100 simp)
     from hC3[rule_format, OF hi2 hj2 hij2]
     show "(vx' i, vy' i) \<noteq> (vx' j, vy' j)" unfolding vx'_def vy'_def by (by100 simp)
+  qed
+  \<comment> \<open>C1': P' is a polygonal region.\<close>
+  have hC1': "top1_is_polygonal_region_on P' ?n'"
+    unfolding top1_is_polygonal_region_on_def
+  proof (intro conjI exI)
+    show "?n' \<ge> 3" using hn'_ge3 .
+    show "\<forall>i<?n'. \<forall>j<?n'. i \<noteq> j \<longrightarrow> (vx' i, vy' i) \<noteq> (vx' j, vy' j)" using hC3' .
+    show "\<forall>k<?n'. \<not> (\<exists>coeffs. (\<forall>i<?n'. i \<noteq> k \<longrightarrow> 0 \<le> coeffs i) \<and> coeffs k = 0
+          \<and> (\<Sum>i<?n'. coeffs i) = 1
+          \<and> vx' k = (\<Sum>i<?n'. coeffs i * vx' i) \<and> vy' k = (\<Sum>i<?n'. coeffs i * vy' i))"
+      sorry \<comment> \<open>Non-degeneracy: each shifted vertex is not a convex comb of the others.
+         Follows from C11 (strict convexity) of original polygon.\<close>
+    show "P' = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n'. 0 \<le> coeffs i) \<and> (\<Sum>i<?n'. coeffs i) = 1
+          \<and> x = (\<Sum>i<?n'. coeffs i * vx' i) \<and> y = (\<Sum>i<?n'. coeffs i * vy' i)}"
+      unfolding P'_def by (by100 simp)
   qed
   \<comment> \<open>C5': P' = convex hull (by definition).\<close>
   have hC5': "P' = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n'. coeffs i \<ge> 0) \<and> (\<Sum>i<?n'. coeffs i) = 1
