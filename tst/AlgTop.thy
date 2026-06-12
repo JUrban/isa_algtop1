@@ -4609,7 +4609,11 @@ proof -
         using hausdorff_subspace[OF hR2_haus] by (by100 blast)
       \<comment> \<open>f is continuous (top1 version).\<close>
       have hf_cont_top1: "top1_continuous_map_on P1 ?TP1 P2 ?TP2 f"
-        sorry \<comment> \<open>From continuous\\_on and subspace topology.\<close>
+      proof -
+        have "\<And>p. p \<in> P1 \<Longrightarrow> f p \<in> P2" using hf_range by (by100 blast)
+        from top1_continuous_map_on_real2_subspace_general[OF this hf_cont]
+        show ?thesis .
+      qed
       \<comment> \<open>f is a closed map (compact \\<to> Hausdorff continuous).\<close>
       have hf_closed: "top1_closed_map_on P1 ?TP1 P2 ?TP2 f"
         unfolding top1_closed_map_on_def
