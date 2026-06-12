@@ -5329,11 +5329,54 @@ proof -
     next
       case False
       \<comment> \<open>Label \\<noteq> fst(a): appears in w at same positions (shifted by 2).\<close>
-      have "{i. i < length ?s \<and> fst (?s ! i) = label} = {i. \<exists>j<length w. i = j + 2 \<and> fst (w ! j) = label}"
-        sorry \<comment> \<open>Positions 0,1 don't match (fst = fst(a) \\<noteq> label); positions i+2 match iff w!i matches.\<close>
+      have hset_eq: "{i. i < length ?s \<and> fst (?s ! i) = label} = {i. \<exists>j<length w. i = j + 2 \<and> fst (w ! j) = label}"
+      proof (rule set_eqI, rule iffI)
+        fix i assume "i \<in> {i. i < length ?s \<and> fst (?s ! i) = label}"
+        hence hi: "i < length ?s" and hlbl: "fst (?s ! i) = label" by (by100 auto)+
+        \<comment> \<open>i \\<ge> 2 (positions 0,1 have fst = fst(a) \\<noteq> label).\<close>
+        have "i \<ge> 2"
+        proof (rule ccontr)
+          assume "\<not> i \<ge> 2" hence "i < 2" by (by100 linarith)
+          hence "i = 0 \<or> i = 1" by (by100 linarith)
+          hence "fst (?s ! i) = fst a"
+          proof
+            assume "i = 0" thus ?thesis by (by100 simp)
+          next
+            assume "i = 1" thus ?thesis unfolding top1_inverse_edge_def by (by100 simp)
+          qed
+          thus False using hlbl False by (by100 simp)
+        qed
+        define j where "j = i - 2"
+        have "i = j + 2" using \<open>i \<ge> 2\<close> unfolding j_def by (by100 linarith)
+        have "j < length w" using hi \<open>i = j + 2\<close> by (by100 simp)
+        have "?s ! (j + 2) = w ! j" by (by100 simp)
+        hence "fst (w ! j) = label" using hlbl \<open>i = j + 2\<close> by (by100 simp)
+        show "i \<in> {i. \<exists>j<length w. i = j + 2 \<and> fst (w ! j) = label}"
+          using \<open>j < length w\<close> \<open>i = j + 2\<close> \<open>fst (w ! j) = label\<close> by (by100 blast)
+      next
+        fix i assume "i \<in> {i. \<exists>j<length w. i = j + 2 \<and> fst (w ! j) = label}"
+        then obtain j where hj: "j < length w" "i = j + 2" "fst (w ! j) = label" by (by100 blast)
+        have "i < length ?s" using hj by (by100 simp)
+        have "?s ! (j + 2) = w ! j" by (by100 simp)
+        hence "fst (?s ! i) = label" using hj by (by100 simp)
+        show "i \<in> {i. i < length ?s \<and> fst (?s ! i) = label}"
+          using \<open>i < length ?s\<close> \<open>fst (?s ! i) = label\<close> by (by100 blast)
+      qed
       moreover have "card {i. \<exists>j<length w. i = j + 2 \<and> fst (w ! j) = label}
           = card {j. j < length w \<and> fst (w ! j) = label}"
-        sorry \<comment> \<open>Bijection j \\<mapsto> j+2.\<close>
+      proof -
+        have "bij_betw (\<lambda>j. j + 2) {j. j < length w \<and> fst (w ! j) = label}
+                                    {i. \<exists>j<length w. i = j + 2 \<and> fst (w ! j) = label}"
+          unfolding bij_betw_def
+        proof (intro conjI)
+          show "inj_on (\<lambda>j. j + 2) {j. j < length w \<and> fst (w ! j) = label}"
+            unfolding inj_on_def by (by100 simp)
+          show "(\<lambda>j. j + 2) ` {j. j < length w \<and> fst (w ! j) = label}
+              = {i. \<exists>j<length w. i = j + 2 \<and> fst (w ! j) = label}"
+            by (by100 force)
+        qed
+        from bij_betw_same_card[OF this] show ?thesis by (by100 simp)
+      qed
       moreover have "card {j. j < length w \<and> fst (w ! j) = label} \<in> {0, 2}"
         using hproper by (by100 blast)
       ultimately show ?thesis by (by100 simp)
