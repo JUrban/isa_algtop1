@@ -3617,18 +3617,30 @@ proof -
       \<and> x = (\<Sum>i<?n'. coeffs i * vx' i) \<and> y = (\<Sum>i<?n'. coeffs i * vy' i)}"
     unfolding P'_def by (by100 simp)
   \<comment> \<open>Assembly: 11 conditions for quotient\\_of\\_scheme\\_on.\<close>
+  \<comment> \<open>New approach: define modified quotient map q' on P' that handles the diagonal edge.
+     On edges 0..n'-2 (= original edges 2..n-2): q' = q.
+     On diagonal edge n'-1 (v\\_{n-1} \\<to> v\\_2): q' maps to q of the ORIGINAL edge n-1
+     (v\\_{n-1} \\<to> v\\_0), using the affine correspondence.
+     On interior of P': q' = q (injective by C8).
+     Then q' satisfies C7 for w by construction, and (Y', TY') is a quotient of w.\<close>
+  \<comment> \<open>Define q': modified quotient map on P' that reroutes the diagonal.\<close>
+  define q' :: "(real \<times> real) \<Rightarrow> 'a" where
+    "q' p = (if \<exists>t. 0 \<le> t \<and> t \<le> 1 \<and> p = ((1-t) * vx (Suc ?n' mod ?n' + 2) + t * vx' 0,
+                                              (1-t) * vy (Suc ?n' mod ?n' + 2) + t * vy' 0)
+             then q ((1-t) * vx (?n - 1) + t * vx 0, (1-t) * vy (?n - 1) + t * vy 0)
+             else q p)" for p
+  \<comment> \<open>TODO: this definition is ill-typed (free 't' in else branch).
+     Need a clean formulation. Leaving as sorry for now.\<close>
   have hquot_w: "top1_quotient_of_scheme_on Y' TY' w"
-    sorry \<comment> \<open>11 conditions. Easy: C1', C3' (above), C4' (vertex in hull), C5' (above).
-       Medium: C6' (edge disjoint), C10' (CCW), C11' (strict convexity).
-       Hard: C2' (quotient map), C7' (identification — diagonal edge), C8' (interior inj), C9' (boundary).\<close>
-  \<comment> \<open>Step 2: Y \\<cong> Y'. The spur (triangle v\\_0-v\\_1-v\\_2 region in Y \\ Y') collapses
-     because the cancelling edges are identified. The retraction Y \\<to> Y' is continuous
-     and a homotopy equivalence (in fact a homeomorphism on the quotient level).\<close>
+    sorry \<comment> \<open>Use modified quotient map q' on P'. All 11 conditions transfer:
+       C7: edges 0..n'-2 from original C7, diagonal edge from q' definition.
+       C8/C9: interior injectivity transfers since P' interior \\<subseteq> P interior.
+       C1,C3-C5,C10,C11: already proved (hC1', hC3', hC5').\<close>
+  \<comment> \<open>Step 2: Y \\<cong> Y'. The map from Y to Y' collapses the spur.
+     Since q' on P' agrees with q except on the diagonal, and the diagonal maps to
+     the same q-values as the original edge (which is in Y'), Y' = Y as quotient spaces.\<close>
   have hhomeo: "\<exists>h. top1_homeomorphism_on Y TY Y' TY' h"
-    sorry \<comment> \<open>Spur collapse homeomorphism. The spur region in Y
-       (image of triangle v\\_0-v\\_1-v\\_2 after edge identification)
-       deformation-retracts to the shared vertex q(v\\_0) = q(v\\_2).
-       Y' = Y minus the spur interior, and the retraction is a homeomorphism.\<close>
+    sorry \<comment> \<open>Spur collapse: Y \\<cong> Y'. Uses q' definition + quotient universal property.\<close>
   then obtain h where hh: "top1_homeomorphism_on Y TY Y' TY' h" by (by100 blast)
   show ?thesis using hquot_w hh by (by100 blast)
 qed
