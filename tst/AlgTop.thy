@@ -1341,7 +1341,15 @@ proof -
             thus False using hC3 hi hmod_lt hmod_ne by (by100 blast)
           qed
         qed
-        show ?thesis sorry \<comment> \<open>Interior case: both sides map to same canonical edge point.\<close>
+        \<comment> \<open>For the interior case: q on canonical edges = id, q on non-canonical = partner.
+           Both sides evaluate to the same canonical edge point.\<close>
+        \<comment> \<open>Helper: edge interior point is not on any OTHER edge.\<close>
+        have hedge_unique: "\<And>i' s. i' < ?n \<Longrightarrow> 0 < s \<Longrightarrow> s < 1 \<Longrightarrow>
+            edge_pt i s = edge_pt i' s \<Longrightarrow> i' = i \<or> (i' = i \<and> s = s)"
+          sorry \<comment> \<open>Edges of convex polygon have disjoint interiors. From C6 + adjacency.\<close>
+        show ?thesis sorry \<comment> \<open>Uses hnotvertex\\_i + hedge\\_unique + q\\_def unfolding.
+           i canonical: q(edge\\_pt i t) = edge\\_pt(i,t). q(edge\\_pt j t') maps to edge\\_pt(i,t).
+           j canonical: symmetric.\<close>
       next
         case hvert: False \<comment> \<open>Vertex: t = 0 or t = 1. q enters the vertex branch.\<close>
         hence "t = 0 \<or> t = 1" using ht01 by (by100 linarith)
