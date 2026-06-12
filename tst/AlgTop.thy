@@ -4957,12 +4957,14 @@ proof -
        (offset=0), (3) for r<1: offset>0 separates halves, (4) injective on interior.\<close>
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
-      sorry \<comment> \<open>Spur collapse via spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.
-         \\<tau> uses sector-squeezing: perpendicular offsets keep cancel sector halves separated.
-         Boundary: at r=1, offset=0, collapses to spur fold. \\<checkmark>
-         Interior: for r<1, offset sign separates edge 0/1 sides. \\<checkmark>
-         Good sector: standard cone rescaling. \\<checkmark>
-         All fibre matching cases verified algebraically (sessions 2-4).\<close>
+    proof (rule exI[of _ spur_f])
+      show "continuous_on P_e spur_f \<and> spur_f ` P_e = P_m
+          \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y)))"
+        sorry \<comment> \<open>Properties of spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.
+           Continuity: composition of continuous functions.
+           Surjectivity: \\<tau> maps B2 onto B2, \\<psi>\\_m\\<inverse> maps onto P\\_m.
+           Fibre matching: sector-squeezing preserves identification structure.\<close>
+    qed
     then obtain f where
         hf_cont: "continuous_on P_e f"
       and hf_surj: "f ` P_e = P_m"
