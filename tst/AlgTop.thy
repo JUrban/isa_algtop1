@@ -4429,14 +4429,101 @@ lemma scheme_quotient_transfer_along_homeomorphism:
   assumes hq: "top1_quotient_of_scheme_on Y TY s"
       and hh: "top1_homeomorphism_on Y TY Y' TY' h"
   shows "top1_quotient_of_scheme_on Y' TY' s"
-  sorry \<comment> \<open>Proof: extract (P, q, vx, vy) from hq. Define q' = h \\<circ> q.
-     C1,C3-C5,C10,C11: don't reference q, transfer directly.
-     C2: q' = h \\<circ> q. h is homeomorphism, q is quotient map,
-         composition of quotient map with homeomorphism = quotient map.
-     C7: q'(edge(i,t)) = h(q(edge(i,t))). Since h preserves equality:
-         q(e1) = q(e2) iff h(q(e1)) = h(q(e2)). So C7 transfers.
-     C8: q' injective on interior = h \\<circ> q injective = true (both injective).
-     C9: boundary identification transfers similarly to C7.\<close>
+proof -
+  let ?n = "length s"
+  let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+  \<comment> \<open>Extract quotient witness from Y.\<close>
+  from hq obtain P q vx vy where
+      hC1: "top1_is_polygonal_region_on P ?n"
+    and hC2: "top1_quotient_map_on P (?TP P) Y TY q"
+    and hC3: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+    and hC4: "\<forall>i<?n. (vx i, vy i) \<in> P"
+    and hC5: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
+                   \<and> x = (\<Sum>i<?n. coeffs i * vx i) \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
+    and hC6: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+        (\<forall>s'\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+           ((1-s') * vx i + s' * vx (Suc i mod ?n), (1-s') * vy i + s' * vy (Suc i mod ?n))
+         \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n), (1-t) * vy j + t * vy (Suc j mod ?n)))"
+    and hC7: "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+         = (if snd(s!i) = snd(s!j)
+            then q ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+            else q (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
+    and hC8: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
+           \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
+          q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+        = q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
+        \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
+    and hC10: "\<forall>i<?n. let cx=(\<Sum>j<?n. vx j)/real ?n; cy=(\<Sum>j<?n. vy j)/real ?n
+         in (vx i-cx)*(vy(Suc i mod ?n)-cy)-(vy i-cy)*(vx(Suc i mod ?n)-cx) > 0"
+    and hC11: "\<forall>i<?n. \<forall>k<?n. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?n \<longrightarrow>
+          (vx k-vx i)*(vy(Suc i mod ?n)-vy i)-(vy k-vy i)*(vx(Suc i mod ?n)-vx i) < 0"
+    by (rule quotient_of_scheme_extract_vx)
+  \<comment> \<open>Define q' = h \\<circ> q: P \\<to> Y'.\<close>
+  define q' where "q' = h \<circ> q"
+  \<comment> \<open>Topology of Y'.\<close>
+  have htopo': "is_topology_on_strict Y' TY'"
+    using hh unfolding top1_homeomorphism_on_def top1_continuous_map_on_def is_topology_on_strict_def sorry
+  \<comment> \<open>C2': q' = h \\<circ> q is a quotient map from P to Y' (composition of quotient + homeomorphism).\<close>
+  have hh_quot: "top1_quotient_map_on Y TY Y' TY' h"
+    by (rule top1_homeomorphism_on_imp_quotient_map_on[OF hh])
+  have hC2': "top1_quotient_map_on P (?TP P) Y' TY' q'"
+    unfolding q'_def by (rule top1_quotient_map_on_comp[OF hC2 hh_quot])
+  \<comment> \<open>C7': h preserves equality, so q'(e1) = q'(e2) iff q(e1) = q(e2).\<close>
+  have hC7': "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
+      (\<forall>t\<in>I_set. q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+       = (if snd(s!i) = snd(s!j)
+          then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+          else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
+    unfolding q'_def comp_def using hC7 sorry \<comment> \<open>h(q(e1)) = h(q(e2)) from q(e1)=q(e2) by C7.\<close>
+  \<comment> \<open>C8': h \\<circ> q injective on interior (h injective + q injective).\<close>
+  have hC8': "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
+           \<longrightarrow> (\<forall>p'\<in>P. q' p = q' p' \<longrightarrow> p = p')"
+    sorry \<comment> \<open>h(q(p)) = h(q(p')) with h injective gives q(p) = q(p'), then C8 gives p = p'.\<close>
+  \<comment> \<open>C9': similarly, h preserves the boundary identification pattern.\<close>
+  have hC9': "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
+        q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+      = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
+      \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
+    sorry \<comment> \<open>Same argument as C8': h(q(e1)) = h(q(e2)) \\<Longrightarrow> q(e1) = q(e2) \\<Longrightarrow> C9 of original.\<close>
+  \<comment> \<open>Assembly.\<close>
+  show ?thesis unfolding top1_quotient_of_scheme_on_def
+  proof (intro conjI exI)
+    show "is_topology_on_strict Y' TY'" using htopo' .
+    show "top1_is_polygonal_region_on P ?n" using hC1 .
+    show "top1_quotient_map_on P (?TP P) Y' TY' q'" using hC2' .
+    show "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)" using hC3 .
+    show "\<forall>i<?n. (vx i, vy i) \<in> P" using hC4 .
+    show "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. 0 \<le> coeffs i) \<and> (\<Sum>i<?n. coeffs i) = 1
+        \<and> x = (\<Sum>i<?n. coeffs i * vx i) \<and> y = (\<Sum>i<?n. coeffs i * vy i)}" using hC5 by (by100 simp)
+    show "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+        (\<forall>s'\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+           ((1-s') * vx i + s' * vx (Suc i mod ?n), (1-s') * vy i + s' * vy (Suc i mod ?n))
+         \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n), (1-t) * vy j + t * vy (Suc j mod ?n)))"
+      using hC6 .
+    show "\<forall>i<?n. \<forall>j<?n. fst (s!i) = fst (s!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+         = (if snd(s!i) = snd(s!j)
+            then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+            else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
+      using hC7' .
+    show "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
+           \<longrightarrow> (\<forall>p'\<in>P. q' p = q' p' \<longrightarrow> p = p')" using hC8' .
+    show "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
+        q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+      = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
+      \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
+      using hC9' .
+    show "\<forall>i<?n. let cx=(\<Sum>j<?n. vx j)/real ?n; cy=(\<Sum>j<?n. vy j)/real ?n
+         in (vx i-cx)*(vy(Suc i mod ?n)-cy)-(vy i-cy)*(vx(Suc i mod ?n)-cx) > 0" using hC10 .
+    show "\<forall>i<?n. \<forall>k<?n. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?n \<longrightarrow>
+          (vx k-vx i)*(vy(Suc i mod ?n)-vy i)-(vy k-vy i)*(vx(Suc i mod ?n)-vx i) < 0" using hC11 .
+  qed
+qed
 
 lemma front_cancel_proper:
   fixes Y :: "'a set" and TY :: "'a set set"
