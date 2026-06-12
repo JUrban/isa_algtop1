@@ -3105,16 +3105,17 @@ proof -
   have hn_ge5: "?n \<ge> 5" using assms(2) hn by (by100 simp)
   have hn'_ge3: "?n' \<ge> 3" using assms(2) .
   \<comment> \<open>Step 1: Y' is a quotient of w via P' with shifted vertices.\<close>
+  \<comment> \<open>Step 1: Y' is a quotient of w via P' with shifted vertices.
+     Note: P' has n-2 vertices: v\\_2, ..., v\\_{n-1}. Its edges 0..n-4 correspond to
+     original edges 2..n-2 (shifted). Edge n-3 is the DIAGONAL from v\\_{n-1} to v\\_2
+     (cutting off the spur v\\_0, v\\_1, v\\_2). In the quotient, q(v\\_0) = q(v\\_2), so
+     the diagonal maps under q to the same arc as original edge n-1 (v\\_{n-1} \\<to> v\\_0).
+     Each condition of top1\\_quotient\\_of\\_scheme\\_on transfers from P to P' using this.\<close>
   have hquot_w: "top1_quotient_of_scheme_on Y' TY' w"
-    sorry \<comment> \<open>11 conditions for sub-polygon P' with shifted vertices vx', vy'.
-       C1 (poly region): P' is convex hull of n-2 \\<ge> 3 points from original circle.
-       C2 (quotient map): TY' is quotient topology by construction.
-       C3-C5 (vertices): transfer from original via index shift.
-       C6 (edge disjoint): transfer from original C6.
-       C7 (identification): q restricted to P' identifies per w (shifted indices).
-       C8 (interior injectivity): q|P' is injective on P' interior.
-       C9 (boundary): interior case provable; vertex case blocked by C9 definition.
-       C10-C11 (convexity): shifted vertices still on circle in CCW order.\<close>
+    sorry \<comment> \<open>11 conditions for sub-polygon P' with shifted vertices.
+       All conditions transfer from original polygon P. Key insight: edge n-3 of P'
+       (the diagonal v\\_{n-1} \\<to> v\\_2) maps under q to same arc as original edge n-1
+       because q(v\\_0) = q(v\\_2) from the cancelling pair identification.\<close>
   \<comment> \<open>Step 2: Y \\<cong> Y'. The spur (triangle v\\_0-v\\_1-v\\_2 region in Y \\ Y') collapses
      because the cancelling edges are identified. The retraction Y \\<to> Y' is continuous
      and a homotopy equivalence (in fact a homeomorphism on the quotient level).\<close>
@@ -4334,19 +4335,6 @@ proof -
           \<comment> \<open>From q1(e1(i,t)) = q1(e1(j,s)) and C9\\_1: get label/direction condition.
              C9 now only applies to interior edge points (0 < t < 1).
              Vertex case (t=0 or t=1) needs separate C7-based argument.\<close>
-          have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-              (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-          proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
-            case True
-            hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
-            from hC9_1 hi hj this heq[unfolded hx_eq hy_eq]
-            show ?thesis by (by100 blast)
-          next
-            case False
-            \<comment> \<open>At least one vertex: use C7 at endpoints + transitivity.\<close>
-            show ?thesis sorry \<comment> \<open>Vertex case: derive from C7 at t=0/1 + transitivity.
-               q1 identifies vertices transitively via C7. Same chain gives q2 identification.\<close>
-          qed
           \<comment> \<open>Need: q2(\\<phi>(x)) = q2(\\<phi>(y)), i.e. q2(e2(i,t)) = q2(e2(j,s)).\<close>
           have h\<phi>x: "\<phi> x = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
                              (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
@@ -4354,40 +4342,55 @@ proof -
           have h\<phi>y: "\<phi> y = ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
                              (1-s) * vy2 j + s * vy2 (Suc j mod ?n))"
             using h\<phi>_edge[rule_format, OF hj hs] hy_eq by (by100 simp)
-          \<comment> \<open>From hcond, derive q2(e2(i,t)) = q2(e2(j,s)) using C7\\_2.\<close>
-          from hcond show ?thesis
-          proof (elim disjE conjE)
-            assume "i = j" "t = s"
-            thus ?thesis using h\<phi>x h\<phi>y by (by100 simp)
-          next
-            assume hlabel: "fst (scheme!i) = fst (scheme!j)"
-              and hdir: "if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t"
-            from hC7_2 hi hj hlabel ht
-            have "q2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-                      (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
-                = (if snd (scheme!i) = snd (scheme!j)
-                   then q2 ((1-t) * vx2 j + t * vx2 (Suc j mod ?n),
-                           (1-t) * vy2 j + t * vy2 (Suc j mod ?n))
-                   else q2 (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
-                           t * vy2 j + (1-t) * vy2 (Suc j mod ?n)))"
+          \<comment> \<open>Split: interior (use C9) vs vertex (direct argument).\<close>
+          show ?thesis
+          proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
+            case True
+            \<comment> \<open>Interior case: use C9 to get hcond, then C7\\_2.\<close>
+            hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
+            from hC9_1 hi hj this heq[unfolded hx_eq hy_eq]
+            have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+                (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
               by (by100 blast)
-            \<comment> \<open>Case split on direction match to rewrite q2 equality.\<close>
-            thus ?thesis
-            proof (cases "snd (scheme!i) = snd (scheme!j)")
-              case True
-              \<comment> \<open>Same direction: s = t, so \\<phi>(y) = e2(j,t) = e2(j,s).\<close>
-              hence "s = t" using hdir by (by100 simp)
-              thus ?thesis using \<open>q2 _ = _\<close> True h\<phi>x h\<phi>y by (by100 simp)
+            from hcond show ?thesis
+            proof (elim disjE conjE)
+              assume "i = j" "t = s"
+              thus ?thesis using h\<phi>x h\<phi>y by (by100 simp)
             next
-              case False
-              \<comment> \<open>Opposite direction: s = 1-t, so e2(j,s) = (t*vx2 j + (1-t)*vx2(Sj), ...).\<close>
-              hence "s = 1 - t" using hdir by (by100 simp)
-              \<comment> \<open>(1-s) = t, s = 1-t, so (1-s)*vx2 j + s*vx2(Sj) = t*vx2 j + (1-t)*vx2(Sj).\<close>
-              hence "\<phi> y = (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
-                           t * vy2 j + (1-t) * vy2 (Suc j mod ?n))"
-                using h\<phi>y by (by100 simp)
-              thus ?thesis using \<open>q2 _ = _\<close> False h\<phi>x by (by100 simp)
+              assume hlabel: "fst (scheme!i) = fst (scheme!j)"
+                and hdir: "if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t"
+              from hC7_2 hi hj hlabel ht
+              have "q2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
+                        (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
+                  = (if snd (scheme!i) = snd (scheme!j)
+                     then q2 ((1-t) * vx2 j + t * vx2 (Suc j mod ?n),
+                             (1-t) * vy2 j + t * vy2 (Suc j mod ?n))
+                     else q2 (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
+                             t * vy2 j + (1-t) * vy2 (Suc j mod ?n)))"
+                by (by100 blast)
+              thus ?thesis
+              proof (cases "snd (scheme!i) = snd (scheme!j)")
+                case True
+                hence "s = t" using hdir by (by100 simp)
+                thus ?thesis using \<open>q2 _ = _\<close> True h\<phi>x h\<phi>y by (by100 simp)
+              next
+                case False
+                hence "s = 1 - t" using hdir by (by100 simp)
+                hence "\<phi> y = (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
+                             t * vy2 j + (1-t) * vy2 (Suc j mod ?n))"
+                  using h\<phi>y by (by100 simp)
+                thus ?thesis using \<open>q2 _ = _\<close> False h\<phi>x by (by100 simp)
+              qed
             qed
+          next
+            case False
+            \<comment> \<open>Vertex case: at least one of t, s is 0 or 1.
+               Derive q2(\\<phi>(x)) = q2(\\<phi>(y)) directly without hcond.
+               Vertices identified under q1 must also be identified under q2
+               because both use the same scheme and C7 determines vertex identification.\<close>
+            show ?thesis sorry \<comment> \<open>Vertex case in uniqueness forward direction.
+               Needs: vertex identification is determined by C7 at endpoints + transitivity.
+               Both q1 and q2 satisfy C7 for the same scheme, so identify the same vertices.\<close>
           qed
         qed
       qed
@@ -4455,47 +4458,49 @@ proof -
         have h\<phi>y: "\<phi> y = ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
                            (1-s) * vy2 j + s * vy2 (Suc j mod ?n))"
           using h\<phi>_edge[rule_format, OF hj hs] hy_eq by (by100 simp)
-        have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-            (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+        \<comment> \<open>Split: interior (C9\\_2 + C7\\_1) vs vertex (direct).\<close>
+        show ?thesis
         proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
           case True
           hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
           from hC9_2 hi hj this heq2'[unfolded h\<phi>x h\<phi>y]
-          show ?thesis by (by100 blast)
+          have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
+              (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
+            by (by100 blast)
+          from hcond show ?thesis
+          proof (elim disjE conjE)
+            assume "i = j" "t = s"
+            thus ?thesis using hx_eq hy_eq by (by100 simp)
+          next
+            assume hlabel: "fst (scheme!i) = fst (scheme!j)"
+              and hdir: "if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t"
+            from hC7_1 hi hj hlabel ht
+            have hq1: "q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
+                          (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
+                = (if snd (scheme!i) = snd (scheme!j)
+                   then q1 ((1-t) * vx1 j + t * vx1 (Suc j mod ?n),
+                           (1-t) * vy1 j + t * vy1 (Suc j mod ?n))
+                   else q1 (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
+                           t * vy1 j + (1-t) * vy1 (Suc j mod ?n)))"
+              by (by100 blast)
+            show ?thesis
+            proof (cases "snd (scheme!i) = snd (scheme!j)")
+              case True
+              hence "s = t" using hdir by (by100 simp)
+              thus ?thesis using hq1 True hx_eq hy_eq by (by100 simp)
+            next
+              case False
+              hence "s = 1 - t" using hdir by (by100 simp)
+              hence "y = (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
+                          t * vy1 j + (1-t) * vy1 (Suc j mod ?n))"
+                using hy_eq by (by100 simp)
+              thus ?thesis using hq1 False hx_eq by (by100 simp)
+            qed
+          qed
         next
           case False
-          show ?thesis sorry \<comment> \<open>Vertex case: same argument as forward direction.\<close>
-        qed
-        from hcond show ?thesis
-        proof (elim disjE conjE)
-          assume "i = j" "t = s"
-          thus ?thesis using hx_eq hy_eq by (by100 simp)
-        next
-          assume hlabel: "fst (scheme!i) = fst (scheme!j)"
-            and hdir: "if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t"
-          \<comment> \<open>Use C7\\_1 (same scheme!) to get q1(e1(i,t)) = q1(e1(j,s)).\<close>
-          from hC7_1 hi hj hlabel ht
-          have hq1: "q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-                        (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
-              = (if snd (scheme!i) = snd (scheme!j)
-                 then q1 ((1-t) * vx1 j + t * vx1 (Suc j mod ?n),
-                         (1-t) * vy1 j + t * vy1 (Suc j mod ?n))
-                 else q1 (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
-                         t * vy1 j + (1-t) * vy1 (Suc j mod ?n)))"
-            by (by100 blast)
-          show ?thesis
-          proof (cases "snd (scheme!i) = snd (scheme!j)")
-            case True
-            hence "s = t" using hdir by (by100 simp)
-            thus ?thesis using hq1 True hx_eq hy_eq by (by100 simp)
-          next
-            case False
-            hence "s = 1 - t" using hdir by (by100 simp)
-            hence "y = (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
-                        t * vy1 j + (1-t) * vy1 (Suc j mod ?n))"
-              using hy_eq by (by100 simp)
-            thus ?thesis using hq1 False hx_eq by (by100 simp)
-          qed
+          \<comment> \<open>Vertex case: same approach as forward direction.\<close>
+          show ?thesis sorry \<comment> \<open>Vertex case in uniqueness backward direction.\<close>
         qed
       qed
     qed
