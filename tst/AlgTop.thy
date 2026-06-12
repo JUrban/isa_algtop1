@@ -4465,7 +4465,9 @@ proof -
   define q' where "q' = h \<circ> q"
   \<comment> \<open>Topology of Y'.\<close>
   have htopo': "is_topology_on_strict Y' TY'"
-    using hh unfolding top1_homeomorphism_on_def top1_continuous_map_on_def is_topology_on_strict_def sorry
+    sorry \<comment> \<open>From homeomorphism: is\\_topology\\_on Y' TY' + TY' \\<subseteq> Pow Y'.
+       Need either strict version from hq transferred through h, or derive TY' \\<subseteq> Pow Y'
+       from the continuous\\_map\\_on definition of h.\<close>
   \<comment> \<open>C2': q' = h \\<circ> q is a quotient map from P to Y' (composition of quotient + homeomorphism).\<close>
   have hh_quot: "top1_quotient_map_on Y TY Y' TY' h"
     by (rule top1_homeomorphism_on_imp_quotient_map_on[OF hh])
@@ -4477,18 +4479,74 @@ proof -
        = (if snd(s!i) = snd(s!j)
           then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
           else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n))))"
-    unfolding q'_def comp_def using hC7 sorry \<comment> \<open>h(q(e1)) = h(q(e2)) from q(e1)=q(e2) by C7.\<close>
+  proof (intro allI impI ballI)
+    fix i j t assume hi: "i < ?n" and hj: "j < ?n" and hlabel: "fst(s!i) = fst(s!j)" and ht: "t \<in> I_set"
+    from hC7[rule_format, OF hi hj hlabel ht]
+    have hq_eq: "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+         = (if snd(s!i) = snd(s!j)
+            then q ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+            else q (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n)))" .
+    \<comment> \<open>Apply h to both sides.\<close>
+    show "q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+       = (if snd(s!i) = snd(s!j)
+          then q' ((1-t)*vx j+t*vx(Suc j mod ?n),(1-t)*vy j+t*vy(Suc j mod ?n))
+          else q' (t*vx j+(1-t)*vx(Suc j mod ?n),t*vy j+(1-t)*vy(Suc j mod ?n)))"
+      unfolding q'_def comp_def using hq_eq by (by100 presburger)
+  qed
+  \<comment> \<open>h is injective on Y (from homeomorphism = bijection).\<close>
+  have h_inj: "inj_on h Y"
+    using hh unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+  \<comment> \<open>q maps P to Y (from quotient map).\<close>
+  have q_range: "\<forall>p\<in>P. q p \<in> Y"
+    using hC2 unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
   \<comment> \<open>C8': h \\<circ> q injective on interior (h injective + q injective).\<close>
   have hC8': "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
               p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
            \<longrightarrow> (\<forall>p'\<in>P. q' p = q' p' \<longrightarrow> p = p')"
-    sorry \<comment> \<open>h(q(p)) = h(q(p')) with h injective gives q(p) = q(p'), then C8 gives p = p'.\<close>
+  proof (intro ballI impI allI)
+    fix p p' assume hp: "p \<in> P" and hp': "p' \<in> P"
+        and hint: "\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))"
+        and heq: "q' p = q' p'"
+    have hqeq: "q p = q p'"
+    proof -
+      from heq have "h (q p) = h (q p')" unfolding q'_def comp_def by (by100 simp)
+      moreover have "q p \<in> Y" using q_range hp by (by100 blast)
+      moreover have "q p' \<in> Y" using q_range hp' by (by100 blast)
+      ultimately show ?thesis using h_inj unfolding inj_on_def by (by100 blast)
+    qed
+    show "p = p'" using hC8 hp hint hp' hqeq by (by100 blast)
+  qed
   \<comment> \<open>C9': similarly, h preserves the boundary identification pattern.\<close>
   have hC9': "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
         q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
       = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))
       \<longrightarrow> (i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))"
-    sorry \<comment> \<open>Same argument as C8': h(q(e1)) = h(q(e2)) \\<Longrightarrow> q(e1) = q(e2) \\<Longrightarrow> C9 of original.\<close>
+  proof (intro allI impI ballI)
+    fix i j t s' assume hi: "i < ?n" and hj: "j < ?n"
+      and ht: "t \<in> {0<..<(1::real)}" and hs: "s' \<in> {0<..<(1::real)}"
+      and heq: "q' ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+        = q' ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))"
+    \<comment> \<open>h(q(e1)) = h(q(e2)). Since h injective on Y and both q(e1), q(e2) \\<in> Y: q(e1) = q(e2).\<close>
+    have "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n))
+        = q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n))"
+    proof -
+      from heq have "h (q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)))
+          = h (q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)))"
+        unfolding q'_def comp_def by (by100 simp)
+      moreover have "((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> P"
+        sorry \<comment> \<open>Edge point is in P (convex combination).\<close>
+      hence "q ((1-t)*vx i+t*vx(Suc i mod ?n),(1-t)*vy i+t*vy(Suc i mod ?n)) \<in> Y"
+        using q_range by (by100 blast)
+      moreover have "((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> P"
+        sorry
+      hence "q ((1-s')*vx j+s'*vx(Suc j mod ?n),(1-s')*vy j+s'*vy(Suc j mod ?n)) \<in> Y"
+        using q_range by (by100 blast)
+      ultimately show ?thesis using h_inj unfolding inj_on_def by (by100 blast)
+    qed
+    from hC9[rule_format, OF hi hj ht hs this]
+    show "(i=j \<and> t=s') \<or> (fst(s!i)=fst(s!j) \<and> (if snd(s!i)=snd(s!j) then s'=t else s'=1-t))" .
+  qed
   \<comment> \<open>Assembly.\<close>
   show ?thesis unfolding top1_quotient_of_scheme_on_def
   proof (intro conjI exI)
