@@ -54,6 +54,26 @@ proof -
     using assms homeomorphism_id_early[OF \<open>is_topology_on X TX\<close>] by (by100 blast)
 qed
 
+\<comment> \<open>Regular n-gon is a polygonal region. Standalone helper for reuse.\<close>
+lemma regular_ngon_polygonal_region:
+  fixes n :: nat
+  assumes "n \<ge> 3"
+  defines "vx \<equiv> \<lambda>k. cos (2 * pi * real k / real n)"
+  defines "vy \<equiv> \<lambda>k. sin (2 * pi * real k / real n)"
+  defines "P \<equiv> {(x::real,y::real). \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                     \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+  shows "top1_is_polygonal_region_on P n
+       \<and> (\<forall>i<n. (vx i, vy i) \<in> P)
+       \<and> (\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
+       \<and> (\<forall>i<n. let cx = (\<Sum>j<n. vx j) / real n; cy = (\<Sum>j<n. vy j) / real n
+           in (vx i - cx) * (vy (Suc i mod n) - cy) - (vy i - cy) * (vx (Suc i mod n) - cx) > 0)
+       \<and> (\<forall>i<n. \<forall>k<n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod n \<longrightarrow>
+           (vx k - vx i) * (vy (Suc i mod n) - vy i) - (vy k - vy i) * (vx (Suc i mod n) - vx i) < 0)"
+  sorry \<comment> \<open>Regular n-gon properties: C1/C3/C4/C10/C11.
+     Proved inside scheme\\_quotient\\_exists for the same definitions. Should be extractable.\<close>
+
 \<comment> \<open>Key geometric helper: quotient preservation under edge permutation.
    Given a quotient of scheme s and s' = \\<sigma>-permutation of s (same edges, different order),
    Y is also a quotient of s'. The proof constructs a fresh polygon P' and quotient map
@@ -122,19 +142,22 @@ proof -
                      \<and> (\<Sum>i<?n. coeffs i) = 1
                      \<and> x = (\<Sum>i<?n. coeffs i * vx2 i)
                      \<and> y = (\<Sum>i<?n. coeffs i * vy2 i)}"
-  \<comment> \<open>P2 satisfies C1/C3/C4/C5/C10/C11 (regular n-gon properties, proved in scheme\\_quotient\\_exists).\<close>
-  have hC1_2: "top1_is_polygonal_region_on P2 ?n" sorry
-  have hC4_2: "\<forall>i<?n. (vx2 i, vy2 i) \<in> P2" sorry
+  \<comment> \<open>P2 satisfies C1/C3/C4/C5/C10/C11 (from regular\\_ngon\\_polygonal\\_region).\<close>
+  from regular_ngon_polygonal_region[OF hn3]
+  have hC1_2: "top1_is_polygonal_region_on P2 ?n"
+    and hC4_2: "\<forall>i<?n. (vx2 i, vy2 i) \<in> P2"
+    and hC3_2: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx2 i, vy2 i) \<noteq> (vx2 j, vy2 j)"
+    and hC10_2: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx2 j) / real ?n;
+                             cy = (\<Sum>j<?n. vy2 j) / real ?n
+         in (vx2 i - cx) * (vy2 (Suc i mod ?n) - cy)
+          - (vy2 i - cy) * (vx2 (Suc i mod ?n) - cx) > 0"
+    and hC11_2: "\<forall>i<?n. \<forall>k<?n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i)
+          - (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) < 0"
+    unfolding vx2_def vy2_def P2_def by (by100 auto)+
   have hC5_2: "P2 = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
       \<and> x = (\<Sum>i<?n. coeffs i * vx2 i) \<and> y = (\<Sum>i<?n. coeffs i * vy2 i)}"
     unfolding P2_def by (by100 simp)
-  have hC10_2: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx2 j) / real ?n;
-                             cy = (\<Sum>j<?n. vy2 j) / real ?n
-         in (vx2 i - cx) * (vy2 (Suc i mod ?n) - cy)
-          - (vy2 i - cy) * (vx2 (Suc i mod ?n) - cx) > 0" sorry
-  have hC11_2: "\<forall>i<?n. \<forall>k<?n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
-          (vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i)
-          - (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) < 0" sorry
   \<comment> \<open>Step 3b: Get disk homeomorphisms for both polygons.\<close>
   \<comment> \<open>The disk homeomorphism technique and composition follow
      exactly as in scheme\\_quotient\\_uniqueness (line ~4050-4200 of this file).
