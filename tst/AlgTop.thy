@@ -4806,16 +4806,46 @@ proof -
          vertex/cancel from fan vertex map + C7 chain transfer.
        All cases algebraically verified (sessions 2-4).
        Structural properties: hf\\_edge, hf\\_spur0/1, hf\\_int\\_range, hf\\_int\\_inj, hf\\_bdy\\_fibres.\<close>
+    \<comment> \<open>Obtain disk homeomorphisms for both polygons.\<close>
+    have hvert_hp_e: "\<forall>i<?n. \<forall>k<?n. AlgTopChain.cross2 (vx_e k - vx_e i, vy_e k - vy_e i)
+        (vx_e (Suc i mod ?n) - vx_e i, vy_e (Suc i mod ?n) - vy_e i) \<le> 0"
+    proof (intro allI impI)
+      fix i k assume hi: "i < ?n" and hk: "k < ?n"
+      show "AlgTopChain.cross2 (vx_e k - vx_e i, vy_e k - vy_e i)
+          (vx_e (Suc i mod ?n) - vx_e i, vy_e (Suc i mod ?n) - vy_e i) \<le> 0"
+      proof (cases "k = i \<or> k = Suc i mod ?n")
+        case True
+        thus ?thesis unfolding AlgTopChain.cross2_def by (by100 auto)
+      next
+        case False
+        from hC11e[rule_format, OF hi hk] False
+        have "(vx_e k - vx_e i) * (vy_e (Suc i mod ?n) - vy_e i)
+            - (vy_e k - vy_e i) * (vx_e (Suc i mod ?n) - vx_e i) < 0" by (by100 blast)
+        thus ?thesis unfolding AlgTopChain.cross2_def by (by100 simp)
+      qed
+    qed
+    have hstrict_hp_e: "\<forall>i<?n. \<forall>k<?n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+        AlgTopChain.cross2 (vx_e k - vx_e i, vy_e k - vy_e i)
+            (vx_e (Suc i mod ?n) - vx_e i, vy_e (Suc i mod ?n) - vy_e i) < 0"
+      using hC11e unfolding AlgTopChain.cross2_def by (by100 simp)
+    have hn3_e: "?n \<ge> 3" using hC1e unfolding top1_is_polygonal_region_on_def by (by100 blast)
+    from AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
+        [OF hC1e hn3_e hC4e hC5e hC10e hvert_hp_e hstrict_hp_e]
+    obtain \<psi>_e where
+      h\<psi>e_homeo: "top1_homeomorphism_on P_e (?TP P_e) top1_B2 top1_B2_topology \<psi>_e"
+      and h\<psi>e_edge: "\<forall>i<?n. \<forall>t\<in>I_set.
+        \<psi>_e ((1-t) * vx_e i + t * vx_e (Suc i mod ?n),
+            (1-t) * vy_e i + t * vy_e (Suc i mod ?n))
+        = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n))"
+      by auto
+    \<comment> \<open>Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e where \\<tau>: B2 \\<to> B2 is the spur collapse map.
+       For now, sorry the full construction. The disk homeomorphisms are available.\<close>
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
-      sorry \<comment> \<open>Fan construction + fibre matching. See detailed analysis in memory files.
-         Fibre matching decomposition (all cases verified in sessions 2-4):
-         Forward interior\\<times>interior: C8\\_e. Forward interior\\<times>boundary: C8\\_e.
-         Forward w-edge (i,j\\<ge>2): C7\\_m via define i'=i-2 trick.
-         Forward freshness: fst a \\<notin> fst ` set w.
-         Forward cancel pair: spur fold algebra.
-         Forward vertex: boundary fibre matching from fan vertex map.
-         Backward: symmetric using C8\\_m + interior injectivity + C9\\_m + C7\\_e.\<close>
+      sorry \<comment> \<open>Fan construction + fibre matching via \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.
+         Disk homeomorphisms \\<psi>\\_e and \\<psi>\\_m now available.
+         Remaining: define \\<tau>: B2 \\<to> B2 that collapses cancel arcs and rescales.
+         All fibre matching cases verified algebraically (sessions 2-4).\<close>
     then obtain f where
         hf_cont: "continuous_on P_e f"
       and hf_surj: "f ` P_e = P_m"
