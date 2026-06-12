@@ -115,13 +115,41 @@ proof -
      Then \\<phi> = \\<psi>1\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>2 where \\<tau> permutes arcs per \\<sigma>.
      Define q2 = q1 \\<circ> \\<phi> and verify all 11 conditions for (P2, q2, vx2, vy2, s').
      This follows the scheme\\_quotient\\_uniqueness technique with permuted edges.\<close>
-  show ?thesis sorry \<comment> \<open>Geometric core: construct P2, \\<phi>, q2 = q1\\<circ>\\<phi>, verify 11 conditions.
-     The fibre-matching argument from scheme\\_quotient\\_uniqueness applies:
-     q1\\<circ>\\<phi> on edge k of P2 = q1 on edge \\<sigma>(k) of P1.
-     Edge \\<sigma>(k) of P1 has label s!\\<sigma>(k) = s'!k.
-     So q1\\<circ>\\<phi> identifies edges of P2 according to s'.
-     Interior: q1\\<circ>\\<phi> is injective (both q1 and \\<phi> are injective on interiors).
-     Boundary: identifications match s' (from \\<sigma>-matching and C7/C9 of P1).\<close>
+  \<comment> \<open>Step 3a: Construct P2 as regular n-gon (from scheme\\_quotient\\_exists infrastructure).\<close>
+  define vx2 where "vx2 k = cos (2 * pi * real k / real ?n)" for k
+  define vy2 where "vy2 k = sin (2 * pi * real k / real ?n)" for k
+  define P2 where "P2 = {(x::real,y::real). \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx2 i)
+                     \<and> y = (\<Sum>i<?n. coeffs i * vy2 i)}"
+  \<comment> \<open>P2 satisfies C1/C3/C4/C5/C10/C11 (regular n-gon properties, proved in scheme\\_quotient\\_exists).\<close>
+  have hC1_2: "top1_is_polygonal_region_on P2 ?n" sorry
+  have hC4_2: "\<forall>i<?n. (vx2 i, vy2 i) \<in> P2" sorry
+  have hC5_2: "P2 = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
+      \<and> x = (\<Sum>i<?n. coeffs i * vx2 i) \<and> y = (\<Sum>i<?n. coeffs i * vy2 i)}"
+    unfolding P2_def by (by100 simp)
+  have hC10_2: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx2 j) / real ?n;
+                             cy = (\<Sum>j<?n. vy2 j) / real ?n
+         in (vx2 i - cx) * (vy2 (Suc i mod ?n) - cy)
+          - (vy2 i - cy) * (vx2 (Suc i mod ?n) - cx) > 0" sorry
+  have hC11_2: "\<forall>i<?n. \<forall>k<?n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i)
+          - (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) < 0" sorry
+  \<comment> \<open>Step 3b: Get disk homeomorphisms for both polygons.\<close>
+  \<comment> \<open>The disk homeomorphism technique and composition follow
+     exactly as in scheme\\_quotient\\_uniqueness (line ~4050-4200 of this file).
+     \\<psi>1: P1 \\<to> B2, \\<psi>2: P2 \\<to> B2 (from polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary).
+     \\<tau>: B2 \\<to> B2 (PL homeomorphism permuting arcs per \\<sigma>).
+     \\<phi> = \\<psi>1\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>2: P2 \\<to> P1.
+     \\<phi> maps edge k of P2 to edge \\<sigma>(k) of P1.
+     q2 = q1 \\<circ> \\<phi>: P2 \\<to> Y.
+     Fibre matching: (q1\\<circ>\\<phi>)(x) = (q1\\<circ>\\<phi>)(y) \\<longleftrightarrow> s'-identification of x, y.
+     Then quotient\\_on Y TY s' using P2, q2, vx2, vy2.\<close>
+  show ?thesis sorry \<comment> \<open>Steps 3b onward: disk homeo composition + fibre matching.
+     Same technique as scheme\\_quotient\\_uniqueness (lines 4050-4370) but with
+     \\<tau> permuting arcs per \\<sigma>. The fibre matching uses:
+     q1(\\<phi>(edge\\_k\\_P2(t))) = q1(edge\\_{\\<sigma>(k)}\\_P1(t))
+     and C9 of P1 gives the s'-identification pattern.\<close>
 qed
 
 \<comment> \<open>Cut-paste preservation: homeomorphic realization (per audit 22 §5.5).
