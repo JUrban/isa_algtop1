@@ -4868,7 +4868,35 @@ proof -
             (1-t) * vy_m j + t * vy_m (Suc j mod ?m))
         = (cos (2*pi*(real j + t)/real ?m), sin (2*pi*(real j + t)/real ?m))"
       by auto
-    \<comment> \<open>Both disk homeomorphisms now available: \\<psi>\\_e: P\\_e \\<to> B2 and \\<psi>\\_m: P\\_m \\<to> B2.
+    \<comment> \<open>Inverse homeomorphism: \\<psi>\\_m\\<inverse>: B2 \\<to> P\\_m.\<close>
+    from homeomorphism_inverse[OF h\<psi>m_homeo]
+    have h\<psi>m_inv: "top1_homeomorphism_on top1_B2 top1_B2_topology P_m (?TP P_m) (inv_into P_m \<psi>_m)" .
+    \<comment> \<open>\\<psi>\\_m is injective on P\\_m (from homeomorphism = bijection).\<close>
+    have h\<psi>m_inj: "inj_on \<psi>_m P_m"
+      using h\<psi>m_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    \<comment> \<open>\\<psi>\\_m maps P\\_m onto B2.\<close>
+    have h\<psi>m_surj: "\<psi>_m ` P_m = top1_B2"
+      using h\<psi>m_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+    \<comment> \<open>Inverse on boundary: \\<psi>\\_m\\<inverse>(cos(2\\<pi>(j+t)/m), sin(2\\<pi>(j+t)/m)) = edge\\_m(j,t).\<close>
+    have h\<psi>m_inv_edge: "\<forall>j<?m. \<forall>t\<in>I_set.
+        inv_into P_m \<psi>_m (cos (2*pi*(real j + t)/real ?m), sin (2*pi*(real j + t)/real ?m))
+        = ((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
+           (1-t) * vy_m j + t * vy_m (Suc j mod ?m))"
+    proof (intro allI impI ballI)
+      fix j t assume hj: "j < ?m" and ht: "t \<in> I_set"
+      have hedge: "((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
+           (1-t) * vy_m j + t * vy_m (Suc j mod ?m)) \<in> P_m"
+        by (rule edge_point_in_polygon_witness[OF hm3 hj ht hC5m])
+      from h\<psi>m_edge[rule_format, OF hj ht]
+      have "\<psi>_m ((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
+           (1-t) * vy_m j + t * vy_m (Suc j mod ?m))
+        = (cos (2*pi*(real j + t)/real ?m), sin (2*pi*(real j + t)/real ?m))" .
+      from inv_into_f_f[OF h\<psi>m_inj hedge] this
+      show "inv_into P_m \<psi>_m (cos (2*pi*(real j + t)/real ?m), sin (2*pi*(real j + t)/real ?m))
+        = ((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
+           (1-t) * vy_m j + t * vy_m (Suc j mod ?m))" by (by100 simp)
+    qed
+    \<comment> \<open>Both disk homeomorphisms + inverse available.
        Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e where \\<tau>: B2 \\<to> B2 is the spur collapse map.\<close>
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
