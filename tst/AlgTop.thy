@@ -3149,9 +3149,123 @@ proof -
   qed
   \<comment> \<open>P' \\<subseteq> P (sub-polygon is inside original polygon).\<close>
   have hP'_sub: "P' \<subseteq> P"
-    sorry \<comment> \<open>P' = conv hull of {v\\_2,...,v\\_{n-1}} \\<subseteq> P = conv hull of {v\\_0,...,v\\_{n-1}}.
-       Proof: extend coefficients by setting coeffs'(0) = coeffs'(1) = 0,
-       coeffs'(i+2) = coeffs(i). Sum reindexing gives the result.\<close>
+  proof
+    fix p assume hp: "p \<in> P'"
+    then obtain coeffs where hge: "\<forall>i<?n'. 0 \<le> coeffs i" and hsum: "(\<Sum>i<?n'. coeffs i) = 1"
+        and hfst: "fst p = (\<Sum>i<?n'. coeffs i * vx' i)" and hsnd: "snd p = (\<Sum>i<?n'. coeffs i * vy' i)"
+      unfolding P'_def by (by100 auto)
+    define coeffs' where "coeffs' i = (if i < 2 then (0::real) else coeffs (i - 2))" for i
+    have hge': "\<forall>i<?n. 0 \<le> coeffs' i"
+    proof (intro allI impI)
+      fix i assume "i < ?n"
+      show "0 \<le> coeffs' i"
+      proof (cases "i < 2")
+        case True thus ?thesis unfolding coeffs'_def by (by100 simp)
+      next
+        case False
+        hence "i - 2 < ?n'" using \<open>i < ?n\<close> hn by (by100 linarith)
+        thus ?thesis unfolding coeffs'_def using hge False by (by100 auto)
+      qed
+    qed
+    \<comment> \<open>Sum reindexing helper: \\<Sum>i<n. f(coeffs'(i), i) = \\<Sum>j<n'. f(coeffs(j), j+2)
+       because coeffs'(0) = coeffs'(1) = 0 (zero contributions) and coeffs'(i+2) = coeffs(i).\<close>
+    have hsum_shift: "\<And>g :: nat \<Rightarrow> real \<Rightarrow> real. g 0 0 = 0 \<Longrightarrow> g 1 0 = 0 \<Longrightarrow>
+        (\<Sum>i<?n. g i (coeffs' i)) = (\<Sum>j<?n'. g (j+2) (coeffs j))"
+    proof -
+      fix g :: "nat \<Rightarrow> real \<Rightarrow> real"
+      assume hg0: "g 0 0 = 0" and hg1: "g 1 0 = 0"
+      \<comment> \<open>coeffs'(i) for i < 2 gives g(i, 0) = 0.\<close>
+      have hc0: "coeffs' 0 = 0" unfolding coeffs'_def by (by100 simp)
+      have hc1: "coeffs' 1 = 0" unfolding coeffs'_def by (by100 simp)
+      \<comment> \<open>coeffs'(i) for i \\<ge> 2 gives coeffs(i-2).\<close>
+      have hc_shift: "\<And>i. 2 \<le> i \<Longrightarrow> i < ?n \<Longrightarrow> coeffs' i = coeffs (i - 2)"
+        unfolding coeffs'_def by (by100 simp)
+      \<comment> \<open>Split sum: {0..<n} = {0,1} \\<union> {2..<n}.\<close>
+      have hsplit: "(\<Sum>i<?n. g i (coeffs' i)) = g 0 (coeffs' 0) + g 1 (coeffs' 1) + (\<Sum>i=2..<?n. g i (coeffs' i))"
+      proof -
+        have h2le: "(2::nat) \<le> ?n" using hn_ge5 by (by100 linarith)
+        have h_concat: "(\<Sum>i\<in>{0..<?n}. g i (coeffs' i)) = (\<Sum>i\<in>{0..<2}. g i (coeffs' i)) + (\<Sum>i\<in>{2..<?n}. g i (coeffs' i))"
+          using sum.atLeastLessThan_concat[of 0 2 ?n "\<lambda>i. g i (coeffs' i)"] h2le by (by100 simp)
+        have "{0..<?n} = {..<?n}" by (by100 auto)
+        have "{0..<(2::nat)} = {..<2}" by (by100 auto)
+        have "(\<Sum>i<?n. g i (coeffs' i)) = (\<Sum>i<2. g i (coeffs' i)) + (\<Sum>i=2..<?n. g i (coeffs' i))"
+          using h_concat \<open>{0..<?n} = {..<?n}\<close> \<open>{0..<2} = {..<2}\<close> by (by100 simp)
+        moreover have "(\<Sum>i<2. g i (coeffs' i)) = g 0 (coeffs' 0) + g 1 (coeffs' 1)"
+        proof -
+          have "{..<(2::nat)} = {0, 1}" by (by100 auto)
+          thus ?thesis by (by100 simp)
+        qed
+        ultimately show ?thesis by (by100 linarith)
+      qed
+      have hfirst: "g 0 (coeffs' 0) + g 1 (coeffs' 1) = 0"
+        using hc0 hc1 hg0 hg1 by (by100 simp)
+      \<comment> \<open>Reindex: \\<Sum>i=2..<n. g(i, coeffs'(i)) = \\<Sum>j<n'. g(j+2, coeffs(j)).\<close>
+      have hreindex: "(\<Sum>i=2..<?n. g i (coeffs' i)) = (\<Sum>j<?n'. g (j+2) (coeffs j))"
+      proof -
+        have "(\<Sum>i=2..<?n. g i (coeffs' i)) = (\<Sum>i=2..<?n. g i (coeffs (i - 2)))"
+        proof (rule sum.cong)
+          show "{2..<?n} = {2..<?n}" by (by100 simp)
+        next
+          fix i assume "i \<in> {2..<?n}"
+          hence "2 \<le> i" "i < ?n" by (by100 auto)+
+          thus "g i (coeffs' i) = g i (coeffs (i - 2))" using hc_shift by (by100 simp)
+        qed
+        also have "\<dots> = (\<Sum>j<?n'. g (j + 2) (coeffs j))"
+        proof -
+          have hinj: "inj_on (\<lambda>j. j + 2) {..<?n'}"
+            unfolding inj_on_def by (by100 simp)
+          have himg: "(\<lambda>j. j + 2) ` {..<?n'} = {2..<?n}"
+          proof (rule set_eqI, rule iffI)
+            fix i assume "i \<in> (\<lambda>j. j + 2) ` {..<?n'}"
+            then obtain j where hj: "j < ?n'" "i = j + 2" by (by100 auto)
+            have "j + 2 < ?n" using hj(1) hlen_w hn_ge5 by (by100 linarith)
+            thus "i \<in> {2..<?n}" using hj(2) by (by100 simp)
+          next
+            fix i assume hi: "i \<in> {2..<?n}"
+            hence "2 \<le> i" "i < ?n" by (by100 simp)+
+            hence hi2: "i - 2 < ?n'" using hlen_w hn_ge5 by (by100 linarith)
+            have "i - 2 + 2 = i" using \<open>2 \<le> i\<close> by (by100 simp)
+            hence "(\<lambda>j. j + 2) (i - 2) = i" by (by100 simp)
+            have "i - 2 \<in> {..<?n'}" using hi2 by (by100 simp)
+            show "i \<in> (\<lambda>j. j + 2) ` {..<?n'}"
+            proof -
+              have "i = (\<lambda>j. j + 2) (i - 2)" using \<open>(\<lambda>j. j + 2) (i - 2) = i\<close> by (by100 simp)
+              thus ?thesis using \<open>i - 2 \<in> {..<?n'}\<close> by (by100 force)
+            qed
+          qed
+          have hbij: "bij_betw (\<lambda>j. j + 2) {..<?n'} {2..<?n}"
+            unfolding bij_betw_def using hinj himg by (by100 blast)
+          from sum.reindex_bij_betw[OF hbij, of "\<lambda>i. g i (coeffs (i - 2))"]
+          show ?thesis by (by100 simp)
+        qed
+        finally show ?thesis .
+      qed
+      show "(\<Sum>i<?n. g i (coeffs' i)) = (\<Sum>j<?n'. g (j+2) (coeffs j))"
+        using hsplit hfirst hreindex by (by100 linarith)
+    qed
+    have hsum': "(\<Sum>i<?n. coeffs' i) = 1"
+    proof -
+      have "(\<Sum>i<?n. coeffs' i) = (\<Sum>j<?n'. coeffs j)"
+        using hsum_shift[of "\<lambda>_ c. c"] by (by100 simp)
+      thus ?thesis using hsum by (by100 simp)
+    qed
+    have hfst': "fst p = (\<Sum>i<?n. coeffs' i * vx i)"
+    proof -
+      have "(\<Sum>i<?n. coeffs' i * vx i) = (\<Sum>j<?n'. coeffs j * vx (j + 2))"
+        using hsum_shift[of "\<lambda>i c. c * vx i"] by (by100 simp)
+      also have "\<dots> = (\<Sum>j<?n'. coeffs j * vx' j)" unfolding vx'_def by (by100 simp)
+      finally show ?thesis using hfst by (by100 simp)
+    qed
+    have hsnd': "snd p = (\<Sum>i<?n. coeffs' i * vy i)"
+    proof -
+      have "(\<Sum>i<?n. coeffs' i * vy i) = (\<Sum>j<?n'. coeffs j * vy (j + 2))"
+        using hsum_shift[of "\<lambda>i c. c * vy i"] by (by100 simp)
+      also have "\<dots> = (\<Sum>j<?n'. coeffs j * vy' j)" unfolding vy'_def by (by100 simp)
+      finally show ?thesis using hsnd by (by100 simp)
+    qed
+    show "p \<in> P" unfolding hC5
+      using hge' hsum' hfst' hsnd' by (by100 auto)
+  qed
   \<comment> \<open>C1': P' is a polygonal region.\<close>
   have hC1': "top1_is_polygonal_region_on P' ?n'" sorry \<comment> \<open>From hn'_ge3 and convexity of P'.\<close>
   \<comment> \<open>C3': distinct vertices (from original C3 with shift).\<close>
