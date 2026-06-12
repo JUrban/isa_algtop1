@@ -5347,9 +5347,61 @@ proof -
                   \<comment> \<open>From C9\\_e: i=j\\<and>t=s or labels match with s=1-t (since snd differ).\<close>
                   \<comment> \<open>Case i=0,j=1 or i=1,j=0: f maps to spur fold \\<to> same value.\<close>
                   \<comment> \<open>Both i,j \\<in> \\{0,1\\}. snd for edges 0 and 1: snd(scheme!0) = True, snd(scheme!1) = False.\<close>
-                  show ?thesis sorry \<comment> \<open>Cancel pair fold. i,j \\<in> \\{0,1\\}.
-                     Both map to spur: f(edge0@t)=(1-t)*u0+t*cm, f(edge1@(1-t))=same.
-                     Freshness proved; just needs spur fold algebra + Suc normalization.\<close>
+                  \<comment> \<open>Simplification: Suc i mod ?n for i \\<in> \\{0,1\\}.\<close>
+                  have hSuc0: "Suc 0 mod ?n = 1" using hn5 by (by100 simp)
+                  have h2_lt_n: "(2::nat) < ?n" using hn5 by (by100 linarith)
+                  have hSuc1: "Suc 1 mod ?n = 2" using h2_lt_n by (by100 simp)
+                  show ?thesis
+                  proof (cases "i = j")
+                    case True
+                    \<comment> \<open>Same edge: from hdir, snd match \\<Longrightarrow> s=t \\<Longrightarrow> x=y.\<close>
+                    thus ?thesis using hx hy hdir \<open>i \<in> {0,1}\<close> unfolding top1_inverse_edge_def
+                      by (by100 auto)
+                  next
+                    case False
+                    hence hij: "(i=0 \<and> j=1) \<or> (i=1 \<and> j=0)"
+                      using \<open>i \<in> {0,1}\<close> \<open>j \<in> {0,1}\<close> by (by100 blast)
+                    have hsnd_diff: "snd(([a, top1_inverse_edge a] @ w)!0) \<noteq> snd(([a, top1_inverse_edge a] @ w)!1)"
+                      unfolding top1_inverse_edge_def by (by100 simp)
+                    hence "s = 1-t" using hdir hij hsnd_diff by (by100 auto)
+                    have h1t_I: "1-t \<in> I_set"
+                    proof -
+                      from ht have "0 \<le> t" "t \<le> 1" unfolding top1_unit_interval_def by (by100 auto)+
+                      thus ?thesis unfolding top1_unit_interval_def by (by100 auto)
+                    qed
+                    from hij show ?thesis
+                    proof (elim disjE conjE)
+                      assume "i = 0" "j = 1"
+                      hence hx': "x = ((1-t)*vx_e 0+t*vx_e 1,(1-t)*vy_e 0+t*vy_e 1)"
+                        using hx hSuc0 by (by100 simp)
+                      hence hfx': "f x = ((1-t)*vx_m 0+t*cx_m,(1-t)*vy_m 0+t*cy_m)"
+                        using hf_spur0 ht by (by100 blast)
+                      have hy': "y = ((1-(1-t))*vx_e 1+(1-t)*vx_e 2,(1-(1-t))*vy_e 1+(1-t)*vy_e 2)"
+                        using hy \<open>j=1\<close> \<open>s=1-t\<close> hSuc1 by (by100 simp)
+                      hence hfy_raw: "f y = ((1-(1-t))*cx_m+(1-t)*vx_m 0,(1-(1-t))*cy_m+(1-t)*vy_m 0)"
+                        using hf_spur1 h1t_I by (by100 blast)
+                      have "(1-(1-t))*cx_m+(1-t)*vx_m 0 = (1-t)*vx_m 0+t*cx_m" by (by100 algebra)
+                      moreover have "(1-(1-t))*cy_m+(1-t)*vy_m 0 = (1-t)*vy_m 0+t*cy_m" by (by100 algebra)
+                      ultimately have "f y = ((1-t)*vx_m 0+t*cx_m,(1-t)*vy_m 0+t*cy_m)"
+                        using hfy_raw by (by100 simp)
+                      thus ?thesis using hfx' by (by100 simp)
+                    next
+                      assume "i = 1" "j = 0"
+                      hence hx': "x = ((1-t)*vx_e 1+t*vx_e 2,(1-t)*vy_e 1+t*vy_e 2)"
+                        using hx hSuc1 by (by100 simp)
+                      hence hfx': "f x = ((1-t)*cx_m+t*vx_m 0,(1-t)*cy_m+t*vy_m 0)"
+                        using hf_spur1 ht by (by100 blast)
+                      have hy': "y = ((1-(1-t))*vx_e 0+(1-t)*vx_e 1,(1-(1-t))*vy_e 0+(1-t)*vy_e 1)"
+                        using hy \<open>j=0\<close> \<open>s=1-t\<close> hSuc0 by (by100 simp)
+                      hence hfy_raw: "f y = ((1-(1-t))*vx_m 0+(1-t)*cx_m,(1-(1-t))*vy_m 0+(1-t)*cy_m)"
+                        using hf_spur0 h1t_I by (by100 blast)
+                      have "(1-(1-t))*vx_m 0+(1-t)*cx_m = (1-t)*cx_m+t*vx_m 0" by (by100 algebra)
+                      moreover have "(1-(1-t))*vy_m 0+(1-t)*cy_m = (1-t)*cy_m+t*vy_m 0" by (by100 algebra)
+                      ultimately have "f y = ((1-t)*cx_m+t*vx_m 0,(1-t)*cy_m+t*vy_m 0)"
+                        using hfy_raw by (by100 simp)
+                      thus ?thesis using hfx' by (by100 simp)
+                    qed
+                  qed
                 qed
               qed
             next
