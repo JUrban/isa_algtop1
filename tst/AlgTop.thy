@@ -5308,7 +5308,46 @@ proof -
                   case False
                   \<comment> \<open>At least one edge is 0 or 1 (cancel pair). Since labels match and a is fresh,
                      both must be in \\{0,1\\}. The fold gives f(x) = f(y).\<close>
-                  show ?thesis sorry \<comment> \<open>Cancel pair or cross-cancel: freshness + fold.\<close>
+                  \<comment> \<open>At least one of i,j < 2. Since labels match and fst a is fresh, both must be < 2.\<close>
+                  have "i < 2 \<or> j < 2" using False by (by100 linarith)
+                  \<comment> \<open>If i < 2 and j \\<ge> 2: label mismatch (a fresh vs w label). Contradiction.\<close>
+                  have "i < 2 \<and> j < 2"
+                  proof (rule ccontr)
+                    assume "\<not>(i < 2 \<and> j < 2)"
+                    hence "i < 2 \<and> j \<ge> 2 \<or> i \<ge> 2 \<and> j < 2" using \<open>i < 2 \<or> j < 2\<close> by (by100 linarith)
+                    thus False
+                    proof (elim disjE conjE)
+                      assume "i < 2" "j \<ge> 2"
+                      hence "fst(([a, top1_inverse_edge a] @ w)!i) = fst a"
+                    proof (cases "i = 0")
+                      case True thus ?thesis by (by100 simp)
+                    next
+                      case False hence "i = 1" using \<open>i < 2\<close> by (by100 linarith)
+                      thus ?thesis unfolding top1_inverse_edge_def by (by100 simp)
+                    qed
+                      moreover have "fst(([a, top1_inverse_edge a] @ w)!j) \<in> fst ` set w"
+                        using \<open>j \<ge> 2\<close> hj hn_eq by (by100 force)
+                      ultimately show False using hlabel hfresh by (by100 metis)
+                    next
+                      assume "i \<ge> 2" "j < 2"
+                      hence "fst(([a, top1_inverse_edge a] @ w)!j) = fst a"
+                    proof (cases "j = 0")
+                      case True thus ?thesis by (by100 simp)
+                    next
+                      case False hence "j = 1" using \<open>j < 2\<close> by (by100 linarith)
+                      thus ?thesis unfolding top1_inverse_edge_def by (by100 simp)
+                    qed
+                      moreover have "fst(([a, top1_inverse_edge a] @ w)!i) \<in> fst ` set w"
+                        using \<open>i \<ge> 2\<close> hi hn_eq by (by100 force)
+                      ultimately show False using hlabel hfresh by (by100 metis)
+                    qed
+                  qed
+                  hence "i \<in> {0,1}" "j \<in> {0,1}" by (by100 auto)+
+                  \<comment> \<open>Both on cancel pair edges. The fold: f(edge0@t) = f(edge1@(1-t)).\<close>
+                  \<comment> \<open>From C9\\_e: i=j\\<and>t=s or labels match with s=1-t (since snd differ).\<close>
+                  \<comment> \<open>Case i=0,j=1 or i=1,j=0: f maps to spur fold \\<to> same value.\<close>
+                  \<comment> \<open>Both i,j \\<in> \\{0,1\\}. snd for edges 0 and 1: snd(scheme!0) = True, snd(scheme!1) = False.\<close>
+                  show ?thesis sorry \<comment> \<open>Cancel pair fold. i,j \\<in> \\{0,1\\}, use hf\\_spur0/1 + hdir.\<close>
                 qed
               qed
             next
