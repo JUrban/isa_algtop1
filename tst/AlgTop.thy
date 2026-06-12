@@ -3709,11 +3709,20 @@ proof -
         hence "k + 2 \<noteq> i + 3" by (by100 linarith)
         thus ?thesis using hSi2 by (by100 linarith)
       qed
+      have hmod_bridge: "Suc i mod ?n' + 2 = Suc (i + 2) mod ?n"
+      proof -
+        have "Suc i mod ?n' = Suc i" using hSi by (by100 simp)
+        hence "Suc i mod ?n' + 2 = i + 3" by arith
+        moreover have "Suc (i + 2) mod ?n = i + 3" using hSi2 by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
       from hC11[rule_format, OF hi2 hk2 hne2' hne3]
-      have "(vx (k+2) - vx (i+2)) * (vy (Suc (i+2) mod ?n) - vy (i+2))
+      have hC11_inst: "(vx (k+2) - vx (i+2)) * (vy (Suc (i+2) mod ?n) - vy (i+2))
           - (vy (k+2) - vy (i+2)) * (vx (Suc (i+2) mod ?n) - vx (i+2)) < 0" .
-      thus ?thesis unfolding vx'_def vy'_def
-        using hSi hSi2 sorry \<comment> \<open>Suc/mod arithmetic: Suc i mod n' + 2 = Suc(i+2) mod n.\<close>
+      \<comment> \<open>Goal has vx(Suc i mod n' + 2) which equals vx(Suc(i+2) mod n) by hmod\\_bridge.\<close>
+      have "vx (Suc i mod ?n' + 2) = vx (Suc (i+2) mod ?n)" using hmod_bridge by (by100 simp)
+      moreover have "vy (Suc i mod ?n' + 2) = vy (Suc (i+2) mod ?n)" using hmod_bridge by (by100 simp)
+      ultimately show ?thesis unfolding vx'_def vy'_def using hC11_inst by (by100 simp)
     next
       case False
       \<comment> \<open>Diagonal edge: i = n'-1. Edge goes from v\\_{n-1} to v\\_2.\<close>
