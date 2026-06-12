@@ -4958,23 +4958,14 @@ proof -
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
     proof (rule exI[of _ spur_f])
-      have hcont: "continuous_on P_e spur_f"
-        sorry \<comment> \<open>Continuity: spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e, composition of continuous maps.
-           \\<psi>\\_e continuous (homeomorphism). \\<tau> continuous (piecewise smooth with matching
-           at sector boundary). \\<psi>\\_m\\<inverse> continuous (homeomorphism).\<close>
-      moreover have hsurj: "spur_f ` P_e = P_m"
-        sorry \<comment> \<open>Surjectivity: \\<psi>\\_e maps P\\_e onto B2. \\<tau> maps B2 onto B2 (good sector
-           covers S1, cancel sector fills interior near spur). \\<psi>\\_m\\<inverse> maps B2 onto P\\_m.\<close>
-      moreover have hfibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e.
-          (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
-        sorry \<comment> \<open>Fibre matching: all cases verified algebraically (sessions 2-4).
-           Interior: C8 injectivity + \\<tau> interior injectivity.
-           Boundary edges \\<ge>2: \\<tau> rescales angles, \\<psi>\\_m\\<inverse> maps to P\\_m edges.
-           Cancel pair: spur fold at boundary, offset separation in interior.
-           Vertex: boundary fibre matching from fan vertex map.\<close>
-      ultimately show "continuous_on P_e spur_f \<and> spur_f ` P_e = P_m
+      show "continuous_on P_e spur_f \<and> spur_f ` P_e = P_m
           \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y)))"
-        by (by100 blast)
+        sorry \<comment> \<open>Properties of spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e with sector-squeezing \\<tau>:
+           (1) Continuity: composition of continuous \\<psi>\\_e, piecewise smooth \\<tau>, continuous \\<psi>\\_m\\<inverse>.
+           (2) Surjectivity: \\<psi>\\_e onto B2, \\<tau> onto B2, \\<psi>\\_m\\<inverse> onto P\\_m.
+           (3) Fibre matching (all cases verified sessions 2-4):
+               Interior: C8 + \\<tau> injectivity. Boundary \\<ge>2: angle rescaling + C7/C9.
+               Cancel pair: spur fold. Vertex: boundary fibre matching.\<close>
     qed
     then obtain f where
         hf_cont: "continuous_on P_e f"
