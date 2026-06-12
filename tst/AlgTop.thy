@@ -4024,6 +4024,37 @@ proof (intro allI impI ballI notI)
   thus False using hint hi ht by (by100 blast)
 qed
 
+\<comment> \<open>Vertex identification is determined by the scheme via C7 at endpoints.
+   If two quotient maps (for the same scheme) agree on edge interiors (via C9),
+   then edge-preserving \\<phi> maps matching vertices: q1(v\\_i) = q1(v\\_j) \\<Longrightarrow> q2(v\\_i) = q2(v\\_j).
+   This covers the vertex case in the uniqueness proof.\<close>
+lemma vertex_identification_scheme_determined:
+  fixes n :: nat and scheme :: "(nat \<times> bool) list"
+    and vx1 vy1 vx2 vy2 :: "nat \<Rightarrow> real"
+    and q1 :: "(real \<times> real) \<Rightarrow> 'a" and q2 :: "(real \<times> real) \<Rightarrow> 'b"
+  assumes "length scheme = n" and "n \<ge> 3"
+    \<comment> \<open>C7 for q1: same-label edges are identified at ALL t \\<in> [0,1].\<close>
+    and hC7_1: "\<forall>i<n. \<forall>j<n. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q1 ((1-t)*vx1 i + t*vx1(Suc i mod n), (1-t)*vy1 i + t*vy1(Suc i mod n))
+         = (if snd(scheme!i) = snd(scheme!j)
+            then q1 ((1-t)*vx1 j + t*vx1(Suc j mod n), (1-t)*vy1 j + t*vy1(Suc j mod n))
+            else q1 (t*vx1 j + (1-t)*vx1(Suc j mod n), t*vy1 j + (1-t)*vy1(Suc j mod n))))"
+    \<comment> \<open>C7 for q2: same identification pattern.\<close>
+    and hC7_2: "\<forall>i<n. \<forall>j<n. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q2 ((1-t)*vx2 i + t*vx2(Suc i mod n), (1-t)*vy2 i + t*vy2(Suc i mod n))
+         = (if snd(scheme!i) = snd(scheme!j)
+            then q2 ((1-t)*vx2 j + t*vx2(Suc j mod n), (1-t)*vy2 j + t*vy2(Suc j mod n))
+            else q2 (t*vx2 j + (1-t)*vx2(Suc j mod n), t*vy2 j + (1-t)*vy2(Suc j mod n))))"
+    \<comment> \<open>q1 identifies vertex i with vertex j.\<close>
+    and hvertex_eq: "q1 (vx1 i, vy1 i) = q1 (vx1 j, vy1 j)"
+    and hi: "i < n" and hj: "j < n"
+  shows "q2 (vx2 i, vy2 i) = q2 (vx2 j, vy2 j)"
+  sorry \<comment> \<open>Vertex identification is determined by scheme via C7 at t=0/1 + transitivity.
+     Proof sketch: q1 identifies v\\_i with v\\_j. This means there's a chain of C7
+     identifications at endpoints connecting i to j. The same chain gives q2 identification.
+     Key technical step: show C7 at t=0 gives q(v\\_i) = q(v\\_k) or q(v\\_{k+1}),
+     and these chain transitively to connect any identified pair.\<close>
+
 \<comment> \<open>Quotient-of-scheme uniqueness: any two quotient spaces of the same scheme are homeomorphic.
    Proof: both are quotients of convex n-gons by the same identification pattern.
    The n-gons are homeomorphic (convex compact in R²), and the homeomorphism respects
