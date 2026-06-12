@@ -5669,7 +5669,16 @@ proof -
           next
             case False
             \<comment> \<open>At least one edge is 0 or 1 (cancel pair or mixed).\<close>
-            show ?thesis sorry \<comment> \<open>Backward cancel/mixed case. Uses C8\\_m on spur + C7\\_e.\<close>
+            \<comment> \<open>At least one edge \\<in> \\{0,1\\}. Three sub-cases:
+               1) i\\<in>\\{0,1\\}, j\\<ge>2 (spur vs P\\_m edge): impossible (spur interior, edge boundary)
+               2) i\\<ge>2, j\\<in>\\{0,1\\} (symmetric to 1)
+               3) Both \\<in> \\{0,1\\}: spur fold gives cancel pair identification\<close>
+            show ?thesis sorry \<comment> \<open>Backward cancel/mixed case.
+               Sub-case 1-2: f(spur) interior to P\\_m, f(w-edge) on P\\_m boundary.
+               C8\\_m at spur point gives f(x)=f(y), contradicting interior\\<noteq>boundary.
+               Sub-case 3: C8\\_m at spur gives f(x)=f(y), then spur fold gives
+               cancel pair identification via C7\\_e.
+               Vertex sub-cases sorry'd (same as forward vertex).\<close>
           qed
         qed
       qed
