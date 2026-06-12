@@ -5293,7 +5293,18 @@ proof -
           case False
           hence hi2: "i \<ge> 2" by (by100 linarith)
           have hsi: "fst (?s ! i) \<in> fst ` set w"
-            using hi hi2 hfresh sorry \<comment> \<open>nth\\_append: for i\\<ge>2, ?s!i = w!(i-2), and fst(w!(i-2)) \\<in> fst`set w.\<close>
+          proof -
+            \<comment> \<open>For i \\<ge> 2: ?s!i is the (i-2)-th element of w.\<close>
+            define j where "j = i - 2"
+            have hj: "i = j + 2" using hi2 unfolding j_def by (by100 linarith)
+            have "?s ! (j + 2) = w ! j"
+              by (by100 simp)
+            hence "?s ! i = w ! j" using hj by (by100 simp)
+            moreover have "j < length w" using hi hj by (by100 simp)
+            hence "w ! j \<in> set w" by (by100 simp)
+            ultimately have "?s ! i \<in> set w" by (by100 simp)
+            thus ?thesis by (by100 force)
+          qed
           have "fst (?s ! i) \<noteq> fst a"
           proof
             assume "fst (?s ! i) = fst a"
