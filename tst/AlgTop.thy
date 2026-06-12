@@ -4608,9 +4608,14 @@ proof -
       by (by100 auto)
     \<comment> \<open>q\\_w \\<circ> f is a quotient map from P\\_ext to Y\\_w (composition of continuous surjection
        f: P\\_ext \\<to> P\\_w with quotient map q\\_w: P\\_w \\<to> Y\\_w).\<close>
+    \<comment> \<open>f is a quotient map (compact \\<to> Hausdorff continuous surjection = quotient map).\<close>
+    have hf_quot: "top1_quotient_map_on P_ext (?TP P_ext) P_w (?TP P_w) f"
+      sorry \<comment> \<open>f: P\\_ext \\<to> P\\_w is a quotient map because:
+         P\\_ext is compact (polygonal\\_region\\_compact), \\<R>\\<twosuperior> subspace is Hausdorff,
+         f is continuous (hf\\_cont) and surjective (hf\\_surj).
+         Compact \\<to> Hausdorff continuous surjection is automatically a quotient map.\<close>
     have hcomp_quot: "top1_quotient_map_on P_ext (?TP P_ext) Y_w TY_w (q_w \<circ> f)"
-      sorry \<comment> \<open>Composition of continuous surjection f and quotient map q\\_w.
-         Uses top1\\_quotient\\_map\\_on\\_comp or direct construction.\<close>
+      by (rule top1_quotient_map_on_comp[OF hf_quot hC2_w])
     \<comment> \<open>Apply quotient\\_same\\_fibres\\_homeomorphic: q\\_ext and q\\_w\\<circ>f have same fibres \\<Longrightarrow> Y\\_ext \\<cong> Y\\_w.\<close>
     from quotient_same_fibres_homeomorphic[OF hC2_ext hcomp_quot hf_fibres]
     show ?thesis .
