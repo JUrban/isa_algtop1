@@ -291,6 +291,45 @@ proof -
   qed
 qed
 
+\<comment> \<open>Arccos precondition: -1 \\<le> x / sqrt(x^2+y^2) \\<le> 1 for (x,y) \\<noteq> (0,0). Reusable helper.\<close>
+lemma fst_div_norm_bounded:
+  fixes x y :: real
+  assumes "x \<noteq> 0 \<or> y \<noteq> 0"
+  shows "-1 \<le> x / sqrt (x^2 + y^2)" and "x / sqrt (x^2 + y^2) \<le> 1"
+proof -
+  have hpos: "x^2 + y^2 > 0" using assms
+  proof
+    assume "x \<noteq> 0" hence "x^2 > 0" by (by100 simp)
+    moreover have "y^2 \<ge> 0" by (by100 simp)
+    ultimately show ?thesis by (by100 linarith)
+  next
+    assume "y \<noteq> 0" hence "y^2 > 0" by (by100 simp)
+    moreover have "x^2 \<ge> 0" by (by100 simp)
+    ultimately show ?thesis by (by100 linarith)
+  qed
+  have hr: "sqrt (x^2 + y^2) > 0" using hpos real_sqrt_gt_0_iff by (by100 auto)
+  have hsq: "(sqrt (x^2 + y^2))^2 = x^2 + y^2"
+    using real_sqrt_pow2[OF less_imp_le[OF hpos]] by (by100 blast)
+  have hx_le: "x^2 \<le> (sqrt (x^2 + y^2))^2"
+  proof - have "y^2 \<ge> 0" by (by100 simp) thus ?thesis using hsq by (by100 linarith) qed
+  have hx_pos: "x \<le> sqrt (x^2 + y^2)"
+    using power2_le_imp_le[OF hx_le] hr by (by100 linarith)
+  have "(-x)^2 \<le> (sqrt (x^2+y^2))^2"
+    using hx_le unfolding power2_eq_square by (by100 linarith)
+  hence hmx_pos: "-x \<le> sqrt (x^2+y^2)"
+    using power2_le_imp_le[OF _ less_imp_le[OF hr]] by (by100 blast)
+  show "-1 \<le> x / sqrt (x^2 + y^2)"
+  proof -
+    from hmx_pos have "- 1 * sqrt (x^2+y^2) \<le> x" by (by100 linarith)
+    with hr show ?thesis by (simp add: pos_le_divide_eq)
+  qed
+  show "x / sqrt (x^2 + y^2) \<le> 1"
+  proof -
+    from hx_pos have "x \<le> 1 * sqrt (x^2+y^2)" by (by100 linarith)
+    with hr show ?thesis by (simp add: pos_divide_le_eq)
+  qed
+qed
+
 \<comment> \<open>Cancel shift: edge i+2 in [a,a\\<inverse>]@w has same label/direction as edge i in w (expert audit 26 §7).\<close>
 lemma cancel_shift_label:
   fixes a :: "'a \<times> bool" and w :: "('a \<times> bool) list" and i :: nat
@@ -5621,7 +5660,7 @@ proof -
               hence "angle_of p = 2*pi - arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
                 unfolding angle_of_def by (by100 simp)
               moreover have "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) \<le> pi"
-                sorry \<comment> \<open>arccos\\_ubound with -1 \\<le> fst p/|p| \\<le> 1. Same pattern as h\\<alpha>\\_ge proof.\<close>
+                using arccos_ubound[OF fst_div_norm_bounded(1)[OF hp_ne] fst_div_norm_bounded(2)[OF hp_ne]] .
               ultimately have "angle_of p \<ge> pi" using pi_gt_zero by (by100 linarith)
               have "\<theta>_cancel < pi"
               proof -
