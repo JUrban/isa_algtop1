@@ -5598,8 +5598,26 @@ proof -
         \<comment> \<open>Step 1: Show S\\_c = Cartesian cone description.\<close>
         have hS_c_eq: "S_c = {p. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
             \<and> fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
-          sorry \<comment> \<open>Equivalence: angle\\_of(p) \\<le> \\<theta>\\_cancel \\<iff> fst p / |p| \\<ge> cos(\\<theta>\\_cancel)
-             for snd p \\<ge> 0. For snd p < 0: angle > \\<pi> > \\<theta>\\_cancel. Origin: 0 \\<ge> cos*0.\<close>
+        proof (rule set_eqI, rule iffI)
+          fix p :: "real \<times> real"
+          assume hp: "p \<in> S_c"
+          hence hp_B2: "p \<in> top1_B2" and hp_angle: "p = (0,0) \<or> angle_of p \<le> \<theta>_cancel"
+            unfolding S_c_def by (by100 auto)+
+          show "p \<in> {p. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
+              \<and> fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
+            sorry \<comment> \<open>Forward: angle \\<le> \\<theta>\\_cancel \\<Longrightarrow> Cartesian cone.
+               For p=(0,0): trivial. For p\\<noteq>0, snd p \\<ge> 0:
+               arccos(fst p/|p|) \\<le> \\<theta>\\_cancel \\<Longrightarrow> fst p/|p| \\<ge> cos(\\<theta>\\_cancel) via cos\\_mono\\_le\\_eq
+               \\<Longrightarrow> fst p \\<ge> cos(\\<theta>\\_cancel)*|p|. For snd p < 0: angle > \\<pi> > \\<theta>\\_cancel, contradiction.\<close>
+        next
+          fix p :: "real \<times> real"
+          assume hp: "p \<in> {p. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
+              \<and> fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
+          show "p \<in> S_c"
+            sorry \<comment> \<open>Backward: Cartesian cone \\<Longrightarrow> angle \\<le> \\<theta>\\_cancel.
+               fst p \\<ge> cos(\\<theta>\\_cancel)*|p| \\<Longrightarrow> fst p/|p| \\<ge> cos(\\<theta>\\_cancel)
+               \\<Longrightarrow> arccos(fst p/|p|) \\<le> \\<theta>\\_cancel via cos\\_mono\\_le\\_eq.\<close>
+        qed
         \<comment> \<open>Step 2: The Cartesian cone set is closed (intersection of closed sets).\<close>
         have "closed {p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
             \<and> fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
