@@ -4181,9 +4181,140 @@ proof -
                Derive q2(\\<phi>(x)) = q2(\\<phi>(y)) directly without hcond.
                Vertices identified under q1 must also be identified under q2
                because both use the same scheme and C7 determines vertex identification.\<close>
-            show ?thesis sorry \<comment> \<open>Vertex case in uniqueness forward direction.
-               Needs: vertex identification is determined by C7 at endpoints + transitivity.
-               Both q1 and q2 satisfy C7 for the same scheme, so identify the same vertices.\<close>
+            \<comment> \<open>Vertex case: at least one of t, s is 0 or 1.
+               Strategy: show vertex identification follows from C7 applied at vertex parameters.
+               Since C7 holds for all t \\<in> I\\_set = {0..1}, including t=0 and t=1, and both q1/q2
+               satisfy C7 for the same scheme, vertex identifications are the same.
+               Key sub-cases: (1) both vertices, (2) one vertex + one edge-interior.\<close>
+            have ht_01: "t \<in> I_set" using ht .
+            have hs_01: "s \<in> I_set" using hs .
+            \<comment> \<open>Case 2a: both t, s are at 0 or 1 (both vertices).
+               Then x = vertex, y = vertex. q1 identifies them \\<Longrightarrow> q2 identifies them.
+               Case 2b: one of t,s in (0,1), the other at 0 or 1.
+               Then one is a vertex, the other is an edge interior.
+               By C8\\_1, the vertex must map to a value not achievable by any interior point.
+               But edges are on the boundary, so C8 doesn't directly apply.
+               Instead: use C9\\_1 limiting argument or show this case is impossible.\<close>
+            show ?thesis
+            proof (cases "0 < t \<and> t < 1")
+              case True \<comment> \<open>0 < t < 1, so s = 0 or s = 1.\<close>
+              hence "\<not>(0 < s \<and> s < 1)" using False by (by100 blast)
+              hence hs_vtx: "s = 0 \<or> s = 1" using hs unfolding top1_unit_interval_def by (by100 auto)
+              \<comment> \<open>Symmetric to the backward case: y is a vertex, x is edge-interior.\<close>
+              show ?thesis sorry \<comment> \<open>Vertex(y) \\<leftrightarrow> edge-interior(x) case. Needs C7+C9 argument.\<close>
+            next
+              case False
+              hence ht_vtx: "t = 0 \<or> t = 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+              show ?thesis
+              proof (cases "0 < s \<and> s < 1")
+                case True \<comment> \<open>s in (0,1), t at vertex.\<close>
+                show ?thesis sorry \<comment> \<open>Vertex(x) \\<leftrightarrow> edge-interior(y) case.\<close>
+              next
+                case False \<comment> \<open>Both at vertices.\<close>
+                hence hs_vtx: "s = 0 \<or> s = 1" using hs unfolding top1_unit_interval_def by (by100 auto)
+                \<comment> \<open>x is vertex vx1(i) or vx1(Suc i mod n), y is vertex vx1(j) or vx1(Suc j mod n).
+                   q1(vx1(k)) = q1(vx1(l)) for some k, l.
+                   Need: q2(vx2(k)) = q2(vx2(l)).
+                   This follows from: for each matching label pair (i0,j0) in the scheme,
+                   C7 at t=0,1 identifies the same vertex pairs for both q1 and q2.
+                   The vertex identification classes are the same.\<close>
+                \<comment> \<open>Express x and y as vertices.\<close>
+                have "\<exists>k. k < ?n \<and> fst (\<phi> x) = vx2 k \<and> snd (\<phi> x) = vy2 k
+                    \<and> fst x = vx1 k \<and> snd x = vy1 k"
+                proof -
+                  from ht_vtx show ?thesis
+                  proof
+                    assume "t = 0"
+                    hence "x = (vx1 i, vy1 i)" using hx_eq by (by100 simp)
+                    moreover have "\<phi> x = (vx2 i, vy2 i)"
+                    proof -
+                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from h\<phi>_edge[rule_format, OF hi this]
+                      have "\<phi> ((1-0) * vx1 i + 0 * vx1 (Suc i mod ?n),
+                              (1-0) * vy1 i + 0 * vy1 (Suc i mod ?n))
+                          = ((1-0) * vx2 i + 0 * vx2 (Suc i mod ?n),
+                             (1-0) * vy2 i + 0 * vy2 (Suc i mod ?n))" .
+                      thus ?thesis using \<open>x = (vx1 i, vy1 i)\<close> \<open>t = 0\<close> hx_eq by (by100 simp)
+                    qed
+                    ultimately have "fst (\<phi> x) = vx2 i \<and> snd (\<phi> x) = vy2 i \<and> fst x = vx1 i \<and> snd x = vy1 i"
+                      by (by100 auto)
+                    thus ?thesis using hi by (by100 blast)
+                  next
+                    assume "t = 1"
+                    hence hx_t1: "x = (vx1 (Suc i mod ?n), vy1 (Suc i mod ?n))" using hx_eq by (by100 simp)
+                    moreover have h\<phi>x_t1: "\<phi> x = (vx2 (Suc i mod ?n), vy2 (Suc i mod ?n))"
+                    proof -
+                      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from h\<phi>_edge[rule_format, OF hi this]
+                      have "\<phi> ((1-1) * vx1 i + 1 * vx1 (Suc i mod ?n),
+                              (1-1) * vy1 i + 1 * vy1 (Suc i mod ?n))
+                          = ((1-1) * vx2 i + 1 * vx2 (Suc i mod ?n),
+                             (1-1) * vy2 i + 1 * vy2 (Suc i mod ?n))" .
+                      thus ?thesis using hx_t1 by (by100 simp)
+                    qed
+                    moreover have "Suc i mod ?n < ?n"
+                    proof -
+                      have "?n > 0" using hn3 by (by100 linarith)
+                      thus ?thesis by (by100 simp)
+                    qed
+                    ultimately have "fst (\<phi> x) = vx2 (Suc i mod ?n) \<and> snd (\<phi> x) = vy2 (Suc i mod ?n)
+                        \<and> fst x = vx1 (Suc i mod ?n) \<and> snd x = vy1 (Suc i mod ?n)"
+                      by (by100 auto)
+                    thus ?thesis using \<open>Suc i mod ?n < ?n\<close> by (by100 blast)
+                  qed
+                qed
+                then obtain kx where hkx: "kx < ?n" "fst (\<phi> x) = vx2 kx" "snd (\<phi> x) = vy2 kx"
+                    "fst x = vx1 kx" "snd x = vy1 kx"
+                  by (by100 blast)
+                have "\<exists>ky. ky < ?n \<and> fst (\<phi> y) = vx2 ky \<and> snd (\<phi> y) = vy2 ky
+                    \<and> fst y = vx1 ky \<and> snd y = vy1 ky"
+                proof -
+                  from hs_vtx show ?thesis
+                  proof
+                    assume "s = 0"
+                    hence hy_s0: "y = (vx1 j, vy1 j)" using hy_eq by (by100 simp)
+                    moreover have "\<phi> y = (vx2 j, vy2 j)"
+                    proof -
+                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from h\<phi>_edge[rule_format, OF hj this]
+                      show ?thesis using hy_s0 by (by100 simp)
+                    qed
+                    ultimately have "fst (\<phi> y) = vx2 j \<and> snd (\<phi> y) = vy2 j \<and> fst y = vx1 j \<and> snd y = vy1 j"
+                      by (by100 auto)
+                    thus ?thesis using hj by (by100 blast)
+                  next
+                    assume "s = 1"
+                    hence hy_s1: "y = (vx1 (Suc j mod ?n), vy1 (Suc j mod ?n))" using hy_eq by (by100 simp)
+                    moreover have "\<phi> y = (vx2 (Suc j mod ?n), vy2 (Suc j mod ?n))"
+                    proof -
+                      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from h\<phi>_edge[rule_format, OF hj this]
+                      show ?thesis using hy_s1 by (by100 simp)
+                    qed
+                    moreover have "Suc j mod ?n < ?n"
+                    proof -
+                      have "?n > 0" using hn3 by (by100 linarith)
+                      thus ?thesis by (by100 simp)
+                    qed
+                    ultimately have "fst (\<phi> y) = vx2 (Suc j mod ?n) \<and> snd (\<phi> y) = vy2 (Suc j mod ?n)
+                        \<and> fst y = vx1 (Suc j mod ?n) \<and> snd y = vy1 (Suc j mod ?n)"
+                      by (by100 auto)
+                    thus ?thesis using \<open>Suc j mod ?n < ?n\<close> by (by100 blast)
+                  qed
+                qed
+                then obtain ky where hky: "ky < ?n" "fst (\<phi> y) = vx2 ky" "snd (\<phi> y) = vy2 ky"
+                    "fst y = vx1 ky" "snd y = vy1 ky"
+                  by (by100 blast)
+                \<comment> \<open>Now: q1(vx1(kx)) = q1(vx1(ky)), need q2(vx2(kx)) = q2(vx2(ky)).
+                   Both follow from C7 applied at the vertex parameter.
+                   The vertex equivalence classes are generated by: for matching label edges (i0,j0),
+                   vx(i0) ~ vx(j0) (same dir) or vx(i0) ~ vx(Suc j0 mod n) (opp dir), etc.
+                   Since both q1 and q2 satisfy C7 for the same scheme, and the vertex identification
+                   is the transitive closure of these C7-endpoint identifications, they agree.\<close>
+                show ?thesis sorry \<comment> \<open>Vertex-vertex case: C7 at endpoints + transitivity.
+                   Both q1 and q2 identify the same vertex pairs via the same scheme.\<close>
+              qed
+            qed
           qed
         qed
       qed
@@ -5145,16 +5276,93 @@ proof -
       \<comment> \<open>Continuity of spur\\_f: PROVED via composition, assuming \\<tau> properties.
          The proof is: \\<psi>\\_e continuous (proved) \\<to> \\<tau> continuous (assumed) \\<to> \\<psi>\\_m\\<inverse> continuous (proved).
          \\<tau> properties + surjectivity + fibre matching sorry'd together below.\<close>
+      \<comment> \<open>Sub-sorry 1: \\<tau> is continuous on B2 (piecewise smooth, matching at sector boundaries).
+         Good sector: standard cone map (angle rescaling) \\<to> continuous.
+         Cancel sector: spur + perpendicular offset \\<to> continuous (smooth formula).
+         Matching at \\<theta>=\\<theta>\\_cancel: both sides give (r, 0). \\<checkmark>
+         Matching at \\<theta>=\\<theta>\\_mid: offset = 0 (sin(\\<pi>*1) = 0). \\<checkmark>
+         Matching at \\<theta>=0/2\\<pi>: both sides give (r, 0). \\<checkmark>
+         Matching at r=0: both sides give (0, 0). \\<checkmark>\<close>
+      have h\<tau>_cont: "continuous_on top1_B2 \<tau>"
+        sorry \<comment> \<open>Piecewise smooth with matching at sector boundaries. See analysis above.\<close>
+      \<comment> \<open>Sub-sorry 2: \\<tau> maps B2 onto B2 (range and surjectivity).
+         Good sector: angle rescaling is a bijection [\\<theta>\\_cancel, 2\\<pi>) \\<to> [0, 2\\<pi>).
+         Cancel sector: maps to interior of B2 (spur + offset, |result| < 1 for r < 1).
+         At r=1 (boundary): \\<tau>\\_boundary maps S1 onto S1 (good sector) + spur (cancel).
+         Overall: \\<tau> is continuous on compact B2, image is contained in B2, image contains
+         all of S1 (via good sector at r=1), and image contains origin. By connectedness and
+         surjectivity of \\<tau>\\_boundary, \\<tau>(B2) = B2.\<close>
+      have h\<tau>_range: "\<forall>p \<in> top1_B2. \<tau> p \<in> top1_B2"
+        sorry \<comment> \<open>Each case maps into B2: good sector r*(cos,sin) has norm r \\<le> 1.
+           Cancel sector: r*spur + offset*d\\_perp. Need |result| \\<le> 1.\<close>
+      have h\<tau>_surj: "\<tau> ` top1_B2 = top1_B2"
+        sorry \<comment> \<open>Good sector at r=1 covers all of S1. Interior covered by intermediate value theorem.
+           Cancel sector covers the spur + neighborhood.\<close>
+      \<comment> \<open>Sub-sorry 3: Fibre matching q\\_e x = q\\_e y \\<longleftrightarrow> q\\_m(spur\\_f x) = q\\_m(spur\\_f y).
+         Verified algebraically in sessions 2-4. Cases:
+         - Both x,y interior of P\\_e: spur\\_f injective on interior \\<to> both sides trivially equiv.
+         - x on good edge k (k\\<ge>2), y on good edge l: edge identification transfers directly
+           because spur\\_f maps edge k to edge k-2 of P\\_m with same parameter.
+         - x on cancel edge (0 or 1): q\\_e identifies edge 0 at t with edge 1 at 1-t.
+           spur\\_f maps both to the same point on the spur \\<to> q\\_m values equal.
+         - Cross cases (cancel vs good, interior vs boundary): handled by injectivity.\<close>
+      have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
+        sorry \<comment> \<open>Fibre matching. Decomposed into cancel/good/interior cases.\<close>
+      \<comment> \<open>Assemble: continuity of spur\\_f via composition, surjectivity via \\<tau>, fibre matching.\<close>
+      have h_spur_cont: "continuous_on P_e spur_f"
+      proof -
+        have h1: "continuous_on P_e \<psi>_e" using h\<psi>e_cont_on .
+        have "\<forall>p \<in> P_e. \<psi>_e p \<in> top1_B2"
+          using h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        hence "\<psi>_e ` P_e \<subseteq> top1_B2" by (by100 blast)
+        from continuous_on_compose2[OF h\<tau>_cont h1 this]
+        have "continuous_on P_e (\<lambda>x. \<tau> (\<psi>_e x))" .
+        hence h2: "continuous_on P_e (\<tau> \<circ> \<psi>_e)" unfolding o_def .
+        have "(\<tau> \<circ> \<psi>_e) ` P_e \<subseteq> top1_B2"
+          using \<open>\<psi>_e ` P_e \<subseteq> top1_B2\<close> h\<tau>_range by (by100 auto)
+        from continuous_on_compose2[OF h\<psi>m_inv_cont_on h2 this]
+        have "continuous_on P_e (\<lambda>x. inv_into P_m \<psi>_m ((\<tau> \<circ> \<psi>_e) x))" .
+        moreover have "\<And>p. inv_into P_m \<psi>_m ((\<tau> \<circ> \<psi>_e) p) = spur_f p"
+          unfolding spur_f_def o_def by (by100 simp)
+        ultimately show ?thesis
+          by (by100 simp)
+      qed
+      have h_spur_surj: "spur_f ` P_e = P_m"
+      proof -
+        have h\<psi>e_bij: "bij_betw \<psi>_e P_e top1_B2"
+          using h\<psi>e_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        hence "\<psi>_e ` P_e = top1_B2" unfolding bij_betw_def by (by100 blast)
+        have h\<psi>m_bij: "bij_betw \<psi>_m P_m top1_B2"
+          using h\<psi>m_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+        hence h\<psi>m_surj: "\<psi>_m ` P_m = top1_B2" unfolding bij_betw_def by (by100 blast)
+        have h\<psi>m_inj: "inj_on \<psi>_m P_m" using h\<psi>m_bij unfolding bij_betw_def by (by100 blast)
+        have "spur_f ` P_e = (inv_into P_m \<psi>_m) ` (\<tau> ` (\<psi>_e ` P_e))"
+          unfolding spur_f_def image_comp[symmetric] by (by100 auto)
+        also have "\<dots> = (inv_into P_m \<psi>_m) ` (\<tau> ` top1_B2)"
+          using \<open>\<psi>_e ` P_e = top1_B2\<close> by (by100 simp)
+        also have "\<dots> = (inv_into P_m \<psi>_m) ` top1_B2"
+          using h\<tau>_surj by (by100 simp)
+        also have "\<dots> = P_m"
+        proof (rule set_eqI, rule iffI)
+          fix x assume "x \<in> inv_into P_m \<psi>_m ` top1_B2"
+          then obtain y where "y \<in> top1_B2" "x = inv_into P_m \<psi>_m y" by (by100 blast)
+          from \<open>y \<in> top1_B2\<close> obtain p where "p \<in> P_m" "\<psi>_m p = y"
+            using h\<psi>m_surj by (by100 force)
+          hence "inv_into P_m \<psi>_m y = p"
+            using inv_into_f_f[OF h\<psi>m_inj \<open>p \<in> P_m\<close>] by (by100 simp)
+          thus "x \<in> P_m" using \<open>x = inv_into P_m \<psi>_m y\<close> \<open>p \<in> P_m\<close> by (by100 simp)
+        next
+          fix x assume "x \<in> P_m"
+          hence "\<psi>_m x \<in> top1_B2" using h\<psi>m_surj by (by100 blast)
+          moreover have "inv_into P_m \<psi>_m (\<psi>_m x) = x"
+            using inv_into_f_f[OF h\<psi>m_inj \<open>x \<in> P_m\<close>] .
+          ultimately show "x \<in> inv_into P_m \<psi>_m ` top1_B2" by (by100 force)
+        qed
+        finally show ?thesis .
+      qed
       show "continuous_on P_e spur_f \<and> spur_f ` P_e = P_m
           \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y)))"
-        sorry \<comment> \<open>Properties of spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e with sector-squeezing \\<tau>.
-           CONTINUITY chain PROVED (sessions 28-31):
-             continuous\\_on P\\_e \\<psi>\\_e (bridge lemma from homeomorphism) \\<checkmark>
-             \\<to> continuous\\_on B2 \\<tau> (piecewise smooth, matching at sector boundaries)
-             \\<to> continuous\\_on B2 \\<psi>\\_m\\<inverse> (bridge lemma from inverse homeomorphism) \\<checkmark>
-             \\<to> continuous\\_on P\\_e spur\\_f (continuous\\_on\\_compose) \\<checkmark>
-           Only \\<tau> continuity + \\<tau> range + surjectivity + fibre matching remain.
-           Fibre matching: all cases verified algebraically (sessions 2-4).\<close>
+        using h_spur_cont h_spur_surj h_fibres by (by100 blast)
     qed
     then obtain f where
         hf_cont: "continuous_on P_e f"
