@@ -5378,12 +5378,93 @@ proof -
           \<comment> \<open>Key property: \\<tau> p = r * (boundary\\_point) + small\\_offset. Since r \\<le> 1 and
              boundary\\_point has norm \\<le> 1, the main term has norm \\<le> r. The offset is
              proportional to r*(1-r) which vanishes at r=0 and r=1.\<close>
+          \<comment> \<open>Helper: for any angle \\<alpha>, (r*cos \\<alpha>)^2 + (r*sin \\<alpha>)^2 = r^2 \\<le> 1.\<close>
+          have hgood_norm: "\<And>\<alpha>. (r * cos \<alpha>) ^ 2 + (r * sin \<alpha>) ^ 2 \<le> 1"
+          proof -
+            fix \<alpha> :: real
+            have "(r * cos \<alpha>) ^ 2 + (r * sin \<alpha>) ^ 2 = r^2 * (cos \<alpha> ^ 2 + sin \<alpha> ^ 2)"
+              by (by100 algebra)
+            also have "\<dots> = r^2" using sin_cos_squared_add3 by (by100 simp)
+            also have "\<dots> \<le> 1"
+            proof -
+              have "r \<ge> 0" using hr_pos by (by100 linarith)
+              hence "r^2 \<le> 1^2" using hr_le1
+                by (intro power_mono) (by100 auto)
+              thus ?thesis by (by100 simp)
+            qed
+            finally show "(r * cos \<alpha>) ^ 2 + (r * sin \<alpha>) ^ 2 \<le> 1" .
+          qed
+          \<comment> \<open>The \\<tau> definition matches r and \\<theta>\\_p locally. To use r and \\<theta>\\_p, we need
+             to show \\<tau> p unfolds to use these local definitions.
+             For the good sector: \\<tau>(p) = (r * cos(\\<theta>'), r * sin(\\<theta>')) where
+             \\<theta>' = (\\<theta>\\_p - \\<theta>\\_cancel) * n / m. So norm = r \\<le> 1.
+             For the cancel sector: more complex but bounded by r*(3-r)/2 \\<le> 1.\<close>
+          \<comment> \<open>Key fact: \\<tau>\\_def at p \\<noteq> (0,0) uses sqrt(fst p^2+snd p^2) = r (our local r).
+             To avoid let-binding unfolding issues, prove \\<tau> p \\<in> B2 directly.\<close>
+          \<comment> \<open>p\\_cm norm: centroid mapped to disk interior.\<close>
+          have hp_cm_le: "fst p_cm ^ 2 + snd p_cm ^ 2 \<le> 1"
+            sorry \<comment> \<open>From p\\_cm \\<in> B2 (centroid mapped by disk homeomorphism).\<close>
+          \<comment> \<open>Convex combination of (1,0) and p\\_cm is in B2 (by convexity of B2).\<close>
+          have hconv_bound: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
+              ((1-t) + t * fst p_cm) ^ 2 + (t * snd p_cm) ^ 2 \<le> 1"
+            sorry \<comment> \<open>Convex combination norm bound: B2 is convex, (1,0) \\<in> B2, p\\_cm \\<in> B2.\<close>
+          \<comment> \<open>d\\_perp norm: (-snd p\\_cm, fst p\\_cm - 1). |d|^2 \\<le> 4.\<close>
+          have hd_sq_bound: "fst d_perp ^ 2 + snd d_perp ^ 2 \<le> 4"
+          proof -
+            have "fst d_perp = - snd p_cm" "snd d_perp = fst p_cm - 1"
+              unfolding d_perp_def by (by100 auto)+
+            hence "fst d_perp ^ 2 + snd d_perp ^ 2
+                 = snd p_cm ^ 2 + (fst p_cm - 1) ^ 2" by (by100 simp)
+            also have "\<dots> = snd p_cm ^ 2 + fst p_cm ^ 2 - 2 * fst p_cm + 1"
+              by (by100 algebra)
+            also have "\<dots> \<le> 1 - 2 * fst p_cm + 1"
+              using hp_cm_le by (by100 linarith)
+            also have "\<dots> = 2 - 2 * fst p_cm" by (by100 linarith)
+            also have "\<dots> \<le> 4"
+            proof -
+              have "fst p_cm \<ge> -1"
+              proof -
+                have "snd p_cm ^ 2 \<ge> 0" by (by100 simp)
+                hence "fst p_cm ^ 2 \<le> 1" using hp_cm_le by (by100 linarith)
+                hence "- 1 \<le> fst p_cm \<and> fst p_cm \<le> 1"
+                proof -
+                  assume h: "(fst p_cm)\<^sup>2 \<le> 1"
+                  have "fst p_cm \<le> 1"
+                  proof (rule ccontr)
+                    assume "\<not> fst p_cm \<le> 1"
+                    hence hgt: "fst p_cm > 1" by (by100 linarith)
+                    have "fst p_cm ^ 2 > 1"
+                    proof -
+                      have "fst p_cm * fst p_cm > 1 * 1"
+                        using mult_strict_mono'[of 1 "fst p_cm" 1 "fst p_cm"] hgt by (by100 linarith)
+                      thus ?thesis unfolding power2_eq_square by (by100 linarith)
+                    qed
+                    thus False using h by (by100 linarith)
+                  qed
+                  moreover have "fst p_cm \<ge> -1"
+                  proof (rule ccontr)
+                    assume "\<not> fst p_cm \<ge> -1"
+                    hence hlt: "fst p_cm < -1" by (by100 linarith)
+                    have "fst p_cm ^ 2 > 1"
+                    proof -
+                      have "(-fst p_cm) > 1" using hlt by (by100 linarith)
+                      hence "(-fst p_cm) * (-fst p_cm) > 1 * 1"
+                        using mult_strict_mono'[of 1 "-fst p_cm" 1 "-fst p_cm"] by (by100 linarith)
+                      thus ?thesis unfolding power2_eq_square by (by100 linarith)
+                    qed
+                    thus False using h by (by100 linarith)
+                  qed
+                  ultimately show ?thesis by (by100 simp)
+                qed
+                thus ?thesis by (by100 linarith)
+              qed
+              thus ?thesis by (by100 linarith)
+            qed
+            finally show ?thesis .
+          qed
           show ?thesis unfolding top1_B2_def
-            sorry \<comment> \<open>Good sector: (r*cos \\<theta>', r*sin \\<theta>') has norm r \\<le> 1.
-               Cancel sector: r*spur + offset*d\\_perp. Need norm \\<le> 1.
-               Bound: |\\<tau>(p)| \\<le> r*|spur\\_pt| + |offset|*|d\\_perp|
-                    \\<le> r*1 + r*(1-r)/4 * 2 = r*(1 + (1-r)/2)
-                    = r*(3-r)/2 \\<le> 1 for r \\<in> [0,1].\<close>
+            sorry \<comment> \<open>Combine all bounds: good sector via hgood\\_norm, cancel sector
+               via hconv\\_bound + hd\\_sq\\_bound + triangle inequality.\<close>
         qed
       qed
       have h\<tau>_surj: "\<tau> ` top1_B2 = top1_B2"
