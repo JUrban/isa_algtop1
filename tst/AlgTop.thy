@@ -4325,8 +4325,28 @@ proof -
                    vx(i0) ~ vx(j0) (same dir) or vx(i0) ~ vx(Suc j0 mod n) (opp dir), etc.
                    Since both q1 and q2 satisfy C7 for the same scheme, and the vertex identification
                    is the transitive closure of these C7-endpoint identifications, they agree.\<close>
-                show ?thesis sorry \<comment> \<open>Vertex-vertex case: C7 at endpoints + transitivity.
-                   Both q1 and q2 identify the same vertex pairs via the same scheme.\<close>
+                \<comment> \<open>Goal: q2(vx2 kx, vy2 kx) = q2(vx2 ky, vy2 ky).
+                   From: q1(vx1 kx, vy1 kx) = q1(vx1 ky, vy1 ky).
+                   Use C7 at t=0: for each matching label pair, C7 gives vertex identification.
+                   Both q1 and q2 satisfy C7 for the same scheme.\<close>
+                have hgoal: "(q2 \<circ> \<phi>) x = q2 (vx2 kx, vy2 kx)"
+                proof -
+                  have "\<phi> x = (vx2 kx, vy2 kx)" using hkx(2,3) by (cases "\<phi> x") (by100 auto)
+                  thus ?thesis by (by100 simp)
+                qed
+                have hgoal2: "(q2 \<circ> \<phi>) y = q2 (vx2 ky, vy2 ky)"
+                proof -
+                  have "\<phi> y = (vx2 ky, vy2 ky)" using hky(2,3) by (cases "\<phi> y") (by100 auto)
+                  thus ?thesis by (by100 simp)
+                qed
+                have hq1_eq: "q1 (vx1 kx, vy1 kx) = q1 (vx1 ky, vy1 ky)"
+                proof -
+                  have "x = (vx1 kx, vy1 kx)" using hkx(4,5) by (cases x) (by100 auto)
+                  moreover have "y = (vx1 ky, vy1 ky)" using hky(4,5) by (cases y) (by100 auto)
+                  ultimately show ?thesis using heq by (by100 simp)
+                qed
+                show ?thesis sorry \<comment> \<open>Vertex-vertex case: from hq1\\_eq derive q2(vx2 kx) = q2(vx2 ky).
+                   Needs: vertex identification is determined by scheme via C7 at t=0,1.\<close>
               qed
             qed
           qed
