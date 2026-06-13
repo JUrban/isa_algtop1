@@ -5573,9 +5573,18 @@ proof -
             define offset_loc where "offset_loc = sign_loc * r * (1 - r) * sin (pi * t_fold_loc) / 4"
             have h\<tau>_cancel: "\<tau> p = (r * fst spur_pt_loc + offset_loc * fst d_perp,
                                     r * snd spur_pt_loc + offset_loc * snd d_perp)"
-              using h\<tau>_simp h\<theta>_lt
-              unfolding spur_pt_loc_def t_fold_loc_def sign_loc_def offset_loc_def
-              sorry \<comment> \<open>\\<tau> definition let-binding unfolding in cancel sector. Structural simp.\<close>
+            proof -
+              from h\<tau>_simp h\<theta>_lt
+              have "\<tau> p = (let spur_pt = \<tau>_boundary \<theta>_p;
+                       t_fold = min (\<theta>_p * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>_p) * real ?n / (2*pi));
+                       sign = (if \<theta>_p \<le> \<theta>_mid then 1 else -1);
+                       offset = sign * r * (1 - r) * sin (pi * t_fold) / 4
+                   in (r * fst spur_pt + offset * fst d_perp,
+                       r * snd spur_pt + offset * snd d_perp))"
+                by (by100 simp)
+              thus ?thesis unfolding spur_pt_loc_def t_fold_loc_def sign_loc_def offset_loc_def Let_def
+                by (by100 simp)
+            qed
             \<comment> \<open>Bound: |offset\\_loc| \\<le> r*(1-r)/4 (from |sin| \\<le> 1 and |sign| = 1).\<close>
             \<comment> \<open>Bound: offset\\_loc^2 \\<le> (r*(1-r)/4)^2.\<close>
             have hoffset: "offset_loc ^ 2 \<le> (r * (1-r) / 4) ^ 2"
@@ -5628,8 +5637,14 @@ proof -
               have h\<theta>_lt: "\<not> \<theta>_p \<ge> \<theta>_cancel" using \<open>\<not> \<theta>_p \<ge> \<theta>_cancel\<close> .
               define tf where "tf = min (\<theta>_p * real ?n / (2*pi)) ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi))"
               have hspur_eq: "spur_pt_loc = ((1-tf) + tf * fst p_cm, tf * snd p_cm)"
-                unfolding spur_pt_loc_def \<tau>_boundary_def tf_def \<theta>_cancel_def
-                using h\<theta>_lt sorry \<comment> \<open>Let-binding unfolding + \\<theta>\\_cancel substitution.\<close>
+              proof -
+                have "\<not> \<theta>_p \<ge> \<theta>_cancel" using h\<theta>_lt .
+                hence "\<tau>_boundary \<theta>_p = (let t_fold = min (\<theta>_p * real ?n / (2*pi))
+                    ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi))
+                    in ((1 - t_fold) * 1 + t_fold * fst p_cm, (1 - t_fold) * 0 + t_fold * snd p_cm))"
+                  unfolding \<tau>_boundary_def \<theta>_cancel_def by (by100 simp)
+                thus ?thesis unfolding spur_pt_loc_def tf_def Let_def by (by100 simp)
+              qed
               \<comment> \<open>Show 0 \\<le> tf \\<le> 1.\<close>
               have hn_pos: "real ?n > 0"
               proof -
@@ -7418,6 +7433,13 @@ qed
 
 
 end
+
+
+
+
+
+
+
 
 
 
