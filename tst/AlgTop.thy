@@ -238,10 +238,54 @@ qed
 \<comment> \<open>Angle recovery: the angle computed from (r*cos \\<alpha>, r*sin \\<alpha>) via arccos recovers \\<alpha> for \\<alpha> \\<in> [0,2\\<pi>).\<close>
 lemma angle_recovery:
   fixes r \<alpha> :: real
-  assumes "r > 0" "0 \<le> \<alpha>" "\<alpha> < 2*pi"
+  assumes hr: "r > 0" and h\<alpha>0: "0 \<le> \<alpha>" and h\<alpha>2: "\<alpha> < 2*pi"
   shows "(if r * sin \<alpha> \<ge> 0 then arccos ((r * cos \<alpha>) / sqrt ((r*cos \<alpha>)^2 + (r*sin \<alpha>)^2))
          else 2*pi - arccos ((r * cos \<alpha>) / sqrt ((r*cos \<alpha>)^2 + (r*sin \<alpha>)^2))) = \<alpha>"
-  sorry
+proof -
+  \<comment> \<open>Step 1: sqrt((r*cos)^2 + (r*sin)^2) = r.\<close>
+  have "(r * cos \<alpha>)^2 + (r * sin \<alpha>)^2 = r^2 * (cos \<alpha> ^2 + sin \<alpha> ^2)"
+    unfolding power2_eq_square by argo
+  also have "\<dots> = r^2" using sin_cos_squared_add3 by (by100 simp)
+  finally have hsqrt: "sqrt ((r*cos \<alpha>)^2 + (r*sin \<alpha>)^2) = r"
+    using hr by (by100 simp)
+  \<comment> \<open>Step 2: (r*cos \\<alpha>)/r = cos \\<alpha>.\<close>
+  have hdiv: "(r * cos \<alpha>) / sqrt ((r*cos \<alpha>)^2 + (r*sin \<alpha>)^2) = cos \<alpha>"
+    using hsqrt hr by (by100 simp)
+  \<comment> \<open>Step 3: arccos(cos \\<alpha>) = \\<alpha> for \\<alpha> \\<in> [0,\\<pi>], arccos(cos \\<alpha>) = 2\\<pi>-\\<alpha> for \\<alpha> \\<in> (\\<pi>,2\\<pi>).\<close>
+  show ?thesis unfolding hdiv
+  proof (cases "\<alpha> \<le> pi")
+    case True
+    \<comment> \<open>\\<alpha> \\<in> [0,\\<pi>]: arccos(cos \\<alpha>) = \\<alpha>, and sin \\<alpha> \\<ge> 0.\<close>
+    have "arccos (cos \<alpha>) = \<alpha>" using arccos_cos[OF h\<alpha>0 True] .
+    moreover have "r * sin \<alpha> \<ge> 0"
+      using hr sin_ge_zero[OF h\<alpha>0 True] by (by100 simp)
+    ultimately show "(if r * sin \<alpha> \<ge> 0 then arccos (cos \<alpha>) else 2*pi - arccos (cos \<alpha>)) = \<alpha>"
+      by (by100 simp)
+  next
+    case False
+    hence h\<alpha>_gt_pi: "\<alpha> > pi" by (by100 linarith)
+    \<comment> \<open>\\<alpha> \\<in> (\\<pi>, 2\\<pi>): cos \\<alpha> = cos(2\\<pi>-\\<alpha>) and 2\\<pi>-\\<alpha> \\<in> (0, \\<pi>).\<close>
+    have h2pa: "2*pi - \<alpha> > 0" using h\<alpha>2 by (by100 linarith)
+    have h2pa_pi: "2*pi - \<alpha> < pi" using h\<alpha>_gt_pi by (by100 linarith)
+    have hcos_eq: "cos \<alpha> = cos (2*pi - \<alpha>)" by (simp add: cos_diff)
+    have harccos: "arccos (cos \<alpha>) = 2*pi - \<alpha>"
+    proof -
+      from arccos_cos[OF less_imp_le[OF h2pa] less_imp_le[OF h2pa_pi]]
+      have "arccos (cos (2*pi - \<alpha>)) = 2*pi - \<alpha>" .
+      thus ?thesis unfolding hcos_eq[symmetric] .
+    qed
+    have "2*pi - arccos (cos \<alpha>) = \<alpha>" using harccos by (by100 linarith)
+    moreover have "\<not> (r * sin \<alpha> \<ge> 0)"
+    proof -
+      have "sin \<alpha> < 0" using sin_lt_zero[OF h\<alpha>_gt_pi h\<alpha>2] .
+      hence "r * sin \<alpha> < 0"
+        using mult_pos_neg[OF hr] by (by100 blast)
+      thus ?thesis by (by100 linarith)
+    qed
+    ultimately show "(if r * sin \<alpha> \<ge> 0 then arccos (cos \<alpha>) else 2*pi - arccos (cos \<alpha>)) = \<alpha>"
+      by (by100 simp)
+  qed
+qed
 
 \<comment> \<open>Cancel shift: edge i+2 in [a,a\\<inverse>]@w has same label/direction as edge i in w (expert audit 26 §7).\<close>
 lemma cancel_shift_label:
@@ -6358,7 +6402,39 @@ proof -
                        else 2*pi - arccos ((r0 * cos \<alpha>) / sqrt ((r0*cos \<alpha>)^2 + (r0*sin \<alpha>)^2)))"
                   by (by100 simp)
                 also have "\<dots> = \<alpha>"
-                  sorry \<comment> \<open>angle\\_recovery[OF hr0\\_pos h\\<alpha>\\_ge0 h\\<alpha>\\_lt2pi].\<close>
+                proof -
+                  have h\<alpha>_ge0: "\<alpha> \<ge> 0"
+                  proof -
+                    have "\<theta>_cancel \<ge> 0" unfolding \<theta>_cancel_def using pi_gt_zero assms(2) by (by100 simp)
+                    thus ?thesis using h\<alpha>_ge by (by100 linarith)
+                  qed
+                  have h\<alpha>_lt2pi: "\<alpha> < 2*pi"
+                  proof -
+                    have "\<theta>0 < 2*pi"
+                    proof (cases "snd q \<ge> 0")
+                      case True
+                      hence "\<theta>0 = arccos (fst q / r0)" unfolding \<theta>0_def by (by100 simp)
+                      moreover have "arccos (fst q / r0) \<le> pi"
+                        using arccos_ubound[OF conjunct1[OF hq_div_bound] conjunct2[OF hq_div_bound]] .
+                      ultimately show ?thesis using pi_gt_zero by (by100 linarith)
+                    next
+                      case False
+                      hence "\<theta>0 = 2*pi - arccos (fst q / r0)" unfolding \<theta>0_def by (by100 simp)
+                      moreover have "arccos (fst q / r0) > 0"
+                        sorry \<comment> \<open>arccos > 0 when x/r < 1 (which holds since q \\<noteq> (0,0) with snd q < 0).\<close>
+                      ultimately show ?thesis by (by100 linarith)
+                    qed
+                    hence "\<theta>0 * real ?m / real ?n < 2*pi * real ?m / real ?n"
+                      sorry \<comment> \<open>Multiply by m/n > 0.\<close>
+                    also have "\<dots> = 2*pi * (real ?n - 2) / real ?n" by (by100 simp)
+                    also have "\<dots> < 2*pi" using assms(2) pi_gt_zero sorry \<comment> \<open>(n-2)/n < 1 for n > 0.\<close>
+                    finally have "\<theta>0 * real ?m / real ?n < 2*pi" .
+                    thus ?thesis unfolding \<alpha>_def \<theta>_cancel_def
+                      sorry \<comment> \<open>\\<theta>\\_cancel + \\<theta>0*m/n < 4\\<pi>/n + 2\\<pi>-4\\<pi>/n = 2\\<pi>.\<close>
+                  qed
+                  from angle_recovery[OF hr0_pos h\<alpha>_ge0 h\<alpha>_lt2pi]
+                  show ?thesis .
+                qed
                 finally show ?thesis .
               qed
               \<comment> \<open>Step 4c: unfold \\<tau>\\_def, use h\\_r\\_eq and h\\_angle.\<close>
