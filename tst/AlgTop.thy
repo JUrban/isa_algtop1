@@ -5567,9 +5567,25 @@ proof -
          Matching at \\<theta>=\\<theta>\\_mid: offset = 0 (sin(\\<pi>*1) = 0). \\<checkmark>
          Matching at \\<theta>=0/2\\<pi>: both sides give (r, 0). \\<checkmark>
          Matching at r=0: both sides give (0, 0). \\<checkmark>\<close>
+      \<comment> \<open>Define angle function for sector classification.\<close>
+      define angle_of :: "real \<times> real \<Rightarrow> real" where
+        "angle_of p = (if snd p \<ge> 0 then arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))
+                       else 2*pi - arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)))" for p
+      define S_g where "S_g = {p \<in> top1_B2. p = (0,0) \<or> angle_of p \<ge> \<theta>_cancel}"
+      define S_c where "S_c = {p \<in> top1_B2. p = (0,0) \<or> angle_of p \<le> \<theta>_cancel}"
+      have h_cover: "top1_B2 = S_g \<union> S_c"
+        unfolding S_g_def S_c_def by (by100 auto)
+      have h_g_closed: "closed S_g"
+        sorry \<comment> \<open>S\\_g is intersection of B2 (closed) with preimage of [\\<theta>\\_cancel, 2\\<pi>] under angle\\_of (continuous).\<close>
+      have h_c_closed: "closed S_c"
+        sorry \<comment> \<open>S\\_c is intersection of B2 (closed) with preimage of [0, \\<theta>\\_cancel] under angle\\_of (continuous).\<close>
+      have h_g_cont: "continuous_on S_g \<tau>"
+        sorry \<comment> \<open>On S\\_g: \\<tau> is composition of sqrt, arccos, cos, sin, multiplication. All continuous.\<close>
+      have h_c_cont: "continuous_on S_c \<tau>"
+        sorry \<comment> \<open>On S\\_c: \\<tau> is polynomial/trig in (r,\\<theta>). All continuous.\<close>
       have h\<tau>_cont: "continuous_on top1_B2 \<tau>"
-        sorry \<comment> \<open>Pasting lemma: continuous\\_on\\_closed\\_Un on good/cancel sectors.
-           4 sub-sorrys: S\\_g closed, S\\_c closed, \\<tau> cont on S\\_g, \\<tau> cont on S\\_c.\<close>
+        using continuous_on_closed_Un[OF h_g_closed h_c_closed h_g_cont h_c_cont]
+        unfolding h_cover[symmetric] .
       \<comment> \<open>Sub-sorry 2: \\<tau> maps B2 onto B2 (range and surjectivity).
          Good sector: angle rescaling is a bijection [\\<theta>\\_cancel, 2\\<pi>) \\<to> [0, 2\\<pi>).
          Cancel sector: maps to interior of B2 (spur + offset, |result| < 1 for r < 1).
