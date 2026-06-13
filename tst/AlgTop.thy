@@ -100,6 +100,141 @@ proof -
   finally show ?thesis using htri by linarith
 qed
 
+\<comment> \<open>Polar decomposition: x = r*cos(\\<theta>), y = r*sin(\\<theta>) where r = sqrt(x^2+y^2)
+   and \\<theta> = arccos(x/r) or 2\\<pi>-arccos(x/r) depending on sign of y.\<close>
+lemma polar_decomposition_fst:
+  fixes x y :: real
+  assumes hpos: "x^2 + y^2 > 0"
+  shows "sqrt (x^2 + y^2) * cos (if y \<ge> 0 then arccos (x / sqrt (x^2 + y^2))
+         else 2*pi - arccos (x / sqrt (x^2 + y^2))) = x"
+proof -
+  define r where "r = sqrt (x^2 + y^2)"
+  have hr_pos: "r > 0" unfolding r_def using hpos
+    using real_sqrt_gt_0_iff by (by100 auto)
+  have hr_sq: "r^2 = x^2 + y^2" unfolding r_def
+    using real_sqrt_pow2[OF less_imp_le[OF hpos]] by (by100 blast)
+  have hxr_le: "x^2 \<le> r^2"
+  proof -
+    have "y^2 \<ge> 0" by (by100 simp)
+    thus ?thesis using hr_sq by (by100 linarith)
+  qed
+  have hfp: "x \<le> r" using power2_le_imp_le[OF hxr_le] hr_pos by (by100 linarith)
+  have "(-x)^2 \<le> r^2"
+  proof -
+    have "(-x)^2 = x^2" unfolding power2_eq_square by (by100 simp)
+    thus ?thesis using hxr_le by (by100 linarith)
+  qed
+  hence hmx: "-x \<le> r"
+    using power2_le_imp_le[OF _ less_imp_le[OF hr_pos]] by (by100 blast)
+  from divide_right_mono[OF hmx, of r] hr_pos
+  have h_lb: "-1 \<le> x / r" by (by100 simp)
+  from divide_right_mono[OF hfp, of r] hr_pos
+  have h_ub: "x / r \<le> 1" by (by100 simp)
+  have hcos: "cos (arccos (x / r)) = x / r"
+    using cos_arccos[OF h_lb h_ub] .
+  hence h1: "r * cos (arccos (x / r)) = x" using hr_pos by (by100 simp)
+  have hcos2: "cos (2*pi - arccos (x / r)) = cos (arccos (x / r))"
+    by (simp add: cos_diff)
+  hence h2: "r * cos (2*pi - arccos (x / r)) = x" using h1 by (by100 simp)
+  show ?thesis unfolding r_def[symmetric] using h1 h2 by (by100 simp)
+qed
+
+lemma polar_decomposition_snd:
+  fixes x y :: real
+  assumes hpos: "x^2 + y^2 > 0"
+  shows "sqrt (x^2 + y^2) * sin (if y \<ge> 0 then arccos (x / sqrt (x^2 + y^2))
+         else 2*pi - arccos (x / sqrt (x^2 + y^2))) = y"
+proof -
+  define r where "r = sqrt (x^2 + y^2)"
+  have hr_pos: "r > 0" unfolding r_def using hpos
+    using real_sqrt_gt_0_iff by (by100 auto)
+  have hr_sq: "r^2 = x^2 + y^2" unfolding r_def
+    using real_sqrt_pow2[OF less_imp_le[OF hpos]] by (by100 blast)
+  \<comment> \<open>Arccos preconditions.\<close>
+  have hxr_le: "x^2 \<le> r^2"
+  proof -
+    have "y^2 \<ge> 0" by (by100 simp)
+    thus ?thesis using hr_sq by (by100 linarith)
+  qed
+  have hfp: "x \<le> r" using power2_le_imp_le[OF hxr_le] hr_pos by (by100 linarith)
+  have "(-x)^2 \<le> r^2"
+  proof -
+    have "(-x)^2 = x^2" unfolding power2_eq_square by (by100 simp)
+    thus ?thesis using hxr_le by (by100 linarith)
+  qed
+  hence hmx: "-x \<le> r" using power2_le_imp_le[OF _ less_imp_le[OF hr_pos]] by (by100 blast)
+  from divide_right_mono[OF hmx, of r] hr_pos have h_lb: "-1 \<le> x / r" by (by100 simp)
+  from divide_right_mono[OF hfp, of r] hr_pos have h_ub: "x / r \<le> 1" by (by100 simp)
+  \<comment> \<open>sin(arccos(x/r)) = sqrt(1-(x/r)^2). And r*sqrt(1-(x/r)^2) = sqrt(r^2-x^2) = sqrt(y^2) = |y|.\<close>
+  have hsin_val: "sin (arccos (x / r)) = sqrt (1 - (x/r)^2)"
+    using sin_arccos[OF h_lb h_ub] .
+  have hxr_sq_le: "(x/r)^2 \<le> 1"
+  proof -
+    have "x/r \<le> 1" using h_ub .
+    moreover have "-(x/r) \<le> 1" using h_lb by (by100 linarith)
+    ultimately have "abs (x/r) \<le> 1" by (by100 linarith)
+    hence hle: "x/r \<le> 1" and hge: "-1 \<le> x/r" by (by100 linarith)+
+    show ?thesis unfolding power2_eq_square
+    proof (cases "x/r \<ge> 0")
+      case True
+      have "x/r * (x/r) \<le> 1 * 1"
+      proof (rule mult_mono)
+        show "x/r \<le> 1" using hle .
+        show "x/r \<le> 1" using hle .
+        show "(0::real) \<le> 1" by (by100 simp)
+        show "0 \<le> x/r" using True .
+      qed
+      thus "x / r * (x / r) \<le> 1" by (by100 simp)
+    next
+      case False
+      hence hn: "x/r < 0" by (by100 linarith)
+      have "-(x/r) \<le> 1" using hge by (by100 linarith)
+      have "(-x/r) * (-x/r) \<le> 1 * 1"
+      proof (rule mult_mono)
+        show "-x/r \<le> 1" using \<open>-(x/r) \<le> 1\<close> by (by100 simp)
+        show "-x/r \<le> 1" using \<open>-(x/r) \<le> 1\<close> by (by100 simp)
+        show "(0::real) \<le> 1" by (by100 simp)
+        show "0 \<le> -x/r" using hn by (by100 linarith)
+      qed
+      thus "x / r * (x / r) \<le> 1" by (by100 simp)
+    qed
+  qed
+  have hsin_nn: "sin (arccos (x / r)) \<ge> 0"
+    using hsin_val hxr_sq_le by (by100 simp)
+  have h_r_sin: "r * sin (arccos (x / r)) = abs y"
+  proof -
+    have "r * sqrt (1 - (x/r)^2) = sqrt (r^2 * (1 - (x/r)^2))"
+      using hr_pos by (simp add: real_sqrt_mult)
+    also have "r^2 * (1 - (x/r)^2) = r^2 - x^2"
+    proof -
+      have "r * r \<noteq> 0" using hr_pos by (by100 simp)
+      hence "r * r * (1 - x * x / (r * r)) = r * r - x * x"
+        by (simp add: field_simps)
+      thus ?thesis unfolding power2_eq_square using hr_pos by (simp add: field_simps)
+    qed
+    also have "\<dots> = y^2" using hr_sq by (by100 linarith)
+    also have "sqrt (y^2) = abs y" by (rule real_sqrt_abs)
+    finally show ?thesis using hsin_val by (by100 simp)
+  qed
+  \<comment> \<open>Case split on y \\<ge> 0.\<close>
+  show ?thesis
+  proof (cases "y \<ge> 0")
+    case True
+    have "r * sin (arccos (x / r)) = y" using h_r_sin True by (by100 simp)
+    thus ?thesis unfolding r_def[symmetric] using True by (by100 simp)
+  next
+    case False
+    have "sin (2*pi - arccos (x / r)) = - sin (arccos (x / r))"
+      by (simp add: sin_diff)
+    hence "r * sin (2*pi - arccos (x / r)) = -(r * sin (arccos (x / r)))"
+      by (by100 simp)
+    also have "\<dots> = - abs y" using h_r_sin by (by100 simp)
+    also have "\<dots> = y" using False by (by100 simp)
+    finally have "r * sin (2*pi - arccos (x / r)) = y" .
+    thus ?thesis unfolding r_def[symmetric] using False by (by100 simp)
+  qed
+qed
+
 \<comment> \<open>Cancel shift: edge i+2 in [a,a\\<inverse>]@w has same label/direction as edge i in w (expert audit 26 §7).\<close>
 lemma cancel_shift_label:
   fixes a :: "'a \<times> bool" and w :: "('a \<times> bool) list" and i :: nat
@@ -6197,8 +6332,27 @@ proof -
               using h\<tau>_at_p h_rescale by (by100 simp)
             \<comment> \<open>Step 6: q = (r0*cos \\<theta>0, r0*sin \\<theta>0) by polar decomposition.\<close>
             moreover have "q = (r0 * cos \<theta>0, r0 * sin \<theta>0)"
-              sorry \<comment> \<open>Polar decomposition: r0 = sqrt(x^2+y^2), \\<theta>0 = arccos(x/r0) adjusted for y sign.
-                 Standard identity: x = r*cos(arccos(x/r)) and y = r*sin(arccos(x/r)).\<close>
+            proof -
+              have hfst_sq_pos: "fst q ^ 2 + snd q ^ 2 > 0"
+              proof -
+                have "fst q \<noteq> 0 \<or> snd q \<noteq> 0" using False by (cases q) (by100 auto)
+                thus ?thesis
+                proof
+                  assume "fst q \<noteq> 0" hence "fst q ^ 2 > 0" by (by100 simp)
+                  moreover have "snd q ^ 2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                next
+                  assume "snd q \<noteq> 0" hence "snd q ^ 2 > 0" by (by100 simp)
+                  moreover have "fst q ^ 2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+              qed
+              have "fst q = r0 * cos \<theta>0"
+                using polar_decomposition_fst[OF hfst_sq_pos] unfolding r0_def \<theta>0_def by (by100 simp)
+              moreover have "snd q = r0 * sin \<theta>0"
+                using polar_decomposition_snd[OF hfst_sq_pos] unfolding r0_def \<theta>0_def by (by100 simp)
+              ultimately show ?thesis by (cases q) (by100 simp)
+            qed
             ultimately show ?thesis by (by100 simp)
           qed
           ultimately show ?thesis by (by100 blast)
