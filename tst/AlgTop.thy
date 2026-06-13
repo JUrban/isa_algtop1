@@ -2,7 +2,7 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (31 sorrys as of 2026-06-14, sessions 1316-1318):
+\<comment> \<open>SORRY ANALYSIS (31 sorrys as of 2026-06-14, sessions 1316-1319):
 
 SPUR COLLAPSE (3 sorrys):
 - h\\_tau\\_cont: \\<tau> continuous on B2 (piecewise smooth, matching at sector boundaries)
@@ -49,7 +49,10 @@ KEY INFRASTRUCTURE (all PROVED):
 - spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e continuity + surjectivity (from sub-sorrys)
 - Continuity chain: \\<psi>\\_e \\<checkmark> \\<to> \\<tau> (sorry) \\<to> \\<psi>\\_m\\<inverse> \\<checkmark> \\<to> spur\\_f \\<checkmark>
 - Vertex extraction: \\<phi>(vx1(k)) = vx2(k) for k < n
-- r > 0, r \\<le> 1, r^2 = fst p^2 + snd p^2 (for \\<tau> range proof)\<close>
+- r > 0, r \\<le> 1, r^2 = fst p^2 + snd p^2 (for \\<tau> range proof)
+- real\\_abs\\_mul\\_le\\_half\\_sum\\_squares: |xy| \\<le> (x^2+y^2)/2 (AM-GM global)
+- real\\_inner2\\_abs\\_le\\_half\\_norm\\_sums: |s\\<cdot>d| \\<le> (S+D)/2 (2D inner product bound)
+- cancel\\_shift\\_label: ([a,a\\<inverse>]@w)!(i+2) = w!i (index shift for fibre matching)\<close>
 
 \<comment> \<open>valid\\_operation\\_reverse, valid\\_equiv\\_sym: cached in AlgTopCached14.\<close>
 \<comment> \<open>§77 normal form chain (scheme\\_normal\\_form\\_valid + all valid helpers): cached in AlgTopCached14.\<close>
