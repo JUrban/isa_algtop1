@@ -64,6 +64,39 @@ proof -
   thus "length w \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
 qed
 
+\<comment> \<open>AM-GM for real products: |xy| \\<le> (x^2+y^2)/2. Reusable for inner product bounds (expert audit 26).\<close>
+lemma real_abs_mul_le_half_sum_squares:
+  fixes x y :: real
+  shows "abs (x * y) \<le> (x^2 + y^2) / 2"
+proof -
+  have h0: "0 \<le> (abs x - abs y)^2" by simp
+  have h1: "(abs x - abs y)^2 = x^2 + y^2 - 2 * abs (x * y)"
+    by (simp add: power2_eq_square abs_mult algebra_simps)
+  from h0 h1 have h2: "2 * abs (x * y) \<le> x^2 + y^2" by linarith
+  show ?thesis using h2 by simp
+qed
+
+\<comment> \<open>Two-coordinate inner-product bound (expert audit 26 §2).\<close>
+lemma real_inner2_abs_le_half_norm_sums:
+  fixes sx sy dx dy S D :: real
+  assumes hs: "sx^2 + sy^2 \<le> S"
+      and hd: "dx^2 + dy^2 \<le> D"
+  shows "abs (sx * dx + sy * dy) \<le> (S + D) / 2"
+proof -
+  have htri: "abs (sx * dx + sy * dy) \<le> abs (sx * dx) + abs (sy * dy)"
+    by (rule abs_triangle_ineq)
+  have hx: "abs (sx * dx) \<le> (sx^2 + dx^2) / 2"
+    by (rule real_abs_mul_le_half_sum_squares)
+  have hy: "abs (sy * dy) \<le> (sy^2 + dy^2) / 2"
+    by (rule real_abs_mul_le_half_sum_squares)
+  have "abs (sx * dx) + abs (sy * dy)
+        \<le> ((sx^2 + sy^2) + (dx^2 + dy^2)) / 2"
+    using hx hy by simp
+  also have "\<dots> \<le> (S + D) / 2"
+    using hs hd by simp
+  finally show ?thesis using htri by linarith
+qed
+
 \<comment> \<open>Identity homeomorphism + same-space helper (moved here for use by cut-paste lemmas).\<close>
 lemma homeomorphism_id_early:
   assumes "is_topology_on X TX"
@@ -5327,7 +5360,10 @@ proof -
          Matching at \\<theta>=0/2\\<pi>: both sides give (r, 0). \\<checkmark>
          Matching at r=0: both sides give (0, 0). \\<checkmark>\<close>
       have h\<tau>_cont: "continuous_on top1_B2 \<tau>"
-        sorry \<comment> \<open>Piecewise smooth with matching at sector boundaries. See analysis above.\<close>
+        sorry \<comment> \<open>Per expert audit 26 §5: use closed-sector pasting lemma.
+           Good sector (\\<theta>\\<ge>\\<theta>\\_cancel): \\<tau> = r*(cos \\<theta>', sin \\<theta>'), continuous from sqrt/arccos/cos/sin.
+           Cancel sector (\\<theta>\\<le>\\<theta>\\_cancel): \\<tau> = r*spur + offset*d\\_perp, continuous from linear interp.
+           Both sectors closed, agreement at boundary (r,0). continuous\\_on\\_closed\\_Un gives result.\<close>
       \<comment> \<open>Sub-sorry 2: \\<tau> maps B2 onto B2 (range and surjectivity).
          Good sector: angle rescaling is a bijection [\\<theta>\\_cancel, 2\\<pi>) \\<to> [0, 2\\<pi>).
          Cancel sector: maps to interior of B2 (spur + offset, |result| < 1 for r < 1).
@@ -5818,62 +5854,8 @@ proof -
               \<comment> \<open>Term 2: cross term via |x*y| \\<le> x*y or -(x*y). Bound |a\\<cdot>d| \\<le> 5/2 via AM-GM.\<close>
               have h_inner_bound: "abs (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp) \<le> 5/2"
               proof -
-                \<comment> \<open>Key fact: (a-b)^2 \\<ge> 0 gives 2ab \\<le> a^2+b^2, hence |a*b| \\<le> (a^2+b^2)/2.\<close>
-                have hsd1: "(fst spur_pt_loc - fst d_perp) * (fst spur_pt_loc - fst d_perp) \<ge> 0" by (by100 simp)
-                have hsd2: "(fst spur_pt_loc + fst d_perp) * (fst spur_pt_loc + fst d_perp) \<ge> 0" by (by100 simp)
-                have hsd3: "(snd spur_pt_loc - snd d_perp) * (snd spur_pt_loc - snd d_perp) \<ge> 0" by (by100 simp)
-                have hsd4: "(snd spur_pt_loc + snd d_perp) * (snd spur_pt_loc + snd d_perp) \<ge> 0" by (by100 simp)
-                \<comment> \<open>Expand using argo.\<close>
-                have e1: "(fst spur_pt_loc - fst d_perp) * (fst spur_pt_loc - fst d_perp)
-                    = fst spur_pt_loc * fst spur_pt_loc - 2 * fst spur_pt_loc * fst d_perp + fst d_perp * fst d_perp" by argo
-                have e2: "(fst spur_pt_loc + fst d_perp) * (fst spur_pt_loc + fst d_perp)
-                    = fst spur_pt_loc * fst spur_pt_loc + 2 * fst spur_pt_loc * fst d_perp + fst d_perp * fst d_perp"
-                  by (simp add: algebra_simps)
-                have e3: "(snd spur_pt_loc - snd d_perp) * (snd spur_pt_loc - snd d_perp)
-                    = snd spur_pt_loc * snd spur_pt_loc - 2 * snd spur_pt_loc * snd d_perp + snd d_perp * snd d_perp" by argo
-                have e4: "(snd spur_pt_loc + snd d_perp) * (snd spur_pt_loc + snd d_perp)
-                    = snd spur_pt_loc * snd spur_pt_loc + 2 * snd spur_pt_loc * snd d_perp + snd d_perp * snd d_perp"
-                  by (simp add: algebra_simps)
-                \<comment> \<open>From (a-b)^2 \\<ge> 0: 2ab \\<le> a^2+b^2. From (a+b)^2 \\<ge> 0: -2ab \\<le> a^2+b^2.\<close>
-                from hsd1 have "2 * fst spur_pt_loc * fst d_perp \<le> fst spur_pt_loc * fst spur_pt_loc + fst d_perp * fst d_perp"
-                  using e1 by (by100 linarith)
-                moreover from hsd2 have "-(2 * fst spur_pt_loc * fst d_perp) \<le> fst spur_pt_loc * fst spur_pt_loc + fst d_perp * fst d_perp"
-                  using e2 by (by100 linarith)
-                moreover from hsd3 have "2 * snd spur_pt_loc * snd d_perp \<le> snd spur_pt_loc * snd spur_pt_loc + snd d_perp * snd d_perp"
-                  using e3 by (by100 linarith)
-                moreover from hsd4 have "-(2 * snd spur_pt_loc * snd d_perp) \<le> snd spur_pt_loc * snd spur_pt_loc + snd d_perp * snd d_perp"
-                  using e4 by (by100 linarith)
-                \<comment> \<open>Combine: 2|s1*d1| \\<le> s1^2+d1^2 and 2|s2*d2| \\<le> s2^2+d2^2.\<close>
-                \<comment> \<open>We have 4 bounds (two directions for each of 2 components).
-                   These give: the inner product lies between -(|s|^2+|d|^2)/2 and (|s|^2+|d|^2)/2.\<close>
-                \<comment> \<open>From the 4 bounds (no abs), derive upper and lower bounds on inner product.\<close>
-                ultimately have h_all: "2 * fst spur_pt_loc * fst d_perp \<le> fst spur_pt_loc * fst spur_pt_loc + fst d_perp * fst d_perp
-                    \<and> -(2 * fst spur_pt_loc * fst d_perp) \<le> fst spur_pt_loc * fst spur_pt_loc + fst d_perp * fst d_perp
-                    \<and> 2 * snd spur_pt_loc * snd d_perp \<le> snd spur_pt_loc * snd spur_pt_loc + snd d_perp * snd d_perp
-                    \<and> -(2 * snd spur_pt_loc * snd d_perp) \<le> snd spur_pt_loc * snd spur_pt_loc + snd d_perp * snd d_perp"
-                  by (by100 auto)
-                \<comment> \<open>Without division: 2*inner \\<le> sum\\_sq and -2*inner \\<le> sum\\_sq, so |inner| \\<le> sum\\_sq/2.\<close>
-                have ha1: "2 * fst spur_pt_loc * fst d_perp \<le> fst spur_pt_loc * fst spur_pt_loc + fst d_perp * fst d_perp"
-                  using h_all by (by100 simp)
-                have ha3: "2 * snd spur_pt_loc * snd d_perp \<le> snd spur_pt_loc * snd spur_pt_loc + snd d_perp * snd d_perp"
-                  using h_all by (by100 simp)
-                have h_upper: "2 * fst spur_pt_loc * fst d_perp + 2 * snd spur_pt_loc * snd d_perp
-                    \<le> fst spur_pt_loc * fst spur_pt_loc + fst d_perp * fst d_perp
-                     + snd spur_pt_loc * snd spur_pt_loc + snd d_perp * snd d_perp"
-                  using ha1 ha3 by (by100 linarith)
-                have ha2: "-(2 * fst spur_pt_loc * fst d_perp) \<le> fst spur_pt_loc * fst spur_pt_loc + fst d_perp * fst d_perp"
-                  using h_all by (by100 simp)
-                have ha4: "-(2 * snd spur_pt_loc * snd d_perp) \<le> snd spur_pt_loc * snd spur_pt_loc + snd d_perp * snd d_perp"
-                  using h_all by (by100 simp)
-                have h_lower: "-(2 * fst spur_pt_loc * fst d_perp) + (-(2 * snd spur_pt_loc * snd d_perp))
-                    \<le> fst spur_pt_loc * fst spur_pt_loc + fst d_perp * fst d_perp
-                     + snd spur_pt_loc * snd spur_pt_loc + snd d_perp * snd d_perp"
-                  using ha2 ha4 by (by100 linarith)
-                have h_norms_bound: "fst spur_pt_loc * fst spur_pt_loc + fst d_perp * fst d_perp
-                     + snd spur_pt_loc * snd spur_pt_loc + snd d_perp * snd d_perp \<le> 5"
-                  using hspur_in_B2 hd_sq_bound unfolding power2_eq_square by (by100 linarith)
-                \<comment> \<open>So 2*inner \\<le> 5 and -2*inner \\<le> 5, hence |inner| \\<le> 5/2.\<close>
-                from h_upper h_lower h_norms_bound show ?thesis by (by100 linarith)
+                from real_inner2_abs_le_half_norm_sums[OF hspur_in_B2 hd_sq_bound]
+                show ?thesis by (by100 simp)
               qed
               have ht2: "2 * r * offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)
                   \<le> 2 * r * abs offset_loc * (5/2)"
@@ -7666,6 +7648,8 @@ end
 
 
  
+
+
 
 
 
