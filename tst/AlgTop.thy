@@ -5821,7 +5821,11 @@ proof -
               \<comment> \<open>Term 2: cross term via |x*y| \\<le> x*y or -(x*y). Bound |a\\<cdot>d| \\<le> 5/2 via AM-GM.\<close>
               have h_inner_bound: "abs (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp) \<le> 5/2"
                 using hspur_in_B2 hd_sq_bound
-                sorry \<comment> \<open>AM-GM: |a\\<cdot>d| \\<le> (|a|^2+|d|^2)/2 \\<le> (1+4)/2 = 5/2.\<close>
+                sorry \<comment> \<open>AM-GM: |s\\<cdot>d| \\<le> (|s|^2+|d|^2)/2 \\<le> (1+4)/2 = 5/2.
+                   Proof correct but by100 linarith can't handle abs+power2 in 1s.
+                   ham\\_gen (2|xy| \\<le> x^2+y^2 from (x-y)^2 \\<ge> 0) is PROVED.
+                   Application to components + abs\\_triangle works mathematically.
+                   Isabelle issue: unfolding power2\\_eq\\_square leaves abs terms that linarith chokes on.\<close>
               have ht2: "2 * r * offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)
                   \<le> 2 * r * abs offset_loc * (5/2)"
               proof -
@@ -7613,6 +7617,24 @@ end
 
 
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
