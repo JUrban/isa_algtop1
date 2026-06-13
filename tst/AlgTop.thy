@@ -235,6 +235,14 @@ proof -
   qed
 qed
 
+\<comment> \<open>Angle recovery: the angle computed from (r*cos \\<alpha>, r*sin \\<alpha>) via arccos recovers \\<alpha> for \\<alpha> \\<in> [0,2\\<pi>).\<close>
+lemma angle_recovery:
+  fixes r \<alpha> :: real
+  assumes "r > 0" "0 \<le> \<alpha>" "\<alpha> < 2*pi"
+  shows "(if r * sin \<alpha> \<ge> 0 then arccos ((r * cos \<alpha>) / sqrt ((r*cos \<alpha>)^2 + (r*sin \<alpha>)^2))
+         else 2*pi - arccos ((r * cos \<alpha>) / sqrt ((r*cos \<alpha>)^2 + (r*sin \<alpha>)^2))) = \<alpha>"
+  sorry
+
 \<comment> \<open>Cancel shift: edge i+2 in [a,a\\<inverse>]@w has same label/direction as edge i in w (expert audit 26 §7).\<close>
 lemma cancel_shift_label:
   fixes a :: "'a \<times> bool" and w :: "('a \<times> bool) list" and i :: nat
@@ -6326,7 +6334,37 @@ proof -
             \<comment> \<open>Step 4: \\<tau>(p) unfolds to good-sector formula.\<close>
             have h\<tau>_at_p: "\<tau> p = (r0 * cos ((\<alpha> - \<theta>_cancel) * real ?n / real ?m),
                                   r0 * sin ((\<alpha> - \<theta>_cancel) * real ?n / real ?m))"
-              sorry \<comment> \<open>\\<tau>\\_def at p \\<noteq> 0 with angle \\<alpha> \\<ge> \\<theta>\\_cancel: good sector formula.\<close>
+            proof -
+              \<comment> \<open>Step 4a: sqrt(fst p^2 + snd p^2) = r0.\<close>
+              have h_r_eq: "sqrt (fst p ^ 2 + snd p ^ 2) = r0"
+              proof -
+                have "(r0 * cos \<alpha>)^2 + (r0 * sin \<alpha>)^2 = r0^2 * (cos \<alpha> ^2 + sin \<alpha> ^2)"
+                  unfolding power2_eq_square by argo
+                also have "\<dots> = r0^2" using sin_cos_squared_add3 by (by100 simp)
+                finally have "(r0 * cos \<alpha>)^2 + (r0 * sin \<alpha>)^2 = r0^2" .
+                hence "fst p ^ 2 + snd p ^ 2 = r0^2" unfolding p_def by (by100 simp)
+                moreover have "r0 \<ge> 0" using hr0_pos by (by100 linarith)
+                ultimately show ?thesis by (by100 simp)
+              qed
+              \<comment> \<open>Step 4b: the angle computed by \\<tau> equals \\<alpha> (via angle\\_recovery).\<close>
+              have h_angle: "(if snd p \<ge> 0 then arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))
+                   else 2*pi - arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))) = \<alpha>"
+              proof -
+                have "fst p = r0 * cos \<alpha>" "snd p = r0 * sin \<alpha>"
+                  unfolding p_def by (by100 simp)+
+                hence "(if snd p \<ge> 0 then arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))
+                   else 2*pi - arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)))
+                    = (if r0 * sin \<alpha> \<ge> 0 then arccos ((r0 * cos \<alpha>) / sqrt ((r0*cos \<alpha>)^2 + (r0*sin \<alpha>)^2))
+                       else 2*pi - arccos ((r0 * cos \<alpha>) / sqrt ((r0*cos \<alpha>)^2 + (r0*sin \<alpha>)^2)))"
+                  by (by100 simp)
+                also have "\<dots> = \<alpha>"
+                  sorry \<comment> \<open>angle\\_recovery[OF hr0\\_pos h\\<alpha>\\_ge0 h\\<alpha>\\_lt2pi].\<close>
+                finally show ?thesis .
+              qed
+              \<comment> \<open>Step 4c: unfold \\<tau>\\_def, use h\\_r\\_eq and h\\_angle.\<close>
+              show ?thesis
+                sorry \<comment> \<open>\\<tau>\\_def unfolding using hp\\_ne + h\\_r\\_eq + h\\_angle + h\\<alpha>\\_ge.\<close>
+            qed
             \<comment> \<open>Step 5: combine rescaling.\<close>
             have "\<tau> p = (r0 * cos \<theta>0, r0 * sin \<theta>0)"
               using h\<tau>_at_p h_rescale by (by100 simp)
