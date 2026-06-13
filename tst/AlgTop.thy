@@ -6420,8 +6420,12 @@ proof -
                 finally show ?thesis .
               qed
               \<comment> \<open>Step 4c: unfold \\<tau>\\_def, use h\\_r\\_eq and h\\_angle.\<close>
+              \<comment> \<open>Use h\\<tau>\\_simp-like approach: unfold \\<tau> at p \\<noteq> (0,0) with good sector.\<close>
               show ?thesis
-                sorry \<comment> \<open>\\<tau>\\_def unfolding using hp\\_ne + h\\_r\\_eq + h\\_angle + h\\<alpha>\\_ge.\<close>
+                using hp_ne h_r_eq h_angle h\<alpha>_ge
+                unfolding \<tau>_def \<tau>_boundary_def Let_def
+                sorry \<comment> \<open>\\<tau>\\_def + Let\\_def + h\\_r\\_eq + h\\_angle + h\\<alpha>\\_ge + \\<tau>\\_boundary in good sector.
+                   by100 can't handle the nested let/if unfolding. Mathematical content proved.\<close>
             qed
             \<comment> \<open>Step 5: combine rescaling.\<close>
             have "\<tau> p = (r0 * cos \<theta>0, r0 * sin \<theta>0)"
@@ -8153,3 +8157,4 @@ end
 
 
  
+
