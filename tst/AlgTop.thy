@@ -5293,8 +5293,51 @@ proof -
          all of S1 (via good sector at r=1), and image contains origin. By connectedness and
          surjectivity of \\<tau>\\_boundary, \\<tau>(B2) = B2.\<close>
       have h\<tau>_range: "\<forall>p \<in> top1_B2. \<tau> p \<in> top1_B2"
-        sorry \<comment> \<open>Each case maps into B2: good sector r*(cos,sin) has norm r \\<le> 1.
-           Cancel sector: r*spur + offset*d\\_perp. Need |result| \\<le> 1.\<close>
+      proof (intro ballI)
+        fix p assume hp: "p \<in> top1_B2"
+        hence hp_norm: "fst p ^ 2 + snd p ^ 2 \<le> 1" unfolding top1_B2_def by (by100 simp)
+        show "\<tau> p \<in> top1_B2"
+        proof (cases "p = (0, 0)")
+          case True thus ?thesis unfolding \<tau>_def top1_B2_def by (by100 simp)
+        next
+          case False
+          define r where "r = sqrt (fst p ^ 2 + snd p ^ 2)"
+          define \<theta>_p where "\<theta>_p = (if snd p \<ge> 0 then arccos (fst p / r) else 2*pi - arccos (fst p / r))"
+          have hr_pos: "r > 0"
+          proof -
+            have "fst p \<noteq> 0 \<or> snd p \<noteq> 0" using False by (cases p) (by100 auto)
+            hence "fst p ^ 2 + snd p ^ 2 > 0"
+            proof
+              assume "fst p \<noteq> 0"
+              hence "fst p ^ 2 > 0" by (by100 simp)
+              moreover have "snd p ^ 2 \<ge> 0" by (by100 simp)
+              ultimately show ?thesis by (by100 linarith)
+            next
+              assume "snd p \<noteq> 0"
+              hence "snd p ^ 2 > 0" by (by100 simp)
+              moreover have "fst p ^ 2 \<ge> 0" by (by100 simp)
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            thus ?thesis unfolding r_def using real_sqrt_gt_0_iff by (by100 auto)
+          qed
+          have hr_le1: "r \<le> 1"
+          proof -
+            have "fst p ^ 2 + snd p ^ 2 \<le> 1" using hp_norm .
+            hence "sqrt (fst p ^ 2 + snd p ^ 2) \<le> sqrt 1" by (rule real_sqrt_le_mono)
+            thus ?thesis unfolding r_def by (by100 simp)
+          qed
+          have hr_sq: "r^2 = fst p ^ 2 + snd p ^ 2"
+          proof -
+            have "fst p ^ 2 + snd p ^ 2 \<ge> 0" by (rule sum_power2_ge_zero)
+            thus ?thesis unfolding r_def using real_sqrt_pow2 by (by100 blast)
+          qed
+          \<comment> \<open>Both sectors map into B2. Good sector: (r*cos,r*sin) has norm r \\<le> 1.
+             Cancel sector: r*spur + offset*d\\_perp has norm \\<le> r + r(1-r)/2 \\<le> 1.\<close>
+          show ?thesis unfolding top1_B2_def
+            sorry \<comment> \<open>Both sectors: good = r*(cos,sin) \\<in> B2; cancel = r*spur + offset*d\\_perp \\<in> B2.
+               Good: norm = r \\<le> 1 (cos^2+sin^2=1). Cancel: triangle inequality + convexity.\<close>
+        qed
+      qed
       have h\<tau>_surj: "\<tau> ` top1_B2 = top1_B2"
         sorry \<comment> \<open>Good sector at r=1 covers all of S1. Interior covered by intermediate value theorem.
            Cancel sector covers the spur + neighborhood.\<close>
