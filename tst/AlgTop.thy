@@ -6094,9 +6094,46 @@ proof -
               thus ?thesis unfolding p_def by (by100 auto)
             qed
             \<comment> \<open>Step 2-8: unfold \\<tau> at p, show good sector, show rescaling gives \\<theta>0, show q decomposition.\<close>
-            show ?thesis sorry \<comment> \<open>\\<tau>(p) = (r0*cos \\<theta>0, r0*sin \\<theta>0) = q.
-               Needs: (1) \\<tau>\\_def unfolding at p, (2) good sector (\\<alpha> \\<ge> \\<theta>\\_cancel),
-               (3) angle rescaling (\\<alpha>-\\<theta>\\_cancel)*n/m = \\<theta>0, (4) q = (r0*cos \\<theta>0, r0*sin \\<theta>0).\<close>
+            \<comment> \<open>Step 2: \\<alpha> \\<ge> \\<theta>\\_cancel (trivial from definition).\<close>
+            have h\<alpha>_ge: "\<alpha> \<ge> \<theta>_cancel"
+              unfolding \<alpha>_def using assms(2)
+              sorry \<comment> \<open>\\<theta>\\_cancel + \\<theta>0*m/n \\<ge> \\<theta>\\_cancel. Needs \\<theta>0 \\<ge> 0 (from arccos \\<ge> 0).\<close>
+            \<comment> \<open>Step 3: angle rescaling.\<close>
+            have h_rescale: "(\<alpha> - \<theta>_cancel) * real ?n / real ?m = \<theta>0"
+            proof -
+              have hm_pos: "real ?m > 0"
+              proof -
+                have "?m \<ge> 3" using assms(2) .
+                hence "?m > 0" by (by100 linarith)
+                thus ?thesis by (by100 simp)
+              qed
+              have hn_pos: "real ?n > 0"
+              proof -
+                have "?n = ?m + 2" by (by100 simp)
+                hence "?n > 0" using assms(2) by (by100 linarith)
+                thus ?thesis by (by100 simp)
+              qed
+              have "\<alpha> - \<theta>_cancel = \<theta>0 * real ?m / real ?n"
+                unfolding \<alpha>_def by (by100 simp)
+              hence "(\<alpha> - \<theta>_cancel) * real ?n = \<theta>0 * real ?m / real ?n * real ?n"
+                by (by100 simp)
+              also have "\<dots> = \<theta>0 * real ?m" using hn_pos by (by100 simp)
+              finally have "(\<alpha> - \<theta>_cancel) * real ?n / real ?m = \<theta>0 * real ?m / real ?m"
+                using hm_pos by (by100 simp)
+              thus ?thesis using hm_pos by (by100 simp)
+            qed
+            \<comment> \<open>Step 4: \\<tau>(p) unfolds to good-sector formula.\<close>
+            have h\<tau>_at_p: "\<tau> p = (r0 * cos ((\<alpha> - \<theta>_cancel) * real ?n / real ?m),
+                                  r0 * sin ((\<alpha> - \<theta>_cancel) * real ?n / real ?m))"
+              sorry \<comment> \<open>\\<tau>\\_def at p \\<noteq> 0 with angle \\<alpha> \\<ge> \\<theta>\\_cancel: good sector formula.\<close>
+            \<comment> \<open>Step 5: combine rescaling.\<close>
+            have "\<tau> p = (r0 * cos \<theta>0, r0 * sin \<theta>0)"
+              using h\<tau>_at_p h_rescale by (by100 simp)
+            \<comment> \<open>Step 6: q = (r0*cos \\<theta>0, r0*sin \\<theta>0) by polar decomposition.\<close>
+            moreover have "q = (r0 * cos \<theta>0, r0 * sin \<theta>0)"
+              sorry \<comment> \<open>Polar decomposition: r0 = sqrt(x^2+y^2), \\<theta>0 = arccos(x/r0) adjusted for y sign.
+                 Standard identity: x = r*cos(arccos(x/r)) and y = r*sin(arccos(x/r)).\<close>
+            ultimately show ?thesis by (by100 simp)
           qed
           ultimately show ?thesis by (by100 blast)
         qed
@@ -7798,3 +7835,5 @@ end
 
 
 
+
+ 
