@@ -2,7 +2,7 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-13, sessions 1316-1416):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1438):
 
 SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
@@ -19,11 +19,15 @@ SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_spur\\_vertex\\_0: FULLY PROVED! (vx\\_e(0) \\<to> vx\\_m(0))
 - h\\_fibres\\_good\\_edge: FULLY PROVED!
 - h\\_fibres: PROVED from forward + backward.
-  h\\_fibres\\_forward: ALL EDGE-INTERIOR CASES PROVED!
+  h\\_fibres\\_forward: ALL EDGE-INTERIOR + ALL VERTEX-EDGE CASES PROVED!
     Interior: C8\\_e. Good-good: C9+shift+C7. Cancel-cancel: collapse+dir.
-    Cancel-good: freshness contradiction. Vertex cases: sorry.
+    Cancel-good: freshness contradiction.
+    Vertex-edge: hC12\\_e contradiction (ALL vertex-edge sorrys CLOSED).
+    Vertex-vertex: sorry (C7 chain transfer — needs vtgt export).
   h\\_fibres\\_backward: sorry.
-  KEY BLOCKER: vertex-edge quotient separation (3 vertex sorrys).
+- hC12\\_e, hC12\\_m: BOTH PROVED from scheme\\_quotient\\_exists(2).
+- scheme\\_quotient\\_exists: BOTH conclusions FULLY PROVED (zero sorry).
+  (2) outputs ALL C1-C12 + vertex-target fact for canonical witnesses.
 - edge\\_interior\\_not\\_vertex: PROVED (polygon-level, C3+C11).
 
 CUT-PASTE (5 sorrys):
