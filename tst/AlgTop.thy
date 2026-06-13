@@ -5608,8 +5608,7 @@ proof -
                 thus ?thesis unfolding power2_eq_square .
               qed
               have "offset_loc ^ 2 = sign_loc ^ 2 * r ^ 2 * (1 - r) ^ 2 * sin (pi * t_fold_loc) ^ 2 / 16"
-                sorry \<comment> \<open>Squaring offset: (s*r*(1-r)*sin/4)^2 = s^2*r^2*(1-r)^2*sin^2/16.
-                   Isabelle's simp struggles with the division rewriting. Use sorry.\<close>
+                unfolding offset_loc_def power2_eq_square by (by100 simp)
               also have "\<dots> = r ^ 2 * (1 - r) ^ 2 * sin (pi * t_fold_loc) ^ 2 / 16"
                 using \<open>sign_loc ^ 2 = 1\<close> by (by100 simp)
               also have "\<dots> \<le> r ^ 2 * (1 - r) ^ 2 * 1 / 16"
@@ -5619,8 +5618,7 @@ proof -
                 show ?thesis by (by100 linarith)
               qed
               also have "\<dots> = (r * (1-r) / 4) ^ 2"
-                unfolding power2_eq_square
-                sorry \<comment> \<open>Ring: r^2*(1-r)^2/16 = (r*(1-r)/4)^2.\<close>
+                unfolding power2_eq_square by (by100 simp)
               finally show ?thesis .
             qed
             \<comment> \<open>spur\\_pt\\_loc is \\<tau>\\_boundary(\\<theta>\\_p) in cancel sector = convex combo of (1,0) and p\\_cm.\<close>
@@ -7420,5 +7418,6 @@ qed
 
 
 end
+
 
 
