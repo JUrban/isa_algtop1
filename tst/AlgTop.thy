@@ -6060,7 +6060,44 @@ proof -
             also have "\<dots> \<le> 1" using hq unfolding top1_B2_def by (by100 simp)
             finally show ?thesis unfolding top1_B2_def by (by100 simp)
           qed
-          moreover have "\<tau> p = q" sorry \<comment> \<open>\\<tau> in good sector rescales (\\<alpha>-\\<theta>\\_cancel)*n/m = \\<theta>0. So \\<tau>(p) = (r0*cos \\<theta>0, r0*sin \\<theta>0) = q.\<close>
+          moreover have "\<tau> p = q"
+          proof -
+            \<comment> \<open>Step 1: p \\<noteq> (0,0) since |p| = |q| > 0.\<close>
+            have hp_ne: "p \<noteq> (0, 0)"
+            proof -
+              have "fst q \<noteq> 0 \<or> snd q \<noteq> 0" using False by (cases q) (by100 auto)
+              hence "fst q ^ 2 + snd q ^ 2 > 0"
+              proof
+                assume "fst q \<noteq> 0" hence "fst q ^ 2 > 0" by (by100 simp)
+                moreover have "snd q ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              next
+                assume "snd q \<noteq> 0" hence "snd q ^ 2 > 0" by (by100 simp)
+                moreover have "fst q ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              hence "r0 > 0" unfolding r0_def using real_sqrt_gt_0_iff by (by100 auto)
+              hence "r0 * cos \<alpha> \<noteq> 0 \<or> r0 * sin \<alpha> \<noteq> 0"
+              proof -
+                assume hr0: "0 < r0"
+                have "(r0 * cos \<alpha>) ^ 2 + (r0 * sin \<alpha>) ^ 2 = r0 ^ 2"
+                proof -
+                  have "(r0 * cos \<alpha>) ^ 2 + (r0 * sin \<alpha>) ^ 2 = r0^2 * (cos \<alpha> ^2 + sin \<alpha> ^2)"
+                    unfolding power2_eq_square by argo
+                  also have "\<dots> = r0^2" using sin_cos_squared_add3 by (by100 simp)
+                  finally show ?thesis .
+                qed
+                moreover have "r0 ^ 2 > 0" using hr0 by (by100 simp)
+                ultimately have "(r0 * cos \<alpha>) ^ 2 + (r0 * sin \<alpha>) ^ 2 > 0" by (by100 linarith)
+                thus ?thesis by (by100 auto)
+              qed
+              thus ?thesis unfolding p_def by (by100 auto)
+            qed
+            \<comment> \<open>Step 2-8: unfold \\<tau> at p, show good sector, show rescaling gives \\<theta>0, show q decomposition.\<close>
+            show ?thesis sorry \<comment> \<open>\\<tau>(p) = (r0*cos \\<theta>0, r0*sin \\<theta>0) = q.
+               Needs: (1) \\<tau>\\_def unfolding at p, (2) good sector (\\<alpha> \\<ge> \\<theta>\\_cancel),
+               (3) angle rescaling (\\<alpha>-\\<theta>\\_cancel)*n/m = \\<theta>0, (4) q = (r0*cos \\<theta>0, r0*sin \\<theta>0).\<close>
+          qed
           ultimately show ?thesis by (by100 blast)
         qed
       qed
