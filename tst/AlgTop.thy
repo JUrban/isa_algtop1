@@ -5803,35 +5803,157 @@ proof -
                 + offset_loc ^ 2 * (fst d_perp ^ 2 + snd d_perp ^ 2)"
               unfolding power2_eq_square by (by100 algebra)
             \<comment> \<open>Bound each term.\<close>
+            \<comment> \<open>Strategy: bound cross term via AM-GM (avoids Cauchy-Schwarz).
+               AM-GM: 2|a\\_i*d\\_i| \\<le> a\\_i^2 + d\\_i^2, so
+               |a\\<cdot>d| \\<le> |a\\_1||d\\_1| + |a\\_2||d\\_2| \\<le> (a\\_1^2+d\\_1^2)/2 + (a\\_2^2+d\\_2^2)/2
+               = (|a|^2+|d|^2)/2 \\<le> (1+4)/2 = 5/2.
+               Total bound: r^2 + 2r|o|*(5/2) + o^2*4 = r^2 + 5r|o| + 4o^2.
+               With |o| \\<le> r(1-r)/4: \\<le> r^2*(10-7r+r^2)/4.
+               Factor: r^2*(10-7r+r^2) - 4 = (r-1)*(r^3-6r^2+4r+4).
+               On [0,1]: (r-1) \\<le> 0 and (r^3-6r^2+4r+4) \\<ge> 0, so product \\<le> 0.\<close>
             also have "\<dots> \<le> r ^ 2 * 1
-                + 2 * r * abs offset_loc * 2
-                + (r * (1-r) / 4) ^ 2 * 4"
+                + 2 * r * abs offset_loc * (5/2)
+                + offset_loc ^ 2 * 4"
             proof -
               \<comment> \<open>Term 1: r^2 * |spur|^2 \\<le> r^2.\<close>
               have ht1: "r ^ 2 * (fst spur_pt_loc ^ 2 + snd spur_pt_loc ^ 2) \<le> r ^ 2 * 1"
                 using mult_left_mono[OF hspur_in_B2] by (by100 simp)
-              \<comment> \<open>Term 2: cross term bounded by 2*r*|offset|*|spur|*|d| via Cauchy-Schwarz.
-                 |spur\\<cdot>d| \\<le> |spur|*|d| \\<le> 1*2 = 2.\<close>
+              \<comment> \<open>Term 2: cross term via |x*y| \\<le> x*y or -(x*y). Bound |a\\<cdot>d| \\<le> 5/2 via AM-GM.\<close>
+              have h_inner_bound: "abs (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp) \<le> 5/2"
+                using hspur_in_B2 hd_sq_bound
+                sorry \<comment> \<open>AM-GM: |a\\<cdot>d| \\<le> (|a|^2+|d|^2)/2 \\<le> (1+4)/2 = 5/2.\<close>
               have ht2: "2 * r * offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)
-                  \<le> 2 * r * abs offset_loc * 2"
-                sorry \<comment> \<open>Cauchy-Schwarz: |spur\\<cdot>d| \\<le> |spur|*|d| \\<le> 1*2 = 2.
-                   Then multiply by 2*r.\<close>
-              \<comment> \<open>Term 3: offset^2 * |d|^2 \\<le> (r(1-r)/4)^2 * 4.\<close>
-              have ht3: "offset_loc ^ 2 * (fst d_perp ^ 2 + snd d_perp ^ 2)
-                  \<le> (r * (1-r) / 4) ^ 2 * 4"
+                  \<le> 2 * r * abs offset_loc * (5/2)"
               proof -
-                from mult_mono'[OF hoffset hd_sq_bound]
-                show ?thesis by (by100 simp)
+                have "offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)
+                    \<le> abs offset_loc * abs (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)"
+                proof -
+                  have "offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)
+                      \<le> abs (offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp))"
+                    by (rule abs_ge_self)
+                  also have "\<dots> = abs offset_loc * abs (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)"
+                    by (rule abs_mult)
+                  finally show ?thesis .
+                qed
+                also have "\<dots> \<le> abs offset_loc * (5/2)"
+                  using mult_left_mono[OF h_inner_bound] by (by100 simp)
+                finally have h_cross_bound: "offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)
+                    \<le> abs offset_loc * (5/2)" .
+                have "r \<ge> 0" using hr_pos by (by100 linarith)
+                have "2 * r * offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)
+                    \<le> 2 * r * (abs offset_loc * (5/2))"
+                proof -
+                  from mult_left_mono[OF h_cross_bound \<open>r \<ge> 0\<close>]
+                  have "r * (offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp))
+                      \<le> r * (abs offset_loc * (5/2))" .
+                  thus ?thesis by (by100 linarith)
+                qed
+                thus ?thesis by (by100 linarith)
               qed
+              \<comment> \<open>Term 3: offset^2 * |d|^2 \\<le> offset^2 * 4.\<close>
+              have ht3: "offset_loc ^ 2 * (fst d_perp ^ 2 + snd d_perp ^ 2) \<le> offset_loc ^ 2 * 4"
+                using mult_left_mono[OF hd_sq_bound] by (by100 simp)
               show ?thesis using ht1 ht2 ht3 by (by100 linarith)
             qed
-            \<comment> \<open>Simplify: r^2 + 4*r*|o| + (r(1-r)/4)^2*4 \\<le> 1.
-               |o| \\<le> r(1-r)/4, so 4*r*|o| \\<le> r^2*(1-r).
-               (r(1-r)/4)^2*4 = r^2*(1-r)^2/4.
-               Total: r^2 + r^2*(1-r) + r^2*(1-r)^2/4 = r^2*(1+(1-r)+(1-r)^2/4) = (r*(2+(1-r))/2)^2
-               = (r*(3-r)/2)^2. And r(3-r)/2 \\<le> 1 for r \\<in> [0,1].\<close>
+            \<comment> \<open>Now: r^2 + 5*r*|o| + 4*o^2 \\<le> 1. Use |o| \\<le> r(1-r)/4.\<close>
             also have "\<dots> \<le> 1"
-              sorry \<comment> \<open>r^2 + 4*r*|offset| + r^2*(1-r)^2/4 \\<le> 1. Polynomial bound.\<close>
+            proof -
+              have hr_ge0: "r \<ge> 0" using hr_pos by (by100 linarith)
+              have h1r_ge0: "1 - r \<ge> 0" using hr_le1 by (by100 linarith)
+              \<comment> \<open>|offset| \\<le> r*(1-r)/4.\<close>
+              have ho_r1r4: "r * (1-r) / 4 \<ge> 0"
+              proof -
+                from mult_nonneg_nonneg[OF hr_ge0 h1r_ge0]
+                show ?thesis by (by100 simp)
+              qed
+              have ho_abs: "abs offset_loc \<le> r * (1-r) / 4"
+              proof -
+                have h_pos: "offset_loc \<le> r * (1-r) / 4"
+                  by (rule power2_le_imp_le[OF hoffset ho_r1r4])
+                have h_neg: "- offset_loc \<le> r * (1-r) / 4"
+                proof -
+                  have "(-offset_loc) ^ 2 = offset_loc ^ 2"
+                    unfolding power2_eq_square by (by100 simp)
+                  hence "(-offset_loc) ^ 2 \<le> (r * (1-r) / 4) ^ 2" using hoffset by (by100 linarith)
+                  thus ?thesis by (rule power2_le_imp_le[OF _ ho_r1r4])
+                qed
+                from h_pos h_neg show ?thesis by (by100 linarith)
+              qed
+              \<comment> \<open>Substitute bound into expression.\<close>
+              have h1: "2 * r * abs offset_loc * (5/2) \<le> 2 * r * (r*(1-r)/4) * (5/2)"
+              proof -
+                have "2 * r * (5/2) \<ge> 0" using hr_ge0 by (by100 simp)
+                from mult_left_mono[OF ho_abs this]
+                show ?thesis by (by100 simp)
+              qed
+              have h2: "offset_loc ^ 2 * 4 \<le> (r*(1-r)/4)^2 * 4"
+                using hoffset by (by100 linarith)
+              \<comment> \<open>Total: r^2 + 5*r^2*(1-r)/4 + r^2*(1-r)^2/4 = r^2*(10-7r+r^2)/4.\<close>
+              have "r^2 * 1 + 2 * r * (r*(1-r)/4) * (5/2) + (r*(1-r)/4)^2 * 4
+                  = r^2 * (10 - 7*r + r^2) / 4"
+                unfolding power2_eq_square by argo
+              \<comment> \<open>Show r^2*(10-7r+r^2)/4 \\<le> 1, i.e., r^2*(10-7r+r^2) \\<le> 4.
+                 Equivalently: (r-1)*(r^3-6r^2+4r+4) \\<le> 0.
+                 On [0,1]: (r-1) \\<le> 0 and (r^3-6r^2+4r+4) > 0 (positive at r=0,1).\<close>
+              moreover have "r^2 * (10 - 7*r + r^2) / 4 \<le> 1"
+              proof -
+                \<comment> \<open>Equivalent: r^4 - 7r^3 + 10r^2 - 4 \\<le> 0.
+                   Factor: (r-1)*(r^3-6r^2+4r+4).
+                   On [0,1]: (r-1) \\<le> 0 and (r^3-6r^2+4r+4) \\<ge> 0.\<close>
+                have hfactor: "r^2 * (10 - 7*r + r^2) - 4 = (r - 1) * (r^3 - 6*r^2 + 4*r + 4)"
+                  unfolding power2_eq_square power3_eq_cube by argo
+                have hle0: "r - 1 \<le> 0" using hr_le1 by (by100 linarith)
+                have hge0: "r^3 - 6*r^2 + 4*r + 4 \<ge> 0"
+                proof -
+                  \<comment> \<open>At r=0: 4. At r=1: 3. Minimum on [0,1] is at critical points.
+                     f'(r) = 3r^2-12r+4. Roots: (12\\<pm>\\<surd>96)/6 \\<approx> 0.35, 3.65. Only 0.35 in [0,1].
+                     f(0.35) \\<approx> 4+1.4-0.735-0.043 = 4.62 > 0. So min > 0.\<close>
+                  have "r^3 - 6*r^2 + 4*r + 4 = r^3 - 6*r^2 + 4*r + 4" by (by100 simp)
+                  \<comment> \<open>Bound: r^3 \\<le> r (for r \\<in> [0,1]), so r^3-6r^2+4r+4 \\<ge> r-6r^2+4r+4 = 5r-6r^2+4.
+                     And 5r-6r^2+4 = -6(r^2-5r/6)+4 = -6(r-5/12)^2+25/24+4 > 0.\<close>
+                  \<comment> \<open>r^2 \\<le> r from r \\<in> [0,1].\<close>
+                  have hr2r: "r^2 \<le> r"
+                  proof -
+                    from mult_left_mono[OF hr_le1 hr_ge0]
+                    show ?thesis unfolding power2_eq_square by (by100 simp)
+                  qed
+                  \<comment> \<open>r^3 \\<le> r from r^2 \\<le> r and r \\<ge> 0.\<close>
+                  have hr3r: "r^3 \<le> r"
+                  proof -
+                    from mult_right_mono[OF hr2r hr_ge0]
+                    have "r^2 * r \<le> r * r" .
+                    hence "r^3 \<le> r^2" unfolding power2_eq_square power3_eq_cube by (by100 linarith)
+                    thus ?thesis using hr2r by (by100 linarith)
+                  qed
+                  \<comment> \<open>r^3-6r^2+4r+4 = r(r^2-6r+4)+4. On [0,1]: r^2-6r+4 \\<ge> -1 (at r=1),
+                     so r(r^2-6r+4) \\<ge> -1, hence +4 \\<ge> 3 > 0.\<close>
+                  have "r^2 - 6*r + 4 \<ge> -1"
+                  proof -
+                    have "r - 1 \<le> 0" using hr_le1 by (by100 linarith)
+                    moreover have "r - 5 \<le> 0" using hr_le1 by (by100 linarith)
+                    ultimately have "(r-1)*(r-5) \<ge> 0"
+                      using mult_nonpos_nonpos by (by100 blast)
+                    moreover have "(r-1)*(r-5) = r^2 - 6*r + 5"
+                      unfolding power2_eq_square by argo
+                    ultimately have "r^2 - 6*r + 5 \<ge> 0" by (by100 linarith)
+                    thus ?thesis by (by100 linarith)
+                  qed
+                  hence "r * (r^2 - 6*r + 4) \<ge> r * (-1)"
+                    using mult_left_mono[of "-1" "r^2-6*r+4" r] hr_ge0 by (by100 linarith)
+                  hence "r * (r^2 - 6*r + 4) \<ge> -r" by (by100 simp)
+                  hence "r * (r^2 - 6*r + 4) + 4 \<ge> -r + 4" by (by100 linarith)
+                  moreover have "-r + 4 \<ge> 3" using hr_le1 by (by100 linarith)
+                  moreover have "r^3 - 6*r^2 + 4*r + 4 = r * (r^2 - 6*r + 4) + 4"
+                    unfolding power2_eq_square power3_eq_cube by argo
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+                have "(r - 1) * (r^3 - 6*r^2 + 4*r + 4) \<le> 0"
+                  using mult_nonpos_nonneg[OF hle0 hge0] .
+                hence "r^2 * (10 - 7*r + r^2) - 4 \<le> 0" using hfactor by (by100 linarith)
+                thus ?thesis by (by100 linarith)
+              qed
+              ultimately show ?thesis using h1 h2 by (by100 linarith)
+            qed
             finally show ?thesis unfolding top1_B2_def by (by100 simp)
           qed
         qed
@@ -7474,6 +7596,26 @@ qed
 
 
 end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
 
 
 
