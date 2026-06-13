@@ -1278,7 +1278,7 @@ AlgTop.thy|lemma|quotient_of_scheme_cut_paste_proper|4543
 ac/AlgTopCached.thy|lemma|quotient_of_scheme_extract|31345
 wh/AlgTopWedgeHelpers.thy|lemma|quotient_of_scheme_extract_full|329
 AlgTop.thy|lemma|quotient_of_scheme_uncancel_front|3309
-AlgTop.thy|lemma|quotient_of_scheme_uncancel_front_proper|5501
+AlgTop.thy|lemma|quotient_of_scheme_uncancel_front_proper|5910
 AlgTop.thy|lemma|quotient_of_scheme_uncancel_proved|3333
 ac/AlgTopCached.thy|lemma|quotient_projection_properties|8976
 AlgTop.thy|lemma|quotient_scheme_length_ge3|58
@@ -1952,8 +1952,8 @@ i/Top1_Ch5_8.thy|lemma|uniform_metric_conv_imp_pointwise_unif|11334
 i/Top1_Ch5_8.thy|lemma|uniform_metric_lt_imp_d_lt|14354
 i/Top1_Ch5_8.thy|lemma|uniform_metric_pointwise_lt|14336
 ac/AlgTopCached.thy|lemma|unit_interval_reversal_homeomorphism|49000
-AlgTop.thy|lemma|valid_equiv_preserves_quotient_homeo|5878
-AlgTop.thy|lemma|valid_operation_preserves_quotient_homeo|5541
+AlgTop.thy|lemma|valid_equiv_preserves_quotient_homeo|6287
+AlgTop.thy|lemma|valid_operation_preserves_quotient_homeo|5950
 i/Top1_Ch9_13.thy|lemma|vector_field_must_point_inward|13533
 ac5/AlgTopCached5.thy|lemma|wedge_circles_pi1_free|2814
 i/Top1_Ch5_8.thy|lemma|weighted_sum_epsilon_delta|29816
@@ -2193,10 +2193,10 @@ ac8/AlgTopCached8.thy|theorem|Theorem_74_4_fund_group_m_projective|8230
 ac8/AlgTopCached8.thy|theorem|Theorem_75_1_H1_abelianization|3787
 ac8/AlgTopCached8.thy|theorem|Theorem_75_3_H1_n_torus|4472
 ac12/AlgTopCached12.thy|theorem|Theorem_75_4_H1_m_projective|975
-AlgTop.thy|theorem|Theorem_76_elementary_operations|5916
-AlgTop.thy|theorem|Theorem_77_5_classification|6893
-AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|5976
-AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|6795
+AlgTop.thy|theorem|Theorem_76_elementary_operations|6325
+AlgTop.thy|theorem|Theorem_77_5_classification|7302
+AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|6385
+AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|7204
 ac4/AlgTopCached4.thy|theorem|Theorem_79_2|1524
 ac4/AlgTopCached4.thy|theorem|Theorem_79_4|2333
 ac4/AlgTopCached4.thy|theorem|Theorem_80_1_universal_unique|3345

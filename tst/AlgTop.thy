@@ -2,11 +2,14 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (32 sorrys as of 2026-06-13, session 1316):
+\<comment> \<open>SORRY ANALYSIS (32 sorrys as of 2026-06-13, sessions 1316-1317):
 
 SPUR COLLAPSE (4 sorrys, decomposed from 1):
 - h\\_tau\\_cont: \\<tau> continuous on B2 (piecewise smooth, matching at sector boundaries)
-- h\\_tau\\_range: \\<tau> maps B2 into B2 (norm bound, r > 0/\\<le>1/r^2 proved, sector bound TODO)
+- h\\_tau\\_range: \\<tau> maps B2 into B2. NEARLY DONE:
+  Good sector PROVED (cos^2+sin^2=1). Cancel sector: all bounds proved
+  (hp\\_cm\\_le, hconv\\_bound, hd\\_sq\\_bound, hoffset, h\\_tau\\_cancel, hspur\\_in\\_B2 all PROVED).
+  Only 1 sorry: final triangle inequality assembly (Cauchy-Schwarz + polynomial bound).
 - h\\_tau\\_surj: \\<tau> maps B2 onto B2 (IVT + good sector coverage)
 - h\\_fibres: fibre matching q\\_e x = q\\_e y \\<longleftrightarrow> q\\_m(spur\\_f x) = q\\_m(spur\\_f y)
   spur\\_f continuity + surjectivity PROVED from these sub-sorrys.
@@ -7433,6 +7436,7 @@ qed
 
 
 end
+
 
 
 
