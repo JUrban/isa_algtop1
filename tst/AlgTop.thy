@@ -2,40 +2,54 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (25 sorrys as of 2026-06-12):
+\<comment> \<open>SORRY ANALYSIS (32 sorrys as of 2026-06-13, session 1316):
 
-CRITICAL PATH (15 sorrys):
-- Spur collapse (1): fan construction + fibre matching for front\\_cancel\\_proper
-  → cascades to front\\_cancel (3253) + uncancel\\_front (3264)
-- Cut-paste same-space (3): quotient\\_of\\_scheme\\_cut\\_paste/2/opp (lines 78, 90, 118)
-  Need edge permutation geometry
-- Cut-paste reverse (2): v\\_cut\\_paste\\_reverse/2\\_reverse (lines 3484, 3491)
-- Genuinely false (2): length(target) < 3 after cancel (lines 3451, 3618)
-  Fix: add length precondition to v\\_cancel (requires cached session change)
-- Uniqueness vertex (2): C7 chain transitivity for vertex identifications (lines 4518, 4630)
-- Final assembly (3): Thm78.2 induction, scheme extraction, sphere realization
+SPUR COLLAPSE (4 sorrys, decomposed from 1):
+- h\\_tau\\_cont: \\<tau> continuous on B2 (piecewise smooth, matching at sector boundaries)
+- h\\_tau\\_range: \\<tau> maps B2 into B2 (norm bound, r > 0/\\<le>1/r^2 proved, sector bound TODO)
+- h\\_tau\\_surj: \\<tau> maps B2 onto B2 (IVT + good sector coverage)
+- h\\_fibres: fibre matching q\\_e x = q\\_e y \\<longleftrightarrow> q\\_m(spur\\_f x) = q\\_m(spur\\_f y)
+  spur\\_f continuity + surjectivity PROVED from these sub-sorrys.
+  Cascades to front\\_cancel (3288) + uncancel\\_front (3299).
 
-NOT ON CRITICAL PATH (10 sorrys):
-- Context-left structural (10): suffix operations != full-scheme operations
-  Classification chain only uses v\\_relabel(fresh) context-left, which IS proved.
-  Expert plan: restrict v\\_context\\_left to proper schemes or refactor.
+CUT-PASTE (5 sorrys):
+- Same-space (3): quotient\\_of\\_scheme\\_cut\\_paste/2/opp (lines 113, 125, 153)
+- Proper variants (2): cut-reglue homeo between canonical quotients (lines 4350, 4399)
+  Structural proof done: canonical quotients + bridge + transfer. Only cut-reglue sorry.
 
-DEAD CODE (0 sorrys counted, 1 relabel sorry in Theorem\\_76):
-- Relabel merge (1): in Theorem\\_76 elementary operations (line 5373)
+VERTEX UNIQUENESS (5 sorrys, decomposed from 2):
+- Forward: vertex-vertex (1), vertex-edge-interior (2) — lines 4219, 4226, 4314
+- Backward: vertex case (1) — line 4427
+  Vertex extraction infrastructure PROVED (phi maps vx1(k) to vx2(k)).
 
-KEY INFRASTRUCTURE (PROVED across sessions 1-34):
+GENUINELY FALSE (2 sorrys): length(u@v) < 3 after cancel — lines 5376, 5543
+  Fix: add length precondition (requires cached session change)
+
+CONTEXT-LEFT (10 sorrys): suffix operations \\<noteq> full-scheme operations — lines 5624-5782
+  PROVED: v\\_relabel(fresh), v\\_cancel(long), v\\_uncancel, v\\_cancel\\_reverse,
+          v\\_cut\\_paste, v\\_cut\\_paste\\_opp, v\\_flip\\_label(fresh).
+  SORRY: v\\_rotate(inner), v\\_invert(inner), v\\_flip\\_label(non-fresh),
+         v\\_cut\\_paste\\_reverse, v\\_cut\\_paste2, v\\_context\\_left(recursive).
+
+CUT-PASTE REVERSE (2 sorrys): lines 5409, 5416
+  Need reverse of cut-paste geometry.
+
+FINAL ASSEMBLY (3 sorrys):
+- Thm 78.2 induction (line 6666): polygon-pasting
+- Scheme extraction (line 6707): construct scheme from quotient map
+- Sphere realization (line 6749): sphere scheme quotient \\<cong> S2
+
+DEAD CODE (1 sorry): Theorem\\_76 relabel (line 5849)
+
+KEY INFRASTRUCTURE (all PROVED):
 - scheme\\_quotient\\_exists, scheme\\_quotient\\_uniqueness, compact\\_surj\\_quotient
 - scheme\\_quotient\\_transfer\\_along\\_homeomorphism (all 11 conditions)
-- front\\_cancel\\_proper skeleton (modulo spur collapse)
+- front\\_cancel\\_proper skeleton (modulo spur collapse sub-sorrys)
 - quotient\\_of\\_scheme\\_uncancel\\_front\\_proper (for proper schemes)
-- cancel\\_pair\\_prepend\\_proper (shared properness lemma)
-- centroid-is-interior (cross product sum argument)
-- Theorem\\_76: 9/10 elementary\\<to>valid cases proved
-- continuous\\_on\\_from\\_top1: bridge lemma top1\\_continuous\\_map\\_on \\<to> continuous\\_on
-- Disk homeomorphisms \\<psi>\\_e, \\<psi>\\_m extracted + continuous\\_on proved
-- \\<tau>: B2 \\<to> B2 defined (sector-squeezing), spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e as explicit exI witness
-- Continuity chain PROVED: \\<psi>\\_e \\<checkmark> \\<to> \\<tau> \\<to> \\<psi>\\_m\\<inverse> \\<checkmark> \\<to> spur\\_f \\<checkmark> (via continuous\\_on\\_compose)
-- Fibre matching: all cases algebraically verified (sessions 2-4)\<close>
+- spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e continuity + surjectivity (from sub-sorrys)
+- Continuity chain: \\<psi>\\_e \\<checkmark> \\<to> \\<tau> (sorry) \\<to> \\<psi>\\_m\\<inverse> \\<checkmark> \\<to> spur\\_f \\<checkmark>
+- Vertex extraction: \\<phi>(vx1(k)) = vx2(k) for k < n
+- r > 0, r \\<le> 1, r^2 = fst p^2 + snd p^2 (for \\<tau> range proof)\<close>
 
 \<comment> \<open>valid\\_operation\\_reverse, valid\\_equiv\\_sym: cached in AlgTopCached14.\<close>
 \<comment> \<open>§77 normal form chain (scheme\\_normal\\_form\\_valid + all valid helpers): cached in AlgTopCached14.\<close>
@@ -5331,11 +5345,16 @@ proof -
             have "fst p ^ 2 + snd p ^ 2 \<ge> 0" by (rule sum_power2_ge_zero)
             thus ?thesis unfolding r_def using real_sqrt_pow2 by (by100 blast)
           qed
-          \<comment> \<open>Both sectors map into B2. Good sector: (r*cos,r*sin) has norm r \\<le> 1.
-             Cancel sector: r*spur + offset*d\\_perp has norm \\<le> r + r(1-r)/2 \\<le> 1.\<close>
+          \<comment> \<open>Both sectors map into B2. Need: fst(\\<tau> p)^2 + snd(\\<tau> p)^2 \\<le> 1.\<close>
+          \<comment> \<open>Key property: \\<tau> p = r * (boundary\\_point) + small\\_offset. Since r \\<le> 1 and
+             boundary\\_point has norm \\<le> 1, the main term has norm \\<le> r. The offset is
+             proportional to r*(1-r) which vanishes at r=0 and r=1.\<close>
           show ?thesis unfolding top1_B2_def
-            sorry \<comment> \<open>Both sectors: good = r*(cos,sin) \\<in> B2; cancel = r*spur + offset*d\\_perp \\<in> B2.
-               Good: norm = r \\<le> 1 (cos^2+sin^2=1). Cancel: triangle inequality + convexity.\<close>
+            sorry \<comment> \<open>Good sector: (r*cos \\<theta>', r*sin \\<theta>') has norm r \\<le> 1.
+               Cancel sector: r*spur + offset*d\\_perp. Need norm \\<le> 1.
+               Bound: |\\<tau>(p)| \\<le> r*|spur\\_pt| + |offset|*|d\\_perp|
+                    \\<le> r*1 + r*(1-r)/4 * 2 = r*(1 + (1-r)/2)
+                    = r*(3-r)/2 \\<le> 1 for r \\<in> [0,1].\<close>
         qed
       qed
       have h\<tau>_surj: "\<tau> ` top1_B2 = top1_B2"
