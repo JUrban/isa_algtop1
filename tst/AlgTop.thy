@@ -5581,7 +5581,23 @@ proof -
               sorry \<comment> \<open>From offset = sign*r*(1-r)*sin(\\<pi>*t)/4, |sign|=1, |sin|\\<le>1.\<close>
             \<comment> \<open>spur\\_pt\\_loc is \\<tau>\\_boundary(\\<theta>\\_p) in cancel sector = convex combo of (1,0) and p\\_cm.\<close>
             have hspur_in_B2: "fst spur_pt_loc ^ 2 + snd spur_pt_loc ^ 2 \<le> 1"
-              sorry \<comment> \<open>From \\<tau>\\_boundary in cancel sector + hconv\\_bound.\<close>
+            proof -
+              \<comment> \<open>spur\\_pt\\_loc = \\<tau>\\_boundary(\\<theta>\\_p) in cancel sector = convex combo.\<close>
+              have h\<theta>_lt: "\<not> \<theta>_p \<ge> \<theta>_cancel" using \<open>\<not> \<theta>_p \<ge> \<theta>_cancel\<close> .
+              define tf where "tf = min (\<theta>_p * real ?n / (2*pi)) ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi))"
+              have hspur_eq: "spur_pt_loc = ((1-tf) + tf * fst p_cm, tf * snd p_cm)"
+                unfolding spur_pt_loc_def \<tau>_boundary_def tf_def \<theta>_cancel_def
+                using h\<theta>_lt sorry \<comment> \<open>Let-binding unfolding + \\<theta>\\_cancel substitution.\<close>
+              \<comment> \<open>Show 0 \\<le> tf \\<le> 1.\<close>
+              have htf_ge0: "tf \<ge> 0"
+                sorry \<comment> \<open>Both min arguments \\<ge> 0 (from \\<theta>\\_p \\<ge> 0, n \\<ge> 3, pi > 0).\<close>
+              have htf_le1: "tf \<le> 1"
+                sorry \<comment> \<open>min(\\<theta>*n/(2\\<pi>), (\\<theta>\\_cancel-\\<theta>)*n/(2\\<pi>)) \\<le> 1 for \\<theta> \\<in> [0, \\<theta>\\_cancel].\<close>
+              \<comment> \<open>Apply hconv\\_bound.\<close>
+              from hconv_bound[OF htf_ge0 htf_le1]
+              have "((1-tf) + tf * fst p_cm) ^ 2 + (tf * snd p_cm) ^ 2 \<le> 1" .
+              thus ?thesis using hspur_eq by (by100 simp)
+            qed
             \<comment> \<open>Triangle inequality: |(r*s + o*d)|^2 \\<le> (r*|s| + |o|*|d|)^2 \\<le> 1.
                This is the hardest part: vector norm bound via Cauchy-Schwarz.\<close>
             show ?thesis unfolding top1_B2_def
