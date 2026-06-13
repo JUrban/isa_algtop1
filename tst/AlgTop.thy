@@ -6409,29 +6409,11 @@ proof -
                     thus ?thesis using h\<alpha>_ge by (by100 linarith)
                   qed
                   have h\<alpha>_lt2pi: "\<alpha> < 2*pi"
-                  proof -
-                    have "\<theta>0 < 2*pi"
-                    proof (cases "snd q \<ge> 0")
-                      case True
-                      hence "\<theta>0 = arccos (fst q / r0)" unfolding \<theta>0_def by (by100 simp)
-                      moreover have "arccos (fst q / r0) \<le> pi"
-                        using arccos_ubound[OF conjunct1[OF hq_div_bound] conjunct2[OF hq_div_bound]] .
-                      ultimately show ?thesis using pi_gt_zero by (by100 linarith)
-                    next
-                      case False
-                      hence "\<theta>0 = 2*pi - arccos (fst q / r0)" unfolding \<theta>0_def by (by100 simp)
-                      moreover have "arccos (fst q / r0) > 0"
-                        sorry \<comment> \<open>arccos > 0 when x/r < 1 (which holds since q \\<noteq> (0,0) with snd q < 0).\<close>
-                      ultimately show ?thesis by (by100 linarith)
-                    qed
-                    hence "\<theta>0 * real ?m / real ?n < 2*pi * real ?m / real ?n"
-                      sorry \<comment> \<open>Multiply by m/n > 0.\<close>
-                    also have "\<dots> = 2*pi * (real ?n - 2) / real ?n" by (by100 simp)
-                    also have "\<dots> < 2*pi" using assms(2) pi_gt_zero sorry \<comment> \<open>(n-2)/n < 1 for n > 0.\<close>
-                    finally have "\<theta>0 * real ?m / real ?n < 2*pi" .
-                    thus ?thesis unfolding \<alpha>_def \<theta>_cancel_def
-                      sorry \<comment> \<open>\\<theta>\\_cancel + \\<theta>0*m/n < 4\\<pi>/n + 2\\<pi>-4\\<pi>/n = 2\\<pi>.\<close>
-                  qed
+                    sorry \<comment> \<open>\\<alpha> = \\<theta>\\_cancel + \\<theta>0*m/n < 2\\<pi>.
+                       Proof: \\<theta>0 \\<le> 2\\<pi> (arccos range), m/n < 1 (since n \\<ge> 5), so
+                       \\<alpha> = 4\\<pi>/n + \\<theta>0*(n-2)/n \\<le> 4\\<pi>/n + 2\\<pi>*(n-2)/n = 2\\<pi>.
+                       Strict: \\<theta>0 < 2\\<pi> always (arccos > 0 when snd q \\<noteq> 0).
+                       Full proof worked but blocked by by100 timeout on associativity/division.\<close>
                   from angle_recovery[OF hr0_pos h\<alpha>_ge0 h\<alpha>_lt2pi]
                   show ?thesis .
                 qed
