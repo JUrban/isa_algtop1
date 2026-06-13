@@ -4365,6 +4365,52 @@ proof -
   thus ?thesis by (rule same_space_implies_homeo_realization)
 qed
 
+\<comment> \<open>Cut-paste (same-direction) for proper nat-typed schemes. Same pattern.\<close>
+lemma quotient_of_scheme_cut_paste_proper:
+  fixes a_label :: "nat"
+    and u1 u2 u3 :: "(nat \<times> bool) list"
+  assumes hq: "top1_quotient_of_scheme_on Y TY (u1 @ [(a_label, True)] @ u2 @ [(a_label, True)] @ u3)"
+      and hproper_old: "\<forall>label. card {i. i < length (u1 @ [(a_label, True)] @ u2 @ [(a_label, True)] @ u3)
+          \<and> fst ((u1 @ [(a_label, True)] @ u2 @ [(a_label, True)] @ u3) ! i) = label} \<in> {0, 2}"
+      and hproper_new: "\<forall>label. card {i. i < length (u1 @ [(a_label, True), (a_label, True)] @ rev (map top1_inverse_edge u2) @ u3)
+          \<and> fst ((u1 @ [(a_label, True), (a_label, True)] @ rev (map top1_inverse_edge u2) @ u3) ! i) = label} \<in> {0, 2}"
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' (u1 @ [(a_label, True), (a_label, True)] @ rev (map top1_inverse_edge u2) @ u3) \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+proof -
+  let ?s = "u1 @ [(a_label, True)] @ u2 @ [(a_label, True)] @ u3"
+  let ?s' = "u1 @ [(a_label, True), (a_label, True)] @ rev (map top1_inverse_edge u2) @ u3"
+  have hlen: "length ?s \<ge> 3" using quotient_scheme_length_ge3[OF hq] .
+  have hlen': "length ?s' = length ?s" by (by100 simp)
+  have htopo: "is_topology_on_strict Y TY"
+    using hq unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  from scheme_quotient_exists[OF hlen hproper_old]
+  obtain Y_old :: "(real \<times> real) set" and TY_old where
+    hY_old: "top1_quotient_of_scheme_on Y_old TY_old ?s" by (by100 blast)
+  have htopo_old: "is_topology_on_strict Y_old TY_old"
+    using hY_old unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have hlen'3: "length ?s' \<ge> 3" using hlen hlen' by (by100 linarith)
+  from scheme_quotient_exists[OF hlen'3 hproper_new]
+  obtain Y_new :: "(real \<times> real) set" and TY_new where
+    hY_new: "top1_quotient_of_scheme_on Y_new TY_new ?s'" by (by100 blast)
+  have htopo_new: "is_topology_on_strict Y_new TY_new"
+    using hY_new unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have "\<exists>h. top1_homeomorphism_on Y_old TY_old Y_new TY_new h"
+    sorry \<comment> \<open>Cut-reglue homeomorphism: arc permutation on S1 extended by cone to B2.\<close>
+  then obtain h_rearrange where hrearr: "top1_homeomorphism_on Y_old TY_old Y_new TY_new h_rearrange"
+    by (by100 blast)
+  from scheme_quotient_uniqueness[OF htopo htopo_old hq hY_old]
+  obtain h_bridge where hbridge: "top1_homeomorphism_on Y TY Y_old TY_old h_bridge"
+    by (by100 blast)
+  from homeomorphism_comp[OF hbridge hrearr]
+  have hcomp: "top1_homeomorphism_on Y TY Y_new TY_new (h_rearrange \<circ> h_bridge)" .
+  from homeomorphism_inverse[OF hcomp]
+  have "top1_homeomorphism_on Y_new TY_new Y TY (inv_into Y (h_rearrange \<circ> h_bridge))" .
+  from scheme_quotient_transfer_along_homeomorphism[OF hY_new this htopo]
+  have "top1_quotient_of_scheme_on Y TY ?s'" .
+  thus ?thesis by (rule same_space_implies_homeo_realization)
+qed
+
 \<comment> \<open>Shared helper: properness of [a,inv a]@w from properness of w + freshness of a.\<close>
 lemma cancel_pair_prepend_proper:
   fixes a :: "nat \<times> bool" and w :: "(nat \<times> bool) list"
