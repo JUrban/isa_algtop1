@@ -5564,14 +5564,29 @@ proof -
             case False
             \<comment> \<open>Cancel sector: \\<tau>(p) = r*spur\\_pt + offset*d\\_perp.
                Need norm \\<le> 1 via triangle inequality + all proved bounds.\<close>
+            \<comment> \<open>Cancel sector: \\<tau>(p) = r*spur\\_pt + offset*d\\_perp.\<close>
+            have h\<theta>_lt: "\<not> \<theta>_p \<ge> \<theta>_cancel" using False .
+            \<comment> \<open>From h\\<tau>\\_simp: extract \\<tau>(p) components in cancel sector.\<close>
+            define spur_pt_loc where "spur_pt_loc = \<tau>_boundary \<theta>_p"
+            define t_fold_loc where "t_fold_loc = min (\<theta>_p * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>_p) * real ?n / (2*pi))"
+            define sign_loc where "sign_loc = (if \<theta>_p \<le> \<theta>_mid then (1::real) else -1)"
+            define offset_loc where "offset_loc = sign_loc * r * (1 - r) * sin (pi * t_fold_loc) / 4"
+            have h\<tau>_cancel: "\<tau> p = (r * fst spur_pt_loc + offset_loc * fst d_perp,
+                                    r * snd spur_pt_loc + offset_loc * snd d_perp)"
+              using h\<tau>_simp h\<theta>_lt
+              unfolding spur_pt_loc_def t_fold_loc_def sign_loc_def offset_loc_def
+              sorry \<comment> \<open>\\<tau> definition let-binding unfolding in cancel sector. Structural simp.\<close>
+            \<comment> \<open>Bound: |offset\\_loc| \\<le> r*(1-r)/4 (from |sin| \\<le> 1 and |sign| = 1).\<close>
+            have hoffset: "offset_loc ^ 2 \<le> (r * (1-r) / 4) ^ 2"
+              sorry \<comment> \<open>From offset = sign*r*(1-r)*sin(\\<pi>*t)/4, |sign|=1, |sin|\\<le>1.\<close>
+            \<comment> \<open>spur\\_pt\\_loc is \\<tau>\\_boundary(\\<theta>\\_p) in cancel sector = convex combo of (1,0) and p\\_cm.\<close>
+            have hspur_in_B2: "fst spur_pt_loc ^ 2 + snd spur_pt_loc ^ 2 \<le> 1"
+              sorry \<comment> \<open>From \\<tau>\\_boundary in cancel sector + hconv\\_bound.\<close>
+            \<comment> \<open>Triangle inequality: |(r*s + o*d)|^2 \\<le> (r*|s| + |o|*|d|)^2 \\<le> 1.
+               This is the hardest part: vector norm bound via Cauchy-Schwarz.\<close>
             show ?thesis unfolding top1_B2_def
-              sorry \<comment> \<open>Cancel sector: substitute \\<tau> formula, apply hconv\\_bound + hd\\_sq\\_bound.
-                 From h\\<tau>\\_simp with \\<theta>\\_p < \\<theta>\\_cancel:
-                 \\<tau>(p) = (r*fst(spur\\_pt) + offset*fst(d\\_perp), r*snd(spur\\_pt) + offset*snd(d\\_perp))
-                 where spur\\_pt = conv combo of (1,0) and p\\_cm (bounded by hconv\\_bound)
-                 and offset = sgn*r*(1-r)*sin(\\<pi>*t)/4 (bounded by r(1-r)/4)
-                 and |d\\_perp| \\<le> 2 (from hd\\_sq\\_bound).
-                 Triangle ineq: |\\<tau>(p)| \\<le> r*|spur| + |offset|*|d| \\<le> r + r(1-r)/2 = r(3-r)/2 \\<le> 1.\<close>
+              sorry \<comment> \<open>From h\\<tau>\\_cancel + hspur\\_in\\_B2 + hoffset + hd\\_sq\\_bound.
+                 Triangle ineq: r*|spur| + |offset|*|d| \\<le> r + r(1-r)/2 = r(3-r)/2 \\<le> 1.\<close>
           qed
         qed
       qed
