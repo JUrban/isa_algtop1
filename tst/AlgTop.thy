@@ -97,6 +97,24 @@ proof -
   finally show ?thesis using htri by linarith
 qed
 
+\<comment> \<open>Cancel shift: edge i+2 in [a,a\\<inverse>]@w has same label/direction as edge i in w (expert audit 26 §7).\<close>
+lemma cancel_shift_label:
+  fixes a :: "'a \<times> bool" and w :: "('a \<times> bool) list" and i :: nat
+  assumes "i < length w"
+  shows "([a, top1_inverse_edge a] @ w) ! (i + 2) = w ! i"
+  by (by100 simp)
+
+\<comment> \<open>Cancel shift preserves label matching: partner edges shift by 2.\<close>
+lemma cancel_shift_partner:
+  fixes a :: "'a \<times> bool" and w :: "('a \<times> bool) list" and i j :: nat
+  assumes "i < length w" "j < length w"
+  shows "fst (([a, top1_inverse_edge a] @ w) ! (i + 2)) = fst (([a, top1_inverse_edge a] @ w) ! (j + 2))
+     \<longleftrightarrow> fst (w ! i) = fst (w ! j)"
+    and "snd (([a, top1_inverse_edge a] @ w) ! (i + 2)) = snd (([a, top1_inverse_edge a] @ w) ! (j + 2))
+     \<longleftrightarrow> snd (w ! i) = snd (w ! j)"
+  using cancel_shift_label[OF assms(1), of a] cancel_shift_label[OF assms(2), of a]
+  by (by100 simp)+
+
 \<comment> \<open>Identity homeomorphism + same-space helper (moved here for use by cut-paste lemmas).\<close>
 lemma homeomorphism_id_early:
   assumes "is_topology_on X TX"
@@ -6005,7 +6023,16 @@ proof -
            spur\\_f maps both to the same point on the spur \\<to> q\\_m values equal.
          - Cross cases (cancel vs good, interior vs boundary): handled by injectivity.\<close>
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
-        sorry \<comment> \<open>Fibre matching. Decomposed into cancel/good/interior cases.\<close>
+        sorry \<comment> \<open>Fibre matching per expert audit 26 §7. Case decomposition:
+           1. Both interior: q\\_e injective on interior (C6\\_e) + spur\\_f injective on interior
+              (\\<tau> injective on B2 interior via perpendicular offsets) + q\\_m injective on interior (C6\\_m).
+           2. x or y on cancel edges (0,1): q\\_e identifies edge 0 at t with edge 1 at 1-t.
+              spur\\_f maps both to same spur point. q\\_m injective at spur (interior of P\\_m).
+           3. x,y on good edges (\\<ge>2): spur\\_f maps edge k of P\\_e to edge k-2 of P\\_m.
+              q\\_e and q\\_m identify matching label pairs; label shift by 2 positions.
+              Expert recommends cancel\\_shift\\_preserves\\_partner lemma.
+           4. Vertex cases: from vertex extraction infrastructure.
+           5. Cross cases (cancel/good, interior/boundary): different image regions.\<close>
       \<comment> \<open>Assemble: continuity of spur\\_f via composition, surjectivity via \\<tau>, fibre matching.\<close>
       have h_spur_cont: "continuous_on P_e spur_f"
       proof -
