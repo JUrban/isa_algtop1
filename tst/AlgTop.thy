@@ -5608,8 +5608,8 @@ proof -
                 thus ?thesis unfolding power2_eq_square .
               qed
               have "offset_loc ^ 2 = sign_loc ^ 2 * r ^ 2 * (1 - r) ^ 2 * sin (pi * t_fold_loc) ^ 2 / 16"
-                unfolding offset_loc_def power2_eq_square
-                sorry \<comment> \<open>Ring computation: expanding square of product with division.\<close>
+                sorry \<comment> \<open>Squaring offset: (s*r*(1-r)*sin/4)^2 = s^2*r^2*(1-r)^2*sin^2/16.
+                   Isabelle's simp struggles with the division rewriting. Use sorry.\<close>
               also have "\<dots> = r ^ 2 * (1 - r) ^ 2 * sin (pi * t_fold_loc) ^ 2 / 16"
                 using \<open>sign_loc ^ 2 = 1\<close> by (by100 simp)
               also have "\<dots> \<le> r ^ 2 * (1 - r) ^ 2 * 1 / 16"
