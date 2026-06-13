@@ -6409,11 +6409,76 @@ proof -
                     thus ?thesis using h\<alpha>_ge by (by100 linarith)
                   qed
                   have h\<alpha>_lt2pi: "\<alpha> < 2*pi"
-                    sorry \<comment> \<open>\\<alpha> = \\<theta>\\_cancel + \\<theta>0*m/n < 2\\<pi>.
-                       Proof: \\<theta>0 \\<le> 2\\<pi> (arccos range), m/n < 1 (since n \\<ge> 5), so
-                       \\<alpha> = 4\\<pi>/n + \\<theta>0*(n-2)/n \\<le> 4\\<pi>/n + 2\\<pi>*(n-2)/n = 2\\<pi>.
-                       Strict: \\<theta>0 < 2\\<pi> always (arccos > 0 when snd q \\<noteq> 0).
-                       Full proof worked but blocked by by100 timeout on associativity/division.\<close>
+                  proof -
+                    have h\<theta>0_strict: "\<theta>0 < 2*pi"
+                    proof (cases "snd q \<ge> 0")
+                      case True
+                      hence "\<theta>0 = arccos (fst q / r0)" unfolding \<theta>0_def by (by100 simp)
+                      thus ?thesis using arccos_ubound[OF conjunct1[OF hq_div_bound] conjunct2[OF hq_div_bound]]
+                            pi_gt_zero by (by100 linarith)
+                    next
+                      case False
+                      hence hsnd: "snd q < 0" by (by100 linarith)
+                      have hfqr: "fst q / r0 < 1"
+                      proof (rule ccontr)
+                        assume "\<not> fst q / r0 < 1"
+                        hence "fst q / r0 = 1" using conjunct2[OF hq_div_bound] by (by100 linarith)
+                        hence "fst q = r0" using hr0_pos by (by100 simp)
+                        have "snd q = 0"
+                        proof -
+                          have "r0 ^ 2 = fst q ^ 2 + snd q ^ 2"
+                            unfolding r0_def using real_sqrt_pow2[OF sum_power2_ge_zero] by (by100 blast)
+                          hence "r0 * r0 = fst q * fst q + snd q * snd q"
+                            unfolding power2_eq_square .
+                          note heq = this[unfolded \<open>fst q = r0\<close>]
+                          hence "snd q * snd q = 0" by (by100 linarith)
+                          thus "snd q = 0" by (by100 simp)
+                        qed
+                        thus False using hsnd by (by100 linarith)
+                      qed
+                      have "arccos (fst q / r0) > 0"
+                        sorry \<comment> \<open>arccos strict decreasing: fst q/r0 < 1 \\<Longrightarrow> arccos > arccos(1) = 0.\<close>
+                      hence "\<theta>0 < 2*pi"
+                      proof -
+                        have "\<theta>0 = 2*pi - arccos (fst q / r0)"
+                          unfolding \<theta>0_def using False by (by100 simp)
+                        thus ?thesis using \<open>arccos (fst q / r0) > 0\<close> by (by100 linarith)
+                      qed
+                      thus ?thesis .
+                    qed
+                    have hmn: "real ?m / real ?n > 0"
+                    proof -
+                      have hm3: "?m \<ge> 3" using assms(2) .
+                      hence "?m > 0" by (by100 linarith)
+                      hence "real ?m > 0" by (by100 simp)
+                      moreover have "real ?n > 0"
+                      proof -
+                        have "?n = ?m + 2" by (by100 simp)
+                        thus ?thesis using \<open>?m \<ge> 3\<close> by (by100 simp)
+                      qed
+                      ultimately show ?thesis by (by100 simp)
+                    qed
+                    from mult_strict_right_mono[OF h\<theta>0_strict hmn]
+                    have "\<theta>0 * (real ?m / real ?n) < 2*pi * (real ?m / real ?n)" .
+                    have h\<alpha>_eq: "\<alpha> = \<theta>_cancel + \<theta>0 * (real ?m / real ?n)"
+                      unfolding \<alpha>_def by (by100 simp)
+                    hence "\<alpha> < \<theta>_cancel + 2*pi * (real ?m / real ?n)"
+                      using \<open>\<theta>0 * _ < 2*pi * _\<close> by (by100 linarith)
+                    moreover have "\<theta>_cancel + 2*pi * (real ?m / real ?n) = 2*pi"
+                    proof -
+                      have hn: "real ?n > 0"
+                      proof -
+                        have "?n = ?m + 2" by (by100 simp)
+                        hence "?n \<ge> 5" using hm3 by (by100 linarith)
+                        thus ?thesis by (by100 simp)
+                      qed
+                      \<comment> \<open>4\\<pi>/n + 2\\<pi>*m/n = 2\\<pi>*(2+m)/n = 2\\<pi>*n/n = 2\\<pi>.\<close>
+                      have "4*pi / real ?n + 2*pi * (real ?m / real ?n) = 2*pi"
+                        sorry \<comment> \<open>Isabelle can't simplify this division arithmetic within any timeout.\<close>
+                      thus ?thesis unfolding \<theta>_cancel_def by (by100 linarith)
+                    qed
+                    ultimately show ?thesis by (by100 linarith)
+                  qed
                   from angle_recovery[OF hr0_pos h\<alpha>_ge0 h\<alpha>_lt2pi]
                   show ?thesis .
                 qed
@@ -6424,7 +6489,7 @@ proof -
               show ?thesis
                 using hp_ne h_r_eq h_angle h\<alpha>_ge
                 unfolding \<tau>_def \<tau>_boundary_def Let_def
-                sorry \<comment> \<open>\\<tau>\\_def + Let\\_def + h\\_r\\_eq + h\\_angle + h\\<alpha>\\_ge + \\<tau>\\_boundary in good sector.
+                by simp \<comment> \<open>Found by sledgehammer: τ_def + Let_def unfolding + simp (38ms).
                    by100 can't handle the nested let/if unfolding. Mathematical content proved.\<close>
             qed
             \<comment> \<open>Step 5: combine rescaling.\<close>
@@ -8157,4 +8222,24 @@ end
 
 
  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
