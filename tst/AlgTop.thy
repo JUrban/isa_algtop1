@@ -6487,8 +6487,29 @@ proof -
                       qed
                       \<comment> \<open>4\\<pi>/n + 2\\<pi>*m/n = 2\\<pi>*(2+m)/n = 2\\<pi>*n/n = 2\\<pi>.\<close>
                       have "4*pi / real ?n + 2*pi * (real ?m / real ?n) = 2*pi"
-                        using hn sorry \<comment> \<open>4\\<pi>/n + 2\\<pi>*m/n = 2\\<pi> from m+2=n. Pure real arithmetic
-                           that linarith/argo/simp all fail on (nonlinear constant multiplication).\<close>
+                      proof -
+                        have h_mn: "?m + 2 = ?n" by (by100 simp)
+                        have h_div1: "4*pi / real ?n * real ?n = 4*pi" using hn by (by100 simp)
+                        have h_div2: "real ?m / real ?n * real ?n = real ?m" using hn by (by100 simp)
+                        have "(4*pi / real ?n + 2*pi * (real ?m / real ?n)) * real ?n
+                            = 4*pi / real ?n * real ?n + 2*pi * (real ?m / real ?n) * real ?n"
+                          by argo
+                        also have "\<dots> = 4*pi + 2*pi * (real ?m / real ?n * real ?n)"
+                          using h_div1 by argo
+                        also have "\<dots> = 4*pi + 2*pi * real ?m"
+                          using h_div2 by (by100 simp)
+                        finally have "(4*pi / real ?n + 2*pi * (real ?m / real ?n)) * real ?n
+                            = 4*pi + 2*pi * real ?m" .
+                        also have "\<dots> = 2*pi * (real ?m + 2)" by argo
+                        also have "\<dots> = 2*pi * real ?n"
+                        proof -
+                          have "real ?m + 2 = real ?n" using h_mn by (by100 simp)
+                          thus ?thesis by (by100 simp)
+                        qed
+                        finally have h: "(4*pi / real ?n + 2*pi * (real ?m / real ?n)) * real ?n = 2*pi * real ?n" .
+                        from mult_right_cancel[of "4*pi / real ?n + 2*pi * (real ?m / real ?n)" "real ?n" "2*pi"]
+                        show ?thesis using h hn by (by100 simp)
+                      qed
                       thus ?thesis unfolding \<theta>_cancel_def by (by100 linarith)
                     qed
                     ultimately show ?thesis by (by100 linarith)
@@ -8236,6 +8257,9 @@ end
 
 
  
+
+
+
 
 
 
