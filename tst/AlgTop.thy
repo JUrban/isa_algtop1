@@ -6437,7 +6437,20 @@ proof -
                         thus False using hsnd by (by100 linarith)
                       qed
                       have "arccos (fst q / r0) > 0"
-                        sorry \<comment> \<open>arccos strict decreasing: fst q/r0 < 1 \\<Longrightarrow> arccos > arccos(1) = 0.\<close>
+                      proof -
+                        have "arccos (fst q / r0) \<ge> 0"
+                          using arccos_lbound[OF conjunct1[OF hq_div_bound] conjunct2[OF hq_div_bound]] .
+                        moreover have "arccos (fst q / r0) \<noteq> 0"
+                        proof
+                          assume "arccos (fst q / r0) = 0"
+                          hence "cos (arccos (fst q / r0)) = cos 0" by (by100 simp)
+                          hence "fst q / r0 = 1"
+                            using cos_arccos[OF conjunct1[OF hq_div_bound] conjunct2[OF hq_div_bound]]
+                            by (by100 simp)
+                          thus False using hfqr by (by100 linarith)
+                        qed
+                        ultimately show ?thesis by (by100 linarith)
+                      qed
                       hence "\<theta>0 < 2*pi"
                       proof -
                         have "\<theta>0 = 2*pi - arccos (fst q / r0)"
@@ -6474,7 +6487,8 @@ proof -
                       qed
                       \<comment> \<open>4\\<pi>/n + 2\\<pi>*m/n = 2\\<pi>*(2+m)/n = 2\\<pi>*n/n = 2\\<pi>.\<close>
                       have "4*pi / real ?n + 2*pi * (real ?m / real ?n) = 2*pi"
-                        sorry \<comment> \<open>Isabelle can't simplify this division arithmetic within any timeout.\<close>
+                        using hn sorry \<comment> \<open>4\\<pi>/n + 2\\<pi>*m/n = 2\\<pi> from m+2=n. Pure real arithmetic
+                           that linarith/argo/simp all fail on (nonlinear constant multiplication).\<close>
                       thus ?thesis unfolding \<theta>_cancel_def by (by100 linarith)
                     qed
                     ultimately show ?thesis by (by100 linarith)
@@ -8222,6 +8236,15 @@ end
 
 
  
+
+
+
+
+
+
+
+
+
 
 
 
