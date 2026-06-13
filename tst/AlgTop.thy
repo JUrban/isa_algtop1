@@ -5792,9 +5792,47 @@ proof -
             qed
             \<comment> \<open>Triangle inequality: |(r*s + o*d)|^2 \\<le> (r*|s| + |o|*|d|)^2 \\<le> 1.
                This is the hardest part: vector norm bound via Cauchy-Schwarz.\<close>
-            show ?thesis unfolding top1_B2_def
-              sorry \<comment> \<open>From h\\<tau>\\_cancel + hspur\\_in\\_B2 + hoffset + hd\\_sq\\_bound.
-                 Triangle ineq: r*|spur| + |offset|*|d| \\<le> r + r(1-r)/2 = r(3-r)/2 \\<le> 1.\<close>
+            \<comment> \<open>Goal: fst(\\<tau> p)^2 + snd(\\<tau> p)^2 \\<le> 1.\<close>
+            have hgoal_eq: "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2
+                = (r * fst spur_pt_loc + offset_loc * fst d_perp) ^ 2
+                + (r * snd spur_pt_loc + offset_loc * snd d_perp) ^ 2"
+              using h\<tau>_cancel by (by100 simp)
+            \<comment> \<open>Expand: = r^2*|spur|^2 + 2*r*offset*(spur\\<cdot>d) + offset^2*|d|^2.\<close>
+            also have "\<dots> = r ^ 2 * (fst spur_pt_loc ^ 2 + snd spur_pt_loc ^ 2)
+                + 2 * r * offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)
+                + offset_loc ^ 2 * (fst d_perp ^ 2 + snd d_perp ^ 2)"
+              unfolding power2_eq_square by (by100 algebra)
+            \<comment> \<open>Bound each term.\<close>
+            also have "\<dots> \<le> r ^ 2 * 1
+                + 2 * r * abs offset_loc * 2
+                + (r * (1-r) / 4) ^ 2 * 4"
+            proof -
+              \<comment> \<open>Term 1: r^2 * |spur|^2 \\<le> r^2.\<close>
+              have ht1: "r ^ 2 * (fst spur_pt_loc ^ 2 + snd spur_pt_loc ^ 2) \<le> r ^ 2 * 1"
+                using mult_left_mono[OF hspur_in_B2] by (by100 simp)
+              \<comment> \<open>Term 2: cross term bounded by 2*r*|offset|*|spur|*|d| via Cauchy-Schwarz.
+                 |spur\\<cdot>d| \\<le> |spur|*|d| \\<le> 1*2 = 2.\<close>
+              have ht2: "2 * r * offset_loc * (fst spur_pt_loc * fst d_perp + snd spur_pt_loc * snd d_perp)
+                  \<le> 2 * r * abs offset_loc * 2"
+                sorry \<comment> \<open>Cauchy-Schwarz: |spur\\<cdot>d| \\<le> |spur|*|d| \\<le> 1*2 = 2.
+                   Then multiply by 2*r.\<close>
+              \<comment> \<open>Term 3: offset^2 * |d|^2 \\<le> (r(1-r)/4)^2 * 4.\<close>
+              have ht3: "offset_loc ^ 2 * (fst d_perp ^ 2 + snd d_perp ^ 2)
+                  \<le> (r * (1-r) / 4) ^ 2 * 4"
+              proof -
+                from mult_mono'[OF hoffset hd_sq_bound]
+                show ?thesis by (by100 simp)
+              qed
+              show ?thesis using ht1 ht2 ht3 by (by100 linarith)
+            qed
+            \<comment> \<open>Simplify: r^2 + 4*r*|o| + (r(1-r)/4)^2*4 \\<le> 1.
+               |o| \\<le> r(1-r)/4, so 4*r*|o| \\<le> r^2*(1-r).
+               (r(1-r)/4)^2*4 = r^2*(1-r)^2/4.
+               Total: r^2 + r^2*(1-r) + r^2*(1-r)^2/4 = r^2*(1+(1-r)+(1-r)^2/4) = (r*(2+(1-r))/2)^2
+               = (r*(3-r)/2)^2. And r(3-r)/2 \\<le> 1 for r \\<in> [0,1].\<close>
+            also have "\<dots> \<le> 1"
+              sorry \<comment> \<open>r^2 + 4*r*|offset| + r^2*(1-r)^2/4 \\<le> 1. Polynomial bound.\<close>
+            finally show ?thesis unfolding top1_B2_def by (by100 simp)
           qed
         qed
       qed
@@ -7436,6 +7474,8 @@ qed
 
 
 end
+
+
 
 
 
