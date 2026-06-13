@@ -2,15 +2,15 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (31 sorrys as of 2026-06-14, sessions 1316-1319):
+\<comment> \<open>SORRY ANALYSIS (30 sorrys as of 2026-06-15, sessions 1316-1322):
 
-SPUR COLLAPSE (3 sorrys):
-- h\\_tau\\_cont: \\<tau> continuous on B2 (piecewise smooth, matching at sector boundaries)
-- h\\_tau\\_range: FULLY PROVED! (good sector cos^2+sin^2=1 + cancel sector AM-GM+polynomial bound)
-- h\\_tau\\_surj: \\<tau> maps B2 onto B2 (IVT + good sector coverage)
+SPUR COLLAPSE (2 sorrys):
+- h\\_tau\\_cont: \\<tau> continuous on B2 (piecewise smooth, pasting lemma on closed sectors)
+- h\\_tau\\_range: FULLY PROVED!
+- h\\_tau\\_surj: FULLY PROVED! (source construction + polar decomp + angle recovery)
 - h\\_fibres: fibre matching q\\_e x = q\\_e y \\<longleftrightarrow> q\\_m(spur\\_f x) = q\\_m(spur\\_f y)
-  spur\\_f continuity + surjectivity PROVED from these sub-sorrys.
-  Cascades to front\\_cancel (3288) + uncancel\\_front (3299).
+  spur\\_f continuity + surjectivity PROVED from h\\_tau\\_cont/h\\_tau\\_surj.
+  Cascades to front\\_cancel + uncancel\\_front.
 
 CUT-PASTE (5 sorrys):
 - Same-space (3): quotient\\_of\\_scheme\\_cut\\_paste/2/opp (lines 113, 125, 153)
