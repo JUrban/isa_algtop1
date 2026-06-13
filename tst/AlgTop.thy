@@ -5598,7 +5598,86 @@ proof -
               have htf_ge0: "tf \<ge> 0"
               proof -
                 have "\<theta>_p \<ge> 0"
-                  sorry \<comment> \<open>\\<theta>\\_p \\<ge> 0 from arccos range + definition.\<close>
+                proof (cases "snd p \<ge> 0")
+                  case True
+                  hence "\<theta>_p = arccos (fst p / r)" unfolding \<theta>_p_def by (by100 simp)
+                  moreover have "arccos (fst p / r) \<ge> 0"
+                  proof (rule arccos_lbound)
+                    have "fst p ^ 2 \<le> r^2"
+                    proof -
+                      have "snd p ^ 2 \<ge> 0" by (by100 simp)
+                      thus ?thesis using hr_sq by (by100 linarith)
+                    qed
+                    hence hfp_le_r: "abs (fst p) \<le> r"
+                    proof -
+                      assume h: "fst p ^ 2 \<le> r ^ 2"
+                      have "0 \<le> r" using hr_pos by (by100 linarith)
+                      from power2_le_imp_le[OF h this]
+                      have "fst p \<le> r" .
+                      moreover have "- fst p \<le> r"
+                      proof -
+                        have "(- fst p) ^ 2 = fst p ^ 2" by (by100 algebra)
+                        hence "(- fst p) ^ 2 \<le> r ^ 2" using h by (by100 linarith)
+                        from power2_le_imp_le[OF this \<open>0 \<le> r\<close>]
+                        show ?thesis .
+                      qed
+                      ultimately show ?thesis by (by100 linarith)
+                    qed
+                    show "- 1 \<le> fst p / r"
+                    proof -
+                      have "- r \<le> fst p" using hfp_le_r by (by100 linarith)
+                      hence "- 1 \<le> fst p / r"
+                        using hr_pos divide_right_mono[of "-r" "fst p" r] by (by100 simp)
+                      thus ?thesis .
+                    qed
+                    show "fst p / r \<le> 1"
+                    proof -
+                      have "fst p \<le> r" using hfp_le_r by (by100 linarith)
+                      thus ?thesis using hr_pos by (by100 simp)
+                    qed
+                  qed
+                  ultimately show ?thesis by (by100 linarith)
+                next
+                  case False
+                  hence "\<theta>_p = 2*pi - arccos (fst p / r)" unfolding \<theta>_p_def by (by100 simp)
+                  moreover have "arccos (fst p / r) \<le> pi"
+                  proof (rule arccos_ubound)
+                    have "fst p ^ 2 \<le> r^2"
+                    proof -
+                      have "snd p ^ 2 \<ge> 0" by (by100 simp)
+                      thus ?thesis using hr_sq by (by100 linarith)
+                    qed
+                    hence hfp_le_r: "abs (fst p) \<le> r"
+                    proof -
+                      assume h: "fst p ^ 2 \<le> r ^ 2"
+                      have "0 \<le> r" using hr_pos by (by100 linarith)
+                      from power2_le_imp_le[OF h this]
+                      have "fst p \<le> r" .
+                      moreover have "- fst p \<le> r"
+                      proof -
+                        have "(- fst p) ^ 2 = fst p ^ 2" by (by100 algebra)
+                        hence "(- fst p) ^ 2 \<le> r ^ 2" using h by (by100 linarith)
+                        from power2_le_imp_le[OF this \<open>0 \<le> r\<close>]
+                        show ?thesis .
+                      qed
+                      ultimately show ?thesis by (by100 linarith)
+                    qed
+                    show "- 1 \<le> fst p / r"
+                    proof -
+                      have "- r \<le> fst p" using hfp_le_r by (by100 linarith)
+                      hence "- 1 \<le> fst p / r"
+                        using hr_pos divide_right_mono[of "-r" "fst p" r] by (by100 simp)
+                      thus ?thesis .
+                    qed
+                    show "fst p / r \<le> 1"
+                    proof -
+                      have "fst p \<le> r" using hfp_le_r by (by100 linarith)
+                      thus ?thesis using hr_pos by (by100 simp)
+                    qed
+                  qed
+                  moreover have "pi > 0" using pi_gt_zero .
+                  ultimately show ?thesis by (by100 linarith)
+                qed
                 hence "\<theta>_p * real ?n / (2*pi) \<ge> 0"
                   using hn_pos hpi_pos by (by100 simp)
                 moreover have "(4*pi/real ?n - \<theta>_p) * real ?n / (2*pi) \<ge> 0"
