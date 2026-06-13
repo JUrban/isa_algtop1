@@ -5528,9 +5528,51 @@ proof -
             qed
             finally show ?thesis .
           qed
-          show ?thesis unfolding top1_B2_def
-            sorry \<comment> \<open>Combine all bounds: good sector via hgood\\_norm, cancel sector
-               via hconv\\_bound + hd\\_sq\\_bound + triangle inequality.\<close>
+          \<comment> \<open>Key: relate \\<tau> definition's internal sqrt to our local r.
+             \\<tau>\\_def uses sqrt(fst p^2 + snd p^2) which equals r by definition.\<close>
+          have hr_eq: "sqrt (fst p ^ 2 + snd p ^ 2) = r" unfolding r_def by (by100 simp)
+          \<comment> \<open>Unfold \\<tau> at p \\<noteq> (0,0): the let-expression uses sqrt and arccos.\<close>
+          have h\<tau>_simp: "\<tau> p = (let \<theta> = \<theta>_p in
+              if \<theta> \<ge> \<theta>_cancel then (r * fst (\<tau>_boundary \<theta>), r * snd (\<tau>_boundary \<theta>))
+              else let spur_pt = \<tau>_boundary \<theta>;
+                       t_fold = min (\<theta> * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>) * real ?n / (2*pi));
+                       sign = (if \<theta> \<le> \<theta>_mid then 1 else -1);
+                       offset = sign * r * (1 - r) * sin (pi * t_fold) / 4
+                   in (r * fst spur_pt + offset * fst d_perp,
+                       r * snd spur_pt + offset * snd d_perp))"
+            unfolding \<tau>_def using False hr_eq \<theta>_p_def by (by100 simp)
+          show ?thesis
+          proof (cases "\<theta>_p \<ge> \<theta>_cancel")
+            case True
+            \<comment> \<open>Good sector: \\<tau>(p) = (r*fst(\\<tau>\\_bdy), r*snd(\\<tau>\\_bdy)) where \\<tau>\\_bdy = (cos, sin).\<close>
+            have h\<tau>_good: "\<tau> p = (r * fst (\<tau>_boundary \<theta>_p), r * snd (\<tau>_boundary \<theta>_p))"
+              using h\<tau>_simp True by (by100 simp)
+            have "fst (\<tau>_boundary \<theta>_p) = cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+              using True unfolding \<tau>_boundary_def by (by100 auto)
+            moreover have "snd (\<tau>_boundary \<theta>_p) = sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+              using True unfolding \<tau>_boundary_def by (by100 auto)
+            ultimately have "fst (\<tau> p) = r * cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)
+                           \<and> snd (\<tau> p) = r * sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+              using h\<tau>_good by (by100 auto)
+            hence "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2
+                = (r * cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)) ^ 2
+                + (r * sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)) ^ 2"
+              by (by100 simp)
+            hence "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2 \<le> 1" using hgood_norm by (by100 simp)
+            thus ?thesis unfolding top1_B2_def by (by100 simp)
+          next
+            case False
+            \<comment> \<open>Cancel sector: \\<tau>(p) = r*spur\\_pt + offset*d\\_perp.
+               Need norm \\<le> 1 via triangle inequality + all proved bounds.\<close>
+            show ?thesis unfolding top1_B2_def
+              sorry \<comment> \<open>Cancel sector: substitute \\<tau> formula, apply hconv\\_bound + hd\\_sq\\_bound.
+                 From h\\<tau>\\_simp with \\<theta>\\_p < \\<theta>\\_cancel:
+                 \\<tau>(p) = (r*fst(spur\\_pt) + offset*fst(d\\_perp), r*snd(spur\\_pt) + offset*snd(d\\_perp))
+                 where spur\\_pt = conv combo of (1,0) and p\\_cm (bounded by hconv\\_bound)
+                 and offset = sgn*r*(1-r)*sin(\\<pi>*t)/4 (bounded by r(1-r)/4)
+                 and |d\\_perp| \\<le> 2 (from hd\\_sq\\_bound).
+                 Triangle ineq: |\\<tau>(p)| \\<le> r*|spur| + |offset|*|d| \\<le> r + r(1-r)/2 = r(3-r)/2 \\<le> 1.\<close>
+          qed
         qed
       qed
       have h\<tau>_surj: "\<tau> ` top1_B2 = top1_B2"
