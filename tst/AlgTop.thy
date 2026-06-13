@@ -5403,7 +5403,17 @@ proof -
              To avoid let-binding unfolding issues, prove \\<tau> p \\<in> B2 directly.\<close>
           \<comment> \<open>p\\_cm norm: centroid mapped to disk interior.\<close>
           have hp_cm_le: "fst p_cm ^ 2 + snd p_cm ^ 2 \<le> 1"
-            sorry \<comment> \<open>From p\\_cm \\<in> B2 (centroid mapped by disk homeomorphism).\<close>
+          proof -
+            have "p_cm \<in> top1_B2"
+            proof -
+              have "\<psi>_m ` P_m = top1_B2"
+                using h\<psi>m_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+              moreover have "(cx_m, cy_m) \<in> P_m" using hcm_in_Pm .
+              ultimately have "\<psi>_m (cx_m, cy_m) \<in> top1_B2" by (by100 blast)
+              thus ?thesis unfolding p_cm_def .
+            qed
+            thus ?thesis unfolding top1_B2_def by (by100 simp)
+          qed
           \<comment> \<open>Convex combination of (1,0) and p\\_cm is in B2 (by convexity of B2).\<close>
           have hconv_bound: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
               ((1-t) + t * fst p_cm) ^ 2 + (t * snd p_cm) ^ 2 \<le> 1"
