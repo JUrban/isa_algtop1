@@ -5571,18 +5571,31 @@ proof -
       define angle_of :: "real \<times> real \<Rightarrow> real" where
         "angle_of p = (if snd p \<ge> 0 then arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))
                        else 2*pi - arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)))" for p
-      define S_g where "S_g = {p \<in> top1_B2. p = (0,0) \<or> angle_of p \<ge> \<theta>_cancel}"
+      \<comment> \<open>Sectors for pasting lemma. S\\_g includes positive x-axis to ensure closedness.
+         S\\_c includes everything with angle \\<le> \\<theta>\\_cancel (which naturally includes positive x-axis).
+         On the positive x-axis, \\<tau> uses cancel formula giving (r,0). Good formula also
+         gives (r,0) at angle \\<to> 2\\<pi>. So \\<tau> is continuous across the sector boundary.\<close>
+      define S_g where "S_g = {p \<in> top1_B2. p = (0,0) \<or> angle_of p \<ge> \<theta>_cancel
+          \<or> (snd p = 0 \<and> fst p \<ge> 0)}"
       define S_c where "S_c = {p \<in> top1_B2. p = (0,0) \<or> angle_of p \<le> \<theta>_cancel}"
       have h_cover: "top1_B2 = S_g \<union> S_c"
         unfolding S_g_def S_c_def by (by100 auto)
       have h_g_closed: "closed S_g"
-        sorry \<comment> \<open>S\\_g is intersection of B2 (closed) with preimage of [\\<theta>\\_cancel, 2\\<pi>] under angle\\_of (continuous).\<close>
+        sorry \<comment> \<open>S\\_g = B2 \\<inter> ({angle \\<ge> \\<theta>\\_cancel} \\<union> positive x-axis \\<union> {0}).
+           The positive x-axis ray in B2 is closed. {angle \\<ge> \\<theta>\\_cancel} in B2\\\\{0}
+           is now closed because the limit of angle\\<to>2\\<pi> (positive x-axis) is included.\<close>
       have h_c_closed: "closed S_c"
-        sorry \<comment> \<open>S\\_c is intersection of B2 (closed) with preimage of [0, \\<theta>\\_cancel] under angle\\_of (continuous).\<close>
+        sorry \<comment> \<open>S\\_c = B2 \\<inter> ({angle \\<le> \\<theta>\\_cancel} \\<union> {0}). The set {angle \\<le> \\<theta>\\_cancel}
+           is the preimage of [0, \\<theta>\\_cancel] under angle\\_of (continuous on B2\\\\{0}).
+           Its closure in B2 includes the positive x-axis, which IS in S\\_c (angle=0).\<close>
       have h_g_cont: "continuous_on S_g \<tau>"
-        sorry \<comment> \<open>On S\\_g: \\<tau> is composition of sqrt, arccos, cos, sin, multiplication. All continuous.\<close>
+        sorry \<comment> \<open>On S\\_g: \\<tau> is good sector formula for angle \\<ge> \\<theta>\\_cancel points,
+           and cancel formula for positive x-axis (giving (r,0) = good formula limit).
+           Continuity follows from each formula being composition of continuous functions,
+           and agreement at the boundary.\<close>
       have h_c_cont: "continuous_on S_c \<tau>"
-        sorry \<comment> \<open>On S\\_c: \\<tau> is polynomial/trig in (r,\\<theta>). All continuous.\<close>
+        sorry \<comment> \<open>On S\\_c: \\<tau> is cancel sector formula (polynomial/trig).
+           Continuous from compositions of sqrt, arccos, min, sin, multiplication.\<close>
       have h\<tau>_cont: "continuous_on top1_B2 \<tau>"
         using continuous_on_closed_Un[OF h_g_closed h_c_closed h_g_cont h_c_cont]
         unfolding h_cover[symmetric] .
