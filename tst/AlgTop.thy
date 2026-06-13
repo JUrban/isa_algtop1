@@ -5589,10 +5589,46 @@ proof -
                 unfolding spur_pt_loc_def \<tau>_boundary_def tf_def \<theta>_cancel_def
                 using h\<theta>_lt sorry \<comment> \<open>Let-binding unfolding + \\<theta>\\_cancel substitution.\<close>
               \<comment> \<open>Show 0 \\<le> tf \\<le> 1.\<close>
+              have hn_pos: "real ?n > 0"
+              proof -
+                have "?n \<ge> 5" using assms(2) by (by100 simp)
+                thus ?thesis by (by100 simp)
+              qed
+              have hpi_pos: "pi > 0" using pi_gt_zero .
               have htf_ge0: "tf \<ge> 0"
-                sorry \<comment> \<open>Both min arguments \\<ge> 0 (from \\<theta>\\_p \\<ge> 0, n \\<ge> 3, pi > 0).\<close>
+              proof -
+                have "\<theta>_p \<ge> 0"
+                  sorry \<comment> \<open>\\<theta>\\_p \\<ge> 0 from arccos range + definition.\<close>
+                hence "\<theta>_p * real ?n / (2*pi) \<ge> 0"
+                  using hn_pos hpi_pos by (by100 simp)
+                moreover have "(4*pi/real ?n - \<theta>_p) * real ?n / (2*pi) \<ge> 0"
+                proof -
+                  have "\<theta>_p < 4*pi/real ?n"
+                    using h\<theta>_lt unfolding \<theta>_cancel_def by (by100 linarith)
+                  hence "4*pi/real ?n - \<theta>_p > 0" by (by100 linarith)
+                  thus ?thesis using hn_pos hpi_pos by (by100 simp)
+                qed
+                ultimately show ?thesis unfolding tf_def by (by100 simp)
+              qed
               have htf_le1: "tf \<le> 1"
-                sorry \<comment> \<open>min(\\<theta>*n/(2\\<pi>), (\\<theta>\\_cancel-\\<theta>)*n/(2\\<pi>)) \\<le> 1 for \\<theta> \\<in> [0, \\<theta>\\_cancel].\<close>
+              proof -
+                \<comment> \<open>Case: if \\<theta>\\_p \\<le> 2\\<pi>/n then first arg \\<le> 1, else second arg \\<le> 1.\<close>
+                show ?thesis
+                proof (cases "\<theta>_p \<le> 2*pi/real ?n")
+                  case True
+                  have "\<theta>_p * real ?n / (2*pi) \<le> 1"
+                    using True hn_pos hpi_pos
+                    sorry \<comment> \<open>\\<theta>\\_p \\<le> 2\\<pi>/n \\<Longrightarrow> \\<theta>\\_p*n/(2\\<pi>) \\<le> 1. Field arithmetic.\<close>
+                  thus ?thesis unfolding tf_def by (by100 linarith)
+                next
+                  case False
+                  hence "\<theta>_p > 2*pi/real ?n" by (by100 linarith)
+                  have "(4*pi/real ?n - \<theta>_p) * real ?n / (2*pi) \<le> 1"
+                    using \<open>\<theta>_p > 2*pi/real ?n\<close> hn_pos hpi_pos
+                    sorry \<comment> \<open>\\<theta> > 2\\<pi>/n \\<Longrightarrow> (4\\<pi>/n - \\<theta>)*n/(2\\<pi>) < 1. Field arithmetic.\<close>
+                  thus ?thesis unfolding tf_def by (by100 linarith)
+                qed
+              qed
               \<comment> \<open>Apply hconv\\_bound.\<close>
               from hconv_bound[OF htf_ge0 htf_le1]
               have "((1-tf) + tf * fst p_cm) ^ 2 + (tf * snd p_cm) ^ 2 \<le> 1" .
