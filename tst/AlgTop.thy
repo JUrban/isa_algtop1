@@ -6096,8 +6096,32 @@ proof -
             \<comment> \<open>Step 2-8: unfold \\<tau> at p, show good sector, show rescaling gives \\<theta>0, show q decomposition.\<close>
             \<comment> \<open>Step 2: \\<alpha> \\<ge> \\<theta>\\_cancel (trivial from definition).\<close>
             have h\<alpha>_ge: "\<alpha> \<ge> \<theta>_cancel"
-              unfolding \<alpha>_def using assms(2)
-              sorry \<comment> \<open>\\<theta>\\_cancel + \\<theta>0*m/n \\<ge> \\<theta>\\_cancel. Needs \\<theta>0 \\<ge> 0 (from arccos \\<ge> 0).\<close>
+            proof -
+              have h\<theta>0_ge: "\<theta>0 \<ge> 0"
+              proof (cases "snd q \<ge> 0")
+                case True
+                hence "\<theta>0 = arccos (fst q / r0)" unfolding \<theta>0_def by (by100 simp)
+                moreover have "arccos (fst q / r0) \<ge> 0"
+                proof (rule arccos_lbound)
+                  show "-1 \<le> fst q / r0" sorry
+                  show "fst q / r0 \<le> 1" sorry
+                qed
+                ultimately show ?thesis by (by100 linarith)
+              next
+                case False
+                hence "\<theta>0 = 2*pi - arccos (fst q / r0)" unfolding \<theta>0_def by (by100 simp)
+                moreover have "arccos (fst q / r0) \<le> pi"
+                proof (rule arccos_ubound)
+                  show "-1 \<le> fst q / r0" sorry
+                  show "fst q / r0 \<le> 1" sorry
+                qed
+                ultimately show ?thesis using pi_gt_zero by (by100 linarith)
+              qed
+              have hmn_ge: "real ?m / real ?n \<ge> 0" using assms(2) by (by100 simp)
+              from mult_nonneg_nonneg[OF h\<theta>0_ge hmn_ge]
+              have "\<theta>0 * (real ?m / real ?n) \<ge> 0" .
+              thus ?thesis unfolding \<alpha>_def by (by100 simp)
+            qed
             \<comment> \<open>Step 3: angle rescaling.\<close>
             have h_rescale: "(\<alpha> - \<theta>_cancel) * real ?n / real ?m = \<theta>0"
             proof -
