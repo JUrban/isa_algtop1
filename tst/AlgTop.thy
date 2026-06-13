@@ -5617,15 +5617,32 @@ proof -
                 proof (cases "\<theta>_p \<le> 2*pi/real ?n")
                   case True
                   have "\<theta>_p * real ?n / (2*pi) \<le> 1"
-                    using True hn_pos hpi_pos
-                    sorry \<comment> \<open>\\<theta>\\_p \\<le> 2\\<pi>/n \\<Longrightarrow> \\<theta>\\_p*n/(2\\<pi>) \\<le> 1. Field arithmetic.\<close>
+                  proof -
+                    have hrn_ge: "real ?n \<ge> 0" using hn_pos by (by100 linarith)
+                    from mult_right_mono[OF True hrn_ge]
+                    have "\<theta>_p * real ?n \<le> 2*pi / real ?n * real ?n" .
+                    moreover have "2*pi / real ?n * real ?n = 2*pi" using hn_pos by (by100 simp)
+                    ultimately have "\<theta>_p * real ?n \<le> 2*pi" by (by100 linarith)
+                    moreover have "2*pi > 0" using hpi_pos by (by100 linarith)
+                    ultimately show ?thesis
+                      by (by100 simp)
+                  qed
                   thus ?thesis unfolding tf_def by (by100 linarith)
                 next
                   case False
                   hence "\<theta>_p > 2*pi/real ?n" by (by100 linarith)
                   have "(4*pi/real ?n - \<theta>_p) * real ?n / (2*pi) \<le> 1"
-                    using \<open>\<theta>_p > 2*pi/real ?n\<close> hn_pos hpi_pos
-                    sorry \<comment> \<open>\\<theta> > 2\\<pi>/n \\<Longrightarrow> (4\\<pi>/n - \\<theta>)*n/(2\\<pi>) < 1. Field arithmetic.\<close>
+                  proof -
+                    have hrn_ge: "real ?n \<ge> 0" using hn_pos by (by100 linarith)
+                    have h2pi: "2*pi > 0" using hpi_pos by (by100 linarith)
+                    have "4*pi/real ?n - \<theta>_p < 2*pi / real ?n"
+                      using \<open>\<theta>_p > 2*pi/real ?n\<close> by (by100 linarith)
+                    from mult_right_mono[OF less_imp_le[OF this] hrn_ge]
+                    have "(4*pi/real ?n - \<theta>_p) * real ?n \<le> 2*pi / real ?n * real ?n" .
+                    moreover have "2*pi / real ?n * real ?n = 2*pi" using hn_pos by (by100 simp)
+                    ultimately have "(4*pi/real ?n - \<theta>_p) * real ?n \<le> 2*pi" by (by100 linarith)
+                    thus ?thesis using h2pi by (by100 simp)
+                  qed
                   thus ?thesis unfolding tf_def by (by100 linarith)
                 qed
               qed
