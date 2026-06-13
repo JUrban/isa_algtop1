@@ -607,7 +607,8 @@ lemma scheme_quotient_exists:
     \<and> (\<forall>k<length scheme. \<forall>j<length scheme. \<forall>s\<in>{0<..<(1::real)}.
         q (vx k, vy k) \<noteq> q ((1-s)*vx j + s*vx(Suc j mod length scheme),
                                (1-s)*vy j + s*vy(Suc j mod length scheme)))
-    \<and> (\<forall>k<length scheme. \<exists>m<length scheme. q (vx k, vy k) = (vx m, vy m))" (is ?C2)
+    \<and> (\<exists>vtgt. (\<forall>k<length scheme. q (vx k, vy k) = (vx (vtgt k), vy (vtgt k)))
+             \<and> (\<forall>k<length scheme. vtgt k < length scheme))" (is ?C2)
 proof -
   let ?n = "length scheme"
   \<comment> \<open>Regular n-gon: vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).\<close>
@@ -3433,10 +3434,9 @@ proof -
       unfolding edge_pt_def by (by100 simp)
   qed
   \<comment> \<open>Vertex target: q maps each vertex to some vertex (from hq\\_vtx + hvtgt\\_lt).\<close>
-  have hq_vtx_target: "\<forall>k<?n. \<exists>m<?n. q (vx k, vy k) = (vx m, vy m)"
+  have hq_vtx_direct: "\<forall>k<?n. q (vx k, vy k) = (vx (vtgt k), vy (vtgt k))"
   proof (intro allI impI)
     fix k assume "k < ?n"
-    \<comment> \<open>Re-derive hq\\_vtx for this k.\<close>
     have "\<exists>k'<?n. (vx k, vy k) = (vx k', vy k')" using \<open>k < ?n\<close> by (by100 blast)
     hence "q (vx k, vy k) = (let k' = (SOME k'. k' < ?n \<and> (vx k, vy k) = (vx k', vy k'))
         in (vx (vtgt k'), vy (vtgt k')))" unfolding q_def by (by100 simp)
@@ -3447,14 +3447,13 @@ proof -
       fix k' assume "k' < ?n \<and> (vx k, vy k) = (vx k', vy k')"
       from hC3[rule_format, OF \<open>k<?n\<close>] this show "k' = k" by (by100 blast)
     qed
-    ultimately have hq: "q (vx k, vy k) = (vx (vtgt k), vy (vtgt k))" by (by100 simp)
-    have hvt: "vtgt k < ?n"
-    proof -
-      have "vtgt k \<le> k" unfolding vtgt_def by (rule Least_le) (by100 simp)
-      thus ?thesis using \<open>k < ?n\<close> by (by100 linarith)
-    qed
-    show "\<exists>m<?n. q (vx k, vy k) = (vx m, vy m)"
-      using hq hvt by (by100 blast)
+    ultimately show "q (vx k, vy k) = (vx (vtgt k), vy (vtgt k))" by (by100 simp)
+  qed
+  have hvtgt_bound: "\<forall>k<?n. vtgt k < ?n"
+  proof (intro allI impI)
+    fix k assume "k < ?n"
+    have "vtgt k \<le> k" unfolding vtgt_def by (rule Least_le) (by100 simp)
+    thus "vtgt k < ?n" using \<open>k < ?n\<close> by (by100 linarith)
   qed
   \<comment> \<open>Capture quotient\\_of\\_scheme\\_on for specific Y, TY BEFORE show.\<close>
   have hqos: "top1_quotient_of_scheme_on Y TY scheme"
@@ -3491,7 +3490,8 @@ proof -
     using hC10 apply (by100 blast)
     using hC11 apply (by100 blast)
     using hC12 apply (by100 blast)
-    using hq_vtx_target by (by100 blast)
+    apply (rule exI[of _ vtgt])
+    using hq_vtx_direct hvtgt_bound by (by100 blast)
 qed
 
 
@@ -5286,6 +5286,7 @@ proof -
   obtain P_m :: "(real \<times> real) set" and q_m :: "(real \<times> real) \<Rightarrow> (real \<times> real)"
     and vx_m vy_m :: "nat \<Rightarrow> real"
     and Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set"
+    and vtgt_m :: "nat \<Rightarrow> nat"
     where hY_w: "top1_quotient_of_scheme_on Y_w TY_w w"
     and hC1m: "top1_is_polygonal_region_on P_m (length w)"
     and hC2m: "top1_quotient_map_on P_m
@@ -5316,7 +5317,8 @@ proof -
     and hC12m_proved: "\<forall>k<length w. \<forall>j<length w. \<forall>s\<in>{0<..<(1::real)}.
         q_m (vx_m k, vy_m k) \<noteq> q_m ((1-s)*vx_m j + s*vx_m(Suc j mod length w),
                                (1-s)*vy_m j + s*vy_m(Suc j mod length w))"
-    and hq_vtx_m: "\<forall>k<length w. \<exists>m<length w. q_m (vx_m k, vy_m k) = (vx_m m, vy_m m)"
+    and hq_vtgt_m1: "\<forall>k<length w. q_m (vx_m k, vy_m k) = (vx_m (vtgt_m k), vy_m (vtgt_m k))"
+    and hq_vtgt_m2: "\<forall>k<length w. vtgt_m k < length w"
     by (elim exE conjE) (rule that, assumption+)
   have htopo_w: "is_topology_on_strict Y_w TY_w"
     using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
@@ -5331,8 +5333,9 @@ proof -
   from scheme_quotient_exists(2)[OF hlen_ext hproper_ext]
   obtain P_e :: "(real \<times> real) set" and q_e :: "(real \<times> real) \<Rightarrow> (real \<times> real)"
     and vx_e vy_e :: "nat \<Rightarrow> real"
-    and Y_ext :: "(real \<times> real) set" and TY_ext :: "(real \<times> real) set set" where
-      hY_ext: "top1_quotient_of_scheme_on Y_ext TY_ext ([a, top1_inverse_edge a] @ w)"
+    and Y_ext :: "(real \<times> real) set" and TY_ext :: "(real \<times> real) set set"
+    and vtgt_e :: "nat \<Rightarrow> nat"
+    where hY_ext: "top1_quotient_of_scheme_on Y_ext TY_ext ([a, top1_inverse_edge a] @ w)"
     and hC1e: "top1_is_polygonal_region_on P_e ?n_ext"
     and hC2e: "top1_quotient_map_on P_e
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e) Y_ext TY_ext q_e"
@@ -5362,7 +5365,8 @@ proof -
     and hC12e_proved: "\<forall>k<?n_ext. \<forall>j<?n_ext. \<forall>s\<in>{0<..<(1::real)}.
         q_e (vx_e k, vy_e k) \<noteq> q_e ((1-s)*vx_e j + s*vx_e(Suc j mod ?n_ext),
                                (1-s)*vy_e j + s*vy_e(Suc j mod ?n_ext))"
-    and hq_vtx_e: "\<forall>k<?n_ext. \<exists>m<?n_ext. q_e (vx_e k, vy_e k) = (vx_e m, vy_e m)"
+    and hq_vtgt_e1: "\<forall>k<?n_ext. q_e (vx_e k, vy_e k) = (vx_e (vtgt_e k), vy_e (vtgt_e k))"
+    and hq_vtgt_e2: "\<forall>k<?n_ext. vtgt_e k < ?n_ext"
     by (elim exE conjE) (rule that, assumption+)
   have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
     using hY_ext unfolding top1_quotient_of_scheme_on_def by (by100 blast)
