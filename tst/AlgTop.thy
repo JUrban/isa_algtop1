@@ -5381,10 +5381,16 @@ proof -
          Matching at \\<theta>=0/2\\<pi>: both sides give (r, 0). \\<checkmark>
          Matching at r=0: both sides give (0, 0). \\<checkmark>\<close>
       have h\<tau>_cont: "continuous_on top1_B2 \<tau>"
-        sorry \<comment> \<open>Per expert audit 26 §5: use closed-sector pasting lemma.
-           Good sector (\\<theta>\\<ge>\\<theta>\\_cancel): \\<tau> = r*(cos \\<theta>', sin \\<theta>'), continuous from sqrt/arccos/cos/sin.
-           Cancel sector (\\<theta>\\<le>\\<theta>\\_cancel): \\<tau> = r*spur + offset*d\\_perp, continuous from linear interp.
-           Both sectors closed, agreement at boundary (r,0). continuous\\_on\\_closed\\_Un gives result.\<close>
+        sorry \<comment> \<open>Per expert audit 26 §5: closed-sector pasting lemma.
+           Proof sketch: define S\\_g = {p \\<in> B2. p=(0,0) \\<or> \\<theta>(p) \\<ge> \\<theta>\\_cancel}
+           and S\\_c = {p \\<in> B2. p=(0,0) \\<or> \\<theta>(p) \\<le> \\<theta>\\_cancel}. Both closed. B2 = S\\_g \\<union> S\\_c.
+           \\<tau> on S\\_g: (r*cos(rescale(\\<theta>)), r*sin(rescale(\\<theta>))). Continuous from
+           continuous\\_on\\_compose of sqrt, arccos, cos, sin, multiplication.
+           \\<tau> on S\\_c: r*spur + offset*d\\_perp. Continuous from continuous\\_on of
+           min, sin, multiplication (all polynomial/trig on closed sector).
+           Agreement at S\\_g \\<inter> S\\_c: both give (r,0) (at \\<theta>=\\<theta>\\_cancel) or (0,0) (at origin).
+           continuous\\_on\\_closed\\_Un gives continuous\\_on B2 \\<tau>.
+           Infrastructure needed: closed\\_sector defs, continuous\\_on for each branch.\<close>
       \<comment> \<open>Sub-sorry 2: \\<tau> maps B2 onto B2 (range and surjectivity).
          Good sector: angle rescaling is a bijection [\\<theta>\\_cancel, 2\\<pi>) \\<to> [0, 2\\<pi>).
          Cancel sector: maps to interior of B2 (spur + offset, |result| < 1 for r < 1).
@@ -6015,8 +6021,49 @@ proof -
         qed
       qed
       have h\<tau>_surj: "\<tau> ` top1_B2 = top1_B2"
-        sorry \<comment> \<open>Good sector at r=1 covers all of S1. Interior covered by intermediate value theorem.
-           Cancel sector covers the spur + neighborhood.\<close>
+      proof (rule set_eqI, rule iffI)
+        fix q assume "q \<in> \<tau> ` top1_B2"
+        then obtain p where "p \<in> top1_B2" "\<tau> p = q" by (by100 blast)
+        thus "q \<in> top1_B2" using h\<tau>_range by (by100 blast)
+      next
+        fix q assume hq: "q \<in> top1_B2"
+        \<comment> \<open>For any target q \\<in> B2, find a source p in the good sector.
+           At target (x0,y0) with angle \\<theta>0 and radius r0:
+           source = (r0, \\<theta>\\_cancel + \\<theta>0 * m/n) which is in the good sector.
+           \\<tau>(source) = (r0 * cos(\\<theta>0), r0 * sin(\\<theta>0)) = (x0, y0) = q.
+           The good sector rescaling (\\<theta>-\\<theta>\\_cancel)*n/m maps [\\<theta>\\_cancel, 2\\<pi>) to [0, 2\\<pi>),
+           so every angle is reachable.\<close>
+        show "q \<in> \<tau> ` top1_B2"
+        proof (cases "q = (0, 0)")
+          case True
+          have "(0::real, 0) \<in> top1_B2" unfolding top1_B2_def by (by100 simp)
+          moreover have "\<tau> (0, 0) = (0, 0)" unfolding \<tau>_def by (by100 simp)
+          ultimately show ?thesis using True by (by100 force)
+        next
+          case False
+          \<comment> \<open>q \\<noteq> (0,0). Let r0 = |q| and \\<theta>0 = angle(q). Construct source in good sector.\<close>
+          define r0 where "r0 = sqrt (fst q ^ 2 + snd q ^ 2)"
+          define \<theta>0 where "\<theta>0 = (if snd q \<ge> 0 then arccos (fst q / r0) else 2*pi - arccos (fst q / r0))"
+          \<comment> \<open>Source angle: \\<alpha> = \\<theta>\\_cancel + \\<theta>0 * m/n. In [\\<theta>\\_cancel, 2\\<pi>).\<close>
+          define \<alpha> where "\<alpha> = \<theta>_cancel + \<theta>0 * real ?m / real ?n"
+          define p where "p = (r0 * cos \<alpha>, r0 * sin \<alpha>)"
+          \<comment> \<open>p \\<in> B2, p in good sector, \\<tau>(p) = q.\<close>
+          have "p \<in> top1_B2"
+          proof -
+            have hfp: "fst p = r0 * cos \<alpha>" and hsp: "snd p = r0 * sin \<alpha>"
+              unfolding p_def by (by100 simp)+
+            have "fst p ^ 2 + snd p ^ 2 = r0 ^ 2 * (cos \<alpha> ^ 2 + sin \<alpha> ^ 2)"
+              unfolding hfp hsp power2_eq_square by argo
+            also have "\<dots> = r0 ^ 2" using sin_cos_squared_add3 by (by100 simp)
+            also have "\<dots> = fst q ^ 2 + snd q ^ 2"
+              unfolding r0_def using real_sqrt_pow2[OF sum_power2_ge_zero] by (by100 blast)
+            also have "\<dots> \<le> 1" using hq unfolding top1_B2_def by (by100 simp)
+            finally show ?thesis unfolding top1_B2_def by (by100 simp)
+          qed
+          moreover have "\<tau> p = q" sorry \<comment> \<open>\\<tau> in good sector rescales (\\<alpha>-\\<theta>\\_cancel)*n/m = \\<theta>0. So \\<tau>(p) = (r0*cos \\<theta>0, r0*sin \\<theta>0) = q.\<close>
+          ultimately show ?thesis by (by100 blast)
+        qed
+      qed
       \<comment> \<open>Sub-sorry 3: Fibre matching q\\_e x = q\\_e y \\<longleftrightarrow> q\\_m(spur\\_f x) = q\\_m(spur\\_f y).
          Verified algebraically in sessions 2-4. Cases:
          - Both x,y interior of P\\_e: spur\\_f injective on interior \\<to> both sides trivially equiv.
