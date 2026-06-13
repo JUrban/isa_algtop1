@@ -5603,12 +5603,45 @@ proof -
           assume hp: "p \<in> S_c"
           hence hp_B2: "p \<in> top1_B2" and hp_angle: "p = (0,0) \<or> angle_of p \<le> \<theta>_cancel"
             unfolding S_c_def by (by100 auto)+
+          have hp_norm: "fst p ^ 2 + snd p ^ 2 \<le> 1"
+            using hp_B2 unfolding top1_B2_def by (by100 simp)
           show "p \<in> {p. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
               \<and> fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
-            sorry \<comment> \<open>Forward: angle \\<le> \\<theta>\\_cancel \\<Longrightarrow> Cartesian cone.
-               For p=(0,0): trivial. For p\\<noteq>0, snd p \\<ge> 0:
-               arccos(fst p/|p|) \\<le> \\<theta>\\_cancel \\<Longrightarrow> fst p/|p| \\<ge> cos(\\<theta>\\_cancel) via cos\\_mono\\_le\\_eq
-               \\<Longrightarrow> fst p \\<ge> cos(\\<theta>\\_cancel)*|p|. For snd p < 0: angle > \\<pi> > \\<theta>\\_cancel, contradiction.\<close>
+          proof (cases "p = (0,0)")
+            case True thus ?thesis using hp_norm by (by100 simp)
+          next
+            case False
+            hence hp_ne: "fst p \<noteq> 0 \<or> snd p \<noteq> 0" by (cases p) (by100 auto)
+            from hp_angle False have h_angle_le: "angle_of p \<le> \<theta>_cancel" by (by100 simp)
+            \<comment> \<open>snd p \\<ge> 0: if snd p < 0, angle\\_of > \\<pi> > \\<theta>\\_cancel, contradiction.\<close>
+            have hsnd_ge: "snd p \<ge> 0"
+            proof (rule ccontr)
+              assume "\<not> snd p \<ge> 0"
+              hence "snd p < 0" by (by100 linarith)
+              hence "angle_of p = 2*pi - arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                unfolding angle_of_def by (by100 simp)
+              moreover have "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) \<le> pi"
+                sorry \<comment> \<open>arccos\\_ubound with -1 \\<le> fst p/|p| \\<le> 1. Same pattern as h\\<alpha>\\_ge proof.\<close>
+              ultimately have "angle_of p \<ge> pi" using pi_gt_zero by (by100 linarith)
+              have "\<theta>_cancel < pi"
+              proof -
+                have "?n \<ge> 5" using assms(2) by (by100 simp)
+                hence "real ?n \<ge> 5" by (by100 simp)
+                hence "4 * pi / real ?n \<le> 4 * pi / 5"
+                proof -
+                  from divide_left_mono[of 5 "real ?n" "4*pi"] \<open>real ?n \<ge> 5\<close> pi_gt_zero
+                  show ?thesis by (by100 simp)
+                qed
+                also have "\<dots> < pi" using pi_gt_zero by (by100 linarith)
+                finally show ?thesis unfolding \<theta>_cancel_def .
+              qed
+              thus False using h_angle_le \<open>angle_of p \<ge> pi\<close> \<open>\<theta>_cancel < pi\<close> by (by100 linarith)
+            qed
+            \<comment> \<open>For snd p \\<ge> 0: angle\\_of = arccos(fst p/|p|). arccos \\<le> \\<theta>\\_cancel \\<Longrightarrow> fst p/|p| \\<ge> cos(\\<theta>\\_cancel).\<close>
+            have hfst_ge: "fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)"
+              sorry \<comment> \<open>arccos(z) \\<le> \\<theta>\\_cancel \\<Longrightarrow> z \\<ge> cos(\\<theta>\\_cancel) via cos\\_mono\\_le\\_eq. Then multiply by |p|.\<close>
+            show ?thesis using hp_norm hsnd_ge hfst_ge by (by100 simp)
+          qed
         next
           fix p :: "real \<times> real"
           assume hp: "p \<in> {p. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
