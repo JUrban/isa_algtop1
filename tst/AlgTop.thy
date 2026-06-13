@@ -5407,7 +5407,63 @@ proof -
           \<comment> \<open>Convex combination of (1,0) and p\\_cm is in B2 (by convexity of B2).\<close>
           have hconv_bound: "\<And>t. 0 \<le> t \<Longrightarrow> t \<le> 1 \<Longrightarrow>
               ((1-t) + t * fst p_cm) ^ 2 + (t * snd p_cm) ^ 2 \<le> 1"
-            sorry \<comment> \<open>Convex combination norm bound: B2 is convex, (1,0) \\<in> B2, p\\_cm \\<in> B2.\<close>
+          proof -
+            fix t :: real assume ht0: "0 \<le> t" and ht1: "t \<le> 1"
+            let ?f = "fst p_cm" and ?s = "snd p_cm"
+            \<comment> \<open>Expand: ((1-t) + t*f)^2 + (t*s)^2 = (1-t)^2 + 2*t*(1-t)*f + t^2*(f^2+s^2).\<close>
+            have hexpand: "((1-t) + t * ?f) ^ 2 + (t * ?s) ^ 2
+                = (1-t)^2 + 2*t*(1-t)*?f + t^2*(?f^2 + ?s^2)"
+              by (by100 algebra)
+            \<comment> \<open>f^2+s^2 \\<le> 1.\<close>
+            have hfs: "?f^2 + ?s^2 \<le> 1" using hp_cm_le .
+            \<comment> \<open>t^2 * (f^2+s^2) \\<le> t^2.\<close>
+            have ht2: "t^2 * (?f^2 + ?s^2) \<le> t^2"
+            proof -
+              have "t^2 \<ge> 0" by (by100 simp)
+              have "t^2 * (?f^2 + ?s^2) \<le> t^2 * 1"
+                using mult_left_mono[OF hfs \<open>t^2 \<ge> 0\<close>] by (by100 linarith)
+              thus ?thesis by (by100 simp)
+            qed
+            \<comment> \<open>-1 \\<le> f \\<le> 1 (from |p\\_cm| \\<le> 1).\<close>
+            have hf_ge: "?f \<ge> -1" and hf_le: "?f \<le> 1"
+            proof -
+              have "?s ^ 2 \<ge> 0" by (by100 simp)
+              hence "?f ^ 2 \<le> 1" using hfs by (by100 linarith)
+              show "?f \<ge> -1"
+              proof (rule ccontr)
+                assume "\<not> ?f \<ge> -1"
+                hence "(-?f) > 1" by (by100 linarith)
+                hence "(-?f) * (-?f) > 1" using mult_strict_mono'[of 1 "-?f" 1 "-?f"] by (by100 linarith)
+                hence "?f ^ 2 > 1" unfolding power2_eq_square by (by100 linarith)
+                thus False using \<open>?f ^ 2 \<le> 1\<close> by (by100 linarith)
+              qed
+              show "?f \<le> 1"
+              proof (rule ccontr)
+                assume "\<not> ?f \<le> 1"
+                hence "?f > 1" by (by100 linarith)
+                hence "?f * ?f > 1" using mult_strict_mono'[of 1 "?f" 1 "?f"] by (by100 linarith)
+                hence "?f ^ 2 > 1" unfolding power2_eq_square by (by100 linarith)
+                thus False using \<open>?f ^ 2 \<le> 1\<close> by (by100 linarith)
+              qed
+            qed
+            \<comment> \<open>2*t*(1-t)*f \\<le> 2*t*(1-t): since 0 \\<le> t*(1-t) and f \\<le> 1.\<close>
+            have h2tf: "2*t*(1-t)*?f \<le> 2*t*(1-t)"
+            proof -
+              have h1t: "1 - t \<ge> 0" using ht1 by (by100 linarith)
+              have "t*(1-t) \<ge> 0" using ht0 h1t by (rule mult_nonneg_nonneg)
+              hence h2t: "2*t*(1-t) \<ge> 0" by (by100 linarith)
+              have "2*t*(1-t)*?f \<le> 2*t*(1-t)*1"
+                using mult_left_mono[OF hf_le h2t] by (by100 linarith)
+              thus ?thesis by (by100 simp)
+            qed
+            \<comment> \<open>Sum: (1-t)^2 + 2*t*(1-t) + t^2 = 1.\<close>
+            have hsum1: "(1-t)^2 + 2*t*(1-t) + t^2 = (1::real)" by (by100 algebra)
+            \<comment> \<open>Combine.\<close>
+            have "((1-t) + t * ?f) ^ 2 + (t * ?s) ^ 2 \<le> (1-t)^2 + 2*t*(1-t) + t^2"
+              using hexpand ht2 h2tf by (by100 linarith)
+            thus "((1-t) + t * ?f) ^ 2 + (t * ?s) ^ 2 \<le> 1"
+              using hsum1 by (by100 linarith)
+          qed
           \<comment> \<open>d\\_perp norm: (-snd p\\_cm, fst p\\_cm - 1). |d|^2 \\<le> 4.\<close>
           have hd_sq_bound: "fst d_perp ^ 2 + snd d_perp ^ 2 \<le> 4"
           proof -
