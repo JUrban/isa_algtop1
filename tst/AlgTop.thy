@@ -2,19 +2,29 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (33 sorrys as of 2026-06-15, sessions 1316-1401):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-13, sessions 1316-1416):
 
-SPUR COLLAPSE (5 sorrys, from decomposition):
+SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
 - h\\_tau\\_surj: FULLY PROVED!
 - h\\_tau\\_cont: PROVED from 4 sub-sorrys via continuous\\_on\\_closed\\_Un pasting:
-  (1) S\\_g (good sector + positive x-axis) closed
-  (2) S\\_c (cancel sector) closed
-  (3) \\<tau> continuous on S\\_g
-  (4) \\<tau> continuous on S\\_c
-- h\\_fibres: fibre matching (1 sorry, per expert §7 case decomposition)
-  spur\\_f continuity + surjectivity PROVED from h\\_tau\\_cont/h\\_tau\\_surj.
-  Cascades to front\\_cancel + uncancel\\_front.
+  (1) S\\_g closed — PROVED \\<checkmark>
+  (2) S\\_c closed — PROVED \\<checkmark>
+  (3) \\<tau> continuous on S\\_g: nonzero (sorry) + origin combination (PROVED)
+  (4) \\<tau> continuous on S\\_c: nonzero (sorry) + origin combination (PROVED)
+  Bounds |fst/snd(\\<tau>)| \\<le> C*r: sorry (mechanical, C = 1 + |p\\_cm| + |d\\_perp|)
+- h\\_spur\\_good\\_edge: FULLY PROVED!
+- h\\_spur\\_cancel\\_collapse: FULLY PROVED!
+- h\\_spur\\_vertex: FULLY PROVED! (k\\<ge>2 \\<to> vx\\_m(k-2))
+- h\\_spur\\_vertex\\_0: FULLY PROVED! (vx\\_e(0) \\<to> vx\\_m(0))
+- h\\_fibres\\_good\\_edge: FULLY PROVED!
+- h\\_fibres: PROVED from forward + backward.
+  h\\_fibres\\_forward: ALL EDGE-INTERIOR CASES PROVED!
+    Interior: C8\\_e. Good-good: C9+shift+C7. Cancel-cancel: collapse+dir.
+    Cancel-good: freshness contradiction. Vertex cases: sorry.
+  h\\_fibres\\_backward: sorry.
+  KEY BLOCKER: vertex-edge quotient separation (3 vertex sorrys).
+- edge\\_interior\\_not\\_vertex: PROVED (polygon-level, C3+C11).
 
 CUT-PASTE (5 sorrys):
 - Same-space (3): quotient\\_of\\_scheme\\_cut\\_paste/2/opp (lines 113, 125, 153)
@@ -69,6 +79,104 @@ proof -
   then obtain P q vx vy where "top1_is_polygonal_region_on P (length w)"
     by (rule quotient_of_scheme_extract_vx)
   thus "length w \<ge> 3" unfolding top1_is_polygonal_region_on_def by (by100 blast)
+qed
+
+\<comment> \<open>Edge-interior point is never a vertex (for any polygon with C3 + C11).
+   Proof: collinearity implies cross product = 0, but C11 forces < 0 for non-adjacent vertices.
+   Adjacent vertex case: would give (vx i, vy i) = (vx(i+1), vy(i+1)), contradicting C3.\<close>
+lemma edge_interior_not_vertex:
+  fixes vx vy :: "nat \<Rightarrow> real" and n :: nat
+  assumes hn: "n \<ge> 3"
+      and hC3: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+      and hC11: "\<forall>i<n. \<forall>k<n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod n \<longrightarrow>
+          (vx k - vx i) * (vy(Suc i mod n) - vy i) - (vy k - vy i) * (vx(Suc i mod n) - vx i) < 0"
+      and hidx: "idx < n" and ht0: "0 < t" and ht1: "t < 1"
+  shows "\<not>(\<exists>k<n. (1-t)*vx idx + t*vx(Suc idx mod n) = vx k
+                \<and> (1-t)*vy idx + t*vy(Suc idx mod n) = vy k)"
+proof
+  assume "\<exists>k<n. (1-t)*vx idx + t*vx(Suc idx mod n) = vx k
+              \<and> (1-t)*vy idx + t*vy(Suc idx mod n) = vy k"
+  then obtain k where hk: "k < n"
+    and hxeq: "(1-t)*vx idx + t*vx(Suc idx mod n) = vx k"
+    and hyeq: "(1-t)*vy idx + t*vy(Suc idx mod n) = vy k" by (by100 blast)
+  \<comment> \<open>Collinearity: (vx k - vx idx, vy k - vy idx) = t * (vx(Suc idx mod n) - vx idx, ...).\<close>
+  have hcolx: "vx k - vx idx = t * (vx(Suc idx mod n) - vx idx)"
+  proof -
+    from hxeq have "vx k - vx idx = t*vx(Suc idx mod n) - t*vx idx" by argo
+    thus ?thesis by (simp only: right_diff_distrib[symmetric])
+  qed
+  have hcoly: "vy k - vy idx = t * (vy(Suc idx mod n) - vy idx)"
+  proof -
+    from hyeq have "vy k - vy idx = t*vy(Suc idx mod n) - t*vy idx" by argo
+    thus ?thesis by (simp only: right_diff_distrib[symmetric])
+  qed
+  \<comment> \<open>Cross product = 0 (collinear with edge direction).\<close>
+  have hcross0: "(vx k - vx idx)*(vy(Suc idx mod n) - vy idx)
+      - (vy k - vy idx)*(vx(Suc idx mod n) - vx idx) = 0"
+    unfolding hcolx hcoly by (by100 algebra)
+  \<comment> \<open>By C11: k must be idx or Suc idx mod n (other vertices have cross product < 0).\<close>
+  have "k = idx \<or> k = Suc idx mod n"
+  proof (rule ccontr)
+    assume "\<not>(k = idx \<or> k = Suc idx mod n)"
+    hence "k \<noteq> idx" "k \<noteq> Suc idx mod n" by (by100 auto)+
+    from hC11[rule_format, OF hidx hk this]
+    have "(vx k - vx idx)*(vy(Suc idx mod n) - vy idx)
+        - (vy k - vy idx)*(vx(Suc idx mod n) - vx idx) < 0" .
+    thus False using hcross0 by (by100 linarith)
+  qed
+  thus False
+  proof
+    assume "k = idx"
+    hence "vx k = vx idx" "vy k = vy idx" by (by100 auto)+
+    hence "t * (vx(Suc idx mod n) - vx idx) = 0" using hcolx by (by100 linarith)
+    hence "vx(Suc idx mod n) = vx idx" using ht0 by (by100 simp)
+    moreover have "t * (vy(Suc idx mod n) - vy idx) = 0" using hcoly \<open>vy k = vy idx\<close> by (by100 linarith)
+    hence "vy(Suc idx mod n) = vy idx" using ht0 by (by100 simp)
+    ultimately have "(vx idx, vy idx) = (vx(Suc idx mod n), vy(Suc idx mod n))" by (by100 simp)
+    have "Suc idx mod n < n" using hn by (by100 simp)
+    have hmod_lt: "Suc idx mod n < n" using hn by (by100 simp)
+    have hmod_ne: "idx \<noteq> Suc idx mod n"
+    proof (cases "idx < n - 1")
+      case True hence "Suc idx < n" by (by100 linarith)
+      hence "Suc idx mod n = Suc idx" by (by100 simp)
+      thus ?thesis by (by100 simp)
+    next
+      case False hence "idx = n - 1" using hidx by (by100 linarith)
+      hence "Suc idx = n" using hn by (by100 linarith)
+      hence "Suc idx mod n = 0" using hn by (by100 simp)
+      thus ?thesis using \<open>idx = n - 1\<close> hn by (by100 linarith)
+    qed
+    from hC3[rule_format, OF hidx hmod_lt hmod_ne]
+    show False using \<open>(vx idx, vy idx) = _\<close> by (by100 blast)
+  next
+    assume "k = Suc idx mod n"
+    hence "vx k = vx(Suc idx mod n)" "vy k = vy(Suc idx mod n)" by (by100 auto)+
+    hence "vx(Suc idx mod n) - vx idx = t * (vx(Suc idx mod n) - vx idx)" using hcolx by (by100 linarith)
+    hence "(1-t) * (vx(Suc idx mod n) - vx idx) = 0" by argo
+    hence "vx(Suc idx mod n) = vx idx" using ht1 by (by100 simp)
+    moreover have "(1-t) * (vy(Suc idx mod n) - vy idx) = 0"
+    proof -
+      from \<open>vy k = vy(Suc idx mod n)\<close> hcoly
+      have "vy(Suc idx mod n) - vy idx = t * (vy(Suc idx mod n) - vy idx)" by (by100 linarith)
+      thus ?thesis by argo
+    qed
+    hence "vy(Suc idx mod n) = vy idx" using ht1 by (by100 simp)
+    ultimately have "(vx idx, vy idx) = (vx(Suc idx mod n), vy(Suc idx mod n))" by (by100 simp)
+    have hmod_lt2: "Suc idx mod n < n" using hn by (by100 simp)
+    have hmod_ne2: "idx \<noteq> Suc idx mod n"
+    proof (cases "idx < n - 1")
+      case True hence "Suc idx < n" by (by100 linarith)
+      hence "Suc idx mod n = Suc idx" by (by100 simp)
+      thus ?thesis by (by100 simp)
+    next
+      case False hence "idx = n - 1" using hidx by (by100 linarith)
+      hence "Suc idx = n" using hn by (by100 linarith)
+      hence "Suc idx mod n = 0" using hn by (by100 simp)
+      thus ?thesis using \<open>idx = n - 1\<close> hn by (by100 linarith)
+    qed
+    from hC3[rule_format, OF hidx \<open>Suc idx mod n < n\<close> this]
+    show False using \<open>(vx idx, vy idx) = _\<close> by (by100 blast)
+  qed
 qed
 
 \<comment> \<open>AM-GM for real products: |xy| \\<le> (x^2+y^2)/2. Reusable for inner product bounds (expert audit 26).\<close>
@@ -462,7 +570,39 @@ lemma scheme_quotient_exists:
   assumes "length scheme \<ge> 3"
       and hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
   shows "\<exists>(Y :: (real \<times> real) set) (TY :: (real \<times> real) set set).
-    top1_quotient_of_scheme_on Y TY scheme"
+    top1_quotient_of_scheme_on Y TY scheme" (is ?C1)
+  and "\<exists>(P :: (real \<times> real) set) q (vx :: nat \<Rightarrow> real) (vy :: nat \<Rightarrow> real)
+    (Y :: (real \<times> real) set) (TY :: (real \<times> real) set set).
+    top1_quotient_of_scheme_on Y TY scheme
+    \<and> top1_is_polygonal_region_on P (length scheme)
+    \<and> top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q
+    \<and> (\<forall>i<length scheme. \<forall>j<length scheme. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
+    \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
+    \<and> P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<length scheme. coeffs i \<ge> 0)
+                   \<and> (\<Sum>i<length scheme. coeffs i) = 1
+                   \<and> x = (\<Sum>i<length scheme. coeffs i * vx i)
+                   \<and> y = (\<Sum>i<length scheme. coeffs i * vy i)}
+    \<and> (\<forall>i<length scheme. \<forall>j<length scheme. fst(scheme!i)=fst(scheme!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q ((1-t)*vx i+t*vx(Suc i mod length scheme),(1-t)*vy i+t*vy(Suc i mod length scheme))
+         = (if snd(scheme!i)=snd(scheme!j)
+            then q ((1-t)*vx j+t*vx(Suc j mod length scheme),(1-t)*vy j+t*vy(Suc j mod length scheme))
+            else q (t*vx j+(1-t)*vx(Suc j mod length scheme),t*vy j+(1-t)*vy(Suc j mod length scheme)))))
+    \<and> (\<forall>p\<in>P. (\<forall>i<length scheme. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t)*vx i+t*vx(Suc i mod length scheme),(1-t)*vy i+t*vy(Suc i mod length scheme)))
+       \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p'))
+    \<and> (\<forall>i<length scheme. \<forall>j<length scheme. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+        q ((1-t)*vx i+t*vx(Suc i mod length scheme),(1-t)*vy i+t*vy(Suc i mod length scheme))
+      = q ((1-s)*vx j+s*vx(Suc j mod length scheme),(1-s)*vy j+s*vy(Suc j mod length scheme))
+      \<longrightarrow> (i=j \<and> t=s) \<or> (fst(scheme!i)=fst(scheme!j) \<and> (if snd(scheme!i)=snd(scheme!j) then s=t else s=1-t)))
+    \<and> (\<forall>i<length scheme. let cx=(\<Sum>j<length scheme. vx j)/real(length scheme);
+                             cy=(\<Sum>j<length scheme. vy j)/real(length scheme)
+         in (vx i-cx)*(vy(Suc i mod length scheme)-cy)-(vy i-cy)*(vx(Suc i mod length scheme)-cx) > 0)
+    \<and> (\<forall>i<length scheme. \<forall>k<length scheme. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod length scheme \<longrightarrow>
+        (vx k-vx i)*(vy(Suc i mod length scheme)-vy i)-(vy k-vy i)*(vx(Suc i mod length scheme)-vx i) < 0)
+    \<and> (\<forall>k<length scheme. \<forall>j<length scheme. \<forall>s\<in>{0<..<(1::real)}.
+        q (vx k, vy k) \<noteq> q ((1-s)*vx j + s*vx(Suc j mod length scheme),
+                               (1-s)*vy j + s*vy(Suc j mod length scheme)))" (is ?C2)
 proof -
   let ?n = "length scheme"
   \<comment> \<open>Regular n-gon: vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).\<close>
@@ -3175,64 +3315,153 @@ proof -
     qed
     ultimately show ?thesis unfolding is_topology_on_strict_def by (by100 blast)
   qed
-  show ?thesis
-    unfolding top1_quotient_of_scheme_on_def
-  proof (intro exI conjI)
-    show "is_topology_on_strict Y TY" using htopo .
-    show "top1_is_polygonal_region_on P ?n" using hC1 .
-    show "top1_quotient_map_on P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
-      using hC2 .
-    show "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)" using hC3 .
-    show "\<forall>i<?n. (vx i, vy i) \<in> P" using hC4 .
-    show "P = {(x, y) | x y.
-                \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
-                       \<and> (\<Sum>i<?n. coeffs i) = 1
-                       \<and> x = (\<Sum>i<?n. coeffs i * vx i)
-                       \<and> y = (\<Sum>i<?n. coeffs i * vy i)}" using hC5 .
-    \<comment> \<open>C6: use hC6 with open01 = {0<..<1}.\<close>
-    show "\<forall>i<?n. \<forall>j<?n.
-          i \<noteq> j \<longrightarrow> (Suc i mod ?n) \<noteq> j \<longrightarrow> i \<noteq> (Suc j mod ?n) \<longrightarrow>
-          (\<forall>s\<in>{0<..<(1::real)}. \<forall>t\<in>{0<..<(1::real)}.
-             ((1-s) * vx i + s * vx (Suc i mod ?n),
-              (1-s) * vy i + s * vy (Suc i mod ?n))
-           \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
-               (1-t) * vy j + t * vy (Suc j mod ?n)))"
-      using hC6 unfolding open01_def .
-    show "\<forall>i<?n. \<forall>j<?n. fst(scheme!i) = fst(scheme!j) \<longrightarrow>
-        (\<forall>t\<in>I_set.
-           q ((1-t) * vx i + t * vx (Suc i mod ?n),
-              (1-t) * vy i + t * vy (Suc i mod ?n))
-         = (if snd(scheme!i) = snd(scheme!j)
-            then q ((1-t) * vx j + t * vx (Suc j mod ?n),
-                    (1-t) * vy j + t * vy (Suc j mod ?n))
-            else q (t * vx j + (1-t) * vx (Suc j mod ?n),
-                    t * vy j + (1-t) * vy (Suc j mod ?n))))"
-      using hC8 .
-    show "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
-                p \<noteq> ((1-t) * vx i + t * vx (Suc i mod ?n),
-                      (1-t) * vy i + t * vy (Suc i mod ?n)))
-             \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
-      using hC9_interior .
-    show "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
-            q ((1-t) * vx i + t * vx (Suc i mod ?n),
-               (1-t) * vy i + t * vy (Suc i mod ?n))
-          = q ((1-s) * vx j + s * vx (Suc j mod ?n),
-               (1-s) * vy j + s * vy (Suc j mod ?n))
-          \<longrightarrow> (i = j \<and> t = s)
-            \<or> (fst(scheme!i) = fst(scheme!j) \<and>
-               (if snd(scheme!i) = snd(scheme!j) then s = t else s = 1 - t))"
-      using hC9_boundary .
-    show "\<forall>i<?n. let cx = (\<Sum>j<?n. vx j) / real ?n;
-                       cy = (\<Sum>j<?n. vy j) / real ?n
-         in (vx i - cx) * (vy (Suc i mod ?n) - cy)
-          - (vy i - cy) * (vx (Suc i mod ?n) - cx) > 0"
-      using hC10 .
-    show "\<forall>i<?n. \<forall>k<?n.
-          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
-          (vx k - vx i) * (vy (Suc i mod ?n) - vy i)
-          - (vy k - vy i) * (vx (Suc i mod ?n) - vx i) < 0"
-      using hC11 .
+  \<comment> \<open>C12: vertex-edge separation. q(vertex) is always a vertex, q(edge interior) is always
+     an edge point. By hnotvertex\\_gen, these are disjoint.\<close>
+  have hC12: "\<forall>k<?n. \<forall>j<?n. \<forall>ss\<in>{0<..<(1::real)}.
+      q (vx k, vy k) \<noteq> q ((1-ss)*vx j + ss*vx(Suc j mod ?n),
+                               (1-ss)*vy j + ss*vy(Suc j mod ?n))"
+  proof (intro allI impI ballI)
+    fix k j :: nat and ss :: real
+    assume hk_lt: "k < ?n" and hj_lt: "j < ?n" and hss: "ss \<in> {0<..<(1::real)}"
+    have hss1: "0 < ss" and hss2: "ss < 1" using hss by (by100 auto)+
+    \<comment> \<open>q(vx k, vy k) = (vx(vtgt k), vy(vtgt k)) — a vertex.\<close>
+    have hq_vtx: "q (vx k, vy k) = (vx (vtgt k), vy (vtgt k))"
+    proof -
+      have "\<exists>k'<?n. (vx k, vy k) = (vx k', vy k')" using hk_lt by (by100 blast)
+      hence hbranch: "q (vx k, vy k) = (let k' = (SOME k'. k' < ?n \<and> (vx k, vy k) = (vx k', vy k'))
+          in (vx (vtgt k'), vy (vtgt k')))" unfolding q_def by (by100 simp)
+      have "(SOME k'. k' < ?n \<and> (vx k, vy k) = (vx k', vy k')) = k"
+      proof (rule some_equality)
+        show "k < ?n \<and> (vx k, vy k) = (vx k, vy k)" using hk_lt by (by100 simp)
+      next
+        fix k' assume "k' < ?n \<and> (vx k, vy k) = (vx k', vy k')"
+        hence "k' < ?n" "(vx k, vy k) = (vx k', vy k')" by (by100 auto)+
+        from hC3[rule_format, OF hk_lt this(1)] this(2) show "k' = k" by (by100 blast)
+      qed
+      thus ?thesis using hbranch by (by100 simp)
+    qed
+    \<comment> \<open>q(edge\\_pt(j,ss)) is NOT a vertex (by hnotvertex\\_gen + q definition).\<close>
+    have h_ept_not_vtx: "\<not>(\<exists>k'<?n. edge_pt j ss = (vx k', vy k'))"
+      using hnotvertex_gen[OF hj_lt hss1 hss2] .
+    have hq_not_vtx: "\<not>(\<exists>k'<?n. q (edge_pt j ss) = (vx k', vy k'))"
+    proof -
+      \<comment> \<open>Branch 1 of q does not apply (edge point \\<noteq> vertex).\<close>
+      have hno_b1: "\<not>(\<exists>k'. k' < ?n \<and> edge_pt j ss = (vx k', vy k'))"
+        using h_ept_not_vtx by (by100 simp)
+      show ?thesis
+      proof (cases "\<exists>i t. i < ?n \<and> 0 < t \<and> t < 1 \<and> edge_pt j ss = edge_pt i t \<and> \<not> is_canonical i")
+        case False
+        \<comment> \<open>Canonical case: q = identity on this point.\<close>
+        hence "q (edge_pt j ss) = edge_pt j ss"
+          unfolding q_def using hno_b1 by auto
+        thus ?thesis using h_ept_not_vtx by (by100 simp)
+      next
+        case True
+        \<comment> \<open>Non-canonical: q maps to partner edge. Extract SOME witness properties.\<close>
+        define sel where "sel = (SOME (i,t). i < ?n \<and> 0 < t \<and> t < 1
+            \<and> edge_pt j ss = edge_pt i t \<and> \<not> is_canonical i)"
+        define i' where "i' = fst sel"
+        define t' where "t' = snd sel"
+        have hsel: "i' < ?n \<and> 0 < t' \<and> t' < 1 \<and> edge_pt j ss = edge_pt i' t' \<and> \<not> is_canonical i'"
+        proof -
+          from True have "\<exists>p. (case p of (i,t) \<Rightarrow> i < ?n \<and> 0 < t \<and> t < 1 \<and> edge_pt j ss = edge_pt i t \<and> \<not> is_canonical i)"
+            by (by100 auto)
+          from someI_ex[OF this] show ?thesis unfolding sel_def i'_def t'_def by (by100 auto)
+        qed
+        hence hi': "i' < ?n" and ht'1: "0 < t'" and ht'2: "t' < 1" by (by100 auto)+
+        define j' where "j' = partner i'"
+        have hj': "j' < ?n"
+        proof -
+          have "card {jj. jj < ?n \<and> fst(scheme!jj) = fst(scheme!i')} \<in> {0, 2}"
+            using hproper by (by100 blast)
+          moreover have "card {jj. jj < ?n \<and> fst(scheme!jj) = fst(scheme!i')} \<noteq> 0"
+          proof -
+            have "i' \<in> {jj. jj < ?n \<and> fst(scheme!jj) = fst(scheme!i')}" using hi' by (by100 simp)
+            moreover have "finite {jj. jj < ?n \<and> fst(scheme!jj) = fst(scheme!i')}" by (by100 simp)
+            ultimately show ?thesis using card_eq_0_iff by auto
+          qed
+          ultimately have hcard2: "card {jj. jj < ?n \<and> fst(scheme!jj) = fst(scheme!i')} = 2" by (by100 blast)
+          from partner_props[OF hi' hcard2] show ?thesis unfolding j'_def by (by100 blast)
+        qed
+        \<comment> \<open>q result is edge\\_pt(j', t') or edge\\_pt(j', 1-t'). Parameter in (0,1).\<close>
+        have hq_eq: "q (edge_pt j ss) = (if snd(scheme!i') = snd(scheme!j') then edge_pt j' t' else edge_pt j' (1-t'))"
+        proof -
+          \<comment> \<open>q at edge\\_pt: branch 1 excluded, branch 2 applies.\<close>
+          have hsel_eq: "sel = (i', t')" unfolding i'_def t'_def by (by100 simp)
+          show ?thesis
+            unfolding q_def sel_def[symmetric] hsel_eq j'_def using hno_b1 True by auto
+        qed
+        \<comment> \<open>The result is edge\\_pt at parameter in (0,1), hence not a vertex.\<close>
+        show ?thesis
+        proof (cases "snd(scheme!i') = snd(scheme!j')")
+          case True
+          hence "q (edge_pt j ss) = edge_pt j' t'" using hq_eq by (by100 simp)
+          from hnotvertex_gen[OF hj' ht'1 ht'2]
+          show ?thesis using \<open>q _ = edge_pt j' t'\<close> by (by100 simp)
+        next
+          case False
+          hence "q (edge_pt j ss) = edge_pt j' (1-t')" using hq_eq by (by100 simp)
+          have "0 < 1-t'" using ht'2 by (by100 linarith)
+          have "1-t' < 1" using ht'1 by (by100 linarith)
+          from hnotvertex_gen[OF hj' \<open>0<1-t'\<close> \<open>1-t'<1\<close>]
+          show ?thesis using \<open>q _ = edge_pt j' (1-t')\<close> by (by100 simp)
+        qed
+      qed
+    qed
+    have hvtgt_lt: "vtgt k < ?n"
+    proof -
+      \<comment> \<open>k is reachable from k (via Id), so vtgt k \\<le> k < n.\<close>
+      have "(k, k) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*" by (by100 simp)
+      hence hk_reach: "(k, k) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*" .
+      have "vtgt k \<le> k" unfolding vtgt_def by (rule Least_le) (by100 simp)
+      thus ?thesis using hk_lt by (by100 linarith)
+    qed
+    have "q (vx k, vy k) \<noteq> q (edge_pt j ss)"
+    proof
+      assume "q (vx k, vy k) = q (edge_pt j ss)"
+      hence "q (edge_pt j ss) = (vx (vtgt k), vy (vtgt k))" using hq_vtx by (by100 simp)
+      hence "\<exists>k'<?n. q (edge_pt j ss) = (vx k', vy k')" using hvtgt_lt by (by100 blast)
+      thus False using hq_not_vtx by (by100 blast)
+    qed
+    thus "q (vx k, vy k) \<noteq> q ((1-ss)*vx j + ss*vx(Suc j mod ?n),
+                                 (1-ss)*vy j + ss*vy(Suc j mod ?n))"
+      unfolding edge_pt_def by (by100 simp)
   qed
+  \<comment> \<open>Capture quotient\\_of\\_scheme\\_on for specific Y, TY BEFORE show.\<close>
+  have hqos: "top1_quotient_of_scheme_on Y TY scheme"
+    unfolding top1_quotient_of_scheme_on_def
+    apply (intro conjI)
+    apply (rule htopo)
+    apply (rule exI[of _ P], rule exI[of _ q], rule exI[of _ vx], rule exI[of _ vy])
+    apply (intro conjI)
+    using hC1 apply (by100 blast)
+    using hC2 apply (by100 blast)
+    using hC3 apply (by100 blast)
+    using hC4 apply (by100 blast)
+    using hC5 apply (by100 simp)
+    using hC6 unfolding open01_def apply (by100 blast)
+    using hC8 apply (by100 blast)
+    using hC9_interior apply (by100 blast)
+    using hC9_boundary apply (by100 blast)
+    using hC10 apply (by100 blast)
+    using hC11 by (by100 blast)
+  show ?C1 using hqos by (by100 blast)
+  show ?C2
+    apply (rule exI[of _ P], rule exI[of _ q], rule exI[of _ vx], rule exI[of _ vy],
+           rule exI[of _ Y], rule exI[of _ TY])
+    apply (intro conjI)
+    using hqos apply (by100 blast)
+    using hC1 apply (by100 blast)
+    using hC2 apply (by100 blast)
+    using hC3 apply (by100 blast)
+    using hC4 apply (by100 blast)
+    using hC5 apply (by100 simp)
+    using hC8 apply (by100 blast)
+    using hC9_interior apply (by100 blast)
+    using hC9_boundary apply (by100 blast)
+    using hC10 apply (by100 blast)
+    using hC11 apply (by100 blast)
+    using hC12 by (by100 blast)
 qed
 
 
@@ -3571,6 +3800,37 @@ proof -
   qed
 qed
 
+\<comment> \<open>Strengthened version: canonical quotient has vertex-edge separation.
+   In the canonical construction (regular polygon + 3-branch q), a vertex q-value is always
+   a vertex (vx(vtgt k), vy(vtgt k)), and an edge-interior q-value is always an edge interior.
+   By edge\\_interior\\_not\\_vertex, these are disjoint. So q(vertex) \\<noteq> q(edge\\_interior).\<close>
+lemma scheme_quotient_exists_with_vertex_separation:
+  fixes scheme :: "(nat \<times> bool) list"
+  assumes "length scheme \<ge> 3"
+      and hproper: "\<forall>label. card {i. i < length scheme \<and> fst (scheme ! i) = label} \<in> {0, 2}"
+  shows "\<exists>(Y :: (real \<times> real) set) (TY :: (real \<times> real) set set)
+    (P :: (real \<times> real) set) q (vx :: nat \<Rightarrow> real) (vy :: nat \<Rightarrow> real).
+    top1_quotient_of_scheme_on Y TY scheme
+    \<and> top1_is_polygonal_region_on P (length scheme)
+    \<and> top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q
+    \<and> (\<forall>i<length scheme. (vx i, vy i) \<in> P)
+    \<and> (\<forall>k<length scheme. \<forall>j<length scheme. \<forall>s\<in>{0<..<(1::real)}.
+        q (vx k, vy k) \<noteq> q ((1-s)*vx j + s*vx(Suc j mod length scheme),
+                               (1-s)*vy j + s*vy(Suc j mod length scheme)))"
+proof -
+  from scheme_quotient_exists(2)[OF assms]
+  show ?thesis by (elim exE conjE) (rule exI, rule exI, rule exI, rule exI, rule exI, rule exI,
+    intro conjI, assumption+)
+qed
+\<comment> \<open>Previously sorry. Now follows directly from scheme\\_quotient\\_exists(2).
+     The vertex-edge separation follows from hnotvertex\\_gen: the q image of a vertex is
+     (vx(vtgt k), vy(vtgt k)) which is a vertex, while q image of edge\\_pt(j,s) is an edge point.
+     By edge\\_interior\\_not\\_vertex, these are disjoint.
+     TO PROVE: need to modify scheme\\_quotient\\_exists to output the extra property,
+     or duplicate enough of the construction to derive it.
+     from hnotvertex\\_gen applied to the 3-branch q definition.\<close>
+
 \<comment> \<open>front\\_cancel\\_proper is defined after scheme\\_quotient\\_uniqueness (line ~4828).\<close>
 
 \<comment> \<open>Cancel at front — homeomorphic-realization form (per expert audit 21 step 4).
@@ -3594,7 +3854,8 @@ lemma quotient_of_scheme_uncancel_front:
   assumes "top1_quotient_of_scheme_on Y TY w"
       and "length w \<ge> 3"
   shows "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
-  sorry \<comment> \<open>Needs geometric spur insertion or transfer lemma.\<close>
+  sorry \<comment> \<open>General case (non-proper). Proper case proved via
+     quotient\\_of\\_scheme\\_uncancel\\_front\\_proper.\<close>
 
 \<comment> \<open>Uncancel at front — homeomorphic realization.
    Derived from quotient\\_of\\_scheme\\_uncancel\\_front (same-space version).\<close>
@@ -4013,7 +4274,7 @@ proof -
             have "\<exists>coeffs. (\<forall>i\<le>Suc k. 0 \<le> coeffs i) \<and> (\<Sum>i\<le>Suc k. coeffs i) = 1
                 \<and> fst q = (\<Sum>i\<le>Suc k. coeffs i * vx i) \<and> snd q = (\<Sum>i\<le>Suc k. coeffs i * vy i)"
               using h\<beta>_pos h\<beta>_sum hx hy by (by100 blast)
-            thus ?thesis unfolding Q_def by (by100 auto)
+            thus ?thesis unfolding Q_def by auto
           qed
         qed
       qed
@@ -4637,9 +4898,16 @@ proof -
                    label edges where kx and ky are endpoints).
                    General case: kx and ky are connected by a CHAIN of C7 identifications.
                    For now: sorry the general transitivity argument.\<close>
+                \<comment> \<open>KEY BLOCKER: vertex identification transfer requires:
+                   (A) Show q1(vx1 kx) = q1(vx1 ky) \\<Longrightarrow> \\<exists>C7 chain from kx to ky.
+                       (Hard: needs vertex-edge-interior separation, expert audit 27 §4)
+                   (B) C7 chain \\<Longrightarrow> q2(vx2 kx) = q2(vx2 ky).
+                       (Easy: C7\\_2 at t=0 gives q2(vx2(i)) = q2(vx2(j)) for matching edges.
+                        Transitivity of = gives the result for chains.)\<close>
                 show ?thesis using hgoal hgoal2 hq1_eq
-                  sorry \<comment> \<open>Vertex identification transfer: q1(vx1 kx) = q1(vx1 ky) \\<Longrightarrow> q2(vx2 kx) = q2(vx2 ky).
-                     Both q1 and q2 satisfy C7 for same scheme \\<Longrightarrow> same vertex equivalence classes.\<close>
+                  sorry \<comment> \<open>Vertex identification transfer.
+                     Needs vertex-edge-interior separation to show q1-identified vertices
+                     are C7-chain-connected. See expert audit 27 §4.\<close>
               qed
             qed
           qed
@@ -4788,13 +5056,13 @@ proof -
   have hlen': "length ?s' = length ?s" by (by100 simp)
   have htopo: "is_topology_on_strict Y TY"
     using hq unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  from scheme_quotient_exists[OF hlen hproper_old]
+  from scheme_quotient_exists(1)[OF hlen hproper_old]
   obtain Y_old :: "(real \<times> real) set" and TY_old where
     hY_old: "top1_quotient_of_scheme_on Y_old TY_old ?s" by (by100 blast)
   have htopo_old: "is_topology_on_strict Y_old TY_old"
     using hY_old unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   have hlen'3: "length ?s' \<ge> 3" using hlen hlen' by (by100 linarith)
-  from scheme_quotient_exists[OF hlen'3 hproper_new]
+  from scheme_quotient_exists(1)[OF hlen'3 hproper_new]
   obtain Y_new :: "(real \<times> real) set" and TY_new where
     hY_new: "top1_quotient_of_scheme_on Y_new TY_new ?s'" by (by100 blast)
   have htopo_new: "is_topology_on_strict Y_new TY_new"
@@ -4842,13 +5110,13 @@ proof -
   have hlen': "length ?s' = length ?s" by (by100 simp)
   have htopo: "is_topology_on_strict Y TY"
     using hq unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  from scheme_quotient_exists[OF hlen hproper_old]
+  from scheme_quotient_exists(1)[OF hlen hproper_old]
   obtain Y_old :: "(real \<times> real) set" and TY_old where
     hY_old: "top1_quotient_of_scheme_on Y_old TY_old ?s" by (by100 blast)
   have htopo_old: "is_topology_on_strict Y_old TY_old"
     using hY_old unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   have hlen'3: "length ?s' \<ge> 3" using hlen hlen' by (by100 linarith)
-  from scheme_quotient_exists[OF hlen'3 hproper_new]
+  from scheme_quotient_exists(1)[OF hlen'3 hproper_new]
   obtain Y_new :: "(real \<times> real) set" and TY_new where
     hY_new: "top1_quotient_of_scheme_on Y_new TY_new ?s'" by (by100 blast)
   have htopo_new: "is_topology_on_strict Y_new TY_new"
@@ -4983,10 +5251,42 @@ lemma front_cancel_proper:
     top1_quotient_of_scheme_on Y' TY' w \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
 proof -
-  \<comment> \<open>Step 1: scheme\\_quotient\\_exists gives Y\\_w :: (real\\<times>real) quotient of w.\<close>
-  from scheme_quotient_exists[of w, OF assms(2) hproper]
-  obtain Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set" where
-      hY_w: "top1_quotient_of_scheme_on Y_w TY_w w" by (by100 blast)
+  \<comment> \<open>Step 1: scheme\\_quotient\\_exists(2) gives Y\\_w + canonical witnesses with ALL C1-C12.\<close>
+  from scheme_quotient_exists(2)[of w, OF assms(2) hproper]
+  obtain P_m :: "(real \<times> real) set" and q_m :: "(real \<times> real) \<Rightarrow> (real \<times> real)"
+    and vx_m vy_m :: "nat \<Rightarrow> real"
+    and Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set"
+    where hY_w: "top1_quotient_of_scheme_on Y_w TY_w w"
+    and hC1m: "top1_is_polygonal_region_on P_m (length w)"
+    and hC2m: "top1_quotient_map_on P_m
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_m) Y_w TY_w q_m"
+    and hC3m_w: "\<forall>i<length w. \<forall>j<length w. i \<noteq> j \<longrightarrow> (vx_m i, vy_m i) \<noteq> (vx_m j, vy_m j)"
+    and hC4m: "\<forall>i<length w. (vx_m i, vy_m i) \<in> P_m"
+    and hC5m: "P_m = {(x, y) | x y. \<exists>coeffs. (\<forall>i<length w. coeffs i \<ge> 0)
+                   \<and> (\<Sum>i<length w. coeffs i) = 1
+                   \<and> x = (\<Sum>i<length w. coeffs i * vx_m i)
+                   \<and> y = (\<Sum>i<length w. coeffs i * vy_m i)}"
+    and hC7m: "\<forall>i<length w. \<forall>j<length w. fst(w!i)=fst(w!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q_m ((1-t)*vx_m i+t*vx_m(Suc i mod length w),(1-t)*vy_m i+t*vy_m(Suc i mod length w))
+         = (if snd(w!i)=snd(w!j)
+            then q_m ((1-t)*vx_m j+t*vx_m(Suc j mod length w),(1-t)*vy_m j+t*vy_m(Suc j mod length w))
+            else q_m (t*vx_m j+(1-t)*vx_m(Suc j mod length w),t*vy_m j+(1-t)*vy_m(Suc j mod length w))))"
+    and hC8m: "\<forall>p\<in>P_m. (\<forall>i<length w. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod length w),(1-t)*vy_m i+t*vy_m(Suc i mod length w)))
+       \<longrightarrow> (\<forall>p'\<in>P_m. q_m p = q_m p' \<longrightarrow> p = p')"
+    and hC9m: "\<forall>i<length w. \<forall>j<length w. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+        q_m ((1-t)*vx_m i+t*vx_m(Suc i mod length w),(1-t)*vy_m i+t*vy_m(Suc i mod length w))
+      = q_m ((1-s)*vx_m j+s*vx_m(Suc j mod length w),(1-s)*vy_m j+s*vy_m(Suc j mod length w))
+      \<longrightarrow> (i=j \<and> t=s) \<or> (fst(w!i)=fst(w!j) \<and> (if snd(w!i)=snd(w!j) then s=t else s=1-t))"
+    and hC10m: "\<forall>i<length w. let cx=(\<Sum>j<length w. vx_m j)/real(length w);
+                             cy=(\<Sum>j<length w. vy_m j)/real(length w)
+         in (vx_m i-cx)*(vy_m(Suc i mod length w)-cy)-(vy_m i-cy)*(vx_m(Suc i mod length w)-cx) > 0"
+    and hC11m: "\<forall>i<length w. \<forall>k<length w. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod length w \<longrightarrow>
+        (vx_m k-vx_m i)*(vy_m(Suc i mod length w)-vy_m i)-(vy_m k-vy_m i)*(vx_m(Suc i mod length w)-vx_m i) < 0"
+    and hC12m_proved: "\<forall>k<length w. \<forall>j<length w. \<forall>s\<in>{0<..<(1::real)}.
+        q_m (vx_m k, vy_m k) \<noteq> q_m ((1-s)*vx_m j + s*vx_m(Suc j mod length w),
+                               (1-s)*vy_m j + s*vy_m(Suc j mod length w))"
+    by (elim exE conjE) (rule that, assumption+)
   have htopo_w: "is_topology_on_strict Y_w TY_w"
     using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   \<comment> \<open>Step 2: Get (real\\<times>real) quotient of [a,inv a]@w.\<close>
@@ -4995,10 +5295,43 @@ proof -
   have hproper_ext: "\<forall>label. card {i. i < length ([a, top1_inverse_edge a] @ w) \<and>
       fst (([a, top1_inverse_edge a] @ w) ! i) = label} \<in> {0, 2}"
     by (rule cancel_pair_prepend_proper[OF hproper hfresh])
-  from scheme_quotient_exists[of "[a, top1_inverse_edge a] @ w", OF _ hproper_ext]
-  obtain Y_ext :: "(real \<times> real) set" and TY_ext :: "(real \<times> real) set set" where
+  have hlen_ext: "length ([a, top1_inverse_edge a] @ w) \<ge> 3" using assms(2) by (by100 simp)
+  let ?n_ext = "length ([a, top1_inverse_edge a] @ w)"
+  from scheme_quotient_exists(2)[OF hlen_ext hproper_ext]
+  obtain P_e :: "(real \<times> real) set" and q_e :: "(real \<times> real) \<Rightarrow> (real \<times> real)"
+    and vx_e vy_e :: "nat \<Rightarrow> real"
+    and Y_ext :: "(real \<times> real) set" and TY_ext :: "(real \<times> real) set set" where
       hY_ext: "top1_quotient_of_scheme_on Y_ext TY_ext ([a, top1_inverse_edge a] @ w)"
-    using assms(2) by (by100 auto)
+    and hC1e: "top1_is_polygonal_region_on P_e ?n_ext"
+    and hC2e: "top1_quotient_map_on P_e
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e) Y_ext TY_ext q_e"
+    and hC3e: "\<forall>i<?n_ext. \<forall>j<?n_ext. i \<noteq> j \<longrightarrow> (vx_e i, vy_e i) \<noteq> (vx_e j, vy_e j)"
+    and hC4e: "\<forall>i<?n_ext. (vx_e i, vy_e i) \<in> P_e"
+    and hC5e: "P_e = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n_ext. coeffs i \<ge> 0)
+                   \<and> (\<Sum>i<?n_ext. coeffs i) = 1
+                   \<and> x = (\<Sum>i<?n_ext. coeffs i * vx_e i)
+                   \<and> y = (\<Sum>i<?n_ext. coeffs i * vy_e i)}"
+    and hC7e: "\<forall>i<?n_ext. \<forall>j<?n_ext. fst(([a, top1_inverse_edge a] @ w)!i)=fst(([a, top1_inverse_edge a] @ w)!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n_ext),(1-t)*vy_e i+t*vy_e(Suc i mod ?n_ext))
+         = (if snd(([a, top1_inverse_edge a] @ w)!i)=snd(([a, top1_inverse_edge a] @ w)!j)
+            then q_e ((1-t)*vx_e j+t*vx_e(Suc j mod ?n_ext),(1-t)*vy_e j+t*vy_e(Suc j mod ?n_ext))
+            else q_e (t*vx_e j+(1-t)*vx_e(Suc j mod ?n_ext),t*vy_e j+(1-t)*vy_e(Suc j mod ?n_ext))))"
+    and hC8e: "\<forall>p\<in>P_e. (\<forall>i<?n_ext. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n_ext),(1-t)*vy_e i+t*vy_e(Suc i mod ?n_ext)))
+       \<longrightarrow> (\<forall>p'\<in>P_e. q_e p = q_e p' \<longrightarrow> p = p')"
+    and hC9e: "\<forall>i<?n_ext. \<forall>j<?n_ext. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+        q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n_ext),(1-t)*vy_e i+t*vy_e(Suc i mod ?n_ext))
+      = q_e ((1-s)*vx_e j+s*vx_e(Suc j mod ?n_ext),(1-s)*vy_e j+s*vy_e(Suc j mod ?n_ext))
+      \<longrightarrow> (i=j \<and> t=s) \<or> (fst(([a, top1_inverse_edge a] @ w)!i)=fst(([a, top1_inverse_edge a] @ w)!j) \<and>
+          (if snd(([a, top1_inverse_edge a] @ w)!i)=snd(([a, top1_inverse_edge a] @ w)!j) then s=t else s=1-t))"
+    and hC10e: "\<forall>i<?n_ext. let cx=(\<Sum>j<?n_ext. vx_e j)/real ?n_ext; cy=(\<Sum>j<?n_ext. vy_e j)/real ?n_ext
+         in (vx_e i-cx)*(vy_e(Suc i mod ?n_ext)-cy)-(vy_e i-cy)*(vx_e(Suc i mod ?n_ext)-cx) > 0"
+    and hC11e: "\<forall>i<?n_ext. \<forall>k<?n_ext. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?n_ext \<longrightarrow>
+        (vx_e k-vx_e i)*(vy_e(Suc i mod ?n_ext)-vy_e i)-(vy_e k-vy_e i)*(vx_e(Suc i mod ?n_ext)-vx_e i) < 0"
+    and hC12e_proved: "\<forall>k<?n_ext. \<forall>j<?n_ext. \<forall>s\<in>{0<..<(1::real)}.
+        q_e (vx_e k, vy_e k) \<noteq> q_e ((1-s)*vx_e j + s*vx_e(Suc j mod ?n_ext),
+                               (1-s)*vy_e j + s*vy_e(Suc j mod ?n_ext))"
+    by (elim exE conjE) (rule that, assumption+)
   have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
     using hY_ext unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   \<comment> \<open>Step 3: Y \\<cong> Y\\_ext (both quotients of [a,inv a]@w, different types).\<close>
@@ -5124,59 +5457,8 @@ proof -
        Composition: f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e gives P\\_e \\<to> P\\_m.
        Then q\\_m \\<circ> f has the same fibres as q\\_e (by fibre matching argument).
        quotient\\_same\\_fibres\\_homeomorphic gives Y\\_ext \\<cong> Y\\_w.\<close>
-    \<comment> \<open>Extract full conditions for both polygons to get disk homeomorphisms.\<close>
-    from hY_ext obtain P_e q_e vx_e vy_e where
-        hC1e: "top1_is_polygonal_region_on P_e ?n"
-      and hC2e: "top1_quotient_map_on P_e (?TP P_e) Y_ext TY_ext q_e"
-      and hC3e: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx_e i, vy_e i) \<noteq> (vx_e j, vy_e j)"
-      and hC4e: "\<forall>i<?n. (vx_e i, vy_e i) \<in> P_e"
-      and hC5e: "P_e = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
-                     \<and> (\<Sum>i<?n. coeffs i) = 1
-                     \<and> x = (\<Sum>i<?n. coeffs i * vx_e i)
-                     \<and> y = (\<Sum>i<?n. coeffs i * vy_e i)}"
-      and hC7e: "\<forall>i<?n. \<forall>j<?n. fst (([a, top1_inverse_edge a] @ w)!i) = fst (([a, top1_inverse_edge a] @ w)!j) \<longrightarrow>
-          (\<forall>t\<in>I_set. q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
-           = (if snd(([a, top1_inverse_edge a] @ w)!i) = snd(([a, top1_inverse_edge a] @ w)!j)
-              then q_e ((1-t)*vx_e j+t*vx_e(Suc j mod ?n),(1-t)*vy_e j+t*vy_e(Suc j mod ?n))
-              else q_e (t*vx_e j+(1-t)*vx_e(Suc j mod ?n),t*vy_e j+(1-t)*vy_e(Suc j mod ?n))))"
-      and hC8e: "\<forall>p\<in>P_e. (\<forall>i<?n. \<forall>t\<in>I_set.
-                p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n)))
-             \<longrightarrow> (\<forall>p'\<in>P_e. q_e p = q_e p' \<longrightarrow> p = p')"
-      and hC9e: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
-            q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
-          = q_e ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))
-          \<longrightarrow> (i=j \<and> t=s) \<or> (fst(([a, top1_inverse_edge a] @ w)!i)=fst(([a, top1_inverse_edge a] @ w)!j)
-               \<and> (if snd(([a, top1_inverse_edge a] @ w)!i)=snd(([a, top1_inverse_edge a] @ w)!j) then s=t else s=1-t))"
-      and hC10e: "\<forall>i<?n. let cx=(\<Sum>j<?n. vx_e j)/real ?n; cy=(\<Sum>j<?n. vy_e j)/real ?n
-           in (vx_e i-cx)*(vy_e(Suc i mod ?n)-cy)-(vy_e i-cy)*(vx_e(Suc i mod ?n)-cx) > 0"
-      and hC11e: "\<forall>i<?n. \<forall>k<?n. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?n \<longrightarrow>
-            (vx_e k-vx_e i)*(vy_e(Suc i mod ?n)-vy_e i)-(vy_e k-vy_e i)*(vx_e(Suc i mod ?n)-vx_e i) < 0"
-      by (rule quotient_of_scheme_extract_vx)
-    from hY_w obtain P_m q_m vx_m vy_m where
-        hC1m: "top1_is_polygonal_region_on P_m ?m"
-      and hC2m: "top1_quotient_map_on P_m (?TP P_m) Y_w TY_w q_m"
-      and hC4m: "\<forall>i<?m. (vx_m i, vy_m i) \<in> P_m"
-      and hC5m: "P_m = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?m. coeffs i \<ge> 0)
-                     \<and> (\<Sum>i<?m. coeffs i) = 1
-                     \<and> x = (\<Sum>i<?m. coeffs i * vx_m i)
-                     \<and> y = (\<Sum>i<?m. coeffs i * vy_m i)}"
-      and hC7m: "\<forall>i<?m. \<forall>j<?m. fst (w!i) = fst (w!j) \<longrightarrow>
-          (\<forall>t\<in>I_set. q_m ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m))
-           = (if snd(w!i)=snd(w!j)
-              then q_m ((1-t)*vx_m j+t*vx_m(Suc j mod ?m),(1-t)*vy_m j+t*vy_m(Suc j mod ?m))
-              else q_m (t*vx_m j+(1-t)*vx_m(Suc j mod ?m),t*vy_m j+(1-t)*vy_m(Suc j mod ?m))))"
-      and hC8m: "\<forall>p\<in>P_m. (\<forall>i<?m. \<forall>t\<in>I_set.
-                p \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m)))
-             \<longrightarrow> (\<forall>p'\<in>P_m. q_m p = q_m p' \<longrightarrow> p = p')"
-      and hC9m: "\<forall>i<?m. \<forall>j<?m. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
-            q_m ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m))
-          = q_m ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m))
-          \<longrightarrow> (i=j \<and> t=s) \<or> (fst(w!i)=fst(w!j) \<and> (if snd(w!i)=snd(w!j) then s=t else s=1-t))"
-      and hC10m: "\<forall>i<?m. let cx=(\<Sum>j<?m. vx_m j)/real ?m; cy=(\<Sum>j<?m. vy_m j)/real ?m
-           in (vx_m i-cx)*(vy_m(Suc i mod ?m)-cy)-(vy_m i-cy)*(vx_m(Suc i mod ?m)-cx) > 0"
-      and hC11m: "\<forall>i<?m. \<forall>k<?m. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?m \<longrightarrow>
-            (vx_m k-vx_m i)*(vy_m(Suc i mod ?m)-vy_m i)-(vy_m k-vy_m i)*(vx_m(Suc i mod ?m)-vx_m i) < 0"
-      by (rule quotient_of_scheme_extract_vx)
+    \<comment> \<open>C1-C12 for P\\_e, q\\_e, vx\\_e, vy\\_e and P\\_m, q\\_m, vx\\_m, vy\\_m
+       now come from scheme\\_quotient\\_exists(2) above.\<close>
     \<comment> \<open>Spur collapse map f: P\\_e \\<to> P\\_m via fan construction.
        Fan from vertex v\\_e(1) of P\\_e to centroid c\\_m of P\\_m:
        Triangle (v\\_e(1), v\\_e(k), v\\_e(k+1)) maps affinely to (c\\_m, u(k-2), u(k-1)).
@@ -5624,9 +5906,274 @@ proof -
       have h_cover: "top1_B2 = S_g \<union> S_c"
         unfolding S_g_def S_c_def by (by100 auto)
       have h_g_closed: "closed S_g"
-        sorry \<comment> \<open>S\\_g = B2 \\<inter> ({angle \\<ge> \\<theta>\\_cancel} \\<union> positive x-axis \\<union> {0}).
-           The positive x-axis ray in B2 is closed. {angle \\<ge> \\<theta>\\_cancel} in B2\\\\{0}
-           is now closed because the limit of angle\\<to>2\\<pi> (positive x-axis) is included.\<close>
+      proof -
+        \<comment> \<open>S\\_g = (B2 \\<inter> {snd \\<le> 0}) \\<union> (B2 \\<inter> {snd \\<ge> 0} \\<inter> {fst \\<le> cos \\<theta> * |p|}).
+           Union of two closed sets is closed.\<close>
+        define A where "A = {p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<le> 0}"
+        define B where "B = {p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
+            \<and> fst p \<le> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
+        have h\<theta>_ge0: "\<theta>_cancel \<ge> 0" unfolding \<theta>_cancel_def
+          using pi_gt_zero assms(2) by (by100 simp)
+        have h\<theta>_le_pi: "\<theta>_cancel \<le> pi"
+        proof -
+          have "?n \<ge> 5" using assms(2) by (by100 simp)
+          hence "real ?n \<ge> 5" by (by100 simp)
+          hence "4 * pi / real ?n \<le> 4 * pi / 5"
+            using divide_left_mono[of 5 "real ?n" "4*pi"] pi_gt_zero by (by100 simp)
+          also have "\<dots> < pi" using pi_gt_zero by (by100 linarith)
+          finally show ?thesis unfolding \<theta>_cancel_def by (by100 linarith)
+        qed
+        have h\<theta>_lt_pi: "\<theta>_cancel < pi"
+        proof -
+          have "?n \<ge> 5" using assms(2) by (by100 simp)
+          hence "real ?n \<ge> 5" by (by100 simp)
+          hence "4 * pi / real ?n \<le> 4 * pi / 5"
+            using divide_left_mono[of 5 "real ?n" "4*pi"] pi_gt_zero by (by100 simp)
+          also have "\<dots> < pi" using pi_gt_zero by (by100 linarith)
+          finally show ?thesis unfolding \<theta>_cancel_def .
+        qed
+        \<comment> \<open>Step 1: S\\_g = A \\<union> B.\<close>
+        have hS_g_eq: "S_g = A \<union> B"
+        proof (rule set_eqI, rule iffI)
+          fix p :: "real \<times> real"
+          assume hp: "p \<in> S_g"
+          hence hp_B2: "p \<in> top1_B2" and hp_disj: "p = (0,0) \<or> angle_of p \<ge> \<theta>_cancel
+              \<or> (snd p = 0 \<and> fst p \<ge> 0)"
+            unfolding S_g_def by (by100 auto)+
+          have hp_norm: "fst p ^ 2 + snd p ^ 2 \<le> 1"
+            using hp_B2 unfolding top1_B2_def by (by100 simp)
+          show "p \<in> A \<union> B"
+          proof (cases "snd p \<le> 0")
+            case True thus ?thesis unfolding A_def using hp_norm by (by100 simp)
+          next
+            case False
+            hence hsnd_pos: "snd p > 0" by (by100 linarith)
+            \<comment> \<open>snd p > 0 rules out p = (0,0) and positive x-axis, so angle\\_of p \\<ge> \\<theta>.\<close>
+            have "p \<noteq> (0,0)" using hsnd_pos by (by100 auto)
+            moreover have "\<not>(snd p = 0 \<and> fst p \<ge> 0)" using hsnd_pos by (by100 linarith)
+            ultimately have h_angle: "angle_of p \<ge> \<theta>_cancel" using hp_disj by (by100 blast)
+            have hp_ne: "fst p \<noteq> 0 \<or> snd p \<noteq> 0" using hsnd_pos by (by100 linarith)
+            have h_aof: "angle_of p = arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+              unfolding angle_of_def using hsnd_pos by (by100 simp)
+            have h_lb: "-1 \<le> fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+              by (rule fst_div_norm_bounded(1)[OF hp_ne])
+            have h_ub: "fst p / sqrt (fst p ^ 2 + snd p ^ 2) \<le> 1"
+              by (rule fst_div_norm_bounded(2)[OF hp_ne])
+            have h_arccos_lb: "0 \<le> arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+              using arccos_lbound[OF h_lb h_ub] .
+            have h_arccos_ub: "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) \<le> pi"
+              using arccos_ubound[OF h_lb h_ub] .
+            \<comment> \<open>arccos(z) \\<ge> \\<theta> \\<Longrightarrow> z \\<le> cos \\<theta> via cos\\_mono\\_le\\_eq.\<close>
+            have "fst p / sqrt (fst p ^ 2 + snd p ^ 2) \<le> cos \<theta>_cancel"
+            proof -
+              from h_angle h_aof have h_ge: "\<theta>_cancel \<le> arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                by (by100 simp)
+              \<comment> \<open>cos(arccos z) \\<le> cos \\<theta> \\<iff> \\<theta> \\<le> arccos z.\<close>
+              from cos_mono_le_eq[OF h_arccos_lb h_arccos_ub h\<theta>_ge0 h\<theta>_le_pi]
+              have "cos (arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))) \<le> cos \<theta>_cancel
+                  \<longleftrightarrow> \<theta>_cancel \<le> arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))" .
+              moreover have "cos (arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)))
+                  = fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+                using cos_arccos[OF h_lb h_ub] .
+              ultimately show ?thesis using h_ge by (by100 simp)
+            qed
+            hence "fst p \<le> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)"
+            proof -
+              have hr_pos: "sqrt (fst p ^ 2 + snd p ^ 2) > 0"
+              proof -
+                have "snd p ^ 2 > 0" using hsnd_pos by (by100 simp)
+                moreover have "fst p ^ 2 \<ge> 0" by (by100 simp)
+                ultimately have "fst p ^ 2 + snd p ^ 2 > 0" by (by100 linarith)
+                thus ?thesis using real_sqrt_gt_0_iff by (by100 auto)
+              qed
+              from \<open>fst p / sqrt _ \<le> cos \<theta>_cancel\<close> hr_pos
+              show ?thesis by (simp add: pos_divide_le_eq)
+            qed
+            thus ?thesis unfolding B_def using hp_norm hsnd_pos by (by100 simp)
+          qed
+        next
+          fix p :: "real \<times> real"
+          assume hp: "p \<in> A \<union> B"
+          thus "p \<in> S_g"
+          proof
+            assume hp_A: "p \<in> A"
+            hence hp_norm: "fst p ^ 2 + snd p ^ 2 \<le> 1" and hsnd: "snd p \<le> 0"
+              unfolding A_def by (by100 simp)+
+            have hp_B2: "p \<in> top1_B2" unfolding top1_B2_def using hp_norm by (by100 simp)
+            show "p \<in> S_g"
+            proof (cases "p = (0,0)")
+              case True thus ?thesis unfolding S_g_def using hp_B2 by (by100 simp)
+            next
+              case False
+              hence hp_ne: "fst p \<noteq> 0 \<or> snd p \<noteq> 0" by (cases p) (by100 auto)
+              show ?thesis
+              proof (cases "snd p = 0")
+                case True
+                hence "fst p \<noteq> 0"
+                  using False by (cases p) (by100 auto)
+                show ?thesis
+                proof (cases "fst p \<ge> 0")
+                  case True
+                  thus ?thesis unfolding S_g_def using hp_B2 \<open>snd p = 0\<close> by (by100 simp)
+                next
+                  case False_fst: False
+                  \<comment> \<open>fst p < 0, snd p = 0: angle = arccos(-|fst p|/|fst p|) = arccos(-1) = \\<pi> > \\<theta>.\<close>
+                  have "fst p < 0" using False_fst by (by100 linarith)
+                  have "angle_of p = arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                    unfolding angle_of_def using True by (by100 simp)
+                  moreover have "sqrt (fst p ^ 2 + snd p ^ 2) = sqrt (fst p ^ 2)"
+                    using True by (by100 simp)
+                  moreover have "sqrt (fst p ^ 2) = \<bar>fst p\<bar>" using real_sqrt_abs by (by100 simp)
+                  moreover have "\<bar>fst p\<bar> = - fst p" using \<open>fst p < 0\<close> by (by100 simp)
+                  ultimately have "angle_of p = arccos (fst p / (- fst p))" by (by100 simp)
+                  moreover have "fst p / (- fst p) = -1" using \<open>fst p < 0\<close> by (by100 simp)
+                  ultimately have "angle_of p = arccos (-1)" by (by100 simp)
+                  moreover have "arccos (-1 :: real) = pi" using arccos_minus_1 .
+                  ultimately have "angle_of p = pi" by (by100 simp)
+                  hence "angle_of p \<ge> \<theta>_cancel" using h\<theta>_lt_pi by (by100 linarith)
+                  thus ?thesis unfolding S_g_def using hp_B2 by (by100 simp)
+                qed
+              next
+                case False_snd: False
+                hence "snd p < 0" using hsnd by (by100 linarith)
+                \<comment> \<open>snd p < 0: angle = 2\\<pi> - arccos(...) \\<ge> \\<pi> > \\<theta>.\<close>
+                have "angle_of p = 2*pi - arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                  unfolding angle_of_def using \<open>snd p < 0\<close> by (by100 simp)
+                moreover have "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) \<le> pi"
+                  using arccos_ubound[OF fst_div_norm_bounded(1)[OF hp_ne]
+                      fst_div_norm_bounded(2)[OF hp_ne]] .
+                ultimately have "angle_of p \<ge> pi" using pi_gt_zero by (by100 linarith)
+                hence "angle_of p \<ge> \<theta>_cancel" using h\<theta>_lt_pi by (by100 linarith)
+                thus ?thesis unfolding S_g_def using hp_B2 by (by100 simp)
+              qed
+            qed
+          next
+            assume hp_B: "p \<in> B"
+            hence hp_norm: "fst p ^ 2 + snd p ^ 2 \<le> 1"
+              and hsnd: "snd p \<ge> 0"
+              and hfst: "fst p \<le> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)"
+              unfolding B_def by (by100 simp)+
+            have hp_B2: "p \<in> top1_B2" unfolding top1_B2_def using hp_norm by (by100 simp)
+            show "p \<in> S_g"
+            proof (cases "p = (0,0)")
+              case True thus ?thesis unfolding S_g_def using hp_B2 by (by100 simp)
+            next
+              case False
+              hence hp_ne: "fst p \<noteq> 0 \<or> snd p \<noteq> 0" by (cases p) (by100 auto)
+              have hr_pos: "sqrt (fst p ^ 2 + snd p ^ 2) > 0"
+              proof -
+                have "fst p ^ 2 + snd p ^ 2 > 0" using hp_ne
+                proof
+                  assume "fst p \<noteq> 0" hence "fst p^2 > 0" by (by100 simp)
+                  moreover have "snd p^2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                next
+                  assume "snd p \<noteq> 0" hence "snd p^2 > 0" by (by100 simp)
+                  moreover have "fst p^2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+                thus ?thesis using real_sqrt_gt_0_iff by (by100 auto)
+              qed
+              have h_lb: "-1 \<le> fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+                by (rule fst_div_norm_bounded(1)[OF hp_ne])
+              have h_ub: "fst p / sqrt (fst p ^ 2 + snd p ^ 2) \<le> 1"
+                by (rule fst_div_norm_bounded(2)[OF hp_ne])
+              have "fst p / sqrt (fst p ^ 2 + snd p ^ 2) \<le> cos \<theta>_cancel"
+                using hfst hr_pos by (simp add: pos_divide_le_eq)
+              have h_arccos_lb: "0 \<le> arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                using arccos_lbound[OF h_lb h_ub] .
+              have h_arccos_ub: "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) \<le> pi"
+                using arccos_ubound[OF h_lb h_ub] .
+              \<comment> \<open>cos(arccos z) = z \\<le> cos \\<theta> and cos\\_mono\\_le\\_eq gives \\<theta> \\<le> arccos z.\<close>
+              have "cos (arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))) \<le> cos \<theta>_cancel"
+              proof -
+                have "cos (arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)))
+                    = fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+                  using cos_arccos[OF h_lb h_ub] .
+                thus ?thesis using \<open>fst p / _ \<le> cos \<theta>_cancel\<close> by (by100 linarith)
+              qed
+              from cos_mono_le_eq[OF h_arccos_lb h_arccos_ub h\<theta>_ge0 h\<theta>_le_pi] this
+              have "\<theta>_cancel \<le> arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                by (by100 blast)
+              hence "angle_of p \<ge> \<theta>_cancel"
+                unfolding angle_of_def using hsnd by (by100 simp)
+              thus ?thesis unfolding S_g_def using hp_B2 by (by100 simp)
+            qed
+          qed
+        qed
+        \<comment> \<open>Step 2: A and B are closed.\<close>
+        have hA_cl: "closed A"
+        proof -
+          have "closed {p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1}"
+          proof -
+            have "continuous_on UNIV (\<lambda>p :: real \<times> real. fst p ^ 2 + snd p ^ 2)"
+              by (intro continuous_intros)
+            hence "closed ((\<lambda>p :: real \<times> real. fst p ^ 2 + snd p ^ 2) -` {..1})"
+              by (simp add: closed_vimage)
+            moreover have "{p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1}
+                = (\<lambda>p. fst p ^ 2 + snd p ^ 2) -` {..1}"
+              by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          moreover have "closed {p :: real \<times> real. snd p \<le> 0}"
+          proof -
+            have "continuous_on UNIV (\<lambda>p :: real \<times> real. snd p)" by (intro continuous_intros)
+            hence "closed ((\<lambda>p :: real \<times> real. snd p) -` {..0})"
+              by (simp add: closed_vimage)
+            moreover have "{p :: real \<times> real. snd p \<le> 0} = snd -` {..0}"
+              by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          ultimately have "closed ({p. fst p ^ 2 + snd p ^ 2 \<le> 1} \<inter> {p :: real \<times> real. snd p \<le> 0})"
+            using closed_Int by (by100 blast)
+          moreover have "A = {p. fst p ^ 2 + snd p ^ 2 \<le> 1} \<inter> {p :: real \<times> real. snd p \<le> 0}"
+            unfolding A_def by (by100 auto)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        have hB_cl: "closed B"
+        proof -
+          have hB2_cl: "closed {p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1}"
+          proof -
+            have "continuous_on UNIV (\<lambda>p :: real \<times> real. fst p ^ 2 + snd p ^ 2)"
+              by (intro continuous_intros)
+            hence "closed ((\<lambda>p :: real \<times> real. fst p ^ 2 + snd p ^ 2) -` {..1})"
+              by (simp add: closed_vimage)
+            moreover have "{p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1}
+                = (\<lambda>p. fst p ^ 2 + snd p ^ 2) -` {..1}"
+              by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have hup_cl: "closed {p :: real \<times> real. (0::real) \<le> snd p}"
+          proof -
+            have "continuous_on UNIV (\<lambda>p :: real \<times> real. snd p)" by (intro continuous_intros)
+            hence "closed ((\<lambda>p :: real \<times> real. snd p) -` {0..})"
+              by (simp add: closed_vimage_snd)
+            moreover have "{p :: real \<times> real. (0::real) \<le> snd p} = snd -` {0..}"
+              by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have hcone_cl: "closed {p :: real \<times> real. fst p \<le> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
+          proof -
+            have "continuous_on UNIV (\<lambda>p :: real \<times> real. cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2) - fst p)"
+              by (intro continuous_intros)
+            hence "closed ((\<lambda>p :: real \<times> real. cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2) - fst p) -` {0..})"
+              by (simp add: closed_vimage)
+            moreover have "{p :: real \<times> real. fst p \<le> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}
+                = (\<lambda>p. cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2) - fst p) -` {0..}"
+              by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          from closed_Int[OF closed_Int[OF hB2_cl hup_cl] hcone_cl]
+          have "closed ({p. fst p ^ 2 + snd p ^ 2 \<le> 1} \<inter> {p. (0::real) \<le> snd p}
+              \<inter> {p :: real \<times> real. fst p \<le> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)})" .
+          moreover have "B = {p. fst p ^ 2 + snd p ^ 2 \<le> 1} \<inter> {p. (0::real) \<le> snd p}
+              \<inter> {p. fst p \<le> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
+            unfolding B_def by (by100 auto)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        from closed_Un[OF hA_cl hB_cl]
+        show ?thesis unfolding hS_g_eq .
+      qed
       have h_c_closed: "closed S_c"
       proof -
         \<comment> \<open>S\\_c = {p \\<in> B2 | snd p \\<ge> 0 \\<and> fst p \\<ge> cos(\\<theta>\\_cancel) * |p|}.
@@ -5678,7 +6225,75 @@ proof -
             qed
             \<comment> \<open>For snd p \\<ge> 0: angle\\_of = arccos(fst p/|p|). arccos \\<le> \\<theta>\\_cancel \\<Longrightarrow> fst p/|p| \\<ge> cos(\\<theta>\\_cancel).\<close>
             have hfst_ge: "fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)"
-              sorry \<comment> \<open>arccos(z) \\<le> \\<theta>\\_cancel \\<Longrightarrow> z \\<ge> cos(\\<theta>\\_cancel) via cos\\_mono\\_le\\_eq. Then multiply by |p|.\<close>
+            proof -
+              have h_aof: "angle_of p = arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                unfolding angle_of_def using hsnd_ge by (by100 simp)
+              have h_arccos_le: "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) \<le> \<theta>_cancel"
+                using h_angle_le h_aof by (by100 simp)
+              \<comment> \<open>arccos z \\<le> \\<theta> \\<Longrightarrow> cos \\<theta> \\<le> z via cos\\_mono\\_le\\_eq.\<close>
+              have h_lb: "-1 \<le> fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+                by (rule fst_div_norm_bounded(1)[OF hp_ne])
+              have h_ub: "fst p / sqrt (fst p ^ 2 + snd p ^ 2) \<le> 1"
+                by (rule fst_div_norm_bounded(2)[OF hp_ne])
+              have h_arccos_lb: "0 \<le> arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                using arccos_lbound[OF h_lb h_ub] .
+              have h_arccos_ub: "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) \<le> pi"
+                using arccos_ubound[OF h_lb h_ub] .
+              have h\<theta>_ge0: "\<theta>_cancel \<ge> 0" unfolding \<theta>_cancel_def
+                using pi_gt_zero assms(2) by (by100 simp)
+              have h\<theta>_le_pi: "\<theta>_cancel \<le> pi"
+              proof -
+                have "?n \<ge> 5" using assms(2) by (by100 simp)
+                hence "real ?n \<ge> 5" by (by100 simp)
+                hence "4 * pi / real ?n \<le> 4 * pi / 5"
+                  using divide_left_mono[of 5 "real ?n" "4*pi"] pi_gt_zero by (by100 simp)
+                also have "\<dots> < pi" using pi_gt_zero by (by100 linarith)
+                finally show ?thesis unfolding \<theta>_cancel_def by (by100 linarith)
+              qed
+              have h_cos_le: "cos \<theta>_cancel \<le> fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+              proof (cases "\<theta>_cancel = arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))")
+                case True
+                hence "cos \<theta>_cancel = cos (arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)))"
+                  by (by100 simp)
+                also have "\<dots> = fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+                  using cos_arccos[OF h_lb h_ub] .
+                finally show ?thesis by (by100 linarith)
+              next
+                case False
+                hence "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) < \<theta>_cancel"
+                  using h_arccos_le by (by100 linarith)
+                have "\<not> (\<theta>_cancel \<le> arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)))"
+                  using \<open>arccos _ < \<theta>_cancel\<close> by (by100 linarith)
+                from cos_mono_le_eq[OF h_arccos_lb h_arccos_ub h\<theta>_ge0 h\<theta>_le_pi]
+                have "\<not> (cos (arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))) \<le> cos \<theta>_cancel)"
+                  using \<open>\<not> (\<theta>_cancel \<le> _)\<close> by (by100 blast)
+                hence "cos \<theta>_cancel < cos (arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)))"
+                  by (by100 linarith)
+                also have "\<dots> = fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+                  using cos_arccos[OF h_lb h_ub] .
+                finally show ?thesis by (by100 linarith)
+              qed
+              \<comment> \<open>fst p / |p| \\<ge> cos \\<theta> and |p| > 0 \\<Longrightarrow> fst p \\<ge> cos \\<theta> * |p|.\<close>
+              have hr_pos: "sqrt (fst p ^ 2 + snd p ^ 2) > 0"
+              proof -
+                have "fst p ^ 2 + snd p ^ 2 > 0" using hp_ne
+                proof
+                  assume "fst p \<noteq> 0" hence "fst p^2 > 0" by (by100 simp)
+                  moreover have "snd p^2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                next
+                  assume "snd p \<noteq> 0" hence "snd p^2 > 0" by (by100 simp)
+                  moreover have "fst p^2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+                thus ?thesis using real_sqrt_gt_0_iff by (by100 auto)
+              qed
+              from mult_right_mono[OF h_cos_le less_imp_le[OF hr_pos]]
+              have "cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)
+                  \<le> fst p / sqrt (fst p ^ 2 + snd p ^ 2) * sqrt (fst p ^ 2 + snd p ^ 2)" .
+              also have "\<dots> = fst p" using hr_pos by (simp add: field_simps)
+              finally show ?thesis .
+            qed
             show ?thesis using hp_norm hsnd_ge hfst_ge by (by100 simp)
           qed
         next
@@ -5686,9 +6301,69 @@ proof -
           assume hp: "p \<in> {p. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
               \<and> fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
           show "p \<in> S_c"
-            sorry \<comment> \<open>Backward: Cartesian cone \\<Longrightarrow> angle \\<le> \\<theta>\\_cancel.
-               fst p \\<ge> cos(\\<theta>\\_cancel)*|p| \\<Longrightarrow> fst p/|p| \\<ge> cos(\\<theta>\\_cancel)
-               \\<Longrightarrow> arccos(fst p/|p|) \\<le> \\<theta>\\_cancel via cos\\_mono\\_le\\_eq.\<close>
+          proof -
+            from hp have hp_norm: "fst p ^ 2 + snd p ^ 2 \<le> 1"
+              and hsnd_ge: "snd p \<ge> 0"
+              and hfst_ge: "fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)"
+              by (by100 simp)+
+            have hp_B2: "p \<in> top1_B2" unfolding top1_B2_def using hp_norm by (by100 simp)
+            show ?thesis
+            proof (cases "p = (0,0)")
+              case True thus ?thesis unfolding S_c_def using hp_B2 by (by100 simp)
+            next
+              case False
+              hence hp_ne: "fst p \<noteq> 0 \<or> snd p \<noteq> 0" by (cases p) (by100 auto)
+              have hr_pos: "sqrt (fst p ^ 2 + snd p ^ 2) > 0"
+              proof -
+                have "fst p ^ 2 + snd p ^ 2 > 0" using hp_ne
+                proof
+                  assume "fst p \<noteq> 0" hence "fst p^2 > 0" by (by100 simp)
+                  moreover have "snd p^2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                next
+                  assume "snd p \<noteq> 0" hence "snd p^2 > 0" by (by100 simp)
+                  moreover have "fst p^2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+                thus ?thesis using real_sqrt_gt_0_iff by (by100 auto)
+              qed
+              have h_lb: "-1 \<le> fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+                by (rule fst_div_norm_bounded(1)[OF hp_ne])
+              have h_ub: "fst p / sqrt (fst p ^ 2 + snd p ^ 2) \<le> 1"
+                by (rule fst_div_norm_bounded(2)[OF hp_ne])
+              have h_arccos_lb: "0 \<le> arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                using arccos_lbound[OF h_lb h_ub] .
+              have h_arccos_ub: "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) \<le> pi"
+                using arccos_ubound[OF h_lb h_ub] .
+              have h\<theta>_ge0: "\<theta>_cancel \<ge> 0" unfolding \<theta>_cancel_def
+                using pi_gt_zero assms(2) by (by100 simp)
+              have h\<theta>_le_pi: "\<theta>_cancel \<le> pi"
+              proof -
+                have "?n \<ge> 5" using assms(2) by (by100 simp)
+                hence "real ?n \<ge> 5" by (by100 simp)
+                hence "4 * pi / real ?n \<le> 4 * pi / 5"
+                  using divide_left_mono[of 5 "real ?n" "4*pi"] pi_gt_zero by (by100 simp)
+                also have "\<dots> < pi" using pi_gt_zero by (by100 linarith)
+                finally show ?thesis unfolding \<theta>_cancel_def by (by100 linarith)
+              qed
+              \<comment> \<open>fst p / |p| \\<ge> cos \\<theta> (dividing hypothesis by |p| > 0).\<close>
+              have h_cos_le: "cos \<theta>_cancel \<le> fst p / sqrt (fst p ^ 2 + snd p ^ 2)"
+                using hfst_ge hr_pos by (simp add: pos_le_divide_eq)
+              \<comment> \<open>cos \\<theta> \\<le> z = cos(arccos(z)) via cos\\_arccos, then cos\\_mono\\_le\\_eq gives arccos(z) \\<le> \\<theta>.\<close>
+              have h_angle_le: "angle_of p \<le> \<theta>_cancel"
+              proof -
+                have h_aof: "angle_of p = arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2))"
+                  unfolding angle_of_def using hsnd_ge by (by100 simp)
+                have "cos \<theta>_cancel \<le> cos (arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)))"
+                  using h_cos_le cos_arccos[OF h_lb h_ub] by (by100 simp)
+                hence "arccos (fst p / sqrt (fst p ^ 2 + snd p ^ 2)) \<le> \<theta>_cancel"
+                  using cos_mono_le_eq[OF h\<theta>_ge0 h\<theta>_le_pi h_arccos_lb h_arccos_ub]
+                  by (by100 blast)
+                thus ?thesis using h_aof by (by100 simp)
+              qed
+              show ?thesis unfolding S_c_def using hp_B2 False h_angle_le by (by100 simp)
+            qed
+          qed
         qed
         \<comment> \<open>Step 2: The Cartesian cone set is closed (intersection of closed sets).\<close>
         have "closed {p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
@@ -5737,14 +6412,230 @@ proof -
         qed
         thus ?thesis unfolding hS_c_eq .
       qed
+      have h_g_cont_nonzero: "continuous_on (S_g - {(0,0)}) \<tau>"
+        sorry \<comment> \<open>Nonzero case: on S\\_g\\{0}, \\<tau> uses good formula (angle\\<ge>\\<theta>) or cancel at pos x-axis.
+           Both are compositions of continuous functions; they agree at boundaries.\<close>
+      have h_g_cont_origin: "((\<lambda>x. \<tau> x) \<longlongrightarrow> (0,0)) (at (0,0) within S_g)"
+      proof -
+        \<comment> \<open>Bound with C=1: on S\\_g, |fst(\\<tau>)| and |snd(\\<tau>)| are both \\<le> r.
+           Good sector: |r\\<cdot>cos(...)| \\<le> r. Cancel (pos x-axis): |(r,0)| \\<le> r. Origin: 0.\<close>
+        have h_fst_bound_g: "\<exists>C. \<forall>p \<in> S_g. \<bar>fst (\<tau> p)\<bar> \<le> C * sqrt (fst p ^ 2 + snd p ^ 2)"
+        proof (rule exI[of _ "1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>"])
+          have hC_pos: "1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar> \<ge> 0" by (by100 simp)
+          show "\<forall>p\<in>S_g. \<bar>fst (\<tau> p)\<bar> \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * sqrt (fst p ^ 2 + snd p ^ 2)"
+            sorry \<comment> \<open>Unfold \\<tau>: good sector gives |r*cos|\\<le>r, cancel (pos x-axis) gives r.\<close>
+        qed
+        have h_snd_bound_g: "\<exists>C. \<forall>p \<in> S_g. \<bar>snd (\<tau> p)\<bar> \<le> C * sqrt (fst p ^ 2 + snd p ^ 2)"
+        proof (rule exI[of _ "1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>"], intro ballI)
+          fix p assume hp: "p \<in> S_g"
+          show "\<bar>snd (\<tau> p)\<bar> \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * sqrt (fst p ^ 2 + snd p ^ 2)"
+            sorry \<comment> \<open>Case split on \\<tau> branches; each bounded by C*r.\<close>
+        qed
+        have h_fst_to_0_g: "((\<lambda>p. fst p) \<longlongrightarrow> (0::real)) (at (0::real, 0::real) within S_g)"
+        proof -
+          have "isCont fst (0::real, 0::real)" by (intro continuous_intros)
+          hence "(fst \<longlongrightarrow> (0::real)) (at (0::real, 0::real))"
+            unfolding isCont_def by (by100 simp)
+          thus ?thesis by (rule filterlim_mono) (auto simp: at_le)
+        qed
+        have h_snd_to_0_g: "((\<lambda>p. snd p) \<longlongrightarrow> (0::real)) (at (0::real, 0::real) within S_g)"
+        proof -
+          have "isCont snd (0::real, 0::real)" by (intro continuous_intros)
+          hence "(snd \<longlongrightarrow> (0::real)) (at (0::real, 0::real))"
+            unfolding isCont_def by (by100 simp)
+          thus ?thesis by (rule filterlim_mono) (auto simp: at_le)
+        qed
+        have h_r_to_0_g: "((\<lambda>p. sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+            (at (0::real, 0::real) within S_g)"
+        proof -
+          have "((\<lambda>p. sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> sqrt ((0::real) ^ 2 + (0::real) ^ 2))
+              (at (0::real, 0::real) within S_g)"
+            using h_fst_to_0_g h_snd_to_0_g by (intro tendsto_intros)
+          thus ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>Squeeze: 0 \\<le> |fst(\\<tau> p)| \\<le> C*r and C*r \\<to> 0, so |fst(\\<tau> p)| \\<to> 0, hence fst(\\<tau> p) \\<to> 0.\<close>
+        from h_fst_bound_g obtain C1 where hC1: "\<forall>p\<in>S_g. \<bar>fst (\<tau> p)\<bar> \<le> C1 * sqrt (fst p^2 + snd p^2)"
+          by (by100 blast)
+        have h_C1r: "((\<lambda>p. C1 * sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+            (at (0::real, 0::real) within S_g)"
+          using tendsto_mult_left[OF h_r_to_0_g, of C1] by (by100 simp)
+        have h_abs_fst: "((\<lambda>p. \<bar>fst (\<tau> p)\<bar>) \<longlongrightarrow> 0) (at (0,0) within S_g)"
+        proof (rule real_tendsto_sandwich[where f="\<lambda>_. 0" and h="\<lambda>p. C1 * sqrt (fst p^2+snd p^2)"])
+          show "\<forall>\<^sub>F p in at (0,0) within S_g. (0::real) \<le> \<bar>fst (\<tau> p)\<bar>"
+            by (intro always_eventually) (by100 auto)
+          show "\<forall>\<^sub>F p in at (0,0) within S_g. \<bar>fst (\<tau> p)\<bar> \<le> C1 * sqrt (fst p^2+snd p^2)"
+            unfolding eventually_at_filter using hC1 by (intro always_eventually) (by100 auto)
+          show "((\<lambda>_. 0::real) \<longlongrightarrow> 0) (at (0,0) within S_g)" by (by100 simp)
+          show "((\<lambda>p. C1 * sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+              (at (0::real, 0::real) within S_g)" by (rule h_C1r)
+        qed
+        have h_fst_tau_0: "((\<lambda>p. fst (\<tau> p)) \<longlongrightarrow> 0) (at (0,0) within S_g)"
+          using tendsto_rabs_zero_cancel[OF h_abs_fst] .
+        \<comment> \<open>Same for snd.\<close>
+        from h_snd_bound_g obtain C2 where hC2: "\<forall>p\<in>S_g. \<bar>snd (\<tau> p)\<bar> \<le> C2 * sqrt (fst p^2 + snd p^2)"
+          by (by100 blast)
+        have h_C2r: "((\<lambda>p. C2 * sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+            (at (0::real, 0::real) within S_g)"
+          using tendsto_mult_left[OF h_r_to_0_g, of C2] by (by100 simp)
+        have h_abs_snd: "((\<lambda>p. \<bar>snd (\<tau> p)\<bar>) \<longlongrightarrow> 0) (at (0,0) within S_g)"
+        proof (rule real_tendsto_sandwich[where f="\<lambda>_. 0" and h="\<lambda>p. C2 * sqrt (fst p^2+snd p^2)"])
+          show "\<forall>\<^sub>F p in at (0,0) within S_g. (0::real) \<le> \<bar>snd (\<tau> p)\<bar>"
+            by (intro always_eventually) (by100 auto)
+          show "\<forall>\<^sub>F p in at (0,0) within S_g. \<bar>snd (\<tau> p)\<bar> \<le> C2 * sqrt (fst p^2+snd p^2)"
+            unfolding eventually_at_filter using hC2 by (intro always_eventually) (by100 auto)
+          show "((\<lambda>_. 0::real) \<longlongrightarrow> 0) (at (0,0) within S_g)" by (by100 simp)
+          show "((\<lambda>p. C2 * sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+              (at (0::real, 0::real) within S_g)" by (rule h_C2r)
+        qed
+        have h_snd_tau_0: "((\<lambda>p. snd (\<tau> p)) \<longlongrightarrow> 0) (at (0,0) within S_g)"
+          using tendsto_rabs_zero_cancel[OF h_abs_snd] .
+        \<comment> \<open>Combine via tendsto\\_Pair.\<close>
+        from tendsto_Pair[OF h_fst_tau_0 h_snd_tau_0]
+        show ?thesis by (by100 simp)
+      qed
+      have h_origin_in_Sg: "(0::real, 0::real) \<in> S_g"
+        unfolding S_g_def top1_B2_def by (by100 simp)
       have h_g_cont: "continuous_on S_g \<tau>"
-        sorry \<comment> \<open>On S\\_g: \\<tau> is good sector formula for angle \\<ge> \\<theta>\\_cancel points,
-           and cancel formula for positive x-axis (giving (r,0) = good formula limit).
-           Continuity follows from each formula being composition of continuous functions,
-           and agreement at the boundary.\<close>
+        unfolding continuous_on_def
+      proof (intro ballI)
+        fix p assume hp: "p \<in> S_g"
+        show "((\<lambda>x. \<tau> x) \<longlongrightarrow> \<tau> p) (at p within S_g)"
+        proof (cases "p = (0::real,0::real)")
+          case True
+          hence "\<tau> p = (0,0)" unfolding \<tau>_def by (by100 simp)
+          thus ?thesis using True h_g_cont_origin by (by100 simp)
+        next
+          case False
+          from continuous_on_def[THEN iffD1, OF h_g_cont_nonzero, rule_format]
+          have "((\<lambda>x. \<tau> x) \<longlongrightarrow> \<tau> p) (at p within (S_g - {(0, 0)}))"
+            using hp False by (by100 blast)
+          moreover have "at p within (S_g - {(0, 0)}) = at p within S_g"
+          proof (rule at_within_nhd[where S = "- {(0::real, 0::real)}"])
+            show "p \<in> - {(0::real, 0::real)}" using False by (by100 simp)
+            show "open (- {(0::real, 0::real)})"
+              using closed_singleton by (by100 blast)
+            show "(S_g - {(0, 0)}) \<inter> (- {(0, 0)}) - {p} = S_g \<inter> (- {(0, 0)}) - {p}"
+              by (by100 auto)
+          qed
+          ultimately show ?thesis by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>On S\\_c, \\<tau> agrees with the cancel formula at ALL points:
+         - For p \\<noteq> (0,0) with angle < \\<theta>\\_cancel: directly the cancel branch.
+         - For p \\<noteq> (0,0) with angle = \\<theta>\\_cancel: good branch gives (r,0) = cancel at \\<theta>\\_cancel.
+         - For p = (0,0): cancel formula gives (0*..., 0*...) = (0,0) = \\<tau>(0,0).
+         So it suffices to show the cancel formula is continuous on S\\_c.
+         Key steps:
+         (1) arccos(x/sqrt(x^2+y^2)) continuous on {x^2+y^2>0, y\\<ge>0} via continuous\\_on\\_arccos
+         (2) min, sin, multiplication all continuous
+         (3) O(r) bound at origin: each component has factor r=sqrt(x^2+y^2)
+         (4) continuous\\_on\\_If for the p=(0,0) case split.\<close>
+      have h_c_cont_nonzero: "continuous_on (S_c - {(0,0)}) \<tau>"
+        sorry \<comment> \<open>Nonzero case: composition of continuous functions
+           (sqrt, arccos, min, sin, mult, add via continuous\\_intros).\<close>
+      have h_c_cont_origin: "((\<lambda>x. \<tau> x) \<longlongrightarrow> (0,0)) (at (0,0) within S_c)"
+      proof -
+        \<comment> \<open>Componentwise: fst(\\<tau>(p)) \\<to> 0 and snd(\\<tau>(p)) \\<to> 0.
+           Both have factor r = sqrt(x^2+y^2) \\<to> 0, with bounded cofactors.\<close>
+        have h_fst_bound: "\<exists>C. \<forall>p \<in> S_c. \<bar>fst (\<tau> p)\<bar> \<le> C * sqrt (fst p ^ 2 + snd p ^ 2)"
+        proof (rule exI[of _ "1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>"], intro ballI)
+          fix p assume hp: "p \<in> S_c"
+          show "\<bar>fst (\<tau> p)\<bar> \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * sqrt (fst p ^ 2 + snd p ^ 2)"
+            sorry \<comment> \<open>Cancel formula: fst = r*spur\\_x + offset*fst(d\\_perp), bounded by C*r.\<close>
+        qed
+        have h_snd_bound: "\<exists>C. \<forall>p \<in> S_c. \<bar>snd (\<tau> p)\<bar> \<le> C * sqrt (fst p ^ 2 + snd p ^ 2)"
+        proof (rule exI[of _ "1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>"], intro ballI)
+          fix p assume hp: "p \<in> S_c"
+          show "\<bar>snd (\<tau> p)\<bar> \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * sqrt (fst p ^ 2 + snd p ^ 2)"
+            sorry \<comment> \<open>Cancel formula: snd = r*spur\\_y + offset*snd(d\\_perp), bounded by C*r.\<close>
+        qed
+        have h_fst_to_0: "((\<lambda>p. fst p) \<longlongrightarrow> (0::real)) (at (0::real, 0::real) within S_c)"
+        proof -
+          have "isCont fst (0::real, 0::real)" by (intro continuous_intros)
+          hence "(fst \<longlongrightarrow> (0::real)) (at (0::real, 0::real))"
+            unfolding isCont_def by (by100 simp)
+          thus ?thesis by (rule filterlim_mono) (auto simp: at_le)
+        qed
+        have h_snd_to_0: "((\<lambda>p. snd p) \<longlongrightarrow> (0::real)) (at (0::real, 0::real) within S_c)"
+        proof -
+          have "isCont snd (0::real, 0::real)" by (intro continuous_intros)
+          hence "(snd \<longlongrightarrow> (0::real)) (at (0::real, 0::real))"
+            unfolding isCont_def by (by100 simp)
+          thus ?thesis by (rule filterlim_mono) (auto simp: at_le)
+        qed
+        have h_r_to_0: "((\<lambda>p. sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+            (at (0::real, 0::real) within S_c)"
+        proof -
+          have "((\<lambda>p. sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> sqrt ((0::real) ^ 2 + (0::real) ^ 2))
+              (at (0::real, 0::real) within S_c)"
+            using h_fst_to_0 h_snd_to_0 by (intro tendsto_intros)
+          thus ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>Squeeze: 0 \\<le> |fst(\\<tau> p)| \\<le> C*r and C*r \\<to> 0.\<close>
+        from h_fst_bound obtain C1 where hC1: "\<forall>p\<in>S_c. \<bar>fst (\<tau> p)\<bar> \<le> C1 * sqrt (fst p^2 + snd p^2)"
+          by (by100 blast)
+        have h_C1r: "((\<lambda>p. C1 * sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+            (at (0::real, 0::real) within S_c)"
+          using tendsto_mult_left[OF h_r_to_0, of C1] by (by100 simp)
+        have h_abs_fst: "((\<lambda>p. \<bar>fst (\<tau> p)\<bar>) \<longlongrightarrow> 0) (at (0,0) within S_c)"
+        proof (rule real_tendsto_sandwich[where f="\<lambda>_. 0" and h="\<lambda>p. C1 * sqrt (fst p^2+snd p^2)"])
+          show "\<forall>\<^sub>F p in at (0,0) within S_c. (0::real) \<le> \<bar>fst (\<tau> p)\<bar>"
+            by (intro always_eventually) (by100 auto)
+          show "\<forall>\<^sub>F p in at (0,0) within S_c. \<bar>fst (\<tau> p)\<bar> \<le> C1 * sqrt (fst p^2+snd p^2)"
+            unfolding eventually_at_filter using hC1 by (intro always_eventually) (by100 auto)
+          show "((\<lambda>_. 0::real) \<longlongrightarrow> 0) (at (0,0) within S_c)" by (by100 simp)
+          show "((\<lambda>p. C1 * sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+              (at (0::real, 0::real) within S_c)" by (rule h_C1r)
+        qed
+        have h_fst_tau_0: "((\<lambda>p. fst (\<tau> p)) \<longlongrightarrow> 0) (at (0,0) within S_c)"
+          using tendsto_rabs_zero_cancel[OF h_abs_fst] .
+        from h_snd_bound obtain C2 where hC2: "\<forall>p\<in>S_c. \<bar>snd (\<tau> p)\<bar> \<le> C2 * sqrt (fst p^2 + snd p^2)"
+          by (by100 blast)
+        have h_C2r: "((\<lambda>p. C2 * sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+            (at (0::real, 0::real) within S_c)"
+          using tendsto_mult_left[OF h_r_to_0, of C2] by (by100 simp)
+        have h_abs_snd: "((\<lambda>p. \<bar>snd (\<tau> p)\<bar>) \<longlongrightarrow> 0) (at (0,0) within S_c)"
+        proof (rule real_tendsto_sandwich[where f="\<lambda>_. 0" and h="\<lambda>p. C2 * sqrt (fst p^2+snd p^2)"])
+          show "\<forall>\<^sub>F p in at (0,0) within S_c. (0::real) \<le> \<bar>snd (\<tau> p)\<bar>"
+            by (intro always_eventually) (by100 auto)
+          show "\<forall>\<^sub>F p in at (0,0) within S_c. \<bar>snd (\<tau> p)\<bar> \<le> C2 * sqrt (fst p^2+snd p^2)"
+            unfolding eventually_at_filter using hC2 by (intro always_eventually) (by100 auto)
+          show "((\<lambda>_. 0::real) \<longlongrightarrow> 0) (at (0,0) within S_c)" by (by100 simp)
+          show "((\<lambda>p. C2 * sqrt (fst p ^ 2 + snd p ^ 2)) \<longlongrightarrow> 0)
+              (at (0::real, 0::real) within S_c)" by (rule h_C2r)
+        qed
+        have h_snd_tau_0: "((\<lambda>p. snd (\<tau> p)) \<longlongrightarrow> 0) (at (0,0) within S_c)"
+          using tendsto_rabs_zero_cancel[OF h_abs_snd] .
+        from tendsto_Pair[OF h_fst_tau_0 h_snd_tau_0]
+        show ?thesis by (by100 simp)
+      qed
+      have h_origin_in_Sc: "(0::real, 0::real) \<in> S_c"
+        unfolding S_c_def top1_B2_def by (by100 simp)
       have h_c_cont: "continuous_on S_c \<tau>"
-        sorry \<comment> \<open>On S\\_c: \\<tau> is cancel sector formula (polynomial/trig).
-           Continuous from compositions of sqrt, arccos, min, sin, multiplication.\<close>
+        unfolding continuous_on_def
+      proof (intro ballI)
+        fix p assume hp: "p \<in> S_c"
+        show "((\<lambda>x. \<tau> x) \<longlongrightarrow> \<tau> p) (at p within S_c)"
+        proof (cases "p = (0::real,0::real)")
+          case True
+          hence "\<tau> p = (0,0)" unfolding \<tau>_def by (by100 simp)
+          thus ?thesis using True h_c_cont_origin by (by100 simp)
+        next
+          case False
+          from continuous_on_def[THEN iffD1, OF h_c_cont_nonzero, rule_format]
+          have "((\<lambda>x. \<tau> x) \<longlongrightarrow> \<tau> p) (at p within (S_c - {(0, 0)}))"
+            using hp False by (by100 blast)
+          moreover have "at p within (S_c - {(0, 0)}) = at p within S_c"
+          proof (rule at_within_nhd[where S = "- {(0::real, 0::real)}"])
+            show "p \<in> - {(0::real, 0::real)}" using False by (by100 simp)
+            show "open (- {(0::real, 0::real)})"
+              using closed_singleton by (by100 blast)
+            show "(S_c - {(0, 0)}) \<inter> (- {(0, 0)}) - {p} = S_c \<inter> (- {(0, 0)}) - {p}"
+              by (by100 auto)
+          qed
+          ultimately show ?thesis by (by100 simp)
+        qed
+      qed
       have h\<tau>_cont: "continuous_on top1_B2 \<tau>"
         using continuous_on_closed_Un[OF h_g_closed h_c_closed h_g_cont h_c_cont]
         unfolding h_cover[symmetric] .
@@ -6743,12 +7634,997 @@ proof -
          (B) Cancel edges: spur\\_f maps cancel pair to interior spur \\<to> collapsed.
          Both depend on HOW \\<tau> maps boundary arcs, which follows from the \\<tau> definition.
          The proof also needs \\<tau> injectivity on B2 interior (from perpendicular offsets).\<close>
+      \<comment> \<open>Key property: spur\\_f maps good edge k (k\\<ge>2) at parameter t to edge\\_m(k-2, t).
+         Proof: \\<psi>\\_e(edge\\_e(k,t)) = (cos(2\\<pi>(k+t)/n), sin(2\\<pi>(k+t)/n)).
+         \\<tau> rescales angle: 2\\<pi>(k+t)/n \\<to> (2\\<pi>(k+t)/n - \\<theta>\\_cancel)\\<cdot>n/m = 2\\<pi>(k-2+t)/m.
+         \\<psi>\\_m\\<inverse> maps back: edge\\_m(k-2, t).\<close>
+      have h_spur_good_edge: "\<forall>k. 2 \<le> k \<longrightarrow> k < ?n \<longrightarrow> (\<forall>t\<in>{0<..<(1::real)}.
+          spur_f ((1-t)*vx_e k + t*vx_e(Suc k mod ?n),
+                  (1-t)*vy_e k + t*vy_e(Suc k mod ?n))
+        = ((1-t)*vx_m (k-2) + t*vx_m(Suc (k-2) mod ?m),
+           (1-t)*vy_m (k-2) + t*vy_m(Suc (k-2) mod ?m)))"
+      proof (intro allI impI ballI)
+        fix k t assume hk2: "2 \<le> k" and hk: "k < ?n" and ht: "t \<in> {0<..<(1::real)}"
+        \<comment> \<open>Step 1: \\<psi>\\_e maps edge\\_e(k,t) to S1.\<close>
+        define \<alpha> where "\<alpha> = 2*pi*(real k + t)/real ?n"
+        have ht_Iset: "t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
+        have h\<psi>e: "\<psi>_e ((1-t)*vx_e k + t*vx_e(Suc k mod ?n),
+            (1-t)*vy_e k + t*vy_e(Suc k mod ?n)) = (cos \<alpha>, sin \<alpha>)"
+          unfolding \<alpha>_def using h\<psi>e_edge[rule_format, OF hk ht_Iset] .
+        \<comment> \<open>Step 2: (cos \\<alpha>, sin \\<alpha>) \\<noteq> (0,0).\<close>
+        have h_ne: "(cos \<alpha>, sin \<alpha>) \<noteq> (0::real, 0)"
+        proof
+          assume "(cos \<alpha>, sin \<alpha>) = (0, 0)"
+          hence "cos \<alpha> = 0" "sin \<alpha> = 0" by (by100 auto)+
+          hence "cos \<alpha> * cos \<alpha> + sin \<alpha> * sin \<alpha> = 0" by (by100 simp)
+          moreover have "cos \<alpha> * cos \<alpha> + sin \<alpha> * sin \<alpha> = 1"
+            using sin_cos_squared_add3[of \<alpha>] by (simp add: power2_eq_square)
+          ultimately show False by (by100 linarith)
+        qed
+        \<comment> \<open>Step 3: angle is \\<alpha> (via angle\\_recovery with r=1).\<close>
+        have hn_pos: "real ?n > 0" using hn5 by (by100 linarith)
+        have ht_pos: "t > 0" using ht by (by100 simp)
+        have ht_lt1: "t < 1" using ht by (by100 simp)
+        have ht_ge0: "t \<ge> 0" using ht_pos by (by100 linarith)
+        have ht_le1: "t \<le> 1" using ht_lt1 by (by100 linarith)
+        have h\<alpha>_ge0: "\<alpha> \<ge> 0" unfolding \<alpha>_def
+          using pi_gt_zero hn_pos ht_ge0 hk2 by (by100 simp)
+        have h\<alpha>_lt2pi: "\<alpha> < 2*pi"
+        proof -
+          have "real k + t < real k + 1" using ht_lt1 by (by100 linarith)
+          also have "\<dots> \<le> real ?n" using hk by (by100 simp)
+          finally have "real k + t < real ?n" .
+          show ?thesis unfolding \<alpha>_def using pi_gt_zero hn_pos \<open>real k + t < real ?n\<close>
+            by (simp add: divide_less_eq mult.commute)
+        qed
+        \<comment> \<open>Step 4: \\<alpha> \\<ge> \\<theta>\\_cancel since k\\<ge>2.\<close>
+        have h_good: "\<alpha> \<ge> \<theta>_cancel"
+        proof -
+          have "real k + t \<ge> 2" using hk2 ht_ge0 by (by100 linarith)
+          show ?thesis unfolding \<alpha>_def \<theta>_cancel_def using \<open>real k + t \<ge> 2\<close> pi_gt_zero hn_pos
+            by (simp add: divide_le_eq mult.commute)
+        qed
+        \<comment> \<open>Step 5: \\<tau> on S1 in good sector gives (cos(...), sin(...)).\<close>
+        have h_\<tau>: "\<tau> (cos \<alpha>, sin \<alpha>) =
+            (cos ((\<alpha> - \<theta>_cancel) * real ?n / real ?m),
+             sin ((\<alpha> - \<theta>_cancel) * real ?n / real ?m))"
+        proof -
+          \<comment> \<open>r = sqrt(cos^2+sin^2) = 1.\<close>
+          have hr1: "sqrt ((cos \<alpha>)^2 + (sin \<alpha>)^2) = 1"
+          proof -
+            have "(cos \<alpha>)^2 + (sin \<alpha>)^2 = 1" using sin_cos_squared_add3 by (by100 simp)
+            thus ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Angle recovery: the angle computed by \\<tau> is \\<alpha>.\<close>
+          have hdiv: "cos \<alpha> / sqrt ((cos \<alpha>)^2 + (sin \<alpha>)^2) = cos \<alpha>"
+            using hr1 by (by100 simp)
+          have h_angle: "(if sin \<alpha> \<ge> 0 then arccos (cos \<alpha> / sqrt ((cos \<alpha>)^2 + (sin \<alpha>)^2))
+              else 2*pi - arccos (cos \<alpha> / sqrt ((cos \<alpha>)^2 + (sin \<alpha>)^2))) = \<alpha>"
+          proof (cases "sin \<alpha> \<ge> 0")
+            case True
+            have "\<alpha> \<le> pi"
+            proof (rule ccontr)
+              assume "\<not> \<alpha> \<le> pi"
+              hence "\<alpha> > pi" by (by100 linarith)
+              hence "sin \<alpha> < 0" using h\<alpha>_lt2pi sin_lt_zero by (by100 auto)
+              thus False using True by (by100 linarith)
+            qed
+            hence "arccos (cos \<alpha>) = \<alpha>" using h\<alpha>_ge0 arccos_cos by (by100 blast)
+            thus ?thesis using True hdiv by (by100 simp)
+          next
+            case False
+            hence "sin \<alpha> < 0" by (by100 linarith)
+            have h\<alpha>_gt_pi: "\<alpha> > pi"
+            proof (rule ccontr)
+              assume "\<not> \<alpha> > pi"
+              hence "\<alpha> \<le> pi" by (by100 linarith)
+              hence "sin \<alpha> \<ge> 0" using h\<alpha>_ge0 sin_ge_zero by (by100 blast)
+              thus False using \<open>sin \<alpha> < 0\<close> by (by100 linarith)
+            qed
+            have "arccos (cos \<alpha>) = 2*pi - \<alpha>"
+            proof -
+              have hx: "\<alpha> - 2*pi \<le> 0" using h\<alpha>_lt2pi by (by100 linarith)
+              have hx2: "- pi \<le> \<alpha> - 2*pi" using h\<alpha>_gt_pi by (by100 linarith)
+              have "cos (\<alpha> - 2*pi) = cos \<alpha>" by (simp add: cos_diff)
+              from arccos_cos2[OF hx hx2] this
+              have "arccos (cos \<alpha>) = -((\<alpha>) - 2*pi)" by (by100 simp)
+              thus ?thesis by (by100 linarith)
+            qed
+            thus ?thesis using False hdiv by (by100 simp)
+          qed
+          \<comment> \<open>Unfold \\<tau> definition, substitute r=1, angle=\\<alpha>, and simplify.\<close>
+          have "\<tau> (cos \<alpha>, sin \<alpha>) = (fst (\<tau>_boundary \<alpha>), snd (\<tau>_boundary \<alpha>))"
+          proof -
+            have "\<tau> (cos \<alpha>, sin \<alpha>) = (1 * fst (\<tau>_boundary \<alpha>), 1 * snd (\<tau>_boundary \<alpha>))"
+              unfolding \<tau>_def using h_ne hr1 h_angle h_good by auto
+            thus ?thesis by (by100 simp)
+          qed
+          also have "\<dots> = (cos ((\<alpha> - \<theta>_cancel) * real ?n / real ?m),
+              sin ((\<alpha> - \<theta>_cancel) * real ?n / real ?m))"
+            unfolding \<tau>_boundary_def using h_good by (by100 auto)
+          finally show ?thesis .
+        qed
+        \<comment> \<open>Step 6: Arithmetic: (\\<alpha>-\\<theta>\\_cancel)\\<cdot>n/m = 2\\<pi>(k-2+t)/m.\<close>
+        have h_arith: "(\<alpha> - \<theta>_cancel) * real ?n / real ?m = 2*pi*(real (k-2) + t) / real ?m"
+        proof -
+          have "\<alpha> - \<theta>_cancel = 2*pi*(real k + t)/real ?n - 4*pi/real ?n"
+            unfolding \<alpha>_def \<theta>_cancel_def by (by100 simp)
+          also have "\<dots> = 2*pi*(real k + t - 2)/real ?n"
+            using hn_pos by (simp add: diff_divide_distrib algebra_simps)
+          finally have h1: "\<alpha> - \<theta>_cancel = 2*pi*(real k + t - 2)/real ?n" .
+          have "(\<alpha> - \<theta>_cancel) * real ?n / real ?m = 2*pi*(real k + t - 2)/real ?n * real ?n / real ?m"
+            using h1 by (by100 simp)
+          also have "\<dots> = 2*pi*(real k + t - 2) / real ?m"
+            using hn_pos by (by100 simp)
+          also have "real k + t - 2 = real (k - 2) + t"
+            using hk2 by (by100 simp)
+          finally show ?thesis .
+        qed
+        \<comment> \<open>Step 7: \\<psi>\\_m\\<inverse> maps result to edge\\_m(k-2,t).\<close>
+        have hk2m: "k - 2 < ?m" using hk hk2 hn_eq by (by100 linarith)
+        have h_result: "spur_f ((1-t)*vx_e k + t*vx_e(Suc k mod ?n),
+            (1-t)*vy_e k + t*vy_e(Suc k mod ?n))
+          = ((1-t)*vx_m (k-2) + t*vx_m(Suc (k-2) mod ?m),
+             (1-t)*vy_m (k-2) + t*vy_m(Suc (k-2) mod ?m))"
+        proof -
+          have "spur_f ((1-t)*vx_e k + t*vx_e(Suc k mod ?n),
+              (1-t)*vy_e k + t*vy_e(Suc k mod ?n))
+            = inv_into P_m \<psi>_m (\<tau> (cos \<alpha>, sin \<alpha>))"
+            unfolding spur_f_def using h\<psi>e by (by100 simp)
+          also have "\<dots> = inv_into P_m \<psi>_m
+              (cos (2*pi*(real (k-2) + t) / real ?m), sin (2*pi*(real (k-2) + t) / real ?m))"
+            unfolding h_\<tau> h_arith ..
+          also have "\<dots> = ((1-t)*vx_m (k-2) + t*vx_m(Suc (k-2) mod ?m),
+              (1-t)*vy_m (k-2) + t*vy_m(Suc (k-2) mod ?m))"
+            using h\<psi>m_inv_edge[rule_format, OF hk2m ht_Iset] .
+          finally show ?thesis .
+        qed
+        show "spur_f ((1-t)*vx_e k + t*vx_e(Suc k mod ?n),
+            (1-t)*vy_e k + t*vy_e(Suc k mod ?n))
+          = ((1-t)*vx_m (k-2) + t*vx_m(Suc (k-2) mod ?m),
+             (1-t)*vy_m (k-2) + t*vy_m(Suc (k-2) mod ?m))"
+          by (rule h_result)
+      qed
+      \<comment> \<open>Cancel edge collapse: edges 0 and 1 of P\\_e both map to the spur in P\\_m.
+         Edge 0 at t and edge 1 at 1-t map to the same spur point.\<close>
+      have h_spur_cancel_collapse: "\<forall>t\<in>{0<..<(1::real)}.
+          spur_f ((1-t)*vx_e 0 + t*vx_e(Suc 0 mod ?n), (1-t)*vy_e 0 + t*vy_e(Suc 0 mod ?n))
+        = spur_f (t*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n), t*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n))"
+      proof (intro ballI)
+        fix t :: real assume ht: "t \<in> {0<..<(1::real)}"
+        \<comment> \<open>Both edges map to S1 at angles 2\\<pi>t/n and 2\\<pi>(2-t)/n.
+           Both in cancel sector (< \\<theta>\\_cancel = 4\\<pi>/n).
+           At r=1: offset = 0, so \\<tau> = \\<tau>\\_boundary.
+           t\\_fold = min(t, 2-t) = t (since t < 1 < 2-t).
+           So \\<tau>\\_boundary(\\<theta>\\_0) = \\<tau>\\_boundary(\\<theta>\\_1) and spur\\_f values equal.\<close>
+        \<comment> \<open>\\<psi>\\_e maps both edge points to S1.\<close>
+        have h0: "0 < ?n" using hn5 by (by100 linarith)
+        have ht_pos: "t > 0" using ht by (by100 simp)
+        have ht_lt1: "t < 1" using ht by (by100 simp)
+        have ht_Iset: "t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
+        have h1t_Iset: "1-t \<in> I_set" using ht_pos ht_lt1 unfolding top1_unit_interval_def by (by100 auto)
+        \<comment> \<open>Both S1 points have the same \\<tau>\\_boundary value.\<close>
+        define \<alpha>0 where "\<alpha>0 = 2*pi*t/real ?n"
+        define \<alpha>1 where "\<alpha>1 = 2*pi*(2-t)/real ?n"
+        \<comment> \<open>Both \\<tau>\\_boundary values are equal because both give t\\_fold = t.\<close>
+        have h\<alpha>0_lt: "\<alpha>0 < \<theta>_cancel"
+        proof -
+          have "t < 2" using ht_lt1 by (by100 linarith)
+          thus ?thesis unfolding \<alpha>0_def \<theta>_cancel_def
+            using pi_gt_zero h0 by (simp add: divide_less_eq mult.commute)
+        qed
+        have h\<alpha>1_lt: "\<alpha>1 < \<theta>_cancel"
+        proof -
+          have "2 - t < 2" using ht_pos by (by100 linarith)
+          thus ?thesis unfolding \<alpha>1_def \<theta>_cancel_def
+            using pi_gt_zero h0 by (simp add: divide_less_eq mult.commute)
+        qed
+        have h_tb_eq: "\<tau>_boundary \<alpha>0 = \<tau>_boundary \<alpha>1"
+        proof -
+          \<comment> \<open>Compute t\\_fold for \\<alpha>0: min(2\\<pi>t/n \\<cdot> n/(2\\<pi>), (4\\<pi>/n - 2\\<pi>t/n) \\<cdot> n/(2\\<pi>)) = min(t, 2-t) = t.\<close>
+          have hpi_pos: "pi > 0" using pi_gt_zero .
+          have h_tf0: "min (\<alpha>0 * real ?n / (2*pi)) ((4*pi/real ?n - \<alpha>0) * real ?n / (2*pi)) = t"
+          proof -
+            have "\<alpha>0 * real ?n / (2*pi) = t"
+              unfolding \<alpha>0_def using hpi_pos h0 by (by100 simp)
+            moreover have "(4*pi/real ?n - \<alpha>0) * real ?n / (2*pi) = 2 - t"
+            proof -
+              have "4*pi/real ?n - \<alpha>0 = (4*pi - 2*pi*t)/real ?n"
+                unfolding \<alpha>0_def using h0 by (simp add: diff_divide_distrib)
+              also have "\<dots> = 2*pi*(2-t)/real ?n" by argo
+              finally have "(4*pi/real ?n - \<alpha>0) * real ?n / (2*pi) = 2*pi*(2-t)/real ?n * real ?n / (2*pi)"
+                by (by100 simp)
+              also have "\<dots> = 2-t" using hpi_pos h0 by (by100 simp)
+              finally show ?thesis .
+            qed
+            moreover have "min t (2 - t) = t" using ht_lt1 by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have h_tf1: "min (\<alpha>1 * real ?n / (2*pi)) ((4*pi/real ?n - \<alpha>1) * real ?n / (2*pi)) = t"
+          proof -
+            have "\<alpha>1 * real ?n / (2*pi) = 2 - t"
+              unfolding \<alpha>1_def using hpi_pos h0 by (by100 simp)
+            moreover have "(4*pi/real ?n - \<alpha>1) * real ?n / (2*pi) = t"
+            proof -
+              have "4*pi/real ?n - \<alpha>1 = (4*pi - 2*pi*(2-t))/real ?n"
+                unfolding \<alpha>1_def using h0 by (simp add: diff_divide_distrib)
+              also have "\<dots> = 2*pi*t/real ?n" by argo
+              finally have "(4*pi/real ?n - \<alpha>1) * real ?n / (2*pi) = 2*pi*t/real ?n * real ?n / (2*pi)"
+                by (by100 simp)
+              also have "\<dots> = t" using hpi_pos h0 by (by100 simp)
+              finally show ?thesis .
+            qed
+            moreover have "min (2 - t) t = t" using ht_lt1 by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Both \\<tau>\\_boundary values use the cancel branch with the same t\\_fold.\<close>
+          have "\<tau>_boundary \<alpha>0 = ((1 - t) * 1 + t * fst p_cm, (1 - t) * 0 + t * snd p_cm)"
+            unfolding \<tau>_boundary_def using h\<alpha>0_lt h_tf0 by (by100 simp)
+          moreover have "\<tau>_boundary \<alpha>1 = ((1 - t) * 1 + t * fst p_cm, (1 - t) * 0 + t * snd p_cm)"
+            unfolding \<tau>_boundary_def using h\<alpha>1_lt h_tf1 by (by100 simp)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>Since r=1 on S1 and offset=0: \\<tau> = (fst(\\<tau>\\_boundary), snd(\\<tau>\\_boundary)).\<close>
+        have h_\<tau>_eq: "\<tau> (cos \<alpha>0, sin \<alpha>0) = \<tau> (cos \<alpha>1, sin \<alpha>1)"
+        proof -
+          \<comment> \<open>Both (cos \\<alpha>, sin \\<alpha>) \\<noteq> (0,0) and r = 1. Unfold \\<tau>.\<close>
+          have hne0: "(cos \<alpha>0, sin \<alpha>0) \<noteq> (0::real, 0)"
+          proof
+            assume "(cos \<alpha>0, sin \<alpha>0) = (0, 0)"
+            hence "cos \<alpha>0 * cos \<alpha>0 + sin \<alpha>0 * sin \<alpha>0 = 0" by (by100 simp)
+            moreover have "cos \<alpha>0 * cos \<alpha>0 + sin \<alpha>0 * sin \<alpha>0 = 1"
+              using sin_cos_squared_add3[of \<alpha>0] by (simp add: power2_eq_square)
+            ultimately show False by (by100 linarith)
+          qed
+          have hne1: "(cos \<alpha>1, sin \<alpha>1) \<noteq> (0::real, 0)"
+          proof
+            assume "(cos \<alpha>1, sin \<alpha>1) = (0, 0)"
+            hence "cos \<alpha>1 * cos \<alpha>1 + sin \<alpha>1 * sin \<alpha>1 = 0" by (by100 simp)
+            moreover have "cos \<alpha>1 * cos \<alpha>1 + sin \<alpha>1 * sin \<alpha>1 = 1"
+              using sin_cos_squared_add3[of \<alpha>1] by (simp add: power2_eq_square)
+            ultimately show False by (by100 linarith)
+          qed
+          have hr0: "sqrt ((cos \<alpha>0)^2 + (sin \<alpha>0)^2) = 1"
+          proof -
+            have "(cos \<alpha>0)^2 + (sin \<alpha>0)^2 = 1" using sin_cos_squared_add3 by (by100 simp)
+            thus ?thesis by (by100 simp)
+          qed
+          have hr1: "sqrt ((cos \<alpha>1)^2 + (sin \<alpha>1)^2) = 1"
+          proof -
+            have "(cos \<alpha>1)^2 + (sin \<alpha>1)^2 = 1" using sin_cos_squared_add3 by (by100 simp)
+            thus ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Angle recovery for both.\<close>
+          \<comment> \<open>Both \\<alpha> are in (0, 4\\<pi>/n) \\<subset> (0, \\<pi>), so sin \\<ge> 0 and arccos\\_cos applies.\<close>
+          have h\<theta>_lt_pi_local: "\<theta>_cancel < pi"
+          proof -
+            have "real ?n \<ge> 5" using hn5 by (by100 simp)
+            hence "4 * pi / real ?n \<le> 4 * pi / 5"
+              using divide_left_mono[of 5 "real ?n" "4*pi"] pi_gt_zero by (by100 simp)
+            also have "\<dots> < pi" using pi_gt_zero by (by100 linarith)
+            finally show ?thesis unfolding \<theta>_cancel_def .
+          qed
+          have h\<alpha>0_ge0: "\<alpha>0 \<ge> 0" unfolding \<alpha>0_def using pi_gt_zero h0 ht_pos by (by100 simp)
+          have h\<alpha>0_le_pi: "\<alpha>0 \<le> pi" using h\<alpha>0_lt h\<theta>_lt_pi_local by (by100 linarith)
+          have h\<alpha>1_ge0: "\<alpha>1 \<ge> 0" unfolding \<alpha>1_def using pi_gt_zero h0 ht_lt1 by (by100 simp)
+          have h\<alpha>1_le_pi: "\<alpha>1 \<le> pi" using h\<alpha>1_lt h\<theta>_lt_pi_local by (by100 linarith)
+          have h_angle0: "(if sin \<alpha>0 \<ge> 0 then arccos (cos \<alpha>0 / sqrt ((cos \<alpha>0)^2 + (sin \<alpha>0)^2))
+              else 2*pi - arccos (cos \<alpha>0 / sqrt ((cos \<alpha>0)^2 + (sin \<alpha>0)^2))) = \<alpha>0"
+          proof -
+            have "sin \<alpha>0 \<ge> 0" using sin_ge_zero[OF h\<alpha>0_ge0 h\<alpha>0_le_pi] .
+            moreover have "cos \<alpha>0 / sqrt ((cos \<alpha>0)^2 + (sin \<alpha>0)^2) = cos \<alpha>0" using hr0 by (by100 simp)
+            moreover have "arccos (cos \<alpha>0) = \<alpha>0" using arccos_cos[OF h\<alpha>0_ge0 h\<alpha>0_le_pi] .
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have h_angle1: "(if sin \<alpha>1 \<ge> 0 then arccos (cos \<alpha>1 / sqrt ((cos \<alpha>1)^2 + (sin \<alpha>1)^2))
+              else 2*pi - arccos (cos \<alpha>1 / sqrt ((cos \<alpha>1)^2 + (sin \<alpha>1)^2))) = \<alpha>1"
+          proof -
+            have "sin \<alpha>1 \<ge> 0" using sin_ge_zero[OF h\<alpha>1_ge0 h\<alpha>1_le_pi] .
+            moreover have "cos \<alpha>1 / sqrt ((cos \<alpha>1)^2 + (sin \<alpha>1)^2) = cos \<alpha>1" using hr1 by (by100 simp)
+            moreover have "arccos (cos \<alpha>1) = \<alpha>1" using arccos_cos[OF h\<alpha>1_ge0 h\<alpha>1_le_pi] .
+            ultimately show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Both \\<alpha> < \\<theta>\\_cancel, so cancel branch. At r=1: offset = sign*1*(1-1)*sin(.)/4 = 0.
+             So \\<tau> = (fst(\\<tau>\\_boundary(\\<alpha>)), snd(\\<tau>\\_boundary(\\<alpha>))).\<close>
+          have "\<tau> (cos \<alpha>0, sin \<alpha>0) = (fst (\<tau>_boundary \<alpha>0), snd (\<tau>_boundary \<alpha>0))"
+            unfolding \<tau>_def using hne0 hr0 h_angle0 h\<alpha>0_lt by auto
+          moreover have "\<tau> (cos \<alpha>1, sin \<alpha>1) = (fst (\<tau>_boundary \<alpha>1), snd (\<tau>_boundary \<alpha>1))"
+            unfolding \<tau>_def using hne1 hr1 h_angle1 h\<alpha>1_lt by auto
+          ultimately show ?thesis using h_tb_eq by (by100 simp)
+        qed
+        \<comment> \<open>Assemble: spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e.\<close>
+        have h_e0: "\<psi>_e ((1-t)*vx_e 0 + t*vx_e(Suc 0 mod ?n), (1-t)*vy_e 0 + t*vy_e(Suc 0 mod ?n))
+            = (cos \<alpha>0, sin \<alpha>0)"
+        proof -
+          have "0 < ?n" using hn5 by (by100 linarith)
+          from h\<psi>e_edge[rule_format, OF this ht_Iset]
+          show ?thesis unfolding \<alpha>0_def by (by100 simp)
+        qed
+        have h1_lt: "1 < ?n" using hn5 by (by100 linarith)
+        \<comment> \<open>Edge 1 reversed: parameter 1-t gives angle 2\\<pi>(1+(1-t))/n = 2\\<pi>(2-t)/n = \\<alpha>\\_1.\<close>
+        have h_e1: "\<psi>_e (t*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n),
+            t*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n)) = (cos \<alpha>1, sin \<alpha>1)"
+        proof -
+          \<comment> \<open>Reversed edge 1 at t = edge 1 at parameter 1-t.\<close>
+          have "t*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n)
+              = (1-(1-t))*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n)" by (by100 simp)
+          moreover have "t*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n)
+              = (1-(1-t))*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n)" by (by100 simp)
+          ultimately have "t*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n) =
+              (1-(1-t))*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n)
+            \<and> t*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n) =
+              (1-(1-t))*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n)" by (by100 blast)
+          from h\<psi>e_edge[rule_format, OF h1_lt h1t_Iset]
+          have "\<psi>_e ((1-(1-t))*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n),
+              (1-(1-t))*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n))
+            = (cos (2*pi*(real 1 + (1-t))/real ?n), sin (2*pi*(real 1 + (1-t))/real ?n))" .
+          hence "\<psi>_e (t*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n),
+              t*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n))
+            = (cos (2*pi*(2-t)/real ?n), sin (2*pi*(2-t)/real ?n))"
+            by (by100 simp)
+          thus ?thesis unfolding \<alpha>1_def by (by100 simp)
+        qed
+        show "spur_f ((1-t)*vx_e 0 + t*vx_e(Suc 0 mod ?n), (1-t)*vy_e 0 + t*vy_e(Suc 0 mod ?n))
+          = spur_f (t*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n), t*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n))"
+          unfolding spur_f_def using h_e0 h_e1 h_\<tau>_eq by (by100 simp)
+      qed
+      \<comment> \<open>Vertex mapping: spur\\_f(vx\\_e(k)) for k \\<ge> 2.\<close>
+      have h_spur_vertex: "\<forall>k. 2 \<le> k \<longrightarrow> k < ?n \<longrightarrow>
+          spur_f (vx_e k, vy_e k) = (vx_m (k-2), vy_m (k-2))"
+      proof (intro allI impI)
+        fix k assume hk2: "2 \<le> k" and hk: "k < ?n"
+        \<comment> \<open>This is h\\_spur\\_good\\_edge at t=0, using I\\_set edge formula.\<close>
+        have ht0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have hk2m: "k - 2 < ?m" using hk hk2 hn_eq by (by100 linarith)
+        \<comment> \<open>Edge at t=0 is the vertex.\<close>
+        have h_vx_eq: "(vx_e k, vy_e k) = ((1-0)*vx_e k + 0*vx_e(Suc k mod ?n),
+            (1-0)*vy_e k + 0*vy_e(Suc k mod ?n))" by (by100 simp)
+        have h_vxm_eq: "(vx_m (k-2), vy_m (k-2)) = ((1-0)*vx_m(k-2) + 0*vx_m(Suc(k-2) mod ?m),
+            (1-0)*vy_m(k-2) + 0*vy_m(Suc(k-2) mod ?m))" by (by100 simp)
+        \<comment> \<open>Use \\<psi>\\_e at edge k, t=0.\<close>
+        define \<alpha> where "\<alpha> = 2*pi*(real k)/real ?n"
+        have h\<psi>e: "\<psi>_e (vx_e k, vy_e k) = (cos \<alpha>, sin \<alpha>)"
+        proof -
+          from h\<psi>e_edge[rule_format, OF hk ht0_I]
+          show ?thesis unfolding \<alpha>_def by (by100 simp)
+        qed
+        \<comment> \<open>\\<tau> at (cos \\<alpha>, sin \\<alpha>): good sector (\\<alpha> \\<ge> \\<theta>\\_cancel).\<close>
+        have hn_pos: "real ?n > 0" using hn5 by (by100 linarith)
+        have h\<alpha>_ge0: "\<alpha> \<ge> 0" unfolding \<alpha>_def using pi_gt_zero hn_pos hk2 by (by100 simp)
+        have h\<alpha>_lt2pi: "\<alpha> < 2*pi"
+        proof -
+          have "real k < real ?n" using hk by (by100 simp)
+          thus ?thesis unfolding \<alpha>_def using pi_gt_zero hn_pos
+            by (simp add: divide_less_eq mult.commute)
+        qed
+        have h_good: "\<alpha> \<ge> \<theta>_cancel"
+        proof -
+          have "real k \<ge> 2" using hk2 by (by100 simp)
+          thus ?thesis unfolding \<alpha>_def \<theta>_cancel_def using pi_gt_zero hn_pos
+            by (simp add: divide_le_eq mult.commute)
+        qed
+        have h_\<tau>: "\<tau> (cos \<alpha>, sin \<alpha>) =
+            (cos ((\<alpha> - \<theta>_cancel) * real ?n / real ?m),
+             sin ((\<alpha> - \<theta>_cancel) * real ?n / real ?m))"
+        proof -
+          have h_ne: "(cos \<alpha>, sin \<alpha>) \<noteq> (0::real, 0)"
+          proof
+            assume "(cos \<alpha>, sin \<alpha>) = (0, 0)"
+            hence "cos \<alpha> * cos \<alpha> + sin \<alpha> * sin \<alpha> = 0" by (by100 simp)
+            moreover have "cos \<alpha> * cos \<alpha> + sin \<alpha> * sin \<alpha> = 1"
+              using sin_cos_squared_add3[of \<alpha>] by (simp add: power2_eq_square)
+            ultimately show False by (by100 linarith)
+          qed
+          have hr1: "sqrt ((cos \<alpha>)^2 + (sin \<alpha>)^2) = 1"
+          proof -
+            have "(cos \<alpha>)^2 + (sin \<alpha>)^2 = 1" using sin_cos_squared_add3 by (by100 simp)
+            thus ?thesis by (by100 simp)
+          qed
+          have hdiv: "cos \<alpha> / sqrt ((cos \<alpha>)^2 + (sin \<alpha>)^2) = cos \<alpha>"
+            using hr1 by (by100 simp)
+          have h_angle: "(if sin \<alpha> \<ge> 0 then arccos (cos \<alpha> / sqrt ((cos \<alpha>)^2 + (sin \<alpha>)^2))
+              else 2*pi - arccos (cos \<alpha> / sqrt ((cos \<alpha>)^2 + (sin \<alpha>)^2))) = \<alpha>"
+          proof (cases "sin \<alpha> \<ge> 0")
+            case True
+            have "\<alpha> \<le> pi"
+            proof (rule ccontr)
+              assume "\<not> \<alpha> \<le> pi"
+              hence "\<alpha> > pi" by (by100 linarith)
+              hence "sin \<alpha> < 0" using h\<alpha>_lt2pi sin_lt_zero by (by100 auto)
+              thus False using True by (by100 linarith)
+            qed
+            hence "arccos (cos \<alpha>) = \<alpha>" using h\<alpha>_ge0 arccos_cos by (by100 blast)
+            thus ?thesis using True hdiv by (by100 simp)
+          next
+            case False
+            hence "sin \<alpha> < 0" by (by100 linarith)
+            have "\<alpha> > pi"
+            proof (rule ccontr)
+              assume "\<not> \<alpha> > pi"
+              hence "\<alpha> \<le> pi" by (by100 linarith)
+              hence "sin \<alpha> \<ge> 0" using h\<alpha>_ge0 sin_ge_zero by (by100 blast)
+              thus False using \<open>sin \<alpha> < 0\<close> by (by100 linarith)
+            qed
+            have "arccos (cos \<alpha>) = 2*pi - \<alpha>"
+            proof -
+              have "\<alpha> - 2*pi \<le> 0" using h\<alpha>_lt2pi by (by100 linarith)
+              have "- pi \<le> \<alpha> - 2*pi" using \<open>\<alpha> > pi\<close> by (by100 linarith)
+              have "cos (\<alpha> - 2*pi) = cos \<alpha>" by (simp add: cos_diff)
+              from arccos_cos2[OF \<open>\<alpha> - 2*pi \<le> 0\<close> \<open>- pi \<le> \<alpha> - 2*pi\<close>] this
+              show ?thesis by (by100 simp)
+            qed
+            thus ?thesis using False hdiv by (by100 simp)
+          qed
+          have "\<tau> (cos \<alpha>, sin \<alpha>) = (fst (\<tau>_boundary \<alpha>), snd (\<tau>_boundary \<alpha>))"
+            unfolding \<tau>_def using h_ne hr1 h_angle h_good by auto
+          also have "\<dots> = (cos ((\<alpha> - \<theta>_cancel) * real ?n / real ?m),
+              sin ((\<alpha> - \<theta>_cancel) * real ?n / real ?m))"
+            unfolding \<tau>_boundary_def using h_good by (by100 auto)
+          finally show ?thesis .
+        qed
+        have h_arith: "(\<alpha> - \<theta>_cancel) * real ?n / real ?m = 2*pi*(real (k-2)) / real ?m"
+        proof -
+          have "\<alpha> - \<theta>_cancel = 2*pi*real k/real ?n - 4*pi/real ?n"
+            unfolding \<alpha>_def \<theta>_cancel_def by (by100 simp)
+          also have "\<dots> = 2*pi*(real k - 2)/real ?n"
+            using hn_pos by (simp add: diff_divide_distrib algebra_simps)
+          finally have h1: "\<alpha> - \<theta>_cancel = 2*pi*(real k - 2)/real ?n" .
+          have "(\<alpha> - \<theta>_cancel) * real ?n / real ?m = 2*pi*(real k - 2) / real ?m"
+            using h1 hn_pos by (by100 simp)
+          also have "real k - 2 = real (k - 2)" using hk2 by (by100 simp)
+          finally show ?thesis .
+        qed
+        show "spur_f (vx_e k, vy_e k) = (vx_m (k-2), vy_m (k-2))"
+        proof -
+          have "spur_f (vx_e k, vy_e k) = inv_into P_m \<psi>_m (\<tau> (cos \<alpha>, sin \<alpha>))"
+            unfolding spur_f_def using h\<psi>e by (by100 simp)
+          also have "\<dots> = inv_into P_m \<psi>_m
+              (cos (2*pi*real(k-2)/real ?m), sin (2*pi*real(k-2)/real ?m))"
+            unfolding h_\<tau> h_arith ..
+          also have "\<dots> = ((1-0)*vx_m(k-2) + 0*vx_m(Suc(k-2) mod ?m),
+              (1-0)*vy_m(k-2) + 0*vy_m(Suc(k-2) mod ?m))"
+            using h\<psi>m_inv_edge[rule_format, OF hk2m ht0_I] by (by100 simp)
+          also have "\<dots> = (vx_m(k-2), vy_m(k-2))" by (by100 simp)
+          finally show ?thesis .
+        qed
+      qed
+      \<comment> \<open>Cancel vertex mapping: spur\\_f(vx\\_e(0)) = vx\\_m(0), spur\\_f(vx\\_e(1)) = centroid.\<close>
+      have h_spur_vertex_0: "spur_f (vx_e 0, vy_e 0) = (vx_m 0, vy_m 0)"
+      proof -
+        have h0_lt: "(0::nat) < ?n" using hn5 by (by100 linarith)
+        have ht0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        \<comment> \<open>\\<psi>\\_e at vertex 0: (cos(0), sin(0)) = (1, 0).\<close>
+        have h\<psi>e0: "\<psi>_e (vx_e 0, vy_e 0) = (1::real, 0)"
+        proof -
+          from h\<psi>e_edge[rule_format, OF h0_lt ht0_I]
+          have "\<psi>_e ((1-0)*vx_e 0 + 0*vx_e(Suc 0 mod ?n), (1-0)*vy_e 0 + 0*vy_e(Suc 0 mod ?n))
+            = (cos (2*pi*(real 0 + 0)/real ?n), sin (2*pi*(real 0 + 0)/real ?n))" .
+          thus ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>\\<tau> at (1,0): cancel sector with \\<theta>=0, r=1, t\\_fold=0 \\<to> (1,0).\<close>
+        have h\<tau>10: "\<tau> (1::real, 0) = (1, 0)"
+        proof -
+          have h_ne: "((1::real), (0::real)) \<noteq> (0, 0)" by (by100 simp)
+          have "sqrt ((1::real)^2 + (0::real)^2) = 1" by (by100 simp)
+          moreover have "arccos ((1::real) / 1) = 0" using arccos_1 by (by100 simp)
+          moreover have "(0::real) < \<theta>_cancel" unfolding \<theta>_cancel_def using pi_gt_zero hn5
+            by (by100 simp)
+          ultimately show ?thesis unfolding \<tau>_def \<tau>_boundary_def using h_ne by auto
+        qed
+        \<comment> \<open>\\<psi>\\_m\\<inverse> at (1,0) = vx\\_m(0).\<close>
+        have h0m_lt: "(0::nat) < ?m" using hm3 by (by100 linarith)
+        from h\<psi>m_inv_edge[rule_format, OF h0m_lt ht0_I]
+        have "inv_into P_m \<psi>_m (cos (2*pi*(real 0 + 0)/real ?m), sin (2*pi*(real 0 + 0)/real ?m))
+          = ((1-0)*vx_m 0 + 0*vx_m(Suc 0 mod ?m), (1-0)*vy_m 0 + 0*vy_m(Suc 0 mod ?m))" .
+        hence h_inv: "inv_into P_m \<psi>_m (1, 0) = (vx_m 0, vy_m 0)" by (by100 simp)
+        show ?thesis unfolding spur_f_def using h\<psi>e0 h\<tau>10 h_inv by (by100 simp)
+      qed
+      \<comment> \<open>Vertex\\_e(0) and vertex\\_e(2) both map to vertex\\_m(0) via spur\\_f.\<close>
+      have h_spur_vertex_02: "spur_f (vx_e 0, vy_e 0) = spur_f (vx_e 2, vy_e 2)"
+      proof -
+        have "spur_f (vx_e 0, vy_e 0) = (vx_m 0, vy_m 0)" by (rule h_spur_vertex_0)
+        moreover have "spur_f (vx_e 2, vy_e 2) = (vx_m 0, vy_m 0)"
+        proof -
+          have h2le: "(2::nat) \<le> 2" by (by100 simp)
+          have h2lt: "(2::nat) < ?n" using hn5 by (by100 linarith)
+          from h_spur_vertex[rule_format, OF h2le h2lt]
+          show ?thesis by (by100 simp)
+        qed
+        ultimately show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>Decompose h\\_fibres into sub-cases.\<close>
+      \<comment> \<open>Case 3: Good-edge fibre matching (i,j \\<ge> 2, 0 < t,s < 1).
+         q\\_e(edge\\_e(i,t)) = q\\_e(edge\\_e(j,s)) via C7\\_e \\<longleftrightarrow>
+         label match in ext\\_scheme \\<longleftrightarrow> label match in w (cancel\\_shift\\_partner) \\<longleftrightarrow>
+         q\\_m(edge\\_m(i-2,t)) = q\\_m(edge\\_m(j-2,s)) via C7\\_m.\<close>
+      have h_fibres_good_edge: "\<forall>i. 2 \<le> i \<longrightarrow> i < ?n \<longrightarrow>
+          (\<forall>j. 2 \<le> j \<longrightarrow> j < ?n \<longrightarrow>
+          (\<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+          (q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+         = q_e ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n)))
+         \<longleftrightarrow>
+          (q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+         = q_m ((1-s)*vx_m(j-2)+s*vx_m(Suc(j-2)mod ?m),(1-s)*vy_m(j-2)+s*vy_m(Suc(j-2)mod ?m)))))"
+      proof (intro allI impI ballI)
+        fix i j :: nat and t s :: real
+        assume hi: "2 \<le> i" "i < ?n" and hj: "2 \<le> j" "j < ?n" and ht: "t \<in> {0<..<1}" and hs: "s \<in> {0<..<1}"
+        let ?ext = "[a, top1_inverse_edge a] @ w"
+        have hi_m: "i - 2 < ?m" using hi hn_eq by (by100 linarith)
+        have hj_m: "j - 2 < ?m" using hj hn_eq by (by100 linarith)
+        \<comment> \<open>cancel\\_shift: ext\\_scheme!(i) = w!(i-2) and ext\\_scheme!(j) = w!(j-2).\<close>
+        have hshift_i: "?ext ! i = w ! (i - 2)"
+        proof -
+          have "i = (i - 2) + 2" using hi by (by100 simp)
+          thus ?thesis using cancel_shift_label[OF hi_m, of a] by (by100 simp)
+        qed
+        have hshift_j: "?ext ! j = w ! (j - 2)"
+        proof -
+          have "j = (j - 2) + 2" using hj by (by100 simp)
+          thus ?thesis using cancel_shift_label[OF hj_m, of a] by (by100 simp)
+        qed
+        have hlabel_iff: "fst (?ext ! i) = fst (?ext ! j) \<longleftrightarrow> fst (w ! (i-2)) = fst (w ! (j-2))"
+          using hshift_i hshift_j by (by100 simp)
+        have hdir_iff: "snd (?ext ! i) = snd (?ext ! j) \<longleftrightarrow> snd (w ! (i-2)) = snd (w ! (j-2))"
+          using hshift_i hshift_j by (by100 simp)
+        \<comment> \<open>No Suc mod shift needed — h\\_spur\\_good\\_edge already handles the mapping directly.\<close>
+        show "(q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+           = q_e ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n)))
+           \<longleftrightarrow>
+            (q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+           = q_m ((1-s)*vx_m(j-2)+s*vx_m(Suc(j-2)mod ?m),(1-s)*vy_m(j-2)+s*vy_m(Suc(j-2)mod ?m)))"
+        proof (intro iffI)
+          \<comment> \<open>Forward: q\\_e identification \\<Longrightarrow> q\\_m identification.\<close>
+          assume heq_e: "q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+              = q_e ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
+          \<comment> \<open>C9\\_e: edge-interior identification \\<Longrightarrow> label match or same point.\<close>
+          from hC9e[rule_format, OF hi(2) hj(2) ht hs] heq_e
+          have "(i=j \<and> t=s) \<or> (fst(?ext!i)=fst(?ext!j) \<and> (if snd(?ext!i)=snd(?ext!j) then s=t else s=1-t))"
+            by (by100 blast)
+          thus "q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+              = q_m ((1-s)*vx_m(j-2)+s*vx_m(Suc(j-2)mod ?m),(1-s)*vy_m(j-2)+s*vy_m(Suc(j-2)mod ?m))"
+          proof
+            assume "i=j \<and> t=s"
+            thus ?thesis by (by100 simp)
+          next
+            assume hlm: "fst(?ext!i)=fst(?ext!j) \<and>
+                (if snd(?ext!i)=snd(?ext!j) then s=t else s=1-t)"
+            hence hlabel_w: "fst(w!(i-2)) = fst(w!(j-2))" using hlabel_iff by (by100 blast)
+            have ht_I: "t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
+            from hC7m[rule_format, OF hi_m hj_m hlabel_w ht_I]
+            have hC7_app: "q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+              = (if snd(w!(i-2))=snd(w!(j-2))
+                then q_m ((1-t)*vx_m(j-2)+t*vx_m(Suc(j-2)mod ?m),(1-t)*vy_m(j-2)+t*vy_m(Suc(j-2)mod ?m))
+                else q_m (t*vx_m(j-2)+(1-t)*vx_m(Suc(j-2)mod ?m),t*vy_m(j-2)+(1-t)*vy_m(Suc(j-2)mod ?m)))" .
+            from hlm have hdir: "if snd(?ext!i)=snd(?ext!j) then s=t else s=1-t" by (by100 blast)
+            show ?thesis
+            proof (cases "snd(?ext!i) = snd(?ext!j)")
+              case True
+              hence "s = t" using hdir by (by100 simp)
+              moreover have "snd(w!(i-2)) = snd(w!(j-2))" using True hdir_iff by (by100 blast)
+              ultimately show ?thesis using hC7_app by (by100 simp)
+            next
+              case False
+              hence "s = 1-t" using hdir by (by100 simp)
+              moreover have "snd(w!(i-2)) \<noteq> snd(w!(j-2))" using False hdir_iff by (by100 blast)
+              ultimately show ?thesis using hC7_app by (by100 simp)
+            qed
+          qed
+        next
+          \<comment> \<open>Backward: q\\_m identification \\<Longrightarrow> q\\_e identification.\<close>
+          assume heq_m: "q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+              = q_m ((1-s)*vx_m(j-2)+s*vx_m(Suc(j-2)mod ?m),(1-s)*vy_m(j-2)+s*vy_m(Suc(j-2)mod ?m))"
+          from hC9m[rule_format, OF hi_m hj_m ht hs] heq_m
+          have "(i-2=j-2 \<and> t=s) \<or> (fst(w!(i-2))=fst(w!(j-2)) \<and> (if snd(w!(i-2))=snd(w!(j-2)) then s=t else s=1-t))"
+            by (by100 blast)
+          thus "q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+              = q_e ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n))"
+          proof
+            assume "i-2=j-2 \<and> t=s"
+            hence "i = j" "t = s" using hi hj by (by100 linarith)+
+            thus ?thesis by (by100 simp)
+          next
+            assume hlm: "fst(w!(i-2))=fst(w!(j-2)) \<and>
+                (if snd(w!(i-2))=snd(w!(j-2)) then s=t else s=1-t)"
+            hence hlabel_ext: "fst(?ext!i) = fst(?ext!j)" using hlabel_iff by (by100 blast)
+            have ht_I: "t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
+            from hC7e[rule_format, OF hi(2) hj(2) hlabel_ext ht_I]
+            have hC7_app: "q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+              = (if snd(?ext!i)=snd(?ext!j)
+                then q_e ((1-t)*vx_e j+t*vx_e(Suc j mod ?n),(1-t)*vy_e j+t*vy_e(Suc j mod ?n))
+                else q_e (t*vx_e j+(1-t)*vx_e(Suc j mod ?n),t*vy_e j+(1-t)*vy_e(Suc j mod ?n)))" .
+            from hlm have hdir: "if snd(w!(i-2))=snd(w!(j-2)) then s=t else s=1-t" by (by100 blast)
+            show ?thesis
+            proof (cases "snd(w!(i-2)) = snd(w!(j-2))")
+              case True
+              hence "s = t" using hdir by (by100 simp)
+              moreover have "snd(?ext!i) = snd(?ext!j)" using True hdir_iff by (by100 blast)
+              ultimately show ?thesis using hC7_app by (by100 simp)
+            next
+              case False
+              hence "s = 1-t" using hdir by (by100 simp)
+              moreover have "snd(?ext!i) \<noteq> snd(?ext!j)" using False hdir_iff by (by100 blast)
+              ultimately show ?thesis using hC7_app by (by100 simp)
+            qed
+          qed
+        qed
+      qed
+      \<comment> \<open>Vertex-edge quotient separation: q\\_e does not identify vertices with edge interiors.
+         This holds because hY\\_ext comes from scheme\\_quotient\\_exists (canonical construction),
+         where q is defined by 3 branches (vertex\\<to>vtgt, non-canonical edge\\<to>partner, else\\<to>id).
+         The vertex branch maps to a vertex representative, the edge branch maps to an edge point,
+         and these are disjoint by edge\\_interior\\_not\\_vertex.\<close>
+      have hC12_e: "\<forall>k<?n. \<forall>j<?n. \<forall>s\<in>{0<..<(1::real)}.
+          q_e (vx_e k, vy_e k) \<noteq> q_e ((1-s)*vx_e j + s*vx_e(Suc j mod ?n),
+                                        (1-s)*vy_e j + s*vy_e(Suc j mod ?n))"
+        using hC12e_proved by (by100 simp)
+      have hC12_m: "\<forall>k<?m. \<forall>j<?m. \<forall>s\<in>{0<..<(1::real)}.
+          q_m (vx_m k, vy_m k) \<noteq> q_m ((1-s)*vx_m j + s*vx_m(Suc j mod ?m),
+                                        (1-s)*vy_m j + s*vy_m(Suc j mod ?m))"
+        using hC12m_proved by (by100 simp)
+      \<comment> \<open>Forward direction of h\\_fibres: q\\_e(x)=q\\_e(y) \\<Longrightarrow> q\\_m(spur\\_f x)=q\\_m(spur\\_f y).
+         For INTERIOR x: C8\\_e gives x=y \\<to> trivial.
+         For EDGE-INTERIOR x with EDGE-INTERIOR y (both t,s \\<in> (0,1)):
+           C9\\_e constrains identifications. Good-good: h\\_fibres\\_good\\_edge + h\\_spur\\_good\\_edge.
+           Cancel-cancel: h\\_spur\\_cancel\\_collapse. Good-cancel: impossible (fresh labels).
+         For VERTEX cases: use hC12\\_e (vertex-edge separation).\<close>
+      have h_fibres_forward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_e x = q_e y \<longrightarrow> q_m (spur_f x) = q_m (spur_f y)"
+      proof (intro ballI impI)
+        fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e" and heq: "q_e x = q_e y"
+        \<comment> \<open>Case on whether x is interior or on a boundary edge.\<close>
+        consider
+          (x_int) "\<forall>i<?n. \<forall>t\<in>I_set. x \<noteq> ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+                (1-t)*vy_e i + t*vy_e(Suc i mod ?n))"
+          | (x_bdy) "\<exists>i<?n. \<exists>t\<in>I_set. x = ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+                (1-t)*vy_e i + t*vy_e(Suc i mod ?n))"
+          by (by100 blast)
+        thus "q_m (spur_f x) = q_m (spur_f y)"
+        proof cases
+          case x_int
+          \<comment> \<open>x interior: C8\\_e gives q\\_e injective at x \\<to> x = y \\<to> trivial.\<close>
+          have "x = y"
+          proof -
+            from hC8e[rule_format, OF hx] x_int
+            have "\<forall>p'\<in>P_e. q_e x = q_e p' \<longrightarrow> x = p'" by (by100 blast)
+            thus ?thesis using hy heq by (by100 blast)
+          qed
+          thus ?thesis by (by100 simp)
+        next
+          case x_bdy
+          \<comment> \<open>x is on some boundary edge. Case on point type.\<close>
+          then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set"
+            and hx_eq: "x = ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+                (1-t)*vy_e i + t*vy_e(Suc i mod ?n))" by (by100 blast)
+          \<comment> \<open>Forward direction with x on edge: needs case analysis on y's type
+             and on edge parameters. Vertex cases sorry'd.\<close>
+          \<comment> \<open>Sub-case: is t strictly interior (0<t<1) or at a vertex (t=0 or t=1)?\<close>
+          show ?thesis
+          proof (cases "0 < t \<and> t < 1")
+            case True
+            \<comment> \<open>x is edge-interior. Case on y's type.\<close>
+            consider
+              (y_int) "\<forall>j<?n. \<forall>s\<in>I_set. y \<noteq> ((1-s)*vx_e j + s*vx_e(Suc j mod ?n),
+                    (1-s)*vy_e j + s*vy_e(Suc j mod ?n))"
+              | (y_bdy) "\<exists>j<?n. \<exists>s\<in>I_set. y = ((1-s)*vx_e j + s*vx_e(Suc j mod ?n),
+                    (1-s)*vy_e j + s*vy_e(Suc j mod ?n))"
+              by (by100 blast)
+            thus ?thesis
+            proof cases
+              case y_int
+              \<comment> \<open>y interior: C8\\_e gives q\\_e injective at y, so y=x.\<close>
+              from hC8e[rule_format, OF hy] y_int
+              have "\<forall>p'\<in>P_e. q_e y = q_e p' \<longrightarrow> y = p'" by (by100 blast)
+              hence "y = x" using hx heq[symmetric] by (by100 blast)
+              thus ?thesis by (by100 simp)
+            next
+              case y_bdy
+              then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set"
+                and hy_eq: "y = ((1-s)*vx_e j + s*vx_e(Suc j mod ?n),
+                    (1-s)*vy_e j + s*vy_e(Suc j mod ?n))" by (by100 blast)
+              show ?thesis
+              proof (cases "0 < s \<and> s < 1")
+                case True
+                \<comment> \<open>Both edge-interior: C9\\_e applies.\<close>
+                hence ht_open: "t \<in> {0<..<(1::real)}" and hs_open: "s \<in> {0<..<(1::real)}"
+                  using \<open>0 < t \<and> t < 1\<close> by (by100 auto)+
+                from hC9e[rule_format, OF hi hj ht_open hs_open]
+                  heq[unfolded hx_eq hy_eq]
+                have hcond: "(i = j \<and> t = s) \<or> (fst (([a, top1_inverse_edge a] @ w)!i) =
+                    fst (([a, top1_inverse_edge a] @ w)!j) \<and>
+                    (if snd (([a, top1_inverse_edge a] @ w)!i) = snd (([a, top1_inverse_edge a] @ w)!j)
+                     then s = t else s = 1 - t))"
+                  by (by100 blast)
+                \<comment> \<open>Case on i,j: both good (\\<ge>2), both cancel (0,1), or mixed.\<close>
+                show ?thesis
+                proof (cases "i \<ge> 2 \<and> j \<ge> 2")
+                  case True
+                  \<comment> \<open>Both good edges: use h\\_fibres\\_good\\_edge + h\\_spur\\_good\\_edge.\<close>
+                  from h_fibres_good_edge[rule_format, OF conjunct1[OF True] hi(1)
+                      conjunct2[OF True] hj(1) ht_open hs_open]
+                  have "(q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+                     = q_e ((1-s)*vx_e j+s*vx_e(Suc j mod ?n),(1-s)*vy_e j+s*vy_e(Suc j mod ?n)))
+                     \<longleftrightarrow>
+                      (q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+                     = q_m ((1-s)*vx_m(j-2)+s*vx_m(Suc(j-2)mod ?m),(1-s)*vy_m(j-2)+s*vy_m(Suc(j-2)mod ?m)))" .
+                  hence hge: "q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+                     = q_m ((1-s)*vx_m(j-2)+s*vx_m(Suc(j-2)mod ?m),(1-s)*vy_m(j-2)+s*vy_m(Suc(j-2)mod ?m))"
+                    using heq[unfolded hx_eq hy_eq] by (by100 blast)
+                  \<comment> \<open>Now translate from q\\_m(edge\\_m) to q\\_m(spur\\_f(edge\\_e)) using h\\_spur\\_good\\_edge.\<close>
+                  have hsf_x: "spur_f x = ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),
+                      (1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))"
+                    using h_spur_good_edge[rule_format, OF conjunct1[OF True] hi ht_open]
+                    unfolding hx_eq by (by100 simp)
+                  have hsf_y: "spur_f y = ((1-s)*vx_m(j-2)+s*vx_m(Suc(j-2)mod ?m),
+                      (1-s)*vy_m(j-2)+s*vy_m(Suc(j-2)mod ?m))"
+                    using h_spur_good_edge[rule_format, OF conjunct2[OF True] hj hs_open]
+                    unfolding hy_eq by (by100 simp)
+                  show ?thesis using hge hsf_x hsf_y by (by100 simp)
+                next
+                  case False
+                  \<comment> \<open>At least one of i,j is a cancel edge (0 or 1).\<close>
+                  \<comment> \<open>At least one of i,j < 2 (cancel edge). With fresh label:
+                     cancel-good impossible (C9 label mismatch), cancel-cancel by collapse.\<close>
+                  let ?ext = "[a, top1_inverse_edge a] @ w"
+                  from hcond show ?thesis
+                  proof (elim disjE conjE)
+                    assume "i = j" "t = s"
+                    thus ?thesis using hx_eq hy_eq by (by100 simp)
+                  next
+                    assume hlabel: "fst (?ext ! i) = fst (?ext ! j)"
+                      and hdir: "if snd (?ext ! i) = snd (?ext ! j) then s = t else s = 1 - t"
+                    \<comment> \<open>Both cancel (i<2, j<2): spur\\_f collapses both to same point.\<close>
+                    \<comment> \<open>Mixed (one cancel, one good): label mismatch \\<to> contradiction.\<close>
+                    show ?thesis
+                    proof (cases "i < 2 \<and> j < 2")
+                      case True
+                      \<comment> \<open>Both cancel edges. Labels: fst(?ext!0)=fst a, fst(?ext!1)=fst a.
+                         spur\\_f collapses cancel pair via h\\_spur\\_cancel\\_collapse.\<close>
+                      \<comment> \<open>i,j \\<in> {0,1}, labels match, direction gives s = 1-t (opposite).
+                         spur\\_f collapses: edge(0,t) and reversed\\_edge(1,t) map to same point.\<close>
+                      have hdir_opp: "snd (?ext ! 0) \<noteq> snd (?ext ! 1)"
+                        unfolding top1_inverse_edge_def by (by100 simp)
+                      \<comment> \<open>Direction: for i\\<noteq>j (both <2): opposite direction, so s=1-t.
+                         For i=j: same direction gives s=t, but that was the earlier disjunct.\<close>
+                      have "i = 0 \<and> j = 1 \<or> i = 1 \<and> j = 0 \<or> i = 0 \<and> j = 0 \<or> i = 1 \<and> j = 1"
+                        using True by (by100 linarith)
+                      thus ?thesis
+                      proof (elim disjE conjE)
+                        assume "i = 0" "j = 1"
+                        hence "snd (?ext ! i) \<noteq> snd (?ext ! j)" using hdir_opp by (by100 simp)
+                        hence hs1t: "s = 1 - t" using hdir by (by100 simp)
+                        have hy_rev: "y = (t*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n),
+                            t*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n))"
+                        proof -
+                          have "y = ((1-s)*vx_e 1 + s*vx_e(Suc 1 mod ?n),
+                              (1-s)*vy_e 1 + s*vy_e(Suc 1 mod ?n))"
+                            using hy_eq \<open>j = 1\<close> by (by100 simp)
+                          moreover have "1 - s = t" "s = 1 - t" using hs1t by argo+
+                          ultimately show ?thesis by (by100 simp)
+                        qed
+                        from h_spur_cancel_collapse[rule_format, OF ht_open]
+                        have "spur_f ((1-t)*vx_e 0 + t*vx_e(Suc 0 mod ?n),
+                            (1-t)*vy_e 0 + t*vy_e(Suc 0 mod ?n))
+                          = spur_f (t*vx_e 1 + (1-t)*vx_e(Suc 1 mod ?n),
+                            t*vy_e 1 + (1-t)*vy_e(Suc 1 mod ?n))" .
+                        thus ?thesis using hx_eq \<open>i = 0\<close> hy_rev by (by100 simp)
+                      next
+                        assume "i = 1" "j = 0"
+                        hence "snd (?ext ! i) \<noteq> snd (?ext ! j)" using hdir_opp by auto
+                        hence hs1t: "s = 1 - t" using hdir by (by100 simp)
+                        \<comment> \<open>x = edge(1,t), y = edge(0,1-t). Symmetric: use collapse at 1-t.\<close>
+                        have h1t_open: "1-t \<in> {0<..<(1::real)}" using ht_open by (by100 simp)
+                        have hy_eq0: "y = ((1-(1-t))*vx_e 0 + (1-t)*vx_e(Suc 0 mod ?n),
+                            (1-(1-t))*vy_e 0 + (1-t)*vy_e(Suc 0 mod ?n))"
+                        proof -
+                          have "y = ((1-s)*vx_e 0 + s*vx_e(Suc 0 mod ?n),
+                              (1-s)*vy_e 0 + s*vy_e(Suc 0 mod ?n))"
+                            using hy_eq \<open>j = 0\<close> by (by100 simp)
+                          moreover have "1 - s = 1 - (1-t)" "s = 1 - t" using hs1t by argo+
+                          ultimately show ?thesis by (by100 simp)
+                        qed
+                        have hx_eq1: "x = ((1-t)*vx_e 1 + t*vx_e(Suc 1 mod ?n),
+                            (1-t)*vy_e 1 + t*vy_e(Suc 1 mod ?n))"
+                          using hx_eq \<open>i = 1\<close> by (by100 simp)
+                        from h_spur_cancel_collapse[rule_format, OF h1t_open]
+                        have "spur_f ((1-(1-t))*vx_e 0 + (1-t)*vx_e(Suc 0 mod ?n),
+                            (1-(1-t))*vy_e 0 + (1-t)*vy_e(Suc 0 mod ?n))
+                          = spur_f ((1-t)*vx_e 1 + (1-(1-t))*vx_e(Suc 1 mod ?n),
+                            (1-t)*vy_e 1 + (1-(1-t))*vy_e(Suc 1 mod ?n))"
+                          by (by100 simp)
+                        hence "spur_f y = spur_f x" using hy_eq0 hx_eq1 by argo
+                        thus ?thesis by (by100 simp)
+                      next
+                        assume "i = 0" "j = 0"
+                        hence "snd (?ext ! i) = snd (?ext ! j)" by (by100 simp)
+                        hence "s = t" using hdir by (by100 simp)
+                        thus ?thesis using hx_eq hy_eq \<open>i=0\<close> \<open>j=0\<close> by (by100 simp)
+                      next
+                        assume "i = 1" "j = 1"
+                        hence "snd (?ext ! i) = snd (?ext ! j)" by (by100 simp)
+                        hence "s = t" using hdir by (by100 simp)
+                        thus ?thesis using hx_eq hy_eq \<open>i=1\<close> \<open>j=1\<close> by (by100 simp)
+                      qed
+                    next
+                      case False
+                      \<comment> \<open>Mixed cancel+good: label mismatch gives contradiction.\<close>
+                      have "i \<ge> 2 \<or> j \<ge> 2" using \<open>\<not>(i \<ge> 2 \<and> j \<ge> 2)\<close> False by (by100 linarith)
+                      \<comment> \<open>WLOG i < 2, j \\<ge> 2: fst(?ext!i) = fst a, fst(?ext!j) = fst(w!(j-2)).
+                         Fresh: fst a \\<notin> fst ` set w, so fst(?ext!j) \\<noteq> fst a. Contradiction.\<close>
+                      \<comment> \<open>One of i,j is cancel (< 2), other is good (\\<ge> 2).\<close>
+                      have "i < 2 \<or> j < 2" using \<open>\<not>(i \<ge> 2 \<and> j \<ge> 2)\<close> by (by100 linarith)
+                      moreover have "i \<ge> 2 \<or> j \<ge> 2" using False by (by100 linarith)
+                      ultimately have hmixed: "(i < 2 \<and> j \<ge> 2) \<or> (i \<ge> 2 \<and> j < 2)" by (by100 linarith)
+                      \<comment> \<open>Cancel edge label = fst a; good edge label \\<in> fst ` set w.
+                         Fresh: fst a \\<notin> fst ` set w. Contradiction with hlabel.\<close>
+                      from hmixed show ?thesis
+                      proof
+                        assume "i < 2 \<and> j \<ge> 2"
+                        hence hi2: "i < 2" and hj2: "j \<ge> 2" by (by100 auto)+
+                        have "fst (?ext ! i) = fst a"
+                          using hi2 unfolding top1_inverse_edge_def by (cases i) (by100 auto)+
+                        moreover have "j - 2 < ?m" using hj hj2 hn_eq by (by100 linarith)
+                        hence "fst (?ext ! j) = fst (w ! (j - 2))"
+                        proof -
+                          have "j = (j-2) + 2" using hj2 by (by100 simp)
+                          thus ?thesis using cancel_shift_label[of "j-2" w a] \<open>j-2 < ?m\<close>
+                            by (by100 simp)
+                        qed
+                        moreover have "fst (w ! (j-2)) \<noteq> fst a"
+                        proof
+                          assume "fst (w ! (j-2)) = fst a"
+                          have "w ! (j-2) \<in> set w" using \<open>j-2 < ?m\<close> by (by100 simp)
+                          hence "fst (w ! (j-2)) \<in> fst ` set w" by (by100 blast)
+                          hence "fst a \<in> fst ` set w" using \<open>fst (w ! (j-2)) = fst a\<close> by (by100 simp)
+                          thus False using hfresh by (by100 blast)
+                        qed
+                        ultimately show ?thesis using hlabel by (by100 simp)
+                      next
+                        assume "i \<ge> 2 \<and> j < 2"
+                        hence hi2: "i \<ge> 2" and hj2: "j < 2" by (by100 auto)+
+                        have "fst (?ext ! j) = fst a"
+                          using hj2 unfolding top1_inverse_edge_def by (cases j) (by100 auto)+
+                        moreover have "i - 2 < ?m" using hi hi2 hn_eq by (by100 linarith)
+                        hence "fst (?ext ! i) = fst (w ! (i - 2))"
+                        proof -
+                          have "i = (i-2) + 2" using hi2 by (by100 simp)
+                          thus ?thesis using cancel_shift_label[of "i-2" w a] \<open>i-2 < ?m\<close>
+                            by (by100 simp)
+                        qed
+                        moreover have "fst (w ! (i-2)) \<noteq> fst a"
+                        proof
+                          assume "fst (w ! (i-2)) = fst a"
+                          have "w ! (i-2) \<in> set w" using \<open>i-2 < ?m\<close> by (by100 simp)
+                          hence "fst (w ! (i-2)) \<in> fst ` set w" by (by100 blast)
+                          hence "fst a \<in> fst ` set w" using \<open>fst (w ! (i-2)) = fst a\<close> by (by100 simp)
+                          thus False using hfresh by (by100 blast)
+                        qed
+                        ultimately show ?thesis using hlabel by (by100 simp)
+                      qed
+                    qed
+                  qed
+                qed
+              next
+                case False
+                \<comment> \<open>s = 0 or s = 1: y is a vertex.\<close>
+                \<comment> \<open>y is a vertex. Need: q\\_e(edge\\_e(i,t)) = q\\_e(vertex(y)).
+                   But hC12\\_e says vertex-edge identification is impossible.\<close>
+                have hs_vtx: "s = 0 \<or> s = 1"
+                  using False hs unfolding top1_unit_interval_def by (by100 auto)
+                \<comment> \<open>y = vertex at parameter s=0 or s=1 of edge j. So y = (vx\\_e j, vy\\_e j) or vx\\_e(Suc j).\<close>
+                have ht_oi2: "t \<in> {0<..<(1::real)}" using \<open>0 < t \<and> t < 1\<close> by (by100 simp)
+                show ?thesis
+                proof (cases "s = 0")
+                  case True
+                  \<comment> \<open>y = vx\\_e(j). By hC12\\_e: q\\_e(edge(i,t)) \\<noteq> q\\_e(vx\\_e(j)). Contradiction with heq.\<close>
+                  have "y = (vx_e j, vy_e j)" using hy_eq True by (by100 simp)
+                  hence "q_e x = q_e (vx_e j, vy_e j)" using heq by (by100 simp)
+                  hence heq2: "q_e ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+                      (1-t)*vy_e i + t*vy_e(Suc i mod ?n)) = q_e (vx_e j, vy_e j)"
+                    using hx_eq by (by100 simp)
+                  have ht_oi: "t \<in> {0<..<(1::real)}" using \<open>0 < t \<and> t < 1\<close> by (by100 simp)
+                  have hneq: "q_e (vx_e j, vy_e j) \<noteq> q_e ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+                      (1-t)*vy_e i + t*vy_e(Suc i mod ?n))"
+                    using hC12_e[rule_format, OF hj hi ht_oi] .
+                  from hneq heq2 have False by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                next
+                  case False
+                  hence "s = 1" using hs_vtx by (by100 blast)
+                  \<comment> \<open>y = vx\\_e(Suc j mod n). Similar argument.\<close>
+                  \<comment> \<open>y = vx\\_e(Suc j mod n). Apply hC12\\_e with k=Suc j mod n.\<close>
+                  have "y = (vx_e (Suc j mod ?n), vy_e (Suc j mod ?n))"
+                    using hy_eq \<open>s = 1\<close> by (by100 simp)
+                  hence heq2: "q_e ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+                      (1-t)*vy_e i + t*vy_e(Suc i mod ?n)) = q_e (vx_e (Suc j mod ?n), vy_e (Suc j mod ?n))"
+                    using hx_eq heq by (by100 simp)
+                  have hSj_lt: "Suc j mod ?n < ?n" using hn5 by (by100 simp)
+                  have hneq: "q_e (vx_e (Suc j mod ?n), vy_e (Suc j mod ?n)) \<noteq>
+                      q_e ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+                           (1-t)*vy_e i + t*vy_e(Suc i mod ?n))"
+                    using hC12_e[rule_format, OF hSj_lt hi ht_oi2] .
+                  from hneq heq2 have False by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                qed
+              qed
+            qed
+          next
+            case False
+            \<comment> \<open>t = 0 or t = 1: x is a vertex.\<close>
+            \<comment> \<open>x is vertex\\_e(k) for some k. y can be interior, edge-interior, or vertex.\<close>
+            have ht_vtx: "t = 0 \<or> t = 1"
+              using False ht unfolding top1_unit_interval_def by (by100 auto)
+            \<comment> \<open>Case on y's type.\<close>
+            consider
+              (y_int2) "\<forall>j<?n. \<forall>s\<in>I_set. y \<noteq> ((1-s)*vx_e j + s*vx_e(Suc j mod ?n),
+                    (1-s)*vy_e j + s*vy_e(Suc j mod ?n))"
+              | (y_bdy2) "\<exists>j<?n. \<exists>s\<in>I_set. y = ((1-s)*vx_e j + s*vx_e(Suc j mod ?n),
+                    (1-s)*vy_e j + s*vy_e(Suc j mod ?n))"
+              by (by100 blast)
+            thus ?thesis
+            proof cases
+              case y_int2
+              \<comment> \<open>y interior: C8\\_e gives y=x.\<close>
+              from hC8e[rule_format, OF hy] y_int2
+              have "\<forall>p'\<in>P_e. q_e y = q_e p' \<longrightarrow> y = p'" by (by100 blast)
+              hence "y = x" using hx heq[symmetric] by (by100 blast)
+              thus ?thesis by (by100 simp)
+            next
+              case y_bdy2
+              then obtain j2 s2 where hj2: "j2 < ?n" and hs2: "s2 \<in> I_set"
+                and hy_eq2: "y = ((1-s2)*vx_e j2 + s2*vx_e(Suc j2 mod ?n),
+                    (1-s2)*vy_e j2 + s2*vy_e(Suc j2 mod ?n))" by (by100 blast)
+              show ?thesis
+              proof (cases "0 < s2 \<and> s2 < 1")
+                case True
+                \<comment> \<open>y is edge-interior. By hC12\\_e: vertex \\<noteq> edge-interior. Contradiction.\<close>
+                have hs2_oi: "s2 \<in> {0<..<(1::real)}" using True by (by100 simp)
+                \<comment> \<open>x = vertex\\_e(k) where k = i (if t=0) or Suc i mod n (if t=1).\<close>
+                from ht_vtx show ?thesis
+                proof
+                  assume "t = 0"
+                  hence "x = (vx_e i, vy_e i)" using hx_eq by (by100 simp)
+                  hence "q_e (vx_e i, vy_e i) = q_e y" using heq by (by100 simp)
+                  hence "q_e (vx_e i, vy_e i) = q_e ((1-s2)*vx_e j2 + s2*vx_e(Suc j2 mod ?n),
+                      (1-s2)*vy_e j2 + s2*vy_e(Suc j2 mod ?n))" using hy_eq2 by (by100 simp)
+                  from hC12_e[rule_format, OF hi hj2 hs2_oi] this
+                  have False by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                next
+                  assume "t = 1"
+                  hence "x = (vx_e (Suc i mod ?n), vy_e (Suc i mod ?n))" using hx_eq by (by100 simp)
+                  hence "q_e (vx_e (Suc i mod ?n), vy_e (Suc i mod ?n)) = q_e y" using heq by (by100 simp)
+                  hence heq_vi: "q_e (vx_e (Suc i mod ?n), vy_e (Suc i mod ?n)) =
+                      q_e ((1-s2)*vx_e j2 + s2*vx_e(Suc j2 mod ?n),
+                           (1-s2)*vy_e j2 + s2*vy_e(Suc j2 mod ?n))" using hy_eq2 by (by100 simp)
+                  have "Suc i mod ?n < ?n" using hn5 by (by100 simp)
+                  from hC12_e[rule_format, OF this hj2 hs2_oi] heq_vi
+                  have False by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                qed
+              next
+                case False
+                \<comment> \<open>y is also a vertex. Vertex-vertex transfer.\<close>
+                show ?thesis
+                  sorry \<comment> \<open>Vertex-vertex forward: q\\_e(vertex k)=q\\_e(vertex l) \\<to> q\\_m transfer.
+                     Needs: C7 chain argument (all vertex identifications come from C7).\<close>
+              qed
+            qed
+          qed
+        qed
+      qed
+      \<comment> \<open>Backward direction: q\\_m(spur\\_f x)=q\\_m(spur\\_f y) \\<Longrightarrow> q\\_e x=q\\_e y.
+         Uses hC12\\_m (vertex-edge separation for q\\_m) + C8\\_m (interior injectivity)
+         + h\\_spur\\_good\\_edge (edge mapping) + h\\_spur\\_cancel\\_collapse (cancel collapse).\<close>
+      have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
+        sorry \<comment> \<open>Backward fibre. Cases on point type in P\\_e:
+           - Good edge × good edge: h\\_fibres\\_good\\_edge backward (PROVED).
+           - Cancel edge × cancel edge: C8\\_m injectivity on spur interior
+             \\<to> spur\\_f(x)=spur\\_f(y) \\<to> cancel pair (C7\\_e). Needs \\<tau> injectivity or spur geometry.
+           - Good edge × cancel: spur\\_f maps to different regions of P\\_m
+             (edge vs interior), C8\\_m/C9\\_m prevent cross identification.
+           - Vertex: hC12\\_m gives vertex-edge separation in P\\_m.
+           - Interior: C8\\_m injectivity.\<close>
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
-        sorry \<comment> \<open>Fibre matching. Decomposition:
-           1. Both interior: both sides \\<longleftrightarrow> x=y (from C8 + spur\\_f injective on interior)
-           2. Cancel pair: q\\_e identifies e(0,t)\\<sim>e(1,1-t); spur\\_f collapses to same spur point
-           3. Good edges: q\\_e at edges i,j (i,j\\<ge>2) \\<longleftrightarrow> q\\_m at edges i-2,j-2 (cancel\\_shift\\_label)
-           4. Vertex/cross cases: from C7 at endpoints + separation of boundary regions\<close>
+        using h_fibres_forward h_fibres_backward by (by100 blast)
       \<comment> \<open>Assemble: continuity of spur\\_f via composition, surjectivity via \\<tau>, fibre matching.\<close>
       have h_spur_cont: "continuous_on P_e spur_f"
       proof -
@@ -6863,7 +8739,7 @@ proof -
   have hlen_ext: "length ?ext \<ge> 3" using assms(2) by (by100 simp)
   have hproper_ext: "\<forall>label. card {i. i < length ?ext \<and> fst (?ext ! i) = label} \<in> {0, 2}"
     by (rule cancel_pair_prepend_proper[OF hproper hfresh])
-  from scheme_quotient_exists[OF hlen_ext hproper_ext]
+  from scheme_quotient_exists(1)[OF hlen_ext hproper_ext]
   obtain Y_ext :: "(real \<times> real) set" and TY_ext :: "(real \<times> real) set set" where
       hY_ext: "top1_quotient_of_scheme_on Y_ext TY_ext ?ext" by (by100 blast)
   have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
