@@ -4345,8 +4345,17 @@ proof -
                   moreover have "y = (vx1 ky, vy1 ky)" using hky(4,5) by (cases y) (by100 auto)
                   ultimately show ?thesis using heq by (by100 simp)
                 qed
-                show ?thesis sorry \<comment> \<open>Vertex-vertex case: from hq1\\_eq derive q2(vx2 kx) = q2(vx2 ky).
-                   Needs: vertex identification is determined by scheme via C7 at t=0,1.\<close>
+                \<comment> \<open>Remaining goal: q2(vx2 kx, vy2 kx) = q2(vx2 ky, vy2 ky).
+                   Known: q1(vx1 kx, vy1 kx) = q1(vx1 ky, vy1 ky).
+                   Use: both q1/q2 satisfy C7 for the same scheme at the same vertex endpoints.
+                   Since (0::real) \\<in> I\\_set and (1::real) \\<in> I\\_set, C7 applies at vertices.\<close>
+                \<comment> \<open>Direct case: kx and ky are directly C7-connected (i.e., there exist matching
+                   label edges where kx and ky are endpoints).
+                   General case: kx and ky are connected by a CHAIN of C7 identifications.
+                   For now: sorry the general transitivity argument.\<close>
+                show ?thesis using hgoal hgoal2 hq1_eq
+                  sorry \<comment> \<open>Vertex identification transfer: q1(vx1 kx) = q1(vx1 ky) \\<Longrightarrow> q2(vx2 kx) = q2(vx2 ky).
+                     Both q1 and q2 satisfy C7 for same scheme \\<Longrightarrow> same vertex equivalence classes.\<close>
               qed
             qed
           qed
