@@ -6095,6 +6095,54 @@ proof -
             qed
             \<comment> \<open>Step 2-8: unfold \\<tau> at p, show good sector, show rescaling gives \\<theta>0, show q decomposition.\<close>
             \<comment> \<open>Step 2: \\<alpha> \\<ge> \\<theta>\\_cancel (trivial from definition).\<close>
+            \<comment> \<open>Arccos precondition: -1 \\<le> fst q / r0 \\<le> 1.\<close>
+            have hr0_pos: "r0 > 0"
+            proof -
+              have "fst q \<noteq> 0 \<or> snd q \<noteq> 0" using False by (cases q) (by100 auto)
+              hence "fst q ^ 2 + snd q ^ 2 > 0"
+              proof
+                assume "fst q \<noteq> 0"
+                hence "fst q ^ 2 > 0" by (by100 simp)
+                moreover have "snd q ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              next
+                assume "snd q \<noteq> 0"
+                hence "snd q ^ 2 > 0" by (by100 simp)
+                moreover have "fst q ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              thus ?thesis unfolding r0_def using real_sqrt_gt_0_iff by (by100 auto)
+            qed
+            have hq_div_bound: "-1 \<le> fst q / r0 \<and> fst q / r0 \<le> 1"
+            proof -
+              have "fst q ^ 2 \<le> r0 ^ 2"
+              proof -
+                have "snd q ^ 2 \<ge> 0" by (by100 simp)
+                moreover have "r0 ^ 2 = fst q ^ 2 + snd q ^ 2"
+                  unfolding r0_def using real_sqrt_pow2[OF sum_power2_ge_zero] by (by100 blast)
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              hence "abs (fst q) \<le> r0"
+              proof -
+                assume h: "fst q ^ 2 \<le> r0 ^ 2"
+                from power2_le_imp_le[OF h] hr0_pos
+                have "fst q \<le> r0" by (by100 linarith)
+                moreover have "- fst q \<le> r0"
+                proof -
+                  have "(-fst q)^2 = fst q ^ 2" unfolding power2_eq_square by (by100 simp)
+                  hence "(-fst q)^2 \<le> r0^2" using h by (by100 linarith)
+                  from power2_le_imp_le[OF this] hr0_pos
+                  show ?thesis by (by100 linarith)
+                qed
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              hence hmr0: "- r0 \<le> fst q" and hfr0: "fst q \<le> r0" by (by100 linarith)+
+              from divide_right_mono[OF hmr0, of r0] hr0_pos
+              have h_lb: "-1 \<le> fst q / r0" by (by100 simp)
+              from divide_right_mono[OF hfr0, of r0] hr0_pos
+              have h_ub: "fst q / r0 \<le> 1" by (by100 simp)
+              from h_lb h_ub show ?thesis by (by100 simp)
+            qed
             have h\<alpha>_ge: "\<alpha> \<ge> \<theta>_cancel"
             proof -
               have h\<theta>0_ge: "\<theta>0 \<ge> 0"
@@ -6102,19 +6150,13 @@ proof -
                 case True
                 hence "\<theta>0 = arccos (fst q / r0)" unfolding \<theta>0_def by (by100 simp)
                 moreover have "arccos (fst q / r0) \<ge> 0"
-                proof (rule arccos_lbound)
-                  show "-1 \<le> fst q / r0" sorry
-                  show "fst q / r0 \<le> 1" sorry
-                qed
+                  using arccos_lbound[OF conjunct1[OF hq_div_bound] conjunct2[OF hq_div_bound]] .
                 ultimately show ?thesis by (by100 linarith)
               next
                 case False
                 hence "\<theta>0 = 2*pi - arccos (fst q / r0)" unfolding \<theta>0_def by (by100 simp)
                 moreover have "arccos (fst q / r0) \<le> pi"
-                proof (rule arccos_ubound)
-                  show "-1 \<le> fst q / r0" sorry
-                  show "fst q / r0 \<le> 1" sorry
-                qed
+                  using arccos_ubound[OF conjunct1[OF hq_div_bound] conjunct2[OF hq_div_bound]] .
                 ultimately show ?thesis using pi_gt_zero by (by100 linarith)
               qed
               have hmn_ge: "real ?m / real ?n \<ge> 0" using assms(2) by (by100 simp)
