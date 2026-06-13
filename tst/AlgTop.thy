@@ -5568,16 +5568,8 @@ proof -
          Matching at \\<theta>=0/2\\<pi>: both sides give (r, 0). \\<checkmark>
          Matching at r=0: both sides give (0, 0). \\<checkmark>\<close>
       have h\<tau>_cont: "continuous_on top1_B2 \<tau>"
-        sorry \<comment> \<open>Per expert audit 26 §5: closed-sector pasting lemma.
-           Proof sketch: define S\\_g = {p \\<in> B2. p=(0,0) \\<or> \\<theta>(p) \\<ge> \\<theta>\\_cancel}
-           and S\\_c = {p \\<in> B2. p=(0,0) \\<or> \\<theta>(p) \\<le> \\<theta>\\_cancel}. Both closed. B2 = S\\_g \\<union> S\\_c.
-           \\<tau> on S\\_g: (r*cos(rescale(\\<theta>)), r*sin(rescale(\\<theta>))). Continuous from
-           continuous\\_on\\_compose of sqrt, arccos, cos, sin, multiplication.
-           \\<tau> on S\\_c: r*spur + offset*d\\_perp. Continuous from continuous\\_on of
-           min, sin, multiplication (all polynomial/trig on closed sector).
-           Agreement at S\\_g \\<inter> S\\_c: both give (r,0) (at \\<theta>=\\<theta>\\_cancel) or (0,0) (at origin).
-           continuous\\_on\\_closed\\_Un gives continuous\\_on B2 \\<tau>.
-           Infrastructure needed: closed\\_sector defs, continuous\\_on for each branch.\<close>
+        sorry \<comment> \<open>Pasting lemma: continuous\\_on\\_closed\\_Un on good/cancel sectors.
+           4 sub-sorrys: S\\_g closed, S\\_c closed, \\<tau> cont on S\\_g, \\<tau> cont on S\\_c.\<close>
       \<comment> \<open>Sub-sorry 2: \\<tau> maps B2 onto B2 (range and surjectivity).
          Good sector: angle rescaling is a bijection [\\<theta>\\_cancel, 2\\<pi>) \\<to> [0, 2\\<pi>).
          Cancel sector: maps to interior of B2 (spur + offset, |result| < 1 for r < 1).
