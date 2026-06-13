@@ -2,13 +2,17 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (30 sorrys as of 2026-06-15, sessions 1316-1322):
+\<comment> \<open>SORRY ANALYSIS (33 sorrys as of 2026-06-15, sessions 1316-1401):
 
-SPUR COLLAPSE (2 sorrys):
-- h\\_tau\\_cont: \\<tau> continuous on B2 (piecewise smooth, pasting lemma on closed sectors)
+SPUR COLLAPSE (5 sorrys, from decomposition):
 - h\\_tau\\_range: FULLY PROVED!
-- h\\_tau\\_surj: FULLY PROVED! (source construction + polar decomp + angle recovery)
-- h\\_fibres: fibre matching q\\_e x = q\\_e y \\<longleftrightarrow> q\\_m(spur\\_f x) = q\\_m(spur\\_f y)
+- h\\_tau\\_surj: FULLY PROVED!
+- h\\_tau\\_cont: PROVED from 4 sub-sorrys via continuous\\_on\\_closed\\_Un pasting:
+  (1) S\\_g (good sector + positive x-axis) closed
+  (2) S\\_c (cancel sector) closed
+  (3) \\<tau> continuous on S\\_g
+  (4) \\<tau> continuous on S\\_c
+- h\\_fibres: fibre matching (1 sorry, per expert §7 case decomposition)
   spur\\_f continuity + surjectivity PROVED from h\\_tau\\_cont/h\\_tau\\_surj.
   Cascades to front\\_cancel + uncancel\\_front.
 
