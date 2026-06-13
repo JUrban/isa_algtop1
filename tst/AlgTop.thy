@@ -5589,9 +5589,64 @@ proof -
            The positive x-axis ray in B2 is closed. {angle \\<ge> \\<theta>\\_cancel} in B2\\\\{0}
            is now closed because the limit of angle\\<to>2\\<pi> (positive x-axis) is included.\<close>
       have h_c_closed: "closed S_c"
-        sorry \<comment> \<open>S\\_c = B2 \\<inter> ({angle \\<le> \\<theta>\\_cancel} \\<union> {0}). The set {angle \\<le> \\<theta>\\_cancel}
-           is the preimage of [0, \\<theta>\\_cancel] under angle\\_of (continuous on B2\\\\{0}).
-           Its closure in B2 includes the positive x-axis, which IS in S\\_c (angle=0).\<close>
+      proof -
+        \<comment> \<open>S\\_c = {p \\<in> B2 | snd p \\<ge> 0 \\<and> fst p \\<ge> cos(\\<theta>\\_cancel) * |p|}.
+           This equals: B2 \\<inter> {snd p \\<ge> 0} \\<inter> {fst p \\<ge> cos(\\<theta>\\_cancel)*sqrt(fst p^2+snd p^2)}.
+           Each component is closed (B2 closed, half-plane closed, cone preimage closed).
+           The equivalence angle\\_of(p) \\<le> \\<theta>\\_cancel \\<iff> fst p / |p| \\<ge> cos(\\<theta>\\_cancel) uses
+           cos\\_mono\\_le\\_eq (arccos is strictly decreasing on [-1,1]).\<close>
+        \<comment> \<open>Step 1: Show S\\_c = Cartesian cone description.\<close>
+        have hS_c_eq: "S_c = {p. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
+            \<and> fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
+          sorry \<comment> \<open>Equivalence: angle\\_of(p) \\<le> \\<theta>\\_cancel \\<iff> fst p / |p| \\<ge> cos(\\<theta>\\_cancel)
+             for snd p \\<ge> 0. For snd p < 0: angle > \\<pi> > \\<theta>\\_cancel. Origin: 0 \\<ge> cos*0.\<close>
+        \<comment> \<open>Step 2: The Cartesian cone set is closed (intersection of closed sets).\<close>
+        have "closed {p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
+            \<and> fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}"
+        proof -
+          have hB2_cl: "closed {p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1}"
+          proof -
+            have "continuous_on UNIV (\<lambda>p :: real \<times> real. fst p ^ 2 + snd p ^ 2)"
+              by (intro continuous_intros)
+            hence "closed ((\<lambda>p :: real \<times> real. fst p ^ 2 + snd p ^ 2) -` {..1})"
+              by (simp add: closed_vimage)
+            moreover have "{p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1}
+                = (\<lambda>p. fst p ^ 2 + snd p ^ 2) -` {..1}"
+              by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have hup_cl: "closed {p :: real \<times> real. (0::real) \<le> snd p}"
+          proof -
+            have "continuous_on UNIV (\<lambda>p :: real \<times> real. snd p)" by (intro continuous_intros)
+            hence "closed ((\<lambda>p :: real \<times> real. snd p) -` {0..})"
+              by (simp add: closed_vimage_snd) \<comment> \<open>Found by sledgehammer.\<close>
+            moreover have "{p :: real \<times> real. (0::real) \<le> snd p} = snd -` {0..}"
+              by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have hcone_cl: "closed {p :: real \<times> real. cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2) \<le> fst p}"
+          proof -
+            have "continuous_on UNIV (\<lambda>p :: real \<times> real. fst p - cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2))"
+              by (intro continuous_intros)
+            hence "closed ((\<lambda>p :: real \<times> real. fst p - cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)) -` {0..})"
+              by (simp add: closed_vimage)
+            moreover have "{p :: real \<times> real. cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2) \<le> fst p}
+                = (\<lambda>p. fst p - cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)) -` {0..}"
+              by (by100 auto)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          from closed_Int[OF closed_Int[OF hB2_cl hup_cl] hcone_cl]
+          have "closed ({p. fst p ^ 2 + snd p ^ 2 \<le> 1} \<inter> {p. (0::real) \<le> snd p}
+              \<inter> {p :: real \<times> real. cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2) \<le> fst p})" .
+          moreover have "{p :: real \<times> real. fst p ^ 2 + snd p ^ 2 \<le> 1 \<and> snd p \<ge> 0
+              \<and> fst p \<ge> cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2)}
+            = {p. fst p ^ 2 + snd p ^ 2 \<le> 1} \<inter> {p. (0::real) \<le> snd p}
+              \<inter> {p. cos \<theta>_cancel * sqrt (fst p ^ 2 + snd p ^ 2) \<le> fst p}"
+            by (by100 auto)
+          ultimately show ?thesis by (by100 simp)
+        qed
+        thus ?thesis unfolding hS_c_eq .
+      qed
       have h_g_cont: "continuous_on S_g \<tau>"
         sorry \<comment> \<open>On S\\_g: \\<tau> is good sector formula for angle \\<ge> \\<theta>\\_cancel points,
            and cancel formula for positive x-axis (giving (r,0) = good formula limit).
