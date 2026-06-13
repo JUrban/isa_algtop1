@@ -6591,17 +6591,19 @@ proof -
          - x on cancel edge (0 or 1): q\\_e identifies edge 0 at t with edge 1 at 1-t.
            spur\\_f maps both to the same point on the spur \\<to> q\\_m values equal.
          - Cross cases (cancel vs good, interior vs boundary): handled by injectivity.\<close>
+      \<comment> \<open>Fibre matching: the core spur-collapse theorem (expert audit 26 §7).
+         The proof has two main parts that depend on the definitional properties of spur\\_f:
+         (A) Good edges: spur\\_f maps edge k (k\\<ge>2) at parameter t to edge k-2 at parameter t.
+             This means q\\_e identifications on good edges match q\\_m identifications via shift.
+         (B) Cancel edges: spur\\_f maps cancel pair to interior spur \\<to> collapsed.
+         Both depend on HOW \\<tau> maps boundary arcs, which follows from the \\<tau> definition.
+         The proof also needs \\<tau> injectivity on B2 interior (from perpendicular offsets).\<close>
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
-        sorry \<comment> \<open>Fibre matching per expert audit 26 §7. Case decomposition:
-           1. Both interior: q\\_e injective on interior (C6\\_e) + spur\\_f injective on interior
-              (\\<tau> injective on B2 interior via perpendicular offsets) + q\\_m injective on interior (C6\\_m).
-           2. x or y on cancel edges (0,1): q\\_e identifies edge 0 at t with edge 1 at 1-t.
-              spur\\_f maps both to same spur point. q\\_m injective at spur (interior of P\\_m).
-           3. x,y on good edges (\\<ge>2): spur\\_f maps edge k of P\\_e to edge k-2 of P\\_m.
-              q\\_e and q\\_m identify matching label pairs; label shift by 2 positions.
-              Expert recommends cancel\\_shift\\_preserves\\_partner lemma.
-           4. Vertex cases: from vertex extraction infrastructure.
-           5. Cross cases (cancel/good, interior/boundary): different image regions.\<close>
+        sorry \<comment> \<open>Fibre matching. Decomposition:
+           1. Both interior: both sides \\<longleftrightarrow> x=y (from C8 + spur\\_f injective on interior)
+           2. Cancel pair: q\\_e identifies e(0,t)\\<sim>e(1,1-t); spur\\_f collapses to same spur point
+           3. Good edges: q\\_e at edges i,j (i,j\\<ge>2) \\<longleftrightarrow> q\\_m at edges i-2,j-2 (cancel\\_shift\\_label)
+           4. Vertex/cross cases: from C7 at endpoints + separation of boundary regions\<close>
       \<comment> \<open>Assemble: continuity of spur\\_f via composition, surjectivity via \\<tau>, fibre matching.\<close>
       have h_spur_cont: "continuous_on P_e spur_f"
       proof -
