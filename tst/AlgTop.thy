@@ -5577,8 +5577,52 @@ proof -
               unfolding spur_pt_loc_def t_fold_loc_def sign_loc_def offset_loc_def
               sorry \<comment> \<open>\\<tau> definition let-binding unfolding in cancel sector. Structural simp.\<close>
             \<comment> \<open>Bound: |offset\\_loc| \\<le> r*(1-r)/4 (from |sin| \\<le> 1 and |sign| = 1).\<close>
+            \<comment> \<open>Bound: offset\\_loc^2 \\<le> (r*(1-r)/4)^2.\<close>
             have hoffset: "offset_loc ^ 2 \<le> (r * (1-r) / 4) ^ 2"
-              sorry \<comment> \<open>From offset = sign*r*(1-r)*sin(\\<pi>*t)/4, |sign|=1, |sin|\\<le>1.\<close>
+            proof -
+              \<comment> \<open>offset = sign * r * (1-r) * sin(...) / 4. Square: sign^2=1, sin^2\\<le>1.\<close>
+              have "sign_loc ^ 2 = 1" unfolding sign_loc_def by (by100 auto)
+              have hsin_sq: "sin (pi * t_fold_loc) ^ 2 \<le> 1"
+              proof -
+                let ?s = "sin (pi * t_fold_loc)"
+                have h1: "?s \<le> 1" by (rule sin_le_one)
+                have h2: "?s \<ge> -1" by (rule sin_ge_minus_one)
+                have "?s * ?s \<le> 1"
+                proof (cases "?s \<ge> 0")
+                  case True
+                  have "?s * ?s \<le> ?s * 1"
+                    using mult_left_mono[OF h1 True] by (by100 simp)
+                  also have "?s * 1 \<le> 1" using h1 by (by100 simp)
+                  finally show ?thesis .
+                next
+                  case False
+                  hence hneg: "?s < 0" by (by100 linarith)
+                  have hmle: "-?s \<le> 1" using h2 by (by100 linarith)
+                  have hmge: "-?s \<ge> 0" using hneg by (by100 linarith)
+                  have "(-?s) * (-?s) \<le> (-?s) * 1"
+                    using mult_left_mono[OF hmle hmge] by (by100 simp)
+                  also have "(-?s) * 1 \<le> 1" using hmle by (by100 simp)
+                  finally have "(-?s) * (-?s) \<le> 1" .
+                  thus ?thesis by (by100 simp)
+                qed
+                thus ?thesis unfolding power2_eq_square .
+              qed
+              have "offset_loc ^ 2 = sign_loc ^ 2 * r ^ 2 * (1 - r) ^ 2 * sin (pi * t_fold_loc) ^ 2 / 16"
+                unfolding offset_loc_def power2_eq_square
+                sorry \<comment> \<open>Ring computation: expanding square of product with division.\<close>
+              also have "\<dots> = r ^ 2 * (1 - r) ^ 2 * sin (pi * t_fold_loc) ^ 2 / 16"
+                using \<open>sign_loc ^ 2 = 1\<close> by (by100 simp)
+              also have "\<dots> \<le> r ^ 2 * (1 - r) ^ 2 * 1 / 16"
+              proof -
+                have "r ^ 2 * (1 - r) ^ 2 \<ge> 0" by (by100 simp)
+                from mult_left_mono[OF hsin_sq this]
+                show ?thesis by (by100 linarith)
+              qed
+              also have "\<dots> = (r * (1-r) / 4) ^ 2"
+                unfolding power2_eq_square
+                sorry \<comment> \<open>Ring: r^2*(1-r)^2/16 = (r*(1-r)/4)^2.\<close>
+              finally show ?thesis .
+            qed
             \<comment> \<open>spur\\_pt\\_loc is \\<tau>\\_boundary(\\<theta>\\_p) in cancel sector = convex combo of (1,0) and p\\_cm.\<close>
             have hspur_in_B2: "fst spur_pt_loc ^ 2 + snd spur_pt_loc ^ 2 \<le> 1"
             proof -
