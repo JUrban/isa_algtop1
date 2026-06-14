@@ -9323,12 +9323,92 @@ proof -
             using h_spur_vertex[rule_format, OF True hia] .
           have hsf_ja: "spur_f (vx_e ja, vy_e ja) = (vx_m (ja-2), vy_m (ja-2))"
             using h_spur_vertex[rule_format, OF hja2 hja] .
-          from hcase show ?thesis
-            sorry \<comment> \<open>4 cases on (dir \\<times> endpoint). Each uses C7\\_m at t=0 or t=1
-               + h\\_spur\\_vertex + cancel\\_shift. Case 1 (same dir, t=0) pattern:
-               C7\\_m gives q\\_m(vtx\\_m(ia-2)) = q\\_m(vtx\\_m(ja-2)),
-               h\\_spur\\_vertex gives spur\\_f(vtx ia) = vtx\\_m(ia-2).
-               Cases 2-4 analogous with Suc mod.\<close>
+          \<comment> \<open>Helper: spur\\_f at Suc vertices. Key fact: for k \\<ge> 2 and k < n:
+             spur\\_f(vertex\\_e(Suc k mod n)) = vertex\\_m(Suc(k-2) mod m).\<close>
+          have h_spur_Suc: "\<And>kk. kk \<ge> 2 \<Longrightarrow> kk < ?n \<Longrightarrow>
+              spur_f (vx_e (Suc kk mod ?n), vy_e (Suc kk mod ?n)) =
+              (vx_m (Suc (kk-2) mod ?m), vy_m (Suc (kk-2) mod ?m))"
+          proof -
+            fix kk assume hkk2: "kk \<ge> 2" and hkk: "kk < ?n"
+            show "spur_f (vx_e (Suc kk mod ?n), vy_e (Suc kk mod ?n)) =
+                (vx_m (Suc (kk-2) mod ?m), vy_m (Suc (kk-2) mod ?m))"
+            proof (cases "kk < ?n - 1")
+              case True
+              \<comment> \<open>kk < n-1: Suc kk mod n = kk+1 \\<ge> 3. spur\\_f = vertex\\_m(kk-1).
+                 Suc(kk-2) mod m = (kk-1) mod m = kk-1.\<close>
+              have hSuc: "Suc kk mod ?n = Suc kk" using True hn5 by (by100 simp)
+              have hSuc_ge2: "Suc kk \<ge> 2" using hkk2 by (by100 linarith)
+              have hSuc_lt: "Suc kk < ?n" using True by (by100 linarith)
+              from h_spur_vertex[rule_format, OF hSuc_ge2 hSuc_lt]
+              have "spur_f (vx_e (Suc kk), vy_e (Suc kk)) =
+                  (vx_m (Suc kk - 2), vy_m (Suc kk - 2))" .
+              moreover have "Suc kk - 2 = Suc (kk - 2)" using hkk2 by (by100 simp)
+              moreover have "Suc (kk - 2) < ?m" using hkk True hn_eq hkk2 by (by100 linarith)
+              hence "Suc (kk - 2) mod ?m = Suc (kk - 2)" by (by100 simp)
+              ultimately show ?thesis using hSuc by (by100 simp)
+            next
+              case False
+              hence "kk = ?n - 1" using hkk by (by100 linarith)
+              hence hSuc0: "Suc kk mod ?n = 0" using hn5 by (by100 simp)
+              have "spur_f (vx_e 0, vy_e 0) = (vx_m 0, vy_m 0)" by (rule h_spur_vertex_0)
+              moreover have "Suc (kk - 2) = ?m" using \<open>kk = ?n - 1\<close> hn_eq hkk2 by (by100 linarith)
+              hence "Suc (kk - 2) mod ?m = 0" by (by100 simp)
+              ultimately show ?thesis using hSuc0 by (by100 simp)
+            qed
+          qed
+          have hsf_Suc_ia: "spur_f (vx_e (Suc ia mod ?n), vy_e (Suc ia mod ?n)) =
+              (vx_m (Suc (ia-2) mod ?m), vy_m (Suc (ia-2) mod ?m))"
+            by (rule h_spur_Suc[OF True hia])
+          have hsf_Suc_ja: "spur_f (vx_e (Suc ja mod ?n), vy_e (Suc ja mod ?n)) =
+              (vx_m (Suc (ja-2) mod ?m), vy_m (Suc (ja-2) mod ?m))"
+            by (rule h_spur_Suc[OF hja2 hja])
+          \<comment> \<open>Now the 4 cases.\<close>
+          have hcase_sd0: "snd (?ext ! ia) = snd (?ext ! ja) \<Longrightarrow> k = ia \<Longrightarrow> l = ja \<Longrightarrow>
+              q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+          proof -
+            assume hsd: "snd (?ext ! ia) = snd (?ext ! ja)" and "k = ia" and "l = ja"
+            from hC7m[rule_format, OF hia_m hja_m hlbl_w ht0]
+              hsd hdir_w
+            have "q_m (vx_m(ia-2), vy_m(ia-2)) = q_m (vx_m(ja-2), vy_m(ja-2))"
+              by (by100 simp)
+            thus ?thesis using hsf_ia hsf_ja \<open>k = ia\<close> \<open>l = ja\<close> by (by100 simp)
+          qed
+          have hcase_sd1: "snd (?ext ! ia) = snd (?ext ! ja) \<Longrightarrow> k = Suc ia mod ?n \<Longrightarrow> l = Suc ja mod ?n \<Longrightarrow>
+              q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+          proof -
+            assume hsd: "snd (?ext ! ia) = snd (?ext ! ja)"
+                and "k = Suc ia mod ?n" and "l = Suc ja mod ?n"
+            from hC7m[rule_format, OF hia_m hja_m hlbl_w ht1]
+              hsd hdir_w
+            have "q_m (vx_m(Suc(ia-2)mod ?m), vy_m(Suc(ia-2)mod ?m)) =
+                q_m (vx_m(Suc(ja-2)mod ?m), vy_m(Suc(ja-2)mod ?m))" by (by100 simp)
+            thus ?thesis using hsf_Suc_ia hsf_Suc_ja \<open>k = Suc ia mod ?n\<close> \<open>l = Suc ja mod ?n\<close>
+              by (by100 simp)
+          qed
+          have hcase_od0: "snd (?ext ! ia) \<noteq> snd (?ext ! ja) \<Longrightarrow> k = ia \<Longrightarrow> l = Suc ja mod ?n \<Longrightarrow>
+              q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+          proof -
+            assume hod: "snd (?ext ! ia) \<noteq> snd (?ext ! ja)"
+                and "k = ia" and "l = Suc ja mod ?n"
+            from hC7m[rule_format, OF hia_m hja_m hlbl_w ht0]
+              hod hdir_w
+            have "q_m (vx_m(ia-2), vy_m(ia-2)) =
+                q_m (vx_m(Suc(ja-2)mod ?m), vy_m(Suc(ja-2)mod ?m))" by (by100 simp)
+            thus ?thesis using hsf_ia hsf_Suc_ja \<open>k = ia\<close> \<open>l = Suc ja mod ?n\<close> by (by100 simp)
+          qed
+          have hcase_od1: "snd (?ext ! ia) \<noteq> snd (?ext ! ja) \<Longrightarrow> k = Suc ia mod ?n \<Longrightarrow> l = ja \<Longrightarrow>
+              q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+          proof -
+            assume hod: "snd (?ext ! ia) \<noteq> snd (?ext ! ja)"
+                and "k = Suc ia mod ?n" and "l = ja"
+            from hC7m[rule_format, OF hia_m hja_m hlbl_w ht1]
+              hod hdir_w
+            have "q_m (vx_m(Suc(ia-2)mod ?m), vy_m(Suc(ia-2)mod ?m)) =
+                q_m (vx_m(ja-2), vy_m(ja-2))" by (by100 simp)
+            thus ?thesis using hsf_Suc_ia hsf_ja \<open>k = Suc ia mod ?n\<close> \<open>l = ja\<close> by (by100 simp)
+          qed
+          from hcase hcase_sd0 hcase_sd1 hcase_od0 hcase_od1
+          show ?thesis by (by100 blast)
         next
           case False
           hence hia_cancel: "ia < 2" by (by100 linarith)
