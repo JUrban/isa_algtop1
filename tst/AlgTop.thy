@@ -10367,8 +10367,79 @@ proof -
                C9\\_m constrains: matching labels, so spur\\_f(y) = edge\\_m(j-2, s)
                for some j \\<ge> 2 via h\\_spur\\_good\\_edge.\<close>
             \<comment> \<open>Then h\\_fibres\\_good\\_edge backward gives q\\_e(edge\\_e(i,t)) = q\\_e(edge\\_e(j,s)).\<close>
+            \<comment> \<open>Determine spur\\_f(y)'s type in P\\_m.\<close>
+            have "\<exists>j<?m. \<exists>s\<in>I_set. spur_f y = ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+            proof (rule ccontr)
+              assume hny: "\<not>(\<exists>j<?m. \<exists>s\<in>I_set. spur_f y = ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                  (1-s)*vy_m j+s*vy_m(Suc j mod ?m)))"
+              \<comment> \<open>spur\\_f(y) is P\\_m interior. C8\\_m: singleton. But spur\\_f(y) = edge\\_m(i-2,t)
+                 which is boundary. Interior \\<noteq> boundary. Contradiction.\<close>
+              have "\<forall>j<?m. \<forall>s\<in>I_set. spur_f y \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                  (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+                using hny by (by100 blast)
+              hence "\<forall>p'\<in>P_m. q_m (spur_f y) = q_m p' \<longrightarrow> spur_f y = p'"
+                using hC8m hsfy by (by100 blast)
+              hence "spur_f y = spur_f x" using hsfx heq[symmetric] by (by100 blast)
+              hence "spur_f y = ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2) mod ?m),
+                  (1-t)*vy_m(i-2)+t*vy_m(Suc(i-2) mod ?m))"
+                using hsf_x by (by100 simp)
+              hence "spur_f y \<in> {((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2) mod ?m),
+                  (1-t)*vy_m(i-2)+t*vy_m(Suc(i-2) mod ?m))}" by (by100 simp)
+              moreover have "i-2 < ?m" using him .
+              moreover have "t \<in> I_set" using ht .
+              ultimately show False using hny
+                by (by100 blast)
+            qed
+            then obtain j_m s_m where hjm: "j_m < ?m" and hsm: "s_m \<in> I_set"
+                and hsfy_eq: "spur_f y = ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                    (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m))" by (by100 blast)
+            \<comment> \<open>s\\_m must be in (0,1) (edge-interior), not a vertex.\<close>
+            have hsm_oi: "0 < s_m \<and> s_m < 1"
+            proof (rule ccontr)
+              assume "\<not>(0 < s_m \<and> s_m < 1)"
+              hence "s_m = 0 \<or> s_m = 1" using hsm
+                unfolding top1_unit_interval_def by (by100 auto)
+              \<comment> \<open>spur\\_f(y) is a vertex. By C12\\_m: vertex \\<noteq> edge-interior. Contradiction.\<close>
+              hence "spur_f y = (vx_m j_m, vy_m j_m) \<or>
+                  spur_f y = (vx_m (Suc j_m mod ?m), vy_m (Suc j_m mod ?m))"
+                using hsfy_eq by (by100 auto)
+              moreover have hqm_eq: "q_m (spur_f y) = q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2) mod ?m),
+                  (1-t)*vy_m(i-2)+t*vy_m(Suc(i-2) mod ?m))"
+                using heq hsf_x by (by100 simp)
+              ultimately show False
+              proof (elim disjE)
+                assume "spur_f y = (vx_m j_m, vy_m j_m)"
+                hence "q_m (vx_m j_m, vy_m j_m) = q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),
+                    (1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))" using hqm_eq by (by100 simp)
+                thus False using hC12_m[rule_format, OF hjm him ht_oi] by (by100 simp)
+              next
+                assume "spur_f y = (vx_m (Suc j_m mod ?m), vy_m (Suc j_m mod ?m))"
+                have hm_pos: "?m > 0" using hm3 by (by100 linarith)
+                have "Suc j_m mod ?m < ?m" using mod_less_divisor[OF hm_pos] .
+                hence "q_m (vx_m (Suc j_m mod ?m), vy_m (Suc j_m mod ?m)) = q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),
+                    (1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))"
+                  using \<open>spur_f y = (vx_m (Suc j_m mod ?m), vy_m (Suc j_m mod ?m))\<close> hqm_eq by (by100 simp)
+                thus False using hC12_m[rule_format, OF \<open>Suc j_m mod ?m < ?m\<close> him ht_oi] by (by100 simp)
+              qed
+            qed
+            hence hsm_oi2: "s_m \<in> {0<..<(1::real)}" by (by100 simp)
+            \<comment> \<open>q\\_m(edge\\_m(i-2,t)) = q\\_m(edge\\_m(j\\_m,s\\_m)). By h\\_fibres\\_good\\_edge backward.\<close>
+            have "q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2) mod ?m),
+                (1-t)*vy_m(i-2)+t*vy_m(Suc(i-2) mod ?m))
+              = q_m ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m))"
+              using heq hsf_x hsfy_eq by (by100 simp)
+            \<comment> \<open>By C9\\_m: (i-2=j\\_m \\<and> t=s\\_m) \\<or> matching labels.\<close>
+            from hC9m[rule_format, OF him hjm ht_oi hsm_oi2] this
+            have hC9: "(i-2=j_m \<and> t=s_m) \<or> (fst(w!(i-2))=fst(w!j_m) \<and>
+                (if snd(w!(i-2))=snd(w!j_m) then s_m=t else s_m=1-t))"
+              by (by100 blast)
+            \<comment> \<open>Now use h\\_fibres\\_good\\_edge backward to get q\\_e equality.\<close>
             show "q_e x = q_e y"
-              sorry \<comment> \<open>Needs: determine spur\\_f(y) is P\\_m edge, extract j/s, apply biconditional.\<close>
+              sorry \<comment> \<open>From C9\\_m identification: edge\\_m(i-2,t) matches edge\\_m(j\\_m,s\\_m).
+                 Need: y = edge\\_e(j\\_m+2, s\\_m) (from spur\\_f structure).
+                 Then h\\_fibres\\_good\\_edge backward: q\\_e(edge\\_e(i,t)) = q\\_e(edge\\_e(j\\_m+2,s\\_m)).\<close>
           qed
           have hcase_cancel: "i < 2 \<and> 0 < t \<and> t < 1 \<longrightarrow> q_e x = q_e y"
             sorry \<comment> \<open>Cancel edge: spur\\_f maps to P\\_m interior. C8\\_m + h\\_spur\\_inj.\<close>
