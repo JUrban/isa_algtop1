@@ -9122,8 +9122,27 @@ proof -
          it respects the full C7\\_e equivalence relation (i.e. vtgt\\_e classes).\<close>
       have h_vtx_vtgt_transfer: "\<forall>k<?n. \<forall>l<?n. vtgt_e k = vtgt_e l \<longrightarrow>
           q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
-        sorry \<comment> \<open>C7 chain transfer: each generator preserves q\\_m\\<circ>spur\\_f, transitivity gives full transfer.
-           Formalization via inductive predicate or rtrancl of C7 vertex\\_ident\\_step.\<close>
+      proof (intro allI impI)
+        fix k l assume hk: "k < ?n" and hl: "l < ?n" and hv: "vtgt_e k = vtgt_e l"
+        \<comment> \<open>Strategy: show the function q\\_m \\<circ> spur\\_f \\<circ> vertex\\_e is constant on vtgt\\_e classes.
+           Each C7\\_e generator preserves this function; the full class follows by transitivity.\<close>
+        \<comment> \<open>For now: sorry the chain argument. See plan §6 for rtrancl approach.\<close>
+        \<comment> \<open>Step 1: vtgt\\_e(k) = vtgt\\_e(l) \\<to> q\\_e(vertex\\_e(k)) = q\\_e(vertex\\_e(l)).\<close>
+        have hqe_eq: "q_e (vx_e k, vy_e k) = q_e (vx_e l, vy_e l)"
+        proof -
+          have "q_e (vx_e k, vy_e k) = (vx_e (vtgt_e k), vy_e (vtgt_e k))"
+            using hq_vtgt_e1[rule_format, OF hk] .
+          also have "\<dots> = (vx_e (vtgt_e l), vy_e (vtgt_e l))" using hv by (by100 simp)
+          also have "\<dots> = q_e (vx_e l, vy_e l)"
+            using hq_vtgt_e1[rule_format, OF hl] by (by100 simp)
+          finally show ?thesis .
+        qed
+        \<comment> \<open>Step 2: For each C7\\_e matching edge pair at t=0,1, spur\\_f preserves q\\_m value.
+           Generator step: if fst(ext!i) = fst(ext!j), then matching endpoints have same q\\_m image.\<close>
+        \<comment> \<open>Step 3: Use q\\_e identification structure to transfer.\<close>
+        show "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+          sorry
+      qed
       \<comment> \<open>Forward direction of h\\_fibres: q\\_e(x)=q\\_e(y) \\<Longrightarrow> q\\_m(spur\\_f x)=q\\_m(spur\\_f y).
          For INTERIOR x: C8\\_e gives x=y \\<to> trivial.
          For EDGE-INTERIOR x with EDGE-INTERIOR y (both t,s \\<in> (0,1)):
