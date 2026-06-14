@@ -10280,9 +10280,14 @@ proof -
         next
           case False
           \<comment> \<open>spur\\_f(x) is on boundary of P\\_m (edge or vertex). Needs case analysis.\<close>
-          show ?thesis using heq hx hy hsfx hsfy False
-            sorry \<comment> \<open>Boundary cases: edge\\<times>edge (h\\_fibres\\_good\\_edge backward),
-               vertex\\<times>vertex (h\\_vtx\\_vtgt\\_transfer\\_rev), cross-type (contradictions).\<close>
+          \<comment> \<open>spur\\_f(x) on boundary: extract edge/vertex type.\<close>
+          from False obtain i_m t_m where him: "i_m < ?m" and htm: "t_m \<in> I_set"
+              and hsf_bdy: "spur_f x = ((1-t_m)*vx_m i_m+t_m*vx_m(Suc i_m mod ?m),
+                  (1-t_m)*vy_m i_m+t_m*vy_m(Suc i_m mod ?m))" by (by100 blast)
+          show ?thesis using heq hx hy hsfx hsfy him htm hsf_bdy
+            sorry \<comment> \<open>Sub-cases on t\\_m \\<in> (0,1) (edge-interior) vs t\\_m \\<in> {0,1} (vertex).
+               Edge-interior: x must be good-edge point \\<to> h\\_fibres\\_good\\_edge backward.
+               Vertex: x must be P\\_e vertex \\<to> h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
         qed
       qed
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
