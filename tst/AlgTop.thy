@@ -10592,7 +10592,22 @@ proof -
             ultimately show "q_e x = q_e y" using hx_eq hy_eq by (by100 simp)
           qed
           have hcase_cancel: "i < 2 \<and> 0 < t \<and> t < 1 \<longrightarrow> q_e x = q_e y"
-            sorry \<comment> \<open>Cancel edge: spur\\_f maps to P\\_m interior. C8\\_m + h\\_spur\\_inj.\<close>
+          proof (intro impI, elim conjE)
+            assume hi_cancel: "i < 2" and ht0: "0 < t" and ht1: "t < 1"
+            \<comment> \<open>Cancel edge: spur\\_f(x) = \\<psi>\\_m\\<inverse>(\\<tau>(\\<psi>\\_e(x))). \\<psi>\\_e(x) on unit circle
+               at cancel angle. \\<tau> maps to spur point with |sp| < 1.
+               Hence spur\\_f(x) in P\\_m interior. C8\\_m + h\\_spur\\_inj gives x = y.\<close>
+            \<comment> \<open>spur\\_f(x) is P\\_m interior. Same argument as P\\_e interior case.\<close>
+            have "\<forall>j<?m. \<forall>s\<in>I_set. spur_f x \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+              sorry \<comment> \<open>\\<tau> maps cancel boundary (r=1, tf>0) to B2 interior (|spur\\_pt| < 1).
+                 Then h\\_B2\\_int\\_to\\_Pm\\_int gives P\\_m interior.\<close>
+            hence "\<forall>p'\<in>P_m. q_m (spur_f x) = q_m p' \<longrightarrow> spur_f x = p'"
+              using hC8m hsfx by (by100 blast)
+            hence "spur_f x = spur_f y" using hsfy heq by (by100 blast)
+            hence "x = y" using h_spur_inj hx hy unfolding inj_on_def by (by100 blast)
+            thus "q_e x = q_e y" by (by100 simp)
+          qed
           have hcase_vertex: "\<not>(0 < t \<and> t < 1) \<longrightarrow> q_e x = q_e y"
           proof (intro impI)
             assume "\<not>(0 < t \<and> t < 1)"
@@ -10612,9 +10627,16 @@ proof -
               case True
               \<comment> \<open>k = 1: vertex\\_e(1) maps to spur point (P\\_m interior).
                  C8\\_m + h\\_spur\\_inj gives x = y.\<close>
-              show ?thesis using True hx_vtx heq hx hy hsfx hsfy
-                sorry \<comment> \<open>spur\\_f(vertex\\_e(1)) is P\\_m interior (spur midpoint).
-                   Same argument as interior case.\<close>
+              \<comment> \<open>spur\\_f(vertex\\_e(1)) is P\\_m interior. Same C8\\_m + h\\_spur\\_inj argument.\<close>
+              have "\<forall>j<?m. \<forall>s\<in>I_set. spur_f x \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                  (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+                sorry \<comment> \<open>\\<tau>(\\<psi>\\_e(vertex\\_e(1))) = (0,0) (spur midpoint).
+                   (0,0) \\<in> B2 interior (|0| = 0 < 1). h\\_B2\\_int\\_to\\_Pm\\_int gives P\\_m interior.\<close>
+              hence "\<forall>p'\<in>P_m. q_m (spur_f x) = q_m p' \<longrightarrow> spur_f x = p'"
+                using hC8m hsfx by (by100 blast)
+              hence "spur_f x = spur_f y" using hsfy heq by (by100 blast)
+              hence "x = y" using h_spur_inj hx hy unfolding inj_on_def by (by100 blast)
+              thus ?thesis by (by100 simp)
             next
               case False
               \<comment> \<open>k \\<noteq> 1: spur\\_f(vertex\\_e(k)) is a P\\_m vertex.\<close>
