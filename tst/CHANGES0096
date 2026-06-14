@@ -1,0 +1,22 @@
+CHANGES0096 — 2026-06-14, Session 1520
+
+KEY FINDINGS:
+
+1. quotient_of_scheme_edge_permutation IS PROVABLY FALSE.
+   Counterexample: s = [a,b,a^{-1},b^{-1}] (torus) permuted to
+   s' = [a,a^{-1},b,b^{-1}] (sphere).
+   Same multiset of labelled edges, but different edge ORDER gives
+   DIFFERENT quotient spaces (torus != sphere).
+   Only CYCLIC permutation (quotient_of_scheme_rotate) is valid.
+   Marked as FALSE in sorry analysis header.
+
+2. Vertex uniqueness sorrys (lines 669, 676, 814, 928) need C12
+   (vertex-edge-interior separation), which is NOT in the definition
+   of top1_quotient_of_scheme_on. C12 cannot be derived from C1-C11.
+
+3. Updated sorry analysis header with both FALSE findings.
+
+4. 32 standalone sorry lines. Classification chain not blocked by
+   context-left sorrys (only fresh relabel case used, already proved).
+
+Build: passes (57-63s).
