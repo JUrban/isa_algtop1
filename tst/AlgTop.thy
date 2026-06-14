@@ -6189,7 +6189,9 @@ proof -
     qed
     have hspur_interior: "\<forall>j<?m. \<forall>t\<in>I_set. spur_target \<noteq>
         ((1-t)*vx_m j+t*vx_m(Suc j mod ?m),(1-t)*vy_m j+t*vy_m(Suc j mod ?m))"
-      sorry \<comment> \<open>Midpoint of interior point and vertex is interior (not on any edge).\<close>
+      sorry \<comment> \<open>Midpoint of vertex 0 and centroid is interior. Proof via signed cross product:
+         cross(midpoint, edge j) = (cross(v0,edge j) + cross(centroid,edge j))/2.
+         cross(centroid) < 0 (avg of C11 terms). cross(v0) \\<le> 0 (C11). So cross(mid) < 0 \\<noteq> 0.\<close>
     have hp_cm_B2: "p_cm \<in> top1_B2"
     proof -
       have "\<psi>_m spur_target \<in> \<psi>_m ` P_m" using hspur_in_Pm by (by100 blast)
