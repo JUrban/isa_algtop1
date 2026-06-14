@@ -10351,7 +10351,25 @@ proof -
           \<comment> \<open>Sub-cases: edge-interior (good or cancel) vs vertex.\<close>
           \<comment> \<open>Three sub-cases based on x's edge type.\<close>
           have hcase_good: "i \<ge> 2 \<and> 0 < t \<and> t < 1 \<longrightarrow> q_e x = q_e y"
-            sorry \<comment> \<open>Good edge: h\\_fibres\\_good\\_edge backward.\<close>
+          proof (intro impI, elim conjE)
+            assume hi2: "i \<ge> 2" and ht0: "0 < t" and ht1: "t < 1"
+            have ht_oi: "t \<in> {0<..<(1::real)}" using ht0 ht1 by (by100 simp)
+            have him: "i - 2 < ?m" using hi2 hi hn_eq by (by100 linarith)
+            \<comment> \<open>spur\\_f(x) = edge\\_m(i-2, t).\<close>
+            have hsf_x: "spur_f x = ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2) mod ?m),
+                (1-t)*vy_m(i-2)+t*vy_m(Suc(i-2) mod ?m))"
+              using h_spur_good_edge[rule_format, OF hi2 hi ht_oi] hx_eq by (by100 simp)
+            \<comment> \<open>q\\_m(spur\\_f(y)) = q\\_m(edge\\_m(i-2, t)). spur\\_f(y) must be on a P\\_m edge.\<close>
+            \<comment> \<open>By C12\\_m: spur\\_f(y) is not identified with a vertex (q\\_m separates).\<close>
+            \<comment> \<open>By C8\\_m: if spur\\_f(y) were interior, it would be a singleton, and
+               edge\\_m(i-2,t) being boundary \\<noteq> interior contradicts identity.\<close>
+            \<comment> \<open>So spur\\_f(y) is on some P\\_m edge j' at parameter s'.
+               C9\\_m constrains: matching labels, so spur\\_f(y) = edge\\_m(j-2, s)
+               for some j \\<ge> 2 via h\\_spur\\_good\\_edge.\<close>
+            \<comment> \<open>Then h\\_fibres\\_good\\_edge backward gives q\\_e(edge\\_e(i,t)) = q\\_e(edge\\_e(j,s)).\<close>
+            show "q_e x = q_e y"
+              sorry \<comment> \<open>Needs: determine spur\\_f(y) is P\\_m edge, extract j/s, apply biconditional.\<close>
+          qed
           have hcase_cancel: "i < 2 \<and> 0 < t \<and> t < 1 \<longrightarrow> q_e x = q_e y"
             sorry \<comment> \<open>Cancel edge: spur\\_f maps to P\\_m interior. C8\\_m + h\\_spur\\_inj.\<close>
           have hcase_vertex: "\<not>(0 < t \<and> t < 1) \<longrightarrow> q_e x = q_e y"
