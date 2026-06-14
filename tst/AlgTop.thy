@@ -9318,11 +9318,17 @@ proof -
           have ht0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
           have ht1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
           \<comment> \<open>Use C7\\_m at t=0 and t=1, and h\\_spur\\_vertex for the spur\\_f mapping.\<close>
+          \<comment> \<open>Helper: spur\\_f at good vertices.\<close>
+          have hsf_ia: "spur_f (vx_e ia, vy_e ia) = (vx_m (ia-2), vy_m (ia-2))"
+            using h_spur_vertex[rule_format, OF True hia] .
+          have hsf_ja: "spur_f (vx_e ja, vy_e ja) = (vx_m (ja-2), vy_m (ja-2))"
+            using h_spur_vertex[rule_format, OF hja2 hja] .
           from hcase show ?thesis
-            sorry \<comment> \<open>4 cases (same/opp dir \\<times> t=0/1). Case 1 (same dir, t=0) proved:
-               spur\\_f(vtx ia) = vtx\\_m(ia-2), spur\\_f(vtx ja) = vtx\\_m(ja-2),
-               cancel\\_shift + C7\\_m at t=0 gives q\\_m equality.
-               Cases 2-4: similar using C7\\_m at t=1 and h\\_spur\\_vertex for Suc mod.\<close>
+            sorry \<comment> \<open>4 cases on (dir \\<times> endpoint). Each uses C7\\_m at t=0 or t=1
+               + h\\_spur\\_vertex + cancel\\_shift. Case 1 (same dir, t=0) pattern:
+               C7\\_m gives q\\_m(vtx\\_m(ia-2)) = q\\_m(vtx\\_m(ja-2)),
+               h\\_spur\\_vertex gives spur\\_f(vtx ia) = vtx\\_m(ia-2).
+               Cases 2-4 analogous with Suc mod.\<close>
         next
           case False
           hence hia_cancel: "ia < 2" by (by100 linarith)
