@@ -10089,9 +10089,13 @@ proof -
               hence "Suc 1 mod ?n = Suc (Suc 0)" using mod_less by (by100 simp)
               ultimately show ?thesis by (by100 simp)
             qed
-            show ?thesis using hmod0_ia hmod0_ia_m hcancel_0_2
-              sorry \<comment> \<open>Numeral issue: Suc(ia+2) mod n = 0, Suc ia mod m = 0.
-                 Goal: q\\_e(vx\\_e 0, vy\\_e 0) = q\\_e(vx\\_e(0+2), vy\\_e(0+2)). From hcancel\\_0\\_2.\<close>
+            have hgoal_lhs: "vx_e (Suc (ia + 2) mod ?n) = vx_e 0"
+                "vy_e (Suc (ia + 2) mod ?n) = vy_e 0"
+              using hmod0_ia by (by100 simp)+
+            have hgoal_rhs: "vx_e (Suc ia mod ?m + 2) = vx_e (0 + 2)"
+                "vy_e (Suc ia mod ?m + 2) = vy_e (0 + 2)"
+              using hmod0_ia_m by (by100 simp)+
+            show ?thesis unfolding hgoal_lhs hgoal_rhs by (rule hcancel_0_2)
           qed
           have hSuc_qe_ja: "q_e (vx_e (Suc (ja + 2) mod ?n), vy_e (Suc (ja + 2) mod ?n)) =
               q_e (vx_e (Suc ja mod ?m + 2), vy_e (Suc ja mod ?m + 2))"
@@ -10107,8 +10111,28 @@ proof -
             hence hmod0_ja: "Suc (ja + 2) mod ?n = 0" by (by100 simp)
             have "Suc ja = ?m" using \<open>ja = ?m - 1\<close> hm3 by (by100 linarith)
             hence hmod0_ja_m: "Suc ja mod ?m = 0" by (by100 simp)
-            show ?thesis using hmod0_ja hmod0_ja_m
-              sorry \<comment> \<open>Same numeral issue + cancel pair: q\\_e(vtx 0) = q\\_e(vtx(0+2)).\<close>
+            have hcancel_0_2_ja: "q_e (vx_e 0, vy_e 0) = q_e (vx_e (0+2), vy_e (0+2))"
+            proof -
+              have "0 < ?n" "1 < ?n" using hn5 by (by100 linarith)+
+              have "fst (?ext ! 0) = fst (?ext ! 1)"
+                unfolding top1_inverse_edge_def by (by100 simp)
+              have "snd (?ext ! 0) \<noteq> snd (?ext ! 1)"
+                unfolding top1_inverse_edge_def by (by100 simp)
+              from hC7e[rule_format, OF \<open>0 < ?n\<close> \<open>1 < ?n\<close> \<open>fst (?ext ! 0) = fst (?ext ! 1)\<close> ht0]
+                \<open>snd (?ext ! 0) \<noteq> snd (?ext ! 1)\<close>
+              have "q_e (vx_e 0, vy_e 0) = q_e (vx_e (Suc 1 mod ?n), vy_e (Suc 1 mod ?n))"
+                by (by100 simp)
+              moreover have "Suc (Suc 0) < ?n" using hn5 by (by100 linarith)
+              hence "Suc 1 mod ?n = Suc (Suc 0)" using mod_less by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            have hgoal_lhs: "vx_e (Suc (ja + 2) mod ?n) = vx_e 0"
+                "vy_e (Suc (ja + 2) mod ?n) = vy_e 0"
+              using hmod0_ja by (by100 simp)+
+            have hgoal_rhs: "vx_e (Suc ja mod ?m + 2) = vx_e (0 + 2)"
+                "vy_e (Suc ja mod ?m + 2) = vy_e (0 + 2)"
+              using hmod0_ja_m by (by100 simp)+
+            show ?thesis unfolding hgoal_lhs hgoal_rhs by (rule hcancel_0_2_ja)
           qed
           \<comment> \<open>4 cases on direction/endpoint, each using C7\\_e.\<close>
           \<comment> \<open>Specialize C7\\_e at t=0 and t=1 for edges ia+2, ja+2.\<close>
