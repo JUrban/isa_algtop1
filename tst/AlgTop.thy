@@ -10610,8 +10610,66 @@ proof -
               have "q_e (vx_e (k'+2), vy_e (k'+2)) = q_e (vx_e (l'+2), vy_e (l'+2))" .
               \<comment> \<open>Map back: k'+2 = k (for k \\<ge> 2) or k'+2 = 2 (for k = 0).\<close>
               \<comment> \<open>And l'+2 corresponds to y's vertex index.\<close>
-              show ?thesis using hx_vtx hsfy_vtx
-                sorry \<comment> \<open>Final step: connect k'+2 to k and l'+2 to y's index via spur\\_f injectivity.\<close>
+              \<comment> \<open>Step 1: q\\_e(vx\\_e k) = q\\_e(vx\\_e(k'+2)).\<close>
+              have hqe_k: "q_e (vx_e k, vy_e k) = q_e (vx_e (k'+2), vy_e (k'+2))"
+              proof (cases "k = 0")
+                case True
+                hence "k' = 0" unfolding k'_def by (by100 simp)
+                \<comment> \<open>k=0, k'+2=2. q\\_e(vx\\_e 0) = q\\_e(vx\\_e 2) from cancel pair.\<close>
+                have "q_e (vx_e 0, vy_e 0) = q_e (vx_e (k'+2), vy_e (k'+2))"
+                proof -
+                  have hcancel: "q_e (vx_e 0, vy_e 0) = q_e (vx_e (0+2), vy_e (0+2))"
+                  proof -
+                    have h0n: "(0::nat) < ?n" using hn5 by (by100 linarith)
+                    have h1n: "(1::nat) < ?n" using hn5 by (by100 linarith)
+                    have "fst (([a, top1_inverse_edge a] @ w) ! 0) =
+                        fst (([a, top1_inverse_edge a] @ w) ! 1)"
+                      unfolding top1_inverse_edge_def by (by100 simp)
+                    have "snd (([a, top1_inverse_edge a] @ w) ! 0) \<noteq>
+                        snd (([a, top1_inverse_edge a] @ w) ! 1)"
+                      unfolding top1_inverse_edge_def by (by100 simp)
+                    have ht0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                    from hC7e[rule_format, OF h0n h1n \<open>fst _ = fst _\<close> ht0_I] \<open>snd _ \<noteq> snd _\<close>
+                    have hq0: "q_e (vx_e 0, vy_e 0) = q_e (vx_e (Suc 1 mod ?n), vy_e (Suc 1 mod ?n))"
+                      by (by100 simp)
+                    have "Suc (Suc 0) < ?n" using hn5 by (by100 linarith)
+                    hence hmod: "Suc 1 mod ?n = Suc (Suc 0)" using mod_less by (by100 simp)
+                    have hgoal_lhs: "vx_e (Suc 1 mod ?n) = vx_e (0+2)"
+                        "vy_e (Suc 1 mod ?n) = vy_e (0+2)" using hmod by (by100 simp)+
+                    show ?thesis unfolding hgoal_lhs using hq0 hmod by (by100 simp)
+                  qed
+                  thus ?thesis using \<open>k' = 0\<close> by (by100 simp)
+                qed
+                thus ?thesis using True by (by100 simp)
+              next
+                case False
+                hence "k \<ge> 2" using hk_ne1 by (by100 linarith)
+                hence "k' = k - 2" unfolding k'_def using False by (by100 simp)
+                hence "k'+2 = k" using \<open>k \<ge> 2\<close> by (by100 simp)
+                thus ?thesis by (by100 simp)
+              qed
+              \<comment> \<open>Step 2: q\\_e(vx\\_e(l'+2)) = q\\_e(y) from spur\\_f injectivity.\<close>
+              have hqe_l: "q_e (vx_e (l'+2), vy_e (l'+2)) = q_e y"
+              proof -
+                have hl2: "l'+2 \<ge> 2" by (by100 simp)
+                have hl2n: "l'+2 < ?n" using hl'_lt hn_eq by (by100 linarith)
+                from h_spur_vertex[rule_format, OF hl2 hl2n]
+                have "spur_f (vx_e (l'+2), vy_e (l'+2)) = (vx_m l', vy_m l')"
+                  by (by100 simp)
+                hence "spur_f (vx_e (l'+2), vy_e (l'+2)) = spur_f y"
+                  using hsfy_vtx by (by100 simp)
+                have "(vx_e (l'+2), vy_e (l'+2)) \<in> P_e"
+                  using hC4e hl2n by (by100 blast)
+                hence "y = (vx_e (l'+2), vy_e (l'+2))"
+                  using h_spur_inj hy \<open>(vx_e (l'+2), vy_e (l'+2)) \<in> P_e\<close>
+                    \<open>spur_f (vx_e (l'+2), vy_e (l'+2)) = spur_f y\<close>
+                  unfolding inj_on_def by (by100 blast)
+                thus ?thesis by (by100 simp)
+              qed
+              \<comment> \<open>Combine: q\\_e(x) = q\\_e(k) = q\\_e(k'+2) = q\\_e(l'+2) = q\\_e(y).\<close>
+              show ?thesis using hx_vtx hqe_k
+                \<open>q_e (vx_e (k'+2), vy_e (k'+2)) = q_e (vx_e (l'+2), vy_e (l'+2))\<close>
+                hqe_l by (by100 simp)
             qed
           qed
           show ?thesis
