@@ -10539,9 +10539,79 @@ proof -
               \<comment> \<open>By C8\\_m: vertex \\<noteq> interior (boundary \\<noteq> interior).\<close>
               \<comment> \<open>So spur\\_f(y) must be on P\\_m boundary at a vertex.\<close>
               \<comment> \<open>Then y is a P\\_e vertex. Use h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
-              show ?thesis using hq_vtx hk'_lt hy hsfy heq hx_vtx
-                sorry \<comment> \<open>Determine spur\\_f(y) is P\\_m vertex, extract y's vertex index,
-                   apply h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
+              \<comment> \<open>spur\\_f(y) must be a P\\_m vertex (not edge-interior by C12\\_m, not interior by C8\\_m).\<close>
+              have "\<exists>j_m<?m. \<exists>s_m\<in>I_set. spur_f y = ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                  (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m))"
+              proof (rule ccontr)
+                assume hny: "\<not>(\<exists>j_m<?m. \<exists>s_m\<in>I_set. spur_f y = ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                    (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m)))"
+                \<comment> \<open>spur\\_f(y) is P\\_m interior. C8\\_m: singleton. q\\_m(spur\\_f(y)) = q\\_m(vertex) but
+                   vertex is boundary \\<noteq> interior. spur\\_f(y) = vertex\\_m(k') is impossible.\<close>
+                have "\<forall>j<?m. \<forall>s\<in>I_set. spur_f y \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                    (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+                  using hny by (by100 blast)
+                hence "\<forall>p'\<in>P_m. q_m (spur_f y) = q_m p' \<longrightarrow> spur_f y = p'"
+                  using hC8m hsfy by (by100 blast)
+                have "(vx_m k', vy_m k') \<in> P_m" using hC4m hk'_lt by (by100 blast)
+                hence "spur_f y = (vx_m k', vy_m k')" using hq_vtx[symmetric]
+                  \<open>\<forall>p'\<in>P_m. q_m (spur_f y) = q_m p' \<longrightarrow> spur_f y = p'\<close> by (by100 blast)
+                \<comment> \<open>But spur\\_f(y) is P\\_m interior and vertex\\_m(k') is boundary. Contradiction.\<close>
+                moreover have "(vx_m k', vy_m k') = ((1-0)*vx_m k' + 0*vx_m(Suc k' mod ?m),
+                    (1-0)*vy_m k' + 0*vy_m(Suc k' mod ?m))" by (by100 simp)
+                moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                ultimately have "\<exists>j<?m. \<exists>s\<in>I_set. spur_f y = ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                    (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+                  using hk'_lt by (by100 force)
+                thus False using hny by (by100 blast)
+              qed
+              then obtain j_m s_m where hjm: "j_m < ?m" and hsm: "s_m \<in> I_set"
+                  and hsfy_eq: "spur_f y = ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                      (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m))" by (by100 blast)
+              \<comment> \<open>s\\_m must be 0 or 1 (vertex, not edge-interior), by C12\\_m.\<close>
+              have "\<not>(0 < s_m \<and> s_m < 1)"
+              proof
+                assume "0 < s_m \<and> s_m < 1"
+                hence hsm_oi: "s_m \<in> {0<..<(1::real)}" by (by100 simp)
+                from hC12_m[rule_format, OF hk'_lt hjm hsm_oi]
+                have "q_m (vx_m k', vy_m k') \<noteq> q_m ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                    (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m))" .
+                moreover have "q_m (vx_m k', vy_m k') = q_m ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                    (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m))"
+                  using hq_vtx hsfy_eq by (by100 simp)
+                ultimately show False by (by100 simp)
+              qed
+              hence "s_m = 0 \<or> s_m = 1" using hsm
+                unfolding top1_unit_interval_def by (by100 auto)
+              \<comment> \<open>spur\\_f(y) is a P\\_m vertex. Determine vertex index l'.\<close>
+              define l' where "l' = (if s_m = 0 then j_m else Suc j_m mod ?m)"
+              have hm_pos: "?m > 0" using hm3 by (by100 linarith)
+              have hl'_lt: "l' < ?m" unfolding l'_def
+                using hjm mod_less_divisor[OF hm_pos] by (by100 auto)
+              have hsfy_vtx: "spur_f y = (vx_m l', vy_m l')"
+                unfolding l'_def using \<open>s_m = 0 \<or> s_m = 1\<close> hsfy_eq by (by100 auto)
+              \<comment> \<open>q\\_m(vertex\\_m(k')) = q\\_m(vertex\\_m(l')).\<close>
+              have "q_m (vx_m k', vy_m k') = q_m (vx_m l', vy_m l')"
+                using hq_vtx hsfy_vtx by (by100 simp)
+              hence hvtgt_eq: "vtgt_m k' = vtgt_m l'"
+              proof -
+                assume hqm: "q_m (vx_m k', vy_m k') = q_m (vx_m l', vy_m l')"
+                from hq_vtgt_m1[rule_format, OF hk'_lt]
+                have h1: "q_m (vx_m k', vy_m k') = (vx_m (vtgt_m k'), vy_m (vtgt_m k'))" .
+                from hq_vtgt_m1[rule_format, OF hl'_lt]
+                have h2: "q_m (vx_m l', vy_m l') = (vx_m (vtgt_m l'), vy_m (vtgt_m l'))" .
+                from hqm h1 h2 have "(vx_m (vtgt_m k'), vy_m (vtgt_m k')) = (vx_m (vtgt_m l'), vy_m (vtgt_m l'))"
+                  by (by100 simp)
+                thus ?thesis using hC3m_w[rule_format]
+                  hq_vtgt_m2[rule_format, OF hk'_lt] hq_vtgt_m2[rule_format, OF hl'_lt]
+                  by (by100 blast)
+              qed
+              \<comment> \<open>By h\\_vtx\\_vtgt\\_transfer\\_rev: q\\_e(vx\\_e(k'+2)) = q\\_e(vx\\_e(l'+2)).\<close>
+              from h_vtx_vtgt_transfer_rev[rule_format, OF hk'_lt hl'_lt hvtgt_eq]
+              have "q_e (vx_e (k'+2), vy_e (k'+2)) = q_e (vx_e (l'+2), vy_e (l'+2))" .
+              \<comment> \<open>Map back: k'+2 = k (for k \\<ge> 2) or k'+2 = 2 (for k = 0).\<close>
+              \<comment> \<open>And l'+2 corresponds to y's vertex index.\<close>
+              show ?thesis using hx_vtx hsfy_vtx
+                sorry \<comment> \<open>Final step: connect k'+2 to k and l'+2 to y's index via spur\\_f injectivity.\<close>
             qed
           qed
           show ?thesis
