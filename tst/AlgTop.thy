@@ -10411,9 +10411,53 @@ proof -
         qed
         have hr_sq: "r ^ 2 = fst p ^ 2 + snd p ^ 2"
           unfolding r_def using real_sqrt_pow2[of "fst p^2 + snd p^2"] by (by100 simp)
+        \<comment> \<open>Unfold \\<tau> at p \\<noteq> (0,0) and case-split on sector.\<close>
+        have hr_eq: "sqrt (fst p ^ 2 + snd p ^ 2) = r" unfolding r_def by (by100 simp)
+        define \<theta>_p where "\<theta>_p = (if snd p \<ge> 0 then arccos (fst p / r) else 2*pi - arccos (fst p / r))"
+        have h\<tau>_simp: "\<tau> p = (let \<theta> = \<theta>_p in
+            if \<theta> \<ge> \<theta>_cancel then (r * fst (\<tau>_boundary \<theta>), r * snd (\<tau>_boundary \<theta>))
+            else let spur_pt = \<tau>_boundary \<theta>;
+                     t_fold = min (\<theta> * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>) * real ?n / (2*pi));
+                     sign_v = (if \<theta> \<le> \<theta>_mid then 1 else -1);
+                     offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4
+                 in (r * fst spur_pt + offset * fst d_perp,
+                     r * snd spur_pt + offset * snd d_perp))"
+          unfolding \<tau>_def \<theta>_p_def using hne hr_eq by (by100 simp)
         show "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2 < 1"
-          sorry \<comment> \<open>Good sector: |\\<tau>|² = r² < 1 (from cos²+sin²=1 and r < 1).
-             Cancel sector: |\\<tau>|² < 1 (algebraic bound, uses (1-tf)² < 1 for tf > 0).\<close>
+        proof (cases "\<theta>_p \<ge> \<theta>_cancel")
+          case True
+          \<comment> \<open>Good sector: \\<tau> = (r*cos(\\<phi>), r*sin(\\<phi>)). |\\<tau>|² = r².\<close>
+          have h\<tau>_good: "\<tau> p = (r * fst (\<tau>_boundary \<theta>_p), r * snd (\<tau>_boundary \<theta>_p))"
+            using h\<tau>_simp True by (by100 simp)
+          have "fst (\<tau>_boundary \<theta>_p) = cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+            using True unfolding \<tau>_boundary_def by (by100 auto)
+          moreover have "snd (\<tau>_boundary \<theta>_p) = sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+            using True unfolding \<tau>_boundary_def by (by100 auto)
+          ultimately have "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2
+              = (r * cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)) ^ 2
+              + (r * sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)) ^ 2"
+            using h\<tau>_good by (by100 simp)
+          also have "\<dots> = r ^ 2 * (cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m) ^ 2
+              + sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m) ^ 2)"
+            by (by100 algebra)
+          also have "\<dots> = r ^ 2" using sin_cos_squared_add3 by (by100 simp)
+          finally have "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2 = r ^ 2" .
+          moreover have "r ^ 2 < 1"
+          proof -
+            have "r * r < 1 * r" using hr_lt1 hr_pos
+              using mult_strict_right_mono[of r 1 r] by (by100 simp)
+            hence "r * r < 1" using hr_lt1 by (by100 linarith)
+            thus ?thesis unfolding power2_eq_square .
+          qed
+          ultimately show ?thesis by (by100 linarith)
+        next
+          case False
+          \<comment> \<open>Cancel sector: |\\<tau>|² < 1. Uses r < 1 and (1-tf)² < 1 for tf > 0.\<close>
+          show ?thesis using h\<tau>_le1 hr_lt1 hr_pos False h\<tau>_simp
+            sorry \<comment> \<open>Cancel sector bound: |\\<tau>|² = r²[(1-tf)² + (1-r)²sin²(\\<pi>tf)/16] < 1.
+               Since (1-tf)² \\<le> 1, offset² \\<le> r²(1-r)²/16, and r < 1:
+               |\\<tau>|² \\<le> r² + r²(1-r)²/16 < 1 (since r² < 1 and correction small).\<close>
+        qed
       qed
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
       proof (intro ballI impI)
