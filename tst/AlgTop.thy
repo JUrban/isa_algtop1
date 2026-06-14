@@ -612,7 +612,14 @@ lemma scheme_quotient_exists:
     \<and> (\<exists>vtgt. (\<forall>k<length scheme. q (vx k, vy k) = (vx (vtgt k), vy (vtgt k)))
              \<and> (\<forall>k<length scheme. vtgt k < length scheme)
              \<and> (\<forall>k<length scheme. vtgt k \<le> k)
-             \<and> (\<forall>k<length scheme. vtgt (vtgt k) = vtgt k))" (is ?C2)
+             \<and> (\<forall>k<length scheme. vtgt (vtgt k) = vtgt k)
+             \<and> (\<forall>k<length scheme. \<forall>l<length scheme. vtgt k = vtgt l \<longrightarrow>
+                (k, l) \<in> {(a, b). \<exists>i<length scheme. \<exists>j<length scheme. i \<noteq> j
+                  \<and> fst (scheme ! i) = fst (scheme ! j)
+                  \<and> ((snd (scheme ! i) = snd (scheme ! j) \<and> a = i \<and> b = j)
+                   \<or> (snd (scheme ! i) = snd (scheme ! j) \<and> a = Suc i mod length scheme \<and> b = Suc j mod length scheme)
+                   \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = i \<and> b = Suc j mod length scheme)
+                   \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = Suc i mod length scheme \<and> b = j))}\<^sup>*))" (is ?C2)
 proof -
   let ?n = "length scheme"
   \<comment> \<open>Regular n-gon: vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).\<close>
@@ -3523,6 +3530,20 @@ proof -
       qed
       from vtgt_class[OF hreach] show ?thesis by (by100 simp)
     qed
+  next
+    \<comment> \<open>vtgt equality implies rtrancl connectivity via C7 vertex identification steps.\<close>
+    fix k l assume hk: "k < ?n" and hl: "l < ?n" and hv: "vtgt k = vtgt l"
+    \<comment> \<open>vtgt k = vtgt l means both are in the same equivalence class of vtx\\_id.
+       The internal vtx\\_id relation is a subset of the output step relation.\<close>
+    show "(k, l) \<in> {(a, b). \<exists>i<?n. \<exists>j<?n. i \<noteq> j
+        \<and> fst (scheme ! i) = fst (scheme ! j)
+        \<and> ((snd (scheme ! i) = snd (scheme ! j) \<and> a = i \<and> b = j)
+         \<or> (snd (scheme ! i) = snd (scheme ! j) \<and> a = Suc i mod ?n \<and> b = Suc j mod ?n)
+         \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = i \<and> b = Suc j mod ?n)
+         \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = Suc i mod ?n \<and> b = j))}\<^sup>*"
+      sorry \<comment> \<open>Follows from vtgt\\_def + vtgt\\_class + vtx\\_id\\_def.
+         The output step relation equals vtx\\_id (by definition), and vtgt equality
+         implies rtrancl connectivity (since vtgt = LEAST of the same class).\<close>
   qed
 qed
 
@@ -5353,6 +5374,13 @@ proof -
     and hq_vtgt_m2: "\<forall>k<length w. vtgt_m k < length w"
     and hq_vtgt_m3: "\<forall>k<length w. vtgt_m k \<le> k"
     and hq_vtgt_m4: "\<forall>k<length w. vtgt_m (vtgt_m k) = vtgt_m k"
+    and hq_vtgt_m5: "\<forall>k<length w. \<forall>l<length w. vtgt_m k = vtgt_m l \<longrightarrow>
+        (k, l) \<in> {(a, b). \<exists>i<length w. \<exists>j<length w. i \<noteq> j
+          \<and> fst (w ! i) = fst (w ! j)
+          \<and> ((snd (w ! i) = snd (w ! j) \<and> a = i \<and> b = j)
+           \<or> (snd (w ! i) = snd (w ! j) \<and> a = Suc i mod length w \<and> b = Suc j mod length w)
+           \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = i \<and> b = Suc j mod length w)
+           \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = Suc i mod length w \<and> b = j))}\<^sup>*"
     by (elim exE conjE) (rule that, assumption+)
   have htopo_w: "is_topology_on_strict Y_w TY_w"
     using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
@@ -5403,6 +5431,13 @@ proof -
     and hq_vtgt_e2: "\<forall>k<?n_ext. vtgt_e k < ?n_ext"
     and hq_vtgt_e3: "\<forall>k<?n_ext. vtgt_e k \<le> k"
     and hq_vtgt_e4: "\<forall>k<?n_ext. vtgt_e (vtgt_e k) = vtgt_e k"
+    and hq_vtgt_e5: "\<forall>k<?n_ext. \<forall>l<?n_ext. vtgt_e k = vtgt_e l \<longrightarrow>
+        (k, l) \<in> {(x, y). \<exists>i<?n_ext. \<exists>j<?n_ext. i \<noteq> j
+          \<and> fst (([a, top1_inverse_edge a] @ w) ! i) = fst (([a, top1_inverse_edge a] @ w) ! j)
+          \<and> ((snd (([a, top1_inverse_edge a] @ w) ! i) = snd (([a, top1_inverse_edge a] @ w) ! j) \<and> x = i \<and> y = j)
+           \<or> (snd (([a, top1_inverse_edge a] @ w) ! i) = snd (([a, top1_inverse_edge a] @ w) ! j) \<and> x = Suc i mod ?n_ext \<and> y = Suc j mod ?n_ext)
+           \<or> (snd (([a, top1_inverse_edge a] @ w) ! i) \<noteq> snd (([a, top1_inverse_edge a] @ w) ! j) \<and> x = i \<and> y = Suc j mod ?n_ext)
+           \<or> (snd (([a, top1_inverse_edge a] @ w) ! i) \<noteq> snd (([a, top1_inverse_edge a] @ w) ! j) \<and> x = Suc i mod ?n_ext \<and> y = j))}\<^sup>*"
     by (elim exE conjE) (rule that, assumption+)
   have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
     using hY_ext unfolding top1_quotient_of_scheme_on_def by (by100 blast)
@@ -9187,24 +9222,43 @@ proof -
          Step (vtgt\\_e(k) < k): k is connected via a C7\\_e edge pair to some vertex
          with smaller or equal index. The generator step preserves q\\_m\\<circ>spur\\_f.
          By IH, the intermediate vertex's q\\_m value equals the representative's.\<close>
-      have h_vtx_to_rep: "\<forall>k<?n. q_m (spur_f (vx_e k, vy_e k)) =
-          q_m (spur_f (vx_e (vtgt_e k), vy_e (vtgt_e k)))"
-        sorry \<comment> \<open>Strong induction on k using vtgt\\_e(k) \\<le> k (from hq\\_vtgt\\_e3).
-           Base: vtgt\\_e(k) = k \\<to> trivial.
-           Step: vtgt\\_e(k) < k \\<to> C7\\_e generator connects k to some j with vtgt\\_e(j) = vtgt\\_e(k).
-           Generator step: cancel\\_shift + C7\\_m gives f(k)=f(j). IH gives f(j)=f(vtgt(k)).
-           Requires: extracting C7 partner from vtgt\\_e(k) < k (proper scheme structure).\<close>
-      \<comment> \<open>Corollary: vtgt\\_e(k) = vtgt\\_e(l) \\<to> q\\_m(spur\\_f(vtx k)) = q\\_m(spur\\_f(vtx l)).\<close>
+      \<comment> \<open>Define the C7 vertex step relation for the ext scheme.\<close>
+      let ?ext = "[a, top1_inverse_edge a] @ w"
+      let ?vtx_step = "{(x, y). \<exists>i<?n. \<exists>j<?n. i \<noteq> j
+          \<and> fst (?ext ! i) = fst (?ext ! j)
+          \<and> ((snd (?ext ! i) = snd (?ext ! j) \<and> x = i \<and> y = j)
+           \<or> (snd (?ext ! i) = snd (?ext ! j) \<and> x = Suc i mod ?n \<and> y = Suc j mod ?n)
+           \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> x = i \<and> y = Suc j mod ?n)
+           \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> x = Suc i mod ?n \<and> y = j))}"
+      \<comment> \<open>Each C7 vertex step preserves q\\_m \\<circ> spur\\_f.\<close>
+      have h_step_f: "\<forall>k l. (k, l) \<in> ?vtx_step \<longrightarrow>
+          q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+        sorry \<comment> \<open>For good edges (\\<ge>2): cancel\\_shift + C7\\_m at t=0/1.
+           For cancel pair (0,1): h\\_spur\\_vertex\\_0/02.\<close>
+      \<comment> \<open>The rtrancl closure preserves q\\_m \\<circ> spur\\_f (by induction on rtrancl).\<close>
+      have h_rtrancl_f: "\<forall>k l. (k, l) \<in> ?vtx_step\<^sup>* \<longrightarrow>
+          q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+      proof (intro allI impI)
+        fix k l assume "(k, l) \<in> ?vtx_step\<^sup>*"
+        thus "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+        proof (induction rule: rtrancl_induct)
+          case base show ?case by (by100 simp)
+        next
+          case (step y z)
+          from h_step_f[rule_format, OF step.hyps(2)]
+          have "q_m (spur_f (vx_e y, vy_e y)) = q_m (spur_f (vx_e z, vy_e z))" .
+          with step.IH show ?case by (by100 simp)
+        qed
+      qed
+      \<comment> \<open>vtgt equality \\<to> rtrancl connectivity (from hq\\_vtgt\\_e5) \\<to> f equality.\<close>
       have h_vtx_vtgt_transfer: "\<forall>k<?n. \<forall>l<?n. vtgt_e k = vtgt_e l \<longrightarrow>
           q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
       proof (intro allI impI)
         fix k l assume hk: "k < ?n" and hl: "l < ?n" and hv: "vtgt_e k = vtgt_e l"
-        from h_vtx_to_rep[rule_format, OF hk]
-        have "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e (vtgt_e k), vy_e (vtgt_e k)))" .
-        also have "\<dots> = q_m (spur_f (vx_e (vtgt_e l), vy_e (vtgt_e l)))" using hv by (by100 simp)
-        also from h_vtx_to_rep[rule_format, OF hl]
-        have "\<dots> = q_m (spur_f (vx_e l, vy_e l))" by (by100 simp)
-        finally show "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))" .
+        from hq_vtgt_e5[rule_format, OF hk hl hv]
+        have "(k, l) \<in> ?vtx_step\<^sup>*" .
+        from h_rtrancl_f[rule_format, OF this]
+        show "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))" .
       qed
       \<comment> \<open>Forward direction of h\\_fibres: q\\_e(x)=q\\_e(y) \\<Longrightarrow> q\\_m(spur\\_f x)=q\\_m(spur\\_f y).
          For INTERIOR x: C8\\_e gives x=y \\<to> trivial.
