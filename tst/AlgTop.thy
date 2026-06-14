@@ -91,6 +91,29 @@ KEY INFRASTRUCTURE (all PROVED):
 - real\\_abs\\_mul\\_le\\_half\\_sum\\_squares: |xy| \\<le> (x^2+y^2)/2 (AM-GM global)
 - real\\_inner2\\_abs\\_le\\_half\\_norm\\_sums: |s\\<cdot>d| \\<le> (S+D)/2 (2D inner product bound)
 - cancel\\_shift\\_label: ([a,a\\<inverse>]@w)!(i+2) = w!i (index shift for fibre matching)\<close>
+\<comment> \<open>Edge permutation: if Y is quotient of scheme s, and s' is a permutation of s
+   (same multiset of labelled edges), then Y is also quotient of s'.
+   Proof: reindex the polygon vertices by the permutation.\<close>
+lemma quotient_of_scheme_edge_permutation:
+  assumes "top1_quotient_of_scheme_on Y TY s"
+      and "length s' = length s"
+      and "\<exists>\<sigma>. bij_betw \<sigma> {..<length s} {..<length s} \<and> (\<forall>i<length s. s' ! i = s ! \<sigma> i)"
+  shows "top1_quotient_of_scheme_on Y TY s'"
+  sorry
+
+\<comment> \<open>Munkres Theorem 76.1 (Cut): quotient of y\\_0 y\\_1 = quotient of y\\_0 c\\<inverse>, c y\\_1.
+   This is the fundamental cut operation for polygonal quotients.
+   Given a quotient of a single polygon scheme y\\_0 y\\_1, the SAME space Y is also
+   a quotient of the two-polygon scheme y\\_0 c\\<inverse>, c y\\_1 (with fresh label c).\<close>
+\<comment> \<open>For the single-polygon case, this means: if Y is quotient of y\\_0@y\\_1 (one polygon),
+   then Y is also quotient of (y\\_0@[(c,False)], [(c,True)]@y\\_1) (two polygons).
+   But our formalization uses single-polygon quotients only, so we express this as:
+   Y is quotient of y\\_0@y\\_1 implies Y is quotient of y\\_0@[(c,False)]
+   AND Y is quotient of [(c,True)]@y\\_1, where the c edges are identified.\<close>
+\<comment> \<open>NOTE: Theorem 76.1 is about MULTI-polygon quotients. Our top1\\_quotient\\_of\\_scheme\\_on
+   is single-polygon. For cancellation via the book's 3-step approach, we may need
+   to extend to multi-polygon quotients, OR express the argument differently.\<close>
+
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
   shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
