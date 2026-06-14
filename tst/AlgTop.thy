@@ -10871,11 +10871,172 @@ proof -
          At r=1, offset=0, so \\<tau> = sp = (1-tf)*(1,0)+tf*p\\_cm. For tf > 0 and |p\\_cm| < 1: |sp| < 1.\<close>
       have h_tau_cancel_bdy: "\<And>\<theta>. 0 < \<theta> \<Longrightarrow> \<theta> < \<theta>_cancel \<Longrightarrow>
           fst (\<tau> (cos \<theta>, sin \<theta>)) ^ 2 + snd (\<tau> (cos \<theta>, sin \<theta>)) ^ 2 < 1"
-        sorry
+      proof -
+        fix \<theta> :: real assume h\<theta>_pos: "0 < \<theta>" and h\<theta>_lt: "\<theta> < \<theta>_cancel"
+        \<comment> \<open>Step 1: (cos \\<theta>, sin \\<theta>) \\<noteq> (0,0) and r = 1.\<close>
+        have hne: "(cos \<theta>, sin \<theta>) \<noteq> (0::real, 0::real)"
+        proof -
+          have "sin \<theta> \<noteq> 0" using h\<theta>_pos h\<theta>_lt
+          proof -
+            have "real ?n \<ge> 5" using hn5 by (by100 simp)
+            have "\<theta>_cancel = 4*pi/real ?n" unfolding \<theta>_cancel_def by (by100 simp)
+            hence "\<theta>_cancel \<le> 4*pi/5"
+              using divide_left_mono[of 5 "real ?n" "4*pi"] pi_gt_zero \<open>real ?n \<ge> 5\<close>
+              by (by100 simp)
+            also have "\<dots> < pi" using pi_gt_zero by (by100 linarith)
+            finally have "\<theta>_cancel < pi" .
+            hence "\<theta> < pi" using h\<theta>_lt by (by100 linarith)
+            from sin_gt_zero[OF h\<theta>_pos \<open>\<theta> < pi\<close>] show ?thesis by (by100 linarith)
+          qed
+          thus ?thesis by (by100 auto)
+        qed
+        have hr_eq: "sqrt ((cos \<theta>)^2 + (sin \<theta>)^2) = 1"
+          using sin_cos_squared_add3[of \<theta>] by (by100 simp)
+        \<comment> \<open>Step 2: \\<theta>\\_cancel < \\<pi>, so sin \\<theta> > 0, hence angle branch = arccos(cos \\<theta>) = \\<theta>.\<close>
+        have h\<theta>_lt_pi: "\<theta> < pi"
+        proof -
+          have "\<theta>_cancel < pi"
+          proof -
+            have "\<theta>_cancel = 4*pi/real ?n" unfolding \<theta>_cancel_def by (by100 simp)
+            have "real ?n \<ge> 5" using hn5 by (by100 simp)
+            have "4*pi/real ?n \<le> 4*pi/5"
+              using divide_left_mono[of 5 "real ?n" "4*pi"] pi_gt_zero \<open>real ?n \<ge> 5\<close>
+              by (by100 simp)
+            also have "\<dots> < pi" using pi_gt_zero by (by100 linarith)
+            finally show ?thesis using \<open>\<theta>_cancel = 4*pi/real ?n\<close> by (by100 linarith)
+          qed
+          thus ?thesis using h\<theta>_lt by (by100 linarith)
+        qed
+        have hsin_pos: "sin \<theta> > 0" using h\<theta>_pos h\<theta>_lt_pi
+          using sin_gt_zero[OF h\<theta>_pos h\<theta>_lt_pi] by (by100 linarith)
+        have hangle_eq: "(if sin \<theta> \<ge> 0 then arccos (cos \<theta> / 1) else 2*pi - arccos (cos \<theta> / 1)) = \<theta>"
+        proof -
+          have "sin \<theta> \<ge> 0" using hsin_pos by (by100 linarith)
+          hence "(if sin \<theta> \<ge> 0 then arccos (cos \<theta> / 1) else 2*pi - arccos (cos \<theta> / 1))
+              = arccos (cos \<theta>)" by (by100 simp)
+          also have "\<dots> = \<theta>"
+          proof -
+            have "0 \<le> \<theta>" using h\<theta>_pos by (by100 linarith)
+            have "\<theta> \<le> pi" using h\<theta>_lt_pi by (by100 linarith)
+            from arccos_cos[OF \<open>0 \<le> \<theta>\<close> \<open>\<theta> \<le> pi\<close>] show ?thesis .
+          qed
+          finally show ?thesis .
+        qed
+        \<comment> \<open>Step 3: \\<tau> at boundary. r=1, cancel sector, offset=0.\<close>
+        have h\<tau>_eq: "\<tau> (cos \<theta>, sin \<theta>) = \<tau>_boundary \<theta>"
+          sorry \<comment> \<open>At boundary: r=1, angle=\\<theta>, cancel sector, offset=0.
+             Need: unfold \\<tau>\\_def, substitute r=1/\\<theta>\\_a=\\<theta>, simplify 1*(1-1)=0.\<close>
+        \<comment> \<open>Step 4: \\<tau>\\_boundary(\\<theta>) in cancel sector with tf > 0.\<close>
+        define tf where "tf = min (\<theta> * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>) * real ?n / (2*pi))"
+        have htf_pos: "tf > 0"
+        proof -
+          have "\<theta> * real ?n / (2*pi) > 0" using h\<theta>_pos pi_gt_zero hn5 by (by100 simp)
+          moreover have "(\<theta>_cancel - \<theta>) * real ?n / (2*pi) > 0"
+            using h\<theta>_lt pi_gt_zero hn5 by (by100 simp)
+          ultimately show ?thesis unfolding tf_def by (by100 simp)
+        qed
+        have htf_le1: "tf \<le> 1" unfolding tf_def
+          using h\<theta>_lt pi_gt_zero hn5
+          by (smt (verit, ccfv_threshold) \<theta>_cancel_def divide_diff_eq_iff divide_le_eq_1_pos
+            length_greater_0_conv list.size(3) nonzero_divide_eq_eq
+            not_numeral_le_zero of_nat_0_less_iff)
+        have hsp_eq: "\<tau>_boundary \<theta> = ((1-tf) + tf * fst p_cm, tf * snd p_cm)"
+        proof -
+          have "\<not> \<theta> \<ge> \<theta>_cancel" using h\<theta>_lt by (by100 linarith)
+          hence "\<tau>_boundary \<theta> = (let t_fold = min (\<theta> * real ?n / (2*pi))
+              ((4*pi/real ?n - \<theta>) * real ?n / (2*pi))
+            in ((1 - t_fold) + t_fold * fst p_cm, t_fold * snd p_cm))"
+            unfolding \<tau>_boundary_def \<theta>_cancel_def by (by100 simp)
+          also have "\<dots> = ((1 - tf) + tf * fst p_cm, tf * snd p_cm)"
+            unfolding tf_def \<theta>_cancel_def Let_def by (by100 simp)
+          finally show ?thesis .
+        qed
+        \<comment> \<open>Step 5: |sp|² < 1 (strict convexity with tf > 0 and |p\\_cm| < 1).\<close>
+        have "fst (\<tau>_boundary \<theta>) ^ 2 + snd (\<tau>_boundary \<theta>) ^ 2 < 1"
+        proof -
+          have "fst (\<tau>_boundary \<theta>) ^ 2 + snd (\<tau>_boundary \<theta>) ^ 2
+              = ((1-tf) + tf * fst p_cm) ^ 2 + (tf * snd p_cm) ^ 2"
+            using hsp_eq by (by100 simp)
+          also have "\<dots> = (1-tf)^2 + 2*(1-tf)*tf*fst p_cm + tf^2*(fst p_cm^2 + snd p_cm^2)"
+            by (by100 algebra)
+          also have "\<dots> < (1-tf)^2 + 2*(1-tf)*tf + tf^2"
+          proof -
+            \<comment> \<open>Since tf > 0 and |p\\_cm|² < 1: at least one of the bounds is strict.\<close>
+            have "fst p_cm ^ 2 + snd p_cm ^ 2 < 1" using hp_cm_int .
+            hence "tf^2*(fst p_cm^2 + snd p_cm^2) < tf^2*1"
+            proof -
+              have "tf^2 > 0" using htf_pos
+              proof -
+                have "tf * tf > 0" using htf_pos by (by100 simp)
+                thus ?thesis unfolding power2_eq_square by (by100 linarith)
+              qed
+              thus ?thesis using hp_cm_int
+                using mult_strict_left_mono[of "fst p_cm^2+snd p_cm^2" 1 "tf^2"]
+                by (by100 linarith)
+            qed
+            moreover have "2*(1-tf)*tf*fst p_cm \<le> 2*(1-tf)*tf*1"
+            proof -
+              have "fst p_cm \<le> 1"
+              proof (rule ccontr)
+                assume "\<not> fst p_cm \<le> 1"
+                hence "fst p_cm > 1" by (by100 linarith)
+                hence "fst p_cm ^ 2 > 1"
+                proof -
+                  have "fst p_cm * fst p_cm > 1 * 1"
+                    using mult_strict_mono'[of 1 "fst p_cm" 1 "fst p_cm"] \<open>fst p_cm > 1\<close>
+                    by (by100 linarith)
+                  thus ?thesis unfolding power2_eq_square by (by100 linarith)
+                qed
+                have "snd p_cm ^ 2 \<ge> 0" by (by100 simp)
+                thus False using \<open>fst p_cm ^ 2 > 1\<close> hp_cm_int by (by100 linarith)
+              qed
+              have "2*(1-tf)*tf \<ge> 0" using htf_pos htf_le1 by (by100 simp)
+              thus ?thesis using mult_left_mono[of "fst p_cm" 1 "2*(1-tf)*tf"]
+                \<open>fst p_cm \<le> 1\<close> \<open>2*(1-tf)*tf \<ge> 0\<close> by (by100 simp)
+            qed
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          also have "\<dots> = 1"
+          proof -
+            have "(1-tf)^2 + 2*(1-tf)*tf + tf^2 = ((1-tf)+tf) * ((1-tf)+tf)"
+              unfolding power2_eq_square by (by100 algebra)
+            thus ?thesis by (by100 simp)
+          qed
+          finally show ?thesis .
+        qed
+        thus "fst (\<tau> (cos \<theta>, sin \<theta>)) ^ 2 + snd (\<tau> (cos \<theta>, sin \<theta>)) ^ 2 < 1"
+          using h\<tau>_eq by (by100 simp)
+      qed
       \<comment> \<open>Helper: \\<tau>(\\<psi>\\_e(vertex\\_e(1))) is in B2 interior (= p\\_cm with |p\\_cm| < 1).\<close>
       have h_tau_vtx1_int: "fst (\<tau> (\<psi>_e (vx_e 1, vy_e 1))) ^ 2
           + snd (\<tau> (\<psi>_e (vx_e 1, vy_e 1))) ^ 2 < 1"
-        sorry
+      proof -
+        \<comment> \<open>\\<psi>\\_e(vertex\\_e(1)) = (cos(2\\<pi>/n), sin(2\\<pi>/n)) at angle 2\\<pi>/n \\<in> (0, \\<theta>\\_cancel).\<close>
+        have h1_lt: "(1::nat) < ?n" using hn5 by (by100 linarith)
+        have h0_Iset: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have h\<psi>_vtx1: "\<psi>_e (vx_e 1, vy_e 1) = (cos (2*pi*1/real ?n), sin (2*pi*1/real ?n))"
+        proof -
+          have "\<psi>_e ((1-0) * vx_e 1 + 0 * vx_e (Suc 1 mod ?n),
+              (1-0) * vy_e 1 + 0 * vy_e (Suc 1 mod ?n))
+            = (cos (2*pi*(real 1 + 0)/real ?n), sin (2*pi*(real 1 + 0)/real ?n))"
+            using h\<psi>e_edge[rule_format, OF h1_lt h0_Iset] .
+          thus ?thesis by (by100 simp)
+        qed
+        define \<alpha> where "\<alpha> = 2*pi/real ?n"
+        have "\<psi>_e (vx_e 1, vy_e 1) = (cos \<alpha>, sin \<alpha>)"
+          using h\<psi>_vtx1 unfolding \<alpha>_def by (by100 simp)
+        have h\<alpha>_pos: "\<alpha> > 0" unfolding \<alpha>_def using pi_gt_zero hn5 by (by100 simp)
+        have h\<alpha>_lt: "\<alpha> < \<theta>_cancel"
+        proof -
+          have "2 < (4::real)" by (by100 simp)
+          hence "2*pi < 4*pi" using pi_gt_zero by (by100 linarith)
+          hence "2*pi/real ?n < 4*pi/real ?n"
+            using divide_strict_right_mono[of "2*pi" "4*pi" "real ?n"] hn5 by (by100 simp)
+          thus ?thesis unfolding \<alpha>_def \<theta>_cancel_def by (by100 linarith)
+        qed
+        from h_tau_cancel_bdy[OF h\<alpha>_pos h\<alpha>_lt]
+        show ?thesis using \<open>\<psi>_e (vx_e 1, vy_e 1) = (cos \<alpha>, sin \<alpha>)\<close> by (by100 simp)
+      qed
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
       proof (intro ballI impI)
         fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e"
