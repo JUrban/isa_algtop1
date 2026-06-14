@@ -6115,12 +6115,25 @@ proof -
     qed
     \<comment> \<open>Both disk homeomorphisms + inverse + continuous\\_on available.
        Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e where \\<tau>: B2 \\<to> B2 is the spur collapse map.\<close>
-    \<comment> \<open>Target of centroid in B2 coordinates.\<close>
-    define p_cm where "p_cm = \<psi>_m (cx_m, cy_m)"
+    \<comment> \<open>Spur target: midpoint of vertex\\_m(0) and centroid. This is interior to P\\_m
+       (convex combination of boundary and interior points) and NOT the centroid itself.
+       Key: \\<psi>\\_m maps it to a NONZERO point in B2 interior, which makes \\<tau> injective.\<close>
+    define spur_target where "spur_target = ((vx_m 0 + cx_m)/2, (vy_m 0 + cy_m)/2)"
+    define p_cm where "p_cm = \<psi>_m spur_target"
+    have hspur_in_Pm: "spur_target \<in> P_m"
+    proof -
+      \<comment> \<open>Midpoint of vertex\\_m(0) and centroid, both in P\\_m. P\\_m is convex.\<close>
+      have "0 < ?m" using hm3 by (by100 linarith)
+      have hv0: "(vx_m 0, vy_m 0) \<in> P_m" using hC4m \<open>0 < ?m\<close> by (by100 blast)
+      show ?thesis unfolding spur_target_def hC5m
+        sorry \<comment> \<open>Convex combination of vertex 0 and centroid in P\\_m.\<close>
+    qed
+    have hspur_interior: "\<forall>j<?m. \<forall>t\<in>I_set. spur_target \<noteq>
+        ((1-t)*vx_m j+t*vx_m(Suc j mod ?m),(1-t)*vy_m j+t*vy_m(Suc j mod ?m))"
+      sorry \<comment> \<open>Midpoint of interior point and vertex is interior (not on any edge).\<close>
     have hp_cm_B2: "p_cm \<in> top1_B2"
     proof -
-      have "(cx_m, cy_m) \<in> P_m" using hcm_in_Pm .
-      hence "\<psi>_m (cx_m, cy_m) \<in> \<psi>_m ` P_m" by (by100 blast)
+      have "\<psi>_m spur_target \<in> \<psi>_m ` P_m" using hspur_in_Pm by (by100 blast)
       thus ?thesis using h\<psi>m_surj unfolding p_cm_def by (by100 blast)
     qed
     have hp_cm_not_S1: "p_cm \<notin> top1_S1"
@@ -6136,11 +6149,11 @@ proof -
       have hedge_in: "((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),
           (1-t')*vy_m j'+t'*vy_m(Suc j' mod ?m)) \<in> P_m"
         using edge_point_in_polygon_witness[OF hm3 hj' ht' hC5m] by (by100 simp)
-      have "(cx_m, cy_m) = ((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),
+      have "spur_target = ((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),
           (1-t')*vy_m j'+t'*vy_m(Suc j' mod ?m))"
-        using h\<psi>m_inj[unfolded inj_on_def, rule_format, OF hcm_in_Pm hedge_in]
+        using h\<psi>m_inj[unfolded inj_on_def, rule_format, OF hspur_in_Pm hedge_in]
             h\<psi>_eq unfolding p_cm_def by (by100 simp)
-      thus False using hcm_interior[rule_format, OF hj' ht'] by (by100 blast)
+      thus False using hspur_interior[rule_format, OF hj' ht'] by (by100 blast)
     qed
     have hp_cm_int: "fst p_cm ^ 2 + snd p_cm ^ 2 < 1"
     proof -
@@ -6148,6 +6161,42 @@ proof -
       moreover have "fst p_cm ^ 2 + snd p_cm ^ 2 \<noteq> 1"
         using hp_cm_not_S1 unfolding top1_S1_def by (by100 simp)
       ultimately show ?thesis by (by100 linarith)
+    qed
+    \<comment> \<open>KEY: p\\_cm \\<noteq> (0,0) because spur\\_target \\<noteq> centroid and \\<psi>\\_m injective.
+       This ensures \\<tau> is injective on B2 interior (no midpoint-ray collapse).\<close>
+    have hp_cm_ne: "p_cm \<noteq> (0, 0)"
+    proof -
+      have "spur_target \<noteq> (cx_m, cy_m)"
+      proof
+        assume "spur_target = (cx_m, cy_m)"
+        hence hfst: "(vx_m 0 + cx_m)/2 = cx_m" and hsnd: "(vy_m 0 + cy_m)/2 = cy_m"
+          unfolding spur_target_def by (by100 auto)+
+        have "vx_m 0 = cx_m"
+        proof -
+          from hfst have "vx_m 0 + cx_m = 2 * cx_m" by (by100 simp)
+          thus ?thesis by (by100 linarith)
+        qed
+        have "vy_m 0 = cy_m"
+        proof -
+          from hsnd have "vy_m 0 + cy_m = 2 * cy_m" by (by100 simp)
+          thus ?thesis by (by100 linarith)
+        qed
+        hence "vx_m 0 = cx_m \<and> vy_m 0 = cy_m" using \<open>vx_m 0 = cx_m\<close> by (by100 simp)
+        hence "(cx_m, cy_m) = (vx_m 0, vy_m 0)" by (by100 simp)
+        \<comment> \<open>But vertex 0 is on edge 0 (at t=0), while centroid is interior.\<close>
+        have "0 < ?m" using hm3 by (by100 linarith)
+        have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have "(cx_m, cy_m) = ((1-0)*vx_m 0 + 0*vx_m(Suc 0 mod ?m),
+            (1-0)*vy_m 0 + 0*vy_m(Suc 0 mod ?m))"
+          using \<open>(cx_m, cy_m) = (vx_m 0, vy_m 0)\<close> by (by100 simp)
+        thus False using hcm_interior[rule_format, OF \<open>0 < ?m\<close> \<open>0 \<in> I_set\<close>] by (by100 blast)
+      qed
+      moreover have "\<psi>_m (cx_m, cy_m) = (0, 0)"
+        sorry \<comment> \<open>From PolygonDisk: \\<psi>\\_m maps centroid to origin.\<close>
+      moreover have "\<psi>_m spur_target \<noteq> \<psi>_m (cx_m, cy_m)"
+        using h\<psi>m_inj[unfolded inj_on_def, rule_format, OF hspur_in_Pm hcm_in_Pm]
+            \<open>spur_target \<noteq> (cx_m, cy_m)\<close> by (by100 blast)
+      ultimately show ?thesis unfolding p_cm_def by (by100 simp)
     qed
     \<comment> \<open>\\<tau> on the boundary S1:
        - Good arcs (edges \\<ge>2 of P\\_e): angle 2\\<pi>(k+t)/n \\<to> angle 2\\<pi>(k-2+t)/m on S1
@@ -7893,8 +7942,8 @@ proof -
             proof -
               have "\<psi>_m ` P_m = top1_B2"
                 using h\<psi>m_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-              moreover have "(cx_m, cy_m) \<in> P_m" using hcm_in_Pm .
-              ultimately have "\<psi>_m (cx_m, cy_m) \<in> top1_B2" by (by100 blast)
+              moreover have "spur_target \<in> P_m" using hspur_in_Pm .
+              ultimately have "\<psi>_m spur_target \<in> top1_B2" by (by100 blast)
               thus ?thesis unfolding p_cm_def .
             qed
             thus ?thesis unfolding top1_B2_def by (by100 simp)
