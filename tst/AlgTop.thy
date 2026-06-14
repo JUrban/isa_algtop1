@@ -10231,10 +10231,22 @@ proof -
         qed
       qed
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
-        sorry \<comment> \<open>Case analysis parallel to forward. Uses h\\_fibres\\_good\\_edge backward
-           (biconditional), h\\_vtx\\_vtgt\\_transfer\\_rev (vertex\\<times>vertex),
-           hC12\\_m (vertex\\<times>edge separation), hC8m (interior injectivity),
-           h\\_spur\\_cancel\\_collapse + C7\\_e (cancel\\<times>cancel).\<close>
+        sorry \<comment> \<open>PLAN: Case analysis on x's type in P\\_e:
+           (1) x interior: C8\\_m gives spur\\_f(x)=spur\\_f(y) (since spur\\_f(interior) \\<subseteq> P\\_m interior).
+               Then spur\\_f injective on interior (\\<tau> injective by offset separation)
+               gives x=y, hence q\\_e(x)=q\\_e(y). [HARD: needs \\<tau> injectivity]
+           (2) x on good edge (i\\<ge>2, 0<t<1): spur\\_f = edge\\_m(i-2,t).
+               Case on y: if good edge: h\\_fibres\\_good\\_edge backward. \\<checkmark>
+               If cancel edge: spur maps to P\\_m interior (spur) vs boundary (edge).
+                 q\\_m can't identify boundary with interior (C8\\_m). Contradiction.
+               If vertex: hC12\\_m. Contradiction.
+               If interior: C8\\_m on spur\\_f(y) interior gives spur\\_f(x)=spur\\_f(y).
+                 But spur\\_f(x) is boundary, spur\\_f(y) is interior. Contradiction.
+           (3) x on cancel edge (i<2, 0<t<1): spur\\_f maps to spur in P\\_m interior.
+               Similar case analysis on y.
+           (4) x is vertex: hC12\\_m + h\\_vtx\\_vtgt\\_transfer\\_rev.
+           Most cases reduce to contradictions. The non-trivial ones:
+           good\\<times>good (biconditional) and vertex\\<times>vertex (reverse transfer).\<close>
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
         using h_fibres_forward h_fibres_backward by (by100 blast)
       \<comment> \<open>Assemble: continuity of spur\\_f via composition, surjectivity via \\<tau>, fibre matching.\<close>
