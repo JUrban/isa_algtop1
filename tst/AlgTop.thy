@@ -6125,46 +6125,67 @@ proof -
       \<comment> \<open>Midpoint of vertex\\_m(0) and centroid, both in P\\_m. P\\_m is convex.\<close>
       have "0 < ?m" using hm3 by (by100 linarith)
       have hv0: "(vx_m 0, vy_m 0) \<in> P_m" using hC4m \<open>0 < ?m\<close> by (by100 blast)
-      \<comment> \<open>Coefficients: (m+1)/(2m) on vertex 0, 1/(2m) on others.\<close>
-      have hm_pos: "real ?m > 0" using hm3 by (by100 linarith)
-      define c where "c i = (if i = 0 then (real ?m + 1)/(2*real ?m) else 1/(2*real ?m))" for i :: nat
-      have hc_ge: "\<forall>i<?m. c i \<ge> 0" unfolding c_def using hm_pos by (by100 simp)
-      have hc_sum: "(\<Sum>i<?m. c i) = 1"
+      \<comment> \<open>Extract convex coefficients for vertex 0 and centroid, then average.\<close>
+      from hv0[unfolded hC5m] obtain cv0 where
+        hcv0_ge: "\<forall>i<?m. cv0 i \<ge> 0" and hcv0_sum: "(\<Sum>i<?m. cv0 i) = 1"
+        and hcv0_x: "vx_m 0 = (\<Sum>i<?m. cv0 i * vx_m i)"
+        and hcv0_y: "vy_m 0 = (\<Sum>i<?m. cv0 i * vy_m i)" by (by100 blast)
+      from hcm_in_Pm[unfolded hC5m] obtain cc where
+        hcc_ge: "\<forall>i<?m. cc i \<ge> 0" and hcc_sum: "(\<Sum>i<?m. cc i) = 1"
+        and hcc_x: "cx_m = (\<Sum>i<?m. cc i * vx_m i)"
+        and hcc_y: "cy_m = (\<Sum>i<?m. cc i * vy_m i)" by (by100 blast)
+      define ca where "ca i = (cv0 i + cc i) / 2" for i
+      have hca_ge: "\<forall>i<?m. ca i \<ge> 0" unfolding ca_def using hcv0_ge hcc_ge by (by100 simp)
+      have hca_sum: "(\<Sum>i<?m. ca i) = 1"
       proof -
-        have hm_ge1: "?m \<ge> 1" using \<open>0 < ?m\<close> by (by100 linarith)
-        have "(\<Sum>i<?m. c i) = c 0 + (\<Sum>i\<in>{1..<?m}. c i)"
-        proof -
-          have "{..<?m} = insert 0 {1..<?m}" using hm_ge1 by (by100 force)
-          moreover have "finite {1..<?m}" by (by100 simp)
-          moreover have "0 \<notin> {1..<?m}" by (by100 simp)
-          ultimately show ?thesis using sum.insert by (by100 auto)
-        qed
-        also have "\<dots> = (real ?m + 1)/(2*real ?m) + (\<Sum>i\<in>{1..<?m}. 1/(2*real ?m))"
-          unfolding c_def by (by100 auto)
-        also have "(\<Sum>i\<in>{1..<?m}. (1::real)/(2*real ?m)) = (real ?m - 1)/(2*real ?m)"
-        proof -
-          have "card {1..<?m} = ?m - 1" using \<open>0 < ?m\<close> by (by100 simp)
-          hence "(\<Sum>i\<in>{1..<?m}. (1::real)/(2*real ?m)) = real (?m - 1) / (2*real ?m)"
-            by (by100 simp)
-          also have "real (?m - 1) = real ?m - 1"
-          proof -
-            have "?m \<ge> 1" using \<open>0 < ?m\<close> by (by100 linarith)
-            thus ?thesis by (by100 linarith)
-          qed
-          finally show ?thesis by (by100 simp)
-        qed
-        also have "(real ?m + 1)/(2*real ?m) + (real ?m - 1)/(2*real ?m) = 1"
-        proof -
-          have "(real ?m + 1 + (real ?m - 1)) / (2*real ?m) = 1"
-            using hm_pos by (by100 simp)
-          thus ?thesis using add_divide_distrib[of "real ?m + 1" "real ?m - 1" "2*real ?m"]
-            by (by100 linarith)
-        qed
-        finally show ?thesis .
+        have "(\<Sum>i<?m. ca i) = (\<Sum>i<?m. (cv0 i + cc i) / 2)" unfolding ca_def by (by100 simp)
+        also have "\<dots> = (\<Sum>i<?m. cv0 i + cc i) / 2"
+          using sum_divide_distrib[of "\<lambda>i. cv0 i + cc i" "{..<?m}" 2, symmetric] by (by100 simp)
+        also have "(\<Sum>i<?m. cv0 i + cc i) = (\<Sum>i<?m. cv0 i) + (\<Sum>i<?m. cc i)"
+          using sum.distrib by (by100 simp)
+        also have "\<dots> = 2" using hcv0_sum hcc_sum by (by100 linarith)
+        finally show ?thesis by (by100 linarith)
       qed
-      have hcx: "(vx_m 0 + cx_m)/2 = (\<Sum>i<?m. c i * vx_m i)" sorry
-      have hcy: "(vy_m 0 + cy_m)/2 = (\<Sum>i<?m. c i * vy_m i)" sorry
-      show ?thesis unfolding spur_target_def hC5m using hc_ge hc_sum hcx hcy by (by100 blast)
+      have hca_x: "(vx_m 0 + cx_m) / 2 = (\<Sum>i<?m. ca i * vx_m i)"
+      proof -
+        have "(\<Sum>i<?m. ca i * vx_m i) = (\<Sum>i<?m. (cv0 i + cc i) / 2 * vx_m i)"
+          unfolding ca_def by (by100 simp)
+        also have "\<dots> = (\<Sum>i<?m. (cv0 i * vx_m i + cc i * vx_m i) / 2)"
+        proof (rule sum.cong, simp)
+          fix i assume "i \<in> {..<?m}"
+          show "(cv0 i + cc i) / 2 * vx_m i = (cv0 i * vx_m i + cc i * vx_m i) / 2"
+            by (by100 algebra)
+        qed
+        also have "\<dots> = (\<Sum>i<?m. cv0 i * vx_m i + cc i * vx_m i) / 2"
+          using sum_divide_distrib[of "\<lambda>i. cv0 i * vx_m i + cc i * vx_m i" "{..<?m}" 2]
+          by (by100 simp)
+        also have "(\<Sum>i<?m. cv0 i * vx_m i + cc i * vx_m i)
+            = (\<Sum>i<?m. cv0 i * vx_m i) + (\<Sum>i<?m. cc i * vx_m i)"
+          using sum.distrib by (by100 simp)
+        also have "\<dots> = vx_m 0 + cx_m" using hcv0_x hcc_x by (by100 linarith)
+        finally show ?thesis by (by100 linarith)
+      qed
+      have hca_y: "(vy_m 0 + cy_m) / 2 = (\<Sum>i<?m. ca i * vy_m i)"
+      proof -
+        have "(\<Sum>i<?m. ca i * vy_m i) = (\<Sum>i<?m. (cv0 i + cc i) / 2 * vy_m i)"
+          unfolding ca_def by (by100 simp)
+        also have "\<dots> = (\<Sum>i<?m. (cv0 i * vy_m i + cc i * vy_m i) / 2)"
+        proof (rule sum.cong, simp)
+          fix i assume "i \<in> {..<?m}"
+          show "(cv0 i + cc i) / 2 * vy_m i = (cv0 i * vy_m i + cc i * vy_m i) / 2"
+            by (by100 algebra)
+        qed
+        also have "\<dots> = (\<Sum>i<?m. cv0 i * vy_m i + cc i * vy_m i) / 2"
+          using sum_divide_distrib[of "\<lambda>i. cv0 i * vy_m i + cc i * vy_m i" "{..<?m}" 2]
+          by (by100 simp)
+        also have "(\<Sum>i<?m. cv0 i * vy_m i + cc i * vy_m i)
+            = (\<Sum>i<?m. cv0 i * vy_m i) + (\<Sum>i<?m. cc i * vy_m i)"
+          using sum.distrib by (by100 simp)
+        also have "\<dots> = vy_m 0 + cy_m" using hcv0_y hcc_y by (by100 linarith)
+        finally show ?thesis by (by100 linarith)
+      qed
+      show ?thesis unfolding spur_target_def hC5m
+        using hca_ge hca_sum hca_x hca_y by (by100 blast)
     qed
     have hspur_interior: "\<forall>j<?m. \<forall>t\<in>I_set. spur_target \<noteq>
         ((1-t)*vx_m j+t*vx_m(Suc j mod ?m),(1-t)*vy_m j+t*vy_m(Suc j mod ?m))"
