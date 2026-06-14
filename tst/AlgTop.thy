@@ -2,32 +2,34 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1442, 50 sorrys):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1462, 17 sorry lines):
 
 SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
 - h\\_tau\\_surj: FULLY PROVED!
-- h\\_tau\\_cont: PROVED from 4 sub-sorrys via continuous\\_on\\_closed\\_Un pasting:
+- h\\_tau\\_cont: PROVED from sub-sorrys via continuous\\_on\\_closed\\_Un pasting:
   (1) S\\_g closed — PROVED \\<checkmark>
   (2) S\\_c closed — PROVED \\<checkmark>
-  (3) \\<tau> continuous on S\\_g: nonzero (sorry) + origin combination (PROVED)
-  (4) \\<tau> continuous on S\\_c: nonzero (sorry) + origin combination (PROVED)
-  Bounds |fst/snd(\\<tau>)| \\<le> C*r: sorry (mechanical, C = 1 + |p\\_cm| + |d\\_perp|)
+  (3+4) Nonzero continuity: consolidated to h\\_tau\\_cont\\_B2\\_nonzero via continuous\\_on\\_subset.
+    Decomposed via open cover U1={snd>0}\\<union>{fst<0}, U2={snd<0}\\<union>{fst>0} + at\\_within\\_nhd.
+    2 sorrys: h\\_U1\\_cont (angle continuous, cases\\_le), h\\_U2\\_cont (closed paste).
+  Bounds |fst/snd(\\<tau>)| \\<le> C*r: ALL 4 PROVED (triangle ineq + convex comb bound)
 - h\\_spur\\_good\\_edge: FULLY PROVED!
 - h\\_spur\\_cancel\\_collapse: FULLY PROVED!
 - h\\_spur\\_vertex: FULLY PROVED! (k\\<ge>2 \\<to> vx\\_m(k-2))
 - h\\_spur\\_vertex\\_0: FULLY PROVED! (vx\\_e(0) \\<to> vx\\_m(0))
 - h\\_fibres\\_good\\_edge: FULLY PROVED!
 - h\\_fibres: PROVED from forward + backward.
-  h\\_fibres\\_forward: ALL EDGE-INTERIOR + ALL VERTEX-EDGE CASES PROVED!
+  h\\_fibres\\_forward: ALL CASES PROVED (modulo h\\_vtx\\_to\\_rep sorry):
     Interior: C8\\_e. Good-good: C9+shift+C7. Cancel-cancel: collapse+dir.
     Cancel-good: freshness contradiction.
-    Vertex-edge: hC12\\_e contradiction (ALL vertex-edge sorrys CLOSED).
-    Vertex-vertex: sorry (C7 chain transfer — needs vtgt export).
-  h\\_fibres\\_backward: sorry.
+    Vertex-edge: hC12\\_e contradiction.
+    Vertex-vertex: PROVED via h\\_vtx\\_vtgt\\_transfer (from h\\_vtx\\_to\\_rep).
+      h\\_vtx\\_to\\_rep (sorry): f(k) = f(vtgt\\_e(k)) by strong induction on k.
+  h\\_fibres\\_backward: sorry (similar case analysis to forward).
 - hC12\\_e, hC12\\_m: BOTH PROVED from scheme\\_quotient\\_exists(2).
 - scheme\\_quotient\\_exists: BOTH conclusions FULLY PROVED (zero sorry).
-  (2) outputs ALL C1-C12 + vertex-target fact for canonical witnesses.
+  (2) outputs ALL C1-C12 + vtgt facts + vtgt(k) \\<le> k (Least property).
 - edge\\_interior\\_not\\_vertex: PROVED (polygon-level, C3+C11).
 
 CUT-PASTE (5 sorrys):
