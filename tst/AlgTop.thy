@@ -1695,9 +1695,50 @@ proof -
           using sin_cos_squared_add3[of "((arccos (fst q / sqrt (fst q * fst q + snd q * snd q)) -
             4 * pi / (2 + real (length w))) * (2 + real (length w)) / real (length w))"]
           by (by100 simp)
-        \<comment> \<open>Goals 2-5: min(A,B)=2 \\<to> False. Both A,B < 2.\<close>
-        \<comment> \<open>min(A,B) = 2 \\<to> False. Since \\<theta> < \\<theta>\\_cancel: A < 2, so min(A,B) \\<le> A < 2.\<close>
-        sorry
+        \<comment> \<open>Remaining: 2 trig + 3 min. Close all with targeted subgoals.\<close>
+        subgoal premises prems \<comment> \<open>Goal 2: cancel, snd\\<ge>0, norm=1\<close>
+        proof -
+          from prems have "arccos (fst q) < 4 * pi / (2 + real (length w))" by (by100 linarith)
+          hence "arccos (fst q) * (2 + real (length w)) < 4 * pi"
+            using hm3 mult_strict_right_mono[of "arccos(fst q)" "4*pi/(2+real(length w))" "2+real(length w)"]
+            by (by100 simp)
+          hence "arccos (fst q) * (2 + real (length w)) / (2 * pi) < 2"
+            using pi_gt_zero
+            using divide_strict_right_mono[of "_ * _" "4*pi" "2*pi"]
+            by (by100 simp)
+          thus False using prems by (by100 linarith)
+        qed
+        subgoal premises prems \<comment> \<open>Goal 3: cancel, snd\\<ge>0, general\<close>
+        proof -
+          define a where "a = arccos (fst q / sqrt (fst q * fst q + snd q * snd q))"
+          from prems have "a < 4 * pi / (2 + real (length w))" unfolding a_def by (by100 linarith)
+          hence "a * (2 + real (length w)) < 4 * pi"
+            using hm3 mult_strict_right_mono[of a "4*pi/(2+real(length w))" "2+real(length w)"]
+            by (by100 simp)
+          hence "a * (2 + real (length w)) / (2 * pi) < 2"
+            using pi_gt_zero
+            using divide_strict_right_mono[of "_ * _" "4*pi" "2*pi"]
+            by (by100 simp)
+          thus False using prems unfolding a_def by (by100 linarith)
+        qed
+        subgoal \<comment> \<open>Goal 4: good sector, snd<0. cos=sin=0.\<close>
+          using sin_cos_squared_add3[of "((2*pi - arccos(fst q / sqrt(fst q*fst q+snd q*snd q)) -
+            4*pi/(2+real(length w))) * (2+real(length w)) / real(length w))"]
+          by (by100 simp)
+        subgoal premises prems \<comment> \<open>Goal 5: cancel, snd<0\<close>
+        proof -
+          define a where "a = 2*pi - arccos(fst q / sqrt(fst q*fst q+snd q*snd q))"
+          from prems have "a < 4 * pi / (2 + real (length w))" unfolding a_def by (by100 linarith)
+          hence "a * (2 + real (length w)) < 4 * pi"
+            using hm3 mult_strict_right_mono[of a "4*pi/(2+real(length w))" "2+real(length w)"]
+            by (by100 simp)
+          hence "a * (2 + real (length w)) / (2 * pi) < 2"
+            using pi_gt_zero
+            using divide_strict_right_mono[of "_ * _" "4*pi" "2*pi"]
+            by (by100 simp)
+          thus False using prems unfolding a_def by (by100 linarith)
+        qed
+        done
     qed
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
