@@ -6125,8 +6125,46 @@ proof -
       \<comment> \<open>Midpoint of vertex\\_m(0) and centroid, both in P\\_m. P\\_m is convex.\<close>
       have "0 < ?m" using hm3 by (by100 linarith)
       have hv0: "(vx_m 0, vy_m 0) \<in> P_m" using hC4m \<open>0 < ?m\<close> by (by100 blast)
-      show ?thesis unfolding spur_target_def hC5m
-        sorry \<comment> \<open>Convex combination of vertex 0 and centroid in P\\_m.\<close>
+      \<comment> \<open>Coefficients: (m+1)/(2m) on vertex 0, 1/(2m) on others.\<close>
+      have hm_pos: "real ?m > 0" using hm3 by (by100 linarith)
+      define c where "c i = (if i = 0 then (real ?m + 1)/(2*real ?m) else 1/(2*real ?m))" for i :: nat
+      have hc_ge: "\<forall>i<?m. c i \<ge> 0" unfolding c_def using hm_pos by (by100 simp)
+      have hc_sum: "(\<Sum>i<?m. c i) = 1"
+      proof -
+        have hm_ge1: "?m \<ge> 1" using \<open>0 < ?m\<close> by (by100 linarith)
+        have "(\<Sum>i<?m. c i) = c 0 + (\<Sum>i\<in>{1..<?m}. c i)"
+        proof -
+          have "{..<?m} = insert 0 {1..<?m}" using hm_ge1 by (by100 force)
+          moreover have "finite {1..<?m}" by (by100 simp)
+          moreover have "0 \<notin> {1..<?m}" by (by100 simp)
+          ultimately show ?thesis using sum.insert by (by100 auto)
+        qed
+        also have "\<dots> = (real ?m + 1)/(2*real ?m) + (\<Sum>i\<in>{1..<?m}. 1/(2*real ?m))"
+          unfolding c_def by (by100 auto)
+        also have "(\<Sum>i\<in>{1..<?m}. (1::real)/(2*real ?m)) = (real ?m - 1)/(2*real ?m)"
+        proof -
+          have "card {1..<?m} = ?m - 1" using \<open>0 < ?m\<close> by (by100 simp)
+          hence "(\<Sum>i\<in>{1..<?m}. (1::real)/(2*real ?m)) = real (?m - 1) / (2*real ?m)"
+            by (by100 simp)
+          also have "real (?m - 1) = real ?m - 1"
+          proof -
+            have "?m \<ge> 1" using \<open>0 < ?m\<close> by (by100 linarith)
+            thus ?thesis by (by100 linarith)
+          qed
+          finally show ?thesis by (by100 simp)
+        qed
+        also have "(real ?m + 1)/(2*real ?m) + (real ?m - 1)/(2*real ?m) = 1"
+        proof -
+          have "(real ?m + 1 + (real ?m - 1)) / (2*real ?m) = 1"
+            using hm_pos by (by100 simp)
+          thus ?thesis using add_divide_distrib[of "real ?m + 1" "real ?m - 1" "2*real ?m"]
+            by (by100 linarith)
+        qed
+        finally show ?thesis .
+      qed
+      have hcx: "(vx_m 0 + cx_m)/2 = (\<Sum>i<?m. c i * vx_m i)" sorry
+      have hcy: "(vy_m 0 + cy_m)/2 = (\<Sum>i<?m. c i * vy_m i)" sorry
+      show ?thesis unfolding spur_target_def hC5m using hc_ge hc_sum hcx hcy by (by100 blast)
     qed
     have hspur_interior: "\<forall>j<?m. \<forall>t\<in>I_set. spur_target \<noteq>
         ((1-t)*vx_m j+t*vx_m(Suc j mod ?m),(1-t)*vy_m j+t*vy_m(Suc j mod ?m))"
