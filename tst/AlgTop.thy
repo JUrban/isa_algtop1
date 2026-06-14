@@ -6451,29 +6451,51 @@ proof -
       have h_tau_cont_B2_nonzero: "continuous_on (top1_B2 - {(0,0)}) \<tau>"
       proof -
         let ?B = "top1_B2 - {(0::real, 0::real)}"
-        \<comment> \<open>Define three closed regions covering B2\\{0}.\<close>
-        define R_uc where "R_uc = {p \<in> ?B. snd p \<ge> 0 \<and> angle_of p \<le> \<theta>_cancel}"
-        define R_ug where "R_ug = {p \<in> ?B. snd p \<ge> 0 \<and> angle_of p \<ge> \<theta>_cancel}"
-        define R_lo where "R_lo = {p \<in> ?B. snd p \<le> 0}"
-        \<comment> \<open>They cover B2\\{0}.\<close>
-        have h_cover: "?B = R_uc \<union> R_ug \<union> R_lo" unfolding R_uc_def R_ug_def R_lo_def
-          sorry
-        \<comment> \<open>Each region is closed in ?B.\<close>
-        have h_uc_closed: "closed R_uc" sorry
-        have h_ug_closed: "closed R_ug" sorry
-        have h_lo_closed: "closed R_lo" sorry
-        \<comment> \<open>\\<tau> is continuous on each region.\<close>
-        have h_uc_cont: "continuous_on R_uc \<tau>" sorry
-        have h_ug_cont: "continuous_on R_ug \<tau>" sorry
-        have h_lo_cont: "continuous_on R_lo \<tau>" sorry
-        \<comment> \<open>Paste via continuous\\_on\\_closed\\_Un.\<close>
-        have h_upper: "continuous_on (R_uc \<union> R_ug) \<tau>"
-          by (rule continuous_on_closed_Un[OF h_uc_closed h_ug_closed h_uc_cont h_ug_cont])
-        have h_upper_closed: "closed (R_uc \<union> R_ug)"
-          using closed_Un[OF h_uc_closed h_ug_closed] .
-        have h_all: "continuous_on (R_uc \<union> R_ug \<union> R_lo) \<tau>"
-          by (rule continuous_on_closed_Un[OF h_upper_closed h_lo_closed h_upper h_lo_cont])
-        show ?thesis using h_all h_cover by (by100 simp)
+        \<comment> \<open>Two open sets covering B2\\{0}.\<close>
+        define U1 where "U1 = {p :: real \<times> real. snd p > 0} \<union> {p. fst p < 0}"
+        define U2 where "U2 = {p :: real \<times> real. snd p < 0} \<union> {p. fst p > 0}"
+        have hU1_open: "open U1" unfolding U1_def
+          by (intro open_Un open_Collect_less continuous_intros)
+        have hU2_open: "open U2" unfolding U2_def
+          by (intro open_Un open_Collect_less continuous_intros)
+        have h_cover: "?B \<subseteq> U1 \<union> U2" unfolding U1_def U2_def by (by100 auto)
+        \<comment> \<open>\\<tau> continuous on each intersection.\<close>
+        have h_U1_cont: "continuous_on (?B \<inter> U1) \<tau>"
+          sorry \<comment> \<open>On U1: angle\\_of is continuous (no branch cut). \\<tau> = composition.\<close>
+        have h_U2_cont: "continuous_on (?B \<inter> U2) \<tau>"
+          sorry \<comment> \<open>On U2: closed pasting for cancel/good at positive x-axis.\<close>
+        \<comment> \<open>Pointwise: for each p \\<in> ?B, p \\<in> U1 or U2. In either case, at\\_within\\_nhd gives limit.\<close>
+        show ?thesis unfolding continuous_on_def
+        proof (intro ballI)
+          fix p assume hp: "p \<in> ?B"
+          hence "p \<in> U1 \<or> p \<in> U2" using h_cover by (by100 blast)
+          thus "((\<lambda>x. \<tau> x) \<longlongrightarrow> \<tau> p) (at p within ?B)"
+          proof
+            assume hU1: "p \<in> U1"
+            have hp1: "p \<in> ?B \<inter> U1" using hp hU1 by (by100 simp)
+            from continuous_on_def[THEN iffD1, OF h_U1_cont, rule_format, OF hp1]
+            have "((\<lambda>x. \<tau> x) \<longlongrightarrow> \<tau> p) (at p within (?B \<inter> U1))" .
+            moreover have "at p within (?B \<inter> U1) = at p within ?B"
+            proof (rule at_within_nhd[where S = U1])
+              show "p \<in> U1" by (rule hU1)
+              show "open U1" by (rule hU1_open)
+              show "(?B \<inter> U1) \<inter> U1 - {p} = ?B \<inter> U1 - {p}" by (by100 auto)
+            qed
+            ultimately show ?thesis by (by100 simp)
+          next
+            assume hU2: "p \<in> U2"
+            have hp2: "p \<in> ?B \<inter> U2" using hp hU2 by (by100 simp)
+            from continuous_on_def[THEN iffD1, OF h_U2_cont, rule_format, OF hp2]
+            have "((\<lambda>x. \<tau> x) \<longlongrightarrow> \<tau> p) (at p within (?B \<inter> U2))" .
+            moreover have "at p within (?B \<inter> U2) = at p within ?B"
+            proof (rule at_within_nhd[where S = U2])
+              show "p \<in> U2" by (rule hU2)
+              show "open U2" by (rule hU2_open)
+              show "(?B \<inter> U2) \<inter> U2 - {p} = ?B \<inter> U2 - {p}" by (by100 auto)
+            qed
+            ultimately show ?thesis by (by100 simp)
+          qed
+        qed
       qed
       have h_g_cont_nonzero: "continuous_on (S_g - {(0,0)}) \<tau>"
       proof (rule continuous_on_subset[OF h_tau_cont_B2_nonzero])
@@ -9114,35 +9136,6 @@ proof -
           q_m (vx_m k, vy_m k) \<noteq> q_m ((1-s)*vx_m j + s*vx_m(Suc j mod ?m),
                                         (1-s)*vy_m j + s*vy_m(Suc j mod ?m))"
         using hC12m_proved by (by100 simp)
-      \<comment> \<open>KEY HELPER: vtgt\\_e(k) = vtgt\\_e(l) \\<to> q\\_m(spur\\_f(vertex\\_e(k))) = q\\_m(spur\\_f(vertex\\_e(l))).
-         Proof sketch: Each C7\\_e matching edge pair (i,j) preserves q\\_m \\<circ> spur\\_f on vertices.
-         For good pairs (i,j \\<ge> 2): cancel\\_shift + C7\\_m gives q\\_m(vtx\\_m(i-2)) = q\\_m(vtx\\_m(j-2)).
-         For cancel pair (0,1): h\\_spur\\_vertex\\_0 + h\\_spur\\_vertex\\_02 give trivial equality.
-         Since q\\_m \\<circ> spur\\_f \\<circ> vertex\\_e respects all C7\\_e generators,
-         it respects the full C7\\_e equivalence relation (i.e. vtgt\\_e classes).\<close>
-      have h_vtx_vtgt_transfer: "\<forall>k<?n. \<forall>l<?n. vtgt_e k = vtgt_e l \<longrightarrow>
-          q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
-      proof (intro allI impI)
-        fix k l assume hk: "k < ?n" and hl: "l < ?n" and hv: "vtgt_e k = vtgt_e l"
-        \<comment> \<open>Strategy: show the function q\\_m \\<circ> spur\\_f \\<circ> vertex\\_e is constant on vtgt\\_e classes.
-           Each C7\\_e generator preserves this function; the full class follows by transitivity.\<close>
-        \<comment> \<open>For now: sorry the chain argument. See plan §6 for rtrancl approach.\<close>
-        \<comment> \<open>Step 1: vtgt\\_e(k) = vtgt\\_e(l) \\<to> q\\_e(vertex\\_e(k)) = q\\_e(vertex\\_e(l)).\<close>
-        have hqe_eq: "q_e (vx_e k, vy_e k) = q_e (vx_e l, vy_e l)"
-        proof -
-          have "q_e (vx_e k, vy_e k) = (vx_e (vtgt_e k), vy_e (vtgt_e k))"
-            using hq_vtgt_e1[rule_format, OF hk] .
-          also have "\<dots> = (vx_e (vtgt_e l), vy_e (vtgt_e l))" using hv by (by100 simp)
-          also have "\<dots> = q_e (vx_e l, vy_e l)"
-            using hq_vtgt_e1[rule_format, OF hl] by (by100 simp)
-          finally show ?thesis .
-        qed
-        \<comment> \<open>Step 2: For each C7\\_e matching edge pair at t=0,1, spur\\_f preserves q\\_m value.
-           Generator step: if fst(ext!i) = fst(ext!j), then matching endpoints have same q\\_m image.\<close>
-        \<comment> \<open>Step 3: Use q\\_e identification structure to transfer.\<close>
-        show "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
-          sorry
-      qed
       \<comment> \<open>Forward direction of h\\_fibres: q\\_e(x)=q\\_e(y) \\<Longrightarrow> q\\_m(spur\\_f x)=q\\_m(spur\\_f y).
          For INTERIOR x: C8\\_e gives x=y \\<to> trivial.
          For EDGE-INTERIOR x with EDGE-INTERIOR y (both t,s \\<in> (0,1)):
@@ -9485,37 +9478,9 @@ proof -
               next
                 case False
                 \<comment> \<open>y is also a vertex. Vertex-vertex transfer.\<close>
-                hence hs2_vtx: "s2 = 0 \<or> s2 = 1" using hs2
-                  unfolding top1_unit_interval_def by (by100 auto)
-                \<comment> \<open>Determine vertex indices k and l.\<close>
-                define k where "k = (if t = 0 then i else Suc i mod ?n)"
-                define l where "l = (if s2 = 0 then j2 else Suc j2 mod ?n)"
-                have hk_lt: "k < ?n" unfolding k_def using hi hn5 by (by100 auto)
-                have hl_lt: "l < ?n" unfolding l_def using hj2 hn5 by (by100 auto)
-                have hx_vtx: "x = (vx_e k, vy_e k)" unfolding k_def
-                  using ht_vtx hx_eq by (by100 auto)
-                have hy_vtx: "y = (vx_e l, vy_e l)" unfolding l_def
-                  using hs2_vtx hy_eq2 by (by100 auto)
-                have hq_eq: "q_e (vx_e k, vy_e k) = q_e (vx_e l, vy_e l)"
-                  using heq hx_vtx hy_vtx by (by100 simp)
-                \<comment> \<open>From hq\\_vtgt\\_e1: vtgt\\_e(k) = vtgt\\_e(l).\<close>
-                have hvtgt: "vtgt_e k = vtgt_e l"
-                proof -
-                  from hq_vtgt_e1[rule_format, OF hk_lt]
-                  have h1: "q_e (vx_e k, vy_e k) = (vx_e (vtgt_e k), vy_e (vtgt_e k))" .
-                  from hq_vtgt_e1[rule_format, OF hl_lt]
-                  have h2: "q_e (vx_e l, vy_e l) = (vx_e (vtgt_e l), vy_e (vtgt_e l))" .
-                  from hq_eq h1 h2 have "(vx_e (vtgt_e k), vy_e (vtgt_e k)) = (vx_e (vtgt_e l), vy_e (vtgt_e l))"
-                    by (by100 simp)
-                  moreover have "vtgt_e k < ?n" using hq_vtgt_e2[rule_format, OF hk_lt] .
-                  moreover have "vtgt_e l < ?n" using hq_vtgt_e2[rule_format, OF hl_lt] .
-                  ultimately show ?thesis
-                    using hC3e[rule_format] by (by100 blast)
-                qed
-                \<comment> \<open>Need: q\\_m(spur\\_f(vertex\\_e(k))) = q\\_m(spur\\_f(vertex\\_e(l))).
-                   Translate vertex index through spur\\_f and use C7\\_m.\<close>
-                from h_vtx_vtgt_transfer[rule_format, OF hk_lt hl_lt hvtgt]
-                show ?thesis using hx_vtx hy_vtx by (by100 simp)
+                show ?thesis
+                  sorry \<comment> \<open>Vertex-vertex forward: q\\_e(vertex k)=q\\_e(vertex l) \\<to> q\\_m transfer.
+                     Needs: C7 chain argument (all vertex identifications come from C7).\<close>
               qed
             qed
           qed
