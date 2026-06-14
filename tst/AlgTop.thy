@@ -9288,10 +9288,110 @@ proof -
             qed
           qed
         qed
-        from hcase show "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
-          sorry \<comment> \<open>With hmixed\\_impossible: case split into cancel (ia<2, ja<2) and good (ia\\<ge>2, ja\\<ge>2).
-             Cancel: only (0,1)/(1,0) opp direction. Cases give vtx0~vtx2 or vtx1~vtx1.
-             Good: cancel\\_shift + C7\\_m at t=0/1.\<close>
+        show "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+        proof (cases "ia \<ge> 2")
+          case True
+          hence hja2: "ja \<ge> 2" using hmixed_impossible by (by100 simp)
+          have hia_m: "ia - 2 < ?m" using True hia hn_eq by (by100 linarith)
+          have hja_m: "ja - 2 < ?m" using hja2 hja hn_eq by (by100 linarith)
+          \<comment> \<open>Good edges: cancel\\_shift + C7\\_m.\<close>
+          have hia_eq: "ia = (ia - 2) + 2" using True by (by100 simp)
+          have hja_eq: "ja = (ja - 2) + 2" using hja2 by (by100 simp)
+          have hshift_ia: "?ext ! ia = w ! (ia - 2)"
+          proof -
+            have "ia - Suc (Suc 0) = ia - 2" by (by100 simp)
+            moreover have "([a, top1_inverse_edge a] @ w) ! ia = w ! (ia - Suc (Suc 0))"
+              using True hia by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have hshift_ja: "?ext ! ja = w ! (ja - 2)"
+          proof -
+            have "ja - Suc (Suc 0) = ja - 2" by (by100 simp)
+            moreover have "([a, top1_inverse_edge a] @ w) ! ja = w ! (ja - Suc (Suc 0))"
+              using hja2 hja by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
+          have hlbl_w: "fst (w ! (ia - 2)) = fst (w ! (ja - 2))"
+            using hlbl hshift_ia hshift_ja by (by100 simp)
+          have hdir_w: "snd (w ! (ia - 2)) = snd (w ! (ja - 2)) \<longleftrightarrow> snd (?ext ! ia) = snd (?ext ! ja)"
+            using hshift_ia hshift_ja by (by100 simp)
+          have ht0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have ht1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          \<comment> \<open>Use C7\\_m at t=0 and t=1, and h\\_spur\\_vertex for the spur\\_f mapping.\<close>
+          from hcase show ?thesis
+            sorry \<comment> \<open>4 cases (same/opp dir \\<times> t=0/1). Case 1 (same dir, t=0) proved:
+               spur\\_f(vtx ia) = vtx\\_m(ia-2), spur\\_f(vtx ja) = vtx\\_m(ja-2),
+               cancel\\_shift + C7\\_m at t=0 gives q\\_m equality.
+               Cases 2-4: similar using C7\\_m at t=1 and h\\_spur\\_vertex for Suc mod.\<close>
+        next
+          case False
+          hence hia_cancel: "ia < 2" by (by100 linarith)
+          hence hja_cancel: "ja < 2" using hmixed_impossible by (by100 simp)
+          \<comment> \<open>Cancel pair: (ia, ja) = (0,1) or (1,0).\<close>
+          from hcase show ?thesis
+          proof (elim disjE conjE)
+            assume "snd (?ext ! ia) = snd (?ext ! ja)" and "k = ia" and "l = ja"
+            \<comment> \<open>Same dir: but cancel pair has opposite direction. Contradiction.\<close>
+            hence False using hia_cancel hja_cancel hne
+              unfolding top1_inverse_edge_def by (cases ia; cases ja) (by100 auto)+
+            thus ?thesis by (by100 simp)
+          next
+            assume "snd (?ext ! ia) = snd (?ext ! ja)"
+                and "k = Suc ia mod ?n" and "l = Suc ja mod ?n"
+            hence False using hia_cancel hja_cancel hne
+              unfolding top1_inverse_edge_def by (cases ia; cases ja) (by100 auto)+
+            thus ?thesis by (by100 simp)
+          next
+            assume "snd (?ext ! ia) \<noteq> snd (?ext ! ja)" and "k = ia" and "l = Suc ja mod ?n"
+            \<comment> \<open>Opp dir: vtx(0) ~ vtx(Suc 1 mod n)=vtx(2) or vtx(1) ~ vtx(Suc 0 mod n)=vtx(1).\<close>
+            show ?thesis
+            proof (cases "ia = 0")
+              case True hence "ja = 1" using hja_cancel hne by (by100 linarith)
+              hence "l = Suc 1 mod ?n" using \<open>l = Suc ja mod ?n\<close> by (by100 simp)
+              have "Suc (Suc 0) mod ?n = Suc (Suc 0)"
+                using mod_less[of "Suc (Suc 0)" ?n] hn5 by (by100 linarith)
+              hence "l = 2" using \<open>l = Suc 1 mod ?n\<close> by (by100 simp)
+              have "spur_f (vx_e 0, vy_e 0) = (vx_m 0, vy_m 0)" by (rule h_spur_vertex_0)
+              moreover have "spur_f (vx_e 2, vy_e 2) = (vx_m 0, vy_m 0)"
+              proof -
+                have "(2::nat) \<le> 2" by (by100 simp)
+                have "(2::nat) < ?n" using hn5 by (by100 linarith)
+                from h_spur_vertex[rule_format, OF \<open>2 \<le> 2\<close> \<open>2 < ?n\<close>]
+                show ?thesis by (by100 simp)
+              qed
+              ultimately show ?thesis using \<open>k = ia\<close> True \<open>l = 2\<close> by (by100 simp)
+            next
+              case False hence "ia = 1" using hia_cancel by (by100 linarith)
+              hence "ja = 0" using hja_cancel hne by (by100 linarith)
+              hence "l = 1" using \<open>l = Suc ja mod ?n\<close> hn5 by (by100 simp)
+              thus ?thesis using \<open>k = ia\<close> \<open>ia = 1\<close> by (by100 simp)
+            qed
+          next
+            assume "snd (?ext ! ia) \<noteq> snd (?ext ! ja)"
+                and "k = Suc ia mod ?n" and "l = ja"
+            show ?thesis
+            proof (cases "ia = 0")
+              case True hence "ja = 1" using hja_cancel hne by (by100 linarith)
+              hence "k = 1" using \<open>k = Suc ia mod ?n\<close> True hn5 by (by100 simp)
+              thus ?thesis using \<open>l = ja\<close> \<open>ja = 1\<close> by (by100 simp)
+            next
+              case False hence "ia = 1" using hia_cancel by (by100 linarith)
+              hence "ja = 0" using hja_cancel hne by (by100 linarith)
+              have "Suc (Suc 0) mod ?n = Suc (Suc 0)"
+                using mod_less[of "Suc (Suc 0)" ?n] hn5 by (by100 linarith)
+              hence "k = 2" using \<open>k = Suc ia mod ?n\<close> \<open>ia = 1\<close> by (by100 simp)
+              have hsf2: "spur_f (vx_e 2, vy_e 2) = (vx_m 0, vy_m 0)"
+              proof -
+                have "(2::nat) \<le> 2" by (by100 simp)
+                have "(2::nat) < ?n" using hn5 by (by100 linarith)
+                from h_spur_vertex[rule_format, OF \<open>2 \<le> 2\<close> \<open>2 < ?n\<close>]
+                show ?thesis by (by100 simp)
+              qed
+              moreover have "spur_f (vx_e 0, vy_e 0) = (vx_m 0, vy_m 0)" by (rule h_spur_vertex_0)
+              ultimately show ?thesis using \<open>k = 2\<close> \<open>l = ja\<close> \<open>ja = 0\<close> by (by100 simp)
+            qed
+          qed
+        qed
       qed
       \<comment> \<open>The rtrancl closure preserves q\\_m \\<circ> spur\\_f (by induction on rtrancl).\<close>
       have h_rtrancl_f: "\<forall>k l. (k, l) \<in> ?vtx_step\<^sup>* \<longrightarrow>
