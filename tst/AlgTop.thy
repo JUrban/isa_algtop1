@@ -6118,150 +6118,17 @@ proof -
     qed
     \<comment> \<open>Both disk homeomorphisms + inverse + continuous\\_on available.
        Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e where \\<tau>: B2 \\<to> B2 is the spur collapse map.\<close>
-    \<comment> \<open>Spur target: midpoint of vertex\\_m(0) and centroid. This is interior to P\\_m
-       (convex combination of boundary and interior points) and NOT the centroid itself.
-       Key: \\<psi>\\_m maps it to a NONZERO point in B2 interior, which makes \\<tau> injective.\<close>
-    define spur_target where "spur_target = ((vx_m 0 + cx_m)/2, (vy_m 0 + cy_m)/2)"
-    define p_cm where "p_cm = \<psi>_m spur_target"
-    have hspur_in_Pm: "spur_target \<in> P_m"
-    proof -
-      \<comment> \<open>Midpoint of vertex\\_m(0) and centroid, both in P\\_m. P\\_m is convex.\<close>
-      have "0 < ?m" using hm3 by (by100 linarith)
-      have hv0: "(vx_m 0, vy_m 0) \<in> P_m" using hC4m \<open>0 < ?m\<close> by (by100 blast)
-      \<comment> \<open>Extract convex coefficients for vertex 0 and centroid, then average.\<close>
-      from hv0[unfolded hC5m] obtain cv0 where
-        hcv0_ge: "\<forall>i<?m. cv0 i \<ge> 0" and hcv0_sum: "(\<Sum>i<?m. cv0 i) = 1"
-        and hcv0_x: "vx_m 0 = (\<Sum>i<?m. cv0 i * vx_m i)"
-        and hcv0_y: "vy_m 0 = (\<Sum>i<?m. cv0 i * vy_m i)" by (by100 blast)
-      from hcm_in_Pm[unfolded hC5m] obtain cc where
-        hcc_ge: "\<forall>i<?m. cc i \<ge> 0" and hcc_sum: "(\<Sum>i<?m. cc i) = 1"
-        and hcc_x: "cx_m = (\<Sum>i<?m. cc i * vx_m i)"
-        and hcc_y: "cy_m = (\<Sum>i<?m. cc i * vy_m i)" by (by100 blast)
-      define ca where "ca i = (cv0 i + cc i) / 2" for i
-      have hca_ge: "\<forall>i<?m. ca i \<ge> 0" unfolding ca_def using hcv0_ge hcc_ge by (by100 simp)
-      have hca_sum: "(\<Sum>i<?m. ca i) = 1"
-      proof -
-        have "(\<Sum>i<?m. ca i) = (\<Sum>i<?m. (cv0 i + cc i) / 2)" unfolding ca_def by (by100 simp)
-        also have "\<dots> = (\<Sum>i<?m. cv0 i + cc i) / 2"
-          using sum_divide_distrib[of "\<lambda>i. cv0 i + cc i" "{..<?m}" 2, symmetric] by (by100 simp)
-        also have "(\<Sum>i<?m. cv0 i + cc i) = (\<Sum>i<?m. cv0 i) + (\<Sum>i<?m. cc i)"
-          using sum.distrib by (by100 simp)
-        also have "\<dots> = 2" using hcv0_sum hcc_sum by (by100 linarith)
-        finally show ?thesis by (by100 linarith)
-      qed
-      have hca_x: "(vx_m 0 + cx_m) / 2 = (\<Sum>i<?m. ca i * vx_m i)"
-      proof -
-        have "(\<Sum>i<?m. ca i * vx_m i) = (\<Sum>i<?m. (cv0 i + cc i) / 2 * vx_m i)"
-          unfolding ca_def by (by100 simp)
-        also have "\<dots> = (\<Sum>i<?m. (cv0 i * vx_m i + cc i * vx_m i) / 2)"
-        proof (rule sum.cong, simp)
-          fix i assume "i \<in> {..<?m}"
-          show "(cv0 i + cc i) / 2 * vx_m i = (cv0 i * vx_m i + cc i * vx_m i) / 2"
-            by (by100 algebra)
-        qed
-        also have "\<dots> = (\<Sum>i<?m. cv0 i * vx_m i + cc i * vx_m i) / 2"
-          using sum_divide_distrib[of "\<lambda>i. cv0 i * vx_m i + cc i * vx_m i" "{..<?m}" 2]
-          by (by100 simp)
-        also have "(\<Sum>i<?m. cv0 i * vx_m i + cc i * vx_m i)
-            = (\<Sum>i<?m. cv0 i * vx_m i) + (\<Sum>i<?m. cc i * vx_m i)"
-          using sum.distrib by (by100 simp)
-        also have "\<dots> = vx_m 0 + cx_m" using hcv0_x hcc_x by (by100 linarith)
-        finally show ?thesis by (by100 linarith)
-      qed
-      have hca_y: "(vy_m 0 + cy_m) / 2 = (\<Sum>i<?m. ca i * vy_m i)"
-      proof -
-        have "(\<Sum>i<?m. ca i * vy_m i) = (\<Sum>i<?m. (cv0 i + cc i) / 2 * vy_m i)"
-          unfolding ca_def by (by100 simp)
-        also have "\<dots> = (\<Sum>i<?m. (cv0 i * vy_m i + cc i * vy_m i) / 2)"
-        proof (rule sum.cong, simp)
-          fix i assume "i \<in> {..<?m}"
-          show "(cv0 i + cc i) / 2 * vy_m i = (cv0 i * vy_m i + cc i * vy_m i) / 2"
-            by (by100 algebra)
-        qed
-        also have "\<dots> = (\<Sum>i<?m. cv0 i * vy_m i + cc i * vy_m i) / 2"
-          using sum_divide_distrib[of "\<lambda>i. cv0 i * vy_m i + cc i * vy_m i" "{..<?m}" 2]
-          by (by100 simp)
-        also have "(\<Sum>i<?m. cv0 i * vy_m i + cc i * vy_m i)
-            = (\<Sum>i<?m. cv0 i * vy_m i) + (\<Sum>i<?m. cc i * vy_m i)"
-          using sum.distrib by (by100 simp)
-        also have "\<dots> = vy_m 0 + cy_m" using hcv0_y hcc_y by (by100 linarith)
-        finally show ?thesis by (by100 linarith)
-      qed
-      show ?thesis unfolding spur_target_def hC5m
-        using hca_ge hca_sum hca_x hca_y by (by100 blast)
-    qed
-    have hspur_interior: "\<forall>j<?m. \<forall>t\<in>I_set. spur_target \<noteq>
-        ((1-t)*vx_m j+t*vx_m(Suc j mod ?m),(1-t)*vy_m j+t*vy_m(Suc j mod ?m))"
-      sorry \<comment> \<open>Midpoint of vertex 0 and centroid is interior. Proof via signed cross product:
-         cross(midpoint, edge j) = (cross(v0,edge j) + cross(centroid,edge j))/2.
-         cross(centroid) < 0 (avg of C11 terms). cross(v0) \\<le> 0 (C11). So cross(mid) < 0 \\<noteq> 0.\<close>
-    have hp_cm_B2: "p_cm \<in> top1_B2"
-    proof -
-      have "\<psi>_m spur_target \<in> \<psi>_m ` P_m" using hspur_in_Pm by (by100 blast)
-      thus ?thesis using h\<psi>m_surj unfolding p_cm_def by (by100 blast)
-    qed
-    have hp_cm_not_S1: "p_cm \<notin> top1_S1"
-    proof
-      assume "p_cm \<in> top1_S1"
-      hence "p_cm \<in> \<psi>_m ` (\<Union>j<?m. {((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
-                     (1-t) * vy_m j + t * vy_m (Suc j mod ?m)) | t. t \<in> I_set})"
-        using h\<psi>m_bdry by (by100 simp)
-      then obtain j' t' where hj': "j' < ?m" and ht': "t' \<in> I_set"
-          and h\<psi>_eq: "p_cm = \<psi>_m ((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),
-              (1-t')*vy_m j'+t'*vy_m(Suc j' mod ?m))"
-        by auto
-      have hedge_in: "((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),
-          (1-t')*vy_m j'+t'*vy_m(Suc j' mod ?m)) \<in> P_m"
-        using edge_point_in_polygon_witness[OF hm3 hj' ht' hC5m] by (by100 simp)
-      have "spur_target = ((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),
-          (1-t')*vy_m j'+t'*vy_m(Suc j' mod ?m))"
-        using h\<psi>m_inj[unfolded inj_on_def, rule_format, OF hspur_in_Pm hedge_in]
-            h\<psi>_eq unfolding p_cm_def by (by100 simp)
-      thus False using hspur_interior[rule_format, OF hj' ht'] by (by100 blast)
-    qed
-    have hp_cm_int: "fst p_cm ^ 2 + snd p_cm ^ 2 < 1"
-    proof -
-      have "fst p_cm ^ 2 + snd p_cm ^ 2 \<le> 1" using hp_cm_B2 unfolding top1_B2_def by (by100 simp)
-      moreover have "fst p_cm ^ 2 + snd p_cm ^ 2 \<noteq> 1"
-        using hp_cm_not_S1 unfolding top1_S1_def by (by100 simp)
-      ultimately show ?thesis by (by100 linarith)
-    qed
-    \<comment> \<open>KEY: p\\_cm \\<noteq> (0,0) because spur\\_target \\<noteq> centroid and \\<psi>\\_m injective.
-       This ensures \\<tau> is injective on B2 interior (no midpoint-ray collapse).\<close>
-    have hp_cm_ne: "p_cm \<noteq> (0, 0)"
-    proof -
-      have "spur_target \<noteq> (cx_m, cy_m)"
-      proof
-        assume "spur_target = (cx_m, cy_m)"
-        hence hfst: "(vx_m 0 + cx_m)/2 = cx_m" and hsnd: "(vy_m 0 + cy_m)/2 = cy_m"
-          unfolding spur_target_def by (by100 auto)+
-        have "vx_m 0 = cx_m"
-        proof -
-          from hfst have "vx_m 0 + cx_m = 2 * cx_m" by (by100 simp)
-          thus ?thesis by (by100 linarith)
-        qed
-        have "vy_m 0 = cy_m"
-        proof -
-          from hsnd have "vy_m 0 + cy_m = 2 * cy_m" by (by100 simp)
-          thus ?thesis by (by100 linarith)
-        qed
-        hence "vx_m 0 = cx_m \<and> vy_m 0 = cy_m" using \<open>vx_m 0 = cx_m\<close> by (by100 simp)
-        hence "(cx_m, cy_m) = (vx_m 0, vy_m 0)" by (by100 simp)
-        \<comment> \<open>But vertex 0 is on edge 0 (at t=0), while centroid is interior.\<close>
-        have "0 < ?m" using hm3 by (by100 linarith)
-        have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-        have "(cx_m, cy_m) = ((1-0)*vx_m 0 + 0*vx_m(Suc 0 mod ?m),
-            (1-0)*vy_m 0 + 0*vy_m(Suc 0 mod ?m))"
-          using \<open>(cx_m, cy_m) = (vx_m 0, vy_m 0)\<close> by (by100 simp)
-        thus False using hcm_interior[rule_format, OF \<open>0 < ?m\<close> \<open>0 \<in> I_set\<close>] by (by100 blast)
-      qed
-      moreover have "\<psi>_m (cx_m, cy_m) = (0, 0)"
-        sorry \<comment> \<open>From PolygonDisk: \\<psi>\\_m maps centroid to origin.\<close>
-      moreover have "\<psi>_m spur_target \<noteq> \<psi>_m (cx_m, cy_m)"
-        using h\<psi>m_inj[unfolded inj_on_def, rule_format, OF hspur_in_Pm hcm_in_Pm]
-            \<open>spur_target \<noteq> (cx_m, cy_m)\<close> by (by100 blast)
-      ultimately show ?thesis unfolding p_cm_def by (by100 simp)
-    qed
+    \<comment> \<open>Spur target: p\\_cm = (1/2, 0) in B2 coordinates (directly defined, no PolygonDisk export needed).
+       This is explicitly \\<noteq> (0,0), has |p\\_cm| = 1/2 < 1, and avoids the midpoint-ray collapse.
+       The preimage \\<psi>\\_m\\<inverse>(1/2, 0) is an interior point of P\\_m (since (1/2,0) \\<in> B2 \\ S1).\<close>
+    define p_cm :: "real \<times> real" where "p_cm = (1/2, 0)"
+    have hp_cm_B2: "p_cm \<in> top1_B2" unfolding p_cm_def top1_B2_def power2_eq_square
+      by (by100 simp)
+    have hp_cm_not_S1: "p_cm \<notin> top1_S1" unfolding p_cm_def top1_S1_def power2_eq_square
+      by (by100 simp)
+    have hp_cm_int: "fst p_cm ^ 2 + snd p_cm ^ 2 < 1" unfolding p_cm_def power2_eq_square
+      by (by100 simp)
+    have hp_cm_ne: "p_cm \<noteq> (0, 0)" unfolding p_cm_def by (by100 simp)
     \<comment> \<open>\\<tau> on the boundary S1:
        - Good arcs (edges \\<ge>2 of P\\_e): angle 2\\<pi>(k+t)/n \\<to> angle 2\\<pi>(k-2+t)/m on S1
        - Cancel arcs (edges 0,1): angle 2\\<pi>t/n \\<to> spur point (1-t')*(1,0) + t'*p\\_cm
@@ -8002,14 +7869,7 @@ proof -
           \<comment> \<open>p\\_cm norm: centroid mapped to disk interior.\<close>
           have hp_cm_le: "fst p_cm ^ 2 + snd p_cm ^ 2 \<le> 1"
           proof -
-            have "p_cm \<in> top1_B2"
-            proof -
-              have "\<psi>_m ` P_m = top1_B2"
-                using h\<psi>m_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
-              moreover have "spur_target \<in> P_m" using hspur_in_Pm .
-              ultimately have "\<psi>_m spur_target \<in> top1_B2" by (by100 blast)
-              thus ?thesis unfolding p_cm_def .
-            qed
+            have "p_cm \<in> top1_B2" using hp_cm_B2 .
             thus ?thesis unfolding top1_B2_def by (by100 simp)
           qed
           \<comment> \<open>Convex combination of (1,0) and p\\_cm is in B2 (by convexity of B2).\<close>
