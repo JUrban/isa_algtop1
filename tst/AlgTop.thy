@@ -10295,6 +10295,21 @@ proof -
                  sp determined by tf (monotone), off determined by r and tf.
            Cross-sector: good image has norm² = r² (on circle), cancel image has
              norm² = r²*|sp|² + off²*|dp|² + 2*r*off*(sp·dp) ≠ r² in general.\<close>
+      \<comment> \<open>Helper: \\<tau>(q) = (0,0) implies q = (0,0).
+         With p\\_cm = (1/2,0): in cancel sector, fst(\\<tau>) = r*(1-tf/2) > 0.
+         In good sector, |\\<tau>| = r > 0. So \\<tau>(q) \\<noteq> (0,0) for q \\<noteq> (0,0).\<close>
+      have h_tau_zero: "\<And>q. q \<in> top1_B2 \<Longrightarrow> \<tau> q = (0, 0) \<Longrightarrow> q = (0, 0)"
+      proof -
+        fix q assume hq: "q \<in> top1_B2" and h\<tau>0: "\<tau> q = (0, 0)"
+        show "q = (0, 0)"
+        proof (rule ccontr)
+          assume hne: "q \<noteq> (0, 0)"
+          \<comment> \<open>In good sector: |\\<tau>| = r > 0. In cancel sector: fst(\\<tau>) > 0.\<close>
+          \<comment> \<open>Either way \\<tau> \\<noteq> (0,0), contradicting h\\<tau>0.\<close>
+          have "fst (\<tau> q) \<noteq> 0 \<or> snd (\<tau> q) \<noteq> 0" sorry
+          thus False using h\<tau>0 by (by100 simp)
+        qed
+      qed
       have h_spur_inj: "inj_on spur_f P_e"
       proof -
         have h\<psi>e_inj: "inj_on \<psi>_e P_e"
@@ -10327,7 +10342,7 @@ proof -
             case True
             hence "\<tau> (\<psi>_e x) = (0, 0)" unfolding \<tau>_def by (by100 simp)
             hence "\<tau> (\<psi>_e y) = (0, 0)" using \<open>\<tau> (\<psi>_e x) = \<tau> (\<psi>_e y)\<close> by (by100 simp)
-            hence "\<psi>_e y = (0, 0)" sorry \<comment> \<open>\\<tau> maps only (0,0) to (0,0) (from \\<tau> definition).\<close>
+            hence "\<psi>_e y = (0, 0)" using h_tau_zero[OF hyB] by (by100 simp)
             thus ?thesis using True by (by100 simp)
           next
             case False
@@ -10339,7 +10354,7 @@ proof -
                 assume "\<psi>_e y = (0, 0)"
                 hence "\<tau> (\<psi>_e y) = (0, 0)" unfolding \<tau>_def by (by100 simp)
                 hence "\<tau> (\<psi>_e x) = (0, 0)" using \<open>\<tau> (\<psi>_e x) = \<tau> (\<psi>_e y)\<close> by (by100 simp)
-                hence "\<psi>_e x = (0, 0)" sorry \<comment> \<open>\\<tau>(p)=(0,0) \\<to> p=(0,0) (from \\<tau> range being B2 and r>0 giving |\\<tau>| > 0).\<close>
+                hence "\<psi>_e x = (0, 0)" using h_tau_zero[OF hxB] by (by100 simp)
                 thus False using False by (by100 simp)
               qed
               thus ?thesis using hyB by (by100 blast)
