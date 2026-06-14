@@ -10591,8 +10591,11 @@ proof -
               proof -
                 have "tf \<le> 1"
                 proof -
-                  show ?thesis unfolding tf_def \<theta>_cancel_def
-                    using h\<theta>_lt pi_gt_zero hn5 sorry
+                  show ?thesis unfolding tf_def
+                    using h\<theta>_lt pi_gt_zero hn5
+                    by (smt (verit, ccfv_threshold) \<theta>_cancel_def divide_diff_eq_iff
+                      divide_le_eq_1_pos length_greater_0_conv list.size(3)
+                      nonzero_divide_eq_eq not_numeral_le_zero of_nat_0_less_iff)
                 qed
                 have "2*(1-tf)*tf \<ge> 0" using htf_ge \<open>tf \<le> 1\<close> by (by100 simp)
                 thus ?thesis using mult_left_mono[of "fst p_cm" 1 "2*(1-tf)*tf"]
@@ -10772,7 +10775,23 @@ proof -
                 by (metis abs_mult abs_mult_pos' less_eq_real_def mult_nonneg_nonneg
                   zero_le_numeral)
               also have "\<dots> \<le> 2*r*(r*(1-r)/4)*1"
-                using hofs_abs hsp_dot hr_pos sorry
+              proof -
+                have h1: "\<bar>ofs\<bar> \<le> r*(1-r)/4" using hofs_abs .
+                have h2: "\<bar>fst sp*fst d_perp+snd sp*snd d_perp\<bar> \<le> 1"
+                  using hsp_dot by (by100 linarith)
+                have h3: "2*r \<ge> 0" using hr_pos by (by100 simp)
+                have "2*r*\<bar>ofs\<bar> \<le> 2*r*(r*(1-r)/4)"
+                  using mult_left_mono[OF h1 h3] by (by100 simp)
+                moreover have "2*r*(r*(1-r)/4) \<ge> 0"
+                  using hr_pos hr_lt1 by (by100 simp)
+                ultimately have "2*r*\<bar>ofs\<bar>*\<bar>fst sp*fst d_perp+snd sp*snd d_perp\<bar>
+                    \<le> 2*r*(r*(1-r)/4)*\<bar>fst sp*fst d_perp+snd sp*snd d_perp\<bar>"
+                  using mult_right_mono[of "2*r*\<bar>ofs\<bar>" "2*r*(r*(1-r)/4)"
+                      "\<bar>fst sp*fst d_perp+snd sp*snd d_perp\<bar>"] by (by100 simp)
+                also have "\<dots> \<le> 2*r*(r*(1-r)/4)*1"
+                  using mult_left_mono[OF h2 \<open>2*r*(r*(1-r)/4) \<ge> 0\<close>] by (by100 simp)
+                finally show ?thesis .
+              qed
               also have "\<dots> = r^2*(1-r)/2" unfolding power2_eq_square by (by100 simp)
               finally show ?thesis by (by100 linarith)
             qed
@@ -10792,7 +10811,59 @@ proof -
           \<comment> \<open>Step 7: Polynomial bound: r²(r²-4r+7)/4 < 1 for r < 1.
              Factor: r⁴-4r³+7r²-4 = (r-1)(r³-3r²+4r+4), second factor > 0.\<close>
           have h_poly: "r^2 + r^2*(1-r)/2 + r^2*(1-r)^2/4 < 1"
-            sorry \<comment> \<open>Polynomial bound: proven mathematically, needs process_theories for tactics.\<close>
+          proof -
+            \<comment> \<open>Since r \\<le> 1: r² \\<le> r, (1-r)² \\<le> 1-r. So bound by r+r(1-r)/2+r(1-r)/4.\<close>
+            define s where "s = 1 - r"
+            have hs_ge: "s \<ge> 0" using hr_lt1 s_def by (by100 linarith)
+            have hs_le: "s \<le> 1" using hr_pos s_def by (by100 linarith)
+            have hrr_le: "r * r \<le> 1 * r"
+              using mult_right_mono[of r 1 r] hr_lt1 hr_pos by (by100 linarith)
+            have hss_le: "s * s \<le> 1 * s"
+              using mult_right_mono[of s 1 s] hs_le hs_ge by (by100 linarith)
+            have hr2_le_r: "r^2 \<le> r" using hrr_le unfolding power2_eq_square by (by100 linarith)
+            have hs2_le_s: "s^2 \<le> s" using hss_le unfolding power2_eq_square by (by100 linarith)
+            \<comment> \<open>r²(1-r) \\<le> r(1-r) and r²(1-r)² \\<le> r(1-r).\<close>
+            have "s \<ge> 0" using hs_ge .
+            have h_t2: "r^2*(1-r) \<le> r*(1-r)"
+              using mult_right_mono[of "r^2" r s] hr2_le_r hs_ge s_def by (by100 simp)
+            have "r^2*(1-r)^2 \<le> r^2*(1-r)"
+              using mult_left_mono[of "s^2" s "r^2"] hs2_le_s s_def by (by100 simp)
+            hence h_t3: "r^2*(1-r)^2 \<le> r*(1-r)" using h_t2 by (by100 linarith)
+            have "r^2 + r^2*(1-r)/2 + r^2*(1-r)^2/4 \<le> r + r*(1-r)/2 + r*(1-r)/4"
+              using hr2_le_r h_t2 h_t3 by (by100 linarith)
+            \<comment> \<open>Now: r+r(1-r)/2+r(1-r)/4 = r+3r(1-r)/4 = r(4+3s)/4 = r(4+3-3r)/4 = r(7-3r)/4.\<close>
+            \<comment> \<open>Need r(7-3r)/4 < 1, i.e., 7r-3r² < 4, i.e., (3r-4)(r-1) > 0.\<close>
+            moreover have "r + r*(1-r)/2 + r*(1-r)/4 < 1"
+            proof -
+              have "(3*r - 4) * (r - 1) > 0"
+              proof -
+                have "3*r - 4 < 0" using hr_lt1 by (by100 linarith)
+                have "r - 1 < 0" using hr_lt1 by (by100 linarith)
+                from mult_neg_neg[OF \<open>3*r-4<0\<close> \<open>r-1<0\<close>] show ?thesis .
+              qed
+              have "(3*r-4)*(r-1) = 3*r*r - 7*r + 4" by (by100 algebra)
+              hence "7*r - 3*r*r < 4"
+                using \<open>(3*r-4)*(r-1) > 0\<close> by (by100 linarith)
+              \<comment> \<open>4*(r+r(1-r)/2+r(1-r)/4) = 4r + 2r(1-r) + r(1-r). Use s = 1-r.\<close>
+              have "r * s = r - r * r" unfolding s_def by (by100 algebra)
+              hence "3 * (r * s) = 3*r - 3*r*r" by (by100 linarith)
+              have "4 * (r + r*s/2 + r*s/4) = 7*r - 3*r*r"
+              proof -
+                have "r*s = r - r*r" unfolding s_def by (by100 algebra)
+                hence "4*r + 3*(r*s) = 4*r + 3*r - 3*r*r" by (by100 linarith)
+                hence h7: "4*r + 3*(r*s) = 7*r - 3*r*r" by (by100 linarith)
+                have "4 * (r + r*s/2 + r*s/4) = 4*r + 3*(r*s)"
+                  by (by100 simp)
+                thus ?thesis using h7 by (by100 linarith)
+              qed
+              hence "4 * (r + r*(1-r)/2 + r*(1-r)/4) = 7*r - 3*r*r"
+                unfolding s_def by (by100 simp)
+              hence "4 * (r + r*(1-r)/2 + r*(1-r)/4) < 4"
+                using \<open>7*r - 3*r*r < 4\<close> by (by100 linarith)
+              thus ?thesis by (by100 simp)
+            qed
+            ultimately show ?thesis by (by100 linarith)
+          qed
           show ?thesis using h_upper h_poly by (by100 linarith)
         qed
       qed
