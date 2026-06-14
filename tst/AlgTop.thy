@@ -1687,7 +1687,8 @@ proof -
         unfolding \<tau>_def using hne
         apply (simp only: if_False)
         unfolding Let_def p_cm_def d_perp_def \<tau>_boundary_def \<theta>_cancel_def \<theta>_mid_def
-        apply (auto simp: power2_eq_square sin_cos_squared_add3[simplified])
+        apply (auto simp: power2_eq_square sin_cos_squared_add3[simplified]
+          intro: prod_eqI)
         sorry
     qed
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
