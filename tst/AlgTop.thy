@@ -10303,6 +10303,45 @@ proof -
             by (by100 blast)
         qed
       qed
+      \<comment> \<open>Helper: if \\<tau>(p) is in B2 interior (norm < 1), then spur\\_f(\\<psi>\\_e\\<inverse>(p)) is P\\_m interior.\<close>
+      have h_B2_int_to_Pm_int: "\<And>q j s. q \<in> top1_B2 \<Longrightarrow> fst q ^ 2 + snd q ^ 2 < 1 \<Longrightarrow>
+          j < ?m \<Longrightarrow> s \<in> I_set \<Longrightarrow>
+          inv_into P_m \<psi>_m q \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+              (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+      proof -
+        fix q :: "real \<times> real" and j :: nat and s :: real
+        assume hq: "q \<in> top1_B2" and hq_int: "fst q ^ 2 + snd q ^ 2 < 1"
+            and hj: "j < ?m" and hs: "s \<in> I_set"
+        show "inv_into P_m \<psi>_m q \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+            (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+        proof
+          assume "inv_into P_m \<psi>_m q = ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+              (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+          hence "\<psi>_m (inv_into P_m \<psi>_m q) =
+              \<psi>_m ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+            by (by100 simp)
+          moreover have "\<psi>_m (inv_into P_m \<psi>_m q) = q"
+          proof -
+            have "\<psi>_m ` P_m = top1_B2"
+              using h\<psi>m_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+            from f_inv_into_f[OF hq[unfolded this[symmetric]]]
+            show ?thesis .
+          qed
+          moreover have "\<psi>_m ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),(1-s)*vy_m j+s*vy_m(Suc j mod ?m))
+              = (cos (2*pi*(real j + s)/real ?m), sin (2*pi*(real j + s)/real ?m))"
+            using h\<psi>m_edge[rule_format, OF hj hs] .
+          ultimately have "q = (cos (2*pi*(real j + s)/real ?m), sin (2*pi*(real j + s)/real ?m))"
+            by (by100 simp)
+          hence "fst q ^ 2 + snd q ^ 2 = 1"
+            using sin_cos_squared_add3[of "2*pi*(real j + s)/real ?m"] by (by100 simp)
+          thus False using hq_int by (by100 linarith)
+        qed
+      qed
+      \<comment> \<open>Helper: \\<tau> maps B2 interior to B2 interior (norm strictly < 1 for good/cancel sectors).\<close>
+      have h_tau_strict_B2: "\<And>p. p \<in> top1_B2 \<Longrightarrow> p \<noteq> (0,0) \<Longrightarrow> fst p ^ 2 + snd p ^ 2 < 1 \<Longrightarrow>
+          fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2 < 1"
+        sorry \<comment> \<open>Good sector: |\\<tau>| = r = sqrt(fst^2+snd^2) < 1. Cancel sector: |\\<tau>| < 1
+           (spur\\_pt has |sp| \\<le> 1 for cancel, offset bounded by r(1-r)/4 \\<le> r/4 < r).\<close>
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
       proof (intro ballI impI)
         fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e"
@@ -10336,7 +10375,10 @@ proof -
           \<comment> \<open>spur\\_f(x) is P\\_m interior (spur\\_f maps P\\_e interior to P\\_m interior).\<close>
           have "\<forall>i<?m. \<forall>t\<in>I_set. spur_f x \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),
               (1-t)*vy_m i+t*vy_m(Suc i mod ?m))"
-            sorry \<comment> \<open>spur\\_f maps P\\_e interior to P\\_m interior (\\<psi>\\_e, \\<tau>, \\<psi>\\_m\\<inverse> all preserve interior).\<close>
+            sorry \<comment> \<open>Proof chain: \\<psi>\\_e(x) B2 interior (sorry: edge\\<to>S1) \\<to>
+               \\<tau> maps B2 interior to B2 interior (h\\_tau\\_strict\\_B2) \\<to>
+               \\<psi>\\_m\\<inverse> maps B2 interior to P\\_m interior (h\\_B2\\_int\\_to\\_Pm\\_int \\<checkmark>).
+               spur\\_f x = \\<psi>\\_m\\<inverse>(\\<tau>(\\<psi>\\_e x)) hence in P\\_m interior.\<close>
           hence "\<forall>p'\<in>P_m. q_m (spur_f x) = q_m p' \<longrightarrow> spur_f x = p'"
             using hC8m hsfx by (by100 blast)
           hence "spur_f x = spur_f y" using hsfy heq by (by100 blast)
