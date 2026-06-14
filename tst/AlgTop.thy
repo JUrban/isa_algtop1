@@ -3564,9 +3564,99 @@ proof -
       using rtrancl_trans[OF hk_reach \<open>(vtgt k, l) \<in> ?R\<^sup>*\<close>] .
     \<comment> \<open>Step 5: vtx\\_id \\<subseteq> ?S (each vtx\\_id pair matches the output step relation).\<close>
     have hvtx_sub: "vtx_id \<subseteq> ?S"
-      sorry \<comment> \<open>Each vtx\\_id pair comes from (idx, partner idx) with matching labels.
-         Show: idx < n, partner < n, idx \\<noteq> partner, fst(scheme!idx) = fst(scheme!partner).
-         Then the vtx\\_id pair matches one of the 4 disjuncts in ?S.\<close>
+    proof
+      fix p assume "p \<in> vtx_id"
+      then obtain idx where hidx: "idx < ?n" and
+          hp: "p \<in> (let j = partner idx in
+            if snd(scheme!idx) = snd(scheme!j) then {(idx, j), (Suc idx mod ?n, Suc j mod ?n)}
+            else {(idx, Suc j mod ?n), (Suc idx mod ?n, j)})"
+        unfolding vtx_id_def by (by100 auto)
+      have hp_lt: "partner idx < ?n" and hp_ne: "partner idx \<noteq> idx"
+          and hp_lbl: "fst(scheme!idx) = fst(scheme!(partner idx))"
+      proof -
+        have "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!idx)} \<in> {0, 2}"
+          using hproper by (by100 blast)
+        moreover have "idx \<in> {k. k < ?n \<and> fst(scheme!k) = fst(scheme!idx)}" using hidx by (by100 simp)
+        hence "{k. k < ?n \<and> fst(scheme!k) = fst(scheme!idx)} \<noteq> {}" by (by100 blast)
+        hence "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!idx)} \<noteq> 0" by (by100 simp)
+        ultimately have hc2: "card {k. k < ?n \<and> fst(scheme!k) = fst(scheme!idx)} = 2"
+          by (by100 blast)
+        from partner_props[OF hidx hc2]
+        show "partner idx < ?n" and "partner idx \<noteq> idx"
+            and "fst(scheme!idx) = fst(scheme!(partner idx))" by (by100 auto)+
+      qed
+      have hp_ne2: "idx \<noteq> partner idx" using hp_ne by (by100 simp)
+      from hp have hp2: "p \<in> (if snd(scheme!idx)=snd(scheme!(partner idx))
+          then {(idx, partner idx), (Suc idx mod ?n, Suc (partner idx) mod ?n)}
+          else {(idx, Suc (partner idx) mod ?n), (Suc idx mod ?n, partner idx)})"
+        unfolding Let_def .
+      show "p \<in> ?S"
+      proof -
+        obtain a b where hab: "p = (a, b)" by (cases p) (by100 simp)
+        have "\<exists>i<?n. \<exists>j<?n. i \<noteq> j \<and> fst (scheme ! i) = fst (scheme ! j)
+            \<and> ((snd (scheme ! i) = snd (scheme ! j) \<and> a = i \<and> b = j)
+             \<or> (snd (scheme ! i) = snd (scheme ! j) \<and> a = Suc i mod ?n \<and> b = Suc j mod ?n)
+             \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = i \<and> b = Suc j mod ?n)
+             \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = Suc i mod ?n \<and> b = j))"
+        proof -
+          from hp2 hab have "a = idx \<and> b = partner idx \<and> snd(scheme!idx) = snd(scheme!(partner idx))
+              \<or> a = Suc idx mod ?n \<and> b = Suc (partner idx) mod ?n \<and> snd(scheme!idx) = snd(scheme!(partner idx))
+              \<or> a = idx \<and> b = Suc (partner idx) mod ?n \<and> snd(scheme!idx) \<noteq> snd(scheme!(partner idx))
+              \<or> a = Suc idx mod ?n \<and> b = partner idx \<and> snd(scheme!idx) \<noteq> snd(scheme!(partner idx))"
+          proof (cases "snd(scheme!idx) = snd(scheme!(partner idx))")
+            case True
+            from hp2 True have "p \<in> {(idx, partner idx), (Suc idx mod ?n, Suc (partner idx) mod ?n)}"
+              by (by100 simp)
+            thus ?thesis using True hab by (by100 auto)
+          next
+            case False
+            from hp2 False have "p \<in> {(idx, Suc (partner idx) mod ?n), (Suc idx mod ?n, partner idx)}"
+              by (by100 simp)
+            thus ?thesis using False hab by (by100 auto)
+          qed
+          hence "idx \<noteq> partner idx \<and> fst (scheme ! idx) = fst (scheme ! (partner idx))
+              \<and> ((snd (scheme ! idx) = snd (scheme ! (partner idx)) \<and> a = idx \<and> b = partner idx)
+               \<or> (snd (scheme ! idx) = snd (scheme ! (partner idx)) \<and> a = Suc idx mod ?n \<and> b = Suc (partner idx) mod ?n)
+               \<or> (snd (scheme ! idx) \<noteq> snd (scheme ! (partner idx)) \<and> a = idx \<and> b = Suc (partner idx) mod ?n)
+               \<or> (snd (scheme ! idx) \<noteq> snd (scheme ! (partner idx)) \<and> a = Suc idx mod ?n \<and> b = partner idx))"
+          proof (intro conjI)
+            show "idx \<noteq> partner idx" by (rule hp_ne2)
+            show "fst (scheme ! idx) = fst (scheme ! (partner idx))" by (rule hp_lbl)
+            show "(snd (scheme ! idx) = snd (scheme ! (partner idx)) \<and> a = idx \<and> b = partner idx)
+               \<or> (snd (scheme ! idx) = snd (scheme ! (partner idx)) \<and> a = Suc idx mod ?n \<and> b = Suc (partner idx) mod ?n)
+               \<or> (snd (scheme ! idx) \<noteq> snd (scheme ! (partner idx)) \<and> a = idx \<and> b = Suc (partner idx) mod ?n)
+               \<or> (snd (scheme ! idx) \<noteq> snd (scheme ! (partner idx)) \<and> a = Suc idx mod ?n \<and> b = partner idx)"
+            proof (cases "snd (scheme ! idx) = snd (scheme ! (partner idx))")
+              case True
+              from hp2 True hab
+              have "a = idx \<and> b = partner idx \<or> a = Suc idx mod ?n \<and> b = Suc (partner idx) mod ?n"
+                by (by100 simp)
+              thus ?thesis using True by (by100 blast)
+            next
+              case False
+              from hp2 False hab
+              have "a = idx \<and> b = Suc (partner idx) mod ?n \<or> a = Suc idx mod ?n \<and> b = partner idx"
+                by (by100 simp)
+              thus ?thesis using False by (by100 blast)
+            qed
+          qed
+          hence "\<exists>j<?n. idx \<noteq> j \<and> fst (scheme ! idx) = fst (scheme ! j)
+              \<and> ((snd (scheme ! idx) = snd (scheme ! j) \<and> a = idx \<and> b = j)
+               \<or> (snd (scheme ! idx) = snd (scheme ! j) \<and> a = Suc idx mod ?n \<and> b = Suc j mod ?n)
+               \<or> (snd (scheme ! idx) \<noteq> snd (scheme ! j) \<and> a = idx \<and> b = Suc j mod ?n)
+               \<or> (snd (scheme ! idx) \<noteq> snd (scheme ! j) \<and> a = Suc idx mod ?n \<and> b = j))"
+            using hp_lt by (by100 blast)
+          hence "\<exists>i<?n. \<exists>j<?n. i \<noteq> j \<and> fst (scheme ! i) = fst (scheme ! j)
+              \<and> ((snd (scheme ! i) = snd (scheme ! j) \<and> a = i \<and> b = j)
+               \<or> (snd (scheme ! i) = snd (scheme ! j) \<and> a = Suc i mod ?n \<and> b = Suc j mod ?n)
+               \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = i \<and> b = Suc j mod ?n)
+               \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = Suc i mod ?n \<and> b = j))"
+            using hidx by (by100 blast)
+          thus ?thesis by (by100 simp)
+        qed
+        thus ?thesis using hab by (by100 simp)
+      qed
+    qed
     \<comment> \<open>Step 6: ?R \\<subseteq> ?S*.\<close>
     have hR_sub_Sstar: "?R\<^sup>* \<subseteq> ?S\<^sup>*"
     proof -
