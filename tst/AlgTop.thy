@@ -2,7 +2,7 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1462, 17 sorry lines):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1470, 16 sorry lines):
 
 SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
@@ -20,16 +20,18 @@ SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_spur\\_vertex\\_0: FULLY PROVED! (vx\\_e(0) \\<to> vx\\_m(0))
 - h\\_fibres\\_good\\_edge: FULLY PROVED!
 - h\\_fibres: PROVED from forward + backward.
-  h\\_fibres\\_forward: ALL CASES PROVED (modulo h\\_vtx\\_to\\_rep sorry):
+  h\\_fibres\\_forward: FULLY PROVED (ZERO SORRY)!
     Interior: C8\\_e. Good-good: C9+shift+C7. Cancel-cancel: collapse+dir.
-    Cancel-good: freshness contradiction.
-    Vertex-edge: hC12\\_e contradiction.
-    Vertex-vertex: PROVED via h\\_vtx\\_vtgt\\_transfer (from h\\_vtx\\_to\\_rep).
-      h\\_vtx\\_to\\_rep (sorry): f(k) = f(vtgt\\_e(k)) by strong induction on k.
+    Cancel-good: freshness contradiction. Vertex-edge: hC12\\_e contradiction.
+    Vertex-vertex: PROVED via rtrancl chain transfer:
+      scheme\\_quotient\\_exists exports vtgt\\<to>rtrancl (PROVED).
+      h\\_step\\_f: each C7 generator preserves q\\_m\\<circ>spur\\_f (PROVED).
+      h\\_rtrancl\\_f: closure preserves f (PROVED by rtrancl\\_induct).
+      h\\_vtx\\_vtgt\\_transfer: vtgt equality \\<to> f equality (PROVED).
   h\\_fibres\\_backward: sorry (similar case analysis to forward).
 - hC12\\_e, hC12\\_m: BOTH PROVED from scheme\\_quotient\\_exists(2).
 - scheme\\_quotient\\_exists: BOTH conclusions FULLY PROVED (zero sorry).
-  (2) outputs ALL C1-C12 + vtgt facts + vtgt(k) \\<le> k (Least property).
+  (2) outputs ALL C1-C12 + vtgt facts + vtgt(k) \\<le> k + vtgt idempotent + rtrancl characterization.
 - edge\\_interior\\_not\\_vertex: PROVED (polygon-level, C3+C11).
 
 CUT-PASTE (5 sorrys):
