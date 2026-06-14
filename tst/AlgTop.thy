@@ -10339,7 +10339,7 @@ proof -
               have "\<tau> q \<in> top1_B2" using hq h\<tau>_range by (by100 blast)
               have "fst (\<tau> q) ^ 2 + snd (\<tau> q) ^ 2 \<le> 1"
                 using \<open>\<tau> q \<in> top1_B2\<close> unfolding top1_B2_def by (by100 simp)
-              \<comment> \<open>Need: > 0. In good sector |\\<tau>| = r. In cancel sector fst > 0.\<close>
+              \<comment> \<open>With p\\_cm=(1/2,0): good sector |\\<tau>|=r>0; cancel sector fst(\\<tau>)=r(1-tf/2)>0.\<close>
               show ?thesis sorry
             qed
             thus ?thesis by (by100 auto)
