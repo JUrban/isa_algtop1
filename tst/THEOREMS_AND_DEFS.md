@@ -1240,7 +1240,7 @@ quotient_of_scheme_cut_paste_proper            AlgTop.thy                       
 quotient_of_scheme_extract                     ac/AlgTopCached.thy                  line 31345
 quotient_of_scheme_extract_full                wh/AlgTopWedgeHelpers.thy            line 329
 quotient_of_scheme_uncancel_front              AlgTop.thy                           line 4077
-quotient_of_scheme_uncancel_front_proper       AlgTop.thy                           line 10394
+quotient_of_scheme_uncancel_front_proper       AlgTop.thy                           line 10991
 quotient_of_scheme_uncancel_proved             AlgTop.thy                           line 4102
 quotient_projection_properties                 ac/AlgTopCached.thy                  line 8976
 quotient_scheme_length_ge3                     AlgTop.thy                           line 83
@@ -1917,8 +1917,8 @@ uniform_metric_conv_imp_pointwise_unif         i/Top1_Ch5_8.thy                 
 uniform_metric_lt_imp_d_lt                     i/Top1_Ch5_8.thy                     line 14354
 uniform_metric_pointwise_lt                    i/Top1_Ch5_8.thy                     line 14336
 unit_interval_reversal_homeomorphism           ac/AlgTopCached.thy                  line 49000
-valid_equiv_preserves_quotient_homeo           AlgTop.thy                           line 10771
-valid_operation_preserves_quotient_homeo       AlgTop.thy                           line 10434
+valid_equiv_preserves_quotient_homeo           AlgTop.thy                           line 11368
+valid_operation_preserves_quotient_homeo       AlgTop.thy                           line 11031
 vector_field_must_point_inward                 i/Top1_Ch9_13.thy                    line 13533
 wedge_circles_pi1_free                         ac5/AlgTopCached5.thy                line 2814
 weighted_sum_epsilon_delta                     i/Top1_Ch5_8.thy                     line 29816
@@ -2161,10 +2161,10 @@ Theorem_74_4_fund_group_m_projective           ac8/AlgTopCached8.thy            
 Theorem_75_1_H1_abelianization                 ac8/AlgTopCached8.thy                line 3787
 Theorem_75_3_H1_n_torus                        ac8/AlgTopCached8.thy                line 4472
 Theorem_75_4_H1_m_projective                   ac12/AlgTopCached12.thy              line 975
-Theorem_76_elementary_operations               AlgTop.thy                           line 10809
-Theorem_77_5_classification                    AlgTop.thy                           line 11786
-Theorem_78_1_triangulable_surface              AlgTop.thy                           line 10869
-Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 11688
+Theorem_76_elementary_operations               AlgTop.thy                           line 11406
+Theorem_77_5_classification                    AlgTop.thy                           line 12383
+Theorem_78_1_triangulable_surface              AlgTop.thy                           line 11466
+Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 12285
 Theorem_79_2                                   ac4/AlgTopCached4.thy                line 1524
 Theorem_79_4                                   ac4/AlgTopCached4.thy                line 2333
 Theorem_80_1_universal_unique                  ac4/AlgTopCached4.thy                line 3345
