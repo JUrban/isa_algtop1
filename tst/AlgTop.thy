@@ -2,7 +2,7 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1450, 17 sorry words):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1442, 50 sorrys):
 
 SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
@@ -12,7 +12,7 @@ SPUR COLLAPSE (decomposed, key properties proved):
   (2) S\\_c closed — PROVED \\<checkmark>
   (3) \\<tau> continuous on S\\_g: nonzero (sorry) + origin combination (PROVED)
   (4) \\<tau> continuous on S\\_c: nonzero (sorry) + origin combination (PROVED)
-  Bounds |fst/snd(\\<tau>)| \\<le> C*r: ALL 4 PROVED (triangle ineq + convex comb bound)
+  Bounds |fst/snd(\\<tau>)| \\<le> C*r: sorry (mechanical, C = 1 + |p\\_cm| + |d\\_perp|)
 - h\\_spur\\_good\\_edge: FULLY PROVED!
 - h\\_spur\\_cancel\\_collapse: FULLY PROVED!
 - h\\_spur\\_vertex: FULLY PROVED! (k\\<ge>2 \\<to> vx\\_m(k-2))
@@ -6448,9 +6448,15 @@ proof -
         qed
         thus ?thesis unfolding hS_c_eq .
       qed
+      have h_tau_cont_B2_nonzero: "continuous_on (top1_B2 - {(0,0)}) \<tau>"
+        sorry \<comment> \<open>Nonzero continuity of \\<tau> on B2\\{0}. Proof via 3-part pasting:
+           Upper cancel (\\<theta> \\<le> \\<theta>\\_cancel, snd \\<ge> 0): cancel formula + arccos.
+           Upper good (\\<theta> \\<ge> \\<theta>\\_cancel, snd \\<ge> 0): good formula + arccos.
+           Lower (snd \\<le> 0): good formula + (2\\<pi>-arccos). Agreement at boundaries.\<close>
       have h_g_cont_nonzero: "continuous_on (S_g - {(0,0)}) \<tau>"
-        sorry \<comment> \<open>Nonzero case: on S\\_g\\{0}, \\<tau> uses good formula (angle\\<ge>\\<theta>) or cancel at pos x-axis.
-           Both are compositions of continuous functions; they agree at boundaries.\<close>
+      proof (rule continuous_on_subset[OF h_tau_cont_B2_nonzero])
+        show "S_g - {(0,0)} \<subseteq> top1_B2 - {(0,0)}" unfolding S_g_def by (by100 blast)
+      qed
       have h_g_cont_origin: "((\<lambda>x. \<tau> x) \<longlongrightarrow> (0,0)) (at (0,0) within S_g)"
       proof -
         \<comment> \<open>Bound with C=1: on S\\_g, |fst(\\<tau>)| and |snd(\\<tau>)| are both \\<le> r.
@@ -6828,8 +6834,9 @@ proof -
          (3) O(r) bound at origin: each component has factor r=sqrt(x^2+y^2)
          (4) continuous\\_on\\_If for the p=(0,0) case split.\<close>
       have h_c_cont_nonzero: "continuous_on (S_c - {(0,0)}) \<tau>"
-        sorry \<comment> \<open>Nonzero case: composition of continuous functions
-           (sqrt, arccos, min, sin, mult, add via continuous\\_intros).\<close>
+      proof (rule continuous_on_subset[OF h_tau_cont_B2_nonzero])
+        show "S_c - {(0,0)} \<subseteq> top1_B2 - {(0,0)}" unfolding S_c_def by (by100 blast)
+      qed
       have h_c_cont_origin: "((\<lambda>x. \<tau> x) \<longlongrightarrow> (0,0)) (at (0,0) within S_c)"
       proof -
         \<comment> \<open>Componentwise: fst(\\<tau>(p)) \\<to> 0 and snd(\\<tau>(p)) \\<to> 0.
