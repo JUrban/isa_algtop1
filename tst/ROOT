@@ -144,7 +144,12 @@ session AlgTopCached14 in ac14 = AlgTopCached13 +
   theories
     AlgTopCached14
 
-session AlgTop = AlgTopCached14 +
+session AlgTopCached15 in ac15 = AlgTopCached14 +
+  options [timeout = 600]
+  theories
+    AlgTopCached15
+
+session AlgTop = AlgTopCached15 +
   options [quick_and_dirty, timeout = 600]
   theories
     AlgTop
