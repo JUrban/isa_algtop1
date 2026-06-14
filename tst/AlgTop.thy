@@ -2,7 +2,16 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1475, 16 sorry lines):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1507, 16 standalone sorry lines):
+UPDATE (session 1501-1507):
+- h\\_psi\\_e\\_int: PROVED (boundary image extraction from polygon\\_homeomorphic\\_to\\_disk)
+- p\\_cm interior: PROVED (fst(p\\_cm)²+snd(p\\_cm)² < 1, centroid in B2 interior)
+- h\\_tau\\_strict\\_B2: BOTH sectors FULLY PROVED (good + cancel, zero sorry)
+- h\\_tau\\_cancel\\_bdy: FULLY PROVED (\\<tau> at cancel boundary maps to B2 interior)
+- h\\_tau\\_vtx1\\_int: PROVED (\\<tau>(\\<psi>\\_e(vertex\\_e(1))) in B2 interior)
+- converse vtx\\_id \\<subseteq> output\\_step\\_rel: PROVED (symmetry swap)
+- BUG FOUND: h\\_tau\\_inj is FALSE (midpoint ray collapse when p\\_cm=0).
+  Fix needed: change sin(\\<pi>*tf) to sin(\\<pi>*tf/2) in offset formula.
 
 SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
