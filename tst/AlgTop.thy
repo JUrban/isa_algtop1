@@ -2,7 +2,7 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1470, 16 sorry lines):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1475, 16 sorry lines):
 
 SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
