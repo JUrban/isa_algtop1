@@ -6449,10 +6449,32 @@ proof -
         thus ?thesis unfolding hS_c_eq .
       qed
       have h_tau_cont_B2_nonzero: "continuous_on (top1_B2 - {(0,0)}) \<tau>"
-        sorry \<comment> \<open>Nonzero continuity of \\<tau> on B2\\{0}. Proof via 3-part pasting:
-           Upper cancel (\\<theta> \\<le> \\<theta>\\_cancel, snd \\<ge> 0): cancel formula + arccos.
-           Upper good (\\<theta> \\<ge> \\<theta>\\_cancel, snd \\<ge> 0): good formula + arccos.
-           Lower (snd \\<le> 0): good formula + (2\\<pi>-arccos). Agreement at boundaries.\<close>
+      proof -
+        let ?B = "top1_B2 - {(0::real, 0::real)}"
+        \<comment> \<open>Define three closed regions covering B2\\{0}.\<close>
+        define R_uc where "R_uc = {p \<in> ?B. snd p \<ge> 0 \<and> angle_of p \<le> \<theta>_cancel}"
+        define R_ug where "R_ug = {p \<in> ?B. snd p \<ge> 0 \<and> angle_of p \<ge> \<theta>_cancel}"
+        define R_lo where "R_lo = {p \<in> ?B. snd p \<le> 0}"
+        \<comment> \<open>They cover B2\\{0}.\<close>
+        have h_cover: "?B = R_uc \<union> R_ug \<union> R_lo" unfolding R_uc_def R_ug_def R_lo_def
+          sorry
+        \<comment> \<open>Each region is closed in ?B.\<close>
+        have h_uc_closed: "closed R_uc" sorry
+        have h_ug_closed: "closed R_ug" sorry
+        have h_lo_closed: "closed R_lo" sorry
+        \<comment> \<open>\\<tau> is continuous on each region.\<close>
+        have h_uc_cont: "continuous_on R_uc \<tau>" sorry
+        have h_ug_cont: "continuous_on R_ug \<tau>" sorry
+        have h_lo_cont: "continuous_on R_lo \<tau>" sorry
+        \<comment> \<open>Paste via continuous\\_on\\_closed\\_Un.\<close>
+        have h_upper: "continuous_on (R_uc \<union> R_ug) \<tau>"
+          by (rule continuous_on_closed_Un[OF h_uc_closed h_ug_closed h_uc_cont h_ug_cont])
+        have h_upper_closed: "closed (R_uc \<union> R_ug)"
+          using closed_Un[OF h_uc_closed h_ug_closed] .
+        have h_all: "continuous_on (R_uc \<union> R_ug \<union> R_lo) \<tau>"
+          by (rule continuous_on_closed_Un[OF h_upper_closed h_lo_closed h_upper h_lo_cont])
+        show ?thesis using h_all h_cover by (by100 simp)
+      qed
       have h_g_cont_nonzero: "continuous_on (S_g - {(0,0)}) \<tau>"
       proof (rule continuous_on_subset[OF h_tau_cont_B2_nonzero])
         show "S_g - {(0,0)} \<subseteq> top1_B2 - {(0,0)}" unfolding S_g_def by (by100 blast)
@@ -9434,9 +9456,40 @@ proof -
               next
                 case False
                 \<comment> \<open>y is also a vertex. Vertex-vertex transfer.\<close>
-                show ?thesis
-                  sorry \<comment> \<open>Vertex-vertex forward: q\\_e(vertex k)=q\\_e(vertex l) \\<to> q\\_m transfer.
-                     Needs: C7 chain argument (all vertex identifications come from C7).\<close>
+                hence hs2_vtx: "s2 = 0 \<or> s2 = 1" using hs2
+                  unfolding top1_unit_interval_def by (by100 auto)
+                \<comment> \<open>Determine vertex indices k and l.\<close>
+                define k where "k = (if t = 0 then i else Suc i mod ?n)"
+                define l where "l = (if s2 = 0 then j2 else Suc j2 mod ?n)"
+                have hk_lt: "k < ?n" unfolding k_def using hi hn5 by (by100 auto)
+                have hl_lt: "l < ?n" unfolding l_def using hj2 hn5 by (by100 auto)
+                have hx_vtx: "x = (vx_e k, vy_e k)" unfolding k_def
+                  using ht_vtx hx_eq by (by100 auto)
+                have hy_vtx: "y = (vx_e l, vy_e l)" unfolding l_def
+                  using hs2_vtx hy_eq2 by (by100 auto)
+                have hq_eq: "q_e (vx_e k, vy_e k) = q_e (vx_e l, vy_e l)"
+                  using heq hx_vtx hy_vtx by (by100 simp)
+                \<comment> \<open>From hq\\_vtgt\\_e1: vtgt\\_e(k) = vtgt\\_e(l).\<close>
+                have hvtgt: "vtgt_e k = vtgt_e l"
+                proof -
+                  from hq_vtgt_e1[rule_format, OF hk_lt]
+                  have h1: "q_e (vx_e k, vy_e k) = (vx_e (vtgt_e k), vy_e (vtgt_e k))" .
+                  from hq_vtgt_e1[rule_format, OF hl_lt]
+                  have h2: "q_e (vx_e l, vy_e l) = (vx_e (vtgt_e l), vy_e (vtgt_e l))" .
+                  from hq_eq h1 h2 have "(vx_e (vtgt_e k), vy_e (vtgt_e k)) = (vx_e (vtgt_e l), vy_e (vtgt_e l))"
+                    by (by100 simp)
+                  moreover have "vtgt_e k < ?n" using hq_vtgt_e2[rule_format, OF hk_lt] .
+                  moreover have "vtgt_e l < ?n" using hq_vtgt_e2[rule_format, OF hl_lt] .
+                  ultimately show ?thesis
+                    using hC3e[rule_format] by (by100 blast)
+                qed
+                \<comment> \<open>Need: q\\_m(spur\\_f(vertex\\_e(k))) = q\\_m(spur\\_f(vertex\\_e(l))).
+                   Translate vertex index through spur\\_f and use C7\\_m.\<close>
+                show ?thesis using hx_vtx hy_vtx hvtgt hk_lt hl_lt
+                  sorry \<comment> \<open>Vertex-vertex forward: vtgt\\_e(k)=vtgt\\_e(l) \\<to> q\\_m(spur\\_f) transfer.
+                     For each C7\\_e matching edge pair, the identification transfers to q\\_m via
+                     cancel\\_shift + C7\\_m (good edges) or h\\_spur\\_vertex\\_0/02 (cancel pair).
+                     Formal chain argument (rtrancl induction) needed.\<close>
               qed
             qed
           qed
