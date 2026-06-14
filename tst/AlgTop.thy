@@ -6505,7 +6505,10 @@ proof -
              Sign\\_v discontinuity at \\<theta>\\_mid handled by nested cases\\_le (offset=0 at boundary).
              Both branches give (r,0) at \\<theta>=\\<theta>\\_cancel (agreement).\<close>
         have h_U2_cont: "continuous_on (?B \<inter> U2) \<tau>"
-          sorry \<comment> \<open>On U2: closed pasting for cancel/good at positive x-axis.\<close>
+          sorry \<comment> \<open>On U2 = {snd<0} \\<union> {fst>0}: For snd<0, good formula (continuous).
+             For fst>0: cancel formula (snd\\<ge>0) and good formula (snd\\<le>0) both give (r,0) at x-axis.
+             Pointwise continuity follows. Key cases: (1) snd\\<noteq>0: single formula in neighborhood,
+             (2) snd=0, fst>0: both formulas converge to (fst p, 0).\<close>
         \<comment> \<open>Pointwise: for each p \\<in> ?B, p \\<in> U1 or U2. In either case, at\\_within\\_nhd gives limit.\<close>
         show ?thesis unfolding continuous_on_def
         proof (intro ballI)
