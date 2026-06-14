@@ -9243,10 +9243,55 @@ proof -
                 (snd (?ext ! ia) \<noteq> snd (?ext ! ja) \<and> k = Suc ia mod ?n \<and> l = ja)"
           by auto
         \<comment> \<open>For each case: show spur\\_f transfers C7 identification to q\\_m equality.\<close>
+        \<comment> \<open>Mixed case impossible: hfresh prevents cancel label matching good label.\<close>
+        have hmixed_impossible: "ia \<ge> 2 \<longleftrightarrow> ja \<ge> 2"
+        proof -
+          have hlen_ext: "length ?ext = ?n" by (by100 simp)
+          show ?thesis
+          proof
+            assume hia2: "ia \<ge> 2"
+            show "ja \<ge> 2"
+            proof (rule ccontr)
+              assume "\<not> ja \<ge> 2" hence "ja < 2" by (by100 linarith)
+              hence "fst (?ext ! ja) = fst a"
+                unfolding top1_inverse_edge_def by (cases ja) (by100 auto)+
+              moreover have "fst (?ext ! ia) \<in> fst ` set w"
+              proof -
+                have "ia - 2 < ?m" using hia2 hia hn_eq by (by100 linarith)
+                have "ia = (ia - 2) + 2" using hia2 by (by100 simp)
+                hence "?ext ! ia = w ! (ia - 2)"
+                  using cancel_shift_label[OF \<open>ia - 2 < ?m\<close>, of a] by (by100 simp)
+                hence "fst (?ext ! ia) = fst (w ! (ia - 2))" by (by100 simp)
+                moreover have "w ! (ia - 2) \<in> set w" using \<open>ia - 2 < ?m\<close> by (by100 simp)
+                ultimately show ?thesis by (by100 force)
+              qed
+              ultimately show False using hfresh hlbl by (by100 auto)
+            qed
+          next
+            assume hja2: "ja \<ge> 2"
+            show "ia \<ge> 2"
+            proof (rule ccontr)
+              assume "\<not> ia \<ge> 2" hence "ia < 2" by (by100 linarith)
+              hence "fst (?ext ! ia) = fst a"
+                unfolding top1_inverse_edge_def by (cases ia) (by100 auto)+
+              moreover have "fst (?ext ! ja) \<in> fst ` set w"
+              proof -
+                have "ja - 2 < ?m" using hja2 hja hn_eq by (by100 linarith)
+                have "ja = (ja - 2) + 2" using hja2 by (by100 simp)
+                hence "?ext ! ja = w ! (ja - 2)"
+                  using cancel_shift_label[OF \<open>ja - 2 < ?m\<close>, of a] by (by100 simp)
+                hence "fst (?ext ! ja) = fst (w ! (ja - 2))" by (by100 simp)
+                moreover have "w ! (ja - 2) \<in> set w" using \<open>ja - 2 < ?m\<close> by (by100 simp)
+                ultimately show ?thesis by (by100 force)
+              qed
+              ultimately show False using hfresh hlbl by (by100 auto)
+            qed
+          qed
+        qed
         from hcase show "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
-          sorry \<comment> \<open>Case split on ia, ja \\<ge> 2 (good) vs ia, ja \\<in> {0,1} (cancel).
-             Good: h\\_spur\\_vertex + C7\\_m at t=0/1 + cancel\\_shift.
-             Cancel: h\\_spur\\_vertex\\_0 + h\\_spur\\_vertex\\_02.\<close>
+          sorry \<comment> \<open>With hmixed\\_impossible: case split into cancel (ia<2, ja<2) and good (ia\\<ge>2, ja\\<ge>2).
+             Cancel: only (0,1)/(1,0) opp direction. Cases give vtx0~vtx2 or vtx1~vtx1.
+             Good: cancel\\_shift + C7\\_m at t=0/1.\<close>
       qed
       \<comment> \<open>The rtrancl closure preserves q\\_m \\<circ> spur\\_f (by induction on rtrancl).\<close>
       have h_rtrancl_f: "\<forall>k l. (k, l) \<in> ?vtx_step\<^sup>* \<longrightarrow>
