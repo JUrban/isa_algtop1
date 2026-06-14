@@ -10509,8 +10509,40 @@ proof -
                By C12\\_m + C8\\_m: spur\\_f(y) must be a P\\_m vertex.\<close>
             \<comment> \<open>y must be a P\\_e vertex. Use h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
             show "q_e x = q_e y"
-              sorry \<comment> \<open>Needs: spur\\_f(x) is P\\_m vertex, determine y's vertex index,
-                 apply h\\_vtx\\_vtgt\\_transfer\\_rev. Similar structure to good-edge case.\<close>
+            proof (cases "k = 1")
+              case True
+              \<comment> \<open>k = 1: vertex\\_e(1) maps to spur point (P\\_m interior).
+                 C8\\_m + h\\_spur\\_inj gives x = y.\<close>
+              show ?thesis using True hx_vtx heq hx hy hsfx hsfy
+                sorry \<comment> \<open>spur\\_f(vertex\\_e(1)) is P\\_m interior (spur midpoint).
+                   Same argument as interior case.\<close>
+            next
+              case False
+              \<comment> \<open>k \\<noteq> 1: spur\\_f(vertex\\_e(k)) is a P\\_m vertex.\<close>
+              hence hk_ne1: "k \<noteq> 1" .
+              \<comment> \<open>Determine spur\\_f image: vertex\\_m(k') for k' = (k=0 \\<to> 0, k\\<ge>2 \\<to> k-2).\<close>
+              define k' where "k' = (if k = 0 then 0 else k - 2)"
+              have hk'_lt: "k' < ?m" unfolding k'_def using hk_lt hn_eq hk_ne1 hm3 by (by100 auto)
+              have hsf_vtx: "spur_f (vx_e k, vy_e k) = (vx_m k', vy_m k')"
+              proof (cases "k = 0")
+                case True thus ?thesis unfolding k'_def using h_spur_vertex_0 by (by100 simp)
+              next
+                case False
+                hence "k \<ge> 2" using hk_ne1 by (by100 linarith)
+                from h_spur_vertex[rule_format, OF this hk_lt]
+                show ?thesis unfolding k'_def using False by (by100 simp)
+              qed
+              \<comment> \<open>q\\_m(vertex\\_m(k')) = q\\_m(spur\\_f(y)). spur\\_f(y) must be a P\\_m vertex.\<close>
+              have hq_vtx: "q_m (vx_m k', vy_m k') = q_m (spur_f y)"
+                using heq hx_vtx hsf_vtx by (by100 simp)
+              \<comment> \<open>By C12\\_m: vertex \\<noteq> edge-interior under q\\_m.\<close>
+              \<comment> \<open>By C8\\_m: vertex \\<noteq> interior (boundary \\<noteq> interior).\<close>
+              \<comment> \<open>So spur\\_f(y) must be on P\\_m boundary at a vertex.\<close>
+              \<comment> \<open>Then y is a P\\_e vertex. Use h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
+              show ?thesis using hq_vtx hk'_lt hy hsfy heq hx_vtx
+                sorry \<comment> \<open>Determine spur\\_f(y) is P\\_m vertex, extract y's vertex index,
+                   apply h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
+            qed
           qed
           show ?thesis
           proof (cases "0 < t \<and> t < 1")
