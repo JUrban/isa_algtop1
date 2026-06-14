@@ -934,6 +934,88 @@ proof -
   show ?thesis .
 qed
 
+\<comment> \<open>§76 Polygon diagonal cut-reglue homeomorphism (per expert audit 30 §6).
+   Given two proper schemes s1, s2 of the same length where s2 is a cut-paste
+   rearrangement of s1 (i.e., s2 is obtained from s1 by moving a block of edges
+   past an identified pair), the canonical quotients Y1, Y2 are homeomorphic.
+
+   Construction (per Munkres §76 + audit 30):
+   1. Both canonical quotients use the SAME regular n-gon P (from scheme\\_quotient\\_exists)
+   2. Cut P along a diagonal d into sub-polygons Q1, Q2
+   3. On Q1: define a PL homeomorphism that rearranges boundary arcs (fixing the diagonal)
+   4. On Q2: identity
+   5. The combined map \\<phi>: P \\<to> P is a homeomorphism (continuous at diagonal)
+   6. \\<phi> maps old-identification fibres to new-identification fibres
+   7. quotient\\_same\\_fibres\\_homeomorphic gives Y\\_old \\<cong> Y\\_new
+
+   The sub-polygon rearrangement is the key geometric step. It's a PL homeomorphism
+   of a convex polygon that cyclically shifts some boundary arcs while fixing others.
+   Extension from boundary to interior by cone from centroid.\<close>
+
+\<comment> \<open>Helper: convex polygon sub-region (intersection of P with a half-plane).
+   Given a convex polygon P and a diagonal from vertex v\\_a to v\\_b,
+   the sub-polygon on one side is still convex and its boundary consists of
+   the edges between v\\_a and v\\_b plus the diagonal segment.\<close>
+
+\<comment> \<open>Helper: PL homeomorphism of convex polygon that permutes boundary arcs.
+   Given a convex polygon Q with boundary arcs A1,...,Ak,D (where D is fixed),
+   a cyclic permutation \\<sigma> of A1,...,Ak induces a PL boundary homeomorphism
+   extended to the interior by cone from centroid.
+
+   Construction: for each boundary arc Ai (angular interval [\\<alpha>i, \\<alpha>i+1]),
+   map it linearly to the arc A\\<sigma>(i) (angular interval [\\<alpha>'\\<sigma>(i), \\<alpha>'\\<sigma>(i)+1]).
+   Since all maps are linear on arcs and agree at arc endpoints (consecutive arcs
+   share endpoints in the permuted order), the boundary map is continuous.
+   Extend to interior by: for a point at distance r from centroid in direction \\<theta>,
+   map to distance r in direction \\<sigma>(\\<theta>).
+
+   This construction works for ANY convex polygon, not just regular ones.
+   The key property: D (the fixed arc) maps to itself, ensuring compatibility
+   with the identity on the other sub-polygon.\<close>
+
+\<comment> \<open>Core lemma: PL homeomorphism of the closed unit disk B2 that rearranges
+   boundary arcs. Given n arcs dividing S1 into equal parts (each of width 2\\<pi>/n)
+   and a permutation \\<sigma> of {0,..n-1}, construct a PL homeomorphism \\<phi>: B2 \\<to> B2
+   that maps the k-th arc linearly to the \\<sigma>(k)-th arc.
+
+   The construction: for each boundary point at angle \\<theta> in the k-th arc
+   [2\\<pi>k/n, 2\\<pi>(k+1)/n], map to the corresponding angle in the \\<sigma>(k)-th arc.
+   Extend radially: \\<phi>(r*p) = r*\\<phi>(p/|p|) for p \\<noteq> 0, \\<phi>(0) = 0.
+
+   CAVEAT (from session 1520): This is NOT continuous at arc boundaries unless
+   the permutation preserves adjacency. For cut-paste operations, we need a
+   DIFFERENT construction: cut the polygon along a diagonal, rearrange one
+   sub-polygon while fixing the diagonal, then reassemble.
+   The sub-polygon rearrangement IS a cyclic rotation of edges on one side
+   of the diagonal, which DOES preserve adjacency within that side.
+   The diagonal arc is fixed, ensuring continuity at the cut boundary.\<close>
+
+\<comment> \<open>Diagonal cut rearrangement: the key geometric lemma for §76 operations.
+   Given a regular n-gon P inscribed in the unit circle, a diagonal d from
+   vertex v\\_a to v\\_b divides P into sub-polygons Q1 (vertices a,...,b) and
+   Q2 (vertices b,...,a). A cyclic rotation of the edges within Q1
+   (fixing the diagonal) gives a homeomorphism of P that rearranges edges.
+
+   This is formalized as: there exists a homeomorphism \\<phi> of B2 that maps
+   the old edge arcs to the new (rearranged) edge arcs on S1, where the
+   rearrangement is a cyclic shift of edges within one sub-polygon.\<close>
+lemma diagonal_cut_rearrange_homeo:
+  fixes n :: nat and cut_start cut_end shift :: nat
+  assumes hn: "n \<ge> 3"
+      and hcut: "cut_start < n" "cut_end < n" "cut_start \<noteq> cut_end"
+      and hshift: "shift > 0"
+      and hshift_bound: "shift < (cut_end - cut_start) mod n"
+  shows "\<exists>\<phi>. top1_homeomorphism_on top1_B2 (subspace_topology UNIV
+    (product_topology_on top1_open_sets top1_open_sets) top1_B2) top1_B2
+    (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) top1_B2) \<phi>
+    \<and> (\<forall>k < n. \<forall>t \<in> {0..(1::real)}.
+         \<phi> (cos (2*pi*(real k + t)/real n), sin (2*pi*(real k + t)/real n))
+       = (let new_k = (if (k - cut_start) mod n < (cut_end - cut_start) mod n
+                       then (cut_start + ((k - cut_start + shift) mod ((cut_end - cut_start) mod n))) mod n
+                       else k)
+          in (cos (2*pi*(real new_k + t)/real n), sin (2*pi*(real new_k + t)/real n))))"
+  sorry
+
 \<comment> \<open>Cancel at front for PROPER schemes — per expert audit 23 §5.
    Uses scheme\\_quotient\\_exists for w to get a canonical quotient Y\\_w,
    then shows Y (quotient of [a,inv a]@w) \\<cong> Y\\_w via spur collapse.
@@ -978,11 +1060,68 @@ proof -
      is induced by arc rearrangement on S1 extended by cone to B2.
      NOTE: scheme\\_quotient\\_uniqueness doesn't apply here (different schemes).
      This step requires the geometric arc-permutation construction.\<close>
+  \<comment> \<open>Step 2a: Get FULL C1-C12 from scheme\\_quotient\\_exists(2) for both schemes.
+     This gives C12 (vertex-edge separation) needed for vertex cases.\<close>
+  from scheme_quotient_exists(2)[OF hlen hproper_old]
+  obtain P_old :: "(real \<times> real) set" and q_old :: "real \<times> real \<Rightarrow> real \<times> real"
+    and vx_old vy_old :: "nat \<Rightarrow> real"
+    and Y_old2 :: "(real \<times> real) set" and TY_old2 :: "(real \<times> real) set set"
+    and vtgt_old :: "nat \<Rightarrow> nat"
+    where hY_old2: "top1_quotient_of_scheme_on Y_old2 TY_old2 ?s"
+    and hC2_old: "top1_quotient_map_on P_old
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_old)
+        Y_old2 TY_old2 q_old"
+    and hC7_old: "\<forall>i<length ?s. \<forall>j<length ?s. fst (?s!i) = fst (?s!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q_old ((1-t)*vx_old i+t*vx_old(Suc i mod length ?s),
+            (1-t)*vy_old i+t*vy_old(Suc i mod length ?s))
+         = (if snd (?s!i) = snd (?s!j)
+            then q_old ((1-t)*vx_old j+t*vx_old(Suc j mod length ?s),
+                    (1-t)*vy_old j+t*vy_old(Suc j mod length ?s))
+            else q_old (t*vx_old j+(1-t)*vx_old(Suc j mod length ?s),
+                    t*vy_old j+(1-t)*vy_old(Suc j mod length ?s))))"
+    and hC8_old: "\<forall>p\<in>P_old. (\<forall>i<length ?s. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t)*vx_old i+t*vx_old(Suc i mod length ?s),
+                (1-t)*vy_old i+t*vy_old(Suc i mod length ?s)))
+       \<longrightarrow> (\<forall>p'\<in>P_old. q_old p = q_old p' \<longrightarrow> p = p')"
+    and hC9_old: "\<forall>i<length ?s. \<forall>j<length ?s. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
+        q_old ((1-t)*vx_old i+t*vx_old(Suc i mod length ?s),
+            (1-t)*vy_old i+t*vy_old(Suc i mod length ?s))
+      = q_old ((1-s')*vx_old j+s'*vx_old(Suc j mod length ?s),
+            (1-s')*vy_old j+s'*vy_old(Suc j mod length ?s))
+      \<longrightarrow> (i=j \<and> t=s') \<or> (fst(?s!i)=fst(?s!j) \<and>
+          (if snd(?s!i)=snd(?s!j) then s'=t else s'=1-t))"
+    and hC12_old: "\<forall>k<length ?s. \<forall>j<length ?s. \<forall>s'\<in>{0<..<(1::real)}.
+        q_old (vx_old k, vy_old k) \<noteq> q_old ((1-s')*vx_old j + s'*vx_old(Suc j mod length ?s),
+                               (1-s')*vy_old j + s'*vy_old(Suc j mod length ?s))"
+    and hvtgt_old: "\<forall>k<length ?s. q_old (vx_old k, vy_old k) = (vx_old (vtgt_old k), vy_old (vtgt_old k))"
+    and hvtgt_old_chain: "\<forall>k<length ?s. \<forall>l<length ?s. vtgt_old k = vtgt_old l \<longrightarrow>
+        (k, l) \<in> {(a, b). \<exists>i<length ?s. \<exists>j<length ?s. i \<noteq> j
+          \<and> fst (?s ! i) = fst (?s ! j)
+          \<and> ((snd (?s ! i) = snd (?s ! j) \<and> a = i \<and> b = j)
+           \<or> (snd (?s ! i) = snd (?s ! j) \<and> a = Suc i mod length ?s \<and> b = Suc j mod length ?s)
+           \<or> (snd (?s ! i) \<noteq> snd (?s ! j) \<and> a = i \<and> b = Suc j mod length ?s)
+           \<or> (snd (?s ! i) \<noteq> snd (?s ! j) \<and> a = Suc i mod length ?s \<and> b = j))}\<^sup>*"
+    by (elim exE conjE) (rule that, assumption+)
+  \<comment> \<open>Step 2b: The diagonal cut-rearrange homeomorphism \\<phi>: B2 \\<to> B2
+     rearranges edge arcs on S1 via cyclic shift within a sub-polygon.
+     Specifically: cut along diagonal from vertex |u0| to vertex |u0|+|u1|+|u2|+2.
+     Within the sub-polygon (containing u1, (a,T), u2, (a,F)): cyclically shift
+     by |u1| positions so u1 moves from before (a,T) to after (a,F).
+     The diagonal arc is fixed, so the map is continuous.
+     The composition q\\_new \\<circ> \\<phi>\\_P \\<circ> \\<psi> has the same fibres as q\\_old.
+     [Here \\<phi>\\_P = \\<psi>\\<inverse> \\<circ> \\<phi> \\<circ> \\<psi> transfers from disk to polygon coordinates.]\<close>
+  \<comment> \<open>Step 2c: Fibre matching (same structure as scheme\\_quotient\\_uniqueness).
+     Interior: C8 gives unique preimage \\<to> same fibre.
+     Edge-interior: \\<phi> maps old edge(i,t) to new edge(\\<sigma>(i),t).
+       If old labels at i,j match, then new labels at \\<sigma>(i),\\<sigma>(j) match
+       (since old\\_scheme[i] = new\\_scheme[\\<sigma>(i)]). So C7/C9 give same fibres.
+     Vertex-edge-interior: impossible by C12 (both quotients from scheme\\_quotient\\_exists).
+     Vertex-vertex: vtgt chain transfers via \\<sigma> (same labels \\<to> same C7 generators).\<close>
   have "\<exists>h. top1_homeomorphism_on Y_old TY_old Y_new TY_new h"
-    sorry \<comment> \<open>Cut-reglue homeomorphism between canonical quotients of same-length
-       proper schemes. Construction: arc permutation on S1 (piecewise linear
-       bijection that moves u1 block past identified edge pair) extended by
-       cone from origin to B2. Then compose with disk homeomorphisms.\<close>
+    sorry \<comment> \<open>Blocked by diagonal\\_cut\\_rearrange\\_homeo (sorry'd).
+       Once that geometric lemma is proved, the fibre matching follows
+       the same pattern as scheme\\_quotient\\_uniqueness but with \\<sigma>-shifted indices.
+       C12 available from scheme\\_quotient\\_exists(2) above.\<close>
   then obtain h_rearrange where hrearr: "top1_homeomorphism_on Y_old TY_old Y_new TY_new h_rearrange"
     by (by100 blast)
   from scheme_quotient_uniqueness[OF htopo htopo_old hq hY_old]
