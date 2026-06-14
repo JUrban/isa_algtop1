@@ -10436,10 +10436,61 @@ proof -
                 (if snd(w!(i-2))=snd(w!j_m) then s_m=t else s_m=1-t))"
               by (by100 blast)
             \<comment> \<open>Now use h\\_fibres\\_good\\_edge backward to get q\\_e equality.\<close>
-            show "q_e x = q_e y"
-              sorry \<comment> \<open>From C9\\_m identification: edge\\_m(i-2,t) matches edge\\_m(j\\_m,s\\_m).
-                 Need: y = edge\\_e(j\\_m+2, s\\_m) (from spur\\_f structure).
-                 Then h\\_fibres\\_good\\_edge backward: q\\_e(edge\\_e(i,t)) = q\\_e(edge\\_e(j\\_m+2,s\\_m)).\<close>
+            \<comment> \<open>spur\\_f(y) = edge\\_m(j\\_m, s\\_m). By h\\_spur\\_good\\_edge: edge\\_e(j\\_m+2, s\\_m) also
+               maps to edge\\_m(j\\_m, s\\_m). By h\\_spur\\_inj: y = edge\\_e(j\\_m+2, s\\_m).\<close>
+            have hjm2: "j_m + 2 < ?n" using hjm hn_eq by (by100 linarith)
+            have hjm2_ge2: "j_m + 2 \<ge> 2" by (by100 simp)
+            have hspur_y: "spur_f ((1-s_m)*vx_e(j_m+2)+s_m*vx_e(Suc(j_m+2) mod ?n),
+                (1-s_m)*vy_e(j_m+2)+s_m*vy_e(Suc(j_m+2) mod ?n))
+              = ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m))"
+            proof -
+              from h_spur_good_edge[rule_format, OF hjm2_ge2 hjm2 hsm_oi2]
+              have "spur_f ((1-s_m)*vx_e(j_m+2)+s_m*vx_e(Suc(j_m+2) mod ?n),
+                  (1-s_m)*vy_e(j_m+2)+s_m*vy_e(Suc(j_m+2) mod ?n))
+                = ((1-s_m)*vx_m((j_m+2)-2)+s_m*vx_m(Suc((j_m+2)-2) mod ?m),
+                  (1-s_m)*vy_m((j_m+2)-2)+s_m*vy_m(Suc((j_m+2)-2) mod ?m))" .
+              thus ?thesis by (by100 simp)
+            qed
+            hence "spur_f ((1-s_m)*vx_e(j_m+2)+s_m*vx_e(Suc(j_m+2) mod ?n),
+                (1-s_m)*vy_e(j_m+2)+s_m*vy_e(Suc(j_m+2) mod ?n)) = spur_f y"
+              using hsfy_eq by (by100 simp)
+            \<comment> \<open>edge\\_e(j\\_m+2, s\\_m) is in P\\_e.\<close>
+            have hy_edge: "((1-s_m)*vx_e(j_m+2)+s_m*vx_e(Suc(j_m+2) mod ?n),
+                (1-s_m)*vy_e(j_m+2)+s_m*vy_e(Suc(j_m+2) mod ?n)) \<in> P_e"
+            proof -
+              have "?n \<ge> 3" using hn5 by (by100 linarith)
+              thus ?thesis by (rule edge_point_in_polygon_witness[OF _ hjm2 hsm hC5e])
+            qed
+            \<comment> \<open>By h\\_spur\\_inj: y = edge\\_e(j\\_m+2, s\\_m).\<close>
+            hence "y = ((1-s_m)*vx_e(j_m+2)+s_m*vx_e(Suc(j_m+2) mod ?n),
+                (1-s_m)*vy_e(j_m+2)+s_m*vy_e(Suc(j_m+2) mod ?n))"
+              using h_spur_inj hy hy_edge \<open>spur_f _ = spur_f y\<close>
+              unfolding inj_on_def by (by100 blast)
+            hence hy_eq: "y = ((1-s_m)*vx_e(j_m+2)+s_m*vx_e(Suc(j_m+2) mod ?n),
+                (1-s_m)*vy_e(j_m+2)+s_m*vy_e(Suc(j_m+2) mod ?n))" .
+            \<comment> \<open>Apply h\\_fibres\\_good\\_edge backward.\<close>
+            from h_fibres_good_edge[rule_format, OF hi2 hi hjm2_ge2 hjm2 ht_oi hsm_oi2]
+            have hbicond: "(q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+               = q_e ((1-s_m)*vx_e(j_m+2)+s_m*vx_e(Suc(j_m+2) mod ?n),
+                   (1-s_m)*vy_e(j_m+2)+s_m*vy_e(Suc(j_m+2) mod ?n)))
+               \<longleftrightarrow>
+                (q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+               = q_m ((1-s_m)*vx_m((j_m+2)-2)+s_m*vx_m(Suc((j_m+2)-2) mod ?m),
+                   (1-s_m)*vy_m((j_m+2)-2)+s_m*vy_m(Suc((j_m+2)-2) mod ?m)))" .
+            hence hbicond2: "(q_e ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),(1-t)*vy_e i+t*vy_e(Suc i mod ?n))
+               = q_e ((1-s_m)*vx_e(j_m+2)+s_m*vx_e(Suc(j_m+2) mod ?n),
+                   (1-s_m)*vy_e(j_m+2)+s_m*vy_e(Suc(j_m+2) mod ?n)))
+               \<longleftrightarrow>
+                (q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+               = q_m ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                   (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m)))"
+              by (by100 simp)
+            moreover have "q_m ((1-t)*vx_m(i-2)+t*vx_m(Suc(i-2)mod ?m),(1-t)*vy_m(i-2)+t*vy_m(Suc(i-2)mod ?m))
+               = q_m ((1-s_m)*vx_m j_m+s_m*vx_m(Suc j_m mod ?m),
+                   (1-s_m)*vy_m j_m+s_m*vy_m(Suc j_m mod ?m))"
+              using heq hsf_x hsfy_eq by (by100 simp)
+            ultimately show "q_e x = q_e y" using hx_eq hy_eq by (by100 simp)
           qed
           have hcase_cancel: "i < 2 \<and> 0 < t \<and> t < 1 \<longrightarrow> q_e x = q_e y"
             sorry \<comment> \<open>Cancel edge: spur\\_f maps to P\\_m interior. C8\\_m + h\\_spur\\_inj.\<close>
