@@ -9149,6 +9149,29 @@ proof -
           q_m (vx_m k, vy_m k) \<noteq> q_m ((1-s)*vx_m j + s*vx_m(Suc j mod ?m),
                                         (1-s)*vy_m j + s*vy_m(Suc j mod ?m))"
         using hC12m_proved by (by100 simp)
+      \<comment> \<open>VERTEX-VERTEX TRANSFER: q\\_m(spur\\_f(vertex\\_e(k))) = q\\_m(spur\\_f(vertex\\_e(vtgt\\_e(k)))).
+         By strong induction on k, using vtgt\\_e(k) \\<le> k.
+         Base (vtgt\\_e(k) = k): trivial.
+         Step (vtgt\\_e(k) < k): k is connected via a C7\\_e edge pair to some vertex
+         with smaller or equal index. The generator step preserves q\\_m\\<circ>spur\\_f.
+         By IH, the intermediate vertex's q\\_m value equals the representative's.\<close>
+      have h_vtx_to_rep: "\<forall>k<?n. q_m (spur_f (vx_e k, vy_e k)) =
+          q_m (spur_f (vx_e (vtgt_e k), vy_e (vtgt_e k)))"
+        sorry \<comment> \<open>Strong induction on k. Generator step: C7\\_e + cancel\\_shift + C7\\_m.
+           For each k with vtgt\\_e(k) < k: edge k (or k-1) has a matching partner,
+           connecting k to vertex j. Generator gives f(k)=f(j). IH gives f(j)=f(vtgt(k)).\<close>
+      \<comment> \<open>Corollary: vtgt\\_e(k) = vtgt\\_e(l) \\<to> q\\_m(spur\\_f(vtx k)) = q\\_m(spur\\_f(vtx l)).\<close>
+      have h_vtx_vtgt_transfer: "\<forall>k<?n. \<forall>l<?n. vtgt_e k = vtgt_e l \<longrightarrow>
+          q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+      proof (intro allI impI)
+        fix k l assume hk: "k < ?n" and hl: "l < ?n" and hv: "vtgt_e k = vtgt_e l"
+        from h_vtx_to_rep[rule_format, OF hk]
+        have "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e (vtgt_e k), vy_e (vtgt_e k)))" .
+        also have "\<dots> = q_m (spur_f (vx_e (vtgt_e l), vy_e (vtgt_e l)))" using hv by (by100 simp)
+        also from h_vtx_to_rep[rule_format, OF hl]
+        have "\<dots> = q_m (spur_f (vx_e l, vy_e l))" by (by100 simp)
+        finally show "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))" .
+      qed
       \<comment> \<open>Forward direction of h\\_fibres: q\\_e(x)=q\\_e(y) \\<Longrightarrow> q\\_m(spur\\_f x)=q\\_m(spur\\_f y).
          For INTERIOR x: C8\\_e gives x=y \\<to> trivial.
          For EDGE-INTERIOR x with EDGE-INTERIOR y (both t,s \\<in> (0,1)):
@@ -9491,9 +9514,29 @@ proof -
               next
                 case False
                 \<comment> \<open>y is also a vertex. Vertex-vertex transfer.\<close>
-                show ?thesis
-                  sorry \<comment> \<open>Vertex-vertex forward: q\\_e(vertex k)=q\\_e(vertex l) \\<to> q\\_m transfer.
-                     Needs: C7 chain argument (all vertex identifications come from C7).\<close>
+                hence hs2_vtx: "s2 = 0 \<or> s2 = 1" using hs2
+                  unfolding top1_unit_interval_def by (by100 auto)
+                define k where "k = (if t = 0 then i else Suc i mod ?n)"
+                define l where "l = (if s2 = 0 then j2 else Suc j2 mod ?n)"
+                have hk_lt: "k < ?n" unfolding k_def using hi hn5 by (by100 auto)
+                have hl_lt: "l < ?n" unfolding l_def using hj2 hn5 by (by100 auto)
+                have hx_vtx: "x = (vx_e k, vy_e k)" unfolding k_def
+                  using ht_vtx hx_eq by (by100 auto)
+                have hy_vtx: "y = (vx_e l, vy_e l)" unfolding l_def
+                  using hs2_vtx hy_eq2 by (by100 auto)
+                have hvtgt: "vtgt_e k = vtgt_e l"
+                proof -
+                  have "q_e (vx_e k, vy_e k) = q_e (vx_e l, vy_e l)"
+                    using heq hx_vtx hy_vtx by (by100 simp)
+                  hence "(vx_e (vtgt_e k), vy_e (vtgt_e k)) = (vx_e (vtgt_e l), vy_e (vtgt_e l))"
+                    using hq_vtgt_e1[rule_format, OF hk_lt]
+                          hq_vtgt_e1[rule_format, OF hl_lt] by (by100 simp)
+                  thus ?thesis using hC3e[rule_format]
+                    hq_vtgt_e2[rule_format, OF hk_lt] hq_vtgt_e2[rule_format, OF hl_lt]
+                    by (by100 blast)
+                qed
+                from h_vtx_vtgt_transfer[rule_format, OF hk_lt hl_lt hvtgt]
+                show ?thesis using hx_vtx hy_vtx by (by100 simp)
               qed
             qed
           qed
