@@ -10867,6 +10867,15 @@ proof -
           show ?thesis using h_upper h_poly by (by100 linarith)
         qed
       qed
+      \<comment> \<open>Helper: \\<tau> maps cancel-sector boundary to B2 interior.
+         At r=1, offset=0, so \\<tau> = sp = (1-tf)*(1,0)+tf*p\\_cm. For tf > 0 and |p\\_cm| < 1: |sp| < 1.\<close>
+      have h_tau_cancel_bdy: "\<And>\<theta>. 0 < \<theta> \<Longrightarrow> \<theta> < \<theta>_cancel \<Longrightarrow>
+          fst (\<tau> (cos \<theta>, sin \<theta>)) ^ 2 + snd (\<tau> (cos \<theta>, sin \<theta>)) ^ 2 < 1"
+        sorry
+      \<comment> \<open>Helper: \\<tau>(\\<psi>\\_e(vertex\\_e(1))) is in B2 interior (= p\\_cm with |p\\_cm| < 1).\<close>
+      have h_tau_vtx1_int: "fst (\<tau> (\<psi>_e (vx_e 1, vy_e 1))) ^ 2
+          + snd (\<tau> (\<psi>_e (vx_e 1, vy_e 1))) ^ 2 < 1"
+        sorry
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
       proof (intro ballI impI)
         fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e"
@@ -11085,8 +11094,42 @@ proof -
             \<comment> \<open>spur\\_f(x) is P\\_m interior. Same argument as P\\_e interior case.\<close>
             have "\<forall>j<?m. \<forall>s\<in>I_set. spur_f x \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
                 (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
-              sorry \<comment> \<open>\\<tau> maps cancel boundary (r=1, tf>0) to B2 interior (|spur\\_pt| < 1).
-                 Then h\\_B2\\_int\\_to\\_Pm\\_int gives P\\_m interior.\<close>
+            proof -
+              \<comment> \<open>\\<psi>\\_e(x) at cancel angle, \\<tau> maps to B2 interior, h\\_B2\\_int\\_to\\_Pm\\_int.\<close>
+              define \<alpha> where "\<alpha> = 2*pi*(real i + t)/real ?n"
+              have h\<psi>_x: "\<psi>_e x = (cos \<alpha>, sin \<alpha>)"
+                using h\<psi>e_edge[rule_format, OF hi ht] hx_eq unfolding \<alpha>_def by (by100 simp)
+              have h\<alpha>_pos: "\<alpha> > 0"
+                unfolding \<alpha>_def using ht0 hi hn5 pi_gt_zero by (by100 simp)
+              have h\<alpha>_lt: "\<alpha> < \<theta>_cancel"
+              proof -
+                have "real i + t < 2" using hi_cancel ht1 by (by100 linarith)
+                hence "2*pi*(real i + t) < 2*pi*2"
+                  using pi_gt_zero by (by100 simp)
+                hence "2*pi*(real i + t)/real ?n < 2*pi*2/real ?n"
+                  using hn5 divide_strict_right_mono[of "2*pi*(real i+t)" "2*pi*2" "real ?n"]
+                  by (by100 simp)
+                also have "\<dots> = \<theta>_cancel" unfolding \<theta>_cancel_def by (by100 simp)
+                finally show ?thesis unfolding \<alpha>_def .
+              qed
+              have h\<tau>_int: "fst (\<tau> (\<psi>_e x)) ^ 2 + snd (\<tau> (\<psi>_e x)) ^ 2 < 1"
+                using h_tau_cancel_bdy[OF h\<alpha>_pos h\<alpha>_lt] h\<psi>_x by (by100 simp)
+              have h\<psi>_B2: "\<psi>_e x \<in> top1_B2"
+                using hx h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def
+                by (by100 blast)
+              have h\<tau>_B2: "\<tau> (\<psi>_e x) \<in> top1_B2" using h\<psi>_B2 h\<tau>_range by (by100 blast)
+              show ?thesis
+              proof (intro allI impI ballI)
+                fix j s assume "j < ?m" and "s \<in> I_set"
+                from h_B2_int_to_Pm_int[OF h\<tau>_B2 h\<tau>_int \<open>j < ?m\<close> \<open>s \<in> I_set\<close>]
+                have "inv_into P_m \<psi>_m (\<tau> (\<psi>_e x)) \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                    (1-s)*vy_m j+s*vy_m(Suc j mod ?m))" .
+                moreover have "spur_f x = inv_into P_m \<psi>_m (\<tau> (\<psi>_e x))"
+                  unfolding spur_f_def by (by100 simp)
+                ultimately show "spur_f x \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                    (1-s)*vy_m j+s*vy_m(Suc j mod ?m))" by (by100 simp)
+              qed
+            qed
             hence "\<forall>p'\<in>P_m. q_m (spur_f x) = q_m p' \<longrightarrow> spur_f x = p'"
               using hC8m hsfx by (by100 blast)
             hence "spur_f x = spur_f y" using hsfy heq by (by100 blast)
@@ -11115,8 +11158,29 @@ proof -
               \<comment> \<open>spur\\_f(vertex\\_e(1)) is P\\_m interior. Same C8\\_m + h\\_spur\\_inj argument.\<close>
               have "\<forall>j<?m. \<forall>s\<in>I_set. spur_f x \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
                   (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
-                sorry \<comment> \<open>\\<tau>(\\<psi>\\_e(vertex\\_e(1))) = (0,0) (spur midpoint).
-                   (0,0) \\<in> B2 interior (|0| = 0 < 1). h\\_B2\\_int\\_to\\_Pm\\_int gives P\\_m interior.\<close>
+              proof -
+                have "x = (vx_e 1, vy_e 1)" using hx_vtx True by (by100 simp)
+                have h\<tau>_int: "fst (\<tau> (\<psi>_e (vx_e 1, vy_e 1))) ^ 2
+                    + snd (\<tau> (\<psi>_e (vx_e 1, vy_e 1))) ^ 2 < 1"
+                  using h_tau_vtx1_int .
+                have h\<psi>_B2: "\<psi>_e x \<in> top1_B2"
+                  using hx h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def
+                  by (by100 blast)
+                have h\<tau>_B2: "\<tau> (\<psi>_e x) \<in> top1_B2" using h\<psi>_B2 h\<tau>_range by (by100 blast)
+                have h\<tau>_x_int: "fst (\<tau> (\<psi>_e x)) ^ 2 + snd (\<tau> (\<psi>_e x)) ^ 2 < 1"
+                  using h\<tau>_int \<open>x = (vx_e 1, vy_e 1)\<close> by (by100 simp)
+                show ?thesis
+                proof (intro allI impI ballI)
+                  fix j s assume "j < ?m" and "s \<in> I_set"
+                  from h_B2_int_to_Pm_int[OF h\<tau>_B2 h\<tau>_x_int \<open>j < ?m\<close> \<open>s \<in> I_set\<close>]
+                  have "inv_into P_m \<psi>_m (\<tau> (\<psi>_e x)) \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                      (1-s)*vy_m j+s*vy_m(Suc j mod ?m))" .
+                  moreover have "spur_f x = inv_into P_m \<psi>_m (\<tau> (\<psi>_e x))"
+                    unfolding spur_f_def by (by100 simp)
+                  ultimately show "spur_f x \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                      (1-s)*vy_m j+s*vy_m(Suc j mod ?m))" by (by100 simp)
+                qed
+              qed
               hence "\<forall>p'\<in>P_m. q_m (spur_f x) = q_m p' \<longrightarrow> spur_f x = p'"
                 using hC8m hsfx by (by100 blast)
               hence "spur_f x = spur_f y" using hsfy heq by (by100 blast)
