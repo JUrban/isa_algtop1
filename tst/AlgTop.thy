@@ -9560,13 +9560,13 @@ proof -
             assume "snd (?ext ! ia) = snd (?ext ! ja)" and "k = ia" and "l = ja"
             \<comment> \<open>Same dir: but cancel pair has opposite direction. Contradiction.\<close>
             hence False using hia_cancel hja_cancel hne
-              unfolding top1_inverse_edge_def by (cases ia; cases ja) (by100 auto)+
+              unfolding top1_inverse_edge_def by (cases ia; cases ja) auto+
             thus ?thesis by (by100 simp)
           next
             assume "snd (?ext ! ia) = snd (?ext ! ja)"
                 and "k = Suc ia mod ?n" and "l = Suc ja mod ?n"
             hence False using hia_cancel hja_cancel hne
-              unfolding top1_inverse_edge_def by (cases ia; cases ja) (by100 auto)+
+              unfolding top1_inverse_edge_def by (cases ia; cases ja) auto+
             thus ?thesis by (by100 simp)
           next
             assume "snd (?ext ! ia) \<noteq> snd (?ext ! ja)" and "k = ia" and "l = Suc ja mod ?n"
@@ -10349,10 +10349,28 @@ proof -
               and hx_eq: "x = ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
                   (1-t)*vy_e i + t*vy_e(Suc i mod ?n))" by (by100 blast)
           \<comment> \<open>Sub-cases: edge-interior (good or cancel) vs vertex.\<close>
-          show ?thesis using heq hx hy hsfx hsfy hi ht hx_eq
-            sorry \<comment> \<open>If 0<t<1, i\\<ge>2: good edge, use h\\_fibres\\_good\\_edge backward.
-               If 0<t<1, i<2: cancel edge maps to P\\_m interior, use C8\\_m + h\\_spur\\_inj.
-               If t\\<in>{0,1}: vertex, use C12\\_m + h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
+          \<comment> \<open>Three sub-cases based on x's edge type.\<close>
+          have hcase_good: "i \<ge> 2 \<and> 0 < t \<and> t < 1 \<longrightarrow> q_e x = q_e y"
+            sorry \<comment> \<open>Good edge: h\\_fibres\\_good\\_edge backward.\<close>
+          have hcase_cancel: "i < 2 \<and> 0 < t \<and> t < 1 \<longrightarrow> q_e x = q_e y"
+            sorry \<comment> \<open>Cancel edge: spur\\_f maps to P\\_m interior. C8\\_m + h\\_spur\\_inj.\<close>
+          have hcase_vertex: "\<not>(0 < t \<and> t < 1) \<longrightarrow> q_e x = q_e y"
+            sorry \<comment> \<open>Vertex: C12\\_m + h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
+          show ?thesis
+          proof (cases "0 < t \<and> t < 1")
+            case True
+            show ?thesis
+            proof (cases "i \<ge> 2")
+              case True
+              thus ?thesis using hcase_good \<open>0 < t \<and> t < 1\<close> by (by100 blast)
+            next
+              case False
+              hence "i < 2" by (by100 linarith)
+              thus ?thesis using hcase_cancel \<open>0 < t \<and> t < 1\<close> by (by100 blast)
+            qed
+          next
+            case False thus ?thesis using hcase_vertex by (by100 blast)
+          qed
         qed
       qed
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
