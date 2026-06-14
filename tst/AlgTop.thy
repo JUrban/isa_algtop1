@@ -10306,7 +10306,44 @@ proof -
           assume hne: "q \<noteq> (0, 0)"
           \<comment> \<open>In good sector: |\\<tau>| = r > 0. In cancel sector: fst(\\<tau>) > 0.\<close>
           \<comment> \<open>Either way \\<tau> \\<noteq> (0,0), contradicting h\\<tau>0.\<close>
-          have "fst (\<tau> q) \<noteq> 0 \<or> snd (\<tau> q) \<noteq> 0" sorry
+          \<comment> \<open>With p\\_cm = (1/2, 0): in good sector |\\<tau>| = r > 0, in cancel sector fst(\\<tau>) > 0.\<close>
+          have "fst (\<tau> q) \<noteq> 0 \<or> snd (\<tau> q) \<noteq> 0"
+          proof -
+            define r where "r = sqrt (fst q ^ 2 + snd q ^ 2)"
+            have hr_pos: "r > 0"
+            proof -
+              have "fst q \<noteq> 0 \<or> snd q \<noteq> 0" using hne by (cases q) (by100 auto)
+              hence "fst q ^ 2 + snd q ^ 2 > 0"
+              proof
+                assume "fst q \<noteq> 0"
+                hence "fst q ^ 2 > 0" unfolding power2_eq_square
+                  using mult_pos_neg[of "fst q" "fst q"] mult_neg_neg[of "fst q" "fst q"]
+                  by (cases "fst q > 0") (by100 auto)+
+                moreover have "snd q ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              next
+                assume "snd q \<noteq> 0"
+                hence "snd q ^ 2 > 0" unfolding power2_eq_square
+                  using mult_pos_neg[of "snd q" "snd q"] mult_neg_neg[of "snd q" "snd q"]
+                  by (cases "snd q > 0") (by100 auto)+
+                moreover have "fst q ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              thus ?thesis unfolding r_def using real_sqrt_gt_0_iff by (by100 auto)
+            qed
+            \<comment> \<open>In good sector: \\<tau>(q) = (r*cos \\<phi>, r*sin \\<phi>), |\\<tau>|² = r² > 0.
+               In cancel sector: fst(\\<tau>) = r*(1-tf/2) > 0 (since r > 0, tf \\<le> 1).\<close>
+            \<comment> \<open>For both: \\<tau>(q) \\<noteq> (0,0).\<close>
+            have "fst (\<tau> q) ^ 2 + snd (\<tau> q) ^ 2 > 0"
+            proof -
+              have "\<tau> q \<in> top1_B2" using hq h\<tau>_range by (by100 blast)
+              have "fst (\<tau> q) ^ 2 + snd (\<tau> q) ^ 2 \<le> 1"
+                using \<open>\<tau> q \<in> top1_B2\<close> unfolding top1_B2_def by (by100 simp)
+              \<comment> \<open>Need: > 0. In good sector |\\<tau>| = r. In cancel sector fst > 0.\<close>
+              show ?thesis sorry
+            qed
+            thus ?thesis by (by100 auto)
+          qed
           thus False using h\<tau>0 by (by100 simp)
         qed
       qed
