@@ -2,16 +2,19 @@ theory AlgTop
   imports "AlgTopCached16.AlgTopCached16"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1511, 18 standalone sorry lines):
-UPDATE (session 1501-1511):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1516, 16 standalone sorry lines):
+UPDATE (sessions 1501-1516):
 - h\\_psi\\_e\\_int: PROVED (boundary image extraction from polygon\\_homeomorphic\\_to\\_disk)
-- p\\_cm interior: PROVED (fst(p\\_cm)²+snd(p\\_cm)² < 1)
+- p\\_cm = (1/2, 0): direct constant definition, avoids PolygonDisk export issues
 - h\\_tau\\_strict\\_B2: BOTH sectors FULLY PROVED (good + cancel, zero sorry)
 - h\\_tau\\_cancel\\_bdy: FULLY PROVED (\\<tau> at cancel boundary maps to B2 interior)
 - h\\_tau\\_vtx1\\_int: PROVED (\\<tau>(\\<psi>\\_e(vertex\\_e(1))) in B2 interior)
+- h\\_tau\\_nonzero: FULLY PROVED (\\<tau> maps nonzero to nonzero)
+- h\\_tau\\_zero: PROVED (\\<tau>(q)=(0,0) \\<to> q=(0,0))
 - converse vtx\\_id \\<subseteq> output\\_step\\_rel: PROVED (symmetry swap)
-- BUG FOUND AND FIXED: h\\_tau\\_inj was FALSE (midpoint ray collapse when p\\_cm=0).
-  Fix: changed spur target from centroid to midpoint(vertex\\_m(0), centroid).
+- BUG FOUND AND FIXED: p\\_cm changed from \\<psi>\\_m(centroid)=(0,0) to (1/2,0).
+  This prevents midpoint-ray collapse and makes \\<tau> injectivity provable.
+- AlgTopCached15+16: 4600 lines cached in clean (no q\\&d) sessions.
   p\\_cm \\<noteq> (0,0) now provable (modulo PolygonDisk export blocked by eta-conversion).
 - hspur\\_in\\_Pm: PROVED (spur target in P\\_m via coefficient averaging)
 - Remaining \\<tau> fix sorrys: hspur\\_interior (cross product, ~100 lines), \\<psi>\\_m(centroid)=(0,0) (eta issue).
