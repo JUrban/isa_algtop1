@@ -2247,11 +2247,11 @@ proof -
          Good sector: fst(\\<tau>)=r*cos(\\<phi>)=0, snd(\\<tau>)=r*sin(\\<phi>)=0, so r²(cos²+sin²)=0, r=0, contradiction.
          Cancel sector: fst(\\<tau>)=r*(1-tf/2)=0. Since 0\\<le>tf\\<le>1: 1-tf/2\\<ge>1/2>0 and r>0, contradiction.\<close>
       show "\<tau> q \<noteq> (0, 0)"
-        unfolding \<tau>_def Let_def using hne
-        unfolding p_cm_def d_perp_def \<tau>_boundary_def \<theta>_cancel_def \<theta>_mid_def
-        sorry \<comment> \<open>Proof: unfold \\<tau>\\_def with p\\_cm=(1/2,0). After auto with sin\\_cos\\_squared\\_add3,
-           11 subgoals remain. These are nonlinear arithmetic about r*(1-tf/2)>0 (cancel)
-           and r²(cos²+sin²)>0 (good). Need targeted tactic for each.\<close>
+        unfolding \<tau>_def using hne
+        apply (simp only: if_False)
+        unfolding Let_def p_cm_def d_perp_def \<tau>_boundary_def \<theta>_cancel_def \<theta>_mid_def
+        apply (auto simp: power2_eq_square sin_cos_squared_add3[simplified])
+        sorry
     qed
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
