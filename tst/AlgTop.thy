@@ -10018,14 +10018,199 @@ proof -
       \<comment> \<open>Backward direction: q\\_m(spur\\_f x)=q\\_m(spur\\_f y) \\<Longrightarrow> q\\_e x=q\\_e y.
          Uses hC12\\_m (vertex-edge separation for q\\_m) + C8\\_m (interior injectivity)
          + h\\_spur\\_good\\_edge (edge mapping) + h\\_spur\\_cancel\\_collapse (cancel collapse).\<close>
+      \<comment> \<open>Reverse vertex transfer: q\\_m vertex identification \\<to> q\\_e vertex identification.
+         Symmetric to h\\_vtx\\_vtgt\\_transfer but uses C7\\_m \\<to> C7\\_e (reverse cancel\\_shift).\<close>
+      have h_vtx_vtgt_transfer_rev: "\<forall>k<?m. \<forall>l<?m. vtgt_m k = vtgt_m l \<longrightarrow>
+          q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))"
+      proof -
+        let ?ext = "[a, top1_inverse_edge a] @ w"
+        let ?vtx_step_m = "{(x, y). \<exists>i<?m. \<exists>j<?m. i \<noteq> j
+            \<and> fst (w ! i) = fst (w ! j)
+            \<and> ((snd (w ! i) = snd (w ! j) \<and> x = i \<and> y = j)
+             \<or> (snd (w ! i) = snd (w ! j) \<and> x = Suc i mod ?m \<and> y = Suc j mod ?m)
+             \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> x = i \<and> y = Suc j mod ?m)
+             \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> x = Suc i mod ?m \<and> y = j))}"
+        \<comment> \<open>Each C7\\_m vertex step transfers to q\\_e vertex identification.\<close>
+        have h_step_rev: "\<forall>k l. (k, l) \<in> ?vtx_step_m \<longrightarrow>
+            q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))"
+        proof (intro allI impI)
+          fix k l assume h: "(k, l) \<in> ?vtx_step_m"
+          then obtain ia ja where hia: "ia < ?m" and hja: "ja < ?m" and hne: "ia \<noteq> ja"
+              and hlbl: "fst (w ! ia) = fst (w ! ja)"
+              and hcase: "(snd (w ! ia) = snd (w ! ja) \<and> k = ia \<and> l = ja) \<or>
+                  (snd (w ! ia) = snd (w ! ja) \<and> k = Suc ia mod ?m \<and> l = Suc ja mod ?m) \<or>
+                  (snd (w ! ia) \<noteq> snd (w ! ja) \<and> k = ia \<and> l = Suc ja mod ?m) \<or>
+                  (snd (w ! ia) \<noteq> snd (w ! ja) \<and> k = Suc ia mod ?m \<and> l = ja)"
+            by auto
+          \<comment> \<open>Reverse cancel\\_shift: w!ia = ext!(ia+2) and w!ja = ext!(ja+2).\<close>
+          have hshift_ia: "?ext ! (ia+2) = w ! ia"
+            using cancel_shift_label[OF hia, of a] .
+          have hshift_ja: "?ext ! (ja+2) = w ! ja"
+            using cancel_shift_label[OF hja, of a] .
+          have hia_e: "ia + 2 < ?n" using hia hn_eq by (by100 linarith)
+          have hja_e: "ja + 2 < ?n" using hja hn_eq by (by100 linarith)
+          have hlbl_e: "fst (?ext ! (ia+2)) = fst (?ext ! (ja+2))"
+            using hlbl hshift_ia hshift_ja by (by100 simp)
+          have hdir_e: "snd (w ! ia) = snd (w ! ja) \<longleftrightarrow> snd (?ext ! (ia+2)) = snd (?ext ! (ja+2))"
+            using hshift_ia hshift_ja by (by100 simp)
+          have hne_e: "ia + 2 \<noteq> ja + 2" using hne by (by100 linarith)
+          have ht0: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have ht1: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          \<comment> \<open>Helper: q\\_e at Suc(ia+2) mod n equals q\\_e at Suc ia mod m + 2.
+             For ia < m-1: indices match. For ia = m-1: index 0 vs 2, q\\_e-identified via cancel pair.\<close>
+          have hSuc_qe_ia: "q_e (vx_e (Suc (ia + 2) mod ?n), vy_e (Suc (ia + 2) mod ?n)) =
+              q_e (vx_e (Suc ia mod ?m + 2), vy_e (Suc ia mod ?m + 2))"
+          proof (cases "ia < ?m - 1")
+            case True
+            hence "Suc (ia + 2) mod ?n = Suc ia mod ?m + 2"
+              using hn_eq hm3 by (by100 simp)
+            thus ?thesis by (by100 simp)
+          next
+            case False
+            hence hia_last: "ia = ?m - 1" using hia by (by100 linarith)
+            hence "Suc (ia + 2) = ?n" using hn_eq hm3 by (by100 linarith)
+            hence hmod0_ia: "Suc (ia + 2) mod ?n = 0" by (by100 simp)
+            have "Suc ia = ?m" using hia_last hm3 by (by100 linarith)
+            hence hmod0_ia_m: "Suc ia mod ?m = 0" by (by100 simp)
+            \<comment> \<open>LHS = q\\_e(vx\\_e 0, vy\\_e 0). RHS = q\\_e(vx\\_e(0+2), vy\\_e(0+2)).
+               Cancel pair gives q\\_e(vx\\_e 0, ...) = q\\_e(vx\\_e(0+2), ...).\<close>
+            have hcancel_0_2: "q_e (vx_e 0, vy_e 0) = q_e (vx_e (0+2), vy_e (0+2))"
+            proof -
+              have "0 < ?n" "1 < ?n" using hn5 by (by100 linarith)+
+              have "fst (?ext ! 0) = fst (?ext ! 1)"
+                unfolding top1_inverse_edge_def by (by100 simp)
+              have "snd (?ext ! 0) \<noteq> snd (?ext ! 1)"
+                unfolding top1_inverse_edge_def by (by100 simp)
+              from hC7e[rule_format, OF \<open>0 < ?n\<close> \<open>1 < ?n\<close> \<open>fst (?ext ! 0) = fst (?ext ! 1)\<close> ht0]
+                \<open>snd (?ext ! 0) \<noteq> snd (?ext ! 1)\<close>
+              have "q_e (vx_e 0, vy_e 0) = q_e (vx_e (Suc 1 mod ?n), vy_e (Suc 1 mod ?n))"
+                by (by100 simp)
+              moreover have "Suc (Suc 0) < ?n" using hn5 by (by100 linarith)
+              hence "Suc 1 mod ?n = Suc (Suc 0)" using mod_less by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            show ?thesis using hmod0_ia hmod0_ia_m hcancel_0_2
+              sorry \<comment> \<open>Numeral issue: Suc(ia+2) mod n = 0, Suc ia mod m = 0.
+                 Goal: q\\_e(vx\\_e 0, vy\\_e 0) = q\\_e(vx\\_e(0+2), vy\\_e(0+2)). From hcancel\\_0\\_2.\<close>
+          qed
+          have hSuc_qe_ja: "q_e (vx_e (Suc (ja + 2) mod ?n), vy_e (Suc (ja + 2) mod ?n)) =
+              q_e (vx_e (Suc ja mod ?m + 2), vy_e (Suc ja mod ?m + 2))"
+          proof (cases "ja < ?m - 1")
+            case True
+            hence "Suc (ja + 2) mod ?n = Suc ja mod ?m + 2"
+              using hn_eq hm3 by (by100 simp)
+            thus ?thesis by (by100 simp)
+          next
+            case False
+            hence "ja = ?m - 1" using hja by (by100 linarith)
+            hence "Suc (ja + 2) = ?n" using hn_eq hm3 by (by100 linarith)
+            hence hmod0_ja: "Suc (ja + 2) mod ?n = 0" by (by100 simp)
+            have "Suc ja = ?m" using \<open>ja = ?m - 1\<close> hm3 by (by100 linarith)
+            hence hmod0_ja_m: "Suc ja mod ?m = 0" by (by100 simp)
+            show ?thesis using hmod0_ja hmod0_ja_m
+              sorry \<comment> \<open>Same numeral issue + cancel pair: q\\_e(vtx 0) = q\\_e(vtx(0+2)).\<close>
+          qed
+          \<comment> \<open>4 cases on direction/endpoint, each using C7\\_e.\<close>
+          \<comment> \<open>Specialize C7\\_e at t=0 and t=1 for edges ia+2, ja+2.\<close>
+          from hC7e[rule_format, OF hia_e hja_e hlbl_e ht0]
+          have hC7e_t0: "q_e (vx_e(ia+2), vy_e(ia+2)) =
+              (if snd(?ext!(ia+2))=snd(?ext!(ja+2))
+               then q_e (vx_e(ja+2), vy_e(ja+2))
+               else q_e (vx_e(Suc(ja+2) mod ?n), vy_e(Suc(ja+2) mod ?n)))"
+            by (by100 simp)
+          from hC7e[rule_format, OF hia_e hja_e hlbl_e ht1]
+          have hC7e_t1: "q_e (vx_e(Suc(ia+2) mod ?n), vy_e(Suc(ia+2) mod ?n)) =
+              (if snd(?ext!(ia+2))=snd(?ext!(ja+2))
+               then q_e (vx_e(Suc(ja+2) mod ?n), vy_e(Suc(ja+2) mod ?n))
+               else q_e (vx_e(ja+2), vy_e(ja+2)))"
+            by (by100 simp)
+          have hcase_sd0: "snd (w ! ia) = snd (w ! ja) \<Longrightarrow> k = ia \<Longrightarrow> l = ja \<Longrightarrow>
+              q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))"
+          proof -
+            assume hsd: "snd (w ! ia) = snd (w ! ja)" and "k = ia" and "l = ja"
+            have "snd (?ext ! (ia+2)) = snd (?ext ! (ja+2))"
+              using hsd hdir_e by (by100 blast)
+            hence "q_e (vx_e(ia+2), vy_e(ia+2)) = q_e (vx_e(ja+2), vy_e(ja+2))"
+              using hC7e_t0 by (by100 simp)
+            thus ?thesis using \<open>k = ia\<close> \<open>l = ja\<close> by (by100 simp)
+          qed
+          have hcase_sd1: "snd (w ! ia) = snd (w ! ja) \<Longrightarrow> k = Suc ia mod ?m \<Longrightarrow> l = Suc ja mod ?m \<Longrightarrow>
+              q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))"
+          proof -
+            assume hsd: "snd (w ! ia) = snd (w ! ja)"
+                and "k = Suc ia mod ?m" and "l = Suc ja mod ?m"
+            have hsd_e: "snd (?ext ! (ia+2)) = snd (?ext ! (ja+2))" using hsd hdir_e by (by100 blast)
+            hence "q_e (vx_e(Suc(ia+2)mod ?n), vy_e(Suc(ia+2)mod ?n)) =
+                q_e (vx_e(Suc(ja+2)mod ?n), vy_e(Suc(ja+2)mod ?n))"
+              using hC7e_t1 by (by100 simp)
+            hence "q_e (vx_e (Suc ia mod ?m + 2), vy_e (Suc ia mod ?m + 2)) =
+                q_e (vx_e (Suc ja mod ?m + 2), vy_e (Suc ja mod ?m + 2))"
+              using hSuc_qe_ia hSuc_qe_ja by (by100 simp)
+            thus ?thesis using \<open>k = Suc ia mod ?m\<close> \<open>l = Suc ja mod ?m\<close>
+              by (by100 simp)
+          qed
+          have hcase_od0: "snd (w ! ia) \<noteq> snd (w ! ja) \<Longrightarrow> k = ia \<Longrightarrow> l = Suc ja mod ?m \<Longrightarrow>
+              q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))"
+          proof -
+            assume hod: "snd (w ! ia) \<noteq> snd (w ! ja)"
+                and "k = ia" and "l = Suc ja mod ?m"
+            have hod_e: "snd (?ext ! (ia+2)) \<noteq> snd (?ext ! (ja+2))" using hod hdir_e by (by100 blast)
+            hence "q_e (vx_e(ia+2), vy_e(ia+2)) =
+                q_e (vx_e(Suc(ja+2)mod ?n), vy_e(Suc(ja+2)mod ?n))"
+              using hC7e_t0 by (by100 simp)
+            hence "q_e (vx_e (ia + 2), vy_e (ia + 2)) =
+                q_e (vx_e (Suc ja mod ?m + 2), vy_e (Suc ja mod ?m + 2))"
+              using hSuc_qe_ja by (by100 simp)
+            thus ?thesis using \<open>k = ia\<close> \<open>l = Suc ja mod ?m\<close> by (by100 simp)
+          qed
+          have hcase_od1: "snd (w ! ia) \<noteq> snd (w ! ja) \<Longrightarrow> k = Suc ia mod ?m \<Longrightarrow> l = ja \<Longrightarrow>
+              q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))"
+          proof -
+            assume hod: "snd (w ! ia) \<noteq> snd (w ! ja)"
+                and "k = Suc ia mod ?m" and "l = ja"
+            have hod_e: "snd (?ext ! (ia+2)) \<noteq> snd (?ext ! (ja+2))" using hod hdir_e by (by100 blast)
+            hence "q_e (vx_e(Suc(ia+2)mod ?n), vy_e(Suc(ia+2)mod ?n)) =
+                q_e (vx_e(ja+2), vy_e(ja+2))"
+              using hC7e_t1 by (by100 simp)
+            hence "q_e (vx_e (Suc ia mod ?m + 2), vy_e (Suc ia mod ?m + 2)) =
+                q_e (vx_e (ja + 2), vy_e (ja + 2))"
+              using hSuc_qe_ia by (by100 simp)
+            thus ?thesis using \<open>k = Suc ia mod ?m\<close> \<open>l = ja\<close> by (by100 simp)
+          qed
+          from hcase hcase_sd0 hcase_sd1 hcase_od0 hcase_od1
+          show "q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))"
+            by (by100 blast)
+        qed
+        \<comment> \<open>Closure by rtrancl\\_induct.\<close>
+        have h_rtrancl_rev: "\<forall>k l. (k, l) \<in> ?vtx_step_m\<^sup>* \<longrightarrow>
+            q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))"
+        proof (intro allI impI)
+          fix k l assume "(k, l) \<in> ?vtx_step_m\<^sup>*"
+          thus "q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))"
+          proof (induction rule: rtrancl_induct)
+            case base show ?case by (by100 simp)
+          next
+            case (step y z)
+            from h_step_rev[rule_format, OF step.hyps(2)]
+            have "q_e (vx_e (y+2), vy_e (y+2)) = q_e (vx_e (z+2), vy_e (z+2))" .
+            with step.IH show ?case by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>vtgt\\_m equality \\<to> rtrancl \\<to> q\\_e equality.\<close>
+        show ?thesis
+        proof (intro allI impI)
+          fix k l assume hk: "k < ?m" and hl: "l < ?m" and hv: "vtgt_m k = vtgt_m l"
+          from hq_vtgt_m5[rule_format, OF hk hl hv]
+          have "(k, l) \<in> ?vtx_step_m\<^sup>*" .
+          from h_rtrancl_rev[rule_format, OF this]
+          show "q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))" .
+        qed
+      qed
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
-        sorry \<comment> \<open>Backward fibre — structurally similar to forward but uses:
-           - Interior: spur\\_f injective on interior (\\<tau> injective by offset separation) + C8\\_m.
-           - Good\\<times>good: h\\_fibres\\_good\\_edge backward (biconditional already PROVED).
-           - Cancel\\<times>cancel: C8\\_m on spur (interior of P\\_m) \\<to> spur\\_f(x)=spur\\_f(y) \\<to> C7\\_e.
-           - Good\\<times>cancel: boundary/interior separation (spur in P\\_m interior, good edge on boundary).
-           - Vertex\\<times>edge: hC12\\_m for q\\_m vertex-edge separation.
-           - Vertex\\<times>vertex: reverse vtgt transfer (symmetric to forward, uses h\\_vtx\\_to\\_rep).\<close>
+        sorry \<comment> \<open>Case analysis parallel to forward. Uses h\\_fibres\\_good\\_edge backward
+           (biconditional), h\\_vtx\\_vtgt\\_transfer\\_rev (vertex\\<times>vertex),
+           hC12\\_m (vertex\\<times>edge separation), hC8m (interior injectivity),
+           h\\_spur\\_cancel\\_collapse + C7\\_e (cancel\\<times>cancel).\<close>
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
         using h_fibres_forward h_fibres_backward by (by100 blast)
       \<comment> \<open>Assemble: continuity of spur\\_f via composition, surjectivity via \\<tau>, fibre matching.\<close>
