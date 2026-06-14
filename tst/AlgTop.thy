@@ -1689,6 +1689,14 @@ proof -
         unfolding Let_def p_cm_def d_perp_def \<tau>_boundary_def \<theta>_cancel_def \<theta>_mid_def
         apply (auto simp: power2_eq_square sin_cos_squared_add3[simplified]
           intro: prod_eqI)
+        \<comment> \<open>5 goals: 1 trig (cos=sin=0) + 4 min=2 contradictions.\<close>
+        \<comment> \<open>Goal 1: sin(X)=0 \\<and> cos(X)=0 \\<to> False. From sin²+cos²=1.\<close>
+        subgoal
+          using sin_cos_squared_add3[of "((arccos (fst q / sqrt (fst q * fst q + snd q * snd q)) -
+            4 * pi / (2 + real (length w))) * (2 + real (length w)) / real (length w))"]
+          by (by100 simp)
+        \<comment> \<open>Goals 2-5: min(A,B)=2 \\<to> False. Both A,B < 2.\<close>
+        \<comment> \<open>min(A,B) = 2 \\<to> False. Since \\<theta> < \\<theta>\\_cancel: A < 2, so min(A,B) \\<le> A < 2.\<close>
         sorry
     qed
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
