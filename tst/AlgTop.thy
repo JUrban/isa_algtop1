@@ -3535,15 +3535,64 @@ proof -
     fix k l assume hk: "k < ?n" and hl: "l < ?n" and hv: "vtgt k = vtgt l"
     \<comment> \<open>vtgt k = vtgt l means both are in the same equivalence class of vtx\\_id.
        The internal vtx\\_id relation is a subset of the output step relation.\<close>
-    show "(k, l) \<in> {(a, b). \<exists>i<?n. \<exists>j<?n. i \<noteq> j
+    let ?R = "vtx_id \<union> converse vtx_id \<union> Id"
+    let ?S = "{(a, b). \<exists>i<?n. \<exists>j<?n. i \<noteq> j
         \<and> fst (scheme ! i) = fst (scheme ! j)
         \<and> ((snd (scheme ! i) = snd (scheme ! j) \<and> a = i \<and> b = j)
          \<or> (snd (scheme ! i) = snd (scheme ! j) \<and> a = Suc i mod ?n \<and> b = Suc j mod ?n)
          \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = i \<and> b = Suc j mod ?n)
-         \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = Suc i mod ?n \<and> b = j))}\<^sup>*"
-      sorry \<comment> \<open>Follows from vtgt\\_def + vtgt\\_class + vtx\\_id\\_def.
-         The output step relation equals vtx\\_id (by definition), and vtgt equality
-         implies rtrancl connectivity (since vtgt = LEAST of the same class).\<close>
+         \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = Suc i mod ?n \<and> b = j))}"
+    \<comment> \<open>Step 1: (k, vtgt k) \\<in> R* and (l, vtgt l) \\<in> R*.\<close>
+    have hk_reach: "(k, vtgt k) \<in> ?R\<^sup>*"
+    proof -
+      have "\<exists>m. (k, m) \<in> ?R\<^sup>*" by (rule exI[of _ k]) (by100 simp)
+      thus ?thesis unfolding vtgt_def by (rule LeastI_ex)
+    qed
+    have hl_reach: "(l, vtgt l) \<in> ?R\<^sup>*"
+    proof -
+      have "\<exists>m. (l, m) \<in> ?R\<^sup>*" by (rule exI[of _ l]) (by100 simp)
+      thus ?thesis unfolding vtgt_def by (rule LeastI_ex)
+    qed
+    \<comment> \<open>Step 2: R* is symmetric.\<close>
+    have hsymR: "sym (?R\<^sup>*)"
+      using sym_rtrancl[of ?R] unfolding sym_def by (by100 blast)
+    \<comment> \<open>Step 3: (vtgt k, l) \\<in> R* (from hl\\_reach reversed + hv).\<close>
+    have "(vtgt l, l) \<in> ?R\<^sup>*" using hl_reach hsymR unfolding sym_def by (by100 blast)
+    hence "(vtgt k, l) \<in> ?R\<^sup>*" using hv by (by100 simp)
+    \<comment> \<open>Step 4: (k, l) \\<in> R* (transitivity).\<close>
+    have hkl_R: "(k, l) \<in> ?R\<^sup>*"
+      using rtrancl_trans[OF hk_reach \<open>(vtgt k, l) \<in> ?R\<^sup>*\<close>] .
+    \<comment> \<open>Step 5: vtx\\_id \\<subseteq> ?S (each vtx\\_id pair matches the output step relation).\<close>
+    have hvtx_sub: "vtx_id \<subseteq> ?S"
+      sorry \<comment> \<open>Each vtx\\_id pair comes from (idx, partner idx) with matching labels.
+         Show: idx < n, partner < n, idx \\<noteq> partner, fst(scheme!idx) = fst(scheme!partner).
+         Then the vtx\\_id pair matches one of the 4 disjuncts in ?S.\<close>
+    \<comment> \<open>Step 6: ?R \\<subseteq> ?S*.\<close>
+    have hR_sub_Sstar: "?R\<^sup>* \<subseteq> ?S\<^sup>*"
+    proof -
+      have "?R \<subseteq> ?S\<^sup>*"
+      proof
+        fix p assume "p \<in> ?R"
+        hence "p \<in> vtx_id \<or> p \<in> converse vtx_id \<or> p \<in> Id" by (by100 blast)
+        thus "p \<in> ?S\<^sup>*"
+        proof (elim disjE)
+          assume "p \<in> vtx_id"
+          hence "p \<in> ?S" using hvtx_sub by (by100 blast)
+          thus ?thesis by (by100 auto)
+        next
+          assume "p \<in> converse vtx_id"
+          hence "p \<in> ?S" sorry \<comment> \<open>Swap i/j in vtx\\_id: symmetric matching.\<close>
+          thus ?thesis by (by100 auto)
+        next
+          assume "p \<in> Id"
+          thus ?thesis by (by100 auto)
+        qed
+      qed
+      from rtrancl_mono[OF this]
+      show ?thesis by (by100 simp)
+    qed
+    \<comment> \<open>Step 7: Conclude.\<close>
+    show "(k, l) \<in> ?S\<^sup>*" using hkl_R \<open>?R\<^sup>* \<subseteq> ?S\<^sup>*\<close> by (by100 blast)
   qed
 qed
 
