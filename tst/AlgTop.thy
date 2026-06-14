@@ -5980,6 +5980,9 @@ proof -
         [OF hC1e hn3_e hC4e hC5e hC10e hvert_hp_e hstrict_hp_e]
     obtain \<psi>_e where
       h\<psi>e_homeo: "top1_homeomorphism_on P_e (?TP P_e) top1_B2 top1_B2_topology \<psi>_e"
+      and h\<psi>e_bdry: "\<psi>_e ` (\<Union>i<?n. {((1-t) * vx_e i + t * vx_e (Suc i mod ?n),
+                     (1-t) * vy_e i + t * vy_e (Suc i mod ?n)) | t. t \<in> I_set})
+        = top1_S1"
       and h\<psi>e_edge: "\<forall>i<?n. \<forall>t\<in>I_set.
         \<psi>_e ((1-t) * vx_e i + t * vx_e (Suc i mod ?n),
             (1-t) * vy_e i + t * vy_e (Suc i mod ?n))
@@ -6010,6 +6013,9 @@ proof -
         [OF hC1m hm3 hC4m hC5m hC10m hvert_hp_m hstrict_hp_m]
     obtain \<psi>_m where
       h\<psi>m_homeo: "top1_homeomorphism_on P_m (?TP P_m) top1_B2 top1_B2_topology \<psi>_m"
+      and h\<psi>m_bdry: "\<psi>_m ` (\<Union>j<?m. {((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
+                     (1-t) * vy_m j + t * vy_m (Suc j mod ?m)) | t. t \<in> I_set})
+        = top1_S1"
       and h\<psi>m_edge: "\<forall>j<?m. \<forall>t\<in>I_set.
         \<psi>_m ((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
             (1-t) * vy_m j + t * vy_m (Suc j mod ?m))
@@ -6071,6 +6077,38 @@ proof -
        Define f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e where \\<tau>: B2 \\<to> B2 is the spur collapse map.\<close>
     \<comment> \<open>Target of centroid in B2 coordinates.\<close>
     define p_cm where "p_cm = \<psi>_m (cx_m, cy_m)"
+    have hp_cm_B2: "p_cm \<in> top1_B2"
+    proof -
+      have "(cx_m, cy_m) \<in> P_m" using hcm_in_Pm .
+      hence "\<psi>_m (cx_m, cy_m) \<in> \<psi>_m ` P_m" by (by100 blast)
+      thus ?thesis using h\<psi>m_surj unfolding p_cm_def by (by100 blast)
+    qed
+    have hp_cm_not_S1: "p_cm \<notin> top1_S1"
+    proof
+      assume "p_cm \<in> top1_S1"
+      hence "p_cm \<in> \<psi>_m ` (\<Union>j<?m. {((1-t) * vx_m j + t * vx_m (Suc j mod ?m),
+                     (1-t) * vy_m j + t * vy_m (Suc j mod ?m)) | t. t \<in> I_set})"
+        using h\<psi>m_bdry by (by100 simp)
+      then obtain j' t' where hj': "j' < ?m" and ht': "t' \<in> I_set"
+          and h\<psi>_eq: "p_cm = \<psi>_m ((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),
+              (1-t')*vy_m j'+t'*vy_m(Suc j' mod ?m))"
+        by auto
+      have hedge_in: "((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),
+          (1-t')*vy_m j'+t'*vy_m(Suc j' mod ?m)) \<in> P_m"
+        using edge_point_in_polygon_witness[OF hm3 hj' ht' hC5m] by (by100 simp)
+      have "(cx_m, cy_m) = ((1-t')*vx_m j'+t'*vx_m(Suc j' mod ?m),
+          (1-t')*vy_m j'+t'*vy_m(Suc j' mod ?m))"
+        using h\<psi>m_inj[unfolded inj_on_def, rule_format, OF hcm_in_Pm hedge_in]
+            h\<psi>_eq unfolding p_cm_def by (by100 simp)
+      thus False using hcm_interior[rule_format, OF hj' ht'] by (by100 blast)
+    qed
+    have hp_cm_int: "fst p_cm ^ 2 + snd p_cm ^ 2 < 1"
+    proof -
+      have "fst p_cm ^ 2 + snd p_cm ^ 2 \<le> 1" using hp_cm_B2 unfolding top1_B2_def by (by100 simp)
+      moreover have "fst p_cm ^ 2 + snd p_cm ^ 2 \<noteq> 1"
+        using hp_cm_not_S1 unfolding top1_S1_def by (by100 simp)
+      ultimately show ?thesis by (by100 linarith)
+    qed
     \<comment> \<open>\\<tau> on the boundary S1:
        - Good arcs (edges \\<ge>2 of P\\_e): angle 2\\<pi>(k+t)/n \\<to> angle 2\\<pi>(k-2+t)/m on S1
        - Cancel arcs (edges 0,1): angle 2\\<pi>t/n \\<to> spur point (1-t')*(1,0) + t'*p\\_cm
@@ -10326,8 +10364,27 @@ proof -
              Since \\<psi>\\_e is bijective: p = edge\\_e(i,t). Contradicts hp\\_ne.\<close>
           \<comment> \<open>More precisely: \\<psi>\\_e is bijective P\\_e \\<to> B2. \\<psi>\\_e(p) on unit circle means
              \\<psi>\\_e(p) = \\<psi>\\_e(edge\\_e(i,t)) for some i,t. By injectivity: p = edge\\_e(i,t).\<close>
-          show False sorry \<comment> \<open>Need: unit circle = image of edges under \\<psi>\\_e.
-             Then bijective \\<psi>\\_e \\<to> p = edge point \\<to> contradicts hp\\_ne.\<close>
+          \<comment> \<open>\\<psi>\\_e(p) \\<in> S1 = \\<psi>\\_e ` edges. By injectivity, p is on an edge. Contradiction.\<close>
+          have "\<psi>_e p \<in> top1_S1"
+            using \<open>fst (\<psi>_e p) ^ 2 + snd (\<psi>_e p) ^ 2 = 1\<close> unfolding top1_S1_def by (by100 simp)
+          hence "\<psi>_e p \<in> \<psi>_e ` (\<Union>i<?n. {((1-t) * vx_e i + t * vx_e (Suc i mod ?n),
+                     (1-t) * vy_e i + t * vy_e (Suc i mod ?n)) | t. t \<in> I_set})"
+            using h\<psi>e_bdry by (by100 simp)
+          then obtain i' t' where hi': "i' < ?n" and ht': "t' \<in> I_set"
+              and h\<psi>_eq: "\<psi>_e p = \<psi>_e ((1-t')*vx_e i'+t'*vx_e(Suc i' mod ?n),
+                  (1-t')*vy_e i'+t'*vy_e(Suc i' mod ?n))"
+            by auto
+          define q where "q = ((1-t')*vx_e i'+t'*vx_e(Suc i' mod ?n),
+              (1-t')*vy_e i'+t'*vy_e(Suc i' mod ?n))"
+          have hq_in_Pe: "q \<in> P_e"
+            using edge_point_in_polygon_witness[OF hn3_e hi' ht' hC5e] unfolding q_def by (by100 simp)
+          have h\<psi>e_inj2: "inj_on \<psi>_e P_e"
+            using h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have "p = q" using h\<psi>e_inj2[unfolded inj_on_def, rule_format, OF hp hq_in_Pe]
+              h\<psi>_eq unfolding q_def by (by100 simp)
+          hence "p = ((1-t')*vx_e i'+t'*vx_e(Suc i' mod ?n),
+              (1-t')*vy_e i'+t'*vy_e(Suc i' mod ?n))" unfolding q_def by (by100 simp)
+          thus False using hp_ne hi' ht' by (by100 blast)
         qed
       qed
       \<comment> \<open>Helper: if \\<tau>(p) is in B2 interior (norm < 1), then spur\\_f(\\<psi>\\_e\\<inverse>(p)) is P\\_m interior.\<close>
@@ -10453,10 +10510,290 @@ proof -
         next
           case False
           \<comment> \<open>Cancel sector: |\\<tau>|² < 1. Uses r < 1 and (1-tf)² < 1 for tf > 0.\<close>
-          show ?thesis using h\<tau>_le1 hr_lt1 hr_pos False h\<tau>_simp
-            sorry \<comment> \<open>Cancel sector bound: |\\<tau>|² = r²[(1-tf)² + (1-r)²sin²(\\<pi>tf)/16] < 1.
-               Since (1-tf)² \\<le> 1, offset² \\<le> r²(1-r)²/16, and r < 1:
-               |\\<tau>|² \\<le> r² + r²(1-r)²/16 < 1 (since r² < 1 and correction small).\<close>
+          \<comment> \<open>Cancel sector: decompose \\<tau> and bound each component.\<close>
+          have h\<theta>_lt: "\<theta>_p < \<theta>_cancel" using False by (by100 linarith)
+          define sp where "sp = \<tau>_boundary \<theta>_p"
+          define tf where "tf = min (\<theta>_p * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>_p) * real ?n / (2*pi))"
+          define sign_v where "sign_v = (if \<theta>_p \<le> \<theta>_mid then (1::real) else -1)"
+          define ofs where "ofs = sign_v * r * (1 - r) * sin (pi * tf) / 4"
+          \<comment> \<open>Step 1: \\<tau> p = r*sp + ofs*d\\_perp in cancel sector.\<close>
+          have h\<tau>_cancel: "\<tau> p = (r * fst sp + ofs * fst d_perp,
+              r * snd sp + ofs * snd d_perp)"
+            using h\<tau>_simp h\<theta>_lt unfolding sp_def tf_def sign_v_def ofs_def Let_def
+            by (by100 simp)
+          \<comment> \<open>Compute sp as explicit pair.\<close>
+          have hsp_pair: "sp = ((1-tf) + tf * fst p_cm, tf * snd p_cm)"
+          proof -
+            have "\<not> \<theta>_p \<ge> \<theta>_cancel" using h\<theta>_lt by (by100 linarith)
+            hence "sp = (let t_fold = min (\<theta>_p * real ?n / (2*pi))
+                ((\<theta>_cancel - \<theta>_p) * real ?n / (2*pi))
+              in ((1 - t_fold) * 1 + t_fold * fst p_cm,
+                  (1 - t_fold) * 0 + t_fold * snd p_cm))"
+              unfolding sp_def \<tau>_boundary_def \<theta>_cancel_def by (by100 simp)
+            also have "\<dots> = ((1 - tf) + tf * fst p_cm, tf * snd p_cm)"
+              unfolding tf_def Let_def by (by100 simp)
+            finally show ?thesis .
+          qed
+          \<comment> \<open>Step 2: |sp|² \\<le> 1 (convex combination of (1,0) and p\\_cm in B2).\<close>
+          have hsp_norm: "fst sp ^ 2 + snd sp ^ 2 \<le> 1"
+          proof -
+            have htf_ge: "tf \<ge> 0"
+            proof -
+              have "\<theta>_p \<ge> 0"
+              proof -
+                have "fst p \<noteq> 0 \<or> snd p \<noteq> 0" using hne by (cases p) (by100 auto)
+                have h_lb: "-1 \<le> fst p / r" unfolding r_def
+                  by (rule fst_div_norm_bounded(1)[OF \<open>fst p \<noteq> 0 \<or> snd p \<noteq> 0\<close>])
+                have h_ub: "fst p / r \<le> 1" unfolding r_def
+                  by (rule fst_div_norm_bounded(2)[OF \<open>fst p \<noteq> 0 \<or> snd p \<noteq> 0\<close>])
+                show ?thesis
+                proof (cases "snd p \<ge> 0")
+                  case True thus ?thesis unfolding \<theta>_p_def
+                    using arccos_lbound[OF h_lb h_ub] by (by100 simp)
+                next
+                  case False
+                  hence "\<theta>_p = 2*pi - arccos (fst p / r)" unfolding \<theta>_p_def by (by100 simp)
+                  moreover have "arccos (fst p / r) \<le> pi" using arccos_ubound[OF h_lb h_ub] .
+                  ultimately show ?thesis using pi_gt_zero by (by100 linarith)
+                qed
+              qed
+              hence "\<theta>_p * real ?n / (2*pi) \<ge> 0" using pi_gt_zero hn5 by (by100 simp)
+              moreover have "(\<theta>_cancel - \<theta>_p) * real ?n / (2*pi) \<ge> 0"
+                using h\<theta>_lt pi_gt_zero hn5 by (by100 simp)
+              ultimately show ?thesis unfolding tf_def by (by100 simp)
+            qed
+            have hfst_pcm_le1: "fst p_cm \<le> 1"
+            proof (rule ccontr)
+              assume "\<not> fst p_cm \<le> 1"
+              hence "fst p_cm > 1" by (by100 linarith)
+              have "snd p_cm ^ 2 \<ge> 0" by (by100 simp)
+              have "fst p_cm ^ 2 \<ge> 1"
+              proof -
+                define a where "a = fst p_cm"
+                have "a > 1" using \<open>fst p_cm > 1\<close> unfolding a_def .
+                hence "a * a > 1 * 1"
+                  using mult_strict_mono'[of 1 a 1 a] by (by100 linarith)
+                thus ?thesis unfolding a_def power2_eq_square by (by100 linarith)
+              qed
+              hence "fst p_cm ^ 2 + snd p_cm ^ 2 \<ge> 1"
+                using \<open>snd p_cm ^ 2 \<ge> 0\<close> by (by100 linarith)
+              thus False using hp_cm_int by (by100 linarith)
+            qed
+            have hpcm_le1: "fst p_cm ^ 2 + snd p_cm ^ 2 \<le> 1" using hp_cm_int by (by100 linarith)
+            have "fst sp ^ 2 + snd sp ^ 2
+                = ((1-tf) + tf * fst p_cm) ^ 2 + (tf * snd p_cm) ^ 2"
+              using hsp_pair by (by100 simp)
+            also have "\<dots> = (1-tf)^2 + 2*(1-tf)*tf*fst p_cm + tf^2*(fst p_cm^2 + snd p_cm^2)"
+              by (by100 algebra)
+            also have "\<dots> \<le> (1-tf)^2 + 2*(1-tf)*tf*1 + tf^2*1"
+            proof -
+              have "2*(1-tf)*tf*fst p_cm \<le> 2*(1-tf)*tf*1"
+              proof -
+                have "tf \<le> 1"
+                proof -
+                  show ?thesis unfolding tf_def \<theta>_cancel_def
+                    using h\<theta>_lt pi_gt_zero hn5 sorry
+                qed
+                have "2*(1-tf)*tf \<ge> 0" using htf_ge \<open>tf \<le> 1\<close> by (by100 simp)
+                thus ?thesis using mult_left_mono[of "fst p_cm" 1 "2*(1-tf)*tf"]
+                  hfst_pcm_le1 by (by100 simp)
+              qed
+              moreover have "tf^2*(fst p_cm^2 + snd p_cm^2) \<le> tf^2*1"
+              proof -
+                have "tf^2 \<ge> 0" by (by100 simp)
+                thus ?thesis using mult_left_mono[of "fst p_cm^2+snd p_cm^2" 1 "tf^2"]
+                  hpcm_le1 by (by100 simp)
+              qed
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            also have "\<dots> = 1"
+            proof -
+              have "(1-tf)^2 + 2*(1-tf)*tf*1 + tf^2*1 = ((1-tf)+tf) * ((1-tf)+tf)"
+                unfolding power2_eq_square by (by100 algebra)
+              thus ?thesis by (by100 simp)
+            qed
+            finally show ?thesis .
+          qed
+          \<comment> \<open>Step 3: |ofs| \\<le> r*(1-r)/4 (from |sin| \\<le> 1 and |sign| = 1).\<close>
+          have hofs_sq: "ofs ^ 2 \<le> (r * (1 - r) / 4) ^ 2"
+          proof -
+            have "sign_v ^ 2 = 1" unfolding sign_v_def by (by100 simp)
+            have "sin (pi * tf) ^ 2 \<le> 1"
+            proof -
+              have "sin (pi * tf) ^ 2 + cos (pi * tf) ^ 2 = 1" by (by100 simp)
+              moreover have "cos (pi * tf) ^ 2 \<ge> 0" by (by100 simp)
+              ultimately show ?thesis by (by100 linarith)
+            qed
+            have "ofs ^ 2 = sign_v ^ 2 * r ^ 2 * (1-r) ^ 2 * sin(pi*tf) ^ 2 / 16"
+              unfolding ofs_def power2_eq_square by (by100 simp)
+            also have "\<dots> = r ^ 2 * (1-r) ^ 2 * sin(pi*tf) ^ 2 / 16"
+              using \<open>sign_v ^ 2 = 1\<close> by (by100 simp)
+            also have "\<dots> \<le> r ^ 2 * (1-r) ^ 2 * 1 / 16"
+            proof -
+              have "r ^ 2 * (1-r) ^ 2 \<ge> 0" by (by100 simp)
+              thus ?thesis using \<open>sin (pi * tf) ^ 2 \<le> 1\<close>
+                using mult_left_mono[of "sin(pi*tf)^2" "1^2" "r^2*(1-r)^2"]
+                by (by100 simp)
+            qed
+            also have "\<dots> = (r * (1-r) / 4) ^ 2" unfolding power2_eq_square by (by100 simp)
+            finally show ?thesis .
+          qed
+          have hofs_abs: "\<bar>ofs\<bar> \<le> r * (1 - r) / 4"
+          proof -
+            have hX_ge: "r * (1 - r) / 4 \<ge> 0" using hr_pos hr_lt1 by (by100 simp)
+            show ?thesis
+            proof (rule ccontr)
+              assume "\<not> \<bar>ofs\<bar> \<le> r * (1 - r) / 4"
+              hence "\<bar>ofs\<bar> > r * (1 - r) / 4" by (by100 linarith)
+              hence "\<bar>ofs\<bar> * \<bar>ofs\<bar> > (r*(1-r)/4) * (r*(1-r)/4)"
+                using hX_ge
+                using mult_strict_mono'[of "r*(1-r)/4" "\<bar>ofs\<bar>" "r*(1-r)/4" "\<bar>ofs\<bar>"]
+                by (by100 linarith)
+              hence "ofs ^ 2 > (r*(1-r)/4) ^ 2" unfolding power2_eq_square abs_mult_self
+                by (by100 linarith)
+              thus False using hofs_sq by (by100 linarith)
+            qed
+          qed
+          \<comment> \<open>Step 4: |d\\_perp|² < 4 (from |p\\_cm| < 1, so snd(p\\_cm)² + (fst(p\\_cm)-1)² < 4).\<close>
+          have hdp_norm: "fst d_perp ^ 2 + snd d_perp ^ 2 < 4"
+          proof -
+            have hfst_dp: "fst d_perp = - snd p_cm" unfolding d_perp_def by (by100 simp)
+            have hsnd_dp: "snd d_perp = fst p_cm - 1" unfolding d_perp_def by (by100 simp)
+            have "fst d_perp ^ 2 + snd d_perp ^ 2
+                = snd p_cm ^ 2 + (fst p_cm - 1) ^ 2"
+              using hfst_dp hsnd_dp by (by100 algebra)
+            also have "\<dots> = fst p_cm ^ 2 + snd p_cm ^ 2 - 2 * fst p_cm + 1"
+              by (by100 algebra)
+            also have "\<dots> < 2 - 2 * fst p_cm" using hp_cm_int by (by100 linarith)
+            finally have "fst d_perp ^ 2 + snd d_perp ^ 2 < 2 - 2 * fst p_cm" .
+            moreover have "fst p_cm > -1"
+            proof (rule ccontr)
+              assume "\<not> fst p_cm > -1"
+              hence "fst p_cm \<le> -1" by (by100 linarith)
+              hence hle: "- fst p_cm \<ge> 1" by (by100 linarith)
+              have "fst p_cm ^ 2 = (- fst p_cm) * (- fst p_cm)" by (by100 algebra)
+              also have "\<dots> \<ge> 1 * 1"
+                using mult_mono[of 1 "- fst p_cm" 1 "- fst p_cm"] hle by (by100 linarith)
+              finally have "fst p_cm ^ 2 \<ge> 1" by (by100 linarith)
+              have "snd p_cm ^ 2 \<ge> 0" by (by100 simp)
+              hence "fst p_cm ^ 2 + snd p_cm ^ 2 \<ge> 1"
+                using \<open>fst p_cm ^ 2 \<ge> 1\<close> by (by100 linarith)
+              thus False using hp_cm_int by (by100 linarith)
+            qed
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          \<comment> \<open>Step 5: sp\\<cdot>dp = -snd(p\\_cm), so |sp\\<cdot>dp| < 1.\<close>
+          have hsp_dot: "\<bar>fst sp * fst d_perp + snd sp * snd d_perp\<bar> < 1"
+          proof -
+            \<comment> \<open>sp = ((1-tf)+tf*fst(pcm), tf*snd(pcm)), dp = (-snd(pcm), fst(pcm)-1).\<close>
+            \<comment> \<open>Compute sp as pair, then extract components.\<close>
+            have hsp_pair: "sp = ((1-tf) + tf * fst p_cm, tf * snd p_cm)"
+            proof -
+              have "\<not> \<theta>_p \<ge> \<theta>_cancel" using h\<theta>_lt by (by100 linarith)
+              hence "sp = (let t_fold = min (\<theta>_p * real ?n / (2*pi))
+                  ((\<theta>_cancel - \<theta>_p) * real ?n / (2*pi))
+                in ((1 - t_fold) * 1 + t_fold * fst p_cm,
+                    (1 - t_fold) * 0 + t_fold * snd p_cm))"
+                unfolding sp_def \<tau>_boundary_def \<theta>_cancel_def by (by100 simp)
+              also have "\<dots> = ((1 - tf) + tf * fst p_cm, tf * snd p_cm)"
+                unfolding tf_def Let_def by (by100 simp)
+              finally show ?thesis .
+            qed
+            have hsp_fst: "fst sp = (1-tf) + tf * fst p_cm" using hsp_pair by (by100 simp)
+            have hsp_snd: "snd sp = tf * snd p_cm" using hsp_pair by (by100 simp)
+            have "fst sp * fst d_perp + snd sp * snd d_perp
+                = ((1-tf) + tf * fst p_cm) * (- snd p_cm) + tf * snd p_cm * (fst p_cm - 1)"
+              using hsp_fst hsp_snd unfolding d_perp_def by (by100 simp)
+            also have "\<dots> = - snd p_cm" by (by100 algebra)
+            finally have hdot: "fst sp * fst d_perp + snd sp * snd d_perp = - snd p_cm" .
+            have "snd p_cm ^ 2 \<le> fst p_cm ^ 2 + snd p_cm ^ 2" by (by100 simp)
+            also have "\<dots> < 1" using hp_cm_int .
+            finally have "snd p_cm ^ 2 < 1" .
+            hence "\<bar>snd p_cm\<bar> < 1"
+            proof -
+              have "snd p_cm ^ 2 < 1" using \<open>snd p_cm ^ 2 < 1\<close> .
+              show ?thesis
+              proof (cases "snd p_cm \<ge> 0")
+                case True
+                hence "snd p_cm \<ge> 0" .
+                have "snd p_cm < 1"
+                proof (rule ccontr)
+                  assume "\<not> snd p_cm < 1"
+                  hence "snd p_cm \<ge> 1" by (by100 linarith)
+                  hence "snd p_cm ^ 2 \<ge> 1 ^ 2"
+                    using power_mono[of 1 "snd p_cm" 2] by (by100 simp)
+                  hence "snd p_cm ^ 2 \<ge> 1" by (by100 simp)
+                  thus False using \<open>snd p_cm ^ 2 < 1\<close> by (by100 linarith)
+                qed
+                thus ?thesis using True by (by100 simp)
+              next
+                case False
+                hence "- snd p_cm > 0" by (by100 linarith)
+                have "- snd p_cm < 1"
+                proof (rule ccontr)
+                  assume "\<not> - snd p_cm < 1"
+                  hence "- snd p_cm \<ge> 1" by (by100 linarith)
+                  hence "(- snd p_cm) ^ 2 \<ge> 1 ^ 2"
+                    using power_mono[of 1 "- snd p_cm" 2] by (by100 simp)
+                  hence "snd p_cm ^ 2 \<ge> 1" by (by100 simp)
+                  thus False using \<open>snd p_cm ^ 2 < 1\<close> by (by100 linarith)
+                qed
+                thus ?thesis using False by (by100 simp)
+              qed
+            qed
+            thus ?thesis using hdot by (by100 linarith)
+          qed
+          \<comment> \<open>Step 6: Expand |\\<tau>|² and bound by r²+r²(1-r)/2+r²(1-r)²/4.\<close>
+          have h_upper: "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2
+              \<le> r^2 + r^2*(1-r)/2 + r^2*(1-r)^2/4"
+          proof -
+            have "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2
+                = (r * fst sp + ofs * fst d_perp) ^ 2 + (r * snd sp + ofs * snd d_perp) ^ 2"
+              using h\<tau>_cancel by (by100 simp)
+            also have "\<dots> = r^2 * (fst sp^2 + snd sp^2)
+                + 2 * r * ofs * (fst sp * fst d_perp + snd sp * snd d_perp)
+                + ofs^2 * (fst d_perp^2 + snd d_perp^2)"
+              unfolding power2_eq_square by (by100 algebra)
+            finally have h_exp: "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2
+                = r^2 * (fst sp^2 + snd sp^2)
+                + 2 * r * ofs * (fst sp * fst d_perp + snd sp * snd d_perp)
+                + ofs^2 * (fst d_perp^2 + snd d_perp^2)" .
+            have ht1: "r^2 * (fst sp^2 + snd sp^2) \<le> r^2"
+            proof -
+              have "r^2 \<ge> 0" by (by100 simp)
+              thus ?thesis using mult_left_mono[of "fst sp^2+snd sp^2" 1 "r^2"]
+                hsp_norm by (by100 simp)
+            qed
+            have ht2: "2*r*ofs*(fst sp*fst d_perp+snd sp*snd d_perp) \<le> r^2*(1-r)/2"
+            proof -
+              have "\<bar>2*r*ofs*(fst sp*fst d_perp+snd sp*snd d_perp)\<bar>
+                  \<le> 2*r*\<bar>ofs\<bar>*\<bar>fst sp*fst d_perp+snd sp*snd d_perp\<bar>"
+                using hr_pos
+                by (metis abs_mult abs_mult_pos' less_eq_real_def mult_nonneg_nonneg
+                  zero_le_numeral)
+              also have "\<dots> \<le> 2*r*(r*(1-r)/4)*1"
+                using hofs_abs hsp_dot hr_pos sorry
+              also have "\<dots> = r^2*(1-r)/2" unfolding power2_eq_square by (by100 simp)
+              finally show ?thesis by (by100 linarith)
+            qed
+            have ht3: "ofs^2 * (fst d_perp^2+snd d_perp^2) \<le> r^2*(1-r)^2/4"
+            proof -
+              have "ofs^2 * (fst d_perp^2+snd d_perp^2)
+                  \<le> (r*(1-r)/4)^2 * 4"
+                using hofs_sq hdp_norm
+                by (metis (no_types, opaque_lifting) less_eq_real_def mult_mono
+                  power2_eq_square sum_power2_ge_zero zero_le_square)
+              also have "\<dots> = r^2*(1-r)^2/4"
+                unfolding power2_eq_square by (by100 simp)
+              finally show ?thesis .
+            qed
+            from h_exp ht1 ht2 ht3 show ?thesis by (by100 linarith)
+          qed
+          \<comment> \<open>Step 7: Polynomial bound: r²(r²-4r+7)/4 < 1 for r < 1.
+             Factor: r⁴-4r³+7r²-4 = (r-1)(r³-3r²+4r+4), second factor > 0.\<close>
+          have h_poly: "r^2 + r^2*(1-r)/2 + r^2*(1-r)^2/4 < 1"
+            sorry \<comment> \<open>Polynomial bound: proven mathematically, needs process_theories for tactics.\<close>
+          show ?thesis using h_upper h_poly by (by100 linarith)
         qed
       qed
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
