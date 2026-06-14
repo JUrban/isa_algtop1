@@ -2,16 +2,19 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1507, 16 standalone sorry lines):
-UPDATE (session 1501-1507):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1511, 18 standalone sorry lines):
+UPDATE (session 1501-1511):
 - h\\_psi\\_e\\_int: PROVED (boundary image extraction from polygon\\_homeomorphic\\_to\\_disk)
-- p\\_cm interior: PROVED (fst(p\\_cm)²+snd(p\\_cm)² < 1, centroid in B2 interior)
+- p\\_cm interior: PROVED (fst(p\\_cm)²+snd(p\\_cm)² < 1)
 - h\\_tau\\_strict\\_B2: BOTH sectors FULLY PROVED (good + cancel, zero sorry)
 - h\\_tau\\_cancel\\_bdy: FULLY PROVED (\\<tau> at cancel boundary maps to B2 interior)
 - h\\_tau\\_vtx1\\_int: PROVED (\\<tau>(\\<psi>\\_e(vertex\\_e(1))) in B2 interior)
 - converse vtx\\_id \\<subseteq> output\\_step\\_rel: PROVED (symmetry swap)
-- BUG FOUND: h\\_tau\\_inj is FALSE (midpoint ray collapse when p\\_cm=0).
-  Fix needed: change sin(\\<pi>*tf) to sin(\\<pi>*tf/2) in offset formula.
+- BUG FOUND AND FIXED: h\\_tau\\_inj was FALSE (midpoint ray collapse when p\\_cm=0).
+  Fix: changed spur target from centroid to midpoint(vertex\\_m(0), centroid).
+  p\\_cm \\<noteq> (0,0) now provable (modulo PolygonDisk export blocked by eta-conversion).
+- hspur\\_in\\_Pm: PROVED (spur target in P\\_m via coefficient averaging)
+- Remaining \\<tau> fix sorrys: hspur\\_interior (cross product, ~100 lines), \\<psi>\\_m(centroid)=(0,0) (eta issue).
 
 SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
