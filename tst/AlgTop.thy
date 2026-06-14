@@ -6474,7 +6474,13 @@ proof -
         have h_cover: "?B \<subseteq> U1 \<union> U2" unfolding U1_def U2_def by (by100 auto)
         \<comment> \<open>\\<tau> continuous on each intersection.\<close>
         have h_U1_cont: "continuous_on (?B \<inter> U1) \<tau>"
-          sorry \<comment> \<open>On U1: angle\\_of is continuous (no branch cut). \\<tau> = composition.\<close>
+          sorry \<comment> \<open>On U1 = {snd>0}\\<union>{fst<0}: angle\\_of is continuous (branch cut excluded).
+             \\<tau> = if angle\\<ge>\\<theta>\\_cancel then good\\_formula else cancel\\_formula.
+             Use continuous\\_on\\_cases\\_le with h=angle\\_of and a=\\<theta>\\_cancel.
+             Good formula: (r*cos(rescaled), r*sin(rescaled)) — composition of continuous.
+             Cancel formula: (r*spur\\_x + offset*dp\\_x, ...) — composition of continuous.
+             Sign\\_v discontinuity at \\<theta>\\_mid handled by nested cases\\_le (offset=0 at boundary).
+             Both branches give (r,0) at \\<theta>=\\<theta>\\_cancel (agreement).\<close>
         have h_U2_cont: "continuous_on (?B \<inter> U2) \<tau>"
           sorry \<comment> \<open>On U2: closed pasting for cancel/good at positive x-axis.\<close>
         \<comment> \<open>Pointwise: for each p \\<in> ?B, p \\<in> U1 or U2. In either case, at\\_within\\_nhd gives limit.\<close>
@@ -9546,14 +9552,13 @@ proof -
          Uses hC12\\_m (vertex-edge separation for q\\_m) + C8\\_m (interior injectivity)
          + h\\_spur\\_good\\_edge (edge mapping) + h\\_spur\\_cancel\\_collapse (cancel collapse).\<close>
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
-        sorry \<comment> \<open>Backward fibre. Cases on point type in P\\_e:
-           - Good edge × good edge: h\\_fibres\\_good\\_edge backward (PROVED).
-           - Cancel edge × cancel edge: C8\\_m injectivity on spur interior
-             \\<to> spur\\_f(x)=spur\\_f(y) \\<to> cancel pair (C7\\_e). Needs \\<tau> injectivity or spur geometry.
-           - Good edge × cancel: spur\\_f maps to different regions of P\\_m
-             (edge vs interior), C8\\_m/C9\\_m prevent cross identification.
-           - Vertex: hC12\\_m gives vertex-edge separation in P\\_m.
-           - Interior: C8\\_m injectivity.\<close>
+        sorry \<comment> \<open>Backward fibre — structurally similar to forward but uses:
+           - Interior: spur\\_f injective on interior (\\<tau> injective by offset separation) + C8\\_m.
+           - Good\\<times>good: h\\_fibres\\_good\\_edge backward (biconditional already PROVED).
+           - Cancel\\<times>cancel: C8\\_m on spur (interior of P\\_m) \\<to> spur\\_f(x)=spur\\_f(y) \\<to> C7\\_e.
+           - Good\\<times>cancel: boundary/interior separation (spur in P\\_m interior, good edge on boundary).
+           - Vertex\\<times>edge: hC12\\_m for q\\_m vertex-edge separation.
+           - Vertex\\<times>vertex: reverse vtgt transfer (symmetric to forward, uses h\\_vtx\\_to\\_rep).\<close>
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
         using h_fibres_forward h_fibres_backward by (by100 blast)
       \<comment> \<open>Assemble: continuity of spur\\_f via composition, surjectivity via \\<tau>, fibre matching.\<close>
