@@ -10303,6 +10303,33 @@ proof -
             by (by100 blast)
         qed
       qed
+      \<comment> \<open>Helper: \\<psi>\\_e maps P\\_e non-edge points to B2 interior (norm < 1).\<close>
+      have h_psi_e_int: "\<And>p. p \<in> P_e \<Longrightarrow>
+          (\<forall>i<?n. \<forall>t\<in>I_set. p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),
+              (1-t)*vy_e i+t*vy_e(Suc i mod ?n))) \<Longrightarrow>
+          fst (\<psi>_e p) ^ 2 + snd (\<psi>_e p) ^ 2 < 1"
+      proof -
+        fix p assume hp: "p \<in> P_e"
+            and hp_ne: "\<forall>i<?n. \<forall>t\<in>I_set. p \<noteq> ((1-t)*vx_e i+t*vx_e(Suc i mod ?n),
+                (1-t)*vy_e i+t*vy_e(Suc i mod ?n))"
+        have h\<psi>e_B2: "\<psi>_e p \<in> top1_B2"
+          using hp h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        hence h\<psi>e_le1: "fst (\<psi>_e p) ^ 2 + snd (\<psi>_e p) ^ 2 \<le> 1"
+          unfolding top1_B2_def by (by100 simp)
+        show "fst (\<psi>_e p) ^ 2 + snd (\<psi>_e p) ^ 2 < 1"
+        proof (rule ccontr)
+          assume "\<not> fst (\<psi>_e p) ^ 2 + snd (\<psi>_e p) ^ 2 < 1"
+          hence "fst (\<psi>_e p) ^ 2 + snd (\<psi>_e p) ^ 2 = 1" using h\<psi>e_le1 by (by100 linarith)
+          \<comment> \<open>\\<psi>\\_e(p) is on unit circle. So p must be on some edge.\<close>
+          \<comment> \<open>Unit circle point = (cos \\<alpha>, sin \\<alpha>) for some \\<alpha>.
+             For \\<alpha> = 2\\<pi>(i+t)/n with i < n, t \\<in> I\\_set: this is \\<psi>\\_e(edge\\_e(i,t)).
+             Since \\<psi>\\_e is bijective: p = edge\\_e(i,t). Contradicts hp\\_ne.\<close>
+          \<comment> \<open>More precisely: \\<psi>\\_e is bijective P\\_e \\<to> B2. \\<psi>\\_e(p) on unit circle means
+             \\<psi>\\_e(p) = \\<psi>\\_e(edge\\_e(i,t)) for some i,t. By injectivity: p = edge\\_e(i,t).\<close>
+          show False sorry \<comment> \<open>Need: unit circle = image of edges under \\<psi>\\_e.
+             Then bijective \\<psi>\\_e \\<to> p = edge point \\<to> contradicts hp\\_ne.\<close>
+        qed
+      qed
       \<comment> \<open>Helper: if \\<tau>(p) is in B2 interior (norm < 1), then spur\\_f(\\<psi>\\_e\\<inverse>(p)) is P\\_m interior.\<close>
       have h_B2_int_to_Pm_int: "\<And>q j s. q \<in> top1_B2 \<Longrightarrow> fst q ^ 2 + snd q ^ 2 < 1 \<Longrightarrow>
           j < ?m \<Longrightarrow> s \<in> I_set \<Longrightarrow>
@@ -10386,12 +10413,29 @@ proof -
           have "\<forall>p'\<in>P_e. q_e x = q_e p' \<longrightarrow> x = p'"
             using hC8e hx hx_int by (by100 blast)
           \<comment> \<open>spur\\_f(x) is P\\_m interior (spur\\_f maps P\\_e interior to P\\_m interior).\<close>
+          \<comment> \<open>Chain: \\<psi>\\_e(x) B2 interior \\<to> \\<tau> B2 interior \\<to> \\<psi>\\_m\\<inverse> P\\_m interior.\<close>
+          have hpe_int: "fst (\<psi>_e x) ^ 2 + snd (\<psi>_e x) ^ 2 < 1"
+            using h_psi_e_int[OF hx hx_int] .
+          have hpe_B2: "\<psi>_e x \<in> top1_B2"
+            using hx h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have h\<tau>_B2: "\<tau> (\<psi>_e x) \<in> top1_B2" using hpe_B2 h\<tau>_range by (by100 blast)
+          have h\<tau>_int: "fst (\<tau> (\<psi>_e x)) ^ 2 + snd (\<tau> (\<psi>_e x)) ^ 2 < 1"
+          proof (cases "\<psi>_e x = (0, 0)")
+            case True thus ?thesis unfolding \<tau>_def by (by100 simp)
+          next
+            case False from h_tau_strict_B2[OF hpe_B2 False hpe_int] show ?thesis .
+          qed
           have "\<forall>i<?m. \<forall>t\<in>I_set. spur_f x \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),
               (1-t)*vy_m i+t*vy_m(Suc i mod ?m))"
-            sorry \<comment> \<open>Proof chain: \\<psi>\\_e(x) B2 interior (sorry: edge\\<to>S1) \\<to>
-               \\<tau> maps B2 interior to B2 interior (h\\_tau\\_strict\\_B2) \\<to>
-               \\<psi>\\_m\\<inverse> maps B2 interior to P\\_m interior (h\\_B2\\_int\\_to\\_Pm\\_int \\<checkmark>).
-               spur\\_f x = \\<psi>\\_m\\<inverse>(\\<tau>(\\<psi>\\_e x)) hence in P\\_m interior.\<close>
+          proof -
+            have "\<And>j s. j < ?m \<Longrightarrow> s \<in> I_set \<Longrightarrow>
+                inv_into P_m \<psi>_m (\<tau> (\<psi>_e x)) \<noteq> ((1-s)*vx_m j+s*vx_m(Suc j mod ?m),
+                    (1-s)*vy_m j+s*vy_m(Suc j mod ?m))"
+              using h_B2_int_to_Pm_int[OF h\<tau>_B2 h\<tau>_int] .
+            moreover have "spur_f x = inv_into P_m \<psi>_m (\<tau> (\<psi>_e x))"
+              unfolding spur_f_def by (by100 simp)
+            ultimately show ?thesis by (by100 simp)
+          qed
           hence "\<forall>p'\<in>P_m. q_m (spur_f x) = q_m p' \<longrightarrow> spur_f x = p'"
             using hC8m hsfx by (by100 blast)
           hence "spur_f x = spur_f y" using hsfy heq by (by100 blast)
