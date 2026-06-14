@@ -10376,11 +10376,44 @@ proof -
           using hp h\<tau>_range unfolding top1_B2_def by (by100 blast)
         \<comment> \<open>Good sector: |\\<tau>(p)|² = r² = fst p² + snd p² < 1.
            Cancel sector: |\\<tau>(p)| \\<le> 1, and strict inequality from detailed analysis.\<close>
+        \<comment> \<open>Unfold \\<tau> at p \\<noteq> (0,0).\<close>
+        define r where "r = sqrt (fst p ^ 2 + snd p ^ 2)"
+        have hr_pos: "r > 0"
+        proof -
+          have "fst p \<noteq> 0 \<or> snd p \<noteq> 0" using hne by (cases p) (by100 auto)
+          hence "fst p ^ 2 + snd p ^ 2 > 0"
+          proof
+            assume "fst p \<noteq> 0" hence "fst p ^ 2 > 0" by (by100 simp)
+            moreover have "snd p ^ 2 \<ge> 0" by (by100 simp)
+            ultimately show ?thesis by (by100 linarith)
+          next
+            assume "snd p \<noteq> 0" hence "snd p ^ 2 > 0" by (by100 simp)
+            moreover have "fst p ^ 2 \<ge> 0" by (by100 simp)
+            ultimately show ?thesis by (by100 linarith)
+          qed
+          thus ?thesis unfolding r_def using real_sqrt_gt_0_iff by (by100 auto)
+        qed
+        have hr_lt1: "r < 1"
+        proof -
+          have "r ^ 2 = fst p ^ 2 + snd p ^ 2"
+            unfolding r_def using real_sqrt_pow2[of "fst p^2 + snd p^2"] by (by100 simp)
+          hence "r ^ 2 < 1" using hp_int by (by100 linarith)
+          hence "r * r < 1" unfolding power2_eq_square .
+          have "r < 1"
+          proof (rule ccontr)
+            assume "\<not> r < 1"
+            hence "r \<ge> 1" by (by100 linarith)
+            hence "r * r \<ge> r * 1" using hr_pos by (by100 simp)
+            hence "r * r \<ge> 1" using \<open>r \<ge> 1\<close> by (by100 linarith)
+            thus False using \<open>r * r < 1\<close> by (by100 linarith)
+          qed
+          thus ?thesis using hr_pos by (by100 simp)
+        qed
+        have hr_sq: "r ^ 2 = fst p ^ 2 + snd p ^ 2"
+          unfolding r_def using real_sqrt_pow2[of "fst p^2 + snd p^2"] by (by100 simp)
         show "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2 < 1"
-          sorry \<comment> \<open>Good sector: \\<tau> = (r*cos, r*sin), norm = r < 1.
-             Cancel sector: norm² = r²[(1-tf)² + (1-r)²sin²(\\<pi>tf)/16].
-             For tf = 0: norm = r < 1. For tf > 0: (1-tf)² < 1 and offset small, so norm < r < 1.
-             Formal bound: (1-tf)² + (1-r)²sin²(\\<pi>tf)/16 < 1 for tf > 0 (algebraic).\<close>
+          sorry \<comment> \<open>Good sector: |\\<tau>|² = r² < 1 (from cos²+sin²=1 and r < 1).
+             Cancel sector: |\\<tau>|² < 1 (algebraic bound, uses (1-tf)² < 1 for tf > 0).\<close>
       qed
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
       proof (intro ballI impI)
