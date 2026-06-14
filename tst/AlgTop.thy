@@ -611,7 +611,8 @@ lemma scheme_quotient_exists:
                                (1-s)*vy j + s*vy(Suc j mod length scheme)))
     \<and> (\<exists>vtgt. (\<forall>k<length scheme. q (vx k, vy k) = (vx (vtgt k), vy (vtgt k)))
              \<and> (\<forall>k<length scheme. vtgt k < length scheme)
-             \<and> (\<forall>k<length scheme. vtgt k \<le> k))" (is ?C2)
+             \<and> (\<forall>k<length scheme. vtgt k \<le> k)
+             \<and> (\<forall>k<length scheme. vtgt (vtgt k) = vtgt k))" (is ?C2)
 proof -
   let ?n = "length scheme"
   \<comment> \<open>Regular n-gon: vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).\<close>
@@ -3504,6 +3505,24 @@ proof -
   next
     fix k assume hk: "k < ?n"
     show "vtgt k \<le> k" unfolding vtgt_def by (rule Least_le) (by100 simp)
+  next
+    fix k assume hk: "k < ?n"
+    \<comment> \<open>Idempotency: vtgt(vtgt(k)) = vtgt(k). Since vtgt(k) is the Least reachable,
+       and vtgt(k) is reachable from itself (via Id), vtgt(vtgt(k)) \\<le> vtgt(k).
+       But also vtgt(k) is reachable from k, so vtgt(k) is reachable from vtgt(k)
+       (reflexivity of rtrancl). So vtgt(vtgt(k)) is the Least of the SAME class as vtgt(k).
+       Since vtgt is the Least of k's class, and vtgt(k) is in the same class:
+       vtgt(vtgt(k)) = vtgt(k).\<close>
+    show "vtgt (vtgt k) = vtgt k"
+    proof -
+      have hreach: "(k, vtgt k) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*"
+      proof -
+        have "\<exists>m. (k, m) \<in> (vtx_id \<union> converse vtx_id \<union> Id)\<^sup>*"
+          by (rule exI[of _ k]) (by100 simp)
+        thus ?thesis unfolding vtgt_def by (rule LeastI_ex)
+      qed
+      from vtgt_class[OF hreach] show ?thesis by (by100 simp)
+    qed
   qed
 qed
 
@@ -5333,6 +5352,7 @@ proof -
     and hq_vtgt_m1: "\<forall>k<length w. q_m (vx_m k, vy_m k) = (vx_m (vtgt_m k), vy_m (vtgt_m k))"
     and hq_vtgt_m2: "\<forall>k<length w. vtgt_m k < length w"
     and hq_vtgt_m3: "\<forall>k<length w. vtgt_m k \<le> k"
+    and hq_vtgt_m4: "\<forall>k<length w. vtgt_m (vtgt_m k) = vtgt_m k"
     by (elim exE conjE) (rule that, assumption+)
   have htopo_w: "is_topology_on_strict Y_w TY_w"
     using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
@@ -5382,6 +5402,7 @@ proof -
     and hq_vtgt_e1: "\<forall>k<?n_ext. q_e (vx_e k, vy_e k) = (vx_e (vtgt_e k), vy_e (vtgt_e k))"
     and hq_vtgt_e2: "\<forall>k<?n_ext. vtgt_e k < ?n_ext"
     and hq_vtgt_e3: "\<forall>k<?n_ext. vtgt_e k \<le> k"
+    and hq_vtgt_e4: "\<forall>k<?n_ext. vtgt_e (vtgt_e k) = vtgt_e k"
     by (elim exE conjE) (rule that, assumption+)
   have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
     using hY_ext unfolding top1_quotient_of_scheme_on_def by (by100 blast)
