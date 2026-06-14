@@ -10230,15 +10230,61 @@ proof -
           show "q_e (vx_e (k+2), vy_e (k+2)) = q_e (vx_e (l+2), vy_e (l+2))" .
         qed
       qed
+      \<comment> \<open>Helper: spur\\_f is injective on P\\_e (hence \\<tau> injective on B2).
+         Proof: good sector = polar rotation (injective). Cancel sector = spur + perpendicular
+         offset (injective since offset separates the two halves and is monotone within each).\<close>
+      have h_spur_inj: "inj_on spur_f P_e"
+        sorry \<comment> \<open>From \\<tau> injectivity on B2: good sector (angle rescaling), cancel sector
+           (perpendicular offset separation). Composition of bijections \\<psi>\\_e, \\<psi>\\_m\\<inverse>
+           with injective \\<tau> gives inj\\_on spur\\_f P\\_e.\<close>
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
-        sorry \<comment> \<open>Complex case analysis. Key infrastructure available:
-           - h\\_fibres\\_good\\_edge: biconditional for good edge \\<times> good edge. \\<checkmark>
-           - h\\_vtx\\_vtgt\\_transfer\\_rev: vertex \\<times> vertex reverse transfer. \\<checkmark>
-           - hC12\\_m: vertex-edge separation for q\\_m. \\<checkmark>
-           - hC8m: P\\_m interior injectivity. \\<checkmark>
-           - h\\_spur\\_cancel\\_collapse: cancel pair collapse. \\<checkmark>
-           Main blocking issue: interior \\<times> interior case needs \\<tau> (hence spur\\_f) injectivity
-           on P\\_e interior, which requires the perpendicular offset separation argument.\<close>
+      proof (intro ballI impI)
+        fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e"
+            and heq: "q_m (spur_f x) = q_m (spur_f y)"
+        \<comment> \<open>From h\\_fibres\\_forward (contrapositive): if q\\_e(x) \\<noteq> q\\_e(y), then
+           q\\_m(spur\\_f(x)) \\<noteq> q\\_m(spur\\_f(y)). The backward is the converse.
+           Key: spur\\_f is injective, so q\\_m\\<circ>spur\\_f has the SAME fibres as q\\_m on spur\\_f(P\\_e).
+           Combined with h\\_fibres\\_forward, the q\\_e fibres equal the q\\_m\\<circ>spur\\_f fibres.\<close>
+        \<comment> \<open>Strategy: show spur\\_f(x) and spur\\_f(y) are in the same q\\_m fibre,
+           then use the fibre structure to show x, y are in the same q\\_e fibre.\<close>
+        \<comment> \<open>spur\\_f(x) and spur\\_f(y) are in P\\_m.\<close>
+        have h\<psi>m_surj_local: "\<psi>_m ` P_m = top1_B2"
+          using h\<psi>m_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have h_sf_in_Pm: "\<And>p. p \<in> P_e \<Longrightarrow> spur_f p \<in> P_m"
+        proof -
+          fix p assume "p \<in> P_e"
+          have "\<psi>_e p \<in> top1_B2"
+            using \<open>p \<in> P_e\<close> h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def
+            by (by100 blast)
+          hence "\<tau> (\<psi>_e p) \<in> top1_B2" using h\<tau>_range by (by100 blast)
+          hence "\<tau> (\<psi>_e p) \<in> \<psi>_m ` P_m" using h\<psi>m_surj_local by (by100 simp)
+          hence "inv_into P_m \<psi>_m (\<tau> (\<psi>_e p)) \<in> P_m" by (rule inv_into_into)
+          thus "spur_f p \<in> P_m" unfolding spur_f_def by (by100 simp)
+        qed
+        have hsfx: "spur_f x \<in> P_m" by (rule h_sf_in_Pm[OF hx])
+        have hsfy: "spur_f y \<in> P_m" by (rule h_sf_in_Pm[OF hy])
+        \<comment> \<open>Case: spur\\_f(x) interior of P\\_m.\<close>
+        show "q_e x = q_e y"
+        proof (cases "\<forall>i<?m. \<forall>t\<in>I_set. spur_f x \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),
+            (1-t)*vy_m i+t*vy_m(Suc i mod ?m))")
+          case True
+          \<comment> \<open>spur\\_f(x) is interior of P\\_m. By C8\\_m: spur\\_f(x) = spur\\_f(y).\<close>
+          have hsfx_int: "\<forall>i<?m. \<forall>t\<in>I_set.
+              spur_f x \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m))"
+            using True .
+          have hsfx_sing: "\<forall>p'\<in>P_m. q_m (spur_f x) = q_m p' \<longrightarrow> spur_f x = p'"
+            using hC8m hsfx hsfx_int by (by100 blast)
+          hence "spur_f x = spur_f y" using hsfy heq by (by100 blast)
+          hence "x = y" using h_spur_inj hx hy unfolding inj_on_def by (by100 blast)
+          thus ?thesis by (by100 simp)
+        next
+          case False
+          \<comment> \<open>spur\\_f(x) is on boundary of P\\_m (edge or vertex). Needs case analysis.\<close>
+          show ?thesis using heq hx hy hsfx hsfy False
+            sorry \<comment> \<open>Boundary cases: edge\\<times>edge (h\\_fibres\\_good\\_edge backward),
+               vertex\\<times>vertex (h\\_vtx\\_vtgt\\_transfer\\_rev), cross-type (contradictions).\<close>
+        qed
+      qed
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
         using h_fibres_forward h_fibres_backward by (by100 blast)
       \<comment> \<open>Assemble: continuity of spur\\_f via composition, surjectivity via \\<tau>, fibre matching.\<close>
