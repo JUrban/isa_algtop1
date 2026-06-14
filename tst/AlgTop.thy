@@ -10924,8 +10924,18 @@ proof -
         qed
         \<comment> \<open>Step 3: \\<tau> at boundary. r=1, cancel sector, offset=0.\<close>
         have h\<tau>_eq: "\<tau> (cos \<theta>, sin \<theta>) = \<tau>_boundary \<theta>"
-          sorry \<comment> \<open>At boundary: r=1, angle=\\<theta>, cancel sector, offset=0.
-             Need: unfold \\<tau>\\_def, substitute r=1/\\<theta>\\_a=\\<theta>, simplify 1*(1-1)=0.\<close>
+        proof -
+          have hsin_ge: "sin \<theta> \<ge> 0" using hsin_pos by (by100 linarith)
+          \<comment> \<open>Unfold \\<tau> at (cos \\<theta>, sin \\<theta>). Since (cos \\<theta>, sin \\<theta>) \\<noteq> (0,0): enters else branch.\<close>
+          have "fst (cos \<theta>, sin \<theta>) = cos \<theta>" by (by100 simp)
+          have "snd (cos \<theta>, sin \<theta>) = sin \<theta>" by (by100 simp)
+          \<comment> \<open>r = sqrt(cos²+sin²) = 1. Angle = arccos(cos \\<theta>/1) = \\<theta>.\<close>
+          \<comment> \<open>\\<theta> < \\<theta>\\_cancel: cancel sector. offset = sign*1*(1-1)*sin/4 = 0.\<close>
+          \<comment> \<open>\\<tau> = (1*fst(sp)+0*fst(dp), 1*snd(sp)+0*snd(dp)) = sp = \\<tau>\\_boundary(\\<theta>).\<close>
+          show ?thesis
+            unfolding \<tau>_def Let_def
+            using hne hr_eq hangle_eq h\<theta>_lt by (by100 auto)
+        qed
         \<comment> \<open>Step 4: \\<tau>\\_boundary(\\<theta>) in cancel sector with tf > 0.\<close>
         define tf where "tf = min (\<theta> * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>) * real ?n / (2*pi))"
         have htf_pos: "tf > 0"
