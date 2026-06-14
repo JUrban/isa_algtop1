@@ -9233,8 +9233,21 @@ proof -
       \<comment> \<open>Each C7 vertex step preserves q\\_m \\<circ> spur\\_f.\<close>
       have h_step_f: "\<forall>k l. (k, l) \<in> ?vtx_step \<longrightarrow>
           q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
-        sorry \<comment> \<open>For good edges (\\<ge>2): cancel\\_shift + C7\\_m at t=0/1.
-           For cancel pair (0,1): h\\_spur\\_vertex\\_0/02.\<close>
+      proof (intro allI impI)
+        fix k l assume h: "(k, l) \<in> ?vtx_step"
+        then obtain ia ja where hia: "ia < ?n" and hja: "ja < ?n" and hne: "ia \<noteq> ja"
+            and hlbl: "fst (?ext ! ia) = fst (?ext ! ja)"
+            and hcase: "(snd (?ext ! ia) = snd (?ext ! ja) \<and> k = ia \<and> l = ja) \<or>
+                (snd (?ext ! ia) = snd (?ext ! ja) \<and> k = Suc ia mod ?n \<and> l = Suc ja mod ?n) \<or>
+                (snd (?ext ! ia) \<noteq> snd (?ext ! ja) \<and> k = ia \<and> l = Suc ja mod ?n) \<or>
+                (snd (?ext ! ia) \<noteq> snd (?ext ! ja) \<and> k = Suc ia mod ?n \<and> l = ja)"
+          by auto
+        \<comment> \<open>For each case: show spur\\_f transfers C7 identification to q\\_m equality.\<close>
+        from hcase show "q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+          sorry \<comment> \<open>Case split on ia, ja \\<ge> 2 (good) vs ia, ja \\<in> {0,1} (cancel).
+             Good: h\\_spur\\_vertex + C7\\_m at t=0/1 + cancel\\_shift.
+             Cancel: h\\_spur\\_vertex\\_0 + h\\_spur\\_vertex\\_02.\<close>
+      qed
       \<comment> \<open>The rtrancl closure preserves q\\_m \\<circ> spur\\_f (by induction on rtrancl).\<close>
       have h_rtrancl_f: "\<forall>k l. (k, l) \<in> ?vtx_step\<^sup>* \<longrightarrow>
           q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
