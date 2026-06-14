@@ -10233,10 +10233,76 @@ proof -
       \<comment> \<open>Helper: spur\\_f is injective on P\\_e (hence \\<tau> injective on B2).
          Proof: good sector = polar rotation (injective). Cancel sector = spur + perpendicular
          offset (injective since offset separates the two halves and is monotone within each).\<close>
+      \<comment> \<open>\\<tau> is injective on B2\\{0}: good sector = polar rescaling (injective),
+         cancel sector = spur + perpendicular offset (injective by offset separation).
+         Composition with bijections \\<psi>\\_e, \\<psi>\\_m\\<inverse> gives spur\\_f injective.\<close>
+      have h_tau_inj: "inj_on \<tau> (top1_B2 - {(0,0)})"
+        sorry \<comment> \<open>Good sector: (r,\\<theta>) \\<to> (r, rescaled \\<theta>) is injective (strictly monotone rescaling).
+           Cancel sector: (r,\\<theta>) \\<to> (r*sp+off*dp) injective by:
+             (1) Two halves have opposite sign\\_v offset \\<to> different perpendicular sides.
+             (2) Within each half, (r, tf) \\<to> (r*sp(tf), off(r,tf)*dp) is injective:
+                 sp determined by tf (monotone), off determined by r and tf.
+           Cross-sector: good image has norm² = r² (on circle), cancel image has
+             norm² = r²*|sp|² + off²*|dp|² + 2*r*off*(sp·dp) ≠ r² in general.\<close>
       have h_spur_inj: "inj_on spur_f P_e"
-        sorry \<comment> \<open>From \\<tau> injectivity on B2: good sector (angle rescaling), cancel sector
-           (perpendicular offset separation). Composition of bijections \\<psi>\\_e, \\<psi>\\_m\\<inverse>
-           with injective \\<tau> gives inj\\_on spur\\_f P\\_e.\<close>
+      proof -
+        have h\<psi>e_inj: "inj_on \<psi>_e P_e"
+          using h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+        have h\<psi>m_inv_inj: "inj_on (inv_into P_m \<psi>_m) top1_B2"
+        proof -
+          have "bij_betw \<psi>_m P_m top1_B2"
+            using h\<psi>m_homeo unfolding top1_homeomorphism_on_def by (by100 blast)
+          hence "bij_betw (inv_into P_m \<psi>_m) top1_B2 P_m"
+            by (rule bij_betw_inv_into)
+          thus ?thesis unfolding bij_betw_def by (by100 blast)
+        qed
+        \<comment> \<open>spur\\_f = \\<psi>\\_m\\<inverse> \\<circ> \\<tau> \\<circ> \\<psi>\\_e. Composition of injective functions.\<close>
+        show ?thesis unfolding inj_on_def spur_f_def
+        proof (intro ballI impI)
+          fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e"
+              and heq: "inv_into P_m \<psi>_m (\<tau> (\<psi>_e x)) = inv_into P_m \<psi>_m (\<tau> (\<psi>_e y))"
+          have hxB: "\<psi>_e x \<in> top1_B2"
+            using hx h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have hyB: "\<psi>_e y \<in> top1_B2"
+            using hy h\<psi>e_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
+          have hxR: "\<tau> (\<psi>_e x) \<in> top1_B2" using hxB h\<tau>_range by (by100 blast)
+          have hyR: "\<tau> (\<psi>_e y) \<in> top1_B2" using hyB h\<tau>_range by (by100 blast)
+          \<comment> \<open>\\<psi>\\_m\\<inverse> injective \\<to> \\<tau>(\\<psi>\\_e x) = \\<tau>(\\<psi>\\_e y).\<close>
+          from h\<psi>m_inv_inj[unfolded inj_on_def, rule_format, OF hxR hyR heq]
+          have "\<tau> (\<psi>_e x) = \<tau> (\<psi>_e y)" .
+          \<comment> \<open>\\<tau> injective on B2\\{0}: either both at origin (hence equal) or both non-origin.\<close>
+          moreover have "\<psi>_e x = \<psi>_e y"
+          proof (cases "\<psi>_e x = (0, 0)")
+            case True
+            hence "\<tau> (\<psi>_e x) = (0, 0)" unfolding \<tau>_def by (by100 simp)
+            hence "\<tau> (\<psi>_e y) = (0, 0)" using \<open>\<tau> (\<psi>_e x) = \<tau> (\<psi>_e y)\<close> by (by100 simp)
+            hence "\<psi>_e y = (0, 0)" sorry \<comment> \<open>\\<tau> maps only (0,0) to (0,0) (from \\<tau> definition).\<close>
+            thus ?thesis using True by (by100 simp)
+          next
+            case False
+            have "\<psi>_e x \<in> top1_B2 - {(0, 0)}" using hxB False by (by100 blast)
+            moreover have "\<psi>_e y \<in> top1_B2 - {(0, 0)}"
+            proof -
+              have "\<psi>_e y \<noteq> (0, 0)"
+              proof
+                assume "\<psi>_e y = (0, 0)"
+                hence "\<tau> (\<psi>_e y) = (0, 0)" unfolding \<tau>_def by (by100 simp)
+                hence "\<tau> (\<psi>_e x) = (0, 0)" using \<open>\<tau> (\<psi>_e x) = \<tau> (\<psi>_e y)\<close> by (by100 simp)
+                hence "\<psi>_e x = (0, 0)" sorry \<comment> \<open>\\<tau>(p)=(0,0) \\<to> p=(0,0) (from \\<tau> range being B2 and r>0 giving |\\<tau>| > 0).\<close>
+                thus False using False by (by100 simp)
+              qed
+              thus ?thesis using hyB by (by100 blast)
+            qed
+            ultimately show ?thesis
+              using h_tau_inj[unfolded inj_on_def, rule_format] \<open>\<tau> (\<psi>_e x) = \<tau> (\<psi>_e y)\<close>
+              by (by100 blast)
+          qed
+          \<comment> \<open>\\<psi>\\_e injective \\<to> x = y.\<close>
+          ultimately show "x = y"
+            using h\<psi>e_inj[unfolded inj_on_def, rule_format, OF hx hy]
+            by (by100 blast)
+        qed
+      qed
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
       proof (intro ballI impI)
         fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e"
