@@ -9165,9 +9165,11 @@ proof -
          By IH, the intermediate vertex's q\\_m value equals the representative's.\<close>
       have h_vtx_to_rep: "\<forall>k<?n. q_m (spur_f (vx_e k, vy_e k)) =
           q_m (spur_f (vx_e (vtgt_e k), vy_e (vtgt_e k)))"
-        sorry \<comment> \<open>Strong induction on k. Generator step: C7\\_e + cancel\\_shift + C7\\_m.
-           For each k with vtgt\\_e(k) < k: edge k (or k-1) has a matching partner,
-           connecting k to vertex j. Generator gives f(k)=f(j). IH gives f(j)=f(vtgt(k)).\<close>
+        sorry \<comment> \<open>Strong induction on k using vtgt\\_e(k) \\<le> k (from hq\\_vtgt\\_e3).
+           Base: vtgt\\_e(k) = k \\<to> trivial.
+           Step: vtgt\\_e(k) < k \\<to> C7\\_e generator connects k to some j with vtgt\\_e(j) = vtgt\\_e(k).
+           Generator step: cancel\\_shift + C7\\_m gives f(k)=f(j). IH gives f(j)=f(vtgt(k)).
+           Requires: extracting C7 partner from vtgt\\_e(k) < k (proper scheme structure).\<close>
       \<comment> \<open>Corollary: vtgt\\_e(k) = vtgt\\_e(l) \\<to> q\\_m(spur\\_f(vtx k)) = q\\_m(spur\\_f(vtx l)).\<close>
       have h_vtx_vtgt_transfer: "\<forall>k<?n. \<forall>l<?n. vtgt_e k = vtgt_e l \<longrightarrow>
           q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
