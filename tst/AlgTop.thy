@@ -2,7 +2,7 @@ theory AlgTop
   imports "AlgTopCached14.AlgTopCached14"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1442, 50 sorrys):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, sessions 1316-1450, 17 sorry words):
 
 SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
@@ -12,7 +12,7 @@ SPUR COLLAPSE (decomposed, key properties proved):
   (2) S\\_c closed — PROVED \\<checkmark>
   (3) \\<tau> continuous on S\\_g: nonzero (sorry) + origin combination (PROVED)
   (4) \\<tau> continuous on S\\_c: nonzero (sorry) + origin combination (PROVED)
-  Bounds |fst/snd(\\<tau>)| \\<le> C*r: sorry (mechanical, C = 1 + |p\\_cm| + |d\\_perp|)
+  Bounds |fst/snd(\\<tau>)| \\<le> C*r: ALL 4 PROVED (triangle ineq + convex comb bound)
 - h\\_spur\\_good\\_edge: FULLY PROVED!
 - h\\_spur\\_cancel\\_collapse: FULLY PROVED!
 - h\\_spur\\_vertex: FULLY PROVED! (k\\<ge>2 \\<to> vx\\_m(k-2))
@@ -6459,13 +6459,274 @@ proof -
         proof (rule exI[of _ "1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>"])
           have hC_pos: "1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar> \<ge> 0" by (by100 simp)
           show "\<forall>p\<in>S_g. \<bar>fst (\<tau> p)\<bar> \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * sqrt (fst p ^ 2 + snd p ^ 2)"
-            sorry \<comment> \<open>Unfold \\<tau>: good sector gives |r*cos|\\<le>r, cancel (pos x-axis) gives r.\<close>
+          proof (intro ballI)
+            fix p assume hp: "p \<in> S_g"
+            define r where "r = sqrt (fst p ^ 2 + snd p ^ 2)"
+            have hr_ge0: "r \<ge> 0" unfolding r_def by (by100 simp)
+            have hC_ge1: "(1::real) + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar> \<ge> 1" by (by100 simp)
+            show "\<bar>fst (\<tau> p)\<bar> \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * sqrt (fst p ^ 2 + snd p ^ 2)"
+            proof (cases "p = (0::real, 0::real)")
+              case True
+              hence "\<tau> p = (0, 0)" unfolding \<tau>_def by (by100 simp)
+              thus ?thesis using True by (by100 simp)
+            next
+              case False
+              hence hne: "p \<noteq> (0::real, 0)" .
+              have hr_pos: "r > 0"
+              proof -
+                have "fst p \<noteq> 0 \<or> snd p \<noteq> 0" using hne by (cases p) (by100 auto)
+                hence "fst p ^ 2 + snd p ^ 2 > 0"
+                proof
+                  assume "fst p \<noteq> 0"
+                  hence "fst p ^ 2 > 0" by (by100 simp)
+                  moreover have "snd p ^ 2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                next
+                  assume "snd p \<noteq> 0"
+                  hence "snd p ^ 2 > 0" by (by100 simp)
+                  moreover have "fst p ^ 2 \<ge> 0" by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+                thus ?thesis unfolding r_def using real_sqrt_gt_0_iff by (by100 auto)
+              qed
+              have hr_eq: "sqrt (fst p ^ 2 + snd p ^ 2) = r" unfolding r_def by (by100 simp)
+              \<comment> \<open>Define angle and unfold \\<tau> at p \\<noteq> (0,0).\<close>
+              define \<theta>_p where "\<theta>_p = angle_of p"
+              have h\<tau>_simp: "\<tau> p = (let \<theta> = \<theta>_p in
+                  if \<theta> \<ge> \<theta>_cancel then (r * fst (\<tau>_boundary \<theta>), r * snd (\<tau>_boundary \<theta>))
+                  else let spur_pt = \<tau>_boundary \<theta>;
+                           t_fold = min (\<theta> * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>) * real ?n / (2*pi));
+                           sign_v = (if \<theta> \<le> \<theta>_mid then 1 else -1);
+                           offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4
+                       in (r * fst spur_pt + offset * fst d_perp,
+                           r * snd spur_pt + offset * snd d_perp))"
+                unfolding \<tau>_def \<theta>_p_def angle_of_def using hne hr_eq by (by100 simp)
+              from hp hne have hcases: "angle_of p \<ge> \<theta>_cancel \<or> (snd p = 0 \<and> fst p \<ge> 0)"
+                unfolding S_g_def by (by100 auto)
+              show ?thesis
+              proof (cases "\<theta>_p \<ge> \<theta>_cancel")
+                case True
+                \<comment> \<open>Good sector: fst(\\<tau> p) = r * cos(...).\<close>
+                have h\<tau>_good: "\<tau> p = (r * fst (\<tau>_boundary \<theta>_p), r * snd (\<tau>_boundary \<theta>_p))"
+                  using h\<tau>_simp True by (by100 simp)
+                have "fst (\<tau>_boundary \<theta>_p) = cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+                  using True unfolding \<tau>_boundary_def by (by100 auto)
+                hence hfst: "fst (\<tau> p) = r * cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+                  using h\<tau>_good by (by100 simp)
+                have "\<bar>r * cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)\<bar> \<le> r"
+                proof -
+                  have "\<bar>cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)\<bar> \<le> 1"
+                    using abs_cos_le_one by (by100 blast)
+                  thus ?thesis using hr_ge0
+                    by (simp add: abs_mult mult_left_le)
+                qed
+                hence hle_r: "\<bar>fst (\<tau> p)\<bar> \<le> r" using hfst by (by100 simp)
+                have "r \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * r"
+                  using mult_right_mono[OF hC_ge1 hr_ge0] by (by100 simp)
+                hence "\<bar>fst (\<tau> p)\<bar> \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * r"
+                  using hle_r by (by100 linarith)
+                thus ?thesis using hr_eq by (by100 simp)
+              next
+                case False
+                \<comment> \<open>Cancel sector in S\\_g: must be positive x-axis (snd p = 0, fst p \\<ge> 0).\<close>
+                hence h\<theta>_lt: "\<not> \<theta>_p \<ge> \<theta>_cancel" .
+                from hcases this have haxis: "snd p = 0 \<and> fst p \<ge> 0"
+                  unfolding \<theta>_p_def by (by100 auto)
+                \<comment> \<open>On positive x-axis: \\<theta> = 0, t\\_fold = 0, spur\\_pt = (1,0), offset = 0.\<close>
+                from haxis have hsnd0: "snd p = 0" and hfst0: "fst p \<ge> 0" by (by100 auto)+
+                have hfst_eq_r: "r = fst p"
+                proof -
+                  have "fst p ^ 2 + snd p ^ 2 = fst p ^ 2" using hsnd0 by (by100 simp)
+                  hence "sqrt (fst p ^ 2 + snd p ^ 2) = sqrt (fst p ^ 2)" by (by100 simp)
+                  hence "sqrt (fst p ^ 2 + snd p ^ 2) = \<bar>fst p\<bar>"
+                    using real_sqrt_abs by (by100 simp)
+                  thus ?thesis unfolding r_def using hfst0 by (by100 simp)
+                qed
+                have hfst_pos: "fst p > 0" using hr_pos hfst_eq_r by (by100 linarith)
+                have hdiv1: "fst p / sqrt (fst p ^ 2 + snd p ^ 2) = 1"
+                  using hfst_eq_r hfst_pos unfolding r_def by (by100 simp)
+                have h\<theta>0: "\<theta>_p = 0"
+                  unfolding \<theta>_p_def angle_of_def using hsnd0 hdiv1 arccos_1 by (by100 simp)
+                have h\<tau>_axis: "\<tau> p = (r, 0)"
+                proof -
+                  have h\<tau>bdy0: "\<tau>_boundary (0::real) = (1, 0)"
+                  proof -
+                    have "\<theta>_cancel > 0" unfolding \<theta>_cancel_def using pi_gt_zero hn5
+                      by (by100 simp)
+                    hence "\<not> (0::real) \<ge> \<theta>_cancel" by (by100 linarith)
+                    thus ?thesis unfolding \<tau>_boundary_def by (by100 simp)
+                  qed
+                  \<comment> \<open>Unfold \\<tau>\\_def directly for p on positive x-axis.\<close>
+                  have "\<tau> p = (r * fst (\<tau>_boundary 0), r * snd (\<tau>_boundary 0))"
+                  proof -
+                    from h\<tau>_simp h\<theta>_lt h\<theta>0
+                    have "\<tau> p = (let spur_pt = \<tau>_boundary 0;
+                         t_fold = min (0 * real ?n / (2*pi)) ((\<theta>_cancel - 0) * real ?n / (2*pi));
+                         sign_v = (if (0::real) \<le> \<theta>_mid then 1 else -1);
+                         offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4
+                     in (r * fst spur_pt + offset * fst d_perp,
+                         r * snd spur_pt + offset * snd d_perp))" by (by100 simp)
+                    also have "\<dots> = (let t_fold = min 0 ((\<theta>_cancel - 0) * real ?n / (2*pi));
+                         sign_v = (if (0::real) \<le> \<theta>_mid then 1 else -1);
+                         offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4
+                     in (r * fst (\<tau>_boundary 0) + offset * fst d_perp,
+                         r * snd (\<tau>_boundary 0) + offset * snd d_perp))"
+                      unfolding Let_def by (by100 simp)
+                    also have "\<dots> = (r * fst (\<tau>_boundary 0), r * snd (\<tau>_boundary 0))"
+                    proof -
+                      have "\<theta>_cancel > 0" unfolding \<theta>_cancel_def using pi_gt_zero hn5
+                        by (by100 simp)
+                      hence "(\<theta>_cancel - 0) * real ?n / (2*pi) \<ge> 0"
+                        using pi_gt_zero hn5 by (by100 simp)
+                      hence "min (0::real) ((\<theta>_cancel - 0) * real ?n / (2*pi)) = 0"
+                        by (by100 simp)
+                      hence "sin (pi * min (0::real) ((\<theta>_cancel - 0) * real ?n / (2*pi))) = 0"
+                        by (by100 simp)
+                      thus ?thesis unfolding Let_def by (by100 simp)
+                    qed
+                    finally show ?thesis .
+                  qed
+                  thus ?thesis using h\<tau>bdy0 by (by100 simp)
+                qed
+                hence "\<bar>fst (\<tau> p)\<bar> = r" using hr_ge0 by (by100 simp)
+                moreover have "r \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * r"
+                  using mult_right_mono[OF hC_ge1 hr_ge0] by (by100 simp)
+                ultimately have "\<bar>fst (\<tau> p)\<bar> \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * r"
+                  by (by100 linarith)
+                thus ?thesis using hr_eq by (by100 simp)
+              qed
+            qed
+          qed
         qed
         have h_snd_bound_g: "\<exists>C. \<forall>p \<in> S_g. \<bar>snd (\<tau> p)\<bar> \<le> C * sqrt (fst p ^ 2 + snd p ^ 2)"
         proof (rule exI[of _ "1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>"], intro ballI)
           fix p assume hp: "p \<in> S_g"
+          define r where "r = sqrt (fst p ^ 2 + snd p ^ 2)"
+          have hr_ge0: "r \<ge> 0" unfolding r_def by (by100 simp)
+          have hC_ge1: "(1::real) + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar> \<ge> 1" by (by100 simp)
           show "\<bar>snd (\<tau> p)\<bar> \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * sqrt (fst p ^ 2 + snd p ^ 2)"
-            sorry \<comment> \<open>Case split on \\<tau> branches; each bounded by C*r.\<close>
+          proof (cases "p = (0::real, 0::real)")
+            case True
+            hence "\<tau> p = (0, 0)" unfolding \<tau>_def by (by100 simp)
+            thus ?thesis using True by (by100 simp)
+          next
+            case False
+            hence hne: "p \<noteq> (0::real, 0)" .
+            have hr_pos: "r > 0"
+            proof -
+              have "fst p \<noteq> 0 \<or> snd p \<noteq> 0" using hne by (cases p) (by100 auto)
+              hence "fst p ^ 2 + snd p ^ 2 > 0"
+              proof
+                assume "fst p \<noteq> 0"
+                hence "fst p ^ 2 > 0" by (by100 simp)
+                moreover have "snd p ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              next
+                assume "snd p \<noteq> 0"
+                hence "snd p ^ 2 > 0" by (by100 simp)
+                moreover have "fst p ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              thus ?thesis unfolding r_def using real_sqrt_gt_0_iff by (by100 auto)
+            qed
+            have hr_eq: "sqrt (fst p ^ 2 + snd p ^ 2) = r" unfolding r_def by (by100 simp)
+            define \<theta>_p where "\<theta>_p = angle_of p"
+            have h\<tau>_simp: "\<tau> p = (let \<theta> = \<theta>_p in
+                if \<theta> \<ge> \<theta>_cancel then (r * fst (\<tau>_boundary \<theta>), r * snd (\<tau>_boundary \<theta>))
+                else let spur_pt = \<tau>_boundary \<theta>;
+                         t_fold = min (\<theta> * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>) * real ?n / (2*pi));
+                         sign_v = (if \<theta> \<le> \<theta>_mid then 1 else -1);
+                         offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4
+                     in (r * fst spur_pt + offset * fst d_perp,
+                         r * snd spur_pt + offset * snd d_perp))"
+              unfolding \<tau>_def \<theta>_p_def angle_of_def using hne hr_eq by (by100 simp)
+            from hp hne have hcases: "angle_of p \<ge> \<theta>_cancel \<or> (snd p = 0 \<and> fst p \<ge> 0)"
+              unfolding S_g_def by (by100 auto)
+            show ?thesis
+            proof (cases "\<theta>_p \<ge> \<theta>_cancel")
+              case True
+              have h\<tau>_good: "\<tau> p = (r * fst (\<tau>_boundary \<theta>_p), r * snd (\<tau>_boundary \<theta>_p))"
+                using h\<tau>_simp True by (by100 simp)
+              have "snd (\<tau>_boundary \<theta>_p) = sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+                using True unfolding \<tau>_boundary_def by (by100 auto)
+              hence hsnd: "snd (\<tau> p) = r * sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+                using h\<tau>_good by (by100 simp)
+              have "\<bar>r * sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)\<bar> \<le> r"
+              proof -
+                have "\<bar>sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)\<bar> \<le> 1"
+                  using abs_sin_le_one by (by100 blast)
+                thus ?thesis using hr_ge0
+                  by (simp add: abs_mult mult_left_le)
+              qed
+              hence hle_r: "\<bar>snd (\<tau> p)\<bar> \<le> r" using hsnd by (by100 simp)
+              have "r \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * r"
+                using mult_right_mono[OF hC_ge1 hr_ge0] by (by100 simp)
+              hence "\<bar>snd (\<tau> p)\<bar> \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * r"
+                using hle_r by (by100 linarith)
+              thus ?thesis using hr_eq by (by100 simp)
+            next
+              case False
+              hence h\<theta>_lt: "\<not> \<theta>_p \<ge> \<theta>_cancel" .
+              from hcases this have haxis: "snd p = 0 \<and> fst p \<ge> 0"
+                unfolding \<theta>_p_def by (by100 auto)
+              from haxis have hsnd0: "snd p = 0" and hfst0: "fst p \<ge> 0" by (by100 auto)+
+              have hfst_eq_r: "r = fst p"
+              proof -
+                have "fst p ^ 2 + snd p ^ 2 = fst p ^ 2" using hsnd0 by (by100 simp)
+                hence "sqrt (fst p ^ 2 + snd p ^ 2) = sqrt (fst p ^ 2)" by (by100 simp)
+                hence "sqrt (fst p ^ 2 + snd p ^ 2) = \<bar>fst p\<bar>"
+                  using real_sqrt_abs by (by100 simp)
+                thus ?thesis unfolding r_def using hfst0 by (by100 simp)
+              qed
+              have hfst_pos: "fst p > 0" using hr_pos hfst_eq_r by (by100 linarith)
+              have hdiv1: "fst p / sqrt (fst p ^ 2 + snd p ^ 2) = 1"
+                using hfst_eq_r hfst_pos unfolding r_def by (by100 simp)
+              have h\<theta>0: "\<theta>_p = 0"
+                unfolding \<theta>_p_def angle_of_def using hsnd0 hdiv1 arccos_1 by (by100 simp)
+              have h\<tau>_axis: "\<tau> p = (r, 0)"
+              proof -
+                have h\<tau>bdy0: "\<tau>_boundary (0::real) = (1, 0)"
+                proof -
+                  have "\<theta>_cancel > 0" unfolding \<theta>_cancel_def using pi_gt_zero hn5
+                    by (by100 simp)
+                  hence "\<not> (0::real) \<ge> \<theta>_cancel" by (by100 linarith)
+                  thus ?thesis unfolding \<tau>_boundary_def by (by100 simp)
+                qed
+                have "\<tau> p = (r * fst (\<tau>_boundary 0), r * snd (\<tau>_boundary 0))"
+                proof -
+                  from h\<tau>_simp h\<theta>_lt h\<theta>0
+                  have "\<tau> p = (let spur_pt = \<tau>_boundary 0;
+                       t_fold = min (0 * real ?n / (2*pi)) ((\<theta>_cancel - 0) * real ?n / (2*pi));
+                       sign_v = (if (0::real) \<le> \<theta>_mid then 1 else -1);
+                       offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4
+                   in (r * fst spur_pt + offset * fst d_perp,
+                       r * snd spur_pt + offset * snd d_perp))" by (by100 simp)
+                  also have "\<dots> = (let t_fold = min 0 ((\<theta>_cancel - 0) * real ?n / (2*pi));
+                       sign_v = (if (0::real) \<le> \<theta>_mid then 1 else -1);
+                       offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4
+                   in (r * fst (\<tau>_boundary 0) + offset * fst d_perp,
+                       r * snd (\<tau>_boundary 0) + offset * snd d_perp))"
+                    unfolding Let_def by (by100 simp)
+                  also have "\<dots> = (r * fst (\<tau>_boundary 0), r * snd (\<tau>_boundary 0))"
+                  proof -
+                    have "\<theta>_cancel > 0" unfolding \<theta>_cancel_def using pi_gt_zero hn5
+                      by (by100 simp)
+                    hence "(\<theta>_cancel - 0) * real ?n / (2*pi) \<ge> 0"
+                      using pi_gt_zero hn5 by (by100 simp)
+                    hence "min (0::real) ((\<theta>_cancel - 0) * real ?n / (2*pi)) = 0"
+                      by (by100 simp)
+                    hence "sin (pi * min (0::real) ((\<theta>_cancel - 0) * real ?n / (2*pi))) = 0"
+                      by (by100 simp)
+                    thus ?thesis unfolding Let_def by (by100 simp)
+                  qed
+                  finally show ?thesis .
+                qed
+                thus ?thesis using h\<tau>bdy0 by (by100 simp)
+              qed
+              hence "\<bar>snd (\<tau> p)\<bar> = 0" by (by100 simp)
+              thus ?thesis by (by100 simp)
+            qed
+          qed
         qed
         have h_fst_to_0_g: "((\<lambda>p. fst p) \<longlongrightarrow> (0::real)) (at (0::real, 0::real) within S_g)"
         proof -
@@ -6576,14 +6837,541 @@ proof -
         have h_fst_bound: "\<exists>C. \<forall>p \<in> S_c. \<bar>fst (\<tau> p)\<bar> \<le> C * sqrt (fst p ^ 2 + snd p ^ 2)"
         proof (rule exI[of _ "1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>"], intro ballI)
           fix p assume hp: "p \<in> S_c"
+          define r where "r = sqrt (fst p ^ 2 + snd p ^ 2)"
+          have hr_ge0: "r \<ge> 0" unfolding r_def by (by100 simp)
+          have hC_ge1: "(1::real) + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar> \<ge> 1" by (by100 simp)
           show "\<bar>fst (\<tau> p)\<bar> \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * sqrt (fst p ^ 2 + snd p ^ 2)"
-            sorry \<comment> \<open>Cancel formula: fst = r*spur\\_x + offset*fst(d\\_perp), bounded by C*r.\<close>
+          proof (cases "p = (0::real, 0::real)")
+            case True
+            hence "\<tau> p = (0, 0)" unfolding \<tau>_def by (by100 simp)
+            thus ?thesis using True by (by100 simp)
+          next
+            case False
+            hence hne: "p \<noteq> (0::real, 0)" .
+            have hr_pos: "r > 0"
+            proof -
+              have "fst p \<noteq> 0 \<or> snd p \<noteq> 0" using hne by (cases p) (by100 auto)
+              hence "fst p ^ 2 + snd p ^ 2 > 0"
+              proof
+                assume "fst p \<noteq> 0"
+                hence "fst p ^ 2 > 0" by (by100 simp)
+                moreover have "snd p ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              next
+                assume "snd p \<noteq> 0"
+                hence "snd p ^ 2 > 0" by (by100 simp)
+                moreover have "fst p ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              thus ?thesis unfolding r_def using real_sqrt_gt_0_iff by (by100 auto)
+            qed
+            have hr_eq: "sqrt (fst p ^ 2 + snd p ^ 2) = r" unfolding r_def by (by100 simp)
+            define \<theta>_p where "\<theta>_p = angle_of p"
+            have h\<tau>_simp: "\<tau> p = (let \<theta> = \<theta>_p in
+                if \<theta> \<ge> \<theta>_cancel then (r * fst (\<tau>_boundary \<theta>), r * snd (\<tau>_boundary \<theta>))
+                else let spur_pt = \<tau>_boundary \<theta>;
+                         t_fold = min (\<theta> * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>) * real ?n / (2*pi));
+                         sign_v = (if \<theta> \<le> \<theta>_mid then 1 else -1);
+                         offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4
+                     in (r * fst spur_pt + offset * fst d_perp,
+                         r * snd spur_pt + offset * snd d_perp))"
+              unfolding \<tau>_def \<theta>_p_def angle_of_def using hne hr_eq by (by100 simp)
+            show ?thesis
+            proof (cases "\<theta>_p \<ge> \<theta>_cancel")
+              case True
+              \<comment> \<open>Good sector (boundary): same bound as S\\_g good sector.\<close>
+              have h\<tau>_good: "\<tau> p = (r * fst (\<tau>_boundary \<theta>_p), r * snd (\<tau>_boundary \<theta>_p))"
+                using h\<tau>_simp True by (by100 simp)
+              have "fst (\<tau>_boundary \<theta>_p) = cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+                using True unfolding \<tau>_boundary_def by (by100 auto)
+              hence hfst: "fst (\<tau> p) = r * cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+                using h\<tau>_good by (by100 simp)
+              have "\<bar>r * cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)\<bar> \<le> r"
+              proof -
+                have "\<bar>cos ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)\<bar> \<le> 1"
+                  using abs_cos_le_one by (by100 blast)
+                thus ?thesis using hr_ge0
+                  by (simp add: abs_mult mult_left_le)
+              qed
+              hence hle_r: "\<bar>fst (\<tau> p)\<bar> \<le> r" using hfst by (by100 simp)
+              have "r \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * r"
+                using mult_right_mono[OF hC_ge1 hr_ge0] by (by100 simp)
+              hence "\<bar>fst (\<tau> p)\<bar> \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * r"
+                using hle_r by (by100 linarith)
+              thus ?thesis using hr_eq by (by100 simp)
+            next
+              case False
+              \<comment> \<open>Cancel sector: \\<tau>(p) = r*spur\\_pt + offset*d\\_perp.\<close>
+              hence h\<theta>_lt: "\<not> \<theta>_p \<ge> \<theta>_cancel" .
+              define spur_pt where "spur_pt = \<tau>_boundary \<theta>_p"
+              define t_fold where "t_fold = min (\<theta>_p * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>_p) * real ?n / (2*pi))"
+              define sign_v where "sign_v = (if \<theta>_p \<le> \<theta>_mid then (1::real) else -1)"
+              define offset where "offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4"
+              have h\<tau>_cancel: "\<tau> p = (r * fst spur_pt + offset * fst d_perp,
+                                      r * snd spur_pt + offset * snd d_perp)"
+              proof -
+                from h\<tau>_simp h\<theta>_lt
+                have "\<tau> p = (let sp = \<tau>_boundary \<theta>_p;
+                     tf = min (\<theta>_p * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>_p) * real ?n / (2*pi));
+                     sv = (if \<theta>_p \<le> \<theta>_mid then 1 else -1);
+                     off = sv * r * (1 - r) * sin (pi * tf) / 4
+                 in (r * fst sp + off * fst d_perp,
+                     r * snd sp + off * snd d_perp))" by (by100 simp)
+                thus ?thesis unfolding spur_pt_def t_fold_def sign_v_def offset_def Let_def
+                  by (by100 simp)
+              qed
+              \<comment> \<open>Triangle inequality: |r*fst(sp) + off*fst(dp)| \\<le> r*|fst(sp)| + |off|*|fst(dp)|.\<close>
+              have hfst_tau: "\<bar>fst (\<tau> p)\<bar> \<le> \<bar>r * fst spur_pt\<bar> + \<bar>offset * fst d_perp\<bar>"
+                using h\<tau>_cancel by (by100 simp)
+              \<comment> \<open>Bound |fst(spur\\_pt)| \\<le> 1 + |fst(p\\_cm)|.\<close>
+              have h\<theta>_cancel_eq: "\<theta>_cancel = 4*pi/real ?n" unfolding \<theta>_cancel_def by (by100 simp)
+              have hsp_bound: "\<bar>fst spur_pt\<bar> \<le> 1 + \<bar>fst p_cm\<bar>"
+              proof -
+                have hsp_fst: "fst spur_pt = (1 - t_fold) + t_fold * fst p_cm"
+                proof -
+                  \<comment> \<open>Use h\\<theta>\\_lt to eliminate good-sector branch.\<close>
+                  from h\<theta>_lt
+                  have hsp_eq: "\<tau>_boundary \<theta>_p = (let tf = min (\<theta>_p * real ?n / (2*pi))
+                      ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi))
+                    in ((1 - tf) * 1 + tf * fst p_cm, (1 - tf) * 0 + tf * snd p_cm))"
+                    unfolding \<tau>_boundary_def \<theta>_cancel_def by (by100 simp)
+                  have "fst (spur_pt) = fst (let tf = min (\<theta>_p * real ?n / (2*pi))
+                      ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi))
+                    in ((1 - tf) * 1 + tf * fst p_cm, (1 - tf) * 0 + tf * snd p_cm))"
+                    unfolding spur_pt_def using hsp_eq by (by100 simp)
+                  also have "\<dots> = (1 - min (\<theta>_p * real ?n / (2*pi))
+                      ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi))) +
+                      min (\<theta>_p * real ?n / (2*pi))
+                      ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi)) * fst p_cm"
+                    unfolding Let_def by (by100 simp)
+                  also have "\<dots> = (1 - t_fold) + t_fold * fst p_cm"
+                    unfolding t_fold_def using h\<theta>_cancel_eq by (by100 simp)
+                  finally show ?thesis .
+                qed
+                have h_fst_div_bnd: "fst p / r \<ge> -1 \<and> fst p / r \<le> 1"
+                proof -
+                  have "fst p ^ 2 \<le> fst p ^ 2 + snd p ^ 2" by (by100 simp)
+                  hence "fst p ^ 2 \<le> r ^ 2"
+                  proof -
+                    have "r ^ 2 = fst p ^ 2 + snd p ^ 2"
+                      unfolding r_def using real_sqrt_pow2[of "fst p^2 + snd p^2"]
+                      by (by100 simp)
+                    thus ?thesis by (by100 simp)
+                  qed
+                  hence "\<bar>fst p\<bar> \<le> r"
+                  proof -
+                    have "\<bar>fst p\<bar> ^ 2 \<le> r ^ 2"
+                      using \<open>fst p ^ 2 \<le> r ^ 2\<close> power2_abs[of "fst p"] by (by100 simp)
+                    hence "sqrt (\<bar>fst p\<bar> ^ 2) \<le> sqrt (r ^ 2)" by (rule real_sqrt_le_mono)
+                    thus ?thesis using real_sqrt_abs hr_ge0 by (by100 simp)
+                  qed
+                  hence hfp_le: "fst p \<le> r" and hfp_ge: "- r \<le> fst p" by (by100 linarith)+
+                  have "fst p / r \<le> 1"
+                  proof -
+                    have "fst p / r \<le> r / r"
+                      by (intro divide_right_mono hfp_le) (rule less_imp_le[OF hr_pos])
+                    thus ?thesis using hr_pos by (by100 simp)
+                  qed
+                  moreover have "fst p / r \<ge> -1"
+                  proof -
+                    have "- r / r \<le> fst p / r"
+                      by (intro divide_right_mono hfp_ge) (rule less_imp_le[OF hr_pos])
+                    thus ?thesis using hr_pos by (by100 simp)
+                  qed
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+                have h\<theta>_ge0: "\<theta>_p \<ge> 0"
+                proof -
+                  have h_fst_ge: "- 1 \<le> fst p / r" using h_fst_div_bnd by (by100 linarith)
+                  have h_fst_le: "fst p / r \<le> 1" using h_fst_div_bnd by (by100 linarith)
+                  have h_arc_ge0: "arccos (fst p / r) \<ge> 0"
+                    using arccos_lbound[OF h_fst_ge h_fst_le] .
+                  have h_arc_le_pi: "arccos (fst p / r) \<le> pi"
+                    using arccos_ubound[OF h_fst_ge h_fst_le] .
+                  show ?thesis
+                  proof (cases "snd p \<ge> 0")
+                    case True
+                    hence "\<theta>_p = arccos (fst p / r)"
+                      unfolding \<theta>_p_def angle_of_def r_def by (by100 simp)
+                    thus ?thesis using h_arc_ge0 by (by100 linarith)
+                  next
+                    case False
+                    hence "\<theta>_p = 2*pi - arccos (fst p / r)"
+                      unfolding \<theta>_p_def angle_of_def r_def by (by100 simp)
+                    thus ?thesis using h_arc_le_pi pi_gt_zero by (by100 linarith)
+                  qed
+                qed
+                have htf_ge0: "t_fold \<ge> 0"
+                proof -
+                  have "\<theta>_p * real ?n / (2*pi) \<ge> 0"
+                    using h\<theta>_ge0 pi_gt_zero hn5 by (by100 simp)
+                  moreover have "(\<theta>_cancel - \<theta>_p) * real ?n / (2*pi) \<ge> 0"
+                  proof -
+                    have "\<theta>_cancel > \<theta>_p" using h\<theta>_lt by (by100 linarith)
+                    thus ?thesis using pi_gt_zero hn5 by (by100 simp)
+                  qed
+                  ultimately show ?thesis unfolding t_fold_def by (by100 simp)
+                qed
+                have htf_le1: "t_fold \<le> 1"
+                proof -
+                  have "\<theta>_p * real ?n / (2*pi) \<ge> 0"
+                    using h\<theta>_ge0 pi_gt_zero hn5 by (by100 simp)
+                  moreover have "(\<theta>_cancel - \<theta>_p) * real ?n / (2*pi) \<ge> 0"
+                  proof -
+                    have "\<theta>_cancel > \<theta>_p" using h\<theta>_lt by (by100 linarith)
+                    thus ?thesis using pi_gt_zero hn5 by (by100 simp)
+                  qed
+                  moreover have "\<theta>_p * real ?n / (2*pi) + (\<theta>_cancel - \<theta>_p) * real ?n / (2*pi)
+                      = \<theta>_cancel * real ?n / (2*pi)" by (by100 algebra)
+                  moreover have "\<theta>_cancel * real ?n / (2*pi) = 2"
+                    unfolding \<theta>_cancel_def using pi_gt_zero hn5 by (by100 simp)
+                  ultimately show ?thesis unfolding t_fold_def by (by100 linarith)
+                qed
+                have "\<bar>(1 - t_fold) + t_fold * fst p_cm\<bar> \<le> \<bar>1 - t_fold\<bar> + \<bar>t_fold * fst p_cm\<bar>"
+                  by (rule abs_triangle_ineq)
+                also have "\<dots> = (1 - t_fold) + t_fold * \<bar>fst p_cm\<bar>"
+                  using htf_ge0 htf_le1 abs_mult[of t_fold "fst p_cm"] by (by100 simp)
+                also have "\<dots> \<le> 1 + \<bar>fst p_cm\<bar>"
+                proof -
+                  have "(1 - t_fold) \<le> 1" using htf_ge0 by (by100 linarith)
+                  moreover have "t_fold * \<bar>fst p_cm\<bar> \<le> \<bar>fst p_cm\<bar>"
+                    using mult_right_mono[OF htf_le1 abs_ge_zero[of "fst p_cm"]] by (by100 simp)
+                  ultimately show ?thesis by (by100 linarith)
+                qed
+                finally show ?thesis unfolding hsp_fst .
+              qed
+              \<comment> \<open>Bound |offset| \\<le> r.\<close>
+              have hr_le1: "r \<le> 1"
+              proof -
+                have "p \<in> top1_B2" using hp unfolding S_c_def by (by100 blast)
+                hence "fst p ^ 2 + snd p ^ 2 \<le> 1" unfolding top1_B2_def by (by100 simp)
+                hence "sqrt (fst p ^ 2 + snd p ^ 2) \<le> sqrt 1" by (rule real_sqrt_le_mono)
+                thus ?thesis unfolding r_def by (by100 simp)
+              qed
+              have hoff_bound: "\<bar>offset\<bar> \<le> r"
+              proof -
+                have h1mr_ge0: "1 - r \<ge> 0" using hr_le1 by (by100 linarith)
+                have hprod_ge0: "r * (1 - r) \<ge> 0" using hr_ge0 h1mr_ge0 by (by100 simp)
+                have hprod_le_r: "r * (1 - r) \<le> r"
+                proof -
+                  have "(1 - r) \<le> 1" using hr_ge0 by (by100 linarith)
+                  from mult_left_mono[OF this hr_ge0]
+                  show ?thesis by (by100 simp)
+                qed
+                have hsin_le: "sin (pi * t_fold) \<le> 1" by (rule sin_le_one)
+                have hsin_ge: "sin (pi * t_fold) \<ge> -1" by (rule sin_ge_minus_one)
+                \<comment> \<open>Product r*(1-r)*sin is in [-r*(1-r), r*(1-r)] \\<subseteq> [-r, r].\<close>
+                have hprod_sin_le: "r * (1 - r) * sin (pi * t_fold) \<le> r * (1 - r)"
+                  using mult_left_mono[OF hsin_le hprod_ge0] by (by100 simp)
+                have hprod_sin_ge: "r * (1 - r) * sin (pi * t_fold) \<ge> - (r * (1 - r))"
+                proof -
+                  have "r * (1 - r) * sin (pi * t_fold) \<ge> r * (1 - r) * (-1)"
+                    using mult_left_mono[OF hsin_ge hprod_ge0] by (by100 simp)
+                  thus ?thesis by (by100 linarith)
+                qed
+                \<comment> \<open>sign\\_v \\<in> {1, -1} scales but preserves the bound.\<close>
+                have "offset \<le> r \<and> offset \<ge> -r"
+                proof -
+                  have "sign_v = 1 \<or> sign_v = -1" unfolding sign_v_def by (by100 auto)
+                  thus ?thesis
+                  proof
+                    assume hsv1: "sign_v = 1"
+                    hence "offset = 1 * r * (1 - r) * sin (pi * t_fold) / 4"
+                      unfolding offset_def by (by100 simp)
+                    hence "offset = r * (1 - r) * sin (pi * t_fold) / 4" by (by100 simp)
+                    thus ?thesis using hprod_sin_le hprod_sin_ge hprod_le_r hr_ge0
+                      by (by100 linarith)
+                  next
+                    assume hsvm1: "sign_v = -1"
+                    hence "offset = (-1) * r * (1 - r) * sin (pi * t_fold) / 4"
+                      unfolding offset_def by (by100 simp)
+                    hence "offset = - (r * (1 - r) * sin (pi * t_fold) / 4)" by (by100 linarith)
+                    thus ?thesis using hprod_sin_le hprod_sin_ge hprod_le_r hr_ge0
+                      by (by100 linarith)
+                  qed
+                qed
+                thus ?thesis by (by100 linarith)
+              qed
+              \<comment> \<open>Combine.\<close>
+              have "\<bar>r * fst spur_pt\<bar> = r * \<bar>fst spur_pt\<bar>"
+                using hr_ge0 abs_mult[of r "fst spur_pt"] by (by100 simp)
+              hence "\<bar>r * fst spur_pt\<bar> \<le> r * (1 + \<bar>fst p_cm\<bar>)"
+                using mult_left_mono[OF hsp_bound hr_ge0] by (by100 simp)
+              moreover have "\<bar>offset * fst d_perp\<bar> = \<bar>offset\<bar> * \<bar>fst d_perp\<bar>"
+                using abs_mult[of offset "fst d_perp"] by (by100 simp)
+              hence "\<bar>offset * fst d_perp\<bar> \<le> r * \<bar>fst d_perp\<bar>"
+                using mult_right_mono[OF hoff_bound abs_ge_zero[of "fst d_perp"]] by (by100 simp)
+              ultimately have "\<bar>fst (\<tau> p)\<bar> \<le> r * (1 + \<bar>fst p_cm\<bar>) + r * \<bar>fst d_perp\<bar>"
+                using hfst_tau by (by100 linarith)
+              hence "\<bar>fst (\<tau> p)\<bar> \<le> (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * r"
+              proof -
+                have "r * (1 + \<bar>fst p_cm\<bar>) + r * \<bar>fst d_perp\<bar> = (1 + \<bar>fst p_cm\<bar> + \<bar>fst d_perp\<bar>) * r"
+                  by (by100 algebra)
+                thus ?thesis using \<open>\<bar>fst (\<tau> p)\<bar> \<le> r * (1 + \<bar>fst p_cm\<bar>) + r * \<bar>fst d_perp\<bar>\<close>
+                  by (by100 linarith)
+              qed
+              thus ?thesis using hr_eq by (by100 simp)
+            qed
+          qed
         qed
         have h_snd_bound: "\<exists>C. \<forall>p \<in> S_c. \<bar>snd (\<tau> p)\<bar> \<le> C * sqrt (fst p ^ 2 + snd p ^ 2)"
         proof (rule exI[of _ "1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>"], intro ballI)
           fix p assume hp: "p \<in> S_c"
+          define r where "r = sqrt (fst p ^ 2 + snd p ^ 2)"
+          have hr_ge0: "r \<ge> 0" unfolding r_def by (by100 simp)
+          have hC_ge1: "(1::real) + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar> \<ge> 1" by (by100 simp)
           show "\<bar>snd (\<tau> p)\<bar> \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * sqrt (fst p ^ 2 + snd p ^ 2)"
-            sorry \<comment> \<open>Cancel formula: snd = r*spur\\_y + offset*snd(d\\_perp), bounded by C*r.\<close>
+          proof (cases "p = (0::real, 0::real)")
+            case True
+            hence "\<tau> p = (0, 0)" unfolding \<tau>_def by (by100 simp)
+            thus ?thesis using True by (by100 simp)
+          next
+            case False
+            hence hne: "p \<noteq> (0::real, 0)" .
+            have hr_pos: "r > 0"
+            proof -
+              have "fst p \<noteq> 0 \<or> snd p \<noteq> 0" using hne by (cases p) (by100 auto)
+              hence "fst p ^ 2 + snd p ^ 2 > 0"
+              proof
+                assume "fst p \<noteq> 0"
+                hence "fst p ^ 2 > 0" by (by100 simp)
+                moreover have "snd p ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              next
+                assume "snd p \<noteq> 0"
+                hence "snd p ^ 2 > 0" by (by100 simp)
+                moreover have "fst p ^ 2 \<ge> 0" by (by100 simp)
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              thus ?thesis unfolding r_def using real_sqrt_gt_0_iff by (by100 auto)
+            qed
+            have hr_eq: "sqrt (fst p ^ 2 + snd p ^ 2) = r" unfolding r_def by (by100 simp)
+            define \<theta>_p where "\<theta>_p = angle_of p"
+            have h\<tau>_simp: "\<tau> p = (let \<theta> = \<theta>_p in
+                if \<theta> \<ge> \<theta>_cancel then (r * fst (\<tau>_boundary \<theta>), r * snd (\<tau>_boundary \<theta>))
+                else let spur_pt = \<tau>_boundary \<theta>;
+                         t_fold = min (\<theta> * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>) * real ?n / (2*pi));
+                         sign_v = (if \<theta> \<le> \<theta>_mid then 1 else -1);
+                         offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4
+                     in (r * fst spur_pt + offset * fst d_perp,
+                         r * snd spur_pt + offset * snd d_perp))"
+              unfolding \<tau>_def \<theta>_p_def angle_of_def using hne hr_eq by (by100 simp)
+            show ?thesis
+            proof (cases "\<theta>_p \<ge> \<theta>_cancel")
+              case True
+              have h\<tau>_good: "\<tau> p = (r * fst (\<tau>_boundary \<theta>_p), r * snd (\<tau>_boundary \<theta>_p))"
+                using h\<tau>_simp True by (by100 simp)
+              have "snd (\<tau>_boundary \<theta>_p) = sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+                using True unfolding \<tau>_boundary_def by (by100 auto)
+              hence hsnd: "snd (\<tau> p) = r * sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)"
+                using h\<tau>_good by (by100 simp)
+              have "\<bar>r * sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)\<bar> \<le> r"
+              proof -
+                have "\<bar>sin ((\<theta>_p - \<theta>_cancel) * real ?n / real ?m)\<bar> \<le> 1"
+                  using abs_sin_le_one by (by100 blast)
+                thus ?thesis using hr_ge0
+                  by (simp add: abs_mult mult_left_le)
+              qed
+              hence hle_r: "\<bar>snd (\<tau> p)\<bar> \<le> r" using hsnd by (by100 simp)
+              have "r \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * r"
+                using mult_right_mono[OF hC_ge1 hr_ge0] by (by100 simp)
+              hence "\<bar>snd (\<tau> p)\<bar> \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * r"
+                using hle_r by (by100 linarith)
+              thus ?thesis using hr_eq by (by100 simp)
+            next
+              case False
+              hence h\<theta>_lt: "\<not> \<theta>_p \<ge> \<theta>_cancel" .
+              define spur_pt where "spur_pt = \<tau>_boundary \<theta>_p"
+              define t_fold where "t_fold = min (\<theta>_p * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>_p) * real ?n / (2*pi))"
+              define sign_v where "sign_v = (if \<theta>_p \<le> \<theta>_mid then (1::real) else -1)"
+              define offset where "offset = sign_v * r * (1 - r) * sin (pi * t_fold) / 4"
+              have h\<tau>_cancel: "\<tau> p = (r * fst spur_pt + offset * fst d_perp,
+                                      r * snd spur_pt + offset * snd d_perp)"
+              proof -
+                from h\<tau>_simp h\<theta>_lt
+                have "\<tau> p = (let sp = \<tau>_boundary \<theta>_p;
+                     tf = min (\<theta>_p * real ?n / (2*pi)) ((\<theta>_cancel - \<theta>_p) * real ?n / (2*pi));
+                     sv = (if \<theta>_p \<le> \<theta>_mid then 1 else -1);
+                     off = sv * r * (1 - r) * sin (pi * tf) / 4
+                 in (r * fst sp + off * fst d_perp,
+                     r * snd sp + off * snd d_perp))" by (by100 simp)
+                thus ?thesis unfolding spur_pt_def t_fold_def sign_v_def offset_def Let_def
+                  by (by100 simp)
+              qed
+              have h\<theta>_cancel_eq: "\<theta>_cancel = 4*pi/real ?n" unfolding \<theta>_cancel_def by (by100 simp)
+              \<comment> \<open>Bound |snd(spur\\_pt)| \\<le> |snd(p\\_cm)|.\<close>
+              have h\<theta>_lt2: "\<not> \<theta>_p \<ge> 4*pi/real ?n"
+                using h\<theta>_lt unfolding \<theta>_cancel_def by (by100 linarith)
+              have hsp_snd: "snd spur_pt = t_fold * snd p_cm"
+              proof -
+                from h\<theta>_lt
+                have hsp_eq: "\<tau>_boundary \<theta>_p = (let tf = min (\<theta>_p * real ?n / (2*pi))
+                    ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi))
+                  in ((1 - tf) * 1 + tf * fst p_cm, (1 - tf) * 0 + tf * snd p_cm))"
+                  unfolding \<tau>_boundary_def \<theta>_cancel_def by (by100 simp)
+                have "snd spur_pt = snd (let tf = min (\<theta>_p * real ?n / (2*pi))
+                    ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi))
+                  in ((1 - tf) * 1 + tf * fst p_cm, (1 - tf) * 0 + tf * snd p_cm))"
+                  unfolding spur_pt_def using hsp_eq by (by100 simp)
+                also have "\<dots> = min (\<theta>_p * real ?n / (2*pi))
+                    ((4*pi/real ?n - \<theta>_p) * real ?n / (2*pi)) * snd p_cm"
+                  unfolding Let_def by (by100 simp)
+                also have "\<dots> = t_fold * snd p_cm"
+                  unfolding t_fold_def using h\<theta>_cancel_eq by (by100 simp)
+                finally show ?thesis .
+              qed
+              have h_fst_div_bnd: "fst p / r \<ge> -1 \<and> fst p / r \<le> 1"
+              proof -
+                have "fst p ^ 2 \<le> fst p ^ 2 + snd p ^ 2" by (by100 simp)
+                hence "fst p ^ 2 \<le> r ^ 2"
+                proof -
+                  have "r ^ 2 = fst p ^ 2 + snd p ^ 2"
+                    unfolding r_def using real_sqrt_pow2[of "fst p^2 + snd p^2"]
+                    by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                qed
+                hence "\<bar>fst p\<bar> ^ 2 \<le> r ^ 2"
+                  using power2_abs[of "fst p"] by (by100 simp)
+                hence "sqrt (\<bar>fst p\<bar> ^ 2) \<le> sqrt (r ^ 2)" by (rule real_sqrt_le_mono)
+                hence "\<bar>fst p\<bar> \<le> r" using real_sqrt_abs hr_ge0 by (by100 simp)
+                hence hfp_le: "fst p \<le> r" and hfp_ge: "- r \<le> fst p" by (by100 linarith)+
+                have "fst p / r \<le> 1"
+                proof -
+                  have "fst p / r \<le> r / r"
+                    by (intro divide_right_mono hfp_le) (rule less_imp_le[OF hr_pos])
+                  thus ?thesis using hr_pos by (by100 simp)
+                qed
+                moreover have "fst p / r \<ge> -1"
+                proof -
+                  have "- r / r \<le> fst p / r"
+                    by (intro divide_right_mono hfp_ge) (rule less_imp_le[OF hr_pos])
+                  thus ?thesis using hr_pos by (by100 simp)
+                qed
+                ultimately show ?thesis by (by100 linarith)
+              qed
+              have h\<theta>_ge0: "\<theta>_p \<ge> 0"
+              proof -
+                have h_fst_ge: "- 1 \<le> fst p / r" using h_fst_div_bnd by (by100 linarith)
+                have h_fst_le: "fst p / r \<le> 1" using h_fst_div_bnd by (by100 linarith)
+                have h_arc_ge0: "arccos (fst p / r) \<ge> 0"
+                  using arccos_lbound[OF h_fst_ge h_fst_le] .
+                have h_arc_le_pi: "arccos (fst p / r) \<le> pi"
+                  using arccos_ubound[OF h_fst_ge h_fst_le] .
+                show ?thesis
+                proof (cases "snd p \<ge> 0")
+                  case True
+                  hence "\<theta>_p = arccos (fst p / r)"
+                    unfolding \<theta>_p_def angle_of_def r_def by (by100 simp)
+                  thus ?thesis using h_arc_ge0 by (by100 linarith)
+                next
+                  case False
+                  hence "\<theta>_p = 2*pi - arccos (fst p / r)"
+                    unfolding \<theta>_p_def angle_of_def r_def by (by100 simp)
+                  thus ?thesis using h_arc_le_pi pi_gt_zero by (by100 linarith)
+                qed
+              qed
+              have htf_ge0: "t_fold \<ge> 0"
+              proof -
+                have "\<theta>_p * real ?n / (2*pi) \<ge> 0"
+                  using h\<theta>_ge0 pi_gt_zero hn5 by (by100 simp)
+                moreover have "(\<theta>_cancel - \<theta>_p) * real ?n / (2*pi) \<ge> 0"
+                proof -
+                  have "\<theta>_cancel > \<theta>_p" using h\<theta>_lt by (by100 linarith)
+                  thus ?thesis using pi_gt_zero hn5 by (by100 simp)
+                qed
+                ultimately show ?thesis unfolding t_fold_def by (by100 simp)
+              qed
+              have htf_le1: "t_fold \<le> 1"
+              proof -
+                have "\<theta>_p * real ?n / (2*pi) \<ge> 0"
+                  using h\<theta>_ge0 pi_gt_zero hn5 by (by100 simp)
+                moreover have "(\<theta>_cancel - \<theta>_p) * real ?n / (2*pi) \<ge> 0"
+                proof -
+                  have "\<theta>_cancel > \<theta>_p" using h\<theta>_lt by (by100 linarith)
+                  thus ?thesis using pi_gt_zero hn5 by (by100 simp)
+                qed
+                moreover have "\<theta>_p * real ?n / (2*pi) + (\<theta>_cancel - \<theta>_p) * real ?n / (2*pi)
+                    = \<theta>_cancel * real ?n / (2*pi)" by (by100 algebra)
+                moreover have "\<theta>_cancel * real ?n / (2*pi) = 2"
+                  unfolding \<theta>_cancel_def using pi_gt_zero hn5 by (by100 simp)
+                ultimately show ?thesis unfolding t_fold_def by (by100 linarith)
+              qed
+              have hsp_snd_bound: "\<bar>snd spur_pt\<bar> \<le> \<bar>snd p_cm\<bar>"
+              proof -
+                have "\<bar>t_fold * snd p_cm\<bar> = t_fold * \<bar>snd p_cm\<bar>"
+                  using htf_ge0 abs_mult[of t_fold "snd p_cm"] by (by100 simp)
+                also have "\<dots> \<le> 1 * \<bar>snd p_cm\<bar>"
+                  using mult_right_mono[OF htf_le1 abs_ge_zero[of "snd p_cm"]] by (by100 simp)
+                finally show ?thesis unfolding hsp_snd by (by100 simp)
+              qed
+              have hr_le1: "r \<le> 1"
+              proof -
+                have "p \<in> top1_B2" using hp unfolding S_c_def by (by100 blast)
+                hence "fst p ^ 2 + snd p ^ 2 \<le> 1" unfolding top1_B2_def by (by100 simp)
+                hence "sqrt (fst p ^ 2 + snd p ^ 2) \<le> sqrt 1" by (rule real_sqrt_le_mono)
+                thus ?thesis unfolding r_def by (by100 simp)
+              qed
+              have hoff_bound: "\<bar>offset\<bar> \<le> r"
+              proof -
+                have h1mr_ge0: "1 - r \<ge> 0" using hr_le1 by (by100 linarith)
+                have hprod_ge0: "r * (1 - r) \<ge> 0" using hr_ge0 h1mr_ge0 by (by100 simp)
+                have hprod_le_r: "r * (1 - r) \<le> r"
+                  using mult_left_mono[of "1 - r" 1 r] hr_ge0 hr_le1 by (by100 simp)
+                have hsin_le: "sin (pi * t_fold) \<le> 1" by (rule sin_le_one)
+                have hsin_ge: "sin (pi * t_fold) \<ge> -1" by (rule sin_ge_minus_one)
+                have hprod_sin_le: "r * (1 - r) * sin (pi * t_fold) \<le> r * (1 - r)"
+                  using mult_left_mono[OF hsin_le hprod_ge0] by (by100 simp)
+                have hprod_sin_ge: "r * (1 - r) * sin (pi * t_fold) \<ge> - (r * (1 - r))"
+                  using mult_left_mono[OF hsin_ge hprod_ge0] by (by100 simp)
+                have "sign_v = 1 \<or> sign_v = -1" unfolding sign_v_def by (by100 auto)
+                thus ?thesis
+                proof
+                  assume "sign_v = 1"
+                  hence "offset = 1 * r * (1 - r) * sin (pi * t_fold) / 4"
+                    unfolding offset_def by (by100 simp)
+                  hence "offset = r * (1 - r) * sin (pi * t_fold) / 4" by (by100 simp)
+                  thus ?thesis using hprod_sin_le hprod_sin_ge hprod_le_r hr_ge0
+                    by (by100 linarith)
+                next
+                  assume "sign_v = -1"
+                  hence "offset = (-1) * r * (1 - r) * sin (pi * t_fold) / 4"
+                    unfolding offset_def by (by100 simp)
+                  hence "offset = - (r * (1 - r) * sin (pi * t_fold) / 4)" by (by100 linarith)
+                  thus ?thesis using hprod_sin_le hprod_sin_ge hprod_le_r hr_ge0
+                    by (by100 linarith)
+                qed
+              qed
+              \<comment> \<open>Combine: |snd(\\<tau> p)| \\<le> r*|snd(sp)| + |off|*|snd(dp)|.\<close>
+              have hsnd_tau: "\<bar>snd (\<tau> p)\<bar> \<le> \<bar>r * snd spur_pt\<bar> + \<bar>offset * snd d_perp\<bar>"
+                using h\<tau>_cancel by (by100 simp)
+              have "\<bar>r * snd spur_pt\<bar> = r * \<bar>snd spur_pt\<bar>"
+                using hr_ge0 abs_mult[of r "snd spur_pt"] by (by100 simp)
+              hence "\<bar>r * snd spur_pt\<bar> \<le> r * \<bar>snd p_cm\<bar>"
+                using mult_left_mono[OF hsp_snd_bound hr_ge0] by (by100 simp)
+              moreover have "\<bar>offset * snd d_perp\<bar> = \<bar>offset\<bar> * \<bar>snd d_perp\<bar>"
+                using abs_mult[of offset "snd d_perp"] by (by100 simp)
+              hence "\<bar>offset * snd d_perp\<bar> \<le> r * \<bar>snd d_perp\<bar>"
+                using mult_right_mono[OF hoff_bound abs_ge_zero[of "snd d_perp"]] by (by100 simp)
+              ultimately have "\<bar>snd (\<tau> p)\<bar> \<le> r * \<bar>snd p_cm\<bar> + r * \<bar>snd d_perp\<bar>"
+                using hsnd_tau by (by100 linarith)
+              hence "\<bar>snd (\<tau> p)\<bar> \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * r"
+              proof -
+                have "r * \<bar>snd p_cm\<bar> + r * \<bar>snd d_perp\<bar> \<le> (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * r"
+                proof -
+                  have "r * \<bar>snd p_cm\<bar> + r * \<bar>snd d_perp\<bar> = r * (\<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>)"
+                    by (by100 algebra)
+                  also have "\<dots> \<le> r * (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>)"
+                    using mult_left_mono[of "\<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>" "1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>" r]
+                      hr_ge0 by (by100 simp)
+                  also have "\<dots> = (1 + \<bar>snd p_cm\<bar> + \<bar>snd d_perp\<bar>) * r" by (by100 algebra)
+                  finally show ?thesis .
+                qed
+                thus ?thesis using \<open>\<bar>snd (\<tau> p)\<bar> \<le> r * \<bar>snd p_cm\<bar> + r * \<bar>snd d_perp\<bar>\<close>
+                  by (by100 linarith)
+              qed
+              thus ?thesis using hr_eq by (by100 simp)
+            qed
+          qed
         qed
         have h_fst_to_0: "((\<lambda>p. fst p) \<longlongrightarrow> (0::real)) (at (0::real, 0::real) within S_c)"
         proof -
