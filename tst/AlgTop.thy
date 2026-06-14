@@ -12,12 +12,13 @@ UPDATE (sessions 1501-1516):
 - h\\_tau\\_nonzero: FULLY PROVED (\\<tau> maps nonzero to nonzero)
 - h\\_tau\\_zero: PROVED (\\<tau>(q)=(0,0) \\<to> q=(0,0))
 - converse vtx\\_id \\<subseteq> output\\_step\\_rel: PROVED (symmetry swap)
-- BUG FOUND AND FIXED: p\\_cm changed from \\<psi>\\_m(centroid)=(0,0) to (1/2,0).
-  This prevents midpoint-ray collapse and makes \\<tau> injectivity provable.
+- p\\_cm changed from \\<psi>\\_m(centroid)=(0,0) to (1/2,0). Fixes midpoint-ray collapse.
 - AlgTopCached15+16: 4600 lines cached in clean (no q\\&d) sessions.
-  p\\_cm \\<noteq> (0,0) now provable (modulo PolygonDisk export blocked by eta-conversion).
-- hspur\\_in\\_Pm: PROVED (spur target in P\\_m via coefficient averaging)
-- Remaining \\<tau> fix sorrys: hspur\\_interior (cross product, ~100 lines), \\<psi>\\_m(centroid)=(0,0) (eta issue).
+- CRITICAL: h\\_tau\\_inj IS PROVABLY FALSE with current \\<tau> construction.
+  Counterexample: cancel(r=0.9,tf=0.5) and good(r\\<approx>0.675,\\<phi>\\<approx>359\\<degree>) produce same \\<tau>.
+  The perpendicular offset (r(1-r)sin(\\<pi>tf)/8) is too small for cross-sector separation.
+  FIX NEEDED: restructure front\\_cancel\\_proper to use Munkres' 3-step cut-combine-paste
+  instead of single \\<tau> map. This does NOT affect 12 of 16 remaining sorrys.
 
 SPUR COLLAPSE (decomposed, key properties proved):
 - h\\_tau\\_range: FULLY PROVED!
