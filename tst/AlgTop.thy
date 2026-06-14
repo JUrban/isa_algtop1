@@ -3673,7 +3673,38 @@ proof -
           thus ?thesis by (by100 auto)
         next
           assume "p \<in> converse vtx_id"
-          hence "p \<in> ?S" sorry \<comment> \<open>Swap i/j in vtx\\_id: symmetric matching.\<close>
+          hence "\<exists>a b. p = (a,b) \<and> (b,a) \<in> vtx_id" by auto
+          then obtain a b where hp: "p = (a,b)" and hab: "(b,a) \<in> vtx_id" by auto
+          have hba: "(b,a) \<in> ?S" using subsetD[OF hvtx_sub hab] .
+          hence "p \<in> ?S"
+          proof -
+            from hba obtain i j where
+              hi: "i<?n" and hj: "j<?n" and hne: "i\<noteq>j"
+              and hlab: "fst(scheme!i)=fst(scheme!j)"
+              and hcases: "(snd(scheme!i)=snd(scheme!j) \<and> b=i \<and> a=j)
+                \<or> (snd(scheme!i)=snd(scheme!j) \<and> b=Suc i mod ?n \<and> a=Suc j mod ?n)
+                \<or> (snd(scheme!i)\<noteq>snd(scheme!j) \<and> b=i \<and> a=Suc j mod ?n)
+                \<or> (snd(scheme!i)\<noteq>snd(scheme!j) \<and> b=Suc i mod ?n \<and> a=j)"
+              by (by100 blast)
+            \<comment> \<open>Use j, i as witnesses with swapped roles.\<close>
+            from hcases
+            have "(snd(scheme!j)=snd(scheme!i) \<and> a=j \<and> b=i)
+                \<or> (snd(scheme!j)=snd(scheme!i) \<and> a=Suc j mod ?n \<and> b=Suc i mod ?n)
+                \<or> (snd(scheme!j)\<noteq>snd(scheme!i) \<and> a=j \<and> b=Suc i mod ?n)
+                \<or> (snd(scheme!j)\<noteq>snd(scheme!i) \<and> a=Suc j mod ?n \<and> b=i)"
+              by (by100 auto)
+            hence "(a,b) \<in> ?S"
+            proof -
+              assume hswap: "(snd(scheme!j)=snd(scheme!i) \<and> a=j \<and> b=i)
+                \<or> (snd(scheme!j)=snd(scheme!i) \<and> a=Suc j mod ?n \<and> b=Suc i mod ?n)
+                \<or> (snd(scheme!j)\<noteq>snd(scheme!i) \<and> a=j \<and> b=Suc i mod ?n)
+                \<or> (snd(scheme!j)\<noteq>snd(scheme!i) \<and> a=Suc j mod ?n \<and> b=i)"
+              have "j<?n \<and> i<?n \<and> j\<noteq>i \<and> fst(scheme!j)=fst(scheme!i)"
+                using hi hj hne hlab by (by100 auto)
+              thus ?thesis using hswap by auto
+            qed
+            thus ?thesis using hp by (by100 simp)
+          qed
           thus ?thesis by (by100 auto)
         next
           assume "p \<in> Id"
