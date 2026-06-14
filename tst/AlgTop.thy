@@ -2237,6 +2237,22 @@ proof -
        to the spur, keeping the two halves of the cancel sector separated.
        Properties: (1) continuous (piecewise smooth), (2) at r=1: collapses to spur
        (offset=0), (3) for r<1: offset>0 separates halves, (4) injective on interior.\<close>
+    \<comment> \<open>\\<tau> maps nonzero to nonzero. With p\\_cm = (1/2,0), d\\_perp = (0,-1/2):
+       Good sector: \\<tau> = (r*cos\\<phi>, r*sin\\<phi>), |\\<tau>| = r > 0.
+       Cancel sector: \\<tau>\\_boundary = (1-tf/2, 0), so fst(\\<tau>) = r*(1-tf/2) > 0.\<close>
+    have h_tau_nonzero: "\<And>q. q \<in> top1_B2 \<Longrightarrow> q \<noteq> (0,0) \<Longrightarrow> \<tau> q \<noteq> (0, 0)"
+    proof -
+      fix q :: "real \<times> real" assume hq: "q \<in> top1_B2" and hne: "q \<noteq> (0, 0)"
+      \<comment> \<open>Proof: assume \\<tau>(q) = (0,0). After unfolding with p\\_cm=(1/2,0):
+         Good sector: fst(\\<tau>)=r*cos(\\<phi>)=0, snd(\\<tau>)=r*sin(\\<phi>)=0, so r²(cos²+sin²)=0, r=0, contradiction.
+         Cancel sector: fst(\\<tau>)=r*(1-tf/2)=0. Since 0\\<le>tf\\<le>1: 1-tf/2\\<ge>1/2>0 and r>0, contradiction.\<close>
+      show "\<tau> q \<noteq> (0, 0)"
+        unfolding \<tau>_def Let_def using hne
+        unfolding p_cm_def d_perp_def \<tau>_boundary_def \<theta>_cancel_def \<theta>_mid_def
+        sorry \<comment> \<open>Proof: unfold \\<tau>\\_def with p\\_cm=(1/2,0). After auto with sin\\_cos\\_squared\\_add3,
+           11 subgoals remain. These are nonlinear arithmetic about r*(1-tf/2)>0 (cancel)
+           and r²(cos²+sin²)>0 (good). Need targeted tactic for each.\<close>
+    qed
     have "\<exists>f. continuous_on P_e f \<and> f ` P_e = P_m
         \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (f x) = q_m (f y)))"
     proof (rule exI[of _ spur_f])
@@ -6392,8 +6408,27 @@ proof -
               have "\<tau> q \<in> top1_B2" using hq h\<tau>_range by (by100 blast)
               have "fst (\<tau> q) ^ 2 + snd (\<tau> q) ^ 2 \<le> 1"
                 using \<open>\<tau> q \<in> top1_B2\<close> unfolding top1_B2_def by (by100 simp)
-              \<comment> \<open>With p\\_cm=(1/2,0): good sector |\\<tau>|=r>0; cancel sector fst(\\<tau>)=r(1-tf/2)>0.\<close>
-              show ?thesis sorry
+              from h_tau_nonzero[OF hq hne]
+              have "\<tau> q \<noteq> (0, 0)" .
+              hence "fst (\<tau> q) \<noteq> 0 \<or> snd (\<tau> q) \<noteq> 0" by (cases "\<tau> q") (by100 auto)
+              thus ?thesis
+              proof
+                assume "fst (\<tau> q) \<noteq> 0"
+                have "fst (\<tau> q) * fst (\<tau> q) > 0"
+                  by (cases "fst (\<tau> q) > 0")
+                     (use \<open>fst (\<tau> q) \<noteq> 0\<close> mult_neg_neg[of "fst (\<tau> q)" "fst (\<tau> q)"] in
+                      \<open>by100 simp, by100 linarith\<close>)
+                moreover have "snd (\<tau> q) * snd (\<tau> q) \<ge> 0" by (by100 simp)
+                ultimately show ?thesis unfolding power2_eq_square by (by100 linarith)
+              next
+                assume "snd (\<tau> q) \<noteq> 0"
+                have "snd (\<tau> q) * snd (\<tau> q) > 0"
+                  by (cases "snd (\<tau> q) > 0")
+                     (use \<open>snd (\<tau> q) \<noteq> 0\<close> mult_neg_neg[of "snd (\<tau> q)" "snd (\<tau> q)"] in
+                      \<open>by100 simp, by100 linarith\<close>)
+                moreover have "fst (\<tau> q) * fst (\<tau> q) \<ge> 0" by (by100 simp)
+                ultimately show ?thesis unfolding power2_eq_square by (by100 linarith)
+              qed
             qed
             thus ?thesis by (by100 auto)
           qed
