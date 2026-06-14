@@ -10307,13 +10307,6 @@ proof -
       proof (intro ballI impI)
         fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e"
             and heq: "q_m (spur_f x) = q_m (spur_f y)"
-        \<comment> \<open>From h\\_fibres\\_forward (contrapositive): if q\\_e(x) \\<noteq> q\\_e(y), then
-           q\\_m(spur\\_f(x)) \\<noteq> q\\_m(spur\\_f(y)). The backward is the converse.
-           Key: spur\\_f is injective, so q\\_m\\<circ>spur\\_f has the SAME fibres as q\\_m on spur\\_f(P\\_e).
-           Combined with h\\_fibres\\_forward, the q\\_e fibres equal the q\\_m\\<circ>spur\\_f fibres.\<close>
-        \<comment> \<open>Strategy: show spur\\_f(x) and spur\\_f(y) are in the same q\\_m fibre,
-           then use the fibre structure to show x, y are in the same q\\_e fibre.\<close>
-        \<comment> \<open>spur\\_f(x) and spur\\_f(y) are in P\\_m.\<close>
         have h\<psi>m_surj_local: "\<psi>_m ` P_m = top1_B2"
           using h\<psi>m_homeo unfolding top1_homeomorphism_on_def bij_betw_def by (by100 blast)
         have h_sf_in_Pm: "\<And>p. p \<in> P_e \<Longrightarrow> spur_f p \<in> P_m"
@@ -10329,31 +10322,37 @@ proof -
         qed
         have hsfx: "spur_f x \<in> P_m" by (rule h_sf_in_Pm[OF hx])
         have hsfy: "spur_f y \<in> P_m" by (rule h_sf_in_Pm[OF hy])
-        \<comment> \<open>Case: spur\\_f(x) interior of P\\_m.\<close>
+        \<comment> \<open>Case-split on x's type in P\\_e: interior/edge-boundary, good/cancel, vertex.\<close>
         show "q_e x = q_e y"
-        proof (cases "\<forall>i<?m. \<forall>t\<in>I_set. spur_f x \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),
-            (1-t)*vy_m i+t*vy_m(Suc i mod ?m))")
-          case True
-          \<comment> \<open>spur\\_f(x) is interior of P\\_m. By C8\\_m: spur\\_f(x) = spur\\_f(y).\<close>
-          have hsfx_int: "\<forall>i<?m. \<forall>t\<in>I_set.
-              spur_f x \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),(1-t)*vy_m i+t*vy_m(Suc i mod ?m))"
-            using True .
-          have hsfx_sing: "\<forall>p'\<in>P_m. q_m (spur_f x) = q_m p' \<longrightarrow> spur_f x = p'"
-            using hC8m hsfx hsfx_int by (by100 blast)
+        proof (cases "\<exists>i<?n. \<exists>t\<in>I_set. x = ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+            (1-t)*vy_e i + t*vy_e(Suc i mod ?n))")
+          case False
+          \<comment> \<open>x is P\\_e interior. spur\\_f(x) is P\\_m interior.
+             C8\\_m gives spur\\_f(x) = spur\\_f(y). h\\_spur\\_inj gives x = y.\<close>
+          have hx_int: "\<forall>i<?n. \<forall>t\<in>I_set. x \<noteq> ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+              (1-t)*vy_e i + t*vy_e(Suc i mod ?n))" using False by (by100 blast)
+          have "\<forall>p'\<in>P_e. q_e x = q_e p' \<longrightarrow> x = p'"
+            using hC8e hx hx_int by (by100 blast)
+          \<comment> \<open>spur\\_f(x) is P\\_m interior (spur\\_f maps P\\_e interior to P\\_m interior).\<close>
+          have "\<forall>i<?m. \<forall>t\<in>I_set. spur_f x \<noteq> ((1-t)*vx_m i+t*vx_m(Suc i mod ?m),
+              (1-t)*vy_m i+t*vy_m(Suc i mod ?m))"
+            sorry \<comment> \<open>spur\\_f maps P\\_e interior to P\\_m interior (\\<psi>\\_e, \\<tau>, \\<psi>\\_m\\<inverse> all preserve interior).\<close>
+          hence "\<forall>p'\<in>P_m. q_m (spur_f x) = q_m p' \<longrightarrow> spur_f x = p'"
+            using hC8m hsfx by (by100 blast)
           hence "spur_f x = spur_f y" using hsfy heq by (by100 blast)
           hence "x = y" using h_spur_inj hx hy unfolding inj_on_def by (by100 blast)
           thus ?thesis by (by100 simp)
         next
-          case False
-          \<comment> \<open>spur\\_f(x) is on boundary of P\\_m (edge or vertex). Needs case analysis.\<close>
-          \<comment> \<open>spur\\_f(x) on boundary: extract edge/vertex type.\<close>
-          from False obtain i_m t_m where him: "i_m < ?m" and htm: "t_m \<in> I_set"
-              and hsf_bdy: "spur_f x = ((1-t_m)*vx_m i_m+t_m*vx_m(Suc i_m mod ?m),
-                  (1-t_m)*vy_m i_m+t_m*vy_m(Suc i_m mod ?m))" by (by100 blast)
-          show ?thesis using heq hx hy hsfx hsfy him htm hsf_bdy
-            sorry \<comment> \<open>Sub-cases on t\\_m \\<in> (0,1) (edge-interior) vs t\\_m \\<in> {0,1} (vertex).
-               Edge-interior: x must be good-edge point \\<to> h\\_fibres\\_good\\_edge backward.
-               Vertex: x must be P\\_e vertex \\<to> h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
+          case True
+          \<comment> \<open>x is on P\\_e boundary (edge or vertex).\<close>
+          then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set"
+              and hx_eq: "x = ((1-t)*vx_e i + t*vx_e(Suc i mod ?n),
+                  (1-t)*vy_e i + t*vy_e(Suc i mod ?n))" by (by100 blast)
+          \<comment> \<open>Sub-cases: edge-interior (good or cancel) vs vertex.\<close>
+          show ?thesis using heq hx hy hsfx hsfy hi ht hx_eq
+            sorry \<comment> \<open>If 0<t<1, i\\<ge>2: good edge, use h\\_fibres\\_good\\_edge backward.
+               If 0<t<1, i<2: cancel edge maps to P\\_m interior, use C8\\_m + h\\_spur\\_inj.
+               If t\\<in>{0,1}: vertex, use C12\\_m + h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
         qed
       qed
       have h_fibres: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. (q_e x = q_e y) \<longleftrightarrow> (q_m (spur_f x) = q_m (spur_f y))"
