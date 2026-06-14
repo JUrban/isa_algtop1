@@ -9114,6 +9114,16 @@ proof -
           q_m (vx_m k, vy_m k) \<noteq> q_m ((1-s)*vx_m j + s*vx_m(Suc j mod ?m),
                                         (1-s)*vy_m j + s*vy_m(Suc j mod ?m))"
         using hC12m_proved by (by100 simp)
+      \<comment> \<open>KEY HELPER: vtgt\\_e(k) = vtgt\\_e(l) \\<to> q\\_m(spur\\_f(vertex\\_e(k))) = q\\_m(spur\\_f(vertex\\_e(l))).
+         Proof sketch: Each C7\\_e matching edge pair (i,j) preserves q\\_m \\<circ> spur\\_f on vertices.
+         For good pairs (i,j \\<ge> 2): cancel\\_shift + C7\\_m gives q\\_m(vtx\\_m(i-2)) = q\\_m(vtx\\_m(j-2)).
+         For cancel pair (0,1): h\\_spur\\_vertex\\_0 + h\\_spur\\_vertex\\_02 give trivial equality.
+         Since q\\_m \\<circ> spur\\_f \\<circ> vertex\\_e respects all C7\\_e generators,
+         it respects the full C7\\_e equivalence relation (i.e. vtgt\\_e classes).\<close>
+      have h_vtx_vtgt_transfer: "\<forall>k<?n. \<forall>l<?n. vtgt_e k = vtgt_e l \<longrightarrow>
+          q_m (spur_f (vx_e k, vy_e k)) = q_m (spur_f (vx_e l, vy_e l))"
+        sorry \<comment> \<open>C7 chain transfer: each generator preserves q\\_m\\<circ>spur\\_f, transitivity gives full transfer.
+           Formalization via inductive predicate or rtrancl of C7 vertex\\_ident\\_step.\<close>
       \<comment> \<open>Forward direction of h\\_fibres: q\\_e(x)=q\\_e(y) \\<Longrightarrow> q\\_m(spur\\_f x)=q\\_m(spur\\_f y).
          For INTERIOR x: C8\\_e gives x=y \\<to> trivial.
          For EDGE-INTERIOR x with EDGE-INTERIOR y (both t,s \\<in> (0,1)):
@@ -9485,11 +9495,8 @@ proof -
                 qed
                 \<comment> \<open>Need: q\\_m(spur\\_f(vertex\\_e(k))) = q\\_m(spur\\_f(vertex\\_e(l))).
                    Translate vertex index through spur\\_f and use C7\\_m.\<close>
-                show ?thesis using hx_vtx hy_vtx hvtgt hk_lt hl_lt
-                  sorry \<comment> \<open>Vertex-vertex forward: vtgt\\_e(k)=vtgt\\_e(l) \\<to> q\\_m(spur\\_f) transfer.
-                     For each C7\\_e matching edge pair, the identification transfers to q\\_m via
-                     cancel\\_shift + C7\\_m (good edges) or h\\_spur\\_vertex\\_0/02 (cancel pair).
-                     Formal chain argument (rtrancl induction) needed.\<close>
+                from h_vtx_vtgt_transfer[rule_format, OF hk_lt hl_lt hvtgt]
+                show ?thesis using hx_vtx hy_vtx by (by100 simp)
               qed
             qed
           qed
