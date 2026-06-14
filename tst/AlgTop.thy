@@ -608,7 +608,8 @@ lemma scheme_quotient_exists:
         q (vx k, vy k) \<noteq> q ((1-s)*vx j + s*vx(Suc j mod length scheme),
                                (1-s)*vy j + s*vy(Suc j mod length scheme)))
     \<and> (\<exists>vtgt. (\<forall>k<length scheme. q (vx k, vy k) = (vx (vtgt k), vy (vtgt k)))
-             \<and> (\<forall>k<length scheme. vtgt k < length scheme))" (is ?C2)
+             \<and> (\<forall>k<length scheme. vtgt k < length scheme)
+             \<and> (\<forall>k<length scheme. vtgt k \<le> k))" (is ?C2)
 proof -
   let ?n = "length scheme"
   \<comment> \<open>Regular n-gon: vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).\<close>
@@ -3491,7 +3492,17 @@ proof -
     using hC11 apply (by100 blast)
     using hC12 apply (by100 blast)
     apply (rule exI[of _ vtgt])
-    using hq_vtx_direct hvtgt_bound by (by100 blast)
+  proof (intro conjI allI impI)
+    fix k assume hk: "k < ?n"
+    show "q (vx k, vy k) = (vx (vtgt k), vy (vtgt k))"
+      using hq_vtx_direct[rule_format, OF hk] .
+  next
+    fix k assume hk: "k < ?n"
+    show "vtgt k < ?n" using hvtgt_bound[rule_format, OF hk] .
+  next
+    fix k assume hk: "k < ?n"
+    show "vtgt k \<le> k" unfolding vtgt_def by (rule Least_le) (by100 simp)
+  qed
 qed
 
 
@@ -5319,6 +5330,7 @@ proof -
                                (1-s)*vy_m j + s*vy_m(Suc j mod length w))"
     and hq_vtgt_m1: "\<forall>k<length w. q_m (vx_m k, vy_m k) = (vx_m (vtgt_m k), vy_m (vtgt_m k))"
     and hq_vtgt_m2: "\<forall>k<length w. vtgt_m k < length w"
+    and hq_vtgt_m3: "\<forall>k<length w. vtgt_m k \<le> k"
     by (elim exE conjE) (rule that, assumption+)
   have htopo_w: "is_topology_on_strict Y_w TY_w"
     using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
@@ -5367,6 +5379,7 @@ proof -
                                (1-s)*vy_e j + s*vy_e(Suc j mod ?n_ext))"
     and hq_vtgt_e1: "\<forall>k<?n_ext. q_e (vx_e k, vy_e k) = (vx_e (vtgt_e k), vy_e (vtgt_e k))"
     and hq_vtgt_e2: "\<forall>k<?n_ext. vtgt_e k < ?n_ext"
+    and hq_vtgt_e3: "\<forall>k<?n_ext. vtgt_e k \<le> k"
     by (elim exE conjE) (rule that, assumption+)
   have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
     using hY_ext unfolding top1_quotient_of_scheme_on_def by (by100 blast)
