@@ -10495,7 +10495,23 @@ proof -
           have hcase_cancel: "i < 2 \<and> 0 < t \<and> t < 1 \<longrightarrow> q_e x = q_e y"
             sorry \<comment> \<open>Cancel edge: spur\\_f maps to P\\_m interior. C8\\_m + h\\_spur\\_inj.\<close>
           have hcase_vertex: "\<not>(0 < t \<and> t < 1) \<longrightarrow> q_e x = q_e y"
-            sorry \<comment> \<open>Vertex: C12\\_m + h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
+          proof (intro impI)
+            assume "\<not>(0 < t \<and> t < 1)"
+            hence ht_vtx: "t = 0 \<or> t = 1" using ht
+              unfolding top1_unit_interval_def by (by100 auto)
+            \<comment> \<open>x is a vertex. Determine vertex index.\<close>
+            define k where "k = (if t = 0 then i else Suc i mod ?n)"
+            have hk_lt: "k < ?n" unfolding k_def using hi hn5 by (by100 auto)
+            have hx_vtx: "x = (vx_e k, vy_e k)" unfolding k_def
+              using ht_vtx hx_eq by (by100 auto)
+            \<comment> \<open>spur\\_f(x) is a P\\_m vertex.\<close>
+            \<comment> \<open>q\\_m(spur\\_f(y)) = q\\_m(spur\\_f(x)) = q\\_m(vertex of P\\_m).
+               By C12\\_m + C8\\_m: spur\\_f(y) must be a P\\_m vertex.\<close>
+            \<comment> \<open>y must be a P\\_e vertex. Use h\\_vtx\\_vtgt\\_transfer\\_rev.\<close>
+            show "q_e x = q_e y"
+              sorry \<comment> \<open>Needs: spur\\_f(x) is P\\_m vertex, determine y's vertex index,
+                 apply h\\_vtx\\_vtgt\\_transfer\\_rev. Similar structure to good-edge case.\<close>
+          qed
           show ?thesis
           proof (cases "0 < t \<and> t < 1")
             case True
