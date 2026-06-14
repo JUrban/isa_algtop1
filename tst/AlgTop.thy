@@ -10340,8 +10340,21 @@ proof -
       \<comment> \<open>Helper: \\<tau> maps B2 interior to B2 interior (norm strictly < 1 for good/cancel sectors).\<close>
       have h_tau_strict_B2: "\<And>p. p \<in> top1_B2 \<Longrightarrow> p \<noteq> (0,0) \<Longrightarrow> fst p ^ 2 + snd p ^ 2 < 1 \<Longrightarrow>
           fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2 < 1"
-        sorry \<comment> \<open>Good sector: |\\<tau>| = r = sqrt(fst^2+snd^2) < 1. Cancel sector: |\\<tau>| < 1
-           (spur\\_pt has |sp| \\<le> 1 for cancel, offset bounded by r(1-r)/4 \\<le> r/4 < r).\<close>
+      proof -
+        fix p :: "real \<times> real"
+        assume hp: "p \<in> top1_B2" and hne: "p \<noteq> (0,0)"
+            and hp_int: "fst p ^ 2 + snd p ^ 2 < 1"
+        \<comment> \<open>From h\\_tau\\_range: |\\<tau>(p)| \\<le> 1. Need strict: |\\<tau>(p)| < 1.\<close>
+        have h\<tau>_le1: "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2 \<le> 1"
+          using hp h\<tau>_range unfolding top1_B2_def by (by100 blast)
+        \<comment> \<open>Good sector: |\\<tau>(p)|² = r² = fst p² + snd p² < 1.
+           Cancel sector: |\\<tau>(p)| \\<le> 1, and strict inequality from detailed analysis.\<close>
+        show "fst (\<tau> p) ^ 2 + snd (\<tau> p) ^ 2 < 1"
+          sorry \<comment> \<open>Good sector: \\<tau> = (r*cos, r*sin), norm = r < 1.
+             Cancel sector: norm² = r²[(1-tf)² + (1-r)²sin²(\\<pi>tf)/16].
+             For tf = 0: norm = r < 1. For tf > 0: (1-tf)² < 1 and offset small, so norm < r < 1.
+             Formal bound: (1-tf)² + (1-r)²sin²(\\<pi>tf)/16 < 1 for tf > 0 (algebraic).\<close>
+      qed
       have h_fibres_backward: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_m (spur_f x) = q_m (spur_f y) \<longrightarrow> q_e x = q_e y"
       proof (intro ballI impI)
         fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e"
