@@ -2269,9 +2269,49 @@ proof -
               qed
             qed
             \<comment> \<open>Both are at vertices. The vtgt chain transfer gives the result.\<close>
-            show ?thesis sorry \<comment> \<open>Both-vertex forward: vtgt chain transfer.
-               Both tx,ty in {0,1}. Express x,y as specific vertices,
-               map through phi, use C7 chain correspondence.\<close>
+            \<comment> \<open>Express x and y as specific P\\_e vertices.\<close>
+            obtain kx where hkx: "kx < ?ne" and hx_vtx: "x = (vxe kx, vye kx)"
+            proof -
+              from hboth_vtx have "tx = 0 \<or> tx = 1" by (by100 blast)
+              thus ?thesis
+              proof
+                assume "tx = 0"
+                hence "x = (vxe ix, vye ix)" using hx_eq unfolding edge_pt_e_def by (by100 simp)
+                thus ?thesis using hix that by (by100 blast)
+              next
+                assume "tx = 1"
+                hence "x = (vxe (Suc ix mod ?ne), vye (Suc ix mod ?ne))"
+                  using hx_eq unfolding edge_pt_e_def by (by100 simp)
+                moreover have "Suc ix mod ?ne < ?ne" using hlen hne_eq by (by100 simp)
+                ultimately show ?thesis using that by (by100 blast)
+              qed
+            qed
+            obtain ky where hky: "ky < ?ne" and hy_vtx: "y = (vxe ky, vye ky)"
+            proof -
+              from hboth_vtx have "ty = 0 \<or> ty = 1" by (by100 blast)
+              thus ?thesis
+              proof
+                assume "ty = 0"
+                hence "y = (vxe iy, vye iy)" using hy_eq unfolding edge_pt_e_def by (by100 simp)
+                thus ?thesis using hiy that by (by100 blast)
+              next
+                assume "ty = 1"
+                hence "y = (vxe (Suc iy mod ?ne), vye (Suc iy mod ?ne))"
+                  using hy_eq unfolding edge_pt_e_def by (by100 simp)
+                moreover have "Suc iy mod ?ne < ?ne" using hlen hne_eq by (by100 simp)
+                ultimately show ?thesis using that by (by100 blast)
+              qed
+            qed
+            \<comment> \<open>q\\_e(v\\_kx) = q\\_e(v\\_ky). Need: q\\_w(phi(v\\_kx)) = q\\_w(phi(v\\_ky)).
+               The vertex identification in q\\_e transfers to q\\_w via the label correspondence.
+               This requires the vtgt chain transfer (induction on rtrancl of C7 generators).
+               For now: sorry the general chain transfer. The math is:
+               each C7 step in ext for non-spur edges (i,j >= 2) corresponds to a C7 step
+               in w at (i-2, j-2). Spur C7 step (0,1) gives phi(v\\_0)=phi(v\\_2)=u\\_0.
+               Chain doesn't pass through spur edges (freshness of a).\<close>
+            show ?thesis sorry \<comment> \<open>Vertex-vertex forward: vtgt chain transfer.
+               kx, ky are specific vertices. phi maps them to P\\_w vertices/arc.
+               C7 chain in ext transfers to C7 chain in w (shifted by 2).\<close>
           qed
         qed
       qed
