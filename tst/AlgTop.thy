@@ -1777,7 +1777,49 @@ proof -
     \<comment> \<open>Similarly for edge 1 vs non-spur:\<close>
     have hspur_sep1: "\<forall>t\<in>{0<..<(1::real)}. \<forall>k<?nw. \<forall>s\<in>{0<..<(1::real)}.
         q_e (edge_pt_e 1 t) \<noteq> q_e (edge_pt_e (k+2) s)"
-      sorry \<comment> \<open>Same argument as hspur\\_sep with edge 1 instead of edge 0.\<close>
+    proof (intro ballI allI impI)
+      fix t s :: real and k :: nat
+      assume ht: "t \<in> {0<..<(1::real)}" and hk: "k < ?nw" and hs: "s \<in> {0<..<(1::real)}"
+      have h1_lt: "1 < ?ne" using hlen hne_eq by (by100 linarith)
+      have hk2_lt: "k+2 < ?ne" using hk hne_eq by (by100 linarith)
+      have "fst (?ext ! 1) = fst (top1_inverse_edge a)" using hspur1 by (by100 simp)
+      hence hfst1: "fst (?ext ! 1) = fst a" unfolding top1_inverse_edge_def by (by100 simp)
+      have "fst (?ext ! (k+2)) = fst (w ! k)"
+      proof -
+        from hlabel_corr have "?ext ! (k+2) = w ! k" using hk by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
+      have hfst_neq1: "fst a \<noteq> fst (w ! k)"
+      proof
+        assume "fst a = fst (w ! k)"
+        have "w ! k \<in> set w" using hk by (by100 simp)
+        hence "fst (w ! k) \<in> fst ` set w" by (by100 blast)
+        hence "fst a \<in> fst ` set w" using \<open>fst a = fst (w ! k)\<close> by (by100 simp)
+        thus False using hfresh by (by100 blast)
+      qed
+      have hlabel_neq1: "fst (?ext ! 1) \<noteq> fst (?ext ! (k+2))"
+        using hfst1 \<open>fst (?ext ! (k+2)) = fst (w ! k)\<close> hfst_neq1 by (by100 simp)
+      show "q_e (edge_pt_e 1 t) \<noteq> q_e (edge_pt_e (k+2) s)"
+      proof
+        assume heq: "q_e (edge_pt_e 1 t) = q_e (edge_pt_e (k+2) s)"
+        have hC9_inst: "q_e ((1-t)*vxe 1+t*vxe(Suc 1 mod ?ne),
+            (1-t)*vye 1+t*vye(Suc 1 mod ?ne))
+          = q_e ((1-s)*vxe (k+2)+s*vxe(Suc (k+2) mod ?ne),
+            (1-s)*vye (k+2)+s*vye(Suc (k+2) mod ?ne))"
+          using heq unfolding edge_pt_e_def by (by100 simp)
+        from hC9_e[rule_format, OF h1_lt hk2_lt ht hs] hC9_inst
+        have "(1 = k+2 \<and> t = s) \<or> (fst(?ext!1) = fst(?ext!(k+2)) \<and>
+            (if snd(?ext!1)=snd(?ext!(k+2)) then s=t else s=1-t))"
+          by (by100 blast)
+        thus False
+        proof (elim disjE conjE)
+          assume "1 = k+2" thus False by (by100 simp)
+        next
+          assume "fst(?ext!1) = fst(?ext!(k+2))"
+          thus False using hlabel_neq1 by (by100 simp)
+        qed
+      qed
+    qed
     \<comment> \<open>The full construction of g: P\\_e -> Y\\_w.\<close>
     show ?thesis
       sorry \<comment> \<open>CORE: construct g from phi\\_bdy + sector extension + q\\_w.
