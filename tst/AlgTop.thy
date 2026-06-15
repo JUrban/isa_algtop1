@@ -1901,7 +1901,19 @@ proof -
        - Spur to vertex v\\_2: q\\_e(v\\_0)=q\\_e(v\\_2), phi(v\\_0)=u\\_0, phi(v\\_2)=u\\_0. CHECK.
        - Cross-type: impossible by C8/C12.\<close>
     have hg_fwd: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_e x = q_e y \<longrightarrow> ?g x = ?g y"
-      sorry
+    proof (intro ballI impI)
+      fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e" and heq: "q_e x = q_e y"
+      \<comment> \<open>Goal: q\\_w(phi(x)) = q\\_w(phi(y)).
+         The identification q\\_e(x)=q\\_e(y) means x and y are in the same fibre.
+         By the structure of q\\_e (3-branch): either x=y (interior injectivity),
+         or both are on matching edges identified by C7, or vertex identification.
+         In each case, phi maps them to q\\_w-identified points.\<close>
+      show "?g x = ?g y" sorry \<comment> \<open>Forward fibre matching case analysis.
+         Needs: case split on interior/boundary for both x and y.
+         Uses: C8\\_e (interior injective), C7\\_e (edge matching),
+         hphi\\_spur (spur constant), hphi\\_nonspur (edge correspondence),
+         hlabel\\_corr (label matching between ext and w schemes).\<close>
+    qed
     \<comment> \<open>Property 5: backward fibres. g(x) = g(y) implies q\\_e(x) = q\\_e(y).
        Cases:
        - Both interior: q\\_w injective (C8\\_w) + phi injective on interior -> x=y. CHECK.
