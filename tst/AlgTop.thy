@@ -1874,6 +1874,7 @@ proof -
       and hphi_spur_endpoints: "phi (edge_pt_e 0 0) = (vxw 0, vyw 0)"
       and hphi_spur_int: "\<forall>t\<in>{0<..<(1::real)}.
           (\<forall>j<?nw. \<forall>s\<in>I_set. phi (edge_pt_e 0 t) \<noteq> edge_pt_w j s)"
+      and hphi_spur_tip_int: "\<forall>j<?nw. \<forall>s\<in>I_set. phi (edge_pt_e 0 1) \<noteq> edge_pt_w j s"
       and hphi_spur_inj: "\<forall>t\<in>I_set. \<forall>s\<in>I_set.
           phi (edge_pt_e 0 t) = phi (edge_pt_e 0 s) \<longrightarrow> t = s"
       and hphi_nonspur: "\<forall>k<?nw. \<forall>t\<in>I_set.
@@ -3355,12 +3356,67 @@ proof -
                 have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
                 \<comment> \<open>phi(v\\_1) not on any w-edge (from spur\\_int at boundary or spur\\_not\\_int).\<close>
                 \<comment> \<open>phi(v\\_ky) for ky in {0,2,...}: is (vxw my, vyw my) = on boundary of P\\_w.\<close>
-                have hphi_ky_bdy: "phi (vxe ky, vye ky) = (vxw (if ky = 0 then 0 else ky - 2), vyw (if ky = 0 then 0 else ky - 2))"
-                  sorry \<comment> \<open>phi at non-spur-tip vertex: boundary vertex of P\\_w.\<close>
-                \<comment> \<open>phi(v\\_1) is NOT on any w-edge (spur arc point).\<close>
-                \<comment> \<open>C8\\_w at phi(v\\_1): unique preimage. So q\\_w(phi(v\\_1)) = q\\_w(phi(v\\_ky))
-                   implies phi(v\\_1) = phi(v\\_ky). But phi(v\\_1) is interior, phi(v\\_ky) boundary.\<close>
-                show False sorry \<comment> \<open>Interior != boundary for phi images -> contradiction with hgeq.\<close>
+                \<comment> \<open>phi(v\\_1) is on spur arc (interior, NOT on any w-edge).
+                   phi(v\\_ky) for ky!=1 is boundary vertex of P\\_w.
+                   C8\\_w: q\\_w(interior) has unique preimage -> phi(v\\_1) = phi(v\\_ky).
+                   But spur arc != boundary vertex -> contradiction.\<close>
+                \<comment> \<open>phi(v\\_1) = phi(edge\\_pt\\_e(0, 1)), which is on the spur arc.\<close>
+                \<comment> \<open>phi(v\\_1) = phi(edge(0,1)): spur arc tip. NOT on any w-edge (hphi\\_spur\\_tip\\_int).
+                   phi(v\\_ky) for ky!=1: is a boundary vertex u\\_{my} of P\\_w, which IS on w-edges.
+                   So phi(v\\_1) != phi(v\\_ky). Then C8\\_w at phi(v\\_1) gives
+                   q\\_w(phi(v\\_1)) != q\\_w(phi(v\\_ky)), contradicting hgeq.\<close>
+                have hv1_spur: "phi (vxe 1, vye 1) = phi (edge_pt_e 0 1)"
+                  using hv1_eq by (by100 simp)
+                \<comment> \<open>phi(v\\_1) NOT on any w-edge.\<close>
+                have hv1_not_edge: "\<forall>j<?nw. \<forall>s\<in>I_set. phi (vxe 1, vye 1) \<noteq> edge_pt_w j s"
+                  using hphi_spur_tip_int hv1_spur by (by100 simp)
+                have hv1_not_edge': "\<forall>j<?nw. \<forall>s\<in>I_set.
+                    phi (vxe 1, vye 1) \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),
+                              (1-s)*vyw j+s*vyw(Suc j mod ?nw))"
+                  using hv1_not_edge unfolding edge_pt_w_def by (by100 simp)
+                \<comment> \<open>phi(v\\_ky) IS on a w-edge (boundary vertex).\<close>
+                have "\<exists>j<?nw. \<exists>s\<in>I_set. phi (vxe ky, vye ky) = edge_pt_w j s"
+                proof (cases "ky = 0")
+                  case True
+                  have "phi (vxe 0, vye 0) = (vxw 0, vyw 0)"
+                    using hphi_spur_endpoints unfolding edge_pt_e_def by (by100 simp)
+                  moreover have "edge_pt_w 0 0 = (vxw 0, vyw 0)" unfolding edge_pt_w_def by (by100 simp)
+                  moreover have "(0::nat) < ?nw" using hlen by (by100 linarith)
+                  moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  ultimately show ?thesis using True by (by100 force)
+                next
+                  case False hence "ky \<ge> 2" using \<open>ky \<noteq> 1\<close> by (by100 linarith)
+                  have hky_k: "ky - 2 < ?nw" using hky_bwd hne_eq \<open>ky \<ge> 2\<close> by (by100 linarith)
+                  have h_eq: "(ky-2)+2 = ky" using \<open>ky \<ge> 2\<close> by (by100 linarith)
+                  have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  from hphi_nonspur[rule_format, OF hky_k this]
+                  have "phi (edge_pt_e ((ky-2)+2) 0) = edge_pt_w (ky-2) 0" by (by100 simp)
+                  moreover have "edge_pt_e ((ky-2)+2) 0 = (vxe ky, vye ky)"
+                    unfolding edge_pt_e_def using h_eq by (by100 simp)
+                  ultimately have "phi (vxe ky, vye ky) = edge_pt_w (ky-2) 0" by (by100 simp)
+                  thus ?thesis using hky_k \<open>(0::real) \<in> I_set\<close> by (by100 force)
+                qed
+                then obtain jky sky where hjky: "jky < ?nw" and hsky: "sky \<in> I_set"
+                    and hphi_ky_edge: "phi (vxe ky, vye ky) = edge_pt_w jky sky" by (by100 blast)
+                \<comment> \<open>C8\\_w at phi(v\\_1) (not on any edge): q\\_w unique preimage.\<close>
+                have hv1_P: "(vxe 1, vye 1) \<in> P_e"
+                proof -
+                  have "1 < ?ne" using hlen hne_eq by (by100 linarith)
+                  have "edge_pt_e 1 0 = (vxe 1, vye 1)" unfolding edge_pt_e_def by (by100 simp)
+                  have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  \<comment> \<open>edge\\_pt\\_e(1,0) is in P\\_e (boundary point).\<close>
+                  show ?thesis using hx hx_vtx_bwd \<open>kx = 1\<close> by (by100 simp)
+                qed
+                have hphi_v1_P: "phi (vxe 1, vye 1) \<in> P_w" using hphi_range hv1_P by (by100 blast)
+                from hC8_w[rule_format, OF hphi_v1_P] hv1_not_edge'
+                have "\<forall>p'\<in>P_w. q_w (phi (vxe 1, vye 1)) = q_w p' \<longrightarrow> phi (vxe 1, vye 1) = p'"
+                  by (by100 blast)
+                hence "phi (vxe 1, vye 1) = phi (vxe ky, vye ky)"
+                  using hphi_range hy_vtx_bwd hpy hgeq hx_vtx_bwd \<open>kx = 1\<close> by (by100 simp)
+                \<comment> \<open>phi(v\\_1) NOT on edge jky, but phi(v\\_ky) IS -> contradiction.\<close>
+                hence hphi_v1_eq: "phi (vxe 1, vye 1) = edge_pt_w jky sky" using hphi_ky_edge by (by100 simp)
+                have "phi (vxe 1, vye 1) \<noteq> edge_pt_w jky sky" using hv1_not_edge hjky hsky by (by100 blast)
+                thus False using hphi_v1_eq by (by100 simp)
               qed
               have hky_ne1: "ky \<noteq> 1"
               proof
