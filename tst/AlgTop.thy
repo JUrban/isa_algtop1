@@ -2125,38 +2125,45 @@ proof -
               next
                 case False note hiy_nonspur = this
                 hence "iy \<ge> 2" by (by100 simp)
-                \<comment> \<open>x spur, y non-spur edge-interior.
-                   g(x) = q\\_w(u\\_0) = vertex image of P\\_w.
-                   g(y) = q\\_w(edge\\_pt\\_w(iy-2, ty)) = edge-interior image.
-                   C12\\_w: vertex != edge-interior -> contradiction.\<close>
-                have hphi_x: "phi x = (vxw 0, vyw 0)"
+                \<comment> \<open>x spur edge-interior, y non-spur edge-interior.
+                   phi(x) = spur arc interior point (NOT on any w-edge, by hphi\\_spur\\_int).
+                   phi(y) = edge\\_pt\\_w(iy-2, ty) (ON a w-edge).
+                   C8\\_w: q\\_w injective at phi(x) -> phi(x) = phi(y) -> contradiction.\<close>
+                \<comment> \<open>phi(x) is NOT on any w-edge (spur arc interior point).\<close>
+                have "\<exists>t0\<in>{0<..<(1::real)}. phi x = phi (edge_pt_e 0 t0)"
                 proof (cases "ix = 0")
-                  case True
-                  show ?thesis sorry
+                  case True thus ?thesis using hx_eq htx_int by (by100 blast)
                 next
                   case False hence "ix = 1" using hix_spur by (by100 simp)
-                  show ?thesis sorry
+                  have "1-tx \<in> I_set" using htx unfolding top1_unit_interval_def by (by100 auto)
+                  have "1-tx \<in> {0<..<(1::real)}" using htx_int by (by100 auto)
+                  from hphi_spur_match[rule_format, OF \<open>1-tx \<in> I_set\<close>]
+                  have "phi (edge_pt_e 0 (1-tx)) = phi (edge_pt_e 1 (1-(1-tx)))" .
+                  hence "phi (edge_pt_e 0 (1-tx)) = phi (edge_pt_e 1 tx)" by (by100 simp)
+                  hence "phi x = phi (edge_pt_e 0 (1-tx))" using hx_eq \<open>ix=1\<close> by (by100 simp)
+                  thus ?thesis using \<open>1-tx \<in> {0<..<(1::real)}\<close> by (by100 blast)
                 qed
+                then obtain t0 where ht0_int: "t0 \<in> {0<..<(1::real)}"
+                    and hphi_x_eq: "phi x = phi (edge_pt_e 0 t0)" by (by100 blast)
+                have hphi_x_not_edge: "\<forall>j<?nw. \<forall>s\<in>I_set. phi x \<noteq> edge_pt_w j s"
+                  using hphi_spur_int[rule_format, OF ht0_int] hphi_x_eq by (by100 simp)
+                have hphi_x_not_edge': "\<forall>j<?nw. \<forall>s\<in>I_set.
+                    phi x \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),
+                              (1-s)*vyw j+s*vyw(Suc j mod ?nw))"
+                  using hphi_x_not_edge unfolding edge_pt_w_def by (by100 simp)
+                from hC8_w[rule_format, OF hpx] hphi_x_not_edge'
+                have "\<forall>p'\<in>P_w. q_w (phi x) = q_w p' \<longrightarrow> phi x = p'" by (by100 blast)
+                hence "phi x = phi y" using hpy hgeq by (by100 blast)
+                \<comment> \<open>phi(y) is on non-spur edge of P\\_w.\<close>
                 have hiy_k: "iy - 2 < ?nw" using hiy hne_eq \<open>iy \<ge> 2\<close> by (by100 linarith)
                 have hiy_eq2: "(iy - 2) + 2 = iy" using \<open>iy \<ge> 2\<close> by (by100 linarith)
-                have hphi_y: "phi y = edge_pt_w (iy-2) ty"
-                proof -
-                  have "phi (edge_pt_e ((iy-2)+2) ty) = edge_pt_w (iy-2) ty"
-                    using hphi_nonspur[rule_format, OF hiy_k hty] by (by100 simp)
-                  thus ?thesis using hiy_eq2 hy_eq by (by100 simp)
-                qed
-                \<comment> \<open>g(x) = q\\_w(u\\_0), g(y) = q\\_w(edge\\_pt\\_w(iy-2, ty)).\<close>
-                \<comment> \<open>u\\_0 is vertex 0 of P\\_w. edge\\_pt\\_w(iy-2, ty) with ty in (0,1) is edge-interior.\<close>
-                \<comment> \<open>C12\\_w: q\\_w(vertex) != q\\_w(edge-interior) -> contradiction with hgeq.\<close>
-                have "q_w (vxw 0, vyw 0) \<noteq> q_w ((1-ty)*vxw(iy-2)+ty*vxw(Suc(iy-2) mod ?nw),
-                    (1-ty)*vyw(iy-2)+ty*vyw(Suc(iy-2) mod ?nw))"
-                proof -
-                  have "0 < ?nw" using hlen by (by100 linarith)
-                  thus ?thesis using hC12_w[rule_format] \<open>0 < ?nw\<close> hiy_k hty_int by (by100 blast)
-                qed
-                hence "q_w (phi x) \<noteq> q_w (phi y)"
-                  using hphi_x hphi_y unfolding edge_pt_w_def by (by100 simp)
-                thus ?thesis using hgeq by (by100 simp)
+                have "phi (edge_pt_e ((iy-2)+2) ty) = edge_pt_w (iy-2) ty"
+                  using hphi_nonspur[rule_format, OF hiy_k hty] by (by100 simp)
+                hence "phi y = edge_pt_w (iy-2) ty" using hiy_eq2 hy_eq by (by100 simp)
+                \<comment> \<open>phi(x) = phi(y) but phi(x) not on any edge and phi(y) on edge. Contradiction.\<close>
+                hence "phi x = edge_pt_w (iy-2) ty" using \<open>phi x = phi y\<close> by (by100 simp)
+                hence False using hphi_x_not_edge hiy_k hty by (by100 blast)
+                thus ?thesis by (by100 simp)
               qed
             next
               case False note hix_nonspur = this
@@ -2164,32 +2171,39 @@ proof -
               show ?thesis
               proof (cases "iy < 2")
                 case True note hiy_spur = this
-                \<comment> \<open>y spur, x non-spur edge-interior: symmetric to above.\<close>
-                have hphi_y2: "phi y = (vxw 0, vyw 0)"
+                \<comment> \<open>y spur, x non-spur edge-interior: symmetric to spur+nonspur above.\<close>
+                have "\<exists>t0\<in>{0<..<(1::real)}. phi y = phi (edge_pt_e 0 t0)"
                 proof (cases "iy = 0")
-                  case True
-                  show ?thesis sorry
+                  case True thus ?thesis using hy_eq hty_int by (by100 blast)
                 next
                   case False hence "iy = 1" using hiy_spur by (by100 simp)
-                  show ?thesis sorry
+                  have "1-ty \<in> I_set" using hty unfolding top1_unit_interval_def by (by100 auto)
+                  have "1-ty \<in> {0<..<(1::real)}" using hty_int by (by100 auto)
+                  from hphi_spur_match[rule_format, OF \<open>1-ty \<in> I_set\<close>]
+                  have "phi (edge_pt_e 0 (1-ty)) = phi (edge_pt_e 1 (1-(1-ty)))" .
+                  hence "phi (edge_pt_e 0 (1-ty)) = phi (edge_pt_e 1 ty)" by (by100 simp)
+                  hence "phi y = phi (edge_pt_e 0 (1-ty))" using hy_eq \<open>iy=1\<close> by (by100 simp)
+                  thus ?thesis using \<open>1-ty \<in> {0<..<(1::real)}\<close> by (by100 blast)
                 qed
+                then obtain t0 where ht0_int: "t0 \<in> {0<..<(1::real)}"
+                    and hphi_y_eq: "phi y = phi (edge_pt_e 0 t0)" by (by100 blast)
+                have hphi_y_not_edge: "\<forall>j<?nw. \<forall>s\<in>I_set. phi y \<noteq> edge_pt_w j s"
+                  using hphi_spur_int[rule_format, OF ht0_int] hphi_y_eq by (by100 simp)
+                have hphi_y_not_edge': "\<forall>j<?nw. \<forall>s\<in>I_set.
+                    phi y \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),
+                              (1-s)*vyw j+s*vyw(Suc j mod ?nw))"
+                  using hphi_y_not_edge unfolding edge_pt_w_def by (by100 simp)
+                from hC8_w[rule_format, OF hpy] hphi_y_not_edge'
+                have "\<forall>p'\<in>P_w. q_w (phi y) = q_w p' \<longrightarrow> phi y = p'" by (by100 blast)
+                hence "phi y = phi x" using hpx hgeq[symmetric] by (by100 blast)
                 have hix_k: "ix - 2 < ?nw" using hix hne_eq \<open>ix \<ge> 2\<close> by (by100 linarith)
                 have hix_eq2: "(ix - 2) + 2 = ix" using \<open>ix \<ge> 2\<close> by (by100 linarith)
-                have hphi_x2: "phi x = edge_pt_w (ix-2) tx"
-                proof -
-                  have "phi (edge_pt_e ((ix-2)+2) tx) = edge_pt_w (ix-2) tx"
-                    using hphi_nonspur[rule_format, OF hix_k htx] by (by100 simp)
-                  thus ?thesis using hix_eq2 hx_eq by (by100 simp)
-                qed
-                have "q_w (vxw 0, vyw 0) \<noteq> q_w ((1-tx)*vxw(ix-2)+tx*vxw(Suc(ix-2) mod ?nw),
-                    (1-tx)*vyw(ix-2)+tx*vyw(Suc(ix-2) mod ?nw))"
-                proof -
-                  have "0 < ?nw" using hlen by (by100 linarith)
-                  thus ?thesis using hC12_w[rule_format] \<open>0 < ?nw\<close> hix_k htx_int by (by100 blast)
-                qed
-                hence "q_w (phi y) \<noteq> q_w (phi x)"
-                  using hphi_y2 hphi_x2 unfolding edge_pt_w_def by (by100 simp)
-                thus ?thesis using hgeq by (by100 simp)
+                have "phi (edge_pt_e ((ix-2)+2) tx) = edge_pt_w (ix-2) tx"
+                  using hphi_nonspur[rule_format, OF hix_k htx] by (by100 simp)
+                hence "phi x = edge_pt_w (ix-2) tx" using hix_eq2 hx_eq by (by100 simp)
+                hence "phi y = edge_pt_w (ix-2) tx" using \<open>phi y = phi x\<close> by (by100 simp)
+                hence False using hphi_y_not_edge hix_k htx by (by100 blast)
+                thus ?thesis by (by100 simp)
               next
                 case False note hiy_nonspur = this
                 hence "iy \<ge> 2" by (by100 simp)
