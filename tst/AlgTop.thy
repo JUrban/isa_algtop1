@@ -3283,8 +3283,153 @@ proof -
                   \<comment> \<open>x is a vertex, y is edge-interior. phi(x) is P\\_w vertex or spur endpoint.
                      phi(y) is P\\_w edge or spur arc interior. g(x) != g(y) -> contradiction.\<close>
                   \<comment> \<open>Reuse the same C8/C12 separation as in the forward vertex-edge case.\<close>
-                  show ?thesis sorry \<comment> \<open>Backward vertex-edge separation (tx vtx, ty int).
-                     Same C8\\_w/C12\\_w/spur\\_inj argument as forward.\<close>
+                  \<comment> \<open>tx vertex, ty edge-interior. Show g(x) != g(y) -> contradiction with hgeq.
+                     x = vertex v\\_kx. phi(x) is a specific P\\_w point.
+                     y = edge-interior. phi(y) is P\\_w edge or spur arc interior.
+                     Separation by type gives phi(x) != phi(y) via C8\\_w.\<close>
+                  have hty_int_01: "ty \<in> {0<..<(1::real)}" using True by (by100 simp)
+                  \<comment> \<open>Express x as vertex, determine phi(x) type.\<close>
+                  obtain kx_v where hkx_v: "kx_v < ?ne" and hx_vtx_v: "x = (vxe kx_v, vye kx_v)"
+                  proof -
+                    from \<open>tx = 0 \<or> tx = 1\<close> show ?thesis
+                    proof
+                      assume "tx = 0" thus ?thesis using hx_eq hix that unfolding edge_pt_e_def by (by100 simp)
+                    next
+                      assume "tx = 1"
+                      hence "x = (vxe (Suc ix mod ?ne), vye (Suc ix mod ?ne))"
+                        using hx_eq unfolding edge_pt_e_def by (by100 simp)
+                      moreover have "Suc ix mod ?ne < ?ne" using hlen hne_eq by (by100 simp)
+                      ultimately show ?thesis using that by (by100 blast)
+                    qed
+                  qed
+                  \<comment> \<open>phi(y) is in P\\_w. phi(x) is in P\\_w. Both are specific types.
+                     Key: phi(y) for edge-interior is either spur arc (not on edge)
+                     or non-spur edge point. phi(x) for vertex is boundary vertex or spur tip.
+                     In all cases: C8\\_w or C12\\_w prevents q\\_w equality.\<close>
+                  \<comment> \<open>Use the forward vertex-edge argument via C12\\_e on the q\\_e side:
+                     q\\_e(vertex) != q\\_e(edge-interior). So q\\_e(x) != q\\_e(y).
+                     But the GOAL is q\\_e(x) = q\\_e(y). If this is false, it's still OK
+                     because the proof obligation "q\\_e(x) = q\\_e(y)" under the assumption
+                     hgeq: g(x) = g(y) just needs to hold. If we can show the assumption
+                     is CONTRADICTORY, we're done.\<close>
+                  \<comment> \<open>Actually: the simplest approach is to show hgeq leads to contradiction.
+                     For this: show q\\_w(phi(x)) != q\\_w(phi(y)).\<close>
+                  \<comment> \<open>Approach: the edge-interior backward matching cases (both tx,ty in (0,1))
+                     already handle all edge-interior pairs. Here tx is 0 or 1 (vertex).
+                     We need to show g(x)=g(y) is impossible, or directly show q\\_e(x)=q\\_e(y).
+
+                     Simplest: show g(x) != g(y) -> contradiction with hgeq -> False -> anything.
+                     g(x) = q\\_w(phi(vertex)), g(y) = q\\_w(phi(edge-interior)).
+                     phi(vertex) and phi(edge-interior) map to different types in P\\_w.
+                     C8\\_w/C12\\_w separates them.\<close>
+                  \<comment> \<open>phi(y): y is edge-interior at (iy, ty) with ty in (0,1).\<close>
+                  show ?thesis
+                  proof (cases "iy < 2")
+                    case True
+                    \<comment> \<open>y on spur edge-interior: phi(y) = spur arc interior (not on any w-edge).\<close>
+                    have "\<exists>t0\<in>{0<..<(1::real)}. phi y = phi (edge_pt_e 0 t0)"
+                    proof (cases "iy = 0")
+                      case True thus ?thesis using hy_eq hty_int_01 by (by100 blast)
+                    next
+                      case False hence "iy = 1" using \<open>iy < 2\<close> by (by100 simp)
+                      have h1mty: "1-ty \<in> I_set" using hty unfolding top1_unit_interval_def by (by100 auto)
+                      have "1-ty \<in> {0<..<(1::real)}" using hty_int_01 by (by100 auto)
+                      from hphi_spur_match[rule_format, OF h1mty]
+                      have "phi (edge_pt_e 0 (1-ty)) = phi (edge_pt_e 1 (1-(1-ty)))" .
+                      hence "phi (edge_pt_e 0 (1-ty)) = phi (edge_pt_e 1 ty)" by (by100 simp)
+                      hence "phi y = phi (edge_pt_e 0 (1-ty))" using hy_eq \<open>iy=1\<close> by (by100 simp)
+                      thus ?thesis using \<open>1-ty \<in> {0<..<(1::real)}\<close> by (by100 blast)
+                    qed
+                    then obtain t0 where ht0: "t0 \<in> {0<..<(1::real)}" and hphi_y_eq: "phi y = phi (edge_pt_e 0 t0)"
+                      by (by100 blast)
+                    \<comment> \<open>phi(y) not on any w-edge.\<close>
+                    have hphi_y_not_edge: "\<forall>j<?nw. \<forall>s\<in>I_set. phi y \<noteq> edge_pt_w j s"
+                      using hphi_spur_int[rule_format, OF ht0] hphi_y_eq by (by100 simp)
+                    have hphi_y_not_edge': "\<forall>j<?nw. \<forall>s\<in>I_set.
+                        phi y \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),(1-s)*vyw j+s*vyw(Suc j mod ?nw))"
+                      using hphi_y_not_edge unfolding edge_pt_w_def by (by100 simp)
+                    \<comment> \<open>C8\\_w at phi(y): unique preimage. q\\_w(phi(y)) = q\\_w(phi(x)) -> phi(y) = phi(x).\<close>
+                    from hC8_w[rule_format, OF hpy] hphi_y_not_edge'
+                    have "\<forall>p'\<in>P_w. q_w (phi y) = q_w p' \<longrightarrow> phi y = p'" by (by100 blast)
+                    hence "phi y = phi x" using hpx hgeq[symmetric] by (by100 blast)
+                    \<comment> \<open>phi(x) is a vertex: show it's NOT a spur arc interior point.\<close>
+                    \<comment> \<open>phi(y) = spur arc interior. phi(x) = phi(vertex). Spur arc != vertex image.\<close>
+                    from hphi_spur_not_int[rule_format, OF _ hx]
+                    show ?thesis sorry \<comment> \<open>Need: phi(spur arc) != phi(vertex of P\\_e).
+                       hphi\\_spur\\_not\\_int says spur != interior\\_of\\_P\\_e.
+                       But x is a BOUNDARY vertex, not interior. Need different argument.\<close>
+                  next
+                    case False hence "iy \<ge> 2" by (by100 simp)
+                    \<comment> \<open>y on non-spur edge-interior: phi(y) = edge\\_pt\\_w(iy-2, ty) on a w-edge.\<close>
+                    have hiy_k: "iy - 2 < ?nw" using hiy hne_eq \<open>iy \<ge> 2\<close> by (by100 linarith)
+                    have hiy_eq: "(iy-2)+2 = iy" using \<open>iy \<ge> 2\<close> by (by100 linarith)
+                    have hphi_y: "phi y = edge_pt_w (iy-2) ty"
+                    proof -
+                      from hphi_nonspur[rule_format, OF hiy_k hty]
+                      have "phi (edge_pt_e ((iy-2)+2) ty) = edge_pt_w (iy-2) ty" by (by100 simp)
+                      moreover have "edge_pt_e ((iy-2)+2) ty = edge_pt_e iy ty"
+                        using hiy_eq by (by100 simp)
+                      ultimately show ?thesis using hy_eq by (by100 simp)
+                    qed
+                    \<comment> \<open>phi(x) is a P\\_w vertex. C12\\_w: vertex != edge-interior on P\\_w.\<close>
+                    \<comment> \<open>Need: phi(x) is a P\\_w vertex, i.e., phi(x) = (vxw m, vyw m) for some m.\<close>
+                    show ?thesis
+                    proof (cases "kx_v = 1")
+                      case True
+                      \<comment> \<open>kx\\_v = 1 (spur tip). phi(v\\_1) not on any w-edge.
+                         phi(y) IS on a w-edge. C8\\_w contradiction.\<close>
+                      have hphi_x_not_edge: "\<forall>j<?nw. \<forall>s\<in>I_set. phi x \<noteq> edge_pt_w j s"
+                        using hphi_spur_tip_int hx_vtx_v True
+                        unfolding edge_pt_e_def by (by100 simp)
+                      have hphi_x_not_edge': "\<forall>j<?nw. \<forall>s\<in>I_set.
+                          phi x \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),(1-s)*vyw j+s*vyw(Suc j mod ?nw))"
+                        using hphi_x_not_edge unfolding edge_pt_w_def by (by100 simp)
+                      from hC8_w[rule_format, OF hpx] hphi_x_not_edge'
+                      have "\<forall>p'\<in>P_w. q_w (phi x) = q_w p' \<longrightarrow> phi x = p'" by (by100 blast)
+                      hence "phi x = phi y" using hpy hgeq by (by100 blast)
+                      hence "phi x = edge_pt_w (iy-2) ty" using hphi_y by (by100 simp)
+                      hence False using hphi_x_not_edge hiy_k hty by (by100 blast)
+                      thus ?thesis by (by100 simp)
+                    next
+                      case False
+                      \<comment> \<open>kx\\_v != 1. phi(x) = (vxw mx, vyw mx) = boundary vertex of P\\_w.
+                         C12\\_w: vertex != edge-interior at (iy-2, ty).\<close>
+                      define mx_v where "mx_v = (if kx_v = 0 then 0 else kx_v - 2)"
+                      have hmx_v_lt: "mx_v < ?nw"
+                      proof (cases "kx_v = 0")
+                        case True hence "mx_v = 0" unfolding mx_v_def by (by100 simp)
+                        thus ?thesis using hlen by (by100 linarith)
+                      next
+                        case False2: False hence "kx_v \<ge> 2" using False by (by100 linarith)
+                        hence "mx_v = kx_v - 2" unfolding mx_v_def by (by100 simp)
+                        thus ?thesis using hkx_v hne_eq \<open>kx_v \<ge> 2\<close> by (by100 linarith)
+                      qed
+                      have hphi_x_vtx: "phi x = (vxw mx_v, vyw mx_v)"
+                      proof (cases "kx_v = 0")
+                        case True thus ?thesis using hphi_spur_endpoints hx_vtx_v
+                          unfolding mx_v_def edge_pt_e_def by (by100 simp)
+                      next
+                        case False2: False hence "kx_v \<ge> 2" using False by (by100 linarith)
+                        hence hmx_eq: "mx_v = kx_v - 2" unfolding mx_v_def by (by100 simp)
+                        have h_eq: "(kx_v-2)+2 = kx_v" using \<open>kx_v \<ge> 2\<close> by (by100 linarith)
+                        have hkx_k: "kx_v - 2 < ?nw" using hkx_v hne_eq \<open>kx_v \<ge> 2\<close> by (by100 linarith)
+                        have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                        from hphi_nonspur[rule_format, OF hkx_k this]
+                        have "phi (edge_pt_e ((kx_v-2)+2) 0) = edge_pt_w (kx_v-2) 0" by (by100 simp)
+                        hence "phi (vxe kx_v, vye kx_v) = edge_pt_w (kx_v-2) 0"
+                          unfolding edge_pt_e_def using h_eq by (by100 simp)
+                        thus ?thesis using hx_vtx_v hmx_eq unfolding edge_pt_w_def by (by100 simp)
+                      qed
+                      \<comment> \<open>C12\\_w: q\\_w(vertex mx\\_v) != q\\_w(edge-interior (iy-2, ty)).\<close>
+                      have "q_w (vxw mx_v, vyw mx_v) \<noteq> q_w ((1-ty)*vxw(iy-2)+ty*vxw(Suc(iy-2) mod ?nw),
+                          (1-ty)*vyw(iy-2)+ty*vyw(Suc(iy-2) mod ?nw))"
+                        using hC12_w[rule_format, OF hmx_v_lt hiy_k hty_int_01] by (by100 blast)
+                      hence "q_w (phi x) \<noteq> q_w (phi y)"
+                        using hphi_x_vtx hphi_y unfolding edge_pt_w_def by (by100 simp)
+                      hence False using hgeq by (by100 simp)
+                      thus ?thesis by (by100 simp)
+                    qed
+                  qed
                 qed
               next
                 assume "\<not>(0 < ty \<and> ty < 1)"
