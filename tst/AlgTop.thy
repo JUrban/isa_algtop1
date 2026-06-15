@@ -3490,9 +3490,39 @@ proof -
                 \<comment> \<open>Single-step helper: each w C7 step -> q\\_e identification at shifted vertices.\<close>
                 have hstep_bwd: "\<forall>va vb. (va, vb) \<in> ?Rw \<longrightarrow>
                     q_e (vxe (va+2), vye (va+2)) = q_e (vxe (vb+2), vye (vb+2))"
-                  sorry \<comment> \<open>W-to-ext single step: w C7 pair (i,j) gives ext C7 pair (i+2,j+2).
-                     Same direction/label. Vertex patterns shift by 2.
-                     C7\\_e at t=0 or t=1 gives the q\\_e identification.\<close>
+                proof (intro allI impI)
+                  fix va vb assume hvab: "(va, vb) \<in> ?Rw"
+                  then obtain i j where hi_w: "i < ?nw" and hj_w: "j < ?nw" and hij_w: "i \<noteq> j"
+                      and hlbl_w: "fst (w ! i) = fst (w ! j)"
+                      and hcases_w: "(snd (w ! i) = snd (w ! j) \<and> va = i \<and> vb = j)
+                         \<or> (snd (w ! i) = snd (w ! j) \<and> va = Suc i mod ?nw \<and> vb = Suc j mod ?nw)
+                         \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> va = i \<and> vb = Suc j mod ?nw)
+                         \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> va = Suc i mod ?nw \<and> vb = j)"
+                    by (by5000 blast)
+                  \<comment> \<open>Transfer to ext: ext!(i+2) = w!i, ext!(j+2) = w!j.\<close>
+                  have hi_e: "i + 2 < ?ne" using hi_w hne_eq by (by100 linarith)
+                  have hj_e: "j + 2 < ?ne" using hj_w hne_eq by (by100 linarith)
+                  have hij_e: "i + 2 \<noteq> j + 2" using hij_w by (by100 linarith)
+                  have hext_i: "?ext ! (i+2) = w ! i"
+                    using hlabel_corr[rule_format, OF hi_w] by (by100 simp)
+                  have hext_j: "?ext ! (j+2) = w ! j"
+                    using hlabel_corr[rule_format, OF hj_w] by (by100 simp)
+                  have hlbl_e: "fst (?ext ! (i+2)) = fst (?ext ! (j+2))"
+                    using hext_i hext_j hlbl_w by (by100 simp)
+                  have hdir_e: "snd (?ext ! (i+2)) = snd (?ext ! (j+2)) \<longleftrightarrow> snd (w ! i) = snd (w ! j)"
+                    using hext_i hext_j by (by100 simp)
+                  \<comment> \<open>Suc (i+2) mod ne = (Suc i mod nw) + 2 (for reasonable sizes).\<close>
+                  have hmod_i: "Suc (i+2) mod ?ne = Suc i mod ?nw + 2"
+                    sorry \<comment> \<open>Modular arithmetic: Suc(i+2) mod (nw+2) = (Suc i mod nw) + 2
+                       when i < nw and nw >= 3.\<close>
+                  have hmod_j: "Suc (j+2) mod ?ne = Suc j mod ?nw + 2"
+                    sorry \<comment> \<open>Same modular arithmetic for j.\<close>
+                  \<comment> \<open>Now: C7\\_e at the shifted indices gives q\\_e identification.
+                     The 4 vertex patterns shift by +2.\<close>
+                  from hcases_w show "q_e (vxe (va+2), vye (va+2)) = q_e (vxe (vb+2), vye (vb+2))"
+                    sorry \<comment> \<open>4-case C7\\_e application with shifted indices.
+                       Same structure as forward hstep but using C7\\_e with (i+2, j+2).\<close>
+                qed
                 from hchain_w have "(mx, my) \<in> ?Rw\<^sup>*" .
                 thus ?thesis
                 proof (induction rule: rtrancl_induct)
