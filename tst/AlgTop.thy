@@ -1606,11 +1606,107 @@ proof -
   from scheme_quotient_uniqueness[OF htopo_ef htopo_e hY_ef hY_e]
   obtain h1 where hh1: "top1_homeomorphism_on Y_ef TY_ef Y_e TY_e h1"
     by (by100 blast)
+  \<comment> \<open>PROOF OF SPUR-COLLAPSE HOMEOMORPHISM.
+     Define g: P\\_e -> Y\\_w by piecewise:
+     - On non-spur cone sectors: g = q\\_w composed with sector-affine map to P\\_w
+     - On spur cone: g = q\\_w(u\\_0) (constant, vertex image)
+     g is continuous because at spur-non-spur junction, both sides approach q\\_w(u\\_0).
+     g factors through q\\_e by fibre matching (C7/C8/C12).
+     The induced f: Y\\_e -> Y\\_w is continuous (Theorem 22.2), bijective (fibre matching),
+     and Y\\_e is compact Hausdorff (Theorem 74.1), so Theorem 26.6 gives homeomorphism.\<close>
+  \<comment> \<open>Step A: Y\\_e is compact and Hausdorff.\<close>
+  have hpoly_e: "top1_is_polygonal_quotient_on Y_e TY_e"
+    unfolding top1_is_polygonal_quotient_on_def using htopo_e hY_e by (by100 blast)
+  have hpoly_w: "top1_is_polygonal_quotient_on Y_w TY_w"
+    unfolding top1_is_polygonal_quotient_on_def using htopo_w hY_w by (by100 blast)
+  from Theorem_74_1_polygon_quotient_compact_hausdorff[OF htopo_e hpoly_e]
+  have hcompact_e: "top1_compact_on Y_e TY_e" and hhaus_e: "is_hausdorff_on Y_e TY_e"
+    by (by100 blast)+
+  from Theorem_74_1_polygon_quotient_compact_hausdorff[OF htopo_w hpoly_w]
+  have hcompact_w: "top1_compact_on Y_w TY_w" and hhaus_w: "is_hausdorff_on Y_w TY_w"
+    by (by100 blast)+
+  \<comment> \<open>Step B: Define g: P\\_e -> Y\\_w (continuous, constant on q\\_e-fibres).
+     g is defined piecewise on cone sectors from centroid.
+     On non-spur sector k (for edge k+2): affine map to corresponding sector in P\\_w,
+     then compose with q\\_w.
+     On spur sectors (for edges 0,1): constant q\\_w(vxw 0, vyw 0).\<close>
+  have "\<exists>g. (\<forall>p \<in> P_e. g p \<in> Y_w)
+      \<and> top1_continuous_map_on P_e
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
+          Y_w TY_w g
+      \<and> g ` P_e = Y_w
+      \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_e x = q_e y \<longrightarrow> g x = g y)
+      \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. g x = g y \<longrightarrow> q_e x = q_e y)"
+    sorry \<comment> \<open>Piecewise cone construction + fibre matching verification.
+       Continuity: junction limits agree via q\\_w(u\\_0).
+       Forward fibres: C7/C8/C12 of q\\_e.
+       Backward fibres: C8/C12 of q\\_w + affine injectivity.\<close>
+  then obtain g where hg_range: "\<forall>p \<in> P_e. g p \<in> Y_w"
+    and hg_cont: "top1_continuous_map_on P_e
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
+        Y_w TY_w g"
+    and hg_surj: "g ` P_e = Y_w"
+    and hg_fwd: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_e x = q_e y \<longrightarrow> g x = g y"
+    and hg_bwd: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. g x = g y \<longrightarrow> q_e x = q_e y"
+    by (by5000 blast)
+  \<comment> \<open>Step C: Factor g through q\\_e to get f: Y\\_e -> Y\\_w (Theorem 22.2).\<close>
+  from Theorem_22_2[OF hC2_e hg_range hg_fwd]
+  obtain f where hf_range: "\<forall>y\<in>Y_e. f y \<in> Y_w"
+    and hf_comp: "\<forall>x\<in>P_e. f (q_e x) = g x"
+    and hf_cont_iff: "top1_continuous_map_on Y_e TY_e Y_w TY_w f
+        \<longleftrightarrow> top1_continuous_map_on P_e
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
+            Y_w TY_w g"
+    by (by100 blast)
+  have hf_cont: "top1_continuous_map_on Y_e TY_e Y_w TY_w f"
+    using hf_cont_iff hg_cont by (by100 simp)
+  \<comment> \<open>Step D: f is bijective.\<close>
+  have hf_bij: "bij_betw f Y_e Y_w"
+  proof -
+    \<comment> \<open>Surjectivity: Y\\_w = g(P\\_e) = f(q\\_e(P\\_e)) = f(Y\\_e).\<close>
+    have hq_surj: "q_e ` P_e = Y_e"
+      using hC2_e unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
+    have hf_surj: "f ` Y_e = Y_w"
+    proof -
+      have "f ` Y_e = f ` (q_e ` P_e)" using hq_surj by (by100 simp)
+      also have "\<dots> = (f \<circ> q_e) ` P_e" by (by100 auto)
+      also have "\<dots> = g ` P_e"
+      proof -
+        have "\<forall>x\<in>P_e. (f \<circ> q_e) x = g x" using hf_comp by (by100 simp)
+        thus ?thesis by (by100 force)
+      qed
+      also have "\<dots> = Y_w" using hg_surj .
+      finally show ?thesis .
+    qed
+    \<comment> \<open>Injectivity: f(y1) = f(y2) implies y1 = y2.\<close>
+    have hf_inj: "inj_on f Y_e"
+    proof (rule inj_onI)
+      fix y1 y2 assume hy1: "y1 \<in> Y_e" and hy2: "y2 \<in> Y_e" and heq: "f y1 = f y2"
+      \<comment> \<open>y1 = q\\_e(x1) and y2 = q\\_e(x2) for some x1, x2 in P\\_e.\<close>
+      from hy1 obtain x1 where hx1: "x1 \<in> P_e" "q_e x1 = y1"
+        using hq_surj by (by100 blast)
+      from hy2 obtain x2 where hx2: "x2 \<in> P_e" "q_e x2 = y2"
+        using hq_surj by (by100 blast)
+      have "g x1 = f (q_e x1)" using hf_comp[rule_format, OF hx1(1)] by (by100 simp)
+      also have "\<dots> = f y1" using hx1(2) by (by100 simp)
+      also have "\<dots> = f y2" using heq .
+      also have "\<dots> = f (q_e x2)" using hx2(2) by (by100 simp)
+      also have "\<dots> = g x2" using hf_comp[rule_format, OF hx2(1)] by (by100 simp)
+      finally have "g x1 = g x2" .
+      hence "q_e x1 = q_e x2"
+        using hg_bwd hx1(1) hx2(1) by (by100 blast)
+      thus "y1 = y2" using hx1(2) hx2(2) by (by100 simp)
+    qed
+    show ?thesis unfolding bij_betw_def using hf_inj hf_surj by (by100 blast)
+  qed
+  \<comment> \<open>Step E: Apply Theorem 26.6: continuous bijection compact -> Hausdorff = homeomorphism.\<close>
+  have htopo_e_on: "is_topology_on Y_e TY_e"
+    using htopo_e by (rule is_topology_on_strict_imp)
+  have htopo_w_on: "is_topology_on Y_w TY_w"
+    using htopo_w by (rule is_topology_on_strict_imp)
+  from Theorem_26_6[OF htopo_e_on htopo_w_on hcompact_e hhaus_w hf_cont hf_bij]
   have hY_e_w: "\<exists>h. top1_homeomorphism_on Y_e TY_e Y_w TY_w h"
-    sorry \<comment> \<open>CORE SORRY: spur-collapse homeomorphism between canonical quotients.
-       The proof outline above (steps 3-7) gives the construction and verification.
-       Formalizing the cone construction + fibre matching + Theorem 22.2/26.6
-       requires ~200 lines of geometric argument.\<close>
+    by (by100 blast)
   from hY_e_w obtain h2 where hh2: "top1_homeomorphism_on Y_e TY_e Y_w TY_w h2"
     by (by100 blast)
   from scheme_quotient_uniqueness[OF htopo_w htopo_wf hY_w hY_wf]
