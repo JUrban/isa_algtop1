@@ -3340,8 +3340,83 @@ proof -
               case False
               \<comment> \<open>Distinct vertices. phi maps to P\\_w vertices/spur arc.
                  q\\_w equality of phi images -> vtgt\\_w chain -> ext chain -> q\\_e.\<close>
-              show ?thesis sorry \<comment> \<open>Backward distinct-vertex: vtgt\\_w chain reverse transfer.
-                 Symmetric to forward distinct-vertex proof.\<close>
+              \<comment> \<open>Step 3a: kx=1 or ky=1 is impossible (spur tip has unique q\\_w image).\<close>
+              have hkx_ne1: "kx \<noteq> 1" and hky_ne1: "ky \<noteq> 1"
+                sorry \<comment> \<open>kx=1 forces ky=1 (phi(v\\_1) is interior, only matches itself via C8\\_w).
+                   Similarly ky=1 forces kx=1. Both contradict kx != ky.\<close>
+              \<comment> \<open>Step 3b: compute the w-vertex indices for phi images.\<close>
+              define mx where "mx = (if kx = 0 then 0 else kx - 2)"
+              define my where "my = (if ky = 0 then 0 else ky - 2)"
+              have hmx_lt: "mx < ?nw"
+              proof (cases "kx = 0")
+                case True hence "mx = 0" unfolding mx_def by (by100 simp)
+                thus ?thesis using hlen by (by100 linarith)
+              next
+                case False hence "kx \<ge> 2" using hkx_ne1 by (by100 linarith)
+                hence hmx_eq: "mx = kx - 2" unfolding mx_def by (by100 simp)
+                have "kx - 2 < ?nw" using hkx_bwd hne_eq \<open>kx \<ge> 2\<close> by (by100 linarith)
+                thus ?thesis using hmx_eq by (by100 linarith)
+              qed
+              have hmy_lt: "my < ?nw"
+              proof (cases "ky = 0")
+                case True hence "my = 0" unfolding my_def by (by100 simp)
+                thus ?thesis using hlen by (by100 linarith)
+              next
+                case False hence "ky \<ge> 2" using hky_ne1 by (by100 linarith)
+                hence hmy_eq: "my = ky - 2" unfolding my_def by (by100 simp)
+                have "ky - 2 < ?nw" using hky_bwd hne_eq \<open>ky \<ge> 2\<close> by (by100 linarith)
+                thus ?thesis using hmy_eq by (by100 linarith)
+              qed
+              \<comment> \<open>phi(v\\_kx) = u\\_{mx}, phi(v\\_ky) = u\\_{my}.\<close>
+              have hphi_kx: "phi (vxe kx, vye kx) = (vxw mx, vyw mx)"
+                sorry \<comment> \<open>phi(v\\_kx) = u\\_{mx} from hphi\\_nonspur or hphi\\_spur\\_endpoints.\<close>
+              have hphi_ky: "phi (vxe ky, vye ky) = (vxw my, vyw my)"
+                sorry \<comment> \<open>phi(v\\_ky) = u\\_{my}.\<close>
+              \<comment> \<open>Step 3c: q\\_w(u\\_{mx}) = q\\_w(u\\_{my}) from hgeq.\<close>
+              have hqw_eq: "q_w (vxw mx, vyw mx) = q_w (vxw my, vyw my)"
+                using hgeq hx_vtx_bwd hy_vtx_bwd hphi_kx hphi_ky by (by100 simp)
+              \<comment> \<open>Step 3d: vtgt\\_w(mx) = vtgt\\_w(my) from q\\_w equality + C3\\_w.\<close>
+              have hvtgt_w_eq: "vtgt_w mx = vtgt_w my"
+              proof -
+                have hqw_mx: "q_w (vxw mx, vyw mx) = (vxw (vtgt_w mx), vyw (vtgt_w mx))"
+                  using hvtgt_w hmx_lt by (by100 blast)
+                have hqw_my: "q_w (vxw my, vyw my) = (vxw (vtgt_w my), vyw (vtgt_w my))"
+                  using hvtgt_w hmy_lt by (by100 blast)
+                show ?thesis
+                proof (rule ccontr)
+                  assume "vtgt_w mx \<noteq> vtgt_w my"
+                  have hvmx: "vtgt_w mx < ?nw" using hvtgt_w_bound hmx_lt by (by100 blast)
+                  have hvmy: "vtgt_w my < ?nw" using hvtgt_w_bound hmy_lt by (by100 blast)
+                  from hC3_w[rule_format, OF hvmx hvmy \<open>vtgt_w mx \<noteq> vtgt_w my\<close>]
+                  have "(vxw (vtgt_w mx), vyw (vtgt_w mx)) \<noteq> (vxw (vtgt_w my), vyw (vtgt_w my))" .
+                  moreover from hqw_eq hqw_mx hqw_my
+                  have "(vxw (vtgt_w mx), vyw (vtgt_w mx)) = (vxw (vtgt_w my), vyw (vtgt_w my))"
+                    by (by100 simp)
+                  ultimately show False by (by100 simp)
+                qed
+              qed
+              \<comment> \<open>Step 3e: vtgt\\_w chain -> ext chain -> q\\_e identification.\<close>
+              from hvtgt_w_chain[rule_format, OF hmx_lt hmy_lt hvtgt_w_eq]
+              have hchain_w: "(mx, my) \<in> {(a, b). \<exists>i<?nw. \<exists>j<?nw. i \<noteq> j
+                  \<and> fst (w ! i) = fst (w ! j)
+                  \<and> ((snd (w ! i) = snd (w ! j) \<and> a = i \<and> b = j)
+                   \<or> (snd (w ! i) = snd (w ! j) \<and> a = Suc i mod ?nw \<and> b = Suc j mod ?nw)
+                   \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = i \<and> b = Suc j mod ?nw)
+                   \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = Suc i mod ?nw \<and> b = j))}\<^sup>*"
+                by (by100 blast)
+              \<comment> \<open>Each w C7 step gives an ext C7 step (shifted by 2).
+                 Then rtrancl gives q\\_e identification.\<close>
+              \<comment> \<open>The w-to-ext transfer: for w edge pair (i,j), ext has pair (i+2, j+2)
+                 with the SAME label and direction. The vertex patterns shift:
+                 w: (a,b) -> ext: (a+2, b+2).
+                 So (mx, my) in w-rtrancl -> (mx+2, my+2) in ext-rtrancl.
+                 Then q\\_e(v\\_{mx+2}) = q\\_e(v\\_{my+2}).
+                 And kx maps to mx (so v\\_kx is identified with v\\_{mx+2} or v\\_{mx+2}=v\\_kx).
+                 Need: v\\_kx = v\\_{mx+2} (or at least q\\_e-identified).\<close>
+              \<comment> \<open>From mx def: if kx=0 then mx=0, mx+2=2. v\\_0 ~ v\\_2 (a-pair). CHECK.
+                 If kx>=2 (and kx!=1): mx=kx-2, mx+2=kx. v\\_kx = v\\_{mx+2}. CHECK.\<close>
+              show ?thesis sorry \<comment> \<open>Final: map (mx,my) chain to (kx,ky) identification.
+                 Uses: w-to-ext C7 transfer + v\\_0~v\\_2 for kx=0 case.\<close>
             qed
           qed
         qed
