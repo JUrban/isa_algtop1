@@ -2372,9 +2372,35 @@ proof -
                    phi(v\\_a) = u\\_{a-2}, phi(v\\_b) = u\\_{b-2}. C7\\_w gives q\\_w equal. CHECK.
                  - Mixed spur+non-spur: impossible by freshness (proved earlier).
                  By induction: the full chain transfers.\<close>
-              show ?thesis sorry \<comment> \<open>Induction on rtrancl chain. Each single step gives
-                 q\\_w(phi(v\\_a)) = q\\_w(phi(v\\_b)) via C7\\_w or spur arc equality.
-                 Transitivity of = gives the full chain result.\<close>
+              \<comment> \<open>Induction on rtrancl chain. For each generator step (a,b): show
+                 q\\_w(phi(v\\_a)) = q\\_w(phi(v\\_b)) via C7\\_w or spur equality.\<close>
+              let ?R = "{(a, b). \<exists>i<?ne. \<exists>j<?ne. i \<noteq> j
+                  \<and> fst (?ext ! i) = fst (?ext ! j)
+                  \<and> ((snd (?ext ! i) = snd (?ext ! j) \<and> a = i \<and> b = j)
+                   \<or> (snd (?ext ! i) = snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = Suc j mod ?ne)
+                   \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = i \<and> b = Suc j mod ?ne)
+                   \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = j))}"
+              \<comment> \<open>Single-step lemma: for (a,b) in ?R, phi identifies in q\\_w.\<close>
+              have hstep: "\<forall>a b. (a, b) \<in> ?R \<longrightarrow> q_w (phi (vxe a, vye a)) = q_w (phi (vxe b, vye b))"
+                sorry \<comment> \<open>Single C7 step: each generator (a,b) from edge pair (i,j) gives
+                   q\\_w(phi(v\\_a)) = q\\_w(phi(v\\_b)). Proof by cases on spur/non-spur.\<close>
+              \<comment> \<open>Induction on rtrancl.\<close>
+              have "q_w (phi (vxe kx, vye kx)) = q_w (phi (vxe ky, vye ky))"
+              proof -
+                from hchain have "(kx, ky) \<in> ?R\<^sup>*" .
+                thus ?thesis
+                proof (induction rule: rtrancl_induct)
+                  case base thus ?case by (by100 simp)
+                next
+                  case (step y z)
+                  have "(y, z) \<in> ?R" using step.hyps(2) .
+                  from hstep[rule_format, of y z]
+                  have "q_w (phi (vxe y, vye y)) = q_w (phi (vxe z, vye z))"
+                    using \<open>(y, z) \<in> ?R\<close> by (by100 simp)
+                  thus ?case using step.IH by (by100 simp)
+                qed
+              qed
+              thus ?thesis using hx_vtx hy_vtx by (by100 simp)
             qed
           qed
         qed
