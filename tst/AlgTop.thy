@@ -2382,8 +2382,23 @@ proof -
                    \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = j))}"
               \<comment> \<open>Single-step lemma: for (a,b) in ?R, phi identifies in q\\_w.\<close>
               have hstep: "\<forall>a b. (a, b) \<in> ?R \<longrightarrow> q_w (phi (vxe a, vye a)) = q_w (phi (vxe b, vye b))"
-                sorry \<comment> \<open>Single C7 step: each generator (a,b) from edge pair (i,j) gives
-                   q\\_w(phi(v\\_a)) = q\\_w(phi(v\\_b)). Proof by cases on spur/non-spur.\<close>
+              proof (intro allI impI)
+                fix a b assume hab: "(a, b) \<in> ?R"
+                then obtain i j where hi: "i < ?ne" and hj: "j < ?ne" and hij: "i \<noteq> j"
+                    and hlbl: "fst (?ext ! i) = fst (?ext ! j)"
+                    and hcases: "(snd (?ext ! i) = snd (?ext ! j) \<and> a = i \<and> b = j)
+                       \<or> (snd (?ext ! i) = snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = Suc j mod ?ne)
+                       \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = i \<and> b = Suc j mod ?ne)
+                       \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = j)"
+                  by (by5000 blast)
+                \<comment> \<open>The edge pair (i,j) either involves spur or non-spur edges.
+                   Spur+non-spur: impossible (freshness). So both spur or both non-spur.\<close>
+                show "q_w (phi (vxe a, vye a)) = q_w (phi (vxe b, vye b))"
+                  sorry \<comment> \<open>Single step: case analysis on spur/non-spur edges i,j.
+                     Both spur: phi(v\\_a) and phi(v\\_b) identified via spur arc properties.
+                     Both non-spur: C7\\_w at t=0 or t=1 gives q\\_w identification.
+                     Mixed: impossible by freshness.\<close>
+              qed
               \<comment> \<open>Induction on rtrancl.\<close>
               have "q_w (phi (vxe kx, vye kx)) = q_w (phi (vxe ky, vye ky))"
               proof -
