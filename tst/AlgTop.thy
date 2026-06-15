@@ -2886,6 +2886,28 @@ next
   show ?case using qZ hXZ by (rule homeo_realization_flat_introI)
 qed
 
+\<comment> \<open>Proper version: valid operations preserve quotient homeomorphism type for proper schemes.
+   Uses front\\_cancel\\_proper (which depends only on spur\\_collapse\\_cancel\\_homeo)
+   and quotient\\_of\\_scheme\\_cut\\_paste\\_opp\\_proper + quotient\\_of\\_scheme\\_cut\\_paste\\_proper
+   for the cut-paste operations. Avoids the FALSE same-space sorrys.\<close>
+lemma valid_equiv_preserves_quotient_homeo_proper:
+  fixes X :: "'a set" and TX :: "'a set set"
+  assumes "top1_quotient_of_scheme_on X TX s"
+      and "top1_valid_scheme_equiv s t"
+      and hproper: "\<forall>label. card {i. i < length s \<and> fst (s ! i) = label} \<in> {0, 2}"
+  shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y TY t \<and>
+    top1_homeomorphism_on X TX Y TY h"
+  sorry \<comment> \<open>Proper version of the valid equiv chain.
+     The proof would track properness through each operation step and use:
+     - front\\_cancel\\_proper (for cancel, depends on spur\\_collapse only)
+     - quotient\\_of\\_scheme\\_cut\\_paste\\_opp\\_proper (for cut-paste-opp, geometric sorry)
+     - quotient\\_of\\_scheme\\_cut\\_paste\\_proper (for cut-paste, geometric sorry)
+     - quotient\\_of\\_scheme\\_rotate, invert, relabel, flip (all PROVED)
+     Each operation preserves properness (combinatorial fact, same label multiset).
+     The proof structure parallels valid\\_equiv\\_preserves\\_quotient\\_homeo
+     but adds properness tracking.\<close>
+
 \<comment> \<open>Bridge moved to before valid\\_operation\\_preserves.\<close>
 
 
@@ -3940,7 +3962,8 @@ proof -
       fix a_s b_s assume hab_s: "a_s \<noteq> b_s"
           and hequiv_s: "top1_valid_scheme_equiv scheme [(a_s, True), (a_s, False), (b_s, True), (b_s, False)]"
       \<comment> \<open>Step 1: X is homeomorphic to some quotient Y of the sphere scheme.\<close>
-      from valid_equiv_preserves_quotient_homeo[OF hsch hequiv_s]
+      \<comment> \<open>Use proper version (avoids FALSE same-space sorrys in general chain).\<close>
+      from valid_equiv_preserves_quotient_homeo_proper[OF hsch hequiv_s hproper]
       obtain Y :: "'a set" and TY :: "'a set set" and h :: "'a \<Rightarrow> 'a" where
         hY: "top1_quotient_of_scheme_on Y TY [(a_s, True), (a_s, False), (b_s, True), (b_s, False)]"
         and hXY: "top1_homeomorphism_on X TX Y TY h"
@@ -3976,7 +3999,7 @@ proof -
       fix n w assume hn: "n > 0" and htor: "top1_is_torus_scheme w n"
           and hequiv: "top1_valid_scheme_equiv scheme w"
       \<comment> \<open>valid chain: \\<exists>Y TY h. quotient Y TY w \\<and> homeo X TX Y TY h.\<close>
-      from valid_equiv_preserves_quotient_homeo[OF hsch hequiv]
+      from valid_equiv_preserves_quotient_homeo_proper[OF hsch hequiv hproper]
       obtain Y :: "'a set" and TY :: "'a set set" and h_t :: "'a \<Rightarrow> 'a" where
         hY_t: "top1_quotient_of_scheme_on Y TY w" and hXY_t: "top1_homeomorphism_on X TX Y TY h_t"
         by (by100 blast)
@@ -3988,7 +4011,7 @@ proof -
       \<comment> \<open>Case 3: scheme \\<sim> projective normal form.\<close>
       fix m w assume hm: "m > 0" and hproj: "top1_is_projective_scheme w m"
           and hequiv: "top1_valid_scheme_equiv scheme w"
-      from valid_equiv_preserves_quotient_homeo[OF hsch hequiv]
+      from valid_equiv_preserves_quotient_homeo_proper[OF hsch hequiv hproper]
       obtain Y :: "'a set" and TY :: "'a set set" and h_p :: "'a \<Rightarrow> 'a" where
         hY_p: "top1_quotient_of_scheme_on Y TY w" and hXY_p: "top1_homeomorphism_on X TX Y TY h_p"
         by (by100 blast)
