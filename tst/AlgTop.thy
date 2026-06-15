@@ -1531,6 +1531,13 @@ proof -
           p \<noteq> ((1-t)*vxe i+t*vxe(Suc i mod ?ne),
                 (1-t)*vye i+t*vye(Suc i mod ?ne)))
        \<longrightarrow> (\<forall>p'\<in>P_e. q_e p = q_e p' \<longrightarrow> p = p')"
+    and hC9_e: "\<forall>i<?ne. \<forall>j<?ne. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
+        q_e ((1-t)*vxe i+t*vxe(Suc i mod ?ne),
+            (1-t)*vye i+t*vye(Suc i mod ?ne))
+      = q_e ((1-s')*vxe j+s'*vxe(Suc j mod ?ne),
+            (1-s')*vye j+s'*vye(Suc j mod ?ne))
+      \<longrightarrow> (i=j \<and> t=s') \<or> (fst(?ext!i)=fst(?ext!j) \<and>
+          (if snd(?ext!i)=snd(?ext!j) then s'=t else s'=1-t))"
     and hC12_e: "\<forall>k<?ne. \<forall>j<?ne. \<forall>s'\<in>{0<..<(1::real)}.
         q_e (vxe k, vye k) \<noteq> q_e ((1-s')*vxe j + s'*vxe(Suc j mod ?ne),
                                (1-s')*vye j + s'*vye(Suc j mod ?ne))"
@@ -1720,15 +1727,62 @@ proof -
       have h3: "phi_bdy 0 0 = (vxw 0, vyw 0)" unfolding phi_bdy_def by (by100 simp)
       show ?thesis using h2 hu0_edgen' h3 by (by100 simp)
     qed
-    \<comment> \<open>The full construction of g: P\\_e -> Y\\_w.
-       On boundary: g(edge\\_e(i,t)) = q\\_w(phi\\_bdy(i, t)).
-       On interior: g maps via piecewise affine sector extension + q\\_w.
-       For now: sorry the full construction. The junction continuity above
-       is the KEY ingredient for proving g continuous at the spur boundary.\<close>
+    \<comment> \<open>Spur-non-spur separation: q\\_e never identifies spur edge-interior with non-spur edge-interior.
+       Follows from C9 + freshness of a.\<close>
+    have hspur_sep: "\<forall>t\<in>{0<..<(1::real)}. \<forall>k<?nw. \<forall>s\<in>{0<..<(1::real)}.
+        q_e (edge_pt_e 0 t) \<noteq> q_e (edge_pt_e (k+2) s)"
+    proof (intro ballI allI impI)
+      fix t s :: real and k :: nat
+      assume ht: "t \<in> {0<..<(1::real)}" and hk: "k < ?nw" and hs: "s \<in> {0<..<(1::real)}"
+      have h0_lt: "0 < ?ne" using hlen hne_eq by (by100 linarith)
+      have hk2_lt: "k+2 < ?ne" using hk hne_eq by (by100 linarith)
+      \<comment> \<open>Labels don't match: ext[0] = a (fresh label), ext[k+2] = w[k] (no a label).\<close>
+      have "fst (?ext ! 0) = fst a" using hspur0 by (by100 simp)
+      moreover have "fst (?ext ! (k+2)) = fst (w ! k)"
+      proof -
+        from hlabel_corr have "?ext ! (k+2) = w ! k" using hk by (by100 blast)
+        thus ?thesis by (by100 simp)
+      qed
+      moreover have hfst_neq: "fst a \<noteq> fst (w ! k)"
+      proof
+        assume "fst a = fst (w ! k)"
+        have "w ! k \<in> set w" using hk by (by100 simp)
+        hence "fst (w ! k) \<in> fst ` set w" by (by100 blast)
+        hence "fst a \<in> fst ` set w" using \<open>fst a = fst (w ! k)\<close> by (by100 simp)
+        thus False using hfresh by (by100 blast)
+      qed
+      ultimately have hlabel_neq: "fst (?ext ! 0) \<noteq> fst (?ext ! (k+2))" by (by100 simp)
+      \<comment> \<open>By C9: if q\\_e identifies edge-interiors, labels must match. Contradiction.\<close>
+      show "q_e (edge_pt_e 0 t) \<noteq> q_e (edge_pt_e (k+2) s)"
+      proof
+        assume heq: "q_e (edge_pt_e 0 t) = q_e (edge_pt_e (k+2) s)"
+        have hC9_inst: "q_e ((1-t)*vxe 0+t*vxe(Suc 0 mod ?ne),
+            (1-t)*vye 0+t*vye(Suc 0 mod ?ne))
+          = q_e ((1-s)*vxe (k+2)+s*vxe(Suc (k+2) mod ?ne),
+            (1-s)*vye (k+2)+s*vye(Suc (k+2) mod ?ne))"
+          using heq unfolding edge_pt_e_def by (by100 simp)
+        from hC9_e[rule_format, OF h0_lt hk2_lt ht hs] hC9_inst
+        have "(0 = k+2 \<and> t = s) \<or> (fst(?ext!0) = fst(?ext!(k+2)) \<and>
+            (if snd(?ext!0)=snd(?ext!(k+2)) then s=t else s=1-t))"
+          by (by100 blast)
+        thus False
+        proof (elim disjE conjE)
+          assume "0 = k+2" thus False by (by100 simp)
+        next
+          assume "fst(?ext!0) = fst(?ext!(k+2))"
+          thus False using hlabel_neq by (by100 simp)
+        qed
+      qed
+    qed
+    \<comment> \<open>Similarly for edge 1 vs non-spur:\<close>
+    have hspur_sep1: "\<forall>t\<in>{0<..<(1::real)}. \<forall>k<?nw. \<forall>s\<in>{0<..<(1::real)}.
+        q_e (edge_pt_e 1 t) \<noteq> q_e (edge_pt_e (k+2) s)"
+      sorry \<comment> \<open>Same argument as hspur\\_sep with edge 1 instead of edge 0.\<close>
+    \<comment> \<open>The full construction of g: P\\_e -> Y\\_w.\<close>
     show ?thesis
       sorry \<comment> \<open>CORE: construct g from phi\\_bdy + sector extension + q\\_w.
-         Junction continuity at v\\_0 and v\\_2 is PROVED above (hjunction\\_v0, hjunction\\_v2).
-         Remaining: define the sector extension, show continuity, surjectivity, fibre matching.\<close>
+         PROVED ingredients: junction continuity, spur-non-spur separation.
+         Remaining: define sector extension, show continuity, surjectivity, fibre matching.\<close>
   qed
   then obtain g where hg_range: "\<forall>p \<in> P_e. g p \<in> Y_w"
     and hg_cont: "top1_continuous_map_on P_e
