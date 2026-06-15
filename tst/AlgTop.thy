@@ -3422,7 +3422,48 @@ proof -
               proof
                 assume "ky = 1"
                 have "kx \<noteq> 1" using False \<open>ky = 1\<close> by (by100 blast)
-                show False sorry \<comment> \<open>Symmetric to kx=1 case.\<close>
+                \<comment> \<open>Symmetric to kx=1: phi(v\\_1) spur arc tip, phi(v\\_kx) boundary vertex.\<close>
+                have hv1_eq: "edge_pt_e 0 1 = (vxe 1, vye 1)"
+                  unfolding edge_pt_e_def by (by100 simp)
+                have hv1_not_edge: "\<forall>j<?nw. \<forall>s\<in>I_set. phi (vxe 1, vye 1) \<noteq> edge_pt_w j s"
+                  using hphi_spur_tip_int hv1_eq by (by100 simp)
+                have "\<exists>jkx<?nw. \<exists>skx\<in>I_set. phi (vxe kx, vye kx) = edge_pt_w jkx skx"
+                proof (cases "kx = 0")
+                  case True
+                  have "phi (vxe 0, vye 0) = (vxw 0, vyw 0)"
+                    using hphi_spur_endpoints unfolding edge_pt_e_def by (by100 simp)
+                  moreover have "edge_pt_w 0 0 = (vxw 0, vyw 0)" unfolding edge_pt_w_def by (by100 simp)
+                  moreover have "(0::nat) < ?nw" using hlen by (by100 linarith)
+                  moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  ultimately show ?thesis using True by (by100 force)
+                next
+                  case False2: False hence "kx \<ge> 2" using \<open>kx \<noteq> 1\<close> by (by100 linarith)
+                  have hkx_k: "kx - 2 < ?nw" using hkx_bwd hne_eq \<open>kx \<ge> 2\<close> by (by100 linarith)
+                  have h_eq: "(kx-2)+2 = kx" using \<open>kx \<ge> 2\<close> by (by100 linarith)
+                  have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  from hphi_nonspur[rule_format, OF hkx_k this]
+                  have "phi (edge_pt_e ((kx-2)+2) 0) = edge_pt_w (kx-2) 0" by (by100 simp)
+                  moreover have "edge_pt_e ((kx-2)+2) 0 = (vxe kx, vye kx)"
+                    unfolding edge_pt_e_def using h_eq by (by100 simp)
+                  ultimately have "phi (vxe kx, vye kx) = edge_pt_w (kx-2) 0" by (by100 simp)
+                  thus ?thesis using hkx_k \<open>(0::real) \<in> I_set\<close> by (by100 force)
+                qed
+                then obtain jkx skx where hjkx: "jkx < ?nw" and hskx: "skx \<in> I_set"
+                    and hphi_kx_edge: "phi (vxe kx, vye kx) = edge_pt_w jkx skx" by (by100 blast)
+                have hv1_P_ky: "(vxe 1, vye 1) \<in> P_e" using hy hy_vtx_bwd \<open>ky = 1\<close> by (by100 simp)
+                have hphi_v1_P: "phi (vxe 1, vye 1) \<in> P_w" using hphi_range hv1_P_ky by (by100 blast)
+                have hv1_not_edge': "\<forall>j<?nw. \<forall>s\<in>I_set.
+                    phi (vxe 1, vye 1) \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),
+                              (1-s)*vyw j+s*vyw(Suc j mod ?nw))"
+                  using hv1_not_edge unfolding edge_pt_w_def by (by100 simp)
+                from hC8_w[rule_format, OF hphi_v1_P] hv1_not_edge'
+                have "\<forall>p'\<in>P_w. q_w (phi (vxe 1, vye 1)) = q_w p' \<longrightarrow> phi (vxe 1, vye 1) = p'"
+                  by (by100 blast)
+                hence "phi (vxe 1, vye 1) = phi (vxe kx, vye kx)"
+                  using hphi_range hx_vtx_bwd hpx hgeq[symmetric] hy_vtx_bwd \<open>ky = 1\<close> by (by100 simp)
+                hence hphi_v1_eq: "phi (vxe 1, vye 1) = edge_pt_w jkx skx" using hphi_kx_edge by (by100 simp)
+                have "phi (vxe 1, vye 1) \<noteq> edge_pt_w jkx skx" using hv1_not_edge hjkx hskx by (by100 blast)
+                thus False using hphi_v1_eq by (by100 simp)
               qed
               \<comment> \<open>Step 3b: compute the w-vertex indices for phi images.\<close>
               define mx where "mx = (if kx = 0 then 0 else kx - 2)"
