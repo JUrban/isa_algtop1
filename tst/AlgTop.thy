@@ -1630,6 +1630,18 @@ proof -
      On non-spur sector k (for edge k+2): affine map to corresponding sector in P\\_w,
      then compose with q\\_w.
      On spur sectors (for edges 0,1): constant q\\_w(vxw 0, vyw 0).\<close>
+  \<comment> \<open>Define g: P\\_e -> Y\\_w explicitly.
+     For each point p in P\\_e, determine which cone sector from centroid it belongs to.
+     - Spur sectors (behind edges 0,1): g(p) = q\\_w(vxw 0, vyw 0)
+     - Non-spur sector k+2 (behind edge k+2 of P\\_e):
+       g(p) = q\\_w(corresponding point in sector k of P\\_w)
+     The sector map is an affine map from triangle (centroid\\_e, v\\_{k+2}, v\\_{k+3})
+     to triangle (centroid\\_w, u\\_k, u\\_{k+1}).\<close>
+  define edge_pt_e where "edge_pt_e i t = ((1-t)*vxe i+t*vxe(Suc i mod ?ne),
+                                            (1-t)*vye i+t*vye(Suc i mod ?ne))" for i t
+  define edge_pt_w where "edge_pt_w i t = ((1-t)*vxw i+t*vxw(Suc i mod ?nw),
+                                            (1-t)*vyw i+t*vyw(Suc i mod ?nw))" for i t
+  \<comment> \<open>g maps spur to q\\_w(u\\_0), non-spur edges to corresponding edges, interior by sectors.\<close>
   have "\<exists>g. (\<forall>p \<in> P_e. g p \<in> Y_w)
       \<and> top1_continuous_map_on P_e
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
@@ -1637,10 +1649,19 @@ proof -
       \<and> g ` P_e = Y_w
       \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_e x = q_e y \<longrightarrow> g x = g y)
       \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. g x = g y \<longrightarrow> q_e x = q_e y)"
-    sorry \<comment> \<open>Piecewise cone construction + fibre matching verification.
-       Continuity: junction limits agree via q\\_w(u\\_0).
-       Forward fibres: C7/C8/C12 of q\\_e.
-       Backward fibres: C8/C12 of q\\_w + affine injectivity.\<close>
+    sorry \<comment> \<open>CORE: piecewise affine sector construction + fibre matching.
+       Define g by: on each triangle (centroid\\_e, v\\_{k+2}, v\\_{k+3}) of P\\_e, use the
+       affine map to (centroid\\_w, u\\_k, u\\_{k+1}) of P\\_w, then compose with q\\_w.
+       On spur triangles: constant q\\_w(u\\_0).
+       Properties:
+       1. Range: affine map to P\\_w sector + q\\_w maps to Y\\_w.
+       2. Continuity: PL on sectors, agrees at boundaries (vertex correspondence).
+          At spur junction: both sides approach q\\_w(u\\_0) since u\\_0 = edge\\_w(0,0) = edge\\_w(n-1,1).
+       3. Surjectivity: non-spur sectors cover all of P\\_w.
+       4. Forward fibres: C7/C8 of q\\_e give same-label correspondence in q\\_w.
+       5. Backward fibres: C8/C12 of q\\_w prevent spurious identifications.
+       Label correspondence: ext[k+2] = w[k] for k < n.
+       Spur labels: ext[0] = a, ext[1] = inv(a), fresh in w.\<close>
   then obtain g where hg_range: "\<forall>p \<in> P_e. g p \<in> Y_w"
     and hg_cont: "top1_continuous_map_on P_e
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
