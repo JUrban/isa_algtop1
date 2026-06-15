@@ -2381,23 +2381,143 @@ proof -
                    \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = i \<and> b = Suc j mod ?ne)
                    \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = j))}"
               \<comment> \<open>Single-step lemma: for (a,b) in ?R, phi identifies in q\\_w.\<close>
-              have hstep: "\<forall>a b. (a, b) \<in> ?R \<longrightarrow> q_w (phi (vxe a, vye a)) = q_w (phi (vxe b, vye b))"
+              have hstep: "\<forall>va vb. (va, vb) \<in> ?R \<longrightarrow> q_w (phi (vxe va, vye va)) = q_w (phi (vxe vb, vye vb))"
               proof (intro allI impI)
-                fix a b assume hab: "(a, b) \<in> ?R"
+                fix va vb assume hab: "(va, vb) \<in> ?R"
                 then obtain i j where hi: "i < ?ne" and hj: "j < ?ne" and hij: "i \<noteq> j"
                     and hlbl: "fst (?ext ! i) = fst (?ext ! j)"
-                    and hcases: "(snd (?ext ! i) = snd (?ext ! j) \<and> a = i \<and> b = j)
-                       \<or> (snd (?ext ! i) = snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = Suc j mod ?ne)
-                       \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = i \<and> b = Suc j mod ?ne)
-                       \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = j)"
+                    and hcases: "(snd (?ext ! i) = snd (?ext ! j) \<and> va = i \<and> vb = j)
+                       \<or> (snd (?ext ! i) = snd (?ext ! j) \<and> va = Suc i mod ?ne \<and> vb = Suc j mod ?ne)
+                       \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> va = i \<and> vb = Suc j mod ?ne)
+                       \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> va = Suc i mod ?ne \<and> vb = j)"
                   by (by5000 blast)
                 \<comment> \<open>The edge pair (i,j) either involves spur or non-spur edges.
                    Spur+non-spur: impossible (freshness). So both spur or both non-spur.\<close>
-                show "q_w (phi (vxe a, vye a)) = q_w (phi (vxe b, vye b))"
-                  sorry \<comment> \<open>Single step: case analysis on spur/non-spur edges i,j.
-                     Both spur: phi(v\\_a) and phi(v\\_b) identified via spur arc properties.
-                     Both non-spur: C7\\_w at t=0 or t=1 gives q\\_w identification.
-                     Mixed: impossible by freshness.\<close>
+                \<comment> \<open>Classify: both spur (i,j < 2) or both non-spur (i,j >= 2).
+                   Mixed is impossible by freshness of label a.\<close>
+                have hboth_spur_or_nonspur: "(i < 2 \<and> j < 2) \<or> (i \<ge> 2 \<and> j \<ge> 2)"
+                proof (rule ccontr)
+                  assume "\<not>((i < 2 \<and> j < 2) \<or> (i \<ge> 2 \<and> j \<ge> 2))"
+                  hence hmixed: "(i < 2 \<and> j \<ge> 2) \<or> (i \<ge> 2 \<and> j < 2)" by (by100 linarith)
+                  \<comment> \<open>One spur, one non-spur. fst(ext!spur) = fst(a), fst(ext!non-spur) = fst(w!k).
+                     Freshness: fst(a) not in fst ` set w -> contradiction.\<close>
+                  from hmixed show False
+                  proof
+                    assume "i < 2 \<and> j \<ge> 2"
+                    hence hi2: "i < 2" and hj2: "j \<ge> 2" by (by100 auto)+
+                    have "fst (?ext ! i) = fst a"
+                    proof (cases "i = 0")
+                      case True thus ?thesis using hspur0 by (by100 simp)
+                    next
+                      case False hence "i = 1" using hi2 by (by100 linarith)
+                      thus ?thesis using hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                    qed
+                    have "j - 2 < ?nw" using hj hne_eq hj2 by (by100 linarith)
+                    from hlabel_corr[rule_format, OF this]
+                    have "([a, top1_inverse_edge a] @ w) ! ((j-2)+2) = w!(j-2)" .
+                    have "(j-2)+2 = j" using hj2 by (by100 linarith)
+                    hence "fst(?ext ! j) = fst(w!(j-2))"
+                      using \<open>([a, top1_inverse_edge a] @ w) ! ((j-2)+2) = w!(j-2)\<close> by (by100 simp)
+                    hence "fst a = fst(w!(j-2))" using hlbl \<open>fst(?ext!i) = fst a\<close> by (by100 simp)
+                    moreover have "w!(j-2) \<in> set w" using \<open>j-2 < ?nw\<close> by (by100 simp)
+                    hence "fst(w!(j-2)) \<in> fst ` set w" by (by100 blast)
+                    ultimately show False using hfresh by (by100 simp)
+                  next
+                    assume "i \<ge> 2 \<and> j < 2"
+                    hence hi2: "i \<ge> 2" and hj2: "j < 2" by (by100 auto)+
+                    have "fst (?ext ! j) = fst a"
+                    proof (cases "j = 0")
+                      case True thus ?thesis using hspur0 by (by100 simp)
+                    next
+                      case False hence "j = 1" using hj2 by (by100 linarith)
+                      thus ?thesis using hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                    qed
+                    have "i - 2 < ?nw" using hi hne_eq hi2 by (by100 linarith)
+                    from hlabel_corr[rule_format, OF this]
+                    have "([a, top1_inverse_edge a] @ w) ! ((i-2)+2) = w!(i-2)" .
+                    have "(i-2)+2 = i" using hi2 by (by100 linarith)
+                    hence "fst(?ext ! i) = fst(w!(i-2))"
+                      using \<open>([a, top1_inverse_edge a] @ w) ! ((i-2)+2) = w!(i-2)\<close> by (by100 simp)
+                    hence "fst a = fst(w!(i-2))" using hlbl \<open>fst(?ext!j) = fst a\<close> by (by100 simp)
+                    moreover have "w!(i-2) \<in> set w" using \<open>i-2 < ?nw\<close> by (by100 simp)
+                    hence "fst(w!(i-2)) \<in> fst ` set w" by (by100 blast)
+                    ultimately show False using hfresh by (by100 simp)
+                  qed
+                qed
+                show "q_w (phi (vxe va, vye va)) = q_w (phi (vxe vb, vye vb))"
+                  using hboth_spur_or_nonspur
+                proof
+                  assume hboth_spur: "i < 2 \<and> j < 2"
+                  \<comment> \<open>Both spur. The 4 vertex patterns from the a-pair:
+                     same-dir: (a=0,b=1) or (a=1,b=2). But snd(ext!0) != snd(ext!1) (opposite dir).
+                     So only opposite-dir patterns: (a=0,b=2) or (a=1,b=1).
+                     phi(v\\_0) = u\\_0, phi(v\\_2) = u\\_0, phi(v\\_1) = spur tip.
+                     For (a=0,b=2): phi equal (both u\\_0). For (a=1,b=1): trivial.\<close>
+                  \<comment> \<open>snd(ext!0) != snd(ext!1): only opposite-dir patterns apply.\<close>
+                  have hopp: "snd(?ext!0) \<noteq> snd(?ext!1)"
+                    using hspur0 hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                  \<comment> \<open>From hcases + same-dir impossible: va and vb are opp-dir endpoints.\<close>
+                  have "i = 0 \<or> i = 1" using hboth_spur by (by100 linarith)
+                  moreover have "j = 0 \<or> j = 1" using hboth_spur by (by100 linarith)
+                  ultimately have hpair: "(i = 0 \<and> j = 1) \<or> (i = 1 \<and> j = 0)" using hij by (by100 auto)
+                  \<comment> \<open>In all cases: va,vb in {0,1,2} and phi maps to u\\_0 or spur tip.\<close>
+                  have hne_ge5: "?ne \<ge> 5" using hlen hne_eq by (by100 linarith)
+                  hence hmod0: "Suc 0 mod ?ne = 1" by (by100 simp)
+                  have hmod1: "Suc 1 mod ?ne = 2"
+                  proof -
+                    have "Suc 1 = (2::nat)" by (by100 simp)
+                    moreover have "(2::nat) < ?ne" using hne_ge5 by (by100 linarith)
+                    ultimately show ?thesis by (by100 simp)
+                  qed
+                  \<comment> \<open>From hcases + hopp: only opp-dir patterns. From hpair: i,j in {0,1}.
+                     The 4 possible (va,vb) values: (0,2), (1,1), (2,0), (1,1).\<close>
+                  from hcases hopp hpair hmod0 hmod1 have
+                    hvavb: "va = vb \<or> (va = 0 \<and> vb = 2) \<or> (va = 2 \<and> vb = 0)"
+                    by (by5000 auto)
+                  from hvavb show ?thesis
+                  proof (elim disjE conjE)
+                    assume "va = vb" thus ?thesis by (by100 simp)
+                  next
+                    assume "va = 0" "vb = 2"
+                    \<comment> \<open>phi(v\\_0) = u\\_0 (spur endpoint). phi(v\\_2) = edge\\_pt\\_w(0,0) = u\\_0.\<close>
+                    have "phi (vxe 0, vye 0) = (vxw 0, vyw 0)"
+                      using hphi_spur_endpoints unfolding edge_pt_e_def by (by100 simp)
+                    moreover have hphi_v2: "phi (vxe 2, vye 2) = (vxw 0, vyw 0)"
+                    proof -
+                      have "0 < ?nw" using hlen by (by100 linarith)
+                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF \<open>0 < ?nw\<close> this]
+                      have hphi_02: "phi (edge_pt_e (0+2) 0) = edge_pt_w 0 0" by (by100 simp)
+                      have "edge_pt_w 0 0 = (vxw 0, vyw 0)" unfolding edge_pt_w_def by (by100 simp)
+                      have "edge_pt_e (0+2) 0 = (vxe 2, vye 2)"
+                        unfolding edge_pt_e_def by (simp add: numeral_2_eq_2)
+                      thus ?thesis using hphi_02 \<open>edge_pt_w 0 0 = (vxw 0, vyw 0)\<close> by (by100 simp)
+                    qed
+                    ultimately have "phi (vxe 0, vye 0) = phi (vxe 2, vye 2)" by (by100 simp)
+                    thus ?thesis using \<open>va = 0\<close> \<open>vb = 2\<close> by (by100 simp)
+                  next
+                    assume "va = 2" "vb = 0"
+                    have hphi_v0: "phi (vxe 0, vye 0) = (vxw 0, vyw 0)"
+                      using hphi_spur_endpoints unfolding edge_pt_e_def by (by100 simp)
+                    have hphi_v2: "phi (vxe 2, vye 2) = (vxw 0, vyw 0)"
+                    proof -
+                      have "0 < ?nw" using hlen by (by100 linarith)
+                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF \<open>0 < ?nw\<close> this]
+                      have hphi_02: "phi (edge_pt_e (0+2) 0) = edge_pt_w 0 0" by (by100 simp)
+                      have "edge_pt_w 0 0 = (vxw 0, vyw 0)" unfolding edge_pt_w_def by (by100 simp)
+                      have "edge_pt_e (0+2) 0 = (vxe 2, vye 2)"
+                        unfolding edge_pt_e_def by (simp add: numeral_2_eq_2)
+                      thus ?thesis using hphi_02 \<open>edge_pt_w 0 0 = (vxw 0, vyw 0)\<close> by (by100 simp)
+                    qed
+                    thus ?thesis using \<open>va = 2\<close> \<open>vb = 0\<close> hphi_v0 hphi_v2 by (by100 simp)
+                  qed
+                next
+                  assume hboth_nonspur: "i \<ge> 2 \<and> j \<ge> 2"
+                  \<comment> \<open>Both non-spur. C7\\_w at t=0 or t=1 gives q\\_w identification.
+                     phi maps v\\_a to u\\_{a-2} or u\\_{Suc(a-2) mod nw}.\<close>
+                  show ?thesis sorry \<comment> \<open>Both-nonspur vertex step.\<close>
+                qed
               qed
               \<comment> \<open>Induction on rtrancl.\<close>
               have "q_w (phi (vxe kx, vye kx)) = q_w (phi (vxe ky, vye ky))"
