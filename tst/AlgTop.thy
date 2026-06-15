@@ -1519,7 +1519,7 @@ proof -
     and hC12_wf: "\<forall>k<length w. \<forall>j<length w. \<forall>s'\<in>{0<..<(1::real)}.
         q_wf (vxw k, vyw k) \<noteq> q_wf ((1-s')*vxw j + s'*vxw(Suc j mod length w),
                                (1-s')*vyw j + s'*vyw(Suc j mod length w))"
-    sorry \<comment> \<open>Extract full C1-C12 for w from scheme\\_quotient\\_exists(2).\<close>
+    by (elim exE conjE) (rule that, assumption+)
   have htopo_wf: "is_topology_on_strict Y_wf TY_wf"
     using hY_wf unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   from scheme_quotient_exists(2)[OF hlen_ext hproper_ext]
@@ -1545,7 +1545,7 @@ proof -
     and hC12_ef: "\<forall>k<length ?ext. \<forall>j<length ?ext. \<forall>s'\<in>{0<..<(1::real)}.
         q_ef (vxe k, vye k) \<noteq> q_ef ((1-s')*vxe j + s'*vxe(Suc j mod length ?ext),
                                (1-s')*vye j + s'*vye(Suc j mod length ?ext))"
-    sorry \<comment> \<open>Extract full C1-C12 for ext from scheme\\_quotient\\_exists(2).\<close>
+    by (elim exE conjE) (rule that, assumption+)
   have htopo_ef: "is_topology_on_strict Y_ef TY_ef"
     using hY_ef unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   \<comment> \<open>Step 3b: The fibre-matching cancel homeomorphism Y\\_ef ~ Y\\_wf.
