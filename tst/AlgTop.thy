@@ -1048,7 +1048,32 @@ lemma polygon_sub_rearrange_homeo:
                        else k)
           in ((1-t)*vx new_k + t*vx(Suc new_k mod n),
               (1-t)*vy new_k + t*vy(Suc new_k mod n))))"
-  sorry
+proof -
+  let ?m = "(cut_b - cut_a) mod n"
+  \<comment> \<open>Step 1: Define the edge index permutation \\<sigma>.\<close>
+  define \<sigma> :: "nat \<Rightarrow> nat" where
+    "\<sigma> k = (if (k - cut_a) mod n < ?m
+            then (cut_a + ((k - cut_a + shift) mod ?m)) mod n
+            else k)" for k
+  \<comment> \<open>Step 2: Define sub-polygon Q1 (vertices from cut\\_a to cut\\_b).
+     Q1 is the convex hull of vertices cut\\_a, cut\\_a+1, ..., cut\\_b (mod n).
+     Q2 is the convex hull of the remaining vertices.
+     P = Q1 \\<union> Q2, and Q1 \\<inter> Q2 = diagonal segment from v\\_{cut\\_a} to v\\_{cut\\_b}.\<close>
+  \<comment> \<open>Step 3: Define boundary map on Q1.
+     On edge k of Q1 (k from cut\\_a to cut\\_b-1 mod n): map linearly to edge \\<sigma>(k).
+     On diagonal (from v\\_{cut\\_b} to v\\_{cut\\_a}): identity.
+     This is a PL homeomorphism of the boundary of Q1.
+     Continuity: cyclic shift preserves adjacency within Q1.\<close>
+  \<comment> \<open>Step 4: Extend to interior of Q1 by cone from centroid c1.
+     Each point p \\<in> Q1 lies on a unique ray from c1 to a boundary point b.
+     p = (1-\\<lambda>)*c1 + \\<lambda>*b for unique \\<lambda> \\<in> [0,1] and b on boundary.
+     Define \\<phi>(p) = (1-\\<lambda>)*c1 + \\<lambda>*\\<sigma>(b).
+     This is a homeomorphism of Q1 (cone extension of boundary homeomorphism).\<close>
+  \<comment> \<open>Step 5: On Q2, \\<phi> = identity.
+     Combined map \\<phi>: P \\<to> P is continuous (agrees on Q1 \\<inter> Q2 = diagonal).\<close>
+  \<comment> \<open>Step 6: Show bij\\_betw, continuous\\_on, edge mapping.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Cancel at front for PROPER schemes -- per expert audit 23 step 5.
    Uses scheme\\_quotient\\_exists for w to get a canonical quotient Y\\_w,
