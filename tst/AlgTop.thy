@@ -1458,6 +1458,57 @@ proof -
   show ?thesis .
 qed
 
+\<comment> \<open>Spur-collapse homeomorphism (Munkres §76 operation (vi)).
+   Given canonical quotients of [a, a^{-1}] @ w and w (from scheme\\_quotient\\_exists),
+   the spur pair (first two edges) collapses to a vertex in the quotient.
+   The remaining edges correspond exactly to the w-scheme edges.
+   Result: quotient([a, a^{-1}] @ w) is homeomorphic to quotient(w).
+
+   Proof approach (following book §76, Figure 76.3):
+   Both P\\_ef and P\\_wf are homeomorphic to B2 (by polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary).
+   Under the disk homeomorphisms, the boundary edge arcs become S1 arcs.
+   The spur pair (edges 0,1) corresponds to two adjacent S1 arcs that are identified
+   by C7 (opposite direction). Collapsing these identified arcs gives B2 again.
+   The composition q\\_wf composed with disk\\_homeo composed with spur\\_collapse
+   gives a continuous surjection g: P\\_ef -> Y\\_wf.
+   Fibre matching g fibres = q\\_ef fibres follows from:
+   - Interior: C8 injectivity on both sides
+   - Non-spur edges: C7/C9 label matching transfers
+   - Spur to vertex: C12 prevents vertex-edge crossings
+   - Vertex chains: vtgt transfers via label correspondence
+   Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
+lemma spur_collapse_cancel_homeo:
+  fixes w :: "(nat \<times> bool) list" and a :: "nat \<times> bool"
+  assumes hlen: "length w \<ge> 3"
+      and hproper: "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+      and hfresh: "fst a \<notin> fst ` set w"
+      and hY_ef: "top1_quotient_of_scheme_on Y_ef TY_ef ([a, top1_inverse_edge a] @ w)"
+      and hY_wf: "top1_quotient_of_scheme_on Y_wf TY_wf w"
+  shows "\<exists>h. top1_homeomorphism_on Y_ef TY_ef Y_wf TY_wf h"
+proof -
+  \<comment> \<open>Both quotient spaces are compact Hausdorff (polygon quotients).\<close>
+  have htopo_ef: "is_topology_on_strict Y_ef TY_ef"
+    sorry
+  have htopo_wf: "is_topology_on_strict Y_wf TY_wf"
+    sorry
+  \<comment> \<open>Step 1: Both polygons are homeomorphic to B2 with boundary on S1.
+     Use polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary for both P\\_ef and P\\_wf.
+     This gives homeomorphisms psi\\_ef: P\\_ef -> B2 and psi\\_wf: P\\_wf -> B2
+     mapping boundary to S1.\<close>
+  \<comment> \<open>Step 2: In B2, the spur collapse is: identify two adjacent S1 arcs
+     (corresponding to edges 0,1 of the a-pair) by the C7 identification.
+     Since the identification is in opposite direction and the arcs are adjacent,
+     the result is B2 with the two arcs collapsed to a point.
+     B2 / (arc collapse) is homeomorphic to B2 (standard topology fact).\<close>
+  \<comment> \<open>Step 3: Construct g: P\\_ef -> Y\\_wf (continuous surjection with matching fibres).
+     g = q\\_wf composed with (psi\\_wf inverse) composed with (spur\\_collapse on B2) composed with psi\\_ef.
+     This is a composition of continuous maps.\<close>
+  \<comment> \<open>Step 4: Verify fibre matching and apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
+  \<comment> \<open>For now: sorry the geometric construction. The mathematical argument is sound;
+     the formalization requires ~200 lines of PL topology infrastructure.\<close>
+  show ?thesis sorry
+qed
+
 \<comment> \<open>Direct front-cancel for proper+fresh schemes.
    DOES NOT use quotient\\_of\\_scheme\\_uncancel (breaks circular dependency).
    Uses scheme\\_quotient\\_exists(2) for BOTH extended and base schemes,
@@ -1564,22 +1615,8 @@ proof -
        p2 = q\\_wf o collapse where collapse: P\\_ef -> P\\_wf.
        Since P\\_ef is compact, Y\\_wf is Hausdorff, and p2 is continuous surjection,
        p2 is automatically a quotient map.\<close>
-    have hp2_quot: "\<exists>p2. top1_quotient_map_on P_ef
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_ef)
-        Y_wf TY_wf p2
-      \<and> (\<forall>x\<in>P_ef. \<forall>y\<in>P_ef. (q_ef x = q_ef y) \<longleftrightarrow> (p2 x = p2 y))"
-      sorry \<comment> \<open>Define spur-collapse composition p2 and verify fibre matching.
-         This is the geometric core: constructing the PL spur-collapse map
-         from the (n+2)-gon to the n-gon, composing with q\\_wf, and
-         checking the fibre equivalence using C7/C8/C9/C12.\<close>
-    \<comment> \<open>Step B: Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
-    from hp2_quot obtain p2 where
-      hp2: "top1_quotient_map_on P_ef
-        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_ef)
-        Y_wf TY_wf p2"
-      and hfibres: "\<forall>x\<in>P_ef. \<forall>y\<in>P_ef. (q_ef x = q_ef y) \<longleftrightarrow> (p2 x = p2 y)"
-      by (by100 blast)
-    from quotient_same_fibres_homeomorphic[OF hC2_ef hp2 hfibres]
+    \<comment> \<open>Use spur\\_collapse\\_cancel\\_homeo to get Y\\_ef ~ Y\\_wf directly.\<close>
+    from spur_collapse_cancel_homeo[OF hlen hproper hfresh hY_ef hY_wf]
     show ?thesis .
   qed
   \<comment> \<open>Step 3c: Bridge all quotients via uniqueness.\<close>
