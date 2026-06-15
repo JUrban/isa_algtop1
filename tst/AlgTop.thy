@@ -2516,7 +2516,91 @@ proof -
                   assume hboth_nonspur: "i \<ge> 2 \<and> j \<ge> 2"
                   \<comment> \<open>Both non-spur. C7\\_w at t=0 or t=1 gives q\\_w identification.
                      phi maps v\\_a to u\\_{a-2} or u\\_{Suc(a-2) mod nw}.\<close>
-                  show ?thesis sorry \<comment> \<open>Both-nonspur vertex step.\<close>
+                  \<comment> \<open>Both non-spur. Transfer to w-scheme via label correspondence.\<close>
+                  have hi2: "i \<ge> 2" and hj2: "j \<ge> 2" using hboth_nonspur by (by100 auto)+
+                  have hik: "i - 2 < ?nw" using hi hne_eq hi2 by (by100 linarith)
+                  have hjk: "j - 2 < ?nw" using hj hne_eq hj2 by (by100 linarith)
+                  \<comment> \<open>Label correspondence: fst(w!(i-2)) = fst(w!(j-2)).\<close>
+                  have hext_i: "?ext!i = w!(i-2)"
+                  proof -
+                    from hlabel_corr[rule_format, OF hik]
+                    have "([a, top1_inverse_edge a] @ w) ! ((i-2)+2) = w!(i-2)" .
+                    have "(i-2)+2 = i" using hi2 by (by100 linarith)
+                    hence "([a, top1_inverse_edge a] @ w) ! i = w!(i-2)"
+                      using \<open>([a, top1_inverse_edge a] @ w) ! ((i-2)+2) = w!(i-2)\<close> by (by100 simp)
+                    thus ?thesis by (by100 simp)
+                  qed
+                  have hext_j: "?ext!j = w!(j-2)"
+                  proof -
+                    from hlabel_corr[rule_format, OF hjk]
+                    have "([a, top1_inverse_edge a] @ w) ! ((j-2)+2) = w!(j-2)" .
+                    have "(j-2)+2 = j" using hj2 by (by100 linarith)
+                    hence "([a, top1_inverse_edge a] @ w) ! j = w!(j-2)"
+                      using \<open>([a, top1_inverse_edge a] @ w) ! ((j-2)+2) = w!(j-2)\<close> by (by100 simp)
+                    thus ?thesis by (by100 simp)
+                  qed
+                  have hw_lbl: "fst(w!(i-2)) = fst(w!(j-2))" using hlbl hext_i hext_j by (by100 simp)
+                  have hw_dir: "snd(w!(i-2)) = snd(w!(j-2)) \<longleftrightarrow> snd(?ext!i) = snd(?ext!j)"
+                    using hext_i hext_j by (by100 simp)
+                  \<comment> \<open>phi maps non-spur vertices: v\\_k -> edge\\_pt\\_w(k-2, 0) or edge\\_pt\\_w(k-3, 1).\<close>
+                  \<comment> \<open>For va = i: phi(v\\_i) = edge\\_pt\\_w(i-2, 0) = u\\_{i-2}.\<close>
+                  \<comment> \<open>For va = Suc i mod ne: phi(v\\_{Suc i mod ne}) = edge\\_pt\\_w(i-2, 1) or edge\\_pt\\_w(Suc i mod ne - 2, 0).\<close>
+                  \<comment> \<open>Use C7\\_w at t=0 for same-dir start, t=1 for same-dir end,
+                     or the mixed endpoints for opp-dir.\<close>
+                  from hcases show ?thesis
+                  proof (elim disjE conjE)
+                    \<comment> \<open>Case 1: same-dir, va=i, vb=j. phi(v\\_i) = u\\_{i-2}, phi(v\\_j) = u\\_{j-2}.
+                       C7\\_w at t=0: q\\_w(u\\_{i-2}) = q\\_w(u\\_{j-2}) (same-dir start vertices).\<close>
+                    assume hsame: "snd(?ext!i) = snd(?ext!j)" and "va = i" "vb = j"
+                    have "phi (vxe i, vye i) = edge_pt_w (i-2) 0"
+                    proof -
+                      have h_eq: "(i-2)+2 = i" using hi2 by (by100 linarith)
+                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF hik this]
+                      have "phi (edge_pt_e ((i-2)+2) 0) = edge_pt_w (i-2) 0" by (by100 simp)
+                      moreover have "edge_pt_e ((i-2)+2) 0 = (vxe i, vye i)"
+                        unfolding edge_pt_e_def using h_eq by (by100 simp)
+                      ultimately show ?thesis by (by100 simp)
+                    qed
+                    hence hphi_va: "phi (vxe va, vye va) = ((1-0)*vxw(i-2)+0*vxw(Suc(i-2) mod ?nw),
+                        (1-0)*vyw(i-2)+0*vyw(Suc(i-2) mod ?nw))"
+                      using \<open>va = i\<close> unfolding edge_pt_w_def by (by100 simp)
+                    have "phi (vxe j, vye j) = edge_pt_w (j-2) 0"
+                    proof -
+                      have h_eq: "(j-2)+2 = j" using hj2 by (by100 linarith)
+                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF hjk this]
+                      have "phi (edge_pt_e ((j-2)+2) 0) = edge_pt_w (j-2) 0" by (by100 simp)
+                      moreover have "edge_pt_e ((j-2)+2) 0 = (vxe j, vye j)"
+                        unfolding edge_pt_e_def using h_eq by (by100 simp)
+                      ultimately show ?thesis by (by100 simp)
+                    qed
+                    hence hphi_vb: "phi (vxe vb, vye vb) = ((1-0)*vxw(j-2)+0*vxw(Suc(j-2) mod ?nw),
+                        (1-0)*vyw(j-2)+0*vyw(Suc(j-2) mod ?nw))"
+                      using \<open>vb = j\<close> unfolding edge_pt_w_def by (by100 simp)
+                    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                    from hC7_w[rule_format, OF hik hjk hw_lbl h0_I]
+                    have "q_w ((1-0)*vxw(i-2)+0*vxw(Suc(i-2) mod ?nw),
+                        (1-0)*vyw(i-2)+0*vyw(Suc(i-2) mod ?nw)) =
+                      (if snd(w!(i-2))=snd(w!(j-2)) then q_w ((1-0)*vxw(j-2)+0*vxw(Suc(j-2) mod ?nw),
+                          (1-0)*vyw(j-2)+0*vyw(Suc(j-2) mod ?nw))
+                       else q_w (0*vxw(j-2)+(1-0)*vxw(Suc(j-2) mod ?nw),
+                          0*vyw(j-2)+(1-0)*vyw(Suc(j-2) mod ?nw)))" by (by100 blast)
+                    hence "q_w (phi (vxe va, vye va)) = q_w ((1-0)*vxw(j-2)+0*vxw(Suc(j-2) mod ?nw),
+                        (1-0)*vyw(j-2)+0*vyw(Suc(j-2) mod ?nw))"
+                      using hphi_va hw_dir hsame by (by100 simp)
+                    thus ?thesis using hphi_vb by (by100 simp)
+                  next
+                    \<comment> \<open>Cases 2-4: similar pattern with t=1 or opposite-dir endpoints.\<close>
+                    assume "snd(?ext!i) = snd(?ext!j)" "va = Suc i mod ?ne" "vb = Suc j mod ?ne"
+                    show ?thesis sorry \<comment> \<open>Same-dir end vertices. C7\\_w at t=1.\<close>
+                  next
+                    assume "snd(?ext!i) \<noteq> snd(?ext!j)" "va = i" "vb = Suc j mod ?ne"
+                    show ?thesis sorry \<comment> \<open>Opp-dir: start of i, end of j. C7\\_w at t=0 opp.\<close>
+                  next
+                    assume "snd(?ext!i) \<noteq> snd(?ext!j)" "va = Suc i mod ?ne" "vb = j"
+                    show ?thesis sorry \<comment> \<open>Opp-dir: end of i, start of j. C7\\_w at t=1 opp.\<close>
+                  qed
                 qed
               qed
               \<comment> \<open>Induction on rtrancl.\<close>
