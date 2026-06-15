@@ -1526,6 +1526,7 @@ proof -
     and hC2_e: "top1_quotient_map_on P_e
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
         Y_e TY_e q_e"
+    and hC3_e: "\<forall>i<?ne. \<forall>j<?ne. i \<noteq> j \<longrightarrow> (vxe i, vye i) \<noteq> (vxe j, vye j)"
     and hC7_e: "\<forall>i<?ne. \<forall>j<?ne. fst (?ext!i) = fst (?ext!j) \<longrightarrow>
         (\<forall>t\<in>I_set. q_e ((1-t)*vxe i+t*vxe(Suc i mod ?ne),
             (1-t)*vye i+t*vye(Suc i mod ?ne))
@@ -1548,6 +1549,7 @@ proof -
     and hC12_e: "\<forall>k<?ne. \<forall>j<?ne. \<forall>s'\<in>{0<..<(1::real)}.
         q_e (vxe k, vye k) \<noteq> q_e ((1-s')*vxe j + s'*vxe(Suc j mod ?ne),
                                (1-s')*vye j + s'*vye(Suc j mod ?ne))"
+    and hvtgt_e_bound: "\<forall>k<?ne. vtgt_e k < ?ne"
     and hvtgt_e: "\<forall>k<?ne. q_e (vxe k, vye k) = (vxe (vtgt_e k), vye (vtgt_e k))"
     and hvtgt_e_chain: "\<forall>k<?ne. \<forall>l<?ne. vtgt_e k = vtgt_e l \<longrightarrow>
         (k, l) \<in> {(a, b). \<exists>i<?ne. \<exists>j<?ne. i \<noteq> j
@@ -2328,7 +2330,51 @@ proof -
                  For kx in {0,2}: phi -> u\\_0. For kx >= 3: phi -> u\\_{kx-2}.
                  The q\\_e identification transfers to q\\_w via C7 chain correspondence.
                  Formal chain transfer: sorry (needs induction on rtrancl).\<close>
-              show ?thesis sorry \<comment> \<open>Distinct-vertex forward. Vtgt chain transfer.\<close>
+              \<comment> \<open>Step 1: From q\\_e equality, derive vtgt\\_e(kx) = vtgt\\_e(ky).\<close>
+              have hqe_kx: "q_e (vxe kx, vye kx) = (vxe (vtgt_e kx), vye (vtgt_e kx))"
+                using hvtgt_e hkx by (by100 blast)
+              have hqe_ky: "q_e (vxe ky, vye ky) = (vxe (vtgt_e ky), vye (vtgt_e ky))"
+                using hvtgt_e hky by (by100 blast)
+              have hvtgt_eq: "vtgt_e kx = vtgt_e ky"
+              proof -
+                from heq hx_vtx hy_vtx hqe_kx hqe_ky
+                have "(vxe (vtgt_e kx), vye (vtgt_e kx)) = (vxe (vtgt_e ky), vye (vtgt_e ky))"
+                  by (by100 simp)
+                \<comment> \<open>By vertex distinctness C3\\_e: same coordinates -> same index.\<close>
+                have hvkx_lt: "vtgt_e kx < ?ne" using hvtgt_e_bound hkx by (by100 blast)
+                have hvky_lt: "vtgt_e ky < ?ne" using hvtgt_e_bound hky by (by100 blast)
+                show ?thesis
+                proof (rule ccontr)
+                  assume "vtgt_e kx \<noteq> vtgt_e ky"
+                  from hC3_e[rule_format, OF hvkx_lt hvky_lt this]
+                  have "(vxe (vtgt_e kx), vye (vtgt_e kx)) \<noteq> (vxe (vtgt_e ky), vye (vtgt_e ky))" .
+                  moreover from heq hx_vtx hy_vtx hqe_kx hqe_ky
+                  have "(vxe (vtgt_e kx), vye (vtgt_e kx)) = (vxe (vtgt_e ky), vye (vtgt_e ky))"
+                    by (by100 simp)
+                  ultimately show False by (by100 simp)
+                qed
+              qed
+              \<comment> \<open>Step 2: From hvtgt\\_e\\_chain: (kx, ky) in rtrancl of C7 generators.\<close>
+              from hvtgt_e_chain[rule_format, OF hkx hky hvtgt_eq]
+              have hchain: "(kx, ky) \<in> {(a, b). \<exists>i<?ne. \<exists>j<?ne. i \<noteq> j
+                  \<and> fst (?ext ! i) = fst (?ext ! j)
+                  \<and> ((snd (?ext ! i) = snd (?ext ! j) \<and> a = i \<and> b = j)
+                   \<or> (snd (?ext ! i) = snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = Suc j mod ?ne)
+                   \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = i \<and> b = Suc j mod ?ne)
+                   \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = j))}\<^sup>*"
+                by (by100 blast)
+              \<comment> \<open>Step 3: Induction on rtrancl. Each step: phi preserves q\\_w identification.\<close>
+              \<comment> \<open>The generator set pairs (a,b) where a,b are vertex endpoints of matching edges.
+                 For each such step: show q\\_w(phi(v\\_a)) = q\\_w(phi(v\\_b)).
+                 - Spur pair (i=0,j=1 or i=1,j=0): the step pairs v\\_0 with v\\_2
+                   (or v\\_1 with v\\_1). phi(v\\_0) = u\\_0 = phi(v\\_2). q\\_w equal. CHECK.
+                 - Non-spur pair (i,j >= 2): transfers to w-scheme C7 pair.
+                   phi(v\\_a) = u\\_{a-2}, phi(v\\_b) = u\\_{b-2}. C7\\_w gives q\\_w equal. CHECK.
+                 - Mixed spur+non-spur: impossible by freshness (proved earlier).
+                 By induction: the full chain transfers.\<close>
+              show ?thesis sorry \<comment> \<open>Induction on rtrancl chain. Each single step gives
+                 q\\_w(phi(v\\_a)) = q\\_w(phi(v\\_b)) via C7\\_w or spur arc equality.
+                 Transitivity of = gives the full chain result.\<close>
             qed
           qed
         qed
