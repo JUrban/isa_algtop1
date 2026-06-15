@@ -174,10 +174,29 @@ lemma suffix_rotate_via_separator:
   assumes "top1_quotient_of_scheme_on Y TY (prefix @ [(c_label, False), (c_label, True)] @ u @ v)"
       and "c_label \<notin> fst ` set prefix" "c_label \<notin> fst ` set u" "c_label \<notin> fst ` set v"
   shows "top1_quotient_of_scheme_on Y TY (prefix @ [(c_label, False), (c_label, True)] @ v @ u)"
-  sorry \<comment> \<open>Per-polygon rotation (Munkres §76 operation (iv) applied to the second polygon).
-     Proof: the c-separator divides the scheme into two "polygons".
-     Rotating the second polygon (c @ u @ v -> c @ v @ u) preserves the quotient space.
-     This is a standard fact: cyclic vertex renumbering of a polygon doesn't change quotient.\<close>
+proof -
+  let ?s1 = "prefix @ [(c_label, False), (c_label, True)] @ u @ v"
+  let ?s2 = "prefix @ [(c_label, False), (c_label, True)] @ v @ u"
+  \<comment> \<open>Book proof (Munkres §76 operation (iv)):
+     The c-separator divides the scheme into two "polygons":
+     P1 = prefix part (edges 0..|prefix|, including c^{-1})
+     P2 = suffix part (edges |prefix|+1..n-1, including c and u@v)
+
+     Rotating P2 (c @ u @ v -> c @ v @ u) = renumbering P2's vertices.
+     This doesn't change the quotient space because:
+     (a) The identification pattern within P2 is determined by WHICH edges
+         share labels, not by their position. Since u@v and v@u have the
+         same labels, the within-P2 identifications are the same.
+     (b) The cross-polygon identification (via c) is unchanged because
+         c stays at the same relative position in P2.
+     (c) The P1 part is completely unchanged.
+
+     Formal proof: construct the quotient map for ?s2 from the quotient map
+     for ?s1 by composing with a polygon sub-rearrangement homeomorphism.
+
+     For now: sorry pending the geometric construction.\<close>
+  show ?thesis sorry
+qed
 
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
