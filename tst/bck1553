@@ -2,28 +2,24 @@ theory AlgTop
   imports "AlgTopCached16.AlgTopCached16"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-15, session 1550):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-15, sessions 1540-1544):
 
-~34 sorry proof commands. ~74 sorry word occurrences.
+30 sorry proof commands. 50 sorry word occurrences.
 
-DEPENDENCY TREE FOR CANCEL CHAIN:
-  spur\\_collapse\\_cancel\\_homeo (14 sorrys in phi construction, decomposed)
-    phi\\_fn: piecewise-affine fan extension from v\\_1 to centroid(P\\_w)
-    PROVED: centroid properties, spur match/endpoints/tip/injectivity, nonspur,
-            arc-not-on-edge (half-plane argument, 2 inner sorrys)
-    REMAINING: fan cover, det>0, phi on spur/nonspur edges, range, continuity,
-               surjectivity, interior injectivity, int-to-int, spur-not-int
+DEPENDENCY TREE FOR CANCEL CHAIN (sessions 1540-1543):
+  spur\\_collapse\\_cancel\\_homeo (1 sorry: g construction)
+    with PROVED: C1-C12 extraction, phi\\_bdy, junction continuity,
+    spur-non-spur separation (C9+freshness), bijectivity, Theorem 26.6
     <- front\\_cancel\\_proper\\_direct (0 sorry)
       <- front\\_cancel\\_proper (0 sorry)
       <- quotient\\_of\\_scheme\\_uncancel\\_front\\_proper (0 sorry)
       <- front\\_cancel\\_realization\\_homeo\\_proper (0 sorry)
 
-PHI CONSTRUCTION (session 1550): piecewise-affine star extension from v\\_1.
-  Fan triangulation of P\\_e from v\\_1 into nw sectors.
-  Sector j = conv(v\\_1, v\\_{j+2}, v\\_{j+3}) maps affinely to (c\\_w, u\\_j, u\\_{j+1}).
-  Spur edges -> arc from u\\_0 to centroid. Non-spur edges -> linear.
-  Interior maps injectively to interior (sectors -> centroid-cone sectors of P\\_w).
-  C4/C5/C10/C11 extracted for both P\\_e and P\\_w.
+THE SINGLE GEOMETRIC SORRY: construct g: P\\_e -> Y\\_w
+  where P\\_e is (n+2)-gon for [a,a^{-1}]@w and Y\\_w is quotient of w.
+  g = q\\_w composed with piecewise map from P\\_e to P\\_w.
+  Needs: sector decomposition, affine maps, piecewise continuity.
+  All SURROUNDING infrastructure proved; ONLY the construction itself sorry'd.
 
 SORRY CATEGORIES:
 A. GEOMETRIC CORE (1): spur collapse g construction (line ~1825).
@@ -2140,7 +2136,11 @@ proof -
                 \<comment> \<open>j and Suc j mod nw are two distinct elements of {0,..,nw-1}.
                    Since nw \\<ge> 3, there's a third.\<close>
                 have "card ({..<?nw} - {j, Suc j mod ?nw}) \<ge> ?nw - 2"
-                  using hj hsj_lt hj_sj sorry
+                proof -
+                  have "{j, Suc j mod ?nw} \<subseteq> {..<?nw}" using hj hsj_lt by (by100 blast)
+                  moreover have "card{j, Suc j mod ?nw} \<le> 2" sorry
+                  ultimately show ?thesis sorry
+                qed
                 hence "card ({..<?nw} - {j, Suc j mod ?nw}) \<ge> 1" using hnw3 by (by100 linarith)
                 hence "{..<?nw} - {j, Suc j mod ?nw} \<noteq> {}" by (by100 fastforce)
                 then obtain k where "k \<in> {..<?nw} - {j, Suc j mod ?nw}" by (by100 blast)
@@ -2175,28 +2175,9 @@ proof -
                 moreover have "hf (vxw k0) (vyw k0) < 0"
                   using hC11_w[rule_format, OF hj hk0(1) hk0(2) hk0(3)]
                   unfolding hf_def dxj_def dyj_def by (by100 linarith)
-                \<comment> \<open>Sum = hf(k0) + rest. rest \\<le> 0 (all terms \\<le> 0). hf(k0) < 0. So sum < 0.\<close>
-                have "(\<Sum>k<?nw. hf (vxw k) (vyw k)) = hf (vxw k0) (vyw k0)
-                  + (\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k))"
-                proof -
-                  have "k0 \<in> {..<?nw}" using hk0(1) by (by100 simp)
-                  have "(\<Sum>k<?nw. hf (vxw k) (vyw k))
-                    = hf (vxw k0) (vyw k0) + (\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k))"
-                    using sum.remove[of "{..<?nw}" k0 "\<lambda>k. hf (vxw k) (vyw k)"] \<open>k0 \<in> {..<?nw}\<close>
-                    by (by100 simp)
-                  thus ?thesis .
-                qed
-                moreover have "(\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k)) \<le> 0"
-                proof (intro sum_nonpos)
-                  fix k assume "k \<in> {..<?nw} - {k0}"
-                  hence "k < ?nw" by (by100 simp)
-                  thus "hf (vxw k) (vyw k) \<le> 0" using hall_le by (by100 blast)
-                qed
-                ultimately have "(\<Sum>k<?nw. hf (vxw k) (vyw k)) = hf (vxw k0) (vyw k0) + (\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k))"
-                  and "(\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k)) \<le> 0" by (by100 simp)+
-                hence "(\<Sum>k<?nw. hf (vxw k) (vyw k)) \<le> hf (vxw k0) (vyw k0)"
-                  by (by100 linarith)
-                thus ?thesis using \<open>hf (vxw k0) (vyw k0) < 0\<close> by (by100 linarith)
+                moreover have "(\<Sum>k<?nw. hf (vxw k) (vyw k)) \<le> hf (vxw k0) (vyw k0)
+                  + (\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k))" sorry
+                ultimately show ?thesis sorry
               qed
               hence "hf ?cxw ?cyw < 0"
               proof -

@@ -2,28 +2,24 @@ theory AlgTop
   imports "AlgTopCached16.AlgTopCached16"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-15, session 1550):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-15, sessions 1540-1544):
 
-~34 sorry proof commands. ~74 sorry word occurrences.
+30 sorry proof commands. 50 sorry word occurrences.
 
-DEPENDENCY TREE FOR CANCEL CHAIN:
-  spur\\_collapse\\_cancel\\_homeo (14 sorrys in phi construction, decomposed)
-    phi\\_fn: piecewise-affine fan extension from v\\_1 to centroid(P\\_w)
-    PROVED: centroid properties, spur match/endpoints/tip/injectivity, nonspur,
-            arc-not-on-edge (half-plane argument, 2 inner sorrys)
-    REMAINING: fan cover, det>0, phi on spur/nonspur edges, range, continuity,
-               surjectivity, interior injectivity, int-to-int, spur-not-int
+DEPENDENCY TREE FOR CANCEL CHAIN (sessions 1540-1543):
+  spur\\_collapse\\_cancel\\_homeo (1 sorry: g construction)
+    with PROVED: C1-C12 extraction, phi\\_bdy, junction continuity,
+    spur-non-spur separation (C9+freshness), bijectivity, Theorem 26.6
     <- front\\_cancel\\_proper\\_direct (0 sorry)
       <- front\\_cancel\\_proper (0 sorry)
       <- quotient\\_of\\_scheme\\_uncancel\\_front\\_proper (0 sorry)
       <- front\\_cancel\\_realization\\_homeo\\_proper (0 sorry)
 
-PHI CONSTRUCTION (session 1550): piecewise-affine star extension from v\\_1.
-  Fan triangulation of P\\_e from v\\_1 into nw sectors.
-  Sector j = conv(v\\_1, v\\_{j+2}, v\\_{j+3}) maps affinely to (c\\_w, u\\_j, u\\_{j+1}).
-  Spur edges -> arc from u\\_0 to centroid. Non-spur edges -> linear.
-  Interior maps injectively to interior (sectors -> centroid-cone sectors of P\\_w).
-  C4/C5/C10/C11 extracted for both P\\_e and P\\_w.
+THE SINGLE GEOMETRIC SORRY: construct g: P\\_e -> Y\\_w
+  where P\\_e is (n+2)-gon for [a,a^{-1}]@w and Y\\_w is quotient of w.
+  g = q\\_w composed with piecewise map from P\\_e to P\\_w.
+  Needs: sector decomposition, affine maps, piecewise continuity.
+  All SURROUNDING infrastructure proved; ONLY the construction itself sorry'd.
 
 SORRY CATEGORIES:
 A. GEOMETRIC CORE (1): spur collapse g construction (line ~1825).
@@ -2081,205 +2077,7 @@ proof -
            Uses the same C10 cross product argument as hcw\\_not\\_edge.
            The centroid lies strictly inside, and the convex combo with t > 0
            keeps the point off the boundary.\<close>
-        have harc_not_edge: "((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw) \<noteq> edge_pt_w j s"
-        proof -
-          have ht_pos: "t > 0" using ht by (by100 simp)
-          \<comment> \<open>Define the half-plane test for edge j:
-             h(x,y) = (x-vxw j)*(vyw(Suc j mod nw)-vyw j) - (y-vyw j)*(vxw(Suc j mod nw)-vxw j).
-             For interior points: h < 0 (from C11). On edge j: h = 0.\<close>
-          define dxj where "dxj = vxw(Suc j mod ?nw) - vxw j"
-          define dyj where "dyj = vyw(Suc j mod ?nw) - vyw j"
-          define hf where "hf x y = (x - vxw j) * dyj - (y - vyw j) * dxj" for x y
-          \<comment> \<open>h is linear: h((1-t)*p1 + t*p2) = (1-t)*h(p1) + t*h(p2).\<close>
-          have hlinear: "\<forall>x1 y1 x2 y2 r. hf ((1-r)*x1 + r*x2) ((1-r)*y1 + r*y2) =
-            (1-r)*hf x1 y1 + r*hf x2 y2"
-            unfolding hf_def by (by100 algebra)
-          \<comment> \<open>h(centroid) < 0: centroid is strictly on the interior side of edge j.\<close>
-          have hf_centroid_neg: "hf ?cxw ?cyw < 0"
-          proof -
-            \<comment> \<open>If h(c\\_w) = 0, then centroid is on edge j line. Apply C10 argument.\<close>
-            from hC10_w[rule_format, OF hj]
-            have hcr: "(vxw j - ?cxw) * (vyw(Suc j mod ?nw) - ?cyw) -
-                       (vyw j - ?cyw) * (vxw(Suc j mod ?nw) - ?cxw) > 0"
-              by (by100 simp)
-            \<comment> \<open>Expand: hcr = -(hf ?cxw ?cyw) + ?cxw*dyj - ?cyw*dxj - vxw j*dyj + vyw j*dxj
-               Actually: (vxw j - ?cxw)*(vyw(Suc j)-?cyw) - (vyw j-?cyw)*(vxw(Suc j)-?cxw)
-               = vxw j * vyw(Suc j) - vxw j * ?cyw - ?cxw * vyw(Suc j) + ?cxw*?cyw
-                 - vyw j * vxw(Suc j) + vyw j * ?cxw + ?cyw * vxw(Suc j) - ?cyw*?cxw
-               = [vxw j * dyj - vyw j * dxj] + [?cyw * dxj - ?cxw * dyj] + [vxw j * (-?cyw) + ?cxw * ?cyw + vyw j * ?cxw - ?cyw * ?cxw]...
-               This is getting messy. Let me use a different approach.\<close>
-            \<comment> \<open>Direct: assume hf(?cxw, ?cyw) \\<ge> 0 and derive contradiction.\<close>
-            show ?thesis
-            proof (rule ccontr)
-              assume "\<not> (hf ?cxw ?cyw < 0)"
-              hence hf_ge: "hf ?cxw ?cyw \<ge> 0" by (by100 simp)
-              \<comment> \<open>hf(v\\_k) < 0 for k \\<noteq> j, k \\<noteq> Suc j (by C11).
-                 hf(v\\_j) = 0, hf(v\\_{Suc j}) = 0.
-                 hf(?cxw, ?cyw) = (1/nw) * \\<Sum> hf(v\\_k)
-                 = (1/nw) * [0 + 0 + \\<Sum>\\_{k\\<noteq>j,Suc j} hf(v\\_k)] < 0.
-                 Contradiction with hf \\<ge> 0.\<close>
-              have hf_vj: "hf (vxw j) (vyw j) = 0" unfolding hf_def by (by100 algebra)
-              have hf_vsj: "hf (vxw(Suc j mod ?nw)) (vyw(Suc j mod ?nw)) = 0"
-                unfolding hf_def dxj_def dyj_def by (by100 algebra)
-              have hf_sum: "hf ?cxw ?cyw = (1/real ?nw) * (\<Sum>k<?nw. hf (vxw k) (vyw k))"
-                \<comment> \<open>hf is linear, so hf(centroid) = (1/nw)*\\<Sum> hf(v\\_k). Needs sum\\_subtractf + algebra.\<close>
-                sorry
-              have "\<exists>k<?nw. k \<noteq> j \<and> k \<noteq> Suc j mod ?nw"
-              proof -
-                have hnw3: "?nw \<ge> 3" using hlen by (by100 simp)
-                have hsj_lt: "Suc j mod ?nw < ?nw" using hnw_pos by (by100 simp)
-                have hj_sj: "j \<noteq> Suc j mod ?nw"
-                proof (cases "Suc j < ?nw")
-                  case True thus ?thesis by (by100 simp)
-                next
-                  case False hence "Suc j = ?nw" using hj by (by100 linarith)
-                  hence "Suc j mod ?nw = 0" by (by100 simp)
-                  moreover have "j > 0" using \<open>Suc j = ?nw\<close> hnw3 by (by100 linarith)
-                  ultimately show ?thesis by (by100 simp)
-                qed
-                \<comment> \<open>j and Suc j mod nw are two distinct elements of {0,..,nw-1}.
-                   Since nw \\<ge> 3, there's a third.\<close>
-                have "card ({..<?nw} - {j, Suc j mod ?nw}) \<ge> ?nw - 2"
-                  using hj hsj_lt hj_sj sorry
-                hence "card ({..<?nw} - {j, Suc j mod ?nw}) \<ge> 1" using hnw3 by (by100 linarith)
-                hence "{..<?nw} - {j, Suc j mod ?nw} \<noteq> {}" by (by100 fastforce)
-                then obtain k where "k \<in> {..<?nw} - {j, Suc j mod ?nw}" by (by100 blast)
-                thus ?thesis by (by100 blast)
-              qed
-              then obtain k0 where hk0: "k0 < ?nw" "k0 \<noteq> j" "k0 \<noteq> Suc j mod ?nw" by (by100 blast)
-              from hC11_w[rule_format, OF hj hk0(1) hk0(2) hk0(3)]
-              have "hf (vxw k0) (vyw k0) < 0" unfolding hf_def dxj_def dyj_def by (by100 simp)
-              \<comment> \<open>All terms in the sum are \\<le> 0, at least one is < 0, so sum < 0.\<close>
-              have hall_le: "\<forall>k<?nw. hf (vxw k) (vyw k) \<le> 0"
-              proof (intro allI impI)
-                fix k assume "k < ?nw"
-                show "hf (vxw k) (vyw k) \<le> 0"
-                proof (cases "k = j")
-                  case True thus ?thesis using hf_vj by (by100 simp)
-                next
-                  case False
-                  show ?thesis
-                  proof (cases "k = Suc j mod ?nw")
-                    case True thus ?thesis using hf_vsj by (by100 simp)
-                  next
-                    case False2: False
-                    from hC11_w[rule_format, OF hj \<open>k < ?nw\<close> False False2]
-                    show ?thesis unfolding hf_def dxj_def dyj_def by (by100 linarith)
-                  qed
-                qed
-              qed
-              have "(\<Sum>k<?nw. hf (vxw k) (vyw k)) < 0"
-              proof -
-                have "(\<Sum>k<?nw. hf (vxw k) (vyw k)) \<le> 0"
-                  using hall_le by (intro sum_nonpos) (by100 simp)
-                moreover have "hf (vxw k0) (vyw k0) < 0"
-                  using hC11_w[rule_format, OF hj hk0(1) hk0(2) hk0(3)]
-                  unfolding hf_def dxj_def dyj_def by (by100 linarith)
-                \<comment> \<open>Sum = hf(k0) + rest. rest \\<le> 0 (all terms \\<le> 0). hf(k0) < 0. So sum < 0.\<close>
-                have "(\<Sum>k<?nw. hf (vxw k) (vyw k)) = hf (vxw k0) (vyw k0)
-                  + (\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k))"
-                proof -
-                  have "k0 \<in> {..<?nw}" using hk0(1) by (by100 simp)
-                  have "(\<Sum>k<?nw. hf (vxw k) (vyw k))
-                    = hf (vxw k0) (vyw k0) + (\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k))"
-                    using sum.remove[of "{..<?nw}" k0 "\<lambda>k. hf (vxw k) (vyw k)"] \<open>k0 \<in> {..<?nw}\<close>
-                    by (by100 simp)
-                  thus ?thesis .
-                qed
-                moreover have "(\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k)) \<le> 0"
-                proof (intro sum_nonpos)
-                  fix k assume "k \<in> {..<?nw} - {k0}"
-                  hence "k < ?nw" by (by100 simp)
-                  thus "hf (vxw k) (vyw k) \<le> 0" using hall_le by (by100 blast)
-                qed
-                ultimately have "(\<Sum>k<?nw. hf (vxw k) (vyw k)) = hf (vxw k0) (vyw k0) + (\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k))"
-                  and "(\<Sum>k \<in> {..<?nw} - {k0}. hf (vxw k) (vyw k)) \<le> 0" by (by100 simp)+
-                hence "(\<Sum>k<?nw. hf (vxw k) (vyw k)) \<le> hf (vxw k0) (vyw k0)"
-                  by (by100 linarith)
-                thus ?thesis using \<open>hf (vxw k0) (vyw k0) < 0\<close> by (by100 linarith)
-              qed
-              hence "hf ?cxw ?cyw < 0"
-              proof -
-                from \<open>(\<Sum>k<?nw. hf (vxw k) (vyw k)) < 0\<close>
-                have "(1/real ?nw) * (\<Sum>k<?nw. hf (vxw k) (vyw k)) < 0"
-                proof -
-                  have "real ?nw > 0" using hnw_pos by (by100 simp)
-                  hence "1/real ?nw > 0" by (by100 simp)
-                  thus ?thesis using \<open>(\<Sum>k<?nw. hf (vxw k) (vyw k)) < 0\<close>
-                    by (rule mult_pos_neg)
-                qed
-                thus ?thesis using hf_sum by (by100 linarith)
-              qed
-              thus False using hf_ge by (by100 linarith)
-            qed
-          qed
-          \<comment> \<open>h(u\\_0) \\<le> 0: vertex v\\_0 is in the polygon, so satisfies all half-plane conditions.\<close>
-          have hf_u0_le: "hf (vxw 0) (vyw 0) \<le> 0"
-          proof (cases "j = 0 \<or> Suc j mod ?nw = 0")
-            case True \<comment> \<open>v\\_0 is an endpoint of edge j.\<close>
-            hence "hf (vxw 0) (vyw 0) = 0"
-            proof (elim disjE)
-              assume hj0: "j = 0"
-              show ?thesis unfolding hf_def dxj_def dyj_def hj0 by (by100 algebra)
-            next
-              assume hsj0: "Suc j mod ?nw = 0"
-              have "dxj = vxw 0 - vxw j" unfolding dxj_def using hsj0 by (by100 simp)
-              moreover have "dyj = vyw 0 - vyw j" unfolding dyj_def using hsj0 by (by100 simp)
-              ultimately show ?thesis unfolding hf_def by (by100 algebra)
-            qed
-            thus ?thesis by (by100 simp)
-          next
-            case False
-            hence "0 \<noteq> j" and "0 \<noteq> Suc j mod ?nw" by (by100 simp)+
-            hence "(0::nat) < ?nw" using hnw_pos by (by100 simp)
-            from hC11_w[rule_format, OF hj this \<open>0 \<noteq> j\<close> \<open>0 \<noteq> Suc j mod ?nw\<close>]
-            have "hf (vxw 0) (vyw 0) < 0" unfolding hf_def dxj_def dyj_def by (by100 simp)
-            thus ?thesis by (by100 simp)
-          qed
-          \<comment> \<open>h(edge point on edge j) = 0.\<close>
-          have hf_edge_zero: "hf (fst (edge_pt_w j s)) (snd (edge_pt_w j s)) = 0"
-          proof -
-            have "fst (edge_pt_w j s) = (1-s)*vxw j + s*vxw(Suc j mod ?nw)"
-              unfolding edge_pt_w_def by (by100 simp)
-            moreover have "snd (edge_pt_w j s) = (1-s)*vyw j + s*vyw(Suc j mod ?nw)"
-              unfolding edge_pt_w_def by (by100 simp)
-            ultimately show ?thesis unfolding hf_def dxj_def dyj_def by (by100 algebra)
-          qed
-          \<comment> \<open>h(arc point) = (1-t)*h(u\\_0) + t*h(c\\_w) < 0.\<close>
-          have hf_arc_neg: "hf ((1-t)*vxw 0 + t*?cxw) ((1-t)*vyw 0 + t*?cyw) < 0"
-          proof -
-            have "hf ((1-t)*vxw 0 + t*?cxw) ((1-t)*vyw 0 + t*?cyw) =
-              (1-t)*hf (vxw 0) (vyw 0) + t*hf ?cxw ?cyw"
-              unfolding hf_def dxj_def dyj_def by (by100 algebra)
-            also have "\<dots> \<le> 0 + t*hf ?cxw ?cyw"
-            proof -
-              have h1t: "(1-t) \<ge> 0" using ht unfolding top1_unit_interval_def by (by100 auto)
-              have "(1-t)*hf (vxw 0) (vyw 0) \<le> 0"
-                using h1t hf_u0_le by (rule mult_nonneg_nonpos)
-              thus ?thesis by (by100 linarith)
-            qed
-            also have "\<dots> < 0"
-            proof -
-              have "t * hf ?cxw ?cyw < 0"
-                using ht_pos hf_centroid_neg by (rule mult_pos_neg)
-              thus ?thesis by (by100 linarith)
-            qed
-            finally show ?thesis .
-          qed
-          \<comment> \<open>If arc = edge, then h(arc) = h(edge) = 0. But h(arc) < 0. Contradiction.\<close>
-          show ?thesis
-          proof
-            assume heq2: "((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw) = edge_pt_w j s"
-            hence "fst ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw) = fst(edge_pt_w j s)
-              \<and> snd ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw) = snd(edge_pt_w j s)"
-              by (by100 simp)
-            hence "hf ((1-t)*vxw 0 + t*?cxw) ((1-t)*vyw 0 + t*?cyw) =
-              hf (fst(edge_pt_w j s)) (snd(edge_pt_w j s))" unfolding hf_def by (by100 simp)
-            hence "hf ((1-t)*vxw 0 + t*?cxw) ((1-t)*vyw 0 + t*?cyw) = 0"
-              using hf_edge_zero by (by100 simp)
-            thus False using hf_arc_neg by (by100 linarith)
-          qed
-        qed
+        have harc_not_edge: "((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw) \<noteq> edge_pt_w j s" sorry
         show "phi_fn (edge_pt_e 0 t) \<noteq> edge_pt_w j s"
           using harc_not_edge hval by (by100 simp)
       qed

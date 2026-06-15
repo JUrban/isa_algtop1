@@ -1,0 +1,34 @@
+Session 1550-1554 (2026-06-15)
+================================
+
+PHI CONSTRUCTION DECOMPOSED (spur_collapse_cancel_homeo):
+The single opaque sorry for the phi construction has been replaced with an explicit
+piecewise-affine star extension construction and decomposed into 14 tractable sub-goals.
+
+Construction: Fan triangulation from v_1 = (vxe 1, vye 1) of P_e into nw sectors.
+Each sector T_j = conv(v_1, v_{j+2}, v_{j+3}) maps affinely to centroid-cone sector
+(c_w, u_j, u_{j+1}) of P_w via barycentric coordinate transfer.
+
+Extracted: C4, C5, C10, C11, polygonal_region for BOTH P_e and P_w.
+
+Fully proved (no sorry):
+- hcw_in_Pw: centroid is in polygon (convex combination with weights 1/nw)
+- hcw_neq_u0: centroid ≠ vertex u_0 (C10 cross product = 0 contradiction)
+- hcw_not_edge: centroid not on any edge (C10 = 0 if on edge, C10 > 0 always)
+- prop4 (spur_match): phi(edge 0 t) = phi(edge 1 (1-t))
+- prop5 (spur_endpoints): phi(edge 0 0) = u_0
+- prop6 (spur_int): spur arc not on edges for t∈(0,1) — half-plane argument,
+  including hf_centroid_neg < 0 via sum decomposition + C11 + sum_nonpos
+- prop7 (spur_tip_int): phi(edge 0 1) = centroid not on edge
+- prop8 (spur_inj): spur arc injective (centroid ≠ u_0 from algebra)
+- prop9 (nonspur): phi on non-spur edges = linear (from helper)
+- hf_u0_le: half-plane value at u_0 ≤ 0 (C11 or on-edge)
+- Sum decomposition: sum = k0-term + rest, rest ≤ 0, k0 < 0, so sum < 0
+
+Remaining sorrys in phi proof: 14
+  Core (5): hfan_cover, hdet_pos, hphi_on_spur0/spur1/nonspur
+  Properties (6): prop1 (range), prop2 (continuity), prop3 (surjectivity),
+    prop10 (interior_inj), prop11 (int_to_int), prop12 (spur_not_int)
+  Infrastructure (3): hf_sum (algebra), card≥nw-2, and one inner sorry
+
+Build: 6889 lines, ~26s.
