@@ -3608,17 +3608,115 @@ proof -
                     using hext_i hext_j hlbl_w by (by100 simp)
                   have hdir_e: "snd (?ext ! (i+2)) = snd (?ext ! (j+2)) \<longleftrightarrow> snd (w ! i) = snd (w ! j)"
                     using hext_i hext_j by (by100 simp)
-                  \<comment> \<open>Suc (i+2) mod ne = (Suc i mod nw) + 2 (for reasonable sizes).\<close>
-                  have hmod_i: "Suc (i+2) mod ?ne = Suc i mod ?nw + 2"
-                    sorry \<comment> \<open>Modular arithmetic: Suc(i+2) mod (nw+2) = (Suc i mod nw) + 2
-                       when i < nw and nw >= 3.\<close>
-                  have hmod_j: "Suc (j+2) mod ?ne = Suc j mod ?nw + 2"
-                    sorry \<comment> \<open>Same modular arithmetic for j.\<close>
-                  \<comment> \<open>Now: C7\\_e at the shifted indices gives q\\_e identification.
-                     The 4 vertex patterns shift by +2.\<close>
+                  \<comment> \<open>C7\\_e at (i+2, j+2): gives vertex identifications at ext edges.\<close>
+                  \<comment> \<open>Helper: q\\_e identification from C7\\_e at t=0 (start vertices).\<close>
+                  have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                  \<comment> \<open>C7\\_e at t=0: q\\_e(v\\_{i+2}) relates to q\\_e(v\\_{j+2}) or q\\_e(v\\_{Suc(j+2) mod ne}).\<close>
+                  have hC7e_t0: "q_e ((1-0)*vxe(i+2)+0*vxe(Suc(i+2) mod ?ne),
+                      (1-0)*vye(i+2)+0*vye(Suc(i+2) mod ?ne)) =
+                    (if snd(?ext!(i+2))=snd(?ext!(j+2)) then q_e ((1-0)*vxe(j+2)+0*vxe(Suc(j+2) mod ?ne),
+                        (1-0)*vye(j+2)+0*vye(Suc(j+2) mod ?ne))
+                     else q_e (0*vxe(j+2)+(1-0)*vxe(Suc(j+2) mod ?ne),
+                        0*vye(j+2)+(1-0)*vye(Suc(j+2) mod ?ne)))"
+                    using hC7_e[rule_format, OF hi_e hj_e hlbl_e h0_I] by (by100 blast)
+                  hence hC7e_start: "q_e (vxe(i+2), vye(i+2)) =
+                    (if snd(w!i)=snd(w!j) then q_e (vxe(j+2), vye(j+2))
+                     else q_e (vxe(Suc(j+2) mod ?ne), vye(Suc(j+2) mod ?ne)))"
+                    using hdir_e by (by100 simp)
+                  \<comment> \<open>C7\\_e at t=1: q\\_e(v\\_{Suc(i+2) mod ne}) relates similarly.\<close>
+                  have hC7e_t1: "q_e ((1-1)*vxe(i+2)+1*vxe(Suc(i+2) mod ?ne),
+                      (1-1)*vye(i+2)+1*vye(Suc(i+2) mod ?ne)) =
+                    (if snd(?ext!(i+2))=snd(?ext!(j+2)) then q_e ((1-1)*vxe(j+2)+1*vxe(Suc(j+2) mod ?ne),
+                        (1-1)*vye(j+2)+1*vye(Suc(j+2) mod ?ne))
+                     else q_e (1*vxe(j+2)+(1-1)*vxe(Suc(j+2) mod ?ne),
+                        1*vye(j+2)+(1-1)*vye(Suc(j+2) mod ?ne)))"
+                    using hC7_e[rule_format, OF hi_e hj_e hlbl_e h1_I] by (by100 blast)
+                  hence hC7e_end: "q_e (vxe(Suc(i+2) mod ?ne), vye(Suc(i+2) mod ?ne)) =
+                    (if snd(w!i)=snd(w!j) then q_e (vxe(Suc(j+2) mod ?ne), vye(Suc(j+2) mod ?ne))
+                     else q_e (vxe(j+2), vye(j+2)))"
+                    using hdir_e by (by100 simp)
+                  \<comment> \<open>Helper: (Suc k mod nw) + 2 is q\\_e-identified with Suc(k+2) mod ne.
+                     For k < nw-1: they're equal. For k = nw-1: v\\_0 ~ v\\_2 from a-pair.\<close>
+                  have hvert_shift: "\<And>k. k < ?nw \<Longrightarrow>
+                      q_e (vxe((Suc k mod ?nw)+2), vye((Suc k mod ?nw)+2)) =
+                      q_e (vxe(Suc(k+2) mod ?ne), vye(Suc(k+2) mod ?ne))"
+                  proof -
+                    fix k assume hk: "k < ?nw"
+                    show "q_e (vxe((Suc k mod ?nw)+2), vye((Suc k mod ?nw)+2)) =
+                        q_e (vxe(Suc(k+2) mod ?ne), vye(Suc(k+2) mod ?ne))"
+                    proof (cases "Suc k < ?nw")
+                      case True
+                      hence "Suc k mod ?nw = Suc k" by (by100 simp)
+                      moreover have "Suc(k+2) < ?ne" using True hne_eq by (by100 linarith)
+                      hence "Suc(k+2) mod ?ne = Suc(k+2)" by (by100 simp)
+                      moreover have "(Suc k) + 2 = Suc(k+2)" by (by100 simp)
+                      ultimately show ?thesis by (by100 simp)
+                    next
+                      case False
+                      hence "k = ?nw - 1" using hk by (by100 linarith)
+                      hence "Suc k = ?nw" using hk by (by100 linarith)
+                      hence "Suc k mod ?nw = 0" by (by100 simp)
+                      hence hvl: "(Suc k mod ?nw) + 2 = 2" by (by100 simp)
+                      have "Suc(k+2) = ?nw + 2" using \<open>k = ?nw - 1\<close> hlen by (by100 linarith)
+                      hence "Suc(k+2) mod ?ne = 0" using hne_eq by (by100 simp)
+                      hence hvr: "Suc(k+2) mod ?ne = 0" .
+                      \<comment> \<open>Need: q\\_e(v\\_2) = q\\_e(v\\_0). From a-pair C7.\<close>
+                      have "q_e (vxe 0, vye 0) = q_e (vxe 2, vye 2)"
+                      proof -
+                        have "fst (?ext ! 0) = fst (?ext ! 1)"
+                          using hspur0 hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                        have "snd (?ext ! 0) \<noteq> snd (?ext ! 1)"
+                          using hspur0 hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                        have "0 < ?ne" using hlen hne_eq by (by100 linarith)
+                        have "1 < ?ne" using hlen hne_eq by (by100 linarith)
+                        from hC7_e[rule_format, OF \<open>0 < ?ne\<close> \<open>1 < ?ne\<close> \<open>fst(?ext!0) = fst(?ext!1)\<close> h0_I]
+                        have "q_e (vxe 0, vye 0) = q_e (vxe(Suc 1 mod ?ne), vye(Suc 1 mod ?ne))"
+                          using \<open>snd(?ext!0) \<noteq> snd(?ext!1)\<close> by (by100 simp)
+                        moreover have "Suc 1 mod ?ne = 2"
+                        proof -
+                          have "?ne \<ge> 5" using hlen hne_eq by (by100 linarith)
+                          hence "(2::nat) < ?ne" by (by100 linarith)
+                          thus ?thesis by (by100 simp)
+                        qed
+                        ultimately show ?thesis by (simp add: numeral_2_eq_2)
+                      qed
+                      thus ?thesis using hvl hvr by (simp add: numeral_2_eq_2)
+                    qed
+                  qed
+                  \<comment> \<open>Now handle the 4 vertex patterns.\<close>
                   from hcases_w show "q_e (vxe (va+2), vye (va+2)) = q_e (vxe (vb+2), vye (vb+2))"
-                    sorry \<comment> \<open>4-case C7\\_e application with shifted indices.
-                       Same structure as forward hstep but using C7\\_e with (i+2, j+2).\<close>
+                  proof (elim disjE conjE)
+                    \<comment> \<open>Case 1: same-dir start: va=i, vb=j.\<close>
+                    assume "snd(w!i) = snd(w!j)" "va = i" "vb = j"
+                    thus ?thesis using hC7e_start by (by100 simp)
+                  next
+                    \<comment> \<open>Case 2: same-dir end: va=Suc i mod nw, vb=Suc j mod nw.\<close>
+                    assume hsame: "snd(w!i) = snd(w!j)" and hva: "va = Suc i mod ?nw" and hvb: "vb = Suc j mod ?nw"
+                    from hC7e_end hsame have "q_e (vxe(Suc(i+2) mod ?ne), vye(Suc(i+2) mod ?ne)) =
+                        q_e (vxe(Suc(j+2) mod ?ne), vye(Suc(j+2) mod ?ne))" by (by100 simp)
+                    moreover from hvert_shift[OF hi_w] have "q_e (vxe(va+2), vye(va+2)) =
+                        q_e (vxe(Suc(i+2) mod ?ne), vye(Suc(i+2) mod ?ne))" using hva by (by100 simp)
+                    moreover from hvert_shift[OF hj_w] have "q_e (vxe(vb+2), vye(vb+2)) =
+                        q_e (vxe(Suc(j+2) mod ?ne), vye(Suc(j+2) mod ?ne))" using hvb by (by100 simp)
+                    ultimately show ?thesis by (by100 simp)
+                  next
+                    \<comment> \<open>Case 3: opp-dir start-end: va=i, vb=Suc j mod nw.\<close>
+                    assume hopp: "snd(w!i) \<noteq> snd(w!j)" and hva: "va = i" and hvb: "vb = Suc j mod ?nw"
+                    from hC7e_start hopp have "q_e (vxe(i+2), vye(i+2)) =
+                        q_e (vxe(Suc(j+2) mod ?ne), vye(Suc(j+2) mod ?ne))" by (by100 simp)
+                    moreover from hvert_shift[OF hj_w] have "q_e (vxe(vb+2), vye(vb+2)) =
+                        q_e (vxe(Suc(j+2) mod ?ne), vye(Suc(j+2) mod ?ne))" using hvb by (by100 simp)
+                    ultimately show ?thesis using hva by (by100 simp)
+                  next
+                    \<comment> \<open>Case 4: opp-dir end-start: va=Suc i mod nw, vb=j.\<close>
+                    assume hopp: "snd(w!i) \<noteq> snd(w!j)" and hva: "va = Suc i mod ?nw" and hvb: "vb = j"
+                    from hC7e_end hopp have "q_e (vxe(Suc(i+2) mod ?ne), vye(Suc(i+2) mod ?ne)) =
+                        q_e (vxe(j+2), vye(j+2))" by (by100 simp)
+                    moreover from hvert_shift[OF hi_w] have "q_e (vxe(va+2), vye(va+2)) =
+                        q_e (vxe(Suc(i+2) mod ?ne), vye(Suc(i+2) mod ?ne))" using hva by (by100 simp)
+                    ultimately show ?thesis using hvb by (by100 simp)
+                  qed
                 qed
                 from hchain_w have "(mx, my) \<in> ?Rw\<^sup>*" .
                 thus ?thesis
