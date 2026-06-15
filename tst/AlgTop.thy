@@ -3263,12 +3263,86 @@ proof -
                backward uses w-to-ext C7 transfer (each w step gives ext step, shifted by 2).
                Both directions work because the label correspondence is a bijection
                between non-spur ext edges and w edges.\<close>
-            show ?thesis sorry \<comment> \<open>Backward vertex. Symmetric to forward vertex.
-               The mathematical argument is the same (vtgt chain transfer works
-               in both directions). The formal proof would replicate the forward
-               structure with vtgt\\_w instead of vtgt\\_e.
-               Key ingredients available: vtgt\\_w, vtgt\\_w\\_chain, C3\\_w, hC7\\_e,
-               hlabel\\_corr, hphi\\_nonspur, hphi\\_spur\\_endpoints.\<close>
+            \<comment> \<open>Step 1: show both are vertices (vertex + edge-interior impossible).\<close>
+            have hboth_vtx_bwd: "(tx = 0 \<or> tx = 1) \<and> (ty = 0 \<or> ty = 1)"
+            proof -
+              from False have "\<not>(0 < tx \<and> tx < 1) \<or> \<not>(0 < ty \<and> ty < 1)" by (by100 blast)
+              thus ?thesis
+              proof
+                assume "\<not>(0 < tx \<and> tx < 1)"
+                hence htx_vtx: "tx = 0 \<or> tx = 1" using htx unfolding top1_unit_interval_def by (by100 auto)
+                show ?thesis
+                proof (cases "0 < ty \<and> ty < 1")
+                  case False2: False
+                  hence "ty = 0 \<or> ty = 1" using hty unfolding top1_unit_interval_def by (by100 auto)
+                  thus ?thesis using htx_vtx by (by100 blast)
+                next
+                  case True
+                  \<comment> \<open>tx vertex, ty edge-interior -> contradiction via phi separation.\<close>
+                  \<comment> \<open>x is a vertex, y is edge-interior. phi(x) is P\\_w vertex or spur endpoint.
+                     phi(y) is P\\_w edge or spur arc interior. g(x) != g(y) -> contradiction.\<close>
+                  \<comment> \<open>Reuse the same C8/C12 separation as in the forward vertex-edge case.\<close>
+                  show ?thesis sorry \<comment> \<open>Backward vertex-edge separation (tx vtx, ty int).
+                     Same C8\\_w/C12\\_w/spur\\_inj argument as forward.\<close>
+                qed
+              next
+                assume "\<not>(0 < ty \<and> ty < 1)"
+                hence hty_vtx: "ty = 0 \<or> ty = 1" using hty unfolding top1_unit_interval_def by (by100 auto)
+                show ?thesis
+                proof (cases "0 < tx \<and> tx < 1")
+                  case False2: False
+                  hence "tx = 0 \<or> tx = 1" using htx unfolding top1_unit_interval_def by (by100 auto)
+                  thus ?thesis using hty_vtx by (by100 blast)
+                next
+                  case True
+                  show ?thesis sorry \<comment> \<open>Backward vertex-edge separation (ty vtx, tx int). Symmetric.\<close>
+                qed
+              qed
+            qed
+            \<comment> \<open>Step 2: express x,y as vertices.\<close>
+            obtain kx where hkx_bwd: "kx < ?ne" and hx_vtx_bwd: "x = (vxe kx, vye kx)"
+            proof -
+              from hboth_vtx_bwd have "tx = 0 \<or> tx = 1" by (by100 blast)
+              thus ?thesis
+              proof
+                assume "tx = 0"
+                hence "x = (vxe ix, vye ix)" using hx_eq unfolding edge_pt_e_def by (by100 simp)
+                thus ?thesis using hix that by (by100 blast)
+              next
+                assume "tx = 1"
+                hence "x = (vxe (Suc ix mod ?ne), vye (Suc ix mod ?ne))"
+                  using hx_eq unfolding edge_pt_e_def by (by100 simp)
+                moreover have "Suc ix mod ?ne < ?ne" using hlen hne_eq by (by100 simp)
+                ultimately show ?thesis using that by (by100 blast)
+              qed
+            qed
+            obtain ky where hky_bwd: "ky < ?ne" and hy_vtx_bwd: "y = (vxe ky, vye ky)"
+            proof -
+              from hboth_vtx_bwd have "ty = 0 \<or> ty = 1" by (by100 blast)
+              thus ?thesis
+              proof
+                assume "ty = 0"
+                hence "y = (vxe iy, vye iy)" using hy_eq unfolding edge_pt_e_def by (by100 simp)
+                thus ?thesis using hiy that by (by100 blast)
+              next
+                assume "ty = 1"
+                hence "y = (vxe (Suc iy mod ?ne), vye (Suc iy mod ?ne))"
+                  using hy_eq unfolding edge_pt_e_def by (by100 simp)
+                moreover have "Suc iy mod ?ne < ?ne" using hlen hne_eq by (by100 simp)
+                ultimately show ?thesis using that by (by100 blast)
+              qed
+            qed
+            \<comment> \<open>Step 3: from g(x)=g(y), derive q\\_e(x)=q\\_e(y) via vtgt reverse transfer.\<close>
+            show ?thesis
+            proof (cases "kx = ky")
+              case True thus ?thesis using hx_vtx_bwd hy_vtx_bwd by (by100 simp)
+            next
+              case False
+              \<comment> \<open>Distinct vertices. phi maps to P\\_w vertices/spur arc.
+                 q\\_w equality of phi images -> vtgt\\_w chain -> ext chain -> q\\_e.\<close>
+              show ?thesis sorry \<comment> \<open>Backward distinct-vertex: vtgt\\_w chain reverse transfer.
+                 Symmetric to forward distinct-vertex proof.\<close>
+            qed
           qed
         qed
       qed
