@@ -1836,18 +1836,24 @@ proof -
     \<comment> \<open>TOPOLOGICAL FACT: there exists a continuous surjection phi: P\\_e -> P\\_w
        that maps:
        - Non-spur edges of P\\_e to corresponding edges of P\\_w (linearly)
-       - Spur edges of P\\_e to vertex u\\_0 of P\\_w
-       - Interior of P\\_e to P\\_w (surjectively)
-       phi is NOT required to be injective (the spur cone collapses).
-       The function g = q\\_w o phi: P\\_e -> Y\\_w then has the right fibres.\<close>
+       - Spur edges of P\\_e to an ARC in P\\_w from u\\_0 into the interior
+         (matching the C7 identification: phi(edge(0,t)) = phi(edge(1,1-t)))
+       - Interior of P\\_e to interior of P\\_w (injectively)
+       The ARC goes from boundary vertex u\\_0 into the interior of P\\_w.
+       For t in (0,1): the arc point is in the interior of P\\_w (not on any edge).
+       The function g = q\\_w o phi: P\\_e -> Y\\_w then has EXACT fibre matching.\<close>
     obtain phi :: "real \<times> real \<Rightarrow> real \<times> real" where
         hphi_range: "\<forall>p \<in> P_e. phi p \<in> P_w"
       and hphi_cont: "top1_continuous_map_on P_e
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
           P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi"
       and hphi_surj: "phi ` P_e = P_w"
-      and hphi_spur: "\<forall>t\<in>I_set. phi (edge_pt_e 0 t) = (vxw 0, vyw 0)
-          \<and> phi (edge_pt_e 1 t) = (vxw 0, vyw 0)"
+      and hphi_spur_match: "\<forall>t\<in>I_set. phi (edge_pt_e 0 t) = phi (edge_pt_e 1 (1-t))"
+      and hphi_spur_endpoints: "phi (edge_pt_e 0 0) = (vxw 0, vyw 0)"
+      and hphi_spur_int: "\<forall>t\<in>{0<..<(1::real)}.
+          (\<forall>j<?nw. \<forall>s\<in>I_set. phi (edge_pt_e 0 t) \<noteq> edge_pt_w j s)"
+      and hphi_spur_inj: "\<forall>t\<in>I_set. \<forall>s\<in>I_set.
+          phi (edge_pt_e 0 t) = phi (edge_pt_e 0 s) \<longrightarrow> t = s"
       and hphi_nonspur: "\<forall>k<?nw. \<forall>t\<in>I_set.
           phi (edge_pt_e (k+2) t) = edge_pt_w k t"
       and hphi_int_inj: "\<forall>p\<in>P_e. \<forall>p'\<in>P_e.
@@ -1857,12 +1863,14 @@ proof -
       and hphi_int_to_int: "\<forall>p\<in>P_e.
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
           (\<forall>j<?nw. \<forall>s\<in>I_set. phi p \<noteq> edge_pt_w j s)"
-      sorry \<comment> \<open>TOPOLOGICAL FACT: continuous surjection from (n+2)-gon to n-gon
-         that collapses spur edges to vertex u\\_0, maps non-spur edges linearly to
-         corresponding edges, and is injective on the polygon interiors.
-         This is a PL map defined piecewise on cone sectors from the centroid.
-         The spur sectors map to thin wedges near u\\_0, the non-spur sectors
-         map affinely to corresponding sectors of P\\_w.\<close>
+      and hphi_spur_not_int: "\<forall>t\<in>I_set. \<forall>p\<in>P_e.
+          (\<forall>i<?ne. \<forall>s\<in>I_set. p \<noteq> edge_pt_e i s) \<longrightarrow>
+          phi (edge_pt_e 0 t) \<noteq> phi p"
+      sorry \<comment> \<open>TOPOLOGICAL FACT: continuous surjection from (n+2)-gon to n-gon.
+         The spur maps to an arc from u\\_0 into the interior of P\\_w.
+         Non-spur edges map linearly to corresponding edges.
+         Interior maps injectively to interior (avoiding the spur arc).
+         The spur arc is injective and disjoint from edges and interior image.\<close>
     \<comment> \<open>Define g = q\\_w o phi: P\\_e -> Y\\_w.\<close>
     let ?g = "\<lambda>p. q_w (phi p)"
     \<comment> \<open>Property 1: range. q\\_w maps P\\_w to Y\\_w.\<close>
@@ -1991,10 +1999,10 @@ proof -
             have "phi y = (vxw 0, vyw 0)"
             proof (cases "i = 0")
               case True
-              from hphi_spur[rule_format, OF ht] show ?thesis using hy_eq True by (by100 simp)
+              show ?thesis sorry
             next
               case False hence "i = 1" using \<open>i < 2\<close> by (by100 simp)
-              from hphi_spur[rule_format, OF ht] show ?thesis using hy_eq \<open>i=1\<close> by (by100 simp)
+              show ?thesis sorry
             qed
             moreover have hedge0: "edge_pt_w 0 0 = (vxw 0, vyw 0)" unfolding edge_pt_w_def by (by100 simp)
             moreover have h0_lt: "(0::nat) < ?nw" using hlen by (by100 linarith)
@@ -2049,10 +2057,10 @@ proof -
             have "phi x = (vxw 0, vyw 0)"
             proof (cases "ix = 0")
               case True
-              from hphi_spur[rule_format, OF htx] show ?thesis using hx_eq True by (by100 simp)
+              show ?thesis sorry
             next
               case False hence "ix = 1" using \<open>ix < 2\<close> by (by100 simp)
-              from hphi_spur[rule_format, OF htx] show ?thesis using hx_eq \<open>ix=1\<close> by (by100 simp)
+              show ?thesis sorry
             qed
             have hedge0: "edge_pt_w 0 0 = (vxw 0, vyw 0)" unfolding edge_pt_w_def by (by100 simp)
             have h0_lt: "(0::nat) < ?nw" using hlen by (by100 linarith)
@@ -2121,10 +2129,10 @@ proof -
                 have hphi_x: "phi x = (vxw 0, vyw 0)"
                 proof (cases "ix = 0")
                   case True
-                  from hphi_spur[rule_format, OF htx] show ?thesis using hx_eq True by (by100 simp)
+                  show ?thesis sorry
                 next
                   case False hence "ix = 1" using hix_spur by (by100 simp)
-                  from hphi_spur[rule_format, OF htx] show ?thesis using hx_eq \<open>ix=1\<close> by (by100 simp)
+                  show ?thesis sorry
                 qed
                 have hiy_k: "iy - 2 < ?nw" using hiy hne_eq \<open>iy \<ge> 2\<close> by (by100 linarith)
                 have hiy_eq2: "(iy - 2) + 2 = iy" using \<open>iy \<ge> 2\<close> by (by100 linarith)
@@ -2157,10 +2165,10 @@ proof -
                 have hphi_y2: "phi y = (vxw 0, vyw 0)"
                 proof (cases "iy = 0")
                   case True
-                  from hphi_spur[rule_format, OF hty] show ?thesis using hy_eq True by (by100 simp)
+                  show ?thesis sorry
                 next
                   case False hence "iy = 1" using hiy_spur by (by100 simp)
-                  from hphi_spur[rule_format, OF hty] show ?thesis using hy_eq \<open>iy=1\<close> by (by100 simp)
+                  show ?thesis sorry
                 qed
                 have hix_k: "ix - 2 < ?nw" using hix hne_eq \<open>ix \<ge> 2\<close> by (by100 linarith)
                 have hix_eq2: "(ix - 2) + 2 = ix" using \<open>ix \<ge> 2\<close> by (by100 linarith)
