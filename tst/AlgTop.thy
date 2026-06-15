@@ -1504,9 +1504,122 @@ proof -
      g = q\\_wf composed with (psi\\_wf inverse) composed with (spur\\_collapse on B2) composed with psi\\_ef.
      This is a composition of continuous maps.\<close>
   \<comment> \<open>Step 4: Verify fibre matching and apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
-  \<comment> \<open>For now: sorry the geometric construction. The mathematical argument is sound;
-     the formalization requires ~200 lines of PL topology infrastructure.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 2: Extract full conditions for both quotients.\<close>
+  let ?ext = "[a, top1_inverse_edge a] @ w"
+  let ?ne = "length ?ext"
+  let ?nw = "length w"
+  have hlen_ext: "length ?ext \<ge> 3" using hlen by (by100 simp)
+  have hproper_ext: "\<forall>label. card {i. i < length ?ext \<and> fst (?ext ! i) = label} \<in> {0, 2}"
+    by (rule cancel_pair_prepend_proper[OF hproper hfresh])
+  from scheme_quotient_exists(2)[OF hlen_ext hproper_ext]
+  obtain P_e :: "(real \<times> real) set" and q_e :: "real \<times> real \<Rightarrow> real \<times> real"
+    and vxe vye :: "nat \<Rightarrow> real"
+    and Y_e :: "(real \<times> real) set" and TY_e :: "(real \<times> real) set set"
+    where hY_e: "top1_quotient_of_scheme_on Y_e TY_e ?ext"
+    and hC2_e: "top1_quotient_map_on P_e
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
+        Y_e TY_e q_e"
+    and hC7_e: "\<forall>i<?ne. \<forall>j<?ne. fst (?ext!i) = fst (?ext!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q_e ((1-t)*vxe i+t*vxe(Suc i mod ?ne),
+            (1-t)*vye i+t*vye(Suc i mod ?ne))
+         = (if snd (?ext!i) = snd (?ext!j)
+            then q_e ((1-t)*vxe j+t*vxe(Suc j mod ?ne),
+                    (1-t)*vye j+t*vye(Suc j mod ?ne))
+            else q_e (t*vxe j+(1-t)*vxe(Suc j mod ?ne),
+                    t*vye j+(1-t)*vye(Suc j mod ?ne))))"
+    and hC8_e: "\<forall>p\<in>P_e. (\<forall>i<?ne. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t)*vxe i+t*vxe(Suc i mod ?ne),
+                (1-t)*vye i+t*vye(Suc i mod ?ne)))
+       \<longrightarrow> (\<forall>p'\<in>P_e. q_e p = q_e p' \<longrightarrow> p = p')"
+    and hC12_e: "\<forall>k<?ne. \<forall>j<?ne. \<forall>s'\<in>{0<..<(1::real)}.
+        q_e (vxe k, vye k) \<noteq> q_e ((1-s')*vxe j + s'*vxe(Suc j mod ?ne),
+                               (1-s')*vye j + s'*vye(Suc j mod ?ne))"
+    by (elim exE conjE) (rule that, assumption+)
+  from scheme_quotient_exists(2)[OF hlen hproper]
+  obtain P_w :: "(real \<times> real) set" and q_w :: "real \<times> real \<Rightarrow> real \<times> real"
+    and vxw vyw :: "nat \<Rightarrow> real"
+    and Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set"
+    where hY_w: "top1_quotient_of_scheme_on Y_w TY_w w"
+    and hC2_w: "top1_quotient_map_on P_w
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w)
+        Y_w TY_w q_w"
+    and hC7_w: "\<forall>i<?nw. \<forall>j<?nw. fst (w!i) = fst (w!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q_w ((1-t)*vxw i+t*vxw(Suc i mod ?nw),
+            (1-t)*vyw i+t*vyw(Suc i mod ?nw))
+         = (if snd (w!i) = snd (w!j)
+            then q_w ((1-t)*vxw j+t*vxw(Suc j mod ?nw),
+                    (1-t)*vyw j+t*vyw(Suc j mod ?nw))
+            else q_w (t*vxw j+(1-t)*vxw(Suc j mod ?nw),
+                    t*vyw j+(1-t)*vyw(Suc j mod ?nw))))"
+    and hC8_w: "\<forall>p\<in>P_w. (\<forall>i<?nw. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t)*vxw i+t*vxw(Suc i mod ?nw),
+                (1-t)*vyw i+t*vyw(Suc i mod ?nw)))
+       \<longrightarrow> (\<forall>p'\<in>P_w. q_w p = q_w p' \<longrightarrow> p = p')"
+    and hC12_w: "\<forall>k<?nw. \<forall>j<?nw. \<forall>s'\<in>{0<..<(1::real)}.
+        q_w (vxw k, vyw k) \<noteq> q_w ((1-s')*vxw j + s'*vxw(Suc j mod ?nw),
+                               (1-s')*vyw j + s'*vyw(Suc j mod ?nw))"
+    by (elim exE conjE) (rule that, assumption+)
+  have htopo_e: "is_topology_on_strict Y_e TY_e"
+    using hY_e unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have htopo_w: "is_topology_on_strict Y_w TY_w"
+    using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 3: Define g: P\\_e -> Y\\_w by cone construction.
+     Centroids of both polygons:\<close>
+  let ?cx_e = "(\<Sum>j<?ne. vxe j) / real ?ne"
+  let ?cy_e = "(\<Sum>j<?ne. vye j) / real ?ne"
+  let ?cx_w = "(\<Sum>j<?nw. vxw j) / real ?nw"
+  let ?cy_w = "(\<Sum>j<?nw. vyw j) / real ?nw"
+  \<comment> \<open>Boundary map phi: boundary(P\\_e) -> P\\_w.
+     - On spur edges (0,1): phi maps to vertex u\\_0 = (vxw 0, vyw 0)
+     - On edge k+2 at parameter t: phi maps to the corresponding point on edge k of P\\_w
+     Interior: for x = (1-s)*centroid\\_e + s*b where b is on boundary:
+       g(x) = q\\_w((1-s)*(cx\\_w, cy\\_w) + s*phi(b))
+     This is a well-defined continuous map from P\\_e to Y\\_w.\<close>
+  \<comment> \<open>Step 4: g factors through q\\_e (constant on q\\_e-fibres).
+     Forward: q\\_e(x) = q\\_e(y) implies g(x) = g(y).
+     Cases:
+     - Interior: C8 gives x = y, so g(x) = g(y) trivially.
+     - Both on spur: g is constant q\\_w(vxw 0, vyw 0) on spur. CHECK.
+     - Matched non-spur edges: C7 for ext at indices i+2, j+2 gives
+       the same identification as C7 for w at indices i, j. CHECK.
+     - Spur vertex to non-spur vertex: q\\_e(v\\_0) = q\\_e(v\\_2) by C7 for a-pair.
+       g(v\\_0) = q\\_w(vxw 0, vyw 0), g(v\\_2) = q\\_w(vxw 0, vyw 0). CHECK.
+     - Vertex-edge: impossible by C12. CHECK.\<close>
+  \<comment> \<open>Step 5: g is surjective and continuous.
+     Surjectivity: the non-spur cone sectors cover all of P\\_w (via the affine sector maps).
+     Continuity: phi is continuous on boundary (piecewise linear, agrees at junctions).
+       The cone extension is continuous (convex combination with continuous coefficients).\<close>
+  \<comment> \<open>Step 6: Theorem 22.2 gives f: Y\\_e -> Y\\_w. Then f is bijective and continuous.
+     Bijectivity: f is injective because g-fibres = q\\_e-fibres (backward direction).
+     Backward: g(x) = g(y) implies q\\_e(x) = q\\_e(y).
+     - Interior: q\\_w injective by C8\\_w, cone map injective on non-spur sectors -> x = y.
+     - Both spur: q\\_e identifies all spur points. CHECK.
+     - Non-spur edge pair: q\\_w C9 gives label match -> q\\_e C7 gives identification.
+     - One spur, one non-spur: g(spur) = q\\_w(vertex), g(non-spur edge) = q\\_w(edge\\_interior).
+       C12\\_w: vertex != edge\\_interior. So g(spur) != g(non-spur edge). Contradiction.
+     - One spur, one interior: g(spur) = q\\_w(vertex), g(interior) = q\\_w(interior\\_point).
+       q\\_w(vertex) != q\\_w(interior\\_point) by C8\\_w (interior injective) + topology. CHECK.\<close>
+  \<comment> \<open>Step 7: f is continuous bijection, compact to Hausdorff -> homeomorphism.
+     Y\\_e compact Hausdorff from Theorem\\_74\\_1.
+     Apply Theorem 26.6.\<close>
+  \<comment> \<open>Step 8: Bridge Y\\_ef to Y\\_e and Y\\_w to Y\\_wf using uniqueness.\<close>
+  from scheme_quotient_uniqueness[OF htopo_ef htopo_e hY_ef hY_e]
+  obtain h1 where hh1: "top1_homeomorphism_on Y_ef TY_ef Y_e TY_e h1"
+    by (by100 blast)
+  have hY_e_w: "\<exists>h. top1_homeomorphism_on Y_e TY_e Y_w TY_w h"
+    sorry \<comment> \<open>CORE SORRY: spur-collapse homeomorphism between canonical quotients.
+       The proof outline above (steps 3-7) gives the construction and verification.
+       Formalizing the cone construction + fibre matching + Theorem 22.2/26.6
+       requires ~200 lines of geometric argument.\<close>
+  from hY_e_w obtain h2 where hh2: "top1_homeomorphism_on Y_e TY_e Y_w TY_w h2"
+    by (by100 blast)
+  from scheme_quotient_uniqueness[OF htopo_w htopo_wf hY_w hY_wf]
+  obtain h3 where hh3: "top1_homeomorphism_on Y_w TY_w Y_wf TY_wf h3"
+    by (by100 blast)
+  from homeomorphism_comp[OF hh1 hh2]
+  have "top1_homeomorphism_on Y_ef TY_ef Y_w TY_w (h2 \<circ> h1)" .
+  from homeomorphism_comp[OF this hh3]
+  show ?thesis by (by100 blast)
 qed
 
 \<comment> \<open>Direct front-cancel for proper+fresh schemes.
