@@ -2314,6 +2314,21 @@ lemma front_cancel_proper:
    The entire cancel chain depends only on spur\\_collapse\\_cancel\\_homeo (1 sorry).
    No dependency on uncancel or the old tau-map approach.\<close>
 
+\<comment> \<open>Cancel at front — homeomorphic-realization form for proper+fresh schemes.
+   Uses front\\_cancel\\_proper directly. No general cancel sorry dependency.
+   Can be used in v\\_cancel case when properness is available.\<close>
+lemma front_cancel_realization_homeo_proper:
+  fixes Y :: "'a set" and TY :: "'a set set"
+    and a :: "nat \<times> bool" and w :: "(nat \<times> bool) list"
+  assumes "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
+      and "length w \<ge> 3"
+      and "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+      and "fst a \<notin> fst ` set w"
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' w \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+  using front_cancel_proper[OF assms(1) assms(2) assms(3) assms(4)] .
+
 \<comment> \<open>Uncancel for proper schemes: derived from front\\_cancel\\_proper\\_direct + existence + uniqueness + transfer.
    Uses front\\_cancel\\_proper\\_direct (which does NOT depend on uncancel) to break circularity.
    Only depends on spur\\_collapse\\_cancel\\_homeo (through front\\_cancel\\_proper\\_direct).\<close>
