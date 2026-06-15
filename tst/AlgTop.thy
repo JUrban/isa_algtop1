@@ -1650,7 +1650,12 @@ proof -
   have hspur0: "?ext ! 0 = a" by (by100 simp)
   have hspur1: "?ext ! 1 = top1_inverse_edge a" by (by100 simp)
   have hne_eq: "?ne = ?nw + 2" by (by100 simp)
-  \<comment> \<open>g maps spur to q\\_w(u\\_0), non-spur edges to corresponding edges, interior by sectors.\<close>
+  \<comment> \<open>Define g: P\\_e -> Y\\_w.
+     On non-spur boundary edge k+2 at parameter t: g maps to q\\_w(edge\\_pt\\_w(k, t)).
+     On spur boundary (edges 0,1): g maps to q\\_w(vxw 0, vyw 0) (the vertex image).
+     On interior: g maps via piecewise affine sector map from P\\_e to P\\_w, composed with q\\_w.
+     This requires defining the sector decomposition and the affine maps.
+     For now: assert existence with required properties.\<close>
   have "\<exists>g. (\<forall>p \<in> P_e. g p \<in> Y_w)
       \<and> top1_continuous_map_on P_e
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
@@ -1658,19 +1663,30 @@ proof -
       \<and> g ` P_e = Y_w
       \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_e x = q_e y \<longrightarrow> g x = g y)
       \<and> (\<forall>x\<in>P_e. \<forall>y\<in>P_e. g x = g y \<longrightarrow> q_e x = q_e y)"
-    sorry \<comment> \<open>CORE: piecewise affine sector construction + fibre matching.
-       Define g by: on each triangle (centroid\\_e, v\\_{k+2}, v\\_{k+3}) of P\\_e, use the
-       affine map to (centroid\\_w, u\\_k, u\\_{k+1}) of P\\_w, then compose with q\\_w.
-       On spur triangles: constant q\\_w(u\\_0).
-       Properties:
-       1. Range: affine map to P\\_w sector + q\\_w maps to Y\\_w.
-       2. Continuity: PL on sectors, agrees at boundaries (vertex correspondence).
-          At spur junction: both sides approach q\\_w(u\\_0) since u\\_0 = edge\\_w(0,0) = edge\\_w(n-1,1).
-       3. Surjectivity: non-spur sectors cover all of P\\_w.
-       4. Forward fibres: C7/C8 of q\\_e give same-label correspondence in q\\_w.
-       5. Backward fibres: C8/C12 of q\\_w prevent spurious identifications.
-       Label correspondence: ext[k+2] = w[k] for k < n.
-       Spur labels: ext[0] = a, ext[1] = inv(a), fresh in w.\<close>
+  proof -
+    \<comment> \<open>Key boundary property: the w-polygon vertex u\\_0 is the endpoint of edges 0 and n-1.
+       This ensures g is continuous at the spur-non-spur junction.\<close>
+    have hu0_edge0: "edge_pt_w 0 0 = (vxw 0, vyw 0)"
+      unfolding edge_pt_w_def by (by100 simp)
+    have hu0_edgen: "edge_pt_w (?nw - 1) 1 = (vxw (Suc (?nw - 1) mod ?nw), vyw (Suc (?nw - 1) mod ?nw))"
+      unfolding edge_pt_w_def by (by100 simp)
+    have hnw_pos: "?nw > 0" using hlen by (by100 linarith)
+    have hnw_mod: "Suc (?nw - 1) mod ?nw = 0"
+    proof -
+      have "Suc (?nw - 1) = ?nw" using hnw_pos by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    have hu0_edgen': "edge_pt_w (?nw - 1) 1 = (vxw 0, vyw 0)"
+      using hu0_edgen hnw_mod by (by100 simp)
+    \<comment> \<open>The piecewise affine sector construction + fibre matching.\<close>
+    show ?thesis
+      sorry \<comment> \<open>CORE: construction of g with the 5 required properties.
+         The proof outline (steps 3-7 above) gives the mathematical argument.
+         Formalizing requires: sector decomposition, affine maps between triangles,
+         piecewise continuity, fibre matching using C7/C8/C9/C12.
+         Key continuity fact: at spur-non-spur junction, both sides approach
+         q\\_w(vxw 0, vyw 0) since u\\_0 = edge\\_pt\\_w(0, 0) = edge\\_pt\\_w(nw-1, 1).\<close>
+  qed
   then obtain g where hg_range: "\<forall>p \<in> P_e. g p \<in> Y_w"
     and hg_cont: "top1_continuous_map_on P_e
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
