@@ -2,47 +2,53 @@ theory AlgTop
   imports "AlgTopCached16.AlgTopCached16"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-16, sessions 1522-1530):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, session 1540):
 
 BREAKTHROUGHS:
 1. front\\_cancel\\_proper: PROVED via uncancel+uniqueness (session 1522).
-2. polygon\\_sub\\_rearrange\\_sigma\\_props: PROVED (\\<sigma> properties, session 1528).
+2. polygon\\_sub\\_rearrange\\_sigma\\_props: PROVED (sigma properties, session 1528).
+3. quotient\\_of\\_scheme\\_uncancel\\_front: skeleton with C1-C11 extraction PROVED (session 1540).
 
 FALSE LEMMAS (discovered during formalization):
 - quotient\\_of\\_scheme\\_edge\\_permutation: FALSE (torus/sphere counterexample).
-- polygon self-map P\\<to>P for sub-polygon rotation: IMPOSSIBLE (session 1529).
-- cut\\_paste\\_rotate\\_proper (same mset \\<to> same quotient): FALSE (session 1530).
+- polygon self-map P to P for sub-polygon rotation: IMPOSSIBLE (session 1529).
+- cut\\_paste\\_rotate\\_proper (same mset to same quotient): FALSE (session 1530).
 - suffix\\_rotate\\_via\\_separator: FALSE (torus/sphere counterexample, session 1531).
 - per\\_polygon\\_rotation\\_homeo: FALSE (same counterexample, session 1531).
+- multi\\_polygon\\_paste\\_flip as stated: FALSE for cross-boundary labels.
+  BUT: under properness (no cross-boundary labels) it SHOULD be true.
 
 ROOT CAUSE: suffix rotation in CONCATENATED single-polygon schemes changes
 cross-boundary label positions, genuinely changing the quotient space.
 The book's "Permute" = vertex renumbering of a SINGLE polygon (= quotient\\_of\\_scheme\\_rotate, PROVED).
 
-REMAINING CUT-PASTE GAP: needs GENUINE multi-polygon infrastructure
-with SEPARATE polygon objects (not concatenated schemes).
-Each polygon is a separate top1\\_quotient\\_of\\_scheme\\_on instance,
-and cross-polygon identification joins them by label matching.
+REMAINING CUT-PASTE GAP: needs quotient-level fibre-matching homeomorphism.
+The approach: both old and new canonical quotients (from scheme\\_quotient\\_exists(2))
+share C12 (vertex-edge separation). The sigma permutation maps old edge labels
+to new edge labels. The fibre-matching argument gives the homeomorphism.
+This is ~300-500 lines but does NOT require multi-polygon infrastructure.
 
 REMAINING SORRY CATEGORIES:
-A. CUT-PASTE SAME-SPACE (3): general (no properness). Lines ~269/280/330.
-B. GENERAL CANCEL/UNCANCEL (2): no properness. Lines ~299/305.
-C. VERTEX UNIQUENESS (4): need C12 in definition. Lines ~749/756/894/1008.
-D. CONTEXT-LEFT (10): mostly NOT on critical path. Lines ~1758-1916.
-E. GENUINELY FALSE (2): length < 3. Lines ~1641/1808.
-F. MISC (3): edge-perm refs + relabel freshness. Lines ~1674/1681/1983.
-G. FINAL ASSEMBLY (3): Thm 78.2 + extraction + sphere. Lines ~2931/2972/3014.
+A. CUT-PASTE SAME-SPACE (3): same-space claim is FALSE. Need homeomorphism.
+B. GENERAL CANCEL/UNCANCEL (2): uncancel\\_front has skeleton; main step sorry'd.
+C. VERTEX UNIQUENESS (4): need C12 (available from scheme\\_quotient\\_exists(2)).
+D. CONTEXT-LEFT (10): mostly NOT on critical path.
+E. GENUINELY FALSE (2): length < 3.
+F. MISC (3): edge-perm (FALSE) + cut-paste reverses + relabel freshness.
+G. FINAL ASSEMBLY (3): Thm 78.2 + extraction + sphere.
+H. CUT-PASTE PROPER (2): fibre-matching homeomorphism.
 
 CRITICAL PATH:
-cut\\_paste\\_opp/proper sorrys \\<to> valid chain (for proper schemes)
-+ general cancel/uncancel (sorry) \\<to> valid chain (for non-proper)
-+ Thm 78.2 (sorry) + extraction (sorry) + sphere (sorry)
+1. uncancel\\_front (geometric spur insertion) - unlocks front\\_cancel\\_proper chain
+2. cut-paste proper (fibre matching) - unlocks valid operation chain
+3. Thm 78.2 (pasting induction) + extraction + sphere
 
 KEY PROVED INFRASTRUCTURE:
 - scheme\\_quotient\\_exists, scheme\\_quotient\\_uniqueness
 - front\\_cancel\\_proper, quotient\\_of\\_scheme\\_uncancel\\_front\\_proper
-- polygon\\_sub\\_rearrange\\_sigma\\_props (\\<sigma> permutation properties)
-- scheme\\_normal\\_form\\_valid (cached)\<close>
+- polygon\\_sub\\_rearrange\\_sigma\\_props (sigma permutation properties)
+- scheme\\_normal\\_form\\_valid (cached)
+- quotient\\_of\\_scheme\\_uncancel\\_front: C1-C11 extraction PROVED\<close>
 \<comment> \<open>PROVABLY FALSE (2026-06-14): arbitrary edge permutation does NOT preserve the quotient space.
    Counterexample: s = [a,b,a\<inverse>,b\<inverse>] (torus) permuted to s' = [a,a\<inverse>,b,b\<inverse>] (sphere).
    Same multiset of labelled edges, but the ORDERING matters for the identification pattern.
@@ -657,8 +663,91 @@ lemma quotient_of_scheme_uncancel_front:
   assumes "top1_quotient_of_scheme_on Y TY w"
       and "length w \<ge> 3"
   shows "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
-  sorry \<comment> \<open>General case (non-proper). Proper case proved via
-     quotient\\_of\\_scheme\\_uncancel\\_front\\_proper.\<close>
+proof -
+  let ?n = "length w"
+  let ?ext = "[a, top1_inverse_edge a] @ w"
+  \<comment> \<open>Step 1: Extract polygon P, quotient map q, and full C1-C11 from Y quotient of w.\<close>
+  from quotient_of_scheme_extract_vx[OF assms(1)]
+  obtain P q vx vy where
+      hC1: "top1_is_polygonal_region_on P ?n"
+    and hC2: "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+    and hC3: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+    and hC4: "\<forall>i<?n. (vx i, vy i) \<in> P"
+    and hC5: "P = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n. coeffs i * vx i)
+                     \<and> y = (\<Sum>i<?n. coeffs i * vy i)}"
+    and hC6: "\<forall>i<?n. \<forall>j<?n.
+          i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+          (\<forall>s\<in>{0<..<1::real}. \<forall>t\<in>{0<..<1::real}.
+             ((1-s) * vx i + s * vx (Suc i mod ?n),
+              (1-s) * vy i + s * vy (Suc i mod ?n))
+           \<noteq> ((1-t) * vx j + t * vx (Suc j mod ?n),
+               (1-t) * vy j + t * vy (Suc j mod ?n)))"
+    and hC7: "\<forall>i<?n. \<forall>j<?n. fst (w!i) = fst (w!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q ((1-t) * vx i + t * vx (Suc i mod ?n),
+              (1-t) * vy i + t * vy (Suc i mod ?n))
+         = (if snd (w!i) = snd (w!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                    (1-t) * vy j + t * vy (Suc j mod ?n))
+            else q (t * vx j + (1-t) * vx (Suc j mod ?n),
+                    t * vy j + (1-t) * vy (Suc j mod ?n))))"
+    and hC8: "\<forall>p\<in>P. (\<forall>i<?n. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t) * vx i + t * vx (Suc i mod ?n),
+                      (1-t) * vy i + t * vy (Suc i mod ?n)))
+             \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p')"
+    and hC9: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+            q ((1-t) * vx i + t * vx (Suc i mod ?n),
+               (1-t) * vy i + t * vy (Suc i mod ?n))
+          = q ((1-s) * vx j + s * vx (Suc j mod ?n),
+               (1-s) * vy j + s * vy (Suc j mod ?n))
+          \<longrightarrow> (i = j \<and> t = s)
+            \<or> (fst (w!i) = fst (w!j) \<and>
+               (if snd (w!i) = snd (w!j) then s = t else s = 1 - t))"
+    and hC10: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx j) / real ?n;
+                           cy = (\<Sum>j<?n. vy j) / real ?n
+         in (vx i - cx) * (vy (Suc i mod ?n) - cy)
+          - (vy i - cy) * (vx (Suc i mod ?n) - cx) > 0"
+    and hC11: "\<forall>i<?n. \<forall>k<?n.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx k - vx i) * (vy (Suc i mod ?n) - vy i)
+          - (vy k - vy i) * (vx (Suc i mod ?n) - vx i) < 0"
+    by (rule quotient_of_scheme_extract_vx[OF assms(1)])
+  \<comment> \<open>Step 2: Construct the (n+2)-gon P' with spur at the front.
+     P' has vertices: v'\\_0 (spur start), v'\\_1 (spur tip), v\\_0, v\\_1, ..., v\\_{n-1}.
+     The spur tip v'\\_1 is placed very close to v\\_0 but outside P.
+     The spur start v'\\_0 is between v'\\_1 and v\\_{n-1}.\<close>
+  have hn3: "?n \<ge> 3" using assms(2) .
+  \<comment> \<open>Outward normal direction at vertex 0: perpendicular to edge 0, pointing away from P.\<close>
+  \<comment> \<open>Choose epsilon small enough that the spur vertices are close to v\\_0.\<close>
+  \<comment> \<open>Define the extended polygon vertices.\<close>
+  let ?n' = "?n + 2"
+  \<comment> \<open>For the extended scheme, we need a valid (n+2)-sided polygon with the spur.
+     APPROACH: use the regular (n+2)-gon (from scheme\\_quotient\\_exists if proper,
+     or construct directly) and define q' = q o (spur\\_collapse\\_map).
+     The spur\\_collapse\\_map: P' -> P collapses the first two edges to vertex v\\_0.\<close>
+  \<comment> \<open>Step 3: Define the spur collapse map phi: P' -> P.
+     On edge 0 (v'\\_0 -> v'\\_1): phi(pt) = (vx 0, vy 0) [collapse to v\\_0]
+     On edge 1 (v'\\_1 -> v\\_0): phi(pt) = (vx 0, vy 0) [collapse to v\\_0]
+     On edge k+2 (v\\_k -> v\\_{k+1 mod n}): phi maps linearly to the same edge of P
+     On interior: extend by cone from centroid of P' to boundary.\<close>
+  \<comment> \<open>Step 4: Define q' = q o phi: P' -> Y.
+     q' is continuous (composition of continuous maps if phi is continuous).
+     q' maps P' surjectively to Y (since q is surjective and phi maps onto P).\<close>
+  \<comment> \<open>Step 5: Show q' is a quotient map P' -> Y satisfying C1-C11 for [a, a^{-1}] @ w.
+     C7 for a-pair: edges 0,1 both collapse to q(v\\_0), so identified. CHECK.
+     C7 for w-labels: inherited from C7 of q via phi. CHECK.
+     C8 (interior injectivity): interior of P' maps to interior of P (via phi),
+       where q is injective by original C8. CHECK.
+     C9 (edge-interior injectivity): from original C9 via phi mapping. CHECK.\<close>
+  \<comment> \<open>Full proof: construct P', phi, q' and verify all conditions.
+     This is the geometric spur insertion argument.
+     For now: sorry the full construction.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Uncancel at front — homeomorphic realization.
    Derived from quotient\\_of\\_scheme\\_uncancel\\_front (same-space version).\<close>
@@ -1367,6 +1456,76 @@ proof -
   qed
   from quotient_same_fibres_homeomorphic[OF hC2_1 hcomp_quot hfibres]
   show ?thesis .
+qed
+
+\<comment> \<open>Direct front-cancel for proper+fresh schemes.
+   DOES NOT use quotient\\_of\\_scheme\\_uncancel (breaks circular dependency).
+   Uses scheme\\_quotient\\_exists(2) for BOTH extended and base schemes,
+   then proves the cancel homeomorphism by direct fibre matching.
+   The spur (edges 0,1 of extended scheme) maps to a single vertex in the quotient.
+   Key: C12 from scheme\\_quotient\\_exists(2) rules out vertex-edge crossings.\<close>
+lemma front_cancel_proper_direct:
+  fixes Y :: "'a set" and TY :: "'a set set"
+    and a :: "nat \<times> bool" and w :: "(nat \<times> bool) list"
+  assumes hY: "top1_quotient_of_scheme_on Y TY ([a, top1_inverse_edge a] @ w)"
+      and hlen: "length w \<ge> 3"
+      and hproper: "\<forall>label. card {i. i < length w \<and> fst (w ! i) = label} \<in> {0, 2}"
+      and hfresh: "fst a \<notin> fst ` set w"
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY' w \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+proof -
+  let ?ext = "[a, top1_inverse_edge a] @ w"
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using hY unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have hlen_ext: "length ?ext \<ge> 3" using hlen by (by100 simp)
+  have hproper_ext: "\<forall>label. card {i. i < length ?ext \<and> fst (?ext ! i) = label} \<in> {0, 2}"
+    by (rule cancel_pair_prepend_proper[OF hproper hfresh])
+  \<comment> \<open>Step 1: Get canonical quotient of w.\<close>
+  from scheme_quotient_exists(1)[OF hlen hproper]
+  obtain Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set"
+    where hY_w: "top1_quotient_of_scheme_on Y_w TY_w w" by (by100 blast)
+  have htopo_w: "is_topology_on_strict Y_w TY_w"
+    using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 2: Get canonical quotient of extended scheme with C12.\<close>
+  \<comment> \<open>Step 2: Get canonical quotient of extended scheme.\<close>
+  from scheme_quotient_exists(1)[OF hlen_ext hproper_ext]
+  obtain Y_ext :: "(real \<times> real) set" and TY_ext :: "(real \<times> real) set set"
+    where hY_ext: "top1_quotient_of_scheme_on Y_ext TY_ext ?ext" by (by100 blast)
+  have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
+    using hY_ext unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 3: Direct fibre-matching homeomorphism Y\\_ext to Y\\_w.
+     The spur pair (edges 0,1 of P\\_ext) collapses to vertex q\\_ext(v\\_ext\\_0) = q\\_ext(v\\_ext\\_2).
+     The main edges (2,...,n+1 of P\\_ext) correspond to edges (0,...,n-1 of P\\_w).
+     Define f: P\\_ext to Y\\_w by:
+       f(spur\\_pt) = q\\_w(v\\_w\\_0)  [vertex image]
+       f(main\\_edge(k+2,t)) = q\\_w(edge\\_w(k,t))  [corresponding edge]
+       f(interior) = q\\_w(spur\\_collapse(interior))
+     f has the same fibres as q\\_ext because:
+       - The spur fibre: all spur points and v\\_ext\\_0, v\\_ext\\_2 map to the same point.
+         In q\\_ext: the a-pair identifies edges 0,1 (C7). At vertices: v\\_0 ~ v\\_2 (from C7 at t=0).
+         So the spur fibre = {all spur pts, v\\_ext\\_0, v\\_ext\\_1, v\\_ext\\_2} modulo.
+       - The main fibres: same as q\\_w fibres shifted by 2 positions.
+     Apply quotient\\_same\\_fibres\\_homeomorphic to get Y\\_ext ~ Y\\_w.\<close>
+  have hY_ext_w_homeo: "\<exists>h. top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h"
+    sorry \<comment> \<open>CORE: direct fibre-matching cancel homeomorphism.
+       Does NOT use uncancel. Uses C12 from both scheme\\_quotient\\_exists(2) calls.\<close>
+  \<comment> \<open>Step 4: Bridge Y to Y\\_ext using uniqueness (both quotients of extended scheme).\<close>
+  from scheme_quotient_uniqueness[OF htopo_Y htopo_ext hY hY_ext]
+  obtain h_bridge where hbridge: "top1_homeomorphism_on Y TY Y_ext TY_ext h_bridge"
+    by (by100 blast)
+  \<comment> \<open>Step 5: Compose homeomorphisms: Y to Y\\_ext to Y\\_w.\<close>
+  from hY_ext_w_homeo obtain h_cancel where
+    hcancel: "top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h_cancel"
+    by (by100 blast)
+  from homeomorphism_comp[OF hbridge hcancel]
+  have hcomp: "top1_homeomorphism_on Y TY Y_w TY_w (h_cancel \<circ> h_bridge)" .
+  \<comment> \<open>Step 6: Transfer quotient of w from Y\\_w to Y via inverse homeomorphism.\<close>
+  from homeomorphism_inverse[OF hcomp]
+  have hinv: "top1_homeomorphism_on Y_w TY_w Y TY (inv_into Y (h_cancel \<circ> h_bridge))" .
+  from scheme_quotient_transfer_along_homeomorphism[OF hY_w hinv htopo_Y]
+  have "top1_quotient_of_scheme_on Y TY w" .
+  thus ?thesis by (rule same_space_implies_homeo_realization)
 qed
 
 \<comment> \<open>§76 Polygon diagonal cut-reglue homeomorphism (per expert audit 30 §6).
