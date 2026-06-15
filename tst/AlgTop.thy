@@ -1847,6 +1847,9 @@ proof -
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
           (\<forall>i<?ne. \<forall>t\<in>I_set. p' \<noteq> edge_pt_e i t) \<longrightarrow>
           phi p = phi p' \<longrightarrow> p = p'"
+      and hphi_int_to_int: "\<forall>p\<in>P_e.
+          (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
+          (\<forall>j<?nw. \<forall>s\<in>I_set. phi p \<noteq> edge_pt_w j s)"
       sorry \<comment> \<open>TOPOLOGICAL FACT: continuous surjection from (n+2)-gon to n-gon
          that collapses spur edges to vertex u\\_0, maps non-spur edges linearly to
          corresponding edges, and is injective on the polygon interiors.
