@@ -1563,6 +1563,7 @@ proof -
   obtain P_w :: "(real \<times> real) set" and q_w :: "real \<times> real \<Rightarrow> real \<times> real"
     and vxw vyw :: "nat \<Rightarrow> real"
     and Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set"
+    and vtgt_w :: "nat \<Rightarrow> nat"
     where hY_w: "top1_quotient_of_scheme_on Y_w TY_w w"
     and hC2_w: "top1_quotient_map_on P_w
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w)
@@ -1589,6 +1590,16 @@ proof -
     and hC12_w: "\<forall>k<?nw. \<forall>j<?nw. \<forall>s'\<in>{0<..<(1::real)}.
         q_w (vxw k, vyw k) \<noteq> q_w ((1-s')*vxw j + s'*vxw(Suc j mod ?nw),
                                (1-s')*vyw j + s'*vyw(Suc j mod ?nw))"
+    and hC3_w: "\<forall>i<?nw. \<forall>j<?nw. i \<noteq> j \<longrightarrow> (vxw i, vyw i) \<noteq> (vxw j, vyw j)"
+    and hvtgt_w_bound: "\<forall>k<?nw. vtgt_w k < ?nw"
+    and hvtgt_w: "\<forall>k<?nw. q_w (vxw k, vyw k) = (vxw (vtgt_w k), vyw (vtgt_w k))"
+    and hvtgt_w_chain: "\<forall>k<?nw. \<forall>l<?nw. vtgt_w k = vtgt_w l \<longrightarrow>
+        (k, l) \<in> {(a, b). \<exists>i<?nw. \<exists>j<?nw. i \<noteq> j
+          \<and> fst (w ! i) = fst (w ! j)
+          \<and> ((snd (w ! i) = snd (w ! j) \<and> a = i \<and> b = j)
+           \<or> (snd (w ! i) = snd (w ! j) \<and> a = Suc i mod ?nw \<and> b = Suc j mod ?nw)
+           \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = i \<and> b = Suc j mod ?nw)
+           \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = Suc i mod ?nw \<and> b = j))}\<^sup>*"
     by (elim exE conjE) (rule that, assumption+)
   have htopo_e: "is_topology_on_strict Y_e TY_e"
     using hY_e unfolding top1_quotient_of_scheme_on_def by (by100 blast)
@@ -3230,8 +3241,23 @@ proof -
           next
             case False
             \<comment> \<open>At least one of tx, ty is 0 or 1 (vertex case).\<close>
-            show ?thesis sorry \<comment> \<open>Vertex case in backward matching.
-               Needs vtgt chain correspondence between ext and w schemes.\<close>
+            \<comment> \<open>Backward vertex case. Same structure as forward vertex:
+               1. Show vertex + edge-interior is impossible (contradiction).
+               2. Handle both-vertex via vtgt chain reverse transfer.\<close>
+            \<comment> \<open>Step 1: show both must be vertices. If one vertex, one edge-interior:
+               phi maps vertex to P\\_w vertex/spur-endpoint and edge-interior to P\\_w edge/spur-arc.
+               C8\\_w or C12\\_w separates them -> g values differ -> contradiction.\<close>
+            \<comment> \<open>Step 2: both vertices -> vtgt chain reverse transfer.
+               q\\_w(phi(v\\_a)) = q\\_w(phi(v\\_b)) -> phi images are q\\_w-identified ->
+               vtgt\\_w chain -> ext scheme has corresponding chain -> q\\_e identified.\<close>
+            \<comment> \<open>This is the reverse of the forward argument. For the forward: each ext C7 step
+               gives a w C7 step. For the backward: each w C7 step (among the non-spur edges,
+               shifted by 2) gives an ext C7 step. The chain transfer works in both directions
+               because the label correspondence is an exact bijection between non-spur ext edges
+               and w edges.\<close>
+            show ?thesis sorry \<comment> \<open>Backward vertex case. Same vtgt chain argument as forward,
+               with direction reversed. The proof structure mirrors the forward case:
+               vertex-edge C12 contradiction, then both-vertex vtgt reverse transfer.\<close>
           qed
         qed
       qed
