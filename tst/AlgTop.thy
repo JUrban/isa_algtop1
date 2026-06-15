@@ -1507,9 +1507,68 @@ proof -
          So the spur fibre = {all spur pts, v\\_ext\\_0, v\\_ext\\_1, v\\_ext\\_2} modulo.
        - The main fibres: same as q\\_w fibres shifted by 2 positions.
      Apply quotient\\_same\\_fibres\\_homeomorphic to get Y\\_ext ~ Y\\_w.\<close>
+  \<comment> \<open>Step 3a: Get full C1-C12 from scheme\\_quotient\\_exists(2) for BOTH schemes.\<close>
+  from scheme_quotient_exists(2)[OF hlen hproper]
+  obtain P_wf :: "(real \<times> real) set" and q_wf :: "real \<times> real \<Rightarrow> real \<times> real"
+    and vxw vyw :: "nat \<Rightarrow> real"
+    and Y_wf :: "(real \<times> real) set" and TY_wf :: "(real \<times> real) set set"
+    where hY_wf: "top1_quotient_of_scheme_on Y_wf TY_wf w"
+    and hC2_wf: "top1_quotient_map_on P_wf
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_wf)
+        Y_wf TY_wf q_wf"
+    and hC12_wf: "\<forall>k<length w. \<forall>j<length w. \<forall>s'\<in>{0<..<(1::real)}.
+        q_wf (vxw k, vyw k) \<noteq> q_wf ((1-s')*vxw j + s'*vxw(Suc j mod length w),
+                               (1-s')*vyw j + s'*vyw(Suc j mod length w))"
+    sorry \<comment> \<open>Extract full C1-C12 for w from scheme\\_quotient\\_exists(2).\<close>
+  have htopo_wf: "is_topology_on_strict Y_wf TY_wf"
+    using hY_wf unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  from scheme_quotient_exists(2)[OF hlen_ext hproper_ext]
+  obtain P_ef :: "(real \<times> real) set" and q_ef :: "real \<times> real \<Rightarrow> real \<times> real"
+    and vxe vye :: "nat \<Rightarrow> real"
+    and Y_ef :: "(real \<times> real) set" and TY_ef :: "(real \<times> real) set set"
+    where hY_ef: "top1_quotient_of_scheme_on Y_ef TY_ef ?ext"
+    and hC2_ef: "top1_quotient_map_on P_ef
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_ef)
+        Y_ef TY_ef q_ef"
+    and hC7_ef: "\<forall>i<length ?ext. \<forall>j<length ?ext. fst (?ext!i) = fst (?ext!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q_ef ((1-t)*vxe i+t*vxe(Suc i mod length ?ext),
+            (1-t)*vye i+t*vye(Suc i mod length ?ext))
+         = (if snd (?ext!i) = snd (?ext!j)
+            then q_ef ((1-t)*vxe j+t*vxe(Suc j mod length ?ext),
+                    (1-t)*vye j+t*vye(Suc j mod length ?ext))
+            else q_ef (t*vxe j+(1-t)*vxe(Suc j mod length ?ext),
+                    t*vye j+(1-t)*vye(Suc j mod length ?ext))))"
+    and hC8_ef: "\<forall>p\<in>P_ef. (\<forall>i<length ?ext. \<forall>t\<in>I_set.
+          p \<noteq> ((1-t)*vxe i+t*vxe(Suc i mod length ?ext),
+                (1-t)*vye i+t*vye(Suc i mod length ?ext)))
+       \<longrightarrow> (\<forall>p'\<in>P_ef. q_ef p = q_ef p' \<longrightarrow> p = p')"
+    and hC12_ef: "\<forall>k<length ?ext. \<forall>j<length ?ext. \<forall>s'\<in>{0<..<(1::real)}.
+        q_ef (vxe k, vye k) \<noteq> q_ef ((1-s')*vxe j + s'*vxe(Suc j mod length ?ext),
+                               (1-s')*vye j + s'*vye(Suc j mod length ?ext))"
+    sorry \<comment> \<open>Extract full C1-C12 for ext from scheme\\_quotient\\_exists(2).\<close>
+  have htopo_ef: "is_topology_on_strict Y_ef TY_ef"
+    using hY_ef unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 3b: The fibre-matching cancel homeomorphism Y\\_ef ~ Y\\_wf.
+     Define p2: P\\_ef -> Y\\_wf by collapsing the spur (edges 0,1) to vertex 0.
+     p2 = q\\_wf o collapse, where collapse: P\\_ef -> P\\_wf merges the spur.
+     Then: q\\_ef and p2 have the same fibres (by C7/C8/C9/C12 analysis).
+     quotient\\_same\\_fibres\\_homeomorphic gives Y\\_ef ~ Y\\_wf.\<close>
+  have hY_ef_wf_homeo: "\<exists>h. top1_homeomorphism_on Y_ef TY_ef Y_wf TY_wf h"
+    sorry \<comment> \<open>CORE: spur-collapse fibre matching. Uses C12 from both quotients.\<close>
+  \<comment> \<open>Step 3c: Bridge all quotients via uniqueness.\<close>
+  from scheme_quotient_uniqueness[OF htopo_ext htopo_ef hY_ext hY_ef]
+  obtain h_be where hbe: "top1_homeomorphism_on Y_ext TY_ext Y_ef TY_ef h_be"
+    by (by100 blast)
+  from hY_ef_wf_homeo obtain h_ew where hew: "top1_homeomorphism_on Y_ef TY_ef Y_wf TY_wf h_ew"
+    by (by100 blast)
+  from homeomorphism_comp[OF hbe hew]
+  have h_ew2: "top1_homeomorphism_on Y_ext TY_ext Y_wf TY_wf (h_ew \<circ> h_be)" .
+  from scheme_quotient_uniqueness[OF htopo_wf htopo_w hY_wf hY_w]
+  obtain h_ww where hww: "top1_homeomorphism_on Y_wf TY_wf Y_w TY_w h_ww"
+    by (by100 blast)
+  from homeomorphism_comp[OF h_ew2 hww]
   have hY_ext_w_homeo: "\<exists>h. top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h"
-    sorry \<comment> \<open>CORE: direct fibre-matching cancel homeomorphism.
-       Does NOT use uncancel. Uses C12 from both scheme\\_quotient\\_exists(2) calls.\<close>
+    by (by100 blast)
   \<comment> \<open>Step 4: Bridge Y to Y\\_ext using uniqueness (both quotients of extended scheme).\<close>
   from scheme_quotient_uniqueness[OF htopo_Y htopo_ext hY hY_ext]
   obtain h_bridge where hbridge: "top1_homeomorphism_on Y TY Y_ext TY_ext h_bridge"
