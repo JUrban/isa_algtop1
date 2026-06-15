@@ -2152,7 +2152,8 @@ proof -
                 then obtain ty0 where hty0: "ty0 \<in> I_set" and hphi_y0: "phi y = phi (edge_pt_e 0 ty0)"
                     and hty0_case: "iy = 0 \<and> ty0 = ty \<or> iy = 1 \<and> ty0 = 1-ty" by (by100 blast)
                 \<comment> \<open>phi(x) on spur arc is interior (not on any edge).\<close>
-                have htx0_int: "tx0 \<in> {0<..<(1::real)}" sorry \<comment> \<open>From htx\\_int and htx0\\_case.\<close>
+                have htx0_int: "tx0 \<in> {0<..<(1::real)}"
+                  using htx0_case htx_int by (by100 auto)
                 have hphi_x_not_edge: "\<forall>j<?nw. \<forall>s\<in>I_set.
                     phi x \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),(1-s)*vyw j+s*vyw(Suc j mod ?nw))"
                   using hphi_spur_int[rule_format, OF htx0_int] hphi_x0 unfolding edge_pt_w_def by (by100 simp)
@@ -2173,7 +2174,8 @@ proof -
                   proof -
                     have "ix = 0 \<or> ix = 1" using hix_spur by (by100 linarith)
                     moreover have "iy = 0 \<or> iy = 1" using hiy_spur by (by100 linarith)
-                    ultimately show ?thesis using htx0_case hty0_case \<open>tx0 = ty0\<close> sorry
+                    ultimately show ?thesis using htx0_case hty0_case \<open>tx0 = ty0\<close>
+                      by (by5000 auto)
                   qed
                   from hparam_rel
                   consider (both0) "ix=0 \<and> iy=0 \<and> tx=ty" | (x0y1) "ix=0 \<and> iy=1 \<and> tx=1-ty"
@@ -2209,7 +2211,31 @@ proof -
                     ultimately have "q_e (edge_pt_e ix tx) = q_e (edge_pt_e iy ty)" by (by100 simp)
                     thus ?thesis using hx_eq hy_eq by (by100 simp)
                   next
-                    case x1y0 thus ?thesis sorry \<comment> \<open>Symmetric to x0y1.\<close>
+                    case x1y0
+                    \<comment> \<open>ix=1, iy=0, 1-tx=ty. Use C7\\_e with iy,ix (swapped) to get
+                       q\\_e(edge(0,ty)) = q\\_e(edge(1,1-ty)) = q\\_e(edge(1,tx)).\<close>
+                    have hiy0: "iy = 0" and hix1: "ix = 1" using x1y0 by (by100 auto)+
+                    have hty_eq: "ty = 1 - tx" using x1y0 by (by100 linarith)
+                    have hext_lbl2: "fst (?ext ! iy) = fst (?ext ! ix)"
+                      using \<open>fst(?ext!0)=fst(?ext!1)\<close> hiy0 hix1 by (by100 simp)
+                    from hC7_e[rule_format, OF hiy hix hext_lbl2 hty]
+                    have hC7: "q_e ((1-ty)*vxe iy+ty*vxe(Suc iy mod ?ne),
+                        (1-ty)*vye iy+ty*vye(Suc iy mod ?ne)) =
+                      (if snd(?ext!iy)=snd(?ext!ix) then q_e ((1-ty)*vxe ix+ty*vxe(Suc ix mod ?ne),
+                          (1-ty)*vye ix+ty*vye(Suc ix mod ?ne))
+                       else q_e (ty*vxe ix+(1-ty)*vxe(Suc ix mod ?ne),
+                          ty*vye ix+(1-ty)*vye(Suc ix mod ?ne)))" by (by100 blast)
+                    have "snd(?ext!0) \<noteq> snd(?ext!1)"
+                      using hspur0 hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                    hence "\<not>(snd(?ext!iy)=snd(?ext!ix))" using hiy0 hix1 by (by100 simp)
+                    hence "q_e (edge_pt_e iy ty) = q_e (ty*vxe ix+(1-ty)*vxe(Suc ix mod ?ne),
+                        ty*vye ix+(1-ty)*vye(Suc ix mod ?ne))"
+                      using hC7 unfolding edge_pt_e_def by (by100 simp)
+                    moreover have "edge_pt_e ix tx = (ty*vxe ix+(1-ty)*vxe(Suc ix mod ?ne),
+                        ty*vye ix+(1-ty)*vye(Suc ix mod ?ne))"
+                      unfolding edge_pt_e_def using hty_eq by (by100 simp)
+                    ultimately have "q_e (edge_pt_e iy ty) = q_e (edge_pt_e ix tx)" by (by100 simp)
+                    thus ?thesis using hx_eq hy_eq by (by100 simp)
                   next
                     case both1 thus ?thesis using hx_eq hy_eq by (by100 simp)
                   qed
