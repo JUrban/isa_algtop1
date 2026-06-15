@@ -1521,6 +1521,7 @@ proof -
   obtain P_e :: "(real \<times> real) set" and q_e :: "real \<times> real \<Rightarrow> real \<times> real"
     and vxe vye :: "nat \<Rightarrow> real"
     and Y_e :: "(real \<times> real) set" and TY_e :: "(real \<times> real) set set"
+    and vtgt_e :: "nat \<Rightarrow> nat"
     where hY_e: "top1_quotient_of_scheme_on Y_e TY_e ?ext"
     and hC2_e: "top1_quotient_map_on P_e
         (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
@@ -1547,6 +1548,14 @@ proof -
     and hC12_e: "\<forall>k<?ne. \<forall>j<?ne. \<forall>s'\<in>{0<..<(1::real)}.
         q_e (vxe k, vye k) \<noteq> q_e ((1-s')*vxe j + s'*vxe(Suc j mod ?ne),
                                (1-s')*vye j + s'*vye(Suc j mod ?ne))"
+    and hvtgt_e: "\<forall>k<?ne. q_e (vxe k, vye k) = (vxe (vtgt_e k), vye (vtgt_e k))"
+    and hvtgt_e_chain: "\<forall>k<?ne. \<forall>l<?ne. vtgt_e k = vtgt_e l \<longrightarrow>
+        (k, l) \<in> {(a, b). \<exists>i<?ne. \<exists>j<?ne. i \<noteq> j
+          \<and> fst (?ext ! i) = fst (?ext ! j)
+          \<and> ((snd (?ext ! i) = snd (?ext ! j) \<and> a = i \<and> b = j)
+           \<or> (snd (?ext ! i) = snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = Suc j mod ?ne)
+           \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = i \<and> b = Suc j mod ?ne)
+           \<or> (snd (?ext ! i) \<noteq> snd (?ext ! j) \<and> a = Suc i mod ?ne \<and> b = j))}\<^sup>*"
     by (elim exE conjE) (rule that, assumption+)
   from scheme_quotient_exists(2)[OF hlen hproper]
   obtain P_w :: "(real \<times> real) set" and q_w :: "real \<times> real \<Rightarrow> real \<times> real"
