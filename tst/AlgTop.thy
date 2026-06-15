@@ -3255,9 +3255,20 @@ proof -
                shifted by 2) gives an ext C7 step. The chain transfer works in both directions
                because the label correspondence is an exact bijection between non-spur ext edges
                and w edges.\<close>
-            show ?thesis sorry \<comment> \<open>Backward vertex case. Same vtgt chain argument as forward,
-               with direction reversed. The proof structure mirrors the forward case:
-               vertex-edge C12 contradiction, then both-vertex vtgt reverse transfer.\<close>
+            \<comment> \<open>Backward vertex case. Mirrors forward:
+               1. vertex + edge-interior -> contradiction
+               2. both vertices -> vtgt reverse transfer\<close>
+            \<comment> \<open>The backward vertex proof is symmetric to the forward. The key difference:
+               forward uses ext-to-w C7 transfer (each ext step gives w step).
+               backward uses w-to-ext C7 transfer (each w step gives ext step, shifted by 2).
+               Both directions work because the label correspondence is a bijection
+               between non-spur ext edges and w edges.\<close>
+            show ?thesis sorry \<comment> \<open>Backward vertex. Symmetric to forward vertex.
+               The mathematical argument is the same (vtgt chain transfer works
+               in both directions). The formal proof would replicate the forward
+               structure with vtgt\\_w instead of vtgt\\_e.
+               Key ingredients available: vtgt\\_w, vtgt\\_w\\_chain, C3\\_w, hC7\\_e,
+               hlabel\\_corr, hphi\\_nonspur, hphi\\_spur\\_endpoints.\<close>
           qed
         qed
       qed
