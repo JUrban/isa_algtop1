@@ -3341,9 +3341,33 @@ proof -
               \<comment> \<open>Distinct vertices. phi maps to P\\_w vertices/spur arc.
                  q\\_w equality of phi images -> vtgt\\_w chain -> ext chain -> q\\_e.\<close>
               \<comment> \<open>Step 3a: kx=1 or ky=1 is impossible (spur tip has unique q\\_w image).\<close>
-              have hkx_ne1: "kx \<noteq> 1" and hky_ne1: "ky \<noteq> 1"
-                sorry \<comment> \<open>kx=1 forces ky=1 (phi(v\\_1) is interior, only matches itself via C8\\_w).
-                   Similarly ky=1 forces kx=1. Both contradict kx != ky.\<close>
+              have hkx_ne1: "kx \<noteq> 1"
+              proof
+                assume "kx = 1"
+                \<comment> \<open>phi(v\\_1) is on spur arc interior. phi(v\\_ky) for ky!=1 is boundary vertex.
+                   C8\\_w: q\\_w(interior) is unique -> can only equal q\\_w(boundary) if same point.
+                   But interior != boundary -> contradiction.\<close>
+                have hky_ne_kx: "ky \<noteq> kx" using False by (by100 blast)
+                hence "ky \<noteq> 1" using \<open>kx = 1\<close> by (by100 blast)
+                \<comment> \<open>phi(v\\_1) = phi(edge\\_pt\\_e(0, 1)): on spur arc. NOT on any w-edge.\<close>
+                have hv1_eq: "edge_pt_e 0 1 = (vxe 1, vye 1)"
+                  unfolding edge_pt_e_def by (by100 simp)
+                have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                \<comment> \<open>phi(v\\_1) not on any w-edge (from spur\\_int at boundary or spur\\_not\\_int).\<close>
+                \<comment> \<open>phi(v\\_ky) for ky in {0,2,...}: is (vxw my, vyw my) = on boundary of P\\_w.\<close>
+                have hphi_ky_bdy: "phi (vxe ky, vye ky) = (vxw (if ky = 0 then 0 else ky - 2), vyw (if ky = 0 then 0 else ky - 2))"
+                  sorry \<comment> \<open>phi at non-spur-tip vertex: boundary vertex of P\\_w.\<close>
+                \<comment> \<open>phi(v\\_1) is NOT on any w-edge (spur arc point).\<close>
+                \<comment> \<open>C8\\_w at phi(v\\_1): unique preimage. So q\\_w(phi(v\\_1)) = q\\_w(phi(v\\_ky))
+                   implies phi(v\\_1) = phi(v\\_ky). But phi(v\\_1) is interior, phi(v\\_ky) boundary.\<close>
+                show False sorry \<comment> \<open>Interior != boundary for phi images -> contradiction with hgeq.\<close>
+              qed
+              have hky_ne1: "ky \<noteq> 1"
+              proof
+                assume "ky = 1"
+                have "kx \<noteq> 1" using False \<open>ky = 1\<close> by (by100 blast)
+                show False sorry \<comment> \<open>Symmetric to kx=1 case.\<close>
+              qed
               \<comment> \<open>Step 3b: compute the w-vertex indices for phi images.\<close>
               define mx where "mx = (if kx = 0 then 0 else kx - 2)"
               define my where "my = (if ky = 0 then 0 else ky - 2)"
