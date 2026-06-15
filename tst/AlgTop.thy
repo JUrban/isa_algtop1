@@ -3369,9 +3369,47 @@ proof -
               qed
               \<comment> \<open>phi(v\\_kx) = u\\_{mx}, phi(v\\_ky) = u\\_{my}.\<close>
               have hphi_kx: "phi (vxe kx, vye kx) = (vxw mx, vyw mx)"
-                sorry \<comment> \<open>phi(v\\_kx) = u\\_{mx} from hphi\\_nonspur or hphi\\_spur\\_endpoints.\<close>
+              proof (cases "kx = 0")
+                case True
+                hence "mx = 0" unfolding mx_def by (by100 simp)
+                moreover have "phi (vxe 0, vye 0) = (vxw 0, vyw 0)"
+                  using hphi_spur_endpoints unfolding edge_pt_e_def by (by100 simp)
+                ultimately show ?thesis using True by (by100 simp)
+              next
+                case False hence "kx \<ge> 2" using hkx_ne1 by (by100 linarith)
+                hence hmx_eq: "mx = kx - 2" unfolding mx_def by (by100 simp)
+                have h_eq: "(kx-2)+2 = kx" using \<open>kx \<ge> 2\<close> by (by100 linarith)
+                have hkx_k: "kx - 2 < ?nw" using hkx_bwd hne_eq \<open>kx \<ge> 2\<close> by (by100 linarith)
+                have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                from hphi_nonspur[rule_format, OF hkx_k this]
+                have "phi (edge_pt_e ((kx-2)+2) 0) = edge_pt_w (kx-2) 0" by (by100 simp)
+                hence "phi (vxe kx, vye kx) = edge_pt_w (kx-2) 0"
+                  unfolding edge_pt_e_def using h_eq by (by100 simp)
+                hence "phi (vxe kx, vye kx) = (vxw (kx-2), vyw (kx-2))"
+                  unfolding edge_pt_w_def by (by100 simp)
+                thus ?thesis using hmx_eq by (by100 simp)
+              qed
               have hphi_ky: "phi (vxe ky, vye ky) = (vxw my, vyw my)"
-                sorry \<comment> \<open>phi(v\\_ky) = u\\_{my}.\<close>
+              proof (cases "ky = 0")
+                case True
+                hence "my = 0" unfolding my_def by (by100 simp)
+                moreover have "phi (vxe 0, vye 0) = (vxw 0, vyw 0)"
+                  using hphi_spur_endpoints unfolding edge_pt_e_def by (by100 simp)
+                ultimately show ?thesis using True by (by100 simp)
+              next
+                case False hence "ky \<ge> 2" using hky_ne1 by (by100 linarith)
+                hence hmy_eq: "my = ky - 2" unfolding my_def by (by100 simp)
+                have h_eq: "(ky-2)+2 = ky" using \<open>ky \<ge> 2\<close> by (by100 linarith)
+                have hky_k: "ky - 2 < ?nw" using hky_bwd hne_eq \<open>ky \<ge> 2\<close> by (by100 linarith)
+                have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                from hphi_nonspur[rule_format, OF hky_k this]
+                have "phi (edge_pt_e ((ky-2)+2) 0) = edge_pt_w (ky-2) 0" by (by100 simp)
+                hence "phi (vxe ky, vye ky) = edge_pt_w (ky-2) 0"
+                  unfolding edge_pt_e_def using h_eq by (by100 simp)
+                hence "phi (vxe ky, vye ky) = (vxw (ky-2), vyw (ky-2))"
+                  unfolding edge_pt_w_def by (by100 simp)
+                thus ?thesis using hmy_eq by (by100 simp)
+              qed
               \<comment> \<open>Step 3c: q\\_w(u\\_{mx}) = q\\_w(u\\_{my}) from hgeq.\<close>
               have hqw_eq: "q_w (vxw mx, vyw mx) = q_w (vxw my, vyw my)"
                 using hgeq hx_vtx_bwd hy_vtx_bwd hphi_kx hphi_ky by (by100 simp)
