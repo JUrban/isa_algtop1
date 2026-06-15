@@ -2231,14 +2231,7 @@ proof -
              (which lies on the boundary v\\_0->v\\_1) gives the same result.
              This is because on boundary edges shared between sectors, the affine maps agree.\<close>
           \<comment> \<open>For now, sorry the detailed sector-specific computation.\<close>
-          \<comment> \<open>The computation: phi\\_fn evaluates to the correct arc value.
-             phi\\_fn = (cxw,cyw) if p = v1, else affine map via LEAST sector.
-             For p = edge\\_pt\\_e(0,t): p \\<noteq> v\\_1, so else branch.
-             LEAST gives j\\_sel. For ANY valid j\\_sel, the barycentric computation
-             with dx = (1-t)*(vxe 0 - vxe 1), dy = (1-t)*(vye 0 - vye 1) gives
-             s = 0 (parallel to f direction) and t\\_par = 1-t (if v\\_0 is vertex j+3).
-             This works for j\\_sel = nw-1 since Suc(nw+1) mod ne = 0.\<close>
-          show ?thesis sorry
+          show ?thesis unfolding phi_fn_def using hp_ne_v1 hj_sel sorry
         qed
       qed
       \<comment> \<open>Key helper: phi on spur edge 1 gives the arc in reverse.\<close>
