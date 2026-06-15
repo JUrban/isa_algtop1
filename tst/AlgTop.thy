@@ -2021,7 +2021,75 @@ proof -
         qed
       next
         case x_bdy
-        show ?thesis sorry \<comment> \<open>x is on boundary: further case analysis on x's edge and y's type.\<close>
+        \<comment> \<open>x is on some boundary edge. Sub-case on y.\<close>
+        consider
+          (y_int) "\<forall>i<?ne. \<forall>t\<in>I_set. y \<noteq> edge_pt_e i t"
+          | (y_bdy) "\<exists>i<?ne. \<exists>t\<in>I_set. y = edge_pt_e i t"
+          by (by100 blast)
+        thus ?thesis
+        proof cases
+          case y_int
+          \<comment> \<open>y interior, x boundary: symmetric to interior-boundary case above.
+             phi(y) interior, phi(x) on edge -> C8\\_w forces phi(y)=phi(x) -> contradiction.\<close>
+          have hpy_int: "\<forall>j<?nw. \<forall>s\<in>I_set. phi y \<noteq> edge_pt_w j s"
+            using hphi_int_to_int hy y_int by (by100 blast)
+          \<comment> \<open>phi(x) is on some edge of P\\_w (since x is on boundary of P\\_e).\<close>
+          from x_bdy obtain ix tx where hix: "ix < ?ne" and htx: "tx \<in> I_set"
+              and hx_eq: "x = edge_pt_e ix tx" by (by100 blast)
+          have "\<exists>jx<?nw. \<exists>sx\<in>I_set. phi x = edge_pt_w jx sx"
+          proof (cases "ix < 2")
+            case True
+            have "phi x = (vxw 0, vyw 0)"
+            proof (cases "ix = 0")
+              case True
+              from hphi_spur[rule_format, OF htx] show ?thesis using hx_eq True by (by100 simp)
+            next
+              case False hence "ix = 1" using \<open>ix < 2\<close> by (by100 simp)
+              from hphi_spur[rule_format, OF htx] show ?thesis using hx_eq \<open>ix=1\<close> by (by100 simp)
+            qed
+            have hedge0: "edge_pt_w 0 0 = (vxw 0, vyw 0)" unfolding edge_pt_w_def by (by100 simp)
+            have h0_lt: "(0::nat) < ?nw" using hlen by (by100 linarith)
+            have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+            have "phi x = edge_pt_w 0 0" using \<open>phi x = (vxw 0, vyw 0)\<close> hedge0 by (by100 simp)
+            thus ?thesis using h0_lt h0_I by (by100 force)
+          next
+            case False hence "ix \<ge> 2" by (by100 simp)
+            hence hkx: "ix - 2 < ?nw" using hix hne_eq by (by100 linarith)
+            have hix_eq: "(ix - 2) + 2 = ix" using \<open>ix \<ge> 2\<close> by (by100 linarith)
+            have "phi (edge_pt_e ((ix-2)+2) tx) = edge_pt_w (ix-2) tx"
+              using hphi_nonspur[rule_format, OF hkx htx] by (by100 simp)
+            hence "phi (edge_pt_e ix tx) = edge_pt_w (ix-2) tx" using hix_eq by (by100 simp)
+            hence "phi x = edge_pt_w (ix-2) tx" using hx_eq by (by100 simp)
+            thus ?thesis using hkx htx by (by100 blast)
+          qed
+          then obtain jx sx where hjx: "jx < ?nw" and hsx: "sx \<in> I_set"
+              and hpx_edge: "phi x = edge_pt_w jx sx" by (by100 blast)
+          \<comment> \<open>C8\\_w: phi(y) interior + q\\_w(phi(y))=q\\_w(phi(x)) -> phi(y)=phi(x).\<close>
+          have hpy_int': "\<forall>j<?nw. \<forall>s\<in>I_set.
+              phi y \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),
+                        (1-s)*vyw j+s*vyw(Suc j mod ?nw))"
+            using hpy_int unfolding edge_pt_w_def by (by100 simp)
+          from hC8_w[rule_format, OF hpy] hpy_int'
+          have "\<forall>p'\<in>P_w. q_w (phi y) = q_w p' \<longrightarrow> phi y = p'" by (by100 blast)
+          hence "phi y = phi x" using hpx hgeq[symmetric] by (by100 blast)
+          \<comment> \<open>But phi(y) NOT on any edge, phi(x) IS on edge jx -> contradiction.\<close>
+          have "phi y \<noteq> edge_pt_w jx sx" using hpy_int hjx hsx by (by100 blast)
+          hence "phi y \<noteq> phi x" using hpx_edge by (by100 simp)
+          thus ?thesis using \<open>phi y = phi x\<close> by (by100 simp)
+        next
+          case y_bdy
+          \<comment> \<open>Both x and y on boundary of P\\_e.
+             Sub-case on which edges they're on.\<close>
+          from x_bdy obtain ix tx where hix: "ix < ?ne" and htx: "tx \<in> I_set"
+              and hx_eq: "x = edge_pt_e ix tx" by (by100 blast)
+          from y_bdy obtain iy ty where hiy: "iy < ?ne" and hty: "ty \<in> I_set"
+              and hy_eq: "y = edge_pt_e iy ty" by (by100 blast)
+          show ?thesis sorry \<comment> \<open>Both on boundary: case analysis on spur/non-spur edges.
+             - Both spur: q\\_e identifies via a-pair C7.
+             - Spur + non-spur edge interior: C12\\_w separates vertex from edge interior.
+             - Both non-spur: C9\\_w + label correspondence -> C7\\_e.
+             - Vertex cases: vertex chain correspondence.\<close>
+        qed
       qed
     qed
     show ?thesis
