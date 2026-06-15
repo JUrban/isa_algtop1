@@ -2243,21 +2243,40 @@ proof -
                     using hext_ix hext_iy by (by100 simp)
                   \<comment> \<open>Apply C7\\_e to get q\\_e(x) = q\\_e(y).\<close>
                   from hC7_e[rule_format, OF hix hiy hext_lbl htx]
+                  have hC7_raw: "q_e ((1-tx)*vxe ix+tx*vxe(Suc ix mod ?ne),
+                      (1-tx)*vye ix+tx*vye(Suc ix mod ?ne))
+                    = (if snd(?ext!ix) = snd(?ext!iy)
+                       then q_e ((1-tx)*vxe iy+tx*vxe(Suc iy mod ?ne),
+                                 (1-tx)*vye iy+tx*vye(Suc iy mod ?ne))
+                       else q_e (tx*vxe iy+(1-tx)*vxe(Suc iy mod ?ne),
+                                 tx*vye iy+(1-tx)*vye(Suc iy mod ?ne)))"
+                    using hC7_e[rule_format, OF hix hiy hext_lbl htx] by (by100 blast)
                   have hC7_inst: "q_e (edge_pt_e ix tx) =
                       (if snd(?ext!ix) = snd(?ext!iy)
                        then q_e (edge_pt_e iy tx)
-                       else q_e ((1-tx)*vxe iy+(tx)*vxe(Suc iy mod ?ne),
-                                 (1-tx)*vye iy+(tx)*vye(Suc iy mod ?ne)))"
-                    sorry \<comment> \<open>C7\\_e instantiation with edge\\_pt\\_e unfolding.\<close>
+                       else q_e (tx*vxe iy+(1-tx)*vxe(Suc iy mod ?ne),
+                                 tx*vye iy+(1-tx)*vye(Suc iy mod ?ne)))"
+                    using hC7_raw unfolding edge_pt_e_def by (by100 simp)
                   show ?thesis
                   proof (cases "snd(?ext!ix) = snd(?ext!iy)")
                     case True
                     hence "ty = tx" using hdir hext_dir by (by100 simp)
-                    thus ?thesis using hC7_inst True hx_eq hy_eq sorry
+                    hence "q_e (edge_pt_e ix tx) = q_e (edge_pt_e iy ty)"
+                      using hC7_inst True by (by100 simp)
+                    thus ?thesis using hx_eq hy_eq by (by100 simp)
                   next
                     case False
-                    hence "ty = 1 - tx" using hdir hext_dir by (by100 simp)
-                    thus ?thesis using hC7_inst False hx_eq hy_eq sorry
+                    hence hty_eq: "ty = 1 - tx" using hdir hext_dir by (by100 simp)
+                    \<comment> \<open>q\\_e(edge\\_e(ix,tx)) = q\\_e(tx*vxe iy + ...). And edge\\_e(iy, 1-tx) = (1-(1-tx))*... = tx*...\<close>
+                    have "q_e (edge_pt_e ix tx) = q_e (tx*vxe iy+(1-tx)*vxe(Suc iy mod ?ne),
+                        tx*vye iy+(1-tx)*vye(Suc iy mod ?ne))"
+                      using hC7_inst False by (by100 simp)
+                    moreover have "edge_pt_e iy (1-tx) = (tx*vxe iy+(1-tx)*vxe(Suc iy mod ?ne),
+                        tx*vye iy+(1-tx)*vye(Suc iy mod ?ne))"
+                      unfolding edge_pt_e_def by (by100 simp)
+                    ultimately have "q_e (edge_pt_e ix tx) = q_e (edge_pt_e iy (1-tx))" by (by100 simp)
+                    hence "q_e (edge_pt_e ix tx) = q_e (edge_pt_e iy ty)" using hty_eq by (by100 simp)
+                    thus ?thesis using hx_eq hy_eq by (by100 simp)
                   qed
                 qed
               qed
