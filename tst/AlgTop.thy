@@ -1554,7 +1554,34 @@ proof -
      Then: q\\_ef and p2 have the same fibres (by C7/C8/C9/C12 analysis).
      quotient\\_same\\_fibres\\_homeomorphic gives Y\\_ef ~ Y\\_wf.\<close>
   have hY_ef_wf_homeo: "\<exists>h. top1_homeomorphism_on Y_ef TY_ef Y_wf TY_wf h"
-    sorry \<comment> \<open>CORE: spur-collapse fibre matching. Uses C12 from both quotients.\<close>
+  proof -
+    \<comment> \<open>Construction: define p2: P\\_ef -> Y\\_wf that collapses the a-spur.
+       The extended scheme [a, a^{-1}] @ w has n+2 edges where edges 0,1 are the a-spur.
+       The base scheme w has n edges.
+       The map p2 collapses edges 0,1 of P\\_ef to vertex 0 of P\\_wf,
+       and maps edges 2,...,n+1 of P\\_ef to edges 0,...,n-1 of P\\_wf.\<close>
+    \<comment> \<open>Step A: p2 is a quotient map from P\\_ef to Y\\_wf.
+       p2 = q\\_wf o collapse where collapse: P\\_ef -> P\\_wf.
+       Since P\\_ef is compact, Y\\_wf is Hausdorff, and p2 is continuous surjection,
+       p2 is automatically a quotient map.\<close>
+    have hp2_quot: "\<exists>p2. top1_quotient_map_on P_ef
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_ef)
+        Y_wf TY_wf p2
+      \<and> (\<forall>x\<in>P_ef. \<forall>y\<in>P_ef. (q_ef x = q_ef y) \<longleftrightarrow> (p2 x = p2 y))"
+      sorry \<comment> \<open>Define spur-collapse composition p2 and verify fibre matching.
+         This is the geometric core: constructing the PL spur-collapse map
+         from the (n+2)-gon to the n-gon, composing with q\\_wf, and
+         checking the fibre equivalence using C7/C8/C9/C12.\<close>
+    \<comment> \<open>Step B: Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
+    from hp2_quot obtain p2 where
+      hp2: "top1_quotient_map_on P_ef
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_ef)
+        Y_wf TY_wf p2"
+      and hfibres: "\<forall>x\<in>P_ef. \<forall>y\<in>P_ef. (q_ef x = q_ef y) \<longleftrightarrow> (p2 x = p2 y)"
+      by (by100 blast)
+    from quotient_same_fibres_homeomorphic[OF hC2_ef hp2 hfibres]
+    show ?thesis .
+  qed
   \<comment> \<open>Step 3c: Bridge all quotients via uniqueness.\<close>
   from scheme_quotient_uniqueness[OF htopo_ext htopo_ef hY_ext hY_ef]
   obtain h_be where hbe: "top1_homeomorphism_on Y_ext TY_ext Y_ef TY_ef h_be"
