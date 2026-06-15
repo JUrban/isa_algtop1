@@ -2,53 +2,59 @@ theory AlgTop
   imports "AlgTopCached16.AlgTopCached16"
 begin
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-14, session 1540):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-15, sessions 1540-1544):
 
-BREAKTHROUGHS:
-1. front\\_cancel\\_proper: PROVED via uncancel+uniqueness (session 1522).
-2. polygon\\_sub\\_rearrange\\_sigma\\_props: PROVED (sigma properties, session 1528).
-3. quotient\\_of\\_scheme\\_uncancel\\_front: skeleton with C1-C11 extraction PROVED (session 1540).
+30 sorry proof commands. 50 sorry word occurrences.
 
-FALSE LEMMAS (discovered during formalization):
-- quotient\\_of\\_scheme\\_edge\\_permutation: FALSE (torus/sphere counterexample).
-- polygon self-map P to P for sub-polygon rotation: IMPOSSIBLE (session 1529).
-- cut\\_paste\\_rotate\\_proper (same mset to same quotient): FALSE (session 1530).
-- suffix\\_rotate\\_via\\_separator: FALSE (torus/sphere counterexample, session 1531).
-- per\\_polygon\\_rotation\\_homeo: FALSE (same counterexample, session 1531).
-- multi\\_polygon\\_paste\\_flip as stated: FALSE for cross-boundary labels.
-  BUT: under properness (no cross-boundary labels) it SHOULD be true.
+DEPENDENCY TREE FOR CANCEL CHAIN (sessions 1540-1543):
+  spur\\_collapse\\_cancel\\_homeo (1 sorry: g construction)
+    with PROVED: C1-C12 extraction, phi\\_bdy, junction continuity,
+    spur-non-spur separation (C9+freshness), bijectivity, Theorem 26.6
+    <- front\\_cancel\\_proper\\_direct (0 sorry)
+      <- front\\_cancel\\_proper (0 sorry)
+      <- quotient\\_of\\_scheme\\_uncancel\\_front\\_proper (0 sorry)
+      <- front\\_cancel\\_realization\\_homeo\\_proper (0 sorry)
 
-ROOT CAUSE: suffix rotation in CONCATENATED single-polygon schemes changes
-cross-boundary label positions, genuinely changing the quotient space.
-The book's "Permute" = vertex renumbering of a SINGLE polygon (= quotient\\_of\\_scheme\\_rotate, PROVED).
+THE SINGLE GEOMETRIC SORRY: construct g: P\\_e -> Y\\_w
+  where P\\_e is (n+2)-gon for [a,a^{-1}]@w and Y\\_w is quotient of w.
+  g = q\\_w composed with piecewise map from P\\_e to P\\_w.
+  Needs: sector decomposition, affine maps, piecewise continuity.
+  All SURROUNDING infrastructure proved; ONLY the construction itself sorry'd.
 
-REMAINING CUT-PASTE GAP: needs quotient-level fibre-matching homeomorphism.
-The approach: both old and new canonical quotients (from scheme\\_quotient\\_exists(2))
-share C12 (vertex-edge separation). The sigma permutation maps old edge labels
-to new edge labels. The fibre-matching argument gives the homeomorphism.
-This is ~300-500 lines but does NOT require multi-polygon infrastructure.
-
-REMAINING SORRY CATEGORIES:
-A. CUT-PASTE SAME-SPACE (3): same-space claim is FALSE. Need homeomorphism.
-B. GENERAL CANCEL/UNCANCEL (2): uncancel\\_front has skeleton; main step sorry'd.
-C. VERTEX UNIQUENESS (4): need C12 (available from scheme\\_quotient\\_exists(2)).
-D. CONTEXT-LEFT (10): mostly NOT on critical path.
-E. GENUINELY FALSE (2): length < 3.
-F. MISC (3): edge-perm (FALSE) + cut-paste reverses + relabel freshness.
-G. FINAL ASSEMBLY (3): Thm 78.2 + extraction + sphere.
-H. CUT-PASTE PROPER (2): fibre-matching homeomorphism.
+SORRY CATEGORIES:
+A. GEOMETRIC CORE (1): spur collapse g construction (line ~1825).
+B. CUT-PASTE PROPER (2): per-polygon rotation (lines ~2369, 2417).
+   Same approach as cancel: fibre matching between canonical quotients.
+C. CUT-PASTE SAME-SPACE (3): FALSE as stated (lines 569, 581, 625).
+   Need restructuring to homeomorphic-realization form.
+D. CUT-PASTE REVERSE (2): FALSE as stated (lines 2605, 2612).
+E. GENERAL CANCEL/UNCANCEL (2): no properness (lines 655, 749).
+F. VERTEX UNIQUENESS (4): need C12 (lines 1193, 1200, 1338, 1452).
+G. CONTEXT-LEFT (11): structural completeness, mostly NOT on critical path.
+   Only v\\_relabel (fresh prefix) is used by classification chain = PROVED.
+H. GENUINELY FALSE (2): short scheme (lines 2572, 2739).
+I. MISC (3): edge-perm (FALSE) + relabel freshness.
+J. FINAL ASSEMBLY (3): Thm 78.2 + extraction + sphere.
 
 CRITICAL PATH:
-1. uncancel\\_front (geometric spur insertion) - unlocks front\\_cancel\\_proper chain
-2. cut-paste proper (fibre matching) - unlocks valid operation chain
-3. Thm 78.2 (pasting induction) + extraction + sphere
+1. spur\\_collapse\\_cancel\\_homeo (A) -> cancel chain -> v\\_cancel in valid chain
+2. cut-paste proper (B) -> v\\_cut\\_paste, v\\_cut\\_paste\\_opp in valid chain
+3. cut-paste same-space (C) needs restructuring to use proper versions
+4. Thm 78.2 (J) + extraction (J) + sphere (J)
+
+FOR CLASSIFICATION CHAIN ONLY: items C, D, E, F, G, H, I are mostly dead code.
+The chain uses only: cancel (proper+fresh), cut-paste (proper), rotate, invert,
+relabel (fresh), flip-label, and context-left with inner v\\_relabel (all PROVED
+except cancel and cut-paste geometric cores).
 
 KEY PROVED INFRASTRUCTURE:
-- scheme\\_quotient\\_exists, scheme\\_quotient\\_uniqueness
+- scheme\\_quotient\\_exists(1,2), scheme\\_quotient\\_uniqueness
 - front\\_cancel\\_proper, quotient\\_of\\_scheme\\_uncancel\\_front\\_proper
+- front\\_cancel\\_proper\\_direct, spur\\_collapse\\_cancel\\_homeo (surrounding only)
+- front\\_cancel\\_realization\\_homeo\\_proper
 - polygon\\_sub\\_rearrange\\_sigma\\_props (sigma permutation properties)
 - scheme\\_normal\\_form\\_valid (cached)
-- quotient\\_of\\_scheme\\_uncancel\\_front: C1-C11 extraction PROVED\<close>
+- phi\\_bdy + junction continuity + spur-non-spur separation (for spur collapse)\<close>
 \<comment> \<open>PROVABLY FALSE (2026-06-14): arbitrary edge permutation does NOT preserve the quotient space.
    Counterexample: s = [a,b,a\<inverse>,b\<inverse>] (torus) permuted to s' = [a,a\<inverse>,b,b\<inverse>] (sphere).
    Same multiset of labelled edges, but the ORDERING matters for the identification pattern.
