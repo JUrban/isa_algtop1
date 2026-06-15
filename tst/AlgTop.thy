@@ -1826,11 +1826,97 @@ proof -
         qed
       qed
     qed
-    \<comment> \<open>The full construction of g: P\\_e -> Y\\_w.\<close>
+    \<comment> \<open>TOPOLOGICAL FACT: there exists a continuous surjection phi: P\\_e -> P\\_w
+       that maps:
+       - Non-spur edges of P\\_e to corresponding edges of P\\_w (linearly)
+       - Spur edges of P\\_e to vertex u\\_0 of P\\_w
+       - Interior of P\\_e to P\\_w (surjectively)
+       phi is NOT required to be injective (the spur cone collapses).
+       The function g = q\\_w o phi: P\\_e -> Y\\_w then has the right fibres.\<close>
+    obtain phi :: "real \<times> real \<Rightarrow> real \<times> real" where
+        hphi_range: "\<forall>p \<in> P_e. phi p \<in> P_w"
+      and hphi_cont: "top1_continuous_map_on P_e
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
+          P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi"
+      and hphi_surj: "phi ` P_e = P_w"
+      and hphi_spur: "\<forall>t\<in>I_set. phi (edge_pt_e 0 t) = (vxw 0, vyw 0)
+          \<and> phi (edge_pt_e 1 t) = (vxw 0, vyw 0)"
+      and hphi_nonspur: "\<forall>k<?nw. \<forall>t\<in>I_set.
+          phi (edge_pt_e (k+2) t) = edge_pt_w k t"
+      and hphi_int_inj: "\<forall>p\<in>P_e. \<forall>p'\<in>P_e.
+          (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
+          (\<forall>i<?ne. \<forall>t\<in>I_set. p' \<noteq> edge_pt_e i t) \<longrightarrow>
+          phi p = phi p' \<longrightarrow> p = p'"
+      sorry \<comment> \<open>TOPOLOGICAL FACT: continuous surjection from (n+2)-gon to n-gon
+         that collapses spur edges to vertex u\\_0, maps non-spur edges linearly to
+         corresponding edges, and is injective on the polygon interiors.
+         This is a PL map defined piecewise on cone sectors from the centroid.
+         The spur sectors map to thin wedges near u\\_0, the non-spur sectors
+         map affinely to corresponding sectors of P\\_w.\<close>
+    \<comment> \<open>Define g = q\\_w o phi: P\\_e -> Y\\_w.\<close>
+    let ?g = "\<lambda>p. q_w (phi p)"
+    \<comment> \<open>Property 1: range. q\\_w maps P\\_w to Y\\_w.\<close>
+    have hg_range: "\<forall>p \<in> P_e. ?g p \<in> Y_w"
+    proof (intro ballI)
+      fix p assume "p \<in> P_e"
+      have "phi p \<in> P_w" using hphi_range \<open>p \<in> P_e\<close> by (by100 blast)
+      have "q_w (phi p) \<in> Y_w"
+        using hC2_w \<open>phi p \<in> P_w\<close>
+        unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
+      thus "?g p \<in> Y_w" by (by100 simp)
+    qed
+    \<comment> \<open>Property 2: continuity. Composition of continuous maps.\<close>
+    have hg_cont: "top1_continuous_map_on P_e
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
+        Y_w TY_w ?g"
+    proof -
+      \<comment> \<open>q\\_w: P\\_w -> Y\\_w is continuous (from quotient map).\<close>
+      have hqw_cont: "top1_continuous_map_on P_w
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w)
+          Y_w TY_w q_w"
+        using hC2_w unfolding top1_quotient_map_on_def by (by100 blast)
+      \<comment> \<open>g = q\\_w o phi is composition of continuous phi and continuous q\\_w.\<close>
+      have "top1_continuous_map_on P_e
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
+          Y_w TY_w (q_w \<circ> phi)"
+        by (rule top1_continuous_map_on_comp[OF hphi_cont hqw_cont])
+      thus ?thesis unfolding comp_def .
+    qed
+    \<comment> \<open>Property 3: surjectivity. phi surjective + q\\_w surjective.\<close>
+    have hg_surj: "?g ` P_e = Y_w"
+    proof -
+      have hq_surj: "q_w ` P_w = Y_w"
+        using hC2_w unfolding top1_quotient_map_on_def top1_continuous_map_on_def by (by100 blast)
+      have "?g ` P_e = q_w ` (phi ` P_e)" by (by100 auto)
+      also have "phi ` P_e = P_w" using hphi_surj .
+      also have "q_w ` P_w = Y_w" using hq_surj .
+      finally show ?thesis .
+    qed
+    \<comment> \<open>Property 4: forward fibres. q\\_e(x) = q\\_e(y) implies g(x) = g(y).
+       Cases:
+       - Both interior: q\\_e injective (C8) -> x=y -> g(x)=g(y). CHECK.
+       - Both spur: phi maps spur to u\\_0, so g constant on spur. CHECK.
+       - Matched non-spur edges: C7 of q\\_e at (i+2,j+2) corresponds to
+         C7 of q\\_w at (i,j) via label correspondence -> g values match. CHECK.
+       - Spur to vertex v\\_2: q\\_e(v\\_0)=q\\_e(v\\_2), phi(v\\_0)=u\\_0, phi(v\\_2)=u\\_0. CHECK.
+       - Cross-type: impossible by C8/C12.\<close>
+    have hg_fwd: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_e x = q_e y \<longrightarrow> ?g x = ?g y"
+      sorry
+    \<comment> \<open>Property 5: backward fibres. g(x) = g(y) implies q\\_e(x) = q\\_e(y).
+       Cases:
+       - Both interior: q\\_w injective (C8\\_w) + phi injective on interior -> x=y. CHECK.
+       - Both spur: q\\_e identifies all spur points. CHECK.
+       - Matched non-spur edges: C9\\_w -> label match -> C7\\_e gives identification. CHECK.
+       - One spur, one non-spur edge: g(spur)=q\\_w(u\\_0)=vertex, g(edge)=q\\_w(edge\\_interior).
+         C12\\_w: vertex != edge\\_interior -> contradiction. CHECK.
+       - One spur, one interior: g(spur)=q\\_w(u\\_0)=boundary image,
+         g(interior)=q\\_w(interior)=interior image. Boundary != interior. CHECK.
+       - Edge to interior: similar to above.\<close>
+    have hg_bwd: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. ?g x = ?g y \<longrightarrow> q_e x = q_e y"
+      sorry
     show ?thesis
-      sorry \<comment> \<open>CORE: construct g from phi\\_bdy + sector extension + q\\_w.
-         PROVED ingredients: junction continuity, spur-non-spur separation.
-         Remaining: define sector extension, show continuity, surjectivity, fibre matching.\<close>
+      apply (rule exI[of _ ?g])
+      using hg_range hg_cont hg_surj hg_fwd hg_bwd by (by100 blast)
   qed
   then obtain g where hg_range: "\<forall>p \<in> P_e. g p \<in> Y_w"
     and hg_cont: "top1_continuous_map_on P_e
