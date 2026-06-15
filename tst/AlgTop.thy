@@ -2309,9 +2309,18 @@ proof -
                each C7 step in ext for non-spur edges (i,j >= 2) corresponds to a C7 step
                in w at (i-2, j-2). Spur C7 step (0,1) gives phi(v\\_0)=phi(v\\_2)=u\\_0.
                Chain doesn't pass through spur edges (freshness of a).\<close>
-            show ?thesis sorry \<comment> \<open>Vertex-vertex forward: vtgt chain transfer.
-               kx, ky are specific vertices. phi maps them to P\\_w vertices/arc.
-               C7 chain in ext transfers to C7 chain in w (shifted by 2).\<close>
+            \<comment> \<open>Case: kx = ky -> trivial.\<close>
+            show ?thesis
+            proof (cases "kx = ky")
+              case True thus ?thesis using hx_vtx hy_vtx by (by100 simp)
+            next
+              case False note hkx_ne_ky = this
+              \<comment> \<open>Distinct vertices. phi maps to specific P\\_w points.
+                 For kx in {0,2}: phi -> u\\_0. For kx >= 3: phi -> u\\_{kx-2}.
+                 The q\\_e identification transfers to q\\_w via C7 chain correspondence.
+                 Formal chain transfer: sorry (needs induction on rtrancl).\<close>
+              show ?thesis sorry \<comment> \<open>Distinct-vertex forward. Vtgt chain transfer.\<close>
+            qed
           qed
         qed
       qed
