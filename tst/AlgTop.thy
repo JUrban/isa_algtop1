@@ -1974,7 +1974,50 @@ proof -
              Interior points are fixed by q\\_w (identity branch).
              Boundary points map to boundary images (vertices or canonical edges).
              These are disjoint sets.\<close>
-          show ?thesis sorry \<comment> \<open>Interior-boundary separation for q\\_w.\<close>
+          \<comment> \<open>phi(y) is on some edge of P\\_w (since y is on boundary of P\\_e).\<close>
+          from y_bdy obtain i t where hi: "i < ?ne" and ht: "t \<in> I_set"
+              and hy_eq: "y = edge_pt_e i t" by (by100 blast)
+          have "\<exists>j<?nw. \<exists>s\<in>I_set. phi y = edge_pt_w j s"
+          proof (cases "i < 2")
+            case True
+            \<comment> \<open>Spur: phi(y) = u\\_0 = edge\\_pt\\_w(0, 0).\<close>
+            have "phi y = (vxw 0, vyw 0)"
+            proof (cases "i = 0")
+              case True
+              from hphi_spur[rule_format, OF ht] show ?thesis using hy_eq True by (by100 simp)
+            next
+              case False hence "i = 1" using \<open>i < 2\<close> by (by100 simp)
+              from hphi_spur[rule_format, OF ht] show ?thesis using hy_eq \<open>i=1\<close> by (by100 simp)
+            qed
+            moreover have hedge0: "edge_pt_w 0 0 = (vxw 0, vyw 0)" unfolding edge_pt_w_def by (by100 simp)
+            moreover have h0_lt: "(0::nat) < ?nw" using hlen by (by100 linarith)
+            moreover have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+            ultimately have "phi y = edge_pt_w 0 0" by (by100 simp)
+            thus ?thesis using h0_lt h0_I by (by100 force)
+          next
+            case False hence "i \<ge> 2" by (by100 simp)
+            hence hk: "i - 2 < ?nw" using hi hne_eq by (by100 linarith)
+            have hi_eq: "(i - 2) + 2 = i" using \<open>i \<ge> 2\<close> by (by100 linarith)
+            have "phi (edge_pt_e ((i-2)+2) t) = edge_pt_w (i-2) t"
+              using hphi_nonspur[rule_format, OF hk ht] by (by100 simp)
+            hence "phi (edge_pt_e i t) = edge_pt_w (i-2) t" using hi_eq by (by100 simp)
+            hence "phi y = edge_pt_w (i-2) t" using hy_eq by (by100 simp)
+            thus ?thesis using hk ht by (by100 blast)
+          qed
+          then obtain j s where hj: "j < ?nw" and hs: "s \<in> I_set"
+              and hpy_edge: "phi y = edge_pt_w j s" by (by100 blast)
+          \<comment> \<open>C8\\_w: phi(x) interior and q\\_w(phi(x))=q\\_w(phi(y)) implies phi(x)=phi(y).\<close>
+          have hpx_int': "\<forall>j<?nw. \<forall>s\<in>I_set.
+              phi x \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),
+                        (1-s)*vyw j+s*vyw(Suc j mod ?nw))"
+            using hpx_int unfolding edge_pt_w_def by (by100 simp)
+          from hC8_w[rule_format, OF hpx] hpx_int'
+          have "\<forall>p'\<in>P_w. q_w (phi x) = q_w p' \<longrightarrow> phi x = p'" by (by100 blast)
+          hence "phi x = phi y" using hpy hgeq by (by100 blast)
+          \<comment> \<open>But phi(x) is NOT on any edge, while phi(y) IS on edge j at param s. Contradiction.\<close>
+          have "phi x \<noteq> edge_pt_w j s" using hpx_int hj hs by (by100 blast)
+          hence "phi x \<noteq> phi y" using hpy_edge by (by100 simp)
+          thus ?thesis using \<open>phi x = phi y\<close> by (by100 simp)
         qed
       next
         case x_bdy
