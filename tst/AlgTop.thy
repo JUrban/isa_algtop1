@@ -1928,7 +1928,59 @@ proof -
          g(interior)=q\\_w(interior)=interior image. Boundary != interior. CHECK.
        - Edge to interior: similar to above.\<close>
     have hg_bwd: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. ?g x = ?g y \<longrightarrow> q_e x = q_e y"
-      sorry
+    proof (intro ballI impI)
+      fix x y assume hx: "x \<in> P_e" and hy: "y \<in> P_e" and hgeq: "q_w (phi x) = q_w (phi y)"
+      \<comment> \<open>Key fact: phi(x), phi(y) are in P\\_w.\<close>
+      have hpx: "phi x \<in> P_w" using hphi_range hx by (by100 blast)
+      have hpy: "phi y \<in> P_w" using hphi_range hy by (by100 blast)
+      \<comment> \<open>Case analysis: is x on the boundary or interior of P\\_e?\<close>
+      consider
+        (x_int) "\<forall>i<?ne. \<forall>t\<in>I_set. x \<noteq> edge_pt_e i t"
+        | (x_bdy) "\<exists>i<?ne. \<exists>t\<in>I_set. x = edge_pt_e i t"
+        by (by100 blast)
+      thus "q_e x = q_e y"
+      proof cases
+        case x_int
+        \<comment> \<open>x is interior. phi(x) is interior to P\\_w (by hphi\\_int\\_to\\_int).\<close>
+        have hpx_int: "\<forall>j<?nw. \<forall>s\<in>I_set. phi x \<noteq> edge_pt_w j s"
+          using hphi_int_to_int hx x_int by (by100 blast)
+        \<comment> \<open>Sub-case: is y interior or boundary?\<close>
+        consider
+          (y_int) "\<forall>i<?ne. \<forall>t\<in>I_set. y \<noteq> edge_pt_e i t"
+          | (y_bdy) "\<exists>i<?ne. \<exists>t\<in>I_set. y = edge_pt_e i t"
+          by (by100 blast)
+        thus ?thesis
+        proof cases
+          case y_int
+          \<comment> \<open>Both interior: phi injectivity gives x = y.\<close>
+          have hpy_int: "\<forall>j<?nw. \<forall>s\<in>I_set. phi y \<noteq> edge_pt_w j s"
+            using hphi_int_to_int hy y_int by (by100 blast)
+          \<comment> \<open>q\\_w injective on interior: phi(x) = phi(y).\<close>
+          have hpx_int': "\<forall>j<?nw. \<forall>s\<in>I_set.
+              phi x \<noteq> ((1-s)*vxw j+s*vxw(Suc j mod ?nw),
+                        (1-s)*vyw j+s*vyw(Suc j mod ?nw))"
+            using hpx_int unfolding edge_pt_w_def by (by100 simp)
+          from hC8_w[rule_format, OF hpx] hpx_int'
+          have "\<forall>p'\<in>P_w. q_w (phi x) = q_w p' \<longrightarrow> phi x = p'" by (by100 blast)
+          hence "phi x = phi y" using hpy hgeq by (by100 blast)
+          \<comment> \<open>phi injective on interior: x = y.\<close>
+          hence "x = y"
+            using hphi_int_inj hx hy x_int y_int by (by100 blast)
+          thus ?thesis by (by100 simp)
+        next
+          case y_bdy
+          \<comment> \<open>x interior, y boundary: phi(x) interior, phi(y) boundary.
+             q\\_w(interior) != q\\_w(boundary) for proper polygon quotients.
+             Interior points are fixed by q\\_w (identity branch).
+             Boundary points map to boundary images (vertices or canonical edges).
+             These are disjoint sets.\<close>
+          show ?thesis sorry \<comment> \<open>Interior-boundary separation for q\\_w.\<close>
+        qed
+      next
+        case x_bdy
+        show ?thesis sorry \<comment> \<open>x is on boundary: further case analysis on x's edge and y's type.\<close>
+      qed
+    qed
     show ?thesis
       apply (rule exI[of _ ?g])
       using hg_range hg_cont hg_surj hg_fwd hg_bwd by (by100 blast)
