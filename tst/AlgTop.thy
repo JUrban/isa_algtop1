@@ -2186,9 +2186,92 @@ proof -
                w-vertices also have vtgt\\_w(k') = vtgt\\_w(l').
                This requires the vtgt chain correspondence between ext and w schemes.
                For now: sorry pending vtgt chain transfer formalization.\<close>
-            show ?thesis sorry \<comment> \<open>Forward vertex case: vtgt chain transfer.
-               Needs: express x,y as specific P\\_e vertices, map through phi to P\\_w vertices,
-               use vtgt chain correspondence to show q\\_w identification.\<close>
+            \<comment> \<open>At least one of tx,ty is 0 or 1. First: show the other must also be 0 or 1
+               (i.e., both are vertices). If one is vertex and one is edge-interior,
+               C12\\_e gives a contradiction with q\\_e(x) = q\\_e(y).\<close>
+            have hboth_vtx: "(tx = 0 \<or> tx = 1) \<and> (ty = 0 \<or> ty = 1)"
+            proof -
+              from False have "\<not>(0 < tx \<and> tx < 1) \<or> \<not>(0 < ty \<and> ty < 1)" by (by100 blast)
+              thus ?thesis
+              proof
+                assume hnotx: "\<not>(0 < tx \<and> tx < 1)"
+                hence htx_vtx: "tx = 0 \<or> tx = 1" using htx unfolding top1_unit_interval_def by (by100 auto)
+                show ?thesis
+                proof (cases "0 < ty \<and> ty < 1")
+                  case False
+                  hence "ty = 0 \<or> ty = 1" using hty unfolding top1_unit_interval_def by (by100 auto)
+                  thus ?thesis using htx_vtx by (by100 blast)
+                next
+                  case True
+                  hence hty_int: "ty \<in> {0<..<(1::real)}" by (by100 simp)
+                  \<comment> \<open>tx is vertex, ty is edge-interior. C12\\_e: contradiction.\<close>
+                  have hx_vtx: "\<exists>kx<?ne. x = (vxe kx, vye kx)"
+                  proof -
+                    from htx_vtx show ?thesis
+                    proof
+                      assume "tx = 0"
+                      hence "x = (vxe ix, vye ix)" using hx_eq unfolding edge_pt_e_def by (by100 simp)
+                      thus ?thesis using hix by (by100 blast)
+                    next
+                      assume "tx = 1"
+                      hence "x = (vxe (Suc ix mod ?ne), vye (Suc ix mod ?ne))"
+                        using hx_eq unfolding edge_pt_e_def by (by100 simp)
+                      moreover have "Suc ix mod ?ne < ?ne" using hlen hne_eq by (by100 simp)
+                      ultimately show ?thesis by (by100 blast)
+                    qed
+                  qed
+                  then obtain kx where hkx: "kx < ?ne" and hx_vtx_eq: "x = (vxe kx, vye kx)"
+                    by (by100 blast)
+                  \<comment> \<open>C12\\_e: q\\_e(vertex kx) != q\\_e(edge-interior (iy, ty)).\<close>
+                  from hC12_e[rule_format, OF hkx hiy hty_int]
+                  have "q_e (vxe kx, vye kx) \<noteq> q_e ((1-ty)*vxe iy+ty*vxe(Suc iy mod ?ne),
+                      (1-ty)*vye iy+ty*vye(Suc iy mod ?ne))" .
+                  hence "q_e x \<noteq> q_e y" using hx_vtx_eq hy_eq unfolding edge_pt_e_def by (by100 simp)
+                  hence False using heq by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                qed
+              next
+                assume hnoty: "\<not>(0 < ty \<and> ty < 1)"
+                hence hty_vtx: "ty = 0 \<or> ty = 1" using hty unfolding top1_unit_interval_def by (by100 auto)
+                show ?thesis
+                proof (cases "0 < tx \<and> tx < 1")
+                  case False
+                  hence "tx = 0 \<or> tx = 1" using htx unfolding top1_unit_interval_def by (by100 auto)
+                  thus ?thesis using hty_vtx by (by100 blast)
+                next
+                  case True
+                  hence htx_int: "tx \<in> {0<..<(1::real)}" by (by100 simp)
+                  \<comment> \<open>ty is vertex, tx is edge-interior. C12\\_e: symmetric contradiction.\<close>
+                  have hy_vtx: "\<exists>ky<?ne. y = (vxe ky, vye ky)"
+                  proof -
+                    from hty_vtx show ?thesis
+                    proof
+                      assume "ty = 0"
+                      hence "y = (vxe iy, vye iy)" using hy_eq unfolding edge_pt_e_def by (by100 simp)
+                      thus ?thesis using hiy by (by100 blast)
+                    next
+                      assume "ty = 1"
+                      hence "y = (vxe (Suc iy mod ?ne), vye (Suc iy mod ?ne))"
+                        using hy_eq unfolding edge_pt_e_def by (by100 simp)
+                      moreover have "Suc iy mod ?ne < ?ne" using hlen hne_eq by (by100 simp)
+                      ultimately show ?thesis by (by100 blast)
+                    qed
+                  qed
+                  then obtain ky where hky: "ky < ?ne" and hy_vtx_eq: "y = (vxe ky, vye ky)"
+                    by (by100 blast)
+                  from hC12_e[rule_format, OF hky hix htx_int]
+                  have "q_e (vxe ky, vye ky) \<noteq> q_e ((1-tx)*vxe ix+tx*vxe(Suc ix mod ?ne),
+                      (1-tx)*vye ix+tx*vye(Suc ix mod ?ne))" .
+                  hence "q_e y \<noteq> q_e x" using hy_vtx_eq hx_eq unfolding edge_pt_e_def by (by100 simp)
+                  hence False using heq by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                qed
+              qed
+            qed
+            \<comment> \<open>Both are at vertices. The vtgt chain transfer gives the result.\<close>
+            show ?thesis sorry \<comment> \<open>Both-vertex forward: vtgt chain transfer.
+               Both tx,ty in {0,1}. Express x,y as specific vertices,
+               map through phi, use C7 chain correspondence.\<close>
           qed
         qed
       qed
