@@ -1641,6 +1641,15 @@ proof -
                                             (1-t)*vye i+t*vye(Suc i mod ?ne))" for i t
   define edge_pt_w where "edge_pt_w i t = ((1-t)*vxw i+t*vxw(Suc i mod ?nw),
                                             (1-t)*vyw i+t*vyw(Suc i mod ?nw))" for i t
+  \<comment> \<open>Label correspondence: ext[k+2] = w[k] for all k < nw.\<close>
+  have hlabel_corr: "\<forall>k<?nw. ?ext ! (k+2) = w ! k"
+  proof (intro allI impI)
+    fix k assume hk: "k < ?nw"
+    show "?ext ! (k+2) = w ! k" using hk by (by100 simp)
+  qed
+  have hspur0: "?ext ! 0 = a" by (by100 simp)
+  have hspur1: "?ext ! 1 = top1_inverse_edge a" by (by100 simp)
+  have hne_eq: "?ne = ?nw + 2" by (by100 simp)
   \<comment> \<open>g maps spur to q\\_w(u\\_0), non-spur edges to corresponding edges, interior by sectors.\<close>
   have "\<exists>g. (\<forall>p \<in> P_e. g p \<in> Y_w)
       \<and> top1_continuous_map_on P_e
