@@ -1568,6 +1568,13 @@ proof -
           p \<noteq> ((1-t)*vxw i+t*vxw(Suc i mod ?nw),
                 (1-t)*vyw i+t*vyw(Suc i mod ?nw)))
        \<longrightarrow> (\<forall>p'\<in>P_w. q_w p = q_w p' \<longrightarrow> p = p')"
+    and hC9_w: "\<forall>i<?nw. \<forall>j<?nw. \<forall>t\<in>{0<..<(1::real)}. \<forall>s'\<in>{0<..<(1::real)}.
+        q_w ((1-t)*vxw i+t*vxw(Suc i mod ?nw),
+            (1-t)*vyw i+t*vyw(Suc i mod ?nw))
+      = q_w ((1-s')*vxw j+s'*vxw(Suc j mod ?nw),
+            (1-s')*vyw j+s'*vyw(Suc j mod ?nw))
+      \<longrightarrow> (i=j \<and> t=s') \<or> (fst(w!i)=fst(w!j) \<and>
+          (if snd(w!i)=snd(w!j) then s'=t else s'=1-t))"
     and hC12_w: "\<forall>k<?nw. \<forall>j<?nw. \<forall>s'\<in>{0<..<(1::real)}.
         q_w (vxw k, vyw k) \<noteq> q_w ((1-s')*vxw j + s'*vxw(Suc j mod ?nw),
                                (1-s')*vyw j + s'*vyw(Suc j mod ?nw))"
@@ -2084,11 +2091,183 @@ proof -
               and hx_eq: "x = edge_pt_e ix tx" by (by100 blast)
           from y_bdy obtain iy ty where hiy: "iy < ?ne" and hty: "ty \<in> I_set"
               and hy_eq: "y = edge_pt_e iy ty" by (by100 blast)
-          show ?thesis sorry \<comment> \<open>Both on boundary: case analysis on spur/non-spur edges.
-             - Both spur: q\\_e identifies via a-pair C7.
-             - Spur + non-spur edge interior: C12\\_w separates vertex from edge interior.
-             - Both non-spur: C9\\_w + label correspondence -> C7\\_e.
-             - Vertex cases: vertex chain correspondence.\<close>
+          \<comment> \<open>Sub-case: are both tx, ty in (0,1) (edge-interior), or at 0/1 (vertex)?\<close>
+          show ?thesis
+          proof (cases "0 < tx \<and> tx < 1 \<and> 0 < ty \<and> ty < 1")
+            case True
+            \<comment> \<open>Both edge-interior. Sub-case on spur/non-spur.\<close>
+            hence htx_int: "tx \<in> {0<..<(1::real)}" and hty_int: "ty \<in> {0<..<(1::real)}" by (by100 auto)+
+            show ?thesis
+            proof (cases "ix < 2")
+              case True note hix_spur = this
+              \<comment> \<open>x on spur edge-interior.\<close>
+              show ?thesis
+              proof (cases "iy < 2")
+                case True note hiy_spur = this
+                \<comment> \<open>Both spur edge-interior: q\\_e identifies via the a-pair (C7\\_e).\<close>
+                \<comment> \<open>ext[0] and ext[1] have the same label (a). C7\\_e at the appropriate params.\<close>
+                have "fst (?ext ! 0) = fst (?ext ! 1)"
+                  using hspur0 hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                \<comment> \<open>C7 for the a-pair gives q\\_e identification.\<close>
+                show ?thesis sorry \<comment> \<open>Both spur edge-interior: C7\\_e for a-pair.
+                   ix, iy in {0,1}, both edge-interior. C7\\_e identifies them.\<close>
+              next
+                case False note hiy_nonspur = this
+                hence "iy \<ge> 2" by (by100 simp)
+                \<comment> \<open>x spur, y non-spur edge-interior.
+                   g(x) = q\\_w(u\\_0) = vertex image of P\\_w.
+                   g(y) = q\\_w(edge\\_pt\\_w(iy-2, ty)) = edge-interior image.
+                   C12\\_w: vertex != edge-interior -> contradiction.\<close>
+                have hphi_x: "phi x = (vxw 0, vyw 0)"
+                proof (cases "ix = 0")
+                  case True
+                  from hphi_spur[rule_format, OF htx] show ?thesis using hx_eq True by (by100 simp)
+                next
+                  case False hence "ix = 1" using hix_spur by (by100 simp)
+                  from hphi_spur[rule_format, OF htx] show ?thesis using hx_eq \<open>ix=1\<close> by (by100 simp)
+                qed
+                have hiy_k: "iy - 2 < ?nw" using hiy hne_eq \<open>iy \<ge> 2\<close> by (by100 linarith)
+                have hiy_eq2: "(iy - 2) + 2 = iy" using \<open>iy \<ge> 2\<close> by (by100 linarith)
+                have hphi_y: "phi y = edge_pt_w (iy-2) ty"
+                proof -
+                  have "phi (edge_pt_e ((iy-2)+2) ty) = edge_pt_w (iy-2) ty"
+                    using hphi_nonspur[rule_format, OF hiy_k hty] by (by100 simp)
+                  thus ?thesis using hiy_eq2 hy_eq by (by100 simp)
+                qed
+                \<comment> \<open>g(x) = q\\_w(u\\_0), g(y) = q\\_w(edge\\_pt\\_w(iy-2, ty)).\<close>
+                \<comment> \<open>u\\_0 is vertex 0 of P\\_w. edge\\_pt\\_w(iy-2, ty) with ty in (0,1) is edge-interior.\<close>
+                \<comment> \<open>C12\\_w: q\\_w(vertex) != q\\_w(edge-interior) -> contradiction with hgeq.\<close>
+                have "q_w (vxw 0, vyw 0) \<noteq> q_w ((1-ty)*vxw(iy-2)+ty*vxw(Suc(iy-2) mod ?nw),
+                    (1-ty)*vyw(iy-2)+ty*vyw(Suc(iy-2) mod ?nw))"
+                proof -
+                  have "0 < ?nw" using hlen by (by100 linarith)
+                  thus ?thesis using hC12_w[rule_format] \<open>0 < ?nw\<close> hiy_k hty_int by (by100 blast)
+                qed
+                hence "q_w (phi x) \<noteq> q_w (phi y)"
+                  using hphi_x hphi_y unfolding edge_pt_w_def by (by100 simp)
+                thus ?thesis using hgeq by (by100 simp)
+              qed
+            next
+              case False note hix_nonspur = this
+              hence "ix \<ge> 2" by (by100 simp)
+              show ?thesis
+              proof (cases "iy < 2")
+                case True note hiy_spur = this
+                \<comment> \<open>y spur, x non-spur edge-interior: symmetric to above.\<close>
+                have hphi_y2: "phi y = (vxw 0, vyw 0)"
+                proof (cases "iy = 0")
+                  case True
+                  from hphi_spur[rule_format, OF hty] show ?thesis using hy_eq True by (by100 simp)
+                next
+                  case False hence "iy = 1" using hiy_spur by (by100 simp)
+                  from hphi_spur[rule_format, OF hty] show ?thesis using hy_eq \<open>iy=1\<close> by (by100 simp)
+                qed
+                have hix_k: "ix - 2 < ?nw" using hix hne_eq \<open>ix \<ge> 2\<close> by (by100 linarith)
+                have hix_eq2: "(ix - 2) + 2 = ix" using \<open>ix \<ge> 2\<close> by (by100 linarith)
+                have hphi_x2: "phi x = edge_pt_w (ix-2) tx"
+                proof -
+                  have "phi (edge_pt_e ((ix-2)+2) tx) = edge_pt_w (ix-2) tx"
+                    using hphi_nonspur[rule_format, OF hix_k htx] by (by100 simp)
+                  thus ?thesis using hix_eq2 hx_eq by (by100 simp)
+                qed
+                have "q_w (vxw 0, vyw 0) \<noteq> q_w ((1-tx)*vxw(ix-2)+tx*vxw(Suc(ix-2) mod ?nw),
+                    (1-tx)*vyw(ix-2)+tx*vyw(Suc(ix-2) mod ?nw))"
+                proof -
+                  have "0 < ?nw" using hlen by (by100 linarith)
+                  thus ?thesis using hC12_w[rule_format] \<open>0 < ?nw\<close> hix_k htx_int by (by100 blast)
+                qed
+                hence "q_w (phi y) \<noteq> q_w (phi x)"
+                  using hphi_y2 hphi_x2 unfolding edge_pt_w_def by (by100 simp)
+                thus ?thesis using hgeq by (by100 simp)
+              next
+                case False note hiy_nonspur = this
+                hence "iy \<ge> 2" by (by100 simp)
+                \<comment> \<open>Both non-spur edge-interior. C9\\_w + label correspondence -> C7\\_e.\<close>
+                have hix_k: "ix - 2 < ?nw" using hix hne_eq \<open>ix \<ge> 2\<close> by (by100 linarith)
+                have hiy_k: "iy - 2 < ?nw" using hiy hne_eq \<open>iy \<ge> 2\<close> by (by100 linarith)
+                have hix_eq2: "(ix - 2) + 2 = ix" using \<open>ix \<ge> 2\<close> by (by100 linarith)
+                have hiy_eq2: "(iy - 2) + 2 = iy" using \<open>iy \<ge> 2\<close> by (by100 linarith)
+                have hphi_x3: "phi x = edge_pt_w (ix-2) tx"
+                proof -
+                  have "phi (edge_pt_e ((ix-2)+2) tx) = edge_pt_w (ix-2) tx"
+                    using hphi_nonspur[rule_format, OF hix_k htx] by (by100 simp)
+                  thus ?thesis using hix_eq2 hx_eq by (by100 simp)
+                qed
+                have hphi_y3: "phi y = edge_pt_w (iy-2) ty"
+                proof -
+                  have "phi (edge_pt_e ((iy-2)+2) ty) = edge_pt_w (iy-2) ty"
+                    using hphi_nonspur[rule_format, OF hiy_k hty] by (by100 simp)
+                  thus ?thesis using hiy_eq2 hy_eq by (by100 simp)
+                qed
+                \<comment> \<open>C9\\_w: q\\_w(edge\\_w(ix-2, tx)) = q\\_w(edge\\_w(iy-2, ty)) with both in (0,1)
+                   implies: (ix-2 = iy-2 and tx = ty) or (label match + direction).\<close>
+                \<comment> \<open>Apply C9\\_w to the equality q\\_w(phi(x)) = q\\_w(phi(y)).\<close>
+                have hgeq_w: "q_w ((1-tx)*vxw(ix-2)+tx*vxw(Suc(ix-2) mod ?nw),
+                    (1-tx)*vyw(ix-2)+tx*vyw(Suc(ix-2) mod ?nw))
+                  = q_w ((1-ty)*vxw(iy-2)+ty*vxw(Suc(iy-2) mod ?nw),
+                    (1-ty)*vyw(iy-2)+ty*vyw(Suc(iy-2) mod ?nw))"
+                  using hgeq hphi_x3 hphi_y3 unfolding edge_pt_w_def by (by100 simp)
+                from hC9_w[rule_format, OF hix_k hiy_k htx_int hty_int] hgeq_w
+                have hC9_result: "(ix-2 = iy-2 \<and> tx = ty) \<or> (fst(w!(ix-2)) = fst(w!(iy-2)) \<and>
+                    (if snd(w!(ix-2))=snd(w!(iy-2)) then ty=tx else ty=1-tx))"
+                  by (by100 blast)
+                from hC9_result show ?thesis
+                proof (elim disjE conjE)
+                  assume hieq: "ix-2 = iy-2" and hteq: "tx = ty"
+                  have "ix = iy" using hieq \<open>ix \<ge> 2\<close> \<open>iy \<ge> 2\<close> by (by100 linarith)
+                  hence "x = y" using hx_eq hy_eq hteq by (by100 simp)
+                  thus ?thesis by (by100 simp)
+                next
+                  assume hlbl: "fst(w!(ix-2)) = fst(w!(iy-2))"
+                    and hdir: "if snd(w!(ix-2))=snd(w!(iy-2)) then ty=tx else ty=1-tx"
+                  \<comment> \<open>Transfer label match from w to ext via hlabel\\_corr.\<close>
+                  have hext_ix: "?ext!ix = w!(ix-2)"
+                  proof -
+                    from hlabel_corr[rule_format, OF hix_k]
+                    have h_: "([a, top1_inverse_edge a] @ w) ! ((ix-2)+2) = w!(ix-2)" .
+                    have "(ix-2)+2 = ix" using hix_eq2 .
+                    hence "([a, top1_inverse_edge a] @ w) ! ix = w!(ix-2)" using h_ by (by100 simp)
+                    thus ?thesis by (by100 simp)
+                  qed
+                  have hext_iy: "?ext!iy = w!(iy-2)"
+                  proof -
+                    from hlabel_corr[rule_format, OF hiy_k]
+                    have h_: "([a, top1_inverse_edge a] @ w) ! ((iy-2)+2) = w!(iy-2)" .
+                    have "(iy-2)+2 = iy" using hiy_eq2 .
+                    hence "([a, top1_inverse_edge a] @ w) ! iy = w!(iy-2)" using h_ by (by100 simp)
+                    thus ?thesis by (by100 simp)
+                  qed
+                  have hext_lbl: "fst(?ext!ix) = fst(?ext!iy)"
+                    using hext_ix hext_iy hlbl by (by100 simp)
+                  have hext_dir: "snd(?ext!ix) = snd(?ext!iy) \<longleftrightarrow> snd(w!(ix-2)) = snd(w!(iy-2))"
+                    using hext_ix hext_iy by (by100 simp)
+                  \<comment> \<open>Apply C7\\_e to get q\\_e(x) = q\\_e(y).\<close>
+                  from hC7_e[rule_format, OF hix hiy hext_lbl htx]
+                  have hC7_inst: "q_e (edge_pt_e ix tx) =
+                      (if snd(?ext!ix) = snd(?ext!iy)
+                       then q_e (edge_pt_e iy tx)
+                       else q_e ((1-tx)*vxe iy+(tx)*vxe(Suc iy mod ?ne),
+                                 (1-tx)*vye iy+(tx)*vye(Suc iy mod ?ne)))"
+                    sorry \<comment> \<open>C7\\_e instantiation with edge\\_pt\\_e unfolding.\<close>
+                  show ?thesis
+                  proof (cases "snd(?ext!ix) = snd(?ext!iy)")
+                    case True
+                    hence "ty = tx" using hdir hext_dir by (by100 simp)
+                    thus ?thesis using hC7_inst True hx_eq hy_eq sorry
+                  next
+                    case False
+                    hence "ty = 1 - tx" using hdir hext_dir by (by100 simp)
+                    thus ?thesis using hC7_inst False hx_eq hy_eq sorry
+                  qed
+                qed
+              qed
+            qed
+          next
+            case False
+            \<comment> \<open>At least one of tx, ty is 0 or 1 (vertex case).\<close>
+            show ?thesis sorry \<comment> \<open>Vertex case in backward matching.
+               Needs vtgt chain correspondence between ext and w schemes.\<close>
+          qed
         qed
       qed
     qed
