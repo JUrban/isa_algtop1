@@ -2591,15 +2591,125 @@ proof -
                       using hphi_va hw_dir hsame by (by100 simp)
                     thus ?thesis using hphi_vb by (by100 simp)
                   next
-                    \<comment> \<open>Cases 2-4: similar pattern with t=1 or opposite-dir endpoints.\<close>
-                    assume "snd(?ext!i) = snd(?ext!j)" "va = Suc i mod ?ne" "vb = Suc j mod ?ne"
-                    show ?thesis sorry \<comment> \<open>Same-dir end vertices. C7\\_w at t=1.\<close>
+                    \<comment> \<open>Case 2: same-dir, va=Suc i mod ne, vb=Suc j mod ne. Use C7\\_w at t=1.\<close>
+                    assume hsame: "snd(?ext!i) = snd(?ext!j)" and hva: "va = Suc i mod ?ne" and hvb: "vb = Suc j mod ?ne"
+                    \<comment> \<open>phi(v\\_{Suc i mod ne}) = edge\\_pt\\_w(i-2, 1) (end of edge i-2 in P\\_w).\<close>
+                    have hphi_va2: "phi (vxe va, vye va) = edge_pt_w (i-2) 1"
+                    proof -
+                      have h_eq: "(i-2)+2 = i" using hi2 by (by100 linarith)
+                      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF hik this]
+                      have "phi (edge_pt_e ((i-2)+2) 1) = edge_pt_w (i-2) 1" by (by100 simp)
+                      moreover have "edge_pt_e ((i-2)+2) 1 = edge_pt_e i 1"
+                        using h_eq by (by100 simp)
+                      moreover have "edge_pt_e i 1 = (vxe (Suc i mod ?ne), vye (Suc i mod ?ne))"
+                        unfolding edge_pt_e_def by (by100 simp)
+                      ultimately show ?thesis using hva by (by100 simp)
+                    qed
+                    have hphi_vb2: "phi (vxe vb, vye vb) = edge_pt_w (j-2) 1"
+                    proof -
+                      have h_eq: "(j-2)+2 = j" using hj2 by (by100 linarith)
+                      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF hjk this]
+                      have "phi (edge_pt_e ((j-2)+2) 1) = edge_pt_w (j-2) 1" by (by100 simp)
+                      moreover have "edge_pt_e ((j-2)+2) 1 = edge_pt_e j 1"
+                        using h_eq by (by100 simp)
+                      moreover have "edge_pt_e j 1 = (vxe (Suc j mod ?ne), vye (Suc j mod ?ne))"
+                        unfolding edge_pt_e_def by (by100 simp)
+                      ultimately show ?thesis using hvb by (by100 simp)
+                    qed
+                    have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                    from hC7_w[rule_format, OF hik hjk hw_lbl h1_I]
+                    have hC7_inst: "q_w ((1-1)*vxw(i-2)+1*vxw(Suc(i-2) mod ?nw),
+                        (1-1)*vyw(i-2)+1*vyw(Suc(i-2) mod ?nw)) =
+                      (if snd(w!(i-2))=snd(w!(j-2)) then q_w ((1-1)*vxw(j-2)+1*vxw(Suc(j-2) mod ?nw),
+                          (1-1)*vyw(j-2)+1*vyw(Suc(j-2) mod ?nw))
+                       else q_w (1*vxw(j-2)+(1-1)*vxw(Suc(j-2) mod ?nw),
+                          1*vyw(j-2)+(1-1)*vyw(Suc(j-2) mod ?nw)))" by (by100 blast)
+                    have "q_w (edge_pt_w (i-2) 1) = q_w (edge_pt_w (j-2) 1)"
+                      using hC7_inst hw_dir hsame unfolding edge_pt_w_def by (by100 simp)
+                    thus ?thesis using hphi_va2 hphi_vb2 by (by100 simp)
                   next
-                    assume "snd(?ext!i) \<noteq> snd(?ext!j)" "va = i" "vb = Suc j mod ?ne"
-                    show ?thesis sorry \<comment> \<open>Opp-dir: start of i, end of j. C7\\_w at t=0 opp.\<close>
+                    \<comment> \<open>Case 3: opp-dir, va=i, vb=Suc j mod ne. C7\\_w at t=0 gives opp-dir match.\<close>
+                    assume hopp: "snd(?ext!i) \<noteq> snd(?ext!j)" and hva: "va = i" and hvb: "vb = Suc j mod ?ne"
+                    have hphi_va3: "phi (vxe va, vye va) = edge_pt_w (i-2) 0"
+                    proof -
+                      have h_eq: "(i-2)+2 = i" using hi2 by (by100 linarith)
+                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF hik this]
+                      have "phi (edge_pt_e ((i-2)+2) 0) = edge_pt_w (i-2) 0" by (by100 simp)
+                      moreover have "edge_pt_e ((i-2)+2) 0 = (vxe i, vye i)"
+                        unfolding edge_pt_e_def using h_eq by (by100 simp)
+                      ultimately show ?thesis using hva by (by100 simp)
+                    qed
+                    have hphi_vb3: "phi (vxe vb, vye vb) = edge_pt_w (j-2) 1"
+                    proof -
+                      have h_eq: "(j-2)+2 = j" using hj2 by (by100 linarith)
+                      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF hjk this]
+                      have "phi (edge_pt_e ((j-2)+2) 1) = edge_pt_w (j-2) 1" by (by100 simp)
+                      moreover have "edge_pt_e ((j-2)+2) 1 = (vxe (Suc j mod ?ne), vye (Suc j mod ?ne))"
+                        unfolding edge_pt_e_def using h_eq by (by100 simp)
+                      ultimately show ?thesis using hvb by (by100 simp)
+                    qed
+                    have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                    from hC7_w[rule_format, OF hik hjk hw_lbl h0_I]
+                    have hC7_inst: "q_w ((1-0)*vxw(i-2)+0*vxw(Suc(i-2) mod ?nw),
+                        (1-0)*vyw(i-2)+0*vyw(Suc(i-2) mod ?nw)) =
+                      (if snd(w!(i-2))=snd(w!(j-2)) then q_w ((1-0)*vxw(j-2)+0*vxw(Suc(j-2) mod ?nw),
+                          (1-0)*vyw(j-2)+0*vyw(Suc(j-2) mod ?nw))
+                       else q_w (0*vxw(j-2)+(1-0)*vxw(Suc(j-2) mod ?nw),
+                          0*vyw(j-2)+(1-0)*vyw(Suc(j-2) mod ?nw)))" by (by100 blast)
+                    \<comment> \<open>Opposite direction: use else branch.\<close>
+                    have "\<not>(snd(w!(i-2)) = snd(w!(j-2)))" using hw_dir hopp by (by100 simp)
+                    hence "q_w (edge_pt_w (i-2) 0) = q_w (0*vxw(j-2)+(1-0)*vxw(Suc(j-2) mod ?nw),
+                        0*vyw(j-2)+(1-0)*vyw(Suc(j-2) mod ?nw))"
+                      using hC7_inst unfolding edge_pt_w_def by (by100 simp)
+                    moreover have "(0*vxw(j-2)+(1-0)*vxw(Suc(j-2) mod ?nw),
+                        0*vyw(j-2)+(1-0)*vyw(Suc(j-2) mod ?nw)) = edge_pt_w (j-2) 1"
+                      unfolding edge_pt_w_def by (by100 simp)
+                    ultimately have "q_w (edge_pt_w (i-2) 0) = q_w (edge_pt_w (j-2) 1)" by (by100 simp)
+                    thus ?thesis using hphi_va3 hphi_vb3 by (by100 simp)
                   next
-                    assume "snd(?ext!i) \<noteq> snd(?ext!j)" "va = Suc i mod ?ne" "vb = j"
-                    show ?thesis sorry \<comment> \<open>Opp-dir: end of i, start of j. C7\\_w at t=1 opp.\<close>
+                    \<comment> \<open>Case 4: opp-dir, va=Suc i mod ne, vb=j. C7\\_w at t=1 gives opp-dir match.\<close>
+                    assume hopp: "snd(?ext!i) \<noteq> snd(?ext!j)" and hva: "va = Suc i mod ?ne" and hvb: "vb = j"
+                    have hphi_va4: "phi (vxe va, vye va) = edge_pt_w (i-2) 1"
+                    proof -
+                      have h_eq: "(i-2)+2 = i" using hi2 by (by100 linarith)
+                      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF hik this]
+                      have "phi (edge_pt_e ((i-2)+2) 1) = edge_pt_w (i-2) 1" by (by100 simp)
+                      moreover have "edge_pt_e ((i-2)+2) 1 = (vxe (Suc i mod ?ne), vye (Suc i mod ?ne))"
+                        unfolding edge_pt_e_def using h_eq by (by100 simp)
+                      ultimately show ?thesis using hva by (by100 simp)
+                    qed
+                    have hphi_vb4: "phi (vxe vb, vye vb) = edge_pt_w (j-2) 0"
+                    proof -
+                      have h_eq: "(j-2)+2 = j" using hj2 by (by100 linarith)
+                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_nonspur[rule_format, OF hjk this]
+                      have "phi (edge_pt_e ((j-2)+2) 0) = edge_pt_w (j-2) 0" by (by100 simp)
+                      moreover have "edge_pt_e ((j-2)+2) 0 = (vxe j, vye j)"
+                        unfolding edge_pt_e_def using h_eq by (by100 simp)
+                      ultimately show ?thesis using hvb by (by100 simp)
+                    qed
+                    have h1_I: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                    from hC7_w[rule_format, OF hik hjk hw_lbl h1_I]
+                    have hC7_inst: "q_w ((1-1)*vxw(i-2)+1*vxw(Suc(i-2) mod ?nw),
+                        (1-1)*vyw(i-2)+1*vyw(Suc(i-2) mod ?nw)) =
+                      (if snd(w!(i-2))=snd(w!(j-2)) then q_w ((1-1)*vxw(j-2)+1*vxw(Suc(j-2) mod ?nw),
+                          (1-1)*vyw(j-2)+1*vyw(Suc(j-2) mod ?nw))
+                       else q_w (1*vxw(j-2)+(1-1)*vxw(Suc(j-2) mod ?nw),
+                          1*vyw(j-2)+(1-1)*vyw(Suc(j-2) mod ?nw)))" by (by100 blast)
+                    have "\<not>(snd(w!(i-2)) = snd(w!(j-2)))" using hw_dir hopp by (by100 simp)
+                    hence "q_w (edge_pt_w (i-2) 1) = q_w (1*vxw(j-2)+(1-1)*vxw(Suc(j-2) mod ?nw),
+                        1*vyw(j-2)+(1-1)*vyw(Suc(j-2) mod ?nw))"
+                      using hC7_inst unfolding edge_pt_w_def by (by100 simp)
+                    moreover have "(1*vxw(j-2)+(1-1)*vxw(Suc(j-2) mod ?nw),
+                        1*vyw(j-2)+(1-1)*vyw(Suc(j-2) mod ?nw)) = edge_pt_w (j-2) 0"
+                      unfolding edge_pt_w_def by (by100 simp)
+                    ultimately have "q_w (edge_pt_w (i-2) 1) = q_w (edge_pt_w (j-2) 0)" by (by100 simp)
+                    thus ?thesis using hphi_va4 hphi_vb4 by (by100 simp)
                   qed
                 qed
               qed
