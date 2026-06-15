@@ -1574,20 +1574,6 @@ proof (intro allI impI)
          = det(v\\_m-v\\_{m+1}, v\\_n-v\\_{m+1}) + det(v\\_m-v\\_{m+1}, v\\_{m+1}-v\\_1) + det(v\\_{m+1}-v\\_1, v\\_n-v\\_{m+1})
          = C11\\_at\\_edge\\_m\\_vtx\\_n (< 0) + det\\_pos(m) (> 0) + IH2\\_component (> 0)
          Not clearly positive either.\<close>
-      \<comment> \<open>Non-consecutive case. Strategy: use IH at (m, n-1) + show det(v\\_m-v\\_1, v\\_n-v\\_{n-1}) > 0.
-         The latter decomposes as: det(v\\_{n-1}-v\\_1, v\\_n-v\\_{n-1}) - det(v\\_{n-1}-v\\_m, v\\_n-v\\_{n-1}).
-         First term > 0 (hdet\\_pos). Second > 0 (C11 at edge n-1, vertex m).
-         Need: first > second, which is det(v\\_m-v\\_1, v\\_n-v\\_{n-1}) > 0.
-         This IS what we want. Circular for the step, but we can use IH differently.\<close>
-      \<comment> \<open>Alternative: use IH at (m+1, n) instead.\<close>
-      have hIH2: "(vx (m+1) - vx 1) * (vy n - vy 1) - (vy (m+1) - vy 1) * (vx n - vx 1) > 0"
-        using less.hyps[of "n-(m+1)"] less.prems hmn1 hne by (by100 simp)
-      \<comment> \<open>det(v\\_m-v\\_1, v\\_n-v\\_1) = det(v\\_{m+1}-v\\_1, v\\_n-v\\_1) + det(v\\_m-v\\_{m+1}, v\\_n-v\\_1).
-         First > 0 (IH2). For the second: we DON'T need it \\<ge> 0.
-         We just need the total to be > 0. But we can't prove that without knowing the sign.\<close>
-      \<comment> \<open>Try: det(v\\_m-v\\_1, v\\_n-v\\_1) = det(v\\_m-v\\_1, v\\_{n-1}-v\\_1) + det(v\\_m-v\\_1, v\\_n-v\\_{n-1}).
-         IH: first term > 0. For second: use ANOTHER IH.\<close>
-      \<comment> \<open>Actually, try C11 at edge 0 (v\\_0→v\\_1) to get information about the direction v\\_m-v\\_1.\<close>
       show ?thesis sorry
     qed
   qed
