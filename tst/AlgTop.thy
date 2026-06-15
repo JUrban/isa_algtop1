@@ -1678,14 +1678,57 @@ proof -
     qed
     have hu0_edgen': "edge_pt_w (?nw - 1) 1 = (vxw 0, vyw 0)"
       using hu0_edgen hnw_mod by (by100 simp)
-    \<comment> \<open>The piecewise affine sector construction + fibre matching.\<close>
+    \<comment> \<open>Define the boundary map phi: boundary(P\\_e) -> P\\_w.\<close>
+    define phi_bdy :: "nat \<Rightarrow> real \<Rightarrow> real \<times> real" where
+      "phi_bdy i t = (if i < 2 then (vxw 0, vyw 0)
+                      else edge_pt_w (i - 2) t)" for i t
+    \<comment> \<open>phi\\_bdy maps spur edges to u\\_0, non-spur edge k+2 to edge\\_w(k, t).\<close>
+    have hphi_spur: "\<forall>i<2. \<forall>t. phi_bdy i t = (vxw 0, vyw 0)"
+      unfolding phi_bdy_def by (by100 simp)
+    have hphi_nonspur: "\<forall>k<?nw. \<forall>t. phi_bdy (k+2) t = edge_pt_w k t"
+      unfolding phi_bdy_def by (by100 simp)
+    \<comment> \<open>Continuity at junction v\\_2 (edge 1 -> edge 2):
+       phi\\_bdy(1, 1) = (vxw 0, vyw 0) [spur edge 1 at t=1]
+       phi\\_bdy(2, 0) = edge\\_pt\\_w(0, 0) = (vxw 0, vyw 0) [non-spur edge 2 at t=0]
+       These agree. CHECK.\<close>
+    have hjunction_v2: "phi_bdy 1 1 = phi_bdy 2 0"
+    proof -
+      have "phi_bdy 1 1 = (vxw 0, vyw 0)" unfolding phi_bdy_def by (by100 simp)
+      also have "(vxw 0, vyw 0) = edge_pt_w 0 0" unfolding edge_pt_w_def by (by100 simp)
+      also have "edge_pt_w 0 0 = phi_bdy 2 0" unfolding phi_bdy_def by (by100 simp)
+      finally show ?thesis .
+    qed
+    \<comment> \<open>Continuity at junction v\\_0 (edge n+1 -> edge 0):
+       phi\\_bdy(?ne-1, 1) = edge\\_pt\\_w(?nw-1, 1) = (vxw 0, vyw 0) [last non-spur edge at t=1]
+       phi\\_bdy(0, 0) = (vxw 0, vyw 0) [spur edge 0 at t=0]
+       These agree. CHECK.\<close>
+    have hjunction_v0: "phi_bdy (?ne - 1) 1 = phi_bdy 0 0"
+    proof -
+      have hne_ge3: "?ne - 1 \<ge> 2" using hlen hne_eq by (by100 linarith)
+      have hne_sub: "(?ne - 1) - 2 = ?nw - 1"
+      proof -
+        have "?ne = ?nw + 2" using hne_eq .
+        hence "?ne - 1 = ?nw + 1" using hnw_pos by (by100 linarith)
+        hence "(?ne - 1) - 2 = ?nw - 1" using hnw_pos by (by100 linarith)
+        thus ?thesis .
+      qed
+      have hne_not_lt2: "\<not> (?ne - 1 < 2)" using hne_ge3 by (by100 linarith)
+      have h1: "phi_bdy (?ne - 1) 1 = edge_pt_w ((?ne - 1) - 2) 1"
+        unfolding phi_bdy_def using hne_not_lt2 by (by100 simp)
+      have h2: "phi_bdy (?ne - 1) 1 = edge_pt_w (?nw - 1) 1"
+        using h1 hne_sub by (by100 simp)
+      have h3: "phi_bdy 0 0 = (vxw 0, vyw 0)" unfolding phi_bdy_def by (by100 simp)
+      show ?thesis using h2 hu0_edgen' h3 by (by100 simp)
+    qed
+    \<comment> \<open>The full construction of g: P\\_e -> Y\\_w.
+       On boundary: g(edge\\_e(i,t)) = q\\_w(phi\\_bdy(i, t)).
+       On interior: g maps via piecewise affine sector extension + q\\_w.
+       For now: sorry the full construction. The junction continuity above
+       is the KEY ingredient for proving g continuous at the spur boundary.\<close>
     show ?thesis
-      sorry \<comment> \<open>CORE: construction of g with the 5 required properties.
-         The proof outline (steps 3-7 above) gives the mathematical argument.
-         Formalizing requires: sector decomposition, affine maps between triangles,
-         piecewise continuity, fibre matching using C7/C8/C9/C12.
-         Key continuity fact: at spur-non-spur junction, both sides approach
-         q\\_w(vxw 0, vyw 0) since u\\_0 = edge\\_pt\\_w(0, 0) = edge\\_pt\\_w(nw-1, 1).\<close>
+      sorry \<comment> \<open>CORE: construct g from phi\\_bdy + sector extension + q\\_w.
+         Junction continuity at v\\_0 and v\\_2 is PROVED above (hjunction\\_v0, hjunction\\_v2).
+         Remaining: define the sector extension, show continuity, surjectivity, fibre matching.\<close>
   qed
   then obtain g where hg_range: "\<forall>p \<in> P_e. g p \<in> Y_w"
     and hg_cont: "top1_continuous_map_on P_e
