@@ -1,0 +1,25 @@
+CHANGES0102 -- 2026-06-15, Sessions 1521-1522
+
+BREAKTHROUGH: front_cancel_proper via uncancel + uniqueness
+
+1. REPLACED the broken 6000-line tau-map spur collapse proof of front_cancel_proper
+   with a clean 30-line proof using EXISTING infrastructure:
+
+   scheme_quotient_exists(w) -> Y_w quotient of w
+   quotient_of_scheme_uncancel_proved -> Y_w also quotient of [a,a^-1]@w
+   scheme_quotient_uniqueness -> Y homeomorphic to Y_w
+   scheme_quotient_transfer_along_homeomorphism -> Y quotient of w
+
+   This completely avoids: tau map (FALSE h_tau_inj), multi-polygon quotients,
+   polygon sub-rearrangement, scar collapse homeomorphism.
+
+2. REMOVED ~6000 lines of tau-map infrastructure (definition, sector analysis,
+   range/surjectivity/continuity proofs, fibre matching, spur collapse map).
+
+3. REMOVED edge_merge_quotient_homeo (~100 lines, ~12 sorrys) - not needed.
+
+4. CLOSED hY_w_ext sorry using quotient_of_scheme_uncancel_proved.
+
+File: 9000 -> 2960 lines.
+Build: 57s -> 5-6s.
+Sorry count: ~30 standalone sorry tactic lines.
