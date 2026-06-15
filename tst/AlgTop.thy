@@ -3764,15 +3764,9 @@ lemma valid_equiv_preserves_quotient_homeo_proper:
   shows "\<exists>(Y :: 'a set) (TY :: 'a set set) (h :: 'a \<Rightarrow> 'a).
     top1_quotient_of_scheme_on Y TY t \<and>
     top1_homeomorphism_on X TX Y TY h"
-  sorry \<comment> \<open>Proper version of the valid equiv chain.
-     The proof would track properness through each operation step and use:
-     - front\\_cancel\\_proper (for cancel, depends on spur\\_collapse only)
-     - quotient\\_of\\_scheme\\_cut\\_paste\\_opp\\_proper (for cut-paste-opp, geometric sorry)
-     - quotient\\_of\\_scheme\\_cut\\_paste\\_proper (for cut-paste, geometric sorry)
-     - quotient\\_of\\_scheme\\_rotate, invert, relabel, flip (all PROVED)
-     Each operation preserves properness (combinatorial fact, same label multiset).
-     The proof structure parallels valid\\_equiv\\_preserves\\_quotient\\_homeo
-     but adds properness tracking.\<close>
+  \<comment> \<open>Delegates to the general chain. The properness assumption is available
+     for future optimization to use proper-only cancel/cut-paste lemmas.\<close>
+  using valid_equiv_preserves_quotient_homeo[OF assms(1) assms(2)] .
 
 \<comment> \<open>Bridge moved to before valid\\_operation\\_preserves.\<close>
 
