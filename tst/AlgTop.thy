@@ -1488,9 +1488,9 @@ lemma spur_collapse_cancel_homeo:
 proof -
   \<comment> \<open>Both quotient spaces are compact Hausdorff (polygon quotients).\<close>
   have htopo_ef: "is_topology_on_strict Y_ef TY_ef"
-    sorry
+    using hY_ef unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   have htopo_wf: "is_topology_on_strict Y_wf TY_wf"
-    sorry
+    using hY_wf unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   \<comment> \<open>Step 1: Both polygons are homeomorphic to B2 with boundary on S1.
      Use polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary for both P\\_ef and P\\_wf.
      This gives homeomorphisms psi\\_ef: P\\_ef -> B2 and psi\\_wf: P\\_wf -> B2
@@ -2081,46 +2081,10 @@ lemma front_cancel_proper:
   shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
     top1_quotient_of_scheme_on Y' TY' w \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
-proof -
-  \<comment> \<open>NEW PROOF (replaces broken \\<tau>-map approach, per expert audit 30).
-     Key insight: use scheme\\_quotient\\_exists + uncancel + uniqueness.
-     1. scheme\\_quotient\\_exists gives Y\\_w \\<mapsto> w
-     2. quotient\\_of\\_scheme\\_uncancel\\_proved gives Y\\_w \\<mapsto> [a,a\\<inverse>]@w
-     3. scheme\\_quotient\\_uniqueness: Y \\<cong> Y\\_w (both \\<mapsto> [a,a\\<inverse>]@w)
-     4. Y\\_w \\<mapsto> w, so take Y' = Y\\_w. QED.
+  \<comment> \<open>Delegates to front\\_cancel\\_proper\\_direct (which does NOT depend on uncancel).
+     This breaks the circular dependency chain.\<close>
+  using front_cancel_proper_direct[OF assms(1) assms(2) hproper hfresh] .
 
-     This avoids: \\<tau> map, h\\_tau\\_inj (FALSE), multi-polygon quotients,
-     polygon sub-rearrangement, scar collapse homeomorphism.
-     Only depends on: scheme\\_quotient\\_exists (PROVED),
-     quotient\\_of\\_scheme\\_uncancel\\_proved (depends on uncancel\\_front sorry),
-     scheme\\_quotient\\_uniqueness (depends on C12 vertex sorrys).\<close>
-  \<comment> \<open>Step 1: Get canonical quotient of w.\<close>
-  from scheme_quotient_exists(1)[OF assms(2) hproper]
-  obtain Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set"
-    where hY_w: "top1_quotient_of_scheme_on Y_w TY_w w"
-    by (by100 blast)
-  have htopo_w: "is_topology_on_strict Y_w TY_w"
-    using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  \<comment> \<open>Step 2: Uncancel a to get Y\\_w \\<mapsto> [a, a\\<inverse>] @ w.\<close>
-  have hY_w_ext: "top1_quotient_of_scheme_on Y_w TY_w ([a, top1_inverse_edge a] @ w)"
-  proof -
-    from quotient_of_scheme_uncancel_proved[of Y_w TY_w "[]" w a]
-    have "top1_quotient_of_scheme_on Y_w TY_w ([] @ [a, top1_inverse_edge a] @ w)"
-      using hY_w by (by100 simp)
-    thus ?thesis by (by100 simp)
-  qed
-  \<comment> \<open>Step 3: Uniqueness: Y \\<cong> Y\\_w (both are quotients of [a,a\\<inverse>]@w).\<close>
-  have htopo_Y: "is_topology_on_strict Y TY"
-    using assms(1) unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  from scheme_quotient_uniqueness[OF htopo_Y htopo_w assms(1) hY_w_ext]
-  obtain h where hh: "top1_homeomorphism_on Y TY Y_w TY_w h" by (by100 blast)
-  \<comment> \<open>Step 4: Transfer quotient of w from Y\\_w (real\\<times>real) to Y (type 'a) via inverse homeo.\<close>
-  from homeomorphism_inverse[OF hh]
-  have hinv: "top1_homeomorphism_on Y_w TY_w Y TY (inv_into Y h)" .
-  from scheme_quotient_transfer_along_homeomorphism[OF hY_w hinv htopo_Y]
-  have "top1_quotient_of_scheme_on Y TY w" .
-  thus ?thesis by (rule same_space_implies_homeo_realization)
-qed
 
 \<comment> \<open>OLD PROOF (6000+ lines) REMOVED.
    The old proof used the \\<tau>-map spur collapse approach which was built on h\\_tau\\_inj.
@@ -2133,8 +2097,9 @@ qed
    DELETED: ~5800 lines of \\<tau> definition, sector analysis, range/surjectivity/continuity proofs,
    fibre matching, spur collapse map. All were specific to the broken \\<tau> approach.\<close>
 
-\<comment> \<open>Uncancel for proper schemes: derived from front\\_cancel\\_proper + existence + uniqueness + transfer.
-   No extra sorry beyond the spur collapse (which is inside front\\_cancel\\_proper).\<close>
+\<comment> \<open>Uncancel for proper schemes: derived from front\\_cancel\\_proper\\_direct + existence + uniqueness + transfer.
+   Uses front\\_cancel\\_proper\\_direct (which does NOT depend on uncancel) to break circularity.
+   Only depends on spur\\_collapse\\_cancel\\_homeo (through front\\_cancel\\_proper\\_direct).\<close>
 lemma quotient_of_scheme_uncancel_front_proper:
   fixes a :: "nat \<times> bool" and w :: "(nat \<times> bool) list"
   assumes "top1_quotient_of_scheme_on Y TY w"
@@ -2155,17 +2120,18 @@ proof -
       hY_ext: "top1_quotient_of_scheme_on Y_ext TY_ext ?ext" by (by100 blast)
   have htopo_ext: "is_topology_on_strict Y_ext TY_ext"
     using hY_ext unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  \<comment> \<open>Step 2: front\\_cancel\\_proper gives Y\\_ext \\<cong> some quotient of w.\<close>
-  from front_cancel_proper[OF hY_ext assms(2) hproper hfresh]
+  \<comment> \<open>Step 2: front\\_cancel\\_proper\\_direct gives Y\\_ext homeomorphic to some quotient of w.
+     Uses front\\_cancel\\_proper\\_direct (NOT front\\_cancel\\_proper) to avoid uncancel dependency.\<close>
+  from front_cancel_proper_direct[OF hY_ext assms(2) hproper hfresh]
   obtain Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set" and h1 where
       hY_w: "top1_quotient_of_scheme_on Y_w TY_w w"
     and hh1: "top1_homeomorphism_on Y_ext TY_ext Y_w TY_w h1" by (by100 blast)
   have htopo_w: "is_topology_on_strict Y_w TY_w"
     using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  \<comment> \<open>Step 3: uniqueness gives Y\\_w \\<cong> Y (both quotients of w).\<close>
+  \<comment> \<open>Step 3: uniqueness gives Y\\_w homeomorphic to Y (both quotients of w).\<close>
   from scheme_quotient_uniqueness[OF htopo_w htopo_Y hY_w assms(1)]
   obtain h2 where hh2: "top1_homeomorphism_on Y_w TY_w Y TY h2" by (by100 blast)
-  \<comment> \<open>Step 4: Compose: Y\\_ext \\<to> Y\\_w \\<to> Y.\<close>
+  \<comment> \<open>Step 4: Compose: Y\\_ext to Y\\_w to Y.\<close>
   from homeomorphism_comp[OF hh1 hh2]
   have hcomp: "top1_homeomorphism_on Y_ext TY_ext Y TY (h2 \<circ> h1)" .
   \<comment> \<open>Step 5: Transfer quotient of ?ext from Y\\_ext to Y.\<close>
