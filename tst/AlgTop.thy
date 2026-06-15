@@ -2179,7 +2179,16 @@ proof -
             qed
           next
             case False
-            show ?thesis sorry \<comment> \<open>Forward vertex case.\<close>
+            \<comment> \<open>At least one of tx, ty is at 0 or 1 (vertex endpoint).
+               The key idea: q\\_e at vertices is determined by vtgt\\_e.
+               phi maps vertices to corresponding w-vertices (spur -> u\\_0, non-spur -> u\\_k).
+               The vtgt chain transfers: if vtgt\\_e(k) = vtgt\\_e(l), then the corresponding
+               w-vertices also have vtgt\\_w(k') = vtgt\\_w(l').
+               This requires the vtgt chain correspondence between ext and w schemes.
+               For now: sorry pending vtgt chain transfer formalization.\<close>
+            show ?thesis sorry \<comment> \<open>Forward vertex case: vtgt chain transfer.
+               Needs: express x,y as specific P\\_e vertices, map through phi to P\\_w vertices,
+               use vtgt chain correspondence to show q\\_w identification.\<close>
           qed
         qed
       qed
@@ -2696,7 +2705,7 @@ proof -
     and hg_surj: "g ` P_e = Y_w"
     and hg_fwd: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. q_e x = q_e y \<longrightarrow> g x = g y"
     and hg_bwd: "\<forall>x\<in>P_e. \<forall>y\<in>P_e. g x = g y \<longrightarrow> q_e x = q_e y"
-    by (by5000 blast)
+    by (elim exE conjE) (rule that, assumption+)
   \<comment> \<open>Step C: Factor g through q\\_e to get f: Y\\_e -> Y\\_w (Theorem 22.2).\<close>
   from Theorem_22_2[OF hC2_e hg_range hg_fwd]
   obtain f where hf_range: "\<forall>y\<in>Y_e. f y \<in> Y_w"
