@@ -3477,8 +3477,105 @@ proof -
                  Need: v\\_kx = v\\_{mx+2} (or at least q\\_e-identified).\<close>
               \<comment> \<open>From mx def: if kx=0 then mx=0, mx+2=2. v\\_0 ~ v\\_2 (a-pair). CHECK.
                  If kx>=2 (and kx!=1): mx=kx-2, mx+2=kx. v\\_kx = v\\_{mx+2}. CHECK.\<close>
-              show ?thesis sorry \<comment> \<open>Final: map (mx,my) chain to (kx,ky) identification.
-                 Uses: w-to-ext C7 transfer + v\\_0~v\\_2 for kx=0 case.\<close>
+              \<comment> \<open>W-to-ext chain transfer: each w C7 step (i,j) -> ext step (i+2,j+2).\<close>
+              let ?Rw = "{(a, b). \<exists>i<?nw. \<exists>j<?nw. i \<noteq> j
+                  \<and> fst (w ! i) = fst (w ! j)
+                  \<and> ((snd (w ! i) = snd (w ! j) \<and> a = i \<and> b = j)
+                   \<or> (snd (w ! i) = snd (w ! j) \<and> a = Suc i mod ?nw \<and> b = Suc j mod ?nw)
+                   \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = i \<and> b = Suc j mod ?nw)
+                   \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = Suc i mod ?nw \<and> b = j))}"
+              \<comment> \<open>Step A: from w-chain, derive q\\_e(v\\_{mx+2}) = q\\_e(v\\_{my+2}) via induction.\<close>
+              have hqe_mx_my: "q_e (vxe (mx+2), vye (mx+2)) = q_e (vxe (my+2), vye (my+2))"
+              proof -
+                \<comment> \<open>Single-step helper: each w C7 step -> q\\_e identification at shifted vertices.\<close>
+                have hstep_bwd: "\<forall>va vb. (va, vb) \<in> ?Rw \<longrightarrow>
+                    q_e (vxe (va+2), vye (va+2)) = q_e (vxe (vb+2), vye (vb+2))"
+                  sorry \<comment> \<open>W-to-ext single step: w C7 pair (i,j) gives ext C7 pair (i+2,j+2).
+                     Same direction/label. Vertex patterns shift by 2.
+                     C7\\_e at t=0 or t=1 gives the q\\_e identification.\<close>
+                from hchain_w have "(mx, my) \<in> ?Rw\<^sup>*" .
+                thus ?thesis
+                proof (induction rule: rtrancl_induct)
+                  case base thus ?case by (by100 simp)
+                next
+                  case (step y z)
+                  have "(y, z) \<in> ?Rw" using step.hyps(2) .
+                  from hstep_bwd[rule_format, of y z]
+                  have "q_e (vxe (y+2), vye (y+2)) = q_e (vxe (z+2), vye (z+2))"
+                    using \<open>(y, z) \<in> ?Rw\<close> by (by100 simp)
+                  thus ?case using step.IH by (by100 simp)
+                qed
+              qed
+              \<comment> \<open>Step B: relate kx to mx+2 and ky to my+2 via q\\_e.\<close>
+              have hqe_kx_mx: "q_e (vxe kx, vye kx) = q_e (vxe (mx+2), vye (mx+2))"
+              proof (cases "kx = 0")
+                case True hence "mx + 2 = 2" unfolding mx_def by (by100 simp)
+                \<comment> \<open>kx=0, mx+2=2. Need q\\_e(v\\_0) = q\\_e(v\\_2). From a-pair C7 at t=0.\<close>
+                have "fst (?ext ! 0) = fst (?ext ! 1)"
+                  using hspur0 hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                have "snd (?ext ! 0) \<noteq> snd (?ext ! 1)"
+                  using hspur0 hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                have "0 < ?ne" using hlen hne_eq by (by100 linarith)
+                have "1 < ?ne" using hlen hne_eq by (by100 linarith)
+                have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                from hC7_e[rule_format, OF \<open>0 < ?ne\<close> \<open>1 < ?ne\<close> \<open>fst(?ext!0) = fst(?ext!1)\<close> this]
+                have "q_e ((1-0)*vxe 0+0*vxe(Suc 0 mod ?ne),(1-0)*vye 0+0*vye(Suc 0 mod ?ne)) =
+                  (if snd(?ext!0) = snd(?ext!1) then q_e ((1-0)*vxe 1+0*vxe(Suc 1 mod ?ne),
+                      (1-0)*vye 1+0*vye(Suc 1 mod ?ne))
+                   else q_e (0*vxe 1+(1-0)*vxe(Suc 1 mod ?ne),
+                      0*vye 1+(1-0)*vye(Suc 1 mod ?ne)))" by (by100 blast)
+                hence "q_e (vxe 0, vye 0) = q_e (vxe (Suc 1 mod ?ne), vye (Suc 1 mod ?ne))"
+                  using \<open>snd(?ext!0) \<noteq> snd(?ext!1)\<close> by (by100 simp)
+                moreover have "Suc 1 mod ?ne = 2"
+                proof -
+                  have "?ne \<ge> 5" using hlen hne_eq by (by100 linarith)
+                  hence "(2::nat) < ?ne" by (by100 linarith)
+                  thus ?thesis by (by100 simp)
+                qed
+                ultimately have "q_e (vxe 0, vye 0) = q_e (vxe 2, vye 2)" by (by100 simp)
+                thus ?thesis using True \<open>mx+2 = 2\<close> by (simp add: numeral_2_eq_2)
+              next
+                case False hence "kx \<ge> 2" using hkx_ne1 by (by100 linarith)
+                hence "mx = kx - 2" unfolding mx_def by (by100 simp)
+                hence "mx + 2 = kx" using \<open>kx \<ge> 2\<close> by (by100 linarith)
+                thus ?thesis by (by100 simp)
+              qed
+              have hqe_ky_my: "q_e (vxe ky, vye ky) = q_e (vxe (my+2), vye (my+2))"
+              proof (cases "ky = 0")
+                case True hence "my + 2 = 2" unfolding my_def by (by100 simp)
+                have "fst (?ext ! 0) = fst (?ext ! 1)"
+                  using hspur0 hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                have "snd (?ext ! 0) \<noteq> snd (?ext ! 1)"
+                  using hspur0 hspur1 unfolding top1_inverse_edge_def by (by100 simp)
+                have "0 < ?ne" using hlen hne_eq by (by100 linarith)
+                have "1 < ?ne" using hlen hne_eq by (by100 linarith)
+                have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                from hC7_e[rule_format, OF \<open>0 < ?ne\<close> \<open>1 < ?ne\<close> \<open>fst(?ext!0) = fst(?ext!1)\<close> this]
+                have "q_e ((1-0)*vxe 0+0*vxe(Suc 0 mod ?ne),(1-0)*vye 0+0*vye(Suc 0 mod ?ne)) =
+                  (if snd(?ext!0) = snd(?ext!1) then q_e ((1-0)*vxe 1+0*vxe(Suc 1 mod ?ne),
+                      (1-0)*vye 1+0*vye(Suc 1 mod ?ne))
+                   else q_e (0*vxe 1+(1-0)*vxe(Suc 1 mod ?ne),
+                      0*vye 1+(1-0)*vye(Suc 1 mod ?ne)))" by (by100 blast)
+                hence "q_e (vxe 0, vye 0) = q_e (vxe (Suc 1 mod ?ne), vye (Suc 1 mod ?ne))"
+                  using \<open>snd(?ext!0) \<noteq> snd(?ext!1)\<close> by (by100 simp)
+                moreover have "Suc 1 mod ?ne = 2"
+                proof -
+                  have "?ne \<ge> 5" using hlen hne_eq by (by100 linarith)
+                  hence "(2::nat) < ?ne" by (by100 linarith)
+                  thus ?thesis by (by100 simp)
+                qed
+                ultimately have "q_e (vxe 0, vye 0) = q_e (vxe 2, vye 2)" by (by100 simp)
+                thus ?thesis using True \<open>my+2 = 2\<close> by (simp add: numeral_2_eq_2)
+              next
+                case False hence "ky \<ge> 2" using hky_ne1 by (by100 linarith)
+                hence "my = ky - 2" unfolding my_def by (by100 simp)
+                hence "my + 2 = ky" using \<open>ky \<ge> 2\<close> by (by100 linarith)
+                thus ?thesis by (by100 simp)
+              qed
+              \<comment> \<open>Step C: compose: q\\_e(v\\_kx) = q\\_e(v\\_{mx+2}) = q\\_e(v\\_{my+2}) = q\\_e(v\\_ky).\<close>
+              have "q_e (vxe kx, vye kx) = q_e (vxe ky, vye ky)"
+                using hqe_kx_mx hqe_mx_my hqe_ky_my by (by100 simp)
+              thus ?thesis using hx_vtx_bwd hy_vtx_bwd by (by100 simp)
             qed
           qed
         qed
