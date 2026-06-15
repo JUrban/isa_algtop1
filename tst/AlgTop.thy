@@ -1926,11 +1926,56 @@ proof -
          By the structure of q\\_e (3-branch): either x=y (interior injectivity),
          or both are on matching edges identified by C7, or vertex identification.
          In each case, phi maps them to q\\_w-identified points.\<close>
-      show "?g x = ?g y" sorry \<comment> \<open>Forward fibre matching case analysis.
-         Needs: case split on interior/boundary for both x and y.
-         Uses: C8\\_e (interior injective), C7\\_e (edge matching),
-         hphi\\_spur (spur constant), hphi\\_nonspur (edge correspondence),
-         hlabel\\_corr (label matching between ext and w schemes).\<close>
+      \<comment> \<open>Case split: x interior or boundary.\<close>
+      consider (x_int) "\<forall>i<?ne. \<forall>t\<in>I_set. x \<noteq> edge_pt_e i t"
+        | (x_bdy) "\<exists>i<?ne. \<exists>t\<in>I_set. x = edge_pt_e i t"
+        by (by100 blast)
+      thus "?g x = ?g y"
+      proof cases
+        case x_int
+        \<comment> \<open>x interior: C8\\_e says x=y.\<close>
+        have hx_int': "\<forall>i<?ne. \<forall>t\<in>I_set.
+            x \<noteq> ((1-t)*vxe i+t*vxe(Suc i mod ?ne),(1-t)*vye i+t*vye(Suc i mod ?ne))"
+          using x_int unfolding edge_pt_e_def by (by100 simp)
+        from hC8_e[rule_format, OF hx] hx_int'
+        have "\<forall>p'\<in>P_e. q_e x = q_e p' \<longrightarrow> x = p'" by (by100 blast)
+        hence "x = y" using hy heq by (by100 blast)
+        thus ?thesis by (by100 simp)
+      next
+        case x_bdy
+        from x_bdy obtain ix tx where hix: "ix < ?ne" and htx: "tx \<in> I_set"
+            and hx_eq: "x = edge_pt_e ix tx" by (by100 blast)
+        \<comment> \<open>y must also be on boundary (from C8\\_e + C12\\_e).\<close>
+        \<comment> \<open>Sub-case: is y interior or boundary?\<close>
+        consider (y_int) "\<forall>i<?ne. \<forall>t\<in>I_set. y \<noteq> edge_pt_e i t"
+          | (y_bdy) "\<exists>i<?ne. \<exists>t\<in>I_set. y = edge_pt_e i t"
+          by (by100 blast)
+        thus ?thesis
+        proof cases
+          case y_int
+          \<comment> \<open>x boundary, y interior: C8\\_e at y gives y unique -> x=y impossible
+             since x is boundary and y interior? Not quite: C8\\_e says y has unique preimage
+             under q\\_e. Since q\\_e(x) = q\\_e(y) and y is interior (unique), x = y.
+             But x is boundary and y is interior -> x != y? That depends on whether
+             boundary and interior are disjoint. They ARE for convex polygons.\<close>
+          have hy_int': "\<forall>i<?ne. \<forall>t\<in>I_set.
+              y \<noteq> ((1-t)*vxe i+t*vxe(Suc i mod ?ne),(1-t)*vye i+t*vye(Suc i mod ?ne))"
+            using y_int unfolding edge_pt_e_def by (by100 simp)
+          from hC8_e[rule_format, OF hy] hy_int'
+          have "\<forall>p'\<in>P_e. q_e y = q_e p' \<longrightarrow> y = p'" by (by100 blast)
+          hence "y = x" using hx heq[symmetric] by (by100 blast)
+          thus ?thesis by (by100 simp)
+        next
+          case y_bdy
+          from y_bdy obtain iy ty where hiy: "iy < ?ne" and hty: "ty \<in> I_set"
+              and hy_eq: "y = edge_pt_e iy ty" by (by100 blast)
+          \<comment> \<open>Both boundary. Forward matching by cases on spur/non-spur.
+             q\\_e(x) = q\\_e(y): from C9\\_e + C7\\_e, this gives the edge matching.
+             Then phi maps the matched edges to q\\_w-matched edges.\<close>
+          show ?thesis sorry \<comment> \<open>Forward: both boundary. Need case analysis on spur/non-spur
+             and C7/C9 to derive phi correspondence. Same structure as backward.\<close>
+        qed
+      qed
     qed
     \<comment> \<open>Property 5: backward fibres. g(x) = g(y) implies q\\_e(x) = q\\_e(y).
        Cases:
