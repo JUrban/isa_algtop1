@@ -4422,20 +4422,54 @@ proof -
                Both equal \\<lambda> on the ray.\<close>
             \<comment> \<open>Goal: phi\\_fn(p) = let-expr for sector j.\<close>
             \<comment> \<open>Strategy: show fst and snd components match separately.\<close>
-            have hgoal_x: "fst(phi_fn (fst p, snd p)) = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
-                fx = vxe(Suc(j+2) mod ?ne)-vxe 1; fy = vye(Suc(j+2) mod ?ne)-vye 1;
-                det = ex*fy-ey*fx; s = (fy*?dx-fx*?dy)/det; t_par = (ex*?dy-ey*?dx)/det
-            in (1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw))"
-              using hphi_simplified ht_j_zero hcross_expand
-              unfolding phi_t2_def phi_s2_def Let_def sorry
-            have hgoal_y: "snd(phi_fn (fst p, snd p)) = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
-                fx = vxe(Suc(j+2) mod ?ne)-vxe 1; fy = vye(Suc(j+2) mod ?ne)-vye 1;
-                det = ex*fy-ey*fx; s = (fy*?dx-fx*?dy)/det; t_par = (ex*?dy-ey*?dx)/det
-            in (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw))"
-              using hphi_simplified ht_j_zero hcross_expand
-              unfolding phi_t2_def phi_s2_def Let_def sorry
-            show ?thesis using hgoal_x hgoal_y
-              unfolding Let_def by (cases "phi_fn (fst p, snd p)") simp
+            \<comment> \<open>Prove t\\_{jm} = s\\_j via cross-multiplication (avoids division).\<close>
+            have ht_jm_eq_s_j: "phi_t2 (jm+2) (j+2) ?dx ?dy =
+              phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy"
+            proof -
+              let ?ex = "vxe(jm+2)-vxe 1" and ?ey = "vye(jm+2)-vye 1"
+              let ?A = "vxe(j+2)-vxe 1" and ?B = "vye(j+2)-vye 1"
+              let ?fx2 = "vxe(Suc(j+2) mod ?ne)-vxe 1" and ?fy2 = "vye(Suc(j+2) mod ?ne)-vye 1"
+              let ?det_jm = "?ex*?B-?ey*?A" and ?det_j = "?A*?fy2-?B*?fx2"
+              \<comment> \<open>Both dets > 0.\<close>
+              have hjm2_lt: "jm+2 < j+2" using hjm_lt by linarith
+              have hj2_lt: "j+2 < ?ne" using hj hne_eq by linarith
+              from hdet_general[rule_format, of "jm+2" "j+2"]
+              have hd1: "?det_jm > 0" using hjm2_lt hj2_lt by linarith
+              from hdet_pos[rule_format, OF hj]
+              have hd2: "?det_j > 0" by (by100 simp)
+              \<comment> \<open>LHS = (?ex*dy-?ey*dx)/?det\\_jm, RHS = (?fy2*dx-?fx2*dy)/?det\\_j.\<close>
+              have lhs_def: "phi_t2 (jm+2) (j+2) ?dx ?dy = (?ex*?dy-?ey*?dx)/?det_jm"
+                unfolding phi_t2_def Let_def by simp
+              have rhs_def: "phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy = (?fy2*?dx-?fx2*?dy)/?det_j"
+                unfolding phi_s2_def Let_def by simp
+              \<comment> \<open>Cross-multiply: (?ex*dy-?ey*dx)*det\\_j = (?fy2*dx-?fx2*dy)*det\\_jm.\<close>
+              \<comment> \<open>With constraint A*dy = B*dx, this is an algebraic identity.\<close>
+              have hcross_mult: "(?ex*?dy-?ey*?dx)*?det_j = (?fy2*?dx-?fx2*?dy)*?det_jm"
+                using hcross_expand by (by100 algebra)
+              \<comment> \<open>Both dets > 0, so a/d1 = b/d2 iff a*d2 = b*d1.\<close>
+              have hd1ne: "?det_jm \<noteq> 0" using hd1 by linarith
+              have hd2ne: "?det_j \<noteq> 0" using hd2 by linarith
+              \<comment> \<open>a/b = c/d from a*d = c*b, b\\<noteq>0, d\\<noteq>0.\<close>
+              have "(?ex*?dy-?ey*?dx) * ?det_j = (?fy2*?dx-?fx2*?dy) * ?det_jm"
+                using hcross_mult .
+              hence heq_div: "(?ex*?dy-?ey*?dx) / ?det_jm = (?fy2*?dx-?fx2*?dy) / ?det_j"
+                using hd1ne hd2ne sorry \<comment> \<open>a*d=c*b, b\\<noteq>0, d\\<noteq>0 => a/b=c/d. Standard field fact.\<close>
+              show ?thesis using lhs_def rhs_def heq_div by simp
+            qed
+            \<comment> \<open>Now assemble: phi\\_fn = (1-t\\_{jm})*c+t\\_{jm}*u\\_j = (1-s\\_j)*c+s\\_j*u\\_j = sector j formula.\<close>
+            show ?thesis
+            proof -
+              \<comment> \<open>hphi\\_simplified: phi\\_fn = (1-phi\\_t2(jm+2,j+2,dx,dy))*c + phi\\_t2*uj.\<close>
+              \<comment> \<open>Substitute phi\\_t2 = phi\\_s2 and reconstruct the let-expression.\<close>
+              from hphi_simplified have "phi_fn (fst p, snd p) =
+                ((1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cxw
+                + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vxw j,
+                (1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cyw
+                + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vyw j)"
+                using ht_jm_eq_s_j hjm3_eq by simp
+              \<comment> \<open>Match with let-expression where t\\_j = 0.\<close>
+              thus ?thesis using ht_j_zero unfolding phi_s2_def phi_t2_def Let_def sorry
+            qed
           qed
         qed
       qed
