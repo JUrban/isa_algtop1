@@ -4203,7 +4203,97 @@ proof -
                   have "((vxe(jm+2)-vxe 1))*(snd p - vye 1) \<ge> 0" by simp
                   \<comment> \<open>If both coefficients same sign: dy forced to 0.
                      If different signs: also forced to 0.\<close>
-                  ultimately show ?thesis sorry
+                  ultimately show ?thesis
+                  proof (cases "vxe(j+2) - vxe 1 = 0")
+                    case True \<comment> \<open>vxe(j+2)=vxe 1 and vye(j+2)\\<noteq>vye 1.\<close>
+                    \<comment> \<open>det32 = (vxe(jm+3)-vxe 1)*(vye(j+2)-vye 1) > 0 (from True).\<close>
+                    from hdet_pos2 True
+                    have h32: "(vxe(jm+3)-vxe 1)*(vye(j+2)-vye 1) > 0" by simp
+                    \<comment> \<open>det22 = (vxe(jm+2)-vxe 1)*(vye(j+2)-vye 1) > 0.\<close>
+                    from hdet22 True
+                    have h22: "(vxe(jm+2)-vxe 1)*(vye(j+2)-vye 1) > 0" by simp
+                    \<comment> \<open>Both (vxe(jm+3)-vxe 1) and (vxe(jm+2)-vxe 1) have same sign as (vye(j+2)-vye 1).\<close>
+                    show ?thesis
+                    proof (cases "vye(j+2) - vye 1 > 0")
+                      case True2: True
+                      have hA_pos: "vxe(jm+3) - vxe 1 > 0"
+                      proof (rule ccontr)
+                        assume "\<not>(vxe(jm+3) - vxe 1 > 0)"
+                        hence "vxe(jm+3) - vxe 1 \<le> 0" by linarith
+                        have "vye(j+2) - vye 1 \<ge> 0" using True2 by linarith
+                        from mult_nonpos_nonneg[OF \<open>vxe(jm+3)-vxe 1 \<le> 0\<close> this]
+                        have "(vxe(jm+3)-vxe 1)*(vye(j+2)-vye 1) \<le> 0" .
+                        thus False using h32 by linarith
+                      qed
+                      have hB_pos: "vxe(jm+2) - vxe 1 > 0"
+                      proof (rule ccontr)
+                        assume "\<not>(vxe(jm+2) - vxe 1 > 0)"
+                        hence "vxe(jm+2) - vxe 1 \<le> 0" by linarith
+                        have "vye(j+2) - vye 1 \<ge> 0" using True2 by linarith
+                        from mult_nonpos_nonneg[OF \<open>vxe(jm+2)-vxe 1 \<le> 0\<close> this]
+                        have "(vxe(jm+2)-vxe 1)*(vye(j+2)-vye 1) \<le> 0" .
+                        thus False using h22 by linarith
+                      qed
+                      have "snd p - vye 1 \<le> 0"
+                      proof (rule ccontr)
+                        assume "\<not>(snd p - vye 1 \<le> 0)"
+                        hence "snd p - vye 1 > 0" by linarith
+                        from mult_pos_pos[OF hA_pos this]
+                        have "(vxe(jm+3)-vxe 1)*(snd p-vye 1) > 0" .
+                        with \<open>(vxe(jm+3)-vxe 1)*(snd p-vye 1) \<le> 0\<close> show False by linarith
+                      qed
+                      moreover have "snd p - vye 1 \<ge> 0"
+                      proof (rule ccontr)
+                        assume "\<not>(snd p - vye 1 \<ge> 0)"
+                        hence "snd p - vye 1 < 0" by linarith
+                        from mult_pos_neg[OF hB_pos this]
+                        have "(vxe(jm+2)-vxe 1)*(snd p-vye 1) < 0" .
+                        with \<open>(vxe(jm+2)-vxe 1)*(snd p-vye 1) \<ge> 0\<close> show False by linarith
+                      qed
+                      ultimately show ?thesis by linarith
+                    next
+                      case False2: False hence hvye_neg: "vye(j+2) - vye 1 < 0" using hvye_ne by linarith
+                      have hA_neg: "vxe(jm+3) - vxe 1 < 0"
+                      proof (rule ccontr)
+                        assume "\<not>(vxe(jm+3) - vxe 1 < 0)"
+                        hence "vxe(jm+3) - vxe 1 \<ge> 0" by linarith
+                        have "vye(j+2) - vye 1 \<le> 0" using hvye_neg by linarith
+                        from mult_nonneg_nonpos[OF \<open>vxe(jm+3)-vxe 1 \<ge> 0\<close> this]
+                        have "(vxe(jm+3)-vxe 1)*(vye(j+2)-vye 1) \<le> 0" .
+                        thus False using h32 by linarith
+                      qed
+                      have hB_neg: "vxe(jm+2) - vxe 1 < 0"
+                      proof (rule ccontr)
+                        assume "\<not>(vxe(jm+2) - vxe 1 < 0)"
+                        hence "vxe(jm+2) - vxe 1 \<ge> 0" by linarith
+                        have "vye(j+2) - vye 1 \<le> 0" using hvye_neg by linarith
+                        from mult_nonneg_nonpos[OF \<open>vxe(jm+2)-vxe 1 \<ge> 0\<close> this]
+                        have "(vxe(jm+2)-vxe 1)*(vye(j+2)-vye 1) \<le> 0" .
+                        thus False using h22 by linarith
+                      qed
+                      have "snd p - vye 1 \<ge> 0"
+                      proof (rule ccontr)
+                        assume "\<not>(snd p - vye 1 \<ge> 0)"
+                        hence "snd p - vye 1 < 0" by linarith
+                        from mult_neg_neg[OF hA_neg this]
+                        have "(vxe(jm+3)-vxe 1)*(snd p-vye 1) > 0" .
+                        with \<open>(vxe(jm+3)-vxe 1)*(snd p-vye 1) \<le> 0\<close> show False by linarith
+                      qed
+                      moreover have "snd p - vye 1 \<le> 0"
+                      proof (rule ccontr)
+                        assume "\<not>(snd p - vye 1 \<le> 0)"
+                        hence "snd p - vye 1 > 0" by linarith
+                        from mult_neg_pos[OF hB_neg this]
+                        have "(vxe(jm+2)-vxe 1)*(snd p-vye 1) < 0" .
+                        with \<open>(vxe(jm+2)-vxe 1)*(snd p-vye 1) \<ge> 0\<close> show False by linarith
+                      qed
+                      ultimately show ?thesis by linarith
+                    qed
+                  next
+                    case False \<comment> \<open>vxe(j+2) \\<noteq> vxe 1: already handled by first disjE branch.\<close>
+                    with \<open>(vxe(j+2)-vxe 1) * (snd p - vye 1) = 0\<close>
+                    show ?thesis by (by100 simp)
+                  qed
                 qed
               qed
               have "fst p - vxe 1 = 0 \<and> snd p - vye 1 = 0" using hdx0 hdy0 by simp
