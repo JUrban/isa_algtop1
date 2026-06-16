@@ -1514,6 +1514,148 @@ qed
    cross_negative_from_det_bounds, frac_eq_from_cross_mult, cyclic_sign_change,
    convex_combo_edge_cross_strict have been moved to AlgTopCached17.\<close>
 
+\<comment> \<open>Standalone lemma: a point with positive centroid weight is not on any polygon edge.
+   If q = \\<alpha>*cw + \\<beta>*u\\_j + \\<gamma>*u\\_{j+1} with \\<alpha> > 0 and
+   the centroid satisfies C10 (strictly interior to each edge),
+   then q is NOT equal to any edge point.\<close>
+lemma centroid_weight_not_on_edge:
+  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real"
+  assumes hnw: "nw \<ge> 3"
+      and hC10: "\<forall>i<nw. (vxw i - cxw) * (vyw(Suc i mod nw) - cyw) -
+          (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
+      and hC11: "\<forall>i<nw. \<forall>k<nw. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod nw \<longrightarrow>
+          (vxw k-vxw i)*(vyw(Suc i mod nw)-vyw i)-(vyw k-vyw i)*(vxw(Suc i mod nw)-vxw i) < 0"
+      and hj_lt: "j_sec < nw"
+      and halpha: "\<alpha> > 0" and hbeta: "\<beta> \<ge> 0" and hgamma: "\<gamma> \<ge> 0"
+      and habg: "\<alpha> + \<beta> + \<gamma> = 1"
+      and hqx: "fst q = \<alpha>*cxw + \<beta>*vxw j_sec + \<gamma>*vxw(Suc j_sec mod nw)"
+      and hqy: "snd q = \<alpha>*cyw + \<beta>*vyw j_sec + \<gamma>*vyw(Suc j_sec mod nw)"
+      and hk_lt: "k_edge < nw"
+      and hsx: "fst (edge_q :: real \<times> real) = (1-t_e)*vxw k_edge + t_e*vxw(Suc k_edge mod nw)"
+      and hsy: "snd edge_q = (1-t_e)*vyw k_edge + t_e*vyw(Suc k_edge mod nw)"
+  shows "q \<noteq> edge_q"
+proof
+  assume heq: "q = edge_q"
+  \<comment> \<open>Edge cross product at edge k: det(u\\_{k+1}-u\\_k, q-u\\_k).
+     For edge\\_q: this is 0 (edge\\_q lies on edge k).
+     For q = \\<alpha>*cw + \\<beta>*u\\_j + \\<gamma>*u\\_{j+1}:
+       = \\<alpha>*det(u\\_{k+1}-u\\_k, cw-u\\_k) + \\<beta>*det(u\\_{k+1}-u\\_k, u\\_j-u\\_k) + \\<gamma>*det(u\\_{k+1}-u\\_k, u\\_{j+1}-u\\_k)
+     The \\<alpha> term is > 0 (from C10) and the \\<beta>,\\<gamma> terms are \\<ge> 0 (from C10/C11).
+     So the total > 0. But edge\\_q has cross = 0. Contradiction.\<close>
+  let ?dx_k = "vxw(Suc k_edge mod nw)-vxw k_edge"
+  let ?dy_k = "vyw(Suc k_edge mod nw)-vyw k_edge"
+  \<comment> \<open>Edge cross at edge\\_q = 0.\<close>
+  have hedge_zero: "?dx_k*(snd edge_q-vyw k_edge)-?dy_k*(fst edge_q-vxw k_edge) = 0"
+  proof -
+    have "snd edge_q - vyw k_edge = t_e*?dy_k" using hsy by (by100 algebra)
+    moreover have "fst edge_q - vxw k_edge = t_e*?dx_k" using hsx by (by100 algebra)
+    ultimately show ?thesis by (by100 algebra)
+  qed
+  \<comment> \<open>Edge cross at q > 0 (from centroid weight).\<close>
+  have "snd q - vyw k_edge = \<alpha>*(cyw-vyw k_edge) + \<beta>*(vyw j_sec-vyw k_edge) + \<gamma>*(vyw(Suc j_sec mod nw)-vyw k_edge)"
+    using hqy habg by (by100 algebra)
+  moreover have "fst q - vxw k_edge = \<alpha>*(cxw-vxw k_edge) + \<beta>*(vxw j_sec-vxw k_edge) + \<gamma>*(vxw(Suc j_sec mod nw)-vxw k_edge)"
+    using hqx habg by (by100 algebra)
+  ultimately have hcross_expand: "?dx_k*(snd q-vyw k_edge)-?dy_k*(fst q-vxw k_edge) =
+      \<alpha>*(?dx_k*(cyw-vyw k_edge)-?dy_k*(cxw-vxw k_edge)) +
+      \<beta>*(?dx_k*(vyw j_sec-vyw k_edge)-?dy_k*(vxw j_sec-vxw k_edge)) +
+      \<gamma>*(?dx_k*(vyw(Suc j_sec mod nw)-vyw k_edge)-?dy_k*(vxw(Suc j_sec mod nw)-vxw k_edge))"
+  proof -
+    assume hsndq: "snd q - vyw k_edge = \<alpha>*(cyw-vyw k_edge) + \<beta>*(vyw j_sec-vyw k_edge) + \<gamma>*(vyw(Suc j_sec mod nw)-vyw k_edge)"
+    assume hfstq: "fst q - vxw k_edge = \<alpha>*(cxw-vxw k_edge) + \<beta>*(vxw j_sec-vxw k_edge) + \<gamma>*(vxw(Suc j_sec mod nw)-vxw k_edge)"
+    \<comment> \<open>Substitute and distribute.\<close>
+    define sy where "sy = snd q - vyw k_edge"
+    define sx where "sx = fst q - vxw k_edge"
+    define ca where "ca = cyw-vyw k_edge"
+    define cb where "cb = cxw-vxw k_edge"
+    define ja where "ja = vyw j_sec-vyw k_edge"
+    define jb where "jb = vxw j_sec-vxw k_edge"
+    define sa where "sa = vyw(Suc j_sec mod nw)-vyw k_edge"
+    define sb where "sb = vxw(Suc j_sec mod nw)-vxw k_edge"
+    from hsndq have hsy: "sy = \<alpha>*ca + \<beta>*ja + \<gamma>*sa" unfolding sy_def ca_def ja_def sa_def .
+    from hfstq have hsx: "sx = \<alpha>*cb + \<beta>*jb + \<gamma>*sb" unfolding sx_def cb_def jb_def sb_def .
+    have "?dx_k*sy - ?dy_k*sx = ?dx_k*(\<alpha>*ca + \<beta>*ja + \<gamma>*sa) - ?dy_k*(\<alpha>*cb + \<beta>*jb + \<gamma>*sb)"
+      using hsy hsx by simp
+    also have "\<dots> = \<alpha>*(?dx_k*ca - ?dy_k*cb) + \<beta>*(?dx_k*ja - ?dy_k*jb) + \<gamma>*(?dx_k*sa - ?dy_k*sb)"
+      by (by100 algebra)
+    finally show ?thesis
+      unfolding sy_def sx_def ca_def cb_def ja_def jb_def sa_def sb_def .
+  qed
+  \<comment> \<open>C10 term: det(u\\_{k+1}-u\\_k, cw-u\\_k) > 0.\<close>
+  have hcw_term: "?dx_k*(cyw-vyw k_edge)-?dy_k*(cxw-vxw k_edge) > 0"
+  proof -
+    \<comment> \<open>From C10 at edge k: det(u\\_k-cw, u\\_{k+1}-cw) > 0.
+       This equals det(u\\_{k+1}-u\\_k, cw-u\\_k) by the algebraic identity.\<close>
+    from hC10[rule_format, OF hk_lt]
+    have "(vxw k_edge - cxw) * (vyw(Suc k_edge mod nw) - cyw) -
+        (vyw k_edge - cyw) * (vxw(Suc k_edge mod nw) - cxw) > 0" .
+    \<comment> \<open>det(u\\_k-cw, u\\_{k+1}-cw) = det(u\\_{k+1}-u\\_k, cw-u\\_k) (algebraic identity).\<close>
+    \<comment> \<open>det(A-C, B-C) = det(B-A, C-A) where A=u\\_k, B=u\\_{k+1}, C=cw.\<close>
+    hence hC10_inst: "(vxw k_edge - cxw) * (vyw(Suc k_edge mod nw) - cyw) -
+        (vyw k_edge - cyw) * (vxw(Suc k_edge mod nw) - cxw) > 0" .
+    define ax where "ax = vxw k_edge"
+    define ay where "ay = vyw k_edge"
+    define bx where "bx = vxw(Suc k_edge mod nw)"
+    define by' where "by' = vyw(Suc k_edge mod nw)"
+    define cx' where "cx' = cxw"
+    define cy' where "cy' = cyw"
+    have "(bx-ax)*(cy'-ay)-(by'-ay)*(cx'-ax) = (ax-cx')*(by'-cy')-(ay-cy')*(bx-cx')"
+      by (by5000 algebra)
+    thus ?thesis using hC10_inst
+      unfolding ax_def ay_def bx_def by'_def cx'_def cy'_def by linarith
+  qed
+  \<comment> \<open>\\<beta>, \\<gamma> terms are \\<ge> 0.\<close>
+  \<comment> \<open>For any vertex m: det(u\\_{k+1}-u\\_k, u\\_m-u\\_k) \\<ge> 0.
+     = 0 when m = k or m = Suc k mod nw.
+     > 0 when m \\<noteq> k and m \\<noteq> Suc k mod nw (from C11 + sign reversal).\<close>
+  have hvertex_cross_ge: "\<forall>m<nw. ?dx_k*(vyw m-vyw k_edge)-?dy_k*(vxw m-vxw k_edge) \<ge> 0"
+  proof (intro allI impI)
+    fix m assume hm: "m < nw"
+    show "?dx_k*(vyw m-vyw k_edge)-?dy_k*(vxw m-vxw k_edge) \<ge> 0"
+    proof (cases "m = k_edge \<or> m = Suc k_edge mod nw")
+      case True thus ?thesis by (elim disjE) simp_all
+    next
+      case False hence "m \<noteq> k_edge" "m \<noteq> Suc k_edge mod nw" by auto
+      \<comment> \<open>From C10 at edge k, applied to vertex m: det(u\\_k-cw, u\\_{k+1}-cw) > 0
+         gives det(u\\_{k+1}-u\\_k, u\\_m-u\\_k) > 0 by C10+C11 argument.
+         Actually use the C10 identity directly: det(u\\_{k+1}-u\\_k, u\\_m-u\\_k) = -det(u\\_m-u\\_k, u\\_{k+1}-u\\_k).
+         C11 gives det(u\\_m-u\\_k, u\\_{k+1}-u\\_k) < 0, hence our term > 0.\<close>
+      from hC11[rule_format, OF hk_lt hm \<open>m \<noteq> k_edge\<close> \<open>m \<noteq> Suc k_edge mod nw\<close>]
+      have "(vxw m-vxw k_edge)*(vyw(Suc k_edge mod nw)-vyw k_edge)-
+          (vyw m-vyw k_edge)*(vxw(Suc k_edge mod nw)-vxw k_edge) < 0" .
+      \<comment> \<open>Negate: det(B-A, M-A) = -det(M-A, B-A).\<close>
+      define ax where "ax = vxw k_edge"
+      define ay where "ay = vyw k_edge"
+      define bx where "bx = vxw(Suc k_edge mod nw)"
+      define by' where "by' = vyw(Suc k_edge mod nw)"
+      define mx where "mx = vxw m"
+      define my' where "my' = vyw m"
+      have "(bx-ax)*(my'-ay)-(by'-ay)*(mx-ax) = -((mx-ax)*(by'-ay)-(my'-ay)*(bx-ax))"
+        by (by5000 algebra)
+      thus ?thesis using \<open>(vxw m-vxw k_edge)*(vyw(Suc k_edge mod nw)-vyw k_edge)-
+          (vyw m-vyw k_edge)*(vxw(Suc k_edge mod nw)-vxw k_edge) < 0\<close>
+        unfolding ax_def ay_def bx_def by'_def mx_def my'_def by linarith
+    qed
+  qed
+  have hbeta_term: "\<beta>*(?dx_k*(vyw j_sec-vyw k_edge)-?dy_k*(vxw j_sec-vxw k_edge)) \<ge> 0"
+    using hbeta hvertex_cross_ge[rule_format, OF hj_lt] by (intro mult_nonneg_nonneg)
+  have hgamma_term: "\<gamma>*(?dx_k*(vyw(Suc j_sec mod nw)-vyw k_edge)-?dy_k*(vxw(Suc j_sec mod nw)-vxw k_edge)) \<ge> 0"
+  proof -
+    have "Suc j_sec mod nw < nw" using hnw by simp
+    from hvertex_cross_ge[rule_format, OF this]
+    show ?thesis using hgamma by (intro mult_nonneg_nonneg)
+  qed
+  \<comment> \<open>Total edge cross > 0.\<close>
+  have halpha_cw: "\<alpha>*(?dx_k*(cyw-vyw k_edge)-?dy_k*(cxw-vxw k_edge)) > 0"
+    using halpha hcw_term by (by100 simp)
+  have "?dx_k*(snd q-vyw k_edge)-?dy_k*(fst q-vxw k_edge) > 0"
+    using hcross_expand halpha_cw hbeta_term hgamma_term by linarith
+  \<comment> \<open>But edge cross at edge\\_q = 0.\<close>
+  hence "?dx_k*(snd edge_q-vyw k_edge)-?dy_k*(fst edge_q-vxw k_edge) > 0"
+    using heq by simp
+  with hedge_zero show False by linarith
+qed
+
 lemma spur_collapse_cancel_homeo:
   fixes w :: "(nat \<times> bool) list" and a :: "nat \<times> bool"
   assumes hlen: "length w \<ge> 3"
