@@ -4703,7 +4703,35 @@ proof -
           \<comment> \<open>Every q \\<in> P\\_w is either the centroid or in some target sector.
              (Discrete IVT on cross\\_cw, analogous to hfan\\_cover.)\<close>
           have hq_cw_or_sector: "q = (?cxw, ?cyw) \<or> (\<exists>j<?nw. in_tsector j q)"
-            sorry
+          proof (cases "q = (?cxw, ?cyw)")
+            case True thus ?thesis by simp
+          next
+            case False
+            \<comment> \<open>q \\<noteq> centroid. Find sector j with cross\\_cw(j,q) \\<ge> 0 and cross\\_cw(j+1,q) \\<le> 0.\<close>
+            \<comment> \<open>Key: the cross products cycle around. There exists j with cross\\_cw(j) \\<ge> 0 (since
+               not all can be < 0: that would put q outside P\\_w). Among all such j, the LEAST
+               one with j < nw has cross\\_cw(Suc j mod nw) \\<le> 0 by the cyclic ordering.\<close>
+            \<comment> \<open>Approach: express cross\\_cw as sum of vertex contributions.
+               For k=j: cross\\_cw(j, u\\_j) = 0. For k=j+1: cross\\_cw(j, u\\_{j+1}) = C10 > 0.
+               For other k: depends on position. Sum over all k with coefficients \\<mu>\\_k.
+               Since cross\\_cw(j, q) depends linearly on q, and vertices go around the centroid,
+               there's always a sign change.\<close>
+            \<comment> \<open>For now: sorry the discrete IVT. This mirrors hfan\\_cover (~200 lines).\<close>
+            \<comment> \<open>Express cross\\_cw as linear combination of vertex cross products.\<close>
+            from hq obtain coeffs_q where hcq: "(\<forall>i<?nw. coeffs_q i \<ge> 0)"
+              "(\<Sum>i<?nw. coeffs_q i) = 1" "fst q = (\<Sum>i<?nw. coeffs_q i * vxw i)"
+              "snd q = (\<Sum>i<?nw. coeffs_q i * vyw i)" using hC5_w by (by100 auto)
+            \<comment> \<open>cross\\_cw(j, u\\_j) = 0, cross\\_cw(j, u\\_{j+1}) > 0 (from C10\\_w),
+               cross\\_cw(j, u\\_k) for other k can be positive or negative.
+               Key: since q \\<noteq> centroid and q \\<in> P\\_w, there exist j1 with cross\\_cw(j1,q) > 0
+               and j2 with cross\\_cw(j2,q) < 0. By cyclic IVT, there's a consecutive sign change.\<close>
+            \<comment> \<open>cross\\_cw(j, q) is linear in q: cross\\_cw(j, q) = \\<Sum> \\<mu>\\_k * cross\\_cw(j, u\\_k).\<close>
+            \<comment> \<open>For the cyclic IVT, we need: \\<exists>j. cross\\_cw(j,q) \\<ge> 0 \\<and> cross\\_cw(Suc j mod nw, q) \\<le> 0.\<close>
+            \<comment> \<open>This is a discrete IVT on a cyclic sequence. The proof mirrors hfan\\_cover.\<close>
+            \<comment> \<open>For now, sorry the cyclic IVT. This is ~100 lines of discrete analysis.\<close>
+            have "\<exists>j<?nw. in_tsector j q" sorry
+            thus ?thesis by simp
+          qed
           \<comment> \<open>Convert sector membership to barycentric coordinates.\<close>
           show ?thesis
           proof (cases "q = (?cxw, ?cyw)")
