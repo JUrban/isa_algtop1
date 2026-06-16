@@ -4505,10 +4505,11 @@ proof -
       have prop2: "top1_continuous_map_on P_e
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
           P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi_fn"
-      \<comment> \<open>Continuity via pasting lemma (expert audit 32 Step 3).
-         hphi\\_affine\\_on\\_sector: phi\\_fn = affine\\_j on each sector j.
-         Affine maps are continuous. Sectors are closed. Sectors cover P\\_e.
-         pasting\\_lemma\\_two\\_closed applied iteratively over nw sectors.\<close>
+      \<comment> \<open>Continuity via pasting lemma (expert audit 32 Step 3):
+         1. Each sector j = {p \\<in> P\\_e | in\\_sector j p} is closed (half-plane intersection).
+         2. phi\\_fn|sector = affine (hphi\\_affine\\_on\\_sector) = continuous.
+         3. Sectors cover P\\_e (hfan\\_cover + {v\\_1}).
+         4. pasting\\_lemma\\_two\\_closed applied iteratively over nw sectors.\<close>
         sorry
       have prop3: "phi_fn ` P_e = P_w"
       proof (rule set_eqI, rule iffI)
