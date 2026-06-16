@@ -4200,7 +4200,7 @@ proof -
           qed
           show ?thesis
           proof (cases "jm = j")
-            case True thus ?thesis using hphi_jm by simp
+            case True from hphi_jm show ?thesis unfolding True .
           next
             case False hence hjm_lt: "jm < j" using hjm_le by linarith
             \<comment> \<open>jm < j: p is on boundary between sectors. Affine maps agree.\<close>
@@ -4283,8 +4283,8 @@ proof -
                 have "?sn*(?A*?ey-?B*?ex) \<le> 0" .
                 moreover from mult_nonneg_nonpos[OF htn hcv3_le]
                 have "?tn*(?A*?fy-?B*?fx) \<le> 0" .
-                ultimately have "?sn*(?A*?ey-?B*?ex) + ?tn*(?A*?fy-?B*?fx) \<le> 0" by linarith
-                hence "?det * (?A*?dy - ?B*?dx) \<le> 0" using hdecomp by linarith
+                ultimately have hsum_le: "?sn*(?A*?ey-?B*?ex) + ?tn*(?A*?fy-?B*?fx) \<le> 0" by linarith
+                have "?det * (?A*?dy - ?B*?dx) \<le> 0" using hdecomp hsum_le by linarith
                 \<comment> \<open>det > 0 and det*X \\<le> 0 => X \\<le> 0.\<close>
                 show ?thesis
                 proof (rule ccontr)
@@ -4658,9 +4658,9 @@ proof -
               + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vxw j,
               (1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cyw
               + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vyw j)"
-                by simp
+                by (by100 simp)
               from hphi_s_form hlet_to_decomp ht_j_zero hdecomp_simplified
-              show ?thesis by simp
+              show ?thesis by simp \<comment> \<open>SLOW (~30s): big Let-expression chain.\<close>
             qed
           qed
         qed
@@ -4763,7 +4763,14 @@ proof -
               s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
           in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
               (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))" .
-          thus "phi_fn p = affine_j p" unfolding affine_j_def by (cases p) simp
+          hence "phi_fn p = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+              fx = vxe ?si-vxe 1; fy = vye ?si-vye 1;
+              det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+              s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
+          in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
+              (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))"
+            by (cases p) simp
+          thus "phi_fn p = affine_j p" unfolding affine_j_def Let_def by (by100 simp)
         qed
         \<comment> \<open>affine\\_j is continuous (affine function of fst p, snd p).\<close>
         have haffine_cont: "continuous_on (sector_set j) affine_j"
