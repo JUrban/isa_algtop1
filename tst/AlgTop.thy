@@ -4566,8 +4566,39 @@ proof -
       qed
       \<comment> \<open>Step B: phi\\_fn is continuous\\_on each sector (affine function of (fst p, snd p)).\<close>
       have hsector_cont_on: "\<forall>j<?nw. continuous_on (sector_set j) phi_fn"
-        sorry \<comment> \<open>phi\\_fn = affine on sector j (hphi\\_affine\\_on\\_sector).
-               Affine maps are continuous\\_on (from continuous\\_on\\_add + continuous\\_on\\_mult etc).\<close>
+      proof (intro allI impI)
+        fix j assume hj: "j < ?nw"
+        \<comment> \<open>phi\\_fn = affine\\_j on sector\\_set j (from hphi\\_affine\\_on\\_sector).\<close>
+        let ?si = "Suc(j+2) mod ?ne"
+        \<comment> \<open>Define the affine formula as a function.\<close>
+        define affine_j where "affine_j p = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+            fx = vxe ?si-vxe 1; fy = vye ?si-vye 1;
+            det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+            s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
+        in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
+            (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))" for p
+        \<comment> \<open>phi\\_fn = affine\\_j on sector\\_set j.\<close>
+        have hphi_eq: "\<forall>p \<in> sector_set j. phi_fn p = affine_j p"
+        proof (intro ballI)
+          fix p assume "p \<in> sector_set j"
+          hence hp: "p \<in> P_e" and hin: "in_sector j p" unfolding sector_set_def by auto
+          from hphi_affine_on_sector[rule_format, OF hj hp hin]
+          have "phi_fn (fst p, snd p) = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+              fx = vxe ?si-vxe 1; fy = vye ?si-vye 1;
+              det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+              s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
+          in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
+              (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))" .
+          thus "phi_fn p = affine_j p" unfolding affine_j_def by (cases p) simp
+        qed
+        \<comment> \<open>affine\\_j is continuous (affine function of fst p, snd p).\<close>
+        have haffine_cont: "continuous_on (sector_set j) affine_j"
+          sorry \<comment> \<open>affine\\_j is affine in (fst p, snd p). continuous\\_intros resolves but times out.\<close>
+        \<comment> \<open>phi\\_fn = affine\\_j on sector => phi\\_fn continuous on sector.\<close>
+        have "continuous_on (sector_set j) phi_fn \<longleftrightarrow> continuous_on (sector_set j) affine_j"
+          by (rule continuous_on_cong) (use hphi_eq in auto)
+        thus "continuous_on (sector_set j) phi_fn" using haffine_cont by simp
+      qed
       \<comment> \<open>Step C: continuous\\_on\\_closed\\_Union gives continuous\\_on P\\_e phi\\_fn.\<close>
       have hcont_on: "continuous_on P_e phi_fn"
       proof -
