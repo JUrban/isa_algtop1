@@ -4530,6 +4530,13 @@ proof -
         \<comment> \<open>Case: q is on edge k of P\\_w. Preimage: edge\\_pt\\_e(k+2, t).\<close>
         \<comment> \<open>Case: q = centroid. Preimage: v\\_1.\<close>
         \<comment> \<open>Case: q is in interior of sector j. Preimage: inverse affine in source sector j.\<close>
+        \<comment> \<open>Construct preimage via sector inverse.
+           q \\<in> P\\_w = conv(u\\_0,...,u\\_{nw-1}). Express q = \\<Sum> \\<mu>\\_k * u\\_k.
+           Define p = (1-\\<Sum>\\<mu>)*v\\_1 + \\<Sum> \\<mu>\\_k * v\\_{k+2}. Then p \\<in> P\\_e.
+           BUT phi\\_fn(p) \\<noteq> q since phi\\_fn is piecewise, not global.
+           Instead: find the sector j containing q (target fan cover), then
+           invert the j-th affine map: p = (1-s-t)*v\\_1 + s*v\\_{j+2} + t*v\\_{si}
+           where (s,t) are barycentric coords of q in conv(centroid, u\\_j, u\\_{j+1}).\<close>
         show "q \<in> phi_fn ` P_e" sorry
       qed
       have prop4: "\<forall>t\<in>I_set. phi_fn (edge_pt_e 0 t) = phi_fn (edge_pt_e 1 (1-t))"
