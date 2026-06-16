@@ -6066,9 +6066,17 @@ proof -
            This means phi\\_fn(p) has a strict centroid contribution.
            The edge cross product of phi\\_fn(p) at any edge of P\\_w is then > 0
            (since centroid is strictly interior), but edge points have edge cross = 0.\<close>
+        \<comment> \<open>Get Cramer coordinates for p in sector jp.\<close>
+        let ?si_jp2 = "Suc(jp+2) mod ?ne"
+        let ?det_jp = "(vxe(jp+2)-vxe 1)*(vye ?si_jp2-vye 1)-(vye(jp+2)-vye 1)*(vxe ?si_jp2-vxe 1)"
+        have hdet_jp_pos: "?det_jp > 0" using hdet_pos[rule_format, OF hjp] by simp
+        \<comment> \<open>From hedge\\_pos: 1-s-t > 0 via algebraic identity (1-s-t)*det = hedge\\_pos.\<close>
+        \<comment> \<open>The centroid weight \\<alpha> = 1-s-t > 0, and phi\\_fn(p) = \\<alpha>*cw + s*u\\_{jp} + t*u\\_{jp+1}.\<close>
+        \<comment> \<open>Apply centroid\\_weight\\_not\\_on\\_edge.\<close>
+        \<comment> \<open>The full chain: hedge\\_pos > 0 \\<Rightarrow> centroid weight > 0 \\<Rightarrow> not on edge.
+           For now: sorry the connection (needs algebraic identity for centroid weight
+           + instantiation of centroid\\_weight\\_not\\_on\\_edge).\<close>
         show "phi_fn p \<noteq> edge_pt_w j s"
-          using hedge_pos hin_sec hp hp_ne_v1 hint_p hjp hj hs
-            hphi_affine_on_sector hdet_pos hC10_w hC11_w
           sorry
       qed
       have prop12: "\<forall>t\<in>I_set. \<forall>p\<in>P_e.
