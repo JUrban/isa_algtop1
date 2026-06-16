@@ -1683,9 +1683,58 @@ lemma fan_affine_interior_injective:
   shows "p = p'"
 proof (cases "jp = jp'")
   case True
-  \<comment> \<open>Same sector: same\\_sector\\_affine\\_injective gives unique Cramer coords,
-     hence unique source displacements, hence p = p'.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Same sector: same\\_sector\\_affine\\_injective gives unique Cramer coords.\<close>
+  define ex_v where "ex_v = vxe(jp+2)-vxe 1"
+  define ey_v where "ey_v = vye(jp+2)-vye 1"
+  define fx_v where "fx_v = vxe(Suc(jp+2) mod ne)-vxe 1"
+  define fy_v where "fy_v = vye(Suc(jp+2) mod ne)-vye 1"
+  have hdet_s_ne: "ex_v*fy_v - ey_v*fx_v \<noteq> 0"
+    using hdet_pos[rule_format, OF hjp]
+    unfolding ex_v_def ey_v_def fx_v_def fy_v_def by linarith
+  have hdet_t_ne: "(vxw jp-cxw)*(vyw(Suc jp mod nw)-cyw)-(vyw jp-cyw)*(vxw(Suc jp mod nw)-cxw) \<noteq> 0"
+    using hC10_w[rule_format, OF hjp] by linarith
+  \<comment> \<open>hphi\\_eq with jp = jp' simplifies: same affine formula on both sides.\<close>
+  \<comment> \<open>The x-coordinate and y-coordinate equalities follow from the pair equality.\<close>
+  from hphi_eq have hphi_simp: "
+    (let det = ex_v*fy_v-ey_v*fx_v; dx = fst p-vxe 1; dy = snd p-vye 1;
+         s = (fy_v*dx-fx_v*dy)/det; t = (ex_v*dy-ey_v*dx)/det
+     in ((1-s-t)*cxw + s*vxw jp + t*vxw(Suc jp mod nw),
+         (1-s-t)*cyw + s*vyw jp + t*vyw(Suc jp mod nw)))
+  = (let det = ex_v*fy_v-ey_v*fx_v; dx = fst p'-vxe 1; dy = snd p'-vye 1;
+         s = (fy_v*dx-fx_v*dy)/det; t = (ex_v*dy-ey_v*dx)/det
+     in ((1-s-t)*cxw + s*vxw jp + t*vxw(Suc jp mod nw),
+         (1-s-t)*cyw + s*vyw jp + t*vyw(Suc jp mod nw)))"
+    sorry \<comment> \<open>From hphi\\_eq with jp=jp': same sector on both sides.\<close>
+  \<comment> \<open>Extract x and y coords from the pair.\<close>
+  define s1 where "s1 = (fy_v*(fst p-vxe 1)-fx_v*(snd p-vye 1))/(ex_v*fy_v-ey_v*fx_v)"
+  define t1 where "t1 = (ex_v*(snd p-vye 1)-ey_v*(fst p-vxe 1))/(ex_v*fy_v-ey_v*fx_v)"
+  define s2 where "s2 = (fy_v*(fst p'-vxe 1)-fx_v*(snd p'-vye 1))/(ex_v*fy_v-ey_v*fx_v)"
+  define t2 where "t2 = (ex_v*(snd p'-vye 1)-ey_v*(fst p'-vxe 1))/(ex_v*fy_v-ey_v*fx_v)"
+  from hphi_simp
+  have "((1-s1-t1)*cxw + s1*vxw jp + t1*vxw(Suc jp mod nw),
+         (1-s1-t1)*cyw + s1*vyw jp + t1*vyw(Suc jp mod nw))
+      = ((1-s2-t2)*cxw + s2*vxw jp + t2*vxw(Suc jp mod nw),
+         (1-s2-t2)*cyw + s2*vyw jp + t2*vyw(Suc jp mod nw))"
+    unfolding Let_def s1_def t1_def s2_def t2_def by simp
+  hence hx_eq: "(1-s1-t1)*cxw + s1*vxw jp + t1*vxw(Suc jp mod nw) =
+      (1-s2-t2)*cxw + s2*vxw jp + t2*vxw(Suc jp mod nw)"
+    and hy_eq: "(1-s1-t1)*cyw + s1*vyw jp + t1*vyw(Suc jp mod nw) =
+      (1-s2-t2)*cyw + s2*vyw jp + t2*vyw(Suc jp mod nw)"
+    by auto
+  \<comment> \<open>triangle\\_coords\\_injective gives s1 = s2 and t1 = t2.\<close>
+  from triangle_coords_injective[OF hdet_t_ne hx_eq hy_eq]
+  have "s1 = s2" "t1 = t2" by auto
+  \<comment> \<open>cramer\\_injective gives (fst p-vxe 1) = (fst p'-vxe 1) and (snd p-vye 1) = (snd p'-vye 1).\<close>
+  from \<open>s1 = s2\<close> have hs_eq: "(fy_v*(fst p-vxe 1)-fx_v*(snd p-vye 1))/(ex_v*fy_v-ey_v*fx_v) =
+      (fy_v*(fst p'-vxe 1)-fx_v*(snd p'-vye 1))/(ex_v*fy_v-ey_v*fx_v)"
+    unfolding s1_def s2_def .
+  from \<open>t1 = t2\<close> have ht_eq: "(ex_v*(snd p-vye 1)-ey_v*(fst p-vxe 1))/(ex_v*fy_v-ey_v*fx_v) =
+      (ex_v*(snd p'-vye 1)-ey_v*(fst p'-vxe 1))/(ex_v*fy_v-ey_v*fx_v)"
+    unfolding t1_def t2_def .
+  from cramer_injective[OF hdet_s_ne hs_eq ht_eq]
+  have "fst p-vxe 1 = fst p'-vxe 1" "snd p-vye 1 = snd p'-vye 1" by auto
+  hence "fst p = fst p'" "snd p = snd p'" by auto
+  thus ?thesis using prod_eqI by (by100 blast)
 next
   case False
   \<comment> \<open>Different sector: target fan interiors are disjoint.\<close>
