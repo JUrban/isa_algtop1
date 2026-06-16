@@ -4317,6 +4317,11 @@ proof -
               from hin have "cross_v1 (j+2) p \<ge> 0" unfolding in_sector_def by auto
               with hle2 show ?thesis by linarith
             qed
+            \<comment> \<open>Algebraic boundary matching: affine\\_{jm}(s=0) = affine\\_j(t=0).\<close>
+            \<comment> \<open>From hcross\\_zero: cross\\_v1(j+2,p) = 0.
+               In sector jm formula: s\\_{jm} depends on cross\\_v1(jm+3,p) = cross\\_v1(j+2,p) = 0 (via hj\\_eq).
+               In sector j formula: t\\_j depends on cross\\_v1(j+2,p) = 0.
+               Both formulas reduce to (1-\\<lambda>)*centroid + \\<lambda>*u\\_{jm+1} for the same \\<lambda>.\<close>
             show ?thesis using hphi_jm hj_eq hcross_zero sorry
           qed
         qed
