@@ -4816,7 +4816,183 @@ proof -
         qed
         \<comment> \<open>phi\\_fn(p) = q: p is in source sector j, so phi\\_fn uses sector j affine formula.\<close>
         have hphi_eq: "phi_fn p = q"
-          sorry
+        proof (cases "s = 0 \<and> t = 0")
+          case True
+          \<comment> \<open>p = v\\_1, phi\\_fn(v\\_1) = centroid = q.\<close>
+          hence "p = (vxe 1, vye 1)" unfolding p_def by simp
+          hence "phi_fn p = (?cxw, ?cyw)" unfolding phi_fn_def by simp
+          moreover from True hqx hqy have "fst q = ?cxw" "snd q = ?cyw" by auto
+          ultimately show ?thesis by (cases q) simp
+        next
+          case False
+          hence hp_ne_v1: "p \<noteq> (vxe 1, vye 1)"
+          proof -
+            assume hst_ne: "\<not>(s = 0 \<and> t = 0)"
+            \<comment> \<open>p - v\\_1 = s*(v\\_{j+2}-v\\_1) + t*(v\\_{si}-v\\_1). If p = v\\_1, both terms = 0.
+               Since det(v\\_{j+2}-v\\_1, v\\_{si}-v\\_1) > 0, the vectors are LI.
+               So s*(v\\_{j+2}-v\\_1) + t*(v\\_{si}-v\\_1) = 0 implies s = 0 and t = 0.\<close>
+            show ?thesis
+            proof (rule ccontr)
+              assume "\<not> p \<noteq> (vxe 1, vye 1)"
+              hence hp_eq: "p = (vxe 1, vye 1)" by simp
+              have hfst_p: "fst p = (1-s-t)*vxe 1 + s*vxe(j+2) + t*vxe ?si"
+                unfolding p_def by simp
+              have hsnd_p: "snd p = (1-s-t)*vye 1 + s*vye(j+2) + t*vye ?si"
+                unfolding p_def by simp
+              from hp_eq have "fst p = vxe 1" "snd p = vye 1" by auto
+              have "vxe 1 = (1-s-t)*vxe 1 + s*vxe(j+2) + t*vxe ?si"
+                using \<open>fst p = vxe 1\<close> hfst_p by simp
+              hence "0 = s*(vxe(j+2) - vxe 1) + t*(vxe ?si - vxe 1)"
+                by (by100 algebra)
+              hence hdx0: "s*(vxe(j+2)-vxe 1) + t*(vxe ?si-vxe 1) = 0"
+                by (by100 algebra)
+              have "vye 1 = (1-s-t)*vye 1 + s*vye(j+2) + t*vye ?si"
+                using \<open>snd p = vye 1\<close> hsnd_p by simp
+              hence "0 = s*(vye(j+2) - vye 1) + t*(vye ?si - vye 1)"
+                by (by100 algebra)
+              hence hdy0: "s*(vye(j+2)-vye 1) + t*(vye ?si-vye 1) = 0"
+                by (by100 algebra)
+              let ?ex = "vxe(j+2)-vxe 1" and ?ey = "vye(j+2)-vye 1"
+              let ?fx = "vxe ?si-vxe 1" and ?fy = "vye ?si-vye 1"
+              let ?det = "?ex*?fy-?ey*?fx"
+              have hdet_pos_j: "?det > 0" using hdet_pos[rule_format, OF hj] by simp
+              \<comment> \<open>From hdx0: s*ex = -(t*fx). From hdy0: s*ey = -(t*fy).\<close>
+              from hdx0 have hsx: "s*?ex = -(t*?fx)" by linarith
+              from hdy0 have hsy: "s*?ey = -(t*?fy)" by linarith
+              \<comment> \<open>s * det = s*ex*fy - s*ey*fx = -(t*fx)*fy - (-(t*fy))*fx = 0.\<close>
+              have hsdet: "s*?det = (s*?ex)*?fy - (s*?ey)*?fx" by (by5000 algebra)
+              also have "\<dots> = (-(t*?fx))*?fy - (-(t*?fy))*?fx"
+                using hsx hsy by simp
+              also have "\<dots> = 0" by (by5000 algebra)
+              finally have "s * ?det = 0" .
+              hence hs0: "s = 0" using hdet_pos_j by (by100 simp)
+              from hdx0 hs0 have "t*?fx = 0" by simp
+              from hdy0 hs0 have "t*?fy = 0" by simp
+              \<comment> \<open>t = 0 since t*fx=0, t*fy=0, and (fx,fy) \\<noteq> (0,0).\<close>
+              \<comment> \<open>Simpler: from t*fx=0 and t*fy=0, if fx\\<noteq>0 or fy\\<noteq>0 then t=0.
+                 But det > 0 means (ex,ey) and (fx,fy) are not parallel.\<close>
+              have "t = 0"
+              proof (rule ccontr)
+                assume "t \<noteq> 0"
+                from \<open>t*?fx = 0\<close> \<open>t \<noteq> 0\<close> have "?fx = 0" by simp
+                from \<open>t*?fy = 0\<close> \<open>t \<noteq> 0\<close> have "?fy = 0" by simp
+                hence "?det = 0" using \<open>?fx = 0\<close> by (by100 simp)
+                thus False using hdet_pos_j by linarith
+              qed
+              from \<open>s = 0\<close> \<open>t = 0\<close> show False using hst_ne by simp
+            qed
+          qed
+          \<comment> \<open>Show p is in sector j.\<close>
+          have hin_sector: "in_sector j p"
+          proof -
+            let ?ex = "vxe(j+2)-vxe 1" and ?ey = "vye(j+2)-vye 1"
+            let ?fx = "vxe ?si-vxe 1" and ?fy = "vye ?si-vye 1"
+            let ?det = "?ex*?fy-?ey*?fx"
+            have hdet_pos_j: "?det > 0" using hdet_pos[rule_format, OF hj] by simp
+            \<comment> \<open>dx = fst p - vxe 1 = s*ex + t*fx.\<close>
+            have hdx: "fst p - vxe 1 = s*?ex + t*?fx"
+            proof -
+              have "fst p = (1-s-t)*vxe 1 + s*vxe(j+2) + t*vxe ?si" unfolding p_def by simp
+              thus ?thesis by (by5000 algebra)
+            qed
+            have hdy: "snd p - vye 1 = s*?ey + t*?fy"
+            proof -
+              have "snd p = (1-s-t)*vye 1 + s*vye(j+2) + t*vye ?si" unfolding p_def by simp
+              thus ?thesis by (by5000 algebra)
+            qed
+            \<comment> \<open>cross\\_v1(j+2, p) = t * det \\<ge> 0.\<close>
+            have hcross_j2: "cross_v1 (j+2) p = t * ?det"
+            proof -
+              have "cross_v1 (j+2) p = ?ex * (snd p - vye 1) - ?ey * (fst p - vxe 1)"
+                unfolding cross_v1_def by simp
+              also have "\<dots> = ?ex * (s*?ey + t*?fy) - ?ey * (s*?ex + t*?fx)"
+                using hdx hdy by simp
+              also have "\<dots> = t * (?ex*?fy - ?ey*?fx)" by (by100 algebra)
+              finally show ?thesis by simp
+            qed
+            have "cross_v1 (j+2) p \<ge> 0" using hcross_j2 ht hdet_pos_j
+              by (by100 simp)
+            \<comment> \<open>cross\\_v1(si, p) = -s * det \\<le> 0.\<close>
+            moreover have hcross_si: "cross_v1 ?si p = -(s * ?det)"
+            proof -
+              have "cross_v1 ?si p = ?fx * (snd p - vye 1) - ?fy * (fst p - vxe 1)"
+                unfolding cross_v1_def by simp
+              also have "\<dots> = ?fx * (s*?ey + t*?fy) - ?fy * (s*?ex + t*?fx)"
+                using hdx hdy by simp
+              also have "\<dots> = -(s * (?ex*?fy - ?ey*?fx))" by (by100 algebra)
+              finally show ?thesis by simp
+            qed
+            hence "cross_v1 ?si p \<le> 0" using hs hdet_pos_j
+              by (by100 simp)
+            ultimately show ?thesis unfolding in_sector_def by auto
+          qed
+          \<comment> \<open>Apply hphi\\_affine\\_on\\_sector to get phi\\_fn p in terms of Cramer formula.\<close>
+          from hphi_affine_on_sector[rule_format, OF hj hp_in hin_sector]
+          have hphi_val: "phi_fn (fst p, snd p) = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+              fx = vxe ?si-vxe 1; fy = vye ?si-vye 1;
+              det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+              s' = (fy*dx-fx*dy)/det; t' = (ex*dy-ey*dx)/det
+          in ((1-s'-t')*?cxw + s'*vxw j + t'*vxw(Suc j mod ?nw),
+              (1-s'-t')*?cyw + s'*vyw j + t'*vyw(Suc j mod ?nw)))" .
+          \<comment> \<open>The Cramer formula recovers s and t.\<close>
+          let ?ex = "vxe(j+2)-vxe 1" and ?ey = "vye(j+2)-vye 1"
+          let ?fx = "vxe ?si-vxe 1" and ?fy = "vye ?si-vye 1"
+          let ?det = "?ex*?fy-?ey*?fx"
+          have hdet_pos_j: "?det > 0" using hdet_pos[rule_format, OF hj] by simp
+          have hdet_ne: "?det \<noteq> 0" using hdet_pos_j by linarith
+          have hdx: "fst p - vxe 1 = s*?ex + t*?fx"
+          proof -
+            have "fst p = (1-s-t)*vxe 1 + s*vxe(j+2) + t*vxe ?si" unfolding p_def by simp
+            thus ?thesis by (by5000 algebra)
+          qed
+          have hdy: "snd p - vye 1 = s*?ey + t*?fy"
+          proof -
+            have "snd p = (1-s-t)*vye 1 + s*vye(j+2) + t*vye ?si" unfolding p_def by simp
+            thus ?thesis by (by5000 algebra)
+          qed
+          have hs_recover: "(?fy*(fst p-vxe 1)-?fx*(snd p-vye 1))/?det = s"
+          proof -
+            have "?fy*(fst p-vxe 1)-?fx*(snd p-vye 1) = ?fy*(s*?ex+t*?fx)-?fx*(s*?ey+t*?fy)"
+              using hdx hdy by simp
+            also have "\<dots> = s*(?ex*?fy-?ey*?fx)" by (by100 algebra)
+            finally have heq_s: "?fy*(fst p-vxe 1)-?fx*(snd p-vye 1) = s * ?det" by simp
+            hence "(?fy*(fst p-vxe 1)-?fx*(snd p-vye 1)) / ?det = s"
+              using hdet_ne by (by100 simp)
+            thus ?thesis .
+          qed
+          have ht_recover: "(?ex*(snd p-vye 1)-?ey*(fst p-vxe 1))/?det = t"
+          proof -
+            have "?ex*(snd p-vye 1)-?ey*(fst p-vxe 1) = ?ex*(s*?ey+t*?fy)-?ey*(s*?ex+t*?fx)"
+              using hdx hdy by simp
+            also have "\<dots> = t*(?ex*?fy-?ey*?fx)" by (by100 algebra)
+            finally have heq_t: "?ex*(snd p-vye 1)-?ey*(fst p-vxe 1) = t * ?det" by simp
+            hence "(?ex*(snd p-vye 1)-?ey*(fst p-vxe 1)) / ?det = t"
+              using hdet_ne by (by100 simp)
+            thus ?thesis .
+          qed
+          \<comment> \<open>Substitute back into the formula.\<close>
+          \<comment> \<open>hphi\\_val gives phi\\_fn in terms of Cramer. hs/ht\\_recover show Cramer = s/t.\<close>
+          have "phi_fn p = ((1-s-t)*?cxw + s*vxw j + t*vxw(Suc j mod ?nw),
+              (1-s-t)*?cyw + s*vyw j + t*vyw(Suc j mod ?nw))"
+          proof -
+            \<comment> \<open>Expand hphi\\_val with Let\\_def.\<close>
+            let ?s' = "(?fy*(fst p-vxe 1)-?fx*(snd p-vye 1))/?det"
+            let ?t' = "(?ex*(snd p-vye 1)-?ey*(fst p-vxe 1))/?det"
+            from hphi_val have hval: "phi_fn (fst p, snd p) =
+                ((1-?s'-?t')*?cxw + ?s'*vxw j + ?t'*vxw(Suc j mod ?nw),
+                 (1-?s'-?t')*?cyw + ?s'*vyw j + ?t'*vyw(Suc j mod ?nw))"
+              unfolding Let_def by simp
+            have "?s' = s" using hs_recover by simp
+            moreover have "?t' = t" using ht_recover by simp
+            ultimately have "phi_fn (fst p, snd p) =
+                ((1-s-t)*?cxw + s*vxw j + t*vxw(Suc j mod ?nw),
+                 (1-s-t)*?cyw + s*vyw j + t*vyw(Suc j mod ?nw))"
+              using hval by simp
+            thus ?thesis by simp
+          qed
+          moreover have "q = (fst q, snd q)" by simp
+          ultimately show ?thesis using hqx hqy by simp
+        qed
         from hp_in hphi_eq show "q \<in> phi_fn ` P_e" by (by100 blast)
       qed
       have prop4: "\<forall>t\<in>I_set. phi_fn (edge_pt_e 0 t) = phi_fn (edge_pt_e 1 (1-t))"
