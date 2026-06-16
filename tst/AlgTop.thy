@@ -1596,6 +1596,57 @@ proof -
   from \<open>a = 0\<close> \<open>b = 0\<close> show ?thesis unfolding a_def b_def by auto
 qed
 
+\<comment> \<open>Standalone lemma: same-sector affine map is injective.
+   If two points (x1,y1) and (x2,y2) both map to the same target point via
+   the Cramer-based affine formula with the same sector vertices and centroid,
+   then (x1,y1) = (x2,y2).\<close>
+lemma same_sector_affine_injective:
+  fixes ex ey fx fy cx cy ax ay bx by' :: real and x1 y1 x2 y2 :: real
+  assumes hdet_s: "ex*fy - ey*fx \<noteq> 0"
+      and hdet_t: "(ax-cx)*(by'-cy) - (ay-cy)*(bx-cx) \<noteq> 0"
+      and hx_eq: "(let s1 = (fy*(x1-cx)-fx*(y1-cy))/(ex*fy-ey*fx);
+                       t1 = (ex*(y1-cy)-ey*(x1-cx))/(ex*fy-ey*fx)
+                   in (1-s1-t1)*cx + s1*ax + t1*bx)
+                = (let s2 = (fy*(x2-cx)-fx*(y2-cy))/(ex*fy-ey*fx);
+                       t2 = (ex*(y2-cy)-ey*(x2-cx))/(ex*fy-ey*fx)
+                   in (1-s2-t2)*cx + s2*ax + t2*bx)"
+      and hy_eq: "(let s1 = (fy*(x1-cx)-fx*(y1-cy))/(ex*fy-ey*fx);
+                       t1 = (ex*(y1-cy)-ey*(x1-cx))/(ex*fy-ey*fx)
+                   in (1-s1-t1)*cy + s1*ay + t1*by')
+                = (let s2 = (fy*(x2-cx)-fx*(y2-cy))/(ex*fy-ey*fx);
+                       t2 = (ex*(y2-cy)-ey*(x2-cx))/(ex*fy-ey*fx)
+                   in (1-s2-t2)*cy + s2*ay + t2*by')"
+  shows "x1 = x2 \<and> y1 = y2"
+proof -
+  define s1 where "s1 = (fy*(x1-cx)-fx*(y1-cy))/(ex*fy-ey*fx)"
+  define t1 where "t1 = (ex*(y1-cy)-ey*(x1-cx))/(ex*fy-ey*fx)"
+  define s2 where "s2 = (fy*(x2-cx)-fx*(y2-cy))/(ex*fy-ey*fx)"
+  define t2 where "t2 = (ex*(y2-cy)-ey*(x2-cx))/(ex*fy-ey*fx)"
+  from hx_eq have "(1-s1-t1)*cx + s1*ax + t1*bx = (1-s2-t2)*cx + s2*ax + t2*bx"
+    unfolding Let_def s1_def t1_def s2_def t2_def by simp
+  moreover from hy_eq have "(1-s1-t1)*cy + s1*ay + t1*by' = (1-s2-t2)*cy + s2*ay + t2*by'"
+    unfolding Let_def s1_def t1_def s2_def t2_def by simp
+  ultimately have "s1 = s2 \<and> t1 = t2"
+    by (rule triangle_coords_injective[OF hdet_t])
+  hence hs: "s1 = s2" and ht: "t1 = t2" by auto
+  from hs have "(fy*(x1-cx)-fx*(y1-cy))/(ex*fy-ey*fx) = (fy*(x2-cx)-fx*(y2-cy))/(ex*fy-ey*fx)"
+    unfolding s1_def s2_def .
+  moreover from ht have "(ex*(y1-cy)-ey*(x1-cx))/(ex*fy-ey*fx) = (ex*(y2-cy)-ey*(x2-cx))/(ex*fy-ey*fx)"
+    unfolding t1_def t2_def .
+  ultimately have "(x1-cx) = (x2-cx) \<and> (y1-cy) = (y2-cy)"
+    by (rule cramer_injective[OF hdet_s])
+  thus ?thesis by auto
+qed
+
+\<comment> \<open>Standalone lemma: fan triangle interiors from a centroid are disjoint.
+   If q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} with \\<alpha>,s,t > 0
+   and q = \\<alpha>'*cw + s'*u\\_{j'} + t'*u\\_{j'+1} with \\<alpha>',s',t' > 0
+   and C10 holds (centroid strictly interior), and j \\<noteq> j', then contradiction.\<close>
+\<comment> \<open>Actually: we show the cross product cross\\_cw at the shared boundary forces j = j'.
+   Specifically: cross\\_cw(j+1, q) = s'*det(u\\_{j+1}-cw, u\\_{j'}-cw) + ... and these
+   must be both < 0 (from being in sector j) and \\<ge> 0 (from sector j' if j+1 = j').
+   The full proof is complex; for now sorry this for progress.\<close>
+
 \<comment> \<open>Standalone lemma: a point with positive centroid weight is not on any polygon edge.
    If q = \\<alpha>*cw + \\<beta>*u\\_j + \\<gamma>*u\\_{j+1} with \\<alpha> > 0 and
    the centroid satisfies C10 (strictly interior to each edge),
