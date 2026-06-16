@@ -1774,7 +1774,30 @@ proof -
       define dj where "dj = (vxw j_sec-vxw 0)*cwy - (vyw j_sec-vyw 0)*cwx"
       define dk where "dk = (vxw(Suc j_sec mod nw)-vxw 0)*cwy - (vyw(Suc j_sec mod nw)-vyw 0)*cwx"
       have helim: "s_v*dj + t_v*dk = 0"
-        sorry \<comment> \<open>From cwy*hx3 - cwx*hy3 + factoring.\<close>
+      proof -
+        have "cwy*(s_v*(vxw j_sec-vxw 0) + t_v*(vxw(Suc j_sec mod nw)-vxw 0) + (\<alpha>-r)*(cxw-vxw 0)) = 0"
+          using hx3 by simp
+        hence hcwy_eq: "cwy*s_v*(vxw j_sec-vxw 0) + cwy*t_v*(vxw(Suc j_sec mod nw)-vxw 0) + cwy*(\<alpha>-r)*(cxw-vxw 0) = 0"
+          by (by100 algebra)
+        have "cwx*(s_v*(vyw j_sec-vyw 0) + t_v*(vyw(Suc j_sec mod nw)-vyw 0) + (\<alpha>-r)*(cyw-vyw 0)) = 0"
+          using hy3 by simp
+        hence hcwx_eq: "cwx*s_v*(vyw j_sec-vyw 0) + cwx*t_v*(vyw(Suc j_sec mod nw)-vyw 0) + cwx*(\<alpha>-r)*(cyw-vyw 0) = 0"
+          by (by100 algebra)
+        \<comment> \<open>Subtract: the (\\<alpha>-r)*cwx*cwy and (\\<alpha>-r)*cwy*cwx terms cancel.\<close>
+        \<comment> \<open>The (\\<alpha>-r) terms: cwy*(\\<alpha>-r)*cwx = cwx*(\\<alpha>-r)*cwy, so they cancel.\<close>
+        have hcancel: "cwy*(\<alpha>-r)*(cxw-vxw 0) = cwx*(\<alpha>-r)*(cyw-vyw 0)"
+          unfolding cwx_def cwy_def by (by100 algebra)
+        from hcwy_eq hcwx_eq hcancel
+        have hsub: "cwy*s_v*(vxw j_sec-vxw 0) + cwy*t_v*(vxw(Suc j_sec mod nw)-vxw 0)
+            - cwx*s_v*(vyw j_sec-vyw 0) - cwx*t_v*(vyw(Suc j_sec mod nw)-vyw 0) = 0"
+          by linarith
+        \<comment> \<open>Factor: this = s*(dj) + t*(dk).\<close>
+        have "s_v*dj = cwy*s_v*(vxw j_sec-vxw 0) - cwx*s_v*(vyw j_sec-vyw 0)"
+          unfolding dj_def by (by100 algebra)
+        moreover have "t_v*dk = cwy*t_v*(vxw(Suc j_sec mod nw)-vxw 0) - cwx*t_v*(vyw(Suc j_sec mod nw)-vyw 0)"
+          unfolding dk_def by (by100 algebra)
+        ultimately show ?thesis using hsub by linarith
+      qed
       \<comment> \<open>Both dj, dk < 0 (from cross\\_product\\_cyclic + C10).\<close>
       have hdj_neg: "dj < 0"
         sorry \<comment> \<open>dj = -(C10 at j\\_sec) < 0 via cross\\_product\\_cyclic.\<close>
