@@ -4529,7 +4529,41 @@ proof -
       \<comment> \<open>Step A: Each sector\\_set j is closed in R^2 (P\\_e is compact hence closed,
          half-planes are closed, intersection of closed sets is closed).\<close>
       have hsector_R2_closed: "\<forall>j<?nw. closed (sector_set j)"
-        sorry \<comment> \<open>P\\_e is compact (polygon), sector = P\\_e \\<inter> half-planes. compact\\_imp\\_closed + closed\\_Int.\<close>
+      proof (intro allI impI)
+        fix j assume hj: "j < ?nw"
+        \<comment> \<open>sector\\_set j = {p \\<in> P\\_e. cross\\_v1(j+2,p) \\<ge> 0 \\<and> cross\\_v1(si,p) \\<le> 0}.\<close>
+        \<comment> \<open>P\\_e is compact (finite convex hull) hence closed.\<close>
+        have hPe_closed: "closed P_e"
+        proof -
+          have hPe_compact: "compact P_e" sorry
+            \<comment> \<open>P\\_e = convex hull of finitely many points.
+               finite\\_imp\\_compact\\_convex\\_hull gives compact. Need P\\_e = convex hull.\<close>
+          from compact_imp_closed[OF hPe_compact] show ?thesis .
+        qed
+        \<comment> \<open>The half-plane {p. cross\\_v1(j+2, p) \\<ge> 0} is closed (preimage of [0,\\<infinity>) under continuous linear).\<close>
+        have hH1_closed: "closed {p :: real \<times> real. (vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1) \<ge> 0}"
+        proof -
+          have "closed {p :: real \<times> real. 0 \<le> (vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1)}"
+            by (intro closed_Collect_le continuous_intros)
+          thus ?thesis by (by100 simp)
+        qed
+        have hH2_closed: "closed {p :: real \<times> real. (vxe(Suc(j+2) mod ?ne)-vxe 1)*(snd p-vye 1)-(vye(Suc(j+2) mod ?ne)-vye 1)*(fst p-vxe 1) \<le> 0}"
+          by (intro closed_Collect_le continuous_intros)
+        \<comment> \<open>sector\\_set j = P\\_e \\<inter> H1 \\<inter> H2, intersection of closed sets.\<close>
+        have "sector_set j = P_e \<inter> {p. (vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1) \<ge> 0}
+          \<inter> {p. (vxe(Suc(j+2) mod ?ne)-vxe 1)*(snd p-vye 1)-(vye(Suc(j+2) mod ?ne)-vye 1)*(fst p-vxe 1) \<le> 0}"
+          unfolding sector_set_def in_sector_def cross_v1_def by auto
+        from closed_Int[OF hH1_closed hH2_closed]
+        have hH12: "closed ({p :: real \<times> real. (vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1) \<ge> 0}
+          \<inter> {p. (vxe(Suc(j+2) mod ?ne)-vxe 1)*(snd p-vye 1)-(vye(Suc(j+2) mod ?ne)-vye 1)*(fst p-vxe 1) \<le> 0})" .
+        from closed_Int[OF hPe_closed hH12]
+        have "closed (P_e \<inter> ({p. (vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1) \<ge> 0}
+          \<inter> {p. (vxe(Suc(j+2) mod ?ne)-vxe 1)*(snd p-vye 1)-(vye(Suc(j+2) mod ?ne)-vye 1)*(fst p-vxe 1) \<le> 0}))" .
+        moreover have "sector_set j = P_e \<inter> ({p. (vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1) \<ge> 0}
+          \<inter> {p. (vxe(Suc(j+2) mod ?ne)-vxe 1)*(snd p-vye 1)-(vye(Suc(j+2) mod ?ne)-vye 1)*(fst p-vxe 1) \<le> 0})"
+          unfolding sector_set_def in_sector_def cross_v1_def by auto
+        ultimately show "closed (sector_set j)" by simp
+      qed
       \<comment> \<open>Step B: phi\\_fn is continuous\\_on each sector (affine function of (fst p, snd p)).\<close>
       have hsector_cont_on: "\<forall>j<?nw. continuous_on (sector_set j) phi_fn"
         sorry \<comment> \<open>phi\\_fn = affine on sector j (hphi\\_affine\\_on\\_sector).
