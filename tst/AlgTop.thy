@@ -1762,6 +1762,121 @@ proof -
   qed
 qed
 
+\<comment> \<open>General lemma: edge cross product is strictly positive at interior points.
+   If: (1) all vertex cross products \\<ge> 0 at edge i (from C11);
+       (2) p = \\<Sum> \\<mu>\\_k * v\\_k is a convex combination;
+       (3) not all nonzero \\<mu>\\_k have v\\_k on edge i (i.e., p is not on edge i);
+   then: edge cross at p > 0.
+   This abstracts the C11+linearity argument used in both source and target fans.\<close>
+lemma convex_combo_edge_cross_strict:
+  fixes n :: nat and vx vy :: "nat \<Rightarrow> real" and edge_i :: nat and coeffs :: "nat \<Rightarrow> real"
+  assumes hn: "n \<ge> 3" and hi: "edge_i < n"
+      and hnn: "\<forall>k<n. coeffs k \<ge> 0"
+      and hsum1: "(\<Sum>k<n. coeffs k) = 1"
+      and hedge: "\<forall>k<n. k \<noteq> edge_i \<longrightarrow> k \<noteq> Suc edge_i mod n \<longrightarrow>
+          (vx(Suc edge_i mod n)-vx edge_i)*(vy k-vy edge_i)-
+          (vy(Suc edge_i mod n)-vy edge_i)*(vx k-vx edge_i) > 0"
+      and hstrict: "\<exists>k<n. k \<noteq> edge_i \<and> k \<noteq> Suc edge_i mod n \<and> coeffs k > 0"
+  shows "(vx(Suc edge_i mod n)-vx edge_i)*((\<Sum>k<n. coeffs k * vy k)-vy edge_i)-
+      (vy(Suc edge_i mod n)-vy edge_i)*((\<Sum>k<n. coeffs k * vx k)-vx edge_i) > 0"
+proof -
+  let ?dx_e = "vx(Suc edge_i mod n)-vx edge_i"
+  let ?dy_e = "vy(Suc edge_i mod n)-vy edge_i"
+  \<comment> \<open>Step 1: linearity. Edge cross at p = \\<Sum> \\<mu>\\_k * edge\\_cross(v\\_k).\<close>
+  have hsy: "(\<Sum>k<n. coeffs k * vy k) - vy edge_i = (\<Sum>k<n. coeffs k * (vy k - vy edge_i))"
+  proof -
+    have "(\<Sum>k<n. coeffs k * (vy k - vy edge_i)) = (\<Sum>k<n. coeffs k * vy k) - (\<Sum>k<n. coeffs k * vy edge_i)"
+    proof -
+      have "\<And>k. coeffs k * (vy k - vy edge_i) = coeffs k * vy k - coeffs k * vy edge_i"
+        by (by100 algebra)
+      hence "(\<Sum>k<n. coeffs k * (vy k - vy edge_i)) = (\<Sum>k<n. (coeffs k * vy k - coeffs k * vy edge_i))" by simp
+      also have "\<dots> = (\<Sum>k<n. coeffs k * vy k) - (\<Sum>k<n. coeffs k * vy edge_i)"
+        by (rule sum_subtractf)
+      finally show ?thesis .
+    qed
+    also have "(\<Sum>k<n. coeffs k * vy edge_i) = vy edge_i"
+    proof -
+      have "(\<Sum>k<n. coeffs k * vy edge_i) = (\<Sum>k<n. coeffs k) * vy edge_i"
+        by (simp add: sum_distrib_right[symmetric])
+      thus ?thesis using hsum1 by simp
+    qed
+    finally show ?thesis by simp
+  qed
+  have hsx: "(\<Sum>k<n. coeffs k * vx k) - vx edge_i = (\<Sum>k<n. coeffs k * (vx k - vx edge_i))"
+  proof -
+    have "(\<Sum>k<n. coeffs k * (vx k - vx edge_i)) = (\<Sum>k<n. coeffs k * vx k) - (\<Sum>k<n. coeffs k * vx edge_i)"
+    proof -
+      have "\<And>k. coeffs k * (vx k - vx edge_i) = coeffs k * vx k - coeffs k * vx edge_i"
+        by (by100 algebra)
+      hence "(\<Sum>k<n. coeffs k * (vx k - vx edge_i)) = (\<Sum>k<n. (coeffs k * vx k - coeffs k * vx edge_i))" by simp
+      also have "\<dots> = (\<Sum>k<n. coeffs k * vx k) - (\<Sum>k<n. coeffs k * vx edge_i)"
+        by (rule sum_subtractf)
+      finally show ?thesis .
+    qed
+    also have "(\<Sum>k<n. coeffs k * vx edge_i) = vx edge_i"
+    proof -
+      have "(\<Sum>k<n. coeffs k * vx edge_i) = (\<Sum>k<n. coeffs k) * vx edge_i"
+        by (simp add: sum_distrib_right[symmetric])
+      thus ?thesis using hsum1 by simp
+    qed
+    finally show ?thesis by simp
+  qed
+  \<comment> \<open>edge\\_cross(p) = \\<Sum> \\<mu>\\_k * (dx\\_e*(vy k - vy edge\\_i) - dy\\_e*(vx k - vx edge\\_i)).\<close>
+  have hlin: "?dx_e*((\<Sum>k<n. coeffs k * vy k)-vy edge_i)-?dy_e*((\<Sum>k<n. coeffs k * vx k)-vx edge_i)
+    = (\<Sum>k<n. coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i)))"
+  proof -
+    have "?dx_e*(\<Sum>k<n. coeffs k * (vy k-vy edge_i)) = (\<Sum>k<n. ?dx_e*(coeffs k*(vy k-vy edge_i)))"
+      by (rule sum_distrib_left)
+    moreover have "?dy_e*(\<Sum>k<n. coeffs k * (vx k-vx edge_i)) = (\<Sum>k<n. ?dy_e*(coeffs k*(vx k-vx edge_i)))"
+      by (rule sum_distrib_left)
+    ultimately have "?dx_e*(\<Sum>k<n. coeffs k * (vy k-vy edge_i))-?dy_e*(\<Sum>k<n. coeffs k * (vx k-vx edge_i))
+      = (\<Sum>k<n. ?dx_e*(coeffs k*(vy k-vy edge_i))) - (\<Sum>k<n. ?dy_e*(coeffs k*(vx k-vx edge_i)))" by simp
+    also have "\<dots> = (\<Sum>k<n. (?dx_e*(coeffs k*(vy k-vy edge_i)) - ?dy_e*(coeffs k*(vx k-vx edge_i))))"
+      by (rule sum_subtractf[symmetric])
+    also have "\<dots> = (\<Sum>k<n. coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i)))"
+    proof (rule sum.cong)
+      fix k assume "k \<in> {..<n}"
+      show "?dx_e*(coeffs k*(vy k-vy edge_i)) - ?dy_e*(coeffs k*(vx k-vx edge_i))
+        = coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i))" by (by100 algebra)
+    qed simp
+    finally show ?thesis using hsy hsx by simp
+  qed
+  \<comment> \<open>Step 2: each term \\<ge> 0.\<close>
+  have hterms_ge: "\<forall>k<n. coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i)) \<ge> 0"
+  proof (intro allI impI)
+    fix k assume hk: "k < n"
+    show "coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i)) \<ge> 0"
+    proof (cases "k = edge_i \<or> k = Suc edge_i mod n")
+      case True thus ?thesis by (elim disjE) simp_all
+    next
+      case False hence "k \<noteq> edge_i" "k \<noteq> Suc edge_i mod n" by auto
+      from hedge[rule_format, OF hk this]
+      have "?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i) > 0" .
+      thus ?thesis using hnn[rule_format, OF hk] by (by100 simp)
+    qed
+  qed
+  \<comment> \<open>Step 3: at least one term > 0 (from hstrict).\<close>
+  from hstrict obtain k0 where hk0: "k0 < n" "k0 \<noteq> edge_i" "k0 \<noteq> Suc edge_i mod n" "coeffs k0 > 0"
+    by auto
+  have hk0_pos: "?dx_e*(vy k0-vy edge_i)-?dy_e*(vx k0-vx edge_i) > 0"
+    using hedge[rule_format, OF hk0(1) hk0(2) hk0(3)] .
+  have hk0_term: "coeffs k0 * (?dx_e*(vy k0-vy edge_i)-?dy_e*(vx k0-vx edge_i)) > 0"
+    using hk0(4) hk0_pos by (by100 simp)
+  \<comment> \<open>Step 4: sum > 0 (one term > 0, rest \\<ge> 0).\<close>
+  have "(\<Sum>k<n. coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i))) > 0"
+  proof -
+    have "(\<Sum>k<n. coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i)))
+      = coeffs k0 * (?dx_e*(vy k0-vy edge_i)-?dy_e*(vx k0-vx edge_i))
+        + (\<Sum>k\<in>{..<n}-{k0}. coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i)))"
+      using sum.remove[of "{..<n}" k0 "\<lambda>k. coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i))"]
+        hk0(1) by simp
+    moreover have "(\<Sum>k\<in>{..<n}-{k0}. coeffs k * (?dx_e*(vy k-vy edge_i)-?dy_e*(vx k-vx edge_i))) \<ge> 0"
+      by (rule sum_nonneg) (use hterms_ge in auto)
+    ultimately show ?thesis using hk0_term by linarith
+  qed
+  thus ?thesis using hlin by linarith
+qed
+
 lemma spur_collapse_cancel_homeo:
   fixes w :: "(nat \<times> bool) list" and a :: "nat \<times> bool"
   assumes hlen: "length w \<ge> 3"
