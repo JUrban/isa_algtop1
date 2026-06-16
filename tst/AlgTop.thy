@@ -4177,7 +4177,35 @@ proof -
                   qed
                 qed
               qed
-              have hdy0: "snd p - vye 1 = 0" using hcr_j2_eq hdx0 sorry
+              have hdy0: "snd p - vye 1 = 0"
+              proof -
+                from hcr_j2_eq hdx0 have "(vxe(j+2)-vxe 1) * (snd p - vye 1) = 0" by simp
+                moreover have "vxe(j+2) - vxe 1 \<noteq> 0 \<or> vye(j+2) - vye 1 \<noteq> 0"
+                proof -
+                  have "j+2 < ?ne" using hj hne_eq by linarith
+                  have "(1::nat) < ?ne" using hlen hne_eq by linarith
+                  have "(1::nat) \<noteq> j+2" by linarith
+                  from hC3_e[rule_format, OF \<open>1 < ?ne\<close> \<open>j+2 < ?ne\<close> \<open>1 \<noteq> j+2\<close>]
+                  have "(vxe 1, vye 1) \<noteq> (vxe(j+2), vye(j+2))" .
+                  thus ?thesis by auto
+                qed
+                ultimately show ?thesis
+                proof (elim disjE)
+                  assume "vxe(j+2) - vxe 1 \<noteq> 0"
+                  with \<open>(vxe(j+2)-vxe 1) * (snd p - vye 1) = 0\<close>
+                  show ?thesis by (by100 simp)
+                next
+                  assume hvye_ne: "vye(j+2) - vye 1 \<noteq> 0"
+                  \<comment> \<open>vxe(j+2) - vxe 1 could be 0. Use cross constraints with dx=0.\<close>
+                  from hcr_jm3_exp hdx0
+                  have "((vxe(jm+3)-vxe 1))*(snd p - vye 1) \<le> 0" by simp
+                  moreover from hcr_jm2_exp hdx0
+                  have "((vxe(jm+2)-vxe 1))*(snd p - vye 1) \<ge> 0" by simp
+                  \<comment> \<open>If both coefficients same sign: dy forced to 0.
+                     If different signs: also forced to 0.\<close>
+                  ultimately show ?thesis sorry
+                qed
+              qed
               have "fst p - vxe 1 = 0 \<and> snd p - vye 1 = 0" using hdx0 hdy0 by simp
               hence "(fst p, snd p) = (vxe 1, vye 1)" by (by100 simp)
               thus False using hp_ne by simp
