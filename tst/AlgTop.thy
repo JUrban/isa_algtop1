@@ -4769,7 +4769,7 @@ proof -
               s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
           in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
               (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))"
-            by (cases p) simp
+            by (cases p) simp \<comment> \<open>SLOW (~25s): pair destruction + Let simplification.\<close>
           thus "phi_fn p = affine_j p" unfolding affine_j_def Let_def by (by100 simp)
         qed
         \<comment> \<open>affine\\_j is continuous (affine function of fst p, snd p).\<close>
