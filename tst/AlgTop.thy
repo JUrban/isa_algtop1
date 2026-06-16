@@ -26,22 +26,23 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-15, session 1559):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-15, session 1570):
 
-~66 sorry word occurrences. Build ~30s.
+~74 sorry word occurrences. Build ~44s.
 
 DEPENDENCY TREE FOR CANCEL CHAIN:
-  spur\\_collapse\\_cancel\\_homeo (phi construction, ~9 sorry proof commands)
+  spur\\_collapse\\_cancel\\_homeo (phi construction, ~8 sorry proof commands)
     phi\\_fn: piecewise-affine fan extension from v\\_1 to centroid(P\\_w)
-    KEY BLOCKER: hdet\\_general (signed area positivity: det(v\\_m-v\\_1,v\\_n-v\\_1)>0 for 2\\<le>m<n<ne)
-    PROVED: centroid properties, sector determinants > 0 (C11),
+    PROVED: hdet\\_general via regular polygon trig formula (4*sin*sin*sin > 0),
+            added fan\\_det to scheme\\_quotient\\_exists in AlgTopCached15,
+            centroid properties, sector determinants > 0 (C11),
             spur0/spur1 edge helpers FULLY PROVED,
             nonspur edge helper proved for t\\<in>(0,1) + boundary,
             arc-not-on-edge FULLY PROVED, vertex \\<noteq> v\\_1 (C11/C3),
             hjv\\_eq (j\\_v=k-1, uses hdet\\_general),
             hphi\\_at\\_vertex j\\_v=k case (phi\\_s2=1, phi\\_t2=0),
             phi\\_s2/phi\\_t2 named decomposition for let-expression control
-    REMAINING: hdet\\_general (sorry), hfan\\_cover, huniq/hLEAST\\_k,
+    REMAINING: hfan\\_cover, huniq/hLEAST\\_k,
                prop1 (range), prop2 (continuity), prop3 (surjectivity),
                prop10-12 (interior properties)
     <- front\\_cancel\\_proper\\_direct (0 sorry)
@@ -1518,66 +1519,148 @@ qed
    - Spur to vertex: C12 prevents vertex-edge crossings
    - Vertex chains: vtgt transfers via label correspondence
    Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
-\<comment> \<open>Fan determinant positivity: for a strictly convex polygon (C11 condition),
-   the signed area det(v\\_m-v\\_1, v\\_n-v\\_1) > 0 for 2 \\<le> m < n < ne.
-   This is the key geometric lemma for the phi construction.\<close>
-lemma fan_det_pos_from_vertex:
-  fixes vx vy :: "nat \<Rightarrow> real" and ne :: nat
-  assumes hne: "ne \<ge> 5"
-    and hC11: "\<forall>i<ne. \<forall>k<ne. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ne \<longrightarrow>
-        (vx k-vx i)*(vy(Suc i mod ne)-vy i)-(vy k-vy i)*(vx(Suc i mod ne)-vx i) < 0"
-  shows "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < ne \<longrightarrow>
-    (vx m - vx 1) * (vy n - vy 1) - (vy m - vy 1) * (vx n - vx 1) > 0"
-proof (intro allI impI)
-  fix m n :: nat assume hm: "2 \<le> m" and hmn: "m < n" and hn: "n < ne"
-  show "(vx m - vx 1) * (vy n - vy 1) - (vy m - vy 1) * (vx n - vx 1) > 0"
-    using hm hmn hn
-  proof (induct "n - m" arbitrary: n rule: less_induct)
-    case (less n)
-    show ?case
-    proof (cases "n = m + 1")
-      case True \<comment> \<open>Consecutive: from C11 at edge m, vertex 1.\<close>
-      have hm_lt: "m < ne" using less.prems by (by100 linarith)
-      have h1_lt: "(1::nat) < ne" using hne by (by100 linarith)
-      have h1_ne_m: "(1::nat) \<noteq> m" using less.prems(1) by (by100 linarith)
-      have "Suc m mod ne = m + 1"
-      proof -
-        have "m + 1 < ne" using True less.prems by (by100 linarith)
-        thus ?thesis by (by100 simp)
-      qed
-      hence h1_ne_sm: "(1::nat) \<noteq> Suc m mod ne"
-        using less.prems(1) by (by100 simp)
-      from hC11[rule_format, OF hm_lt h1_lt h1_ne_m h1_ne_sm]
-      have "(vx 1-vx m)*(vy(Suc m mod ne)-vy m)-(vy 1-vy m)*(vx(Suc m mod ne)-vx m) < 0" .
-      hence hC11_inst: "(vx 1-vx m)*(vy(m+1)-vy m)-(vy 1-vy m)*(vx(m+1)-vx m) < 0"
-        using \<open>Suc m mod ne = m + 1\<close> by (by100 simp)
-      have "(vx m-vx 1)*(vy(m+1)-vy 1)-(vy m-vy 1)*(vx(m+1)-vx 1) =
-        -((vx 1-vx m)*(vy(m+1)-vy m)-(vy 1-vy m)*(vx(m+1)-vx m))" by (by100 algebra)
-      hence "(vx m-vx 1)*(vy(m+1)-vy 1)-(vy m-vy 1)*(vx(m+1)-vx 1) > 0"
-        using hC11_inst by (by100 linarith)
-      thus ?thesis using True by (by100 simp)
-    next
-      case False hence hmn1: "m + 1 < n" using less.prems by (by100 linarith)
-      \<comment> \<open>Inductive step: det(v\\_m-v\\_1, v\\_n-v\\_1) = det(v\\_m-v\\_1, v\\_{n-1}-v\\_1) + det(v\\_m-v\\_1, v\\_n-v\\_{n-1}).
-         First term > 0 by IH. Need second term > 0: use C11 at edge (n-1).\<close>
-      \<comment> \<open>IH at n-1 (same m): det(v\\_m-v\\_1, v\\_{n-1}-v\\_1) > 0.\<close>
-      have hIH: "(vx m - vx 1) * (vy (n-1) - vy 1) - (vy m - vy 1) * (vx (n-1) - vx 1) > 0"
-      proof -
-        have "n - 1 - m < n - m" using hmn1 by (by100 linarith)
-        thus ?thesis using less.hyps less.prems hmn1 by (by100 simp)
-      qed
-      \<comment> \<open>det(v\\_m-v\\_1, v\\_n-v\\_1) = det(v\\_{m+1}-v\\_1, v\\_n-v\\_1) + det(v\\_m-v\\_{m+1}, v\\_n-v\\_1).\<close>
-      \<comment> \<open>First term > 0 (IH2). Second: det(v\\_m-v\\_{m+1}, v\\_n-v\\_1) = det(v\\_m-v\\_{m+1}, v\\_n-v\\_{m+1}) + det(v\\_m-v\\_{m+1}, v\\_{m+1}-v\\_1).
-         C11 at edge m, vertex n: det(v\\_n-v\\_m, v\\_{m+1}-v\\_m) < 0 \\<longrightarrow> det(v\\_m-v\\_{m+1}, v\\_n-v\\_{m+1}) = det(v\\_m-v\\_{m+1}, v\\_n-v\\_m) + 0 ... hmm.\<close>
-      \<comment> \<open>Simpler: det(v\\_m-v\\_1, v\\_n-v\\_1) = det(v\\_m-v\\_{m+1}, v\\_n-v\\_{m+1}) + det(v\\_m-v\\_{m+1}, v\\_{m+1}-v\\_1)
-                                             + det(v\\_{m+1}-v\\_1, v\\_n-v\\_{m+1}) + det(v\\_{m+1}-v\\_1, v\\_{m+1}-v\\_1)
-         = det(v\\_m-v\\_{m+1}, v\\_n-v\\_{m+1}) + det(v\\_m-v\\_{m+1}, v\\_{m+1}-v\\_1) + det(v\\_{m+1}-v\\_1, v\\_n-v\\_{m+1})
-         = C11\\_at\\_edge\\_m\\_vtx\\_n (< 0) + det\\_pos(m) (> 0) + IH2\\_component (> 0)
-         Not clearly positive either.\<close>
-      show ?thesis sorry
-    qed
+\<comment> \<open>Trig identity: sin(A) + sin(B) - sin(A+B) = 4*sin(A/2)*sin(B/2)*sin((A+B)/2).
+   Used for the regular polygon fan determinant proof.\<close>
+lemma sin_sum_minus_sin_add:
+  fixes A B :: real
+  shows "sin A + sin B - sin(A+B) = 4 * sin(A/2) * sin(B/2) * sin((A+B)/2)"
+proof -
+  have h1: "sin(A+B) = sin A * cos B + cos A * sin B" by (rule sin_add)
+  have hA: "sin A = 2 * sin(A/2) * cos(A/2)"
+    using sin_double[of "A/2"] by simp
+  have hB: "sin B = 2 * sin(B/2) * cos(B/2)"
+    using sin_double[of "B/2"] by simp
+  have hcosB: "1 - cos B = 2 * (sin(B/2))^2"
+  proof -
+    from sin_cos_squared_add[of "B/2"]
+    have hsc: "(cos(B/2))^2 = 1 - (sin(B/2))^2" by (simp add: power2_eq_square algebra_simps)
+    from cos_double[of "B/2"]
+    have "cos(B/2 + B/2) = (cos(B/2))^2 - (sin(B/2))^2" by simp
+    hence "cos B = (1 - (sin(B/2))^2) - (sin(B/2))^2" using hsc by simp
+    hence "cos B = 1 - 2 * (sin(B/2))^2" by (simp add: power2_eq_square algebra_simps)
+    thus ?thesis by linarith
   qed
+  have hcosA: "1 - cos A = 2 * (sin(A/2))^2"
+  proof -
+    from sin_cos_squared_add[of "A/2"]
+    have hsc: "(cos(A/2))^2 = 1 - (sin(A/2))^2" by (simp add: power2_eq_square algebra_simps)
+    from cos_double[of "A/2"]
+    have "cos(A/2 + A/2) = (cos(A/2))^2 - (sin(A/2))^2" by simp
+    hence "cos A = (1 - (sin(A/2))^2) - (sin(A/2))^2" using hsc by simp
+    hence "cos A = 1 - 2 * (sin(A/2))^2" by (simp add: power2_eq_square algebra_simps)
+    thus ?thesis by linarith
+  qed
+  have "sin A + sin B - sin(A+B) = sin A + sin B - (sin A * cos B + cos A * sin B)"
+    using h1 by simp
+  also have "\<dots> = sin A * (1 - cos B) + sin B * (1 - cos A)" by (simp add: algebra_simps)
+  also have "\<dots> = sin A * (2 * (sin(B/2))^2) + sin B * (2 * (sin(A/2))^2)"
+    using hcosB hcosA by simp
+  also have "\<dots> = 2 * sin(A/2) * cos(A/2) * (2 * (sin(B/2))^2)
+                + 2 * sin(B/2) * cos(B/2) * (2 * (sin(A/2))^2)"
+    using hA hB by simp
+  also have "\<dots> = 4 * sin(A/2) * sin(B/2) * (cos(A/2) * sin(B/2) + sin(A/2) * cos(B/2))"
+    by (simp add: power2_eq_square algebra_simps)
+  also have "cos(A/2) * sin(B/2) + sin(A/2) * cos(B/2) = sin(A/2 + B/2)"
+    using sin_add[of "A/2" "B/2"] by simp
+  also have "A/2 + B/2 = (A+B)/2" by simp
+  finally show ?thesis by simp
 qed
+
+\<comment> \<open>Fan determinant for the regular polygon on the unit circle.
+   For vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)), the determinant
+   det(v\\_m-v\\_1, v\\_{n'}-v\\_1) = 4*sin(\\<pi>(m-1)/n)*sin(\\<pi>(n'-m)/n)*sin(\\<pi>(n'-1)/n) > 0.\<close>
+lemma fan_det_pos_regular:
+  fixes ne :: nat
+  assumes hne: "ne \<ge> 5"
+  shows "\<forall>m n'. 2 \<le> m \<longrightarrow> m < n' \<longrightarrow> n' < ne \<longrightarrow>
+    (cos(2*pi*real m/real ne) - cos(2*pi/real ne)) *
+    (sin(2*pi*real n'/real ne) - sin(2*pi/real ne))
+  - (sin(2*pi*real m/real ne) - sin(2*pi/real ne)) *
+    (cos(2*pi*real n'/real ne) - cos(2*pi/real ne)) > 0"
+proof (intro allI impI)
+  fix m n' :: nat assume hm: "2 \<le> m" and hmn: "m < n'" and hn: "n' < ne"
+  let ?\<alpha> = "2*pi*real m/real ne"
+  let ?\<beta> = "2*pi*real n'/real ne"
+  let ?\<gamma> = "2*pi/real ne"
+  have hdet_trig: "(cos ?\<alpha> - cos ?\<gamma>) * (sin ?\<beta> - sin ?\<gamma>) -
+    (sin ?\<alpha> - sin ?\<gamma>) * (cos ?\<beta> - cos ?\<gamma>)
+    = sin(?\<beta> - ?\<alpha>) + sin(?\<alpha> - ?\<gamma>) - sin(?\<beta> - ?\<gamma>)"
+  proof -
+    have "cos ?\<alpha> * sin ?\<beta> - sin ?\<alpha> * cos ?\<beta> = sin(?\<beta> - ?\<alpha>)"
+      using sin_diff[of ?\<beta> ?\<alpha>] by (simp add: algebra_simps)
+    moreover have "sin ?\<alpha> * cos ?\<gamma> - cos ?\<alpha> * sin ?\<gamma> = sin(?\<alpha> - ?\<gamma>)"
+      using sin_diff[of ?\<alpha> ?\<gamma>] by (simp add: algebra_simps)
+    moreover have "sin ?\<gamma> * cos ?\<beta> - cos ?\<gamma> * sin ?\<beta> = -sin(?\<beta> - ?\<gamma>)"
+      using sin_diff[of ?\<beta> ?\<gamma>] by (simp add: algebra_simps)
+    ultimately show ?thesis by (simp add: algebra_simps)
+  qed
+  let ?A = "?\<alpha> - ?\<gamma>"
+  let ?B = "?\<beta> - ?\<alpha>"
+  have hne_pos: "real ne > 0" using hne by simp
+  have hm1_real: "real(m - 1) = real m - 1" using hm by simp
+  have hnm_real: "real(n' - m) = real n' - real m" using hmn by simp
+  have hn1_real: "real(n' - 1) = real n' - 1" using hm hmn by simp
+  have hA_eq: "?A = 2*pi*real(m-1)/real ne"
+    using hne_pos hm1_real by (simp add: field_simps)
+  have hB_eq: "?B = 2*pi*real(n'-m)/real ne"
+    using hne_pos hnm_real by (simp add: field_simps)
+  have hAB_eq: "?A + ?B = ?\<beta> - ?\<gamma>" by simp
+  have hAB_eq2: "?\<beta> - ?\<gamma> = 2*pi*real(n'-1)/real ne"
+    using hne_pos hn1_real by (simp add: field_simps)
+  have "sin ?A + sin ?B - sin(?A+?B) = 4 * sin(?A/2) * sin(?B/2) * sin((?A+?B)/2)"
+    by (rule sin_sum_minus_sin_add)
+  hence hprod: "sin(?\<alpha>-?\<gamma>) + sin(?\<beta>-?\<alpha>) - sin(?\<beta>-?\<gamma>)
+    = 4 * sin(?A/2) * sin(?B/2) * sin((?A+?B)/2)" using hAB_eq by simp
+  have hA2_eq: "?A/2 = pi*real(m-1)/real ne" using hA_eq by simp
+  have hB2_eq: "?B/2 = pi*real(n'-m)/real ne" using hB_eq by simp
+  have hAB2_eq: "(?A+?B)/2 = pi*real(n'-1)/real ne" using hAB_eq hAB_eq2 by simp
+  have hsin1: "sin(?A/2) > 0"
+  proof -
+    have "real(m-1) \<ge> 1" using hm by simp
+    hence "pi*real(m-1)/real ne > 0" using pi_gt_zero hne_pos
+      by (intro divide_pos_pos mult_pos_pos) linarith+
+    moreover have "real(m-1) < real ne" using hmn hn by simp
+    hence "pi*real(m-1)/real ne < pi" using pi_gt_zero hne_pos
+      by (simp add: field_simps)
+    ultimately show ?thesis unfolding hA2_eq using sin_gt_zero by blast
+  qed
+  have hsin2: "sin(?B/2) > 0"
+  proof -
+    have "real(n'-m) \<ge> 1" using hmn by simp
+    hence "pi*real(n'-m)/real ne > 0" using pi_gt_zero hne_pos
+      by (intro divide_pos_pos mult_pos_pos) linarith+
+    moreover have "real(n'-m) < real ne" using hn by simp
+    hence "pi*real(n'-m)/real ne < pi" using pi_gt_zero hne_pos
+      by (simp add: field_simps)
+    ultimately show ?thesis unfolding hB2_eq using sin_gt_zero by blast
+  qed
+  have hsin3: "sin((?A+?B)/2) > 0"
+  proof -
+    have "real(n'-1) \<ge> 1" using hm hmn by simp
+    hence "pi*real(n'-1)/real ne > 0" using pi_gt_zero hne_pos
+      by (intro divide_pos_pos mult_pos_pos) linarith+
+    moreover have "real(n'-1) < real ne" using hn by simp
+    hence "pi*real(n'-1)/real ne < pi" using pi_gt_zero hne_pos
+      by (simp add: field_simps)
+    ultimately show ?thesis unfolding hAB2_eq using sin_gt_zero by blast
+  qed
+  from hprod hdet_trig have "(cos ?\<alpha> - cos ?\<gamma>) * (sin ?\<beta> - sin ?\<gamma>) -
+    (sin ?\<alpha> - sin ?\<gamma>) * (cos ?\<beta> - cos ?\<gamma>)
+    = 4 * sin(?A/2) * sin(?B/2) * sin((?A+?B)/2)" by simp
+  moreover have "4 * sin(?A/2) * sin(?B/2) * sin((?A+?B)/2) > 0"
+    using hsin1 hsin2 hsin3 by (simp add: mult_pos_pos)
+  ultimately show "(cos(2*pi*real m/real ne) - cos(2*pi/real ne)) *
+    (sin(2*pi*real n'/real ne) - sin(2*pi/real ne))
+  - (sin(2*pi*real m/real ne) - sin(2*pi/real ne)) *
+    (cos(2*pi*real n'/real ne) - cos(2*pi/real ne)) > 0"
+    by linarith
+qed
+
+\<comment> \<open>fan\\_det\\_pos\\_from\\_vertex (general convex polygon version) REMOVED.
+   The fan determinant positivity is now proved for the specific regular polygon
+   in scheme\\_quotient\\_exists (AlgTopCached15) using the trig formula:
+   det = 4*sin(\\<pi>(m-1)/n)*sin(\\<pi>(n'-m)/n)*sin(\\<pi>(n'-1)/n) > 0.
+   The general C11-only proof was stuck for 14+ sessions.\<close>
 
 \<comment> \<open>Sector uniqueness helper: if the cross product at direction m of an edge point
    decomposes as (1-t)*A + t*B with A \\<ge> 0, B > 0, t > 0, then the result > 0.\<close>
@@ -1670,6 +1753,8 @@ proof -
     and hC12_e: "\<forall>k<?ne. \<forall>j<?ne. \<forall>s'\<in>{0<..<(1::real)}.
         q_e (vxe k, vye k) \<noteq> q_e ((1-s')*vxe j + s'*vxe(Suc j mod ?ne),
                                (1-s')*vye j + s'*vye(Suc j mod ?ne))"
+    and hfan_det_e: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < ?ne \<longrightarrow>
+        (vxe m - vxe 1) * (vye n - vye 1) - (vye m - vye 1) * (vxe n - vxe 1) > 0"
     and hC4_e: "\<forall>i<?ne. (vxe i, vye i) \<in> P_e"
     and hC5_e: "P_e = {(x, y) | x y. \<exists>coeffs. (\<forall>i<?ne. coeffs i \<ge> 0)
                    \<and> (\<Sum>i<?ne. coeffs i) = 1
@@ -2178,13 +2263,267 @@ proof -
       \<comment> \<open>General signed area: det(v\\_m-v\\_1, v\\_n-v\\_1) > 0 for 2 \\<le> m < n < ne.\<close>
       have hdet_general: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < ?ne \<longrightarrow>
         (vxe m - vxe 1) * (vye n - vye 1) - (vye m - vye 1) * (vxe n - vxe 1) > 0"
-      proof -
-        have "?ne \<ge> 5" using hlen hne_eq by (by100 linarith)
-        from fan_det_pos_from_vertex[OF this hC11_e]
-        show ?thesis .
+        using hfan_det_e .
+      \<comment> \<open>Helper: det(v\\_k - v\\_1, v\\_0 - v\\_1) > 0 for k \\<in> {2,...,ne-1}.\<close>
+      have hdet_from_v1: "\<forall>k. 2 \<le> k \<longrightarrow> k < ?ne \<longrightarrow>
+        (vxe k - vxe 1) * (vye 0 - vye 1) - (vye k - vye 1) * (vxe 0 - vxe 1) > 0"
+      proof (intro allI impI)
+        fix k assume hk2: "(2::nat) \<le> k" and hk_lt: "k < ?ne"
+        have h0_lt: "(0::nat) < ?ne" using hlen hne_eq by (by100 linarith)
+        have hk_ne0: "k \<noteq> 0" using hk2 by (by100 linarith)
+        have hk_ne1: "k \<noteq> Suc 0 mod ?ne"
+        proof -
+          have "Suc 0 mod ?ne = 1" using hlen hne_eq by (by100 simp)
+          thus ?thesis using hk2 by (by100 linarith)
+        qed
+        from hC11_e[rule_format, OF h0_lt hk_lt hk_ne0 hk_ne1]
+        have hC11_at0: "(vxe k-vxe 0)*(vye(Suc 0 mod ?ne)-vye 0)-(vye k-vye 0)*(vxe(Suc 0 mod ?ne)-vxe 0) < 0" .
+        have hsuc0: "Suc 0 mod ?ne = 1" using hlen hne_eq by (by100 simp)
+        have "(vxe k - vxe 1) * (vye 0 - vye 1) - (vye k - vye 1) * (vxe 0 - vxe 1)
+          = -((vxe k-vxe 0)*(vye 1-vye 0)-(vye k-vye 0)*(vxe 1-vxe 0))"
+          by (by100 algebra)
+        also have "\<dots> > 0"
+        proof -
+          from hC11_at0 hsuc0 have "(vxe k-vxe 0)*(vye 1-vye 0)-(vye k-vye 0)*(vxe 1-vxe 0) < 0"
+            by (by100 simp)
+          thus ?thesis by (by100 linarith)
+        qed
+        finally show "(vxe k - vxe 1) * (vye 0 - vye 1) - (vye k - vye 1) * (vxe 0 - vxe 1) > 0" .
       qed
       \<comment> \<open>Key helper: fan from v\\_1 covers P\\_e.\<close>
-      have hfan_cover: "\<forall>p\<in>P_e. p = (vxe 1, vye 1) \<or> (\<exists>j<?nw. in_sector j p)" sorry
+      have hfan_cover: "\<forall>p\<in>P_e. p = (vxe 1, vye 1) \<or> (\<exists>j<?nw. in_sector j p)"
+      proof (intro ballI)
+        fix p assume hp: "p \<in> P_e"
+        show "p = (vxe 1, vye 1) \<or> (\<exists>j<?nw. in_sector j p)"
+        proof (cases "p = (vxe 1, vye 1)")
+          case True thus ?thesis by (by100 blast)
+        next
+          case False
+          \<comment> \<open>cross\\_v1(k, p) = \\<Sum>i<ne. \\<lambda>\\_i * det(v\\_k-v\\_1, v\\_i-v\\_1) for p = \\<Sum> \\<lambda>\\_i v\\_i.\<close>
+          from hp obtain coeffs where hcoeffs: "(\<forall>i<?ne. coeffs i \<ge> 0)"
+            "(\<Sum>i<?ne. coeffs i) = 1" "fst p = (\<Sum>i<?ne. coeffs i * vxe i)" "snd p = (\<Sum>i<?ne. coeffs i * vye i)"
+            using hC5_e by (by100 auto)
+          \<comment> \<open>cross\\_v1(k, p) = \\<Sum> \\<lambda>\\_i * cross\\_v1(k, v\\_i) by linearity.\<close>
+          have hcross_sum: "\<And>k. cross_v1 k p = (\<Sum>i<?ne. coeffs i * cross_v1 k (vxe i, vye i))"
+          proof -
+            fix k
+            have "cross_v1 k p = (vxe k - vxe 1) * (snd p - vye 1) - (vye k - vye 1) * (fst p - vxe 1)"
+              unfolding cross_v1_def by simp
+            also have "snd p = (\<Sum>i<?ne. coeffs i * vye i)" using hcoeffs(4) .
+            also have "fst p = (\<Sum>i<?ne. coeffs i * vxe i)" using hcoeffs(3) .
+            finally have "cross_v1 k p =
+              (vxe k - vxe 1) * ((\<Sum>i<?ne. coeffs i * vye i) - vye 1) -
+              (vye k - vye 1) * ((\<Sum>i<?ne. coeffs i * vxe i) - vxe 1)" by simp
+            also have "\<dots> = (\<Sum>i<?ne. coeffs i * ((vxe k - vxe 1) * (vye i - vye 1) - (vye k - vye 1) * (vxe i - vxe 1)))"
+            proof -
+              have hsy: "(\<Sum>i<?ne. coeffs i * vye i) - vye 1 = (\<Sum>i<?ne. coeffs i * (vye i - vye 1))"
+              proof -
+                have "(\<Sum>i<?ne. coeffs i * (vye i - vye 1)) = (\<Sum>i<?ne. (coeffs i * vye i - coeffs i * vye 1))"
+                  by (rule sum.cong) (simp_all add: algebra_simps)
+                also have "\<dots> = (\<Sum>i<?ne. coeffs i * vye i) - (\<Sum>i<?ne. coeffs i * vye 1)"
+                  by (rule sum_subtractf)
+                also have "(\<Sum>i<?ne. coeffs i * vye 1) = vye 1"
+                proof -
+                  have "(\<Sum>i<?ne. coeffs i * vye 1) = (\<Sum>i<?ne. coeffs i) * vye 1"
+                    using sum_distrib_right[symmetric, of coeffs "vye 1" "{..<?ne}"]
+                      sum_distrib_right[symmetric, of coeffs "vxe 1" "{..<?ne}"]
+                    by (by5000 simp)
+                  also have "\<dots> = vye 1" using hcoeffs(2) by simp
+                  finally show ?thesis .
+                qed
+                finally show ?thesis by simp
+              qed
+              have hsx: "(\<Sum>i<?ne. coeffs i * vxe i) - vxe 1 = (\<Sum>i<?ne. coeffs i * (vxe i - vxe 1))"
+              proof -
+                have "(\<Sum>i<?ne. coeffs i * (vxe i - vxe 1)) = (\<Sum>i<?ne. (coeffs i * vxe i - coeffs i * vxe 1))"
+                  by (rule sum.cong) (simp_all add: algebra_simps)
+                also have "\<dots> = (\<Sum>i<?ne. coeffs i * vxe i) - (\<Sum>i<?ne. coeffs i * vxe 1)"
+                  by (rule sum_subtractf)
+                also have "(\<Sum>i<?ne. coeffs i * vxe 1) = vxe 1"
+                proof -
+                  have "(\<Sum>i<?ne. coeffs i * vxe 1) = (\<Sum>i<?ne. coeffs i) * vxe 1"
+                    using sum_distrib_right[symmetric, of coeffs "vye 1" "{..<?ne}"]
+                      sum_distrib_right[symmetric, of coeffs "vxe 1" "{..<?ne}"]
+                    by (by5000 simp)
+                  also have "\<dots> = vxe 1" using hcoeffs(2) by simp
+                  finally show ?thesis .
+                qed
+                finally show ?thesis by simp
+              qed
+              have "(vxe k - vxe 1) * (\<Sum>i<?ne. coeffs i * (vye i - vye 1))
+                = (\<Sum>i<?ne. (vxe k - vxe 1) * (coeffs i * (vye i - vye 1)))"
+                by (rule sum_distrib_left)
+              have "(vye k - vye 1) * (\<Sum>i<?ne. coeffs i * (vxe i - vxe 1))
+                = (\<Sum>i<?ne. (vye k - vye 1) * (coeffs i * (vxe i - vxe 1)))"
+                by (rule sum_distrib_left)
+              have hlhs: "(vxe k - vxe 1) * ((\<Sum>i<?ne. coeffs i * vye i) - vye 1) -
+                (vye k - vye 1) * ((\<Sum>i<?ne. coeffs i * vxe i) - vxe 1)
+                = (\<Sum>i<?ne. (vxe k - vxe 1) * (coeffs i * (vye i - vye 1))) -
+                  (\<Sum>i<?ne. (vye k - vye 1) * (coeffs i * (vxe i - vxe 1)))"
+                using hsy hsx
+                  \<open>(vxe k - vxe 1) * (\<Sum>i<?ne. coeffs i * (vye i - vye 1))
+                    = (\<Sum>i<?ne. (vxe k - vxe 1) * (coeffs i * (vye i - vye 1)))\<close>
+                  \<open>(vye k - vye 1) * (\<Sum>i<?ne. coeffs i * (vxe i - vxe 1))
+                    = (\<Sum>i<?ne. (vye k - vye 1) * (coeffs i * (vxe i - vxe 1)))\<close>
+                by simp
+              have "(\<Sum>i<?ne. (vxe k - vxe 1) * (coeffs i * (vye i - vye 1))) -
+                (\<Sum>i<?ne. (vye k - vye 1) * (coeffs i * (vxe i - vxe 1)))
+                = (\<Sum>i<?ne. ((vxe k - vxe 1) * (coeffs i * (vye i - vye 1)) -
+                             (vye k - vye 1) * (coeffs i * (vxe i - vxe 1))))"
+                using sum_subtractf[of "\<lambda>i. (vxe k-vxe 1)*(coeffs i*(vye i-vye 1))"
+                  "\<lambda>i. (vye k-vye 1)*(coeffs i*(vxe i-vxe 1))" "{..<?ne}"] by (by100 simp)
+              also have "\<dots> = (\<Sum>i<?ne. coeffs i * ((vxe k - vxe 1) * (vye i - vye 1) - (vye k - vye 1) * (vxe i - vxe 1)))"
+              proof -
+                have "\<And>i. (vxe k - vxe 1) * (coeffs i * (vye i - vye 1)) -
+                  (vye k - vye 1) * (coeffs i * (vxe i - vxe 1)) =
+                  coeffs i * ((vxe k - vxe 1) * (vye i - vye 1) - (vye k - vye 1) * (vxe i - vxe 1))"
+                  by (by100 algebra)
+                thus ?thesis by simp
+              qed
+              finally show ?thesis using hlhs by simp
+            qed
+            also have "\<dots> = (\<Sum>i<?ne. coeffs i * cross_v1 k (vxe i, vye i))"
+              unfolding cross_v1_def by simp
+            finally show "cross_v1 k p = (\<Sum>i<?ne. coeffs i * cross_v1 k (vxe i, vye i))" .
+          qed
+          \<comment> \<open>Step 1: cross\\_v1(2, p) \\<ge> 0.\<close>
+          have hcross2_ge: "cross_v1 2 p \<ge> 0"
+          proof -
+            have "\<forall>i<?ne. coeffs i * cross_v1 2 (vxe i, vye i) \<ge> 0"
+            proof (intro allI impI)
+              fix i assume hi: "i < ?ne"
+              show "coeffs i * cross_v1 2 (vxe i, vye i) \<ge> 0"
+              proof (cases "i = 1 \<or> i = 2")
+                case True
+                hence "cross_v1 2 (vxe i, vye i) = 0" unfolding cross_v1_def
+                  by (elim disjE) (simp add: algebra_simps)+
+                thus ?thesis by simp
+              next
+                case False hence "i \<noteq> 1" "i \<noteq> 2" by auto
+                have hcv_pos: "cross_v1 2 (vxe i, vye i) > 0"
+                proof (cases "i = 0")
+                  case True
+                  from hdet_from_v1[rule_format, of 2]
+                  have "(vxe 2-vxe 1)*(vye 0-vye 1)-(vye 2-vye 1)*(vxe 0-vxe 1) > 0"
+                    using hlen hne_eq by linarith
+                  thus ?thesis unfolding cross_v1_def using True by simp
+                next
+                  case False hence "i > 2" using \<open>i \<noteq> 1\<close> \<open>i \<noteq> 2\<close> by linarith
+                  from hdet_general[rule_format, of 2 i]
+                  have "(vxe 2-vxe 1)*(vye i-vye 1)-(vye 2-vye 1)*(vxe i-vxe 1) > 0"
+                    using \<open>i > 2\<close> hi by linarith
+                  thus ?thesis unfolding cross_v1_def by simp
+                qed
+                thus ?thesis using hcoeffs(1)[rule_format, OF hi] by (simp add: mult_nonneg_nonneg)
+              qed
+            qed
+            have "(\<Sum>i<?ne. coeffs i * cross_v1 2 (vxe i, vye i)) \<ge> 0"
+              by (intro sum_nonneg) (use \<open>\<forall>i<?ne. coeffs i * cross_v1 2 (vxe i, vye i) \<ge> 0\<close> in \<open>by100 blast\<close>)
+            thus ?thesis using hcross_sum[of 2] by linarith
+          qed
+          \<comment> \<open>Step 2: cross\\_v1(0, p) \\<le> 0 (using hdet\\_from\\_v1 reversed: det(v\\_0-v\\_1, v\\_i-v\\_1) < 0 for i \\<ge> 2).\<close>
+          have hcross0_le: "cross_v1 0 p \<le> 0"
+          proof -
+            have "\<forall>i<?ne. coeffs i * cross_v1 0 (vxe i, vye i) \<le> 0"
+            proof (intro allI impI)
+              fix i assume hi: "i < ?ne"
+              show "coeffs i * cross_v1 0 (vxe i, vye i) \<le> 0"
+              proof (cases "i \<le> 1")
+                case True
+                hence "cross_v1 0 (vxe i, vye i) = 0"
+                proof (cases "i = 0")
+                  case True thus ?thesis unfolding cross_v1_def by simp
+                next
+                  case False hence "i = 1" using True by linarith
+                  thus ?thesis unfolding cross_v1_def by simp
+                qed
+                thus ?thesis by simp
+              next
+                case False hence "i \<ge> 2" by linarith
+                from hdet_from_v1[rule_format, OF \<open>i \<ge> 2\<close> hi]
+                have "(vxe i-vxe 1)*(vye 0-vye 1)-(vye i-vye 1)*(vxe 0-vxe 1) > 0" .
+                have "(vxe 0-vxe 1)*(vye i-vye 1)-(vye 0-vye 1)*(vxe i-vxe 1) =
+                  -((vxe i-vxe 1)*(vye 0-vye 1)-(vye i-vye 1)*(vxe 0-vxe 1))"
+                  by (by100 algebra)
+                hence "(vxe 0-vxe 1)*(vye i-vye 1)-(vye 0-vye 1)*(vxe i-vxe 1) < 0"
+                  using \<open>(vxe i-vxe 1)*(vye 0-vye 1)-(vye i-vye 1)*(vxe 0-vxe 1) > 0\<close> by linarith
+                hence "cross_v1 0 (vxe i, vye i) < 0"
+                  unfolding cross_v1_def by simp
+                thus ?thesis using hcoeffs(1)[rule_format, OF hi]
+                  by (simp add: mult_nonneg_nonpos)
+              qed
+            qed
+            have "(\<Sum>i<?ne. coeffs i * cross_v1 0 (vxe i, vye i)) \<le> 0"
+              by (intro sum_nonpos) (use \<open>\<forall>i<?ne. coeffs i * cross_v1 0 (vxe i, vye i) \<le> 0\<close> in \<open>by100 blast\<close>)
+            thus ?thesis using hcross_sum[of 0] by linarith
+          qed
+          \<comment> \<open>Step 3: discrete IVT. Sequence from cross\\_v1(2,p)\\<ge>0 to cross\\_v1(0,p)\\<le>0.\<close>
+          have "\<exists>j<?nw. cross_v1 (j+2) p \<ge> 0 \<and> cross_v1 (Suc(j+2) mod ?ne) p \<le> 0"
+          proof -
+            \<comment> \<open>Define f(j) = cross\\_v1(j+2, p) for j = 0, ..., nw.\<close>
+            define f where "f j = cross_v1 (j+2) p" for j
+            have hf0: "f 0 \<ge> 0" using hcross2_ge unfolding f_def
+              by (simp add: numeral_2_eq_2)
+            have "Suc(?nw-1+2) mod ?ne = Suc (?nw+1) mod ?ne" using hnw_pos by simp
+            also have "\<dots> = (?nw + 2) mod ?ne" by simp
+            also have "\<dots> = ?ne mod ?ne" using hne_eq by simp
+            also have "\<dots> = 0" by simp
+            finally have hmod_nw: "Suc((?nw-1)+2) mod ?ne = 0" .
+            have hfnw: "cross_v1 (Suc((?nw-1)+2) mod ?ne) p \<le> 0"
+              using hcross0_le hmod_nw by simp
+            \<comment> \<open>Find the sign change by taking the largest j with f(j) \\<ge> 0.\<close>
+            \<comment> \<open>Discrete IVT by strong induction on nw.\<close>
+            show ?thesis
+            proof (cases "f (?nw - 1) \<ge> 0")
+              case True \<comment> \<open>Last sector boundary \\<ge> 0: j = nw-1 works.\<close>
+              have "?nw-1 < ?nw" using hnw_pos by linarith
+              moreover have "cross_v1 ((?nw-1)+2) p \<ge> 0" using True unfolding f_def .
+              moreover have "cross_v1 (Suc((?nw-1)+2) mod ?ne) p \<le> 0" using hfnw .
+              ultimately show ?thesis by (by100 blast)
+            next
+              case False hence hfnw1_neg: "f (?nw - 1) < 0" by linarith
+              \<comment> \<open>f(0)\\<ge>0 and f(nw-1)<0. Find the sign change.\<close>
+              have "\<exists>j. j < ?nw - 1 \<and> f j \<ge> 0 \<and> f (Suc j) < 0"
+              proof (rule ccontr)
+                assume hno: "\<not>(\<exists>j. j < ?nw - 1 \<and> f j \<ge> 0 \<and> f (Suc j) < 0)"
+                hence hall: "\<forall>j<?nw - 1. f j \<ge> 0 \<longrightarrow> f (Suc j) \<ge> 0" by force
+                have "\<forall>j<?nw. f j \<ge> 0"
+                proof (intro allI impI)
+                  fix j assume "j < ?nw"
+                  thus "f j \<ge> 0"
+                  proof (induct j)
+                    case 0 thus ?case using hf0 by simp
+                  next
+                    case (Suc j') hence "j' < ?nw - 1" by linarith
+                    moreover have "f j' \<ge> 0" using Suc by linarith
+                    ultimately show ?case using hall by blast
+                  qed
+                qed
+                hence "f (?nw - 1) \<ge> 0"
+                proof -
+                  have "?nw - 1 < ?nw" using hnw_pos by linarith
+                  with \<open>\<forall>j<?nw. f j \<ge> 0\<close> show ?thesis by blast
+                qed
+                thus False using hfnw1_neg by linarith
+              qed
+              then obtain j where hj: "j < ?nw - 1" "f j \<ge> 0" "f (Suc j) < 0" by blast
+              have hj_lt: "j < ?nw" using hj(1) by linarith
+              have "cross_v1 (j+2) p \<ge> 0" using hj(2) unfolding f_def .
+              moreover have "cross_v1 (Suc(j+2) mod ?ne) p \<le> 0"
+              proof -
+                have "j + 3 < ?ne" using hj(1) hne_eq by linarith
+                hence "Suc(j+2) mod ?ne = j+3" by simp
+                also have "j+3 = Suc j + 2" by simp
+                finally have "Suc(j+2) mod ?ne = Suc j + 2" .
+                hence "cross_v1 (Suc(j+2) mod ?ne) p = f (Suc j)" unfolding f_def by simp
+                thus ?thesis using hj(3) by linarith
+              qed
+              ultimately show ?thesis using hj_lt by (by100 blast)
+            qed
+          qed
+          thus ?thesis unfolding in_sector_def by (by100 blast)
+        qed
+      qed
       \<comment> \<open>Key helper: sector determinants are positive (non-degenerate triangles).\<close>
       have hdet_pos: "\<forall>j<?nw.
         let ex = vxe(j+2) - vxe 1; ey = vye(j+2) - vye 1;
@@ -2252,35 +2591,6 @@ proof -
                          ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
                           (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))"
         unfolding phi_fn_def Let_def by (by100 simp)
-      \<comment> \<open>Helper: det(v\\_k - v\\_1, v\\_0 - v\\_1) > 0 for k \\<in> {2,...,ne-1}.
-         Follows from C11 at edge 0: v\\_k is strictly on one side of edge v\\_0->v\\_1.\<close>
-      have hdet_from_v1: "\<forall>k. 2 \<le> k \<longrightarrow> k < ?ne \<longrightarrow>
-        (vxe k - vxe 1) * (vye 0 - vye 1) - (vye k - vye 1) * (vxe 0 - vxe 1) > 0"
-      proof (intro allI impI)
-        fix k assume hk2: "(2::nat) \<le> k" and hk_lt: "k < ?ne"
-        have h0_lt: "(0::nat) < ?ne" using hlen hne_eq by (by100 linarith)
-        have hk_ne0: "k \<noteq> 0" using hk2 by (by100 linarith)
-        have hk_ne1: "k \<noteq> Suc 0 mod ?ne"
-        proof -
-          have "Suc 0 mod ?ne = 1" using hlen hne_eq by (by100 simp)
-          thus ?thesis using hk2 by (by100 linarith)
-        qed
-        from hC11_e[rule_format, OF h0_lt hk_lt hk_ne0 hk_ne1]
-        have hC11_at0: "(vxe k-vxe 0)*(vye(Suc 0 mod ?ne)-vye 0)-(vye k-vye 0)*(vxe(Suc 0 mod ?ne)-vxe 0) < 0" .
-        have hsuc0: "Suc 0 mod ?ne = 1" using hlen hne_eq by (by100 simp)
-        \<comment> \<open>C11 gives: det(v\\_k - v\\_0, v\\_1 - v\\_0) < 0.
-           Algebraically: det(v\\_k-v\\_1, v\\_0-v\\_1) = -det(v\\_k-v\\_0, v\\_1-v\\_0).\<close>
-        have "(vxe k - vxe 1) * (vye 0 - vye 1) - (vye k - vye 1) * (vxe 0 - vxe 1)
-          = -((vxe k-vxe 0)*(vye 1-vye 0)-(vye k-vye 0)*(vxe 1-vxe 0))"
-          by (by100 algebra)
-        also have "\<dots> > 0"
-        proof -
-          from hC11_at0 hsuc0 have "(vxe k-vxe 0)*(vye 1-vye 0)-(vye k-vye 0)*(vxe 1-vxe 0) < 0"
-            by (by100 simp)
-          thus ?thesis by (by100 linarith)
-        qed
-        finally show "(vxe k - vxe 1) * (vye 0 - vye 1) - (vye k - vye 1) * (vxe 0 - vxe 1) > 0" .
-      qed
       \<comment> \<open>Key helper: phi on spur edge 0 gives the arc from u\\_0 to centroid.\<close>
       have hphi_on_spur0: "\<forall>t\<in>I_set.
         phi_fn (edge_pt_e 0 t) = ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw)"
@@ -3171,14 +3481,118 @@ proof -
                for j'>k the first cond fails. Uses hdet\\_general.\<close>
             \<comment> \<open>For j'<k: cross\\_v1(j'+3) > 0 (from hdet\\_general), contradicting in\\_sector \\<le> 0.\<close>
             have huniq_lt: "\<forall>j'<?nw. j' < k \<longrightarrow> \<not>in_sector j' (edge_pt_e (k+2) t)"
-            \<comment> \<open>cross\\_v1(j'+3, p) > 0 from cross\\_positive\\_from\\_det\\_bounds + hdet\\_general.\<close>
-              using hcross_decomp hdet_general hdet_from_v1 ht_pos ht_lt1 hk hne_eq hnw_pos
-              sorry
+            proof (intro allI impI)
+              fix j' assume hj'nw: "j' < ?nw" and hj'k: "j' < k"
+              have hj'3: "j' + 3 \<le> k + 2" using hj'k by linarith
+              have hj'3_lt_ne: "j' + 3 < ?ne" using hj'k hk hne_eq by linarith
+              have hj'3_ge2: "(2::nat) \<le> j' + 3" by linarith
+              have hmod_eq: "Suc(j'+2) mod ?ne = j'+3"
+                using hj'3_lt_ne by simp
+              \<comment> \<open>cross\\_v1(j'+3, p) = (1-t)*det\\_A + t*det\\_B where both terms \\<ge> 0 and at least one > 0.\<close>
+              have hdet_A: "(vxe(j'+3)-vxe 1)*(vye(k+2)-vye 1)-(vye(j'+3)-vye 1)*(vxe(k+2)-vxe 1) \<ge> 0"
+              proof (cases "j'+3 < k+2")
+                case True
+                from hdet_general[rule_format, of "j'+3" "k+2"]
+                show ?thesis using True hj'3_ge2 hk hne_eq by linarith
+              next
+                case False hence heq: "j'+3 = k+2" using hj'3 by linarith
+                show ?thesis unfolding heq by simp
+              qed
+              have hsi_eq: "?si = Suc(k+2) mod ?ne" by simp
+              have hdet_B: "(vxe(j'+3)-vxe 1)*(vye ?si-vye 1)-(vye(j'+3)-vye 1)*(vxe ?si-vxe 1) > 0"
+              proof (cases "Suc(k+2) < ?ne")
+                case True hence hsi_val: "?si = k+3" by simp
+                show ?thesis
+                proof (cases "j'+3 < k+3")
+                  case True
+                  from hdet_general[rule_format, of "j'+3" "k+3"]
+                  have "(vxe(j'+3)-vxe 1)*(vye(k+3)-vye 1)-(vye(j'+3)-vye 1)*(vxe(k+3)-vxe 1) > 0"
+                    using True hj'3_ge2 hk hne_eq \<open>Suc(k+2) < ?ne\<close> by linarith
+                  thus ?thesis using hsi_val by simp
+                next
+                  case False hence "j'+3 = k+3" using hj'3 by linarith
+                  hence "j' = k" by linarith
+                  thus ?thesis using hj'k by linarith
+                qed
+              next
+                case False
+                hence "k + 3 = ?ne" using hk hne_eq by linarith
+                hence hsi_val: "?si = 0" by simp
+                from hdet_from_v1[rule_format, OF hj'3_ge2 hj'3_lt_ne]
+                show ?thesis using hsi_val by simp
+              qed
+              have hcross_pos: "cross_v1 (j'+3) (edge_pt_e (k+2) t) > 0"
+              proof -
+                from hcross_decomp[of "j'+3"]
+                have "cross_v1 (j'+3) (edge_pt_e (k+2) t) =
+                  (1-t)*((vxe(j'+3)-vxe 1)*(vye(k+2)-vye 1)-(vye(j'+3)-vye 1)*(vxe(k+2)-vxe 1)) +
+                  t*((vxe(j'+3)-vxe 1)*(vye ?si-vye 1)-(vye(j'+3)-vye 1)*(vxe ?si-vxe 1))" .
+                moreover have "(1-t) \<ge> 0" using ht_lt1 by linarith
+                moreover have "t > 0" using ht_pos .
+                ultimately show ?thesis using hdet_A hdet_B
+                  by (smt (verit) mult_nonneg_nonneg mult_pos_pos)
+              qed
+              have "cross_v1 (Suc(j'+2) mod ?ne) (edge_pt_e (k+2) t) > 0"
+                using hcross_pos hmod_eq by simp
+              thus "\<not>in_sector j' (edge_pt_e (k+2) t)"
+                unfolding in_sector_def by linarith
+            qed
             \<comment> \<open>For j'>k: cross\\_v1(j'+2) < 0 (from hdet\\_general reversed), contradicting \\<ge> 0.\<close>
             have huniq_gt: "\<forall>j'<?nw. j' > k \<longrightarrow> \<not>in_sector j' (edge_pt_e (k+2) t)"
-            \<comment> \<open>Proof: cross\\_v1(j'+2, p) < 0 contradicts in\\_sector \\<ge> 0 condition.\<close>
-              using hcross_decomp hdet_general hdet_from_v1 ht_pos ht_lt1 hk hne_eq hnw_pos
-              sorry
+            proof (intro allI impI)
+              fix j' assume hj'nw: "j' < ?nw" and hj'k: "j' > k"
+              have hj'2_ge2: "(2::nat) \<le> j'+2" by linarith
+              have hj'2_gt_k2: "j'+2 > k+2" using hj'k by linarith
+              have hj'2_lt_ne: "j'+2 < ?ne" using hj'nw hne_eq by linarith
+              have hk2_ge2: "(2::nat) \<le> k+2" by linarith
+              have hk2_lt_ne: "k+2 < ?ne" using hk hne_eq by linarith
+              \<comment> \<open>det\\_A = det(v\\_{j'+2}-v\\_1, v\\_{k+2}-v\\_1) < 0 (reverse of hdet\\_general).\<close>
+              have hdet_A_neg: "(vxe(j'+2)-vxe 1)*(vye(k+2)-vye 1)-(vye(j'+2)-vye 1)*(vxe(k+2)-vxe 1) < 0"
+              proof -
+                from hdet_general[rule_format, of "k+2" "j'+2"]
+                have hpos: "(vxe(k+2)-vxe 1)*(vye(j'+2)-vye 1)-(vye(k+2)-vye 1)*(vxe(j'+2)-vxe 1) > 0"
+                  using hk2_ge2 hj'2_gt_k2 hj'2_lt_ne by linarith
+                have "(vxe(j'+2)-vxe 1)*(vye(k+2)-vye 1)-(vye(j'+2)-vye 1)*(vxe(k+2)-vxe 1) =
+                  -((vxe(k+2)-vxe 1)*(vye(j'+2)-vye 1)-(vye(k+2)-vye 1)*(vxe(j'+2)-vxe 1))"
+                  by (by100 algebra)
+                thus ?thesis using hpos by linarith
+              qed
+              \<comment> \<open>si = k+3 (k < nw-1 since j'>k and j'<nw forces k \\<le> nw-2).\<close>
+              have hk_lt_nw1: "k < ?nw - 1" using hj'k hj'nw by linarith
+              hence hsi_lt: "Suc(k+2) < ?ne" using hne_eq by linarith
+              hence hsi_val: "?si = k+3" by simp
+              \<comment> \<open>det\\_B = det(v\\_{j'+2}-v\\_1, v\\_{k+3}-v\\_1) \\<le> 0.\<close>
+              have hdet_B_le: "(vxe(j'+2)-vxe 1)*(vye ?si-vye 1)-(vye(j'+2)-vye 1)*(vxe ?si-vxe 1) \<le> 0"
+              proof (cases "j'+2 > k+3")
+                case True
+                from hdet_general[rule_format, of "k+3" "j'+2"]
+                have "(vxe(k+3)-vxe 1)*(vye(j'+2)-vye 1)-(vye(k+3)-vye 1)*(vxe(j'+2)-vxe 1) > 0"
+                  using True hj'2_lt_ne hsi_lt by linarith
+                have "(vxe(j'+2)-vxe 1)*(vye(k+3)-vye 1)-(vye(j'+2)-vye 1)*(vxe(k+3)-vxe 1) =
+                  -((vxe(k+3)-vxe 1)*(vye(j'+2)-vye 1)-(vye(k+3)-vye 1)*(vxe(j'+2)-vxe 1))"
+                  by (by100 algebra)
+                hence "(vxe(j'+2)-vxe 1)*(vye(k+3)-vye 1)-(vye(j'+2)-vye 1)*(vxe(k+3)-vxe 1) < 0"
+                  using \<open>(vxe(k+3)-vxe 1)*(vye(j'+2)-vye 1)-(vye(k+3)-vye 1)*(vxe(j'+2)-vxe 1) > 0\<close> by linarith
+                thus ?thesis using hsi_val by simp
+              next
+                case False hence heq: "j'+2 = k+3" using hj'k by linarith
+                show ?thesis unfolding heq hsi_val by simp
+              qed
+              \<comment> \<open>cross\\_v1(j'+2, p) = (1-t)*det\\_A + t*det\\_B < 0.\<close>
+              have hcross_neg: "cross_v1 (j'+2) (edge_pt_e (k+2) t) < 0"
+              proof -
+                from hcross_decomp[of "j'+2"]
+                have "cross_v1 (j'+2) (edge_pt_e (k+2) t) =
+                  (1-t)*((vxe(j'+2)-vxe 1)*(vye(k+2)-vye 1)-(vye(j'+2)-vye 1)*(vxe(k+2)-vxe 1)) +
+                  t*((vxe(j'+2)-vxe 1)*(vye ?si-vye 1)-(vye(j'+2)-vye 1)*(vxe ?si-vxe 1))" .
+                moreover have "(1-t) > 0" using ht_pos ht_lt1 by linarith
+                moreover have "t \<ge> 0" using ht_pos by linarith
+                ultimately show ?thesis using hdet_A_neg hdet_B_le
+                  by (smt (verit) mult_pos_neg mult_nonneg_nonpos)
+              qed
+              show "\<not>in_sector j' (edge_pt_e (k+2) t)"
+                unfolding in_sector_def using hcross_neg by linarith
+            qed
             have huniq: "\<forall>j'. j' < ?nw \<and> in_sector j' (edge_pt_e (k+2) t) \<longrightarrow> j' = k"
               using huniq_lt huniq_gt by (by100 fastforce)
             from LeastI_ex[OF \<open>\<exists>j. j < ?nw \<and> in_sector j (edge_pt_e (k+2) t)\<close>]
@@ -3290,7 +3704,286 @@ proof -
         qed
       qed
       \<comment> \<open>Now prove all 12 properties of phi\\_fn.\<close>
-      have prop1: "\<forall>p \<in> P_e. phi_fn p \<in> P_w" sorry
+      have prop1: "\<forall>p \<in> P_e. phi_fn p \<in> P_w"
+      proof (intro ballI)
+        fix p assume hp: "p \<in> P_e"
+        from hfan_cover[rule_format, OF hp]
+        show "phi_fn p \<in> P_w"
+        proof (elim disjE exE conjE)
+          assume "p = (vxe 1, vye 1)"
+          hence "phi_fn p = (?cxw, ?cyw)" unfolding phi_fn_def by (by100 simp)
+          thus ?thesis using hcw_in_Pw by simp
+        next
+          fix j0 assume hj0: "j0 < ?nw" and hin0: "in_sector j0 p"
+          show "phi_fn p \<in> P_w"
+          proof (cases "p = (vxe 1, vye 1)")
+            case True
+            hence "phi_fn p = (?cxw, ?cyw)" unfolding phi_fn_def by (by100 simp)
+            thus ?thesis using hcw_in_Pw by simp
+          next
+            case False
+            hence hp_ne_v1: "p \<noteq> (vxe 1, vye 1)" .
+          have hexist: "\<exists>j'. j' < ?nw \<and> in_sector j' p" using hj0 hin0 by blast
+          define j where "j = (LEAST j'. j' < ?nw \<and> in_sector j' p)"
+          from LeastI_ex[OF hexist] have hj: "j < ?nw" and hin: "in_sector j p"
+            unfolding j_def by auto
+          let ?si = "Suc(j+2) mod ?ne"
+          let ?dx = "fst p - vxe 1" and ?dy = "snd p - vye 1"
+          let ?s = "phi_s2 (j+2) ?si ?dx ?dy"
+          let ?t = "phi_t2 (j+2) ?si ?dx ?dy"
+          \<comment> \<open>From in\\_sector: cross\\_v1(j+2,p) \\<ge> 0 and cross\\_v1(si,p) \\<le> 0.\<close>
+          from hin have hcr_ge: "cross_v1 (j+2) p \<ge> 0" and hcr_le: "cross_v1 ?si p \<le> 0"
+            unfolding in_sector_def by auto
+          \<comment> \<open>det > 0.\<close>
+          from hdet_pos[rule_format, OF hj]
+          have hdet_pos_j: "(vxe(j+2)-vxe 1)*(vye ?si-vye 1)-(vye(j+2)-vye 1)*(vxe ?si-vxe 1) > 0"
+            by (by100 simp)
+          \<comment> \<open>t\\_par = cross\\_v1(j+2, p) / det \\<ge> 0.\<close>
+          have ht_ge: "?t \<ge> 0"
+          proof -
+            have "?t = cross_v1 (j+2) p / ((vxe(j+2)-vxe 1)*(vye ?si-vye 1)-(vye(j+2)-vye 1)*(vxe ?si-vxe 1))"
+              unfolding phi_t2_def cross_v1_def Let_def by (by100 simp)
+            thus ?thesis using hcr_ge hdet_pos_j using divide_nonneg_pos by (by100 simp)
+          qed
+          \<comment> \<open>s = -cross\\_v1(si, p) / det \\<ge> 0.\<close>
+          have hs_ge: "?s \<ge> 0"
+          proof -
+            have heq: "?s = -cross_v1 ?si p / ((vxe(j+2)-vxe 1)*(vye ?si-vye 1)-(vye(j+2)-vye 1)*(vxe ?si-vxe 1))"
+              unfolding phi_s2_def cross_v1_def Let_def by (by100 algebra)
+            have "-cross_v1 ?si p \<ge> 0" using hcr_le by linarith
+            from divide_nonneg_pos[OF this hdet_pos_j]
+            show ?thesis using heq by linarith
+          qed
+          \<comment> \<open>1-s-t \\<ge> 0: p is on the v\\_1 side of edge v\\_{j+2}v\\_{si}.\<close>
+          have hst_le: "?s + ?t \<le> 1"
+          proof -
+            let ?det = "(vxe(j+2)-vxe 1)*(vye ?si-vye 1)-(vye(j+2)-vye 1)*(vxe ?si-vxe 1)"
+            have hst_expr: "?s + ?t = (cross_v1 (j+2) p - cross_v1 ?si p) / ?det"
+            proof -
+              have "?t = cross_v1 (j+2) p / ?det"
+                unfolding phi_t2_def cross_v1_def Let_def by (by100 simp)
+              moreover have "?s = -cross_v1 ?si p / ?det"
+                unfolding phi_s2_def cross_v1_def Let_def by (by100 algebra)
+              ultimately show ?thesis
+                using diff_divide_distrib[of "cross_v1 (j+2) p" "cross_v1 ?si p" ?det, symmetric]
+                by linarith
+            qed
+            \<comment> \<open>1-s-t \\<ge> 0 via C11 at edge j+2: all vertices on correct side.
+               edge\\_cross(p) = det(v\\_{si}-v\\_{j+2}, p-v\\_{j+2}) \\<ge> 0 by C11 + linearity.
+               Algebraically: cross\\_v1(j+2,p) - cross\\_v1(si,p) - det = -edge\\_cross(p) \\<le> 0.\<close>
+            have hgoal: "cross_v1 (j+2) p - cross_v1 ?si p \<le> ?det"
+            proof -
+              from hp obtain coeffs where hcoeffs: "(\<forall>i<?ne. coeffs i \<ge> 0)"
+                "(\<Sum>i<?ne. coeffs i) = 1" "fst p = (\<Sum>i<?ne. coeffs i * vxe i)"
+                "snd p = (\<Sum>i<?ne. coeffs i * vye i)"
+                using hC5_e by (by100 auto)
+              have hj2_lt: "j+2 < ?ne" using hj hne_eq by linarith
+              \<comment> \<open>C11 at edge j+2 gives: for all i \\<noteq> j+2, i \\<noteq> si:
+                 det(v\\_{si}-v\\_{j+2}, v\\_i-v\\_{j+2}) > 0.\<close>
+              have hedge: "\<forall>i<?ne. (vxe ?si-vxe(j+2))*(vye i-vye(j+2))-(vye ?si-vye(j+2))*(vxe i-vxe(j+2)) \<ge> 0"
+              proof (intro allI impI)
+                fix i assume hi: "i < ?ne"
+                show "(vxe ?si-vxe(j+2))*(vye i-vye(j+2))-(vye ?si-vye(j+2))*(vxe i-vxe(j+2)) \<ge> 0"
+                proof (cases "i = j+2 \<or> i = ?si")
+                  case True thus ?thesis by (elim disjE) simp_all
+                next
+                  case False hence "i \<noteq> j+2" "i \<noteq> Suc(j+2) mod ?ne" by auto
+                  from hC11_e[rule_format, OF hj2_lt hi this]
+                  have hC11_inst: "(vxe i-vxe(j+2))*(vye(Suc(j+2) mod ?ne)-vye(j+2))-(vye i-vye(j+2))*(vxe(Suc(j+2) mod ?ne)-vxe(j+2)) < 0" .
+                  have "(vxe ?si-vxe(j+2))*(vye i-vye(j+2))-(vye ?si-vye(j+2))*(vxe i-vxe(j+2))
+                    = -((vxe i-vxe(j+2))*(vye(Suc(j+2) mod ?ne)-vye(j+2))-(vye i-vye(j+2))*(vxe(Suc(j+2) mod ?ne)-vxe(j+2)))"
+                    by (by100 algebra)
+                  thus ?thesis using hC11_inst by linarith
+                qed
+              qed
+              \<comment> \<open>edge\\_cross(p) \\<ge> 0 by linearity.\<close>
+              have hedge_p: "(vxe ?si-vxe(j+2))*(snd p-vye(j+2))-(vye ?si-vye(j+2))*(fst p-vxe(j+2)) \<ge> 0"
+              proof -
+                \<comment> \<open>edge\\_cross(p) = \\<Sum> \\<lambda>\\_i * edge\\_cross(v\\_i).\<close>
+                let ?a = "vxe ?si - vxe(j+2)" and ?b = "vye ?si - vye(j+2)"
+                have hedy: "snd p - vye(j+2) = (\<Sum>i<?ne. coeffs i * (vye i - vye(j+2)))"
+                proof -
+                  have "(\<Sum>i<?ne. coeffs i * (vye i - vye(j+2)))
+                    = (\<Sum>i<?ne. coeffs i * vye i) - (\<Sum>i<?ne. coeffs i * vye(j+2))"
+                    by (simp add: sum_subtractf right_diff_distrib)
+                  also have "(\<Sum>i<?ne. coeffs i * vye(j+2)) = (\<Sum>i<?ne. coeffs i) * vye(j+2)"
+                    by (simp add: sum_distrib_right[symmetric])
+                  finally show ?thesis using hcoeffs(2,4) by simp
+                qed
+                have hedx: "fst p - vxe(j+2) = (\<Sum>i<?ne. coeffs i * (vxe i - vxe(j+2)))"
+                proof -
+                  have "(\<Sum>i<?ne. coeffs i * (vxe i - vxe(j+2)))
+                    = (\<Sum>i<?ne. coeffs i * vxe i) - (\<Sum>i<?ne. coeffs i * vxe(j+2))"
+                    by (simp add: sum_subtractf right_diff_distrib)
+                  also have "(\<Sum>i<?ne. coeffs i * vxe(j+2)) = (\<Sum>i<?ne. coeffs i) * vxe(j+2)"
+                    by (simp add: sum_distrib_right[symmetric])
+                  finally show ?thesis using hcoeffs(2,3) by simp
+                qed
+                have "?a * (snd p - vye(j+2)) - ?b * (fst p - vxe(j+2))
+                  = ?a * (\<Sum>i<?ne. coeffs i * (vye i - vye(j+2)))
+                  - ?b * (\<Sum>i<?ne. coeffs i * (vxe i - vxe(j+2)))" using hedy hedx by simp
+                also have "\<dots> = (\<Sum>i<?ne. ?a * (coeffs i * (vye i - vye(j+2))))
+                  - (\<Sum>i<?ne. ?b * (coeffs i * (vxe i - vxe(j+2))))"
+                  by (simp add: sum_distrib_left[symmetric])
+                also have "\<dots> = (\<Sum>i<?ne. ?a * (coeffs i * (vye i - vye(j+2)))
+                                          - ?b * (coeffs i * (vxe i - vxe(j+2))))"
+                  using sum_subtractf[of "\<lambda>i. ?a*(coeffs i*(vye i-vye(j+2)))"
+                    "\<lambda>i. ?b*(coeffs i*(vxe i-vxe(j+2)))" "{..<?ne}"] by (by100 simp)
+                also have "\<dots> = (\<Sum>i<?ne. coeffs i * (?a * (vye i - vye(j+2)) - ?b * (vxe i - vxe(j+2))))"
+                proof -
+                  have "\<And>i. ?a * (coeffs i * (vye i - vye(j+2))) - ?b * (coeffs i * (vxe i - vxe(j+2)))
+                    = coeffs i * (?a * (vye i - vye(j+2)) - ?b * (vxe i - vxe(j+2)))"
+                    by (by100 algebra)
+                  thus ?thesis by simp
+                qed
+                finally have hlin: "?a * (snd p - vye(j+2)) - ?b * (fst p - vxe(j+2))
+                  = (\<Sum>i<?ne. coeffs i * (?a * (vye i - vye(j+2)) - ?b * (vxe i - vxe(j+2))))" .
+                \<comment> \<open>Each term = coeffs i * edge\\_cross(v\\_i) \\<ge> 0.\<close>
+                have hterms: "\<forall>i<?ne. coeffs i * (?a * (vye i - vye(j+2)) - ?b * (vxe i - vxe(j+2))) \<ge> 0"
+                proof (intro allI impI)
+                  fix i assume "i < ?ne"
+                  from hedge[rule_format, OF this]
+                  have "0 \<le> (vxe ?si-vxe(j+2))*(vye i-vye(j+2))-(vye ?si-vye(j+2))*(vxe i-vxe(j+2))" by linarith
+                  hence "0 \<le> ?a * (vye i - vye(j+2)) - ?b * (vxe i - vxe(j+2))" by simp
+                  from mult_nonneg_nonneg[OF hcoeffs(1)[rule_format, OF \<open>i < ?ne\<close>] this]
+                  show "coeffs i * (?a * (vye i - vye(j+2)) - ?b * (vxe i - vxe(j+2))) \<ge> 0" .
+                qed
+                hence "(\<Sum>i<?ne. coeffs i * (?a * (vye i - vye(j+2)) - ?b * (vxe i - vxe(j+2)))) \<ge> 0"
+                  by (intro sum_nonneg) blast
+                thus ?thesis using hlin by linarith
+              qed
+              \<comment> \<open>Algebraically: diff - det = -edge\\_cross(p).\<close>
+              have "cross_v1 (j+2) p - cross_v1 ?si p - ?det
+                = -((vxe ?si-vxe(j+2))*(snd p-vye(j+2))-(vye ?si-vye(j+2))*(fst p-vxe(j+2)))"
+                unfolding cross_v1_def by (by100 algebra)
+              thus ?thesis using hedge_p by linarith
+            qed
+            have "(cross_v1 (j+2) p - cross_v1 ?si p) / ?det \<le> 1"
+              using hgoal hdet_pos_j pos_divide_le_eq[of ?det] by (by100 simp)
+            thus ?thesis using hst_expr by linarith
+          qed
+          \<comment> \<open>phi\\_fn(p) is a convex combination of vertices of P\\_w -> \\<in> P\\_w.\<close>
+          \<comment> \<open>phi\\_fn(p) = (1-s-t)*centroid + s*u\\_j + t*u\\_{j+1} where centroid \\<in> P\\_w.\<close>
+          \<comment> \<open>Since centroid = (1/nw)*\\<Sum> u\\_i, phi\\_fn(p) = \\<Sum> c\\_i * u\\_i with c\\_i \\<ge> 0, \\<Sum> = 1.\<close>
+          \<comment> \<open>Use hphi\\_fn\\_decomp with LEAST = j.\<close>
+          obtain a b where hab: "p = (a, b)" by (cases p) auto
+          have hab_ne: "(a, b) \<noteq> (vxe 1, vye 1)" using hp_ne_v1 hab by simp
+          have hLEAST_j: "(LEAST j'. j' < ?nw \<and> in_sector j' (a, b)) = j"
+            unfolding j_def using hab by simp
+          from hphi_fn_decomp[OF hab_ne hLEAST_j]
+          have hphi_eq_ab: "phi_fn (a, b) = ((1 - phi_s2 (j+2) ?si (a-vxe 1) (b-vye 1)
+                           - phi_t2 (j+2) ?si (a-vxe 1) (b-vye 1))*?cxw
+                         + phi_s2 (j+2) ?si (a-vxe 1) (b-vye 1)*vxw j
+                         + phi_t2 (j+2) ?si (a-vxe 1) (b-vye 1)*vxw(Suc j mod ?nw),
+                         (1 - phi_s2 (j+2) ?si (a-vxe 1) (b-vye 1)
+                           - phi_t2 (j+2) ?si (a-vxe 1) (b-vye 1))*?cyw
+                         + phi_s2 (j+2) ?si (a-vxe 1) (b-vye 1)*vyw j
+                         + phi_t2 (j+2) ?si (a-vxe 1) (b-vye 1)*vyw(Suc j mod ?nw))" .
+          \<comment> \<open>Since p=(a,b): phi\\_s2(..., a-vxe 1, b-vye 1) = ?s, similarly for t.\<close>
+          have hs_eq: "phi_s2 (j+2) ?si (a-vxe 1) (b-vye 1) = ?s" using hab by simp
+          have ht_eq: "phi_t2 (j+2) ?si (a-vxe 1) (b-vye 1) = ?t" using hab by simp
+          have hphi_eq: "phi_fn p = ((1-?s-?t)*?cxw + ?s*vxw j + ?t*vxw(Suc j mod ?nw),
+                                     (1-?s-?t)*?cyw + ?s*vyw j + ?t*vyw(Suc j mod ?nw))"
+            using hphi_eq_ab hs_eq ht_eq hab by simp
+          \<comment> \<open>Construct convex hull coefficients for P\\_w.\<close>
+          have h1st: "1 - ?s - ?t \<ge> 0" using hst_le hs_ge ht_ge by linarith
+          \<comment> \<open>centroid \\<in> P\\_w, u\\_j \\<in> P\\_w, u\\_{j+1} \\<in> P\\_w.\<close>
+          have huj: "(vxw j, vyw j) \<in> P_w" using hC4_w hj by (by100 blast)
+          have hjm: "Suc j mod ?nw < ?nw" using hnw_pos by simp
+          have huj1: "(vxw (Suc j mod ?nw), vyw (Suc j mod ?nw)) \<in> P_w"
+            using hC4_w hjm by (by100 blast)
+          \<comment> \<open>Convex combination of three P\\_w elements with non-negative weights summing to 1.\<close>
+          \<comment> \<open>centroid \\<in> P\\_w gives \\<exists>coeffs\\_c. u\\_j \\<in> P\\_w gives \\<exists>coeffs\\_j. Combine.\<close>
+          \<comment> \<open>Construct explicit convex hull coefficients for phi\\_fn(p) \\<in> P\\_w.\<close>
+          \<comment> \<open>centroid = (1/nw) * \\<Sum> u\\_i. So phi\\_fn(p) = \\<Sum> c\\_i * u\\_i where
+             c\\_i = (1-s-t)/nw + s*(if i=j then 1 else 0) + t*(if i=Suc j mod nw then 1 else 0).\<close>
+          define c_w where "c_w i = (1-?s-?t)/(real ?nw) + (if i=j then ?s else 0)
+            + (if i = Suc j mod ?nw then ?t else 0)" for i
+          have hcw_nn: "\<forall>i<?nw. c_w i \<ge> 0"
+          proof (intro allI impI)
+            fix i assume "i < ?nw"
+            have "(1-?s-?t) / real ?nw \<ge> 0" using h1st hnw_pos by (by100 simp)
+            moreover have "(if i=j then ?s else 0) \<ge> 0" using hs_ge by simp
+            moreover have "(if i = Suc j mod ?nw then ?t else 0) \<ge> 0" using ht_ge by simp
+            ultimately show "c_w i \<ge> 0" unfolding c_w_def by linarith
+          qed
+          have hcw_sum: "(\<Sum>i<?nw. c_w i) = 1"
+          proof -
+            have "(\<Sum>i<?nw. c_w i) = (\<Sum>i<?nw. (1-?s-?t)/(real ?nw))
+              + (\<Sum>i<?nw. (if i=j then ?s else 0))
+              + (\<Sum>i<?nw. (if i = Suc j mod ?nw then ?t else 0))"
+              unfolding c_w_def by (simp add: sum.distrib)
+            also have "(\<Sum>i<?nw. (1-?s-?t)/(real ?nw)) = (1-?s-?t)"
+              using hnw_pos by simp
+            also have "(\<Sum>i<?nw. (if i=j then ?s else 0)) = ?s"
+              using hj by simp
+            also have "(\<Sum>i<?nw. (if i = Suc j mod ?nw then ?t else 0)) = ?t"
+              using hjm by simp
+            finally show ?thesis by simp
+          qed
+          have hcw_x: "fst(phi_fn p) = (\<Sum>i<?nw. c_w i * vxw i)"
+          proof -
+            have "(\<Sum>i<?nw. c_w i * vxw i) = (\<Sum>i<?nw. ((1-?s-?t)/(real ?nw)) * vxw i)
+              + (\<Sum>i<?nw. (if i=j then ?s else 0) * vxw i)
+              + (\<Sum>i<?nw. (if i = Suc j mod ?nw then ?t else 0) * vxw i)"
+              unfolding c_w_def by (simp add: sum.distrib algebra_simps)
+            also have "(\<Sum>i<?nw. ((1-?s-?t)/(real ?nw)) * vxw i) = (1-?s-?t) * ?cxw"
+            proof -
+              have "(\<Sum>i<?nw. ((1-?s-?t)/(real ?nw)) * vxw i) = ((1-?s-?t)/(real ?nw)) * (\<Sum>i<?nw. vxw i)"
+                by (simp add: sum_distrib_left)
+              also have "\<dots> = (1-?s-?t) * ((\<Sum>i<?nw. vxw i) / real ?nw)" by (by100 simp)
+              finally show ?thesis by simp
+            qed
+            also have "(\<Sum>i<?nw. (if i=j then ?s else 0) * vxw i) = ?s * vxw j"
+            proof -
+              have "(\<Sum>i<?nw. (if i=j then ?s else 0) * vxw i) = (\<Sum>i\<in>{j}. ?s * vxw i)"
+                using hj by (intro sum.mono_neutral_cong_right) auto
+              also have "\<dots> = ?s * vxw j" by simp
+              finally show ?thesis .
+            qed
+            also have "(\<Sum>i<?nw. (if i = Suc j mod ?nw then ?t else 0) * vxw i) = ?t * vxw(Suc j mod ?nw)"
+            proof -
+              have "(\<Sum>i<?nw. (if i = Suc j mod ?nw then ?t else 0) * vxw i) = (\<Sum>i\<in>{Suc j mod ?nw}. ?t * vxw i)"
+                using hjm by (intro sum.mono_neutral_cong_right) auto
+              also have "\<dots> = ?t * vxw(Suc j mod ?nw)" by simp
+              finally show ?thesis .
+            qed
+            finally show ?thesis using hphi_eq by simp
+          qed
+          have hcw_y: "snd(phi_fn p) = (\<Sum>i<?nw. c_w i * vyw i)"
+          proof -
+            have "(\<Sum>i<?nw. c_w i * vyw i) = (\<Sum>i<?nw. ((1-?s-?t)/(real ?nw)) * vyw i)
+              + (\<Sum>i<?nw. (if i=j then ?s else 0) * vyw i)
+              + (\<Sum>i<?nw. (if i = Suc j mod ?nw then ?t else 0) * vyw i)"
+              unfolding c_w_def by (simp add: sum.distrib algebra_simps)
+            also have "(\<Sum>i<?nw. ((1-?s-?t)/(real ?nw)) * vyw i) = (1-?s-?t) * ?cyw"
+            proof -
+              have "(\<Sum>i<?nw. ((1-?s-?t)/(real ?nw)) * vyw i) = ((1-?s-?t)/(real ?nw)) * (\<Sum>i<?nw. vyw i)"
+                by (simp add: sum_distrib_left)
+              also have "\<dots> = (1-?s-?t) * ((\<Sum>i<?nw. vyw i) / real ?nw)" by (by100 simp)
+              finally show ?thesis by simp
+            qed
+            also have "(\<Sum>i<?nw. (if i=j then ?s else 0) * vyw i) = ?s * vyw j"
+            proof -
+              have "(\<Sum>i<?nw. (if i=j then ?s else 0) * vyw i) = (\<Sum>i\<in>{j}. ?s * vyw i)"
+                using hj by (intro sum.mono_neutral_cong_right) auto
+              also have "\<dots> = ?s * vyw j" by simp
+              finally show ?thesis .
+            qed
+            also have "(\<Sum>i<?nw. (if i = Suc j mod ?nw then ?t else 0) * vyw i) = ?t * vyw(Suc j mod ?nw)"
+            proof -
+              have "(\<Sum>i<?nw. (if i = Suc j mod ?nw then ?t else 0) * vyw i) = (\<Sum>i\<in>{Suc j mod ?nw}. ?t * vyw i)"
+                using hjm by (intro sum.mono_neutral_cong_right) auto
+              also have "\<dots> = ?t * vyw(Suc j mod ?nw)" by simp
+              finally show ?thesis .
+            qed
+            finally show ?thesis using hphi_eq by simp
+          qed
+          show ?thesis unfolding hC5_w
+            using hcw_nn hcw_sum hcw_x hcw_y by (by100 auto)
+          qed
+        qed
+      qed
       have prop2: "top1_continuous_map_on P_e
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
           P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi_fn"

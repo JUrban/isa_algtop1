@@ -523,6 +523,39 @@ qed
    The classification uses a different route via scheme\\_quotient\\_exists + uniqueness.\<close>
 
 
+\<comment> \<open>Trig identity for fan determinant: sin(A)+sin(B)-sin(A+B)=4sin(A/2)sin(B/2)sin((A+B)/2).\<close>
+lemma sin_sum_minus_sin_add_cached:
+  fixes A B :: real
+  shows "sin A + sin B - sin(A+B) = 4 * sin(A/2) * sin(B/2) * sin((A+B)/2)"
+proof -
+  have h1: "sin(A+B) = sin A * cos B + cos A * sin B" by (rule sin_add)
+  have hA: "sin A = 2 * sin(A/2) * cos(A/2)" using sin_double[of "A/2"] by simp
+  have hB: "sin B = 2 * sin(B/2) * cos(B/2)" using sin_double[of "B/2"] by simp
+  have hcosB2: "(cos(B/2))^2 = 1 - (sin(B/2))^2"
+    using sin_cos_squared_add[of "B/2"] by (simp add: power2_eq_square algebra_simps)
+  have "cos(B/2 + B/2) = (cos(B/2))^2 - (sin(B/2))^2" using cos_double[of "B/2"] by simp
+  hence hcB: "cos B = 1 - 2 * (sin(B/2))^2" using hcosB2 by (simp add: power2_eq_square)
+  hence hcosB_sub: "1 - cos B = 2 * (sin(B/2))^2" by linarith
+  have hcosA2: "(cos(A/2))^2 = 1 - (sin(A/2))^2"
+    using sin_cos_squared_add[of "A/2"] by (simp add: power2_eq_square algebra_simps)
+  have "cos(A/2 + A/2) = (cos(A/2))^2 - (sin(A/2))^2" using cos_double[of "A/2"] by simp
+  hence "cos A = 1 - 2 * (sin(A/2))^2" using hcosA2 by (simp add: power2_eq_square)
+  hence hcosA_sub: "1 - cos A = 2 * (sin(A/2))^2" by linarith
+  have "sin A + sin B - sin(A+B) = sin A * (1 - cos B) + sin B * (1 - cos A)"
+    using h1 by (simp add: algebra_simps)
+  also have "\<dots> = sin A * (2 * (sin(B/2))^2) + sin B * (2 * (sin(A/2))^2)"
+    using hcosB_sub hcosA_sub by simp
+  also have "\<dots> = 2 * sin(A/2) * cos(A/2) * (2 * (sin(B/2))^2)
+                + 2 * sin(B/2) * cos(B/2) * (2 * (sin(A/2))^2)"
+    using hA hB by simp
+  also have "\<dots> = 4 * sin(A/2) * sin(B/2) * (cos(A/2) * sin(B/2) + sin(A/2) * cos(B/2))"
+    by (simp add: power2_eq_square algebra_simps)
+  also have "cos(A/2) * sin(B/2) + sin(A/2) * cos(B/2) = sin(A/2 + B/2)"
+    using sin_add[of "A/2" "B/2"] by simp
+  also have "A/2 + B/2 = (A+B)/2" by simp
+  finally show ?thesis by simp
+qed
+
 \<comment> \<open>Cut-paste preservation: homeomorphic realization (per audit 22 §5.5).
    The quotient of the cut-paste rearranged scheme is homeomorphic to the original.
    Book: Munkres §76, Theorem 76.1. Cut along diagonal, rearrange, paste.
@@ -567,6 +600,8 @@ lemma scheme_quotient_exists:
     \<and> (\<forall>k<length scheme. \<forall>j<length scheme. \<forall>s\<in>{0<..<(1::real)}.
         q (vx k, vy k) \<noteq> q ((1-s)*vx j + s*vx(Suc j mod length scheme),
                                (1-s)*vy j + s*vy(Suc j mod length scheme)))
+    \<and> (\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < length scheme \<longrightarrow>
+        (vx m - vx 1) * (vy n - vy 1) - (vy m - vy 1) * (vx n - vx 1) > 0)
     \<and> (\<exists>vtgt. (\<forall>k<length scheme. q (vx k, vy k) = (vx (vtgt k), vy (vtgt k)))
              \<and> (\<forall>k<length scheme. vtgt k < length scheme)
              \<and> (\<forall>k<length scheme. vtgt k \<le> k)
@@ -3424,6 +3459,70 @@ proof -
     have "vtgt k \<le> k" unfolding vtgt_def by (rule Least_le) (by100 simp)
     thus "vtgt k < ?n" using \<open>k < ?n\<close> by (by100 linarith)
   qed
+  \<comment> \<open>Fan determinant positivity (proved from regular polygon trig formula).\<close>
+  have hfan_det_early: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < ?n \<longrightarrow>
+      (vx m - vx 1) * (vy n - vy 1) - (vy m - vy 1) * (vx n - vx 1) > 0"
+  proof (intro allI impI)
+    fix m n' :: nat assume hm: "2 \<le> m" and hmn: "m < n'" and hn': "n' < ?n"
+    let ?\<alpha> = "2*pi*real m/real ?n" and ?\<beta> = "2*pi*real n'/real ?n" and ?\<gamma> = "2*pi/real ?n"
+    have hne_pos: "real ?n > 0" using assms(1) by linarith
+    have hdet_trig: "(vx m - vx 1) * (vy n' - vy 1) - (vy m - vy 1) * (vx n' - vx 1)
+      = sin(?\<beta> - ?\<alpha>) + sin(?\<alpha> - ?\<gamma>) - sin(?\<beta> - ?\<gamma>)"
+    proof -
+      have "cos ?\<alpha> * sin ?\<beta> - sin ?\<alpha> * cos ?\<beta> = sin(?\<beta> - ?\<alpha>)"
+        using sin_diff[of ?\<beta> ?\<alpha>] by (simp add: algebra_simps)
+      moreover have "sin ?\<alpha> * cos ?\<gamma> - cos ?\<alpha> * sin ?\<gamma> = sin(?\<alpha> - ?\<gamma>)"
+        using sin_diff[of ?\<alpha> ?\<gamma>] by (simp add: algebra_simps)
+      moreover have "sin ?\<gamma> * cos ?\<beta> - cos ?\<gamma> * sin ?\<beta> = -sin(?\<beta> - ?\<gamma>)"
+        using sin_diff[of ?\<beta> ?\<gamma>] by (simp add: algebra_simps)
+      ultimately have "(cos ?\<alpha> - cos ?\<gamma>) * (sin ?\<beta> - sin ?\<gamma>) -
+        (sin ?\<alpha> - sin ?\<gamma>) * (cos ?\<beta> - cos ?\<gamma>)
+        = sin(?\<beta> - ?\<alpha>) + sin(?\<alpha> - ?\<gamma>) - sin(?\<beta> - ?\<gamma>)" by (simp add: algebra_simps)
+      thus ?thesis unfolding vx_def vy_def by simp
+    qed
+    let ?A = "?\<alpha> - ?\<gamma>" and ?B = "?\<beta> - ?\<alpha>"
+    have hm1: "real(m - 1) = real m - 1" using hm by simp
+    have hnm: "real(n' - m) = real n' - real m" using hmn by simp
+    have hn1: "real(n' - 1) = real n' - 1" using hm hmn by simp
+    have hA_eq: "?A = 2*pi*real(m-1)/real ?n" using hne_pos hm1 by (simp add: field_simps)
+    have hB_eq: "?B = 2*pi*real(n'-m)/real ?n" using hne_pos hnm by (simp add: field_simps)
+    have hAB_eq2: "?A + ?B = 2*pi*real(n'-1)/real ?n" using hne_pos hn1 by (simp add: field_simps)
+    have hid: "sin ?A + sin ?B - sin(?A+?B) = 4 * sin(?A/2) * sin(?B/2) * sin((?A+?B)/2)"
+      by (rule sin_sum_minus_sin_add_cached)
+    have hA2_eq: "?A/2 = pi*real(m-1)/real ?n" using hA_eq by simp
+    have hB2_eq: "?B/2 = pi*real(n'-m)/real ?n" using hB_eq by simp
+    have hAB2_eq: "(?A+?B)/2 = pi*real(n'-1)/real ?n" using hAB_eq2 by simp
+    have hsin1: "sin(?A/2) > 0"
+    proof -
+      have "pi*real(m-1)/real ?n > 0" using pi_gt_zero hne_pos hm
+        by (intro divide_pos_pos mult_pos_pos) linarith+
+      moreover have "pi*real(m-1)/real ?n < pi" using pi_gt_zero hne_pos hmn hn'
+        by (simp add: field_simps)
+      ultimately show ?thesis unfolding hA2_eq using sin_gt_zero by blast
+    qed
+    have hsin2: "sin(?B/2) > 0"
+    proof -
+      have "pi*real(n'-m)/real ?n > 0" using pi_gt_zero hne_pos hmn
+        by (intro divide_pos_pos mult_pos_pos) linarith+
+      moreover have "pi*real(n'-m)/real ?n < pi" using pi_gt_zero hne_pos hn'
+        by (simp add: field_simps)
+      ultimately show ?thesis unfolding hB2_eq using sin_gt_zero by blast
+    qed
+    have hsin3: "sin((?A+?B)/2) > 0"
+    proof -
+      have "pi*real(n'-1)/real ?n > 0" using pi_gt_zero hne_pos hm hmn
+        by (intro divide_pos_pos mult_pos_pos) linarith+
+      moreover have "pi*real(n'-1)/real ?n < pi" using pi_gt_zero hne_pos hn'
+        by (simp add: field_simps)
+      ultimately show ?thesis unfolding hAB2_eq using sin_gt_zero by blast
+    qed
+    from hid hdet_trig have "(vx m - vx 1) * (vy n' - vy 1) - (vy m - vy 1) * (vx n' - vx 1)
+      = 4 * sin(?A/2) * sin(?B/2) * sin((?A+?B)/2)" by simp
+    moreover have "4 * sin(?A/2) * sin(?B/2) * sin((?A+?B)/2) > 0"
+      using hsin1 hsin2 hsin3 by (simp add: mult_pos_pos)
+    ultimately show "(vx m - vx 1) * (vy n' - vy 1) - (vy m - vy 1) * (vx n' - vx 1) > 0"
+      by linarith
+  qed
   \<comment> \<open>Capture quotient\\_of\\_scheme\\_on for specific Y, TY BEFORE show.\<close>
   have hqos: "top1_quotient_of_scheme_on Y TY scheme"
     unfolding top1_quotient_of_scheme_on_def
@@ -3459,6 +3558,7 @@ proof -
     using hC10 apply (by100 blast)
     using hC11 apply (by100 blast)
     using hC12 apply (by100 blast)
+    using hfan_det_early apply (by100 blast)
     apply (rule exI[of _ vtgt])
   proof (intro conjI allI impI)
     fix k assume hk: "k < ?n"
