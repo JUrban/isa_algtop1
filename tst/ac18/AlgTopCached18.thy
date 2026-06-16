@@ -933,4 +933,22 @@ proof -
     done
 qed
 
+\<comment> \<open>Cross product identity: det(A-B, C-B) = det(B-C, A-C) for any 2D points.\<close>
+lemma cross_product_cyclic:
+  fixes ax ay bx by' cx cy :: real
+  shows "(ax-bx)*(cy-by')-(ay-by')*(cx-bx) = (bx-cx)*(ay-cy)-(by'-cy)*(ax-cx)"
+proof -
+  \<comment> \<open>Expand each product with canonical multiplication order (a before b before c).\<close>
+  have lhs: "(ax-bx)*(cy-by') = ax*cy - ax*by' - bx*cy + bx*by'"
+    by (simp add: algebra_simps)
+  have lhs2: "(ay-by')*(cx-bx) = ay*cx - ay*bx - by'*cx + bx*by'"
+    by (simp add: algebra_simps)
+  have rhs: "(bx-cx)*(ay-cy) = ay*bx - bx*cy - ay*cx + cx*cy"
+    by (simp add: algebra_simps)
+  have rhs2: "(by'-cy)*(ax-cx) = ax*by' - by'*cx - ax*cy + cx*cy"
+    by (simp add: algebra_simps)
+  show ?thesis using lhs lhs2 rhs rhs2
+    by (simp add: mult.commute)
+qed
+
 end
