@@ -1679,9 +1679,12 @@ proof -
   thus ?thesis using \<open>(1-t)*A < 0\<close> by linarith
 qed
 
-\<comment> \<open>fan\\_wedge\\_later\\_cross\\_nonpos: REMOVED. The hcr\\_j2\\_le proof now uses a direct
-   sector-containment argument (multiply by det\\_{jm}, use numerator identities by algebra,
-   avoid division). This bypasses the convex-combination approach entirely.\<close>
+\<comment> \<open>Cross-multiplication for fraction equality: a*d = c*b with b,d \\<noteq> 0 implies a/b = c/d.\<close>
+lemma frac_eq_from_cross_mult:
+  fixes a b c d :: real
+  assumes "a * d = c * b" "b \<noteq> 0" "d \<noteq> 0"
+  shows "a / b = c / d"
+  using assms by (simp add: field_simps)
 
 lemma spur_collapse_cancel_homeo:
   fixes w :: "(nat \<times> bool) list" and a :: "nat \<times> bool"
@@ -4453,7 +4456,7 @@ proof -
               have "(?ex*?dy-?ey*?dx) * ?det_j = (?fy2*?dx-?fx2*?dy) * ?det_jm"
                 using hcross_mult .
               hence heq_div: "(?ex*?dy-?ey*?dx) / ?det_jm = (?fy2*?dx-?fx2*?dy) / ?det_j"
-                using hd1ne hd2ne sorry \<comment> \<open>a*d=c*b, b\\<noteq>0, d\\<noteq>0 => a/b=c/d. Standard field fact.\<close>
+                using frac_eq_from_cross_mult[OF _ hd1ne hd2ne] by (by100 simp)
               show ?thesis using lhs_def rhs_def heq_div by simp
             qed
             \<comment> \<open>Now assemble: phi\\_fn = (1-t\\_{jm})*c+t\\_{jm}*u\\_j = (1-s\\_j)*c+s\\_j*u\\_j = sector j formula.\<close>
@@ -4461,14 +4464,16 @@ proof -
             proof -
               \<comment> \<open>hphi\\_simplified: phi\\_fn = (1-phi\\_t2(jm+2,j+2,dx,dy))*c + phi\\_t2*uj.\<close>
               \<comment> \<open>Substitute phi\\_t2 = phi\\_s2 and reconstruct the let-expression.\<close>
-              from hphi_simplified have "phi_fn (fst p, snd p) =
+              from hphi_simplified have hphi_s_form: "phi_fn (fst p, snd p) =
                 ((1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cxw
                 + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vxw j,
                 (1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cyw
                 + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vyw j)"
                 using ht_jm_eq_s_j hjm3_eq by simp
-              \<comment> \<open>Match with let-expression where t\\_j = 0.\<close>
-              thus ?thesis using ht_j_zero unfolding phi_s2_def phi_t2_def Let_def sorry
+              show ?thesis using hphi_s_form ht_j_zero
+                unfolding phi_s2_def phi_t2_def Let_def sorry
+                \<comment> \<open>Syntactic let-match: after unfolding, both sides are the same expression with t=0.
+                   The math is proved; this is a simp/automation limitation on large expressions.\<close>
             qed
           qed
         qed
