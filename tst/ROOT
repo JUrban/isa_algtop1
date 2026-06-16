@@ -159,7 +159,12 @@ session AlgTopCached17 in ac17 = AlgTopCached16 +
   theories
     AlgTopCached17
 
-session AlgTop = AlgTopCached17 +
+session AlgTopCached18 in ac18 = AlgTopCached17 +
+  options [timeout = 600]
+  theories
+    AlgTopCached18
+
+session AlgTop = AlgTopCached18 +
   options [quick_and_dirty, timeout = 600]
   theories
     AlgTop
