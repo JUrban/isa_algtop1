@@ -4121,29 +4121,61 @@ proof -
               let ?det32 = "(vxe(jm+3)-vxe 1)*(vye(j+2)-vye 1)-(vye(jm+3)-vye 1)*(vxe(j+2)-vxe 1)"
               let ?det22 = "(vxe(jm+2)-vxe 1)*(vye(j+2)-vye 1)-(vye(jm+2)-vye 1)*(vxe(j+2)-vxe 1)"
               have hdx0: "fst p - vxe 1 = 0"
-              proof -
-                have h1: "?det32 * (fst p - vxe 1) \<le> 0"
-                  sorry \<comment> \<open>= RHS of hcramer1 = C*cross(jm+3). Sign: nonpos*anything \\<le> 0.\<close>
-                have h2: "?det22 * (fst p - vxe 1) \<ge> 0"
-                  sorry \<comment> \<open>= RHS of hcramer2 = C*cross(jm+2). Sign: nonneg*anything \\<ge> 0.\<close>
-                \<comment> \<open>det1 > 0 and det1*dx \\<le> 0 => dx \\<le> 0. det2 > 0 and det2*dx \\<ge> 0 => dx \\<ge> 0.\<close>
-                have "fst p - vxe 1 \<le> 0"
+              proof (cases "vxe(j+2) - vxe 1 \<ge> 0")
+                case True \<comment> \<open>C \\<ge> 0: det32*dx = C*cross(jm+3) \\<le> 0, det22*dx = C*cross(jm+2) \\<ge> 0.\<close>
+                have "?det32 * (fst p - vxe 1) = (vxe(j+2)-vxe 1) * ((vxe(jm+3)-vxe 1)*(snd p-vye 1)-(vye(jm+3)-vye 1)*(fst p-vxe 1))"
+                  using hcramer1 by simp
+                moreover have "(vxe(j+2)-vxe 1) * ((vxe(jm+3)-vxe 1)*(snd p-vye 1)-(vye(jm+3)-vye 1)*(fst p-vxe 1)) \<le> 0"
+                  using mult_nonneg_nonpos[OF True hcr_jm3_exp] .
+                ultimately have h1: "?det32 * (fst p - vxe 1) \<le> 0" by linarith
+                have "?det22 * (fst p - vxe 1) = (vxe(j+2)-vxe 1) * ((vxe(jm+2)-vxe 1)*(snd p-vye 1)-(vye(jm+2)-vye 1)*(fst p-vxe 1))"
+                  using hcramer2 by simp
+                moreover have "(vxe(j+2)-vxe 1) * ((vxe(jm+2)-vxe 1)*(snd p-vye 1)-(vye(jm+2)-vye 1)*(fst p-vxe 1)) \<ge> 0"
+                  using mult_nonneg_nonneg[OF True hcr_jm2_exp] .
+                ultimately have h2: "?det22 * (fst p - vxe 1) \<ge> 0" by linarith
+                show ?thesis
                 proof (rule ccontr)
-                  assume "\<not>(fst p - vxe 1 \<le> 0)"
-                  hence "fst p - vxe 1 > 0" by linarith
-                  from mult_pos_pos[OF hdet_pos2 \<open>fst p - vxe 1 > 0\<close>]
-                  have "?det32 * (fst p - vxe 1) > 0" .
-                  thus False using h1 by linarith
+                  assume "fst p - vxe 1 \<noteq> 0"
+                  hence "fst p - vxe 1 > 0 \<or> fst p - vxe 1 < 0" by linarith
+                  thus False
+                  proof
+                    assume "fst p - vxe 1 > 0"
+                    from mult_pos_pos[OF hdet_pos2 this] h1 show False by linarith
+                  next
+                    assume "fst p - vxe 1 < 0"
+                    from mult_pos_neg[OF hdet22 this] h2 show False by linarith
+                  qed
                 qed
-                moreover have "fst p - vxe 1 \<ge> 0"
+              next
+                case False hence hC_neg: "vxe(j+2) - vxe 1 < 0" by linarith
+                have hC_le: "vxe(j+2) - vxe 1 \<le> 0" using hC_neg by linarith
+                have h1: "?det32 * (fst p - vxe 1) \<ge> 0"
+                proof -
+                  have "?det32 * (fst p - vxe 1) = (vxe(j+2)-vxe 1) * ((vxe(jm+3)-vxe 1)*(snd p-vye 1)-(vye(jm+3)-vye 1)*(fst p-vxe 1))"
+                    using hcramer1 by simp
+                  also have "\<dots> \<ge> 0" using mult_nonpos_nonpos[OF hC_le hcr_jm3_exp] .
+                  finally show ?thesis .
+                qed
+                have h2: "?det22 * (fst p - vxe 1) \<le> 0"
+                proof -
+                  have "?det22 * (fst p - vxe 1) = (vxe(j+2)-vxe 1) * ((vxe(jm+2)-vxe 1)*(snd p-vye 1)-(vye(jm+2)-vye 1)*(fst p-vxe 1))"
+                    using hcramer2 by simp
+                  also have "\<dots> \<le> 0" using mult_nonpos_nonneg[OF hC_le hcr_jm2_exp] .
+                  finally show ?thesis .
+                qed
+                show ?thesis
                 proof (rule ccontr)
-                  assume "\<not>(fst p - vxe 1 \<ge> 0)"
-                  hence "fst p - vxe 1 < 0" by linarith
-                  from mult_pos_neg[OF hdet22 \<open>fst p - vxe 1 < 0\<close>]
-                  have "?det22 * (fst p - vxe 1) < 0" .
-                  thus False using h2 by linarith
+                  assume "fst p - vxe 1 \<noteq> 0"
+                  hence "fst p - vxe 1 > 0 \<or> fst p - vxe 1 < 0" by linarith
+                  thus False
+                  proof
+                    assume "fst p - vxe 1 > 0"
+                    from mult_pos_pos[OF hdet22 this] h2 show False by linarith
+                  next
+                    assume "fst p - vxe 1 < 0"
+                    from mult_pos_neg[OF hdet_pos2 this] h1 show False by linarith
+                  qed
                 qed
-                ultimately show ?thesis by linarith
               qed
               have hdy0: "snd p - vye 1 = 0" using hcr_j2_eq hdx0 sorry
               have "fst p - vxe 1 = 0 \<and> snd p - vye 1 = 0" using hdx0 hdy0 by simp
