@@ -26,25 +26,22 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-15, session 1570):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-16, session 1578):
 
-~74 sorry word occurrences. Build ~44s.
+~69 sorry word occurrences. Build ~25s.
 
 DEPENDENCY TREE FOR CANCEL CHAIN:
-  spur\\_collapse\\_cancel\\_homeo (phi construction, ~8 sorry proof commands)
+  spur\\_collapse\\_cancel\\_homeo (phi construction, ~5 sorry proof commands)
     phi\\_fn: piecewise-affine fan extension from v\\_1 to centroid(P\\_w)
-    PROVED: hdet\\_general via regular polygon trig formula (4*sin*sin*sin > 0),
-            added fan\\_det to scheme\\_quotient\\_exists in AlgTopCached15,
-            centroid properties, sector determinants > 0 (C11),
-            spur0/spur1 edge helpers FULLY PROVED,
-            nonspur edge helper proved for t\\<in>(0,1) + boundary,
-            arc-not-on-edge FULLY PROVED, vertex \\<noteq> v\\_1 (C11/C3),
-            hjv\\_eq (j\\_v=k-1, uses hdet\\_general),
-            hphi\\_at\\_vertex j\\_v=k case (phi\\_s2=1, phi\\_t2=0),
-            phi\\_s2/phi\\_t2 named decomposition for let-expression control
-    REMAINING: hfan\\_cover, huniq/hLEAST\\_k,
-               prop1 (range), prop2 (continuity), prop3 (surjectivity),
-               prop10-12 (interior properties)
+    PROVED: hdet\\_general via regular polygon trig formula in AlgTopCached15,
+            huniq\\_lt/huniq\\_gt (sector uniqueness via cross product signs),
+            hfan\\_cover (discrete IVT + vertex linearity),
+            prop1 (range: s\\<ge>0, t\\<ge>0, s+t\\<le>1 via C11, convex hull coefficients),
+            centroid properties, sector determinants > 0,
+            all edge helpers (spur0/1, nonspur, vertices),
+            arc-not-on-edge, hjv\\_eq, phi\\_s2/phi\\_t2 decomposition
+    REMAINING: prop2 (continuity), prop3 (surjectivity),
+               prop10-12 (interior injectivity, int-to-int, spur\\<noteq>int)
     <- front\\_cancel\\_proper\\_direct (0 sorry)
       <- front\\_cancel\\_proper (0 sorry)
       <- quotient\\_of\\_scheme\\_uncancel\\_front\\_proper (0 sorry)
