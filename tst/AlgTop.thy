@@ -6481,9 +6481,16 @@ proof -
         qed
         from hfan_cover[rule_format, OF hp] hp_ne_v1
         obtain jp where hjp: "jp < ?nw" and hin_sec: "in_sector jp p" by blast
-        \<comment> \<open>phi\\_fn(p) has positive centroid weight (p not on edge jp+2).
-           phi\\_fn(edge\\_pt\\_e 0 t) = spur arc point on the u\\_0-cw line.
-           For interior p: centroid weight > 0 and image not on u\\_0-cw line.\<close>
+        \<comment> \<open>PROOF STRATEGY for phi\\_fn(edge\\_pt\\_e 0 t) \\<noteq> phi\\_fn p:
+           1. Get affine form: phi\\_fn(p) = \\<alpha>*cw + s*u\\_jp + t\\_p*u\\_{jp+1}, \\<alpha> > 0.
+           2. Spur arc = r*cw + (1-r)*u\\_0.
+           3. Assume equal: \\<alpha>=r, s*u\\_jp+t\\_p*u\\_{jp+1} = (1-r)*u\\_0.
+           4. If jp=0: t\\_p=0 \\<to> p on edge 1 \\<to> contradiction with interior.
+           5. If jp=nw-1: s=0 \\<to> p on edge 0 \\<to> contradiction.
+           6. Other jp: s+t\\_p>0 and u\\_0 = convex combo of u\\_jp,u\\_{jp+1}.
+              C11 at edge jp: det(u\\_0-u\\_jp, u\\_{jp+1}-u\\_jp) < 0,
+              but collinearity gives det=0. Contradiction.
+           All infrastructure (centroid weight, C11) is available.\<close>
         show "phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p" sorry
       qed
       show ?thesis
