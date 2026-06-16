@@ -1638,6 +1638,50 @@ proof -
   thus ?thesis by auto
 qed
 
+\<comment> \<open>Standalone lemma: piecewise-affine fan map is injective on interior.
+   Given: two points p, p' in P (convex polygon), both not on any edge,
+   mapped by the same piecewise-affine fan construction to the same target.
+   Then p = p'. The proof splits into same-sector (Cramer) and different-sector (disjoint).\<close>
+lemma fan_affine_interior_injective:
+  fixes ne nw :: nat
+    and vxe vye vxw vyw :: "nat \<Rightarrow> real"
+    and cxw cyw :: real
+  assumes hnw: "nw \<ge> 3" and hne_nw: "ne = nw + 2"
+      and hdet_pos: "\<forall>j<nw. (vxe(j+2)-vxe 1)*(vye(Suc(j+2) mod ne)-vye 1)-
+          (vye(j+2)-vye 1)*(vxe(Suc(j+2) mod ne)-vxe 1) > 0"
+      and hC10_w: "\<forall>i<nw. (vxw i - cxw) * (vyw(Suc i mod nw) - cyw) -
+          (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
+      \<comment> \<open>p in sector jp:\<close>
+      and hjp: "jp < nw"
+      and hin_p_ge: "(vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1) \<ge> 0"
+      and hin_p_le: "(vxe(Suc(jp+2) mod ne)-vxe 1)*(snd p-vye 1)-
+          (vye(Suc(jp+2) mod ne)-vye 1)*(fst p-vxe 1) \<le> 0"
+      \<comment> \<open>p' in sector jp':\<close>
+      and hjp': "jp' < nw"
+      and hin_p'_ge: "(vxe(jp'+2)-vxe 1)*(snd p'-vye 1)-(vye(jp'+2)-vye 1)*(fst p'-vxe 1) \<ge> 0"
+      and hin_p'_le: "(vxe(Suc(jp'+2) mod ne)-vxe 1)*(snd p'-vye 1)-
+          (vye(Suc(jp'+2) mod ne)-vye 1)*(fst p'-vxe 1) \<le> 0"
+      \<comment> \<open>p \\<noteq> v\\_1 and p' \\<noteq> v\\_1:\<close>
+      and hp_ne: "p \<noteq> (vxe 1, vye 1)" and hp'_ne: "p' \<noteq> (vxe 1, vye 1)"
+      \<comment> \<open>phi(p) = phi(p') (same piecewise-affine output):\<close>
+      and hphi_eq: "
+        (let ej = jp; si = Suc(ej+2) mod ne;
+             ex = vxe(ej+2)-vxe 1; ey = vye(ej+2)-vye 1;
+             fx = vxe si-vxe 1; fy = vye si-vye 1;
+             det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+             s = (fy*dx-fx*dy)/det; t = (ex*dy-ey*dx)/det
+         in ((1-s-t)*cxw + s*vxw ej + t*vxw(Suc ej mod nw),
+             (1-s-t)*cyw + s*vyw ej + t*vyw(Suc ej mod nw)))
+      = (let ej' = jp'; si' = Suc(ej'+2) mod ne;
+             ex' = vxe(ej'+2)-vxe 1; ey' = vye(ej'+2)-vye 1;
+             fx' = vxe si'-vxe 1; fy' = vye si'-vye 1;
+             det' = ex'*fy'-ey'*fx'; dx' = fst p'-vxe 1; dy' = snd p'-vye 1;
+             s' = (fy'*dx'-fx'*dy')/det'; t' = (ex'*dy'-ey'*dx')/det'
+         in ((1-s'-t')*cxw + s'*vxw ej' + t'*vxw(Suc ej' mod nw),
+             (1-s'-t')*cyw + s'*vyw ej' + t'*vyw(Suc ej' mod nw)))"
+  shows "p = p'"
+  sorry
+
 \<comment> \<open>Standalone lemma: fan triangle interiors from a centroid are disjoint.
    If q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} with \\<alpha>,s,t > 0
    and q = \\<alpha>'*cw + s'*u\\_{j'} + t'*u\\_{j'+1} with \\<alpha>',s',t' > 0
@@ -6048,9 +6092,7 @@ proof -
         qed
         from hfan_cover[rule_format, OF hp'] hp'_ne_v1
         obtain jp' where hjp': "jp' < ?nw" and hin_p': "in_sector jp' p'" by blast
-        \<comment> \<open>Both p and p' are in sectors. phi\\_fn is affine-injective on each.
-           If jp = jp': injectivity from det > 0 (Cramer uniquely determines p from phi(p)).
-           If jp \\<noteq> jp': images have different target sector barycentric coords.\<close>
+        \<comment> \<open>Apply fan\\_affine\\_interior\\_injective (standalone lemma, sorry'd).\<close>
         show "p = p'" sorry
       qed
       have prop11: "\<forall>p\<in>P_e.
