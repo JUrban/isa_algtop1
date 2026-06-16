@@ -4038,7 +4038,38 @@ proof -
                Proof: if j > jm+1, p is on ray v\\_1\\<to>v\\_{jm+3}, and cross\\_v1(j+2,p) < 0,
                contradicting in\\_sector j p. Then cross\\_v1(j+2,p) = 0 at boundary,
                giving affine\\_{jm}(s=0) = affine\\_j(t=0) = (1-\\<lambda>)*centroid+\\<lambda>*u\\_{jm+1}.\<close>
-            have hj_eq: "j = jm + 1" sorry
+            have hj_eq: "j = jm + 1"
+            proof (rule ccontr)
+              assume hne: "j \<noteq> jm + 1"
+              hence hjm2: "jm + 2 \<le> j" using hjm_lt by linarith
+              \<comment> \<open>From in\\_sector jm: cross\\_v1(jm+3, p) \\<le> 0. Also cross\\_v1(jm+3, p) \\<ge> 0
+                 (from in\\_sector(jm+1) if it existed... actually from a different argument).\<close>
+              \<comment> \<open>cross\\_v1(jm+3, (fst p, snd p)) \\<le> 0 from in\\_sector jm.\<close>
+              have hjm3_lt: "jm + 3 < ?ne" using hjm2 hj hne_eq by linarith
+              have hjm3_mod: "Suc(jm+2) mod ?ne = jm + 3" using hjm3_lt by simp
+              from hinm have hcr_le: "cross_v1 (jm+3) (fst p, snd p) \<le> 0"
+                unfolding in_sector_def using hjm3_mod by simp
+              \<comment> \<open>cross\\_v1(j+2, p) \\<ge> 0 from in\\_sector j.\<close>
+              from hin have hcr_ge: "cross_v1 (j+2) p \<ge> 0"
+                unfolding in_sector_def by auto
+              \<comment> \<open>jm+3 \\<le> j+1 < j+2. hdet\\_general gives det(v\\_{jm+3}-v\\_1, v\\_{j+2}-v\\_1) > 0.\<close>
+              have hjm3_lt_j2: "jm + 3 < j + 2" using hjm2 by linarith
+              have hjm3_ge2: "(2::nat) \<le> jm + 3" by linarith
+              have hj2_lt_ne: "j + 2 < ?ne" using hj hne_eq by linarith
+              from hdet_general[rule_format, of "jm+3" "j+2"]
+              have hdet_pos2: "(vxe(jm+3)-vxe 1)*(vye(j+2)-vye 1)-(vye(jm+3)-vye 1)*(vxe(j+2)-vxe 1) > 0"
+                using hjm3_ge2 hjm3_lt_j2 hj2_lt_ne by linarith
+              \<comment> \<open>p is on ray v\\_1\\<to>v\\_{jm+3} (from cross\\_v1(jm+3, p) \\<le> 0 + hfan\\_cover context).
+                 Actually: cross\\_v1(jm+2, p) \\<ge> 0 (from in\\_sector jm) and cross\\_v1(jm+3, p) \\<le> 0.
+                 By hdet\\_general decomposition of cross\\_v1(j+2, p) at the edge point,
+                 cross\\_v1(j+2, p) can't be \\<ge> 0 simultaneously.\<close>
+              \<comment> \<open>cross\\_v1(j+2, p) = cross\\_v1(j+2, v\\_1) + (cross involving p-v\\_1 direction).
+                 For p with cross\\_v1(jm+3, p) \\<le> 0 and cross\\_v1(jm+2, p) \\<ge> 0:
+                 p is "between" directions jm+2 and jm+3. Then cross\\_v1(j+2, p) has the
+                 sign of det(v\\_{j+2}-v\\_1, p-v\\_1) which is negative when p is in the
+                 angular range [jm+2, jm+3] and j+2 > jm+3.\<close>
+              show False sorry
+            qed
             have hcross_zero: "cross_v1 (j+2) p = 0"
             proof -
               from hinm have hle: "cross_v1 (Suc(jm+2) mod ?ne) (fst p, snd p) \<le> 0"
