@@ -4034,9 +4034,13 @@ proof -
           next
             case False hence hjm_lt: "jm < j" using hjm_le by linarith
             \<comment> \<open>jm < j: p is on boundary between sectors. Affine maps agree.\<close>
-            show ?thesis using hphi_jm sorry
-              \<comment> \<open>Boundary matching: affine\\_{jm}(p) = affine\\_j(p) when
-                 in\\_sector jm p AND in\\_sector j p AND jm < j.\<close>
+            \<comment> \<open>Sectors must be consecutive: j = jm+1 (at most 2 sectors overlap at p \\<noteq> v\\_1).
+               Proof: if j > jm+1, p is on ray v\\_1\\<to>v\\_{jm+3}, and cross\\_v1(j+2,p) < 0,
+               contradicting in\\_sector j p. Then cross\\_v1(j+2,p) = 0 at boundary,
+               giving affine\\_{jm}(s=0) = affine\\_j(t=0) = (1-\\<lambda>)*centroid+\\<lambda>*u\\_{jm+1}.\<close>
+            have hj_eq: "j = jm + 1" sorry
+            have hcross_zero: "cross_v1 (j+2) p = 0" sorry
+            show ?thesis using hphi_jm hj_eq hcross_zero sorry
           qed
         qed
       qed
