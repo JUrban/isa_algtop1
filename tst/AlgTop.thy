@@ -4526,21 +4526,32 @@ proof -
         fix p assume "p \<in> (\<Union>j<?nw. sector_set j)"
         thus "p \<in> P_e" unfolding sector_set_def by (by100 blast)
       qed
-      \<comment> \<open>Each sector set is closed in the subspace topology on P\\_e.\<close>
-      have hsector_closed: "\<forall>j<?nw. closedin_on P_e
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
-          (sector_set j)"
-        sorry \<comment> \<open>Sector = intersection of P\\_e with two half-planes (closed in R^2).\<close>
-      \<comment> \<open>phi\\_fn is continuous on each sector (affine from hphi\\_affine\\_on\\_sector).\<close>
-      have hsector_cont: "\<forall>j<?nw. top1_continuous_map_on (sector_set j)
-          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (sector_set j))
-          P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi_fn"
-        sorry \<comment> \<open>phi\\_fn = affine on sector j (hphi\\_affine\\_on\\_sector). Affine is continuous.\<close>
+      \<comment> \<open>Step A: Each sector\\_set j is closed in R^2 (P\\_e is compact hence closed,
+         half-planes are closed, intersection of closed sets is closed).\<close>
+      have hsector_R2_closed: "\<forall>j<?nw. closed (sector_set j)"
+        sorry \<comment> \<open>P\\_e is compact (polygon), sector = P\\_e \\<inter> half-planes. compact\\_imp\\_closed + closed\\_Int.\<close>
+      \<comment> \<open>Step B: phi\\_fn is continuous\\_on each sector (affine function of (fst p, snd p)).\<close>
+      have hsector_cont_on: "\<forall>j<?nw. continuous_on (sector_set j) phi_fn"
+        sorry \<comment> \<open>phi\\_fn = affine on sector j (hphi\\_affine\\_on\\_sector).
+               Affine maps are continuous\\_on (from continuous\\_on\\_add + continuous\\_on\\_mult etc).\<close>
+      \<comment> \<open>Step C: continuous\\_on\\_closed\\_Union gives continuous\\_on P\\_e phi\\_fn.\<close>
+      have hcont_on: "continuous_on P_e phi_fn"
+      proof -
+        have "P_e = (\<Union>j\<in>{..<?nw}. sector_set j)" using hsector_cover by simp
+        moreover have "finite {..<?nw}" by simp
+        moreover have "\<And>j. j \<in> {..<?nw} \<Longrightarrow> closed (sector_set j)"
+          using hsector_R2_closed by (by100 simp)
+        moreover have "\<And>j. j \<in> {..<?nw} \<Longrightarrow> continuous_on (sector_set j) phi_fn"
+          using hsector_cont_on by (by100 simp)
+        ultimately show ?thesis
+          using continuous_on_closed_Union[of "{..<?nw}" sector_set phi_fn] by simp
+      qed
+      \<comment> \<open>Step D: Transfer from continuous\\_on to top1\\_continuous\\_map\\_on via bridge lemma.\<close>
       have prop2: "top1_continuous_map_on P_e
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
           P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi_fn"
-      \<comment> \<open>Apply pasting lemma iteratively over nw sectors.\<close>
-        using hsector_cover hsector_closed hsector_cont prop1 sorry
+        using top1_continuous_map_on_real2_subspace_general[of P_e phi_fn P_w]
+          prop1 hcont_on by (by100 blast)
       have prop3: "phi_fn ` P_e = P_w"
       proof (rule set_eqI, rule iffI)
         \<comment> \<open>\\<subseteq>: from prop1.\<close>
