@@ -1754,6 +1754,15 @@ qed
    must be both < 0 (from being in sector j) and \\<ge> 0 (from sector j' if j+1 = j').
    The full proof is complex; for now sorry this for progress.\<close>
 
+\<comment> \<open>Standalone lemma: spur arc point differs from positive-centroid-weight point
+   when the centroid weight coordinates place p in a sector.
+   If q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} with \\<alpha> > 0, \\<alpha>+s+t = 1, s \\<ge> 0, t \\<ge> 0,
+   and q' = (1-r)*u\\_0 + r*cw with r \\<in> [0,1],
+   and the polygon has C10 (centroid interior),
+   and (s > 0 or j = 0 implies something forcing) and (t > 0 or j = nw-1 implies...),
+   then q \\<noteq> q'.
+   This is too specific. Instead, we leave prop12 as sorry and document the proof idea.\<close>
+
 \<comment> \<open>Standalone lemma: a point with positive centroid weight is not on any polygon edge.
    If q = \\<alpha>*cw + \\<beta>*u\\_j + \\<gamma>*u\\_{j+1} with \\<alpha> > 0 and
    the centroid satisfies C10 (strictly interior to each edge),
