@@ -6169,7 +6169,120 @@ proof -
         let ?si_jp = "Suc(jp+2) mod ?ne"
         have hedge_pos: "(vxe ?si_jp - vxe(jp+2))*(snd p - vye(jp+2)) -
             (vye ?si_jp - vye(jp+2))*(fst p - vxe(jp+2)) > 0"
-          sorry \<comment> \<open>By C11 + linearity + p not on edge jp+2.\<close>
+        proof -
+          from hp obtain coeffs_p where hcp: "(\<forall>i<?ne. coeffs_p i \<ge> 0)"
+            "(\<Sum>i<?ne. coeffs_p i) = 1" "fst p = (\<Sum>i<?ne. coeffs_p i * vxe i)"
+            "snd p = (\<Sum>i<?ne. coeffs_p i * vye i)"
+            using hC5_e by (by100 auto)
+          \<comment> \<open>C11 at edge jp+2: for k \\<noteq> jp+2, k \\<noteq> si, cross product > 0.\<close>
+          have hC11_inst: "\<forall>k<?ne. k \<noteq> jp+2 \<longrightarrow> k \<noteq> ?si_jp \<longrightarrow>
+              (vxe ?si_jp-vxe(jp+2))*(vye k-vye(jp+2))-(vye ?si_jp-vye(jp+2))*(vxe k-vxe(jp+2)) > 0"
+          proof (intro allI impI)
+            fix k assume hk: "k < ?ne" and hk1: "k \<noteq> jp+2" and hk2: "k \<noteq> ?si_jp"
+            from hC11_e[rule_format, OF hjp2_lt hk hk1 hk2]
+            have "(vxe k-vxe(jp+2))*(vye ?si_jp-vye(jp+2))-(vye k-vye(jp+2))*(vxe ?si_jp-vxe(jp+2)) < 0" .
+            \<comment> \<open>Negate: det(B-A, C-A) = -det(C-A, B-A).\<close>
+            let ?ax = "vxe(jp+2)" and ?ay = "vye(jp+2)"
+            let ?bx = "vxe ?si_jp" and ?by' = "vye ?si_jp"
+            let ?kx = "vxe k" and ?ky = "vye k"
+            have "(?bx-?ax)*(?ky-?ay)-(?by'-?ay)*(?kx-?ax) =
+                -((?kx-?ax)*(?by'-?ay)-(?ky-?ay)*(?bx-?ax))" by (by5000 algebra)
+            thus "(vxe ?si_jp-vxe(jp+2))*(vye k-vye(jp+2))-(vye ?si_jp-vye(jp+2))*(vxe k-vxe(jp+2)) > 0"
+              using \<open>(vxe k-vxe(jp+2))*(vye ?si_jp-vye(jp+2))-(vye k-vye(jp+2))*(vxe ?si_jp-vxe(jp+2)) < 0\<close>
+              by linarith
+          qed
+          \<comment> \<open>Strictness: \\<exists> k with k \\<noteq> jp+2, k \\<noteq> si, coeffs\\_p k > 0 (p not on edge jp+2).\<close>
+          have hstrict_k: "\<exists>k<?ne. k \<noteq> jp+2 \<and> k \<noteq> ?si_jp \<and> coeffs_p k > 0"
+          proof (rule ccontr)
+            assume "\<not>(\<exists>k<?ne. k \<noteq> jp+2 \<and> k \<noteq> ?si_jp \<and> coeffs_p k > 0)"
+            hence hall_zero: "\<forall>k<?ne. k \<noteq> jp+2 \<longrightarrow> k \<noteq> ?si_jp \<longrightarrow> coeffs_p k = 0"
+              using hcp(1) by (by100 fastforce)
+            \<comment> \<open>p = coeffs(jp+2)*v\\_{jp+2} + coeffs(si)*v\\_{si}.\<close>
+            have hsi_lt: "?si_jp < ?ne" using hjp2_lt by simp
+            have hsi_ne: "?si_jp \<noteq> jp+2"
+            proof (cases "Suc(jp+2) < ?ne")
+              case True thus ?thesis by simp
+            next
+              case False
+              hence "Suc(jp+2) \<ge> ?ne" by simp
+              moreover have "Suc(jp+2) \<le> ?ne" using hjp2_lt by simp
+              ultimately have "Suc(jp+2) = ?ne" by simp
+              hence "?si_jp = 0" by simp
+              moreover have "jp+2 \<ge> 2" by simp
+              ultimately show ?thesis by simp
+            qed
+            have hcoeffs_sum2: "coeffs_p (jp+2) + coeffs_p ?si_jp = 1"
+            proof -
+              have "(\<Sum>k<?ne. coeffs_p k) = coeffs_p (jp+2) + coeffs_p ?si_jp +
+                  (\<Sum>k \<in> {..<?ne} - {jp+2, ?si_jp}. coeffs_p k)"
+              proof -
+                have s1: "(\<Sum>k<?ne. coeffs_p k) = coeffs_p (jp+2) + (\<Sum>k \<in> {..<?ne} - {jp+2}. coeffs_p k)"
+                  using sum.remove[of "{..<?ne}" "jp+2" coeffs_p] hjp2_lt by simp
+                have s2: "(\<Sum>k \<in> {..<?ne} - {jp+2}. coeffs_p k) = coeffs_p ?si_jp + (\<Sum>k \<in> {..<?ne} - {jp+2} - {?si_jp}. coeffs_p k)"
+                  using sum.remove[of "{..<?ne} - {jp+2}" ?si_jp coeffs_p] hsi_lt hsi_ne by simp
+                have "({..<?ne} - {jp+2} - {?si_jp}) = ({..<?ne} - {jp+2, ?si_jp})" by auto
+                from s1 s2 this show ?thesis by simp
+              qed
+              moreover have "(\<Sum>k \<in> {..<?ne} - {jp+2, ?si_jp}. coeffs_p k) = 0"
+                by (rule sum.neutral) (use hall_zero in auto)
+              ultimately show ?thesis using hcp(2) by simp
+            qed
+            \<comment> \<open>p = coeffs(jp+2)*v\\_{jp+2} + coeffs(si)*v\\_{si} = edge\\_pt\\_e(jp+2, coeffs(si)).\<close>
+            have hpx: "fst p = coeffs_p (jp+2) * vxe(jp+2) + coeffs_p ?si_jp * vxe ?si_jp"
+            proof -
+              have "fst p = (\<Sum>k<?ne. coeffs_p k * vxe k)" using hcp(3) .
+              also have "\<dots> = coeffs_p (jp+2) * vxe(jp+2) + coeffs_p ?si_jp * vxe ?si_jp +
+                  (\<Sum>k \<in> {..<?ne} - {jp+2, ?si_jp}. coeffs_p k * vxe k)"
+              proof -
+                have s1: "(\<Sum>k<?ne. coeffs_p k * vxe k) = coeffs_p (jp+2) * vxe(jp+2) + (\<Sum>k \<in> {..<?ne} - {jp+2}. coeffs_p k * vxe k)"
+                  using sum.remove[of "{..<?ne}" "jp+2" "\<lambda>k. coeffs_p k * vxe k"] hjp2_lt by simp
+                have s2: "(\<Sum>k \<in> {..<?ne} - {jp+2}. coeffs_p k * vxe k) = coeffs_p ?si_jp * vxe ?si_jp + (\<Sum>k \<in> {..<?ne} - {jp+2} - {?si_jp}. coeffs_p k * vxe k)"
+                  using sum.remove[of "{..<?ne} - {jp+2}" ?si_jp "\<lambda>k. coeffs_p k * vxe k"] hsi_lt hsi_ne by simp
+                have "({..<?ne} - {jp+2} - {?si_jp}) = ({..<?ne} - {jp+2, ?si_jp})" by auto
+                from s1 s2 this show ?thesis by simp
+              qed
+              also have "(\<Sum>k \<in> {..<?ne} - {jp+2, ?si_jp}. coeffs_p k * vxe k) = 0"
+                by (rule sum.neutral) (use hall_zero in auto)
+              finally show ?thesis by simp
+            qed
+            have hpy: "snd p = coeffs_p (jp+2) * vye(jp+2) + coeffs_p ?si_jp * vye ?si_jp"
+            proof -
+              have "snd p = (\<Sum>k<?ne. coeffs_p k * vye k)" using hcp(4) .
+              also have "\<dots> = coeffs_p (jp+2) * vye(jp+2) + coeffs_p ?si_jp * vye ?si_jp +
+                  (\<Sum>k \<in> {..<?ne} - {jp+2, ?si_jp}. coeffs_p k * vye k)"
+              proof -
+                have s1: "(\<Sum>k<?ne. coeffs_p k * vye k) = coeffs_p (jp+2) * vye(jp+2) + (\<Sum>k \<in> {..<?ne} - {jp+2}. coeffs_p k * vye k)"
+                  using sum.remove[of "{..<?ne}" "jp+2" "\<lambda>k. coeffs_p k * vye k"] hjp2_lt by simp
+                have s2: "(\<Sum>k \<in> {..<?ne} - {jp+2}. coeffs_p k * vye k) = coeffs_p ?si_jp * vye ?si_jp + (\<Sum>k \<in> {..<?ne} - {jp+2} - {?si_jp}. coeffs_p k * vye k)"
+                  using sum.remove[of "{..<?ne} - {jp+2}" ?si_jp "\<lambda>k. coeffs_p k * vye k"] hsi_lt hsi_ne by simp
+                have "({..<?ne} - {jp+2} - {?si_jp}) = ({..<?ne} - {jp+2, ?si_jp})" by auto
+                from s1 s2 this show ?thesis by simp
+              qed
+              also have "(\<Sum>k \<in> {..<?ne} - {jp+2, ?si_jp}. coeffs_p k * vye k) = 0"
+                by (rule sum.neutral) (use hall_zero in auto)
+              finally show ?thesis by simp
+            qed
+            \<comment> \<open>p = (1-t')*v\\_{jp+2} + t'*v\\_{si} where t' = coeffs(si). This is edge\\_pt\\_e(jp+2, t').\<close>
+            let ?t' = "coeffs_p ?si_jp"
+            have "p = edge_pt_e (jp+2) ?t'"
+            proof -
+              have "edge_pt_e (jp+2) ?t' = ((1-?t')*vxe(jp+2)+?t'*vxe ?si_jp,
+                  (1-?t')*vye(jp+2)+?t'*vye ?si_jp)" unfolding edge_pt_e_def by simp
+              also have "(1-?t') = coeffs_p (jp+2)" using hcoeffs_sum2 by linarith
+              finally have "edge_pt_e (jp+2) ?t' = (coeffs_p(jp+2)*vxe(jp+2)+?t'*vxe ?si_jp,
+                  coeffs_p(jp+2)*vye(jp+2)+?t'*vye ?si_jp)" by simp
+              thus ?thesis using hpx hpy by (cases p) simp
+            qed
+            moreover have "?t' \<in> I_set" using hcp(1)[rule_format, OF hsi_lt] hcoeffs_sum2
+              hcp(1)[rule_format, OF hjp2_lt] unfolding top1_unit_interval_def by (by100 auto)
+            ultimately show False using hint_p[rule_format, OF hjp2_lt \<open>?t' \<in> I_set\<close>] by simp
+          qed
+          from convex_combo_edge_cross_strict[OF _ hjp2_lt hcp(1) hcp(2) hC11_inst hstrict_k]
+          have "(vxe ?si_jp-vxe(jp+2))*((\<Sum>k<?ne. coeffs_p k * vye k)-vye(jp+2))-
+              (vye ?si_jp-vye(jp+2))*((\<Sum>k<?ne. coeffs_p k * vxe k)-vxe(jp+2)) > 0"
+            using hlen_ext by linarith
+          thus ?thesis using hcp(3) hcp(4) by simp
+        qed
         show "phi_fn p \<noteq> edge_pt_w j s"
           using hedge_pos sorry \<comment> \<open>Edge cross > 0 -> centroid weight > 0 -> not on any w-edge.\<close>
       qed
