@@ -4828,7 +4828,75 @@ proof -
               \<comment> \<open>ec(q) = \\<Sum> coeffs\\_w k * ec(u\\_k) by linearity.\<close>
               have hec_sum: "?dx_ew*(snd q-vyw jw)-?dy_ew*(fst q-vxw jw) =
                   (\<Sum>k<?nw. coeffs_w k * (?dx_ew*(vyw k-vyw jw)-?dy_ew*(vxw k-vxw jw)))"
-                sorry \<comment> \<open>Linearity of cross product over convex combination.\<close>
+              proof -
+                \<comment> \<open>Step 1: snd q - vyw jw = \\<Sum> coeffs\\_w k * (vyw k - vyw jw).\<close>
+                have hsy: "snd q - vyw jw = (\<Sum>k<?nw. coeffs_w k * (vyw k - vyw jw))"
+                proof -
+                  have "(\<Sum>k<?nw. coeffs_w k * (vyw k - vyw jw)) =
+                      (\<Sum>k<?nw. coeffs_w k * vyw k) - (\<Sum>k<?nw. coeffs_w k * vyw jw)"
+                  proof -
+                    have "\<And>k. coeffs_w k * (vyw k - vyw jw) = coeffs_w k * vyw k - coeffs_w k * vyw jw"
+                      by (by100 algebra)
+                    hence "(\<Sum>k<?nw. coeffs_w k * (vyw k - vyw jw)) =
+                        (\<Sum>k<?nw. (coeffs_w k * vyw k - coeffs_w k * vyw jw))" by simp
+                    also have "\<dots> = (\<Sum>k<?nw. coeffs_w k * vyw k) - (\<Sum>k<?nw. coeffs_w k * vyw jw)"
+                      by (rule sum_subtractf)
+                    finally show ?thesis .
+                  qed
+                  also have "(\<Sum>k<?nw. coeffs_w k * vyw jw) = vyw jw"
+                  proof -
+                    have "(\<Sum>k<?nw. coeffs_w k * vyw jw) = (\<Sum>k<?nw. coeffs_w k) * vyw jw"
+                      by (simp add: sum_distrib_right)
+                    also have "\<dots> = vyw jw" using hcw_c(2) by simp
+                    finally show ?thesis .
+                  qed
+                  finally show ?thesis using hcw_c(4) by simp
+                qed
+                \<comment> \<open>Step 2: fst q - vxw jw = \\<Sum> coeffs\\_w k * (vxw k - vxw jw).\<close>
+                have hsx: "fst q - vxw jw = (\<Sum>k<?nw. coeffs_w k * (vxw k - vxw jw))"
+                proof -
+                  have "(\<Sum>k<?nw. coeffs_w k * (vxw k - vxw jw)) =
+                      (\<Sum>k<?nw. coeffs_w k * vxw k) - (\<Sum>k<?nw. coeffs_w k * vxw jw)"
+                  proof -
+                    have "\<And>k. coeffs_w k * (vxw k - vxw jw) = coeffs_w k * vxw k - coeffs_w k * vxw jw"
+                      by (by100 algebra)
+                    hence "(\<Sum>k<?nw. coeffs_w k * (vxw k - vxw jw)) =
+                        (\<Sum>k<?nw. (coeffs_w k * vxw k - coeffs_w k * vxw jw))" by simp
+                    also have "\<dots> = (\<Sum>k<?nw. coeffs_w k * vxw k) - (\<Sum>k<?nw. coeffs_w k * vxw jw)"
+                      by (rule sum_subtractf)
+                    finally show ?thesis .
+                  qed
+                  also have "(\<Sum>k<?nw. coeffs_w k * vxw jw) = vxw jw"
+                  proof -
+                    have "(\<Sum>k<?nw. coeffs_w k * vxw jw) = (\<Sum>k<?nw. coeffs_w k) * vxw jw"
+                      by (simp add: sum_distrib_right)
+                    also have "\<dots> = vxw jw" using hcw_c(2) by simp
+                    finally show ?thesis .
+                  qed
+                  finally show ?thesis using hcw_c(3) by simp
+                qed
+                \<comment> \<open>Step 3: Distribute dx\\_ew and dy\\_ew through sums.\<close>
+                have "?dx_ew*(snd q-vyw jw) = (\<Sum>k<?nw. ?dx_ew*(coeffs_w k*(vyw k-vyw jw)))"
+                  using hsy sum_distrib_left[of ?dx_ew "\<lambda>k. coeffs_w k*(vyw k-vyw jw)" "{..<?nw}"]
+                  by simp
+                moreover have "?dy_ew*(fst q-vxw jw) = (\<Sum>k<?nw. ?dy_ew*(coeffs_w k*(vxw k-vxw jw)))"
+                  using hsx sum_distrib_left[of ?dy_ew "\<lambda>k. coeffs_w k*(vxw k-vxw jw)" "{..<?nw}"]
+                  by simp
+                ultimately have "?dx_ew*(snd q-vyw jw)-?dy_ew*(fst q-vxw jw) =
+                    (\<Sum>k<?nw. ?dx_ew*(coeffs_w k*(vyw k-vyw jw))) -
+                    (\<Sum>k<?nw. ?dy_ew*(coeffs_w k*(vxw k-vxw jw)))" by simp
+                also have "\<dots> = (\<Sum>k<?nw. (?dx_ew*(coeffs_w k*(vyw k-vyw jw)) -
+                    ?dy_ew*(coeffs_w k*(vxw k-vxw jw))))"
+                  by (rule sum_subtractf[symmetric])
+                also have "\<dots> = (\<Sum>k<?nw. coeffs_w k * (?dx_ew*(vyw k-vyw jw)-?dy_ew*(vxw k-vxw jw)))"
+                proof (rule sum.cong)
+                  fix k assume "k \<in> {..<?nw}"
+                  show "?dx_ew*(coeffs_w k*(vyw k-vyw jw)) - ?dy_ew*(coeffs_w k*(vxw k-vxw jw))
+                      = coeffs_w k * (?dx_ew*(vyw k-vyw jw)-?dy_ew*(vxw k-vxw jw))"
+                    by (by100 algebra)
+                qed simp
+                finally show ?thesis .
+              qed
               have hec_q: "?dx_ew*(snd q-vyw jw)-?dy_ew*(fst q-vxw jw) \<ge> 0"
               proof -
                 from hec_sum have "?dx_ew*(snd q-vyw jw)-?dy_ew*(fst q-vxw jw) =
