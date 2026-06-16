@@ -1628,14 +1628,84 @@ qed
    must be both < 0 (from being in sector j) and \\<ge> 0 (from sector j' if j+1 = j').
    The full proof is complex; for now sorry this for progress.\<close>
 
-\<comment> \<open>Standalone lemma: spur arc point differs from positive-centroid-weight point
-   when the centroid weight coordinates place p in a sector.
-   If q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} with \\<alpha> > 0, \\<alpha>+s+t = 1, s \\<ge> 0, t \\<ge> 0,
-   and q' = (1-r)*u\\_0 + r*cw with r \\<in> [0,1],
-   and the polygon has C10 (centroid interior),
-   and (s > 0 or j = 0 implies something forcing) and (t > 0 or j = nw-1 implies...),
-   then q \\<noteq> q'.
-   This is too specific. Instead, we leave prop12 as sorry and document the proof idea.\<close>
+\<comment> \<open>Standalone lemma for prop12: if s*(u\\_j - u\\_0) + t*(u\\_{j+1} - u\\_0) = 0 with s,t \\<ge> 0
+   and the vertices are not at u\\_0 (i.e., j \\<noteq> 0 and j+1 \\<noteq> 0), then s = t = 0.
+   This forces p = v\\_1 in the spur arc collision argument.\<close>
+lemma nonneg_combo_independent_zero:
+  fixes ax ay bx by' :: real
+  assumes hs: "s_v \<ge> 0" and ht: "t_v \<ge> 0"
+      and hx: "s_v*ax + t_v*bx = 0"
+      and hy: "s_v*ay + t_v*by' = 0"
+      and hdet: "ax*by' - ay*bx \<noteq> 0"
+  shows "s_v = 0 \<and> t_v = 0"
+proof -
+  \<comment> \<open>Cramer: s\\_v*(ax*by'-ay*bx) = by'*(s\\_v*ax) - bx*(s\\_v*ay)
+     = by'*(-(t\\_v*bx)) - bx*(-(t\\_v*by')) = 0.\<close>
+  have "s_v*(ax*by'-ay*bx) = (s_v*ax)*by' - (s_v*ay)*bx" by (by100 algebra)
+  also have "(s_v*ax) = -(t_v*bx)" using hx by linarith
+  also have "(s_v*ay) = -(t_v*by')" using hy by linarith
+  finally have "s_v*(ax*by'-ay*bx) = -(t_v*bx)*by' - (-(t_v*by'))*bx" by simp
+  hence "s_v*(ax*by'-ay*bx) = 0" by (by100 algebra)
+  hence "s_v = 0" using hdet by simp
+  moreover from hx \<open>s_v = 0\<close> have "t_v*bx = 0" by simp
+  from hy \<open>s_v = 0\<close> have "t_v*by' = 0" by simp
+  have "t_v = 0"
+  proof (rule ccontr)
+    assume "t_v \<noteq> 0"
+    from \<open>t_v*bx = 0\<close> \<open>t_v \<noteq> 0\<close> have "bx = 0" by simp
+    from \<open>t_v*by' = 0\<close> \<open>t_v \<noteq> 0\<close> have "by' = 0" by simp
+    hence "ax*by' - ay*bx = 0" using \<open>bx = 0\<close> by simp
+    with hdet show False by simp
+  qed
+  ultimately show ?thesis by auto
+qed
+
+\<comment> \<open>Standalone lemma: spur arc and interior phi image differ.
+   If Q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} = (1-r)*u\\_0 + r*cw with \\<alpha>,s,t \\<ge> 0,
+   \\<alpha>+s+t=1, \\<alpha>>0, and C10 holds, then j=0 implies t=0, j+1=0 implies s=0,
+   and j\\<noteq>0,j+1\\<noteq>0 implies s=t=0.
+   In all cases, either s or t is zero, which forces p onto a polygon edge.\<close>
+lemma spur_arc_match_forces_edge:
+  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
+  assumes hnw: "nw \<ge> 3"
+      and hC10: "\<forall>i<nw. (vxw i - cxw) * (vyw(Suc i mod nw) - cyw) -
+          (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
+      and hj: "j_sec < nw"
+      and halpha: "\<alpha> > 0" and hs: "s_v \<ge> 0" and ht: "t_v \<ge> 0"
+      and habg: "\<alpha> + s_v + t_v = 1"
+      and hx: "\<alpha>*cxw + s_v*vxw j_sec + t_v*vxw(Suc j_sec mod nw) = r*cxw + (1-r)*vxw 0"
+      and hy: "\<alpha>*cyw + s_v*vyw j_sec + t_v*vyw(Suc j_sec mod nw) = r*cyw + (1-r)*vyw 0"
+      and hr0: "r \<ge> 0" and hr1: "r \<le> 1"
+  shows "(j_sec = 0 \<and> t_v = 0) \<or> (Suc j_sec mod nw = 0 \<and> s_v = 0) \<or> (s_v = 0 \<and> t_v = 0)"
+proof -
+  \<comment> \<open>From the equations: s*(u\\_j - u\\_0) + t*(u\\_{j+1} - u\\_0) + (\\<alpha>-r)*(cw - u\\_0) = 0.\<close>
+  have hx3: "s_v*(vxw j_sec - vxw 0) + t_v*(vxw(Suc j_sec mod nw) - vxw 0) + (\<alpha>-r)*(cxw - vxw 0) = 0"
+    using hx habg by (by5000 algebra)
+  have hy3: "s_v*(vyw j_sec - vyw 0) + t_v*(vyw(Suc j_sec mod nw) - vyw 0) + (\<alpha>-r)*(cyw - vyw 0) = 0"
+    using hy habg by (by5000 algebra)
+  show ?thesis
+  proof (cases "j_sec = 0")
+    case True
+    \<comment> \<open>u\\_j = u\\_0, so s*(0) + t*(u\\_1 - u\\_0) + (\\<alpha>-r)*(cw-u\\_0) = 0.\<close>
+    from hx3 True have "t_v*(vxw(Suc 0 mod nw) - vxw 0) + (\<alpha>-r)*(cxw - vxw 0) = 0" by simp
+    from hy3 True have "t_v*(vyw(Suc 0 mod nw) - vyw 0) + (\<alpha>-r)*(cyw - vyw 0) = 0" by simp
+    \<comment> \<open>This is a 2x2 system in (t\\_v, \\<alpha>-r). We need to show t\\_v = 0.
+       The det is det(u\\_1-u\\_0, cw-u\\_0). From C10, this is \\<noteq> 0.\<close>
+    show ?thesis using True sorry
+  next
+    case False
+    show ?thesis
+    proof (cases "Suc j_sec mod nw = 0")
+      case True
+      \<comment> \<open>u\\_{j+1} = u\\_0, so s*(u\\_j - u\\_0) + t*(0) + (\\<alpha>-r)*(cw-u\\_0) = 0.\<close>
+      show ?thesis using True sorry
+    next
+      case False
+      \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: eliminate (\\<alpha>-r) from hx3,hy3, apply nonneg\\_combo\\_independent\\_zero.\<close>
+      show ?thesis sorry
+    qed
+  qed
+qed
 
 \<comment> \<open>Standalone lemma: a point with positive centroid weight is not on any polygon edge.
    If q = \\<alpha>*cw + \\<beta>*u\\_j + \\<gamma>*u\\_{j+1} with \\<alpha> > 0 and
