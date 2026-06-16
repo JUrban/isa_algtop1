@@ -3992,6 +3992,13 @@ proof -
         \<comment> \<open>Every edge point of P\\_w has a preimage via hphi\\_on\\_nonspur.\<close>
         \<comment> \<open>The centroid has preimage v\\_1.\<close>
         \<comment> \<open>General: use inverse affine map on each sector.\<close>
+        \<comment> \<open>Construct preimage: express q in centroid-cone sector j of P\\_w,
+           then define p = (1-s-t)*v\\_1 + s*v\\_{j+2} + t*v\\_{si} in corresponding source sector.
+           phi\\_fn(p) = q by the affine formula, p \\<in> P\\_e by convex combination.\<close>
+        \<comment> \<open>Step 1: q is on some edge or in some sector of P\\_w.\<close>
+        \<comment> \<open>Case: q is on edge k of P\\_w. Preimage: edge\\_pt\\_e(k+2, t).\<close>
+        \<comment> \<open>Case: q = centroid. Preimage: v\\_1.\<close>
+        \<comment> \<open>Case: q is in interior of sector j. Preimage: inverse affine in source sector j.\<close>
         show "q \<in> phi_fn ` P_e" sorry
       qed
       have prop4: "\<forall>t\<in>I_set. phi_fn (edge_pt_e 0 t) = phi_fn (edge_pt_e 1 (1-t))"
