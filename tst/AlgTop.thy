@@ -3976,10 +3976,19 @@ proof -
           qed
         qed
       qed
+      \<comment> \<open>phi\\_fn on sector j equals the affine map for ALL p in sector j.\<close>
+      have hphi_affine_on_sector: "\<forall>j<?nw. \<forall>p. in_sector j p \<longrightarrow>
+        phi_fn (fst p, snd p) = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+            fx = vxe(Suc(j+2) mod ?ne)-vxe 1; fy = vye(Suc(j+2) mod ?ne)-vye 1;
+            det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+            s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
+        in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
+            (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))"
+        sorry \<comment> \<open>Key: at boundary, LEAST picks j' \\<le> j but affine\\_j = affine\\_{j'}.\<close>
       have prop2: "top1_continuous_map_on P_e
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
           P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi_fn"
-        sorry
+        sorry \<comment> \<open>Pasting lemma: hphi\\_affine\\_on\\_sector gives cont. on each sector.\<close>
       have prop3: "phi_fn ` P_e = P_w"
       proof (rule set_eqI, rule iffI)
         \<comment> \<open>\\<subseteq>: from prop1.\<close>
