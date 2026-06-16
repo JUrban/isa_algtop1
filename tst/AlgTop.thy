@@ -3980,7 +3980,20 @@ proof -
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
           P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi_fn"
         sorry
-      have prop3: "phi_fn ` P_e = P_w" sorry
+      have prop3: "phi_fn ` P_e = P_w"
+      proof (rule set_eqI, rule iffI)
+        \<comment> \<open>\\<subseteq>: from prop1.\<close>
+        fix q assume "q \<in> phi_fn ` P_e"
+        then obtain p where "p \<in> P_e" "phi_fn p = q" by blast
+        from prop1[rule_format, OF \<open>p \<in> P_e\<close>] show "q \<in> P_w" using \<open>phi_fn p = q\<close> by simp
+      next
+        \<comment> \<open>\\<supseteq>: construct preimage for each q \\<in> P\\_w.\<close>
+        fix q assume hq: "q \<in> P_w"
+        \<comment> \<open>Every edge point of P\\_w has a preimage via hphi\\_on\\_nonspur.\<close>
+        \<comment> \<open>The centroid has preimage v\\_1.\<close>
+        \<comment> \<open>General: use inverse affine map on each sector.\<close>
+        show "q \<in> phi_fn ` P_e" sorry
+      qed
       have prop4: "\<forall>t\<in>I_set. phi_fn (edge_pt_e 0 t) = phi_fn (edge_pt_e 1 (1-t))"
       proof (intro ballI)
         fix t assume ht: "t \<in> I_set"
@@ -4346,7 +4359,10 @@ proof -
       have prop10: "\<forall>p\<in>P_e. \<forall>p'\<in>P_e.
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
           (\<forall>i<?ne. \<forall>t\<in>I_set. p' \<noteq> edge_pt_e i t) \<longrightarrow>
-          phi_fn p = phi_fn p' \<longrightarrow> p = p'" sorry
+          phi_fn p = phi_fn p' \<longrightarrow> p = p'"
+      \<comment> \<open>Interior injectivity: both p,p' in open sectors. Same sector -> affine injective.
+         Different sectors -> images in disjoint centroid-cone interiors, contradiction.\<close>
+        sorry
       have prop11: "\<forall>p\<in>P_e.
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
           (\<forall>j<?nw. \<forall>s\<in>I_set. phi_fn p \<noteq> edge_pt_w j s)" sorry
