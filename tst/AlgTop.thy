@@ -4802,11 +4802,68 @@ proof -
                 hence heq1: "(vxw 1-?cxw)*(snd q-?cyw) = (vyw 1-?cyw)*(fst q-?cxw)"
                   unfolding cross_cw_def by linarith
                 \<comment> \<open>2x2 system with det = C10 at j=0 > 0.\<close>
-                have hdet01: "(vxw 0-?cxw)*(vyw 1-?cyw)-(vyw 0-?cyw)*(vxw 1-?cxw) > 0"
-                  sorry \<comment> \<open>From C10\\_w at j=0, but need Suc 0 mod nw = 1 (true since nw \\<ge> 3).\<close>
-                \<comment> \<open>Cramer: fst q - cxw = 0, snd q - cyw = 0.\<close>
+                have hmod1: "Suc 0 mod ?nw = 1" using hlen by simp
+                from hC10_w[rule_format, OF h0]
+                have "(vxw 0 - ?cxw) * (vyw(Suc 0 mod ?nw) - ?cyw) -
+                    (vyw 0 - ?cyw) * (vxw(Suc 0 mod ?nw) - ?cxw) > 0" by (by100 simp)
+                hence hdet01: "(vxw 0-?cxw)*(vyw 1-?cyw)-(vyw 0-?cyw)*(vxw 1-?cxw) > 0"
+                  using hmod1 by simp
+                \<comment> \<open>Cramer: from 2x2 system with nonzero det, solve fst q = cxw, snd q = cyw.\<close>
+                have hdet_ne: "(vxw 0-?cxw)*(vyw 1-?cyw)-(vyw 0-?cyw)*(vxw 1-?cxw) \<noteq> 0"
+                  using hdet01 by linarith
+                \<comment> \<open>From heq0 and heq1: (a0*(snd q-cyw) = b0*(fst q-cxw)) and
+                   (a1*(snd q-cyw) = b1*(fst q-cxw)) where det(a,b) \\<noteq> 0.
+                   Cross: a0*b1*(fst q-cxw) = a0*(snd q-cyw)*... -> (fst q-cxw)*det = 0.\<close>
                 have "fst q = ?cxw \<and> snd q = ?cyw"
-                  sorry \<comment> \<open>From Cramer applied to heq0+heq1 with hdet01 \\<noteq> 0.\<close>
+                proof -
+                  define a0 where "a0 = vxw 0 - ?cxw"
+                  define b0 where "b0 = vyw 0 - ?cyw"
+                  define a1 where "a1 = vxw 1 - ?cxw"
+                  define b1 where "b1 = vyw 1 - ?cyw"
+                  define dx where "dx = fst q - ?cxw"
+                  define dy where "dy = snd q - ?cyw"
+                  from heq0 have h0': "a0*dy = b0*dx"
+                    unfolding a0_def b0_def dx_def dy_def by linarith
+                  from heq1 have h1': "a1*dy = b1*dx"
+                    unfolding a1_def b1_def dx_def dy_def by linarith
+                  have hD: "a0*b1 - b0*a1 > 0" using hdet01
+                    unfolding a0_def b0_def a1_def b1_def by simp
+                  \<comment> \<open>Cramer: (a0*b1-b0*a1)*dy = a0*b1*dy - b0*a1*dy
+                     = b1*(a0*dy) - a1*(b0*dy) = b1*(b0*dx) - a1*(b0*dy)
+                     = b0*(b1*dx - a1*dy) = b0*(a1*dy - a1*dy) ... hmm.
+                     Better: a0*dy = b0*dx and a1*dy = b1*dx.
+                     So (a0*b1)*dy = b0*b1*dx and (b0*a1)*dy = b0*b1*dx.
+                     Hence (a0*b1-b0*a1)*dy = 0.\<close>
+                  have "(a0*b1)*dy = b1*(a0*dy)" by (by100 algebra)
+                  also have "\<dots> = b1*(b0*dx)" using h0' by simp
+                  finally have hA: "(a0*b1)*dy = b1*b0*dx" by (by100 algebra)
+                  have "(b0*a1)*dy = b0*(a1*dy)" by (by100 algebra)
+                  also have "\<dots> = b0*(b1*dx)" using h1' by simp
+                  finally have hB: "(b0*a1)*dy = b0*b1*dx" by (by100 algebra)
+                  have "(a0*b1-b0*a1)*dy = a0*b1*dy - b0*a1*dy" by (by100 algebra)
+                  also have "\<dots> = b1*b0*dx - b0*b1*dx" using hA hB by linarith
+                  also have "\<dots> = 0" by (by100 algebra)
+                  finally have "(a0*b1-b0*a1)*dy = 0" .
+                  hence "dy = 0" using hD by (by100 simp)
+                  hence "dx = 0"
+                  proof -
+                    assume "dy = 0"
+                    from h0' \<open>dy = 0\<close> have "b0*dx = 0" by simp
+                    hence "b0 = 0 \<or> dx = 0" by (by100 auto)
+                    thus "dx = 0"
+                    proof
+                      assume "b0 = 0"
+                      from hD \<open>b0 = 0\<close> have "a0*b1 > 0" by simp
+                      hence "b1 \<noteq> 0" by auto
+                      from h1' \<open>dy = 0\<close> have "b1*dx = 0" by simp
+                      with \<open>b1 \<noteq> 0\<close> show "dx = 0" by simp
+                    next
+                      assume "dx = 0" thus ?thesis .
+                    qed
+                  qed
+                  from \<open>dx = 0\<close> \<open>dy = 0\<close> show ?thesis
+                    unfolding dx_def dy_def by auto
+                qed
                 thus ?thesis by (cases q) auto
               qed
               with False show False by simp
@@ -4830,9 +4887,57 @@ proof -
                 from hall[rule_format, OF h1] have "cross_cw 1 q = 0" .
                 hence heq1: "(vxw 1-?cxw)*(snd q-?cyw) = (vyw 1-?cyw)*(fst q-?cxw)"
                   unfolding cross_cw_def by linarith
-                have hdet01: "(vxw 0-?cxw)*(vyw 1-?cyw)-(vyw 0-?cyw)*(vxw 1-?cxw) > 0"
-                  sorry
-                have "fst q = ?cxw \<and> snd q = ?cyw" sorry
+                have hmod1': "Suc 0 mod ?nw = 1" using hlen by simp
+                from hC10_w[rule_format, OF h0]
+                have "(vxw 0 - ?cxw) * (vyw(Suc 0 mod ?nw) - ?cyw) -
+                    (vyw 0 - ?cyw) * (vxw(Suc 0 mod ?nw) - ?cxw) > 0" by (by100 simp)
+                hence hdet01: "(vxw 0-?cxw)*(vyw 1-?cyw)-(vyw 0-?cyw)*(vxw 1-?cxw) > 0"
+                  using hmod1' by simp
+                \<comment> \<open>Same Cramer argument as in hhas\\_pos.\<close>
+                have "fst q = ?cxw \<and> snd q = ?cyw"
+                proof -
+                  define a0 where "a0 = vxw 0 - ?cxw"
+                  define b0 where "b0 = vyw 0 - ?cyw"
+                  define a1 where "a1 = vxw 1 - ?cxw"
+                  define b1 where "b1 = vyw 1 - ?cyw"
+                  define dx where "dx = fst q - ?cxw"
+                  define dy where "dy = snd q - ?cyw"
+                  from heq0 have h0': "a0*dy = b0*dx"
+                    unfolding a0_def b0_def dx_def dy_def by linarith
+                  from heq1 have h1': "a1*dy = b1*dx"
+                    unfolding a1_def b1_def dx_def dy_def by linarith
+                  have hD: "a0*b1 - b0*a1 > 0" using hdet01
+                    unfolding a0_def b0_def a1_def b1_def by simp
+                  have "(a0*b1)*dy = b1*(a0*dy)" by (by100 algebra)
+                  also have "\<dots> = b1*(b0*dx)" using h0' by simp
+                  finally have hA: "(a0*b1)*dy = b1*b0*dx" by (by100 algebra)
+                  have "(b0*a1)*dy = b0*(a1*dy)" by (by100 algebra)
+                  also have "\<dots> = b0*(b1*dx)" using h1' by simp
+                  finally have hB: "(b0*a1)*dy = b0*b1*dx" by (by100 algebra)
+                  have "(a0*b1-b0*a1)*dy = a0*b1*dy - b0*a1*dy" by (by100 algebra)
+                  also have "\<dots> = b1*b0*dx - b0*b1*dx" using hA hB by linarith
+                  also have "\<dots> = 0" by (by100 algebra)
+                  finally have "(a0*b1-b0*a1)*dy = 0" .
+                  hence "dy = 0" using hD by (by100 simp)
+                  hence "dx = 0"
+                  proof -
+                    assume "dy = 0"
+                    from h0' \<open>dy = 0\<close> have "b0*dx = 0" by simp
+                    hence "b0 = 0 \<or> dx = 0" by (by100 auto)
+                    thus "dx = 0"
+                    proof
+                      assume "b0 = 0"
+                      from hD \<open>b0 = 0\<close> have "a0*b1 > 0" by simp
+                      hence "b1 \<noteq> 0" by auto
+                      from h1' \<open>dy = 0\<close> have "b1*dx = 0" by simp
+                      with \<open>b1 \<noteq> 0\<close> show "dx = 0" by simp
+                    next
+                      assume "dx = 0" thus ?thesis .
+                    qed
+                  qed
+                  from \<open>dx = 0\<close> \<open>dy = 0\<close> show ?thesis
+                    unfolding dx_def dy_def by auto
+                qed
                 thus ?thesis by (cases q) auto
               qed
               with False show False by simp
