@@ -1514,6 +1514,46 @@ qed
    cross_negative_from_det_bounds, frac_eq_from_cross_mult, cyclic_sign_change,
    convex_combo_edge_cross_strict have been moved to AlgTopCached17.\<close>
 
+\<comment> \<open>Standalone lemma: affine map with nonzero det is injective.
+   If det(ex,ey,fx,fy) \\<noteq> 0 and two displacements (dx1,dy1), (dx2,dy2) give the same
+   Cramer output, then (dx1,dy1) = (dx2,dy2).\<close>
+lemma cramer_injective:
+  fixes ex ey fx fy dx1 dy1 dx2 dy2 :: real
+  assumes hdet: "ex*fy - ey*fx \<noteq> 0"
+      and hs_eq: "(fy*dx1-fx*dy1)/(ex*fy-ey*fx) = (fy*dx2-fx*dy2)/(ex*fy-ey*fx)"
+      and ht_eq: "(ex*dy1-ey*dx1)/(ex*fy-ey*fx) = (ex*dy2-ey*dx2)/(ex*fy-ey*fx)"
+  shows "dx1 = dx2 \<and> dy1 = dy2"
+proof -
+  from hs_eq hdet have "fy*dx1-fx*dy1 = fy*dx2-fx*dy2" by simp
+  hence heq1: "fy*(dx1-dx2) = fx*(dy1-dy2)" by (by100 algebra)
+  from ht_eq hdet have "ex*dy1-ey*dx1 = ex*dy2-ey*dx2" by simp
+  hence heq2: "ex*(dy1-dy2) = ey*(dx1-dx2)" by (by100 algebra)
+  \<comment> \<open>2x2 system: fy*(dx1-dx2) = fx*(dy1-dy2) and ex*(dy1-dy2) = ey*(dx1-dx2).
+     det \\<noteq> 0 \\<Rightarrow> (dx1-dx2, dy1-dy2) = (0, 0).\<close>
+  define a where "a = dx1 - dx2"
+  define b where "b = dy1 - dy2"
+  from heq1 have h1: "fy*a = fx*b" unfolding a_def b_def .
+  from heq2 have h2: "ex*b = ey*a" unfolding a_def b_def .
+  have "(ex*fy-ey*fx)*a = ex*(fy*a) - ey*(fx*a)" by (by100 algebra)
+  also have "ex*(fy*a) = ex*(fx*b)" using h1 by simp
+  also have "ey*(fx*a) = fx*(ey*a)" by (by100 algebra)
+  also have "fx*(ey*a) = fx*(ex*b)" using h2 by simp
+  finally have "(ex*fy-ey*fx)*a = ex*fx*b - fx*ex*b" by (by100 algebra)
+  hence "(ex*fy-ey*fx)*a = 0" by (by100 algebra)
+  hence ha0: "a = 0" using hdet by simp
+  from h1 ha0 have "fx*b = 0" by simp
+  from h2 ha0 have "ex*b = 0" by simp
+  have "b = 0"
+  proof (rule ccontr)
+    assume "b \<noteq> 0"
+    from \<open>fx*b = 0\<close> \<open>b \<noteq> 0\<close> have "fx = 0" by simp
+    from \<open>ex*b = 0\<close> \<open>b \<noteq> 0\<close> have "ex = 0" by simp
+    hence "ex*fy - ey*fx = 0" using \<open>fx = 0\<close> by simp
+    with hdet show False by simp
+  qed
+  from ha0 \<open>b = 0\<close> show ?thesis unfolding a_def b_def by auto
+qed
+
 \<comment> \<open>Standalone lemma: a point with positive centroid weight is not on any polygon edge.
    If q = \\<alpha>*cw + \\<beta>*u\\_j + \\<gamma>*u\\_{j+1} with \\<alpha> > 0 and
    the centroid satisfies C10 (strictly interior to each edge),
@@ -5916,8 +5956,8 @@ proof -
         from hfan_cover[rule_format, OF hp'] hp'_ne_v1
         obtain jp' where hjp': "jp' < ?nw" and hin_p': "in_sector jp' p'" by blast
         \<comment> \<open>Both p and p' are in sectors. phi\\_fn is affine-injective on each.
-           If jp = jp': injectivity from det > 0.
-           If jp \\<noteq> jp': images in disjoint target sectors.\<close>
+           If jp = jp': injectivity from det > 0 (Cramer uniquely determines p from phi(p)).
+           If jp \\<noteq> jp': images have different target sector barycentric coords.\<close>
         show "p = p'" sorry
       qed
       have prop11: "\<forall>p\<in>P_e.
