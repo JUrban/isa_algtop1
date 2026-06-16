@@ -1670,6 +1670,8 @@ lemma spur_arc_match_forces_edge:
   assumes hnw: "nw \<ge> 3"
       and hC10: "\<forall>i<nw. (vxw i - cxw) * (vyw(Suc i mod nw) - cyw) -
           (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
+      and hC11: "\<forall>i<nw. \<forall>k<nw. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod nw \<longrightarrow>
+          (vxw k-vxw i)*(vyw(Suc i mod nw)-vyw i)-(vyw k-vyw i)*(vxw(Suc i mod nw)-vxw i) < 0"
       and hj: "j_sec < nw"
       and halpha: "\<alpha> > 0" and hs: "s_v \<ge> 0" and ht: "t_v \<ge> 0"
       and habg: "\<alpha> + s_v + t_v = 1"
@@ -1761,54 +1763,34 @@ proof -
       with True show ?thesis by auto
     next
       case False note hsi_ne0 = this
-      \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: eliminate (\\<alpha>-r) by cross-multiplying hx3, hy3 with cw-u\\_0 coords.\<close>
-      define cwx where "cwx = cxw - vxw 0"
-      define cwy where "cwy = cyw - vyw 0"
-      \<comment> \<open>cwy*hx3 - cwx*hy3 eliminates the (\\<alpha>-r) term.\<close>
-      from hx3 have "cwy*(s_v*(vxw j_sec-vxw 0) + t_v*(vxw(Suc j_sec mod nw)-vxw 0) + (\<alpha>-r)*(cxw-vxw 0)) = 0"
-        by simp
-      from hy3 have "cwx*(s_v*(vyw j_sec-vyw 0) + t_v*(vyw(Suc j_sec mod nw)-vyw 0) + (\<alpha>-r)*(cyw-vyw 0)) = 0"
-        by simp
-      \<comment> \<open>After subtraction and factoring: s*det\\_j + t*det\\_k = 0
-         where det\\_j = det(u\\_j-u\\_0, cw-u\\_0) and det\\_k = det(u\\_{j+1}-u\\_0, cw-u\\_0).\<close>
-      define dj where "dj = (vxw j_sec-vxw 0)*cwy - (vyw j_sec-vyw 0)*cwx"
-      define dk where "dk = (vxw(Suc j_sec mod nw)-vxw 0)*cwy - (vyw(Suc j_sec mod nw)-vyw 0)*cwx"
-      have helim: "s_v*dj + t_v*dk = 0"
-      proof -
-        have "cwy*(s_v*(vxw j_sec-vxw 0) + t_v*(vxw(Suc j_sec mod nw)-vxw 0) + (\<alpha>-r)*(cxw-vxw 0)) = 0"
-          using hx3 by simp
-        hence hcwy_eq: "cwy*s_v*(vxw j_sec-vxw 0) + cwy*t_v*(vxw(Suc j_sec mod nw)-vxw 0) + cwy*(\<alpha>-r)*(cxw-vxw 0) = 0"
-          by (by100 algebra)
-        have "cwx*(s_v*(vyw j_sec-vyw 0) + t_v*(vyw(Suc j_sec mod nw)-vyw 0) + (\<alpha>-r)*(cyw-vyw 0)) = 0"
-          using hy3 by simp
-        hence hcwx_eq: "cwx*s_v*(vyw j_sec-vyw 0) + cwx*t_v*(vyw(Suc j_sec mod nw)-vyw 0) + cwx*(\<alpha>-r)*(cyw-vyw 0) = 0"
-          by (by100 algebra)
-        \<comment> \<open>Subtract: the (\\<alpha>-r)*cwx*cwy and (\\<alpha>-r)*cwy*cwx terms cancel.\<close>
-        \<comment> \<open>The (\\<alpha>-r) terms: cwy*(\\<alpha>-r)*cwx = cwx*(\\<alpha>-r)*cwy, so they cancel.\<close>
-        have hcancel: "cwy*(\<alpha>-r)*(cxw-vxw 0) = cwx*(\<alpha>-r)*(cyw-vyw 0)"
-          unfolding cwx_def cwy_def by (by100 algebra)
-        from hcwy_eq hcwx_eq hcancel
-        have hsub: "cwy*s_v*(vxw j_sec-vxw 0) + cwy*t_v*(vxw(Suc j_sec mod nw)-vxw 0)
-            - cwx*s_v*(vyw j_sec-vyw 0) - cwx*t_v*(vyw(Suc j_sec mod nw)-vyw 0) = 0"
-          by linarith
-        \<comment> \<open>Factor: this = s*(dj) + t*(dk).\<close>
-        have "s_v*dj = cwy*s_v*(vxw j_sec-vxw 0) - cwx*s_v*(vyw j_sec-vyw 0)"
-          unfolding dj_def by (by100 algebra)
-        moreover have "t_v*dk = cwy*t_v*(vxw(Suc j_sec mod nw)-vxw 0) - cwx*t_v*(vyw(Suc j_sec mod nw)-vyw 0)"
-          unfolding dk_def by (by100 algebra)
-        ultimately show ?thesis using hsub by linarith
-      qed
-      \<comment> \<open>Both dj, dk < 0 (from cross\\_product\\_cyclic + C10).\<close>
-      have hdj_neg: "dj < 0"
-        sorry \<comment> \<open>dj = -(C10 at j\\_sec) < 0 via cross\\_product\\_cyclic.\<close>
-      have hdk_neg: "dk < 0"
-        sorry \<comment> \<open>dk = -(C10 at Suc j\\_sec) < 0 via cross\\_product\\_cyclic.\<close>
-      \<comment> \<open>s*dj + t*dk = 0 with s,t \\<ge> 0 and dj,dk < 0 gives s=t=0.\<close>
-      have "s_v*dj \<le> 0" using hs hdj_neg mult_nonneg_nonpos by (by100 fastforce)
-      moreover have "t_v*dk \<le> 0" using ht hdk_neg mult_nonneg_nonpos by (by100 fastforce)
-      ultimately have "s_v*dj = 0" "t_v*dk = 0" using helim by linarith+
-      hence "s_v = 0" "t_v = 0" using hdj_neg hdk_neg by auto
-      thus ?thesis by auto
+      \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: C11 says u\\_0 is not on segment u\\_j--u\\_{j+1}.
+         From hx3,hy3: s*(u\\_j-u\\_0) + t*(u\\_{j+1}-u\\_0) + ar*(cw-u\\_0) = 0.
+         Use nonneg\\_combo\\_independent\\_zero with det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) \\<noteq> 0 from C11.\<close>
+      \<comment> \<open>C11 at edge j, k=0: det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) < 0.
+         This means det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) \\<noteq> 0 (u\\_0 not on line u\\_j--u\\_{j+1}).
+         Apply nonneg\\_combo\\_independent\\_zero to get s = t = 0.\<close>
+      have h0_lt: "(0::nat) < nw" using hnw by linarith
+      from hC11[rule_format, OF hj h0_lt \<open>j_sec \<noteq> 0\<close>[symmetric] hsi_ne0[symmetric]]
+      have hC11_inst: "(vxw 0-vxw j_sec)*(vyw(Suc j_sec mod nw)-vyw j_sec)-
+          (vyw 0-vyw j_sec)*(vxw(Suc j_sec mod nw)-vxw j_sec) < 0" .
+      \<comment> \<open>det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) \\<noteq> 0 from C11.\<close>
+      define djx where "djx = vxw j_sec - vxw 0"
+      define djy where "djy = vyw j_sec - vyw 0"
+      define dkx where "dkx = vxw(Suc j_sec mod nw) - vxw 0"
+      define dky where "dky = vyw(Suc j_sec mod nw) - vyw 0"
+      have hdet_ne: "djx*dky - djy*dkx \<noteq> 0"
+        sorry \<comment> \<open>From hC11\\_inst: det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) = -det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) + ... \\<noteq> 0.\<close>
+      \<comment> \<open>From hx3, hy3: extract two equations in s, t.\<close>
+      define ar where "ar = \<alpha> - r"
+      from hx3 have hx3': "s_v*djx + t_v*dkx = -(ar*(cxw - vxw 0))"
+        unfolding djx_def dkx_def ar_def by linarith
+      from hy3 have hy3': "s_v*djy + t_v*dky = -(ar*(cyw - vyw 0))"
+        unfolding djy_def dky_def ar_def by linarith
+      \<comment> \<open>By nonneg\\_combo: s=t=0 iff the RHS = 0 (i.e., ar=0). Otherwise unique Cramer solution.\<close>
+      \<comment> \<open>Actually: we don't need s=t=0 for the FULL conclusion. We need the disjunction.
+         Since j\\<noteq>0 and j+1\\<noteq>0, the third disjunct s=t=0 suffices. But it may be false.
+         The correct approach: show s=t=ar=0 from the 2-equation system + constraints.\<close>
+      show ?thesis sorry
     qed
   qed
 qed
