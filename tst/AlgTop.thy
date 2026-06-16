@@ -1719,8 +1719,30 @@ proof -
     show ?thesis
     proof (cases "Suc j_sec mod nw = 0")
       case True
-      \<comment> \<open>j+1=0: symmetric Cramer argument. s\\_v = 0.\<close>
-      show ?thesis using True sorry
+      \<comment> \<open>j+1=0 mod nw: u\\_{j+1} = u\\_0. Cramer: s\\_v = 0.\<close>
+      from True have hvxk: "vxw(Suc j_sec mod nw) = vxw 0" "vyw(Suc j_sec mod nw) = vyw 0" by auto
+      from hx3 hvxk have hx0: "s_v*(vxw j_sec - vxw 0) + (\<alpha>-r)*(cxw - vxw 0) = 0" by simp
+      from hy3 hvxk have hy0: "s_v*(vyw j_sec - vyw 0) + (\<alpha>-r)*(cyw - vyw 0) = 0" by simp
+      define ujx where "ujx = vxw j_sec - vxw 0"
+      define ujy where "ujy = vyw j_sec - vyw 0"
+      define cwx where "cwx = cxw - vxw 0"
+      define cwy where "cwy = cyw - vyw 0"
+      define ar where "ar = \<alpha> - r"
+      have h1: "s_v*ujx + ar*cwx = 0" using hx0 unfolding ujx_def cwx_def ar_def by linarith
+      have h2: "s_v*ujy + ar*cwy = 0" using hy0 unfolding ujy_def cwy_def ar_def by linarith
+      have "s_v*(ujx*cwy - ujy*cwx) = (s_v*ujx)*cwy - (s_v*ujy)*cwx" by (by100 algebra)
+      also have "(s_v*ujx) = -(ar*cwx)" using h1 by linarith
+      also have "(s_v*ujy) = -(ar*cwy)" using h2 by linarith
+      finally have "s_v*(ujx*cwy - ujy*cwx) = -(ar*cwx)*cwy - (-(ar*cwy))*cwx" by simp
+      hence hs_det: "s_v*(ujx*cwy - ujy*cwx) = 0" by (by100 algebra)
+      \<comment> \<open>det(u\\_j-u\\_0, cw-u\\_0) = det(u\\_0-cw, u\\_j-cw) from C10 at j\\_sec (with u\\_{j+1}=u\\_0).\<close>
+      from hC10[rule_format, OF hj] hvxk
+      have hC10_j: "(vxw j_sec-cxw)*(vyw 0-cyw)-(vyw j_sec-cyw)*(vxw 0-cxw) > 0" by simp
+      \<comment> \<open>Identity: det(A-B,C-B) = det(B-C,A-C). Here A=u\\_j, B=u\\_0, C=cw.\<close>
+      have hdet_ne: "ujx*cwy - ujy*cwx \<noteq> 0"
+        sorry \<comment> \<open>From C10 + correct identity det(A-B,C-B)=det(B-C,A-C). algebra\\_simps fails on generic index.\<close>
+      from hs_det hdet_ne have "s_v = 0" by simp
+      with True show ?thesis by auto
     next
       case False
       \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: eliminate (\\<alpha>-r) gives s*A + t*B = 0 with A,B > 0 from C10.\<close>
