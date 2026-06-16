@@ -4813,14 +4813,61 @@ proof -
                 "(\<Sum>i<?nw. coeffs_w i) = 1" "fst q = (\<Sum>i<?nw. coeffs_w i * vxw i)"
                 "snd q = (\<Sum>i<?nw. coeffs_w i * vyw i)"
                 using hC5_w by (by100 auto)
-              have hec_q: "(vxw(Suc jw mod ?nw)-vxw jw)*(snd q-vyw jw)-
-                  (vyw(Suc jw mod ?nw)-vyw jw)*(fst q-vxw jw) \<ge> 0"
-                sorry \<comment> \<open>Linearity: ec(q) = \\<Sum> \\<mu>\\_k * ec(u\\_k), each term \\<ge> 0.\<close>
+              \<comment> \<open>ec(q) \\<ge> 0: by linearity over convex combination.\<close>
+              let ?dx_ew = "vxw(Suc jw mod ?nw)-vxw jw"
+              let ?dy_ew = "vyw(Suc jw mod ?nw)-vyw jw"
+              have hec_at_k: "\<forall>k<?nw. coeffs_w k * (?dx_ew*(vyw k-vyw jw)-?dy_ew*(vxw k-vxw jw)) \<ge> 0"
+              proof (intro allI impI)
+                fix k assume "k < ?nw"
+                from hec_vertex[rule_format, OF this]
+                have "?dx_ew*(vyw k-vyw jw)-?dy_ew*(vxw k-vxw jw) \<ge> 0" .
+                thus "coeffs_w k * (?dx_ew*(vyw k-vyw jw)-?dy_ew*(vxw k-vxw jw)) \<ge> 0"
+                  using hcw_c(1)[rule_format, OF \<open>k < ?nw\<close>]
+                  by (intro mult_nonneg_nonneg)
+              qed
+              \<comment> \<open>ec(q) = \\<Sum> coeffs\\_w k * ec(u\\_k) by linearity.\<close>
+              have hec_sum: "?dx_ew*(snd q-vyw jw)-?dy_ew*(fst q-vxw jw) =
+                  (\<Sum>k<?nw. coeffs_w k * (?dx_ew*(vyw k-vyw jw)-?dy_ew*(vxw k-vxw jw)))"
+                sorry \<comment> \<open>Linearity of cross product over convex combination.\<close>
+              have hec_q: "?dx_ew*(snd q-vyw jw)-?dy_ew*(fst q-vxw jw) \<ge> 0"
+              proof -
+                from hec_sum have "?dx_ew*(snd q-vyw jw)-?dy_ew*(fst q-vxw jw) =
+                    (\<Sum>k<?nw. coeffs_w k * (?dx_ew*(vyw k-vyw jw)-?dy_ew*(vxw k-vxw jw)))" .
+                also have "\<dots> \<ge> 0" by (rule sum_nonneg) (use hec_at_k in auto)
+                finally show ?thesis .
+              qed
               \<comment> \<open>Show (1-sw-tw)*detw\\_val = ec(q).\<close>
               have hec_eq: "(1-sw-tw)*detw_val =
                   (vxw(Suc jw mod ?nw)-vxw jw)*(snd q-vyw jw)-
                   (vyw(Suc jw mod ?nw)-vyw jw)*(fst q-vxw jw)"
-                sorry \<comment> \<open>Algebraic identity: ec(q) = (1-sw-tw)*D.\<close>
+              proof -
+                \<comment> \<open>Express ec(q) using named variables.\<close>
+                have hfx_ex: "fx_val - ex_val = vxw(Suc jw mod ?nw) - vxw jw"
+                  unfolding fx_val_def ex_val_def by (by100 simp)
+                have hfy_ey: "fy_val - ey_val = vyw(Suc jw mod ?nw) - vyw jw"
+                  unfolding fy_val_def ey_val_def by (by100 simp)
+                have hdxw_ex: "dxw_val - ex_val = fst q - vxw jw"
+                  unfolding dxw_val_def ex_val_def by (by100 simp)
+                have hdyw_ey: "dyw_val - ey_val = snd q - vyw jw"
+                  unfolding dyw_val_def ey_val_def by (by100 simp)
+                \<comment> \<open>(1-sw-tw)*D = D - sw*D - tw*D.\<close>
+                have h1: "(1-sw-tw)*detw_val = detw_val - sw*detw_val - tw*detw_val"
+                  by (by100 algebra)
+                \<comment> \<open>Substitute Cramer.\<close>
+                hence h2: "(1-sw-tw)*detw_val = detw_val -
+                    (fy_val*dxw_val - fx_val*dyw_val) - (ex_val*dyw_val - ey_val*dxw_val)"
+                  using hsw_m htw_m by linarith
+                \<comment> \<open>ec(q) in named variables.\<close>
+                have hec: "(fx_val-ex_val)*(dyw_val-ey_val) - (fy_val-ey_val)*(dxw_val-ex_val) =
+                    (vxw(Suc jw mod ?nw)-vxw jw)*(snd q-vyw jw) -
+                    (vyw(Suc jw mod ?nw)-vyw jw)*(fst q-vxw jw)"
+                  using hfx_ex hfy_ey hdxw_ex hdyw_ey by simp
+                \<comment> \<open>Key algebraic identity: D - (fy*dx-fx*dy) - (ex*dy-ey*dx) = (fx-ex)*(dy-ey)-(fy-ey)*(dx-ex).\<close>
+                have "detw_val - (fy_val*dxw_val - fx_val*dyw_val) - (ex_val*dyw_val - ey_val*dxw_val)
+                    = (fx_val-ex_val)*(dyw_val-ey_val) - (fy_val-ey_val)*(dxw_val-ex_val)"
+                  unfolding detw_val_def by (by5000 algebra)
+                with h2 hec show ?thesis by simp
+              qed
               have "(1-sw-tw)*detw_val \<ge> 0" using hec_eq hec_q by linarith
               hence "1 - sw - tw \<ge> 0"
               proof -
