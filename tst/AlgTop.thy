@@ -4502,15 +4502,45 @@ proof -
           qed
         qed
       qed
+      \<comment> \<open>Define sector sets for the pasting lemma.\<close>
+      define sector_set where "sector_set j = {p \<in> P_e. in_sector j p}" for j
+      \<comment> \<open>Sector sets cover P\\_e (from hfan\\_cover: every p is v\\_1 or in some sector).\<close>
+      have hsector_cover: "P_e = (\<Union>j<?nw. sector_set j)"
+      proof (rule set_eqI, rule iffI)
+        fix p assume hp: "p \<in> P_e"
+        from hfan_cover[rule_format, OF hp]
+        show "p \<in> (\<Union>j<?nw. sector_set j)"
+        proof (elim disjE exE conjE)
+          assume "p = (vxe 1, vye 1)"
+          \<comment> \<open>v\\_1 is in sector nw-1 (and sector 0). Choose sector 0.\<close>
+          have "in_sector 0 (vxe 1, vye 1)" unfolding in_sector_def cross_v1_def by simp
+          hence "p \<in> sector_set 0" using hp \<open>p = (vxe 1, vye 1)\<close>
+            unfolding sector_set_def by simp
+          thus ?thesis using hnw_pos by (by100 blast)
+        next
+          fix j assume "j < ?nw" "in_sector j p"
+          hence "p \<in> sector_set j" using hp unfolding sector_set_def by simp
+          thus ?thesis using \<open>j < ?nw\<close> by (by100 blast)
+        qed
+      next
+        fix p assume "p \<in> (\<Union>j<?nw. sector_set j)"
+        thus "p \<in> P_e" unfolding sector_set_def by (by100 blast)
+      qed
+      \<comment> \<open>Each sector set is closed in the subspace topology on P\\_e.\<close>
+      have hsector_closed: "\<forall>j<?nw. closedin_on P_e
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
+          (sector_set j)"
+        sorry \<comment> \<open>Sector = intersection of P\\_e with two half-planes (closed in R^2).\<close>
+      \<comment> \<open>phi\\_fn is continuous on each sector (affine from hphi\\_affine\\_on\\_sector).\<close>
+      have hsector_cont: "\<forall>j<?nw. top1_continuous_map_on (sector_set j)
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) (sector_set j))
+          P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi_fn"
+        sorry \<comment> \<open>phi\\_fn = affine on sector j (hphi\\_affine\\_on\\_sector). Affine is continuous.\<close>
       have prop2: "top1_continuous_map_on P_e
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
           P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi_fn"
-      \<comment> \<open>Continuity via pasting lemma (expert audit 32 Step 3):
-         1. Each sector j = {p \\<in> P\\_e | in\\_sector j p} is closed (half-plane intersection).
-         2. phi\\_fn|sector = affine (hphi\\_affine\\_on\\_sector) = continuous.
-         3. Sectors cover P\\_e (hfan\\_cover + {v\\_1}).
-         4. pasting\\_lemma\\_two\\_closed applied iteratively over nw sectors.\<close>
-        sorry
+      \<comment> \<open>Apply pasting lemma iteratively over nw sectors.\<close>
+        using hsector_cover hsector_closed hsector_cont prop1 sorry
       have prop3: "phi_fn ` P_e = P_w"
       proof (rule set_eqI, rule iffI)
         \<comment> \<open>\\<subseteq>: from prop1.\<close>
