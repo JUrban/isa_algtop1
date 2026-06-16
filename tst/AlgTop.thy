@@ -5985,17 +5985,72 @@ proof -
       qed
       have prop9: "\<forall>k<?nw. \<forall>t\<in>I_set. phi_fn (edge_pt_e (k+2) t) = edge_pt_w k t"
         using hphi_on_nonspur by (by100 blast)
+      \<comment> \<open>Interior point lemma: if p is interior (not on any edge), then
+         p \\<noteq> v\\_1 and p is in exactly one sector strictly (cross > 0 and cross < 0).
+         This gives strict barycentric coords: s > 0, t > 0, 1-s-t > 0 in the sector.\<close>
+      have hinterior_strict: "\<forall>p\<in>P_e. (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
+          p \<noteq> (vxe 1, vye 1) \<and> (\<exists>j<?nw. cross_v1 (j+2) p > 0 \<and> cross_v1 (Suc(j+2) mod ?ne) p < 0)"
+        sorry \<comment> \<open>From: interior \\<neq> edge \\<neq> vertex, sector boundary = edge, and fan cover.\<close>
       have prop10: "\<forall>p\<in>P_e. \<forall>p'\<in>P_e.
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
           (\<forall>i<?ne. \<forall>t\<in>I_set. p' \<noteq> edge_pt_e i t) \<longrightarrow>
           phi_fn p = phi_fn p' \<longrightarrow> p = p'"
-        sorry
+      proof (intro ballI impI)
+        fix p p' assume hp: "p \<in> P_e" and hp': "p' \<in> P_e"
+            and hint_p: "\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t"
+            and hint_p': "\<forall>i<?ne. \<forall>t\<in>I_set. p' \<noteq> edge_pt_e i t"
+            and heq: "phi_fn p = phi_fn p'"
+        \<comment> \<open>p is in strict sector j, p' is in strict sector j'.
+           If j = j': phi\\_fn is affine injective on sector j (det > 0).
+           If j \\<noteq> j': phi\\_fn(p) is in strict interior of target sector j,
+           phi\\_fn(p') is in strict interior of target sector j', and these are disjoint.\<close>
+        from hinterior_strict[rule_format, OF hp] hint_p
+        have h_strict_p: "p \<noteq> (vxe 1, vye 1) \<and> (\<exists>j<?nw. cross_v1 (j+2) p > 0 \<and>
+            cross_v1 (Suc(j+2) mod ?ne) p < 0)" by auto
+        then obtain j where hj: "j < ?nw" and hcross_pos: "cross_v1 (j+2) p > 0"
+            and hcross_neg: "cross_v1 (Suc(j+2) mod ?ne) p < 0"
+          and hp_ne_v1: "p \<noteq> (vxe 1, vye 1)" by auto
+        from hinterior_strict[rule_format, OF hp'] hint_p'
+        have h_strict_p': "p' \<noteq> (vxe 1, vye 1) \<and> (\<exists>j'<?nw. cross_v1 (j'+2) p' > 0 \<and>
+            cross_v1 (Suc(j'+2) mod ?ne) p' < 0)" by auto
+        then obtain j' where hj': "j' < ?nw" and hcross_pos': "cross_v1 (j'+2) p' > 0"
+            and hcross_neg': "cross_v1 (Suc(j'+2) mod ?ne) p' < 0"
+          and hp'_ne_v1: "p' \<noteq> (vxe 1, vye 1)" by auto
+        show "p = p'" sorry
+      qed
       have prop11: "\<forall>p\<in>P_e.
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
-          (\<forall>j<?nw. \<forall>s\<in>I_set. phi_fn p \<noteq> edge_pt_w j s)" sorry
+          (\<forall>j<?nw. \<forall>s\<in>I_set. phi_fn p \<noteq> edge_pt_w j s)"
+      proof (intro ballI impI allI)
+        fix p j s assume hp: "p \<in> P_e" and hint_p: "\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t"
+            and hj: "j < ?nw" and hs: "s \<in> I_set"
+        from hinterior_strict[rule_format, OF hp] hint_p
+        have "p \<noteq> (vxe 1, vye 1) \<and> (\<exists>jp<?nw. cross_v1 (jp+2) p > 0 \<and>
+            cross_v1 (Suc(jp+2) mod ?ne) p < 0)" by auto
+        then obtain jp where hjp: "jp < ?nw" and hcross_pos: "cross_v1 (jp+2) p > 0"
+            and hcross_neg: "cross_v1 (Suc(jp+2) mod ?ne) p < 0"
+          and hp_ne_v1: "p \<noteq> (vxe 1, vye 1)" by auto
+        \<comment> \<open>phi\\_fn(p) is strictly inside target sector jp.
+           Edge points are on the boundary of P\\_w, not inside any sector.\<close>
+        show "phi_fn p \<noteq> edge_pt_w j s" sorry
+      qed
       have prop12: "\<forall>t\<in>I_set. \<forall>p\<in>P_e.
           (\<forall>i<?ne. \<forall>s\<in>I_set. p \<noteq> edge_pt_e i s) \<longrightarrow>
-          phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p" sorry
+          phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p"
+      proof (intro ballI impI)
+        fix t p assume ht: "t \<in> I_set" and hp: "p \<in> P_e"
+            and hint_p: "\<forall>i<?ne. \<forall>s\<in>I_set. p \<noteq> edge_pt_e i s"
+        from hinterior_strict[rule_format, OF hp] hint_p
+        have "p \<noteq> (vxe 1, vye 1) \<and> (\<exists>jp<?nw. cross_v1 (jp+2) p > 0 \<and>
+            cross_v1 (Suc(jp+2) mod ?ne) p < 0)" by auto
+        then obtain jp where hjp: "jp < ?nw" and hcross_pos: "cross_v1 (jp+2) p > 0"
+            and hcross_neg: "cross_v1 (Suc(jp+2) mod ?ne) p < 0"
+          and hp_ne_v1: "p \<noteq> (vxe 1, vye 1)" by auto
+        \<comment> \<open>phi\\_fn(p) is strictly inside target sector jp.
+           phi\\_fn(edge\\_pt\\_e 0 t) is on the spur arc (from u\\_0 to centroid).
+           The spur arc is NOT in the strict interior of any sector.\<close>
+        show "phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p" sorry
+      qed
       show ?thesis
         by (rule that[of phi_fn])
            (use prop1 prop2 prop3 prop4 prop5 prop6 prop7 prop8 prop9
