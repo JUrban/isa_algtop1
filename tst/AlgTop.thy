@@ -4535,9 +4535,13 @@ proof -
         \<comment> \<open>P\\_e is compact (finite convex hull) hence closed.\<close>
         have hPe_closed: "closed P_e"
         proof -
+          \<comment> \<open>P\\_e is compact: it's the convex hull of finitely many points.\<close>
+          \<comment> \<open>Show P\\_e \\<subseteq> convex hull of vertices (from hC5\\_e definition).\<close>
+          \<comment> \<open>Show convex hull \\<subseteq> P\\_e (vertices are in P\\_e by hC4\\_e, P\\_e is convex).\<close>
           have hPe_compact: "compact P_e" sorry
-            \<comment> \<open>P\\_e = convex hull of finitely many points.
-               finite\\_imp\\_compact\\_convex\\_hull gives compact. Need P\\_e = convex hull.\<close>
+            \<comment> \<open>Need: P\\_e = convex hull {(vxe i, vye i) | i < ne}.
+               This connects hC5\\_e's sum representation to HOL-Analysis's convex hull.
+               Then finite\\_imp\\_compact\\_convex\\_hull gives compact.\<close>
           from compact_imp_closed[OF hPe_compact] show ?thesis .
         qed
         \<comment> \<open>The half-plane {p. cross\\_v1(j+2, p) \\<ge> 0} is closed (preimage of [0,\\<infinity>) under continuous linear).\<close>
@@ -4593,7 +4597,29 @@ proof -
         qed
         \<comment> \<open>affine\\_j is continuous (affine function of fst p, snd p).\<close>
         have haffine_cont: "continuous_on (sector_set j) affine_j"
-          sorry \<comment> \<open>affine\\_j is affine in (fst p, snd p). continuous\\_intros resolves but times out.\<close>
+        proof -
+          \<comment> \<open>Expand affine\\_j to a direct formula (no let), then apply continuous\\_intros.\<close>
+          let ?ex = "vxe(j+2)-vxe 1" and ?ey = "vye(j+2)-vye 1"
+          let ?fx = "vxe ?si-vxe 1" and ?fy = "vye ?si-vye 1"
+          let ?det = "?ex*?fy-?ey*?fx"
+          have hdet_ne: "?det \<noteq> 0"
+          proof -
+            from hdet_pos[rule_format, OF hj] have "?det > 0" by (by100 simp)
+            thus ?thesis by linarith
+          qed
+          \<comment> \<open>affine\\_j p = explicit formula in fst p, snd p.\<close>
+          have haffine_expand: "\<And>p. affine_j p =
+            (let dx = fst p-vxe 1; dy = snd p-vye 1;
+                 s = (?fy*dx-?fx*dy)/?det; t = (?ex*dy-?ey*dx)/?det
+            in ((1-s-t)*?cxw + s*vxw j + t*vxw(Suc j mod ?nw),
+                (1-s-t)*?cyw + s*vyw j + t*vyw(Suc j mod ?nw)))"
+            unfolding affine_j_def Let_def by simp
+          \<comment> \<open>Each component is continuous (affine in fst p, snd p with constant det).\<close>
+          have "continuous_on (sector_set j) (\<lambda>p. affine_j p)"
+            unfolding haffine_expand Let_def using hdet_ne
+            by (intro continuous_intros) auto
+          thus ?thesis by simp
+        qed
         \<comment> \<open>phi\\_fn = affine\\_j on sector => phi\\_fn continuous on sector.\<close>
         have "continuous_on (sector_set j) phi_fn \<longleftrightarrow> continuous_on (sector_set j) affine_j"
           by (rule continuous_on_cong) (use hphi_eq in auto)
