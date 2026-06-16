@@ -4905,8 +4905,6 @@ proof -
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
           (\<forall>i<?ne. \<forall>t\<in>I_set. p' \<noteq> edge_pt_e i t) \<longrightarrow>
           phi_fn p = phi_fn p' \<longrightarrow> p = p'"
-      \<comment> \<open>Interior injectivity: both p,p' in open sectors. Same sector -> affine injective.
-         Different sectors -> images in disjoint centroid-cone interiors, contradiction.\<close>
         sorry
       have prop11: "\<forall>p\<in>P_e.
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
