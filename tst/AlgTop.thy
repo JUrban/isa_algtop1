@@ -4728,9 +4728,124 @@ proof -
             \<comment> \<open>cross\\_cw(j, q) is linear in q: cross\\_cw(j, q) = \\<Sum> \\<mu>\\_k * cross\\_cw(j, u\\_k).\<close>
             \<comment> \<open>For the cyclic IVT, we need: \\<exists>j. cross\\_cw(j,q) \\<ge> 0 \\<and> cross\\_cw(Suc j mod nw, q) \\<le> 0.\<close>
             \<comment> \<open>This is a discrete IVT on a cyclic sequence. The proof mirrors hfan\\_cover.\<close>
-            \<comment> \<open>For now, sorry the cyclic IVT. This is ~100 lines of discrete analysis.\<close>
-            have "\<exists>j<?nw. in_tsector j q" sorry
-            thus ?thesis by simp
+            \<comment> \<open>Cyclic discrete IVT: \\<Sum> cross\\_cw(j, q) = 0 (centroid = mean of vertices).
+               So not all cross\\_cw(j,q) have the same sign. Find consecutive sign change.\<close>
+            have hsum_cross_zero: "(\<Sum>j<?nw. cross_cw j q) = 0"
+            proof -
+              \<comment> \<open>cross\\_cw(j, q) = (vxw j-cxw)*(snd q-cyw) - (vyw j-cyw)*(fst q-cxw).
+                 Sum over j: (\\<Sum>(vxw j-cxw))*(snd q-cyw) - (\\<Sum>(vyw j-cyw))*(fst q-cxw).
+                 \\<Sum>(vxw j-cxw) = \\<Sum> vxw j - nw*cxw = nw*cxw - nw*cxw = 0.\<close>
+              have "(\<Sum>j<?nw. cross_cw j q) =
+                  (\<Sum>j<?nw. (vxw j-?cxw))*(snd q-?cyw) - (\<Sum>j<?nw. (vyw j-?cyw))*(fst q-?cxw)"
+              proof -
+                have "(\<Sum>j<?nw. cross_cw j q) =
+                    (\<Sum>j<?nw. ((vxw j-?cxw)*(snd q-?cyw) - (vyw j-?cyw)*(fst q-?cxw)))"
+                  unfolding cross_cw_def by simp
+                also have "\<dots> = (\<Sum>j<?nw. (vxw j-?cxw)*(snd q-?cyw)) - (\<Sum>j<?nw. (vyw j-?cyw)*(fst q-?cxw))"
+                  by (rule sum_subtractf)
+                also have "(\<Sum>j<?nw. (vxw j-?cxw)*(snd q-?cyw)) = (\<Sum>j<?nw. (vxw j-?cxw))*(snd q-?cyw)"
+                  by (simp add: sum_distrib_right)
+                also have "(\<Sum>j<?nw. (vyw j-?cyw)*(fst q-?cxw)) = (\<Sum>j<?nw. (vyw j-?cyw))*(fst q-?cxw)"
+                  by (simp add: sum_distrib_right)
+                finally show ?thesis .
+              qed
+              moreover have "(\<Sum>j<?nw. (vxw j-?cxw)) = 0"
+              proof -
+                have "(\<Sum>j<?nw. (vxw j-?cxw)) = (\<Sum>j<?nw. vxw j) - ?nw*?cxw"
+                  by (simp add: sum_subtractf)
+                also have "?nw*?cxw = (\<Sum>j<?nw. vxw j)"
+                  using hnw_pos by (by100 simp)
+                finally show ?thesis by simp
+              qed
+              moreover have "(\<Sum>j<?nw. (vyw j-?cyw)) = 0"
+              proof -
+                have "(\<Sum>j<?nw. (vyw j-?cyw)) = (\<Sum>j<?nw. vyw j) - ?nw*?cyw"
+                  by (simp add: sum_subtractf)
+                also have "?nw*?cyw = (\<Sum>j<?nw. vyw j)"
+                  using hnw_pos by (by100 simp)
+                finally show ?thesis by simp
+              qed
+              ultimately show ?thesis by simp
+            qed
+            \<comment> \<open>q \\<noteq> cw, so not all cross\\_cw = 0. With sum = 0, both signs exist.\<close>
+            have hhas_pos: "\<exists>j<?nw. cross_cw j q > 0"
+            proof (rule ccontr)
+              assume "\<not>(\<exists>j<?nw. cross_cw j q > 0)"
+              hence hall_le: "\<forall>j<?nw. cross_cw j q \<le> 0"
+                by (by100 fastforce)
+              \<comment> \<open>Sum \\<le> 0, but sum = 0, so all = 0.\<close>
+              hence "(\<Sum>j<?nw. cross_cw j q) \<le> 0" by (intro sum_nonpos) auto
+              with hsum_cross_zero have "(\<Sum>j<?nw. cross_cw j q) = 0" by linarith
+              \<comment> \<open>All \\<le> 0 and sum = 0 implies all = 0.\<close>
+              \<comment> \<open>All \\<le> 0 and sum = 0 implies all = 0.\<close>
+              have "\<forall>j<?nw. -(cross_cw j q) \<ge> 0" using hall_le by auto
+              hence "(\<Sum>j<?nw. -(cross_cw j q)) \<ge> 0" by (intro sum_nonneg) auto
+              hence "(\<Sum>j<?nw. -(cross_cw j q)) = 0" using hsum_cross_zero
+                by (simp add: sum_negf)
+              hence "\<forall>j\<in>{..<?nw}. -(cross_cw j q) = 0"
+                using sum_nonneg_eq_0_iff[of "{..<?nw}" "\<lambda>j. -(cross_cw j q)"]
+                  \<open>\<forall>j<?nw. -(cross_cw j q) \<ge> 0\<close> by auto
+              hence "\<forall>j<?nw. cross_cw j q = 0" by auto
+              \<comment> \<open>All cross products = 0 means q lies on all rays from cw, hence q = cw.
+                 cross\\_cw(0,q) = 0 and cross\\_cw(1,q) = 0 gives a 2x2 system.
+                 det of system = det(u\\_0-cw, u\\_1-cw) > 0 (from C10 at j=0).
+                 So unique solution: fst q = cxw, snd q = cyw.\<close>
+              hence "q = (?cxw, ?cyw)"
+              proof -
+                assume hall: "\<forall>j<?nw. cross_cw j q = 0"
+                have h0: "0 < ?nw" using hnw_pos .
+                have h1: "1 < ?nw" using hlen by linarith
+                from hall[rule_format, OF h0] have "cross_cw 0 q = 0" .
+                hence heq0: "(vxw 0-?cxw)*(snd q-?cyw) = (vyw 0-?cyw)*(fst q-?cxw)"
+                  unfolding cross_cw_def by linarith
+                from hall[rule_format, OF h1] have "cross_cw 1 q = 0" .
+                hence heq1: "(vxw 1-?cxw)*(snd q-?cyw) = (vyw 1-?cyw)*(fst q-?cxw)"
+                  unfolding cross_cw_def by linarith
+                \<comment> \<open>2x2 system with det = C10 at j=0 > 0.\<close>
+                have hdet01: "(vxw 0-?cxw)*(vyw 1-?cyw)-(vyw 0-?cyw)*(vxw 1-?cxw) > 0"
+                  sorry \<comment> \<open>From C10\\_w at j=0, but need Suc 0 mod nw = 1 (true since nw \\<ge> 3).\<close>
+                \<comment> \<open>Cramer: fst q - cxw = 0, snd q - cyw = 0.\<close>
+                have "fst q = ?cxw \<and> snd q = ?cyw"
+                  sorry \<comment> \<open>From Cramer applied to heq0+heq1 with hdet01 \\<noteq> 0.\<close>
+                thus ?thesis by (cases q) auto
+              qed
+              with False show False by simp
+            qed
+            have hhas_neg: "\<exists>j<?nw. cross_cw j q < 0"
+            proof (rule ccontr)
+              assume "\<not>(\<exists>j<?nw. cross_cw j q < 0)"
+              hence hall_ge: "\<forall>j<?nw. cross_cw j q \<ge> 0" by (by100 fastforce)
+              hence "(\<Sum>j<?nw. cross_cw j q) \<ge> 0" by (intro sum_nonneg) auto
+              hence "(\<Sum>j<?nw. cross_cw j q) = 0" using hsum_cross_zero by simp
+              hence "\<forall>j\<in>{..<?nw}. cross_cw j q = 0"
+                using sum_nonneg_eq_0_iff[of "{..<?nw}" "\<lambda>j. cross_cw j q"] hall_ge by auto
+              hence hall: "\<forall>j<?nw. cross_cw j q = 0" by auto
+              hence "q = (?cxw, ?cyw)"
+              proof -
+                have h0: "0 < ?nw" using hnw_pos .
+                have h1: "1 < ?nw" using hlen by linarith
+                from hall[rule_format, OF h0] have "cross_cw 0 q = 0" .
+                hence heq0: "(vxw 0-?cxw)*(snd q-?cyw) = (vyw 0-?cyw)*(fst q-?cxw)"
+                  unfolding cross_cw_def by linarith
+                from hall[rule_format, OF h1] have "cross_cw 1 q = 0" .
+                hence heq1: "(vxw 1-?cxw)*(snd q-?cyw) = (vyw 1-?cyw)*(fst q-?cxw)"
+                  unfolding cross_cw_def by linarith
+                have hdet01: "(vxw 0-?cxw)*(vyw 1-?cyw)-(vyw 0-?cyw)*(vxw 1-?cxw) > 0"
+                  sorry
+                have "fst q = ?cxw \<and> snd q = ?cyw" sorry
+                thus ?thesis by (cases q) auto
+              qed
+              with False show False by simp
+            qed
+            \<comment> \<open>Cyclic IVT: there's a consecutive sign change \\<ge>0 then \\<le>0.\<close>
+            from hhas_neg obtain j2 where hj2: "j2 < ?nw" and hj2_neg: "cross_cw j2 q < 0"
+              by blast
+            \<comment> \<open>Walk backwards from j2 until we find j with cross\\_cw(j,q) \\<ge> 0.\<close>
+            \<comment> \<open>The predecessor (j2-1) mod nw either has cross\\_cw \\<ge> 0 (done) or < 0 (continue).
+               Since there exists j1 with cross\\_cw > 0, we must find one within nw steps.\<close>
+            have "\<exists>j<?nw. cross_cw j q \<ge> 0 \<and> cross_cw (Suc j mod ?nw) q \<le> 0"
+              sorry \<comment> \<open>Finite cyclic walk from positive to negative element.\<close>
+            thus ?thesis unfolding in_tsector_def by auto
           qed
           \<comment> \<open>Convert sector membership to barycentric coordinates.\<close>
           show ?thesis
