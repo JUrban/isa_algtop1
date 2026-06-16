@@ -1679,21 +1679,22 @@ proof -
   thus ?thesis using \<open>(1-t)*A < 0\<close> by linarith
 qed
 
-\<comment> \<open>Fan sector ordering (expert audit 32 Step 1): if p \\<in> P is in wedge [a,a+1]
-   (cross(a,p)\\<ge>0, cross(a+1,p)\\<le>0) and b > a+1, then cross(b,p) \\<le> 0.\<close>
+\<comment> \<open>Fan sector ordering (expert audit 32 Step 1): if p \\<in> P is in wedge [a,a']
+   (cross(a,p)\\<ge>0, cross(a',p)\\<le>0) and b > a', then cross(b,p) \\<le> 0.
+   Uses convex combination + vertex cross product signs.\<close>
 lemma fan_wedge_later_cross_nonpos:
-  fixes vx vy :: "nat \<Rightarrow> real" and ne :: nat
-  assumes "ne \<ge> 5"
-    and "P = {(x::real, y::real). \<exists>coeffs. (\<forall>i<ne. coeffs i \<ge> 0) \<and> (\<Sum>i<ne. coeffs i) = 1
+  fixes vx vy :: "nat \<Rightarrow> real" and ne a a' b :: nat
+  assumes hne: "ne \<ge> 5"
+    and hC5: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<ne. coeffs i \<ge> 0) \<and> (\<Sum>i<ne. coeffs i) = 1
                    \<and> x = (\<Sum>i<ne. coeffs i * vx i) \<and> y = (\<Sum>i<ne. coeffs i * vy i)}"
-    and "p \<in> P"
-    and "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < ne \<longrightarrow>
+    and hp: "p \<in> P"
+    and hdet: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < ne \<longrightarrow>
         (vx m - vx 1) * (vy n - vy 1) - (vy m - vy 1) * (vx n - vx 1) > 0"
-    and "\<forall>k. 2 \<le> k \<longrightarrow> k < ne \<longrightarrow>
+    and hdet0: "\<forall>k. 2 \<le> k \<longrightarrow> k < ne \<longrightarrow>
         (vx k - vx 1) * (vy 0 - vy 1) - (vy k - vy 1) * (vx 0 - vx 1) > 0"
-    and "2 \<le> a" and "a + 1 < b" and "b < ne"
-    and "(vx a - vx 1) * (snd p - vy 1) - (vy a - vy 1) * (fst p - vx 1) \<ge> 0"
-    and "(vx (a+1) - vx 1) * (snd p - vy 1) - (vy (a+1) - vy 1) * (fst p - vx 1) \<le> 0"
+    and ha: "2 \<le> a" and ha': "a' < b" and hb: "b < ne"
+    and hcr_a: "(vx a - vx 1) * (snd p - vy 1) - (vy a - vy 1) * (fst p - vx 1) \<ge> 0"
+    and hcr_a': "(vx a' - vx 1) * (snd p - vy 1) - (vy a' - vy 1) * (fst p - vx 1) \<le> 0"
   shows "(vx b - vx 1) * (snd p - vy 1) - (vy b - vy 1) * (fst p - vx 1) \<le> 0"
   sorry
 
@@ -4091,14 +4092,14 @@ proof -
                 unfolding in_sector_def by auto
               have hcr_jm2_exp: "(vxe(jm+2)-vxe 1)*(snd p-vye 1)-(vye(jm+2)-vye 1)*(fst p-vxe 1) \<ge> 0"
                 using hcr_jm2 unfolding cross_v1_def by (cases p) simp
-              have hcr_jm3_exp: "(vxe((jm+2)+1)-vxe 1)*(snd p-vye 1)-(vye((jm+2)+1)-vye 1)*(fst p-vxe 1) \<le> 0"
-                using hcr_le unfolding cross_v1_def sorry
+              have hcr_jm3_exp: "(vxe(jm+3)-vxe 1)*(snd p-vye 1)-(vye(jm+3)-vye 1)*(fst p-vxe 1) \<le> 0"
+                using hcr_le unfolding cross_v1_def by (cases p) simp
               have hne5: "?ne \<ge> 5" using hlen hne_eq by linarith
               have hjm2_ge: "(2::nat) \<le> jm + 2" by linarith
-              have hjm2p1: "(jm+2) + 1 < j + 2" using hjm3_lt_j2 by linarith
-              \<comment> \<open>fan\\_wedge\\_later\\_cross\\_nonpos gives cross(j+2,p) \\<le> 0.\<close>
               have hcr_j2_le: "(vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1) \<le> 0"
-                sorry \<comment> \<open>From fan\\_wedge\\_later\\_cross\\_nonpos. Instantiation issue with a+1 vs jm+3.\<close>
+                using fan_wedge_later_cross_nonpos[OF hne5 hC5_e hp hdet_general hdet_from_v1
+                  hjm2_ge hjm3_lt_j2 hj2_lt_ne] hcr_jm2_exp hcr_jm3_exp
+                by (by100 blast)
               \<comment> \<open>But in\\_sector j: cross(j+2,p) \\<ge> 0. So = 0.\<close>
               have hcr_j2_exp: "(vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1) \<ge> 0"
                 using hcr_ge unfolding cross_v1_def by (cases p) simp
