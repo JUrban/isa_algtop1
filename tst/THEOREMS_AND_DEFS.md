@@ -4,7 +4,7 @@
 #
 # Files: i/Top1_Ch2.thy,i/Top1_Ch3.thy,i/Top1_Ch4.thy,i/Top1_Ch5_8.thy,i/Top1_Ch9_13.thy,h/AlgTopHelpers.thy,b0/AlgTop_JCT_Base0.thy,b/AlgTop_JCT_Base.thy,a0/AlgTop0.thy,ac/AlgTopCached.thy,fib/AlgIsoFixedBase.thy,fi/AlgIsoFixed.thy,k5/K5_nonplanar.thy,ag/AlgTopGroups.thy,pd/PolygonDisk.thy,svk/AlgTopSvK.thy,wh/AlgTopWedgeHelpers.thy,at/AlgTopChain.thy,ac2/AlgTopCached2.thy,ac3/AlgTopCached3.thy,ac4/AlgTopCached4.thy,ac5/AlgTopCached5.thy,ac6/AlgTopCached6.thy,ac7/AlgTopCached7.thy,ac8/AlgTopCached8.thy,ac9/AlgTopCached9.thy,ac10/AlgTopCached10.thy,ac11/AlgTopCached11.thy,ac12/AlgTopCached12.thy,AlgTop.thy
 #
-# Total entries: 2209
+# Total entries: 2214
 # Duplicate names: 39
 
 ## definitions (336)
@@ -372,7 +372,7 @@ top1_urysohn_U                                 i/Top1_Ch4.thy                   
 
 top1_I01                                       i/Top1_Ch5_8.thy                     line 25035
 
-## lemmas (1557)
+## lemmas (1562)
 
 abelian_commutator_trivial                     ac8/AlgTopCached8.thy                line 4968
 abelian_doubles_normal                         ag/AlgTopGroups.thy                  line 6792
@@ -471,6 +471,7 @@ cc_topology_is_topology                        i/Top1_Ch5_8.thy                 
 ccw_polygon_half_plane                         at/AlgTopChain.thy                   line 2203
 ccw_polygon_half_plane                         pd/PolygonDisk.thy                   line 173
 centralizer_is_subgroup                        ac8/AlgTopCached8.thy                line 4543
+centroid_weight_not_on_edge                    AlgTop.thy                           line 1698
 circle_minus_point_deformation_retract         wh/AlgTopWedgeHelpers.thy            line 3284
 circle_minus_point_path_connected              svk/AlgTopSvK.thy                    line 819
 circle_minus_point_simply_connected            svk/AlgTopSvK.thy                    line 1196
@@ -620,6 +621,7 @@ covering_map_evenly_covered_neighborhood       ac4/AlgTopCached4.thy            
 covering_map_is_open_map                       wh/AlgTopWedgeHelpers.thy            line 2945
 covering_map_surjective                        ac4/AlgTopCached4.thy                line 10
 covering_sheet_over_arc_path_connected         ac5/AlgTopCached5.thy                line 39
+cramer_injective                               AlgTop.thy                           line 1520
 cross2_antisym                                 at/AlgTopChain.thy                   line 2179
 cross2_antisym                                 pd/PolygonDisk.thy                   line 149
 cross2_centroid_sum_zero                       at/AlgTopChain.thy                   line 2137
@@ -674,6 +676,7 @@ expansion_E_open                               i/Top1_Ch5_8.thy                 
 expansion_lf_from_auxiliary                    i/Top1_Ch5_8.thy                     line 7945
 exterior_ball_connected_R2                     h/AlgTopHelpers.thy                  line 39
 false_from_disjoint_nonempty                   fib/AlgIsoFixedBase.thy              line 1223
+fan_affine_interior_injective                  AlgTop.thy                           line 1645
 filter_eq_replicate                            ag/AlgTopGroups.thy                  line 3396
 filter_pred_eq                                 ag/AlgTopGroups.thy                  line 4547
 finer_than_on_imp                              i/Top1_Ch2.thy                       line 1057
@@ -745,10 +748,10 @@ free_group_universal_property                  at/AlgTopChain.thy               
 free_group_word_kernel                         ag/AlgTopGroups.thy                  line 3110
 free_product_reduced_repr                      ac/AlgTopCached.thy                  line 10948
 free_product_trivial_factor_surj               ac/AlgTopCached.thy                  line 27169
-front_cancel_proper                            AlgTop.thy                           line 8824
-front_cancel_proper_direct                     AlgTop.thy                           line 8299
+front_cancel_proper                            AlgTop.thy                           line 9249
+front_cancel_proper_direct                     AlgTop.thy                           line 8724
 front_cancel_realization_homeo                 AlgTop.thy                           line 681
-front_cancel_realization_homeo_proper          AlgTop.thy                           line 8846
+front_cancel_realization_homeo_proper          AlgTop.thy                           line 9271
 frontier_closed_sub                            ac/AlgTopCached.thy                  line 3608
 front_uncancel_realization_homeo               AlgTop.thy                           line 787
 fst_set_flip_rev                               ag/AlgTopGroups.thy                  line 78
@@ -1194,7 +1197,7 @@ polygonal_region_convex_combo                  at/AlgTopChain.thy               
 polygonal_region_convex_combo                  pd/PolygonDisk.thy                   line 456
 polygon_homeomorphic_to_disk_with_boundary     at/AlgTopChain.thy                   line 2827
 polygon_homeomorphic_to_disk_with_boundary     pd/PolygonDisk.thy                   line 1043
-polygon_sub_rearrange_sigma_props              AlgTop.thy                           line 8520
+polygon_sub_rearrange_sigma_props              AlgTop.thy                           line 8945
 preimage_normal_subgroup                       ac/AlgTopCached.thy                  line 27286
 presentation_from_free_quotient                wh/AlgTopWedgeHelpers.thy            line 1512
 presented_by_commutators_abelian               ac8/AlgTopCached8.thy                line 4722
@@ -1230,12 +1233,12 @@ quotient_induced_hom                           ac/AlgTopCached.thy              
 quotient_of_scheme_cut_paste                   AlgTop.thy                           line 595
 quotient_of_scheme_cut_paste2                  AlgTop.thy                           line 607
 quotient_of_scheme_cut_paste_opp               AlgTop.thy                           line 618
-quotient_of_scheme_cut_paste_opp_proper        AlgTop.thy                           line 8664
-quotient_of_scheme_cut_paste_proper            AlgTop.thy                           line 8774
+quotient_of_scheme_cut_paste_opp_proper        AlgTop.thy                           line 9089
+quotient_of_scheme_cut_paste_proper            AlgTop.thy                           line 9199
 quotient_of_scheme_extract                     ac/AlgTopCached.thy                  line 31345
 quotient_of_scheme_extract_full                wh/AlgTopWedgeHelpers.thy            line 329
 quotient_of_scheme_uncancel_front              AlgTop.thy                           line 695
-quotient_of_scheme_uncancel_front_proper       AlgTop.thy                           line 8861
+quotient_of_scheme_uncancel_front_proper       AlgTop.thy                           line 9286
 quotient_of_scheme_uncancel_proved             AlgTop.thy                           line 803
 quotient_projection_properties                 ac/AlgTopCached.thy                  line 8976
 R2_locally_path_connected                      b/AlgTop_JCT_Base.thy                line 6672
@@ -1311,6 +1314,7 @@ S2_open_path_connected_arc_connected           fi/AlgIsoFixed.thy               
 S2_two_component_open                          ac/AlgTopCached.thy                  line 52178
 same_endpoint_same_coset                       ac10/AlgTopCached10.thy              line 822
 same_projection_same_endpoint                  ac10/AlgTopCached10.thy              line 125
+same_sector_affine_injective                   AlgTop.thy                           line 1603
 scc_decomp_arc_endpoints                       fi/AlgIsoFixed.thy                   line 3060
 SCC_decompose_at_given_points                  fi/AlgIsoFixed.thy                   line 6389
 scc_in_sc_false                                ac11/AlgTopCached11.thy              line 2489
@@ -1361,7 +1365,7 @@ Sn_interpolation_in_Sn                         b/AlgTop_JCT_Base.thy            
 Sn_interpolation_norm_pos                      b/AlgTop_JCT_Base.thy                line 720
 Sn_interpolation_to_q_avoids_p                 b/AlgTop_JCT_Base.thy                line 878
 Sn_normalized_interpolation_path               b/AlgTop_JCT_Base.thy                line 441
-spur_collapse_cancel_homeo                     AlgTop.thy                           line 1517
+spur_collapse_cancel_homeo                     AlgTop.thy                           line 1836
 sqnorm_memI                                    h/AlgTopHelpers.thy                  line 5
 squaring_map_covering                          b0/AlgTop_JCT_Base0.thy              line 12
 squaring_map_factorization                     b0/AlgTop_JCT_Base0.thy              line 2522
@@ -1888,6 +1892,7 @@ tree_leaf_other_endpoint_shared                ac11/AlgTopCached11.thy          
 tree_simply_connected                          ac3/AlgTopCached3.thy                line 84
 tree_union_arcs_path_connected                 ac7/AlgTopCached7.thy                line 4220
 triangle_compact                               ac/AlgTopCached.thy                  line 41258
+triangle_coords_injective                      AlgTop.thy                           line 1560
 tri_arg_metric                                 i/Top1_Ch5_8.thy                     line 14381
 trivial_kernel_injective                       ac8/AlgTopCached8.thy                line 5010
 trivial_pi1_imp_simply_connected               ac7/AlgTopCached7.thy                line 4476
@@ -1906,9 +1911,9 @@ uniform_metric_conv_imp_pointwise_unif         i/Top1_Ch5_8.thy                 
 uniform_metric_lt_imp_d_lt                     i/Top1_Ch5_8.thy                     line 14354
 uniform_metric_pointwise_lt                    i/Top1_Ch5_8.thy                     line 14336
 unit_interval_reversal_homeomorphism           ac/AlgTopCached.thy                  line 49000
-valid_equiv_preserves_quotient_homeo           AlgTop.thy                           line 9239
-valid_equiv_preserves_quotient_homeo_proper    AlgTop.thy                           line 9274
-valid_operation_preserves_quotient_homeo       AlgTop.thy                           line 8902
+valid_equiv_preserves_quotient_homeo           AlgTop.thy                           line 9664
+valid_equiv_preserves_quotient_homeo_proper    AlgTop.thy                           line 9699
+valid_operation_preserves_quotient_homeo       AlgTop.thy                           line 9327
 vector_field_must_point_inward                 i/Top1_Ch9_13.thy                    line 13533
 wedge_circles_pi1_free                         ac5/AlgTopCached5.thy                line 2814
 weighted_sum_epsilon_delta                     i/Top1_Ch5_8.thy                     line 29816
@@ -2151,10 +2156,10 @@ Theorem_74_4_fund_group_m_projective           ac8/AlgTopCached8.thy            
 Theorem_75_1_H1_abelianization                 ac8/AlgTopCached8.thy                line 3787
 Theorem_75_3_H1_n_torus                        ac8/AlgTopCached8.thy                line 4472
 Theorem_75_4_H1_m_projective                   ac12/AlgTopCached12.thy              line 975
-Theorem_76_elementary_operations               AlgTop.thy                           line 9293
-Theorem_77_5_classification                    AlgTop.thy                           line 10270
-Theorem_78_1_triangulable_surface              AlgTop.thy                           line 9353
-Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 10172
+Theorem_76_elementary_operations               AlgTop.thy                           line 9718
+Theorem_77_5_classification                    AlgTop.thy                           line 10695
+Theorem_78_1_triangulable_surface              AlgTop.thy                           line 9778
+Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 10597
 Theorem_79_2                                   ac4/AlgTopCached4.thy                line 1524
 Theorem_79_4                                   ac4/AlgTopCached4.thy                line 2333
 Theorem_80_1_universal_unique                  ac4/AlgTopCached4.thy                line 3345
