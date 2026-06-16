@@ -6076,8 +6076,108 @@ proof -
         \<comment> \<open>The full chain: hedge\\_pos > 0 \\<Rightarrow> centroid weight > 0 \\<Rightarrow> not on edge.
            For now: sorry the connection (needs algebraic identity for centroid weight
            + instantiation of centroid\\_weight\\_not\\_on\\_edge).\<close>
-        show "phi_fn p \<noteq> edge_pt_w j s"
-          sorry
+        \<comment> \<open>Step 1: phi\\_fn(p) has a known affine form in sector jp.\<close>
+        from hphi_affine_on_sector[rule_format, OF hjp hp hin_sec]
+        have hphi_form: "phi_fn (fst p, snd p) = (let ex = vxe(jp+2)-vxe 1; ey = vye(jp+2)-vye 1;
+            fx = vxe ?si_jp2-vxe 1; fy = vye ?si_jp2-vye 1;
+            det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+            s' = (fy*dx-fx*dy)/det; t' = (ex*dy-ey*dx)/det
+        in ((1-s'-t')*?cxw + s'*vxw jp + t'*vxw(Suc jp mod ?nw),
+            (1-s'-t')*?cyw + s'*vyw jp + t'*vyw(Suc jp mod ?nw)))" .
+        \<comment> \<open>Step 2: compute Cramer coordinates and show centroid weight > 0.\<close>
+        define ex_p where "ex_p = vxe(jp+2)-vxe 1"
+        define ey_p where "ey_p = vye(jp+2)-vye 1"
+        define fx_p where "fx_p = vxe ?si_jp2-vxe 1"
+        define fy_p where "fy_p = vye ?si_jp2-vye 1"
+        define dx_p where "dx_p = fst p-vxe 1"
+        define dy_p where "dy_p = snd p-vye 1"
+        define det_p where "det_p = ex_p*fy_p-ey_p*fx_p"
+        define s_p where "s_p = (fy_p*dx_p-fx_p*dy_p)/det_p"
+        define t_p where "t_p = (ex_p*dy_p-ey_p*dx_p)/det_p"
+        have hdet_p_pos: "det_p > 0" using hdet_jp_pos
+          unfolding det_p_def ex_p_def ey_p_def fx_p_def fy_p_def by simp
+        have hdet_p_ne: "det_p \<noteq> 0" using hdet_p_pos by linarith
+        \<comment> \<open>hedge\\_pos = (1-s\\_p-t\\_p)*det\\_p (algebraic identity, proved for target fan in hec\\_eq).\<close>
+        \<comment> \<open>s\\_p*det\\_p = fy\\_p*dx\\_p-fx\\_p*dy\\_p, t\\_p*det\\_p = ex\\_p*dy\\_p-ey\\_p*dx\\_p.\<close>
+        have hs_p_mul: "s_p*det_p = fy_p*dx_p-fx_p*dy_p"
+          unfolding s_p_def using hdet_p_ne by simp
+        have ht_p_mul: "t_p*det_p = ex_p*dy_p-ey_p*dx_p"
+          unfolding t_p_def using hdet_p_ne by simp
+        have hweight_identity: "(1-s_p-t_p)*det_p = (fx_p-ex_p)*(dy_p-ey_p) - (fy_p-ey_p)*(dx_p-ex_p)"
+        proof -
+          have h1: "(1-s_p-t_p)*det_p = det_p - s_p*det_p - t_p*det_p" by (by100 algebra)
+          have h2: "det_p - (fy_p*dx_p-fx_p*dy_p) - (ex_p*dy_p-ey_p*dx_p)
+              = (fx_p-ex_p)*(dy_p-ey_p) - (fy_p-ey_p)*(dx_p-ex_p)"
+            unfolding det_p_def by (by5000 algebra)
+          from h1 hs_p_mul ht_p_mul h2 show ?thesis by linarith
+        qed
+        \<comment> \<open>RHS = hedge\\_pos (change of basis).\<close>
+        have hRHS_eq: "(fx_p-ex_p)*(dy_p-ey_p) - (fy_p-ey_p)*(dx_p-ex_p)
+            = (vxe ?si_jp2 - vxe(jp+2))*(snd p - vye(jp+2)) - (vye ?si_jp2 - vye(jp+2))*(fst p - vxe(jp+2))"
+          unfolding fx_p_def ex_p_def fy_p_def ey_p_def dx_p_def dy_p_def by (by5000 algebra)
+        have halpha_pos: "1-s_p-t_p > 0"
+        proof -
+          from hweight_identity hRHS_eq hedge_pos
+          have hprod_pos: "(1-s_p-t_p)*det_p > 0" by linarith
+          show ?thesis
+          proof (rule ccontr)
+            assume "\<not> 1 - s_p - t_p > 0"
+            hence "1 - s_p - t_p \<le> 0" by linarith
+            hence "(1-s_p-t_p)*det_p \<le> 0"
+              using hdet_p_pos mult_nonpos_nonneg[of "1-s_p-t_p" det_p] by linarith
+            with hprod_pos show False by linarith
+          qed
+        qed
+        \<comment> \<open>Step 3: phi\\_fn(p) = (1-s\\_p-t\\_p)*cw + s\\_p*u\\_{jp} + t\\_p*u\\_{jp+1}.\<close>
+        have hphi_x: "fst (phi_fn p) = (1-s_p-t_p)*?cxw + s_p*vxw jp + t_p*vxw(Suc jp mod ?nw)"
+          using hphi_form unfolding Let_def s_p_def t_p_def det_p_def
+            ex_p_def ey_p_def fx_p_def fy_p_def dx_p_def dy_p_def by simp
+        have hphi_y: "snd (phi_fn p) = (1-s_p-t_p)*?cyw + s_p*vyw jp + t_p*vyw(Suc jp mod ?nw)"
+          using hphi_form unfolding Let_def s_p_def t_p_def det_p_def
+            ex_p_def ey_p_def fx_p_def fy_p_def dx_p_def dy_p_def by simp
+        \<comment> \<open>Step 4: s\\_p \\<ge> 0 and t\\_p \\<ge> 0 (from in\\_sector + Cramer).\<close>
+        \<comment> \<open>s\\_p \\<ge> 0 from cross\\_v1(si, p) \\<le> 0: s\\_p*det = -(cross\\_v1(si,p)) \\<ge> 0.\<close>
+        have hs_p_ge: "s_p \<ge> 0"
+        proof -
+          from hin_sec have "cross_v1 ?si_jp2 p \<le> 0" unfolding in_sector_def by auto
+          have "fy_p*dx_p - fx_p*dy_p = -(cross_v1 ?si_jp2 p)"
+            unfolding cross_v1_def fx_p_def fy_p_def dx_p_def dy_p_def by (by5000 algebra)
+          hence hsp_det: "s_p*det_p \<ge> 0" using hs_p_mul \<open>cross_v1 ?si_jp2 p \<le> 0\<close> by linarith
+          show ?thesis
+          proof (rule ccontr)
+            assume "\<not> s_p \<ge> 0"
+            hence "s_p < 0" by linarith
+            hence "s_p*det_p < 0" using hdet_p_pos mult_neg_pos by (by100 blast)
+            with hsp_det show False by linarith
+          qed
+        qed
+        have ht_p_ge: "t_p \<ge> 0"
+        proof -
+          from hin_sec have "cross_v1 (jp+2) p \<ge> 0" unfolding in_sector_def by auto
+          have "ex_p*dy_p - ey_p*dx_p = cross_v1 (jp+2) p"
+            unfolding cross_v1_def ex_p_def ey_p_def dx_p_def dy_p_def by (by100 simp)
+          hence htp_det: "t_p*det_p \<ge> 0" using ht_p_mul \<open>cross_v1 (jp+2) p \<ge> 0\<close> by linarith
+          show ?thesis
+          proof (rule ccontr)
+            assume "\<not> t_p \<ge> 0"
+            hence "t_p < 0" by linarith
+            hence "t_p*det_p < 0" using hdet_p_pos mult_neg_pos by (by100 blast)
+            with htp_det show False by linarith
+          qed
+        qed
+        have habg: "(1-s_p-t_p) + s_p + t_p = 1" by linarith
+        \<comment> \<open>Step 5: edge point has specific form.\<close>
+        have hedge_x: "fst (edge_pt_w j s) = (1-s)*vxw j + s*vxw(Suc j mod ?nw)"
+          unfolding edge_pt_w_def by simp
+        have hedge_y: "snd (edge_pt_w j s) = (1-s)*vyw j + s*vyw(Suc j mod ?nw)"
+          unfolding edge_pt_w_def by simp
+        \<comment> \<open>Step 6: expand hC10\\_w and hC11\\_w to match centroid\\_weight\\_not\\_on\\_edge format.\<close>
+        have hC10_expanded: "\<forall>i<?nw. (vxw i - ?cxw) * (vyw(Suc i mod ?nw) - ?cyw) -
+            (vyw i - ?cyw) * (vxw(Suc i mod ?nw) - ?cxw) > 0"
+          using hC10_w by (by100 simp)
+        from centroid_weight_not_on_edge[OF hlen hC10_expanded hC11_w hjp halpha_pos hs_p_ge ht_p_ge habg
+            hphi_x hphi_y hj hedge_x hedge_y]
+        show "phi_fn p \<noteq> edge_pt_w j s" .
       qed
       have prop12: "\<forall>t\<in>I_set. \<forall>p\<in>P_e.
           (\<forall>i<?ne. \<forall>s\<in>I_set. p \<noteq> edge_pt_e i s) \<longrightarrow>
