@@ -1686,6 +1686,83 @@ lemma frac_eq_from_cross_mult:
   shows "a / b = c / d"
   using assms by (simp add: field_simps)
 
+lemma cyclic_sign_change:
+  fixes f :: "nat \<Rightarrow> real" and n :: nat
+  assumes "n \<ge> 1"
+      and "\<exists>j<n. f j > 0"
+      and "\<exists>j<n. f j < 0"
+  shows "\<exists>j<n. f j \<ge> 0 \<and> f (Suc j mod n) \<le> 0"
+proof -
+  define S where "S = {j. j < n \<and> f j \<ge> 0}"
+  from assms(2) have "S \<noteq> {}" unfolding S_def by auto
+  from assms(3) have hcompl: "{..<n} - S \<noteq> {}" unfolding S_def by auto
+  have hS_sub: "S \<subseteq> {..<n}" unfolding S_def by auto
+  show ?thesis
+  proof (cases "\<exists>j\<in>S. Suc j mod n \<notin> S")
+    case True
+    then obtain j where "j \<in> S" "Suc j mod n \<notin> S" by auto
+    from \<open>j \<in> S\<close> have "j < n" "f j \<ge> 0" unfolding S_def by auto
+    from \<open>Suc j mod n \<notin> S\<close> have "f (Suc j mod n) < 0"
+    proof -
+      assume "Suc j mod n \<notin> S"
+      hence "\<not>(Suc j mod n < n \<and> f (Suc j mod n) \<ge> 0)" unfolding S_def by auto
+      moreover have "Suc j mod n < n" using assms(1) by simp
+      ultimately show ?thesis by linarith
+    qed
+    from \<open>j < n\<close> \<open>f j \<ge> 0\<close> \<open>f (Suc j mod n) < 0\<close> show ?thesis by (intro exI[of _ j]) auto
+  next
+    case False
+    hence hclosed: "\<forall>j\<in>S. Suc j mod n \<in> S" by auto
+    \<comment> \<open>S is closed under Suc mod n and nonempty, so S = {..<n}.\<close>
+    have "S = {..<n}"
+    proof -
+      from \<open>S \<noteq> {}\<close> obtain j0 where "j0 \<in> S" by auto
+      hence "j0 < n" unfolding S_def by auto
+      \<comment> \<open>Show: for all k < n, (j0 + k) mod n \\<in> S by induction on k.\<close>
+      have "\<forall>k. (j0 + k) mod n \<in> S"
+      proof
+        fix k show "(j0 + k) mod n \<in> S"
+        proof (induct k)
+          case 0
+          have "(j0 + 0) mod n = j0 mod n" by simp
+          also have "\<dots> = j0" using \<open>j0 < n\<close> by simp
+          finally show ?case using \<open>j0 \<in> S\<close> by simp
+        next
+          case (Suc k)
+          hence hIH: "(j0 + k) mod n \<in> S" .
+          have "(j0 + Suc k) mod n = Suc ((j0 + k) mod n) mod n"
+            using mod_Suc_eq by (by100 simp)
+          from hclosed[rule_format, OF hIH] have "Suc ((j0 + k) mod n) mod n \<in> S" .
+          thus ?case using \<open>(j0 + Suc k) mod n = Suc ((j0 + k) mod n) mod n\<close> by simp
+        qed
+      qed
+      hence "\<forall>j<n. j \<in> S"
+      proof -
+        assume h: "\<forall>k. (j0 + k) mod n \<in> S"
+        show "\<forall>j<n. j \<in> S"
+        proof (intro allI impI)
+          fix j assume hj: "j < n"
+          \<comment> \<open>k = (j - j0 + n) mod n gives (j0+k) mod n = j.\<close>
+          define k where "k = (j + n - j0) mod n"
+          have "j0 + k = j0 + ((j + n - j0) mod n)" unfolding k_def by simp
+          \<comment> \<open>j + n - j0 \\<ge> 0 since j \\<ge> 0 and n > j0.\<close>
+          have hjn: "j + n \<ge> j0" using \<open>j0 < n\<close> by linarith
+          have "(j0 + (j + n - j0) mod n) mod n = (j0 + (j + n - j0)) mod n"
+            by (simp add: mod_add_right_eq)
+          also have "j0 + (j + n - j0) = j + n" using hjn by linarith
+          also have "(j + n) mod n = j mod n" by simp
+          also have "\<dots> = j" using hj by simp
+          finally have "(j0 + k) mod n = j" unfolding k_def .
+          from h[rule_format, of k] this show "j \<in> S" by simp
+        qed
+      qed
+      with hS_sub show "S = {..<n}" by auto
+    qed
+    hence "{..<n} - S = {}" by simp
+    with hcompl show ?thesis by simp
+  qed
+qed
+
 lemma spur_collapse_cancel_homeo:
   fixes w :: "(nat \<times> bool) list" and a :: "nat \<times> bool"
   assumes hlen: "length w \<ge> 3"
@@ -4949,7 +5026,7 @@ proof -
             \<comment> \<open>The predecessor (j2-1) mod nw either has cross\\_cw \\<ge> 0 (done) or < 0 (continue).
                Since there exists j1 with cross\\_cw > 0, we must find one within nw steps.\<close>
             have "\<exists>j<?nw. cross_cw j q \<ge> 0 \<and> cross_cw (Suc j mod ?nw) q \<le> 0"
-              sorry \<comment> \<open>Finite cyclic walk from positive to negative element.\<close>
+              by (rule cyclic_sign_change[OF _ hhas_pos hhas_neg]) (use hnw_pos in linarith)
             thus ?thesis unfolding in_tsector_def by auto
           qed
           \<comment> \<open>Convert sector membership to barycentric coordinates.\<close>
