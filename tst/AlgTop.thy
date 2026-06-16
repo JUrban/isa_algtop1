@@ -4779,12 +4779,49 @@ proof -
                 using hsw_mul hdetw_eq unfolding dxw_val_def dyw_val_def fx_val_def fy_val_def by simp
               have htw_m: "tw*detw_val = ex_val*dyw_val-ey_val*dxw_val"
                 using htw_mul hdetw_eq unfolding dxw_val_def dyw_val_def ex_val_def ey_val_def by simp
-              \<comment> \<open>sw+tw \\<le> 1 follows from q being on the cw-side of edge u\\_j->u\\_{j+1}.
-                 The edge cross product for q in P\\_w at vertices j,j+1 gives the sign condition.
-                 This uses hC11\\_w (all non-adjacent vertices are strictly interior to each edge)
-                 and convex combination representation of q.\<close>
-              have "(1-sw-tw)*detw_val \<ge> 0"
-                sorry
+              \<comment> \<open>(1-sw-tw)*D = det(u\\_{jw+1}-u\\_jw, q-u\\_jw) \\<ge> 0 by C11 + convexity.\<close>
+              \<comment> \<open>Fact: for all k, det(u\\_{jw+1}-u\\_jw, u\\_k-u\\_jw) \\<ge> 0.\<close>
+              have hec_vertex: "\<forall>k<?nw. (vxw(Suc jw mod ?nw)-vxw jw)*(vyw k-vyw jw)-
+                  (vyw(Suc jw mod ?nw)-vyw jw)*(vxw k-vxw jw) \<ge> 0"
+              proof (intro allI impI)
+                fix k assume hk: "k < ?nw"
+                show "(vxw(Suc jw mod ?nw)-vxw jw)*(vyw k-vyw jw)-
+                    (vyw(Suc jw mod ?nw)-vyw jw)*(vxw k-vxw jw) \<ge> 0"
+                proof (cases "k = jw \<or> k = Suc jw mod ?nw")
+                  case True thus ?thesis by (elim disjE) simp_all
+                next
+                  case False hence "k \<noteq> jw" "k \<noteq> Suc jw mod ?nw" by auto
+                  \<comment> \<open>C11: det(u\\_k-u\\_jw, u\\_{jw+1}-u\\_jw) < 0.
+                     So det(u\\_{jw+1}-u\\_jw, u\\_k-u\\_jw) = -det(u\\_k-u\\_jw, u\\_{jw+1}-u\\_jw) > 0.\<close>
+                  from hC11_w[rule_format, OF hjw hk \<open>k \<noteq> jw\<close> \<open>k \<noteq> Suc jw mod ?nw\<close>]
+                  have hC11_inst: "(vxw k-vxw jw)*(vyw(Suc jw mod ?nw)-vyw jw)-
+                      (vyw k-vyw jw)*(vxw(Suc jw mod ?nw)-vxw jw) < 0" .
+                  \<comment> \<open>Negation: det(B-A, C-A) = -det(C-A, B-A).\<close>
+                  let ?ax = "vxw jw" and ?ay = "vyw jw"
+                  let ?bx = "vxw(Suc jw mod ?nw)" and ?by' = "vyw(Suc jw mod ?nw)"
+                  let ?kx = "vxw k" and ?ky = "vyw k"
+                  have "(?bx-?ax)*(?ky-?ay)-(?by'-?ay)*(?kx-?ax) =
+                      -((?kx-?ax)*(?by'-?ay)-(?ky-?ay)*(?bx-?ax))" by (by5000 algebra)
+                  hence "(vxw(Suc jw mod ?nw)-vxw jw)*(vyw k-vyw jw)-
+                      (vyw(Suc jw mod ?nw)-vyw jw)*(vxw k-vxw jw) > 0"
+                    using hC11_inst by linarith
+                  thus ?thesis by linarith
+                qed
+              qed
+              \<comment> \<open>ec(q) = \\<Sum> \\<mu>\\_k * ec(u\\_k) \\<ge> 0.\<close>
+              from hq obtain coeffs_w where hcw_c: "(\<forall>i<?nw. coeffs_w i \<ge> 0)"
+                "(\<Sum>i<?nw. coeffs_w i) = 1" "fst q = (\<Sum>i<?nw. coeffs_w i * vxw i)"
+                "snd q = (\<Sum>i<?nw. coeffs_w i * vyw i)"
+                using hC5_w by (by100 auto)
+              have hec_q: "(vxw(Suc jw mod ?nw)-vxw jw)*(snd q-vyw jw)-
+                  (vyw(Suc jw mod ?nw)-vyw jw)*(fst q-vxw jw) \<ge> 0"
+                sorry \<comment> \<open>Linearity: ec(q) = \\<Sum> \\<mu>\\_k * ec(u\\_k), each term \\<ge> 0.\<close>
+              \<comment> \<open>Show (1-sw-tw)*detw\\_val = ec(q).\<close>
+              have hec_eq: "(1-sw-tw)*detw_val =
+                  (vxw(Suc jw mod ?nw)-vxw jw)*(snd q-vyw jw)-
+                  (vyw(Suc jw mod ?nw)-vyw jw)*(fst q-vxw jw)"
+                sorry \<comment> \<open>Algebraic identity: ec(q) = (1-sw-tw)*D.\<close>
+              have "(1-sw-tw)*detw_val \<ge> 0" using hec_eq hec_q by linarith
               hence "1 - sw - tw \<ge> 0"
               proof -
                 assume h: "0 \<le> (1 - sw - tw) * detw_val"
