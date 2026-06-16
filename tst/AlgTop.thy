@@ -1740,7 +1740,23 @@ proof -
       have hC10_j: "(vxw j_sec-cxw)*(vyw 0-cyw)-(vyw j_sec-cyw)*(vxw 0-cxw) > 0" by simp
       \<comment> \<open>Identity: det(A-B,C-B) = det(B-C,A-C). Here A=u\\_j, B=u\\_0, C=cw.\<close>
       have hdet_ne: "ujx*cwy - ujy*cwx \<noteq> 0"
-        sorry \<comment> \<open>From C10 + correct identity det(A-B,C-B)=det(B-C,A-C). algebra\\_simps fails on generic index.\<close>
+      proof -
+        \<comment> \<open>Use cross\\_product\\_cyclic: det(uj-u0, cw-u0) = det(u0-cw, uj-cw) = -C10.\<close>
+        have hcross: "(vxw j_sec-vxw 0)*(cyw-vyw 0)-(vyw j_sec-vyw 0)*(cxw-vxw 0)
+            = (vxw 0-cxw)*(vyw j_sec-cyw)-(vyw 0-cyw)*(vxw j_sec-cxw)"
+          by (rule cross_product_cyclic)
+        have hneg_C10: "(vxw 0-cxw)*(vyw j_sec-cyw)-(vyw 0-cyw)*(vxw j_sec-cxw)
+            = -(((vxw j_sec-cxw)*(vyw 0-cyw)-(vyw j_sec-cyw)*(vxw 0-cxw)))"
+          by (by100 algebra)
+        have h_unfold: "ujx*cwy - ujy*cwx = (vxw j_sec-vxw 0)*(cyw-vyw 0)-(vyw j_sec-vyw 0)*(cxw-vxw 0)"
+          unfolding ujx_def ujy_def cwx_def cwy_def by simp
+        from h_unfold hcross have h_eq_neg: "ujx*cwy - ujy*cwx =
+            (vxw 0-cxw)*(vyw j_sec-cyw)-(vyw 0-cyw)*(vxw j_sec-cxw)" by linarith
+        from hneg_C10 have h_neg: "(vxw 0-cxw)*(vyw j_sec-cyw)-(vyw 0-cyw)*(vxw j_sec-cxw) < 0"
+          using hC10_j by linarith
+        from h_eq_neg h_neg have "ujx*cwy - ujy*cwx < 0" by linarith
+        thus ?thesis by linarith
+      qed
       from hs_det hdet_ne have "s_v = 0" by simp
       with True show ?thesis by auto
     next
