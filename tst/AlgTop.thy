@@ -1704,7 +1704,11 @@ proof (cases "jp = jp'")
          s = (fy_v*dx-fx_v*dy)/det; t = (ex_v*dy-ey_v*dx)/det
      in ((1-s-t)*cxw + s*vxw jp + t*vxw(Suc jp mod nw),
          (1-s-t)*cyw + s*vyw jp + t*vyw(Suc jp mod nw)))"
-    sorry \<comment> \<open>From hphi\\_eq with jp=jp': same sector on both sides.\<close>
+  proof -
+    from hphi_eq[unfolded Let_def] True
+    show ?thesis unfolding Let_def
+      ex_v_def ey_v_def fx_v_def fy_v_def by simp
+  qed
   \<comment> \<open>Extract x and y coords from the pair.\<close>
   define s1 where "s1 = (fy_v*(fst p-vxe 1)-fx_v*(snd p-vye 1))/(ex_v*fy_v-ey_v*fx_v)"
   define t1 where "t1 = (ex_v*(snd p-vye 1)-ey_v*(fst p-vxe 1))/(ex_v*fy_v-ey_v*fx_v)"
