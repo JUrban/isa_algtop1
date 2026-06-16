@@ -1691,17 +1691,38 @@ proof -
     from hy3 True have "t_v*(vyw(Suc 0 mod nw) - vyw 0) + (\<alpha>-r)*(cyw - vyw 0) = 0" by simp
     \<comment> \<open>This is a 2x2 system in (t\\_v, \\<alpha>-r). We need to show t\\_v = 0.
        The det is det(u\\_1-u\\_0, cw-u\\_0). From C10, this is \\<noteq> 0.\<close>
-    show ?thesis using True sorry
+    \<comment> \<open>j=0: Cramer on t\\_v*(u\\_1-u\\_0) + (\\<alpha>-r)*(cw-u\\_0) = 0.\<close>
+    have h1mod: "Suc 0 mod nw = 1" using hnw by simp
+    from hx3[unfolded True] h1mod have hx0: "t_v*(vxw 1 - vxw 0) + (\<alpha>-r)*(cxw - vxw 0) = 0" by simp
+    from hy3[unfolded True] h1mod have hy0: "t_v*(vyw 1 - vyw 0) + (\<alpha>-r)*(cyw - vyw 0) = 0" by simp
+    define u1x where "u1x = vxw 1 - vxw 0"
+    define u1y where "u1y = vyw 1 - vyw 0"
+    define cwx where "cwx = cxw - vxw 0"
+    define cwy where "cwy = cyw - vyw 0"
+    define ar where "ar = \<alpha> - r"
+    have h1: "t_v*u1x + ar*cwx = 0" using hx0 unfolding u1x_def cwx_def ar_def by linarith
+    have h2: "t_v*u1y + ar*cwy = 0" using hy0 unfolding u1y_def cwy_def ar_def by linarith
+    have "t_v*(u1x*cwy - u1y*cwx) = (t_v*u1x)*cwy - (t_v*u1y)*cwx" by (by100 algebra)
+    also have "(t_v*u1x) = -(ar*cwx)" using h1 by linarith
+    also have "(t_v*u1y) = -(ar*cwy)" using h2 by linarith
+    finally have "t_v*(u1x*cwy - u1y*cwx) = -(ar*cwx)*cwy - (-(ar*cwy))*cwx" by simp
+    hence ht_det: "t_v*(u1x*cwy - u1y*cwx) = 0" by (by100 algebra)
+    from hC10[rule_format, of 0] hnw h1mod
+    have hC10_0: "(vxw 0-cxw)*(vyw 1-cyw)-(vyw 0-cyw)*(vxw 1-cxw) > 0" by simp
+    have "u1x*cwy - u1y*cwx \<noteq> 0"
+      sorry \<comment> \<open>Algebraic identity: det(u\\_1-u\\_0, cw-u\\_0) = det(u\\_0-cw, u\\_1-cw) > 0 from C10.\<close>
+    from ht_det this have "t_v = 0" by simp
+    with True show ?thesis by auto
   next
-    case False
+    case False note hj_ne0 = this
     show ?thesis
     proof (cases "Suc j_sec mod nw = 0")
       case True
-      \<comment> \<open>u\\_{j+1} = u\\_0, so s*(u\\_j - u\\_0) + t*(0) + (\\<alpha>-r)*(cw-u\\_0) = 0.\<close>
+      \<comment> \<open>j+1=0: symmetric Cramer argument. s\\_v = 0.\<close>
       show ?thesis using True sorry
     next
       case False
-      \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: eliminate (\\<alpha>-r) from hx3,hy3, apply nonneg\\_combo\\_independent\\_zero.\<close>
+      \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: eliminate (\\<alpha>-r) gives s*A + t*B = 0 with A,B > 0 from C10.\<close>
       show ?thesis sorry
     qed
   qed
