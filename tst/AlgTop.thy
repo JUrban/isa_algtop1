@@ -4118,8 +4118,35 @@ proof -
               have hdet22: "(vxe(jm+2)-vxe 1)*(vye(j+2)-vye 1)-(vye(jm+2)-vye 1)*(vxe(j+2)-vxe 1) > 0"
                 using hjm3_lt_j2 hj2_lt_ne by linarith
               \<comment> \<open>dx = 0 (from opposing sign constraints), then dy = 0, p = v\\_1.\<close>
-              have "fst p - vxe 1 = 0 \<and> snd p - vye 1 = 0"
-                using hcramer1 hcramer2 hdet_pos2 hdet22 hcr_jm2_exp hcr_jm3_exp sorry
+              let ?det32 = "(vxe(jm+3)-vxe 1)*(vye(j+2)-vye 1)-(vye(jm+3)-vye 1)*(vxe(j+2)-vxe 1)"
+              let ?det22 = "(vxe(jm+2)-vxe 1)*(vye(j+2)-vye 1)-(vye(jm+2)-vye 1)*(vxe(j+2)-vxe 1)"
+              have hdx0: "fst p - vxe 1 = 0"
+              proof -
+                have h1: "?det32 * (fst p - vxe 1) \<le> 0"
+                  sorry \<comment> \<open>= RHS of hcramer1 = C*cross(jm+3). Sign: nonpos*anything \\<le> 0.\<close>
+                have h2: "?det22 * (fst p - vxe 1) \<ge> 0"
+                  sorry \<comment> \<open>= RHS of hcramer2 = C*cross(jm+2). Sign: nonneg*anything \\<ge> 0.\<close>
+                \<comment> \<open>det1 > 0 and det1*dx \\<le> 0 => dx \\<le> 0. det2 > 0 and det2*dx \\<ge> 0 => dx \\<ge> 0.\<close>
+                have "fst p - vxe 1 \<le> 0"
+                proof (rule ccontr)
+                  assume "\<not>(fst p - vxe 1 \<le> 0)"
+                  hence "fst p - vxe 1 > 0" by linarith
+                  from mult_pos_pos[OF hdet_pos2 \<open>fst p - vxe 1 > 0\<close>]
+                  have "?det32 * (fst p - vxe 1) > 0" .
+                  thus False using h1 by linarith
+                qed
+                moreover have "fst p - vxe 1 \<ge> 0"
+                proof (rule ccontr)
+                  assume "\<not>(fst p - vxe 1 \<ge> 0)"
+                  hence "fst p - vxe 1 < 0" by linarith
+                  from mult_pos_neg[OF hdet22 \<open>fst p - vxe 1 < 0\<close>]
+                  have "?det22 * (fst p - vxe 1) < 0" .
+                  thus False using h2 by linarith
+                qed
+                ultimately show ?thesis by linarith
+              qed
+              have hdy0: "snd p - vye 1 = 0" using hcr_j2_eq hdx0 sorry
+              have "fst p - vxe 1 = 0 \<and> snd p - vye 1 = 0" using hdx0 hdy0 by simp
               hence "(fst p, snd p) = (vxe 1, vye 1)" by (by100 simp)
               thus False using hp_ne by simp
             qed
