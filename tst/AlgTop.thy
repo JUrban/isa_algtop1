@@ -4361,36 +4361,52 @@ proof -
               finally show ?thesis by simp
             qed
             \<comment> \<open>Step 5: t\\_{jm} = s\\_j (both = \\<lambda> on the ray).\<close>
-            have ht_jm_eq_s_j: "phi_t2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy =
-              phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy"
-              sorry \<comment> \<open>Both numerators reduce to det*\\<lambda> on ray cross(j+2)=0. Algebra.\<close>
-            \<comment> \<open>Step 6: Assemble using hphi\\_fn\\_decomp for both sectors.\<close>
-            show ?thesis
-            proof -
-              \<comment> \<open>Use hphi\\_fn\\_decomp for sector jm to get phi\\_s2/phi\\_t2 form.\<close>
-              have hjm_least2: "(LEAST j'. j' < ?nw \<and> in_sector j' (fst p, snd p)) = jm"
-                unfolding jm_def by simp
-              from hphi_fn_decomp[OF hp_ne hjm_least2]
-              have hphi_decomp_jm: "phi_fn (fst p, snd p) =
-                ((1 - phi_s2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy
-                   - phi_t2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy)*?cxw
-                + phi_s2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy*vxw jm
-                + phi_t2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy*vxw(Suc jm mod ?nw),
-                (1 - phi_s2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy
-                   - phi_t2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy)*?cyw
-                + phi_s2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy*vyw jm
-                + phi_t2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy*vyw(Suc jm mod ?nw))"
-                by simp
-              \<comment> \<open>Substitute s\\_{jm}=0 and Suc(jm+2) mod ne = j+2 and Suc jm mod nw = j.\<close>
-              hence hphi_simplified: "phi_fn (fst p, snd p) =
-                ((1 - phi_t2 (jm+2) (j+2) ?dx ?dy)*?cxw
-                + phi_t2 (jm+2) (j+2) ?dx ?dy*vxw j,
-                (1 - phi_t2 (jm+2) (j+2) ?dx ?dy)*?cyw
-                + phi_t2 (jm+2) (j+2) ?dx ?dy*vyw j)"
-                using hs_jm_zero hjm3_eq hjm_suc by simp
-              \<comment> \<open>Substitute phi\\_t2 = phi\\_s2 and match with sector j formula.\<close>
-              show ?thesis using hphi_simplified ht_jm_eq_s_j ht_j_zero sorry
-            qed
+            \<comment> \<open>Step 5+6: Show phi\\_fn(p) = sector j formula directly.\<close>
+            \<comment> \<open>From hphi\\_fn\\_decomp for sector jm: phi\\_fn = decomp\\_{jm} with s\\_{jm}=0.
+               After simplification: phi\\_fn = (1-t\\_{jm})*cxw + t\\_{jm}*vxw j.
+               The sector j let-expression with t\\_j=0 gives (1-s\\_j)*cxw + s\\_j*vxw j.
+               Both t\\_{jm} and s\\_j equal \\<lambda> on the ray cross(j+2)=0.
+               So phi\\_fn matches the sector j formula.\<close>
+            have hjm_least2: "(LEAST j'. j' < ?nw \<and> in_sector j' (fst p, snd p)) = jm"
+              unfolding jm_def by simp
+            from hphi_fn_decomp[OF hp_ne hjm_least2]
+            have hphi_decomp_jm: "phi_fn (fst p, snd p) =
+              ((1 - phi_s2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy
+                 - phi_t2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy)*?cxw
+              + phi_s2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy*vxw jm
+              + phi_t2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy*vxw(Suc jm mod ?nw),
+              (1 - phi_s2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy
+                 - phi_t2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy)*?cyw
+              + phi_s2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy*vyw jm
+              + phi_t2 (jm+2) (Suc(jm+2) mod ?ne) ?dx ?dy*vyw(Suc jm mod ?nw))"
+              by simp
+            hence hphi_simplified: "phi_fn (fst p, snd p) =
+              ((1 - phi_t2 (jm+2) (j+2) ?dx ?dy)*?cxw
+              + phi_t2 (jm+2) (j+2) ?dx ?dy*vxw j,
+              (1 - phi_t2 (jm+2) (j+2) ?dx ?dy)*?cyw
+              + phi_t2 (jm+2) (j+2) ?dx ?dy*vyw j)"
+              using hs_jm_zero hjm3_eq hjm_suc by simp
+            \<comment> \<open>phi\\_t2(jm+2, j+2, dx, dy) = ((vxe(jm+2)-vxe 1)*dy-(vye(jm+2)-vye 1)*dx) / det\\_{jm}.
+               With cross(j+2)=0: C*dy = D*dx. So numerator = ex*dy-ey*dx where
+               ex=vxe(jm+2)-vxe 1, ey=vye(jm+2)-vye 1.
+               phi\\_s2(j+2, si, dx, dy) = ((vye(si)-vye 1)*dx-(vxe(si)-vxe 1)*dy) / det\\_j.
+               Both equal \\<lambda> on the ray.\<close>
+            \<comment> \<open>Goal: phi\\_fn(p) = let-expr for sector j.\<close>
+            \<comment> \<open>Strategy: show fst and snd components match separately.\<close>
+            have hgoal_x: "fst(phi_fn (fst p, snd p)) = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+                fx = vxe(Suc(j+2) mod ?ne)-vxe 1; fy = vye(Suc(j+2) mod ?ne)-vye 1;
+                det = ex*fy-ey*fx; s = (fy*?dx-fx*?dy)/det; t_par = (ex*?dy-ey*?dx)/det
+            in (1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw))"
+              using hphi_simplified ht_j_zero hcross_expand
+              unfolding phi_t2_def phi_s2_def Let_def sorry
+            have hgoal_y: "snd(phi_fn (fst p, snd p)) = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+                fx = vxe(Suc(j+2) mod ?ne)-vxe 1; fy = vye(Suc(j+2) mod ?ne)-vye 1;
+                det = ex*fy-ey*fx; s = (fy*?dx-fx*?dy)/det; t_par = (ex*?dy-ey*?dx)/det
+            in (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw))"
+              using hphi_simplified ht_j_zero hcross_expand
+              unfolding phi_t2_def phi_s2_def Let_def sorry
+            show ?thesis using hgoal_x hgoal_y
+              unfolding Let_def by (cases "phi_fn (fst p, snd p)") simp
           qed
         qed
       qed
