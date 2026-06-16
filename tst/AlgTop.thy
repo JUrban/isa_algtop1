@@ -4538,10 +4538,17 @@ proof -
           \<comment> \<open>P\\_e is compact: it's the convex hull of finitely many points.\<close>
           \<comment> \<open>Show P\\_e \\<subseteq> convex hull of vertices (from hC5\\_e definition).\<close>
           \<comment> \<open>Show convex hull \\<subseteq> P\\_e (vertices are in P\\_e by hC4\\_e, P\\_e is convex).\<close>
-          have hPe_compact: "compact P_e" sorry
-            \<comment> \<open>Need: P\\_e = convex hull {(vxe i, vye i) | i < ne}.
-               This connects hC5\\_e's sum representation to HOL-Analysis's convex hull.
-               Then finite\\_imp\\_compact\\_convex\\_hull gives compact.\<close>
+          have hPe_compact: "compact P_e"
+          proof -
+            have hne_ge1: "?ne \<ge> 1" using hlen_ext by (by100 linarith)
+            have "P_e = {(x, y). \<exists>coeffs. (\<forall>i<?ne. (coeffs i :: real) \<ge> 0) \<and> (\<Sum>i<?ne. coeffs i) = 1
+                \<and> x = (\<Sum>i<?ne. coeffs i * vxe i) \<and> y = (\<Sum>i<?ne. coeffs i * vye i)}"
+              using hC5_e by auto
+            moreover have "compact {(x, y). \<exists>coeffs. (\<forall>i<?ne. (coeffs i :: real) \<ge> 0) \<and> (\<Sum>i<?ne. coeffs i) = 1
+                \<and> x = (\<Sum>i<?ne. coeffs i * vxe i) \<and> y = (\<Sum>i<?ne. coeffs i * vye i)}"
+              by (rule convex_hull_compact_general[OF hne_ge1])
+            ultimately show ?thesis by simp
+          qed
           from compact_imp_closed[OF hPe_compact] show ?thesis .
         qed
         \<comment> \<open>The half-plane {p. cross\\_v1(j+2, p) \\<ge> 0} is closed (preimage of [0,\\<infinity>) under continuous linear).\<close>
@@ -4669,7 +4676,148 @@ proof -
            Instead: find the sector j containing q (target fan cover), then
            invert the j-th affine map: p = (1-s-t)*v\\_1 + s*v\\_{j+2} + t*v\\_{si}
            where (s,t) are barycentric coords of q in conv(centroid, u\\_j, u\\_{j+1}).\<close>
-        show "q \<in> phi_fn ` P_e" sorry
+        \<comment> \<open>Target fan cover: every q \\<in> P\\_w lies in some centroid-cone sector.
+           I.e. \\<exists> j < nw. \\<exists> s t. s \\<ge> 0 \\<and> t \\<ge> 0 \\<and> s+t \\<le> 1 \\<and>
+           q = (1-s-t)*(cxw,cyw) + s*(vxw j,vyw j) + t*(vxw(Suc j mod nw),vyw(Suc j mod nw)).
+           Proof: define cross\\_cw j q analogously to cross\\_v1.
+           The centroid is strictly interior (from hC10\\_w), so the fan from cw covers P\\_w.
+           The same discrete IVT argument as hfan\\_cover applies.\<close>
+        have htarget_fan: "\<exists>j<?nw. \<exists>s t::real. s \<ge> 0 \<and> t \<ge> 0 \<and> s + t \<le> 1 \<and>
+            fst q = (1-s-t)*?cxw + s*vxw j + t*vxw(Suc j mod ?nw) \<and>
+            snd q = (1-s-t)*?cyw + s*vyw j + t*vyw(Suc j mod ?nw)"
+          sorry
+        then obtain j s t where hj: "j < ?nw" and hs: "s \<ge> 0" and ht: "t \<ge> 0"
+            and hst: "s + t \<le> 1" and hqx: "fst q = (1-s-t)*?cxw + s*vxw j + t*vxw(Suc j mod ?nw)"
+            and hqy: "snd q = (1-s-t)*?cyw + s*vyw j + t*vyw(Suc j mod ?nw)" by blast
+        \<comment> \<open>Define preimage p using same barycentric coords in source sector j.\<close>
+        let ?si = "Suc(j+2) mod ?ne"
+        define p where "p = ((1-s-t)*vxe 1 + s*vxe(j+2) + t*vxe ?si,
+                              (1-s-t)*vye 1 + s*vye(j+2) + t*vye ?si)"
+        \<comment> \<open>p \\<in> P\\_e: it's a convex combination of vertices of P\\_e.\<close>
+        have hp_in: "p \<in> P_e"
+        proof -
+          \<comment> \<open>p is a convex combination of v\\_1, v\\_{j+2}, v\\_{si} (all vertices of P\\_e).\<close>
+          have hj2_lt: "j + 2 < ?ne" using hj hne_eq by linarith
+          have hsi_lt: "?si < ?ne" using hj2_lt by simp
+          have h1_lt: "1 < ?ne" using hlen_ext by linarith
+          \<comment> \<open>Key: j+2 \\<noteq> 1 and si \\<noteq> 1 (since j+2 \\<ge> 2 and si \\<ge> 2 or si = 0).\<close>
+          have hj2_ne1: "j + 2 \<noteq> 1" by simp
+          have hsi_ne_j2: "?si \<noteq> j + 2"
+          proof -
+            have "?ne \<ge> 3" using hlen_ext by linarith
+            hence "Suc(j+2) mod ?ne \<noteq> j+2"
+            proof (cases "Suc(j+2) < ?ne")
+              case True
+              hence "Suc(j+2) mod ?ne = Suc(j+2)" by simp
+              thus ?thesis by simp
+            next
+              case False
+              hence "Suc(j+2) \<ge> ?ne" by simp
+              moreover have "Suc(j+2) \<le> ?ne" using hj2_lt by simp
+              ultimately have "Suc(j+2) = ?ne" by simp
+              hence "Suc(j+2) mod ?ne = 0" by simp
+              moreover have "j+2 \<ge> 2" by simp
+              ultimately show ?thesis by simp
+            qed
+            thus ?thesis .
+          qed
+          \<comment> \<open>Define coefficients: 1-s-t at index 1, s at j+2, t at si, 0 elsewhere.\<close>
+          define coeffs where "coeffs i = (if i = (1::nat) then 1-s-t
+              else if i = j+2 then s else if i = ?si then t else 0)" for i
+          have hnn: "\<forall>i<?ne. coeffs i \<ge> 0"
+          proof (intro allI impI)
+            fix i assume "i < ?ne"
+            show "coeffs i \<ge> 0" unfolding coeffs_def using hs ht hst by (by100 simp)
+          qed
+          \<comment> \<open>Shared index facts for sum splitting.\<close>
+          have hfin: "finite ({..<?ne})" by simp
+          have h1_in: "1 \<in> {..<?ne}" using h1_lt by simp
+          have hj2_in: "j+2 \<in> {..<?ne}" using hj2_lt by simp
+          have hsi_in: "?si \<in> {..<?ne}" using hsi_lt by simp
+          have hsi_ne1: "?si \<noteq> (1::nat)"
+          proof -
+            have "?ne \<ge> 5" using hlen_ext hne_eq hlen by linarith
+            show ?thesis
+            proof (cases "Suc(j+2) < ?ne")
+              case True thus ?thesis by simp
+            next
+              case False
+              hence "Suc(j+2) \<ge> ?ne" by simp
+              moreover have "Suc(j+2) \<le> ?ne" using hj2_lt by simp
+              ultimately have "Suc(j+2) = ?ne" by simp
+              thus ?thesis by simp
+            qed
+          qed
+          have hj2_in2: "j+2 \<in> {..<?ne} - {1}" using hj2_in hj2_ne1 by auto
+          have hsi_in2: "?si \<in> {..<?ne} - {1} - {j+2}" using hsi_in hsi_ne1 hsi_ne_j2 by auto
+          have hsum: "(\<Sum>i<?ne. coeffs i) = 1"
+          proof -
+            have "(\<Sum>i<?ne. coeffs i) = coeffs 1 + coeffs (j+2) + coeffs ?si +
+                (\<Sum>i \<in> {..<?ne} - {1, j+2, ?si}. coeffs i)"
+            proof -
+              have s1: "(\<Sum>i<?ne. coeffs i) = coeffs 1 + (\<Sum>i \<in> {..<?ne} - {1}. coeffs i)"
+                using sum.remove[OF hfin h1_in, of coeffs] by simp
+              have s2: "(\<Sum>i \<in> {..<?ne} - {1}. coeffs i) = coeffs (j+2) + (\<Sum>i \<in> {..<?ne} - {1} - {j+2}. coeffs i)"
+                using sum.remove[of "{..<?ne} - {1}" "j+2" coeffs] hj2_in2 by simp
+              have s3: "(\<Sum>i \<in> {..<?ne} - {1} - {j+2}. coeffs i) = coeffs ?si + (\<Sum>i \<in> {..<?ne} - {1} - {j+2} - {?si}. coeffs i)"
+                using sum.remove[of "{..<?ne} - {1} - {j+2}" ?si coeffs] hsi_in2 by simp
+              have "({..<?ne} - {1} - {j+2} - {?si}) = ({..<?ne} - {1, j+2, ?si})" by auto
+              from s1 s2 s3 this show ?thesis by simp
+            qed
+            also have "(\<Sum>i \<in> {..<?ne} - {1, j+2, ?si}. coeffs i) = 0"
+              unfolding coeffs_def by (rule sum.neutral) auto
+            also have "coeffs 1 + coeffs (j+2) + coeffs ?si + 0 = (1-s-t) + s + t"
+              unfolding coeffs_def using hj2_ne1 hsi_ne_j2 hsi_ne1 by simp
+            finally show ?thesis by simp
+          qed
+          have hx: "fst p = (\<Sum>i<?ne. coeffs i * vxe i)"
+          proof -
+            have "(\<Sum>i<?ne. coeffs i * vxe i) = coeffs 1 * vxe 1 + coeffs (j+2) * vxe (j+2) +
+                coeffs ?si * vxe ?si + (\<Sum>i \<in> {..<?ne} - {1, j+2, ?si}. coeffs i * vxe i)"
+            proof -
+              have s1: "(\<Sum>i<?ne. coeffs i * vxe i) = coeffs 1 * vxe 1 + (\<Sum>i \<in> {..<?ne} - {1}. coeffs i * vxe i)"
+                using sum.remove[OF hfin h1_in, of "\<lambda>i. coeffs i * vxe i"] by simp
+              have s2: "(\<Sum>i \<in> {..<?ne} - {1}. coeffs i * vxe i) = coeffs (j+2) * vxe (j+2) + (\<Sum>i \<in> {..<?ne} - {1} - {j+2}. coeffs i * vxe i)"
+                using sum.remove[of "{..<?ne} - {1}" "j+2" "\<lambda>i. coeffs i * vxe i"] hj2_in2 by simp
+              have s3: "(\<Sum>i \<in> {..<?ne} - {1} - {j+2}. coeffs i * vxe i) = coeffs ?si * vxe ?si + (\<Sum>i \<in> {..<?ne} - {1} - {j+2} - {?si}. coeffs i * vxe i)"
+                using sum.remove[of "{..<?ne} - {1} - {j+2}" ?si "\<lambda>i. coeffs i * vxe i"] hsi_in2 by simp
+              have "({..<?ne} - {1} - {j+2} - {?si}) = ({..<?ne} - {1, j+2, ?si})" by auto
+              from s1 s2 s3 this show ?thesis by simp
+            qed
+            also have "(\<Sum>i \<in> {..<?ne} - {1, j+2, ?si}. coeffs i * vxe i) = 0"
+              unfolding coeffs_def by (rule sum.neutral) auto
+            also have "coeffs 1 * vxe 1 + coeffs (j+2) * vxe (j+2) + coeffs ?si * vxe ?si + 0
+                = (1-s-t) * vxe 1 + s * vxe (j+2) + t * vxe ?si"
+              unfolding coeffs_def using hj2_ne1 hsi_ne_j2 hsi_ne1 by simp
+            finally show ?thesis unfolding p_def by (by100 simp)
+          qed
+          have hy: "snd p = (\<Sum>i<?ne. coeffs i * vye i)"
+          proof -
+            have "(\<Sum>i<?ne. coeffs i * vye i) = coeffs 1 * vye 1 + coeffs (j+2) * vye (j+2) +
+                coeffs ?si * vye ?si + (\<Sum>i \<in> {..<?ne} - {1, j+2, ?si}. coeffs i * vye i)"
+            proof -
+              have s1: "(\<Sum>i<?ne. coeffs i * vye i) = coeffs 1 * vye 1 + (\<Sum>i \<in> {..<?ne} - {1}. coeffs i * vye i)"
+                using sum.remove[OF hfin h1_in, of "\<lambda>i. coeffs i * vye i"] by simp
+              have s2: "(\<Sum>i \<in> {..<?ne} - {1}. coeffs i * vye i) = coeffs (j+2) * vye (j+2) + (\<Sum>i \<in> {..<?ne} - {1} - {j+2}. coeffs i * vye i)"
+                using sum.remove[of "{..<?ne} - {1}" "j+2" "\<lambda>i. coeffs i * vye i"] hj2_in2 by simp
+              have s3: "(\<Sum>i \<in> {..<?ne} - {1} - {j+2}. coeffs i * vye i) = coeffs ?si * vye ?si + (\<Sum>i \<in> {..<?ne} - {1} - {j+2} - {?si}. coeffs i * vye i)"
+                using sum.remove[of "{..<?ne} - {1} - {j+2}" ?si "\<lambda>i. coeffs i * vye i"] hsi_in2 by simp
+              have "({..<?ne} - {1} - {j+2} - {?si}) = ({..<?ne} - {1, j+2, ?si})" by auto
+              from s1 s2 s3 this show ?thesis by simp
+            qed
+            also have "(\<Sum>i \<in> {..<?ne} - {1, j+2, ?si}. coeffs i * vye i) = 0"
+              unfolding coeffs_def by (rule sum.neutral) auto
+            also have "coeffs 1 * vye 1 + coeffs (j+2) * vye (j+2) + coeffs ?si * vye ?si + 0
+                = (1-s-t) * vye 1 + s * vye (j+2) + t * vye ?si"
+              unfolding coeffs_def using hj2_ne1 hsi_ne_j2 hsi_ne1 by simp
+            finally show ?thesis unfolding p_def by (by100 simp)
+          qed
+          show ?thesis unfolding hC5_e using hnn hsum hx hy by (by5000 auto)
+        qed
+        \<comment> \<open>phi\\_fn(p) = q: p is in source sector j, so phi\\_fn uses sector j affine formula.\<close>
+        have hphi_eq: "phi_fn p = q"
+          sorry
+        from hp_in hphi_eq show "q \<in> phi_fn ` P_e" by (by100 blast)
       qed
       have prop4: "\<forall>t\<in>I_set. phi_fn (edge_pt_e 0 t) = phi_fn (edge_pt_e 1 (1-t))"
       proof (intro ballI)
