@@ -3984,7 +3984,62 @@ proof -
             s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
         in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
             (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))"
-        sorry \<comment> \<open>Key: at boundary, LEAST picks j' \\<le> j but affine\\_j = affine\\_{j'}.\<close>
+      proof (intro allI impI)
+        fix j p assume hj: "j < ?nw" and hin: "in_sector j p"
+        show "phi_fn (fst p, snd p) = (let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+            fx = vxe(Suc(j+2) mod ?ne)-vxe 1; fy = vye(Suc(j+2) mod ?ne)-vye 1;
+            det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+            s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
+        in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
+            (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))"
+        proof (cases "(fst p, snd p) = (vxe 1, vye 1)")
+          case True
+          \<comment> \<open>At v\\_1: dx=0, dy=0, s=0, t=0. phi\\_fn = centroid = (1-0-0)*cxw+0+0.\<close>
+          have "phi_fn (vxe 1, vye 1) = (?cxw, ?cyw)" unfolding phi_fn_def by (by100 simp)
+          moreover have "(let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+              fx = vxe(Suc(j+2) mod ?ne)-vxe 1; fy = vye(Suc(j+2) mod ?ne)-vye 1;
+              det = ex*fy-ey*fx; dx = 0::real; dy = 0::real;
+              s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
+          in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
+              (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw))) = (?cxw, ?cyw)"
+            unfolding Let_def by (by100 simp)
+          ultimately show ?thesis using True by simp
+        next
+          case False
+          hence hp_ne: "(fst p, snd p) \<noteq> (vxe 1, vye 1)" .
+          \<comment> \<open>LEAST sector for p. Since in\\_sector j p, LEAST \\<le> j.\<close>
+          have hexist: "\<exists>j'. j' < ?nw \<and> in_sector j' (fst p, snd p)"
+            using hj hin by auto
+          define jm where "jm = (LEAST j'. j' < ?nw \<and> in_sector j' (fst p, snd p))"
+          from LeastI_ex[OF hexist]
+          have hjm: "jm < ?nw" and hinm: "in_sector jm (fst p, snd p)" unfolding jm_def by auto
+          have hjm_le: "jm \<le> j"
+            unfolding jm_def by (rule Least_le) (use hj hin in auto)
+          \<comment> \<open>phi\\_fn uses LEAST = jm.\<close>
+          have hphi_jm: "phi_fn (fst p, snd p) = (let ex = vxe(jm+2)-vxe 1; ey = vye(jm+2)-vye 1;
+              fx = vxe(Suc(jm+2) mod ?ne)-vxe 1; fy = vye(Suc(jm+2) mod ?ne)-vye 1;
+              det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+              s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
+          in ((1-s-t_par)*?cxw + s*vxw jm + t_par*vxw(Suc jm mod ?nw),
+              (1-s-t_par)*?cyw + s*vyw jm + t_par*vyw(Suc jm mod ?nw)))"
+          proof -
+            have hjm_least: "(LEAST j'. j' < ?nw \<and> in_sector j' (fst p, snd p)) = jm"
+              unfolding jm_def by simp
+            from hphi_fn_sector[OF hp_ne hjm_least]
+            show ?thesis unfolding Let_def by (by100 simp)
+          qed
+          show ?thesis
+          proof (cases "jm = j")
+            case True thus ?thesis using hphi_jm by simp
+          next
+            case False hence hjm_lt: "jm < j" using hjm_le by linarith
+            \<comment> \<open>jm < j: p is on boundary between sectors. Affine maps agree.\<close>
+            show ?thesis using hphi_jm sorry
+              \<comment> \<open>Boundary matching: affine\\_{jm}(p) = affine\\_j(p) when
+                 in\\_sector jm p AND in\\_sector j p AND jm < j.\<close>
+          qed
+        qed
+      qed
       have prop2: "top1_continuous_map_on P_e
           (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_e)
           P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) phi_fn"
