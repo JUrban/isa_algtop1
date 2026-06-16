@@ -26,12 +26,12 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-16, session 1604):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-17, session 1610):
 
 ~68 sorry word occurrences. Build ~50s.
 
 DEPENDENCY TREE FOR CANCEL CHAIN:
-  spur\\_collapse\\_cancel\\_homeo (phi construction, ~3 sorry proof commands)
+  spur\\_collapse\\_cancel\\_homeo (phi construction, ~2 sorry proof commands)
     phi\\_fn: piecewise-affine fan extension from v\\_1 to centroid(P\\_w)
     PROVED: hdet\\_general, huniq\\_lt/huniq\\_gt, hfan\\_cover,
             prop1 (range), prop2 (continuity), prop3 (surjectivity),
@@ -39,8 +39,9 @@ DEPENDENCY TREE FOR CANCEL CHAIN:
             centroid properties, sector determinants > 0,
             all edge helpers, arc-not-on-edge, hjv\\_eq,
             phi\\_s2/phi\\_t2 decomposition, cyclic\\_sign\\_change
-    REMAINING: prop10 (interior injectivity), prop11 (interior-to-interior),
-               prop10-12 (interior injectivity, int-to-int, spur\\<noteq>int)
+    REMAINING: prop10 (interior injectivity), prop12 (spur\\<noteq>int)
+    PROVED STANDALONE: cramer\\_injective, triangle\\_coords\\_injective,
+            same\\_sector\\_affine\\_injective, centroid\\_weight\\_not\\_on\\_edge
     <- front\\_cancel\\_proper\\_direct (0 sorry)
       <- front\\_cancel\\_proper (0 sorry)
       <- quotient\\_of\\_scheme\\_uncancel\\_front\\_proper (0 sorry)
@@ -1680,9 +1681,16 @@ lemma fan_affine_interior_injective:
          in ((1-s'-t')*cxw + s'*vxw ej' + t'*vxw(Suc ej' mod nw),
              (1-s'-t')*cyw + s'*vyw ej' + t'*vyw(Suc ej' mod nw)))"
   shows "p = p'"
-\<comment> \<open>Same sector: use same\\_sector\\_affine\\_injective with source det > 0 + target C10.
-   Different sector: target fan interiors are disjoint (cross product argument).\<close>
-  sorry
+proof (cases "jp = jp'")
+  case True
+  \<comment> \<open>Same sector: same\\_sector\\_affine\\_injective gives unique Cramer coords,
+     hence unique source displacements, hence p = p'.\<close>
+  show ?thesis sorry
+next
+  case False
+  \<comment> \<open>Different sector: target fan interiors are disjoint.\<close>
+  show ?thesis sorry
+qed
 
 \<comment> \<open>Standalone lemma: fan triangle interiors from a centroid are disjoint.
    If q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} with \\<alpha>,s,t > 0
