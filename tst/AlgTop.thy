@@ -1554,6 +1554,48 @@ proof -
   from ha0 \<open>b = 0\<close> show ?thesis unfolding a_def b_def by auto
 qed
 
+\<comment> \<open>Standalone lemma: an affine triangle with nonzero det has injective coordinates.
+   If (1-s-t)*C + s*A + t*B = (1-s'-t')*C + s'*A + t'*B and det(A-C, B-C) \\<noteq> 0,
+   then s = s' and t = t'.\<close>
+lemma triangle_coords_injective:
+  fixes ax ay bx by' cx cy sx tx sx' tx' :: real
+  assumes hdet: "(ax-cx)*(by'-cy)-(ay-cy)*(bx-cx) \<noteq> 0"
+      and hx: "(1-sx-tx)*cx + sx*ax + tx*bx = (1-sx'-tx')*cx + sx'*ax + tx'*bx"
+      and hy: "(1-sx-tx)*cy + sx*ay + tx*by' = (1-sx'-tx')*cy + sx'*ay + tx'*by'"
+  shows "sx = sx' \<and> tx = tx'"
+proof -
+  from hx have "(sx-sx')*(ax-cx) + (tx-tx')*(bx-cx) = 0" by (by100 algebra)
+  from hy have "(sx-sx')*(ay-cy) + (tx-tx')*(by'-cy) = 0" by (by100 algebra)
+  \<comment> \<open>2x2 system with det \\<noteq> 0 \\<Rightarrow> (sx-sx', tx-tx') = (0, 0).\<close>
+  define a where "a = sx - sx'"
+  define b where "b = tx - tx'"
+  from \<open>(sx-sx')*(ax-cx) + (tx-tx')*(bx-cx) = 0\<close> have h1: "a*(ax-cx) + b*(bx-cx) = 0"
+    unfolding a_def b_def .
+  from \<open>(sx-sx')*(ay-cy) + (tx-tx')*(by'-cy) = 0\<close> have h2: "a*(ay-cy) + b*(by'-cy) = 0"
+    unfolding a_def b_def .
+  \<comment> \<open>Cramer: a*det = 0, b*det = 0.\<close>
+  from h1 have ha_ax: "a*(ax-cx) = -(b*(bx-cx))" by linarith
+  from h2 have ha_ay: "a*(ay-cy) = -(b*(by'-cy))" by linarith
+  have "a*((ax-cx)*(by'-cy)-(ay-cy)*(bx-cx)) = (a*(ax-cx))*(by'-cy) - (a*(ay-cy))*(bx-cx)"
+    by (by100 algebra)
+  also have "\<dots> = (-(b*(bx-cx)))*(by'-cy) - (-(b*(by'-cy)))*(bx-cx)"
+    using ha_ax ha_ay by simp
+  also have "\<dots> = 0" by (by100 algebra)
+  finally have "a*((ax-cx)*(by'-cy)-(ay-cy)*(bx-cx)) = 0" .
+  hence "a = 0" using hdet by simp
+  from h1 \<open>a = 0\<close> have "b*(bx-cx) = 0" by simp
+  from h2 \<open>a = 0\<close> have "b*(by'-cy) = 0" by simp
+  have "b = 0"
+  proof (rule ccontr)
+    assume "b \<noteq> 0"
+    from \<open>b*(bx-cx) = 0\<close> \<open>b \<noteq> 0\<close> have "bx = cx" by simp
+    from \<open>b*(by'-cy) = 0\<close> \<open>b \<noteq> 0\<close> have "by' = cy" by simp
+    hence "(ax-cx)*(by'-cy)-(ay-cy)*(bx-cx) = 0" using \<open>bx = cx\<close> by simp
+    with hdet show False by simp
+  qed
+  from \<open>a = 0\<close> \<open>b = 0\<close> show ?thesis unfolding a_def b_def by auto
+qed
+
 \<comment> \<open>Standalone lemma: a point with positive centroid weight is not on any polygon edge.
    If q = \\<alpha>*cw + \\<beta>*u\\_j + \\<gamma>*u\\_{j+1} with \\<alpha> > 0 and
    the centroid satisfies C10 (strictly interior to each edge),
