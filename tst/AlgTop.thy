@@ -26,21 +26,20 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-16, session 1578):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-16, session 1604):
 
-~69 sorry word occurrences. Build ~25s.
+~68 sorry word occurrences. Build ~50s.
 
 DEPENDENCY TREE FOR CANCEL CHAIN:
-  spur\\_collapse\\_cancel\\_homeo (phi construction, ~5 sorry proof commands)
+  spur\\_collapse\\_cancel\\_homeo (phi construction, ~3 sorry proof commands)
     phi\\_fn: piecewise-affine fan extension from v\\_1 to centroid(P\\_w)
-    PROVED: hdet\\_general via regular polygon trig formula in AlgTopCached15,
-            huniq\\_lt/huniq\\_gt (sector uniqueness via cross product signs),
-            hfan\\_cover (discrete IVT + vertex linearity),
-            prop1 (range: s\\<ge>0, t\\<ge>0, s+t\\<le>1 via C11, convex hull coefficients),
+    PROVED: hdet\\_general, huniq\\_lt/huniq\\_gt, hfan\\_cover,
+            prop1 (range), prop2 (continuity), prop3 (surjectivity),
+            hphi\\_affine\\_on\\_sector (boundary matching), hPe\\_compact,
             centroid properties, sector determinants > 0,
-            all edge helpers (spur0/1, nonspur, vertices),
-            arc-not-on-edge, hjv\\_eq, phi\\_s2/phi\\_t2 decomposition
-    REMAINING: prop2 (continuity), prop3 (surjectivity),
+            all edge helpers, arc-not-on-edge, hjv\\_eq,
+            phi\\_s2/phi\\_t2 decomposition, cyclic\\_sign\\_change
+    REMAINING: prop10 (interior injectivity), prop11 (interior-to-interior),
                prop10-12 (interior injectivity, int-to-int, spur\\<noteq>int)
     <- front\\_cancel\\_proper\\_direct (0 sorry)
       <- front\\_cancel\\_proper (0 sorry)
