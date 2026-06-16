@@ -1679,24 +1679,9 @@ proof -
   thus ?thesis using \<open>(1-t)*A < 0\<close> by linarith
 qed
 
-\<comment> \<open>Fan sector ordering (expert audit 32 Step 1): if p \\<in> P is in wedge [a,a']
-   (cross(a,p)\\<ge>0, cross(a',p)\\<le>0) and b > a', then cross(b,p) \\<le> 0.
-   Uses convex combination + vertex cross product signs.\<close>
-lemma fan_wedge_later_cross_nonpos:
-  fixes vx vy :: "nat \<Rightarrow> real" and ne a a' b :: nat
-  assumes hne: "ne \<ge> 5"
-    and hC5: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<ne. coeffs i \<ge> 0) \<and> (\<Sum>i<ne. coeffs i) = 1
-                   \<and> x = (\<Sum>i<ne. coeffs i * vx i) \<and> y = (\<Sum>i<ne. coeffs i * vy i)}"
-    and hp: "p \<in> P"
-    and hdet: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < ne \<longrightarrow>
-        (vx m - vx 1) * (vy n - vy 1) - (vy m - vy 1) * (vx n - vx 1) > 0"
-    and hdet0: "\<forall>k. 2 \<le> k \<longrightarrow> k < ne \<longrightarrow>
-        (vx k - vx 1) * (vy 0 - vy 1) - (vy k - vy 1) * (vx 0 - vx 1) > 0"
-    and ha: "2 \<le> a" and ha': "a' < b" and hb: "b < ne"
-    and hcr_a: "(vx a - vx 1) * (snd p - vy 1) - (vy a - vy 1) * (fst p - vx 1) \<ge> 0"
-    and hcr_a': "(vx a' - vx 1) * (snd p - vy 1) - (vy a' - vy 1) * (fst p - vx 1) \<le> 0"
-  shows "(vx b - vx 1) * (snd p - vy 1) - (vy b - vy 1) * (fst p - vx 1) \<le> 0"
-  sorry
+\<comment> \<open>fan\\_wedge\\_later\\_cross\\_nonpos: REMOVED. The hcr\\_j2\\_le proof now uses a direct
+   sector-containment argument (multiply by det\\_{jm}, use numerator identities by algebra,
+   avoid division). This bypasses the convex-combination approach entirely.\<close>
 
 lemma spur_collapse_cancel_homeo:
   fixes w :: "(nat \<times> bool) list" and a :: "nat \<times> bool"
@@ -4096,10 +4081,54 @@ proof -
                 using hcr_le unfolding cross_v1_def by (cases p) simp
               have hne5: "?ne \<ge> 5" using hlen hne_eq by linarith
               have hjm2_ge: "(2::nat) \<le> jm + 2" by linarith
+              \<comment> \<open>Direct: multiply cross(j+2,p) by det\\_{jm} > 0, decompose via sector jm.\<close>
               have hcr_j2_le: "(vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1) \<le> 0"
-                using fan_wedge_later_cross_nonpos[OF hne5 hC5_e hp hdet_general hdet_from_v1
-                  hjm2_ge hjm3_lt_j2 hj2_lt_ne] hcr_jm2_exp hcr_jm3_exp
-                by (by100 blast)
+              proof -
+                let ?ex = "vxe(jm+2)-vxe 1" and ?ey = "vye(jm+2)-vye 1"
+                let ?fx = "vxe(jm+3)-vxe 1" and ?fy = "vye(jm+3)-vye 1"
+                let ?det = "?ex*?fy-?ey*?fx"
+                let ?dx = "fst p - vxe 1" and ?dy = "snd p - vye 1"
+                let ?sn = "?fy*?dx-?fx*?dy" and ?tn = "?ex*?dy-?ey*?dx"
+                from hdet_pos[rule_format, OF hjm]
+                have hd: "?det > 0" using hjm3_mod by (by100 simp)
+                \<comment> \<open>s\\_num \\<ge> 0 from cross(jm+3) \\<le> 0, t\\_num \\<ge> 0 from cross(jm+2) \\<ge> 0.\<close>
+                have hsn: "?sn \<ge> 0" using hcr_jm3_exp by linarith
+                have htn: "?tn \<ge> 0" using hcr_jm2_exp by linarith
+                \<comment> \<open>Algebraic identity: det * cross(j+2,p) = sn * cross(j+2,v\\_{jm+2}) + tn * cross(j+2,v\\_{jm+3}).
+                   This avoids division entirely.\<close>
+                let ?A = "vxe(j+2)-vxe 1" and ?B = "vye(j+2)-vye 1"
+                have hdecomp: "?det * (?A*?dy - ?B*?dx) = ?sn*(?A*?ey-?B*?ex) + ?tn*(?A*?fy-?B*?fx)"
+                  by (by100 algebra)
+                \<comment> \<open>cross(j+2, v\\_{jm+2}) < 0: (A*ey-B*ex) = -(ex*B-ey*A) = -det(jm+2,j+2) < 0.\<close>
+                have hjm2_lt: "jm+2 < j+2" using hjm_lt by linarith
+                from hdet_general[rule_format, of "jm+2" "j+2"]
+                have "?ex*?B-?ey*?A > 0" using hjm2_lt hj2_lt_ne by linarith
+                have "?A*?ey-?B*?ex = -(?ex*?B-?ey*?A)" by (by100 algebra)
+                hence hcv2: "?A*?ey-?B*?ex < 0" using \<open>?ex*?B-?ey*?A > 0\<close> by linarith
+                \<comment> \<open>cross(j+2, v\\_{jm+3}) < 0: same argument.\<close>
+                from hdet_general[rule_format, of "jm+3" "j+2"]
+                have "?fx*?B-?fy*?A > 0" using hjm3_lt_j2 hj2_lt_ne by linarith
+                have "?A*?fy-?B*?fx = -(?fx*?B-?fy*?A)" by (by100 algebra)
+                hence hcv3: "?A*?fy-?B*?fx < 0" using \<open>?fx*?B-?fy*?A > 0\<close> by linarith
+                \<comment> \<open>sn*(neg) \\<le> 0 and tn*(neg) \\<le> 0.\<close>
+                have hcv2_le: "?A*?ey-?B*?ex \<le> 0" using hcv2 by linarith
+                have hcv3_le: "?A*?fy-?B*?fx \<le> 0" using hcv3 by linarith
+                from mult_nonneg_nonpos[OF hsn hcv2_le]
+                have "?sn*(?A*?ey-?B*?ex) \<le> 0" .
+                moreover from mult_nonneg_nonpos[OF htn hcv3_le]
+                have "?tn*(?A*?fy-?B*?fx) \<le> 0" .
+                ultimately have "?sn*(?A*?ey-?B*?ex) + ?tn*(?A*?fy-?B*?fx) \<le> 0" by linarith
+                hence "?det * (?A*?dy - ?B*?dx) \<le> 0" using hdecomp by linarith
+                \<comment> \<open>det > 0 and det*X \\<le> 0 => X \\<le> 0.\<close>
+                show ?thesis
+                proof (rule ccontr)
+                  assume "\<not>(?A*?dy - ?B*?dx \<le> 0)"
+                  hence "?A*?dy - ?B*?dx > 0" by linarith
+                  from mult_pos_pos[OF hd this]
+                  have "?det * (?A*?dy - ?B*?dx) > 0" .
+                  with \<open>?det * (?A*?dy - ?B*?dx) \<le> 0\<close> show False by linarith
+                qed
+              qed
               \<comment> \<open>But in\\_sector j: cross(j+2,p) \\<ge> 0. So = 0.\<close>
               have hcr_j2_exp: "(vxe(j+2)-vxe 1)*(snd p-vye 1)-(vye(j+2)-vye 1)*(fst p-vxe 1) \<ge> 0"
                 using hcr_ge unfolding cross_v1_def by (cases p) simp
