@@ -1680,6 +1680,8 @@ lemma fan_affine_interior_injective:
          in ((1-s'-t')*cxw + s'*vxw ej' + t'*vxw(Suc ej' mod nw),
              (1-s'-t')*cyw + s'*vyw ej' + t'*vyw(Suc ej' mod nw)))"
   shows "p = p'"
+\<comment> \<open>Same sector: use same\\_sector\\_affine\\_injective with source det > 0 + target C10.
+   Different sector: target fan interiors are disjoint (cross product argument).\<close>
   sorry
 
 \<comment> \<open>Standalone lemma: fan triangle interiors from a centroid are disjoint.
