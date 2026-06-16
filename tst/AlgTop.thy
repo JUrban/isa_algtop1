@@ -1760,9 +1760,32 @@ proof -
       from hs_det hdet_ne have "s_v = 0" by simp
       with True show ?thesis by auto
     next
-      case False
-      \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: eliminate (\\<alpha>-r) gives s*A + t*B = 0 with A,B > 0 from C10.\<close>
-      show ?thesis sorry
+      case False note hsi_ne0 = this
+      \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: eliminate (\\<alpha>-r) by cross-multiplying hx3, hy3 with cw-u\\_0 coords.\<close>
+      define cwx where "cwx = cxw - vxw 0"
+      define cwy where "cwy = cyw - vyw 0"
+      \<comment> \<open>cwy*hx3 - cwx*hy3 eliminates the (\\<alpha>-r) term.\<close>
+      from hx3 have "cwy*(s_v*(vxw j_sec-vxw 0) + t_v*(vxw(Suc j_sec mod nw)-vxw 0) + (\<alpha>-r)*(cxw-vxw 0)) = 0"
+        by simp
+      from hy3 have "cwx*(s_v*(vyw j_sec-vyw 0) + t_v*(vyw(Suc j_sec mod nw)-vyw 0) + (\<alpha>-r)*(cyw-vyw 0)) = 0"
+        by simp
+      \<comment> \<open>After subtraction and factoring: s*det\\_j + t*det\\_k = 0
+         where det\\_j = det(u\\_j-u\\_0, cw-u\\_0) and det\\_k = det(u\\_{j+1}-u\\_0, cw-u\\_0).\<close>
+      define dj where "dj = (vxw j_sec-vxw 0)*cwy - (vyw j_sec-vyw 0)*cwx"
+      define dk where "dk = (vxw(Suc j_sec mod nw)-vxw 0)*cwy - (vyw(Suc j_sec mod nw)-vyw 0)*cwx"
+      have helim: "s_v*dj + t_v*dk = 0"
+        sorry \<comment> \<open>From cwy*hx3 - cwx*hy3 + factoring.\<close>
+      \<comment> \<open>Both dj, dk < 0 (from cross\\_product\\_cyclic + C10).\<close>
+      have hdj_neg: "dj < 0"
+        sorry \<comment> \<open>dj = -(C10 at j\\_sec) < 0 via cross\\_product\\_cyclic.\<close>
+      have hdk_neg: "dk < 0"
+        sorry \<comment> \<open>dk = -(C10 at Suc j\\_sec) < 0 via cross\\_product\\_cyclic.\<close>
+      \<comment> \<open>s*dj + t*dk = 0 with s,t \\<ge> 0 and dj,dk < 0 gives s=t=0.\<close>
+      have "s_v*dj \<le> 0" using hs hdj_neg mult_nonneg_nonpos by (by100 fastforce)
+      moreover have "t_v*dk \<le> 0" using ht hdk_neg mult_nonneg_nonpos by (by100 fastforce)
+      ultimately have "s_v*dj = 0" "t_v*dk = 0" using helim by linarith+
+      hence "s_v = 0" "t_v = 0" using hdj_neg hdk_neg by auto
+      thus ?thesis by auto
     qed
   qed
 qed
