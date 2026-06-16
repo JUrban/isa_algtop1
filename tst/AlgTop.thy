@@ -95,15 +95,10 @@ KEY PROVED INFRASTRUCTURE:
    See quotient\\_of\\_scheme\\_rotate (AlgTopCached13) for the correct cyclic version.
    The sorrys that referenced this lemma need alternative approaches:
    cut-paste operations need Munkres' 3-step cut-combine-paste (requires multi-polygon quotients).\<close>
-lemma quotient_of_scheme_edge_permutation:
-  assumes "top1_quotient_of_scheme_on Y TY s"
-      and "length s' = length s"
-      and "\<exists>\<sigma>. bij_betw \<sigma> {..<length s} {..<length s} \<and> (\<forall>i<length s. s' ! i = s ! \<sigma> i)"
-  shows "top1_quotient_of_scheme_on Y TY s'"
-proof -
-  \<comment> \<open>THIS LEMMA IS FALSE — see counterexample above. Keeping statement for dependency tracking.\<close>
-  show ?thesis sorry
-qed
+\<comment> \<open>DELETED: quotient\\_of\\_scheme\\_edge\\_permutation.
+   This was PROVABLY FALSE — counterexample: torus [a,b,a⁻¹,b⁻¹] vs sphere [a,a⁻¹,b,b⁻¹].
+   Same multiset but different quotient spaces. Only CYCLIC permutation is valid (§76 op (iv)).
+   All sorrys that depended on this need the multi-polygon approach instead.\<close>
 
 \<comment> \<open>Munkres Theorem 76.1 and multi-polygon quotients.
 
