@@ -4039,7 +4039,23 @@ proof -
                contradicting in\\_sector j p. Then cross\\_v1(j+2,p) = 0 at boundary,
                giving affine\\_{jm}(s=0) = affine\\_j(t=0) = (1-\\<lambda>)*centroid+\\<lambda>*u\\_{jm+1}.\<close>
             have hj_eq: "j = jm + 1" sorry
-            have hcross_zero: "cross_v1 (j+2) p = 0" sorry
+            have hcross_zero: "cross_v1 (j+2) p = 0"
+            proof -
+              from hinm have hle: "cross_v1 (Suc(jm+2) mod ?ne) (fst p, snd p) \<le> 0"
+                unfolding in_sector_def by auto
+              have hjm3: "Suc(jm+2) mod ?ne = jm + 3"
+              proof -
+                have "jm + 3 \<le> j + 2" using hj_eq by linarith
+                also have "\<dots> < ?ne" using hj hne_eq by linarith
+                finally show ?thesis by simp
+              qed
+              have "Suc(jm+2) mod ?ne = j + 2" using hjm3 hj_eq by linarith
+              hence "cross_v1 (j+2) (fst p, snd p) \<le> 0" using hle by simp
+              hence hle2: "cross_v1 (j+2) p \<le> 0"
+                by (cases p) simp
+              from hin have "cross_v1 (j+2) p \<ge> 0" unfolding in_sector_def by auto
+              with hle2 show ?thesis by linarith
+            qed
             show ?thesis using hphi_jm hj_eq hcross_zero sorry
           qed
         qed
