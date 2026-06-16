@@ -4470,10 +4470,34 @@ proof -
                 (1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cyw
                 + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vyw j)"
                 using ht_jm_eq_s_j hjm3_eq by simp
-              show ?thesis using hphi_s_form ht_j_zero
-                unfolding phi_s2_def phi_t2_def Let_def sorry
-                \<comment> \<open>Syntactic let-match: after unfolding, both sides are the same expression with t=0.
-                   The math is proved; this is a simp/automation limitation on large expressions.\<close>
+              \<comment> \<open>Convert goal let-expr to phi\\_s2/phi\\_t2 form (reverse of hphi\\_fn\\_decomp).\<close>
+              have hlet_to_decomp: "(let ex = vxe(j+2)-vxe 1; ey = vye(j+2)-vye 1;
+                  fx = vxe(Suc(j+2) mod ?ne)-vxe 1; fy = vye(Suc(j+2) mod ?ne)-vye 1;
+                  det = ex*fy-ey*fx; dx = fst p - vxe 1; dy = snd p - vye 1;
+                  s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
+              in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
+                  (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))
+              = ((1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy
+                 - phi_t2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cxw
+              + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vxw j
+              + phi_t2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vxw(Suc j mod ?nw),
+              (1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy
+                 - phi_t2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cyw
+              + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vyw j
+              + phi_t2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vyw(Suc j mod ?nw))"
+                unfolding phi_s2_def phi_t2_def Let_def by (by100 simp)
+              \<comment> \<open>With t\\_j=0, the decomp form = our phi\\_s form.\<close>
+              have hdecomp_simplified: "((1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy - 0)*?cxw
+              + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vxw j + 0*vxw(Suc j mod ?nw),
+              (1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy - 0)*?cyw
+              + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vyw j + 0*vyw(Suc j mod ?nw))
+              = ((1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cxw
+              + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vxw j,
+              (1 - phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy)*?cyw
+              + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vyw j)"
+                by simp
+              from hphi_s_form hlet_to_decomp ht_j_zero hdecomp_simplified
+              show ?thesis by simp
             qed
           qed
         qed
