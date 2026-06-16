@@ -4685,7 +4685,159 @@ proof -
         have htarget_fan: "\<exists>j<?nw. \<exists>s t::real. s \<ge> 0 \<and> t \<ge> 0 \<and> s + t \<le> 1 \<and>
             fst q = (1-s-t)*?cxw + s*vxw j + t*vxw(Suc j mod ?nw) \<and>
             snd q = (1-s-t)*?cyw + s*vyw j + t*vyw(Suc j mod ?nw)"
-          sorry
+        proof -
+          \<comment> \<open>Define target cross product from centroid:\<close>
+          define cross_cw where "cross_cw j q' =
+            (vxw j - ?cxw) * (snd q' - ?cyw) - (vyw j - ?cyw) * (fst q' - ?cxw)" for j q'
+          \<comment> \<open>Target sector test: q' is in centroid-cone sector j.\<close>
+          define in_tsector where "in_tsector j q' =
+            (cross_cw j q' \<ge> 0 \<and> cross_cw (Suc j mod ?nw) q' \<le> 0)" for j q'
+          \<comment> \<open>The target determinant at sector j is > 0 (from hC10\\_w).\<close>
+          have hdet_w_pos: "\<forall>j<?nw. (vxw j - ?cxw) * (vyw(Suc j mod ?nw) - ?cyw) -
+              (vyw j - ?cyw) * (vxw(Suc j mod ?nw) - ?cxw) > 0"
+          proof (intro allI impI)
+            fix j assume "j < ?nw"
+            from hC10_w[rule_format, OF this] show "(vxw j - ?cxw) * (vyw(Suc j mod ?nw) - ?cyw) -
+                (vyw j - ?cyw) * (vxw(Suc j mod ?nw) - ?cxw) > 0" by (by100 simp)
+          qed
+          \<comment> \<open>Every q \\<in> P\\_w is either the centroid or in some target sector.
+             (Discrete IVT on cross\\_cw, analogous to hfan\\_cover.)\<close>
+          have hq_cw_or_sector: "q = (?cxw, ?cyw) \<or> (\<exists>j<?nw. in_tsector j q)"
+            sorry
+          \<comment> \<open>Convert sector membership to barycentric coordinates.\<close>
+          show ?thesis
+          proof (cases "q = (?cxw, ?cyw)")
+            case True
+            \<comment> \<open>q = centroid: take j=0, s=0, t=0.\<close>
+            have "0 < ?nw" using hnw_pos .
+            moreover have "(0::real) \<ge> 0" "(0::real) \<ge> 0" "(0::real) + (0::real) \<le> 1" by auto
+            moreover have "fst q = (1-0-0)*?cxw + 0*vxw 0 + 0*vxw(Suc 0 mod ?nw)"
+              using True by simp
+            moreover have "snd q = (1-0-0)*?cyw + 0*vyw 0 + 0*vyw(Suc 0 mod ?nw)"
+              using True by simp
+            ultimately show ?thesis by (by100 blast)
+          next
+            case False
+            from hq_cw_or_sector False obtain jw where hjw: "jw < ?nw" and hin: "in_tsector jw q"
+              by blast
+            \<comment> \<open>Extract cross product signs.\<close>
+            from hin have hcross_ge: "cross_cw jw q \<ge> 0"
+              and hcross_le: "cross_cw (Suc jw mod ?nw) q \<le> 0"
+              unfolding in_tsector_def by auto
+            \<comment> \<open>Compute barycentric coords via Cramer.\<close>
+            let ?ew_x = "vxw jw - ?cxw" and ?ew_y = "vyw jw - ?cyw"
+            let ?fw_x = "vxw(Suc jw mod ?nw) - ?cxw"
+            let ?fw_y = "vyw(Suc jw mod ?nw) - ?cyw"
+            let ?detw = "?ew_x*?fw_y - ?ew_y*?fw_x"
+            have hdetw_pos: "?detw > 0"
+              using hdet_w_pos[rule_format, OF hjw] by simp
+            have hdetw_ne: "?detw \<noteq> 0" using hdetw_pos by linarith
+            let ?dxw = "fst q - ?cxw" and ?dyw = "snd q - ?cyw"
+            define sw where "sw = (?fw_y*?dxw - ?fw_x*?dyw) / ?detw"
+            define tw where "tw = (?ew_x*?dyw - ?ew_y*?dxw) / ?detw"
+            \<comment> \<open>sw = cross\\_cw(jw, q) / detw \\<ge> 0.\<close>
+            have hsw_ge: "sw \<ge> 0"
+            proof -
+              \<comment> \<open>numerator of sw = -cross\\_cw(Suc jw mod nw, q) \\<ge> 0.\<close>
+              have "?fw_y*?dxw - ?fw_x*?dyw = -(cross_cw (Suc jw mod ?nw) q)"
+                unfolding cross_cw_def by (by100 algebra)
+              hence "?fw_y*?dxw - ?fw_x*?dyw \<ge> 0" using hcross_le by linarith
+              thus ?thesis unfolding sw_def using hdetw_pos by (by100 simp)
+            qed
+            have htw_ge: "tw \<ge> 0"
+            proof -
+              \<comment> \<open>numerator of tw = cross\\_cw(jw, q) \\<ge> 0.\<close>
+              have "?ew_x*?dyw - ?ew_y*?dxw = cross_cw jw q"
+                unfolding cross_cw_def by (by100 simp)
+              hence "?ew_x*?dyw - ?ew_y*?dxw \<ge> 0" using hcross_ge by linarith
+              thus ?thesis unfolding tw_def using hdetw_pos by (by100 simp)
+            qed
+            \<comment> \<open>Cramer inverse: sw*detw = fw\\_y*dxw-fw\\_x*dyw, tw*detw = ew\\_x*dyw-ew\\_y*dxw.\<close>
+            have hsw_mul: "sw*?detw = ?fw_y*?dxw-?fw_x*?dyw"
+              unfolding sw_def using hdetw_ne by simp
+            have htw_mul: "tw*?detw = ?ew_x*?dyw-?ew_y*?dxw"
+              unfolding tw_def using hdetw_ne by simp
+            have hst_le: "sw + tw \<le> 1"
+            proof -
+              \<comment> \<open>Sufficient: (1-sw-tw)*detw \\<ge> 0. Since detw > 0, this gives 1-sw-tw \\<ge> 0.\<close>
+              \<comment> \<open>(1-sw-tw)*detw = detw - sw*detw - tw*detw
+                 = (ew\\_x*fw\\_y-ew\\_y*fw\\_x) - (fw\\_y*dxw-fw\\_x*dyw) - (ew\\_x*dyw-ew\\_y*dxw)
+                 = cross product from edge u\\_j->u\\_{j+1} at q relative to centroid.
+                 This equals det(u\\_{j+1}-u\\_j, q-u\\_j) which is non-negative for q \\<in> P\\_w
+                 by C11 and convexity.\<close>
+              \<comment> \<open>Name all values to avoid expansion of sum/div expressions.\<close>
+              define ex_val where "ex_val = ?ew_x"
+              define ey_val where "ey_val = ?ew_y"
+              define fx_val where "fx_val = ?fw_x"
+              define fy_val where "fy_val = ?fw_y"
+              define detw_val where "detw_val = ex_val*fy_val - ey_val*fx_val"
+              define dxw_val where "dxw_val = ?dxw"
+              define dyw_val where "dyw_val = ?dyw"
+              have hdetw_eq: "detw_val = ?detw" unfolding detw_val_def ex_val_def ey_val_def fx_val_def fy_val_def by simp
+              have hdetw_val_pos: "detw_val > 0" using hdetw_pos hdetw_eq by simp
+              have hsw_m: "sw*detw_val = fy_val*dxw_val-fx_val*dyw_val"
+                using hsw_mul hdetw_eq unfolding dxw_val_def dyw_val_def fx_val_def fy_val_def by simp
+              have htw_m: "tw*detw_val = ex_val*dyw_val-ey_val*dxw_val"
+                using htw_mul hdetw_eq unfolding dxw_val_def dyw_val_def ex_val_def ey_val_def by simp
+              \<comment> \<open>sw+tw \\<le> 1 follows from q being on the cw-side of edge u\\_j->u\\_{j+1}.
+                 The edge cross product for q in P\\_w at vertices j,j+1 gives the sign condition.
+                 This uses hC11\\_w (all non-adjacent vertices are strictly interior to each edge)
+                 and convex combination representation of q.\<close>
+              have "(1-sw-tw)*detw_val \<ge> 0"
+                sorry
+              hence "1 - sw - tw \<ge> 0"
+              proof -
+                assume h: "0 \<le> (1 - sw - tw) * detw_val"
+                show "1 - sw - tw \<ge> 0"
+                proof (rule ccontr)
+                  assume "\<not> (1 - sw - tw \<ge> 0)"
+                  hence "1 - sw - tw < 0" by simp
+                  hence "(1-sw-tw)*detw_val < 0"
+                    using hdetw_val_pos mult_neg_pos by (by100 blast)
+                  with h show False by linarith
+                qed
+              qed
+              thus ?thesis by linarith
+            qed
+            \<comment> \<open>Cramer inverse: dxw = sw*ew\\_x + tw*fw\\_x, dyw = sw*ew\\_y + tw*fw\\_y.\<close>
+            have hdxw_eq: "?dxw = sw*?ew_x + tw*?fw_x"
+            proof -
+              have "(sw*?ew_x + tw*?fw_x)*?detw =
+                  ?ew_x*(sw*?detw) + ?fw_x*(tw*?detw)" by (by5000 algebra)
+              also have "\<dots> = ?ew_x*(?fw_y*?dxw-?fw_x*?dyw) + ?fw_x*(?ew_x*?dyw-?ew_y*?dxw)"
+                using hsw_mul htw_mul by simp
+              also have "\<dots> = ?dxw*(?ew_x*?fw_y-?ew_y*?fw_x)" by (by5000 algebra)
+              finally have "(sw*?ew_x + tw*?fw_x)*?detw = ?dxw*?detw" by simp
+              thus ?thesis using hdetw_ne by (by100 simp)
+            qed
+            have hdyw_eq: "?dyw = sw*?ew_y + tw*?fw_y"
+            proof -
+              have "(sw*?ew_y + tw*?fw_y)*?detw =
+                  ?ew_y*(sw*?detw) + ?fw_y*(tw*?detw)" by (by5000 algebra)
+              also have "\<dots> = ?ew_y*(?fw_y*?dxw-?fw_x*?dyw) + ?fw_y*(?ew_x*?dyw-?ew_y*?dxw)"
+                using hsw_mul htw_mul by simp
+              also have "\<dots> = ?dyw*(?ew_x*?fw_y-?ew_y*?fw_x)" by (by5000 algebra)
+              finally have "(sw*?ew_y + tw*?fw_y)*?detw = ?dyw*?detw" by simp
+              thus ?thesis using hdetw_ne by (by100 simp)
+            qed
+            have hqx_eq: "fst q = (1-sw-tw)*?cxw + sw*vxw jw + tw*vxw(Suc jw mod ?nw)"
+            proof -
+              have "fst q = ?cxw + ?dxw" by simp
+              also have "?dxw = sw*(vxw jw - ?cxw) + tw*(vxw(Suc jw mod ?nw) - ?cxw)"
+                using hdxw_eq by simp
+              finally show ?thesis by (by5000 algebra)
+            qed
+            have hqy_eq: "snd q = (1-sw-tw)*?cyw + sw*vyw jw + tw*vyw(Suc jw mod ?nw)"
+            proof -
+              have "snd q = ?cyw + ?dyw" by simp
+              also have "?dyw = sw*(vyw jw - ?cyw) + tw*(vyw(Suc jw mod ?nw) - ?cyw)"
+                using hdyw_eq by simp
+              finally show ?thesis by (by5000 algebra)
+            qed
+            from hjw hsw_ge htw_ge hst_le hqx_eq hqy_eq
+            show ?thesis by (by100 blast)
+          qed
+        qed
         then obtain j s t where hj: "j < ?nw" and hs: "s \<ge> 0" and ht: "t \<ge> 0"
             and hst: "s + t \<le> 1" and hqx: "fst q = (1-s-t)*?cxw + s*vxw j + t*vxw(Suc j mod ?nw)"
             and hqy: "snd q = (1-s-t)*?cyw + s*vyw j + t*vyw(Suc j mod ?nw)" by blast
