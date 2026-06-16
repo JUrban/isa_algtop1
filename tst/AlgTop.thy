@@ -5985,39 +5985,9 @@ proof -
       qed
       have prop9: "\<forall>k<?nw. \<forall>t\<in>I_set. phi_fn (edge_pt_e (k+2) t) = edge_pt_w k t"
         using hphi_on_nonspur by (by100 blast)
-      \<comment> \<open>Interior point lemma: if p is interior (not on any edge), then
-         p \\<noteq> v\\_1 and p is in exactly one sector strictly (cross > 0 and cross < 0).
-         This gives strict barycentric coords: s > 0, t > 0, 1-s-t > 0 in the sector.\<close>
-      have hinterior_strict: "\<forall>p\<in>P_e. (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
-          p \<noteq> (vxe 1, vye 1) \<and> (\<exists>j<?nw. cross_v1 (j+2) p > 0 \<and> cross_v1 (Suc(j+2) mod ?ne) p < 0)"
-      proof (intro ballI impI conjI)
-        fix p assume hp: "p \<in> P_e" and hint: "\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t"
-        \<comment> \<open>p \\<noteq> v\\_1: v\\_1 = edge\\_pt\\_e 1 0.\<close>
-        have h1_lt: "1 < ?ne" using hlen_ext by linarith
-        have h0_I: "0 \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-        show "p \<noteq> (vxe 1, vye 1)"
-        proof
-          assume "p = (vxe 1, vye 1)"
-          have "edge_pt_e 1 0 = (vxe 1, vye 1)" unfolding edge_pt_e_def by (by100 simp)
-          hence "p = edge_pt_e 1 0" using \<open>p = (vxe 1, vye 1)\<close> by simp
-          from hint[rule_format, OF h1_lt h0_I] this show False by simp
-        qed
-        \<comment> \<open>p is in some sector j (from hfan\\_cover). Show strict inequalities.\<close>
-        from hfan_cover[rule_format, OF hp] \<open>p \<noteq> (vxe 1, vye 1)\<close>
-        obtain j where hj: "j < ?nw" and hin: "in_sector j p" by blast
-        from hin have hcross_ge: "cross_v1 (j+2) p \<ge> 0"
-            and hcross_le: "cross_v1 (Suc(j+2) mod ?ne) p \<le> 0"
-          unfolding in_sector_def by auto
-        \<comment> \<open>Show strict: if cross = 0, then p is on a fan ray = edge, contradicting hint.\<close>
-        \<comment> \<open>Strict: cross = 0 \\<Longrightarrow> p on fan ray = edge, contradicting hint.\<close>
-        have hcross_strict_pos: "cross_v1 (j+2) p > 0"
-          sorry \<comment> \<open>cross = 0 implies t = 0 in Cramer, so p on edge j+2.\<close>
-        have hcross_strict_neg: "cross_v1 (Suc(j+2) mod ?ne) p < 0"
-          sorry \<comment> \<open>cross = 0 implies s = 0 in Cramer, so p on adjacent edge.\<close>
-        from hj hcross_strict_pos hcross_strict_neg
-        show "\<exists>j<?nw. cross_v1 (j+2) p > 0 \<and> cross_v1 (Suc(j+2) mod ?ne) p < 0"
-          by blast
-      qed
+      \<comment> \<open>NOTE: hinterior\\_strict removed. Direct sector arguments used in prop10-12 instead.
+         The key insight: for interior p, the centroid weight (1-s-t) > 0 because
+         s+t=1 would put p on edge jp+2 of P\\_e, contradicting interior.\<close>
       have prop10: "\<forall>p\<in>P_e. \<forall>p'\<in>P_e.
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
           (\<forall>i<?ne. \<forall>t\<in>I_set. p' \<noteq> edge_pt_e i t) \<longrightarrow>
@@ -6031,18 +6001,29 @@ proof -
            If j = j': phi\\_fn is affine injective on sector j (det > 0).
            If j \\<noteq> j': phi\\_fn(p) is in strict interior of target sector j,
            phi\\_fn(p') is in strict interior of target sector j', and these are disjoint.\<close>
-        from hinterior_strict[rule_format, OF hp] hint_p
-        have h_strict_p: "p \<noteq> (vxe 1, vye 1) \<and> (\<exists>j<?nw. cross_v1 (j+2) p > 0 \<and>
-            cross_v1 (Suc(j+2) mod ?ne) p < 0)" by auto
-        then obtain j where hj: "j < ?nw" and hcross_pos: "cross_v1 (j+2) p > 0"
-            and hcross_neg: "cross_v1 (Suc(j+2) mod ?ne) p < 0"
-          and hp_ne_v1: "p \<noteq> (vxe 1, vye 1)" by auto
-        from hinterior_strict[rule_format, OF hp'] hint_p'
-        have h_strict_p': "p' \<noteq> (vxe 1, vye 1) \<and> (\<exists>j'<?nw. cross_v1 (j'+2) p' > 0 \<and>
-            cross_v1 (Suc(j'+2) mod ?ne) p' < 0)" by auto
-        then obtain j' where hj': "j' < ?nw" and hcross_pos': "cross_v1 (j'+2) p' > 0"
-            and hcross_neg': "cross_v1 (Suc(j'+2) mod ?ne) p' < 0"
-          and hp'_ne_v1: "p' \<noteq> (vxe 1, vye 1)" by auto
+        \<comment> \<open>p is not v\\_1 (v\\_1 = edge\\_pt\\_e 1 0), so p is in some sector.\<close>
+        have h1_lt_ne: "1 < ?ne" using hlen_ext by linarith
+        have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have hedge1: "edge_pt_e 1 0 = (vxe 1, vye 1)" unfolding edge_pt_e_def by (by100 simp)
+        have hp_ne_v1: "p \<noteq> (vxe 1, vye 1)"
+        proof
+          assume "p = (vxe 1, vye 1)"
+          hence "p = edge_pt_e 1 0" using hedge1 by simp
+          with hint_p[rule_format, OF h1_lt_ne h0_I] show False by simp
+        qed
+        from hfan_cover[rule_format, OF hp] hp_ne_v1
+        obtain jp where hjp: "jp < ?nw" and hin_p: "in_sector jp p" by blast
+        have hp'_ne_v1: "p' \<noteq> (vxe 1, vye 1)"
+        proof
+          assume "p' = (vxe 1, vye 1)"
+          hence "p' = edge_pt_e 1 0" using hedge1 by simp
+          with hint_p'[rule_format, OF h1_lt_ne h0_I] show False by simp
+        qed
+        from hfan_cover[rule_format, OF hp'] hp'_ne_v1
+        obtain jp' where hjp': "jp' < ?nw" and hin_p': "in_sector jp' p'" by blast
+        \<comment> \<open>Both p and p' are in sectors. phi\\_fn is affine-injective on each.
+           If jp = jp': injectivity from det > 0.
+           If jp \\<noteq> jp': images in disjoint target sectors.\<close>
         show "p = p'" sorry
       qed
       have prop11: "\<forall>p\<in>P_e.
@@ -6051,15 +6032,24 @@ proof -
       proof (intro ballI impI allI)
         fix p j s assume hp: "p \<in> P_e" and hint_p: "\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t"
             and hj: "j < ?nw" and hs: "s \<in> I_set"
-        from hinterior_strict[rule_format, OF hp] hint_p
-        have "p \<noteq> (vxe 1, vye 1) \<and> (\<exists>jp<?nw. cross_v1 (jp+2) p > 0 \<and>
-            cross_v1 (Suc(jp+2) mod ?ne) p < 0)" by auto
-        then obtain jp where hjp: "jp < ?nw" and hcross_pos: "cross_v1 (jp+2) p > 0"
-            and hcross_neg: "cross_v1 (Suc(jp+2) mod ?ne) p < 0"
-          and hp_ne_v1: "p \<noteq> (vxe 1, vye 1)" by auto
-        \<comment> \<open>phi\\_fn(p) is strictly inside target sector jp.
-           Edge points are on the boundary of P\\_w, not inside any sector.\<close>
-        show "phi_fn p \<noteq> edge_pt_w j s" sorry
+        have h1_lt: "1 < ?ne" using hlen_ext by linarith
+        have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have hp_ne_v1: "p \<noteq> (vxe 1, vye 1)"
+        proof
+          assume "p = (vxe 1, vye 1)"
+          hence "p = edge_pt_e 1 0" unfolding edge_pt_e_def by (by100 simp)
+          with hint_p[rule_format, OF h1_lt h0_I] show False by simp
+        qed
+        from hfan_cover[rule_format, OF hp] hp_ne_v1
+        obtain jp where hjp: "jp < ?nw" and hin_sec: "in_sector jp p" by blast
+        have hjp2_lt: "jp + 2 < ?ne" using hjp hne_eq by linarith
+        \<comment> \<open>s\\_p + t\\_p < 1 (since = 1 would put p on edge jp+2, contradicting interior).
+           Therefore the centroid weight in phi\\_fn(p) is strictly positive.
+           phi\\_fn(p) is then strictly on the interior side of every edge of P\\_w.
+           Hence phi\\_fn(p) \\<noteq> any edge point.\<close>
+        show "phi_fn p \<noteq> edge_pt_w j s"
+          sorry \<comment> \<open>Proof: s+t=1 -> p on edge jp+2 -> contradiction. Then centroid weight > 0
+                   -> phi(p) strictly interior to P\\_w -> not on boundary edge.\<close>
       qed
       have prop12: "\<forall>t\<in>I_set. \<forall>p\<in>P_e.
           (\<forall>i<?ne. \<forall>s\<in>I_set. p \<noteq> edge_pt_e i s) \<longrightarrow>
@@ -6067,15 +6057,19 @@ proof -
       proof (intro ballI impI)
         fix t p assume ht: "t \<in> I_set" and hp: "p \<in> P_e"
             and hint_p: "\<forall>i<?ne. \<forall>s\<in>I_set. p \<noteq> edge_pt_e i s"
-        from hinterior_strict[rule_format, OF hp] hint_p
-        have "p \<noteq> (vxe 1, vye 1) \<and> (\<exists>jp<?nw. cross_v1 (jp+2) p > 0 \<and>
-            cross_v1 (Suc(jp+2) mod ?ne) p < 0)" by auto
-        then obtain jp where hjp: "jp < ?nw" and hcross_pos: "cross_v1 (jp+2) p > 0"
-            and hcross_neg: "cross_v1 (Suc(jp+2) mod ?ne) p < 0"
-          and hp_ne_v1: "p \<noteq> (vxe 1, vye 1)" by auto
-        \<comment> \<open>phi\\_fn(p) is strictly inside target sector jp.
-           phi\\_fn(edge\\_pt\\_e 0 t) is on the spur arc (from u\\_0 to centroid).
-           The spur arc is NOT in the strict interior of any sector.\<close>
+        have h1_lt: "1 < ?ne" using hlen_ext by linarith
+        have h0_I: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have hp_ne_v1: "p \<noteq> (vxe 1, vye 1)"
+        proof
+          assume "p = (vxe 1, vye 1)"
+          hence "p = edge_pt_e 1 0" unfolding edge_pt_e_def by (by100 simp)
+          with hint_p[rule_format, OF h1_lt h0_I] show False by simp
+        qed
+        from hfan_cover[rule_format, OF hp] hp_ne_v1
+        obtain jp where hjp: "jp < ?nw" and hin_sec: "in_sector jp p" by blast
+        \<comment> \<open>phi\\_fn(p) has positive centroid weight (p not on edge jp+2).
+           phi\\_fn(edge\\_pt\\_e 0 t) = spur arc point on the u\\_0-cw line.
+           For interior p: centroid weight > 0 and image not on u\\_0-cw line.\<close>
         show "phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p" sorry
       qed
       show ?thesis
