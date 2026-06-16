@@ -516,7 +516,7 @@ i/Top1_Ch5_8.thy|lemma|cc_topology_is_topology|15834
 at/AlgTopChain.thy|lemma|ccw_polygon_half_plane|2203
 pd/PolygonDisk.thy|lemma|ccw_polygon_half_plane|173
 ac8/AlgTopCached8.thy|lemma|centralizer_is_subgroup|4543
-AlgTop.thy|lemma|centroid_weight_not_on_edge|1770
+AlgTop.thy|lemma|centroid_weight_not_on_edge|1802
 wh/AlgTopWedgeHelpers.thy|lemma|circle_minus_point_deformation_retract|3284
 svk/AlgTopSvK.thy|lemma|circle_minus_point_path_connected|819
 svk/AlgTopSvK.thy|lemma|circle_minus_point_simply_connected|1196
@@ -666,7 +666,6 @@ ac4/AlgTopCached4.thy|lemma|covering_map_evenly_covered_neighborhood|16
 wh/AlgTopWedgeHelpers.thy|lemma|covering_map_is_open_map|2945
 ac4/AlgTopCached4.thy|lemma|covering_map_surjective|10
 ac5/AlgTopCached5.thy|lemma|covering_sheet_over_arc_path_connected|39
-AlgTop.thy|lemma|cramer_injective|1521
 at/AlgTopChain.thy|lemma|cross2_antisym|2179
 pd/PolygonDisk.thy|lemma|cross2_antisym|149
 at/AlgTopChain.thy|lemma|cross2_centroid_sum_zero|2137
@@ -721,7 +720,7 @@ i/Top1_Ch5_8.thy|lemma|expansion_E_open|7915
 i/Top1_Ch5_8.thy|lemma|expansion_lf_from_auxiliary|7945
 h/AlgTopHelpers.thy|lemma|exterior_ball_connected_R2|39
 fib/AlgIsoFixedBase.thy|lemma|false_from_disjoint_nonempty|1223
-AlgTop.thy|lemma|fan_affine_interior_injective|1646
+AlgTop.thy|lemma|fan_affine_interior_injective|1520
 ag/AlgTopGroups.thy|lemma|filter_eq_replicate|3396
 ag/AlgTopGroups.thy|lemma|filter_pred_eq|4547
 i/Top1_Ch2.thy|lemma|finer_than_on_imp|1057
@@ -793,10 +792,10 @@ at/AlgTopChain.thy|lemma|free_group_universal_property|396
 ag/AlgTopGroups.thy|lemma|free_group_word_kernel|3110
 ac/AlgTopCached.thy|lemma|free_product_reduced_repr|10948
 ac/AlgTopCached.thy|lemma|free_product_trivial_factor_surj|27169
-AlgTop.thy|lemma|front_cancel_proper|9321
-AlgTop.thy|lemma|front_cancel_proper_direct|8796
+AlgTop.thy|lemma|front_cancel_proper|9367
+AlgTop.thy|lemma|front_cancel_proper_direct|8842
 AlgTop.thy|lemma|front_cancel_realization_homeo|682
-AlgTop.thy|lemma|front_cancel_realization_homeo_proper|9343
+AlgTop.thy|lemma|front_cancel_realization_homeo_proper|9389
 ac/AlgTopCached.thy|lemma|frontier_closed_sub|3608
 AlgTop.thy|lemma|front_uncancel_realization_homeo|788
 ag/AlgTopGroups.thy|lemma|fst_set_flip_rev|78
@@ -1135,6 +1134,7 @@ i/Top1_Ch5_8.thy|lemma|net_converges_eventually_strict|33480
 i/Top1_Ch5_8.thy|lemma|net_limit_in_closure|33463
 ag/AlgTopGroups.thy|lemma|no_matching_pair_word_ne_e|4637
 fib/AlgIsoFixedBase.thy|lemma|nonempty_inter_from_subset|1219
+AlgTop.thy|lemma|nonneg_combo_independent_zero|1634
 ag/AlgTopGroups.thy|lemma|normal_closure_least|2069
 ac/AlgTopCached.thy|lemma|normal_coset_eq|8732
 ac/AlgTopCached.thy|lemma|normal_coset_mul_eq|8886
@@ -1242,7 +1242,7 @@ at/AlgTopChain.thy|lemma|polygonal_region_convex_combo|2486
 pd/PolygonDisk.thy|lemma|polygonal_region_convex_combo|456
 at/AlgTopChain.thy|lemma|polygon_homeomorphic_to_disk_with_boundary|2827
 pd/PolygonDisk.thy|lemma|polygon_homeomorphic_to_disk_with_boundary|1043
-AlgTop.thy|lemma|polygon_sub_rearrange_sigma_props|9017
+AlgTop.thy|lemma|polygon_sub_rearrange_sigma_props|9063
 ac/AlgTopCached.thy|lemma|preimage_normal_subgroup|27286
 wh/AlgTopWedgeHelpers.thy|lemma|presentation_from_free_quotient|1512
 ac8/AlgTopCached8.thy|lemma|presented_by_commutators_abelian|4722
@@ -1278,12 +1278,12 @@ ac/AlgTopCached.thy|lemma|quotient_induced_hom|12739
 AlgTop.thy|lemma|quotient_of_scheme_cut_paste|596
 AlgTop.thy|lemma|quotient_of_scheme_cut_paste2|608
 AlgTop.thy|lemma|quotient_of_scheme_cut_paste_opp|619
-AlgTop.thy|lemma|quotient_of_scheme_cut_paste_opp_proper|9161
-AlgTop.thy|lemma|quotient_of_scheme_cut_paste_proper|9271
+AlgTop.thy|lemma|quotient_of_scheme_cut_paste_opp_proper|9207
+AlgTop.thy|lemma|quotient_of_scheme_cut_paste_proper|9317
 ac/AlgTopCached.thy|lemma|quotient_of_scheme_extract|31345
 wh/AlgTopWedgeHelpers.thy|lemma|quotient_of_scheme_extract_full|329
 AlgTop.thy|lemma|quotient_of_scheme_uncancel_front|696
-AlgTop.thy|lemma|quotient_of_scheme_uncancel_front_proper|9358
+AlgTop.thy|lemma|quotient_of_scheme_uncancel_front_proper|9404
 AlgTop.thy|lemma|quotient_of_scheme_uncancel_proved|804
 ac/AlgTopCached.thy|lemma|quotient_projection_properties|8976
 b/AlgTop_JCT_Base.thy|lemma|R2_locally_path_connected|6672
@@ -1359,7 +1359,6 @@ fi/AlgIsoFixed.thy|lemma|S2_open_path_connected_arc_connected|1893
 ac/AlgTopCached.thy|lemma|S2_two_component_open|52178
 ac10/AlgTopCached10.thy|lemma|same_endpoint_same_coset|822
 ac10/AlgTopCached10.thy|lemma|same_projection_same_endpoint|125
-AlgTop.thy|lemma|same_sector_affine_injective|1604
 fi/AlgIsoFixed.thy|lemma|scc_decomp_arc_endpoints|3060
 fi/AlgIsoFixed.thy|lemma|SCC_decompose_at_given_points|6389
 ac11/AlgTopCached11.thy|lemma|scc_in_sc_false|2489
@@ -1410,7 +1409,8 @@ b/AlgTop_JCT_Base.thy|lemma|Sn_interpolation_in_Sn|819
 b/AlgTop_JCT_Base.thy|lemma|Sn_interpolation_norm_pos|720
 b/AlgTop_JCT_Base.thy|lemma|Sn_interpolation_to_q_avoids_p|878
 b/AlgTop_JCT_Base.thy|lemma|Sn_normalized_interpolation_path|441
-AlgTop.thy|lemma|spur_collapse_cancel_homeo|1908
+AlgTop.thy|lemma|spur_arc_match_forces_edge|1668
+AlgTop.thy|lemma|spur_collapse_cancel_homeo|1940
 h/AlgTopHelpers.thy|lemma|sqnorm_memI|5
 b0/AlgTop_JCT_Base0.thy|lemma|squaring_map_covering|12
 b0/AlgTop_JCT_Base0.thy|lemma|squaring_map_factorization|2522
@@ -1937,7 +1937,6 @@ ac11/AlgTopCached11.thy|lemma|tree_leaf_other_endpoint_shared|1360
 ac3/AlgTopCached3.thy|lemma|tree_simply_connected|84
 ac7/AlgTopCached7.thy|lemma|tree_union_arcs_path_connected|4220
 ac/AlgTopCached.thy|lemma|triangle_compact|41258
-AlgTop.thy|lemma|triangle_coords_injective|1561
 i/Top1_Ch5_8.thy|lemma|tri_arg_metric|14381
 ac8/AlgTopCached8.thy|lemma|trivial_kernel_injective|5010
 ac7/AlgTopCached7.thy|lemma|trivial_pi1_imp_simply_connected|4476
@@ -1956,9 +1955,9 @@ i/Top1_Ch5_8.thy|lemma|uniform_metric_conv_imp_pointwise_unif|11334
 i/Top1_Ch5_8.thy|lemma|uniform_metric_lt_imp_d_lt|14354
 i/Top1_Ch5_8.thy|lemma|uniform_metric_pointwise_lt|14336
 ac/AlgTopCached.thy|lemma|unit_interval_reversal_homeomorphism|49000
-AlgTop.thy|lemma|valid_equiv_preserves_quotient_homeo|9736
-AlgTop.thy|lemma|valid_equiv_preserves_quotient_homeo_proper|9771
-AlgTop.thy|lemma|valid_operation_preserves_quotient_homeo|9399
+AlgTop.thy|lemma|valid_equiv_preserves_quotient_homeo|9782
+AlgTop.thy|lemma|valid_equiv_preserves_quotient_homeo_proper|9817
+AlgTop.thy|lemma|valid_operation_preserves_quotient_homeo|9445
 i/Top1_Ch9_13.thy|lemma|vector_field_must_point_inward|13533
 ac5/AlgTopCached5.thy|lemma|wedge_circles_pi1_free|2814
 i/Top1_Ch5_8.thy|lemma|weighted_sum_epsilon_delta|29816
@@ -2198,10 +2197,9 @@ ac8/AlgTopCached8.thy|theorem|Theorem_74_4_fund_group_m_projective|8230
 ac8/AlgTopCached8.thy|theorem|Theorem_75_1_H1_abelianization|3787
 ac8/AlgTopCached8.thy|theorem|Theorem_75_3_H1_n_torus|4472
 ac12/AlgTopCached12.thy|theorem|Theorem_75_4_H1_m_projective|975
-AlgTop.thy|theorem|Theorem_76_elementary_operations|9790
-AlgTop.thy|theorem|Theorem_77_5_classification|10767
-AlgTop.thy|theorem|Theorem_78_1_triangulable_surface|9850
-AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|10669
+AlgTop.thy|theorem|Theorem_76_elementary_operations|9836
+AlgTop.thy|theorem|Theorem_77_5_classification|9996
+AlgTop.thy|theorem|Theorem_78_2_connected_polygonal_quotient|9898
 ac4/AlgTopCached4.thy|theorem|Theorem_79_2|1524
 ac4/AlgTopCached4.thy|theorem|Theorem_79_4|2333
 ac4/AlgTopCached4.thy|theorem|Theorem_80_1_universal_unique|3345
