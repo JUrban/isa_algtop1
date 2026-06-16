@@ -6047,9 +6047,16 @@ proof -
            Therefore the centroid weight in phi\\_fn(p) is strictly positive.
            phi\\_fn(p) is then strictly on the interior side of every edge of P\\_w.
            Hence phi\\_fn(p) \\<noteq> any edge point.\<close>
+        \<comment> \<open>The edge cross product at edge jp+2 for point p is > 0 (strictly).
+           This means the centroid weight in phi\\_fn(p) is strictly positive.
+           A point with positive centroid weight in the target fan is strictly interior
+           to P\\_w, hence not on any boundary edge.\<close>
+        let ?si_jp = "Suc(jp+2) mod ?ne"
+        have hedge_pos: "(vxe ?si_jp - vxe(jp+2))*(snd p - vye(jp+2)) -
+            (vye ?si_jp - vye(jp+2))*(fst p - vxe(jp+2)) > 0"
+          sorry \<comment> \<open>By C11 + linearity + p not on edge jp+2.\<close>
         show "phi_fn p \<noteq> edge_pt_w j s"
-          sorry \<comment> \<open>Proof: s+t=1 -> p on edge jp+2 -> contradiction. Then centroid weight > 0
-                   -> phi(p) strictly interior to P\\_w -> not on boundary edge.\<close>
+          using hedge_pos sorry \<comment> \<open>Edge cross > 0 -> centroid weight > 0 -> not on any w-edge.\<close>
       qed
       have prop12: "\<forall>t\<in>I_set. \<forall>p\<in>P_e.
           (\<forall>i<?ne. \<forall>s\<in>I_set. p \<noteq> edge_pt_e i s) \<longrightarrow>
