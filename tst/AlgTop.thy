@@ -1709,8 +1709,9 @@ proof -
     hence ht_det: "t_v*(u1x*cwy - u1y*cwx) = 0" by (by100 algebra)
     from hC10[rule_format, of 0] hnw h1mod
     have hC10_0: "(vxw 0-cxw)*(vyw 1-cyw)-(vyw 0-cyw)*(vxw 1-cxw) > 0" by simp
-    have "u1x*cwy - u1y*cwx \<noteq> 0"
-      sorry \<comment> \<open>Algebraic identity: det(u\\_1-u\\_0, cw-u\\_0) = det(u\\_0-cw, u\\_1-cw) > 0 from C10.\<close>
+    have hdet_eq: "u1x*cwy - u1y*cwx = (vxw 0-cxw)*(vyw 1-cyw)-(vyw 0-cyw)*(vxw 1-cxw)"
+      unfolding u1x_def u1y_def cwx_def cwy_def by (simp add: algebra_simps)
+    have "u1x*cwy - u1y*cwx \<noteq> 0" using hdet_eq hC10_0 by linarith
     from ht_det this have "t_v = 0" by simp
     with True show ?thesis by auto
   next
