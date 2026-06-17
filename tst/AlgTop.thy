@@ -1995,15 +1995,30 @@ proof -
       have halpha_pos: "alpha jp > 0"
       proof -
         have "alpha jp = (\<Sum>j<jp. theta j)" unfolding alpha_def by simp
-        moreover have "\<forall>j<jp. theta j > 0" using htheta_pos hjp by (by100 auto)
-        moreover have "jp > 0" using hjp_ne0 by (by100 linarith)
-        ultimately show ?thesis sorry \<comment> \<open>Sum of positive terms with nonempty index set.\<close>
+        have "\<forall>j\<in>{..<jp}. theta j > 0" using htheta_pos hjp by (by100 auto)
+        have "{..<jp} \<noteq> {}" using hjp_ne0 by (by100 auto)
+        from sum_pos[OF _ \<open>{..<jp} \<noteq> {}\<close>] \<open>\<forall>j\<in>{..<jp}. theta j > 0\<close>
+        have "(\<Sum>j<jp. theta j) > 0" by (by100 blast)
+        thus ?thesis unfolding alpha_def by simp
       qed
       \<comment> \<open>alpha jp < 2*pi (remaining sum > 0).\<close>
       have halpha_lt: "alpha jp < 2*pi"
       proof -
-        have "alpha jp + (\<Sum>j=jp..<nw. theta j) = alpha nw" unfolding alpha_def sorry
-        moreover have "(\<Sum>j=jp..<nw. theta j) > 0" sorry
+        have "alpha jp + (\<Sum>j=jp..<nw. theta j) = alpha nw" unfolding alpha_def
+        proof -
+          have "(\<Sum>j<jp. theta j) + (\<Sum>j=jp..<nw. theta j) = (\<Sum>j<nw. theta j)"
+            using sum.atLeastLessThan_concat[of 0 jp nw theta] hjp
+            by (simp add: atLeast0LessThan)
+          thus "(\<Sum>j<jp. theta j) + (\<Sum>j=jp..<nw. theta j) = (\<Sum>j<nw. theta j)" .
+        qed
+        moreover have "(\<Sum>j=jp..<nw. theta j) > 0"
+        proof -
+          have "\<forall>j\<in>{jp..<nw}. theta j > 0" using htheta_pos hjp by (by100 auto)
+          have "{jp..<nw} \<noteq> {}" using hjp by (by100 auto)
+          have "finite {jp..<nw}" by (by100 simp)
+          from sum_pos[OF \<open>finite {jp..<nw}\<close> \<open>{jp..<nw} \<noteq> {}\<close>] \<open>\<forall>j\<in>{jp..<nw}. theta j > 0\<close>
+          show ?thesis by (by100 blast)
+        qed
         ultimately show ?thesis using halpha_sum by linarith
       qed
       \<comment> \<open>sin(alpha jp) \\<le> 0 and 0 < alpha jp: alpha jp \\<ge> pi.\<close>
@@ -2025,10 +2040,21 @@ proof -
       moreover have "alpha (jp+1) < 2*pi"
       proof -
         have "alpha nw = 2*pi" using halpha_sum .
-        have "alpha (jp+1) + (\<Sum>j=jp+1..<nw. theta j) = alpha nw"
-          unfolding alpha_def sorry
+        have "alpha (jp+1) + (\<Sum>j=jp+1..<nw. theta j) = alpha nw" unfolding alpha_def
+        proof -
+          have "(\<Sum>j<jp+1. theta j) + (\<Sum>j=jp+1..<nw. theta j) = (\<Sum>j<nw. theta j)"
+            using sum.atLeastLessThan_concat[of 0 "jp+1" nw theta] hjp1_lt
+            by (simp add: atLeast0LessThan)
+          thus "(\<Sum>j<jp+1. theta j) + (\<Sum>j=jp+1..<nw. theta j) = (\<Sum>j<nw. theta j)" .
+        qed
         moreover have "(\<Sum>j=jp+1..<nw. theta j) > 0"
-          sorry \<comment> \<open>Each theta > 0 and jp+1 < nw.\<close>
+        proof -
+          have "\<forall>j\<in>{jp+1..<nw}. theta j > 0" using htheta_pos hjp1_lt by (by100 auto)
+          have "{jp+1..<nw} \<noteq> {}" using hjp1_lt by (by100 auto)
+          have "finite {jp+1..<nw}" by (by100 simp)
+          from sum_pos[OF \<open>finite {jp+1..<nw}\<close> \<open>{jp+1..<nw} \<noteq> {}\<close>] \<open>\<forall>j\<in>{jp+1..<nw}. theta j > 0\<close>
+          show ?thesis by (by100 blast)
+        qed
         ultimately show ?thesis using halpha_sum by linarith
       qed
       ultimately show ?thesis by linarith
