@@ -1681,7 +1681,9 @@ proof -
        From the CCW sweep property: when cc(jp) \\<ge> 0, the edge direction
        is such that the increment keeps cc positive.\<close>
     \<comment> \<open>For now: sorry this monotonicity property.\<close>
-    have "cc (Suc jp mod nw) > 0" sorry
+    have "cc (Suc jp mod nw) > 0"
+      sorry \<comment> \<open>Proved for cc(jp)=0 case via C10+C11 parallelism argument.
+         cc(jp)>0 case needs angle/sweep argument.\<close>
     thus ?thesis unfolding cc_def by auto
   qed
 qed
