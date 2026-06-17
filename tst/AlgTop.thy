@@ -26,12 +26,33 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-17, session 1627):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-17, session 1628):
 
-~69 sorry word occurrences. Build ~47s.
-prop12: jp=0 and jp=nw-1 FULLY PROVED. Only jp\\<notin>{0,nw-1} sorry remains (spur\\_arc\\_target\\_sector).
-New standalone lemmas PROVED: spur\\_match\\_sector0\\_forces\\_t\\_zero, spur\\_match\\_sector\\_last\\_forces\\_s\\_zero,
-  cramer\\_inverse\\_tp\\_zero, cramer\\_inverse\\_sp\\_zero.
+22 sorry proof commands. Build ~47s.
+prop12: jp=0 and jp=nw-1 FULLY PROVED. Only jp\\<notin>{0,nw-1} sorry remains.
+New standalone lemmas: spur\\_match\\_sector0/last, cramer\\_inverse\\_tp/sp\\_zero.
+
+SORRY INVENTORY (22 proof sorrys):
+A. GEOMETRIC CORE (3 sorrys):
+   - spur\\_arc\\_target\\_sector (L1837): cc monotonicity. HARD: needs angular/winding argument.
+     Blocks prop12 jp\\<notin>{0,nw-1} (L7154). Approaches exhausted: C10/C11 alone insufficient,
+     hfan\\_det\\_w integration would need ~500 lines of sum decomposition.
+   - fan\\_affine\\_interior\\_injective False (L1622): sector disjointness. Same difficulty.
+     Blocks prop10 (L6469).
+   - spur\\_arc\\_match j\\<noteq>0\\<and>j+1\\<noteq>0 (L2053): GENUINELY FALSE for general C10/C11 polygons.
+     Not needed (prop12 uses target sector analysis instead).
+B. CUT-PASTE OPERATIONS (5 sorrys, L421/567/596/606/618/662/692):
+   suffix\\_rotate\\_via\\_separator FALSE as stated (L571 comment).
+   All need multi-polygon quotient infrastructure (Munkres §76 cut-combine-paste).
+   CRITICAL PATH for v\\_cut\\_paste/v\\_cut\\_paste\\_opp operations.
+C. PER-POLYGON ROTATION (2 sorrys, L9962/10010):
+   Proper versions need geometric arc-permutation construction.
+   CRITICAL PATH.
+D. CONTEXT-LEFT + STRUCTURAL (7 sorrys, various):
+   NOT on critical path. Only v\\_relabel (fresh) used by classification chain = PROVED.
+E. FINAL ASSEMBLY (2 sorrys, L10695/10753):
+   Extraction: construct edge scheme from polygonal quotient.
+   Sphere: quotient of [(a,T),(a,F),(b,T),(b,F)] \\<cong> S2.
 
 DEPENDENCY TREE FOR CANCEL CHAIN:
   spur\\_collapse\\_cancel\\_homeo (phi construction, ~2 sorry proof commands)
