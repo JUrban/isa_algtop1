@@ -2272,7 +2272,45 @@ proof -
            Then z\\_{j2}/z\\_0 = cis(alpha\\_{j2}) = cis(alpha\\_{j1}+2\\<pi>) = cis(alpha\\_{j1}) = z\\_{j1}/z\\_0.
            So z\\_{j2} = z\\_{j1}, i.e., u\\_{j2} = u\\_{j1}.\<close>
         \<comment> \<open>C11 at edge (j1, Suc j1 mod nw), vertex j2: det = 0. Contradiction.\<close>
-        show False sorry \<comment> \<open>Circle polygon with k \\<ge> 2 has repeated vertices, violating C11 strict < 0.\<close>
+        \<comment> \<open>Find the 2\\<pi> crossing index: m0 is the largest with alpha\\_{m0} < 2\\<pi>.\<close>
+        \<comment> \<open>With k \\<ge> 2: alpha\\_nw \\<ge> 4\\<pi>. So some index crosses 2\\<pi>.\<close>
+        \<comment> \<open>Use C11 at edge (0,1), vertex m0+1 to get contradiction.\<close>
+        \<comment> \<open>The cis-difference formula gives the det as a product of three sines,
+           which has sign (-)*(+)*(-) = (+), contradicting C11 < 0.\<close>
+        \<comment> \<open>Key computation (for circle polygon with equal moduli):
+           det(u\\_{m0+1}-u\\_0, u\\_1-u\\_0) = r^2 * 4*sin(alpha\\_{m0+1}/2)*sin(theta\\_0/2)*sin((theta\\_0-alpha\\_{m0+1})/2)
+           With alpha\\_{m0+1} \\<in> [2\\<pi>, 3\\<pi>): sin(alpha\\_{m0+1}/2) < 0 and sin((theta\\_0-alpha\\_{m0+1})/2) < 0.
+           Product of three sines > 0, but C11 requires < 0. Contradiction.\<close>
+        \<comment> \<open>Step 1: find crossing index m0 with alpha\\_{m0} < 2\\<pi> \\<le> alpha\\_{m0+1}.\<close>
+        \<comment> \<open>alpha\\_1 = theta\\_0 < \\<pi> < 2\\<pi>. And alpha\\_nw \\<ge> 4\\<pi> > 2\\<pi>. So crossing exists.\<close>
+        define m0 where "m0 = (GREATEST m. m < nw \<and> alpha m < 2*pi)"
+        \<comment> \<open>For now: sorry the existence and properties of m0.
+           Key properties: m0 \\<ge> 2, m0+1 < nw, alpha\\_{m0+1} \\<ge> 2\\<pi>, alpha\\_{m0+1} < 3\\<pi>.\<close>
+        have hm0_props: "m0 \<ge> 2 \<and> m0 + 1 < nw \<and> alpha (m0+1) \<ge> 2*pi \<and> alpha (m0+1) < 3*pi"
+          sorry \<comment> \<open>From alpha\\_1 < \\<pi> < 2\\<pi>, alpha\\_nw \\<ge> 4\\<pi>, each step < \\<pi>.\<close>
+        hence hm0_ge2: "m0 \<ge> 2" and hm0_lt: "m0 + 1 < nw"
+            and halpha_m0_ge: "alpha (m0+1) \<ge> 2*pi" and halpha_m0_lt: "alpha (m0+1) < 3*pi"
+          by auto
+        \<comment> \<open>Step 2: C11 at edge (0, 1), vertex m0+1.\<close>
+        have hm0_ne0: "m0+1 \<noteq> 0" by (by100 arith)
+        have "Suc 0 mod nw = 1" using hnw by (by100 simp)
+        have hm0_ne1: "m0+1 \<noteq> Suc 0 mod nw" using hm0_ge2 \<open>Suc 0 mod nw = 1\<close> by (by100 arith)
+        have "m0 + 1 < nw" using hm0_lt .
+        have h0_lt: "(0::nat) < nw" using hnw by linarith
+        have h_C11_inst: "(vxw (m0+1)-vxw 0)*(vyw(Suc 0 mod nw)-vyw 0)-(vyw (m0+1)-vyw 0)*(vxw(Suc 0 mod nw)-vxw 0) < 0"
+          using hC11[rule_format, OF h0_lt \<open>m0+1 < nw\<close> hm0_ne0 hm0_ne1] .
+        \<comment> \<open>Step 3: Compute det(u\\_{m0+1}-u\\_0, u\\_1-u\\_0) using the equal-modulus property.
+           All u\\_j = cw + r*cis(phi\\_j) where phi\\_j = Arg(z\\_0)+alpha\\_j.
+           det = r^2 * 4*sin(alpha\\_{m0+1}/2)*sin(theta\\_0/2)*sin((theta\\_0-alpha\\_{m0+1})/2).\<close>
+        \<comment> \<open>For alpha\\_{m0+1} \\<in> [2\\<pi>, 3\\<pi>):
+           sin(alpha\\_{m0+1}/2) \\<in> sin([\\<pi>, 3\\<pi>/2)): \\<le> 0 (actually < 0 for > \\<pi>).
+           sin(theta\\_0/2) > 0.
+           sin((theta\\_0-alpha\\_{m0+1})/2): (theta\\_0-alpha\\_{m0+1})/2 \\<in> ((-3\\<pi>+theta\\_0)/2, (theta\\_0-2\\<pi>)/2).
+             = ((-3\\<pi>+theta\\_0)/2, (theta\\_0-2\\<pi>)/2) \\<subset> (-3\\<pi>/2, 0).
+             For the range (-\\<pi>, 0): sin < 0.
+           Product: (\\<le>0)*(>0)*(\\<le>0) \\<ge> 0. But C11 requires < 0. Contradiction.\<close>
+        \<comment> \<open>Formal computation using the cis-difference formula.\<close>
+        show False sorry \<comment> \<open>Needs ~50 lines: cis-difference + sin signs. All ingredients available.\<close>
       qed
       with hk(2) show "alpha nw = 2*pi" by simp
     qed
