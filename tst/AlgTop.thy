@@ -1987,10 +1987,28 @@ proof -
         by (by100 simp)
       have "Arg (zw (Suc j mod nw) / zw j) > -pi" using Arg_bounded[of "zw (Suc j mod nw) / zw j"] by linarith
       have "Arg (zw (Suc j mod nw) / zw j) \<le> pi" using Arg_bounded[of "zw (Suc j mod nw) / zw j"] by linarith
-      from \<open>sin _ > 0\<close> \<open>Arg _ > -pi\<close> \<open>Arg _ \<le> pi\<close>
-      show "theta j > 0" unfolding theta_def sorry \<comment> \<open>sin > 0 and Arg \\<in> (-\\<pi>, \\<pi>] \\<Longrightarrow> Arg > 0.\<close>
-      from \<open>sin _ > 0\<close> \<open>Arg _ > -pi\<close> \<open>Arg _ \<le> pi\<close>
-      show "theta j < pi" unfolding theta_def sorry \<comment> \<open>sin > 0 and Arg \\<in> (-\\<pi>, \\<pi>] \\<Longrightarrow> Arg < \\<pi>.\<close>
+      show "theta j > 0" unfolding theta_def
+      proof (rule ccontr)
+        assume "\<not> Arg (zw (Suc j mod nw) / zw j) > 0"
+        hence "Arg (zw (Suc j mod nw) / zw j) \<le> 0" by linarith
+        with \<open>Arg _ > -pi\<close> have "Arg (zw (Suc j mod nw) / zw j) \<in> {x. -pi < x \<and> x \<le> 0}" by auto
+        hence "sin (Arg (zw (Suc j mod nw) / zw j)) \<le> 0"
+        proof -
+          from \<open>Arg _ \<le> 0\<close> \<open>Arg _ > -pi\<close>
+          have h1: "0 \<le> -(Arg (zw (Suc j mod nw) / zw j))" by linarith
+          have h2: "-(Arg (zw (Suc j mod nw) / zw j)) \<le> pi" using \<open>Arg _ > -pi\<close> by linarith
+          from sin_ge_zero[OF h1 h2] have "sin (-(Arg (zw (Suc j mod nw) / zw j))) \<ge> 0" .
+          thus ?thesis by (by100 simp)
+        qed
+        with \<open>sin _ > 0\<close> show False by linarith
+      qed
+      show "theta j < pi" unfolding theta_def
+      proof (rule ccontr)
+        assume "\<not> Arg (zw (Suc j mod nw) / zw j) < pi"
+        with \<open>Arg _ \<le> pi\<close> have "Arg (zw (Suc j mod nw) / zw j) = pi" by linarith
+        hence "sin (Arg (zw (Suc j mod nw) / zw j)) = 0" by (by100 simp)
+        with \<open>sin _ > 0\<close> show False by linarith
+      qed
     qed
     define alpha where "alpha m = (\<Sum>j<m. theta j)" for m
     have halpha_sum: "alpha nw = 2*pi"
