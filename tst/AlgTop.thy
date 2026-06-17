@@ -2237,7 +2237,17 @@ proof -
         \<comment> \<open>Use C11 to show this is impossible for nw \\<ge> 5.
            If alpha = 2k\\<pi> \\<ge> 4\\<pi>: the polygon wraps twice around cw.
            C11 (convexity) prevents this: for a convex polygon, winding number = 1.\<close>
-        show False sorry \<comment> \<open>For k \\<ge> 2: use C11 convexity to derive contradiction.\<close>
+        \<comment> \<open>From k \\<ge> 2 and 2k < nw: nw \\<ge> 5.\<close>
+        have "nw \<ge> 5" using \<open>2 * k \<ge> 4\<close> h2k_lt by linarith
+        \<comment> \<open>For nw \\<ge> 5 with k \\<ge> 2: the polygon wraps \\<ge> 2 times around centroid.
+           At the 2\\<pi> crossing, C11 convexity is violated.
+           Specifically: let m be the index where alpha\\_m first crosses 2\\<pi>.
+           At m: z\\_m is approximately aligned with z\\_0 (angle \\<approx> 2\\<pi>).
+           C11 at edge (0,1), vertex m+1 gives det(u\\_{m+1}-u\\_0, u\\_1-u\\_0) < 0.
+           But with alpha\\_{m+1} \\<in> [2\\<pi>, 3\\<pi>): u\\_{m+1} is approximately at angle \\<theta>\\_0
+           from u\\_0 (starting second loop), so det \\<approx> 0, contradicting strict < 0.
+           Formal proof needs careful bounding of the det using the cc-sin formula.\<close>
+        show False sorry \<comment> \<open>Winding number = 1 for convex polygon (C11). Needed only for nw \\<ge> 5.\<close>
       qed
       with hk(2) show "alpha nw = 2*pi" by simp
     qed
