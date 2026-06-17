@@ -2041,17 +2041,6 @@ proof -
       qed
     qed
     define alpha where "alpha m = (\<Sum>j<m. theta j)" for m
-    \<comment> \<open>Telescope: \\<Prod>\\_{j<nw} (z\\_{j+1}/z\\_j) = 1, so cis(\\<Sum> \\<theta>\\_j) = 1, hence \\<Sum> = 2k\\<pi>.
-       For convex polygon (C10): k=1, so \\<Sum> = 2\\<pi>.\<close>
-    have htelescope: "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = 1"
-      sorry \<comment> \<open>Cyclic telescope: \\<Prod> zw(j+1 mod nw)/zw j = 1 (numerators = denominators up to reindexing).\<close>
-    have halpha_sum: "alpha nw = 2*pi"
-      sorry \<comment> \<open>From telescope = 1: cis(alpha nw) = 1, so alpha nw = 2k\\<pi>.
-         Each theta \\<in> (0,\\<pi>) and nw \\<ge> 3: alpha nw \\<in> (0, nw*\\<pi>).
-         For k=1: need to rule out k \\<ge> 2 using C10/C11 convexity.
-         For nw \\<le> 4: alpha nw < nw*\\<pi> \\<le> 4\\<pi>, and 4\\<pi> is excluded (strict), so k=1.
-         For nw \\<ge> 5: need C11 argument (convexity forces single winding).\<close>
-    \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
     \<comment> \<open>Partial telescope for m < nw: z\\_m = (\\<Prod>\\_{j<m} ratio\\_j) * z\\_0.
        For j < m < nw: Suc j mod nw = j+1, so ratios telescope.\<close>
     have hpartial_telescope: "\<forall>m<nw. zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
@@ -2085,6 +2074,46 @@ proof -
     qed
     \<comment> \<open>Product decomposition: each ratio = |ratio|*cis(theta).\<close>
     \<comment> \<open>Product of cis: \\<Prod> cis(\\<theta>\\_j) = cis(\\<Sum> \\<theta>\\_j) = cis(alpha m).\<close>
+    \<comment> \<open>Telescope: \\<Prod>\\_{j<nw} (z\\_{j+1}/z\\_j) = 1, so cis(\\<Sum> \\<theta>\\_j) = 1, hence \\<Sum> = 2k\\<pi>.
+       For convex polygon (C10): k=1, so \\<Sum> = 2\\<pi>.\<close>
+    have htelescope: "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = 1"
+    proof -
+      have hnw1_lt: "nw - 1 < nw" using hnw by linarith
+      have hz0_ne: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
+      have hznw1_ne: "zw (nw-1) \<noteq> 0" using hzw_ne hnw1_lt by (by100 blast)
+      from hpartial_telescope[rule_format, OF hnw1_lt]
+      have hP: "zw (nw-1) = (\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) * zw 0" .
+      \<comment> \<open>Split: \\<Prod>\\_{j<nw} = (\\<Prod>\\_{j<nw-1}) * (zw(Suc(nw-1) mod nw) / zw(nw-1)).\<close>
+      define f where "f j = zw (Suc j mod nw) / zw j" for j
+      have "(\<Prod>j<nw. f j) = (\<Prod>j<nw-1. f j) * f (nw-1)"
+      proof -
+        have hnw_Suc: "nw = Suc (nw-1)" using hnw by (by100 arith)
+        have "{..<Suc (nw-1)} = insert (nw-1) {..<(nw-1)}" by (rule lessThan_Suc)
+        hence "{..<nw} = insert (nw-1) {..<nw-1}" using hnw_Suc by simp
+        hence "prod f {..<nw} = f (nw-1) * prod f {..<nw-1}" by simp
+        thus ?thesis by (by100 algebra)
+      qed
+      hence hsplit: "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) =
+          (\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) * (zw (Suc (nw-1) mod nw) / zw (nw-1))"
+        unfolding f_def .
+      have "Suc (nw-1) mod nw = 0" using hnw by simp
+      with hsplit have "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) =
+          (\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) * (zw 0 / zw (nw-1))" by simp
+      \<comment> \<open>From hP: (\\<Prod>\\_{j<nw-1}) = zw(nw-1) / zw 0.\<close>
+      from hP hz0_ne have "(\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) = zw (nw-1) / zw 0"
+        by (by100 simp)
+      hence "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = (zw (nw-1) / zw 0) * (zw 0 / zw (nw-1))"
+        using \<open>(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = _ * (zw 0 / zw (nw-1))\<close> by simp
+      also have "\<dots> = 1" using hz0_ne hznw1_ne by (by100 simp)
+      finally show ?thesis .
+    qed
+    have halpha_sum: "alpha nw = 2*pi"
+      sorry \<comment> \<open>From telescope = 1: cis(alpha nw) = 1, so alpha nw = 2k\\<pi>.
+         Each theta \\<in> (0,\\<pi>) and nw \\<ge> 3: alpha nw \\<in> (0, nw*\\<pi>).
+         For k=1: need to rule out k \\<ge> 2 using C10/C11 convexity.
+         For nw \\<le> 4: alpha nw < nw*\\<pi> \\<le> 4\\<pi>, and 4\\<pi> is excluded (strict), so k=1.
+         For nw \\<ge> 5: need C11 argument (convexity forces single winding).\<close>
+    \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
     have hcc_sin: "\<forall>m. 0 < m \<longrightarrow> m < nw \<longrightarrow>
         cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
     proof (intro allI impI)
