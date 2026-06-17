@@ -6792,7 +6792,73 @@ proof -
             have hdet_eq: "det_p = ex_p*fy_p - ey_p*fx_p" unfolding det_p_def by simp
             from cramer_inverse_tp_zero[OF hsp_mul htp_mul htp0 hdet_p_ne hdet_eq]
             have hdx: "dx_p = sp12*ex_p" and hdy: "dy_p = sp12*ey_p" by auto
-            show False sorry
+            \<comment> \<open>Derive p = edge\\_pt\\_e(1, sp12): need ex\\_p = vxe(Suc 1 mod ne)-vxe 1.\<close>
+            have hne_gt: "?ne > 2" using hlen hne_eq by (by100 linarith)
+            have hsuc1_jp2: "Suc 1 mod ?ne = jp + 2"
+            proof -
+              have "jp + 2 < ?ne" using hjp hne_eq by (by100 linarith)
+              moreover have "Suc 1 = jp + 2" using True by (by100 arith)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            hence hex_match: "ex_p = vxe(Suc 1 mod ?ne) - vxe 1"
+              unfolding ex_p_def by simp
+            have hey_match: "ey_p = vye(Suc 1 mod ?ne) - vye 1"
+              using hsuc1_jp2 unfolding ey_p_def by simp
+            \<comment> \<open>p = (vxe 1 + sp12*ex\\_p, vye 1 + sp12*ey\\_p) from hdx, hdy.\<close>
+            have h_px: "fst p = vxe 1 + sp12*ex_p" using hdx unfolding dx_p_def by linarith
+            have h_py: "snd p = vye 1 + sp12*ey_p" using hdy unfolding dy_p_def by linarith
+            \<comment> \<open>edge\\_pt\\_e 1 sp12 = ((1-sp12)*vxe 1 + sp12*vxe(Suc 1 mod ne), ...).\<close>
+            have hedge: "edge_pt_e 1 sp12 = ((1-sp12)*vxe 1 + sp12*vxe(Suc 1 mod ?ne),
+                (1-sp12)*vye 1 + sp12*vye(Suc 1 mod ?ne))"
+              unfolding edge_pt_e_def by (by100 simp)
+            \<comment> \<open>Show fst(edge) = fst p and snd(edge) = snd p.\<close>
+            have hp_edge: "p = edge_pt_e 1 sp12"
+            proof -
+              \<comment> \<open>Need: (1-sp12)*vxe 1 + sp12*vxe(Suc 1 mod ne) = vxe 1 + sp12*ex\\_p.
+                 From hex\\_match: vxe(Suc 1 mod ne) = vxe 1 + ex\\_p.
+                 (1-sp12)*vxe 1 + sp12*(vxe 1+ex\\_p) = vxe 1 + sp12*ex\\_p. Ring algebra.\<close>
+              define vx2 where "vx2 = vxe(Suc 1 mod ?ne)"
+              define vy2 where "vy2 = vye(Suc 1 mod ?ne)"
+              have "vx2 = vxe 1 + ex_p" unfolding vx2_def using hex_match by linarith
+              have "vy2 = vye 1 + ey_p" unfolding vy2_def using hey_match by linarith
+              \<comment> \<open>fst edge = (1-sp12)*vxe 1 + sp12*vx2 = vxe 1-sp12*vxe 1+sp12*(vxe 1+ex\\_p)
+                 = vxe 1 + sp12*ex\\_p.\<close>
+              define sp_v1 where "sp_v1 = sp12*vxe 1"
+              define sp_vx2 where "sp_vx2 = sp12*vx2"
+              have "sp_vx2 = sp_v1 + sp12*ex_p"
+                unfolding sp_vx2_def sp_v1_def \<open>vx2 = vxe 1 + ex_p\<close> by (by100 algebra)
+              have hfst_e: "fst (edge_pt_e 1 sp12) = (1-sp12)*vxe 1 + sp12*vx2"
+                using hedge unfolding vx2_def by simp
+              define omsv1 where "omsv1 = (1-sp12)*vxe 1"
+              have "omsv1 = vxe 1 - sp_v1" unfolding omsv1_def sp_v1_def by (by100 algebra)
+              have "fst (edge_pt_e 1 sp12) = omsv1 + sp_vx2"
+                using hfst_e unfolding omsv1_def sp_vx2_def vx2_def by simp
+              hence "fst (edge_pt_e 1 sp12) = vxe 1 - sp_v1 + sp_vx2"
+                using \<open>omsv1 = vxe 1 - sp_v1\<close> by linarith
+              hence hfst_eq: "fst (edge_pt_e 1 sp12) = vxe 1 + sp12*ex_p"
+                using \<open>sp_vx2 = sp_v1 + sp12*ex_p\<close> unfolding sp_v1_def by linarith
+              define sp_v1y where "sp_v1y = sp12*vye 1"
+              define sp_vy2 where "sp_vy2 = sp12*vy2"
+              have "sp_vy2 = sp_v1y + sp12*ey_p"
+                unfolding sp_vy2_def sp_v1y_def \<open>vy2 = vye 1 + ey_p\<close> by (by100 algebra)
+              have hsnd_e: "snd (edge_pt_e 1 sp12) = (1-sp12)*vye 1 + sp12*vy2"
+                using hedge unfolding vy2_def by simp
+              define omsv1y where "omsv1y = (1-sp12)*vye 1"
+              have "omsv1y = vye 1 - sp_v1y" unfolding omsv1y_def sp_v1y_def by (by100 algebra)
+              have "snd (edge_pt_e 1 sp12) = omsv1y + sp_vy2"
+                using hsnd_e unfolding omsv1y_def sp_vy2_def vy2_def by simp
+              hence "snd (edge_pt_e 1 sp12) = vye 1 - sp_v1y + sp_vy2"
+                using \<open>omsv1y = vye 1 - sp_v1y\<close> by linarith
+              hence hsnd_eq: "snd (edge_pt_e 1 sp12) = vye 1 + sp12*ey_p"
+                using \<open>sp_vy2 = sp_v1y + sp12*ey_p\<close> unfolding sp_v1y_def by linarith
+              from hfst_eq hsnd_eq h_px h_py show ?thesis
+                by (cases "edge_pt_e 1 sp12", cases p) simp
+            qed
+            \<comment> \<open>sp12 \\<in> I\\_set: from matching with tp12=0.\<close>
+            have "sp12 \<in> I_set"
+              using hmx0 hmy0 htp0 hC10_expanded hnw_pos ht sorry
+            have "1 < ?ne" using hlen_ext by (by100 linarith)
+            from hint_p[rule_format, OF this \<open>sp12 \<in> I_set\<close>] hp_edge show False by (by100 simp)
           next
             case False note hjp_ne0 = this
             show False
