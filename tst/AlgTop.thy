@@ -2426,8 +2426,118 @@ proof -
            This expression \\<ge> 0 when delta \\<le> theta0, contradicting C11 < 0.\<close>
         \<comment> \<open>For now: sorry the det computation. Needs expressing det in terms of
            sin(alpha\\_cross), sin(theta0), etc. using the equal-modulus formula.\<close>
-        show False sorry \<comment> \<open>Equal-modulus det \\<ge> 0 when delta \\<le> theta0 (from cos monotonicity),
-           OR hfan\\_det < 0 when delta > theta0 (three-sine product). Both \\<to> False.\<close>
+        \<comment> \<open>Key identity: the C11 det equals r^2*(sin(theta0-delta)+sin(delta)-sin(theta0)).
+           Proof: u\\_j = cw + r*cis(Arg(z\\_0)+alpha\\_j). Differences factor out cis(Arg(z\\_0)).
+           Then conj(cis(alpha\\_cross)-1)*(cis(theta0)-1) gives the formula via cis periodicity.\<close>
+        have hSuc0: "Suc 0 mod nw = 1" using hnw by (by100 simp)
+        \<comment> \<open>The C11 det in terms of cc values.\<close>
+        have hdet_formula: "(vxw (m0_real+1)-vxw 0)*(vyw 1-vyw 0)-(vyw (m0_real+1)-vyw 0)*(vxw 1-vxw 0) =
+            r^2 * (sin(theta0-delta) + sin delta - sin theta0)"
+          sorry \<comment> \<open>From equal-modulus cis expansion + sin(2\\<pi>+\\<delta>)=sin(\\<delta>).\<close>
+        \<comment> \<open>From h\\_C11\\_inst: the LHS < 0.\<close>
+        from h_C11_inst hSuc0
+        have hdet_neg: "r^2 * (sin(theta0-delta) + sin delta - sin theta0) < 0"
+          using hdet_formula by simp
+        \<comment> \<open>Case analysis on delta vs theta0.\<close>
+        show False
+        proof (cases "delta \<le> theta0")
+          case True
+          \<comment> \<open>CASE 1: delta \\<le> theta0. Show sin(theta0-delta)+sin(delta)-sin(theta0) \\<ge> 0.\<close>
+          have "sin(theta0-delta) + sin delta - sin theta0 \<ge> 0"
+          proof -
+            \<comment> \<open>sin(A-B)+sin(B) = 2*sin(A/2)*cos((A-2B)/2). So:
+               sin(theta0-delta)+sin(delta) = 2*sin(theta0/2)*cos((theta0-2*delta)/2).
+               And sin(theta0) = 2*sin(theta0/2)*cos(theta0/2).
+               Difference = 2*sin(theta0/2)*(cos((theta0-2*delta)/2)-cos(theta0/2)).
+               For delta \\<in> [0, theta0]: |(theta0-2*delta)/2| \\<le> theta0/2.
+               cos is even and decreasing on [0,\\<pi>]: cos(|(theta0-2*delta)/2|) \\<ge> cos(theta0/2).\<close>
+            show ?thesis sorry \<comment> \<open>Trigonometric identity + cos monotonicity.\<close>
+          qed
+          hence "r^2 * (sin(theta0-delta) + sin delta - sin theta0) \<ge> 0"
+            using hr_pos by (by100 simp)
+          with hdet_neg show False by linarith
+        next
+          case False
+          hence "delta > theta0" by linarith
+          \<comment> \<open>CASE 2: delta > theta0. Use hfan\\_det at m=m0\\_real, n=m0\\_real+1.\<close>
+          \<comment> \<open>The hfan\\_det product = r^2*4*sin(A)*sin(B)*sin(C) where:
+             A = (alpha\\_m0 - theta0)/2 > 0 (first loop, sin > 0)
+             B = (alpha\\_cross - theta0)/2 > \\<pi> (second loop, sin < 0)
+             C = theta\\_{m0}/2 > 0 (sin > 0)
+             Product < 0, contradicting hfan\\_det > 0.\<close>
+          have hm0_ge2_nat: "2 \<le> m0_real" using hm0_ge2 .
+          have hm0_lt_nat: "m0_real < m0_real + 1" by (by100 arith)
+          have hm01_lt: "m0_real + 1 < nw" using hm0_lt .
+          from hfan_det[rule_format, OF hm0_ge2_nat hm0_lt_nat hm01_lt]
+          have hfan_pos: "(vxw m0_real - vxw 1) * (vyw (m0_real+1) - vyw 1) -
+              (vyw m0_real - vyw 1) * (vxw (m0_real+1) - vxw 1) > 0" .
+          \<comment> \<open>This equals r^2*4*sin((alpha\\_m0-theta0)/2)*sin((alpha\\_cross-theta0)/2)*sin(theta\\_{m0}/2).\<close>
+          have hfan_formula: "(vxw m0_real - vxw 1) * (vyw (m0_real+1) - vyw 1) -
+              (vyw m0_real - vyw 1) * (vxw (m0_real+1) - vxw 1) =
+              r^2 * 4 * sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2)"
+            sorry \<comment> \<open>From equal-modulus cis-difference formula.\<close>
+          from hfan_pos hfan_formula
+          have hprod_pos: "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) > 0"
+          proof -
+            have "r^2 * 4 > 0" using hr_pos by (by100 simp)
+            from hfan_pos hfan_formula have "r^2 * 4 * (sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2)) > 0"
+              by (by100 linarith)
+            with \<open>r^2 * 4 > 0\<close> show ?thesis sorry \<comment> \<open>r^2*4*x > 0 and r^2*4 > 0 \\<Longrightarrow> x > 0.\<close>
+          qed
+          \<comment> \<open>But: sin((alpha\\_cross-theta0)/2) < 0 since alpha\\_cross-theta0 = 2\\<pi>+delta-theta0 > 2\\<pi>.
+             So (alpha\\_cross-theta0)/2 > \\<pi>. sin < 0.\<close>
+          have "alpha_cross - theta0 > 2*pi"
+            using \<open>delta > theta0\<close> unfolding delta_def alpha_cross_def by linarith
+          hence "sin((alpha_cross - theta0)/2) < 0"
+          proof -
+            have hpi_lt: "pi < (alpha_cross - theta0)/2"
+              using \<open>alpha_cross - theta0 > 2*pi\<close> by simp
+            from halpha_m0_lt have "alpha_cross < 3*pi" unfolding alpha_cross_def .
+            hence "(alpha_cross - theta0)/2 < 3*pi/2" using htheta0_pos by simp
+            hence h2pi_lt: "(alpha_cross - theta0)/2 < 2*pi" using pi_gt_zero by linarith
+            from sin_lt_zero[OF hpi_lt h2pi_lt] show ?thesis .
+          qed
+          \<comment> \<open>And the other two sines > 0.\<close>
+          have "sin(theta (m0_real) / 2) > 0"
+          proof -
+            have "m0_real < nw" using hm0_lt by linarith
+            from htheta_pos[rule_format, OF this] have "theta m0_real > 0" "theta m0_real < pi" by auto
+            thus ?thesis using sin_gt_zero by (by100 auto)
+          qed
+          have "sin((alpha m0_real - theta0)/2) > 0"
+          proof -
+            have "alpha m0_real > theta0"
+            proof -
+              have "alpha m0_real \<ge> alpha 2"
+                using hm0_ge2 sorry \<comment> \<open>alpha monotone: m0 \\<ge> 2 \\<Longrightarrow> alpha(m0) \\<ge> alpha(2).\<close>
+              moreover have "alpha 2 > theta0"
+                using htheta_pos hnw sorry \<comment> \<open>alpha\\_2 = theta\\_0+theta\\_1 > theta\\_0.\<close>
+              ultimately show ?thesis by linarith
+            qed
+            moreover have "alpha m0_real < 2*pi"
+              sorry \<comment> \<open>m0 is in first loop by construction (alpha < 2\\<pi> at the GREATEST).\<close>
+            ultimately have h1: "(alpha m0_real - theta0)/2 > 0" by simp
+            have h2: "(alpha m0_real - theta0)/2 < pi" using \<open>alpha m0_real < 2*pi\<close> htheta0_pos by simp
+            from sin_gt_zero[OF h1 h2] show ?thesis .
+          qed
+          \<comment> \<open>Product: (+)*(-)*)(+) < 0. But we showed > 0. Contradiction.\<close>
+          from \<open>sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) > 0\<close>
+            \<open>sin((alpha m0_real - theta0)/2) > 0\<close> \<open>sin(theta (m0_real) / 2) > 0\<close>
+            \<open>sin((alpha_cross - theta0)/2) < 0\<close>
+          show False
+          proof -
+            have "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) < 0"
+              using \<open>sin((alpha m0_real - theta0)/2) > 0\<close> \<open>sin((alpha_cross - theta0)/2) < 0\<close>
+              using mult_pos_neg[of "sin((alpha m0_real - theta0)/2)" "sin((alpha_cross - theta0)/2)"]
+              by linarith
+            hence "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) < 0"
+              using \<open>sin(theta (m0_real) / 2) > 0\<close>
+              mult_neg_pos[of "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2)" "sin(theta (m0_real) / 2)"]
+              by linarith
+            with \<open>sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) > 0\<close>
+            show False by linarith
+          qed
+        qed
       qed
       with hk(2) show "alpha nw = 2*pi" by simp
     qed
