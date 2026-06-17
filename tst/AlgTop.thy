@@ -26,9 +26,12 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-17, session 1610):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-16, session 1625):
 
-~68 sorry word occurrences. Build ~50s.
+~69 sorry word occurrences. Build ~46s.
+prop12 restructured: 3 case sorrys (jp=0, jp=nw-1, jp\\<notin>{0,nw-1}) replacing 1 monolithic sorry.
+jp=0 and jp=nw-1 provable via affine independence from C10.
+jp\\<notin>{0,nw-1} depends on spur\\_arc\\_target\\_sector (sorry at line ~1690).
 
 DEPENDENCY TREE FOR CANCEL CHAIN:
   spur\\_collapse\\_cancel\\_homeo (phi construction, ~2 sorry proof commands)
@@ -1631,6 +1634,7 @@ lemma spur_arc_target_sector:
           (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
       and hC11: "\<forall>i<nw. \<forall>k<nw. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod nw \<longrightarrow>
           (vxw k-vxw i)*(vyw(Suc i mod nw)-vyw i)-(vyw k-vyw i)*(vxw(Suc i mod nw)-vxw i) < 0"
+      and hC5: "cxw = (\<Sum>j<nw. vxw j) / real nw" "cyw = (\<Sum>j<nw. vyw j) / real nw"
       and hjp: "jp < nw" and hjp_ne0: "jp \<noteq> 0" and hjp_ne_last: "Suc jp mod nw \<noteq> 0"
   shows "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0
          \<or> (vxw(Suc jp mod nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod nw)-cyw)*(vxw 0-cxw) > 0"
@@ -6605,12 +6609,34 @@ proof -
             (vyw i - ?cyw) * (vxw(Suc i mod ?nw) - ?cxw) > 0"
           using hC10_w by (by100 simp)
         show "phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p"
-          using hjp hin_sec hp hp_ne_v1 ht hint_p
-            hphi_affine_on_sector hdet_pos hphi_on_spur0
-            hC10_expanded hC11_w hC11_e hlen hne_eq hnw_pos
-            spur_arc_target_sector[OF hlen hC10_expanded hC11_w]
-            spur_arc_match_forces_edge[OF hlen hC10_expanded hC11_w]
-          sorry
+        proof
+          assume heq: "phi_fn (edge_pt_e 0 t) = phi_fn p"
+          \<comment> \<open>STRUCTURED PROOF: case jp = 0 or nw-1: affine independence from C10 forces
+             Cramer coordinate zero, making p an edge point (contradiction with hint\\_p).
+             Case jp \\<notin> {0, nw-1}: spur\\_arc\\_target\\_sector gives cross product contradiction.\<close>
+          show False
+          proof (cases "jp = 0")
+            case True
+            show False
+              using heq ht hjp True hp hin_sec hp_ne_v1 hint_p hlen_ext hlen hne_eq hnw_pos
+                hphi_on_spur0 hphi_affine_on_sector hdet_pos hC10_expanded sorry
+          next
+            case False note hjp_ne0 = this
+            show False
+            proof (cases "Suc jp mod ?nw = 0")
+              case True
+              show False
+                using heq ht hjp True hjp_ne0 hp hin_sec hp_ne_v1 hint_p hlen_ext hlen hne_eq hnw_pos
+                  hphi_on_spur0 hphi_affine_on_sector hdet_pos hC10_expanded sorry
+            next
+              case False note hjp_ne_last = this
+              show False
+                using heq ht hjp hjp_ne0 hjp_ne_last hp hin_sec hp_ne_v1 hint_p hlen hne_eq hnw_pos
+                  hphi_on_spur0 hphi_affine_on_sector hdet_pos hC10_expanded hC11_w
+                  spur_arc_target_sector[OF hlen hC10_expanded hC11_w] sorry
+            qed
+          qed
+        qed
       qed
       show ?thesis
         by (rule that[of phi_fn])
