@@ -1619,6 +1619,23 @@ next
   show ?thesis sorry
 qed
 
+\<comment> \<open>Standalone lemma: spur arc point is NOT in target sector jp for jp \\<notin> {0, nw-1}.
+   The spur arc ((1-t)*u\\_0 + t*cw) has cross\\_cw(j, spur) = (1-t)*cross\\_cw(j, u\\_0).
+   cross\\_cw(j, u\\_0) = det(u\\_j-cw, u\\_0-cw).
+   For jp \\<notin> {0, nw-1}: either cross\\_cw(jp, u\\_0) < 0 (from consecutive C10 analysis)
+   or cross\\_cw(Suc jp mod nw, u\\_0) > 0, so the in\\_tsector condition fails.\<close>
+lemma spur_arc_target_sector:
+  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
+  assumes hnw: "nw \<ge> 3"
+      and hC10: "\<forall>i<nw. (vxw i - cxw) * (vyw(Suc i mod nw) - cyw) -
+          (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
+      and hjp: "jp < nw" and hjp_ne0: "jp \<noteq> 0" and hjp_ne_last: "Suc jp mod nw \<noteq> 0"
+  shows "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0
+         \<or> (vxw(Suc jp mod nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod nw)-cyw)*(vxw 0-cxw) > 0"
+  \<comment> \<open>Either cross\\_cw(jp, u\\_0) < 0 or cross\\_cw(jp+1, u\\_0) > 0.
+     This means the spur arc point is NOT in target sector jp.\<close>
+  sorry
+
 \<comment> \<open>Standalone lemma: fan triangle interiors from a centroid are disjoint.
    If q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} with \\<alpha>,s,t > 0
    and q = \\<alpha>'*cw + s'*u\\_{j'} + t'*u\\_{j'+1} with \\<alpha>',s',t' > 0
