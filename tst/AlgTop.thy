@@ -6540,26 +6540,21 @@ proof -
         qed
         from hfan_cover[rule_format, OF hp] hp_ne_v1
         obtain jp where hjp: "jp < ?nw" and hin_sec: "in_sector jp p" by blast
-        \<comment> \<open>PROOF STRATEGY for phi\\_fn(edge\\_pt\\_e 0 t) \\<noteq> phi\\_fn p:
-           1. Get affine form: phi\\_fn(p) = \\<alpha>*cw + s*u\\_jp + t\\_p*u\\_{jp+1}, \\<alpha> > 0.
-           2. Spur arc = r*cw + (1-r)*u\\_0.
-           3. Assume equal: \\<alpha>=r, s*u\\_jp+t\\_p*u\\_{jp+1} = (1-r)*u\\_0.
-           4. If jp=0: t\\_p=0 \\<to> p on edge 1 \\<to> contradiction with interior.
-           5. If jp=nw-1: s=0 \\<to> p on edge 0 \\<to> contradiction.
-           6. Other jp: s+t\\_p>0 and u\\_0 = convex combo of u\\_jp,u\\_{jp+1}.
-              C11 at edge jp: det(u\\_0-u\\_jp, u\\_{jp+1}-u\\_jp) < 0,
-              but collinearity gives det=0. Contradiction.
-           All infrastructure (centroid weight, C11) is available.\<close>
-        \<comment> \<open>Use spur\\_arc\\_match\\_forces\\_edge to derive that if phi\\_fn(p)=spur,
-           then jp=0\\<and>t=0 or jp=nw-1\\<and>s=0 or s=t=0. Each contradicts interior.\<close>
-        \<comment> \<open>This needs the Cramer decomposition of phi\\_fn(p) matching the spur formula.
-           Then spur\\_arc\\_match\\_forces\\_edge gives the disjunction.
-           All 3 disjuncts lead to p on a polygon edge or p=v\\_1, contradicting interior.\<close>
+        \<comment> \<open>PROOF via target fan sector analysis:
+           1. For jp \\<notin> {0, nw-1}: spur\\_arc\\_target\\_sector shows spur arc NOT in sector jp.
+              phi\\_fn(p) IS in sector jp (affine map). So \\<noteq>.
+           2. For jp = 0: spur\\_arc\\_match\\_forces\\_edge j=0 case: t\\_p=0 \\<to> p on edge \\<to> contradiction.
+           3. For jp = nw-1: j+1=0 case: s\\_p=0 \\<to> p on edge \\<to> contradiction.\<close>
+        \<comment> \<open>Expand hC10\\_w for use with spur\\_arc\\_target\\_sector.\<close>
+        have hC10_expanded: "\<forall>i<?nw. (vxw i - ?cxw) * (vyw(Suc i mod ?nw) - ?cyw) -
+            (vyw i - ?cyw) * (vxw(Suc i mod ?nw) - ?cxw) > 0"
+          using hC10_w by (by100 simp)
         show "phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p"
           using hjp hin_sec hp hp_ne_v1 ht hint_p
             hphi_affine_on_sector hdet_pos hphi_on_spur0
-            hC10_w hC11_w hC11_e hlen hne_eq hnw_pos
-            spur_arc_match_forces_edge
+            hC10_expanded hC11_w hC11_e hlen hne_eq hnw_pos
+            spur_arc_target_sector[OF hlen hC10_expanded]
+            spur_arc_match_forces_edge[OF hlen hC10_expanded hC11_w]
           sorry
       qed
       show ?thesis
