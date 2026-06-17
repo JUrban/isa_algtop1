@@ -2052,10 +2052,37 @@ proof -
          For nw \\<le> 4: alpha nw < nw*\\<pi> \\<le> 4\\<pi>, and 4\\<pi> is excluded (strict), so k=1.
          For nw \\<ge> 5: need C11 argument (convexity forces single winding).\<close>
     \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
-    \<comment> \<open>Partial telescope: z\\_m/z\\_0 = \\<Prod>\\_{j<m} (z\\_{j+1}/z\\_j) for m \\<le> nw.\<close>
-    have hpartial_telescope: "\<forall>m\<le>nw. zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
-      sorry \<comment> \<open>Induction on m. Base: m=0 gives 1*z\\_0. Step: multiply by z\\_{m+1}/z\\_m.
-         Uses: Suc j mod nw = j+1 for j < nw-1, and Suc(nw-1) mod nw = 0.\<close>
+    \<comment> \<open>Partial telescope for m < nw: z\\_m = (\\<Prod>\\_{j<m} ratio\\_j) * z\\_0.
+       For j < m < nw: Suc j mod nw = j+1, so ratios telescope.\<close>
+    have hpartial_telescope: "\<forall>m<nw. zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
+    proof -
+      have aux: "\<And>m. m < nw \<Longrightarrow> zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
+      proof -
+        fix m show "m < nw \<Longrightarrow> zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
+        proof (induction m)
+          case 0 thus ?case by simp
+        next
+          case (Suc k)
+          hence hk_lt: "k < nw" by simp
+          have hSuc_lt: "Suc k < nw" using Suc.prems .
+          have hSuc_mod: "Suc k mod nw = Suc k" using hSuc_lt by (by100 simp)
+          from Suc.IH[OF hk_lt]
+          have hIH: "zw k = (\<Prod>j<k. zw (Suc j mod nw) / zw j) * zw 0" .
+          have "(\<Prod>j<Suc k. zw (Suc j mod nw) / zw j) =
+              (\<Prod>j<k. zw (Suc j mod nw) / zw j) * (zw (Suc k mod nw) / zw k)"
+            by simp
+          hence "(\<Prod>j<Suc k. zw (Suc j mod nw) / zw j) * zw 0 =
+              (\<Prod>j<k. zw (Suc j mod nw) / zw j) * (zw (Suc k) / zw k) * zw 0"
+            using hSuc_mod by simp
+          also have "\<dots> = (zw (Suc k) / zw k) * ((\<Prod>j<k. zw (Suc j mod nw) / zw j) * zw 0)"
+            by (by100 algebra)
+          also have "\<dots> = (zw (Suc k) / zw k) * zw k" using hIH by simp
+          also have "\<dots> = zw (Suc k)" using hzw_ne[rule_format, OF hk_lt] by simp
+          finally show ?case by simp
+        qed
+      qed
+      thus ?thesis by (by100 blast)
+    qed
     \<comment> \<open>Product decomposition: each ratio = |ratio|*cis(theta).\<close>
     \<comment> \<open>Product of cis: \\<Prod> cis(\\<theta>\\_j) = cis(\\<Sum> \\<theta>\\_j) = cis(alpha m).\<close>
     have hcc_sin: "\<forall>m. 0 < m \<longrightarrow> m < nw \<longrightarrow>
