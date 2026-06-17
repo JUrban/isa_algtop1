@@ -1622,6 +1622,65 @@ next
   show ?thesis sorry
 qed
 
+\<comment> \<open>Standalone lemma: if phi(p) = spur arc point and jp=0, then t\\_p = 0.
+   From the affine form: (1-s-t)*cw + s*u\\_0 + t*u\\_1 = (1-r)*u\\_0 + r*cw.
+   Rearranging: s*(u\\_0-cw) + t*(u\\_1-cw) = (1-r)*(u\\_0-cw).
+   Cramer with det(u\\_0-cw, u\\_1-cw) = C10(0) > 0:
+   t*C10(0) = (1-r)*det(u\\_0-cw, u\\_0-cw) = 0. So t = 0.\<close>
+lemma spur_match_sector0_forces_t_zero:
+  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
+  assumes hnw: "nw \<ge> 3"
+      and hC10_0: "(vxw 0 - cxw) * (vyw(Suc 0 mod nw) - cyw) - (vyw 0 - cyw) * (vxw(Suc 0 mod nw) - cxw) > 0"
+      and hmx: "(1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw) = (1-r)*vxw 0 + r*cxw"
+      and hmy: "(1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw) = (1-r)*vyw 0 + r*cyw"
+  shows "tp = 0"
+proof -
+  \<comment> \<open>Multiply hmx by (vyw 0-cyw), hmy by (vxw 0-cxw), subtract to eliminate s.\<close>
+  define Ay where "Ay = vyw 0 - cyw"
+  define Ax where "Ax = vxw 0 - cxw"
+  \<comment> \<open>From hmx: Ay*((1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw)) = Ay*((1-r)*vxw 0 + r*cxw).\<close>
+  \<comment> \<open>From hmy: Ax*((1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw)) = Ax*((1-r)*vyw 0 + r*cyw).\<close>
+  \<comment> \<open>Subtract: Ay*LHS\\_x - Ax*LHS\\_y = Ay*RHS\\_x - Ax*RHS\\_y.\<close>
+  \<comment> \<open>LHS: (1-s-tp)*(Ay*cxw-Ax*cyw) + s*(Ay*vxw 0-Ax*vyw 0) + tp*(Ay*vxw(suc)-Ax*vyw(suc)).\<close>
+  \<comment> \<open>Key: Ay*vxw 0 - Ax*vyw 0 = (vyw 0-cyw)*vxw 0 - (vxw 0-cxw)*vyw 0 = cxw*vyw 0-cyw*vxw 0
+     = Ay*cxw - Ax*cyw. So the (1-s-tp) and s terms COMBINE: (1-tp)*(Ay*cxw-Ax*cyw).\<close>
+  \<comment> \<open>RHS: (1-r)*Ay*vxw 0 + r*Ay*cxw - (1-r)*Ax*vyw 0 - r*Ax*cyw
+     = (1-r)*(Ay*vxw 0-Ax*vyw 0) + r*(Ay*cxw-Ax*cyw)
+     = (1-r)*(Ay*cxw-Ax*cyw) + r*(Ay*cxw-Ax*cyw) = Ay*cxw - Ax*cyw.\<close>
+  \<comment> \<open>So: (1-tp)*(Ay*cxw-Ax*cyw) + tp*(Ay*vxw(suc)-Ax*vyw(suc)) = Ay*cxw - Ax*cyw.\<close>
+  \<comment> \<open>Hence: tp*(Ay*vxw(suc)-Ax*vyw(suc) - (Ay*cxw-Ax*cyw)) = 0.\<close>
+  \<comment> \<open>The coefficient of tp is: Ay*(vxw(suc)-cxw) - Ax*(vyw(suc)-cyw) = C10(0) > 0.\<close>
+  \<comment> \<open>Define products for Cramer cross-multiplication.\<close>
+  have h1: "Ay*((1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw)) = Ay*((1-r)*vxw 0 + r*cxw)"
+    using hmx by simp
+  have h2: "Ax*((1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw)) = Ax*((1-r)*vyw 0 + r*cyw)"
+    using hmy by simp
+  \<comment> \<open>Subtract h2 from h1. On the LHS, the s*(Ay*vxw 0 - Ax*vyw 0) and
+     (1-s-tp)*(Ay*cxw - Ax*cyw) terms combine because Ay*vxw 0 - Ax*vyw 0 = Ay*cxw - Ax*cyw.
+     Result: tp * ((Ax*(vyw(Suc 0 mod nw)-cyw) - Ay*(vxw(Suc 0 mod nw)-cxw))) = 0.
+     But Ax*(vyw(suc)-cyw) - Ay*(vxw(suc)-cxw) = -C10(0) < 0. Wait, let me check the sign.\<close>
+  \<comment> \<open>Actually: Ay*vxw(suc) - Ax*vyw(suc) - (Ay*cxw - Ax*cyw) =
+     Ay*(vxw(suc)-cxw) - Ax*(vyw(suc)-cyw) = (vyw 0-cyw)*(vxw(suc)-cxw)-(vxw 0-cxw)*(vyw(suc)-cyw).
+     This is -C10(0) (by antisymmetry). So tp*(-C10(0)) = 0, tp = 0.\<close>
+  \<comment> \<open>The algebra is tedious but straightforward. Sorry for now.\<close>
+  \<comment> \<open>The key Cramer cross-multiplication identity.\<close>
+  have htp_zero: "tp * ((vyw 0-cyw)*(vxw(Suc 0 mod nw)-cxw) - (vxw 0-cxw)*(vyw(Suc 0 mod nw)-cyw)) = 0"
+  proof -
+    \<comment> \<open>h1-h2 gives: the difference of the cross-multiplied matching equations.\<close>
+    from h1 have h1': "(vyw 0-cyw)*((1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw)) =
+        (vyw 0-cyw)*((1-r)*vxw 0 + r*cxw)" unfolding Ay_def .
+    from h2 have h2': "(vxw 0-cxw)*((1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw)) =
+        (vxw 0-cxw)*((1-r)*vyw 0 + r*cyw)" unfolding Ax_def .
+    \<comment> \<open>Expand and subtract. The key cancellation: the s terms cancel because
+       (vyw 0-cyw)*vxw 0 - (vxw 0-cxw)*vyw 0 = cxw*(vyw 0)-cyw*(vxw 0)
+       and (vyw 0-cyw)*cxw - (vxw 0-cxw)*cyw = same. So (1-s-tp+s)=1-tp factor.\<close>
+    show ?thesis using h1' h2' by (by20000 algebra)
+  qed
+  have hdet_ne: "(vyw 0-cyw)*(vxw(Suc 0 mod nw)-cxw) - (vxw 0-cxw)*(vyw(Suc 0 mod nw)-cyw) \<noteq> 0"
+    using hC10_0 by linarith
+  from htp_zero hdet_ne show "tp = 0" by simp
+qed
+
 \<comment> \<open>Standalone lemma: spur arc point is NOT in target sector jp for jp \\<notin> {0, nw-1}.
    The spur arc ((1-t)*u\\_0 + t*cw) has cross\\_cw(j, spur) = (1-t)*cross\\_cw(j, u\\_0).
    cross\\_cw(j, u\\_0) = det(u\\_j-cw, u\\_0-cw).
