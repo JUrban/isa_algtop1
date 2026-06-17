@@ -2318,19 +2318,81 @@ proof -
           show ?thesis by linarith
         qed
         \<comment> \<open>By discrete IVT: \\<exists>m0 with alpha(m0) < 2\\<pi> and alpha(m0+1) \\<ge> 2\\<pi>.\<close>
-        have hm0_props: "m0 \<ge> 2 \<and> m0 + 1 < nw \<and> alpha (m0+1) \<ge> 2*pi \<and> alpha (m0+1) < 3*pi"
-          sorry \<comment> \<open>Discrete IVT on alpha sequence + each step < \\<pi>.\<close>
-        hence hm0_ge2: "m0 \<ge> 2" and hm0_lt: "m0 + 1 < nw"
-            and halpha_m0_ge: "alpha (m0+1) \<ge> 2*pi" and halpha_m0_lt: "alpha (m0+1) < 3*pi"
-          by auto
-        \<comment> \<open>Step 2: C11 at edge (0, 1), vertex m0+1.\<close>
-        have hm0_ne0: "m0+1 \<noteq> 0" by (by100 arith)
+        \<comment> \<open>Discrete IVT: define m0 via GREATEST, show properties.\<close>
+        \<comment> \<open>Actually, just find ANY suitable index, no need for GREATEST.\<close>
+        \<comment> \<open>alpha\\_2 = theta\\_0+theta\\_1 < 2\\<pi>. alpha\\_{nw-1} > 2\\<pi>. So \\<exists>m with alpha\\_m < 2\\<pi> \\<le> alpha\\_{m+1}.\<close>
+        have hm0_props: "\<exists>m0. m0 \<ge> 2 \<and> m0 + 1 < nw \<and> alpha (m0+1) \<ge> 2*pi \<and> alpha (m0+1) < 3*pi"
+        proof -
+          \<comment> \<open>alpha\\_2 < 2\\<pi>: alpha\\_2 = theta\\_0+theta\\_1 < \\<pi>+\\<pi> = 2\\<pi>.\<close>
+          have "alpha 2 < 2*pi"
+          proof -
+            have h0: "0 < nw" using hnw by linarith
+            have h1: "1 < nw" using hnw by linarith
+            have "alpha 2 = theta 0 + theta 1" unfolding alpha_def
+              by (simp add: lessThan_Suc numeral_2_eq_2)
+            also have "\<dots> < pi + pi"
+              using htheta_pos[rule_format, OF h0] htheta_pos[rule_format, OF h1] by linarith
+            finally show ?thesis by simp
+          qed
+          \<comment> \<open>alpha\\_{nw-1} > 2\\<pi> (proved above as halpha\\_nw1\\_ge).\<close>
+          \<comment> \<open>By well-ordering: let m0 = Max {m. m \\<le> nw-2 \\<and> alpha m < 2\\<pi>}.\<close>
+          define S where "S = {m. 2 \<le> m \<and> m \<le> nw-2 \<and> alpha m < 2*pi}"
+          have "2 \<in> S" using \<open>alpha 2 < 2*pi\<close> \<open>nw \<ge> 5\<close> unfolding S_def by (by100 auto)
+          hence "S \<noteq> {}" by (by100 blast)
+          have "finite S" unfolding S_def by (by100 auto)
+          define m0_val where "m0_val = Max S"
+          have hm0_in: "m0_val \<in> S" using Max_in[OF \<open>finite S\<close> \<open>S \<noteq> {}\<close>] unfolding m0_val_def .
+          hence hm0_ge: "m0_val \<ge> 2" and hm0_le: "m0_val \<le> nw-2" and hm0_alpha: "alpha m0_val < 2*pi"
+            unfolding S_def by (by100 auto)+
+          have hm0_max: "\<forall>m \<in> S. m \<le> m0_val" using Max_ge[OF \<open>finite S\<close>] unfolding m0_val_def by (by100 auto)
+          \<comment> \<open>alpha(m0\\_val+1) \\<ge> 2\\<pi>: otherwise m0\\_val+1 \\<in> S, contradicting maximality.\<close>
+          have "alpha (m0_val+1) \<ge> 2*pi"
+          proof (rule ccontr)
+            assume "\<not> alpha (m0_val+1) \<ge> 2*pi"
+            hence "alpha (m0_val+1) < 2*pi" by linarith
+            have "m0_val+1 \<le> nw-2"
+            proof (rule ccontr)
+              assume "\<not> m0_val+1 \<le> nw-2"
+              hence "m0_val+1 > nw-2" by linarith
+              hence "m0_val \<ge> nw-2" by linarith
+              with hm0_le have "m0_val = nw-2" by linarith
+              hence "m0_val+1 = nw-1" using \<open>nw \<ge> 5\<close> by (by100 arith)
+              from \<open>alpha (m0_val+1) < 2*pi\<close> have "alpha (nw-1) < 2*pi"
+                using \<open>m0_val+1 = nw-1\<close> by simp
+              with halpha_nw1_ge show False by linarith
+            qed
+            have "m0_val+1 \<in> S" using \<open>alpha (m0_val+1) < 2*pi\<close> hm0_ge \<open>m0_val+1 \<le> nw-2\<close>
+              unfolding S_def by (by100 auto)
+            from hm0_max[rule_format, OF this] show False by linarith
+          qed
+          \<comment> \<open>alpha(m0\\_val+1) < 3\\<pi>: each step < \\<pi>.\<close>
+          have "alpha (m0_val+1) < 3*pi"
+          proof -
+            have "alpha (m0_val+1) = alpha m0_val + theta m0_val" unfolding alpha_def by simp
+            also have "\<dots> < 2*pi + pi"
+            proof -
+              have "m0_val < nw" using hm0_le \<open>nw \<ge> 5\<close> by linarith
+              from htheta_pos[rule_format, OF this] have "theta m0_val < pi" by simp
+              with hm0_alpha show ?thesis by linarith
+            qed
+            also have "\<dots> = 3*pi" by simp
+            finally show ?thesis .
+          qed
+          \<comment> \<open>m0\\_val+1 < nw.\<close>
+          have "m0_val+1 < nw" using hm0_le \<open>nw \<ge> 5\<close> by linarith
+          with hm0_ge \<open>alpha (m0_val+1) \<ge> 2*pi\<close> \<open>alpha (m0_val+1) < 3*pi\<close>
+          show ?thesis by (by100 blast)
+        qed
+        then obtain m0_real where hm0_ge2: "m0_real \<ge> 2" and hm0_lt: "m0_real + 1 < nw"
+            and halpha_m0_ge: "alpha (m0_real+1) \<ge> 2*pi" and halpha_m0_lt: "alpha (m0_real+1) < 3*pi"
+          by (by100 blast)
+        \<comment> \<open>Step 2: C11 at edge (0, 1), vertex m0\\_real+1.\<close>
+        have hm0_ne0: "m0_real+1 \<noteq> 0" using hm0_ge2 by (by100 arith)
         have "Suc 0 mod nw = 1" using hnw by (by100 simp)
-        have hm0_ne1: "m0+1 \<noteq> Suc 0 mod nw" using hm0_ge2 \<open>Suc 0 mod nw = 1\<close> by (by100 arith)
-        have "m0 + 1 < nw" using hm0_lt .
+        have hm0_ne1: "m0_real+1 \<noteq> Suc 0 mod nw" using hm0_ge2 \<open>Suc 0 mod nw = 1\<close> by (by100 arith)
         have h0_lt: "(0::nat) < nw" using hnw by linarith
-        have h_C11_inst: "(vxw (m0+1)-vxw 0)*(vyw(Suc 0 mod nw)-vyw 0)-(vyw (m0+1)-vyw 0)*(vxw(Suc 0 mod nw)-vxw 0) < 0"
-          using hC11[rule_format, OF h0_lt \<open>m0+1 < nw\<close> hm0_ne0 hm0_ne1] .
+        have h_C11_inst: "(vxw (m0_real+1)-vxw 0)*(vyw(Suc 0 mod nw)-vyw 0)-(vyw (m0_real+1)-vyw 0)*(vxw(Suc 0 mod nw)-vxw 0) < 0"
+          using hC11[rule_format, OF h0_lt hm0_lt hm0_ne0 hm0_ne1] .
         \<comment> \<open>Step 3: Compute det(u\\_{m0+1}-u\\_0, u\\_1-u\\_0) using the equal-modulus property.
            All u\\_j = cw + r*cis(phi\\_j) where phi\\_j = Arg(z\\_0)+alpha\\_j.
            det = r^2 * 4*sin(alpha\\_{m0+1}/2)*sin(theta\\_0/2)*sin((theta\\_0-alpha\\_{m0+1})/2).\<close>
