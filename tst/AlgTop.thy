@@ -2041,8 +2041,16 @@ proof -
       qed
     qed
     define alpha where "alpha m = (\<Sum>j<m. theta j)" for m
+    \<comment> \<open>Telescope: \\<Prod>\\_{j<nw} (z\\_{j+1}/z\\_j) = 1, so cis(\\<Sum> \\<theta>\\_j) = 1, hence \\<Sum> = 2k\\<pi>.
+       For convex polygon (C10): k=1, so \\<Sum> = 2\\<pi>.\<close>
+    have htelescope: "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = 1"
+      sorry \<comment> \<open>Cyclic telescope: \\<Prod> zw(j+1 mod nw)/zw j = 1 (numerators = denominators up to reindexing).\<close>
     have halpha_sum: "alpha nw = 2*pi"
-      sorry \<comment> \<open>Telescope: z\\_nw/z\\_0 = z\\_0/z\\_0 = 1, so total angle = 2\\<pi>.\<close>
+      sorry \<comment> \<open>From telescope = 1: cis(alpha nw) = 1, so alpha nw = 2k\\<pi>.
+         Each theta \\<in> (0,\\<pi>) and nw \\<ge> 3: alpha nw \\<in> (0, nw*\\<pi>).
+         For k=1: need to rule out k \\<ge> 2 using C10/C11 convexity.
+         For nw \\<le> 4: alpha nw < nw*\\<pi> \\<le> 4\\<pi>, and 4\\<pi> is excluded (strict), so k=1.
+         For nw \\<ge> 5: need C11 argument (convexity forces single winding).\<close>
     \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
     have hcc_sin: "\<forall>m. 0 < m \<longrightarrow> m < nw \<longrightarrow>
         cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
