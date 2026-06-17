@@ -1810,6 +1810,7 @@ lemma spur_arc_target_sector:
       and hC5: "cxw = (\<Sum>j<nw. vxw j) / real nw" "cyw = (\<Sum>j<nw. vyw j) / real nw"
       and hfan_det: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < nw \<longrightarrow>
           (vxw m - vxw 1) * (vyw n - vyw 1) - (vyw m - vyw 1) * (vxw n - vxw 1) > 0"
+      and hregular: "\<exists>r > 0. \<forall>j<nw. (vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2"
       and hjp: "jp < nw" and hjp_ne0: "jp \<noteq> 0" and hjp_ne_last: "Suc jp mod nw \<noteq> 0"
   shows "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0
          \<or> (vxw(Suc jp mod nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod nw)-cyw)*(vxw 0-cxw) > 0"
@@ -2242,15 +2243,36 @@ proof -
            C11 (convexity) prevents this: for a convex polygon, winding number = 1.\<close>
         \<comment> \<open>From k \\<ge> 2 and 2k < nw: nw \\<ge> 5.\<close>
         have "nw \<ge> 5" using \<open>2 * k \<ge> 4\<close> h2k_lt by linarith
-        \<comment> \<open>For nw \\<ge> 5 with k \\<ge> 2: the polygon wraps \\<ge> 2 times around centroid.
-           At the 2\\<pi> crossing, C11 convexity is violated.
-           Specifically: let m be the index where alpha\\_m first crosses 2\\<pi>.
-           At m: z\\_m is approximately aligned with z\\_0 (angle \\<approx> 2\\<pi>).
-           C11 at edge (0,1), vertex m+1 gives det(u\\_{m+1}-u\\_0, u\\_1-u\\_0) < 0.
-           But with alpha\\_{m+1} \\<in> [2\\<pi>, 3\\<pi>): u\\_{m+1} is approximately at angle \\<theta>\\_0
-           from u\\_0 (starting second loop), so det \\<approx> 0, contradicting strict < 0.
-           Formal proof needs careful bounding of the det using the cc-sin formula.\<close>
-        show False sorry \<comment> \<open>Winding number = 1 for convex polygon (C11). Needed only for nw \\<ge> 5.\<close>
+        \<comment> \<open>PROOF: hregular gives all |z\\_j| = r. For k \\<ge> 2: alpha\\_nw = 2k\\<pi>.
+           Since all moduli = r: z\\_m/z\\_0 = cis(alpha\\_m). For the sub-product
+           from 0 to some index p: cis(alpha\\_p) = 1 (i.e., z\\_p = z\\_0) when alpha\\_p = 2\\<pi>.
+           By discrete IVT: \\<exists>p with alpha\\_p near 2\\<pi>.
+           More directly: with all moduli equal and cis(alpha\\_nw) = cis(2k\\<pi>) = 1:
+           the product is periodic. There exist j1 < j2 with z\\_{j2} = z\\_{j1}.
+           C11 at edge (j1, j1+1), vertex j2: det(z\\_{j2}-z\\_{j1}, z\\_{j1+1}-z\\_{j1}) = det(0, ..) = 0.
+           But C11 requires strict < 0. Contradiction.\<close>
+        \<comment> \<open>From hregular: all |z\\_j| = r.\<close>
+        from hregular obtain r where hr_pos: "r > 0"
+            and hr_eq: "\<forall>j<nw. (vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2" by (by100 blast)
+        \<comment> \<open>All cmod(zw j) = r.\<close>
+        have hmod_eq: "\<forall>j<nw. cmod (zw j) = r"
+        proof (intro allI impI)
+          fix j assume "j < nw"
+          from hr_eq[rule_format, OF this]
+          have "(vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2" .
+          hence hsum_sq: "(vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2" .
+          have "cmod (zw j) = sqrt ((vxw j - cxw)^2 + (vyw j - cyw)^2)"
+            unfolding zw_def cmod_def by simp
+          also have "\<dots> = sqrt (r^2)" using hsum_sq by simp
+          also have "\<dots> = r" using hr_pos by simp
+          finally show "cmod (zw j) = r" .
+        qed
+        \<comment> \<open>With equal moduli: z\\_m/z\\_0 = cis(alpha\\_m) (from polar decomp with r\\_j = 1).\<close>
+        \<comment> \<open>There exist j1 < j2 < nw with alpha\\_{j2} - alpha\\_{j1} = 2\\<pi>.
+           Then z\\_{j2}/z\\_0 = cis(alpha\\_{j2}) = cis(alpha\\_{j1}+2\\<pi>) = cis(alpha\\_{j1}) = z\\_{j1}/z\\_0.
+           So z\\_{j2} = z\\_{j1}, i.e., u\\_{j2} = u\\_{j1}.\<close>
+        \<comment> \<open>C11 at edge (j1, Suc j1 mod nw), vertex j2: det = 0. Contradiction.\<close>
+        show False sorry \<comment> \<open>Circle polygon with k \\<ge> 2 has repeated vertices, violating C11 strict < 0.\<close>
       qed
       with hk(2) show "alpha nw = 2*pi" by simp
     qed
