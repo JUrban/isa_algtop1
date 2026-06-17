@@ -1894,7 +1894,97 @@ proof -
        This follows from: u\\_{jp+1} is CCW of u\\_jp (from C10), and the CCW step is < \\<pi>,
        so u\\_{jp+1} stays in the same half-plane as u\\_jp (w.r.t. the line through cw \\<perp> u\\_0-cw).
        Formal proof: use C11 to show the step stays bounded.\<close>
-    have "cc (jp + 1) > 0" sorry
+    \<comment> \<open>PROOF via complex-number argument (Arg function).
+       Convert vectors to complex, use Arg(z\\_{j+1}/z\\_j) \\<in> (0,\\<pi>) from C10,
+       telescope to get cumulative angle, then use angle arithmetic.\<close>
+    define zw :: "nat \<Rightarrow> complex" where "zw j = Complex (vxw j - cxw) (vyw j - cyw)" for j
+    have hzw_ne: "\<forall>j<nw. zw j \<noteq> 0"
+    proof (intro allI impI)
+      fix j assume hj: "j < nw"
+      show "zw j \<noteq> 0"
+      proof
+        assume "zw j = 0"
+        hence "vxw j = cxw" "vyw j = cyw" unfolding zw_def by (auto simp: complex_eq_iff)
+        from hC10[rule_format, OF hj]
+        have "(vxw j - cxw) * (vyw(Suc j mod nw) - cyw) -
+            (vyw j - cyw) * (vxw(Suc j mod nw) - cxw) > 0" .
+        with \<open>vxw j = cxw\<close> \<open>vyw j = cyw\<close> show False by simp
+      qed
+    qed
+    \<comment> \<open>C10 gives Im(cnj(z\\_j)*z\\_{j+1}) > 0, i.e., the angular step is in (0,\\<pi>).\<close>
+    have hC10_im: "\<forall>j<nw. Im (cnj (zw j) * zw (Suc j mod nw)) > 0"
+    proof (intro allI impI)
+      fix j assume hj: "j < nw"
+      have "Im (cnj (zw j) * zw (Suc j mod nw)) =
+          (vxw j - cxw) * (vyw(Suc j mod nw) - cyw) - (vyw j - cyw) * (vxw(Suc j mod nw) - cxw)"
+        unfolding zw_def sorry
+      also have "\<dots> > 0" using hC10[rule_format, OF hj] .
+      finally show "Im (cnj (zw j) * zw (Suc j mod nw)) > 0" .
+    qed
+    \<comment> \<open>cc(j) = Im(cnj(z\\_j)*z\\_0) = -(Im(cnj(z\\_0)*z\\_j)).\<close>
+    have hcc_im: "\<forall>j<nw. cc j = Im (cnj (zw j) * zw 0)"
+    proof (intro allI impI)
+      fix j assume "j < nw"
+      show "cc j = Im (cnj (zw j) * zw 0)"
+        unfolding cc_def zw_def sorry
+    qed
+    \<comment> \<open>Define angular steps and cumulative angle.\<close>
+    define theta where "theta j = Arg (zw (Suc j mod nw) / zw j)" for j
+    have htheta_pos: "\<forall>j<nw. theta j > 0 \<and> theta j < pi"
+      sorry \<comment> \<open>From hC10\\_im: Im(cnj(z\\_j)*z\\_{j+1}) > 0 \\<Longleftrightarrow> Arg(z\\_{j+1}/z\\_j) \\<in> (0,\\<pi>).\<close>
+    define alpha where "alpha m = (\<Sum>j<m. theta j)" for m
+    have halpha_sum: "alpha nw = 2*pi"
+      sorry \<comment> \<open>Telescope: z\\_nw/z\\_0 = z\\_0/z\\_0 = 1, so total angle = 2\\<pi>.\<close>
+    \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
+    have hcc_sin: "\<forall>m. 0 < m \<longrightarrow> m < nw \<longrightarrow>
+        cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
+      sorry \<comment> \<open>From telescope z\\_m/z\\_0 = |z\\_m/z\\_0|*cis(alpha m) and Im(cnj*z) = |.|*|.|*sin.\<close>
+    \<comment> \<open>From cc(jp) \\<ge> 0: sin(alpha jp) \\<le> 0, so alpha\\_jp \\<in> [\\<pi>, 2\\<pi>).\<close>
+    have hjp_pos: "jp > 0" using hjp_ne0 by (by100 linarith)
+    have hjp1_lt: "jp + 1 < nw" using hjp_lt by (by100 linarith)
+    from hcc_sin[rule_format, OF hjp_pos hjp] \<open>cc jp \<ge> 0\<close>
+    have "sin (alpha jp) \<le> 0"
+    proof -
+      have "cmod (zw 0) > 0" using hzw_ne hnw by (by100 simp)
+      have "cmod (zw jp) > 0" using hzw_ne hjp by (by100 simp)
+      from hcc_sin[rule_format, OF hjp_pos hjp] \<open>cc jp \<ge> 0\<close>
+      show ?thesis using \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw jp) > 0\<close>
+        sorry
+    qed
+    \<comment> \<open>alpha\\_jp \\<in> (0, 2\\<pi>) and sin \\<le> 0: alpha\\_jp \\<in> [\\<pi>, 2\\<pi>).\<close>
+    have halpha_jp_range: "alpha jp \<ge> pi \<and> alpha jp < 2*pi"
+      sorry \<comment> \<open>From alpha > 0 (each theta > 0) and alpha < 2*pi (total = 2*pi, remaining > 0).\<close>
+    \<comment> \<open>alpha(jp+1) = alpha(jp) + theta(jp) \\<in> (\\<pi>, 2\\<pi>+\\<pi>) \\<cap> (0, 2\\<pi>) = (\\<pi>, 2\\<pi>).\<close>
+    have halpha_jp1_range: "alpha (jp+1) > pi \<and> alpha (jp+1) < 2*pi"
+    proof -
+      have "alpha (jp+1) = alpha jp + theta jp" unfolding alpha_def by simp
+      moreover from htheta_pos hjp have "theta jp > 0" by (by100 blast)
+      moreover from halpha_jp_range have "alpha jp \<ge> pi" by (by100 blast)
+      moreover have "alpha (jp+1) < 2*pi"
+      proof -
+        have "alpha nw = 2*pi" using halpha_sum .
+        have "alpha (jp+1) + (\<Sum>j=jp+1..<nw. theta j) = alpha nw"
+          unfolding alpha_def sorry
+        moreover have "(\<Sum>j=jp+1..<nw. theta j) > 0"
+          sorry \<comment> \<open>Each theta > 0 and jp+1 < nw.\<close>
+        ultimately show ?thesis using halpha_sum by linarith
+      qed
+      ultimately show ?thesis by linarith
+    qed
+    \<comment> \<open>sin(alpha(jp+1)) < 0 since alpha(jp+1) \\<in> (\\<pi>, 2\\<pi>).\<close>
+    have "sin (alpha (jp+1)) < 0"
+      using halpha_jp1_range sorry
+    \<comment> \<open>Therefore cc(jp+1) > 0.\<close>
+    have "cc (jp + 1) > 0"
+    proof -
+      have "cmod (zw 0) > 0" using hzw_ne hnw by (by100 simp)
+      have "cmod (zw (jp+1)) > 0" using hzw_ne hjp1_lt by (by100 simp)
+      from hcc_sin[rule_format, OF _ hjp1_lt] hjp_pos
+      have "cc (jp+1) = -(cmod (zw 0) * cmod (zw (jp+1)) * sin (alpha (jp+1)))"
+        by (by100 linarith)
+      with \<open>sin (alpha (jp+1)) < 0\<close> \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw (jp+1)) > 0\<close>
+      show ?thesis sorry
+    qed
     hence "cc (Suc jp mod nw) > 0" using hsjp by simp
     thus ?thesis unfolding cc_def by auto
   qed
