@@ -2137,7 +2137,81 @@ proof -
         \<comment> \<open>Arg(ratio\\_j) = theta j by definition.\<close>
         \<comment> \<open>Product: \\<Prod> (of\\_real r\\_j * cis t\\_j) = of\\_real(\\<Prod> r\\_j) * cis(\\<Sum> t\\_j).\<close>
         \<comment> \<open>And \\<Prod> r\\_j = cmod(\\<Prod> ratio\\_j) = cmod(zw m/zw 0) = cmod(zw m)/cmod(zw 0).\<close>
-        show ?thesis sorry \<comment> \<open>Product polar decomposition — standard but needs induction on m.\<close>
+        \<comment> \<open>Helper: \\<Prod>\\_{j<m} r\\_j = of\\_real(\\<Prod> cmod r\\_j) * cis(\\<Sum> Arg r\\_j) when each r\\_j \\<noteq> 0.\<close>
+        define rj where "rj j = zw (Suc j mod nw) / zw j" for j
+        have hrj_ne: "\<forall>j<m. rj j \<noteq> 0"
+        proof (intro allI impI)
+          fix j assume "j < m"
+          hence "j < nw" using hm_lt by linarith
+          have "Suc j mod nw < nw" using hnw by (by100 simp)
+          thus "rj j \<noteq> 0" unfolding rj_def
+            using hzw_ne[rule_format, OF \<open>Suc j mod nw < nw\<close>] hzw_ne[rule_format, OF \<open>j < nw\<close>]
+            by (by100 simp)
+        qed
+        \<comment> \<open>Each r\\_j = of\\_real(cmod r\\_j) * cis(Arg r\\_j) = of\\_real(cmod r\\_j) * cis(theta j).\<close>
+        have hrj_decomp: "\<forall>j<m. rj j = of_real (cmod (rj j)) * cis (theta j)"
+        proof (intro allI impI)
+          fix j assume "j < m"
+          from rcis_cmod_Arg[of "rj j", symmetric] have "rj j = of_real (cmod (rj j)) * cis (Arg (rj j))"
+            unfolding rcis_def .
+          also have "Arg (rj j) = theta j" unfolding rj_def theta_def by (by100 simp)
+          finally show "rj j = of_real (cmod (rj j)) * cis (theta j)" .
+        qed
+        \<comment> \<open>Product induction: \\<Prod> r\\_j = of\\_real(\\<Prod> cmod r\\_j) * cis(\\<Sum> theta j).\<close>
+        have hprod_polar: "(\<Prod>j<m. rj j) = of_real (\<Prod>j<m. cmod (rj j)) * cis (alpha m)"
+        proof -
+          have "\<And>k. k \<le> m \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
+          proof -
+            fix k show "k \<le> m \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
+            proof (induction k)
+              case 0 thus ?case by simp
+            next
+              case (Suc k')
+              hence "k' < m" by simp
+              from Suc.IH[OF order.strict_implies_order[OF \<open>k' < m\<close>]]
+              have hIH: "(\<Prod>j<k'. rj j) = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j)" .
+              have "(\<Prod>j<Suc k'. rj j) = (\<Prod>j<k'. rj j) * rj k'" by simp
+              also have "\<dots> = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j) * rj k'"
+                using hIH by simp
+              also from hrj_decomp[rule_format, OF \<open>k' < m\<close>]
+              have "\<dots> = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j) *
+                  (of_real (cmod (rj k')) * cis (theta k'))" by simp
+              also have "\<dots> = of_real ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k')) *
+                  (cis (\<Sum>j<k'. theta j) * cis (theta k'))"
+              proof -
+                have "of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j) *
+                    (of_real (cmod (rj k')) * cis (theta k'))
+                    = rcis (\<Prod>j<k'. cmod (rj j)) (\<Sum>j<k'. theta j) *
+                      rcis (cmod (rj k')) (theta k')"
+                  unfolding rcis_def by simp
+                also have "\<dots> = rcis ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k'))
+                    ((\<Sum>j<k'. theta j) + theta k')"
+                  by (rule rcis_mult)
+                also have "\<dots> = of_real ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k')) *
+                    cis ((\<Sum>j<k'. theta j) + theta k')"
+                  unfolding rcis_def ..
+                also have "cis ((\<Sum>j<k'. theta j) + theta k') = cis (\<Sum>j<k'. theta j) * cis (theta k')"
+                  using cis_mult[symmetric] .
+                finally show ?thesis .
+              qed
+              also have "cis (\<Sum>j<k'. theta j) * cis (theta k') = cis ((\<Sum>j<k'. theta j) + theta k')"
+                by (rule cis_mult)
+              also have "(\<Sum>j<k'. theta j) + theta k' = (\<Sum>j<Suc k'. theta j)" by simp
+              also have "(\<Prod>j<k'. cmod (rj j)) * cmod (rj k') = (\<Prod>j<Suc k'. cmod (rj j))" by simp
+              finally show ?case .
+            qed
+          qed
+          from this[of m] show ?thesis unfolding alpha_def by simp
+        qed
+        \<comment> \<open>\\<Prod> cmod r\\_j = cmod(\\<Prod> r\\_j) = cmod(zw m/zw 0) = cmod(zw m)/cmod(zw 0).\<close>
+        have "(\<Prod>j<m. cmod (rj j)) = cmod (\<Prod>j<m. rj j)"
+          by (simp add: prod_norm)
+        also have "\<dots> = cmod (zw m / zw 0)"
+          using \<open>zw m / zw 0 = (\<Prod>j<m. zw (Suc j mod nw) / zw j)\<close> unfolding rj_def by simp
+        also have "\<dots> = cmod (zw m) / cmod (zw 0)" by (rule norm_divide)
+        finally have hmod_eq: "(\<Prod>j<m. cmod (rj j)) = cmod (zw m) / cmod (zw 0)" .
+        from hprod_polar hmod_eq
+        show ?thesis unfolding rj_def using \<open>zw m / zw 0 = _\<close> by simp
       qed
       \<comment> \<open>Step 2: cc(m) = Im(cnj(z\\_m)*z\\_0) = -|z\\_0|*|z\\_m|*sin(alpha m).\<close>
       have hz0_ne: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
