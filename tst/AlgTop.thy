@@ -1721,6 +1721,29 @@ proof -
   from hsp_zero hdet_ne show "sp = 0" by simp
 qed
 
+\<comment> \<open>Cramer inverse: if sp*det = fy*dx-fx*dy and tp*det = ex*dy-ey*dx and tp=0 and det\\<noteq>0,
+   then dx = sp*ex and dy = sp*ey.\<close>
+lemma cramer_inverse_tp_zero:
+  assumes hsp_mul: "sp*det_v = fy*dx - fx*dy"
+      and htp_mul: "tp*det_v = ex*dy - ey*dx"
+      and htp0: "(tp::real) = 0"
+      and hdet_ne: "det_v \<noteq> 0"
+      and hdet_eq: "det_v = ex*fy - ey*fx"
+  shows "dx = sp*ex" "dy = sp*ey"
+proof -
+  have "dx*det_v = (fy*dx-fx*dy)*ex + (ex*dy-ey*dx)*fx"
+    unfolding hdet_eq by (by20000 algebra)
+  hence "dx*det_v = sp*det_v*ex + tp*det_v*fx" using hsp_mul htp_mul by simp
+  with htp0 have "dx*det_v = (sp*ex)*det_v" by (by100 algebra)
+  thus "dx = sp*ex" using hdet_ne by simp
+next
+  have "dy*det_v = (fy*dx-fx*dy)*ey + (ex*dy-ey*dx)*fy"
+    unfolding hdet_eq by (by20000 algebra)
+  hence "dy*det_v = sp*det_v*ey + tp*det_v*fy" using hsp_mul htp_mul by simp
+  with htp0 have "dy*det_v = (sp*ey)*det_v" by (by100 algebra)
+  thus "dy = sp*ey" using hdet_ne by simp
+qed
+
 \<comment> \<open>Standalone lemma: spur arc point is NOT in target sector jp for jp \\<notin> {0, nw-1}.
    The spur arc ((1-t)*u\\_0 + t*cw) has cross\\_cw(j, spur) = (1-t)*cross\\_cw(j, u\\_0).
    cross\\_cw(j, u\\_0) = det(u\\_j-cw, u\\_0-cw).
