@@ -1744,6 +1744,28 @@ next
   thus "dy = sp*ey" using hdet_ne by simp
 qed
 
+\<comment> \<open>Symmetric Cramer inverse: sp=0 gives dx = tp*fx, dy = tp*fy.\<close>
+lemma cramer_inverse_sp_zero:
+  assumes hsp_mul: "sp*det_v = fy*dx - fx*dy"
+      and htp_mul: "tp*det_v = ex*dy - ey*dx"
+      and hsp0: "(sp::real) = 0"
+      and hdet_ne: "det_v \<noteq> 0"
+      and hdet_eq: "det_v = ex*fy - ey*fx"
+  shows "dx = tp*fx" "dy = tp*fy"
+proof -
+  have "dx*det_v = (fy*dx-fx*dy)*ex + (ex*dy-ey*dx)*fx"
+    unfolding hdet_eq by (by20000 algebra)
+  hence "dx*det_v = sp*det_v*ex + tp*det_v*fx" using hsp_mul htp_mul by simp
+  with hsp0 have "dx*det_v = (tp*fx)*det_v" by (by100 algebra)
+  thus "dx = tp*fx" using hdet_ne by simp
+next
+  have "dy*det_v = (fy*dx-fx*dy)*ey + (ex*dy-ey*dx)*fy"
+    unfolding hdet_eq by (by20000 algebra)
+  hence "dy*det_v = sp*det_v*ey + tp*det_v*fy" using hsp_mul htp_mul by simp
+  with hsp0 have "dy*det_v = (tp*fy)*det_v" by (by100 algebra)
+  thus "dy = tp*fy" using hdet_ne by simp
+qed
+
 \<comment> \<open>Standalone lemma: spur arc point is NOT in target sector jp for jp \\<notin> {0, nw-1}.
    The spur arc ((1-t)*u\\_0 + t*cw) has cross\\_cw(j, spur) = (1-t)*cross\\_cw(j, u\\_0).
    cross\\_cw(j, u\\_0) = det(u\\_j-cw, u\\_0-cw).
@@ -6935,9 +6957,195 @@ proof -
             show False
             proof (cases "Suc jp mod ?nw = 0")
               case True
-              show False
-                using heq ht hjp True hjp_ne0 hp hin_sec hp_ne_v1 hint_p hlen_ext hlen hne_eq hnw_pos
-                  hphi_on_spur0 hphi_affine_on_sector hdet_pos hC10_expanded sorry
+              \<comment> \<open>jp=nw-1 (Suc jp mod nw = 0): symmetric to jp=0 with sp12=0.\<close>
+              \<comment> \<open>Reuse the Cramer decomposition from prop12 context.\<close>
+              have hphi_eq_spur: "phi_fn p = ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw)"
+                using heq hphi_on_spur0[rule_format, OF ht] by simp
+              \<comment> \<open>Need matching equations for sector jp with Suc jp mod nw = 0.\<close>
+              let ?si_jp2' = "Suc(jp+2) mod ?ne"
+              from hphi_affine_on_sector[rule_format, OF hjp hp hin_sec]
+              have hphi_form': "phi_fn (fst p, snd p) = (let ex = vxe(jp+2)-vxe 1; ey = vye(jp+2)-vye 1;
+                  fx = vxe ?si_jp2'-vxe 1; fy = vye ?si_jp2'-vye 1;
+                  det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+                  s' = (fy*dx-fx*dy)/det; t' = (ex*dy-ey*dx)/det
+              in ((1-s'-t')*?cxw + s'*vxw jp + t'*vxw(Suc jp mod ?nw),
+                  (1-s'-t')*?cyw + s'*vyw jp + t'*vyw(Suc jp mod ?nw)))" .
+              define ex_p' where "ex_p' = vxe(jp+2)-vxe 1"
+              define ey_p' where "ey_p' = vye(jp+2)-vye 1"
+              define fx_p' where "fx_p' = vxe ?si_jp2'-vxe 1"
+              define fy_p' where "fy_p' = vye ?si_jp2'-vye 1"
+              define dx_p' where "dx_p' = fst p-vxe 1"
+              define dy_p' where "dy_p' = snd p-vye 1"
+              define det_p' where "det_p' = ex_p'*fy_p'-ey_p'*fx_p'"
+              define sp12' where "sp12' = (fy_p'*dx_p'-fx_p'*dy_p')/det_p'"
+              define tp12' where "tp12' = (ex_p'*dy_p'-ey_p'*dx_p')/det_p'"
+              have hphi_x': "fst (phi_fn p) = (1-sp12'-tp12')*?cxw + sp12'*vxw jp + tp12'*vxw(Suc jp mod ?nw)"
+                using hphi_form' unfolding Let_def sp12'_def tp12'_def det_p'_def
+                  ex_p'_def ey_p'_def fx_p'_def fy_p'_def dx_p'_def dy_p'_def by simp
+              have hphi_y': "snd (phi_fn p) = (1-sp12'-tp12')*?cyw + sp12'*vyw jp + tp12'*vyw(Suc jp mod ?nw)"
+                using hphi_form' unfolding Let_def sp12'_def tp12'_def det_p'_def
+                  ex_p'_def ey_p'_def fx_p'_def fy_p'_def dx_p'_def dy_p'_def by simp
+              \<comment> \<open>Matching equations in un-substituted form (Suc jp mod nw, not 0).\<close>
+              have hmx': "(1-sp12'-tp12')*?cxw + sp12'*vxw jp + tp12'*vxw(Suc jp mod ?nw) = (1-t)*vxw 0 + t*?cxw"
+              proof -
+                have "fst (phi_fn p) = (1-t)*vxw 0 + t*?cxw" using hphi_eq_spur by simp
+                thus ?thesis using hphi_x' by (cases p) simp
+              qed
+              have hmy': "(1-sp12'-tp12')*?cyw + sp12'*vyw jp + tp12'*vyw(Suc jp mod ?nw) = (1-t)*vyw 0 + t*?cyw"
+              proof -
+                have "snd (phi_fn p) = (1-t)*vyw 0 + t*?cyw" using hphi_eq_spur by simp
+                thus ?thesis using hphi_y' by (cases p) simp
+              qed
+              \<comment> \<open>Apply spur\\_match\\_sector\\_last\\_forces\\_s\\_zero: sp12' = 0.\<close>
+              from spur_match_sector_last_forces_s_zero[OF hlen hjp True hC10_expanded[rule_format, OF hjp]
+                  hmx' hmy']
+              have hsp0: "sp12' = 0" .
+              \<comment> \<open>sp12'=0: Cramer inverse gives dx=tp12'*fx, dy=tp12'*fy.\<close>
+              have hdet_p_ne': "det_p' \<noteq> 0"
+                using hdet_pos[rule_format, OF hjp] unfolding det_p'_def ex_p'_def ey_p'_def fx_p'_def fy_p'_def
+                  Let_def by linarith
+              have hsp_mul': "sp12'*det_p' = fy_p'*dx_p' - fx_p'*dy_p'" unfolding sp12'_def using hdet_p_ne' by simp
+              have htp_mul': "tp12'*det_p' = ex_p'*dy_p' - ey_p'*dx_p'" unfolding tp12'_def using hdet_p_ne' by simp
+              have hdet_eq': "det_p' = ex_p'*fy_p' - ey_p'*fx_p'" unfolding det_p'_def by simp
+              from cramer_inverse_sp_zero[OF hsp_mul' htp_mul' hsp0 hdet_p_ne' hdet_eq']
+              have hdx': "dx_p' = tp12'*fx_p'" and hdy': "dy_p' = tp12'*fy_p'" by auto
+              \<comment> \<open>For jp=nw-1: si\\_jp2' = Suc(jp+2) mod ne = 0. So fx\\_p' = vxe 0-vxe 1.\<close>
+              have hsi_zero: "?si_jp2' = 0"
+              proof -
+                from True hjp have "jp = ?nw - 1"
+                proof -
+                  from True have "Suc jp mod ?nw = 0" .
+                  hence "?nw dvd Suc jp" by (metis dvd_eq_mod_eq_0)
+                  with hjp have "Suc jp = ?nw"
+                  proof -
+                    from hjp have "Suc jp \<le> ?nw" by (by100 simp)
+                    from \<open>?nw dvd Suc jp\<close> have "Suc jp \<ge> 1" by (by100 simp)
+                    from \<open>?nw dvd Suc jp\<close> \<open>Suc jp \<le> ?nw\<close> show ?thesis
+                      using dvd_imp_le[of ?nw "Suc jp"] by (by100 linarith)
+                  qed
+                  thus "jp = ?nw - 1" by (by100 arith)
+                qed
+                hence "jp + 2 = ?nw + 1" using hnw_pos by (by100 arith)
+                hence "Suc(jp + 2) = ?nw + 2" by (by100 arith)
+                also have "?nw + 2 = ?ne" using hne_eq by (by100 simp)
+                finally have "Suc(jp+2) = ?ne" .
+                thus ?thesis by (by100 simp)
+              qed
+              hence hfx_eq: "fx_p' = vxe 0 - vxe 1" "fy_p' = vye 0 - vye 1"
+                unfolding fx_p'_def fy_p'_def by auto
+              have h_px': "fst p = vxe 1 + tp12'*fx_p'" using hdx' unfolding dx_p'_def by linarith
+              have h_py': "snd p = vye 1 + tp12'*fy_p'" using hdy' unfolding dy_p'_def by linarith
+              \<comment> \<open>edge\\_pt\\_e 0 (1-tp12') = ((1-(1-tp12'))*vxe 0 + (1-tp12')*vxe 1, ...) = p.\<close>
+              have hsuc0: "Suc 0 mod ?ne = 1" using hlen hne_eq by (by100 simp)
+              have hedge0: "edge_pt_e 0 (1-tp12') = (tp12'*vxe 0 + (1-tp12')*vxe 1,
+                  tp12'*vye 0 + (1-tp12')*vye 1)"
+                unfolding edge_pt_e_def using hsuc0 by (by100 simp)
+              have hp_edge': "p = edge_pt_e 0 (1-tp12')"
+              proof -
+                \<comment> \<open>fst p = vxe 1 + tp12'*(vxe 0-vxe 1) = (1-tp12')*vxe 1 + tp12'*vxe 0.\<close>
+                define tp_fx where "tp_fx = tp12'*fx_p'"
+                define tp_vx0 where "tp_vx0 = tp12'*vxe 0"
+                define tp_vx1 where "tp_vx1 = tp12'*vxe 1"
+                have "tp_fx = tp_vx0 - tp_vx1" unfolding tp_fx_def tp_vx0_def tp_vx1_def
+                  hfx_eq by (by100 algebra)
+                have "fst p = vxe 1 + tp_fx" using h_px' unfolding tp_fx_def by simp
+                hence "fst p = vxe 1 + tp_vx0 - tp_vx1"
+                  using \<open>tp_fx = tp_vx0 - tp_vx1\<close> by linarith
+                define omt_v1 where "omt_v1 = (1-tp12')*vxe 1"
+                have "omt_v1 = vxe 1 - tp_vx1" unfolding omt_v1_def tp_vx1_def by (by100 algebra)
+                hence hfst': "fst p = tp_vx0 + omt_v1"
+                  using \<open>fst p = vxe 1 + tp_vx0 - tp_vx1\<close> by linarith
+                define tp_fy where "tp_fy = tp12'*fy_p'"
+                define tp_vy0 where "tp_vy0 = tp12'*vye 0"
+                define tp_vy1 where "tp_vy1 = tp12'*vye 1"
+                have "tp_fy = tp_vy0 - tp_vy1" unfolding tp_fy_def tp_vy0_def tp_vy1_def
+                  using hfx_eq by (by100 algebra)
+                have "snd p = vye 1 + tp_fy" using h_py' unfolding tp_fy_def by simp
+                hence "snd p = vye 1 + tp_vy0 - tp_vy1"
+                  using \<open>tp_fy = tp_vy0 - tp_vy1\<close> by linarith
+                define omt_v1y where "omt_v1y = (1-tp12')*vye 1"
+                have "omt_v1y = vye 1 - tp_vy1" unfolding omt_v1y_def tp_vy1_def by (by100 algebra)
+                hence hsnd': "snd p = tp_vy0 + omt_v1y"
+                  using \<open>snd p = vye 1 + tp_vy0 - tp_vy1\<close> by linarith
+                from hfst' hsnd' hedge0 show ?thesis
+                  unfolding tp_vx0_def tp_vy0_def omt_v1_def omt_v1y_def
+                  by (cases "edge_pt_e 0 (1-tp12')", cases p) simp
+              qed
+              \<comment> \<open>(1-tp12') \\<in> I\\_set: derive tp12' = 1-t.\<close>
+              have htp_eq': "tp12' = 1 - t"
+              proof -
+                \<comment> \<open>From hmx' with sp12'=0 and Suc jp mod nw = 0: (1-tp12')*cxw + tp12'*vxw 0 = (1-t)*vxw 0+t*cxw.\<close>
+                from hmx' hsp0 True have "(1-tp12')*?cxw + tp12'*vxw 0 = (1-t)*vxw 0 + t*?cxw" by simp
+                from hmy' hsp0 True have "(1-tp12')*?cyw + tp12'*vyw 0 = (1-t)*vyw 0 + t*?cyw" by simp
+                \<comment> \<open>Same ring algebra as jp=0 case but with tp12' and vxw 0.\<close>
+                define tp_cx where "tp_cx = tp12'*?cxw"
+                define t_cx' where "t_cx' = t*?cxw"
+                define tp_vx where "tp_vx = tp12'*vxw 0"
+                define t_vx' where "t_vx' = t*vxw 0"
+                define oms_cx' where "oms_cx' = (1-tp12')*?cxw"
+                define omt_vx' where "omt_vx' = (1-t)*vxw 0"
+                have "oms_cx' = ?cxw - tp_cx" unfolding oms_cx'_def tp_cx_def by (by100 algebra)
+                have "omt_vx' = vxw 0 - t_vx'" unfolding omt_vx'_def t_vx'_def by (by100 algebra)
+                from \<open>(1-tp12')*?cxw + tp12'*vxw 0 = (1-t)*vxw 0 + t*?cxw\<close>
+                have "oms_cx' + tp_vx = omt_vx' + t_cx'"
+                  unfolding oms_cx'_def tp_vx_def omt_vx'_def t_cx'_def by simp
+                hence "?cxw - tp_cx + tp_vx = vxw 0 - t_vx' + t_cx'"
+                  using \<open>oms_cx' = ?cxw - tp_cx\<close> \<open>omt_vx' = vxw 0 - t_vx'\<close> by linarith
+                hence hx_lin': "tp_vx - tp_cx = (vxw 0 - ?cxw) + (t_cx' - t_vx')" by linarith
+                define wx' where "wx' = vxw 0 - ?cxw"
+                have "tp_vx - tp_cx = tp12'*wx'" unfolding tp_vx_def tp_cx_def wx'_def by (by100 algebra)
+                have "t_cx' - t_vx' = -(t*wx')" unfolding t_cx'_def t_vx'_def wx'_def by (by100 algebra)
+                have hwx'_eq: "vxw 0 - ?cxw = wx'" unfolding wx'_def by simp
+                from hx_lin' have "tp12'*wx' = wx' - t*wx'"
+                  using \<open>tp_vx - tp_cx = tp12'*wx'\<close> \<open>t_cx' - t_vx' = -(t*wx')\<close> hwx'_eq by linarith
+                hence htp_wx: "tp12'*wx' = (1-t)*wx'" by (by100 algebra)
+                define wy' where "wy' = vyw 0 - ?cyw"
+                have htp_wy: "tp12'*wy' = (1-t)*wy'"
+                proof -
+                  define tp_cy where "tp_cy = tp12'*?cyw"
+                  define t_cy' where "t_cy' = t*?cyw"
+                  define tp_vy where "tp_vy = tp12'*vyw 0"
+                  define t_vy' where "t_vy' = t*vyw 0"
+                  define oms_cy' where "oms_cy' = (1-tp12')*?cyw"
+                  define omt_vy' where "omt_vy' = (1-t)*vyw 0"
+                  have "oms_cy' = ?cyw - tp_cy" unfolding oms_cy'_def tp_cy_def by (by100 algebra)
+                  have "omt_vy' = vyw 0 - t_vy'" unfolding omt_vy'_def t_vy'_def by (by100 algebra)
+                  from \<open>(1-tp12')*?cyw + tp12'*vyw 0 = (1-t)*vyw 0 + t*?cyw\<close>
+                  have "oms_cy' + tp_vy = omt_vy' + t_cy'"
+                    unfolding oms_cy'_def tp_vy_def omt_vy'_def t_cy'_def by simp
+                  hence "?cyw - tp_cy + tp_vy = vyw 0 - t_vy' + t_cy'"
+                    using \<open>oms_cy' = ?cyw - tp_cy\<close> \<open>omt_vy' = vyw 0 - t_vy'\<close> by linarith
+                  hence hy_lin': "tp_vy - tp_cy = (vyw 0 - ?cyw) + (t_cy' - t_vy')" by linarith
+                  have "tp_vy - tp_cy = tp12'*wy'" unfolding tp_vy_def tp_cy_def wy'_def by (by100 algebra)
+                  have "t_cy' - t_vy' = -(t*wy')" unfolding t_cy'_def t_vy'_def wy'_def by (by100 algebra)
+                  have hwy'_eq: "vyw 0 - ?cyw = wy'" unfolding wy'_def by simp
+                  from hy_lin' have "tp12'*wy' = wy' - t*wy'"
+                    using \<open>tp_vy - tp_cy = tp12'*wy'\<close> \<open>t_cy' - t_vy' = -(t*wy')\<close> hwy'_eq by linarith
+                  thus ?thesis by (by100 algebra)
+                qed
+                show ?thesis
+                proof (cases "wx' \<noteq> 0")
+                  case True from htp_wx True show ?thesis by simp
+                next
+                  case False hence "wx' = 0" by simp
+                  show ?thesis
+                  proof (cases "wy' \<noteq> 0")
+                    case True from htp_wy True show ?thesis by simp
+                  next
+                    case False hence "wy' = 0" by simp
+                    have "vxw 0 = ?cxw" using \<open>wx' = 0\<close> unfolding wx'_def by simp
+                    have "vyw 0 = ?cyw" using \<open>wy' = 0\<close> unfolding wy'_def by simp
+                    have h0_lt: "(0::nat) < ?nw" using hnw_pos by linarith
+                    from hC10_expanded[rule_format, OF h0_lt]
+                    have "(vxw 0-?cxw)*(vyw(Suc 0 mod ?nw)-?cyw)-(vyw 0-?cyw)*(vxw(Suc 0 mod ?nw)-?cxw) > 0" .
+                    with \<open>vxw 0 = ?cxw\<close> \<open>vyw 0 = ?cyw\<close> show ?thesis by simp
+                  qed
+                qed
+              qed
+              have "(1-tp12') \<in> I_set" using htp_eq' ht
+                unfolding top1_unit_interval_def by (by100 auto)
+              have "0 < ?ne" using hlen hne_eq by (by100 linarith)
+              from hint_p[rule_format, OF this \<open>(1-tp12') \<in> I_set\<close>] hp_edge' show False by (by100 simp)
             next
               case False note hjp_ne_last = this
               show False
