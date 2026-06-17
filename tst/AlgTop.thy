@@ -2123,7 +2123,22 @@ proof -
       \<comment> \<open>cc(m) = Im(cnj(z\\_m)*z\\_0) = -|z\\_0|*|z\\_m|*sin(alpha m).\<close>
       \<comment> \<open>Step 1: z\\_m/z\\_0 = (|z\\_m|/|z\\_0|)*cis(alpha m).\<close>
       have hzm_decomp: "zw m / zw 0 = of_real (cmod (zw m) / cmod (zw 0)) * cis (alpha m)"
-        sorry \<comment> \<open>From partial telescope + Arg product decomposition.\<close>
+      proof -
+        \<comment> \<open>From partial telescope: zw m / zw 0 = \\<Prod>\\_{j<m} ratio\\_j.
+           Each ratio\\_j = cmod(ratio\\_j) * cis(Arg(ratio\\_j)) = cmod(ratio\\_j) * cis(theta j).
+           Product of cis: cis(\\<Sum> theta) = cis(alpha m).
+           Product of mods: \\<Prod> cmod(ratio\\_j) = cmod(\\<Prod> ratio\\_j) = cmod(zw m / zw 0).\<close>
+        from hpartial_telescope[rule_format, OF hm_lt]
+        have "zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0" .
+        have hz0_ne_loc: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
+        hence "zw m / zw 0 = (\<Prod>j<m. zw (Suc j mod nw) / zw j)"
+          using \<open>zw m = _ * zw 0\<close> by (by100 simp)
+        \<comment> \<open>Each ratio decomposed: ratio\\_j = of\\_real(cmod ratio\\_j)*cis(Arg ratio\\_j).\<close>
+        \<comment> \<open>Arg(ratio\\_j) = theta j by definition.\<close>
+        \<comment> \<open>Product: \\<Prod> (of\\_real r\\_j * cis t\\_j) = of\\_real(\\<Prod> r\\_j) * cis(\\<Sum> t\\_j).\<close>
+        \<comment> \<open>And \\<Prod> r\\_j = cmod(\\<Prod> ratio\\_j) = cmod(zw m/zw 0) = cmod(zw m)/cmod(zw 0).\<close>
+        show ?thesis sorry \<comment> \<open>Product polar decomposition — standard but needs induction on m.\<close>
+      qed
       \<comment> \<open>Step 2: cc(m) = Im(cnj(z\\_m)*z\\_0) = -|z\\_0|*|z\\_m|*sin(alpha m).\<close>
       have hz0_ne: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
       have hzm_ne: "zw m \<noteq> 0" using hzw_ne hm_lt by (by100 blast)
