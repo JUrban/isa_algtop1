@@ -1807,6 +1807,8 @@ lemma spur_arc_target_sector:
       and hC11: "\<forall>i<nw. \<forall>k<nw. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod nw \<longrightarrow>
           (vxw k-vxw i)*(vyw(Suc i mod nw)-vyw i)-(vyw k-vyw i)*(vxw(Suc i mod nw)-vxw i) < 0"
       and hC5: "cxw = (\<Sum>j<nw. vxw j) / real nw" "cyw = (\<Sum>j<nw. vyw j) / real nw"
+      and hfan_det: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < nw \<longrightarrow>
+          (vxw m - vxw 1) * (vyw n - vyw 1) - (vyw m - vyw 1) * (vxw n - vxw 1) > 0"
       and hjp: "jp < nw" and hjp_ne0: "jp \<noteq> 0" and hjp_ne_last: "Suc jp mod nw \<noteq> 0"
   shows "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0
          \<or> (vxw(Suc jp mod nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod nw)-cyw)*(vxw 0-cxw) > 0"
