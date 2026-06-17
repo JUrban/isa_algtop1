@@ -2108,11 +2108,51 @@ proof -
       finally show ?thesis .
     qed
     have halpha_sum: "alpha nw = 2*pi"
-      sorry \<comment> \<open>From telescope = 1: cis(alpha nw) = 1, so alpha nw = 2k\\<pi>.
-         Each theta \\<in> (0,\\<pi>) and nw \\<ge> 3: alpha nw \\<in> (0, nw*\\<pi>).
-         For k=1: need to rule out k \\<ge> 2 using C10/C11 convexity.
-         For nw \\<le> 4: alpha nw < nw*\\<pi> \\<le> 4\\<pi>, and 4\\<pi> is excluded (strict), so k=1.
-         For nw \\<ge> 5: need C11 argument (convexity forces single winding).\<close>
+    proof -
+      \<comment> \<open>Step 1: cis(alpha nw) = 1 from telescope product decomposition.\<close>
+      \<comment> \<open>The full product \\<Prod> ratio\\_j = 1 (htelescope). By polar decomposition (induction),
+         \\<Prod> ratio\\_j = of\\_real(\\<Prod> cmod ratio\\_j) * cis(alpha nw).
+         Since |\\<Prod>| = 1 (from |telescope| = |1| = 1): of\\_real(1) * cis(alpha nw) = 1.\<close>
+      define rj where "rj j = zw (Suc j mod nw) / zw j" for j
+      \<comment> \<open>From the polar decomposition proof pattern: \\<Prod> rj = of\\_real(\\<Prod> cmod rj) * cis(alpha nw).\<close>
+      have "(\<Prod>j<nw. rj j) = of_real (\<Prod>j<nw. cmod (rj j)) * cis (alpha nw)"
+        sorry \<comment> \<open>Same induction as hprod\\_polar but for the full product j<nw.
+           Already proved for j<m where m<nw. Need m=nw extension.\<close>
+      also have "(\<Prod>j<nw. rj j) = 1" using htelescope unfolding rj_def .
+      also have "(\<Prod>j<nw. cmod (rj j)) = cmod (\<Prod>j<nw. rj j)"
+        by (simp add: prod_norm)
+      also have "\<dots> = 1" using htelescope unfolding rj_def by simp
+      finally have "cis (alpha nw) = 1" by simp
+      \<comment> \<open>Step 2: cis(alpha) = 1 \\<Longleftrightarrow> alpha = 2k\\<pi>.\<close>
+      \<comment> \<open>Step 3: alpha nw \\<in> (0, nw*\\<pi>). Combined with cis = 1: alpha = 2\\<pi> for nw \\<le> 4,
+         and needs C11 convexity for nw \\<ge> 5.\<close>
+      have halpha_pos: "alpha nw > 0"
+      proof -
+        have "\<forall>j\<in>{..<nw}. theta j > 0" using htheta_pos hnw by (by100 auto)
+        have "(0::nat) < nw" using hnw by linarith
+        hence "{..<nw} \<noteq> {}" by (by100 blast)
+        from sum_pos[OF _ \<open>{..<nw} \<noteq> {}\<close>] \<open>\<forall>j\<in>{..<nw}. theta j > 0\<close>
+        show ?thesis unfolding alpha_def by (by100 blast)
+      qed
+      have halpha_lt: "alpha nw < real nw * pi"
+      proof -
+        have h1: "\<And>j. j < nw \<Longrightarrow> theta j < pi" using htheta_pos by (by100 blast)
+        have "alpha nw = (\<Sum>j<nw. theta j)" unfolding alpha_def by simp
+        also have "\<dots> < (\<Sum>j<nw. pi)"
+          using sum_strict_mono[of "{..<nw}" theta "\<lambda>_. pi"] h1 hnw sorry
+        also have "(\<Sum>j<nw. pi) = real nw * pi" by simp
+        finally show ?thesis .
+      qed
+      \<comment> \<open>From cis(alpha) = 1 and alpha > 0: alpha = 2k\\<pi> for some k \\<ge> 1.\<close>
+      from \<open>cis (alpha nw) = 1\<close>
+      have hcos: "cos (alpha nw) = 1" and hsin: "sin (alpha nw) = 0"
+        sorry \<comment> \<open>cis(x)=1 \\<Longleftrightarrow> cos x=1 \\<and> sin x=0. Needs Re/Im extraction from cis.\<close>
+      \<comment> \<open>From alpha \\<in> (0, nw*\\<pi>) and cos=1,sin=0: alpha = 2\\<pi>*(nw div something)...
+         For nw \\<le> 4: alpha < 4\\<pi>, so alpha = 2\\<pi>.
+         For nw \\<ge> 5: alpha < nw*\\<pi>, and we use C11 to show alpha < 4\\<pi>.\<close>
+      show "alpha nw = 2*pi"
+        using halpha_pos halpha_lt \<open>cis (alpha nw) = 1\<close> hnw sorry
+    qed
     \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
     have hcc_sin: "\<forall>m. 0 < m \<longrightarrow> m < nw \<longrightarrow>
         cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
