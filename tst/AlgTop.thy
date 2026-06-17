@@ -2218,7 +2218,37 @@ proof -
       have hzm_ne: "zw m \<noteq> 0" using hzw_ne hm_lt by (by100 blast)
       \<comment> \<open>From decomposition: cnj(z\\_m)*z\\_0 = of\\_real(|z\\_0|*|z\\_m|)*cis(-alpha m).\<close>
       have hcnj_eq: "cnj (zw m) * zw 0 = of_real (cmod (zw 0) * cmod (zw m)) * cis (-(alpha m))"
-        using hzm_decomp hz0_ne hzm_ne sorry \<comment> \<open>cnj decomposition + of\\_real algebra.\<close>
+      proof -
+        \<comment> \<open>Use rcis decomposition: zw m/zw 0 = rcis(|zm|/|z0|, alpha m).
+           cnj(rcis(r,t)) = rcis(r,-t). Then cnj(zm)*z0 = cnj(zm/z0)*|z0|^2 = rcis(|zm|/|z0|,-alpha)*|z0|^2.\<close>
+        define r_ratio where "r_ratio = cmod (zw m) / cmod (zw 0)"
+        from hzm_decomp have hrat: "zw m / zw 0 = rcis r_ratio (alpha m)"
+          unfolding rcis_def r_ratio_def .
+        \<comment> \<open>cnj(zw m/zw 0) = rcis(r\\_ratio, -alpha m).\<close>
+        have "cnj (zw m / zw 0) = cnj (rcis r_ratio (alpha m))" using hrat by simp
+        also have "cnj (rcis r_ratio (alpha m)) = rcis r_ratio (-(alpha m))"
+          unfolding rcis_def by (simp add: cis_cnj)
+        finally have hcnj_rat: "cnj (zw m / zw 0) = rcis r_ratio (-(alpha m))" .
+        \<comment> \<open>cnj(zm)*z0 = cnj(zm/z0) * |z0|^2.\<close>
+        have hnorm_sq: "cnj (zw 0) * zw 0 = of_real ((cmod (zw 0))^2)"
+          using complex_norm_square by simp
+        have hcnj_prod: "cnj (zw m / zw 0) * cnj (zw 0) = cnj (zw m)" using hz0_ne by simp
+        have "cnj (zw m) * zw 0 = (cnj (zw m / zw 0) * cnj (zw 0)) * zw 0" using hcnj_prod by simp
+        also have "\<dots> = cnj (zw m / zw 0) * (cnj (zw 0) * zw 0)" by (by100 algebra)
+        also have "\<dots> = cnj (zw m / zw 0) * of_real ((cmod (zw 0))^2)" using hnorm_sq by simp
+        also have "\<dots> = rcis r_ratio (-(alpha m)) * of_real ((cmod (zw 0))^2)" using hcnj_rat by simp
+        also have "\<dots> = rcis (r_ratio * (cmod (zw 0))^2) (-(alpha m))"
+          using rcis_mult[of r_ratio "-(alpha m)" "(cmod (zw 0))^2" 0] by (by100 simp)
+        also have "r_ratio * (cmod (zw 0))^2 = cmod (zw 0) * cmod (zw m)"
+        proof -
+          have "cmod (zw 0) > 0" using hz0_ne by (by100 simp)
+          hence "cmod (zw 0) \<noteq> 0" by linarith
+          hence "cmod (zw m) / cmod (zw 0) * (cmod (zw 0))^2 = cmod (zw m) * cmod (zw 0)"
+            by (simp add: power2_eq_square)
+          thus ?thesis unfolding r_ratio_def by (by100 algebra)
+        qed
+        finally show ?thesis unfolding rcis_def by simp
+      qed
       hence "Im (cnj (zw m) * zw 0) = cmod (zw 0) * cmod (zw m) * sin (-(alpha m))"
       proof -
         have "Im (of_real (cmod (zw 0) * cmod (zw m)) * cis (-(alpha m))) =
