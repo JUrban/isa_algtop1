@@ -6783,10 +6783,15 @@ proof -
             qed
             from spur_match_sector0_forces_t_zero[OF hlen hC10_expanded[rule_format, OF h0_lt] hmx0 hmy0]
             have htp0: "tp12 = 0" .
-            \<comment> \<open>tp12=0: p on edge 1 (Cramer inverse + edge construction).
-               Needs: dx=sp12*ex (from Cramer inverse with tp12=0),
-               then p = (1-sp12)*v\\_1 + sp12*v\\_2 = edge\\_pt\\_e(1, sp12),
-               sp12 \\<in> I\\_set (from sp12=1-t), contradiction with hint\\_p.\<close>
+            \<comment> \<open>Cramer inverse + edge derivation + I\\_set membership.\<close>
+            have hdet_p_ne: "det_p \<noteq> 0"
+              using hdet_pos[rule_format, OF hjp] unfolding det_p_def ex_p_def ey_p_def fx_p_def fy_p_def
+                Let_def by linarith
+            have hsp_mul: "sp12*det_p = fy_p*dx_p - fx_p*dy_p" unfolding sp12_def using hdet_p_ne by simp
+            have htp_mul: "tp12*det_p = ex_p*dy_p - ey_p*dx_p" unfolding tp12_def using hdet_p_ne by simp
+            have hdet_eq: "det_p = ex_p*fy_p - ey_p*fx_p" unfolding det_p_def by simp
+            from cramer_inverse_tp_zero[OF hsp_mul htp_mul htp0 hdet_p_ne hdet_eq]
+            have hdx: "dx_p = sp12*ex_p" and hdy: "dy_p = sp12*ey_p" by auto
             show False sorry
           next
             case False note hjp_ne0 = this
