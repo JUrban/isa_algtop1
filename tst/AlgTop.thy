@@ -1974,9 +1974,19 @@ proof -
     proof -
       have "cmod (zw 0) > 0" using hzw_ne hnw by (by100 simp)
       have "cmod (zw jp) > 0" using hzw_ne hjp by (by100 simp)
-      from hcc_sin[rule_format, OF hjp_pos hjp] \<open>cc jp \<ge> 0\<close>
-      show ?thesis using \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw jp) > 0\<close>
-        sorry
+      from hcc_sin[rule_format, OF hjp_pos hjp]
+      have "cc jp = -(cmod (zw 0) * cmod (zw jp) * sin (alpha jp))" .
+      with \<open>cc jp \<ge> 0\<close> have "cmod (zw 0) * cmod (zw jp) * sin (alpha jp) \<le> 0" by linarith
+      have "cmod (zw 0) * cmod (zw jp) > 0"
+        using \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw jp) > 0\<close> by (by100 simp)
+      show ?thesis
+      proof (rule ccontr)
+        assume "\<not> sin (alpha jp) \<le> 0"
+        hence "sin (alpha jp) > 0" by linarith
+        hence "cmod (zw 0) * cmod (zw jp) * sin (alpha jp) > 0"
+          using \<open>cmod (zw 0) * cmod (zw jp) > 0\<close> by (by100 simp)
+        with \<open>cmod (zw 0) * cmod (zw jp) * sin (alpha jp) \<le> 0\<close> show False by linarith
+      qed
     qed
     \<comment> \<open>alpha\\_jp \\<in> (0, 2\\<pi>) and sin \\<le> 0: alpha\\_jp \\<in> [\\<pi>, 2\\<pi>).\<close>
     have halpha_jp_range: "alpha jp \<ge> pi \<and> alpha jp < 2*pi"
@@ -2000,17 +2010,24 @@ proof -
     qed
     \<comment> \<open>sin(alpha(jp+1)) < 0 since alpha(jp+1) \\<in> (\\<pi>, 2\\<pi>).\<close>
     have "sin (alpha (jp+1)) < 0"
-      using halpha_jp1_range sorry
+      using halpha_jp1_range sin_lt_zero by (by100 blast)
     \<comment> \<open>Therefore cc(jp+1) > 0.\<close>
     have "cc (jp + 1) > 0"
     proof -
       have "cmod (zw 0) > 0" using hzw_ne hnw by (by100 simp)
       have "cmod (zw (jp+1)) > 0" using hzw_ne hjp1_lt by (by100 simp)
       from hcc_sin[rule_format, OF _ hjp1_lt] hjp_pos
-      have "cc (jp+1) = -(cmod (zw 0) * cmod (zw (jp+1)) * sin (alpha (jp+1)))"
+      have hcc_jp1_eq: "cc (jp+1) = -(cmod (zw 0) * cmod (zw (jp+1)) * sin (alpha (jp+1)))"
         by (by100 linarith)
       with \<open>sin (alpha (jp+1)) < 0\<close> \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw (jp+1)) > 0\<close>
-      show ?thesis sorry
+      show ?thesis
+      proof -
+        have "cmod (zw 0) * cmod (zw (jp+1)) > 0"
+          using \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw (jp+1)) > 0\<close> by (by100 simp)
+        hence "cmod (zw 0) * cmod (zw (jp+1)) * sin (alpha (jp+1)) < 0"
+          using \<open>sin (alpha (jp+1)) < 0\<close> mult_pos_neg by (by100 blast)
+        thus ?thesis using hcc_jp1_eq by linarith
+      qed
     qed
     hence "cc (Suc jp mod nw) > 0" using hsjp by simp
     thus ?thesis unfolding cc_def by auto
