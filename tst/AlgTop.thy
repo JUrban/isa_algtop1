@@ -6744,10 +6744,20 @@ proof -
               using hphi_form12 unfolding Let_def sp12_def tp12_def det_p_def
                 ex_p_def ey_p_def fx_p_def fy_p_def dx_p_def dy_p_def by simp
             have h0_lt: "(0::nat) < ?nw" using hnw_pos by linarith
+            have hspur12: "phi_fn (edge_pt_e 0 t) = ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw)"
+              using hphi_on_spur0[rule_format, OF ht] .
+            have hphi_eq_spur: "phi_fn p = ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw)"
+              using heq hspur12 by simp
             have hmx0: "(1-sp12-tp12)*?cxw + sp12*vxw 0 + tp12*vxw(Suc 0 mod ?nw) = (1-t)*vxw 0 + t*?cxw"
-              using hphi_x12 heq hphi_on_spur0[rule_format, OF ht] True sorry
+            proof -
+              have "fst (phi_fn p) = (1-t)*vxw 0 + t*?cxw" using hphi_eq_spur by simp
+              thus ?thesis using hphi_x12 True by simp
+            qed
             have hmy0: "(1-sp12-tp12)*?cyw + sp12*vyw 0 + tp12*vyw(Suc 0 mod ?nw) = (1-t)*vyw 0 + t*?cyw"
-              using hphi_y12 heq hphi_on_spur0[rule_format, OF ht] True sorry
+            proof -
+              have "snd (phi_fn p) = (1-t)*vyw 0 + t*?cyw" using hphi_eq_spur by simp
+              thus ?thesis using hphi_y12 True by simp
+            qed
             from spur_match_sector0_forces_t_zero[OF hlen hC10_expanded[rule_format, OF h0_lt] hmx0 hmy0]
             have htp0: "tp12 = 0" .
             show False sorry
