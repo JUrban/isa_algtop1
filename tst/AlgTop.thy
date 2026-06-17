@@ -2052,9 +2052,41 @@ proof -
          For nw \\<le> 4: alpha nw < nw*\\<pi> \\<le> 4\\<pi>, and 4\\<pi> is excluded (strict), so k=1.
          For nw \\<ge> 5: need C11 argument (convexity forces single winding).\<close>
     \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
+    \<comment> \<open>Partial telescope: z\\_m/z\\_0 = \\<Prod>\\_{j<m} (z\\_{j+1}/z\\_j) for m \\<le> nw.\<close>
+    have hpartial_telescope: "\<forall>m\<le>nw. zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
+      sorry \<comment> \<open>Induction on m. Base: m=0 gives 1*z\\_0. Step: multiply by z\\_{m+1}/z\\_m.
+         Uses: Suc j mod nw = j+1 for j < nw-1, and Suc(nw-1) mod nw = 0.\<close>
+    \<comment> \<open>Product decomposition: each ratio = |ratio|*cis(theta).\<close>
+    \<comment> \<open>Product of cis: \\<Prod> cis(\\<theta>\\_j) = cis(\\<Sum> \\<theta>\\_j) = cis(alpha m).\<close>
     have hcc_sin: "\<forall>m. 0 < m \<longrightarrow> m < nw \<longrightarrow>
         cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
-      sorry \<comment> \<open>From telescope z\\_m/z\\_0 = |z\\_m/z\\_0|*cis(alpha m) and Im(cnj*z) = |.|*|.|*sin.\<close>
+    proof (intro allI impI)
+      fix m assume hm_pos: "0 < m" and hm_lt: "m < nw"
+      \<comment> \<open>z\\_m/z\\_0 = \\<Prod>\\_{j<m} ratio\\_j. Each ratio = |r|*cis(\\<theta>).
+         Product = (\\<Prod> |r|)*cis(\\<Sum> \\<theta>) = (|z\\_m|/|z\\_0|)*cis(alpha m).\<close>
+      \<comment> \<open>cc(m) = Im(cnj(z\\_m)*z\\_0) = -|z\\_0|*|z\\_m|*sin(alpha m).\<close>
+      \<comment> \<open>Step 1: z\\_m/z\\_0 = (|z\\_m|/|z\\_0|)*cis(alpha m).\<close>
+      have hzm_decomp: "zw m / zw 0 = of_real (cmod (zw m) / cmod (zw 0)) * cis (alpha m)"
+        sorry \<comment> \<open>From partial telescope + Arg product decomposition.\<close>
+      \<comment> \<open>Step 2: cc(m) = Im(cnj(z\\_m)*z\\_0) = -|z\\_0|*|z\\_m|*sin(alpha m).\<close>
+      have hz0_ne: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
+      have hzm_ne: "zw m \<noteq> 0" using hzw_ne hm_lt by (by100 blast)
+      \<comment> \<open>From decomposition: cnj(z\\_m)*z\\_0 = of\\_real(|z\\_0|*|z\\_m|)*cis(-alpha m).\<close>
+      have hcnj_eq: "cnj (zw m) * zw 0 = of_real (cmod (zw 0) * cmod (zw m)) * cis (-(alpha m))"
+        using hzm_decomp hz0_ne hzm_ne sorry \<comment> \<open>cnj decomposition + of\\_real algebra.\<close>
+      hence "Im (cnj (zw m) * zw 0) = cmod (zw 0) * cmod (zw m) * sin (-(alpha m))"
+      proof -
+        have "Im (of_real (cmod (zw 0) * cmod (zw m)) * cis (-(alpha m))) =
+            cmod (zw 0) * cmod (zw m) * Im (cis (-(alpha m)))"
+          by (cases "cis (-(alpha m))") (simp add: complex_of_real_mult_Complex)
+        also have "Im (cis (-(alpha m))) = sin (-(alpha m))" by (by100 simp)
+        finally show ?thesis using hcnj_eq by simp
+      qed
+      hence "Im (cnj (zw m) * zw 0) = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
+        by (by100 simp)
+      from hcc_im[rule_format, OF hm_lt] this
+      show "cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))" by linarith
+    qed
     \<comment> \<open>From cc(jp) \\<ge> 0: sin(alpha jp) \\<le> 0, so alpha\\_jp \\<in> [\\<pi>, 2\\<pi>).\<close>
     have hjp_pos: "jp > 0" using hjp_ne0 by (by100 linarith)
     have hjp1_lt: "jp + 1 < nw" using hjp_lt by (by100 linarith)
