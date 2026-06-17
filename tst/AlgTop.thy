@@ -2103,6 +2103,8 @@ proof -
                    \<and> (\<Sum>i<?nw. coeffs i) = 1
                    \<and> x = (\<Sum>i<?nw. coeffs i * vxw i)
                    \<and> y = (\<Sum>i<?nw. coeffs i * vyw i)}"
+    and hfan_det_w: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < ?nw \<longrightarrow>
+        (vxw m - vxw 1) * (vyw n - vyw 1) - (vyw m - vyw 1) * (vxw n - vxw 1) > 0"
     and hC10_w: "\<forall>i<?nw. let cx = (\<Sum>j<?nw. vxw j) / real ?nw;
                              cy = (\<Sum>j<?nw. vyw j) / real ?nw
          in (vxw i - cx) * (vyw(Suc i mod ?nw) - cy) - (vyw i - cy) * (vxw(Suc i mod ?nw) - cx) > 0"
