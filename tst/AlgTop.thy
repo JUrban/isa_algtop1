@@ -2386,6 +2386,7 @@ proof -
         then obtain m0_real where hm0_ge2: "m0_real \<ge> 2" and hm0_lt: "m0_real + 1 < nw"
             and halpha_m0_ge: "alpha (m0_real+1) \<ge> 2*pi" and halpha_m0_lt: "alpha (m0_real+1) < 3*pi"
           by (by100 blast)
+        have halpha_m0_below: "alpha m0_real < 2*pi" sorry \<comment> \<open>From the crossing construction.\<close>
         \<comment> \<open>Step 2: C11 at edge (0, 1), vertex m0\\_real+1.\<close>
         have hm0_ne0: "m0_real+1 \<noteq> 0" using hm0_ge2 by (by100 arith)
         have "Suc 0 mod nw = 1" using hnw by (by100 simp)
@@ -2509,13 +2510,24 @@ proof -
             have "alpha m0_real > theta0"
             proof -
               have "alpha m0_real \<ge> alpha 2"
-                using hm0_ge2 sorry \<comment> \<open>alpha monotone: m0 \\<ge> 2 \\<Longrightarrow> alpha(m0) \\<ge> alpha(2).\<close>
+              proof -
+                have "alpha m0_real = alpha 2 + (\<Sum>j=2..<m0_real. theta j)" unfolding alpha_def
+                  using sum.atLeastLessThan_concat[of 0 2 m0_real theta] hm0_ge2
+                  by (simp add: atLeast0LessThan)
+                moreover have "(\<Sum>j=2..<m0_real. theta j) \<ge> 0" sorry \<comment> \<open>Sum of nonneg.\<close>
+                ultimately show ?thesis by linarith
+              qed
               moreover have "alpha 2 > theta0"
-                using htheta_pos hnw sorry \<comment> \<open>alpha\\_2 = theta\\_0+theta\\_1 > theta\\_0.\<close>
+              proof -
+                have "alpha 2 = theta 0 + theta 1" unfolding alpha_def
+                  by (simp add: lessThan_Suc numeral_2_eq_2)
+                moreover have "theta 1 > 0" using htheta_pos hnw by (by100 auto)
+                ultimately show ?thesis unfolding theta0_def by linarith
+              qed
               ultimately show ?thesis by linarith
             qed
             moreover have "alpha m0_real < 2*pi"
-              sorry \<comment> \<open>m0 is in first loop by construction (alpha < 2\\<pi> at the GREATEST).\<close>
+              using halpha_m0_below .
             ultimately have h1: "(alpha m0_real - theta0)/2 > 0" by simp
             have h2: "(alpha m0_real - theta0)/2 < pi" using \<open>alpha m0_real < 2*pi\<close> htheta0_pos by simp
             from sin_gt_zero[OF h1 h2] show ?thesis .
