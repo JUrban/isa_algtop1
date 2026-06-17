@@ -2412,7 +2412,22 @@ proof -
            formalization needs the cis-difference formula for circle polygons.
            Case 1: the three-sine product from hfan\\_det has signs (+)(-)(+) < 0.
            Case 2: det = r^2*2*sin(theta\\_0/2)*(cos((theta\\_0-2*delta)/2)-cos(theta\\_0/2)) \\<ge> 0.\<close>
-        show False sorry \<comment> \<open>Two-case sign proof: hfan\\_det contradiction OR C11 sign contradiction.\<close>
+        \<comment> \<open>The C11 det in centroid coords:\<close>
+        define alpha_cross where "alpha_cross = alpha (m0_real + 1)"
+        define delta where "delta = alpha_cross - 2*pi"
+        have hdelta_ge: "delta \<ge> 0" using halpha_m0_ge unfolding delta_def alpha_cross_def by linarith
+        have hdelta_lt: "delta < pi" using halpha_m0_lt unfolding delta_def alpha_cross_def by linarith
+        define theta0 where "theta0 = theta 0"
+        have htheta0_pos: "theta0 > 0" and htheta0_lt: "theta0 < pi"
+          using htheta_pos hnw unfolding theta0_def by (by100 auto)+
+        \<comment> \<open>The C11 det = (cross product formula involving vxw, vyw).
+           With equal moduli: det = r^2 * (sin(theta0-delta) + sin(delta) - sin(theta0)).
+           (Using periodicity: sin(alpha\\_cross) = sin(delta), sin(theta0-alpha\\_cross) = sin(theta0-delta).)
+           This expression \\<ge> 0 when delta \\<le> theta0, contradicting C11 < 0.\<close>
+        \<comment> \<open>For now: sorry the det computation. Needs expressing det in terms of
+           sin(alpha\\_cross), sin(theta0), etc. using the equal-modulus formula.\<close>
+        show False sorry \<comment> \<open>Equal-modulus det \\<ge> 0 when delta \\<le> theta0 (from cos monotonicity),
+           OR hfan\\_det < 0 when delta > theta0 (three-sine product). Both \\<to> False.\<close>
       qed
       with hk(2) show "alpha nw = 2*pi" by simp
     qed
