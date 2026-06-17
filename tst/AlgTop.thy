@@ -1778,8 +1778,48 @@ proof -
       define djy where "djy = vyw j_sec - vyw 0"
       define dkx where "dkx = vxw(Suc j_sec mod nw) - vxw 0"
       define dky where "dky = vyw(Suc j_sec mod nw) - vyw 0"
-      have hdet_ne: "djx*dky - djy*dkx \<noteq> 0"
-        sorry \<comment> \<open>From hC11\\_inst: det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) = -det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) + ... \\<noteq> 0.\<close>
+      \<comment> \<open>det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) = -det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) from cross\\_product\\_cyclic + antisym.\<close>
+      have hdet_pos: "djx*dky - djy*dkx > 0"
+      proof -
+        \<comment> \<open>cross\\_product\\_cyclic: det(A-B,C-B) = det(B-C,A-C).
+           With A=u\\_0, B=u\\_j, C=u\\_{j+1}:
+           det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) = det(u\\_j-u\\_{j+1}, u\\_0-u\\_{j+1}).
+           With A=u\\_j, B=u\\_0, C=u\\_{j+1}:
+           det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) = det(u\\_0-u\\_{j+1}, u\\_j-u\\_{j+1}).
+           So det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) = -det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) by antisymmetry.\<close>
+        have h_cyc1: "(vxw 0-vxw j_sec)*(vyw(Suc j_sec mod nw)-vyw j_sec)-
+            (vyw 0-vyw j_sec)*(vxw(Suc j_sec mod nw)-vxw j_sec)
+            = (vxw j_sec-vxw(Suc j_sec mod nw))*(vyw 0-vyw(Suc j_sec mod nw))-
+            (vyw j_sec-vyw(Suc j_sec mod nw))*(vxw 0-vxw(Suc j_sec mod nw))"
+          by (rule cross_product_cyclic)
+        have h_cyc2: "(vxw j_sec-vxw 0)*(vyw(Suc j_sec mod nw)-vyw 0)-
+            (vyw j_sec-vyw 0)*(vxw(Suc j_sec mod nw)-vxw 0)
+            = (vxw 0-vxw(Suc j_sec mod nw))*(vyw j_sec-vyw(Suc j_sec mod nw))-
+            (vyw 0-vyw(Suc j_sec mod nw))*(vxw j_sec-vxw(Suc j_sec mod nw))"
+          by (rule cross_product_cyclic)
+        \<comment> \<open>h\\_cyc1 RHS = -(h\\_cyc2 RHS) by antisymmetry.\<close>
+        \<comment> \<open>Antisymmetry: det(A,B) = -det(B,A).\<close>
+        define px where "px = vxw j_sec-vxw(Suc j_sec mod nw)"
+        define py where "py = vyw j_sec-vyw(Suc j_sec mod nw)"
+        define qx where "qx = vxw 0-vxw(Suc j_sec mod nw)"
+        define qy where "qy = vyw 0-vyw(Suc j_sec mod nw)"
+        have hantisym: "px*qy - py*qx = -(qx*py - qy*px)"
+          by (by100 algebra)
+        have hantisym': "(vxw j_sec-vxw(Suc j_sec mod nw))*(vyw 0-vyw(Suc j_sec mod nw))-
+            (vyw j_sec-vyw(Suc j_sec mod nw))*(vxw 0-vxw(Suc j_sec mod nw))
+            = -((vxw 0-vxw(Suc j_sec mod nw))*(vyw j_sec-vyw(Suc j_sec mod nw))-
+            (vyw 0-vyw(Suc j_sec mod nw))*(vxw j_sec-vxw(Suc j_sec mod nw)))"
+          using hantisym unfolding px_def py_def qx_def qy_def by linarith
+        from h_cyc1 h_cyc2 hantisym' have hC11_vs_dj: "(vxw 0-vxw j_sec)*(vyw(Suc j_sec mod nw)-vyw j_sec)-
+            (vyw 0-vyw j_sec)*(vxw(Suc j_sec mod nw)-vxw j_sec)
+            = -((vxw j_sec-vxw 0)*(vyw(Suc j_sec mod nw)-vyw 0)-
+            (vyw j_sec-vyw 0)*(vxw(Suc j_sec mod nw)-vxw 0))" by linarith
+        hence "djx*dky - djy*dkx = -((vxw 0-vxw j_sec)*(vyw(Suc j_sec mod nw)-vyw j_sec)-
+            (vyw 0-vyw j_sec)*(vxw(Suc j_sec mod nw)-vxw j_sec))"
+          unfolding djx_def djy_def dkx_def dky_def by linarith
+        thus ?thesis using hC11_inst by linarith
+      qed
+      have hdet_ne: "djx*dky - djy*dkx \<noteq> 0" using hdet_pos by linarith
       \<comment> \<open>From hx3, hy3: extract two equations in s, t.\<close>
       define ar where "ar = \<alpha> - r"
       from hx3 have hx3': "s_v*djx + t_v*dkx = -(ar*(cxw - vxw 0))"
