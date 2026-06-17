@@ -6531,7 +6531,17 @@ proof -
               C11 at edge jp: det(u\\_0-u\\_jp, u\\_{jp+1}-u\\_jp) < 0,
               but collinearity gives det=0. Contradiction.
            All infrastructure (centroid weight, C11) is available.\<close>
-        show "phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p" sorry
+        \<comment> \<open>Use spur\\_arc\\_match\\_forces\\_edge to derive that if phi\\_fn(p)=spur,
+           then jp=0\\<and>t=0 or jp=nw-1\\<and>s=0 or s=t=0. Each contradicts interior.\<close>
+        \<comment> \<open>This needs the Cramer decomposition of phi\\_fn(p) matching the spur formula.
+           Then spur\\_arc\\_match\\_forces\\_edge gives the disjunction.
+           All 3 disjuncts lead to p on a polygon edge or p=v\\_1, contradicting interior.\<close>
+        show "phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p"
+          using hjp hin_sec hp hp_ne_v1 ht hint_p
+            hphi_affine_on_sector hdet_pos hphi_on_spur0
+            hC10_w hC11_w hC11_e hlen hne_eq hnw_pos
+            spur_arc_match_forces_edge
+          sorry
       qed
       show ?thesis
         by (rule that[of phi_fn])
