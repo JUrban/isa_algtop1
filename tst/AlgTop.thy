@@ -1681,9 +1681,12 @@ proof -
        From the CCW sweep property: when cc(jp) \\<ge> 0, the edge direction
        is such that the increment keeps cc positive.\<close>
     \<comment> \<open>For now: sorry this monotonicity property.\<close>
-    have "cc (Suc jp mod nw) > 0"
-      sorry \<comment> \<open>Proved for cc(jp)=0 case via C10+C11 parallelism argument.
-         cc(jp)>0 case needs angle/sweep argument.\<close>
+    \<comment> \<open>cc(jp) \\<ge> 0 and jp \\<noteq> 0 and jp+1 \\<noteq> nw: show cc(jp+1) > 0.
+       From cc(1) < 0: jp \\<ge> 2. From cc(nw-1) > 0: jp+1 \\<le> nw-2.
+       The centroid cross product sequence is: 0, neg, ..., neg, (0/pos), pos, ..., pos, 0.
+       Once non-negative, the subsequent values are positive.
+       This follows from the convex polygon structure (C10 + centroid inside).\<close>
+    have "cc (Suc jp mod nw) > 0" sorry
     thus ?thesis unfolding cc_def by auto
   qed
 qed
