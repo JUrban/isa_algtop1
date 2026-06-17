@@ -6720,9 +6720,37 @@ proof -
                phi\\_fn(p) = (1-s-t)*cw + s*u\\_jp + t*u\\_{jp+1} with the Cramer coords.
                For jp=0: matching with spur forces t=0 via affine independence.\<close>
             \<comment> \<open>We use the prop11-style analysis already done for centroid weight.\<close>
-            show False
-              using heq ht hjp True hp hin_sec hp_ne_v1 hint_p hlen_ext hlen hne_eq hnw_pos
-                hphi_on_spur0 hphi_affine_on_sector hdet_pos hC10_expanded sorry
+            let ?si_jp2 = "Suc(jp+2) mod ?ne"
+            from hphi_affine_on_sector[rule_format, OF hjp hp hin_sec]
+            have hphi_form12: "phi_fn (fst p, snd p) = (let ex = vxe(jp+2)-vxe 1; ey = vye(jp+2)-vye 1;
+                fx = vxe ?si_jp2-vxe 1; fy = vye ?si_jp2-vye 1;
+                det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+                s' = (fy*dx-fx*dy)/det; t' = (ex*dy-ey*dx)/det
+            in ((1-s'-t')*?cxw + s'*vxw jp + t'*vxw(Suc jp mod ?nw),
+                (1-s'-t')*?cyw + s'*vyw jp + t'*vyw(Suc jp mod ?nw)))" .
+            define ex_p where "ex_p = vxe(jp+2)-vxe 1"
+            define ey_p where "ey_p = vye(jp+2)-vye 1"
+            define fx_p where "fx_p = vxe ?si_jp2-vxe 1"
+            define fy_p where "fy_p = vye ?si_jp2-vye 1"
+            define dx_p where "dx_p = fst p-vxe 1"
+            define dy_p where "dy_p = snd p-vye 1"
+            define det_p where "det_p = ex_p*fy_p-ey_p*fx_p"
+            define sp12 where "sp12 = (fy_p*dx_p-fx_p*dy_p)/det_p"
+            define tp12 where "tp12 = (ex_p*dy_p-ey_p*dx_p)/det_p"
+            have hphi_x12: "fst (phi_fn p) = (1-sp12-tp12)*?cxw + sp12*vxw jp + tp12*vxw(Suc jp mod ?nw)"
+              using hphi_form12 unfolding Let_def sp12_def tp12_def det_p_def
+                ex_p_def ey_p_def fx_p_def fy_p_def dx_p_def dy_p_def by simp
+            have hphi_y12: "snd (phi_fn p) = (1-sp12-tp12)*?cyw + sp12*vyw jp + tp12*vyw(Suc jp mod ?nw)"
+              using hphi_form12 unfolding Let_def sp12_def tp12_def det_p_def
+                ex_p_def ey_p_def fx_p_def fy_p_def dx_p_def dy_p_def by simp
+            have h0_lt: "(0::nat) < ?nw" using hnw_pos by linarith
+            have hmx0: "(1-sp12-tp12)*?cxw + sp12*vxw 0 + tp12*vxw(Suc 0 mod ?nw) = (1-t)*vxw 0 + t*?cxw"
+              using hphi_x12 heq hphi_on_spur0[rule_format, OF ht] True sorry
+            have hmy0: "(1-sp12-tp12)*?cyw + sp12*vyw 0 + tp12*vyw(Suc 0 mod ?nw) = (1-t)*vyw 0 + t*?cyw"
+              using hphi_y12 heq hphi_on_spur0[rule_format, OF ht] True sorry
+            from spur_match_sector0_forces_t_zero[OF hlen hC10_expanded[rule_format, OF h0_lt] hmx0 hmy0]
+            have htp0: "tp12 = 0" .
+            show False sorry
           next
             case False note hjp_ne0 = this
             show False
