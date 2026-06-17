@@ -6617,6 +6617,10 @@ proof -
           show False
           proof (cases "jp = 0")
             case True
+            \<comment> \<open>Use prop11 infrastructure: centroid\\_weight\\_not\\_on\\_edge already established that
+               phi\\_fn(p) = (1-s-t)*cw + s*u\\_jp + t*u\\_{jp+1} with the Cramer coords.
+               For jp=0: matching with spur forces t=0 via affine independence.\<close>
+            \<comment> \<open>We use the prop11-style analysis already done for centroid weight.\<close>
             show False
               using heq ht hjp True hp hin_sec hp_ne_v1 hint_p hlen_ext hlen hne_eq hnw_pos
                 hphi_on_spur0 hphi_affine_on_sector hdet_pos hC10_expanded sorry
