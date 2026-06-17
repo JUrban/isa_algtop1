@@ -1981,7 +1981,17 @@ proof -
           have "Im (cnj (zw j) * zw (Suc j mod nw)) = Im (of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j))"
             by simp
           also have "\<dots> = (cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j)"
-            sorry \<comment> \<open>Im(of\\_real r * w) = r * Im w. Needs Im\\_mult\\_real or similar.\<close>
+          proof -
+            define w where "w = zw (Suc j mod nw) / zw j"
+            define r where "r = (cmod (zw j))^2"
+            have "Im (of_real r * w) = r * Im w"
+            proof -
+              have "of_real r * w = Complex (r * Re w) (r * Im w)"
+                by (cases w) (simp add: complex_of_real_mult_Complex)
+              thus ?thesis by simp
+            qed
+            thus ?thesis unfolding w_def r_def .
+          qed
           finally show ?thesis .
         qed
         with hC10_im[rule_format, OF hj] have "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) > 0" by linarith
