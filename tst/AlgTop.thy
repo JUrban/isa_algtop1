@@ -1632,9 +1632,57 @@ lemma spur_arc_target_sector:
       and hjp: "jp < nw" and hjp_ne0: "jp \<noteq> 0" and hjp_ne_last: "Suc jp mod nw \<noteq> 0"
   shows "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0
          \<or> (vxw(Suc jp mod nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod nw)-cyw)*(vxw 0-cxw) > 0"
-  \<comment> \<open>Either cross\\_cw(jp, u\\_0) < 0 or cross\\_cw(jp+1, u\\_0) > 0.
-     This means the spur arc point is NOT in target sector jp.\<close>
-  sorry
+proof -
+  \<comment> \<open>cross\\_cw(j, u\\_0) = det(u\\_j-cw, u\\_0-cw) = -(det(u\\_0-cw, u\\_j-cw)).\<close>
+  define cc where "cc j = (vxw j-cxw)*(vyw 0-cyw)-(vyw j-cyw)*(vxw 0-cxw)" for j
+  \<comment> \<open>cc(0) = 0 (self), cc(1) < 0 (from C10 at i=0, antisymmetry),
+     cc(nw-1) > 0 (from C10 at i=nw-1).\<close>
+  have hcc0: "cc 0 = 0" unfolding cc_def by (by100 simp)
+  have hcc1: "cc 1 < 0"
+  proof -
+    from hC10[rule_format, of 0] hnw
+    have "(vxw 0 - cxw) * (vyw(Suc 0 mod nw) - cyw) - (vyw 0 - cyw) * (vxw(Suc 0 mod nw) - cxw) > 0"
+      by simp
+    hence "(vxw 0 - cxw) * (vyw 1 - cyw) - (vyw 0 - cyw) * (vxw 1 - cxw) > 0"
+      using hnw by simp
+    \<comment> \<open>cc(1) = -(the above) < 0.\<close>
+    \<comment> \<open>cc(1) = -(C10 at 0) by expand + algebra\\_simps.\<close>
+    have "cc 1 = -((vxw 0 - cxw) * (vyw 1 - cyw) - (vyw 0 - cyw) * (vxw 1 - cxw))"
+      unfolding cc_def by (simp add: algebra_simps mult.commute)
+    thus ?thesis using \<open>(vxw 0 - cxw) * (vyw 1 - cyw) - (vyw 0 - cyw) * (vxw 1 - cxw) > 0\<close> by linarith
+  qed
+  have hcc_last: "cc (nw - 1) > 0"
+  proof -
+    have "nw - 1 < nw" using hnw by linarith
+    from hC10[rule_format, OF this]
+    have "(vxw (nw-1) - cxw) * (vyw(Suc(nw-1) mod nw) - cyw) - (vyw (nw-1) - cyw) * (vxw(Suc(nw-1) mod nw) - cxw) > 0" .
+    have "Suc(nw-1) mod nw = 0" using hnw by simp
+    hence "(vxw (nw-1) - cxw) * (vyw 0 - cyw) - (vyw (nw-1) - cyw) * (vxw 0 - cxw) > 0"
+      using \<open>(vxw (nw-1) - cxw) * (vyw(Suc(nw-1) mod nw) - cyw) - (vyw (nw-1) - cyw) * (vxw(Suc(nw-1) mod nw) - cxw) > 0\<close>
+      by simp
+    thus ?thesis unfolding cc_def .
+  qed
+  \<comment> \<open>Main argument: if cc(jp) \\<ge> 0 then cc(Suc jp mod nw) > 0.
+     Proof: cc goes 0 \\<to> negative \\<to> ... \\<to> positive \\<to> 0.
+     Once cc becomes \\<ge> 0 (past the minimum), it stays positive.
+     This uses the monotone CCW sweep from C10.\<close>
+  show ?thesis
+  proof (cases "cc jp < 0")
+    case True thus ?thesis unfolding cc_def by auto
+  next
+    case False
+    hence "cc jp \<ge> 0" by linarith
+    \<comment> \<open>cc(jp) \\<ge> 0 with jp \\<ge> 1 and jp+1 < nw: show cc(jp+1) > 0.
+       Since cc(1) < 0 and cc(jp) \\<ge> 0 with jp \\<ge> 2: the sign changed from neg to nonneg.
+       With the CCW sweep, once nonneg, stays positive for subsequent vertices.\<close>
+    \<comment> \<open>Key: cc(jp+1) = cc(jp) + det(edge\\_jp, u\\_0-cw).
+       From the CCW sweep property: when cc(jp) \\<ge> 0, the edge direction
+       is such that the increment keeps cc positive.\<close>
+    \<comment> \<open>For now: sorry this monotonicity property.\<close>
+    have "cc (Suc jp mod nw) > 0" sorry
+    thus ?thesis unfolding cc_def by auto
+  qed
+qed
 
 \<comment> \<open>Standalone lemma: fan triangle interiors from a centroid are disjoint.
    If q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} with \\<alpha>,s,t > 0
