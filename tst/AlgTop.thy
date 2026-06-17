@@ -1681,6 +1681,46 @@ proof -
   from htp_zero hdet_ne show "tp = 0" by simp
 qed
 
+\<comment> \<open>Symmetric lemma for jp=nw-1: if phi(p) = spur and Suc jp mod nw = 0 (u\\_{jp+1}=u\\_0),
+   then s\\_p = 0. The matching equation gives s*(u\\_j-cw)+t*(u\\_0-cw)=(1-r)*(u\\_0-cw),
+   and Cramer with C10(jp) > 0 shows s = 0.\<close>
+lemma spur_match_sector_last_forces_s_zero:
+  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
+  assumes hnw: "nw \<ge> 3"
+      and hjp: "jp < nw" and hjp_last: "Suc jp mod nw = 0"
+      and hC10_jp: "(vxw jp - cxw) * (vyw(Suc jp mod nw) - cyw) - (vyw jp - cyw) * (vxw(Suc jp mod nw) - cxw) > 0"
+      and hmx: "(1-sp-t)*cxw + sp*vxw jp + t*vxw(Suc jp mod nw) = (1-r)*vxw 0 + r*cxw"
+      and hmy: "(1-sp-t)*cyw + sp*vyw jp + t*vyw(Suc jp mod nw) = (1-r)*vyw 0 + r*cyw"
+  shows "sp = 0"
+proof -
+  \<comment> \<open>Suc jp mod nw = 0, so vxw(Suc jp mod nw) = vxw 0.\<close>
+  from hjp_last have hvx: "vxw(Suc jp mod nw) = vxw 0" "vyw(Suc jp mod nw) = vyw 0" by auto
+  \<comment> \<open>Multiply hmy by (vxw(Suc jp mod nw)-cxw)=(vxw 0-cxw), hmx by (vyw(Suc jp mod nw)-cyw)=(vyw 0-cyw).
+     Subtract to eliminate t. For jp=nw-1: u\\_{jp+1}=u\\_0, so the t coefficients match the RHS.\<close>
+  define Bx where "Bx = vxw 0 - cxw"
+  define By where "By = vyw 0 - cyw"
+  have h1: "By*((1-sp-t)*cxw + sp*vxw jp + t*vxw 0) = By*((1-r)*vxw 0 + r*cxw)"
+    using hmx hvx by simp
+  have h2: "Bx*((1-sp-t)*cyw + sp*vyw jp + t*vyw 0) = Bx*((1-r)*vyw 0 + r*cyw)"
+    using hmy hvx by simp
+  \<comment> \<open>h1 - h2 eliminates t and (1-sp-t) by the same cancellation as sector0.\<close>
+  have hsp_zero: "sp * ((vxw jp - cxw)*(vyw 0 - cyw) - (vyw jp - cyw)*(vxw 0 - cxw)) = 0"
+  proof -
+    from h1 have h1': "By*((1-sp-t)*cxw + sp*vxw jp + t*vxw 0) =
+        By*((1-r)*vxw 0 + r*cxw)" .
+    from h2 have h2': "Bx*((1-sp-t)*cyw + sp*vyw jp + t*vyw 0) =
+        Bx*((1-r)*vyw 0 + r*cyw)" .
+    show ?thesis using h1' h2' unfolding Bx_def By_def by (by20000 algebra)
+  qed
+  have hdet_ne: "(vxw jp - cxw)*(vyw 0 - cyw) - (vyw jp - cyw)*(vxw 0 - cxw) \<noteq> 0"
+  proof -
+    from hC10_jp hvx have "(vxw jp - cxw)*(vyw 0 - cyw) - (vyw jp - cyw)*(vxw 0 - cxw) > 0"
+      by simp
+    thus ?thesis by linarith
+  qed
+  from hsp_zero hdet_ne show "sp = 0" by simp
+qed
+
 \<comment> \<open>Standalone lemma: spur arc point is NOT in target sector jp for jp \\<notin> {0, nw-1}.
    The spur arc ((1-t)*u\\_0 + t*cw) has cross\\_cw(j, spur) = (1-t)*cross\\_cw(j, u\\_0).
    cross\\_cw(j, u\\_0) = det(u\\_j-cw, u\\_0-cw).
