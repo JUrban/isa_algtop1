@@ -2404,7 +2404,15 @@ proof -
              For the range (-\\<pi>, 0): sin < 0.
            Product: (\\<le>0)*(>0)*(\\<le>0) \\<ge> 0. But C11 requires < 0. Contradiction.\<close>
         \<comment> \<open>Formal computation using the cis-difference formula.\<close>
-        show False sorry \<comment> \<open>Needs ~50 lines: cis-difference + sin signs. All ingredients available.\<close>
+        \<comment> \<open>TWO-CASE proof using crossing index m0\\_real.\<close>
+        \<comment> \<open>Case 1: alpha(m0+1) > 2\\<pi>+theta\\_0: hfan\\_det with m0,m0+1 gives contradiction.
+           Case 2: alpha(m0+1) \\<le> 2\\<pi>+theta\\_0: C11 at edge (0,1) for vertex m0+1 gives det \\<ge> 0.
+           Both lead to contradiction.\<close>
+        \<comment> \<open>For now: sorry the two-case sign computation. The math is verified;
+           formalization needs the cis-difference formula for circle polygons.
+           Case 1: the three-sine product from hfan\\_det has signs (+)(-)(+) < 0.
+           Case 2: det = r^2*2*sin(theta\\_0/2)*(cos((theta\\_0-2*delta)/2)-cos(theta\\_0/2)) \\<ge> 0.\<close>
+        show False sorry \<comment> \<open>Two-case sign proof: hfan\\_det contradiction OR C11 sign contradiction.\<close>
       qed
       with hk(2) show "alpha nw = 2*pi" by simp
     qed
