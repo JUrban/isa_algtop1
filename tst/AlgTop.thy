@@ -26,12 +26,12 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-16, session 1625):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-17, session 1627):
 
-~69 sorry word occurrences. Build ~46s.
-prop12 restructured: 3 case sorrys (jp=0, jp=nw-1, jp\\<notin>{0,nw-1}) replacing 1 monolithic sorry.
-jp=0 and jp=nw-1 provable via affine independence from C10.
-jp\\<notin>{0,nw-1} depends on spur\\_arc\\_target\\_sector (sorry at line ~1690).
+~69 sorry word occurrences. Build ~47s.
+prop12: jp=0 and jp=nw-1 FULLY PROVED. Only jp\\<notin>{0,nw-1} sorry remains (spur\\_arc\\_target\\_sector).
+New standalone lemmas PROVED: spur\\_match\\_sector0\\_forces\\_t\\_zero, spur\\_match\\_sector\\_last\\_forces\\_s\\_zero,
+  cramer\\_inverse\\_tp\\_zero, cramer\\_inverse\\_sp\\_zero.
 
 DEPENDENCY TREE FOR CANCEL CHAIN:
   spur\\_collapse\\_cancel\\_homeo (phi construction, ~2 sorry proof commands)
