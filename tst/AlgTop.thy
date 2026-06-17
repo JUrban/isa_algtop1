@@ -26,11 +26,18 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-17, session 1628):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-17, session 1630):
 
 22 sorry proof commands. Build ~47s.
 prop12: jp=0 and jp=nw-1 FULLY PROVED. Only jp\\<notin>{0,nw-1} sorry remains.
 New standalone lemmas: spur\\_match\\_sector0/last, cramer\\_inverse\\_tp/sp\\_zero.
+
+CLASSIFICATION CHAIN ANALYSIS (scheme\\_normal\\_form\\_valid uses 100 operations):
+  PROVED for proper: rotate(25), flip\\_label(22), cancel(13), cancel\\_reverse(2),
+    invert(4), relabel-fresh(8).
+  SORRY: cut\\_paste\\_opp(11), cut\\_paste(4), cut\\_paste2(2),
+    cut\\_paste\\_reverse(2), cut\\_paste2\\_reverse(3), context\\_left-nonstandard(4).
+  KEY: all sorry'd operations need GEOMETRIC REARRANGEMENT (multi-polygon or arc-permutation).
 
 SORRY INVENTORY (22 proof sorrys):
 A. GEOMETRIC CORE (3 sorrys):
