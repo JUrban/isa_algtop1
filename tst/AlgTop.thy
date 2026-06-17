@@ -6760,6 +6760,10 @@ proof -
             qed
             from spur_match_sector0_forces_t_zero[OF hlen hC10_expanded[rule_format, OF h0_lt] hmx0 hmy0]
             have htp0: "tp12 = 0" .
+            \<comment> \<open>tp12=0: p on edge 1 (Cramer inverse + edge construction).
+               Needs: dx=sp12*ex (from Cramer inverse with tp12=0),
+               then p = (1-sp12)*v\\_1 + sp12*v\\_2 = edge\\_pt\\_e(1, sp12),
+               sp12 \\<in> I\\_set (from sp12=1-t), contradiction with hint\\_p.\<close>
             show False sorry
           next
             case False note hjp_ne0 = this
