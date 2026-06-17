@@ -6854,9 +6854,80 @@ proof -
               from hfst_eq hsnd_eq h_px h_py show ?thesis
                 by (cases "edge_pt_e 1 sp12", cases p) simp
             qed
-            \<comment> \<open>sp12 \\<in> I\\_set: from matching with tp12=0.\<close>
-            have "sp12 \<in> I_set"
-              using hmx0 hmy0 htp0 hC10_expanded hnw_pos ht sorry
+            \<comment> \<open>sp12 \\<in> I\\_set: derive sp12 = 1-t from matching.\<close>
+            have hsp_eq: "sp12 = 1 - t"
+            proof -
+              from hmx0 htp0 have hmx_s: "(1-sp12)*?cxw + sp12*vxw 0 = (1-t)*vxw 0 + t*?cxw" by simp
+              from hmy0 htp0 have hmy_s: "(1-sp12)*?cyw + sp12*vyw 0 = (1-t)*vyw 0 + t*?cyw" by simp
+              \<comment> \<open>Ring distribute: (1-sp12)*cxw = cxw - sp12*cxw, etc.\<close>
+              define sp_cx where "sp_cx = sp12*?cxw"
+              define t_cx where "t_cx = t*?cxw"
+              define sp_vx where "sp_vx = sp12*vxw 0"
+              define t_vx where "t_vx = t*vxw 0"
+              define oms_cx where "oms_cx = (1-sp12)*?cxw"
+              define omt_vx where "omt_vx = (1-t)*vxw 0"
+              have "oms_cx = ?cxw - sp_cx" unfolding oms_cx_def sp_cx_def by (by100 algebra)
+              have "omt_vx = vxw 0 - t_vx" unfolding omt_vx_def t_vx_def by (by100 algebra)
+              from hmx_s have "oms_cx + sp_vx = omt_vx + t_cx"
+                unfolding oms_cx_def sp_vx_def omt_vx_def t_cx_def by simp
+              hence "?cxw - sp_cx + sp_vx = vxw 0 - t_vx + t_cx"
+                using \<open>oms_cx = ?cxw - sp_cx\<close> \<open>omt_vx = vxw 0 - t_vx\<close> by linarith
+              hence hx_lin: "sp_vx - sp_cx = (vxw 0 - ?cxw) + (t_cx - t_vx)" by linarith
+              \<comment> \<open>sp\\_vx - sp\\_cx = sp12*(vxw 0-cxw), t\\_cx-t\\_vx = t*(cxw-vxw 0) = -(t*(vxw 0-cxw)).\<close>
+              define wx where "wx = vxw 0 - ?cxw"
+              have "sp_vx - sp_cx = sp12*wx" unfolding sp_vx_def sp_cx_def wx_def by (by100 algebra)
+              have "t_cx - t_vx = -(t*wx)" unfolding t_cx_def t_vx_def wx_def by (by100 algebra)
+              have hwx_eq: "vxw 0 - ?cxw = wx" unfolding wx_def by simp
+              from hx_lin have "sp12*wx = wx - t*wx"
+                using \<open>sp_vx - sp_cx = sp12*wx\<close> \<open>t_cx - t_vx = -(t*wx)\<close> hwx_eq by linarith
+              hence hsp_wx: "sp12*wx = (1-t)*wx" by (by100 algebra)
+              \<comment> \<open>Similarly for y.\<close>
+              define wy where "wy = vyw 0 - ?cyw"
+              have hsp_wy: "sp12*wy = (1-t)*wy"
+              proof -
+                define sp_cy where "sp_cy = sp12*?cyw"
+                define t_cy where "t_cy = t*?cyw"
+                define sp_vy where "sp_vy = sp12*vyw 0"
+                define t_vy where "t_vy = t*vyw 0"
+                define oms_cy where "oms_cy = (1-sp12)*?cyw"
+                define omt_vy where "omt_vy = (1-t)*vyw 0"
+                have "oms_cy = ?cyw - sp_cy" unfolding oms_cy_def sp_cy_def by (by100 algebra)
+                have "omt_vy = vyw 0 - t_vy" unfolding omt_vy_def t_vy_def by (by100 algebra)
+                from hmy_s have "oms_cy + sp_vy = omt_vy + t_cy"
+                  unfolding oms_cy_def sp_vy_def omt_vy_def t_cy_def by simp
+                hence "?cyw - sp_cy + sp_vy = vyw 0 - t_vy + t_cy"
+                  using \<open>oms_cy = ?cyw - sp_cy\<close> \<open>omt_vy = vyw 0 - t_vy\<close> by linarith
+                hence hy_lin: "sp_vy - sp_cy = (vyw 0 - ?cyw) + (t_cy - t_vy)" by linarith
+                have "sp_vy - sp_cy = sp12*wy" unfolding sp_vy_def sp_cy_def wy_def by (by100 algebra)
+                have "t_cy - t_vy = -(t*wy)" unfolding t_cy_def t_vy_def wy_def by (by100 algebra)
+                have hwy_eq: "vyw 0 - ?cyw = wy" unfolding wy_def by simp
+                from hy_lin have "sp12*wy = wy - t*wy"
+                  using \<open>sp_vy - sp_cy = sp12*wy\<close> \<open>t_cy - t_vy = -(t*wy)\<close> hwy_eq by linarith
+                thus ?thesis by (by100 algebra)
+              qed
+              \<comment> \<open>From sp12*wx = (1-t)*wx: if wx \\<noteq> 0 then sp12=1-t. Else use wy. C10 ensures one \\<noteq> 0.\<close>
+              show ?thesis
+              proof (cases "wx \<noteq> 0")
+                case True from hsp_wx True show ?thesis by simp
+              next
+                case False hence "wx = 0" by simp
+                show ?thesis
+                proof (cases "wy \<noteq> 0")
+                  case True from hsp_wy True show ?thesis by simp
+                next
+                  case False hence "wy = 0" by simp
+                  \<comment> \<open>wx=wy=0 means vxw 0=cxw and vyw 0=cyw. C10(0) gives contradiction.\<close>
+                  have "vxw 0 = ?cxw" using \<open>wx = 0\<close> unfolding wx_def by simp
+                  have "vyw 0 = ?cyw" using \<open>wy = 0\<close> unfolding wy_def by simp
+                  have h0_lt: "(0::nat) < ?nw" using hnw_pos by linarith
+                  from hC10_expanded[rule_format, OF h0_lt]
+                  have "(vxw 0-?cxw)*(vyw(Suc 0 mod ?nw)-?cyw)-(vyw 0-?cyw)*(vxw(Suc 0 mod ?nw)-?cxw) > 0" .
+                  with \<open>vxw 0 = ?cxw\<close> \<open>vyw 0 = ?cyw\<close> show ?thesis by simp
+                qed
+              qed
+            qed
+            have "sp12 \<in> I_set" using hsp_eq ht
+              unfolding top1_unit_interval_def by (by100 auto)
             have "1 < ?ne" using hlen_ext by (by100 linarith)
             from hint_p[rule_format, OF this \<open>sp12 \<in> I_set\<close>] hp_edge show False by (by100 simp)
           next
