@@ -1855,7 +1855,40 @@ proof -
        The centroid cross product sequence is: 0, neg, ..., neg, (0/pos), pos, ..., pos, 0.
        Once non-negative, the subsequent values are positive.
        This follows from the convex polygon structure (C10 + centroid inside).\<close>
-    have "cc (Suc jp mod nw) > 0" sorry
+    \<comment> \<open>PROOF: Use the fact that each C10 step has angle < \\<pi>.
+       det(u\\_j-cw, u\\_{j+1}-cw) > 0 means the angle from cw→u\\_j to cw→u\\_{j+1} is in (0,\\<pi>).
+       Cumulative: if the total angle from u\\_0 to u\\_jp exceeds \\<pi> (i.e., cc(jp) \\<ge> 0),
+       adding one more step (< \\<pi>) keeps it in (\\<pi>, 2\\<pi>), so cc(jp+1) > 0.
+       This is formalized via the "cross product chain" property.\<close>
+    \<comment> \<open>Key helper: for vectors a,b with det(a,b) \\<le> 0 and |a|,|b| > 0, and c with det(b,c) > 0,
+       if additionally det(a, -(r*b+s*c)) \\<ge> 0 for some r > 0, s > 0 (encoding angle < 2\\<pi>),
+       then det(a,c) < 0.
+       Simpler: use the Jacobi identity det(a,b)*c + det(b,c)*a + det(c,a)*b = 0 (vector form).
+       From det(a,b) \\<le> 0, det(b,c) > 0: if det(a,c) \\<ge> 0, then from Jacobi:
+       det(a,b)*c = -det(b,c)*a + det(a,c)*b. The RHS has -det(b,c)*a (opposite to a) + det(a,c)*b.
+       Need to show this is contradictory given the polygon structure.\<close>
+    \<comment> \<open>Use the "half-plane chain" from C10:
+       The sequence u\\_0-cw, u\\_1-cw, ..., u\\_{nw-1}-cw goes CCW around cw.
+       Each pair (u\\_j-cw, u\\_{j+1}-cw) has positive det (C10).
+       The signed angle from the first to the last vector is exactly 2\\<pi>-\\<delta>\\_0 where \\<delta>\\_0 > 0.
+       u\\_0 is the "starting" direction. Once the cumulative angle passes \\<pi>,
+       the det with u\\_0-cw flips sign permanently.\<close>
+    have hjp_lt: "jp < nw - 1"
+    proof (rule ccontr)
+      assume "\<not> jp < nw - 1"
+      hence "jp \<ge> nw - 1" by (by100 linarith)
+      with hjp have "jp = nw - 1" by (by100 linarith)
+      hence "Suc jp = nw" using hnw by (by100 arith)
+      hence "Suc jp mod nw = 0" by (by100 simp)
+      with hjp_ne_last show False by simp
+    qed
+    have hsjp: "Suc jp mod nw = jp + 1" using hjp_lt by (by100 simp)
+    \<comment> \<open>The DECISIVE helper: det(u\\_0-cw, u\\_{jp+1}-cw) < 0 when det(u\\_0-cw, u\\_jp-cw) \\<le> 0.
+       This follows from: u\\_{jp+1} is CCW of u\\_jp (from C10), and the CCW step is < \\<pi>,
+       so u\\_{jp+1} stays in the same half-plane as u\\_jp (w.r.t. the line through cw \\<perp> u\\_0-cw).
+       Formal proof: use C11 to show the step stays bounded.\<close>
+    have "cc (jp + 1) > 0" sorry
+    hence "cc (Suc jp mod nw) > 0" using hsjp by simp
     thus ?thesis unfolding cc_def by auto
   qed
 qed
