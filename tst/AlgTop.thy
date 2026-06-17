@@ -2286,8 +2286,40 @@ proof -
         define m0 where "m0 = (GREATEST m. m < nw \<and> alpha m < 2*pi)"
         \<comment> \<open>For now: sorry the existence and properties of m0.
            Key properties: m0 \\<ge> 2, m0+1 < nw, alpha\\_{m0+1} \\<ge> 2\\<pi>, alpha\\_{m0+1} < 3\\<pi>.\<close>
+        \<comment> \<open>Existence: alpha\\_1 = theta\\_0 < \\<pi> < 2\\<pi>. And alpha\\_{nw-1} = 2k\\<pi>-theta\\_{nw-1} > 3\\<pi> (for k \\<ge> 2).
+           So there's a crossing of 2\\<pi> between indices 1 and nw-1.\<close>
+        have halpha_1_lt: "alpha 1 < 2*pi"
+        proof -
+          have "alpha 1 = theta 0" unfolding alpha_def by simp
+          have h0_lt: "0 < nw" using hnw by linarith
+          from htheta_pos[rule_format, OF h0_lt] have "theta 0 < pi" by simp
+          hence "theta 0 < 2*pi" using pi_gt_zero by linarith
+          thus ?thesis using \<open>alpha 1 = theta 0\<close> by simp
+        qed
+        have halpha_nw1_ge: "alpha (nw-1) > 2*pi"
+        proof -
+          have "alpha nw = 2 * real k * pi" using hk(2) .
+          have hnw_Suc: "nw = Suc (nw-1)" using hnw by (by100 arith)
+          have "alpha nw = alpha (nw-1) + theta (nw-1)" unfolding alpha_def
+          proof -
+            have "{..<Suc (nw-1)} = insert (nw-1) {..<(nw-1)}" by (rule lessThan_Suc)
+            hence "(\<Sum>j<nw. theta j) = theta (nw-1) + (\<Sum>j<nw-1. theta j)"
+              using hnw_Suc by simp
+            thus "(\<Sum>j<nw. theta j) = (\<Sum>j<nw-1. theta j) + theta (nw-1)"
+              by (by100 algebra)
+          qed
+          hence "alpha (nw-1) = alpha nw - theta (nw-1)" by linarith
+          also have "\<dots> = 2*real k*pi - theta (nw-1)" using hk(2) by simp
+          finally have h: "alpha (nw-1) = 2*real k*pi - theta (nw-1)" .
+          have "theta (nw-1) < pi" using htheta_pos hnw by (by100 auto)
+          from \<open>k \<ge> 2\<close> have "2*real k*pi \<ge> 4*pi" using pi_gt_zero by (by100 simp)
+          from h have "alpha (nw-1) = 2*real k*pi - theta (nw-1)" .
+          with \<open>4*pi \<le> 2*real k*pi\<close> \<open>theta (nw-1) < pi\<close> pi_gt_zero
+          show ?thesis by linarith
+        qed
+        \<comment> \<open>By discrete IVT: \\<exists>m0 with alpha(m0) < 2\\<pi> and alpha(m0+1) \\<ge> 2\\<pi>.\<close>
         have hm0_props: "m0 \<ge> 2 \<and> m0 + 1 < nw \<and> alpha (m0+1) \<ge> 2*pi \<and> alpha (m0+1) < 3*pi"
-          sorry \<comment> \<open>From alpha\\_1 < \\<pi> < 2\\<pi>, alpha\\_nw \\<ge> 4\\<pi>, each step < \\<pi>.\<close>
+          sorry \<comment> \<open>Discrete IVT on alpha sequence + each step < \\<pi>.\<close>
         hence hm0_ge2: "m0 \<ge> 2" and hm0_lt: "m0 + 1 < nw"
             and halpha_m0_ge: "alpha (m0+1) \<ge> 2*pi" and halpha_m0_lt: "alpha (m0+1) < 3*pi"
           by auto
