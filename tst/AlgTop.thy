@@ -2191,8 +2191,55 @@ proof -
       \<comment> \<open>From alpha \\<in> (0, nw*\\<pi>) and cos=1,sin=0: alpha = 2\\<pi>*(nw div something)...
          For nw \\<le> 4: alpha < 4\\<pi>, so alpha = 2\\<pi>.
          For nw \\<ge> 5: alpha < nw*\\<pi>, and we use C11 to show alpha < 4\\<pi>.\<close>
-      show "alpha nw = 2*pi"
-        using halpha_pos halpha_lt \<open>cis (alpha nw) = 1\<close> hnw sorry
+      \<comment> \<open>From cis = 1: alpha = 2k\\<pi> for integer k. From alpha > 0: k \\<ge> 1.
+         From alpha < nw*\\<pi>: 2k < nw. For nw \\<le> 4: k = 1.
+         For nw \\<ge> 5: k < nw/2 and C11 convexity rules out k \\<ge> 2.\<close>
+      have "\<exists>k::nat. k \<ge> 1 \<and> alpha nw = 2 * real k * pi"
+      proof -
+        from hcos have "((\<exists>n::nat. alpha nw = real n * 2 * pi) \<or> (\<exists>n::nat. alpha nw = -(real n * 2 * pi)))"
+          using cos_one_2pi by (by100 blast)
+        hence "\<exists>n::nat. alpha nw = real n * 2 * pi"
+        proof (elim disjE exE)
+          fix n :: nat assume "alpha nw = real n * 2 * pi" thus ?thesis by (by100 blast)
+        next
+          fix n :: nat assume "alpha nw = -(real n * 2 * pi)"
+          hence "alpha nw \<le> 0" using pi_gt_zero by (by100 simp)
+          with halpha_pos show ?thesis by linarith
+        qed
+        then obtain n :: nat where hn: "alpha nw = real n * 2 * pi" by (by100 blast)
+        have "n \<ge> 1"
+        proof (rule ccontr)
+          assume "\<not> n \<ge> 1" hence "n = 0" by (by100 simp)
+          with hn have "alpha nw = 0" by simp
+          with halpha_pos show False by linarith
+        qed
+        from hn have "alpha nw = 2 * real n * pi" by (by100 algebra)
+        with \<open>n \<ge> 1\<close> show ?thesis by (by100 blast)
+      qed
+      then obtain k :: nat where hk: "k \<ge> 1" "alpha nw = 2 * real k * pi" by (by100 blast)
+      from hk(2) halpha_lt have "2 * real k * pi < real nw * pi" by simp
+      hence "2 * real k < real nw" using pi_gt_zero by (by100 simp)
+      hence h2k_lt: "2 * k < nw" by linarith
+      \<comment> \<open>For nw \\<le> 4: 2k < nw \\<le> 4, so k < 2, hence k = 1.\<close>
+      \<comment> \<open>For nw \\<ge> 5: need C11 to show k < 2.\<close>
+      have "k = 1"
+      proof (rule ccontr)
+        assume "k \<noteq> 1"
+        with hk(1) have "k \<ge> 2" by linarith
+        hence "2 * k \<ge> 4" by linarith
+        \<comment> \<open>For k \\<ge> 2: alpha = 2k\\<pi> \\<ge> 4\\<pi>. But need alpha < nw*\\<pi> with nw \\<ge> 3.
+           For nw = 3,4: 4\\<pi> > nw*\\<pi> is false (4\\<pi> > 3\\<pi> = true, 4\\<pi> > 4\\<pi> = false but strict).
+           Actually: alpha < nw*pi STRICT. For k=2: alpha = 4\\<pi>. Need 4\\<pi> < nw*\\<pi>, i.e., nw > 4.
+           For nw \\<le> 4: 4\\<pi> \\<ge> nw*\\<pi> (4\\<pi> \\<ge> 4\\<pi>), contradicting alpha < nw*\\<pi>.
+           For nw = 3: 4\\<pi> > 3\\<pi>. Contradiction. For nw = 4: 4\\<pi> = 4\\<pi>, not strict. But alpha < 4\\<pi> = nw*\\<pi>.
+           4\\<pi> < 4\\<pi> is false. So alpha = 4\\<pi> \\<ge> 4\\<pi> = nw*\\<pi>. Contradiction with strict <.
+           For nw \\<ge> 5: 4\\<pi> < 5\\<pi> \\<le> nw*\\<pi>. No contradiction from alpha < nw*\\<pi> alone.\<close>
+        \<comment> \<open>Use C11 to show this is impossible for nw \\<ge> 5.
+           If alpha = 2k\\<pi> \\<ge> 4\\<pi>: the polygon wraps twice around cw.
+           C11 (convexity) prevents this: for a convex polygon, winding number = 1.\<close>
+        show False sorry \<comment> \<open>For k \\<ge> 2: use C11 convexity to derive contradiction.\<close>
+      qed
+      with hk(2) show "alpha nw = 2*pi" by simp
     qed
     \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
     have hcc_sin: "\<forall>m. 0 < m \<longrightarrow> m < nw \<longrightarrow>
