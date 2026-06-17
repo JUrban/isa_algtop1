@@ -26,11 +26,12 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-17, session 1630):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-18, session 1634):
 
-22 sorry proof commands. Build ~47s.
-prop12: jp=0 and jp=nw-1 FULLY PROVED. Only jp\\<notin>{0,nw-1} sorry remains.
-New standalone lemmas: spur\\_match\\_sector0/last, cramer\\_inverse\\_tp/sp\\_zero.
+21 sorry proof commands. Build ~2:10.
+spur\\_arc\\_target\\_sector: 99% proved via complex Arg. Only k=1 for nw\\<ge>5 (winding=1) remains.
+prop12: jp=0 and jp=nw-1 FULLY PROVED. jp\\<notin>{0,nw-1} blocked by spur\\_arc\\_target\\_sector.
+New: spur\\_match\\_sector0/last, cramer\\_inverse\\_tp/sp\\_zero, complex angle infrastructure.
 
 CLASSIFICATION CHAIN ANALYSIS (scheme\\_normal\\_form\\_valid uses 100 operations):
   PROVED for proper: rotate(25), flip\\_label(22), cancel(13), cancel\\_reverse(2),
