@@ -1990,7 +1990,32 @@ proof -
     qed
     \<comment> \<open>alpha\\_jp \\<in> (0, 2\\<pi>) and sin \\<le> 0: alpha\\_jp \\<in> [\\<pi>, 2\\<pi>).\<close>
     have halpha_jp_range: "alpha jp \<ge> pi \<and> alpha jp < 2*pi"
-      sorry \<comment> \<open>From alpha > 0 (each theta > 0) and alpha < 2*pi (total = 2*pi, remaining > 0).\<close>
+    proof -
+      \<comment> \<open>alpha jp > 0 (each theta > 0 and jp > 0).\<close>
+      have halpha_pos: "alpha jp > 0"
+      proof -
+        have "alpha jp = (\<Sum>j<jp. theta j)" unfolding alpha_def by simp
+        moreover have "\<forall>j<jp. theta j > 0" using htheta_pos hjp by (by100 auto)
+        moreover have "jp > 0" using hjp_ne0 by (by100 linarith)
+        ultimately show ?thesis sorry \<comment> \<open>Sum of positive terms with nonempty index set.\<close>
+      qed
+      \<comment> \<open>alpha jp < 2*pi (remaining sum > 0).\<close>
+      have halpha_lt: "alpha jp < 2*pi"
+      proof -
+        have "alpha jp + (\<Sum>j=jp..<nw. theta j) = alpha nw" unfolding alpha_def sorry
+        moreover have "(\<Sum>j=jp..<nw. theta j) > 0" sorry
+        ultimately show ?thesis using halpha_sum by linarith
+      qed
+      \<comment> \<open>sin(alpha jp) \\<le> 0 and 0 < alpha jp: alpha jp \\<ge> pi.\<close>
+      have "alpha jp \<ge> pi"
+      proof (rule ccontr)
+        assume "\<not> alpha jp \<ge> pi"
+        hence "alpha jp < pi" by linarith
+        with halpha_pos have "sin (alpha jp) > 0" by (rule sin_gt_zero)
+        with \<open>sin (alpha jp) \<le> 0\<close> show False by linarith
+      qed
+      with halpha_lt show ?thesis by (by100 auto)
+    qed
     \<comment> \<open>alpha(jp+1) = alpha(jp) + theta(jp) \\<in> (\\<pi>, 2\\<pi>+\\<pi>) \\<cap> (0, 2\\<pi>) = (\\<pi>, 2\\<pi>).\<close>
     have halpha_jp1_range: "alpha (jp+1) > pi \<and> alpha (jp+1) < 2*pi"
     proof -
