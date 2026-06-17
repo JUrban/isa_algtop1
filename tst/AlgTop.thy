@@ -1958,7 +1958,40 @@ proof -
     \<comment> \<open>Define angular steps and cumulative angle.\<close>
     define theta where "theta j = Arg (zw (Suc j mod nw) / zw j)" for j
     have htheta_pos: "\<forall>j<nw. theta j > 0 \<and> theta j < pi"
-      sorry \<comment> \<open>From hC10\\_im: Im(cnj(z\\_j)*z\\_{j+1}) > 0 \\<Longleftrightarrow> Arg(z\\_{j+1}/z\\_j) \\<in> (0,\\<pi>).\<close>
+    proof (intro allI impI conjI)
+      fix j assume hj: "j < nw"
+      have hzj_ne: "zw j \<noteq> 0" using hzw_ne hj by (by100 blast)
+      have hzk_ne: "zw (Suc j mod nw) \<noteq> 0" using hzw_ne hj hnw by (by100 auto)
+      have hratio_ne: "zw (Suc j mod nw) / zw j \<noteq> 0" using hzj_ne hzk_ne by (by100 simp)
+      \<comment> \<open>Im(cnj z * w) = |z|^2 * Im(w/z).\<close>
+      \<comment> \<open>From Im(cnj z * w) > 0: Im(w/z) > 0 (since cnj z * w = |z|^2 * (w/z)).\<close>
+      have "Im (zw (Suc j mod nw) / zw j) > 0"
+      proof -
+        have "cnj (zw j) * (zw (Suc j mod nw) / zw j) = cnj (zw j) / zw j * zw (Suc j mod nw)"
+          using hzj_ne by (by100 simp)
+        have "cnj (zw j) * zw (Suc j mod nw) = zw j * cnj (zw j) * (zw (Suc j mod nw) / zw j)"
+          using hzj_ne by (by100 simp)
+        have "zw j * cnj (zw j) = of_real ((cmod (zw j))^2)"
+          using complex_norm_square[of "zw j"] by simp
+        hence "cnj (zw j) * zw (Suc j mod nw) = of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j)"
+          using \<open>cnj (zw j) * zw (Suc j mod nw) = zw j * cnj (zw j) * _\<close> by simp
+        hence "Im (cnj (zw j) * zw (Suc j mod nw)) = (cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j)"
+          sorry \<comment> \<open>Im(of\\_real r * w) = r * Im(w).\<close>
+        with hC10_im[rule_format, OF hj] have "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) > 0" by linarith
+        moreover have "(cmod (zw j))^2 > 0" using hzj_ne by (by100 simp)
+        ultimately show ?thesis sorry \<comment> \<open>a^2*b > 0 \\<and> a^2 > 0 \\<Longrightarrow> b > 0.\<close>
+      qed
+      \<comment> \<open>From Im > 0 and z \\<noteq> 0: sin(Arg z) > 0, hence Arg z \\<in> (0, \\<pi>).\<close>
+      have "sin (Arg (zw (Suc j mod nw) / zw j)) > 0"
+        using sin_Arg[OF hratio_ne] \<open>Im (zw (Suc j mod nw) / zw j) > 0\<close> hratio_ne
+        by (by100 simp)
+      have "Arg (zw (Suc j mod nw) / zw j) > -pi" using Arg_bounded[of "zw (Suc j mod nw) / zw j"] by linarith
+      have "Arg (zw (Suc j mod nw) / zw j) \<le> pi" using Arg_bounded[of "zw (Suc j mod nw) / zw j"] by linarith
+      from \<open>sin _ > 0\<close> \<open>Arg _ > -pi\<close> \<open>Arg _ \<le> pi\<close>
+      show "theta j > 0" unfolding theta_def sorry \<comment> \<open>sin > 0 and Arg \\<in> (-\\<pi>, \\<pi>] \\<Longrightarrow> Arg > 0.\<close>
+      from \<open>sin _ > 0\<close> \<open>Arg _ > -pi\<close> \<open>Arg _ \<le> pi\<close>
+      show "theta j < pi" unfolding theta_def sorry \<comment> \<open>sin > 0 and Arg \\<in> (-\\<pi>, \\<pi>] \\<Longrightarrow> Arg < \\<pi>.\<close>
+    qed
     define alpha where "alpha m = (\<Sum>j<m. theta j)" for m
     have halpha_sum: "alpha nw = 2*pi"
       sorry \<comment> \<open>Telescope: z\\_nw/z\\_0 = z\\_0/z\\_0 = 1, so total angle = 2\\<pi>.\<close>
