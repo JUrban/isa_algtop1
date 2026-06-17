@@ -1629,6 +1629,8 @@ lemma spur_arc_target_sector:
   assumes hnw: "nw \<ge> 3"
       and hC10: "\<forall>i<nw. (vxw i - cxw) * (vyw(Suc i mod nw) - cyw) -
           (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
+      and hC11: "\<forall>i<nw. \<forall>k<nw. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod nw \<longrightarrow>
+          (vxw k-vxw i)*(vyw(Suc i mod nw)-vyw i)-(vyw k-vyw i)*(vxw(Suc i mod nw)-vxw i) < 0"
       and hjp: "jp < nw" and hjp_ne0: "jp \<noteq> 0" and hjp_ne_last: "Suc jp mod nw \<noteq> 0"
   shows "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0
          \<or> (vxw(Suc jp mod nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod nw)-cyw)*(vxw 0-cxw) > 0"
@@ -6601,7 +6603,7 @@ proof -
           using hjp hin_sec hp hp_ne_v1 ht hint_p
             hphi_affine_on_sector hdet_pos hphi_on_spur0
             hC10_expanded hC11_w hC11_e hlen hne_eq hnw_pos
-            spur_arc_target_sector[OF hlen hC10_expanded]
+            spur_arc_target_sector[OF hlen hC10_expanded hC11_w]
             spur_arc_match_forces_edge[OF hlen hC10_expanded hC11_w]
           sorry
       qed
