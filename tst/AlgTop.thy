@@ -1917,7 +1917,20 @@ proof -
       fix j assume hj: "j < nw"
       have "Im (cnj (zw j) * zw (Suc j mod nw)) =
           (vxw j - cxw) * (vyw(Suc j mod nw) - cyw) - (vyw j - cyw) * (vxw(Suc j mod nw) - cxw)"
-        unfolding zw_def sorry
+      proof -
+        define a where "a = vxw j - cxw"
+        define b where "b = vyw j - cyw"
+        define c where "c = vxw(Suc j mod nw) - cxw"
+        define d where "d = vyw(Suc j mod nw) - cyw"
+        have hzj: "zw j = Complex a b" unfolding zw_def a_def b_def by simp
+        have hzk: "zw (Suc j mod nw) = Complex c d" unfolding zw_def c_def d_def by simp
+        have "cnj (zw j) * zw (Suc j mod nw) = Complex a (-b) * Complex c d"
+          unfolding hzj hzk using complex_cnj[of a b] by simp
+        also have "\<dots> = Complex (a*c+b*d) (a*d-b*c)"
+          using complex_mult[of a "- b" c d] by simp
+        finally have "Im (cnj (zw j) * zw (Suc j mod nw)) = a*d-b*c" by simp
+        thus ?thesis unfolding a_def b_def c_def d_def .
+      qed
       also have "\<dots> > 0" using hC10[rule_format, OF hj] .
       finally show "Im (cnj (zw j) * zw (Suc j mod nw)) > 0" .
     qed
@@ -1926,7 +1939,21 @@ proof -
     proof (intro allI impI)
       fix j assume "j < nw"
       show "cc j = Im (cnj (zw j) * zw 0)"
-        unfolding cc_def zw_def sorry
+      proof -
+        define a where "a = vxw j - cxw"
+        define b where "b = vyw j - cyw"
+        define c where "c = vxw 0 - cxw"
+        define d where "d = vyw 0 - cyw"
+        have hzj: "zw j = Complex a b" unfolding zw_def a_def b_def by simp
+        have hz0: "zw 0 = Complex c d" unfolding zw_def c_def d_def by simp
+        have "cnj (zw j) * zw 0 = Complex a (-b) * Complex c d"
+          unfolding hzj hz0 using complex_cnj[of a b] by simp
+        also have "\<dots> = Complex (a*c+b*d) (a*d-b*c)"
+          using complex_mult[of a "- b" c d] by simp
+        finally have "Im (cnj (zw j) * zw 0) = a*d-b*c" by simp
+        also have "a*d-b*c = cc j" unfolding a_def b_def c_def d_def cc_def by (by100 simp)
+        finally show ?thesis by simp
+      qed
     qed
     \<comment> \<open>Define angular steps and cumulative angle.\<close>
     define theta where "theta j = Arg (zw (Suc j mod nw) / zw j)" for j
