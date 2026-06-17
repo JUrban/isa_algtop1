@@ -2115,9 +2115,44 @@ proof -
          Since |\\<Prod>| = 1 (from |telescope| = |1| = 1): of\\_real(1) * cis(alpha nw) = 1.\<close>
       define rj where "rj j = zw (Suc j mod nw) / zw j" for j
       \<comment> \<open>From the polar decomposition proof pattern: \\<Prod> rj = of\\_real(\\<Prod> cmod rj) * cis(alpha nw).\<close>
+      have hrj_ne: "\<forall>j<nw. rj j \<noteq> 0"
+      proof (intro allI impI)
+        fix j assume "j < nw"
+        have "Suc j mod nw < nw" using hnw by (by100 simp)
+        thus "rj j \<noteq> 0" unfolding rj_def
+          using hzw_ne[rule_format, OF \<open>Suc j mod nw < nw\<close>] hzw_ne[rule_format, OF \<open>j < nw\<close>]
+          by (by100 simp)
+      qed
       have "(\<Prod>j<nw. rj j) = of_real (\<Prod>j<nw. cmod (rj j)) * cis (alpha nw)"
-        sorry \<comment> \<open>Same induction as hprod\\_polar but for the full product j<nw.
-           Already proved for j<m where m<nw. Need m=nw extension.\<close>
+      proof -
+        \<comment> \<open>By induction: \\<Prod>\\_{j<k} rj = of\\_real(\\<Prod> cmod) * cis(\\<Sum> theta) for k \\<le> nw.\<close>
+        have "\<And>k. k \<le> nw \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
+        proof -
+          fix k show "k \<le> nw \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
+          proof (induction k)
+            case 0 thus ?case by simp
+          next
+            case (Suc k')
+            hence "k' < nw" by simp
+            from Suc.IH[OF order.strict_implies_order[OF \<open>k' < nw\<close>]]
+            have hIH: "(\<Prod>j<k'. rj j) = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j)" .
+            from rcis_cmod_Arg[of "rj k'", symmetric]
+            have "rj k' = of_real (cmod (rj k')) * cis (Arg (rj k'))" unfolding rcis_def .
+            also have "Arg (rj k') = theta k'" unfolding rj_def theta_def by (by100 simp)
+            finally have hrj_decomp: "rj k' = of_real (cmod (rj k')) * cis (theta k')" .
+            have "(\<Prod>j<Suc k'. rj j) = (\<Prod>j<k'. rj j) * rj k'" by simp
+            also have "\<dots> = (of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j)) * (of_real (cmod (rj k')) * cis (theta k'))"
+              using hIH hrj_decomp by simp
+            also have "\<dots> = rcis ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k')) ((\<Sum>j<k'. theta j) + theta k')"
+              unfolding rcis_def using rcis_mult[of "(\<Prod>j<k'. cmod (rj j))" "(\<Sum>j<k'. theta j)" "cmod (rj k')" "theta k'"]
+              unfolding rcis_def by simp
+            also have "(\<Prod>j<k'. cmod (rj j)) * cmod (rj k') = (\<Prod>j<Suc k'. cmod (rj j))" by simp
+            also have "(\<Sum>j<k'. theta j) + theta k' = (\<Sum>j<Suc k'. theta j)" by simp
+            finally show ?case unfolding rcis_def .
+          qed
+        qed
+        from this[of nw] show ?thesis unfolding alpha_def by simp
+      qed
       also have "(\<Prod>j<nw. rj j) = 1" using htelescope unfolding rj_def .
       also have "(\<Prod>j<nw. cmod (rj j)) = cmod (\<Prod>j<nw. rj j)"
         by (simp add: prod_norm)
@@ -2139,14 +2174,20 @@ proof -
         have h1: "\<And>j. j < nw \<Longrightarrow> theta j < pi" using htheta_pos by (by100 blast)
         have "alpha nw = (\<Sum>j<nw. theta j)" unfolding alpha_def by simp
         also have "\<dots> < (\<Sum>j<nw. pi)"
-          using sum_strict_mono[of "{..<nw}" theta "\<lambda>_. pi"] h1 hnw sorry
+        proof (rule sum_strict_mono)
+          show "finite {..<nw}" by simp
+          have "(0::nat) \<in> {..<nw}" using hnw by simp
+          thus "{..<nw} \<noteq> {}" by (by100 blast)
+          fix j assume "j \<in> {..<nw}" thus "theta j < pi" using h1 by simp
+        qed
         also have "(\<Sum>j<nw. pi) = real nw * pi" by simp
         finally show ?thesis .
       qed
       \<comment> \<open>From cis(alpha) = 1 and alpha > 0: alpha = 2k\\<pi> for some k \\<ge> 1.\<close>
       from \<open>cis (alpha nw) = 1\<close>
-      have hcos: "cos (alpha nw) = 1" and hsin: "sin (alpha nw) = 0"
-        sorry \<comment> \<open>cis(x)=1 \\<Longleftrightarrow> cos x=1 \\<and> sin x=0. Needs Re/Im extraction from cis.\<close>
+      have hcos: "cos (alpha nw) = 1" using cis.sel(1)[of "alpha nw"] by simp
+      from \<open>cis (alpha nw) = 1\<close>
+      have hsin: "sin (alpha nw) = 0" using cis.sel(2)[of "alpha nw"] by simp
       \<comment> \<open>From alpha \\<in> (0, nw*\\<pi>) and cos=1,sin=0: alpha = 2\\<pi>*(nw div something)...
          For nw \\<le> 4: alpha < 4\\<pi>, so alpha = 2\\<pi>.
          For nw \\<ge> 5: alpha < nw*\\<pi>, and we use C11 to show alpha < 4\\<pi>.\<close>
