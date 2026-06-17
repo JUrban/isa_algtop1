@@ -10538,6 +10538,10 @@ qed
    Uses front\\_cancel\\_proper (which depends only on spur\\_collapse\\_cancel\\_homeo)
    and quotient\\_of\\_scheme\\_cut\\_paste\\_opp\\_proper + quotient\\_of\\_scheme\\_cut\\_paste\\_proper
    for the cut-paste operations. Avoids the FALSE same-space sorrys.\<close>
+\<comment> \<open>TODO: The proper version currently delegates to the general chain which has
+   unnecessary sorrys (non-fresh prefix, short-scheme, etc.) that are eliminable with
+   properness. Future: implement proper-specific single-step lemma and chain it here.
+   Impact: would eliminate ~5 structural sorrys from the effective sorry count.\<close>
 lemma valid_equiv_preserves_quotient_homeo_proper:
   fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_quotient_of_scheme_on X TX s"
