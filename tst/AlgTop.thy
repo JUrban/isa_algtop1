@@ -1975,11 +1975,31 @@ proof -
           using complex_norm_square[of "zw j"] by simp
         hence "cnj (zw j) * zw (Suc j mod nw) = of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j)"
           using \<open>cnj (zw j) * zw (Suc j mod nw) = zw j * cnj (zw j) * _\<close> by simp
-        hence "Im (cnj (zw j) * zw (Suc j mod nw)) = (cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j)"
-          sorry \<comment> \<open>Im(of\\_real r * w) = r * Im(w).\<close>
+        hence hIm_eq: "Im (cnj (zw j) * zw (Suc j mod nw)) = (cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j)"
+        proof -
+          from \<open>cnj (zw j) * zw (Suc j mod nw) = of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j)\<close>
+          have "Im (cnj (zw j) * zw (Suc j mod nw)) = Im (of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j))"
+            by simp
+          also have "\<dots> = (cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j)"
+            sorry \<comment> \<open>Im(of\\_real r * w) = r * Im w. Needs Im\\_mult\\_real or similar.\<close>
+          finally show ?thesis .
+        qed
         with hC10_im[rule_format, OF hj] have "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) > 0" by linarith
-        moreover have "(cmod (zw j))^2 > 0" using hzj_ne by (by100 simp)
-        ultimately show ?thesis sorry \<comment> \<open>a^2*b > 0 \\<and> a^2 > 0 \\<Longrightarrow> b > 0.\<close>
+        moreover have "((cmod (zw j))^2 :: real) > 0" using hzj_ne by (by100 simp)
+        ultimately show ?thesis
+        proof -
+          assume hab: "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) > 0"
+              and ha: "((cmod (zw j))^2 :: real) > 0"
+          show "Im (zw (Suc j mod nw) / zw j) > 0"
+          proof (rule ccontr)
+            assume "\<not> Im (zw (Suc j mod nw) / zw j) > 0"
+            hence "Im (zw (Suc j mod nw) / zw j) \<le> 0" by linarith
+            hence "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) \<le> 0"
+              using ha mult_nonneg_nonpos[of "(cmod (zw j))^2" "Im (zw (Suc j mod nw) / zw j)"]
+              by linarith
+            with hab show False by linarith
+          qed
+        qed
       qed
       \<comment> \<open>From Im > 0 and z \\<noteq> 0: sin(Arg z) > 0, hence Arg z \\<in> (0, \\<pi>).\<close>
       have "sin (Arg (zw (Suc j mod nw) / zw j)) > 0"
