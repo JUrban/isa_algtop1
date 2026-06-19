@@ -846,10 +846,12 @@ qed
    via the CUT+FLIP+PASTE chain, using top1\\_quotient\\_map\\_on\\_comp.\<close>
 lemma theorem_76_1_paste_chain:
   assumes "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
+      and "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
   shows "top1_quotient_of_scheme_on Y TY
     ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])"
   sorry \<comment> \<open>Theorem 76.1 paste chain: CUT+FLIP+PASTE.
      This is the GEOMETRIC CORE of cut\\_flip\\_paste\\_core.
+     c is the fresh label for the diagonal.
      After this, RELABEL c\\<to>a and ROTATE give the final result.\<close>
 
 \<comment> \<open>MULTI-POLYGON CUT-FLIP-PASTE CORE (Munkres Theorem 76.1 application).
@@ -873,9 +875,11 @@ lemma cut_flip_paste_core:
   shows "top1_quotient_of_scheme_on Y TY ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ v)"
 proof -
   \<comment> \<open>Step 1: Apply Theorem 76.1 paste chain to get quotient of c@inv(u2)@v@c.\<close>
-  obtain c where hfresh: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
-    sorry \<comment> \<open>Fresh label c exists (nat labels, finite scheme, pick max+1).\<close>
-  from theorem_76_1_paste_chain[OF assms]
+  let ?labels = "fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
+  have hfin: "finite ?labels" by (by100 simp)
+  obtain c :: "'b" where hfresh: "c \<notin> ?labels"
+    sorry \<comment> \<open>Fresh label exists. For nat: pick max+1. For general 'b: needs infinite type.\<close>
+  from theorem_76_1_paste_chain[OF assms hfresh]
   have h1: "top1_quotient_of_scheme_on Y TY
     ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])" .
   \<comment> \<open>Step 2: RELABEL c \\<to> a. Fresh since a \\<notin> labels of c@inv(u2)@v@c
