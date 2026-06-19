@@ -562,6 +562,40 @@ lemma quotient_rearrangement_homeomorphism:
   shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
   sorry \<comment> \<open>FALSE as stated. Needs additional conditions or replacement.\<close>
 
+\<comment> \<open>CORRECTED VERSION with one-vertex-class + snd-relative conditions.
+   Under these conditions, the boundary rearrangement map q1 \\<circ> \\<phi> is continuous
+   because all vertex jumps are absorbed (one vertex class: q maps all vertices
+   to the same point). The snd-relative condition ensures identification-compatibility.\<close>
+lemma quotient_rearrangement_homeomorphism_1vc:
+  fixes s1 s2 :: "('b \<times> bool) list" and \<sigma> :: "nat \<Rightarrow> nat"
+  assumes hY1: "top1_quotient_of_scheme_on Y1 TY1 s1"
+      and hY2: "top1_quotient_of_scheme_on Y2 TY2 s2"
+      and hlen: "length s2 = length s1"
+      and hbij: "bij_betw \<sigma> {..<length s1} {..<length s1}"
+      and hfst: "\<And>i. i < length s1 \<Longrightarrow> fst (s2!i) = fst (s1!(\<sigma> i))"
+      and hsnd_rel: "\<And>i j. \<lbrakk>i < length s1; j < length s1;
+            fst (s1!(\<sigma> i)) = fst (s1!(\<sigma> j))\<rbrakk> \<Longrightarrow>
+            (snd (s2!i) = snd (s2!j)) = (snd (s1!(\<sigma> i)) = snd (s1!(\<sigma> j)))"
+      \<comment> \<open>One vertex class: for the extracted quotient realization of s1,
+         all polygon vertices map to the same point in Y1.\<close>
+      and h1vc: "\<And>P1 q1 vx1 vy1.
+          \<lbrakk>top1_is_polygonal_region_on P1 (length s1);
+           top1_quotient_map_on P1
+             (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P1) Y1 TY1 q1;
+           \<forall>i<length s1. (vx1 i, vy1 i) \<in> P1;
+           \<forall>i<length s1. \<forall>j<length s1. fst (s1!i) = fst (s1!j) \<longrightarrow>
+              (\<forall>t\<in>I_set. q1 ((1-t)*vx1 i + t*vx1(Suc i mod length s1),
+                              (1-t)*vy1 i + t*vy1(Suc i mod length s1))
+                = (if snd(s1!i) = snd(s1!j)
+                   then q1 ((1-t)*vx1 j + t*vx1(Suc j mod length s1),
+                             (1-t)*vy1 j + t*vy1(Suc j mod length s1))
+                   else q1 (t*vx1 j + (1-t)*vx1(Suc j mod length s1),
+                            t*vy1 j + (1-t)*vy1(Suc j mod length s1))))\<rbrakk> \<Longrightarrow>
+          \<forall>i<length s1. \<forall>j<length s1. q1 (vx1 i, vy1 i) = q1 (vx1 j, vy1 j)"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+  sorry \<comment> \<open>Proof: under one vertex class, boundary map q1 \\<circ> \\<phi> IS continuous
+     (vertex jumps absorbed). Bijection by \\<sigma> + snd\\_rel. Compact \\<to> Hausdorff.\<close>
+
 \<comment> \<open>CORRECT replacement for the false lemma above: multi-polygon paste.
    The book's Theorem 76.1 CUT+FLIP+PERMUTE+PASTE argument for same-direction cut-paste.
    Given Y quotient of a@y1@[d\\<inverse>,d]@a@y2, the per-polygon FLIP of P1=(a,y1,d\\<inverse>)
