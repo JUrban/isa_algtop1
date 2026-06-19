@@ -739,6 +739,82 @@ proof (rule subsetI)
     using hc' hsum' hx' hy' by (by100 auto)
 qed
 
+\<comment> \<open>DIAGONAL IN POLYGON: the line segment from v\\_0 to v\\_k is inside P.
+   Follows directly from convexity of polygonal regions (polygonal\\_region\\_convex\\_combo).\<close>
+lemma polygon_diagonal_in_region:
+  fixes vx vy :: "nat \<Rightarrow> real" and n k :: nat
+  assumes hP: "top1_is_polygonal_region_on P n" and hn: "n \<ge> 3"
+    and hk: "k < n" and hk2: "k \<ge> 2"
+    and hv0: "(vx 0, vy 0) \<in> P" and hvk: "(vx k, vy k) \<in> P"
+    and ht: "0 \<le> t" "t \<le> 1"
+  shows "((1-t) * vx 0 + t * vx k, (1-t) * vy 0 + t * vy k) \<in> P"
+  using polygonal_region_convex_combo[OF hP hn hv0 hvk assms(7,8)] by simp
+
+\<comment> \<open>QUOTIENT MAP EDGE IDENTIFICATION AT DIAGONAL.
+   When the a-pair in scheme a@u2@a@v has same direction (both True),
+   C7 gives: q(edge\\_0(t)) = q(edge\\_{1+|u2|}(t)) for all t.
+   This identifies the first and second a-edge point-by-point.\<close>
+lemma scheme_a_pair_identification:
+  fixes a :: "'b" and u2 v :: "('b \<times> bool) list"
+  assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
+  obtains P q vx vy where
+    "top1_is_polygonal_region_on P (length ([(a, True)] @ u2 @ [(a, True)] @ v))"
+    "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+    "\<forall>i<length ([(a, True)] @ u2 @ [(a, True)] @ v). (vx i, vy i) \<in> P"
+    "\<forall>t\<in>I_set.
+       q ((1-t) * vx 0 + t * vx 1, (1-t) * vy 0 + t * vy 1)
+     = q ((1-t) * vx (1 + length u2) + t * vx (Suc (1 + length u2) mod length ([(a, True)] @ u2 @ [(a, True)] @ v)),
+          (1-t) * vy (1 + length u2) + t * vy (Suc (1 + length u2) mod length ([(a, True)] @ u2 @ [(a, True)] @ v)))"
+proof -
+  let ?w = "[(a, True)] @ u2 @ [(a, True)] @ v"
+  let ?n = "length ?w"
+  from quotient_of_scheme_extract_vx[OF hq]
+  obtain P q vx vy where
+      hC1: "top1_is_polygonal_region_on P ?n"
+    and hC2: "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+    and hC4: "\<forall>i<?n. (vx i, vy i) \<in> P"
+    and hC7: "\<forall>i<?n. \<forall>j<?n. fst (?w!i) = fst (?w!j) \<longrightarrow>
+        (\<forall>t\<in>I_set.
+           q ((1-t) * vx i + t * vx (Suc i mod ?n),
+              (1-t) * vy i + t * vy (Suc i mod ?n))
+         = (if snd (?w!i) = snd (?w!j)
+            then q ((1-t) * vx j + t * vx (Suc j mod ?n),
+                    (1-t) * vy j + t * vy (Suc j mod ?n))
+            else q (t * vx j + (1-t) * vx (Suc j mod ?n),
+                    t * vy j + (1-t) * vy (Suc j mod ?n))))"
+    by (rule quotient_of_scheme_extract_vx[OF hq])
+  \<comment> \<open>Apply C7 with i=0, j=1+|u2|.\<close>
+  have h0: "0 < ?n" by (by100 simp)
+  have hj: "1 + length u2 < ?n" by (by100 simp)
+  have hfst: "fst (?w ! 0) = fst (?w ! (1 + length u2))"
+    by (by100 simp)
+  have hsnd: "snd (?w ! 0) = snd (?w ! (1 + length u2))"
+    by (by100 simp)
+  have hsuc0: "Suc 0 mod ?n = 1" by (by100 simp)
+  have hn_ge3: "?n \<ge> 3" using quotient_scheme_length_ge3[OF hq] .
+  \<comment> \<open>Suc(1+|u2|) mod n = 2+|u2| if v \\<noteq> [], = 0 if v = [].
+     When v = []: n = 2+|u2|, so edge 1+|u2| wraps to vertex 0.\<close>
+  from hC7[rule_format, OF h0 hj hfst]
+  have hident: "\<forall>t\<in>I_set.
+       q ((1-t) * vx 0 + t * vx (Suc 0 mod ?n),
+          (1-t) * vy 0 + t * vy (Suc 0 mod ?n))
+     = q ((1-t) * vx (1 + length u2) + t * vx (Suc (1 + length u2) mod ?n),
+          (1-t) * vy (1 + length u2) + t * vy (Suc (1 + length u2) mod ?n))"
+    using hsnd by (by100 simp)
+  have hsuc0': "Suc 0 mod ?n = 1" using hsuc0 .
+  \<comment> \<open>For the case v \\<noteq> []: Suc(1+|u2|) mod n = 2+|u2|.
+     For v = []: Suc(1+|u2|) mod n = 0 (wrap around).
+     In both cases, derive the identification.\<close>
+  have hident': "\<forall>t\<in>I_set.
+       q ((1-t) * vx 0 + t * vx 1, (1-t) * vy 0 + t * vy 1)
+     = q ((1-t) * vx (1 + length u2) + t * vx (Suc (1 + length u2) mod ?n),
+          (1-t) * vy (1 + length u2) + t * vy (Suc (1 + length u2) mod ?n))"
+    using hident hsuc0' by (by100 simp)
+  show ?thesis using hC1 hC2 hC4 hident' by (rule that)
+qed
+
 \<comment> \<open>POLYGON PASTE ALONG SHARED EDGE (Munkres Theorem 76.1 core geometric fact).
    Given two disjoint polygonal regions Q1 (scheme w1) and Q2 (scheme w2) where:
    - Q1 has an edge labeled (a,F) at its last position
