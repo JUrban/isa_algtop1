@@ -921,13 +921,20 @@ proof -
      C7: edge identifications match w' (c-pair from diagonal, other labels from original)
      C8: interior injectivity (from q's C8 + disjointness of the two halves)
      C9: edge-interior (from original C9 + the piecewise construction)\<close>
-  \<comment> \<open>The full construction: deferred to future formalization of polygon paste geometry.\<close>
+  \<comment> \<open>KEY DISCOVERY: The piecewise map IS continuous WITHOUT one-vertex-class.
+     At internal junction (former a-edges): C7 with parameter (1-s) gives
+       q(first\\_a(1-s)) = q(second\\_a(1-s)), which is exactly what the paste matching needs.
+     At paste vertices: C7(t=0) gives q(v\\_0) = q(v\\_{1+|u2|}) and
+       C7(t=1) gives q(v\\_1) = q(v\\_{2+|u2| mod n}),
+     which are exactly the vertex pairs created by the opposite-exponent paste.\<close>
+  \<comment> \<open>The full geometric construction of P' and q' requires:
+     1. Define Q1 = sub-polygon {v\\_0,...,v\\_{1+|u2|}} and Q2 = sub-polygon {v\\_{1+|u2|},...,v\\_0}
+     2. Q1 and Q2 are valid polygonal regions (from sub\\_polygon\\_in\\_polygon + convexity)
+     3. Define pasted polygon P' by geometric placement of Q1-flipped next to Q2-permuted
+     4. Define q': P' \\<to> Y piecewise (Q1 half \\<to> Q1 \\<subset> P, Q2 half \\<to> Q2 \\<subset> P)
+     5. Verify C1-C11 for P', q', target scheme w'
+     The continuity at junctions follows from hC7\\_a (steps hq\\_v0, hq\\_v1 above).\<close>
   show ?thesis sorry
-    \<comment> \<open>Theorem 76.1 paste chain. The proof plan above is complete.
-       The key insight: q' = q \\<circ> (piecewise un-rearrangement) IS continuous because
-       the a-pair identification (hC7\\_a) ensures continuity at the paste junction.
-       Interior injectivity follows from disjointness of the two sub-polygon halves.
-       Needs: formal polygon diagonal split, piecewise quotient map construction.\<close>
 qed
 
 \<comment> \<open>MULTI-POLYGON CUT-FLIP-PASTE CORE (Munkres Theorem 76.1 application).
