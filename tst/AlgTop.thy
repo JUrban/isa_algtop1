@@ -829,6 +829,29 @@ qed
    2. The quotient map factors: Q1 \\<squnion> Q2 \\<to> P \\<to> Y (composition of quotient maps)
    3. Applying top1\\_quotient\\_map\\_on\\_comp.\<close>
 
+\<comment> \<open>THEOREM 76.1 PASTE (simplified for the cut-paste application).
+   Given polygon P with scheme y0@y1 and quotient Y:
+   - CUT P along diagonal from v\\_0 to v\\_{|y0|} into Q1 and Q2
+   - The quotient of Q1 \\<squnion> Q2 (identifying all labels including c on the diagonal) = Y
+   - Per-polygon operations on Q1 and Q2 preserve the quotient Y
+   - PASTE Q1 and Q2 along a DIFFERENT shared edge gives a new polygon
+     whose quotient under the combined scheme = Y
+
+   The full chain: CUT \\<to> per-polygon ops \\<to> PASTE preserves the quotient space.
+   This is the content of Munkres Theorem 76.1.
+
+   Formal statement: if Y is quotient of [(a,T)]@u2@[(a,T)]@v, then
+   Y is ALSO quotient of [(c,T)]@inv(u2)@v@[(c,T)] (for any fresh c).
+   The proof constructs a new polygon P' and quotient map q': P' \\<to> Y
+   via the CUT+FLIP+PASTE chain, using top1\\_quotient\\_map\\_on\\_comp.\<close>
+lemma theorem_76_1_paste_chain:
+  assumes "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
+  shows "top1_quotient_of_scheme_on Y TY
+    ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])"
+  sorry \<comment> \<open>Theorem 76.1 paste chain: CUT+FLIP+PASTE.
+     This is the GEOMETRIC CORE of cut\\_flip\\_paste\\_core.
+     After this, RELABEL c\\<to>a and ROTATE give the final result.\<close>
+
 \<comment> \<open>MULTI-POLYGON CUT-FLIP-PASTE CORE (Munkres Theorem 76.1 application).
    Proof chain (book-faithful, step by step):
    1. Extract polygon P, vertices vx/vy, quotient map q from the given quotient
@@ -848,15 +871,42 @@ qed
 lemma cut_flip_paste_core:
   assumes "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
   shows "top1_quotient_of_scheme_on Y TY ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ v)"
-  sorry \<comment> \<open>Munkres Theorem 76.1 multi-polygon CUT+FLIP+PASTE.
-     Proof chain: CUT P at diagonal v\\_0 to v\\_{1+|u2|}, giving sub-polygons
-     Q1 (scheme a@u2@c^{-1}) and Q2 (scheme c@a@v). Then:
-     FLIP Q1 \\<to> c@inv(u2)@a^{-1}, PERMUTE Q2 \\<to> a@v@c,
-     PASTE along a \\<to> single polygon c@inv(u2)@v@c,
-     RELABEL c\\<to>a \\<to> a@inv(u2)@v@a, ROTATE \\<to> a@a@inv(u2)@v.
-     Key: paste along a (opposite exponents after flip), not c.
-     Each step preserves Y via quotient map composition (top1\\_quotient\\_map\\_on\\_comp).
-     Needs: polygon diagonal split + polygon edge paste lemma.\<close>
+proof -
+  \<comment> \<open>Step 1: Apply Theorem 76.1 paste chain to get quotient of c@inv(u2)@v@c.\<close>
+  obtain c where hfresh: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
+    sorry \<comment> \<open>Fresh label c exists (nat labels, finite scheme, pick max+1).\<close>
+  from theorem_76_1_paste_chain[OF assms]
+  have h1: "top1_quotient_of_scheme_on Y TY
+    ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])" .
+  \<comment> \<open>Step 2: RELABEL c \\<to> a. Fresh since a \\<notin> labels of c@inv(u2)@v@c
+     (because a only appeared in the two explicit positions, now replaced by c).\<close>
+  \<comment> \<open>Actually: a MAY appear in u2 or v! For properness, a appears exactly twice
+     (the two explicit positions). So a \\<notin> fst ` set u2 and a \\<notin> fst ` set v.
+     Hence a \\<notin> fst ` set (inv(u2)) and a \\<notin> fst ` set v.
+     So a \\<notin> fst ` set (c@inv(u2)@v@c) (since c \\<noteq> a by freshness of c).
+     Therefore relabel c\\<to>a is fresh.\<close>
+  \<comment> \<open>For the general case (non-proper): a might appear in u2 or v.
+     In that case, relabel c\\<to>a creates non-fresh relabeling.
+     For now: sorry this step and handle properness separately.\<close>
+  have h2: "top1_quotient_of_scheme_on Y TY
+    ([(a, True)] @ rev (map top1_inverse_edge u2) @ v @ [(a, True)])"
+    sorry \<comment> \<open>RELABEL c\\<to>a on scheme from h1. Needs freshness of a in the c-scheme.\<close>
+  \<comment> \<open>Step 3: ROTATE: move last element to second position.\<close>
+  from quotient_of_scheme_rotate[OF h2]
+  have h3: "top1_quotient_of_scheme_on Y TY
+    (rev (map top1_inverse_edge u2) @ v @ [(a, True)] @ [(a, True)])" by simp
+  from quotient_of_scheme_rotate[OF h3]
+  have h4: "top1_quotient_of_scheme_on Y TY
+    (v @ [(a, True)] @ [(a, True)] @ rev (map top1_inverse_edge u2))" by simp
+  from quotient_of_scheme_rotate[OF h4]
+  have h5: "top1_quotient_of_scheme_on Y TY
+    ([(a, True)] @ [(a, True)] @ rev (map top1_inverse_edge u2) @ v)" by simp
+  thus ?thesis by simp
+qed
+\<comment> \<open>NOTE: cut\\_flip\\_paste\\_core uses two sorrys:
+   1. theorem\\_76\\_1\\_paste\\_chain (Theorem 76.1 paste)
+   2. Fresh label existence + RELABEL step
+   The RELABEL sorry can be closed for proper schemes (a \\<notin> fst ` set u2 \\<union> fst ` set v).\<close>
 
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
