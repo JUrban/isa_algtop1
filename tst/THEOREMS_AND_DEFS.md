@@ -4,10 +4,10 @@
 #
 # Files: i/Top1_Ch2.thy,i/Top1_Ch3.thy,i/Top1_Ch4.thy,i/Top1_Ch5_8.thy,i/Top1_Ch9_13.thy,h/AlgTopHelpers.thy,b0/AlgTop_JCT_Base0.thy,b/AlgTop_JCT_Base.thy,a0/AlgTop0.thy,ac/AlgTopCached.thy,fib/AlgIsoFixedBase.thy,fi/AlgIsoFixed.thy,k5/K5_nonplanar.thy,ag/AlgTopGroups.thy,pd/PolygonDisk.thy,svk/AlgTopSvK.thy,wh/AlgTopWedgeHelpers.thy,at/AlgTopChain.thy,ac2/AlgTopCached2.thy,ac3/AlgTopCached3.thy,ac4/AlgTopCached4.thy,ac5/AlgTopCached5.thy,ac6/AlgTopCached6.thy,ac7/AlgTopCached7.thy,ac8/AlgTopCached8.thy,ac9/AlgTopCached9.thy,ac10/AlgTopCached10.thy,ac11/AlgTopCached11.thy,ac12/AlgTopCached12.thy,AlgTop.thy
 #
-# Total entries: 2214
-# Duplicate names: 39
+# Total entries: 4434
+# Duplicate names: 2173
 
-## definitions (336)
+## definitions (672)
 
 basis_for                                      i/Top1_Ch2.thy                       line 1078
 basis_K_topology_R                             i/Top1_Ch2.thy                       line 1559
@@ -345,8 +345,344 @@ topology_generated_by_subbasis                 i/Top1_Ch2.thy                   
 topology_K_R                                   i/Top1_Ch2.thy                       line 1570
 topology_lower_limit_R                         i/Top1_Ch2.thy                       line 1567
 topology_standard_R                            i/Top1_Ch2.thy                       line 1564
+basis_for                                      i/Top1_Ch2.thy                       line 1078
+basis_K_topology_R                             i/Top1_Ch2.thy                       line 1559
+basis_lower_limit_R                            i/Top1_Ch2.thy                       line 1556
+basis_order_topology                           i/Top1_Ch2.thy                       line 2238
+basis_order_topology_on                        i/Top1_Ch2.thy                       line 2259
+basis_standard_R                               i/Top1_Ch2.thy                       line 1553
+clamp01                                        i/Top1_Ch5_8.thy                     line 12132
+closedin_on                                    i/Top1_Ch2.thy                       line 4886
+closure_on                                     i/Top1_Ch2.thy                       line 5220
+comparable_topologies                          i/Top1_Ch2.thy                       line 1050
+convex_in                                      i/Top1_Ch2.thy                       line 4268
+countable                                      i/Top1_Ch3.thy                       line 9264
+cross2                                         at/AlgTopChain.thy                   line 2131
+cross2                                         pd/PolygonDisk.thy                   line 101
+finer_than                                     i/Top1_Ch2.thy                       line 1044
+finer_than_on                                  i/Top1_Ch2.thy                       line 1054
+finite_intersections                           i/Top1_Ch2.thy                       line 1956
+frontier                                       ac/AlgTopCached.thy                  line 3604
+hilbert_entry                                  i/Top1_Ch5_8.thy                     line 12168
+hilbert_exit                                   i/Top1_Ch5_8.thy                     line 12172
+hilbert_quad                                   i/Top1_Ch5_8.thy                     line 12176
+hilbert_sub                                    i/Top1_Ch5_8.thy                     line 12183
+householder_S2                                 b/AlgTop_JCT_Base.thy                line 4334
+II_topology                                    i/Top1_Ch9_13.thy                    line 324
+interior_on                                    i/Top1_Ch2.thy                       line 5217
+intersects                                     i/Top1_Ch2.thy                       line 5443
+interval_half_open_left_closed                 i/Top1_Ch2.thy                       line 1547
+interval_open                                  i/Top1_Ch2.thy                       line 1544
+interval_types_four                            i/Top1_Ch2.thy                       line 2990
+is_basis_on                                    i/Top1_Ch2.thy                       line 1064
+is_hausdorff_on                                i/Top1_Ch2.thy                       line 5873
+is_limit_point_of                              i/Top1_Ch2.thy                       line 5672
+is_subbasis_on                                 i/Top1_Ch2.thy                       line 1953
+is_topology_on                                 i/Top1_Ch2.thy                       line 26
+is_topology_on_strict                          i/Top1_Ch2.thy                       line 34
+K_set                                          i/Top1_Ch2.thy                       line 1550
+limit_points_of                                i/Top1_Ch2.thy                       line 5677
+neighborhood_of                                i/Top1_Ch2.thy                       line 5450
+neighborhood_of_strict                         i/Top1_Ch2.thy                       line 5456
+north_pole                                     b/AlgTop_JCT_Base.thy                line 3786
+openin_on                                      i/Top1_Ch2.thy                       line 1028
+open_interval                                  i/Top1_Ch2.thy                       line 2235
+open_interval_on                               i/Top1_Ch2.thy                       line 2256
+open_ray_gt                                    i/Top1_Ch2.thy                       line 2229
+open_ray_gt_on                                 i/Top1_Ch2.thy                       line 2250
+open_ray_lt                                    i/Top1_Ch2.thy                       line 2232
+open_ray_lt_on                                 i/Top1_Ch2.thy                       line 2253
+order_topology_on                              i/Top1_Ch2.thy                       line 2266
+order_topology_on_UNIV                         i/Top1_Ch2.thy                       line 2245
+pair_scl                                       b/AlgTop_JCT_Base.thy                line 8574
+pair_sub                                       b/AlgTop_JCT_Base.thy                line 8571
+pi1                                            i/Top1_Ch2.thy                       line 3180
+pi2                                            i/Top1_Ch2.thy                       line 3181
+preimage                                       i/Top1_Ch2.thy                       line 3183
+product_basis                                  i/Top1_Ch2.thy                       line 3003
+product_topology_on                            i/Top1_Ch2.thy                       line 3007
+remains                                        wh/AlgTopWedgeHelpers.thy            line 413
+RN_grid_covering                               i/Top1_Ch5_8.thy                     line 31048
+RN_grid_covering_sc                            i/Top1_Ch5_8.thy                     line 31451
+RN_grid_family                                 i/Top1_Ch5_8.thy                     line 31045
+RN_grid_family_sc                              i/Top1_Ch5_8.thy                     line 31448
+RN_shifted_cube                                i/Top1_Ch5_8.thy                     line 31040
+RN_shifted_cube_sc                             i/Top1_Ch5_8.thy                     line 31443
+satisfies_T1_on                                i/Top1_Ch2.thy                       line 5986
+seq_converges_to_on                            i/Top1_Ch2.thy                       line 6119
+sfa_n                                          i/Top1_Ch5_8.thy                     line 13316
+sfa_raw                                        i/Top1_Ch5_8.thy                     line 12203
+stereographic_inv                              b/AlgTop_JCT_Base.thy                line 3792
+stereographic_proj                             b/AlgTop_JCT_Base.thy                line 3783
+strictly_finer_than                            i/Top1_Ch2.thy                       line 1047
+subspace_topology                              i/Top1_Ch2.thy                       line 3701
+top1_AN_48                                     i/Top1_Ch5_8.thy                     line 24188
+top1_antipode_preserving_S1                    i/Top1_Ch9_13.thy                    line 14646
+top1_arc_endpoints_on                          ac/AlgTopCached.thy                  line 48539
+top1_B2                                        i/Top1_Ch9_13.thy                    line 11554
+top1_B2_topology                               i/Top1_Ch9_13.thy                    line 11557
+top1_baire_on                                  i/Top1_Ch5_8.thy                     line 22237
+top1_ball_on                                   i/Top1_Ch2.thy                       line 11626
+top1_basepoint_change_on                       i/Top1_Ch9_13.thy                    line 2967
+top1_bounded_map_on                            i/Top1_Ch5_8.thy                     line 10529
+top1_bounded_maps_metric_on                    i/Top1_Ch5_8.thy                     line 10533
+top1_bounded_metric                            i/Top1_Ch2.thy                       line 11801
+top1_bounded_on                                i/Top1_Ch5_8.thy                     line 1717
+top1_bounded_set                               i/Top1_Ch3.thy                       line 7668
+top1_box_basis_on                              i/Top1_Ch2.thy                       line 8503
+top1_box_topology_on                           i/Top1_Ch2.thy                       line 8521
+top1_C01                                       i/Top1_Ch5_8.thy                     line 25048
+top1_cauchy_seq_on                             i/Top1_Ch5_8.thy                     line 9684
+top1_closed_interval                           i/Top1_Ch4.thy                       line 6203
+top1_closed_interval_topology                  i/Top1_Ch4.thy                       line 6206
+top1_closed_map_on                             i/Top1_Ch2.thy                       line 18808
+top1_C_minus_0                                 i/Top1_Ch9_13.thy                    line 14773
+top1_C_minus_0_topology                        i/Top1_Ch9_13.thy                    line 14776
+top1_commutator_subgroup_on                    ac/AlgTopCached.thy                  line 7029
+top1_compact_convergence_basis_on              i/Top1_Ch5_8.thy                     line 15589
+top1_compact_convergence_topology_on           i/Top1_Ch5_8.thy                     line 15597
+top1_compactification_via_on                   i/Top1_Ch5_8.thy                     line 1462
+top1_compactly_generated_on                    i/Top1_Ch5_8.thy                     line 15581
+top1_compact_on                                i/Top1_Ch3.thy                       line 4646
+top1_compact_open_subbasis_on                  i/Top1_Ch5_8.thy                     line 15607
+top1_compact_open_topology_on                  i/Top1_Ch5_8.thy                     line 15613
+top1_completely_regular_on                     i/Top1_Ch4.thy                       line 8213
+top1_complete_metric_on                        i/Top1_Ch5_8.thy                     line 9689
+top1_component_of_on                           i/Top1_Ch3.thy                       line 2471
+top1_components_on                             i/Top1_Ch3.thy                       line 2475
+top1_connected_on                              i/Top1_Ch3.thy                       line 19
+top1_constant_path                             i/Top1_Ch9_13.thy                    line 1196
+top1_continuous_at_on                          i/Top1_Ch2.thy                       line 7065
+top1_continuous_funcs_on                       i/Top1_Ch5_8.thy                     line 13739
+top1_continuous_map_on                         i/Top1_Ch2.thy                       line 6648
+top1_continuous_maps_metric_on                 i/Top1_Ch5_8.thy                     line 10524
+top1_countable                                 i/Top1_Ch4.thy                       line 16
+top1_countable_neighborhood_basis_at           i/Top1_Ch4.thy                       line 436
+top1_countably_compact_on                      i/Top1_Ch3.thy                       line 10373
+top1_covering_lifted_arc_family_on             ac11/AlgTopCached11.thy              line 10086
+top1_covering_map_on                           i/Top1_Ch9_13.thy                    line 3918
+top1_covering_transformation_on                ac4/AlgTopCached4.thy                line 4965
+top1_cover_order_le_on                         i/Top1_Ch5_8.thy                     line 26322
+top1_deformation_retract_of_on                 b0/AlgTop_JCT_Base0.thy              line 4031
+top1_Delta49                                   i/Top1_Ch5_8.thy                     line 25038
+top1_Delta_h49                                 i/Top1_Ch5_8.thy                     line 25045
+top1_Delta_on                                  i/Top1_Ch5_8.thy                     line 29430
+top1_dense_image_via_on                        i/Top1_Ch5_8.thy                     line 1457
+top1_densein_on                                i/Top1_Ch5_8.thy                     line 22119
+top1_diameter_on                               i/Top1_Ch3.thy                       line 8449
+top1_dim_le_on                                 i/Top1_Ch5_8.thy                     line 26326
+top1_dim_on                                    i/Top1_Ch5_8.thy                     line 26334
+top1_directed_set                              i/Top1_Ch5_8.thy                     line 33398
+top1_direct_sum_carrier                        ac/AlgTopCached.thy                  line 7060
+top1_dist_to_set                               i/Top1_Ch2.thy                       line 16843
+top1_D_metric_real_omega                       i/Top1_Ch2.thy                       line 13291
+top1_dyadic                                    i/Top1_Ch4.thy                       line 6247
+top1_embedding_on                              i/Top1_Ch2.thy                       line 7084
+top1_eq_on                                     i/Top1_Ch5_8.thy                     line 1467
+top1_equicontinuous_family_on                  i/Top1_Ch5_8.thy                     line 14316
+top1_equivalent_coverings_on                   ac4/AlgTopCached4.thy                line 1515
+top1_equiv_compactification_via_on             i/Top1_Ch5_8.thy                     line 1470
+top1_euclidean_metric_real_on                  i/Top1_Ch2.thy                       line 12953
+top1_evenly_covered_on                         i/Top1_Ch9_13.thy                    line 3907
+top1_extensional                               i/Top1_Ch2.thy                       line 8487
+top1_fiber_partition_on                        i/Top1_Ch2.thy                       line 20644
+top1_fiber_projection_on                       i/Top1_Ch2.thy                       line 20648
+top1_finite_dimensional_on                     i/Top1_Ch5_8.thy                     line 26331
+top1_FIP_maximal_on                            i/Top1_Ch5_8.thy                     line 50
+top1_FIP_on                                    i/Top1_Ch5_8.thy                     line 46
+top1_first_countable_on                        i/Top1_Ch4.thy                       line 443
+top1_free_group_universal_prop                 ac/AlgTopCached.thy                  line 6887
+top1_free_product_carrier                      ac/AlgTopCached.thy                  line 9616
+top1_fundamental_group_carrier                 i/Top1_Ch9_13.thy                    line 2410
+top1_fundamental_group_id                      i/Top1_Ch9_13.thy                    line 2424
+top1_fundamental_group_image_hom               i/Top1_Ch9_13.thy                    line 2444
+top1_fundamental_group_induced_on              i/Top1_Ch9_13.thy                    line 2437
+top1_fundamental_group_invg                    i/Top1_Ch9_13.thy                    line 2430
+top1_fundamental_group_mul                     i/Top1_Ch9_13.thy                    line 2417
+top1_G_delta_on                                i/Top1_Ch5_8.thy                     line 4420
+top1_general_position_in_Rpow                  i/Top1_Ch5_8.thy                     line 27602
+top1_graph_vertex_set                          ac10/AlgTopCached10.thy              line 21854
+top1_group_commutator_on                       ac/AlgTopCached.thy                  line 7024
+top1_group_coset_on                            ac/AlgTopCached.thy                  line 6169
+top1_group_hom_on                              i/Top1_Ch9_13.thy                    line 3130
+top1_group_image_on                            ac/AlgTopCached.thy                  line 6163
+top1_group_iso_on                              i/Top1_Ch9_13.thy                    line 3137
+top1_group_kernel_on                           ac/AlgTopCached.thy                  line 6158
+top1_group_presented_by_on                     ac/AlgTopCached.thy                  line 6921
+top1_groups_isomorphic_on                      i/Top1_Ch9_13.thy                    line 3143
+top1_homeomorphism_on                          i/Top1_Ch2.thy                       line 7073
+top1_homotopic_on                              i/Top1_Ch9_13.thy                    line 329
+top1_homotopy_equivalence_on                   b0/AlgTop_JCT_Base0.thy              line 4039
+top1_induced_homomorphism_on                   i/Top1_Ch9_13.thy                    line 2481
+top1_in_same_component_on                      i/Top1_Ch3.thy                       line 2466
+top1_in_same_path_component_on                 i/Top1_Ch3.thy                       line 3057
+top1_interval_encode                           i/Top1_Ch3.thy                       line 9643
+top1_is_2_manifold_on                          wh/AlgTopWedgeHelpers.thy            line 11
+top1_is_abelian_group_on                       i/Top1_Ch9_13.thy                    line 3124
+top1_is_abelianization_of                      ac/AlgTopCached.thy                  line 7044
+top1_is_arc_on                                 b/AlgTop_JCT_Base.thy                line 10034
+top1_is_direct_sum_of_on                       ac/AlgTopCached.thy                  line 7070
+top1_is_dunce_cap_on                           ac/AlgTopCached.thy                  line 31382
+top1_is_free_abelian_group_full_on             ac/AlgTopCached.thy                  line 6900
+top1_is_free_group_full_on                     ac/AlgTopCached.thy                  line 6870
+top1_is_free_product_on                        ac/AlgTopCached.thy                  line 6943
+top1_is_graph_on                               ac3/AlgTopCached3.thy                line 17
+top1_is_group_on                               i/Top1_Ch9_13.thy                    line 3114
+top1_is_lifting_on                             i/Top1_Ch9_13.thy                    line 3966
+top1_is_loop_on                                i/Top1_Ch9_13.thy                    line 2335
+top1_is_m_fold_projective_on                   ac/AlgTopCached.thy                  line 31401
+top1_is_net_on                                 i/Top1_Ch5_8.thy                     line 33406
+top1_is_n_fold_torus_on                        ac/AlgTopCached.thy                  line 31375
+top1_isolated_point_on                         i/Top1_Ch3.thy                       line 9260
+top1_isometry_on                               i/Top1_Ch5_8.thy                     line 11705
+top1_is_path_on                                i/Top1_Ch3.thy                       line 3052
+top1_is_polygonal_quotient_on                  ac/AlgTopCached.thy                  line 31357
+top1_is_polygonal_quotient_strict_on           wh/AlgTopWedgeHelpers.thy            line 296
+top1_is_polygonal_region_on                    ac/AlgTopCached.thy                  line 31242
+top1_is_retraction_on                          i/Top1_Ch9_13.thy                    line 11432
+top1_is_separation_on                          i/Top1_Ch3.thy                       line 25
+top1_is_subnet                                 i/Top1_Ch5_8.thy                     line 33609
+top1_is_surface_on                             wh/AlgTopWedgeHelpers.thy            line 25
+top1_is_theta_space_on                         ac/AlgTopCached.thy                  line 51945
+top1_is_torus_on                               ac/AlgTopCached.thy                  line 31407
+top1_is_tree_on                                ac3/AlgTopCached3.thy                line 77
+top1_is_triangulable_on                        ac/AlgTopCached.thy                  line 31435
+top1_is_universal_covering_on                  ac4/AlgTopCached4.thy                line 3196
+top1_is_wedge_of_circles_on                    ac/AlgTopCached.thy                  line 31222
+top1_left_cosets_on                            ac/AlgTopCached.thy                  line 31485
+top1_limit_point_compact_on                    i/Top1_Ch3.thy                       line 10363
+top1_lindelof_on                               i/Top1_Ch5_8.thy                     line 6914
+top1_locally_compact_on                        i/Top1_Ch3.thy                       line 10676
+top1_locally_connected_at                      i/Top1_Ch3.thy                       line 2820
+top1_locally_connected_on                      i/Top1_Ch3.thy                       line 2826
+top1_locally_finite_family_on                  i/Top1_Ch5_8.thy                     line 2831
+top1_locally_metrizable_on                     i/Top1_Ch5_8.thy                     line 9337
+top1_locally_path_connected_at                 i/Top1_Ch3.thy                       line 3070
+top1_locally_path_connected_on                 i/Top1_Ch3.thy                       line 3076
+top1_loop_equiv_on                             i/Top1_Ch9_13.thy                    line 2381
+top1_max_conn_comp                             ac3/AlgTopCached3.thy                line 32
+top1_metric_basis_on                           i/Top1_Ch2.thy                       line 11629
+top1_metric_bounded_subset_on                  i/Top1_Ch5_8.thy                     line 14324
+top1_metric_diam_on                            i/Top1_Ch5_8.thy                     line 27755
+top1_metric_on                                 i/Top1_Ch2.thy                       line 11597
+top1_metric_topology_on                        i/Top1_Ch2.thy                       line 11632
+top1_metrizable_on                             i/Top1_Ch2.thy                       line 11635
+top1_m_manifold_on                             i/Top1_Ch4.thy                       line 17564
+top1_m_projective_scheme                       ac/AlgTopCached.thy                  line 31370
+top1_nbhd_of_set                               i/Top1_Ch5_8.thy                     line 3811
+top1_net_accumulation_point                    i/Top1_Ch5_8.thy                     line 33419
+top1_net_converges_to_on                       i/Top1_Ch5_8.thy                     line 33411
+top1_normalizer_on                             ac/AlgTopCached.thy                  line 7036
+top1_normal_on                                 i/Top1_Ch4.thy                       line 3232
+top1_normal_subgroup_generated_on              ac/AlgTopCached.thy                  line 6775
+top1_normal_subgroup_on                        ac/AlgTopCached.thy                  line 6150
+top1_n_torus_scheme                            ac/AlgTopCached.thy                  line 31364
+top1_nulhomotopic_on                           i/Top1_Ch9_13.thy                    line 350
+top1_one_point_compactification_on             i/Top1_Ch3.thy                       line 11301
+top1_open_covering_on                          i/Top1_Ch5_8.thy                     line 2843
+top1_open_map_on                               i/Top1_Ch2.thy                       line 18803
+top1_open_sets                                 i/Top1_Ch3.thy                       line 1929
+top1_pair_code                                 i/Top1_Ch4.thy                       line 126
+top1_paracompact_on                            i/Top1_Ch5_8.thy                     line 6909
+top1_partition_of_unity_dominated_family_on    i/Top1_Ch5_8.thy                     line 8631
+top1_partition_of_unity_dominated_on           i/Top1_Ch4.thy                       line 16424
+top1_path_component_of_on                      i/Top1_Ch3.thy                       line 3060
+top1_path_components_on                        i/Top1_Ch3.thy                       line 3063
+top1_path_connected_on                         i/Top1_Ch3.thy                       line 3066
+top1_path_homotopic_on                         i/Top1_Ch9_13.thy                    line 340
+top1_path_product                              i/Top1_Ch9_13.thy                    line 1188
+top1_path_reverse                              i/Top1_Ch9_13.thy                    line 1192
+top1_Pi                                        i/Top1_Ch2.thy                       line 8490
+top1_PiE                                       i/Top1_Ch2.thy                       line 8493
+top1_pointwise_bounded_family_on               i/Top1_Ch5_8.thy                     line 14327
+top1_pointwise_topology_on                     i/Top1_Ch5_8.thy                     line 15553
+top1_product_basis_on                          i/Top1_Ch2.thy                       line 8527
+top1_product_topology_on                       i/Top1_Ch2.thy                       line 8535
+top1_quotient_group_carrier_on                 ac/AlgTopCached.thy                  line 6173
+top1_quotient_group_mul_on                     ac/AlgTopCached.thy                  line 6178
+top1_quotient_map_on                           i/Top1_Ch2.thy                       line 18788
+top1_quotient_of_scheme_on                     ac/AlgTopCached.thy                  line 31275
+top1_quotient_topology_by_map_on               i/Top1_Ch2.thy                       line 20121
+top1_real_bounded_metric                       i/Top1_Ch2.thy                       line 12251
+top1_refines                                   i/Top1_Ch5_8.thy                     line 2840
+top1_regular_on                                i/Top1_Ch4.thy                       line 2418
+top1_retract_of_on                             i/Top1_Ch9_13.thy                    line 11439
+top1_rho49                                     i/Top1_Ch5_8.thy                     line 25062
+top1_right_coset_on                            ac11/AlgTopCached11.thy              line 6
+top1_right_cosets_on                           ac11/AlgTopCached11.thy              line 9
+top1_Rpow_set                                  i/Top1_Ch4.thy                       line 17545
+top1_Rpow_sq_metric                            i/Top1_Ch5_8.thy                     line 28094
+top1_Rpow_sup_dist                             i/Top1_Ch5_8.thy                     line 27594
+top1_Rpow_topology                             i/Top1_Ch4.thy                       line 17548
+top1_R_to_S1                                   i/Top1_Ch9_13.thy                    line 3991
+top1_S1                                        i/Top1_Ch9_13.thy                    line 3983
+top1_S1_arc_E                                  i/Top1_Ch9_13.thy                    line 4002
+top1_S1_arc_N                                  i/Top1_Ch9_13.thy                    line 4006
+top1_S1_arc_S                                  i/Top1_Ch9_13.thy                    line 4008
+top1_S1_arc_W                                  i/Top1_Ch9_13.thy                    line 4004
+top1_S1_complex                                i/Top1_Ch9_13.thy                    line 14766
+top1_S1_complex_topology                       i/Top1_Ch9_13.thy                    line 14769
+top1_S1_topology                               i/Top1_Ch9_13.thy                    line 3986
+top1_S2                                        b/AlgTop_JCT_Base.thy                line 3728
+top1_S2_topology                               b/AlgTop_JCT_Base.thy                line 3731
+top1_same_homotopy_type_on                     b0/AlgTop_JCT_Base0.thy              line 4048
+top1_saturated_with_respect_to_on              i/Top1_Ch2.thy                       line 18798
+top1_SC_F                                      i/Top1_Ch5_8.thy                     line 20779
+top1_SC_J                                      i/Top1_Ch5_8.thy                     line 20775
+top1_SC_TY                                     i/Top1_Ch5_8.thy                     line 20793
+top1_SC_TZ                                     i/Top1_Ch5_8.thy                     line 20785
+top1_SC_Y                                      i/Top1_Ch5_8.thy                     line 20789
+top1_SC_Z                                      i/Top1_Ch5_8.thy                     line 20782
+top1_second_countable_on                       i/Top1_Ch4.thy                       line 447
+top1_semilocally_simply_connected_on           ac10/AlgTopCached10.thy              line 2945
+top1_separates_on                              b/AlgTop_JCT_Base.thy                line 3763
+top1_sequentially_compact_on                   i/Top1_Ch5_8.thy                     line 32828
+top1_sigma_locally_finite_family_on            i/Top1_Ch5_8.thy                     line 2835
+top1_simple_closed_curve_on                    b/AlgTop_JCT_Base.thy                line 4784
+top1_simply_connected_on                       i/Top1_Ch9_13.thy                    line 2453
+top1_simply_connected_strict                   i/Top1_Ch9_13.thy                    line 2460
+top1_slh_ext                                   i/Top1_Ch9_13.thy                    line 10687
+top1_Sn                                        b0/AlgTop_JCT_Base0.thy              line 5568
+top1_square_metric_real_on                     i/Top1_Ch2.thy                       line 12957
+top1_standard_simplex                          ac/AlgTopCached.thy                  line 31412
+top1_standard_simplex_edges                    ac/AlgTopCached.thy                  line 31421
+top1_standard_simplex_topology                 ac/AlgTopCached.thy                  line 31415
+top1_standard_simplex_vertices                 ac/AlgTopCached.thy                  line 31428
+top1_subgroup_generated_on                     ac/AlgTopCached.thy                  line 6208
+top1_subgroup_has_index_on                     ac/AlgTopCached.thy                  line 31489
+top1_sup_metric_on                             i/Top1_Ch5_8.thy                     line 10539
+top1_support_on                                i/Top1_Ch4.thy                       line 16213
+top1_sup_topology_on                           i/Top1_Ch5_8.thy                     line 10543
+top1_T1_on                                     i/Top1_Ch4.thy                       line 2397
+top1_ternary_sum                               i/Top1_Ch3.thy                       line 9322
+top1_torsion_subgroup_on                       ac/AlgTopCached.thy                  line 7018
+top1_totally_bounded_on                        i/Top1_Ch5_8.thy                     line 13735
+top1_U49                                       i/Top1_Ch5_8.thy                     line 25065
+top1_U_eps_on                                  i/Top1_Ch5_8.thy                     line 29435
+top1_uniformly_continuous_map_on               i/Top1_Ch3.thy                       line 9051
+top1_uniformly_convergent_on                   i/Top1_Ch2.thy                       line 18551
+top1_uniformly_convergent_on_real              i/Top1_Ch4.thy                       line 15212
+top1_uniform_metric_on                         i/Top1_Ch5_8.thy                     line 10519
+top1_uniform_metric_real_on                    i/Top1_Ch2.thy                       line 12961
+top1_uniform_topology_on                       i/Top1_Ch5_8.thy                     line 15602
+top1_unit_interval                             i/Top1_Ch3.thy                       line 3045
+top1_unit_interval_topology                    i/Top1_Ch3.thy                       line 3048
+top1_winding_number_on                         ac/AlgTopCached.thy                  line 6055
+top1_Z_group                                   i/Top1_Ch9_13.thy                    line 11007
+top1_Z_id                                      i/Top1_Ch9_13.thy                    line 11013
+top1_Z_invg                                    i/Top1_Ch9_13.thy                    line 11016
+top1_Z_mul                                     i/Top1_Ch9_13.thy                    line 11010
+top1_Zn_group                                  ac/AlgTopCached.thy                  line 6963
+top1_Zn_id                                     ac/AlgTopCached.thy                  line 6969
+top1_Zn_invg                                   ac/AlgTopCached.thy                  line 6972
+top1_Zn_mul                                    ac/AlgTopCached.thy                  line 6966
+topology_generated_by_basis                    i/Top1_Ch2.thy                       line 1073
+topology_generated_by_subbasis                 i/Top1_Ch2.thy                       line 1960
+topology_K_R                                   i/Top1_Ch2.thy                       line 1570
+topology_lower_limit_R                         i/Top1_Ch2.thy                       line 1567
+topology_standard_R                            i/Top1_Ch2.thy                       line 1564
 
-## funs (19)
+## funs (38)
 
 hilbert_rec                                    i/Top1_Ch5_8.thy                     line 12190
 method_evaluate                                i/Top1_Ch9_13.thy                    line 6
@@ -367,12 +703,32 @@ top1_group_word_product                        ac/AlgTopCached.thy              
 top1_is_reduced_word                           ac/AlgTopCached.thy                  line 6200
 top1_list_code                                 i/Top1_Ch4.thy                       line 352
 top1_urysohn_U                                 i/Top1_Ch4.thy                       line 6250
+hilbert_rec                                    i/Top1_Ch5_8.thy                     line 12190
+method_evaluate                                i/Top1_Ch9_13.thy                    line 6
+method_evaluate_rt                             ac/AlgTopCached.thy                  line 23
+method_evaluate_rt                             ag/AlgTopGroups.thy                  line 22
+method_evaluate_rt                             AlgTop.thy                           line 20
+sfa_rec                                        i/Top1_Ch5_8.thy                     line 12151
+tac                                            ac/AlgTopCached.thy                  line 25
+tac                                            ag/AlgTopGroups.thy                  line 24
+tac                                            AlgTop.thy                           line 22
+tac                                            i/Top1_Ch9_13.thy                    line 26
+timed_seq                                      ac/AlgTopCached.thy                  line 13
+timed_seq                                      ag/AlgTopGroups.thy                  line 12
+timed_seq                                      AlgTop.thy                           line 10
+timed_seq                                      i/Top1_Ch9_13.thy                    line 9
+top1_group_pow                                 ac/AlgTopCached.thy                  line 6183
+top1_group_word_product                        ac/AlgTopCached.thy                  line 6190
+top1_is_reduced_word                           ac/AlgTopCached.thy                  line 6200
+top1_list_code                                 i/Top1_Ch4.thy                       line 352
+top1_urysohn_U                                 i/Top1_Ch4.thy                       line 6250
 
-## abbreviations (1)
+## abbreviations (2)
 
 top1_I01                                       i/Top1_Ch5_8.thy                     line 25035
+top1_I01                                       i/Top1_Ch5_8.thy                     line 25035
 
-## lemmas (1563)
+## lemmas (3132)
 
 abelian_commutator_trivial                     ac8/AlgTopCached8.thy                line 4968
 abelian_doubles_normal                         ag/AlgTopGroups.thy                  line 6792
@@ -403,8 +759,8 @@ abelian_word_product_zero_net_coeff            ag/AlgTopGroups.thy              
 abs_diff_le_of_bounds                          i/Top1_Ch4.thy                       line 12764
 abs_diff_lt_iff_mem_open_interval              i/Top1_Ch2.thy                       line 13922
 acyclic_graph_has_leaf                         ac11/AlgTopCached11.thy              line 6243
-adjacent_cone_diagonal_injective               AlgTop.thy                           line 2253
-adjacent_cone_diagonal_injective_tp            AlgTop.thy                           line 2323
+adjacent_cone_diagonal_injective               AlgTop.thy                           line 2368
+adjacent_cone_diagonal_injective_tp            AlgTop.thy                           line 2438
 affine_map_continuous_I_to_I                   ac/AlgTopCached.thy                  line 15520
 affine_on_interval_continuous                  i/Top1_Ch5_8.thy                     line 12516
 affine_param_in_interval                       ac/AlgTopCached.thy                  line 48498
@@ -473,7 +829,7 @@ cc_topology_is_topology                        i/Top1_Ch5_8.thy                 
 ccw_polygon_half_plane                         at/AlgTopChain.thy                   line 2203
 ccw_polygon_half_plane                         pd/PolygonDisk.thy                   line 173
 centralizer_is_subgroup                        ac8/AlgTopCached8.thy                line 4543
-centroid_weight_not_on_edge                    AlgTop.thy                           line 2391
+centroid_weight_not_on_edge                    AlgTop.thy                           line 2506
 circle_minus_point_deformation_retract         wh/AlgTopWedgeHelpers.thy            line 3284
 circle_minus_point_path_connected              svk/AlgTopSvK.thy                    line 819
 circle_minus_point_simply_connected            svk/AlgTopSvK.thy                    line 1196
@@ -748,12 +1104,12 @@ free_group_universal_property                  at/AlgTopChain.thy               
 free_group_word_kernel                         ag/AlgTopGroups.thy                  line 3110
 free_product_reduced_repr                      ac/AlgTopCached.thy                  line 10948
 free_product_trivial_factor_surj               ac/AlgTopCached.thy                  line 27169
-front_cancel_proper                            AlgTop.thy                           line 11918
-front_cancel_proper_direct                     AlgTop.thy                           line 10821
-front_cancel_realization_homeo                 AlgTop.thy                           line 674
-front_cancel_realization_homeo_proper          AlgTop.thy                           line 11940
+front_cancel_proper                            AlgTop.thy                           line 12034
+front_cancel_proper_direct                     AlgTop.thy                           line 10937
+front_cancel_realization_homeo                 AlgTop.thy                           line 769
+front_cancel_realization_homeo_proper          AlgTop.thy                           line 12056
 frontier_closed_sub                            ac/AlgTopCached.thy                  line 3608
-front_uncancel_realization_homeo               AlgTop.thy                           line 780
+front_uncancel_realization_homeo               AlgTop.thy                           line 895
 fst_set_flip_rev                               ag/AlgTopGroups.thy                  line 78
 fundamental_group_class_members_equiv          i/Top1_Ch9_13.thy                    line 10872
 fundamental_group_induced_agree                ac/AlgTopCached.thy                  line 5932
@@ -1004,7 +1360,7 @@ Lemma_67_7_free_abelian_extension              ag/AlgTopGroups.thy              
 Lemma_68_3_extension_property                  ac/AlgTopCached.thy                  line 11323
 Lemma_68_9_normal_closure_conjugates           ac/AlgTopCached.thy                  line 8291
 Lemma_69_3_commutator_in_kernel                ac/AlgTopCached.thy                  line 8551
-Lemma_77_1_step1                               AlgTop.thy                           line 582
+Lemma_77_1_step1                               AlgTop.thy                           line 676
 Lemma_84_2_tree_union_arc                      ac3/AlgTopCached3.thy                line 822
 Lemma_84_6_two_component_generation            ac7/AlgTopCached7.thy                line 1031
 limit_point_imp_closure                        i/Top1_Ch5_8.thy                     line 32628
@@ -1076,6 +1432,7 @@ metrizable_imp_strict                          i/Top1_Ch5_8.thy                 
 metrizable_openin_on                           i/Top1_Ch5_8.thy                     line 5245
 metrizable_open_sub_carrier                    i/Top1_Ch5_8.thy                     line 5240
 move_one_puncture                              fi/AlgIsoFixed.thy                   line 4391
+multi                                          AlgTop.thy                           line 572
 munkres_basis_property                         i/Top1_Ch5_8.thy                     line 9379
 Munkres_Step_1_arc_splice                      fi/AlgIsoFixed.thy                   line 1515
 Munkres_Step_4_move_punctures                  fi/AlgIsoFixed.thy                   line 6247
@@ -1088,7 +1445,7 @@ net_convergence_iff_seq_convergence            i/Top1_Ch5_8.thy                 
 net_converges_eventually_strict                i/Top1_Ch5_8.thy                     line 33480
 net_limit_in_closure                           i/Top1_Ch5_8.thy                     line 33463
 no_matching_pair_word_ne_e                     ag/AlgTopGroups.thy                  line 4637
-non_adjacent_cone_disjoint                     AlgTop.thy                           line 945
+non_adjacent_cone_disjoint                     AlgTop.thy                           line 1060
 nonempty_inter_from_subset                     fib/AlgIsoFixedBase.thy              line 1219
 normal_closure_least                           ag/AlgTopGroups.thy                  line 2069
 normal_coset_eq                                ac/AlgTopCached.thy                  line 8732
@@ -1109,8 +1466,8 @@ normal_urysohn_initial_step                    i/Top1_Ch4.thy                   
 north_pole_in_S2                               b/AlgTop_JCT_Base.thy                line 3789
 not_connected_imp_no_path                      a0/AlgTop0.thy                       line 4823
 not_reduced_has_cancel                         ag/AlgTopGroups.thy                  line 2875
-nth_append_skip                                AlgTop.thy                           line 561
-nth_append_take                                AlgTop.thy                           line 564
+nth_append_skip                                AlgTop.thy                           line 655
+nth_append_take                                AlgTop.thy                           line 658
 nulhomotopic_homotopic_trans                   i/Top1_Ch9_13.thy                    line 13164
 nulhomotopic_transfer                          b/AlgTop_JCT_Base.thy                line 6113
 nulhomotopic_trivializes_loops                 i/Top1_Ch9_13.thy                    line 16045
@@ -1199,7 +1556,7 @@ polygonal_region_convex_combo                  at/AlgTopChain.thy               
 polygonal_region_convex_combo                  pd/PolygonDisk.thy                   line 456
 polygon_homeomorphic_to_disk_with_boundary     at/AlgTopChain.thy                   line 2827
 polygon_homeomorphic_to_disk_with_boundary     pd/PolygonDisk.thy                   line 1043
-polygon_sub_rearrange_sigma_props              AlgTop.thy                           line 11042
+polygon_sub_rearrange_sigma_props              AlgTop.thy                           line 11158
 preimage_normal_subgroup                       ac/AlgTopCached.thy                  line 27286
 presentation_from_free_quotient                wh/AlgTopWedgeHelpers.thy            line 1512
 presented_by_commutators_abelian               ac8/AlgTopCached8.thy                line 4722
@@ -1232,19 +1589,21 @@ quotient_group_is_group                        ac/AlgTopCached.thy              
 quotient_group_iso_transfer                    ac/AlgTopCached.thy                  line 40033
 quotient_group_universal_property              ag/AlgTopGroups.thy                  line 2079
 quotient_induced_hom                           ac/AlgTopCached.thy                  line 12739
-quotient_of_scheme_cut_paste                   AlgTop.thy                           line 567
-quotient_of_scheme_cut_paste2                  AlgTop.thy                           line 600
-quotient_of_scheme_cut_paste_opp               AlgTop.thy                           line 611
-quotient_of_scheme_cut_paste_opp_proper        AlgTop.thy                           line 11186
-quotient_of_scheme_cut_paste_proper            AlgTop.thy                           line 11616
+quotient_of_scheme_cut_paste                   AlgTop.thy                           line 661
+quotient_of_scheme_cut_paste2                  AlgTop.thy                           line 695
+quotient_of_scheme_cut_paste_opp               AlgTop.thy                           line 706
+quotient_of_scheme_cut_paste_opp_proper        AlgTop.thy                           line 11302
+quotient_of_scheme_cut_paste_proper            AlgTop.thy                           line 11732
 quotient_of_scheme_extract                     ac/AlgTopCached.thy                  line 31345
 quotient_of_scheme_extract_full                wh/AlgTopWedgeHelpers.thy            line 329
-quotient_of_scheme_transfer_bij_rel            AlgTop.thy                           line 503
-quotient_of_scheme_uncancel_front              AlgTop.thy                           line 688
-quotient_of_scheme_uncancel_front_proper       AlgTop.thy                           line 11955
-quotient_of_scheme_uncancel_proved             AlgTop.thy                           line 796
+quotient_of_scheme_reverse                     AlgTop.thy                           line 625
+quotient_of_scheme_transfer_bij_rel            AlgTop.thy                           line 510
+quotient_of_scheme_uncancel_front              AlgTop.thy                           line 783
+quotient_of_scheme_uncancel_front_proper       AlgTop.thy                           line 12071
+quotient_of_scheme_uncancel_proved             AlgTop.thy                           line 911
 quotient_projection_properties                 ac/AlgTopCached.thy                  line 8976
-quotient_rearrangement_homeomorphism           AlgTop.thy                           line 551
+quotient_rearrangement_homeomorphism           AlgTop.thy                           line 556
+quotient_scheme_flip_labels                    AlgTop.thy                           line 580
 R2_locally_path_connected                      b/AlgTop_JCT_Base.thy                line 6672
 R2_minus_origin_not_simply_connected           b/AlgTop_JCT_Base.thy                line 4796
 R2_minus_point_not_simply_connected            b/AlgTop_JCT_Base.thy                line 5090
@@ -1367,8 +1726,8 @@ Sn_interpolation_in_Sn                         b/AlgTop_JCT_Base.thy            
 Sn_interpolation_norm_pos                      b/AlgTop_JCT_Base.thy                line 720
 Sn_interpolation_to_q_avoids_p                 b/AlgTop_JCT_Base.thy                line 878
 Sn_normalized_interpolation_path               b/AlgTop_JCT_Base.thy                line 441
-spur_arc_match_forces_edge                     AlgTop.thy                           line 836
-spur_collapse_cancel_homeo                     AlgTop.thy                           line 2529
+spur_arc_match_forces_edge                     AlgTop.thy                           line 951
+spur_collapse_cancel_homeo                     AlgTop.thy                           line 2644
 sqnorm_memI                                    h/AlgTopHelpers.thy                  line 5
 squaring_map_covering                          b0/AlgTop_JCT_Base0.thy              line 12
 squaring_map_factorization                     b0/AlgTop_JCT_Base0.thy              line 2522
@@ -1912,9 +2271,1575 @@ uniform_metric_conv_imp_pointwise_unif         i/Top1_Ch5_8.thy                 
 uniform_metric_lt_imp_d_lt                     i/Top1_Ch5_8.thy                     line 14354
 uniform_metric_pointwise_lt                    i/Top1_Ch5_8.thy                     line 14336
 unit_interval_reversal_homeomorphism           ac/AlgTopCached.thy                  line 49000
-valid_equiv_preserves_quotient_homeo           AlgTop.thy                           line 12334
-valid_equiv_preserves_quotient_homeo_proper    AlgTop.thy                           line 12373
-valid_operation_preserves_quotient_homeo       AlgTop.thy                           line 11996
+valid_equiv_preserves_quotient_homeo           AlgTop.thy                           line 12499
+valid_equiv_preserves_quotient_homeo_proper    AlgTop.thy                           line 12538
+valid_operation_preserves_quotient_homeo       AlgTop.thy                           line 12112
+vector_field_must_point_inward                 i/Top1_Ch9_13.thy                    line 13533
+wedge_circles_pi1_free                         ac5/AlgTopCached5.thy                line 2814
+weighted_sum_epsilon_delta                     i/Top1_Ch5_8.thy                     line 29816
+wellorder_basis_refine_Ioc                     i/Top1_Ch4.thy                       line 5161
+wellorder_Ioc_open_in_order_topology           i/Top1_Ch4.thy                       line 5065
+wellorder_Least_le_all                         i/Top1_Ch4.thy                       line 5041
+wellorder_min_lt_if_ne                         i/Top1_Ch4.thy                       line 5053
+wellorder_min_singleton_open                   i/Top1_Ch4.thy                       line 5291
+wellorder_open_refine_Ioc                      i/Top1_Ch4.thy                       line 5266
+word_cancel_preserves_eval                     ag/AlgTopGroups.thy                  line 2770
+word_product_append                            ag/AlgTopGroups.thy                  line 2714
+word_product_as_foldr                          ag/AlgTopGroups.thy                  line 3374
+word_product_cancel_matching_pair              ag/AlgTopGroups.thy                  line 3487
+word_product_commutator_concat_in_comm         ac8/AlgTopCached8.thy                line 3914
+word_product_foldr_class                       ac7/AlgTopCached7.thy                line 12
+word_product_foldr_class                       ac8/AlgTopCached8.thy                line 463
+word_product_in_group                          ag/AlgTopGroups.thy                  line 2212
+word_product_rel_invrel_as_foldr               ac12/AlgTopCached12.thy              line 213
+word_product_rev_inv                           ag/AlgTopGroups.thy                  line 2978
+Z_auto_sends_1_to_pm1                          ac/AlgTopCached.thy                  line 41687
+Z_is_free_on_one_generator                     ac/AlgTopCached.thy                  line 31500
+Z_quotient_nZ_iso                              at/AlgTopChain.thy                   line 1804
+abelian_commutator_trivial                     ac8/AlgTopCached8.thy                line 4968
+abelian_doubles_normal                         ag/AlgTopGroups.thy                  line 6792
+abelian_foldr_concat_double                    ac12/AlgTopCached12.thy              line 153
+abelian_foldr_map_perm_distinct                ag/AlgTopGroups.thy                  line 4066
+abelian_foldr_mul_cancel_pair                  ag/AlgTopGroups.thy                  line 1658
+abelian_foldr_mul_extract                      ag/AlgTopGroups.thy                  line 1618
+abelian_foldr_mul_filter_eq                    ag/AlgTopGroups.thy                  line 3399
+abelian_foldr_mul_split_filter                 ag/AlgTopGroups.thy                  line 1770
+abelian_foldr_perm_distinct                    ag/AlgTopGroups.thy                  line 3931
+abelian_foldr_remdups_pow                      ag/AlgTopGroups.thy                  line 4308
+abelian_foldr_replace_one                      ag/AlgTopGroups.thy                  line 4195
+abelian_foldr_split_one_element                ag/AlgTopGroups.thy                  line 4169
+abelian_foldr_two_element                      ag/AlgTopGroups.thy                  line 4486
+abelian_generated_decomposes_via_order2        ac12/AlgTopCached12.thy              line 727
+abelian_group_pow_mul                          ac12/AlgTopCached12.thy              line 565
+abelianization_concrete                        ac/AlgTopCached.thy                  line 9544
+abelianization_independence_on_generators      at/AlgTopChain.thy                   line 622
+abelianization_injective_on_generators         at/AlgTopChain.thy                   line 539
+abelianization_of_presented_group              at/AlgTopChain.thy                   line 1340
+abelianization_transfer_iso                    ac8/AlgTopCached8.thy                line 4364
+abelian_mul_left_commute                       ag/AlgTopGroups.thy                  line 1596
+abelian_subgroup_is_normal                     ac12/AlgTopCached12.thy              line 120
+abelian_word_net_count                         ag/AlgTopGroups.thy                  line 1584
+abelian_word_product_move_front                ag/AlgTopGroups.thy                  line 3412
+abelian_word_product_swap                      ag/AlgTopGroups.thy                  line 3291
+abelian_word_product_zero_net_coeff            ag/AlgTopGroups.thy                  line 3632
+abs_diff_le_of_bounds                          i/Top1_Ch4.thy                       line 12764
+abs_diff_lt_iff_mem_open_interval              i/Top1_Ch2.thy                       line 13922
+acyclic_graph_has_leaf                         ac11/AlgTopCached11.thy              line 6243
+adjacent_cone_diagonal_injective               AlgTop.thy                           line 2368
+adjacent_cone_diagonal_injective_tp            AlgTop.thy                           line 2438
+affine_map_continuous_I_to_I                   ac/AlgTopCached.thy                  line 15520
+affine_on_interval_continuous                  i/Top1_Ch5_8.thy                     line 12516
+affine_param_in_interval                       ac/AlgTopCached.thy                  line 48498
+affine_param_in_unit_interval                  ac/AlgTopCached.thy                  line 48511
+affine_scale_continuous                        i/Top1_Ch5_8.thy                     line 12548
+affine_span_empty_interior                     i/Top1_Ch5_8.thy                     line 28596
+affine_span_in_hyperplane                      i/Top1_Ch5_8.thy                     line 28498
+antipode_preserving_basepoint_nontrivial       b0/AlgTop_JCT_Base0.thy              line 2823
+arc_both_endpoints_in_one_part                 ac/AlgTopCached.thy                  line 51546
+arc_compact                                    ac10/AlgTopCached10.thy              line 10322
+arc_concat_endpoints                           ac/AlgTopCached.thy                  line 51654
+arc_connected                                  a0/AlgTop0.thy                       line 4922
+arc_deformation_retract_to_endpoint            ac3/AlgTopCached3.thy                line 514
+arc_endpoint_in_closure_of_complement_S2       fi/AlgIsoFixed.thy                   line 3723
+arc_endpoint_in_closure_of_interior            ac/AlgTopCached.thy                  line 52950
+arc_endpoint_not_interior_S2                   fi/AlgIsoFixed.thy                   line 3326
+arc_endpoints_are_boundary                     ac/AlgTopCached.thy                  line 48544
+arc_endpoints_subset                           k5/K5_nonplanar.thy                  line 5
+arc_endpoints_under_homeomorphism              fib/AlgIsoFixedBase.thy              line 5097
+arc_in_S2_closed                               a0/AlgTop0.thy                       line 4888
+arc_joining_lemma                              a0/AlgTop0.thy                       line 5620
+arc_locally_path_connected                     ac10/AlgTopCached10.thy              line 10306
+arc_merge_at_endpoint                          ac11/AlgTopCached11.thy              line 5240
+arc_minus_endpoints_connected                  ac/AlgTopCached.thy                  line 51957
+arcs_concatenation_is_arc                      ac/AlgTopCached.thy                  line 49839
+arcs_form_simple_closed_curve                  ac/AlgTopCached.thy                  line 49072
+arc_split_at_given_point                       ac/AlgTopCached.thy                  line 50468
+arc_split_at_midpoint                          a0/AlgTop0.thy                       line 4959
+arc_split_endpoints                            ac/AlgTopCached.thy                  line 50950
+arc_sub_arc_covering_compact                   ac10/AlgTopCached10.thy              line 10421
+B2_compact                                     ac2/AlgTopCached2.thy                line 7
+balanced_from_sum_zero                         ac12/AlgTopCached12.thy              line 106
+basepoint_change_cong_on_I                     ac/AlgTopCached.thy                  line 41780
+basepoint_change_image_hom                     ac4/AlgTopCached4.thy                line 1833
+basis_elem_in_generated_topology               i/Top1_Ch5_8.thy                     line 16011
+basis_elem_open_if_basis_for                   i/Top1_Ch2.thy                       line 1918
+basis_elem_open_in_generated_topology          i/Top1_Ch2.thy                       line 1882
+basis_for_is_topology_on                       i/Top1_Ch2.thy                       line 1904
+basis_for_order_topology_on_UNIV               i/Top1_Ch2.thy                       line 2973
+basis_for_refine                               i/Top1_Ch2.thy                       line 1934
+basis_order_topology_cases                     i/Top1_Ch2.thy                       line 2365
+basis_order_topology_contains_open_interval    i/Top1_Ch2.thy                       line 2375
+basis_order_topology_HOL_open                  i/Top1_Ch5_8.thy                     line 1724
+basis_order_topology_is_basis_on_UNIV          i/Top1_Ch2.thy                       line 2946
+basis_order_topology_on_restrict               i/Top1_Ch2.thy                       line 4391
+basis_order_topology_on_subset                 i/Top1_Ch2.thy                       line 4384
+basis_order_topology_on_UNIV                   i/Top1_Ch2.thy                       line 2269
+basis_order_topology_refine_intersection       i/Top1_Ch2.thy                       line 2617
+bij_hom_inv_is_hom                             ac/AlgTopCached.thy                  line 41743
+bm_triangle                                    i/Top1_Ch5_8.thy                     line 15618
+Borsuk_R2                                      ac/AlgTopCached.thy                  line 3745
+bounded_metric_lt_imp_d_lt                     i/Top1_Ch5_8.thy                     line 14331
+cancel_pair_not_reduced                        ac7/AlgTopCached7.thy                line 120
+canonical_product_two_eq                       ag/AlgTopGroups.thy                  line 4553
+card_three_le                                  ac/AlgTopCached.thy                  line 48532
+cc_basis_is_basis                              i/Top1_Ch5_8.thy                     line 15711
+cc_basis_member_pointwise                      i/Top1_Ch5_8.thy                     line 15983
+cc_basis_refine_single                         i/Top1_Ch5_8.thy                     line 15630
+cc_basis_self_member                           i/Top1_Ch5_8.thy                     line 15689
+cc_conv_imp_unif_compact                       i/Top1_Ch5_8.thy                     line 16018
+cc_eq_uniform_compact                          i/Top1_Ch5_8.thy                     line 17943
+cc_open_basis_at_point                         i/Top1_Ch5_8.thy                     line 16075
+cc_supset_uniform_compact                      i/Top1_Ch5_8.thy                     line 19250
+cc_supset_uniform_compact_full                 i/Top1_Ch5_8.thy                     line 19288
+cc_topology_is_topology                        i/Top1_Ch5_8.thy                     line 15834
+ccw_polygon_half_plane                         at/AlgTopChain.thy                   line 2203
+ccw_polygon_half_plane                         pd/PolygonDisk.thy                   line 173
+centralizer_is_subgroup                        ac8/AlgTopCached8.thy                line 4543
+centroid_weight_not_on_edge                    AlgTop.thy                           line 2506
+circle_minus_point_deformation_retract         wh/AlgTopWedgeHelpers.thy            line 3284
+circle_minus_point_path_connected              svk/AlgTopSvK.thy                    line 819
+circle_minus_point_simply_connected            svk/AlgTopSvK.thy                    line 1196
+circle_path_connected                          svk/AlgTopSvK.thy                    line 849
+clamp01_id                                     i/Top1_Ch5_8.thy                     line 13247
+clamp01_id_early                               i/Top1_Ch5_8.thy                     line 12137
+clamp01_range                                  i/Top1_Ch5_8.thy                     line 12134
+closed_complement_open                         svk/AlgTopSvK.thy                    line 1230
+closedin_carrier                               i/Top1_Ch2.thy                       line 5056
+closedin_complement_openin                     b/AlgTop_JCT_Base.thy                line 260
+closedin_contains_closure                      i/Top1_Ch5_8.thy                     line 20669
+closedin_contains_closure_early                i/Top1_Ch5_8.thy                     line 2177
+closedin_diff_open                             i/Top1_Ch2.thy                       line 4900
+closedin_empty                                 i/Top1_Ch2.thy                       line 5053
+closedin_if_closure_subset                     i/Top1_Ch5_8.thy                     line 16481
+closedin_II_rectangle                          i/Top1_Ch9_13.thy                    line 7710
+closedin_Inter                                 i/Top1_Ch2.thy                       line 5060
+closedin_inter2                                i/Top1_Ch2.thy                       line 5067
+closedin_intro                                 i/Top1_Ch2.thy                       line 4906
+closedin_I_sub_interval                        i/Top1_Ch9_13.thy                    line 7689
+closedin_on_finite_indexed_Union               i/Top1_Ch5_8.thy                     line 27362
+closedin_on_finite_Union                       i/Top1_Ch5_8.thy                     line 4759
+closedin_on_subspace                           i/Top1_Ch5_8.thy                     line 27392
+closedin_on_Un                                 i/Top1_Ch5_8.thy                     line 27348
+closedin_sub                                   i/Top1_Ch2.thy                       line 4894
+closedin_subspace_from_ambient                 i/Top1_Ch5_8.thy                     line 20677
+closed_interval_01_is_topology                 i/Top1_Ch5_8.thy                     line 12409
+closed_interval_hausdorff                      i/Top1_Ch5_8.thy                     line 1946
+closedin_Union_finite                          i/Top1_Ch2.thy                       line 4920
+closed_real_Inf_in                             ac10/AlgTopCached10.thy              line 10395
+closed_real_Sup_in                             ac10/AlgTopCached10.thy              line 10370
+closed_set_first_entry                         ac11/AlgTopCached11.thy              line 2799
+closed_subset_compact                          ac/AlgTopCached.thy                  line 41032
+closed_subset_complete                         i/Top1_Ch5_8.thy                     line 11512
+closure_cc_cont_on_compact                     i/Top1_Ch5_8.thy                     line 16493
+closure_equicontinuous                         i/Top1_Ch5_8.thy                     line 14831
+closure_imp_net_converges                      i/Top1_Ch5_8.thy                     line 33492
+closure_meets_open                             i/Top1_Ch2.thy                       line 5316
+closure_on_carrier                             i/Top1_Ch3.thy                       line 10683
+closure_on_closed                              i/Top1_Ch2.thy                       line 5269
+closure_on_closed_subspace                     i/Top1_Ch5_8.thy                     line 20686
+closure_on_is_closedin                         i/Top1_Ch5_8.thy                     line 20662
+closure_on_mono                                i/Top1_Ch2.thy                       line 5239
+closure_on_product_rect_subset_prod_closure    i/Top1_Ch4.thy                       line 2711
+closure_on_sub_carrier                         i/Top1_Ch5_8.thy                     line 20655
+closure_on_subset_carrier                      i/Top1_Ch2.thy                       line 5310
+closure_on_subset_of_closed                    i/Top1_Ch2.thy                       line 5263
+closure_pointwise_bounded                      i/Top1_Ch5_8.thy                     line 14941
+coherent_topology_is_strict                    ac10/AlgTopCached10.thy              line 18570
+commutator_conjugate                           ac/AlgTopCached.thy                  line 8124
+commutator_subgroup_is_normal                  ac/AlgTopCached.thy                  line 8171
+commutator_zero_exponent                       at/AlgTopChain.thy                   line 448
+compact_closed_FIP_inter_ne                    i/Top1_Ch5_8.thy                     line 781
+compact_discrete_finite                        ac3/AlgTopCached3.thy                line 92
+compact_embedding_dim_le                       i/Top1_Ch5_8.thy                     line 32033
+compact_finite                                 ac/AlgTopCached.thy                  line 41242
+compact_finite_subcover                        i/Top1_Ch3.thy                       line 4655
+compact_finite_union_subspace                  ac10/AlgTopCached10.thy              line 8199
+compact_graph_finite_arcs                      ac10/AlgTopCached10.thy              line 21712
+compact_hausdorff_continuous_closed_map        i/Top1_Ch3.thy                       line 6863
+compact_hausdorff_shrink_into_open             i/Top1_Ch3.thy                       line 11093
+compact_Icc_Times                              ac/AlgTopCached.thy                  line 41253
+compact_imp_complete                           i/Top1_Ch5_8.thy                     line 13783
+compact_imp_countably_compact                  i/Top1_Ch3.thy                       line 10379
+compact_imp_totally_bounded                    i/Top1_Ch5_8.thy                     line 13745
+compact_in_graph_finite_arcs                   ac3/AlgTopCached3.thy                line 191
+compact_in_hausdorff_closed                    i/Top1_Ch5_8.thy                     line 2218
+compact_in_open_eps_gap                        i/Top1_Ch5_8.thy                     line 18478
+compact_is_topology                            i/Top1_Ch3.thy                       line 4652
+compact_metric_imp_bounded                     i/Top1_Ch5_8.thy                     line 14714
+compact_metric_small_cover                     i/Top1_Ch5_8.thy                     line 29148
+compact_onI                                    i/Top1_Ch3.thy                       line 4660
+compact_on_subspace_self                       i/Top1_Ch5_8.thy                     line 19223
+compact_R2_bridge                              at/AlgTopChain.thy                   line 2035
+compact_R2_bridge                              pd/PolygonDisk.thy                   line 5
+compact_real_imp_top1_bounded_set              i/Top1_Ch3.thy                       line 7671
+compact_singleton                              ac/AlgTopCached.thy                  line 41233
+compact_strict                                 i/Top1_Ch3.thy                       line 4674
+compact_strict_cover_sub                       i/Top1_Ch3.thy                       line 4689
+compact_subspace_strict                        i/Top1_Ch3.thy                       line 4683
+compact_Times_general                          ac/AlgTopCached.thy                  line 41075
+compact_Un                                     ac/AlgTopCached.thy                  line 40988
+compact_Union                                  ac/AlgTopCached.thy                  line 41017
+comp_basepoint_change                          ac/AlgTopCached.thy                  line 5607
+completely_regular_imp_regular_on              i/Top1_Ch4.thy                       line 8222
+complete_metric_baire_aux                      i/Top1_Ch5_8.thy                     line 23104
+complete_tb_convergent_subseq                  i/Top1_Ch5_8.thy                     line 13892
+complete_totally_bounded_imp_compact           i/Top1_Ch5_8.thy                     line 14151
+component_eq_from_subset                       fib/AlgIsoFixedBase.thy              line 1214
+component_image_under_homeomorphism            fib/AlgIsoFixedBase.thy              line 5080
+comp_path_product                              ac/AlgTopCached.thy                  line 5587
+comp_path_reverse                              ac/AlgTopCached.thy                  line 5599
+connected_graph_has_maximal_tree               ac6/AlgTopCached6.thy                line 7
+connected_iff_clopen                           i/Top1_Ch3.thy                       line 128
+connected_open_delete_R2                       b/AlgTop_JCT_Base.thy                line 7937
+connected_open_delete_S2                       b/AlgTop_JCT_Base.thy                line 8060
+connected_open_delete_S2                       b/AlgTop_JCT_Base.thy                line 8309
+connected_strict                               i/Top1_Ch3.thy                       line 4678
+cont_at_metric_nbhd                            i/Top1_Ch5_8.thy                     line 14395
+continuous_closed_interval_imp_I_top           ac/AlgTopCached.thy                  line 150
+continuous_compose_product_R2                  b/AlgTop_JCT_Base.thy                line 8320
+continuous_funcs_eq_maps_metric                i/Top1_Ch5_8.thy                     line 14827
+continuous_funcs_eval_sub                      i/Top1_Ch5_8.thy                     line 21184
+continuous_image_closure_subset                i/Top1_Ch5_8.thy                     line 2185
+continuous_map_image_subspace_strict           i/Top1_Ch2.thy                       line 6683
+continuous_map_maps_to                         i/Top1_Ch2.thy                       line 6653
+continuous_map_maps_to_all                     i/Top1_Ch2.thy                       line 6661
+continuous_map_onI                             i/Top1_Ch2.thy                       line 6669
+continuous_map_preimage_open                   i/Top1_Ch2.thy                       line 6657
+continuous_map_preimage_open_all               i/Top1_Ch2.thy                       line 6665
+continuous_map_preimage_openin_on              i/Top1_Ch2.thy                       line 6675
+continuous_map_restrict_codomain               ac/AlgTopCached.thy                  line 14215
+continuous_maps_metric_on_eval                 i/Top1_Ch5_8.thy                     line 29656
+continuous_on_squeeze_at_point                 pd/PolygonDisk.thy                   line 947
+continuous_preimage_closedin                   i/Top1_Ch2.thy                       line 7528
+continuous_preserves_net_convergence           i/Top1_Ch5_8.thy                     line 33545
+continuous_preserves_path_homotopic            i/Top1_Ch9_13.thy                    line 10068
+continuous_restrict_to_interval                i/Top1_Ch5_8.thy                     line 12486
+convergent_lim_ge                              i/Top1_Ch5_8.thy                     line 11940
+convergent_lim_le                              i/Top1_Ch5_8.thy                     line 11922
+convex_hull_compact                            wh/AlgTopWedgeHelpers.thy            line 287
+convex_hull_compact_general                    wh/AlgTopWedgeHelpers.thy            line 225
+convex_hull_cone_sub                           wh/AlgTopWedgeHelpers.thy            line 98
+convex_hull_cone_sup                           wh/AlgTopWedgeHelpers.thy            line 44
+convex_in_not_mem_imp_all_gt                   i/Top1_Ch2.thy                       line 4468
+convex_in_not_mem_imp_all_lt                   i/Top1_Ch2.thy                       line 4496
+convex_in_refine_basis_intersection            i/Top1_Ch2.thy                       line 4525
+convex_real_subspace_path_connected            ac5/AlgTopCached5.thy                line 7
+convex_real_subspace_simply_connected          ac7/AlgTopCached7.thy                line 4340
+coset_e_is_N                                   ac/AlgTopCached.thy                  line 8709
+coset_eq_from_diff_in_H                        ac10/AlgTopCached10.thy              line 182
+coset_self_mem                                 ac/AlgTopCached.thy                  line 8698
+cos_sin_eq_imp                                 a0/AlgTop0.thy                       line 7480
+cos_sin_eq_small_diff                          a0/AlgTop0.thy                       line 7492
+co_subbasis_in_cc_subspace                     i/Top1_Ch5_8.thy                     line 18552
+countable_union_sigma_lf                       i/Top1_Ch5_8.thy                     line 2963
+covering_base_locally_path_connected           ac4/AlgTopCached4.thy                line 3813
+covering_component_over_arc_path_connected     ac5/AlgTopCached5.thy                line 397
+covering_graph_pi1_rank                        ac11/AlgTopCached11.thy              line 10740
+covering_induced_injective                     ac4/AlgTopCached4.thy                line 36
+covering_lifted_arc_family_card                ac11/AlgTopCached11.thy              line 10103
+covering_lifted_vertex_set_card                ac11/AlgTopCached11.thy              line 10266
+covering_lift_endpoint_contradiction           a0/AlgTop0.thy                       line 2577
+covering_lift_unique_connected                 ac4/AlgTopCached4.thy                line 179
+covering_lift_unique_path                      ac4/AlgTopCached4.thy                line 23
+covering_map_evenly_covered_neighborhood       ac4/AlgTopCached4.thy                line 16
+covering_map_is_open_map                       wh/AlgTopWedgeHelpers.thy            line 2945
+covering_map_surjective                        ac4/AlgTopCached4.thy                line 10
+covering_sheet_over_arc_path_connected         ac5/AlgTopCached5.thy                line 39
+cross2_antisym                                 at/AlgTopChain.thy                   line 2179
+cross2_antisym                                 pd/PolygonDisk.thy                   line 149
+cross2_centroid_sum_zero                       at/AlgTopChain.thy                   line 2137
+cross2_centroid_sum_zero                       pd/PolygonDisk.thy                   line 107
+cross2_linear_left_add                         at/AlgTopChain.thy                   line 2185
+cross2_linear_left_add                         pd/PolygonDisk.thy                   line 155
+cross2_linear_left_scale                       at/AlgTopChain.thy                   line 2189
+cross2_linear_left_scale                       pd/PolygonDisk.thy                   line 159
+cross2_linear_right_add                        at/AlgTopChain.thy                   line 2193
+cross2_linear_right_add                        pd/PolygonDisk.thy                   line 163
+cross2_linear_right_scale                      at/AlgTopChain.thy                   line 2197
+cross2_linear_right_scale                      pd/PolygonDisk.thy                   line 167
+cross2_self                                    at/AlgTopChain.thy                   line 2182
+cross2_self                                    pd/PolygonDisk.thy                   line 152
+cycle_arcs_form_scc                            ac11/AlgTopCached11.thy              line 5541
+cyclic_sign_change                             at/AlgTopChain.thy                   line 2278
+cyclic_sign_change                             pd/PolygonDisk.thy                   line 248
+cyclic_strict_sign_change                      at/AlgTopChain.thy                   line 2375
+cyclic_strict_sign_change                      pd/PolygonDisk.thy                   line 345
+deck_transformation_homeomorphism              ac4/AlgTopCached4.thy                line 4972
+deck_transformations_group                     ac4/AlgTopCached4.thy                line 4978
+deformation_retract_path_connected             ac7/AlgTopCached7.thy                line 4516
+deformation_retract_to_singleton_imp_simply_connected  wh/AlgTopWedgeHelpers.thy            line 2785
+degree_sum_leaf                                ac11/AlgTopCached11.thy              line 1334
+dense_in_compact_image                         i/Top1_Ch5_8.thy                     line 12068
+dense_in_own_closure                           i/Top1_Ch5_8.thy                     line 20742
+diff_Inter_eq                                  i/Top1_Ch2.thy                       line 4890
+diff_inter_subset                              fib/AlgIsoFixedBase.thy              line 1236
+dim_le_finite_closed_cover                     i/Top1_Ch5_8.thy                     line 32091
+dim_le_two_closed_cover                        i/Top1_Ch5_8.thy                     line 32081
+disjoint_subset_right                          fib/AlgIsoFixedBase.thy              line 1240
+dist_to_set_continuous                         i/Top1_Ch5_8.thy                     line 27795
+dist_to_set_lipschitz                          i/Top1_Ch5_8.thy                     line 27761
+dist_to_set_nonneg                             i/Top1_Ch2.thy                       line 16846
+dist_to_set_zero_iff_closure                   i/Top1_Ch2.thy                       line 16907
+dist_to_set_zero_iff_eps                       i/Top1_Ch2.thy                       line 16862
+double_basepoint_change_equiv                  i/Top1_Ch9_13.thy                    line 14542
+double_counting_sum                            ac11/AlgTopCached11.thy              line 1295
+doubleton_eq_iff                               ac/AlgTopCached.thy                  line 48489
+dunce_cap_hausdorff                            ac2/AlgTopCached2.thy                line 80
+dunce_cap_skeleton_is_circle                   ac2/AlgTopCached2.thy                line 570
+element_of_three_subset                        fib/AlgIsoFixedBase.thy              line 1210
+equicont_from_tb_cover                         i/Top1_Ch5_8.thy                     line 14422
+equicontinuous_covering_bound                  i/Top1_Ch5_8.thy                     line 21437
+equicontinuous_subset                          i/Top1_Ch5_8.thy                     line 14789
+eval_continuous_compact_convergence            i/Top1_Ch5_8.thy                     line 21706
+evenly_covered_open_subset                     ac4/AlgTopCached4.thy                line 3679
+exI4                                           svk/AlgTopSvK.thy                    line 4
+exists_pow2_inv_lt                             i/Top1_Ch4.thy                       line 6770
+exists_top1_dyadic_between_01                  i/Top1_Ch4.thy                       line 6793
+expansion_E_open                               i/Top1_Ch5_8.thy                     line 7915
+expansion_lf_from_auxiliary                    i/Top1_Ch5_8.thy                     line 7945
+exterior_ball_connected_R2                     h/AlgTopHelpers.thy                  line 39
+false_from_disjoint_nonempty                   fib/AlgIsoFixedBase.thy              line 1223
+filter_eq_replicate                            ag/AlgTopGroups.thy                  line 3396
+filter_pred_eq                                 ag/AlgTopGroups.thy                  line 4547
+finer_than_on_imp                              i/Top1_Ch2.thy                       line 1057
+finer_than_on_strict                           i/Top1_Ch2.thy                       line 1528
+fin_inter_open_on                              i/Top1_Ch5_8.thy                     line 14361
+finite_cover_enumerate                         i/Top1_Ch5_8.thy                     line 29663
+finite_covering_compact                        ac11/AlgTopCached11.thy              line 10384
+finite_distinct_list_of_set                    i/Top1_Ch4.thy                       line 11669
+finite_Func                                    i/Top1_Ch5_8.thy                     line 14520
+finite_range_const_subseq                      i/Top1_Ch5_8.thy                     line 32593
+finite_subset_compact                          i/Top1_Ch5_8.thy                     line 15017
+finite_tree_has_leaf                           ac11/AlgTopCached11.thy              line 9225
+finite_tree_has_leaf_arc                       ac11/AlgTopCached11.thy              line 9565
+finite_tree_remove_leaf_is_tree                ac11/AlgTopCached11.thy              line 1520
+finite_union_empty_interior                    i/Top1_Ch5_8.thy                     line 27702
+finite_union_finite_dim                        i/Top1_Ch5_8.thy                     line 27408
+finite_union_locally_finite                    i/Top1_Ch5_8.thy                     line 2890
+finite_wedge_pi1_free_with_chosen_loops        at/AlgTopChain.thy                   line 5565
+finite_wedge_pi1_free_with_chosen_loops_arb    ac8/AlgTopCached8.thy                line 275
+finite_wedge_pi1_free_with_generators          ac8/AlgTopCached8.thy                line 235
+first_countable_closure_imp_seq                i/Top1_Ch4.thy                       line 1580
+first_hit_sub_arc                              fi/AlgIsoFixed.thy                   line 3753
+first_isomorphism_theorem                      ac/AlgTopCached.thy                  line 9333
+first_isomorphism_theorem_forward              ac/AlgTopCached.thy                  line 9598
+flexible_arc_decomposition                     a0/AlgTop0.thy                       line 7509
+flip_t_continuous_product                      i/Top1_Ch9_13.thy                    line 407
+floor_nat_plus_frac                            i/Top1_Ch5_8.thy                     line 13240
+floor_nat_plus_frac_early                      i/Top1_Ch5_8.thy                     line 12140
+fold_fun_update_notin_fst                      i/Top1_Ch4.thy                       line 98
+foldr_in_subgroup                              at/AlgTopChain.thy                   line 5366
+foldr_mul_append                               ac/AlgTopCached.thy                  line 6296
+foldr_mul_closed                               ac/AlgTopCached.thy                  line 6276
+foldr_mul_in_group                             ag/AlgTopGroups.thy                  line 4025
+foldr_mul_replicate                            ag/AlgTopGroups.thy                  line 3386
+foldr_mul_rev_inv                              ac/AlgTopCached.thy                  line 6334
+foldr_path_product_base_homotopic              b0/AlgTop_JCT_Base0.thy              line 5603
+foldr_path_product_is_path                     b0/AlgTop_JCT_Base0.thy              line 5640
+foldr_path_product_loops_is_loop               pd/PolygonDisk.thy                   line 4121
+foldr_path_product_nulhomotopic                b/AlgTop_JCT_Base.thy                line 278
+foldr_path_product_pointwise_eq                ac8/AlgTopCached8.thy                line 421
+foldr_plus_map_bool                            ac12/AlgTopCached12.thy              line 83
+foldr_replicate_is_path_power                  ac7/AlgTopCached7.thy                line 158
+foldr_uniform_is_path_power                    ac7/AlgTopCached7.thy                line 165
+forest_euler_formula                           ac11/AlgTopCached11.thy              line 7017
+four_strips_connected                          h/AlgTopHelpers.thy                  line 19
+free_abelian_all_coords_zero_imp_e             ac12/AlgTopCached12.thy              line 442
+free_abelian_coordinate_projection             ag/AlgTopGroups.thy                  line 6006
+free_abelian_eval_e_zero_net_coeff             ag/AlgTopGroups.thy                  line 5601
+free_abelian_independence_transfer             at/AlgTopChain.thy                   line 1072
+free_abelian_invariant_under_iso               at/AlgTopChain.thy                   line 1201
+free_abelian_kernel_coordinate                 ag/AlgTopGroups.thy                  line 6078
+free_abelian_mod2_card                         ag/AlgTopGroups.thy                  line 8065
+free_abelian_reindex                           ac12/AlgTopCached12.thy              line 247
+free_abelian_torsion_free                      ac12/AlgTopCached12.thy              line 648
+free_abelian_word_kernel                       ag/AlgTopGroups.thy                  line 5181
+free_group_exponent_sum                        at/AlgTopChain.thy                   line 427
+free_group_full_on_cong                        ac10/AlgTopCached10.thy              line 12209
+free_group_full_reindex                        wh/AlgTopWedgeHelpers.thy            line 1743
+free_group_hom_exists                          at/AlgTopChain.thy                   line 10
+free_group_hom_generators_iso                  at/AlgTopChain.thy                   line 4717
+free_group_hom_subset_injective                ac9/AlgTopCached9.thy                line 9
+free_group_hom_unique                          ag/AlgTopGroups.thy                  line 2635
+free_group_invariant_under_iso                 ag/AlgTopGroups.thy                  line 2335
+free_group_iso_transfer                        ac7/AlgTopCached7.thy                line 4206
+free_group_rank_invariant_finite               at/AlgTopChain.thy                   line 1756
+free_group_realized_by_abstract_wedge          ac10/AlgTopCached10.thy              line 18656
+free_group_realized_by_wedge                   ac10/AlgTopCached10.thy              line 8240
+free_group_universal_property                  at/AlgTopChain.thy                   line 396
+free_group_word_kernel                         ag/AlgTopGroups.thy                  line 3110
+free_product_reduced_repr                      ac/AlgTopCached.thy                  line 10948
+free_product_trivial_factor_surj               ac/AlgTopCached.thy                  line 27169
+front_cancel_proper                            AlgTop.thy                           line 12034
+front_cancel_proper_direct                     AlgTop.thy                           line 10937
+front_cancel_realization_homeo                 AlgTop.thy                           line 769
+front_cancel_realization_homeo_proper          AlgTop.thy                           line 12056
+frontier_closed_sub                            ac/AlgTopCached.thy                  line 3608
+front_uncancel_realization_homeo               AlgTop.thy                           line 895
+fst_set_flip_rev                               ag/AlgTopGroups.thy                  line 78
+fundamental_group_class_members_equiv          i/Top1_Ch9_13.thy                    line 10872
+fundamental_group_induced_agree                ac/AlgTopCached.thy                  line 5932
+fundamental_group_induced_comp                 ac/AlgTopCached.thy                  line 5835
+fundamental_group_invg_class                   ac/AlgTopCached.thy                  line 13786
+fundamental_group_mul_eq_class                 i/Top1_Ch9_13.thy                    line 10888
+general_lifting_criterion                      ac4/AlgTopCached4.thy                line 492
+general_position_extend                        i/Top1_Ch5_8.thy                     line 28761
+generated_topology_contains_basis_elem         i/Top1_Ch5_8.thy                     line 16006
+geom_cauchy_bound                              i/Top1_Ch5_8.thy                     line 11839
+geom_cauchy_bound_aux                          i/Top1_Ch5_8.thy                     line 11817
+geom_cauchy_Cauchy                             i/Top1_Ch5_8.thy                     line 11852
+geom_cauchy_converges                          i/Top1_Ch5_8.thy                     line 11886
+geom_cauchy_lim_bound                          i/Top1_Ch5_8.thy                     line 11892
+gp_singleton                                   i/Top1_Ch5_8.thy                     line 29297
+gp_singleton_set                               i/Top1_Ch5_8.thy                     line 29279
+graph_arc_containment_via_open_interior        ac11/AlgTopCached11.thy              line 3288
+graph_arc_interior_open                        ac11/AlgTopCached11.thy              line 3115
+graph_coherent_any_decomposition               ac11/AlgTopCached11.thy              line 2877
+graph_connected_sub_covered_by_arcs            ac7/AlgTopCached7.thy                line 4698
+graph_covering_is_graph                        ac10/AlgTopCached10.thy              line 9824
+graph_cycle_retract                            ac11/AlgTopCached11.thy              line 4907
+graph_deformation_retract_helper               ac7/AlgTopCached7.thy                line 4896
+graph_euler_invariance                         ac11/AlgTopCached11.thy              line 4371
+graph_euler_rank                               ac11/AlgTopCached11.thy              line 9917
+graph_is_free                                  ac11/AlgTopCached11.thy              line 2586
+graph_iterated_subdivision_exists              ac11/AlgTopCached11.thy              line 3980
+graph_locally_path_connected                   ac10/AlgTopCached10.thy              line 9939
+graph_one_edge_pi1_iso_Z                       ac7/AlgTopCached7.thy                line 6581
+graph_pi1_free_weak                            ac10/AlgTopCached10.thy              line 12615
+graph_pi1_free_weak_apply                      ac10/AlgTopCached10.thy              line 12176
+graph_pi1_free_weak_finite                     ac7/AlgTopCached7.thy                line 7547
+graph_quotient_by_tree_wedge_of_circles        ac6/AlgTopCached6.thy                line 1248
+graph_remove_interior_points_sc                ac6/AlgTopCached6.thy                line 2034
+graph_same_vertices_same_arcs                  ac11/AlgTopCached11.thy              line 3582
+graph_selection_set_discrete                   ac3/AlgTopCached3.thy                line 127
+graph_semilocally_simply_connected             ac10/AlgTopCached10.thy              line 10896
+graph_subdivision_preserves_euler              ac11/AlgTopCached11.thy              line 2636
+graph_tree_free_pi1                            ac7/AlgTopCached7.thy                line 6481
+grid_from_per_piece_subdivisions               i/Top1_Ch9_13.thy                    line 7786
+grid_subdivision_UV                            ac/AlgTopCached.thy                  line 15124
+group_assoc                                    ac10/AlgTopCached10.thy              line 329
+group_assoc                                    ac/AlgTopCached.thy                  line 7524
+group_conj_reverse                             ac10/AlgTopCached10.thy              line 7
+group_conjugate_inv                            ac/AlgTopCached.thy                  line 8069
+group_conjugate_mul                            ac/AlgTopCached.thy                  line 8033
+group_e_in                                     ac10/AlgTopCached10.thy              line 455
+group_e_mem                                    ac/AlgTopCached.thy                  line 7518
+group_hom_comp                                 ac/AlgTopCached.thy                  line 7831
+group_hom_id                                   ac/AlgTopCached.thy                  line 7965
+group_id_left                                  ac/AlgTopCached.thy                  line 7527
+group_id_right                                 ac/AlgTopCached.thy                  line 7529
+group_inv_closed                               ac10/AlgTopCached10.thy              line 325
+group_inv_closed                               ac/AlgTopCached.thy                  line 7522
+group_inv_e                                    ac10/AlgTopCached10.thy              line 440
+group_inv_inv                                  ac/AlgTopCached.thy                  line 7609
+group_inv_inv_early                            ac/AlgTopCached.thy                  line 6237
+group_inv_left                                 ac/AlgTopCached.thy                  line 7531
+group_inv_mul                                  ac10/AlgTopCached10.thy              line 460
+group_inv_mul                                  ac/AlgTopCached.thy                  line 7567
+group_inv_product                              ag/AlgTopGroups.thy                  line 2915
+group_inv_right                                ac/AlgTopCached.thy                  line 7533
+group_iso_on_compose                           ag/AlgTopGroups.thy                  line 1859
+group_iso_on_image_normal_subgroup             ag/AlgTopGroups.thy                  line 1893
+group_iso_on_inverse                           at/AlgTopChain.thy                   line 4666
+group_iso_on_refl                              ag/AlgTopGroups.thy                  line 1849
+group_left_cancel                              ac/AlgTopCached.thy                  line 7551
+group_left_id                                  ac10/AlgTopCached10.thy              line 342
+group_left_inv                                 ac10/AlgTopCached10.thy              line 334
+group_mul_closed                               ac10/AlgTopCached10.thy              line 321
+group_mul_closed                               ac/AlgTopCached.thy                  line 7520
+group_pow_add                                  ag/AlgTopGroups.thy                  line 6764
+group_pow_in_group                             ag/AlgTopGroups.thy                  line 4047
+group_pow_in_group                             at/AlgTopChain.thy                   line 463
+group_right_cancel                             ac/AlgTopCached.thy                  line 7537
+group_right_id                                 ac10/AlgTopCached10.thy              line 346
+group_right_inv                                ac10/AlgTopCached10.thy              line 338
+groups_isomorphic_trans_fwd                    ac/AlgTopCached.thy                  line 893
+hausdorff_imp_T1_on                            i/Top1_Ch4.thy                       line 2401
+hausdorff_is_topology                          i/Top1_Ch2.thy                       line 5879
+hausdorff_net_unique_limit                     i/Top1_Ch5_8.thy                     line 33583
+hausdorff_onI                                  i/Top1_Ch3.thy                       line 4666
+hausdorff_on_of_inj_continuous_map             i/Top1_Ch2.thy                       line 6694
+hausdorff_product                              i/Top1_Ch5_8.thy                     line 20275
+hausdorff_separation                           i/Top1_Ch2.thy                       line 5882
+hausdorff_separation_strict                    i/Top1_Ch2.thy                       line 5889
+hausdorff_singleton_closed                     svk/AlgTopSvK.thy                    line 1220
+hausdorff_strict_is_strict                     i/Top1_Ch2.thy                       line 5904
+hausdorff_subspace                             i/Top1_Ch5_8.thy                     line 1916
+helix_covering_construction                    a0/AlgTop0.thy                       line 10
+helix_f_power_lift                             a0/AlgTop0.thy                       line 1453
+helix_g_lift_is_loop                           a0/AlgTop0.thy                       line 1116
+helix_shift_general_continuous                 ac/AlgTopCached.thy                  line 58773
+hgen_connecting_path_reduction                 ac7/AlgTopCached7.thy                line 584
+hgen_subdivision_only                          ac7/AlgTopCached7.thy                line 174
+hilbert_boundary_match                         i/Top1_Ch5_8.thy                     line 12393
+hilbert_entry_range                            i/Top1_Ch5_8.thy                     line 12207
+hilbert_entry_sub_quad_match_0                 i/Top1_Ch5_8.thy                     line 12358
+hilbert_exit_range                             i/Top1_Ch5_8.thy                     line 12210
+hilbert_exit_sub_quad_match_3                  i/Top1_Ch5_8.thy                     line 12362
+hilbert_quad_range                             i/Top1_Ch5_8.thy                     line 12213
+hilbert_rec_at_0                               i/Top1_Ch5_8.thy                     line 12366
+hilbert_rec_at_1                               i/Top1_Ch5_8.thy                     line 12379
+hilbert_rec_cauchy                             i/Top1_Ch5_8.thy                     line 12240
+hilbert_rec_continuous                         i/Top1_Ch5_8.thy                     line 12650
+hilbert_rec_dense                              i/Top1_Ch5_8.thy                     line 12353
+hilbert_rec_dense_strict                       i/Top1_Ch5_8.thy                     line 12293
+hilbert_rec_range                              i/Top1_Ch5_8.thy                     line 12216
+HOL_continuous_imp_order_topology_continuous   i/Top1_Ch5_8.thy                     line 20758
+HOL_open_imp_order_topology_on_UNIV            i/Top1_Ch5_8.thy                     line 1767
+homeomorphism_comp                             b/AlgTop_JCT_Base.thy                line 5617
+homeomorphism_compose                          ac/AlgTopCached.thy                  line 7849
+homeomorphism_image_open                       wh/AlgTopWedgeHelpers.thy            line 2903
+homeomorphism_inv_connected_bridge             fi/AlgIsoFixed.thy                   line 3229
+homeomorphism_inverse                          ac/AlgTopCached.thy                  line 7917
+homeomorphism_inverse                          b/AlgTop_JCT_Base.thy                line 5705
+homeomorphism_on_comp                          ac/AlgTopCached.thy                  line 48846
+homeomorphism_on_restrict                      ac/AlgTopCached.thy                  line 48917
+homeomorphism_preserves_dim_le                 i/Top1_Ch5_8.thy                     line 26759
+homeomorphism_preserves_lpc                    b/AlgTop_JCT_Base.thy                line 6395
+homeomorphism_preserves_path_connected         ac/AlgTopCached.thy                  line 40812
+homeomorphism_preserves_path_connected         b/AlgTop_JCT_Base.thy                line 1150
+homeomorphism_preserves_simply_connected       ac/AlgTopCached.thy                  line 40856
+homeomorphism_preserves_simply_connected       b/AlgTop_JCT_Base.thy                line 1205
+homeomorphism_preserves_simply_connected_forward  b/AlgTop_JCT_Base.thy                line 5751
+homeomorphism_reflects_simply_connected        b/AlgTop_JCT_Base.thy                line 5757
+homeomorphism_restrict_open                    ac4/AlgTopCached4.thy                line 3577
+homeomorphism_restrict_point                   b/AlgTop_JCT_Base.thy                line 5763
+hom_foldr_mul                                  at/AlgTopChain.thy                   line 514
+hom_foldr_mul_early                            ag/AlgTopGroups.thy                  line 6030
+hom_from_cyclic_Z_image_in_subgroup            ac/AlgTopCached.thy                  line 41675
+hom_from_Z_image_in_subgroup                   ac/AlgTopCached.thy                  line 41624
+hom_group_pow                                  at/AlgTopChain.thy                   line 490
+hom_group_pow_early                            ag/AlgTopGroups.thy                  line 6053
+hom_image_commutator_sub                       ac8/AlgTopCached8.thy                line 4189
+hom_image_in_subgroup_from_generators          at/AlgTopChain.thy                   line 5395
+hom_image_is_subgroup                          ac/AlgTopCached.thy                  line 7688
+homotopy_concat_continuous                     i/Top1_Ch9_13.thy                    line 502
+homotopy_const_continuous                      i/Top1_Ch9_13.thy                    line 356
+homotopy_induced_basepoint_change              i/Top1_Ch9_13.thy                    line 13983
+homotopy_lifting_rectangle_step                i/Top1_Ch9_13.thy                    line 7371
+homotopy_reverse_continuous                    i/Top1_Ch9_13.thy                    line 452
+hom_preserves_id                               ac/AlgTopCached.thy                  line 7631
+hom_preserves_inv                              ac/AlgTopCached.thy                  line 7657
+hom_word_product                               ag/AlgTopGroups.thy                  line 2245
+householder_S2_homeo                           b/AlgTop_JCT_Base.thy                line 4340
+II_topology_eq_subspace                        i/Top1_Ch9_13.thy                    line 304
+inclusion_gen_images_in_hom_image              at/AlgTopChain.thy                   line 5477
+inclusion_induced_class                        ac/AlgTopCached.thy                  line 14172
+inclusion_induced_class                        b0/AlgTop_JCT_Base0.thy              line 4801
+inclusion_induced_comp                         ac/AlgTopCached.thy                  line 43318
+inclusion_retraction_iso                       b0/AlgTop_JCT_Base0.thy              line 4844
+inclusion_sends_class                          fib/AlgIsoFixedBase.thy              line 1153
+increasing_interval_cover                      i/Top1_Ch9_13.thy                    line 7747
+indexed_shrinking                              i/Top1_Ch5_8.thy                     line 8645
+induced_hom_mul                                b0/AlgTop_JCT_Base0.thy              line 7896
+induced_id_eq_lam                              fib/AlgIsoFixedBase.thy              line 1125
+infinite_cyclic_common_power                   a0/AlgTop0.thy                       line 4391
+infinite_range_lpc_subseq                      i/Top1_Ch5_8.thy                     line 32649
+inj_hom_preimage_normal_closure                ac/AlgTopCached.thy                  line 43243
+intersection_of_subgroups_is_group             ac/AlgTopCached.thy                  line 7972
+interval_continuous_imp_abs_epsilon_delta      i/Top1_Ch5_8.thy                     line 29775
+interval_delete_connected_R2                   b/AlgTop_JCT_Base.thy                line 7809
+interval_eps_ball_open                         i/Top1_Ch5_8.thy                     line 12053
+interval_open_contains_eps_ball                i/Top1_Ch5_8.thy                     line 11994
+int_group_pow                                  at/AlgTopChain.thy                   line 476
+inv_into_preimage_eq                           i/Top1_Ch5_8.thy                     line 32190
+I_set_locally_path_connected                   ac10/AlgTopCached10.thy              line 9832
+is_hausdorff_on_of_homeomorphism_on            i/Top1_Ch3.thy                       line 10986
+iso_Z_generator_free_single                    ac10/AlgTopCached10.thy              line 12280
+is_topology_on_counterexample                  i/Top1_Ch2.thy                       line 46
+is_topology_on_strict_counterexample           i/Top1_Ch2.thy                       line 50
+is_topology_on_strictI                         i/Top1_Ch2.thy                       line 54
+is_topology_on_strict_imp                      i/Top1_Ch2.thy                       line 37
+is_topology_on_strict_opens_sub                i/Top1_Ch2.thy                       line 40
+is_topology_on_strict_Pow                      i/Top1_Ch2.thy                       line 58
+I_top_sub_closed_interval_top                  ac/AlgTopCached.thy                  line 130
+J_component_sub_theta_forces_eq                fib/AlgIsoFixedBase.thy              line 1257
+K4_cycle_is_SCC                                fib/AlgIsoFixedBase.thy              line 4774
+K4_final_contradiction                         fib/AlgIsoFixedBase.thy              line 1173
+K4_four_components_with_boundary               k5/K5_nonplanar.thy                  line 49
+K4_from_SCC                                    fi/AlgIsoFixed.thy                   line 7229
+K4_generator_loop_in_C                         fib/AlgIsoFixedBase.thy              line 2765
+K4_inclusion_surjective_at_x                   fib/AlgIsoFixedBase.thy              line 4834
+K4_nonadjacent_edges_different_components      fib/AlgIsoFixedBase.thy              line 1289
+K5_K4_sep                                      k5/K5_nonplanar.thy                  line 10
+kernel_is_normal_subgroup                      ac/AlgTopCached.thy                  line 7746
+lebesgue_number_lemma                          i/Top1_Ch5_8.thy                     line 14062
+left_right_coset_card_eq                       ac11/AlgTopCached11.thy              line 714
+Lemma_16_4_aux                                 i/Top1_Ch2.thy                       line 4273
+Lemma_23_1                                     i/Top1_Ch3.thy                       line 33
+Lemma_23_1_proper                              i/Top1_Ch3.thy                       line 40
+Lemma_23_2                                     i/Top1_Ch3.thy                       line 219
+Lemma_26_4                                     i/Top1_Ch3.thy                       line 6408
+Lemma_27_5                                     i/Top1_Ch3.thy                       line 8690
+Lemma_37_1                                     i/Top1_Ch5_8.thy                     line 55
+Lemma_37_2                                     i/Top1_Ch5_8.thy                     line 281
+Lemma_38_1                                     i/Top1_Ch5_8.thy                     line 1478
+Lemma_38_3                                     i/Top1_Ch5_8.thy                     line 2095
+Lemma_39_1                                     i/Top1_Ch5_8.thy                     line 3787
+Lemma_39_2                                     i/Top1_Ch5_8.thy                     line 3857
+Lemma_40_1                                     i/Top1_Ch5_8.thy                     line 5115
+Lemma_40_1_step1                               i/Top1_Ch5_8.thy                     line 4427
+Lemma_40_1_step2                               i/Top1_Ch5_8.thy                     line 4677
+Lemma_40_1_step3                               i/Top1_Ch5_8.thy                     line 4807
+Lemma_40_2                                     i/Top1_Ch5_8.thy                     line 5597
+Lemma_41_3                                     i/Top1_Ch5_8.thy                     line 7504
+Lemma_41_6                                     i/Top1_Ch5_8.thy                     line 8389
+Lemma_43_1                                     i/Top1_Ch5_8.thy                     line 9695
+Lemma_43_3                                     i/Top1_Ch5_8.thy                     line 9966
+Lemma_45_2                                     i/Top1_Ch5_8.thy                     line 14483
+Lemma_45_3                                     i/Top1_Ch5_8.thy                     line 14547
+Lemma_46_3                                     i/Top1_Ch5_8.thy                     line 16238
+Lemma_46_4                                     i/Top1_Ch5_8.thy                     line 16347
+Lemma_48_1                                     i/Top1_Ch5_8.thy                     line 22511
+Lemma_48_3                                     i/Top1_Ch5_8.thy                     line 23808
+Lemma_48_4                                     i/Top1_Ch5_8.thy                     line 24010
+Lemma_50_4                                     i/Top1_Ch5_8.thy                     line 29042
+Lemma_50_4_indexed                             i/Top1_Ch5_8.thy                     line 29417
+Lemma_50_4_indexed_ind                         i/Top1_Ch5_8.thy                     line 29312
+Lemma_51_1_homotopic_refl                      i/Top1_Ch9_13.thy                    line 379
+Lemma_51_1_homotopic_sym                       i/Top1_Ch9_13.thy                    line 467
+Lemma_51_1_homotopic_trans                     i/Top1_Ch9_13.thy                    line 706
+Lemma_51_1_path_homotopic_refl                 i/Top1_Ch9_13.thy                    line 752
+Lemma_51_1_path_homotopic_sym                  i/Top1_Ch9_13.thy                    line 788
+Lemma_51_1_path_homotopic_trans                i/Top1_Ch9_13.thy                    line 1120
+Lemma_52_3_simply_connected_unique_paths       ac/AlgTopCached.thy                  line 730
+Lemma_54_1_path_lifting                        i/Top1_Ch9_13.thy                    line 6553
+Lemma_54_1_uniqueness                          i/Top1_Ch9_13.thy                    line 7152
+Lemma_54_2_homotopy_lifting                    i/Top1_Ch9_13.thy                    line 8269
+Lemma_55_1_retract_injective                   i/Top1_Ch9_13.thy                    line 11594
+Lemma_55_3_backward                            i/Top1_Ch9_13.thy                    line 12324
+Lemma_55_3_nulhomotopic_characterization       i/Top1_Ch9_13.thy                    line 12500
+Lemma_58_1_basepoint_fixed                     b0/AlgTop_JCT_Base0.thy              line 4067
+Lemma_58_5_basepoint_change                    b0/AlgTop_JCT_Base0.thy              line 4197
+Lemma_60_5_figure_eight_not_abelian            ac/AlgTopCached.thy                  line 39917
+Lemma_61_1_components_correspond               b/AlgTop_JCT_Base.thy                line 7249
+Lemma_61_2_nulhomotopy                         b/AlgTop_JCT_Base.thy                line 6253
+Lemma_61_2_nulhomotopy_textbook                b/AlgTop_JCT_Base.thy                line 8579
+Lemma_62_1_homotopy_extension                  ac/AlgTopCached.thy                  line 1113
+Lemma_62_2_BorsukLemma                         ac/AlgTopCached.thy                  line 2023
+Lemma_64_1_theta_space_three_components        ac/AlgTopCached.thy                  line 52257
+Lemma_64_3_K4_four_components                  ac/AlgTopCached.thy                  line 53295
+Lemma_65_1                                     fi/AlgIsoFixed.thy                   line 739
+Lemma_65_1_exists_basepoint                    fi/AlgIsoFixed.thy                   line 1319
+Lemma_65_1_K4_subgraph                         ac/AlgTopCached.thy                  line 55121
+Lemma_67_7_free_abelian_extension              ag/AlgTopGroups.thy                  line 5651
+Lemma_68_3_extension_property                  ac/AlgTopCached.thy                  line 11323
+Lemma_68_9_normal_closure_conjugates           ac/AlgTopCached.thy                  line 8291
+Lemma_69_3_commutator_in_kernel                ac/AlgTopCached.thy                  line 8551
+Lemma_77_1_step1                               AlgTop.thy                           line 676
+Lemma_84_2_tree_union_arc                      ac3/AlgTopCached3.thy                line 822
+Lemma_84_6_two_component_generation            ac7/AlgTopCached7.thy                line 1031
+limit_point_imp_closure                        i/Top1_Ch5_8.thy                     line 32628
+limit_point_strict_nbhd                        i/Top1_Ch2.thy                       line 5681
+line_0half_to_half0_avoids_zero                ac/AlgTopCached.thy                  line 40476
+line_path_in_punctured_disk                    ac/AlgTopCached.thy                  line 40359
+line_to_hub_avoids_zero                        ac/AlgTopCached.thy                  line 40442
+locally_connected_at_strict                    i/Top1_Ch3.thy                       line 2831
+locally_finite_sum_continuous                  i/Top1_Ch5_8.thy                     line 8572
+locally_metrizable_paracompact_imp_sigma_lf_basis  i/Top1_Ch5_8.thy                     line 9459
+locally_path_connected_at_strict               i/Top1_Ch3.thy                       line 3081
+loop_agree_on_I                                i/Top1_Ch9_13.thy                    line 10118
+loop_class_cong                                ac10/AlgTopCached10.thy              line 351
+loop_equiv_class_pointwise_I                   ac8/AlgTopCached8.thy                line 574
+loop_equiv_subspace_superspace                 ac/AlgTopCached.thy                  line 13671
+loop_factors_through_S1                        b/AlgTop_JCT_Base.thy                line 11040
+loop_nulhomotopic_via_connected_obstruction    b/AlgTop_JCT_Base.thy                line 12099
+loop_on_superspace_via_homeo                   at/AlgTopChain.thy                   line 5509
+loop_split_at_vertices                         pd/PolygonDisk.thy                   line 4756
+loop_split_first                               pd/PolygonDisk.thy                   line 4143
+loop_split_inductive                           pd/PolygonDisk.thy                   line 4471
+loop_subdivision_UV                            ac/AlgTopCached.thy                  line 15732
+lp_compact_first_countable_imp_seq_compact     i/Top1_Ch5_8.thy                     line 33337
+lp_compact_not_imp_compact_in_general          i/Top1_Ch5_8.thy                     line 33330
+map_const_upt_replicate                        ac7/AlgTopCached7.thy                line 162
+map_into_R2_nulhomotopic                       b/AlgTop_JCT_Base.thy                line 5952
+map_into_S2_minus_point_nulhomotopic           b/AlgTop_JCT_Base.thy                line 6153
+map_map_pair_compose                           wh/AlgTopWedgeHelpers.thy            line 1736
+map_pair_fst_append                            ag/AlgTopGroups.thy                  line 159
+map_pair_fst_flip                              ag/AlgTopGroups.thy                  line 144
+map_pair_fst_flip_rev                          ag/AlgTopGroups.thy                  line 148
+map_pair_fst_rev                               ag/AlgTopGroups.thy                  line 141
+mapped_word_fst_flip_rev                       ag/AlgTopGroups.thy                  line 102
+map_tl_pair                                    ag/AlgTopGroups.thy                  line 30
+max_conn_comp_covers                           ac3/AlgTopCached3.thy                line 47
+max_conn_comp_mem                              ac3/AlgTopCached3.thy                line 40
+max_conn_comp_ne                               ac3/AlgTopCached3.thy                line 43
+max_conn_comp_sub                              ac3/AlgTopCached3.thy                line 37
+maximal_tree_reaches_all_arcs                  ac6/AlgTopCached6.thy                line 1259
+mem_of_elem_eq                                 i/Top1_Ch5_8.thy                     line 806
+mem_of_eq                                      i/Top1_Ch5_8.thy                     line 804
+mem_of_eq_sym                                  i/Top1_Ch5_8.thy                     line 805
+metric_bounded_subset_mono                     i/Top1_Ch5_8.thy                     line 14808
+metric_closed_ball_closed                      i/Top1_Ch5_8.thy                     line 15046
+metric_continuous_imp_epsilon_delta            i/Top1_Ch5_8.thy                     line 29741
+metric_conv_eventually_in_closed               i/Top1_Ch5_8.thy                     line 11465
+metric_epsilon_delta_imp_continuous            i/Top1_Ch5_8.thy                     line 29691
+metric_limit_preserves_bound                   i/Top1_Ch5_8.thy                     line 10796
+metric_limit_preserves_le                      i/Top1_Ch5_8.thy                     line 29495
+metric_on_subset                               i/Top1_Ch5_8.thy                     line 11456
+metric_on_sym                                  i/Top1_Ch5_8.thy                     line 29485
+metric_on_triangle                             i/Top1_Ch5_8.thy                     line 29490
+metric_satisfies_T1                            i/Top1_Ch5_8.thy                     line 32578
+metric_seq_closed_imp_closed                   i/Top1_Ch5_8.thy                     line 10950
+metric_seq_conv_iff                            i/Top1_Ch5_8.thy                     line 10860
+metric_seq_limit_eq                            i/Top1_Ch5_8.thy                     line 29552
+metric_to_interval_eps_delta                   i/Top1_Ch5_8.thy                     line 11957
+metric_topology_ball_neighborhood              i/Top1_Ch5_8.thy                     line 18000
+metric_topology_hausdorff                      i/Top1_Ch5_8.thy                     line 5126
+metric_topology_is_strict                      i/Top1_Ch2.thy                       line 11779
+metric_topology_open_from_balls                i/Top1_Ch5_8.thy                     line 18038
+metric_topology_open_sub                       i/Top1_Ch5_8.thy                     line 20647
+metric_triangle4                               i/Top1_Ch5_8.thy                     line 14510
+metrizable_closedin_complement_openin_on       i/Top1_Ch5_8.thy                     line 5250
+metrizable_imp_hausdorff                       i/Top1_Ch5_8.thy                     line 5220
+metrizable_imp_regular                         i/Top1_Ch5_8.thy                     line 5256
+metrizable_imp_strict                          i/Top1_Ch2.thy                       line 11786
+metrizable_imp_strict                          i/Top1_Ch5_8.thy                     line 5230
+metrizable_openin_on                           i/Top1_Ch5_8.thy                     line 5245
+metrizable_open_sub_carrier                    i/Top1_Ch5_8.thy                     line 5240
+move_one_puncture                              fi/AlgIsoFixed.thy                   line 4391
+multi                                          AlgTop.thy                           line 572
+munkres_basis_property                         i/Top1_Ch5_8.thy                     line 9379
+Munkres_Step_1_arc_splice                      fi/AlgIsoFixed.thy                   line 1515
+Munkres_Step_4_move_punctures                  fi/AlgIsoFixed.thy                   line 6247
+Munkres_xaxis_segment                          fi/AlgIsoFixed.thy                   line 4029
+nat_directed_set                               i/Top1_Ch5_8.thy                     line 33426
+neighborhood_of_strict_carrier                 i/Top1_Ch2.thy                       line 5463
+neighborhood_of_strict_imp                     i/Top1_Ch2.thy                       line 5459
+neighborhood_of_to_strict                      i/Top1_Ch2.thy                       line 5467
+net_convergence_iff_seq_convergence            i/Top1_Ch5_8.thy                     line 33432
+net_converges_eventually_strict                i/Top1_Ch5_8.thy                     line 33480
+net_limit_in_closure                           i/Top1_Ch5_8.thy                     line 33463
+no_matching_pair_word_ne_e                     ag/AlgTopGroups.thy                  line 4637
+non_adjacent_cone_disjoint                     AlgTop.thy                           line 1060
+nonempty_inter_from_subset                     fib/AlgIsoFixedBase.thy              line 1219
+normal_closure_least                           ag/AlgTopGroups.thy                  line 2069
+normal_coset_eq                                ac/AlgTopCached.thy                  line 8732
+normal_coset_mul_eq                            ac/AlgTopCached.thy                  line 8886
+normal_finite_cover_bump_family                i/Top1_Ch4.thy                       line 16997
+normal_imp_completely_regular_on               i/Top1_Ch4.thy                       line 11546
+normal_imp_regular_on                          i/Top1_Ch4.thy                       line 4670
+normal_insert_open_between                     i/Top1_Ch4.thy                       line 4646
+normal_is_T1                                   i/Top1_Ch4.thy                       line 3238
+normalizer_is_group                            ac10/AlgTopCached10.thy              line 495
+normal_refine_closed_into_open                 i/Top1_Ch4.thy                       line 4374
+normal_separation                              i/Top1_Ch4.thy                       line 3241
+normal_separation_openin_on                    i/Top1_Ch4.thy                       line 3248
+normal_shrink_finite_open_cover                i/Top1_Ch4.thy                       line 16479
+normal_subgroup_generated_is_normal            ac/AlgTopCached.thy                  line 6781
+normal_urysohn_bump_support                    i/Top1_Ch4.thy                       line 16917
+normal_urysohn_initial_step                    i/Top1_Ch4.thy                       line 6212
+north_pole_in_S2                               b/AlgTop_JCT_Base.thy                line 3789
+not_connected_imp_no_path                      a0/AlgTop0.thy                       line 4823
+not_reduced_has_cancel                         ag/AlgTopGroups.thy                  line 2875
+nth_append_skip                                AlgTop.thy                           line 655
+nth_append_take                                AlgTop.thy                           line 658
+nulhomotopic_homotopic_trans                   i/Top1_Ch9_13.thy                    line 13164
+nulhomotopic_transfer                          b/AlgTop_JCT_Base.thy                line 6113
+nulhomotopic_trivializes_loops                 i/Top1_Ch9_13.thy                    line 16045
+nulhomotopic_trivializes_loops_general         i/Top1_Ch9_13.thy                    line 14652
+nulhomotopic_via_convex_R2                     ac/AlgTopCached.thy                  line 3626
+open_cover_subdivision_01                      i/Top1_Ch9_13.thy                    line 6333
+open_dense_inter_nonempty                      i/Top1_Ch5_8.thy                     line 27692
+open_disk_convex                               ac/AlgTopCached.thy                  line 40184
+open_disk_is_topology                          ac/AlgTopCached.thy                  line 40268
+open_disk_path_connected                       ac/AlgTopCached.thy                  line 40288
+open_disk_simply_connected                     ac/AlgTopCached.thy                  line 40617
+open_disk_topology_eq                          ac/AlgTopCached.thy                  line 40258
+open_family_basis_criterion                    i/Top1_Ch5_8.thy                     line 9341
+openin_complement_closedin                     b/AlgTop_JCT_Base.thy                line 266
+open_in_generated_basis_neighborhood           i/Top1_Ch5_8.thy                     line 17991
+openin_on_mem                                  i/Top1_Ch2.thy                       line 1031
+openin_on_sub                                  i/Top1_Ch2.thy                       line 1034
+openin_on_sub_strict                           i/Top1_Ch2.thy                       line 1037
+open_in_sub_imp_open_general                   ac/AlgTopCached.thy                  line 52079
+open_in_subspace_if_open_and_subset            ac/AlgTopCached.thy                  line 52069
+open_interval_in_abs_metric_topology           i/Top1_Ch4.thy                       line 11095
+open_interval_in_bounded_metric_topology       i/Top1_Ch2.thy                       line 12556
+open_interval_in_order_topology                i/Top1_Ch2.thy                       line 6194
+open_interval_is_open                          ac/AlgTopCached.thy                  line 48
+open_nonempty_R2_has_two_points                b/AlgTop_JCT_Base.thy                line 7756
+open_ray_gt_in_abs_metric_topology             i/Top1_Ch4.thy                       line 11168
+open_ray_gt_in_bounded_metric_topology         i/Top1_Ch2.thy                       line 12685
+open_ray_gt_in_order_topology                  i/Top1_Ch2.thy                       line 6183
+open_ray_gt_is_open                            ac/AlgTopCached.thy                  line 34
+open_ray_lt_in_abs_metric_topology             i/Top1_Ch4.thy                       line 11219
+open_ray_lt_in_bounded_metric_topology         i/Top1_Ch2.thy                       line 12773
+open_ray_lt_in_order_topology                  i/Top1_Ch2.thy                       line 6172
+open_ray_lt_is_open                            ac/AlgTopCached.thy                  line 41
+open_subset_locally_path_connected             b/AlgTop_JCT_Base.thy                line 6195
+op_minus_continuous_on_interval                i/Top1_Ch9_13.thy                    line 393
+order_topology_on_UNIV_eq                      i/Top1_Ch2.thy                       line 2353
+order_topology_on_UNIV_eq_bounded_metric_topology_real  i/Top1_Ch2.thy                       line 12861
+order_topology_on_UNIV_eq_HOL_open             i/Top1_Ch5_8.thy                     line 1800
+order_topology_on_UNIV_imp_HOL_open            i/Top1_Ch5_8.thy                     line 1752
+order_topology_on_UNIV_is_topology_on          i/Top1_Ch2.thy                       line 2981
+order_topology_on_UNIV_open_interval_subset_real  i/Top1_Ch2.thy                       line 13676
+order_topology_on_UNIV_real_eq_abs_metric_topology  i/Top1_Ch4.thy                       line 11270
+pair_const_t_continuous                        i/Top1_Ch9_13.thy                    line 7127
+pair_s_const_continuous                        i/Top1_Ch9_13.thy                    line 7100
+paracompact_closure_avoidance_step             i/Top1_Ch4.thy                       line 18722
+paracompact_closure_union_avoidance            i/Top1_Ch5_8.thy                     line 7165
+paracompact_hausdorff_imp_regular              i/Top1_Ch5_8.thy                     line 6923
+paracompact_regular_imp_normal                 i/Top1_Ch5_8.thy                     line 7193
+pasting_deformation_retracts_to_point          wh/AlgTopWedgeHelpers.thy            line 2055
+pasting_deformation_retract_to_subspace        wh/AlgTopWedgeHelpers.thy            line 2444
+pasting_lemma_two_closed                       i/Top1_Ch5_8.thy                     line 12415
+path_connected_finite_union_common_point       svk/AlgTopSvK.thy                    line 525
+path_connected_imp_connected                   ac4/AlgTopCached4.thy                line 411
+path_connected_imp_connected                   b/AlgTop_JCT_Base.thy                line 6977
+path_connected_union                           b/AlgTop_JCT_Base.thy                line 81
+path_homotopic_path_power                      a0/AlgTop0.thy                       line 4010
+path_homotopic_product_left                    i/Top1_Ch9_13.thy                    line 2486
+path_homotopic_product_right                   i/Top1_Ch9_13.thy                    line 2691
+path_homotopic_reverse                         a0/AlgTop0.thy                       line 4289
+path_homotopic_reverse_congruence              ac/AlgTopCached.thy                  line 13715
+path_homotopic_same_class                      fib/AlgIsoFixedBase.thy              line 1134
+path_homotopic_subspace_superspace             ac/AlgTopCached.thy                  line 13628
+path_homotopic_subspace_to_ambient             b0/AlgTop_JCT_Base0.thy              line 7805
+path_homotopy_concat_continuous                i/Top1_Ch9_13.thy                    line 843
+path_homotopy_const_continuous                 i/Top1_Ch9_13.thy                    line 730
+path_homotopy_reverse_continuous               i/Top1_Ch9_13.thy                    line 771
+path_in_subspace_imp_path_in_ambient           b/AlgTop_JCT_Base.thy                line 46
+path_in_subspace_is_path_in_ambient            b0/AlgTop_JCT_Base0.thy              line 5576
+path_in_subspace_is_path_in_ambient            b/AlgTop_JCT_Base.thy                line 19
+path_in_subspace_is_path_in_space              a0/AlgTop0.thy                       line 1415
+path_power_mult                                a0/AlgTop0.thy                       line 4095
+path_power_product_add                         a0/AlgTop0.thy                       line 4049
+path_power_reverse                             a0/AlgTop0.thy                       line 4135
+path_product_split                             b0/AlgTop_JCT_Base0.thy              line 6055
+path_reverse_involution                        ac/AlgTopCached.thy                  line 5595
+paths_agree_on_I_path_homotopic                b/AlgTop_JCT_Base.thy                line 10995
+pi1_S2_minus_two_points_infinite_cyclic        a0/AlgTop0.thy                       line 2961
+PiE_closed_sets_closed_in_product              i/Top1_Ch5_8.thy                     line 21133
+PiE_inter                                      i/Top1_Ch5_8.thy                     line 20328
+pointwise_bounded_subset                       i/Top1_Ch5_8.thy                     line 14813
+pointwise_d_imp_bm_le                          i/Top1_Ch5_8.thy                     line 16103
+pointwise_d_imp_sup_bm_strict                  i/Top1_Ch5_8.thy                     line 16119
+polygonal_region_compact                       at/AlgTopChain.thy                   line 2548
+polygonal_region_compact                       pd/PolygonDisk.thy                   line 518
+polygonal_region_convex_combo                  at/AlgTopChain.thy                   line 2486
+polygonal_region_convex_combo                  pd/PolygonDisk.thy                   line 456
+polygon_homeomorphic_to_disk_with_boundary     at/AlgTopChain.thy                   line 2827
+polygon_homeomorphic_to_disk_with_boundary     pd/PolygonDisk.thy                   line 1043
+polygon_sub_rearrange_sigma_props              AlgTop.thy                           line 11158
+preimage_normal_subgroup                       ac/AlgTopCached.thy                  line 27286
+presentation_from_free_quotient                wh/AlgTopWedgeHelpers.thy            line 1512
+presented_by_commutators_abelian               ac8/AlgTopCached8.thy                line 4722
+presented_comm_relator_abelianization          ac8/AlgTopCached8.thy                line 3887
+product_basis_finitely_many_nontrivial         i/Top1_Ch2.thy                       line 8863
+product_basis_subspace_iff                     i/Top1_Ch5_8.thy                     line 20332
+product_coarser_than_box                       i/Top1_Ch2.thy                       line 8900
+product_group_is_group                         ac/AlgTopCached.thy                  line 11215
+product_groups_isomorphic                      ac/AlgTopCached.thy                  line 920
+product_of_closedin_is_closedin                i/Top1_Ch5_8.thy                     line 20601
+product_rect_open                              i/Top1_Ch2.thy                       line 3012
+product_subspace_eq_pointwise                  i/Top1_Ch5_8.thy                     line 21176
+product_subspace_topology_eq                   i/Top1_Ch5_8.thy                     line 20537
+product_subspace_topology_eq_const             i/Top1_Ch5_8.thy                     line 20568
+product_topology_coord_open                    i/Top1_Ch5_8.thy                     line 20217
+product_topology_is_strict                     i/Top1_Ch2.thy                       line 8829
+product_topology_on_is_topology_on             i/Top1_Ch2.thy                       line 3046
+product_topology_on_open_sets                  i/Top1_Ch9_13.thy                    line 57
+projective_scheme_length                       ac2/AlgTopCached2.thy                line 1150
+projective_scheme_nth                          ac2/AlgTopCached2.thy                line 1154
+projective_scheme_vertex_connectivity          ac2/AlgTopCached2.thy                line 1212
+psi_angle_cases_agree                          pd/PolygonDisk.thy                   line 798
+psi_continuous_S1                              i/Top1_Ch9_13.thy                    line 14789
+punctured_open_disk_path_connected             ac/AlgTopCached.thy                  line 40486
+pw_sub_cc_topology                             i/Top1_Ch5_8.thy                     line 15841
+quotient_by_commutator_is_abelian              ac/AlgTopCached.thy                  line 9045
+quotient_carrier_memI                          ac10/AlgTopCached10.thy              line 815
+quotient_double_by_kernel                      ag/AlgTopGroups.thy                  line 6959
+quotient_group_is_group                        ac/AlgTopCached.thy                  line 9199
+quotient_group_iso_transfer                    ac/AlgTopCached.thy                  line 40033
+quotient_group_universal_property              ag/AlgTopGroups.thy                  line 2079
+quotient_induced_hom                           ac/AlgTopCached.thy                  line 12739
+quotient_of_scheme_cut_paste                   AlgTop.thy                           line 661
+quotient_of_scheme_cut_paste2                  AlgTop.thy                           line 695
+quotient_of_scheme_cut_paste_opp               AlgTop.thy                           line 706
+quotient_of_scheme_cut_paste_opp_proper        AlgTop.thy                           line 11302
+quotient_of_scheme_cut_paste_proper            AlgTop.thy                           line 11732
+quotient_of_scheme_extract                     ac/AlgTopCached.thy                  line 31345
+quotient_of_scheme_extract_full                wh/AlgTopWedgeHelpers.thy            line 329
+quotient_of_scheme_reverse                     AlgTop.thy                           line 625
+quotient_of_scheme_transfer_bij_rel            AlgTop.thy                           line 510
+quotient_of_scheme_uncancel_front              AlgTop.thy                           line 783
+quotient_of_scheme_uncancel_front_proper       AlgTop.thy                           line 12071
+quotient_of_scheme_uncancel_proved             AlgTop.thy                           line 911
+quotient_projection_properties                 ac/AlgTopCached.thy                  line 8976
+quotient_rearrangement_homeomorphism           AlgTop.thy                           line 556
+quotient_scheme_flip_labels                    AlgTop.thy                           line 580
+R2_locally_path_connected                      b/AlgTop_JCT_Base.thy                line 6672
+R2_minus_origin_not_simply_connected           b/AlgTop_JCT_Base.thy                line 4796
+R2_minus_point_not_simply_connected            b/AlgTop_JCT_Base.thy                line 5090
+R2_minus_point_path_connected                  b/AlgTop_JCT_Base.thy                line 5407
+R2_open_ball_path_connected                    b/AlgTop_JCT_Base.thy                line 6553
+R2_simply_connected                            b/AlgTop_JCT_Base.thy                line 4136
+R2_straight_line_path                          b/AlgTop_JCT_Base.thy                line 5375
+R2_subspace_I_continuous_on_transfer           i/Top1_Ch9_13.thy                    line 13347
+real_order_topology_hausdorff                  i/Top1_Ch5_8.thy                     line 1870
+reduced_word_transfer                          ag/AlgTopGroups.thy                  line 2294
+regular_imp_hausdorff_on                       i/Top1_Ch4.thy                       line 2425
+regular_refine_point_into_open                 i/Top1_Ch4.thy                       line 2602
+regular_separation_openin_on                   i/Top1_Ch4.thy                       line 2584
+remdups_fst_single_pol                         ag/AlgTopGroups.thy                  line 4599
+remdups_map_inj_on                             ag/AlgTopGroups.thy                  line 4573
+reparam_path_homotopy                          ac/AlgTopCached.thy                  line 15568
+retract_attached_arc                           ac11/AlgTopCached11.thy              line 4561
+right_coset_eq_from_product_in_H               ac11/AlgTopCached11.thy              line 21
+right_top_strip_connected                      h/AlgTopHelpers.thy                  line 8
+RN_covering_order_N_plus_1                     i/Top1_Ch5_8.thy                     line 31842
+RN_grid_covering_covers                        i/Top1_Ch5_8.thy                     line 31127
+RN_grid_covering_order                         i/Top1_Ch5_8.thy                     line 31335
+RN_grid_covering_sc_covers                     i/Top1_Ch5_8.thy                     line 31455
+RN_grid_covering_sc_order                      i/Top1_Ch5_8.thy                     line 31649
+RN_grid_cube_diam                              i/Top1_Ch5_8.thy                     line 31311
+RN_grid_cube_open                              i/Top1_Ch5_8.thy                     line 31263
+RN_grid_cube_sc_open                           i/Top1_Ch5_8.thy                     line 31501
+RN_grid_family_disjoint                        i/Top1_Ch5_8.thy                     line 31115
+RN_shifted_cube_disjoint_coord                 i/Top1_Ch5_8.thy                     line 31053
+RN_shifted_cube_dist_lt_1                      i/Top1_Ch5_8.thy                     line 31281
+RN_shifted_cube_eq_if_agree                    i/Top1_Ch5_8.thy                     line 31092
+RN_shifted_cube_eq_iff                         i/Top1_Ch5_8.thy                     line 31097
+RN_shifted_cube_eq_PiE                         i/Top1_Ch5_8.thy                     line 31221
+RN_shifted_cube_in_product_basis               i/Top1_Ch5_8.thy                     line 31236
+RN_shifted_cube_nonempty                       i/Top1_Ch5_8.thy                     line 31077
+RN_shifted_cube_sc_diam                        i/Top1_Ch5_8.thy                     line 31573
+RN_shifted_cube_sc_dist_le                     i/Top1_Ch5_8.thy                     line 31529
+RN_shifted_cube_sc_eq_iff                      i/Top1_Ch5_8.thy                     line 31600
+RN_shifted_cube_sc_eq_PiE                      i/Top1_Ch5_8.thy                     line 31487
+RN_unit_covering_order                         i/Top1_Ch5_8.thy                     line 31418
+Rpow_hyperplane_closed                         i/Top1_Ch5_8.thy                     line 28659
+Rpow_hyperplane_empty_interior                 i/Top1_Ch5_8.thy                     line 27613
+Rpow_sq_metric_coord_bound                     i/Top1_Ch5_8.thy                     line 29460
+Rpow_sq_metric_eq_square_metric                i/Top1_Ch5_8.thy                     line 28189
+Rpow_sq_metric_nonneg                          i/Top1_Ch5_8.thy                     line 28105
+Rpow_sq_metric_sep                             i/Top1_Ch5_8.thy                     line 28120
+Rpow_sq_metric_sym                             i/Top1_Ch5_8.thy                     line 28097
+Rpow_sq_metric_triangle                        i/Top1_Ch5_8.thy                     line 28152
+Rpow_sup_dist_coord_bound                      i/Top1_Ch5_8.thy                     line 29471
+R_to_S1_interval_homeomorphism                 wh/AlgTopWedgeHelpers.thy            line 3055
+S1_closed_in_B2                                ac2/AlgTopCached2.thy                line 45
+S1_compact                                     b/AlgTop_JCT_Base.thy                line 10659
+S1_deformation_retract_B2_minus_zero           ac/AlgTopCached.thy                  line 41330
+S1_I_to_R2_minus_0_continuous                  i/Top1_Ch9_13.thy                    line 13217
+S1_I_to_R2_minus_0_continuous_on               i/Top1_Ch9_13.thy                    line 13442
+S1_minus_point_path_connected                  svk/AlgTopSvK.thy                    line 594
+S1_minus_point_simply_connected                svk/AlgTopSvK.thy                    line 858
+S1_not_simply_connected                        b/AlgTop_JCT_Base.thy                line 10039
+S1_path_connected                              ac/AlgTopCached.thy                  line 624
+S1_point_to_angle                              ac/AlgTopCached.thy                  line 48518
+S2_compact_standard                            b/AlgTop_JCT_Base.thy                line 6282
+S2_component_of_open_subset_is_open            ac/AlgTopCached.thy                  line 52096
+S2_connected                                   b/AlgTop_JCT_Base.thy                line 7044
+S2_locally_path_connected                      b/AlgTop_JCT_Base.thy                line 6849
+S2_minus_north_pole_simply_connected           b/AlgTop_JCT_Base.thy                line 4325
+S2_minus_point_homeo_R2                        b/AlgTop_JCT_Base.thy                line 5677
+S2_minus_point_simply_connected                b/AlgTop_JCT_Base.thy                line 4769
+S2_minus_two_points_not_simply_connected       b/AlgTop_JCT_Base.thy                line 5883
+S2_nonsep_path_exists                          a0/AlgTop0.thy                       line 4657
+S2_open_path_connected_arc_connected           fi/AlgIsoFixed.thy                   line 1893
+S2_two_component_open                          ac/AlgTopCached.thy                  line 52178
+same_endpoint_same_coset                       ac10/AlgTopCached10.thy              line 822
+same_projection_same_endpoint                  ac10/AlgTopCached10.thy              line 125
+scc_decomp_arc_endpoints                       fi/AlgIsoFixed.thy                   line 3060
+SCC_decompose_at_given_points                  fi/AlgIsoFixed.thy                   line 6389
+scc_in_sc_false                                ac11/AlgTopCached11.thy              line 2489
+scc_interior_contradiction                     fi/AlgIsoFixed.thy                   line 2863
+scc_minus_point_connected                      fi/AlgIsoFixed.thy                   line 2636
+SCC_pi1_iso_Z                                  fib/AlgIsoFixedBase.thy              line 14
+sc_graph_no_cycle                              ac11/AlgTopCached11.thy              line 6151
+scheme_quotient_CW_data                        at/AlgTopChain.thy                   line 3613
+scheme_quotient_hausdorff                      at/AlgTopChain.thy                   line 2902
+second_countable_countable_subcover_of_closed  i/Top1_Ch4.thy                       line 2160
+seq_conv_comp                                  i/Top1_Ch5_8.thy                     line 32635
+seq_converges_eventually                       i/Top1_Ch2.thy                       line 6128
+seq_converges_eventually_strict                i/Top1_Ch2.thy                       line 6134
+seq_converges_limit_in_X                       i/Top1_Ch2.thy                       line 6124
+seq_converges_to_on_in_set_imp_closure         i/Top1_Ch4.thy                       line 1545
+seq_conv_rename                                i/Top1_Ch5_8.thy                     line 32640
+sfa_n_cauchy                                   i/Top1_Ch5_8.thy                     line 13359
+sfa_n_continuous                               i/Top1_Ch5_8.thy                     line 13331
+sfa_n_dense                                    i/Top1_Ch5_8.thy                     line 13385
+sfa_n_eq_hilbert                               i/Top1_Ch5_8.thy                     line 13322
+sfa_n_range                                    i/Top1_Ch5_8.thy                     line 13319
+sfa_rec_cauchy                                 i/Top1_Ch5_8.thy                     line 13193
+sfa_rec_dense                                  i/Top1_Ch5_8.thy                     line 13311
+sfa_rec_dense_strict                           i/Top1_Ch5_8.thy                     line 13252
+sfa_rec_range                                  i/Top1_Ch5_8.thy                     line 13167
+sigma_lf_to_lf_covering                        i/Top1_Ch5_8.thy                     line 7598
+sigma_lf_to_lf_open_covering                   i/Top1_Ch5_8.thy                     line 8007
+simple_closed_curve_arc_decomposition          b/AlgTop_JCT_Base.thy                line 10118
+simple_closed_curve_boundary_meets_component   a0/AlgTop0.thy                       line 8284
+simple_closed_curve_closed_in_S2               fib/AlgIsoFixedBase.thy              line 5007
+simple_closed_curve_compact                    fib/AlgIsoFixedBase.thy              line 4982
+simple_closed_curve_complement_components_two  fib/AlgIsoFixedBase.thy              line 5022
+simple_closed_curve_complement_open            fib/AlgIsoFixedBase.thy              line 5015
+simple_closed_curve_component_path_connected   fib/AlgIsoFixedBase.thy              line 5028
+simple_closed_curve_nonempty                   fib/AlgIsoFixedBase.thy              line 4997
+simple_closed_curve_proper_subset              b/AlgTop_JCT_Base.thy                line 10712
+simple_closed_curve_separates_connected_set    fib/AlgIsoFixedBase.thy              line 5049
+simple_closed_curve_subset                     b/AlgTop_JCT_Base.thy                line 4790
+simply_connected_paths_homotopic               i/Top1_Ch9_13.thy                    line 10166
+simply_connected_trivial_carrier               ac/AlgTopCached.thy                  line 27397
+simply_connected_trivial_image                 ac4/AlgTopCached4.thy                line 3203
+singleton_Bex_simp                             ac12/AlgTopCached12.thy              line 79
+singleton_closed_in_hausdorff                  i/Top1_Ch2.thy                       line 5909
+singleton_not_open_in_S2                       b/AlgTop_JCT_Base.thy                line 7226
+Sn_interpolation_at_1                          b/AlgTop_JCT_Base.thy                line 853
+Sn_interpolation_in_Sn                         b/AlgTop_JCT_Base.thy                line 819
+Sn_interpolation_norm_pos                      b/AlgTop_JCT_Base.thy                line 720
+Sn_interpolation_to_q_avoids_p                 b/AlgTop_JCT_Base.thy                line 878
+Sn_normalized_interpolation_path               b/AlgTop_JCT_Base.thy                line 441
+spur_arc_match_forces_edge                     AlgTop.thy                           line 951
+spur_collapse_cancel_homeo                     AlgTop.thy                           line 2644
+sqnorm_memI                                    h/AlgTopHelpers.thy                  line 5
+squaring_map_covering                          b0/AlgTop_JCT_Base0.thy              line 12
+squaring_map_factorization                     b0/AlgTop_JCT_Base0.thy              line 2522
+standard_S1_loop_class_in_carrier              ac/AlgTopCached.thy                  line 41860
+standard_S1_loop_generates_Z                   ac/AlgTopCached.thy                  line 42319
+standard_S1_loop_is_loop                       ac/AlgTopCached.thy                  line 41838
+standard_simplex_is_polygonal_region           ac8/AlgTopCached8.thy                line 8406
+stereo_denom_ne                                b/AlgTop_JCT_Base.thy                line 3799
+stereo_denom_pos                               b/AlgTop_JCT_Base.thy                line 3796
+stereographic_inv_in_S2                        b/AlgTop_JCT_Base.thy                line 3802
+stereographic_inv_not_north                    b/AlgTop_JCT_Base.thy                line 3823
+stereographic_inv_proj                         b/AlgTop_JCT_Base.thy                line 3912
+stereographic_proj_homeomorphism               b/AlgTop_JCT_Base.thy                line 3951
+stereographic_proj_inv                         b/AlgTop_JCT_Base.thy                line 3839
+strict_inter_sub_carrier                       i/Top1_Ch2.thy                       line 68
+strict_open_sub                                i/Top1_Ch2.thy                       line 11796
+strict_union_sub_carrier                       i/Top1_Ch2.thy                       line 64
+subgraph_coherent_topology                     ac7/AlgTopCached7.thy                line 4584
+subgraph_union_of_arcs_is_graph                ac5/AlgTopCached5.thy                line 2725
+subgroup_generated_contains                    ac/AlgTopCached.thy                  line 6222
+subgroup_generated_minimal                     ac/AlgTopCached.thy                  line 6227
+subgroup_generated_subset                      ac/AlgTopCached.thy                  line 6213
+subgroup_generated_word_rep                    ag/AlgTopGroups.thy                  line 3812
+subgroup_generated_word_repr                   ac/AlgTopCached.thy                  line 6446
+subnet_converges_to_same_limit                 i/Top1_Ch5_8.thy                     line 33617
+subseq_converges_to                            i/Top1_Ch5_8.thy                     line 29442
+subset_closure_on                              i/Top1_Ch2.thy                       line 5224
+subset_disjoint_helper                         fib/AlgIsoFixedBase.thy              line 1169
+subset_from_eq_and_subset                      fib/AlgIsoFixedBase.thy              line 1227
+subset_of_complement_disjoint                  fib/AlgIsoFixedBase.thy              line 1231
+subspace_inclusion_induced_class               ac/AlgTopCached.thy                  line 43310
+subspace_inclusion_induced_hom                 ac/AlgTopCached.thy                  line 43288
+subspace_metric_topology_eq_metric_topology    i/Top1_Ch4.thy                       line 11391
+subspace_topology_generated_by_basis           i/Top1_Ch5_8.thy                     line 20486
+subspace_topology_is_strict                    i/Top1_Ch2.thy                       line 4870
+subspace_topology_is_topology_on               i/Top1_Ch2.thy                       line 3705
+subspace_topology_memI                         b/AlgTop_JCT_Base.thy                line 5371
+subspace_topology_self                         i/Top1_Ch5_8.thy                     line 27376
+subspace_topology_self_carrier                 i/Top1_Ch5_8.thy                     line 18749
+subspace_topology_trans                        i/Top1_Ch2.thy                       line 3854
+subspace_topology_UNIV_self                    i/Top1_Ch9_13.thy                    line 10651
+sup_metric_ge_pointwise                        i/Top1_Ch5_8.thy                     line 14751
+sup_uniform_ball_eq                            i/Top1_Ch5_8.thy                     line 15425
+sup_uniform_topology_eq_on_continuous          i/Top1_Ch5_8.thy                     line 18068
+surjection_coset_bij                           ac11/AlgTopCached11.thy              line 1195
+surjection_right_coset_bij                     ac11/AlgTopCached11.thy              line 1124
+surjective_hom_preserves_generation            ac8/AlgTopCached8.thy                line 4633
+surj_hom_generated                             ag/AlgTopGroups.thy                  line 2538
+surj_hom_image_commutator                      ac8/AlgTopCached8.thy                line 4244
+surj_hom_image_normal                          ac/AlgTopCached.thy                  line 43193
+surj_hom_infinite_cyclic_inj                   fib/AlgIsoFixedBase.thy              line 885
+svk_free_product_free                          at/AlgTopChain.thy                   line 5294
+svk_free_product_free_with_generators          at/AlgTopChain.thy                   line 5180
+svk_generation_sc                              svk/AlgTopSvK.thy                    line 16
+svk_iso_with_tracking                          at/AlgTopChain.thy                   line 4839
+svk_pieces_in_subgroup                         ac/AlgTopCached.thy                  line 14238
+SvK_simply_connected_V_surj_kernel             ac/AlgTopCached.thy                  line 42650
+tagged_word_reduce_pairs                       ac/AlgTopCached.thy                  line 10700
+telescoping_conjugated_product                 b0/AlgTop_JCT_Base0.thy              line 5943
+telescoping_core                               b0/AlgTop_JCT_Base0.thy              line 5669
+Theorem_35_1_R                                 ac/AlgTopCached.thy                  line 173
+Theorem_46_8_cc_finer_co                       i/Top1_Ch5_8.thy                     line 18683
+Theorem_46_8_co_finer_cc                       i/Top1_Ch5_8.thy                     line 18757
+Theorem_50_2_dim_le                            i/Top1_Ch5_8.thy                     line 27229
+Theorem_50_2_step1                             i/Top1_Ch5_8.thy                     line 26930
+Theorem_51_2_associativity                     i/Top1_Ch9_13.thy                    line 1475
+Theorem_51_2_invgerse_left                     i/Top1_Ch9_13.thy                    line 2188
+Theorem_51_2_invgerse_right                    i/Top1_Ch9_13.thy                    line 2314
+Theorem_51_2_left_identity                     i/Top1_Ch9_13.thy                    line 1929
+Theorem_51_2_right_identity                    i/Top1_Ch9_13.thy                    line 2063
+Theorem_51_3_aux                               b0/AlgTop_JCT_Base0.thy              line 6383
+Theorem_54_5_iso_with_generator                ac/AlgTopCached.thy                  line 41869
+Theorem_56_1_step_1                            i/Top1_Ch9_13.thy                    line 15198
+Theorem_56_1_step_1_cont                       i/Top1_Ch9_13.thy                    line 14837
+Theorem_56_1_step_1_inj                        i/Top1_Ch9_13.thy                    line 14847
+Theorem_56_1_step_2                            i/Top1_Ch9_13.thy                    line 15216
+Theorem_56_1_step_3                            i/Top1_Ch9_13.thy                    line 15683
+Theorem_58_3_explicit                          wh/AlgTopWedgeHelpers.thy            line 1826
+Theorem_63_1_b_generation                      fib/AlgIsoFixedBase.thy              line 123
+Theorem_63_1_c_subgroups_trivial               a0/AlgTop0.thy                       line 1856
+Theorem_63_1_c_subgroups_trivial_reverse       a0/AlgTop0.thy                       line 2600
+Theorem_69_2_free_product_part                 at/AlgTopChain.thy                   line 4803
+Theorem_69_4_concrete_free_abelian             at/AlgTopChain.thy                   line 1266
+Theorem_69_4_concrete_image_basis              ac12/AlgTopCached12.thy              line 9
+Theorem_70_1_uniqueness                        ac/AlgTopCached.thy                  line 28142
+Theorem_70_1_universal_property                ac/AlgTopCached.thy                  line 15888
+theta_space_vertex_exclusion                   ag/AlgTopGroups.thy                  line 182
+third_element_unique                           fib/AlgIsoFixedBase.thy              line 1244
+three_components_contradiction                 a0/AlgTop0.thy                       line 6637
+tl_take_drop_eq                                ag/AlgTopGroups.thy                  line 33
+tl_take_drop_map_pair                          ag/AlgTopGroups.thy                  line 56
+tl_take_map_pair                               ag/AlgTopGroups.thy                  line 37
+to                                             fib/AlgIsoFixedBase.thy              line 2764
+top1_27_7_shrink_open_avoid_closure            i/Top1_Ch3.thy                       line 9701
+top1_abs_metric_on_UNIV_real                   i/Top1_Ch4.thy                       line 11065
+top1_ascoli_step1_compact_closure_pointwise    i/Top1_Ch5_8.thy                     line 21197
+top1_ascoli_step2_closure_continuous_and_equicontinuous  i/Top1_Ch5_8.thy                     line 21270
+top1_ascoli_step3_pointwise_eq_compact_convergence_on_closure  i/Top1_Ch5_8.thy                     line 21472
+top1_B2_cont_fst                               i/Top1_Ch9_13.thy                    line 11820
+top1_B2_cont_snd                               i/Top1_Ch9_13.thy                    line 11858
+top1_B2_convex                                 i/Top1_Ch9_13.thy                    line 11754
+top1_B2_diff_continuous                        i/Top1_Ch9_13.thy                    line 12235
+top1_B2_path_connected                         i/Top1_Ch9_13.thy                    line 11892
+top1_B2_simply_connected                       i/Top1_Ch9_13.thy                    line 11970
+top1_ball_on_bounded_metric_eq                 i/Top1_Ch2.thy                       line 11921
+top1_ball_on_mono_radius                       i/Top1_Ch5_8.thy                     line 22878
+top1_ball_open_in_metric_topology              i/Top1_Ch2.thy                       line 11738
+top1_ball_openin_on_metric_topology            i/Top1_Ch2.thy                       line 11755
+top1_basepoint_change_congruence               i/Top1_Ch9_13.thy                    line 3149
+top1_basepoint_change_is_loop                  i/Top1_Ch9_13.thy                    line 3288
+top1_basepoint_change_loop_equiv               i/Top1_Ch9_13.thy                    line 3307
+top1_basepoint_change_roundtrip                i/Top1_Ch9_13.thy                    line 3176
+top1_bij_quotient_map_on_imp_homeomorphism_on  i/Top1_Ch2.thy                       line 20470
+top1_bounded_abs_eq_real_bounded_metric        i/Top1_Ch5_8.thy                     line 10223
+top1_bounded_abs_metric_topology_eq_order      i/Top1_Ch5_8.thy                     line 10231
+top1_bounded_metric_lt_imp_lt                  i/Top1_Ch5_8.thy                     line 16679
+top1_bounded_metric_on                         i/Top1_Ch2.thy                       line 11804
+top1_box_basis_is_basis_on                     i/Top1_Ch2.thy                       line 8601
+top1_box_basis_on_strict_eq                    i/Top1_Ch2.thy                       line 8510
+top1_box_topology_on_is_topology_on            i/Top1_Ch2.thy                       line 8694
+top1_C01_baire                                 i/Top1_Ch5_8.thy                     line 26263
+top1_C01_complete                              i/Top1_Ch5_8.thy                     line 26017
+top1_C01_nonempty                              i/Top1_Ch5_8.thy                     line 25051
+top1_closedin_equalizer_of_continuous_maps     i/Top1_Ch5_8.thy                     line 1965
+top1_closed_interval_closedin_order_topology   i/Top1_Ch4.thy                       line 12734
+top1_closed_interval_compact                   i/Top1_Ch5_8.thy                     line 1805
+top1_closed_interval_completely_regular        i/Top1_Ch4.thy                       line 11598
+top1_closed_interval_metrizable                i/Top1_Ch4.thy                       line 11489
+top1_closedin_Union_locally_finite             i/Top1_Ch5_8.thy                     line 3305
+top1_closure_on_empty                          i/Top1_Ch5_8.thy                     line 3151
+top1_closure_on_union2                         i/Top1_Ch5_8.thy                     line 3169
+top1_closure_on_Union_finite                   i/Top1_Ch5_8.thy                     line 3256
+top1_closure_on_Union_locally_finite           i/Top1_Ch5_8.thy                     line 3504
+top1_compact_convergence_topology_on_superset_pointwise  i/Top1_Ch5_8.thy                     line 16691
+top1_compact_hausdorff_imp_baire               i/Top1_Ch5_8.thy                     line 22525
+top1_compact_Icc_linear_continuum              i/Top1_Ch3.thy                       line 7312
+top1_compact_m_manifold_finite_chart_cover     i/Top1_Ch4.thy                       line 18003
+top1_compact_nested_closure_inter_ne           i/Top1_Ch3.thy                       line 9954
+top1_compact_on_continuous_image               i/Top1_Ch3.thy                       line 7907
+top1_compact_on_empty_subspace                 i/Top1_Ch3.thy                       line 11309
+top1_compact_on_finite_subcover_image          i/Top1_Ch4.thy                       line 17760
+top1_compact_on_finite_subspace                i/Top1_Ch3.thy                       line 4893
+top1_compact_on_imp_locally_compact_on         i/Top1_Ch3.thy                       line 10702
+top1_compact_on_Inter_nested_closed_nonempty   i/Top1_Ch5_8.thy                     line 22242
+top1_compact_on_order_topology_has_greatest    i/Top1_Ch3.thy                       line 8221
+top1_compact_on_order_topology_has_least       i/Top1_Ch3.thy                       line 8049
+top1_compact_on_subspace_UNIV_iff_compact      i/Top1_Ch3.thy                       line 7131
+top1_compact_on_union2_subspace                i/Top1_Ch3.thy                       line 11337
+top1_compact_uniformly_continuous              i/Top1_Ch5_8.thy                     line 25379
+top1_completely_regular_on_product_topology_on  i/Top1_Ch4.thy                       line 11688
+top1_component_of_on_as_component              i/Top1_Ch3.thy                       line 2713
+top1_component_of_on_connected                 i/Top1_Ch3.thy                       line 2660
+top1_component_of_on_eq_of_mem                 i/Top1_Ch3.thy                       line 2627
+top1_component_of_on_in_components             i/Top1_Ch3.thy                       line 2708
+top1_component_of_on_mem_iff                   i/Top1_Ch3.thy                       line 2478
+top1_component_of_on_self_mem                  i/Top1_Ch3.thy                       line 2516
+top1_component_of_on_subset                    i/Top1_Ch3.thy                       line 2506
+top1_component_of_on_subset_path_component_if_locally_path_connected  i/Top1_Ch3.thy                       line 4458
+top1_connected_on_singleton                    i/Top1_Ch3.thy                       line 2399
+top1_connected_on_subspace_openI               i/Top1_Ch3.thy                       line 2087
+top1_connected_on_subspace_open_iff_connected  i/Top1_Ch3.thy                       line 1964
+top1_connected_subspace_subset_component_of    i/Top1_Ch3.thy                       line 2533
+top1_constant_path_continuous                  i/Top1_Ch9_13.thy                    line 1259
+top1_constant_path_is_loop                     i/Top1_Ch9_13.thy                    line 2350
+top1_constant_path_is_path                     i/Top1_Ch9_13.thy                    line 1265
+top1_constant_path_value                       i/Top1_Ch9_13.thy                    line 1223
+top1_continuous_add_order_topology             i/Top1_Ch4.thy                       line 13097
+top1_continuous_add_real                       i/Top1_Ch4.thy                       line 14917
+top1_continuous_diff_real                      i/Top1_Ch4.thy                       line 15045
+top1_continuous_inv_order_topology_pos         i/Top1_Ch4.thy                       line 14630
+top1_continuous_map_loop                       b0/AlgTop_JCT_Base0.thy              line 4290
+top1_continuous_map_loop_early                 i/Top1_Ch9_13.thy                    line 14823
+top1_continuous_map_on_agree                   i/Top1_Ch9_13.thy                    line 1460
+top1_continuous_map_on_agree                   i/Top1_Ch9_13.thy                    line 485
+top1_continuous_map_on_closed_interval_to_real  i/Top1_Ch4.thy                       line 17880
+top1_continuous_map_on_codomain_enlarge        i/Top1_Ch9_13.thy                    line 11563
+top1_continuous_map_on_codomain_shrink         i/Top1_Ch9_13.thy                    line 817
+top1_continuous_map_on_comp                    i/Top1_Ch2.thy                       line 6879
+top1_continuous_map_on_cong                    i/Top1_Ch2.thy                       line 19527
+top1_continuous_map_on_const                   i/Top1_Ch3.thy                       line 923
+top1_continuous_map_on_generated_by_basis      i/Top1_Ch2.thy                       line 6791
+top1_continuous_map_on_id                      i/Top1_Ch3.thy                       line 874
+top1_continuous_map_on_II_to_I                 i/Top1_Ch9_13.thy                    line 248
+top1_continuous_map_on_II_to_UNIV              i/Top1_Ch9_13.thy                    line 10705
+top1_continuous_map_on_product_projection      i/Top1_Ch2.thy                       line 9111
+top1_continuous_map_on_real2_subspace          i/Top1_Ch9_13.thy                    line 209
+top1_continuous_map_on_real2_subspace_general  i/Top1_Ch9_13.thy                    line 165
+top1_continuous_map_on_real_subspace_open_sets  i/Top1_Ch3.thy                       line 3125
+top1_continuous_map_on_restrict_domain_simple  i/Top1_Ch4.thy                       line 17646
+top1_continuous_map_on_Rpow_coord              i/Top1_Ch4.thy                       line 17962
+top1_continuous_map_on_R_to_R2_subspace        i/Top1_Ch9_13.thy                    line 133
+top1_continuous_map_on_section2                i/Top1_Ch3.thy                       line 962
+top1_continuous_map_on_subspace_open_sets      i/Top1_Ch9_13.thy                    line 14738
+top1_continuous_map_on_subspace_open_sets_on   i/Top1_Ch9_13.thy                    line 4175
+top1_continuous_map_on_subspace_restrict       i/Top1_Ch9_13.thy                    line 11534
+top1_continuous_map_on_to_continuous_on_R2     i/Top1_Ch9_13.thy                    line 13299
+top1_continuous_map_on_to_topology_generated_by_subbasis  i/Top1_Ch2.thy                       line 6950
+top1_continuous_min2_unit_interval             i/Top1_Ch4.thy                       line 11609
+top1_continuous_min_unit_interval              i/Top1_Ch4.thy                       line 8556
+top1_continuous_mul_order_topology             i/Top1_Ch4.thy                       line 13275
+top1_continuous_mul_real                       i/Top1_Ch4.thy                       line 15061
+top1_continuous_mul_supported_extend_zero      i/Top1_Ch4.thy                       line 16257
+top1_continuous_pi1                            i/Top1_Ch2.thy                       line 8401
+top1_continuous_pi2                            i/Top1_Ch2.thy                       line 8438
+top1_continuous_preimage_ball                  i/Top1_Ch9_13.thy                    line 6525
+top1_continuous_preserves_path_homotopy        b0/AlgTop_JCT_Base0.thy              line 4252
+top1_continuous_scale_real                     i/Top1_Ch5_8.thy                     line 5387
+top1_continuous_sum_finite_real                i/Top1_Ch5_8.thy                     line 8547
+top1_continuous_sum_lessThan_real              i/Top1_Ch4.thy                       line 15119
+top1_continuous_uminus_order_topology          i/Top1_Ch4.thy                       line 14454
+top1_continuous_uminus_real                    i/Top1_Ch4.thy                       line 15029
+top1_countable_iff_countable                   i/Top1_Ch4.thy                       line 19
+top1_countable_image                           i/Top1_Ch4.thy                       line 47
+top1_countable_lists                           i/Top1_Ch4.thy                       line 401
+top1_countable_nat_prod                        i/Top1_Ch4.thy                       line 278
+top1_countable_nonempty_eq_image_nat           i/Top1_Ch3.thy                       line 9876
+top1_countable_SIGMA                           i/Top1_Ch4.thy                       line 283
+top1_countable_subset                          i/Top1_Ch4.thy                       line 23
+top1_covering_map_on_continuous                i/Top1_Ch9_13.thy                    line 3925
+top1_covering_map_on_evenly_covered            i/Top1_Ch9_13.thy                    line 3933
+top1_covering_map_on_strict_evenly_covered_openin  i/Top1_Ch9_13.thy                    line 3954
+top1_covering_map_on_surj                      i/Top1_Ch9_13.thy                    line 3929
+top1_cover_order_le_on_mono_m                  i/Top1_Ch5_8.thy                     line 26370
+top1_cover_order_le_on_mono_X                  i/Top1_Ch5_8.thy                     line 26389
+top1_cover_order_le_on_subset                  i/Top1_Ch5_8.thy                     line 26338
+top1_densein_on_iff_intersects_nonempty_open   i/Top1_Ch5_8.thy                     line 22167
+top1_densein_on_intersects_neighborhood        i/Top1_Ch5_8.thy                     line 22132
+top1_densein_on_intersects_nonempty_open       i/Top1_Ch5_8.thy                     line 22149
+top1_densein_on_open_subspace                  i/Top1_Ch5_8.thy                     line 22442
+top1_densein_on_subset_carrier                 i/Top1_Ch5_8.thy                     line 22122
+top1_diameter_on_lt_imp_dist_lt                i/Top1_Ch5_8.thy                     line 23788
+top1_diameter_on_pair_le                       i/Top1_Ch3.thy                       line 8453
+top1_dim_le_on_closedin_subspace               i/Top1_Ch5_8.thy                     line 26499
+top1_dim_le_on_dim_on                          i/Top1_Ch5_8.thy                     line 26467
+top1_dim_le_on_dim_on_finite                   i/Top1_Ch5_8.thy                     line 26473
+top1_dim_le_on_iff_dim_on_le                   i/Top1_Ch5_8.thy                     line 26483
+top1_dim_le_on_imp_finite_dimensional          i/Top1_Ch5_8.thy                     line 26444
+top1_dim_le_on_mono_m                          i/Top1_Ch5_8.thy                     line 26406
+top1_dim_on_le_of_dim_le                       i/Top1_Ch5_8.thy                     line 26450
+top1_dim_on_le_of_dim_le                       i/Top1_Ch5_8.thy                     line 26456
+top1_direct_sum_carrier_mul_closed             ac/AlgTopCached.thy                  line 7084
+top1_D_metric_real_omega_0_iff                 i/Top1_Ch2.thy                       line 13467
+top1_D_metric_real_omega_ball_in_product_topology  i/Top1_Ch2.thy                       line 15889
+top1_D_metric_real_omega_bdd_above             i/Top1_Ch2.thy                       line 13315
+top1_D_metric_real_omega_le_1                  i/Top1_Ch2.thy                       line 13359
+top1_D_metric_real_omega_nonneg                i/Top1_Ch2.thy                       line 13328
+top1_D_metric_real_omega_refl                  i/Top1_Ch2.thy                       line 13381
+top1_D_metric_real_omega_sym                   i/Top1_Ch2.thy                       line 13427
+top1_D_metric_real_omega_term_le               i/Top1_Ch2.thy                       line 13620
+top1_D_metric_real_omega_term_le_1             i/Top1_Ch2.thy                       line 13296
+top1_D_metric_real_omega_triangle              i/Top1_Ch2.thy                       line 13515
+top1_dyadic_lt_same_denom_iff                  i/Top1_Ch4.thy                       line 6760
+top1_dyadic_pow2_scale                         i/Top1_Ch4.thy                       line 6755
+top1_embedding_on_compact_inj                  i/Top1_Ch3.thy                       line 7047
+top1_embedding_on_imp_continuous               i/Top1_Ch4.thy                       line 17585
+top1_embedding_on_imp_inj_on                   i/Top1_Ch4.thy                       line 17572
+top1_embedding_on_restrict_codomain_subspace   i/Top1_Ch4.thy                       line 10759
+top1_embedding_on_restrict_domain              i/Top1_Ch5_8.thy                     line 32221
+top1_euclidean_ball_open_in_square_metric_topology_real  i/Top1_Ch2.thy                       line 14400
+top1_euclidean_metric_real_on_coord_le         i/Top1_Ch2.thy                       line 13956
+top1_euclidean_metric_real_on_le_sqrt_card_mul_square  i/Top1_Ch2.thy                       line 14110
+top1_euclidean_metric_real_on_triangle         i/Top1_Ch2.thy                       line 14179
+top1_evenly_covered_on_openin_on               i/Top1_Ch9_13.thy                    line 3939
+top1_fst_continuous_R2_subspace                i/Top1_Ch9_13.thy                    line 11485
+top1_fundamental_group_induced_on_is_hom       ac/AlgTopCached.thy                  line 5618
+top1_fundamental_group_is_group                ac/AlgTopCached.thy                  line 13825
+top1_fundamental_group_mul_class               i/Top1_Ch9_13.thy                    line 3333
+top1_geometric_partial_sum_2_3                 i/Top1_Ch4.thy                       line 12631
+top1_geometric_partial_sum_shift_bound         i/Top1_Ch4.thy                       line 12647
+top1_groups_isomorphic_on_refl                 ac/AlgTopCached.thy                  line 6069
+top1_groups_isomorphic_on_sym                  ac/AlgTopCached.thy                  line 6079
+top1_homeomorphism_on_imp_completely_regular_on  i/Top1_Ch4.thy                       line 12087
+top1_homeomorphism_on_imp_quotient_map_on      i/Top1_Ch2.thy                       line 20391
+top1_homotopy_equivalence_on_sym               b0/AlgTop_JCT_Base0.thy              line 4053
+top1_I01_compact                               i/Top1_Ch5_8.thy                     line 25101
+top1_I01_eq_Icc                                i/Top1_Ch5_8.thy                     line 25098
+top1_I01_nonempty                              i/Top1_Ch5_8.thy                     line 25095
+top1_image_on_cong                             i/Top1_Ch2.thy                       line 19501
+top1_induced_preserves_loop_equiv              b0/AlgTop_JCT_Base0.thy              line 4304
+top1_in_same_component_on_iff_component_mem    i/Top1_Ch3.thy                       line 2484
+top1_in_same_component_on_refl                 i/Top1_Ch3.thy                       line 2546
+top1_in_same_component_on_sym                  i/Top1_Ch3.thy                       line 2561
+top1_in_same_component_on_trans                i/Top1_Ch3.thy                       line 2566
+top1_in_same_path_component_on_refl            i/Top1_Ch3.thy                       line 3983
+top1_in_same_path_component_on_sym             i/Top1_Ch3.thy                       line 3634
+top1_in_same_path_component_on_trans           i/Top1_Ch3.thy                       line 3648
+top1_intersects_closure_on_open_imp_intersects  i/Top1_Ch5_8.thy                     line 3041
+top1_Inter_U49_dense                           i/Top1_Ch5_8.thy                     line 25894
+top1_Inter_U49_nowhere_differentiable          i/Top1_Ch5_8.thy                     line 25919
+top1_Inter_U49_subset_C01                      i/Top1_Ch5_8.thy                     line 25079
+top1_interval_encode_inj                       i/Top1_Ch3.thy                       line 9684
+top1_interval_encode_mem_Icc                   i/Top1_Ch3.thy                       line 9646
+top1_is_lifting_on_continuous                  i/Top1_Ch9_13.thy                    line 3972
+top1_is_lifting_on_covers                      i/Top1_Ch9_13.thy                    line 3977
+top1_is_loop_on_continuous                     i/Top1_Ch9_13.thy                    line 2338
+top1_is_loop_on_end                            i/Top1_Ch9_13.thy                    line 2346
+top1_is_loop_on_start                          i/Top1_Ch9_13.thy                    line 2342
+top1_is_path_on_append                         i/Top1_Ch3.thy                       line 3228
+top1_is_path_on_point_in_path_component        i/Top1_Ch3.thy                       line 3544
+top1_is_path_on_reverse                        i/Top1_Ch3.thy                       line 3171
+top1_is_retraction_on_continuous               i/Top1_Ch9_13.thy                    line 11447
+top1_is_retraction_on_fixes_A                  i/Top1_Ch9_13.thy                    line 11452
+top1_is_retraction_on_subset                   i/Top1_Ch9_13.thy                    line 11442
+top1_lebesgue_number                           i/Top1_Ch5_8.thy                     line 27836
+top1_list_code_inj                             i/Top1_Ch4.thy                       line 356
+top1_locally_compact_on_of_homeomorphism_on    i/Top1_Ch3.thy                       line 10749
+top1_locally_compact_on_open_subspace_of_compact_hausdorff  i/Top1_Ch3.thy                       line 11222
+top1_locally_finite_family_on_closure_image    i/Top1_Ch5_8.thy                     line 3074
+top1_locally_finite_family_on_subset           i/Top1_Ch5_8.thy                     line 2846
+top1_loop_equiv_on_refl                        i/Top1_Ch9_13.thy                    line 2387
+top1_loop_equiv_on_sym                         i/Top1_Ch9_13.thy                    line 2394
+top1_loop_equiv_on_trans                       i/Top1_Ch9_13.thy                    line 2400
+top1_metric_ball_self_mem                      i/Top1_Ch5_8.thy                     line 22866
+top1_metric_basis_is_basis_on                  i/Top1_Ch2.thy                       line 11638
+top1_metric_closure_ball_imp_dist_le           i/Top1_Ch5_8.thy                     line 22892
+top1_metric_closure_ball_subset_ball           i/Top1_Ch5_8.thy                     line 22994
+top1_metric_closure_ball_subset_closed_ball    i/Top1_Ch5_8.thy                     line 22972
+top1_metric_compact_bounded                    i/Top1_Ch3.thy                       line 8638
+top1_metric_compact_bounded_from_point         i/Top1_Ch3.thy                       line 8529
+top1_metric_diameter_closure_ball_le           i/Top1_Ch5_8.thy                     line 23018
+top1_metric_dist_set_bdd_above                 i/Top1_Ch5_8.thy                     line 23757
+top1_metric_nonneg                             i/Top1_Ch2.thy                       line 11606
+top1_metric_open_contains_ball                 i/Top1_Ch2.thy                       line 11959
+top1_metric_self_zero                          i/Top1_Ch2.thy                       line 11622
+top1_metric_sym                                i/Top1_Ch2.thy                       line 11614
+top1_metric_topology_on_is_topology_on         i/Top1_Ch2.thy                       line 11766
+top1_metric_triangle                           i/Top1_Ch2.thy                       line 11618
+top1_metric_zero_iff                           i/Top1_Ch2.thy                       line 11610
+top1_min_add_le                                i/Top1_Ch2.thy                       line 12279
+top1_min_mono_1                                i/Top1_Ch2.thy                       line 12255
+top1_m_manifold_on_local_chart_inj_cont        i/Top1_Ch4.thy                       line 17694
+top1_mult_continuous_R2                        b/AlgTop_JCT_Base.thy                line 5929
+top1_nbhd_of_set_contains                      i/Top1_Ch5_8.thy                     line 3840
+top1_nbhd_of_set_open                          i/Top1_Ch5_8.thy                     line 3815
+top1_nbhd_of_set_sub                           i/Top1_Ch5_8.thy                     line 3834
+top1_nested_subset_le                          i/Top1_Ch3.thy                       line 9935
+top1_not_countable_UNIV_nat_set                i/Top1_Ch3.thy                       line 9268
+top1_open_of_local_subsets                     i/Top1_Ch2.thy                       line 89
+top1_open_set_from_local_opens                 i/Top1_Ch2.thy                       line 2575
+top1_open_sets_is_topology_on_UNIV             i/Top1_Ch3.thy                       line 1932
+top1_open_sets_sub_order_topology_real         ac/AlgTopCached.thy                  line 55
+top1_pair_code_inj                             i/Top1_Ch4.thy                       line 129
+top1_partition_of_unity_dominated_on_exists_ne0  i/Top1_Ch4.thy                       line 17863
+top1_path_component_of_on_complement_open_if_locally_path_connected  i/Top1_Ch3.thy                       line 4368
+top1_path_component_of_on_eq_of_mem            i/Top1_Ch3.thy                       line 4016
+top1_path_component_of_on_in_components        i/Top1_Ch3.thy                       line 4010
+top1_path_component_of_on_open_if_locally_path_connected  i/Top1_Ch3.thy                       line 4291
+top1_path_component_of_on_path_connected       i/Top1_Ch3.thy                       line 4050
+top1_path_component_of_on_self_mem             i/Top1_Ch3.thy                       line 4002
+top1_path_component_of_on_subset               i/Top1_Ch3.thy                       line 3610
+top1_path_connected_continuous_image           at/AlgTopChain.thy                   line 2430
+top1_path_connected_continuous_image           pd/PolygonDisk.thy                   line 400
+top1_path_connected_imp_connected              b/AlgTop_JCT_Base.thy                line 5304
+top1_path_connected_subspace_subset_path_component_of  i/Top1_Ch3.thy                       line 4063
+top1_path_power_0                              a0/AlgTop0.thy                       line 1384
+top1_path_power_is_loop                        a0/AlgTop0.thy                       line 1409
+top1_path_power_is_path                        a0/AlgTop0.thy                       line 1392
+top1_path_power_Suc                            a0/AlgTop0.thy                       line 1388
+top1_path_product_at_end                       i/Top1_Ch9_13.thy                    line 1203
+top1_path_product_at_half                      i/Top1_Ch9_13.thy                    line 1207
+top1_path_product_at_start                     i/Top1_Ch9_13.thy                    line 1199
+top1_path_product_continuous                   i/Top1_Ch9_13.thy                    line 1273
+top1_path_product_is_loop                      i/Top1_Ch9_13.thy                    line 2356
+top1_path_product_is_path                      i/Top1_Ch9_13.thy                    line 1438
+top1_path_reverse_at_end                       i/Top1_Ch9_13.thy                    line 1215
+top1_path_reverse_at_start                     i/Top1_Ch9_13.thy                    line 1211
+top1_path_reverse_continuous                   i/Top1_Ch9_13.thy                    line 1230
+top1_path_reverse_is_loop                      i/Top1_Ch9_13.thy                    line 2369
+top1_path_reverse_is_path                      i/Top1_Ch9_13.thy                    line 1242
+top1_path_reverse_twice                        i/Top1_Ch9_13.thy                    line 1219
+top1_PiE_as_Inter_cylinders                    i/Top1_Ch5_8.thy                     line 881
+top1_PiE_cong_on                               i/Top1_Ch2.thy                       line 8570
+top1_PiE_const_val                             i/Top1_Ch5_8.thy                     line 15548
+top1_PiE_fun_eqI                               i/Top1_Ch2.thy                       line 8929
+top1_PiE_iff                                   i/Top1_Ch2.thy                       line 8496
+top1_PiE_Int                                   i/Top1_Ch2.thy                       line 8562
+top1_PiE_mono                                  i/Top1_Ch2.thy                       line 8541
+top1_PiE_neq_imp_coord_neq                     i/Top1_Ch2.thy                       line 8956
+top1_preimage_on_cong                          i/Top1_Ch2.thy                       line 19470
+top1_product_basis_eq_box_basis_if_finite      i/Top1_Ch2.thy                       line 8868
+top1_product_basis_is_basis_on                 i/Top1_Ch2.thy                       line 8700
+top1_product_cylinder_eq                       i/Top1_Ch2.thy                       line 9046
+top1_product_cylinder_in_basis                 i/Top1_Ch2.thy                       line 8971
+top1_product_open_contains_rect                i/Top1_Ch3.thy                       line 903
+top1_product_topology_eq_box_topology_if_finite  i/Top1_Ch2.thy                       line 8888
+top1_product_topology_ne_uniform_metric_topology_real  i/Top1_Ch2.thy                       line 15400
+top1_product_topology_on_is_topology_on        i/Top1_Ch2.thy                       line 8822
+top1_product_topology_on_unit_interval_eq_subspace  i/Top1_Ch4.thy                       line 10797
+top1_product_topology_subset_D_metric_topology_real_omega  i/Top1_Ch2.thy                       line 16140
+top1_product_topology_subset_uniform_metric_topology_real  i/Top1_Ch2.thy                       line 15068
+top1_quotient_map_closed_iff_preimage_closed   i/Top1_Ch2.thy                       line 18905
+top1_quotient_map_on_comp                      i/Top1_Ch2.thy                       line 19668
+top1_quotient_map_on_cong                      i/Top1_Ch2.thy                       line 19592
+top1_quotient_map_on_from_quotient_topology_by_map_on  i/Top1_Ch2.thy                       line 20356
+top1_quotient_map_open_iff_preimage_open       i/Top1_Ch2.thy                       line 18998
+top1_quotient_topology_by_map_on_is_topology_on  i/Top1_Ch2.thy                       line 20127
+top1_R2_is_hausdorff                           b/AlgTop_JCT_Base.thy                line 198
+top1_R2_minus_0_is_topology_on_strict          b/AlgTop_JCT_Base.thy                line 242
+top1_R3_is_hausdorff                           b/AlgTop_JCT_Base.thy                line 217
+top1_real_bounded_metric_ball_in_order_topology  i/Top1_Ch2.thy                       line 12423
+top1_real_bounded_metric_lt_iff_abs_lt         i/Top1_Ch2.thy                       line 12521
+top1_real_bounded_metric_metric_on             i/Top1_Ch2.thy                       line 12374
+top1_real_bounded_metric_triangle              i/Top1_Ch2.thy                       line 12344
+top1_retract_self                              i/Top1_Ch9_13.thy                    line 11458
+top1_rho49_bdd_above                           i/Top1_Ch5_8.thy                     line 25104
+top1_rho49_is_metric                           i/Top1_Ch5_8.thy                     line 25212
+top1_rho49_nonneg                              i/Top1_Ch5_8.thy                     line 25123
+top1_rho49_pointwise_bound                     i/Top1_Ch5_8.thy                     line 25219
+top1_rho49_self                                i/Top1_Ch5_8.thy                     line 25135
+top1_rho49_sym                                 i/Top1_Ch5_8.thy                     line 25183
+top1_rho49_triangle                            i/Top1_Ch5_8.thy                     line 25192
+top1_rho49_zero_iff                            i/Top1_Ch5_8.thy                     line 25159
+top1_rho49_zero_imp_eq_on                      i/Top1_Ch5_8.thy                     line 25144
+top1_R_is_hausdorff                            b/AlgTop_JCT_Base.thy                line 161
+top1_R_path_connected                          i/Top1_Ch9_13.thy                    line 10656
+top1_Rpow_is_hausdorff_on                      i/Top1_Ch4.thy                       line 17552
+top1_Rpow_is_topology_on                       i/Top1_Ch4.thy                       line 17918
+top1_Rpow_set_ext                              i/Top1_Ch4.thy                       line 17931
+top1_Rpow_sq_metric_is_complete                i/Top1_Ch5_8.thy                     line 28207
+top1_Rpow_sq_metric_is_metric                  i/Top1_Ch5_8.thy                     line 28183
+top1_Rpow_topology_eq_sq_metric                i/Top1_Ch5_8.thy                     line 28328
+top1_R_simply_connected                        i/Top1_Ch9_13.thy                    line 10728
+top1_R_to_S1_fiber_is_Z                        i/Top1_Ch9_13.thy                    line 10806
+top1_R_to_S1_int_shift                         i/Top1_Ch9_13.thy                    line 10829
+top1_R_to_S1_int_shift                         i/Top1_Ch9_13.thy                    line 10843
+top1_R_to_S1_int_shift_early                   i/Top1_Ch9_13.thy                    line 4025
+top1_R_to_S1_translated_lift_end               i/Top1_Ch9_13.thy                    line 10868
+top1_R_to_S1_translated_lift_is_lift           i/Top1_Ch9_13.thy                    line 10855
+top1_R_to_S1_translated_lift_start             i/Top1_Ch9_13.thy                    line 10862
+top1_R_to_S1_translate_lift                    i/Top1_Ch9_13.thy                    line 10849
+top1_S1_arc_E_preimage                         i/Top1_Ch9_13.thy                    line 4036
+top1_S1_arcs_cover                             i/Top1_Ch9_13.thy                    line 4011
+top1_S1_fundamental_group_nontrivial           i/Top1_Ch9_13.thy                    line 11663
+top1_S1_is_hausdorff                           b/AlgTop_JCT_Base.thy                line 208
+top1_S1_is_topology_on_strict                  b/AlgTop_JCT_Base.thy                line 231
+top1_S2_is_hausdorff                           b/AlgTop_JCT_Base.thy                line 3737
+top1_S2_is_topology_on_strict                  b/AlgTop_JCT_Base.thy                line 3746
+top1_same_homotopy_type_on_sym                 b0/AlgTop_JCT_Base0.thy              line 4059
+top1_saturated_image_inter_eq                  i/Top1_Ch2.thy                       line 18874
+top1_saturated_preimage_image_eq               i/Top1_Ch2.thy                       line 19016
+top1_saturated_preimage_subset                 i/Top1_Ch2.thy                       line 18813
+top1_saturated_restrict_preimage_eq            i/Top1_Ch2.thy                       line 18837
+top1_section_preimage_open                     i/Top1_Ch3.thy                       line 998
+top1_separates_on_def_expand                   b/AlgTop_JCT_Base.thy                line 3767
+top1_separates_onI                             b/AlgTop_JCT_Base.thy                line 3772
+top1_simply_connected_from_one_point           i/Top1_Ch9_13.thy                    line 2857
+top1_simply_connected_on_path_connected        i/Top1_Ch9_13.thy                    line 2472
+top1_simply_connected_strict_imp               i/Top1_Ch9_13.thy                    line 2464
+top1_simply_connected_strict_is_topology_strict  i/Top1_Ch9_13.thy                    line 2468
+top1_slh_ext_agrees                            i/Top1_Ch9_13.thy                    line 10700
+top1_slh_ext_continuous                        i/Top1_Ch9_13.thy                    line 10690
+top1_snd_continuous_R2_subspace                i/Top1_Ch9_13.thy                    line 11509
+top1_square_ball_open_in_euclidean_metric_topology_real  i/Top1_Ch2.thy                       line 14310
+top1_square_metric_real_on_coord_le            i/Top1_Ch2.thy                       line 14087
+top1_square_metric_real_on_le_euclidean        i/Top1_Ch2.thy                       line 13979
+top1_square_metric_real_on_lt_iff              i/Top1_Ch2.thy                       line 13877
+top1_square_metric_real_on_triangle            i/Top1_Ch2.thy                       line 14012
+top1_suminf_geometric_1_3_Suc                  i/Top1_Ch3.thy                       line 9341
+top1_suminf_geometric_1_3_tail                 i/Top1_Ch3.thy                       line 9387
+top1_summable_ternary_sum                      i/Top1_Ch3.thy                       line 9325
+top1_support_on_complement_imp_zero            i/Top1_Ch4.thy                       line 16240
+top1_support_on_contains_nonzero               i/Top1_Ch4.thy                       line 17680
+top1_support_on_mul_nonzero_factor             i/Top1_Ch4.thy                       line 16432
+top1_support_on_subset_imp_zero_on_complement  i/Top1_Ch4.thy                       line 16216
+top1_ternary_sum_ge_0                          i/Top1_Ch3.thy                       line 9356
+top1_ternary_sum_inj                           i/Top1_Ch3.thy                       line 9410
+top1_ternary_sum_le_half                       i/Top1_Ch3.thy                       line 9366
+top1_tietze_step1                              i/Top1_Ch4.thy                       line 12778
+top1_tietze_step2_approximants                 i/Top1_Ch4.thy                       line 15578
+top1_tietze_tail_bound                         i/Top1_Ch4.thy                       line 12681
+top1_U49_dense                                 i/Top1_Ch5_8.thy                     line 25855
+top1_U49_dense_approx                          i/Top1_Ch5_8.thy                     line 25456
+top1_U49_open                                  i/Top1_Ch5_8.thy                     line 25231
+top1_U49_subset_C01                            i/Top1_Ch5_8.thy                     line 25070
+top1_uniform_limit_continuous_real             i/Top1_Ch4.thy                       line 15217
+top1_uniform_metric_is_metric                  i/Top1_Ch5_8.thy                     line 10549
+top1_uniform_metric_real_on_bdd_above          i/Top1_Ch2.thy                       line 13231
+top1_uniform_metric_real_on_coord_le           i/Top1_Ch2.thy                       line 13247
+top1_uniform_metric_real_on_metric_on          i/Top1_Ch2.thy                       line 12965
+top1_uniform_metric_real_on_metric_on_PiE_UNIV  i/Top1_Ch2.thy                       line 13263
+top1_uniform_metric_real_on_refl               i/Top1_Ch2.thy                       line 13270
+top1_uniform_metric_topology_ne_box_topology_real  i/Top1_Ch2.thy                       line 15558
+top1_uniform_metric_topology_subset_box_topology_real  i/Top1_Ch2.thy                       line 14836
+top1_uniform_topology_on_superset_compact_convergence  i/Top1_Ch5_8.thy                     line 17054
+top1_Union_closure_on_subset_closure_on_Union  i/Top1_Ch5_8.thy                     line 3136
+top1_unit_interval_connected                   i/Top1_Ch3.thy                       line 3114
+top1_unit_interval_topology_is_topology_on     i/Top1_Ch3.thy                       line 3101
+top1_urysohn_U_basic_properties                i/Top1_Ch4.thy                       line 6360
+top1_urysohn_U_closure_mono_dyadic             i/Top1_Ch4.thy                       line 7018
+top1_urysohn_U_closure_mono_same_level         i/Top1_Ch4.thy                       line 6976
+top1_urysohn_U_endpoints                       i/Top1_Ch4.thy                       line 6282
+top1_urysohn_U_even                            i/Top1_Ch4.thy                       line 6261
+top1_urysohn_U_mono_same_level                 i/Top1_Ch4.thy                       line 6894
+top1_urysohn_unit_interval                     i/Top1_Ch4.thy                       line 7073
+top1_urysohn_U_odd_step_properties             i/Top1_Ch4.thy                       line 6314
+top1_urysohn_U_pow2_scale                      i/Top1_Ch4.thy                       line 6265
+top1_Z_is_abelian_group                        i/Top1_Ch9_13.thy                    line 11019
+top1_Zn_is_abelian_group                       ac/AlgTopCached.thy                  line 6975
+topology_generated_by_basis_inter_image        i/Top1_Ch5_8.thy                     line 20451
+topology_generated_by_basis_is_strict          i/Top1_Ch2.thy                       line 1202
+topology_generated_by_basis_is_topology_on     i/Top1_Ch2.thy                       line 1082
+topology_generated_by_basis_mono_via_basis_elems  i/Top1_Ch2.thy                       line 13635
+topology_generated_by_basis_subset             i/Top1_Ch2.thy                       line 1280
+topology_generated_by_subbasis_contains        i/Top1_Ch2.thy                       line 1964
+topology_generated_by_subbasis_is_topology_on  i/Top1_Ch2.thy                       line 1993
+topology_inter2                                i/Top1_Ch2.thy                       line 73
+topology_inter_open                            b/AlgTop_JCT_Base.thy                line 6179
+topology_union2                                i/Top1_Ch2.thy                       line 1008
+topology_X_mem_TX                              svk/AlgTopSvK.thy                    line 519
+torus_relator_commutator                       ac8/AlgTopCached8.thy                line 4088
+torus_scheme_all_eq_v0                         pd/PolygonDisk.thy                   line 3875
+torus_scheme_nth                               ac8/AlgTopCached8.thy                line 3313
+torus_scheme_vertex_connectivity               pd/PolygonDisk.thy                   line 4095
+translation_homeo_R2                           b/AlgTop_JCT_Base.thy                line 8430
+tree_euler_all                                 ac11/AlgTopCached11.thy              line 9844
+tree_euler_and_leaf_combined                   ac11/AlgTopCached11.thy              line 9405
+tree_euler_from_leaf                           ac11/AlgTopCached11.thy              line 2218
+tree_euler_from_sc                             ac11/AlgTopCached11.thy              line 9111
+tree_euler_nat                                 ac11/AlgTopCached11.thy              line 9583
+tree_euler_number_one                          ac11/AlgTopCached11.thy              line 9874
+tree_leaf_existence_bridge                     ac11/AlgTopCached11.thy              line 7257
+tree_leaf_other_endpoint_shared                ac11/AlgTopCached11.thy              line 1360
+tree_simply_connected                          ac3/AlgTopCached3.thy                line 84
+tree_union_arcs_path_connected                 ac7/AlgTopCached7.thy                line 4220
+triangle_compact                               ac/AlgTopCached.thy                  line 41258
+tri_arg_metric                                 i/Top1_Ch5_8.thy                     line 14381
+trivial_kernel_injective                       ac8/AlgTopCached8.thy                line 5010
+trivial_pi1_imp_simply_connected               ac7/AlgTopCached7.thy                line 4476
+two_arcs_same_endpoints_sc_false               ac11/AlgTopCached11.thy              line 8732
+tychonoff_coord_point                          i/Top1_Ch5_8.thy                     line 809
+Tychonoff_general                              i/Top1_Ch5_8.thy                     line 21154
+tychonoff_point_in_all_closures                i/Top1_Ch5_8.thy                     line 1056
+tychonoff_subbasis_in_maxFIP                   i/Top1_Ch5_8.thy                     line 975
+tychonoff_subspace_compact                     i/Top1_Ch5_8.thy                     line 20583
+underdetermined_homogeneous_system             i/Top1_Ch5_8.thy                     line 28349
+unif_compact_imp_cc_conv                       i/Top1_Ch5_8.thy                     line 16132
+uniform_ball_in_cc_basis                       i/Top1_Ch5_8.thy                     line 19233
+uniform_bounded_imp_pointwise_bounded          i/Top1_Ch5_8.thy                     line 14757
+uniform_limit_continuous                       i/Top1_Ch5_8.thy                     line 5479
+uniform_metric_conv_imp_pointwise_unif         i/Top1_Ch5_8.thy                     line 11334
+uniform_metric_lt_imp_d_lt                     i/Top1_Ch5_8.thy                     line 14354
+uniform_metric_pointwise_lt                    i/Top1_Ch5_8.thy                     line 14336
+unit_interval_reversal_homeomorphism           ac/AlgTopCached.thy                  line 49000
+valid_equiv_preserves_quotient_homeo           AlgTop.thy                           line 12499
+valid_equiv_preserves_quotient_homeo_proper    AlgTop.thy                           line 12538
+valid_operation_preserves_quotient_homeo       AlgTop.thy                           line 12112
 vector_field_must_point_inward                 i/Top1_Ch9_13.thy                    line 13533
 wedge_circles_pi1_free                         ac5/AlgTopCached5.thy                line 2814
 weighted_sum_epsilon_delta                     i/Top1_Ch5_8.thy                     line 29816
@@ -1938,7 +3863,7 @@ Z_auto_sends_1_to_pm1                          ac/AlgTopCached.thy              
 Z_is_free_on_one_generator                     ac/AlgTopCached.thy                  line 31500
 Z_quotient_nZ_iso                              at/AlgTopChain.thy                   line 1804
 
-## theorems (230)
+## theorems (460)
 
 Corollary_17_7                                 i/Top1_Ch2.thy                       line 5793
 Lemma_13_1                                     i/Top1_Ch2.thy                       line 1215
@@ -2157,9 +4082,239 @@ Theorem_74_4_fund_group_m_projective           ac8/AlgTopCached8.thy            
 Theorem_75_1_H1_abelianization                 ac8/AlgTopCached8.thy                line 3787
 Theorem_75_3_H1_n_torus                        ac8/AlgTopCached8.thy                line 4472
 Theorem_75_4_H1_m_projective                   ac12/AlgTopCached12.thy              line 975
-Theorem_76_elementary_operations               AlgTop.thy                           line 12392
-Theorem_77_5_classification                    AlgTop.thy                           line 12552
-Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 12454
+Theorem_76_elementary_operations               AlgTop.thy                           line 12557
+Theorem_77_5_classification                    AlgTop.thy                           line 12749
+Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 12651
+Theorem_79_2                                   ac4/AlgTopCached4.thy                line 1524
+Theorem_79_4                                   ac4/AlgTopCached4.thy                line 2333
+Theorem_80_1_universal_unique                  ac4/AlgTopCached4.thy                line 3345
+Theorem_80_3_universal                         ac4/AlgTopCached4.thy                line 4013
+Theorem_81_2_covering_group_iso                ac10/AlgTopCached10.thy              line 1110
+Theorem_82_1_covering_existence                ac10/AlgTopCached10.thy              line 2957
+Theorem_83_4_covering_of_graph_is_graph        ac5/AlgTopCached5.thy                line 708
+Theorem_84_7_fund_group_graph_is_free          ac10/AlgTopCached10.thy              line 18527
+Theorem_85_1_Nielsen_Schreier                  ac10/AlgTopCached10.thy              line 21359
+Theorem_85_3_Schreier_index                    ac11/AlgTopCached11.thy              line 12841
+Corollary_17_7                                 i/Top1_Ch2.thy                       line 5793
+Lemma_13_1                                     i/Top1_Ch2.thy                       line 1215
+Lemma_13_2                                     i/Top1_Ch2.thy                       line 1319
+Lemma_13_3                                     i/Top1_Ch2.thy                       line 1420
+Lemma_13_4                                     i/Top1_Ch2.thy                       line 1575
+Lemma_16_1                                     i/Top1_Ch2.thy                       line 3896
+Lemma_16_2                                     i/Top1_Ch2.thy                       line 4085
+Lemma_20_2                                     i/Top1_Ch2.thy                       line 12134
+Lemma_21_2                                     i/Top1_Ch2.thy                       line 17267
+Lemma_21_2_sequence                            i/Top1_Ch2.thy                       line 17121
+Lemma_21_2_sequence_converse                   i/Top1_Ch2.thy                       line 17146
+Lemma_21_4                                     i/Top1_Ch2.thy                       line 17415
+Lemma_26_1                                     i/Top1_Ch3.thy                       line 4694
+Lemma_26_8                                     i/Top1_Ch3.thy                       line 4971
+Lemma_31_1                                     i/Top1_Ch4.thy                       line 4621
+Lemma_31_1a                                    i/Top1_Ch4.thy                       line 3112
+Lemma_31_1b                                    i/Top1_Ch4.thy                       line 4496
+Theorem_15_1                                   i/Top1_Ch2.thy                       line 3188
+Theorem_15_2                                   i/Top1_Ch2.thy                       line 3360
+Theorem_16_3                                   i/Top1_Ch2.thy                       line 4104
+Theorem_16_4                                   i/Top1_Ch2.thy                       line 4752
+Theorem_17_1                                   i/Top1_Ch2.thy                       line 4977
+Theorem_17_10                                  i/Top1_Ch2.thy                       line 6145
+Theorem_17_11                                  i/Top1_Ch2.thy                       line 6208
+Theorem_17_2                                   i/Top1_Ch2.thy                       line 5076
+Theorem_17_3                                   i/Top1_Ch2.thy                       line 5177
+Theorem_17_4                                   i/Top1_Ch2.thy                       line 5345
+Theorem_17_5a                                  i/Top1_Ch2.thy                       line 5471
+Theorem_17_5b                                  i/Top1_Ch2.thy                       line 5573
+Theorem_17_6                                   i/Top1_Ch2.thy                       line 5691
+Theorem_17_8                                   i/Top1_Ch2.thy                       line 5951
+Theorem_17_9                                   i/Top1_Ch2.thy                       line 5991
+Theorem_18_1                                   i/Top1_Ch2.thy                       line 7092
+Theorem_18_2                                   i/Top1_Ch2.thy                       line 7545
+Theorem_18_3                                   i/Top1_Ch2.thy                       line 7859
+Theorem_18_4                                   i/Top1_Ch2.thy                       line 8112
+Theorem_19_1                                   i/Top1_Ch2.thy                       line 8836
+Theorem_19_2                                   i/Top1_Ch2.thy                       line 11532
+Theorem_19_2_box                               i/Top1_Ch2.thy                       line 9482
+Theorem_19_2_product                           i/Top1_Ch2.thy                       line 9636
+Theorem_19_3                                   i/Top1_Ch2.thy                       line 11551
+Theorem_19_3_box                               i/Top1_Ch2.thy                       line 9921
+Theorem_19_3_product                           i/Top1_Ch2.thy                       line 10181
+Theorem_19_4                                   i/Top1_Ch2.thy                       line 11567
+Theorem_19_4_box                               i/Top1_Ch2.thy                       line 10521
+Theorem_19_4_product                           i/Top1_Ch2.thy                       line 10781
+Theorem_19_5                                   i/Top1_Ch2.thy                       line 11578
+Theorem_19_5_box                               i/Top1_Ch2.thy                       line 10917
+Theorem_19_5_product                           i/Top1_Ch2.thy                       line 11221
+Theorem_19_6                                   i/Top1_Ch2.thy                       line 9154
+Theorem_20_1                                   i/Top1_Ch2.thy                       line 12008
+Theorem_20_3                                   i/Top1_Ch2.thy                       line 14513
+Theorem_20_4                                   i/Top1_Ch2.thy                       line 15825
+Theorem_20_5                                   i/Top1_Ch2.thy                       line 16327
+Theorem_21_1                                   i/Top1_Ch2.thy                       line 16958
+Theorem_21_3                                   i/Top1_Ch2.thy                       line 17382
+Theorem_21_3_converse_metric                   i/Top1_Ch2.thy                       line 17324
+Theorem_21_3_forward                           i/Top1_Ch2.thy                       line 17281
+Theorem_21_5                                   i/Top1_Ch2.thy                       line 18399
+Theorem_21_6                                   i/Top1_Ch2.thy                       line 18558
+Theorem_22_1                                   i/Top1_Ch2.thy                       line 19054
+Theorem_22_2                                   i/Top1_Ch2.thy                       line 19837
+Theorem_23_3                                   i/Top1_Ch3.thy                       line 339
+Theorem_23_4                                   i/Top1_Ch3.thy                       line 504
+Theorem_23_5                                   i/Top1_Ch3.thy                       line 667
+Theorem_23_6                                   i/Top1_Ch3.thy                       line 1016
+Theorem_24_1                                   i/Top1_Ch3.thy                       line 2095
+Theorem_24_3                                   i/Top1_Ch3.thy                       line 2162
+Theorem_25_1                                   i/Top1_Ch3.thy                       line 2730
+Theorem_25_2                                   i/Top1_Ch3.thy                       line 3665
+Theorem_25_3                                   i/Top1_Ch3.thy                       line 2851
+Theorem_25_4                                   i/Top1_Ch3.thy                       line 4106
+Theorem_25_5                                   i/Top1_Ch3.thy                       line 4528
+Theorem_26_2                                   i/Top1_Ch3.thy                       line 5856
+Theorem_26_3                                   i/Top1_Ch3.thy                       line 6018
+Theorem_26_5                                   i/Top1_Ch3.thy                       line 6689
+Theorem_26_6                                   i/Top1_Ch3.thy                       line 6913
+Theorem_26_7                                   i/Top1_Ch3.thy                       line 5213
+Theorem_26_9                                   i/Top1_Ch3.thy                       line 5507
+Theorem_27_1                                   i/Top1_Ch3.thy                       line 7648
+Theorem_27_3                                   i/Top1_Ch3.thy                       line 7851
+Theorem_27_4                                   i/Top1_Ch3.thy                       line 8392
+Theorem_27_6                                   i/Top1_Ch3.thy                       line 9059
+Theorem_27_7                                   i/Top1_Ch3.thy                       line 10127
+Theorem_28_1                                   i/Top1_Ch3.thy                       line 10385
+Theorem_28_2                                   i/Top1_Ch5_8.thy                     line 32838
+Theorem_29_1                                   i/Top1_Ch3.thy                       line 11567
+Theorem_29_2                                   i/Top1_Ch3.thy                       line 13139
+Theorem_30_1                                   i/Top1_Ch4.thy                       line 1862
+Theorem_30_2                                   i/Top1_Ch4.thy                       line 2041
+Theorem_30_2_first_countable_product           i/Top1_Ch2.thy                       line 133
+Theorem_30_2_first_countable_product           i/Top1_Ch4.thy                       line 578
+Theorem_30_2_first_countable_subspace          i/Top1_Ch4.thy                       line 451
+Theorem_30_2_second_countable_product          i/Top1_Ch2.thy                       line 566
+Theorem_30_2_second_countable_product          i/Top1_Ch4.thy                       line 1072
+Theorem_30_2_second_countable_subspace         i/Top1_Ch4.thy                       line 549
+Theorem_30_3                                   i/Top1_Ch4.thy                       line 2360
+Theorem_30_3a                                  i/Top1_Ch4.thy                       line 2102
+Theorem_30_3b                                  i/Top1_Ch4.thy                       line 2264
+Theorem_31_2                                   i/Top1_Ch4.thy                       line 2849
+Theorem_31_2_regular_subspace                  i/Top1_Ch4.thy                       line 2468
+Theorem_32_1                                   i/Top1_Ch4.thy                       line 3266
+Theorem_32_2                                   i/Top1_Ch4.thy                       line 3931
+Theorem_32_3                                   i/Top1_Ch4.thy                       line 4731
+Theorem_32_4                                   i/Top1_Ch4.thy                       line 5371
+Theorem_33_1                                   i/Top1_Ch4.thy                       line 7904
+Theorem_33_2                                   i/Top1_Ch4.thy                       line 9278
+Theorem_33_2_product                           i/Top1_Ch4.thy                       line 8958
+Theorem_33_2_subspace                          i/Top1_Ch4.thy                       line 8395
+Theorem_34_1                                   i/Top1_Ch4.thy                       line 9314
+Theorem_34_2                                   i/Top1_Ch4.thy                       line 10495
+Theorem_34_3                                   i/Top1_Ch4.thy                       line 12558
+Theorem_34_3_forward                           i/Top1_Ch4.thy                       line 12346
+Theorem_35_1                                   i/Top1_Ch4.thy                       line 15860
+Theorem_36_1                                   i/Top1_Ch4.thy                       line 17139
+Theorem_36_2                                   i/Top1_Ch4.thy                       line 18195
+Theorem_37_3                                   i/Top1_Ch5_8.thy                     line 1224
+Theorem_38_2                                   i/Top1_Ch5_8.thy                     line 20798
+Theorem_38_4                                   i/Top1_Ch5_8.thy                     line 2226
+Theorem_38_5                                   i/Top1_Ch5_8.thy                     line 2597
+Theorem_40_3                                   i/Top1_Ch5_8.thy                     line 5939
+Theorem_41_1                                   i/Top1_Ch5_8.thy                     line 7325
+Theorem_41_2                                   i/Top1_Ch5_8.thy                     line 7336
+Theorem_41_4                                   i/Top1_Ch5_8.thy                     line 8210
+Theorem_41_5                                   i/Top1_Ch5_8.thy                     line 8247
+Theorem_41_7                                   i/Top1_Ch5_8.thy                     line 8762
+Theorem_41_8                                   i/Top1_Ch5_8.thy                     line 9109
+Theorem_42_1                                   i/Top1_Ch5_8.thy                     line 9599
+Theorem_43_2                                   i/Top1_Ch5_8.thy                     line 9863
+Theorem_43_4                                   i/Top1_Ch5_8.thy                     line 10245
+Theorem_43_5                                   i/Top1_Ch5_8.thy                     line 11076
+Theorem_43_6a                                  i/Top1_Ch5_8.thy                     line 11402
+Theorem_43_6b                                  i/Top1_Ch5_8.thy                     line 11608
+Theorem_43_6c                                  i/Top1_Ch5_8.thy                     line 11584
+Theorem_43_6d                                  i/Top1_Ch5_8.thy                     line 11683
+Theorem_43_7                                   i/Top1_Ch5_8.thy                     line 11716
+Theorem_44_1                                   i/Top1_Ch5_8.thy                     line 13408
+Theorem_45_1                                   i/Top1_Ch5_8.thy                     line 14182
+Theorem_45_4                                   i/Top1_Ch5_8.thy                     line 15101
+Theorem_46_1                                   i/Top1_Ch5_8.thy                     line 15559
+Theorem_46_10                                  i/Top1_Ch5_8.thy                     line 19438
+Theorem_46_11                                  i/Top1_Ch5_8.thy                     line 19643
+Theorem_46_2                                   i/Top1_Ch5_8.thy                     line 16216
+Theorem_46_5                                   i/Top1_Ch5_8.thy                     line 16591
+Theorem_46_7                                   i/Top1_Ch5_8.thy                     line 17330
+Theorem_46_8                                   i/Top1_Ch5_8.thy                     line 19210
+Theorem_47_1                                   i/Top1_Ch5_8.thy                     line 21745
+Theorem_48_2                                   i/Top1_Ch5_8.thy                     line 23689
+Theorem_48_5                                   i/Top1_Ch5_8.thy                     line 24191
+Theorem_49_1                                   i/Top1_Ch5_8.thy                     line 26267
+Theorem_50_1                                   i/Top1_Ch5_8.thy                     line 26897
+Theorem_50_2                                   i/Top1_Ch5_8.thy                     line 27062
+Theorem_50_5                                   i/Top1_Ch5_8.thy                     line 29924
+Theorem_50_6                                   i/Top1_Ch5_8.thy                     line 31887
+Theorem_52_1                                   i/Top1_Ch9_13.thy                    line 2976
+Theorem_52_1_iso                               i/Top1_Ch9_13.thy                    line 3381
+Theorem_52_4_composition                       i/Top1_Ch9_13.thy                    line 3888
+Theorem_52_4_identity                          i/Top1_Ch9_13.thy                    line 3897
+Theorem_53_1                                   i/Top1_Ch9_13.thy                    line 4199
+Theorem_53_2                                   i/Top1_Ch9_13.thy                    line 5641
+Theorem_53_3                                   i/Top1_Ch9_13.thy                    line 5907
+Theorem_54_3                                   i/Top1_Ch9_13.thy                    line 9890
+Theorem_54_4_bijective_simply_connected        i/Top1_Ch9_13.thy                    line 10460
+Theorem_54_4_lifting_correspondence            i/Top1_Ch9_13.thy                    line 10223
+Theorem_54_5                                   i/Top1_Ch9_13.thy                    line 10951
+Theorem_54_5_iso                               i/Top1_Ch9_13.thy                    line 11026
+Theorem_54_6b                                  ac11/AlgTopCached11.thy              line 91
+Theorem_54_6c                                  ac11/AlgTopCached11.thy              line 946
+Theorem_55_2_no_retraction                     i/Top1_Ch9_13.thy                    line 12147
+Theorem_55_5_vector_field                      i/Top1_Ch9_13.thy                    line 13839
+Theorem_55_6_brouwer                           i/Top1_Ch9_13.thy                    line 13914
+Theorem_56_1_FTA                               i/Top1_Ch9_13.thy                    line 15928
+Theorem_57_1                                   b0/AlgTop_JCT_Base0.thy              line 3409
+Theorem_57_2_no_antipode_S2_to_S1              ac/AlgTopCached.thy                  line 830
+Theorem_57_3_BorsukUlam                        b0/AlgTop_JCT_Base0.thy              line 3656
+Theorem_58_2_inclusion_iso                     b0/AlgTop_JCT_Base0.thy              line 5319
+Theorem_58_2_inclusion_iso_fixed               fi/AlgIsoFixed.thy                   line 430
+Theorem_58_3                                   b0/AlgTop_JCT_Base0.thy              line 5083
+Theorem_58_7                                   b0/AlgTop_JCT_Base0.thy              line 4316
+Theorem_58_7                                   fi/AlgIsoFixed.thy                   line 5
+Theorem_59_1                                   b0/AlgTop_JCT_Base0.thy              line 6691
+Theorem_59_3                                   b/AlgTop_JCT_Base.thy                line 1315
+Theorem_60_1_product                           b/AlgTop_JCT_Base.thy                line 3261
+Theorem_61_3_JordanSeparation_S2               b/AlgTop_JCT_Base.thy                line 11223
+Theorem_61_4_general_separation                b/AlgTop_JCT_Base.thy                line 12245
+Theorem_62_3_invariance_of_domain              ac/AlgTopCached.thy                  line 4363
+Theorem_63_1_loop_nontrivial                   a0/AlgTop0.thy                       line 736
+Theorem_63_2_arc_no_separation                 a0/AlgTop0.thy                       line 5858
+Theorem_63_3_general_nonseparation             a0/AlgTop0.thy                       line 5304
+Theorem_63_4_JordanCurve                       a0/AlgTop0.thy                       line 8554
+Theorem_63_5_two_closed_connected              a0/AlgTop0.thy                       line 6917
+Theorem_64_2_K33_not_planar                    ag/AlgTopGroups.thy                  line 1241
+Theorem_64_4_K5_not_planar                     k5/K5_nonplanar.thy                  line 3130
+Theorem_65_2                                   fi/AlgIsoFixed.thy                   line 10284
+Theorem_67_4_direct_sum_exists                 ac/AlgTopCached.thy                  line 7123
+Theorem_67_6_direct_sum_unique                 ac/AlgTopCached.thy                  line 7430
+Theorem_67_8_rank_unique                       ag/AlgTopGroups.thy                  line 8216
+Theorem_68_2_free_product_exists               ac/AlgTopCached.thy                  line 9628
+Theorem_68_4_free_product_unique               ac/AlgTopCached.thy                  line 12578
+Theorem_68_7_quotient_free_product             ac/AlgTopCached.thy                  line 12829
+Theorem_69_2                                   ac/AlgTopCached.thy                  line 28767
+Theorem_69_4                                   at/AlgTopChain.thy                   line 959
+Theorem_70_2_SvK                               ac/AlgTopCached.thy                  line 14137
+Theorem_70_2_SvK_parameterized                 ac/AlgTopCached.thy                  line 25835
+Theorem_71_1_wedge_of_circles_finite           ac/AlgTopCached.thy                  line 31796
+Theorem_71_3                                   ac9/AlgTopCached9.thy                line 257
+Theorem_71_3_finite                            ac8/AlgTopCached8.thy                line 7
+Theorem_72_1_attaching_two_cell                ac/AlgTopCached.thy                  line 43351
+Theorem_73_2_torus_free_abelian                ac8/AlgTopCached8.thy                line 5051
+Theorem_73_4_dunce_cap                         ac8/AlgTopCached8.thy                line 5255
+Theorem_74_1_polygon_quotient_compact_hausdorff  wh/AlgTopWedgeHelpers.thy            line 416
+Theorem_74_2_scheme_presentation               ac8/AlgTopCached8.thy                line 649
+Theorem_74_3_fund_group_n_torus                ac8/AlgTopCached8.thy                line 3372
+Theorem_74_4_fund_group_m_projective           ac8/AlgTopCached8.thy                line 8230
+Theorem_75_1_H1_abelianization                 ac8/AlgTopCached8.thy                line 3787
+Theorem_75_3_H1_n_torus                        ac8/AlgTopCached8.thy                line 4472
+Theorem_75_4_H1_m_projective                   ac12/AlgTopCached12.thy              line 975
+Theorem_76_elementary_operations               AlgTop.thy                           line 12557
+Theorem_77_5_classification                    AlgTop.thy                           line 12749
+Theorem_78_2_connected_polygonal_quotient      AlgTop.thy                           line 12651
 Theorem_79_2                                   ac4/AlgTopCached4.thy                line 1524
 Theorem_79_4                                   ac4/AlgTopCached4.thy                line 2333
 Theorem_80_1_universal_unique                  ac4/AlgTopCached4.thy                line 3345
@@ -2171,7 +4326,7 @@ Theorem_84_7_fund_group_graph_is_free          ac10/AlgTopCached10.thy          
 Theorem_85_1_Nielsen_Schreier                  ac10/AlgTopCached10.thy              line 21359
 Theorem_85_3_Schreier_index                    ac11/AlgTopCached11.thy              line 12841
 
-## corollarys (65)
+## corollarys (130)
 
 basepoint_change_iso_via_path                  i/Top1_Ch9_13.thy                    line 3665
 closure_of_connected_is_connected              i/Top1_Ch3.thy                       line 658
@@ -2238,129 +4393,6679 @@ Theorem_58_7_strict                            b0/AlgTop_JCT_Base0.thy          
 Theorem_59_3_path_connected                    b/AlgTop_JCT_Base.thy                line 3249
 Theorem_80_3_universal_strict                  ac4/AlgTopCached4.thy                line 4946
 top1_same_homotopy_type_strict                 b0/AlgTop_JCT_Base0.thy              line 5560
+basepoint_change_iso_via_path                  i/Top1_Ch9_13.thy                    line 3665
+closure_of_connected_is_connected              i/Top1_Ch3.thy                       line 658
+compact_finite_product                         i/Top1_Ch5_8.thy                     line 1424
+compact_iff_lp_compact_metric                  i/Top1_Ch5_8.thy                     line 33361
+compact_iff_seq_compact_metric                 i/Top1_Ch5_8.thy                     line 33366
+compact_iff_seq_compact_metrizable             i/Top1_Ch5_8.thy                     line 33377
+compact_in_strict_hausdorff_closedin_on        i/Top1_Ch3.thy                       line 6389
+compact_in_strict_hausdorff_complement_openin_on  i/Top1_Ch3.thy                       line 6396
+compact_metric_imp_second_countable            i/Top1_Ch5_8.thy                     line 14207
+compact_metric_imp_separable                   i/Top1_Ch5_8.thy                     line 14310
+compact_metrizable_strict                      i/Top1_Ch5_8.thy                     line 33387
+compact_product_strict                         i/Top1_Ch5_8.thy                     line 1431
+connected_iff_clopen_openin_on                 i/Top1_Ch3.thy                       line 179
+connected_locally_path_connected_imp_path_connected  i/Top1_Ch3.thy                       line 4608
+Corollary_22_3                                 i/Top1_Ch2.thy                       line 20663
+Corollary_24_2                                 i/Top1_Ch3.thy                       line 2107
+Corollary_27_2                                 i/Top1_Ch3.thy                       line 7661
+Corollary_27_8                                 i/Top1_Ch3.thy                       line 10306
+Corollary_29_3                                 i/Top1_Ch3.thy                       line 13456
+Corollary_29_4                                 i/Top1_Ch3.thy                       line 13729
+Corollary_45_5                                 i/Top1_Ch5_8.thy                     line 18293
+Corollary_46_6                                 i/Top1_Ch5_8.thy                     line 16623
+Corollary_46_9                                 i/Top1_Ch5_8.thy                     line 19355
+Corollary_50_3                                 i/Top1_Ch5_8.thy                     line 27487
+Corollary_50_7                                 i/Top1_Ch5_8.thy                     line 32323
+Corollary_50_8                                 i/Top1_Ch5_8.thy                     line 32484
+Corollary_50_9                                 i/Top1_Ch5_8.thy                     line 32516
+Corollary_52_2_basepoint_independent           ac/AlgTopCached.thy                  line 716
+Corollary_52_5_homeomorphism_iso               ac/AlgTopCached.thy                  line 739
+Corollary_55_4_inclusion_not_nulhomotopic      i/Top1_Ch9_13.thy                    line 12998
+Corollary_59_2                                 b/AlgTop_JCT_Base.thy                line 318
+Corollary_60_2_torus_pi1                       ac/AlgTopCached.thy                  line 989
+Corollary_70_3_simply_connected_intersection   ac/AlgTopCached.thy                  line 27144
+Corollary_70_3_simply_connected_intersection_param  ac/AlgTopCached.thy                  line 28405
+Corollary_70_4_simply_connected_V              ac/AlgTopCached.thy                  line 27456
+dunce_cap_presentation                         ac8/AlgTopCached8.thy                line 8215
+Lemma_13_3_on                                  i/Top1_Ch2.thy                       line 1509
+Lemma_23_2_disjoint                            i/Top1_Ch3.thy                       line 330
+lp_compact_iff_seq_compact_metric              i/Top1_Ch5_8.thy                     line 33371
+lp_compact_T1_infinite_intersection            i/Top1_Ch3.thy                       line 10657
+pi1_S2_minus_two_points_iso_Z                  ac/AlgTopCached.thy                  line 58898
+S1_pi1_iso_B2_minus_zero                       ac/AlgTopCached.thy                  line 41589
+Theorem_17_1_strict                            i/Top1_Ch2.thy                       line 5046
+Theorem_17_5a_strict                           i/Top1_Ch2.thy                       line 5547
+Theorem_18_1_strict                            i/Top1_Ch2.thy                       line 7517
+Theorem_19_1_strict                            i/Top1_Ch2.thy                       line 8855
+Theorem_23_3_strict                            i/Top1_Ch3.thy                       line 489
+Theorem_23_4_strict                            i/Top1_Ch3.thy                       line 650
+Theorem_26_2_strict                            i/Top1_Ch3.thy                       line 6005
+Theorem_26_3_strict                            i/Top1_Ch3.thy                       line 6376
+Theorem_26_5_strict                            i/Top1_Ch3.thy                       line 6849
+Theorem_28_2_strict                            i/Top1_Ch5_8.thy                     line 33352
+Theorem_30_3_strict                            i/Top1_Ch4.thy                       line 2384
+Theorem_32_1_strict                            i/Top1_Ch4.thy                       line 3918
+Theorem_33_1_strict                            i/Top1_Ch4.thy                       line 8193
+Theorem_35_1_strict                            i/Top1_Ch4.thy                       line 16185
+Theorem_37_3_strict                            i/Top1_Ch5_8.thy                     line 1444
+Theorem_45_1_strict                            i/Top1_Ch5_8.thy                     line 14198
+Theorem_46_7_finer_than_on                     i/Top1_Ch5_8.thy                     line 17347
+Theorem_50_2_finite_dim                        i/Top1_Ch5_8.thy                     line 27322
+Theorem_56_1_FTA_leading                       i/Top1_Ch9_13.thy                    line 16020
+Theorem_58_7_strict                            b0/AlgTop_JCT_Base0.thy              line 5548
+Theorem_59_3_path_connected                    b/AlgTop_JCT_Base.thy                line 3249
+Theorem_80_3_universal_strict                  ac4/AlgTopCached4.thy                line 4946
+top1_same_homotopy_type_strict                 b0/AlgTop_JCT_Base0.thy              line 5560
 
-## DUPLICATES (39 names appear in multiple locations)
+## DUPLICATES (2173 names appear in multiple locations)
 
+  abelian_commutator_trivial:
+    ac8/AlgTopCached8.thy                lemma  line 4968
+    ac8/AlgTopCached8.thy                lemma  line 4968
+  abelian_doubles_normal:
+    ag/AlgTopGroups.thy                  lemma  line 6792
+    ag/AlgTopGroups.thy                  lemma  line 6792
+  abelian_foldr_concat_double:
+    ac12/AlgTopCached12.thy              lemma  line 153
+    ac12/AlgTopCached12.thy              lemma  line 153
+  abelian_foldr_map_perm_distinct:
+    ag/AlgTopGroups.thy                  lemma  line 4066
+    ag/AlgTopGroups.thy                  lemma  line 4066
+  abelian_foldr_mul_cancel_pair:
+    ag/AlgTopGroups.thy                  lemma  line 1658
+    ag/AlgTopGroups.thy                  lemma  line 1658
+  abelian_foldr_mul_extract:
+    ag/AlgTopGroups.thy                  lemma  line 1618
+    ag/AlgTopGroups.thy                  lemma  line 1618
+  abelian_foldr_mul_filter_eq:
+    ag/AlgTopGroups.thy                  lemma  line 3399
+    ag/AlgTopGroups.thy                  lemma  line 3399
+  abelian_foldr_mul_split_filter:
+    ag/AlgTopGroups.thy                  lemma  line 1770
+    ag/AlgTopGroups.thy                  lemma  line 1770
+  abelian_foldr_perm_distinct:
+    ag/AlgTopGroups.thy                  lemma  line 3931
+    ag/AlgTopGroups.thy                  lemma  line 3931
+  abelian_foldr_remdups_pow:
+    ag/AlgTopGroups.thy                  lemma  line 4308
+    ag/AlgTopGroups.thy                  lemma  line 4308
+  abelian_foldr_replace_one:
+    ag/AlgTopGroups.thy                  lemma  line 4195
+    ag/AlgTopGroups.thy                  lemma  line 4195
+  abelian_foldr_split_one_element:
+    ag/AlgTopGroups.thy                  lemma  line 4169
+    ag/AlgTopGroups.thy                  lemma  line 4169
+  abelian_foldr_two_element:
+    ag/AlgTopGroups.thy                  lemma  line 4486
+    ag/AlgTopGroups.thy                  lemma  line 4486
+  abelian_generated_decomposes_via_order2:
+    ac12/AlgTopCached12.thy              lemma  line 727
+    ac12/AlgTopCached12.thy              lemma  line 727
+  abelian_group_pow_mul:
+    ac12/AlgTopCached12.thy              lemma  line 565
+    ac12/AlgTopCached12.thy              lemma  line 565
+  abelianization_concrete:
+    ac/AlgTopCached.thy                  lemma  line 9544
+    ac/AlgTopCached.thy                  lemma  line 9544
+  abelianization_independence_on_generators:
+    at/AlgTopChain.thy                   lemma  line 622
+    at/AlgTopChain.thy                   lemma  line 622
+  abelianization_injective_on_generators:
+    at/AlgTopChain.thy                   lemma  line 539
+    at/AlgTopChain.thy                   lemma  line 539
+  abelianization_of_presented_group:
+    at/AlgTopChain.thy                   lemma  line 1340
+    at/AlgTopChain.thy                   lemma  line 1340
+  abelianization_transfer_iso:
+    ac8/AlgTopCached8.thy                lemma  line 4364
+    ac8/AlgTopCached8.thy                lemma  line 4364
+  abelian_mul_left_commute:
+    ag/AlgTopGroups.thy                  lemma  line 1596
+    ag/AlgTopGroups.thy                  lemma  line 1596
+  abelian_subgroup_is_normal:
+    ac12/AlgTopCached12.thy              lemma  line 120
+    ac12/AlgTopCached12.thy              lemma  line 120
+  abelian_word_net_count:
+    ag/AlgTopGroups.thy                  lemma  line 1584
+    ag/AlgTopGroups.thy                  lemma  line 1584
+  abelian_word_product_move_front:
+    ag/AlgTopGroups.thy                  lemma  line 3412
+    ag/AlgTopGroups.thy                  lemma  line 3412
+  abelian_word_product_swap:
+    ag/AlgTopGroups.thy                  lemma  line 3291
+    ag/AlgTopGroups.thy                  lemma  line 3291
+  abelian_word_product_zero_net_coeff:
+    ag/AlgTopGroups.thy                  lemma  line 3632
+    ag/AlgTopGroups.thy                  lemma  line 3632
+  abs_diff_le_of_bounds:
+    i/Top1_Ch4.thy                       lemma  line 12764
+    i/Top1_Ch4.thy                       lemma  line 12764
+  abs_diff_lt_iff_mem_open_interval:
+    i/Top1_Ch2.thy                       lemma  line 13922
+    i/Top1_Ch2.thy                       lemma  line 13922
+  acyclic_graph_has_leaf:
+    ac11/AlgTopCached11.thy              lemma  line 6243
+    ac11/AlgTopCached11.thy              lemma  line 6243
+  adjacent_cone_diagonal_injective:
+    AlgTop.thy                           lemma  line 2368
+    AlgTop.thy                           lemma  line 2368
+  adjacent_cone_diagonal_injective_tp:
+    AlgTop.thy                           lemma  line 2438
+    AlgTop.thy                           lemma  line 2438
+  affine_map_continuous_I_to_I:
+    ac/AlgTopCached.thy                  lemma  line 15520
+    ac/AlgTopCached.thy                  lemma  line 15520
+  affine_on_interval_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 12516
+    i/Top1_Ch5_8.thy                     lemma  line 12516
+  affine_param_in_interval:
+    ac/AlgTopCached.thy                  lemma  line 48498
+    ac/AlgTopCached.thy                  lemma  line 48498
+  affine_param_in_unit_interval:
+    ac/AlgTopCached.thy                  lemma  line 48511
+    ac/AlgTopCached.thy                  lemma  line 48511
+  affine_scale_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 12548
+    i/Top1_Ch5_8.thy                     lemma  line 12548
+  affine_span_empty_interior:
+    i/Top1_Ch5_8.thy                     lemma  line 28596
+    i/Top1_Ch5_8.thy                     lemma  line 28596
+  affine_span_in_hyperplane:
+    i/Top1_Ch5_8.thy                     lemma  line 28498
+    i/Top1_Ch5_8.thy                     lemma  line 28498
+  antipode_preserving_basepoint_nontrivial:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 2823
+    b0/AlgTop_JCT_Base0.thy              lemma  line 2823
+  arc_both_endpoints_in_one_part:
+    ac/AlgTopCached.thy                  lemma  line 51546
+    ac/AlgTopCached.thy                  lemma  line 51546
+  arc_compact:
+    ac10/AlgTopCached10.thy              lemma  line 10322
+    ac10/AlgTopCached10.thy              lemma  line 10322
+  arc_concat_endpoints:
+    ac/AlgTopCached.thy                  lemma  line 51654
+    ac/AlgTopCached.thy                  lemma  line 51654
+  arc_connected:
+    a0/AlgTop0.thy                       lemma  line 4922
+    a0/AlgTop0.thy                       lemma  line 4922
+  arc_deformation_retract_to_endpoint:
+    ac3/AlgTopCached3.thy                lemma  line 514
+    ac3/AlgTopCached3.thy                lemma  line 514
+  arc_endpoint_in_closure_of_complement_S2:
+    fi/AlgIsoFixed.thy                   lemma  line 3723
+    fi/AlgIsoFixed.thy                   lemma  line 3723
+  arc_endpoint_in_closure_of_interior:
+    ac/AlgTopCached.thy                  lemma  line 52950
+    ac/AlgTopCached.thy                  lemma  line 52950
+  arc_endpoint_not_interior_S2:
+    fi/AlgIsoFixed.thy                   lemma  line 3326
+    fi/AlgIsoFixed.thy                   lemma  line 3326
+  arc_endpoints_are_boundary:
+    ac/AlgTopCached.thy                  lemma  line 48544
+    ac/AlgTopCached.thy                  lemma  line 48544
+  arc_endpoints_subset:
+    k5/K5_nonplanar.thy                  lemma  line 5
+    k5/K5_nonplanar.thy                  lemma  line 5
+  arc_endpoints_under_homeomorphism:
+    fib/AlgIsoFixedBase.thy              lemma  line 5097
+    fib/AlgIsoFixedBase.thy              lemma  line 5097
+  arc_in_S2_closed:
+    a0/AlgTop0.thy                       lemma  line 4888
+    a0/AlgTop0.thy                       lemma  line 4888
+  arc_joining_lemma:
+    a0/AlgTop0.thy                       lemma  line 5620
+    a0/AlgTop0.thy                       lemma  line 5620
+  arc_locally_path_connected:
+    ac10/AlgTopCached10.thy              lemma  line 10306
+    ac10/AlgTopCached10.thy              lemma  line 10306
+  arc_merge_at_endpoint:
+    ac11/AlgTopCached11.thy              lemma  line 5240
+    ac11/AlgTopCached11.thy              lemma  line 5240
+  arc_minus_endpoints_connected:
+    ac/AlgTopCached.thy                  lemma  line 51957
+    ac/AlgTopCached.thy                  lemma  line 51957
+  arcs_concatenation_is_arc:
+    ac/AlgTopCached.thy                  lemma  line 49839
+    ac/AlgTopCached.thy                  lemma  line 49839
+  arcs_form_simple_closed_curve:
+    ac/AlgTopCached.thy                  lemma  line 49072
+    ac/AlgTopCached.thy                  lemma  line 49072
+  arc_split_at_given_point:
+    ac/AlgTopCached.thy                  lemma  line 50468
+    ac/AlgTopCached.thy                  lemma  line 50468
+  arc_split_at_midpoint:
+    a0/AlgTop0.thy                       lemma  line 4959
+    a0/AlgTop0.thy                       lemma  line 4959
+  arc_split_endpoints:
+    ac/AlgTopCached.thy                  lemma  line 50950
+    ac/AlgTopCached.thy                  lemma  line 50950
+  arc_sub_arc_covering_compact:
+    ac10/AlgTopCached10.thy              lemma  line 10421
+    ac10/AlgTopCached10.thy              lemma  line 10421
+  B2_compact:
+    ac2/AlgTopCached2.thy                lemma  line 7
+    ac2/AlgTopCached2.thy                lemma  line 7
+  balanced_from_sum_zero:
+    ac12/AlgTopCached12.thy              lemma  line 106
+    ac12/AlgTopCached12.thy              lemma  line 106
+  basepoint_change_cong_on_I:
+    ac/AlgTopCached.thy                  lemma  line 41780
+    ac/AlgTopCached.thy                  lemma  line 41780
+  basepoint_change_image_hom:
+    ac4/AlgTopCached4.thy                lemma  line 1833
+    ac4/AlgTopCached4.thy                lemma  line 1833
+  basepoint_change_iso_via_path:
+    i/Top1_Ch9_13.thy                    corollary  line 3665
+    i/Top1_Ch9_13.thy                    corollary  line 3665
+  basis_elem_in_generated_topology:
+    i/Top1_Ch5_8.thy                     lemma  line 16011
+    i/Top1_Ch5_8.thy                     lemma  line 16011
+  basis_elem_open_if_basis_for:
+    i/Top1_Ch2.thy                       lemma  line 1918
+    i/Top1_Ch2.thy                       lemma  line 1918
+  basis_elem_open_in_generated_topology:
+    i/Top1_Ch2.thy                       lemma  line 1882
+    i/Top1_Ch2.thy                       lemma  line 1882
+  basis_for:
+    i/Top1_Ch2.thy                       definition  line 1078
+    i/Top1_Ch2.thy                       definition  line 1078
+  basis_for_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 1904
+    i/Top1_Ch2.thy                       lemma  line 1904
+  basis_for_order_topology_on_UNIV:
+    i/Top1_Ch2.thy                       lemma  line 2973
+    i/Top1_Ch2.thy                       lemma  line 2973
+  basis_for_refine:
+    i/Top1_Ch2.thy                       lemma  line 1934
+    i/Top1_Ch2.thy                       lemma  line 1934
+  basis_K_topology_R:
+    i/Top1_Ch2.thy                       definition  line 1559
+    i/Top1_Ch2.thy                       definition  line 1559
+  basis_lower_limit_R:
+    i/Top1_Ch2.thy                       definition  line 1556
+    i/Top1_Ch2.thy                       definition  line 1556
+  basis_order_topology:
+    i/Top1_Ch2.thy                       definition  line 2238
+    i/Top1_Ch2.thy                       definition  line 2238
+  basis_order_topology_cases:
+    i/Top1_Ch2.thy                       lemma  line 2365
+    i/Top1_Ch2.thy                       lemma  line 2365
+  basis_order_topology_contains_open_interval:
+    i/Top1_Ch2.thy                       lemma  line 2375
+    i/Top1_Ch2.thy                       lemma  line 2375
+  basis_order_topology_HOL_open:
+    i/Top1_Ch5_8.thy                     lemma  line 1724
+    i/Top1_Ch5_8.thy                     lemma  line 1724
+  basis_order_topology_is_basis_on_UNIV:
+    i/Top1_Ch2.thy                       lemma  line 2946
+    i/Top1_Ch2.thy                       lemma  line 2946
+  basis_order_topology_on:
+    i/Top1_Ch2.thy                       definition  line 2259
+    i/Top1_Ch2.thy                       definition  line 2259
+  basis_order_topology_on_restrict:
+    i/Top1_Ch2.thy                       lemma  line 4391
+    i/Top1_Ch2.thy                       lemma  line 4391
+  basis_order_topology_on_subset:
+    i/Top1_Ch2.thy                       lemma  line 4384
+    i/Top1_Ch2.thy                       lemma  line 4384
+  basis_order_topology_on_UNIV:
+    i/Top1_Ch2.thy                       lemma  line 2269
+    i/Top1_Ch2.thy                       lemma  line 2269
+  basis_order_topology_refine_intersection:
+    i/Top1_Ch2.thy                       lemma  line 2617
+    i/Top1_Ch2.thy                       lemma  line 2617
+  basis_standard_R:
+    i/Top1_Ch2.thy                       definition  line 1553
+    i/Top1_Ch2.thy                       definition  line 1553
+  bij_hom_inv_is_hom:
+    ac/AlgTopCached.thy                  lemma  line 41743
+    ac/AlgTopCached.thy                  lemma  line 41743
+  bm_triangle:
+    i/Top1_Ch5_8.thy                     lemma  line 15618
+    i/Top1_Ch5_8.thy                     lemma  line 15618
+  Borsuk_R2:
+    ac/AlgTopCached.thy                  lemma  line 3745
+    ac/AlgTopCached.thy                  lemma  line 3745
+  bounded_metric_lt_imp_d_lt:
+    i/Top1_Ch5_8.thy                     lemma  line 14331
+    i/Top1_Ch5_8.thy                     lemma  line 14331
+  cancel_pair_not_reduced:
+    ac7/AlgTopCached7.thy                lemma  line 120
+    ac7/AlgTopCached7.thy                lemma  line 120
+  canonical_product_two_eq:
+    ag/AlgTopGroups.thy                  lemma  line 4553
+    ag/AlgTopGroups.thy                  lemma  line 4553
+  card_three_le:
+    ac/AlgTopCached.thy                  lemma  line 48532
+    ac/AlgTopCached.thy                  lemma  line 48532
+  cc_basis_is_basis:
+    i/Top1_Ch5_8.thy                     lemma  line 15711
+    i/Top1_Ch5_8.thy                     lemma  line 15711
+  cc_basis_member_pointwise:
+    i/Top1_Ch5_8.thy                     lemma  line 15983
+    i/Top1_Ch5_8.thy                     lemma  line 15983
+  cc_basis_refine_single:
+    i/Top1_Ch5_8.thy                     lemma  line 15630
+    i/Top1_Ch5_8.thy                     lemma  line 15630
+  cc_basis_self_member:
+    i/Top1_Ch5_8.thy                     lemma  line 15689
+    i/Top1_Ch5_8.thy                     lemma  line 15689
+  cc_conv_imp_unif_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 16018
+    i/Top1_Ch5_8.thy                     lemma  line 16018
+  cc_eq_uniform_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 17943
+    i/Top1_Ch5_8.thy                     lemma  line 17943
+  cc_open_basis_at_point:
+    i/Top1_Ch5_8.thy                     lemma  line 16075
+    i/Top1_Ch5_8.thy                     lemma  line 16075
+  cc_supset_uniform_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 19250
+    i/Top1_Ch5_8.thy                     lemma  line 19250
+  cc_supset_uniform_compact_full:
+    i/Top1_Ch5_8.thy                     lemma  line 19288
+    i/Top1_Ch5_8.thy                     lemma  line 19288
+  cc_topology_is_topology:
+    i/Top1_Ch5_8.thy                     lemma  line 15834
+    i/Top1_Ch5_8.thy                     lemma  line 15834
   ccw_polygon_half_plane:
     at/AlgTopChain.thy                   lemma  line 2203
     pd/PolygonDisk.thy                   lemma  line 173
+    at/AlgTopChain.thy                   lemma  line 2203
+    pd/PolygonDisk.thy                   lemma  line 173
+  centralizer_is_subgroup:
+    ac8/AlgTopCached8.thy                lemma  line 4543
+    ac8/AlgTopCached8.thy                lemma  line 4543
+  centroid_weight_not_on_edge:
+    AlgTop.thy                           lemma  line 2506
+    AlgTop.thy                           lemma  line 2506
+  circle_minus_point_deformation_retract:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 3284
+    wh/AlgTopWedgeHelpers.thy            lemma  line 3284
+  circle_minus_point_path_connected:
+    svk/AlgTopSvK.thy                    lemma  line 819
+    svk/AlgTopSvK.thy                    lemma  line 819
+  circle_minus_point_simply_connected:
+    svk/AlgTopSvK.thy                    lemma  line 1196
+    svk/AlgTopSvK.thy                    lemma  line 1196
+  circle_path_connected:
+    svk/AlgTopSvK.thy                    lemma  line 849
+    svk/AlgTopSvK.thy                    lemma  line 849
+  clamp01:
+    i/Top1_Ch5_8.thy                     definition  line 12132
+    i/Top1_Ch5_8.thy                     definition  line 12132
+  clamp01_id:
+    i/Top1_Ch5_8.thy                     lemma  line 13247
+    i/Top1_Ch5_8.thy                     lemma  line 13247
+  clamp01_id_early:
+    i/Top1_Ch5_8.thy                     lemma  line 12137
+    i/Top1_Ch5_8.thy                     lemma  line 12137
+  clamp01_range:
+    i/Top1_Ch5_8.thy                     lemma  line 12134
+    i/Top1_Ch5_8.thy                     lemma  line 12134
+  closed_complement_open:
+    svk/AlgTopSvK.thy                    lemma  line 1230
+    svk/AlgTopSvK.thy                    lemma  line 1230
+  closedin_carrier:
+    i/Top1_Ch2.thy                       lemma  line 5056
+    i/Top1_Ch2.thy                       lemma  line 5056
+  closedin_complement_openin:
+    b/AlgTop_JCT_Base.thy                lemma  line 260
+    b/AlgTop_JCT_Base.thy                lemma  line 260
+  closedin_contains_closure:
+    i/Top1_Ch5_8.thy                     lemma  line 20669
+    i/Top1_Ch5_8.thy                     lemma  line 20669
+  closedin_contains_closure_early:
+    i/Top1_Ch5_8.thy                     lemma  line 2177
+    i/Top1_Ch5_8.thy                     lemma  line 2177
+  closedin_diff_open:
+    i/Top1_Ch2.thy                       lemma  line 4900
+    i/Top1_Ch2.thy                       lemma  line 4900
+  closedin_empty:
+    i/Top1_Ch2.thy                       lemma  line 5053
+    i/Top1_Ch2.thy                       lemma  line 5053
+  closedin_if_closure_subset:
+    i/Top1_Ch5_8.thy                     lemma  line 16481
+    i/Top1_Ch5_8.thy                     lemma  line 16481
+  closedin_II_rectangle:
+    i/Top1_Ch9_13.thy                    lemma  line 7710
+    i/Top1_Ch9_13.thy                    lemma  line 7710
+  closedin_Inter:
+    i/Top1_Ch2.thy                       lemma  line 5060
+    i/Top1_Ch2.thy                       lemma  line 5060
+  closedin_inter2:
+    i/Top1_Ch2.thy                       lemma  line 5067
+    i/Top1_Ch2.thy                       lemma  line 5067
+  closedin_intro:
+    i/Top1_Ch2.thy                       lemma  line 4906
+    i/Top1_Ch2.thy                       lemma  line 4906
+  closedin_I_sub_interval:
+    i/Top1_Ch9_13.thy                    lemma  line 7689
+    i/Top1_Ch9_13.thy                    lemma  line 7689
+  closedin_on:
+    i/Top1_Ch2.thy                       definition  line 4886
+    i/Top1_Ch2.thy                       definition  line 4886
+  closedin_on_finite_indexed_Union:
+    i/Top1_Ch5_8.thy                     lemma  line 27362
+    i/Top1_Ch5_8.thy                     lemma  line 27362
+  closedin_on_finite_Union:
+    i/Top1_Ch5_8.thy                     lemma  line 4759
+    i/Top1_Ch5_8.thy                     lemma  line 4759
+  closedin_on_subspace:
+    i/Top1_Ch5_8.thy                     lemma  line 27392
+    i/Top1_Ch5_8.thy                     lemma  line 27392
+  closedin_on_Un:
+    i/Top1_Ch5_8.thy                     lemma  line 27348
+    i/Top1_Ch5_8.thy                     lemma  line 27348
+  closedin_sub:
+    i/Top1_Ch2.thy                       lemma  line 4894
+    i/Top1_Ch2.thy                       lemma  line 4894
+  closedin_subspace_from_ambient:
+    i/Top1_Ch5_8.thy                     lemma  line 20677
+    i/Top1_Ch5_8.thy                     lemma  line 20677
+  closed_interval_01_is_topology:
+    i/Top1_Ch5_8.thy                     lemma  line 12409
+    i/Top1_Ch5_8.thy                     lemma  line 12409
+  closed_interval_hausdorff:
+    i/Top1_Ch5_8.thy                     lemma  line 1946
+    i/Top1_Ch5_8.thy                     lemma  line 1946
+  closedin_Union_finite:
+    i/Top1_Ch2.thy                       lemma  line 4920
+    i/Top1_Ch2.thy                       lemma  line 4920
+  closed_real_Inf_in:
+    ac10/AlgTopCached10.thy              lemma  line 10395
+    ac10/AlgTopCached10.thy              lemma  line 10395
+  closed_real_Sup_in:
+    ac10/AlgTopCached10.thy              lemma  line 10370
+    ac10/AlgTopCached10.thy              lemma  line 10370
+  closed_set_first_entry:
+    ac11/AlgTopCached11.thy              lemma  line 2799
+    ac11/AlgTopCached11.thy              lemma  line 2799
+  closed_subset_compact:
+    ac/AlgTopCached.thy                  lemma  line 41032
+    ac/AlgTopCached.thy                  lemma  line 41032
+  closed_subset_complete:
+    i/Top1_Ch5_8.thy                     lemma  line 11512
+    i/Top1_Ch5_8.thy                     lemma  line 11512
+  closure_cc_cont_on_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 16493
+    i/Top1_Ch5_8.thy                     lemma  line 16493
+  closure_equicontinuous:
+    i/Top1_Ch5_8.thy                     lemma  line 14831
+    i/Top1_Ch5_8.thy                     lemma  line 14831
+  closure_imp_net_converges:
+    i/Top1_Ch5_8.thy                     lemma  line 33492
+    i/Top1_Ch5_8.thy                     lemma  line 33492
+  closure_meets_open:
+    i/Top1_Ch2.thy                       lemma  line 5316
+    i/Top1_Ch2.thy                       lemma  line 5316
+  closure_of_connected_is_connected:
+    i/Top1_Ch3.thy                       corollary  line 658
+    i/Top1_Ch3.thy                       corollary  line 658
+  closure_on:
+    i/Top1_Ch2.thy                       definition  line 5220
+    i/Top1_Ch2.thy                       definition  line 5220
+  closure_on_carrier:
+    i/Top1_Ch3.thy                       lemma  line 10683
+    i/Top1_Ch3.thy                       lemma  line 10683
+  closure_on_closed:
+    i/Top1_Ch2.thy                       lemma  line 5269
+    i/Top1_Ch2.thy                       lemma  line 5269
+  closure_on_closed_subspace:
+    i/Top1_Ch5_8.thy                     lemma  line 20686
+    i/Top1_Ch5_8.thy                     lemma  line 20686
+  closure_on_is_closedin:
+    i/Top1_Ch5_8.thy                     lemma  line 20662
+    i/Top1_Ch5_8.thy                     lemma  line 20662
+  closure_on_mono:
+    i/Top1_Ch2.thy                       lemma  line 5239
+    i/Top1_Ch2.thy                       lemma  line 5239
+  closure_on_product_rect_subset_prod_closure:
+    i/Top1_Ch4.thy                       lemma  line 2711
+    i/Top1_Ch4.thy                       lemma  line 2711
+  closure_on_sub_carrier:
+    i/Top1_Ch5_8.thy                     lemma  line 20655
+    i/Top1_Ch5_8.thy                     lemma  line 20655
+  closure_on_subset_carrier:
+    i/Top1_Ch2.thy                       lemma  line 5310
+    i/Top1_Ch2.thy                       lemma  line 5310
+  closure_on_subset_of_closed:
+    i/Top1_Ch2.thy                       lemma  line 5263
+    i/Top1_Ch2.thy                       lemma  line 5263
+  closure_pointwise_bounded:
+    i/Top1_Ch5_8.thy                     lemma  line 14941
+    i/Top1_Ch5_8.thy                     lemma  line 14941
+  coherent_topology_is_strict:
+    ac10/AlgTopCached10.thy              lemma  line 18570
+    ac10/AlgTopCached10.thy              lemma  line 18570
+  commutator_conjugate:
+    ac/AlgTopCached.thy                  lemma  line 8124
+    ac/AlgTopCached.thy                  lemma  line 8124
+  commutator_subgroup_is_normal:
+    ac/AlgTopCached.thy                  lemma  line 8171
+    ac/AlgTopCached.thy                  lemma  line 8171
+  commutator_zero_exponent:
+    at/AlgTopChain.thy                   lemma  line 448
+    at/AlgTopChain.thy                   lemma  line 448
+  compact_closed_FIP_inter_ne:
+    i/Top1_Ch5_8.thy                     lemma  line 781
+    i/Top1_Ch5_8.thy                     lemma  line 781
+  compact_discrete_finite:
+    ac3/AlgTopCached3.thy                lemma  line 92
+    ac3/AlgTopCached3.thy                lemma  line 92
+  compact_embedding_dim_le:
+    i/Top1_Ch5_8.thy                     lemma  line 32033
+    i/Top1_Ch5_8.thy                     lemma  line 32033
+  compact_finite:
+    ac/AlgTopCached.thy                  lemma  line 41242
+    ac/AlgTopCached.thy                  lemma  line 41242
+  compact_finite_product:
+    i/Top1_Ch5_8.thy                     corollary  line 1424
+    i/Top1_Ch5_8.thy                     corollary  line 1424
+  compact_finite_subcover:
+    i/Top1_Ch3.thy                       lemma  line 4655
+    i/Top1_Ch3.thy                       lemma  line 4655
+  compact_finite_union_subspace:
+    ac10/AlgTopCached10.thy              lemma  line 8199
+    ac10/AlgTopCached10.thy              lemma  line 8199
+  compact_graph_finite_arcs:
+    ac10/AlgTopCached10.thy              lemma  line 21712
+    ac10/AlgTopCached10.thy              lemma  line 21712
+  compact_hausdorff_continuous_closed_map:
+    i/Top1_Ch3.thy                       lemma  line 6863
+    i/Top1_Ch3.thy                       lemma  line 6863
+  compact_hausdorff_shrink_into_open:
+    i/Top1_Ch3.thy                       lemma  line 11093
+    i/Top1_Ch3.thy                       lemma  line 11093
+  compact_Icc_Times:
+    ac/AlgTopCached.thy                  lemma  line 41253
+    ac/AlgTopCached.thy                  lemma  line 41253
+  compact_iff_lp_compact_metric:
+    i/Top1_Ch5_8.thy                     corollary  line 33361
+    i/Top1_Ch5_8.thy                     corollary  line 33361
+  compact_iff_seq_compact_metric:
+    i/Top1_Ch5_8.thy                     corollary  line 33366
+    i/Top1_Ch5_8.thy                     corollary  line 33366
+  compact_iff_seq_compact_metrizable:
+    i/Top1_Ch5_8.thy                     corollary  line 33377
+    i/Top1_Ch5_8.thy                     corollary  line 33377
+  compact_imp_complete:
+    i/Top1_Ch5_8.thy                     lemma  line 13783
+    i/Top1_Ch5_8.thy                     lemma  line 13783
+  compact_imp_countably_compact:
+    i/Top1_Ch3.thy                       lemma  line 10379
+    i/Top1_Ch3.thy                       lemma  line 10379
+  compact_imp_totally_bounded:
+    i/Top1_Ch5_8.thy                     lemma  line 13745
+    i/Top1_Ch5_8.thy                     lemma  line 13745
+  compact_in_graph_finite_arcs:
+    ac3/AlgTopCached3.thy                lemma  line 191
+    ac3/AlgTopCached3.thy                lemma  line 191
+  compact_in_hausdorff_closed:
+    i/Top1_Ch5_8.thy                     lemma  line 2218
+    i/Top1_Ch5_8.thy                     lemma  line 2218
+  compact_in_open_eps_gap:
+    i/Top1_Ch5_8.thy                     lemma  line 18478
+    i/Top1_Ch5_8.thy                     lemma  line 18478
+  compact_in_strict_hausdorff_closedin_on:
+    i/Top1_Ch3.thy                       corollary  line 6389
+    i/Top1_Ch3.thy                       corollary  line 6389
+  compact_in_strict_hausdorff_complement_openin_on:
+    i/Top1_Ch3.thy                       corollary  line 6396
+    i/Top1_Ch3.thy                       corollary  line 6396
+  compact_is_topology:
+    i/Top1_Ch3.thy                       lemma  line 4652
+    i/Top1_Ch3.thy                       lemma  line 4652
+  compact_metric_imp_bounded:
+    i/Top1_Ch5_8.thy                     lemma  line 14714
+    i/Top1_Ch5_8.thy                     lemma  line 14714
+  compact_metric_imp_second_countable:
+    i/Top1_Ch5_8.thy                     corollary  line 14207
+    i/Top1_Ch5_8.thy                     corollary  line 14207
+  compact_metric_imp_separable:
+    i/Top1_Ch5_8.thy                     corollary  line 14310
+    i/Top1_Ch5_8.thy                     corollary  line 14310
+  compact_metric_small_cover:
+    i/Top1_Ch5_8.thy                     lemma  line 29148
+    i/Top1_Ch5_8.thy                     lemma  line 29148
+  compact_metrizable_strict:
+    i/Top1_Ch5_8.thy                     corollary  line 33387
+    i/Top1_Ch5_8.thy                     corollary  line 33387
+  compact_onI:
+    i/Top1_Ch3.thy                       lemma  line 4660
+    i/Top1_Ch3.thy                       lemma  line 4660
+  compact_on_subspace_self:
+    i/Top1_Ch5_8.thy                     lemma  line 19223
+    i/Top1_Ch5_8.thy                     lemma  line 19223
+  compact_product_strict:
+    i/Top1_Ch5_8.thy                     corollary  line 1431
+    i/Top1_Ch5_8.thy                     corollary  line 1431
   compact_R2_bridge:
     at/AlgTopChain.thy                   lemma  line 2035
     pd/PolygonDisk.thy                   lemma  line 5
+    at/AlgTopChain.thy                   lemma  line 2035
+    pd/PolygonDisk.thy                   lemma  line 5
+  compact_real_imp_top1_bounded_set:
+    i/Top1_Ch3.thy                       lemma  line 7671
+    i/Top1_Ch3.thy                       lemma  line 7671
+  compact_singleton:
+    ac/AlgTopCached.thy                  lemma  line 41233
+    ac/AlgTopCached.thy                  lemma  line 41233
+  compact_strict:
+    i/Top1_Ch3.thy                       lemma  line 4674
+    i/Top1_Ch3.thy                       lemma  line 4674
+  compact_strict_cover_sub:
+    i/Top1_Ch3.thy                       lemma  line 4689
+    i/Top1_Ch3.thy                       lemma  line 4689
+  compact_subspace_strict:
+    i/Top1_Ch3.thy                       lemma  line 4683
+    i/Top1_Ch3.thy                       lemma  line 4683
+  compact_Times_general:
+    ac/AlgTopCached.thy                  lemma  line 41075
+    ac/AlgTopCached.thy                  lemma  line 41075
+  compact_Un:
+    ac/AlgTopCached.thy                  lemma  line 40988
+    ac/AlgTopCached.thy                  lemma  line 40988
+  compact_Union:
+    ac/AlgTopCached.thy                  lemma  line 41017
+    ac/AlgTopCached.thy                  lemma  line 41017
+  comparable_topologies:
+    i/Top1_Ch2.thy                       definition  line 1050
+    i/Top1_Ch2.thy                       definition  line 1050
+  comp_basepoint_change:
+    ac/AlgTopCached.thy                  lemma  line 5607
+    ac/AlgTopCached.thy                  lemma  line 5607
+  completely_regular_imp_regular_on:
+    i/Top1_Ch4.thy                       lemma  line 8222
+    i/Top1_Ch4.thy                       lemma  line 8222
+  complete_metric_baire_aux:
+    i/Top1_Ch5_8.thy                     lemma  line 23104
+    i/Top1_Ch5_8.thy                     lemma  line 23104
+  complete_tb_convergent_subseq:
+    i/Top1_Ch5_8.thy                     lemma  line 13892
+    i/Top1_Ch5_8.thy                     lemma  line 13892
+  complete_totally_bounded_imp_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 14151
+    i/Top1_Ch5_8.thy                     lemma  line 14151
+  component_eq_from_subset:
+    fib/AlgIsoFixedBase.thy              lemma  line 1214
+    fib/AlgIsoFixedBase.thy              lemma  line 1214
+  component_image_under_homeomorphism:
+    fib/AlgIsoFixedBase.thy              lemma  line 5080
+    fib/AlgIsoFixedBase.thy              lemma  line 5080
+  comp_path_product:
+    ac/AlgTopCached.thy                  lemma  line 5587
+    ac/AlgTopCached.thy                  lemma  line 5587
+  comp_path_reverse:
+    ac/AlgTopCached.thy                  lemma  line 5599
+    ac/AlgTopCached.thy                  lemma  line 5599
+  connected_graph_has_maximal_tree:
+    ac6/AlgTopCached6.thy                lemma  line 7
+    ac6/AlgTopCached6.thy                lemma  line 7
+  connected_iff_clopen:
+    i/Top1_Ch3.thy                       lemma  line 128
+    i/Top1_Ch3.thy                       lemma  line 128
+  connected_iff_clopen_openin_on:
+    i/Top1_Ch3.thy                       corollary  line 179
+    i/Top1_Ch3.thy                       corollary  line 179
+  connected_locally_path_connected_imp_path_connected:
+    i/Top1_Ch3.thy                       corollary  line 4608
+    i/Top1_Ch3.thy                       corollary  line 4608
+  connected_open_delete_R2:
+    b/AlgTop_JCT_Base.thy                lemma  line 7937
+    b/AlgTop_JCT_Base.thy                lemma  line 7937
   connected_open_delete_S2:
     b/AlgTop_JCT_Base.thy                lemma  line 8060
     b/AlgTop_JCT_Base.thy                lemma  line 8309
+    b/AlgTop_JCT_Base.thy                lemma  line 8060
+    b/AlgTop_JCT_Base.thy                lemma  line 8309
+  connected_strict:
+    i/Top1_Ch3.thy                       lemma  line 4678
+    i/Top1_Ch3.thy                       lemma  line 4678
+  cont_at_metric_nbhd:
+    i/Top1_Ch5_8.thy                     lemma  line 14395
+    i/Top1_Ch5_8.thy                     lemma  line 14395
+  continuous_closed_interval_imp_I_top:
+    ac/AlgTopCached.thy                  lemma  line 150
+    ac/AlgTopCached.thy                  lemma  line 150
+  continuous_compose_product_R2:
+    b/AlgTop_JCT_Base.thy                lemma  line 8320
+    b/AlgTop_JCT_Base.thy                lemma  line 8320
+  continuous_funcs_eq_maps_metric:
+    i/Top1_Ch5_8.thy                     lemma  line 14827
+    i/Top1_Ch5_8.thy                     lemma  line 14827
+  continuous_funcs_eval_sub:
+    i/Top1_Ch5_8.thy                     lemma  line 21184
+    i/Top1_Ch5_8.thy                     lemma  line 21184
+  continuous_image_closure_subset:
+    i/Top1_Ch5_8.thy                     lemma  line 2185
+    i/Top1_Ch5_8.thy                     lemma  line 2185
+  continuous_map_image_subspace_strict:
+    i/Top1_Ch2.thy                       lemma  line 6683
+    i/Top1_Ch2.thy                       lemma  line 6683
+  continuous_map_maps_to:
+    i/Top1_Ch2.thy                       lemma  line 6653
+    i/Top1_Ch2.thy                       lemma  line 6653
+  continuous_map_maps_to_all:
+    i/Top1_Ch2.thy                       lemma  line 6661
+    i/Top1_Ch2.thy                       lemma  line 6661
+  continuous_map_onI:
+    i/Top1_Ch2.thy                       lemma  line 6669
+    i/Top1_Ch2.thy                       lemma  line 6669
+  continuous_map_preimage_open:
+    i/Top1_Ch2.thy                       lemma  line 6657
+    i/Top1_Ch2.thy                       lemma  line 6657
+  continuous_map_preimage_open_all:
+    i/Top1_Ch2.thy                       lemma  line 6665
+    i/Top1_Ch2.thy                       lemma  line 6665
+  continuous_map_preimage_openin_on:
+    i/Top1_Ch2.thy                       lemma  line 6675
+    i/Top1_Ch2.thy                       lemma  line 6675
+  continuous_map_restrict_codomain:
+    ac/AlgTopCached.thy                  lemma  line 14215
+    ac/AlgTopCached.thy                  lemma  line 14215
+  continuous_maps_metric_on_eval:
+    i/Top1_Ch5_8.thy                     lemma  line 29656
+    i/Top1_Ch5_8.thy                     lemma  line 29656
+  continuous_on_squeeze_at_point:
+    pd/PolygonDisk.thy                   lemma  line 947
+    pd/PolygonDisk.thy                   lemma  line 947
+  continuous_preimage_closedin:
+    i/Top1_Ch2.thy                       lemma  line 7528
+    i/Top1_Ch2.thy                       lemma  line 7528
+  continuous_preserves_net_convergence:
+    i/Top1_Ch5_8.thy                     lemma  line 33545
+    i/Top1_Ch5_8.thy                     lemma  line 33545
+  continuous_preserves_path_homotopic:
+    i/Top1_Ch9_13.thy                    lemma  line 10068
+    i/Top1_Ch9_13.thy                    lemma  line 10068
+  continuous_restrict_to_interval:
+    i/Top1_Ch5_8.thy                     lemma  line 12486
+    i/Top1_Ch5_8.thy                     lemma  line 12486
+  convergent_lim_ge:
+    i/Top1_Ch5_8.thy                     lemma  line 11940
+    i/Top1_Ch5_8.thy                     lemma  line 11940
+  convergent_lim_le:
+    i/Top1_Ch5_8.thy                     lemma  line 11922
+    i/Top1_Ch5_8.thy                     lemma  line 11922
+  convex_hull_compact:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 287
+    wh/AlgTopWedgeHelpers.thy            lemma  line 287
+  convex_hull_compact_general:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 225
+    wh/AlgTopWedgeHelpers.thy            lemma  line 225
+  convex_hull_cone_sub:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 98
+    wh/AlgTopWedgeHelpers.thy            lemma  line 98
+  convex_hull_cone_sup:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 44
+    wh/AlgTopWedgeHelpers.thy            lemma  line 44
+  convex_in:
+    i/Top1_Ch2.thy                       definition  line 4268
+    i/Top1_Ch2.thy                       definition  line 4268
+  convex_in_not_mem_imp_all_gt:
+    i/Top1_Ch2.thy                       lemma  line 4468
+    i/Top1_Ch2.thy                       lemma  line 4468
+  convex_in_not_mem_imp_all_lt:
+    i/Top1_Ch2.thy                       lemma  line 4496
+    i/Top1_Ch2.thy                       lemma  line 4496
+  convex_in_refine_basis_intersection:
+    i/Top1_Ch2.thy                       lemma  line 4525
+    i/Top1_Ch2.thy                       lemma  line 4525
+  convex_real_subspace_path_connected:
+    ac5/AlgTopCached5.thy                lemma  line 7
+    ac5/AlgTopCached5.thy                lemma  line 7
+  convex_real_subspace_simply_connected:
+    ac7/AlgTopCached7.thy                lemma  line 4340
+    ac7/AlgTopCached7.thy                lemma  line 4340
+  Corollary_17_7:
+    i/Top1_Ch2.thy                       theorem  line 5793
+    i/Top1_Ch2.thy                       theorem  line 5793
+  Corollary_22_3:
+    i/Top1_Ch2.thy                       corollary  line 20663
+    i/Top1_Ch2.thy                       corollary  line 20663
+  Corollary_24_2:
+    i/Top1_Ch3.thy                       corollary  line 2107
+    i/Top1_Ch3.thy                       corollary  line 2107
+  Corollary_27_2:
+    i/Top1_Ch3.thy                       corollary  line 7661
+    i/Top1_Ch3.thy                       corollary  line 7661
+  Corollary_27_8:
+    i/Top1_Ch3.thy                       corollary  line 10306
+    i/Top1_Ch3.thy                       corollary  line 10306
+  Corollary_29_3:
+    i/Top1_Ch3.thy                       corollary  line 13456
+    i/Top1_Ch3.thy                       corollary  line 13456
+  Corollary_29_4:
+    i/Top1_Ch3.thy                       corollary  line 13729
+    i/Top1_Ch3.thy                       corollary  line 13729
+  Corollary_45_5:
+    i/Top1_Ch5_8.thy                     corollary  line 18293
+    i/Top1_Ch5_8.thy                     corollary  line 18293
+  Corollary_46_6:
+    i/Top1_Ch5_8.thy                     corollary  line 16623
+    i/Top1_Ch5_8.thy                     corollary  line 16623
+  Corollary_46_9:
+    i/Top1_Ch5_8.thy                     corollary  line 19355
+    i/Top1_Ch5_8.thy                     corollary  line 19355
+  Corollary_50_3:
+    i/Top1_Ch5_8.thy                     corollary  line 27487
+    i/Top1_Ch5_8.thy                     corollary  line 27487
+  Corollary_50_7:
+    i/Top1_Ch5_8.thy                     corollary  line 32323
+    i/Top1_Ch5_8.thy                     corollary  line 32323
+  Corollary_50_8:
+    i/Top1_Ch5_8.thy                     corollary  line 32484
+    i/Top1_Ch5_8.thy                     corollary  line 32484
+  Corollary_50_9:
+    i/Top1_Ch5_8.thy                     corollary  line 32516
+    i/Top1_Ch5_8.thy                     corollary  line 32516
+  Corollary_52_2_basepoint_independent:
+    ac/AlgTopCached.thy                  corollary  line 716
+    ac/AlgTopCached.thy                  corollary  line 716
+  Corollary_52_5_homeomorphism_iso:
+    ac/AlgTopCached.thy                  corollary  line 739
+    ac/AlgTopCached.thy                  corollary  line 739
+  Corollary_55_4_inclusion_not_nulhomotopic:
+    i/Top1_Ch9_13.thy                    corollary  line 12998
+    i/Top1_Ch9_13.thy                    corollary  line 12998
+  Corollary_59_2:
+    b/AlgTop_JCT_Base.thy                corollary  line 318
+    b/AlgTop_JCT_Base.thy                corollary  line 318
+  Corollary_60_2_torus_pi1:
+    ac/AlgTopCached.thy                  corollary  line 989
+    ac/AlgTopCached.thy                  corollary  line 989
+  Corollary_70_3_simply_connected_intersection:
+    ac/AlgTopCached.thy                  corollary  line 27144
+    ac/AlgTopCached.thy                  corollary  line 27144
+  Corollary_70_3_simply_connected_intersection_param:
+    ac/AlgTopCached.thy                  corollary  line 28405
+    ac/AlgTopCached.thy                  corollary  line 28405
+  Corollary_70_4_simply_connected_V:
+    ac/AlgTopCached.thy                  corollary  line 27456
+    ac/AlgTopCached.thy                  corollary  line 27456
+  coset_e_is_N:
+    ac/AlgTopCached.thy                  lemma  line 8709
+    ac/AlgTopCached.thy                  lemma  line 8709
+  coset_eq_from_diff_in_H:
+    ac10/AlgTopCached10.thy              lemma  line 182
+    ac10/AlgTopCached10.thy              lemma  line 182
+  coset_self_mem:
+    ac/AlgTopCached.thy                  lemma  line 8698
+    ac/AlgTopCached.thy                  lemma  line 8698
+  cos_sin_eq_imp:
+    a0/AlgTop0.thy                       lemma  line 7480
+    a0/AlgTop0.thy                       lemma  line 7480
+  cos_sin_eq_small_diff:
+    a0/AlgTop0.thy                       lemma  line 7492
+    a0/AlgTop0.thy                       lemma  line 7492
+  co_subbasis_in_cc_subspace:
+    i/Top1_Ch5_8.thy                     lemma  line 18552
+    i/Top1_Ch5_8.thy                     lemma  line 18552
+  countable:
+    i/Top1_Ch3.thy                       definition  line 9264
+    i/Top1_Ch3.thy                       definition  line 9264
+  countable_union_sigma_lf:
+    i/Top1_Ch5_8.thy                     lemma  line 2963
+    i/Top1_Ch5_8.thy                     lemma  line 2963
+  covering_base_locally_path_connected:
+    ac4/AlgTopCached4.thy                lemma  line 3813
+    ac4/AlgTopCached4.thy                lemma  line 3813
+  covering_component_over_arc_path_connected:
+    ac5/AlgTopCached5.thy                lemma  line 397
+    ac5/AlgTopCached5.thy                lemma  line 397
+  covering_graph_pi1_rank:
+    ac11/AlgTopCached11.thy              lemma  line 10740
+    ac11/AlgTopCached11.thy              lemma  line 10740
+  covering_induced_injective:
+    ac4/AlgTopCached4.thy                lemma  line 36
+    ac4/AlgTopCached4.thy                lemma  line 36
+  covering_lifted_arc_family_card:
+    ac11/AlgTopCached11.thy              lemma  line 10103
+    ac11/AlgTopCached11.thy              lemma  line 10103
+  covering_lifted_vertex_set_card:
+    ac11/AlgTopCached11.thy              lemma  line 10266
+    ac11/AlgTopCached11.thy              lemma  line 10266
+  covering_lift_endpoint_contradiction:
+    a0/AlgTop0.thy                       lemma  line 2577
+    a0/AlgTop0.thy                       lemma  line 2577
+  covering_lift_unique_connected:
+    ac4/AlgTopCached4.thy                lemma  line 179
+    ac4/AlgTopCached4.thy                lemma  line 179
+  covering_lift_unique_path:
+    ac4/AlgTopCached4.thy                lemma  line 23
+    ac4/AlgTopCached4.thy                lemma  line 23
+  covering_map_evenly_covered_neighborhood:
+    ac4/AlgTopCached4.thy                lemma  line 16
+    ac4/AlgTopCached4.thy                lemma  line 16
+  covering_map_is_open_map:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2945
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2945
+  covering_map_surjective:
+    ac4/AlgTopCached4.thy                lemma  line 10
+    ac4/AlgTopCached4.thy                lemma  line 10
+  covering_sheet_over_arc_path_connected:
+    ac5/AlgTopCached5.thy                lemma  line 39
+    ac5/AlgTopCached5.thy                lemma  line 39
   cross2:
+    at/AlgTopChain.thy                   definition  line 2131
+    pd/PolygonDisk.thy                   definition  line 101
     at/AlgTopChain.thy                   definition  line 2131
     pd/PolygonDisk.thy                   definition  line 101
   cross2_antisym:
     at/AlgTopChain.thy                   lemma  line 2179
     pd/PolygonDisk.thy                   lemma  line 149
+    at/AlgTopChain.thy                   lemma  line 2179
+    pd/PolygonDisk.thy                   lemma  line 149
   cross2_centroid_sum_zero:
+    at/AlgTopChain.thy                   lemma  line 2137
+    pd/PolygonDisk.thy                   lemma  line 107
     at/AlgTopChain.thy                   lemma  line 2137
     pd/PolygonDisk.thy                   lemma  line 107
   cross2_linear_left_add:
     at/AlgTopChain.thy                   lemma  line 2185
     pd/PolygonDisk.thy                   lemma  line 155
+    at/AlgTopChain.thy                   lemma  line 2185
+    pd/PolygonDisk.thy                   lemma  line 155
   cross2_linear_left_scale:
+    at/AlgTopChain.thy                   lemma  line 2189
+    pd/PolygonDisk.thy                   lemma  line 159
     at/AlgTopChain.thy                   lemma  line 2189
     pd/PolygonDisk.thy                   lemma  line 159
   cross2_linear_right_add:
     at/AlgTopChain.thy                   lemma  line 2193
     pd/PolygonDisk.thy                   lemma  line 163
+    at/AlgTopChain.thy                   lemma  line 2193
+    pd/PolygonDisk.thy                   lemma  line 163
   cross2_linear_right_scale:
+    at/AlgTopChain.thy                   lemma  line 2197
+    pd/PolygonDisk.thy                   lemma  line 167
     at/AlgTopChain.thy                   lemma  line 2197
     pd/PolygonDisk.thy                   lemma  line 167
   cross2_self:
     at/AlgTopChain.thy                   lemma  line 2182
     pd/PolygonDisk.thy                   lemma  line 152
+    at/AlgTopChain.thy                   lemma  line 2182
+    pd/PolygonDisk.thy                   lemma  line 152
+  cycle_arcs_form_scc:
+    ac11/AlgTopCached11.thy              lemma  line 5541
+    ac11/AlgTopCached11.thy              lemma  line 5541
   cyclic_sign_change:
+    at/AlgTopChain.thy                   lemma  line 2278
+    pd/PolygonDisk.thy                   lemma  line 248
     at/AlgTopChain.thy                   lemma  line 2278
     pd/PolygonDisk.thy                   lemma  line 248
   cyclic_strict_sign_change:
     at/AlgTopChain.thy                   lemma  line 2375
     pd/PolygonDisk.thy                   lemma  line 345
+    at/AlgTopChain.thy                   lemma  line 2375
+    pd/PolygonDisk.thy                   lemma  line 345
+  deck_transformation_homeomorphism:
+    ac4/AlgTopCached4.thy                lemma  line 4972
+    ac4/AlgTopCached4.thy                lemma  line 4972
+  deck_transformations_group:
+    ac4/AlgTopCached4.thy                lemma  line 4978
+    ac4/AlgTopCached4.thy                lemma  line 4978
+  deformation_retract_path_connected:
+    ac7/AlgTopCached7.thy                lemma  line 4516
+    ac7/AlgTopCached7.thy                lemma  line 4516
+  deformation_retract_to_singleton_imp_simply_connected:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2785
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2785
+  degree_sum_leaf:
+    ac11/AlgTopCached11.thy              lemma  line 1334
+    ac11/AlgTopCached11.thy              lemma  line 1334
+  dense_in_compact_image:
+    i/Top1_Ch5_8.thy                     lemma  line 12068
+    i/Top1_Ch5_8.thy                     lemma  line 12068
+  dense_in_own_closure:
+    i/Top1_Ch5_8.thy                     lemma  line 20742
+    i/Top1_Ch5_8.thy                     lemma  line 20742
+  diff_Inter_eq:
+    i/Top1_Ch2.thy                       lemma  line 4890
+    i/Top1_Ch2.thy                       lemma  line 4890
+  diff_inter_subset:
+    fib/AlgIsoFixedBase.thy              lemma  line 1236
+    fib/AlgIsoFixedBase.thy              lemma  line 1236
+  dim_le_finite_closed_cover:
+    i/Top1_Ch5_8.thy                     lemma  line 32091
+    i/Top1_Ch5_8.thy                     lemma  line 32091
+  dim_le_two_closed_cover:
+    i/Top1_Ch5_8.thy                     lemma  line 32081
+    i/Top1_Ch5_8.thy                     lemma  line 32081
+  disjoint_subset_right:
+    fib/AlgIsoFixedBase.thy              lemma  line 1240
+    fib/AlgIsoFixedBase.thy              lemma  line 1240
+  dist_to_set_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 27795
+    i/Top1_Ch5_8.thy                     lemma  line 27795
+  dist_to_set_lipschitz:
+    i/Top1_Ch5_8.thy                     lemma  line 27761
+    i/Top1_Ch5_8.thy                     lemma  line 27761
+  dist_to_set_nonneg:
+    i/Top1_Ch2.thy                       lemma  line 16846
+    i/Top1_Ch2.thy                       lemma  line 16846
+  dist_to_set_zero_iff_closure:
+    i/Top1_Ch2.thy                       lemma  line 16907
+    i/Top1_Ch2.thy                       lemma  line 16907
+  dist_to_set_zero_iff_eps:
+    i/Top1_Ch2.thy                       lemma  line 16862
+    i/Top1_Ch2.thy                       lemma  line 16862
+  double_basepoint_change_equiv:
+    i/Top1_Ch9_13.thy                    lemma  line 14542
+    i/Top1_Ch9_13.thy                    lemma  line 14542
+  double_counting_sum:
+    ac11/AlgTopCached11.thy              lemma  line 1295
+    ac11/AlgTopCached11.thy              lemma  line 1295
+  doubleton_eq_iff:
+    ac/AlgTopCached.thy                  lemma  line 48489
+    ac/AlgTopCached.thy                  lemma  line 48489
+  dunce_cap_hausdorff:
+    ac2/AlgTopCached2.thy                lemma  line 80
+    ac2/AlgTopCached2.thy                lemma  line 80
+  dunce_cap_presentation:
+    ac8/AlgTopCached8.thy                corollary  line 8215
+    ac8/AlgTopCached8.thy                corollary  line 8215
+  dunce_cap_skeleton_is_circle:
+    ac2/AlgTopCached2.thy                lemma  line 570
+    ac2/AlgTopCached2.thy                lemma  line 570
+  element_of_three_subset:
+    fib/AlgIsoFixedBase.thy              lemma  line 1210
+    fib/AlgIsoFixedBase.thy              lemma  line 1210
+  equicont_from_tb_cover:
+    i/Top1_Ch5_8.thy                     lemma  line 14422
+    i/Top1_Ch5_8.thy                     lemma  line 14422
+  equicontinuous_covering_bound:
+    i/Top1_Ch5_8.thy                     lemma  line 21437
+    i/Top1_Ch5_8.thy                     lemma  line 21437
+  equicontinuous_subset:
+    i/Top1_Ch5_8.thy                     lemma  line 14789
+    i/Top1_Ch5_8.thy                     lemma  line 14789
+  eval_continuous_compact_convergence:
+    i/Top1_Ch5_8.thy                     lemma  line 21706
+    i/Top1_Ch5_8.thy                     lemma  line 21706
+  evenly_covered_open_subset:
+    ac4/AlgTopCached4.thy                lemma  line 3679
+    ac4/AlgTopCached4.thy                lemma  line 3679
+  exI4:
+    svk/AlgTopSvK.thy                    lemma  line 4
+    svk/AlgTopSvK.thy                    lemma  line 4
+  exists_pow2_inv_lt:
+    i/Top1_Ch4.thy                       lemma  line 6770
+    i/Top1_Ch4.thy                       lemma  line 6770
+  exists_top1_dyadic_between_01:
+    i/Top1_Ch4.thy                       lemma  line 6793
+    i/Top1_Ch4.thy                       lemma  line 6793
+  expansion_E_open:
+    i/Top1_Ch5_8.thy                     lemma  line 7915
+    i/Top1_Ch5_8.thy                     lemma  line 7915
+  expansion_lf_from_auxiliary:
+    i/Top1_Ch5_8.thy                     lemma  line 7945
+    i/Top1_Ch5_8.thy                     lemma  line 7945
+  exterior_ball_connected_R2:
+    h/AlgTopHelpers.thy                  lemma  line 39
+    h/AlgTopHelpers.thy                  lemma  line 39
+  false_from_disjoint_nonempty:
+    fib/AlgIsoFixedBase.thy              lemma  line 1223
+    fib/AlgIsoFixedBase.thy              lemma  line 1223
+  filter_eq_replicate:
+    ag/AlgTopGroups.thy                  lemma  line 3396
+    ag/AlgTopGroups.thy                  lemma  line 3396
+  filter_pred_eq:
+    ag/AlgTopGroups.thy                  lemma  line 4547
+    ag/AlgTopGroups.thy                  lemma  line 4547
+  finer_than:
+    i/Top1_Ch2.thy                       definition  line 1044
+    i/Top1_Ch2.thy                       definition  line 1044
+  finer_than_on:
+    i/Top1_Ch2.thy                       definition  line 1054
+    i/Top1_Ch2.thy                       definition  line 1054
+  finer_than_on_imp:
+    i/Top1_Ch2.thy                       lemma  line 1057
+    i/Top1_Ch2.thy                       lemma  line 1057
+  finer_than_on_strict:
+    i/Top1_Ch2.thy                       lemma  line 1528
+    i/Top1_Ch2.thy                       lemma  line 1528
+  fin_inter_open_on:
+    i/Top1_Ch5_8.thy                     lemma  line 14361
+    i/Top1_Ch5_8.thy                     lemma  line 14361
+  finite_cover_enumerate:
+    i/Top1_Ch5_8.thy                     lemma  line 29663
+    i/Top1_Ch5_8.thy                     lemma  line 29663
+  finite_covering_compact:
+    ac11/AlgTopCached11.thy              lemma  line 10384
+    ac11/AlgTopCached11.thy              lemma  line 10384
+  finite_distinct_list_of_set:
+    i/Top1_Ch4.thy                       lemma  line 11669
+    i/Top1_Ch4.thy                       lemma  line 11669
+  finite_Func:
+    i/Top1_Ch5_8.thy                     lemma  line 14520
+    i/Top1_Ch5_8.thy                     lemma  line 14520
+  finite_intersections:
+    i/Top1_Ch2.thy                       definition  line 1956
+    i/Top1_Ch2.thy                       definition  line 1956
+  finite_range_const_subseq:
+    i/Top1_Ch5_8.thy                     lemma  line 32593
+    i/Top1_Ch5_8.thy                     lemma  line 32593
+  finite_subset_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 15017
+    i/Top1_Ch5_8.thy                     lemma  line 15017
+  finite_tree_has_leaf:
+    ac11/AlgTopCached11.thy              lemma  line 9225
+    ac11/AlgTopCached11.thy              lemma  line 9225
+  finite_tree_has_leaf_arc:
+    ac11/AlgTopCached11.thy              lemma  line 9565
+    ac11/AlgTopCached11.thy              lemma  line 9565
+  finite_tree_remove_leaf_is_tree:
+    ac11/AlgTopCached11.thy              lemma  line 1520
+    ac11/AlgTopCached11.thy              lemma  line 1520
+  finite_union_empty_interior:
+    i/Top1_Ch5_8.thy                     lemma  line 27702
+    i/Top1_Ch5_8.thy                     lemma  line 27702
+  finite_union_finite_dim:
+    i/Top1_Ch5_8.thy                     lemma  line 27408
+    i/Top1_Ch5_8.thy                     lemma  line 27408
+  finite_union_locally_finite:
+    i/Top1_Ch5_8.thy                     lemma  line 2890
+    i/Top1_Ch5_8.thy                     lemma  line 2890
+  finite_wedge_pi1_free_with_chosen_loops:
+    at/AlgTopChain.thy                   lemma  line 5565
+    at/AlgTopChain.thy                   lemma  line 5565
+  finite_wedge_pi1_free_with_chosen_loops_arb:
+    ac8/AlgTopCached8.thy                lemma  line 275
+    ac8/AlgTopCached8.thy                lemma  line 275
+  finite_wedge_pi1_free_with_generators:
+    ac8/AlgTopCached8.thy                lemma  line 235
+    ac8/AlgTopCached8.thy                lemma  line 235
+  first_countable_closure_imp_seq:
+    i/Top1_Ch4.thy                       lemma  line 1580
+    i/Top1_Ch4.thy                       lemma  line 1580
+  first_hit_sub_arc:
+    fi/AlgIsoFixed.thy                   lemma  line 3753
+    fi/AlgIsoFixed.thy                   lemma  line 3753
+  first_isomorphism_theorem:
+    ac/AlgTopCached.thy                  lemma  line 9333
+    ac/AlgTopCached.thy                  lemma  line 9333
+  first_isomorphism_theorem_forward:
+    ac/AlgTopCached.thy                  lemma  line 9598
+    ac/AlgTopCached.thy                  lemma  line 9598
+  flexible_arc_decomposition:
+    a0/AlgTop0.thy                       lemma  line 7509
+    a0/AlgTop0.thy                       lemma  line 7509
+  flip_t_continuous_product:
+    i/Top1_Ch9_13.thy                    lemma  line 407
+    i/Top1_Ch9_13.thy                    lemma  line 407
+  floor_nat_plus_frac:
+    i/Top1_Ch5_8.thy                     lemma  line 13240
+    i/Top1_Ch5_8.thy                     lemma  line 13240
+  floor_nat_plus_frac_early:
+    i/Top1_Ch5_8.thy                     lemma  line 12140
+    i/Top1_Ch5_8.thy                     lemma  line 12140
+  fold_fun_update_notin_fst:
+    i/Top1_Ch4.thy                       lemma  line 98
+    i/Top1_Ch4.thy                       lemma  line 98
+  foldr_in_subgroup:
+    at/AlgTopChain.thy                   lemma  line 5366
+    at/AlgTopChain.thy                   lemma  line 5366
+  foldr_mul_append:
+    ac/AlgTopCached.thy                  lemma  line 6296
+    ac/AlgTopCached.thy                  lemma  line 6296
+  foldr_mul_closed:
+    ac/AlgTopCached.thy                  lemma  line 6276
+    ac/AlgTopCached.thy                  lemma  line 6276
+  foldr_mul_in_group:
+    ag/AlgTopGroups.thy                  lemma  line 4025
+    ag/AlgTopGroups.thy                  lemma  line 4025
+  foldr_mul_replicate:
+    ag/AlgTopGroups.thy                  lemma  line 3386
+    ag/AlgTopGroups.thy                  lemma  line 3386
+  foldr_mul_rev_inv:
+    ac/AlgTopCached.thy                  lemma  line 6334
+    ac/AlgTopCached.thy                  lemma  line 6334
+  foldr_path_product_base_homotopic:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 5603
+    b0/AlgTop_JCT_Base0.thy              lemma  line 5603
+  foldr_path_product_is_path:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 5640
+    b0/AlgTop_JCT_Base0.thy              lemma  line 5640
+  foldr_path_product_loops_is_loop:
+    pd/PolygonDisk.thy                   lemma  line 4121
+    pd/PolygonDisk.thy                   lemma  line 4121
+  foldr_path_product_nulhomotopic:
+    b/AlgTop_JCT_Base.thy                lemma  line 278
+    b/AlgTop_JCT_Base.thy                lemma  line 278
+  foldr_path_product_pointwise_eq:
+    ac8/AlgTopCached8.thy                lemma  line 421
+    ac8/AlgTopCached8.thy                lemma  line 421
+  foldr_plus_map_bool:
+    ac12/AlgTopCached12.thy              lemma  line 83
+    ac12/AlgTopCached12.thy              lemma  line 83
+  foldr_replicate_is_path_power:
+    ac7/AlgTopCached7.thy                lemma  line 158
+    ac7/AlgTopCached7.thy                lemma  line 158
+  foldr_uniform_is_path_power:
+    ac7/AlgTopCached7.thy                lemma  line 165
+    ac7/AlgTopCached7.thy                lemma  line 165
+  forest_euler_formula:
+    ac11/AlgTopCached11.thy              lemma  line 7017
+    ac11/AlgTopCached11.thy              lemma  line 7017
+  four_strips_connected:
+    h/AlgTopHelpers.thy                  lemma  line 19
+    h/AlgTopHelpers.thy                  lemma  line 19
+  free_abelian_all_coords_zero_imp_e:
+    ac12/AlgTopCached12.thy              lemma  line 442
+    ac12/AlgTopCached12.thy              lemma  line 442
+  free_abelian_coordinate_projection:
+    ag/AlgTopGroups.thy                  lemma  line 6006
+    ag/AlgTopGroups.thy                  lemma  line 6006
+  free_abelian_eval_e_zero_net_coeff:
+    ag/AlgTopGroups.thy                  lemma  line 5601
+    ag/AlgTopGroups.thy                  lemma  line 5601
+  free_abelian_independence_transfer:
+    at/AlgTopChain.thy                   lemma  line 1072
+    at/AlgTopChain.thy                   lemma  line 1072
+  free_abelian_invariant_under_iso:
+    at/AlgTopChain.thy                   lemma  line 1201
+    at/AlgTopChain.thy                   lemma  line 1201
+  free_abelian_kernel_coordinate:
+    ag/AlgTopGroups.thy                  lemma  line 6078
+    ag/AlgTopGroups.thy                  lemma  line 6078
+  free_abelian_mod2_card:
+    ag/AlgTopGroups.thy                  lemma  line 8065
+    ag/AlgTopGroups.thy                  lemma  line 8065
+  free_abelian_reindex:
+    ac12/AlgTopCached12.thy              lemma  line 247
+    ac12/AlgTopCached12.thy              lemma  line 247
+  free_abelian_torsion_free:
+    ac12/AlgTopCached12.thy              lemma  line 648
+    ac12/AlgTopCached12.thy              lemma  line 648
+  free_abelian_word_kernel:
+    ag/AlgTopGroups.thy                  lemma  line 5181
+    ag/AlgTopGroups.thy                  lemma  line 5181
+  free_group_exponent_sum:
+    at/AlgTopChain.thy                   lemma  line 427
+    at/AlgTopChain.thy                   lemma  line 427
+  free_group_full_on_cong:
+    ac10/AlgTopCached10.thy              lemma  line 12209
+    ac10/AlgTopCached10.thy              lemma  line 12209
+  free_group_full_reindex:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 1743
+    wh/AlgTopWedgeHelpers.thy            lemma  line 1743
+  free_group_hom_exists:
+    at/AlgTopChain.thy                   lemma  line 10
+    at/AlgTopChain.thy                   lemma  line 10
+  free_group_hom_generators_iso:
+    at/AlgTopChain.thy                   lemma  line 4717
+    at/AlgTopChain.thy                   lemma  line 4717
+  free_group_hom_subset_injective:
+    ac9/AlgTopCached9.thy                lemma  line 9
+    ac9/AlgTopCached9.thy                lemma  line 9
+  free_group_hom_unique:
+    ag/AlgTopGroups.thy                  lemma  line 2635
+    ag/AlgTopGroups.thy                  lemma  line 2635
+  free_group_invariant_under_iso:
+    ag/AlgTopGroups.thy                  lemma  line 2335
+    ag/AlgTopGroups.thy                  lemma  line 2335
+  free_group_iso_transfer:
+    ac7/AlgTopCached7.thy                lemma  line 4206
+    ac7/AlgTopCached7.thy                lemma  line 4206
+  free_group_rank_invariant_finite:
+    at/AlgTopChain.thy                   lemma  line 1756
+    at/AlgTopChain.thy                   lemma  line 1756
+  free_group_realized_by_abstract_wedge:
+    ac10/AlgTopCached10.thy              lemma  line 18656
+    ac10/AlgTopCached10.thy              lemma  line 18656
+  free_group_realized_by_wedge:
+    ac10/AlgTopCached10.thy              lemma  line 8240
+    ac10/AlgTopCached10.thy              lemma  line 8240
+  free_group_universal_property:
+    at/AlgTopChain.thy                   lemma  line 396
+    at/AlgTopChain.thy                   lemma  line 396
+  free_group_word_kernel:
+    ag/AlgTopGroups.thy                  lemma  line 3110
+    ag/AlgTopGroups.thy                  lemma  line 3110
+  free_product_reduced_repr:
+    ac/AlgTopCached.thy                  lemma  line 10948
+    ac/AlgTopCached.thy                  lemma  line 10948
+  free_product_trivial_factor_surj:
+    ac/AlgTopCached.thy                  lemma  line 27169
+    ac/AlgTopCached.thy                  lemma  line 27169
+  front_cancel_proper:
+    AlgTop.thy                           lemma  line 12034
+    AlgTop.thy                           lemma  line 12034
+  front_cancel_proper_direct:
+    AlgTop.thy                           lemma  line 10937
+    AlgTop.thy                           lemma  line 10937
+  front_cancel_realization_homeo:
+    AlgTop.thy                           lemma  line 769
+    AlgTop.thy                           lemma  line 769
+  front_cancel_realization_homeo_proper:
+    AlgTop.thy                           lemma  line 12056
+    AlgTop.thy                           lemma  line 12056
+  frontier:
+    ac/AlgTopCached.thy                  definition  line 3604
+    ac/AlgTopCached.thy                  definition  line 3604
+  frontier_closed_sub:
+    ac/AlgTopCached.thy                  lemma  line 3608
+    ac/AlgTopCached.thy                  lemma  line 3608
+  front_uncancel_realization_homeo:
+    AlgTop.thy                           lemma  line 895
+    AlgTop.thy                           lemma  line 895
+  fst_set_flip_rev:
+    ag/AlgTopGroups.thy                  lemma  line 78
+    ag/AlgTopGroups.thy                  lemma  line 78
+  fundamental_group_class_members_equiv:
+    i/Top1_Ch9_13.thy                    lemma  line 10872
+    i/Top1_Ch9_13.thy                    lemma  line 10872
+  fundamental_group_induced_agree:
+    ac/AlgTopCached.thy                  lemma  line 5932
+    ac/AlgTopCached.thy                  lemma  line 5932
+  fundamental_group_induced_comp:
+    ac/AlgTopCached.thy                  lemma  line 5835
+    ac/AlgTopCached.thy                  lemma  line 5835
+  fundamental_group_invg_class:
+    ac/AlgTopCached.thy                  lemma  line 13786
+    ac/AlgTopCached.thy                  lemma  line 13786
+  fundamental_group_mul_eq_class:
+    i/Top1_Ch9_13.thy                    lemma  line 10888
+    i/Top1_Ch9_13.thy                    lemma  line 10888
+  general_lifting_criterion:
+    ac4/AlgTopCached4.thy                lemma  line 492
+    ac4/AlgTopCached4.thy                lemma  line 492
+  general_position_extend:
+    i/Top1_Ch5_8.thy                     lemma  line 28761
+    i/Top1_Ch5_8.thy                     lemma  line 28761
+  generated_topology_contains_basis_elem:
+    i/Top1_Ch5_8.thy                     lemma  line 16006
+    i/Top1_Ch5_8.thy                     lemma  line 16006
+  geom_cauchy_bound:
+    i/Top1_Ch5_8.thy                     lemma  line 11839
+    i/Top1_Ch5_8.thy                     lemma  line 11839
+  geom_cauchy_bound_aux:
+    i/Top1_Ch5_8.thy                     lemma  line 11817
+    i/Top1_Ch5_8.thy                     lemma  line 11817
+  geom_cauchy_Cauchy:
+    i/Top1_Ch5_8.thy                     lemma  line 11852
+    i/Top1_Ch5_8.thy                     lemma  line 11852
+  geom_cauchy_converges:
+    i/Top1_Ch5_8.thy                     lemma  line 11886
+    i/Top1_Ch5_8.thy                     lemma  line 11886
+  geom_cauchy_lim_bound:
+    i/Top1_Ch5_8.thy                     lemma  line 11892
+    i/Top1_Ch5_8.thy                     lemma  line 11892
+  gp_singleton:
+    i/Top1_Ch5_8.thy                     lemma  line 29297
+    i/Top1_Ch5_8.thy                     lemma  line 29297
+  gp_singleton_set:
+    i/Top1_Ch5_8.thy                     lemma  line 29279
+    i/Top1_Ch5_8.thy                     lemma  line 29279
+  graph_arc_containment_via_open_interior:
+    ac11/AlgTopCached11.thy              lemma  line 3288
+    ac11/AlgTopCached11.thy              lemma  line 3288
+  graph_arc_interior_open:
+    ac11/AlgTopCached11.thy              lemma  line 3115
+    ac11/AlgTopCached11.thy              lemma  line 3115
+  graph_coherent_any_decomposition:
+    ac11/AlgTopCached11.thy              lemma  line 2877
+    ac11/AlgTopCached11.thy              lemma  line 2877
+  graph_connected_sub_covered_by_arcs:
+    ac7/AlgTopCached7.thy                lemma  line 4698
+    ac7/AlgTopCached7.thy                lemma  line 4698
+  graph_covering_is_graph:
+    ac10/AlgTopCached10.thy              lemma  line 9824
+    ac10/AlgTopCached10.thy              lemma  line 9824
+  graph_cycle_retract:
+    ac11/AlgTopCached11.thy              lemma  line 4907
+    ac11/AlgTopCached11.thy              lemma  line 4907
+  graph_deformation_retract_helper:
+    ac7/AlgTopCached7.thy                lemma  line 4896
+    ac7/AlgTopCached7.thy                lemma  line 4896
+  graph_euler_invariance:
+    ac11/AlgTopCached11.thy              lemma  line 4371
+    ac11/AlgTopCached11.thy              lemma  line 4371
+  graph_euler_rank:
+    ac11/AlgTopCached11.thy              lemma  line 9917
+    ac11/AlgTopCached11.thy              lemma  line 9917
+  graph_is_free:
+    ac11/AlgTopCached11.thy              lemma  line 2586
+    ac11/AlgTopCached11.thy              lemma  line 2586
+  graph_iterated_subdivision_exists:
+    ac11/AlgTopCached11.thy              lemma  line 3980
+    ac11/AlgTopCached11.thy              lemma  line 3980
+  graph_locally_path_connected:
+    ac10/AlgTopCached10.thy              lemma  line 9939
+    ac10/AlgTopCached10.thy              lemma  line 9939
+  graph_one_edge_pi1_iso_Z:
+    ac7/AlgTopCached7.thy                lemma  line 6581
+    ac7/AlgTopCached7.thy                lemma  line 6581
+  graph_pi1_free_weak:
+    ac10/AlgTopCached10.thy              lemma  line 12615
+    ac10/AlgTopCached10.thy              lemma  line 12615
+  graph_pi1_free_weak_apply:
+    ac10/AlgTopCached10.thy              lemma  line 12176
+    ac10/AlgTopCached10.thy              lemma  line 12176
+  graph_pi1_free_weak_finite:
+    ac7/AlgTopCached7.thy                lemma  line 7547
+    ac7/AlgTopCached7.thy                lemma  line 7547
+  graph_quotient_by_tree_wedge_of_circles:
+    ac6/AlgTopCached6.thy                lemma  line 1248
+    ac6/AlgTopCached6.thy                lemma  line 1248
+  graph_remove_interior_points_sc:
+    ac6/AlgTopCached6.thy                lemma  line 2034
+    ac6/AlgTopCached6.thy                lemma  line 2034
+  graph_same_vertices_same_arcs:
+    ac11/AlgTopCached11.thy              lemma  line 3582
+    ac11/AlgTopCached11.thy              lemma  line 3582
+  graph_selection_set_discrete:
+    ac3/AlgTopCached3.thy                lemma  line 127
+    ac3/AlgTopCached3.thy                lemma  line 127
+  graph_semilocally_simply_connected:
+    ac10/AlgTopCached10.thy              lemma  line 10896
+    ac10/AlgTopCached10.thy              lemma  line 10896
+  graph_subdivision_preserves_euler:
+    ac11/AlgTopCached11.thy              lemma  line 2636
+    ac11/AlgTopCached11.thy              lemma  line 2636
+  graph_tree_free_pi1:
+    ac7/AlgTopCached7.thy                lemma  line 6481
+    ac7/AlgTopCached7.thy                lemma  line 6481
+  grid_from_per_piece_subdivisions:
+    i/Top1_Ch9_13.thy                    lemma  line 7786
+    i/Top1_Ch9_13.thy                    lemma  line 7786
+  grid_subdivision_UV:
+    ac/AlgTopCached.thy                  lemma  line 15124
+    ac/AlgTopCached.thy                  lemma  line 15124
   group_assoc:
     ac10/AlgTopCached10.thy              lemma  line 329
     ac/AlgTopCached.thy                  lemma  line 7524
+    ac10/AlgTopCached10.thy              lemma  line 329
+    ac/AlgTopCached.thy                  lemma  line 7524
+  group_conj_reverse:
+    ac10/AlgTopCached10.thy              lemma  line 7
+    ac10/AlgTopCached10.thy              lemma  line 7
+  group_conjugate_inv:
+    ac/AlgTopCached.thy                  lemma  line 8069
+    ac/AlgTopCached.thy                  lemma  line 8069
+  group_conjugate_mul:
+    ac/AlgTopCached.thy                  lemma  line 8033
+    ac/AlgTopCached.thy                  lemma  line 8033
+  group_e_in:
+    ac10/AlgTopCached10.thy              lemma  line 455
+    ac10/AlgTopCached10.thy              lemma  line 455
+  group_e_mem:
+    ac/AlgTopCached.thy                  lemma  line 7518
+    ac/AlgTopCached.thy                  lemma  line 7518
+  group_hom_comp:
+    ac/AlgTopCached.thy                  lemma  line 7831
+    ac/AlgTopCached.thy                  lemma  line 7831
+  group_hom_id:
+    ac/AlgTopCached.thy                  lemma  line 7965
+    ac/AlgTopCached.thy                  lemma  line 7965
+  group_id_left:
+    ac/AlgTopCached.thy                  lemma  line 7527
+    ac/AlgTopCached.thy                  lemma  line 7527
+  group_id_right:
+    ac/AlgTopCached.thy                  lemma  line 7529
+    ac/AlgTopCached.thy                  lemma  line 7529
   group_inv_closed:
     ac10/AlgTopCached10.thy              lemma  line 325
     ac/AlgTopCached.thy                  lemma  line 7522
+    ac10/AlgTopCached10.thy              lemma  line 325
+    ac/AlgTopCached.thy                  lemma  line 7522
+  group_inv_e:
+    ac10/AlgTopCached10.thy              lemma  line 440
+    ac10/AlgTopCached10.thy              lemma  line 440
+  group_inv_inv:
+    ac/AlgTopCached.thy                  lemma  line 7609
+    ac/AlgTopCached.thy                  lemma  line 7609
+  group_inv_inv_early:
+    ac/AlgTopCached.thy                  lemma  line 6237
+    ac/AlgTopCached.thy                  lemma  line 6237
+  group_inv_left:
+    ac/AlgTopCached.thy                  lemma  line 7531
+    ac/AlgTopCached.thy                  lemma  line 7531
   group_inv_mul:
     ac10/AlgTopCached10.thy              lemma  line 460
     ac/AlgTopCached.thy                  lemma  line 7567
+    ac10/AlgTopCached10.thy              lemma  line 460
+    ac/AlgTopCached.thy                  lemma  line 7567
+  group_inv_product:
+    ag/AlgTopGroups.thy                  lemma  line 2915
+    ag/AlgTopGroups.thy                  lemma  line 2915
+  group_inv_right:
+    ac/AlgTopCached.thy                  lemma  line 7533
+    ac/AlgTopCached.thy                  lemma  line 7533
+  group_iso_on_compose:
+    ag/AlgTopGroups.thy                  lemma  line 1859
+    ag/AlgTopGroups.thy                  lemma  line 1859
+  group_iso_on_image_normal_subgroup:
+    ag/AlgTopGroups.thy                  lemma  line 1893
+    ag/AlgTopGroups.thy                  lemma  line 1893
+  group_iso_on_inverse:
+    at/AlgTopChain.thy                   lemma  line 4666
+    at/AlgTopChain.thy                   lemma  line 4666
+  group_iso_on_refl:
+    ag/AlgTopGroups.thy                  lemma  line 1849
+    ag/AlgTopGroups.thy                  lemma  line 1849
+  group_left_cancel:
+    ac/AlgTopCached.thy                  lemma  line 7551
+    ac/AlgTopCached.thy                  lemma  line 7551
+  group_left_id:
+    ac10/AlgTopCached10.thy              lemma  line 342
+    ac10/AlgTopCached10.thy              lemma  line 342
+  group_left_inv:
+    ac10/AlgTopCached10.thy              lemma  line 334
+    ac10/AlgTopCached10.thy              lemma  line 334
   group_mul_closed:
     ac10/AlgTopCached10.thy              lemma  line 321
     ac/AlgTopCached.thy                  lemma  line 7520
+    ac10/AlgTopCached10.thy              lemma  line 321
+    ac/AlgTopCached.thy                  lemma  line 7520
+  group_pow_add:
+    ag/AlgTopGroups.thy                  lemma  line 6764
+    ag/AlgTopGroups.thy                  lemma  line 6764
   group_pow_in_group:
     ag/AlgTopGroups.thy                  lemma  line 4047
     at/AlgTopChain.thy                   lemma  line 463
+    ag/AlgTopGroups.thy                  lemma  line 4047
+    at/AlgTopChain.thy                   lemma  line 463
+  group_right_cancel:
+    ac/AlgTopCached.thy                  lemma  line 7537
+    ac/AlgTopCached.thy                  lemma  line 7537
+  group_right_id:
+    ac10/AlgTopCached10.thy              lemma  line 346
+    ac10/AlgTopCached10.thy              lemma  line 346
+  group_right_inv:
+    ac10/AlgTopCached10.thy              lemma  line 338
+    ac10/AlgTopCached10.thy              lemma  line 338
+  groups_isomorphic_trans_fwd:
+    ac/AlgTopCached.thy                  lemma  line 893
+    ac/AlgTopCached.thy                  lemma  line 893
+  hausdorff_imp_T1_on:
+    i/Top1_Ch4.thy                       lemma  line 2401
+    i/Top1_Ch4.thy                       lemma  line 2401
+  hausdorff_is_topology:
+    i/Top1_Ch2.thy                       lemma  line 5879
+    i/Top1_Ch2.thy                       lemma  line 5879
+  hausdorff_net_unique_limit:
+    i/Top1_Ch5_8.thy                     lemma  line 33583
+    i/Top1_Ch5_8.thy                     lemma  line 33583
+  hausdorff_onI:
+    i/Top1_Ch3.thy                       lemma  line 4666
+    i/Top1_Ch3.thy                       lemma  line 4666
+  hausdorff_on_of_inj_continuous_map:
+    i/Top1_Ch2.thy                       lemma  line 6694
+    i/Top1_Ch2.thy                       lemma  line 6694
+  hausdorff_product:
+    i/Top1_Ch5_8.thy                     lemma  line 20275
+    i/Top1_Ch5_8.thy                     lemma  line 20275
+  hausdorff_separation:
+    i/Top1_Ch2.thy                       lemma  line 5882
+    i/Top1_Ch2.thy                       lemma  line 5882
+  hausdorff_separation_strict:
+    i/Top1_Ch2.thy                       lemma  line 5889
+    i/Top1_Ch2.thy                       lemma  line 5889
+  hausdorff_singleton_closed:
+    svk/AlgTopSvK.thy                    lemma  line 1220
+    svk/AlgTopSvK.thy                    lemma  line 1220
+  hausdorff_strict_is_strict:
+    i/Top1_Ch2.thy                       lemma  line 5904
+    i/Top1_Ch2.thy                       lemma  line 5904
+  hausdorff_subspace:
+    i/Top1_Ch5_8.thy                     lemma  line 1916
+    i/Top1_Ch5_8.thy                     lemma  line 1916
+  helix_covering_construction:
+    a0/AlgTop0.thy                       lemma  line 10
+    a0/AlgTop0.thy                       lemma  line 10
+  helix_f_power_lift:
+    a0/AlgTop0.thy                       lemma  line 1453
+    a0/AlgTop0.thy                       lemma  line 1453
+  helix_g_lift_is_loop:
+    a0/AlgTop0.thy                       lemma  line 1116
+    a0/AlgTop0.thy                       lemma  line 1116
+  helix_shift_general_continuous:
+    ac/AlgTopCached.thy                  lemma  line 58773
+    ac/AlgTopCached.thy                  lemma  line 58773
+  hgen_connecting_path_reduction:
+    ac7/AlgTopCached7.thy                lemma  line 584
+    ac7/AlgTopCached7.thy                lemma  line 584
+  hgen_subdivision_only:
+    ac7/AlgTopCached7.thy                lemma  line 174
+    ac7/AlgTopCached7.thy                lemma  line 174
+  hilbert_boundary_match:
+    i/Top1_Ch5_8.thy                     lemma  line 12393
+    i/Top1_Ch5_8.thy                     lemma  line 12393
+  hilbert_entry:
+    i/Top1_Ch5_8.thy                     definition  line 12168
+    i/Top1_Ch5_8.thy                     definition  line 12168
+  hilbert_entry_range:
+    i/Top1_Ch5_8.thy                     lemma  line 12207
+    i/Top1_Ch5_8.thy                     lemma  line 12207
+  hilbert_entry_sub_quad_match_0:
+    i/Top1_Ch5_8.thy                     lemma  line 12358
+    i/Top1_Ch5_8.thy                     lemma  line 12358
+  hilbert_exit:
+    i/Top1_Ch5_8.thy                     definition  line 12172
+    i/Top1_Ch5_8.thy                     definition  line 12172
+  hilbert_exit_range:
+    i/Top1_Ch5_8.thy                     lemma  line 12210
+    i/Top1_Ch5_8.thy                     lemma  line 12210
+  hilbert_exit_sub_quad_match_3:
+    i/Top1_Ch5_8.thy                     lemma  line 12362
+    i/Top1_Ch5_8.thy                     lemma  line 12362
+  hilbert_quad:
+    i/Top1_Ch5_8.thy                     definition  line 12176
+    i/Top1_Ch5_8.thy                     definition  line 12176
+  hilbert_quad_range:
+    i/Top1_Ch5_8.thy                     lemma  line 12213
+    i/Top1_Ch5_8.thy                     lemma  line 12213
+  hilbert_rec:
+    i/Top1_Ch5_8.thy                     fun  line 12190
+    i/Top1_Ch5_8.thy                     fun  line 12190
+  hilbert_rec_at_0:
+    i/Top1_Ch5_8.thy                     lemma  line 12366
+    i/Top1_Ch5_8.thy                     lemma  line 12366
+  hilbert_rec_at_1:
+    i/Top1_Ch5_8.thy                     lemma  line 12379
+    i/Top1_Ch5_8.thy                     lemma  line 12379
+  hilbert_rec_cauchy:
+    i/Top1_Ch5_8.thy                     lemma  line 12240
+    i/Top1_Ch5_8.thy                     lemma  line 12240
+  hilbert_rec_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 12650
+    i/Top1_Ch5_8.thy                     lemma  line 12650
+  hilbert_rec_dense:
+    i/Top1_Ch5_8.thy                     lemma  line 12353
+    i/Top1_Ch5_8.thy                     lemma  line 12353
+  hilbert_rec_dense_strict:
+    i/Top1_Ch5_8.thy                     lemma  line 12293
+    i/Top1_Ch5_8.thy                     lemma  line 12293
+  hilbert_rec_range:
+    i/Top1_Ch5_8.thy                     lemma  line 12216
+    i/Top1_Ch5_8.thy                     lemma  line 12216
+  hilbert_sub:
+    i/Top1_Ch5_8.thy                     definition  line 12183
+    i/Top1_Ch5_8.thy                     definition  line 12183
+  HOL_continuous_imp_order_topology_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 20758
+    i/Top1_Ch5_8.thy                     lemma  line 20758
+  HOL_open_imp_order_topology_on_UNIV:
+    i/Top1_Ch5_8.thy                     lemma  line 1767
+    i/Top1_Ch5_8.thy                     lemma  line 1767
+  homeomorphism_comp:
+    b/AlgTop_JCT_Base.thy                lemma  line 5617
+    b/AlgTop_JCT_Base.thy                lemma  line 5617
+  homeomorphism_compose:
+    ac/AlgTopCached.thy                  lemma  line 7849
+    ac/AlgTopCached.thy                  lemma  line 7849
+  homeomorphism_image_open:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2903
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2903
+  homeomorphism_inv_connected_bridge:
+    fi/AlgIsoFixed.thy                   lemma  line 3229
+    fi/AlgIsoFixed.thy                   lemma  line 3229
   homeomorphism_inverse:
     ac/AlgTopCached.thy                  lemma  line 7917
     b/AlgTop_JCT_Base.thy                lemma  line 5705
+    ac/AlgTopCached.thy                  lemma  line 7917
+    b/AlgTop_JCT_Base.thy                lemma  line 5705
+  homeomorphism_on_comp:
+    ac/AlgTopCached.thy                  lemma  line 48846
+    ac/AlgTopCached.thy                  lemma  line 48846
+  homeomorphism_on_restrict:
+    ac/AlgTopCached.thy                  lemma  line 48917
+    ac/AlgTopCached.thy                  lemma  line 48917
+  homeomorphism_preserves_dim_le:
+    i/Top1_Ch5_8.thy                     lemma  line 26759
+    i/Top1_Ch5_8.thy                     lemma  line 26759
+  homeomorphism_preserves_lpc:
+    b/AlgTop_JCT_Base.thy                lemma  line 6395
+    b/AlgTop_JCT_Base.thy                lemma  line 6395
   homeomorphism_preserves_path_connected:
+    ac/AlgTopCached.thy                  lemma  line 40812
+    b/AlgTop_JCT_Base.thy                lemma  line 1150
     ac/AlgTopCached.thy                  lemma  line 40812
     b/AlgTop_JCT_Base.thy                lemma  line 1150
   homeomorphism_preserves_simply_connected:
     ac/AlgTopCached.thy                  lemma  line 40856
     b/AlgTop_JCT_Base.thy                lemma  line 1205
+    ac/AlgTopCached.thy                  lemma  line 40856
+    b/AlgTop_JCT_Base.thy                lemma  line 1205
+  homeomorphism_preserves_simply_connected_forward:
+    b/AlgTop_JCT_Base.thy                lemma  line 5751
+    b/AlgTop_JCT_Base.thy                lemma  line 5751
+  homeomorphism_reflects_simply_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 5757
+    b/AlgTop_JCT_Base.thy                lemma  line 5757
+  homeomorphism_restrict_open:
+    ac4/AlgTopCached4.thy                lemma  line 3577
+    ac4/AlgTopCached4.thy                lemma  line 3577
+  homeomorphism_restrict_point:
+    b/AlgTop_JCT_Base.thy                lemma  line 5763
+    b/AlgTop_JCT_Base.thy                lemma  line 5763
+  hom_foldr_mul:
+    at/AlgTopChain.thy                   lemma  line 514
+    at/AlgTopChain.thy                   lemma  line 514
+  hom_foldr_mul_early:
+    ag/AlgTopGroups.thy                  lemma  line 6030
+    ag/AlgTopGroups.thy                  lemma  line 6030
+  hom_from_cyclic_Z_image_in_subgroup:
+    ac/AlgTopCached.thy                  lemma  line 41675
+    ac/AlgTopCached.thy                  lemma  line 41675
+  hom_from_Z_image_in_subgroup:
+    ac/AlgTopCached.thy                  lemma  line 41624
+    ac/AlgTopCached.thy                  lemma  line 41624
+  hom_group_pow:
+    at/AlgTopChain.thy                   lemma  line 490
+    at/AlgTopChain.thy                   lemma  line 490
+  hom_group_pow_early:
+    ag/AlgTopGroups.thy                  lemma  line 6053
+    ag/AlgTopGroups.thy                  lemma  line 6053
+  hom_image_commutator_sub:
+    ac8/AlgTopCached8.thy                lemma  line 4189
+    ac8/AlgTopCached8.thy                lemma  line 4189
+  hom_image_in_subgroup_from_generators:
+    at/AlgTopChain.thy                   lemma  line 5395
+    at/AlgTopChain.thy                   lemma  line 5395
+  hom_image_is_subgroup:
+    ac/AlgTopCached.thy                  lemma  line 7688
+    ac/AlgTopCached.thy                  lemma  line 7688
+  homotopy_concat_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 502
+    i/Top1_Ch9_13.thy                    lemma  line 502
+  homotopy_const_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 356
+    i/Top1_Ch9_13.thy                    lemma  line 356
+  homotopy_induced_basepoint_change:
+    i/Top1_Ch9_13.thy                    lemma  line 13983
+    i/Top1_Ch9_13.thy                    lemma  line 13983
+  homotopy_lifting_rectangle_step:
+    i/Top1_Ch9_13.thy                    lemma  line 7371
+    i/Top1_Ch9_13.thy                    lemma  line 7371
+  homotopy_reverse_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 452
+    i/Top1_Ch9_13.thy                    lemma  line 452
+  hom_preserves_id:
+    ac/AlgTopCached.thy                  lemma  line 7631
+    ac/AlgTopCached.thy                  lemma  line 7631
+  hom_preserves_inv:
+    ac/AlgTopCached.thy                  lemma  line 7657
+    ac/AlgTopCached.thy                  lemma  line 7657
+  hom_word_product:
+    ag/AlgTopGroups.thy                  lemma  line 2245
+    ag/AlgTopGroups.thy                  lemma  line 2245
+  householder_S2:
+    b/AlgTop_JCT_Base.thy                definition  line 4334
+    b/AlgTop_JCT_Base.thy                definition  line 4334
+  householder_S2_homeo:
+    b/AlgTop_JCT_Base.thy                lemma  line 4340
+    b/AlgTop_JCT_Base.thy                lemma  line 4340
+  II_topology:
+    i/Top1_Ch9_13.thy                    definition  line 324
+    i/Top1_Ch9_13.thy                    definition  line 324
+  II_topology_eq_subspace:
+    i/Top1_Ch9_13.thy                    lemma  line 304
+    i/Top1_Ch9_13.thy                    lemma  line 304
+  inclusion_gen_images_in_hom_image:
+    at/AlgTopChain.thy                   lemma  line 5477
+    at/AlgTopChain.thy                   lemma  line 5477
   inclusion_induced_class:
     ac/AlgTopCached.thy                  lemma  line 14172
     b0/AlgTop_JCT_Base0.thy              lemma  line 4801
+    ac/AlgTopCached.thy                  lemma  line 14172
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4801
+  inclusion_induced_comp:
+    ac/AlgTopCached.thy                  lemma  line 43318
+    ac/AlgTopCached.thy                  lemma  line 43318
+  inclusion_retraction_iso:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4844
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4844
+  inclusion_sends_class:
+    fib/AlgIsoFixedBase.thy              lemma  line 1153
+    fib/AlgIsoFixedBase.thy              lemma  line 1153
+  increasing_interval_cover:
+    i/Top1_Ch9_13.thy                    lemma  line 7747
+    i/Top1_Ch9_13.thy                    lemma  line 7747
+  indexed_shrinking:
+    i/Top1_Ch5_8.thy                     lemma  line 8645
+    i/Top1_Ch5_8.thy                     lemma  line 8645
+  induced_hom_mul:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 7896
+    b0/AlgTop_JCT_Base0.thy              lemma  line 7896
+  induced_id_eq_lam:
+    fib/AlgIsoFixedBase.thy              lemma  line 1125
+    fib/AlgIsoFixedBase.thy              lemma  line 1125
+  infinite_cyclic_common_power:
+    a0/AlgTop0.thy                       lemma  line 4391
+    a0/AlgTop0.thy                       lemma  line 4391
+  infinite_range_lpc_subseq:
+    i/Top1_Ch5_8.thy                     lemma  line 32649
+    i/Top1_Ch5_8.thy                     lemma  line 32649
+  inj_hom_preimage_normal_closure:
+    ac/AlgTopCached.thy                  lemma  line 43243
+    ac/AlgTopCached.thy                  lemma  line 43243
+  interior_on:
+    i/Top1_Ch2.thy                       definition  line 5217
+    i/Top1_Ch2.thy                       definition  line 5217
+  intersection_of_subgroups_is_group:
+    ac/AlgTopCached.thy                  lemma  line 7972
+    ac/AlgTopCached.thy                  lemma  line 7972
+  intersects:
+    i/Top1_Ch2.thy                       definition  line 5443
+    i/Top1_Ch2.thy                       definition  line 5443
+  interval_continuous_imp_abs_epsilon_delta:
+    i/Top1_Ch5_8.thy                     lemma  line 29775
+    i/Top1_Ch5_8.thy                     lemma  line 29775
+  interval_delete_connected_R2:
+    b/AlgTop_JCT_Base.thy                lemma  line 7809
+    b/AlgTop_JCT_Base.thy                lemma  line 7809
+  interval_eps_ball_open:
+    i/Top1_Ch5_8.thy                     lemma  line 12053
+    i/Top1_Ch5_8.thy                     lemma  line 12053
+  interval_half_open_left_closed:
+    i/Top1_Ch2.thy                       definition  line 1547
+    i/Top1_Ch2.thy                       definition  line 1547
+  interval_open:
+    i/Top1_Ch2.thy                       definition  line 1544
+    i/Top1_Ch2.thy                       definition  line 1544
+  interval_open_contains_eps_ball:
+    i/Top1_Ch5_8.thy                     lemma  line 11994
+    i/Top1_Ch5_8.thy                     lemma  line 11994
+  interval_types_four:
+    i/Top1_Ch2.thy                       definition  line 2990
+    i/Top1_Ch2.thy                       definition  line 2990
+  int_group_pow:
+    at/AlgTopChain.thy                   lemma  line 476
+    at/AlgTopChain.thy                   lemma  line 476
+  inv_into_preimage_eq:
+    i/Top1_Ch5_8.thy                     lemma  line 32190
+    i/Top1_Ch5_8.thy                     lemma  line 32190
+  is_basis_on:
+    i/Top1_Ch2.thy                       definition  line 1064
+    i/Top1_Ch2.thy                       definition  line 1064
+  I_set_locally_path_connected:
+    ac10/AlgTopCached10.thy              lemma  line 9832
+    ac10/AlgTopCached10.thy              lemma  line 9832
+  is_hausdorff_on:
+    i/Top1_Ch2.thy                       definition  line 5873
+    i/Top1_Ch2.thy                       definition  line 5873
+  is_hausdorff_on_of_homeomorphism_on:
+    i/Top1_Ch3.thy                       lemma  line 10986
+    i/Top1_Ch3.thy                       lemma  line 10986
+  is_limit_point_of:
+    i/Top1_Ch2.thy                       definition  line 5672
+    i/Top1_Ch2.thy                       definition  line 5672
+  iso_Z_generator_free_single:
+    ac10/AlgTopCached10.thy              lemma  line 12280
+    ac10/AlgTopCached10.thy              lemma  line 12280
+  is_subbasis_on:
+    i/Top1_Ch2.thy                       definition  line 1953
+    i/Top1_Ch2.thy                       definition  line 1953
+  is_topology_on:
+    i/Top1_Ch2.thy                       definition  line 26
+    i/Top1_Ch2.thy                       definition  line 26
+  is_topology_on_counterexample:
+    i/Top1_Ch2.thy                       lemma  line 46
+    i/Top1_Ch2.thy                       lemma  line 46
+  is_topology_on_strict:
+    i/Top1_Ch2.thy                       definition  line 34
+    i/Top1_Ch2.thy                       definition  line 34
+  is_topology_on_strict_counterexample:
+    i/Top1_Ch2.thy                       lemma  line 50
+    i/Top1_Ch2.thy                       lemma  line 50
+  is_topology_on_strictI:
+    i/Top1_Ch2.thy                       lemma  line 54
+    i/Top1_Ch2.thy                       lemma  line 54
+  is_topology_on_strict_imp:
+    i/Top1_Ch2.thy                       lemma  line 37
+    i/Top1_Ch2.thy                       lemma  line 37
+  is_topology_on_strict_opens_sub:
+    i/Top1_Ch2.thy                       lemma  line 40
+    i/Top1_Ch2.thy                       lemma  line 40
+  is_topology_on_strict_Pow:
+    i/Top1_Ch2.thy                       lemma  line 58
+    i/Top1_Ch2.thy                       lemma  line 58
+  I_top_sub_closed_interval_top:
+    ac/AlgTopCached.thy                  lemma  line 130
+    ac/AlgTopCached.thy                  lemma  line 130
+  J_component_sub_theta_forces_eq:
+    fib/AlgIsoFixedBase.thy              lemma  line 1257
+    fib/AlgIsoFixedBase.thy              lemma  line 1257
+  K4_cycle_is_SCC:
+    fib/AlgIsoFixedBase.thy              lemma  line 4774
+    fib/AlgIsoFixedBase.thy              lemma  line 4774
+  K4_final_contradiction:
+    fib/AlgIsoFixedBase.thy              lemma  line 1173
+    fib/AlgIsoFixedBase.thy              lemma  line 1173
+  K4_four_components_with_boundary:
+    k5/K5_nonplanar.thy                  lemma  line 49
+    k5/K5_nonplanar.thy                  lemma  line 49
+  K4_from_SCC:
+    fi/AlgIsoFixed.thy                   lemma  line 7229
+    fi/AlgIsoFixed.thy                   lemma  line 7229
+  K4_generator_loop_in_C:
+    fib/AlgIsoFixedBase.thy              lemma  line 2765
+    fib/AlgIsoFixedBase.thy              lemma  line 2765
+  K4_inclusion_surjective_at_x:
+    fib/AlgIsoFixedBase.thy              lemma  line 4834
+    fib/AlgIsoFixedBase.thy              lemma  line 4834
+  K4_nonadjacent_edges_different_components:
+    fib/AlgIsoFixedBase.thy              lemma  line 1289
+    fib/AlgIsoFixedBase.thy              lemma  line 1289
+  K5_K4_sep:
+    k5/K5_nonplanar.thy                  lemma  line 10
+    k5/K5_nonplanar.thy                  lemma  line 10
+  kernel_is_normal_subgroup:
+    ac/AlgTopCached.thy                  lemma  line 7746
+    ac/AlgTopCached.thy                  lemma  line 7746
+  K_set:
+    i/Top1_Ch2.thy                       definition  line 1550
+    i/Top1_Ch2.thy                       definition  line 1550
+  lebesgue_number_lemma:
+    i/Top1_Ch5_8.thy                     lemma  line 14062
+    i/Top1_Ch5_8.thy                     lemma  line 14062
+  left_right_coset_card_eq:
+    ac11/AlgTopCached11.thy              lemma  line 714
+    ac11/AlgTopCached11.thy              lemma  line 714
+  Lemma_13_1:
+    i/Top1_Ch2.thy                       theorem  line 1215
+    i/Top1_Ch2.thy                       theorem  line 1215
+  Lemma_13_2:
+    i/Top1_Ch2.thy                       theorem  line 1319
+    i/Top1_Ch2.thy                       theorem  line 1319
+  Lemma_13_3:
+    i/Top1_Ch2.thy                       theorem  line 1420
+    i/Top1_Ch2.thy                       theorem  line 1420
+  Lemma_13_3_on:
+    i/Top1_Ch2.thy                       corollary  line 1509
+    i/Top1_Ch2.thy                       corollary  line 1509
+  Lemma_13_4:
+    i/Top1_Ch2.thy                       theorem  line 1575
+    i/Top1_Ch2.thy                       theorem  line 1575
+  Lemma_16_1:
+    i/Top1_Ch2.thy                       theorem  line 3896
+    i/Top1_Ch2.thy                       theorem  line 3896
+  Lemma_16_2:
+    i/Top1_Ch2.thy                       theorem  line 4085
+    i/Top1_Ch2.thy                       theorem  line 4085
+  Lemma_16_4_aux:
+    i/Top1_Ch2.thy                       lemma  line 4273
+    i/Top1_Ch2.thy                       lemma  line 4273
+  Lemma_20_2:
+    i/Top1_Ch2.thy                       theorem  line 12134
+    i/Top1_Ch2.thy                       theorem  line 12134
+  Lemma_21_2:
+    i/Top1_Ch2.thy                       theorem  line 17267
+    i/Top1_Ch2.thy                       theorem  line 17267
+  Lemma_21_2_sequence:
+    i/Top1_Ch2.thy                       theorem  line 17121
+    i/Top1_Ch2.thy                       theorem  line 17121
+  Lemma_21_2_sequence_converse:
+    i/Top1_Ch2.thy                       theorem  line 17146
+    i/Top1_Ch2.thy                       theorem  line 17146
+  Lemma_21_4:
+    i/Top1_Ch2.thy                       theorem  line 17415
+    i/Top1_Ch2.thy                       theorem  line 17415
+  Lemma_23_1:
+    i/Top1_Ch3.thy                       lemma  line 33
+    i/Top1_Ch3.thy                       lemma  line 33
+  Lemma_23_1_proper:
+    i/Top1_Ch3.thy                       lemma  line 40
+    i/Top1_Ch3.thy                       lemma  line 40
+  Lemma_23_2:
+    i/Top1_Ch3.thy                       lemma  line 219
+    i/Top1_Ch3.thy                       lemma  line 219
+  Lemma_23_2_disjoint:
+    i/Top1_Ch3.thy                       corollary  line 330
+    i/Top1_Ch3.thy                       corollary  line 330
+  Lemma_26_1:
+    i/Top1_Ch3.thy                       theorem  line 4694
+    i/Top1_Ch3.thy                       theorem  line 4694
+  Lemma_26_4:
+    i/Top1_Ch3.thy                       lemma  line 6408
+    i/Top1_Ch3.thy                       lemma  line 6408
+  Lemma_26_8:
+    i/Top1_Ch3.thy                       theorem  line 4971
+    i/Top1_Ch3.thy                       theorem  line 4971
+  Lemma_27_5:
+    i/Top1_Ch3.thy                       lemma  line 8690
+    i/Top1_Ch3.thy                       lemma  line 8690
+  Lemma_31_1:
+    i/Top1_Ch4.thy                       theorem  line 4621
+    i/Top1_Ch4.thy                       theorem  line 4621
+  Lemma_31_1a:
+    i/Top1_Ch4.thy                       theorem  line 3112
+    i/Top1_Ch4.thy                       theorem  line 3112
+  Lemma_31_1b:
+    i/Top1_Ch4.thy                       theorem  line 4496
+    i/Top1_Ch4.thy                       theorem  line 4496
+  Lemma_37_1:
+    i/Top1_Ch5_8.thy                     lemma  line 55
+    i/Top1_Ch5_8.thy                     lemma  line 55
+  Lemma_37_2:
+    i/Top1_Ch5_8.thy                     lemma  line 281
+    i/Top1_Ch5_8.thy                     lemma  line 281
+  Lemma_38_1:
+    i/Top1_Ch5_8.thy                     lemma  line 1478
+    i/Top1_Ch5_8.thy                     lemma  line 1478
+  Lemma_38_3:
+    i/Top1_Ch5_8.thy                     lemma  line 2095
+    i/Top1_Ch5_8.thy                     lemma  line 2095
+  Lemma_39_1:
+    i/Top1_Ch5_8.thy                     lemma  line 3787
+    i/Top1_Ch5_8.thy                     lemma  line 3787
+  Lemma_39_2:
+    i/Top1_Ch5_8.thy                     lemma  line 3857
+    i/Top1_Ch5_8.thy                     lemma  line 3857
+  Lemma_40_1:
+    i/Top1_Ch5_8.thy                     lemma  line 5115
+    i/Top1_Ch5_8.thy                     lemma  line 5115
+  Lemma_40_1_step1:
+    i/Top1_Ch5_8.thy                     lemma  line 4427
+    i/Top1_Ch5_8.thy                     lemma  line 4427
+  Lemma_40_1_step2:
+    i/Top1_Ch5_8.thy                     lemma  line 4677
+    i/Top1_Ch5_8.thy                     lemma  line 4677
+  Lemma_40_1_step3:
+    i/Top1_Ch5_8.thy                     lemma  line 4807
+    i/Top1_Ch5_8.thy                     lemma  line 4807
+  Lemma_40_2:
+    i/Top1_Ch5_8.thy                     lemma  line 5597
+    i/Top1_Ch5_8.thy                     lemma  line 5597
+  Lemma_41_3:
+    i/Top1_Ch5_8.thy                     lemma  line 7504
+    i/Top1_Ch5_8.thy                     lemma  line 7504
+  Lemma_41_6:
+    i/Top1_Ch5_8.thy                     lemma  line 8389
+    i/Top1_Ch5_8.thy                     lemma  line 8389
+  Lemma_43_1:
+    i/Top1_Ch5_8.thy                     lemma  line 9695
+    i/Top1_Ch5_8.thy                     lemma  line 9695
+  Lemma_43_3:
+    i/Top1_Ch5_8.thy                     lemma  line 9966
+    i/Top1_Ch5_8.thy                     lemma  line 9966
+  Lemma_45_2:
+    i/Top1_Ch5_8.thy                     lemma  line 14483
+    i/Top1_Ch5_8.thy                     lemma  line 14483
+  Lemma_45_3:
+    i/Top1_Ch5_8.thy                     lemma  line 14547
+    i/Top1_Ch5_8.thy                     lemma  line 14547
+  Lemma_46_3:
+    i/Top1_Ch5_8.thy                     lemma  line 16238
+    i/Top1_Ch5_8.thy                     lemma  line 16238
+  Lemma_46_4:
+    i/Top1_Ch5_8.thy                     lemma  line 16347
+    i/Top1_Ch5_8.thy                     lemma  line 16347
+  Lemma_48_1:
+    i/Top1_Ch5_8.thy                     lemma  line 22511
+    i/Top1_Ch5_8.thy                     lemma  line 22511
+  Lemma_48_3:
+    i/Top1_Ch5_8.thy                     lemma  line 23808
+    i/Top1_Ch5_8.thy                     lemma  line 23808
+  Lemma_48_4:
+    i/Top1_Ch5_8.thy                     lemma  line 24010
+    i/Top1_Ch5_8.thy                     lemma  line 24010
+  Lemma_50_4:
+    i/Top1_Ch5_8.thy                     lemma  line 29042
+    i/Top1_Ch5_8.thy                     lemma  line 29042
+  Lemma_50_4_indexed:
+    i/Top1_Ch5_8.thy                     lemma  line 29417
+    i/Top1_Ch5_8.thy                     lemma  line 29417
+  Lemma_50_4_indexed_ind:
+    i/Top1_Ch5_8.thy                     lemma  line 29312
+    i/Top1_Ch5_8.thy                     lemma  line 29312
+  Lemma_51_1_homotopic_refl:
+    i/Top1_Ch9_13.thy                    lemma  line 379
+    i/Top1_Ch9_13.thy                    lemma  line 379
+  Lemma_51_1_homotopic_sym:
+    i/Top1_Ch9_13.thy                    lemma  line 467
+    i/Top1_Ch9_13.thy                    lemma  line 467
+  Lemma_51_1_homotopic_trans:
+    i/Top1_Ch9_13.thy                    lemma  line 706
+    i/Top1_Ch9_13.thy                    lemma  line 706
+  Lemma_51_1_path_homotopic_refl:
+    i/Top1_Ch9_13.thy                    lemma  line 752
+    i/Top1_Ch9_13.thy                    lemma  line 752
+  Lemma_51_1_path_homotopic_sym:
+    i/Top1_Ch9_13.thy                    lemma  line 788
+    i/Top1_Ch9_13.thy                    lemma  line 788
+  Lemma_51_1_path_homotopic_trans:
+    i/Top1_Ch9_13.thy                    lemma  line 1120
+    i/Top1_Ch9_13.thy                    lemma  line 1120
+  Lemma_52_3_simply_connected_unique_paths:
+    ac/AlgTopCached.thy                  lemma  line 730
+    ac/AlgTopCached.thy                  lemma  line 730
+  Lemma_54_1_path_lifting:
+    i/Top1_Ch9_13.thy                    lemma  line 6553
+    i/Top1_Ch9_13.thy                    lemma  line 6553
+  Lemma_54_1_uniqueness:
+    i/Top1_Ch9_13.thy                    lemma  line 7152
+    i/Top1_Ch9_13.thy                    lemma  line 7152
+  Lemma_54_2_homotopy_lifting:
+    i/Top1_Ch9_13.thy                    lemma  line 8269
+    i/Top1_Ch9_13.thy                    lemma  line 8269
+  Lemma_55_1_retract_injective:
+    i/Top1_Ch9_13.thy                    lemma  line 11594
+    i/Top1_Ch9_13.thy                    lemma  line 11594
+  Lemma_55_3_backward:
+    i/Top1_Ch9_13.thy                    lemma  line 12324
+    i/Top1_Ch9_13.thy                    lemma  line 12324
+  Lemma_55_3_nulhomotopic_characterization:
+    i/Top1_Ch9_13.thy                    lemma  line 12500
+    i/Top1_Ch9_13.thy                    lemma  line 12500
+  Lemma_58_1_basepoint_fixed:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4067
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4067
+  Lemma_58_5_basepoint_change:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4197
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4197
+  Lemma_60_5_figure_eight_not_abelian:
+    ac/AlgTopCached.thy                  lemma  line 39917
+    ac/AlgTopCached.thy                  lemma  line 39917
+  Lemma_61_1_components_correspond:
+    b/AlgTop_JCT_Base.thy                lemma  line 7249
+    b/AlgTop_JCT_Base.thy                lemma  line 7249
+  Lemma_61_2_nulhomotopy:
+    b/AlgTop_JCT_Base.thy                lemma  line 6253
+    b/AlgTop_JCT_Base.thy                lemma  line 6253
+  Lemma_61_2_nulhomotopy_textbook:
+    b/AlgTop_JCT_Base.thy                lemma  line 8579
+    b/AlgTop_JCT_Base.thy                lemma  line 8579
+  Lemma_62_1_homotopy_extension:
+    ac/AlgTopCached.thy                  lemma  line 1113
+    ac/AlgTopCached.thy                  lemma  line 1113
+  Lemma_62_2_BorsukLemma:
+    ac/AlgTopCached.thy                  lemma  line 2023
+    ac/AlgTopCached.thy                  lemma  line 2023
+  Lemma_64_1_theta_space_three_components:
+    ac/AlgTopCached.thy                  lemma  line 52257
+    ac/AlgTopCached.thy                  lemma  line 52257
+  Lemma_64_3_K4_four_components:
+    ac/AlgTopCached.thy                  lemma  line 53295
+    ac/AlgTopCached.thy                  lemma  line 53295
+  Lemma_65_1:
+    fi/AlgIsoFixed.thy                   lemma  line 739
+    fi/AlgIsoFixed.thy                   lemma  line 739
+  Lemma_65_1_exists_basepoint:
+    fi/AlgIsoFixed.thy                   lemma  line 1319
+    fi/AlgIsoFixed.thy                   lemma  line 1319
+  Lemma_65_1_K4_subgraph:
+    ac/AlgTopCached.thy                  lemma  line 55121
+    ac/AlgTopCached.thy                  lemma  line 55121
+  Lemma_67_7_free_abelian_extension:
+    ag/AlgTopGroups.thy                  lemma  line 5651
+    ag/AlgTopGroups.thy                  lemma  line 5651
+  Lemma_68_3_extension_property:
+    ac/AlgTopCached.thy                  lemma  line 11323
+    ac/AlgTopCached.thy                  lemma  line 11323
+  Lemma_68_9_normal_closure_conjugates:
+    ac/AlgTopCached.thy                  lemma  line 8291
+    ac/AlgTopCached.thy                  lemma  line 8291
+  Lemma_69_3_commutator_in_kernel:
+    ac/AlgTopCached.thy                  lemma  line 8551
+    ac/AlgTopCached.thy                  lemma  line 8551
+  Lemma_77_1_step1:
+    AlgTop.thy                           lemma  line 676
+    AlgTop.thy                           lemma  line 676
+  Lemma_84_2_tree_union_arc:
+    ac3/AlgTopCached3.thy                lemma  line 822
+    ac3/AlgTopCached3.thy                lemma  line 822
+  Lemma_84_6_two_component_generation:
+    ac7/AlgTopCached7.thy                lemma  line 1031
+    ac7/AlgTopCached7.thy                lemma  line 1031
+  limit_point_imp_closure:
+    i/Top1_Ch5_8.thy                     lemma  line 32628
+    i/Top1_Ch5_8.thy                     lemma  line 32628
+  limit_points_of:
+    i/Top1_Ch2.thy                       definition  line 5677
+    i/Top1_Ch2.thy                       definition  line 5677
+  limit_point_strict_nbhd:
+    i/Top1_Ch2.thy                       lemma  line 5681
+    i/Top1_Ch2.thy                       lemma  line 5681
+  line_0half_to_half0_avoids_zero:
+    ac/AlgTopCached.thy                  lemma  line 40476
+    ac/AlgTopCached.thy                  lemma  line 40476
+  line_path_in_punctured_disk:
+    ac/AlgTopCached.thy                  lemma  line 40359
+    ac/AlgTopCached.thy                  lemma  line 40359
+  line_to_hub_avoids_zero:
+    ac/AlgTopCached.thy                  lemma  line 40442
+    ac/AlgTopCached.thy                  lemma  line 40442
+  locally_connected_at_strict:
+    i/Top1_Ch3.thy                       lemma  line 2831
+    i/Top1_Ch3.thy                       lemma  line 2831
+  locally_finite_sum_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 8572
+    i/Top1_Ch5_8.thy                     lemma  line 8572
+  locally_metrizable_paracompact_imp_sigma_lf_basis:
+    i/Top1_Ch5_8.thy                     lemma  line 9459
+    i/Top1_Ch5_8.thy                     lemma  line 9459
+  locally_path_connected_at_strict:
+    i/Top1_Ch3.thy                       lemma  line 3081
+    i/Top1_Ch3.thy                       lemma  line 3081
+  loop_agree_on_I:
+    i/Top1_Ch9_13.thy                    lemma  line 10118
+    i/Top1_Ch9_13.thy                    lemma  line 10118
+  loop_class_cong:
+    ac10/AlgTopCached10.thy              lemma  line 351
+    ac10/AlgTopCached10.thy              lemma  line 351
+  loop_equiv_class_pointwise_I:
+    ac8/AlgTopCached8.thy                lemma  line 574
+    ac8/AlgTopCached8.thy                lemma  line 574
+  loop_equiv_subspace_superspace:
+    ac/AlgTopCached.thy                  lemma  line 13671
+    ac/AlgTopCached.thy                  lemma  line 13671
+  loop_factors_through_S1:
+    b/AlgTop_JCT_Base.thy                lemma  line 11040
+    b/AlgTop_JCT_Base.thy                lemma  line 11040
+  loop_nulhomotopic_via_connected_obstruction:
+    b/AlgTop_JCT_Base.thy                lemma  line 12099
+    b/AlgTop_JCT_Base.thy                lemma  line 12099
+  loop_on_superspace_via_homeo:
+    at/AlgTopChain.thy                   lemma  line 5509
+    at/AlgTopChain.thy                   lemma  line 5509
+  loop_split_at_vertices:
+    pd/PolygonDisk.thy                   lemma  line 4756
+    pd/PolygonDisk.thy                   lemma  line 4756
+  loop_split_first:
+    pd/PolygonDisk.thy                   lemma  line 4143
+    pd/PolygonDisk.thy                   lemma  line 4143
+  loop_split_inductive:
+    pd/PolygonDisk.thy                   lemma  line 4471
+    pd/PolygonDisk.thy                   lemma  line 4471
+  loop_subdivision_UV:
+    ac/AlgTopCached.thy                  lemma  line 15732
+    ac/AlgTopCached.thy                  lemma  line 15732
+  lp_compact_first_countable_imp_seq_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 33337
+    i/Top1_Ch5_8.thy                     lemma  line 33337
+  lp_compact_iff_seq_compact_metric:
+    i/Top1_Ch5_8.thy                     corollary  line 33371
+    i/Top1_Ch5_8.thy                     corollary  line 33371
+  lp_compact_not_imp_compact_in_general:
+    i/Top1_Ch5_8.thy                     lemma  line 33330
+    i/Top1_Ch5_8.thy                     lemma  line 33330
+  lp_compact_T1_infinite_intersection:
+    i/Top1_Ch3.thy                       corollary  line 10657
+    i/Top1_Ch3.thy                       corollary  line 10657
+  map_const_upt_replicate:
+    ac7/AlgTopCached7.thy                lemma  line 162
+    ac7/AlgTopCached7.thy                lemma  line 162
+  map_into_R2_nulhomotopic:
+    b/AlgTop_JCT_Base.thy                lemma  line 5952
+    b/AlgTop_JCT_Base.thy                lemma  line 5952
+  map_into_S2_minus_point_nulhomotopic:
+    b/AlgTop_JCT_Base.thy                lemma  line 6153
+    b/AlgTop_JCT_Base.thy                lemma  line 6153
+  map_map_pair_compose:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 1736
+    wh/AlgTopWedgeHelpers.thy            lemma  line 1736
+  map_pair_fst_append:
+    ag/AlgTopGroups.thy                  lemma  line 159
+    ag/AlgTopGroups.thy                  lemma  line 159
+  map_pair_fst_flip:
+    ag/AlgTopGroups.thy                  lemma  line 144
+    ag/AlgTopGroups.thy                  lemma  line 144
+  map_pair_fst_flip_rev:
+    ag/AlgTopGroups.thy                  lemma  line 148
+    ag/AlgTopGroups.thy                  lemma  line 148
+  map_pair_fst_rev:
+    ag/AlgTopGroups.thy                  lemma  line 141
+    ag/AlgTopGroups.thy                  lemma  line 141
+  mapped_word_fst_flip_rev:
+    ag/AlgTopGroups.thy                  lemma  line 102
+    ag/AlgTopGroups.thy                  lemma  line 102
+  map_tl_pair:
+    ag/AlgTopGroups.thy                  lemma  line 30
+    ag/AlgTopGroups.thy                  lemma  line 30
+  max_conn_comp_covers:
+    ac3/AlgTopCached3.thy                lemma  line 47
+    ac3/AlgTopCached3.thy                lemma  line 47
+  max_conn_comp_mem:
+    ac3/AlgTopCached3.thy                lemma  line 40
+    ac3/AlgTopCached3.thy                lemma  line 40
+  max_conn_comp_ne:
+    ac3/AlgTopCached3.thy                lemma  line 43
+    ac3/AlgTopCached3.thy                lemma  line 43
+  max_conn_comp_sub:
+    ac3/AlgTopCached3.thy                lemma  line 37
+    ac3/AlgTopCached3.thy                lemma  line 37
+  maximal_tree_reaches_all_arcs:
+    ac6/AlgTopCached6.thy                lemma  line 1259
+    ac6/AlgTopCached6.thy                lemma  line 1259
+  mem_of_elem_eq:
+    i/Top1_Ch5_8.thy                     lemma  line 806
+    i/Top1_Ch5_8.thy                     lemma  line 806
+  mem_of_eq:
+    i/Top1_Ch5_8.thy                     lemma  line 804
+    i/Top1_Ch5_8.thy                     lemma  line 804
+  mem_of_eq_sym:
+    i/Top1_Ch5_8.thy                     lemma  line 805
+    i/Top1_Ch5_8.thy                     lemma  line 805
+  method_evaluate:
+    i/Top1_Ch9_13.thy                    fun  line 6
+    i/Top1_Ch9_13.thy                    fun  line 6
   method_evaluate_rt:
     ac/AlgTopCached.thy                  fun  line 23
     ag/AlgTopGroups.thy                  fun  line 22
     AlgTop.thy                           fun  line 20
+    ac/AlgTopCached.thy                  fun  line 23
+    ag/AlgTopGroups.thy                  fun  line 22
+    AlgTop.thy                           fun  line 20
+  metric_bounded_subset_mono:
+    i/Top1_Ch5_8.thy                     lemma  line 14808
+    i/Top1_Ch5_8.thy                     lemma  line 14808
+  metric_closed_ball_closed:
+    i/Top1_Ch5_8.thy                     lemma  line 15046
+    i/Top1_Ch5_8.thy                     lemma  line 15046
+  metric_continuous_imp_epsilon_delta:
+    i/Top1_Ch5_8.thy                     lemma  line 29741
+    i/Top1_Ch5_8.thy                     lemma  line 29741
+  metric_conv_eventually_in_closed:
+    i/Top1_Ch5_8.thy                     lemma  line 11465
+    i/Top1_Ch5_8.thy                     lemma  line 11465
+  metric_epsilon_delta_imp_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 29691
+    i/Top1_Ch5_8.thy                     lemma  line 29691
+  metric_limit_preserves_bound:
+    i/Top1_Ch5_8.thy                     lemma  line 10796
+    i/Top1_Ch5_8.thy                     lemma  line 10796
+  metric_limit_preserves_le:
+    i/Top1_Ch5_8.thy                     lemma  line 29495
+    i/Top1_Ch5_8.thy                     lemma  line 29495
+  metric_on_subset:
+    i/Top1_Ch5_8.thy                     lemma  line 11456
+    i/Top1_Ch5_8.thy                     lemma  line 11456
+  metric_on_sym:
+    i/Top1_Ch5_8.thy                     lemma  line 29485
+    i/Top1_Ch5_8.thy                     lemma  line 29485
+  metric_on_triangle:
+    i/Top1_Ch5_8.thy                     lemma  line 29490
+    i/Top1_Ch5_8.thy                     lemma  line 29490
+  metric_satisfies_T1:
+    i/Top1_Ch5_8.thy                     lemma  line 32578
+    i/Top1_Ch5_8.thy                     lemma  line 32578
+  metric_seq_closed_imp_closed:
+    i/Top1_Ch5_8.thy                     lemma  line 10950
+    i/Top1_Ch5_8.thy                     lemma  line 10950
+  metric_seq_conv_iff:
+    i/Top1_Ch5_8.thy                     lemma  line 10860
+    i/Top1_Ch5_8.thy                     lemma  line 10860
+  metric_seq_limit_eq:
+    i/Top1_Ch5_8.thy                     lemma  line 29552
+    i/Top1_Ch5_8.thy                     lemma  line 29552
+  metric_to_interval_eps_delta:
+    i/Top1_Ch5_8.thy                     lemma  line 11957
+    i/Top1_Ch5_8.thy                     lemma  line 11957
+  metric_topology_ball_neighborhood:
+    i/Top1_Ch5_8.thy                     lemma  line 18000
+    i/Top1_Ch5_8.thy                     lemma  line 18000
+  metric_topology_hausdorff:
+    i/Top1_Ch5_8.thy                     lemma  line 5126
+    i/Top1_Ch5_8.thy                     lemma  line 5126
+  metric_topology_is_strict:
+    i/Top1_Ch2.thy                       lemma  line 11779
+    i/Top1_Ch2.thy                       lemma  line 11779
+  metric_topology_open_from_balls:
+    i/Top1_Ch5_8.thy                     lemma  line 18038
+    i/Top1_Ch5_8.thy                     lemma  line 18038
+  metric_topology_open_sub:
+    i/Top1_Ch5_8.thy                     lemma  line 20647
+    i/Top1_Ch5_8.thy                     lemma  line 20647
+  metric_triangle4:
+    i/Top1_Ch5_8.thy                     lemma  line 14510
+    i/Top1_Ch5_8.thy                     lemma  line 14510
+  metrizable_closedin_complement_openin_on:
+    i/Top1_Ch5_8.thy                     lemma  line 5250
+    i/Top1_Ch5_8.thy                     lemma  line 5250
+  metrizable_imp_hausdorff:
+    i/Top1_Ch5_8.thy                     lemma  line 5220
+    i/Top1_Ch5_8.thy                     lemma  line 5220
+  metrizable_imp_regular:
+    i/Top1_Ch5_8.thy                     lemma  line 5256
+    i/Top1_Ch5_8.thy                     lemma  line 5256
   metrizable_imp_strict:
     i/Top1_Ch2.thy                       lemma  line 11786
     i/Top1_Ch5_8.thy                     lemma  line 5230
+    i/Top1_Ch2.thy                       lemma  line 11786
+    i/Top1_Ch5_8.thy                     lemma  line 5230
+  metrizable_openin_on:
+    i/Top1_Ch5_8.thy                     lemma  line 5245
+    i/Top1_Ch5_8.thy                     lemma  line 5245
+  metrizable_open_sub_carrier:
+    i/Top1_Ch5_8.thy                     lemma  line 5240
+    i/Top1_Ch5_8.thy                     lemma  line 5240
+  move_one_puncture:
+    fi/AlgIsoFixed.thy                   lemma  line 4391
+    fi/AlgIsoFixed.thy                   lemma  line 4391
+  multi:
+    AlgTop.thy                           lemma  line 572
+    AlgTop.thy                           lemma  line 572
+  munkres_basis_property:
+    i/Top1_Ch5_8.thy                     lemma  line 9379
+    i/Top1_Ch5_8.thy                     lemma  line 9379
+  Munkres_Step_1_arc_splice:
+    fi/AlgIsoFixed.thy                   lemma  line 1515
+    fi/AlgIsoFixed.thy                   lemma  line 1515
+  Munkres_Step_4_move_punctures:
+    fi/AlgIsoFixed.thy                   lemma  line 6247
+    fi/AlgIsoFixed.thy                   lemma  line 6247
+  Munkres_xaxis_segment:
+    fi/AlgIsoFixed.thy                   lemma  line 4029
+    fi/AlgIsoFixed.thy                   lemma  line 4029
+  nat_directed_set:
+    i/Top1_Ch5_8.thy                     lemma  line 33426
+    i/Top1_Ch5_8.thy                     lemma  line 33426
+  neighborhood_of:
+    i/Top1_Ch2.thy                       definition  line 5450
+    i/Top1_Ch2.thy                       definition  line 5450
+  neighborhood_of_strict:
+    i/Top1_Ch2.thy                       definition  line 5456
+    i/Top1_Ch2.thy                       definition  line 5456
+  neighborhood_of_strict_carrier:
+    i/Top1_Ch2.thy                       lemma  line 5463
+    i/Top1_Ch2.thy                       lemma  line 5463
+  neighborhood_of_strict_imp:
+    i/Top1_Ch2.thy                       lemma  line 5459
+    i/Top1_Ch2.thy                       lemma  line 5459
+  neighborhood_of_to_strict:
+    i/Top1_Ch2.thy                       lemma  line 5467
+    i/Top1_Ch2.thy                       lemma  line 5467
+  net_convergence_iff_seq_convergence:
+    i/Top1_Ch5_8.thy                     lemma  line 33432
+    i/Top1_Ch5_8.thy                     lemma  line 33432
+  net_converges_eventually_strict:
+    i/Top1_Ch5_8.thy                     lemma  line 33480
+    i/Top1_Ch5_8.thy                     lemma  line 33480
+  net_limit_in_closure:
+    i/Top1_Ch5_8.thy                     lemma  line 33463
+    i/Top1_Ch5_8.thy                     lemma  line 33463
+  no_matching_pair_word_ne_e:
+    ag/AlgTopGroups.thy                  lemma  line 4637
+    ag/AlgTopGroups.thy                  lemma  line 4637
+  non_adjacent_cone_disjoint:
+    AlgTop.thy                           lemma  line 1060
+    AlgTop.thy                           lemma  line 1060
+  nonempty_inter_from_subset:
+    fib/AlgIsoFixedBase.thy              lemma  line 1219
+    fib/AlgIsoFixedBase.thy              lemma  line 1219
+  normal_closure_least:
+    ag/AlgTopGroups.thy                  lemma  line 2069
+    ag/AlgTopGroups.thy                  lemma  line 2069
+  normal_coset_eq:
+    ac/AlgTopCached.thy                  lemma  line 8732
+    ac/AlgTopCached.thy                  lemma  line 8732
+  normal_coset_mul_eq:
+    ac/AlgTopCached.thy                  lemma  line 8886
+    ac/AlgTopCached.thy                  lemma  line 8886
+  normal_finite_cover_bump_family:
+    i/Top1_Ch4.thy                       lemma  line 16997
+    i/Top1_Ch4.thy                       lemma  line 16997
+  normal_imp_completely_regular_on:
+    i/Top1_Ch4.thy                       lemma  line 11546
+    i/Top1_Ch4.thy                       lemma  line 11546
+  normal_imp_regular_on:
+    i/Top1_Ch4.thy                       lemma  line 4670
+    i/Top1_Ch4.thy                       lemma  line 4670
+  normal_insert_open_between:
+    i/Top1_Ch4.thy                       lemma  line 4646
+    i/Top1_Ch4.thy                       lemma  line 4646
+  normal_is_T1:
+    i/Top1_Ch4.thy                       lemma  line 3238
+    i/Top1_Ch4.thy                       lemma  line 3238
+  normalizer_is_group:
+    ac10/AlgTopCached10.thy              lemma  line 495
+    ac10/AlgTopCached10.thy              lemma  line 495
+  normal_refine_closed_into_open:
+    i/Top1_Ch4.thy                       lemma  line 4374
+    i/Top1_Ch4.thy                       lemma  line 4374
+  normal_separation:
+    i/Top1_Ch4.thy                       lemma  line 3241
+    i/Top1_Ch4.thy                       lemma  line 3241
+  normal_separation_openin_on:
+    i/Top1_Ch4.thy                       lemma  line 3248
+    i/Top1_Ch4.thy                       lemma  line 3248
+  normal_shrink_finite_open_cover:
+    i/Top1_Ch4.thy                       lemma  line 16479
+    i/Top1_Ch4.thy                       lemma  line 16479
+  normal_subgroup_generated_is_normal:
+    ac/AlgTopCached.thy                  lemma  line 6781
+    ac/AlgTopCached.thy                  lemma  line 6781
+  normal_urysohn_bump_support:
+    i/Top1_Ch4.thy                       lemma  line 16917
+    i/Top1_Ch4.thy                       lemma  line 16917
+  normal_urysohn_initial_step:
+    i/Top1_Ch4.thy                       lemma  line 6212
+    i/Top1_Ch4.thy                       lemma  line 6212
+  north_pole:
+    b/AlgTop_JCT_Base.thy                definition  line 3786
+    b/AlgTop_JCT_Base.thy                definition  line 3786
+  north_pole_in_S2:
+    b/AlgTop_JCT_Base.thy                lemma  line 3789
+    b/AlgTop_JCT_Base.thy                lemma  line 3789
+  not_connected_imp_no_path:
+    a0/AlgTop0.thy                       lemma  line 4823
+    a0/AlgTop0.thy                       lemma  line 4823
+  not_reduced_has_cancel:
+    ag/AlgTopGroups.thy                  lemma  line 2875
+    ag/AlgTopGroups.thy                  lemma  line 2875
+  nth_append_skip:
+    AlgTop.thy                           lemma  line 655
+    AlgTop.thy                           lemma  line 655
+  nth_append_take:
+    AlgTop.thy                           lemma  line 658
+    AlgTop.thy                           lemma  line 658
+  nulhomotopic_homotopic_trans:
+    i/Top1_Ch9_13.thy                    lemma  line 13164
+    i/Top1_Ch9_13.thy                    lemma  line 13164
+  nulhomotopic_transfer:
+    b/AlgTop_JCT_Base.thy                lemma  line 6113
+    b/AlgTop_JCT_Base.thy                lemma  line 6113
+  nulhomotopic_trivializes_loops:
+    i/Top1_Ch9_13.thy                    lemma  line 16045
+    i/Top1_Ch9_13.thy                    lemma  line 16045
+  nulhomotopic_trivializes_loops_general:
+    i/Top1_Ch9_13.thy                    lemma  line 14652
+    i/Top1_Ch9_13.thy                    lemma  line 14652
+  nulhomotopic_via_convex_R2:
+    ac/AlgTopCached.thy                  lemma  line 3626
+    ac/AlgTopCached.thy                  lemma  line 3626
+  open_cover_subdivision_01:
+    i/Top1_Ch9_13.thy                    lemma  line 6333
+    i/Top1_Ch9_13.thy                    lemma  line 6333
+  open_dense_inter_nonempty:
+    i/Top1_Ch5_8.thy                     lemma  line 27692
+    i/Top1_Ch5_8.thy                     lemma  line 27692
+  open_disk_convex:
+    ac/AlgTopCached.thy                  lemma  line 40184
+    ac/AlgTopCached.thy                  lemma  line 40184
+  open_disk_is_topology:
+    ac/AlgTopCached.thy                  lemma  line 40268
+    ac/AlgTopCached.thy                  lemma  line 40268
+  open_disk_path_connected:
+    ac/AlgTopCached.thy                  lemma  line 40288
+    ac/AlgTopCached.thy                  lemma  line 40288
+  open_disk_simply_connected:
+    ac/AlgTopCached.thy                  lemma  line 40617
+    ac/AlgTopCached.thy                  lemma  line 40617
+  open_disk_topology_eq:
+    ac/AlgTopCached.thy                  lemma  line 40258
+    ac/AlgTopCached.thy                  lemma  line 40258
+  open_family_basis_criterion:
+    i/Top1_Ch5_8.thy                     lemma  line 9341
+    i/Top1_Ch5_8.thy                     lemma  line 9341
+  openin_complement_closedin:
+    b/AlgTop_JCT_Base.thy                lemma  line 266
+    b/AlgTop_JCT_Base.thy                lemma  line 266
+  open_in_generated_basis_neighborhood:
+    i/Top1_Ch5_8.thy                     lemma  line 17991
+    i/Top1_Ch5_8.thy                     lemma  line 17991
+  openin_on:
+    i/Top1_Ch2.thy                       definition  line 1028
+    i/Top1_Ch2.thy                       definition  line 1028
+  openin_on_mem:
+    i/Top1_Ch2.thy                       lemma  line 1031
+    i/Top1_Ch2.thy                       lemma  line 1031
+  openin_on_sub:
+    i/Top1_Ch2.thy                       lemma  line 1034
+    i/Top1_Ch2.thy                       lemma  line 1034
+  openin_on_sub_strict:
+    i/Top1_Ch2.thy                       lemma  line 1037
+    i/Top1_Ch2.thy                       lemma  line 1037
+  open_in_sub_imp_open_general:
+    ac/AlgTopCached.thy                  lemma  line 52079
+    ac/AlgTopCached.thy                  lemma  line 52079
+  open_in_subspace_if_open_and_subset:
+    ac/AlgTopCached.thy                  lemma  line 52069
+    ac/AlgTopCached.thy                  lemma  line 52069
+  open_interval:
+    i/Top1_Ch2.thy                       definition  line 2235
+    i/Top1_Ch2.thy                       definition  line 2235
+  open_interval_in_abs_metric_topology:
+    i/Top1_Ch4.thy                       lemma  line 11095
+    i/Top1_Ch4.thy                       lemma  line 11095
+  open_interval_in_bounded_metric_topology:
+    i/Top1_Ch2.thy                       lemma  line 12556
+    i/Top1_Ch2.thy                       lemma  line 12556
+  open_interval_in_order_topology:
+    i/Top1_Ch2.thy                       lemma  line 6194
+    i/Top1_Ch2.thy                       lemma  line 6194
+  open_interval_is_open:
+    ac/AlgTopCached.thy                  lemma  line 48
+    ac/AlgTopCached.thy                  lemma  line 48
+  open_interval_on:
+    i/Top1_Ch2.thy                       definition  line 2256
+    i/Top1_Ch2.thy                       definition  line 2256
+  open_nonempty_R2_has_two_points:
+    b/AlgTop_JCT_Base.thy                lemma  line 7756
+    b/AlgTop_JCT_Base.thy                lemma  line 7756
+  open_ray_gt:
+    i/Top1_Ch2.thy                       definition  line 2229
+    i/Top1_Ch2.thy                       definition  line 2229
+  open_ray_gt_in_abs_metric_topology:
+    i/Top1_Ch4.thy                       lemma  line 11168
+    i/Top1_Ch4.thy                       lemma  line 11168
+  open_ray_gt_in_bounded_metric_topology:
+    i/Top1_Ch2.thy                       lemma  line 12685
+    i/Top1_Ch2.thy                       lemma  line 12685
+  open_ray_gt_in_order_topology:
+    i/Top1_Ch2.thy                       lemma  line 6183
+    i/Top1_Ch2.thy                       lemma  line 6183
+  open_ray_gt_is_open:
+    ac/AlgTopCached.thy                  lemma  line 34
+    ac/AlgTopCached.thy                  lemma  line 34
+  open_ray_gt_on:
+    i/Top1_Ch2.thy                       definition  line 2250
+    i/Top1_Ch2.thy                       definition  line 2250
+  open_ray_lt:
+    i/Top1_Ch2.thy                       definition  line 2232
+    i/Top1_Ch2.thy                       definition  line 2232
+  open_ray_lt_in_abs_metric_topology:
+    i/Top1_Ch4.thy                       lemma  line 11219
+    i/Top1_Ch4.thy                       lemma  line 11219
+  open_ray_lt_in_bounded_metric_topology:
+    i/Top1_Ch2.thy                       lemma  line 12773
+    i/Top1_Ch2.thy                       lemma  line 12773
+  open_ray_lt_in_order_topology:
+    i/Top1_Ch2.thy                       lemma  line 6172
+    i/Top1_Ch2.thy                       lemma  line 6172
+  open_ray_lt_is_open:
+    ac/AlgTopCached.thy                  lemma  line 41
+    ac/AlgTopCached.thy                  lemma  line 41
+  open_ray_lt_on:
+    i/Top1_Ch2.thy                       definition  line 2253
+    i/Top1_Ch2.thy                       definition  line 2253
+  open_subset_locally_path_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 6195
+    b/AlgTop_JCT_Base.thy                lemma  line 6195
+  op_minus_continuous_on_interval:
+    i/Top1_Ch9_13.thy                    lemma  line 393
+    i/Top1_Ch9_13.thy                    lemma  line 393
+  order_topology_on:
+    i/Top1_Ch2.thy                       definition  line 2266
+    i/Top1_Ch2.thy                       definition  line 2266
+  order_topology_on_UNIV:
+    i/Top1_Ch2.thy                       definition  line 2245
+    i/Top1_Ch2.thy                       definition  line 2245
+  order_topology_on_UNIV_eq:
+    i/Top1_Ch2.thy                       lemma  line 2353
+    i/Top1_Ch2.thy                       lemma  line 2353
+  order_topology_on_UNIV_eq_bounded_metric_topology_real:
+    i/Top1_Ch2.thy                       lemma  line 12861
+    i/Top1_Ch2.thy                       lemma  line 12861
+  order_topology_on_UNIV_eq_HOL_open:
+    i/Top1_Ch5_8.thy                     lemma  line 1800
+    i/Top1_Ch5_8.thy                     lemma  line 1800
+  order_topology_on_UNIV_imp_HOL_open:
+    i/Top1_Ch5_8.thy                     lemma  line 1752
+    i/Top1_Ch5_8.thy                     lemma  line 1752
+  order_topology_on_UNIV_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 2981
+    i/Top1_Ch2.thy                       lemma  line 2981
+  order_topology_on_UNIV_open_interval_subset_real:
+    i/Top1_Ch2.thy                       lemma  line 13676
+    i/Top1_Ch2.thy                       lemma  line 13676
+  order_topology_on_UNIV_real_eq_abs_metric_topology:
+    i/Top1_Ch4.thy                       lemma  line 11270
+    i/Top1_Ch4.thy                       lemma  line 11270
+  pair_const_t_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 7127
+    i/Top1_Ch9_13.thy                    lemma  line 7127
+  pair_scl:
+    b/AlgTop_JCT_Base.thy                definition  line 8574
+    b/AlgTop_JCT_Base.thy                definition  line 8574
+  pair_s_const_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 7100
+    i/Top1_Ch9_13.thy                    lemma  line 7100
+  pair_sub:
+    b/AlgTop_JCT_Base.thy                definition  line 8571
+    b/AlgTop_JCT_Base.thy                definition  line 8571
+  paracompact_closure_avoidance_step:
+    i/Top1_Ch4.thy                       lemma  line 18722
+    i/Top1_Ch4.thy                       lemma  line 18722
+  paracompact_closure_union_avoidance:
+    i/Top1_Ch5_8.thy                     lemma  line 7165
+    i/Top1_Ch5_8.thy                     lemma  line 7165
+  paracompact_hausdorff_imp_regular:
+    i/Top1_Ch5_8.thy                     lemma  line 6923
+    i/Top1_Ch5_8.thy                     lemma  line 6923
+  paracompact_regular_imp_normal:
+    i/Top1_Ch5_8.thy                     lemma  line 7193
+    i/Top1_Ch5_8.thy                     lemma  line 7193
+  pasting_deformation_retracts_to_point:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2055
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2055
+  pasting_deformation_retract_to_subspace:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2444
+    wh/AlgTopWedgeHelpers.thy            lemma  line 2444
+  pasting_lemma_two_closed:
+    i/Top1_Ch5_8.thy                     lemma  line 12415
+    i/Top1_Ch5_8.thy                     lemma  line 12415
+  path_connected_finite_union_common_point:
+    svk/AlgTopSvK.thy                    lemma  line 525
+    svk/AlgTopSvK.thy                    lemma  line 525
   path_connected_imp_connected:
     ac4/AlgTopCached4.thy                lemma  line 411
     b/AlgTop_JCT_Base.thy                lemma  line 6977
+    ac4/AlgTopCached4.thy                lemma  line 411
+    b/AlgTop_JCT_Base.thy                lemma  line 6977
+  path_connected_union:
+    b/AlgTop_JCT_Base.thy                lemma  line 81
+    b/AlgTop_JCT_Base.thy                lemma  line 81
+  path_homotopic_path_power:
+    a0/AlgTop0.thy                       lemma  line 4010
+    a0/AlgTop0.thy                       lemma  line 4010
+  path_homotopic_product_left:
+    i/Top1_Ch9_13.thy                    lemma  line 2486
+    i/Top1_Ch9_13.thy                    lemma  line 2486
+  path_homotopic_product_right:
+    i/Top1_Ch9_13.thy                    lemma  line 2691
+    i/Top1_Ch9_13.thy                    lemma  line 2691
+  path_homotopic_reverse:
+    a0/AlgTop0.thy                       lemma  line 4289
+    a0/AlgTop0.thy                       lemma  line 4289
+  path_homotopic_reverse_congruence:
+    ac/AlgTopCached.thy                  lemma  line 13715
+    ac/AlgTopCached.thy                  lemma  line 13715
+  path_homotopic_same_class:
+    fib/AlgIsoFixedBase.thy              lemma  line 1134
+    fib/AlgIsoFixedBase.thy              lemma  line 1134
+  path_homotopic_subspace_superspace:
+    ac/AlgTopCached.thy                  lemma  line 13628
+    ac/AlgTopCached.thy                  lemma  line 13628
+  path_homotopic_subspace_to_ambient:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 7805
+    b0/AlgTop_JCT_Base0.thy              lemma  line 7805
+  path_homotopy_concat_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 843
+    i/Top1_Ch9_13.thy                    lemma  line 843
+  path_homotopy_const_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 730
+    i/Top1_Ch9_13.thy                    lemma  line 730
+  path_homotopy_reverse_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 771
+    i/Top1_Ch9_13.thy                    lemma  line 771
+  path_in_subspace_imp_path_in_ambient:
+    b/AlgTop_JCT_Base.thy                lemma  line 46
+    b/AlgTop_JCT_Base.thy                lemma  line 46
   path_in_subspace_is_path_in_ambient:
     b0/AlgTop_JCT_Base0.thy              lemma  line 5576
     b/AlgTop_JCT_Base.thy                lemma  line 19
+    b0/AlgTop_JCT_Base0.thy              lemma  line 5576
+    b/AlgTop_JCT_Base.thy                lemma  line 19
+  path_in_subspace_is_path_in_space:
+    a0/AlgTop0.thy                       lemma  line 1415
+    a0/AlgTop0.thy                       lemma  line 1415
+  path_power_mult:
+    a0/AlgTop0.thy                       lemma  line 4095
+    a0/AlgTop0.thy                       lemma  line 4095
+  path_power_product_add:
+    a0/AlgTop0.thy                       lemma  line 4049
+    a0/AlgTop0.thy                       lemma  line 4049
+  path_power_reverse:
+    a0/AlgTop0.thy                       lemma  line 4135
+    a0/AlgTop0.thy                       lemma  line 4135
+  path_product_split:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 6055
+    b0/AlgTop_JCT_Base0.thy              lemma  line 6055
+  path_reverse_involution:
+    ac/AlgTopCached.thy                  lemma  line 5595
+    ac/AlgTopCached.thy                  lemma  line 5595
+  paths_agree_on_I_path_homotopic:
+    b/AlgTop_JCT_Base.thy                lemma  line 10995
+    b/AlgTop_JCT_Base.thy                lemma  line 10995
+  pi1:
+    i/Top1_Ch2.thy                       definition  line 3180
+    i/Top1_Ch2.thy                       definition  line 3180
+  pi1_S2_minus_two_points_infinite_cyclic:
+    a0/AlgTop0.thy                       lemma  line 2961
+    a0/AlgTop0.thy                       lemma  line 2961
+  pi1_S2_minus_two_points_iso_Z:
+    ac/AlgTopCached.thy                  corollary  line 58898
+    ac/AlgTopCached.thy                  corollary  line 58898
+  pi2:
+    i/Top1_Ch2.thy                       definition  line 3181
+    i/Top1_Ch2.thy                       definition  line 3181
+  PiE_closed_sets_closed_in_product:
+    i/Top1_Ch5_8.thy                     lemma  line 21133
+    i/Top1_Ch5_8.thy                     lemma  line 21133
+  PiE_inter:
+    i/Top1_Ch5_8.thy                     lemma  line 20328
+    i/Top1_Ch5_8.thy                     lemma  line 20328
+  pointwise_bounded_subset:
+    i/Top1_Ch5_8.thy                     lemma  line 14813
+    i/Top1_Ch5_8.thy                     lemma  line 14813
+  pointwise_d_imp_bm_le:
+    i/Top1_Ch5_8.thy                     lemma  line 16103
+    i/Top1_Ch5_8.thy                     lemma  line 16103
+  pointwise_d_imp_sup_bm_strict:
+    i/Top1_Ch5_8.thy                     lemma  line 16119
+    i/Top1_Ch5_8.thy                     lemma  line 16119
   polygonal_region_compact:
+    at/AlgTopChain.thy                   lemma  line 2548
+    pd/PolygonDisk.thy                   lemma  line 518
     at/AlgTopChain.thy                   lemma  line 2548
     pd/PolygonDisk.thy                   lemma  line 518
   polygonal_region_convex_combo:
     at/AlgTopChain.thy                   lemma  line 2486
     pd/PolygonDisk.thy                   lemma  line 456
+    at/AlgTopChain.thy                   lemma  line 2486
+    pd/PolygonDisk.thy                   lemma  line 456
   polygon_homeomorphic_to_disk_with_boundary:
     at/AlgTopChain.thy                   lemma  line 2827
     pd/PolygonDisk.thy                   lemma  line 1043
+    at/AlgTopChain.thy                   lemma  line 2827
+    pd/PolygonDisk.thy                   lemma  line 1043
+  polygon_sub_rearrange_sigma_props:
+    AlgTop.thy                           lemma  line 11158
+    AlgTop.thy                           lemma  line 11158
+  preimage:
+    i/Top1_Ch2.thy                       definition  line 3183
+    i/Top1_Ch2.thy                       definition  line 3183
+  preimage_normal_subgroup:
+    ac/AlgTopCached.thy                  lemma  line 27286
+    ac/AlgTopCached.thy                  lemma  line 27286
+  presentation_from_free_quotient:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 1512
+    wh/AlgTopWedgeHelpers.thy            lemma  line 1512
+  presented_by_commutators_abelian:
+    ac8/AlgTopCached8.thy                lemma  line 4722
+    ac8/AlgTopCached8.thy                lemma  line 4722
+  presented_comm_relator_abelianization:
+    ac8/AlgTopCached8.thy                lemma  line 3887
+    ac8/AlgTopCached8.thy                lemma  line 3887
+  product_basis:
+    i/Top1_Ch2.thy                       definition  line 3003
+    i/Top1_Ch2.thy                       definition  line 3003
+  product_basis_finitely_many_nontrivial:
+    i/Top1_Ch2.thy                       lemma  line 8863
+    i/Top1_Ch2.thy                       lemma  line 8863
+  product_basis_subspace_iff:
+    i/Top1_Ch5_8.thy                     lemma  line 20332
+    i/Top1_Ch5_8.thy                     lemma  line 20332
+  product_coarser_than_box:
+    i/Top1_Ch2.thy                       lemma  line 8900
+    i/Top1_Ch2.thy                       lemma  line 8900
+  product_group_is_group:
+    ac/AlgTopCached.thy                  lemma  line 11215
+    ac/AlgTopCached.thy                  lemma  line 11215
+  product_groups_isomorphic:
+    ac/AlgTopCached.thy                  lemma  line 920
+    ac/AlgTopCached.thy                  lemma  line 920
+  product_of_closedin_is_closedin:
+    i/Top1_Ch5_8.thy                     lemma  line 20601
+    i/Top1_Ch5_8.thy                     lemma  line 20601
+  product_rect_open:
+    i/Top1_Ch2.thy                       lemma  line 3012
+    i/Top1_Ch2.thy                       lemma  line 3012
+  product_subspace_eq_pointwise:
+    i/Top1_Ch5_8.thy                     lemma  line 21176
+    i/Top1_Ch5_8.thy                     lemma  line 21176
+  product_subspace_topology_eq:
+    i/Top1_Ch5_8.thy                     lemma  line 20537
+    i/Top1_Ch5_8.thy                     lemma  line 20537
+  product_subspace_topology_eq_const:
+    i/Top1_Ch5_8.thy                     lemma  line 20568
+    i/Top1_Ch5_8.thy                     lemma  line 20568
+  product_topology_coord_open:
+    i/Top1_Ch5_8.thy                     lemma  line 20217
+    i/Top1_Ch5_8.thy                     lemma  line 20217
+  product_topology_is_strict:
+    i/Top1_Ch2.thy                       lemma  line 8829
+    i/Top1_Ch2.thy                       lemma  line 8829
+  product_topology_on:
+    i/Top1_Ch2.thy                       definition  line 3007
+    i/Top1_Ch2.thy                       definition  line 3007
+  product_topology_on_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 3046
+    i/Top1_Ch2.thy                       lemma  line 3046
+  product_topology_on_open_sets:
+    i/Top1_Ch9_13.thy                    lemma  line 57
+    i/Top1_Ch9_13.thy                    lemma  line 57
+  projective_scheme_length:
+    ac2/AlgTopCached2.thy                lemma  line 1150
+    ac2/AlgTopCached2.thy                lemma  line 1150
+  projective_scheme_nth:
+    ac2/AlgTopCached2.thy                lemma  line 1154
+    ac2/AlgTopCached2.thy                lemma  line 1154
+  projective_scheme_vertex_connectivity:
+    ac2/AlgTopCached2.thy                lemma  line 1212
+    ac2/AlgTopCached2.thy                lemma  line 1212
+  psi_angle_cases_agree:
+    pd/PolygonDisk.thy                   lemma  line 798
+    pd/PolygonDisk.thy                   lemma  line 798
+  psi_continuous_S1:
+    i/Top1_Ch9_13.thy                    lemma  line 14789
+    i/Top1_Ch9_13.thy                    lemma  line 14789
+  punctured_open_disk_path_connected:
+    ac/AlgTopCached.thy                  lemma  line 40486
+    ac/AlgTopCached.thy                  lemma  line 40486
+  pw_sub_cc_topology:
+    i/Top1_Ch5_8.thy                     lemma  line 15841
+    i/Top1_Ch5_8.thy                     lemma  line 15841
+  quotient_by_commutator_is_abelian:
+    ac/AlgTopCached.thy                  lemma  line 9045
+    ac/AlgTopCached.thy                  lemma  line 9045
+  quotient_carrier_memI:
+    ac10/AlgTopCached10.thy              lemma  line 815
+    ac10/AlgTopCached10.thy              lemma  line 815
+  quotient_double_by_kernel:
+    ag/AlgTopGroups.thy                  lemma  line 6959
+    ag/AlgTopGroups.thy                  lemma  line 6959
+  quotient_group_is_group:
+    ac/AlgTopCached.thy                  lemma  line 9199
+    ac/AlgTopCached.thy                  lemma  line 9199
+  quotient_group_iso_transfer:
+    ac/AlgTopCached.thy                  lemma  line 40033
+    ac/AlgTopCached.thy                  lemma  line 40033
+  quotient_group_universal_property:
+    ag/AlgTopGroups.thy                  lemma  line 2079
+    ag/AlgTopGroups.thy                  lemma  line 2079
+  quotient_induced_hom:
+    ac/AlgTopCached.thy                  lemma  line 12739
+    ac/AlgTopCached.thy                  lemma  line 12739
+  quotient_of_scheme_cut_paste:
+    AlgTop.thy                           lemma  line 661
+    AlgTop.thy                           lemma  line 661
+  quotient_of_scheme_cut_paste2:
+    AlgTop.thy                           lemma  line 695
+    AlgTop.thy                           lemma  line 695
+  quotient_of_scheme_cut_paste_opp:
+    AlgTop.thy                           lemma  line 706
+    AlgTop.thy                           lemma  line 706
+  quotient_of_scheme_cut_paste_opp_proper:
+    AlgTop.thy                           lemma  line 11302
+    AlgTop.thy                           lemma  line 11302
+  quotient_of_scheme_cut_paste_proper:
+    AlgTop.thy                           lemma  line 11732
+    AlgTop.thy                           lemma  line 11732
+  quotient_of_scheme_extract:
+    ac/AlgTopCached.thy                  lemma  line 31345
+    ac/AlgTopCached.thy                  lemma  line 31345
+  quotient_of_scheme_extract_full:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 329
+    wh/AlgTopWedgeHelpers.thy            lemma  line 329
+  quotient_of_scheme_reverse:
+    AlgTop.thy                           lemma  line 625
+    AlgTop.thy                           lemma  line 625
+  quotient_of_scheme_transfer_bij_rel:
+    AlgTop.thy                           lemma  line 510
+    AlgTop.thy                           lemma  line 510
+  quotient_of_scheme_uncancel_front:
+    AlgTop.thy                           lemma  line 783
+    AlgTop.thy                           lemma  line 783
+  quotient_of_scheme_uncancel_front_proper:
+    AlgTop.thy                           lemma  line 12071
+    AlgTop.thy                           lemma  line 12071
+  quotient_of_scheme_uncancel_proved:
+    AlgTop.thy                           lemma  line 911
+    AlgTop.thy                           lemma  line 911
+  quotient_projection_properties:
+    ac/AlgTopCached.thy                  lemma  line 8976
+    ac/AlgTopCached.thy                  lemma  line 8976
+  quotient_rearrangement_homeomorphism:
+    AlgTop.thy                           lemma  line 556
+    AlgTop.thy                           lemma  line 556
+  quotient_scheme_flip_labels:
+    AlgTop.thy                           lemma  line 580
+    AlgTop.thy                           lemma  line 580
+  R2_locally_path_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 6672
+    b/AlgTop_JCT_Base.thy                lemma  line 6672
+  R2_minus_origin_not_simply_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 4796
+    b/AlgTop_JCT_Base.thy                lemma  line 4796
+  R2_minus_point_not_simply_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 5090
+    b/AlgTop_JCT_Base.thy                lemma  line 5090
+  R2_minus_point_path_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 5407
+    b/AlgTop_JCT_Base.thy                lemma  line 5407
+  R2_open_ball_path_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 6553
+    b/AlgTop_JCT_Base.thy                lemma  line 6553
+  R2_simply_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 4136
+    b/AlgTop_JCT_Base.thy                lemma  line 4136
+  R2_straight_line_path:
+    b/AlgTop_JCT_Base.thy                lemma  line 5375
+    b/AlgTop_JCT_Base.thy                lemma  line 5375
+  R2_subspace_I_continuous_on_transfer:
+    i/Top1_Ch9_13.thy                    lemma  line 13347
+    i/Top1_Ch9_13.thy                    lemma  line 13347
+  real_order_topology_hausdorff:
+    i/Top1_Ch5_8.thy                     lemma  line 1870
+    i/Top1_Ch5_8.thy                     lemma  line 1870
+  reduced_word_transfer:
+    ag/AlgTopGroups.thy                  lemma  line 2294
+    ag/AlgTopGroups.thy                  lemma  line 2294
+  regular_imp_hausdorff_on:
+    i/Top1_Ch4.thy                       lemma  line 2425
+    i/Top1_Ch4.thy                       lemma  line 2425
+  regular_refine_point_into_open:
+    i/Top1_Ch4.thy                       lemma  line 2602
+    i/Top1_Ch4.thy                       lemma  line 2602
+  regular_separation_openin_on:
+    i/Top1_Ch4.thy                       lemma  line 2584
+    i/Top1_Ch4.thy                       lemma  line 2584
+  remains:
+    wh/AlgTopWedgeHelpers.thy            definition  line 413
+    wh/AlgTopWedgeHelpers.thy            definition  line 413
+  remdups_fst_single_pol:
+    ag/AlgTopGroups.thy                  lemma  line 4599
+    ag/AlgTopGroups.thy                  lemma  line 4599
+  remdups_map_inj_on:
+    ag/AlgTopGroups.thy                  lemma  line 4573
+    ag/AlgTopGroups.thy                  lemma  line 4573
+  reparam_path_homotopy:
+    ac/AlgTopCached.thy                  lemma  line 15568
+    ac/AlgTopCached.thy                  lemma  line 15568
+  retract_attached_arc:
+    ac11/AlgTopCached11.thy              lemma  line 4561
+    ac11/AlgTopCached11.thy              lemma  line 4561
+  right_coset_eq_from_product_in_H:
+    ac11/AlgTopCached11.thy              lemma  line 21
+    ac11/AlgTopCached11.thy              lemma  line 21
+  right_top_strip_connected:
+    h/AlgTopHelpers.thy                  lemma  line 8
+    h/AlgTopHelpers.thy                  lemma  line 8
+  RN_covering_order_N_plus_1:
+    i/Top1_Ch5_8.thy                     lemma  line 31842
+    i/Top1_Ch5_8.thy                     lemma  line 31842
+  RN_grid_covering:
+    i/Top1_Ch5_8.thy                     definition  line 31048
+    i/Top1_Ch5_8.thy                     definition  line 31048
+  RN_grid_covering_covers:
+    i/Top1_Ch5_8.thy                     lemma  line 31127
+    i/Top1_Ch5_8.thy                     lemma  line 31127
+  RN_grid_covering_order:
+    i/Top1_Ch5_8.thy                     lemma  line 31335
+    i/Top1_Ch5_8.thy                     lemma  line 31335
+  RN_grid_covering_sc:
+    i/Top1_Ch5_8.thy                     definition  line 31451
+    i/Top1_Ch5_8.thy                     definition  line 31451
+  RN_grid_covering_sc_covers:
+    i/Top1_Ch5_8.thy                     lemma  line 31455
+    i/Top1_Ch5_8.thy                     lemma  line 31455
+  RN_grid_covering_sc_order:
+    i/Top1_Ch5_8.thy                     lemma  line 31649
+    i/Top1_Ch5_8.thy                     lemma  line 31649
+  RN_grid_cube_diam:
+    i/Top1_Ch5_8.thy                     lemma  line 31311
+    i/Top1_Ch5_8.thy                     lemma  line 31311
+  RN_grid_cube_open:
+    i/Top1_Ch5_8.thy                     lemma  line 31263
+    i/Top1_Ch5_8.thy                     lemma  line 31263
+  RN_grid_cube_sc_open:
+    i/Top1_Ch5_8.thy                     lemma  line 31501
+    i/Top1_Ch5_8.thy                     lemma  line 31501
+  RN_grid_family:
+    i/Top1_Ch5_8.thy                     definition  line 31045
+    i/Top1_Ch5_8.thy                     definition  line 31045
+  RN_grid_family_disjoint:
+    i/Top1_Ch5_8.thy                     lemma  line 31115
+    i/Top1_Ch5_8.thy                     lemma  line 31115
+  RN_grid_family_sc:
+    i/Top1_Ch5_8.thy                     definition  line 31448
+    i/Top1_Ch5_8.thy                     definition  line 31448
+  RN_shifted_cube:
+    i/Top1_Ch5_8.thy                     definition  line 31040
+    i/Top1_Ch5_8.thy                     definition  line 31040
+  RN_shifted_cube_disjoint_coord:
+    i/Top1_Ch5_8.thy                     lemma  line 31053
+    i/Top1_Ch5_8.thy                     lemma  line 31053
+  RN_shifted_cube_dist_lt_1:
+    i/Top1_Ch5_8.thy                     lemma  line 31281
+    i/Top1_Ch5_8.thy                     lemma  line 31281
+  RN_shifted_cube_eq_if_agree:
+    i/Top1_Ch5_8.thy                     lemma  line 31092
+    i/Top1_Ch5_8.thy                     lemma  line 31092
+  RN_shifted_cube_eq_iff:
+    i/Top1_Ch5_8.thy                     lemma  line 31097
+    i/Top1_Ch5_8.thy                     lemma  line 31097
+  RN_shifted_cube_eq_PiE:
+    i/Top1_Ch5_8.thy                     lemma  line 31221
+    i/Top1_Ch5_8.thy                     lemma  line 31221
+  RN_shifted_cube_in_product_basis:
+    i/Top1_Ch5_8.thy                     lemma  line 31236
+    i/Top1_Ch5_8.thy                     lemma  line 31236
+  RN_shifted_cube_nonempty:
+    i/Top1_Ch5_8.thy                     lemma  line 31077
+    i/Top1_Ch5_8.thy                     lemma  line 31077
+  RN_shifted_cube_sc:
+    i/Top1_Ch5_8.thy                     definition  line 31443
+    i/Top1_Ch5_8.thy                     definition  line 31443
+  RN_shifted_cube_sc_diam:
+    i/Top1_Ch5_8.thy                     lemma  line 31573
+    i/Top1_Ch5_8.thy                     lemma  line 31573
+  RN_shifted_cube_sc_dist_le:
+    i/Top1_Ch5_8.thy                     lemma  line 31529
+    i/Top1_Ch5_8.thy                     lemma  line 31529
+  RN_shifted_cube_sc_eq_iff:
+    i/Top1_Ch5_8.thy                     lemma  line 31600
+    i/Top1_Ch5_8.thy                     lemma  line 31600
+  RN_shifted_cube_sc_eq_PiE:
+    i/Top1_Ch5_8.thy                     lemma  line 31487
+    i/Top1_Ch5_8.thy                     lemma  line 31487
+  RN_unit_covering_order:
+    i/Top1_Ch5_8.thy                     lemma  line 31418
+    i/Top1_Ch5_8.thy                     lemma  line 31418
+  Rpow_hyperplane_closed:
+    i/Top1_Ch5_8.thy                     lemma  line 28659
+    i/Top1_Ch5_8.thy                     lemma  line 28659
+  Rpow_hyperplane_empty_interior:
+    i/Top1_Ch5_8.thy                     lemma  line 27613
+    i/Top1_Ch5_8.thy                     lemma  line 27613
+  Rpow_sq_metric_coord_bound:
+    i/Top1_Ch5_8.thy                     lemma  line 29460
+    i/Top1_Ch5_8.thy                     lemma  line 29460
+  Rpow_sq_metric_eq_square_metric:
+    i/Top1_Ch5_8.thy                     lemma  line 28189
+    i/Top1_Ch5_8.thy                     lemma  line 28189
+  Rpow_sq_metric_nonneg:
+    i/Top1_Ch5_8.thy                     lemma  line 28105
+    i/Top1_Ch5_8.thy                     lemma  line 28105
+  Rpow_sq_metric_sep:
+    i/Top1_Ch5_8.thy                     lemma  line 28120
+    i/Top1_Ch5_8.thy                     lemma  line 28120
+  Rpow_sq_metric_sym:
+    i/Top1_Ch5_8.thy                     lemma  line 28097
+    i/Top1_Ch5_8.thy                     lemma  line 28097
+  Rpow_sq_metric_triangle:
+    i/Top1_Ch5_8.thy                     lemma  line 28152
+    i/Top1_Ch5_8.thy                     lemma  line 28152
+  Rpow_sup_dist_coord_bound:
+    i/Top1_Ch5_8.thy                     lemma  line 29471
+    i/Top1_Ch5_8.thy                     lemma  line 29471
+  R_to_S1_interval_homeomorphism:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 3055
+    wh/AlgTopWedgeHelpers.thy            lemma  line 3055
+  S1_closed_in_B2:
+    ac2/AlgTopCached2.thy                lemma  line 45
+    ac2/AlgTopCached2.thy                lemma  line 45
+  S1_compact:
+    b/AlgTop_JCT_Base.thy                lemma  line 10659
+    b/AlgTop_JCT_Base.thy                lemma  line 10659
+  S1_deformation_retract_B2_minus_zero:
+    ac/AlgTopCached.thy                  lemma  line 41330
+    ac/AlgTopCached.thy                  lemma  line 41330
+  S1_I_to_R2_minus_0_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 13217
+    i/Top1_Ch9_13.thy                    lemma  line 13217
+  S1_I_to_R2_minus_0_continuous_on:
+    i/Top1_Ch9_13.thy                    lemma  line 13442
+    i/Top1_Ch9_13.thy                    lemma  line 13442
+  S1_minus_point_path_connected:
+    svk/AlgTopSvK.thy                    lemma  line 594
+    svk/AlgTopSvK.thy                    lemma  line 594
+  S1_minus_point_simply_connected:
+    svk/AlgTopSvK.thy                    lemma  line 858
+    svk/AlgTopSvK.thy                    lemma  line 858
+  S1_not_simply_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 10039
+    b/AlgTop_JCT_Base.thy                lemma  line 10039
+  S1_path_connected:
+    ac/AlgTopCached.thy                  lemma  line 624
+    ac/AlgTopCached.thy                  lemma  line 624
+  S1_pi1_iso_B2_minus_zero:
+    ac/AlgTopCached.thy                  corollary  line 41589
+    ac/AlgTopCached.thy                  corollary  line 41589
+  S1_point_to_angle:
+    ac/AlgTopCached.thy                  lemma  line 48518
+    ac/AlgTopCached.thy                  lemma  line 48518
+  S2_compact_standard:
+    b/AlgTop_JCT_Base.thy                lemma  line 6282
+    b/AlgTop_JCT_Base.thy                lemma  line 6282
+  S2_component_of_open_subset_is_open:
+    ac/AlgTopCached.thy                  lemma  line 52096
+    ac/AlgTopCached.thy                  lemma  line 52096
+  S2_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 7044
+    b/AlgTop_JCT_Base.thy                lemma  line 7044
+  S2_locally_path_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 6849
+    b/AlgTop_JCT_Base.thy                lemma  line 6849
+  S2_minus_north_pole_simply_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 4325
+    b/AlgTop_JCT_Base.thy                lemma  line 4325
+  S2_minus_point_homeo_R2:
+    b/AlgTop_JCT_Base.thy                lemma  line 5677
+    b/AlgTop_JCT_Base.thy                lemma  line 5677
+  S2_minus_point_simply_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 4769
+    b/AlgTop_JCT_Base.thy                lemma  line 4769
+  S2_minus_two_points_not_simply_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 5883
+    b/AlgTop_JCT_Base.thy                lemma  line 5883
+  S2_nonsep_path_exists:
+    a0/AlgTop0.thy                       lemma  line 4657
+    a0/AlgTop0.thy                       lemma  line 4657
+  S2_open_path_connected_arc_connected:
+    fi/AlgIsoFixed.thy                   lemma  line 1893
+    fi/AlgIsoFixed.thy                   lemma  line 1893
+  S2_two_component_open:
+    ac/AlgTopCached.thy                  lemma  line 52178
+    ac/AlgTopCached.thy                  lemma  line 52178
+  same_endpoint_same_coset:
+    ac10/AlgTopCached10.thy              lemma  line 822
+    ac10/AlgTopCached10.thy              lemma  line 822
+  same_projection_same_endpoint:
+    ac10/AlgTopCached10.thy              lemma  line 125
+    ac10/AlgTopCached10.thy              lemma  line 125
+  satisfies_T1_on:
+    i/Top1_Ch2.thy                       definition  line 5986
+    i/Top1_Ch2.thy                       definition  line 5986
+  scc_decomp_arc_endpoints:
+    fi/AlgIsoFixed.thy                   lemma  line 3060
+    fi/AlgIsoFixed.thy                   lemma  line 3060
+  SCC_decompose_at_given_points:
+    fi/AlgIsoFixed.thy                   lemma  line 6389
+    fi/AlgIsoFixed.thy                   lemma  line 6389
+  scc_in_sc_false:
+    ac11/AlgTopCached11.thy              lemma  line 2489
+    ac11/AlgTopCached11.thy              lemma  line 2489
+  scc_interior_contradiction:
+    fi/AlgIsoFixed.thy                   lemma  line 2863
+    fi/AlgIsoFixed.thy                   lemma  line 2863
+  scc_minus_point_connected:
+    fi/AlgIsoFixed.thy                   lemma  line 2636
+    fi/AlgIsoFixed.thy                   lemma  line 2636
+  SCC_pi1_iso_Z:
+    fib/AlgIsoFixedBase.thy              lemma  line 14
+    fib/AlgIsoFixedBase.thy              lemma  line 14
+  sc_graph_no_cycle:
+    ac11/AlgTopCached11.thy              lemma  line 6151
+    ac11/AlgTopCached11.thy              lemma  line 6151
+  scheme_quotient_CW_data:
+    at/AlgTopChain.thy                   lemma  line 3613
+    at/AlgTopChain.thy                   lemma  line 3613
+  scheme_quotient_hausdorff:
+    at/AlgTopChain.thy                   lemma  line 2902
+    at/AlgTopChain.thy                   lemma  line 2902
+  second_countable_countable_subcover_of_closed:
+    i/Top1_Ch4.thy                       lemma  line 2160
+    i/Top1_Ch4.thy                       lemma  line 2160
+  seq_conv_comp:
+    i/Top1_Ch5_8.thy                     lemma  line 32635
+    i/Top1_Ch5_8.thy                     lemma  line 32635
+  seq_converges_eventually:
+    i/Top1_Ch2.thy                       lemma  line 6128
+    i/Top1_Ch2.thy                       lemma  line 6128
+  seq_converges_eventually_strict:
+    i/Top1_Ch2.thy                       lemma  line 6134
+    i/Top1_Ch2.thy                       lemma  line 6134
+  seq_converges_limit_in_X:
+    i/Top1_Ch2.thy                       lemma  line 6124
+    i/Top1_Ch2.thy                       lemma  line 6124
+  seq_converges_to_on:
+    i/Top1_Ch2.thy                       definition  line 6119
+    i/Top1_Ch2.thy                       definition  line 6119
+  seq_converges_to_on_in_set_imp_closure:
+    i/Top1_Ch4.thy                       lemma  line 1545
+    i/Top1_Ch4.thy                       lemma  line 1545
+  seq_conv_rename:
+    i/Top1_Ch5_8.thy                     lemma  line 32640
+    i/Top1_Ch5_8.thy                     lemma  line 32640
+  sfa_n:
+    i/Top1_Ch5_8.thy                     definition  line 13316
+    i/Top1_Ch5_8.thy                     definition  line 13316
+  sfa_n_cauchy:
+    i/Top1_Ch5_8.thy                     lemma  line 13359
+    i/Top1_Ch5_8.thy                     lemma  line 13359
+  sfa_n_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 13331
+    i/Top1_Ch5_8.thy                     lemma  line 13331
+  sfa_n_dense:
+    i/Top1_Ch5_8.thy                     lemma  line 13385
+    i/Top1_Ch5_8.thy                     lemma  line 13385
+  sfa_n_eq_hilbert:
+    i/Top1_Ch5_8.thy                     lemma  line 13322
+    i/Top1_Ch5_8.thy                     lemma  line 13322
+  sfa_n_range:
+    i/Top1_Ch5_8.thy                     lemma  line 13319
+    i/Top1_Ch5_8.thy                     lemma  line 13319
+  sfa_raw:
+    i/Top1_Ch5_8.thy                     definition  line 12203
+    i/Top1_Ch5_8.thy                     definition  line 12203
+  sfa_rec:
+    i/Top1_Ch5_8.thy                     fun  line 12151
+    i/Top1_Ch5_8.thy                     fun  line 12151
+  sfa_rec_cauchy:
+    i/Top1_Ch5_8.thy                     lemma  line 13193
+    i/Top1_Ch5_8.thy                     lemma  line 13193
+  sfa_rec_dense:
+    i/Top1_Ch5_8.thy                     lemma  line 13311
+    i/Top1_Ch5_8.thy                     lemma  line 13311
+  sfa_rec_dense_strict:
+    i/Top1_Ch5_8.thy                     lemma  line 13252
+    i/Top1_Ch5_8.thy                     lemma  line 13252
+  sfa_rec_range:
+    i/Top1_Ch5_8.thy                     lemma  line 13167
+    i/Top1_Ch5_8.thy                     lemma  line 13167
+  sigma_lf_to_lf_covering:
+    i/Top1_Ch5_8.thy                     lemma  line 7598
+    i/Top1_Ch5_8.thy                     lemma  line 7598
+  sigma_lf_to_lf_open_covering:
+    i/Top1_Ch5_8.thy                     lemma  line 8007
+    i/Top1_Ch5_8.thy                     lemma  line 8007
+  simple_closed_curve_arc_decomposition:
+    b/AlgTop_JCT_Base.thy                lemma  line 10118
+    b/AlgTop_JCT_Base.thy                lemma  line 10118
+  simple_closed_curve_boundary_meets_component:
+    a0/AlgTop0.thy                       lemma  line 8284
+    a0/AlgTop0.thy                       lemma  line 8284
+  simple_closed_curve_closed_in_S2:
+    fib/AlgIsoFixedBase.thy              lemma  line 5007
+    fib/AlgIsoFixedBase.thy              lemma  line 5007
+  simple_closed_curve_compact:
+    fib/AlgIsoFixedBase.thy              lemma  line 4982
+    fib/AlgIsoFixedBase.thy              lemma  line 4982
+  simple_closed_curve_complement_components_two:
+    fib/AlgIsoFixedBase.thy              lemma  line 5022
+    fib/AlgIsoFixedBase.thy              lemma  line 5022
+  simple_closed_curve_complement_open:
+    fib/AlgIsoFixedBase.thy              lemma  line 5015
+    fib/AlgIsoFixedBase.thy              lemma  line 5015
+  simple_closed_curve_component_path_connected:
+    fib/AlgIsoFixedBase.thy              lemma  line 5028
+    fib/AlgIsoFixedBase.thy              lemma  line 5028
+  simple_closed_curve_nonempty:
+    fib/AlgIsoFixedBase.thy              lemma  line 4997
+    fib/AlgIsoFixedBase.thy              lemma  line 4997
+  simple_closed_curve_proper_subset:
+    b/AlgTop_JCT_Base.thy                lemma  line 10712
+    b/AlgTop_JCT_Base.thy                lemma  line 10712
+  simple_closed_curve_separates_connected_set:
+    fib/AlgIsoFixedBase.thy              lemma  line 5049
+    fib/AlgIsoFixedBase.thy              lemma  line 5049
+  simple_closed_curve_subset:
+    b/AlgTop_JCT_Base.thy                lemma  line 4790
+    b/AlgTop_JCT_Base.thy                lemma  line 4790
+  simply_connected_paths_homotopic:
+    i/Top1_Ch9_13.thy                    lemma  line 10166
+    i/Top1_Ch9_13.thy                    lemma  line 10166
+  simply_connected_trivial_carrier:
+    ac/AlgTopCached.thy                  lemma  line 27397
+    ac/AlgTopCached.thy                  lemma  line 27397
+  simply_connected_trivial_image:
+    ac4/AlgTopCached4.thy                lemma  line 3203
+    ac4/AlgTopCached4.thy                lemma  line 3203
+  singleton_Bex_simp:
+    ac12/AlgTopCached12.thy              lemma  line 79
+    ac12/AlgTopCached12.thy              lemma  line 79
+  singleton_closed_in_hausdorff:
+    i/Top1_Ch2.thy                       lemma  line 5909
+    i/Top1_Ch2.thy                       lemma  line 5909
+  singleton_not_open_in_S2:
+    b/AlgTop_JCT_Base.thy                lemma  line 7226
+    b/AlgTop_JCT_Base.thy                lemma  line 7226
+  Sn_interpolation_at_1:
+    b/AlgTop_JCT_Base.thy                lemma  line 853
+    b/AlgTop_JCT_Base.thy                lemma  line 853
+  Sn_interpolation_in_Sn:
+    b/AlgTop_JCT_Base.thy                lemma  line 819
+    b/AlgTop_JCT_Base.thy                lemma  line 819
+  Sn_interpolation_norm_pos:
+    b/AlgTop_JCT_Base.thy                lemma  line 720
+    b/AlgTop_JCT_Base.thy                lemma  line 720
+  Sn_interpolation_to_q_avoids_p:
+    b/AlgTop_JCT_Base.thy                lemma  line 878
+    b/AlgTop_JCT_Base.thy                lemma  line 878
+  Sn_normalized_interpolation_path:
+    b/AlgTop_JCT_Base.thy                lemma  line 441
+    b/AlgTop_JCT_Base.thy                lemma  line 441
+  spur_arc_match_forces_edge:
+    AlgTop.thy                           lemma  line 951
+    AlgTop.thy                           lemma  line 951
+  spur_collapse_cancel_homeo:
+    AlgTop.thy                           lemma  line 2644
+    AlgTop.thy                           lemma  line 2644
+  sqnorm_memI:
+    h/AlgTopHelpers.thy                  lemma  line 5
+    h/AlgTopHelpers.thy                  lemma  line 5
+  squaring_map_covering:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 12
+    b0/AlgTop_JCT_Base0.thy              lemma  line 12
+  squaring_map_factorization:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 2522
+    b0/AlgTop_JCT_Base0.thy              lemma  line 2522
+  standard_S1_loop_class_in_carrier:
+    ac/AlgTopCached.thy                  lemma  line 41860
+    ac/AlgTopCached.thy                  lemma  line 41860
+  standard_S1_loop_generates_Z:
+    ac/AlgTopCached.thy                  lemma  line 42319
+    ac/AlgTopCached.thy                  lemma  line 42319
+  standard_S1_loop_is_loop:
+    ac/AlgTopCached.thy                  lemma  line 41838
+    ac/AlgTopCached.thy                  lemma  line 41838
+  standard_simplex_is_polygonal_region:
+    ac8/AlgTopCached8.thy                lemma  line 8406
+    ac8/AlgTopCached8.thy                lemma  line 8406
+  stereo_denom_ne:
+    b/AlgTop_JCT_Base.thy                lemma  line 3799
+    b/AlgTop_JCT_Base.thy                lemma  line 3799
+  stereo_denom_pos:
+    b/AlgTop_JCT_Base.thy                lemma  line 3796
+    b/AlgTop_JCT_Base.thy                lemma  line 3796
+  stereographic_inv:
+    b/AlgTop_JCT_Base.thy                definition  line 3792
+    b/AlgTop_JCT_Base.thy                definition  line 3792
+  stereographic_inv_in_S2:
+    b/AlgTop_JCT_Base.thy                lemma  line 3802
+    b/AlgTop_JCT_Base.thy                lemma  line 3802
+  stereographic_inv_not_north:
+    b/AlgTop_JCT_Base.thy                lemma  line 3823
+    b/AlgTop_JCT_Base.thy                lemma  line 3823
+  stereographic_inv_proj:
+    b/AlgTop_JCT_Base.thy                lemma  line 3912
+    b/AlgTop_JCT_Base.thy                lemma  line 3912
+  stereographic_proj:
+    b/AlgTop_JCT_Base.thy                definition  line 3783
+    b/AlgTop_JCT_Base.thy                definition  line 3783
+  stereographic_proj_homeomorphism:
+    b/AlgTop_JCT_Base.thy                lemma  line 3951
+    b/AlgTop_JCT_Base.thy                lemma  line 3951
+  stereographic_proj_inv:
+    b/AlgTop_JCT_Base.thy                lemma  line 3839
+    b/AlgTop_JCT_Base.thy                lemma  line 3839
+  strict_inter_sub_carrier:
+    i/Top1_Ch2.thy                       lemma  line 68
+    i/Top1_Ch2.thy                       lemma  line 68
+  strictly_finer_than:
+    i/Top1_Ch2.thy                       definition  line 1047
+    i/Top1_Ch2.thy                       definition  line 1047
+  strict_open_sub:
+    i/Top1_Ch2.thy                       lemma  line 11796
+    i/Top1_Ch2.thy                       lemma  line 11796
+  strict_union_sub_carrier:
+    i/Top1_Ch2.thy                       lemma  line 64
+    i/Top1_Ch2.thy                       lemma  line 64
+  subgraph_coherent_topology:
+    ac7/AlgTopCached7.thy                lemma  line 4584
+    ac7/AlgTopCached7.thy                lemma  line 4584
+  subgraph_union_of_arcs_is_graph:
+    ac5/AlgTopCached5.thy                lemma  line 2725
+    ac5/AlgTopCached5.thy                lemma  line 2725
+  subgroup_generated_contains:
+    ac/AlgTopCached.thy                  lemma  line 6222
+    ac/AlgTopCached.thy                  lemma  line 6222
+  subgroup_generated_minimal:
+    ac/AlgTopCached.thy                  lemma  line 6227
+    ac/AlgTopCached.thy                  lemma  line 6227
+  subgroup_generated_subset:
+    ac/AlgTopCached.thy                  lemma  line 6213
+    ac/AlgTopCached.thy                  lemma  line 6213
+  subgroup_generated_word_rep:
+    ag/AlgTopGroups.thy                  lemma  line 3812
+    ag/AlgTopGroups.thy                  lemma  line 3812
+  subgroup_generated_word_repr:
+    ac/AlgTopCached.thy                  lemma  line 6446
+    ac/AlgTopCached.thy                  lemma  line 6446
+  subnet_converges_to_same_limit:
+    i/Top1_Ch5_8.thy                     lemma  line 33617
+    i/Top1_Ch5_8.thy                     lemma  line 33617
+  subseq_converges_to:
+    i/Top1_Ch5_8.thy                     lemma  line 29442
+    i/Top1_Ch5_8.thy                     lemma  line 29442
+  subset_closure_on:
+    i/Top1_Ch2.thy                       lemma  line 5224
+    i/Top1_Ch2.thy                       lemma  line 5224
+  subset_disjoint_helper:
+    fib/AlgIsoFixedBase.thy              lemma  line 1169
+    fib/AlgIsoFixedBase.thy              lemma  line 1169
+  subset_from_eq_and_subset:
+    fib/AlgIsoFixedBase.thy              lemma  line 1227
+    fib/AlgIsoFixedBase.thy              lemma  line 1227
+  subset_of_complement_disjoint:
+    fib/AlgIsoFixedBase.thy              lemma  line 1231
+    fib/AlgIsoFixedBase.thy              lemma  line 1231
+  subspace_inclusion_induced_class:
+    ac/AlgTopCached.thy                  lemma  line 43310
+    ac/AlgTopCached.thy                  lemma  line 43310
+  subspace_inclusion_induced_hom:
+    ac/AlgTopCached.thy                  lemma  line 43288
+    ac/AlgTopCached.thy                  lemma  line 43288
+  subspace_metric_topology_eq_metric_topology:
+    i/Top1_Ch4.thy                       lemma  line 11391
+    i/Top1_Ch4.thy                       lemma  line 11391
+  subspace_topology:
+    i/Top1_Ch2.thy                       definition  line 3701
+    i/Top1_Ch2.thy                       definition  line 3701
+  subspace_topology_generated_by_basis:
+    i/Top1_Ch5_8.thy                     lemma  line 20486
+    i/Top1_Ch5_8.thy                     lemma  line 20486
+  subspace_topology_is_strict:
+    i/Top1_Ch2.thy                       lemma  line 4870
+    i/Top1_Ch2.thy                       lemma  line 4870
+  subspace_topology_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 3705
+    i/Top1_Ch2.thy                       lemma  line 3705
+  subspace_topology_memI:
+    b/AlgTop_JCT_Base.thy                lemma  line 5371
+    b/AlgTop_JCT_Base.thy                lemma  line 5371
+  subspace_topology_self:
+    i/Top1_Ch5_8.thy                     lemma  line 27376
+    i/Top1_Ch5_8.thy                     lemma  line 27376
+  subspace_topology_self_carrier:
+    i/Top1_Ch5_8.thy                     lemma  line 18749
+    i/Top1_Ch5_8.thy                     lemma  line 18749
+  subspace_topology_trans:
+    i/Top1_Ch2.thy                       lemma  line 3854
+    i/Top1_Ch2.thy                       lemma  line 3854
+  subspace_topology_UNIV_self:
+    i/Top1_Ch9_13.thy                    lemma  line 10651
+    i/Top1_Ch9_13.thy                    lemma  line 10651
+  sup_metric_ge_pointwise:
+    i/Top1_Ch5_8.thy                     lemma  line 14751
+    i/Top1_Ch5_8.thy                     lemma  line 14751
+  sup_uniform_ball_eq:
+    i/Top1_Ch5_8.thy                     lemma  line 15425
+    i/Top1_Ch5_8.thy                     lemma  line 15425
+  sup_uniform_topology_eq_on_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 18068
+    i/Top1_Ch5_8.thy                     lemma  line 18068
+  surjection_coset_bij:
+    ac11/AlgTopCached11.thy              lemma  line 1195
+    ac11/AlgTopCached11.thy              lemma  line 1195
+  surjection_right_coset_bij:
+    ac11/AlgTopCached11.thy              lemma  line 1124
+    ac11/AlgTopCached11.thy              lemma  line 1124
+  surjective_hom_preserves_generation:
+    ac8/AlgTopCached8.thy                lemma  line 4633
+    ac8/AlgTopCached8.thy                lemma  line 4633
+  surj_hom_generated:
+    ag/AlgTopGroups.thy                  lemma  line 2538
+    ag/AlgTopGroups.thy                  lemma  line 2538
+  surj_hom_image_commutator:
+    ac8/AlgTopCached8.thy                lemma  line 4244
+    ac8/AlgTopCached8.thy                lemma  line 4244
+  surj_hom_image_normal:
+    ac/AlgTopCached.thy                  lemma  line 43193
+    ac/AlgTopCached.thy                  lemma  line 43193
+  surj_hom_infinite_cyclic_inj:
+    fib/AlgIsoFixedBase.thy              lemma  line 885
+    fib/AlgIsoFixedBase.thy              lemma  line 885
+  svk_free_product_free:
+    at/AlgTopChain.thy                   lemma  line 5294
+    at/AlgTopChain.thy                   lemma  line 5294
+  svk_free_product_free_with_generators:
+    at/AlgTopChain.thy                   lemma  line 5180
+    at/AlgTopChain.thy                   lemma  line 5180
+  svk_generation_sc:
+    svk/AlgTopSvK.thy                    lemma  line 16
+    svk/AlgTopSvK.thy                    lemma  line 16
+  svk_iso_with_tracking:
+    at/AlgTopChain.thy                   lemma  line 4839
+    at/AlgTopChain.thy                   lemma  line 4839
+  svk_pieces_in_subgroup:
+    ac/AlgTopCached.thy                  lemma  line 14238
+    ac/AlgTopCached.thy                  lemma  line 14238
+  SvK_simply_connected_V_surj_kernel:
+    ac/AlgTopCached.thy                  lemma  line 42650
+    ac/AlgTopCached.thy                  lemma  line 42650
   tac:
     ac/AlgTopCached.thy                  fun  line 25
     ag/AlgTopGroups.thy                  fun  line 24
     AlgTop.thy                           fun  line 22
     i/Top1_Ch9_13.thy                    fun  line 26
+    ac/AlgTopCached.thy                  fun  line 25
+    ag/AlgTopGroups.thy                  fun  line 24
+    AlgTop.thy                           fun  line 22
+    i/Top1_Ch9_13.thy                    fun  line 26
+  tagged_word_reduce_pairs:
+    ac/AlgTopCached.thy                  lemma  line 10700
+    ac/AlgTopCached.thy                  lemma  line 10700
+  telescoping_conjugated_product:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 5943
+    b0/AlgTop_JCT_Base0.thy              lemma  line 5943
+  telescoping_core:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 5669
+    b0/AlgTop_JCT_Base0.thy              lemma  line 5669
+  Theorem_15_1:
+    i/Top1_Ch2.thy                       theorem  line 3188
+    i/Top1_Ch2.thy                       theorem  line 3188
+  Theorem_15_2:
+    i/Top1_Ch2.thy                       theorem  line 3360
+    i/Top1_Ch2.thy                       theorem  line 3360
+  Theorem_16_3:
+    i/Top1_Ch2.thy                       theorem  line 4104
+    i/Top1_Ch2.thy                       theorem  line 4104
+  Theorem_16_4:
+    i/Top1_Ch2.thy                       theorem  line 4752
+    i/Top1_Ch2.thy                       theorem  line 4752
+  Theorem_17_1:
+    i/Top1_Ch2.thy                       theorem  line 4977
+    i/Top1_Ch2.thy                       theorem  line 4977
+  Theorem_17_10:
+    i/Top1_Ch2.thy                       theorem  line 6145
+    i/Top1_Ch2.thy                       theorem  line 6145
+  Theorem_17_11:
+    i/Top1_Ch2.thy                       theorem  line 6208
+    i/Top1_Ch2.thy                       theorem  line 6208
+  Theorem_17_1_strict:
+    i/Top1_Ch2.thy                       corollary  line 5046
+    i/Top1_Ch2.thy                       corollary  line 5046
+  Theorem_17_2:
+    i/Top1_Ch2.thy                       theorem  line 5076
+    i/Top1_Ch2.thy                       theorem  line 5076
+  Theorem_17_3:
+    i/Top1_Ch2.thy                       theorem  line 5177
+    i/Top1_Ch2.thy                       theorem  line 5177
+  Theorem_17_4:
+    i/Top1_Ch2.thy                       theorem  line 5345
+    i/Top1_Ch2.thy                       theorem  line 5345
+  Theorem_17_5a:
+    i/Top1_Ch2.thy                       theorem  line 5471
+    i/Top1_Ch2.thy                       theorem  line 5471
+  Theorem_17_5a_strict:
+    i/Top1_Ch2.thy                       corollary  line 5547
+    i/Top1_Ch2.thy                       corollary  line 5547
+  Theorem_17_5b:
+    i/Top1_Ch2.thy                       theorem  line 5573
+    i/Top1_Ch2.thy                       theorem  line 5573
+  Theorem_17_6:
+    i/Top1_Ch2.thy                       theorem  line 5691
+    i/Top1_Ch2.thy                       theorem  line 5691
+  Theorem_17_8:
+    i/Top1_Ch2.thy                       theorem  line 5951
+    i/Top1_Ch2.thy                       theorem  line 5951
+  Theorem_17_9:
+    i/Top1_Ch2.thy                       theorem  line 5991
+    i/Top1_Ch2.thy                       theorem  line 5991
+  Theorem_18_1:
+    i/Top1_Ch2.thy                       theorem  line 7092
+    i/Top1_Ch2.thy                       theorem  line 7092
+  Theorem_18_1_strict:
+    i/Top1_Ch2.thy                       corollary  line 7517
+    i/Top1_Ch2.thy                       corollary  line 7517
+  Theorem_18_2:
+    i/Top1_Ch2.thy                       theorem  line 7545
+    i/Top1_Ch2.thy                       theorem  line 7545
+  Theorem_18_3:
+    i/Top1_Ch2.thy                       theorem  line 7859
+    i/Top1_Ch2.thy                       theorem  line 7859
+  Theorem_18_4:
+    i/Top1_Ch2.thy                       theorem  line 8112
+    i/Top1_Ch2.thy                       theorem  line 8112
+  Theorem_19_1:
+    i/Top1_Ch2.thy                       theorem  line 8836
+    i/Top1_Ch2.thy                       theorem  line 8836
+  Theorem_19_1_strict:
+    i/Top1_Ch2.thy                       corollary  line 8855
+    i/Top1_Ch2.thy                       corollary  line 8855
+  Theorem_19_2:
+    i/Top1_Ch2.thy                       theorem  line 11532
+    i/Top1_Ch2.thy                       theorem  line 11532
+  Theorem_19_2_box:
+    i/Top1_Ch2.thy                       theorem  line 9482
+    i/Top1_Ch2.thy                       theorem  line 9482
+  Theorem_19_2_product:
+    i/Top1_Ch2.thy                       theorem  line 9636
+    i/Top1_Ch2.thy                       theorem  line 9636
+  Theorem_19_3:
+    i/Top1_Ch2.thy                       theorem  line 11551
+    i/Top1_Ch2.thy                       theorem  line 11551
+  Theorem_19_3_box:
+    i/Top1_Ch2.thy                       theorem  line 9921
+    i/Top1_Ch2.thy                       theorem  line 9921
+  Theorem_19_3_product:
+    i/Top1_Ch2.thy                       theorem  line 10181
+    i/Top1_Ch2.thy                       theorem  line 10181
+  Theorem_19_4:
+    i/Top1_Ch2.thy                       theorem  line 11567
+    i/Top1_Ch2.thy                       theorem  line 11567
+  Theorem_19_4_box:
+    i/Top1_Ch2.thy                       theorem  line 10521
+    i/Top1_Ch2.thy                       theorem  line 10521
+  Theorem_19_4_product:
+    i/Top1_Ch2.thy                       theorem  line 10781
+    i/Top1_Ch2.thy                       theorem  line 10781
+  Theorem_19_5:
+    i/Top1_Ch2.thy                       theorem  line 11578
+    i/Top1_Ch2.thy                       theorem  line 11578
+  Theorem_19_5_box:
+    i/Top1_Ch2.thy                       theorem  line 10917
+    i/Top1_Ch2.thy                       theorem  line 10917
+  Theorem_19_5_product:
+    i/Top1_Ch2.thy                       theorem  line 11221
+    i/Top1_Ch2.thy                       theorem  line 11221
+  Theorem_19_6:
+    i/Top1_Ch2.thy                       theorem  line 9154
+    i/Top1_Ch2.thy                       theorem  line 9154
+  Theorem_20_1:
+    i/Top1_Ch2.thy                       theorem  line 12008
+    i/Top1_Ch2.thy                       theorem  line 12008
+  Theorem_20_3:
+    i/Top1_Ch2.thy                       theorem  line 14513
+    i/Top1_Ch2.thy                       theorem  line 14513
+  Theorem_20_4:
+    i/Top1_Ch2.thy                       theorem  line 15825
+    i/Top1_Ch2.thy                       theorem  line 15825
+  Theorem_20_5:
+    i/Top1_Ch2.thy                       theorem  line 16327
+    i/Top1_Ch2.thy                       theorem  line 16327
+  Theorem_21_1:
+    i/Top1_Ch2.thy                       theorem  line 16958
+    i/Top1_Ch2.thy                       theorem  line 16958
+  Theorem_21_3:
+    i/Top1_Ch2.thy                       theorem  line 17382
+    i/Top1_Ch2.thy                       theorem  line 17382
+  Theorem_21_3_converse_metric:
+    i/Top1_Ch2.thy                       theorem  line 17324
+    i/Top1_Ch2.thy                       theorem  line 17324
+  Theorem_21_3_forward:
+    i/Top1_Ch2.thy                       theorem  line 17281
+    i/Top1_Ch2.thy                       theorem  line 17281
+  Theorem_21_5:
+    i/Top1_Ch2.thy                       theorem  line 18399
+    i/Top1_Ch2.thy                       theorem  line 18399
+  Theorem_21_6:
+    i/Top1_Ch2.thy                       theorem  line 18558
+    i/Top1_Ch2.thy                       theorem  line 18558
+  Theorem_22_1:
+    i/Top1_Ch2.thy                       theorem  line 19054
+    i/Top1_Ch2.thy                       theorem  line 19054
+  Theorem_22_2:
+    i/Top1_Ch2.thy                       theorem  line 19837
+    i/Top1_Ch2.thy                       theorem  line 19837
+  Theorem_23_3:
+    i/Top1_Ch3.thy                       theorem  line 339
+    i/Top1_Ch3.thy                       theorem  line 339
+  Theorem_23_3_strict:
+    i/Top1_Ch3.thy                       corollary  line 489
+    i/Top1_Ch3.thy                       corollary  line 489
+  Theorem_23_4:
+    i/Top1_Ch3.thy                       theorem  line 504
+    i/Top1_Ch3.thy                       theorem  line 504
+  Theorem_23_4_strict:
+    i/Top1_Ch3.thy                       corollary  line 650
+    i/Top1_Ch3.thy                       corollary  line 650
+  Theorem_23_5:
+    i/Top1_Ch3.thy                       theorem  line 667
+    i/Top1_Ch3.thy                       theorem  line 667
+  Theorem_23_6:
+    i/Top1_Ch3.thy                       theorem  line 1016
+    i/Top1_Ch3.thy                       theorem  line 1016
+  Theorem_24_1:
+    i/Top1_Ch3.thy                       theorem  line 2095
+    i/Top1_Ch3.thy                       theorem  line 2095
+  Theorem_24_3:
+    i/Top1_Ch3.thy                       theorem  line 2162
+    i/Top1_Ch3.thy                       theorem  line 2162
+  Theorem_25_1:
+    i/Top1_Ch3.thy                       theorem  line 2730
+    i/Top1_Ch3.thy                       theorem  line 2730
+  Theorem_25_2:
+    i/Top1_Ch3.thy                       theorem  line 3665
+    i/Top1_Ch3.thy                       theorem  line 3665
+  Theorem_25_3:
+    i/Top1_Ch3.thy                       theorem  line 2851
+    i/Top1_Ch3.thy                       theorem  line 2851
+  Theorem_25_4:
+    i/Top1_Ch3.thy                       theorem  line 4106
+    i/Top1_Ch3.thy                       theorem  line 4106
+  Theorem_25_5:
+    i/Top1_Ch3.thy                       theorem  line 4528
+    i/Top1_Ch3.thy                       theorem  line 4528
+  Theorem_26_2:
+    i/Top1_Ch3.thy                       theorem  line 5856
+    i/Top1_Ch3.thy                       theorem  line 5856
+  Theorem_26_2_strict:
+    i/Top1_Ch3.thy                       corollary  line 6005
+    i/Top1_Ch3.thy                       corollary  line 6005
+  Theorem_26_3:
+    i/Top1_Ch3.thy                       theorem  line 6018
+    i/Top1_Ch3.thy                       theorem  line 6018
+  Theorem_26_3_strict:
+    i/Top1_Ch3.thy                       corollary  line 6376
+    i/Top1_Ch3.thy                       corollary  line 6376
+  Theorem_26_5:
+    i/Top1_Ch3.thy                       theorem  line 6689
+    i/Top1_Ch3.thy                       theorem  line 6689
+  Theorem_26_5_strict:
+    i/Top1_Ch3.thy                       corollary  line 6849
+    i/Top1_Ch3.thy                       corollary  line 6849
+  Theorem_26_6:
+    i/Top1_Ch3.thy                       theorem  line 6913
+    i/Top1_Ch3.thy                       theorem  line 6913
+  Theorem_26_7:
+    i/Top1_Ch3.thy                       theorem  line 5213
+    i/Top1_Ch3.thy                       theorem  line 5213
+  Theorem_26_9:
+    i/Top1_Ch3.thy                       theorem  line 5507
+    i/Top1_Ch3.thy                       theorem  line 5507
+  Theorem_27_1:
+    i/Top1_Ch3.thy                       theorem  line 7648
+    i/Top1_Ch3.thy                       theorem  line 7648
+  Theorem_27_3:
+    i/Top1_Ch3.thy                       theorem  line 7851
+    i/Top1_Ch3.thy                       theorem  line 7851
+  Theorem_27_4:
+    i/Top1_Ch3.thy                       theorem  line 8392
+    i/Top1_Ch3.thy                       theorem  line 8392
+  Theorem_27_6:
+    i/Top1_Ch3.thy                       theorem  line 9059
+    i/Top1_Ch3.thy                       theorem  line 9059
+  Theorem_27_7:
+    i/Top1_Ch3.thy                       theorem  line 10127
+    i/Top1_Ch3.thy                       theorem  line 10127
+  Theorem_28_1:
+    i/Top1_Ch3.thy                       theorem  line 10385
+    i/Top1_Ch3.thy                       theorem  line 10385
+  Theorem_28_2:
+    i/Top1_Ch5_8.thy                     theorem  line 32838
+    i/Top1_Ch5_8.thy                     theorem  line 32838
+  Theorem_28_2_strict:
+    i/Top1_Ch5_8.thy                     corollary  line 33352
+    i/Top1_Ch5_8.thy                     corollary  line 33352
+  Theorem_29_1:
+    i/Top1_Ch3.thy                       theorem  line 11567
+    i/Top1_Ch3.thy                       theorem  line 11567
+  Theorem_29_2:
+    i/Top1_Ch3.thy                       theorem  line 13139
+    i/Top1_Ch3.thy                       theorem  line 13139
+  Theorem_30_1:
+    i/Top1_Ch4.thy                       theorem  line 1862
+    i/Top1_Ch4.thy                       theorem  line 1862
+  Theorem_30_2:
+    i/Top1_Ch4.thy                       theorem  line 2041
+    i/Top1_Ch4.thy                       theorem  line 2041
   Theorem_30_2_first_countable_product:
     i/Top1_Ch2.thy                       theorem  line 133
     i/Top1_Ch4.thy                       theorem  line 578
+    i/Top1_Ch2.thy                       theorem  line 133
+    i/Top1_Ch4.thy                       theorem  line 578
+  Theorem_30_2_first_countable_subspace:
+    i/Top1_Ch4.thy                       theorem  line 451
+    i/Top1_Ch4.thy                       theorem  line 451
   Theorem_30_2_second_countable_product:
     i/Top1_Ch2.thy                       theorem  line 566
     i/Top1_Ch4.thy                       theorem  line 1072
+    i/Top1_Ch2.thy                       theorem  line 566
+    i/Top1_Ch4.thy                       theorem  line 1072
+  Theorem_30_2_second_countable_subspace:
+    i/Top1_Ch4.thy                       theorem  line 549
+    i/Top1_Ch4.thy                       theorem  line 549
+  Theorem_30_3:
+    i/Top1_Ch4.thy                       theorem  line 2360
+    i/Top1_Ch4.thy                       theorem  line 2360
+  Theorem_30_3a:
+    i/Top1_Ch4.thy                       theorem  line 2102
+    i/Top1_Ch4.thy                       theorem  line 2102
+  Theorem_30_3b:
+    i/Top1_Ch4.thy                       theorem  line 2264
+    i/Top1_Ch4.thy                       theorem  line 2264
+  Theorem_30_3_strict:
+    i/Top1_Ch4.thy                       corollary  line 2384
+    i/Top1_Ch4.thy                       corollary  line 2384
+  Theorem_31_2:
+    i/Top1_Ch4.thy                       theorem  line 2849
+    i/Top1_Ch4.thy                       theorem  line 2849
+  Theorem_31_2_regular_subspace:
+    i/Top1_Ch4.thy                       theorem  line 2468
+    i/Top1_Ch4.thy                       theorem  line 2468
+  Theorem_32_1:
+    i/Top1_Ch4.thy                       theorem  line 3266
+    i/Top1_Ch4.thy                       theorem  line 3266
+  Theorem_32_1_strict:
+    i/Top1_Ch4.thy                       corollary  line 3918
+    i/Top1_Ch4.thy                       corollary  line 3918
+  Theorem_32_2:
+    i/Top1_Ch4.thy                       theorem  line 3931
+    i/Top1_Ch4.thy                       theorem  line 3931
+  Theorem_32_3:
+    i/Top1_Ch4.thy                       theorem  line 4731
+    i/Top1_Ch4.thy                       theorem  line 4731
+  Theorem_32_4:
+    i/Top1_Ch4.thy                       theorem  line 5371
+    i/Top1_Ch4.thy                       theorem  line 5371
+  Theorem_33_1:
+    i/Top1_Ch4.thy                       theorem  line 7904
+    i/Top1_Ch4.thy                       theorem  line 7904
+  Theorem_33_1_strict:
+    i/Top1_Ch4.thy                       corollary  line 8193
+    i/Top1_Ch4.thy                       corollary  line 8193
+  Theorem_33_2:
+    i/Top1_Ch4.thy                       theorem  line 9278
+    i/Top1_Ch4.thy                       theorem  line 9278
+  Theorem_33_2_product:
+    i/Top1_Ch4.thy                       theorem  line 8958
+    i/Top1_Ch4.thy                       theorem  line 8958
+  Theorem_33_2_subspace:
+    i/Top1_Ch4.thy                       theorem  line 8395
+    i/Top1_Ch4.thy                       theorem  line 8395
+  Theorem_34_1:
+    i/Top1_Ch4.thy                       theorem  line 9314
+    i/Top1_Ch4.thy                       theorem  line 9314
+  Theorem_34_2:
+    i/Top1_Ch4.thy                       theorem  line 10495
+    i/Top1_Ch4.thy                       theorem  line 10495
+  Theorem_34_3:
+    i/Top1_Ch4.thy                       theorem  line 12558
+    i/Top1_Ch4.thy                       theorem  line 12558
+  Theorem_34_3_forward:
+    i/Top1_Ch4.thy                       theorem  line 12346
+    i/Top1_Ch4.thy                       theorem  line 12346
+  Theorem_35_1:
+    i/Top1_Ch4.thy                       theorem  line 15860
+    i/Top1_Ch4.thy                       theorem  line 15860
+  Theorem_35_1_R:
+    ac/AlgTopCached.thy                  lemma  line 173
+    ac/AlgTopCached.thy                  lemma  line 173
+  Theorem_35_1_strict:
+    i/Top1_Ch4.thy                       corollary  line 16185
+    i/Top1_Ch4.thy                       corollary  line 16185
+  Theorem_36_1:
+    i/Top1_Ch4.thy                       theorem  line 17139
+    i/Top1_Ch4.thy                       theorem  line 17139
+  Theorem_36_2:
+    i/Top1_Ch4.thy                       theorem  line 18195
+    i/Top1_Ch4.thy                       theorem  line 18195
+  Theorem_37_3:
+    i/Top1_Ch5_8.thy                     theorem  line 1224
+    i/Top1_Ch5_8.thy                     theorem  line 1224
+  Theorem_37_3_strict:
+    i/Top1_Ch5_8.thy                     corollary  line 1444
+    i/Top1_Ch5_8.thy                     corollary  line 1444
+  Theorem_38_2:
+    i/Top1_Ch5_8.thy                     theorem  line 20798
+    i/Top1_Ch5_8.thy                     theorem  line 20798
+  Theorem_38_4:
+    i/Top1_Ch5_8.thy                     theorem  line 2226
+    i/Top1_Ch5_8.thy                     theorem  line 2226
+  Theorem_38_5:
+    i/Top1_Ch5_8.thy                     theorem  line 2597
+    i/Top1_Ch5_8.thy                     theorem  line 2597
+  Theorem_40_3:
+    i/Top1_Ch5_8.thy                     theorem  line 5939
+    i/Top1_Ch5_8.thy                     theorem  line 5939
+  Theorem_41_1:
+    i/Top1_Ch5_8.thy                     theorem  line 7325
+    i/Top1_Ch5_8.thy                     theorem  line 7325
+  Theorem_41_2:
+    i/Top1_Ch5_8.thy                     theorem  line 7336
+    i/Top1_Ch5_8.thy                     theorem  line 7336
+  Theorem_41_4:
+    i/Top1_Ch5_8.thy                     theorem  line 8210
+    i/Top1_Ch5_8.thy                     theorem  line 8210
+  Theorem_41_5:
+    i/Top1_Ch5_8.thy                     theorem  line 8247
+    i/Top1_Ch5_8.thy                     theorem  line 8247
+  Theorem_41_7:
+    i/Top1_Ch5_8.thy                     theorem  line 8762
+    i/Top1_Ch5_8.thy                     theorem  line 8762
+  Theorem_41_8:
+    i/Top1_Ch5_8.thy                     theorem  line 9109
+    i/Top1_Ch5_8.thy                     theorem  line 9109
+  Theorem_42_1:
+    i/Top1_Ch5_8.thy                     theorem  line 9599
+    i/Top1_Ch5_8.thy                     theorem  line 9599
+  Theorem_43_2:
+    i/Top1_Ch5_8.thy                     theorem  line 9863
+    i/Top1_Ch5_8.thy                     theorem  line 9863
+  Theorem_43_4:
+    i/Top1_Ch5_8.thy                     theorem  line 10245
+    i/Top1_Ch5_8.thy                     theorem  line 10245
+  Theorem_43_5:
+    i/Top1_Ch5_8.thy                     theorem  line 11076
+    i/Top1_Ch5_8.thy                     theorem  line 11076
+  Theorem_43_6a:
+    i/Top1_Ch5_8.thy                     theorem  line 11402
+    i/Top1_Ch5_8.thy                     theorem  line 11402
+  Theorem_43_6b:
+    i/Top1_Ch5_8.thy                     theorem  line 11608
+    i/Top1_Ch5_8.thy                     theorem  line 11608
+  Theorem_43_6c:
+    i/Top1_Ch5_8.thy                     theorem  line 11584
+    i/Top1_Ch5_8.thy                     theorem  line 11584
+  Theorem_43_6d:
+    i/Top1_Ch5_8.thy                     theorem  line 11683
+    i/Top1_Ch5_8.thy                     theorem  line 11683
+  Theorem_43_7:
+    i/Top1_Ch5_8.thy                     theorem  line 11716
+    i/Top1_Ch5_8.thy                     theorem  line 11716
+  Theorem_44_1:
+    i/Top1_Ch5_8.thy                     theorem  line 13408
+    i/Top1_Ch5_8.thy                     theorem  line 13408
+  Theorem_45_1:
+    i/Top1_Ch5_8.thy                     theorem  line 14182
+    i/Top1_Ch5_8.thy                     theorem  line 14182
+  Theorem_45_1_strict:
+    i/Top1_Ch5_8.thy                     corollary  line 14198
+    i/Top1_Ch5_8.thy                     corollary  line 14198
+  Theorem_45_4:
+    i/Top1_Ch5_8.thy                     theorem  line 15101
+    i/Top1_Ch5_8.thy                     theorem  line 15101
+  Theorem_46_1:
+    i/Top1_Ch5_8.thy                     theorem  line 15559
+    i/Top1_Ch5_8.thy                     theorem  line 15559
+  Theorem_46_10:
+    i/Top1_Ch5_8.thy                     theorem  line 19438
+    i/Top1_Ch5_8.thy                     theorem  line 19438
+  Theorem_46_11:
+    i/Top1_Ch5_8.thy                     theorem  line 19643
+    i/Top1_Ch5_8.thy                     theorem  line 19643
+  Theorem_46_2:
+    i/Top1_Ch5_8.thy                     theorem  line 16216
+    i/Top1_Ch5_8.thy                     theorem  line 16216
+  Theorem_46_5:
+    i/Top1_Ch5_8.thy                     theorem  line 16591
+    i/Top1_Ch5_8.thy                     theorem  line 16591
+  Theorem_46_7:
+    i/Top1_Ch5_8.thy                     theorem  line 17330
+    i/Top1_Ch5_8.thy                     theorem  line 17330
+  Theorem_46_7_finer_than_on:
+    i/Top1_Ch5_8.thy                     corollary  line 17347
+    i/Top1_Ch5_8.thy                     corollary  line 17347
+  Theorem_46_8:
+    i/Top1_Ch5_8.thy                     theorem  line 19210
+    i/Top1_Ch5_8.thy                     theorem  line 19210
+  Theorem_46_8_cc_finer_co:
+    i/Top1_Ch5_8.thy                     lemma  line 18683
+    i/Top1_Ch5_8.thy                     lemma  line 18683
+  Theorem_46_8_co_finer_cc:
+    i/Top1_Ch5_8.thy                     lemma  line 18757
+    i/Top1_Ch5_8.thy                     lemma  line 18757
+  Theorem_47_1:
+    i/Top1_Ch5_8.thy                     theorem  line 21745
+    i/Top1_Ch5_8.thy                     theorem  line 21745
+  Theorem_48_2:
+    i/Top1_Ch5_8.thy                     theorem  line 23689
+    i/Top1_Ch5_8.thy                     theorem  line 23689
+  Theorem_48_5:
+    i/Top1_Ch5_8.thy                     theorem  line 24191
+    i/Top1_Ch5_8.thy                     theorem  line 24191
+  Theorem_49_1:
+    i/Top1_Ch5_8.thy                     theorem  line 26267
+    i/Top1_Ch5_8.thy                     theorem  line 26267
+  Theorem_50_1:
+    i/Top1_Ch5_8.thy                     theorem  line 26897
+    i/Top1_Ch5_8.thy                     theorem  line 26897
+  Theorem_50_2:
+    i/Top1_Ch5_8.thy                     theorem  line 27062
+    i/Top1_Ch5_8.thy                     theorem  line 27062
+  Theorem_50_2_dim_le:
+    i/Top1_Ch5_8.thy                     lemma  line 27229
+    i/Top1_Ch5_8.thy                     lemma  line 27229
+  Theorem_50_2_finite_dim:
+    i/Top1_Ch5_8.thy                     corollary  line 27322
+    i/Top1_Ch5_8.thy                     corollary  line 27322
+  Theorem_50_2_step1:
+    i/Top1_Ch5_8.thy                     lemma  line 26930
+    i/Top1_Ch5_8.thy                     lemma  line 26930
+  Theorem_50_5:
+    i/Top1_Ch5_8.thy                     theorem  line 29924
+    i/Top1_Ch5_8.thy                     theorem  line 29924
+  Theorem_50_6:
+    i/Top1_Ch5_8.thy                     theorem  line 31887
+    i/Top1_Ch5_8.thy                     theorem  line 31887
+  Theorem_51_2_associativity:
+    i/Top1_Ch9_13.thy                    lemma  line 1475
+    i/Top1_Ch9_13.thy                    lemma  line 1475
+  Theorem_51_2_invgerse_left:
+    i/Top1_Ch9_13.thy                    lemma  line 2188
+    i/Top1_Ch9_13.thy                    lemma  line 2188
+  Theorem_51_2_invgerse_right:
+    i/Top1_Ch9_13.thy                    lemma  line 2314
+    i/Top1_Ch9_13.thy                    lemma  line 2314
+  Theorem_51_2_left_identity:
+    i/Top1_Ch9_13.thy                    lemma  line 1929
+    i/Top1_Ch9_13.thy                    lemma  line 1929
+  Theorem_51_2_right_identity:
+    i/Top1_Ch9_13.thy                    lemma  line 2063
+    i/Top1_Ch9_13.thy                    lemma  line 2063
+  Theorem_51_3_aux:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 6383
+    b0/AlgTop_JCT_Base0.thy              lemma  line 6383
+  Theorem_52_1:
+    i/Top1_Ch9_13.thy                    theorem  line 2976
+    i/Top1_Ch9_13.thy                    theorem  line 2976
+  Theorem_52_1_iso:
+    i/Top1_Ch9_13.thy                    theorem  line 3381
+    i/Top1_Ch9_13.thy                    theorem  line 3381
+  Theorem_52_4_composition:
+    i/Top1_Ch9_13.thy                    theorem  line 3888
+    i/Top1_Ch9_13.thy                    theorem  line 3888
+  Theorem_52_4_identity:
+    i/Top1_Ch9_13.thy                    theorem  line 3897
+    i/Top1_Ch9_13.thy                    theorem  line 3897
+  Theorem_53_1:
+    i/Top1_Ch9_13.thy                    theorem  line 4199
+    i/Top1_Ch9_13.thy                    theorem  line 4199
+  Theorem_53_2:
+    i/Top1_Ch9_13.thy                    theorem  line 5641
+    i/Top1_Ch9_13.thy                    theorem  line 5641
+  Theorem_53_3:
+    i/Top1_Ch9_13.thy                    theorem  line 5907
+    i/Top1_Ch9_13.thy                    theorem  line 5907
+  Theorem_54_3:
+    i/Top1_Ch9_13.thy                    theorem  line 9890
+    i/Top1_Ch9_13.thy                    theorem  line 9890
+  Theorem_54_4_bijective_simply_connected:
+    i/Top1_Ch9_13.thy                    theorem  line 10460
+    i/Top1_Ch9_13.thy                    theorem  line 10460
+  Theorem_54_4_lifting_correspondence:
+    i/Top1_Ch9_13.thy                    theorem  line 10223
+    i/Top1_Ch9_13.thy                    theorem  line 10223
+  Theorem_54_5:
+    i/Top1_Ch9_13.thy                    theorem  line 10951
+    i/Top1_Ch9_13.thy                    theorem  line 10951
+  Theorem_54_5_iso:
+    i/Top1_Ch9_13.thy                    theorem  line 11026
+    i/Top1_Ch9_13.thy                    theorem  line 11026
+  Theorem_54_5_iso_with_generator:
+    ac/AlgTopCached.thy                  lemma  line 41869
+    ac/AlgTopCached.thy                  lemma  line 41869
+  Theorem_54_6b:
+    ac11/AlgTopCached11.thy              theorem  line 91
+    ac11/AlgTopCached11.thy              theorem  line 91
+  Theorem_54_6c:
+    ac11/AlgTopCached11.thy              theorem  line 946
+    ac11/AlgTopCached11.thy              theorem  line 946
+  Theorem_55_2_no_retraction:
+    i/Top1_Ch9_13.thy                    theorem  line 12147
+    i/Top1_Ch9_13.thy                    theorem  line 12147
+  Theorem_55_5_vector_field:
+    i/Top1_Ch9_13.thy                    theorem  line 13839
+    i/Top1_Ch9_13.thy                    theorem  line 13839
+  Theorem_55_6_brouwer:
+    i/Top1_Ch9_13.thy                    theorem  line 13914
+    i/Top1_Ch9_13.thy                    theorem  line 13914
+  Theorem_56_1_FTA:
+    i/Top1_Ch9_13.thy                    theorem  line 15928
+    i/Top1_Ch9_13.thy                    theorem  line 15928
+  Theorem_56_1_FTA_leading:
+    i/Top1_Ch9_13.thy                    corollary  line 16020
+    i/Top1_Ch9_13.thy                    corollary  line 16020
+  Theorem_56_1_step_1:
+    i/Top1_Ch9_13.thy                    lemma  line 15198
+    i/Top1_Ch9_13.thy                    lemma  line 15198
+  Theorem_56_1_step_1_cont:
+    i/Top1_Ch9_13.thy                    lemma  line 14837
+    i/Top1_Ch9_13.thy                    lemma  line 14837
+  Theorem_56_1_step_1_inj:
+    i/Top1_Ch9_13.thy                    lemma  line 14847
+    i/Top1_Ch9_13.thy                    lemma  line 14847
+  Theorem_56_1_step_2:
+    i/Top1_Ch9_13.thy                    lemma  line 15216
+    i/Top1_Ch9_13.thy                    lemma  line 15216
+  Theorem_56_1_step_3:
+    i/Top1_Ch9_13.thy                    lemma  line 15683
+    i/Top1_Ch9_13.thy                    lemma  line 15683
+  Theorem_57_1:
+    b0/AlgTop_JCT_Base0.thy              theorem  line 3409
+    b0/AlgTop_JCT_Base0.thy              theorem  line 3409
+  Theorem_57_2_no_antipode_S2_to_S1:
+    ac/AlgTopCached.thy                  theorem  line 830
+    ac/AlgTopCached.thy                  theorem  line 830
+  Theorem_57_3_BorsukUlam:
+    b0/AlgTop_JCT_Base0.thy              theorem  line 3656
+    b0/AlgTop_JCT_Base0.thy              theorem  line 3656
+  Theorem_58_2_inclusion_iso:
+    b0/AlgTop_JCT_Base0.thy              theorem  line 5319
+    b0/AlgTop_JCT_Base0.thy              theorem  line 5319
+  Theorem_58_2_inclusion_iso_fixed:
+    fi/AlgIsoFixed.thy                   theorem  line 430
+    fi/AlgIsoFixed.thy                   theorem  line 430
+  Theorem_58_3:
+    b0/AlgTop_JCT_Base0.thy              theorem  line 5083
+    b0/AlgTop_JCT_Base0.thy              theorem  line 5083
+  Theorem_58_3_explicit:
+    wh/AlgTopWedgeHelpers.thy            lemma  line 1826
+    wh/AlgTopWedgeHelpers.thy            lemma  line 1826
   Theorem_58_7:
     b0/AlgTop_JCT_Base0.thy              theorem  line 4316
     fi/AlgIsoFixed.thy                   theorem  line 5
+    b0/AlgTop_JCT_Base0.thy              theorem  line 4316
+    fi/AlgIsoFixed.thy                   theorem  line 5
+  Theorem_58_7_strict:
+    b0/AlgTop_JCT_Base0.thy              corollary  line 5548
+    b0/AlgTop_JCT_Base0.thy              corollary  line 5548
+  Theorem_59_1:
+    b0/AlgTop_JCT_Base0.thy              theorem  line 6691
+    b0/AlgTop_JCT_Base0.thy              theorem  line 6691
+  Theorem_59_3:
+    b/AlgTop_JCT_Base.thy                theorem  line 1315
+    b/AlgTop_JCT_Base.thy                theorem  line 1315
+  Theorem_59_3_path_connected:
+    b/AlgTop_JCT_Base.thy                corollary  line 3249
+    b/AlgTop_JCT_Base.thy                corollary  line 3249
+  Theorem_60_1_product:
+    b/AlgTop_JCT_Base.thy                theorem  line 3261
+    b/AlgTop_JCT_Base.thy                theorem  line 3261
+  Theorem_61_3_JordanSeparation_S2:
+    b/AlgTop_JCT_Base.thy                theorem  line 11223
+    b/AlgTop_JCT_Base.thy                theorem  line 11223
+  Theorem_61_4_general_separation:
+    b/AlgTop_JCT_Base.thy                theorem  line 12245
+    b/AlgTop_JCT_Base.thy                theorem  line 12245
+  Theorem_62_3_invariance_of_domain:
+    ac/AlgTopCached.thy                  theorem  line 4363
+    ac/AlgTopCached.thy                  theorem  line 4363
+  Theorem_63_1_b_generation:
+    fib/AlgIsoFixedBase.thy              lemma  line 123
+    fib/AlgIsoFixedBase.thy              lemma  line 123
+  Theorem_63_1_c_subgroups_trivial:
+    a0/AlgTop0.thy                       lemma  line 1856
+    a0/AlgTop0.thy                       lemma  line 1856
+  Theorem_63_1_c_subgroups_trivial_reverse:
+    a0/AlgTop0.thy                       lemma  line 2600
+    a0/AlgTop0.thy                       lemma  line 2600
+  Theorem_63_1_loop_nontrivial:
+    a0/AlgTop0.thy                       theorem  line 736
+    a0/AlgTop0.thy                       theorem  line 736
+  Theorem_63_2_arc_no_separation:
+    a0/AlgTop0.thy                       theorem  line 5858
+    a0/AlgTop0.thy                       theorem  line 5858
+  Theorem_63_3_general_nonseparation:
+    a0/AlgTop0.thy                       theorem  line 5304
+    a0/AlgTop0.thy                       theorem  line 5304
+  Theorem_63_4_JordanCurve:
+    a0/AlgTop0.thy                       theorem  line 8554
+    a0/AlgTop0.thy                       theorem  line 8554
+  Theorem_63_5_two_closed_connected:
+    a0/AlgTop0.thy                       theorem  line 6917
+    a0/AlgTop0.thy                       theorem  line 6917
+  Theorem_64_2_K33_not_planar:
+    ag/AlgTopGroups.thy                  theorem  line 1241
+    ag/AlgTopGroups.thy                  theorem  line 1241
+  Theorem_64_4_K5_not_planar:
+    k5/K5_nonplanar.thy                  theorem  line 3130
+    k5/K5_nonplanar.thy                  theorem  line 3130
+  Theorem_65_2:
+    fi/AlgIsoFixed.thy                   theorem  line 10284
+    fi/AlgIsoFixed.thy                   theorem  line 10284
+  Theorem_67_4_direct_sum_exists:
+    ac/AlgTopCached.thy                  theorem  line 7123
+    ac/AlgTopCached.thy                  theorem  line 7123
+  Theorem_67_6_direct_sum_unique:
+    ac/AlgTopCached.thy                  theorem  line 7430
+    ac/AlgTopCached.thy                  theorem  line 7430
+  Theorem_67_8_rank_unique:
+    ag/AlgTopGroups.thy                  theorem  line 8216
+    ag/AlgTopGroups.thy                  theorem  line 8216
+  Theorem_68_2_free_product_exists:
+    ac/AlgTopCached.thy                  theorem  line 9628
+    ac/AlgTopCached.thy                  theorem  line 9628
+  Theorem_68_4_free_product_unique:
+    ac/AlgTopCached.thy                  theorem  line 12578
+    ac/AlgTopCached.thy                  theorem  line 12578
+  Theorem_68_7_quotient_free_product:
+    ac/AlgTopCached.thy                  theorem  line 12829
+    ac/AlgTopCached.thy                  theorem  line 12829
+  Theorem_69_2:
+    ac/AlgTopCached.thy                  theorem  line 28767
+    ac/AlgTopCached.thy                  theorem  line 28767
+  Theorem_69_2_free_product_part:
+    at/AlgTopChain.thy                   lemma  line 4803
+    at/AlgTopChain.thy                   lemma  line 4803
+  Theorem_69_4:
+    at/AlgTopChain.thy                   theorem  line 959
+    at/AlgTopChain.thy                   theorem  line 959
+  Theorem_69_4_concrete_free_abelian:
+    at/AlgTopChain.thy                   lemma  line 1266
+    at/AlgTopChain.thy                   lemma  line 1266
+  Theorem_69_4_concrete_image_basis:
+    ac12/AlgTopCached12.thy              lemma  line 9
+    ac12/AlgTopCached12.thy              lemma  line 9
+  Theorem_70_1_uniqueness:
+    ac/AlgTopCached.thy                  lemma  line 28142
+    ac/AlgTopCached.thy                  lemma  line 28142
+  Theorem_70_1_universal_property:
+    ac/AlgTopCached.thy                  lemma  line 15888
+    ac/AlgTopCached.thy                  lemma  line 15888
+  Theorem_70_2_SvK:
+    ac/AlgTopCached.thy                  theorem  line 14137
+    ac/AlgTopCached.thy                  theorem  line 14137
+  Theorem_70_2_SvK_parameterized:
+    ac/AlgTopCached.thy                  theorem  line 25835
+    ac/AlgTopCached.thy                  theorem  line 25835
+  Theorem_71_1_wedge_of_circles_finite:
+    ac/AlgTopCached.thy                  theorem  line 31796
+    ac/AlgTopCached.thy                  theorem  line 31796
+  Theorem_71_3:
+    ac9/AlgTopCached9.thy                theorem  line 257
+    ac9/AlgTopCached9.thy                theorem  line 257
+  Theorem_71_3_finite:
+    ac8/AlgTopCached8.thy                theorem  line 7
+    ac8/AlgTopCached8.thy                theorem  line 7
+  Theorem_72_1_attaching_two_cell:
+    ac/AlgTopCached.thy                  theorem  line 43351
+    ac/AlgTopCached.thy                  theorem  line 43351
+  Theorem_73_2_torus_free_abelian:
+    ac8/AlgTopCached8.thy                theorem  line 5051
+    ac8/AlgTopCached8.thy                theorem  line 5051
+  Theorem_73_4_dunce_cap:
+    ac8/AlgTopCached8.thy                theorem  line 5255
+    ac8/AlgTopCached8.thy                theorem  line 5255
+  Theorem_74_1_polygon_quotient_compact_hausdorff:
+    wh/AlgTopWedgeHelpers.thy            theorem  line 416
+    wh/AlgTopWedgeHelpers.thy            theorem  line 416
+  Theorem_74_2_scheme_presentation:
+    ac8/AlgTopCached8.thy                theorem  line 649
+    ac8/AlgTopCached8.thy                theorem  line 649
+  Theorem_74_3_fund_group_n_torus:
+    ac8/AlgTopCached8.thy                theorem  line 3372
+    ac8/AlgTopCached8.thy                theorem  line 3372
+  Theorem_74_4_fund_group_m_projective:
+    ac8/AlgTopCached8.thy                theorem  line 8230
+    ac8/AlgTopCached8.thy                theorem  line 8230
+  Theorem_75_1_H1_abelianization:
+    ac8/AlgTopCached8.thy                theorem  line 3787
+    ac8/AlgTopCached8.thy                theorem  line 3787
+  Theorem_75_3_H1_n_torus:
+    ac8/AlgTopCached8.thy                theorem  line 4472
+    ac8/AlgTopCached8.thy                theorem  line 4472
+  Theorem_75_4_H1_m_projective:
+    ac12/AlgTopCached12.thy              theorem  line 975
+    ac12/AlgTopCached12.thy              theorem  line 975
+  Theorem_76_elementary_operations:
+    AlgTop.thy                           theorem  line 12557
+    AlgTop.thy                           theorem  line 12557
+  Theorem_77_5_classification:
+    AlgTop.thy                           theorem  line 12749
+    AlgTop.thy                           theorem  line 12749
+  Theorem_78_2_connected_polygonal_quotient:
+    AlgTop.thy                           theorem  line 12651
+    AlgTop.thy                           theorem  line 12651
+  Theorem_79_2:
+    ac4/AlgTopCached4.thy                theorem  line 1524
+    ac4/AlgTopCached4.thy                theorem  line 1524
+  Theorem_79_4:
+    ac4/AlgTopCached4.thy                theorem  line 2333
+    ac4/AlgTopCached4.thy                theorem  line 2333
+  Theorem_80_1_universal_unique:
+    ac4/AlgTopCached4.thy                theorem  line 3345
+    ac4/AlgTopCached4.thy                theorem  line 3345
+  Theorem_80_3_universal:
+    ac4/AlgTopCached4.thy                theorem  line 4013
+    ac4/AlgTopCached4.thy                theorem  line 4013
+  Theorem_80_3_universal_strict:
+    ac4/AlgTopCached4.thy                corollary  line 4946
+    ac4/AlgTopCached4.thy                corollary  line 4946
+  Theorem_81_2_covering_group_iso:
+    ac10/AlgTopCached10.thy              theorem  line 1110
+    ac10/AlgTopCached10.thy              theorem  line 1110
+  Theorem_82_1_covering_existence:
+    ac10/AlgTopCached10.thy              theorem  line 2957
+    ac10/AlgTopCached10.thy              theorem  line 2957
+  Theorem_83_4_covering_of_graph_is_graph:
+    ac5/AlgTopCached5.thy                theorem  line 708
+    ac5/AlgTopCached5.thy                theorem  line 708
+  Theorem_84_7_fund_group_graph_is_free:
+    ac10/AlgTopCached10.thy              theorem  line 18527
+    ac10/AlgTopCached10.thy              theorem  line 18527
+  Theorem_85_1_Nielsen_Schreier:
+    ac10/AlgTopCached10.thy              theorem  line 21359
+    ac10/AlgTopCached10.thy              theorem  line 21359
+  Theorem_85_3_Schreier_index:
+    ac11/AlgTopCached11.thy              theorem  line 12841
+    ac11/AlgTopCached11.thy              theorem  line 12841
+  theta_space_vertex_exclusion:
+    ag/AlgTopGroups.thy                  lemma  line 182
+    ag/AlgTopGroups.thy                  lemma  line 182
+  third_element_unique:
+    fib/AlgIsoFixedBase.thy              lemma  line 1244
+    fib/AlgIsoFixedBase.thy              lemma  line 1244
+  three_components_contradiction:
+    a0/AlgTop0.thy                       lemma  line 6637
+    a0/AlgTop0.thy                       lemma  line 6637
   timed_seq:
     ac/AlgTopCached.thy                  fun  line 13
     ag/AlgTopGroups.thy                  fun  line 12
     AlgTop.thy                           fun  line 10
     i/Top1_Ch9_13.thy                    fun  line 9
+    ac/AlgTopCached.thy                  fun  line 13
+    ag/AlgTopGroups.thy                  fun  line 12
+    AlgTop.thy                           fun  line 10
+    i/Top1_Ch9_13.thy                    fun  line 9
+  tl_take_drop_eq:
+    ag/AlgTopGroups.thy                  lemma  line 33
+    ag/AlgTopGroups.thy                  lemma  line 33
+  tl_take_drop_map_pair:
+    ag/AlgTopGroups.thy                  lemma  line 56
+    ag/AlgTopGroups.thy                  lemma  line 56
+  tl_take_map_pair:
+    ag/AlgTopGroups.thy                  lemma  line 37
+    ag/AlgTopGroups.thy                  lemma  line 37
+  to:
+    fib/AlgIsoFixedBase.thy              lemma  line 2764
+    fib/AlgIsoFixedBase.thy              lemma  line 2764
+  top1_27_7_shrink_open_avoid_closure:
+    i/Top1_Ch3.thy                       lemma  line 9701
+    i/Top1_Ch3.thy                       lemma  line 9701
+  top1_abs_metric_on_UNIV_real:
+    i/Top1_Ch4.thy                       lemma  line 11065
+    i/Top1_Ch4.thy                       lemma  line 11065
+  top1_AN_48:
+    i/Top1_Ch5_8.thy                     definition  line 24188
+    i/Top1_Ch5_8.thy                     definition  line 24188
+  top1_antipode_preserving_S1:
+    i/Top1_Ch9_13.thy                    definition  line 14646
+    i/Top1_Ch9_13.thy                    definition  line 14646
+  top1_arc_endpoints_on:
+    ac/AlgTopCached.thy                  definition  line 48539
+    ac/AlgTopCached.thy                  definition  line 48539
+  top1_ascoli_step1_compact_closure_pointwise:
+    i/Top1_Ch5_8.thy                     lemma  line 21197
+    i/Top1_Ch5_8.thy                     lemma  line 21197
+  top1_ascoli_step2_closure_continuous_and_equicontinuous:
+    i/Top1_Ch5_8.thy                     lemma  line 21270
+    i/Top1_Ch5_8.thy                     lemma  line 21270
+  top1_ascoli_step3_pointwise_eq_compact_convergence_on_closure:
+    i/Top1_Ch5_8.thy                     lemma  line 21472
+    i/Top1_Ch5_8.thy                     lemma  line 21472
+  top1_B2:
+    i/Top1_Ch9_13.thy                    definition  line 11554
+    i/Top1_Ch9_13.thy                    definition  line 11554
+  top1_B2_cont_fst:
+    i/Top1_Ch9_13.thy                    lemma  line 11820
+    i/Top1_Ch9_13.thy                    lemma  line 11820
+  top1_B2_cont_snd:
+    i/Top1_Ch9_13.thy                    lemma  line 11858
+    i/Top1_Ch9_13.thy                    lemma  line 11858
+  top1_B2_convex:
+    i/Top1_Ch9_13.thy                    lemma  line 11754
+    i/Top1_Ch9_13.thy                    lemma  line 11754
+  top1_B2_diff_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 12235
+    i/Top1_Ch9_13.thy                    lemma  line 12235
+  top1_B2_path_connected:
+    i/Top1_Ch9_13.thy                    lemma  line 11892
+    i/Top1_Ch9_13.thy                    lemma  line 11892
+  top1_B2_simply_connected:
+    i/Top1_Ch9_13.thy                    lemma  line 11970
+    i/Top1_Ch9_13.thy                    lemma  line 11970
+  top1_B2_topology:
+    i/Top1_Ch9_13.thy                    definition  line 11557
+    i/Top1_Ch9_13.thy                    definition  line 11557
+  top1_baire_on:
+    i/Top1_Ch5_8.thy                     definition  line 22237
+    i/Top1_Ch5_8.thy                     definition  line 22237
+  top1_ball_on:
+    i/Top1_Ch2.thy                       definition  line 11626
+    i/Top1_Ch2.thy                       definition  line 11626
+  top1_ball_on_bounded_metric_eq:
+    i/Top1_Ch2.thy                       lemma  line 11921
+    i/Top1_Ch2.thy                       lemma  line 11921
+  top1_ball_on_mono_radius:
+    i/Top1_Ch5_8.thy                     lemma  line 22878
+    i/Top1_Ch5_8.thy                     lemma  line 22878
+  top1_ball_open_in_metric_topology:
+    i/Top1_Ch2.thy                       lemma  line 11738
+    i/Top1_Ch2.thy                       lemma  line 11738
+  top1_ball_openin_on_metric_topology:
+    i/Top1_Ch2.thy                       lemma  line 11755
+    i/Top1_Ch2.thy                       lemma  line 11755
+  top1_basepoint_change_congruence:
+    i/Top1_Ch9_13.thy                    lemma  line 3149
+    i/Top1_Ch9_13.thy                    lemma  line 3149
+  top1_basepoint_change_is_loop:
+    i/Top1_Ch9_13.thy                    lemma  line 3288
+    i/Top1_Ch9_13.thy                    lemma  line 3288
+  top1_basepoint_change_loop_equiv:
+    i/Top1_Ch9_13.thy                    lemma  line 3307
+    i/Top1_Ch9_13.thy                    lemma  line 3307
+  top1_basepoint_change_on:
+    i/Top1_Ch9_13.thy                    definition  line 2967
+    i/Top1_Ch9_13.thy                    definition  line 2967
+  top1_basepoint_change_roundtrip:
+    i/Top1_Ch9_13.thy                    lemma  line 3176
+    i/Top1_Ch9_13.thy                    lemma  line 3176
+  top1_bij_quotient_map_on_imp_homeomorphism_on:
+    i/Top1_Ch2.thy                       lemma  line 20470
+    i/Top1_Ch2.thy                       lemma  line 20470
+  top1_bounded_abs_eq_real_bounded_metric:
+    i/Top1_Ch5_8.thy                     lemma  line 10223
+    i/Top1_Ch5_8.thy                     lemma  line 10223
+  top1_bounded_abs_metric_topology_eq_order:
+    i/Top1_Ch5_8.thy                     lemma  line 10231
+    i/Top1_Ch5_8.thy                     lemma  line 10231
+  top1_bounded_map_on:
+    i/Top1_Ch5_8.thy                     definition  line 10529
+    i/Top1_Ch5_8.thy                     definition  line 10529
+  top1_bounded_maps_metric_on:
+    i/Top1_Ch5_8.thy                     definition  line 10533
+    i/Top1_Ch5_8.thy                     definition  line 10533
+  top1_bounded_metric:
+    i/Top1_Ch2.thy                       definition  line 11801
+    i/Top1_Ch2.thy                       definition  line 11801
+  top1_bounded_metric_lt_imp_lt:
+    i/Top1_Ch5_8.thy                     lemma  line 16679
+    i/Top1_Ch5_8.thy                     lemma  line 16679
+  top1_bounded_metric_on:
+    i/Top1_Ch2.thy                       lemma  line 11804
+    i/Top1_Ch2.thy                       lemma  line 11804
+  top1_bounded_on:
+    i/Top1_Ch5_8.thy                     definition  line 1717
+    i/Top1_Ch5_8.thy                     definition  line 1717
+  top1_bounded_set:
+    i/Top1_Ch3.thy                       definition  line 7668
+    i/Top1_Ch3.thy                       definition  line 7668
+  top1_box_basis_is_basis_on:
+    i/Top1_Ch2.thy                       lemma  line 8601
+    i/Top1_Ch2.thy                       lemma  line 8601
+  top1_box_basis_on:
+    i/Top1_Ch2.thy                       definition  line 8503
+    i/Top1_Ch2.thy                       definition  line 8503
+  top1_box_basis_on_strict_eq:
+    i/Top1_Ch2.thy                       lemma  line 8510
+    i/Top1_Ch2.thy                       lemma  line 8510
+  top1_box_topology_on:
+    i/Top1_Ch2.thy                       definition  line 8521
+    i/Top1_Ch2.thy                       definition  line 8521
+  top1_box_topology_on_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 8694
+    i/Top1_Ch2.thy                       lemma  line 8694
+  top1_C01:
+    i/Top1_Ch5_8.thy                     definition  line 25048
+    i/Top1_Ch5_8.thy                     definition  line 25048
+  top1_C01_baire:
+    i/Top1_Ch5_8.thy                     lemma  line 26263
+    i/Top1_Ch5_8.thy                     lemma  line 26263
+  top1_C01_complete:
+    i/Top1_Ch5_8.thy                     lemma  line 26017
+    i/Top1_Ch5_8.thy                     lemma  line 26017
+  top1_C01_nonempty:
+    i/Top1_Ch5_8.thy                     lemma  line 25051
+    i/Top1_Ch5_8.thy                     lemma  line 25051
+  top1_cauchy_seq_on:
+    i/Top1_Ch5_8.thy                     definition  line 9684
+    i/Top1_Ch5_8.thy                     definition  line 9684
+  top1_closedin_equalizer_of_continuous_maps:
+    i/Top1_Ch5_8.thy                     lemma  line 1965
+    i/Top1_Ch5_8.thy                     lemma  line 1965
+  top1_closed_interval:
+    i/Top1_Ch4.thy                       definition  line 6203
+    i/Top1_Ch4.thy                       definition  line 6203
+  top1_closed_interval_closedin_order_topology:
+    i/Top1_Ch4.thy                       lemma  line 12734
+    i/Top1_Ch4.thy                       lemma  line 12734
+  top1_closed_interval_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 1805
+    i/Top1_Ch5_8.thy                     lemma  line 1805
+  top1_closed_interval_completely_regular:
+    i/Top1_Ch4.thy                       lemma  line 11598
+    i/Top1_Ch4.thy                       lemma  line 11598
+  top1_closed_interval_metrizable:
+    i/Top1_Ch4.thy                       lemma  line 11489
+    i/Top1_Ch4.thy                       lemma  line 11489
+  top1_closed_interval_topology:
+    i/Top1_Ch4.thy                       definition  line 6206
+    i/Top1_Ch4.thy                       definition  line 6206
+  top1_closedin_Union_locally_finite:
+    i/Top1_Ch5_8.thy                     lemma  line 3305
+    i/Top1_Ch5_8.thy                     lemma  line 3305
+  top1_closed_map_on:
+    i/Top1_Ch2.thy                       definition  line 18808
+    i/Top1_Ch2.thy                       definition  line 18808
+  top1_closure_on_empty:
+    i/Top1_Ch5_8.thy                     lemma  line 3151
+    i/Top1_Ch5_8.thy                     lemma  line 3151
+  top1_closure_on_union2:
+    i/Top1_Ch5_8.thy                     lemma  line 3169
+    i/Top1_Ch5_8.thy                     lemma  line 3169
+  top1_closure_on_Union_finite:
+    i/Top1_Ch5_8.thy                     lemma  line 3256
+    i/Top1_Ch5_8.thy                     lemma  line 3256
+  top1_closure_on_Union_locally_finite:
+    i/Top1_Ch5_8.thy                     lemma  line 3504
+    i/Top1_Ch5_8.thy                     lemma  line 3504
+  top1_C_minus_0:
+    i/Top1_Ch9_13.thy                    definition  line 14773
+    i/Top1_Ch9_13.thy                    definition  line 14773
+  top1_C_minus_0_topology:
+    i/Top1_Ch9_13.thy                    definition  line 14776
+    i/Top1_Ch9_13.thy                    definition  line 14776
+  top1_commutator_subgroup_on:
+    ac/AlgTopCached.thy                  definition  line 7029
+    ac/AlgTopCached.thy                  definition  line 7029
+  top1_compact_convergence_basis_on:
+    i/Top1_Ch5_8.thy                     definition  line 15589
+    i/Top1_Ch5_8.thy                     definition  line 15589
+  top1_compact_convergence_topology_on:
+    i/Top1_Ch5_8.thy                     definition  line 15597
+    i/Top1_Ch5_8.thy                     definition  line 15597
+  top1_compact_convergence_topology_on_superset_pointwise:
+    i/Top1_Ch5_8.thy                     lemma  line 16691
+    i/Top1_Ch5_8.thy                     lemma  line 16691
+  top1_compact_hausdorff_imp_baire:
+    i/Top1_Ch5_8.thy                     lemma  line 22525
+    i/Top1_Ch5_8.thy                     lemma  line 22525
+  top1_compact_Icc_linear_continuum:
+    i/Top1_Ch3.thy                       lemma  line 7312
+    i/Top1_Ch3.thy                       lemma  line 7312
+  top1_compactification_via_on:
+    i/Top1_Ch5_8.thy                     definition  line 1462
+    i/Top1_Ch5_8.thy                     definition  line 1462
+  top1_compactly_generated_on:
+    i/Top1_Ch5_8.thy                     definition  line 15581
+    i/Top1_Ch5_8.thy                     definition  line 15581
+  top1_compact_m_manifold_finite_chart_cover:
+    i/Top1_Ch4.thy                       lemma  line 18003
+    i/Top1_Ch4.thy                       lemma  line 18003
+  top1_compact_nested_closure_inter_ne:
+    i/Top1_Ch3.thy                       lemma  line 9954
+    i/Top1_Ch3.thy                       lemma  line 9954
+  top1_compact_on:
+    i/Top1_Ch3.thy                       definition  line 4646
+    i/Top1_Ch3.thy                       definition  line 4646
+  top1_compact_on_continuous_image:
+    i/Top1_Ch3.thy                       lemma  line 7907
+    i/Top1_Ch3.thy                       lemma  line 7907
+  top1_compact_on_empty_subspace:
+    i/Top1_Ch3.thy                       lemma  line 11309
+    i/Top1_Ch3.thy                       lemma  line 11309
+  top1_compact_on_finite_subcover_image:
+    i/Top1_Ch4.thy                       lemma  line 17760
+    i/Top1_Ch4.thy                       lemma  line 17760
+  top1_compact_on_finite_subspace:
+    i/Top1_Ch3.thy                       lemma  line 4893
+    i/Top1_Ch3.thy                       lemma  line 4893
+  top1_compact_on_imp_locally_compact_on:
+    i/Top1_Ch3.thy                       lemma  line 10702
+    i/Top1_Ch3.thy                       lemma  line 10702
+  top1_compact_on_Inter_nested_closed_nonempty:
+    i/Top1_Ch5_8.thy                     lemma  line 22242
+    i/Top1_Ch5_8.thy                     lemma  line 22242
+  top1_compact_on_order_topology_has_greatest:
+    i/Top1_Ch3.thy                       lemma  line 8221
+    i/Top1_Ch3.thy                       lemma  line 8221
+  top1_compact_on_order_topology_has_least:
+    i/Top1_Ch3.thy                       lemma  line 8049
+    i/Top1_Ch3.thy                       lemma  line 8049
+  top1_compact_on_subspace_UNIV_iff_compact:
+    i/Top1_Ch3.thy                       lemma  line 7131
+    i/Top1_Ch3.thy                       lemma  line 7131
+  top1_compact_on_union2_subspace:
+    i/Top1_Ch3.thy                       lemma  line 11337
+    i/Top1_Ch3.thy                       lemma  line 11337
+  top1_compact_open_subbasis_on:
+    i/Top1_Ch5_8.thy                     definition  line 15607
+    i/Top1_Ch5_8.thy                     definition  line 15607
+  top1_compact_open_topology_on:
+    i/Top1_Ch5_8.thy                     definition  line 15613
+    i/Top1_Ch5_8.thy                     definition  line 15613
+  top1_compact_uniformly_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 25379
+    i/Top1_Ch5_8.thy                     lemma  line 25379
+  top1_completely_regular_on:
+    i/Top1_Ch4.thy                       definition  line 8213
+    i/Top1_Ch4.thy                       definition  line 8213
+  top1_completely_regular_on_product_topology_on:
+    i/Top1_Ch4.thy                       lemma  line 11688
+    i/Top1_Ch4.thy                       lemma  line 11688
+  top1_complete_metric_on:
+    i/Top1_Ch5_8.thy                     definition  line 9689
+    i/Top1_Ch5_8.thy                     definition  line 9689
+  top1_component_of_on:
+    i/Top1_Ch3.thy                       definition  line 2471
+    i/Top1_Ch3.thy                       definition  line 2471
+  top1_component_of_on_as_component:
+    i/Top1_Ch3.thy                       lemma  line 2713
+    i/Top1_Ch3.thy                       lemma  line 2713
+  top1_component_of_on_connected:
+    i/Top1_Ch3.thy                       lemma  line 2660
+    i/Top1_Ch3.thy                       lemma  line 2660
+  top1_component_of_on_eq_of_mem:
+    i/Top1_Ch3.thy                       lemma  line 2627
+    i/Top1_Ch3.thy                       lemma  line 2627
+  top1_component_of_on_in_components:
+    i/Top1_Ch3.thy                       lemma  line 2708
+    i/Top1_Ch3.thy                       lemma  line 2708
+  top1_component_of_on_mem_iff:
+    i/Top1_Ch3.thy                       lemma  line 2478
+    i/Top1_Ch3.thy                       lemma  line 2478
+  top1_component_of_on_self_mem:
+    i/Top1_Ch3.thy                       lemma  line 2516
+    i/Top1_Ch3.thy                       lemma  line 2516
+  top1_component_of_on_subset:
+    i/Top1_Ch3.thy                       lemma  line 2506
+    i/Top1_Ch3.thy                       lemma  line 2506
+  top1_component_of_on_subset_path_component_if_locally_path_connected:
+    i/Top1_Ch3.thy                       lemma  line 4458
+    i/Top1_Ch3.thy                       lemma  line 4458
+  top1_components_on:
+    i/Top1_Ch3.thy                       definition  line 2475
+    i/Top1_Ch3.thy                       definition  line 2475
+  top1_connected_on:
+    i/Top1_Ch3.thy                       definition  line 19
+    i/Top1_Ch3.thy                       definition  line 19
+  top1_connected_on_singleton:
+    i/Top1_Ch3.thy                       lemma  line 2399
+    i/Top1_Ch3.thy                       lemma  line 2399
+  top1_connected_on_subspace_openI:
+    i/Top1_Ch3.thy                       lemma  line 2087
+    i/Top1_Ch3.thy                       lemma  line 2087
+  top1_connected_on_subspace_open_iff_connected:
+    i/Top1_Ch3.thy                       lemma  line 1964
+    i/Top1_Ch3.thy                       lemma  line 1964
+  top1_connected_subspace_subset_component_of:
+    i/Top1_Ch3.thy                       lemma  line 2533
+    i/Top1_Ch3.thy                       lemma  line 2533
+  top1_constant_path:
+    i/Top1_Ch9_13.thy                    definition  line 1196
+    i/Top1_Ch9_13.thy                    definition  line 1196
+  top1_constant_path_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 1259
+    i/Top1_Ch9_13.thy                    lemma  line 1259
+  top1_constant_path_is_loop:
+    i/Top1_Ch9_13.thy                    lemma  line 2350
+    i/Top1_Ch9_13.thy                    lemma  line 2350
+  top1_constant_path_is_path:
+    i/Top1_Ch9_13.thy                    lemma  line 1265
+    i/Top1_Ch9_13.thy                    lemma  line 1265
+  top1_constant_path_value:
+    i/Top1_Ch9_13.thy                    lemma  line 1223
+    i/Top1_Ch9_13.thy                    lemma  line 1223
+  top1_continuous_add_order_topology:
+    i/Top1_Ch4.thy                       lemma  line 13097
+    i/Top1_Ch4.thy                       lemma  line 13097
+  top1_continuous_add_real:
+    i/Top1_Ch4.thy                       lemma  line 14917
+    i/Top1_Ch4.thy                       lemma  line 14917
+  top1_continuous_at_on:
+    i/Top1_Ch2.thy                       definition  line 7065
+    i/Top1_Ch2.thy                       definition  line 7065
+  top1_continuous_diff_real:
+    i/Top1_Ch4.thy                       lemma  line 15045
+    i/Top1_Ch4.thy                       lemma  line 15045
+  top1_continuous_funcs_on:
+    i/Top1_Ch5_8.thy                     definition  line 13739
+    i/Top1_Ch5_8.thy                     definition  line 13739
+  top1_continuous_inv_order_topology_pos:
+    i/Top1_Ch4.thy                       lemma  line 14630
+    i/Top1_Ch4.thy                       lemma  line 14630
+  top1_continuous_map_loop:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4290
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4290
+  top1_continuous_map_loop_early:
+    i/Top1_Ch9_13.thy                    lemma  line 14823
+    i/Top1_Ch9_13.thy                    lemma  line 14823
+  top1_continuous_map_on:
+    i/Top1_Ch2.thy                       definition  line 6648
+    i/Top1_Ch2.thy                       definition  line 6648
   top1_continuous_map_on_agree:
     i/Top1_Ch9_13.thy                    lemma  line 1460
     i/Top1_Ch9_13.thy                    lemma  line 485
+    i/Top1_Ch9_13.thy                    lemma  line 1460
+    i/Top1_Ch9_13.thy                    lemma  line 485
+  top1_continuous_map_on_closed_interval_to_real:
+    i/Top1_Ch4.thy                       lemma  line 17880
+    i/Top1_Ch4.thy                       lemma  line 17880
+  top1_continuous_map_on_codomain_enlarge:
+    i/Top1_Ch9_13.thy                    lemma  line 11563
+    i/Top1_Ch9_13.thy                    lemma  line 11563
+  top1_continuous_map_on_codomain_shrink:
+    i/Top1_Ch9_13.thy                    lemma  line 817
+    i/Top1_Ch9_13.thy                    lemma  line 817
+  top1_continuous_map_on_comp:
+    i/Top1_Ch2.thy                       lemma  line 6879
+    i/Top1_Ch2.thy                       lemma  line 6879
+  top1_continuous_map_on_cong:
+    i/Top1_Ch2.thy                       lemma  line 19527
+    i/Top1_Ch2.thy                       lemma  line 19527
+  top1_continuous_map_on_const:
+    i/Top1_Ch3.thy                       lemma  line 923
+    i/Top1_Ch3.thy                       lemma  line 923
+  top1_continuous_map_on_generated_by_basis:
+    i/Top1_Ch2.thy                       lemma  line 6791
+    i/Top1_Ch2.thy                       lemma  line 6791
+  top1_continuous_map_on_id:
+    i/Top1_Ch3.thy                       lemma  line 874
+    i/Top1_Ch3.thy                       lemma  line 874
+  top1_continuous_map_on_II_to_I:
+    i/Top1_Ch9_13.thy                    lemma  line 248
+    i/Top1_Ch9_13.thy                    lemma  line 248
+  top1_continuous_map_on_II_to_UNIV:
+    i/Top1_Ch9_13.thy                    lemma  line 10705
+    i/Top1_Ch9_13.thy                    lemma  line 10705
+  top1_continuous_map_on_product_projection:
+    i/Top1_Ch2.thy                       lemma  line 9111
+    i/Top1_Ch2.thy                       lemma  line 9111
+  top1_continuous_map_on_real2_subspace:
+    i/Top1_Ch9_13.thy                    lemma  line 209
+    i/Top1_Ch9_13.thy                    lemma  line 209
+  top1_continuous_map_on_real2_subspace_general:
+    i/Top1_Ch9_13.thy                    lemma  line 165
+    i/Top1_Ch9_13.thy                    lemma  line 165
+  top1_continuous_map_on_real_subspace_open_sets:
+    i/Top1_Ch3.thy                       lemma  line 3125
+    i/Top1_Ch3.thy                       lemma  line 3125
+  top1_continuous_map_on_restrict_domain_simple:
+    i/Top1_Ch4.thy                       lemma  line 17646
+    i/Top1_Ch4.thy                       lemma  line 17646
+  top1_continuous_map_on_Rpow_coord:
+    i/Top1_Ch4.thy                       lemma  line 17962
+    i/Top1_Ch4.thy                       lemma  line 17962
+  top1_continuous_map_on_R_to_R2_subspace:
+    i/Top1_Ch9_13.thy                    lemma  line 133
+    i/Top1_Ch9_13.thy                    lemma  line 133
+  top1_continuous_map_on_section2:
+    i/Top1_Ch3.thy                       lemma  line 962
+    i/Top1_Ch3.thy                       lemma  line 962
+  top1_continuous_map_on_subspace_open_sets:
+    i/Top1_Ch9_13.thy                    lemma  line 14738
+    i/Top1_Ch9_13.thy                    lemma  line 14738
+  top1_continuous_map_on_subspace_open_sets_on:
+    i/Top1_Ch9_13.thy                    lemma  line 4175
+    i/Top1_Ch9_13.thy                    lemma  line 4175
+  top1_continuous_map_on_subspace_restrict:
+    i/Top1_Ch9_13.thy                    lemma  line 11534
+    i/Top1_Ch9_13.thy                    lemma  line 11534
+  top1_continuous_map_on_to_continuous_on_R2:
+    i/Top1_Ch9_13.thy                    lemma  line 13299
+    i/Top1_Ch9_13.thy                    lemma  line 13299
+  top1_continuous_map_on_to_topology_generated_by_subbasis:
+    i/Top1_Ch2.thy                       lemma  line 6950
+    i/Top1_Ch2.thy                       lemma  line 6950
+  top1_continuous_maps_metric_on:
+    i/Top1_Ch5_8.thy                     definition  line 10524
+    i/Top1_Ch5_8.thy                     definition  line 10524
+  top1_continuous_min2_unit_interval:
+    i/Top1_Ch4.thy                       lemma  line 11609
+    i/Top1_Ch4.thy                       lemma  line 11609
+  top1_continuous_min_unit_interval:
+    i/Top1_Ch4.thy                       lemma  line 8556
+    i/Top1_Ch4.thy                       lemma  line 8556
+  top1_continuous_mul_order_topology:
+    i/Top1_Ch4.thy                       lemma  line 13275
+    i/Top1_Ch4.thy                       lemma  line 13275
+  top1_continuous_mul_real:
+    i/Top1_Ch4.thy                       lemma  line 15061
+    i/Top1_Ch4.thy                       lemma  line 15061
+  top1_continuous_mul_supported_extend_zero:
+    i/Top1_Ch4.thy                       lemma  line 16257
+    i/Top1_Ch4.thy                       lemma  line 16257
+  top1_continuous_pi1:
+    i/Top1_Ch2.thy                       lemma  line 8401
+    i/Top1_Ch2.thy                       lemma  line 8401
+  top1_continuous_pi2:
+    i/Top1_Ch2.thy                       lemma  line 8438
+    i/Top1_Ch2.thy                       lemma  line 8438
+  top1_continuous_preimage_ball:
+    i/Top1_Ch9_13.thy                    lemma  line 6525
+    i/Top1_Ch9_13.thy                    lemma  line 6525
+  top1_continuous_preserves_path_homotopy:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4252
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4252
+  top1_continuous_scale_real:
+    i/Top1_Ch5_8.thy                     lemma  line 5387
+    i/Top1_Ch5_8.thy                     lemma  line 5387
+  top1_continuous_sum_finite_real:
+    i/Top1_Ch5_8.thy                     lemma  line 8547
+    i/Top1_Ch5_8.thy                     lemma  line 8547
+  top1_continuous_sum_lessThan_real:
+    i/Top1_Ch4.thy                       lemma  line 15119
+    i/Top1_Ch4.thy                       lemma  line 15119
+  top1_continuous_uminus_order_topology:
+    i/Top1_Ch4.thy                       lemma  line 14454
+    i/Top1_Ch4.thy                       lemma  line 14454
+  top1_continuous_uminus_real:
+    i/Top1_Ch4.thy                       lemma  line 15029
+    i/Top1_Ch4.thy                       lemma  line 15029
+  top1_countable:
+    i/Top1_Ch4.thy                       definition  line 16
+    i/Top1_Ch4.thy                       definition  line 16
+  top1_countable_iff_countable:
+    i/Top1_Ch4.thy                       lemma  line 19
+    i/Top1_Ch4.thy                       lemma  line 19
+  top1_countable_image:
+    i/Top1_Ch4.thy                       lemma  line 47
+    i/Top1_Ch4.thy                       lemma  line 47
+  top1_countable_lists:
+    i/Top1_Ch4.thy                       lemma  line 401
+    i/Top1_Ch4.thy                       lemma  line 401
+  top1_countable_nat_prod:
+    i/Top1_Ch4.thy                       lemma  line 278
+    i/Top1_Ch4.thy                       lemma  line 278
+  top1_countable_neighborhood_basis_at:
+    i/Top1_Ch4.thy                       definition  line 436
+    i/Top1_Ch4.thy                       definition  line 436
+  top1_countable_nonempty_eq_image_nat:
+    i/Top1_Ch3.thy                       lemma  line 9876
+    i/Top1_Ch3.thy                       lemma  line 9876
+  top1_countable_SIGMA:
+    i/Top1_Ch4.thy                       lemma  line 283
+    i/Top1_Ch4.thy                       lemma  line 283
+  top1_countable_subset:
+    i/Top1_Ch4.thy                       lemma  line 23
+    i/Top1_Ch4.thy                       lemma  line 23
+  top1_countably_compact_on:
+    i/Top1_Ch3.thy                       definition  line 10373
+    i/Top1_Ch3.thy                       definition  line 10373
+  top1_covering_lifted_arc_family_on:
+    ac11/AlgTopCached11.thy              definition  line 10086
+    ac11/AlgTopCached11.thy              definition  line 10086
+  top1_covering_map_on:
+    i/Top1_Ch9_13.thy                    definition  line 3918
+    i/Top1_Ch9_13.thy                    definition  line 3918
+  top1_covering_map_on_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 3925
+    i/Top1_Ch9_13.thy                    lemma  line 3925
+  top1_covering_map_on_evenly_covered:
+    i/Top1_Ch9_13.thy                    lemma  line 3933
+    i/Top1_Ch9_13.thy                    lemma  line 3933
+  top1_covering_map_on_strict_evenly_covered_openin:
+    i/Top1_Ch9_13.thy                    lemma  line 3954
+    i/Top1_Ch9_13.thy                    lemma  line 3954
+  top1_covering_map_on_surj:
+    i/Top1_Ch9_13.thy                    lemma  line 3929
+    i/Top1_Ch9_13.thy                    lemma  line 3929
+  top1_covering_transformation_on:
+    ac4/AlgTopCached4.thy                definition  line 4965
+    ac4/AlgTopCached4.thy                definition  line 4965
+  top1_cover_order_le_on:
+    i/Top1_Ch5_8.thy                     definition  line 26322
+    i/Top1_Ch5_8.thy                     definition  line 26322
+  top1_cover_order_le_on_mono_m:
+    i/Top1_Ch5_8.thy                     lemma  line 26370
+    i/Top1_Ch5_8.thy                     lemma  line 26370
+  top1_cover_order_le_on_mono_X:
+    i/Top1_Ch5_8.thy                     lemma  line 26389
+    i/Top1_Ch5_8.thy                     lemma  line 26389
+  top1_cover_order_le_on_subset:
+    i/Top1_Ch5_8.thy                     lemma  line 26338
+    i/Top1_Ch5_8.thy                     lemma  line 26338
+  top1_deformation_retract_of_on:
+    b0/AlgTop_JCT_Base0.thy              definition  line 4031
+    b0/AlgTop_JCT_Base0.thy              definition  line 4031
+  top1_Delta49:
+    i/Top1_Ch5_8.thy                     definition  line 25038
+    i/Top1_Ch5_8.thy                     definition  line 25038
+  top1_Delta_h49:
+    i/Top1_Ch5_8.thy                     definition  line 25045
+    i/Top1_Ch5_8.thy                     definition  line 25045
+  top1_Delta_on:
+    i/Top1_Ch5_8.thy                     definition  line 29430
+    i/Top1_Ch5_8.thy                     definition  line 29430
+  top1_dense_image_via_on:
+    i/Top1_Ch5_8.thy                     definition  line 1457
+    i/Top1_Ch5_8.thy                     definition  line 1457
+  top1_densein_on:
+    i/Top1_Ch5_8.thy                     definition  line 22119
+    i/Top1_Ch5_8.thy                     definition  line 22119
+  top1_densein_on_iff_intersects_nonempty_open:
+    i/Top1_Ch5_8.thy                     lemma  line 22167
+    i/Top1_Ch5_8.thy                     lemma  line 22167
+  top1_densein_on_intersects_neighborhood:
+    i/Top1_Ch5_8.thy                     lemma  line 22132
+    i/Top1_Ch5_8.thy                     lemma  line 22132
+  top1_densein_on_intersects_nonempty_open:
+    i/Top1_Ch5_8.thy                     lemma  line 22149
+    i/Top1_Ch5_8.thy                     lemma  line 22149
+  top1_densein_on_open_subspace:
+    i/Top1_Ch5_8.thy                     lemma  line 22442
+    i/Top1_Ch5_8.thy                     lemma  line 22442
+  top1_densein_on_subset_carrier:
+    i/Top1_Ch5_8.thy                     lemma  line 22122
+    i/Top1_Ch5_8.thy                     lemma  line 22122
+  top1_diameter_on:
+    i/Top1_Ch3.thy                       definition  line 8449
+    i/Top1_Ch3.thy                       definition  line 8449
+  top1_diameter_on_lt_imp_dist_lt:
+    i/Top1_Ch5_8.thy                     lemma  line 23788
+    i/Top1_Ch5_8.thy                     lemma  line 23788
+  top1_diameter_on_pair_le:
+    i/Top1_Ch3.thy                       lemma  line 8453
+    i/Top1_Ch3.thy                       lemma  line 8453
+  top1_dim_le_on:
+    i/Top1_Ch5_8.thy                     definition  line 26326
+    i/Top1_Ch5_8.thy                     definition  line 26326
+  top1_dim_le_on_closedin_subspace:
+    i/Top1_Ch5_8.thy                     lemma  line 26499
+    i/Top1_Ch5_8.thy                     lemma  line 26499
+  top1_dim_le_on_dim_on:
+    i/Top1_Ch5_8.thy                     lemma  line 26467
+    i/Top1_Ch5_8.thy                     lemma  line 26467
+  top1_dim_le_on_dim_on_finite:
+    i/Top1_Ch5_8.thy                     lemma  line 26473
+    i/Top1_Ch5_8.thy                     lemma  line 26473
+  top1_dim_le_on_iff_dim_on_le:
+    i/Top1_Ch5_8.thy                     lemma  line 26483
+    i/Top1_Ch5_8.thy                     lemma  line 26483
+  top1_dim_le_on_imp_finite_dimensional:
+    i/Top1_Ch5_8.thy                     lemma  line 26444
+    i/Top1_Ch5_8.thy                     lemma  line 26444
+  top1_dim_le_on_mono_m:
+    i/Top1_Ch5_8.thy                     lemma  line 26406
+    i/Top1_Ch5_8.thy                     lemma  line 26406
+  top1_dim_on:
+    i/Top1_Ch5_8.thy                     definition  line 26334
+    i/Top1_Ch5_8.thy                     definition  line 26334
   top1_dim_on_le_of_dim_le:
     i/Top1_Ch5_8.thy                     lemma  line 26450
     i/Top1_Ch5_8.thy                     lemma  line 26456
+    i/Top1_Ch5_8.thy                     lemma  line 26450
+    i/Top1_Ch5_8.thy                     lemma  line 26456
+  top1_directed_set:
+    i/Top1_Ch5_8.thy                     definition  line 33398
+    i/Top1_Ch5_8.thy                     definition  line 33398
+  top1_direct_sum_carrier:
+    ac/AlgTopCached.thy                  definition  line 7060
+    ac/AlgTopCached.thy                  definition  line 7060
+  top1_direct_sum_carrier_mul_closed:
+    ac/AlgTopCached.thy                  lemma  line 7084
+    ac/AlgTopCached.thy                  lemma  line 7084
+  top1_dist_to_set:
+    i/Top1_Ch2.thy                       definition  line 16843
+    i/Top1_Ch2.thy                       definition  line 16843
+  top1_D_metric_real_omega:
+    i/Top1_Ch2.thy                       definition  line 13291
+    i/Top1_Ch2.thy                       definition  line 13291
+  top1_D_metric_real_omega_0_iff:
+    i/Top1_Ch2.thy                       lemma  line 13467
+    i/Top1_Ch2.thy                       lemma  line 13467
+  top1_D_metric_real_omega_ball_in_product_topology:
+    i/Top1_Ch2.thy                       lemma  line 15889
+    i/Top1_Ch2.thy                       lemma  line 15889
+  top1_D_metric_real_omega_bdd_above:
+    i/Top1_Ch2.thy                       lemma  line 13315
+    i/Top1_Ch2.thy                       lemma  line 13315
+  top1_D_metric_real_omega_le_1:
+    i/Top1_Ch2.thy                       lemma  line 13359
+    i/Top1_Ch2.thy                       lemma  line 13359
+  top1_D_metric_real_omega_nonneg:
+    i/Top1_Ch2.thy                       lemma  line 13328
+    i/Top1_Ch2.thy                       lemma  line 13328
+  top1_D_metric_real_omega_refl:
+    i/Top1_Ch2.thy                       lemma  line 13381
+    i/Top1_Ch2.thy                       lemma  line 13381
+  top1_D_metric_real_omega_sym:
+    i/Top1_Ch2.thy                       lemma  line 13427
+    i/Top1_Ch2.thy                       lemma  line 13427
+  top1_D_metric_real_omega_term_le:
+    i/Top1_Ch2.thy                       lemma  line 13620
+    i/Top1_Ch2.thy                       lemma  line 13620
+  top1_D_metric_real_omega_term_le_1:
+    i/Top1_Ch2.thy                       lemma  line 13296
+    i/Top1_Ch2.thy                       lemma  line 13296
+  top1_D_metric_real_omega_triangle:
+    i/Top1_Ch2.thy                       lemma  line 13515
+    i/Top1_Ch2.thy                       lemma  line 13515
+  top1_dyadic:
+    i/Top1_Ch4.thy                       definition  line 6247
+    i/Top1_Ch4.thy                       definition  line 6247
+  top1_dyadic_lt_same_denom_iff:
+    i/Top1_Ch4.thy                       lemma  line 6760
+    i/Top1_Ch4.thy                       lemma  line 6760
+  top1_dyadic_pow2_scale:
+    i/Top1_Ch4.thy                       lemma  line 6755
+    i/Top1_Ch4.thy                       lemma  line 6755
+  top1_embedding_on:
+    i/Top1_Ch2.thy                       definition  line 7084
+    i/Top1_Ch2.thy                       definition  line 7084
+  top1_embedding_on_compact_inj:
+    i/Top1_Ch3.thy                       lemma  line 7047
+    i/Top1_Ch3.thy                       lemma  line 7047
+  top1_embedding_on_imp_continuous:
+    i/Top1_Ch4.thy                       lemma  line 17585
+    i/Top1_Ch4.thy                       lemma  line 17585
+  top1_embedding_on_imp_inj_on:
+    i/Top1_Ch4.thy                       lemma  line 17572
+    i/Top1_Ch4.thy                       lemma  line 17572
+  top1_embedding_on_restrict_codomain_subspace:
+    i/Top1_Ch4.thy                       lemma  line 10759
+    i/Top1_Ch4.thy                       lemma  line 10759
+  top1_embedding_on_restrict_domain:
+    i/Top1_Ch5_8.thy                     lemma  line 32221
+    i/Top1_Ch5_8.thy                     lemma  line 32221
+  top1_eq_on:
+    i/Top1_Ch5_8.thy                     definition  line 1467
+    i/Top1_Ch5_8.thy                     definition  line 1467
+  top1_equicontinuous_family_on:
+    i/Top1_Ch5_8.thy                     definition  line 14316
+    i/Top1_Ch5_8.thy                     definition  line 14316
+  top1_equivalent_coverings_on:
+    ac4/AlgTopCached4.thy                definition  line 1515
+    ac4/AlgTopCached4.thy                definition  line 1515
+  top1_equiv_compactification_via_on:
+    i/Top1_Ch5_8.thy                     definition  line 1470
+    i/Top1_Ch5_8.thy                     definition  line 1470
+  top1_euclidean_ball_open_in_square_metric_topology_real:
+    i/Top1_Ch2.thy                       lemma  line 14400
+    i/Top1_Ch2.thy                       lemma  line 14400
+  top1_euclidean_metric_real_on:
+    i/Top1_Ch2.thy                       definition  line 12953
+    i/Top1_Ch2.thy                       definition  line 12953
+  top1_euclidean_metric_real_on_coord_le:
+    i/Top1_Ch2.thy                       lemma  line 13956
+    i/Top1_Ch2.thy                       lemma  line 13956
+  top1_euclidean_metric_real_on_le_sqrt_card_mul_square:
+    i/Top1_Ch2.thy                       lemma  line 14110
+    i/Top1_Ch2.thy                       lemma  line 14110
+  top1_euclidean_metric_real_on_triangle:
+    i/Top1_Ch2.thy                       lemma  line 14179
+    i/Top1_Ch2.thy                       lemma  line 14179
+  top1_evenly_covered_on:
+    i/Top1_Ch9_13.thy                    definition  line 3907
+    i/Top1_Ch9_13.thy                    definition  line 3907
+  top1_evenly_covered_on_openin_on:
+    i/Top1_Ch9_13.thy                    lemma  line 3939
+    i/Top1_Ch9_13.thy                    lemma  line 3939
+  top1_extensional:
+    i/Top1_Ch2.thy                       definition  line 8487
+    i/Top1_Ch2.thy                       definition  line 8487
+  top1_fiber_partition_on:
+    i/Top1_Ch2.thy                       definition  line 20644
+    i/Top1_Ch2.thy                       definition  line 20644
+  top1_fiber_projection_on:
+    i/Top1_Ch2.thy                       definition  line 20648
+    i/Top1_Ch2.thy                       definition  line 20648
+  top1_finite_dimensional_on:
+    i/Top1_Ch5_8.thy                     definition  line 26331
+    i/Top1_Ch5_8.thy                     definition  line 26331
+  top1_FIP_maximal_on:
+    i/Top1_Ch5_8.thy                     definition  line 50
+    i/Top1_Ch5_8.thy                     definition  line 50
+  top1_FIP_on:
+    i/Top1_Ch5_8.thy                     definition  line 46
+    i/Top1_Ch5_8.thy                     definition  line 46
+  top1_first_countable_on:
+    i/Top1_Ch4.thy                       definition  line 443
+    i/Top1_Ch4.thy                       definition  line 443
+  top1_free_group_universal_prop:
+    ac/AlgTopCached.thy                  definition  line 6887
+    ac/AlgTopCached.thy                  definition  line 6887
+  top1_free_product_carrier:
+    ac/AlgTopCached.thy                  definition  line 9616
+    ac/AlgTopCached.thy                  definition  line 9616
+  top1_fst_continuous_R2_subspace:
+    i/Top1_Ch9_13.thy                    lemma  line 11485
+    i/Top1_Ch9_13.thy                    lemma  line 11485
+  top1_fundamental_group_carrier:
+    i/Top1_Ch9_13.thy                    definition  line 2410
+    i/Top1_Ch9_13.thy                    definition  line 2410
+  top1_fundamental_group_id:
+    i/Top1_Ch9_13.thy                    definition  line 2424
+    i/Top1_Ch9_13.thy                    definition  line 2424
+  top1_fundamental_group_image_hom:
+    i/Top1_Ch9_13.thy                    definition  line 2444
+    i/Top1_Ch9_13.thy                    definition  line 2444
+  top1_fundamental_group_induced_on:
+    i/Top1_Ch9_13.thy                    definition  line 2437
+    i/Top1_Ch9_13.thy                    definition  line 2437
+  top1_fundamental_group_induced_on_is_hom:
+    ac/AlgTopCached.thy                  lemma  line 5618
+    ac/AlgTopCached.thy                  lemma  line 5618
+  top1_fundamental_group_invg:
+    i/Top1_Ch9_13.thy                    definition  line 2430
+    i/Top1_Ch9_13.thy                    definition  line 2430
+  top1_fundamental_group_is_group:
+    ac/AlgTopCached.thy                  lemma  line 13825
+    ac/AlgTopCached.thy                  lemma  line 13825
+  top1_fundamental_group_mul:
+    i/Top1_Ch9_13.thy                    definition  line 2417
+    i/Top1_Ch9_13.thy                    definition  line 2417
+  top1_fundamental_group_mul_class:
+    i/Top1_Ch9_13.thy                    lemma  line 3333
+    i/Top1_Ch9_13.thy                    lemma  line 3333
+  top1_G_delta_on:
+    i/Top1_Ch5_8.thy                     definition  line 4420
+    i/Top1_Ch5_8.thy                     definition  line 4420
+  top1_general_position_in_Rpow:
+    i/Top1_Ch5_8.thy                     definition  line 27602
+    i/Top1_Ch5_8.thy                     definition  line 27602
+  top1_geometric_partial_sum_2_3:
+    i/Top1_Ch4.thy                       lemma  line 12631
+    i/Top1_Ch4.thy                       lemma  line 12631
+  top1_geometric_partial_sum_shift_bound:
+    i/Top1_Ch4.thy                       lemma  line 12647
+    i/Top1_Ch4.thy                       lemma  line 12647
+  top1_graph_vertex_set:
+    ac10/AlgTopCached10.thy              definition  line 21854
+    ac10/AlgTopCached10.thy              definition  line 21854
+  top1_group_commutator_on:
+    ac/AlgTopCached.thy                  definition  line 7024
+    ac/AlgTopCached.thy                  definition  line 7024
+  top1_group_coset_on:
+    ac/AlgTopCached.thy                  definition  line 6169
+    ac/AlgTopCached.thy                  definition  line 6169
+  top1_group_hom_on:
+    i/Top1_Ch9_13.thy                    definition  line 3130
+    i/Top1_Ch9_13.thy                    definition  line 3130
+  top1_group_image_on:
+    ac/AlgTopCached.thy                  definition  line 6163
+    ac/AlgTopCached.thy                  definition  line 6163
+  top1_group_iso_on:
+    i/Top1_Ch9_13.thy                    definition  line 3137
+    i/Top1_Ch9_13.thy                    definition  line 3137
+  top1_group_kernel_on:
+    ac/AlgTopCached.thy                  definition  line 6158
+    ac/AlgTopCached.thy                  definition  line 6158
+  top1_group_pow:
+    ac/AlgTopCached.thy                  fun  line 6183
+    ac/AlgTopCached.thy                  fun  line 6183
+  top1_group_presented_by_on:
+    ac/AlgTopCached.thy                  definition  line 6921
+    ac/AlgTopCached.thy                  definition  line 6921
+  top1_groups_isomorphic_on:
+    i/Top1_Ch9_13.thy                    definition  line 3143
+    i/Top1_Ch9_13.thy                    definition  line 3143
+  top1_groups_isomorphic_on_refl:
+    ac/AlgTopCached.thy                  lemma  line 6069
+    ac/AlgTopCached.thy                  lemma  line 6069
+  top1_groups_isomorphic_on_sym:
+    ac/AlgTopCached.thy                  lemma  line 6079
+    ac/AlgTopCached.thy                  lemma  line 6079
+  top1_group_word_product:
+    ac/AlgTopCached.thy                  fun  line 6190
+    ac/AlgTopCached.thy                  fun  line 6190
+  top1_homeomorphism_on:
+    i/Top1_Ch2.thy                       definition  line 7073
+    i/Top1_Ch2.thy                       definition  line 7073
+  top1_homeomorphism_on_imp_completely_regular_on:
+    i/Top1_Ch4.thy                       lemma  line 12087
+    i/Top1_Ch4.thy                       lemma  line 12087
+  top1_homeomorphism_on_imp_quotient_map_on:
+    i/Top1_Ch2.thy                       lemma  line 20391
+    i/Top1_Ch2.thy                       lemma  line 20391
+  top1_homotopic_on:
+    i/Top1_Ch9_13.thy                    definition  line 329
+    i/Top1_Ch9_13.thy                    definition  line 329
+  top1_homotopy_equivalence_on:
+    b0/AlgTop_JCT_Base0.thy              definition  line 4039
+    b0/AlgTop_JCT_Base0.thy              definition  line 4039
+  top1_homotopy_equivalence_on_sym:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4053
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4053
+  top1_I01:
+    i/Top1_Ch5_8.thy                     abbreviation  line 25035
+    i/Top1_Ch5_8.thy                     abbreviation  line 25035
+  top1_I01_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 25101
+    i/Top1_Ch5_8.thy                     lemma  line 25101
+  top1_I01_eq_Icc:
+    i/Top1_Ch5_8.thy                     lemma  line 25098
+    i/Top1_Ch5_8.thy                     lemma  line 25098
+  top1_I01_nonempty:
+    i/Top1_Ch5_8.thy                     lemma  line 25095
+    i/Top1_Ch5_8.thy                     lemma  line 25095
+  top1_image_on_cong:
+    i/Top1_Ch2.thy                       lemma  line 19501
+    i/Top1_Ch2.thy                       lemma  line 19501
+  top1_induced_homomorphism_on:
+    i/Top1_Ch9_13.thy                    definition  line 2481
+    i/Top1_Ch9_13.thy                    definition  line 2481
+  top1_induced_preserves_loop_equiv:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4304
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4304
+  top1_in_same_component_on:
+    i/Top1_Ch3.thy                       definition  line 2466
+    i/Top1_Ch3.thy                       definition  line 2466
+  top1_in_same_component_on_iff_component_mem:
+    i/Top1_Ch3.thy                       lemma  line 2484
+    i/Top1_Ch3.thy                       lemma  line 2484
+  top1_in_same_component_on_refl:
+    i/Top1_Ch3.thy                       lemma  line 2546
+    i/Top1_Ch3.thy                       lemma  line 2546
+  top1_in_same_component_on_sym:
+    i/Top1_Ch3.thy                       lemma  line 2561
+    i/Top1_Ch3.thy                       lemma  line 2561
+  top1_in_same_component_on_trans:
+    i/Top1_Ch3.thy                       lemma  line 2566
+    i/Top1_Ch3.thy                       lemma  line 2566
+  top1_in_same_path_component_on:
+    i/Top1_Ch3.thy                       definition  line 3057
+    i/Top1_Ch3.thy                       definition  line 3057
+  top1_in_same_path_component_on_refl:
+    i/Top1_Ch3.thy                       lemma  line 3983
+    i/Top1_Ch3.thy                       lemma  line 3983
+  top1_in_same_path_component_on_sym:
+    i/Top1_Ch3.thy                       lemma  line 3634
+    i/Top1_Ch3.thy                       lemma  line 3634
+  top1_in_same_path_component_on_trans:
+    i/Top1_Ch3.thy                       lemma  line 3648
+    i/Top1_Ch3.thy                       lemma  line 3648
+  top1_intersects_closure_on_open_imp_intersects:
+    i/Top1_Ch5_8.thy                     lemma  line 3041
+    i/Top1_Ch5_8.thy                     lemma  line 3041
+  top1_Inter_U49_dense:
+    i/Top1_Ch5_8.thy                     lemma  line 25894
+    i/Top1_Ch5_8.thy                     lemma  line 25894
+  top1_Inter_U49_nowhere_differentiable:
+    i/Top1_Ch5_8.thy                     lemma  line 25919
+    i/Top1_Ch5_8.thy                     lemma  line 25919
+  top1_Inter_U49_subset_C01:
+    i/Top1_Ch5_8.thy                     lemma  line 25079
+    i/Top1_Ch5_8.thy                     lemma  line 25079
+  top1_interval_encode:
+    i/Top1_Ch3.thy                       definition  line 9643
+    i/Top1_Ch3.thy                       definition  line 9643
+  top1_interval_encode_inj:
+    i/Top1_Ch3.thy                       lemma  line 9684
+    i/Top1_Ch3.thy                       lemma  line 9684
+  top1_interval_encode_mem_Icc:
+    i/Top1_Ch3.thy                       lemma  line 9646
+    i/Top1_Ch3.thy                       lemma  line 9646
+  top1_is_2_manifold_on:
+    wh/AlgTopWedgeHelpers.thy            definition  line 11
+    wh/AlgTopWedgeHelpers.thy            definition  line 11
+  top1_is_abelian_group_on:
+    i/Top1_Ch9_13.thy                    definition  line 3124
+    i/Top1_Ch9_13.thy                    definition  line 3124
+  top1_is_abelianization_of:
+    ac/AlgTopCached.thy                  definition  line 7044
+    ac/AlgTopCached.thy                  definition  line 7044
+  top1_is_arc_on:
+    b/AlgTop_JCT_Base.thy                definition  line 10034
+    b/AlgTop_JCT_Base.thy                definition  line 10034
+  top1_is_direct_sum_of_on:
+    ac/AlgTopCached.thy                  definition  line 7070
+    ac/AlgTopCached.thy                  definition  line 7070
+  top1_is_dunce_cap_on:
+    ac/AlgTopCached.thy                  definition  line 31382
+    ac/AlgTopCached.thy                  definition  line 31382
+  top1_is_free_abelian_group_full_on:
+    ac/AlgTopCached.thy                  definition  line 6900
+    ac/AlgTopCached.thy                  definition  line 6900
+  top1_is_free_group_full_on:
+    ac/AlgTopCached.thy                  definition  line 6870
+    ac/AlgTopCached.thy                  definition  line 6870
+  top1_is_free_product_on:
+    ac/AlgTopCached.thy                  definition  line 6943
+    ac/AlgTopCached.thy                  definition  line 6943
+  top1_is_graph_on:
+    ac3/AlgTopCached3.thy                definition  line 17
+    ac3/AlgTopCached3.thy                definition  line 17
+  top1_is_group_on:
+    i/Top1_Ch9_13.thy                    definition  line 3114
+    i/Top1_Ch9_13.thy                    definition  line 3114
+  top1_is_lifting_on:
+    i/Top1_Ch9_13.thy                    definition  line 3966
+    i/Top1_Ch9_13.thy                    definition  line 3966
+  top1_is_lifting_on_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 3972
+    i/Top1_Ch9_13.thy                    lemma  line 3972
+  top1_is_lifting_on_covers:
+    i/Top1_Ch9_13.thy                    lemma  line 3977
+    i/Top1_Ch9_13.thy                    lemma  line 3977
+  top1_is_loop_on:
+    i/Top1_Ch9_13.thy                    definition  line 2335
+    i/Top1_Ch9_13.thy                    definition  line 2335
+  top1_is_loop_on_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 2338
+    i/Top1_Ch9_13.thy                    lemma  line 2338
+  top1_is_loop_on_end:
+    i/Top1_Ch9_13.thy                    lemma  line 2346
+    i/Top1_Ch9_13.thy                    lemma  line 2346
+  top1_is_loop_on_start:
+    i/Top1_Ch9_13.thy                    lemma  line 2342
+    i/Top1_Ch9_13.thy                    lemma  line 2342
+  top1_is_m_fold_projective_on:
+    ac/AlgTopCached.thy                  definition  line 31401
+    ac/AlgTopCached.thy                  definition  line 31401
+  top1_is_net_on:
+    i/Top1_Ch5_8.thy                     definition  line 33406
+    i/Top1_Ch5_8.thy                     definition  line 33406
+  top1_is_n_fold_torus_on:
+    ac/AlgTopCached.thy                  definition  line 31375
+    ac/AlgTopCached.thy                  definition  line 31375
+  top1_isolated_point_on:
+    i/Top1_Ch3.thy                       definition  line 9260
+    i/Top1_Ch3.thy                       definition  line 9260
+  top1_isometry_on:
+    i/Top1_Ch5_8.thy                     definition  line 11705
+    i/Top1_Ch5_8.thy                     definition  line 11705
+  top1_is_path_on:
+    i/Top1_Ch3.thy                       definition  line 3052
+    i/Top1_Ch3.thy                       definition  line 3052
+  top1_is_path_on_append:
+    i/Top1_Ch3.thy                       lemma  line 3228
+    i/Top1_Ch3.thy                       lemma  line 3228
+  top1_is_path_on_point_in_path_component:
+    i/Top1_Ch3.thy                       lemma  line 3544
+    i/Top1_Ch3.thy                       lemma  line 3544
+  top1_is_path_on_reverse:
+    i/Top1_Ch3.thy                       lemma  line 3171
+    i/Top1_Ch3.thy                       lemma  line 3171
+  top1_is_polygonal_quotient_on:
+    ac/AlgTopCached.thy                  definition  line 31357
+    ac/AlgTopCached.thy                  definition  line 31357
+  top1_is_polygonal_quotient_strict_on:
+    wh/AlgTopWedgeHelpers.thy            definition  line 296
+    wh/AlgTopWedgeHelpers.thy            definition  line 296
+  top1_is_polygonal_region_on:
+    ac/AlgTopCached.thy                  definition  line 31242
+    ac/AlgTopCached.thy                  definition  line 31242
+  top1_is_reduced_word:
+    ac/AlgTopCached.thy                  fun  line 6200
+    ac/AlgTopCached.thy                  fun  line 6200
+  top1_is_retraction_on:
+    i/Top1_Ch9_13.thy                    definition  line 11432
+    i/Top1_Ch9_13.thy                    definition  line 11432
+  top1_is_retraction_on_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 11447
+    i/Top1_Ch9_13.thy                    lemma  line 11447
+  top1_is_retraction_on_fixes_A:
+    i/Top1_Ch9_13.thy                    lemma  line 11452
+    i/Top1_Ch9_13.thy                    lemma  line 11452
+  top1_is_retraction_on_subset:
+    i/Top1_Ch9_13.thy                    lemma  line 11442
+    i/Top1_Ch9_13.thy                    lemma  line 11442
+  top1_is_separation_on:
+    i/Top1_Ch3.thy                       definition  line 25
+    i/Top1_Ch3.thy                       definition  line 25
+  top1_is_subnet:
+    i/Top1_Ch5_8.thy                     definition  line 33609
+    i/Top1_Ch5_8.thy                     definition  line 33609
+  top1_is_surface_on:
+    wh/AlgTopWedgeHelpers.thy            definition  line 25
+    wh/AlgTopWedgeHelpers.thy            definition  line 25
+  top1_is_theta_space_on:
+    ac/AlgTopCached.thy                  definition  line 51945
+    ac/AlgTopCached.thy                  definition  line 51945
+  top1_is_torus_on:
+    ac/AlgTopCached.thy                  definition  line 31407
+    ac/AlgTopCached.thy                  definition  line 31407
+  top1_is_tree_on:
+    ac3/AlgTopCached3.thy                definition  line 77
+    ac3/AlgTopCached3.thy                definition  line 77
+  top1_is_triangulable_on:
+    ac/AlgTopCached.thy                  definition  line 31435
+    ac/AlgTopCached.thy                  definition  line 31435
+  top1_is_universal_covering_on:
+    ac4/AlgTopCached4.thy                definition  line 3196
+    ac4/AlgTopCached4.thy                definition  line 3196
+  top1_is_wedge_of_circles_on:
+    ac/AlgTopCached.thy                  definition  line 31222
+    ac/AlgTopCached.thy                  definition  line 31222
+  top1_lebesgue_number:
+    i/Top1_Ch5_8.thy                     lemma  line 27836
+    i/Top1_Ch5_8.thy                     lemma  line 27836
+  top1_left_cosets_on:
+    ac/AlgTopCached.thy                  definition  line 31485
+    ac/AlgTopCached.thy                  definition  line 31485
+  top1_limit_point_compact_on:
+    i/Top1_Ch3.thy                       definition  line 10363
+    i/Top1_Ch3.thy                       definition  line 10363
+  top1_lindelof_on:
+    i/Top1_Ch5_8.thy                     definition  line 6914
+    i/Top1_Ch5_8.thy                     definition  line 6914
+  top1_list_code:
+    i/Top1_Ch4.thy                       fun  line 352
+    i/Top1_Ch4.thy                       fun  line 352
+  top1_list_code_inj:
+    i/Top1_Ch4.thy                       lemma  line 356
+    i/Top1_Ch4.thy                       lemma  line 356
+  top1_locally_compact_on:
+    i/Top1_Ch3.thy                       definition  line 10676
+    i/Top1_Ch3.thy                       definition  line 10676
+  top1_locally_compact_on_of_homeomorphism_on:
+    i/Top1_Ch3.thy                       lemma  line 10749
+    i/Top1_Ch3.thy                       lemma  line 10749
+  top1_locally_compact_on_open_subspace_of_compact_hausdorff:
+    i/Top1_Ch3.thy                       lemma  line 11222
+    i/Top1_Ch3.thy                       lemma  line 11222
+  top1_locally_connected_at:
+    i/Top1_Ch3.thy                       definition  line 2820
+    i/Top1_Ch3.thy                       definition  line 2820
+  top1_locally_connected_on:
+    i/Top1_Ch3.thy                       definition  line 2826
+    i/Top1_Ch3.thy                       definition  line 2826
+  top1_locally_finite_family_on:
+    i/Top1_Ch5_8.thy                     definition  line 2831
+    i/Top1_Ch5_8.thy                     definition  line 2831
+  top1_locally_finite_family_on_closure_image:
+    i/Top1_Ch5_8.thy                     lemma  line 3074
+    i/Top1_Ch5_8.thy                     lemma  line 3074
+  top1_locally_finite_family_on_subset:
+    i/Top1_Ch5_8.thy                     lemma  line 2846
+    i/Top1_Ch5_8.thy                     lemma  line 2846
+  top1_locally_metrizable_on:
+    i/Top1_Ch5_8.thy                     definition  line 9337
+    i/Top1_Ch5_8.thy                     definition  line 9337
+  top1_locally_path_connected_at:
+    i/Top1_Ch3.thy                       definition  line 3070
+    i/Top1_Ch3.thy                       definition  line 3070
+  top1_locally_path_connected_on:
+    i/Top1_Ch3.thy                       definition  line 3076
+    i/Top1_Ch3.thy                       definition  line 3076
+  top1_loop_equiv_on:
+    i/Top1_Ch9_13.thy                    definition  line 2381
+    i/Top1_Ch9_13.thy                    definition  line 2381
+  top1_loop_equiv_on_refl:
+    i/Top1_Ch9_13.thy                    lemma  line 2387
+    i/Top1_Ch9_13.thy                    lemma  line 2387
+  top1_loop_equiv_on_sym:
+    i/Top1_Ch9_13.thy                    lemma  line 2394
+    i/Top1_Ch9_13.thy                    lemma  line 2394
+  top1_loop_equiv_on_trans:
+    i/Top1_Ch9_13.thy                    lemma  line 2400
+    i/Top1_Ch9_13.thy                    lemma  line 2400
+  top1_max_conn_comp:
+    ac3/AlgTopCached3.thy                definition  line 32
+    ac3/AlgTopCached3.thy                definition  line 32
+  top1_metric_ball_self_mem:
+    i/Top1_Ch5_8.thy                     lemma  line 22866
+    i/Top1_Ch5_8.thy                     lemma  line 22866
+  top1_metric_basis_is_basis_on:
+    i/Top1_Ch2.thy                       lemma  line 11638
+    i/Top1_Ch2.thy                       lemma  line 11638
+  top1_metric_basis_on:
+    i/Top1_Ch2.thy                       definition  line 11629
+    i/Top1_Ch2.thy                       definition  line 11629
+  top1_metric_bounded_subset_on:
+    i/Top1_Ch5_8.thy                     definition  line 14324
+    i/Top1_Ch5_8.thy                     definition  line 14324
+  top1_metric_closure_ball_imp_dist_le:
+    i/Top1_Ch5_8.thy                     lemma  line 22892
+    i/Top1_Ch5_8.thy                     lemma  line 22892
+  top1_metric_closure_ball_subset_ball:
+    i/Top1_Ch5_8.thy                     lemma  line 22994
+    i/Top1_Ch5_8.thy                     lemma  line 22994
+  top1_metric_closure_ball_subset_closed_ball:
+    i/Top1_Ch5_8.thy                     lemma  line 22972
+    i/Top1_Ch5_8.thy                     lemma  line 22972
+  top1_metric_compact_bounded:
+    i/Top1_Ch3.thy                       lemma  line 8638
+    i/Top1_Ch3.thy                       lemma  line 8638
+  top1_metric_compact_bounded_from_point:
+    i/Top1_Ch3.thy                       lemma  line 8529
+    i/Top1_Ch3.thy                       lemma  line 8529
+  top1_metric_diameter_closure_ball_le:
+    i/Top1_Ch5_8.thy                     lemma  line 23018
+    i/Top1_Ch5_8.thy                     lemma  line 23018
+  top1_metric_diam_on:
+    i/Top1_Ch5_8.thy                     definition  line 27755
+    i/Top1_Ch5_8.thy                     definition  line 27755
+  top1_metric_dist_set_bdd_above:
+    i/Top1_Ch5_8.thy                     lemma  line 23757
+    i/Top1_Ch5_8.thy                     lemma  line 23757
+  top1_metric_nonneg:
+    i/Top1_Ch2.thy                       lemma  line 11606
+    i/Top1_Ch2.thy                       lemma  line 11606
+  top1_metric_on:
+    i/Top1_Ch2.thy                       definition  line 11597
+    i/Top1_Ch2.thy                       definition  line 11597
+  top1_metric_open_contains_ball:
+    i/Top1_Ch2.thy                       lemma  line 11959
+    i/Top1_Ch2.thy                       lemma  line 11959
+  top1_metric_self_zero:
+    i/Top1_Ch2.thy                       lemma  line 11622
+    i/Top1_Ch2.thy                       lemma  line 11622
+  top1_metric_sym:
+    i/Top1_Ch2.thy                       lemma  line 11614
+    i/Top1_Ch2.thy                       lemma  line 11614
+  top1_metric_topology_on:
+    i/Top1_Ch2.thy                       definition  line 11632
+    i/Top1_Ch2.thy                       definition  line 11632
+  top1_metric_topology_on_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 11766
+    i/Top1_Ch2.thy                       lemma  line 11766
+  top1_metric_triangle:
+    i/Top1_Ch2.thy                       lemma  line 11618
+    i/Top1_Ch2.thy                       lemma  line 11618
+  top1_metric_zero_iff:
+    i/Top1_Ch2.thy                       lemma  line 11610
+    i/Top1_Ch2.thy                       lemma  line 11610
+  top1_metrizable_on:
+    i/Top1_Ch2.thy                       definition  line 11635
+    i/Top1_Ch2.thy                       definition  line 11635
+  top1_min_add_le:
+    i/Top1_Ch2.thy                       lemma  line 12279
+    i/Top1_Ch2.thy                       lemma  line 12279
+  top1_min_mono_1:
+    i/Top1_Ch2.thy                       lemma  line 12255
+    i/Top1_Ch2.thy                       lemma  line 12255
+  top1_m_manifold_on:
+    i/Top1_Ch4.thy                       definition  line 17564
+    i/Top1_Ch4.thy                       definition  line 17564
+  top1_m_manifold_on_local_chart_inj_cont:
+    i/Top1_Ch4.thy                       lemma  line 17694
+    i/Top1_Ch4.thy                       lemma  line 17694
+  top1_m_projective_scheme:
+    ac/AlgTopCached.thy                  definition  line 31370
+    ac/AlgTopCached.thy                  definition  line 31370
+  top1_mult_continuous_R2:
+    b/AlgTop_JCT_Base.thy                lemma  line 5929
+    b/AlgTop_JCT_Base.thy                lemma  line 5929
+  top1_nbhd_of_set:
+    i/Top1_Ch5_8.thy                     definition  line 3811
+    i/Top1_Ch5_8.thy                     definition  line 3811
+  top1_nbhd_of_set_contains:
+    i/Top1_Ch5_8.thy                     lemma  line 3840
+    i/Top1_Ch5_8.thy                     lemma  line 3840
+  top1_nbhd_of_set_open:
+    i/Top1_Ch5_8.thy                     lemma  line 3815
+    i/Top1_Ch5_8.thy                     lemma  line 3815
+  top1_nbhd_of_set_sub:
+    i/Top1_Ch5_8.thy                     lemma  line 3834
+    i/Top1_Ch5_8.thy                     lemma  line 3834
+  top1_nested_subset_le:
+    i/Top1_Ch3.thy                       lemma  line 9935
+    i/Top1_Ch3.thy                       lemma  line 9935
+  top1_net_accumulation_point:
+    i/Top1_Ch5_8.thy                     definition  line 33419
+    i/Top1_Ch5_8.thy                     definition  line 33419
+  top1_net_converges_to_on:
+    i/Top1_Ch5_8.thy                     definition  line 33411
+    i/Top1_Ch5_8.thy                     definition  line 33411
+  top1_normalizer_on:
+    ac/AlgTopCached.thy                  definition  line 7036
+    ac/AlgTopCached.thy                  definition  line 7036
+  top1_normal_on:
+    i/Top1_Ch4.thy                       definition  line 3232
+    i/Top1_Ch4.thy                       definition  line 3232
+  top1_normal_subgroup_generated_on:
+    ac/AlgTopCached.thy                  definition  line 6775
+    ac/AlgTopCached.thy                  definition  line 6775
+  top1_normal_subgroup_on:
+    ac/AlgTopCached.thy                  definition  line 6150
+    ac/AlgTopCached.thy                  definition  line 6150
+  top1_not_countable_UNIV_nat_set:
+    i/Top1_Ch3.thy                       lemma  line 9268
+    i/Top1_Ch3.thy                       lemma  line 9268
+  top1_n_torus_scheme:
+    ac/AlgTopCached.thy                  definition  line 31364
+    ac/AlgTopCached.thy                  definition  line 31364
+  top1_nulhomotopic_on:
+    i/Top1_Ch9_13.thy                    definition  line 350
+    i/Top1_Ch9_13.thy                    definition  line 350
+  top1_one_point_compactification_on:
+    i/Top1_Ch3.thy                       definition  line 11301
+    i/Top1_Ch3.thy                       definition  line 11301
+  top1_open_covering_on:
+    i/Top1_Ch5_8.thy                     definition  line 2843
+    i/Top1_Ch5_8.thy                     definition  line 2843
+  top1_open_map_on:
+    i/Top1_Ch2.thy                       definition  line 18803
+    i/Top1_Ch2.thy                       definition  line 18803
+  top1_open_of_local_subsets:
+    i/Top1_Ch2.thy                       lemma  line 89
+    i/Top1_Ch2.thy                       lemma  line 89
+  top1_open_set_from_local_opens:
+    i/Top1_Ch2.thy                       lemma  line 2575
+    i/Top1_Ch2.thy                       lemma  line 2575
+  top1_open_sets:
+    i/Top1_Ch3.thy                       definition  line 1929
+    i/Top1_Ch3.thy                       definition  line 1929
+  top1_open_sets_is_topology_on_UNIV:
+    i/Top1_Ch3.thy                       lemma  line 1932
+    i/Top1_Ch3.thy                       lemma  line 1932
+  top1_open_sets_sub_order_topology_real:
+    ac/AlgTopCached.thy                  lemma  line 55
+    ac/AlgTopCached.thy                  lemma  line 55
+  top1_pair_code:
+    i/Top1_Ch4.thy                       definition  line 126
+    i/Top1_Ch4.thy                       definition  line 126
+  top1_pair_code_inj:
+    i/Top1_Ch4.thy                       lemma  line 129
+    i/Top1_Ch4.thy                       lemma  line 129
+  top1_paracompact_on:
+    i/Top1_Ch5_8.thy                     definition  line 6909
+    i/Top1_Ch5_8.thy                     definition  line 6909
+  top1_partition_of_unity_dominated_family_on:
+    i/Top1_Ch5_8.thy                     definition  line 8631
+    i/Top1_Ch5_8.thy                     definition  line 8631
+  top1_partition_of_unity_dominated_on:
+    i/Top1_Ch4.thy                       definition  line 16424
+    i/Top1_Ch4.thy                       definition  line 16424
+  top1_partition_of_unity_dominated_on_exists_ne0:
+    i/Top1_Ch4.thy                       lemma  line 17863
+    i/Top1_Ch4.thy                       lemma  line 17863
+  top1_path_component_of_on:
+    i/Top1_Ch3.thy                       definition  line 3060
+    i/Top1_Ch3.thy                       definition  line 3060
+  top1_path_component_of_on_complement_open_if_locally_path_connected:
+    i/Top1_Ch3.thy                       lemma  line 4368
+    i/Top1_Ch3.thy                       lemma  line 4368
+  top1_path_component_of_on_eq_of_mem:
+    i/Top1_Ch3.thy                       lemma  line 4016
+    i/Top1_Ch3.thy                       lemma  line 4016
+  top1_path_component_of_on_in_components:
+    i/Top1_Ch3.thy                       lemma  line 4010
+    i/Top1_Ch3.thy                       lemma  line 4010
+  top1_path_component_of_on_open_if_locally_path_connected:
+    i/Top1_Ch3.thy                       lemma  line 4291
+    i/Top1_Ch3.thy                       lemma  line 4291
+  top1_path_component_of_on_path_connected:
+    i/Top1_Ch3.thy                       lemma  line 4050
+    i/Top1_Ch3.thy                       lemma  line 4050
+  top1_path_component_of_on_self_mem:
+    i/Top1_Ch3.thy                       lemma  line 4002
+    i/Top1_Ch3.thy                       lemma  line 4002
+  top1_path_component_of_on_subset:
+    i/Top1_Ch3.thy                       lemma  line 3610
+    i/Top1_Ch3.thy                       lemma  line 3610
+  top1_path_components_on:
+    i/Top1_Ch3.thy                       definition  line 3063
+    i/Top1_Ch3.thy                       definition  line 3063
   top1_path_connected_continuous_image:
     at/AlgTopChain.thy                   lemma  line 2430
     pd/PolygonDisk.thy                   lemma  line 400
+    at/AlgTopChain.thy                   lemma  line 2430
+    pd/PolygonDisk.thy                   lemma  line 400
+  top1_path_connected_imp_connected:
+    b/AlgTop_JCT_Base.thy                lemma  line 5304
+    b/AlgTop_JCT_Base.thy                lemma  line 5304
+  top1_path_connected_on:
+    i/Top1_Ch3.thy                       definition  line 3066
+    i/Top1_Ch3.thy                       definition  line 3066
+  top1_path_connected_subspace_subset_path_component_of:
+    i/Top1_Ch3.thy                       lemma  line 4063
+    i/Top1_Ch3.thy                       lemma  line 4063
+  top1_path_homotopic_on:
+    i/Top1_Ch9_13.thy                    definition  line 340
+    i/Top1_Ch9_13.thy                    definition  line 340
+  top1_path_power_0:
+    a0/AlgTop0.thy                       lemma  line 1384
+    a0/AlgTop0.thy                       lemma  line 1384
+  top1_path_power_is_loop:
+    a0/AlgTop0.thy                       lemma  line 1409
+    a0/AlgTop0.thy                       lemma  line 1409
+  top1_path_power_is_path:
+    a0/AlgTop0.thy                       lemma  line 1392
+    a0/AlgTop0.thy                       lemma  line 1392
+  top1_path_power_Suc:
+    a0/AlgTop0.thy                       lemma  line 1388
+    a0/AlgTop0.thy                       lemma  line 1388
+  top1_path_product:
+    i/Top1_Ch9_13.thy                    definition  line 1188
+    i/Top1_Ch9_13.thy                    definition  line 1188
+  top1_path_product_at_end:
+    i/Top1_Ch9_13.thy                    lemma  line 1203
+    i/Top1_Ch9_13.thy                    lemma  line 1203
+  top1_path_product_at_half:
+    i/Top1_Ch9_13.thy                    lemma  line 1207
+    i/Top1_Ch9_13.thy                    lemma  line 1207
+  top1_path_product_at_start:
+    i/Top1_Ch9_13.thy                    lemma  line 1199
+    i/Top1_Ch9_13.thy                    lemma  line 1199
+  top1_path_product_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 1273
+    i/Top1_Ch9_13.thy                    lemma  line 1273
+  top1_path_product_is_loop:
+    i/Top1_Ch9_13.thy                    lemma  line 2356
+    i/Top1_Ch9_13.thy                    lemma  line 2356
+  top1_path_product_is_path:
+    i/Top1_Ch9_13.thy                    lemma  line 1438
+    i/Top1_Ch9_13.thy                    lemma  line 1438
+  top1_path_reverse:
+    i/Top1_Ch9_13.thy                    definition  line 1192
+    i/Top1_Ch9_13.thy                    definition  line 1192
+  top1_path_reverse_at_end:
+    i/Top1_Ch9_13.thy                    lemma  line 1215
+    i/Top1_Ch9_13.thy                    lemma  line 1215
+  top1_path_reverse_at_start:
+    i/Top1_Ch9_13.thy                    lemma  line 1211
+    i/Top1_Ch9_13.thy                    lemma  line 1211
+  top1_path_reverse_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 1230
+    i/Top1_Ch9_13.thy                    lemma  line 1230
+  top1_path_reverse_is_loop:
+    i/Top1_Ch9_13.thy                    lemma  line 2369
+    i/Top1_Ch9_13.thy                    lemma  line 2369
+  top1_path_reverse_is_path:
+    i/Top1_Ch9_13.thy                    lemma  line 1242
+    i/Top1_Ch9_13.thy                    lemma  line 1242
+  top1_path_reverse_twice:
+    i/Top1_Ch9_13.thy                    lemma  line 1219
+    i/Top1_Ch9_13.thy                    lemma  line 1219
+  top1_Pi:
+    i/Top1_Ch2.thy                       definition  line 8490
+    i/Top1_Ch2.thy                       definition  line 8490
+  top1_PiE:
+    i/Top1_Ch2.thy                       definition  line 8493
+    i/Top1_Ch2.thy                       definition  line 8493
+  top1_PiE_as_Inter_cylinders:
+    i/Top1_Ch5_8.thy                     lemma  line 881
+    i/Top1_Ch5_8.thy                     lemma  line 881
+  top1_PiE_cong_on:
+    i/Top1_Ch2.thy                       lemma  line 8570
+    i/Top1_Ch2.thy                       lemma  line 8570
+  top1_PiE_const_val:
+    i/Top1_Ch5_8.thy                     lemma  line 15548
+    i/Top1_Ch5_8.thy                     lemma  line 15548
+  top1_PiE_fun_eqI:
+    i/Top1_Ch2.thy                       lemma  line 8929
+    i/Top1_Ch2.thy                       lemma  line 8929
+  top1_PiE_iff:
+    i/Top1_Ch2.thy                       lemma  line 8496
+    i/Top1_Ch2.thy                       lemma  line 8496
+  top1_PiE_Int:
+    i/Top1_Ch2.thy                       lemma  line 8562
+    i/Top1_Ch2.thy                       lemma  line 8562
+  top1_PiE_mono:
+    i/Top1_Ch2.thy                       lemma  line 8541
+    i/Top1_Ch2.thy                       lemma  line 8541
+  top1_PiE_neq_imp_coord_neq:
+    i/Top1_Ch2.thy                       lemma  line 8956
+    i/Top1_Ch2.thy                       lemma  line 8956
+  top1_pointwise_bounded_family_on:
+    i/Top1_Ch5_8.thy                     definition  line 14327
+    i/Top1_Ch5_8.thy                     definition  line 14327
+  top1_pointwise_topology_on:
+    i/Top1_Ch5_8.thy                     definition  line 15553
+    i/Top1_Ch5_8.thy                     definition  line 15553
+  top1_preimage_on_cong:
+    i/Top1_Ch2.thy                       lemma  line 19470
+    i/Top1_Ch2.thy                       lemma  line 19470
+  top1_product_basis_eq_box_basis_if_finite:
+    i/Top1_Ch2.thy                       lemma  line 8868
+    i/Top1_Ch2.thy                       lemma  line 8868
+  top1_product_basis_is_basis_on:
+    i/Top1_Ch2.thy                       lemma  line 8700
+    i/Top1_Ch2.thy                       lemma  line 8700
+  top1_product_basis_on:
+    i/Top1_Ch2.thy                       definition  line 8527
+    i/Top1_Ch2.thy                       definition  line 8527
+  top1_product_cylinder_eq:
+    i/Top1_Ch2.thy                       lemma  line 9046
+    i/Top1_Ch2.thy                       lemma  line 9046
+  top1_product_cylinder_in_basis:
+    i/Top1_Ch2.thy                       lemma  line 8971
+    i/Top1_Ch2.thy                       lemma  line 8971
+  top1_product_open_contains_rect:
+    i/Top1_Ch3.thy                       lemma  line 903
+    i/Top1_Ch3.thy                       lemma  line 903
+  top1_product_topology_eq_box_topology_if_finite:
+    i/Top1_Ch2.thy                       lemma  line 8888
+    i/Top1_Ch2.thy                       lemma  line 8888
+  top1_product_topology_ne_uniform_metric_topology_real:
+    i/Top1_Ch2.thy                       lemma  line 15400
+    i/Top1_Ch2.thy                       lemma  line 15400
+  top1_product_topology_on:
+    i/Top1_Ch2.thy                       definition  line 8535
+    i/Top1_Ch2.thy                       definition  line 8535
+  top1_product_topology_on_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 8822
+    i/Top1_Ch2.thy                       lemma  line 8822
+  top1_product_topology_on_unit_interval_eq_subspace:
+    i/Top1_Ch4.thy                       lemma  line 10797
+    i/Top1_Ch4.thy                       lemma  line 10797
+  top1_product_topology_subset_D_metric_topology_real_omega:
+    i/Top1_Ch2.thy                       lemma  line 16140
+    i/Top1_Ch2.thy                       lemma  line 16140
+  top1_product_topology_subset_uniform_metric_topology_real:
+    i/Top1_Ch2.thy                       lemma  line 15068
+    i/Top1_Ch2.thy                       lemma  line 15068
+  top1_quotient_group_carrier_on:
+    ac/AlgTopCached.thy                  definition  line 6173
+    ac/AlgTopCached.thy                  definition  line 6173
+  top1_quotient_group_mul_on:
+    ac/AlgTopCached.thy                  definition  line 6178
+    ac/AlgTopCached.thy                  definition  line 6178
+  top1_quotient_map_closed_iff_preimage_closed:
+    i/Top1_Ch2.thy                       lemma  line 18905
+    i/Top1_Ch2.thy                       lemma  line 18905
+  top1_quotient_map_on:
+    i/Top1_Ch2.thy                       definition  line 18788
+    i/Top1_Ch2.thy                       definition  line 18788
+  top1_quotient_map_on_comp:
+    i/Top1_Ch2.thy                       lemma  line 19668
+    i/Top1_Ch2.thy                       lemma  line 19668
+  top1_quotient_map_on_cong:
+    i/Top1_Ch2.thy                       lemma  line 19592
+    i/Top1_Ch2.thy                       lemma  line 19592
+  top1_quotient_map_on_from_quotient_topology_by_map_on:
+    i/Top1_Ch2.thy                       lemma  line 20356
+    i/Top1_Ch2.thy                       lemma  line 20356
+  top1_quotient_map_open_iff_preimage_open:
+    i/Top1_Ch2.thy                       lemma  line 18998
+    i/Top1_Ch2.thy                       lemma  line 18998
+  top1_quotient_of_scheme_on:
+    ac/AlgTopCached.thy                  definition  line 31275
+    ac/AlgTopCached.thy                  definition  line 31275
+  top1_quotient_topology_by_map_on:
+    i/Top1_Ch2.thy                       definition  line 20121
+    i/Top1_Ch2.thy                       definition  line 20121
+  top1_quotient_topology_by_map_on_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 20127
+    i/Top1_Ch2.thy                       lemma  line 20127
+  top1_R2_is_hausdorff:
+    b/AlgTop_JCT_Base.thy                lemma  line 198
+    b/AlgTop_JCT_Base.thy                lemma  line 198
+  top1_R2_minus_0_is_topology_on_strict:
+    b/AlgTop_JCT_Base.thy                lemma  line 242
+    b/AlgTop_JCT_Base.thy                lemma  line 242
+  top1_R3_is_hausdorff:
+    b/AlgTop_JCT_Base.thy                lemma  line 217
+    b/AlgTop_JCT_Base.thy                lemma  line 217
+  top1_real_bounded_metric:
+    i/Top1_Ch2.thy                       definition  line 12251
+    i/Top1_Ch2.thy                       definition  line 12251
+  top1_real_bounded_metric_ball_in_order_topology:
+    i/Top1_Ch2.thy                       lemma  line 12423
+    i/Top1_Ch2.thy                       lemma  line 12423
+  top1_real_bounded_metric_lt_iff_abs_lt:
+    i/Top1_Ch2.thy                       lemma  line 12521
+    i/Top1_Ch2.thy                       lemma  line 12521
+  top1_real_bounded_metric_metric_on:
+    i/Top1_Ch2.thy                       lemma  line 12374
+    i/Top1_Ch2.thy                       lemma  line 12374
+  top1_real_bounded_metric_triangle:
+    i/Top1_Ch2.thy                       lemma  line 12344
+    i/Top1_Ch2.thy                       lemma  line 12344
+  top1_refines:
+    i/Top1_Ch5_8.thy                     definition  line 2840
+    i/Top1_Ch5_8.thy                     definition  line 2840
+  top1_regular_on:
+    i/Top1_Ch4.thy                       definition  line 2418
+    i/Top1_Ch4.thy                       definition  line 2418
+  top1_retract_of_on:
+    i/Top1_Ch9_13.thy                    definition  line 11439
+    i/Top1_Ch9_13.thy                    definition  line 11439
+  top1_retract_self:
+    i/Top1_Ch9_13.thy                    lemma  line 11458
+    i/Top1_Ch9_13.thy                    lemma  line 11458
+  top1_rho49:
+    i/Top1_Ch5_8.thy                     definition  line 25062
+    i/Top1_Ch5_8.thy                     definition  line 25062
+  top1_rho49_bdd_above:
+    i/Top1_Ch5_8.thy                     lemma  line 25104
+    i/Top1_Ch5_8.thy                     lemma  line 25104
+  top1_rho49_is_metric:
+    i/Top1_Ch5_8.thy                     lemma  line 25212
+    i/Top1_Ch5_8.thy                     lemma  line 25212
+  top1_rho49_nonneg:
+    i/Top1_Ch5_8.thy                     lemma  line 25123
+    i/Top1_Ch5_8.thy                     lemma  line 25123
+  top1_rho49_pointwise_bound:
+    i/Top1_Ch5_8.thy                     lemma  line 25219
+    i/Top1_Ch5_8.thy                     lemma  line 25219
+  top1_rho49_self:
+    i/Top1_Ch5_8.thy                     lemma  line 25135
+    i/Top1_Ch5_8.thy                     lemma  line 25135
+  top1_rho49_sym:
+    i/Top1_Ch5_8.thy                     lemma  line 25183
+    i/Top1_Ch5_8.thy                     lemma  line 25183
+  top1_rho49_triangle:
+    i/Top1_Ch5_8.thy                     lemma  line 25192
+    i/Top1_Ch5_8.thy                     lemma  line 25192
+  top1_rho49_zero_iff:
+    i/Top1_Ch5_8.thy                     lemma  line 25159
+    i/Top1_Ch5_8.thy                     lemma  line 25159
+  top1_rho49_zero_imp_eq_on:
+    i/Top1_Ch5_8.thy                     lemma  line 25144
+    i/Top1_Ch5_8.thy                     lemma  line 25144
+  top1_right_coset_on:
+    ac11/AlgTopCached11.thy              definition  line 6
+    ac11/AlgTopCached11.thy              definition  line 6
+  top1_right_cosets_on:
+    ac11/AlgTopCached11.thy              definition  line 9
+    ac11/AlgTopCached11.thy              definition  line 9
+  top1_R_is_hausdorff:
+    b/AlgTop_JCT_Base.thy                lemma  line 161
+    b/AlgTop_JCT_Base.thy                lemma  line 161
+  top1_R_path_connected:
+    i/Top1_Ch9_13.thy                    lemma  line 10656
+    i/Top1_Ch9_13.thy                    lemma  line 10656
+  top1_Rpow_is_hausdorff_on:
+    i/Top1_Ch4.thy                       lemma  line 17552
+    i/Top1_Ch4.thy                       lemma  line 17552
+  top1_Rpow_is_topology_on:
+    i/Top1_Ch4.thy                       lemma  line 17918
+    i/Top1_Ch4.thy                       lemma  line 17918
+  top1_Rpow_set:
+    i/Top1_Ch4.thy                       definition  line 17545
+    i/Top1_Ch4.thy                       definition  line 17545
+  top1_Rpow_set_ext:
+    i/Top1_Ch4.thy                       lemma  line 17931
+    i/Top1_Ch4.thy                       lemma  line 17931
+  top1_Rpow_sq_metric:
+    i/Top1_Ch5_8.thy                     definition  line 28094
+    i/Top1_Ch5_8.thy                     definition  line 28094
+  top1_Rpow_sq_metric_is_complete:
+    i/Top1_Ch5_8.thy                     lemma  line 28207
+    i/Top1_Ch5_8.thy                     lemma  line 28207
+  top1_Rpow_sq_metric_is_metric:
+    i/Top1_Ch5_8.thy                     lemma  line 28183
+    i/Top1_Ch5_8.thy                     lemma  line 28183
+  top1_Rpow_sup_dist:
+    i/Top1_Ch5_8.thy                     definition  line 27594
+    i/Top1_Ch5_8.thy                     definition  line 27594
+  top1_Rpow_topology:
+    i/Top1_Ch4.thy                       definition  line 17548
+    i/Top1_Ch4.thy                       definition  line 17548
+  top1_Rpow_topology_eq_sq_metric:
+    i/Top1_Ch5_8.thy                     lemma  line 28328
+    i/Top1_Ch5_8.thy                     lemma  line 28328
+  top1_R_simply_connected:
+    i/Top1_Ch9_13.thy                    lemma  line 10728
+    i/Top1_Ch9_13.thy                    lemma  line 10728
+  top1_R_to_S1:
+    i/Top1_Ch9_13.thy                    definition  line 3991
+    i/Top1_Ch9_13.thy                    definition  line 3991
+  top1_R_to_S1_fiber_is_Z:
+    i/Top1_Ch9_13.thy                    lemma  line 10806
+    i/Top1_Ch9_13.thy                    lemma  line 10806
   top1_R_to_S1_int_shift:
     i/Top1_Ch9_13.thy                    lemma  line 10829
     i/Top1_Ch9_13.thy                    lemma  line 10843
+    i/Top1_Ch9_13.thy                    lemma  line 10829
+    i/Top1_Ch9_13.thy                    lemma  line 10843
+  top1_R_to_S1_int_shift_early:
+    i/Top1_Ch9_13.thy                    lemma  line 4025
+    i/Top1_Ch9_13.thy                    lemma  line 4025
+  top1_R_to_S1_translated_lift_end:
+    i/Top1_Ch9_13.thy                    lemma  line 10868
+    i/Top1_Ch9_13.thy                    lemma  line 10868
+  top1_R_to_S1_translated_lift_is_lift:
+    i/Top1_Ch9_13.thy                    lemma  line 10855
+    i/Top1_Ch9_13.thy                    lemma  line 10855
+  top1_R_to_S1_translated_lift_start:
+    i/Top1_Ch9_13.thy                    lemma  line 10862
+    i/Top1_Ch9_13.thy                    lemma  line 10862
+  top1_R_to_S1_translate_lift:
+    i/Top1_Ch9_13.thy                    lemma  line 10849
+    i/Top1_Ch9_13.thy                    lemma  line 10849
+  top1_S1:
+    i/Top1_Ch9_13.thy                    definition  line 3983
+    i/Top1_Ch9_13.thy                    definition  line 3983
+  top1_S1_arc_E:
+    i/Top1_Ch9_13.thy                    definition  line 4002
+    i/Top1_Ch9_13.thy                    definition  line 4002
+  top1_S1_arc_E_preimage:
+    i/Top1_Ch9_13.thy                    lemma  line 4036
+    i/Top1_Ch9_13.thy                    lemma  line 4036
+  top1_S1_arc_N:
+    i/Top1_Ch9_13.thy                    definition  line 4006
+    i/Top1_Ch9_13.thy                    definition  line 4006
+  top1_S1_arc_S:
+    i/Top1_Ch9_13.thy                    definition  line 4008
+    i/Top1_Ch9_13.thy                    definition  line 4008
+  top1_S1_arcs_cover:
+    i/Top1_Ch9_13.thy                    lemma  line 4011
+    i/Top1_Ch9_13.thy                    lemma  line 4011
+  top1_S1_arc_W:
+    i/Top1_Ch9_13.thy                    definition  line 4004
+    i/Top1_Ch9_13.thy                    definition  line 4004
+  top1_S1_complex:
+    i/Top1_Ch9_13.thy                    definition  line 14766
+    i/Top1_Ch9_13.thy                    definition  line 14766
+  top1_S1_complex_topology:
+    i/Top1_Ch9_13.thy                    definition  line 14769
+    i/Top1_Ch9_13.thy                    definition  line 14769
+  top1_S1_fundamental_group_nontrivial:
+    i/Top1_Ch9_13.thy                    lemma  line 11663
+    i/Top1_Ch9_13.thy                    lemma  line 11663
+  top1_S1_is_hausdorff:
+    b/AlgTop_JCT_Base.thy                lemma  line 208
+    b/AlgTop_JCT_Base.thy                lemma  line 208
+  top1_S1_is_topology_on_strict:
+    b/AlgTop_JCT_Base.thy                lemma  line 231
+    b/AlgTop_JCT_Base.thy                lemma  line 231
+  top1_S1_topology:
+    i/Top1_Ch9_13.thy                    definition  line 3986
+    i/Top1_Ch9_13.thy                    definition  line 3986
+  top1_S2:
+    b/AlgTop_JCT_Base.thy                definition  line 3728
+    b/AlgTop_JCT_Base.thy                definition  line 3728
+  top1_S2_is_hausdorff:
+    b/AlgTop_JCT_Base.thy                lemma  line 3737
+    b/AlgTop_JCT_Base.thy                lemma  line 3737
+  top1_S2_is_topology_on_strict:
+    b/AlgTop_JCT_Base.thy                lemma  line 3746
+    b/AlgTop_JCT_Base.thy                lemma  line 3746
+  top1_S2_topology:
+    b/AlgTop_JCT_Base.thy                definition  line 3731
+    b/AlgTop_JCT_Base.thy                definition  line 3731
+  top1_same_homotopy_type_on:
+    b0/AlgTop_JCT_Base0.thy              definition  line 4048
+    b0/AlgTop_JCT_Base0.thy              definition  line 4048
+  top1_same_homotopy_type_on_sym:
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4059
+    b0/AlgTop_JCT_Base0.thy              lemma  line 4059
+  top1_same_homotopy_type_strict:
+    b0/AlgTop_JCT_Base0.thy              corollary  line 5560
+    b0/AlgTop_JCT_Base0.thy              corollary  line 5560
+  top1_saturated_image_inter_eq:
+    i/Top1_Ch2.thy                       lemma  line 18874
+    i/Top1_Ch2.thy                       lemma  line 18874
+  top1_saturated_preimage_image_eq:
+    i/Top1_Ch2.thy                       lemma  line 19016
+    i/Top1_Ch2.thy                       lemma  line 19016
+  top1_saturated_preimage_subset:
+    i/Top1_Ch2.thy                       lemma  line 18813
+    i/Top1_Ch2.thy                       lemma  line 18813
+  top1_saturated_restrict_preimage_eq:
+    i/Top1_Ch2.thy                       lemma  line 18837
+    i/Top1_Ch2.thy                       lemma  line 18837
+  top1_saturated_with_respect_to_on:
+    i/Top1_Ch2.thy                       definition  line 18798
+    i/Top1_Ch2.thy                       definition  line 18798
+  top1_SC_F:
+    i/Top1_Ch5_8.thy                     definition  line 20779
+    i/Top1_Ch5_8.thy                     definition  line 20779
+  top1_SC_J:
+    i/Top1_Ch5_8.thy                     definition  line 20775
+    i/Top1_Ch5_8.thy                     definition  line 20775
+  top1_SC_TY:
+    i/Top1_Ch5_8.thy                     definition  line 20793
+    i/Top1_Ch5_8.thy                     definition  line 20793
+  top1_SC_TZ:
+    i/Top1_Ch5_8.thy                     definition  line 20785
+    i/Top1_Ch5_8.thy                     definition  line 20785
+  top1_SC_Y:
+    i/Top1_Ch5_8.thy                     definition  line 20789
+    i/Top1_Ch5_8.thy                     definition  line 20789
+  top1_SC_Z:
+    i/Top1_Ch5_8.thy                     definition  line 20782
+    i/Top1_Ch5_8.thy                     definition  line 20782
+  top1_second_countable_on:
+    i/Top1_Ch4.thy                       definition  line 447
+    i/Top1_Ch4.thy                       definition  line 447
+  top1_section_preimage_open:
+    i/Top1_Ch3.thy                       lemma  line 998
+    i/Top1_Ch3.thy                       lemma  line 998
+  top1_semilocally_simply_connected_on:
+    ac10/AlgTopCached10.thy              definition  line 2945
+    ac10/AlgTopCached10.thy              definition  line 2945
+  top1_separates_on:
+    b/AlgTop_JCT_Base.thy                definition  line 3763
+    b/AlgTop_JCT_Base.thy                definition  line 3763
+  top1_separates_on_def_expand:
+    b/AlgTop_JCT_Base.thy                lemma  line 3767
+    b/AlgTop_JCT_Base.thy                lemma  line 3767
+  top1_separates_onI:
+    b/AlgTop_JCT_Base.thy                lemma  line 3772
+    b/AlgTop_JCT_Base.thy                lemma  line 3772
+  top1_sequentially_compact_on:
+    i/Top1_Ch5_8.thy                     definition  line 32828
+    i/Top1_Ch5_8.thy                     definition  line 32828
+  top1_sigma_locally_finite_family_on:
+    i/Top1_Ch5_8.thy                     definition  line 2835
+    i/Top1_Ch5_8.thy                     definition  line 2835
+  top1_simple_closed_curve_on:
+    b/AlgTop_JCT_Base.thy                definition  line 4784
+    b/AlgTop_JCT_Base.thy                definition  line 4784
+  top1_simply_connected_from_one_point:
+    i/Top1_Ch9_13.thy                    lemma  line 2857
+    i/Top1_Ch9_13.thy                    lemma  line 2857
+  top1_simply_connected_on:
+    i/Top1_Ch9_13.thy                    definition  line 2453
+    i/Top1_Ch9_13.thy                    definition  line 2453
+  top1_simply_connected_on_path_connected:
+    i/Top1_Ch9_13.thy                    lemma  line 2472
+    i/Top1_Ch9_13.thy                    lemma  line 2472
+  top1_simply_connected_strict:
+    i/Top1_Ch9_13.thy                    definition  line 2460
+    i/Top1_Ch9_13.thy                    definition  line 2460
+  top1_simply_connected_strict_imp:
+    i/Top1_Ch9_13.thy                    lemma  line 2464
+    i/Top1_Ch9_13.thy                    lemma  line 2464
+  top1_simply_connected_strict_is_topology_strict:
+    i/Top1_Ch9_13.thy                    lemma  line 2468
+    i/Top1_Ch9_13.thy                    lemma  line 2468
+  top1_slh_ext:
+    i/Top1_Ch9_13.thy                    definition  line 10687
+    i/Top1_Ch9_13.thy                    definition  line 10687
+  top1_slh_ext_agrees:
+    i/Top1_Ch9_13.thy                    lemma  line 10700
+    i/Top1_Ch9_13.thy                    lemma  line 10700
+  top1_slh_ext_continuous:
+    i/Top1_Ch9_13.thy                    lemma  line 10690
+    i/Top1_Ch9_13.thy                    lemma  line 10690
+  top1_Sn:
+    b0/AlgTop_JCT_Base0.thy              definition  line 5568
+    b0/AlgTop_JCT_Base0.thy              definition  line 5568
+  top1_snd_continuous_R2_subspace:
+    i/Top1_Ch9_13.thy                    lemma  line 11509
+    i/Top1_Ch9_13.thy                    lemma  line 11509
+  top1_square_ball_open_in_euclidean_metric_topology_real:
+    i/Top1_Ch2.thy                       lemma  line 14310
+    i/Top1_Ch2.thy                       lemma  line 14310
+  top1_square_metric_real_on:
+    i/Top1_Ch2.thy                       definition  line 12957
+    i/Top1_Ch2.thy                       definition  line 12957
+  top1_square_metric_real_on_coord_le:
+    i/Top1_Ch2.thy                       lemma  line 14087
+    i/Top1_Ch2.thy                       lemma  line 14087
+  top1_square_metric_real_on_le_euclidean:
+    i/Top1_Ch2.thy                       lemma  line 13979
+    i/Top1_Ch2.thy                       lemma  line 13979
+  top1_square_metric_real_on_lt_iff:
+    i/Top1_Ch2.thy                       lemma  line 13877
+    i/Top1_Ch2.thy                       lemma  line 13877
+  top1_square_metric_real_on_triangle:
+    i/Top1_Ch2.thy                       lemma  line 14012
+    i/Top1_Ch2.thy                       lemma  line 14012
+  top1_standard_simplex:
+    ac/AlgTopCached.thy                  definition  line 31412
+    ac/AlgTopCached.thy                  definition  line 31412
+  top1_standard_simplex_edges:
+    ac/AlgTopCached.thy                  definition  line 31421
+    ac/AlgTopCached.thy                  definition  line 31421
+  top1_standard_simplex_topology:
+    ac/AlgTopCached.thy                  definition  line 31415
+    ac/AlgTopCached.thy                  definition  line 31415
+  top1_standard_simplex_vertices:
+    ac/AlgTopCached.thy                  definition  line 31428
+    ac/AlgTopCached.thy                  definition  line 31428
+  top1_subgroup_generated_on:
+    ac/AlgTopCached.thy                  definition  line 6208
+    ac/AlgTopCached.thy                  definition  line 6208
+  top1_subgroup_has_index_on:
+    ac/AlgTopCached.thy                  definition  line 31489
+    ac/AlgTopCached.thy                  definition  line 31489
+  top1_suminf_geometric_1_3_Suc:
+    i/Top1_Ch3.thy                       lemma  line 9341
+    i/Top1_Ch3.thy                       lemma  line 9341
+  top1_suminf_geometric_1_3_tail:
+    i/Top1_Ch3.thy                       lemma  line 9387
+    i/Top1_Ch3.thy                       lemma  line 9387
+  top1_summable_ternary_sum:
+    i/Top1_Ch3.thy                       lemma  line 9325
+    i/Top1_Ch3.thy                       lemma  line 9325
+  top1_sup_metric_on:
+    i/Top1_Ch5_8.thy                     definition  line 10539
+    i/Top1_Ch5_8.thy                     definition  line 10539
+  top1_support_on:
+    i/Top1_Ch4.thy                       definition  line 16213
+    i/Top1_Ch4.thy                       definition  line 16213
+  top1_support_on_complement_imp_zero:
+    i/Top1_Ch4.thy                       lemma  line 16240
+    i/Top1_Ch4.thy                       lemma  line 16240
+  top1_support_on_contains_nonzero:
+    i/Top1_Ch4.thy                       lemma  line 17680
+    i/Top1_Ch4.thy                       lemma  line 17680
+  top1_support_on_mul_nonzero_factor:
+    i/Top1_Ch4.thy                       lemma  line 16432
+    i/Top1_Ch4.thy                       lemma  line 16432
+  top1_support_on_subset_imp_zero_on_complement:
+    i/Top1_Ch4.thy                       lemma  line 16216
+    i/Top1_Ch4.thy                       lemma  line 16216
+  top1_sup_topology_on:
+    i/Top1_Ch5_8.thy                     definition  line 10543
+    i/Top1_Ch5_8.thy                     definition  line 10543
+  top1_T1_on:
+    i/Top1_Ch4.thy                       definition  line 2397
+    i/Top1_Ch4.thy                       definition  line 2397
+  top1_ternary_sum:
+    i/Top1_Ch3.thy                       definition  line 9322
+    i/Top1_Ch3.thy                       definition  line 9322
+  top1_ternary_sum_ge_0:
+    i/Top1_Ch3.thy                       lemma  line 9356
+    i/Top1_Ch3.thy                       lemma  line 9356
+  top1_ternary_sum_inj:
+    i/Top1_Ch3.thy                       lemma  line 9410
+    i/Top1_Ch3.thy                       lemma  line 9410
+  top1_ternary_sum_le_half:
+    i/Top1_Ch3.thy                       lemma  line 9366
+    i/Top1_Ch3.thy                       lemma  line 9366
+  top1_tietze_step1:
+    i/Top1_Ch4.thy                       lemma  line 12778
+    i/Top1_Ch4.thy                       lemma  line 12778
+  top1_tietze_step2_approximants:
+    i/Top1_Ch4.thy                       lemma  line 15578
+    i/Top1_Ch4.thy                       lemma  line 15578
+  top1_tietze_tail_bound:
+    i/Top1_Ch4.thy                       lemma  line 12681
+    i/Top1_Ch4.thy                       lemma  line 12681
+  top1_torsion_subgroup_on:
+    ac/AlgTopCached.thy                  definition  line 7018
+    ac/AlgTopCached.thy                  definition  line 7018
+  top1_totally_bounded_on:
+    i/Top1_Ch5_8.thy                     definition  line 13735
+    i/Top1_Ch5_8.thy                     definition  line 13735
+  top1_U49:
+    i/Top1_Ch5_8.thy                     definition  line 25065
+    i/Top1_Ch5_8.thy                     definition  line 25065
+  top1_U49_dense:
+    i/Top1_Ch5_8.thy                     lemma  line 25855
+    i/Top1_Ch5_8.thy                     lemma  line 25855
+  top1_U49_dense_approx:
+    i/Top1_Ch5_8.thy                     lemma  line 25456
+    i/Top1_Ch5_8.thy                     lemma  line 25456
+  top1_U49_open:
+    i/Top1_Ch5_8.thy                     lemma  line 25231
+    i/Top1_Ch5_8.thy                     lemma  line 25231
+  top1_U49_subset_C01:
+    i/Top1_Ch5_8.thy                     lemma  line 25070
+    i/Top1_Ch5_8.thy                     lemma  line 25070
+  top1_U_eps_on:
+    i/Top1_Ch5_8.thy                     definition  line 29435
+    i/Top1_Ch5_8.thy                     definition  line 29435
+  top1_uniform_limit_continuous_real:
+    i/Top1_Ch4.thy                       lemma  line 15217
+    i/Top1_Ch4.thy                       lemma  line 15217
+  top1_uniformly_continuous_map_on:
+    i/Top1_Ch3.thy                       definition  line 9051
+    i/Top1_Ch3.thy                       definition  line 9051
+  top1_uniformly_convergent_on:
+    i/Top1_Ch2.thy                       definition  line 18551
+    i/Top1_Ch2.thy                       definition  line 18551
+  top1_uniformly_convergent_on_real:
+    i/Top1_Ch4.thy                       definition  line 15212
+    i/Top1_Ch4.thy                       definition  line 15212
+  top1_uniform_metric_is_metric:
+    i/Top1_Ch5_8.thy                     lemma  line 10549
+    i/Top1_Ch5_8.thy                     lemma  line 10549
+  top1_uniform_metric_on:
+    i/Top1_Ch5_8.thy                     definition  line 10519
+    i/Top1_Ch5_8.thy                     definition  line 10519
+  top1_uniform_metric_real_on:
+    i/Top1_Ch2.thy                       definition  line 12961
+    i/Top1_Ch2.thy                       definition  line 12961
+  top1_uniform_metric_real_on_bdd_above:
+    i/Top1_Ch2.thy                       lemma  line 13231
+    i/Top1_Ch2.thy                       lemma  line 13231
+  top1_uniform_metric_real_on_coord_le:
+    i/Top1_Ch2.thy                       lemma  line 13247
+    i/Top1_Ch2.thy                       lemma  line 13247
+  top1_uniform_metric_real_on_metric_on:
+    i/Top1_Ch2.thy                       lemma  line 12965
+    i/Top1_Ch2.thy                       lemma  line 12965
+  top1_uniform_metric_real_on_metric_on_PiE_UNIV:
+    i/Top1_Ch2.thy                       lemma  line 13263
+    i/Top1_Ch2.thy                       lemma  line 13263
+  top1_uniform_metric_real_on_refl:
+    i/Top1_Ch2.thy                       lemma  line 13270
+    i/Top1_Ch2.thy                       lemma  line 13270
+  top1_uniform_metric_topology_ne_box_topology_real:
+    i/Top1_Ch2.thy                       lemma  line 15558
+    i/Top1_Ch2.thy                       lemma  line 15558
+  top1_uniform_metric_topology_subset_box_topology_real:
+    i/Top1_Ch2.thy                       lemma  line 14836
+    i/Top1_Ch2.thy                       lemma  line 14836
+  top1_uniform_topology_on:
+    i/Top1_Ch5_8.thy                     definition  line 15602
+    i/Top1_Ch5_8.thy                     definition  line 15602
+  top1_uniform_topology_on_superset_compact_convergence:
+    i/Top1_Ch5_8.thy                     lemma  line 17054
+    i/Top1_Ch5_8.thy                     lemma  line 17054
+  top1_Union_closure_on_subset_closure_on_Union:
+    i/Top1_Ch5_8.thy                     lemma  line 3136
+    i/Top1_Ch5_8.thy                     lemma  line 3136
+  top1_unit_interval:
+    i/Top1_Ch3.thy                       definition  line 3045
+    i/Top1_Ch3.thy                       definition  line 3045
+  top1_unit_interval_connected:
+    i/Top1_Ch3.thy                       lemma  line 3114
+    i/Top1_Ch3.thy                       lemma  line 3114
+  top1_unit_interval_topology:
+    i/Top1_Ch3.thy                       definition  line 3048
+    i/Top1_Ch3.thy                       definition  line 3048
+  top1_unit_interval_topology_is_topology_on:
+    i/Top1_Ch3.thy                       lemma  line 3101
+    i/Top1_Ch3.thy                       lemma  line 3101
+  top1_urysohn_U:
+    i/Top1_Ch4.thy                       fun  line 6250
+    i/Top1_Ch4.thy                       fun  line 6250
+  top1_urysohn_U_basic_properties:
+    i/Top1_Ch4.thy                       lemma  line 6360
+    i/Top1_Ch4.thy                       lemma  line 6360
+  top1_urysohn_U_closure_mono_dyadic:
+    i/Top1_Ch4.thy                       lemma  line 7018
+    i/Top1_Ch4.thy                       lemma  line 7018
+  top1_urysohn_U_closure_mono_same_level:
+    i/Top1_Ch4.thy                       lemma  line 6976
+    i/Top1_Ch4.thy                       lemma  line 6976
+  top1_urysohn_U_endpoints:
+    i/Top1_Ch4.thy                       lemma  line 6282
+    i/Top1_Ch4.thy                       lemma  line 6282
+  top1_urysohn_U_even:
+    i/Top1_Ch4.thy                       lemma  line 6261
+    i/Top1_Ch4.thy                       lemma  line 6261
+  top1_urysohn_U_mono_same_level:
+    i/Top1_Ch4.thy                       lemma  line 6894
+    i/Top1_Ch4.thy                       lemma  line 6894
+  top1_urysohn_unit_interval:
+    i/Top1_Ch4.thy                       lemma  line 7073
+    i/Top1_Ch4.thy                       lemma  line 7073
+  top1_urysohn_U_odd_step_properties:
+    i/Top1_Ch4.thy                       lemma  line 6314
+    i/Top1_Ch4.thy                       lemma  line 6314
+  top1_urysohn_U_pow2_scale:
+    i/Top1_Ch4.thy                       lemma  line 6265
+    i/Top1_Ch4.thy                       lemma  line 6265
+  top1_winding_number_on:
+    ac/AlgTopCached.thy                  definition  line 6055
+    ac/AlgTopCached.thy                  definition  line 6055
+  top1_Z_group:
+    i/Top1_Ch9_13.thy                    definition  line 11007
+    i/Top1_Ch9_13.thy                    definition  line 11007
+  top1_Z_id:
+    i/Top1_Ch9_13.thy                    definition  line 11013
+    i/Top1_Ch9_13.thy                    definition  line 11013
+  top1_Z_invg:
+    i/Top1_Ch9_13.thy                    definition  line 11016
+    i/Top1_Ch9_13.thy                    definition  line 11016
+  top1_Z_is_abelian_group:
+    i/Top1_Ch9_13.thy                    lemma  line 11019
+    i/Top1_Ch9_13.thy                    lemma  line 11019
+  top1_Z_mul:
+    i/Top1_Ch9_13.thy                    definition  line 11010
+    i/Top1_Ch9_13.thy                    definition  line 11010
+  top1_Zn_group:
+    ac/AlgTopCached.thy                  definition  line 6963
+    ac/AlgTopCached.thy                  definition  line 6963
+  top1_Zn_id:
+    ac/AlgTopCached.thy                  definition  line 6969
+    ac/AlgTopCached.thy                  definition  line 6969
+  top1_Zn_invg:
+    ac/AlgTopCached.thy                  definition  line 6972
+    ac/AlgTopCached.thy                  definition  line 6972
+  top1_Zn_is_abelian_group:
+    ac/AlgTopCached.thy                  lemma  line 6975
+    ac/AlgTopCached.thy                  lemma  line 6975
+  top1_Zn_mul:
+    ac/AlgTopCached.thy                  definition  line 6966
+    ac/AlgTopCached.thy                  definition  line 6966
+  topology_generated_by_basis:
+    i/Top1_Ch2.thy                       definition  line 1073
+    i/Top1_Ch2.thy                       definition  line 1073
+  topology_generated_by_basis_inter_image:
+    i/Top1_Ch5_8.thy                     lemma  line 20451
+    i/Top1_Ch5_8.thy                     lemma  line 20451
+  topology_generated_by_basis_is_strict:
+    i/Top1_Ch2.thy                       lemma  line 1202
+    i/Top1_Ch2.thy                       lemma  line 1202
+  topology_generated_by_basis_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 1082
+    i/Top1_Ch2.thy                       lemma  line 1082
+  topology_generated_by_basis_mono_via_basis_elems:
+    i/Top1_Ch2.thy                       lemma  line 13635
+    i/Top1_Ch2.thy                       lemma  line 13635
+  topology_generated_by_basis_subset:
+    i/Top1_Ch2.thy                       lemma  line 1280
+    i/Top1_Ch2.thy                       lemma  line 1280
+  topology_generated_by_subbasis:
+    i/Top1_Ch2.thy                       definition  line 1960
+    i/Top1_Ch2.thy                       definition  line 1960
+  topology_generated_by_subbasis_contains:
+    i/Top1_Ch2.thy                       lemma  line 1964
+    i/Top1_Ch2.thy                       lemma  line 1964
+  topology_generated_by_subbasis_is_topology_on:
+    i/Top1_Ch2.thy                       lemma  line 1993
+    i/Top1_Ch2.thy                       lemma  line 1993
+  topology_inter2:
+    i/Top1_Ch2.thy                       lemma  line 73
+    i/Top1_Ch2.thy                       lemma  line 73
+  topology_inter_open:
+    b/AlgTop_JCT_Base.thy                lemma  line 6179
+    b/AlgTop_JCT_Base.thy                lemma  line 6179
+  topology_K_R:
+    i/Top1_Ch2.thy                       definition  line 1570
+    i/Top1_Ch2.thy                       definition  line 1570
+  topology_lower_limit_R:
+    i/Top1_Ch2.thy                       definition  line 1567
+    i/Top1_Ch2.thy                       definition  line 1567
+  topology_standard_R:
+    i/Top1_Ch2.thy                       definition  line 1564
+    i/Top1_Ch2.thy                       definition  line 1564
+  topology_union2:
+    i/Top1_Ch2.thy                       lemma  line 1008
+    i/Top1_Ch2.thy                       lemma  line 1008
+  topology_X_mem_TX:
+    svk/AlgTopSvK.thy                    lemma  line 519
+    svk/AlgTopSvK.thy                    lemma  line 519
+  torus_relator_commutator:
+    ac8/AlgTopCached8.thy                lemma  line 4088
+    ac8/AlgTopCached8.thy                lemma  line 4088
+  torus_scheme_all_eq_v0:
+    pd/PolygonDisk.thy                   lemma  line 3875
+    pd/PolygonDisk.thy                   lemma  line 3875
+  torus_scheme_nth:
+    ac8/AlgTopCached8.thy                lemma  line 3313
+    ac8/AlgTopCached8.thy                lemma  line 3313
+  torus_scheme_vertex_connectivity:
+    pd/PolygonDisk.thy                   lemma  line 4095
+    pd/PolygonDisk.thy                   lemma  line 4095
+  translation_homeo_R2:
+    b/AlgTop_JCT_Base.thy                lemma  line 8430
+    b/AlgTop_JCT_Base.thy                lemma  line 8430
+  tree_euler_all:
+    ac11/AlgTopCached11.thy              lemma  line 9844
+    ac11/AlgTopCached11.thy              lemma  line 9844
+  tree_euler_and_leaf_combined:
+    ac11/AlgTopCached11.thy              lemma  line 9405
+    ac11/AlgTopCached11.thy              lemma  line 9405
+  tree_euler_from_leaf:
+    ac11/AlgTopCached11.thy              lemma  line 2218
+    ac11/AlgTopCached11.thy              lemma  line 2218
+  tree_euler_from_sc:
+    ac11/AlgTopCached11.thy              lemma  line 9111
+    ac11/AlgTopCached11.thy              lemma  line 9111
+  tree_euler_nat:
+    ac11/AlgTopCached11.thy              lemma  line 9583
+    ac11/AlgTopCached11.thy              lemma  line 9583
+  tree_euler_number_one:
+    ac11/AlgTopCached11.thy              lemma  line 9874
+    ac11/AlgTopCached11.thy              lemma  line 9874
+  tree_leaf_existence_bridge:
+    ac11/AlgTopCached11.thy              lemma  line 7257
+    ac11/AlgTopCached11.thy              lemma  line 7257
+  tree_leaf_other_endpoint_shared:
+    ac11/AlgTopCached11.thy              lemma  line 1360
+    ac11/AlgTopCached11.thy              lemma  line 1360
+  tree_simply_connected:
+    ac3/AlgTopCached3.thy                lemma  line 84
+    ac3/AlgTopCached3.thy                lemma  line 84
+  tree_union_arcs_path_connected:
+    ac7/AlgTopCached7.thy                lemma  line 4220
+    ac7/AlgTopCached7.thy                lemma  line 4220
+  triangle_compact:
+    ac/AlgTopCached.thy                  lemma  line 41258
+    ac/AlgTopCached.thy                  lemma  line 41258
+  tri_arg_metric:
+    i/Top1_Ch5_8.thy                     lemma  line 14381
+    i/Top1_Ch5_8.thy                     lemma  line 14381
+  trivial_kernel_injective:
+    ac8/AlgTopCached8.thy                lemma  line 5010
+    ac8/AlgTopCached8.thy                lemma  line 5010
+  trivial_pi1_imp_simply_connected:
+    ac7/AlgTopCached7.thy                lemma  line 4476
+    ac7/AlgTopCached7.thy                lemma  line 4476
+  two_arcs_same_endpoints_sc_false:
+    ac11/AlgTopCached11.thy              lemma  line 8732
+    ac11/AlgTopCached11.thy              lemma  line 8732
+  tychonoff_coord_point:
+    i/Top1_Ch5_8.thy                     lemma  line 809
+    i/Top1_Ch5_8.thy                     lemma  line 809
+  Tychonoff_general:
+    i/Top1_Ch5_8.thy                     lemma  line 21154
+    i/Top1_Ch5_8.thy                     lemma  line 21154
+  tychonoff_point_in_all_closures:
+    i/Top1_Ch5_8.thy                     lemma  line 1056
+    i/Top1_Ch5_8.thy                     lemma  line 1056
+  tychonoff_subbasis_in_maxFIP:
+    i/Top1_Ch5_8.thy                     lemma  line 975
+    i/Top1_Ch5_8.thy                     lemma  line 975
+  tychonoff_subspace_compact:
+    i/Top1_Ch5_8.thy                     lemma  line 20583
+    i/Top1_Ch5_8.thy                     lemma  line 20583
+  underdetermined_homogeneous_system:
+    i/Top1_Ch5_8.thy                     lemma  line 28349
+    i/Top1_Ch5_8.thy                     lemma  line 28349
+  unif_compact_imp_cc_conv:
+    i/Top1_Ch5_8.thy                     lemma  line 16132
+    i/Top1_Ch5_8.thy                     lemma  line 16132
+  uniform_ball_in_cc_basis:
+    i/Top1_Ch5_8.thy                     lemma  line 19233
+    i/Top1_Ch5_8.thy                     lemma  line 19233
+  uniform_bounded_imp_pointwise_bounded:
+    i/Top1_Ch5_8.thy                     lemma  line 14757
+    i/Top1_Ch5_8.thy                     lemma  line 14757
+  uniform_limit_continuous:
+    i/Top1_Ch5_8.thy                     lemma  line 5479
+    i/Top1_Ch5_8.thy                     lemma  line 5479
+  uniform_metric_conv_imp_pointwise_unif:
+    i/Top1_Ch5_8.thy                     lemma  line 11334
+    i/Top1_Ch5_8.thy                     lemma  line 11334
+  uniform_metric_lt_imp_d_lt:
+    i/Top1_Ch5_8.thy                     lemma  line 14354
+    i/Top1_Ch5_8.thy                     lemma  line 14354
+  uniform_metric_pointwise_lt:
+    i/Top1_Ch5_8.thy                     lemma  line 14336
+    i/Top1_Ch5_8.thy                     lemma  line 14336
+  unit_interval_reversal_homeomorphism:
+    ac/AlgTopCached.thy                  lemma  line 49000
+    ac/AlgTopCached.thy                  lemma  line 49000
+  valid_equiv_preserves_quotient_homeo:
+    AlgTop.thy                           lemma  line 12499
+    AlgTop.thy                           lemma  line 12499
+  valid_equiv_preserves_quotient_homeo_proper:
+    AlgTop.thy                           lemma  line 12538
+    AlgTop.thy                           lemma  line 12538
+  valid_operation_preserves_quotient_homeo:
+    AlgTop.thy                           lemma  line 12112
+    AlgTop.thy                           lemma  line 12112
+  vector_field_must_point_inward:
+    i/Top1_Ch9_13.thy                    lemma  line 13533
+    i/Top1_Ch9_13.thy                    lemma  line 13533
+  wedge_circles_pi1_free:
+    ac5/AlgTopCached5.thy                lemma  line 2814
+    ac5/AlgTopCached5.thy                lemma  line 2814
+  weighted_sum_epsilon_delta:
+    i/Top1_Ch5_8.thy                     lemma  line 29816
+    i/Top1_Ch5_8.thy                     lemma  line 29816
+  wellorder_basis_refine_Ioc:
+    i/Top1_Ch4.thy                       lemma  line 5161
+    i/Top1_Ch4.thy                       lemma  line 5161
+  wellorder_Ioc_open_in_order_topology:
+    i/Top1_Ch4.thy                       lemma  line 5065
+    i/Top1_Ch4.thy                       lemma  line 5065
+  wellorder_Least_le_all:
+    i/Top1_Ch4.thy                       lemma  line 5041
+    i/Top1_Ch4.thy                       lemma  line 5041
+  wellorder_min_lt_if_ne:
+    i/Top1_Ch4.thy                       lemma  line 5053
+    i/Top1_Ch4.thy                       lemma  line 5053
+  wellorder_min_singleton_open:
+    i/Top1_Ch4.thy                       lemma  line 5291
+    i/Top1_Ch4.thy                       lemma  line 5291
+  wellorder_open_refine_Ioc:
+    i/Top1_Ch4.thy                       lemma  line 5266
+    i/Top1_Ch4.thy                       lemma  line 5266
+  word_cancel_preserves_eval:
+    ag/AlgTopGroups.thy                  lemma  line 2770
+    ag/AlgTopGroups.thy                  lemma  line 2770
+  word_product_append:
+    ag/AlgTopGroups.thy                  lemma  line 2714
+    ag/AlgTopGroups.thy                  lemma  line 2714
+  word_product_as_foldr:
+    ag/AlgTopGroups.thy                  lemma  line 3374
+    ag/AlgTopGroups.thy                  lemma  line 3374
+  word_product_cancel_matching_pair:
+    ag/AlgTopGroups.thy                  lemma  line 3487
+    ag/AlgTopGroups.thy                  lemma  line 3487
+  word_product_commutator_concat_in_comm:
+    ac8/AlgTopCached8.thy                lemma  line 3914
+    ac8/AlgTopCached8.thy                lemma  line 3914
   word_product_foldr_class:
     ac7/AlgTopCached7.thy                lemma  line 12
     ac8/AlgTopCached8.thy                lemma  line 463
+    ac7/AlgTopCached7.thy                lemma  line 12
+    ac8/AlgTopCached8.thy                lemma  line 463
+  word_product_in_group:
+    ag/AlgTopGroups.thy                  lemma  line 2212
+    ag/AlgTopGroups.thy                  lemma  line 2212
+  word_product_rel_invrel_as_foldr:
+    ac12/AlgTopCached12.thy              lemma  line 213
+    ac12/AlgTopCached12.thy              lemma  line 213
+  word_product_rev_inv:
+    ag/AlgTopGroups.thy                  lemma  line 2978
+    ag/AlgTopGroups.thy                  lemma  line 2978
+  Z_auto_sends_1_to_pm1:
+    ac/AlgTopCached.thy                  lemma  line 41687
+    ac/AlgTopCached.thy                  lemma  line 41687
+  Z_is_free_on_one_generator:
+    ac/AlgTopCached.thy                  lemma  line 31500
+    ac/AlgTopCached.thy                  lemma  line 31500
+  Z_quotient_nZ_iso:
+    at/AlgTopChain.thy                   lemma  line 1804
+    at/AlgTopChain.thy                   lemma  line 1804
 
