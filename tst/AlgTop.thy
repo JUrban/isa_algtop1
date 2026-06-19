@@ -702,7 +702,80 @@ lemma proper_scheme_subst:
       and hfresh: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
   shows "\<forall>label. card {i. i < length ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])
             \<and> fst (([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)]) ! i) = label} \<in> {0, 2}"
-  sorry
+proof -
+  let ?w = "[(a, True)] @ u2 @ [(a, True)] @ v"
+  let ?w' = "[(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)]"
+  \<comment> \<open>Convert card-set to filter-length for easier reasoning.\<close>
+  have hfst_inv: "map fst (rev (map top1_inverse_edge u2)) = rev (map fst u2)"
+  proof -
+    have "\<And>x. fst (top1_inverse_edge x) = fst x"
+      unfolding top1_inverse_edge_def by (by100 auto)
+    hence "map fst (map top1_inverse_edge u2) = map fst u2"
+      by (induction u2) (by100 auto)+
+    have "map fst (map top1_inverse_edge u2) = map fst u2"
+      unfolding top1_inverse_edge_def by (induction u2) (by100 auto)+
+    hence "rev (map fst (map top1_inverse_edge u2)) = rev (map fst u2)" by (by100 simp)
+    moreover have "rev (map fst (map top1_inverse_edge u2)) = map fst (rev (map top1_inverse_edge u2))"
+      by (rule rev_map)
+    moreover have "rev (map fst u2) = map fst (rev u2)"
+      by (rule rev_map)
+    ultimately show ?thesis by (by100 simp)
+  qed
+  have hfst_w: "map fst ?w = [a] @ map fst u2 @ [a] @ map fst v" by (by100 simp)
+  have hfst_w': "map fst ?w' = [c] @ rev (map fst u2) @ map fst v @ [c]"
+    using hfst_inv by (by100 simp)
+  have hc_ne_a: "c \<noteq> a" using hfresh by (by100 auto)
+  have hc_notin_u2: "c \<notin> fst ` set u2" using hfresh by (by100 auto)
+  have hc_notin_v: "c \<notin> fst ` set v" using hfresh by (by100 auto)
+  \<comment> \<open>For any label l: count in source = 2*(l=a) + count\\_u2(l) + count\\_v(l).\<close>
+  define cnt where "cnt l xs = length (filter (\<lambda>x. fst x = l) xs)" for l :: "'b" and xs :: "('b \<times> bool) list"
+  \<comment> \<open>Helper: filter on rev preserves length.\<close>
+  have hcnt_rev: "\<And>l. \<And>xs :: ('b \<times> bool) list. cnt l (rev xs) = cnt l xs"
+  proof -
+    fix l and xs :: "('b \<times> bool) list"
+    have "filter (\<lambda>x. fst x = l) (rev xs) = rev (filter (\<lambda>x. fst x = l) xs)"
+      using rev_filter[of "\<lambda>x. fst x = l" xs] by (by100 simp)
+    thus "cnt l (rev xs) = cnt l xs" unfolding cnt_def by (by100 simp)
+  qed
+  \<comment> \<open>Source count decomposition.\<close>
+  have hcnt_w: "\<And>l. cnt l ?w = (if l = a then 1 else 0) + cnt l u2 + (if l = a then 1 else 0) + cnt l v"
+    unfolding cnt_def by (by100 simp)
+  \<comment> \<open>Target count decomposition.\<close>
+  have hcnt_w': "\<And>l. cnt l ?w' = (if l = c then 1 else 0) + cnt l (rev (map top1_inverse_edge u2)) + cnt l v + (if l = c then 1 else 0)"
+    unfolding cnt_def by (by100 simp)
+  \<comment> \<open>cnt of inv(u2) = cnt of u2 (since fst preserved by inv).\<close>
+  have hcnt_inv: "\<And>l. cnt l (rev (map top1_inverse_edge u2)) = cnt l u2"
+    sorry \<comment> \<open>fst preserved by inv, length preserved by rev.\<close>
+  \<comment> \<open>Source properness via cnt.\<close>
+  have hproper_cnt: "\<And>l. cnt l ?w \<in> {0, 2}"
+    sorry \<comment> \<open>From hproper + card\\_filter\\_nth\\_eq.\<close>
+  show ?thesis
+  proof (rule allI)
+    fix label
+    have hcnt_target: "cnt label ?w' = (if label = c then 2 else 0) + cnt label u2 + cnt label v"
+      using hcnt_w' hcnt_inv by (by100 simp)
+    show "card {i. i < length ?w' \<and> fst (?w' ! i) = label} \<in> {0, 2}"
+    proof (cases "label = c")
+      case True
+      have "cnt c u2 = 0" using hc_notin_u2 unfolding cnt_def sorry
+      moreover have "cnt c v = 0" using hc_notin_v unfolding cnt_def sorry
+      ultimately have "cnt label ?w' = 2" using hcnt_target True by (by100 simp)
+      thus ?thesis sorry \<comment> \<open>cnt = card via card\\_filter\\_nth\\_eq.\<close>
+    next
+      case False
+      have hcnt_src: "cnt label ?w = (if label = a then 2 else 0) + cnt label u2 + cnt label v"
+        using hcnt_w by (by100 simp)
+      have hcnt_src_in: "cnt label ?w \<in> {0, 2}" using hproper_cnt .
+      have "cnt label ?w' = cnt label u2 + cnt label v"
+        using hcnt_target False by (by100 simp)
+      also have "\<dots> = cnt label ?w - (if label = a then 2 else 0)"
+        using hcnt_src by (by100 simp)
+      finally have "cnt label ?w' = cnt label ?w - (if label = a then 2 else 0)" .
+      hence "cnt label ?w' \<in> {0, 2}" using hcnt_src_in sorry
+      thus ?thesis sorry \<comment> \<open>cnt = card via card\\_filter\\_nth\\_eq.\<close>
+    qed
+  qed
+qed
 
 \<comment> \<open>SUB-POLYGON INCLUSION: convex hull of a subset of vertices is contained in the polygon.
    If P is a convex polygon with vertices v\\_0,...,v\\_{n-1}, then for any k+1 consecutive
