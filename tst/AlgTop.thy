@@ -664,10 +664,31 @@ lemma quotient_of_scheme_cut_paste:
     top1_quotient_of_scheme_on Y' TY' (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3) \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
 proof -
-  have "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
-    sorry \<comment> \<open>Munkres §76(iv): cut along diagonal, flip u2 piece, recombine.
-       The transfer\\_bij\\_rel approach fails for cross-boundary labels (hsnd\\_rel condition).
-       Needs direct quotient construction or extended transfer handling edge reversal.\<close>
+  \<comment> \<open>Reduce to the u1=[] case via ROTATE.
+     ROTATE: u1@a@u2@a@u3 to a@u2@a@u3@u1.
+     Apply CUT-PASTE (u1=[]) to get: a@a@inv(u2)@u3@u1.
+     ROTATE back: u1@a@a@inv(u2)@u3.\<close>
+  have hrot: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ u3 @ u1)"
+    using quotient_of_scheme_rotate[OF assms] by simp
+  \<comment> \<open>Apply CUT-PASTE for the u1=[] case.
+     Need: Y quotient of a@u2@a@(u3@u1) implies Y quotient of a@a@inv(u2)@(u3@u1).\<close>
+  have hcore: "top1_quotient_of_scheme_on Y TY
+      ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3 @ u1)"
+    sorry \<comment> \<open>CUT-PASTE core (u1=[] case): multi-polygon CUT+FLIP+PASTE along a.
+       Given Y quotient of [(a,T)]@u2@[(a,T)]@(u3@u1),
+       prove Y also quotient of [(a,T),(a,T)]@inv(u2)@(u3@u1).
+       Via Munkres Theorem 76.1 multi-polygon argument.\<close>
+  \<comment> \<open>Step C: ROTATE back to get u1 to the front.\<close>
+  have hrewrite: "([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3 @ u1)
+      = ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3) @ u1"
+    by simp
+  from quotient_of_scheme_rotate[OF hcore[unfolded hrewrite]]
+  have "top1_quotient_of_scheme_on Y TY
+      (u1 @ ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3))"
+    by simp
+  hence "top1_quotient_of_scheme_on Y TY
+      (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
+    by simp
   thus ?thesis by (rule same_space_implies_homeo_realization_early)
 qed
 
