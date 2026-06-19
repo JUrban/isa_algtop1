@@ -1025,12 +1025,29 @@ proof -
   have hlen': "length ?w' = ?n" by (by100 simp)
   have htopo: "is_topology_on_strict Y TY"
     using hq unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  \<comment> \<open>Step 1: Target scheme is proper.\<close>
-  \<comment> \<open>Target scheme properness: c replaces a (fresh), other labels unchanged.\<close>
+  \<comment> \<open>Step 1: Target scheme properness.\<close>
+  have hmap_fst_inv: "map fst (rev (map top1_inverse_edge u2)) = rev (map fst u2)"
+  proof -
+    have hfst_comp: "\<And>x. fst (top1_inverse_edge x) = fst x"
+      unfolding top1_inverse_edge_def by (by100 auto)
+    have "map fst (rev (map top1_inverse_edge u2))
+        = map fst (map top1_inverse_edge (rev u2))"
+      by (rule arg_cong[of _ _ "map fst"]) (rule rev_map)
+    also have "\<dots> = map (fst \<circ> top1_inverse_edge) (rev u2)" by (by100 simp)
+    also have "\<dots> = map fst (rev u2)" using hfst_comp by (by100 auto)
+    also have "\<dots> = rev (map fst u2)" by (rule rev_map[symmetric])
+    finally show ?thesis .
+  qed
+  have hmap_fst_w: "map fst ?w = [a] @ map fst u2 @ [a] @ map fst v"
+    by (by100 simp)
+  have hmap_fst_w': "map fst ?w' = [c] @ rev (map fst u2) @ map fst v @ [c]"
+    using hmap_fst_inv by (by100 simp)
+  have hc_ne_a: "c \<noteq> a" using hfresh_c by (by100 auto)
   have hproper': "\<forall>label. card {i. i < length ?w' \<and> fst (?w'!i) = label} \<in> {0, 2}"
-    sorry \<comment> \<open>Properness of target. Proof: fst-image of inv(u2) = fst-image of u2.
-       c appears exactly twice (positions 0 and n-1). a does not appear (c \\<noteq> a, c fresh).
-       Each u2/v label has same count as in source. Source is proper \\<Rightarrow> target is proper.\<close>
+    sorry \<comment> \<open>From hmap\\_fst\\_w, hmap\\_fst\\_w', hc\\_ne\\_a, hfresh\\_c, hproper.
+       Key: count\\_list l (map fst w') = count\\_list l (map fst w) for l \\<noteq> a, l \\<noteq> c.
+       For l = c: count = 2 (at positions 0 and n-1, c \\<notin> u2 \\<union> v by freshness).
+       For l = a: count = 0 (a removed, c \\<noteq> a, a \\<notin> u2 \\<union> v by source properness).\<close>
   \<comment> \<open>Step 2: Get Y' quotient of target scheme from scheme\\_quotient\\_exists.\<close>
   have hlen'3: "length ?w' \<ge> 3" using hlen hlen' by (by100 linarith)
   from scheme_quotient_exists(1)[OF hlen'3 hproper']
