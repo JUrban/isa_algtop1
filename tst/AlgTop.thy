@@ -750,6 +750,16 @@ lemma polygon_diagonal_in_region:
   shows "((1-t) * vx 0 + t * vx k, (1-t) * vy 0 + t * vy k) \<in> P"
   using polygonal_region_convex_combo[OF hP hn hv0 hvk assms(7,8)] by simp
 
+\<comment> \<open>EDGE PARAMETRIZATION: same-direction a-pair identification gives a continuous
+   matching of the two a-edge parametrizations in the quotient.
+   For t ranging over [0,1]:
+     q(first\\_a(t)) = q(second\\_a(t))      [same direction, same parameter]
+   After FLIP of one piece:
+     q(first\\_a(1-t)) = q(second\\_a(1-t))  [reversed parameter]
+   So q(first\\_a\\_flipped(t)) = q(second\\_a(1-t))
+   This ensures CONTINUITY at the paste junction: the two approaching
+   limits in Y agree at every parameter.\<close>
+
 \<comment> \<open>QUOTIENT MAP EDGE IDENTIFICATION AT DIAGONAL.
    When the a-pair in scheme a@u2@a@v has same direction (both True),
    C7 gives: q(edge\\_0(t)) = q(edge\\_{1+|u2|}(t)) for all t.
