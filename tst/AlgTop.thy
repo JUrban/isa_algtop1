@@ -1004,6 +1004,59 @@ proof -
   show ?thesis sorry
 qed
 
+\<comment> \<open>PROPER VERSION of theorem\\_76\\_1\\_paste\\_chain.
+   For proper nat schemes: uses scheme\\_quotient\\_exists for target scheme,
+   constructs homeomorphism via piecewise map \\<psi>: P' \\<to> P2 (regular n-gon to source polygon),
+   then transfers quotient via scheme\\_quotient\\_transfer\\_along\\_homeomorphism.
+   This avoids constructing the geometric paste polygon entirely!\<close>
+lemma theorem_76_1_paste_chain_proper:
+  fixes a c :: nat and u2 v :: "(nat \<times> bool) list"
+  assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
+      and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
+      and hproper: "\<forall>label. card {i. i < length ([(a, True)] @ u2 @ [(a, True)] @ v)
+            \<and> fst (([(a, True)] @ u2 @ [(a, True)] @ v) ! i) = label} \<in> {0, 2}"
+  shows "top1_quotient_of_scheme_on Y TY
+    ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])"
+proof -
+  let ?w = "[(a, True)] @ u2 @ [(a, True)] @ v"
+  let ?w' = "[(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)]"
+  let ?n = "length ?w"
+  have hlen: "?n \<ge> 3" using quotient_scheme_length_ge3[OF hq] .
+  have hlen': "length ?w' = ?n" by (by100 simp)
+  have htopo: "is_topology_on_strict Y TY"
+    using hq unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 1: Target scheme is proper.\<close>
+  \<comment> \<open>Target scheme properness: c replaces a (fresh), other labels unchanged.\<close>
+  have hproper': "\<forall>label. card {i. i < length ?w' \<and> fst (?w'!i) = label} \<in> {0, 2}"
+    sorry \<comment> \<open>Properness of target. Proof: fst-image of inv(u2) = fst-image of u2.
+       c appears exactly twice (positions 0 and n-1). a does not appear (c \\<noteq> a, c fresh).
+       Each u2/v label has same count as in source. Source is proper \\<Rightarrow> target is proper.\<close>
+  \<comment> \<open>Step 2: Get Y' quotient of target scheme from scheme\\_quotient\\_exists.\<close>
+  have hlen'3: "length ?w' \<ge> 3" using hlen hlen' by (by100 linarith)
+  from scheme_quotient_exists(1)[OF hlen'3 hproper']
+  obtain Y' :: "(real \<times> real) set" and TY' :: "(real \<times> real) set set" where
+      hY': "top1_quotient_of_scheme_on Y' TY' ?w'" by (by100 blast)
+  have htopo': "is_topology_on_strict Y' TY'"
+    using hY' unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 3: Construct homeomorphism h: Y' \\<to> Y.
+     Define \\<psi>: P' \\<to> P piecewise (P' = regular n-gon for target, P = polygon for source).
+     g = q \\<circ> \\<psi>: P' \\<to> Y is continuous (C7 at junctions).
+     g descends to h: Y' \\<to> Y (well-defined by identification matching).
+     h is bijective (injective from \\<sigma>-matching, surjective from \\<psi> covering all of P).
+     Compact \\<to> Hausdorff \\<to> homeomorphism.\<close>
+  have "\<exists>h. top1_homeomorphism_on Y' TY' Y TY h"
+    sorry \<comment> \<open>Homeomorphism construction via piecewise \\<psi>: P' \\<to> P.
+       Key facts used:
+       - C7 of source: continuity at junction vertices (hC7\\_a, hq\\_v0, hq\\_v1)
+       - \\<sigma> bijection: well-definedness and injectivity of h
+       - \\<psi>(P') covers all of P (including a-edges via interior junction)
+       - Compact \\<to> Hausdorff: continuous bijection = homeomorphism\<close>
+  then obtain h where hh: "top1_homeomorphism_on Y' TY' Y TY h" by (by100 blast)
+  \<comment> \<open>Step 4: Transfer quotient from Y' to Y.\<close>
+  from scheme_quotient_transfer_along_homeomorphism[OF hY' hh htopo]
+  show ?thesis .
+qed
+
 \<comment> \<open>MULTI-POLYGON CUT-FLIP-PASTE CORE (Munkres Theorem 76.1 application).
    Proof chain (book-faithful, step by step):
    1. Extract polygon P, vertices vx/vy, quotient map q from the given quotient
