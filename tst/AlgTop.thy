@@ -658,24 +658,129 @@ lemma nth_append_skip: "\<lbrakk>i \<ge> length xs\<rbrakk> \<Longrightarrow> (x
 lemma nth_append_take: "\<lbrakk>i < length xs\<rbrakk> \<Longrightarrow> (xs @ ys) ! i = xs ! i"
   by (simp add: nth_append)
 
+\<comment> \<open>SUB-POLYGON INCLUSION: convex hull of a subset of vertices is contained in the polygon.
+   If P is a convex polygon with vertices v\\_0,...,v\\_{n-1}, then for any k+1 consecutive
+   vertices v\\_0,...,v\\_k, the convex hull Q1 = {\\<Sum> c\\_i * v\\_i | i \\<le> k, c\\_i \\<ge> 0, \\<Sum> c\\_i = 1}
+   is contained in P = {\\<Sum> c\\_i * v\\_i | i < n, c\\_i \\<ge> 0, \\<Sum> c\\_i = 1}.
+   This is immediate: extend any convex combination over {0,...,k} to {0,...,n-1}
+   by setting c\\_{k+1} = ... = c\\_{n-1} = 0.\<close>
+lemma sub_polygon_in_polygon:
+  fixes vx vy :: "nat \<Rightarrow> real" and n k :: nat
+  assumes "k < n" "k \<ge> 2"
+  shows "{(x::real,y::real). \<exists>coeffs. (\<forall>i\<le>k. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i\<le>k. coeffs i) = 1
+                     \<and> x = (\<Sum>i\<le>k. coeffs i * vx i)
+                     \<and> y = (\<Sum>i\<le>k. coeffs i * vy i)}
+       \<subseteq> {(x,y). \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                     \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+proof (rule subsetI)
+  fix p assume "p \<in> {(x::real,y::real). \<exists>coeffs. (\<forall>i\<le>k. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i\<le>k. coeffs i) = 1
+                     \<and> x = (\<Sum>i\<le>k. coeffs i * vx i)
+                     \<and> y = (\<Sum>i\<le>k. coeffs i * vy i)}"
+  then obtain x y where hp: "p = (x, y)" and "\<exists>coeffs. (\<forall>i\<le>k. coeffs i \<ge> 0)
+      \<and> (\<Sum>i\<le>k. coeffs i) = 1 \<and> x = (\<Sum>i\<le>k. coeffs i * vx i) \<and> y = (\<Sum>i\<le>k. coeffs i * vy i)"
+    by (by100 auto)
+  then obtain coeffs where hc: "\<forall>i\<le>k. coeffs i \<ge> 0"
+      and hsum: "(\<Sum>i\<le>k. coeffs i) = 1"
+      and hx: "fst p = (\<Sum>i\<le>k. coeffs i * vx i)"
+      and hy: "snd p = (\<Sum>i\<le>k. coeffs i * vy i)"
+    using hp by (by100 auto)
+  \<comment> \<open>Define extended coefficients: zero beyond k.\<close>
+  define coeffs' where "coeffs' i = (if i \<le> k then coeffs i else 0)" for i
+  have hc': "\<forall>i<n. coeffs' i \<ge> 0"
+    using hc assms(1) unfolding coeffs'_def by (by100 auto)
+  have hzero: "\<And>i. i > k \<Longrightarrow> i < n \<Longrightarrow> coeffs' i = 0" unfolding coeffs'_def by (by100 auto)
+  have hsame: "\<And>i. i \<le> k \<Longrightarrow> coeffs' i = coeffs i" unfolding coeffs'_def by (by100 simp)
+  have hsplit: "{..<n} = {..k} \<union> {Suc k..<n}" using assms(1) by (by100 auto)
+  have hdisj: "{..k} \<inter> {Suc k..<n} = {}" by (by100 auto)
+  have hsum': "(\<Sum>i<n. coeffs' i) = 1"
+  proof -
+    have "(\<Sum>i<n. coeffs' i) = (\<Sum>i\<in>{..k} \<union> {Suc k..<n}. coeffs' i)"
+      using hsplit by (by100 simp)
+    also have "\<dots> = (\<Sum>i\<le>k. coeffs' i) + (\<Sum>i\<in>{Suc k..<n}. coeffs' i)"
+      using hdisj by (rule sum.union_disjoint[OF finite_atMost finite_atLeastLessThan])
+    also have "(\<Sum>i\<in>{Suc k..<n}. coeffs' i) = 0"
+      using hzero by (by100 simp)
+    also have "(\<Sum>i\<le>k. coeffs' i) = (\<Sum>i\<le>k. coeffs i)"
+      using hsame by (by100 auto)
+    finally show ?thesis using hsum by (by100 simp)
+  qed
+  have hx': "fst p = (\<Sum>i<n. coeffs' i * vx i)"
+  proof -
+    have "(\<Sum>i<n. coeffs' i * vx i) = (\<Sum>i\<in>{..k} \<union> {Suc k..<n}. coeffs' i * vx i)"
+      using hsplit by (by100 simp)
+    also have "\<dots> = (\<Sum>i\<le>k. coeffs' i * vx i) + (\<Sum>i\<in>{Suc k..<n}. coeffs' i * vx i)"
+      using hdisj by (rule sum.union_disjoint[OF finite_atMost finite_atLeastLessThan])
+    also have "(\<Sum>i\<in>{Suc k..<n}. coeffs' i * vx i) = 0"
+      using hzero by (by100 simp)
+    also have "(\<Sum>i\<le>k. coeffs' i * vx i) = (\<Sum>i\<le>k. coeffs i * vx i)"
+      using hsame by (by100 auto)
+    finally show ?thesis using hx by (by100 simp)
+  qed
+  have hy': "snd p = (\<Sum>i<n. coeffs' i * vy i)"
+  proof -
+    have "(\<Sum>i<n. coeffs' i * vy i) = (\<Sum>i\<in>{..k} \<union> {Suc k..<n}. coeffs' i * vy i)"
+      using hsplit by (by100 simp)
+    also have "\<dots> = (\<Sum>i\<le>k. coeffs' i * vy i) + (\<Sum>i\<in>{Suc k..<n}. coeffs' i * vy i)"
+      using hdisj by (rule sum.union_disjoint[OF finite_atMost finite_atLeastLessThan])
+    also have "(\<Sum>i\<in>{Suc k..<n}. coeffs' i * vy i) = 0"
+      using hzero by (by100 simp)
+    also have "(\<Sum>i\<le>k. coeffs' i * vy i) = (\<Sum>i\<le>k. coeffs i * vy i)"
+      using hsame by (by100 auto)
+    finally show ?thesis using hy by (by100 simp)
+  qed
+  show "p \<in> {(x,y). \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                     \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+    using hc' hsum' hx' hy' by (by100 auto)
+qed
+
+\<comment> \<open>POLYGON PASTE ALONG SHARED EDGE (Munkres Theorem 76.1 core geometric fact).
+   Given two disjoint polygonal regions Q1 (scheme w1) and Q2 (scheme w2) where:
+   - Q1 has an edge labeled (a,F) at its last position
+   - Q2 has an edge labeled (a,T) at its first position
+   - label a appears nowhere else in w1 or w2
+   Then pasting Q1 and Q2 along the a-edges gives a single polygon P with scheme
+   (w1 minus last) @ (w2 minus first), and the quotient of P under this scheme
+   (with remaining identifications) gives the same space as the two-polygon quotient.
+
+   This is the GEOMETRIC HEART of Theorem 76.1. The proof uses:
+   1. The pasted polygon P = Q1 \\<union>\\_{a-edges} Q2 is a valid polygonal region
+   2. The quotient map factors: Q1 \\<squnion> Q2 \\<to> P \\<to> Y (composition of quotient maps)
+   3. Applying top1\\_quotient\\_map\\_on\\_comp.\<close>
+
 \<comment> \<open>MULTI-POLYGON CUT-FLIP-PASTE CORE (Munkres Theorem 76.1 application).
-   The key geometric fact: given a polygon quotient Y of scheme y0@y1,
-   cutting the polygon along the diagonal from v\\_0 to v\\_{|y0|},
-   flipping the first piece, and pasting along a shared label a
-   gives the same quotient Y for a rearranged scheme.
-
-   Specifically: if Y is quotient of y0@y1 where y0 contains one occurrence
-   of label a and y1 contains the other, and the two a-edges have opposite
-   exponents, then the CUT(y0@y1) + FLIP(P1) + PASTE(along a) chain
-   gives Y quotient of a rearranged scheme.
-
-   This is the FUNDAMENTAL sorry that blocks all cut-paste operations.
-   Proof requires: polygon diagonal cut + piecewise-linear map + quotient map composition.
-   See detailed analysis in CHANGES1700 and memory file project\\_algtop\\_cutpaste\\_analysis.md.\<close>
+   Proof chain (book-faithful, step by step):
+   1. Extract polygon P, vertices vx/vy, quotient map q from the given quotient
+   2. CUT P along diagonal from v\\_0 to v\\_{1+|u2|}:
+      Q1 = sub-polygon with edges [(a,T)] @ u2 @ [(c,F)]  (k1 = |u2|+2 edges)
+      Q2 = sub-polygon with edges [(c,T)] @ [(a,T)] @ v   (k2 = |v|+2 edges)
+   3. Define two-polygon quotient map f: Q1 \\<squnion> Q2 \\<to> Y via q restricted to each piece
+   4. FLIP Q1: scheme becomes [(c,T)] @ inv(u2) @ [(a,F)]
+      (geometrically: reverse Q1's boundary traversal, flip exponents)
+   5. PERMUTE Q2: scheme becomes [(a,T)] @ v @ [(c,T)]
+      (geometrically: cyclic rotation of Q2's vertex numbering)
+   6. PASTE along a: merge Q1' and Q2' identifying (a,F) and (a,T) edges
+      Result: single polygon P' with scheme [(c,T)] @ inv(u2) @ v @ [(c,T)]
+      Quotient: the composed map P' \\<to> Y is a valid quotient map (Theorem 76.1)
+   7. RELABEL c\\<to>a: same quotient Y for scheme [(a,T)] @ inv(u2) @ v @ [(a,T)]
+   8. ROTATE: same quotient Y for scheme [(a,T),(a,T)] @ inv(u2) @ v\<close>
 lemma cut_flip_paste_core:
   assumes "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
   shows "top1_quotient_of_scheme_on Y TY ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ v)"
-  sorry \<comment> \<open>Multi-polygon CUT+FLIP+PASTE. See analysis in project\\_algtop\\_cutpaste\\_analysis.md.\<close>
+  sorry \<comment> \<open>Munkres Theorem 76.1 multi-polygon CUT+FLIP+PASTE.
+     Proof chain: CUT P at diagonal v\\_0 to v\\_{1+|u2|}, giving sub-polygons
+     Q1 (scheme a@u2@c^{-1}) and Q2 (scheme c@a@v). Then:
+     FLIP Q1 \\<to> c@inv(u2)@a^{-1}, PERMUTE Q2 \\<to> a@v@c,
+     PASTE along a \\<to> single polygon c@inv(u2)@v@c,
+     RELABEL c\\<to>a \\<to> a@inv(u2)@v@a, ROTATE \\<to> a@a@inv(u2)@v.
+     Key: paste along a (opposite exponents after flip), not c.
+     Each step preserves Y via quotient map composition (top1\\_quotient\\_map\\_on\\_comp).
+     Needs: polygon diagonal split + polygon edge paste lemma.\<close>
 
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
