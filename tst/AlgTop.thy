@@ -1123,6 +1123,8 @@ lemma cut_flip_paste_core_proper:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
       and ha_fresh_u2: "a \<notin> fst ` set u2"
       and ha_fresh_v: "a \<notin> fst ` set v"
+      and hproper_src: "\<forall>label. card {i. i < length ([(a, True)] @ u2 @ [(a, True)] @ v)
+            \<and> fst (([(a, True)] @ u2 @ [(a, True)] @ v) ! i) = label} \<in> {0, 2}"
   shows "top1_quotient_of_scheme_on Y TY ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ v)"
 proof -
   let ?w = "[(a, True)] @ u2 @ [(a, True)] @ v"
@@ -1131,8 +1133,8 @@ proof -
   have hfin: "finite ?labels" by (by100 simp)
   from ex_new_if_finite[OF infinite_UNIV_nat hfin]
   obtain c :: nat where hfresh_c: "c \<notin> ?labels" by (by100 blast)
-  \<comment> \<open>Step 2: Apply theorem\\_76\\_1\\_paste\\_chain.\<close>
-  from theorem_76_1_paste_chain[OF hq hfresh_c]
+  \<comment> \<open>Step 2: Apply theorem\\_76\\_1\\_paste\\_chain\\_proper (uses scheme\\_quotient\\_exists).\<close>
+  from theorem_76_1_paste_chain_proper[OF hq hfresh_c hproper_src]
   have h1: "top1_quotient_of_scheme_on Y TY
     ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])" .
   \<comment> \<open>Step 3: RELABEL c \\<to> a. Fresh because a \\<notin> labels of c-scheme.\<close>
