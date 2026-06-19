@@ -992,62 +992,15 @@ proof -
      6. Verifying C7 for target scheme
      7. Verifying C8, C9 for interior/edge injectivity\<close>
   \<comment> \<open>Step 9: Construct the target polygon P' and quotient map q'.
-     Use the SAME polygon P2 and the SAME quotient map q2, but with a
-     DIFFERENT vertex numbering that traces the target scheme boundary.
-
-     The target scheme w' = c@inv(u2)@v@c has edges:
-       Edge 0 (c,T): diagonal from v2\\_0 to v2\\_{?k} (INTERIOR of P2)
-       Edges 1..|u2| (inv(u2)): source edges |u2|..1 reversed
-       Edges |u2|+1..|u2|+|v| (v): source edges 2+|u2|..n-1
-       Edge n-1 (c,T): diagonal from v2\\_{?k} back to v2\\_0
-
-     PROBLEM: Edge 0 and edge n-1 are DIAGONALS (interior of P2), not boundary edges.
-     So P2 with boundary retracing doesn't work directly.
-
-     SOLUTION: construct P' = the pasted polygon Q1-flipped pasted with Q2-permuted along a.
-     P' is a DIFFERENT polygon from P2, obtained by cutting P2 along the diagonal
-     and re-gluing along the a-edges.
-
-     For the formal construction: P' is the convex hull of the rearranged vertices.
-     The rearranged vertices trace: v2\\_{?k} \\<to> v2\\_{|u2|} \\<to> ... \\<to> v2\\_1 \\<to>
-     v2\\_{2+|u2|} \\<to> ... \\<to> v2\\_{n-1} \\<to> v2\\_0 (= v2\\_{?k} after paste identification).
-     But v2\\_0 \\<noteq> v2\\_{?k} geometrically. So the hull is NOT a simple polygon.
-
-     ALTERNATIVE: use a regular n-gon P' with NEW vertices w\\_0,...,w\\_{n-1},
-     and define q': P' \\<to> Y by mapping each edge of P' to the corresponding
-     part of P2's boundary/interior.\<close>
-  \<comment> \<open>Construct P' as regular n-gon.\<close>
-  have hn_ge3: "?n \<ge> 3" using quotient_scheme_length_ge3[OF hq] .
-  define vx' where "vx' i = cos (2 * pi * real i / real ?n)" for i
-  define vy' where "vy' i = sin (2 * pi * real i / real ?n)" for i
-  define P' where "P' = {(x::real,y::real). \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
-                     \<and> (\<Sum>i<?n. coeffs i) = 1
-                     \<and> x = (\<Sum>i<?n. coeffs i * vx' i)
-                     \<and> y = (\<Sum>i<?n. coeffs i * vy' i)}"
-  have hP': "top1_is_polygonal_region_on P' ?n"
-    sorry \<comment> \<open>Regular n-gon is a polygonal region. Standard.\<close>
-  \<comment> \<open>Define the boundary map \\<phi>: \\<partial>P' \\<to> P2.
-     Edge i of P' at parameter t \\<in> [0,1] maps to:
-       i = 0 (c-edge): diagonal at parameter t = (1-t)*v2\\_0 + t*v2\\_{?k}
-       1 \\<le> i \\<le> |u2| (inv(u2)): source edge (|u2|+1-i) at parameter (1-t)
-         = (1-(1-t))*v2\\_{|u2|+1-i} + (1-t)*v2\\_{|u2|+2-i}
-         = t*v2\\_{|u2|+1-i} + (1-t)*v2\\_{|u2|+2-i}
-       |u2|+1 \\<le> i \\<le> |u2|+|v| (v-edges): source edge i at parameter t
-         = (1-t)*v2\\_i + t*v2\\_{Suc i mod ?n}
-         Wait: source edge 2+|u2|+(i-|u2|-1) = source edge i+1.
-         At parameter t: (1-t)*v2\\_{i+1} + t*v2\\_{Suc(i+1) mod ?n}
-       i = n-1 (c-edge): diagonal at parameter t = (1-t)*v2\\_{?k} + t*v2\\_0\<close>
-  \<comment> \<open>Define q' = q2 \\<circ> \\<phi> on boundary, extend to interior by cone from centroid.\<close>
-  define cx' where "cx' = (\<Sum>i<?n. vx' i) / real ?n"
-  define cy' where "cy' = (\<Sum>i<?n. vy' i) / real ?n"
-  define cx2 where "cx2 = (\<Sum>i<?n. vx2 i) / real ?n"
-  define cy2 where "cy2 = (\<Sum>i<?n. vy2 i) / real ?n"
-  \<comment> \<open>The full piecewise definition of \\<phi> and q' requires:
-     1. \\<phi>(boundary point) = corresponding P2 point (edge-by-edge)
-     2. \\<phi>(interior point (1-r)*c' + r*b) = (1-r)*c2 + r*\\<phi>(b)  (cone extension)
-     3. q' = q2 \\<circ> \\<phi>
-     These are all definable but the details are ~100 lines.
-     For now: sorry the existence of q' satisfying C1-C11.\<close>
+     The construction requires the GEOMETRIC PASTE: cut P2 along diagonal,
+     physically rearrange sub-polygons, and re-glue along a-edges.
+     Using a regular n-gon P' with c-edges mapping to the diagonal FAILS
+     (c-edges map to interior of P2, violating C8).
+     The correct P' is obtained by geometric paste construction:
+     P' = Q1-flipped placed next to Q2-permuted, merged along a-edges.
+     q' is defined piecewise on each half: Q1-half \\<to> q2|\\_{Q1}, Q2-half \\<to> q2|\\_{Q2}.
+     Continuity proved by hC7\\_a + hq\\_v0 + hq\\_v1 at all junction vertices.
+     This is the remaining ~100 lines of geometric construction.\<close>
   show ?thesis sorry
 qed
 
