@@ -845,14 +845,64 @@ qed
    The proof constructs a new polygon P' and quotient map q': P' \\<to> Y
    via the CUT+FLIP+PASTE chain, using top1\\_quotient\\_map\\_on\\_comp.\<close>
 lemma theorem_76_1_paste_chain:
-  assumes "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
-      and "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
+  assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
+      and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
   shows "top1_quotient_of_scheme_on Y TY
     ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])"
-  sorry \<comment> \<open>Theorem 76.1 paste chain: CUT+FLIP+PASTE.
-     This is the GEOMETRIC CORE of cut\\_flip\\_paste\\_core.
-     c is the fresh label for the diagonal.
-     After this, RELABEL c\\<to>a and ROTATE give the final result.\<close>
+proof -
+  let ?w = "[(a, True)] @ u2 @ [(a, True)] @ v"
+  let ?n = "length ?w"
+  let ?k = "1 + length u2"  \<comment> \<open>Position of the diagonal cut: v\\_0 to v\\_{?k}.\<close>
+  let ?w' = "[(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)]"
+  \<comment> \<open>Step 1: Extract polygon P with vertices vx/vy and quotient map q.\<close>
+  from scheme_a_pair_identification[OF hq]
+  obtain P q vx vy where
+      hP: "top1_is_polygonal_region_on P ?n"
+    and hqmap: "top1_quotient_map_on P
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q"
+    and hv_in: "\<forall>i<?n. (vx i, vy i) \<in> P"
+    and hC7_a: "\<forall>t\<in>I_set.
+       q ((1-t) * vx 0 + t * vx 1, (1-t) * vy 0 + t * vy 1)
+     = q ((1-t) * vx ?k + t * vx (Suc ?k mod ?n),
+          (1-t) * vy ?k + t * vy (Suc ?k mod ?n))"
+    by (by100 blast)
+  \<comment> \<open>Step 2: Vertex identifications from the a-pair.
+     q(v\\_0) = q(v\\_{?k}) and q(v\\_1) = q(v\\_{Suc ?k mod n}).\<close>
+  have h0_in: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+  have h1_in: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+  have hq_v0: "q (vx 0, vy 0) = q (vx ?k, vy ?k)"
+    using hC7_a[rule_format, OF h0_in] by (by100 simp)
+  have hq_v1: "q (vx 1, vy 1) = q (vx (Suc ?k mod ?n), vy (Suc ?k mod ?n))"
+    using hC7_a[rule_format, OF h1_in] by (by100 simp)
+  \<comment> \<open>Step 3: Construct pasted polygon P' for the target scheme w'.
+     P' is obtained by cutting P along diagonal v\\_0 to v\\_{?k},
+     flipping Q1, permuting Q2, and pasting along the a-edges.
+     Geometrically: the two sub-polygons are rearranged and combined.
+     For formalization: use scheme\\_quotient\\_exists for proper schemes,
+     or construct P' directly as a regular n-gon.\<close>
+  \<comment> \<open>Step 4: Define quotient map q': P' \\<to> Y.
+     q' is defined piecewise on the two halves of P'
+     (separated by the diagonal of P' from the paste junction):
+     - On Q1-flipped half: q' = q \\<circ> (un-flip back to Q1 \\<subset> P)
+     - On Q2-permuted half: q' = q \\<circ> (un-permute back to Q2 \\<subset> P)
+     At the junction (former a-edges): both pieces give the same q-value
+     by the a-pair identification (hC7\\_a).
+     At the c-edges (diagonal): both pieces map to the diagonal of P,
+     approaching from opposite sides.\<close>
+  \<comment> \<open>Step 5: Verify that q' is a valid quotient map for scheme w' on P'.
+     C1: P' is a valid polygon (from construction)
+     C2: q' is a quotient map (continuous closed surjection from compact to Hausdorff)
+     C7: edge identifications match w' (c-pair from diagonal, other labels from original)
+     C8: interior injectivity (from q's C8 + disjointness of the two halves)
+     C9: edge-interior (from original C9 + the piecewise construction)\<close>
+  \<comment> \<open>The full construction: deferred to future formalization of polygon paste geometry.\<close>
+  show ?thesis sorry
+    \<comment> \<open>Theorem 76.1 paste chain. The proof plan above is complete.
+       The key insight: q' = q \\<circ> (piecewise un-rearrangement) IS continuous because
+       the a-pair identification (hC7\\_a) ensures continuity at the paste junction.
+       Interior injectivity follows from disjointness of the two sub-polygon halves.
+       Needs: formal polygon diagonal split, piecewise quotient map construction.\<close>
+qed
 
 \<comment> \<open>MULTI-POLYGON CUT-FLIP-PASTE CORE (Munkres Theorem 76.1 application).
    Proof chain (book-faithful, step by step):
