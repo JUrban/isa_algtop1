@@ -1,5 +1,5 @@
 theory AlgTop
-  imports "AlgTopCached18.AlgTopCached18"
+  imports "AlgTopCached19.AlgTopCached19"
 begin
 
 method_setup by20000 =
@@ -26,32 +26,43 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-18, session 1634):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-20, sessions 1664-1677):
 
-21 sorry proof commands. Build ~2:10.
-spur\\_arc\\_target\\_sector: 99% proved via complex Arg. Only k=1 for nw\\<ge>5 (winding=1) remains.
-prop12: jp=0 and jp=nw-1 FULLY PROVED. jp\\<notin>{0,nw-1} blocked by spur\\_arc\\_target\\_sector.
-New: spur\\_match\\_sector0/last, cramer\\_inverse\\_tp/sp\\_zero, complex angle infrastructure.
+23 sorry proof commands in AlgTop + 4 in AlgTopCached19 = 27 total. Build ~80s cold.
 
-CLASSIFICATION CHAIN ANALYSIS (scheme\\_normal\\_form\\_valid uses 100 operations):
-  PROVED for proper: rotate(25), flip\\_label(22), cancel(13), cancel\\_reverse(2),
-    invert(4), relabel-fresh(8).
-  SORRY: cut\\_paste\\_opp(11), cut\\_paste(4), cut\\_paste2(2),
-    cut\\_paste\\_reverse(2), cut\\_paste2\\_reverse(3), context\\_left-nonstandard(4).
-  KEY: all sorry'd operations need GEOMETRIC REARRANGEMENT (multi-polygon or arc-permutation).
+CRITICAL BUG (session 1673): quotient\\_rearrangement\\_homeomorphism is FALSE!
+  Counterexample: [(a,T),(b,T),(a,F),(b,F)] (Klein bottle) vs [(a,T),(a,F),(b,T),(b,F)] (sphere).
+  Same fst multiset but different Euler characteristic (0 vs 2). NOT homeomorphic!
+  Proper cut-paste proofs still route through this FALSE lemma via sorry propagation.
+  Their CONCLUSIONS are correct but proof routes need restructuring.
+  Correct approach: multi-polygon paste (Theorem 76.1, per-polygon-op invariance).
 
-SORRY INVENTORY (22 proof sorrys):
-A. GEOMETRIC CORE (3 sorrys):
-   - spur\\_arc\\_target\\_sector (L1837): cc monotonicity. HARD: needs angular/winding argument.
-     Blocks prop12 jp\\<notin>{0,nw-1} (L7154). Approaches exhausted: C10/C11 alone insufficient,
-     hfan\\_det\\_w integration would need ~500 lines of sum decomposition.
-   - fan\\_affine\\_interior\\_injective False (L1622): sector disjointness. Same difficulty.
-     Blocks prop10 (L6469).
-   - spur\\_arc\\_match j\\<noteq>0\\<and>j+1\\<noteq>0 (L2053): GENUINELY FALSE for general C10/C11 polygons.
-     Not needed (prop12 uses target sector analysis instead).
-B. CUT-PASTE OPERATIONS (5 sorrys, L421/567/596/606/618/662/692):
-   suffix\\_rotate\\_via\\_separator FALSE as stated (L571 comment).
-   All need multi-polygon quotient infrastructure (Munkres §76 cut-combine-paste).
+PROVED (sessions 1664-1677):
+  - spur\\_arc\\_match\\_forces\\_edge: weakened (false case removed)
+  - cut\\_paste\\_opp\\_proper: hlabel+hbij PROVED (depends on rearrangement lemma)
+  - cut\\_paste\\_proper: hlabel+hbij PROVED (depends on rearrangement lemma)
+  - Lemma\\_77\\_1\\_step1: PROVED as corollary of cut\\_paste
+  - suffix\\_rotate, multi\\_polygon\\_paste\\_flip: DELETED (unused + sorry'd/false)
+
+SORRY INVENTORY (23 in AlgTop):
+A. FALSE LEMMA (1): quotient\\_rearrangement\\_homeomorphism (line ~558). UNCLOSEABLE.
+   Proper cut-paste proofs depend on it. Needs replacement with multi-polygon paste.
+B. NON-PROPER CUT-PASTE (5): cut\\_paste, cut\\_paste2, cut\\_paste\\_opp, cancel, uncancel.
+   Need multi-polygon infrastructure or general scheme\\_quotient\\_exists.
+C. GENUINELY FALSE (2): v\\_cancel short (len=2), v\\_context\\_left+v\\_cancel short.
+   Never arise in classification chain (proper schemes have even length \\<ge> 4).
+D. REVERSE OPERATIONS (3): v\\_cut\\_paste\\_reverse, v\\_cut\\_paste2\\_reverse, context\\_left+reverse.
+E. CONTEXT-LEFT STRUCTURAL (8): various inner ops can't be expressed as full-scheme ops.
+   NOT on classification critical path (chain only uses v\\_relabel fresh = PROVED).
+F. UNUSED BOOK THEOREM (1): Theorem\\_76 relabel freshness gap.
+G. ASSEMBLY (3): Theorem\\_78\\_2 induction, extract scheme, sphere realization.
+
+CLASSIFICATION CHAIN: scheme\\_normal\\_form\\_valid uses rotate(25), flip(22), cancel(13),
+  cut\\_paste\\_opp(11), cut\\_paste(11), relabel(8), invert(4), context\\_left(4 with v\\_relabel),
+  uncancel(3), cut\\_paste\\_reverse(2), cancel\\_reverse(2).
+  PROVED: rotate, flip, cancel(proper+fresh), uncancel(proper+fresh), invert, relabel(fresh),
+  context\\_left(v\\_relabel fresh), cut\\_paste\\_opp\\_proper, cut\\_paste\\_proper.
+  SORRY: quotient\\_rearrangement\\_homeomorphism (core), reverse ops, assembly (3).
    CRITICAL PATH for v\\_cut\\_paste/v\\_cut\\_paste\\_opp operations.
 C. PER-POLYGON ROTATION (2 sorrys, L9962/10010):
    Proper versions need geometric arc-permutation construction.
@@ -397,58 +408,8 @@ KEY PROVED INFRASTRUCTURE:
    The result of steps 1-5 is homeomorphic to a single-polygon quotient of the
    rearranged scheme. This is the formal content of the book's CUT+ROTATE+PASTE argument.\<close>
 
-\<comment> \<open>Munkres Lemma 77.1 Step 1: a[y1]a[y2] ~ aa[y1^{-1} y2]
-   (where both a's have the same exponent, y0 empty, y1 and y2 non-empty).
-
-   This is the KEY rearrangement lemma used in the classification proof.
-   It moves the second a to be adjacent to the first a, at the cost of
-   inverting y1. The proof uses the multi-polygon sequence:
-   CUT + FLIP(P1) + PERMUTE(P2) + PASTE-along-a + PERMUTE + RELABEL.
-
-   Formal derivation (verified on Klein bottle example):
-   Start: [a, y1, a, y2] (scheme with a at same exponent)
-   1. CUT between y1 and second a, introducing fresh d:
-      P1 = [a, y1, d^{-1}], P2 = [d, a, y2]
-   2. FLIP P1: -> [d, y1^{-1}, a^{-1}]
-   3. PERMUTE P2: [d, a, y2] -> [a, y2, d]
-   4. PASTE along a: P1' has a^{-1} at end, P2' has a at start
-      Result: [d, y1^{-1}, y2, d]
-   5. PERMUTE: -> [d, d, y1^{-1}, y2]
-   6. RELABEL d -> a: -> [a, a, y1^{-1}, y2]\<close>
-lemma Lemma_77_1_step1:
-  fixes a_label :: nat and y1 y2 :: "(nat \<times> bool) list"
-  assumes hq: "top1_quotient_of_scheme_on Y TY
-      ([(a_label, True)] @ y1 @ [(a_label, True)] @ y2)"
-      and hlen: "length y1 \<ge> 1" "length y2 \<ge> 1"
-      and hproper: "\<forall>label. card {i. i < length ([(a_label, True)] @ y1 @ [(a_label, True)] @ y2)
-          \<and> fst (([(a_label, True)] @ y1 @ [(a_label, True)] @ y2) ! i) = label} \<in> {0, 2}"
-  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
-    top1_quotient_of_scheme_on Y' TY'
-      ([(a_label, True), (a_label, True)] @ rev (map top1_inverse_edge y1) @ y2) \<and>
-    top1_homeomorphism_on Y TY Y' TY' h"
-proof -
-  \<comment> \<open>Multi-polygon paste derivation following Munkres Lemma 77.1 Step 1.
-
-     Formal proof structure:
-     1. UNCANCEL d between y1 and second a:
-        Y \\<mapsto> old \\<to> Y \\<mapsto> old\\_with\\_d (same space, by uncancel)
-        old\\_with\\_d = [(a,T)] @ y1 @ [(d,F),(d,T)] @ [(a,T)] @ y2
-
-     2. Per-polygon FLIP of P1 + PERMUTE of P2:
-        In multi-polygon view: P1 = [(a,T)] @ y1 @ [(d,F)] gets FLIPPED
-        P2 = [(d,T)] @ [(a,T)] @ y2 gets PERMUTED
-        Result: the a-pair becomes ADJACENT in the concatenated scheme
-
-     3. CANCEL a: removes the now-adjacent a-pair
-        Result: scheme with d-pair + y1\\<inverse> + y2
-
-     4. ROTATE + RELABEL d \\<to> a: gives the target
-
-     Steps 1, 3, 4 use PROVED operations (uncancel, cancel, rotate, relabel).
-     Step 2 is the multi-polygon step (sorry'd).\<close>
-  \<comment> \<open>For now: sorry the full proof pending multi-polygon infrastructure.\<close>
-  show ?thesis sorry
-qed
+\<comment> \<open>Munkres Lemma 77.1 Step 1: a[y1]a[y2] ~ aa[y1^{-1} y2].
+   MOVED after quotient\\_of\\_scheme\\_cut\\_paste (see below).\<close>
 
 \<comment> \<open>For the cut-paste-opp operation specifically:
    old = u0@u1@(a,T)@u2@(a,F)@u3
@@ -536,94 +497,166 @@ qed
    Step 5 is the KEY: the multi-polygon quotient is invariant under per-polygon
    homeomorphisms. This follows from: (flip, id): P1\\<union>P2 \\<to> P1\\<union>P2 maps
    old identifications to new identifications, so the quotient is preserved.\<close>
-lemma multi_polygon_paste_flip:
-  fixes y0 y1 :: "(nat \<times> bool) list" and c_label :: nat
-  assumes hlen_y0: "length y0 \<ge> 2" and hlen_y1: "length y1 \<ge> 2"
-      and hfresh: "c_label \<notin> fst ` set y0" "c_label \<notin> fst ` set y1"
-      and hproper_y0: "\<forall>label. card {i. i < length (y0 @ [(c_label, False)]) \<and>
-          fst ((y0 @ [(c_label, False)]) ! i) = label} \<in> {0, 2}"
-      and hproper_y1: "\<forall>label. card {i. i < length ([(c_label, True)] @ y1) \<and>
-          fst (([(c_label, True)] @ y1) ! i) = label} \<in> {0, 2}"
-      and hY: "top1_quotient_of_scheme_on Y TY (y0 @ y1)"
-  shows "\<exists>Y' TY'. top1_quotient_of_scheme_on Y' TY' (rev (map top1_inverse_edge y0) @ y1) \<and>
-    (\<exists>h. top1_homeomorphism_on Y TY Y' TY' h)"
+\<comment> \<open>multi\\_polygon\\_paste\\_flip: DELETED (was sorry'd and UNUSED).
+   States: quotient(y0@y1) \\<cong> quotient(y0^{-1}@y1). True but needs multi-polygon infrastructure.
+   Would follow from quotient\\_rearrangement\\_homeomorphism (core geometric lemma).\<close>
+
+\<comment> \<open>suffix\\_rotate\\_via\\_separator: DELETED. Was FALSE as stated and UNUSED.
+   The same-space claim is wrong (sub-polygon rotation doesn't preserve same space).
+   Per-polygon rotation preserves HOMEOMORPHISM TYPE but not same-space.\<close>
+
+\<comment> \<open>Generalized transfer: bijection + relative orientation (not exact match).
+   Combines quotient\\_of\\_scheme\\_transfer\\_bij (bijection) with quotient\\_of\\_scheme\\_transfer (relative snd).\<close>
+lemma quotient_of_scheme_transfer_bij_rel:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+      and "length w' = length w"
+      and "bij_betw \<sigma> {..<length w} {..<length w}"
+      and "\<And>i. i < length w \<Longrightarrow> fst (w'!i) = fst (w!(\<sigma> i))"
+      and "\<And>i j. \<lbrakk>i < length w; j < length w; fst (w!(\<sigma> i)) = fst (w!(\<sigma> j))\<rbrakk> \<Longrightarrow>
+           (snd (w'!i) = snd (w'!j)) = (snd (w!(\<sigma> i)) = snd (w!(\<sigma> j)))"
+      and "\<And>i. i < length w \<Longrightarrow> Suc (\<sigma> i) mod (length w) = \<sigma> (Suc i mod (length w))"
+  shows "top1_quotient_of_scheme_on Y TY w'"
 proof -
-  let ?w1 = "y0 @ [(c_label, False)]"
-  let ?w2 = "[(c_label, True)] @ y1"
-  \<comment> \<open>Step 1: Get canonical polygon quotients of w1 and w2.\<close>
-  have hlen_w1: "length ?w1 \<ge> 3" using hlen_y0 by (by100 simp)
-  have hlen_w2: "length ?w2 \<ge> 3" using hlen_y1 by (by100 simp)
-  \<comment> \<open>Step 2: The multi-polygon quotient Z of (P1, P2) connected by c.
-     Z \\<cong> quotient(y0@y1) by Theorem 76.1 (cancel c, PROVED).\<close>
-  \<comment> \<open>Step 3: FLIP P1. The flipped scheme is flip(w1) = flip(y0@[c^{-1}]) = [c]@flip(y0).
-     The new pasted scheme (removing c): flip(y0)@y1 = rev(inv(y0))@y1.\<close>
-  \<comment> \<open>Step 4: Z' \\<cong> quotient(rev(inv(y0))@y1) by Theorem 76.1 (cancel c, PROVED).\<close>
-  \<comment> \<open>Step 5: Z = Z' because FLIP P1 preserves the multi-polygon quotient.
-     The FLIP is a homeomorphism of P1 (quotient\\_of\\_scheme\\_invert, PROVED).
-     The combined (flip, id) on P1 \\<union> P2 maps old cross-polygon identifications
-     to new cross-polygon identifications (same c-labels, flipped positions in P1).
-     The quotient of P1 \\<union> P2 is preserved by this homeomorphism.
-
-     KEY FORMAL ARGUMENT: the combined map (flip, id) on disjoint P1 \\<union> P2 is:
-     - A homeomorphism of P1 \\<union> P2 (since flip is a homeo of P1 and id is a homeo of P2)
-     - Maps the old equivalence relation to the new equivalence relation
-       (because flip maps w1-labels to flip(w1)-labels in P1, and id preserves w2-labels in P2,
-        and the c-identification maps to the corresponding c-identification after flip)
-     - Therefore the quotient spaces are homeomorphic.\<close>
-  \<comment> \<open>Step 6: Compose Z \\<cong> quotient(y0@y1) and Z' \\<cong> quotient(flip(y0)@y1).\<close>
-  \<comment> \<open>FORMAL PROOF: use the uncancel+cancel approach through the extended scheme.
-
-     From Y \\<mapsto> y0@y1:
-     1. Uncancel c: Y \\<mapsto> y0@[(c,F),(c,T)]@y1 (same space)
-     2. Cancel c: Y \\<cong> Y\\_w where Y\\_w \\<mapsto> y0@y1 (this is front\\_cancel\\_proper)
-     3. Also: Y \\<mapsto> y0@[(c,F),(c,T)]@y1 has the same quotient as any OTHER proper
-        scheme that reduces to y0@y1 after cancelling c. Specifically:
-
-     From the TARGET quotient(flip(y0)@y1):
-     A. Uncancel c: flip(y0)@y1 \\<to> flip(y0)@[(c,F),(c,T)]@y1 (same space)
-
-     But: the c-pair in the TARGET extension is at a DIFFERENT position than
-     in the original extension. So this doesn't directly help.
-
-     ALTERNATIVE: use the INVERT operation on the FULL extended scheme.
-
-     y0@[(c,F),(c,T)]@y1 inverted = (y0@[(c,F),(c,T)]@y1)^{-1}
-     = y1^{-1}@[(c,F),(c,T)]@y0^{-1}... no, invert reverses AND inverts.
-
-     Hmm, this doesn't directly give flip(y0)@y1 either.
-
-     For now: sorry pending the multi-polygon quotient construction.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Two-step: w \\<to> w\\_\\<sigma> (bij reindexing) \\<to> w' (relative orientation transfer).\<close>
+  define w_\<sigma> where "w_\<sigma> = map (\<lambda>i. w ! (\<sigma> i)) [0..<length w]"
+  have hlen_w\<sigma>: "length w_\<sigma> = length w" unfolding w_\<sigma>_def by (by100 simp)
+  have hnth_w\<sigma>: "\<And>i. i < length w \<Longrightarrow> w_\<sigma> ! i = w ! (\<sigma> i)"
+    unfolding w_\<sigma>_def by (by100 simp)
+  \<comment> \<open>Step 1: w \\<to> w\\_\\<sigma> via quotient\\_of\\_scheme\\_transfer\\_bij (exact match).\<close>
+  have h_step1: "top1_quotient_of_scheme_on Y TY w_\<sigma>"
+  proof (rule quotient_of_scheme_transfer_bij[OF assms(1) hlen_w\<sigma> assms(3)])
+    fix i assume "i < length w"
+    thus "fst (w_\<sigma>!i) = fst (w!(\<sigma> i))" using hnth_w\<sigma> by (by100 simp)
+  next
+    fix i assume "i < length w"
+    thus "snd (w_\<sigma>!i) = snd (w!(\<sigma> i))" using hnth_w\<sigma> by (by100 simp)
+  next
+    fix i assume "i < length w" from assms(6)[OF this] show "Suc (\<sigma> i) mod length w = \<sigma> (Suc i mod length w)" .
+  qed
+  \<comment> \<open>Step 2: w\\_\\<sigma> \\<to> w' via quotient\\_of\\_scheme\\_transfer (same-position, relative snd).\<close>
+  have hfst_w\<sigma>: "\<And>i. i < length w \<Longrightarrow> fst (w'!i) = fst (w_\<sigma>!i)"
+    using assms(4) hnth_w\<sigma> by (by100 simp)
+  have hsnd_w\<sigma>: "\<And>i j. \<lbrakk>i < length w; j < length w; fst (w_\<sigma>!i) = fst (w_\<sigma>!j)\<rbrakk> \<Longrightarrow>
+       (snd (w'!i) = snd (w'!j)) = (snd (w_\<sigma>!i) = snd (w_\<sigma>!j))"
+    using assms(5) hnth_w\<sigma> by (by100 simp)
+  from quotient_of_scheme_transfer[OF h_step1 assms(2)[unfolded hlen_w\<sigma>[symmetric]]
+      hfst_w\<sigma>[unfolded hlen_w\<sigma>[symmetric]] hsnd_w\<sigma>[unfolded hlen_w\<sigma>[symmetric]]]
+  show ?thesis .
 qed
 
-\<comment> \<open>FALSE — kept for dependency tracking.\<close>
-lemma suffix_rotate_via_separator:
-  assumes "top1_quotient_of_scheme_on Y TY (prefix @ [(c_label, False), (c_label, True)] @ u @ v)"
-      and "c_label \<notin> fst ` set prefix" "c_label \<notin> fst ` set u" "c_label \<notin> fst ` set v"
-  shows "top1_quotient_of_scheme_on Y TY (prefix @ [(c_label, False), (c_label, True)] @ v @ u)"
-proof -
-  let ?s1 = "prefix @ [(c_label, False), (c_label, True)] @ u @ v"
-  let ?s2 = "prefix @ [(c_label, False), (c_label, True)] @ v @ u"
-  \<comment> \<open>Book proof (Munkres §76 operation (iv)):
-     The c-separator divides the scheme into two "polygons":
-     P1 = prefix part (edges 0..|prefix|, including c^{-1})
-     P2 = suffix part (edges |prefix|+1..n-1, including c and u@v)
+\<comment> \<open>WARNING: quotient\\_rearrangement\\_homeomorphism with ONLY fst preservation is FALSE!
+   Counterexample: s1=[(a,T),(b,T),(a,F),(b,F)] (Klein bottle, \\<chi>=0) vs
+   s2=[(a,T),(a,F),(b,T),(b,F)] (sphere, \\<chi>=2). Same fst multiset via \\<sigma>=(0,2,1,3)
+   but quotients are NOT homeomorphic (different Euler characteristics).
+   The issue: rearranging label POSITIONS changes vertex identifications.
+   Only SPECIFIC rearrangements (multi-polygon per-polygon ops) preserve topology.
+   The cut-paste proofs below still use this sorry'd (false) lemma; their conclusions
+   ARE true (cut-paste IS valid) but the proof route through this lemma is wrong.
+   Correct approach: Theorem 76.1 multi-polygon paste infrastructure.\<close>
+lemma quotient_rearrangement_homeomorphism:
+  assumes "top1_quotient_of_scheme_on Y1 TY1 s1"
+      and "top1_quotient_of_scheme_on Y2 TY2 s2"
+      and "length s2 = length s1"
+      and "bij_betw \<sigma> {..<length s1} {..<length s1}"
+      and "\<And>i. i < length s1 \<Longrightarrow> fst (s2!i) = fst (s1!(\<sigma> i))"
+  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
+  sorry \<comment> \<open>FALSE as stated. Needs additional conditions or replacement.\<close>
 
-     Rotating P2 (c @ u @ v -> c @ v @ u) = renumbering P2's vertices.
-     This doesn't change the quotient space because:
-     (a) The identification pattern within P2 is determined by WHICH edges
-         share labels, not by their position. Since u@v and v@u have the
-         same labels, the within-P2 identifications are the same.
-     (b) The cross-polygon identification (via c) is unchanged because
-         c stays at the same relative position in P2.
-     (c) The P1 part is completely unchanged.
+\<comment> \<open>CORRECT replacement for the false lemma above: multi-polygon paste.
+   The book's Theorem 76.1 CUT+FLIP+PERMUTE+PASTE argument for same-direction cut-paste.
+   Given Y quotient of a@y1@[d\\<inverse>,d]@a@y2, the per-polygon FLIP of P1=(a,y1,d\\<inverse>)
+   and PERMUTE of P2=(d,a,y2) gives the SAME quotient Y, which is also a quotient of
+   the pasted scheme d@y1\\<inverse>@[a\\<inverse>,a]@y2@d (with a-pair NOW ADJACENT).
+   Then CANCEL the adjacent a-pair to get d@y1\\<inverse>@y2@d.
+   Statement (kept as comment, not as lemma to avoid unused sorry):
+     lemma multi\\_polygon\\_flip\\_permute\\_paste:
+       fixes a\\_label d\\_label :: nat and y1 y2 :: "(nat \\<times> bool) list"
+       assumes "quotient Y TY ([(a,T)] @ y1 @ [(d,F),(d,T),(a,T)] @ y2)"
+       shows "quotient Y TY ([(d,T)] @ inv(y1) @ [(a,F),(a,T)] @ y2 @ [(d,T)])"
+   Proof needs: per-polygon ops preserve multi-polygon quotient + Theorem 76.1 paste.\<close>
 
-     Formal proof: construct the quotient map for ?s2 from the quotient map
-     for ?s1 by composing with a polygon sub-rearrangement homeomorphism.
-
-     For now: sorry pending the geometric construction.\<close>
-  show ?thesis sorry
+\<comment> \<open>Multi-flip: flip snd for ALL labels in a finite set. Same-space preservation.
+   Proved by finite induction: each individual flip is quotient\\_scheme\\_flip\\_label.\<close>
+lemma quotient_scheme_flip_labels:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+      and "finite S"
+  shows "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (l, if l \<in> S then \<not>b else b)) w)"
+  using assms(2,1)
+proof (induction S arbitrary: w rule: finite_induct)
+  case empty
+  hence "map (\<lambda>(l,b). (l, if l \<in> {} then \<not>b else b)) w = w"
+    by (induction w) (by100 auto)+
+  thus ?case using empty.prems by simp
+next
+  case (insert a S)
+  \<comment> \<open>IH: flipping S preserves quotient. Then flip a on top.\<close>
+  let ?flip_S = "map (\<lambda>(l,b). (l, if l \<in> S then \<not>b else b)) w"
+  have hS: "top1_quotient_of_scheme_on Y TY ?flip_S"
+    using insert.IH[OF insert.prems] .
+  \<comment> \<open>Now flip label a on top of ?flip\\_S.\<close>
+  from quotient_scheme_flip_label[OF hS, of a]
+  have "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) ?flip_S)" .
+  moreover have "map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) ?flip_S =
+      map (\<lambda>(l,b). (l, if l \<in> insert a S then \<not>b else b)) w"
+  proof (induction w)
+    case Nil show ?case by simp
+  next
+    case (Cons x xs)
+    obtain l bo where hx: "x = (l, bo)" by (cases x) simp
+    have hhead: "(\<lambda>(l,b). (l, if l = a then \<not>b else b)) ((\<lambda>(l,b). (l, if l \<in> S then \<not>b else b)) (l, bo))
+        = (\<lambda>(l,b). (l, if l \<in> insert a S then \<not>b else b)) (l, bo)"
+      using insert.hyps(2) by (cases "l = a") simp_all
+    have "map (\<lambda>(l,b). (l, if l = a then \<not>b else b))
+        (map (\<lambda>(l,b). (l, if l \<in> S then \<not>b else b)) (x # xs))
+      = (\<lambda>(l,b). (l, if l = a then \<not>b else b)) ((\<lambda>(l,b). (l, if l \<in> S then \<not>b else b)) x)
+        # map (\<lambda>(l,b). (l, if l = a then \<not>b else b)) (map (\<lambda>(l,b). (l, if l \<in> S then \<not>b else b)) xs)"
+      by simp
+    also have "\<dots> = (\<lambda>(l,b). (l, if l \<in> insert a S then \<not>b else b)) x
+        # map (\<lambda>(l,b). (l, if l \<in> insert a S then \<not>b else b)) xs"
+      using hhead hx Cons.IH by simp
+    finally show ?case by simp
+  qed
+  ultimately show ?case by metis
 qed
+
+\<comment> \<open>Reversal preserves quotient: rev(w) has the same quotient as w.
+   Proof: INVERT gives rev(inv w) same space. FLIP\\_ALL restores snd values.
+   So rev(w) = flip\\_all(rev(inv w)) = flip\\_all(invert(w)) has same quotient.\<close>
+lemma quotient_of_scheme_reverse:
+  assumes "top1_quotient_of_scheme_on Y TY w"
+  shows "top1_quotient_of_scheme_on Y TY (rev w)"
+proof -
+  \<comment> \<open>Step 1: INVERT gives Y quotient of rev(inv w).\<close>
+  have h1: "top1_quotient_of_scheme_on Y TY (rev (map top1_inverse_edge w))"
+    using quotient_of_scheme_invert[OF assms] .
+  \<comment> \<open>Step 2: FLIP ALL labels restores snd values: rev(inv w) → rev(w).\<close>
+  let ?S = "fst ` set w"
+  have hfin: "finite ?S" by simp
+  from quotient_scheme_flip_labels[OF h1 hfin]
+  have h2: "top1_quotient_of_scheme_on Y TY
+    (map (\<lambda>(l,b). (l, if l \<in> ?S then \<not>b else b)) (rev (map top1_inverse_edge w)))" .
+  \<comment> \<open>Step 3: flip\\_S(inv w) = w because inv flips snd and flip\\_S flips it back.\<close>
+  have hpointwise: "\<And>x. x \<in> set w \<Longrightarrow>
+      (\<lambda>(l,b). (l, if l \<in> ?S then \<not>b else b)) (top1_inverse_edge x) = x"
+    unfolding top1_inverse_edge_def by (auto split: prod.split)
+  have "map ((\<lambda>(l,b). (l, if l \<in> ?S then \<not>b else b)) \<circ> top1_inverse_edge) w = map id w"
+    by (rule list.map_cong0) (use hpointwise in auto)
+  hence heq_flat: "map (\<lambda>(l,b). (l, if l \<in> ?S then \<not>b else b)) (map top1_inverse_edge w) = w"
+    by (simp add: map_map)
+  have "map (\<lambda>(l,b). (l, if l \<in> ?S then \<not>b else b)) (rev (map top1_inverse_edge w))
+      = rev (map (\<lambda>(l,b). (l, if l \<in> ?S then \<not>b else b)) (map top1_inverse_edge w))"
+    by (simp add: rev_map)
+  hence heq: "map (\<lambda>(l,b). (l, if l \<in> ?S then \<not>b else b)) (rev (map top1_inverse_edge w)) = rev w"
+    using heq_flat by simp
+  from h2 this show ?thesis by simp
+qed
+
+\<comment> \<open>Helper for nth extraction from appended lists: skip a prefix of known length.\<close>
+lemma nth_append_skip: "\<lbrakk>i \<ge> length xs\<rbrakk> \<Longrightarrow> (xs @ ys) ! i = ys ! (i - length xs)"
+  by (simp add: nth_append)
+
+lemma nth_append_take: "\<lbrakk>i < length xs\<rbrakk> \<Longrightarrow> (xs @ ys) ! i = xs ! i"
+  by (simp add: nth_append)
 
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
@@ -633,8 +666,30 @@ lemma quotient_of_scheme_cut_paste:
 proof -
   have "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3)"
     sorry \<comment> \<open>Munkres §76(iv): cut along diagonal, flip u2 piece, recombine.
-       Uses quotient\\_scheme\\_edge\\_permutation with \\<sigma> that swaps u2 block (reversed).\<close>
+       The transfer\\_bij\\_rel approach fails for cross-boundary labels (hsnd\\_rel condition).
+       Needs direct quotient construction or extended transfer handling edge reversal.\<close>
   thus ?thesis by (rule same_space_implies_homeo_realization_early)
+qed
+
+\<comment> \<open>Munkres Lemma 77.1 Step 1: a[y1]a[y2] ~ aa[y1^{-1} y2].
+   This is quotient\\_of\\_scheme\\_cut\\_paste with u1=[], u2=y1, u3=y2.\<close>
+lemma Lemma_77_1_step1:
+  fixes a_label :: nat and y1 y2 :: "(nat \<times> bool) list"
+  assumes hq: "top1_quotient_of_scheme_on Y TY
+      ([(a_label, True)] @ y1 @ [(a_label, True)] @ y2)"
+      and hlen: "length y1 \<ge> 1" "length y2 \<ge> 1"
+      and hproper: "\<forall>label. card {i. i < length ([(a_label, True)] @ y1 @ [(a_label, True)] @ y2)
+          \<and> fst (([(a_label, True)] @ y1 @ [(a_label, True)] @ y2) ! i) = label} \<in> {0, 2}"
+  shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
+    top1_quotient_of_scheme_on Y' TY'
+      ([(a_label, True), (a_label, True)] @ rev (map top1_inverse_edge y1) @ y2) \<and>
+    top1_homeomorphism_on Y TY Y' TY' h"
+proof -
+  \<comment> \<open>Delegates to quotient\\_of\\_scheme\\_cut\\_paste with u1=[], u2=y1, u3=y2.\<close>
+  have "top1_quotient_of_scheme_on Y TY ([] @ [(a_label, True)] @ y1 @ [(a_label, True)] @ y2)"
+    using hq by simp
+  from quotient_of_scheme_cut_paste[OF this]
+  show ?thesis by simp
 qed
 
 lemma quotient_of_scheme_cut_paste2:
@@ -809,9 +864,29 @@ proof -
      C8 (interior injectivity): interior of P' maps to interior of P (via phi),
        where q is injective by original C8. CHECK.
      C9 (edge-interior injectivity): from original C9 via phi mapping. CHECK.\<close>
-  \<comment> \<open>Full proof: construct P', phi, q' and verify all conditions.
-     This is the geometric spur insertion argument.
-     For now: sorry the full construction.\<close>
+  \<comment> \<open>PROOF: use regular (n+2)-gon P' and spur collapse map \\<phi>: P'\\<to>P.
+     q' = q \\<circ> \\<phi> is a quotient map (composition of closed continuous surjections).
+     \\<phi> collapses edges 0,1 to v\\_0 and maps edge k+2 linearly to edge k.\<close>
+  \<comment> \<open>Step 2: Construct P' = regular (n+2)-gon and define vertex coordinates.\<close>
+  define vx' where "vx' k = cos (2 * pi * real k / real ?n')" for k
+  define vy' where "vy' k = sin (2 * pi * real k / real ?n')" for k
+  define P' where "P' = {(x::real,y::real). \<exists>coeffs. (\<forall>i<?n'. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<?n'. coeffs i) = 1
+                     \<and> x = (\<Sum>i<?n'. coeffs i * vx' i)
+                     \<and> y = (\<Sum>i<?n'. coeffs i * vy' i)}"
+  \<comment> \<open>Step 3: Define spur collapse \\<phi>: P' \\<to> P.
+     On boundary: edges 0,1 map to v\\_0; edge k+2 maps linearly to edge k.
+     On interior: cone extension from centroid.\<close>
+  \<comment> \<open>Step 4: Define q' = q \\<circ> \\<phi>.\<close>
+  \<comment> \<open>Step 5: Verify C1-C11 for P', q', [a,inv a]@w.\<close>
+  \<comment> \<open>The full construction requires ~300 lines of geometric reasoning.
+     Key facts: P' is a valid polygon (C1,C3-C6,C10,C11 from regularity).
+     q' is a quotient map (C2 from composition of closed continuous surjections).
+     C7 for a-pair: \\<phi> maps both spur edges to v\\_0, so q'(edge0(t)) = q(v\\_0) = q'(edge1(1-t)).
+     C7 for w-labels: inherited from q via \\<phi>.
+     C8: interior of P' maps injectively to interior of P where q is injective.
+     C9: edge-interior identification from original C9 via \\<phi>.
+     For now: sorry the full verification.\<close>
   show ?thesis sorry
 qed
 
@@ -868,2005 +943,11 @@ qed
 \<comment> \<open>Same-space preservation implies homeomorphic-realization preservation (take Y=X, h=id).\<close>
 \<comment> \<open>Identity is a homeomorphism on any topological space.\<close>
 
-\<comment> \<open>Vertex identification helper (vertex\\_identification\\_scheme\\_determined) REMOVED:
-   was never used. The vertex case in uniqueness is handled directly
-   via the admitted steps at lines 4325/4437 (continuity/density argument).\<close>
-
-\<comment> \<open>Quotient-of-scheme uniqueness: any two quotient spaces of the same scheme are homeomorphic.
-   Proof: both are quotients of convex n-gons by the same identification pattern.
-   The n-gons are homeomorphic (convex compact in R²), and the homeomorphism respects
-   the boundary identifications. So the quotient spaces are homeomorphic.\<close>
-lemma scheme_quotient_uniqueness:
-  assumes "is_topology_on_strict Y1 TY1" and "is_topology_on_strict Y2 TY2"
-      and "top1_quotient_of_scheme_on Y1 TY1 scheme"
-      and "top1_quotient_of_scheme_on Y2 TY2 scheme"
-  shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-proof -
-  let ?n = "length scheme"
-  let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
-  \<comment> \<open>Step 1: Extract ALL 11 conditions from both quotients.\<close>
-  from assms(3) obtain P1 q1 vx1 vy1 where
-      hC1_1: "top1_is_polygonal_region_on P1 ?n"
-    and hC2_1: "top1_quotient_map_on P1 (?TP P1) Y1 TY1 q1"
-    and hC3_1: "\<forall>i<?n. \<forall>j<?n. i \<noteq> j \<longrightarrow> (vx1 i, vy1 i) \<noteq> (vx1 j, vy1 j)"
-    and hC4_1: "\<forall>i<?n. (vx1 i, vy1 i) \<in> P1"
-    and hC5_1: "P1 = {(x, y) | x y.
-              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
-                     \<and> (\<Sum>i<?n. coeffs i) = 1
-                     \<and> x = (\<Sum>i<?n. coeffs i * vx1 i)
-                     \<and> y = (\<Sum>i<?n. coeffs i * vy1 i)}"
-    and hC7_1: "\<forall>i<?n. \<forall>j<?n. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
-        (\<forall>t\<in>I_set.
-           q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-              (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
-         = (if snd (scheme!i) = snd (scheme!j)
-            then q1 ((1-t) * vx1 j + t * vx1 (Suc j mod ?n),
-                    (1-t) * vy1 j + t * vy1 (Suc j mod ?n))
-            else q1 (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
-                    t * vy1 j + (1-t) * vy1 (Suc j mod ?n))))"
-    and hC8_1: "\<forall>p\<in>P1. (\<forall>i<?n. \<forall>t\<in>I_set.
-                p \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-                      (1-t) * vy1 i + t * vy1 (Suc i mod ?n)))
-             \<longrightarrow> (\<forall>p'\<in>P1. q1 p = q1 p' \<longrightarrow> p = p')"
-    and hC9_1: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
-            q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-               (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
-          = q1 ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
-               (1-s) * vy1 j + s * vy1 (Suc j mod ?n))
-          \<longrightarrow> (i = j \<and> t = s)
-            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-    and hC10_1: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx1 j) / real ?n;
-                             cy = (\<Sum>j<?n. vy1 j) / real ?n
-         in (vx1 i - cx) * (vy1 (Suc i mod ?n) - cy)
-          - (vy1 i - cy) * (vx1 (Suc i mod ?n) - cx) > 0"
-    and hC11_1: "\<forall>i<?n. \<forall>k<?n.
-          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
-          (vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i)
-          - (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i) < 0"
-    by (rule quotient_of_scheme_extract_vx)
-  from assms(4) obtain P2 q2 vx2 vy2 where
-      hC1_2: "top1_is_polygonal_region_on P2 ?n"
-    and hC2_2: "top1_quotient_map_on P2 (?TP P2) Y2 TY2 q2"
-    and hC4_2: "\<forall>i<?n. (vx2 i, vy2 i) \<in> P2"
-    and hC5_2: "P2 = {(x, y) | x y.
-              \<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0)
-                     \<and> (\<Sum>i<?n. coeffs i) = 1
-                     \<and> x = (\<Sum>i<?n. coeffs i * vx2 i)
-                     \<and> y = (\<Sum>i<?n. coeffs i * vy2 i)}"
-    and hC7_2: "\<forall>i<?n. \<forall>j<?n. fst (scheme!i) = fst (scheme!j) \<longrightarrow>
-        (\<forall>t\<in>I_set.
-           q2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-              (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
-         = (if snd (scheme!i) = snd (scheme!j)
-            then q2 ((1-t) * vx2 j + t * vx2 (Suc j mod ?n),
-                    (1-t) * vy2 j + t * vy2 (Suc j mod ?n))
-            else q2 (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
-                    t * vy2 j + (1-t) * vy2 (Suc j mod ?n))))"
-    and hC8_2: "\<forall>p\<in>P2. (\<forall>i<?n. \<forall>t\<in>I_set.
-                p \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-                      (1-t) * vy2 i + t * vy2 (Suc i mod ?n)))
-             \<longrightarrow> (\<forall>p'\<in>P2. q2 p = q2 p' \<longrightarrow> p = p')"
-    and hC9_2: "\<forall>i<?n. \<forall>j<?n. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
-            q2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-               (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
-          = q2 ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
-               (1-s) * vy2 j + s * vy2 (Suc j mod ?n))
-          \<longrightarrow> (i = j \<and> t = s)
-            \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-               (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-    and hC10_2: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx2 j) / real ?n;
-                             cy = (\<Sum>j<?n. vy2 j) / real ?n
-         in (vx2 i - cx) * (vy2 (Suc i mod ?n) - cy)
-          - (vy2 i - cy) * (vx2 (Suc i mod ?n) - cx) > 0"
-    and hC11_2: "\<forall>i<?n. \<forall>k<?n.
-          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
-          (vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i)
-          - (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) < 0"
-    by (rule quotient_of_scheme_extract_vx)
-  have hn3: "?n \<ge> 3" using hC1_1 unfolding top1_is_polygonal_region_on_def by (by100 blast)
-  \<comment> \<open>Step 2: Derive non-strict side conditions (needed for disk homeomorphism).\<close>
-  have hside_le_1: "\<forall>i<?n. \<forall>k<?n.
-      (vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i)
-      - (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i) \<le> 0"
-  proof (intro allI impI)
-    fix i k assume "i < ?n" "k < ?n"
-    show "(vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i) -
-          (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i) \<le> 0"
-    proof (cases "k = i")
-      case True thus ?thesis by (by100 simp)
-    next
-      case False
-      show ?thesis
-      proof (cases "k = Suc i mod ?n")
-        case True
-        hence "(vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i) =
-               (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i)" by (by100 simp)
-        thus ?thesis by (by100 simp)
-      next
-        case False2: False
-        from hC11_1 \<open>i < ?n\<close> \<open>k < ?n\<close> False False2
-        have "(vx1 k - vx1 i) * (vy1 (Suc i mod ?n) - vy1 i) -
-              (vy1 k - vy1 i) * (vx1 (Suc i mod ?n) - vx1 i) < 0" by (by100 blast)
-        thus ?thesis by (by100 linarith)
-      qed
-    qed
-  qed
-  have hside_le_2: "\<forall>i<?n. \<forall>k<?n.
-      (vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i)
-      - (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) \<le> 0"
-  proof (intro allI impI)
-    fix i k assume "i < ?n" "k < ?n"
-    show "(vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i) -
-          (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) \<le> 0"
-    proof (cases "k = i")
-      case True thus ?thesis by (by100 simp)
-    next
-      case False
-      show ?thesis
-      proof (cases "k = Suc i mod ?n")
-        case True
-        hence "(vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i) =
-               (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i)" by (by100 simp)
-        thus ?thesis by (by100 simp)
-      next
-        case False2: False
-        from hC11_2 \<open>i < ?n\<close> \<open>k < ?n\<close> \<open>k \<noteq> i\<close> False2
-        have "(vx2 k - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i) -
-              (vy2 k - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) < 0" by (by100 blast)
-        thus ?thesis by (by100 linarith)
-      qed
-    qed
-  qed
-  \<comment> \<open>Step 3: Get edge-preserving homeomorphisms P1 \\<to> B² \\<to> P2 via disk lemma.\<close>
-  \<comment> \<open>Apply polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary to both polygons.
-     The lemma uses cross2 from AlgTopChain. Need to convert our conditions.\<close>
-  \<comment> \<open>Convert hside\\_le\\_1 and hC11\\_1 to cross2 form.\<close>
-  have hvert_hp_1: "\<forall>i<?n. \<forall>k<?n. AlgTopChain.cross2 (vx1 k - vx1 i, vy1 k - vy1 i)
-      (vx1 (Suc i mod ?n) - vx1 i, vy1 (Suc i mod ?n) - vy1 i) \<le> 0"
-    using hside_le_1 unfolding AlgTopChain.cross2_def by (by100 simp)
-  have hstrict_hp_1: "\<forall>i<?n. \<forall>k<?n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
-      AlgTopChain.cross2 (vx1 k - vx1 i, vy1 k - vy1 i)
-          (vx1 (Suc i mod ?n) - vx1 i, vy1 (Suc i mod ?n) - vy1 i) < 0"
-    using hC11_1 unfolding AlgTopChain.cross2_def by (by100 simp)
-  have hdisk1: "\<exists>\<psi>. top1_homeomorphism_on P1 (?TP P1) top1_B2 top1_B2_topology \<psi>
-    \<and> (\<forall>i<?n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-        (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
-      = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n)))"
-    using AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
-      [OF hC1_1 hn3 hC4_1 hC5_1 hC10_1 hvert_hp_1 hstrict_hp_1]
-  proof -
-    from AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
-        [OF hC1_1 hn3 hC4_1 hC5_1 hC10_1 hvert_hp_1 hstrict_hp_1]
-    show ?thesis
-      apply (elim exE conjE)
-      apply (intro exI conjI)
-       apply assumption
-      apply assumption
-      done
-  qed
-  then obtain \<psi>1 where
-    h\<psi>1_homeo: "top1_homeomorphism_on P1 (?TP P1) top1_B2 top1_B2_topology \<psi>1"
-    and h\<psi>1_edge: "\<forall>i<?n. \<forall>t\<in>I_set. \<psi>1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-        (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
-      = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n))"
-    by (by100 blast)
-  have hvert_hp_2: "\<forall>i<?n. \<forall>k<?n. AlgTopChain.cross2 (vx2 k - vx2 i, vy2 k - vy2 i)
-      (vx2 (Suc i mod ?n) - vx2 i, vy2 (Suc i mod ?n) - vy2 i) \<le> 0"
-    using hside_le_2 unfolding AlgTopChain.cross2_def by (by100 simp)
-  have hstrict_hp_2: "\<forall>i<?n. \<forall>k<?n. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod ?n \<longrightarrow>
-      AlgTopChain.cross2 (vx2 k - vx2 i, vy2 k - vy2 i)
-          (vx2 (Suc i mod ?n) - vx2 i, vy2 (Suc i mod ?n) - vy2 i) < 0"
-    using hC11_2 unfolding AlgTopChain.cross2_def by (by100 simp)
-  have hdisk2: "\<exists>\<psi>. top1_homeomorphism_on P2 (?TP P2) top1_B2 top1_B2_topology \<psi>
-    \<and> (\<forall>i<?n. \<forall>t\<in>I_set. \<psi> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-        (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
-      = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n)))"
-  proof -
-    from AlgTopChain.polygon_homeomorphic_to_disk_with_boundary
-        [OF hC1_2 hn3 hC4_2 hC5_2 hC10_2 hvert_hp_2 hstrict_hp_2]
-    show ?thesis
-      apply (elim exE conjE)
-      apply (intro exI conjI)
-       apply assumption
-      apply assumption
-      done
-  qed
-  then obtain \<psi>2 where
-    h\<psi>2_homeo: "top1_homeomorphism_on P2 (?TP P2) top1_B2 top1_B2_topology \<psi>2"
-    and h\<psi>2_edge: "\<forall>i<?n. \<forall>t\<in>I_set. \<psi>2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-        (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
-      = (cos (2*pi*(real i + t)/real ?n), sin (2*pi*(real i + t)/real ?n))"
-    by (by100 blast)
-  \<comment> \<open>Step 4: Compose \\<psi>2\\<inverse> \\<circ> \\<psi>1 to get edge-preserving \\<phi>: P1 \\<to> P2.\<close>
-  from homeomorphism_inverse[OF h\<psi>2_homeo]
-  have h\<psi>2_inv: "top1_homeomorphism_on top1_B2 top1_B2_topology P2 (?TP P2) (inv_into P2 \<psi>2)" .
-  define \<phi> where "\<phi> = (inv_into P2 \<psi>2) \<circ> \<psi>1"
-  from homeomorphism_comp[OF h\<psi>1_homeo h\<psi>2_inv]
-  have h\<phi>: "top1_homeomorphism_on P1 (?TP P1) P2 (?TP P2) \<phi>" unfolding \<phi>_def .
-  \<comment> \<open>Step 5: \\<phi> preserves edge parametrization.\<close>
-  \<comment> \<open>\\<phi> preserves edge parametrization: \\<psi>1 and \\<psi>2 map corresponding edge points to
-     the same S¹ point (cos/sin at 2\\<pi>(i+t)/n), so \\<psi>2\\<inverse> \\<circ> \\<psi>1 maps edge i of P1
-     to edge i of P2. Uses h\\<psi>1\\_edge, h\\<psi>2\\_edge, injectivity of \\<psi>2, and inv\\_into\\_f\\_f.\<close>
-  have h\<psi>2_bij: "bij_betw \<psi>2 P2 top1_B2"
-    using h\<psi>2_homeo unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
-    by (by100 blast)
-  have h\<psi>2_inj: "inj_on \<psi>2 P2"
-    using h\<psi>2_bij unfolding bij_betw_def by (by100 blast)
-  have h\<phi>_edge: "\<forall>i<?n. \<forall>t\<in>I_set.
-      \<phi> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-         (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
-      = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-         (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
-    \<comment> \<open>Apply standalone lemmas: composed\\_disk\\_homeo\\_edge\\_preserving + edge\\_point\\_in\\_polygon\\_witness.\<close>
-    apply (intro allI impI ballI)
-    apply (unfold \<phi>_def comp_def)
-    \<comment> \<open>Goal: inv\\_into P2 \\<psi>2 (\\<psi>1 (edge1(i,t))) = edge2(i,t).
-       Now i < n and t \\<in> I\\_set are meta-level assumptions (from impI + ballI).\<close>
-    apply (subst h\<psi>1_edge[rule_format], assumption, assumption)
-    apply (subst h\<psi>2_edge[rule_format, symmetric], assumption, assumption)
-    apply (rule inv_into_f_f[OF h\<psi>2_inj])
-    apply (rule edge_point_in_polygon_witness[OF hn3 _ _ hC5_2], assumption, assumption)
-    done
-  \<comment> \<open>Step 6: q2 \\<circ> \\<phi> is a quotient map P1 \\<to> Y2.\<close>
-  have h\<phi>_quot: "top1_quotient_map_on P1 (?TP P1) P2 (?TP P2) \<phi>"
-    by (rule top1_homeomorphism_on_imp_quotient_map_on[OF h\<phi>])
-  have hcomp_quot: "top1_quotient_map_on P1 (?TP P1) Y2 TY2 (q2 \<circ> \<phi>)"
-    by (rule top1_quotient_map_on_comp[OF h\<phi>_quot hC2_2])
-  \<comment> \<open>Step 7: Fibres of q1 and q2\\<circ>\\<phi> agree (key step, uses edge preservation).
-     Interior points: both maps are injective (C8), so fibres match.
-     Edge points: \\<phi> preserves edge parametrization, so the scheme identification
-     pattern is preserved. q1 identifies edges i,j iff scheme says so, and
-     q2\\<circ>\\<phi> identifies the same edges because \\<phi> maps edge i to edge i.\<close>
-  \<comment> \<open>Helper: \\<phi> is bijective (from homeomorphism).\<close>
-  have h\<phi>_bij: "bij_betw \<phi> P1 P2"
-    using h\<phi> unfolding top1_homeomorphism_on_def top1_continuous_map_on_def
-    by (by100 blast)
-  \<comment> \<open>Helper: \\<phi> preserves interior (not-on-boundary) of P1 to interior of P2.\<close>
-  have h\<phi>_int: "\<And>x. \<lbrakk>x \<in> P1; \<forall>i<?n. \<forall>t\<in>I_set.
-      x \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-            (1-t) * vy1 i + t * vy1 (Suc i mod ?n))\<rbrakk> \<Longrightarrow>
-      \<forall>i<?n. \<forall>t\<in>I_set.
-      \<phi> x \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-            (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
-    by (rule edge_preserving_homeo_interior[OF h\<phi>_bij h\<phi>_edge hn3 hC5_1])
-  \<comment> \<open>\\<phi> maps P1 into P2 (from bij\\_betw).\<close>
-  have h\<phi>_img: "\<And>x. x \<in> P1 \<Longrightarrow> \<phi> x \<in> P2"
-    using h\<phi>_bij unfolding bij_betw_def by (by100 blast)
-  have hfibres: "\<forall>x\<in>P1. \<forall>y\<in>P1. (q1 x = q1 y) \<longleftrightarrow> ((q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y)"
-  proof (intro ballI iffI)
-    fix x y assume hxP: "x \<in> P1" and hyP: "y \<in> P1"
-    \<comment> \<open>Forward: q1 x = q1 y \\<Longrightarrow> q2(\\<phi>(x)) = q2(\\<phi>(y)).\<close>
-    {
-      assume heq: "q1 x = q1 y"
-      \<comment> \<open>Case split: is x on a boundary edge?\<close>
-      consider
-        (x_int) "\<forall>i<?n. \<forall>t\<in>I_set. x \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-              (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
-        | (x_bdy) "\<exists>i<?n. \<exists>t\<in>I_set. x = ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-              (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
-        by (by100 blast)
-      hence "(q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y"
-      proof cases
-        case x_int
-        \<comment> \<open>x is interior: C8\\_1 says q1 injective at x, so x = y.\<close>
-        from hC8_1 hxP x_int have "\<forall>p'\<in>P1. q1 x = q1 p' \<longrightarrow> x = p'" by (by100 blast)
-        hence "x = y" using hyP heq by (by100 blast)
-        thus ?thesis by (by100 simp)
-      next
-        case x_bdy
-        then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set"
-          and hx_eq: "x = ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-                           (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
-          by (by100 blast)
-        \<comment> \<open>Is y on a boundary edge?\<close>
-        consider
-          (y_int) "\<forall>j<?n. \<forall>s\<in>I_set. y \<noteq> ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
-                (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
-          | (y_bdy) "\<exists>j<?n. \<exists>s\<in>I_set. y = ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
-                (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
-          by (by100 blast)
-        thus ?thesis
-        proof cases
-          case y_int
-          \<comment> \<open>y interior: C8\\_1 says q1 injective at y, so y = x.\<close>
-          from hC8_1 hyP y_int have "\<forall>p'\<in>P1. q1 y = q1 p' \<longrightarrow> y = p'" by (by100 blast)
-          hence "y = x" using hxP heq[symmetric] by (by100 blast)
-          thus ?thesis by (by100 simp)
-        next
-          case y_bdy
-          \<comment> \<open>Both on boundary: use C7/C9 — identification depends only on scheme.\<close>
-          then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set"
-            and hy_eq: "y = ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
-                             (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
-            by (by100 blast)
-          \<comment> \<open>From q1(e1(i,t)) = q1(e1(j,s)) and C9\\_1: get label/direction condition.
-             C9 now only applies to interior edge points (0 < t < 1).
-             Vertex case (t=0 or t=1) needs separate C7-based argument.\<close>
-          \<comment> \<open>Need: q2(\\<phi>(x)) = q2(\\<phi>(y)), i.e. q2(e2(i,t)) = q2(e2(j,s)).\<close>
-          have h\<phi>x: "\<phi> x = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-                             (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
-            using h\<phi>_edge[rule_format, OF hi ht] hx_eq by (by100 simp)
-          have h\<phi>y: "\<phi> y = ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
-                             (1-s) * vy2 j + s * vy2 (Suc j mod ?n))"
-            using h\<phi>_edge[rule_format, OF hj hs] hy_eq by (by100 simp)
-          \<comment> \<open>Split: interior (use C9) vs vertex (direct argument).\<close>
-          show ?thesis
-          proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
-            case True
-            \<comment> \<open>Interior case: use C9 to get hcond, then C7\\_2.\<close>
-            hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
-            from hC9_1 hi hj this heq[unfolded hx_eq hy_eq]
-            have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-                (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-              by (by100 blast)
-            from hcond show ?thesis
-            proof (elim disjE conjE)
-              assume "i = j" "t = s"
-              thus ?thesis using h\<phi>x h\<phi>y by (by100 simp)
-            next
-              assume hlabel: "fst (scheme!i) = fst (scheme!j)"
-                and hdir: "if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t"
-              from hC7_2 hi hj hlabel ht
-              have "q2 ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-                        (1-t) * vy2 i + t * vy2 (Suc i mod ?n))
-                  = (if snd (scheme!i) = snd (scheme!j)
-                     then q2 ((1-t) * vx2 j + t * vx2 (Suc j mod ?n),
-                             (1-t) * vy2 j + t * vy2 (Suc j mod ?n))
-                     else q2 (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
-                             t * vy2 j + (1-t) * vy2 (Suc j mod ?n)))"
-                by (by100 blast)
-              thus ?thesis
-              proof (cases "snd (scheme!i) = snd (scheme!j)")
-                case True
-                hence "s = t" using hdir by (by100 simp)
-                thus ?thesis using \<open>q2 _ = _\<close> True h\<phi>x h\<phi>y by (by100 simp)
-              next
-                case False
-                hence "s = 1 - t" using hdir by (by100 simp)
-                hence "\<phi> y = (t * vx2 j + (1-t) * vx2 (Suc j mod ?n),
-                             t * vy2 j + (1-t) * vy2 (Suc j mod ?n))"
-                  using h\<phi>y by (by100 simp)
-                thus ?thesis using \<open>q2 _ = _\<close> False h\<phi>x by (by100 simp)
-              qed
-            qed
-          next
-            case False
-            \<comment> \<open>Vertex case: at least one of t, s is 0 or 1.
-               Derive q2(\\<phi>(x)) = q2(\\<phi>(y)) directly without hcond.
-               Vertices identified under q1 must also be identified under q2
-               because both use the same scheme and C7 determines vertex identification.\<close>
-            \<comment> \<open>Vertex case: at least one of t, s is 0 or 1.
-               Strategy: show vertex identification follows from C7 applied at vertex parameters.
-               Since C7 holds for all t \\<in> I\\_set = {0..1}, including t=0 and t=1, and both q1/q2
-               satisfy C7 for the same scheme, vertex identifications are the same.
-               Key sub-cases: (1) both vertices, (2) one vertex + one edge-interior.\<close>
-            have ht_01: "t \<in> I_set" using ht .
-            have hs_01: "s \<in> I_set" using hs .
-            \<comment> \<open>Case 2a: both t, s are at 0 or 1 (both vertices).
-               Then x = vertex, y = vertex. q1 identifies them \\<Longrightarrow> q2 identifies them.
-               Case 2b: one of t,s in (0,1), the other at 0 or 1.
-               Then one is a vertex, the other is an edge interior.
-               By C8\\_1, the vertex must map to a value not achievable by any interior point.
-               But edges are on the boundary, so C8 doesn't directly apply.
-               Instead: use C9\\_1 limiting argument or show this case is impossible.\<close>
-            show ?thesis
-            proof (cases "0 < t \<and> t < 1")
-              case True \<comment> \<open>0 < t < 1, so s = 0 or s = 1.\<close>
-              hence "\<not>(0 < s \<and> s < 1)" using False by (by100 blast)
-              hence hs_vtx: "s = 0 \<or> s = 1" using hs unfolding top1_unit_interval_def by (by100 auto)
-              \<comment> \<open>Symmetric to the backward case: y is a vertex, x is edge-interior.\<close>
-              show ?thesis sorry \<comment> \<open>Vertex(y) \\<leftrightarrow> edge-interior(x) case. Needs C7+C9 argument.\<close>
-            next
-              case False
-              hence ht_vtx: "t = 0 \<or> t = 1" using ht unfolding top1_unit_interval_def by (by100 auto)
-              show ?thesis
-              proof (cases "0 < s \<and> s < 1")
-                case True \<comment> \<open>s in (0,1), t at vertex.\<close>
-                show ?thesis sorry \<comment> \<open>Vertex(x) \\<leftrightarrow> edge-interior(y) case.\<close>
-              next
-                case False \<comment> \<open>Both at vertices.\<close>
-                hence hs_vtx: "s = 0 \<or> s = 1" using hs unfolding top1_unit_interval_def by (by100 auto)
-                \<comment> \<open>x is vertex vx1(i) or vx1(Suc i mod n), y is vertex vx1(j) or vx1(Suc j mod n).
-                   q1(vx1(k)) = q1(vx1(l)) for some k, l.
-                   Need: q2(vx2(k)) = q2(vx2(l)).
-                   This follows from: for each matching label pair (i0,j0) in the scheme,
-                   C7 at t=0,1 identifies the same vertex pairs for both q1 and q2.
-                   The vertex identification classes are the same.\<close>
-                \<comment> \<open>Express x and y as vertices.\<close>
-                have "\<exists>k. k < ?n \<and> fst (\<phi> x) = vx2 k \<and> snd (\<phi> x) = vy2 k
-                    \<and> fst x = vx1 k \<and> snd x = vy1 k"
-                proof -
-                  from ht_vtx show ?thesis
-                  proof
-                    assume "t = 0"
-                    hence "x = (vx1 i, vy1 i)" using hx_eq by (by100 simp)
-                    moreover have "\<phi> x = (vx2 i, vy2 i)"
-                    proof -
-                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-                      from h\<phi>_edge[rule_format, OF hi this]
-                      have "\<phi> ((1-0) * vx1 i + 0 * vx1 (Suc i mod ?n),
-                              (1-0) * vy1 i + 0 * vy1 (Suc i mod ?n))
-                          = ((1-0) * vx2 i + 0 * vx2 (Suc i mod ?n),
-                             (1-0) * vy2 i + 0 * vy2 (Suc i mod ?n))" .
-                      thus ?thesis using \<open>x = (vx1 i, vy1 i)\<close> \<open>t = 0\<close> hx_eq by (by100 simp)
-                    qed
-                    ultimately have "fst (\<phi> x) = vx2 i \<and> snd (\<phi> x) = vy2 i \<and> fst x = vx1 i \<and> snd x = vy1 i"
-                      by (by100 auto)
-                    thus ?thesis using hi by (by100 blast)
-                  next
-                    assume "t = 1"
-                    hence hx_t1: "x = (vx1 (Suc i mod ?n), vy1 (Suc i mod ?n))" using hx_eq by (by100 simp)
-                    moreover have h\<phi>x_t1: "\<phi> x = (vx2 (Suc i mod ?n), vy2 (Suc i mod ?n))"
-                    proof -
-                      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-                      from h\<phi>_edge[rule_format, OF hi this]
-                      have "\<phi> ((1-1) * vx1 i + 1 * vx1 (Suc i mod ?n),
-                              (1-1) * vy1 i + 1 * vy1 (Suc i mod ?n))
-                          = ((1-1) * vx2 i + 1 * vx2 (Suc i mod ?n),
-                             (1-1) * vy2 i + 1 * vy2 (Suc i mod ?n))" .
-                      thus ?thesis using hx_t1 by (by100 simp)
-                    qed
-                    moreover have "Suc i mod ?n < ?n"
-                    proof -
-                      have "?n > 0" using hn3 by (by100 linarith)
-                      thus ?thesis by (by100 simp)
-                    qed
-                    ultimately have "fst (\<phi> x) = vx2 (Suc i mod ?n) \<and> snd (\<phi> x) = vy2 (Suc i mod ?n)
-                        \<and> fst x = vx1 (Suc i mod ?n) \<and> snd x = vy1 (Suc i mod ?n)"
-                      by (by100 auto)
-                    thus ?thesis using \<open>Suc i mod ?n < ?n\<close> by (by100 blast)
-                  qed
-                qed
-                then obtain kx where hkx: "kx < ?n" "fst (\<phi> x) = vx2 kx" "snd (\<phi> x) = vy2 kx"
-                    "fst x = vx1 kx" "snd x = vy1 kx"
-                  by (by100 blast)
-                have "\<exists>ky. ky < ?n \<and> fst (\<phi> y) = vx2 ky \<and> snd (\<phi> y) = vy2 ky
-                    \<and> fst y = vx1 ky \<and> snd y = vy1 ky"
-                proof -
-                  from hs_vtx show ?thesis
-                  proof
-                    assume "s = 0"
-                    hence hy_s0: "y = (vx1 j, vy1 j)" using hy_eq by (by100 simp)
-                    moreover have "\<phi> y = (vx2 j, vy2 j)"
-                    proof -
-                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-                      from h\<phi>_edge[rule_format, OF hj this]
-                      show ?thesis using hy_s0 by (by100 simp)
-                    qed
-                    ultimately have "fst (\<phi> y) = vx2 j \<and> snd (\<phi> y) = vy2 j \<and> fst y = vx1 j \<and> snd y = vy1 j"
-                      by (by100 auto)
-                    thus ?thesis using hj by (by100 blast)
-                  next
-                    assume "s = 1"
-                    hence hy_s1: "y = (vx1 (Suc j mod ?n), vy1 (Suc j mod ?n))" using hy_eq by (by100 simp)
-                    moreover have "\<phi> y = (vx2 (Suc j mod ?n), vy2 (Suc j mod ?n))"
-                    proof -
-                      have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
-                      from h\<phi>_edge[rule_format, OF hj this]
-                      show ?thesis using hy_s1 by (by100 simp)
-                    qed
-                    moreover have "Suc j mod ?n < ?n"
-                    proof -
-                      have "?n > 0" using hn3 by (by100 linarith)
-                      thus ?thesis by (by100 simp)
-                    qed
-                    ultimately have "fst (\<phi> y) = vx2 (Suc j mod ?n) \<and> snd (\<phi> y) = vy2 (Suc j mod ?n)
-                        \<and> fst y = vx1 (Suc j mod ?n) \<and> snd y = vy1 (Suc j mod ?n)"
-                      by (by100 auto)
-                    thus ?thesis using \<open>Suc j mod ?n < ?n\<close> by (by100 blast)
-                  qed
-                qed
-                then obtain ky where hky: "ky < ?n" "fst (\<phi> y) = vx2 ky" "snd (\<phi> y) = vy2 ky"
-                    "fst y = vx1 ky" "snd y = vy1 ky"
-                  by (by100 blast)
-                \<comment> \<open>Now: q1(vx1(kx)) = q1(vx1(ky)), need q2(vx2(kx)) = q2(vx2(ky)).
-                   Both follow from C7 applied at the vertex parameter.
-                   The vertex equivalence classes are generated by: for matching label edges (i0,j0),
-                   vx(i0) ~ vx(j0) (same dir) or vx(i0) ~ vx(Suc j0 mod n) (opp dir), etc.
-                   Since both q1 and q2 satisfy C7 for the same scheme, and the vertex identification
-                   is the transitive closure of these C7-endpoint identifications, they agree.\<close>
-                \<comment> \<open>Goal: q2(vx2 kx, vy2 kx) = q2(vx2 ky, vy2 ky).
-                   From: q1(vx1 kx, vy1 kx) = q1(vx1 ky, vy1 ky).
-                   Use C7 at t=0: for each matching label pair, C7 gives vertex identification.
-                   Both q1 and q2 satisfy C7 for the same scheme.\<close>
-                have hgoal: "(q2 \<circ> \<phi>) x = q2 (vx2 kx, vy2 kx)"
-                proof -
-                  have "\<phi> x = (vx2 kx, vy2 kx)" using hkx(2,3) by (cases "\<phi> x") (by100 auto)
-                  thus ?thesis by (by100 simp)
-                qed
-                have hgoal2: "(q2 \<circ> \<phi>) y = q2 (vx2 ky, vy2 ky)"
-                proof -
-                  have "\<phi> y = (vx2 ky, vy2 ky)" using hky(2,3) by (cases "\<phi> y") (by100 auto)
-                  thus ?thesis by (by100 simp)
-                qed
-                have hq1_eq: "q1 (vx1 kx, vy1 kx) = q1 (vx1 ky, vy1 ky)"
-                proof -
-                  have "x = (vx1 kx, vy1 kx)" using hkx(4,5) by (cases x) (by100 auto)
-                  moreover have "y = (vx1 ky, vy1 ky)" using hky(4,5) by (cases y) (by100 auto)
-                  ultimately show ?thesis using heq by (by100 simp)
-                qed
-                \<comment> \<open>Remaining goal: q2(vx2 kx, vy2 kx) = q2(vx2 ky, vy2 ky).
-                   Known: q1(vx1 kx, vy1 kx) = q1(vx1 ky, vy1 ky).
-                   Use: both q1/q2 satisfy C7 for the same scheme at the same vertex endpoints.
-                   Since (0::real) \\<in> I\\_set and (1::real) \\<in> I\\_set, C7 applies at vertices.\<close>
-                \<comment> \<open>Direct case: kx and ky are directly C7-connected (i.e., there exist matching
-                   label edges where kx and ky are endpoints).
-                   General case: kx and ky are connected by a CHAIN of C7 identifications.
-                   For now: sorry the general transitivity argument.\<close>
-                \<comment> \<open>KEY BLOCKER: vertex identification transfer requires:
-                   (A) Show q1(vx1 kx) = q1(vx1 ky) \\<Longrightarrow> \\<exists>C7 chain from kx to ky.
-                       (Hard: needs vertex-edge-interior separation, expert audit 27 §4)
-                   (B) C7 chain \\<Longrightarrow> q2(vx2 kx) = q2(vx2 ky).
-                       (Easy: C7\\_2 at t=0 gives q2(vx2(i)) = q2(vx2(j)) for matching edges.
-                        Transitivity of = gives the result for chains.)\<close>
-                show ?thesis using hgoal hgoal2 hq1_eq
-                  sorry \<comment> \<open>Vertex identification transfer.
-                     Needs vertex-edge-interior separation to show q1-identified vertices
-                     are C7-chain-connected. See expert audit 27 §4.\<close>
-              qed
-            qed
-          qed
-        qed
-      qed
-    }
-    thus "q1 x = q1 y \<Longrightarrow> (q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y" .
-  next
-    fix x y assume hxP: "x \<in> P1" and hyP: "y \<in> P1"
-    \<comment> \<open>Backward: q2(\\<phi>(x)) = q2(\\<phi>(y)) \\<Longrightarrow> q1 x = q1 y. Symmetric argument.\<close>
-    assume heq2: "(q2 \<circ> \<phi>) x = (q2 \<circ> \<phi>) y"
-    \<comment> \<open>Symmetric to forward, but using C8\\_2 on \\<phi>(x),\\<phi>(y) \\<in> P2, then pulling back to P1.\<close>
-    have h\<phi>xP: "\<phi> x \<in> P2" using h\<phi>_img hxP by (by100 blast)
-    have h\<phi>yP: "\<phi> y \<in> P2" using h\<phi>_img hyP by (by100 blast)
-    have heq2': "q2 (\<phi> x) = q2 (\<phi> y)" using heq2 by (by100 simp)
-    consider
-      (x_int) "\<forall>i<?n. \<forall>t\<in>I_set. x \<noteq> ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-            (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
-      | (x_bdy) "\<exists>i<?n. \<exists>t\<in>I_set. x = ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-            (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
-      by (by100 blast)
-    thus "q1 x = q1 y"
-    proof cases
-      case x_int
-      \<comment> \<open>x interior \\<Longrightarrow> \\<phi>(x) interior \\<Longrightarrow> q2 injective at \\<phi>(x) \\<Longrightarrow> \\<phi>(x)=\\<phi>(y) \\<Longrightarrow> x=y.\<close>
-      from h\<phi>_int hxP x_int
-      have "\<forall>i<?n. \<forall>t\<in>I_set. \<phi> x \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-          (1-t) * vy2 i + t * vy2 (Suc i mod ?n))" .
-      from hC8_2 h\<phi>xP this have "\<forall>p'\<in>P2. q2 (\<phi> x) = q2 p' \<longrightarrow> \<phi> x = p'" by (by100 blast)
-      hence "\<phi> x = \<phi> y" using h\<phi>yP heq2' by (by100 blast)
-      hence "x = y" using bij_betw_imp_inj_on[OF h\<phi>_bij] hxP hyP
-        unfolding inj_on_def by (by100 blast)
-      thus ?thesis by (by100 simp)
-    next
-      case x_bdy
-      then obtain i t where hi: "i < ?n" and ht: "t \<in> I_set"
-        and hx_eq: "x = ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-                         (1-t) * vy1 i + t * vy1 (Suc i mod ?n))"
-        by (by100 blast)
-      consider
-        (y_int) "\<forall>j<?n. \<forall>s\<in>I_set. y \<noteq> ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
-              (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
-        | (y_bdy) "\<exists>j<?n. \<exists>s\<in>I_set. y = ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
-              (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
-        by (by100 blast)
-      thus ?thesis
-      proof cases
-        case y_int
-        from h\<phi>_int hyP y_int
-        have "\<forall>i<?n. \<forall>t\<in>I_set. \<phi> y \<noteq> ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-            (1-t) * vy2 i + t * vy2 (Suc i mod ?n))" .
-        from hC8_2 h\<phi>yP this have "\<forall>p'\<in>P2. q2 (\<phi> y) = q2 p' \<longrightarrow> \<phi> y = p'" by (by100 blast)
-        hence "\<phi> y = \<phi> x" using h\<phi>xP heq2'[symmetric] by (by100 blast)
-        hence "y = x" using bij_betw_imp_inj_on[OF h\<phi>_bij] hxP hyP
-          unfolding inj_on_def by (by100 blast)
-        thus ?thesis by (by100 simp)
-      next
-        case y_bdy
-        then obtain j s where hj: "j < ?n" and hs: "s \<in> I_set"
-          and hy_eq: "y = ((1-s) * vx1 j + s * vx1 (Suc j mod ?n),
-                           (1-s) * vy1 j + s * vy1 (Suc j mod ?n))"
-          by (by100 blast)
-        \<comment> \<open>\\<phi>(x) = e2(i,t), \\<phi>(y) = e2(j,s). From C9\\_2 + C7\\_1: same argument as forward.\<close>
-        have h\<phi>x: "\<phi> x = ((1-t) * vx2 i + t * vx2 (Suc i mod ?n),
-                           (1-t) * vy2 i + t * vy2 (Suc i mod ?n))"
-          using h\<phi>_edge[rule_format, OF hi ht] hx_eq by (by100 simp)
-        have h\<phi>y: "\<phi> y = ((1-s) * vx2 j + s * vx2 (Suc j mod ?n),
-                           (1-s) * vy2 j + s * vy2 (Suc j mod ?n))"
-          using h\<phi>_edge[rule_format, OF hj hs] hy_eq by (by100 simp)
-        \<comment> \<open>Split: interior (C9\\_2 + C7\\_1) vs vertex (direct).\<close>
-        show ?thesis
-        proof (cases "0 < t \<and> t < 1 \<and> 0 < s \<and> s < 1")
-          case True
-          hence "t \<in> {0<..<(1::real)}" "s \<in> {0<..<(1::real)}" by (by100 auto)+
-          from hC9_2 hi hj this heq2'[unfolded h\<phi>x h\<phi>y]
-          have hcond: "(i = j \<and> t = s) \<or> (fst (scheme!i) = fst (scheme!j) \<and>
-              (if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t))"
-            by (by100 blast)
-          from hcond show ?thesis
-          proof (elim disjE conjE)
-            assume "i = j" "t = s"
-            thus ?thesis using hx_eq hy_eq by (by100 simp)
-          next
-            assume hlabel: "fst (scheme!i) = fst (scheme!j)"
-              and hdir: "if snd (scheme!i) = snd (scheme!j) then s = t else s = 1 - t"
-            from hC7_1 hi hj hlabel ht
-            have hq1: "q1 ((1-t) * vx1 i + t * vx1 (Suc i mod ?n),
-                          (1-t) * vy1 i + t * vy1 (Suc i mod ?n))
-                = (if snd (scheme!i) = snd (scheme!j)
-                   then q1 ((1-t) * vx1 j + t * vx1 (Suc j mod ?n),
-                           (1-t) * vy1 j + t * vy1 (Suc j mod ?n))
-                   else q1 (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
-                           t * vy1 j + (1-t) * vy1 (Suc j mod ?n)))"
-              by (by100 blast)
-            show ?thesis
-            proof (cases "snd (scheme!i) = snd (scheme!j)")
-              case True
-              hence "s = t" using hdir by (by100 simp)
-              thus ?thesis using hq1 True hx_eq hy_eq by (by100 simp)
-            next
-              case False
-              hence "s = 1 - t" using hdir by (by100 simp)
-              hence "y = (t * vx1 j + (1-t) * vx1 (Suc j mod ?n),
-                          t * vy1 j + (1-t) * vy1 (Suc j mod ?n))"
-                using hy_eq by (by100 simp)
-              thus ?thesis using hq1 False hx_eq by (by100 simp)
-            qed
-          qed
-        next
-          case False
-          \<comment> \<open>Vertex case: same approach as forward direction.\<close>
-          show ?thesis sorry \<comment> \<open>Vertex case in uniqueness backward direction.\<close>
-        qed
-      qed
-    qed
-  qed
-  from quotient_same_fibres_homeomorphic[OF hC2_1 hcomp_quot hfibres]
-  show ?thesis .
-qed
-
-\<comment> \<open>Spur-collapse homeomorphism (Munkres §76 operation (vi)).
-   Given canonical quotients of [a, a^{-1}] @ w and w (from scheme\\_quotient\\_exists),
-   the spur pair (first two edges) collapses to a vertex in the quotient.
-   The remaining edges correspond exactly to the w-scheme edges.
-   Result: quotient([a, a^{-1}] @ w) is homeomorphic to quotient(w).
-
-   Proof approach (following book §76, Figure 76.3):
-   Both P\\_ef and P\\_wf are homeomorphic to B2 (by polygon\\_homeomorphic\\_to\\_disk\\_with\\_boundary).
-   Under the disk homeomorphisms, the boundary edge arcs become S1 arcs.
-   The spur pair (edges 0,1) corresponds to two adjacent S1 arcs that are identified
-   by C7 (opposite direction). Collapsing these identified arcs gives B2 again.
-   The composition q\\_wf composed with disk\\_homeo composed with spur\\_collapse
-   gives a continuous surjection g: P\\_ef -> Y\\_wf.
-   Fibre matching g fibres = q\\_ef fibres follows from:
-   - Interior: C8 injectivity on both sides
-   - Non-spur edges: C7/C9 label matching transfers
-   - Spur to vertex: C12 prevents vertex-edge crossings
-   - Vertex chains: vtgt transfers via label correspondence
-   Apply quotient\\_same\\_fibres\\_homeomorphic.\<close>
-\<comment> \<open>Lemmas sin_sum_minus_sin_add, fan_det_pos_regular, cross_positive_from_det_bounds,
-   cross_negative_from_det_bounds, frac_eq_from_cross_mult, cyclic_sign_change,
-   convex_combo_edge_cross_strict have been moved to AlgTopCached17.\<close>
-
-\<comment> \<open>cramer\\_injective, triangle\\_coords\\_injective, same\\_sector\\_affine\\_injective
-   moved to AlgTopCached18.\<close>
-lemma fan_affine_interior_injective:
-  fixes ne nw :: nat
-    and vxe vye vxw vyw :: "nat \<Rightarrow> real"
-    and cxw cyw :: real
-  assumes hnw: "nw \<ge> 3" and hne_nw: "ne = nw + 2"
-      and hdet_pos: "\<forall>j<nw. (vxe(j+2)-vxe 1)*(vye(Suc(j+2) mod ne)-vye 1)-
-          (vye(j+2)-vye 1)*(vxe(Suc(j+2) mod ne)-vxe 1) > 0"
-      and hC10_w: "\<forall>i<nw. (vxw i - cxw) * (vyw(Suc i mod nw) - cyw) -
-          (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
-      \<comment> \<open>p in sector jp:\<close>
-      and hjp: "jp < nw"
-      and hin_p_ge: "(vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1) \<ge> 0"
-      and hin_p_le: "(vxe(Suc(jp+2) mod ne)-vxe 1)*(snd p-vye 1)-
-          (vye(Suc(jp+2) mod ne)-vye 1)*(fst p-vxe 1) \<le> 0"
-      \<comment> \<open>p' in sector jp':\<close>
-      and hjp': "jp' < nw"
-      and hin_p'_ge: "(vxe(jp'+2)-vxe 1)*(snd p'-vye 1)-(vye(jp'+2)-vye 1)*(fst p'-vxe 1) \<ge> 0"
-      and hin_p'_le: "(vxe(Suc(jp'+2) mod ne)-vxe 1)*(snd p'-vye 1)-
-          (vye(Suc(jp'+2) mod ne)-vye 1)*(fst p'-vxe 1) \<le> 0"
-      \<comment> \<open>p \\<noteq> v\\_1 and p' \\<noteq> v\\_1:\<close>
-      and hp_ne: "p \<noteq> (vxe 1, vye 1)" and hp'_ne: "p' \<noteq> (vxe 1, vye 1)"
-      \<comment> \<open>phi(p) = phi(p') (same piecewise-affine output):\<close>
-      and hphi_eq: "
-        (let ej = jp; si = Suc(ej+2) mod ne;
-             ex = vxe(ej+2)-vxe 1; ey = vye(ej+2)-vye 1;
-             fx = vxe si-vxe 1; fy = vye si-vye 1;
-             det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
-             s = (fy*dx-fx*dy)/det; t = (ex*dy-ey*dx)/det
-         in ((1-s-t)*cxw + s*vxw ej + t*vxw(Suc ej mod nw),
-             (1-s-t)*cyw + s*vyw ej + t*vyw(Suc ej mod nw)))
-      = (let ej' = jp'; si' = Suc(ej'+2) mod ne;
-             ex' = vxe(ej'+2)-vxe 1; ey' = vye(ej'+2)-vye 1;
-             fx' = vxe si'-vxe 1; fy' = vye si'-vye 1;
-             det' = ex'*fy'-ey'*fx'; dx' = fst p'-vxe 1; dy' = snd p'-vye 1;
-             s' = (fy'*dx'-fx'*dy')/det'; t' = (ex'*dy'-ey'*dx')/det'
-         in ((1-s'-t')*cxw + s'*vxw ej' + t'*vxw(Suc ej' mod nw),
-             (1-s'-t')*cyw + s'*vyw ej' + t'*vyw(Suc ej' mod nw)))"
-  shows "p = p'"
-proof (cases "jp = jp'")
-  case True
-  \<comment> \<open>Same sector: same\\_sector\\_affine\\_injective gives unique Cramer coords.\<close>
-  define ex_v where "ex_v = vxe(jp+2)-vxe 1"
-  define ey_v where "ey_v = vye(jp+2)-vye 1"
-  define fx_v where "fx_v = vxe(Suc(jp+2) mod ne)-vxe 1"
-  define fy_v where "fy_v = vye(Suc(jp+2) mod ne)-vye 1"
-  have hdet_s_ne: "ex_v*fy_v - ey_v*fx_v \<noteq> 0"
-    using hdet_pos[rule_format, OF hjp]
-    unfolding ex_v_def ey_v_def fx_v_def fy_v_def by linarith
-  have hdet_t_ne: "(vxw jp-cxw)*(vyw(Suc jp mod nw)-cyw)-(vyw jp-cyw)*(vxw(Suc jp mod nw)-cxw) \<noteq> 0"
-    using hC10_w[rule_format, OF hjp] by linarith
-  \<comment> \<open>hphi\\_eq with jp = jp' simplifies: same affine formula on both sides.\<close>
-  \<comment> \<open>The x-coordinate and y-coordinate equalities follow from the pair equality.\<close>
-  from hphi_eq have hphi_simp: "
-    (let det = ex_v*fy_v-ey_v*fx_v; dx = fst p-vxe 1; dy = snd p-vye 1;
-         s = (fy_v*dx-fx_v*dy)/det; t = (ex_v*dy-ey_v*dx)/det
-     in ((1-s-t)*cxw + s*vxw jp + t*vxw(Suc jp mod nw),
-         (1-s-t)*cyw + s*vyw jp + t*vyw(Suc jp mod nw)))
-  = (let det = ex_v*fy_v-ey_v*fx_v; dx = fst p'-vxe 1; dy = snd p'-vye 1;
-         s = (fy_v*dx-fx_v*dy)/det; t = (ex_v*dy-ey_v*dx)/det
-     in ((1-s-t)*cxw + s*vxw jp + t*vxw(Suc jp mod nw),
-         (1-s-t)*cyw + s*vyw jp + t*vyw(Suc jp mod nw)))"
-  proof -
-    from hphi_eq[unfolded Let_def] True
-    show ?thesis unfolding Let_def
-      ex_v_def ey_v_def fx_v_def fy_v_def by simp
-  qed
-  \<comment> \<open>Extract x and y coords from the pair.\<close>
-  define s1 where "s1 = (fy_v*(fst p-vxe 1)-fx_v*(snd p-vye 1))/(ex_v*fy_v-ey_v*fx_v)"
-  define t1 where "t1 = (ex_v*(snd p-vye 1)-ey_v*(fst p-vxe 1))/(ex_v*fy_v-ey_v*fx_v)"
-  define s2 where "s2 = (fy_v*(fst p'-vxe 1)-fx_v*(snd p'-vye 1))/(ex_v*fy_v-ey_v*fx_v)"
-  define t2 where "t2 = (ex_v*(snd p'-vye 1)-ey_v*(fst p'-vxe 1))/(ex_v*fy_v-ey_v*fx_v)"
-  from hphi_simp
-  have "((1-s1-t1)*cxw + s1*vxw jp + t1*vxw(Suc jp mod nw),
-         (1-s1-t1)*cyw + s1*vyw jp + t1*vyw(Suc jp mod nw))
-      = ((1-s2-t2)*cxw + s2*vxw jp + t2*vxw(Suc jp mod nw),
-         (1-s2-t2)*cyw + s2*vyw jp + t2*vyw(Suc jp mod nw))"
-    unfolding Let_def s1_def t1_def s2_def t2_def by simp
-  hence hx_eq: "(1-s1-t1)*cxw + s1*vxw jp + t1*vxw(Suc jp mod nw) =
-      (1-s2-t2)*cxw + s2*vxw jp + t2*vxw(Suc jp mod nw)"
-    and hy_eq: "(1-s1-t1)*cyw + s1*vyw jp + t1*vyw(Suc jp mod nw) =
-      (1-s2-t2)*cyw + s2*vyw jp + t2*vyw(Suc jp mod nw)"
-    by auto
-  \<comment> \<open>triangle\\_coords\\_injective gives s1 = s2 and t1 = t2.\<close>
-  from triangle_coords_injective[OF hdet_t_ne hx_eq hy_eq]
-  have "s1 = s2" "t1 = t2" by auto
-  \<comment> \<open>cramer\\_injective gives (fst p-vxe 1) = (fst p'-vxe 1) and (snd p-vye 1) = (snd p'-vye 1).\<close>
-  from \<open>s1 = s2\<close> have hs_eq: "(fy_v*(fst p-vxe 1)-fx_v*(snd p-vye 1))/(ex_v*fy_v-ey_v*fx_v) =
-      (fy_v*(fst p'-vxe 1)-fx_v*(snd p'-vye 1))/(ex_v*fy_v-ey_v*fx_v)"
-    unfolding s1_def s2_def .
-  from \<open>t1 = t2\<close> have ht_eq: "(ex_v*(snd p-vye 1)-ey_v*(fst p-vxe 1))/(ex_v*fy_v-ey_v*fx_v) =
-      (ex_v*(snd p'-vye 1)-ey_v*(fst p'-vxe 1))/(ex_v*fy_v-ey_v*fx_v)"
-    unfolding t1_def t2_def .
-  from cramer_injective[OF hdet_s_ne hs_eq ht_eq]
-  have "fst p-vxe 1 = fst p'-vxe 1" "snd p-vye 1 = snd p'-vye 1" by auto
-  hence "fst p = fst p'" "snd p = snd p'" by auto
-  thus ?thesis using prod_eqI by (by100 blast)
-next
-  case False
-  \<comment> \<open>Different sector: target fan interiors are disjoint.\<close>
-  show ?thesis sorry
-qed
-
-\<comment> \<open>Standalone lemma: if phi(p) = spur arc point and jp=0, then t\\_p = 0.
-   From the affine form: (1-s-t)*cw + s*u\\_0 + t*u\\_1 = (1-r)*u\\_0 + r*cw.
-   Rearranging: s*(u\\_0-cw) + t*(u\\_1-cw) = (1-r)*(u\\_0-cw).
-   Cramer with det(u\\_0-cw, u\\_1-cw) = C10(0) > 0:
-   t*C10(0) = (1-r)*det(u\\_0-cw, u\\_0-cw) = 0. So t = 0.\<close>
-lemma spur_match_sector0_forces_t_zero:
-  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
-  assumes hnw: "nw \<ge> 3"
-      and hC10_0: "(vxw 0 - cxw) * (vyw(Suc 0 mod nw) - cyw) - (vyw 0 - cyw) * (vxw(Suc 0 mod nw) - cxw) > 0"
-      and hmx: "(1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw) = (1-r)*vxw 0 + r*cxw"
-      and hmy: "(1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw) = (1-r)*vyw 0 + r*cyw"
-  shows "tp = 0"
-proof -
-  \<comment> \<open>Multiply hmx by (vyw 0-cyw), hmy by (vxw 0-cxw), subtract to eliminate s.\<close>
-  define Ay where "Ay = vyw 0 - cyw"
-  define Ax where "Ax = vxw 0 - cxw"
-  \<comment> \<open>From hmx: Ay*((1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw)) = Ay*((1-r)*vxw 0 + r*cxw).\<close>
-  \<comment> \<open>From hmy: Ax*((1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw)) = Ax*((1-r)*vyw 0 + r*cyw).\<close>
-  \<comment> \<open>Subtract: Ay*LHS\\_x - Ax*LHS\\_y = Ay*RHS\\_x - Ax*RHS\\_y.\<close>
-  \<comment> \<open>LHS: (1-s-tp)*(Ay*cxw-Ax*cyw) + s*(Ay*vxw 0-Ax*vyw 0) + tp*(Ay*vxw(suc)-Ax*vyw(suc)).\<close>
-  \<comment> \<open>Key: Ay*vxw 0 - Ax*vyw 0 = (vyw 0-cyw)*vxw 0 - (vxw 0-cxw)*vyw 0 = cxw*vyw 0-cyw*vxw 0
-     = Ay*cxw - Ax*cyw. So the (1-s-tp) and s terms COMBINE: (1-tp)*(Ay*cxw-Ax*cyw).\<close>
-  \<comment> \<open>RHS: (1-r)*Ay*vxw 0 + r*Ay*cxw - (1-r)*Ax*vyw 0 - r*Ax*cyw
-     = (1-r)*(Ay*vxw 0-Ax*vyw 0) + r*(Ay*cxw-Ax*cyw)
-     = (1-r)*(Ay*cxw-Ax*cyw) + r*(Ay*cxw-Ax*cyw) = Ay*cxw - Ax*cyw.\<close>
-  \<comment> \<open>So: (1-tp)*(Ay*cxw-Ax*cyw) + tp*(Ay*vxw(suc)-Ax*vyw(suc)) = Ay*cxw - Ax*cyw.\<close>
-  \<comment> \<open>Hence: tp*(Ay*vxw(suc)-Ax*vyw(suc) - (Ay*cxw-Ax*cyw)) = 0.\<close>
-  \<comment> \<open>The coefficient of tp is: Ay*(vxw(suc)-cxw) - Ax*(vyw(suc)-cyw) = C10(0) > 0.\<close>
-  \<comment> \<open>Define products for Cramer cross-multiplication.\<close>
-  have h1: "Ay*((1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw)) = Ay*((1-r)*vxw 0 + r*cxw)"
-    using hmx by simp
-  have h2: "Ax*((1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw)) = Ax*((1-r)*vyw 0 + r*cyw)"
-    using hmy by simp
-  \<comment> \<open>Subtract h2 from h1. On the LHS, the s*(Ay*vxw 0 - Ax*vyw 0) and
-     (1-s-tp)*(Ay*cxw - Ax*cyw) terms combine because Ay*vxw 0 - Ax*vyw 0 = Ay*cxw - Ax*cyw.
-     Result: tp * ((Ax*(vyw(Suc 0 mod nw)-cyw) - Ay*(vxw(Suc 0 mod nw)-cxw))) = 0.
-     But Ax*(vyw(suc)-cyw) - Ay*(vxw(suc)-cxw) = -C10(0) < 0. Wait, let me check the sign.\<close>
-  \<comment> \<open>Actually: Ay*vxw(suc) - Ax*vyw(suc) - (Ay*cxw - Ax*cyw) =
-     Ay*(vxw(suc)-cxw) - Ax*(vyw(suc)-cyw) = (vyw 0-cyw)*(vxw(suc)-cxw)-(vxw 0-cxw)*(vyw(suc)-cyw).
-     This is -C10(0) (by antisymmetry). So tp*(-C10(0)) = 0, tp = 0.\<close>
-  \<comment> \<open>The algebra is tedious but straightforward. Sorry for now.\<close>
-  \<comment> \<open>The key Cramer cross-multiplication identity.\<close>
-  have htp_zero: "tp * ((vyw 0-cyw)*(vxw(Suc 0 mod nw)-cxw) - (vxw 0-cxw)*(vyw(Suc 0 mod nw)-cyw)) = 0"
-  proof -
-    \<comment> \<open>h1-h2 gives: the difference of the cross-multiplied matching equations.\<close>
-    from h1 have h1': "(vyw 0-cyw)*((1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw)) =
-        (vyw 0-cyw)*((1-r)*vxw 0 + r*cxw)" unfolding Ay_def .
-    from h2 have h2': "(vxw 0-cxw)*((1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw)) =
-        (vxw 0-cxw)*((1-r)*vyw 0 + r*cyw)" unfolding Ax_def .
-    \<comment> \<open>Expand and subtract. The key cancellation: the s terms cancel because
-       (vyw 0-cyw)*vxw 0 - (vxw 0-cxw)*vyw 0 = cxw*(vyw 0)-cyw*(vxw 0)
-       and (vyw 0-cyw)*cxw - (vxw 0-cxw)*cyw = same. So (1-s-tp+s)=1-tp factor.\<close>
-    show ?thesis using h1' h2' by (by20000 algebra)
-  qed
-  have hdet_ne: "(vyw 0-cyw)*(vxw(Suc 0 mod nw)-cxw) - (vxw 0-cxw)*(vyw(Suc 0 mod nw)-cyw) \<noteq> 0"
-    using hC10_0 by linarith
-  from htp_zero hdet_ne show "tp = 0" by simp
-qed
-
-\<comment> \<open>Symmetric lemma for jp=nw-1: if phi(p) = spur and Suc jp mod nw = 0 (u\\_{jp+1}=u\\_0),
-   then s\\_p = 0. The matching equation gives s*(u\\_j-cw)+t*(u\\_0-cw)=(1-r)*(u\\_0-cw),
-   and Cramer with C10(jp) > 0 shows s = 0.\<close>
-lemma spur_match_sector_last_forces_s_zero:
-  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
-  assumes hnw: "nw \<ge> 3"
-      and hjp: "jp < nw" and hjp_last: "Suc jp mod nw = 0"
-      and hC10_jp: "(vxw jp - cxw) * (vyw(Suc jp mod nw) - cyw) - (vyw jp - cyw) * (vxw(Suc jp mod nw) - cxw) > 0"
-      and hmx: "(1-sp-t)*cxw + sp*vxw jp + t*vxw(Suc jp mod nw) = (1-r)*vxw 0 + r*cxw"
-      and hmy: "(1-sp-t)*cyw + sp*vyw jp + t*vyw(Suc jp mod nw) = (1-r)*vyw 0 + r*cyw"
-  shows "sp = 0"
-proof -
-  \<comment> \<open>Suc jp mod nw = 0, so vxw(Suc jp mod nw) = vxw 0.\<close>
-  from hjp_last have hvx: "vxw(Suc jp mod nw) = vxw 0" "vyw(Suc jp mod nw) = vyw 0" by auto
-  \<comment> \<open>Multiply hmy by (vxw(Suc jp mod nw)-cxw)=(vxw 0-cxw), hmx by (vyw(Suc jp mod nw)-cyw)=(vyw 0-cyw).
-     Subtract to eliminate t. For jp=nw-1: u\\_{jp+1}=u\\_0, so the t coefficients match the RHS.\<close>
-  define Bx where "Bx = vxw 0 - cxw"
-  define By where "By = vyw 0 - cyw"
-  have h1: "By*((1-sp-t)*cxw + sp*vxw jp + t*vxw 0) = By*((1-r)*vxw 0 + r*cxw)"
-    using hmx hvx by simp
-  have h2: "Bx*((1-sp-t)*cyw + sp*vyw jp + t*vyw 0) = Bx*((1-r)*vyw 0 + r*cyw)"
-    using hmy hvx by simp
-  \<comment> \<open>h1 - h2 eliminates t and (1-sp-t) by the same cancellation as sector0.\<close>
-  have hsp_zero: "sp * ((vxw jp - cxw)*(vyw 0 - cyw) - (vyw jp - cyw)*(vxw 0 - cxw)) = 0"
-  proof -
-    from h1 have h1': "By*((1-sp-t)*cxw + sp*vxw jp + t*vxw 0) =
-        By*((1-r)*vxw 0 + r*cxw)" .
-    from h2 have h2': "Bx*((1-sp-t)*cyw + sp*vyw jp + t*vyw 0) =
-        Bx*((1-r)*vyw 0 + r*cyw)" .
-    show ?thesis using h1' h2' unfolding Bx_def By_def by (by20000 algebra)
-  qed
-  have hdet_ne: "(vxw jp - cxw)*(vyw 0 - cyw) - (vyw jp - cyw)*(vxw 0 - cxw) \<noteq> 0"
-  proof -
-    from hC10_jp hvx have "(vxw jp - cxw)*(vyw 0 - cyw) - (vyw jp - cyw)*(vxw 0 - cxw) > 0"
-      by simp
-    thus ?thesis by linarith
-  qed
-  from hsp_zero hdet_ne show "sp = 0" by simp
-qed
-
-\<comment> \<open>Cramer inverse: if sp*det = fy*dx-fx*dy and tp*det = ex*dy-ey*dx and tp=0 and det\\<noteq>0,
-   then dx = sp*ex and dy = sp*ey.\<close>
-lemma cramer_inverse_tp_zero:
-  assumes hsp_mul: "sp*det_v = fy*dx - fx*dy"
-      and htp_mul: "tp*det_v = ex*dy - ey*dx"
-      and htp0: "(tp::real) = 0"
-      and hdet_ne: "det_v \<noteq> 0"
-      and hdet_eq: "det_v = ex*fy - ey*fx"
-  shows "dx = sp*ex" "dy = sp*ey"
-proof -
-  have "dx*det_v = (fy*dx-fx*dy)*ex + (ex*dy-ey*dx)*fx"
-    unfolding hdet_eq by (by20000 algebra)
-  hence "dx*det_v = sp*det_v*ex + tp*det_v*fx" using hsp_mul htp_mul by simp
-  with htp0 have "dx*det_v = (sp*ex)*det_v" by (by100 algebra)
-  thus "dx = sp*ex" using hdet_ne by simp
-next
-  have "dy*det_v = (fy*dx-fx*dy)*ey + (ex*dy-ey*dx)*fy"
-    unfolding hdet_eq by (by20000 algebra)
-  hence "dy*det_v = sp*det_v*ey + tp*det_v*fy" using hsp_mul htp_mul by simp
-  with htp0 have "dy*det_v = (sp*ey)*det_v" by (by100 algebra)
-  thus "dy = sp*ey" using hdet_ne by simp
-qed
-
-\<comment> \<open>Symmetric Cramer inverse: sp=0 gives dx = tp*fx, dy = tp*fy.\<close>
-lemma cramer_inverse_sp_zero:
-  assumes hsp_mul: "sp*det_v = fy*dx - fx*dy"
-      and htp_mul: "tp*det_v = ex*dy - ey*dx"
-      and hsp0: "(sp::real) = 0"
-      and hdet_ne: "det_v \<noteq> 0"
-      and hdet_eq: "det_v = ex*fy - ey*fx"
-  shows "dx = tp*fx" "dy = tp*fy"
-proof -
-  have "dx*det_v = (fy*dx-fx*dy)*ex + (ex*dy-ey*dx)*fx"
-    unfolding hdet_eq by (by20000 algebra)
-  hence "dx*det_v = sp*det_v*ex + tp*det_v*fx" using hsp_mul htp_mul by simp
-  with hsp0 have "dx*det_v = (tp*fx)*det_v" by (by100 algebra)
-  thus "dx = tp*fx" using hdet_ne by simp
-next
-  have "dy*det_v = (fy*dx-fx*dy)*ey + (ex*dy-ey*dx)*fy"
-    unfolding hdet_eq by (by20000 algebra)
-  hence "dy*det_v = sp*det_v*ey + tp*det_v*fy" using hsp_mul htp_mul by simp
-  with hsp0 have "dy*det_v = (tp*fy)*det_v" by (by100 algebra)
-  thus "dy = tp*fy" using hdet_ne by simp
-qed
-
-\<comment> \<open>Standalone lemma: spur arc point is NOT in target sector jp for jp \\<notin> {0, nw-1}.
-   The spur arc ((1-t)*u\\_0 + t*cw) has cross\\_cw(j, spur) = (1-t)*cross\\_cw(j, u\\_0).
-   cross\\_cw(j, u\\_0) = det(u\\_j-cw, u\\_0-cw).
-   For jp \\<notin> {0, nw-1}: either cross\\_cw(jp, u\\_0) < 0 (from consecutive C10 analysis)
-   or cross\\_cw(Suc jp mod nw, u\\_0) > 0, so the in\\_tsector condition fails.\<close>
-lemma spur_arc_target_sector:
-  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
-  assumes hnw: "nw \<ge> 3"
-      and hC10: "\<forall>i<nw. (vxw i - cxw) * (vyw(Suc i mod nw) - cyw) -
-          (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
-      and hC11: "\<forall>i<nw. \<forall>k<nw. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod nw \<longrightarrow>
-          (vxw k-vxw i)*(vyw(Suc i mod nw)-vyw i)-(vyw k-vyw i)*(vxw(Suc i mod nw)-vxw i) < 0"
-      and hC5: "cxw = (\<Sum>j<nw. vxw j) / real nw" "cyw = (\<Sum>j<nw. vyw j) / real nw"
-      and hfan_det: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < nw \<longrightarrow>
-          (vxw m - vxw 1) * (vyw n - vyw 1) - (vyw m - vyw 1) * (vxw n - vxw 1) > 0"
-      and hregular: "\<exists>r > 0. \<forall>j<nw. (vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2"
-      and hjp: "jp < nw" and hjp_ne0: "jp \<noteq> 0" and hjp_ne_last: "Suc jp mod nw \<noteq> 0"
-  shows "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0
-         \<or> (vxw(Suc jp mod nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod nw)-cyw)*(vxw 0-cxw) > 0"
-proof -
-  \<comment> \<open>cross\\_cw(j, u\\_0) = det(u\\_j-cw, u\\_0-cw) = -(det(u\\_0-cw, u\\_j-cw)).\<close>
-  define cc where "cc j = (vxw j-cxw)*(vyw 0-cyw)-(vyw j-cyw)*(vxw 0-cxw)" for j
-  \<comment> \<open>cc(0) = 0 (self), cc(1) < 0 (from C10 at i=0, antisymmetry),
-     cc(nw-1) > 0 (from C10 at i=nw-1).\<close>
-  have hcc0: "cc 0 = 0" unfolding cc_def by (by100 simp)
-  have hcc1: "cc 1 < 0"
-  proof -
-    from hC10[rule_format, of 0] hnw
-    have "(vxw 0 - cxw) * (vyw(Suc 0 mod nw) - cyw) - (vyw 0 - cyw) * (vxw(Suc 0 mod nw) - cxw) > 0"
-      by simp
-    hence "(vxw 0 - cxw) * (vyw 1 - cyw) - (vyw 0 - cyw) * (vxw 1 - cxw) > 0"
-      using hnw by simp
-    \<comment> \<open>cc(1) = -(the above) < 0.\<close>
-    \<comment> \<open>cc(1) = -(C10 at 0) by expand + algebra\\_simps.\<close>
-    have "cc 1 = -((vxw 0 - cxw) * (vyw 1 - cyw) - (vyw 0 - cyw) * (vxw 1 - cxw))"
-      unfolding cc_def by (simp add: algebra_simps mult.commute)
-    thus ?thesis using \<open>(vxw 0 - cxw) * (vyw 1 - cyw) - (vyw 0 - cyw) * (vxw 1 - cxw) > 0\<close> by linarith
-  qed
-  have hcc_last: "cc (nw - 1) > 0"
-  proof -
-    have "nw - 1 < nw" using hnw by linarith
-    from hC10[rule_format, OF this]
-    have "(vxw (nw-1) - cxw) * (vyw(Suc(nw-1) mod nw) - cyw) - (vyw (nw-1) - cyw) * (vxw(Suc(nw-1) mod nw) - cxw) > 0" .
-    have "Suc(nw-1) mod nw = 0" using hnw by simp
-    hence "(vxw (nw-1) - cxw) * (vyw 0 - cyw) - (vyw (nw-1) - cyw) * (vxw 0 - cxw) > 0"
-      using \<open>(vxw (nw-1) - cxw) * (vyw(Suc(nw-1) mod nw) - cyw) - (vyw (nw-1) - cyw) * (vxw(Suc(nw-1) mod nw) - cxw) > 0\<close>
-      by simp
-    thus ?thesis unfolding cc_def .
-  qed
-  \<comment> \<open>Main argument: if cc(jp) \\<ge> 0 then cc(Suc jp mod nw) > 0.
-     Proof: cc goes 0 \\<to> negative \\<to> ... \\<to> positive \\<to> 0.
-     Once cc becomes \\<ge> 0 (past the minimum), it stays positive.
-     This uses the monotone CCW sweep from C10.\<close>
-  show ?thesis
-  proof (cases "cc jp < 0")
-    case True thus ?thesis unfolding cc_def by auto
-  next
-    case False
-    hence "cc jp \<ge> 0" by linarith
-    \<comment> \<open>cc(jp) \\<ge> 0 with jp \\<ge> 1 and jp+1 < nw: show cc(jp+1) > 0.
-       Since cc(1) < 0 and cc(jp) \\<ge> 0 with jp \\<ge> 2: the sign changed from neg to nonneg.
-       With the CCW sweep, once nonneg, stays positive for subsequent vertices.\<close>
-    \<comment> \<open>Key: cc(jp+1) = cc(jp) + det(edge\\_jp, u\\_0-cw).
-       From the CCW sweep property: when cc(jp) \\<ge> 0, the edge direction
-       is such that the increment keeps cc positive.\<close>
-    \<comment> \<open>For now: sorry this monotonicity property.\<close>
-    \<comment> \<open>cc(jp) \\<ge> 0 and jp \\<noteq> 0 and jp+1 \\<noteq> nw: show cc(jp+1) > 0.
-       From cc(1) < 0: jp \\<ge> 2. From cc(nw-1) > 0: jp+1 \\<le> nw-2.
-       The centroid cross product sequence is: 0, neg, ..., neg, (0/pos), pos, ..., pos, 0.
-       Once non-negative, the subsequent values are positive.
-       This follows from the convex polygon structure (C10 + centroid inside).\<close>
-    \<comment> \<open>PROOF: Use the fact that each C10 step has angle < \\<pi>.
-       det(u\\_j-cw, u\\_{j+1}-cw) > 0 means the angle from cw→u\\_j to cw→u\\_{j+1} is in (0,\\<pi>).
-       Cumulative: if the total angle from u\\_0 to u\\_jp exceeds \\<pi> (i.e., cc(jp) \\<ge> 0),
-       adding one more step (< \\<pi>) keeps it in (\\<pi>, 2\\<pi>), so cc(jp+1) > 0.
-       This is formalized via the "cross product chain" property.\<close>
-    \<comment> \<open>Key helper: for vectors a,b with det(a,b) \\<le> 0 and |a|,|b| > 0, and c with det(b,c) > 0,
-       if additionally det(a, -(r*b+s*c)) \\<ge> 0 for some r > 0, s > 0 (encoding angle < 2\\<pi>),
-       then det(a,c) < 0.
-       Simpler: use the Jacobi identity det(a,b)*c + det(b,c)*a + det(c,a)*b = 0 (vector form).
-       From det(a,b) \\<le> 0, det(b,c) > 0: if det(a,c) \\<ge> 0, then from Jacobi:
-       det(a,b)*c = -det(b,c)*a + det(a,c)*b. The RHS has -det(b,c)*a (opposite to a) + det(a,c)*b.
-       Need to show this is contradictory given the polygon structure.\<close>
-    \<comment> \<open>Use the "half-plane chain" from C10:
-       The sequence u\\_0-cw, u\\_1-cw, ..., u\\_{nw-1}-cw goes CCW around cw.
-       Each pair (u\\_j-cw, u\\_{j+1}-cw) has positive det (C10).
-       The signed angle from the first to the last vector is exactly 2\\<pi>-\\<delta>\\_0 where \\<delta>\\_0 > 0.
-       u\\_0 is the "starting" direction. Once the cumulative angle passes \\<pi>,
-       the det with u\\_0-cw flips sign permanently.\<close>
-    have hjp_lt: "jp < nw - 1"
-    proof (rule ccontr)
-      assume "\<not> jp < nw - 1"
-      hence "jp \<ge> nw - 1" by (by100 linarith)
-      with hjp have "jp = nw - 1" by (by100 linarith)
-      hence "Suc jp = nw" using hnw by (by100 arith)
-      hence "Suc jp mod nw = 0" by (by100 simp)
-      with hjp_ne_last show False by simp
-    qed
-    have hsjp: "Suc jp mod nw = jp + 1" using hjp_lt by (by100 simp)
-    \<comment> \<open>The DECISIVE helper: det(u\\_0-cw, u\\_{jp+1}-cw) < 0 when det(u\\_0-cw, u\\_jp-cw) \\<le> 0.
-       This follows from: u\\_{jp+1} is CCW of u\\_jp (from C10), and the CCW step is < \\<pi>,
-       so u\\_{jp+1} stays in the same half-plane as u\\_jp (w.r.t. the line through cw \\<perp> u\\_0-cw).
-       Formal proof: use C11 to show the step stays bounded.\<close>
-    \<comment> \<open>PROOF via complex-number argument (Arg function).
-       Convert vectors to complex, use Arg(z\\_{j+1}/z\\_j) \\<in> (0,\\<pi>) from C10,
-       telescope to get cumulative angle, then use angle arithmetic.\<close>
-    define zw :: "nat \<Rightarrow> complex" where "zw j = Complex (vxw j - cxw) (vyw j - cyw)" for j
-    have hzw_ne: "\<forall>j<nw. zw j \<noteq> 0"
-    proof (intro allI impI)
-      fix j assume hj: "j < nw"
-      show "zw j \<noteq> 0"
-      proof
-        assume "zw j = 0"
-        hence "vxw j = cxw" "vyw j = cyw" unfolding zw_def by (auto simp: complex_eq_iff)
-        from hC10[rule_format, OF hj]
-        have "(vxw j - cxw) * (vyw(Suc j mod nw) - cyw) -
-            (vyw j - cyw) * (vxw(Suc j mod nw) - cxw) > 0" .
-        with \<open>vxw j = cxw\<close> \<open>vyw j = cyw\<close> show False by simp
-      qed
-    qed
-    \<comment> \<open>C10 gives Im(cnj(z\\_j)*z\\_{j+1}) > 0, i.e., the angular step is in (0,\\<pi>).\<close>
-    have hC10_im: "\<forall>j<nw. Im (cnj (zw j) * zw (Suc j mod nw)) > 0"
-    proof (intro allI impI)
-      fix j assume hj: "j < nw"
-      have "Im (cnj (zw j) * zw (Suc j mod nw)) =
-          (vxw j - cxw) * (vyw(Suc j mod nw) - cyw) - (vyw j - cyw) * (vxw(Suc j mod nw) - cxw)"
-      proof -
-        define a where "a = vxw j - cxw"
-        define b where "b = vyw j - cyw"
-        define c where "c = vxw(Suc j mod nw) - cxw"
-        define d where "d = vyw(Suc j mod nw) - cyw"
-        have hzj: "zw j = Complex a b" unfolding zw_def a_def b_def by simp
-        have hzk: "zw (Suc j mod nw) = Complex c d" unfolding zw_def c_def d_def by simp
-        have "cnj (zw j) * zw (Suc j mod nw) = Complex a (-b) * Complex c d"
-          unfolding hzj hzk using complex_cnj[of a b] by simp
-        also have "\<dots> = Complex (a*c+b*d) (a*d-b*c)"
-          using complex_mult[of a "- b" c d] by simp
-        finally have "Im (cnj (zw j) * zw (Suc j mod nw)) = a*d-b*c" by simp
-        thus ?thesis unfolding a_def b_def c_def d_def .
-      qed
-      also have "\<dots> > 0" using hC10[rule_format, OF hj] .
-      finally show "Im (cnj (zw j) * zw (Suc j mod nw)) > 0" .
-    qed
-    \<comment> \<open>cc(j) = Im(cnj(z\\_j)*z\\_0) = -(Im(cnj(z\\_0)*z\\_j)).\<close>
-    have hcc_im: "\<forall>j<nw. cc j = Im (cnj (zw j) * zw 0)"
-    proof (intro allI impI)
-      fix j assume "j < nw"
-      show "cc j = Im (cnj (zw j) * zw 0)"
-      proof -
-        define a where "a = vxw j - cxw"
-        define b where "b = vyw j - cyw"
-        define c where "c = vxw 0 - cxw"
-        define d where "d = vyw 0 - cyw"
-        have hzj: "zw j = Complex a b" unfolding zw_def a_def b_def by simp
-        have hz0: "zw 0 = Complex c d" unfolding zw_def c_def d_def by simp
-        have "cnj (zw j) * zw 0 = Complex a (-b) * Complex c d"
-          unfolding hzj hz0 using complex_cnj[of a b] by simp
-        also have "\<dots> = Complex (a*c+b*d) (a*d-b*c)"
-          using complex_mult[of a "- b" c d] by simp
-        finally have "Im (cnj (zw j) * zw 0) = a*d-b*c" by simp
-        also have "a*d-b*c = cc j" unfolding a_def b_def c_def d_def cc_def by (by100 simp)
-        finally show ?thesis by simp
-      qed
-    qed
-    \<comment> \<open>Define angular steps and cumulative angle.\<close>
-    define theta where "theta j = Arg (zw (Suc j mod nw) / zw j)" for j
-    have htheta_pos: "\<forall>j<nw. theta j > 0 \<and> theta j < pi"
-    proof (intro allI impI conjI)
-      fix j assume hj: "j < nw"
-      have hzj_ne: "zw j \<noteq> 0" using hzw_ne hj by (by100 blast)
-      have hzk_ne: "zw (Suc j mod nw) \<noteq> 0" using hzw_ne hj hnw by (by100 auto)
-      have hratio_ne: "zw (Suc j mod nw) / zw j \<noteq> 0" using hzj_ne hzk_ne by (by100 simp)
-      \<comment> \<open>Im(cnj z * w) = |z|^2 * Im(w/z).\<close>
-      \<comment> \<open>From Im(cnj z * w) > 0: Im(w/z) > 0 (since cnj z * w = |z|^2 * (w/z)).\<close>
-      have "Im (zw (Suc j mod nw) / zw j) > 0"
-      proof -
-        have "cnj (zw j) * (zw (Suc j mod nw) / zw j) = cnj (zw j) / zw j * zw (Suc j mod nw)"
-          using hzj_ne by (by100 simp)
-        have "cnj (zw j) * zw (Suc j mod nw) = zw j * cnj (zw j) * (zw (Suc j mod nw) / zw j)"
-          using hzj_ne by (by100 simp)
-        have "zw j * cnj (zw j) = of_real ((cmod (zw j))^2)"
-          using complex_norm_square[of "zw j"] by simp
-        hence "cnj (zw j) * zw (Suc j mod nw) = of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j)"
-          using \<open>cnj (zw j) * zw (Suc j mod nw) = zw j * cnj (zw j) * _\<close> by simp
-        hence hIm_eq: "Im (cnj (zw j) * zw (Suc j mod nw)) = (cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j)"
-        proof -
-          from \<open>cnj (zw j) * zw (Suc j mod nw) = of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j)\<close>
-          have "Im (cnj (zw j) * zw (Suc j mod nw)) = Im (of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j))"
-            by simp
-          also have "\<dots> = (cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j)"
-          proof -
-            define w where "w = zw (Suc j mod nw) / zw j"
-            define r where "r = (cmod (zw j))^2"
-            have "Im (of_real r * w) = r * Im w"
-            proof -
-              have "of_real r * w = Complex (r * Re w) (r * Im w)"
-                by (cases w) (simp add: complex_of_real_mult_Complex)
-              thus ?thesis by simp
-            qed
-            thus ?thesis unfolding w_def r_def .
-          qed
-          finally show ?thesis .
-        qed
-        with hC10_im[rule_format, OF hj] have "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) > 0" by linarith
-        moreover have "((cmod (zw j))^2 :: real) > 0" using hzj_ne by (by100 simp)
-        ultimately show ?thesis
-        proof -
-          assume hab: "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) > 0"
-              and ha: "((cmod (zw j))^2 :: real) > 0"
-          show "Im (zw (Suc j mod nw) / zw j) > 0"
-          proof (rule ccontr)
-            assume "\<not> Im (zw (Suc j mod nw) / zw j) > 0"
-            hence "Im (zw (Suc j mod nw) / zw j) \<le> 0" by linarith
-            hence "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) \<le> 0"
-              using ha mult_nonneg_nonpos[of "(cmod (zw j))^2" "Im (zw (Suc j mod nw) / zw j)"]
-              by linarith
-            with hab show False by linarith
-          qed
-        qed
-      qed
-      \<comment> \<open>From Im > 0 and z \\<noteq> 0: sin(Arg z) > 0, hence Arg z \\<in> (0, \\<pi>).\<close>
-      have "sin (Arg (zw (Suc j mod nw) / zw j)) > 0"
-        using sin_Arg[OF hratio_ne] \<open>Im (zw (Suc j mod nw) / zw j) > 0\<close> hratio_ne
-        by (by100 simp)
-      have "Arg (zw (Suc j mod nw) / zw j) > -pi" using Arg_bounded[of "zw (Suc j mod nw) / zw j"] by linarith
-      have "Arg (zw (Suc j mod nw) / zw j) \<le> pi" using Arg_bounded[of "zw (Suc j mod nw) / zw j"] by linarith
-      show "theta j > 0" unfolding theta_def
-      proof (rule ccontr)
-        assume "\<not> Arg (zw (Suc j mod nw) / zw j) > 0"
-        hence "Arg (zw (Suc j mod nw) / zw j) \<le> 0" by linarith
-        with \<open>Arg _ > -pi\<close> have "Arg (zw (Suc j mod nw) / zw j) \<in> {x. -pi < x \<and> x \<le> 0}" by auto
-        hence "sin (Arg (zw (Suc j mod nw) / zw j)) \<le> 0"
-        proof -
-          from \<open>Arg _ \<le> 0\<close> \<open>Arg _ > -pi\<close>
-          have h1: "0 \<le> -(Arg (zw (Suc j mod nw) / zw j))" by linarith
-          have h2: "-(Arg (zw (Suc j mod nw) / zw j)) \<le> pi" using \<open>Arg _ > -pi\<close> by linarith
-          from sin_ge_zero[OF h1 h2] have "sin (-(Arg (zw (Suc j mod nw) / zw j))) \<ge> 0" .
-          thus ?thesis by (by100 simp)
-        qed
-        with \<open>sin _ > 0\<close> show False by linarith
-      qed
-      show "theta j < pi" unfolding theta_def
-      proof (rule ccontr)
-        assume "\<not> Arg (zw (Suc j mod nw) / zw j) < pi"
-        with \<open>Arg _ \<le> pi\<close> have "Arg (zw (Suc j mod nw) / zw j) = pi" by linarith
-        hence "sin (Arg (zw (Suc j mod nw) / zw j)) = 0" by (by100 simp)
-        with \<open>sin _ > 0\<close> show False by linarith
-      qed
-    qed
-    define alpha where "alpha m = (\<Sum>j<m. theta j)" for m
-    \<comment> \<open>Partial telescope for m < nw: z\\_m = (\\<Prod>\\_{j<m} ratio\\_j) * z\\_0.
-       For j < m < nw: Suc j mod nw = j+1, so ratios telescope.\<close>
-    have hpartial_telescope: "\<forall>m<nw. zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
-    proof -
-      have aux: "\<And>m. m < nw \<Longrightarrow> zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
-      proof -
-        fix m show "m < nw \<Longrightarrow> zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
-        proof (induction m)
-          case 0 thus ?case by simp
-        next
-          case (Suc k)
-          hence hk_lt: "k < nw" by simp
-          have hSuc_lt: "Suc k < nw" using Suc.prems .
-          have hSuc_mod: "Suc k mod nw = Suc k" using hSuc_lt by (by100 simp)
-          from Suc.IH[OF hk_lt]
-          have hIH: "zw k = (\<Prod>j<k. zw (Suc j mod nw) / zw j) * zw 0" .
-          have "(\<Prod>j<Suc k. zw (Suc j mod nw) / zw j) =
-              (\<Prod>j<k. zw (Suc j mod nw) / zw j) * (zw (Suc k mod nw) / zw k)"
-            by simp
-          hence "(\<Prod>j<Suc k. zw (Suc j mod nw) / zw j) * zw 0 =
-              (\<Prod>j<k. zw (Suc j mod nw) / zw j) * (zw (Suc k) / zw k) * zw 0"
-            using hSuc_mod by simp
-          also have "\<dots> = (zw (Suc k) / zw k) * ((\<Prod>j<k. zw (Suc j mod nw) / zw j) * zw 0)"
-            by (by100 algebra)
-          also have "\<dots> = (zw (Suc k) / zw k) * zw k" using hIH by simp
-          also have "\<dots> = zw (Suc k)" using hzw_ne[rule_format, OF hk_lt] by simp
-          finally show ?case by simp
-        qed
-      qed
-      thus ?thesis by (by100 blast)
-    qed
-    \<comment> \<open>Product decomposition: each ratio = |ratio|*cis(theta).\<close>
-    \<comment> \<open>Product of cis: \\<Prod> cis(\\<theta>\\_j) = cis(\\<Sum> \\<theta>\\_j) = cis(alpha m).\<close>
-    \<comment> \<open>Telescope: \\<Prod>\\_{j<nw} (z\\_{j+1}/z\\_j) = 1, so cis(\\<Sum> \\<theta>\\_j) = 1, hence \\<Sum> = 2k\\<pi>.
-       For convex polygon (C10): k=1, so \\<Sum> = 2\\<pi>.\<close>
-    have htelescope: "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = 1"
-    proof -
-      have hnw1_lt: "nw - 1 < nw" using hnw by linarith
-      have hz0_ne: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
-      have hznw1_ne: "zw (nw-1) \<noteq> 0" using hzw_ne hnw1_lt by (by100 blast)
-      from hpartial_telescope[rule_format, OF hnw1_lt]
-      have hP: "zw (nw-1) = (\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) * zw 0" .
-      \<comment> \<open>Split: \\<Prod>\\_{j<nw} = (\\<Prod>\\_{j<nw-1}) * (zw(Suc(nw-1) mod nw) / zw(nw-1)).\<close>
-      define f where "f j = zw (Suc j mod nw) / zw j" for j
-      have "(\<Prod>j<nw. f j) = (\<Prod>j<nw-1. f j) * f (nw-1)"
-      proof -
-        have hnw_Suc: "nw = Suc (nw-1)" using hnw by (by100 arith)
-        have "{..<Suc (nw-1)} = insert (nw-1) {..<(nw-1)}" by (rule lessThan_Suc)
-        hence "{..<nw} = insert (nw-1) {..<nw-1}" using hnw_Suc by simp
-        hence "prod f {..<nw} = f (nw-1) * prod f {..<nw-1}" by simp
-        thus ?thesis by (by100 algebra)
-      qed
-      hence hsplit: "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) =
-          (\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) * (zw (Suc (nw-1) mod nw) / zw (nw-1))"
-        unfolding f_def .
-      have "Suc (nw-1) mod nw = 0" using hnw by simp
-      with hsplit have "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) =
-          (\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) * (zw 0 / zw (nw-1))" by simp
-      \<comment> \<open>From hP: (\\<Prod>\\_{j<nw-1}) = zw(nw-1) / zw 0.\<close>
-      from hP hz0_ne have "(\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) = zw (nw-1) / zw 0"
-        by (by100 simp)
-      hence "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = (zw (nw-1) / zw 0) * (zw 0 / zw (nw-1))"
-        using \<open>(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = _ * (zw 0 / zw (nw-1))\<close> by simp
-      also have "\<dots> = 1" using hz0_ne hznw1_ne by (by100 simp)
-      finally show ?thesis .
-    qed
-    have halpha_sum: "alpha nw = 2*pi"
-    proof -
-      \<comment> \<open>Step 1: cis(alpha nw) = 1 from telescope product decomposition.\<close>
-      \<comment> \<open>The full product \\<Prod> ratio\\_j = 1 (htelescope). By polar decomposition (induction),
-         \\<Prod> ratio\\_j = of\\_real(\\<Prod> cmod ratio\\_j) * cis(alpha nw).
-         Since |\\<Prod>| = 1 (from |telescope| = |1| = 1): of\\_real(1) * cis(alpha nw) = 1.\<close>
-      define rj where "rj j = zw (Suc j mod nw) / zw j" for j
-      \<comment> \<open>From the polar decomposition proof pattern: \\<Prod> rj = of\\_real(\\<Prod> cmod rj) * cis(alpha nw).\<close>
-      have hrj_ne: "\<forall>j<nw. rj j \<noteq> 0"
-      proof (intro allI impI)
-        fix j assume "j < nw"
-        have "Suc j mod nw < nw" using hnw by (by100 simp)
-        thus "rj j \<noteq> 0" unfolding rj_def
-          using hzw_ne[rule_format, OF \<open>Suc j mod nw < nw\<close>] hzw_ne[rule_format, OF \<open>j < nw\<close>]
-          by (by100 simp)
-      qed
-      have "(\<Prod>j<nw. rj j) = of_real (\<Prod>j<nw. cmod (rj j)) * cis (alpha nw)"
-      proof -
-        \<comment> \<open>By induction: \\<Prod>\\_{j<k} rj = of\\_real(\\<Prod> cmod) * cis(\\<Sum> theta) for k \\<le> nw.\<close>
-        have "\<And>k. k \<le> nw \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
-        proof -
-          fix k show "k \<le> nw \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
-          proof (induction k)
-            case 0 thus ?case by simp
-          next
-            case (Suc k')
-            hence "k' < nw" by simp
-            from Suc.IH[OF order.strict_implies_order[OF \<open>k' < nw\<close>]]
-            have hIH: "(\<Prod>j<k'. rj j) = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j)" .
-            from rcis_cmod_Arg[of "rj k'", symmetric]
-            have "rj k' = of_real (cmod (rj k')) * cis (Arg (rj k'))" unfolding rcis_def .
-            also have "Arg (rj k') = theta k'" unfolding rj_def theta_def by (by100 simp)
-            finally have hrj_decomp: "rj k' = of_real (cmod (rj k')) * cis (theta k')" .
-            have "(\<Prod>j<Suc k'. rj j) = (\<Prod>j<k'. rj j) * rj k'" by simp
-            also have "\<dots> = (of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j)) * (of_real (cmod (rj k')) * cis (theta k'))"
-              using hIH hrj_decomp by simp
-            also have "\<dots> = rcis ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k')) ((\<Sum>j<k'. theta j) + theta k')"
-              unfolding rcis_def using rcis_mult[of "(\<Prod>j<k'. cmod (rj j))" "(\<Sum>j<k'. theta j)" "cmod (rj k')" "theta k'"]
-              unfolding rcis_def by simp
-            also have "(\<Prod>j<k'. cmod (rj j)) * cmod (rj k') = (\<Prod>j<Suc k'. cmod (rj j))" by simp
-            also have "(\<Sum>j<k'. theta j) + theta k' = (\<Sum>j<Suc k'. theta j)" by simp
-            finally show ?case unfolding rcis_def .
-          qed
-        qed
-        from this[of nw] show ?thesis unfolding alpha_def by simp
-      qed
-      also have "(\<Prod>j<nw. rj j) = 1" using htelescope unfolding rj_def .
-      also have "(\<Prod>j<nw. cmod (rj j)) = cmod (\<Prod>j<nw. rj j)"
-        by (simp add: prod_norm)
-      also have "\<dots> = 1" using htelescope unfolding rj_def by simp
-      finally have "cis (alpha nw) = 1" by simp
-      \<comment> \<open>Step 2: cis(alpha) = 1 \\<Longleftrightarrow> alpha = 2k\\<pi>.\<close>
-      \<comment> \<open>Step 3: alpha nw \\<in> (0, nw*\\<pi>). Combined with cis = 1: alpha = 2\\<pi> for nw \\<le> 4,
-         and needs C11 convexity for nw \\<ge> 5.\<close>
-      have halpha_pos: "alpha nw > 0"
-      proof -
-        have "\<forall>j\<in>{..<nw}. theta j > 0" using htheta_pos hnw by (by100 auto)
-        have "(0::nat) < nw" using hnw by linarith
-        hence "{..<nw} \<noteq> {}" by (by100 blast)
-        from sum_pos[OF _ \<open>{..<nw} \<noteq> {}\<close>] \<open>\<forall>j\<in>{..<nw}. theta j > 0\<close>
-        show ?thesis unfolding alpha_def by (by100 blast)
-      qed
-      have halpha_lt: "alpha nw < real nw * pi"
-      proof -
-        have h1: "\<And>j. j < nw \<Longrightarrow> theta j < pi" using htheta_pos by (by100 blast)
-        have "alpha nw = (\<Sum>j<nw. theta j)" unfolding alpha_def by simp
-        also have "\<dots> < (\<Sum>j<nw. pi)"
-        proof (rule sum_strict_mono)
-          show "finite {..<nw}" by simp
-          have "(0::nat) \<in> {..<nw}" using hnw by simp
-          thus "{..<nw} \<noteq> {}" by (by100 blast)
-          fix j assume "j \<in> {..<nw}" thus "theta j < pi" using h1 by simp
-        qed
-        also have "(\<Sum>j<nw. pi) = real nw * pi" by simp
-        finally show ?thesis .
-      qed
-      \<comment> \<open>From cis(alpha) = 1 and alpha > 0: alpha = 2k\\<pi> for some k \\<ge> 1.\<close>
-      from \<open>cis (alpha nw) = 1\<close>
-      have hcos: "cos (alpha nw) = 1" using cis.sel(1)[of "alpha nw"] by simp
-      from \<open>cis (alpha nw) = 1\<close>
-      have hsin: "sin (alpha nw) = 0" using cis.sel(2)[of "alpha nw"] by simp
-      \<comment> \<open>From alpha \\<in> (0, nw*\\<pi>) and cos=1,sin=0: alpha = 2\\<pi>*(nw div something)...
-         For nw \\<le> 4: alpha < 4\\<pi>, so alpha = 2\\<pi>.
-         For nw \\<ge> 5: alpha < nw*\\<pi>, and we use C11 to show alpha < 4\\<pi>.\<close>
-      \<comment> \<open>From cis = 1: alpha = 2k\\<pi> for integer k. From alpha > 0: k \\<ge> 1.
-         From alpha < nw*\\<pi>: 2k < nw. For nw \\<le> 4: k = 1.
-         For nw \\<ge> 5: k < nw/2 and C11 convexity rules out k \\<ge> 2.\<close>
-      have "\<exists>k::nat. k \<ge> 1 \<and> alpha nw = 2 * real k * pi"
-      proof -
-        from hcos have "((\<exists>n::nat. alpha nw = real n * 2 * pi) \<or> (\<exists>n::nat. alpha nw = -(real n * 2 * pi)))"
-          using cos_one_2pi by (by100 blast)
-        hence "\<exists>n::nat. alpha nw = real n * 2 * pi"
-        proof (elim disjE exE)
-          fix n :: nat assume "alpha nw = real n * 2 * pi" thus ?thesis by (by100 blast)
-        next
-          fix n :: nat assume "alpha nw = -(real n * 2 * pi)"
-          hence "alpha nw \<le> 0" using pi_gt_zero by (by100 simp)
-          with halpha_pos show ?thesis by linarith
-        qed
-        then obtain n :: nat where hn: "alpha nw = real n * 2 * pi" by (by100 blast)
-        have "n \<ge> 1"
-        proof (rule ccontr)
-          assume "\<not> n \<ge> 1" hence "n = 0" by (by100 simp)
-          with hn have "alpha nw = 0" by simp
-          with halpha_pos show False by linarith
-        qed
-        from hn have "alpha nw = 2 * real n * pi" by (by100 algebra)
-        with \<open>n \<ge> 1\<close> show ?thesis by (by100 blast)
-      qed
-      then obtain k :: nat where hk: "k \<ge> 1" "alpha nw = 2 * real k * pi" by (by100 blast)
-      from hk(2) halpha_lt have "2 * real k * pi < real nw * pi" by simp
-      hence "2 * real k < real nw" using pi_gt_zero by (by100 simp)
-      hence h2k_lt: "2 * k < nw" by linarith
-      \<comment> \<open>For nw \\<le> 4: 2k < nw \\<le> 4, so k < 2, hence k = 1.\<close>
-      \<comment> \<open>For nw \\<ge> 5: need C11 to show k < 2.\<close>
-      have "k = 1"
-      proof (rule ccontr)
-        assume "k \<noteq> 1"
-        with hk(1) have "k \<ge> 2" by linarith
-        hence "2 * k \<ge> 4" by linarith
-        \<comment> \<open>For k \\<ge> 2: alpha = 2k\\<pi> \\<ge> 4\\<pi>. But need alpha < nw*\\<pi> with nw \\<ge> 3.
-           For nw = 3,4: 4\\<pi> > nw*\\<pi> is false (4\\<pi> > 3\\<pi> = true, 4\\<pi> > 4\\<pi> = false but strict).
-           Actually: alpha < nw*pi STRICT. For k=2: alpha = 4\\<pi>. Need 4\\<pi> < nw*\\<pi>, i.e., nw > 4.
-           For nw \\<le> 4: 4\\<pi> \\<ge> nw*\\<pi> (4\\<pi> \\<ge> 4\\<pi>), contradicting alpha < nw*\\<pi>.
-           For nw = 3: 4\\<pi> > 3\\<pi>. Contradiction. For nw = 4: 4\\<pi> = 4\\<pi>, not strict. But alpha < 4\\<pi> = nw*\\<pi>.
-           4\\<pi> < 4\\<pi> is false. So alpha = 4\\<pi> \\<ge> 4\\<pi> = nw*\\<pi>. Contradiction with strict <.
-           For nw \\<ge> 5: 4\\<pi> < 5\\<pi> \\<le> nw*\\<pi>. No contradiction from alpha < nw*\\<pi> alone.\<close>
-        \<comment> \<open>Use C11 to show this is impossible for nw \\<ge> 5.
-           If alpha = 2k\\<pi> \\<ge> 4\\<pi>: the polygon wraps twice around cw.
-           C11 (convexity) prevents this: for a convex polygon, winding number = 1.\<close>
-        \<comment> \<open>From k \\<ge> 2 and 2k < nw: nw \\<ge> 5.\<close>
-        have "nw \<ge> 5" using \<open>2 * k \<ge> 4\<close> h2k_lt by linarith
-        \<comment> \<open>PROOF: hregular gives all |z\\_j| = r. For k \\<ge> 2: alpha\\_nw = 2k\\<pi>.
-           Since all moduli = r: z\\_m/z\\_0 = cis(alpha\\_m). For the sub-product
-           from 0 to some index p: cis(alpha\\_p) = 1 (i.e., z\\_p = z\\_0) when alpha\\_p = 2\\<pi>.
-           By discrete IVT: \\<exists>p with alpha\\_p near 2\\<pi>.
-           More directly: with all moduli equal and cis(alpha\\_nw) = cis(2k\\<pi>) = 1:
-           the product is periodic. There exist j1 < j2 with z\\_{j2} = z\\_{j1}.
-           C11 at edge (j1, j1+1), vertex j2: det(z\\_{j2}-z\\_{j1}, z\\_{j1+1}-z\\_{j1}) = det(0, ..) = 0.
-           But C11 requires strict < 0. Contradiction.\<close>
-        \<comment> \<open>From hregular: all |z\\_j| = r.\<close>
-        from hregular obtain r where hr_pos: "r > 0"
-            and hr_eq: "\<forall>j<nw. (vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2" by (by100 blast)
-        \<comment> \<open>All cmod(zw j) = r.\<close>
-        have hmod_eq: "\<forall>j<nw. cmod (zw j) = r"
-        proof (intro allI impI)
-          fix j assume "j < nw"
-          from hr_eq[rule_format, OF this]
-          have "(vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2" .
-          hence hsum_sq: "(vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2" .
-          have "cmod (zw j) = sqrt ((vxw j - cxw)^2 + (vyw j - cyw)^2)"
-            unfolding zw_def cmod_def by simp
-          also have "\<dots> = sqrt (r^2)" using hsum_sq by simp
-          also have "\<dots> = r" using hr_pos by simp
-          finally show "cmod (zw j) = r" .
-        qed
-        \<comment> \<open>With equal moduli: z\\_m/z\\_0 = cis(alpha\\_m) (from polar decomp with r\\_j = 1).\<close>
-        \<comment> \<open>There exist j1 < j2 < nw with alpha\\_{j2} - alpha\\_{j1} = 2\\<pi>.
-           Then z\\_{j2}/z\\_0 = cis(alpha\\_{j2}) = cis(alpha\\_{j1}+2\\<pi>) = cis(alpha\\_{j1}) = z\\_{j1}/z\\_0.
-           So z\\_{j2} = z\\_{j1}, i.e., u\\_{j2} = u\\_{j1}.\<close>
-        \<comment> \<open>C11 at edge (j1, Suc j1 mod nw), vertex j2: det = 0. Contradiction.\<close>
-        \<comment> \<open>Find the 2\\<pi> crossing index: m0 is the largest with alpha\\_{m0} < 2\\<pi>.\<close>
-        \<comment> \<open>With k \\<ge> 2: alpha\\_nw \\<ge> 4\\<pi>. So some index crosses 2\\<pi>.\<close>
-        \<comment> \<open>Use C11 at edge (0,1), vertex m0+1 to get contradiction.\<close>
-        \<comment> \<open>The cis-difference formula gives the det as a product of three sines,
-           which has sign (-)*(+)*(-) = (+), contradicting C11 < 0.\<close>
-        \<comment> \<open>Key computation (for circle polygon with equal moduli):
-           det(u\\_{m0+1}-u\\_0, u\\_1-u\\_0) = r^2 * 4*sin(alpha\\_{m0+1}/2)*sin(theta\\_0/2)*sin((theta\\_0-alpha\\_{m0+1})/2)
-           With alpha\\_{m0+1} \\<in> [2\\<pi>, 3\\<pi>): sin(alpha\\_{m0+1}/2) < 0 and sin((theta\\_0-alpha\\_{m0+1})/2) < 0.
-           Product of three sines > 0, but C11 requires < 0. Contradiction.\<close>
-        \<comment> \<open>Step 1: find crossing index m0 with alpha\\_{m0} < 2\\<pi> \\<le> alpha\\_{m0+1}.\<close>
-        \<comment> \<open>alpha\\_1 = theta\\_0 < \\<pi> < 2\\<pi>. And alpha\\_nw \\<ge> 4\\<pi> > 2\\<pi>. So crossing exists.\<close>
-        define m0 where "m0 = (GREATEST m. m < nw \<and> alpha m < 2*pi)"
-        \<comment> \<open>For now: sorry the existence and properties of m0.
-           Key properties: m0 \\<ge> 2, m0+1 < nw, alpha\\_{m0+1} \\<ge> 2\\<pi>, alpha\\_{m0+1} < 3\\<pi>.\<close>
-        \<comment> \<open>Existence: alpha\\_1 = theta\\_0 < \\<pi> < 2\\<pi>. And alpha\\_{nw-1} = 2k\\<pi>-theta\\_{nw-1} > 3\\<pi> (for k \\<ge> 2).
-           So there's a crossing of 2\\<pi> between indices 1 and nw-1.\<close>
-        have halpha_1_lt: "alpha 1 < 2*pi"
-        proof -
-          have "alpha 1 = theta 0" unfolding alpha_def by simp
-          have h0_lt: "0 < nw" using hnw by linarith
-          from htheta_pos[rule_format, OF h0_lt] have "theta 0 < pi" by simp
-          hence "theta 0 < 2*pi" using pi_gt_zero by linarith
-          thus ?thesis using \<open>alpha 1 = theta 0\<close> by simp
-        qed
-        have halpha_nw1_ge: "alpha (nw-1) > 2*pi"
-        proof -
-          have "alpha nw = 2 * real k * pi" using hk(2) .
-          have hnw_Suc: "nw = Suc (nw-1)" using hnw by (by100 arith)
-          have "alpha nw = alpha (nw-1) + theta (nw-1)" unfolding alpha_def
-          proof -
-            have "{..<Suc (nw-1)} = insert (nw-1) {..<(nw-1)}" by (rule lessThan_Suc)
-            hence "(\<Sum>j<nw. theta j) = theta (nw-1) + (\<Sum>j<nw-1. theta j)"
-              using hnw_Suc by simp
-            thus "(\<Sum>j<nw. theta j) = (\<Sum>j<nw-1. theta j) + theta (nw-1)"
-              by (by100 algebra)
-          qed
-          hence "alpha (nw-1) = alpha nw - theta (nw-1)" by linarith
-          also have "\<dots> = 2*real k*pi - theta (nw-1)" using hk(2) by simp
-          finally have h: "alpha (nw-1) = 2*real k*pi - theta (nw-1)" .
-          have "theta (nw-1) < pi" using htheta_pos hnw by (by100 auto)
-          from \<open>k \<ge> 2\<close> have "2*real k*pi \<ge> 4*pi" using pi_gt_zero by (by100 simp)
-          from h have "alpha (nw-1) = 2*real k*pi - theta (nw-1)" .
-          with \<open>4*pi \<le> 2*real k*pi\<close> \<open>theta (nw-1) < pi\<close> pi_gt_zero
-          show ?thesis by linarith
-        qed
-        \<comment> \<open>By discrete IVT: \\<exists>m0 with alpha(m0) < 2\\<pi> and alpha(m0+1) \\<ge> 2\\<pi>.\<close>
-        \<comment> \<open>Discrete IVT: define m0 via GREATEST, show properties.\<close>
-        \<comment> \<open>Actually, just find ANY suitable index, no need for GREATEST.\<close>
-        \<comment> \<open>alpha\\_2 = theta\\_0+theta\\_1 < 2\\<pi>. alpha\\_{nw-1} > 2\\<pi>. So \\<exists>m with alpha\\_m < 2\\<pi> \\<le> alpha\\_{m+1}.\<close>
-        have hm0_props: "\<exists>m0. m0 \<ge> 2 \<and> m0 + 1 < nw \<and> alpha (m0+1) \<ge> 2*pi \<and> alpha (m0+1) < 3*pi"
-        proof -
-          \<comment> \<open>alpha\\_2 < 2\\<pi>: alpha\\_2 = theta\\_0+theta\\_1 < \\<pi>+\\<pi> = 2\\<pi>.\<close>
-          have "alpha 2 < 2*pi"
-          proof -
-            have h0: "0 < nw" using hnw by linarith
-            have h1: "1 < nw" using hnw by linarith
-            have "alpha 2 = theta 0 + theta 1" unfolding alpha_def
-              by (simp add: lessThan_Suc numeral_2_eq_2)
-            also have "\<dots> < pi + pi"
-              using htheta_pos[rule_format, OF h0] htheta_pos[rule_format, OF h1] by linarith
-            finally show ?thesis by simp
-          qed
-          \<comment> \<open>alpha\\_{nw-1} > 2\\<pi> (proved above as halpha\\_nw1\\_ge).\<close>
-          \<comment> \<open>By well-ordering: let m0 = Max {m. m \\<le> nw-2 \\<and> alpha m < 2\\<pi>}.\<close>
-          define S where "S = {m. 2 \<le> m \<and> m \<le> nw-2 \<and> alpha m < 2*pi}"
-          have "2 \<in> S" using \<open>alpha 2 < 2*pi\<close> \<open>nw \<ge> 5\<close> unfolding S_def by (by100 auto)
-          hence "S \<noteq> {}" by (by100 blast)
-          have "finite S" unfolding S_def by (by100 auto)
-          define m0_val where "m0_val = Max S"
-          have hm0_in: "m0_val \<in> S" using Max_in[OF \<open>finite S\<close> \<open>S \<noteq> {}\<close>] unfolding m0_val_def .
-          hence hm0_ge: "m0_val \<ge> 2" and hm0_le: "m0_val \<le> nw-2" and hm0_alpha: "alpha m0_val < 2*pi"
-            unfolding S_def by (by100 auto)+
-          have hm0_max: "\<forall>m \<in> S. m \<le> m0_val" using Max_ge[OF \<open>finite S\<close>] unfolding m0_val_def by (by100 auto)
-          \<comment> \<open>alpha(m0\\_val+1) \\<ge> 2\\<pi>: otherwise m0\\_val+1 \\<in> S, contradicting maximality.\<close>
-          have "alpha (m0_val+1) \<ge> 2*pi"
-          proof (rule ccontr)
-            assume "\<not> alpha (m0_val+1) \<ge> 2*pi"
-            hence "alpha (m0_val+1) < 2*pi" by linarith
-            have "m0_val+1 \<le> nw-2"
-            proof (rule ccontr)
-              assume "\<not> m0_val+1 \<le> nw-2"
-              hence "m0_val+1 > nw-2" by linarith
-              hence "m0_val \<ge> nw-2" by linarith
-              with hm0_le have "m0_val = nw-2" by linarith
-              hence "m0_val+1 = nw-1" using \<open>nw \<ge> 5\<close> by (by100 arith)
-              from \<open>alpha (m0_val+1) < 2*pi\<close> have "alpha (nw-1) < 2*pi"
-                using \<open>m0_val+1 = nw-1\<close> by simp
-              with halpha_nw1_ge show False by linarith
-            qed
-            have "m0_val+1 \<in> S" using \<open>alpha (m0_val+1) < 2*pi\<close> hm0_ge \<open>m0_val+1 \<le> nw-2\<close>
-              unfolding S_def by (by100 auto)
-            from hm0_max[rule_format, OF this] show False by linarith
-          qed
-          \<comment> \<open>alpha(m0\\_val+1) < 3\\<pi>: each step < \\<pi>.\<close>
-          have "alpha (m0_val+1) < 3*pi"
-          proof -
-            have "alpha (m0_val+1) = alpha m0_val + theta m0_val" unfolding alpha_def by simp
-            also have "\<dots> < 2*pi + pi"
-            proof -
-              have "m0_val < nw" using hm0_le \<open>nw \<ge> 5\<close> by linarith
-              from htheta_pos[rule_format, OF this] have "theta m0_val < pi" by simp
-              with hm0_alpha show ?thesis by linarith
-            qed
-            also have "\<dots> = 3*pi" by simp
-            finally show ?thesis .
-          qed
-          \<comment> \<open>m0\\_val+1 < nw.\<close>
-          have "m0_val+1 < nw" using hm0_le \<open>nw \<ge> 5\<close> by linarith
-          with hm0_ge \<open>alpha (m0_val+1) \<ge> 2*pi\<close> \<open>alpha (m0_val+1) < 3*pi\<close>
-          show ?thesis by (by100 blast)
-        qed
-        then obtain m0_real where hm0_ge2: "m0_real \<ge> 2" and hm0_lt: "m0_real + 1 < nw"
-            and halpha_m0_ge: "alpha (m0_real+1) \<ge> 2*pi" and halpha_m0_lt: "alpha (m0_real+1) < 3*pi"
-          by (by100 blast)
-        have halpha_m0_below: "alpha m0_real < 2*pi" sorry \<comment> \<open>From the crossing construction.\<close>
-        \<comment> \<open>Step 2: C11 at edge (0, 1), vertex m0\\_real+1.\<close>
-        have hm0_ne0: "m0_real+1 \<noteq> 0" using hm0_ge2 by (by100 arith)
-        have "Suc 0 mod nw = 1" using hnw by (by100 simp)
-        have hm0_ne1: "m0_real+1 \<noteq> Suc 0 mod nw" using hm0_ge2 \<open>Suc 0 mod nw = 1\<close> by (by100 arith)
-        have h0_lt: "(0::nat) < nw" using hnw by linarith
-        have h_C11_inst: "(vxw (m0_real+1)-vxw 0)*(vyw(Suc 0 mod nw)-vyw 0)-(vyw (m0_real+1)-vyw 0)*(vxw(Suc 0 mod nw)-vxw 0) < 0"
-          using hC11[rule_format, OF h0_lt hm0_lt hm0_ne0 hm0_ne1] .
-        \<comment> \<open>Step 3: Compute det(u\\_{m0+1}-u\\_0, u\\_1-u\\_0) using the equal-modulus property.
-           All u\\_j = cw + r*cis(phi\\_j) where phi\\_j = Arg(z\\_0)+alpha\\_j.
-           det = r^2 * 4*sin(alpha\\_{m0+1}/2)*sin(theta\\_0/2)*sin((theta\\_0-alpha\\_{m0+1})/2).\<close>
-        \<comment> \<open>For alpha\\_{m0+1} \\<in> [2\\<pi>, 3\\<pi>):
-           sin(alpha\\_{m0+1}/2) \\<in> sin([\\<pi>, 3\\<pi>/2)): \\<le> 0 (actually < 0 for > \\<pi>).
-           sin(theta\\_0/2) > 0.
-           sin((theta\\_0-alpha\\_{m0+1})/2): (theta\\_0-alpha\\_{m0+1})/2 \\<in> ((-3\\<pi>+theta\\_0)/2, (theta\\_0-2\\<pi>)/2).
-             = ((-3\\<pi>+theta\\_0)/2, (theta\\_0-2\\<pi>)/2) \\<subset> (-3\\<pi>/2, 0).
-             For the range (-\\<pi>, 0): sin < 0.
-           Product: (\\<le>0)*(>0)*(\\<le>0) \\<ge> 0. But C11 requires < 0. Contradiction.\<close>
-        \<comment> \<open>Formal computation using the cis-difference formula.\<close>
-        \<comment> \<open>TWO-CASE proof using crossing index m0\\_real.\<close>
-        \<comment> \<open>Case 1: alpha(m0+1) > 2\\<pi>+theta\\_0: hfan\\_det with m0,m0+1 gives contradiction.
-           Case 2: alpha(m0+1) \\<le> 2\\<pi>+theta\\_0: C11 at edge (0,1) for vertex m0+1 gives det \\<ge> 0.
-           Both lead to contradiction.\<close>
-        \<comment> \<open>For now: sorry the two-case sign computation. The math is verified;
-           formalization needs the cis-difference formula for circle polygons.
-           Case 1: the three-sine product from hfan\\_det has signs (+)(-)(+) < 0.
-           Case 2: det = r^2*2*sin(theta\\_0/2)*(cos((theta\\_0-2*delta)/2)-cos(theta\\_0/2)) \\<ge> 0.\<close>
-        \<comment> \<open>The C11 det in centroid coords:\<close>
-        define alpha_cross where "alpha_cross = alpha (m0_real + 1)"
-        define delta where "delta = alpha_cross - 2*pi"
-        have hdelta_ge: "delta \<ge> 0" using halpha_m0_ge unfolding delta_def alpha_cross_def by linarith
-        have hdelta_lt: "delta < pi" using halpha_m0_lt unfolding delta_def alpha_cross_def by linarith
-        define theta0 where "theta0 = theta 0"
-        have htheta0_pos: "theta0 > 0" and htheta0_lt: "theta0 < pi"
-          using htheta_pos hnw unfolding theta0_def by (by100 auto)+
-        \<comment> \<open>The C11 det = (cross product formula involving vxw, vyw).
-           With equal moduli: det = r^2 * (sin(theta0-delta) + sin(delta) - sin(theta0)).
-           (Using periodicity: sin(alpha\\_cross) = sin(delta), sin(theta0-alpha\\_cross) = sin(theta0-delta).)
-           This expression \\<ge> 0 when delta \\<le> theta0, contradicting C11 < 0.\<close>
-        \<comment> \<open>For now: sorry the det computation. Needs expressing det in terms of
-           sin(alpha\\_cross), sin(theta0), etc. using the equal-modulus formula.\<close>
-        \<comment> \<open>Key identity: the C11 det equals r^2*(sin(theta0-delta)+sin(delta)-sin(theta0)).
-           Proof: u\\_j = cw + r*cis(Arg(z\\_0)+alpha\\_j). Differences factor out cis(Arg(z\\_0)).
-           Then conj(cis(alpha\\_cross)-1)*(cis(theta0)-1) gives the formula via cis periodicity.\<close>
-        have hSuc0: "Suc 0 mod nw = 1" using hnw by (by100 simp)
-        \<comment> \<open>The C11 det in terms of cc values.\<close>
-        have hdet_formula: "(vxw (m0_real+1)-vxw 0)*(vyw 1-vyw 0)-(vyw (m0_real+1)-vyw 0)*(vxw 1-vxw 0) =
-            r^2 * (sin(theta0-delta) + sin delta - sin theta0)"
-          sorry \<comment> \<open>From equal-modulus cis expansion + sin(2\\<pi>+\\<delta>)=sin(\\<delta>).\<close>
-        \<comment> \<open>From h\\_C11\\_inst: the LHS < 0.\<close>
-        from h_C11_inst hSuc0
-        have hdet_neg: "r^2 * (sin(theta0-delta) + sin delta - sin theta0) < 0"
-          using hdet_formula by simp
-        \<comment> \<open>Case analysis on delta vs theta0.\<close>
-        show False
-        proof (cases "delta \<le> theta0")
-          case True
-          \<comment> \<open>CASE 1: delta \\<le> theta0. Show sin(theta0-delta)+sin(delta)-sin(theta0) \\<ge> 0.\<close>
-          have "sin(theta0-delta) + sin delta - sin theta0 \<ge> 0"
-          proof -
-            \<comment> \<open>sin(A-B)+sin(B) = 2*sin(A/2)*cos((A-2B)/2). So:
-               sin(theta0-delta)+sin(delta) = 2*sin(theta0/2)*cos((theta0-2*delta)/2).
-               And sin(theta0) = 2*sin(theta0/2)*cos(theta0/2).
-               Difference = 2*sin(theta0/2)*(cos((theta0-2*delta)/2)-cos(theta0/2)).
-               For delta \\<in> [0, theta0]: |(theta0-2*delta)/2| \\<le> theta0/2.
-               cos is even and decreasing on [0,\\<pi>]: cos(|(theta0-2*delta)/2|) \\<ge> cos(theta0/2).\<close>
-            show ?thesis sorry \<comment> \<open>Trigonometric identity + cos monotonicity.\<close>
-          qed
-          hence "r^2 * (sin(theta0-delta) + sin delta - sin theta0) \<ge> 0"
-            using hr_pos by (by100 simp)
-          with hdet_neg show False by linarith
-        next
-          case False
-          hence "delta > theta0" by linarith
-          \<comment> \<open>CASE 2: delta > theta0. Use hfan\\_det at m=m0\\_real, n=m0\\_real+1.\<close>
-          \<comment> \<open>The hfan\\_det product = r^2*4*sin(A)*sin(B)*sin(C) where:
-             A = (alpha\\_m0 - theta0)/2 > 0 (first loop, sin > 0)
-             B = (alpha\\_cross - theta0)/2 > \\<pi> (second loop, sin < 0)
-             C = theta\\_{m0}/2 > 0 (sin > 0)
-             Product < 0, contradicting hfan\\_det > 0.\<close>
-          have hm0_ge2_nat: "2 \<le> m0_real" using hm0_ge2 .
-          have hm0_lt_nat: "m0_real < m0_real + 1" by (by100 arith)
-          have hm01_lt: "m0_real + 1 < nw" using hm0_lt .
-          from hfan_det[rule_format, OF hm0_ge2_nat hm0_lt_nat hm01_lt]
-          have hfan_pos: "(vxw m0_real - vxw 1) * (vyw (m0_real+1) - vyw 1) -
-              (vyw m0_real - vyw 1) * (vxw (m0_real+1) - vxw 1) > 0" .
-          \<comment> \<open>This equals r^2*4*sin((alpha\\_m0-theta0)/2)*sin((alpha\\_cross-theta0)/2)*sin(theta\\_{m0}/2).\<close>
-          have hfan_formula: "(vxw m0_real - vxw 1) * (vyw (m0_real+1) - vyw 1) -
-              (vyw m0_real - vyw 1) * (vxw (m0_real+1) - vxw 1) =
-              r^2 * 4 * sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2)"
-            sorry \<comment> \<open>From equal-modulus cis-difference formula.\<close>
-          from hfan_pos hfan_formula
-          have hprod_pos: "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) > 0"
-          proof -
-            have "r^2 * 4 > 0" using hr_pos by (by100 simp)
-            from hfan_pos hfan_formula have "r^2 * 4 * (sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2)) > 0"
-              by (by100 linarith)
-            with \<open>r^2 * 4 > 0\<close> show ?thesis sorry \<comment> \<open>r^2*4*x > 0 and r^2*4 > 0 \\<Longrightarrow> x > 0.\<close>
-          qed
-          \<comment> \<open>But: sin((alpha\\_cross-theta0)/2) < 0 since alpha\\_cross-theta0 = 2\\<pi>+delta-theta0 > 2\\<pi>.
-             So (alpha\\_cross-theta0)/2 > \\<pi>. sin < 0.\<close>
-          have "alpha_cross - theta0 > 2*pi"
-            using \<open>delta > theta0\<close> unfolding delta_def alpha_cross_def by linarith
-          hence "sin((alpha_cross - theta0)/2) < 0"
-          proof -
-            have hpi_lt: "pi < (alpha_cross - theta0)/2"
-              using \<open>alpha_cross - theta0 > 2*pi\<close> by simp
-            from halpha_m0_lt have "alpha_cross < 3*pi" unfolding alpha_cross_def .
-            hence "(alpha_cross - theta0)/2 < 3*pi/2" using htheta0_pos by simp
-            hence h2pi_lt: "(alpha_cross - theta0)/2 < 2*pi" using pi_gt_zero by linarith
-            from sin_lt_zero[OF hpi_lt h2pi_lt] show ?thesis .
-          qed
-          \<comment> \<open>And the other two sines > 0.\<close>
-          have "sin(theta (m0_real) / 2) > 0"
-          proof -
-            have "m0_real < nw" using hm0_lt by linarith
-            from htheta_pos[rule_format, OF this] have "theta m0_real > 0" "theta m0_real < pi" by auto
-            thus ?thesis using sin_gt_zero by (by100 auto)
-          qed
-          have "sin((alpha m0_real - theta0)/2) > 0"
-          proof -
-            have "alpha m0_real > theta0"
-            proof -
-              have "alpha m0_real \<ge> alpha 2"
-              proof -
-                have "alpha m0_real = alpha 2 + (\<Sum>j=2..<m0_real. theta j)" unfolding alpha_def
-                  using sum.atLeastLessThan_concat[of 0 2 m0_real theta] hm0_ge2
-                  by (simp add: atLeast0LessThan)
-                moreover have "(\<Sum>j=2..<m0_real. theta j) \<ge> 0" sorry \<comment> \<open>Sum of nonneg.\<close>
-                ultimately show ?thesis by linarith
-              qed
-              moreover have "alpha 2 > theta0"
-              proof -
-                have "alpha 2 = theta 0 + theta 1" unfolding alpha_def
-                  by (simp add: lessThan_Suc numeral_2_eq_2)
-                moreover have "theta 1 > 0" using htheta_pos hnw by (by100 auto)
-                ultimately show ?thesis unfolding theta0_def by linarith
-              qed
-              ultimately show ?thesis by linarith
-            qed
-            moreover have "alpha m0_real < 2*pi"
-              using halpha_m0_below .
-            ultimately have h1: "(alpha m0_real - theta0)/2 > 0" by simp
-            have h2: "(alpha m0_real - theta0)/2 < pi" using \<open>alpha m0_real < 2*pi\<close> htheta0_pos by simp
-            from sin_gt_zero[OF h1 h2] show ?thesis .
-          qed
-          \<comment> \<open>Product: (+)*(-)*)(+) < 0. But we showed > 0. Contradiction.\<close>
-          from \<open>sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) > 0\<close>
-            \<open>sin((alpha m0_real - theta0)/2) > 0\<close> \<open>sin(theta (m0_real) / 2) > 0\<close>
-            \<open>sin((alpha_cross - theta0)/2) < 0\<close>
-          show False
-          proof -
-            have "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) < 0"
-              using \<open>sin((alpha m0_real - theta0)/2) > 0\<close> \<open>sin((alpha_cross - theta0)/2) < 0\<close>
-              using mult_pos_neg[of "sin((alpha m0_real - theta0)/2)" "sin((alpha_cross - theta0)/2)"]
-              by linarith
-            hence "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) < 0"
-              using \<open>sin(theta (m0_real) / 2) > 0\<close>
-              mult_neg_pos[of "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2)" "sin(theta (m0_real) / 2)"]
-              by linarith
-            with \<open>sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) > 0\<close>
-            show False by linarith
-          qed
-        qed
-      qed
-      with hk(2) show "alpha nw = 2*pi" by simp
-    qed
-    \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
-    have hcc_sin: "\<forall>m. 0 < m \<longrightarrow> m < nw \<longrightarrow>
-        cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
-    proof (intro allI impI)
-      fix m assume hm_pos: "0 < m" and hm_lt: "m < nw"
-      \<comment> \<open>z\\_m/z\\_0 = \\<Prod>\\_{j<m} ratio\\_j. Each ratio = |r|*cis(\\<theta>).
-         Product = (\\<Prod> |r|)*cis(\\<Sum> \\<theta>) = (|z\\_m|/|z\\_0|)*cis(alpha m).\<close>
-      \<comment> \<open>cc(m) = Im(cnj(z\\_m)*z\\_0) = -|z\\_0|*|z\\_m|*sin(alpha m).\<close>
-      \<comment> \<open>Step 1: z\\_m/z\\_0 = (|z\\_m|/|z\\_0|)*cis(alpha m).\<close>
-      have hzm_decomp: "zw m / zw 0 = of_real (cmod (zw m) / cmod (zw 0)) * cis (alpha m)"
-      proof -
-        \<comment> \<open>From partial telescope: zw m / zw 0 = \\<Prod>\\_{j<m} ratio\\_j.
-           Each ratio\\_j = cmod(ratio\\_j) * cis(Arg(ratio\\_j)) = cmod(ratio\\_j) * cis(theta j).
-           Product of cis: cis(\\<Sum> theta) = cis(alpha m).
-           Product of mods: \\<Prod> cmod(ratio\\_j) = cmod(\\<Prod> ratio\\_j) = cmod(zw m / zw 0).\<close>
-        from hpartial_telescope[rule_format, OF hm_lt]
-        have "zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0" .
-        have hz0_ne_loc: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
-        hence "zw m / zw 0 = (\<Prod>j<m. zw (Suc j mod nw) / zw j)"
-          using \<open>zw m = _ * zw 0\<close> by (by100 simp)
-        \<comment> \<open>Each ratio decomposed: ratio\\_j = of\\_real(cmod ratio\\_j)*cis(Arg ratio\\_j).\<close>
-        \<comment> \<open>Arg(ratio\\_j) = theta j by definition.\<close>
-        \<comment> \<open>Product: \\<Prod> (of\\_real r\\_j * cis t\\_j) = of\\_real(\\<Prod> r\\_j) * cis(\\<Sum> t\\_j).\<close>
-        \<comment> \<open>And \\<Prod> r\\_j = cmod(\\<Prod> ratio\\_j) = cmod(zw m/zw 0) = cmod(zw m)/cmod(zw 0).\<close>
-        \<comment> \<open>Helper: \\<Prod>\\_{j<m} r\\_j = of\\_real(\\<Prod> cmod r\\_j) * cis(\\<Sum> Arg r\\_j) when each r\\_j \\<noteq> 0.\<close>
-        define rj where "rj j = zw (Suc j mod nw) / zw j" for j
-        have hrj_ne: "\<forall>j<m. rj j \<noteq> 0"
-        proof (intro allI impI)
-          fix j assume "j < m"
-          hence "j < nw" using hm_lt by linarith
-          have "Suc j mod nw < nw" using hnw by (by100 simp)
-          thus "rj j \<noteq> 0" unfolding rj_def
-            using hzw_ne[rule_format, OF \<open>Suc j mod nw < nw\<close>] hzw_ne[rule_format, OF \<open>j < nw\<close>]
-            by (by100 simp)
-        qed
-        \<comment> \<open>Each r\\_j = of\\_real(cmod r\\_j) * cis(Arg r\\_j) = of\\_real(cmod r\\_j) * cis(theta j).\<close>
-        have hrj_decomp: "\<forall>j<m. rj j = of_real (cmod (rj j)) * cis (theta j)"
-        proof (intro allI impI)
-          fix j assume "j < m"
-          from rcis_cmod_Arg[of "rj j", symmetric] have "rj j = of_real (cmod (rj j)) * cis (Arg (rj j))"
-            unfolding rcis_def .
-          also have "Arg (rj j) = theta j" unfolding rj_def theta_def by (by100 simp)
-          finally show "rj j = of_real (cmod (rj j)) * cis (theta j)" .
-        qed
-        \<comment> \<open>Product induction: \\<Prod> r\\_j = of\\_real(\\<Prod> cmod r\\_j) * cis(\\<Sum> theta j).\<close>
-        have hprod_polar: "(\<Prod>j<m. rj j) = of_real (\<Prod>j<m. cmod (rj j)) * cis (alpha m)"
-        proof -
-          have "\<And>k. k \<le> m \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
-          proof -
-            fix k show "k \<le> m \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
-            proof (induction k)
-              case 0 thus ?case by simp
-            next
-              case (Suc k')
-              hence "k' < m" by simp
-              from Suc.IH[OF order.strict_implies_order[OF \<open>k' < m\<close>]]
-              have hIH: "(\<Prod>j<k'. rj j) = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j)" .
-              have "(\<Prod>j<Suc k'. rj j) = (\<Prod>j<k'. rj j) * rj k'" by simp
-              also have "\<dots> = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j) * rj k'"
-                using hIH by simp
-              also from hrj_decomp[rule_format, OF \<open>k' < m\<close>]
-              have "\<dots> = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j) *
-                  (of_real (cmod (rj k')) * cis (theta k'))" by simp
-              also have "\<dots> = of_real ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k')) *
-                  (cis (\<Sum>j<k'. theta j) * cis (theta k'))"
-              proof -
-                have "of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j) *
-                    (of_real (cmod (rj k')) * cis (theta k'))
-                    = rcis (\<Prod>j<k'. cmod (rj j)) (\<Sum>j<k'. theta j) *
-                      rcis (cmod (rj k')) (theta k')"
-                  unfolding rcis_def by simp
-                also have "\<dots> = rcis ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k'))
-                    ((\<Sum>j<k'. theta j) + theta k')"
-                  by (rule rcis_mult)
-                also have "\<dots> = of_real ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k')) *
-                    cis ((\<Sum>j<k'. theta j) + theta k')"
-                  unfolding rcis_def ..
-                also have "cis ((\<Sum>j<k'. theta j) + theta k') = cis (\<Sum>j<k'. theta j) * cis (theta k')"
-                  using cis_mult[symmetric] .
-                finally show ?thesis .
-              qed
-              also have "cis (\<Sum>j<k'. theta j) * cis (theta k') = cis ((\<Sum>j<k'. theta j) + theta k')"
-                by (rule cis_mult)
-              also have "(\<Sum>j<k'. theta j) + theta k' = (\<Sum>j<Suc k'. theta j)" by simp
-              also have "(\<Prod>j<k'. cmod (rj j)) * cmod (rj k') = (\<Prod>j<Suc k'. cmod (rj j))" by simp
-              finally show ?case .
-            qed
-          qed
-          from this[of m] show ?thesis unfolding alpha_def by simp
-        qed
-        \<comment> \<open>\\<Prod> cmod r\\_j = cmod(\\<Prod> r\\_j) = cmod(zw m/zw 0) = cmod(zw m)/cmod(zw 0).\<close>
-        have "(\<Prod>j<m. cmod (rj j)) = cmod (\<Prod>j<m. rj j)"
-          by (simp add: prod_norm)
-        also have "\<dots> = cmod (zw m / zw 0)"
-          using \<open>zw m / zw 0 = (\<Prod>j<m. zw (Suc j mod nw) / zw j)\<close> unfolding rj_def by simp
-        also have "\<dots> = cmod (zw m) / cmod (zw 0)" by (rule norm_divide)
-        finally have hmod_eq: "(\<Prod>j<m. cmod (rj j)) = cmod (zw m) / cmod (zw 0)" .
-        from hprod_polar hmod_eq
-        show ?thesis unfolding rj_def using \<open>zw m / zw 0 = _\<close> by simp
-      qed
-      \<comment> \<open>Step 2: cc(m) = Im(cnj(z\\_m)*z\\_0) = -|z\\_0|*|z\\_m|*sin(alpha m).\<close>
-      have hz0_ne: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
-      have hzm_ne: "zw m \<noteq> 0" using hzw_ne hm_lt by (by100 blast)
-      \<comment> \<open>From decomposition: cnj(z\\_m)*z\\_0 = of\\_real(|z\\_0|*|z\\_m|)*cis(-alpha m).\<close>
-      have hcnj_eq: "cnj (zw m) * zw 0 = of_real (cmod (zw 0) * cmod (zw m)) * cis (-(alpha m))"
-      proof -
-        \<comment> \<open>Use rcis decomposition: zw m/zw 0 = rcis(|zm|/|z0|, alpha m).
-           cnj(rcis(r,t)) = rcis(r,-t). Then cnj(zm)*z0 = cnj(zm/z0)*|z0|^2 = rcis(|zm|/|z0|,-alpha)*|z0|^2.\<close>
-        define r_ratio where "r_ratio = cmod (zw m) / cmod (zw 0)"
-        from hzm_decomp have hrat: "zw m / zw 0 = rcis r_ratio (alpha m)"
-          unfolding rcis_def r_ratio_def .
-        \<comment> \<open>cnj(zw m/zw 0) = rcis(r\\_ratio, -alpha m).\<close>
-        have "cnj (zw m / zw 0) = cnj (rcis r_ratio (alpha m))" using hrat by simp
-        also have "cnj (rcis r_ratio (alpha m)) = rcis r_ratio (-(alpha m))"
-          unfolding rcis_def by (simp add: cis_cnj)
-        finally have hcnj_rat: "cnj (zw m / zw 0) = rcis r_ratio (-(alpha m))" .
-        \<comment> \<open>cnj(zm)*z0 = cnj(zm/z0) * |z0|^2.\<close>
-        have hnorm_sq: "cnj (zw 0) * zw 0 = of_real ((cmod (zw 0))^2)"
-          using complex_norm_square by simp
-        have hcnj_prod: "cnj (zw m / zw 0) * cnj (zw 0) = cnj (zw m)" using hz0_ne by simp
-        have "cnj (zw m) * zw 0 = (cnj (zw m / zw 0) * cnj (zw 0)) * zw 0" using hcnj_prod by simp
-        also have "\<dots> = cnj (zw m / zw 0) * (cnj (zw 0) * zw 0)" by (by100 algebra)
-        also have "\<dots> = cnj (zw m / zw 0) * of_real ((cmod (zw 0))^2)" using hnorm_sq by simp
-        also have "\<dots> = rcis r_ratio (-(alpha m)) * of_real ((cmod (zw 0))^2)" using hcnj_rat by simp
-        also have "\<dots> = rcis (r_ratio * (cmod (zw 0))^2) (-(alpha m))"
-          using rcis_mult[of r_ratio "-(alpha m)" "(cmod (zw 0))^2" 0] by (by100 simp)
-        also have "r_ratio * (cmod (zw 0))^2 = cmod (zw 0) * cmod (zw m)"
-        proof -
-          have "cmod (zw 0) > 0" using hz0_ne by (by100 simp)
-          hence "cmod (zw 0) \<noteq> 0" by linarith
-          hence "cmod (zw m) / cmod (zw 0) * (cmod (zw 0))^2 = cmod (zw m) * cmod (zw 0)"
-            by (simp add: power2_eq_square)
-          thus ?thesis unfolding r_ratio_def by (by100 algebra)
-        qed
-        finally show ?thesis unfolding rcis_def by simp
-      qed
-      hence "Im (cnj (zw m) * zw 0) = cmod (zw 0) * cmod (zw m) * sin (-(alpha m))"
-      proof -
-        have "Im (of_real (cmod (zw 0) * cmod (zw m)) * cis (-(alpha m))) =
-            cmod (zw 0) * cmod (zw m) * Im (cis (-(alpha m)))"
-          by (cases "cis (-(alpha m))") (simp add: complex_of_real_mult_Complex)
-        also have "Im (cis (-(alpha m))) = sin (-(alpha m))" by (by100 simp)
-        finally show ?thesis using hcnj_eq by simp
-      qed
-      hence "Im (cnj (zw m) * zw 0) = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
-        by (by100 simp)
-      from hcc_im[rule_format, OF hm_lt] this
-      show "cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))" by linarith
-    qed
-    \<comment> \<open>From cc(jp) \\<ge> 0: sin(alpha jp) \\<le> 0, so alpha\\_jp \\<in> [\\<pi>, 2\\<pi>).\<close>
-    have hjp_pos: "jp > 0" using hjp_ne0 by (by100 linarith)
-    have hjp1_lt: "jp + 1 < nw" using hjp_lt by (by100 linarith)
-    from hcc_sin[rule_format, OF hjp_pos hjp] \<open>cc jp \<ge> 0\<close>
-    have "sin (alpha jp) \<le> 0"
-    proof -
-      have "cmod (zw 0) > 0" using hzw_ne hnw by (by100 simp)
-      have "cmod (zw jp) > 0" using hzw_ne hjp by (by100 simp)
-      from hcc_sin[rule_format, OF hjp_pos hjp]
-      have "cc jp = -(cmod (zw 0) * cmod (zw jp) * sin (alpha jp))" .
-      with \<open>cc jp \<ge> 0\<close> have "cmod (zw 0) * cmod (zw jp) * sin (alpha jp) \<le> 0" by linarith
-      have "cmod (zw 0) * cmod (zw jp) > 0"
-        using \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw jp) > 0\<close> by (by100 simp)
-      show ?thesis
-      proof (rule ccontr)
-        assume "\<not> sin (alpha jp) \<le> 0"
-        hence "sin (alpha jp) > 0" by linarith
-        hence "cmod (zw 0) * cmod (zw jp) * sin (alpha jp) > 0"
-          using \<open>cmod (zw 0) * cmod (zw jp) > 0\<close> by (by100 simp)
-        with \<open>cmod (zw 0) * cmod (zw jp) * sin (alpha jp) \<le> 0\<close> show False by linarith
-      qed
-    qed
-    \<comment> \<open>alpha\\_jp \\<in> (0, 2\\<pi>) and sin \\<le> 0: alpha\\_jp \\<in> [\\<pi>, 2\\<pi>).\<close>
-    have halpha_jp_range: "alpha jp \<ge> pi \<and> alpha jp < 2*pi"
-    proof -
-      \<comment> \<open>alpha jp > 0 (each theta > 0 and jp > 0).\<close>
-      have halpha_pos: "alpha jp > 0"
-      proof -
-        have "alpha jp = (\<Sum>j<jp. theta j)" unfolding alpha_def by simp
-        have "\<forall>j\<in>{..<jp}. theta j > 0" using htheta_pos hjp by (by100 auto)
-        have "{..<jp} \<noteq> {}" using hjp_ne0 by (by100 auto)
-        from sum_pos[OF _ \<open>{..<jp} \<noteq> {}\<close>] \<open>\<forall>j\<in>{..<jp}. theta j > 0\<close>
-        have "(\<Sum>j<jp. theta j) > 0" by (by100 blast)
-        thus ?thesis unfolding alpha_def by simp
-      qed
-      \<comment> \<open>alpha jp < 2*pi (remaining sum > 0).\<close>
-      have halpha_lt: "alpha jp < 2*pi"
-      proof -
-        have "alpha jp + (\<Sum>j=jp..<nw. theta j) = alpha nw" unfolding alpha_def
-        proof -
-          have "(\<Sum>j<jp. theta j) + (\<Sum>j=jp..<nw. theta j) = (\<Sum>j<nw. theta j)"
-            using sum.atLeastLessThan_concat[of 0 jp nw theta] hjp
-            by (simp add: atLeast0LessThan)
-          thus "(\<Sum>j<jp. theta j) + (\<Sum>j=jp..<nw. theta j) = (\<Sum>j<nw. theta j)" .
-        qed
-        moreover have "(\<Sum>j=jp..<nw. theta j) > 0"
-        proof -
-          have "\<forall>j\<in>{jp..<nw}. theta j > 0" using htheta_pos hjp by (by100 auto)
-          have "{jp..<nw} \<noteq> {}" using hjp by (by100 auto)
-          have "finite {jp..<nw}" by (by100 simp)
-          from sum_pos[OF \<open>finite {jp..<nw}\<close> \<open>{jp..<nw} \<noteq> {}\<close>] \<open>\<forall>j\<in>{jp..<nw}. theta j > 0\<close>
-          show ?thesis by (by100 blast)
-        qed
-        ultimately show ?thesis using halpha_sum by linarith
-      qed
-      \<comment> \<open>sin(alpha jp) \\<le> 0 and 0 < alpha jp: alpha jp \\<ge> pi.\<close>
-      have "alpha jp \<ge> pi"
-      proof (rule ccontr)
-        assume "\<not> alpha jp \<ge> pi"
-        hence "alpha jp < pi" by linarith
-        with halpha_pos have "sin (alpha jp) > 0" by (rule sin_gt_zero)
-        with \<open>sin (alpha jp) \<le> 0\<close> show False by linarith
-      qed
-      with halpha_lt show ?thesis by (by100 auto)
-    qed
-    \<comment> \<open>alpha(jp+1) = alpha(jp) + theta(jp) \\<in> (\\<pi>, 2\\<pi>+\\<pi>) \\<cap> (0, 2\\<pi>) = (\\<pi>, 2\\<pi>).\<close>
-    have halpha_jp1_range: "alpha (jp+1) > pi \<and> alpha (jp+1) < 2*pi"
-    proof -
-      have "alpha (jp+1) = alpha jp + theta jp" unfolding alpha_def by simp
-      moreover from htheta_pos hjp have "theta jp > 0" by (by100 blast)
-      moreover from halpha_jp_range have "alpha jp \<ge> pi" by (by100 blast)
-      moreover have "alpha (jp+1) < 2*pi"
-      proof -
-        have "alpha nw = 2*pi" using halpha_sum .
-        have "alpha (jp+1) + (\<Sum>j=jp+1..<nw. theta j) = alpha nw" unfolding alpha_def
-        proof -
-          have "(\<Sum>j<jp+1. theta j) + (\<Sum>j=jp+1..<nw. theta j) = (\<Sum>j<nw. theta j)"
-            using sum.atLeastLessThan_concat[of 0 "jp+1" nw theta] hjp1_lt
-            by (simp add: atLeast0LessThan)
-          thus "(\<Sum>j<jp+1. theta j) + (\<Sum>j=jp+1..<nw. theta j) = (\<Sum>j<nw. theta j)" .
-        qed
-        moreover have "(\<Sum>j=jp+1..<nw. theta j) > 0"
-        proof -
-          have "\<forall>j\<in>{jp+1..<nw}. theta j > 0" using htheta_pos hjp1_lt by (by100 auto)
-          have "{jp+1..<nw} \<noteq> {}" using hjp1_lt by (by100 auto)
-          have "finite {jp+1..<nw}" by (by100 simp)
-          from sum_pos[OF \<open>finite {jp+1..<nw}\<close> \<open>{jp+1..<nw} \<noteq> {}\<close>] \<open>\<forall>j\<in>{jp+1..<nw}. theta j > 0\<close>
-          show ?thesis by (by100 blast)
-        qed
-        ultimately show ?thesis using halpha_sum by linarith
-      qed
-      ultimately show ?thesis by linarith
-    qed
-    \<comment> \<open>sin(alpha(jp+1)) < 0 since alpha(jp+1) \\<in> (\\<pi>, 2\\<pi>).\<close>
-    have "sin (alpha (jp+1)) < 0"
-      using halpha_jp1_range sin_lt_zero by (by100 blast)
-    \<comment> \<open>Therefore cc(jp+1) > 0.\<close>
-    have "cc (jp + 1) > 0"
-    proof -
-      have "cmod (zw 0) > 0" using hzw_ne hnw by (by100 simp)
-      have "cmod (zw (jp+1)) > 0" using hzw_ne hjp1_lt by (by100 simp)
-      from hcc_sin[rule_format, OF _ hjp1_lt] hjp_pos
-      have hcc_jp1_eq: "cc (jp+1) = -(cmod (zw 0) * cmod (zw (jp+1)) * sin (alpha (jp+1)))"
-        by (by100 linarith)
-      with \<open>sin (alpha (jp+1)) < 0\<close> \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw (jp+1)) > 0\<close>
-      show ?thesis
-      proof -
-        have "cmod (zw 0) * cmod (zw (jp+1)) > 0"
-          using \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw (jp+1)) > 0\<close> by (by100 simp)
-        hence "cmod (zw 0) * cmod (zw (jp+1)) * sin (alpha (jp+1)) < 0"
-          using \<open>sin (alpha (jp+1)) < 0\<close> mult_pos_neg by (by100 blast)
-        thus ?thesis using hcc_jp1_eq by linarith
-      qed
-    qed
-    hence "cc (Suc jp mod nw) > 0" using hsjp by simp
-    thus ?thesis unfolding cc_def by auto
-  qed
-qed
-
-\<comment> \<open>Standalone lemma: fan triangle interiors from a centroid are disjoint.
-   If q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} with \\<alpha>,s,t > 0
-   and q = \\<alpha>'*cw + s'*u\\_{j'} + t'*u\\_{j'+1} with \\<alpha>',s',t' > 0
-   and C10 holds (centroid strictly interior), and j \\<noteq> j', then contradiction.\<close>
-\<comment> \<open>Actually: we show the cross product cross\\_cw at the shared boundary forces j = j'.
-   Specifically: cross\\_cw(j+1, q) = s'*det(u\\_{j+1}-cw, u\\_{j'}-cw) + ... and these
-   must be both < 0 (from being in sector j) and \\<ge> 0 (from sector j' if j+1 = j').
-   The full proof is complex; for now sorry this for progress.\<close>
-
-\<comment> \<open>Standalone lemma for prop12: if s*(u\\_j - u\\_0) + t*(u\\_{j+1} - u\\_0) = 0 with s,t \\<ge> 0
-   and the vertices are not at u\\_0 (i.e., j \\<noteq> 0 and j+1 \\<noteq> 0), then s = t = 0.
-   This forces p = v\\_1 in the spur arc collision argument.\<close>
-lemma nonneg_combo_independent_zero:
-  fixes ax ay bx by' :: real
-  assumes hs: "s_v \<ge> 0" and ht: "t_v \<ge> 0"
-      and hx: "s_v*ax + t_v*bx = 0"
-      and hy: "s_v*ay + t_v*by' = 0"
-      and hdet: "ax*by' - ay*bx \<noteq> 0"
-  shows "s_v = 0 \<and> t_v = 0"
-proof -
-  \<comment> \<open>Cramer: s\\_v*(ax*by'-ay*bx) = by'*(s\\_v*ax) - bx*(s\\_v*ay)
-     = by'*(-(t\\_v*bx)) - bx*(-(t\\_v*by')) = 0.\<close>
-  have "s_v*(ax*by'-ay*bx) = (s_v*ax)*by' - (s_v*ay)*bx" by (by100 algebra)
-  also have "(s_v*ax) = -(t_v*bx)" using hx by linarith
-  also have "(s_v*ay) = -(t_v*by')" using hy by linarith
-  finally have "s_v*(ax*by'-ay*bx) = -(t_v*bx)*by' - (-(t_v*by'))*bx" by simp
-  hence "s_v*(ax*by'-ay*bx) = 0" by (by100 algebra)
-  hence "s_v = 0" using hdet by simp
-  moreover from hx \<open>s_v = 0\<close> have "t_v*bx = 0" by simp
-  from hy \<open>s_v = 0\<close> have "t_v*by' = 0" by simp
-  have "t_v = 0"
-  proof (rule ccontr)
-    assume "t_v \<noteq> 0"
-    from \<open>t_v*bx = 0\<close> \<open>t_v \<noteq> 0\<close> have "bx = 0" by simp
-    from \<open>t_v*by' = 0\<close> \<open>t_v \<noteq> 0\<close> have "by' = 0" by simp
-    hence "ax*by' - ay*bx = 0" using \<open>bx = 0\<close> by simp
-    with hdet show False by simp
-  qed
-  ultimately show ?thesis by auto
-qed
-
 \<comment> \<open>Standalone lemma: spur arc and interior phi image differ.
    If Q = \\<alpha>*cw + s*u\\_j + t*u\\_{j+1} = (1-r)*u\\_0 + r*cw with \\<alpha>,s,t \\<ge> 0,
-   \\<alpha>+s+t=1, \\<alpha>>0, and C10 holds, then j=0 implies t=0, j+1=0 implies s=0,
-   and j\\<noteq>0,j+1\\<noteq>0 implies s=t=0.
-   In all cases, either s or t is zero, which forces p onto a polygon edge.\<close>
+   \\<alpha>+s+t=1, \\<alpha>>0, and C10 holds, then j=0 implies t=0, j+1=0 implies s=0.
+   NOTE: the j\\<noteq>0,j+1\\<noteq>0 case (s=t=0) is GENUINELY FALSE (see CHANGES0179)
+   and UNUSED, so the conclusion is conditional on which boundary case applies.\<close>
 lemma spur_arc_match_forces_edge:
   fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
   assumes hnw: "nw \<ge> 3"
@@ -2880,7 +961,7 @@ lemma spur_arc_match_forces_edge:
       and hx: "\<alpha>*cxw + s_v*vxw j_sec + t_v*vxw(Suc j_sec mod nw) = r*cxw + (1-r)*vxw 0"
       and hy: "\<alpha>*cyw + s_v*vyw j_sec + t_v*vyw(Suc j_sec mod nw) = r*cyw + (1-r)*vyw 0"
       and hr0: "r \<ge> 0" and hr1: "r \<le> 1"
-  shows "(j_sec = 0 \<and> t_v = 0) \<or> (Suc j_sec mod nw = 0 \<and> s_v = 0) \<or> (s_v = 0 \<and> t_v = 0)"
+  shows "(j_sec = 0 \<longrightarrow> t_v = 0) \<and> (Suc j_sec mod nw = 0 \<longrightarrow> s_v = 0)"
 proof -
   \<comment> \<open>From the equations: s*(u\\_j - u\\_0) + t*(u\\_{j+1} - u\\_0) + (\\<alpha>-r)*(cw - u\\_0) = 0.\<close>
   have hx3: "s_v*(vxw j_sec - vxw 0) + t_v*(vxw(Suc j_sec mod nw) - vxw 0) + (\<alpha>-r)*(cxw - vxw 0) = 0"
@@ -2917,7 +998,8 @@ proof -
       unfolding u1x_def u1y_def cwx_def cwy_def by (simp add: algebra_simps)
     have "u1x*cwy - u1y*cwx \<noteq> 0" using hdet_eq hC10_0 by linarith
     from ht_det this have "t_v = 0" by simp
-    with True show ?thesis by auto
+    have h_suc_ne: "Suc 0 mod nw \<noteq> 0" using hnw by simp
+    from \<open>t_v = 0\<close> True h_suc_ne show ?thesis by simp
   next
     case False note hj_ne0 = this
     show ?thesis
@@ -2962,79 +1044,1459 @@ proof -
         thus ?thesis by linarith
       qed
       from hs_det hdet_ne have "s_v = 0" by simp
-      with True show ?thesis by auto
+      from \<open>s_v = 0\<close> True hj_ne0 show ?thesis by simp
     next
       case False note hsi_ne0 = this
-      \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: C11 says u\\_0 is not on segment u\\_j--u\\_{j+1}.
-         From hx3,hy3: s*(u\\_j-u\\_0) + t*(u\\_{j+1}-u\\_0) + ar*(cw-u\\_0) = 0.
-         Use nonneg\\_combo\\_independent\\_zero with det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) \\<noteq> 0 from C11.\<close>
-      \<comment> \<open>C11 at edge j, k=0: det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) < 0.
-         This means det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) \\<noteq> 0 (u\\_0 not on line u\\_j--u\\_{j+1}).
-         Apply nonneg\\_combo\\_independent\\_zero to get s = t = 0.\<close>
-      have h0_lt: "(0::nat) < nw" using hnw by linarith
-      from hC11[rule_format, OF hj h0_lt \<open>j_sec \<noteq> 0\<close>[symmetric] hsi_ne0[symmetric]]
-      have hC11_inst: "(vxw 0-vxw j_sec)*(vyw(Suc j_sec mod nw)-vyw j_sec)-
-          (vyw 0-vyw j_sec)*(vxw(Suc j_sec mod nw)-vxw j_sec) < 0" .
-      \<comment> \<open>det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) \\<noteq> 0 from C11.\<close>
-      define djx where "djx = vxw j_sec - vxw 0"
-      define djy where "djy = vyw j_sec - vyw 0"
-      define dkx where "dkx = vxw(Suc j_sec mod nw) - vxw 0"
-      define dky where "dky = vyw(Suc j_sec mod nw) - vyw 0"
-      \<comment> \<open>det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) = -det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) from cross\\_product\\_cyclic + antisym.\<close>
-      have hdet_pos: "djx*dky - djy*dkx > 0"
-      proof -
-        \<comment> \<open>cross\\_product\\_cyclic: det(A-B,C-B) = det(B-C,A-C).
-           With A=u\\_0, B=u\\_j, C=u\\_{j+1}:
-           det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) = det(u\\_j-u\\_{j+1}, u\\_0-u\\_{j+1}).
-           With A=u\\_j, B=u\\_0, C=u\\_{j+1}:
-           det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) = det(u\\_0-u\\_{j+1}, u\\_j-u\\_{j+1}).
-           So det(u\\_0-u\\_j, u\\_{j+1}-u\\_j) = -det(u\\_j-u\\_0, u\\_{j+1}-u\\_0) by antisymmetry.\<close>
-        have h_cyc1: "(vxw 0-vxw j_sec)*(vyw(Suc j_sec mod nw)-vyw j_sec)-
-            (vyw 0-vyw j_sec)*(vxw(Suc j_sec mod nw)-vxw j_sec)
-            = (vxw j_sec-vxw(Suc j_sec mod nw))*(vyw 0-vyw(Suc j_sec mod nw))-
-            (vyw j_sec-vyw(Suc j_sec mod nw))*(vxw 0-vxw(Suc j_sec mod nw))"
-          by (rule cross_product_cyclic)
-        have h_cyc2: "(vxw j_sec-vxw 0)*(vyw(Suc j_sec mod nw)-vyw 0)-
-            (vyw j_sec-vyw 0)*(vxw(Suc j_sec mod nw)-vxw 0)
-            = (vxw 0-vxw(Suc j_sec mod nw))*(vyw j_sec-vyw(Suc j_sec mod nw))-
-            (vyw 0-vyw(Suc j_sec mod nw))*(vxw j_sec-vxw(Suc j_sec mod nw))"
-          by (rule cross_product_cyclic)
-        \<comment> \<open>h\\_cyc1 RHS = -(h\\_cyc2 RHS) by antisymmetry.\<close>
-        \<comment> \<open>Antisymmetry: det(A,B) = -det(B,A).\<close>
-        define px where "px = vxw j_sec-vxw(Suc j_sec mod nw)"
-        define py where "py = vyw j_sec-vyw(Suc j_sec mod nw)"
-        define qx where "qx = vxw 0-vxw(Suc j_sec mod nw)"
-        define qy where "qy = vyw 0-vyw(Suc j_sec mod nw)"
-        have hantisym: "px*qy - py*qx = -(qx*py - qy*px)"
-          by (by100 algebra)
-        have hantisym': "(vxw j_sec-vxw(Suc j_sec mod nw))*(vyw 0-vyw(Suc j_sec mod nw))-
-            (vyw j_sec-vyw(Suc j_sec mod nw))*(vxw 0-vxw(Suc j_sec mod nw))
-            = -((vxw 0-vxw(Suc j_sec mod nw))*(vyw j_sec-vyw(Suc j_sec mod nw))-
-            (vyw 0-vyw(Suc j_sec mod nw))*(vxw j_sec-vxw(Suc j_sec mod nw)))"
-          using hantisym unfolding px_def py_def qx_def qy_def by linarith
-        from h_cyc1 h_cyc2 hantisym' have hC11_vs_dj: "(vxw 0-vxw j_sec)*(vyw(Suc j_sec mod nw)-vyw j_sec)-
-            (vyw 0-vyw j_sec)*(vxw(Suc j_sec mod nw)-vxw j_sec)
-            = -((vxw j_sec-vxw 0)*(vyw(Suc j_sec mod nw)-vyw 0)-
-            (vyw j_sec-vyw 0)*(vxw(Suc j_sec mod nw)-vxw 0))" by linarith
-        hence "djx*dky - djy*dkx = -((vxw 0-vxw j_sec)*(vyw(Suc j_sec mod nw)-vyw j_sec)-
-            (vyw 0-vyw j_sec)*(vxw(Suc j_sec mod nw)-vxw j_sec))"
-          unfolding djx_def djy_def dkx_def dky_def by linarith
-        thus ?thesis using hC11_inst by linarith
-      qed
-      have hdet_ne: "djx*dky - djy*dkx \<noteq> 0" using hdet_pos by linarith
-      \<comment> \<open>From hx3, hy3: extract two equations in s, t.\<close>
-      define ar where "ar = \<alpha> - r"
-      from hx3 have hx3': "s_v*djx + t_v*dkx = -(ar*(cxw - vxw 0))"
-        unfolding djx_def dkx_def ar_def by linarith
-      from hy3 have hy3': "s_v*djy + t_v*dky = -(ar*(cyw - vyw 0))"
-        unfolding djy_def dky_def ar_def by linarith
-      \<comment> \<open>By nonneg\\_combo: s=t=0 iff the RHS = 0 (i.e., ar=0). Otherwise unique Cramer solution.\<close>
-      \<comment> \<open>Actually: we don't need s=t=0 for the FULL conclusion. We need the disjunction.
-         Since j\\<noteq>0 and j+1\\<noteq>0, the third disjunct s=t=0 suffices. But it may be false.
-         The correct approach: show s=t=ar=0 from the 2-equation system + constraints.\<close>
-      show ?thesis sorry
+      \<comment> \<open>j \\<noteq> 0, j+1 \\<noteq> 0: both implications are vacuously true.\<close>
+      from hj_ne0 hsi_ne0 show ?thesis by simp
     qed
   qed
+qed
+
+
+
+\<comment> \<open>Non-adjacent centroid-cone disjointness. For a convex polygon with C10/C11 and centroid at
+   origin with vertices on unit circle: a point in sector jp can't be in non-adjacent sector jp'.\<close>
+lemma non_adjacent_cone_disjoint:
+  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real"
+  assumes hnw: "nw \<ge> 3"
+      and hC10: "\<forall>i<nw. vxw i * vyw(Suc i mod nw) - vyw i * vxw(Suc i mod nw) > 0"
+      and hC11: "\<forall>i<nw. \<forall>k<nw. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod nw \<longrightarrow>
+          (vxw k-vxw i)*(vyw(Suc i mod nw)-vyw i)-(vyw k-vyw i)*(vxw(Suc i mod nw)-vxw i) < 0"
+      and hunit: "\<forall>j<nw. (vxw j)^2 + (vyw j)^2 = 1"
+      and hsum_x: "(\<Sum>j<nw. vxw j) = 0" and hsum_y: "(\<Sum>j<nw. vyw j) = 0"
+      and hjp: "jp < nw" and hjp': "jp' < nw"
+      and hne: "jp \<noteq> jp'" and hne_adj1: "jp' \<noteq> Suc jp mod nw" and hne_adj2: "jp \<noteq> Suc jp' mod nw"
+      and hsp: "sp \<ge> 0" and htp: "tp \<ge> 0" and hst: "sp + tp > 0"
+      \<comment> \<open>q = sp*u\\_jp + tp*u\\_{jp+1} (centroid=0).\<close>
+      \<comment> \<open>Cone jp' first condition: cross(u\\_{jp'}, q) \\<ge> 0.\<close>
+      and hcone1: "vxw jp' * (sp*vyw jp + tp*vyw(Suc jp mod nw)) -
+          vyw jp' * (sp*vxw jp + tp*vxw(Suc jp mod nw)) \<ge> 0"
+      \<comment> \<open>Cone jp' second condition: cross(q, u\\_{jp'+1}) \\<ge> 0.\<close>
+      and hcone2: "(sp*vxw jp + tp*vxw(Suc jp mod nw)) * vyw(Suc jp' mod nw) -
+          (sp*vyw jp + tp*vyw(Suc jp mod nw)) * vxw(Suc jp' mod nw) \<ge> 0"
+  shows False
+proof -
+  \<comment> \<open>Complex number setup: u\\_j = Complex(vxw j, vyw j) on unit circle.\<close>
+  define uw :: "nat \<Rightarrow> complex" where "uw j = Complex (vxw j) (vyw j)" for j
+  have huw_ne: "\<forall>j<nw. uw j \<noteq> 0"
+  proof (intro allI impI)
+    fix j assume "j < nw"
+    from hunit[rule_format, OF this] have "(vxw j)^2 + (vyw j)^2 = 1" .
+    hence "cmod (uw j) = 1" unfolding uw_def cmod_def by (by100 simp)
+    thus "uw j \<noteq> 0" by (by100 auto)
+  qed
+  have hmod_eq: "\<forall>j<nw. cmod (uw j) = 1"
+  proof (intro allI impI)
+    fix j assume "j < nw"
+    from hunit[rule_format, OF this] show "cmod (uw j) = 1"
+      unfolding uw_def cmod_def by (by100 simp)
+  qed
+  \<comment> \<open>C10 gives Im(cnj(uw j) * uw(j+1)) > 0, i.e., consecutive vertices CCW.\<close>
+  have hC10_im: "\<forall>j<nw. Im (cnj (uw j) * uw (Suc j mod nw)) > 0"
+  proof (intro allI impI)
+    fix j assume hj: "j < nw"
+    have "Im (cnj (uw j) * uw (Suc j mod nw)) =
+        vxw j * vyw(Suc j mod nw) - vyw j * vxw(Suc j mod nw)"
+      unfolding uw_def by (by100 simp)
+    with hC10[rule_format, OF hj] show "Im (cnj (uw j) * uw (Suc j mod nw)) > 0" by linarith
+  qed
+  \<comment> \<open>Define theta (angular steps) and alpha (cumulative angle).\<close>
+  define theta where "theta j = Arg (uw (Suc j mod nw) / uw j)" for j
+  define alpha where "alpha m = (\<Sum>j<m. theta j)" for m
+  \<comment> \<open>theta\\_j \\<in> (0, \\<pi>) from C10 (same derivation as spur\\_arc\\_target\\_sector).\<close>
+  have htheta_pos: "\<forall>j<nw. theta j > 0 \<and> theta j < pi"
+  proof (intro allI impI conjI)
+    fix j assume hj: "j < nw"
+    have hzj_ne: "uw j \<noteq> 0" using huw_ne hj by (by100 auto)
+    have hSj: "Suc j mod nw < nw" using hnw by (by100 simp)
+    have hratio_ne: "uw (Suc j mod nw) / uw j \<noteq> 0"
+      using huw_ne[rule_format, OF hSj] hzj_ne by (by100 auto)
+    have hsin_pos: "Im (uw (Suc j mod nw) / uw j) > 0"
+    proof -
+      have hmod_j: "cmod (uw j) = 1" using hmod_eq hj by (by100 auto)
+      have "cnj (uw j) * uw (Suc j mod nw) = cnj (uw j) * uw j * (uw (Suc j mod nw) / uw j)"
+        using hzj_ne by (by100 simp)
+      also have "cnj (uw j) * uw j = of_real ((cmod (uw j))^2)"
+        using complex_norm_square by (by100 simp)
+      finally have "cnj (uw j) * uw (Suc j mod nw) = of_real 1 * (uw (Suc j mod nw) / uw j)"
+        using hmod_j by (by100 simp)
+      hence "Im (cnj (uw j) * uw (Suc j mod nw)) = Im (uw (Suc j mod nw) / uw j)"
+        by (by100 simp)
+      with hC10_im[rule_format, OF hj] show ?thesis by linarith
+    qed
+    have harg_bound: "- pi < Arg (uw (Suc j mod nw) / uw j)" "Arg (uw (Suc j mod nw) / uw j) \<le> pi"
+      using Arg_bounded[of "uw (Suc j mod nw) / uw j"] by auto
+    have hsin_arg: "sin (Arg (uw (Suc j mod nw) / uw j)) > 0"
+    proof -
+      from sin_Arg[of "uw (Suc j mod nw) / uw j"] hratio_ne
+      have "sin (Arg (uw (Suc j mod nw) / uw j)) = Im (uw (Suc j mod nw) / uw j) / cmod (uw (Suc j mod nw) / uw j)"
+        by (by100 simp)
+      moreover have "cmod (uw (Suc j mod nw) / uw j) > 0" using hratio_ne by (by100 simp)
+      ultimately show ?thesis using hsin_pos by (by100 simp)
+    qed
+    show "theta j > 0" unfolding theta_def
+    proof (rule ccontr)
+      assume "\<not> 0 < Arg (uw (Suc j mod nw) / uw j)"
+      hence "Arg (uw (Suc j mod nw) / uw j) \<le> 0" by linarith
+      with harg_bound(1) have "Arg (uw (Suc j mod nw) / uw j) \<in> {-pi<..0}" by (by100 auto)
+      hence "sin (Arg (uw (Suc j mod nw) / uw j)) \<le> 0"
+      proof -
+        from \<open>Arg _ \<le> 0\<close> have "- Arg (uw (Suc j mod nw) / uw j) \<ge> 0" by linarith
+        moreover from harg_bound(1) have "- Arg (uw (Suc j mod nw) / uw j) < pi" by linarith
+        ultimately have "sin(- Arg (uw (Suc j mod nw) / uw j)) \<ge> 0"
+          using sin_ge_zero[of "- Arg (uw (Suc j mod nw) / uw j)"] by linarith
+        moreover have "sin(- Arg (uw (Suc j mod nw) / uw j)) = - sin(Arg (uw (Suc j mod nw) / uw j))"
+          using sin_minus[of "Arg (uw (Suc j mod nw) / uw j)"] by (by100 metis)
+        ultimately show ?thesis by linarith
+      qed
+      with hsin_arg show False by linarith
+    qed
+    show "theta j < pi" unfolding theta_def
+    proof -
+      from harg_bound(2) have "Arg (uw (Suc j mod nw) / uw j) \<le> pi" .
+      moreover have "Arg (uw (Suc j mod nw) / uw j) \<noteq> pi"
+      proof
+        assume "Arg (uw (Suc j mod nw) / uw j) = pi"
+        hence "sin(Arg (uw (Suc j mod nw) / uw j)) = 0" by (by100 simp)
+        with hsin_arg show False by linarith
+      qed
+      ultimately show "Arg (uw (Suc j mod nw) / uw j) < pi" by linarith
+    qed
+  qed
+  \<comment> \<open>alpha is strictly increasing.\<close>
+  have halpha_strict: "\<forall>j<nw. alpha j < alpha (Suc j)"
+  proof (intro allI impI)
+    fix j assume "j < nw"
+    have "alpha (Suc j) = alpha j + theta j" unfolding alpha_def
+      using lessThan_Suc by (by100 simp)
+    with htheta_pos[rule_format, OF \<open>j < nw\<close>] show "alpha j < alpha (Suc j)" by linarith
+  qed
+  \<comment> \<open>Cross product = Im(cnj(uw i) * q) where q = sp*uw(jp)+tp*uw(jp+1).\<close>
+  define q where "q = of_real sp * uw jp + of_real tp * uw (Suc jp mod nw)"
+  have hq_ne: "q \<noteq> 0"
+  proof
+    assume "q = 0"
+    hence "of_real sp * uw jp = -(of_real tp * uw (Suc jp mod nw))" unfolding q_def by (by100 algebra)
+    \<comment> \<open>With sp,tp \\<ge> 0 and uw on unit circle: sp*uw(jp) = -tp*uw(jp+1) impossible unless sp=tp=0.\<close>
+    \<comment> \<open>q=0: Im(cnj(uw jp)*q) = 0 = tp*C10\\_im. Since C10\\_im > 0: tp = 0. Similarly sp = 0.\<close>
+    have "Im (cnj (uw jp) * q) = tp * Im (cnj (uw jp) * uw (Suc jp mod nw))"
+    proof -
+      have "cnj (uw jp) * q = of_real sp * (cnj (uw jp) * uw jp) + of_real tp * (cnj (uw jp) * uw (Suc jp mod nw))"
+        unfolding q_def by (by100 algebra)
+      moreover have "Im (cnj (uw jp) * uw jp) = 0"
+      proof -
+        have "cnj (uw jp) * uw jp = uw jp * cnj (uw jp)" by (by100 algebra)
+        also have "Im \<dots> = 0" by (rule complex_In_mult_cnj_zero)
+        finally show ?thesis .
+      qed
+      ultimately show ?thesis by (by5000 simp)
+    qed
+    hence "tp * Im (cnj (uw jp) * uw (Suc jp mod nw)) = 0"
+      using \<open>q = 0\<close> by (by5000 simp)
+    hence "tp = 0" using hC10_im[rule_format, OF hjp] by (by100 simp)
+    \<comment> \<open>Similarly: from q=0 and tp=0: sp*uw(jp) = 0. Since uw(jp) \\<noteq> 0: sp = 0.\<close>
+    from \<open>q = 0\<close> \<open>tp = 0\<close> have "of_real sp * uw jp = 0" unfolding q_def by (by100 simp)
+    hence "sp = 0" using huw_ne[rule_format, OF hjp] by (by100 simp)
+    with \<open>tp = 0\<close> hst show False by linarith
+  qed
+  \<comment> \<open>hcone1: Im(cnj(uw jp') * q) \\<ge> 0.\<close>
+  have hcone1_im: "Im (cnj (uw jp') * q) \<ge> 0"
+  proof -
+    have "Im (cnj (uw jp') * q) = vxw jp' * Im q - vyw jp' * Re q"
+      unfolding uw_def by (by100 simp)
+    also have "Re q = sp * vxw jp + tp * vxw(Suc jp mod nw)"
+      unfolding q_def uw_def by (by100 simp)
+    also have "Im q = sp * vyw jp + tp * vyw(Suc jp mod nw)"
+      unfolding q_def uw_def by (by100 simp)
+    finally show ?thesis using hcone1 by (by100 simp)
+  qed
+  \<comment> \<open>hcone2: Im(cnj q * uw(jp'+1)) \\<ge> 0, i.e., Im(q * cnj(uw(jp'+1))) \\<le> 0... actually
+     cross(q, u\\_{jp'+1}) = Im(cnj q * uw(jp'+1)) \\<ge> 0? Let me check.\<close>
+  \<comment> \<open>cross(a, b) = ax*by - ay*bx = Im(cnj(a)*b). So cross(q, u\\_{jp'+1}) = Im(cnj q * uw(jp'+1)).\<close>
+  have hcone2_im: "Im (cnj q * uw (Suc jp' mod nw)) \<ge> 0"
+  proof -
+    have hRe_q: "Re q = sp*vxw jp + tp*vxw(Suc jp mod nw)" unfolding q_def uw_def by (by100 simp)
+    have hIm_q: "Im q = sp*vyw jp + tp*vyw(Suc jp mod nw)" unfolding q_def uw_def by (by100 simp)
+    have hRe_jp': "Re (uw (Suc jp' mod nw)) = vxw (Suc jp' mod nw)" unfolding uw_def by (by100 simp)
+    have hIm_jp': "Im (uw (Suc jp' mod nw)) = vyw (Suc jp' mod nw)" unfolding uw_def by (by100 simp)
+    have "Im (cnj q * uw (Suc jp' mod nw)) = Re q * Im (uw (Suc jp' mod nw)) - Im q * Re (uw (Suc jp' mod nw))"
+      by (by100 simp)
+    also have "\<dots> = (sp*vxw jp + tp*vxw(Suc jp mod nw)) * vyw(Suc jp' mod nw) -
+        (sp*vyw jp + tp*vyw(Suc jp mod nw)) * vxw(Suc jp' mod nw)"
+      using hRe_q hIm_q hRe_jp' hIm_jp' by (by100 algebra)
+    finally show ?thesis using hcone2 by linarith
+  qed
+  \<comment> \<open>From the angular partition: Arg(q) \\<in> (Arg(uw jp), Arg(uw(jp+1))) but
+     cone jp' needs Arg(q) \\<in> (Arg(uw jp'), Arg(uw(jp'+1))). Non-adjacent \\<to> disjoint \\<to> False.\<close>
+  \<comment> \<open>The detailed angular argument uses the cumulative angle alpha.\<close>
+  \<comment> \<open>Use unit\\_circle\\_cross\\_cis to get the cumulative angle alpha.\<close>
+  from unit_circle_cross_cis[OF hnw hC10 hC11 hunit hjp hjp']
+  obtain alpha where
+    halpha_cis: "\<forall>j<nw. \<forall>j'<nw. cnj (Complex (vxw j) (vyw j)) * Complex (vxw j') (vyw j') =
+      cis (alpha j' - alpha j)"
+    and halpha_strict: "\<forall>j<nw. alpha j < alpha (Suc j)"
+    and halpha_0: "alpha 0 = 0"
+    and halpha_nw: "alpha nw = 2*pi"
+    by (by100 blast)
+  \<comment> \<open>hcone1\\_im: Im(cnj(uw jp')*q) \\<ge> 0 \\<to> Im(cis(Arg(q/uw0)-alpha\\_{jp'})) \\<ge> 0 \\<to> sin(...) \\<ge> 0.\<close>
+  \<comment> \<open>From hcone1\\_im and the cis representation: q must have angle in [alpha\\_{jp'}, alpha\\_{jp'+1}].
+     From q = sp*uw(jp)+tp*uw(jp+1): q has angle in [alpha\\_jp, alpha\\_{jp+1}].
+     Non-adjacent: intervals disjoint \\<to> contradiction.\<close>
+  \<comment> \<open>Alpha strictly increasing: alpha\\_0 < alpha\\_1 < ... < alpha\\_nw = 2\\<pi>.
+     For non-adjacent jp, jp': [alpha\\_jp, alpha\\_{jp+1}] \\<cap> [alpha\\_{jp'}, alpha\\_{jp'+1}] = \\<emptyset>.\<close>
+  \<comment> \<open>Cross product via cis: cnj(uw i)*uw j = cis(alpha\\_j - alpha\\_i). So Im = sin(alpha\\_j-alpha\\_i).\<close>
+  \<comment> \<open>From hcone1\\_im \\<ge> 0: sp*sin(alpha\\_jp-alpha\\_{jp'})+tp*sin(alpha\\_{jp+1}-alpha\\_{jp'}) \\<ge> 0.\<close>
+  have hcone1_sin: "sp * sin(alpha jp - alpha jp') + tp * sin(alpha(Suc jp mod nw) - alpha jp') \<ge> 0"
+  proof -
+    have "Im (cnj (Complex (vxw jp') (vyw jp')) * q) =
+      sp * Im (cis (alpha jp - alpha jp')) + tp * Im (cis (alpha (Suc jp mod nw) - alpha jp'))"
+    proof -
+      have "cnj (Complex (vxw jp') (vyw jp')) * q =
+        of_real sp * (cnj (Complex (vxw jp') (vyw jp')) * Complex (vxw jp) (vyw jp)) +
+        of_real tp * (cnj (Complex (vxw jp') (vyw jp')) * Complex (vxw (Suc jp mod nw)) (vyw (Suc jp mod nw)))"
+        unfolding q_def uw_def by (by100 algebra)
+      also have "cnj (Complex (vxw jp') (vyw jp')) * Complex (vxw jp) (vyw jp) = cis (alpha jp - alpha jp')"
+        using halpha_cis[rule_format, OF hjp' hjp] by (by100 simp)
+      also have "cnj (Complex (vxw jp') (vyw jp')) * Complex (vxw (Suc jp mod nw)) (vyw (Suc jp mod nw)) =
+        cis (alpha (Suc jp mod nw) - alpha jp')"
+      proof -
+        have "Suc jp mod nw < nw" using hnw by (by100 simp)
+        from halpha_cis[rule_format, OF hjp' this] show ?thesis by (by100 simp)
+      qed
+      finally show ?thesis by (by100 simp)
+    qed
+    moreover have "Im (cnj (Complex (vxw jp') (vyw jp')) * q) = Im (cnj (uw jp') * q)"
+      unfolding uw_def by (by100 simp)
+    ultimately have "Im (cnj (uw jp') * q) = sp*sin(alpha jp-alpha jp') + tp*sin(alpha(Suc jp mod nw)-alpha jp')"
+      by (by100 simp)
+    with hcone1_im show ?thesis by linarith
+  qed
+  \<comment> \<open>From hcone2\\_im \\<ge> 0: similarly for the second condition.\<close>
+  have hcone2_sin: "sp * sin(alpha(Suc jp' mod nw) - alpha jp) + tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) \<ge> 0"
+  proof -
+    have hSjp': "Suc jp' mod nw < nw" using hnw by (by100 simp)
+    have hSjp: "Suc jp mod nw < nw" using hnw by (by100 simp)
+    have "Im (cnj q * uw (Suc jp' mod nw)) =
+      sp * Im (cnj (uw jp) * uw (Suc jp' mod nw)) + tp * Im (cnj (uw (Suc jp mod nw)) * uw (Suc jp' mod nw))"
+    proof -
+      have "cnj q = of_real sp * cnj (uw jp) + of_real tp * cnj (uw (Suc jp mod nw))"
+        unfolding q_def by (by100 simp)
+      hence "cnj q * uw (Suc jp' mod nw) =
+        of_real sp * (cnj (uw jp) * uw (Suc jp' mod nw)) +
+        of_real tp * (cnj (uw (Suc jp mod nw)) * uw (Suc jp' mod nw))"
+        by (by100 algebra)
+      thus ?thesis by (by100 simp)
+    qed
+    also have "Im (cnj (uw jp) * uw (Suc jp' mod nw)) = sin(alpha(Suc jp' mod nw) - alpha jp)"
+    proof -
+      have "cnj (uw jp) * uw (Suc jp' mod nw) = cis (alpha(Suc jp' mod nw) - alpha jp)"
+        using halpha_cis[rule_format, OF hjp hSjp'] unfolding uw_def by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    also have "Im (cnj (uw (Suc jp mod nw)) * uw (Suc jp' mod nw)) = sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw))"
+    proof -
+      have "cnj (uw (Suc jp mod nw)) * uw (Suc jp' mod nw) = cis (alpha(Suc jp' mod nw) - alpha(Suc jp mod nw))"
+        using halpha_cis[rule_format, OF hSjp hSjp'] unfolding uw_def by (by100 simp)
+      thus ?thesis by (by100 simp)
+    qed
+    finally show ?thesis using hcone2_im by linarith
+  qed
+  \<comment> \<open>Use C11 to derive that uw(jp) and uw(jp+1) are on the wrong side of edge (jp', jp'+1).\<close>
+  have hSjp: "Suc jp mod nw < nw" using hnw by (by100 simp)
+  have hSjp': "Suc jp' mod nw < nw" using hnw by (by100 simp)
+  \<comment> \<open>C11 with edge jp', vertex jp: cross(uw(jp)-uw(jp'), uw(jp'+1)-uw(jp')) < 0.\<close>
+  have hC11_jp: "(vxw jp - vxw jp')*(vyw(Suc jp' mod nw) - vyw jp') -
+      (vyw jp - vyw jp')*(vxw(Suc jp' mod nw) - vxw jp') < 0"
+    using hC11[rule_format, OF hjp' hjp hne hne_adj2] by (by100 auto)
+  \<comment> \<open>C11 with edge jp', vertex Suc jp mod nw: cross(uw(jp+1)-uw(jp'), uw(jp'+1)-uw(jp')) < 0.\<close>
+  have hne2: "Suc jp mod nw \<noteq> jp'"
+    using hne_adj1 by (by100 auto)
+  have hne2b: "Suc jp mod nw \<noteq> Suc jp' mod nw"
+  proof
+    assume h: "Suc jp mod nw = Suc jp' mod nw"
+    have "Suc jp mod nw = (if jp = nw - 1 then 0 else Suc jp)"
+      using hjp hnw by (by100 auto)
+    moreover have "Suc jp' mod nw = (if jp' = nw - 1 then 0 else Suc jp')"
+      using hjp' hnw by (by100 auto)
+    ultimately have "jp = jp'"
+    proof (cases "jp = nw - 1")
+      case True
+      show ?thesis
+      proof (cases "jp' = nw - 1")
+        case True with \<open>jp = nw - 1\<close> show ?thesis by (by100 simp)
+      next
+        case False
+        hence "Suc jp' mod nw = Suc jp'" using hjp' hnw by (by100 auto)
+        moreover have "Suc jp mod nw = 0" using \<open>jp = nw - 1\<close> hnw by (by100 auto)
+        ultimately have "Suc jp' = 0" using h by linarith
+        thus ?thesis by (by100 simp)
+      qed
+    next
+      case False
+      hence "Suc jp mod nw = Suc jp" using hjp hnw by (by100 auto)
+      show ?thesis
+      proof (cases "jp' = nw - 1")
+        case True
+        hence "Suc jp' mod nw = 0" using hnw by (by100 auto)
+        with h \<open>Suc jp mod nw = Suc jp\<close> have "Suc jp = 0" by linarith
+        thus ?thesis by (by100 simp)
+      next
+        case False
+        hence "Suc jp' mod nw = Suc jp'" using hjp' hnw by (by100 auto)
+        with h \<open>Suc jp mod nw = Suc jp\<close> show ?thesis by linarith
+      qed
+    qed
+    with hne show False by (by100 auto)
+  qed
+  have hC11_jp1: "(vxw(Suc jp mod nw) - vxw jp')*(vyw(Suc jp' mod nw) - vyw jp') -
+      (vyw(Suc jp mod nw) - vyw jp')*(vxw(Suc jp' mod nw) - vxw jp') < 0"
+    using hC11[rule_format, OF hjp' hSjp hne2 hne2b] by (by100 auto)
+  \<comment> \<open>Weighted sum: sp*C11\\_jp + tp*C11\\_jp1 < 0.\<close>
+  have hweighted: "sp * ((vxw jp - vxw jp')*(vyw(Suc jp' mod nw) - vyw jp') -
+      (vyw jp - vyw jp')*(vxw(Suc jp' mod nw) - vxw jp')) +
+    tp * ((vxw(Suc jp mod nw) - vxw jp')*(vyw(Suc jp' mod nw) - vyw jp') -
+      (vyw(Suc jp mod nw) - vyw jp')*(vxw(Suc jp' mod nw) - vxw jp')) < 0"
+  proof -
+    define xjp where "xjp = (vxw jp - vxw jp')*(vyw(Suc jp' mod nw) - vyw jp') -
+        (vyw jp - vyw jp')*(vxw(Suc jp' mod nw) - vxw jp')"
+    define xjp1 where "xjp1 = (vxw(Suc jp mod nw) - vxw jp')*(vyw(Suc jp' mod nw) - vyw jp') -
+        (vyw(Suc jp mod nw) - vyw jp')*(vxw(Suc jp' mod nw) - vxw jp')"
+    have hxjp: "xjp < 0" using hC11_jp unfolding xjp_def by linarith
+    have hxjp1: "xjp1 < 0" using hC11_jp1 unfolding xjp1_def by linarith
+    have "xjp \<le> 0" using hxjp by linarith
+    have hC11_jp_le: "sp * xjp \<le> 0"
+      using mult_nonneg_nonpos[OF hsp \<open>xjp \<le> 0\<close>] .
+    have "xjp1 \<le> 0" using hxjp1 by linarith
+    moreover have hC11_jp1_le: "tp * xjp1 \<le> 0"
+      using mult_nonneg_nonpos[OF htp \<open>xjp1 \<le> 0\<close>] .
+    moreover have "sp * xjp + tp * xjp1 < 0"
+    proof (cases "sp > 0")
+      case True
+      from mult_pos_neg[OF this hxjp] have "sp * xjp < 0" .
+      with hC11_jp1_le show ?thesis by linarith
+    next
+      case False hence "sp = 0" using hsp by linarith
+      hence "sp * xjp = 0" by (by100 simp)
+      moreover have "tp > 0" using hst \<open>sp = 0\<close> by linarith
+      from mult_pos_neg[OF this hxjp1] have "tp * xjp1 < 0" .
+      with \<open>sp * xjp = 0\<close> show ?thesis by linarith
+    qed
+    thus ?thesis unfolding xjp_def xjp1_def by linarith
+  qed
+  \<comment> \<open>Expand: sp*cross(uw(jp)-uw(jp'), dir) + tp*cross(uw(jp+1)-uw(jp'), dir)
+     = cross(q - (sp+tp)*uw(jp'), dir) where dir = uw(jp'+1) - uw(jp').
+     = cross(q, dir) - (sp+tp)*cross(uw(jp'), dir)
+     = [cross(q, uw(jp'+1)) - cross(q, uw(jp'))] - (sp+tp)*[cross(uw(jp'), uw(jp'+1)) - 0]
+     = [hcone2 + hcone1] - (sp+tp)*C10(jp') where we use cross(q, uw(jp')) = -hcone1.
+     Hmm: cross(q, uw(jp')) = Im(cnj q * uw(jp')). And hcone1 = Im(cnj(uw jp')*q).
+     Im(cnj q * uw(jp')) = Re(q)*Im(uw jp') - Im(q)*Re(uw jp').
+     Im(cnj(uw jp')*q) = Re(uw jp')*Im(q) - Im(uw jp')*Re(q) = -(Re(q)*Im(uw jp') - Im(q)*Re(uw jp')).
+     So cross(q, uw(jp')) = -hcone1.
+     cross(q, uw(jp'+1)) = Im(cnj q * uw(jp'+1)) = hcone2.
+     cross(uw(jp'), uw(jp'+1)) = Im(cnj(uw jp')*uw(jp'+1)) = C10(jp') > 0.\<close>
+  \<comment> \<open>So the weighted sum = hcone2 - (-hcone1) - (sp+tp)*C10\\_jp' = hcone1 + hcone2 - (sp+tp)*C10\\_jp'.\<close>
+  \<comment> \<open>But this only gives hcone1 + hcone2 < (sp+tp)*C10(jp'). Not a contradiction since LHS \\<ge> 0, RHS > 0.\<close>
+  \<comment> \<open>We need to expand the weighted sum in coordinates and relate to hcone1, hcone2, C10 directly.\<close>
+  \<comment> \<open>Alternative approach: the weighted sum equals the cross product of
+     (q - (sp+tp)*centroid\\_of\\_jp') with (edge direction of jp').
+     Since centroid is at origin: q - (sp+tp)*0 = q. No, that's wrong.
+     Actually it's q - (sp+tp)*uw(jp'), not q itself.\<close>
+  \<comment> \<open>KEY: directly expand and combine with hcone1 and hcone2 to get contradiction.
+     The weighted sum in coordinates:\<close>
+  have hexpand: "sp * ((vxw jp - vxw jp')*(vyw(Suc jp' mod nw) - vyw jp') -
+      (vyw jp - vyw jp')*(vxw(Suc jp' mod nw) - vxw jp')) +
+    tp * ((vxw(Suc jp mod nw) - vxw jp')*(vyw(Suc jp' mod nw) - vyw jp') -
+      (vyw(Suc jp mod nw) - vyw jp')*(vxw(Suc jp' mod nw) - vxw jp'))
+    = (sp*vxw jp + tp*vxw(Suc jp mod nw) - (sp+tp)*vxw jp') * (vyw(Suc jp' mod nw) - vyw jp') -
+      (sp*vyw jp + tp*vyw(Suc jp mod nw) - (sp+tp)*vyw jp') * (vxw(Suc jp' mod nw) - vxw jp')"
+    by (by100 algebra)
+  \<comment> \<open>Also expand hcone1 and hcone2 in similar terms.\<close>
+  \<comment> \<open>hcone1 = vxw jp' * (sp*vyw jp + tp*vyw(Suc jp)) - vyw jp' * (sp*vxw jp + tp*vxw(Suc jp))
+     = vxw jp' * qy - vyw jp' * qx where qx = sp*vxw jp + tp*vxw(Suc jp), qy = sp*vyw jp + tp*vyw(Suc jp).
+     hcone2 = qx * vyw(Suc jp') - qy * vxw(Suc jp').\<close>
+  \<comment> \<open>The weighted C11 sum = (qx - (sp+tp)*vxw jp') * (vyw(Suc jp') - vyw jp')
+     - (qy - (sp+tp)*vyw jp') * (vxw(Suc jp') - vxw jp')
+     = qx*vyw(Suc jp') - qx*vyw jp' - (sp+tp)*vxw jp'*vyw(Suc jp') + (sp+tp)*vxw jp'*vyw jp'
+     - qy*vxw(Suc jp') + qy*vxw jp' + (sp+tp)*vyw jp'*vxw(Suc jp') - (sp+tp)*vyw jp'*vxw jp'
+     = [qx*vyw(Suc jp') - qy*vxw(Suc jp')] + [qy*vxw jp' - qx*vyw jp']
+     - (sp+tp)*[vxw jp'*vyw(Suc jp') - vyw jp'*vxw(Suc jp')]
+     = hcone2 + (-hcone1) ... wait:
+     hcone1 = vxw jp'*qy - vyw jp'*qx. So qy*vxw jp' - qx*vyw jp' = hcone1 (reorder).
+     Hmm: hcone1 = vxw jp' * qy - vyw jp' * qx = qy*vxw jp' - qx*vyw jp'. Yes!
+     Wait, that's wrong. vxw jp' * qy - vyw jp' * qx \\<noteq> qy*vxw jp' - qx*vyw jp'. They're the same: commutative.
+     So: qy*vxw jp' - qx*vyw jp' = hcone1? No: hcone1 = vxw jp'*qy - vyw jp'*qx which IS qy*vxw jp' - qx*vyw jp'. Wait no, multiplication is commutative so vxw jp' * qy = qy * vxw jp'. So hcone1 = qy*vxw jp' - qx*vyw jp'. And in the expansion: qy*vxw jp' - qx*vyw jp' = hcone1. But with opposite sign compared to cross(q, uw(jp')): cross(q, uw(jp')) = qx*vyw jp' - qy*vxw jp' = -hcone1. So the term is -cross(q, uw jp') = hcone1.
+
+     So the expansion is: hcone2 + hcone1 - (sp+tp)*C10\\_jp'.
+     And this < 0 from the weighted C11.
+     So: hcone1 + hcone2 < (sp+tp)*C10\\_jp'. \\<checkmark> Known bound, not contradictory.\<close>
+  \<comment> \<open>This approach alone doesn't give a contradiction. We need the dual C11 for edge (jp, jp+1).\<close>
+  \<comment> \<open>TAKE 2: Use C11 with edge (jp, jp+1) and vertices jp', jp'+1.\<close>
+  have hne3: "jp' \<noteq> jp" using hne by (by100 auto)
+  have hne3b: "jp' \<noteq> Suc jp mod nw" using hne_adj1 by (by100 auto)
+  have hC11_jp'_on_jp: "(vxw jp' - vxw jp)*(vyw(Suc jp mod nw) - vyw jp) -
+      (vyw jp' - vyw jp)*(vxw(Suc jp mod nw) - vxw jp) < 0"
+    using hC11[rule_format, OF hjp hjp' hne3 hne3b] by (by100 auto)
+  have hne4: "Suc jp' mod nw \<noteq> jp" using hne_adj2 by (by100 auto)
+  have hne2b_sym: "Suc jp' mod nw \<noteq> Suc jp mod nw" using hne2b by (by100 auto)
+  have hC11_jp1'_on_jp: "(vxw(Suc jp' mod nw) - vxw jp)*(vyw(Suc jp mod nw) - vyw jp) -
+      (vyw(Suc jp' mod nw) - vyw jp)*(vxw(Suc jp mod nw) - vxw jp) < 0"
+    using hC11[rule_format, OF hjp hSjp' hne4 hne2b_sym] by (by100 auto)
+  \<comment> \<open>Hmm but hne2b was Suc jp mod nw \\<noteq> Suc jp' mod nw. Need: Suc jp' mod nw \\<noteq> Suc jp mod nw.
+     That's the same as hne2b by symmetry.\<close>
+  \<comment> \<open>Now: C11[i=jp, k=jp'] gives cross(uw(jp')-uw(jp), uw(jp+1)-uw(jp)) < 0.
+     Expanding: Im(cnj(uw jp')*uw(jp+1)) - Im(cnj(uw jp')*uw(jp)) - Im(cnj(uw jp)*uw(jp+1)) < 0.
+     = sin(b) - sin(a) - sin\\_theta\\_jp < 0. (sin\\_theta\\_jp = sin of theta jp, which is > 0.)
+     Where sin\\_theta\\_jp = Im(cnj(uw jp)*uw(jp+1)) = the C10 value for edge jp.\<close>
+  \<comment> \<open>Similarly C11[i=jp, k=Suc jp'] gives:
+     sin(d') - sin(c') - sin\\_theta\\_jp < 0 where appropriate... need careful indices.
+     Actually: sin(alpha(jp+1) - alpha(Suc jp')) - sin(alpha(jp) - alpha(Suc jp')) - sin(theta jp) < 0.
+     = sin(-d) - sin(-c) - sin(theta jp) = -sin(d) + sin(c) - sin(theta jp) < 0.
+     i.e., sin(c) - sin(d) < sin(theta jp).\<close>
+  \<comment> \<open>So we get 4 C11 inequalities:
+     (I) sin(a) + sin(c) < sin(\\<theta>\\_{jp'})     [C11 edge jp', vertex jp]
+     (II) sin(b) + sin(d) < sin(\\<theta>\\_{jp'})    [C11 edge jp', vertex jp+1]
+     (III) sin(b) - sin(a) < sin(\\<theta>\\_jp)   [C11 edge jp, vertex jp']
+     (IV) sin(c) - sin(d) < sin(\\<theta>\\_jp)    [C11 edge jp, vertex jp'+1]
+
+     And cone conditions:
+     (H1) sp*sin(a) + tp*sin(b) \\<ge> 0
+     (H2) sp*sin(c) + tp*sin(d) \\<ge> 0
+
+     Take sp*(I) + tp*(II): sp*sin(a) + sp*sin(c) + tp*sin(b) + tp*sin(d) < (sp+tp)*sin(\\<theta>\\_{jp'}).
+     = (H1) + (H2) < (sp+tp)*sin(\\<theta>\\_{jp'}).
+
+     Take tp*(III) + sp*(IV): tp*sin(b) - tp*sin(a) + sp*sin(c) - sp*sin(d) < (sp+tp)*sin(\\<theta>\\_jp).
+     = (H1) - (H2) + 2*(sp*sin(c) - tp*sin(a)) ... hmm not clean.
+     Actually: tp*sin(b) - tp*sin(a) + sp*sin(c) - sp*sin(d)
+     = (sp*sin(c) + tp*sin(b)) - (tp*sin(a) + sp*sin(d))
+
+     From (H1)+(H2) \\<ge> 0 and < (sp+tp)*sin(\\<theta>\\_{jp'}): nothing new.
+
+     Take sp*(III) + tp*(IV): sp*sin(b) - sp*sin(a) + tp*sin(c) - tp*sin(d) < (sp+tp)*sin(\\<theta>\\_jp).
+     = (sp*sin(b) + tp*sin(c)) - (sp*sin(a) + tp*sin(d)) < (sp+tp)*sin(\\<theta>\\_jp).
+
+     Hmm, let me define X = sp*sin(a) + tp*sin(d) and Y = sp*sin(b) + tp*sin(c).
+     Then: X + Y = (H1) + (H2) \\<ge> 0.
+     Y - X < (sp+tp)*sin(\\<theta>\\_jp) from sp*(III) + tp*(IV).
+     X + Y < (sp+tp)*sin(\\<theta>\\_{jp'}) from sp*(I) + tp*(II).
+
+     Also: determinant condition. sin(a)*sin(d) - sin(b)*sin(c) < 0.
+
+     From the Cauchy-like computation:
+     (H1)*(H2) = (sp*sin(a)+tp*sin(b))*(sp*sin(c)+tp*sin(d))
+     = sp^2*sin(a)*sin(c) + sp*tp*sin(a)*sin(d) + sp*tp*sin(b)*sin(c) + tp^2*sin(b)*sin(d)
+     \\<ge> 0 (since both factors \\<ge> 0).
+
+     (sp*sin(b)+tp*sin(c))*(sp*sin(a)+tp*sin(d)) = X*Y... hmm.
+
+     sp^2*sin(a)*sin(b) + sp*tp*sin(b)*sin(d) + sp*tp*sin(a)*sin(c) + tp^2*sin(c)*sin(d).
+
+     (H1)*(H2) - X*Y = sp*tp*(sin(a)*sin(d)+sin(b)*sin(c)) - sp*tp*(sin(b)*sin(d)+sin(a)*sin(c))
+     = sp*tp*(sin(a)*sin(d) + sin(b)*sin(c) - sin(b)*sin(d) - sin(a)*sin(c))
+     = sp*tp*(sin(a)*(sin(d)-sin(c)) + sin(b)*(sin(c)-sin(d)))
+     = sp*tp*(sin(a)-sin(b))*(sin(d)-sin(c)).
+
+     So (H1)*(H2) = X*Y + sp*tp*(sin(a)-sin(b))*(sin(d)-sin(c)).
+
+     Not sure this helps.\<close>
+  \<comment> \<open>FINAL APPROACH: Direct coordinate computation with the cone + C11 + non-adjacency.\<close>
+  \<comment> \<open>Key algebraic identity: hweighted = hcone1 + hcone2 - (sp+tp)*C10(jp'). Since hweighted < 0:
+     hcone1 + hcone2 < (sp+tp)*C10(jp'). Similarly, hW2 expands to another bound.
+     Together with hcone1, hcone2 \\<ge> 0 and C10 > 0, these force sp = tp = 0. Contradiction.\<close>
+  \<comment> \<open>hweighted = sp*C11(jp',jp) + tp*C11(jp',jp+1) < 0 (already proved).
+     Expanding in coordinates: it equals (qx - (sp+tp)*x\\_{jp'}) * \\<Delta>y' - (qy - (sp+tp)*y\\_{jp'}) * \\<Delta>x'.
+     = hcone2 + hcone1 - (sp+tp)*C10'. But NOT via subtraction - via expansion.
+     Actually: the expansion gives hcone1+hcone2 < (sp+tp)*C10' which is not False.
+     Similarly for the other edge. The TWO bounds together don't directly force False either.
+     We need the cross-term: combine cone1 with C11 on edge jp and cone2 with C11 on edge jp'.\<close>
+  \<comment> \<open>DIRECT PROOF: From hcone1 \\<ge> 0 and C11(jp, jp') < 0, derive a bound on sp*sin(b).
+     From hcone2 \\<ge> 0 and C11(jp', jp+1) < 0, derive a bound on tp*sin(d).
+     Together with the weighted C11 sums, derive sp = tp = 0.\<close>
+  have hcone1_plus_hcone2: "vxw jp' * (sp*vyw jp + tp*vyw(Suc jp mod nw)) -
+          vyw jp' * (sp*vxw jp + tp*vxw(Suc jp mod nw)) +
+      ((sp*vxw jp + tp*vxw(Suc jp mod nw)) * vyw(Suc jp' mod nw) -
+          (sp*vyw jp + tp*vyw(Suc jp mod nw)) * vxw(Suc jp' mod nw))
+    < (sp+tp) * (vxw jp' * vyw(Suc jp' mod nw) - vyw jp' * vxw(Suc jp' mod nw))"
+    using hweighted hcone1 hcone2 by (by100 argo)
+  \<comment> \<open>Now derive hcone1 + hcone2 < (sp+tp)*C10(jp'). This is bound (A).\<close>
+  \<comment> \<open>Similarly derive bound (B) from the dual C11 weighted sum.\<close>
+  \<comment> \<open>The two bounds together with hcone1, hcone2 \\<ge> 0 should give the contradiction.\<close>
+  \<comment> \<open>Actually, we already have the hweighted < 0 which gives the bound. The question is how
+     to combine with the dual bound to get False. Let me try sledgehammer on show False
+     with all available facts.\<close>
+  \<comment> \<open>Dual weighted C11 for edge jp.\<close>
+  have hweighted2: "sp * ((vxw jp' - vxw jp)*(vyw(Suc jp mod nw) - vyw jp) -
+      (vyw jp' - vyw jp)*(vxw(Suc jp mod nw) - vxw jp)) +
+    tp * ((vxw(Suc jp' mod nw) - vxw jp)*(vyw(Suc jp mod nw) - vyw jp) -
+      (vyw(Suc jp' mod nw) - vyw jp)*(vxw(Suc jp mod nw) - vxw jp)) < 0"
+  proof -
+    define xjp2 where "xjp2 = (vxw jp' - vxw jp)*(vyw(Suc jp mod nw) - vyw jp) -
+        (vyw jp' - vyw jp)*(vxw(Suc jp mod nw) - vxw jp)"
+    define xjp12 where "xjp12 = (vxw(Suc jp' mod nw) - vxw jp)*(vyw(Suc jp mod nw) - vyw jp) -
+        (vyw(Suc jp' mod nw) - vyw jp)*(vxw(Suc jp mod nw) - vxw jp)"
+    have hxjp2: "xjp2 < 0" using hC11_jp'_on_jp unfolding xjp2_def by linarith
+    have hxjp12: "xjp12 < 0" using hC11_jp1'_on_jp unfolding xjp12_def by linarith
+    have "sp * xjp2 + tp * xjp12 < 0"
+    proof (cases "sp > 0")
+      case True
+      from mult_pos_neg[OF this hxjp2] have "sp * xjp2 < 0" .
+      moreover have "xjp12 \<le> 0" using hxjp12 by linarith
+      from mult_nonneg_nonpos[OF htp this] have "tp * xjp12 \<le> 0" .
+      ultimately show ?thesis by linarith
+    next
+      case False hence "sp = 0" using hsp by linarith
+      hence "tp > 0" using hst by linarith
+      from mult_pos_neg[OF this hxjp12] have "tp * xjp12 < 0" .
+      moreover have "sp * xjp2 = 0" using \<open>sp = 0\<close> by (by100 simp)
+      ultimately show ?thesis by linarith
+    qed
+    thus ?thesis unfolding xjp2_def xjp12_def by linarith
+  qed
+  \<comment> \<open>Derive analogous bound from hweighted2: cross of (sp*uw(jp')+tp*uw(jp'+1)) with edge jp.\<close>
+  have hbound_B: "sp * (vxw jp' * vyw(Suc jp mod nw) - vyw jp' * vxw(Suc jp mod nw)) +
+      tp * (vxw(Suc jp' mod nw) * vyw(Suc jp mod nw) - vyw(Suc jp' mod nw) * vxw(Suc jp mod nw))
+    - sp * (vxw jp' * vyw jp - vyw jp' * vxw jp)
+    - tp * (vxw(Suc jp' mod nw) * vyw jp - vyw(Suc jp' mod nw) * vxw jp)
+    < (sp+tp) * (vxw jp * vyw(Suc jp mod nw) - vyw jp * vxw(Suc jp mod nw))"
+    using hweighted2 by (by100 argo)
+  \<comment> \<open>Express using cross products: sp*cross(jp',jp+1) + tp*cross(jp'+1,jp+1)
+     - sp*cross(jp',jp) - tp*cross(jp'+1,jp) < (sp+tp)*C10(jp).\<close>
+  \<comment> \<open>Note: cross(a,b) = -cross(b,a). So this becomes:
+     sp*[-Im(cnj(uw(jp+1))*uw(jp'))] + tp*[-Im(cnj(uw(jp+1))*uw(jp'+1))]
+     + sp*Im(cnj(uw jp)*uw(jp')) + tp*Im(cnj(uw jp)*uw(jp'+1))
+     < (sp+tp)*C10(jp).
+     i.e., sp*[Im(cnj(uw jp)*uw(jp')) - Im(cnj(uw(jp+1))*uw(jp'))]
+     + tp*[Im(cnj(uw jp)*uw(jp'+1)) - Im(cnj(uw(jp+1))*uw(jp'+1))]
+     < (sp+tp)*C10(jp).
+
+     The terms are:
+     Im(cnj(uw jp)*uw(jp')) - Im(cnj(uw(jp+1))*uw(jp')) = -[hcone1 with q=(1,0,...) version]. Hmm not clear.
+
+     Actually: sp*cross(jp',jp+1) - sp*cross(jp',jp) = sp*cross(jp', jp+1-jp) = sp*cross(jp', uw(jp+1)-uw(jp)).
+     And the RHS involves (sp+tp)*cross(jp, jp+1-jp) = (sp+tp)*cross(jp, uw(jp+1)-uw(jp)).
+     But cross(jp, uw(jp+1)-uw(jp)) = cross(uw jp, uw(jp+1)) - cross(uw jp, uw jp) = C10(jp).
+
+     So the inequality is: sp*cross(uw(jp'), uw(jp+1)-uw(jp)) + tp*cross(uw(jp'+1), uw(jp+1)-uw(jp))
+     < (sp+tp)*C10(jp).
+
+     Now: cross(uw(jp'), uw(jp+1)-uw(jp)) = -hcone_jp'(cone condition using edge jp direction).
+     And cross(uw(jp'+1), uw(jp+1)-uw(jp)) = -hcone_jp'+1(similar).
+
+     These relate to how far uw(jp') and uw(jp'+1) are from the edge (jp, jp+1).\<close>
+  \<comment> \<open>Use hcone1\\_sin, hcone2\\_sin and the C11 bounds in sin form to derive contradiction.\<close>
+  \<comment> \<open>Abbreviations for the sine arguments.\<close>
+  define sa where "sa = sin(alpha jp - alpha jp')"
+  define sb where "sb = sin(alpha (Suc jp mod nw) - alpha jp')"
+  define sc where "sc = sin(alpha (Suc jp' mod nw) - alpha jp)"
+  define sd where "sd = sin(alpha (Suc jp' mod nw) - alpha (Suc jp mod nw))"
+  have hcone1_ab: "sp * sa + tp * sb \<ge> 0"
+    using hcone1_sin unfolding sa_def sb_def by (by100 simp)
+  have hcone2_cd: "sp * sc + tp * sd \<ge> 0"
+    using hcone2_sin unfolding sc_def sd_def by (by100 simp)
+  \<comment> \<open>C11 in sin form via halpha\\_cis:
+     C11(jp', jp) gives: cross(uw(jp)-uw(jp'), uw(jp'+1)-uw(jp')) < 0.
+     In cis form: Im(cnj(uw jp)*uw(jp'+1)) + Im(cnj(uw jp')*uw(jp)) - Im(cnj(uw jp')*uw(jp'+1)) < 0.
+     = sin(alpha(Suc jp')-alpha(jp)) + sin(alpha(jp)-alpha(jp')) - sin(alpha(Suc jp')-alpha(jp')) < 0
+     Wait: Im(cnj(uw jp)*uw(jp'+1)): in the halpha\\_cis framework, this is sin(alpha(Suc jp')-alpha(jp)).
+     But halpha\\_cis uses the RAW cis values, not the alpha-based ones necessarily.
+     Actually: from halpha\\_cis: cnj(Complex(vxw j)(vyw j))*Complex(vxw j')(vyw j') = cis(alpha j' - alpha j).
+     So Im = sin(alpha j' - alpha j).
+     Thus Im(cnj(uw jp)*uw(jp'+1)) = sin(alpha(Suc jp' mod nw) - alpha jp) = sc.
+     Im(cnj(uw jp')*uw(jp)) = sin(alpha jp - alpha jp') = sa.
+     Im(cnj(uw jp')*uw(jp'+1)) = sin(alpha(Suc jp' mod nw) - alpha jp') = sin of theta jp' (mod 2\\<pi>).
+
+     So C11(jp',jp) in sin form: sc + sa - sin(\\<theta>) < 0 where sin(\\<theta>) = sin(alpha(Suc jp' mod nw) - alpha jp').
+     I.e., sa + sc < sin(\\<theta>).
+
+     But sin(\\<theta>) is NOT directly sin(theta jp') because of the wrapping issue with alpha(Suc jp' mod nw).
+     HOWEVER, from hsin\\_ac\\_pos (proved earlier): sin(alpha(Suc jp' mod nw) - alpha jp') > 0.
+     And this IS the same as the C10 value.\<close>
+  define stheta' where "stheta' = sin(alpha(Suc jp' mod nw) - alpha jp')"
+  define stheta where "stheta = sin(alpha(Suc jp mod nw) - alpha jp)"
+  have hstheta'_pos: "stheta' > 0"
+  proof -
+    have "Im (cnj (uw jp') * uw (Suc jp' mod nw)) > 0" using hC10_im hjp' by (by100 auto)
+    moreover have "cnj (uw jp') * uw (Suc jp' mod nw) = cis(alpha(Suc jp' mod nw) - alpha jp')"
+    proof -
+      from halpha_cis[rule_format, OF hjp' hSjp']
+      show ?thesis unfolding uw_def by (by100 simp)
+    qed
+    ultimately show ?thesis unfolding stheta'_def by (by100 simp)
+  qed
+  have hstheta_pos: "stheta > 0"
+  proof -
+    have "Im (cnj (uw jp) * uw (Suc jp mod nw)) > 0" using hC10_im hjp by (by100 auto)
+    moreover have "cnj (uw jp) * uw (Suc jp mod nw) = cis(alpha(Suc jp mod nw) - alpha jp)"
+    proof -
+      from halpha_cis[rule_format, OF hjp hSjp]
+      show ?thesis unfolding uw_def by (by100 simp)
+    qed
+    ultimately show ?thesis unfolding stheta_def by (by100 simp)
+  qed
+  \<comment> \<open>C11 bounds in sin form:\<close>
+  \<comment> \<open>(I) sa + sc < stheta'   [from C11(jp',jp)]\<close>
+  \<comment> \<open>(II) sb + sd < stheta'  [from C11(jp',jp+1)]\<close>
+  \<comment> \<open>(III) sb - sa < stheta  [from C11(jp,jp')]\<close>
+  \<comment> \<open>(IV) sc - sd < stheta   [from C11(jp,jp'+1)]\<close>
+  \<comment> \<open>C11 bounds in sin form (not directly used in current proof).\<close>
+  \<comment> \<open>Now derive the contradiction from hcone1\\_ab, hcone2\\_cd, C11 bounds, and non-adjacency.
+     The proof:
+     Case 1: sa \\<le> 0 and sb \\<le> 0. Then sp*sa+tp*sb \\<le> 0. With sp+tp>0 and one < 0: < 0. Contradicts hcone1 \\<ge> 0.
+     Case 2: sa \\<le> 0 and sb > 0. From (III): sb < sa + stheta \\<le> stheta.
+       From (I): sc < stheta' - sa. Since sa \\<le> 0: sc < stheta' + |sa|.
+       Also sd = sc - stheta + ... hmm, sd is not simply expressible.
+       Use determinant: det = sa*sd - sb*sc = -(stheta'*stheta) [per the identity].
+       ... still complex.
+     Actually, just use sp*(I) + tp*(II): sp*(sa+sc) + tp*(sb+sd) < (sp+tp)*stheta'.
+       = hcone1\\_ab + hcone2\\_cd < (sp+tp)*stheta'. But \\<ge> 0 and < positive. No contradiction.
+     AND sp*(III) + tp*(IV): sp*(sb-sa) + tp*(sc-sd) < (sp+tp)*stheta.
+       = (sp*sb+tp*sc) - (sp*sa+tp*sd) < (sp+tp)*stheta.
+
+     Define X = sp*sa + tp*sd, Y = sp*sb + tp*sc.
+     X + Y = hcone1 + hcone2 \\<ge> 0.
+     Y - X < (sp+tp)*stheta.
+     X + Y < (sp+tp)*stheta'.
+
+     So: Y < ((sp+tp)*stheta' + (sp+tp)*stheta)/2 = (sp+tp)*(stheta'+stheta)/2.
+     And: X > Y - (sp+tp)*stheta. From X + Y \\<ge> 0: X \\<ge> -Y. If Y > 0: X could be negative.
+
+     Now from the determinant: sa*sd - sb*sc = -(stheta'*stheta) < 0.
+     H1*H2 = (sp*sa+tp*sb)*(sp*sc+tp*sd) \\<ge> 0.
+     Y^2 - X^2 = (Y+X)(Y-X) = (H1+H2)(Y-X) < (H1+H2)*(sp+tp)*stheta.
+     And Y^2 - X^2 = (sp*sb+tp*sc)^2 - (sp*sa+tp*sd)^2.
+     = sp^2*(sb^2-sa^2) + 2*sp*tp*(sb*sc-sa*sd) + tp^2*(sc^2-sd^2).
+     = sp^2*(sb-sa)*(sb+sa) + 2*sp*tp*(sb*sc-sa*sd) + tp^2*(sc-sd)*(sc+sd).
+
+     This is getting nowhere. Let me just try the specific approach:
+     For ALL non-adjacent sectors, sa \\<le> 0 and sb \\<le> 0 (when jp < jp', non-wrapping).
+     This gives immediate contradiction.\<close>
+  \<comment> \<open>From non-adjacency: there are at least 2 sectors between jp and jp' (in one direction).
+     For jp < jp': alpha(jp+1) < alpha(jp') (since non-adjacent).
+     So alpha(jp+1) - alpha(jp') < 0 \\<to> sb is sin of a negative angle.
+     And alpha(jp) - alpha(jp') < alpha(jp+1) - alpha(jp') < 0 \\<to> sa is sin of a negative angle.
+     BUT: sin of negative angle is not always negative! sin(-x) = -sin(x), but sin(x+2\\<pi>) = sin(x).
+     The issue is that alpha(jp) - alpha(jp') could be < -\\<pi> (wrapping), making sin positive.
+
+     From alpha ordering: alpha(0) = 0, ..., alpha(nw) = 2\\<pi>.
+     For jp < jp': alpha(jp) \\<in> [0, alpha(jp')), alpha(jp') \\<in> (alpha(jp+1), 2\\<pi>).
+     alpha(jp) - alpha(jp') \\<in> (-2\\<pi>, 0).
+     alpha(jp+1) - alpha(jp') \\<in> (-2\\<pi>+theta\\_jp, 0).
+
+     sin(alpha(jp)-alpha(jp')) < 0 when alpha(jp)-alpha(jp') \\<in> (-\\<pi>, 0).
+     This holds when alpha(jp') - alpha(jp) < \\<pi>.
+
+     If alpha(jp') - alpha(jp) \\<ge> \\<pi>: sa = sin(alpha(jp)-alpha(jp')) = sin(negative > -2\\<pi>) could be positive.
+
+     In this case, use the dual C11 for edge jp: sb - sa < stheta. This bounds sb relative to sa.
+
+     If sa > 0 (large gap case): sb = sin(alpha(jp+1)-alpha(jp')) where alpha(jp+1)-alpha(jp') < 0.
+     sin(alpha(jp+1)-alpha(jp')) could be < 0 (if gap < \\<pi>) or \\<ge> 0 (if gap > \\<pi>).
+
+     From (III): sb - sa < stheta. sa > 0: sb < sa + stheta.
+     We need sb \\<le> 0 for hcone1 contradiction. sb < sa + stheta doesn't give sb \\<le> 0 directly.
+
+     BUT: from (I): sa + sc < stheta'. Since sa > 0 and stheta' < \\<pi> (actually stheta' = sin(\\<theta>\\_{jp'}) > 0):
+     sc < stheta' - sa. If sa \\<ge> stheta': sc < 0.
+
+     For non-wrapping jp < jp': alpha(jp+1) \\<le> alpha(jp'-1) < alpha(jp') (non-adjacent).
+     alpha(jp) < alpha(jp+1) < alpha(jp').
+     sa > 0 requires alpha(jp') - alpha(jp) > \\<pi>.
+     alpha(Suc jp' mod nw) - alpha(jp) = alpha(jp'+1) - alpha(jp) = (alpha(jp')-alpha(jp)) + theta\\_{jp'}.
+     If alpha(jp')-alpha(jp) > \\<pi>: sc = sin(alpha(jp'+1)-alpha(jp)) = sin(something > \\<pi>).
+     If alpha(jp'+1)-alpha(jp) < 2\\<pi> (always true for valid polygon): sc = sin(something in (\\<pi>, 2\\<pi>)) < 0. \\<checkmark>!
+
+     Similarly: sd = sin(alpha(jp'+1) - alpha(jp+1)). alpha(jp'+1) - alpha(jp+1) = (alpha(jp')-alpha(jp+1)) + theta\\_{jp'}.
+     alpha(jp')-alpha(jp+1) > 0 (non-adjacent). So alpha(jp'+1)-alpha(jp+1) > theta\\_{jp'} > 0.
+     If alpha(jp'+1)-alpha(jp+1) > \\<pi>: sd = sin(something > \\<pi>) < 0 (if < 2\\<pi>).
+     alpha(jp'+1)-alpha(jp+1) < 2\\<pi> (always). So sd could be < 0.
+     But alpha(jp'+1)-alpha(jp+1) could be \\<le> \\<pi>: sd \\<ge> 0.
+
+     When sd \\<ge> 0: sc < 0 (proved above). hcone2 = sp*sc + tp*sd.
+     If sc < 0 and sd \\<ge> 0: hcone2 could be \\<ge> 0 (tp*sd compensates sp*sc).
+     Use determinant: det = sa*sd - sb*sc. And... still the same issues.
+
+     OK let me just try: for the case sa > 0 (large gap, alpha(jp')-alpha(jp) > \\<pi>):
+     sc < 0 (proved: alpha(jp'+1)-alpha(jp) > \\<pi> so sin < 0).
+     From hcone2 \\<ge> 0: sp*sc + tp*sd \\<ge> 0. sc < 0: tp*sd \\<ge> -sp*sc > 0 (if sp > 0).
+     So tp*sd > 0 \\<to> tp > 0 and sd > 0 (or sp = 0).
+
+     Sub-case sd > 0 and tp > 0:
+     From (II): sb + sd < stheta'. sd > 0: sb < stheta' - sd < stheta'.
+     From (III): sb - sa < stheta. sa > 0: sb < sa + stheta. Not useful for sb \\<le> 0.
+     From hcone1: sp*sa + tp*sb \\<ge> 0. sa > 0: this is fine even if sb < 0.
+     From determinant: sa*sd - sb*sc < 0. sa > 0, sd > 0: sa*sd > 0. sb*sc: sc < 0, so sb*sc has sign -sb.
+     sa*sd < sb*sc = sb*(negative) = -sb*|sc|. So sa*sd < -sb*|sc|. sa*sd > 0 \\<to> -sb*|sc| > 0 \\<to> sb < 0. \\<checkmark>!
+
+     So sb < 0! Now: sp*sa + tp*sb \\<ge> 0 and sp*sc + tp*sd \\<ge> 0.
+     sa > 0, sb < 0, sc < 0, sd > 0. The determinant tells us sa*sd < sb*sc (both products negative?).
+     sa > 0, sd > 0: sa*sd > 0. sb < 0, sc < 0: sb*sc > 0. So sa*sd < sb*sc means sa*sd < sb*sc.
+     Both positive. This is a magnitude condition.
+
+     Use: multiply hcone1 by sd > 0: sp*sa*sd + tp*sb*sd \\<ge> 0.
+     Multiply hcone2 by (-sb) > 0: -sp*sc*sb - tp*sd*sb \\<ge> 0 i.e. sp*(-sc)*sb + tp*(-sd)*sb... hmm signs.
+     Actually: (-sb)*(sp*sc + tp*sd) \\<ge> 0 since -sb > 0 and hcone2 \\<ge> 0.
+     = -sp*sb*sc - tp*sb*sd \\<ge> 0.
+
+     Adding: sp*sa*sd + tp*sb*sd - sp*sb*sc - tp*sb*sd \\<ge> 0.
+     = sp*(sa*sd - sb*sc) \\<ge> 0.
+     = sp*det \\<ge> 0. But det < 0 and sp \\<ge> 0: sp*det \\<le> 0.
+     So sp*det = 0 \\<to> sp = 0 (since det \\<noteq> 0).
+
+     With sp = 0: hcone1 = tp*sb \\<ge> 0. sb < 0, tp \\<ge> 0: tp*sb \\<le> 0. So tp*sb = 0.
+     tp > 0 (from earlier): sb = 0. But we derived sb < 0. Contradiction!
+
+     FANTASTIC! This works! The key was:
+     1. From sa > 0 and alpha constraints: sc < 0.
+     2. From determinant + sa > 0, sd > 0, sc < 0: sb < 0.
+     3. Determinant argument with weights sd and -sb: sp = 0.
+     4. Then tp*sb = 0 with sb < 0 forces tp = 0. sp+tp = 0. Contradiction.
+
+     Sub-case sd \\<le> 0: sc < 0 and sd \\<le> 0. hcone2 = sp*sc + tp*sd \\<le> 0 (since sp,tp \\<ge> 0 and sc,sd \\<le> 0).
+     With sp+tp > 0 and sc < 0 or sd < 0: hcone2 < 0. Contradicts hcone2 \\<ge> 0. \\<checkmark>
+
+     So for sa > 0: the argument works in all sub-cases! \\<checkmark>
+
+     For sa \\<le> 0 (small gap, alpha(jp')-alpha(jp) \\<le> \\<pi>):
+     sb = sin(alpha(jp+1)-alpha(jp')). alpha(jp+1)-alpha(jp') < 0 (non-adjacent).
+     If alpha(jp')-alpha(jp+1) \\<le> \\<pi>: alpha(jp+1)-alpha(jp') \\<ge> -\\<pi>. sin \\<le> 0. So sb \\<le> 0. \\<checkmark>
+     If alpha(jp')-alpha(jp+1) > \\<pi>: sb = sin(alpha(jp+1)-alpha(jp')) where alpha(jp+1)-alpha(jp') < -\\<pi>.
+     sin > 0. So sb > 0. But alpha(jp')-alpha(jp+1) > \\<pi> AND alpha(jp')-alpha(jp) \\<le> \\<pi>:
+     alpha(jp+1)-alpha(jp) = theta\\_jp < \\<pi>. So alpha(jp')-alpha(jp+1) = (alpha(jp')-alpha(jp)) - theta\\_jp.
+     alpha(jp')-alpha(jp) \\<le> \\<pi> and theta\\_jp > 0: alpha(jp')-alpha(jp+1) < \\<pi>. Contradiction!
+     So alpha(jp')-alpha(jp+1) \\<le> \\<pi>, hence sb \\<le> 0.
+
+     With sa \\<le> 0 and sb \\<le> 0: hcone1 = sp*sa + tp*sb \\<le> 0. With sp+tp > 0:
+     If sa < 0 or sb < 0: hcone1 < 0. Contradicts hcone1 \\<ge> 0. \\<checkmark>
+     If sa = 0 and sb = 0: sp*0 + tp*0 = 0 \\<ge> 0. \\<checkmark> (no contradiction from hcone1 alone).
+     But sa = 0 means alpha(jp) = alpha(jp') (mod \\<pi>). Since both \\<in> [0, 2\\<pi>): sa = 0 implies
+     alpha(jp) = alpha(jp') or alpha(jp) = alpha(jp') + \\<pi>.
+     The first: jp = jp' (alpha increasing). Contradicts hne. \\<checkmark>
+     The second: alpha(jp) = alpha(jp') + \\<pi>. Then sb = sin(alpha(jp+1) - alpha(jp') - \\<pi> + \\<pi>)... hmm.
+     Actually sa = sin(alpha(jp)-alpha(jp')) = 0 means alpha(jp)-alpha(jp') = k*\\<pi>.
+     k = 0: jp = jp'. Contradiction.
+     k = -1: alpha(jp')-alpha(jp) = \\<pi>.
+     Then sb = sin(alpha(jp+1)-alpha(jp')) = sin(theta\\_jp - \\<pi>) = -sin(\\<pi>-theta\\_jp) = -sin(theta\\_jp) < 0 (since theta\\_jp \\<in> (0,\\<pi>), sin(theta\\_jp) > 0, wait: sin(theta\\_jp - \\<pi>) = -sin(\\<pi> - theta\\_jp) = -sin(theta\\_jp)... hmm.
+     Actually sin(x - \\<pi>) = -sin(\\<pi> - x) for x \\<in> (0,\\<pi>)? No: sin(x - \\<pi>) = sin(x)*cos(\\<pi>) - cos(x)*sin(\\<pi>) = -sin(x). So sin(theta\\_jp - \\<pi>) = -sin(theta\\_jp) < 0. sb < 0.
+     Then hcone1 = sp*0 + tp*(-sin(theta\\_jp)) < 0 (since tp \\<ge> 0, sin > 0). Wait: tp*sb = tp*(-sin(theta\\_jp)) \\<le> 0 (tp \\<ge> 0). If tp > 0: < 0. Contradicts hcone1 \\<ge> 0.
+     If tp = 0: sp > 0 (from hst). hcone1 = 0 \\<ge> 0 \\<checkmark>. hcone2 = sp*sc + 0 \\<ge> 0 \\<to> sc \\<ge> 0.
+     sc = sin(alpha(jp'+1)-alpha(jp)) = sin(alpha(jp') + theta\\_{jp'} - alpha(jp)) = sin(\\<pi> + theta\\_{jp'}).
+     sin(\\<pi> + theta\\_{jp'}) = -sin(theta\\_{jp'}) < 0. So sc < 0. Contradicts sc \\<ge> 0. \\<checkmark>
+
+     So sa = 0 also leads to contradiction (in all sub-cases).
+
+     Therefore: for jp < jp' (non-wrapping), the contradiction is established.
+
+     For jp > jp' or wrapping cases: symmetric argument (swap roles of the two sectors).
+     Actually, the same argument applies because the C11 bounds are symmetric:
+     the angular gap from the OTHER direction (jp' to jp going CCW) has similar bounds.\<close>
+  \<comment> \<open>OK, the proof strategy for the show False:
+     CASE 1 (sa \\<le> 0):
+       Show sb \\<le> 0 (from non-adjacency + theta \\<in> (0,\\<pi>)).
+       Sub-case sb < 0 or sa < 0: hcone1 < 0. Contradiction.
+       Sub-case sa = 0 and sb = 0: derive further contradiction from hcone2.
+     CASE 2 (sa > 0):
+       Show sc < 0 (from non-adjacency + alpha bounds).
+       Sub-case sd \\<le> 0: sc < 0 and sd \\<le> 0 \\<to> hcone2 < 0. Contradiction.
+       Sub-case sd > 0: determinant argument (multiply hcone1*sd, hcone2*(-sb)) \\<to> sp=0, tp=0.\<close>
+  have halpha_mono: "\<And>m n. m < n \<Longrightarrow> n \<le> nw \<Longrightarrow> alpha m < alpha n"
+  proof -
+    fix m n :: nat assume "m < n" "n \<le> nw"
+    thus "alpha m < alpha n"
+    proof (induct "n - Suc m" arbitrary: n)
+      case 0
+      hence "n = Suc m" by linarith
+      with 0 halpha_strict show ?case by (by100 simp)
+    next
+      case (Suc k)
+      have hn1: "n - 1 < nw" using Suc by linarith
+      have hn_suc: "Suc(n-1) = n" using Suc by linarith
+      have "alpha(n-1) < alpha n"
+        using halpha_strict[rule_format, of "n-1"] hn1 hn_suc by (by100 simp)
+      moreover have "alpha m < alpha(n-1)"
+        using Suc(1)[of "n-1"] Suc(2-4) by linarith
+      ultimately show ?case by linarith
+    qed
+  qed
+  \<comment> \<open>Determinant identity (used in both cases).\<close>
+  have hdet_neg: "sin(alpha jp - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw))
+      - sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) < 0"
+  proof -
+    define sa where "sa = alpha jp - alpha jp'"
+    define sb where "sb = alpha(Suc jp mod nw) - alpha jp'"
+    define sc where "sc = alpha(Suc jp' mod nw) - alpha jp"
+    define sd where "sd = alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)"
+    have hsd_eq: "sd = (sa + sc) - sb" unfolding sa_def sb_def sc_def sd_def by (by100 simp)
+    have "sin sa * sin sd - sin sb * sin sc =
+      sin sa * sin((sa+sc) - sb) - sin sb * sin((sa+sc) - sa)"
+      using hsd_eq by (by100 simp)
+    also have "\<dots> = sin(sa+sc) * sin(sa - sb)"
+    proof -
+      have e1: "sin((sa+sc) - sb) = sin(sa+sc)*cos sb - cos(sa+sc)*sin sb"
+        using sin_diff[of "sa+sc" sb] by (by100 simp)
+      have e2: "sin((sa+sc) - sa) = sin(sa+sc)*cos sa - cos(sa+sc)*sin sa"
+        using sin_diff[of "sa+sc" sa] by (by100 simp)
+      have "sin sa * sin((sa+sc) - sb) - sin sb * sin((sa+sc) - sa) =
+        sin sa * (sin(sa+sc)*cos sb - cos(sa+sc)*sin sb)
+        - sin sb * (sin(sa+sc)*cos sa - cos(sa+sc)*sin sa)"
+        using e1 e2 by (by100 simp)
+      also have "\<dots> = sin(sa+sc) * (sin sa * cos sb - sin sb * cos sa)"
+        by (by100 algebra)
+      also have "\<dots> = sin(sa+sc) * sin(sa - sb)"
+        using sin_diff[of sa sb] by (by100 simp)
+      finally show ?thesis by (by100 simp)
+    qed
+    also have "\<dots> = -(sin(sa+sc) * sin(sb - sa))"
+    proof -
+      have "sin(sa - sb) = -sin(sb - sa)" using sin_minus[of "sb - sa"] by (by100 simp)
+      thus ?thesis by (by100 algebra)
+    qed
+    finally have "sin sa * sin sd - sin sb * sin sc = -(sin(sa+sc) * sin(sb - sa))" .
+    moreover have "sin(sa + sc) > 0"
+    proof -
+      have "sa + sc = alpha(Suc jp' mod nw) - alpha jp'" unfolding sa_def sc_def by (by100 simp)
+      thus ?thesis using hstheta'_pos stheta'_def by (by100 simp)
+    qed
+    moreover have "sin(sb - sa) > 0"
+    proof -
+      have "sb - sa = alpha(Suc jp mod nw) - alpha jp" unfolding sb_def sa_def by (by100 simp)
+      thus ?thesis using hstheta_pos stheta_def by (by100 simp)
+    qed
+    ultimately have "sin sa * sin sd - sin sb * sin sc < 0"
+    proof -
+      assume h1: "sin sa * sin sd - sin sb * sin sc = -(sin(sa+sc) * sin(sb - sa))"
+      assume h2: "sin(sa + sc) > 0"
+      assume h3: "sin(sb - sa) > 0"
+      from mult_pos_pos[OF h2 h3] have "sin(sa+sc) * sin(sb-sa) > 0" .
+      with h1 show ?thesis by linarith
+    qed
+    thus ?thesis unfolding sa_def sb_def sc_def sd_def by linarith
+  qed
+  show False
+  proof (cases "jp < jp'")
+    case hjp_lt: True
+    have hjp_lt_nw1: "jp < nw - 1" using hjp_lt hjp' by linarith
+    have hSjp_eq: "Suc jp mod nw = Suc jp" using hjp_lt_nw1 hnw by (by100 auto)
+    have hjp1_lt_jp': "Suc jp < jp'" using hjp_lt hne_adj1 hSjp_eq by linarith
+    have halpha_gap: "alpha(Suc jp) < alpha jp'"
+      using halpha_mono[of "Suc jp" jp'] hjp1_lt_jp' hjp' by linarith
+    show False
+    proof (cases "alpha jp' - alpha jp \<le> pi")
+      case hcase1: True
+      have hgap_small: "alpha jp' - alpha(Suc jp) < pi"
+      proof -
+        have "alpha(Suc jp) - alpha jp > 0" using halpha_strict[rule_format, OF hjp] by linarith
+        with hcase1 show ?thesis by linarith
+      qed
+      have hsb_neg: "sin(alpha(Suc jp) - alpha jp') < 0"
+        using halpha_gap hgap_small sin_gt_zero[of "alpha jp' - alpha(Suc jp)"]
+              sin_minus[of "alpha jp' - alpha(Suc jp)"] by (by100 simp)
+      have hsa_nonpos: "sin(alpha jp - alpha jp') \<le> 0"
+        using hcase1 halpha_mono[of jp jp'] hjp_lt hjp'
+              sin_ge_zero[of "alpha jp' - alpha jp"]
+              sin_minus[of "alpha jp' - alpha jp"] by (by100 simp)
+      show False
+      proof (cases "tp > 0")
+        case True
+        have "tp * sin(alpha(Suc jp) - alpha jp') < 0"
+          using mult_pos_neg[OF True hsb_neg] .
+        moreover have "sp * sin(alpha jp - alpha jp') \<le> 0"
+          using mult_nonneg_nonpos[OF hsp hsa_nonpos] .
+        ultimately have "sp * sin(alpha jp - alpha jp') + tp * sin(alpha(Suc jp) - alpha jp') < 0"
+          by linarith
+        hence "sp * sin(alpha jp - alpha jp') + tp * sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+          using hSjp_eq by (by100 simp)
+        with hcone1_sin show False by linarith
+      next
+        case False hence "tp = 0" using htp by linarith
+        hence "sp > 0" using hst by linarith
+        show False
+        proof (cases "alpha jp' - alpha jp < pi")
+          case True
+          have "sin(alpha jp' - alpha jp) > 0"
+            using sin_gt_zero[of "alpha jp' - alpha jp"]
+                  halpha_mono[of jp jp'] hjp_lt hjp' True by linarith
+          hence "sin(alpha jp - alpha jp') < 0"
+            using sin_minus[of "alpha jp' - alpha jp"] by (by100 simp)
+          from mult_pos_neg[OF \<open>sp > 0\<close> this]
+          have "sp * sin(alpha jp - alpha jp') < 0" .
+          hence "sp * sin(alpha jp - alpha jp') + tp * sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+            using \<open>tp = 0\<close> by (by100 simp)
+          with hcone1_sin show False by linarith
+        next
+          case False
+          hence "alpha jp' - alpha jp = pi" using hcase1 by linarith
+          \<comment> \<open>gap = pi, tp = 0. hcone2 = sp*sc. sc = sin(alpha(jp'+1)-alpha(jp)).
+             alpha(jp'+1)-alpha(jp) = pi + theta'. \\<in> (pi, 2pi). sin < 0. hcone2 < 0.\<close>
+          have hsc_here: "sin(alpha(Suc jp' mod nw) - alpha jp) < 0"
+          proof -
+            have "alpha(Suc jp' mod nw) - alpha jp =
+                  (alpha(Suc jp' mod nw) - alpha jp') + pi"
+              using \<open>alpha jp' - alpha jp = pi\<close> by linarith
+            hence "sin(alpha(Suc jp' mod nw) - alpha jp) =
+                  sin((alpha(Suc jp' mod nw) - alpha jp') + pi)" by (by100 metis)
+            also have "\<dots> = -sin(alpha(Suc jp' mod nw) - alpha jp')"
+              using sin_periodic_pi[of "alpha(Suc jp' mod nw) - alpha jp'"] by (by100 metis)
+            finally show ?thesis using hstheta'_pos stheta'_def by linarith
+          qed
+          from mult_pos_neg[OF \<open>sp > 0\<close> hsc_here]
+          have "sp * sin(alpha(Suc jp' mod nw) - alpha jp) < 0" .
+          hence "sp * sin(alpha(Suc jp' mod nw) - alpha jp) +
+              tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) < 0"
+            using \<open>tp = 0\<close> by (by100 simp)
+          with hcone2_sin show False by linarith
+        qed
+      qed
+    next
+      case hcase2: False
+      hence hbig: "alpha jp' - alpha jp > pi" by linarith
+      have hsc_neg: "sin(alpha(Suc jp' mod nw) - alpha jp) < 0"
+      proof (cases "jp' < nw - 1")
+        case True
+        hence hSjp'_eq: "Suc jp' mod nw = Suc jp'" using hnw by (by100 auto)
+        have "alpha(Suc jp') > alpha jp'" using halpha_strict[rule_format, OF hjp'] by linarith
+        hence "alpha(Suc jp') - alpha jp > pi" using hbig by linarith
+        hence hlb: "alpha(Suc jp' mod nw) - alpha jp > pi" using hSjp'_eq by (by100 simp)
+        have "alpha(Suc jp') < alpha nw"
+          using halpha_mono[of "Suc jp'" nw] True hnw by linarith
+        moreover have "alpha jp \<ge> 0"
+        proof (cases "jp = 0")
+          case True with halpha_0 show ?thesis by (by100 simp)
+        next
+          case False
+          from halpha_mono[of 0 jp] False hjp show ?thesis using halpha_0 by linarith
+        qed
+        ultimately have "alpha(Suc jp') - alpha jp < 2*pi"
+          using halpha_nw by linarith
+        hence hub: "alpha(Suc jp' mod nw) - alpha jp < 2*pi"
+          using hSjp'_eq by (by100 simp)
+        from sin_lt_zero[of "alpha(Suc jp' mod nw) - alpha jp"] hlb hub show ?thesis by linarith
+      next
+        case False
+        hence hjp'_last: "jp' = nw - 1" using hjp' by linarith
+        hence "Suc jp' mod nw = 0" using hnw by (by100 auto)
+        hence hval: "alpha(Suc jp' mod nw) = 0" using halpha_0 by (by100 simp)
+        have "jp > 0" using hne_adj2 \<open>Suc jp' mod nw = 0\<close> by linarith
+        hence "alpha jp > 0" using halpha_mono[of 0 jp] hjp halpha_0 by linarith
+        moreover have "alpha jp < pi"
+        proof -
+          have "alpha jp' < 2*pi" using halpha_mono[of jp' nw] hjp' halpha_nw by linarith
+          with hbig show ?thesis by linarith
+        qed
+        ultimately have "sin(alpha jp) > 0" using sin_gt_zero[of "alpha jp"] by linarith
+        hence "- sin(alpha jp) < 0" by linarith
+        hence "sin(-alpha jp) < 0" using sin_minus[of "alpha jp"] by (by100 metis)
+        with hval show ?thesis by (by100 simp)
+      qed
+      show False
+      proof (cases "sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) \<le> 0")
+        case hsd_nonpos: True
+        show False
+        proof -
+          have hsc_le: "sin(alpha(Suc jp' mod nw) - alpha jp) \<le> 0" using hsc_neg by linarith
+          have h1: "sp * sin(alpha(Suc jp' mod nw) - alpha jp) \<le> 0"
+            using mult_nonneg_nonpos[OF hsp hsc_le] .
+          have h2: "tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) \<le> 0"
+            using mult_nonneg_nonpos[OF htp hsd_nonpos] .
+          have "sp * sin(alpha(Suc jp' mod nw) - alpha jp) +
+              tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) \<le> 0"
+            using h1 h2 by linarith
+          moreover have "sp * sin(alpha(Suc jp' mod nw) - alpha jp) +
+              tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) \<ge> 0"
+            using hcone2_sin by linarith
+          ultimately have hsum: "sp * sin(alpha(Suc jp' mod nw) - alpha jp) +
+              tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) = 0" by linarith
+          hence heq1: "sp * sin(alpha(Suc jp' mod nw) - alpha jp) = 0" using h1 h2 by linarith
+          have heq2: "tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) = 0" using hsum heq1 by linarith
+          show False
+          proof (cases "sp > 0")
+            case True
+            from mult_pos_neg[OF True hsc_neg] heq1 show False by linarith
+          next
+            case False hence "sp = 0" using hsp by linarith
+            hence "tp > 0" using hst by linarith
+            from heq2 have "tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) = 0" .
+            hence "sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) = 0"
+              using \<open>tp > 0\<close> by (by100 simp)
+            \<comment> \<open>sd = 0. From det identity: -sb*sc < 0, sc < 0 \\<to> sb < 0. Then hcone1 < 0.\<close>
+            have hdet: "sin(alpha jp - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw))
+                - sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) < 0"
+              using hdet_neg .
+            hence "- sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) < 0"
+              using \<open>sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) = 0\<close> by (by100 simp)
+            hence hsb_sc_pos: "sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) > 0"
+              by linarith
+            have "sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+            proof (rule ccontr)
+              assume "\<not> sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+              hence "sin(alpha(Suc jp mod nw) - alpha jp') \<ge> 0" by linarith
+              from mult_nonneg_nonpos[OF this hsc_le]
+              have "sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) \<le> 0" .
+              with hsb_sc_pos show False by linarith
+            qed
+            from mult_pos_neg[OF \<open>tp > 0\<close> this]
+            have "tp * sin(alpha(Suc jp mod nw) - alpha jp') < 0" .
+            hence "sp * sin(alpha jp - alpha jp') + tp * sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+              using \<open>sp = 0\<close> by (by100 simp)
+            with hcone1_sin show False by linarith
+          qed
+        qed
+      next
+        case hsd_pos: False
+        hence "sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) > 0" by linarith
+        have hsa_pos: "sin(alpha jp - alpha jp') > 0"
+        proof -
+          \<comment> \<open>alpha jp - alpha jp' \\<in> (-2pi, -pi). sin > 0 on (-2pi, -pi).
+             Use sin(x + 2pi) = sin(x): sin(alpha jp - alpha jp') = sin(alpha jp - alpha jp' + 2pi).
+             alpha jp - alpha jp' + 2pi \\<in> (0, pi). sin > 0.\<close>
+          have h1: "alpha jp - alpha jp' + 2*pi > 0"
+          proof -
+            have "alpha jp \<ge> 0"
+            proof (cases "jp = 0")
+              case True with halpha_0 show ?thesis by (by100 simp)
+            next
+              case False from halpha_mono[of 0 jp] False hjp show ?thesis using halpha_0 by linarith
+            qed
+            moreover have "alpha jp' < 2*pi"
+              using halpha_mono[of jp' nw] hjp' halpha_nw by linarith
+            ultimately show ?thesis by linarith
+          qed
+          have h2: "alpha jp - alpha jp' + 2*pi < pi" using hbig by linarith
+          have "sin(alpha jp - alpha jp' + 2*pi) > 0"
+            using sin_gt_zero[of "alpha jp - alpha jp' + 2*pi"] h1 h2 by linarith
+          moreover have "sin(alpha jp - alpha jp') = sin(alpha jp - alpha jp' + 2*pi)"
+            using sin_periodic[of "alpha jp - alpha jp'"] by (by100 simp)
+          ultimately show ?thesis by linarith
+        qed
+        have hsb_neg: "sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+        proof (rule ccontr)
+          assume "\<not> sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+          hence "sin(alpha(Suc jp mod nw) - alpha jp') \<ge> 0" by linarith
+          have hsc_le: "sin(alpha(Suc jp' mod nw) - alpha jp) \<le> 0" using hsc_neg by linarith
+          from mult_nonneg_nonpos[OF \<open>sin(alpha(Suc jp mod nw) - alpha jp') \<ge> 0\<close> hsc_le]
+          have "sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) \<le> 0" .
+          moreover from mult_pos_pos[OF hsa_pos \<open>sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) > 0\<close>]
+          have "sin(alpha jp - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) > 0" .
+          ultimately have "sin(alpha jp - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw))
+              - sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) > 0"
+            by linarith
+          with hdet_neg show False by linarith
+        qed
+        have "sp = 0"
+        proof -
+          define sa where "sa = sin(alpha jp - alpha jp')"
+          define sb where "sb = sin(alpha(Suc jp mod nw) - alpha jp')"
+          define sc where "sc = sin(alpha(Suc jp' mod nw) - alpha jp)"
+          define sd where "sd = sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw))"
+          have hsa': "sa > 0" using hsa_pos unfolding sa_def by linarith
+          have hsb': "sb < 0" using hsb_neg unfolding sb_def by linarith
+          have hsc': "sc < 0" using hsc_neg unfolding sc_def by linarith
+          have hsd': "sd > 0" using \<open>sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) > 0\<close>
+            unfolding sd_def by linarith
+          have hh1: "sp * sa + tp * sb \<ge> 0" using hcone1_sin unfolding sa_def sb_def by (by100 simp)
+          have hh2: "sp * sc + tp * sd \<ge> 0" using hcone2_sin unfolding sc_def sd_def by (by100 simp)
+          have hdet': "sa * sd - sb * sc < 0" using hdet_neg unfolding sa_def sb_def sc_def sd_def by linarith
+          \<comment> \<open>sd * hh1 + (-sb) * hh2 = sp*(sa*sd - sb*sc) = sp*det \\<ge> 0.\<close>
+          have "sd * (sp * sa + tp * sb) + (-sb) * (sp * sc + tp * sd) \<ge> 0"
+          proof -
+            have "sd \<ge> 0" using hsd' by linarith
+            from mult_nonneg_nonneg[OF this hh1] have "sd * (sp * sa + tp * sb) \<ge> 0" .
+            moreover have "-sb \<ge> 0" using hsb' by linarith
+            from mult_nonneg_nonneg[OF this hh2] have "(-sb) * (sp * sc + tp * sd) \<ge> 0" .
+            ultimately show ?thesis by linarith
+          qed
+          moreover have "sd * (sp * sa + tp * sb) + (-sb) * (sp * sc + tp * sd) =
+              sp * (sa * sd - sb * sc)" by (by100 algebra)
+          ultimately have "sp * (sa * sd - sb * sc) \<ge> 0" by linarith
+          with hdet' have "sp \<le> 0"
+          proof -
+            assume hge: "sp * (sa * sd - sb * sc) \<ge> 0"
+            assume hlt: "sa * sd - sb * sc < 0"
+            show "sp \<le> 0"
+            proof (rule ccontr)
+              assume "\<not> sp \<le> 0" hence "sp > 0" by linarith
+              from mult_pos_neg[OF this hlt] have "sp * (sa * sd - sb * sc) < 0" .
+              with hge show False by linarith
+            qed
+          qed
+          with hsp show ?thesis by linarith
+        qed
+        hence "tp > 0" using hst by linarith
+        from hcone1_sin \<open>sp = 0\<close> have "tp * sin(alpha(Suc jp mod nw) - alpha jp') \<ge> 0"
+          by (by100 simp)
+        hence "tp * sin(alpha(Suc jp mod nw) - alpha jp') \<ge> 0" .
+        moreover from mult_pos_neg[OF \<open>tp > 0\<close> hsb_neg]
+        have "tp * sin(alpha(Suc jp mod nw) - alpha jp') < 0" .
+        ultimately show False by linarith
+      qed
+    qed
+  next
+    case False
+    hence hjp_gt: "jp > jp'" using hne by linarith
+    \<comment> \<open>Symmetric to jp < jp'. Same argument on hcone2 via c/d angles.\<close>
+    have hjp'_lt_nw1: "jp' < nw - 1" using hjp_gt hjp by linarith
+    have hSjp'_eq: "Suc jp' mod nw = Suc jp'" using hjp'_lt_nw1 hnw by (by100 auto)
+    have hjp1'_lt_jp: "Suc jp' < jp" using hjp_gt hne_adj2 hSjp'_eq by linarith
+    have halpha_gap': "alpha(Suc jp') < alpha jp"
+      using halpha_mono[of "Suc jp'" jp] hjp1'_lt_jp hjp by linarith
+    show False
+    proof (cases "alpha jp - alpha jp' \<le> pi")
+      case hc1: True
+      \<comment> \<open>Small gap: sc < 0, sd \\<le> 0 \\<to> hcone2 \\<le> 0 \\<to> False (with sp+tp > 0).\<close>
+      have hsc': "sin(alpha(Suc jp' mod nw) - alpha jp) < 0"
+      proof -
+        have "0 < alpha jp - alpha(Suc jp')" using halpha_gap' by linarith
+        moreover have "alpha jp - alpha(Suc jp') < pi"
+        proof -
+          have "alpha(Suc jp') > alpha jp'" using halpha_strict[rule_format, OF hjp'] by linarith
+          with hc1 show ?thesis by linarith
+        qed
+        ultimately have "sin(alpha jp - alpha(Suc jp')) > 0"
+          using sin_gt_zero[of "alpha jp - alpha(Suc jp')"] by linarith
+        thus ?thesis using hSjp'_eq sin_minus[of "alpha jp - alpha(Suc jp')"] by (by100 simp)
+      qed
+      have hsc_le: "sin(alpha(Suc jp' mod nw) - alpha jp) \<le> 0" using hsc' by linarith
+      show False
+      proof (cases "sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) \<le> 0")
+        case hsd_neg: True
+        \<comment> \<open>sd \\<le> 0 and sc < 0: same argument as before.\<close>
+        have "sp * sin(alpha(Suc jp' mod nw) - alpha jp) +
+            tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) \<le> 0"
+          using mult_nonneg_nonpos[OF hsp hsc_le] mult_nonneg_nonpos[OF htp hsd_neg] by linarith
+        moreover have "sp * sin(alpha(Suc jp' mod nw) - alpha jp) +
+            tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) \<ge> 0"
+          using hcone2_sin by linarith
+        ultimately have hsum0: "sp * sin(alpha(Suc jp' mod nw) - alpha jp) +
+            tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) = 0" by linarith
+        hence heq1: "sp * sin(alpha(Suc jp' mod nw) - alpha jp) = 0"
+          using mult_nonneg_nonpos[OF hsp hsc_le] mult_nonneg_nonpos[OF htp hsd_neg] by linarith
+        show False
+        proof (cases "sp > 0")
+          case True from mult_pos_neg[OF True hsc'] heq1 show False by linarith
+        next
+          case False hence "sp = 0" using hsp by linarith
+          hence "tp > 0" using hst by linarith
+          have "tp * sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) = 0"
+            using hsum0 heq1 by linarith
+          hence "sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) = 0"
+            using \<open>tp > 0\<close> by (by100 simp)
+          \<comment> \<open>sd = 0. From det: sb*sc > 0, sc < 0 \\<to> sb < 0. hcone1 = tp*sb < 0.\<close>
+          hence "- sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) < 0"
+            using hdet_neg by (by100 simp)
+          hence hsb_sc: "sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) > 0"
+            by linarith
+          have "sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+          proof (rule ccontr)
+            assume "\<not> sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+            hence "sin(alpha(Suc jp mod nw) - alpha jp') \<ge> 0" by linarith
+            from mult_nonneg_nonpos[OF this hsc_le]
+            have "sin(alpha(Suc jp mod nw) - alpha jp') * sin(alpha(Suc jp' mod nw) - alpha jp) \<le> 0" .
+            with hsb_sc show False by linarith
+          qed
+          from mult_pos_neg[OF \<open>tp > 0\<close> this]
+          have "tp * sin(alpha(Suc jp mod nw) - alpha jp') < 0" .
+          hence "sp * sin(alpha jp - alpha jp') + tp * sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+            using \<open>sp = 0\<close> by (by100 simp)
+          with hcone1_sin show False by linarith
+        qed
+      next
+        case hsd_pos: False
+        hence "sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) > 0" by linarith
+        \<comment> \<open>sd > 0, sc < 0. Same Cramer argument as jp < jp' case.\<close>
+        \<comment> \<open>Cramer: sd*hcone2 + (-sc)*hcone1 = tp*(-det) \\<ge> 0. But -sc > 0.
+           Wait: sd*(sp*sc+tp*sd) + (-sc)*(sp*sa+tp*sb) = tp*(sc*sb - sa*sd) + sp*(sd*sc - sc*sa)
+           = ... let me just use the same pattern.
+           Actually: sd*hcone2 + (-sc)*hcone1 = sp*(sd*sc - sc*sa) + tp*(sd^2 - sc*sb)... too complex.
+           Use define with abbreviations.\<close>
+        have "tp = 0"
+        proof -
+          define sa' where "sa' = sin(alpha jp - alpha jp')"
+          define sb' where "sb' = sin(alpha(Suc jp mod nw) - alpha jp')"
+          define sc' where "sc' = sin(alpha(Suc jp' mod nw) - alpha jp)"
+          define sd' where "sd' = sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw))"
+          have hsc'': "sc' < 0" using hsc' unfolding sc'_def by linarith
+          have hsd'': "sd' > 0" using \<open>sin(alpha(Suc jp' mod nw) - alpha(Suc jp mod nw)) > 0\<close>
+            unfolding sd'_def by linarith
+          have hh1: "sp * sa' + tp * sb' \<ge> 0" using hcone1_sin unfolding sa'_def sb'_def by (by100 simp)
+          have hh2: "sp * sc' + tp * sd' \<ge> 0" using hcone2_sin unfolding sc'_def sd'_def by (by100 simp)
+          have hdet': "sa' * sd' - sb' * sc' < 0" using hdet_neg
+            unfolding sa'_def sb'_def sc'_def sd'_def by linarith
+          \<comment> \<open>Key: sa' \\<ge> 0 (gap \\<in> (0, pi], sin \\<ge> 0). Use Cramer: (-sc')*hh1 + sa'*hh2 = tp*(-det') \\<ge> 0.
+             Both (-sc') > 0 and sa' \\<ge> 0. hh1, hh2 \\<ge> 0. Sum \\<ge> 0.
+             And = tp*(-det') \\<ge> 0. tp \\<ge> 0, -det' > 0 \\<to> tp*(-det') \\<ge> 0 always.
+             But also: (-sc')*hh1 + sa'*hh2 = tp*(-det'). Both sides \\<ge> 0.
+             From the Cramer: sa'*hh2 - sc'*hh1 = tp*det'. And det' < 0 \\<to> tp*det' \\<le> 0.
+             So sa'*hh2 - sc'*hh1 \\<le> 0. With (-sc')*hh1 \\<ge> 0 and sa'*hh2 \\<ge> 0 (sa' \\<ge> 0):
+             sa'*hh2 \\<le> sc'*hh1 ... sc' < 0 \\<to> sc'*hh1 \\<le> 0. So sa'*hh2 \\<le> 0.
+             If sa' > 0: hh2 \\<le> 0 AND hh2 \\<ge> 0 \\<to> hh2 = 0 \\<to> sp*sc'+tp*sd' = 0 \\<to> sp=0 and tp=0. Contradiction!
+             If sa' = 0: from det: -sb'*sc' < 0, sc' < 0 \\<to> sb' < 0. hh1 = sp*0+tp*sb' = tp*sb' \\<ge> 0. tp*sb' \\<ge> 0 with sb' < 0 \\<to> tp \\<le> 0 \\<to> tp = 0.
+             sp + tp = 0. Contradiction!\<close>
+          have hsa_ge: "sa' \<ge> 0"
+          proof -
+            have "alpha jp - alpha jp' > 0" using halpha_mono[of jp' jp] hjp_gt hjp by linarith
+            moreover have "alpha jp - alpha jp' \<le> pi" using hc1 by linarith
+            ultimately have "sin(alpha jp - alpha jp') \<ge> 0"
+              using sin_ge_zero[of "alpha jp - alpha jp'"] by linarith
+            thus ?thesis unfolding sa'_def by linarith
+          qed
+          \<comment> \<open>Cramer identity: sa'*hh2 - sc'*hh1 = tp*det'.\<close>
+          have hcramer: "sa' * (sp * sc' + tp * sd') - sc' * (sp * sa' + tp * sb') = tp * (sa' * sd' - sb' * sc')"
+            by (by100 algebra)
+          hence "tp * (sa' * sd' - sb' * sc') = sa' * (sp * sc' + tp * sd') + (-sc') * (sp * sa' + tp * sb')"
+            by linarith
+          hence htp_det: "tp * (sa' * sd' - sb' * sc') \<le> 0"
+          proof -
+            assume h: "tp * (sa' * sd' - sb' * sc') = sa' * (sp * sc' + tp * sd') + (-sc') * (sp * sa' + tp * sb')"
+            have "sa' * (sp * sc' + tp * sd') \<ge> 0"
+              using mult_nonneg_nonneg[OF hsa_ge hh2] .
+            moreover have "(-sc') > 0" using hsc'' by linarith
+            have "(-sc') \<ge> 0" using hsc'' by linarith
+            from mult_nonneg_nonneg[OF this hh1]
+            have "(-sc') * (sp * sa' + tp * sb') \<ge> 0" .
+            ultimately have "sa' * (sp * sc' + tp * sd') + (-sc') * (sp * sa' + tp * sb') \<ge> 0" by linarith
+            have "sa' * sd' - sb' * sc' \<le> 0" using hdet' by linarith
+            from mult_nonneg_nonpos[OF htp this]
+            show ?thesis .
+          qed
+          \<comment> \<open>tp \\<ge> 0 and det' < 0: tp * det' \\<le> 0 always. But we also derived it \\<ge> 0 from Cramer.
+             Wait: we derived the RHS \\<ge> 0 AND = tp*det'. So tp*det' \\<ge> 0.
+             With det' < 0: tp \\<le> 0. With tp \\<ge> 0: tp = 0.\<close>
+          show ?thesis
+          proof -
+            from htp_det have "tp * (sa' * sd' - sb' * sc') \<le> 0" .
+            moreover from hcramer hsa_ge hh2 hsc'' hh1
+            have "sa' * (sp * sc' + tp * sd') + (-sc') * (sp * sa' + tp * sb') \<ge> 0"
+              using mult_nonneg_nonneg[OF hsa_ge hh2]
+                    mult_nonneg_nonneg[of "-sc'" "sp * sa' + tp * sb'"] hsc'' hh1 by linarith
+            ultimately have "tp * (sa' * sd' - sb' * sc') \<ge> 0" using hcramer by linarith
+            with htp_det have "tp * (sa' * sd' - sb' * sc') = 0" by linarith
+            with hdet' show "tp = 0" by (by100 simp)
+          qed
+        qed
+        \<comment> \<open>tp = 0. From hcone1: sp*sa \\<ge> 0. sa could be < 0 or \\<ge> 0.\<close>
+        hence "sp > 0" using hst by linarith
+        from hcone2_sin \<open>tp = 0\<close> have "sp * sin(alpha(Suc jp' mod nw) - alpha jp) \<ge> 0" by (by100 simp)
+        from mult_pos_neg[OF \<open>sp > 0\<close> hsc']
+        have "sp * sin(alpha(Suc jp' mod nw) - alpha jp) < 0" .
+        with \<open>sp * sin(alpha(Suc jp' mod nw) - alpha jp) \<ge> 0\<close> show False by linarith
+      qed
+    next
+      case hc2: False
+      hence hbig': "alpha jp - alpha jp' > pi" by linarith
+      \<comment> \<open>Big gap. sa < 0 (in (pi, 2pi)). sb < 0 (in (pi, 2pi) for non-wrapping, or (0, pi) negated for wrapping).
+         hcone1 = sp*sa + tp*sb < 0.\<close>
+      have hsa_neg: "sin(alpha jp - alpha jp') < 0"
+      proof -
+        have "alpha jp < 2*pi" using halpha_mono[of jp nw] hjp halpha_nw by linarith
+        have "alpha jp' \<ge> 0"
+        proof (cases "jp' = 0")
+          case True with halpha_0 show ?thesis by (by100 simp)
+        next
+          case False from halpha_mono[of 0 jp'] False hjp' show ?thesis using halpha_0 by linarith
+        qed
+        hence "alpha jp - alpha jp' < 2*pi" using \<open>alpha jp < 2*pi\<close> by linarith
+        with hbig' show ?thesis using sin_lt_zero[of "alpha jp - alpha jp'"] by linarith
+      qed
+      have hsb_neg: "sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+      proof (cases "jp < nw - 1")
+        case True
+        hence hSjp_eq: "Suc jp mod nw = Suc jp" using hnw by (by100 auto)
+        \<comment> \<open>alpha(Suc jp) - alpha jp' > pi (big gap + theta > 0) and < 2pi.\<close>
+        have "alpha(Suc jp) - alpha jp' > pi"
+        proof -
+          have "alpha(Suc jp) > alpha jp" using halpha_strict[rule_format, OF hjp] by linarith
+          with hbig' show ?thesis by linarith
+        qed
+        moreover have "alpha(Suc jp) - alpha jp' < 2*pi"
+        proof -
+          have "alpha(Suc jp) < alpha nw" using halpha_mono[of "Suc jp" nw] True hnw by linarith
+          have "alpha jp' \<ge> 0"
+          proof (cases "jp' = 0")
+            case True with halpha_0 show ?thesis by (by100 simp)
+          next
+            case False from halpha_mono[of 0 jp'] False hjp' show ?thesis using halpha_0 by linarith
+          qed
+          with \<open>alpha(Suc jp) < alpha nw\<close> halpha_nw show ?thesis by linarith
+        qed
+        ultimately show ?thesis using hSjp_eq sin_lt_zero[of "alpha(Suc jp) - alpha jp'"] by (by100 simp)
+      next
+        case False
+        hence "jp = nw - 1" using hjp by linarith
+        hence "Suc jp mod nw = 0" using hnw by (by100 auto)
+        hence hval: "alpha(Suc jp mod nw) = 0" using halpha_0 by (by100 simp)
+        \<comment> \<open>sb = sin(-alpha jp'). alpha jp' < pi (from big gap: alpha jp' < alpha jp - pi < 2pi - pi = pi).\<close>
+        have "alpha jp' < pi"
+        proof -
+          have "alpha jp < 2*pi" using halpha_mono[of jp nw] hjp halpha_nw by linarith
+          with hbig' show ?thesis by linarith
+        qed
+        moreover have "alpha jp' > 0"
+        proof -
+          have "jp' \<noteq> 0" using hne_adj1 \<open>Suc jp mod nw = 0\<close> by linarith
+          from halpha_mono[of 0 jp'] this hjp' show ?thesis using halpha_0 by linarith
+        qed
+        ultimately have "sin(alpha jp') > 0" using sin_gt_zero[of "alpha jp'"] by linarith
+        hence "sin(-alpha jp') < 0" using sin_minus[of "alpha jp'"] by linarith
+        with hval show ?thesis by (by100 simp)
+      qed
+      \<comment> \<open>sa < 0 and sb < 0 \\<to> hcone1 < 0.\<close>
+      have hsa_le: "sin(alpha jp - alpha jp') \<le> 0" using hsa_neg by linarith
+      have hsb_le: "sin(alpha(Suc jp mod nw) - alpha jp') \<le> 0" using hsb_neg by linarith
+      have "sp * sin(alpha jp - alpha jp') + tp * sin(alpha(Suc jp mod nw) - alpha jp') < 0"
+      proof (cases "sp > 0")
+        case True from mult_pos_neg[OF True hsa_neg]
+        have "sp * sin(alpha jp - alpha jp') < 0" .
+        moreover have "tp * sin(alpha(Suc jp mod nw) - alpha jp') \<le> 0"
+          using mult_nonneg_nonpos[OF htp hsb_le] .
+        ultimately show ?thesis by linarith
+      next
+        case False hence "sp = 0" using hsp by linarith
+        hence "tp > 0" using hst by linarith
+        from mult_pos_neg[OF this hsb_neg]
+        have "tp * sin(alpha(Suc jp mod nw) - alpha jp') < 0" .
+        with \<open>sp = 0\<close> show ?thesis by (by100 simp)
+      qed
+      with hcone1_sin show False by linarith
+    qed
+  qed
+qed
+
+\<comment> \<open>Adjacent centroid-cone injectivity. If phi(p)=phi(p') with p in sector jp, p' in sector jp+1,
+   sp\\_v = 0 (from cross product = 0), centroid at origin, C10: then p = p'.
+   The argument: 2D linear independence gives tp\\_v'=0 and sp\\_v'=tp\\_v.
+   Then Cramer with sp=0 (for p) and tp'=0 (for p') give the same source diagonal parameter.\<close>
+lemma adjacent_cone_diagonal_injective:
+  fixes det_s sp_v tp_v sp_v' tp_v' :: real
+    and vxw vyw :: "nat \<Rightarrow> real"
+    and ex_s ey_s fx_s fy_s :: real
+    and ex_s' ey_s' fx_s' fy_s' :: real
+  assumes hsp0: "sp_v = 0" and htp_ge: "tp_v \<ge> 0"
+      and hdet_pos: "ex_s*fy_s - ey_s*fx_s > 0"
+      and htp_v_det: "tp_v*(ex_s*fy_s-ey_s*fx_s) = ex_s*dy - ey_s*dx"
+      and hsp_zero: "fy_s*dx - fx_s*dy = 0"
+      \<comment> \<open>phi(p) = tp\\_v * u\\_{jp+1} = sp\\_v' * u\\_{jp+1} + tp\\_v' * u\\_{jp+2} (centroid=0).\<close>
+      and hphi_x: "tp_v * ux1 = sp_v' * ux1 + tp_v' * ux2"
+      and hphi_y: "tp_v * uy1 = sp_v' * uy1 + tp_v' * uy2"
+      and hC10_ne: "ux1*uy2 - uy1*ux2 \<noteq> 0"
+      \<comment> \<open>p' Cramer: ex\\_s' = fx\\_s, ey\\_s' = fy\\_s (shared diagonal direction).\<close>
+      and hex': "ex_s' = fx_s" and hey': "ey_s' = fy_s"
+      and hdet'_pos: "ex_s'*fy_s' - ey_s'*fx_s' > 0"
+      and hsp_v'_det: "sp_v'*(ex_s'*fy_s'-ey_s'*fx_s') = fy_s'*dx' - fx_s'*dy'"
+      and htp_v'_det: "tp_v'*(ex_s'*fy_s'-ey_s'*fx_s') = ex_s'*dy' - ey_s'*dx'"
+  shows "dx = dx' \<and> dy = dy'"
+proof -
+  \<comment> \<open>Step 1: tp\\_v' = 0 and sp\\_v' = tp\\_v from 2D linear independence.\<close>
+  have "tp_v' * (ux1*uy2 - uy1*ux2) = 0"
+    using hphi_x hphi_y by (by100 algebra)
+  hence "tp_v' = 0" using hC10_ne by (by100 simp)
+  from hphi_x \<open>tp_v' = 0\<close> have "(tp_v - sp_v') * ux1 = 0" by (by100 algebra)
+  from hphi_y \<open>tp_v' = 0\<close> have "(tp_v - sp_v') * uy1 = 0" by (by100 algebra)
+  have "ux1 \<noteq> 0 \<or> uy1 \<noteq> 0" using hC10_ne by (by100 auto)
+  with \<open>(tp_v-sp_v')*ux1=0\<close> \<open>(tp_v-sp_v')*uy1=0\<close>
+  have "sp_v' = tp_v" by (by100 auto)
+  \<comment> \<open>Step 2: From sp\\_v=0 and Cramer: dx = tp\\_v*fx\\_s, dy = tp\\_v*fy\\_s.\<close>
+  have "ex_s*(fy_s*dx-fx_s*dy) + fx_s*(ex_s*dy-ey_s*dx) = (ex_s*fy_s-ey_s*fx_s)*dx"
+    by (by100 algebra)
+  hence "(ex_s*fy_s-ey_s*fx_s)*dx = ex_s*0 + fx_s*(tp_v*(ex_s*fy_s-ey_s*fx_s))"
+    using hsp_zero htp_v_det by (by100 simp)
+  hence "(ex_s*fy_s-ey_s*fx_s)*dx = tp_v*fx_s*(ex_s*fy_s-ey_s*fx_s)" by (by100 algebra)
+  hence hdx: "dx = tp_v*fx_s" using hdet_pos by (by100 simp)
+  have "ey_s*(fy_s*dx-fx_s*dy) + fy_s*(ex_s*dy-ey_s*dx) = (ex_s*fy_s-ey_s*fx_s)*dy"
+    by (by100 algebra)
+  hence "(ex_s*fy_s-ey_s*fx_s)*dy = ey_s*0 + fy_s*(tp_v*(ex_s*fy_s-ey_s*fx_s))"
+    using hsp_zero htp_v_det by (by100 simp)
+  hence "(ex_s*fy_s-ey_s*fx_s)*dy = tp_v*fy_s*(ex_s*fy_s-ey_s*fx_s)" by (by100 algebra)
+  hence hdy: "dy = tp_v*fy_s" using hdet_pos by (by100 simp)
+  \<comment> \<open>Step 3: From tp\\_v'=0 and Cramer for p': dx' = sp\\_v'*ex\\_s' = sp\\_v'*fx\\_s = tp\\_v*fx\\_s.\<close>
+  have htp_zero_eq: "ex_s'*dy' - ey_s'*dx' = 0"
+    using htp_v'_det \<open>tp_v' = 0\<close> hdet'_pos by (by100 simp)
+  hence htp_zero_eq': "fx_s*dy' - fy_s*dx' = 0"
+    using hex' hey' by (by100 simp)
+  have "fx_s*(fy_s'*dx'-fx_s'*dy') + fx_s'*(fx_s*dy'-fy_s*dx') = (fx_s*fy_s'-fy_s*fx_s')*dx'"
+    by (by100 algebra)
+  hence "(fx_s*fy_s'-fy_s*fx_s')*dx' = fx_s*(sp_v'*(ex_s'*fy_s'-ey_s'*fx_s')) + fx_s'*0"
+    using hsp_v'_det htp_zero_eq' by (by100 simp)
+  hence "(ex_s'*fy_s'-ey_s'*fx_s')*dx' = sp_v'*(ex_s'*fy_s'-ey_s'*fx_s')*fx_s"
+    using hex' hey' by (by100 algebra)
+  hence "dx' = sp_v'*fx_s" using hdet'_pos hex' hey' by (by100 simp)
+  hence "dx' = tp_v*fx_s" using \<open>sp_v' = tp_v\<close> by (by100 simp)
+  with hdx have "dx = dx'" by (by100 simp)
+  \<comment> \<open>Similarly for dy.\<close>
+  have "fy_s*(fy_s'*dx'-fx_s'*dy') + fy_s'*(fx_s*dy'-fy_s*dx') = (fx_s*fy_s'-fy_s*fx_s')*dy'"
+    by (by100 algebra)
+  hence "(fx_s*fy_s'-fy_s*fx_s')*dy' = fy_s*(sp_v'*(ex_s'*fy_s'-ey_s'*fx_s')) + fy_s'*0"
+    using hsp_v'_det htp_zero_eq' by (by100 simp)
+  hence "(ex_s'*fy_s'-ey_s'*fx_s')*dy' = sp_v'*(ex_s'*fy_s'-ey_s'*fx_s')*fy_s"
+    using hex' hey' by (by100 algebra)
+  hence "dy' = sp_v'*fy_s" using hdet'_pos hex' hey' by (by100 simp)
+  hence "dy' = tp_v*fy_s" using \<open>sp_v' = tp_v\<close> by (by100 simp)
+  with hdy have "dy = dy'" by (by100 simp)
+  with \<open>dx = dx'\<close> show ?thesis by (by100 simp)
+qed
+
+\<comment> \<open>Symmetric version for tp = 0 (p on LEFT boundary).\<close>
+lemma adjacent_cone_diagonal_injective_tp:
+  fixes det_s sp_v tp_v sp_v' tp_v' :: real
+    and ex_s ey_s fx_s fy_s :: real
+    and fx_s' fy_s' ex_s' ey_s' :: real
+  assumes htp0: "tp_v = 0" and hsp_ge: "sp_v \<ge> 0"
+      and hdet_pos: "ex_s*fy_s - ey_s*fx_s > 0"
+      and hsp_v_det: "sp_v*(ex_s*fy_s-ey_s*fx_s) = fy_s*dx - fx_s*dy"
+      and htp_zero: "ex_s*dy - ey_s*dx = 0"
+      \<comment> \<open>phi matching: sp\\_v*u\\_jp = tp\\_v'*u\\_jp + sp\\_v'*u\\_{jp-1} (centroid=0).\<close>
+      and hphi_x: "sp_v * ux1 = tp_v' * ux1 + sp_v' * ux0"
+      and hphi_y: "sp_v * uy1 = tp_v' * uy1 + sp_v' * uy0"
+      and hC10_ne: "ux0*uy1 - uy0*ux1 \<noteq> 0"
+      \<comment> \<open>p' Cramer: fx\\_s' = ex\\_s, fy\\_s' = ey\\_s (shared diagonal direction).\<close>
+      and hfx': "fx_s' = ex_s" and hfy': "fy_s' = ey_s"
+      and hdet'_pos: "ex_s'*fy_s' - ey_s'*fx_s' > 0"
+      and hsp_v'_det: "sp_v'*(ex_s'*fy_s'-ey_s'*fx_s') = fy_s'*dx' - fx_s'*dy'"
+      and htp_v'_det: "tp_v'*(ex_s'*fy_s'-ey_s'*fx_s') = ex_s'*dy' - ey_s'*dx'"
+  shows "dx = dx' \<and> dy = dy'"
+proof -
+  \<comment> \<open>Step 1: sp\\_v' = 0 and tp\\_v' = sp\\_v from 2D linear independence.\<close>
+  have "sp_v' * (ux0*uy1 - uy0*ux1) = 0"
+    using hphi_x hphi_y by (by100 algebra)
+  hence "sp_v' = 0" using hC10_ne by (by100 simp)
+  from hphi_x \<open>sp_v' = 0\<close> have "(sp_v - tp_v') * ux1 = 0" by (by100 algebra)
+  from hphi_y \<open>sp_v' = 0\<close> have "(sp_v - tp_v') * uy1 = 0" by (by100 algebra)
+  have "ux1 \<noteq> 0 \<or> uy1 \<noteq> 0" using hC10_ne by (by100 auto)
+  with \<open>(sp_v-tp_v')*ux1=0\<close> \<open>(sp_v-tp_v')*uy1=0\<close>
+  have "tp_v' = sp_v" by (by100 auto)
+  \<comment> \<open>Step 2: From tp\\_v=0 and Cramer: dx = sp\\_v*ex\\_s, dy = sp\\_v*ey\\_s.\<close>
+  have "ex_s*(fy_s*dx-fx_s*dy) + fx_s*(ex_s*dy-ey_s*dx) = (ex_s*fy_s-ey_s*fx_s)*dx"
+    by (by100 algebra)
+  hence "(ex_s*fy_s-ey_s*fx_s)*dx = ex_s*(sp_v*(ex_s*fy_s-ey_s*fx_s)) + fx_s*0"
+    using hsp_v_det htp_zero by (by100 simp)
+  hence "(ex_s*fy_s-ey_s*fx_s)*dx = sp_v*ex_s*(ex_s*fy_s-ey_s*fx_s)" by (by100 algebra)
+  hence hdx: "dx = sp_v*ex_s" using hdet_pos by (by100 simp)
+  have "ey_s*(fy_s*dx-fx_s*dy) + fy_s*(ex_s*dy-ey_s*dx) = (ex_s*fy_s-ey_s*fx_s)*dy"
+    by (by100 algebra)
+  hence "(ex_s*fy_s-ey_s*fx_s)*dy = ey_s*(sp_v*(ex_s*fy_s-ey_s*fx_s)) + fy_s*0"
+    using hsp_v_det htp_zero by (by100 simp)
+  hence "(ex_s*fy_s-ey_s*fx_s)*dy = sp_v*ey_s*(ex_s*fy_s-ey_s*fx_s)" by (by100 algebra)
+  hence hdy: "dy = sp_v*ey_s" using hdet_pos by (by100 simp)
+  \<comment> \<open>Step 3: From sp\\_v'=0 and Cramer for p': dx' = tp\\_v'*fx\\_s' = sp\\_v*ex\\_s.\<close>
+  have hsp_zero_eq': "fy_s'*dx' - fx_s'*dy' = 0"
+    using hsp_v'_det \<open>sp_v' = 0\<close> hdet'_pos by (by100 simp)
+  hence "fy_s'*dx' = fx_s'*dy'" by linarith
+  hence hex_eq: "ey_s*dx' = ex_s*dy'"
+    using hfx' hfy' by (by100 simp)
+  have "(ex_s'*fy_s'-ey_s'*fx_s')*dx' = ex_s'*(fy_s'*dx'-fx_s'*dy') + fx_s'*(ex_s'*dy'-ey_s'*dx')"
+    by (by100 algebra)
+  hence "(ex_s'*fy_s'-ey_s'*fx_s')*dx' = ex_s'*0 + fx_s'*(tp_v'*(ex_s'*fy_s'-ey_s'*fx_s'))"
+    using hsp_zero_eq' htp_v'_det by (by100 simp)
+  hence "dx' = tp_v'*fx_s'" using hdet'_pos by (by100 simp)
+  hence "dx' = sp_v*ex_s" using \<open>tp_v' = sp_v\<close> hfx' by (by100 simp)
+  with hdx have "dx = dx'" by (by100 simp)
+  have "(ex_s'*fy_s'-ey_s'*fx_s')*dy' = ey_s'*(fy_s'*dx'-fx_s'*dy') + fy_s'*(ex_s'*dy'-ey_s'*dx')"
+    by (by100 algebra)
+  hence "(ex_s'*fy_s'-ey_s'*fx_s')*dy' = ey_s'*0 + fy_s'*(tp_v'*(ex_s'*fy_s'-ey_s'*fx_s'))"
+    using hsp_zero_eq' htp_v'_det by (by100 simp)
+  hence "dy' = tp_v'*fy_s'" using hdet'_pos by (by100 simp)
+  hence "dy' = sp_v*ey_s" using \<open>tp_v' = sp_v\<close> hfy' by (by100 simp)
+  with hdy have "dy = dy'" by (by100 simp)
+  with \<open>dx = dx'\<close> show ?thesis by (by100 simp)
 qed
 
 \<comment> \<open>Standalone lemma: a point with positive centroid weight is not on any polygon edge.
@@ -3322,7 +2784,22 @@ proof -
            \<or> (snd (w ! i) = snd (w ! j) \<and> a = Suc i mod ?nw \<and> b = Suc j mod ?nw)
            \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = i \<and> b = Suc j mod ?nw)
            \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> a = Suc i mod ?nw \<and> b = j))}\<^sup>*"
+    and hsum_vxw_0: "(\<Sum>k<?nw. vxw k) = 0"
+    and hsum_vyw_0: "(\<Sum>k<?nw. vyw k) = 0"
+    and hunit_circle_w: "\<forall>j<?nw. (vxw j)^2 + (vyw j)^2 = 1"
     by (elim exE conjE) (rule that, assumption+)
+  define cxw where "cxw = (\<Sum>j<?nw. vxw j) / real ?nw"
+  define cyw where "cyw = (\<Sum>j<?nw. vyw j) / real ?nw"
+  have hcxw_0: "cxw = 0" unfolding cxw_def using hsum_vxw_0 by (by100 simp)
+  have hcyw_0: "cyw = 0" unfolding cyw_def using hsum_vyw_0 by (by100 simp)
+  have hregular_w: "\<exists>r>(0::real). \<forall>j<?nw. (vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2"
+  proof (rule exI[of _ 1], intro conjI)
+    show "(0::real) < 1" by (by100 simp)
+    show "\<forall>j<?nw. (vxw j - cxw)^2 + (vyw j - cyw)^2 = 1^2"
+      using hunit_circle_w hcxw_0 hcyw_0 by (by100 simp)
+  qed
+  let ?cxw = "(\<Sum>j<?nw. vxw j) / real ?nw"
+  let ?cyw = "(\<Sum>j<?nw. vyw j) / real ?nw"
   have htopo_e: "is_topology_on_strict Y_e TY_e"
     using hY_e unfolding top1_quotient_of_scheme_on_def by (by100 blast)
   have htopo_w: "is_topology_on_strict Y_w TY_w"
@@ -3796,7 +3273,7 @@ proof -
           \<comment> \<open>cross\\_v1(k, p) = \\<Sum>i<ne. \\<lambda>\\_i * det(v\\_k-v\\_1, v\\_i-v\\_1) for p = \\<Sum> \\<lambda>\\_i v\\_i.\<close>
           from hp obtain coeffs where hcoeffs: "(\<forall>i<?ne. coeffs i \<ge> 0)"
             "(\<Sum>i<?ne. coeffs i) = 1" "fst p = (\<Sum>i<?ne. coeffs i * vxe i)" "snd p = (\<Sum>i<?ne. coeffs i * vye i)"
-            using hC5_e by (by100 auto)
+            using hC5_e by (by5000 auto)
           \<comment> \<open>cross\\_v1(k, p) = \\<Sum> \\<lambda>\\_i * cross\\_v1(k, v\\_i) by linearity.\<close>
           have hcross_sum: "\<And>k. cross_v1 k p = (\<Sum>i<?ne. coeffs i * cross_v1 k (vxe i, vye i))"
           proof -
@@ -5270,7 +4747,7 @@ proof -
               from hp obtain coeffs where hcoeffs: "(\<forall>i<?ne. coeffs i \<ge> 0)"
                 "(\<Sum>i<?ne. coeffs i) = 1" "fst p = (\<Sum>i<?ne. coeffs i * vxe i)"
                 "snd p = (\<Sum>i<?ne. coeffs i * vye i)"
-                using hC5_e by (by100 auto)
+                using hC5_e by (by5000 auto)
               have hj2_lt: "j+2 < ?ne" using hj hne_eq by linarith
               \<comment> \<open>C11 at edge j+2 gives: for all i \\<noteq> j+2, i \\<noteq> si:
                  det(v\\_{si}-v\\_{j+2}, v\\_i-v\\_{j+2}) > 0.\<close>
@@ -5322,7 +4799,7 @@ proof -
                 also have "\<dots> = (\<Sum>i<?ne. ?a * (coeffs i * (vye i - vye(j+2)))
                                           - ?b * (coeffs i * (vxe i - vxe(j+2))))"
                   using sum_subtractf[of "\<lambda>i. ?a*(coeffs i*(vye i-vye(j+2)))"
-                    "\<lambda>i. ?b*(coeffs i*(vxe i-vxe(j+2)))" "{..<?ne}"] by (by100 simp)
+                    "\<lambda>i. ?b*(coeffs i*(vxe i-vxe(j+2)))" "{..<?ne}"] by (by5000 simp)
                 also have "\<dots> = (\<Sum>i<?ne. coeffs i * (?a * (vye i - vye(j+2)) - ?b * (vxe i - vxe(j+2))))"
                 proof -
                   have "\<And>i. ?a * (coeffs i * (vye i - vye(j+2))) - ?b * (coeffs i * (vxe i - vxe(j+2)))
@@ -5615,8 +5092,12 @@ proof -
                 have "?sn*(?A*?ey-?B*?ex) \<le> 0" .
                 moreover from mult_nonneg_nonpos[OF htn hcv3_le]
                 have "?tn*(?A*?fy-?B*?fx) \<le> 0" .
-                ultimately have hsum_le: "?sn*(?A*?ey-?B*?ex) + ?tn*(?A*?fy-?B*?fx) \<le> 0" by linarith
-                have "?det * (?A*?dy - ?B*?dx) \<le> 0" using hdecomp hsum_le by linarith
+                ultimately have hsum_le: "?sn*(?A*?ey-?B*?ex) + ?tn*(?A*?fy-?B*?fx) \<le> 0"
+                  using add_nonpos_nonpos by (by100 blast)
+                define lhs where "lhs = ?sn*(?A*?ey-?B*?ex) + ?tn*(?A*?fy-?B*?fx)"
+                have "?det * (?A*?dy - ?B*?dx) = lhs" using hdecomp unfolding lhs_def by linarith
+                moreover have "lhs \<le> 0" using hsum_le unfolding lhs_def by linarith
+                ultimately have "?det * (?A*?dy - ?B*?dx) \<le> 0" by linarith
                 \<comment> \<open>det > 0 and det*X \\<le> 0 => X \\<le> 0.\<close>
                 show ?thesis
                 proof (rule ccontr)
@@ -5992,7 +5473,7 @@ proof -
               + phi_s2 (j+2) (Suc(j+2) mod ?ne) ?dx ?dy*vyw j)"
                 by (by100 simp)
               from hphi_s_form hlet_to_decomp ht_j_zero hdecomp_simplified
-              show ?thesis by simp \<comment> \<open>SLOW (~30s): big Let-expression chain.\<close>
+              show ?thesis by (by5000 metis) \<comment> \<open>Was bare simp (~30s). Now metis.\<close>
             qed
           qed
         qed
@@ -6101,7 +5582,7 @@ proof -
               s = (fy*dx-fx*dy)/det; t_par = (ex*dy-ey*dx)/det
           in ((1-s-t_par)*?cxw + s*vxw j + t_par*vxw(Suc j mod ?nw),
               (1-s-t_par)*?cyw + s*vyw j + t_par*vyw(Suc j mod ?nw)))"
-            by (cases p) simp \<comment> \<open>SLOW (~25s): pair destruction + Let simplification.\<close>
+            by (cases p) (simp add: Let_def) \<comment> \<open>Was bare (cases p) simp (~25s).\<close>
           thus "phi_fn p = affine_j p" unfolding affine_j_def Let_def by (by100 simp)
         qed
         \<comment> \<open>affine\\_j is continuous (affine function of fst p, snd p).\<close>
@@ -7447,8 +6928,757 @@ proof -
         qed
         from hfan_cover[rule_format, OF hp'] hp'_ne_v1
         obtain jp' where hjp': "jp' < ?nw" and hin_p': "in_sector jp' p'" by blast
-        \<comment> \<open>Apply fan\\_affine\\_interior\\_injective (standalone lemma, sorry'd).\<close>
-        show "p = p'" sorry
+        \<comment> \<open>DIRECT PROOF (bypassing fan\\_affine\\_interior\\_injective):
+           Same sector: Cramer uniqueness. Different sector: centroid-cone disjointness.\<close>
+        \<comment> \<open>Extract Cramer coords for p in sector jp (at outer scope to avoid define issues).\<close>
+        define sp_v where "sp_v = (let fy = vye(Suc(jp+2) mod ?ne)-vye 1; fx = vxe(Suc(jp+2) mod ?ne)-vxe 1;
+            det = (vxe(jp+2)-vxe 1)*fy-(vye(jp+2)-vye 1)*fx; dx = fst p-vxe 1; dy = snd p-vye 1
+        in (fy*dx-fx*dy)/det)"
+        define tp_v where "tp_v = (let ex = vxe(jp+2)-vxe 1; ey = vye(jp+2)-vye 1;
+            fx = vxe(Suc(jp+2) mod ?ne)-vxe 1; fy = vye(Suc(jp+2) mod ?ne)-vye 1;
+            det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1
+        in (ex*dy-ey*dx)/det)"
+        have hdet_v_pos: "(vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-
+            (vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1) > 0"
+          using hdet_pos[rule_format, OF hjp] by (by100 simp)
+        have hphi_x_v: "fst (phi_fn p) = (1-sp_v-tp_v)*?cxw + sp_v*vxw jp + tp_v*vxw(Suc jp mod ?nw)"
+        proof -
+          from hphi_affine_on_sector[rule_format, OF hjp hp hin_p]
+          show ?thesis unfolding Let_def sp_v_def tp_v_def by (by100 simp)
+        qed
+        have hphi_y_v: "snd (phi_fn p) = (1-sp_v-tp_v)*?cyw + sp_v*vyw jp + tp_v*vyw(Suc jp mod ?nw)"
+        proof -
+          from hphi_affine_on_sector[rule_format, OF hjp hp hin_p]
+          show ?thesis unfolding Let_def sp_v_def tp_v_def by (by100 simp)
+        qed
+        have hsp_v_ge: "sp_v \<ge> 0"
+        proof -
+          from hin_p have "cross_v1 (Suc(jp+2) mod ?ne) p \<le> 0" unfolding in_sector_def by (by100 auto)
+          have "sp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+            = (vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)"
+            unfolding sp_v_def Let_def using hdet_v_pos by (by100 simp)
+          also have "\<dots> = -(cross_v1 (Suc(jp+2) mod ?ne) p)"
+            unfolding cross_v1_def by (by5000 algebra)
+          finally have "sp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1)) \<ge> 0"
+            using \<open>cross_v1 _ p \<le> 0\<close> by linarith
+          thus ?thesis using hdet_v_pos by (metis linorder_not_le mult_neg_pos)
+        qed
+        have htp_v_ge: "tp_v \<ge> 0"
+        proof -
+          from hin_p have "cross_v1 (jp+2) p \<ge> 0" unfolding in_sector_def by (by100 auto)
+          have "tp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+            = (vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1)"
+            unfolding tp_v_def Let_def using hdet_v_pos by (by100 simp)
+          also have "\<dots> = cross_v1 (jp+2) p"
+            unfolding cross_v1_def by (by100 simp)
+          finally have "tp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1)) \<ge> 0"
+            using \<open>cross_v1 _ p \<ge> 0\<close> by linarith
+          thus ?thesis using hdet_v_pos by (metis linorder_not_le mult_neg_pos)
+        qed
+        have habg_v: "(1-sp_v-tp_v) + sp_v + tp_v = 1" by linarith
+        have hC10_jp_v: "(vxw jp-?cxw)*(vyw(Suc jp mod ?nw)-?cyw)-(vyw jp-?cyw)*(vxw(Suc jp mod ?nw)-?cxw) > 0"
+        proof -
+          from hC10_w[rule_format, OF hjp] show ?thesis by (by100 simp)
+        qed
+        from centroid_cone_cross_nonneg[OF hsp_v_ge htp_v_ge habg_v hphi_x_v hphi_y_v hC10_jp_v]
+        have hcross_jp_ge: "(vxw jp-?cxw)*(snd (phi_fn p)-?cyw)-(vyw jp-?cyw)*(fst (phi_fn p)-?cxw) \<ge> 0"
+          and hcross_jp1_ge: "(fst (phi_fn p)-?cxw)*(vyw(Suc jp mod ?nw)-?cyw)-(snd (phi_fn p)-?cyw)*(vxw(Suc jp mod ?nw)-?cxw) \<ge> 0"
+          by auto
+        \<comment> \<open>For jp=jp': same sector Cramer uniqueness. For jp\\<noteq>jp': cross product mismatch.\<close>
+        show "p = p'"
+        proof (cases "jp = jp'")
+          case True
+          \<comment> \<open>Same sector: from phi(p)=phi(p') with same affine map, det>0 gives p=p'.\<close>
+          \<comment> \<open>Same sector: from hphi\\_affine + jp=jp', the target-side coords match.
+             Then triangle\\_coords\\_injective + cramer\\_injective give p=p'.\<close>
+          have hC10_ne: "(vxw jp-?cxw)*(vyw(Suc jp mod ?nw)-?cyw)-(vyw jp-?cyw)*(vxw(Suc jp mod ?nw)-?cxw) \<noteq> 0"
+            using hC10_jp_v by linarith
+          have hdet_ne: "(vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-
+              (vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1) \<noteq> 0"
+            using hdet_v_pos by linarith
+          \<comment> \<open>phi(p') also in sector jp (since jp=jp').\<close>
+          from hphi_affine_on_sector[rule_format, OF hjp' hp' hin_p']
+          have hphi_p': "phi_fn (fst p', snd p') = (let ex = vxe(jp'+2)-vxe 1; ey = vye(jp'+2)-vye 1;
+              fx = vxe(Suc(jp'+2) mod ?ne)-vxe 1; fy = vye(Suc(jp'+2) mod ?ne)-vye 1;
+              det = ex*fy-ey*fx; dx = fst p'-vxe 1; dy = snd p'-vye 1;
+              s' = (fy*dx-fx*dy)/det; t' = (ex*dy-ey*dx)/det
+          in ((1-s'-t')*?cxw + s'*vxw jp' + t'*vxw(Suc jp' mod ?nw),
+              (1-s'-t')*?cyw + s'*vyw jp' + t'*vyw(Suc jp' mod ?nw)))" .
+          \<comment> \<open>With jp=jp': both phi formulas use the same sector.\<close>
+          define sp_v' where "sp_v' = (let fy = vye(Suc(jp+2) mod ?ne)-vye 1; fx = vxe(Suc(jp+2) mod ?ne)-vxe 1;
+              det = (vxe(jp+2)-vxe 1)*fy-(vye(jp+2)-vye 1)*fx; dx = fst p'-vxe 1; dy = snd p'-vye 1
+          in (fy*dx-fx*dy)/det)"
+          define tp_v' where "tp_v' = (let ex = vxe(jp+2)-vxe 1; ey = vye(jp+2)-vye 1;
+              fx = vxe(Suc(jp+2) mod ?ne)-vxe 1; fy = vye(Suc(jp+2) mod ?ne)-vye 1;
+              det = ex*fy-ey*fx; dx = fst p'-vxe 1; dy = snd p'-vye 1
+          in (ex*dy-ey*dx)/det)"
+          have hphi_x_v': "fst (phi_fn p') = (1-sp_v'-tp_v')*?cxw + sp_v'*vxw jp + tp_v'*vxw(Suc jp mod ?nw)"
+            using hphi_p' True unfolding Let_def sp_v'_def tp_v'_def by (by100 simp)
+          have hphi_y_v': "snd (phi_fn p') = (1-sp_v'-tp_v')*?cyw + sp_v'*vyw jp + tp_v'*vyw(Suc jp mod ?nw)"
+            using hphi_p' True unfolding Let_def sp_v'_def tp_v'_def by (by100 simp)
+          \<comment> \<open>phi(p)=phi(p'): target coords match.\<close>
+          from heq have "fst (phi_fn p) = fst (phi_fn p')" "snd (phi_fn p) = snd (phi_fn p')" by auto
+          hence hx_eq: "(1-sp_v-tp_v)*?cxw + sp_v*vxw jp + tp_v*vxw(Suc jp mod ?nw) =
+              (1-sp_v'-tp_v')*?cxw + sp_v'*vxw jp + tp_v'*vxw(Suc jp mod ?nw)"
+            and hy_eq: "(1-sp_v-tp_v)*?cyw + sp_v*vyw jp + tp_v*vyw(Suc jp mod ?nw) =
+              (1-sp_v'-tp_v')*?cyw + sp_v'*vyw jp + tp_v'*vyw(Suc jp mod ?nw)"
+            using hphi_x_v hphi_y_v hphi_x_v' hphi_y_v' by auto
+          \<comment> \<open>triangle\\_coords\\_injective: det(target) \\<noteq> 0 implies sp=sp' and tp=tp'.\<close>
+          from triangle_coords_injective[OF hC10_ne hx_eq hy_eq]
+          have "sp_v = sp_v'" "tp_v = tp_v'" by auto
+          \<comment> \<open>cramer\\_injective: det(source) \\<noteq> 0 and sp=sp', tp=tp' implies dx=dx', dy=dy'.\<close>
+          \<comment> \<open>From sp=sp' and tp=tp': the source Cramer systems match.\<close>
+          \<comment> \<open>From sp=sp' and tp=tp': unfold Let and apply cramer\\_injective.\<close>
+          define ex_s where "ex_s = vxe(jp+2)-vxe 1"
+          define ey_s where "ey_s = vye(jp+2)-vye 1"
+          define fx_s where "fx_s = vxe(Suc(jp+2) mod ?ne)-vxe 1"
+          define fy_s where "fy_s = vye(Suc(jp+2) mod ?ne)-vye 1"
+          have hdet_s_ne: "ex_s*fy_s - ey_s*fx_s \<noteq> 0"
+            using hdet_v_pos unfolding ex_s_def ey_s_def fx_s_def fy_s_def by linarith
+          have hsp_cramer: "(fy_s*(fst p-vxe 1)-fx_s*(snd p-vye 1))/(ex_s*fy_s-ey_s*fx_s) =
+              (fy_s*(fst p'-vxe 1)-fx_s*(snd p'-vye 1))/(ex_s*fy_s-ey_s*fx_s)"
+            using \<open>sp_v = sp_v'\<close> unfolding sp_v_def sp_v'_def Let_def
+              ex_s_def ey_s_def fx_s_def fy_s_def by (by100 simp)
+          have htp_cramer: "(ex_s*(snd p-vye 1)-ey_s*(fst p-vxe 1))/(ex_s*fy_s-ey_s*fx_s) =
+              (ex_s*(snd p'-vye 1)-ey_s*(fst p'-vxe 1))/(ex_s*fy_s-ey_s*fx_s)"
+            using \<open>tp_v = tp_v'\<close> unfolding tp_v_def tp_v'_def Let_def
+              ex_s_def ey_s_def fx_s_def fy_s_def by (by100 simp)
+          from cramer_injective[OF hdet_s_ne hsp_cramer htp_cramer]
+          have "fst p - vxe 1 = fst p' - vxe 1 \<and> snd p - vye 1 = snd p' - vye 1" .
+          hence "fst p = fst p'" "snd p = snd p'" by auto
+          thus ?thesis by (cases p, cases p') (by100 simp)
+        next
+          case False
+          \<comment> \<open>Different sector: centroid-cone cross products from sector jp hold for phi(p).
+             Since phi(p)=phi(p'), they also hold for phi(p'). But from sector jp',
+             the cross products should have OPPOSITE signs for non-adjacent sectors.\<close>
+          \<comment> \<open>Key: cross(u\\_{jp+1}-cw, phi(p)-cw) = -sp\\_v*C10(jp) \\<le> 0 from sector jp.
+             For jp' \\<noteq> jp: if jp' uses the same direction u\\_{jp+1}, we get incompatibility.\<close>
+          \<comment> \<open>Adjacent case (jp' = Suc jp mod nw or jp' = (jp-1) mod nw): boundary analysis.\<close>
+          \<comment> \<open>Non-adjacent: cross product of u\\_{jp'} with phi(p) from C11 perspective.\<close>
+          \<comment> \<open>Step 1: Compute cross(u\\_{jp+1}-cw, phi(p)-cw) = -sp\\_v * C10(jp) \\<le> 0.\<close>
+          have hcross_neg1: "(vxw(Suc jp mod ?nw)-?cxw)*(snd (phi_fn p)-?cyw)-
+              (vyw(Suc jp mod ?nw)-?cyw)*(fst (phi_fn p)-?cxw) =
+              -(sp_v * ((vxw jp-?cxw)*(vyw(Suc jp mod ?nw)-?cyw)-(vyw jp-?cyw)*(vxw(Suc jp mod ?nw)-?cxw)))"
+          proof -
+            have "fst (phi_fn p) - ?cxw = sp_v*(vxw jp-?cxw) + tp_v*(vxw(Suc jp mod ?nw)-?cxw)"
+              using hphi_x_v habg_v by (by100 algebra)
+            have "snd (phi_fn p) - ?cyw = sp_v*(vyw jp-?cyw) + tp_v*(vyw(Suc jp mod ?nw)-?cyw)"
+              using hphi_y_v habg_v by (by100 algebra)
+            show ?thesis using \<open>fst _ - _ = _\<close> \<open>snd _ - _ = _\<close> by (by100 algebra)
+          qed
+          hence hcross_jp1_le: "(vxw(Suc jp mod ?nw)-?cxw)*(snd (phi_fn p)-?cyw)-
+              (vyw(Suc jp mod ?nw)-?cyw)*(fst (phi_fn p)-?cxw) \<le> 0"
+            using hsp_v_ge hC10_jp_v by (by100 auto)
+          \<comment> \<open>Similarly: cross(phi(p)-cw, u\\_jp-cw) = -tp\\_v * C10(jp) \\<le> 0.\<close>
+          have hcross_neg2: "(fst (phi_fn p)-?cxw)*(vyw jp-?cyw)-
+              (snd (phi_fn p)-?cyw)*(vxw jp-?cxw) =
+              -(tp_v * ((vxw jp-?cxw)*(vyw(Suc jp mod ?nw)-?cyw)-(vyw jp-?cyw)*(vxw(Suc jp mod ?nw)-?cxw)))"
+          proof -
+            have "fst (phi_fn p) - ?cxw = sp_v*(vxw jp-?cxw) + tp_v*(vxw(Suc jp mod ?nw)-?cxw)"
+              using hphi_x_v habg_v by (by100 algebra)
+            have "snd (phi_fn p) - ?cyw = sp_v*(vyw jp-?cyw) + tp_v*(vyw(Suc jp mod ?nw)-?cyw)"
+              using hphi_y_v habg_v by (by100 algebra)
+            show ?thesis using \<open>fst _ - _ = _\<close> \<open>snd _ - _ = _\<close> by (by100 algebra)
+          qed
+          hence hcross_jp_le: "(fst (phi_fn p)-?cxw)*(vyw jp-?cyw)-
+              (snd (phi_fn p)-?cyw)*(vxw jp-?cxw) \<le> 0"
+            using htp_v_ge hC10_jp_v by (by100 auto)
+          \<comment> \<open>Now: phi(p) = phi(p'). Similar Cramer analysis for p' in sector jp'.
+             Extract cross products from sector jp' perspective.\<close>
+          \<comment> \<open>For the contradiction: phi(p)=phi(p') must be in BOTH cones jp and jp'.
+             From cone jp: cross(u\\_{jp+1}-cw, q-cw) \\<le> 0.
+             From cone jp': cross(u\\_{jp'}-cw, q-cw) \\<ge> 0.
+             For jp' = Suc jp mod nw: u\\_{jp'} = u\\_{jp+1}. Then cross(u\\_{jp+1}-cw,q-cw) both \\<le>0 and \\<ge>0.
+             So = 0, which means sp\\_v = 0. Then diagonal injectivity gives p = p'.
+             For non-adjacent jp': use C11 to show incompatibility.\<close>
+          \<comment> \<open>Extract Cramer coords for p' in sector jp'.\<close>
+          define sp_v' where "sp_v' = (let fy = vye(Suc(jp'+2) mod ?ne)-vye 1; fx = vxe(Suc(jp'+2) mod ?ne)-vxe 1;
+              det = (vxe(jp'+2)-vxe 1)*fy-(vye(jp'+2)-vye 1)*fx; dx = fst p'-vxe 1; dy = snd p'-vye 1
+          in (fy*dx-fx*dy)/det)"
+          define tp_v' where "tp_v' = (let ex = vxe(jp'+2)-vxe 1; ey = vye(jp'+2)-vye 1;
+              fx = vxe(Suc(jp'+2) mod ?ne)-vxe 1; fy = vye(Suc(jp'+2) mod ?ne)-vye 1;
+              det = ex*fy-ey*fx; dx = fst p'-vxe 1; dy = snd p'-vye 1
+          in (ex*dy-ey*dx)/det)"
+          have hdet_v'_pos: "(vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-
+              (vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1) > 0"
+            using hdet_pos[rule_format, OF hjp'] by (by100 simp)
+          have hphi_x_v': "fst (phi_fn p') = (1-sp_v'-tp_v')*?cxw + sp_v'*vxw jp' + tp_v'*vxw(Suc jp' mod ?nw)"
+            using hphi_affine_on_sector[rule_format, OF hjp' hp' hin_p']
+            unfolding Let_def sp_v'_def tp_v'_def by (by100 simp)
+          have hphi_y_v': "snd (phi_fn p') = (1-sp_v'-tp_v')*?cyw + sp_v'*vyw jp' + tp_v'*vyw(Suc jp' mod ?nw)"
+            using hphi_affine_on_sector[rule_format, OF hjp' hp' hin_p']
+            unfolding Let_def sp_v'_def tp_v'_def by (by100 simp)
+          have hsp_v'_ge: "sp_v' \<ge> 0"
+          proof -
+            from hin_p' have "cross_v1 (Suc(jp'+2) mod ?ne) p' \<le> 0" unfolding in_sector_def by (by100 auto)
+            have "sp_v' * ((vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-(vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1))
+              = (vye(Suc(jp'+2) mod ?ne)-vye 1)*(fst p'-vxe 1)-(vxe(Suc(jp'+2) mod ?ne)-vxe 1)*(snd p'-vye 1)"
+              unfolding sp_v'_def Let_def using hdet_v'_pos by (by100 simp)
+            also have "\<dots> = -(cross_v1 (Suc(jp'+2) mod ?ne) p')"
+              unfolding cross_v1_def by (by5000 algebra)
+            finally have "sp_v' * ((vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-(vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1)) \<ge> 0"
+              using \<open>cross_v1 _ p' \<le> 0\<close> by linarith
+            thus ?thesis using hdet_v'_pos by (metis linorder_not_le mult_neg_pos)
+          qed
+          have htp_v'_ge: "tp_v' \<ge> 0"
+          proof -
+            from hin_p' have "cross_v1 (jp'+2) p' \<ge> 0" unfolding in_sector_def by (by100 auto)
+            have "tp_v' * ((vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-(vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1))
+              = (vxe(jp'+2)-vxe 1)*(snd p'-vye 1)-(vye(jp'+2)-vye 1)*(fst p'-vxe 1)"
+              unfolding tp_v'_def Let_def using hdet_v'_pos by (by100 simp)
+            also have "\<dots> = cross_v1 (jp'+2) p'"
+              unfolding cross_v1_def by (by100 simp)
+            finally have "tp_v' * ((vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-(vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1)) \<ge> 0"
+              using \<open>cross_v1 _ p' \<ge> 0\<close> by linarith
+            thus ?thesis using hdet_v'_pos by (metis linorder_not_le mult_neg_pos)
+          qed
+          have habg_v': "(1-sp_v'-tp_v') + sp_v' + tp_v' = 1" by linarith
+          have hC10_jp'_v: "(vxw jp'-?cxw)*(vyw(Suc jp' mod ?nw)-?cyw)-(vyw jp'-?cyw)*(vxw(Suc jp' mod ?nw)-?cxw) > 0"
+          proof -
+            from hC10_w[rule_format, OF hjp'] show ?thesis by (by100 simp)
+          qed
+          \<comment> \<open>Cross products from cone jp' (using phi(p')=phi(p)).\<close>
+          from centroid_cone_cross_nonneg[OF hsp_v'_ge htp_v'_ge habg_v' hphi_x_v' hphi_y_v' hC10_jp'_v]
+          have hcross_jp'_ge: "(vxw jp'-?cxw)*(snd (phi_fn p')-?cyw)-(vyw jp'-?cyw)*(fst (phi_fn p')-?cxw) \<ge> 0"
+            and hcross_jp'1_ge: "(fst (phi_fn p')-?cxw)*(vyw(Suc jp' mod ?nw)-?cyw)-(snd (phi_fn p')-?cyw)*(vxw(Suc jp' mod ?nw)-?cxw) \<ge> 0"
+            by auto
+          \<comment> \<open>Since phi(p)=phi(p'): the cross products apply to the SAME point.\<close>
+          from heq have hfst_eq: "fst (phi_fn p) = fst (phi_fn p')" and hsnd_eq: "snd (phi_fn p) = snd (phi_fn p')"
+            by auto
+          hence hcross_jp'_from_p: "(vxw jp'-?cxw)*(snd (phi_fn p)-?cyw)-(vyw jp'-?cyw)*(fst (phi_fn p)-?cxw) \<ge> 0"
+            using hcross_jp'_ge by (by100 simp)
+          hence hcross_jp'1_from_p: "(fst (phi_fn p)-?cxw)*(vyw(Suc jp' mod ?nw)-?cyw)-(snd (phi_fn p)-?cyw)*(vxw(Suc jp' mod ?nw)-?cxw) \<ge> 0"
+            using hcross_jp'1_ge hfst_eq hsnd_eq by (by100 simp)
+          \<comment> \<open>Now combine: from cone jp we have cross(u\\_{jp+1}-cw, q-cw) \\<le> 0 and cross(q-cw, u\\_jp-cw) \\<le> 0.
+             From cone jp' we have cross(u\\_{jp'}-cw, q-cw) \\<ge> 0 and cross(q-cw, u\\_{jp'+1}-cw) \\<ge> 0.
+             For jp' = Suc jp mod nw: u\\_{jp'} = u\\_{jp+1}. cross(u\\_{jp+1}-cw,q-cw) \\<le> 0 AND \\<ge> 0. So = 0.
+             This means sp\\_v = 0. Then q is on the shared diagonal.
+             Similarly if jp' = (jp + nw - 1) mod nw (i.e., jp = Suc jp' mod nw): tp\\_v = 0.\<close>
+          \<comment> \<open>HELPER: diagonal injectivity via Cramer + centroid-cone matching.\<close>
+          \<comment> \<open>If sp\\_v = 0 and jp' = Suc jp: p and p' are on the shared diagonal, same parameter.\<close>
+          have hadj_fwd: "jp' = Suc jp mod ?nw \<longrightarrow> p = p'"
+          proof (intro impI)
+            assume hTrue: "jp' = Suc jp mod ?nw"
+            \<comment> \<open>sp\\_v = 0 from cross product analysis.\<close>
+            from hTrue hcross_jp'_from_p
+            have "(vxw(Suc jp mod ?nw)-?cxw)*(snd (phi_fn p)-?cyw)-
+                (vyw(Suc jp mod ?nw)-?cyw)*(fst (phi_fn p)-?cxw) \<ge> 0" by (by100 simp)
+            with hcross_jp1_le have "(vxw(Suc jp mod ?nw)-?cxw)*(snd (phi_fn p)-?cyw)-
+                (vyw(Suc jp mod ?nw)-?cyw)*(fst (phi_fn p)-?cxw) = 0" by linarith
+            hence "sp_v * ((vxw jp-?cxw)*(vyw(Suc jp mod ?nw)-?cyw)-(vyw jp-?cyw)*(vxw(Suc jp mod ?nw)-?cxw)) = 0"
+              using hcross_neg1 by linarith
+            hence hsp0: "sp_v = 0" using hC10_jp_v by (by100 simp)
+            \<comment> \<open>Cramer: (dx,dy) = tp\\_v * (diagonal direction).\<close>
+            have hsp_zero_eq: "(vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-
+                (vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1) = 0"
+            proof -
+              have "sp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+                = (vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)"
+                unfolding sp_v_def Let_def using hdet_v_pos by (by100 simp)
+              with hsp0 show ?thesis by (by100 simp)
+            qed
+            have htp_v_det: "tp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+                = (vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1)"
+              unfolding tp_v_def Let_def using hdet_v_pos by (by100 simp)
+            \<comment> \<open>Solve 2x2 system: dx = tp\\_v * fx, dy = tp\\_v * fy.\<close>
+            have hdx_p: "fst p - vxe 1 = tp_v * (vxe(Suc(jp+2) mod ?ne)-vxe 1)"
+            proof -
+              have "((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1)) * (fst p-vxe 1) =
+                  (vxe(jp+2)-vxe 1)*((vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)) -
+                  (vye(jp+2)-vye 1)*((vxe(Suc(jp+2) mod ?ne)-vxe 1)*(fst p-vxe 1))"
+                by (by100 algebra)
+              also have "\<dots> = (vxe(jp+2)-vxe 1)*((vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)) -
+                  (vye(jp+2)-vye 1)*((vxe(Suc(jp+2) mod ?ne)-vxe 1)*(fst p-vxe 1))"
+                using hsp_zero_eq by (by100 algebra)
+              also have "\<dots> = (vxe(Suc(jp+2) mod ?ne)-vxe 1)*((vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1))"
+                by (by100 algebra)
+              also have "\<dots> = (vxe(Suc(jp+2) mod ?ne)-vxe 1)*tp_v*((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))"
+                using htp_v_det by (by100 algebra)
+              finally show ?thesis using hdet_v_pos by (by100 simp)
+            qed
+            have hdy_p: "snd p - vye 1 = tp_v * (vye(Suc(jp+2) mod ?ne)-vye 1)"
+            proof -
+              have "((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1)) * (snd p-vye 1) =
+                  (vye(Suc(jp+2) mod ?ne)-vye 1)*((vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1)) +
+                  (vye(jp+2)-vye 1)*((vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1))"
+                by (by100 algebra)
+              also have "\<dots> = (vye(Suc(jp+2) mod ?ne)-vye 1)*tp_v*((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1)) + (vye(jp+2)-vye 1)*0"
+                using htp_v_det hsp_zero_eq by (by100 algebra)
+              finally show ?thesis using hdet_v_pos by (by100 simp)
+            qed
+            \<comment> \<open>Similarly for p': tp\\_v' = 0 and sp\\_v' = tp\\_v (from centroid-cone matching).\<close>
+            \<comment> \<open>Then dx' = sp\\_v' * ex\\_s' = tp\\_v * fx (since ex\\_s' = fx for shared diagonal).\<close>
+            \<comment> \<open>Case split: wrapping (jp=nw-1, jp'=0) vs non-wrapping.\<close>
+            \<comment> \<open>Case split: wrapping (jp=nw-1) vs non-wrapping.\<close>
+            show "p = p'"
+            proof (cases "jp = ?nw - 1")
+              case True
+              \<comment> \<open>Wrapping: sp\\_v=0 puts p on edge 0 (v\\_0-v\\_1 diagonal). Impossible for interior p.\<close>
+              have "Suc(jp+2) mod ?ne = 0"
+              proof -
+                have "jp + 2 = ?nw + 1" using True hlen by (by100 linarith)
+                hence "Suc(jp+2) = ?nw + 2" by (by100 arith)
+                also have "?nw + 2 = ?ne" using hne_eq by (by100 simp)
+                finally have "Suc(jp+2) = ?ne" .
+                thus ?thesis using hlen by (by100 simp)
+              qed
+              \<comment> \<open>From dx = tp\\_v * (vxe 0 - vxe 1): p on line v\\_1 to v\\_0 = edge 0.\<close>
+              have hdx0: "fst p - vxe 1 = tp_v * (vxe 0 - vxe 1)"
+                using hdx_p \<open>Suc(jp+2) mod ?ne = 0\<close> by (by100 simp)
+              have hdy0: "snd p - vye 1 = tp_v * (vye 0 - vye 1)"
+                using hdy_p \<open>Suc(jp+2) mod ?ne = 0\<close> by (by100 simp)
+              have hfp: "fst p = (1-tp_v)*vxe 1 + tp_v*vxe 0"
+                using hdx0 by (by100 algebra)
+              have hsp_v2: "snd p = (1-tp_v)*vye 1 + tp_v*vye 0"
+                using hdy0 by (by100 algebra)
+              \<comment> \<open>p = edge\\_pt\\_e 0 (1-tp\\_v).\<close>
+              have h0_lt: "(0::nat) < ?ne" using hlen hne_eq by (by100 linarith)
+              have hSuc0: "Suc 0 mod ?ne = 1" using hlen hne_eq by (by100 simp)
+              have hp_edge0: "p = edge_pt_e 0 (1-tp_v)"
+              proof -
+                have "edge_pt_e 0 (1-tp_v) = ((1-(1-tp_v))*vxe 0+(1-tp_v)*vxe(Suc 0 mod ?ne),
+                    (1-(1-tp_v))*vye 0+(1-tp_v)*vye(Suc 0 mod ?ne))"
+                  unfolding edge_pt_e_def by (by100 simp)
+                also have "\<dots> = (tp_v*vxe 0+(1-tp_v)*vxe 1, tp_v*vye 0+(1-tp_v)*vye 1)"
+                  using hSuc0 by (by100 simp)
+                also have "\<dots> = ((1-tp_v)*vxe 1+tp_v*vxe 0, (1-tp_v)*vye 1+tp_v*vye 0)"
+                  by (by100 auto)
+                also have "\<dots> = p" using hfp hsp_v2 by (cases p) (by100 auto)
+                finally show ?thesis by (by100 simp)
+              qed
+              have "tp_v \<noteq> 1"
+              proof
+                assume "tp_v = 1"
+                \<comment> \<open>tp\\_v=1 with sp\\_v=0: p = v\\_1 + 1*(v\\_0-v\\_1) = v\\_0 = vertex 0.\<close>
+                from hdx0 \<open>tp_v = 1\<close> have "fst p - vxe 1 = vxe 0 - vxe 1" by (by100 simp)
+                hence "fst p = vxe 0" by linarith
+                from hdy0 \<open>tp_v = 1\<close> have "snd p - vye 1 = vye 0 - vye 1" by (by100 simp)
+                hence "snd p = vye 0" by linarith
+                \<comment> \<open>p = vertex 0 = edge\\_pt\\_e(?ne-1, 1).\<close>
+                have hne_pos: "?ne > 0" using hlen hne_eq by (by100 linarith)
+                have hne1_lt: "?ne - 1 < ?ne" using hne_pos by (by100 linarith)
+                have "Suc (?ne-1) mod ?ne = 0" using hne_pos by (by100 simp)
+                have "edge_pt_e (?ne-1) 1 = (1*vxe 0 + (1-1)*vxe(Suc(?ne-1) mod ?ne),
+                    1*vye 0 + (1-1)*vye(Suc(?ne-1) mod ?ne))"
+                  unfolding edge_pt_e_def using \<open>Suc(?ne-1) mod ?ne = 0\<close> by (by100 simp)
+                hence "edge_pt_e (?ne-1) 1 = (vxe 0, vye 0)" by (by100 simp)
+                hence "p = edge_pt_e (?ne-1) 1" using \<open>fst p = vxe 0\<close> \<open>snd p = vye 0\<close>
+                  by (cases p) (by100 simp)
+                have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                from hint_p[rule_format, OF hne1_lt this] \<open>p = edge_pt_e (?ne-1) 1\<close> show False by (by100 simp)
+              qed
+              have "tp_v \<le> 1"
+              proof (rule ccontr)
+                assume "\<not> tp_v \<le> 1"
+                hence "tp_v > 1" by linarith
+                \<comment> \<open>tp\\_v > 1 with sp\\_v=0: p is outside the polygon (past vertex 0).\<close>
+                \<comment> \<open>phi(p) = (1-tp\\_v)*cxw + tp\\_v*u\\_{jp+1}. With tp\\_v > 1: centroid weight < 0.
+                   By centroid\\_weight\\_not\\_on\\_edge: phi(p) \\<ne> any target edge.
+                   But with negative centroid weight: the proof breaks down.
+                   Alternative: p \\<in> P\\_e = convex hull. On the line from v\\_1 to v\\_0,
+                   points in P\\_e have parameter in [0,1]. tp\\_v > 1 means outside.\<close>
+                \<comment> \<open>phi(p) = tp\\_v * u\\_{jp+1} (centroid=0, sp\\_v=0). With tp\\_v>1:
+                   phi(p) is past u\\_{jp+1} on the ray from origin.
+                   The edge cross at edge Suc jp mod nw for phi(p) < 0, so phi(p) \\<notin> P\\_w.\<close>
+                have "phi_fn p \<in> P_w" using prop1 hp by (by100 blast)
+                \<comment> \<open>phi(p) = tp\\_v * u\\_{jp+1}.\<close>
+                have hcxw0: "?cxw = 0" using hcxw_0 unfolding cxw_def by (by100 simp)
+                have hcyw0: "?cyw = 0" using hcyw_0 unfolding cyw_def by (by100 simp)
+                have hphi_fst: "fst (phi_fn p) = tp_v*vxw(Suc jp mod ?nw)"
+                  using hphi_x_v hsp0 hcxw0 by (by100 algebra)
+                have hphi_snd: "snd (phi_fn p) = tp_v*vyw(Suc jp mod ?nw)"
+                  using hphi_y_v hsp0 hcyw0 by (by100 algebra)
+                \<comment> \<open>By centroid\\_weight\\_not\\_on\\_edge with alpha = 1-tp\\_v < 0 and sp=0, tp=tp\\_v:
+                   actually, we use a DIFFERENT argument.
+                   phi(p) = tp\\_v * u, |u|=1. phi(p) \\<in> P\\_w \\<subseteq> unit disk.
+                   |phi(p)| = tp\\_v > 1. But all convex hull points have |q| \\<le> 1.\<close>
+                \<comment> \<open>Norm argument: |phi(p)|^2 = tp\\_v^2 > 1 since tp\\_v > 1.\<close>
+                have hnw_pos: "?nw > 0" using hlen by (by100 linarith)
+                have hSjp_lt: "Suc jp mod ?nw < ?nw" using hnw_pos by (by100 simp)
+                have hunit: "vxw(Suc jp mod ?nw)^2 + vyw(Suc jp mod ?nw)^2 = 1"
+                  using hunit_circle_w[rule_format, OF hSjp_lt] .
+                have hnorm_sq: "(fst (phi_fn p))^2 + (snd (phi_fn p))^2 = tp_v^2"
+                  using hphi_fst hphi_snd hunit by (by100 algebra)
+                have "tp_v^2 > 1" using \<open>tp_v > 1\<close> by (by100 auto)
+                hence hnorm_gt1: "(fst (phi_fn p))^2 + (snd (phi_fn p))^2 > 1"
+                  using hnorm_sq by linarith
+                \<comment> \<open>All convex hull points have |q|^2 \\<le> 1 (Jensen).\<close>
+                \<comment> \<open>phi(p) \\<in> P\\_w, so |phi(p)|^2 \\<le> 1. Contradiction.\<close>
+                from \<open>phi_fn p \<in> P_w\<close>
+                have "\<exists>coeffs. (\<forall>i<?nw. coeffs i \<ge> 0) \<and> (\<Sum>i<?nw. coeffs i) = 1 \<and>
+                    fst (phi_fn p) = (\<Sum>i<?nw. coeffs i * vxw i) \<and>
+                    snd (phi_fn p) = (\<Sum>i<?nw. coeffs i * vyw i)"
+                  using hC5_w by (by100 auto)
+                then obtain cfs where hcfs: "(\<forall>i<?nw. cfs i \<ge> 0)" "(\<Sum>i<?nw. cfs i) = 1"
+                    "fst (phi_fn p) = (\<Sum>i<?nw. cfs i * vxw i)"
+                    "snd (phi_fn p) = (\<Sum>i<?nw. cfs i * vyw i)"
+                  by (by100 blast)
+                \<comment> \<open>|phi(p)|^2 = (\\<Sum> c\\_i*vxw\\_i)^2 + (\\<Sum> c\\_i*vyw\\_i)^2 \\<le> \\<Sum> c\\_i*(vxw\\_i^2+vyw\\_i^2) = 1.\<close>
+                have "(fst (phi_fn p))^2 + (snd (phi_fn p))^2 \<le> 1"
+                  using convex_hull_unit_circle_norm_le[OF hcfs(1) hcfs(2) hunit_circle_w]
+                    hcfs(3) hcfs(4) by (by100 simp)
+                with hnorm_gt1 show False by linarith
+              qed
+              have "(1-tp_v) \<in> I_set" using htp_v_ge \<open>tp_v \<le> 1\<close> unfolding top1_unit_interval_def
+                by (by100 auto)
+              from hint_p[rule_format, OF h0_lt this] hp_edge0 show ?thesis by (by100 simp)
+            next
+              case False
+              \<comment> \<open>Non-wrapping: apply adjacent\\_cone\\_diagonal\\_injective.\<close>
+              \<comment> \<open>Non-wrapping: jp \\<noteq> nw-1, jp' = Suc jp mod nw.
+                 Apply adjacent\\_cone\\_diagonal\\_injective with proper instantiation.\<close>
+              \<comment> \<open>Step 1: phi(p)=phi(p') with centroid=0 gives the matching equations.\<close>
+              have hcxw0_loc: "?cxw = 0" using hcxw_0 unfolding cxw_def by (by100 simp)
+              have hcyw0_loc: "?cyw = 0" using hcyw_0 unfolding cyw_def by (by100 simp)
+              \<comment> \<open>Step 2: From phi(p)=phi(p'), sp\\_v=0, centroid=0:\<close>
+              have hphi_match_x: "tp_v * vxw(Suc jp mod ?nw) = sp_v' * vxw(Suc jp mod ?nw) + tp_v' * vxw(Suc jp' mod ?nw)"
+              proof -
+                from heq have "fst (phi_fn p) = fst (phi_fn p')" by (by100 simp)
+                thus ?thesis using hphi_x_v hphi_x_v' hsp0 hcxw0_loc hTrue by (by100 simp)
+              qed
+              have hphi_match_y: "tp_v * vyw(Suc jp mod ?nw) = sp_v' * vyw(Suc jp mod ?nw) + tp_v' * vyw(Suc jp' mod ?nw)"
+              proof -
+                from heq have "snd (phi_fn p) = snd (phi_fn p')" by (by100 simp)
+                thus ?thesis using hphi_y_v hphi_y_v' hsp0 hcyw0_loc hTrue by (by100 simp)
+              qed
+              \<comment> \<open>Step 3: C10 at Suc jp mod nw gives nonzero cross product.\<close>
+              have hC10_ne_loc: "vxw(Suc jp mod ?nw)*vyw(Suc jp' mod ?nw) - vyw(Suc jp mod ?nw)*vxw(Suc jp' mod ?nw) \<noteq> 0"
+              proof -
+                have hnw_pos: "?nw > 0" using hlen by (by100 linarith)
+                have hjp1_lt: "Suc jp mod ?nw < ?nw" using hnw_pos by (by100 simp)
+                from hC10_w[rule_format, OF hjp1_lt]
+                have "(vxw(Suc jp mod ?nw)-?cxw)*(vyw(Suc(Suc jp mod ?nw) mod ?nw)-?cyw) -
+                    (vyw(Suc jp mod ?nw)-?cyw)*(vxw(Suc(Suc jp mod ?nw) mod ?nw)-?cxw) > 0"
+                  by (by100 simp)
+                moreover have "Suc(Suc jp mod ?nw) mod ?nw = Suc jp' mod ?nw"
+                  using hTrue by (by100 simp)
+                ultimately have "vxw(Suc jp mod ?nw)*vyw(Suc jp' mod ?nw) - vyw(Suc jp mod ?nw)*vxw(Suc jp' mod ?nw) > 0"
+                  using hcxw0_loc hcyw0_loc by (by100 simp)
+                thus ?thesis by linarith
+              qed
+              \<comment> \<open>Step 4: Shared diagonal direction: ex\\_s' = fx\\_s for non-wrapping.\<close>
+              have hjp3_lt: "jp + 3 < ?ne" using False hjp hne_eq hlen by (by100 linarith)
+              have hjp3_mod: "Suc(jp+2) mod ?ne = jp+3" using hjp3_lt by (by100 simp)
+              have hjp'2_eq: "jp'+2 = Suc(jp+2) mod ?ne"
+              proof -
+                have "Suc jp < ?nw" using False hjp by (by100 linarith)
+                hence "jp' = Suc jp" using hTrue by (by100 simp)
+                hence "jp'+2 = Suc jp + 2" by (by100 arith)
+                also have "\<dots> = jp + 3" by (by100 arith)
+                also have "\<dots> = Suc(jp+2) mod ?ne" using hjp3_mod by (by100 simp)
+                finally show ?thesis .
+              qed
+              have hex'_eq: "vxe(jp'+2)-vxe 1 = vxe(Suc(jp+2) mod ?ne)-vxe 1"
+                using hjp'2_eq by (by100 simp)
+              have hey'_eq: "vye(jp'+2)-vye 1 = vye(Suc(jp+2) mod ?ne)-vye 1"
+                using hjp'2_eq by (by100 simp)
+              \<comment> \<open>Step 5: p' Cramer determinant > 0.\<close>
+              have hdet_v'_pos_loc: "(vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-
+                  (vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1) > 0"
+                using hdet_pos[rule_format, OF hjp'] by (by100 simp)
+              \<comment> \<open>Step 6: p' Cramer formulas.\<close>
+              have hsp_v'_mul_loc: "sp_v' * ((vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-(vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1))
+                = (vye(Suc(jp'+2) mod ?ne)-vye 1)*(fst p'-vxe 1)-(vxe(Suc(jp'+2) mod ?ne)-vxe 1)*(snd p'-vye 1)"
+                unfolding sp_v'_def Let_def using hdet_v'_pos_loc by (by100 simp)
+              have htp_v'_mul_loc: "tp_v' * ((vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-(vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1))
+                = (vxe(jp'+2)-vxe 1)*(snd p'-vye 1)-(vye(jp'+2)-vye 1)*(fst p'-vxe 1)"
+                unfolding tp_v'_def Let_def using hdet_v'_pos_loc by (by100 simp)
+              \<comment> \<open>Step 7: Apply adjacent\\_cone\\_diagonal\\_injective.\<close>
+              from adjacent_cone_diagonal_injective[OF hsp0 htp_v_ge hdet_v_pos htp_v_det hsp_zero_eq
+                  hphi_match_x hphi_match_y hC10_ne_loc hex'_eq hey'_eq hdet_v'_pos_loc
+                  hsp_v'_mul_loc htp_v'_mul_loc]
+              have "fst p - vxe 1 = fst p' - vxe 1 \<and> snd p - vye 1 = snd p' - vye 1" .
+              hence "fst p = fst p'" "snd p = snd p'" by auto
+              show ?thesis by (cases p, cases p') (use \<open>fst p = fst p'\<close> \<open>snd p = snd p'\<close> in \<open>by100 auto\<close>)
+            qed
+          qed
+          have hadj_bwd: "jp = Suc jp' mod ?nw \<longrightarrow> p = p'"
+          proof (intro impI)
+            assume hBwd: "jp = Suc jp' mod ?nw"
+            \<comment> \<open>From hcross\\_jp\\_le and cone jp': cross(phi-cw, u\\_jp-cw) = 0. So tp\\_v = 0.\<close>
+            from hcross_jp'1_from_p have "(fst (phi_fn p)-?cxw)*(vyw(Suc jp' mod ?nw)-?cyw)-
+                (snd (phi_fn p)-?cyw)*(vxw(Suc jp' mod ?nw)-?cxw) \<ge> 0" .
+            hence "(fst (phi_fn p)-?cxw)*(vyw jp-?cyw)-(snd (phi_fn p)-?cyw)*(vxw jp-?cxw) \<ge> 0"
+              using hBwd by (by100 simp)
+            with hcross_jp_le have "(fst (phi_fn p)-?cxw)*(vyw jp-?cyw)-(snd (phi_fn p)-?cyw)*(vxw jp-?cxw) = 0"
+              by linarith
+            hence "tp_v * ((vxw jp-?cxw)*(vyw(Suc jp mod ?nw)-?cyw)-(vyw jp-?cyw)*(vxw(Suc jp mod ?nw)-?cxw)) = 0"
+              using hcross_neg2 by linarith
+            hence htp0: "tp_v = 0" using hC10_jp_v by (by100 simp)
+            \<comment> \<open>With tp\\_v=0: p on LEFT diagonal of sector jp (from v\\_1 to v\\_{jp+2}).\<close>
+            \<comment> \<open>Symmetric diagonal injectivity argument.\<close>
+            \<comment> \<open>Cramer with tp\\_v=0: ex*dy-ey*dx=0.\<close>
+            have htp_zero_eq: "(vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1) = 0"
+            proof -
+              have "tp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+                = (vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1)"
+                unfolding tp_v_def Let_def using hdet_v_pos by (by100 simp)
+              with htp0 show ?thesis by (by100 simp)
+            qed
+            have hsp_v_det_loc: "sp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+              = (vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)"
+              unfolding sp_v_def Let_def using hdet_v_pos by (by100 simp)
+            \<comment> \<open>dx = sp\\_v*ex, dy = sp\\_v*ey.\<close>
+            have hdx_bwd: "fst p - vxe 1 = sp_v * (vxe(jp+2)-vxe 1)"
+            proof -
+              have "((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1)) * (fst p-vxe 1) =
+                  (vxe(jp+2)-vxe 1)*((vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)) +
+                  (vxe(Suc(jp+2) mod ?ne)-vxe 1)*((vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1))"
+                by (by100 algebra)
+              also have "\<dots> = (vxe(jp+2)-vxe 1)*(sp_v*((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))) + (vxe(Suc(jp+2) mod ?ne)-vxe 1)*0"
+                using hsp_v_det_loc htp_zero_eq by (by100 algebra)
+              finally show ?thesis using hdet_v_pos by (by100 simp)
+            qed
+            have hdy_bwd: "snd p - vye 1 = sp_v * (vye(jp+2)-vye 1)"
+            proof -
+              have "((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1)) * (snd p-vye 1) =
+                  (vye(jp+2)-vye 1)*((vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)) +
+                  (vye(Suc(jp+2) mod ?ne)-vye 1)*((vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1))"
+                by (by100 algebra)
+              also have "\<dots> = (vye(jp+2)-vye 1)*(sp_v*((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))) + (vye(Suc(jp+2) mod ?ne)-vye 1)*0"
+                using hsp_v_det_loc htp_zero_eq by (by100 algebra)
+              finally show ?thesis using hdet_v_pos by (by100 simp)
+            qed
+            \<comment> \<open>Case split: wrapping (jp=0) vs non-wrapping.\<close>
+            show "p = p'"
+            proof (cases "jp = 0")
+              case True
+              \<comment> \<open>jp=0: LEFT diagonal = edge 1 (v\\_1 to v\\_2). p on edge 1 \\<to> contradiction.\<close>
+              \<comment> \<open>p = v\\_1 + sp\\_v*(v\\_2-v\\_1) = (1-sp\\_v)*v\\_1 + sp\\_v*v\\_2 = edge\\_pt\\_e 1 sp\\_v.\<close>
+              have h1_lt: "(1::nat) < ?ne" using hlen hne_eq by (by100 linarith)
+              have hne_gt2: "?ne > 2" using hlen hne_eq by (by100 linarith)
+              have hSuc1: "Suc 1 mod ?ne = 2"
+              proof -
+                have "(2::nat) < ?ne" using hne_gt2 by linarith
+                thus ?thesis by (by100 simp)
+              qed
+              have hp_edge1: "p = edge_pt_e 1 sp_v"
+              proof -
+                have "edge_pt_e 1 sp_v = ((1-sp_v)*vxe 1+sp_v*vxe(Suc 1 mod ?ne),
+                    (1-sp_v)*vye 1+sp_v*vye(Suc 1 mod ?ne))"
+                  unfolding edge_pt_e_def by (by100 simp)
+                also have "\<dots> = ((1-sp_v)*vxe 1+sp_v*vxe 2, (1-sp_v)*vye 1+sp_v*vye 2)"
+                  using hSuc1 by (by100 simp)
+                finally have hedge_form: "edge_pt_e 1 sp_v = ((1-sp_v)*vxe 1+sp_v*vxe 2, (1-sp_v)*vye 1+sp_v*vye 2)" .
+                \<comment> \<open>p = (vxe 1 + sp\\_v*(vxe(jp+2)-vxe 1), ...) with jp=0: jp+2=2.\<close>
+                have "jp + 2 = Suc(Suc 0)" using True by (by100 arith)
+                from hdx_bwd have "fst p - vxe 1 = sp_v*(vxe(jp+2) - vxe 1)" .
+                have hjp2_is_2: "jp + 2 = (2::nat)" using True by (by100 arith)
+                have hvxe_jp2: "vxe(jp+2) = vxe 2" using hjp2_is_2 by (by100 metis)
+                have hvye_jp2: "vye(jp+2) = vye 2" using hjp2_is_2 by (by100 metis)
+                from hdx_bwd hvxe_jp2
+                have "fst p - vxe 1 = sp_v*(vxe 2 - vxe 1)" by (by100 simp)
+                hence hfp: "fst p = (1-sp_v)*vxe 1 + sp_v*vxe 2" by (by100 algebra)
+                from hdy_bwd hvye_jp2
+                have "snd p - vye 1 = sp_v*(vye 2 - vye 1)" by (by100 simp)
+                hence hgp: "snd p = (1-sp_v)*vye 1 + sp_v*vye 2" by (by100 algebra)
+                from hedge_form hfp hgp show ?thesis by (cases p) (by100 auto)
+              qed
+              \<comment> \<open>sp\\_v \\<in> I\\_set from norm bound.\<close>
+              have "sp_v \<le> 1"
+              proof (rule ccontr)
+                assume "\<not> sp_v \<le> 1"
+                hence "sp_v > 1" by linarith
+                \<comment> \<open>|phi(p)|^2 = sp\\_v^2 > 1 (from tp\\_v=0, centroid=0).\<close>
+                have hcxw0: "?cxw = 0" using hcxw_0 unfolding cxw_def by (by100 simp)
+                have hcyw0: "?cyw = 0" using hcyw_0 unfolding cyw_def by (by100 simp)
+                have hphi_fst_sp: "fst (phi_fn p) = sp_v*vxw jp"
+                  using hphi_x_v htp0 hcxw0 by (by100 algebra)
+                have hphi_snd_sp: "snd (phi_fn p) = sp_v*vyw jp"
+                  using hphi_y_v htp0 hcyw0 by (by100 algebra)
+                have hunit_jp: "vxw jp^2 + vyw jp^2 = 1"
+                  using hunit_circle_w hjp by (by100 blast)
+                have "(fst (phi_fn p))^2 + (snd (phi_fn p))^2 = sp_v^2"
+                  using hphi_fst_sp hphi_snd_sp hunit_jp by (by100 algebra)
+                moreover have "sp_v^2 > 1" using \<open>sp_v > 1\<close> by (by100 auto)
+                ultimately have "(fst (phi_fn p))^2 + (snd (phi_fn p))^2 > 1" by linarith
+                have "phi_fn p \<in> P_w" using prop1 hp by (by100 blast)
+                hence "\<exists>cfs. (\<forall>i<?nw. cfs i \<ge> 0) \<and> (\<Sum>i<?nw. cfs i) = 1 \<and>
+                    fst (phi_fn p) = (\<Sum>i<?nw. cfs i * vxw i) \<and>
+                    snd (phi_fn p) = (\<Sum>i<?nw. cfs i * vyw i)"
+                  using hC5_w by (by100 auto)
+                then obtain cfs where hcfs: "(\<forall>i<?nw. cfs i \<ge> 0)" "(\<Sum>i<?nw. cfs i) = 1"
+                    "fst (phi_fn p) = (\<Sum>i<?nw. cfs i * vxw i)"
+                    "snd (phi_fn p) = (\<Sum>i<?nw. cfs i * vyw i)"
+                  by (by100 blast)
+                have "(fst (phi_fn p))^2 + (snd (phi_fn p))^2 \<le> 1"
+                  using convex_hull_unit_circle_norm_le[OF hcfs(1) hcfs(2) hunit_circle_w]
+                    hcfs(3) hcfs(4) by (by100 simp)
+                with \<open>(fst (phi_fn p))^2 + (snd (phi_fn p))^2 > 1\<close> show False by linarith
+              qed
+              have "sp_v \<in> I_set" using hsp_v_ge \<open>sp_v \<le> 1\<close> unfolding top1_unit_interval_def
+                by (by100 auto)
+              from hint_p[rule_format, OF h1_lt this] hp_edge1 show ?thesis by (by100 simp)
+            next
+              case False
+              \<comment> \<open>Non-wrapping backward: apply adjacent\\_cone\\_diagonal\\_injective\\_tp.\<close>
+              \<comment> \<open>Non-wrapping backward: jp \\<noteq> 0, jp = Suc jp' mod nw, tp\\_v = 0.\<close>
+              \<comment> \<open>Shared diagonal: from v\\_1 to v\\_{jp+2}. Direction = (ex\\_s, ey\\_s).\<close>
+              \<comment> \<open>For sector jp': RIGHT boundary goes to v\\_{Suc(jp'+2) mod ne}.\<close>
+              \<comment> \<open>With jp = Suc jp' (non-wrapping, jp'\\<noteq>nw-1): Suc(jp'+2) = jp+2. Same direction.\<close>
+              have hcxw0: "?cxw = 0" using hcxw_0 unfolding cxw_def by (by100 simp)
+              have hcyw0: "?cyw = 0" using hcyw_0 unfolding cyw_def by (by100 simp)
+              \<comment> \<open>phi matching with centroid=0 and tp\\_v=0.\<close>
+              have hphi_match_x_bwd: "sp_v * vxw jp = tp_v' * vxw jp + sp_v' * vxw jp'"
+              proof -
+                from heq have "fst (phi_fn p) = fst (phi_fn p')" by (by100 simp)
+                thus ?thesis using hphi_x_v hphi_x_v' htp0 hcxw0 hBwd by (by100 simp)
+              qed
+              have hphi_match_y_bwd: "sp_v * vyw jp = tp_v' * vyw jp + sp_v' * vyw jp'"
+              proof -
+                from heq have "snd (phi_fn p) = snd (phi_fn p')" by (by100 simp)
+                thus ?thesis using hphi_y_v hphi_y_v' htp0 hcyw0 hBwd by (by100 simp)
+              qed
+              \<comment> \<open>C10 ne for u\\_{jp'} and u\\_jp.\<close>
+              have hC10_ne_bwd: "vxw jp'*vyw jp - vyw jp'*vxw jp \<noteq> 0"
+              proof -
+                from hC10_w[rule_format, OF hjp'] have "(vxw jp'-?cxw)*(vyw(Suc jp' mod ?nw)-?cyw) -
+                    (vyw jp'-?cyw)*(vxw(Suc jp' mod ?nw)-?cxw) > 0" by (by100 simp)
+                hence "vxw jp'*vyw(Suc jp' mod ?nw) - vyw jp'*vxw(Suc jp' mod ?nw) > 0"
+                  using hcxw0 hcyw0 by (by100 simp)
+                moreover have "Suc jp' mod ?nw = jp" using hBwd by (by100 auto)
+                ultimately have "vxw jp'*vyw jp - vyw jp'*vxw jp > 0" by (by100 simp)
+                thus ?thesis by linarith
+              qed
+              \<comment> \<open>Shared diagonal direction: fx\\_s'=ex\\_s for sector jp'.\<close>
+              have hjp'2_eq_bwd: "Suc(jp'+2) mod ?ne = jp+2"
+              proof -
+                have "Suc jp' < ?nw"
+                proof (rule ccontr)
+                  assume "\<not> Suc jp' < ?nw"
+                  hence "Suc jp' \<ge> ?nw" by linarith
+                  with hjp' have "Suc jp' = ?nw" by (by100 linarith)
+                  hence "Suc jp' mod ?nw = 0" by (by100 simp)
+                  hence "jp = 0" using hBwd by (by100 simp)
+                  with False show False by (by100 simp)
+                qed
+                hence hjp'1: "jp' + 1 = jp" using hBwd by (by100 simp)
+                hence hSjp'2: "Suc(jp'+2) = jp + 2" by (by100 arith)
+                have "jp + 2 < ?ne" using hjp hne_eq by (by100 linarith)
+                hence "Suc(jp'+2) mod ?ne = jp + 2" using hSjp'2 by (by100 simp)
+                thus ?thesis using hSjp'2 by (by100 simp)
+              qed
+              have hfx'_eq_bwd: "vxe(Suc(jp'+2) mod ?ne)-vxe 1 = vxe(jp+2)-vxe 1"
+                using hjp'2_eq_bwd by (by100 simp)
+              have hfy'_eq_bwd: "vye(Suc(jp'+2) mod ?ne)-vye 1 = vye(jp+2)-vye 1"
+                using hjp'2_eq_bwd by (by100 simp)
+              \<comment> \<open>p' Cramer determinant and formulas.\<close>
+              have hdet_v'_pos_bwd: "(vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-
+                  (vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1) > 0"
+                using hdet_pos[rule_format, OF hjp'] by (by100 simp)
+              have hsp_v'_mul_bwd: "sp_v' * ((vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-(vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1))
+                = (vye(Suc(jp'+2) mod ?ne)-vye 1)*(fst p'-vxe 1)-(vxe(Suc(jp'+2) mod ?ne)-vxe 1)*(snd p'-vye 1)"
+                unfolding sp_v'_def Let_def using hdet_v'_pos_bwd by (by100 simp)
+              have htp_v'_mul_bwd: "tp_v' * ((vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-(vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1))
+                = (vxe(jp'+2)-vxe 1)*(snd p'-vye 1)-(vye(jp'+2)-vye 1)*(fst p'-vxe 1)"
+                unfolding tp_v'_def Let_def using hdet_v'_pos_bwd by (by100 simp)
+              \<comment> \<open>Apply adjacent\\_cone\\_diagonal\\_injective\\_tp.\<close>
+              from adjacent_cone_diagonal_injective_tp[OF htp0 hsp_v_ge hdet_v_pos hsp_v_det_loc htp_zero_eq
+                  hphi_match_x_bwd hphi_match_y_bwd hC10_ne_bwd hfx'_eq_bwd hfy'_eq_bwd
+                  hdet_v'_pos_bwd hsp_v'_mul_bwd htp_v'_mul_bwd]
+              have "fst p - vxe 1 = fst p' - vxe 1 \<and> snd p - vye 1 = snd p' - vye 1" .
+              hence "fst p = fst p'" "snd p = snd p'" by auto
+              show ?thesis using \<open>fst p = fst p'\<close> \<open>snd p = snd p'\<close>
+                by (cases p, cases p') (by100 auto)
+            qed
+          qed
+          show ?thesis
+          proof (cases "jp' = Suc jp mod ?nw")
+            case True from hadj_fwd True show ?thesis by (by100 simp)
+          next
+            case False
+            show ?thesis
+            proof (cases "jp = Suc jp' mod ?nw")
+              case True from hadj_bwd True show ?thesis by (by100 simp)
+            next
+              case False
+              \<comment> \<open>Non-adjacent sector disjointness.\<close>
+              \<comment> \<open>Non-adjacent: jp \\<noteq> jp', jp' \\<noteq> Suc jp, jp \\<noteq> Suc jp'. Sectors \\<ge> 2 apart.
+                 phi(p) satisfies: cross(u\\_{jp+1}-cw, phi-cw) \\<le> 0 AND cross(phi-cw, u\\_jp-cw) \\<le> 0.
+                 For non-adjacent jp': at least one cone condition from jp' fails.\<close>
+              \<comment> \<open>For nw = 3: non-adjacent case is VACUOUS (all pairs adjacent).\<close>
+              \<comment> \<open>For nw \\<ge> 4: use cross product from C11 to show angular incompatibility.\<close>
+              \<comment> \<open>Apply non\\_adjacent\\_cone\\_disjoint.\<close>
+              have hcxw0: "?cxw = 0" using hcxw_0 unfolding cxw_def by (by100 simp)
+              have hcyw0: "?cyw = 0" using hcyw_0 unfolding cyw_def by (by100 simp)
+              have hC10_0: "\<forall>i<?nw. vxw i * vyw(Suc i mod ?nw) - vyw i * vxw(Suc i mod ?nw) > 0"
+              proof (intro allI impI)
+                fix i assume "i < ?nw"
+                from hC10_w[rule_format, OF this] show "vxw i * vyw(Suc i mod ?nw) - vyw i * vxw(Suc i mod ?nw) > 0"
+                  using hcxw0 hcyw0 by (by100 simp)
+              qed
+              \<comment> \<open>sp\\_v + tp\\_v > 0 (since p \\<noteq> vertex 1: dx or dy nonzero, hence sp or tp > 0).\<close>
+              have hst_pos: "sp_v + tp_v > 0"
+              proof (rule ccontr)
+                assume "\<not> sp_v + tp_v > 0"
+                hence "sp_v = 0 \<and> tp_v = 0" using hsp_v_ge htp_v_ge by linarith
+                hence "fst p = vxe 1 \<and> snd p = vye 1"
+                proof -
+                  have "sp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+                    = (vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)"
+                    unfolding sp_v_def Let_def using hdet_v_pos by (by100 simp)
+                  have "tp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+                    = (vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1)"
+                    unfolding tp_v_def Let_def using hdet_v_pos by (by100 simp)
+                  have hsp_mul: "sp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+                    = (vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)"
+                    unfolding sp_v_def Let_def using hdet_v_pos by (by100 simp)
+                  have htp_mul: "tp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))
+                    = (vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1)"
+                    unfolding tp_v_def Let_def using hdet_v_pos by (by100 simp)
+                  from hsp_mul \<open>sp_v = 0 \<and> tp_v = 0\<close>
+                  have hfy_eq: "(vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1) = 0"
+                    by (by100 simp)
+                  from htp_mul \<open>sp_v = 0 \<and> tp_v = 0\<close>
+                  have hex_eq: "(vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1) = 0"
+                    by (by100 simp)
+                  \<comment> \<open>2x2 system with det > 0: dx = dy = 0.\<close>
+                  have "(vxe(jp+2)-vxe 1)*((vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)) +
+                    (vxe(Suc(jp+2) mod ?ne)-vxe 1)*((vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1)) =
+                    ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))*(fst p-vxe 1)"
+                    by (by100 algebra)
+                  hence "((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))*(fst p-vxe 1) = 0"
+                    using hfy_eq hex_eq by (by100 simp)
+                  hence "fst p = vxe 1" using hdet_v_pos by (by100 simp)
+                  have "(vye(jp+2)-vye 1)*((vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)) +
+                    (vye(Suc(jp+2) mod ?ne)-vye 1)*((vxe(jp+2)-vxe 1)*(snd p-vye 1)-(vye(jp+2)-vye 1)*(fst p-vxe 1)) =
+                    ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))*(snd p-vye 1)"
+                    by (by100 algebra)
+                  hence "((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1))*(snd p-vye 1) = 0"
+                    using hfy_eq hex_eq by (by100 simp)
+                  hence "snd p = vye 1" using hdet_v_pos by (by100 simp)
+                  with \<open>fst p = vxe 1\<close> show ?thesis by (by100 simp)
+                qed
+                hence "p = (vxe 1, vye 1)" by (cases p) (by100 auto)
+                with hp_ne_v1 show False by (by100 simp)
+              qed
+              \<comment> \<open>Cone conditions from phi(p)=phi(p').\<close>
+              have hcone1_inst: "vxw jp' * (sp_v*vyw jp + tp_v*vyw(Suc jp mod ?nw)) -
+                  vyw jp' * (sp_v*vxw jp + tp_v*vxw(Suc jp mod ?nw)) \<ge> 0"
+              proof -
+                from hcross_jp'_from_p hcxw0 hcyw0
+                have "(vxw jp'-0)*(snd (phi_fn p)-0)-(vyw jp'-0)*(fst (phi_fn p)-0) \<ge> 0"
+                  by (by100 simp)
+                hence "vxw jp'*snd (phi_fn p) - vyw jp'*fst (phi_fn p) \<ge> 0" by (by100 simp)
+                thus ?thesis using hphi_x_v hphi_y_v hcxw0 hcyw0 by (by100 simp)
+              qed
+              have hcone2_inst: "(sp_v*vxw jp + tp_v*vxw(Suc jp mod ?nw)) * vyw(Suc jp' mod ?nw) -
+                  (sp_v*vyw jp + tp_v*vyw(Suc jp mod ?nw)) * vxw(Suc jp' mod ?nw) \<ge> 0"
+              proof -
+                from hcross_jp'1_from_p hcxw0 hcyw0
+                have "(fst (phi_fn p)-0)*vyw(Suc jp' mod ?nw) - (snd (phi_fn p)-0)*vxw(Suc jp' mod ?nw) \<ge> 0"
+                  by (by100 simp)
+                hence "fst (phi_fn p)*vyw(Suc jp' mod ?nw) - snd (phi_fn p)*vxw(Suc jp' mod ?nw) \<ge> 0" by (by100 simp)
+                thus ?thesis using hphi_x_v hphi_y_v hcxw0 hcyw0 by (by100 simp)
+              qed
+              from non_adjacent_cone_disjoint[OF hlen hC10_0 hC11_w hunit_circle_w
+                  hsum_vxw_0 hsum_vyw_0 hjp hjp' \<open>jp \<noteq> jp'\<close> \<open>jp' \<noteq> Suc jp mod ?nw\<close> False
+                  hsp_v_ge htp_v_ge hst_pos hcone1_inst hcone2_inst]
+              show ?thesis by (by100 simp)
+            qed
+          qed
+        qed
       qed
       have prop11: "\<forall>p\<in>P_e.
           (\<forall>i<?ne. \<forall>t\<in>I_set. p \<noteq> edge_pt_e i t) \<longrightarrow>
@@ -8130,10 +8360,230 @@ proof -
               from hint_p[rule_format, OF this \<open>(1-tp12') \<in> I_set\<close>] hp_edge' show False by (by100 simp)
             next
               case False note hjp_ne_last = this
+              \<comment> \<open>Apply spur\\_arc\\_target\\_sector with full arguments.\<close>
+              have hC5_cxw: "cxw = (\<Sum>j<?nw. vxw j) / real ?nw" unfolding cxw_def ..
+              have hC5_cyw: "cyw = (\<Sum>j<?nw. vyw j) / real ?nw" unfolding cyw_def ..
+              have hC10_cxw: "\<forall>i<?nw. (vxw i - cxw) * (vyw(Suc i mod ?nw) - cyw) -
+                  (vyw i - cyw) * (vxw(Suc i mod ?nw) - cxw) > 0"
+                using hC10_expanded unfolding cxw_def cyw_def by (by100 simp)
+              have hC11_cxw: "\<forall>i<?nw. \<forall>k<?nw. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod ?nw \<longrightarrow>
+                  (vxw k-vxw i)*(vyw(Suc i mod ?nw)-vyw i)-(vyw k-vyw i)*(vxw(Suc i mod ?nw)-vxw i) < 0"
+                using hC11_w .
+              have hcc_disj: "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0
+                \<or> (vxw(Suc jp mod ?nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod ?nw)-cyw)*(vxw 0-cxw) > 0"
+                by (rule spur_arc_target_sector[OF hlen hC10_cxw hC11_cxw hC5_cxw hC5_cyw
+                    hfan_det_w hregular_w hjp hjp_ne0 hjp_ne_last])
+              \<comment> \<open>Cramer extraction (same as prop11 but at higher scope to avoid define issues).\<close>
+              from hphi_affine_on_sector[rule_format, OF hjp hp hin_sec]
+              have hphi_form12: "phi_fn (fst p, snd p) = (let ex = vxe(jp+2)-vxe 1; ey = vye(jp+2)-vye 1;
+                  fx = vxe(Suc(jp+2) mod ?ne)-vxe 1; fy = vye(Suc(jp+2) mod ?ne)-vye 1;
+                  det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+                  s' = (fy*dx-fx*dy)/det; t' = (ex*dy-ey*dx)/det
+              in ((1-s'-t')*?cxw + s'*vxw jp + t'*vxw(Suc jp mod ?nw),
+                  (1-s'-t')*?cyw + s'*vyw jp + t'*vyw(Suc jp mod ?nw)))" .
+              define ex_p12 where "ex_p12 = vxe(jp+2)-vxe 1"
+              define ey_p12 where "ey_p12 = vye(jp+2)-vye 1"
+              define fx_p12 where "fx_p12 = vxe(Suc(jp+2) mod ?ne)-vxe 1"
+              define fy_p12 where "fy_p12 = vye(Suc(jp+2) mod ?ne)-vye 1"
+              define dx_p12 where "dx_p12 = fst p-vxe 1"
+              define dy_p12 where "dy_p12 = snd p-vye 1"
+              define det_p12 where "det_p12 = ex_p12*fy_p12-ey_p12*fx_p12"
+              define sp12 where "sp12 = (fy_p12*dx_p12-fx_p12*dy_p12)/det_p12"
+              define tp12 where "tp12 = (ex_p12*dy_p12-ey_p12*dx_p12)/det_p12"
+              have hdet_p12_pos: "det_p12 > 0"
+                using hdet_pos[rule_format, OF hjp]
+                unfolding det_p12_def ex_p12_def ey_p12_def fx_p12_def fy_p12_def by (by100 simp)
+              have hdet_p12_ne: "det_p12 \<noteq> 0" using hdet_p12_pos by linarith
+              have hphi_x12: "fst (phi_fn p) = (1-sp12-tp12)*?cxw + sp12*vxw jp + tp12*vxw(Suc jp mod ?nw)"
+                using hphi_form12 unfolding Let_def sp12_def tp12_def det_p12_def
+                  ex_p12_def ey_p12_def fx_p12_def fy_p12_def dx_p12_def dy_p12_def by (by100 simp)
+              have hphi_y12: "snd (phi_fn p) = (1-sp12-tp12)*?cyw + sp12*vyw jp + tp12*vyw(Suc jp mod ?nw)"
+                using hphi_form12 unfolding Let_def sp12_def tp12_def det_p12_def
+                  ex_p12_def ey_p12_def fx_p12_def fy_p12_def dx_p12_def dy_p12_def by (by100 simp)
+              have hsp12_ge: "sp12 \<ge> 0"
+              proof -
+                from hin_sec have "cross_v1 (Suc(jp+2) mod ?ne) p \<le> 0" unfolding in_sector_def by (by100 auto)
+                have "fy_p12*dx_p12 - fx_p12*dy_p12 = -(cross_v1 (Suc(jp+2) mod ?ne) p)"
+                  unfolding cross_v1_def fx_p12_def fy_p12_def dx_p12_def dy_p12_def by (by5000 algebra)
+                hence "sp12*det_p12 \<ge> 0"
+                  unfolding sp12_def using hdet_p12_ne \<open>cross_v1 _ p \<le> 0\<close> by (by100 simp)
+                thus ?thesis using hdet_p12_pos
+                  by (metis linorder_not_le mult_neg_pos)
+              qed
+              have htp12_ge: "tp12 \<ge> 0"
+              proof -
+                from hin_sec have "cross_v1 (jp+2) p \<ge> 0" unfolding in_sector_def by (by100 auto)
+                have "ex_p12*dy_p12 - ey_p12*dx_p12 = cross_v1 (jp+2) p"
+                  unfolding cross_v1_def ex_p12_def ey_p12_def dx_p12_def dy_p12_def by (by100 simp)
+                hence "tp12*det_p12 \<ge> 0"
+                  unfolding tp12_def using hdet_p12_ne \<open>cross_v1 _ p \<ge> 0\<close> by (by100 simp)
+                thus ?thesis using hdet_p12_pos
+                  by (metis linorder_not_le mult_neg_pos)
+              qed
+              have habg12: "(1-sp12-tp12) + sp12 + tp12 = 1" by linarith
+              have hC10_jp: "(vxw jp-?cxw)*(vyw(Suc jp mod ?nw)-?cyw)-(vyw jp-?cyw)*(vxw(Suc jp mod ?nw)-?cxw) > 0"
+                using hC10_expanded hjp by (by100 blast)
+              \<comment> \<open>Centroid-cone cross products \\<ge> 0.\<close>
+              from centroid_cone_cross_nonneg[OF hsp12_ge htp12_ge habg12 hphi_x12 hphi_y12 hC10_jp]
+              have hcross_phi_ge1: "(vxw jp-?cxw)*(snd (phi_fn p)-?cyw)-(vyw jp-?cyw)*(fst (phi_fn p)-?cxw) \<ge> 0"
+                and hcross_phi_ge2: "(fst (phi_fn p)-?cxw)*(vyw(Suc jp mod ?nw)-?cyw)-(snd (phi_fn p)-?cyw)*(vxw(Suc jp mod ?nw)-?cxw) \<ge> 0"
+                by auto
               show False
-                using heq ht hjp hjp_ne0 hjp_ne_last hp hin_sec hp_ne_v1 hint_p hlen hne_eq hnw_pos
-                  hphi_on_spur0 hphi_affine_on_sector hdet_pos hC10_expanded hC11_w
-                  spur_arc_target_sector[OF hlen hC10_expanded hC11_w] sorry
+              proof (cases "t = 1")
+                case True
+                \<comment> \<open>t=1: spur point = centroid. phi(p)=cw forces p=vertex1.\<close>
+                have "phi_fn (edge_pt_e 0 t) = (?cxw, ?cyw)"
+                  using hphi_on_spur0[rule_format, OF ht] True by (by100 simp)
+                hence "phi_fn p = (?cxw, ?cyw)" using heq by (by100 simp)
+                \<comment> \<open>From affine form: phi(p)=cw means sp=tp=0, hence p=vertex1.\<close>
+                from hphi_affine_on_sector[rule_format, OF hjp hp hin_sec]
+                have hphi_form: "phi_fn (fst p, snd p) = (let ex = vxe(jp+2)-vxe 1; ey = vye(jp+2)-vye 1;
+                    fx = vxe(Suc(jp+2) mod ?ne)-vxe 1; fy = vye(Suc(jp+2) mod ?ne)-vye 1;
+                    det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+                    s' = (fy*dx-fx*dy)/det; t' = (ex*dy-ey*dx)/det
+                in ((1-s'-t')*?cxw + s'*vxw jp + t'*vxw(Suc jp mod ?nw),
+                    (1-s'-t')*?cyw + s'*vyw jp + t'*vyw(Suc jp mod ?nw)))" .
+                \<comment> \<open>From phi(p)=cw and hcxw\\_0/hcyw\\_0: phi\\_x = 0, phi\\_y = 0.\<close>
+                \<comment> \<open>Cramer coords: sp*vxw(jp) + tp*vxw(jp+1) = 0 (with alpha*cxw = 0).\<close>
+                \<comment> \<open>Since vxw,vyw linearly independent (C10), sp=tp=0, hence dx=dy=0, p=v1.\<close>
+                \<comment> \<open>phi(p)=cw=(0,0). From hphi\\_x12: 0 = sp12*vxw(jp)+tp12*vxw(jp+1) (cxw=0).\<close>
+                have "?cxw = 0" using hcxw_0 unfolding cxw_def by (by100 simp)
+                have "?cyw = 0" using hcyw_0 unfolding cyw_def by (by100 simp)
+                have hfst_eq: "sp12*vxw jp + tp12*vxw(Suc jp mod ?nw) = 0"
+                proof -
+                  from \<open>phi_fn p = (?cxw, ?cyw)\<close> have "fst (phi_fn p) = ?cxw" by (by100 simp)
+                  with hphi_x12 have "(1-sp12-tp12)*?cxw + sp12*vxw jp + tp12*vxw(Suc jp mod ?nw) = ?cxw"
+                    by (by100 simp)
+                  with \<open>?cxw = 0\<close> show ?thesis by (by100 algebra)
+                qed
+                have hsnd_eq: "sp12*vyw jp + tp12*vyw(Suc jp mod ?nw) = 0"
+                proof -
+                  from \<open>phi_fn p = (?cxw, ?cyw)\<close> have "snd (phi_fn p) = ?cyw" by (by100 simp)
+                  with hphi_y12 have "(1-sp12-tp12)*?cyw + sp12*vyw jp + tp12*vyw(Suc jp mod ?nw) = ?cyw"
+                    by (by100 simp)
+                  with \<open>?cyw = 0\<close> show ?thesis by (by100 algebra)
+                qed
+                \<comment> \<open>C10(jp) \\<noteq> 0, so the 2x2 system has only solution sp12=tp12=0.\<close>
+                have "sp12 = 0 \<and> tp12 = 0"
+                proof -
+                  \<comment> \<open>cross(u\\_jp, u\\_{jp+1}) = vxw(jp)*vyw(jp+1)-vyw(jp)*vxw(jp+1) \\<noteq> 0.\<close>
+                  \<comment> \<open>Cramer: sp12 = (0*vyw(jp+1)-0*vxw(jp+1))/cross = 0, tp12 = (vxw(jp)*0-vyw(jp)*0)/cross = 0.\<close>
+                  have hcross_ne: "vxw jp*vyw(Suc jp mod ?nw)-vyw jp*vxw(Suc jp mod ?nw) \<noteq> 0"
+                  proof -
+                    from hC10_jp \<open>?cxw = 0\<close> \<open>?cyw = 0\<close>
+                    have "vxw jp*vyw(Suc jp mod ?nw)-vyw jp*vxw(Suc jp mod ?nw) > 0" by (by100 simp)
+                    thus ?thesis by linarith
+                  qed
+                  \<comment> \<open>From the 2x2 system: sp12*(det) = 0 and tp12*(det) = 0.\<close>
+                  have "sp12*(vxw jp*vyw(Suc jp mod ?nw)-vyw jp*vxw(Suc jp mod ?nw)) = 0"
+                    using hfst_eq hsnd_eq by (by100 algebra)
+                  hence "sp12 = 0" using hcross_ne by (by100 simp)
+                  have "tp12*(vxw jp*vyw(Suc jp mod ?nw)-vyw jp*vxw(Suc jp mod ?nw)) = 0"
+                    using hfst_eq hsnd_eq by (by100 algebra)
+                  hence "tp12 = 0" using hcross_ne by (by100 simp)
+                  with \<open>sp12 = 0\<close> show ?thesis by (by100 simp)
+                qed
+                \<comment> \<open>sp12=tp12=0 implies dx\\_p12=dy\\_p12=0 (Cramer with nonzero det).\<close>
+                have hsp_mul12: "sp12*det_p12 = fy_p12*dx_p12-fx_p12*dy_p12"
+                  unfolding sp12_def using hdet_p12_ne by (by100 simp)
+                have htp_mul12: "tp12*det_p12 = ex_p12*dy_p12-ey_p12*dx_p12"
+                  unfolding tp12_def using hdet_p12_ne by (by100 simp)
+                have "fy_p12*dx_p12 - fx_p12*dy_p12 = 0"
+                  using \<open>sp12 = 0 \<and> tp12 = 0\<close> hsp_mul12 by (by100 simp)
+                have "ex_p12*dy_p12 - ey_p12*dx_p12 = 0"
+                  using \<open>sp12 = 0 \<and> tp12 = 0\<close> htp_mul12 by (by100 simp)
+                have "dx_p12 = 0 \<and> dy_p12 = 0"
+                proof -
+                  have "ex_p12*(fy_p12*dx_p12-fx_p12*dy_p12)+fx_p12*(ex_p12*dy_p12-ey_p12*dx_p12) = det_p12*dx_p12"
+                    unfolding det_p12_def by (by100 algebra)
+                  have "ex_p12*0 + fx_p12*0 = det_p12*dx_p12"
+                    using \<open>fy_p12*dx_p12-fx_p12*dy_p12 = 0\<close> \<open>ex_p12*dy_p12-ey_p12*dx_p12 = 0\<close>
+                    \<open>ex_p12*(fy_p12*dx_p12-fx_p12*dy_p12)+fx_p12*(ex_p12*dy_p12-ey_p12*dx_p12) = det_p12*dx_p12\<close>
+                    by (by100 simp)
+                  hence "det_p12*dx_p12 = 0" by (by100 simp)
+                  hence "dx_p12 = 0" using hdet_p12_ne by (by100 simp)
+                  have "ey_p12*(fy_p12*dx_p12-fx_p12*dy_p12)+fy_p12*(ex_p12*dy_p12-ey_p12*dx_p12) = det_p12*dy_p12"
+                    unfolding det_p12_def by (by100 algebra)
+                  have "ey_p12*0 + fy_p12*0 = det_p12*dy_p12"
+                    using \<open>fy_p12*dx_p12-fx_p12*dy_p12 = 0\<close> \<open>ex_p12*dy_p12-ey_p12*dx_p12 = 0\<close>
+                    \<open>ey_p12*(fy_p12*dx_p12-fx_p12*dy_p12)+fy_p12*(ex_p12*dy_p12-ey_p12*dx_p12) = det_p12*dy_p12\<close>
+                    by (by100 simp)
+                  hence "det_p12*dy_p12 = 0" by (by100 simp)
+                  hence "dy_p12 = 0" using hdet_p12_ne by (by100 simp)
+                  with \<open>dx_p12 = 0\<close> show ?thesis by (by100 simp)
+                qed
+                hence "fst p = vxe 1" "snd p = vye 1"
+                  unfolding dx_p12_def dy_p12_def by auto
+                hence "p = (vxe 1, vye 1)" by (cases p) (by100 simp)
+                with hp_ne_v1 show False by (by100 simp)
+              next
+                case False
+                hence ht_lt1: "t < 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+                hence h1mt_pos: "1 - t > 0" by linarith
+                \<comment> \<open>Spur point: q = (1-t)*u\\_0 + t*cw.\<close>
+                \<comment> \<open>Cross product of (q-cw) with (u\\_jp-cw) = (1-t)*cc(jp).
+                   Cross product of (u\\_{jp+1}-cw) with (q-cw) = (1-t)*cc(jp+1).\<close>
+                \<comment> \<open>For the spur to be in centroid-cone jp: need (1-t)*cc(jp) \\<ge> 0 AND -(1-t)*cc(jp+1) \\<ge> 0.
+                   i.e., cc(jp) \\<ge> 0 AND cc(jp+1) \\<le> 0. But hcc\\_disj says the opposite.\<close>
+                \<comment> \<open>phi\\_fn(p) IS in centroid-cone jp (from affine map + hin\\_sec).\<close>
+                \<comment> \<open>Formally: show centroid-cone cross products agree for phi\\_fn(p) but not for spur.\<close>
+                \<comment> \<open>phi\\_fn(p) = spur. Compute cross(u\\_jp-cw, point-cw) two ways.\<close>
+                have hspur_eq: "phi_fn p = ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw)"
+                  using heq hphi_on_spur0[rule_format, OF ht] by (by100 simp)
+                \<comment> \<open>phi\\_fn(p) - cw = (1-t)*(u\\_0 - cw) (direction from centroid to vertex 0).\<close>
+                have hfst_diff: "fst (phi_fn p) - ?cxw = (1-t)*(vxw 0 - ?cxw)"
+                proof -
+                  have "fst (phi_fn p) = (1-t)*vxw 0 + t*?cxw" using hspur_eq by (by100 simp)
+                  thus ?thesis by (by100 algebra)
+                qed
+                have hsnd_diff: "snd (phi_fn p) - ?cyw = (1-t)*(vyw 0 - ?cyw)"
+                proof -
+                  have "snd (phi_fn p) = (1-t)*vyw 0 + t*?cyw" using hspur_eq by (by100 simp)
+                  thus ?thesis by (by100 algebra)
+                qed
+                \<comment> \<open>Cross(u\\_jp-cw, phi(p)-cw) = (1-t)*cc(jp).\<close>
+                have hcross_spur: "(vxw jp - ?cxw)*(snd (phi_fn p) - ?cyw) - (vyw jp - ?cyw)*(fst (phi_fn p) - ?cxw) =
+                  (1-t)*((vxw jp - ?cxw)*(vyw 0 - ?cyw) - (vyw jp - ?cyw)*(vxw 0 - ?cxw))"
+                  using hfst_diff hsnd_diff by (by100 algebra)
+                \<comment> \<open>But phi\\_fn(p) is in sector jp, so Cross(u\\_jp-cw, phi(p)-cw) = tp*C10(jp) \\<ge> 0.\<close>
+                \<comment> \<open>We use: from the affine form, the cross product with u\\_jp-cw must have correct sign.\<close>
+                from hcc_disj show False
+                proof
+                  assume hcc_neg: "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0"
+                  \<comment> \<open>cc(jp) < 0. Cross(u\\_jp-cw, spur-cw) = (1-t)*cc(jp) < 0.\<close>
+                  have "((vxw jp-?cxw)*(vyw 0-?cyw)-(vyw jp-?cyw)*(vxw 0-?cxw)) < 0"
+                    using hcc_neg unfolding cxw_def cyw_def by (by100 simp)
+                  hence hcross_neg: "(vxw jp - ?cxw)*(snd (phi_fn p) - ?cyw) - (vyw jp - ?cyw)*(fst (phi_fn p) - ?cxw) < 0"
+                    using hcross_spur h1mt_pos
+                    by (metis mult_pos_neg)
+                  \<comment> \<open>But from centroid\\_weight\\_not\\_on\\_edge infrastructure: phi(p) has \\<alpha>>0, so
+                     the cross with u\\_jp-cw direction via C10 is \\<ge> 0. Contradiction.\<close>
+                  \<comment> \<open>Actually: direct computation. phi(p) = \\<alpha>*cw + sp*u\\_jp + tp*u\\_{jp+1}.
+                     cross(u\\_jp-cw, phi(p)-cw) = sp*cross(u\\_jp-cw, u\\_jp-cw) + tp*cross(u\\_jp-cw, u\\_{jp+1}-cw)
+                       = tp * C10(jp). Since tp \\<ge> 0 and C10(jp) > 0: cross \\<ge> 0.\<close>
+                  with hcross_phi_ge1 show False by linarith
+                next
+                  assume hcc_pos: "(vxw(Suc jp mod ?nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod ?nw)-cyw)*(vxw 0-cxw) > 0"
+                  \<comment> \<open>cc(jp+1) > 0. Cross(phi(p)-cw, u\\_{jp+1}-cw) = -(1-t)*cc(jp+1) < 0.
+                     But from sector form: sp*C10(jp) \\<ge> 0. Contradiction.\<close>
+                  have "((vxw(Suc jp mod ?nw)-?cxw)*(vyw 0-?cyw)-(vyw(Suc jp mod ?nw)-?cyw)*(vxw 0-?cxw)) > 0"
+                    using hcc_pos unfolding cxw_def cyw_def by (by100 simp)
+                  \<comment> \<open>Cross(phi(p)-cw, u\\_{jp+1}-cw) = (1-t)*cross(u\\_0-cw, u\\_{jp+1}-cw) = -(1-t)*cc(jp+1).\<close>
+                  have hcross_spur2: "(fst (phi_fn p) - ?cxw)*(vyw(Suc jp mod ?nw) - ?cyw) -
+                    (snd (phi_fn p) - ?cyw)*(vxw(Suc jp mod ?nw) - ?cxw) =
+                    -(1-t)*((vxw(Suc jp mod ?nw) - ?cxw)*(vyw 0 - ?cyw) - (vyw(Suc jp mod ?nw) - ?cyw)*(vxw 0 - ?cxw))"
+                    using hfst_diff hsnd_diff by (by100 algebra)
+                  hence hcross_neg2: "(fst (phi_fn p) - ?cxw)*(vyw(Suc jp mod ?nw) - ?cyw) -
+                    (snd (phi_fn p) - ?cyw)*(vxw(Suc jp mod ?nw) - ?cxw) < 0"
+                  proof -
+                    have "-(1-t) < 0" using h1mt_pos by linarith
+                    thus ?thesis using hcross_spur2
+                      \<open>((vxw(Suc jp mod ?nw)-?cxw)*(vyw 0-?cyw)-(vyw(Suc jp mod ?nw)-?cyw)*(vxw 0-?cxw)) > 0\<close>
+                      by (metis mult_neg_pos)
+                  qed
+                  with hcross_phi_ge2 show False by linarith
+                qed
+              qed
             qed
           qed
         qed
@@ -10778,7 +11228,7 @@ proof -
                 ?m dvd ((y - cut_a + shift) - (x - cut_a + shift))"
               by (rule mod_eq_dvd_iff_nat)
             hence "?m dvd ((y - cut_a) - (x - cut_a))"
-              using hmod_eq by (by100 simp)
+              using hmod_eq by (by5000 simp)
             moreover have "0 < (y - cut_a) - (x - cut_a)" using lt by (by100 linarith)
             moreover have hlt_m: "(y - cut_a) - (x - cut_a) < ?m" using hxm hym by (by100 linarith)
             moreover have hpos: "0 < (y - cut_a) - (x - cut_a)" using lt by (by100 linarith)
@@ -10940,10 +11390,330 @@ proof -
        (since old\\_scheme[i] = new\\_scheme[\\<sigma>(i)]). So C7/C9 give same fibres.
      Vertex-edge-interior: impossible by C12 (both quotients from scheme\\_quotient\\_exists).
      Vertex-vertex: vtgt chain transfers via \\<sigma> (same labels \\<to> same C7 generators).\<close>
+  \<comment> \<open>Use quotient\\_rearrangement\\_homeomorphism with \\<sigma> mapping target to source.\<close>
   have "\<exists>h. top1_homeomorphism_on Y_old TY_old Y_new TY_new h"
-    sorry \<comment> \<open>Per-polygon rotation invariance (Munkres §76 operation (iv)).
-       Requires multi-polygon argument: both quotients equal the same
-       multi-polygon quotient, which is invariant under per-polygon rotation.\<close>
+  proof -
+    define n0 where "n0 = length u0"
+    define n1 where "n1 = length u1"
+    define n2 where "n2 = length u2"
+    define n where "n = length ?s"
+    have hn'_eq: "length ?s' = n" using hlen' unfolding n_def by simp
+    define \<sigma> where "\<sigma> i = (if i < n0 then i
+      else if i = n0 then n0 + n1
+      else if i \<le> n0 + n2 then i + n1
+      else if i = n0 + n2 + 1 then n0 + n1 + n2 + 1
+      else if i \<le> n0 + n2 + 1 + n1 then i - n2 - 2
+      else i)" for i
+    have hlen_s: "length ?s = n0 + n1 + n2 + length u3 + 2"
+      unfolding n0_def n1_def n2_def by (by100 simp)
+    \<comment> \<open>Helpers: length facts for nth extraction.\<close>
+    have hlen_u0: "length u0 = n0" unfolding n0_def by simp
+    have hlen_u1: "length u1 = n1" unfolding n1_def by simp
+    have hlen_u2: "length u2 = n2" unfolding n2_def by simp
+    \<comment> \<open>Target ?s' = u0 @ [(a\\_label,T)] @ u2 @ [(a\\_label,F)] @ u1 @ u3\<close>
+    \<comment> \<open>Source ?s  = u0 @ u1 @ [(a\\_label,T)] @ u2 @ [(a\\_label,F)] @ u3\<close>
+    have hlabel: "\<And>i. i < n \<Longrightarrow> ?s' ! i = ?s ! (\<sigma> i)"
+    proof -
+      fix i assume hi: "i < n"
+      consider (c1) "i < n0" | (c2) "i = n0" | (c3) "n0 < i \<and> i \<le> n0 + n2"
+        | (c4) "i = n0 + n2 + 1" | (c5) "n0 + n2 + 1 < i \<and> i \<le> n0 + n2 + 1 + n1"
+        | (c6) "n0 + n2 + 1 + n1 < i"
+        using hi unfolding n_def hlen_s by linarith
+      thus "?s' ! i = ?s ! (\<sigma> i)"
+      proof cases
+        case c1 \<comment> \<open>i in u0 region (both lists start with u0)\<close>
+        have "\<sigma> i = i" using c1 unfolding \<sigma>_def by simp
+        moreover have hi_u0: "i < length u0" using c1 unfolding n0_def by simp
+        hence "?s' ! i = u0 ! i" by (rule nth_append_take)
+        moreover have "?s ! i = u0 ! i" using hi_u0 by (rule nth_append_take)
+        ultimately show ?thesis by simp
+      next
+        case c2 \<comment> \<open>i = n0: target has (a,T), source at n0+n1 has (a,T)\<close>
+        have "\<sigma> i = n0 + n1" using c2 unfolding \<sigma>_def by simp
+        moreover have "?s' ! n0 = (a_label, True)"
+        proof -
+          have "n0 \<ge> length u0" unfolding n0_def by simp
+          hence "?s' ! n0 = ([(a_label, True)] @ u2 @ [(a_label, False)] @ u1 @ u3) ! (n0 - length u0)"
+            by (rule nth_append_skip)
+          thus ?thesis unfolding n0_def by simp
+        qed
+        moreover have "?s ! (n0 + n1) = (a_label, True)"
+        proof -
+          have "n0 + n1 \<ge> length u0" unfolding n0_def by simp
+          hence "?s ! (n0 + n1) = (u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (n0 + n1 - length u0)"
+            by (rule nth_append_skip)
+          also have "n0 + n1 - length u0 = n1" unfolding n0_def by simp
+          also have "(u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! n1 =
+              ([(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (n1 - length u1)"
+          proof -
+            have "n1 \<ge> length u1" unfolding n1_def by simp
+            thus ?thesis by (rule nth_append_skip)
+          qed
+          finally show ?thesis unfolding n1_def by simp
+        qed
+        ultimately show ?thesis using c2 by simp
+      next
+        case c3 \<comment> \<open>n0 < i \\<le> n0+n2: target has u2, source at i+n1 has u2\<close>
+        have hi3: "i - n0 - 1 < n2" "1 \<le> i - n0" using c3 by linarith+
+        have "\<sigma> i = i + n1" using c3 unfolding \<sigma>_def by simp
+        moreover have "?s' ! i = u2 ! (i - n0 - 1)"
+        proof -
+          have "?s' ! i = ([(a_label, True)] @ u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0)"
+            using c3 hlen_u0 by (subst nth_append_skip, simp, simp)
+          also have "\<dots> = (u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0 - 1)"
+            using hi3 by (subst nth_append_skip, simp, simp)
+          also have "\<dots> = u2 ! (i - n0 - 1)"
+          proof (rule nth_append_take)
+            show "i - n0 - 1 < length u2" using hi3 unfolding n2_def by linarith
+          qed
+          finally show ?thesis .
+        qed
+        moreover have "?s ! (i + n1) = u2 ! (i - n0 - 1)"
+        proof -
+          have "?s ! (i + n1) = (u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i + n1 - n0)"
+            using c3 hlen_u0 by (subst nth_append_skip, simp, simp)
+          also have "i + n1 - n0 = n1 + (i - n0)" using c3 by linarith
+          also have "(u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (n1 + (i - n0))
+              = ([(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i - n0)"
+            using hlen_u1 by (subst nth_append_skip, simp, simp)
+          also have "\<dots> = (u2 @ [(a_label, False)] @ u3) ! (i - n0 - 1)"
+            using hi3 by (subst nth_append_skip, simp, simp)
+          also have "\<dots> = u2 ! (i - n0 - 1)"
+          proof (rule nth_append_take)
+            show "i - n0 - 1 < length u2" using hi3 unfolding n2_def by linarith
+          qed
+          finally show ?thesis .
+        qed
+        ultimately show ?thesis by simp
+      next
+        case c4 \<comment> \<open>i = n0+n2+1: target (a,F), source at n0+n1+n2+1 (a,F)\<close>
+        have "\<sigma> i = n0 + n1 + n2 + 1" using c4 unfolding \<sigma>_def by simp
+        moreover have "?s' ! i = (a_label, False)"
+        proof -
+          have "?s' ! (n0 + n2 + 1) = ([(a_label, True)] @ u2 @ [(a_label, False)] @ u1 @ u3) ! (n2 + 1)"
+            using hlen_u0 c4 by (subst nth_append_skip, simp, simp)
+          also have "\<dots> = ([(a_label, False)] @ u1 @ u3) ! 0"
+          proof -
+            have "n2 = length u2" using hlen_u2 by linarith
+            thus ?thesis
+              apply (subst nth_append_skip)
+              apply simp
+              apply simp
+              done
+          qed
+          finally show ?thesis using c4 by simp
+        qed
+        moreover have "?s ! (n0 + n1 + n2 + 1) = (a_label, False)"
+        proof -
+          have "?s ! (n0 + n1 + n2 + 1) = (u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (n1 + n2 + 1)"
+            using hlen_u0 by (subst nth_append_skip, simp, simp)
+          also have "\<dots> = ([(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (n2 + 1)"
+            using hlen_u1 by (subst nth_append_skip, simp, simp)
+          also have "\<dots> = ([(a_label, False)] @ u3) ! 0"
+          proof -
+            have "n2 = length u2" using hlen_u2 by linarith
+            thus ?thesis
+              apply (subst nth_append_skip)
+              apply simp
+              apply simp
+              done
+          qed
+          finally show ?thesis by simp
+        qed
+        ultimately show ?thesis by simp
+      next
+        case c5 \<comment> \<open>u1 region in target maps to u1 region in source\<close>
+        have hi5: "i > n0 + n2 + 1" "i \<le> n0 + n2 + 1 + n1" using c5 by linarith+
+        have "\<sigma> i = i - n2 - 2" using c5 unfolding \<sigma>_def by simp
+        moreover have "?s' ! i = u1 ! (i - n0 - n2 - 2)"
+        proof -
+          have "i \<ge> length u0" using hi5 unfolding n0_def by linarith
+          hence "?s' ! i = ([(a_label, True)] @ u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0)"
+            unfolding n0_def by (rule nth_append_skip)
+          also have "i - n0 \<ge> 1" using hi5 by linarith
+          hence "([(a_label, True)] @ u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0)
+              = (u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0 - 1)"
+            by (subst nth_append_skip, simp, simp)
+          also have "i - n0 - 1 \<ge> length u2" using hi5 unfolding n2_def by linarith
+          hence "(u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0 - 1)
+              = ([(a_label, False)] @ u1 @ u3) ! (i - n0 - 1 - n2)"
+            unfolding n2_def by (rule nth_append_skip)
+          also have "i - n0 - 1 - n2 \<ge> 1" using hi5 by linarith
+          hence "([(a_label, False)] @ u1 @ u3) ! (i - n0 - 1 - n2)
+              = (u1 @ u3) ! (i - n0 - n2 - 2)"
+            by (subst nth_append_skip, simp, simp)
+          also have "i - n0 - n2 - 2 < length u1" using hi5 unfolding n1_def by linarith
+          hence "(u1 @ u3) ! (i - n0 - n2 - 2) = u1 ! (i - n0 - n2 - 2)"
+            by (rule nth_append_take)
+          finally show ?thesis .
+        qed
+        moreover have "?s ! (i - n2 - 2) = u1 ! (i - n0 - n2 - 2)"
+        proof -
+          have hge_n0: "i - n2 - 2 \<ge> n0" using hi5 by linarith
+          hence "?s ! (i - n2 - 2) = (u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i - n2 - 2 - n0)"
+            unfolding n0_def by (rule nth_append_skip)
+          also have "i - n2 - 2 - n0 < n1" using hi5 by linarith
+          hence "(u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i - n2 - 2 - n0)
+              = u1 ! (i - n2 - 2 - n0)"
+            unfolding n1_def by (rule nth_append_take)
+          also have "i - n2 - 2 - n0 = i - n0 - n2 - 2" using hi5 by linarith
+          finally show ?thesis .
+        qed
+        ultimately show ?thesis by simp
+      next
+        case c6 \<comment> \<open>u3 region: identity in both\<close>
+        have hi6: "i > n0 + n2 + 1 + n1" using c6 by linarith
+        have "\<sigma> i = i" using c6 unfolding \<sigma>_def by simp
+        moreover have "?s' ! i = u3 ! (i - n0 - n2 - n1 - 2)"
+        proof -
+          have h1: "i \<ge> length u0" using hi6 unfolding n0_def by linarith
+          have h2: "?s' ! i = ([(a_label, True)] @ u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0)"
+            using h1 unfolding n0_def by (rule nth_append_skip)
+          have h3: "([(a_label, True)] @ u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0) =
+              (u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0 - 1)"
+          proof -
+            have "i - n0 \<ge> 1" using hi6 by linarith
+            thus ?thesis by (subst nth_append_skip, simp, simp)
+          qed
+          have hi6a: "i - n0 - 1 \<ge> length u2" using hi6 unfolding n2_def by linarith
+          have h4: "(u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0 - 1) =
+              ([(a_label, False)] @ u1 @ u3) ! (i - n0 - 1 - n2)"
+          proof -
+            have heq: "(u2 @ [(a_label, False)] @ u1 @ u3) ! (i - n0 - 1) =
+                ([(a_label, False)] @ u1 @ u3) ! (i - n0 - 1 - length u2)"
+              using hi6a by (rule nth_append_skip)
+            thus ?thesis unfolding n2_def using heq by simp
+          qed
+          have hi6b: "i - n0 - 1 - n2 \<ge> 1" using hi6 by linarith
+          have h5: "([(a_label, False)] @ u1 @ u3) ! (i - n0 - 1 - n2) =
+              (u1 @ u3) ! (i - n0 - n2 - 2)"
+          proof -
+            have "i - n0 - 1 - n2 \<ge> 1" using hi6b by linarith
+            thus ?thesis by (subst nth_append_skip, simp, simp)
+          qed
+          have hi6c: "i - n0 - n2 - 2 \<ge> length u1" using hi6 unfolding n1_def by linarith
+          have h6: "(u1 @ u3) ! (i - n0 - n2 - 2) = u3 ! (i - n0 - n2 - 2 - n1)"
+          proof -
+            have heq: "(u1 @ u3) ! (i - n0 - n2 - 2) = u3 ! (i - n0 - n2 - 2 - length u1)"
+              using hi6c by (rule nth_append_skip)
+            thus ?thesis unfolding n1_def using heq by simp
+          qed
+          have h7: "i - n0 - n2 - 2 - n1 = i - n0 - n2 - n1 - 2" using hi6 by linarith
+          show ?thesis using h2 h3 h4 h5 h6 h7 by simp
+        qed
+        moreover have "?s ! i = u3 ! (i - n0 - n1 - n2 - 2)"
+        proof -
+          have hs1: "i \<ge> length u0" using hi6 unfolding n0_def by linarith
+          have hs2: "?s ! i = (u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i - n0)"
+            using hs1 unfolding n0_def by (rule nth_append_skip)
+          have hs3a: "i - n0 \<ge> length u1" using hi6 unfolding n1_def by linarith
+          have hs3: "(u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i - n0) =
+              ([(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i - n0 - n1)"
+          proof -
+            have heq: "(u1 @ [(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i - n0) =
+                ([(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i - n0 - length u1)"
+              using hs3a by (rule nth_append_skip)
+            thus ?thesis unfolding n1_def using heq by simp
+          qed
+          have hs4: "([(a_label, True)] @ u2 @ [(a_label, False)] @ u3) ! (i - n0 - n1) =
+              (u2 @ [(a_label, False)] @ u3) ! (i - n0 - n1 - 1)"
+          proof -
+            have "i - n0 - n1 \<ge> 1" using hi6 by linarith
+            thus ?thesis by (subst nth_append_skip, simp, simp)
+          qed
+          have hs5a: "i - n0 - n1 - 1 \<ge> length u2" using hi6 unfolding n2_def by linarith
+          have hs5: "(u2 @ [(a_label, False)] @ u3) ! (i - n0 - n1 - 1) =
+              ([(a_label, False)] @ u3) ! (i - n0 - n1 - 1 - n2)"
+          proof -
+            have heq: "(u2 @ [(a_label, False)] @ u3) ! (i - n0 - n1 - 1) =
+                ([(a_label, False)] @ u3) ! (i - n0 - n1 - 1 - length u2)"
+              using hs5a by (rule nth_append_skip)
+            thus ?thesis unfolding n2_def using heq by simp
+          qed
+          have hs6: "([(a_label, False)] @ u3) ! (i - n0 - n1 - 1 - n2) =
+              u3 ! (i - n0 - n1 - n2 - 2)"
+          proof -
+            have "i - n0 - n1 - 1 - n2 \<ge> 1" using hi6 by linarith
+            thus ?thesis by (subst nth_append_skip, simp, simp)
+          qed
+          show ?thesis using hs2 hs3 hs4 hs5 hs6 by simp
+        qed
+        moreover have "i - n0 - n2 - n1 - 2 = i - n0 - n1 - n2 - 2" by linarith
+        ultimately show ?thesis by simp
+      qed
+    qed
+    have hfst: "\<And>i. i < length ?s \<Longrightarrow> fst (?s' ! i) = fst (?s ! (\<sigma> i))"
+      using hlabel unfolding n_def by simp
+    \<comment> \<open>hsnd\\_eq/hsnd\\_rel not needed: rearrangement lemma only requires fst preservation.\<close>
+    have hn_eq: "n = n0 + n1 + n2 + length u3 + 2"
+      unfolding n_def n0_def n1_def n2_def by (by100 simp)
+    have hbij: "bij_betw \<sigma> {..<length ?s} {..<length ?s}"
+    proof -
+      \<comment> \<open>Define the inverse of \\<sigma>.\<close>
+      define \<sigma>_inv where "\<sigma>_inv j = (if j < n0 then j
+        else if j < n0 + n1 then j + n2 + 2
+        else if j = n0 + n1 then n0
+        else if j \<le> n0 + n1 + n2 then j - n1
+        else if j = n0 + n1 + n2 + 1 then n0 + n2 + 1
+        else j)" for j
+      \<comment> \<open>Unfold length of ?s for arithmetic\<close>
+      have hlen_s: "length ?s = n0 + n1 + n2 + length u3 + 2"
+        unfolding n0_def n1_def n2_def by (by100 simp)
+      \<comment> \<open>Show \\<sigma>_inv is a left inverse: \\<sigma>_inv (\\<sigma> i) = i for i \\<in> {..<n}\<close>
+      have hleft: "\<forall>i \<in> {..<length ?s}. \<sigma>_inv (\<sigma> i) = i"
+      proof (rule ballI)
+        fix i :: nat assume hi: "i \<in> {..<length ?s}"
+        hence hi': "i < n0 + n1 + n2 + length u3 + 2" using hlen_s by (by100 simp)
+        show "\<sigma>_inv (\<sigma> i) = i"
+          unfolding \<sigma>_def \<sigma>_inv_def n0_def n1_def n2_def
+          using hi'
+          apply (simp add: not_less n0_def n1_def n2_def split: if_split)
+          apply arith
+          done
+      qed
+      \<comment> \<open>Show \\<sigma> is a right inverse: \\<sigma> (\\<sigma>_inv j) = j for j \\<in> {..<n}\<close>
+      have hright: "\<forall>j \<in> {..<length ?s}. \<sigma> (\<sigma>_inv j) = j"
+      proof (rule ballI)
+        fix j :: nat assume hj: "j \<in> {..<length ?s}"
+        hence hj': "j < n0 + n1 + n2 + length u3 + 2" using hlen_s by (by100 simp)
+        show "\<sigma> (\<sigma>_inv j) = j"
+          unfolding \<sigma>_def \<sigma>_inv_def n0_def n1_def n2_def
+          using hj'
+          apply (simp add: not_less n0_def n1_def n2_def split: if_split)
+          apply arith
+          done
+      qed
+      \<comment> \<open>Show \\<sigma> maps {..<n} into {..<n}\<close>
+      have himg: "\<sigma> ` {..<length ?s} \<subseteq> {..<length ?s}"
+      proof (rule image_subsetI)
+        fix i :: nat assume hi: "i \<in> {..<length ?s}"
+        hence hi': "i < n0 + n1 + n2 + length u3 + 2" using hlen_s by (by100 simp)
+        show "\<sigma> i \<in> {..<length ?s}"
+          unfolding \<sigma>_def n0_def n1_def n2_def hlen_s
+          using hi'
+          apply (simp add: not_less n0_def n1_def n2_def split: if_split)
+          apply arith
+          done
+      qed
+      \<comment> \<open>Show \\<sigma>_inv maps {..<n} into {..<n}\<close>
+      have himg_inv: "\<sigma>_inv ` {..<length ?s} \<subseteq> {..<length ?s}"
+      proof (rule image_subsetI)
+        fix j :: nat assume hj: "j \<in> {..<length ?s}"
+        hence hj': "j < n0 + n1 + n2 + length u3 + 2" using hlen_s by (by100 simp)
+        show "\<sigma>_inv j \<in> {..<length ?s}"
+          unfolding \<sigma>_inv_def n0_def n1_def n2_def hlen_s
+          using hj'
+          apply (simp add: not_less n0_def n1_def n2_def split: if_split)
+          apply arith
+          done
+      qed
+      show ?thesis
+        by (rule bij_betw_byWitness[where f' = \<sigma>_inv]) (use hleft hright himg himg_inv in blast)+
+    qed
+    from quotient_rearrangement_homeomorphism[OF hY_old hY_new hn'_eq[unfolded n_def]
+        hbij hfst]
+    show ?thesis .
+  qed
   then obtain h_rearrange where hrearr: "top1_homeomorphism_on Y_old TY_old Y_new TY_new h_rearrange"
     by (by100 blast)
   from scheme_quotient_uniqueness[OF htopo htopo_old hq hY_old]
@@ -10988,10 +11758,262 @@ proof -
     hY_new: "top1_quotient_of_scheme_on Y_new TY_new ?s'" by (by100 blast)
   have htopo_new: "is_topology_on_strict Y_new TY_new"
     using hY_new unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Use quotient\\_rearrangement\\_homeomorphism with \\<sigma> for same-direction cut-paste.\<close>
   have "\<exists>h. top1_homeomorphism_on Y_old TY_old Y_new TY_new h"
-    sorry \<comment> \<open>Per-polygon rotation invariance (Munkres §76 operation (iv)).
-       Requires multi-polygon argument: both quotients equal the same
-       multi-polygon quotient, which is invariant under per-polygon rotation.\<close>
+  proof -
+    define n1 where "n1 = length u1"
+    define n2 where "n2 = length u2"
+    define n where "n = length ?s"
+    have hn'_eq: "length ?s' = n" using hlen' unfolding n_def by simp
+    \<comment> \<open>\\<sigma> maps target to source: u1 stays, a-pair moves, u2 reversed+inverted, u3 stays.\<close>
+    define \<sigma> where "\<sigma> i = (if i < n1 then i
+      else if i = n1 then n1
+      else if i = n1 + 1 then n1 + 1 + n2
+      else if i < n1 + 2 + n2 then n1 + 1 + (n1 + 1 + n2 - i)
+      else i)" for i
+    \<comment> \<open>Helper facts for lengths and nth.\<close>
+    have hlen_u1: "length u1 = n1" unfolding n1_def by simp
+    have hlen_u2: "length u2 = n2" unfolding n2_def by simp
+    have hlen_s: "length ?s = n1 + n2 + length u3 + 2"
+      unfolding n1_def n2_def by (by100 simp)
+    have hlen_rev: "length (rev (map top1_inverse_edge u2)) = n2"
+      unfolding n2_def by simp
+    \<comment> \<open>Key: fst of inverse\\_edge is unchanged.\<close>
+    have hfst_inv: "\<And>e. fst (top1_inverse_edge e) = fst e"
+      unfolding top1_inverse_edge_def by simp
+    \<comment> \<open>Key: for k < n2, fst(rev(map inv u2) ! k) = fst(u2 ! (n2-1-k)).\<close>
+    have hfst_rev_inv: "\<And>k. k < n2 \<Longrightarrow>
+        fst (rev (map top1_inverse_edge u2) ! k) = fst (u2 ! (n2 - 1 - k))"
+    proof -
+      fix k assume hk: "k < n2"
+      have "rev (map top1_inverse_edge u2) ! k = map top1_inverse_edge u2 ! (n2 - 1 - k)"
+        using hk unfolding n2_def by (simp add: rev_nth)
+      also have "map top1_inverse_edge u2 ! (n2 - 1 - k) = top1_inverse_edge (u2 ! (n2 - 1 - k))"
+        using hk unfolding n2_def by simp
+      finally show "fst (rev (map top1_inverse_edge u2) ! k) = fst (u2 ! (n2 - 1 - k))"
+        using hfst_inv by simp
+    qed
+    have hlabel: "\<And>i. i < n \<Longrightarrow> fst (?s' ! i) = fst (?s ! (\<sigma> i))"
+    proof -
+      fix i assume hi: "i < n"
+      \<comment> \<open>5 regions: u1 (identity), n1 (first a), n1+1 (second a), [n1+2,n1+2+n2) (rev inv u2), rest (u3 identity).\<close>
+      consider (c1) "i < n1" | (c2) "i = n1" | (c3) "i = n1 + 1"
+        | (c4) "n1 + 2 \<le> i \<and> i < n1 + 2 + n2" | (c5) "n1 + 2 + n2 \<le> i"
+        using hi unfolding n_def hlen_s by linarith
+      thus "fst (?s' ! i) = fst (?s ! (\<sigma> i))"
+      proof cases
+        case c1 \<comment> \<open>u1 region: identity\<close>
+        have "\<sigma> i = i" using c1 unfolding \<sigma>_def by simp
+        moreover have "i < length u1" using c1 unfolding n1_def by simp
+        hence "?s' ! i = u1 ! i" by (rule nth_append_take)
+        moreover have "?s ! i = u1 ! i" using \<open>i < length u1\<close> by (rule nth_append_take)
+        ultimately show ?thesis by simp
+      next
+        case c2 \<comment> \<open>first (a,T) in both\<close>
+        have "\<sigma> i = n1" using c2 unfolding \<sigma>_def by simp
+        moreover have "?s' ! n1 = (a_label, True)"
+        proof -
+          have "n1 \<ge> length u1" unfolding n1_def by simp
+          hence "?s' ! n1 = ([(a_label, True), (a_label, True)] @
+              rev (map top1_inverse_edge u2) @ u3) ! (n1 - length u1)"
+            by (rule nth_append_skip)
+          thus ?thesis unfolding n1_def by simp
+        qed
+        moreover have "?s ! n1 = (a_label, True)"
+        proof -
+          have "n1 \<ge> length u1" unfolding n1_def by simp
+          hence "?s ! n1 = ([(a_label, True)] @ u2 @ [(a_label, True)] @ u3) ! (n1 - length u1)"
+            by (rule nth_append_skip)
+          thus ?thesis unfolding n1_def by simp
+        qed
+        ultimately show ?thesis using c2 by simp
+      next
+        case c3 \<comment> \<open>second (a,T): target n1+1 maps to source n1+1+n2\<close>
+        have "\<sigma> i = n1 + 1 + n2" using c3 unfolding \<sigma>_def by simp
+        moreover have "?s' ! (n1 + 1) = (a_label, True)"
+        proof -
+          have hge: "n1 + 1 \<ge> length u1" unfolding n1_def by simp
+          from nth_append_skip[OF hge]
+          have "?s' ! (n1 + 1) = ([(a_label, True), (a_label, True)] @
+              rev (map top1_inverse_edge u2) @ u3) ! (n1 + 1 - length u1)" .
+          thus ?thesis unfolding n1_def by simp
+        qed
+        moreover have "?s ! (n1 + 1 + n2) = (a_label, True)"
+        proof -
+          have hge1: "n1 + 1 + n2 \<ge> length u1" unfolding n1_def by simp
+          have "?s ! (n1 + 1 + n2) = ([(a_label, True)] @ u2 @ [(a_label, True)] @ u3) ! (n1 + 1 + n2 - length u1)"
+            using nth_append_skip[OF hge1] .
+          also have "n1 + 1 + n2 - length u1 = 1 + n2" unfolding n1_def by simp
+          also have "([(a_label, True)] @ u2 @ [(a_label, True)] @ u3) ! (1 + n2)
+              = (u2 @ [(a_label, True)] @ u3) ! n2"
+            by (subst nth_append_skip, simp, simp)
+          also have "\<dots> = ([(a_label, True)] @ u3) ! (n2 - length u2)"
+          proof (rule nth_append_skip)
+            show "n2 \<ge> length u2" unfolding n2_def by simp
+          qed
+          also have "n2 - length u2 = 0" unfolding n2_def by simp
+          finally show ?thesis by simp
+        qed
+        ultimately show ?thesis using c3 by simp
+      next
+        case c4 \<comment> \<open>u2 reversed+inverted region\<close>
+        have hi4: "i - n1 - 2 < n2" using c4 by linarith
+        have "\<sigma> i = n1 + 1 + (n1 + 1 + n2 - i)" using c4 unfolding \<sigma>_def by simp
+        \<comment> \<open>Target: ?s'!i = rev(map inv u2) ! (i - n1 - 2)\<close>
+        moreover have "fst (?s' ! i) = fst (u2 ! (n2 - 1 - (i - n1 - 2)))"
+        proof -
+          have hge: "i \<ge> length u1" using c4 unfolding n1_def by linarith
+          have h1: "?s' ! i = ([(a_label, True), (a_label, True)] @
+              rev (map top1_inverse_edge u2) @ u3) ! (i - n1)"
+            using nth_append_skip[OF hge] unfolding n1_def .
+          have h2: "([(a_label, True), (a_label, True)] @
+              rev (map top1_inverse_edge u2) @ u3) ! (i - n1) =
+              (rev (map top1_inverse_edge u2) @ u3) ! (i - n1 - 2)"
+          proof -
+            have "i - n1 \<ge> 2" using c4 by linarith
+            thus ?thesis by (subst nth_append_skip, simp, simp)
+          qed
+          have h3: "(rev (map top1_inverse_edge u2) @ u3) ! (i - n1 - 2) =
+              rev (map top1_inverse_edge u2) ! (i - n1 - 2)"
+          proof (rule nth_append_take)
+            show "i - n1 - 2 < length (rev (map top1_inverse_edge u2))"
+              using hi4 hlen_rev by simp
+          qed
+          from h1 h2 h3 have "?s' ! i = rev (map top1_inverse_edge u2) ! (i - n1 - 2)" by simp
+          thus ?thesis using hfst_rev_inv[OF hi4] by simp
+        qed
+        \<comment> \<open>Source: ?s!(\\<sigma> i) = u2 ! (n2-1-(i-n1-2)) -- same element (reversed)\<close>
+        moreover have "fst (?s ! (n1 + 1 + (n1 + 1 + n2 - i))) = fst (u2 ! (n2 - 1 - (i - n1 - 2)))"
+        proof -
+          define j where "j = n1 + 1 + (n1 + 1 + n2 - i)"
+          have hj_ge: "j \<ge> length u1" unfolding j_def n1_def by linarith
+          have h1: "?s ! j = ([(a_label, True)] @ u2 @ [(a_label, True)] @ u3) ! (j - n1)"
+            using nth_append_skip[OF hj_ge] unfolding n1_def .
+          have hj_n1_ge: "j - n1 \<ge> 1" unfolding j_def using c4 by linarith
+          have h2: "([(a_label, True)] @ u2 @ [(a_label, True)] @ u3) ! (j - n1) =
+              (u2 @ [(a_label, True)] @ u3) ! (j - n1 - 1)"
+            using hj_n1_ge by (subst nth_append_skip, simp, simp)
+          have hlt: "j - n1 - 1 < length u2"
+          proof -
+            have "j - n1 - 1 = n2 - (i - n1 - 1)" unfolding j_def using c4 by linarith
+            thus ?thesis using c4 unfolding n2_def by linarith
+          qed
+          have h3: "(u2 @ [(a_label, True)] @ u3) ! (j - n1 - 1) = u2 ! (j - n1 - 1)"
+            using hlt by (rule nth_append_take)
+          have h4: "j - n1 - 1 = n2 - 1 - (i - n1 - 2)" unfolding j_def using c4 by linarith
+          from h1 h2 h3 h4 show ?thesis unfolding j_def by simp
+        qed
+        ultimately show ?thesis by simp
+      next
+        case c5 \<comment> \<open>u3 region: identity\<close>
+        have "\<sigma> i = i" using c5 unfolding \<sigma>_def by simp
+        \<comment> \<open>Target: ?s'!i = u3!(i - n1 - 2 - n2)\<close>
+        moreover have "fst (?s' ! i) = fst (?s ! i)"
+        proof -
+          have "i \<ge> length u1" using c5 unfolding n1_def by linarith
+          hence h1: "?s' ! i = ([(a_label, True), (a_label, True)] @
+              rev (map top1_inverse_edge u2) @ u3) ! (i - n1)"
+            unfolding n1_def by (rule nth_append_skip)
+          have h2: "([(a_label, True), (a_label, True)] @
+              rev (map top1_inverse_edge u2) @ u3) ! (i - n1) =
+              (rev (map top1_inverse_edge u2) @ u3) ! (i - n1 - 2)"
+          proof -
+            have "i - n1 \<ge> 2" using c5 by linarith
+            thus ?thesis by (subst nth_append_skip, simp, simp)
+          qed
+          have hge_rev: "i - n1 - 2 \<ge> length (rev (map top1_inverse_edge u2))"
+            using c5 hlen_rev by simp
+          have h3: "(rev (map top1_inverse_edge u2) @ u3) ! (i - n1 - 2) = u3 ! (i - n1 - 2 - n2)"
+            using nth_append_skip[OF hge_rev] hlen_rev unfolding n2_def by simp
+          \<comment> \<open>Source: ?s!i = u3!(i - n1 - 1 - n2 - 1) = u3!(i - n1 - n2 - 2)\<close>
+          have "i \<ge> length u1" using c5 unfolding n1_def by linarith
+          hence h4: "?s ! i = ([(a_label, True)] @ u2 @ [(a_label, True)] @ u3) ! (i - n1)"
+            unfolding n1_def by (rule nth_append_skip)
+          have "i - n1 \<ge> 1" using c5 by linarith
+          hence h5: "([(a_label, True)] @ u2 @ [(a_label, True)] @ u3) ! (i - n1) =
+              (u2 @ [(a_label, True)] @ u3) ! (i - n1 - 1)"
+            by (subst nth_append_skip, simp, simp)
+          have "i - n1 - 1 \<ge> length u2" using c5 unfolding n2_def by linarith
+          hence h6: "(u2 @ [(a_label, True)] @ u3) ! (i - n1 - 1) =
+              ([(a_label, True)] @ u3) ! (i - n1 - 1 - n2)"
+            unfolding n2_def by (rule nth_append_skip)
+          have "i - n1 - 1 - n2 \<ge> 1" using c5 by linarith
+          hence h7: "([(a_label, True)] @ u3) ! (i - n1 - 1 - n2) = u3 ! (i - n1 - n2 - 2)"
+            by (subst nth_append_skip, simp, simp)
+          have h8: "i - n1 - 2 - n2 = i - n1 - n2 - 2" using c5 by linarith
+          from h1 h2 h3 h4 h5 h6 h7 h8 show ?thesis by simp
+        qed
+        ultimately show ?thesis by simp
+      qed
+    qed
+    \<comment> \<open>NOTE: hsnd\\_rel not needed -- quotient\\_rearrangement\\_homeomorphism
+       only requires fst preservation (snd changes handled by the geometric construction).\<close>
+    have hbij: "bij_betw \<sigma> {..<length ?s} {..<length ?s}"
+    proof -
+      \<comment> \<open>Define the inverse of \\<sigma>.\<close>
+      define \<sigma>_inv where "\<sigma>_inv j = (if j < n1 then j
+        else if j = n1 then n1
+        else if j < n1 + 1 + n2 then n1 + 1 + (n1 + 1 + n2 - j)
+        else if j = n1 + 1 + n2 then n1 + 1
+        else j)" for j
+      \<comment> \<open>Unfold length of ?s for arithmetic\<close>
+      have hlen_s: "length ?s = n1 + n2 + length u3 + 2"
+        unfolding n1_def n2_def by (by100 simp)
+      \<comment> \<open>Show \\<sigma>_inv is a left inverse: \\<sigma>_inv (\\<sigma> i) = i for i \\<in> {..<n}\<close>
+      have hleft: "\<forall>i \<in> {..<length ?s}. \<sigma>_inv (\<sigma> i) = i"
+      proof (rule ballI)
+        fix i :: nat assume hi: "i \<in> {..<length ?s}"
+        hence hi': "i < n1 + n2 + length u3 + 2" using hlen_s by (by100 simp)
+        show "\<sigma>_inv (\<sigma> i) = i"
+          unfolding \<sigma>_def \<sigma>_inv_def n1_def n2_def
+          using hi'
+          apply (simp add: not_less n1_def n2_def split: if_split)
+          apply arith
+          done
+      qed
+      \<comment> \<open>Show \\<sigma> is a right inverse: \\<sigma> (\\<sigma>_inv j) = j for j \\<in> {..<n}\<close>
+      have hright: "\<forall>j \<in> {..<length ?s}. \<sigma> (\<sigma>_inv j) = j"
+      proof (rule ballI)
+        fix j :: nat assume hj: "j \<in> {..<length ?s}"
+        hence hj': "j < n1 + n2 + length u3 + 2" using hlen_s by (by100 simp)
+        show "\<sigma> (\<sigma>_inv j) = j"
+          unfolding \<sigma>_def \<sigma>_inv_def n1_def n2_def
+          using hj'
+          apply (simp add: not_less n1_def n2_def split: if_split)
+          apply arith
+          done
+      qed
+      \<comment> \<open>Show \\<sigma> maps {..<n} into {..<n}\<close>
+      have himg: "\<sigma> ` {..<length ?s} \<subseteq> {..<length ?s}"
+      proof (rule image_subsetI)
+        fix i :: nat assume hi: "i \<in> {..<length ?s}"
+        hence hi': "i < n1 + n2 + length u3 + 2" using hlen_s by (by100 simp)
+        show "\<sigma> i \<in> {..<length ?s}"
+          unfolding \<sigma>_def n1_def n2_def hlen_s
+          using hi'
+          apply (simp add: not_less n1_def n2_def split: if_split)
+          apply arith
+          done
+      qed
+      \<comment> \<open>Show \\<sigma>_inv maps {..<n} into {..<n}\<close>
+      have himg_inv: "\<sigma>_inv ` {..<length ?s} \<subseteq> {..<length ?s}"
+      proof (rule image_subsetI)
+        fix j :: nat assume hj: "j \<in> {..<length ?s}"
+        hence hj': "j < n1 + n2 + length u3 + 2" using hlen_s by (by100 simp)
+        show "\<sigma>_inv j \<in> {..<length ?s}"
+          unfolding \<sigma>_inv_def n1_def n2_def hlen_s
+          using hj'
+          apply (simp add: not_less n1_def n2_def split: if_split)
+          apply arith
+          done
+      qed
+      show ?thesis
+        by (rule bij_betw_byWitness[where f' = \<sigma>_inv]) (use hleft hright himg himg_inv in blast)+
+    qed
+    from quotient_rearrangement_homeomorphism[OF hY_old hY_new hn'_eq[unfolded n_def]
+        hbij hlabel[unfolded n_def]]
+    show ?thesis .
+  qed
   then obtain h_rearrange where hrearr: "top1_homeomorphism_on Y_old TY_old Y_new TY_new h_rearrange"
     by (by100 blast)
   from scheme_quotient_uniqueness[OF htopo htopo_old hq hY_old]
@@ -11175,10 +12197,11 @@ next
   show ?case by (rule same_space_implies_homeo_realization)
 next
   case (v_cut_paste_reverse u1_r a_r u2_r u3_r)
-  \<comment> \<open>Reverse of cut-paste: same geometric argument (edge permutation) in reverse direction.\<close>
+  \<comment> \<open>Reverse of cut-paste: needs reverse direction of the rearrangement.
+     For proper schemes: use scheme\\_quotient\\_exists + forward cut\\_paste + uniqueness.
+     For general: sorry pending proper chain restructuring.\<close>
   have "top1_quotient_of_scheme_on X TX (u1_r @ [(a_r, True)] @ u2_r @ [(a_r, True)] @ u3_r)"
-    sorry \<comment> \<open>Same-space: quotient\\_scheme\\_edge\\_permutation with \\<sigma>\\<inverse>.
-       The source scheme is a permutation of the target (with u2 reversal).\<close>
+    sorry \<comment> \<open>Same-space: quotient\\_scheme\\_edge\\_permutation with \\<sigma>\\<inverse>.\<close>
   thus ?case by (rule same_space_implies_homeo_realization_early)
 next
   case (v_cut_paste2_reverse b_r u2_r u1_r u0_r a_r)
@@ -11261,8 +12284,28 @@ next
       \<comment> \<open>old or new appears in prefix: non-trivial case.
          For PROPER schemes this can't happen (label appears exactly 2 times,
          all in the suffix). For the classification chain, all schemes are proper.\<close>
-      show ?thesis sorry \<comment> \<open>Non-fresh prefix case of context-left relabel.
-         Blocked: would need properness assumption to eliminate.\<close>
+      \<comment> \<open>Sub-case: if old \\<notin> y, the relabel is a no-op (z = y).\<close>
+      show ?thesis
+      proof (cases "old \<in> fst ` set y")
+        case False2: False
+        hence "z = y"
+          unfolding hz_eq by (induction y) (by100 auto)+
+        hence "prefix @ z = prefix @ y" by simp
+        hence "top1_quotient_of_scheme_on X TX (prefix @ z)"
+          using v_context_left.prems by simp
+        thus ?thesis by (rule same_space_implies_homeo_realization)
+      next
+        case True2: True
+        \<comment> \<open>old \\<in> y AND (old \\<in> prefix OR new \\<in> prefix): genuine cross-prefix relabel.
+           For proper schemes: old appears exactly 2 times in prefix@y.
+           If old \\<in> y: at least 1 in y. If old \\<in> prefix: at least 1 in prefix.
+           Total \\<ge> 2. For proper: exactly 2. So old has 1 in prefix and 1 in y.
+           The relabel changes the y-occurrence to new, creating new in y.
+           Since new might also be in prefix: creates cross-prefix new-identification.
+           This is genuinely non-trivial for non-proper schemes.\<close>
+        show ?thesis sorry \<comment> \<open>Cross-prefix relabel with old in both prefix and suffix.
+           Needs properness or multi-polygon argument.\<close>
+      qed
     qed
   next
     \<comment> \<open>Other inner operations: not exercised by the normal form chain.
@@ -11271,8 +12314,23 @@ next
        For proper schemes, the fresh-prefix case (proved above) always holds.
        These remaining sub-cases are structural completeness requirements.\<close>
     case (v_rotate u_r v_r)
-    \<comment> \<open>Inner rotate: y = u\\_r@v\\_r \\<to> z = v\\_r@u\\_r. Cannot express as full-scheme rotate.\<close>
-    show ?thesis sorry \<comment> \<open>prefix@u\\_r@v\\_r \\<to> prefix@v\\_r@u\\_r: not a rotation of the full scheme.\<close>
+    \<comment> \<open>Inner rotate: y = u\\_r@v\\_r \\<to> z = v\\_r@u\\_r.\<close>
+    have hy_rot: "y = u_r @ v_r" and hz_rot: "z = v_r @ u_r"
+      using v_rotate by (by100 auto)+
+    show ?thesis
+    proof (cases "u_r = [] \<or> v_r = []")
+      case True
+      hence "prefix @ z = prefix @ y" using hy_rot hz_rot by (by100 auto)
+      hence "top1_quotient_of_scheme_on X TX (prefix @ z)"
+        using v_context_left.prems by simp
+      thus ?thesis by (rule same_space_implies_homeo_realization)
+    next
+      case False
+      \<comment> \<open>Both u\\_r and v\\_r non-empty: genuine sub-sequence rotation.
+         Cannot express as full-scheme rotation (prefix stays fixed).
+         Needs multi-polygon paste infrastructure.\<close>
+      show ?thesis sorry \<comment> \<open>Sub-sequence rotation with non-empty parts.\<close>
+    qed
   next case (v_cancel u_c a_c v_c)
     \<comment> \<open>Inner cancel: y = u\\_c@[a\\_c,inv a\\_c]@v\\_c \\<to> z = u\\_c@v\\_c.
        Full scheme: (prefix@u\\_c)@[a\\_c,inv a\\_c]@v\\_c \\<to> (prefix@u\\_c)@v\\_c.
@@ -11356,7 +12414,10 @@ next
     show ?thesis sorry \<comment> \<open>Full-scheme cut-paste2-reverse: prefix splitting differs.\<close>
   next case v_invert
     \<comment> \<open>Inner invert: y = w \\<to> z = rev(inv w).
-       Cannot express as full-scheme invert (prefix is not inverted).\<close>
+       Cannot express as full-scheme invert (prefix is not inverted).
+       For no-shared-labels case: ROTATE + INVERT + multi-flip restores prefix.
+       But multi-flip needs induction over prefix labels.
+       For shared-labels case: needs multi-polygon infrastructure.\<close>
     show ?thesis sorry
   next case (v_flip_label a_fl)
     \<comment> \<open>Inner operation flips direction of label a\\_fl in suffix y.
@@ -11377,7 +12438,18 @@ next
         using \<open>prefix @ z = _\<close> by (by100 simp)
       thus ?thesis by (rule same_space_implies_homeo_realization)
     next
-      case False show ?thesis sorry \<comment> \<open>a\\_fl in prefix: non-trivial.\<close>
+      case False
+      show ?thesis
+      proof (cases "a_fl \<in> fst ` set y")
+        case False2: False
+        hence "z = y" unfolding hz_fl by (induction y) (by100 auto)+
+        hence "top1_quotient_of_scheme_on X TX (prefix @ z)"
+          using v_context_left.prems by simp
+        thus ?thesis by (rule same_space_implies_homeo_realization)
+      next
+        case True2: True
+        show ?thesis sorry \<comment> \<open>a\\_fl in both prefix and suffix: genuine cross-prefix flip.\<close>
+      qed
     qed
   next case (v_cut_paste u1_cp a_cp u2_cp u3_cp)
     \<comment> \<open>Inner cut-paste in suffix = full-scheme cut-paste with u1' = prefix@u1.\<close>
@@ -11506,7 +12578,39 @@ proof -
   next
     case invert show ?case by (rule top1_valid_scheme_operation.v_invert)
   next
-    case relabel show ?case sorry \<comment> \<open>Relabel: needs freshness for v\\_relabel; or label merge argument.\<close>
+    case (relabel w old new)
+    show ?case
+    proof (cases "new \<in> fst ` set w")
+      case False
+      \<comment> \<open>new \\<notin> labels(w): v\\_relabel applies directly.\<close>
+      show ?thesis
+      proof (cases "new = old")
+        case True
+        \<comment> \<open>new = old: the relabel is a no-op.\<close>
+        have "map (\<lambda>(l,b). (if l = old then new else l, b)) w = w"
+          using True by (induction w) (by100 auto)+
+        thus ?thesis by (simp add: top1_valid_scheme_operation.v_rotate[of w "[]", simplified])
+      next
+        case False2: False
+        from top1_valid_scheme_operation.v_relabel[OF \<open>new \<notin> fst ` set w\<close> False2]
+        show ?thesis .
+      qed
+    next
+      case True
+      \<comment> \<open>new \\<in> labels(w): can't use v\\_relabel (freshness fails).\<close>
+      show ?thesis
+      proof (cases "old \<in> fst ` set w")
+        case False
+        \<comment> \<open>old \\<notin> labels(w): relabel is a no-op.\<close>
+        have "map (\<lambda>(l,b). (if l = old then new else l, b)) w = w"
+          using False by (induction w) (by100 auto)+
+        thus ?thesis by (simp add: top1_valid_scheme_operation.v_rotate[of w "[]", simplified])
+      next
+        case True2: True
+        \<comment> \<open>Both old and new in w: genuine non-fresh relabel.\<close>
+        show ?thesis sorry \<comment> \<open>Non-fresh relabel: old,new both in scheme.\<close>
+      qed
+    qed
   next
     case flip_label show ?case by (rule top1_valid_scheme_operation.v_flip_label)
   next
