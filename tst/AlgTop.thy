@@ -729,6 +729,26 @@ proof -
   have hc_notin_v: "c \<notin> fst ` set v" using hfresh by (by100 auto)
   \<comment> \<open>For any label l: count in source = 2*(l=a) + count\\_u2(l) + count\\_v(l).\<close>
   define cnt where "cnt l xs = length (filter (\<lambda>x. fst x = l) xs)" for l :: "'b" and xs :: "('b \<times> bool) list"
+  \<comment> \<open>Bridge: card {i < n. fst(xs!i) = l} = cnt l xs.\<close>
+  have hcard_cnt: "\<And>l. \<And>xs :: ('b \<times> bool) list.
+      card {i. i < length xs \<and> fst (xs ! i) = l} = cnt l xs"
+  proof -
+    fix l and xs :: "('b \<times> bool) list"
+    have "{i. i < length xs \<and> fst (xs ! i) = l} = {i. i < length (map fst xs) \<and> (map fst xs) ! i = l}"
+      by (by100 auto)
+    hence "card {i. i < length xs \<and> fst (xs ! i) = l} = card {i. i < length (map fst xs) \<and> (map fst xs) ! i = l}"
+      by (by100 simp)
+    also have "\<dots> = length (filter ((=) l) (map fst xs))"
+      by (rule card_filter_nth_eq)
+    also have "\<dots> = cnt l xs"
+    proof -
+      have "length (filter ((=) l) (map fst xs)) = length (filter (((=) l) \<circ> fst) xs)"
+        by (rule length_filter_map)
+      also have "(((=) l) \<circ> fst) = (\<lambda>x :: 'b \<times> bool. fst x = l)" by (by100 auto)
+      finally show ?thesis unfolding cnt_def by (by100 simp)
+    qed
+    finally show "card {i. i < length xs \<and> fst (xs ! i) = l} = cnt l xs" .
+  qed
   \<comment> \<open>Helper: filter on rev preserves length.\<close>
   have hcnt_rev: "\<And>l. \<And>xs :: ('b \<times> bool) list. cnt l (rev xs) = cnt l xs"
   proof -
@@ -745,10 +765,24 @@ proof -
     unfolding cnt_def by (by100 simp)
   \<comment> \<open>cnt of inv(u2) = cnt of u2 (since fst preserved by inv).\<close>
   have hcnt_inv: "\<And>l. cnt l (rev (map top1_inverse_edge u2)) = cnt l u2"
-    sorry \<comment> \<open>fst preserved by inv, length preserved by rev.\<close>
+  proof -
+    fix l
+    have "cnt l (rev (map top1_inverse_edge u2)) = cnt l (map top1_inverse_edge u2)"
+      using hcnt_rev by (by100 blast)
+    also have "\<dots> = cnt l u2"
+      unfolding cnt_def top1_inverse_edge_def by (induction u2) (by100 auto)+
+    finally show "cnt l (rev (map top1_inverse_edge u2)) = cnt l u2" .
+  qed
   \<comment> \<open>Source properness via cnt.\<close>
   have hproper_cnt: "\<And>l. cnt l ?w \<in> {0, 2}"
-    sorry \<comment> \<open>From hproper + card\\_filter\\_nth\\_eq.\<close>
+  proof -
+    fix l
+    from hproper[rule_format, of l]
+    have "card {i. i < length ?w \<and> fst (?w ! i) = l} \<in> {0, 2}" .
+    moreover have "card {i. i < length ?w \<and> fst (?w ! i) = l} = cnt l ?w"
+      using hcard_cnt .
+    ultimately show "cnt l ?w \<in> {0, 2}" by (by100 simp)
+  qed
   show ?thesis
   proof (rule allI)
     fix label
@@ -757,10 +791,14 @@ proof -
     show "card {i. i < length ?w' \<and> fst (?w' ! i) = label} \<in> {0, 2}"
     proof (cases "label = c")
       case True
-      have "cnt c u2 = 0" using hc_notin_u2 unfolding cnt_def sorry
-      moreover have "cnt c v = 0" using hc_notin_v unfolding cnt_def sorry
-      ultimately have "cnt label ?w' = 2" using hcnt_target True by (by100 simp)
-      thus ?thesis sorry \<comment> \<open>cnt = card via card\\_filter\\_nth\\_eq.\<close>
+      have "cnt c u2 = 0" using hc_notin_u2 unfolding cnt_def
+        by (induction u2) (by100 auto)+
+      moreover have "cnt c v = 0" using hc_notin_v unfolding cnt_def
+        by (induction v) (by100 auto)+
+      ultimately have hcnt_eq: "cnt label ?w' = 2" using hcnt_target True by (by100 simp)
+      have "card {i. i < length ?w' \<and> fst (?w' ! i) = label} = cnt label ?w'"
+        using hcard_cnt .
+      thus ?thesis using hcnt_eq by (by100 simp)
     next
       case False
       have hcnt_src: "cnt label ?w = (if label = a then 2 else 0) + cnt label u2 + cnt label v"
@@ -771,8 +809,10 @@ proof -
       also have "\<dots> = cnt label ?w - (if label = a then 2 else 0)"
         using hcnt_src by (by100 simp)
       finally have "cnt label ?w' = cnt label ?w - (if label = a then 2 else 0)" .
-      hence "cnt label ?w' \<in> {0, 2}" using hcnt_src_in sorry
-      thus ?thesis sorry \<comment> \<open>cnt = card via card\\_filter\\_nth\\_eq.\<close>
+      hence "cnt label ?w' \<in> {0, 2}" using hcnt_src_in by (by100 auto)
+      moreover have "card {i. i < length ?w' \<and> fst (?w' ! i) = label} = cnt label ?w'"
+        using hcard_cnt .
+      ultimately show ?thesis by (by100 simp)
     qed
   qed
 qed
