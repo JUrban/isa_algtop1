@@ -854,13 +854,12 @@ qed
    Y is ALSO quotient of [(c,T)]@inv(u2)@v@[(c,T)] (for any fresh c).
    The proof constructs a new polygon P' and quotient map q': P' \\<to> Y
    via the CUT+FLIP+PASTE chain, using top1\\_quotient\\_map\\_on\\_comp.\<close>
-\<comment> \<open>WARNING: the same-space claim below (Y quotient of BOTH source and target) may be
-   TOO STRONG. The CUT+FLIP+PASTE creates vertex identifications (v\\_0 \\<leftrightarrow> v\\_{k+1 mod n},
-   v\\_1 \\<leftrightarrow> v\\_k) that differ from the original (v\\_0 \\<leftrightarrow> v\\_k, v\\_1 \\<leftrightarrow> v\\_{k+1 mod n}).
-   Combined with the c-pair, these may create coarser identifications than Y has.
-   The CORRECT statement should be HOMEOMORPHIC REALIZATION (\\<exists>Y' with Y \\<cong> Y'),
-   which is what the book proves (scheme equivalence, not same-space).
-   The same-space claim is used by cut\\_flip\\_paste\\_core but may need replacement.\<close>
+\<comment> \<open>The same-space claim IS CORRECT when all vertices are in one equivalence class
+   (one vertex class), which is the standard condition in the book's classification proof.
+   Under one vertex class: v\\_0, v\\_1, v\\_{1+|u2|}, v\\_{2+|u2|} are ALL identified in Y,
+   so the paste identification (v\\_0 \\<leftrightarrow> v\\_{2+|u2|}, v\\_1 \\<leftrightarrow> v\\_{1+|u2|}) doesn't create
+   any NEW identifications beyond what Y already has.
+   Without one vertex class: the paste may create coarser identifications.\<close>
 lemma theorem_76_1_paste_chain:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
       and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
