@@ -658,6 +658,25 @@ lemma nth_append_skip: "\<lbrakk>i \<ge> length xs\<rbrakk> \<Longrightarrow> (x
 lemma nth_append_take: "\<lbrakk>i < length xs\<rbrakk> \<Longrightarrow> (xs @ ys) ! i = xs ! i"
   by (simp add: nth_append)
 
+\<comment> \<open>MULTI-POLYGON CUT-FLIP-PASTE CORE (Munkres Theorem 76.1 application).
+   The key geometric fact: given a polygon quotient Y of scheme y0@y1,
+   cutting the polygon along the diagonal from v\\_0 to v\\_{|y0|},
+   flipping the first piece, and pasting along a shared label a
+   gives the same quotient Y for a rearranged scheme.
+
+   Specifically: if Y is quotient of y0@y1 where y0 contains one occurrence
+   of label a and y1 contains the other, and the two a-edges have opposite
+   exponents, then the CUT(y0@y1) + FLIP(P1) + PASTE(along a) chain
+   gives Y quotient of a rearranged scheme.
+
+   This is the FUNDAMENTAL sorry that blocks all cut-paste operations.
+   Proof requires: polygon diagonal cut + piecewise-linear map + quotient map composition.
+   See detailed analysis in CHANGES1700 and memory file project\\_algtop\\_cutpaste\\_analysis.md.\<close>
+lemma cut_flip_paste_core:
+  assumes "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
+  shows "top1_quotient_of_scheme_on Y TY ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ v)"
+  sorry \<comment> \<open>Multi-polygon CUT+FLIP+PASTE. See analysis in project\\_algtop\\_cutpaste\\_analysis.md.\<close>
+
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
   shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
@@ -674,10 +693,7 @@ proof -
      Need: Y quotient of a@u2@a@(u3@u1) implies Y quotient of a@a@inv(u2)@(u3@u1).\<close>
   have hcore: "top1_quotient_of_scheme_on Y TY
       ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3 @ u1)"
-    sorry \<comment> \<open>CUT-PASTE core (u1=[] case): multi-polygon CUT+FLIP+PASTE along a.
-       Given Y quotient of [(a,T)]@u2@[(a,T)]@(u3@u1),
-       prove Y also quotient of [(a,T),(a,T)]@inv(u2)@(u3@u1).
-       Via Munkres Theorem 76.1 multi-polygon argument.\<close>
+    by (rule cut_flip_paste_core[OF hrot])
   \<comment> \<open>Step C: ROTATE back to get u1 to the front.\<close>
   have hrewrite: "([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3 @ u1)
       = ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3) @ u1"
@@ -719,8 +735,16 @@ lemma quotient_of_scheme_cut_paste2:
     top1_quotient_of_scheme_on Y' TY' ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0)) \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
 proof -
+  \<comment> \<open>Derivation via multi-polygon CUT+FLIP+PASTE (Figure 77.2):
+     CUT at position |u0|: P1 = u0@c^{-1}, P2 = c@a@u1@a@u2
+     FLIP P1: c@inv(u0)
+     Apply cut\\_flip\\_paste\\_core to P2 (treating c as prefix): c@a@a@inv(u1)@u2
+     Wait - can't apply single-polygon cut-paste to P2 in a multi-polygon context.
+     Need direct multi-polygon argument for Figure 77.2.\<close>
   have "top1_quotient_of_scheme_on Y TY ([(b, True)] @ u2 @ [(b, True)] @ u1 @ rev (map top1_inverse_edge u0))"
-    sorry \<comment> \<open>Munkres §76(v): cut, relabel, recombine with fresh label b.\<close>
+    sorry \<comment> \<open>CUT-PASTE variant 2 (Figure 77.2). Needs own multi-polygon chain:
+       CUT between u0 and first a, FLIP Q1, PERMUTE both, PASTE along a.
+       Same fundamental technique as cut\\_flip\\_paste\\_core but different cut position.\<close>
   thus ?thesis by (rule same_space_implies_homeo_realization_early)
 qed
 
@@ -730,43 +754,18 @@ lemma quotient_of_scheme_cut_paste_opp:
     top1_quotient_of_scheme_on Y' TY' (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3) \<and>
     top1_homeomorphism_on Y TY Y' TY' h"
 proof -
-  \<comment> \<open>Munkres §76 cut-paste-opp: move u1 past identified pair (a,T)...(a,F).
-     Book proof: CUT between u0@u1 and (a,T), ROTATE the second polygon,
-     then PASTE back. In single-polygon view with c-separator:
-     1. CUT: insert [c^{-1}, c] separator (= UNCANCEL c)
-     2. SUFFIX ROTATE: rotate the part after c to move u1 past the a-pair
-     3. PASTE: remove [c^{-1}, c] separator (= CANCEL c)
-
-     This uses suffix\\_rotate\\_via\\_separator (sorry'd) for step 2.\<close>
-  let ?src = "u0 @ u1 @ [(a, True)] @ u2 @ [(a, False)] @ u3"
-  let ?tgt = "u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3"
-  \<comment> \<open>Step 1: ROTATE source to bring u0@u1 to the front (already there).\<close>
-  \<comment> \<open>Step 2: CUT = UNCANCEL fresh c between u0@u1 and [(a,T)].\<close>
-  \<comment> \<open>After uncancel: u0 @ u1 @ [c^{-1}, c] @ [(a,T)] @ u2 @ [(a,F)] @ u3\<close>
-  \<comment> \<open>Step 3: SUFFIX ROTATE: rotate [c, (a,T), u2, (a,F), u3] to [(a,T), u2, (a,F), u3, c]
-     Wait -- that changes the c position, making step 4 (cancel) harder.
-     Need to be more careful about the rotation.\<close>
-  \<comment> \<open>Actually, for cut-paste-opp, the book's argument is:
-     1. ROTATE source to bring (a,T) to the front:
-        [(a,T)] @ u2 @ [(a,F)] @ u3 @ u0 @ u1
-     2. CUT between [(a,F)] @ u3 and u0 @ u1:
-        P1 = [(a,T)] @ u2 @ [(a,F)] @ u3 @ [c^{-1}]
-        P2 = [c] @ u0 @ u1
-     3. ROTATE P2: [c] @ u0 @ u1 -> u1 @ [c] @ u0 (no, this changes c position)
-
-     Better approach: cut between u1 and (a,T).
-     P1 = u0 @ u1 @ [c^{-1}]
-     P2 = [c] @ [(a,T)] @ u2 @ [(a,F)] @ u3
-     Rotate P2: [(a,F)] @ u3 @ [c] @ [(a,T)] @ u2
-     Paste: u0 @ u1 @ [(a,F)] @ u3 @ [(a,T)] @ u2
-     Rotate full scheme: u0 @ [(a,T)] @ u2 @ u1 @ [(a,F)] @ u3
-
-     Hmm, that's not right either. The book's derivation is subtle.
-     For now: sorry the same-space claim and derive homeo realization.\<close>
-  have "top1_quotient_of_scheme_on Y TY ?tgt"
-    sorry \<comment> \<open>Munkres §76: CUT + per-polygon ROTATE + PASTE.
-       Requires suffix\\_rotate\\_via\\_separator (sorry'd).
-       The exact sequence of operations needs careful derivation.\<close>
+  \<comment> \<open>Multi-polygon CUT+PERMUTE+PASTE for opposite-direction labels.
+     CUT between u0@u1 and [(a,T)]:
+       P1 = u0@u1@c^{-1}, P2 = c@[(a,T)]@u2@[(a,F)]@u3
+     PERMUTE P2 to rotate u1's worth of material:
+       P2 rotated = [(a,T)]@u2@[(a,F)]@u3@c  (move c from front to end)
+     Wait: pasting P1@c^{-1} with c@... gives back original.
+     Instead: PERMUTE P2 = u3@c@[(a,T)]@u2@[(a,F)] (different rotation)
+     Then PASTE: u0@u1@u3@[(a,T)]@u2@[(a,F)] (wrong).
+     The correct approach for cut-paste-opp uses PASTE along c AFTER permuting.\<close>
+  have "top1_quotient_of_scheme_on Y TY (u0 @ [(a, True)] @ u2 @ [(a, False)] @ u1 @ u3)"
+    sorry \<comment> \<open>Multi-polygon CUT+PERMUTE+PASTE for opposite-direction cut-paste.
+       Same fundamental technique as cut\\_flip\\_paste\\_core.\<close>
   thus ?thesis by (rule same_space_implies_homeo_realization_early)
 qed
 
