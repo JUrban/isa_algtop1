@@ -668,6 +668,42 @@ lemma nth_append_skip: "\<lbrakk>i \<ge> length xs\<rbrakk> \<Longrightarrow> (x
 lemma nth_append_take: "\<lbrakk>i < length xs\<rbrakk> \<Longrightarrow> (xs @ ys) ! i = xs ! i"
   by (simp add: nth_append)
 
+\<comment> \<open>CARD-FILTER EQUIVALENCE: card {i < n. xs!i = x} = length(filter ((=) x) xs).\<close>
+lemma card_filter_nth_eq:
+  "card {i. i < length xs \<and> xs ! i = x} = length (filter ((=) x) xs)"
+proof (induction xs rule: rev_induct)
+  case Nil show ?case by (by100 simp)
+next
+  case (snoc y ys)
+  have h1: "{i. i < length (ys @ [y]) \<and> (ys @ [y]) ! i = x}
+      = {i. i < length ys \<and> ys ! i = x} \<union> (if y = x then {length ys} else {})"
+  proof (rule set_eqI)
+    fix i
+    show "(i \<in> {i. i < length (ys @ [y]) \<and> (ys @ [y]) ! i = x}) =
+          (i \<in> {i. i < length ys \<and> ys ! i = x} \<union> (if y = x then {length ys} else {}))"
+      by (cases "i < length ys") (auto simp: nth_append)
+  qed
+  have h2: "length (filter ((=) x) (ys @ [y])) = length (filter ((=) x) ys) + (if y = x then 1 else 0)"
+    by (by100 simp)
+  have hfin: "finite {i. i < length ys \<and> ys ! i = x}" by (by100 auto)
+  have hdisj: "{i. i < length ys \<and> ys ! i = x} \<inter> (if y = x then {length ys} else {}) = {}"
+    by (by100 auto)
+  show ?case using snoc.IH h1 h2 hfin hdisj card_Un_disjoint
+    by (by100 simp)
+qed
+
+\<comment> \<open>PROPERNESS PRESERVATION under label substitution.
+   If source scheme is proper (each label 0 or 2 times) and c is fresh,
+   then replacing a by c preserves properness.\<close>
+lemma proper_scheme_subst:
+  fixes a c :: "'b" and u2 v :: "('b \<times> bool) list"
+  assumes hproper: "\<forall>label. card {i. i < length ([(a, True)] @ u2 @ [(a, True)] @ v)
+            \<and> fst (([(a, True)] @ u2 @ [(a, True)] @ v) ! i) = label} \<in> {0, 2}"
+      and hfresh: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
+  shows "\<forall>label. card {i. i < length ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])
+            \<and> fst (([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)]) ! i) = label} \<in> {0, 2}"
+  sorry
+
 \<comment> \<open>SUB-POLYGON INCLUSION: convex hull of a subset of vertices is contained in the polygon.
    If P is a convex polygon with vertices v\\_0,...,v\\_{n-1}, then for any k+1 consecutive
    vertices v\\_0,...,v\\_k, the convex hull Q1 = {\\<Sum> c\\_i * v\\_i | i \\<le> k, c\\_i \\<ge> 0, \\<Sum> c\\_i = 1}
@@ -1044,10 +1080,7 @@ proof -
     using hmap_fst_inv by (by100 simp)
   have hc_ne_a: "c \<noteq> a" using hfresh_c by (by100 auto)
   have hproper': "\<forall>label. card {i. i < length ?w' \<and> fst (?w'!i) = label} \<in> {0, 2}"
-    sorry \<comment> \<open>From hmap\\_fst\\_w, hmap\\_fst\\_w', hc\\_ne\\_a, hfresh\\_c, hproper.
-       Key: count\\_list l (map fst w') = count\\_list l (map fst w) for l \\<noteq> a, l \\<noteq> c.
-       For l = c: count = 2 (at positions 0 and n-1, c \\<notin> u2 \\<union> v by freshness).
-       For l = a: count = 0 (a removed, c \\<noteq> a, a \\<notin> u2 \\<union> v by source properness).\<close>
+    using proper_scheme_subst[OF hproper hfresh_c] .
   \<comment> \<open>Step 2: Get Y' quotient of target scheme from scheme\\_quotient\\_exists.\<close>
   have hlen'3: "length ?w' \<ge> 3" using hlen hlen' by (by100 linarith)
   from scheme_quotient_exists(1)[OF hlen'3 hproper']
