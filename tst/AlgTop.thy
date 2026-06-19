@@ -12417,7 +12417,11 @@ next
       by (by100 blast)
     have "top1_quotient_of_scheme_on Y'opp TY'opp (prefix @ z)" using hY'opp hz by (by100 simp)
     thus ?thesis using hh'opp by (rule homeo_realization_flat_introI)
-  next case v_context_left show ?thesis sorry
+  next case v_context_left
+    \<comment> \<open>Nested context-left: inner is v\\_context\\_left(prefix2, y2, z2).
+       The full operation: (prefix@prefix2)@y2 \\<to> (prefix@prefix2)@z2.
+       This is a v\\_context\\_left with combined prefix, handled by the lemma itself.\<close>
+    show ?thesis sorry \<comment> \<open>Nested context-left: needs recursion on nesting depth.\<close>
   qed
 qed
 
