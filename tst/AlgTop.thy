@@ -972,6 +972,96 @@ qed
    2. Fresh label existence + RELABEL step
    The RELABEL sorry can be closed for proper schemes (a \\<notin> fst ` set u2 \\<union> fst ` set v).\<close>
 
+\<comment> \<open>PROPER VERSION: for nat-typed proper schemes where a appears only at the two
+   explicit positions, the fresh label and relabel steps can be closed.
+   Only theorem\\_76\\_1\\_paste\\_chain remains as sorry.\<close>
+lemma cut_flip_paste_core_proper:
+  fixes a :: nat
+  assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
+      and ha_fresh_u2: "a \<notin> fst ` set u2"
+      and ha_fresh_v: "a \<notin> fst ` set v"
+  shows "top1_quotient_of_scheme_on Y TY ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ v)"
+proof -
+  let ?w = "[(a, True)] @ u2 @ [(a, True)] @ v"
+  let ?labels = "fst ` set ?w"
+  \<comment> \<open>Step 1: Get fresh label c (nat, so infinite UNIV).\<close>
+  have hfin: "finite ?labels" by (by100 simp)
+  from ex_new_if_finite[OF infinite_UNIV_nat hfin]
+  obtain c :: nat where hfresh_c: "c \<notin> ?labels" by (by100 blast)
+  \<comment> \<open>Step 2: Apply theorem\\_76\\_1\\_paste\\_chain.\<close>
+  from theorem_76_1_paste_chain[OF hq hfresh_c]
+  have h1: "top1_quotient_of_scheme_on Y TY
+    ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])" .
+  \<comment> \<open>Step 3: RELABEL c \\<to> a. Fresh because a \\<notin> labels of c-scheme.\<close>
+  have ha_ne_c: "a \<noteq> c" using hfresh_c by (by100 auto)
+  have hfst_inv: "\<And>e. e \<in> set u2 \<Longrightarrow> fst (top1_inverse_edge e) = fst e"
+    unfolding top1_inverse_edge_def by (by100 auto)
+  have hfst_inv_set: "fst ` set (map top1_inverse_edge u2) = fst ` set u2"
+    unfolding top1_inverse_edge_def by (by100 force)
+  have ha_fresh_inv: "a \<notin> fst ` set (rev (map top1_inverse_edge u2))"
+    using ha_fresh_u2 hfst_inv_set by (by100 simp)
+  have ha_fresh_w': "a \<notin> fst ` set ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])"
+    using ha_ne_c ha_fresh_inv ha_fresh_v by (by100 auto)
+  from quotient_of_scheme_relabel_fresh[OF h1 ha_fresh_w' ha_ne_c]
+  have h2: "top1_quotient_of_scheme_on Y TY
+    (map (\<lambda>(l,b). (if l = c then a else l, b)) ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)]))" .
+  \<comment> \<open>Simplify: relabeling c\\<to>a changes only the c entries.\<close>
+  have hmap_eq: "map (\<lambda>(l,b). (if l = c then a else l, b))
+    ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])
+    = [(a, True)] @ rev (map top1_inverse_edge u2) @ v @ [(a, True)]"
+  proof -
+    have hmap_c: "map (\<lambda>(l,b). (if l = c then a else l, b)) [(c, True)] = [(a, True)]"
+      by (by100 simp)
+    have hmap_inv: "map (\<lambda>(l,b). (if l = c then a else l, b)) (rev (map top1_inverse_edge u2))
+        = rev (map top1_inverse_edge u2)"
+    proof (rule map_idI)
+      fix x assume "x \<in> set (rev (map top1_inverse_edge u2))"
+      hence "fst x \<in> fst ` set (rev (map top1_inverse_edge u2))" by (by100 auto)
+      hence "fst x \<noteq> c"
+      proof -
+        have "c \<notin> fst ` set (rev (map top1_inverse_edge u2))"
+        proof -
+          have "fst ` set (rev (map top1_inverse_edge u2)) = fst ` set (map top1_inverse_edge u2)"
+            by (by100 simp)
+          also have "\<dots> = fst ` set u2"
+          proof (rule set_eqI)
+            fix x show "x \<in> fst ` set (map top1_inverse_edge u2) \<longleftrightarrow> x \<in> fst ` set u2"
+              unfolding top1_inverse_edge_def by (by100 force)
+          qed
+          also have "c \<notin> \<dots>" using hfresh_c by (by100 auto)
+          finally show ?thesis .
+        qed
+        thus ?thesis using \<open>fst x \<in> fst ` set (rev (map top1_inverse_edge u2))\<close> by (by100 blast)
+      qed
+      thus "(case x of (l, b) \<Rightarrow> (if l = c then a else l, b)) = x"
+        using \<open>fst x \<noteq> c\<close> by (cases x) (by100 simp)
+    qed
+    have hmap_v: "map (\<lambda>(l,b). (if l = c then a else l, b)) v = v"
+    proof (rule map_idI)
+      fix x assume "x \<in> set v"
+      hence "fst x \<in> fst ` set v" by (by100 auto)
+      hence "fst x \<noteq> c" using hfresh_c by (by100 auto)
+      thus "(case x of (l, b) \<Rightarrow> (if l = c then a else l, b)) = x"
+        using \<open>fst x \<noteq> c\<close> by (cases x) (by100 simp)
+    qed
+    show ?thesis using hmap_c hmap_inv hmap_v by (by100 simp)
+  qed
+  from h2[unfolded hmap_eq]
+  have h3: "top1_quotient_of_scheme_on Y TY
+    ([(a, True)] @ rev (map top1_inverse_edge u2) @ v @ [(a, True)])" .
+  \<comment> \<open>Step 4: ROTATE to final form.\<close>
+  from quotient_of_scheme_rotate[OF h3]
+  have "top1_quotient_of_scheme_on Y TY
+    (rev (map top1_inverse_edge u2) @ v @ [(a, True)] @ [(a, True)])" by simp
+  from quotient_of_scheme_rotate[OF this]
+  have "top1_quotient_of_scheme_on Y TY
+    (v @ [(a, True)] @ [(a, True)] @ rev (map top1_inverse_edge u2))" by simp
+  from quotient_of_scheme_rotate[OF this]
+  have "top1_quotient_of_scheme_on Y TY
+    ([(a, True)] @ [(a, True)] @ rev (map top1_inverse_edge u2) @ v)" by simp
+  thus ?thesis by simp
+qed
+
 lemma quotient_of_scheme_cut_paste:
   assumes "top1_quotient_of_scheme_on Y TY (u1 @ [(a, True)] @ u2 @ [(a, True)] @ u3)"
   shows "\<exists>(Y' :: 'a set) (TY' :: 'a set set) (h :: 'a \<Rightarrow> 'a).
