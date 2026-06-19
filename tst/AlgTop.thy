@@ -567,7 +567,7 @@ lemma quotient_rearrangement_homeomorphism:
    because all vertex jumps are absorbed (one vertex class: q maps all vertices
    to the same point). The snd-relative condition ensures identification-compatibility.\<close>
 lemma quotient_rearrangement_homeomorphism_1vc:
-  fixes s1 s2 :: "('b \<times> bool) list" and \<sigma> :: "nat \<Rightarrow> nat"
+  fixes s1 s2 :: "(nat \<times> bool) list" and \<sigma> :: "nat \<Rightarrow> nat"
   assumes hY1: "top1_quotient_of_scheme_on Y1 TY1 s1"
       and hY2: "top1_quotient_of_scheme_on Y2 TY2 s2"
       and hlen: "length s2 = length s1"
@@ -593,8 +593,62 @@ lemma quotient_rearrangement_homeomorphism_1vc:
                             t*vy1 j + (1-t)*vy1(Suc j mod length s1))))\<rbrakk> \<Longrightarrow>
           \<forall>i<length s1. \<forall>j<length s1. q1 (vx1 i, vy1 i) = q1 (vx1 j, vy1 j)"
   shows "\<exists>h. top1_homeomorphism_on Y1 TY1 Y2 TY2 h"
-  sorry \<comment> \<open>Proof: under one vertex class, boundary map q1 \\<circ> \\<phi> IS continuous
-     (vertex jumps absorbed). Bijection by \\<sigma> + snd\\_rel. Compact \\<to> Hausdorff.\<close>
+proof -
+  let ?n = "length s1"
+  let ?TP = "\<lambda>S. subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) S"
+  have htopo1: "is_topology_on_strict Y1 TY1"
+    using hY1 unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have htopo2: "is_topology_on_strict Y2 TY2"
+    using hY2 unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 1: Extract polygon P1 and P2 with full C1-C11 witnesses.\<close>
+  from quotient_of_scheme_extract_vx[OF hY1]
+  obtain P1 q1 vx1 vy1 where
+      hP1: "top1_is_polygonal_region_on P1 ?n"
+    and hq1: "top1_quotient_map_on P1 (?TP P1) Y1 TY1 q1"
+    and hv1_in: "\<forall>i<?n. (vx1 i, vy1 i) \<in> P1"
+    and hC7_1: "\<forall>i<?n. \<forall>j<?n. fst (s1!i) = fst (s1!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q1 ((1-t)*vx1 i + t*vx1(Suc i mod ?n), (1-t)*vy1 i + t*vy1(Suc i mod ?n))
+         = (if snd(s1!i) = snd(s1!j)
+            then q1 ((1-t)*vx1 j + t*vx1(Suc j mod ?n), (1-t)*vy1 j + t*vy1(Suc j mod ?n))
+            else q1 (t*vx1 j + (1-t)*vx1(Suc j mod ?n), t*vy1 j + (1-t)*vy1(Suc j mod ?n))))"
+    and hC8_1: "\<forall>p\<in>P1. (\<forall>i<?n. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx1 i + t*vx1(Suc i mod ?n), (1-t)*vy1 i + t*vy1(Suc i mod ?n)))
+           \<longrightarrow> (\<forall>p'\<in>P1. q1 p = q1 p' \<longrightarrow> p = p')"
+    by (rule quotient_of_scheme_extract_vx[OF hY1])
+  \<comment> \<open>Step 2: Apply one vertex class condition.\<close>
+  have h1vc_applied: "\<forall>i<?n. \<forall>j<?n. q1 (vx1 i, vy1 i) = q1 (vx1 j, vy1 j)"
+    using h1vc[OF hP1 hq1 hv1_in hC7_1] .
+  \<comment> \<open>Step 3: Both Y1 and Y2 are compact Hausdorff (from Theorem 74.1).\<close>
+  \<comment> \<open>Both Y1 and Y2 are compact Hausdorff (from quotient\\_of\\_scheme\\_on).\<close>
+  have hpq1: "top1_is_polygonal_quotient_on Y1 TY1"
+    unfolding top1_is_polygonal_quotient_on_def using htopo1 hY1 by (by100 blast)
+  have hpq2: "top1_is_polygonal_quotient_on Y2 TY2"
+    unfolding top1_is_polygonal_quotient_on_def using htopo2 hY2 by (by100 blast)
+  from Theorem_74_1_polygon_quotient_compact_hausdorff[OF htopo1 hpq1]
+  have hY1_compact: "top1_compact_on Y1 TY1" and hY1_haus: "is_hausdorff_on Y1 TY1"
+    by (by100 blast)+
+  from Theorem_74_1_polygon_quotient_compact_hausdorff[OF htopo2 hpq2]
+  have hY2_compact: "top1_compact_on Y2 TY2" and hY2_haus: "is_hausdorff_on Y2 TY2"
+    by (by100 blast)+
+  \<comment> \<open>Step 4: Construct the homeomorphism.
+     Define h: Y1 \\<to> Y2 by:
+       h(q1(interior point p)) = q2(\\<phi>(p))  where \\<phi>: P1 \\<to> P2 rearranges edges
+       h(q1(edge point)) = q2(corresponding edge point)
+       h(q1(vertex)) = q2(any vertex)  (one vertex class: all vertices equivalent)
+
+     Key property: q1 \\<circ> \\<phi>\\<inverse> is continuous because:
+       - On edge interiors: \\<phi>\\<inverse> maps each edge linearly, q1 is continuous
+       - At vertex junctions: \\<phi>\\<inverse> jumps between vertices, but q1 maps all vertices
+         to the same point (one vertex class), so the jump is absorbed
+
+     Then h is a continuous bijection from compact Y1 to Hausdorff Y2 = homeomorphism.\<close>
+  show ?thesis sorry
+    \<comment> \<open>Full construction of h. Requires:
+       - \\<phi> definition on polygon boundary + cone extension to interior
+       - Continuity of q2 \\<circ> \\<phi> under one vertex class (vertex jumps absorbed)
+       - Bijectivity from \\<sigma> bijection + C8 interior injectivity + snd\\_rel
+       - Compact \\<to> Hausdorff gives homeomorphism\<close>
+qed
 
 \<comment> \<open>CORRECT replacement for the false lemma above: multi-polygon paste.
    The book's Theorem 76.1 CUT+FLIP+PERMUTE+PASTE argument for same-direction cut-paste.
