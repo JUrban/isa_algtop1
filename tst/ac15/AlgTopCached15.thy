@@ -612,7 +612,10 @@ lemma scheme_quotient_exists:
                   \<and> ((snd (scheme ! i) = snd (scheme ! j) \<and> a = i \<and> b = j)
                    \<or> (snd (scheme ! i) = snd (scheme ! j) \<and> a = Suc i mod length scheme \<and> b = Suc j mod length scheme)
                    \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = i \<and> b = Suc j mod length scheme)
-                   \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = Suc i mod length scheme \<and> b = j))}\<^sup>*))" (is ?C2)
+                   \<or> (snd (scheme ! i) \<noteq> snd (scheme ! j) \<and> a = Suc i mod length scheme \<and> b = j))}\<^sup>*))
+    \<and> (\<Sum>k<length scheme. vx k) = 0
+    \<and> (\<Sum>k<length scheme. vy k) = 0
+    \<and> (\<forall>j<length scheme. (vx j)^2 + (vy j)^2 = 1)" (is ?C2)
 proof -
   let ?n = "length scheme"
   \<comment> \<open>Regular n-gon: vertices at (cos(2\\<pi>k/n), sin(2\\<pi>k/n)).\<close>
@@ -3772,6 +3775,17 @@ proof -
     qed
     \<comment> \<open>Step 7: Conclude.\<close>
     show "(k, l) \<in> ?S\<^sup>*" using hkl_R \<open>?R\<^sup>* \<subseteq> ?S\<^sup>*\<close> by (by100 blast)
+  next
+    \<comment> \<open>Circumscribed property: all vertices on circle of radius 1 centered at centroid.\<close>
+    show "(\<Sum>k<?n. vx k) = 0" using hcx0 .
+    show "(\<Sum>k<?n. vy k) = 0" using hcy0 .
+    show "\<forall>j<?n. (vx j)^2 + (vy j)^2 = 1"
+    proof (intro allI impI)
+      fix j assume "j < ?n"
+      show "(vx j)^2 + (vy j)^2 = 1"
+        using sin_cos_squared_add[of "2*pi*real j/real ?n"]
+        unfolding vx_def vy_def by (by100 simp)
+    qed
   qed
 qed
 

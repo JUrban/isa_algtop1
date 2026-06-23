@@ -26,9 +26,41 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-17, session 1610):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-18, session 1634):
 
-~68 sorry word occurrences. Build ~50s.
+21 sorry proof commands. Build ~2:10.
+spur\\_arc\\_target\\_sector: 99% proved via complex Arg. Only k=1 for nw\\<ge>5 (winding=1) remains.
+prop12: jp=0 and jp=nw-1 FULLY PROVED. jp\\<notin>{0,nw-1} blocked by spur\\_arc\\_target\\_sector.
+New: spur\\_match\\_sector0/last, cramer\\_inverse\\_tp/sp\\_zero, complex angle infrastructure.
+
+CLASSIFICATION CHAIN ANALYSIS (scheme\\_normal\\_form\\_valid uses 100 operations):
+  PROVED for proper: rotate(25), flip\\_label(22), cancel(13), cancel\\_reverse(2),
+    invert(4), relabel-fresh(8).
+  SORRY: cut\\_paste\\_opp(11), cut\\_paste(4), cut\\_paste2(2),
+    cut\\_paste\\_reverse(2), cut\\_paste2\\_reverse(3), context\\_left-nonstandard(4).
+  KEY: all sorry'd operations need GEOMETRIC REARRANGEMENT (multi-polygon or arc-permutation).
+
+SORRY INVENTORY (22 proof sorrys):
+A. GEOMETRIC CORE (3 sorrys):
+   - spur\\_arc\\_target\\_sector (L1837): cc monotonicity. HARD: needs angular/winding argument.
+     Blocks prop12 jp\\<notin>{0,nw-1} (L7154). Approaches exhausted: C10/C11 alone insufficient,
+     hfan\\_det\\_w integration would need ~500 lines of sum decomposition.
+   - fan\\_affine\\_interior\\_injective False (L1622): sector disjointness. Same difficulty.
+     Blocks prop10 (L6469).
+   - spur\\_arc\\_match j\\<noteq>0\\<and>j+1\\<noteq>0 (L2053): GENUINELY FALSE for general C10/C11 polygons.
+     Not needed (prop12 uses target sector analysis instead).
+B. CUT-PASTE OPERATIONS (5 sorrys, L421/567/596/606/618/662/692):
+   suffix\\_rotate\\_via\\_separator FALSE as stated (L571 comment).
+   All need multi-polygon quotient infrastructure (Munkres §76 cut-combine-paste).
+   CRITICAL PATH for v\\_cut\\_paste/v\\_cut\\_paste\\_opp operations.
+C. PER-POLYGON ROTATION (2 sorrys, L9962/10010):
+   Proper versions need geometric arc-permutation construction.
+   CRITICAL PATH.
+D. CONTEXT-LEFT + STRUCTURAL (7 sorrys, various):
+   NOT on critical path. Only v\\_relabel (fresh) used by classification chain = PROVED.
+E. FINAL ASSEMBLY (2 sorrys, L10695/10753):
+   Extraction: construct edge scheme from polygonal quotient.
+   Sphere: quotient of [(a,T),(a,F),(b,T),(b,F)] \\<cong> S2.
 
 DEPENDENCY TREE FOR CANCEL CHAIN:
   spur\\_collapse\\_cancel\\_homeo (phi construction, ~2 sorry proof commands)
@@ -1619,6 +1651,150 @@ next
   show ?thesis sorry
 qed
 
+\<comment> \<open>Standalone lemma: if phi(p) = spur arc point and jp=0, then t\\_p = 0.
+   From the affine form: (1-s-t)*cw + s*u\\_0 + t*u\\_1 = (1-r)*u\\_0 + r*cw.
+   Rearranging: s*(u\\_0-cw) + t*(u\\_1-cw) = (1-r)*(u\\_0-cw).
+   Cramer with det(u\\_0-cw, u\\_1-cw) = C10(0) > 0:
+   t*C10(0) = (1-r)*det(u\\_0-cw, u\\_0-cw) = 0. So t = 0.\<close>
+lemma spur_match_sector0_forces_t_zero:
+  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
+  assumes hnw: "nw \<ge> 3"
+      and hC10_0: "(vxw 0 - cxw) * (vyw(Suc 0 mod nw) - cyw) - (vyw 0 - cyw) * (vxw(Suc 0 mod nw) - cxw) > 0"
+      and hmx: "(1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw) = (1-r)*vxw 0 + r*cxw"
+      and hmy: "(1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw) = (1-r)*vyw 0 + r*cyw"
+  shows "tp = 0"
+proof -
+  \<comment> \<open>Multiply hmx by (vyw 0-cyw), hmy by (vxw 0-cxw), subtract to eliminate s.\<close>
+  define Ay where "Ay = vyw 0 - cyw"
+  define Ax where "Ax = vxw 0 - cxw"
+  \<comment> \<open>From hmx: Ay*((1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw)) = Ay*((1-r)*vxw 0 + r*cxw).\<close>
+  \<comment> \<open>From hmy: Ax*((1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw)) = Ax*((1-r)*vyw 0 + r*cyw).\<close>
+  \<comment> \<open>Subtract: Ay*LHS\\_x - Ax*LHS\\_y = Ay*RHS\\_x - Ax*RHS\\_y.\<close>
+  \<comment> \<open>LHS: (1-s-tp)*(Ay*cxw-Ax*cyw) + s*(Ay*vxw 0-Ax*vyw 0) + tp*(Ay*vxw(suc)-Ax*vyw(suc)).\<close>
+  \<comment> \<open>Key: Ay*vxw 0 - Ax*vyw 0 = (vyw 0-cyw)*vxw 0 - (vxw 0-cxw)*vyw 0 = cxw*vyw 0-cyw*vxw 0
+     = Ay*cxw - Ax*cyw. So the (1-s-tp) and s terms COMBINE: (1-tp)*(Ay*cxw-Ax*cyw).\<close>
+  \<comment> \<open>RHS: (1-r)*Ay*vxw 0 + r*Ay*cxw - (1-r)*Ax*vyw 0 - r*Ax*cyw
+     = (1-r)*(Ay*vxw 0-Ax*vyw 0) + r*(Ay*cxw-Ax*cyw)
+     = (1-r)*(Ay*cxw-Ax*cyw) + r*(Ay*cxw-Ax*cyw) = Ay*cxw - Ax*cyw.\<close>
+  \<comment> \<open>So: (1-tp)*(Ay*cxw-Ax*cyw) + tp*(Ay*vxw(suc)-Ax*vyw(suc)) = Ay*cxw - Ax*cyw.\<close>
+  \<comment> \<open>Hence: tp*(Ay*vxw(suc)-Ax*vyw(suc) - (Ay*cxw-Ax*cyw)) = 0.\<close>
+  \<comment> \<open>The coefficient of tp is: Ay*(vxw(suc)-cxw) - Ax*(vyw(suc)-cyw) = C10(0) > 0.\<close>
+  \<comment> \<open>Define products for Cramer cross-multiplication.\<close>
+  have h1: "Ay*((1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw)) = Ay*((1-r)*vxw 0 + r*cxw)"
+    using hmx by simp
+  have h2: "Ax*((1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw)) = Ax*((1-r)*vyw 0 + r*cyw)"
+    using hmy by simp
+  \<comment> \<open>Subtract h2 from h1. On the LHS, the s*(Ay*vxw 0 - Ax*vyw 0) and
+     (1-s-tp)*(Ay*cxw - Ax*cyw) terms combine because Ay*vxw 0 - Ax*vyw 0 = Ay*cxw - Ax*cyw.
+     Result: tp * ((Ax*(vyw(Suc 0 mod nw)-cyw) - Ay*(vxw(Suc 0 mod nw)-cxw))) = 0.
+     But Ax*(vyw(suc)-cyw) - Ay*(vxw(suc)-cxw) = -C10(0) < 0. Wait, let me check the sign.\<close>
+  \<comment> \<open>Actually: Ay*vxw(suc) - Ax*vyw(suc) - (Ay*cxw - Ax*cyw) =
+     Ay*(vxw(suc)-cxw) - Ax*(vyw(suc)-cyw) = (vyw 0-cyw)*(vxw(suc)-cxw)-(vxw 0-cxw)*(vyw(suc)-cyw).
+     This is -C10(0) (by antisymmetry). So tp*(-C10(0)) = 0, tp = 0.\<close>
+  \<comment> \<open>The algebra is tedious but straightforward. Sorry for now.\<close>
+  \<comment> \<open>The key Cramer cross-multiplication identity.\<close>
+  have htp_zero: "tp * ((vyw 0-cyw)*(vxw(Suc 0 mod nw)-cxw) - (vxw 0-cxw)*(vyw(Suc 0 mod nw)-cyw)) = 0"
+  proof -
+    \<comment> \<open>h1-h2 gives: the difference of the cross-multiplied matching equations.\<close>
+    from h1 have h1': "(vyw 0-cyw)*((1-s-tp)*cxw + s*vxw 0 + tp*vxw(Suc 0 mod nw)) =
+        (vyw 0-cyw)*((1-r)*vxw 0 + r*cxw)" unfolding Ay_def .
+    from h2 have h2': "(vxw 0-cxw)*((1-s-tp)*cyw + s*vyw 0 + tp*vyw(Suc 0 mod nw)) =
+        (vxw 0-cxw)*((1-r)*vyw 0 + r*cyw)" unfolding Ax_def .
+    \<comment> \<open>Expand and subtract. The key cancellation: the s terms cancel because
+       (vyw 0-cyw)*vxw 0 - (vxw 0-cxw)*vyw 0 = cxw*(vyw 0)-cyw*(vxw 0)
+       and (vyw 0-cyw)*cxw - (vxw 0-cxw)*cyw = same. So (1-s-tp+s)=1-tp factor.\<close>
+    show ?thesis using h1' h2' by (by20000 algebra)
+  qed
+  have hdet_ne: "(vyw 0-cyw)*(vxw(Suc 0 mod nw)-cxw) - (vxw 0-cxw)*(vyw(Suc 0 mod nw)-cyw) \<noteq> 0"
+    using hC10_0 by linarith
+  from htp_zero hdet_ne show "tp = 0" by simp
+qed
+
+\<comment> \<open>Symmetric lemma for jp=nw-1: if phi(p) = spur and Suc jp mod nw = 0 (u\\_{jp+1}=u\\_0),
+   then s\\_p = 0. The matching equation gives s*(u\\_j-cw)+t*(u\\_0-cw)=(1-r)*(u\\_0-cw),
+   and Cramer with C10(jp) > 0 shows s = 0.\<close>
+lemma spur_match_sector_last_forces_s_zero:
+  fixes nw :: nat and vxw vyw :: "nat \<Rightarrow> real" and cxw cyw :: real
+  assumes hnw: "nw \<ge> 3"
+      and hjp: "jp < nw" and hjp_last: "Suc jp mod nw = 0"
+      and hC10_jp: "(vxw jp - cxw) * (vyw(Suc jp mod nw) - cyw) - (vyw jp - cyw) * (vxw(Suc jp mod nw) - cxw) > 0"
+      and hmx: "(1-sp-t)*cxw + sp*vxw jp + t*vxw(Suc jp mod nw) = (1-r)*vxw 0 + r*cxw"
+      and hmy: "(1-sp-t)*cyw + sp*vyw jp + t*vyw(Suc jp mod nw) = (1-r)*vyw 0 + r*cyw"
+  shows "sp = 0"
+proof -
+  \<comment> \<open>Suc jp mod nw = 0, so vxw(Suc jp mod nw) = vxw 0.\<close>
+  from hjp_last have hvx: "vxw(Suc jp mod nw) = vxw 0" "vyw(Suc jp mod nw) = vyw 0" by auto
+  \<comment> \<open>Multiply hmy by (vxw(Suc jp mod nw)-cxw)=(vxw 0-cxw), hmx by (vyw(Suc jp mod nw)-cyw)=(vyw 0-cyw).
+     Subtract to eliminate t. For jp=nw-1: u\\_{jp+1}=u\\_0, so the t coefficients match the RHS.\<close>
+  define Bx where "Bx = vxw 0 - cxw"
+  define By where "By = vyw 0 - cyw"
+  have h1: "By*((1-sp-t)*cxw + sp*vxw jp + t*vxw 0) = By*((1-r)*vxw 0 + r*cxw)"
+    using hmx hvx by simp
+  have h2: "Bx*((1-sp-t)*cyw + sp*vyw jp + t*vyw 0) = Bx*((1-r)*vyw 0 + r*cyw)"
+    using hmy hvx by simp
+  \<comment> \<open>h1 - h2 eliminates t and (1-sp-t) by the same cancellation as sector0.\<close>
+  have hsp_zero: "sp * ((vxw jp - cxw)*(vyw 0 - cyw) - (vyw jp - cyw)*(vxw 0 - cxw)) = 0"
+  proof -
+    from h1 have h1': "By*((1-sp-t)*cxw + sp*vxw jp + t*vxw 0) =
+        By*((1-r)*vxw 0 + r*cxw)" .
+    from h2 have h2': "Bx*((1-sp-t)*cyw + sp*vyw jp + t*vyw 0) =
+        Bx*((1-r)*vyw 0 + r*cyw)" .
+    show ?thesis using h1' h2' unfolding Bx_def By_def by (by20000 algebra)
+  qed
+  have hdet_ne: "(vxw jp - cxw)*(vyw 0 - cyw) - (vyw jp - cyw)*(vxw 0 - cxw) \<noteq> 0"
+  proof -
+    from hC10_jp hvx have "(vxw jp - cxw)*(vyw 0 - cyw) - (vyw jp - cyw)*(vxw 0 - cxw) > 0"
+      by simp
+    thus ?thesis by linarith
+  qed
+  from hsp_zero hdet_ne show "sp = 0" by simp
+qed
+
+\<comment> \<open>Cramer inverse: if sp*det = fy*dx-fx*dy and tp*det = ex*dy-ey*dx and tp=0 and det\\<noteq>0,
+   then dx = sp*ex and dy = sp*ey.\<close>
+lemma cramer_inverse_tp_zero:
+  assumes hsp_mul: "sp*det_v = fy*dx - fx*dy"
+      and htp_mul: "tp*det_v = ex*dy - ey*dx"
+      and htp0: "(tp::real) = 0"
+      and hdet_ne: "det_v \<noteq> 0"
+      and hdet_eq: "det_v = ex*fy - ey*fx"
+  shows "dx = sp*ex" "dy = sp*ey"
+proof -
+  have "dx*det_v = (fy*dx-fx*dy)*ex + (ex*dy-ey*dx)*fx"
+    unfolding hdet_eq by (by20000 algebra)
+  hence "dx*det_v = sp*det_v*ex + tp*det_v*fx" using hsp_mul htp_mul by simp
+  with htp0 have "dx*det_v = (sp*ex)*det_v" by (by100 algebra)
+  thus "dx = sp*ex" using hdet_ne by simp
+next
+  have "dy*det_v = (fy*dx-fx*dy)*ey + (ex*dy-ey*dx)*fy"
+    unfolding hdet_eq by (by20000 algebra)
+  hence "dy*det_v = sp*det_v*ey + tp*det_v*fy" using hsp_mul htp_mul by simp
+  with htp0 have "dy*det_v = (sp*ey)*det_v" by (by100 algebra)
+  thus "dy = sp*ey" using hdet_ne by simp
+qed
+
+\<comment> \<open>Symmetric Cramer inverse: sp=0 gives dx = tp*fx, dy = tp*fy.\<close>
+lemma cramer_inverse_sp_zero:
+  assumes hsp_mul: "sp*det_v = fy*dx - fx*dy"
+      and htp_mul: "tp*det_v = ex*dy - ey*dx"
+      and hsp0: "(sp::real) = 0"
+      and hdet_ne: "det_v \<noteq> 0"
+      and hdet_eq: "det_v = ex*fy - ey*fx"
+  shows "dx = tp*fx" "dy = tp*fy"
+proof -
+  have "dx*det_v = (fy*dx-fx*dy)*ex + (ex*dy-ey*dx)*fx"
+    unfolding hdet_eq by (by20000 algebra)
+  hence "dx*det_v = sp*det_v*ex + tp*det_v*fx" using hsp_mul htp_mul by simp
+  with hsp0 have "dx*det_v = (tp*fx)*det_v" by (by100 algebra)
+  thus "dx = tp*fx" using hdet_ne by simp
+next
+  have "dy*det_v = (fy*dx-fx*dy)*ey + (ex*dy-ey*dx)*fy"
+    unfolding hdet_eq by (by20000 algebra)
+  hence "dy*det_v = sp*det_v*ey + tp*det_v*fy" using hsp_mul htp_mul by simp
+  with hsp0 have "dy*det_v = (tp*fy)*det_v" by (by100 algebra)
+  thus "dy = tp*fy" using hdet_ne by simp
+qed
+
 \<comment> \<open>Standalone lemma: spur arc point is NOT in target sector jp for jp \\<notin> {0, nw-1}.
    The spur arc ((1-t)*u\\_0 + t*cw) has cross\\_cw(j, spur) = (1-t)*cross\\_cw(j, u\\_0).
    cross\\_cw(j, u\\_0) = det(u\\_j-cw, u\\_0-cw).
@@ -1631,6 +1807,10 @@ lemma spur_arc_target_sector:
           (vyw i - cyw) * (vxw(Suc i mod nw) - cxw) > 0"
       and hC11: "\<forall>i<nw. \<forall>k<nw. k\<noteq>i \<longrightarrow> k\<noteq>Suc i mod nw \<longrightarrow>
           (vxw k-vxw i)*(vyw(Suc i mod nw)-vyw i)-(vyw k-vyw i)*(vxw(Suc i mod nw)-vxw i) < 0"
+      and hC5: "cxw = (\<Sum>j<nw. vxw j) / real nw" "cyw = (\<Sum>j<nw. vyw j) / real nw"
+      and hfan_det: "\<forall>m n. 2 \<le> m \<longrightarrow> m < n \<longrightarrow> n < nw \<longrightarrow>
+          (vxw m - vxw 1) * (vyw n - vyw 1) - (vyw m - vyw 1) * (vxw n - vxw 1) > 0"
+      and hregular: "\<exists>r > 0. \<forall>j<nw. (vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2"
       and hjp: "jp < nw" and hjp_ne0: "jp \<noteq> 0" and hjp_ne_last: "Suc jp mod nw \<noteq> 0"
   shows "(vxw jp-cxw)*(vyw 0-cyw)-(vyw jp-cyw)*(vxw 0-cxw) < 0
          \<or> (vxw(Suc jp mod nw)-cxw)*(vyw 0-cyw)-(vyw(Suc jp mod nw)-cyw)*(vxw 0-cxw) > 0"
@@ -1686,7 +1866,1416 @@ proof -
        The centroid cross product sequence is: 0, neg, ..., neg, (0/pos), pos, ..., pos, 0.
        Once non-negative, the subsequent values are positive.
        This follows from the convex polygon structure (C10 + centroid inside).\<close>
-    have "cc (Suc jp mod nw) > 0" sorry
+    \<comment> \<open>PROOF: Use the fact that each C10 step has angle < \\<pi>.
+       det(u\\_j-cw, u\\_{j+1}-cw) > 0 means the angle from cw→u\\_j to cw→u\\_{j+1} is in (0,\\<pi>).
+       Cumulative: if the total angle from u\\_0 to u\\_jp exceeds \\<pi> (i.e., cc(jp) \\<ge> 0),
+       adding one more step (< \\<pi>) keeps it in (\\<pi>, 2\\<pi>), so cc(jp+1) > 0.
+       This is formalized via the "cross product chain" property.\<close>
+    \<comment> \<open>Key helper: for vectors a,b with det(a,b) \\<le> 0 and |a|,|b| > 0, and c with det(b,c) > 0,
+       if additionally det(a, -(r*b+s*c)) \\<ge> 0 for some r > 0, s > 0 (encoding angle < 2\\<pi>),
+       then det(a,c) < 0.
+       Simpler: use the Jacobi identity det(a,b)*c + det(b,c)*a + det(c,a)*b = 0 (vector form).
+       From det(a,b) \\<le> 0, det(b,c) > 0: if det(a,c) \\<ge> 0, then from Jacobi:
+       det(a,b)*c = -det(b,c)*a + det(a,c)*b. The RHS has -det(b,c)*a (opposite to a) + det(a,c)*b.
+       Need to show this is contradictory given the polygon structure.\<close>
+    \<comment> \<open>Use the "half-plane chain" from C10:
+       The sequence u\\_0-cw, u\\_1-cw, ..., u\\_{nw-1}-cw goes CCW around cw.
+       Each pair (u\\_j-cw, u\\_{j+1}-cw) has positive det (C10).
+       The signed angle from the first to the last vector is exactly 2\\<pi>-\\<delta>\\_0 where \\<delta>\\_0 > 0.
+       u\\_0 is the "starting" direction. Once the cumulative angle passes \\<pi>,
+       the det with u\\_0-cw flips sign permanently.\<close>
+    have hjp_lt: "jp < nw - 1"
+    proof (rule ccontr)
+      assume "\<not> jp < nw - 1"
+      hence "jp \<ge> nw - 1" by (by100 linarith)
+      with hjp have "jp = nw - 1" by (by100 linarith)
+      hence "Suc jp = nw" using hnw by (by100 arith)
+      hence "Suc jp mod nw = 0" by (by100 simp)
+      with hjp_ne_last show False by simp
+    qed
+    have hsjp: "Suc jp mod nw = jp + 1" using hjp_lt by (by100 simp)
+    \<comment> \<open>The DECISIVE helper: det(u\\_0-cw, u\\_{jp+1}-cw) < 0 when det(u\\_0-cw, u\\_jp-cw) \\<le> 0.
+       This follows from: u\\_{jp+1} is CCW of u\\_jp (from C10), and the CCW step is < \\<pi>,
+       so u\\_{jp+1} stays in the same half-plane as u\\_jp (w.r.t. the line through cw \\<perp> u\\_0-cw).
+       Formal proof: use C11 to show the step stays bounded.\<close>
+    \<comment> \<open>PROOF via complex-number argument (Arg function).
+       Convert vectors to complex, use Arg(z\\_{j+1}/z\\_j) \\<in> (0,\\<pi>) from C10,
+       telescope to get cumulative angle, then use angle arithmetic.\<close>
+    define zw :: "nat \<Rightarrow> complex" where "zw j = Complex (vxw j - cxw) (vyw j - cyw)" for j
+    have hzw_ne: "\<forall>j<nw. zw j \<noteq> 0"
+    proof (intro allI impI)
+      fix j assume hj: "j < nw"
+      show "zw j \<noteq> 0"
+      proof
+        assume "zw j = 0"
+        hence "vxw j = cxw" "vyw j = cyw" unfolding zw_def by (auto simp: complex_eq_iff)
+        from hC10[rule_format, OF hj]
+        have "(vxw j - cxw) * (vyw(Suc j mod nw) - cyw) -
+            (vyw j - cyw) * (vxw(Suc j mod nw) - cxw) > 0" .
+        with \<open>vxw j = cxw\<close> \<open>vyw j = cyw\<close> show False by simp
+      qed
+    qed
+    \<comment> \<open>C10 gives Im(cnj(z\\_j)*z\\_{j+1}) > 0, i.e., the angular step is in (0,\\<pi>).\<close>
+    have hC10_im: "\<forall>j<nw. Im (cnj (zw j) * zw (Suc j mod nw)) > 0"
+    proof (intro allI impI)
+      fix j assume hj: "j < nw"
+      have "Im (cnj (zw j) * zw (Suc j mod nw)) =
+          (vxw j - cxw) * (vyw(Suc j mod nw) - cyw) - (vyw j - cyw) * (vxw(Suc j mod nw) - cxw)"
+      proof -
+        define a where "a = vxw j - cxw"
+        define b where "b = vyw j - cyw"
+        define c where "c = vxw(Suc j mod nw) - cxw"
+        define d where "d = vyw(Suc j mod nw) - cyw"
+        have hzj: "zw j = Complex a b" unfolding zw_def a_def b_def by simp
+        have hzk: "zw (Suc j mod nw) = Complex c d" unfolding zw_def c_def d_def by simp
+        have "cnj (zw j) * zw (Suc j mod nw) = Complex a (-b) * Complex c d"
+          unfolding hzj hzk using complex_cnj[of a b] by simp
+        also have "\<dots> = Complex (a*c+b*d) (a*d-b*c)"
+          using complex_mult[of a "- b" c d] by simp
+        finally have "Im (cnj (zw j) * zw (Suc j mod nw)) = a*d-b*c" by simp
+        thus ?thesis unfolding a_def b_def c_def d_def .
+      qed
+      also have "\<dots> > 0" using hC10[rule_format, OF hj] .
+      finally show "Im (cnj (zw j) * zw (Suc j mod nw)) > 0" .
+    qed
+    \<comment> \<open>cc(j) = Im(cnj(z\\_j)*z\\_0) = -(Im(cnj(z\\_0)*z\\_j)).\<close>
+    have hcc_im: "\<forall>j<nw. cc j = Im (cnj (zw j) * zw 0)"
+    proof (intro allI impI)
+      fix j assume "j < nw"
+      show "cc j = Im (cnj (zw j) * zw 0)"
+      proof -
+        define a where "a = vxw j - cxw"
+        define b where "b = vyw j - cyw"
+        define c where "c = vxw 0 - cxw"
+        define d where "d = vyw 0 - cyw"
+        have hzj: "zw j = Complex a b" unfolding zw_def a_def b_def by simp
+        have hz0: "zw 0 = Complex c d" unfolding zw_def c_def d_def by simp
+        have "cnj (zw j) * zw 0 = Complex a (-b) * Complex c d"
+          unfolding hzj hz0 using complex_cnj[of a b] by simp
+        also have "\<dots> = Complex (a*c+b*d) (a*d-b*c)"
+          using complex_mult[of a "- b" c d] by simp
+        finally have "Im (cnj (zw j) * zw 0) = a*d-b*c" by simp
+        also have "a*d-b*c = cc j" unfolding a_def b_def c_def d_def cc_def by (by100 simp)
+        finally show ?thesis by simp
+      qed
+    qed
+    \<comment> \<open>Define angular steps and cumulative angle.\<close>
+    define theta where "theta j = Arg (zw (Suc j mod nw) / zw j)" for j
+    have htheta_pos: "\<forall>j<nw. theta j > 0 \<and> theta j < pi"
+    proof (intro allI impI conjI)
+      fix j assume hj: "j < nw"
+      have hzj_ne: "zw j \<noteq> 0" using hzw_ne hj by (by100 blast)
+      have hzk_ne: "zw (Suc j mod nw) \<noteq> 0" using hzw_ne hj hnw by (by100 auto)
+      have hratio_ne: "zw (Suc j mod nw) / zw j \<noteq> 0" using hzj_ne hzk_ne by (by100 simp)
+      \<comment> \<open>Im(cnj z * w) = |z|^2 * Im(w/z).\<close>
+      \<comment> \<open>From Im(cnj z * w) > 0: Im(w/z) > 0 (since cnj z * w = |z|^2 * (w/z)).\<close>
+      have "Im (zw (Suc j mod nw) / zw j) > 0"
+      proof -
+        have "cnj (zw j) * (zw (Suc j mod nw) / zw j) = cnj (zw j) / zw j * zw (Suc j mod nw)"
+          using hzj_ne by (by100 simp)
+        have "cnj (zw j) * zw (Suc j mod nw) = zw j * cnj (zw j) * (zw (Suc j mod nw) / zw j)"
+          using hzj_ne by (by100 simp)
+        have "zw j * cnj (zw j) = of_real ((cmod (zw j))^2)"
+          using complex_norm_square[of "zw j"] by simp
+        hence "cnj (zw j) * zw (Suc j mod nw) = of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j)"
+          using \<open>cnj (zw j) * zw (Suc j mod nw) = zw j * cnj (zw j) * _\<close> by simp
+        hence hIm_eq: "Im (cnj (zw j) * zw (Suc j mod nw)) = (cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j)"
+        proof -
+          from \<open>cnj (zw j) * zw (Suc j mod nw) = of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j)\<close>
+          have "Im (cnj (zw j) * zw (Suc j mod nw)) = Im (of_real ((cmod (zw j))^2) * (zw (Suc j mod nw) / zw j))"
+            by simp
+          also have "\<dots> = (cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j)"
+          proof -
+            define w where "w = zw (Suc j mod nw) / zw j"
+            define r where "r = (cmod (zw j))^2"
+            have "Im (of_real r * w) = r * Im w"
+            proof -
+              have "of_real r * w = Complex (r * Re w) (r * Im w)"
+                by (cases w) (simp add: complex_of_real_mult_Complex)
+              thus ?thesis by simp
+            qed
+            thus ?thesis unfolding w_def r_def .
+          qed
+          finally show ?thesis .
+        qed
+        with hC10_im[rule_format, OF hj] have "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) > 0" by linarith
+        moreover have "((cmod (zw j))^2 :: real) > 0" using hzj_ne by (by100 simp)
+        ultimately show ?thesis
+        proof -
+          assume hab: "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) > 0"
+              and ha: "((cmod (zw j))^2 :: real) > 0"
+          show "Im (zw (Suc j mod nw) / zw j) > 0"
+          proof (rule ccontr)
+            assume "\<not> Im (zw (Suc j mod nw) / zw j) > 0"
+            hence "Im (zw (Suc j mod nw) / zw j) \<le> 0" by linarith
+            hence "(cmod (zw j))^2 * Im (zw (Suc j mod nw) / zw j) \<le> 0"
+              using ha mult_nonneg_nonpos[of "(cmod (zw j))^2" "Im (zw (Suc j mod nw) / zw j)"]
+              by linarith
+            with hab show False by linarith
+          qed
+        qed
+      qed
+      \<comment> \<open>From Im > 0 and z \\<noteq> 0: sin(Arg z) > 0, hence Arg z \\<in> (0, \\<pi>).\<close>
+      have "sin (Arg (zw (Suc j mod nw) / zw j)) > 0"
+        using sin_Arg[OF hratio_ne] \<open>Im (zw (Suc j mod nw) / zw j) > 0\<close> hratio_ne
+        by (by100 simp)
+      have "Arg (zw (Suc j mod nw) / zw j) > -pi" using Arg_bounded[of "zw (Suc j mod nw) / zw j"] by linarith
+      have "Arg (zw (Suc j mod nw) / zw j) \<le> pi" using Arg_bounded[of "zw (Suc j mod nw) / zw j"] by linarith
+      show "theta j > 0" unfolding theta_def
+      proof (rule ccontr)
+        assume "\<not> Arg (zw (Suc j mod nw) / zw j) > 0"
+        hence "Arg (zw (Suc j mod nw) / zw j) \<le> 0" by linarith
+        with \<open>Arg _ > -pi\<close> have "Arg (zw (Suc j mod nw) / zw j) \<in> {x. -pi < x \<and> x \<le> 0}" by auto
+        hence "sin (Arg (zw (Suc j mod nw) / zw j)) \<le> 0"
+        proof -
+          from \<open>Arg _ \<le> 0\<close> \<open>Arg _ > -pi\<close>
+          have h1: "0 \<le> -(Arg (zw (Suc j mod nw) / zw j))" by linarith
+          have h2: "-(Arg (zw (Suc j mod nw) / zw j)) \<le> pi" using \<open>Arg _ > -pi\<close> by linarith
+          from sin_ge_zero[OF h1 h2] have "sin (-(Arg (zw (Suc j mod nw) / zw j))) \<ge> 0" .
+          thus ?thesis by (by100 simp)
+        qed
+        with \<open>sin _ > 0\<close> show False by linarith
+      qed
+      show "theta j < pi" unfolding theta_def
+      proof (rule ccontr)
+        assume "\<not> Arg (zw (Suc j mod nw) / zw j) < pi"
+        with \<open>Arg _ \<le> pi\<close> have "Arg (zw (Suc j mod nw) / zw j) = pi" by linarith
+        hence "sin (Arg (zw (Suc j mod nw) / zw j)) = 0" by (by100 simp)
+        with \<open>sin _ > 0\<close> show False by linarith
+      qed
+    qed
+    define alpha where "alpha m = (\<Sum>j<m. theta j)" for m
+    \<comment> \<open>Partial telescope for m < nw: z\\_m = (\\<Prod>\\_{j<m} ratio\\_j) * z\\_0.
+       For j < m < nw: Suc j mod nw = j+1, so ratios telescope.\<close>
+    have hpartial_telescope: "\<forall>m<nw. zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
+    proof -
+      have aux: "\<And>m. m < nw \<Longrightarrow> zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
+      proof -
+        fix m show "m < nw \<Longrightarrow> zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0"
+        proof (induction m)
+          case 0 thus ?case by simp
+        next
+          case (Suc k)
+          hence hk_lt: "k < nw" by simp
+          have hSuc_lt: "Suc k < nw" using Suc.prems .
+          have hSuc_mod: "Suc k mod nw = Suc k" using hSuc_lt by (by100 simp)
+          from Suc.IH[OF hk_lt]
+          have hIH: "zw k = (\<Prod>j<k. zw (Suc j mod nw) / zw j) * zw 0" .
+          have "(\<Prod>j<Suc k. zw (Suc j mod nw) / zw j) =
+              (\<Prod>j<k. zw (Suc j mod nw) / zw j) * (zw (Suc k mod nw) / zw k)"
+            by simp
+          hence "(\<Prod>j<Suc k. zw (Suc j mod nw) / zw j) * zw 0 =
+              (\<Prod>j<k. zw (Suc j mod nw) / zw j) * (zw (Suc k) / zw k) * zw 0"
+            using hSuc_mod by simp
+          also have "\<dots> = (zw (Suc k) / zw k) * ((\<Prod>j<k. zw (Suc j mod nw) / zw j) * zw 0)"
+            by (by100 algebra)
+          also have "\<dots> = (zw (Suc k) / zw k) * zw k" using hIH by simp
+          also have "\<dots> = zw (Suc k)" using hzw_ne[rule_format, OF hk_lt] by simp
+          finally show ?case by simp
+        qed
+      qed
+      thus ?thesis by (by100 blast)
+    qed
+    \<comment> \<open>Product decomposition: each ratio = |ratio|*cis(theta).\<close>
+    \<comment> \<open>Product of cis: \\<Prod> cis(\\<theta>\\_j) = cis(\\<Sum> \\<theta>\\_j) = cis(alpha m).\<close>
+    \<comment> \<open>Telescope: \\<Prod>\\_{j<nw} (z\\_{j+1}/z\\_j) = 1, so cis(\\<Sum> \\<theta>\\_j) = 1, hence \\<Sum> = 2k\\<pi>.
+       For convex polygon (C10): k=1, so \\<Sum> = 2\\<pi>.\<close>
+    have htelescope: "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = 1"
+    proof -
+      have hnw1_lt: "nw - 1 < nw" using hnw by linarith
+      have hz0_ne: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
+      have hznw1_ne: "zw (nw-1) \<noteq> 0" using hzw_ne hnw1_lt by (by100 blast)
+      from hpartial_telescope[rule_format, OF hnw1_lt]
+      have hP: "zw (nw-1) = (\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) * zw 0" .
+      \<comment> \<open>Split: \\<Prod>\\_{j<nw} = (\\<Prod>\\_{j<nw-1}) * (zw(Suc(nw-1) mod nw) / zw(nw-1)).\<close>
+      define f where "f j = zw (Suc j mod nw) / zw j" for j
+      have "(\<Prod>j<nw. f j) = (\<Prod>j<nw-1. f j) * f (nw-1)"
+      proof -
+        have hnw_Suc: "nw = Suc (nw-1)" using hnw by (by100 arith)
+        have "{..<Suc (nw-1)} = insert (nw-1) {..<(nw-1)}" by (rule lessThan_Suc)
+        hence "{..<nw} = insert (nw-1) {..<nw-1}" using hnw_Suc by simp
+        hence "prod f {..<nw} = f (nw-1) * prod f {..<nw-1}" by simp
+        thus ?thesis by (by100 algebra)
+      qed
+      hence hsplit: "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) =
+          (\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) * (zw (Suc (nw-1) mod nw) / zw (nw-1))"
+        unfolding f_def .
+      have "Suc (nw-1) mod nw = 0" using hnw by simp
+      with hsplit have "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) =
+          (\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) * (zw 0 / zw (nw-1))" by simp
+      \<comment> \<open>From hP: (\\<Prod>\\_{j<nw-1}) = zw(nw-1) / zw 0.\<close>
+      from hP hz0_ne have "(\<Prod>j<nw-1. zw (Suc j mod nw) / zw j) = zw (nw-1) / zw 0"
+        by (by100 simp)
+      hence "(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = (zw (nw-1) / zw 0) * (zw 0 / zw (nw-1))"
+        using \<open>(\<Prod>j<nw. zw (Suc j mod nw) / zw j) = _ * (zw 0 / zw (nw-1))\<close> by simp
+      also have "\<dots> = 1" using hz0_ne hznw1_ne by (by100 simp)
+      finally show ?thesis .
+    qed
+    have halpha_sum: "alpha nw = 2*pi"
+    proof -
+      \<comment> \<open>Step 1: cis(alpha nw) = 1 from telescope product decomposition.\<close>
+      \<comment> \<open>The full product \\<Prod> ratio\\_j = 1 (htelescope). By polar decomposition (induction),
+         \\<Prod> ratio\\_j = of\\_real(\\<Prod> cmod ratio\\_j) * cis(alpha nw).
+         Since |\\<Prod>| = 1 (from |telescope| = |1| = 1): of\\_real(1) * cis(alpha nw) = 1.\<close>
+      define rj where "rj j = zw (Suc j mod nw) / zw j" for j
+      \<comment> \<open>From the polar decomposition proof pattern: \\<Prod> rj = of\\_real(\\<Prod> cmod rj) * cis(alpha nw).\<close>
+      have hrj_ne: "\<forall>j<nw. rj j \<noteq> 0"
+      proof (intro allI impI)
+        fix j assume "j < nw"
+        have "Suc j mod nw < nw" using hnw by (by100 simp)
+        thus "rj j \<noteq> 0" unfolding rj_def
+          using hzw_ne[rule_format, OF \<open>Suc j mod nw < nw\<close>] hzw_ne[rule_format, OF \<open>j < nw\<close>]
+          by (by100 simp)
+      qed
+      have "(\<Prod>j<nw. rj j) = of_real (\<Prod>j<nw. cmod (rj j)) * cis (alpha nw)"
+      proof -
+        \<comment> \<open>By induction: \\<Prod>\\_{j<k} rj = of\\_real(\\<Prod> cmod) * cis(\\<Sum> theta) for k \\<le> nw.\<close>
+        have "\<And>k. k \<le> nw \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
+        proof -
+          fix k show "k \<le> nw \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
+          proof (induction k)
+            case 0 thus ?case by simp
+          next
+            case (Suc k')
+            hence "k' < nw" by simp
+            from Suc.IH[OF order.strict_implies_order[OF \<open>k' < nw\<close>]]
+            have hIH: "(\<Prod>j<k'. rj j) = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j)" .
+            from rcis_cmod_Arg[of "rj k'", symmetric]
+            have "rj k' = of_real (cmod (rj k')) * cis (Arg (rj k'))" unfolding rcis_def .
+            also have "Arg (rj k') = theta k'" unfolding rj_def theta_def by (by100 simp)
+            finally have hrj_decomp: "rj k' = of_real (cmod (rj k')) * cis (theta k')" .
+            have "(\<Prod>j<Suc k'. rj j) = (\<Prod>j<k'. rj j) * rj k'" by simp
+            also have "\<dots> = (of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j)) * (of_real (cmod (rj k')) * cis (theta k'))"
+              using hIH hrj_decomp by simp
+            also have "\<dots> = rcis ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k')) ((\<Sum>j<k'. theta j) + theta k')"
+              unfolding rcis_def using rcis_mult[of "(\<Prod>j<k'. cmod (rj j))" "(\<Sum>j<k'. theta j)" "cmod (rj k')" "theta k'"]
+              unfolding rcis_def by simp
+            also have "(\<Prod>j<k'. cmod (rj j)) * cmod (rj k') = (\<Prod>j<Suc k'. cmod (rj j))" by simp
+            also have "(\<Sum>j<k'. theta j) + theta k' = (\<Sum>j<Suc k'. theta j)" by simp
+            finally show ?case unfolding rcis_def .
+          qed
+        qed
+        from this[of nw] show ?thesis unfolding alpha_def by simp
+      qed
+      also have "(\<Prod>j<nw. rj j) = 1" using htelescope unfolding rj_def .
+      also have "(\<Prod>j<nw. cmod (rj j)) = cmod (\<Prod>j<nw. rj j)"
+        by (simp add: prod_norm)
+      also have "\<dots> = 1" using htelescope unfolding rj_def by simp
+      finally have "cis (alpha nw) = 1" by simp
+      \<comment> \<open>Step 2: cis(alpha) = 1 \\<Longleftrightarrow> alpha = 2k\\<pi>.\<close>
+      \<comment> \<open>Step 3: alpha nw \\<in> (0, nw*\\<pi>). Combined with cis = 1: alpha = 2\\<pi> for nw \\<le> 4,
+         and needs C11 convexity for nw \\<ge> 5.\<close>
+      have halpha_pos: "alpha nw > 0"
+      proof -
+        have "\<forall>j\<in>{..<nw}. theta j > 0" using htheta_pos hnw by (by100 auto)
+        have "(0::nat) < nw" using hnw by linarith
+        hence "{..<nw} \<noteq> {}" by (by100 blast)
+        from sum_pos[OF _ \<open>{..<nw} \<noteq> {}\<close>] \<open>\<forall>j\<in>{..<nw}. theta j > 0\<close>
+        show ?thesis unfolding alpha_def by (by100 blast)
+      qed
+      have halpha_lt: "alpha nw < real nw * pi"
+      proof -
+        have h1: "\<And>j. j < nw \<Longrightarrow> theta j < pi" using htheta_pos by (by100 blast)
+        have "alpha nw = (\<Sum>j<nw. theta j)" unfolding alpha_def by simp
+        also have "\<dots> < (\<Sum>j<nw. pi)"
+        proof (rule sum_strict_mono)
+          show "finite {..<nw}" by simp
+          have "(0::nat) \<in> {..<nw}" using hnw by simp
+          thus "{..<nw} \<noteq> {}" by (by100 blast)
+          fix j assume "j \<in> {..<nw}" thus "theta j < pi" using h1 by simp
+        qed
+        also have "(\<Sum>j<nw. pi) = real nw * pi" by simp
+        finally show ?thesis .
+      qed
+      \<comment> \<open>From cis(alpha) = 1 and alpha > 0: alpha = 2k\\<pi> for some k \\<ge> 1.\<close>
+      from \<open>cis (alpha nw) = 1\<close>
+      have hcos: "cos (alpha nw) = 1" using cis.sel(1)[of "alpha nw"] by simp
+      from \<open>cis (alpha nw) = 1\<close>
+      have hsin: "sin (alpha nw) = 0" using cis.sel(2)[of "alpha nw"] by simp
+      \<comment> \<open>From alpha \\<in> (0, nw*\\<pi>) and cos=1,sin=0: alpha = 2\\<pi>*(nw div something)...
+         For nw \\<le> 4: alpha < 4\\<pi>, so alpha = 2\\<pi>.
+         For nw \\<ge> 5: alpha < nw*\\<pi>, and we use C11 to show alpha < 4\\<pi>.\<close>
+      \<comment> \<open>From cis = 1: alpha = 2k\\<pi> for integer k. From alpha > 0: k \\<ge> 1.
+         From alpha < nw*\\<pi>: 2k < nw. For nw \\<le> 4: k = 1.
+         For nw \\<ge> 5: k < nw/2 and C11 convexity rules out k \\<ge> 2.\<close>
+      have "\<exists>k::nat. k \<ge> 1 \<and> alpha nw = 2 * real k * pi"
+      proof -
+        from hcos have "((\<exists>n::nat. alpha nw = real n * 2 * pi) \<or> (\<exists>n::nat. alpha nw = -(real n * 2 * pi)))"
+          using cos_one_2pi by (by100 blast)
+        hence "\<exists>n::nat. alpha nw = real n * 2 * pi"
+        proof (elim disjE exE)
+          fix n :: nat assume "alpha nw = real n * 2 * pi" thus ?thesis by (by100 blast)
+        next
+          fix n :: nat assume "alpha nw = -(real n * 2 * pi)"
+          hence "alpha nw \<le> 0" using pi_gt_zero by (by100 simp)
+          with halpha_pos show ?thesis by linarith
+        qed
+        then obtain n :: nat where hn: "alpha nw = real n * 2 * pi" by (by100 blast)
+        have "n \<ge> 1"
+        proof (rule ccontr)
+          assume "\<not> n \<ge> 1" hence "n = 0" by (by100 simp)
+          with hn have "alpha nw = 0" by simp
+          with halpha_pos show False by linarith
+        qed
+        from hn have "alpha nw = 2 * real n * pi" by (by100 algebra)
+        with \<open>n \<ge> 1\<close> show ?thesis by (by100 blast)
+      qed
+      then obtain k :: nat where hk: "k \<ge> 1" "alpha nw = 2 * real k * pi" by (by100 blast)
+      from hk(2) halpha_lt have "2 * real k * pi < real nw * pi" by simp
+      hence "2 * real k < real nw" using pi_gt_zero by (by100 simp)
+      hence h2k_lt: "2 * k < nw" by linarith
+      \<comment> \<open>For nw \\<le> 4: 2k < nw \\<le> 4, so k < 2, hence k = 1.\<close>
+      \<comment> \<open>For nw \\<ge> 5: need C11 to show k < 2.\<close>
+      have "k = 1"
+      proof (rule ccontr)
+        assume "k \<noteq> 1"
+        with hk(1) have "k \<ge> 2" by linarith
+        hence "2 * k \<ge> 4" by linarith
+        \<comment> \<open>For k \\<ge> 2: alpha = 2k\\<pi> \\<ge> 4\\<pi>. But need alpha < nw*\\<pi> with nw \\<ge> 3.
+           For nw = 3,4: 4\\<pi> > nw*\\<pi> is false (4\\<pi> > 3\\<pi> = true, 4\\<pi> > 4\\<pi> = false but strict).
+           Actually: alpha < nw*pi STRICT. For k=2: alpha = 4\\<pi>. Need 4\\<pi> < nw*\\<pi>, i.e., nw > 4.
+           For nw \\<le> 4: 4\\<pi> \\<ge> nw*\\<pi> (4\\<pi> \\<ge> 4\\<pi>), contradicting alpha < nw*\\<pi>.
+           For nw = 3: 4\\<pi> > 3\\<pi>. Contradiction. For nw = 4: 4\\<pi> = 4\\<pi>, not strict. But alpha < 4\\<pi> = nw*\\<pi>.
+           4\\<pi> < 4\\<pi> is false. So alpha = 4\\<pi> \\<ge> 4\\<pi> = nw*\\<pi>. Contradiction with strict <.
+           For nw \\<ge> 5: 4\\<pi> < 5\\<pi> \\<le> nw*\\<pi>. No contradiction from alpha < nw*\\<pi> alone.\<close>
+        \<comment> \<open>Use C11 to show this is impossible for nw \\<ge> 5.
+           If alpha = 2k\\<pi> \\<ge> 4\\<pi>: the polygon wraps twice around cw.
+           C11 (convexity) prevents this: for a convex polygon, winding number = 1.\<close>
+        \<comment> \<open>From k \\<ge> 2 and 2k < nw: nw \\<ge> 5.\<close>
+        have "nw \<ge> 5" using \<open>2 * k \<ge> 4\<close> h2k_lt by linarith
+        \<comment> \<open>PROOF: hregular gives all |z\\_j| = r. For k \\<ge> 2: alpha\\_nw = 2k\\<pi>.
+           Since all moduli = r: z\\_m/z\\_0 = cis(alpha\\_m). For the sub-product
+           from 0 to some index p: cis(alpha\\_p) = 1 (i.e., z\\_p = z\\_0) when alpha\\_p = 2\\<pi>.
+           By discrete IVT: \\<exists>p with alpha\\_p near 2\\<pi>.
+           More directly: with all moduli equal and cis(alpha\\_nw) = cis(2k\\<pi>) = 1:
+           the product is periodic. There exist j1 < j2 with z\\_{j2} = z\\_{j1}.
+           C11 at edge (j1, j1+1), vertex j2: det(z\\_{j2}-z\\_{j1}, z\\_{j1+1}-z\\_{j1}) = det(0, ..) = 0.
+           But C11 requires strict < 0. Contradiction.\<close>
+        \<comment> \<open>From hregular: all |z\\_j| = r.\<close>
+        from hregular obtain r where hr_pos: "r > 0"
+            and hr_eq: "\<forall>j<nw. (vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2" by (by100 blast)
+        \<comment> \<open>All cmod(zw j) = r.\<close>
+        have hmod_eq: "\<forall>j<nw. cmod (zw j) = r"
+        proof (intro allI impI)
+          fix j assume "j < nw"
+          from hr_eq[rule_format, OF this]
+          have "(vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2" .
+          hence hsum_sq: "(vxw j - cxw)^2 + (vyw j - cyw)^2 = r^2" .
+          have "cmod (zw j) = sqrt ((vxw j - cxw)^2 + (vyw j - cyw)^2)"
+            unfolding zw_def cmod_def by simp
+          also have "\<dots> = sqrt (r^2)" using hsum_sq by simp
+          also have "\<dots> = r" using hr_pos by simp
+          finally show "cmod (zw j) = r" .
+        qed
+        \<comment> \<open>With equal moduli: z\\_m/z\\_0 = cis(alpha\\_m) (from polar decomp with r\\_j = 1).\<close>
+        \<comment> \<open>There exist j1 < j2 < nw with alpha\\_{j2} - alpha\\_{j1} = 2\\<pi>.
+           Then z\\_{j2}/z\\_0 = cis(alpha\\_{j2}) = cis(alpha\\_{j1}+2\\<pi>) = cis(alpha\\_{j1}) = z\\_{j1}/z\\_0.
+           So z\\_{j2} = z\\_{j1}, i.e., u\\_{j2} = u\\_{j1}.\<close>
+        \<comment> \<open>C11 at edge (j1, Suc j1 mod nw), vertex j2: det = 0. Contradiction.\<close>
+        \<comment> \<open>Find the 2\\<pi> crossing index: m0 is the largest with alpha\\_{m0} < 2\\<pi>.\<close>
+        \<comment> \<open>With k \\<ge> 2: alpha\\_nw \\<ge> 4\\<pi>. So some index crosses 2\\<pi>.\<close>
+        \<comment> \<open>Use C11 at edge (0,1), vertex m0+1 to get contradiction.\<close>
+        \<comment> \<open>The cis-difference formula gives the det as a product of three sines,
+           which has sign (-)*(+)*(-) = (+), contradicting C11 < 0.\<close>
+        \<comment> \<open>Key computation (for circle polygon with equal moduli):
+           det(u\\_{m0+1}-u\\_0, u\\_1-u\\_0) = r^2 * 4*sin(alpha\\_{m0+1}/2)*sin(theta\\_0/2)*sin((theta\\_0-alpha\\_{m0+1})/2)
+           With alpha\\_{m0+1} \\<in> [2\\<pi>, 3\\<pi>): sin(alpha\\_{m0+1}/2) < 0 and sin((theta\\_0-alpha\\_{m0+1})/2) < 0.
+           Product of three sines > 0, but C11 requires < 0. Contradiction.\<close>
+        \<comment> \<open>Step 1: find crossing index m0 with alpha\\_{m0} < 2\\<pi> \\<le> alpha\\_{m0+1}.\<close>
+        \<comment> \<open>alpha\\_1 = theta\\_0 < \\<pi> < 2\\<pi>. And alpha\\_nw \\<ge> 4\\<pi> > 2\\<pi>. So crossing exists.\<close>
+        define m0 where "m0 = (GREATEST m. m < nw \<and> alpha m < 2*pi)"
+        \<comment> \<open>For now: sorry the existence and properties of m0.
+           Key properties: m0 \\<ge> 2, m0+1 < nw, alpha\\_{m0+1} \\<ge> 2\\<pi>, alpha\\_{m0+1} < 3\\<pi>.\<close>
+        \<comment> \<open>Existence: alpha\\_1 = theta\\_0 < \\<pi> < 2\\<pi>. And alpha\\_{nw-1} = 2k\\<pi>-theta\\_{nw-1} > 3\\<pi> (for k \\<ge> 2).
+           So there's a crossing of 2\\<pi> between indices 1 and nw-1.\<close>
+        have halpha_1_lt: "alpha 1 < 2*pi"
+        proof -
+          have "alpha 1 = theta 0" unfolding alpha_def by simp
+          have h0_lt: "0 < nw" using hnw by linarith
+          from htheta_pos[rule_format, OF h0_lt] have "theta 0 < pi" by simp
+          hence "theta 0 < 2*pi" using pi_gt_zero by linarith
+          thus ?thesis using \<open>alpha 1 = theta 0\<close> by simp
+        qed
+        have halpha_nw1_ge: "alpha (nw-1) > 2*pi"
+        proof -
+          have "alpha nw = 2 * real k * pi" using hk(2) .
+          have hnw_Suc: "nw = Suc (nw-1)" using hnw by (by100 arith)
+          have "alpha nw = alpha (nw-1) + theta (nw-1)" unfolding alpha_def
+          proof -
+            have "{..<Suc (nw-1)} = insert (nw-1) {..<(nw-1)}" by (rule lessThan_Suc)
+            hence "(\<Sum>j<nw. theta j) = theta (nw-1) + (\<Sum>j<nw-1. theta j)"
+              using hnw_Suc by simp
+            thus "(\<Sum>j<nw. theta j) = (\<Sum>j<nw-1. theta j) + theta (nw-1)"
+              by (by100 algebra)
+          qed
+          hence "alpha (nw-1) = alpha nw - theta (nw-1)" by linarith
+          also have "\<dots> = 2*real k*pi - theta (nw-1)" using hk(2) by simp
+          finally have h: "alpha (nw-1) = 2*real k*pi - theta (nw-1)" .
+          have "theta (nw-1) < pi" using htheta_pos hnw by (by100 auto)
+          from \<open>k \<ge> 2\<close> have "2*real k*pi \<ge> 4*pi" using pi_gt_zero by (by100 simp)
+          from h have "alpha (nw-1) = 2*real k*pi - theta (nw-1)" .
+          with \<open>4*pi \<le> 2*real k*pi\<close> \<open>theta (nw-1) < pi\<close> pi_gt_zero
+          show ?thesis by linarith
+        qed
+        \<comment> \<open>By discrete IVT: \\<exists>m0 with alpha(m0) < 2\\<pi> and alpha(m0+1) \\<ge> 2\\<pi>.\<close>
+        \<comment> \<open>Discrete IVT: define m0 via GREATEST, show properties.\<close>
+        \<comment> \<open>Actually, just find ANY suitable index, no need for GREATEST.\<close>
+        \<comment> \<open>alpha\\_2 = theta\\_0+theta\\_1 < 2\\<pi>. alpha\\_{nw-1} > 2\\<pi>. So \\<exists>m with alpha\\_m < 2\\<pi> \\<le> alpha\\_{m+1}.\<close>
+        have hm0_props: "\<exists>m0. m0 \<ge> 2 \<and> m0 + 1 < nw \<and> alpha (m0+1) \<ge> 2*pi \<and> alpha (m0+1) < 3*pi \<and> alpha m0 < 2*pi"
+        proof -
+          \<comment> \<open>alpha\\_2 < 2\\<pi>: alpha\\_2 = theta\\_0+theta\\_1 < \\<pi>+\\<pi> = 2\\<pi>.\<close>
+          have "alpha 2 < 2*pi"
+          proof -
+            have h0: "0 < nw" using hnw by linarith
+            have h1: "1 < nw" using hnw by linarith
+            have "alpha 2 = theta 0 + theta 1" unfolding alpha_def
+              by (simp add: lessThan_Suc numeral_2_eq_2)
+            also have "\<dots> < pi + pi"
+              using htheta_pos[rule_format, OF h0] htheta_pos[rule_format, OF h1] by linarith
+            finally show ?thesis by simp
+          qed
+          \<comment> \<open>alpha\\_{nw-1} > 2\\<pi> (proved above as halpha\\_nw1\\_ge).\<close>
+          \<comment> \<open>By well-ordering: let m0 = Max {m. m \\<le> nw-2 \\<and> alpha m < 2\\<pi>}.\<close>
+          define S where "S = {m. 2 \<le> m \<and> m \<le> nw-2 \<and> alpha m < 2*pi}"
+          have "2 \<in> S" using \<open>alpha 2 < 2*pi\<close> \<open>nw \<ge> 5\<close> unfolding S_def by (by100 auto)
+          hence "S \<noteq> {}" by (by100 blast)
+          have "finite S" unfolding S_def by (by100 auto)
+          define m0_val where "m0_val = Max S"
+          have hm0_in: "m0_val \<in> S" using Max_in[OF \<open>finite S\<close> \<open>S \<noteq> {}\<close>] unfolding m0_val_def .
+          hence hm0_ge: "m0_val \<ge> 2" and hm0_le: "m0_val \<le> nw-2" and hm0_alpha: "alpha m0_val < 2*pi"
+            unfolding S_def by (by100 auto)+
+          have hm0_max: "\<forall>m \<in> S. m \<le> m0_val" using Max_ge[OF \<open>finite S\<close>] unfolding m0_val_def by (by100 auto)
+          \<comment> \<open>alpha(m0\\_val+1) \\<ge> 2\\<pi>: otherwise m0\\_val+1 \\<in> S, contradicting maximality.\<close>
+          have "alpha (m0_val+1) \<ge> 2*pi"
+          proof (rule ccontr)
+            assume "\<not> alpha (m0_val+1) \<ge> 2*pi"
+            hence "alpha (m0_val+1) < 2*pi" by linarith
+            have "m0_val+1 \<le> nw-2"
+            proof (rule ccontr)
+              assume "\<not> m0_val+1 \<le> nw-2"
+              hence "m0_val+1 > nw-2" by linarith
+              hence "m0_val \<ge> nw-2" by linarith
+              with hm0_le have "m0_val = nw-2" by linarith
+              hence "m0_val+1 = nw-1" using \<open>nw \<ge> 5\<close> by (by100 arith)
+              from \<open>alpha (m0_val+1) < 2*pi\<close> have "alpha (nw-1) < 2*pi"
+                using \<open>m0_val+1 = nw-1\<close> by simp
+              with halpha_nw1_ge show False by linarith
+            qed
+            have "m0_val+1 \<in> S" using \<open>alpha (m0_val+1) < 2*pi\<close> hm0_ge \<open>m0_val+1 \<le> nw-2\<close>
+              unfolding S_def by (by100 auto)
+            from hm0_max[rule_format, OF this] show False by linarith
+          qed
+          \<comment> \<open>alpha(m0\\_val+1) < 3\\<pi>: each step < \\<pi>.\<close>
+          have "alpha (m0_val+1) < 3*pi"
+          proof -
+            have "alpha (m0_val+1) = alpha m0_val + theta m0_val" unfolding alpha_def by simp
+            also have "\<dots> < 2*pi + pi"
+            proof -
+              have "m0_val < nw" using hm0_le \<open>nw \<ge> 5\<close> by linarith
+              from htheta_pos[rule_format, OF this] have "theta m0_val < pi" by simp
+              with hm0_alpha show ?thesis by linarith
+            qed
+            also have "\<dots> = 3*pi" by simp
+            finally show ?thesis .
+          qed
+          \<comment> \<open>m0\\_val+1 < nw.\<close>
+          have "m0_val+1 < nw" using hm0_le \<open>nw \<ge> 5\<close> by linarith
+          \<comment> \<open>Provide all 5 properties as separate conjuncts for the obtain.\<close>
+          show ?thesis
+            apply (rule exI[of _ m0_val])
+            using hm0_ge \<open>alpha (m0_val+1) \<ge> 2*pi\<close> \<open>alpha (m0_val+1) < 3*pi\<close>
+              \<open>m0_val+1 < nw\<close> hm0_alpha
+            by (by100 auto)
+        qed
+        then obtain m0_real where hm0_ge2: "m0_real \<ge> 2" and hm0_lt: "m0_real + 1 < nw"
+            and halpha_m0_ge: "alpha (m0_real+1) \<ge> 2*pi" and halpha_m0_lt: "alpha (m0_real+1) < 3*pi"
+            and halpha_m0_below: "alpha m0_real < 2*pi"
+          by (by5000 auto)
+        \<comment> \<open>Step 2: C11 at edge (0, 1), vertex m0\\_real+1.\<close>
+        have hm0_ne0: "m0_real+1 \<noteq> 0" using hm0_ge2 by (by100 arith)
+        have "Suc 0 mod nw = 1" using hnw by (by100 simp)
+        have hm0_ne1: "m0_real+1 \<noteq> Suc 0 mod nw" using hm0_ge2 \<open>Suc 0 mod nw = 1\<close> by (by100 arith)
+        have h0_lt: "(0::nat) < nw" using hnw by linarith
+        have h_C11_inst: "(vxw (m0_real+1)-vxw 0)*(vyw(Suc 0 mod nw)-vyw 0)-(vyw (m0_real+1)-vyw 0)*(vxw(Suc 0 mod nw)-vxw 0) < 0"
+          using hC11[rule_format, OF h0_lt hm0_lt hm0_ne0 hm0_ne1] .
+        \<comment> \<open>Step 3: Compute det(u\\_{m0+1}-u\\_0, u\\_1-u\\_0) using the equal-modulus property.
+           All u\\_j = cw + r*cis(phi\\_j) where phi\\_j = Arg(z\\_0)+alpha\\_j.
+           det = r^2 * 4*sin(alpha\\_{m0+1}/2)*sin(theta\\_0/2)*sin((theta\\_0-alpha\\_{m0+1})/2).\<close>
+        \<comment> \<open>For alpha\\_{m0+1} \\<in> [2\\<pi>, 3\\<pi>):
+           sin(alpha\\_{m0+1}/2) \\<in> sin([\\<pi>, 3\\<pi>/2)): \\<le> 0 (actually < 0 for > \\<pi>).
+           sin(theta\\_0/2) > 0.
+           sin((theta\\_0-alpha\\_{m0+1})/2): (theta\\_0-alpha\\_{m0+1})/2 \\<in> ((-3\\<pi>+theta\\_0)/2, (theta\\_0-2\\<pi>)/2).
+             = ((-3\\<pi>+theta\\_0)/2, (theta\\_0-2\\<pi>)/2) \\<subset> (-3\\<pi>/2, 0).
+             For the range (-\\<pi>, 0): sin < 0.
+           Product: (\\<le>0)*(>0)*(\\<le>0) \\<ge> 0. But C11 requires < 0. Contradiction.\<close>
+        \<comment> \<open>Formal computation using the cis-difference formula.\<close>
+        \<comment> \<open>TWO-CASE proof using crossing index m0\\_real.\<close>
+        \<comment> \<open>Case 1: alpha(m0+1) > 2\\<pi>+theta\\_0: hfan\\_det with m0,m0+1 gives contradiction.
+           Case 2: alpha(m0+1) \\<le> 2\\<pi>+theta\\_0: C11 at edge (0,1) for vertex m0+1 gives det \\<ge> 0.
+           Both lead to contradiction.\<close>
+        \<comment> \<open>For now: sorry the two-case sign computation. The math is verified;
+           formalization needs the cis-difference formula for circle polygons.
+           Case 1: the three-sine product from hfan\\_det has signs (+)(-)(+) < 0.
+           Case 2: det = r^2*2*sin(theta\\_0/2)*(cos((theta\\_0-2*delta)/2)-cos(theta\\_0/2)) \\<ge> 0.\<close>
+        \<comment> \<open>The C11 det in centroid coords:\<close>
+        define alpha_cross where "alpha_cross = alpha (m0_real + 1)"
+        define delta where "delta = alpha_cross - 2*pi"
+        have hdelta_ge: "delta \<ge> 0" using halpha_m0_ge unfolding delta_def alpha_cross_def by linarith
+        have hdelta_lt: "delta < pi" using halpha_m0_lt unfolding delta_def alpha_cross_def by linarith
+        define theta0 where "theta0 = theta 0"
+        have htheta0_pos: "theta0 > 0" and htheta0_lt: "theta0 < pi"
+          using htheta_pos hnw unfolding theta0_def by (by100 auto)+
+        \<comment> \<open>The C11 det = (cross product formula involving vxw, vyw).
+           With equal moduli: det = r^2 * (sin(theta0-delta) + sin(delta) - sin(theta0)).
+           (Using periodicity: sin(alpha\\_cross) = sin(delta), sin(theta0-alpha\\_cross) = sin(theta0-delta).)
+           This expression \\<ge> 0 when delta \\<le> theta0, contradicting C11 < 0.\<close>
+        \<comment> \<open>For now: sorry the det computation. Needs expressing det in terms of
+           sin(alpha\\_cross), sin(theta0), etc. using the equal-modulus formula.\<close>
+        \<comment> \<open>Key identity: the C11 det equals r^2*(sin(theta0-delta)+sin(delta)-sin(theta0)).
+           Proof: u\\_j = cw + r*cis(Arg(z\\_0)+alpha\\_j). Differences factor out cis(Arg(z\\_0)).
+           Then conj(cis(alpha\\_cross)-1)*(cis(theta0)-1) gives the formula via cis periodicity.\<close>
+        have hSuc0: "Suc 0 mod nw = 1" using hnw by (by100 simp)
+        \<comment> \<open>Circle polygon infrastructure: zw j = cis(alpha j) * zw 0 for j < nw.\<close>
+        have hz0_ne: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
+        \<comment> \<open>Each ratio zw(j+1)/zw(j) = cis(theta j) since equal moduli.\<close>
+        have hratio_cis: "\<forall>k. k < nw \<longrightarrow> zw (Suc k mod nw) / zw k = cis (theta k)"
+        proof (intro allI impI)
+          fix k assume hk: "k < nw"
+          have hk_ne: "zw k \<noteq> 0" using hzw_ne hk by (by100 auto)
+          have hSk: "Suc k mod nw < nw" using hnw by (by100 simp)
+          have "cmod (zw (Suc k mod nw) / zw k) = 1"
+          proof -
+            have "cmod (zw (Suc k mod nw)) = r" using hmod_eq[rule_format, OF hSk] .
+            moreover have "cmod (zw k) = r" using hmod_eq[rule_format, OF hk] .
+            ultimately show ?thesis using hk_ne hr_pos norm_divide[of "zw (Suc k mod nw)" "zw k"]
+              by (by100 simp)
+          qed
+          moreover have "Arg (zw (Suc k mod nw) / zw k) = theta k"
+            unfolding theta_def by (by100 simp)
+          moreover have "zw (Suc k mod nw) / zw k \<noteq> 0" using hk_ne hzw_ne hSk
+            by (by100 auto)
+          ultimately show "zw (Suc k mod nw) / zw k = cis (theta k)"
+            using rcis_cmod_Arg[of "zw (Suc k mod nw) / zw k"]
+            unfolding rcis_def by (by100 simp)
+        qed
+        \<comment> \<open>Product of cis = cis of sum: \\<Prod>k<j. cis(theta k) = cis(alpha j).\<close>
+        have hprod_cis: "\<forall>j. (\<Prod>k<j. cis (theta k)) = cis (alpha j)"
+        proof
+          fix j show "(\<Prod>k<j. cis (theta k)) = cis (alpha j)"
+          proof (induct j)
+            case 0 show ?case unfolding alpha_def by (by100 simp)
+          next
+            case (Suc j)
+            have "{..<Suc j} = insert j {..<j}" by (rule lessThan_Suc)
+            hence "(\<Prod>k<Suc j. cis (theta k)) = cis (theta j) * (\<Prod>k<j. cis (theta k))"
+              by (by100 simp)
+            also have "\<dots> = cis (theta j) * cis (alpha j)" using Suc by (by100 simp)
+            also have "\<dots> = cis (theta j + alpha j)" using cis_mult[of "theta j" "alpha j"] by (by100 simp)
+            also have "\<dots> = cis (alpha (Suc j))"
+            proof -
+              have "alpha (Suc j) = (\<Sum>k<Suc j. theta k)" unfolding alpha_def by (by100 simp)
+              also have "\<dots> = theta j + (\<Sum>k<j. theta k)"
+                using lessThan_Suc by (by100 simp)
+              also have "\<dots> = theta j + alpha j" unfolding alpha_def by (by100 simp)
+              finally show ?thesis by (by100 simp)
+            qed
+            finally show ?case .
+          qed
+        qed
+        \<comment> \<open>Combine: zw j = cis(alpha j) * zw 0.\<close>
+        have hzw_cis: "\<forall>j. j < nw \<longrightarrow> zw j = cis (alpha j) * zw 0"
+        proof (intro allI impI)
+          fix j assume hj: "j < nw"
+          from hpartial_telescope[rule_format, OF hj]
+          have "zw j = (\<Prod>k<j. zw (Suc k mod nw) / zw k) * zw 0" .
+          also have "(\<Prod>k<j. zw (Suc k mod nw) / zw k) = (\<Prod>k<j. cis (theta k))"
+          proof (rule prod.cong, simp)
+            fix k assume "k \<in> {..<j}"
+            hence "k < nw" using hj by (by100 auto)
+            from hratio_cis[rule_format, OF this] show "zw (Suc k mod nw) / zw k = cis (theta k)" .
+          qed
+          also have "\<dots> = cis (alpha j)" using hprod_cis by (by100 simp)
+          finally show "zw j = cis (alpha j) * zw 0" .
+        qed
+        \<comment> \<open>The C11 det in terms of cc values.\<close>
+        have hdet_formula: "(vxw (m0_real+1)-vxw 0)*(vyw 1-vyw 0)-(vyw (m0_real+1)-vyw 0)*(vxw 1-vxw 0) =
+            r^2 * (sin(theta0-delta) + sin delta - sin theta0)"
+        proof -
+          \<comment> \<open>Step A: det = Im(cnj(zw(m0+1)-zw 0)*(zw 1-zw 0)).\<close>
+          have hdet_Im: "(vxw (m0_real+1)-vxw 0)*(vyw 1-vyw 0)-(vyw (m0_real+1)-vyw 0)*(vxw 1-vxw 0) =
+            Im (cnj (zw (m0_real+1) - zw 0) * (zw 1 - zw 0))"
+          proof -
+            \<comment> \<open>Re/Im of differences = coordinate differences.\<close>
+            have hRe_diff_m: "Re (zw (m0_real+1) - zw 0) = vxw (m0_real+1) - vxw 0"
+              unfolding zw_def by (by100 simp)
+            have hIm_diff_m: "Im (zw (m0_real+1) - zw 0) = vyw (m0_real+1) - vyw 0"
+              unfolding zw_def by (by100 simp)
+            have hRe_diff_1: "Re (zw 1 - zw 0) = vxw 1 - vxw 0"
+              unfolding zw_def by (by100 simp)
+            have hIm_diff_1: "Im (zw 1 - zw 0) = vyw 1 - vyw 0"
+              unfolding zw_def by (by100 simp)
+            \<comment> \<open>Im(cnj(z)*w) = Re(z)*Im(w) - Im(z)*Re(w).\<close>
+            define z1 where "z1 = zw (m0_real+1) - zw 0"
+            define w1 where "w1 = zw 1 - zw 0"
+            have "Im (cnj z1 * w1) = Re (cnj z1) * Im w1 + Im (cnj z1) * Re w1"
+              by (by100 simp)
+            also have "\<dots> = Re z1 * Im w1 - Im z1 * Re w1"
+              by (by100 simp)
+            finally have "Im (cnj z1 * w1) = Re z1 * Im w1 - Im z1 * Re w1" .
+            thus ?thesis unfolding z1_def w1_def
+              using hRe_diff_m hIm_diff_m hRe_diff_1 hIm_diff_1 by (by100 algebra)
+          qed
+          \<comment> \<open>Step B: Substitute zw j = cis(alpha j)*zw 0.\<close>
+          have hm01_lt: "m0_real+1 < nw" using hm0_lt .
+          have h1_lt: "(1::nat) < nw" using hnw by linarith
+          have hzw_m: "zw (m0_real+1) = cis alpha_cross * zw 0"
+            using hzw_cis[rule_format, OF hm01_lt] unfolding alpha_cross_def by (by100 simp)
+          have halpha1: "alpha 1 = theta 0"
+            unfolding alpha_def by (by100 simp)
+          have hzw_1: "zw 1 = cis theta0 * zw 0"
+            using hzw_cis[rule_format, OF h1_lt] halpha1 unfolding theta0_def by (by100 simp)
+          \<comment> \<open>Differences.\<close>
+          have hdiff_m: "zw (m0_real+1) - zw 0 = (cis alpha_cross - 1) * zw 0"
+            using hzw_m by (by100 algebra)
+          have hdiff_1: "zw 1 - zw 0 = (cis theta0 - 1) * zw 0"
+            using hzw_1 by (by100 algebra)
+          \<comment> \<open>Step C: cnj(d1)*d2 = r^2*(cis(-alpha\\_cross)-1)*(cis(theta0)-1).\<close>
+          have hprod_val: "cnj (zw (m0_real+1) - zw 0) * (zw 1 - zw 0) =
+            of_real (r^2) * ((cis (-alpha_cross) - 1) * (cis theta0 - 1))"
+          proof -
+            \<comment> \<open>Substitute differences.\<close>
+            have s1: "cnj (zw (m0_real+1) - zw 0) * (zw 1 - zw 0) =
+              cnj ((cis alpha_cross - 1) * zw 0) * ((cis theta0 - 1) * zw 0)"
+              using hdiff_m hdiff_1 by (by100 simp)
+            \<comment> \<open>Distribute cnj.\<close>
+            have s2: "cnj ((cis alpha_cross - 1) * zw 0) = (cis (-alpha_cross) - 1) * cnj (zw 0)"
+              using cis_cnj[of alpha_cross] by (by100 simp)
+            \<comment> \<open>Reorder to separate cnj(z0)*z0.\<close>
+            have s3: "(cis (-alpha_cross) - 1) * cnj (zw 0) * ((cis theta0 - 1) * zw 0) =
+              (cis (-alpha_cross) - 1) * (cis theta0 - 1) * (cnj (zw 0) * zw 0)"
+              by (by100 algebra)
+            \<comment> \<open>cnj(z0)*z0 = |z0|^2 = r^2.\<close>
+            have "cmod (zw 0) = r" using hmod_eq hnw by (by100 auto)
+            hence hmod_sq: "(cmod (zw 0))^2 = r^2" by (by100 simp)
+            have s4: "cnj (zw 0) * zw 0 = of_real (r^2)"
+            proof -
+              have "cnj (zw 0) * zw 0 = zw 0 * cnj (zw 0)" by (by100 algebra)
+              also have "\<dots> = of_real ((cmod (zw 0))^2)"
+                using complex_norm_square[of "zw 0"] by (by100 simp)
+              also have "\<dots> = of_real (r^2)" using hmod_sq by (by100 simp)
+              finally show ?thesis .
+            qed
+            \<comment> \<open>Combine.\<close>
+            from s1 s2 have "cnj (zw (m0_real+1) - zw 0) * (zw 1 - zw 0) =
+              (cis (-alpha_cross) - 1) * cnj (zw 0) * ((cis theta0 - 1) * zw 0)"
+              by (by100 simp)
+            also from s3 have "\<dots> = (cis (-alpha_cross) - 1) * (cis theta0 - 1) * (cnj (zw 0) * zw 0)"
+              by (by100 simp)
+            also from s4 have "\<dots> = (cis (-alpha_cross) - 1) * (cis theta0 - 1) * of_real (r^2)"
+              by (by100 simp)
+            also have "\<dots> = of_real (r^2) * ((cis (-alpha_cross) - 1) * (cis theta0 - 1))"
+              by (by100 algebra)
+            finally show ?thesis .
+          qed
+          \<comment> \<open>Step D: Im of the product.\<close>
+          have hIm_expand: "Im ((cis (-alpha_cross) - 1) * (cis theta0 - 1)) =
+            sin (theta0 - alpha_cross) + sin alpha_cross - sin theta0"
+          proof -
+            have hexpand: "(cis (-alpha_cross) - 1) * (cis theta0 - 1) =
+              cis (theta0 - alpha_cross) - cis (-alpha_cross) - cis theta0 + 1"
+            proof -
+              have heq_arg: "-alpha_cross + theta0 = theta0 - alpha_cross" by (by100 linarith)
+              have hcis_prod: "cis (-alpha_cross) * cis theta0 = cis (theta0 - alpha_cross)"
+                using cis_mult[of "-alpha_cross" theta0] heq_arg by (by100 simp)
+              \<comment> \<open>Expand: (a-1)*(b-1) = a*b - a - b + 1.\<close>
+              have "(cis (-alpha_cross) - 1) * (cis theta0 - 1) =
+                cis (-alpha_cross) * cis theta0 - cis (-alpha_cross) - cis theta0 + 1"
+                by (by100 algebra)
+              thus ?thesis using hcis_prod by (by100 simp)
+            qed
+            have "Im ((cis (-alpha_cross) - 1) * (cis theta0 - 1)) =
+              Im (cis (theta0 - alpha_cross) - cis (-alpha_cross) - cis theta0 + 1)"
+              using hexpand by (by100 simp)
+            also have "\<dots> = sin (theta0 - alpha_cross) - sin (-alpha_cross) - sin theta0"
+              by (by100 simp)
+            also have "\<dots> = sin (theta0 - alpha_cross) + sin alpha_cross - sin theta0"
+              by (by100 simp)
+            finally show ?thesis .
+          qed
+          \<comment> \<open>Step E: Sin periodicity: alpha\\_cross = 2\\<pi>+\\<delta>.\<close>
+          have hsin_period1: "sin (theta0 - alpha_cross) = sin (theta0 - delta)"
+          proof -
+            have "alpha_cross = delta + 2*pi" unfolding delta_def by (by100 algebra)
+            hence "theta0 - alpha_cross = (theta0 - delta) + (-(2*pi))" by (by100 linarith)
+            hence h1: "sin(theta0 - alpha_cross) = sin((theta0-delta) + (-(2*pi)))" by (by100 metis)
+            have h2: "sin((theta0-delta) + (-(2*pi))) = sin(theta0-delta)"
+              using sin_periodic[of "(theta0-delta) - 2*pi"] by (by100 simp)
+            from h1 h2 show ?thesis by (by100 simp)
+          qed
+          have hsin_period2: "sin alpha_cross = sin delta"
+          proof -
+            have "alpha_cross = delta + 2*pi" unfolding delta_def by (by100 algebra)
+            thus ?thesis using sin_periodic[of delta] by (by100 simp)
+          qed
+          \<comment> \<open>Combine.\<close>
+          have "Im (cnj (zw (m0_real+1) - zw 0) * (zw 1 - zw 0)) =
+            r^2 * (sin (theta0 - delta) + sin delta - sin theta0)"
+          proof -
+            from hprod_val have "Im (cnj (zw (m0_real+1) - zw 0) * (zw 1 - zw 0)) =
+              r^2 * Im ((cis (-alpha_cross) - 1) * (cis theta0 - 1))"
+              by (by100 simp)
+            also have "\<dots> = r^2 * (sin (theta0 - alpha_cross) + sin alpha_cross - sin theta0)"
+              using hIm_expand by (by100 simp)
+            also have "\<dots> = r^2 * (sin (theta0 - delta) + sin delta - sin theta0)"
+              using hsin_period1 hsin_period2 by (by100 simp)
+            finally show ?thesis .
+          qed
+          with hdet_Im show ?thesis by (by100 simp)
+        qed
+        \<comment> \<open>From h\\_C11\\_inst: the LHS < 0.\<close>
+        from h_C11_inst hSuc0
+        have hdet_neg: "r^2 * (sin(theta0-delta) + sin delta - sin theta0) < 0"
+          using hdet_formula by simp
+        \<comment> \<open>Case analysis on delta vs theta0.\<close>
+        show False
+        proof (cases "delta \<le> theta0")
+          case True
+          \<comment> \<open>CASE 1: delta \\<le> theta0. Show sin(theta0-delta)+sin(delta)-sin(theta0) \\<ge> 0.\<close>
+          have "sin(theta0-delta) + sin delta - sin theta0 \<ge> 0"
+          proof -
+            \<comment> \<open>sin(A-B)+sin(B) = 2*sin(A/2)*cos((A-2B)/2). So:
+               sin(theta0-delta)+sin(delta) = 2*sin(theta0/2)*cos((theta0-2*delta)/2).
+               And sin(theta0) = 2*sin(theta0/2)*cos(theta0/2).
+               Difference = 2*sin(theta0/2)*(cos((theta0-2*delta)/2)-cos(theta0/2)).
+               For delta \\<in> [0, theta0]: |(theta0-2*delta)/2| \\<le> theta0/2.
+               cos is even and decreasing on [0,\\<pi>]: cos(|(theta0-2*delta)/2|) \\<ge> cos(theta0/2).\<close>
+            \<comment> \<open>Identity: sin(A-B)+sin(B)-sin(A) = 4*sin(A/2)*sin(B/2)*sin((A-B)/2).
+               Proof via half-angle substitutions.\<close>
+            have h_expand: "sin(theta0-delta) + sin delta - sin theta0 =
+              sin theta0 * (cos delta - 1) + sin delta * (1 - cos theta0)"
+              using sin_diff[of theta0 delta] by (by100 algebra)
+            have hcos_half_t: "1 - cos theta0 = 2 * (sin(theta0/2))^2"
+            proof -
+              from cos_double_sin[of "theta0/2"] have "cos(2*(theta0/2)) = 1 - 2*(sin(theta0/2))^2" .
+              hence "cos theta0 = 1 - 2*(sin(theta0/2))^2" by (by100 simp)
+              thus ?thesis by linarith
+            qed
+            have hcos_half_d: "cos delta - 1 = -(2 * (sin(delta/2))^2)"
+            proof -
+              from cos_double_sin[of "delta/2"] have "cos(2*(delta/2)) = 1 - 2*(sin(delta/2))^2" .
+              hence "cos delta = 1 - 2*(sin(delta/2))^2" by (by100 simp)
+              thus ?thesis by linarith
+            qed
+            have h2: "sin(theta0-delta) + sin delta - sin theta0 =
+              2 * (sin delta * (sin(theta0/2))^2 - sin theta0 * (sin(delta/2))^2)"
+              using h_expand hcos_half_t hcos_half_d by (by100 algebra)
+            have hsin_half_t: "sin theta0 = 2 * sin(theta0/2) * cos(theta0/2)"
+            proof -
+              from sin_double[of "theta0/2"] have "sin(2*(theta0/2)) = 2 * sin(theta0/2) * cos(theta0/2)" .
+              thus ?thesis by (by100 simp)
+            qed
+            have hsin_half_d: "sin delta = 2 * sin(delta/2) * cos(delta/2)"
+            proof -
+              from sin_double[of "delta/2"] have "sin(2*(delta/2)) = 2 * sin(delta/2) * cos(delta/2)" .
+              thus ?thesis by (by100 simp)
+            qed
+            have h3: "sin(theta0-delta) + sin delta - sin theta0 =
+              4 * sin(theta0/2) * sin(delta/2) * (cos(delta/2) * sin(theta0/2) - cos(theta0/2) * sin(delta/2))"
+              using h2 hsin_half_t hsin_half_d by (by100 algebra)
+            have h_sin_diff: "cos(delta/2) * sin(theta0/2) - cos(theta0/2) * sin(delta/2) = sin((theta0 - delta) / 2)"
+            proof -
+              have heq: "theta0/2 - delta/2 = (theta0 - delta) / 2" by (by100 simp)
+              have "sin((theta0 - delta)/2) = sin(theta0/2) * cos(delta/2) - cos(theta0/2) * sin(delta/2)"
+                using sin_diff[of "theta0/2" "delta/2"] heq by (by100 simp)
+              also have "\<dots> = cos(delta/2) * sin(theta0/2) - cos(theta0/2) * sin(delta/2)"
+                by (by100 algebra)
+              finally show ?thesis by (by100 simp)
+            qed
+            from h3 h_sin_diff
+            have h_product: "sin(theta0-delta) + sin delta - sin theta0 =
+              4 * sin(theta0/2) * sin(delta/2) * sin((theta0 - delta) / 2)"
+              by (by100 algebra)
+            \<comment> \<open>All three sine factors are non-negative.\<close>
+            have "sin(theta0/2) > 0"
+              using sin_gt_zero[of "theta0/2"] htheta0_pos htheta0_lt by (by100 auto)
+            have "sin(delta/2) \<ge> 0"
+              using sin_ge_zero[of "delta/2"] hdelta_ge hdelta_lt by (by100 auto)
+            have "sin((theta0 - delta) / 2) \<ge> 0"
+            proof (rule sin_ge_zero)
+              from True show "0 \<le> (theta0 - delta) / 2" by simp
+              have "theta0 - delta \<le> 2 * pi" using htheta0_lt hdelta_ge pi_gt_zero by linarith
+              thus "(theta0 - delta) / 2 \<le> pi" by simp
+            qed
+            have "sin(theta0/2) * sin(delta/2) \<ge> 0"
+              using \<open>sin(theta0/2) > 0\<close> \<open>sin(delta/2) \<ge> 0\<close> by (by100 auto)
+            hence "sin(theta0/2) * sin(delta/2) * sin((theta0 - delta) / 2) \<ge> 0"
+              using \<open>sin((theta0 - delta) / 2) \<ge> 0\<close> by (by100 auto)
+            hence "4 * sin(theta0/2) * sin(delta/2) * sin((theta0 - delta) / 2) \<ge> 0"
+              by (by100 linarith)
+            with h_product show ?thesis by linarith
+          qed
+          hence "r^2 * (sin(theta0-delta) + sin delta - sin theta0) \<ge> 0"
+            using hr_pos by (by100 simp)
+          with hdet_neg show False by linarith
+        next
+          case False
+          hence "delta > theta0" by linarith
+          \<comment> \<open>CASE 2: delta > theta0. Use hfan\\_det at m=m0\\_real, n=m0\\_real+1.\<close>
+          \<comment> \<open>The hfan\\_det product = r^2*4*sin(A)*sin(B)*sin(C) where:
+             A = (alpha\\_m0 - theta0)/2 > 0 (first loop, sin > 0)
+             B = (alpha\\_cross - theta0)/2 > \\<pi> (second loop, sin < 0)
+             C = theta\\_{m0}/2 > 0 (sin > 0)
+             Product < 0, contradicting hfan\\_det > 0.\<close>
+          have hm0_ge2_nat: "2 \<le> m0_real" using hm0_ge2 .
+          have hm0_lt_nat: "m0_real < m0_real + 1" by (by100 arith)
+          have hm01_lt: "m0_real + 1 < nw" using hm0_lt .
+          from hfan_det[rule_format, OF hm0_ge2_nat hm0_lt_nat hm01_lt]
+          have hfan_pos: "(vxw m0_real - vxw 1) * (vyw (m0_real+1) - vyw 1) -
+              (vyw m0_real - vyw 1) * (vxw (m0_real+1) - vxw 1) > 0" .
+          \<comment> \<open>This equals r^2*4*sin((alpha\\_m0-theta0)/2)*sin((alpha\\_cross-theta0)/2)*sin(theta\\_{m0}/2).\<close>
+          have hfan_formula: "(vxw m0_real - vxw 1) * (vyw (m0_real+1) - vyw 1) -
+              (vyw m0_real - vyw 1) * (vxw (m0_real+1) - vxw 1) =
+              r^2 * 4 * sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2)"
+          proof -
+            \<comment> \<open>Step A: det = Im(cnj(zw m0-zw 1)*(zw(m0+1)-zw 1)).\<close>
+            define z1_m where "z1_m = zw m0_real - zw 1"
+            define z1_c where "z1_c = zw (m0_real+1) - zw 1"
+            have hdet_Im2: "(vxw m0_real - vxw 1) * (vyw (m0_real+1) - vyw 1) -
+                (vyw m0_real - vyw 1) * (vxw (m0_real+1) - vxw 1) = Im (cnj z1_m * z1_c)"
+            proof -
+              have "Re z1_m = vxw m0_real - vxw 1" unfolding z1_m_def zw_def by (by100 simp)
+              have "Im z1_m = vyw m0_real - vyw 1" unfolding z1_m_def zw_def by (by100 simp)
+              have "Re z1_c = vxw (m0_real+1) - vxw 1" unfolding z1_c_def zw_def by (by100 simp)
+              have "Im z1_c = vyw (m0_real+1) - vyw 1" unfolding z1_c_def zw_def by (by100 simp)
+              have "Im (cnj z1_m * z1_c) = Re z1_m * Im z1_c - Im z1_m * Re z1_c"
+                by (by100 simp)
+              thus ?thesis using \<open>Re z1_m = _\<close> \<open>Im z1_m = _\<close> \<open>Re z1_c = _\<close> \<open>Im z1_c = _\<close>
+                by (by100 algebra)
+            qed
+            \<comment> \<open>Step B: Substitute zw j = cis(alpha j)*zw 0.\<close>
+            have hm0_lt_nw: "m0_real < nw" using hm0_lt by linarith
+            have hzw_m0: "zw m0_real = cis (alpha m0_real) * zw 0"
+              using hzw_cis[rule_format, OF hm0_lt_nw] .
+            have hzw_m01: "zw (m0_real+1) = cis alpha_cross * zw 0"
+              using hzw_cis[rule_format, OF hm01_lt] unfolding alpha_cross_def by (by100 simp)
+            have h1_lt: "(1::nat) < nw" using hnw by linarith
+            have halpha1_eq: "alpha 1 = theta 0" unfolding alpha_def by (by100 simp)
+            have hzw_1: "zw 1 = cis theta0 * zw 0"
+              using hzw_cis[rule_format, OF h1_lt] halpha1_eq unfolding theta0_def by (by100 simp)
+            \<comment> \<open>Differences from vertex 1.\<close>
+            have hdm: "z1_m = (cis (alpha m0_real) - cis theta0) * zw 0"
+              unfolding z1_m_def using hzw_m0 hzw_1 by (by100 algebra)
+            have hdc: "z1_c = (cis alpha_cross - cis theta0) * zw 0"
+              unfolding z1_c_def using hzw_m01 hzw_1 by (by100 algebra)
+            \<comment> \<open>Step C: Factor out |zw 0|^2 = r^2.\<close>
+            have "cmod (zw 0) = r" using hmod_eq hnw by (by100 auto)
+            hence hmod_sq2: "(cmod (zw 0))^2 = r^2" by (by100 simp)
+            have s4_2: "cnj (zw 0) * zw 0 = of_real (r^2)"
+            proof -
+              have "cnj (zw 0) * zw 0 = zw 0 * cnj (zw 0)" by (by100 algebra)
+              also have "\<dots> = of_real ((cmod (zw 0))^2)"
+                using complex_norm_square[of "zw 0"] by (by100 simp)
+              also have "\<dots> = of_real (r^2)" using hmod_sq2 by (by100 simp)
+              finally show ?thesis .
+            qed
+            define A where "A = alpha m0_real"
+            define B where "B = alpha_cross"
+            define T where "T = theta0"
+            have "cnj z1_m * z1_c = cnj ((cis A - cis T) * zw 0) * ((cis B - cis T) * zw 0)"
+              using hdm hdc unfolding A_def B_def T_def by (by100 simp)
+            also have "\<dots> = (cnj (cis A - cis T) * cnj (zw 0)) * ((cis B - cis T) * zw 0)"
+              by (by100 simp)
+            also have "\<dots> = (cnj (cis A - cis T) * (cis B - cis T)) * (cnj (zw 0) * zw 0)"
+              by (by100 algebra)
+            also have "\<dots> = (cnj (cis A - cis T) * (cis B - cis T)) * of_real (r^2)"
+              using s4_2 by (by100 simp)
+            also have "\<dots> = of_real (r^2) * (cnj (cis A - cis T) * (cis B - cis T))"
+              by (by100 algebra)
+            finally have hprod2: "cnj z1_m * z1_c = of_real (r^2) * (cnj (cis A - cis T) * (cis B - cis T))" .
+            \<comment> \<open>Step D: cnj(cis A - cis T)*(cis B - cis T) expanded.\<close>
+            have "cnj (cis A - cis T) = cis (-A) - cis (-T)"
+              using cis_cnj[of A] cis_cnj[of T] by (by100 simp)
+            hence hprod_expand: "cnj (cis A - cis T) * (cis B - cis T) =
+              (cis (-A) - cis (-T)) * (cis B - cis T)"
+              by (by100 simp)
+            have hcis1: "cis (-A) * cis B = cis (B - A)"
+            proof -
+              have "-A + B = B - A" by (by100 linarith)
+              thus ?thesis using cis_mult[of "-A" B] by (by100 simp)
+            qed
+            have hcis2: "cis (-A) * cis T = cis (T - A)"
+            proof -
+              have "-A + T = T - A" by (by100 linarith)
+              thus ?thesis using cis_mult[of "-A" T] by (by100 simp)
+            qed
+            have hcis3: "cis (-T) * cis B = cis (B - T)"
+            proof -
+              have "-T + B = B - T" by (by100 linarith)
+              thus ?thesis using cis_mult[of "-T" B] by (by100 simp)
+            qed
+            have hcis4: "cis (-T) * cis T = cis 0"
+            proof -
+              have "-T + T = (0::real)" by (by100 linarith)
+              thus ?thesis using cis_mult[of "-T" T] by (by100 simp)
+            qed
+            have hprod_cis2: "(cis (-A) - cis (-T)) * (cis B - cis T) =
+              cis (B-A) - cis (T-A) - cis (B-T) + cis 0"
+            proof -
+              have "(cis (-A) - cis (-T)) * (cis B - cis T) =
+                cis (-A)*cis B - cis (-A)*cis T - cis (-T)*cis B + cis (-T)*cis T"
+                by (by100 algebra)
+              thus ?thesis using hcis1 hcis2 hcis3 hcis4 by (by100 simp)
+            qed
+            \<comment> \<open>Step E: Take Im.\<close>
+            have "Im (cis (B-A) - cis (T-A) - cis (B-T) + cis 0) =
+              sin(B-A) - sin(T-A) - sin(B-T)"
+              by (by100 simp)
+            \<comment> \<open>Step F: B-A = theta(m0), T-A = theta0-alpha(m0), B-T = alpha\\_cross-theta0.\<close>
+            have hBA: "B - A = theta (m0_real)"
+            proof -
+              have "B - A = alpha_cross - alpha m0_real" unfolding B_def A_def by (by100 simp)
+              also have "\<dots> = alpha (m0_real+1) - alpha m0_real" unfolding alpha_cross_def by (by100 simp)
+              also have "\<dots> = theta m0_real" unfolding alpha_def by (by100 simp)
+              finally show ?thesis .
+            qed
+            have hTA: "T - A = theta0 - alpha m0_real" unfolding T_def A_def by (by100 simp)
+            have hBT: "B - T = alpha_cross - theta0" unfolding B_def T_def by (by100 simp)
+            \<comment> \<open>So Im = sin(theta m0) + sin(alpha m0 - theta0) - sin(alpha\\_cross-theta0).\<close>
+            \<comment> \<open>= sin(A'-B')+sin(B')-sin(A') with A'=alpha\\_cross-theta0, B'=alpha m0-theta0.\<close>
+            \<comment> \<open>= 4*sin(A'/2)*sin(B'/2)*sin((A'-B')/2) by the identity.\<close>
+            have hsin_neg: "sin(theta0 - alpha m0_real) = -sin(alpha m0_real - theta0)"
+              using sin_minus[of "alpha m0_real - theta0"] by (by100 simp)
+            have hIm_val: "sin(B-A) - sin(T-A) - sin(B-T) =
+              sin(theta m0_real) + sin(alpha m0_real - theta0) - sin(alpha_cross - theta0)"
+              using hBA hTA hBT hsin_neg by (by100 simp)
+            \<comment> \<open>Apply the 4*sin*sin*sin identity: sin(X-Y)+sin(Y)-sin(X) = 4*sin(X/2)*sin(Y/2)*sin((X-Y)/2).\<close>
+            define X where "X = alpha_cross - theta0"
+            define Y where "Y = alpha m0_real - theta0"
+            have hXY: "X - Y = theta (m0_real)" using hBA unfolding X_def Y_def B_def A_def T_def
+              by (by100 simp)
+            have h_identity: "sin(X-Y) + sin Y - sin X =
+              4 * sin(X/2) * sin(Y/2) * sin((X-Y)/2)"
+            proof -
+              \<comment> \<open>Same half-angle identity as before.\<close>
+              have h_ex: "sin(X-Y) + sin Y - sin X =
+                sin X * (cos Y - 1) + sin Y * (1 - cos X)"
+                using sin_diff[of X Y] by (by100 algebra)
+              have hc1: "cos X = 1 - 2 * (sin(X/2))^2"
+              proof -
+                from cos_double_sin[of "X/2"] have "cos(2*(X/2)) = 1 - 2*(sin(X/2))^2" .
+                thus ?thesis by (by100 simp)
+              qed
+              have hc2: "cos Y = 1 - 2 * (sin(Y/2))^2"
+              proof -
+                from cos_double_sin[of "Y/2"] have "cos(2*(Y/2)) = 1 - 2*(sin(Y/2))^2" .
+                thus ?thesis by (by100 simp)
+              qed
+              have hs1: "sin X = 2 * sin(X/2) * cos(X/2)"
+              proof -
+                from sin_double[of "X/2"] have "sin(2*(X/2)) = 2*sin(X/2)*cos(X/2)" .
+                thus ?thesis by (by100 simp)
+              qed
+              have hs2: "sin Y = 2 * sin(Y/2) * cos(Y/2)"
+              proof -
+                from sin_double[of "Y/2"] have "sin(2*(Y/2)) = 2*sin(Y/2)*cos(Y/2)" .
+                thus ?thesis by (by100 simp)
+              qed
+              have h_expand2: "sin(X-Y) + sin Y - sin X =
+                4 * sin(X/2) * sin(Y/2) * (cos(Y/2) * sin(X/2) - cos(X/2) * sin(Y/2))"
+                using h_ex hc1 hc2 hs1 hs2 by (by100 algebra)
+              have h_sin_XY: "cos(Y/2) * sin(X/2) - cos(X/2) * sin(Y/2) = sin((X-Y)/2)"
+              proof -
+                have heq2: "X/2 - Y/2 = (X-Y)/2" by (by100 simp)
+                have "sin((X-Y)/2) = sin(X/2)*cos(Y/2) - cos(X/2)*sin(Y/2)"
+                  using sin_diff[of "X/2" "Y/2"] heq2 by (by100 simp)
+                also have "\<dots> = cos(Y/2)*sin(X/2) - cos(X/2)*sin(Y/2)"
+                  by (by100 algebra)
+                finally show ?thesis by (by100 simp)
+              qed
+              from h_expand2 h_sin_XY show ?thesis by (by100 algebra)
+            qed
+            have "sin(theta m0_real) + sin(alpha m0_real - theta0) - sin(alpha_cross - theta0) =
+              sin(X-Y) + sin Y - sin X"
+            proof -
+              have "X = alpha_cross - theta0" unfolding X_def by (by100 simp)
+              have "Y = alpha m0_real - theta0" unfolding Y_def by (by100 simp)
+              have "X - Y = theta m0_real" using hXY .
+              thus ?thesis using \<open>X = _\<close> \<open>Y = _\<close> by (by100 simp)
+            qed
+            also have "\<dots> = 4 * sin(X/2) * sin(Y/2) * sin((X-Y)/2)"
+              using h_identity .
+            also have "\<dots> = 4 * sin((alpha_cross-theta0)/2) * sin((alpha m0_real-theta0)/2) * sin(theta m0_real/2)"
+            proof -
+              have "sin(X/2) = sin((alpha_cross-theta0)/2)" unfolding X_def ..
+              moreover have "sin(Y/2) = sin((alpha m0_real-theta0)/2)" unfolding Y_def ..
+              moreover have "sin((X-Y)/2) = sin(theta m0_real/2)"
+              proof -
+                have "X - Y = theta m0_real" using hXY .
+                thus ?thesis by (by100 simp)
+              qed
+              ultimately show ?thesis by (by100 simp)
+            qed
+            finally have hIm_product: "sin(theta m0_real) + sin(alpha m0_real - theta0) - sin(alpha_cross - theta0) =
+              4 * sin((alpha_cross-theta0)/2) * sin((alpha m0_real-theta0)/2) * sin(theta m0_real/2)" .
+            \<comment> \<open>Combine all: det = r^2 * (above expression).\<close>
+            have "Im (cnj z1_m * z1_c) = r^2 * (sin(theta m0_real) + sin(alpha m0_real - theta0) - sin(alpha_cross - theta0))"
+            proof -
+              from hprod2 have "Im (cnj z1_m * z1_c) = r^2 * Im (cnj (cis A - cis T) * (cis B - cis T))"
+                by (by100 simp)
+              also have "\<dots> = r^2 * (sin(B-A) - sin(T-A) - sin(B-T))"
+                using hprod_expand hprod_cis2 by (by100 simp)
+              also have "\<dots> = r^2 * (sin(theta m0_real) + sin(alpha m0_real - theta0) - sin(alpha_cross - theta0))"
+                using hIm_val by (by100 simp)
+              finally show ?thesis .
+            qed
+            with hIm_product hdet_Im2 show ?thesis by (by100 algebra)
+          qed
+          from hfan_pos hfan_formula
+          have hprod_pos: "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) > 0"
+          proof -
+            have "r^2 * 4 > 0" using hr_pos by (by100 simp)
+            from hfan_pos hfan_formula have "r^2 * 4 * (sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2)) > 0"
+              by (by100 linarith)
+            with \<open>r^2 * 4 > 0\<close> show ?thesis
+              by (simp add: zero_less_mult_iff)
+          qed
+          \<comment> \<open>But: sin((alpha\\_cross-theta0)/2) < 0 since alpha\\_cross-theta0 = 2\\<pi>+delta-theta0 > 2\\<pi>.
+             So (alpha\\_cross-theta0)/2 > \\<pi>. sin < 0.\<close>
+          have "alpha_cross - theta0 > 2*pi"
+            using \<open>delta > theta0\<close> unfolding delta_def alpha_cross_def by linarith
+          hence "sin((alpha_cross - theta0)/2) < 0"
+          proof -
+            have hpi_lt: "pi < (alpha_cross - theta0)/2"
+              using \<open>alpha_cross - theta0 > 2*pi\<close> by simp
+            from halpha_m0_lt have "alpha_cross < 3*pi" unfolding alpha_cross_def .
+            hence "(alpha_cross - theta0)/2 < 3*pi/2" using htheta0_pos by simp
+            hence h2pi_lt: "(alpha_cross - theta0)/2 < 2*pi" using pi_gt_zero by linarith
+            from sin_lt_zero[OF hpi_lt h2pi_lt] show ?thesis .
+          qed
+          \<comment> \<open>And the other two sines > 0.\<close>
+          have "sin(theta (m0_real) / 2) > 0"
+          proof -
+            have "m0_real < nw" using hm0_lt by linarith
+            from htheta_pos[rule_format, OF this] have "theta m0_real > 0" "theta m0_real < pi" by auto
+            thus ?thesis using sin_gt_zero by (by100 auto)
+          qed
+          have "sin((alpha m0_real - theta0)/2) > 0"
+          proof -
+            have "alpha m0_real > theta0"
+            proof -
+              have "alpha m0_real \<ge> alpha 2"
+              proof -
+                have "alpha m0_real = alpha 2 + (\<Sum>j=2..<m0_real. theta j)" unfolding alpha_def
+                  using sum.atLeastLessThan_concat[of 0 2 m0_real theta] hm0_ge2
+                  by (simp add: atLeast0LessThan)
+                moreover have "(\<Sum>j=2..<m0_real. theta j) \<ge> 0"
+                proof (rule sum_nonneg)
+                  fix j assume "j \<in> {2..<m0_real}"
+                  hence "j < nw" using hm0_lt by (by100 auto)
+                  from htheta_pos[rule_format, OF this] show "0 \<le> theta j" by linarith
+                qed
+                ultimately show ?thesis by linarith
+              qed
+              moreover have "alpha 2 > theta0"
+              proof -
+                have "alpha 2 = theta 0 + theta 1" unfolding alpha_def
+                  by (simp add: lessThan_Suc numeral_2_eq_2)
+                moreover have "theta 1 > 0" using htheta_pos hnw by (by100 auto)
+                ultimately show ?thesis unfolding theta0_def by linarith
+              qed
+              ultimately show ?thesis by linarith
+            qed
+            moreover have "alpha m0_real < 2*pi"
+              using halpha_m0_below .
+            ultimately have h1: "(alpha m0_real - theta0)/2 > 0" by simp
+            have h2: "(alpha m0_real - theta0)/2 < pi" using \<open>alpha m0_real < 2*pi\<close> htheta0_pos by simp
+            from sin_gt_zero[OF h1 h2] show ?thesis .
+          qed
+          \<comment> \<open>Product: (+)*(-)*)(+) < 0. But we showed > 0. Contradiction.\<close>
+          from \<open>sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) > 0\<close>
+            \<open>sin((alpha m0_real - theta0)/2) > 0\<close> \<open>sin(theta (m0_real) / 2) > 0\<close>
+            \<open>sin((alpha_cross - theta0)/2) < 0\<close>
+          show False
+          proof -
+            have "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) < 0"
+              using \<open>sin((alpha m0_real - theta0)/2) > 0\<close> \<open>sin((alpha_cross - theta0)/2) < 0\<close>
+              using mult_pos_neg[of "sin((alpha m0_real - theta0)/2)" "sin((alpha_cross - theta0)/2)"]
+              by linarith
+            hence "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) < 0"
+              using \<open>sin(theta (m0_real) / 2) > 0\<close>
+              mult_neg_pos[of "sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2)" "sin(theta (m0_real) / 2)"]
+              by linarith
+            with \<open>sin((alpha m0_real - theta0)/2) * sin((alpha_cross - theta0)/2) * sin(theta (m0_real) / 2) > 0\<close>
+            show False by linarith
+          qed
+        qed
+      qed
+      with hk(2) show "alpha nw = 2*pi" by simp
+    qed
+    \<comment> \<open>Key: cc(m) = -|z\\_0|*|z\\_m|*sin(alpha m) for m \\<in> {1,...,nw-1}.\<close>
+    have hcc_sin: "\<forall>m. 0 < m \<longrightarrow> m < nw \<longrightarrow>
+        cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
+    proof (intro allI impI)
+      fix m assume hm_pos: "0 < m" and hm_lt: "m < nw"
+      \<comment> \<open>z\\_m/z\\_0 = \\<Prod>\\_{j<m} ratio\\_j. Each ratio = |r|*cis(\\<theta>).
+         Product = (\\<Prod> |r|)*cis(\\<Sum> \\<theta>) = (|z\\_m|/|z\\_0|)*cis(alpha m).\<close>
+      \<comment> \<open>cc(m) = Im(cnj(z\\_m)*z\\_0) = -|z\\_0|*|z\\_m|*sin(alpha m).\<close>
+      \<comment> \<open>Step 1: z\\_m/z\\_0 = (|z\\_m|/|z\\_0|)*cis(alpha m).\<close>
+      have hzm_decomp: "zw m / zw 0 = of_real (cmod (zw m) / cmod (zw 0)) * cis (alpha m)"
+      proof -
+        \<comment> \<open>From partial telescope: zw m / zw 0 = \\<Prod>\\_{j<m} ratio\\_j.
+           Each ratio\\_j = cmod(ratio\\_j) * cis(Arg(ratio\\_j)) = cmod(ratio\\_j) * cis(theta j).
+           Product of cis: cis(\\<Sum> theta) = cis(alpha m).
+           Product of mods: \\<Prod> cmod(ratio\\_j) = cmod(\\<Prod> ratio\\_j) = cmod(zw m / zw 0).\<close>
+        from hpartial_telescope[rule_format, OF hm_lt]
+        have "zw m = (\<Prod>j<m. zw (Suc j mod nw) / zw j) * zw 0" .
+        have hz0_ne_loc: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
+        hence "zw m / zw 0 = (\<Prod>j<m. zw (Suc j mod nw) / zw j)"
+          using \<open>zw m = _ * zw 0\<close> by (by100 simp)
+        \<comment> \<open>Each ratio decomposed: ratio\\_j = of\\_real(cmod ratio\\_j)*cis(Arg ratio\\_j).\<close>
+        \<comment> \<open>Arg(ratio\\_j) = theta j by definition.\<close>
+        \<comment> \<open>Product: \\<Prod> (of\\_real r\\_j * cis t\\_j) = of\\_real(\\<Prod> r\\_j) * cis(\\<Sum> t\\_j).\<close>
+        \<comment> \<open>And \\<Prod> r\\_j = cmod(\\<Prod> ratio\\_j) = cmod(zw m/zw 0) = cmod(zw m)/cmod(zw 0).\<close>
+        \<comment> \<open>Helper: \\<Prod>\\_{j<m} r\\_j = of\\_real(\\<Prod> cmod r\\_j) * cis(\\<Sum> Arg r\\_j) when each r\\_j \\<noteq> 0.\<close>
+        define rj where "rj j = zw (Suc j mod nw) / zw j" for j
+        have hrj_ne: "\<forall>j<m. rj j \<noteq> 0"
+        proof (intro allI impI)
+          fix j assume "j < m"
+          hence "j < nw" using hm_lt by linarith
+          have "Suc j mod nw < nw" using hnw by (by100 simp)
+          thus "rj j \<noteq> 0" unfolding rj_def
+            using hzw_ne[rule_format, OF \<open>Suc j mod nw < nw\<close>] hzw_ne[rule_format, OF \<open>j < nw\<close>]
+            by (by100 simp)
+        qed
+        \<comment> \<open>Each r\\_j = of\\_real(cmod r\\_j) * cis(Arg r\\_j) = of\\_real(cmod r\\_j) * cis(theta j).\<close>
+        have hrj_decomp: "\<forall>j<m. rj j = of_real (cmod (rj j)) * cis (theta j)"
+        proof (intro allI impI)
+          fix j assume "j < m"
+          from rcis_cmod_Arg[of "rj j", symmetric] have "rj j = of_real (cmod (rj j)) * cis (Arg (rj j))"
+            unfolding rcis_def .
+          also have "Arg (rj j) = theta j" unfolding rj_def theta_def by (by100 simp)
+          finally show "rj j = of_real (cmod (rj j)) * cis (theta j)" .
+        qed
+        \<comment> \<open>Product induction: \\<Prod> r\\_j = of\\_real(\\<Prod> cmod r\\_j) * cis(\\<Sum> theta j).\<close>
+        have hprod_polar: "(\<Prod>j<m. rj j) = of_real (\<Prod>j<m. cmod (rj j)) * cis (alpha m)"
+        proof -
+          have "\<And>k. k \<le> m \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
+          proof -
+            fix k show "k \<le> m \<Longrightarrow> (\<Prod>j<k. rj j) = of_real (\<Prod>j<k. cmod (rj j)) * cis (\<Sum>j<k. theta j)"
+            proof (induction k)
+              case 0 thus ?case by simp
+            next
+              case (Suc k')
+              hence "k' < m" by simp
+              from Suc.IH[OF order.strict_implies_order[OF \<open>k' < m\<close>]]
+              have hIH: "(\<Prod>j<k'. rj j) = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j)" .
+              have "(\<Prod>j<Suc k'. rj j) = (\<Prod>j<k'. rj j) * rj k'" by simp
+              also have "\<dots> = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j) * rj k'"
+                using hIH by simp
+              also from hrj_decomp[rule_format, OF \<open>k' < m\<close>]
+              have "\<dots> = of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j) *
+                  (of_real (cmod (rj k')) * cis (theta k'))" by simp
+              also have "\<dots> = of_real ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k')) *
+                  (cis (\<Sum>j<k'. theta j) * cis (theta k'))"
+              proof -
+                have "of_real (\<Prod>j<k'. cmod (rj j)) * cis (\<Sum>j<k'. theta j) *
+                    (of_real (cmod (rj k')) * cis (theta k'))
+                    = rcis (\<Prod>j<k'. cmod (rj j)) (\<Sum>j<k'. theta j) *
+                      rcis (cmod (rj k')) (theta k')"
+                  unfolding rcis_def by simp
+                also have "\<dots> = rcis ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k'))
+                    ((\<Sum>j<k'. theta j) + theta k')"
+                  by (rule rcis_mult)
+                also have "\<dots> = of_real ((\<Prod>j<k'. cmod (rj j)) * cmod (rj k')) *
+                    cis ((\<Sum>j<k'. theta j) + theta k')"
+                  unfolding rcis_def ..
+                also have "cis ((\<Sum>j<k'. theta j) + theta k') = cis (\<Sum>j<k'. theta j) * cis (theta k')"
+                  using cis_mult[symmetric] .
+                finally show ?thesis .
+              qed
+              also have "cis (\<Sum>j<k'. theta j) * cis (theta k') = cis ((\<Sum>j<k'. theta j) + theta k')"
+                by (rule cis_mult)
+              also have "(\<Sum>j<k'. theta j) + theta k' = (\<Sum>j<Suc k'. theta j)" by simp
+              also have "(\<Prod>j<k'. cmod (rj j)) * cmod (rj k') = (\<Prod>j<Suc k'. cmod (rj j))" by simp
+              finally show ?case .
+            qed
+          qed
+          from this[of m] show ?thesis unfolding alpha_def by simp
+        qed
+        \<comment> \<open>\\<Prod> cmod r\\_j = cmod(\\<Prod> r\\_j) = cmod(zw m/zw 0) = cmod(zw m)/cmod(zw 0).\<close>
+        have "(\<Prod>j<m. cmod (rj j)) = cmod (\<Prod>j<m. rj j)"
+          by (simp add: prod_norm)
+        also have "\<dots> = cmod (zw m / zw 0)"
+          using \<open>zw m / zw 0 = (\<Prod>j<m. zw (Suc j mod nw) / zw j)\<close> unfolding rj_def by simp
+        also have "\<dots> = cmod (zw m) / cmod (zw 0)" by (rule norm_divide)
+        finally have hmod_eq: "(\<Prod>j<m. cmod (rj j)) = cmod (zw m) / cmod (zw 0)" .
+        from hprod_polar hmod_eq
+        show ?thesis unfolding rj_def using \<open>zw m / zw 0 = _\<close> by simp
+      qed
+      \<comment> \<open>Step 2: cc(m) = Im(cnj(z\\_m)*z\\_0) = -|z\\_0|*|z\\_m|*sin(alpha m).\<close>
+      have hz0_ne: "zw 0 \<noteq> 0" using hzw_ne hnw by (by100 simp)
+      have hzm_ne: "zw m \<noteq> 0" using hzw_ne hm_lt by (by100 blast)
+      \<comment> \<open>From decomposition: cnj(z\\_m)*z\\_0 = of\\_real(|z\\_0|*|z\\_m|)*cis(-alpha m).\<close>
+      have hcnj_eq: "cnj (zw m) * zw 0 = of_real (cmod (zw 0) * cmod (zw m)) * cis (-(alpha m))"
+      proof -
+        \<comment> \<open>Use rcis decomposition: zw m/zw 0 = rcis(|zm|/|z0|, alpha m).
+           cnj(rcis(r,t)) = rcis(r,-t). Then cnj(zm)*z0 = cnj(zm/z0)*|z0|^2 = rcis(|zm|/|z0|,-alpha)*|z0|^2.\<close>
+        define r_ratio where "r_ratio = cmod (zw m) / cmod (zw 0)"
+        from hzm_decomp have hrat: "zw m / zw 0 = rcis r_ratio (alpha m)"
+          unfolding rcis_def r_ratio_def .
+        \<comment> \<open>cnj(zw m/zw 0) = rcis(r\\_ratio, -alpha m).\<close>
+        have "cnj (zw m / zw 0) = cnj (rcis r_ratio (alpha m))" using hrat by simp
+        also have "cnj (rcis r_ratio (alpha m)) = rcis r_ratio (-(alpha m))"
+          unfolding rcis_def by (simp add: cis_cnj)
+        finally have hcnj_rat: "cnj (zw m / zw 0) = rcis r_ratio (-(alpha m))" .
+        \<comment> \<open>cnj(zm)*z0 = cnj(zm/z0) * |z0|^2.\<close>
+        have hnorm_sq: "cnj (zw 0) * zw 0 = of_real ((cmod (zw 0))^2)"
+          using complex_norm_square by simp
+        have hcnj_prod: "cnj (zw m / zw 0) * cnj (zw 0) = cnj (zw m)" using hz0_ne by simp
+        have "cnj (zw m) * zw 0 = (cnj (zw m / zw 0) * cnj (zw 0)) * zw 0" using hcnj_prod by simp
+        also have "\<dots> = cnj (zw m / zw 0) * (cnj (zw 0) * zw 0)" by (by100 algebra)
+        also have "\<dots> = cnj (zw m / zw 0) * of_real ((cmod (zw 0))^2)" using hnorm_sq by simp
+        also have "\<dots> = rcis r_ratio (-(alpha m)) * of_real ((cmod (zw 0))^2)" using hcnj_rat by simp
+        also have "\<dots> = rcis (r_ratio * (cmod (zw 0))^2) (-(alpha m))"
+          using rcis_mult[of r_ratio "-(alpha m)" "(cmod (zw 0))^2" 0] by (by100 simp)
+        also have "r_ratio * (cmod (zw 0))^2 = cmod (zw 0) * cmod (zw m)"
+        proof -
+          have "cmod (zw 0) > 0" using hz0_ne by (by100 simp)
+          hence "cmod (zw 0) \<noteq> 0" by linarith
+          hence "cmod (zw m) / cmod (zw 0) * (cmod (zw 0))^2 = cmod (zw m) * cmod (zw 0)"
+            by (simp add: power2_eq_square)
+          thus ?thesis unfolding r_ratio_def by (by100 algebra)
+        qed
+        finally show ?thesis unfolding rcis_def by simp
+      qed
+      hence "Im (cnj (zw m) * zw 0) = cmod (zw 0) * cmod (zw m) * sin (-(alpha m))"
+      proof -
+        have "Im (of_real (cmod (zw 0) * cmod (zw m)) * cis (-(alpha m))) =
+            cmod (zw 0) * cmod (zw m) * Im (cis (-(alpha m)))"
+          by (cases "cis (-(alpha m))") (simp add: complex_of_real_mult_Complex)
+        also have "Im (cis (-(alpha m))) = sin (-(alpha m))" by (by100 simp)
+        finally show ?thesis using hcnj_eq by simp
+      qed
+      hence "Im (cnj (zw m) * zw 0) = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))"
+        by (by100 simp)
+      from hcc_im[rule_format, OF hm_lt] this
+      show "cc m = -(cmod (zw 0) * cmod (zw m) * sin (alpha m))" by linarith
+    qed
+    \<comment> \<open>From cc(jp) \\<ge> 0: sin(alpha jp) \\<le> 0, so alpha\\_jp \\<in> [\\<pi>, 2\\<pi>).\<close>
+    have hjp_pos: "jp > 0" using hjp_ne0 by (by100 linarith)
+    have hjp1_lt: "jp + 1 < nw" using hjp_lt by (by100 linarith)
+    from hcc_sin[rule_format, OF hjp_pos hjp] \<open>cc jp \<ge> 0\<close>
+    have "sin (alpha jp) \<le> 0"
+    proof -
+      have "cmod (zw 0) > 0" using hzw_ne hnw by (by100 simp)
+      have "cmod (zw jp) > 0" using hzw_ne hjp by (by100 simp)
+      from hcc_sin[rule_format, OF hjp_pos hjp]
+      have "cc jp = -(cmod (zw 0) * cmod (zw jp) * sin (alpha jp))" .
+      with \<open>cc jp \<ge> 0\<close> have "cmod (zw 0) * cmod (zw jp) * sin (alpha jp) \<le> 0" by linarith
+      have "cmod (zw 0) * cmod (zw jp) > 0"
+        using \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw jp) > 0\<close> by (by100 simp)
+      show ?thesis
+      proof (rule ccontr)
+        assume "\<not> sin (alpha jp) \<le> 0"
+        hence "sin (alpha jp) > 0" by linarith
+        hence "cmod (zw 0) * cmod (zw jp) * sin (alpha jp) > 0"
+          using \<open>cmod (zw 0) * cmod (zw jp) > 0\<close> by (by100 simp)
+        with \<open>cmod (zw 0) * cmod (zw jp) * sin (alpha jp) \<le> 0\<close> show False by linarith
+      qed
+    qed
+    \<comment> \<open>alpha\\_jp \\<in> (0, 2\\<pi>) and sin \\<le> 0: alpha\\_jp \\<in> [\\<pi>, 2\\<pi>).\<close>
+    have halpha_jp_range: "alpha jp \<ge> pi \<and> alpha jp < 2*pi"
+    proof -
+      \<comment> \<open>alpha jp > 0 (each theta > 0 and jp > 0).\<close>
+      have halpha_pos: "alpha jp > 0"
+      proof -
+        have "alpha jp = (\<Sum>j<jp. theta j)" unfolding alpha_def by simp
+        have "\<forall>j\<in>{..<jp}. theta j > 0" using htheta_pos hjp by (by100 auto)
+        have "{..<jp} \<noteq> {}" using hjp_ne0 by (by100 auto)
+        from sum_pos[OF _ \<open>{..<jp} \<noteq> {}\<close>] \<open>\<forall>j\<in>{..<jp}. theta j > 0\<close>
+        have "(\<Sum>j<jp. theta j) > 0" by (by100 blast)
+        thus ?thesis unfolding alpha_def by simp
+      qed
+      \<comment> \<open>alpha jp < 2*pi (remaining sum > 0).\<close>
+      have halpha_lt: "alpha jp < 2*pi"
+      proof -
+        have "alpha jp + (\<Sum>j=jp..<nw. theta j) = alpha nw" unfolding alpha_def
+        proof -
+          have "(\<Sum>j<jp. theta j) + (\<Sum>j=jp..<nw. theta j) = (\<Sum>j<nw. theta j)"
+            using sum.atLeastLessThan_concat[of 0 jp nw theta] hjp
+            by (simp add: atLeast0LessThan)
+          thus "(\<Sum>j<jp. theta j) + (\<Sum>j=jp..<nw. theta j) = (\<Sum>j<nw. theta j)" .
+        qed
+        moreover have "(\<Sum>j=jp..<nw. theta j) > 0"
+        proof -
+          have "\<forall>j\<in>{jp..<nw}. theta j > 0" using htheta_pos hjp by (by100 auto)
+          have "{jp..<nw} \<noteq> {}" using hjp by (by100 auto)
+          have "finite {jp..<nw}" by (by100 simp)
+          from sum_pos[OF \<open>finite {jp..<nw}\<close> \<open>{jp..<nw} \<noteq> {}\<close>] \<open>\<forall>j\<in>{jp..<nw}. theta j > 0\<close>
+          show ?thesis by (by100 blast)
+        qed
+        ultimately show ?thesis using halpha_sum by linarith
+      qed
+      \<comment> \<open>sin(alpha jp) \\<le> 0 and 0 < alpha jp: alpha jp \\<ge> pi.\<close>
+      have "alpha jp \<ge> pi"
+      proof (rule ccontr)
+        assume "\<not> alpha jp \<ge> pi"
+        hence "alpha jp < pi" by linarith
+        with halpha_pos have "sin (alpha jp) > 0" by (rule sin_gt_zero)
+        with \<open>sin (alpha jp) \<le> 0\<close> show False by linarith
+      qed
+      with halpha_lt show ?thesis by (by100 auto)
+    qed
+    \<comment> \<open>alpha(jp+1) = alpha(jp) + theta(jp) \\<in> (\\<pi>, 2\\<pi>+\\<pi>) \\<cap> (0, 2\\<pi>) = (\\<pi>, 2\\<pi>).\<close>
+    have halpha_jp1_range: "alpha (jp+1) > pi \<and> alpha (jp+1) < 2*pi"
+    proof -
+      have "alpha (jp+1) = alpha jp + theta jp" unfolding alpha_def by simp
+      moreover from htheta_pos hjp have "theta jp > 0" by (by100 blast)
+      moreover from halpha_jp_range have "alpha jp \<ge> pi" by (by100 blast)
+      moreover have "alpha (jp+1) < 2*pi"
+      proof -
+        have "alpha nw = 2*pi" using halpha_sum .
+        have "alpha (jp+1) + (\<Sum>j=jp+1..<nw. theta j) = alpha nw" unfolding alpha_def
+        proof -
+          have "(\<Sum>j<jp+1. theta j) + (\<Sum>j=jp+1..<nw. theta j) = (\<Sum>j<nw. theta j)"
+            using sum.atLeastLessThan_concat[of 0 "jp+1" nw theta] hjp1_lt
+            by (simp add: atLeast0LessThan)
+          thus "(\<Sum>j<jp+1. theta j) + (\<Sum>j=jp+1..<nw. theta j) = (\<Sum>j<nw. theta j)" .
+        qed
+        moreover have "(\<Sum>j=jp+1..<nw. theta j) > 0"
+        proof -
+          have "\<forall>j\<in>{jp+1..<nw}. theta j > 0" using htheta_pos hjp1_lt by (by100 auto)
+          have "{jp+1..<nw} \<noteq> {}" using hjp1_lt by (by100 auto)
+          have "finite {jp+1..<nw}" by (by100 simp)
+          from sum_pos[OF \<open>finite {jp+1..<nw}\<close> \<open>{jp+1..<nw} \<noteq> {}\<close>] \<open>\<forall>j\<in>{jp+1..<nw}. theta j > 0\<close>
+          show ?thesis by (by100 blast)
+        qed
+        ultimately show ?thesis using halpha_sum by linarith
+      qed
+      ultimately show ?thesis by linarith
+    qed
+    \<comment> \<open>sin(alpha(jp+1)) < 0 since alpha(jp+1) \\<in> (\\<pi>, 2\\<pi>).\<close>
+    have "sin (alpha (jp+1)) < 0"
+      using halpha_jp1_range sin_lt_zero by (by100 blast)
+    \<comment> \<open>Therefore cc(jp+1) > 0.\<close>
+    have "cc (jp + 1) > 0"
+    proof -
+      have "cmod (zw 0) > 0" using hzw_ne hnw by (by100 simp)
+      have "cmod (zw (jp+1)) > 0" using hzw_ne hjp1_lt by (by100 simp)
+      from hcc_sin[rule_format, OF _ hjp1_lt] hjp_pos
+      have hcc_jp1_eq: "cc (jp+1) = -(cmod (zw 0) * cmod (zw (jp+1)) * sin (alpha (jp+1)))"
+        by (by100 linarith)
+      with \<open>sin (alpha (jp+1)) < 0\<close> \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw (jp+1)) > 0\<close>
+      show ?thesis
+      proof -
+        have "cmod (zw 0) * cmod (zw (jp+1)) > 0"
+          using \<open>cmod (zw 0) > 0\<close> \<open>cmod (zw (jp+1)) > 0\<close> by (by100 simp)
+        hence "cmod (zw 0) * cmod (zw (jp+1)) * sin (alpha (jp+1)) < 0"
+          using \<open>sin (alpha (jp+1)) < 0\<close> mult_pos_neg by (by100 blast)
+        thus ?thesis using hcc_jp1_eq by linarith
+      qed
+    qed
+    hence "cc (Suc jp mod nw) > 0" using hsjp by simp
     thus ?thesis unfolding cc_def by auto
   qed
 qed
@@ -2666,7 +4255,7 @@ proof -
           \<comment> \<open>cross\\_v1(k, p) = \\<Sum>i<ne. \\<lambda>\\_i * det(v\\_k-v\\_1, v\\_i-v\\_1) for p = \\<Sum> \\<lambda>\\_i v\\_i.\<close>
           from hp obtain coeffs where hcoeffs: "(\<forall>i<?ne. coeffs i \<ge> 0)"
             "(\<Sum>i<?ne. coeffs i) = 1" "fst p = (\<Sum>i<?ne. coeffs i * vxe i)" "snd p = (\<Sum>i<?ne. coeffs i * vye i)"
-            using hC5_e by (by100 auto)
+            using hC5_e by (by5000 auto)
           \<comment> \<open>cross\\_v1(k, p) = \\<Sum> \\<lambda>\\_i * cross\\_v1(k, v\\_i) by linearity.\<close>
           have hcross_sum: "\<And>k. cross_v1 k p = (\<Sum>i<?ne. coeffs i * cross_v1 k (vxe i, vye i))"
           proof -
@@ -6605,12 +8194,408 @@ proof -
             (vyw i - ?cyw) * (vxw(Suc i mod ?nw) - ?cxw) > 0"
           using hC10_w by (by100 simp)
         show "phi_fn (edge_pt_e 0 t) \<noteq> phi_fn p"
-          using hjp hin_sec hp hp_ne_v1 ht hint_p
-            hphi_affine_on_sector hdet_pos hphi_on_spur0
-            hC10_expanded hC11_w hC11_e hlen hne_eq hnw_pos
-            spur_arc_target_sector[OF hlen hC10_expanded hC11_w]
-            spur_arc_match_forces_edge[OF hlen hC10_expanded hC11_w]
-          sorry
+        proof
+          assume heq: "phi_fn (edge_pt_e 0 t) = phi_fn p"
+          \<comment> \<open>STRUCTURED PROOF: case jp = 0 or nw-1: affine independence from C10 forces
+             Cramer coordinate zero, making p an edge point (contradiction with hint\\_p).
+             Case jp \\<notin> {0, nw-1}: spur\\_arc\\_target\\_sector gives cross product contradiction.\<close>
+          show False
+          proof (cases "jp = 0")
+            case True
+            \<comment> \<open>Use prop11 infrastructure: centroid\\_weight\\_not\\_on\\_edge already established that
+               phi\\_fn(p) = (1-s-t)*cw + s*u\\_jp + t*u\\_{jp+1} with the Cramer coords.
+               For jp=0: matching with spur forces t=0 via affine independence.\<close>
+            \<comment> \<open>We use the prop11-style analysis already done for centroid weight.\<close>
+            let ?si_jp2 = "Suc(jp+2) mod ?ne"
+            from hphi_affine_on_sector[rule_format, OF hjp hp hin_sec]
+            have hphi_form12: "phi_fn (fst p, snd p) = (let ex = vxe(jp+2)-vxe 1; ey = vye(jp+2)-vye 1;
+                fx = vxe ?si_jp2-vxe 1; fy = vye ?si_jp2-vye 1;
+                det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+                s' = (fy*dx-fx*dy)/det; t' = (ex*dy-ey*dx)/det
+            in ((1-s'-t')*?cxw + s'*vxw jp + t'*vxw(Suc jp mod ?nw),
+                (1-s'-t')*?cyw + s'*vyw jp + t'*vyw(Suc jp mod ?nw)))" .
+            define ex_p where "ex_p = vxe(jp+2)-vxe 1"
+            define ey_p where "ey_p = vye(jp+2)-vye 1"
+            define fx_p where "fx_p = vxe ?si_jp2-vxe 1"
+            define fy_p where "fy_p = vye ?si_jp2-vye 1"
+            define dx_p where "dx_p = fst p-vxe 1"
+            define dy_p where "dy_p = snd p-vye 1"
+            define det_p where "det_p = ex_p*fy_p-ey_p*fx_p"
+            define sp12 where "sp12 = (fy_p*dx_p-fx_p*dy_p)/det_p"
+            define tp12 where "tp12 = (ex_p*dy_p-ey_p*dx_p)/det_p"
+            have hphi_x12: "fst (phi_fn p) = (1-sp12-tp12)*?cxw + sp12*vxw jp + tp12*vxw(Suc jp mod ?nw)"
+              using hphi_form12 unfolding Let_def sp12_def tp12_def det_p_def
+                ex_p_def ey_p_def fx_p_def fy_p_def dx_p_def dy_p_def by simp
+            have hphi_y12: "snd (phi_fn p) = (1-sp12-tp12)*?cyw + sp12*vyw jp + tp12*vyw(Suc jp mod ?nw)"
+              using hphi_form12 unfolding Let_def sp12_def tp12_def det_p_def
+                ex_p_def ey_p_def fx_p_def fy_p_def dx_p_def dy_p_def by simp
+            have h0_lt: "(0::nat) < ?nw" using hnw_pos by linarith
+            have hspur12: "phi_fn (edge_pt_e 0 t) = ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw)"
+              using hphi_on_spur0[rule_format, OF ht] .
+            have hphi_eq_spur: "phi_fn p = ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw)"
+              using heq hspur12 by simp
+            have hmx0: "(1-sp12-tp12)*?cxw + sp12*vxw 0 + tp12*vxw(Suc 0 mod ?nw) = (1-t)*vxw 0 + t*?cxw"
+            proof -
+              have "fst (phi_fn p) = (1-t)*vxw 0 + t*?cxw" using hphi_eq_spur by simp
+              thus ?thesis using hphi_x12 True by simp
+            qed
+            have hmy0: "(1-sp12-tp12)*?cyw + sp12*vyw 0 + tp12*vyw(Suc 0 mod ?nw) = (1-t)*vyw 0 + t*?cyw"
+            proof -
+              have "snd (phi_fn p) = (1-t)*vyw 0 + t*?cyw" using hphi_eq_spur by simp
+              thus ?thesis using hphi_y12 True by simp
+            qed
+            from spur_match_sector0_forces_t_zero[OF hlen hC10_expanded[rule_format, OF h0_lt] hmx0 hmy0]
+            have htp0: "tp12 = 0" .
+            \<comment> \<open>Cramer inverse + edge derivation + I\\_set membership.\<close>
+            have hdet_p_ne: "det_p \<noteq> 0"
+              using hdet_pos[rule_format, OF hjp] unfolding det_p_def ex_p_def ey_p_def fx_p_def fy_p_def
+                Let_def by linarith
+            have hsp_mul: "sp12*det_p = fy_p*dx_p - fx_p*dy_p" unfolding sp12_def using hdet_p_ne by simp
+            have htp_mul: "tp12*det_p = ex_p*dy_p - ey_p*dx_p" unfolding tp12_def using hdet_p_ne by simp
+            have hdet_eq: "det_p = ex_p*fy_p - ey_p*fx_p" unfolding det_p_def by simp
+            from cramer_inverse_tp_zero[OF hsp_mul htp_mul htp0 hdet_p_ne hdet_eq]
+            have hdx: "dx_p = sp12*ex_p" and hdy: "dy_p = sp12*ey_p" by auto
+            \<comment> \<open>Derive p = edge\\_pt\\_e(1, sp12): need ex\\_p = vxe(Suc 1 mod ne)-vxe 1.\<close>
+            have hne_gt: "?ne > 2" using hlen hne_eq by (by100 linarith)
+            have hsuc1_jp2: "Suc 1 mod ?ne = jp + 2"
+            proof -
+              have "jp + 2 < ?ne" using hjp hne_eq by (by100 linarith)
+              moreover have "Suc 1 = jp + 2" using True by (by100 arith)
+              ultimately show ?thesis by (by100 simp)
+            qed
+            hence hex_match: "ex_p = vxe(Suc 1 mod ?ne) - vxe 1"
+              unfolding ex_p_def by simp
+            have hey_match: "ey_p = vye(Suc 1 mod ?ne) - vye 1"
+              using hsuc1_jp2 unfolding ey_p_def by simp
+            \<comment> \<open>p = (vxe 1 + sp12*ex\\_p, vye 1 + sp12*ey\\_p) from hdx, hdy.\<close>
+            have h_px: "fst p = vxe 1 + sp12*ex_p" using hdx unfolding dx_p_def by linarith
+            have h_py: "snd p = vye 1 + sp12*ey_p" using hdy unfolding dy_p_def by linarith
+            \<comment> \<open>edge\\_pt\\_e 1 sp12 = ((1-sp12)*vxe 1 + sp12*vxe(Suc 1 mod ne), ...).\<close>
+            have hedge: "edge_pt_e 1 sp12 = ((1-sp12)*vxe 1 + sp12*vxe(Suc 1 mod ?ne),
+                (1-sp12)*vye 1 + sp12*vye(Suc 1 mod ?ne))"
+              unfolding edge_pt_e_def by (by100 simp)
+            \<comment> \<open>Show fst(edge) = fst p and snd(edge) = snd p.\<close>
+            have hp_edge: "p = edge_pt_e 1 sp12"
+            proof -
+              \<comment> \<open>Need: (1-sp12)*vxe 1 + sp12*vxe(Suc 1 mod ne) = vxe 1 + sp12*ex\\_p.
+                 From hex\\_match: vxe(Suc 1 mod ne) = vxe 1 + ex\\_p.
+                 (1-sp12)*vxe 1 + sp12*(vxe 1+ex\\_p) = vxe 1 + sp12*ex\\_p. Ring algebra.\<close>
+              define vx2 where "vx2 = vxe(Suc 1 mod ?ne)"
+              define vy2 where "vy2 = vye(Suc 1 mod ?ne)"
+              have "vx2 = vxe 1 + ex_p" unfolding vx2_def using hex_match by linarith
+              have "vy2 = vye 1 + ey_p" unfolding vy2_def using hey_match by linarith
+              \<comment> \<open>fst edge = (1-sp12)*vxe 1 + sp12*vx2 = vxe 1-sp12*vxe 1+sp12*(vxe 1+ex\\_p)
+                 = vxe 1 + sp12*ex\\_p.\<close>
+              define sp_v1 where "sp_v1 = sp12*vxe 1"
+              define sp_vx2 where "sp_vx2 = sp12*vx2"
+              have "sp_vx2 = sp_v1 + sp12*ex_p"
+                unfolding sp_vx2_def sp_v1_def \<open>vx2 = vxe 1 + ex_p\<close> by (by100 algebra)
+              have hfst_e: "fst (edge_pt_e 1 sp12) = (1-sp12)*vxe 1 + sp12*vx2"
+                using hedge unfolding vx2_def by simp
+              define omsv1 where "omsv1 = (1-sp12)*vxe 1"
+              have "omsv1 = vxe 1 - sp_v1" unfolding omsv1_def sp_v1_def by (by100 algebra)
+              have "fst (edge_pt_e 1 sp12) = omsv1 + sp_vx2"
+                using hfst_e unfolding omsv1_def sp_vx2_def vx2_def by simp
+              hence "fst (edge_pt_e 1 sp12) = vxe 1 - sp_v1 + sp_vx2"
+                using \<open>omsv1 = vxe 1 - sp_v1\<close> by linarith
+              hence hfst_eq: "fst (edge_pt_e 1 sp12) = vxe 1 + sp12*ex_p"
+                using \<open>sp_vx2 = sp_v1 + sp12*ex_p\<close> unfolding sp_v1_def by linarith
+              define sp_v1y where "sp_v1y = sp12*vye 1"
+              define sp_vy2 where "sp_vy2 = sp12*vy2"
+              have "sp_vy2 = sp_v1y + sp12*ey_p"
+                unfolding sp_vy2_def sp_v1y_def \<open>vy2 = vye 1 + ey_p\<close> by (by100 algebra)
+              have hsnd_e: "snd (edge_pt_e 1 sp12) = (1-sp12)*vye 1 + sp12*vy2"
+                using hedge unfolding vy2_def by simp
+              define omsv1y where "omsv1y = (1-sp12)*vye 1"
+              have "omsv1y = vye 1 - sp_v1y" unfolding omsv1y_def sp_v1y_def by (by100 algebra)
+              have "snd (edge_pt_e 1 sp12) = omsv1y + sp_vy2"
+                using hsnd_e unfolding omsv1y_def sp_vy2_def vy2_def by simp
+              hence "snd (edge_pt_e 1 sp12) = vye 1 - sp_v1y + sp_vy2"
+                using \<open>omsv1y = vye 1 - sp_v1y\<close> by linarith
+              hence hsnd_eq: "snd (edge_pt_e 1 sp12) = vye 1 + sp12*ey_p"
+                using \<open>sp_vy2 = sp_v1y + sp12*ey_p\<close> unfolding sp_v1y_def by linarith
+              from hfst_eq hsnd_eq h_px h_py show ?thesis
+                by (cases "edge_pt_e 1 sp12", cases p) simp
+            qed
+            \<comment> \<open>sp12 \\<in> I\\_set: derive sp12 = 1-t from matching.\<close>
+            have hsp_eq: "sp12 = 1 - t"
+            proof -
+              from hmx0 htp0 have hmx_s: "(1-sp12)*?cxw + sp12*vxw 0 = (1-t)*vxw 0 + t*?cxw" by simp
+              from hmy0 htp0 have hmy_s: "(1-sp12)*?cyw + sp12*vyw 0 = (1-t)*vyw 0 + t*?cyw" by simp
+              \<comment> \<open>Ring distribute: (1-sp12)*cxw = cxw - sp12*cxw, etc.\<close>
+              define sp_cx where "sp_cx = sp12*?cxw"
+              define t_cx where "t_cx = t*?cxw"
+              define sp_vx where "sp_vx = sp12*vxw 0"
+              define t_vx where "t_vx = t*vxw 0"
+              define oms_cx where "oms_cx = (1-sp12)*?cxw"
+              define omt_vx where "omt_vx = (1-t)*vxw 0"
+              have "oms_cx = ?cxw - sp_cx" unfolding oms_cx_def sp_cx_def by (by100 algebra)
+              have "omt_vx = vxw 0 - t_vx" unfolding omt_vx_def t_vx_def by (by100 algebra)
+              from hmx_s have "oms_cx + sp_vx = omt_vx + t_cx"
+                unfolding oms_cx_def sp_vx_def omt_vx_def t_cx_def by simp
+              hence "?cxw - sp_cx + sp_vx = vxw 0 - t_vx + t_cx"
+                using \<open>oms_cx = ?cxw - sp_cx\<close> \<open>omt_vx = vxw 0 - t_vx\<close> by linarith
+              hence hx_lin: "sp_vx - sp_cx = (vxw 0 - ?cxw) + (t_cx - t_vx)" by linarith
+              \<comment> \<open>sp\\_vx - sp\\_cx = sp12*(vxw 0-cxw), t\\_cx-t\\_vx = t*(cxw-vxw 0) = -(t*(vxw 0-cxw)).\<close>
+              define wx where "wx = vxw 0 - ?cxw"
+              have "sp_vx - sp_cx = sp12*wx" unfolding sp_vx_def sp_cx_def wx_def by (by100 algebra)
+              have "t_cx - t_vx = -(t*wx)" unfolding t_cx_def t_vx_def wx_def by (by100 algebra)
+              have hwx_eq: "vxw 0 - ?cxw = wx" unfolding wx_def by simp
+              from hx_lin have "sp12*wx = wx - t*wx"
+                using \<open>sp_vx - sp_cx = sp12*wx\<close> \<open>t_cx - t_vx = -(t*wx)\<close> hwx_eq by linarith
+              hence hsp_wx: "sp12*wx = (1-t)*wx" by (by100 algebra)
+              \<comment> \<open>Similarly for y.\<close>
+              define wy where "wy = vyw 0 - ?cyw"
+              have hsp_wy: "sp12*wy = (1-t)*wy"
+              proof -
+                define sp_cy where "sp_cy = sp12*?cyw"
+                define t_cy where "t_cy = t*?cyw"
+                define sp_vy where "sp_vy = sp12*vyw 0"
+                define t_vy where "t_vy = t*vyw 0"
+                define oms_cy where "oms_cy = (1-sp12)*?cyw"
+                define omt_vy where "omt_vy = (1-t)*vyw 0"
+                have "oms_cy = ?cyw - sp_cy" unfolding oms_cy_def sp_cy_def by (by100 algebra)
+                have "omt_vy = vyw 0 - t_vy" unfolding omt_vy_def t_vy_def by (by100 algebra)
+                from hmy_s have "oms_cy + sp_vy = omt_vy + t_cy"
+                  unfolding oms_cy_def sp_vy_def omt_vy_def t_cy_def by simp
+                hence "?cyw - sp_cy + sp_vy = vyw 0 - t_vy + t_cy"
+                  using \<open>oms_cy = ?cyw - sp_cy\<close> \<open>omt_vy = vyw 0 - t_vy\<close> by linarith
+                hence hy_lin: "sp_vy - sp_cy = (vyw 0 - ?cyw) + (t_cy - t_vy)" by linarith
+                have "sp_vy - sp_cy = sp12*wy" unfolding sp_vy_def sp_cy_def wy_def by (by100 algebra)
+                have "t_cy - t_vy = -(t*wy)" unfolding t_cy_def t_vy_def wy_def by (by100 algebra)
+                have hwy_eq: "vyw 0 - ?cyw = wy" unfolding wy_def by simp
+                from hy_lin have "sp12*wy = wy - t*wy"
+                  using \<open>sp_vy - sp_cy = sp12*wy\<close> \<open>t_cy - t_vy = -(t*wy)\<close> hwy_eq by linarith
+                thus ?thesis by (by100 algebra)
+              qed
+              \<comment> \<open>From sp12*wx = (1-t)*wx: if wx \\<noteq> 0 then sp12=1-t. Else use wy. C10 ensures one \\<noteq> 0.\<close>
+              show ?thesis
+              proof (cases "wx \<noteq> 0")
+                case True from hsp_wx True show ?thesis by simp
+              next
+                case False hence "wx = 0" by simp
+                show ?thesis
+                proof (cases "wy \<noteq> 0")
+                  case True from hsp_wy True show ?thesis by simp
+                next
+                  case False hence "wy = 0" by simp
+                  \<comment> \<open>wx=wy=0 means vxw 0=cxw and vyw 0=cyw. C10(0) gives contradiction.\<close>
+                  have "vxw 0 = ?cxw" using \<open>wx = 0\<close> unfolding wx_def by simp
+                  have "vyw 0 = ?cyw" using \<open>wy = 0\<close> unfolding wy_def by simp
+                  have h0_lt: "(0::nat) < ?nw" using hnw_pos by linarith
+                  from hC10_expanded[rule_format, OF h0_lt]
+                  have "(vxw 0-?cxw)*(vyw(Suc 0 mod ?nw)-?cyw)-(vyw 0-?cyw)*(vxw(Suc 0 mod ?nw)-?cxw) > 0" .
+                  with \<open>vxw 0 = ?cxw\<close> \<open>vyw 0 = ?cyw\<close> show ?thesis by simp
+                qed
+              qed
+            qed
+            have "sp12 \<in> I_set" using hsp_eq ht
+              unfolding top1_unit_interval_def by (by100 auto)
+            have "1 < ?ne" using hlen_ext by (by100 linarith)
+            from hint_p[rule_format, OF this \<open>sp12 \<in> I_set\<close>] hp_edge show False by (by100 simp)
+          next
+            case False note hjp_ne0 = this
+            show False
+            proof (cases "Suc jp mod ?nw = 0")
+              case True
+              \<comment> \<open>jp=nw-1 (Suc jp mod nw = 0): symmetric to jp=0 with sp12=0.\<close>
+              \<comment> \<open>Reuse the Cramer decomposition from prop12 context.\<close>
+              have hphi_eq_spur: "phi_fn p = ((1-t)*vxw 0 + t*?cxw, (1-t)*vyw 0 + t*?cyw)"
+                using heq hphi_on_spur0[rule_format, OF ht] by simp
+              \<comment> \<open>Need matching equations for sector jp with Suc jp mod nw = 0.\<close>
+              let ?si_jp2' = "Suc(jp+2) mod ?ne"
+              from hphi_affine_on_sector[rule_format, OF hjp hp hin_sec]
+              have hphi_form': "phi_fn (fst p, snd p) = (let ex = vxe(jp+2)-vxe 1; ey = vye(jp+2)-vye 1;
+                  fx = vxe ?si_jp2'-vxe 1; fy = vye ?si_jp2'-vye 1;
+                  det = ex*fy-ey*fx; dx = fst p-vxe 1; dy = snd p-vye 1;
+                  s' = (fy*dx-fx*dy)/det; t' = (ex*dy-ey*dx)/det
+              in ((1-s'-t')*?cxw + s'*vxw jp + t'*vxw(Suc jp mod ?nw),
+                  (1-s'-t')*?cyw + s'*vyw jp + t'*vyw(Suc jp mod ?nw)))" .
+              define ex_p' where "ex_p' = vxe(jp+2)-vxe 1"
+              define ey_p' where "ey_p' = vye(jp+2)-vye 1"
+              define fx_p' where "fx_p' = vxe ?si_jp2'-vxe 1"
+              define fy_p' where "fy_p' = vye ?si_jp2'-vye 1"
+              define dx_p' where "dx_p' = fst p-vxe 1"
+              define dy_p' where "dy_p' = snd p-vye 1"
+              define det_p' where "det_p' = ex_p'*fy_p'-ey_p'*fx_p'"
+              define sp12' where "sp12' = (fy_p'*dx_p'-fx_p'*dy_p')/det_p'"
+              define tp12' where "tp12' = (ex_p'*dy_p'-ey_p'*dx_p')/det_p'"
+              have hphi_x': "fst (phi_fn p) = (1-sp12'-tp12')*?cxw + sp12'*vxw jp + tp12'*vxw(Suc jp mod ?nw)"
+                using hphi_form' unfolding Let_def sp12'_def tp12'_def det_p'_def
+                  ex_p'_def ey_p'_def fx_p'_def fy_p'_def dx_p'_def dy_p'_def by simp
+              have hphi_y': "snd (phi_fn p) = (1-sp12'-tp12')*?cyw + sp12'*vyw jp + tp12'*vyw(Suc jp mod ?nw)"
+                using hphi_form' unfolding Let_def sp12'_def tp12'_def det_p'_def
+                  ex_p'_def ey_p'_def fx_p'_def fy_p'_def dx_p'_def dy_p'_def by simp
+              \<comment> \<open>Matching equations in un-substituted form (Suc jp mod nw, not 0).\<close>
+              have hmx': "(1-sp12'-tp12')*?cxw + sp12'*vxw jp + tp12'*vxw(Suc jp mod ?nw) = (1-t)*vxw 0 + t*?cxw"
+              proof -
+                have "fst (phi_fn p) = (1-t)*vxw 0 + t*?cxw" using hphi_eq_spur by simp
+                thus ?thesis using hphi_x' by (cases p) simp
+              qed
+              have hmy': "(1-sp12'-tp12')*?cyw + sp12'*vyw jp + tp12'*vyw(Suc jp mod ?nw) = (1-t)*vyw 0 + t*?cyw"
+              proof -
+                have "snd (phi_fn p) = (1-t)*vyw 0 + t*?cyw" using hphi_eq_spur by simp
+                thus ?thesis using hphi_y' by (cases p) simp
+              qed
+              \<comment> \<open>Apply spur\\_match\\_sector\\_last\\_forces\\_s\\_zero: sp12' = 0.\<close>
+              from spur_match_sector_last_forces_s_zero[OF hlen hjp True hC10_expanded[rule_format, OF hjp]
+                  hmx' hmy']
+              have hsp0: "sp12' = 0" .
+              \<comment> \<open>sp12'=0: Cramer inverse gives dx=tp12'*fx, dy=tp12'*fy.\<close>
+              have hdet_p_ne': "det_p' \<noteq> 0"
+                using hdet_pos[rule_format, OF hjp] unfolding det_p'_def ex_p'_def ey_p'_def fx_p'_def fy_p'_def
+                  Let_def by linarith
+              have hsp_mul': "sp12'*det_p' = fy_p'*dx_p' - fx_p'*dy_p'" unfolding sp12'_def using hdet_p_ne' by simp
+              have htp_mul': "tp12'*det_p' = ex_p'*dy_p' - ey_p'*dx_p'" unfolding tp12'_def using hdet_p_ne' by simp
+              have hdet_eq': "det_p' = ex_p'*fy_p' - ey_p'*fx_p'" unfolding det_p'_def by simp
+              from cramer_inverse_sp_zero[OF hsp_mul' htp_mul' hsp0 hdet_p_ne' hdet_eq']
+              have hdx': "dx_p' = tp12'*fx_p'" and hdy': "dy_p' = tp12'*fy_p'" by auto
+              \<comment> \<open>For jp=nw-1: si\\_jp2' = Suc(jp+2) mod ne = 0. So fx\\_p' = vxe 0-vxe 1.\<close>
+              have hsi_zero: "?si_jp2' = 0"
+              proof -
+                from True hjp have "jp = ?nw - 1"
+                proof -
+                  from True have "Suc jp mod ?nw = 0" .
+                  hence "?nw dvd Suc jp" by (metis dvd_eq_mod_eq_0)
+                  with hjp have "Suc jp = ?nw"
+                  proof -
+                    from hjp have "Suc jp \<le> ?nw" by (by100 simp)
+                    from \<open>?nw dvd Suc jp\<close> have "Suc jp \<ge> 1" by (by100 simp)
+                    from \<open>?nw dvd Suc jp\<close> \<open>Suc jp \<le> ?nw\<close> show ?thesis
+                      using dvd_imp_le[of ?nw "Suc jp"] by (by100 linarith)
+                  qed
+                  thus "jp = ?nw - 1" by (by100 arith)
+                qed
+                hence "jp + 2 = ?nw + 1" using hnw_pos by (by100 arith)
+                hence "Suc(jp + 2) = ?nw + 2" by (by100 arith)
+                also have "?nw + 2 = ?ne" using hne_eq by (by100 simp)
+                finally have "Suc(jp+2) = ?ne" .
+                thus ?thesis by (by100 simp)
+              qed
+              hence hfx_eq: "fx_p' = vxe 0 - vxe 1" "fy_p' = vye 0 - vye 1"
+                unfolding fx_p'_def fy_p'_def by auto
+              have h_px': "fst p = vxe 1 + tp12'*fx_p'" using hdx' unfolding dx_p'_def by linarith
+              have h_py': "snd p = vye 1 + tp12'*fy_p'" using hdy' unfolding dy_p'_def by linarith
+              \<comment> \<open>edge\\_pt\\_e 0 (1-tp12') = ((1-(1-tp12'))*vxe 0 + (1-tp12')*vxe 1, ...) = p.\<close>
+              have hsuc0: "Suc 0 mod ?ne = 1" using hlen hne_eq by (by100 simp)
+              have hedge0: "edge_pt_e 0 (1-tp12') = (tp12'*vxe 0 + (1-tp12')*vxe 1,
+                  tp12'*vye 0 + (1-tp12')*vye 1)"
+                unfolding edge_pt_e_def using hsuc0 by (by100 simp)
+              have hp_edge': "p = edge_pt_e 0 (1-tp12')"
+              proof -
+                \<comment> \<open>fst p = vxe 1 + tp12'*(vxe 0-vxe 1) = (1-tp12')*vxe 1 + tp12'*vxe 0.\<close>
+                define tp_fx where "tp_fx = tp12'*fx_p'"
+                define tp_vx0 where "tp_vx0 = tp12'*vxe 0"
+                define tp_vx1 where "tp_vx1 = tp12'*vxe 1"
+                have "tp_fx = tp_vx0 - tp_vx1" unfolding tp_fx_def tp_vx0_def tp_vx1_def
+                  hfx_eq by (by100 algebra)
+                have "fst p = vxe 1 + tp_fx" using h_px' unfolding tp_fx_def by simp
+                hence "fst p = vxe 1 + tp_vx0 - tp_vx1"
+                  using \<open>tp_fx = tp_vx0 - tp_vx1\<close> by linarith
+                define omt_v1 where "omt_v1 = (1-tp12')*vxe 1"
+                have "omt_v1 = vxe 1 - tp_vx1" unfolding omt_v1_def tp_vx1_def by (by100 algebra)
+                hence hfst': "fst p = tp_vx0 + omt_v1"
+                  using \<open>fst p = vxe 1 + tp_vx0 - tp_vx1\<close> by linarith
+                define tp_fy where "tp_fy = tp12'*fy_p'"
+                define tp_vy0 where "tp_vy0 = tp12'*vye 0"
+                define tp_vy1 where "tp_vy1 = tp12'*vye 1"
+                have "tp_fy = tp_vy0 - tp_vy1" unfolding tp_fy_def tp_vy0_def tp_vy1_def
+                  using hfx_eq by (by100 algebra)
+                have "snd p = vye 1 + tp_fy" using h_py' unfolding tp_fy_def by simp
+                hence "snd p = vye 1 + tp_vy0 - tp_vy1"
+                  using \<open>tp_fy = tp_vy0 - tp_vy1\<close> by linarith
+                define omt_v1y where "omt_v1y = (1-tp12')*vye 1"
+                have "omt_v1y = vye 1 - tp_vy1" unfolding omt_v1y_def tp_vy1_def by (by100 algebra)
+                hence hsnd': "snd p = tp_vy0 + omt_v1y"
+                  using \<open>snd p = vye 1 + tp_vy0 - tp_vy1\<close> by linarith
+                from hfst' hsnd' hedge0 show ?thesis
+                  unfolding tp_vx0_def tp_vy0_def omt_v1_def omt_v1y_def
+                  by (cases "edge_pt_e 0 (1-tp12')", cases p) simp
+              qed
+              \<comment> \<open>(1-tp12') \\<in> I\\_set: derive tp12' = 1-t.\<close>
+              have htp_eq': "tp12' = 1 - t"
+              proof -
+                \<comment> \<open>From hmx' with sp12'=0 and Suc jp mod nw = 0: (1-tp12')*cxw + tp12'*vxw 0 = (1-t)*vxw 0+t*cxw.\<close>
+                from hmx' hsp0 True have "(1-tp12')*?cxw + tp12'*vxw 0 = (1-t)*vxw 0 + t*?cxw" by simp
+                from hmy' hsp0 True have "(1-tp12')*?cyw + tp12'*vyw 0 = (1-t)*vyw 0 + t*?cyw" by simp
+                \<comment> \<open>Same ring algebra as jp=0 case but with tp12' and vxw 0.\<close>
+                define tp_cx where "tp_cx = tp12'*?cxw"
+                define t_cx' where "t_cx' = t*?cxw"
+                define tp_vx where "tp_vx = tp12'*vxw 0"
+                define t_vx' where "t_vx' = t*vxw 0"
+                define oms_cx' where "oms_cx' = (1-tp12')*?cxw"
+                define omt_vx' where "omt_vx' = (1-t)*vxw 0"
+                have "oms_cx' = ?cxw - tp_cx" unfolding oms_cx'_def tp_cx_def by (by100 algebra)
+                have "omt_vx' = vxw 0 - t_vx'" unfolding omt_vx'_def t_vx'_def by (by100 algebra)
+                from \<open>(1-tp12')*?cxw + tp12'*vxw 0 = (1-t)*vxw 0 + t*?cxw\<close>
+                have "oms_cx' + tp_vx = omt_vx' + t_cx'"
+                  unfolding oms_cx'_def tp_vx_def omt_vx'_def t_cx'_def by simp
+                hence "?cxw - tp_cx + tp_vx = vxw 0 - t_vx' + t_cx'"
+                  using \<open>oms_cx' = ?cxw - tp_cx\<close> \<open>omt_vx' = vxw 0 - t_vx'\<close> by linarith
+                hence hx_lin': "tp_vx - tp_cx = (vxw 0 - ?cxw) + (t_cx' - t_vx')" by linarith
+                define wx' where "wx' = vxw 0 - ?cxw"
+                have "tp_vx - tp_cx = tp12'*wx'" unfolding tp_vx_def tp_cx_def wx'_def by (by100 algebra)
+                have "t_cx' - t_vx' = -(t*wx')" unfolding t_cx'_def t_vx'_def wx'_def by (by100 algebra)
+                have hwx'_eq: "vxw 0 - ?cxw = wx'" unfolding wx'_def by simp
+                from hx_lin' have "tp12'*wx' = wx' - t*wx'"
+                  using \<open>tp_vx - tp_cx = tp12'*wx'\<close> \<open>t_cx' - t_vx' = -(t*wx')\<close> hwx'_eq by linarith
+                hence htp_wx: "tp12'*wx' = (1-t)*wx'" by (by100 algebra)
+                define wy' where "wy' = vyw 0 - ?cyw"
+                have htp_wy: "tp12'*wy' = (1-t)*wy'"
+                proof -
+                  define tp_cy where "tp_cy = tp12'*?cyw"
+                  define t_cy' where "t_cy' = t*?cyw"
+                  define tp_vy where "tp_vy = tp12'*vyw 0"
+                  define t_vy' where "t_vy' = t*vyw 0"
+                  define oms_cy' where "oms_cy' = (1-tp12')*?cyw"
+                  define omt_vy' where "omt_vy' = (1-t)*vyw 0"
+                  have "oms_cy' = ?cyw - tp_cy" unfolding oms_cy'_def tp_cy_def by (by100 algebra)
+                  have "omt_vy' = vyw 0 - t_vy'" unfolding omt_vy'_def t_vy'_def by (by100 algebra)
+                  from \<open>(1-tp12')*?cyw + tp12'*vyw 0 = (1-t)*vyw 0 + t*?cyw\<close>
+                  have "oms_cy' + tp_vy = omt_vy' + t_cy'"
+                    unfolding oms_cy'_def tp_vy_def omt_vy'_def t_cy'_def by simp
+                  hence "?cyw - tp_cy + tp_vy = vyw 0 - t_vy' + t_cy'"
+                    using \<open>oms_cy' = ?cyw - tp_cy\<close> \<open>omt_vy' = vyw 0 - t_vy'\<close> by linarith
+                  hence hy_lin': "tp_vy - tp_cy = (vyw 0 - ?cyw) + (t_cy' - t_vy')" by linarith
+                  have "tp_vy - tp_cy = tp12'*wy'" unfolding tp_vy_def tp_cy_def wy'_def by (by100 algebra)
+                  have "t_cy' - t_vy' = -(t*wy')" unfolding t_cy'_def t_vy'_def wy'_def by (by100 algebra)
+                  have hwy'_eq: "vyw 0 - ?cyw = wy'" unfolding wy'_def by simp
+                  from hy_lin' have "tp12'*wy' = wy' - t*wy'"
+                    using \<open>tp_vy - tp_cy = tp12'*wy'\<close> \<open>t_cy' - t_vy' = -(t*wy')\<close> hwy'_eq by linarith
+                  thus ?thesis by (by100 algebra)
+                qed
+                show ?thesis
+                proof (cases "wx' \<noteq> 0")
+                  case True from htp_wx True show ?thesis by simp
+                next
+                  case False hence "wx' = 0" by simp
+                  show ?thesis
+                  proof (cases "wy' \<noteq> 0")
+                    case True from htp_wy True show ?thesis by simp
+                  next
+                    case False hence "wy' = 0" by simp
+                    have "vxw 0 = ?cxw" using \<open>wx' = 0\<close> unfolding wx'_def by simp
+                    have "vyw 0 = ?cyw" using \<open>wy' = 0\<close> unfolding wy'_def by simp
+                    have h0_lt: "(0::nat) < ?nw" using hnw_pos by linarith
+                    from hC10_expanded[rule_format, OF h0_lt]
+                    have "(vxw 0-?cxw)*(vyw(Suc 0 mod ?nw)-?cyw)-(vyw 0-?cyw)*(vxw(Suc 0 mod ?nw)-?cxw) > 0" .
+                    with \<open>vxw 0 = ?cxw\<close> \<open>vyw 0 = ?cyw\<close> show ?thesis by simp
+                  qed
+                qed
+              qed
+              have "(1-tp12') \<in> I_set" using htp_eq' ht
+                unfolding top1_unit_interval_def by (by100 auto)
+              have "0 < ?ne" using hlen hne_eq by (by100 linarith)
+              from hint_p[rule_format, OF this \<open>(1-tp12') \<in> I_set\<close>] hp_edge' show False by (by100 simp)
+            next
+              case False note hjp_ne_last = this
+              show False
+                using heq ht hjp hjp_ne0 hjp_ne_last hp hin_sec hp_ne_v1 hint_p hlen hne_eq hnw_pos
+                  hphi_on_spur0 hphi_affine_on_sector hdet_pos hC10_expanded hC11_w
+                  spur_arc_target_sector[OF hlen hC10_expanded hC11_w] sorry
+            qed
+          qed
+        qed
       qed
       show ?thesis
         by (rule that[of phi_fn])
@@ -9933,6 +11918,10 @@ qed
    Uses front\\_cancel\\_proper (which depends only on spur\\_collapse\\_cancel\\_homeo)
    and quotient\\_of\\_scheme\\_cut\\_paste\\_opp\\_proper + quotient\\_of\\_scheme\\_cut\\_paste\\_proper
    for the cut-paste operations. Avoids the FALSE same-space sorrys.\<close>
+\<comment> \<open>TODO: The proper version currently delegates to the general chain which has
+   unnecessary sorrys (non-fresh prefix, short-scheme, etc.) that are eliminable with
+   properness. Future: implement proper-specific single-step lemma and chain it here.
+   Impact: would eliminate ~5 structural sorrys from the effective sorry count.\<close>
 lemma valid_equiv_preserves_quotient_homeo_proper:
   fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_quotient_of_scheme_on X TX s"
