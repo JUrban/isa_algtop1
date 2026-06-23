@@ -1252,18 +1252,17 @@ proof -
      - 1 \\<le> i \\<le> |u2| (inv(u2)): q2(t*vx2(?k-i) + (1-t)*vx2(?k+1-i), ...) [reversed u2 edge]
      - |u2|+1 \\<le> i \\<le> n-2 (v): q2((1-t)*vx2(i+1) + t*vx2(Suc(i+1) mod n), ...) [original v edge]
      INTERIOR: half-and-half piecewise extension through sub-polygons Q1, Q2.\<close>
-  \<comment> \<open>PACKAGING: we show top1\\_quotient\\_of\\_scheme\\_on Y TY w' directly.
-     The proof constructs the half-and-half quotient map g: P2 \\<to> Y and verifies C1-C11.
-     C1-C6, C10, C11: inherited from original polygon P2 (same polygon, same vertices).
-     C2 (quotient map), C7-C9: for the new piecewise map g defined above.
-     SORRY DECOMPOSITION (for future work):
-     1. g continuous on boundary (junctions match by hq\\_v0/hq\\_v1): ~50 lines
-     2. g extends continuously to interior (half-and-half via sub-polygon homeomorphisms): ~100 lines
-     3. g is surjective + quotient map (compact to Hausdorff): ~30 lines
-     4. C7 for w' (case analysis on label pairs, uses original C7 + double negation): ~100 lines
-     5. C8 for w' (halves injective, Q1/Q2 disjoint, q2 injective on interior): ~50 lines
-     6. C9 for w' (diagonal in interior, edges on boundary, original C9): ~50 lines
-     Total: ~380 lines. Mathematical argument is COMPLETE (see analysis above).\<close>
+  \<comment> \<open>CONSTRUCTION: define boundary map g on P2 (same polygon, new quotient map).
+     g(edge\\_i, t) for target scheme w':
+     - i = 0 or n-1 (c-pair): q2((1-t)*v0 + t*v(k), (1-t)*vy0 + t*vy(k))
+     - 1 \\<le> i \\<le> |u2| (inv(u2)): q2(t*v(k-i) + (1-t)*v(k+1-i), ...)
+     - |u2|+1 \\<le> i \\<le> n-2 (v): q2((1-t)*v(i+1) + t*v(Suc(i+1) mod n), ...)
+     Interior: half-and-half via sub-polygon homeomorphisms (Q1 left, Q2 right).
+     All junction continuity, C7, C8, C9 verified mathematically (see comments above).\<close>
+  \<comment> \<open>The proof uses the half-and-half geometric construction.
+     This is the SOLE remaining sorry for the full classification chain.
+     Mathematical proof is complete; formal verification needs ~380 lines of
+     boundary map definition, continuity proof, and C7/C8/C9 case analysis.\<close>
   show ?thesis sorry
 qed
 
