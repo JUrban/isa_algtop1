@@ -1259,11 +1259,110 @@ proof -
      - |u2|+1 \\<le> i \\<le> n-2 (v): q2((1-t)*v(i+1) + t*v(Suc(i+1) mod n), ...)
      Interior: half-and-half via sub-polygon homeomorphisms (Q1 left, Q2 right).
      All junction continuity, C7, C8, C9 verified mathematically (see comments above).\<close>
-  \<comment> \<open>The proof uses the half-and-half geometric construction.
-     This is the SOLE remaining sorry for the full classification chain.
-     Mathematical proof is complete; formal verification needs ~380 lines of
-     boundary map definition, continuity proof, and C7/C8/C9 case analysis.\<close>
-  show ?thesis sorry
+  \<comment> \<open>Step 11: Extract topology\\_on\\_strict from hq.\<close>
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using hq unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have hlen_eq: "length ?w' = ?n" by (by100 simp)
+  \<comment> \<open>Step 12: Construct the map g: P2 -> Y satisfying C7/C8/C9 for scheme w'.
+     g is defined piecewise on the boundary:
+     - c-edges (0, n-1): map to the diagonal q2(v0..v(k+1))
+     - inv(u2) edges (1..k): map to reversed original u2 edges
+     - v edges (k+1..n-2): map to original v edges
+     Interior: half-and-half extension through sub-polygons.
+     The construction and verification of all conditions uses the half-and-half
+     approach documented in the PROOF OF THEOREM 76.1 comment block above.\<close>
+  \<comment> \<open>For now: sorry the full construction. The mathematical proof is complete
+     (all junction continuity, C7 cases, C8, C9 verified in comments above).
+     The formal verification requires defining g, proving continuity,
+     and verifying C7/C8/C9 as separate sub-goals (~380 lines total).
+
+     KEY FACT: the proof uses ONLY the following from the original quotient:
+     - hC7\\_2: edge identifications for scheme w (especially the a-pair)
+     - hC8\\_2: interior injectivity of q2
+     - hC9\\_2: edge-edge injectivity of q2
+     - hq\\_v0, hq\\_v1: vertex identifications from the a-pair
+     All other conditions (C1-C6, C10, C11) are pure polygon properties
+     inherited from P2 unchanged.\<close>
+  \<comment> \<open>Unfold the definition and provide witnesses.\<close>
+  show "top1_quotient_of_scheme_on Y TY ?w'"
+    unfolding top1_quotient_of_scheme_on_def
+  proof (intro conjI)
+    show "is_topology_on_strict Y TY" by (rule htopo_Y)
+  next
+    \<comment> \<open>Need: \\<exists>P q vx vy. C1 \\<and> C2 \\<and> ... \\<and> C11 for scheme w' on P with map q.
+       Witness: P = P2, q = g (piecewise map), vx = vx2, vy = vy2.
+       g is defined by the half-and-half construction:
+       - On boundary: edge-by-edge map to original polygon (diagonal for c-edges)
+       - On interior: piecewise extension through sub-polygon homeomorphisms\<close>
+    \<comment> \<open>Witness: P = P2 (same polygon), vx = vx2, vy = vy2.
+       g = the half-and-half piecewise quotient map (construction sorry'd).
+       C1, C3-C6, C10, C11: inherit from P2 via hlen\\_eq (length w' = length w = n).
+       C2, C7, C8, C9: need the new map g.\<close>
+    \<comment> \<open>Inherit polygon properties from P2 (same polygon, same vertices, same length).\<close>
+    have hC1': "top1_is_polygonal_region_on P2 (length ?w')"
+      using hP2 hlen_eq by simp
+    have hC3': "\<forall>i<length ?w'. \<forall>j<length ?w'. i \<noteq> j \<longrightarrow> (vx2 i, vy2 i) \<noteq> (vx2 j, vy2 j)"
+      using hC3_2 hlen_eq by simp
+    have hC4': "\<forall>i<length ?w'. (vx2 i, vy2 i) \<in> P2"
+      using hv2_in hlen_eq by simp
+    have hC5': "P2 = {(x, y) | x y.
+              \<exists>coeffs. (\<forall>i<length ?w'. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<length ?w'. coeffs i) = 1
+                     \<and> x = (\<Sum>i<length ?w'. coeffs i * vx2 i)
+                     \<and> y = (\<Sum>i<length ?w'. coeffs i * vy2 i)}"
+      using hC5_2 hlen_eq by simp
+    \<comment> \<open>C2 (quotient map g: P2 -> Y), C7, C8, C9 for scheme w' with map g.
+       These require the full geometric half-and-half construction.
+       Sorry'd: the mathematical argument is complete (see comments above).\<close>
+    show "\<exists>P q (vx::nat\<Rightarrow>real) vy.
+        top1_is_polygonal_region_on P (length ?w')
+      \<and> top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y TY q
+      \<and> (\<forall>i<length ?w'. \<forall>j<length ?w'. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
+      \<and> (\<forall>i<length ?w'. (vx i, vy i) \<in> P)
+      \<and> P = {(x, y) | x y.
+                \<exists>coeffs. (\<forall>i<length ?w'. coeffs i \<ge> 0)
+                       \<and> (\<Sum>i<length ?w'. coeffs i) = 1
+                       \<and> x = (\<Sum>i<length ?w'. coeffs i * vx i)
+                       \<and> y = (\<Sum>i<length ?w'. coeffs i * vy i)}
+      \<and> (\<forall>i<length ?w'. \<forall>j<length ?w'.
+            i \<noteq> j \<longrightarrow> Suc i mod length ?w' \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length ?w' \<longrightarrow>
+            (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+               ((1-s) * vx i + s * vx (Suc i mod length ?w'),
+                (1-s) * vy i + s * vy (Suc i mod length ?w'))
+             \<noteq> ((1-t) * vx j + t * vx (Suc j mod length ?w'),
+                (1-t) * vy j + t * vy (Suc j mod length ?w'))))
+      \<and> (\<forall>i<length ?w'. \<forall>j<length ?w'. fst (?w'!i) = fst (?w'!j) \<longrightarrow>
+            (\<forall>t\<in>I_set.
+               q ((1-t) * vx i + t * vx (Suc i mod length ?w'),
+                  (1-t) * vy i + t * vy (Suc i mod length ?w'))
+             = (if snd (?w'!i) = snd (?w'!j)
+                then q ((1-t) * vx j + t * vx (Suc j mod length ?w'),
+                        (1-t) * vy j + t * vy (Suc j mod length ?w'))
+                else q (t * vx j + (1-t) * vx (Suc j mod length ?w'),
+                        t * vy j + (1-t) * vy (Suc j mod length ?w')))))
+      \<and> (\<forall>p\<in>P. (\<forall>i<length ?w'. \<forall>t\<in>I_set.
+                    p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length ?w'),
+                          (1-t) * vy i + t * vy (Suc i mod length ?w')))
+               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p'))
+      \<and> (\<forall>i<length ?w'. \<forall>j<length ?w'. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+              q ((1-t) * vx i + t * vx (Suc i mod length ?w'),
+                 (1-t) * vy i + t * vy (Suc i mod length ?w'))
+            = q ((1-s) * vx j + s * vx (Suc j mod length ?w'),
+                 (1-s) * vy j + s * vy (Suc j mod length ?w'))
+            \<longrightarrow> (i = j \<and> t = s)
+              \<or> (fst (?w'!i) = fst (?w'!j) \<and>
+                 (if snd (?w'!i) = snd (?w'!j) then s = t else s = 1 - t)))
+      \<and> (\<forall>i<length ?w'. let cx = (\<Sum>j<length ?w'. vx j) / real (length ?w');
+                               cy = (\<Sum>j<length ?w'. vy j) / real (length ?w')
+           in (vx i - cx) * (vy (Suc i mod length ?w') - cy)
+            - (vy i - cy) * (vx (Suc i mod length ?w') - cx) > 0)
+      \<and> (\<forall>i<length ?w'. \<forall>k<length ?w'.
+            k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length ?w' \<longrightarrow>
+            (vx k - vx i) * (vy (Suc i mod length ?w') - vy i)
+            - (vy k - vy i) * (vx (Suc i mod length ?w') - vx i) < 0)"
+      sorry
+  qed
 qed
 
 \<comment> \<open>PROPER VERSION of theorem\\_76\\_1\\_paste\\_chain.
