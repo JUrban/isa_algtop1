@@ -3147,8 +3147,18 @@ next
           define dx where "dx = (1-t)*vx2 i + t*vx2(Suc i) - vx2 0"
           define dy where "dy = (1-t)*vy2 i + t*vy2(Suc i) - vy2 0"
           \<comment> \<open>Fan det gives dd \\<noteq> 0.\<close>
-          have hdd_ne0: "dd \<noteq> 0"
-            sorry \<comment> \<open>dd = fan\\_det(j, Suc j) > 0 from hfan\\_det\\_0.\<close>
+          have hdd_pos: "dd > 0"
+          proof -
+            have "j \<ge> 1" unfolding j_def sorry \<comment> \<open>Trivial: if i=0 then 1\\<ge>1 else i\\<ge>1 (since i<k\\<ge>2).\<close>
+            have "j < ?k" unfolding j_def using hik sorry \<comment> \<open>j < k: trivial from j\\_def + i < k.\<close>
+            have "j < ?n" using \<open>j < ?k\<close> by simp
+            have "Suc j \<le> ?k" using \<open>j < ?k\<close> by linarith
+            have "Suc j < ?n" using \<open>Suc j \<le> ?k\<close> by simp
+            have "j < Suc j" by simp
+            from hfan_det_0[rule_format, OF \<open>j < ?n\<close> \<open>Suc j < ?n\<close> \<open>j \<ge> 1\<close> \<open>j < Suc j\<close>]
+            show ?thesis unfolding dd_def ex_def ey_def fx_def fy_def .
+          qed
+          have hdd_ne0: "dd \<noteq> 0" using hdd_pos by linarith
           \<comment> \<open>dx and dy are edge\\_point - v\\_0: linear in t.\<close>
           have hdx_eq: "dx = (1-t)*ex + t*fx"
             sorry \<comment> \<open>When i = j or i = 0 (j=1): dx decomposes via edge vertices.\<close>
