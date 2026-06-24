@@ -1356,7 +1356,57 @@ proof (intro allI impI ballI)
       \<comment> \<open>sigma(i,t) = edge\\_orig(k-i, 1-t), sigma(j,t) = edge\\_orig(k-j, 1-t).
          Original C7 at indices (k-i), (k-j) with param (1-t) gives the result.
          The double negation: reversed param (1-t) + flipped exponent (\\<not>snd) cancel.\<close>
-      show ?thesis sorry \<comment> \<open>inv(u2) x inv(u2) pair: uses hC7\\_orig at (k-i),(k-j) with 1-t.\<close>
+      \<comment> \<open>Both i,j in inv(u2) range: i,j \\<le> length u2.
+         sigma(i,t) = edge\\_orig(k-i, 1-t). sigma(j,t) = edge\\_orig(k-j, 1-t).
+         Target label w'!i = inv of w!(k-i), so fst same, snd flipped.
+         Original C7 at (k-i),(k-j) with param (1-t) + double negation gives result.\<close>
+      have hii: "i \<le> length u2" and hjj: "j \<le> length u2" using True by simp_all
+      \<comment> \<open>sigma(i,t) = (t*vx(k-i)+(1-t)*vx(k+1-i), ...).\<close>
+      \<comment> \<open>sigma(i,t) = ((1-(1-t))*vx(k-i) + (1-t)*vx(k+1-i), ...) = (t*vx(k-i) + (1-t)*vx(k+1-i), ...).\<close>
+      have hii_k: "i \<le> k - 1" using hii hk_eq by linarith
+      have hjj_k: "j \<le> k - 1" using hjj hk_eq by linarith
+      have hk2: "k \<ge> 2" using hi_mid(1) hii_k by linarith
+      have h\<sigma>i: "\<sigma> i t = (t*vx(k-i)+(1-t)*vx(k+1-i), t*vy(k-i)+(1-t)*vy(k+1-i))"
+      proof -
+        have "Suc (k - i) mod ?n = k + 1 - i"
+          using hi_mid(1) hii_k hk_lt by (by100 simp)
+        from paste_sigma_inv_u2_edge(1)[OF hi_mid(1) hii_k hk2 hn3 hk_lt this]
+             paste_sigma_inv_u2_edge(2)[OF hi_mid(1) hii_k hk2 hn3 hk_lt this]
+        show ?thesis unfolding \<sigma>_def by (by100 simp)
+      qed
+      have h\<sigma>j: "\<sigma> j t = (t*vx(k-j)+(1-t)*vx(k+1-j), t*vy(k-j)+(1-t)*vy(k+1-j))"
+      proof -
+        have "Suc (k - j) mod ?n = k + 1 - j"
+          using hj_mid(1) hjj_k hk_lt by (by100 simp)
+        from paste_sigma_inv_u2_edge(1)[OF hj_mid(1) hjj_k hk2 hn3 hk_lt this]
+             paste_sigma_inv_u2_edge(2)[OF hj_mid(1) hjj_k hk2 hn3 hk_lt this]
+        show ?thesis unfolding \<sigma>_def by (by100 simp)
+      qed
+      \<comment> \<open>Rewrite: sigma(i,t) = edge\\_orig(k-i) at param (1-t).\<close>
+      \<comment> \<open>edge\\_orig(m, s) = (1-s)*vx(m) + s*vx(Suc m mod n), similarly y.\<close>
+      \<comment> \<open>At s=1-t: (1-(1-t))*vx(m) + (1-t)*vx(Suc m mod n) = t*vx(m)+(1-t)*vx(Suc m mod n).\<close>
+      \<comment> \<open>So sigma(i,t) = edge\\_orig(k-i, 1-t) when Suc(k-i) mod n = k+1-i.\<close>
+      \<comment> \<open>Original C7 at (k-i, k-j): fst(w!(k-i)) = fst(w!(k-j)) from hlabel + label correspondence.\<close>
+      have hki_lt: "k-i < ?n" using hii_k hk_lt by (by100 linarith)
+      have hkj_lt: "k-j < ?n" using hjj_k hk_lt by (by100 linarith)
+      \<comment> \<open>Label correspondence: fst(w'!i) = fst(u2!(k-1-i)) and fst(w!(k-i)) = fst(u2!(k-i-1)).
+         Since k = 1+|u2|: k-i-1 = |u2|-i = k-1-i. Both equal fst(u2!(|u2|-i)).\<close>
+      have hlabel_orig: "fst(w!(k-i)) = fst(w!(k-j))"
+        sorry \<comment> \<open>From hlabel + label correspondence through u2 indices.\<close>
+      \<comment> \<open>Need 1-t \\<in> I\\_set.\<close>
+      have ht_1mt: "1-t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
+      from hC7_orig[rule_format, OF hki_lt hkj_lt hlabel_orig ht_1mt]
+      have hC7_app: "q2 ((1-(1-t))*vx(k-i) + (1-t)*vx(Suc(k-i) mod ?n),
+                          (1-(1-t))*vy(k-i) + (1-t)*vy(Suc(k-i) mod ?n))
+        = (if snd(w!(k-i)) = snd(w!(k-j))
+           then q2 ((1-(1-t))*vx(k-j) + (1-t)*vx(Suc(k-j) mod ?n),
+                     (1-(1-t))*vy(k-j) + (1-t)*vy(Suc(k-j) mod ?n))
+           else q2 ((1-t)*vx(k-j) + (1-(1-t))*vx(Suc(k-j) mod ?n),
+                     (1-t)*vy(k-j) + (1-(1-t))*vy(Suc(k-j) mod ?n)))" sorry
+      \<comment> \<open>Simplify 1-(1-t) = t.\<close>
+      \<comment> \<open>Translate snd(w!(k-i)) \\<leftrightarrow> snd(w'!i): flipped by inv(u2).\<close>
+      \<comment> \<open>Double negation: snd(w'!i)=snd(w'!j) iff snd(w!(k-i))=snd(w!(k-j)).\<close>
+      show ?thesis sorry
     next
       case False
       show ?thesis
