@@ -2826,8 +2826,66 @@ proof -
       have hphi_L_sigma: "\<And>i t. i < ?k \<Longrightarrow> t \<in> I_set \<Longrightarrow>
           phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
         = paste_sigma vx2 vy2 ?k ?n i t"
-        sorry \<comment> \<open>LEAST sector selection + Cramer coordinate evaluation.
-           Uses hfan\\_det\\_0, cramer\\_on\\_triangle\\_edge/base\\_edge.\<close>
+      proof -
+        fix i :: nat and t :: real assume hik: "i < ?k" and ht: "t \<in> I_set"
+        let ?px = "(1-t)*vx2 i + t*vx2(Suc i mod ?n)"
+        let ?py = "(1-t)*vy2 i + t*vy2(Suc i mod ?n)"
+        \<comment> \<open>Step A: Determine expected LEAST sector and show it satisfies the predicate.\<close>
+        \<comment> \<open>Step B: Show LEAST = expected sector.\<close>
+        \<comment> \<open>Step C: Evaluate Cramer coordinates and show result = sigma.\<close>
+        \<comment> \<open>For now: sorry the three steps. Each is a substantial computation
+           using hfan\\_det\\_0, cramer\\_on\\_triangle\\_edge/base\\_edge, and algebra.\<close>
+        \<comment> \<open>The phi\\_L\\_def LEAST predicate, after fst/snd simplification.\<close>
+        let ?PL_raw = "\<lambda>j. 1 \<le> j \<and> j < ?k \<and>
+            (vx2 j - vx2 0)*(?py - vy2 0) - (vy2 j - vy2 0)*(?px - vx2 0) \<ge> 0 \<and>
+            (vx2(Suc j) - vx2 0)*(?py - vy2 0) - (vy2(Suc j) - vy2 0)*(?px - vx2 0) \<le> 0"
+        \<comment> \<open>Connect phi\\_L\\_def's LEAST to ?PL\\_raw.\<close>
+        have hPL_connect: "(LEAST j. 1 \<le> j \<and> j < ?k \<and>
+            (vx2 j - vx2 0)*(snd (?px,?py) - vy2 0) - (vy2 j - vy2 0)*(fst (?px,?py) - vx2 0) \<ge> 0 \<and>
+            (vx2(Suc j) - vx2 0)*(snd (?px,?py) - vy2 0) - (vy2(Suc j) - vy2 0)*(fst (?px,?py) - vx2 0) \<le> 0)
+          = (LEAST j. ?PL_raw j)" by simp
+        \<comment> \<open>Determine which j LEAST gives and what the Cramer result is.\<close>
+        \<comment> \<open>Case i \\<ge> 1: LEAST = i (for t > 0), Cramer gives (0, 1-t, t).
+           Result: (1-t)*v(k+1-i) + t*v(k-i) = sigma(i,t).
+           Case i = 0: LEAST = 1 (when k \\<ge> 2), Cramer gives (1-t, t, 0).
+           Result: (1-t)*v\\_0 + t*v\\_k = sigma(0,t).\<close>
+        \<comment> \<open>The key: show LEAST in phi\\_L\\_def gives expected sector, then Cramer matches sigma.\<close>
+        \<comment> \<open>Useful: ?PL(0) is false (since 1 \\<le> 0 fails), so LEAST = Suc(LEAST m. ?PL(Suc m)).\<close>
+        have hPL0_false: "\<not> ?PL_raw 0" by simp
+        \<comment> \<open>Suc i mod n = Suc i (since i < k < n, so Suc i \\<le> k \\<le> n-1 < n).\<close>
+        have hsi_lt: "Suc i < ?n" using hik by simp
+        have hsi_mod: "Suc i mod ?n = Suc i" using hsi_lt by simp
+        show "phi_L (?px, ?py) = paste_sigma vx2 vy2 ?k ?n i t"
+        proof (cases "i = 0")
+          case True
+          \<comment> \<open>i = 0: edge from v\\_0 to v\\_1. LEAST = 1.\<close>
+          \<comment> \<open>When k = 1 (u2 = []): phi\\_L has no valid sectors, need separate argument.\<close>
+          \<comment> \<open>?PL\\_raw(1) holds: lower = 0 \\<ge> 0, upper = t*(-fan\\_det(1,2)) \\<le> 0.\<close>
+          have hPL1: "?PL_raw 1"
+          proof -
+            have "1 \<le> (1::nat) \<and> 1 < ?k" sorry \<comment> \<open>Needs k \\<ge> 2.\<close>
+            moreover have "(vx2 1 - vx2 0)*(?py - vy2 0) - (vy2 1 - vy2 0)*(?px - vx2 0) \<ge> 0"
+              sorry \<comment> \<open>= 0 (cross product of parallel vectors, since edge 0 is from v\\_0 to v\\_1).\<close>
+            moreover have "(vx2 2 - vx2 0)*(?py - vy2 0) - (vy2 2 - vy2 0)*(?px - vx2 0) \<le> 0"
+              sorry \<comment> \<open>= t * (-fan\\_det(1,2)) \\<le> 0 since fan\\_det > 0 and t \\<ge> 0.\<close>
+            ultimately show ?thesis using True hsi_mod sorry \<comment> \<open>Assembly of PL(1) conjuncts.\<close>
+          qed
+          have hLeast_1: "(LEAST j. ?PL_raw j) = 1"
+          proof (rule Least_equality)
+            show "?PL_raw 1" by (rule hPL1)
+            fix j assume "?PL_raw j" thus "1 \<le> j" by simp
+          qed
+          \<comment> \<open>With LEAST = 1: Cramer in triangle (v\\_0, v\\_1, v\\_2), base edge.\<close>
+          show ?thesis
+            using hLeast_1 hPL_connect True
+            unfolding phi_L_def paste_chain_sigma_x_def paste_chain_sigma_y_def Let_def
+            sorry \<comment> \<open>Substitute LEAST = 1, evaluate Cramer: s = t, t\\_par = 0.
+               Result: (1-t)*vx2 0 + t*vx2 k, matching sigma(0,t).\<close>
+        next
+          case False hence hi1: "1 \<le> i" by linarith
+          show ?thesis sorry \<comment> \<open>Case 1 \\<le> i < k: LEAST = i, Cramer gives sigma.\<close>
+        qed
+      qed
       \<comment> \<open>HELPER: phi\\_R at right-half boundary point gives sigma.
          For k \\<le> i < n-1: LEAST = i, cramer\\_on\\_triangle\\_edge.
          For i = n-1: LEAST = n-2, cramer\\_on\\_triangle\\_base\\_edge.
