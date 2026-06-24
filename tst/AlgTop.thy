@@ -3169,7 +3169,27 @@ next
               thus "j = i" unfolding j_def by (rule if_not_P)
             qed
             \<comment> \<open>i\\<ge>1, j=i. Edge from v\\_i to v\\_{i+1}. Cramer on edge gives s=1-t, tp=t.\<close>
-            show ?thesis sorry \<comment> \<open>i\\<ge>1: phi\\_L with j=i + cramer\\_on\\_triangle\\_edge + sigma(i,t).\<close>
+            \<comment> \<open>Fan det: dd = cross(v\\_i, v\\_{i+1}) > 0 (from hfan\\_det\\_0).\<close>
+            have hdd_ne2: "(vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0) \<noteq> 0"
+            proof -
+              have "i < ?n" using hik by simp
+              have "Suc i < ?n" using hik by simp
+              have "1 \<le> i" using False by linarith
+              from hfan_det_0[rule_format, OF \<open>i < ?n\<close> \<open>Suc i < ?n\<close> \<open>1 \<le> i\<close>]
+              show ?thesis using hik by linarith
+            qed
+            \<comment> \<open>Cramer on triangle edge: s = 1-t, tp = t.\<close>
+            have hsi_local: "Suc i mod ?n = Suc i" using hik by simp
+            from cramer_on_triangle_edge[of "vx2 0" "vy2 0" "vx2 i" "vy2 i" "vx2(Suc i)" "vy2(Suc i)" t]
+            have hs2: "((vy2(Suc i) - vy2 0) * ((1-t)*(vx2 i - vx2 0) + t*(vx2(Suc i) - vx2 0)) -
+                        (vx2(Suc i) - vx2 0) * ((1-t)*(vy2 i - vy2 0) + t*(vy2(Suc i) - vy2 0))) /
+                       ((vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0)) = 1 - t"
+              and htp2: "((vx2 i - vx2 0) * ((1-t)*(vy2 i - vy2 0) + t*(vy2(Suc i) - vy2 0)) -
+                          (vy2 i - vy2 0) * ((1-t)*(vx2 i - vx2 0) + t*(vx2(Suc i) - vx2 0))) /
+                         ((vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0)) = t"
+              using hdd_ne2 using cramer_on_triangle_edge(1) cramer_on_triangle_edge(2) by (by5000 blast)+
+            \<comment> \<open>Assemble: phi\\_L = 0*v\\_0 + (1-t)*v\\_{k+1-i} + t*v\\_{k-i} = sigma(i,t).\<close>
+            show ?thesis sorry \<comment> \<open>Let-chain evaluation with j=i, s=1-t, tp=t + sigma matching.\<close>
           qed
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
