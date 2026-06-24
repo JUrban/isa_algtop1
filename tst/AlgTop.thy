@@ -2413,6 +2413,11 @@ proof -
       \<comment> \<open>The piecewise map g = q2 o phi.\<close>
       define g where
         "g p = (if cross_diag p \<le> 0 then q2 (phi_L p) else q2 (phi_R p))" for p
+      \<comment> \<open>Fan determinant positivity from v\\_0: cross(v\\_a - v\\_0, v\\_b - v\\_0) > 0 for 1 \\<le> a < b < n.
+         Follows from C11\\_2 (all non-adjacent vertices on interior side of each edge).\<close>
+      have hfan_det_0: "\<forall>a<?n. \<forall>b<?n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
+          (vx2 a - vx2 0) * (vy2 b - vy2 0) - (vy2 a - vy2 0) * (vx2 b - vx2 0) > 0"
+        sorry \<comment> \<open>Fan determinant from v\\_0. Derivable from C11\\_2 + convexity.\<close>
       \<comment> \<open>KEY FACT: g on boundary edges equals q2 composed with sigma.\<close>
       have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
           g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
