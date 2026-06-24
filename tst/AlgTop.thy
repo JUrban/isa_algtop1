@@ -2347,9 +2347,69 @@ lemma left_fan_edge_sector:
       (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0) \<ge> 0 \<and>
       (vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0)
     = (if i = 0 then 1 else i)"
-  sorry \<comment> \<open>Fan sector selection for t > 0. Proof uses hfan for cross-product signs.
-     For i=0: PL(1) holds and 1 is minimum.
-     For 1\\<le>i: PL(i) holds; PL(j) false for j < i since upper cross > 0 (t > 0).\<close>
+proof -
+  let ?PL = "\<lambda>j. 1 \<le> j \<and> j < k \<and>
+      (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0) \<ge> 0 \<and>
+      (vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0"
+  have ht01: "t \<ge> 0 \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+  have h1mt: "1 - t \<ge> 0" using ht01 by linarith
+  have hsi_lt: "Suc i < n" using hi hk_lt by linarith
+  have hsi_mod: "Suc i mod n = Suc i" using hsi_lt by simp
+  \<comment> \<open>Cross product bilinearity: cross(v\\_j, edge\\_pt) = (1-t)*cross(j,i) + t*cross(j,i+1).\<close>
+  have hbilin: "\<And>j. (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0)
+      = (1-t)*((vx j - vx 0)*(vy i - vy 0) - (vy j - vy 0)*(vx i - vx 0))
+      + t*((vx j - vx 0)*(vy(Suc i) - vy 0) - (vy j - vy 0)*(vx(Suc i) - vx 0))"
+    unfolding px_def py_def using hsi_mod sorry \<comment> \<open>Bilinearity of cross product. Algebra.\<close>
+  define expected where "expected = (if i = 0 then 1 else i)"
+  \<comment> \<open>Step A: ?PL(expected) holds.\<close>
+  have hPL_holds: "?PL expected"
+    sorry \<comment> \<open>Lower: t*cross(expected, i+1) \\<ge> 0 (fan det + t > 0 or = 0 for i=0).
+       Upper: (1-t)*(-cross(i+1,expected)) \\<le> 0 (fan det antisymmetry + 1-t \\<ge> 0).\<close>
+  \<comment> \<open>Step B: ?PL(j) false for j < expected.\<close>
+  have hPL_min: "\<And>j. ?PL j \<Longrightarrow> expected \<le> j"
+  proof -
+    fix j assume hj: "?PL j"
+    hence hj1: "1 \<le> j" by simp
+    from hj have hjk: "j < k" by simp
+    from hj have hupper: "(vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0"
+      by simp
+    show "expected \<le> j"
+    proof (cases "i = 0")
+      case True hence "expected = 1" unfolding expected_def by simp
+      thus ?thesis using hj1 by simp
+    next
+      case False hence hi1: "i \<ge> 1" by linarith
+      hence "expected = i" unfolding expected_def by simp
+      \<comment> \<open>Need: i \\<le> j. Suppose j < i. Then upper(j) > 0 (from fan det), contradicting hupper.\<close>
+      have "i \<le> j"
+      proof (rule ccontr)
+        assume "\<not> i \<le> j"
+        hence hjlt: "j < i" by linarith
+        \<comment> \<open>Upper(j) = (1-t)*cross(j+1,i) + t*cross(j+1,i+1).
+           Both \\<ge> 0 from fan det, and t*cross(j+1,i+1) > 0 since t > 0.\<close>
+        have "Suc j \<le> i" using hjlt by linarith
+        have hcr1: "(vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0) \<ge> 0"
+          sorry \<comment> \<open>Fan det: cross(Suc j, i) \\<ge> 0 (> 0 if Suc j < i, = 0 if Suc j = i).\<close>
+        have "Suc j < Suc i" using hjlt by linarith
+        have hcr2: "(vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0) > 0"
+          sorry \<comment> \<open>Fan det: cross(Suc j, Suc i) > 0 since Suc j < Suc i.\<close>
+        have "t * ((vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0)) > 0"
+          using mult_pos_pos[OF ht_pos hcr2] .
+        moreover have "(1-t) * ((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0)) \<ge> 0"
+          using mult_nonneg_nonneg[of "1-t" "(vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0)"]
+                h1mt hcr1 by linarith
+        ultimately have "(vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) > 0"
+          using hbilin[of "Suc j"] hsi_mod by linarith
+        with hupper show False by linarith \<comment> \<open>Contradiction: upper > 0 but hupper says \\<le> 0.\<close>
+      qed
+      thus ?thesis using \<open>expected = i\<close> by simp
+    qed
+  qed
+  \<comment> \<open>Step C: LEAST = expected.\<close>
+  have "(LEAST j. ?PL j) = expected"
+    using Least_equality[of ?PL expected] hPL_holds hPL_min by (by100 blast)
+  thus ?thesis unfolding expected_def by simp
+qed
 
 \<comment> \<open>LEFT FAN VERTEX CASE: at t = 0, phi\\_L at vertex v\\_i gives the same result
    regardless of whether LEAST selects sector i or i-1. Both sectors give v\\_{k+1-i}.\<close>
