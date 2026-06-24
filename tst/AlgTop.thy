@@ -2360,6 +2360,14 @@ proof -
       \<comment> \<open>The piecewise map g = q2 o phi.\<close>
       define g where
         "g p = (if cross_diag p \<le> 0 then q2 (phi_L p) else q2 (phi_R p))" for p
+      \<comment> \<open>KEY FACT: g on boundary edges equals q2 composed with sigma.\<close>
+      have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
+          g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+        = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+        sorry \<comment> \<open>g on boundary = q2 o sigma. From phi\\_L/phi\\_R Cramer decomposition.
+           The Cramer coords on boundary edges simplify: edge i at param t gives
+           barycentric coords (1-t, t, 0) or similar in the fan sector.
+           phi\\_L/phi\\_R maps these to the sigma target vertices.\<close>
       \<comment> \<open>Provide witnesses: P = P2, q = g, vx = vx2, vy = vy2.\<close>
       show ?thesis
       proof (rule exI[of _ P2], rule exI[of _ g], rule exI[of _ vx2], rule exI[of _ vy2],
@@ -2386,11 +2394,7 @@ proof -
             else g (t*vx2 j+(1-t)*vx2(Suc j mod length ?w'),
             t*vy2 j+(1-t)*vy2(Suc j mod length ?w'))))"
         proof -
-          \<comment> \<open>Step 1: g on boundary edges equals q2 composed with sigma.\<close>
-          have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
-              g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
-            = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-            sorry \<comment> \<open>g on boundary = q2 o sigma. From phi\\_L/phi\\_R Cramer decomposition.\<close>
+          \<comment> \<open>Step 1: hg\\_bdy available from outer scope.\<close>
           \<comment> \<open>Step 2: paste\\_chain\\_boundary\\_C7 gives C7 for q2 o sigma.\<close>
           have hlen3: "length ?w \<ge> 3"
             using quotient_scheme_length_ge3[OF hq] .
@@ -2444,7 +2448,30 @@ proof -
             = g ((1-s)*vx2 j+s*vx2(Suc j mod length ?w'),(1-s)*vy2 j+s*vy2(Suc j mod length ?w'))
             \<longrightarrow> (i=j \<and> t=s) \<or> (fst(?w'!i)=fst(?w'!j) \<and>
             (if snd(?w'!i)=snd(?w'!j) then s=t else s=1-t))"
-          sorry \<comment> \<open>C9: edge-edge injectivity.\<close>
+        proof (intro allI impI ballI)
+          fix i j t s assume hi: "i < length ?w'" and hj: "j < length ?w'"
+              and ht: "t \<in> {0<..<(1::real)}" and hs: "s \<in> {0<..<(1::real)}"
+              and heq: "g ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w'))
+                = g ((1-s)*vx2 j+s*vx2(Suc j mod length ?w'),(1-s)*vy2 j+s*vy2(Suc j mod length ?w'))"
+          have hi': "i < ?n" and hj': "j < ?n" using hi hj hlen_eq by simp+
+          have ht_I: "t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
+          have hs_I: "s \<in> I_set" using hs unfolding top1_unit_interval_def by (by100 auto)
+          \<comment> \<open>From hg\\_bdy: g on edges = q2 o sigma.\<close>
+          have hgi: "g ((1-t)*vx2 i+t*vx2(Suc i mod ?n),(1-t)*vy2 i+t*vy2(Suc i mod ?n))
+            = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+            using hg_bdy[rule_format, OF hi' ht_I] .
+          have hgj: "g ((1-s)*vx2 j+s*vx2(Suc j mod ?n),(1-s)*vy2 j+s*vy2(Suc j mod ?n))
+            = q2 (paste_sigma vx2 vy2 ?k ?n j s)"
+            using hg_bdy[rule_format, OF hj' hs_I] .
+          \<comment> \<open>From heq + hgi + hgj: q2(sigma(i,t)) = q2(sigma(j,s)).\<close>
+          have hq2_eq: "q2 (paste_sigma vx2 vy2 ?k ?n i t) = q2 (paste_sigma vx2 vy2 ?k ?n j s)"
+            using heq hgi hgj hlen_eq by (by100 simp)
+          \<comment> \<open>Apply C9\\_2 to sigma(i,t) and sigma(j,s) to get original matching.
+             Then translate to target matching via sigma correspondence.\<close>
+          show "(i=j \<and> t=s) \<or> (fst(?w'!i)=fst(?w'!j) \<and>
+            (if snd(?w'!i)=snd(?w'!j) then s=t else s=1-t))"
+            sorry \<comment> \<open>From hq2\\_eq + C9\\_2 + sigma correspondence translation.\<close>
+        qed
         show "\<forall>i<length ?w'. let cx=(\<Sum>j<length ?w'. vx2 j)/real(length ?w');
             cy=(\<Sum>j<length ?w'. vy2 j)/real(length ?w')
             in (vx2 i-cx)*(vy2(Suc i mod length ?w')-cy)-(vy2 i-cy)*(vx2(Suc i mod length ?w')-cx)>0"
