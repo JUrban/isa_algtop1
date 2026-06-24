@@ -13833,6 +13833,22 @@ proof -
   qed
 qed
 
+\<comment> \<open>Sphere realization: the quotient of the sphere scheme [(a,T),(a,F),(b,T),(b,F)]
+   is homeomorphic to S2 (the unit sphere in R3).
+   This is a specific geometric fact about the 4-gon quotient with two adjacent cancel pairs.
+   The identification collapses all boundary edges to two points (poles), leaving S2.\<close>
+lemma sphere_scheme_realizes_S2:
+  fixes a b :: "'b"
+  assumes hab: "a \<noteq> b"
+      and hY: "top1_quotient_of_scheme_on Y TY [(a, True), (a, False), (b, True), (b, False)]"
+  shows "\<exists>g. top1_homeomorphism_on Y TY top1_S2 top1_S2_topology g"
+  sorry \<comment> \<open>SPHERE REALIZATION.
+     Proof: extract 4-gon P with q: P -> Y. Define f: P -> S2 via
+     f(x,y) = (sin(pi*t2)*cos(2*pi*t1), sin(pi*t2)*sin(2*pi*t1), cos(pi*t2))
+     where (t1,t2) maps P to [0,1]x[0,1]. f is continuous, surjective, and
+     constant on q-fibres. Induced map: continuous bijection, compact to Hausdorff -> homeo.
+     Independent of paste-chain infrastructure. Estimated: ~200 lines.\<close>
+
 theorem Theorem_77_5_classification:
   fixes X :: "'a set" and TX :: "'a set set"
   assumes "top1_is_surface_on X TX"
@@ -13927,9 +13943,7 @@ proof -
          2. Instead: the quotient of [(a,T),(a,F),(b,T),(b,F)]) is a closed surface
             with Euler characteristic 2 = sphere.\<close>
       have "\<exists>g. top1_homeomorphism_on Y TY top1_S2 top1_S2_topology g"
-        sorry \<comment> \<open>Sphere scheme realizes S2.
-           Proof: explicit construction of homeomorphism from 4-gon quotient to S2.
-           This is a specific geometric fact independent of multi-polygon infrastructure.\<close>
+        by (rule sphere_scheme_realizes_S2[OF hab_s hY])
       then obtain g where hYS: "top1_homeomorphism_on Y TY top1_S2 top1_S2_topology g" by (by100 blast)
       \<comment> \<open>Step 3: X \\<cong> Y \\<cong> S2 by composition.\<close>
       from homeomorphism_comp[OF hXY hYS]
