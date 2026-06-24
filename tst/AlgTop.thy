@@ -2230,6 +2230,26 @@ proof -
                      \<and> x = (\<Sum>i<length ?w'. coeffs i * vx2 i)
                      \<and> y = (\<Sum>i<length ?w'. coeffs i * vy2 i)}"
       using hC5_2 hlen_eq by simp
+    \<comment> \<open>C6, C10, C11: polygon properties from hq, transferred via hlen\\_eq.
+       These are the same polygon P2 with the same vertices, just different scheme length.\<close>
+    have hC6': "\<forall>i<length ?w'. \<forall>j<length ?w'.
+          i \<noteq> j \<longrightarrow> Suc i mod length ?w' \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length ?w' \<longrightarrow>
+          (\<forall>s\<in>{0<..<(1::real)}. \<forall>t\<in>{0<..<(1::real)}.
+             ((1-s) * vx2 i + s * vx2 (Suc i mod length ?w'),
+              (1-s) * vy2 i + s * vy2 (Suc i mod length ?w'))
+           \<noteq> ((1-t) * vx2 j + t * vx2 (Suc j mod length ?w'),
+               (1-t) * vy2 j + t * vy2 (Suc j mod length ?w')))"
+      sorry \<comment> \<open>C6 from P2 via hlen\\_eq.\<close>
+    have hC10': "\<forall>i<length ?w'. let cx = (\<Sum>j<length ?w'. vx2 j) / real (length ?w');
+                               cy = (\<Sum>j<length ?w'. vy2 j) / real (length ?w')
+         in (vx2 i - cx) * (vy2 (Suc i mod length ?w') - cy)
+          - (vy2 i - cy) * (vx2 (Suc i mod length ?w') - cx) > 0"
+      sorry \<comment> \<open>C10 from P2 via hlen\\_eq.\<close>
+    have hC11': "\<forall>i<length ?w'. \<forall>k<length ?w'.
+          k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length ?w' \<longrightarrow>
+          (vx2 k - vx2 i) * (vy2 (Suc i mod length ?w') - vy2 i)
+          - (vy2 k - vy2 i) * (vx2 (Suc i mod length ?w') - vx2 i) < 0"
+      sorry \<comment> \<open>C11 from P2 via hlen\\_eq.\<close>
     \<comment> \<open>C2 (quotient map g: P2 -> Y), C7, C8, C9 for scheme w' with map g.
        These require the full geometric half-and-half construction.
        Sorry'd: the mathematical argument is complete (see comments above).\<close>
