@@ -3137,9 +3137,38 @@ next
                 (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j)))"
             unfolding phi_L_def Let_def using hj_eq by simp
           \<comment> \<open>Now evaluate the Cramer formula using cramer helpers.\<close>
-          show ?thesis using hphi_L_eq
-            sorry \<comment> \<open>Cramer computation: s and tp from cramer\\_on\\_triangle\\_edge/base\\_edge,
-               then simplify to paste\\_sigma. Pure algebra.\<close>
+          \<comment> \<open>Cramer computation: evaluate s, tp, then match sigma.\<close>
+          have hsi_mod_local: "Suc i mod ?n = Suc i" using hik by simp
+          define ex where "ex = vx2 j - vx2 0"
+          define ey where "ey = vy2 j - vy2 0"
+          define fx where "fx = vx2(Suc j) - vx2 0"
+          define fy where "fy = vy2(Suc j) - vy2 0"
+          define dd where "dd = ex*fy - ey*fx"
+          define dx where "dx = (1-t)*vx2 i + t*vx2(Suc i) - vx2 0"
+          define dy where "dy = (1-t)*vy2 i + t*vy2(Suc i) - vy2 0"
+          \<comment> \<open>Fan det gives dd \\<noteq> 0.\<close>
+          have hdd_ne0: "dd \<noteq> 0"
+            sorry \<comment> \<open>dd = fan\\_det(j, Suc j) > 0 from hfan\\_det\\_0.\<close>
+          \<comment> \<open>dx and dy are edge\\_point - v\\_0: linear in t.\<close>
+          have hdx_eq: "dx = (1-t)*ex + t*fx"
+            sorry \<comment> \<open>When i = j or i = 0 (j=1): dx decomposes via edge vertices.\<close>
+          have hdy_eq: "dy = (1-t)*ey + t*fy"
+            sorry
+          define s where "s = (fy*dx - fx*dy)/dd"
+          define tp where "tp = (ex*dy - ey*dx)/dd"
+          \<comment> \<open>From cramer\\_on\\_triangle\\_edge: s = 1-t, tp = t (for i \\<ge> 1, j = i).
+             From cramer\\_on\\_triangle\\_base\\_edge: s = t, tp = 0 (for i = 0, j = 1).\<close>
+          have "s = (if i = 0 then t else 1 - t)" and "tp = (if i = 0 then 0 else t)"
+            sorry \<comment> \<open>Cramer evaluation. Uses cramer\\_on\\_triangle\\_edge/base\\_edge with hdd\\_ne0.\<close>
+          \<comment> \<open>Result: (1-s-tp)*vx2 0 + s*vx2(k+1-j) + tp*vx2(k-j).\<close>
+          have hresult: "((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
+                          (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j))
+            = paste_sigma vx2 vy2 ?k ?n i t"
+            sorry \<comment> \<open>Substitute s, tp values and match with paste\\_sigma definition.\<close>
+          \<comment> \<open>Connect hphi\\_L\\_eq (let-form) to hresult.\<close>
+          show ?thesis using hphi_L_eq hresult
+            sorry \<comment> \<open>The let-expression in hphi\\_L\\_eq evaluates to the same as hresult
+               (same ex/ey/fx/fy/dd/dx/dy/s/tp definitions).\<close>
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
