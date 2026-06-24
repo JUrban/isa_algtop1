@@ -2425,34 +2425,13 @@ proof -
         \<comment> \<open>The proof requires: (1) cross\\_diag sign, (2) LEAST sector = i, (3) Cramer = sigma.
            Steps 1-2 need polygon geometry. Step 3 uses cramer\\_on\\_triangle\\_edge.
            For now: sorry the full verification per edge.\<close>
-        let ?edge_pt = "((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
-        \<comment> \<open>The proof splits into left half (edges 0..k-1) and right half (edges k..n-1).
-           Each case: determine cross\\_diag sign, show phi\\_L/phi\\_R = sigma via Cramer.
-           The LEAST selection and Cramer algebra are sorry'd together per-half.\<close>
-        show "g ?edge_pt = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-        proof (cases "i < ?k")
-          case True
-          \<comment> \<open>LEFT HALF: edge i with 0 \\<le> i < k. cross\\_diag \\<le> 0.
-             phi\\_L with LEAST sector + Cramer gives sigma(i,t).\<close>
-          have hcross: "cross_diag ?edge_pt \<le> 0"
-            sorry \<comment> \<open>Left half edges have non-positive cross product with diagonal.\<close>
-          hence "g ?edge_pt = q2 (phi_L ?edge_pt)" unfolding g_def by (by100 simp)
-          also have "phi_L ?edge_pt = paste_sigma vx2 vy2 ?k ?n i t"
-            sorry \<comment> \<open>phi\\_L Cramer decomposition gives sigma for left-half edges.
-               Uses cramer\\_on\\_triangle\\_edge (for i=1..k-1) or cramer\\_on\\_triangle\\_base\\_edge (for i=0).\<close>
-          finally show ?thesis .
-        next
-          case False hence hright: "?k \<le> i" by simp
-          \<comment> \<open>RIGHT HALF: edge i with k \\<le> i \\<le> n-1. cross\\_diag > 0 (or \\<ge> 0 for diagonal).\<close>
-          have hcross: "cross_diag ?edge_pt > 0"
-            sorry \<comment> \<open>Right half edges have positive cross product with diagonal.
-               Exception: diagonal boundary gives 0, but those are left half edges.\<close>
-          hence "g ?edge_pt = q2 (phi_R ?edge_pt)" unfolding g_def by (by100 simp)
-          also have "phi_R ?edge_pt = paste_sigma vx2 vy2 ?k ?n i t"
-            sorry \<comment> \<open>phi\\_R Cramer decomposition gives sigma for right-half edges.
-               Uses cramer\\_on\\_triangle\\_edge (for k\\<le>i\\<le>n-2) or cramer\\_on\\_triangle\\_base\\_edge (for i=n-1).\<close>
-          finally show ?thesis .
-        qed
+        show "g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+          = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+          sorry \<comment> \<open>g on boundary = q2 o sigma. Proof plan:
+             Left half (i < k): cross\\_diag \\<le> 0, g = q2(phi\\_L), phi\\_L = sigma via cramer\\_on\\_triangle\\_*.
+             Right half (i \\<ge> k): cross\\_diag > 0, g = q2(phi\\_R), phi\\_R = sigma via cramer\\_on\\_triangle\\_*.
+             Requires: cross product signs from CCW convexity + LEAST sector evaluation.
+             Both Cramer helpers proved: cramer\\_on\\_triangle\\_edge + cramer\\_on\\_triangle\\_base\\_edge.\<close>
       qed
       \<comment> \<open>Provide witnesses: P = P2, q = g, vx = vx2, vy = vy2.\<close>
       show ?thesis
