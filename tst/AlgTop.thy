@@ -13842,12 +13842,35 @@ lemma sphere_scheme_realizes_S2:
   assumes hab: "a \<noteq> b"
       and hY: "top1_quotient_of_scheme_on Y TY [(a, True), (a, False), (b, True), (b, False)]"
   shows "\<exists>g. top1_homeomorphism_on Y TY top1_S2 top1_S2_topology g"
-  sorry \<comment> \<open>SPHERE REALIZATION.
-     Proof: extract 4-gon P with q: P -> Y. Define f: P -> S2 via
-     f(x,y) = (sin(pi*t2)*cos(2*pi*t1), sin(pi*t2)*sin(2*pi*t1), cos(pi*t2))
-     where (t1,t2) maps P to [0,1]x[0,1]. f is continuous, surjective, and
-     constant on q-fibres. Induced map: continuous bijection, compact to Hausdorff -> homeo.
-     Independent of paste-chain infrastructure. Estimated: ~200 lines.\<close>
+proof -
+  let ?s = "[(a, True), (a, False), (b, True), (b, False)]"
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using hY unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 1: Extract 4-gon P with quotient map q.\<close>
+  \<comment> \<open>Extract polygon data. length ?s = 4.\<close>
+  have hlen_s: "length ?s = 4" by (by100 simp)
+  \<comment> \<open>Y is compact Hausdorff (polygon quotient).\<close>
+  have hpoly_Y: "top1_is_polygonal_quotient_on Y TY"
+    unfolding top1_is_polygonal_quotient_on_def using htopo_Y hY sorry
+  from Theorem_74_1_polygon_quotient_compact_hausdorff[OF htopo_Y hpoly_Y]
+  have hcompact_Y: "top1_compact_on Y TY" and hhaus_Y: "is_hausdorff_on Y TY"
+    by (by100 blast)+
+  have hhaus_S2: "is_hausdorff_on top1_S2 top1_S2_topology"
+    by (rule top1_S2_is_hausdorff)
+  \<comment> \<open>Step 2: The sphere scheme has specific label structure.
+     Position 0: (a,T), Position 1: (a,F) -- opposite exponents, a-pair
+     Position 2: (b,T), Position 3: (b,F) -- opposite exponents, b-pair
+     C7 for a-pair (i=0,j=1): q(edge(0,t)) = q(edge(1,1-t)) [reverse param, opposite exp]
+     C7 for b-pair (i=2,j=3): q(edge(2,t)) = q(edge(3,1-t)) [reverse param, opposite exp]\<close>
+  \<comment> \<open>Step 3: The boundary identifications collapse to two points.
+     At t=0: q(v0) = q(v2) [a-pair t=0 and b-pair t=0]
+     At t=1: q(v1) = q(v1) [trivial] and q(v3) = q(v3) [trivial]
+     The two "poles" are q(v1) and q(v3).\<close>
+  \<comment> \<open>Step 4: Define f: P -> S2 and show it's a homeomorphism from Y to S2.
+     This requires an explicit parametrization of the 4-gon to S2.
+     Sorry'd for now.\<close>
+  show ?thesis sorry
+qed
 
 theorem Theorem_77_5_classification:
   fixes X :: "'a set" and TX :: "'a set set"
