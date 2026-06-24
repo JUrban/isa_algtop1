@@ -1732,7 +1732,52 @@ proof (intro allI impI ballI)
           have hj1_lt: "j+1 < ?n" using hj_mid by linarith
           \<comment> \<open>Label correspondence.\<close>
           have hlabel_orig_cross: "fst(w!(k-i)) = fst(w!(j+1))"
-            sorry \<comment> \<open>From hlabel + fst correspondence for inv(u2) and v.\<close>
+          proof -
+            \<comment> \<open>fst(w'!i) = fst(w!(k-i)): inv(u2) decomposition (same as hw'i in inv case).\<close>
+            let ?rivu = "rev (map top1_inverse_edge u2)"
+            have h_i2: "i - 1 < length ?rivu" using hi_inv hi_mid(1) by (by100 simp)
+            have "w'!i = ?rivu!(i-1)"
+              using nth_append_first[OF h_i2] unfolding w'_def using hi_mid(1) by (by100 simp)
+            also have h_i4: "i - 1 < length (map top1_inverse_edge u2)" using h_i2 by (by100 simp)
+            have "?rivu!(i-1) = (map top1_inverse_edge u2)!(length (map top1_inverse_edge u2) - Suc(i-1))"
+              using h_i4 by (rule rev_nth)
+            also have "length (map top1_inverse_edge u2) - Suc(i-1) = length u2 - i"
+              using hi_mid(1) hi_inv by (by100 simp)
+            also have "length u2 - i < length u2" using hi_mid(1) hi_inv by (by100 linarith)
+            hence "(map top1_inverse_edge u2)!(length u2 - i) = top1_inverse_edge (u2!(length u2 - i))"
+              by (by100 simp)
+            finally have "w'!i = top1_inverse_edge (u2!(length u2 - i))" by simp
+            hence hfst_w'i_u2: "fst(w'!i) = fst(u2!(length u2 - i))"
+              unfolding top1_inverse_edge_def by (cases "u2!(length u2 - i)") simp
+            \<comment> \<open>w!(k-i) = u2!(k-i-1) = u2!(length u2 - i).\<close>
+            have "k - i \<ge> 1" using hii_k hk2 by linarith
+            have "w!(k-i) = (u2 @ [(a, True)] @ v)!(k-i-1)"
+              unfolding w_def using \<open>k-i \<ge> 1\<close> by (by100 simp)
+            also have "k-i-1 < length u2" using hi_mid(1) hk_eq hi_inv by (by100 simp)
+            hence "(u2 @ [(a, True)] @ v)!(k-i-1) = u2!(k-i-1)" by (rule nth_append_first)
+            finally have "w!(k-i) = u2!(k-i-1)" .
+            have "k-i-1 = length u2 - i" using hk_eq hi_mid(1) by (by100 simp)
+            hence hfst_wki: "fst(w!(k-i)) = fst(u2!(length u2 - i))" using \<open>w!(k-i) = u2!(k-i-1)\<close> by simp
+            hence hfst_link_i: "fst(w'!i) = fst(w!(k-i))" using hfst_w'i_u2 by simp
+            \<comment> \<open>fst(w'!j) = fst(w!(j+1)): v range (same as v case).\<close>
+            have hlen_w_val: "?n = 2 + length u2 + length v" unfolding w_def by (by100 simp)
+            have hvj_lt: "j - length u2 - 1 < length v" using hj_mid hj_v hlen_w_val by linarith
+            have hjrivu: "j - 1 \<ge> length ?rivu" using hj_v by (by100 simp)
+            have "w'!j = (?rivu @ v @ [(c, True)])!(j-1)"
+              unfolding w'_def using hj_mid(1) by (by100 simp)
+            also have "(?rivu @ v @ [(c, True)])!(j-1) = (v @ [(c, True)])!(j-1-length ?rivu)"
+              using nth_append_second[OF hjrivu] .
+            also have "j-1-length ?rivu = j-1-length u2" by (by100 simp)
+            hence "(v @ [(c, True)])!(j-1-length ?rivu) = (v @ [(c, True)])!(j-1-length u2)" by simp
+            also have "j-1-length u2 < length v" using hvj_lt hj_v by (by100 simp)
+            hence "(v @ [(c, True)])!(j-1-length u2) = v!(j-1-length u2)" by (rule nth_append_first)
+            finally have hw'j_val: "w'!j = v!(j-1-length u2)" .
+            have hw_j1_val: "w!(j+1) = v!(j - length u2 - 1)"
+              using hj_mid hj_v hvj_lt unfolding w_def by (simp add: nth_append_skip)
+            have "j-1-length u2 = j-length u2-1" using hj_v by (by100 linarith)
+            hence hfst_link_j: "fst(w'!j) = fst(w!(j+1))" using hw'j_val hw_j1_val by simp
+            from hlabel hfst_link_i hfst_link_j show ?thesis by simp
+          qed
           have ht_1mt: "1-t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
           from hC7_orig[rule_format, OF hki_lt hj1_lt hlabel_orig_cross ht_1mt]
           have hC7_cross: "q2 ((1-(1-t))*vx(k-i) + (1-t)*vx(Suc(k-i) mod ?n),
@@ -1756,7 +1801,54 @@ proof (intro allI impI ballI)
              So (snd(w'!i)=snd(w'!j)) = (snd(w!(k-i)) \\<noteq> snd(w!(j+1))).
              This SWAPS the then/else branches.\<close>
           have hsingle_neg: "(snd(w'!i) = snd(w'!j)) = (snd(w!(k-i)) \<noteq> snd(w!(j+1)))"
-            sorry \<comment> \<open>Single negation: inv side flipped, v side not.\<close>
+          proof -
+            \<comment> \<open>snd(w'!i) = \\<not>snd(w!(k-i)): inv side flips snd.\<close>
+            \<comment> \<open>Reuse: w'!i = inv(u2!(length u2-i)) and w!(k-i) = u2!(length u2-i) from hlabel proof.\<close>
+            let ?rivu = "rev (map top1_inverse_edge u2)"
+            have h_i2: "i - 1 < length ?rivu" using hi_inv hi_mid(1) by (by100 simp)
+            have "w'!i = ?rivu!(i-1)"
+              using nth_append_first[OF h_i2] unfolding w'_def using hi_mid(1) by (by100 simp)
+            also have h_i4: "i - 1 < length (map top1_inverse_edge u2)" using h_i2 by (by100 simp)
+            have "?rivu!(i-1) = (map top1_inverse_edge u2)!(length (map top1_inverse_edge u2) - Suc(i-1))"
+              using h_i4 by (rule rev_nth)
+            also have "length (map top1_inverse_edge u2) - Suc(i-1) = length u2 - i"
+              using hi_mid(1) hi_inv by (by100 simp)
+            also have "length u2 - i < length u2" using hi_mid(1) hi_inv by (by100 linarith)
+            hence "(map top1_inverse_edge u2)!(length u2 - i) = top1_inverse_edge (u2!(length u2 - i))"
+              by (by100 simp)
+            finally have hw'i_val: "w'!i = top1_inverse_edge (u2!(length u2 - i))" by simp
+            obtain li bi where hlbi: "u2!(length u2 - i) = (li, bi)" by (cases "u2!(length u2 - i)")
+            have "snd (top1_inverse_edge (li, bi)) = (\<not>bi)" unfolding top1_inverse_edge_def by simp
+            hence hsnd_w'i: "snd(w'!i) = (\<not>bi)" using hw'i_val hlbi by simp
+            \<comment> \<open>snd(w!(k-i)) = bi.\<close>
+            have "k - i \<ge> 1" using hii_k hk2 by linarith
+            have "w!(k-i) = (u2 @ [(a, True)] @ v)!(k-i-1)"
+              unfolding w_def using \<open>k-i \<ge> 1\<close> by (by100 simp)
+            also have "k-i-1 < length u2" using hi_mid(1) hk_eq hi_inv by (by100 simp)
+            hence "(u2 @ [(a, True)] @ v)!(k-i-1) = u2!(k-i-1)" by (rule nth_append_first)
+            finally have "w!(k-i) = u2!(k-i-1)" .
+            have "k-i-1 = length u2 - i" using hk_eq hi_mid(1) by (by100 simp)
+            hence hsnd_wki: "snd(w!(k-i)) = bi" using \<open>w!(k-i) = u2!(k-i-1)\<close> hlbi by simp
+            \<comment> \<open>snd(w'!j) = snd(w!(j+1)): v side no flip.\<close>
+            have hlen_w_val: "?n = 2 + length u2 + length v" unfolding w_def by (by100 simp)
+            have hvj_lt: "j - length u2 - 1 < length v" using hj_mid hj_v hlen_w_val by linarith
+            have hjrivu: "j - 1 \<ge> length ?rivu" using hj_v by (by100 simp)
+            have "w'!j = (?rivu @ v @ [(c, True)])!(j-1)"
+              unfolding w'_def using hj_mid(1) by (by100 simp)
+            also have "(?rivu @ v @ [(c, True)])!(j-1) = (v @ [(c, True)])!(j-1-length ?rivu)"
+              using nth_append_second[OF hjrivu] .
+            also have "j-1-length ?rivu = j-1-length u2" by (by100 simp)
+            hence "(v @ [(c, True)])!(j-1-length ?rivu) = (v @ [(c, True)])!(j-1-length u2)" by simp
+            also have "j-1-length u2 < length v" using hvj_lt hj_v by (by100 simp)
+            hence "(v @ [(c, True)])!(j-1-length u2) = v!(j-1-length u2)" by (rule nth_append_first)
+            finally have hw'j_val: "w'!j = v!(j-1-length u2)" .
+            have hw_j1_val: "w!(j+1) = v!(j - length u2 - 1)"
+              using hj_mid hj_v hvj_lt unfolding w_def by (simp add: nth_append_skip)
+            have "j-1-length u2 = j-length u2-1" using hj_v by (by100 linarith)
+            hence hsnd_w'j_eq: "snd(w'!j) = snd(w!(j+1))" using hw'j_val hw_j1_val by simp
+            \<comment> \<open>Combine: snd(w'!i)=snd(w'!j) iff \\<not>bi=snd(w!(j+1)) iff bi\\<noteq>snd(w!(j+1)).\<close>
+            from hsnd_w'i hsnd_wki hsnd_w'j_eq show ?thesis by (by100 auto)
+          qed
           from hLHS hC7_cross hTHEN_cross hELSE_cross hsingle_neg
           show ?thesis by (by100 auto)
         next
