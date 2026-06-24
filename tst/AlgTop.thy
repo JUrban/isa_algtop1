@@ -3211,7 +3211,10 @@ next
                          ((vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0)) = t"
               using hdd_ne2 using cramer_on_triangle_edge(1) cramer_on_triangle_edge(2) by (by5000 blast)+
             \<comment> \<open>Assemble: phi\\_L = 0*v\\_0 + (1-t)*v\\_{k+1-i} + t*v\\_{k-i} = sigma(i,t).\<close>
-            show ?thesis sorry \<comment> \<open>Let-chain evaluation with j=i, s=1-t, tp=t + sigma matching.\<close>
+            \<comment> \<open>Apply phi\\_L\\_def + Let\\_def + hLeast in one simp pass, then try to close.\<close>
+            show ?thesis
+              apply (simp only: phi_L_def Let_def fst_conv snd_conv hLeast)
+              sorry \<comment> \<open>After simp only: need numeral normalization + sigma matching.\<close>
           qed
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
