@@ -1474,10 +1474,36 @@ proof (intro allI impI ballI)
                      (1-(1-t))*vy(k-j) + (1-t)*vy(Suc(k-j) mod ?n))
            else q2 ((1-t)*vx(k-j) + (1-(1-t))*vx(Suc(k-j) mod ?n),
                      (1-t)*vy(k-j) + (1-(1-t))*vy(Suc(k-j) mod ?n)))" .
-      \<comment> \<open>Simplify 1-(1-t) = t.\<close>
-      \<comment> \<open>Translate snd(w!(k-i)) \\<leftrightarrow> snd(w'!i): flipped by inv(u2).\<close>
-      \<comment> \<open>Double negation: snd(w'!i)=snd(w'!j) iff snd(w!(k-i))=snd(w!(k-j)).\<close>
-      show ?thesis sorry
+      \<comment> \<open>Assembly: translate hC7\\_app to target scheme via sigma, Suc mod, double negation.\<close>
+      have hsuci: "Suc (k-i) mod ?n = k+1-i"
+        using hi_mid(1) hii_k hk_lt by (by100 simp)
+      have hsucj: "Suc (k-j) mod ?n = k+1-j"
+        using hj_mid(1) hjj_k hk_lt by (by100 simp)
+      have hLHS: "q2 (\<sigma> i t) = q2 ((1-(1-t))*vx(k-i) + (1-t)*vx(Suc(k-i) mod ?n),
+                                     (1-(1-t))*vy(k-i) + (1-t)*vy(Suc(k-i) mod ?n))"
+        using h\<sigma>i hsuci by (by100 simp)
+      have hTHEN: "q2 (\<sigma> j t) = q2 ((1-(1-t))*vx(k-j) + (1-t)*vx(Suc(k-j) mod ?n),
+                                       (1-(1-t))*vy(k-j) + (1-t)*vy(Suc(k-j) mod ?n))"
+        using h\<sigma>j hsucj by (by100 simp)
+      have hELSE: "q2 (\<sigma> j (1-t)) = q2 ((1-t)*vx(k-j) + (1-(1-t))*vx(Suc(k-j) mod ?n),
+                                           (1-t)*vy(k-j) + (1-(1-t))*vy(Suc(k-j) mod ?n))"
+      proof -
+        have "paste_chain_sigma_x vx k ?n j (1-t) = (1-(1-(1-t)))*vx(k-j) + (1-(1-t))*vx(k+1-j)"
+          using paste_sigma_inv_u2_edge(1)[OF hj_mid(1) hjj_k hk2 hn3 hk_lt hsucj] by simp
+        hence hx: "paste_chain_sigma_x vx k ?n j (1-t) = (1-t)*vx(k-j) + t*vx(k+1-j)"
+          by (by100 simp)
+        have "paste_chain_sigma_y vy k ?n j (1-t) = (1-(1-(1-t)))*vy(k-j) + (1-(1-t))*vy(k+1-j)"
+          using paste_sigma_inv_u2_edge(2)[OF hj_mid(1) hjj_k hk2 hn3 hk_lt hsucj] by simp
+        hence hy: "paste_chain_sigma_y vy k ?n j (1-t) = (1-t)*vy(k-j) + t*vy(k+1-j)"
+          by (by100 simp)
+        show ?thesis using hx hy hsucj unfolding \<sigma>_def by (by100 simp)
+      qed
+      \<comment> \<open>Double negation: snd(w'!i) = \\<not>snd(u2!(k-1-i)), snd(w!(k-i)) = snd(u2!(k-i-1)) = snd(u2!(k-1-i)).
+         So snd(w'!i) = \\<not>snd(w!(k-i)). Hence (snd(w'!i)=snd(w'!j)) = (snd(w!(k-i))=snd(w!(k-j))).\<close>
+      have hdouble_neg: "(snd(w'!i) = snd(w'!j)) = (snd(w!(k-i)) = snd(w!(k-j)))"
+        sorry \<comment> \<open>Double negation via inv(u2) snd flip. Same list indexing as hw'i/hw'j but for snd.\<close>
+      from hLHS hC7_app hTHEN hELSE hdouble_neg
+      show ?thesis by (by100 auto)
     next
       case False
       show ?thesis
