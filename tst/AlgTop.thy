@@ -2385,7 +2385,50 @@ proof -
             (1-t)*vy2 j+t*vy2(Suc j mod length ?w'))
             else g (t*vx2 j+(1-t)*vx2(Suc j mod length ?w'),
             t*vy2 j+(1-t)*vy2(Suc j mod length ?w'))))"
-          sorry \<comment> \<open>C7: from paste\\_chain\\_boundary\\_C7 instantiated with g.\<close>
+        proof -
+          \<comment> \<open>Step 1: g on boundary edges equals q2 composed with sigma.\<close>
+          have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
+              g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+            = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+            sorry \<comment> \<open>g on boundary = q2 o sigma. From phi\\_L/phi\\_R Cramer decomposition.\<close>
+          \<comment> \<open>Step 2: paste\\_chain\\_boundary\\_C7 gives C7 for q2 o sigma.\<close>
+          have hlen3: "length ?w \<ge> 3"
+            using quotient_scheme_length_ge3[OF hq] .
+          from paste_chain_boundary_C7[OF hlen3 hfresh_c hC7_2]
+          have hC7_sigma: "\<forall>i<length ?w'. \<forall>j<length ?w'. fst (?w'!i) = fst (?w'!j) \<longrightarrow>
+              (\<forall>t\<in>I_set. q2 (paste_sigma vx2 vy2 ?k ?n i t)
+               = (if snd(?w'!i) = snd(?w'!j)
+                  then q2 (paste_sigma vx2 vy2 ?k ?n j t)
+                  else q2 (paste_sigma vx2 vy2 ?k ?n j (1-t))))" .
+          \<comment> \<open>Step 3: Combine: g on edges satisfies C7 for w'.\<close>
+          show ?thesis
+          proof (intro allI impI ballI)
+            fix i j t assume hi: "i < length ?w'" and hj: "j < length ?w'"
+                and hlbl: "fst(?w'!i) = fst(?w'!j)" and ht: "t \<in> I_set"
+            have hi': "i < ?n" using hi hlen_eq by simp
+            have hj': "j < ?n" using hj hlen_eq by simp
+            have hg_i: "g ((1-t)*vx2 i+t*vx2(Suc i mod ?n),(1-t)*vy2 i+t*vy2(Suc i mod ?n))
+              = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+              using hg_bdy[rule_format, OF hi' ht] .
+            have hg_j: "g ((1-t)*vx2 j+t*vx2(Suc j mod ?n),(1-t)*vy2 j+t*vy2(Suc j mod ?n))
+              = q2 (paste_sigma vx2 vy2 ?k ?n j t)"
+              using hg_bdy[rule_format, OF hj' ht] .
+            have ht_1mt: "(1-t) \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
+            have hg_j_1mt: "g (t*vx2 j+(1-t)*vx2(Suc j mod ?n),t*vy2 j+(1-t)*vy2(Suc j mod ?n))
+              = q2 (paste_sigma vx2 vy2 ?k ?n j (1-t))"
+              sorry \<comment> \<open>g at reversed parameter = q2 o sigma at reversed parameter.\<close>
+            from hC7_sigma[rule_format, OF hi hj hlbl ht]
+            have "q2 (paste_sigma vx2 vy2 ?k ?n i t)
+              = (if snd(?w'!i) = snd(?w'!j) then q2 (paste_sigma vx2 vy2 ?k ?n j t)
+                 else q2 (paste_sigma vx2 vy2 ?k ?n j (1-t)))" .
+            with hg_i hg_j hg_j_1mt hlen_eq show
+              "g ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w'))
+              = (if snd(?w'!i)=snd(?w'!j)
+                 then g ((1-t)*vx2 j+t*vx2(Suc j mod length ?w'),(1-t)*vy2 j+t*vy2(Suc j mod length ?w'))
+                 else g (t*vx2 j+(1-t)*vx2(Suc j mod length ?w'),t*vy2 j+(1-t)*vy2(Suc j mod length ?w')))"
+              by (by100 auto)
+          qed
+        qed
         show "\<forall>p\<in>P2. (\<forall>i<length ?w'. \<forall>t\<in>I_set.
             p \<noteq> ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w')))
             \<longrightarrow> (\<forall>p'\<in>P2. g p = g p' \<longrightarrow> p = p')"
