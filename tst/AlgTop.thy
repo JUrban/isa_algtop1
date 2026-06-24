@@ -2285,13 +2285,60 @@ proof -
             k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length ?w' \<longrightarrow>
             (vx k - vx i) * (vy (Suc i mod length ?w') - vy i)
             - (vy k - vy i) * (vx (Suc i mod length ?w') - vx i) < 0)"
-      sorry \<comment> \<open>REMAINING SORRY: existential witness with geometric map.
-         C1,C3,C4,C5: proved (hC1',hC3',hC4',hC5').
-         C6,C10,C11: can be inherited from P2 via hlen\\_eq.
-         C7: PROVED as paste\\_chain\\_boundary\\_C7 (needs instantiation with q).
-         C2,C8,C9: require defining q on interior (half-and-half construction).
-         The C7 proof is a major algebraic result (~800 lines).
-         Once q is defined, C7 follows from the proved lemma.\<close>
+    proof -
+      \<comment> \<open>GEOMETRIC CONSTRUCTION: define g = q2 composed with phi piecewise on two halves.
+         Half determined by cross product with diagonal v\\_0 to v\\_k.
+         Left half: fan from v\\_0, reverse vertex mapping.
+         Right half: fan from v\\_0, shift vertex mapping.
+         g is continuous at the dividing line because C7 absorbs the jump.\<close>
+      let ?k = "1 + length u2"
+      \<comment> \<open>Define the half-and-half map phi: P2 -> P2 (DISCONTINUOUS at dividing line).
+         Then g = q2 o phi is continuous.\<close>
+      define cross_diag :: "real \<times> real \<Rightarrow> real" where
+        "cross_diag p = (vx2 ?k - vx2 0) * (snd p - vy2 0)
+                       - (vy2 ?k - vy2 0) * (fst p - vx2 0)" for p
+      \<comment> \<open>Left half phi: for sector j (1<=j<k), Cramer coords in (v0, vj, v{j+1}),
+         map to (v0, v{k+1-j}, v{k-j}).\<close>
+      define phi_L :: "real \<times> real \<Rightarrow> real \<times> real" where
+        "phi_L p = (let j = (LEAST j. 1 \<le> j \<and> j < ?k \<and>
+            (vx2 j - vx2 0)*(snd p - vy2 0) - (vy2 j - vy2 0)*(fst p - vx2 0) \<ge> 0 \<and>
+            (vx2(Suc j) - vx2 0)*(snd p - vy2 0) - (vy2(Suc j) - vy2 0)*(fst p - vx2 0) \<le> 0) in
+          let ex = vx2 j - vx2 0; ey = vy2 j - vy2 0;
+              fx = vx2(Suc j) - vx2 0; fy = vy2(Suc j) - vy2 0;
+              det = ex*fy - ey*fx;
+              dx = fst p - vx2 0; dy = snd p - vy2 0;
+              s = (fy*dx - fx*dy)/det;
+              t_par = (ex*dy - ey*dx)/det in
+          ((1-s-t_par)*vx2 0 + s*vx2(?k+1-j) + t_par*vx2(?k-j),
+           (1-s-t_par)*vy2 0 + s*vy2(?k+1-j) + t_par*vy2(?k-j)))" for p
+      \<comment> \<open>Right half phi: for sector j (k<=j<n-1), Cramer coords in (v0, vj, v{j+1}),
+         map to (vk, v{j+1}, v{(j+2) mod n}).\<close>
+      define phi_R :: "real \<times> real \<Rightarrow> real \<times> real" where
+        "phi_R p = (let j = (LEAST j. ?k \<le> j \<and> j < ?n - 1 \<and>
+            (vx2 j - vx2 0)*(snd p - vy2 0) - (vy2 j - vy2 0)*(fst p - vx2 0) \<ge> 0 \<and>
+            (vx2(Suc j) - vx2 0)*(snd p - vy2 0) - (vy2(Suc j) - vy2 0)*(fst p - vx2 0) \<le> 0) in
+          let ex = vx2 j - vx2 0; ey = vy2 j - vy2 0;
+              fx = vx2(Suc j) - vx2 0; fy = vy2(Suc j) - vy2 0;
+              det = ex*fy - ey*fx;
+              dx = fst p - vx2 0; dy = snd p - vy2 0;
+              s = (fy*dx - fx*dy)/det;
+              t_par = (ex*dy - ey*dx)/det in
+          ((1-s-t_par)*vx2 ?k + s*vx2(Suc j) + t_par*vx2(Suc(Suc j) mod ?n),
+           (1-s-t_par)*vy2 ?k + s*vy2(Suc j) + t_par*vy2(Suc(Suc j) mod ?n)))" for p
+      \<comment> \<open>The piecewise map g = q2 o phi.\<close>
+      define g where
+        "g p = (if cross_diag p \<le> 0 then q2 (phi_L p) else q2 (phi_R p))" for p
+      \<comment> \<open>Provide witnesses: P = P2, q = g, vx = vx2, vy = vy2.\<close>
+      show ?thesis
+        apply (rule exI[of _ P2], rule exI[of _ g], rule exI[of _ vx2], rule exI[of _ vy2])
+        sorry \<comment> \<open>11-fold conjunction. Each condition:
+           C1: hC1'. C3: hC3'. C4: hC4'. C5: hC5'.
+           C6: from P2 via hlen\\_eq. C10: same. C11: same.
+           C2: g is quotient map (continuous surjection, compact to Hausdorff).
+           C7: paste\\_chain\\_boundary\\_C7 instantiated with g.
+           C8: phi\\_L/R bijective on halves + C8\\_2.
+           C9: edge separation via sigma correspondence + C9\\_2.\<close>
+    qed
   qed
 qed
 
