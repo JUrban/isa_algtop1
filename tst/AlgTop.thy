@@ -2106,6 +2106,11 @@ proof -
                      \<and> (\<Sum>i<?n. coeffs i) = 1
                      \<and> x = (\<Sum>i<?n. coeffs i * vx2 i)
                      \<and> y = (\<Sum>i<?n. coeffs i * vy2 i)}"
+    and hC6_2: "\<forall>i<?n. \<forall>j<?n.
+          i \<noteq> j \<longrightarrow> Suc i mod ?n \<noteq> j \<longrightarrow> i \<noteq> Suc j mod ?n \<longrightarrow>
+          (\<forall>s\<in>{0<..<(1::real)}. \<forall>t\<in>{0<..<(1::real)}.
+             \<not>(((1-s) * vx2 i + s * vx2 (Suc i mod ?n), (1-s) * vy2 i + s * vy2 (Suc i mod ?n))
+              = ((1-t) * vx2 j + t * vx2 (Suc j mod ?n), (1-t) * vy2 j + t * vy2 (Suc j mod ?n))))"
     and hC7_2: "\<forall>i<?n. \<forall>j<?n. fst (?w!i) = fst (?w!j) \<longrightarrow>
         (\<forall>t\<in>I_set. q2 ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
          = (if snd(?w!i) = snd(?w!j)
@@ -2119,6 +2124,13 @@ proof -
         = q2 ((1-s)*vx2 j + s*vx2(Suc j mod ?n), (1-s)*vy2 j + s*vy2(Suc j mod ?n))
         \<longrightarrow> (i = j \<and> t = s) \<or> (fst(?w!i) = fst(?w!j) \<and>
               (if snd(?w!i) = snd(?w!j) then s = t else s = 1 - t))"
+    and hC10_2: "\<forall>i<?n. let cx = (\<Sum>j<?n. vx2 j) / real ?n;
+                           cy = (\<Sum>j<?n. vy2 j) / real ?n
+         in (vx2 i - cx) * (vy2 (Suc i mod ?n) - cy)
+          - (vy2 i - cy) * (vx2 (Suc i mod ?n) - cx) > 0"
+    and hC11_2: "\<forall>i<?n. \<forall>kk<?n. kk \<noteq> i \<longrightarrow> kk \<noteq> Suc i mod ?n \<longrightarrow>
+          (vx2 kk - vx2 i) * (vy2 (Suc i mod ?n) - vy2 i)
+          - (vy2 kk - vy2 i) * (vx2 (Suc i mod ?n) - vx2 i) < 0"
     by (rule quotient_of_scheme_extract_vx[OF hq])
   \<comment> \<open>PROOF OF THEOREM 76.1 (CUT+FLIP+PASTE CHAIN).
      Strategy: use SAME polygon P2 with vertices vx2/vy2 as witness for scheme w'.
@@ -2239,17 +2251,17 @@ proof -
               (1-s) * vy2 i + s * vy2 (Suc i mod length ?w'))
            \<noteq> ((1-t) * vx2 j + t * vx2 (Suc j mod length ?w'),
                (1-t) * vy2 j + t * vy2 (Suc j mod length ?w')))"
-      sorry \<comment> \<open>C6 from P2 via hlen\\_eq.\<close>
+      using hC6_2 hlen_eq by simp
     have hC10': "\<forall>i<length ?w'. let cx = (\<Sum>j<length ?w'. vx2 j) / real (length ?w');
                                cy = (\<Sum>j<length ?w'. vy2 j) / real (length ?w')
          in (vx2 i - cx) * (vy2 (Suc i mod length ?w') - cy)
           - (vy2 i - cy) * (vx2 (Suc i mod length ?w') - cx) > 0"
-      sorry \<comment> \<open>C10 from P2 via hlen\\_eq.\<close>
+      using hC10_2 hlen_eq by simp
     have hC11': "\<forall>i<length ?w'. \<forall>k<length ?w'.
           k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length ?w' \<longrightarrow>
           (vx2 k - vx2 i) * (vy2 (Suc i mod length ?w') - vy2 i)
           - (vy2 k - vy2 i) * (vx2 (Suc i mod length ?w') - vx2 i) < 0"
-      sorry \<comment> \<open>C11 from P2 via hlen\\_eq.\<close>
+      using hC11_2 hlen_eq by simp
     \<comment> \<open>C2 (quotient map g: P2 -> Y), C7, C8, C9 for scheme w' with map g.
        These require the full geometric half-and-half construction.
        Sorry'd: the mathematical argument is complete (see comments above).\<close>
