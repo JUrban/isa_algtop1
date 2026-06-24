@@ -2029,6 +2029,36 @@ qed
    - C8: each half maps bijectively to a sub-polygon interior, q\\_w injective there.
    - C9: edges map to distinct original edges, q\\_w separates them.\<close>
 
+\<comment> \<open>Cramer decomposition on a triangle edge: if p is on the edge from a to b
+   in triangle (o, a, b) with det(a-o, b-o) \\<noteq> 0, then the Cramer coords are (0, 1-t, t)
+   and the mapped point is (1-t)*target\\_a + t*target\\_b.\<close>
+lemma cramer_on_triangle_edge:
+  fixes ox oy ax ay bx by' :: real and t :: real
+  defines "ex \<equiv> ax - ox" and "ey \<equiv> ay - oy"
+  defines "fx \<equiv> bx - ox" and "fy \<equiv> by' - oy"
+  defines "det \<equiv> ex*fy - ey*fx"
+  assumes hdet: "det \<noteq> 0"
+  defines "dx \<equiv> (1-t)*ex + t*fx" and "dy \<equiv> (1-t)*ey + t*fy"
+  defines "s \<equiv> (fy*dx - fx*dy)/det" and "t_par \<equiv> (ex*dy - ey*dx)/det"
+  shows "s = 1 - t" and "t_par = t" and "1 - s - t_par = 0"
+proof -
+  have hs: "s * det = fy*dx - fx*dy" using hdet unfolding s_def by simp
+  have ht: "t_par * det = ex*dy - ey*dx" using hdet unfolding t_par_def by simp
+  have "fy*dx - fx*dy = (1-t)*(fy*ex - fx*ey) + t*(fy*fx - fx*fy)"
+    unfolding dx_def dy_def by (by100 algebra)
+  also have "\<dots> = (1-t)*det" unfolding det_def by (by100 algebra)
+  finally have hs_eq: "s * det = (1-t) * det" using hs by simp
+  hence "s = 1 - t" using hdet by simp
+  thus "s = 1 - t" .
+  have "ex*dy - ey*dx = (1-t)*(ex*ey - ey*ex) + t*(ex*fy - ey*fx)"
+    unfolding dx_def dy_def by (by100 algebra)
+  also have "\<dots> = t*det" unfolding det_def by (by100 algebra)
+  finally have ht_eq: "t_par * det = t * det" using ht by simp
+  hence "t_par = t" using hdet by simp
+  thus "t_par = t" .
+  from \<open>s = 1 - t\<close> \<open>t_par = t\<close> show "1 - s - t_par = 0" by simp
+qed
+
 lemma theorem_76_1_paste_chain:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
       and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
