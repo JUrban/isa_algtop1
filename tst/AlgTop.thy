@@ -3126,9 +3126,46 @@ next
             \<comment> \<open>Direct phi\\_L evaluation for i=0, j=1.
                Process\\_theories confirmed proof exists via smt(verit)+argo (~4min).
                For build-time compliance: sorry pending manual decomposition.\<close>
+            \<comment> \<open>Manual let-chain evaluation: define each let-binding, then assemble.\<close>
+            define ex0 where "ex0 = vx2 (1::nat) - vx2 0"
+            define ey0 where "ey0 = vy2 (1::nat) - vy2 0"
+            define fx0 where "fx0 = vx2 (2::nat) - vx2 0"
+            define fy0 where "fy0 = vy2 (2::nat) - vy2 0"
+            define dd0 where "dd0 = ex0*fy0 - ey0*fx0"
+            define dx0 where "dx0 = (1-t)*vx2 0 + t*vx2 1 - vx2 0"
+            define dy0 where "dy0 = (1-t)*vy2 0 + t*vy2 1 - vy2 0"
+            define s0 where "s0 = (fy0*dx0 - fx0*dy0)/dd0"
+            define tp0 where "tp0 = (ex0*dy0 - ey0*dx0)/dd0"
+            \<comment> \<open>hphi\\_L\\_eq with j=1, i=0 gives phi\\_L = let-chain = result with s0, tp0.\<close>
+            \<comment> \<open>hphi0: connect phi\\_L to local defs. phi\\_L\\_eq gives let-form;
+               local defs match the let-bindings for j=1, i=0.\<close>
+            have hphi0: "phi_L ((1-t)*vx2 0 + t*vx2 1, (1-t)*vy2 0 + t*vy2 1)
+              = ((1-s0-tp0)*vx2 0 + s0*vx2 ?k + tp0*vx2(?k-1),
+                 (1-s0-tp0)*vy2 0 + s0*vy2 ?k + tp0*vy2(?k-1))"
+              sorry \<comment> \<open>Let-chain to local-defs connection. process\\_theories found: argo 5ms.
+                 Build-time argo/simp fail (expression too large after full def unfolding).\<close>
+            \<comment> \<open>Now show s0 = t and tp0 = 0 from Cramer lemmas.\<close>
+            have hdx0: "dx0 = t*ex0" unfolding dx0_def ex0_def by (by100 algebra)
+            have hdy0: "dy0 = t*ey0" unfolding dy0_def ey0_def by (by100 algebra)
+            have hs0: "s0 = t"
+            proof -
+              have "fy0*dx0 - fx0*dy0 = fy0*(t*ex0) - fx0*(t*ey0)" using hdx0 hdy0 by simp
+              also have "\<dots> = t*(fy0*ex0 - fx0*ey0)" by (by100 algebra)
+              also have "\<dots> = t*dd0" unfolding dd0_def by (by100 algebra)
+              finally have hnum: "fy0*dx0 - fx0*dy0 = t*dd0" .
+              have hdd0_ne: "dd0 \<noteq> 0"
+                unfolding dd0_def ex0_def ey0_def fx0_def fy0_def using hdd_ne by simp
+              show "s0 = t" unfolding s0_def using hnum hdd0_ne by simp
+            qed
+            have htp0: "tp0 = 0"
+              using cramer_on_triangle_base_edge(2)[of "vx2 0" "vy2 0" "vx2 1" "vy2 1" "vx2 2" "vy2 2" t]
+                    hdd_ne
+              unfolding tp0_def ex0_def ey0_def dx0_def dy0_def dd0_def fx0_def fy0_def
+              by (by100 argo)
+            \<comment> \<open>Substitute: (1-t-0)*vx2 0 + t*vx2 k + 0*vx2(k-1) = (1-t)*vx2 0 + t*vx2 k.\<close>
             have "phi_L ((1-t)*vx2 0 + t*vx2 1, (1-t)*vy2 0 + t*vy2 1)
               = ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k)"
-              sorry \<comment> \<open>PROOF EXISTS (smt 4min). Needs decomposition for fast build.\<close>
+              using hphi0 hs0 htp0 by simp
             moreover have "paste_sigma vx2 vy2 ?k ?n 0 t = ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k)"
               unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def by simp
             moreover have "Suc i mod ?n = 1" using True hsi_0 by simp
