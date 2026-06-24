@@ -3096,9 +3096,34 @@ next
       have hphi_L_sigma: "\<And>i t. i < ?k \<Longrightarrow> t \<in> I_set \<Longrightarrow>
           phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
         = paste_sigma vx2 vy2 ?k ?n i t"
-        sorry \<comment> \<open>phi\\_L at left boundary = sigma. Uses left\\_fan\\_edge\\_sector (t>0)
-           + left\\_fan\\_vertex\\_gives\\_sigma (t=0) + Cramer evaluation.
-           After sector selection: unfold phi\\_L\\_def, apply cramer\\_on\\_triangle\\_edge/base\\_edge.\<close>
+      proof -
+        fix i :: nat and t :: real assume hik: "i < ?k" and ht: "t \<in> I_set"
+        \<comment> \<open>Case split: t > 0 (use left\\_fan\\_edge\\_sector) vs t = 0 (vertex case).\<close>
+        show "phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+          = paste_sigma vx2 vy2 ?k ?n i t"
+        proof (cases "t > 0")
+          case True
+          \<comment> \<open>t > 0: LEAST = expected from left\\_fan\\_edge\\_sector.\<close>
+          have hk_lt_n_local: "?k < ?n" by simp
+          from left_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local ht True hik hfan_det_0]
+          have hLeast: "(LEAST j. 1 \<le> j \<and> j < ?k \<and>
+              (vx2 j - vx2 0)*((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0) -
+              (vy2 j - vy2 0)*((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0) -
+              (vy2(Suc j) - vy2 0)*((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0) \<le> 0)
+            = (if i = 0 then 1 else i)" sorry \<comment> \<open>left\\_fan\\_edge\\_sector instantiation (px/py/defines matching).\<close>
+          \<comment> \<open>Unfold phi\\_L\\_def and substitute LEAST.\<close>
+          show ?thesis
+            unfolding phi_L_def Let_def
+            sorry \<comment> \<open>After phi\\_L\\_def unfolding with LEAST = expected:
+               evaluate Cramer coords via cramer\\_on\\_triangle\\_edge/base\\_edge,
+               simplify to paste\\_sigma. This is pure algebra + definition matching.\<close>
+        next
+          case False hence "t = 0" using ht unfolding top1_unit_interval_def sorry
+          \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
+          show ?thesis sorry \<comment> \<open>Vertex case: sigma(i,0) = v\\_{k+1-expected} and phi\\_L gives same.\<close>
+        qed
+      qed
       \<comment> \<open>HELPER: phi\\_R at right-half boundary point gives sigma.
          For k \\<le> i < n-1: LEAST = i, cramer\\_on\\_triangle\\_edge.
          For i = n-1: LEAST = n-2, cramer\\_on\\_triangle\\_base\\_edge.
