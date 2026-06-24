@@ -2059,6 +2059,29 @@ proof -
   from \<open>s = 1 - t\<close> \<open>t_par = t\<close> show "1 - s - t_par = 0" by simp
 qed
 
+\<comment> \<open>Cramer decomposition on the base edge: if p is on the edge from o to a
+   in triangle (o, a, b), the Cramer coords are (1-t, t, 0).\<close>
+lemma cramer_on_triangle_base_edge:
+  fixes ox oy ax ay bx by' :: real and t :: real
+  defines "ex \<equiv> ax - ox" and "ey \<equiv> ay - oy"
+  defines "fx \<equiv> bx - ox" and "fy \<equiv> by' - oy"
+  defines "det \<equiv> ex*fy - ey*fx"
+  assumes hdet: "det \<noteq> 0"
+  defines "dx \<equiv> t*ex" and "dy \<equiv> t*ey"
+  defines "s \<equiv> (fy*dx - fx*dy)/det" and "t_par \<equiv> (ex*dy - ey*dx)/det"
+  shows "s = t" and "t_par = 0" and "1 - s - t_par = 1 - t"
+proof -
+  have "fy*dx - fx*dy = t*(fy*ex - fx*ey)" unfolding dx_def dy_def by (by100 algebra)
+  also have "\<dots> = t*det" unfolding det_def by (by100 algebra)
+  finally have "s * det = t * det" using hdet unfolding s_def by simp
+  thus "s = t" using hdet by simp
+  have "ex*dy - ey*dx = t*(ex*ey - ey*ex)" unfolding dx_def dy_def by (by100 algebra)
+  also have "\<dots> = 0" by (by100 algebra)
+  finally have "t_par * det = 0" using hdet unfolding t_par_def by simp
+  thus "t_par = 0" using hdet by simp
+  from \<open>s = t\<close> \<open>t_par = 0\<close> show "1 - s - t_par = 1 - t" by simp
+qed
+
 lemma theorem_76_1_paste_chain:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
       and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
