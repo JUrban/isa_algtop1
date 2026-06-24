@@ -2746,7 +2746,79 @@ proof -
       qed
       have hcd_right: "\<And>i t. i \<ge> ?k \<Longrightarrow> i < ?n \<Longrightarrow> t \<in> I_set \<Longrightarrow>
           cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) \<ge> 0"
-        sorry \<comment> \<open>Symmetric: fan det + bilinearity for right half.\<close>
+      proof -
+        fix i :: nat and t :: real assume hik: "i \<ge> ?k" and hi_lt: "i < ?n" and ht: "t \<in> I_set"
+        have ht01: "t \<ge> 0 \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+        have ht_ge0: "t \<ge> 0" using ht01 by linarith
+        have h1mt: "1 - t \<ge> 0" using ht01 by linarith
+        \<comment> \<open>cross(v\\_k - v\\_0, v\\_i - v\\_0) \\<ge> 0: zero for i=k, positive for i > k.\<close>
+        have hcki: "(vx2 ?k - vx2 0) * (vy2 i - vy2 0) - (vy2 ?k - vy2 0) * (vx2 i - vx2 0) \<ge> 0"
+        proof (cases "i = ?k")
+          case True thus ?thesis by simp
+        next
+          case False hence "i > ?k" using hik by linarith
+          hence "1 \<le> ?k" by simp
+          have hk_lt: "?k < ?n" by simp
+          from hfan_det_0[rule_format, OF hk_lt hi_lt \<open>1 \<le> ?k\<close> \<open>i > ?k\<close>]
+          show ?thesis by linarith
+        qed
+        \<comment> \<open>cross(v\\_k - v\\_0, v\\_{Suc i mod n} - v\\_0) \\<ge> 0.\<close>
+        have hcksi: "(vx2 ?k - vx2 0) * (vy2 (Suc i mod ?n) - vy2 0)
+            - (vy2 ?k - vy2 0) * (vx2 (Suc i mod ?n) - vx2 0) \<ge> 0"
+        proof (cases "Suc i mod ?n = 0")
+          case True \<comment> \<open>i = n-1, Suc i mod n = 0. cross(v\\_k, v\\_0) = 0.\<close>
+          thus ?thesis by simp
+        next
+          case False
+          hence hsi_ne0: "Suc i mod ?n \<noteq> 0" .
+          have hsi_lt: "Suc i mod ?n < ?n" by simp
+          show ?thesis
+          proof (cases "Suc i mod ?n = ?k")
+            case True thus ?thesis by simp
+          next
+            case False
+            \<comment> \<open>Suc i mod n > k (since i \\<ge> k and Suc i mod n \\<noteq> k and \\<noteq> 0).
+               But wait: i could be n-2, then Suc i = n-1 and Suc i mod n = n-1 > k. \\<checkmark>
+               Or i = n-1, Suc i mod n = 0, handled above.\<close>
+            \<comment> \<open>Since Suc i mod n \\<noteq> 0 (handled above), i < n-1 so Suc i < n.\<close>
+            have hsi_lt2: "Suc i < ?n"
+            proof (rule ccontr)
+              assume "\<not> Suc i < ?n"
+              hence "Suc i \<ge> ?n" by linarith
+              hence "Suc i = ?n" using hi_lt by linarith
+              hence "Suc i mod ?n = 0" by simp
+              with hsi_ne0 show False by simp
+            qed
+            hence "Suc i < ?n" using hi_lt by linarith
+            have hsi_eq: "Suc i mod ?n = Suc i" using \<open>Suc i < ?n\<close> by simp
+            have "Suc i > ?k" using hik by linarith
+            hence hgt: "?k < Suc i mod ?n" using hsi_eq by simp
+            have "1 \<le> ?k" by simp
+            have hk_lt3: "?k < ?n" by simp
+            from hfan_det_0[rule_format, OF hk_lt3 hsi_lt \<open>1 \<le> ?k\<close> hgt]
+            show ?thesis by linarith
+          qed
+        qed
+        \<comment> \<open>Bilinearity: cross\\_diag = (1-t)*hcki + t*hcksi \\<ge> 0.\<close>
+        have "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+          = (vx2 ?k - vx2 0) * ((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0)
+          - (vy2 ?k - vy2 0) * ((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0)"
+          unfolding cross_diag_def by simp
+        also have "\<dots> = (1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))
+          + t * ((vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0))"
+          by (by100 algebra)
+        finally have hdecomp: "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+          = (1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))
+          + t * ((vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0))" .
+        have "(1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)) \<ge> 0"
+          using mult_nonneg_nonneg[of "1-t" "(vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)"]
+                h1mt hcki by linarith
+        moreover have "t * ((vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0)) \<ge> 0"
+          using mult_nonneg_nonneg[of t "(vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0)"]
+                ht_ge0 hcksi by linarith
+        ultimately show "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) \<ge> 0"
+          using hdecomp by linarith
+      qed
       \<comment> \<open>HELPER: phi\\_L at left-half boundary point gives sigma.
          For 1 \\<le> i < k: LEAST = i, cramer\\_on\\_triangle\\_edge gives (0, 1-t, t).
          For i = 0: LEAST = 1, cramer\\_on\\_triangle\\_base\\_edge gives (1-t, t, 0).
