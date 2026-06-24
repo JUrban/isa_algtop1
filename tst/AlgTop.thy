@@ -3105,80 +3105,8 @@ next
           case True
           \<comment> \<open>t > 0: LEAST = expected from left\\_fan\\_edge\\_sector.\<close>
           have hk_lt_n_local: "?k < ?n" by simp
-          from left_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local ht True hik hfan_det_0]
-          have hLeast: "(LEAST j. 1 \<le> j \<and> j < ?k \<and>
-              (vx2 j - vx2 0)*((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0) -
-              (vy2 j - vy2 0)*((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0) \<ge> 0 \<and>
-              (vx2(Suc j) - vx2 0)*((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0) -
-              (vy2(Suc j) - vy2 0)*((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0) \<le> 0)
-            = (if i = 0 then 1 else i)" .
-          \<comment> \<open>Unfold phi\\_L\\_def and substitute LEAST.\<close>
-          \<comment> \<open>From phi\\_L\\_def + hLeast: phi\\_L evaluates with j = expected sector.\<close>
-          \<comment> \<open>The Cramer computation in the let-chain gives sigma.\<close>
-          \<comment> \<open>phi\\_L with j = (if i=0 then 1 else i).\<close>
-          define j where "j = (if i = 0 then 1 else i)"
-          have hj_eq: "(LEAST j. 1 \<le> j \<and> j < ?k \<and>
-              (vx2 j - vx2 0)*(snd ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vy2 0) -
-              (vy2 j - vy2 0)*(fst ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vx2 0) \<ge> 0 \<and>
-              (vx2(Suc j) - vx2 0)*(snd ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vy2 0) -
-              (vy2(Suc j) - vy2 0)*(fst ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vx2 0) \<le> 0)
-            = j" using hLeast unfolding j_def by simp
-          \<comment> \<open>Step-by-step Cramer evaluation after LEAST = j.\<close>
-          \<comment> \<open>phi\\_L\\_def unfolds to: let J = LEAST...; let ex = ...; ... in (result).
-             With J = j (from hj\\_eq), evaluate Cramer: s, t\\_par, then result.\<close>
-          have hphi_L_eq: "phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
-            = (let ex = vx2 j - vx2 0; ey = vy2 j - vy2 0;
-                   fx = vx2(Suc j) - vx2 0; fy = vy2(Suc j) - vy2 0;
-                   dd = ex*fy - ey*fx;
-                   dx = (1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0;
-                   dy = (1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0;
-                   s = (fy*dx - fx*dy)/dd; tp = (ex*dy - ey*dx)/dd in
-               ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
-                (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j)))"
-            unfolding phi_L_def Let_def using hj_eq by simp
-          \<comment> \<open>Now evaluate the Cramer formula using cramer helpers.\<close>
-          \<comment> \<open>Cramer computation: evaluate s, tp, then match sigma.\<close>
-          have hsi_mod_local: "Suc i mod ?n = Suc i" using hik by simp
-          define ex where "ex = vx2 j - vx2 0"
-          define ey where "ey = vy2 j - vy2 0"
-          define fx where "fx = vx2(Suc j) - vx2 0"
-          define fy where "fy = vy2(Suc j) - vy2 0"
-          define dd where "dd = ex*fy - ey*fx"
-          define dx where "dx = (1-t)*vx2 i + t*vx2(Suc i) - vx2 0"
-          define dy where "dy = (1-t)*vy2 i + t*vy2(Suc i) - vy2 0"
-          \<comment> \<open>Fan det gives dd \\<noteq> 0.\<close>
-          have hdd_pos: "dd > 0"
-          proof -
-            have "j \<ge> 1" unfolding j_def sorry \<comment> \<open>Trivial: if i=0 then 1\\<ge>1 else i\\<ge>1 (since i<k\\<ge>2).\<close>
-            have "j < ?k" unfolding j_def using hik sorry \<comment> \<open>j < k: trivial from j\\_def + i < k.\<close>
-            have "j < ?n" using \<open>j < ?k\<close> by simp
-            have "Suc j \<le> ?k" using \<open>j < ?k\<close> by linarith
-            have "Suc j < ?n" using \<open>Suc j \<le> ?k\<close> by simp
-            have "j < Suc j" by simp
-            from hfan_det_0[rule_format, OF \<open>j < ?n\<close> \<open>Suc j < ?n\<close> \<open>j \<ge> 1\<close> \<open>j < Suc j\<close>]
-            show ?thesis unfolding dd_def ex_def ey_def fx_def fy_def .
-          qed
-          have hdd_ne0: "dd \<noteq> 0" using hdd_pos by linarith
-          \<comment> \<open>dx and dy are edge\\_point - v\\_0: linear in t.\<close>
-          have hdx_eq: "dx = (1-t)*ex + t*fx"
-            sorry \<comment> \<open>When i = j or i = 0 (j=1): dx decomposes via edge vertices.\<close>
-          have hdy_eq: "dy = (1-t)*ey + t*fy"
-            sorry
-          define s where "s = (fy*dx - fx*dy)/dd"
-          define tp where "tp = (ex*dy - ey*dx)/dd"
-          \<comment> \<open>From cramer\\_on\\_triangle\\_edge: s = 1-t, tp = t (for i \\<ge> 1, j = i).
-             From cramer\\_on\\_triangle\\_base\\_edge: s = t, tp = 0 (for i = 0, j = 1).\<close>
-          have "s = (if i = 0 then t else 1 - t)" and "tp = (if i = 0 then 0 else t)"
-            sorry \<comment> \<open>Cramer evaluation. Uses cramer\\_on\\_triangle\\_edge/base\\_edge with hdd\\_ne0.\<close>
-          \<comment> \<open>Result: (1-s-tp)*vx2 0 + s*vx2(k+1-j) + tp*vx2(k-j).\<close>
-          have hresult: "((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
-                          (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j))
-            = paste_sigma vx2 vy2 ?k ?n i t"
-            sorry \<comment> \<open>Substitute s, tp values and match with paste\\_sigma definition.\<close>
-          \<comment> \<open>Connect hphi\\_L\\_eq (let-form) to hresult.\<close>
-          show ?thesis using hphi_L_eq hresult
-            sorry \<comment> \<open>The let-expression in hphi\\_L\\_eq evaluates to the same as hresult
-               (same ex/ey/fx/fy/dd/dx/dy/s/tp definitions).\<close>
+          note hLeast = left_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local ht True hik hfan_det_0]
+          show ?thesis sorry \<comment> \<open>From hLeast + phi\\_L\\_def unfolding + cramer evaluation + sigma matching.\<close>
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
