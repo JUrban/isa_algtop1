@@ -2209,6 +2209,11 @@ proof -
     \<comment> \<open>C2 (quotient map g: P2 -> Y), C7, C8, C9 for scheme w' with map g.
        These require the full geometric half-and-half construction.
        Sorry'd: the mathematical argument is complete (see comments above).\<close>
+    \<comment> \<open>The existential needs a quotient map q on P2 satisfying C2+C7+C8+C9.
+       C7 is now proved (paste\\_chain\\_boundary\\_C7). C2/C8/C9 need the geometric construction.
+       The geometric part requires defining q on the interior of P2 via half-and-half
+       extension, proving continuity, surjectivity, and injectivity properties.
+       For now: sorry the full existential. The C7 part can be closed once q is defined.\<close>
     show "\<exists>P q (vx::nat\<Rightarrow>real) vy.
         top1_is_polygonal_region_on P (length ?w')
       \<and> top1_quotient_map_on P
@@ -2256,7 +2261,13 @@ proof -
             k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length ?w' \<longrightarrow>
             (vx k - vx i) * (vy (Suc i mod length ?w') - vy i)
             - (vy k - vy i) * (vx (Suc i mod length ?w') - vx i) < 0)"
-      sorry
+      sorry \<comment> \<open>REMAINING SORRY: existential witness with geometric map.
+         C1,C3,C4,C5: proved (hC1',hC3',hC4',hC5').
+         C6,C10,C11: can be inherited from P2 via hlen\\_eq.
+         C7: PROVED as paste\\_chain\\_boundary\\_C7 (needs instantiation with q).
+         C2,C8,C9: require defining q on interior (half-and-half construction).
+         The C7 proof is a major algebraic result (~800 lines).
+         Once q is defined, C7 follows from the proved lemma.\<close>
   qed
 qed
 
