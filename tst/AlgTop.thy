@@ -3139,11 +3139,24 @@ next
             \<comment> \<open>hphi\\_L\\_eq with j=1, i=0 gives phi\\_L = let-chain = result with s0, tp0.\<close>
             \<comment> \<open>hphi0: connect phi\\_L to local defs. phi\\_L\\_eq gives let-form;
                local defs match the let-bindings for j=1, i=0.\<close>
+            \<comment> \<open>Prove hphi0 by unfolding phi\\_L\\_def with hj\\_eq as rewrite, then match local defs.\<close>
             have hphi0: "phi_L ((1-t)*vx2 0 + t*vx2 1, (1-t)*vy2 0 + t*vy2 1)
               = ((1-s0-tp0)*vx2 0 + s0*vx2 ?k + tp0*vx2(?k-1),
                  (1-s0-tp0)*vy2 0 + s0*vy2 ?k + tp0*vy2(?k-1))"
-              sorry \<comment> \<open>Let-chain to local-defs connection. process\\_theories found: argo 5ms.
-                 Build-time argo/simp fail (expression too large after full def unfolding).\<close>
+            proof -
+              \<comment> \<open>phi\\_L\\_def: phi\\_L p = (let j = LEAST...; ex = vx2 j - vx2 0; ... in ...).
+                 Step 1: substitute LEAST = j using hj\\_eq.
+                 Step 2: j = 1 from hj1, so vx2 j = vx2 1, vx2(Suc j) = vx2 2.
+                 Step 3: i = 0 from True, Suc i mod n = 1 from hsi\\_0.
+                 Step 4: the remaining let-bindings match ex0..tp0 by definition.\<close>
+              \<comment> \<open>Strategy: unfold phi\\_L\\_def + Let\\_def + use hj\\_eq as simp rule.
+                 Then the LEAST is replaced by j, and the let-chain fully expands.\<close>
+              \<comment> \<open>Unfold phi\\_L\\_def + Let\\_def + substitute LEAST via hLeast in one simp pass.\<close>
+              \<comment> \<open>Unfold phi\\_L with LEAST substituted, then simplify numerals.\<close>
+              show ?thesis
+                apply (simp only: phi_L_def Let_def fst_conv snd_conv hLeast)
+                sorry
+            qed
             \<comment> \<open>Now show s0 = t and tp0 = 0 from Cramer lemmas.\<close>
             have hdx0: "dx0 = t*ex0" unfolding dx0_def ex0_def by (by100 algebra)
             have hdy0: "dy0 = t*ey0" unfolding dy0_def ey0_def by (by100 algebra)
