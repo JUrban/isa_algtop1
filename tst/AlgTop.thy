@@ -2394,10 +2394,18 @@ proof -
       have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
           g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
         = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-        sorry \<comment> \<open>g on boundary = q2 o sigma. From phi\\_L/phi\\_R Cramer decomposition.
-           The Cramer coords on boundary edges simplify: edge i at param t gives
-           barycentric coords (1-t, t, 0) or similar in the fan sector.
-           phi\\_L/phi\\_R maps these to the sigma target vertices.\<close>
+      proof (intro allI impI ballI)
+        fix i t assume hi: "i < ?n" and ht: "t \<in> I_set"
+        \<comment> \<open>Need: g(edge(i,t)) = q2(sigma(i,t)).\<close>
+        \<comment> \<open>g = if cross\\_diag \\<le> 0 then q2(phi\\_L) else q2(phi\\_R).
+           For each edge type, phi\\_L/phi\\_R gives sigma via cramer\\_on\\_triangle\\_edge.\<close>
+        \<comment> \<open>The proof requires: (1) cross\\_diag sign, (2) LEAST sector = i, (3) Cramer = sigma.
+           Steps 1-2 need polygon geometry. Step 3 uses cramer\\_on\\_triangle\\_edge.
+           For now: sorry the full verification per edge.\<close>
+        show "g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+          = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+          sorry \<comment> \<open>Per-edge verification. Uses cramer\\_on\\_triangle\\_edge + sector selection.\<close>
+      qed
       \<comment> \<open>Provide witnesses: P = P2, q = g, vx = vx2, vy = vy2.\<close>
       show ?thesis
       proof (rule exI[of _ P2], rule exI[of _ g], rule exI[of _ vx2], rule exI[of _ vy2],
