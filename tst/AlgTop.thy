@@ -1361,10 +1361,28 @@ proof (intro allI impI ballI)
           using paste_sigma_v_edge[OF hkj hj_mid(2) hk_pos hn3]
           unfolding \<sigma>_def sorry
         \<comment> \<open>Labels and exponents match original at shifted index.\<close>
-        have hfst_match_i: "fst(w'!i) = fst(w!(i+1))" sorry
-        have hfst_match_j: "fst(w'!j) = fst(w!(j+1))" sorry
-        have hsnd_match_i: "snd(w'!i) = snd(w!(i+1))" sorry
-        have hsnd_match_j: "snd(w'!j) = snd(w!(j+1))" sorry
+        \<comment> \<open>Both w'!i and w!(i+1) equal v!(i-length u2-1). Similarly for j.\<close>
+        have hlen_w: "?n = 2 + length u2 + length v" unfolding w_def by (by100 simp)
+        have hvi: "i - length u2 - 1 < length v"
+        proof -
+          have "i \<le> length u2 + length v" using hi_mid hlen_w by linarith
+          moreover have "i > length u2" using hiv by linarith
+          ultimately show ?thesis by linarith
+        qed
+        have hvj: "j - length u2 - 1 < length v"
+        proof -
+          have "j \<le> length u2 + length v" using hj_mid hlen_w by linarith
+          moreover have "j > length u2" using hjv by linarith
+          ultimately show ?thesis by linarith
+        qed
+        have hw'_i_eq: "w'!i = v!(i - length u2 - 1)" sorry
+        have hw_i1_eq: "w!(i+1) = v!(i - length u2 - 1)" sorry
+        have hw'_j_eq: "w'!j = v!(j - length u2 - 1)" sorry
+        have hw_j1_eq: "w!(j+1) = v!(j - length u2 - 1)" sorry
+        have hfst_match_i: "fst(w'!i) = fst(w!(i+1))" using hw'_i_eq hw_i1_eq by simp
+        have hfst_match_j: "fst(w'!j) = fst(w!(j+1))" using hw'_j_eq hw_j1_eq by simp
+        have hsnd_match_i: "snd(w'!i) = snd(w!(i+1))" using hw'_i_eq hw_i1_eq by simp
+        have hsnd_match_j: "snd(w'!j) = snd(w!(j+1))" using hw'_j_eq hw_j1_eq by simp
         \<comment> \<open>Apply original C7.\<close>
         have hi1_lt: "i+1 < ?n" using hi_mid by linarith
         have hj1_lt: "j+1 < ?n" using hj_mid by linarith
