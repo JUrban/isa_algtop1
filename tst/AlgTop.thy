@@ -2366,8 +2366,11 @@ proof -
         \<comment> \<open>Goal: 11-fold conjunction C1 \\<and> C2 \\<and> C3 \\<and> C4 \\<and> C5 \\<and> C6 \\<and> C7 \\<and> C8 \\<and> C9 \\<and> C10 \\<and> C11.
            Provide each condition. Polygon properties (C1,C3,C4,C5,C6,C10,C11) inherit.
            Map properties (C2,C7,C8,C9) need verification with g.\<close>
-        using hC1' hC3' hC4' hC5'
-        sorry
+        using hC1' hC3' hC4' hC5' hC6' hC10' hC11'
+        sorry \<comment> \<open>11-fold conjunction. 7 polygon conditions available via using.
+           Remaining 4 (C2, C7, C8, C9) need map g verification.
+           C7 can use paste\\_chain\\_boundary\\_C7.
+           C2/C8/C9 need piecewise map properties.\<close>
     qed
   qed
 qed
