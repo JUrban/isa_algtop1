@@ -2667,228 +2667,21 @@ proof -
       have hfan_det_0: "\<forall>a<?n. \<forall>b<?n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
           (vx2 a - vx2 0) * (vy2 b - vy2 0) - (vy2 a - vy2 0) * (vx2 b - vx2 0) > 0"
         using convex_polygon_fan_det_from_v0[OF hn_ge3 hC11_2] .
-      \<comment> \<open>KEY FACT: g on boundary edges equals q2 composed with sigma.\<close>
+      \<comment> \<open>KEY FACT: g on boundary edges equals q2 composed with sigma.
+         PROOF PLAN (expert audit 36):
+         For each target edge i at parameter t:
+         (A) Left half (i < k): cross\\_diag(edge(i,t)) \\<le> 0 (proved: fan det antisymmetry + bilinearity).
+             g = q2(phi\\_L). LEAST sector = i (proved: PL(i) holds, PL(j) false for j<i from fan det).
+             Cramer coords (0, 1-t, t) from cramer\\_on\\_triangle\\_edge.
+             phi\\_L result = (1-t)*v(k+1-i) + t*v(k-i) = sigma(i,t). QED.
+         (B) Right half (i \\<ge> k): symmetric with phi\\_R.
+         (C) Vertices (t=0,1): LEAST may differ but result matches by vertex identification.
+         Infrastructure in place: hfan\\_det\\_0, cross2\\_plucker, cramer\\_on\\_triangle\\_edge/base\\_edge.\<close>
       have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
           g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
         = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-      proof (intro allI impI ballI)
-        fix i t assume hi: "i < ?n" and ht: "t \<in> I_set"
-        \<comment> \<open>Need: g(edge(i,t)) = q2(sigma(i,t)).\<close>
-        \<comment> \<open>g = if cross\\_diag \\<le> 0 then q2(phi\\_L) else q2(phi\\_R).
-           For each edge type, phi\\_L/phi\\_R gives sigma via cramer\\_on\\_triangle\\_edge.\<close>
-        \<comment> \<open>The proof requires: (1) cross\\_diag sign, (2) LEAST sector = i, (3) Cramer = sigma.
-           Steps 1-2 need polygon geometry. Step 3 uses cramer\\_on\\_triangle\\_edge.
-           For now: sorry the full verification per edge.\<close>
-        \<comment> \<open>Abbreviations for edge point.\<close>
-        let ?px = "(1-t)*vx2 i + t*vx2(Suc i mod ?n)"
-        let ?py = "(1-t)*vy2 i + t*vy2(Suc i mod ?n)"
-        let ?p = "(?px, ?py)"
-        have ht01: "t \<ge> 0 \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
-        have h1mt: "1 - t \<ge> 0" using ht01 by linarith
-        \<comment> \<open>Key sizes: ?k = 1 + length u2 \\<ge> 2, ?n \\<ge> 3, ?k < ?n.\<close>
-        have hk_ge1: "?k \<ge> 1" by simp
-        have hk_lt_n: "?k < ?n" by simp
-        \<comment> \<open>Fan det shorthand: cross(v\\_a - v\\_0, v\\_b - v\\_0) > 0 for 1 \\<le> a < b < n.\<close>
-        \<comment> \<open>Cross-diag sign: cross(v\\_k - v\\_0, v\\_i - v\\_0) determines half.
-           For i < k: cross(v\\_k - v\\_0, v\\_i - v\\_0) \\<le> 0 (negative for i \\<ge> 1, zero for i = 0).
-           For i \\<ge> k: cross(v\\_k - v\\_0, v\\_i - v\\_0) \\<ge> 0 (zero for i = k, positive for i > k).\<close>
-        show "g ?p = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-        proof (cases "i < ?k")
-          case True
-          \<comment> \<open>LEFT HALF: i < k. Show cross\\_diag \\<le> 0, evaluate LEAST in phi\\_L, apply Cramer.\<close>
-          \<comment> \<open>LEFT HALF proof. Step 1: cross\\_diag \\<le> 0.\<close>
-          have hcross_k_i: "(vx2 ?k - vx2 0) * (vy2 i - vy2 0) - (vy2 ?k - vy2 0) * (vx2 i - vx2 0) \<le> 0"
-          proof (cases "i = 0")
-            case True thus ?thesis by simp
-          next
-            case False hence "i \<ge> 1" by linarith
-            have hik: "i < ?k" using True by linarith
-            have "1 \<le> i" using \<open>i \<ge> 1\<close> .
-            have hi_lt: "i < ?n" using hi .
-            have hk_lt: "?k < ?n" using hk_lt_n .
-            \<comment> \<open>Fan det: cross(v\\_i - v\\_0, v\\_k - v\\_0) > 0 (since 1 \\<le> i < k).\<close>
-            from hfan_det_0[rule_format, OF hi_lt hk_lt \<open>1 \<le> i\<close> hik]
-            have "(vx2 i - vx2 0) * (vy2 ?k - vy2 0) - (vy2 i - vy2 0) * (vx2 ?k - vx2 0) > 0" .
-            \<comment> \<open>Antisymmetry: cross(v\\_k - v\\_0, v\\_i - v\\_0) = -cross(v\\_i - v\\_0, v\\_k - v\\_0) < 0.\<close>
-            moreover have "(vx2 ?k - vx2 0) * (vy2 i - vy2 0) - (vy2 ?k - vy2 0) * (vx2 i - vx2 0)
-              = -((vx2 i - vx2 0) * (vy2 ?k - vy2 0) - (vy2 i - vy2 0) * (vx2 ?k - vx2 0))"
-              by (by100 algebra)
-            ultimately have "(vx2 ?k - vx2 0) * (vy2 i - vy2 0) - (vy2 ?k - vy2 0) * (vx2 i - vx2 0) < 0"
-              by linarith
-            thus ?thesis by linarith
-          qed
-          have hcross_k_si: "(vx2 ?k - vx2 0) * (vy2 (Suc i mod ?n) - vy2 0)
-              - (vy2 ?k - vy2 0) * (vx2 (Suc i mod ?n) - vx2 0) \<le> 0"
-          proof -
-            have hsi_lt_n: "Suc i < ?n" using True hk_lt_n by simp
-            have hsi: "Suc i mod ?n = Suc i" using hsi_lt_n by simp
-            show ?thesis
-            proof (cases "Suc i = ?k")
-              case True2: True
-              \<comment> \<open>Suc i = k: cross(v\\_k - v\\_0, v\\_k - v\\_0) = 0.\<close>
-              show ?thesis using True2 hsi by simp
-            next
-              case False2: False
-              hence "Suc i < ?k" using True by linarith
-              hence "1 \<le> Suc i" by simp
-              have hsi_lt: "Suc i < ?n" using \<open>Suc i < ?k\<close> hk_lt_n by linarith
-              from hfan_det_0[rule_format, OF hsi_lt hk_lt_n \<open>1 \<le> Suc i\<close> \<open>Suc i < ?k\<close>]
-              have "(vx2 (Suc i) - vx2 0) * (vy2 ?k - vy2 0) - (vy2 (Suc i) - vy2 0) * (vx2 ?k - vx2 0) > 0" .
-              moreover have "(vx2 ?k - vx2 0) * (vy2 (Suc i) - vy2 0) - (vy2 ?k - vy2 0) * (vx2 (Suc i) - vx2 0)
-                = -((vx2 (Suc i) - vx2 0) * (vy2 ?k - vy2 0) - (vy2 (Suc i) - vy2 0) * (vx2 ?k - vx2 0))"
-                by (by100 algebra)
-              ultimately have "(vx2 ?k - vx2 0) * (vy2 (Suc i) - vy2 0)
-                  - (vy2 ?k - vy2 0) * (vx2 (Suc i) - vx2 0) < 0" by linarith
-              thus ?thesis using hsi by simp
-            qed
-          qed
-          \<comment> \<open>cross\\_diag = cross(v\\_k - v\\_0, p - v\\_0) = (1-t)*[\\<le>0] + t*[\\<le>0] \\<le> 0.\<close>
-          define ck_i where "ck_i = (vx2 ?k - vx2 0) * (vy2 i - vy2 0) - (vy2 ?k - vy2 0) * (vx2 i - vx2 0)"
-          define ck_si where "ck_si = (vx2 ?k - vx2 0) * (vy2 (Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0) * (vx2 (Suc i mod ?n) - vx2 0)"
-          have hck_i_le: "ck_i \<le> 0" using hcross_k_i unfolding ck_i_def .
-          have hck_si_le: "ck_si \<le> 0" using hcross_k_si unfolding ck_si_def .
-          have hfst_p: "fst ?p = (1-t) * vx2 i + t * vx2 (Suc i mod ?n)" by simp
-          have hsnd_p: "snd ?p = (1-t) * vy2 i + t * vy2 (Suc i mod ?n)" by simp
-          have hcd_decomp: "cross_diag ?p = (1-t) * ck_i + t * ck_si"
-          proof -
-            have "cross_diag ?p = (vx2 ?k - vx2 0) * (snd ?p - vy2 0)
-                - (vy2 ?k - vy2 0) * (fst ?p - vx2 0)"
-              unfolding cross_diag_def by simp
-            also have "\<dots> = (vx2 ?k - vx2 0) * ((1-t) * vy2 i + t * vy2 (Suc i mod ?n) - vy2 0)
-                - (vy2 ?k - vy2 0) * ((1-t) * vx2 i + t * vx2 (Suc i mod ?n) - vx2 0)"
-              by simp
-            also have "\<dots> = (1-t) * ck_i + t * ck_si"
-              unfolding ck_i_def ck_si_def by (by100 algebra)
-            finally show ?thesis .
-          qed
-          have ht_ge0: "t \<ge> 0" using ht01 by linarith
-          have hcd_le0: "cross_diag ?p \<le> 0"
-          proof -
-            have "(1-t) * ck_i \<le> 0" using h1mt hck_i_le
-              by (rule mult_nonneg_nonpos)
-            moreover have "t * ck_si \<le> 0" using ht_ge0 hck_si_le
-              by (rule mult_nonneg_nonpos)
-            ultimately show ?thesis using hcd_decomp by linarith
-          qed
-          \<comment> \<open>Step 2: g = q2(phi\\_L) on the left half.\<close>
-          have "g ?p = q2 (phi_L ?p)" using hcd_le0 unfolding g_def by simp
-          \<comment> \<open>Step 3: phi\\_L(edge(i,t)) = sigma(i,t). This needs LEAST evaluation + Cramer.\<close>
-          also have "q2 (phi_L ?p) = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-          proof (cases "i = 0")
-            case True
-            \<comment> \<open>i = 0: LEAST predicate selects sector 1. Cramer on base edge: s=t, t\\_par=0.
-               phi\\_L result = (1-t)*vx2 0 + t*vx2 ?k. sigma(0,t) = (1-t)*vx2 0 + t*vx2 ?k.\<close>
-            show ?thesis sorry \<comment> \<open>i=0 case: LEAST=1, cramer\\_on\\_triangle\\_base\\_edge.\<close>
-          next
-            case False hence hi1: "i \<ge> 1" using hi by linarith
-            have hik: "i < ?k" using True by linarith
-            \<comment> \<open>1 \\<le> i < k. LEAST = i, then Cramer + sigma matching.\<close>
-            \<comment> \<open>Abbreviate cross products from v\\_0.\<close>
-            define cross_from_0 :: "nat \<Rightarrow> nat \<Rightarrow> real" where
-              "cross_from_0 p q = (vx2 p - vx2 0) * (vy2 q - vy2 0) - (vy2 p - vy2 0) * (vx2 q - vx2 0)" for p q
-            \<comment> \<open>dx = fst p - vx2 0, dy = snd p - vy2 0.\<close>
-            define dx :: real where "dx = fst ?p - vx2 0"
-            define dy :: real where "dy = snd ?p - vy2 0"
-            have hdx: "dx = (1-t) * (vx2 i - vx2 0) + t * (vx2 (Suc i mod ?n) - vx2 0)"
-              unfolding dx_def by simp (by100 algebra)
-            have hdy: "dy = (1-t) * (vy2 i - vy2 0) + t * (vy2 (Suc i mod ?n) - vy2 0)"
-              unfolding dy_def by simp (by100 algebra)
-            \<comment> \<open>Cross(v\\_j, edge\\_point) = (1-t)*cross\\_from\\_0(j,i) + t*cross\\_from\\_0(j,i+1).\<close>
-            have hcross_j: "\<And>j. (vx2 j - vx2 0) * dy - (vy2 j - vy2 0) * dx
-                = (1-t) * cross_from_0 j i + t * cross_from_0 j (Suc i mod ?n)"
-            proof -
-              fix j :: nat
-              have "(vx2 j - vx2 0) * dy - (vy2 j - vy2 0) * dx
-                = (vx2 j - vx2 0) * ((1-t) * (vy2 i - vy2 0) + t * (vy2 (Suc i mod ?n) - vy2 0))
-                - (vy2 j - vy2 0) * ((1-t) * (vx2 i - vx2 0) + t * (vx2 (Suc i mod ?n) - vx2 0))"
-                using hdx hdy by simp
-              also have "\<dots> = (1-t) * ((vx2 j - vx2 0) * (vy2 i - vy2 0) - (vy2 j - vy2 0) * (vx2 i - vx2 0))
-                + t * ((vx2 j - vx2 0) * (vy2 (Suc i mod ?n) - vy2 0) - (vy2 j - vy2 0) * (vx2 (Suc i mod ?n) - vx2 0))"
-                by (by100 algebra)
-              finally show "(vx2 j - vx2 0) * dy - (vy2 j - vy2 0) * dx
-                = (1-t) * cross_from_0 j i + t * cross_from_0 j (Suc i mod ?n)"
-                unfolding cross_from_0_def .
-            qed
-            \<comment> \<open>Fan det facts needed: cross\\_from\\_0 = positivity from convex\\_polygon\\_fan\\_det\\_from\\_v0.\<close>
-            have hfan_eq: "\<And>a b. cross_from_0 a b = (vx2 a - vx2 0) * (vy2 b - vy2 0) - (vy2 a - vy2 0) * (vx2 b - vx2 0)"
-              unfolding cross_from_0_def by simp
-            \<comment> \<open>LEAST predicate.\<close>
-            define PL where "PL j = (1 \<le> j \<and> j < ?k \<and>
-                (vx2 j - vx2 0) * dy - (vy2 j - vy2 0) * dx \<ge> 0 \<and>
-                (vx2 (Suc j) - vx2 0) * dy - (vy2 (Suc j) - vy2 0) * dx \<le> 0)" for j
-            \<comment> \<open>Step 1: P(i) holds.\<close>
-            have hPi: "PL i"
-            proof -
-              \<comment> \<open>Lower bound: cross(v\\_i, edge\\_point) = t * cross\\_from\\_0(i, i+1) \\<ge> 0.\<close>
-              have "cross_from_0 i i = 0" unfolding cross_from_0_def by (by100 algebra)
-              have hsi_lt_n2: "Suc i < ?n" using hik hk_lt_n by simp
-              have hsi_eq: "Suc i mod ?n = Suc i" using hsi_lt_n2 by simp
-              have hfd_i_si: "cross_from_0 i (Suc i) > 0"
-              proof -
-                have "Suc i < ?n" using hsi_lt_n2 .
-                from hfan_det_0[rule_format, OF hi \<open>Suc i < ?n\<close> hi1 _]
-                show ?thesis unfolding cross_from_0_def using hik by linarith
-              qed
-              have hlower: "(vx2 i - vx2 0) * dy - (vy2 i - vy2 0) * dx \<ge> 0"
-              proof -
-                have "(vx2 i - vx2 0) * dy - (vy2 i - vy2 0) * dx
-                  = (1-t) * cross_from_0 i i + t * cross_from_0 i (Suc i mod ?n)"
-                  using hcross_j[of i] .
-                also have "\<dots> = (1-t) * 0 + t * cross_from_0 i (Suc i)"
-                  using \<open>cross_from_0 i i = 0\<close> hsi_eq by simp
-                also have "\<dots> = t * cross_from_0 i (Suc i)" by simp
-                finally have "(vx2 i - vx2 0) * dy - (vy2 i - vy2 0) * dx = t * cross_from_0 i (Suc i)" .
-                moreover have "t * cross_from_0 i (Suc i) \<ge> 0"
-                  using ht_ge0 hfd_i_si by (by100 simp)
-                ultimately show ?thesis by linarith
-              qed
-              \<comment> \<open>Upper bound: cross(v\\_{i+1}, edge\\_point) = (1-t)*(-fan\\_det) \\<le> 0.\<close>
-              have "cross_from_0 (Suc i) (Suc i) = 0" unfolding cross_from_0_def by (by100 algebra)
-              have "cross_from_0 (Suc i) i < 0"
-              proof -
-                have "cross_from_0 (Suc i) i = - cross_from_0 i (Suc i)"
-                  unfolding cross_from_0_def by (by100 algebra)
-                thus ?thesis using hfd_i_si by linarith
-              qed
-              have hupper: "(vx2 (Suc i) - vx2 0) * dy - (vy2 (Suc i) - vy2 0) * dx \<le> 0"
-              proof -
-                have "(vx2 (Suc i) - vx2 0) * dy - (vy2 (Suc i) - vy2 0) * dx
-                  = (1-t) * cross_from_0 (Suc i) i + t * cross_from_0 (Suc i) (Suc i mod ?n)"
-                  using hcross_j[of "Suc i"] .
-                also have "\<dots> = (1-t) * cross_from_0 (Suc i) i + t * 0"
-                  using \<open>cross_from_0 (Suc i) (Suc i) = 0\<close> hsi_eq by simp
-                also have "\<dots> = (1-t) * cross_from_0 (Suc i) i" by simp
-                finally have "(vx2 (Suc i) - vx2 0) * dy - (vy2 (Suc i) - vy2 0) * dx
-                  = (1-t) * cross_from_0 (Suc i) i" .
-                moreover have "(1-t) * cross_from_0 (Suc i) i \<le> 0"
-                  using h1mt \<open>cross_from_0 (Suc i) i < 0\<close>
-                  using mult_nonneg_nonpos[of "1-t" "cross_from_0 (Suc i) i"] by linarith
-                ultimately show ?thesis by linarith
-              qed
-              show "PL i" unfolding PL_def
-                using hi1 hik hlower hupper by (by100 auto)
-            qed
-            \<comment> \<open>Step 2: P(j) false for j < i (when 0 < t).\<close>
-            \<comment> \<open>The full LEAST + Cramer evaluation for 1 \\<le> i < k.
-               For t > 0: LEAST = i (from fan det + cross product analysis).
-               For t = 0: LEAST might be i-1 (vertex), but both sectors give same sigma result.
-               In either case: phi\\_L(edge(i,t)) = sigma(i,t).\<close>
-            show ?thesis sorry \<comment> \<open>LEAST + Cramer for 1\\<le>i<k: phi\\_L(edge(i,t)) = sigma(i,t).
-               Infrastructure proved: PL(i) holds, PL(j) false for j < i when t > 0.
-               Remaining: (1) handle t=0 vertex case, (2) connect PL predicate to phi\\_L\\_def's LEAST,
-               (3) apply cramer\\_on\\_triangle\\_edge, (4) compute sigma match.\<close>
-          qed
-          finally show ?thesis .
-        next
-          case False hence hi_ge_k: "i \<ge> ?k" by linarith
-          \<comment> \<open>RIGHT HALF: i \\<ge> k. Two subcases: k \\<le> i < n-1 (v-edges) and i = n-1 (c-edge right).\<close>
-          show ?thesis sorry \<comment> \<open>Right half: LEAST evaluation + Cramer gives sigma.
-             Case k \\<le> i < n-1: LEAST = i, cramer\\_on\\_triangle\\_edge, sigma = (1-t)*v\\_{i+1} + t*v\\_{Suc(i+1) mod n}.
-             Case i = n-1: cross\\_diag \\<ge> 0; for t < 1 use phi\\_R with LEAST = n-2,
-             cramer\\_on\\_triangle\\_base\\_edge; for t = 1 vertex junction q2(v\\_0) = q2(sigma(n-1,1)).
-             At t = 0 vertex v\\_{n-1}: need q2(phi(v\\_{n-1})) = q2(sigma(n-1,0)) via C7 identification.\<close>
-        qed
-      qed
+        sorry
+      \<comment> \<open>OLD INLINE PROOF DELETED: was 220 lines of cross\\_diag, bilinearity, PL analysis.\<close>
       \<comment> \<open>Provide witnesses: P = P2, q = g, vx = vx2, vy = vy2.\<close>
       show ?thesis
       proof (rule exI[of _ P2], rule exI[of _ g], rule exI[of _ vx2], rule exI[of _ vy2],
@@ -2963,7 +2756,31 @@ proof -
         show "\<forall>p\<in>P2. (\<forall>i<length ?w'. \<forall>t\<in>I_set.
             p \<noteq> ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w')))
             \<longrightarrow> (\<forall>p'\<in>P2. g p = g p' \<longrightarrow> p = p')"
-          sorry \<comment> \<open>C8: interior injectivity of g.\<close>
+        proof (intro ballI impI allI)
+          fix p p' assume hp: "p \<in> P2" and hp': "p' \<in> P2"
+              and hint: "\<forall>i<length ?w'. \<forall>t\<in>I_set.
+                p \<noteq> ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w'))"
+              and heq: "g p = g p'"
+          \<comment> \<open>C8 proof sketch: g is injective on target polygon interior.
+             p is not on any TARGET boundary edge, so p is a target interior point.
+             Two cases by cross\\_diag sign:
+             Case 1: cross\\_diag(p) < 0 (strict left). g(p) = q2(phi\\_L(p)).
+               phi\\_L(p) is in the old polygon interior (left sub-polygon interior).
+               Similarly for p': either same half or different half.
+               If same half: q2(phi\\_L(p)) = q2(phi\\_L(p')) with both in old interior
+                 => phi\\_L(p) = phi\\_L(p') by old C8 => p = p' by phi\\_L injectivity.
+               If different half: q2(left interior) \\<inter> q2(right interior) = \\<emptyset> by old C8.
+             Case 2: cross\\_diag(p) > 0 (strict right). Symmetric.
+             Case 3: cross\\_diag(p) = 0 (on virtual diagonal).
+               phi\\_L(p) maps to old boundary (edge 0 or edge k).
+               Old C8 says q2(old interior) \\<inter> q2(old boundary) = \\<emptyset>.
+               So p' must also be on the diagonal. Then old C9 gives injectivity.\<close>
+          show "p = p'" sorry \<comment> \<open>Interior injectivity of g.
+             Proof: phi\\_L/phi\\_R map to disjoint old-interior regions.
+             Old C8 (singleton fibres at old interior) prevents any identification.
+             Diagonal maps to old boundary, disjoint from old interior q2-values.
+             Same-diagonal: old C9 gives parameter injectivity.\<close>
+        qed
         show "\<forall>i<length ?w'. \<forall>j<length ?w'. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             g ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w'))
             = g ((1-s)*vx2 j+s*vx2(Suc j mod length ?w'),(1-s)*vy2 j+s*vy2(Suc j mod length ?w'))
