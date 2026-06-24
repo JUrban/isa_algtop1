@@ -3115,11 +3115,31 @@ next
           \<comment> \<open>Unfold phi\\_L\\_def and substitute LEAST.\<close>
           \<comment> \<open>From phi\\_L\\_def + hLeast: phi\\_L evaluates with j = expected sector.\<close>
           \<comment> \<open>The Cramer computation in the let-chain gives sigma.\<close>
-          show ?thesis sorry \<comment> \<open>phi\\_L = sigma via LEAST + Cramer. Needs:
-             1. Unfold phi\\_L\\_def with j = hLeast result.
-             2. fst/snd simplification.
-             3. cramer\\_on\\_triangle\\_edge (i\\<ge>1) or cramer\\_on\\_triangle\\_base\\_edge (i=0).
-             4. Match result with paste\\_sigma\\_def.\<close>
+          \<comment> \<open>phi\\_L with j = (if i=0 then 1 else i).\<close>
+          define j where "j = (if i = 0 then 1 else i)"
+          have hj_eq: "(LEAST j. 1 \<le> j \<and> j < ?k \<and>
+              (vx2 j - vx2 0)*(snd ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vy2 0) -
+              (vy2 j - vy2 0)*(fst ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*(snd ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vy2 0) -
+              (vy2(Suc j) - vy2 0)*(fst ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vx2 0) \<le> 0)
+            = j" using hLeast unfolding j_def by simp
+          \<comment> \<open>Step-by-step Cramer evaluation after LEAST = j.\<close>
+          \<comment> \<open>phi\\_L\\_def unfolds to: let J = LEAST...; let ex = ...; ... in (result).
+             With J = j (from hj\\_eq), evaluate Cramer: s, t\\_par, then result.\<close>
+          have hphi_L_eq: "phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+            = (let ex = vx2 j - vx2 0; ey = vy2 j - vy2 0;
+                   fx = vx2(Suc j) - vx2 0; fy = vy2(Suc j) - vy2 0;
+                   dd = ex*fy - ey*fx;
+                   dx = (1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0;
+                   dy = (1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0;
+                   s = (fy*dx - fx*dy)/dd; tp = (ex*dy - ey*dx)/dd in
+               ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
+                (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j)))"
+            unfolding phi_L_def Let_def using hj_eq by simp
+          \<comment> \<open>Now evaluate the Cramer formula using cramer helpers.\<close>
+          show ?thesis using hphi_L_eq
+            sorry \<comment> \<open>Cramer computation: s and tp from cramer\\_on\\_triangle\\_edge/base\\_edge,
+               then simplify to paste\\_sigma. Pure algebra.\<close>
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
