@@ -2306,13 +2306,46 @@ proof -
      Both are compact Hausdorff quotients of proper schemes of the same length.
      The boundary C7 identifications match (paste\\_chain\\_boundary\\_C7).
      Using quotient\\_same\\_fibres\\_homeomorphic or direct construction.\<close>
+  \<comment> \<open>Step 3a: Get canonical quotient of w.\<close>
+  from scheme_quotient_exists(1)[OF hlen hproper]
+  obtain Y_w :: "(real \<times> real) set" and TY_w :: "(real \<times> real) set set"
+    where hY_w: "top1_quotient_of_scheme_on Y_w TY_w ?w" by (by100 blast)
+  \<comment> \<open>Step 3b: Y' is already obtained (canonical quotient of w').\<close>
+  define Y_w' where "Y_w' = Y'"
+  define TY_w' where "TY_w' = TY'"
+  have hY_w': "top1_quotient_of_scheme_on Y_w' TY_w' ?w'"
+    using hY' unfolding Y_w'_def TY_w'_def .
+  \<comment> \<open>Step 3c: P\\_w and P\\_w' are both regular n-gons (same n = length w = length w').
+     They use the standard vertex coordinates: vx(k) = cos(2\\<pi>k/n), vy(k) = sin(2\\<pi>k/n).
+     So P\\_w = P\\_w' (same polygon). Both q\\_w and q\\_w' are quotient maps from P\\_w.
+     The fibre equivalence q\\_w(x)=q\\_w(y) iff q\\_w'(x)=q\\_w'(y) then gives Y\\_w homeo Y\\_w'.
+     This fibre equivalence follows from paste\\_chain\\_boundary\\_C7 + C8/C9 properties.\<close>
+  \<comment> \<open>Step 3d: Y homeo Y\\_w (both quotients of w, by uniqueness).\<close>
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using hq unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have htopo_Yw: "is_topology_on_strict Y_w TY_w"
+    using hY_w unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  have htopo_Yw': "is_topology_on_strict Y_w' TY_w'"
+    using hY_w' unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  from scheme_quotient_uniqueness[OF htopo_Y htopo_Yw hq hY_w]
+  obtain h_Yw where hYYw: "top1_homeomorphism_on Y TY Y_w TY_w h_Yw" by (by100 blast)
+  \<comment> \<open>Step 3e: Y' homeo Y\\_w' (both quotients of w', by uniqueness).\<close>
+  from scheme_quotient_uniqueness[OF htopo_Y' htopo_Yw' hY' hY_w']
+  obtain h_Yw' where hY'Yw': "top1_homeomorphism_on Y' TY' Y_w' TY_w' h_Yw'" by (by100 blast)
+  \<comment> \<open>Step 3f: Y\\_w homeo Y\\_w' from fibre equivalence on the common polygon P\\_w.
+     Both q\\_w and q\\_w' are quotient maps from regular n-gons.
+     The n-gons are the SAME (same construction from scheme\\_quotient\\_exists).
+     SORRY: this requires showing the fibre equivalence.\<close>
+  have "\<exists>h. top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h"
+    sorry \<comment> \<open>Fibre equivalence on common canonical polygon gives homeomorphism.
+       Requires: P\\_w = P\\_w' (same regular n-gon construction).
+       Then q\\_w(x)=q\\_w(y) iff q\\_w'(x)=q\\_w'(y) from C7/C8/C9 matching.\<close>
+  then obtain h_ww' where hww': "top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h_ww'" by (by100 blast)
+  \<comment> \<open>Step 3g: Compose: Y -> Y\\_w -> Y\\_w' -> Y' = Y\\_w'.\<close>
+  from homeomorphism_comp[OF hYYw hww']
+  have hYYw': "top1_homeomorphism_on Y TY Y_w' TY_w' (h_ww' \<circ> h_Yw)" .
   have "\<exists>h. top1_homeomorphism_on Y TY Y' TY' h"
-    sorry \<comment> \<open>Homeomorphism Y \\<cong> Y' from fibre equivalence.
-       Both are quotients of regular n-gons with matching boundary identifications.
-       The fibre equivalence follows from:
-       - Interior: both maps injective (C8) \\<to> fibres are singletons.
-       - Boundary: paste\\_chain\\_boundary\\_C7 shows matching identifications.
-       - Cross: interior/boundary separated by C8+C12.\<close>
+    using hYYw' unfolding Y_w'_def TY_w'_def by (by100 blast)
   then obtain h where hh: "top1_homeomorphism_on Y TY Y' TY' h" by (by100 blast)
   \<comment> \<open>Step 4: Transfer via scheme\\_quotient\\_transfer\\_along\\_homeomorphism.\<close>
   have htopo_Y: "is_topology_on_strict Y TY"
