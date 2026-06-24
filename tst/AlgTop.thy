@@ -2336,10 +2336,19 @@ proof -
      Both q\\_w and q\\_w' are quotient maps from regular n-gons.
      The n-gons are the SAME (same construction from scheme\\_quotient\\_exists).
      SORRY: this requires showing the fibre equivalence.\<close>
+  \<comment> \<open>Both Y\\_w and Y\\_w' are canonical quotients of regular n-gons from scheme\\_quotient\\_exists.
+     Since both schemes have the same length n, the same regular n-gon P is used.
+     q\\_w: P -> Y\\_w and q\\_w': P -> Y\\_w' are both quotient maps from the same P.
+     Fibre equivalence q\\_w(x)=q\\_w(y) <-> q\\_w'(x)=q\\_w'(y) gives the homeomorphism.\<close>
   have "\<exists>h. top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h"
-    sorry \<comment> \<open>Fibre equivalence on common canonical polygon gives homeomorphism.
-       Requires: P\\_w = P\\_w' (same regular n-gon construction).
-       Then q\\_w(x)=q\\_w(y) iff q\\_w'(x)=q\\_w'(y) from C7/C8/C9 matching.\<close>
+    sorry \<comment> \<open>SOLE REMAINING SORRY for paste chain proper.
+       Strategy: extract full data from both scheme\\_quotient\\_exists calls.
+       Show P\\_w = P\\_w' (same n-gon construction, same n).
+       Apply quotient\\_same\\_fibres\\_homeomorphic with fibre equivalence from:
+       - Interior: both C8 give singletons.
+       - Boundary: paste\\_chain\\_boundary\\_C7 matches identifications.
+       - Cross: C8 separates interior from boundary.
+       Estimated: ~100 lines of extraction + fibre verification.\<close>
   then obtain h_ww' where hww': "top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h_ww'" by (by100 blast)
   \<comment> \<open>Step 3g: Compose: Y -> Y\\_w -> Y\\_w' -> Y' = Y\\_w'.\<close>
   from homeomorphism_comp[OF hYYw hww']
