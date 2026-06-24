@@ -1683,7 +1683,88 @@ proof (intro allI impI ballI)
       next
         case False
         \<comment> \<open>CASE: one in inv(u2), other in v (cross pair).\<close>
-        show ?thesis sorry \<comment> \<open>Cross pair inv(u2) x v: uses hC7\\_orig at (k-i),(j+1).\<close>
+        \<comment> \<open>CROSS PAIR: one in inv(u2), other in v.
+           From the two False cases: \\<not>(both inv) and \\<not>(both v).
+           So exactly one of i,j is \\<le> length u2 and the other is not.\<close>
+        from \<open>\<not>(i \<le> length u2 \<and> j \<le> length u2)\<close> False
+        have hcross: "(i \<le> length u2 \<and> \<not>(j \<le> length u2)) \<or> (\<not>(i \<le> length u2) \<and> j \<le> length u2)"
+          by (by100 auto)
+        show ?thesis
+        proof (cases "i \<le> length u2")
+          case True note hi_inv = this
+          hence hj_v: "\<not>(j \<le> length u2)" using hcross by (by100 auto)
+          \<comment> \<open>i in inv(u2): sigma(i,t) = edge\\_orig(k-i, 1-t).
+             j in v: sigma(j,t) = edge\\_orig(j+1, t).
+             Need original C7 at (k-i, j+1).
+             Single negation: snd(w'!i) = \\<not>snd(w!(k-i)), snd(w'!j) = snd(w!(j+1)).
+             So (snd(w'!i) = snd(w'!j)) iff (snd(w!(k-i)) \\<noteq> snd(w!(j+1))).
+             This SWAPS the then/else branches of original C7.\<close>
+          \<comment> \<open>Setup: sigma(i,t) for inv range, sigma(j,t) for v range.\<close>
+          have hii_k: "i \<le> k - 1" using hi_inv hk_eq by linarith
+          have hk2: "k \<ge> 2" using hi_mid(1) hii_k by linarith
+          have hsuci: "Suc (k-i) mod ?n = k+1-i" using hi_mid(1) hii_k hk_lt by (by100 simp)
+          have h\<sigma>i: "\<sigma> i t = (t*vx(k-i)+(1-t)*vx(k+1-i), t*vy(k-i)+(1-t)*vy(k+1-i))"
+          proof -
+            from paste_sigma_inv_u2_edge(1)[OF hi_mid(1) hii_k hk2 hn3 hk_lt hsuci]
+                 paste_sigma_inv_u2_edge(2)[OF hi_mid(1) hii_k hk2 hn3 hk_lt hsuci]
+            show ?thesis unfolding \<sigma>_def by (by100 simp)
+          qed
+          have hkv: "k \<le> j" using hj_v hk_eq by linarith
+          have h\<sigma>j: "\<sigma> j t = ((1-t)*vx(j+1)+t*vx(Suc(j+1) mod ?n), (1-t)*vy(j+1)+t*vy(Suc(j+1) mod ?n))"
+            using paste_sigma_v_edge(1)[OF hkv hj_mid(2) hk_pos hn3]
+                  paste_sigma_v_edge(2)[OF hkv hj_mid(2) hk_pos hn3]
+            unfolding \<sigma>_def by (by100 simp)
+          \<comment> \<open>sigma(j, 1-t) for v range.\<close>
+          have h\<sigma>j_1mt: "\<sigma> j (1-t) = (t*vx(j+1)+(1-t)*vx(Suc(j+1) mod ?n), t*vy(j+1)+(1-t)*vy(Suc(j+1) mod ?n))"
+          proof -
+            have "paste_chain_sigma_x vx k ?n j (1-t) = (1-(1-t))*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n)"
+              using paste_sigma_v_edge(1)[OF hkv hj_mid(2) hk_pos hn3] by simp
+            hence hx: "paste_chain_sigma_x vx k ?n j (1-t) = t*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n)"
+              by (by100 simp)
+            have "paste_chain_sigma_y vy k ?n j (1-t) = (1-(1-t))*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n)"
+              using paste_sigma_v_edge(2)[OF hkv hj_mid(2) hk_pos hn3] by simp
+            hence hy: "paste_chain_sigma_y vy k ?n j (1-t) = t*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n)"
+              by (by100 simp)
+            show ?thesis using hx hy unfolding \<sigma>_def by (by100 simp)
+          qed
+          \<comment> \<open>Original C7 at (k-i, j+1) with param 1-t.\<close>
+          have hki_lt: "k-i < ?n" using hii_k hk_lt by (by100 linarith)
+          have hj1_lt: "j+1 < ?n" using hj_mid by linarith
+          \<comment> \<open>Label correspondence.\<close>
+          have hlabel_orig_cross: "fst(w!(k-i)) = fst(w!(j+1))"
+            sorry \<comment> \<open>From hlabel + fst correspondence for inv(u2) and v.\<close>
+          have ht_1mt: "1-t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
+          from hC7_orig[rule_format, OF hki_lt hj1_lt hlabel_orig_cross ht_1mt]
+          have hC7_cross: "q2 ((1-(1-t))*vx(k-i) + (1-t)*vx(Suc(k-i) mod ?n),
+                                (1-(1-t))*vy(k-i) + (1-t)*vy(Suc(k-i) mod ?n))
+            = (if snd(w!(k-i)) = snd(w!(j+1))
+               then q2 ((1-(1-t))*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n),
+                         (1-(1-t))*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n))
+               else q2 ((1-t)*vx(j+1) + (1-(1-t))*vx(Suc(j+1) mod ?n),
+                         (1-t)*vy(j+1) + (1-(1-t))*vy(Suc(j+1) mod ?n)))" .
+          \<comment> \<open>Translate to sigma.\<close>
+          have hLHS: "q2 (\<sigma> i t) = q2 ((1-(1-t))*vx(k-i) + (1-t)*vx(Suc(k-i) mod ?n),
+                                         (1-(1-t))*vy(k-i) + (1-t)*vy(Suc(k-i) mod ?n))"
+            using h\<sigma>i hsuci by (by100 simp)
+          have hTHEN_cross: "q2 (\<sigma> j (1-t)) = q2 ((1-(1-t))*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n),
+                                                      (1-(1-t))*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n))"
+            using h\<sigma>j_1mt by (by100 simp)
+          have hELSE_cross: "q2 (\<sigma> j t) = q2 ((1-t)*vx(j+1) + (1-(1-t))*vx(Suc(j+1) mod ?n),
+                                                  (1-t)*vy(j+1) + (1-(1-t))*vy(Suc(j+1) mod ?n))"
+            using h\<sigma>j by (by100 simp)
+          \<comment> \<open>Single negation: snd(w'!i) = \\<not>snd(w!(k-i)), snd(w'!j) = snd(w!(j+1)).
+             So (snd(w'!i)=snd(w'!j)) = (snd(w!(k-i)) \\<noteq> snd(w!(j+1))).
+             This SWAPS the then/else branches.\<close>
+          have hsingle_neg: "(snd(w'!i) = snd(w'!j)) = (snd(w!(k-i)) \<noteq> snd(w!(j+1)))"
+            sorry \<comment> \<open>Single negation: inv side flipped, v side not.\<close>
+          from hLHS hC7_cross hTHEN_cross hELSE_cross hsingle_neg
+          show ?thesis by (by100 auto)
+        next
+          case False note hi_v = this
+          hence hj_inv: "j \<le> length u2" using hcross by (by100 auto)
+          \<comment> \<open>Symmetric to above with i,j roles swapped.\<close>
+          show ?thesis sorry
+        qed
       qed
     qed
   qed
