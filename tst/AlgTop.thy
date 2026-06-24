@@ -13838,7 +13838,7 @@ qed
    This is a specific geometric fact about the 4-gon quotient with two adjacent cancel pairs.
    The identification collapses all boundary edges to two points (poles), leaving S2.\<close>
 lemma sphere_scheme_realizes_S2:
-  fixes a b :: "'b"
+  fixes a b :: nat
   assumes hab: "a \<noteq> b"
       and hY: "top1_quotient_of_scheme_on Y TY [(a, True), (a, False), (b, True), (b, False)]"
   shows "\<exists>g. top1_homeomorphism_on Y TY top1_S2 top1_S2_topology g"
@@ -13846,12 +13846,9 @@ proof -
   let ?s = "[(a, True), (a, False), (b, True), (b, False)]"
   have htopo_Y: "is_topology_on_strict Y TY"
     using hY unfolding top1_quotient_of_scheme_on_def by (by100 blast)
-  \<comment> \<open>Step 1: Extract 4-gon P with quotient map q.\<close>
-  \<comment> \<open>Extract polygon data. length ?s = 4.\<close>
   have hlen_s: "length ?s = 4" by (by100 simp)
-  \<comment> \<open>Y is compact Hausdorff (polygon quotient).\<close>
   have hpoly_Y: "top1_is_polygonal_quotient_on Y TY"
-    unfolding top1_is_polygonal_quotient_on_def using htopo_Y hY sorry
+    unfolding top1_is_polygonal_quotient_on_def using htopo_Y hY by (by100 blast)
   from Theorem_74_1_polygon_quotient_compact_hausdorff[OF htopo_Y hpoly_Y]
   have hcompact_Y: "top1_compact_on Y TY" and hhaus_Y: "is_hausdorff_on Y TY"
     by (by100 blast)+
