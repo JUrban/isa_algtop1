@@ -1160,7 +1160,7 @@ qed
    sigma(i, t) for k <= i <= n-2 = edge\\_orig(i+1, t).\<close>
 lemma paste_sigma_v_edge:
   fixes vx vy :: "nat \<Rightarrow> real" and k n i :: nat and t :: real
-  assumes "k \<le> i" "i \<le> n - 2" "k \<ge> 2" "n \<ge> 3"
+  assumes "k \<le> i" "i \<le> n - 2" "k \<ge> 1" "n \<ge> 3"
   shows "paste_chain_sigma_x vx k n i t = (1-t)*vx(i+1) + t*vx(Suc(i+1) mod n)"
     and "paste_chain_sigma_y vy k n i t = (1-t)*vy(i+1) + t*vy(Suc(i+1) mod n)"
 proof -
@@ -1344,7 +1344,42 @@ proof (intro allI impI ballI)
       proof (cases "\<not>(i \<le> length u2) \<and> \<not>(j \<le> length u2)")
         case True
         \<comment> \<open>CASE: both in v range.\<close>
-        show ?thesis sorry \<comment> \<open>v x v pair: direct from hC7\\_orig at (i+1),(j+1) with t.\<close>
+        \<comment> \<open>Both i,j in v range: \\<not>(i \\<le> length u2) and \\<not>(j \\<le> length u2).
+           sigma(i,t) = edge\\_orig(i+1, t) and sigma(j,t) = edge\\_orig(j+1, t).
+           Target label w'!i = w!(i+1) and exponent w'!i = w!(i+1).
+           Direct application of original C7 at indices (i+1), (j+1).\<close>
+        have hiv: "\<not>(i \<le> length u2)" and hjv: "\<not>(j \<le> length u2)" using True by simp_all
+        \<comment> \<open>sigma(i,t) = ((1-t)*vx(i+1) + t*vx(Suc(i+1) mod n), same for y).\<close>
+        have hki: "k \<le> i" using hiv hk_eq by linarith
+        have hkj: "k \<le> j" using hjv hk_eq by linarith
+        have h\<sigma>i: "\<sigma> i t = ((1-t)*vx(i+1) + t*vx(Suc(i+1) mod ?n),
+                              (1-t)*vy(i+1) + t*vy(Suc(i+1) mod ?n))"
+          using paste_sigma_v_edge[OF hki hi_mid(2) hk_pos hn3]
+          unfolding \<sigma>_def sorry
+        have h\<sigma>j: "\<sigma> j t = ((1-t)*vx(j+1) + t*vx(Suc(j+1) mod ?n),
+                              (1-t)*vy(j+1) + t*vy(Suc(j+1) mod ?n))"
+          using paste_sigma_v_edge[OF hkj hj_mid(2) hk_pos hn3]
+          unfolding \<sigma>_def sorry
+        \<comment> \<open>Labels and exponents match original at shifted index.\<close>
+        have hfst_match_i: "fst(w'!i) = fst(w!(i+1))" sorry
+        have hfst_match_j: "fst(w'!j) = fst(w!(j+1))" sorry
+        have hsnd_match_i: "snd(w'!i) = snd(w!(i+1))" sorry
+        have hsnd_match_j: "snd(w'!j) = snd(w!(j+1))" sorry
+        \<comment> \<open>Apply original C7.\<close>
+        have hi1_lt: "i+1 < ?n" using hi_mid by linarith
+        have hj1_lt: "j+1 < ?n" using hj_mid by linarith
+        have hlabel_orig: "fst(w!(i+1)) = fst(w!(j+1))"
+          using hlabel hfst_match_i hfst_match_j by simp
+        from hC7_orig[rule_format, OF hi1_lt hj1_lt hlabel_orig ht]
+        have hC7_app: "q2 ((1-t)*vx(i+1) + t*vx(Suc(i+1) mod ?n),
+                            (1-t)*vy(i+1) + t*vy(Suc(i+1) mod ?n))
+          = (if snd(w!(i+1)) = snd(w!(j+1))
+             then q2 ((1-t)*vx(j+1) + t*vx(Suc(j+1) mod ?n),
+                       (1-t)*vy(j+1) + t*vy(Suc(j+1) mod ?n))
+             else q2 (t*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n),
+                       t*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n)))" .
+        \<comment> \<open>Translate back to sigma and target labels.\<close>
+        show ?thesis using hC7_app h\<sigma>i h\<sigma>j hsnd_match_i hsnd_match_j sorry
       next
         case False
         \<comment> \<open>CASE: one in inv(u2), other in v (cross pair).\<close>
