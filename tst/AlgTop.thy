@@ -2682,7 +2682,68 @@ proof -
          Left half: both terms \\<le> 0 from fan det antisymmetry. Right half: both \\<ge> 0.\<close>
       have hcd_left: "\<And>i t. i < ?k \<Longrightarrow> t \<in> I_set \<Longrightarrow>
           cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) \<le> 0"
-        sorry \<comment> \<open>Fan det antisymmetry + bilinearity. Infrastructure was proved in session E.\<close>
+      proof -
+        fix i :: nat and t :: real assume hik: "i < ?k" and ht: "t \<in> I_set"
+        have ht01: "t \<ge> 0 \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+        have ht_ge0: "t \<ge> 0" using ht01 by linarith
+        have h1mt: "1 - t \<ge> 0" using ht01 by linarith
+        \<comment> \<open>cross(v\\_k - v\\_0, v\\_i - v\\_0) \\<le> 0: zero for i=0, negative for i \\<ge> 1.\<close>
+        have hcki: "(vx2 ?k - vx2 0) * (vy2 i - vy2 0) - (vy2 ?k - vy2 0) * (vx2 i - vx2 0) \<le> 0"
+        proof (cases "i = 0")
+          case True thus ?thesis by simp
+        next
+          case False hence hi1: "1 \<le> i" by linarith
+          have hi_lt: "i < ?n" using hik by simp
+          have hk_lt: "?k < ?n" by simp
+          from hfan_det_0[rule_format, OF hi_lt hk_lt hi1 hik]
+          have hpos: "(vx2 i - vx2 0)*(vy2 ?k - vy2 0) - (vy2 i - vy2 0)*(vx2 ?k - vx2 0) > 0" .
+          moreover have "(vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)
+            = -((vx2 i - vx2 0)*(vy2 ?k - vy2 0) - (vy2 i - vy2 0)*(vx2 ?k - vx2 0))"
+            by (by100 algebra)
+          ultimately have "(vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0) < 0"
+            by linarith
+          thus ?thesis by linarith
+        qed
+        \<comment> \<open>cross(v\\_k - v\\_0, v\\_{Suc i} - v\\_0) \\<le> 0: zero if Suc i = k, negative if Suc i < k.\<close>
+        have hsi_lt: "Suc i < ?n" using hik by simp
+        have hsi_mod: "Suc i mod ?n = Suc i" using hsi_lt by simp
+        have hcksi: "(vx2 ?k - vx2 0) * (vy2 (Suc i mod ?n) - vy2 0)
+            - (vy2 ?k - vy2 0) * (vx2 (Suc i mod ?n) - vx2 0) \<le> 0"
+        proof (cases "Suc i = ?k")
+          case True thus ?thesis using hsi_mod by simp
+        next
+          case False hence "Suc i < ?k" using hik by linarith
+          hence "1 \<le> Suc i" by simp
+          have hk_lt2: "?k < ?n" by simp
+          from hfan_det_0[rule_format, OF hsi_lt hk_lt2 \<open>1 \<le> Suc i\<close> \<open>Suc i < ?k\<close>]
+          have "(vx2 (Suc i) - vx2 0)*(vy2 ?k - vy2 0) - (vy2 (Suc i) - vy2 0)*(vx2 ?k - vx2 0) > 0" .
+          moreover have "(vx2 ?k - vx2 0)*(vy2 (Suc i) - vy2 0) - (vy2 ?k - vy2 0)*(vx2 (Suc i) - vx2 0)
+            = -((vx2 (Suc i) - vx2 0)*(vy2 ?k - vy2 0) - (vy2 (Suc i) - vy2 0)*(vx2 ?k - vx2 0))"
+            by (by100 algebra)
+          ultimately have "(vx2 ?k - vx2 0)*(vy2 (Suc i) - vy2 0) - (vy2 ?k - vy2 0)*(vx2 (Suc i) - vx2 0) < 0"
+            by linarith
+          thus ?thesis using hsi_mod by simp
+        qed
+        \<comment> \<open>Bilinearity: cross\\_diag = (1-t)*hcki + t*hcksi \\<le> 0.\<close>
+        have "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+          = (vx2 ?k - vx2 0) * ((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0)
+          - (vy2 ?k - vy2 0) * ((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0)"
+          unfolding cross_diag_def by simp
+        also have "\<dots> = (1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))
+          + t * ((vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0))"
+          by (by100 algebra)
+        finally have "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+          = (1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))
+          + t * ((vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0))" .
+        moreover have "(1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)) \<le> 0"
+          using mult_nonneg_nonpos[of "1-t" "(vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)"]
+                h1mt hcki by linarith
+        moreover have "t * ((vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0)) \<le> 0"
+          using mult_nonneg_nonpos[of t "(vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0)"]
+                ht_ge0 hcksi by linarith
+        ultimately show "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) \<le> 0"
+          by linarith
+      qed
       have hcd_right: "\<And>i t. i \<ge> ?k \<Longrightarrow> i < ?n \<Longrightarrow> t \<in> I_set \<Longrightarrow>
           cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) \<ge> 0"
         sorry \<comment> \<open>Symmetric: fan det + bilinearity for right half.\<close>
