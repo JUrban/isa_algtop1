@@ -2404,7 +2404,10 @@ proof -
     by (rule quotient_of_scheme_extract_vx[OF hY_w])
   \<comment> \<open>Step 3g: Get polygon self-homeomorphism phi for the sigma rearrangement.\<close>
   let ?k = "1 + length u2"
-  from paste_chain_polygon_self_homeomorphism[OF _ _ _ hP_w hC5_w hC3_w]
+  have hn_ge3: "length ?w \<ge> 3" by (rule hlen)
+  have hk_ge1: "(1::nat) \<le> ?k" by (by100 simp)
+  have hk_lt_n: "?k < length ?w" by (by100 simp)
+  from paste_chain_polygon_self_homeomorphism[OF hn_ge3 hk_ge1 hk_lt_n hP_w hC5_w hC3_w]
   obtain \<phi> where h\<phi>_homeo: "top1_homeomorphism_on P_w
       (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w)
       P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) \<phi>"
@@ -2412,8 +2415,7 @@ proof -
         \<phi> ((1-t)*vx_w i + t*vx_w(Suc i mod length ?w), (1-t)*vy_w i + t*vy_w(Suc i mod length ?w))
       = (paste_chain_sigma_x vx_w ?k (length ?w) i t,
          paste_chain_sigma_y vy_w ?k (length ?w) i t)"
-    sorry \<comment> \<open>Instantiation of paste\\_chain\\_polygon\\_self\\_homeomorphism.
-       Needs: n >= 3, 1 <= k, k < n. These follow from hlen and k = 1 + length u2.\<close>
+    by (by100 blast)
   \<comment> \<open>Step 3h: Fibre equivalence gives Y\\_w \\<cong> Y\\_w'.
      Need: q\\_w(x) = q\\_w(y) <-> q\\_w'(\\<phi>(x)) = q\\_w'(\\<phi>(y)) on P\\_w.
      Then quotient\\_same\\_fibres\\_homeomorphic on q\\_w and q\\_w'\\<circ>\\<phi> gives the result.
