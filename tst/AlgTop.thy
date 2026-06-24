@@ -1232,7 +1232,18 @@ proof (intro allI impI ballI)
     \<comment> \<open>m is in the middle of w'. w' = [c] @ rev(inv u2) @ v @ [c].
        Middle positions 1..n-2 have labels from inv(u2) or v, not c.\<close>
     have "fst (w'!m) \<in> fst ` set (rev (map top1_inverse_edge u2) @ v)"
-      sorry \<comment> \<open>w'!m for 1<=m<=n-2 is in the rev(inv u2)@v block.\<close>
+    proof -
+      let ?mid = "rev (map top1_inverse_edge u2) @ v"
+      have hlen_mid: "length ?mid = length u2 + length v" by (by100 simp)
+      have hlen_n: "?n = 2 + length u2 + length v" unfolding w_def by (by100 simp)
+      have hm1_lt: "m - 1 < length ?mid" using hm1 hm2 hlen_mid hlen_n by (by100 linarith)
+      have h1: "w'!m = (?mid @ [(c, True)])!(m - 1)"
+        unfolding w'_def using hm1 by (by100 simp)
+      have h2: "(?mid @ [(c, True)])!(m - 1) = ?mid!(m - 1)"
+        sorry \<comment> \<open>(xs@ys)!n = xs!n when n<length xs.\<close>
+      have h3: "?mid!(m - 1) \<in> set ?mid" using nth_mem[OF hm1_lt] .
+      from h1 h2 h3 show ?thesis by (by100 auto)
+    qed
     moreover have "c \<notin> fst ` set (rev (map top1_inverse_edge u2) @ v)"
     proof -
       have "fst ` set (rev (map top1_inverse_edge u2)) = fst ` set u2"
@@ -7531,7 +7542,7 @@ proof -
               unfolding coeffs_def using hj2_ne1 hsi_ne_j2 hsi_ne1 by simp
             finally show ?thesis unfolding p_def by (by100 simp)
           qed
-          show ?thesis unfolding hC5_e using hnn hsum hx hy by (by100 auto)
+          show ?thesis unfolding hC5_e using hnn hsum hx hy by (by5000 auto)
         qed
         \<comment> \<open>phi\\_fn(p) = q: p is in source sector j, so phi\\_fn uses sector j affine formula.\<close>
         have hphi_eq: "phi_fn p = q"
