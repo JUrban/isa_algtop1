@@ -2947,7 +2947,7 @@ proof -
               = (if snd(?w'!i)=snd(?w'!j)
                  then g ((1-t)*vx2 j+t*vx2(Suc j mod length ?w'),(1-t)*vy2 j+t*vy2(Suc j mod length ?w'))
                  else g (t*vx2 j+(1-t)*vx2(Suc j mod length ?w'),t*vy2 j+(1-t)*vy2(Suc j mod length ?w')))"
-              by (by100 auto)
+              by (by5000 auto)
           qed
         qed
         show "\<forall>p\<in>P2. (\<forall>i<length ?w'. \<forall>t\<in>I_set.
@@ -13213,7 +13213,7 @@ proof -
                          \<or> (snd (w ! i) = snd (w ! j) \<and> va = Suc i mod ?nw \<and> vb = Suc j mod ?nw)
                          \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> va = i \<and> vb = Suc j mod ?nw)
                          \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> va = Suc i mod ?nw \<and> vb = j)"
-                    by (by100 blast)
+                    by (by5000 blast)
                   \<comment> \<open>Transfer to ext: ext!(i+2) = w!i, ext!(j+2) = w!j.\<close>
                   have hi_e: "i + 2 < ?ne" using hi_w hne_eq by (by100 linarith)
                   have hj_e: "j + 2 < ?ne" using hj_w hne_eq by (by100 linarith)
@@ -14878,3 +14878,4 @@ end
 
 
 
+ 
