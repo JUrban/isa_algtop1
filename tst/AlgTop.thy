@@ -2396,12 +2396,72 @@ proof -
      C8: each half maps bijectively to a sub-polygon, q\\_w injective on interior.
      C9: edges map to distinct original edges, q\\_w separates them.\<close>
   have hYw_w': "top1_quotient_of_scheme_on Y_w TY_w ?w'"
-    sorry \<comment> \<open>CORE GEOMETRIC SORRY: Y\\_w is quotient of w'.
-       Proof: define g = q\\_w \\<circ> phi (piecewise on Q1/Q2), verify C1-C11 for w'.
-       C7 is the main content (paste\\_chain\\_boundary\\_C7, PROVED).
-       C8/C9 follow from phi bijectivity on each half + original C8/C9.
-       Other conditions (C1,C3-C6,C10,C11) inherited from P\\_w.
-       Estimated: ~150 lines (define g, prove continuity, verify conditions).\<close>
+    unfolding top1_quotient_of_scheme_on_def
+  proof (intro conjI)
+    show "is_topology_on_strict Y_w TY_w" by (rule htopo_Yw)
+  next
+    have hlen_w'_eq: "length ?w' = length ?w" by (by100 simp)
+    \<comment> \<open>Witnesses: P = P\\_w, vx = vx\\_w, vy = vy\\_w, q = g (piecewise q\\_w \\<circ> phi).
+       C1,C3,C4,C5,C6,C10,C11: pure polygon properties, inherited via hlen\\_w'\\_eq.\<close>
+    \<comment> \<open>C2: g is quotient map (sorry — requires defining g and proving continuity).
+       C7: paste\\_chain\\_boundary\\_C7 (PROVED).
+       C8: phi bijective on halves + C8\\_w (sorry — requires interior analysis).
+       C9: phi injective on edges + C9\\_w (sorry — requires edge analysis).\<close>
+    show "\<exists>P q (vx::nat\<Rightarrow>real) vy. top1_is_polygonal_region_on P (length ?w')
+      \<and> top1_quotient_map_on P
+          (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) Y_w TY_w q
+      \<and> (\<forall>i<length ?w'. \<forall>j<length ?w'. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j))
+      \<and> (\<forall>i<length ?w'. (vx i, vy i) \<in> P)
+      \<and> P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<length ?w'. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<length ?w'. coeffs i) = 1
+                     \<and> x = (\<Sum>i<length ?w'. coeffs i * vx i)
+                     \<and> y = (\<Sum>i<length ?w'. coeffs i * vy i)}
+      \<and> (\<forall>i<length ?w'. \<forall>j<length ?w'.
+            i \<noteq> j \<longrightarrow> Suc i mod length ?w' \<noteq> j \<longrightarrow> i \<noteq> Suc j mod length ?w' \<longrightarrow>
+            (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+               ((1-s) * vx i + s * vx (Suc i mod length ?w'),
+                (1-s) * vy i + s * vy (Suc i mod length ?w'))
+             \<noteq> ((1-t) * vx j + t * vx (Suc j mod length ?w'),
+                (1-t) * vy j + t * vy (Suc j mod length ?w'))))
+      \<and> (\<forall>i<length ?w'. \<forall>j<length ?w'. fst (?w'!i) = fst (?w'!j) \<longrightarrow>
+            (\<forall>t\<in>I_set.
+               q ((1-t) * vx i + t * vx (Suc i mod length ?w'),
+                  (1-t) * vy i + t * vy (Suc i mod length ?w'))
+             = (if snd (?w'!i) = snd (?w'!j)
+                then q ((1-t) * vx j + t * vx (Suc j mod length ?w'),
+                        (1-t) * vy j + t * vy (Suc j mod length ?w'))
+                else q (t * vx j + (1-t) * vx (Suc j mod length ?w'),
+                        t * vy j + (1-t) * vy (Suc j mod length ?w')))))
+      \<and> (\<forall>p\<in>P. (\<forall>i<length ?w'. \<forall>t\<in>I_set.
+                    p \<noteq> ((1-t) * vx i + t * vx (Suc i mod length ?w'),
+                          (1-t) * vy i + t * vy (Suc i mod length ?w')))
+               \<longrightarrow> (\<forall>p'\<in>P. q p = q p' \<longrightarrow> p = p'))
+      \<and> (\<forall>i<length ?w'. \<forall>j<length ?w'. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+              q ((1-t) * vx i + t * vx (Suc i mod length ?w'),
+                 (1-t) * vy i + t * vy (Suc i mod length ?w'))
+            = q ((1-s) * vx j + s * vx (Suc j mod length ?w'),
+                 (1-s) * vy j + s * vy (Suc j mod length ?w'))
+            \<longrightarrow> (i = j \<and> t = s)
+              \<or> (fst (?w'!i) = fst (?w'!j) \<and>
+                 (if snd (?w'!i) = snd (?w'!j) then s = t else s = 1 - t)))
+      \<and> (\<forall>i<length ?w'. let cx = (\<Sum>j<length ?w'. vx j) / real (length ?w');
+                               cy = (\<Sum>j<length ?w'. vy j) / real (length ?w')
+           in (vx i - cx) * (vy (Suc i mod length ?w') - cy)
+            - (vy i - cy) * (vx (Suc i mod length ?w') - cx) > 0)
+      \<and> (\<forall>i<length ?w'. \<forall>k<length ?w'.
+            k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length ?w' \<longrightarrow>
+            (vx k - vx i) * (vy (Suc i mod length ?w') - vy i)
+            - (vy k - vy i) * (vx (Suc i mod length ?w') - vx i) < 0)"
+      sorry \<comment> \<open>CORE GEOMETRIC SORRY: existential witness for quotient of w'.
+         P = P\\_w, vx = vx\\_w, vy = vy\\_w, q = g (piecewise q\\_w \\<circ> phi).
+         C1,C3,C4,C5,C6,C10,C11: inherited via hlen\\_w'\\_eq.
+         C2: g is quotient map (piecewise continuous, compact to Hausdorff).
+         C7: paste\\_chain\\_boundary\\_C7 (PROVED).
+         C8: phi bijective on halves + C8\\_w.
+         C9: phi injective on edges + C9\\_w.
+         Requires ~150 lines: define g, prove continuity at dividing line,
+         verify each condition.\<close>
+  qed
   \<comment> \<open>Now Y\\_w is quotient of w' (hYw\\_w') and Y\\_w' is quotient of w' (hY\\_w').
      scheme\\_quotient\\_uniqueness gives homeomorphism.\<close>
   have "\<exists>h. top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h"
