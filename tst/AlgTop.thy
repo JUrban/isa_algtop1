@@ -2389,10 +2389,26 @@ proof -
            Both \\<ge> 0 from fan det, and t*cross(j+1,i+1) > 0 since t > 0.\<close>
         have "Suc j \<le> i" using hjlt by linarith
         have hcr1: "(vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0) \<ge> 0"
-          sorry \<comment> \<open>Fan det: cross(Suc j, i) \\<ge> 0 (> 0 if Suc j < i, = 0 if Suc j = i).\<close>
+        proof (cases "Suc j = i")
+          case True thus ?thesis by simp
+        next
+          case False
+          hence "Suc j < i" using \<open>Suc j \<le> i\<close> by linarith
+          hence "1 \<le> Suc j" by simp
+          have "Suc j < n" using hjlt hi hk_lt by linarith
+          have "i < n" using hi hk_lt by linarith
+          from hfan[rule_format, OF \<open>Suc j < n\<close> \<open>i < n\<close> \<open>1 \<le> Suc j\<close> \<open>Suc j < i\<close>]
+          show ?thesis by linarith
+        qed
         have "Suc j < Suc i" using hjlt by linarith
         have hcr2: "(vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0) > 0"
-          sorry \<comment> \<open>Fan det: cross(Suc j, Suc i) > 0 since Suc j < Suc i.\<close>
+        proof -
+          have "1 \<le> Suc j" using hj1 by simp
+          have "Suc j < n" using hjlt hi hk_lt by linarith
+          have "Suc i < n" using hsi_lt .
+          from hfan[rule_format, OF \<open>Suc j < n\<close> \<open>Suc i < n\<close> \<open>1 \<le> Suc j\<close> \<open>Suc j < Suc i\<close>]
+          show ?thesis .
+        qed
         have "t * ((vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0)) > 0"
           using mult_pos_pos[OF ht_pos hcr2] .
         moreover have "(1-t) * ((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0)) \<ge> 0"
