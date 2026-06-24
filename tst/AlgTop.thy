@@ -2331,13 +2331,11 @@ proof -
       \<comment> \<open>Provide witnesses: P = P2, q = g, vx = vx2, vy = vy2.\<close>
       show ?thesis
         apply (rule exI[of _ P2], rule exI[of _ g], rule exI[of _ vx2], rule exI[of _ vy2])
-        sorry \<comment> \<open>11-fold conjunction. Each condition:
-           C1: hC1'. C3: hC3'. C4: hC4'. C5: hC5'.
-           C6: from P2 via hlen\\_eq. C10: same. C11: same.
-           C2: g is quotient map (continuous surjection, compact to Hausdorff).
-           C7: paste\\_chain\\_boundary\\_C7 instantiated with g.
-           C8: phi\\_L/R bijective on halves + C8\\_2.
-           C9: edge separation via sigma correspondence + C9\\_2.\<close>
+        \<comment> \<open>Goal: 11-fold conjunction C1 \\<and> C2 \\<and> C3 \\<and> C4 \\<and> C5 \\<and> C6 \\<and> C7 \\<and> C8 \\<and> C9 \\<and> C10 \\<and> C11.
+           Provide each condition. Polygon properties (C1,C3,C4,C5,C6,C10,C11) inherit.
+           Map properties (C2,C7,C8,C9) need verification with g.\<close>
+        using hC1' hC3' hC4' hC5'
+        sorry
     qed
   qed
 qed
