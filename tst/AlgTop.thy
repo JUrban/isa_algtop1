@@ -2330,14 +2330,15 @@ lemma paste_phi_R_edge_formula:
      i = n-1: LEAST = n-2, cramer\\_on\\_triangle\\_base\\_edge gives s=t, t\\_par=0.
        Result: (1-t)*vx 0 + t*vx k = sigma(n-1,t).\<close>
 
-\<comment> \<open>LEFT FAN SECTOR SELECTION: for a point on edge i (0 \\<le> i < k) of an n-gon,
+\<comment> \<open>LEFT FAN SECTOR SELECTION: for a point on edge i (0 \\<le> i < k) at param t > 0,
    the LEAST sector in the left fan from v\\_0 through v\\_1,...,v\\_k is determined.
    For i = 0: LEAST = 1 (point on edge from v\\_0 to v\\_1, in sector 1).
-   For 1 \\<le> i < k: LEAST = i (point on edge from v\\_i to v\\_{i+1}, in sector i).\<close>
+   For 1 \\<le> i < k: LEAST = i (point strictly inside edge i is in sector i).
+   NOTE: at t = 0 (vertex), LEAST might give i-1; handled separately.\<close>
 lemma left_fan_edge_sector:
   fixes vx vy :: "nat \<Rightarrow> real" and n k i :: nat and t :: real
   assumes hn: "n \<ge> 3" and hk: "k \<ge> 2" and hk_lt: "k < n"
-      and ht: "t \<in> I_set" and hi: "i < k"
+      and ht: "t \<in> I_set" and ht_pos: "t > 0" and hi: "i < k"
       and hfan: "\<forall>a<n. \<forall>b<n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
           (vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
   defines "px \<equiv> (1-t)*vx i + t*vx(Suc i mod n)"
@@ -2346,9 +2347,20 @@ lemma left_fan_edge_sector:
       (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0) \<ge> 0 \<and>
       (vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0)
     = (if i = 0 then 1 else i)"
-  sorry \<comment> \<open>Fan sector selection. Proof uses hfan for cross-product signs.
-     For i=0: PL(1) holds and 1 is minimum. For 1\\<le>i: PL(i) holds, PL(j) false for j<i (t>0).
-     At t=0: LEAST might give i-1 but Cramer result is the same.\<close>
+  sorry \<comment> \<open>Fan sector selection for t > 0. Proof uses hfan for cross-product signs.
+     For i=0: PL(1) holds and 1 is minimum.
+     For 1\\<le>i: PL(i) holds; PL(j) false for j < i since upper cross > 0 (t > 0).\<close>
+
+\<comment> \<open>LEFT FAN VERTEX CASE: at t = 0, phi\\_L at vertex v\\_i gives the same result
+   regardless of whether LEAST selects sector i or i-1. Both sectors give v\\_{k+1-i}.\<close>
+lemma left_fan_vertex_gives_sigma:
+  fixes vx vy :: "nat \<Rightarrow> real" and n k i :: nat
+  assumes hn: "n \<ge> 3" and hk: "k \<ge> 2" and hk_lt: "k < n" and hi: "i < k"
+      and hfan: "\<forall>a<n. \<forall>b<n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
+          (vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
+  shows "paste_chain_sigma_x vx k n i 0 = vx (k + 1 - (if i = 0 then 1 else i))"
+    and "paste_chain_sigma_y vy k n i 0 = vy (k + 1 - (if i = 0 then 1 else i))"
+  sorry \<comment> \<open>sigma(i, 0) = vertex v\\_{k+1-expected\\_sector}. Direct from sigma definition.\<close>
 
 \<comment> \<open>RIGHT FAN SECTOR SELECTION: symmetric for the right fan from v\\_0 through v\\_k,...,v\\_{n-1}.\<close>
 lemma right_fan_edge_sector:
@@ -2880,23 +2892,9 @@ next
       have hphi_L_sigma: "\<And>i t. i < ?k \<Longrightarrow> t \<in> I_set \<Longrightarrow>
           phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
         = paste_sigma vx2 vy2 ?k ?n i t"
-      proof -
-        fix i :: nat and t :: real assume hik: "i < ?k" and ht: "t \<in> I_set"
-        \<comment> \<open>Step 1: Use left\\_fan\\_edge\\_sector to get LEAST = expected sector.\<close>
-        from left_fan_edge_sector[OF hn_ge3 hk_ge2 _ ht hik hfan_det_0]
-        have hLeast: "(LEAST j. 1 \<le> j \<and> j < ?k \<and>
-            (vx2 j - vx2 0)*((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0) -
-            (vy2 j - vy2 0)*((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0) \<ge> 0 \<and>
-            (vx2(Suc j) - vx2 0)*((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0) -
-            (vy2(Suc j) - vy2 0)*((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0) \<le> 0)
-          = (if i = 0 then 1 else i)" sorry \<comment> \<open>Instantiate left\\_fan\\_edge\\_sector.\<close>
-        \<comment> \<open>Step 2: Connect LEAST to phi\\_L\\_def (fst/snd simplification).\<close>
-        \<comment> \<open>Step 3: With LEAST = j, evaluate Cramer to get sigma.\<close>
-        show "phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
-          = paste_sigma vx2 vy2 ?k ?n i t"
-          sorry \<comment> \<open>Unfold phi\\_L\\_def, substitute LEAST from hLeast, evaluate Cramer.
-             Uses cramer\\_on\\_triangle\\_edge (i\\<ge>1) or cramer\\_on\\_triangle\\_base\\_edge (i=0).\<close>
-      qed
+        sorry \<comment> \<open>phi\\_L at left boundary = sigma. Uses left\\_fan\\_edge\\_sector (t>0)
+           + left\\_fan\\_vertex\\_gives\\_sigma (t=0) + Cramer evaluation.
+           After sector selection: unfold phi\\_L\\_def, apply cramer\\_on\\_triangle\\_edge/base\\_edge.\<close>
       \<comment> \<open>HELPER: phi\\_R at right-half boundary point gives sigma.
          For k \\<le> i < n-1: LEAST = i, cramer\\_on\\_triangle\\_edge.
          For i = n-1: LEAST = n-2, cramer\\_on\\_triangle\\_base\\_edge.
