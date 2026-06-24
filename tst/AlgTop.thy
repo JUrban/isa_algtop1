@@ -2404,7 +2404,8 @@ proof -
            For now: sorry the full verification per edge.\<close>
         show "g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
           = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-          sorry \<comment> \<open>Per-edge verification. Uses cramer\\_on\\_triangle\\_edge + sector selection.\<close>
+          sorry \<comment> \<open>Per-edge verification. Uses cramer\\_on\\_triangle\\_edge + sector selection.
+             The formal proof requires ~100 lines of LEAST evaluation + Cramer algebra.\<close>
       qed
       \<comment> \<open>Provide witnesses: P = P2, q = g, vx = vx2, vy = vy2.\<close>
       show ?thesis
