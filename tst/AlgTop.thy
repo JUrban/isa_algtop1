@@ -1110,6 +1110,80 @@ next
     by simp
 qed
 
+\<comment> \<open>DEFINITION: the boundary edge-correspondence map for the paste chain.
+   Maps target edge (i, t) coordinates to a point in the ORIGINAL polygon P.
+   This is the key ingredient of the quotient map g = q2 o sigma.\<close>
+definition paste_chain_sigma_x ::
+  "(nat \<Rightarrow> real) \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real \<Rightarrow> real" where
+  "paste_chain_sigma_x vx k n i t =
+     (if i = 0 \<or> i = n - 1
+      then (1-t)*vx 0 + t*vx k
+      else if i \<le> k - 1
+      then t*vx(k-i) + (1-t)*vx(k+1-i)
+      else (1-t)*vx(i+1) + t*vx(Suc(i+1) mod n))"
+
+definition paste_chain_sigma_y ::
+  "(nat \<Rightarrow> real) \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> nat \<Rightarrow> real \<Rightarrow> real" where
+  "paste_chain_sigma_y vy k n i t =
+     (if i = 0 \<or> i = n - 1
+      then (1-t)*vy 0 + t*vy k
+      else if i \<le> k - 1
+      then t*vy(k-i) + (1-t)*vy(k+1-i)
+      else (1-t)*vy(i+1) + t*vy(Suc(i+1) mod n))"
+
+\<comment> \<open>Abbreviation: sigma maps target edge (i,t) to a point in P.\<close>
+abbreviation paste_sigma where
+  "paste_sigma vx vy k n i t \<equiv>
+     (paste_chain_sigma_x vx k n i t, paste_chain_sigma_y vy k n i t)"
+
+\<comment> \<open>DEFINITION: the new quotient map g = q2 composed with sigma on boundary edges.
+   g(edge'(i, t)) = q2(sigma(i, t)). Interior: to be extended separately.\<close>
+
+\<comment> \<open>KEY LEMMA: sigma on inv(u2) edges equals original edge at reversed parameter.
+   sigma(i, t) for 1 <= i <= k-1 = edge\\_orig(k-i, 1-t).\<close>
+lemma paste_sigma_inv_u2_edge:
+  fixes vx vy :: "nat \<Rightarrow> real" and k n i :: nat and t :: real
+  assumes "1 \<le> i" "i \<le> k - 1" "k \<ge> 2" "n \<ge> 3" "k < n"
+      and "Suc (k - i) mod n = k + 1 - i"
+  shows "paste_chain_sigma_x vx k n i t = (1-(1-t))*vx(k-i) + (1-t)*vx(k+1-i)"
+    and "paste_chain_sigma_y vy k n i t = (1-(1-t))*vy(k-i) + (1-t)*vy(k+1-i)"
+proof -
+  from assms have "i \<noteq> 0" "i \<noteq> n - 1" "i \<le> k - 1" by linarith+
+  thus "paste_chain_sigma_x vx k n i t = (1-(1-t))*vx(k-i) + (1-t)*vx(k+1-i)"
+    unfolding paste_chain_sigma_x_def by simp
+  from \<open>i \<noteq> 0\<close> \<open>i \<noteq> n - 1\<close> \<open>i \<le> k - 1\<close>
+  show "paste_chain_sigma_y vy k n i t = (1-(1-t))*vy(k-i) + (1-t)*vy(k+1-i)"
+    unfolding paste_chain_sigma_y_def by simp
+qed
+
+\<comment> \<open>KEY LEMMA: sigma on v edges equals original edge at same parameter.
+   sigma(i, t) for k <= i <= n-2 = edge\\_orig(i+1, t).\<close>
+lemma paste_sigma_v_edge:
+  fixes vx vy :: "nat \<Rightarrow> real" and k n i :: nat and t :: real
+  assumes "k \<le> i" "i \<le> n - 2" "k \<ge> 2" "n \<ge> 3"
+  shows "paste_chain_sigma_x vx k n i t = (1-t)*vx(i+1) + t*vx(Suc(i+1) mod n)"
+    and "paste_chain_sigma_y vy k n i t = (1-t)*vy(i+1) + t*vy(Suc(i+1) mod n)"
+proof -
+  from assms have "i \<noteq> 0" "i \<noteq> n - 1" "\<not>(i \<le> k - 1)" by linarith+
+  thus "paste_chain_sigma_x vx k n i t = (1-t)*vx(i+1) + t*vx(Suc(i+1) mod n)"
+    unfolding paste_chain_sigma_x_def by simp
+  from \<open>i \<noteq> 0\<close> \<open>i \<noteq> n - 1\<close> \<open>\<not>(i \<le> k - 1)\<close>
+  show "paste_chain_sigma_y vy k n i t = (1-t)*vy(i+1) + t*vy(Suc(i+1) mod n)"
+    unfolding paste_chain_sigma_y_def by simp
+qed
+
+\<comment> \<open>KEY LEMMA: sigma on c-edges (i=0 or i=n-1) equals diagonal point.
+   sigma(0, t) = sigma(n-1, t) = ((1-t)*vx 0 + t*vx k, ...).\<close>
+lemma paste_sigma_c_edge:
+  fixes vx vy :: "nat \<Rightarrow> real" and k n :: nat and t :: real
+  assumes "n \<ge> 3"
+  shows "paste_chain_sigma_x vx k n 0 t = (1-t)*vx 0 + t*vx k"
+    and "paste_chain_sigma_y vy k n 0 t = (1-t)*vy 0 + t*vy k"
+    and "paste_chain_sigma_x vx k n (n-1) t = (1-t)*vx 0 + t*vx k"
+    and "paste_chain_sigma_y vy k n (n-1) t = (1-t)*vy 0 + t*vy k"
+  unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def
+  using assms by simp_all
+
 lemma theorem_76_1_paste_chain:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
       and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
