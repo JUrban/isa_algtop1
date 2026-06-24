@@ -3111,13 +3111,15 @@ next
               (vy2 j - vy2 0)*((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0) \<ge> 0 \<and>
               (vx2(Suc j) - vx2 0)*((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0) -
               (vy2(Suc j) - vy2 0)*((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0) \<le> 0)
-            = (if i = 0 then 1 else i)" sorry \<comment> \<open>left\\_fan\\_edge\\_sector instantiation (px/py/defines matching).\<close>
+            = (if i = 0 then 1 else i)" .
           \<comment> \<open>Unfold phi\\_L\\_def and substitute LEAST.\<close>
-          show ?thesis
-            unfolding phi_L_def Let_def
-            sorry \<comment> \<open>After phi\\_L\\_def unfolding with LEAST = expected:
-               evaluate Cramer coords via cramer\\_on\\_triangle\\_edge/base\\_edge,
-               simplify to paste\\_sigma. This is pure algebra + definition matching.\<close>
+          \<comment> \<open>From phi\\_L\\_def + hLeast: phi\\_L evaluates with j = expected sector.\<close>
+          \<comment> \<open>The Cramer computation in the let-chain gives sigma.\<close>
+          show ?thesis sorry \<comment> \<open>phi\\_L = sigma via LEAST + Cramer. Needs:
+             1. Unfold phi\\_L\\_def with j = hLeast result.
+             2. fst/snd simplification.
+             3. cramer\\_on\\_triangle\\_edge (i\\<ge>1) or cramer\\_on\\_triangle\\_base\\_edge (i=0).
+             4. Match result with paste\\_sigma\\_def.\<close>
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
