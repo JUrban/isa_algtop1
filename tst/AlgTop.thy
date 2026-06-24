@@ -2416,7 +2416,13 @@ proof -
             have ht_1mt: "(1-t) \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
             have hg_j_1mt: "g (t*vx2 j+(1-t)*vx2(Suc j mod ?n),t*vy2 j+(1-t)*vy2(Suc j mod ?n))
               = q2 (paste_sigma vx2 vy2 ?k ?n j (1-t))"
-              sorry \<comment> \<open>g at reversed parameter = q2 o sigma at reversed parameter.\<close>
+            proof -
+              have "g ((1-(1-t))*vx2 j+(1-t)*vx2(Suc j mod ?n),(1-(1-t))*vy2 j+(1-t)*vy2(Suc j mod ?n))
+                = q2 (paste_sigma vx2 vy2 ?k ?n j (1-t))"
+                using hg_bdy[rule_format, OF hj' ht_1mt] .
+              moreover have "(1-(1-t)) = t" by (by100 simp)
+              ultimately show ?thesis by (by100 simp)
+            qed
             from hC7_sigma[rule_format, OF hi hj hlbl ht]
             have "q2 (paste_sigma vx2 vy2 ?k ?n i t)
               = (if snd(?w'!i) = snd(?w'!j) then q2 (paste_sigma vx2 vy2 ?k ?n j t)
