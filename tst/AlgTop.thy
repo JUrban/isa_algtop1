@@ -2286,7 +2286,40 @@ lemma theorem_76_1_paste_chain_proper:
             \<and> fst (([(a, True)] @ u2 @ [(a, True)] @ v) ! i) = label} \<in> {0, 2}"
   shows "top1_quotient_of_scheme_on Y TY
     ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])"
-  using theorem_76_1_paste_chain[OF hq hfresh_c] .
+proof -
+  let ?w = "[(a, True)] @ u2 @ [(a, True)] @ v"
+  let ?w' = "[(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)]"
+  \<comment> \<open>Step 1: w' is proper (from proper\\_scheme\\_subst, proved).\<close>
+  have hproper': "\<forall>label. card {i. i < length ?w' \<and> fst (?w'!i) = label} \<in> {0, 2}"
+    using proper_scheme_subst[OF hproper hfresh_c] .
+  have hlen: "length ?w \<ge> 3"
+    using quotient_scheme_length_ge3[OF hq] .
+  have hlen': "length ?w' \<ge> 3" using hlen by (by100 simp)
+  \<comment> \<open>Step 2: scheme\\_quotient\\_exists for w' gives canonical quotient Y'.\<close>
+  from scheme_quotient_exists(1)[OF hlen' hproper']
+  obtain Y' :: "(real \<times> real) set" and TY' :: "(real \<times> real) set set"
+    where hY': "top1_quotient_of_scheme_on Y' TY' ?w'"
+    by (by100 blast)
+  have htopo_Y': "is_topology_on_strict Y' TY'"
+    using hY' unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  \<comment> \<open>Step 3: Construct homeomorphism Y \\<cong> Y'.
+     Both are compact Hausdorff quotients of proper schemes of the same length.
+     The boundary C7 identifications match (paste\\_chain\\_boundary\\_C7).
+     Using quotient\\_same\\_fibres\\_homeomorphic or direct construction.\<close>
+  have "\<exists>h. top1_homeomorphism_on Y TY Y' TY' h"
+    sorry \<comment> \<open>Homeomorphism Y \\<cong> Y' from fibre equivalence.
+       Both are quotients of regular n-gons with matching boundary identifications.
+       The fibre equivalence follows from:
+       - Interior: both maps injective (C8) \\<to> fibres are singletons.
+       - Boundary: paste\\_chain\\_boundary\\_C7 shows matching identifications.
+       - Cross: interior/boundary separated by C8+C12.\<close>
+  then obtain h where hh: "top1_homeomorphism_on Y TY Y' TY' h" by (by100 blast)
+  \<comment> \<open>Step 4: Transfer via scheme\\_quotient\\_transfer\\_along\\_homeomorphism.\<close>
+  have htopo_Y: "is_topology_on_strict Y TY"
+    using hq unfolding top1_quotient_of_scheme_on_def by (by100 blast)
+  from scheme_quotient_transfer_along_homeomorphism[OF hY' homeomorphism_inverse[OF hh] htopo_Y]
+  show ?thesis .
+qed
 
 \<comment> \<open>MULTI-POLYGON CUT-FLIP-PASTE CORE (Munkres Theorem 76.1 application).
    Proof chain (book-faithful, step by step):
