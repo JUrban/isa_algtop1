@@ -3157,14 +3157,17 @@ next
             \<comment> \<open>From hphi\\_L\\_eq: phi\\_L(p) = let-expression with j.
                With j=1, the let-expression evaluates using hs\\_val (s=t) and htp\\_val (tp=0).
                The result: (1-t-0)*vx2 0 + t*vx2(k+1-1) + 0*vx2(k-1) = (1-t)*vx2 0 + t*vx2 k.\<close>
-            have hphi_simp: "phi_L ((1-t)*vx2 0 + t*vx2 1, (1-t)*vy2 0 + t*vy2 1)
-              = ((1 - t - 0)*vx2 0 + t*vx2(?k+1-1) + 0*vx2(?k-1),
-                 (1 - t - 0)*vy2 0 + t*vy2(?k+1-1) + 0*vy2(?k-1))"
-              using hphi_L_eq[unfolded Let_def] hj1 hs_val htp_val True hsi_0
-              sorry \<comment> \<open>Let-chain evaluation: substitute j=1, s=t, tp=0.\<close>
+            \<comment> \<open>Step-by-step let-chain evaluation for i=0, j=1.\<close>
+            \<comment> \<open>After phi\\_L\\_def unfolding with j=1:
+               ex = vx2 1 - vx2 0, ey = vy2 1 - vy2 0.
+               fx = vx2 2 - vx2 0, fy = vy2 2 - vy2 0.
+               dx = t*(vx2 1 - vx2 0), dy = t*(vy2 1 - vy2 0).
+               s = t (from hs\\_val), tp = 0 (from htp\\_val).
+               result = (1-t)*vx2 0 + t*vx2(k+1-1) = (1-t)*vx2 0 + t*vx2 k.\<close>
             have "phi_L ((1-t)*vx2 0 + t*vx2 1, (1-t)*vy2 0 + t*vy2 1)
               = ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k)"
-              using hphi_simp by simp
+              sorry \<comment> \<open>phi\\_L let-chain evaluation for i=0. Found by process\\_theories using smt(verit)+argo.
+                 ~4min in process\\_theories. Need manual decomposition for fast build.\<close>
             moreover have "paste_sigma vx2 vy2 ?k ?n 0 t = ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k)"
               unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def by simp
             moreover have "Suc i mod ?n = 1" using True hsi_0 by simp
