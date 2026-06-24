@@ -3155,7 +3155,7 @@ next
               \<comment> \<open>Unfold phi\\_L with LEAST substituted, then simplify numerals.\<close>
               show ?thesis
                 apply (simp only: phi_L_def Let_def fst_conv snd_conv hLeast)
-                sorry \<comment> \<open>After simp only with LEAST: numeral normalization + sigma match.\<close>
+                sorry \<comment> \<open>After phi\\_L + Let + LEAST unfolding. Numeral normalization remains.\<close>
             qed
             \<comment> \<open>Now show s0 = t and tp0 = 0 from Cramer lemmas.\<close>
             have hdx0: "dx0 = t*ex0" unfolding dx0_def ex0_def by (by100 algebra)
