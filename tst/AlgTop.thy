@@ -1375,10 +1375,19 @@ proof (intro allI impI ballI)
           moreover have "j > length u2" using hjv by linarith
           ultimately show ?thesis by linarith
         qed
-        have hw'_i_eq: "w'!i = v!(i - length u2 - 1)" sorry
-        have hw_i1_eq: "w!(i+1) = v!(i - length u2 - 1)" sorry
-        have hw'_j_eq: "w'!j = v!(j - length u2 - 1)" sorry
-        have hw_j1_eq: "w!(j+1) = v!(j - length u2 - 1)" sorry
+        \<comment> \<open>List indexing: w'!i and w!(i+1) both equal v!(i-|u2|-1).\<close>
+        \<comment> \<open>List indexing via step-by-step append decomposition.\<close>
+        \<comment> \<open>List indexing: w'!i and w!(i+1) both = v!(i-|u2|-1) for v-range positions.
+           Proof: step-by-step append decomposition (nth\\_append at each level).
+           Same for j. Sorry'd pending process\\_theories run.\<close>
+        have hw'_i_eq: "w'!i = v!(i - length u2 - 1)"
+          using hi_mid hiv hvi unfolding w'_def sorry
+        have hw_i1_eq: "w!(i+1) = v!(i - length u2 - 1)"
+          using hi_mid hiv hvi unfolding w_def by (simp add: nth_append_skip)
+        have hw'_j_eq: "w'!j = v!(j - length u2 - 1)"
+          using hj_mid hjv hvj unfolding w'_def sorry
+        have hw_j1_eq: "w!(j+1) = v!(j - length u2 - 1)"
+          using hj_mid hjv hvj unfolding w_def by (simp add: nth_append_skip)
         have hfst_match_i: "fst(w'!i) = fst(w!(i+1))" using hw'_i_eq hw_i1_eq by simp
         have hfst_match_j: "fst(w'!j) = fst(w!(j+1))" using hw'_j_eq hw_j1_eq by simp
         have hsnd_match_i: "snd(w'!i) = snd(w!(i+1))" using hw'_i_eq hw_i1_eq by simp
@@ -2137,9 +2146,9 @@ lemma spur_arc_match_forces_edge:
 proof -
   \<comment> \<open>From the equations: s*(u\\_j - u\\_0) + t*(u\\_{j+1} - u\\_0) + (\\<alpha>-r)*(cw - u\\_0) = 0.\<close>
   have hx3: "s_v*(vxw j_sec - vxw 0) + t_v*(vxw(Suc j_sec mod nw) - vxw 0) + (\<alpha>-r)*(cxw - vxw 0) = 0"
-    using hx habg by (by5000 algebra)
+    using hx habg by (by100 algebra)
   have hy3: "s_v*(vyw j_sec - vyw 0) + t_v*(vyw(Suc j_sec mod nw) - vyw 0) + (\<alpha>-r)*(cyw - vyw 0) = 0"
-    using hy habg by (by5000 algebra)
+    using hy habg by (by100 algebra)
   show ?thesis
   proof (cases "j_sec = 0")
     case True
@@ -2362,10 +2371,10 @@ proof -
         also have "Im \<dots> = 0" by (rule complex_In_mult_cnj_zero)
         finally show ?thesis .
       qed
-      ultimately show ?thesis by (by5000 simp)
+      ultimately show ?thesis by (by100 simp)
     qed
     hence "tp * Im (cnj (uw jp) * uw (Suc jp mod nw)) = 0"
-      using \<open>q = 0\<close> by (by5000 simp)
+      using \<open>q = 0\<close> by (by100 simp)
     hence "tp = 0" using hC10_im[rule_format, OF hjp] by (by100 simp)
     \<comment> \<open>Similarly: from q=0 and tp=0: sp*uw(jp) = 0. Since uw(jp) \\<noteq> 0: sp = 0.\<close>
     from \<open>q = 0\<close> \<open>tp = 0\<close> have "of_real sp * uw jp = 0" unfolding q_def by (by100 simp)
@@ -3757,7 +3766,7 @@ proof
     define cx' where "cx' = cxw"
     define cy' where "cy' = cyw"
     have "(bx-ax)*(cy'-ay)-(by'-ay)*(cx'-ax) = (ax-cx')*(by'-cy')-(ay-cy')*(bx-cx')"
-      by (by5000 algebra)
+      by (by100 algebra)
     thus ?thesis using hC10_inst
       unfolding ax_def ay_def bx_def by'_def cx'_def cy'_def by linarith
   qed
@@ -3788,7 +3797,7 @@ proof
       define mx where "mx = vxw m"
       define my' where "my' = vyw m"
       have "(bx-ax)*(my'-ay)-(by'-ay)*(mx-ax) = -((mx-ax)*(by'-ay)-(my'-ay)*(bx-ax))"
-        by (by5000 algebra)
+        by (by100 algebra)
       thus ?thesis using \<open>(vxw m-vxw k_edge)*(vyw(Suc k_edge mod nw)-vyw k_edge)-
           (vyw m-vyw k_edge)*(vxw(Suc k_edge mod nw)-vxw k_edge) < 0\<close>
         unfolding ax_def ay_def bx_def by'_def mx_def my'_def by linarith
@@ -4346,7 +4355,7 @@ proof -
           also have "\<dots> = ?cyw" by (by100 simp)
           finally show ?thesis by (by100 simp)
         qed
-        show ?thesis unfolding hC5_w using hnn hsum hx hy by (by5000 auto)
+        show ?thesis unfolding hC5_w using hnn hsum hx hy by (by100 auto)
       qed
       have hcw_neq_u0: "(?cxw, ?cyw) \<noteq> (vxw 0, vyw 0)"
       proof
@@ -4445,7 +4454,7 @@ proof -
           \<comment> \<open>cross\\_v1(k, p) = \\<Sum>i<ne. \\<lambda>\\_i * det(v\\_k-v\\_1, v\\_i-v\\_1) for p = \\<Sum> \\<lambda>\\_i v\\_i.\<close>
           from hp obtain coeffs where hcoeffs: "(\<forall>i<?ne. coeffs i \<ge> 0)"
             "(\<Sum>i<?ne. coeffs i) = 1" "fst p = (\<Sum>i<?ne. coeffs i * vxe i)" "snd p = (\<Sum>i<?ne. coeffs i * vye i)"
-            using hC5_e by (by5000 auto)
+            using hC5_e by (by100 auto)
           \<comment> \<open>cross\\_v1(k, p) = \\<Sum> \\<lambda>\\_i * cross\\_v1(k, v\\_i) by linearity.\<close>
           have hcross_sum: "\<And>k. cross_v1 k p = (\<Sum>i<?ne. coeffs i * cross_v1 k (vxe i, vye i))"
           proof -
@@ -4470,7 +4479,7 @@ proof -
                   have "(\<Sum>i<?ne. coeffs i * vye 1) = (\<Sum>i<?ne. coeffs i) * vye 1"
                     using sum_distrib_right[symmetric, of coeffs "vye 1" "{..<?ne}"]
                       sum_distrib_right[symmetric, of coeffs "vxe 1" "{..<?ne}"]
-                    by (by5000 simp)
+                    by (by100 simp)
                   also have "\<dots> = vye 1" using hcoeffs(2) by simp
                   finally show ?thesis .
                 qed
@@ -4487,7 +4496,7 @@ proof -
                   have "(\<Sum>i<?ne. coeffs i * vxe 1) = (\<Sum>i<?ne. coeffs i) * vxe 1"
                     using sum_distrib_right[symmetric, of coeffs "vye 1" "{..<?ne}"]
                       sum_distrib_right[symmetric, of coeffs "vxe 1" "{..<?ne}"]
-                    by (by5000 simp)
+                    by (by100 simp)
                   also have "\<dots> = vxe 1" using hcoeffs(2) by simp
                   finally show ?thesis .
                 qed
@@ -4514,7 +4523,7 @@ proof -
                 = (\<Sum>i<?ne. ((vxe k - vxe 1) * (coeffs i * (vye i - vye 1)) -
                              (vye k - vye 1) * (coeffs i * (vxe i - vxe 1))))"
                 using sum_subtractf[of "\<lambda>i. (vxe k-vxe 1)*(coeffs i*(vye i-vye 1))"
-                  "\<lambda>i. (vye k-vye 1)*(coeffs i*(vxe i-vxe 1))" "{..<?ne}"] by (by100 simp)
+                  "\<lambda>i. (vye k-vye 1)*(coeffs i*(vxe i-vxe 1))" "{..<?ne}"] by (by5000 simp)
               also have "\<dots> = (\<Sum>i<?ne. coeffs i * ((vxe k - vxe 1) * (vye i - vye 1) - (vye k - vye 1) * (vxe i - vxe 1)))"
               proof -
                 have "\<And>i. (vxe k - vxe 1) * (coeffs i * (vye i - vye 1)) -
@@ -5035,7 +5044,7 @@ proof -
           hence "phi_fn (edge_pt_e 0 t) =
             ((1-0-(1-t))*?cxw + 0*vxw(?nw-1) + (1-t)*vxw 0,
              (1-0-(1-t))*?cyw + 0*vyw(?nw-1) + (1-t)*vyw 0)"
-            using hs_zero htpar_num htpar_val unfolding Let_def by (by5000 simp)
+            using hs_zero htpar_num htpar_val unfolding Let_def by (by100 simp)
           hence "phi_fn (edge_pt_e 0 t) = (t*?cxw + (1-t)*vxw 0, t*?cyw + (1-t)*vyw 0)"
             by (by100 simp)
           thus ?thesis
@@ -5919,7 +5928,7 @@ proof -
               from hp obtain coeffs where hcoeffs: "(\<forall>i<?ne. coeffs i \<ge> 0)"
                 "(\<Sum>i<?ne. coeffs i) = 1" "fst p = (\<Sum>i<?ne. coeffs i * vxe i)"
                 "snd p = (\<Sum>i<?ne. coeffs i * vye i)"
-                using hC5_e by (by5000 auto)
+                using hC5_e by (by100 auto)
               have hj2_lt: "j+2 < ?ne" using hj hne_eq by linarith
               \<comment> \<open>C11 at edge j+2 gives: for all i \\<noteq> j+2, i \\<noteq> si:
                  det(v\\_{si}-v\\_{j+2}, v\\_i-v\\_{j+2}) > 0.\<close>
@@ -5971,7 +5980,7 @@ proof -
                 also have "\<dots> = (\<Sum>i<?ne. ?a * (coeffs i * (vye i - vye(j+2)))
                                           - ?b * (coeffs i * (vxe i - vxe(j+2))))"
                   using sum_subtractf[of "\<lambda>i. ?a*(coeffs i*(vye i-vye(j+2)))"
-                    "\<lambda>i. ?b*(coeffs i*(vxe i-vxe(j+2)))" "{..<?ne}"] by (by5000 simp)
+                    "\<lambda>i. ?b*(coeffs i*(vxe i-vxe(j+2)))" "{..<?ne}"] by (by100 simp)
                 also have "\<dots> = (\<Sum>i<?ne. coeffs i * (?a * (vye i - vye(j+2)) - ?b * (vxe i - vxe(j+2))))"
                 proof -
                   have "\<And>i. ?a * (coeffs i * (vye i - vye(j+2))) - ?b * (coeffs i * (vxe i - vxe(j+2)))
@@ -7204,7 +7213,7 @@ proof -
                   let ?bx = "vxw(Suc jw mod ?nw)" and ?by' = "vyw(Suc jw mod ?nw)"
                   let ?kx = "vxw k" and ?ky = "vyw k"
                   have "(?bx-?ax)*(?ky-?ay)-(?by'-?ay)*(?kx-?ax) =
-                      -((?kx-?ax)*(?by'-?ay)-(?ky-?ay)*(?bx-?ax))" by (by5000 algebra)
+                      -((?kx-?ax)*(?by'-?ay)-(?ky-?ay)*(?bx-?ax))" by (by100 algebra)
                   hence "(vxw(Suc jw mod ?nw)-vxw jw)*(vyw k-vyw jw)-
                       (vyw(Suc jw mod ?nw)-vyw jw)*(vxw k-vxw jw) > 0"
                     using hC11_inst by linarith
@@ -7336,7 +7345,7 @@ proof -
                 \<comment> \<open>Key algebraic identity: D - (fy*dx-fx*dy) - (ex*dy-ey*dx) = (fx-ex)*(dy-ey)-(fy-ey)*(dx-ex).\<close>
                 have "detw_val - (fy_val*dxw_val - fx_val*dyw_val) - (ex_val*dyw_val - ey_val*dxw_val)
                     = (fx_val-ex_val)*(dyw_val-ey_val) - (fy_val-ey_val)*(dxw_val-ex_val)"
-                  unfolding detw_val_def by (by5000 algebra)
+                  unfolding detw_val_def by (by100 algebra)
                 with h2 hec show ?thesis by simp
               qed
               have "(1-sw-tw)*detw_val \<ge> 0" using hec_eq hec_q by linarith
@@ -7358,20 +7367,20 @@ proof -
             have hdxw_eq: "?dxw = sw*?ew_x + tw*?fw_x"
             proof -
               have "(sw*?ew_x + tw*?fw_x)*?detw =
-                  ?ew_x*(sw*?detw) + ?fw_x*(tw*?detw)" by (by5000 algebra)
+                  ?ew_x*(sw*?detw) + ?fw_x*(tw*?detw)" by (by100 algebra)
               also have "\<dots> = ?ew_x*(?fw_y*?dxw-?fw_x*?dyw) + ?fw_x*(?ew_x*?dyw-?ew_y*?dxw)"
                 using hsw_mul htw_mul by simp
-              also have "\<dots> = ?dxw*(?ew_x*?fw_y-?ew_y*?fw_x)" by (by5000 algebra)
+              also have "\<dots> = ?dxw*(?ew_x*?fw_y-?ew_y*?fw_x)" by (by100 algebra)
               finally have "(sw*?ew_x + tw*?fw_x)*?detw = ?dxw*?detw" by simp
               thus ?thesis using hdetw_ne by (by100 simp)
             qed
             have hdyw_eq: "?dyw = sw*?ew_y + tw*?fw_y"
             proof -
               have "(sw*?ew_y + tw*?fw_y)*?detw =
-                  ?ew_y*(sw*?detw) + ?fw_y*(tw*?detw)" by (by5000 algebra)
+                  ?ew_y*(sw*?detw) + ?fw_y*(tw*?detw)" by (by100 algebra)
               also have "\<dots> = ?ew_y*(?fw_y*?dxw-?fw_x*?dyw) + ?fw_y*(?ew_x*?dyw-?ew_y*?dxw)"
                 using hsw_mul htw_mul by simp
-              also have "\<dots> = ?dyw*(?ew_x*?fw_y-?ew_y*?fw_x)" by (by5000 algebra)
+              also have "\<dots> = ?dyw*(?ew_x*?fw_y-?ew_y*?fw_x)" by (by100 algebra)
               finally have "(sw*?ew_y + tw*?fw_y)*?detw = ?dyw*?detw" by simp
               thus ?thesis using hdetw_ne by (by100 simp)
             qed
@@ -7380,14 +7389,14 @@ proof -
               have "fst q = ?cxw + ?dxw" by simp
               also have "?dxw = sw*(vxw jw - ?cxw) + tw*(vxw(Suc jw mod ?nw) - ?cxw)"
                 using hdxw_eq by simp
-              finally show ?thesis by (by5000 algebra)
+              finally show ?thesis by (by100 algebra)
             qed
             have hqy_eq: "snd q = (1-sw-tw)*?cyw + sw*vyw jw + tw*vyw(Suc jw mod ?nw)"
             proof -
               have "snd q = ?cyw + ?dyw" by simp
               also have "?dyw = sw*(vyw jw - ?cyw) + tw*(vyw(Suc jw mod ?nw) - ?cyw)"
                 using hdyw_eq by simp
-              finally show ?thesis by (by5000 algebra)
+              finally show ?thesis by (by100 algebra)
             qed
             from hjw hsw_ge htw_ge hst_le hqx_eq hqy_eq
             show ?thesis by (by100 blast)
@@ -7519,7 +7528,7 @@ proof -
               unfolding coeffs_def using hj2_ne1 hsi_ne_j2 hsi_ne1 by simp
             finally show ?thesis unfolding p_def by (by100 simp)
           qed
-          show ?thesis unfolding hC5_e using hnn hsum hx hy by (by5000 auto)
+          show ?thesis unfolding hC5_e using hnn hsum hx hy by (by100 auto)
         qed
         \<comment> \<open>phi\\_fn(p) = q: p is in source sector j, so phi\\_fn uses sector j affine formula.\<close>
         have hphi_eq: "phi_fn p = q"
@@ -7567,10 +7576,10 @@ proof -
               from hdx0 have hsx: "s*?ex = -(t*?fx)" by linarith
               from hdy0 have hsy: "s*?ey = -(t*?fy)" by linarith
               \<comment> \<open>s * det = s*ex*fy - s*ey*fx = -(t*fx)*fy - (-(t*fy))*fx = 0.\<close>
-              have hsdet: "s*?det = (s*?ex)*?fy - (s*?ey)*?fx" by (by5000 algebra)
+              have hsdet: "s*?det = (s*?ex)*?fy - (s*?ey)*?fx" by (by100 algebra)
               also have "\<dots> = (-(t*?fx))*?fy - (-(t*?fy))*?fx"
                 using hsx hsy by simp
-              also have "\<dots> = 0" by (by5000 algebra)
+              also have "\<dots> = 0" by (by100 algebra)
               finally have "s * ?det = 0" .
               hence hs0: "s = 0" using hdet_pos_j by (by100 simp)
               from hdx0 hs0 have "t*?fx = 0" by simp
@@ -7600,12 +7609,12 @@ proof -
             have hdx: "fst p - vxe 1 = s*?ex + t*?fx"
             proof -
               have "fst p = (1-s-t)*vxe 1 + s*vxe(j+2) + t*vxe ?si" unfolding p_def by simp
-              thus ?thesis by (by5000 algebra)
+              thus ?thesis by (by100 algebra)
             qed
             have hdy: "snd p - vye 1 = s*?ey + t*?fy"
             proof -
               have "snd p = (1-s-t)*vye 1 + s*vye(j+2) + t*vye ?si" unfolding p_def by simp
-              thus ?thesis by (by5000 algebra)
+              thus ?thesis by (by100 algebra)
             qed
             \<comment> \<open>cross\\_v1(j+2, p) = t * det \\<ge> 0.\<close>
             have hcross_j2: "cross_v1 (j+2) p = t * ?det"
@@ -7650,12 +7659,12 @@ proof -
           have hdx: "fst p - vxe 1 = s*?ex + t*?fx"
           proof -
             have "fst p = (1-s-t)*vxe 1 + s*vxe(j+2) + t*vxe ?si" unfolding p_def by simp
-            thus ?thesis by (by5000 algebra)
+            thus ?thesis by (by100 algebra)
           qed
           have hdy: "snd p - vye 1 = s*?ey + t*?fy"
           proof -
             have "snd p = (1-s-t)*vye 1 + s*vye(j+2) + t*vye ?si" unfolding p_def by simp
-            thus ?thesis by (by5000 algebra)
+            thus ?thesis by (by100 algebra)
           qed
           have hs_recover: "(?fy*(fst p-vxe 1)-?fx*(snd p-vye 1))/?det = s"
           proof -
@@ -8130,7 +8139,7 @@ proof -
             = (vye(Suc(jp+2) mod ?ne)-vye 1)*(fst p-vxe 1)-(vxe(Suc(jp+2) mod ?ne)-vxe 1)*(snd p-vye 1)"
             unfolding sp_v_def Let_def using hdet_v_pos by (by100 simp)
           also have "\<dots> = -(cross_v1 (Suc(jp+2) mod ?ne) p)"
-            unfolding cross_v1_def by (by5000 algebra)
+            unfolding cross_v1_def by (by100 algebra)
           finally have "sp_v * ((vxe(jp+2)-vxe 1)*(vye(Suc(jp+2) mod ?ne)-vye 1)-(vye(jp+2)-vye 1)*(vxe(Suc(jp+2) mod ?ne)-vxe 1)) \<ge> 0"
             using \<open>cross_v1 _ p \<le> 0\<close> by linarith
           thus ?thesis using hdet_v_pos by (metis linorder_not_le mult_neg_pos)
@@ -8288,7 +8297,7 @@ proof -
               = (vye(Suc(jp'+2) mod ?ne)-vye 1)*(fst p'-vxe 1)-(vxe(Suc(jp'+2) mod ?ne)-vxe 1)*(snd p'-vye 1)"
               unfolding sp_v'_def Let_def using hdet_v'_pos by (by100 simp)
             also have "\<dots> = -(cross_v1 (Suc(jp'+2) mod ?ne) p')"
-              unfolding cross_v1_def by (by5000 algebra)
+              unfolding cross_v1_def by (by100 algebra)
             finally have "sp_v' * ((vxe(jp'+2)-vxe 1)*(vye(Suc(jp'+2) mod ?ne)-vye 1)-(vye(jp'+2)-vye 1)*(vxe(Suc(jp'+2) mod ?ne)-vxe 1)) \<ge> 0"
               using \<open>cross_v1 _ p' \<le> 0\<close> by linarith
             thus ?thesis using hdet_v'_pos by (metis linorder_not_le mult_neg_pos)
@@ -8897,7 +8906,7 @@ proof -
             let ?bx = "vxe ?si_jp" and ?by' = "vye ?si_jp"
             let ?kx = "vxe k" and ?ky = "vye k"
             have "(?bx-?ax)*(?ky-?ay)-(?by'-?ay)*(?kx-?ax) =
-                -((?kx-?ax)*(?by'-?ay)-(?ky-?ay)*(?bx-?ax))" by (by5000 algebra)
+                -((?kx-?ax)*(?by'-?ay)-(?ky-?ay)*(?bx-?ax))" by (by100 algebra)
             thus "(vxe ?si_jp-vxe(jp+2))*(vye k-vye(jp+2))-(vye ?si_jp-vye(jp+2))*(vxe k-vxe(jp+2)) > 0"
               using \<open>(vxe k-vxe(jp+2))*(vye ?si_jp-vye(jp+2))-(vye k-vye(jp+2))*(vxe ?si_jp-vxe(jp+2)) < 0\<close>
               by linarith
@@ -9040,13 +9049,13 @@ proof -
           have h1: "(1-s_p-t_p)*det_p = det_p - s_p*det_p - t_p*det_p" by (by100 algebra)
           have h2: "det_p - (fy_p*dx_p-fx_p*dy_p) - (ex_p*dy_p-ey_p*dx_p)
               = (fx_p-ex_p)*(dy_p-ey_p) - (fy_p-ey_p)*(dx_p-ex_p)"
-            unfolding det_p_def by (by5000 algebra)
+            unfolding det_p_def by (by100 algebra)
           from h1 hs_p_mul ht_p_mul h2 show ?thesis by linarith
         qed
         \<comment> \<open>RHS = hedge\\_pos (change of basis).\<close>
         have hRHS_eq: "(fx_p-ex_p)*(dy_p-ey_p) - (fy_p-ey_p)*(dx_p-ex_p)
             = (vxe ?si_jp2 - vxe(jp+2))*(snd p - vye(jp+2)) - (vye ?si_jp2 - vye(jp+2))*(fst p - vxe(jp+2))"
-          unfolding fx_p_def ex_p_def fy_p_def ey_p_def dx_p_def dy_p_def by (by5000 algebra)
+          unfolding fx_p_def ex_p_def fy_p_def ey_p_def dx_p_def dy_p_def by (by100 algebra)
         have halpha_pos: "1-s_p-t_p > 0"
         proof -
           from hweight_identity hRHS_eq hedge_pos
@@ -9073,7 +9082,7 @@ proof -
         proof -
           from hin_sec have "cross_v1 ?si_jp2 p \<le> 0" unfolding in_sector_def by auto
           have "fy_p*dx_p - fx_p*dy_p = -(cross_v1 ?si_jp2 p)"
-            unfolding cross_v1_def fx_p_def fy_p_def dx_p_def dy_p_def by (by5000 algebra)
+            unfolding cross_v1_def fx_p_def fy_p_def dx_p_def dy_p_def by (by100 algebra)
           hence hsp_det: "s_p*det_p \<ge> 0" using hs_p_mul \<open>cross_v1 ?si_jp2 p \<le> 0\<close> by linarith
           show ?thesis
           proof (rule ccontr)
@@ -9576,7 +9585,7 @@ proof -
               proof -
                 from hin_sec have "cross_v1 (Suc(jp+2) mod ?ne) p \<le> 0" unfolding in_sector_def by (by100 auto)
                 have "fy_p12*dx_p12 - fx_p12*dy_p12 = -(cross_v1 (Suc(jp+2) mod ?ne) p)"
-                  unfolding cross_v1_def fx_p12_def fy_p12_def dx_p12_def dy_p12_def by (by5000 algebra)
+                  unfolding cross_v1_def fx_p12_def fy_p12_def dx_p12_def dy_p12_def by (by100 algebra)
                 hence "sp12*det_p12 \<ge> 0"
                   unfolding sp12_def using hdet_p12_ne \<open>cross_v1 _ p \<le> 0\<close> by (by100 simp)
                 thus ?thesis using hdet_p12_pos
@@ -11808,7 +11817,7 @@ proof -
                          \<or> (snd (w ! i) = snd (w ! j) \<and> va = Suc i mod ?nw \<and> vb = Suc j mod ?nw)
                          \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> va = i \<and> vb = Suc j mod ?nw)
                          \<or> (snd (w ! i) \<noteq> snd (w ! j) \<and> va = Suc i mod ?nw \<and> vb = j)"
-                    by (by5000 blast)
+                    by (by100 blast)
                   \<comment> \<open>Transfer to ext: ext!(i+2) = w!i, ext!(j+2) = w!j.\<close>
                   have hi_e: "i + 2 < ?ne" using hi_w hne_eq by (by100 linarith)
                   have hj_e: "j + 2 < ?ne" using hj_w hne_eq by (by100 linarith)
@@ -12400,7 +12409,7 @@ proof -
                 ?m dvd ((y - cut_a + shift) - (x - cut_a + shift))"
               by (rule mod_eq_dvd_iff_nat)
             hence "?m dvd ((y - cut_a) - (x - cut_a))"
-              using hmod_eq by (by5000 simp)
+              using hmod_eq by (by100 simp)
             moreover have "0 < (y - cut_a) - (x - cut_a)" using lt by (by100 linarith)
             moreover have hlt_m: "(y - cut_a) - (x - cut_a) < ?m" using hxm hym by (by100 linarith)
             moreover have hpos: "0 < (y - cut_a) - (x - cut_a)" using lt by (by100 linarith)
