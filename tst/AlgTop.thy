@@ -2599,8 +2599,40 @@ proof (cases "u2 = []")
   \<comment> \<open>DEGENERATE CASE: u2 = []. Source: [(a,T),(a,T)] @ v. Target: [(c,T)] @ v @ [(c,T)].
      k = 1, so left fan has no sectors. The paste-chain operation is a simple
      edge-pair relabel + rotation. Proof sorry'd: needs separate argument.\<close>
-  show ?thesis sorry \<comment> \<open>u2 = [] degenerate case. Target = [(c,T)] @ v @ [(c,T)].
-     The a-pair (consecutive same-orientation) identifies to c-pair after relabel+rotation.\<close>
+  \<comment> \<open>u2 = []: source = [(a,T),(a,T)] @ v, target = [(c,T)] @ v @ [(c,T)].
+     Step 1: Relabel a \\<to> c. Gives [(c,T),(c,T)] @ v' where v' = map(a\\<to>c) v.
+     Step 2: Rotate. [(c,T),(c,T)] @ v' \\<to> [(c,T)] @ v' @ [(c,T)].
+     Step 3: If a \\<notin> fst ` set v, then v' = v. Done.
+     Step 4: If a \\<in> fst ` set v, need separate argument.\<close>
+  have hTarget: "?thesis = top1_quotient_of_scheme_on Y TY ([(c, True)] @ v @ [(c, True)])"
+    using True by simp
+  have hSource: "top1_quotient_of_scheme_on Y TY ([(a, True), (a, True)] @ v)"
+    using hq True by simp
+  \<comment> \<open>c is fresh in the source.\<close>
+  have hc_fresh: "c \<notin> fst ` set ([(a, True), (a, True)] @ v)"
+    using hfresh_c True by simp
+  hence hc_ne_a: "c \<noteq> a" by (by100 auto)
+  \<comment> \<open>Relabel a \\<to> c.\<close>
+  from quotient_of_scheme_relabel_fresh[OF hSource hc_fresh hc_ne_a]
+  have h1: "top1_quotient_of_scheme_on Y TY (map (\<lambda>(l,b). (if l = a then c else l, b)) ([(a, True), (a, True)] @ v))" .
+  have h1_simp: "map (\<lambda>(l,b). (if l = a then c else l, b)) ([(a, True), (a, True)] @ v)
+    = [(c, True), (c, True)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) v"
+    by (by100 simp)
+  \<comment> \<open>Rotate: [(c,T),(c,T)] @ v' \\<to> [(c,T)] @ v' @ [(c,T)].\<close>
+  have h2: "top1_quotient_of_scheme_on Y TY ([(c, True), (c, True)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) v)"
+    using h1 h1_simp by simp
+  from quotient_of_scheme_rotate[OF h2]
+  have h3: "top1_quotient_of_scheme_on Y TY
+      (map (\<lambda>(l,b). (if l = a then c else l, b)) v @ [(c, True), (c, True)])" by simp
+  \<comment> \<open>h3 has v' @ [(c,T),(c,T)]. Split as (v' @ [(c,T)]) @ [(c,T)] and rotate.\<close>
+  have h3_rewrite: "map (\<lambda>(l,b). (if l = a then c else l, b)) v @ [(c, True), (c, True)]
+      = (map (\<lambda>(l,b). (if l = a then c else l, b)) v @ [(c, True)]) @ [(c, True)]" by simp
+  from quotient_of_scheme_rotate[OF h3[unfolded h3_rewrite]]
+  have h4: "top1_quotient_of_scheme_on Y TY
+      ([(c, True)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) v @ [(c, True)])" by simp
+  \<comment> \<open>If a \\<notin> fst ` set v, then the relabeled v equals v.\<close>
+  show ?thesis sorry \<comment> \<open>Need: map(a\\<to>c) v = v. True when a \\<notin> fst ` set v (proper case).
+     For general case: sorry. The proper version (used by classification) handles this.\<close>
 next
   case False hence hu2_ne: "u2 \<noteq> []" .
   hence hk_ge2: "1 + length u2 \<ge> 2" by (cases u2) simp+
