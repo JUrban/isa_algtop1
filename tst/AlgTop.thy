@@ -1373,12 +1373,14 @@ proof (intro allI impI ballI)
         have hkj: "k \<le> j" using hjv hk_eq by linarith
         have h\<sigma>i: "\<sigma> i t = ((1-t)*vx(i+1) + t*vx(Suc(i+1) mod ?n),
                               (1-t)*vy(i+1) + t*vy(Suc(i+1) mod ?n))"
-          using paste_sigma_v_edge[OF hki hi_mid(2) hk_pos hn3]
-          unfolding \<sigma>_def sorry
+          using paste_sigma_v_edge(1)[OF hki hi_mid(2) hk_pos hn3]
+                paste_sigma_v_edge(2)[OF hki hi_mid(2) hk_pos hn3]
+          unfolding \<sigma>_def by (by100 simp)
         have h\<sigma>j: "\<sigma> j t = ((1-t)*vx(j+1) + t*vx(Suc(j+1) mod ?n),
                               (1-t)*vy(j+1) + t*vy(Suc(j+1) mod ?n))"
-          using paste_sigma_v_edge[OF hkj hj_mid(2) hk_pos hn3]
-          unfolding \<sigma>_def sorry
+          using paste_sigma_v_edge(1)[OF hkj hj_mid(2) hk_pos hn3]
+                paste_sigma_v_edge(2)[OF hkj hj_mid(2) hk_pos hn3]
+          unfolding \<sigma>_def by (by100 simp)
         \<comment> \<open>Labels and exponents match original at shifted index.\<close>
         \<comment> \<open>Both w'!i and w!(i+1) equal v!(i-length u2-1). Similarly for j.\<close>
         have hlen_w: "?n = 2 + length u2 + length v" unfolding w_def by (by100 simp)
@@ -1461,7 +1463,17 @@ proof (intro allI impI ballI)
         \<comment> \<open>Translate back to sigma and target labels.\<close>
         have h\<sigma>j_1mt: "\<sigma> j (1-t) = (t*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n),
                                       t*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n))"
-          sorry \<comment> \<open>sigma at 1-t for v-range edge\<close>
+        proof -
+          have "paste_chain_sigma_x vx k ?n j (1-t) = (1-(1-t))*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n)"
+            using paste_sigma_v_edge(1)[OF hkj hj_mid(2) hk_pos hn3] by simp
+          hence hx: "paste_chain_sigma_x vx k ?n j (1-t) = t*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n)"
+            by (by100 simp)
+          have "paste_chain_sigma_y vy k ?n j (1-t) = (1-(1-t))*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n)"
+            using paste_sigma_v_edge(2)[OF hkj hj_mid(2) hk_pos hn3] by simp
+          hence hy: "paste_chain_sigma_y vy k ?n j (1-t) = t*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n)"
+            by (by100 simp)
+          show ?thesis using hx hy unfolding \<sigma>_def by (by100 simp)
+        qed
         show ?thesis using hC7_app h\<sigma>i h\<sigma>j h\<sigma>j_1mt hsnd_match_i hsnd_match_j by (by100 auto)
       next
         case False
