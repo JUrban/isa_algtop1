@@ -2362,15 +2362,48 @@ proof -
         "g p = (if cross_diag p \<le> 0 then q2 (phi_L p) else q2 (phi_R p))" for p
       \<comment> \<open>Provide witnesses: P = P2, q = g, vx = vx2, vy = vy2.\<close>
       show ?thesis
-        apply (rule exI[of _ P2], rule exI[of _ g], rule exI[of _ vx2], rule exI[of _ vy2])
-        \<comment> \<open>Goal: 11-fold conjunction C1 \\<and> C2 \\<and> C3 \\<and> C4 \\<and> C5 \\<and> C6 \\<and> C7 \\<and> C8 \\<and> C9 \\<and> C10 \\<and> C11.
-           Provide each condition. Polygon properties (C1,C3,C4,C5,C6,C10,C11) inherit.
-           Map properties (C2,C7,C8,C9) need verification with g.\<close>
-        using hC1' hC3' hC4' hC5' hC6' hC10' hC11'
-        sorry \<comment> \<open>11-fold conjunction. 7 polygon conditions available via using.
-           Remaining 4 (C2, C7, C8, C9) need map g verification.
-           C7 can use paste\\_chain\\_boundary\\_C7.
-           C2/C8/C9 need piecewise map properties.\<close>
+      proof (rule exI[of _ P2], rule exI[of _ g], rule exI[of _ vx2], rule exI[of _ vy2],
+             intro conjI)
+        show "top1_is_polygonal_region_on P2 (length ?w')" by (rule hC1')
+        show "top1_quotient_map_on P2
+            (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P2) Y TY g"
+          sorry \<comment> \<open>C2: g is quotient map. Piecewise continuous surjection, compact to Hausdorff.\<close>
+        show "\<forall>i<length ?w'. \<forall>j<length ?w'. i \<noteq> j \<longrightarrow> (vx2 i, vy2 i) \<noteq> (vx2 j, vy2 j)"
+          by (rule hC3')
+        show "\<forall>i<length ?w'. (vx2 i, vy2 i) \<in> P2" by (rule hC4')
+        show "P2 = {(x, y) | x y. \<exists>coeffs. (\<forall>i<length ?w'. coeffs i \<ge> 0) \<and>
+            (\<Sum>i<length ?w'. coeffs i) = 1 \<and> x = (\<Sum>i<length ?w'. coeffs i * vx2 i) \<and>
+            y = (\<Sum>i<length ?w'. coeffs i * vy2 i)}" by (rule hC5')
+        show "\<forall>i<length ?w'. \<forall>j<length ?w'. i \<noteq> j \<longrightarrow> Suc i mod length ?w' \<noteq> j \<longrightarrow>
+            i \<noteq> Suc j mod length ?w' \<longrightarrow> (\<forall>s\<in>{0<..<1}. \<forall>t\<in>{0<..<1}.
+            ((1-s)*vx2 i+s*vx2(Suc i mod length ?w'),(1-s)*vy2 i+s*vy2(Suc i mod length ?w'))
+            \<noteq> ((1-t)*vx2 j+t*vx2(Suc j mod length ?w'),(1-t)*vy2 j+t*vy2(Suc j mod length ?w')))"
+          by (rule hC6')
+        show "\<forall>i<length ?w'. \<forall>j<length ?w'. fst (?w'!i) = fst (?w'!j) \<longrightarrow> (\<forall>t\<in>I_set.
+            g ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w'))
+            = (if snd(?w'!i)=snd(?w'!j) then g ((1-t)*vx2 j+t*vx2(Suc j mod length ?w'),
+            (1-t)*vy2 j+t*vy2(Suc j mod length ?w'))
+            else g (t*vx2 j+(1-t)*vx2(Suc j mod length ?w'),
+            t*vy2 j+(1-t)*vy2(Suc j mod length ?w'))))"
+          sorry \<comment> \<open>C7: from paste\\_chain\\_boundary\\_C7 instantiated with g.\<close>
+        show "\<forall>p\<in>P2. (\<forall>i<length ?w'. \<forall>t\<in>I_set.
+            p \<noteq> ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w')))
+            \<longrightarrow> (\<forall>p'\<in>P2. g p = g p' \<longrightarrow> p = p')"
+          sorry \<comment> \<open>C8: interior injectivity of g.\<close>
+        show "\<forall>i<length ?w'. \<forall>j<length ?w'. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+            g ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w'))
+            = g ((1-s)*vx2 j+s*vx2(Suc j mod length ?w'),(1-s)*vy2 j+s*vy2(Suc j mod length ?w'))
+            \<longrightarrow> (i=j \<and> t=s) \<or> (fst(?w'!i)=fst(?w'!j) \<and>
+            (if snd(?w'!i)=snd(?w'!j) then s=t else s=1-t))"
+          sorry \<comment> \<open>C9: edge-edge injectivity.\<close>
+        show "\<forall>i<length ?w'. let cx=(\<Sum>j<length ?w'. vx2 j)/real(length ?w');
+            cy=(\<Sum>j<length ?w'. vy2 j)/real(length ?w')
+            in (vx2 i-cx)*(vy2(Suc i mod length ?w')-cy)-(vy2 i-cy)*(vx2(Suc i mod length ?w')-cx)>0"
+          by (rule hC10')
+        show "\<forall>i<length ?w'. \<forall>k<length ?w'. k \<noteq> i \<longrightarrow> k \<noteq> Suc i mod length ?w' \<longrightarrow>
+            (vx2 k-vx2 i)*(vy2(Suc i mod length ?w')-vy2 i)-(vy2 k-vy2 i)*(vx2(Suc i mod length ?w')-vx2 i)<0"
+          by (rule hC11')
+      qed
     qed
   qed
 qed
