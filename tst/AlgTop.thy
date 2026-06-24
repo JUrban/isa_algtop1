@@ -2493,17 +2493,6 @@ proof -
   thus ?thesis unfolding expected_def by simp
 qed
 
-\<comment> \<open>LEFT FAN VERTEX CASE: at t = 0, phi\\_L at vertex v\\_i gives the same result
-   regardless of whether LEAST selects sector i or i-1. Both sectors give v\\_{k+1-i}.\<close>
-lemma left_fan_vertex_gives_sigma:
-  fixes vx vy :: "nat \<Rightarrow> real" and n k i :: nat
-  assumes hn: "n \<ge> 3" and hk: "k \<ge> 2" and hk_lt: "k < n" and hi: "i < k"
-      and hfan: "\<forall>a<n. \<forall>b<n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
-          (vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
-  shows "paste_chain_sigma_x vx k n i 0 = vx (k + 1 - (if i = 0 then 1 else i))"
-    and "paste_chain_sigma_y vy k n i 0 = vy (k + 1 - (if i = 0 then 1 else i))"
-  sorry \<comment> \<open>sigma(i, 0) = vertex v\\_{k+1-expected\\_sector}. Direct from sigma definition.\<close>
-
 \<comment> \<open>RIGHT FAN SECTOR SELECTION: symmetric for the right fan from v\\_0 through v\\_k,...,v\\_{n-1}.\<close>
 lemma right_fan_edge_sector:
   fixes vx vy :: "nat \<Rightarrow> real" and n k i :: nat and t :: real
