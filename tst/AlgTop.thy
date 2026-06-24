@@ -2677,11 +2677,75 @@ proof -
          (B) Right half (i \\<ge> k): symmetric with phi\\_R.
          (C) Vertices (t=0,1): LEAST may differ but result matches by vertex identification.
          Infrastructure in place: hfan\\_det\\_0, cross2\\_plucker, cramer\\_on\\_triangle\\_edge/base\\_edge.\<close>
+      \<comment> \<open>HELPER: cross\\_diag at edge(i,t) is \\<le> 0 for left half (i < k), \\<ge> 0 for right half (i \\<ge> k).
+         Proof: cross\\_diag = (1-t)*cross(v\\_k-v\\_0, v\\_i-v\\_0) + t*cross(v\\_k-v\\_0, v\\_{i+1}-v\\_0).
+         Left half: both terms \\<le> 0 from fan det antisymmetry. Right half: both \\<ge> 0.\<close>
+      have hcd_left: "\<And>i t. i < ?k \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+          cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) \<le> 0"
+        sorry \<comment> \<open>Fan det antisymmetry + bilinearity. Infrastructure was proved in session E.\<close>
+      have hcd_right: "\<And>i t. i \<ge> ?k \<Longrightarrow> i < ?n \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+          cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) \<ge> 0"
+        sorry \<comment> \<open>Symmetric: fan det + bilinearity for right half.\<close>
+      \<comment> \<open>HELPER: phi\\_L at left-half boundary point gives sigma.
+         For 1 \\<le> i < k: LEAST = i, cramer\\_on\\_triangle\\_edge gives (0, 1-t, t).
+         For i = 0: LEAST = 1, cramer\\_on\\_triangle\\_base\\_edge gives (1-t, t, 0).
+         Both give phi\\_L = sigma.\<close>
+      have hphi_L_sigma: "\<And>i t. i < ?k \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+          phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+        = paste_sigma vx2 vy2 ?k ?n i t"
+        sorry \<comment> \<open>LEAST sector selection + Cramer coordinate evaluation.
+           Uses hfan\\_det\\_0, cramer\\_on\\_triangle\\_edge/base\\_edge.\<close>
+      \<comment> \<open>HELPER: phi\\_R at right-half boundary point gives sigma.
+         For k \\<le> i < n-1: LEAST = i, cramer\\_on\\_triangle\\_edge.
+         For i = n-1: LEAST = n-2, cramer\\_on\\_triangle\\_base\\_edge.
+         Both give phi\\_R = sigma.\<close>
+      have hphi_R_sigma: "\<And>i t. ?k \<le> i \<Longrightarrow> i < ?n \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+          phi_R ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+        = paste_sigma vx2 vy2 ?k ?n i t"
+        sorry \<comment> \<open>Symmetric LEAST + Cramer for right half.\<close>
+      \<comment> \<open>HELPER: junction continuity. At diagonal points (cross\\_diag = 0),
+         q2(phi\\_L) = q2(phi\\_R) via C7 for the a-pair.\<close>
+      have hjunction: "\<And>i t. i \<ge> ?k \<Longrightarrow> i < ?n \<Longrightarrow> t \<in> I_set \<Longrightarrow>
+          cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) = 0 \<Longrightarrow>
+          q2 (phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))
+        = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+        sorry \<comment> \<open>At diagonal: phi\\_L gives point on old edge 0, sigma gives point in terms of original.
+           C7 for a-pair equates q2-values. Only relevant at i=k,t=0 and i=n-1,t=1.\<close>
       have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
           g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
         = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-        sorry
-      \<comment> \<open>OLD INLINE PROOF DELETED: was 220 lines of cross\\_diag, bilinearity, PL analysis.\<close>
+      proof (intro allI impI ballI)
+        fix i t assume hi: "i < ?n" and ht: "t \<in> I_set"
+        let ?p = "((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
+        show "g ?p = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+        proof (cases "i < ?k")
+          case True \<comment> \<open>Left half.\<close>
+          have "cross_diag ?p \<le> 0" using hcd_left[OF True ht] .
+          hence "g ?p = q2 (phi_L ?p)" unfolding g_def by simp
+          also have "phi_L ?p = paste_sigma vx2 vy2 ?k ?n i t"
+            using hphi_L_sigma[OF True ht] .
+          finally show ?thesis .
+        next
+          case False hence hik: "i \<ge> ?k" by linarith
+          \<comment> \<open>Right half: cross\\_diag \\<ge> 0.\<close>
+          have hcd: "cross_diag ?p \<ge> 0" using hcd_right[OF hik hi ht] .
+          show ?thesis
+          proof (cases "cross_diag ?p > 0")
+            case True
+            hence "g ?p = q2 (phi_R ?p)" unfolding g_def by simp
+            also have "phi_R ?p = paste_sigma vx2 vy2 ?k ?n i t"
+              using hphi_R_sigma[OF hik hi ht] .
+            finally show ?thesis .
+          next
+            case False
+            hence "cross_diag ?p = 0" using hcd by linarith
+            hence "g ?p = q2 (phi_L ?p)" unfolding g_def by simp
+            also have "q2 (phi_L ?p) = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+              using hjunction[OF hik hi ht \<open>cross_diag ?p = 0\<close>] .
+            finally show ?thesis .
+          qed
+        qed
+      qed
       \<comment> \<open>Provide witnesses: P = P2, q = g, vx = vx2, vy = vy2.\<close>
       show ?thesis
       proof (rule exI[of _ P2], rule exI[of _ g], rule exI[of _ vx2], rule exI[of _ vy2],
