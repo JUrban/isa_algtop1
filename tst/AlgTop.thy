@@ -26,25 +26,37 @@ method_setup by20000 =
   \<close>
   "Apply method with 20000ms timeout"
 
-\<comment> \<open>SORRY ANALYSIS (as of 2026-06-23, session 1709):
+\<comment> \<open>SORRY ANALYSIS (as of 2026-06-26):
 
-24 sorry proof commands in AlgTop + 4 in AlgTopCached19 = 28 total. Build ~80s cold.
+24 sorry proof commands in AlgTop + 4 in AlgTopCached19 = 28 total. Build ~26s.
 
-CRITICAL PATH: theorem\\_76\\_1\\_paste\\_chain (L1151 sorry) is the SOLE fundamental blocker.
-  ALL downstream sorrys (cut-paste, valid ops, classification chain) trace back to it.
-  spur\\_collapse\\_cancel\\_homeo is FULLY PROVED (zero sorry, 8K-line proof).
+CATEGORY BREAKDOWN:
+  1 PASTE CHAIN (geometric core): theorem\\_76\\_1\\_paste\\_chain existential.
+  5 CUT-PASTE VARIANTS: cut\\_paste2, cut\\_paste\\_opp, general cancel, fresh label, relabel.
+    All depend on theorem\\_76\\_1\\_paste\\_chain.
+  1 SPUR CONSTRUCTION: general uncancel (proper version IS proved).
+  14 VALID\\_OPERATION: context-left structural, reverse ops, false cases.
+    NOT on classification critical path.
+  3 ASSEMBLY: Theorem 78.2 induction, extract scheme, sphere realization.
 
-  The proof approach is the HALF-AND-HALF geometric construction:
-  Use SAME polygon P2, define piecewise map g: P2 -> Y.
-  - Boundary: c-edges -> diagonal, inv(u2) -> reversed u2 edges, v -> same v edges.
-  - Interior: split P2 into left/right halves along virtual diagonal (v0 to v(k+1)).
-  - Left half -> Q1 (sub-polygon of P with edges 0..k + diagonal).
-  - Right half -> Q2 (sub-polygon of P with edges k+1..n-1 + diagonal).
-  - At dividing line: both sides give q2(a-edge(s)) by C7. Continuous!
-  - All junction continuity verified (hq\\_v0, hq\\_v1 from C7 at t=0,1).
-  - C7 verified: double negation (reversed param + flipped exponent) works.
-  - C8: halves map injectively to disjoint sub-polygon interiors.
-  - C9: diagonal (interior) separates from edges (boundary) by C8.
+PROVED INFRASTRUCTURE:
+  paste\\_chain\\_boundary\\_C7: ZERO SORRY (~800 lines, all 5 cases).
+  paste\\_chain\\_target\\_label: label correspondence for target scheme.
+  paste\\_chain\\_sigma\\_x/y: boundary edge-correspondence map definitions.
+  paste\\_sigma\\_c\\_edge, \\_inv\\_u2\\_edge, \\_v\\_edge: edge correspondence lemmas.
+  nth\\_append\\_first/second: list indexing helpers.
+
+GEOMETRIC CORE (THE blocker):
+  Define g = q2 composed with phi piecewise on P2 (phi is DISCONTINUOUS but q2 o phi
+  is continuous because C7 absorbs the jumps at the dividing line v0-v(k+1)).
+  Left half: phi\\_L reverses vertex order in Q1 (barycentric extension).
+  Right half: phi\\_R shifts vertices in Q2 (barycentric extension).
+  At dividing line: g\\_left = q2(edge\\_0(s)), g\\_right = q2(edge\\_k(s)).
+  These match by C7 for a-pair: q2(edge\\_0(s)) = q2(edge\\_k(s)).
+  C7 for w': from paste\\_chain\\_boundary\\_C7 (PROVED).
+  C8: each half maps bijectively to sub-polygon interior, q2 injective there.
+  C9: edges map to distinct original edges, q2 separates them.
+  Approach: adapt spur\\_collapse fan-map infrastructure (sector detection + Cramer coords).
 
 CRITICAL BUG (session 1673): quotient\\_rearrangement\\_homeomorphism is FALSE!
   Counterexample: [(a,T),(b,T),(a,F),(b,F)] (Klein bottle) vs [(a,T),(a,F),(b,T),(b,F)] (sphere).
