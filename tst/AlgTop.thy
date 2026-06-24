@@ -3106,7 +3106,71 @@ next
           \<comment> \<open>t > 0: LEAST = expected from left\\_fan\\_edge\\_sector.\<close>
           have hk_lt_n_local: "?k < ?n" by simp
           note hLeast = left_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local ht True hik hfan_det_0]
-          show ?thesis sorry \<comment> \<open>From hLeast + phi\\_L\\_def unfolding + cramer evaluation + sigma matching.\<close>
+          \<comment> \<open>Step 1: Unfold phi\\_L with LEAST = (if i=0 then 1 else i) substituted.\<close>
+          define j where "j = (if i = 0 then (1::nat) else i)"
+          have hj_eq: "(LEAST j. 1 \<le> j \<and> j < ?k \<and>
+              (vx2 j - vx2 0)*(snd ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vy2 0) -
+              (vy2 j - vy2 0)*(fst ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*(snd ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vy2 0) -
+              (vy2(Suc j) - vy2 0)*(fst ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) - vx2 0) \<le> 0)
+            = j" using hLeast unfolding j_def by simp
+          \<comment> \<open>Step 2: phi\\_L unfolds to a let-expression with j substituted.\<close>
+          have hphi_L_eq: "phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+            = (let ex = vx2 j - vx2 0; ey = vy2 j - vy2 0;
+                   fx = vx2(Suc j) - vx2 0; fy = vy2(Suc j) - vy2 0;
+                   dd = ex*fy - ey*fx;
+                   dx = (1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0;
+                   dy = (1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0;
+                   s = (fy*dx - fx*dy)/dd; tp = (ex*dy - ey*dx)/dd in
+               ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
+                (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j)))"
+            unfolding phi_L_def Let_def using hj_eq by simp
+          \<comment> \<open>Step 3: Case split i=0 vs i\\<ge>1 for Cramer evaluation.\<close>
+          show ?thesis
+          proof (cases "i = 0")
+            case True
+            \<comment> \<open>i=0, j=1. Edge from v\\_0 to v\\_1. Cramer on base edge gives s=t, tp=0.\<close>
+            have hj1: "j = 1" unfolding j_def using True by simp
+            \<comment> \<open>Fan det for sector 1: dd = cross(v\\_1, v\\_2) > 0.\<close>
+            have hdd_ne: "(vx2 1 - vx2 0)*(vy2 2 - vy2 0) - (vy2 1 - vy2 0)*(vx2 2 - vx2 0) \<noteq> 0"
+            proof -
+              have "(1::nat) < ?n" using hn_ge3 by linarith
+              have "(2::nat) < ?n" using hn_ge3 by linarith
+              from hfan_det_0[rule_format, OF \<open>1 < ?n\<close> \<open>2 < ?n\<close>]
+              show ?thesis by simp
+            qed
+            \<comment> \<open>Cramer on base edge: s = t, tp = 0.\<close>
+            from cramer_on_triangle_base_edge[of "vx2 0" "vy2 0" "vx2 1" "vy2 1" "vx2 2" "vy2 2" t]
+            have hs_val: "((vy2 2 - vy2 0) * (t * (vx2 1 - vx2 0)) -
+                           (vx2 2 - vx2 0) * (t * (vy2 1 - vy2 0))) /
+                          ((vx2 1 - vx2 0)*(vy2 2 - vy2 0) - (vy2 1 - vy2 0)*(vx2 2 - vx2 0)) = t"
+              and htp_val: "((vx2 1 - vx2 0) * (t * (vy2 1 - vy2 0)) -
+                            (vy2 1 - vy2 0) * (t * (vx2 1 - vx2 0))) /
+                           ((vx2 1 - vx2 0)*(vy2 2 - vy2 0) - (vy2 1 - vy2 0)*(vx2 2 - vx2 0)) = 0"
+              using hdd_ne using cramer_on_triangle_base_edge(1) cramer_on_triangle_base_edge(2) by (by5000 blast)
+            \<comment> \<open>Assemble: phi\\_L = ((1-t)*vx2 0 + t*vx2 k, (1-t)*vy2 0 + t*vy2 k) = sigma(0,t).\<close>
+            \<comment> \<open>From hphi\\_L\\_eq with j=1 + hs\\_val (s=t) + htp\\_val (tp=0):
+               phi\\_L(edge(0,t)) = ((1-t-0)*vx2 0 + t*vx2(k+1-1) + 0*vx2(k-1), ...)
+               = ((1-t)*vx2 0 + t*vx2 k, (1-t)*vy2 0 + t*vy2 k) = sigma(0,t).\<close>
+            have hsi_0: "Suc 0 mod ?n = 1" using hn_ge3 by simp
+            \<comment> \<open>Evaluate the let-chain in hphi\\_L\\_eq with j=1.\<close>
+            have "phi_L ((1-t)*vx2 0 + t*vx2 1, (1-t)*vy2 0 + t*vy2 1)
+              = ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k)"
+              sorry \<comment> \<open>hphi\\_L\\_eq with j=1 unfolded: s=t, tp=0, result=(1-t)*v0 + t*vk.\<close>
+            moreover have "paste_sigma vx2 vy2 ?k ?n 0 t = ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k)"
+              unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def by simp
+            moreover have "Suc i mod ?n = 1" using True hsi_0 by simp
+            ultimately show ?thesis using True by simp
+          next
+            case False
+            hence "j = i"
+            proof -
+              have "\<not> (i = 0)" using False .
+              thus "j = i" unfolding j_def by (rule if_not_P)
+            qed
+            \<comment> \<open>i\\<ge>1, j=i. Edge from v\\_i to v\\_{i+1}. Cramer on edge gives s=1-t, tp=t.\<close>
+            show ?thesis sorry \<comment> \<open>i\\<ge>1: phi\\_L with j=i + cramer\\_on\\_triangle\\_edge + sigma(i,t).\<close>
+          qed
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
