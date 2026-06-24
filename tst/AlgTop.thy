@@ -1392,7 +1392,44 @@ proof (intro allI impI ballI)
       \<comment> \<open>Label correspondence: fst(w'!i) = fst(u2!(k-1-i)) and fst(w!(k-i)) = fst(u2!(k-i-1)).
          Since k = 1+|u2|: k-i-1 = |u2|-i = k-1-i. Both equal fst(u2!(|u2|-i)).\<close>
       have hlabel_orig: "fst(w!(k-i)) = fst(w!(k-j))"
-        sorry \<comment> \<open>From hlabel + label correspondence through u2 indices.\<close>
+      proof -
+        \<comment> \<open>w!(k-i) is in the u2 block. Position k-i in w = [(a,T)]@u2@[(a,T)]@v.
+           k-i \\<ge> 1 (from i \\<le> k-1 and k \\<ge> 2) and k-i \\<le> k-1 < k = 1+|u2|.
+           So w!(k-i) = ([(a,T)]@u2@[(a,T)]@v)!(k-i) = u2!(k-i-1).
+           Similarly fst(w'!i) = fst(u2!(k-1-i)) via rev(inv u2).
+           And k-i-1 = k-1-i. So fst(w!(k-i)) = fst(u2!(k-1-i)) = fst(w'!i).\<close>
+        have hki_ge1: "k - i \<ge> 1" using hii_k hk2 by linarith
+        have hki_le: "k - i \<le> length u2" using hi_mid(1) hk_eq by (by100 simp)
+        have hwki: "w!(k-i) = u2!(k-i-1)"
+        proof -
+          have "w!(k-i) = (u2 @ [(a, True)] @ v)!(k-i-1)"
+            unfolding w_def using \<open>k-i \<ge> 1\<close> by (by100 simp)
+          also have "k-i-1 < length u2" using \<open>k-i \<le> length u2\<close> \<open>k-i \<ge> 1\<close> by linarith
+          hence "(u2 @ [(a, True)] @ v)!(k-i-1) = u2!(k-i-1)"
+            by (rule nth_append_first)
+          finally show ?thesis .
+        qed
+        have hwkj: "w!(k-j) = u2!(k-j-1)"
+        proof -
+          have "k - j \<ge> 1" using hjj_k hk2 by linarith
+          have "k - j \<le> length u2" using hj_mid(1) hk_eq by (by100 simp)
+          have "w!(k-j) = (u2 @ [(a, True)] @ v)!(k-j-1)"
+            unfolding w_def using \<open>k-j \<ge> 1\<close> by (by100 simp)
+          also have "k-j-1 < length u2" using \<open>k-j \<le> length u2\<close> \<open>k-j \<ge> 1\<close> by linarith
+          hence "(u2 @ [(a, True)] @ v)!(k-j-1) = u2!(k-j-1)"
+            by (rule nth_append_first)
+          finally show ?thesis .
+        qed
+        \<comment> \<open>Similarly for w'!i and w'!j via rev(inv u2).\<close>
+        have hw'i: "fst(w'!i) = fst(u2!(k-1-i))"
+          sorry \<comment> \<open>w'!i = inv(u2!(k-1-i)), fst preserved by inv.\<close>
+        have hw'j: "fst(w'!j) = fst(u2!(k-1-j))"
+          sorry \<comment> \<open>Same for j.\<close>
+        have "k-i-1 = k-1-i" using hi_mid(1) hii_k by linarith
+        have "k-j-1 = k-1-j" using hj_mid(1) hjj_k by linarith
+        from hlabel hw'i hw'j hwki hwkj \<open>k-i-1 = k-1-i\<close> \<open>k-j-1 = k-1-j\<close>
+        show ?thesis by simp
+      qed
       \<comment> \<open>Need 1-t \\<in> I\\_set.\<close>
       have ht_1mt: "1-t \<in> I_set" using ht unfolding top1_unit_interval_def by (by100 auto)
       from hC7_orig[rule_format, OF hki_lt hkj_lt hlabel_orig ht_1mt]
