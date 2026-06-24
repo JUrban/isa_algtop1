@@ -1184,6 +1184,134 @@ lemma paste_sigma_c_edge:
   unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def
   using assms by simp_all
 
+\<comment> \<open>BOUNDARY C7 for the target scheme: the key algebraic lemma.
+   Shows that q2 composed with sigma satisfies C7 for the target scheme w'.
+   The proof is pure index arithmetic + the original C7 for the source scheme w.
+   Cases: c-pair (trivial), inv(u2) pair (double negation), v pair (direct),
+   cross pair inv(u2)-v (double negation), c vs non-c (impossible by freshness).\<close>
+lemma paste_chain_boundary_C7:
+  fixes a c :: "'b" and u2 v :: "('b \<times> bool) list"
+    and vx vy :: "nat \<Rightarrow> real" and q2 :: "real \<times> real \<Rightarrow> 'a"
+  defines "w \<equiv> [(a, True)] @ u2 @ [(a, True)] @ v"
+  defines "w' \<equiv> [(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)]"
+  defines "k \<equiv> 1 + length u2"
+  defines "\<sigma> \<equiv> \<lambda>i t. paste_sigma vx vy k (length w) i t"
+  assumes hlen3: "length w \<ge> 3"
+      and hfresh: "c \<notin> fst ` set w"
+      and hC7_orig: "\<forall>i<length w. \<forall>j<length w. fst (w!i) = fst (w!j) \<longrightarrow>
+          (\<forall>t\<in>I_set. q2 ((1-t)*vx i + t*vx(Suc i mod length w),
+                          (1-t)*vy i + t*vy(Suc i mod length w))
+           = (if snd(w!i) = snd(w!j)
+              then q2 ((1-t)*vx j + t*vx(Suc j mod length w),
+                        (1-t)*vy j + t*vy(Suc j mod length w))
+              else q2 (t*vx j + (1-t)*vx(Suc j mod length w),
+                        t*vy j + (1-t)*vy(Suc j mod length w))))"
+  shows "\<forall>i<length w'. \<forall>j<length w'. fst (w'!i) = fst (w'!j) \<longrightarrow>
+      (\<forall>t\<in>I_set. q2 (\<sigma> i t)
+       = (if snd(w'!i) = snd(w'!j)
+          then q2 (\<sigma> j t)
+          else q2 (\<sigma> j (1-t))))"
+proof (intro allI impI ballI)
+  fix i j t
+  assume hi: "i < length w'" and hj: "j < length w'"
+    and hlabel: "fst (w'!i) = fst (w'!j)" and ht: "t \<in> I_set"
+  let ?n = "length w"
+  have hlen: "length w' = ?n" unfolding w_def w'_def by (by100 simp)
+  have hn3: "?n \<ge> 3" using hlen3 by simp
+  have hk_eq: "k = Suc (length u2)" unfolding k_def by simp
+  have hk_pos: "k \<ge> 1" unfolding k_def by simp
+  have hk_lt: "k < ?n" unfolding w_def k_def by (by100 simp)
+  \<comment> \<open>Freshness consequences.\<close>
+  have hc_ne_a: "c \<noteq> a" using hfresh unfolding w_def by (by100 auto)
+  have hc_not_u2: "c \<notin> fst ` set u2" using hfresh unfolding w_def by (by100 auto)
+  have hc_not_v: "c \<notin> fst ` set v" using hfresh unfolding w_def by (by100 auto)
+  \<comment> \<open>Target label at middle positions (1..n-2) is never c.\<close>
+  have hfst_mid_ne_c: "\<And>m. 1 \<le> m \<Longrightarrow> m \<le> ?n - 2 \<Longrightarrow> fst (w'!m) \<noteq> c"
+  proof -
+    fix m assume hm1: "(1::nat) \<le> m" and hm2: "m \<le> ?n - 2"
+    \<comment> \<open>m is in the middle of w'. w' = [c] @ rev(inv u2) @ v @ [c].
+       Middle positions 1..n-2 have labels from inv(u2) or v, not c.\<close>
+    have "fst (w'!m) \<in> fst ` set (rev (map top1_inverse_edge u2) @ v)"
+      sorry \<comment> \<open>w'!m for 1<=m<=n-2 is in the rev(inv u2)@v block.\<close>
+    moreover have "c \<notin> fst ` set (rev (map top1_inverse_edge u2) @ v)"
+    proof -
+      have "fst ` set (rev (map top1_inverse_edge u2)) = fst ` set u2"
+        unfolding top1_inverse_edge_def by (by100 force)
+      hence "fst ` set (rev (map top1_inverse_edge u2) @ v) = fst ` set u2 \<union> fst ` set v"
+        by (by100 auto)
+      with hc_not_u2 hc_not_v show ?thesis by (by100 blast)
+    qed
+    ultimately show "fst (w'!m) \<noteq> c" by (by100 blast)
+  qed
+  \<comment> \<open>Case split: is i a c-edge (0 or n-1) or a middle edge (1..n-2)?\<close>
+  show "q2 (\<sigma> i t) = (if snd(w'!i) = snd(w'!j)
+          then q2 (\<sigma> j t) else q2 (\<sigma> j (1-t)))"
+  proof (cases "i = 0 \<or> i = ?n - 1")
+    case True
+    \<comment> \<open>i is a c-edge. Label = c. Since c fresh, j must also be c-edge.\<close>
+    have hfst_i_c: "fst (w'!i) = c" sorry \<comment> \<open>Position 0 or n-1 has label c.\<close>
+    have hfst_j_c: "fst (w'!j) = c" using hlabel hfst_i_c by simp
+    have hj_c: "j = 0 \<or> j = ?n - 1"
+    proof (rule ccontr)
+      assume "\<not>(j = 0 \<or> j = ?n - 1)"
+      hence "1 \<le> j" "j \<le> ?n - 2" using hj hlen by linarith+
+      from hfst_mid_ne_c[OF this] hfst_j_c show False by simp
+    qed
+    \<comment> \<open>Both c-edges: sigma(0,t) = sigma(n-1,t) (same diagonal).\<close>
+    have h\<sigma>_eq: "\<sigma> i t = \<sigma> j t"
+      using True hj_c unfolding \<sigma>_def paste_chain_sigma_x_def paste_chain_sigma_y_def sorry
+    have hsnd_eq: "snd(w'!i) = snd(w'!j)"
+      using True hj_c sorry \<comment> \<open>Both c-edge positions have snd = True.\<close>
+    thus ?thesis using h\<sigma>_eq hsnd_eq by (by100 simp)
+  next
+    case False
+    \<comment> \<open>i is a middle edge (1..n-2). Label \\<noteq> c. So j is also middle.\<close>
+    have hi_mid: "1 \<le> i" "i \<le> ?n - 2" using hi hlen False by linarith+
+    have hfst_i_ne_c: "fst (w'!i) \<noteq> c" using hfst_mid_ne_c[OF hi_mid] .
+    have hfst_j_ne_c: "fst (w'!j) \<noteq> c" using hlabel hfst_i_ne_c by simp
+    have hj_not_c: "j \<noteq> 0 \<and> j \<noteq> ?n - 1"
+    proof (intro conjI)
+      show "j \<noteq> 0"
+      proof
+        assume "j = 0" hence "fst (w'!j) = c" unfolding w'_def by (by100 simp)
+        with hfst_j_ne_c show False by simp
+      qed
+      show "j \<noteq> ?n - 1"
+      proof
+        assume "j = ?n - 1"
+        hence "fst (w'!j) = c" sorry \<comment> \<open>Last position of w' has label c.\<close>
+        with hfst_j_ne_c show False by simp
+      qed
+    qed
+    have hj_mid: "1 \<le> j" "j \<le> ?n - 2" using hj hlen hj_not_c by linarith+
+    \<comment> \<open>Both middle edges. Further case split: inv(u2) range or v range.\<close>
+    \<comment> \<open>The boundary between inv(u2) and v ranges is at position k = 1 + length u2.
+       inv(u2): positions 1..k-1 = 1..length u2.
+       v: positions k..n-2 = (length u2 + 1)..n-2.\<close>
+    show ?thesis
+    proof (cases "i \<le> length u2 \<and> j \<le> length u2")
+      case True
+      \<comment> \<open>CASE: both in inv(u2) range.\<close>
+      \<comment> \<open>sigma(i,t) = edge\\_orig(k-i, 1-t), sigma(j,t) = edge\\_orig(k-j, 1-t).
+         Original C7 at indices (k-i), (k-j) with param (1-t) gives the result.
+         The double negation: reversed param (1-t) + flipped exponent (\\<not>snd) cancel.\<close>
+      show ?thesis sorry \<comment> \<open>inv(u2) x inv(u2) pair: uses hC7\\_orig at (k-i),(k-j) with 1-t.\<close>
+    next
+      case False
+      show ?thesis
+      proof (cases "\<not>(i \<le> length u2) \<and> \<not>(j \<le> length u2)")
+        case True
+        \<comment> \<open>CASE: both in v range.\<close>
+        show ?thesis sorry \<comment> \<open>v x v pair: direct from hC7\\_orig at (i+1),(j+1) with t.\<close>
+      next
+        case False
+        \<comment> \<open>CASE: one in inv(u2), other in v (cross pair).\<close>
+        show ?thesis sorry \<comment> \<open>Cross pair inv(u2) x v: uses hC7\\_orig at (k-i),(j+1).\<close>
+      qed
+    qed
+  qed
+qed
+
 lemma theorem_76_1_paste_chain:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
       and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
