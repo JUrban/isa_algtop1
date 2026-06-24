@@ -3164,10 +3164,12 @@ next
                dx = t*(vx2 1 - vx2 0), dy = t*(vy2 1 - vy2 0).
                s = t (from hs\\_val), tp = 0 (from htp\\_val).
                result = (1-t)*vx2 0 + t*vx2(k+1-1) = (1-t)*vx2 0 + t*vx2 k.\<close>
+            \<comment> \<open>Direct phi\\_L evaluation for i=0, j=1.
+               Process\\_theories confirmed proof exists via smt(verit)+argo (~4min).
+               For build-time compliance: sorry pending manual decomposition.\<close>
             have "phi_L ((1-t)*vx2 0 + t*vx2 1, (1-t)*vy2 0 + t*vy2 1)
               = ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k)"
-              sorry \<comment> \<open>phi\\_L let-chain evaluation for i=0. Found by process\\_theories using smt(verit)+argo.
-                 ~4min in process\\_theories. Need manual decomposition for fast build.\<close>
+              sorry \<comment> \<open>PROOF EXISTS (smt 4min). Needs decomposition for fast build.\<close>
             moreover have "paste_sigma vx2 vy2 ?k ?n 0 t = ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k)"
               unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def by simp
             moreover have "Suc i mod ?n = 1" using True hsi_0 by simp
