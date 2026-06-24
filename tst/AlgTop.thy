@@ -2005,6 +2005,37 @@ proof (intro allI impI ballI)
   qed
 qed
 
+\<comment> \<open>POLYGON SELF-HOMEOMORPHISM for the paste chain.
+   The boundary rearrangement sigma (proved continuous by paste\\_chain\\_boundary\\_C7's
+   junction analysis) extends to a homeomorphism of the polygon to itself.
+   This is the geometric core that cannot be avoided by algebraic arguments.
+   The extension uses the half-and-half construction: split P along the virtual
+   diagonal from v\\_0 to v\\_{k+1}, map each half to a sub-polygon of P.\<close>
+lemma paste_chain_polygon_self_homeomorphism:
+  fixes vx vy :: "nat \<Rightarrow> real" and k n :: nat
+  assumes hn: "n \<ge> 3" and hk: "1 \<le> k" and hk_lt: "k < n"
+      and hP: "top1_is_polygonal_region_on P n"
+      and hC5: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<n. coeffs i) = 1
+                     \<and> x = (\<Sum>i<n. coeffs i * vx i)
+                     \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
+      and hC3: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
+  shows "\<exists>\<phi>. top1_homeomorphism_on P
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
+      P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) \<phi>
+    \<and> (\<forall>i<n. \<forall>t\<in>I_set.
+        \<phi> ((1-t)*vx i + t*vx(Suc i mod n), (1-t)*vy i + t*vy(Suc i mod n))
+      = (paste_chain_sigma_x vx k n i t, paste_chain_sigma_y vy k n i t))"
+  sorry \<comment> \<open>GEOMETRIC CORE: half-and-half polygon self-homeomorphism.
+     Construction: split P along diagonal v\\_0-v\\_{k+1} into Q1 (edges 0..k) and Q2 (edges k+1..n-1).
+     Left half maps: edge i -> reversed edge (k-i) for i=1..k-1, edge 0 -> diagonal.
+     Right half maps: edge i -> edge i+1 for i=k..n-2, edge n-1 -> diagonal.
+     Interior: barycentric extension on each half (convex polygon homeomorphism).
+     Continuity: junction analysis from paste\\_chain\\_boundary\\_C7.
+     Bijectivity: each half maps bijectively to its sub-polygon.
+     Compact Hausdorff: P homeomorphic to disk, phi continuous bijection -> homeomorphism.
+     Estimated: ~200 lines.\<close>
+
 lemma theorem_76_1_paste_chain:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
       and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
@@ -2340,15 +2371,66 @@ proof -
      Since both schemes have the same length n, the same regular n-gon P is used.
      q\\_w: P -> Y\\_w and q\\_w': P -> Y\\_w' are both quotient maps from the same P.
      Fibre equivalence q\\_w(x)=q\\_w(y) <-> q\\_w'(x)=q\\_w'(y) gives the homeomorphism.\<close>
+  \<comment> \<open>Step 3f: Extract full data from Y\\_w for the fibre equivalence argument.\<close>
+  from quotient_of_scheme_extract_vx[OF hY_w]
+  obtain P_w q_w vx_w vy_w where
+      hP_w: "top1_is_polygonal_region_on P_w (length ?w)"
+    and hC2_w: "top1_quotient_map_on P_w
+        (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) Y_w TY_w q_w"
+    and hC3_w: "\<forall>i<length ?w. \<forall>j<length ?w. i \<noteq> j \<longrightarrow> (vx_w i, vy_w i) \<noteq> (vx_w j, vy_w j)"
+    and hC5_w: "P_w = {(x, y) | x y. \<exists>coeffs. (\<forall>i<length ?w. coeffs i \<ge> 0)
+                     \<and> (\<Sum>i<length ?w. coeffs i) = 1
+                     \<and> x = (\<Sum>i<length ?w. coeffs i * vx_w i)
+                     \<and> y = (\<Sum>i<length ?w. coeffs i * vy_w i)}"
+    and hC7_w: "\<forall>i<length ?w. \<forall>j<length ?w. fst (?w!i) = fst (?w!j) \<longrightarrow>
+        (\<forall>t\<in>I_set. q_w ((1-t)*vx_w i + t*vx_w(Suc i mod length ?w),
+                        (1-t)*vy_w i + t*vy_w(Suc i mod length ?w))
+         = (if snd(?w!i) = snd(?w!j)
+            then q_w ((1-t)*vx_w j + t*vx_w(Suc j mod length ?w),
+                      (1-t)*vy_w j + t*vy_w(Suc j mod length ?w))
+            else q_w (t*vx_w j + (1-t)*vx_w(Suc j mod length ?w),
+                      t*vy_w j + (1-t)*vy_w(Suc j mod length ?w))))"
+    and hC8_w: "\<forall>p\<in>P_w. (\<forall>i<length ?w. \<forall>t\<in>I_set.
+              p \<noteq> ((1-t)*vx_w i + t*vx_w(Suc i mod length ?w),
+                    (1-t)*vy_w i + t*vy_w(Suc i mod length ?w)))
+           \<longrightarrow> (\<forall>p'\<in>P_w. q_w p = q_w p' \<longrightarrow> p = p')"
+    and hC9_w: "\<forall>i<length ?w. \<forall>j<length ?w. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
+          q_w ((1-t)*vx_w i + t*vx_w(Suc i mod length ?w),
+               (1-t)*vy_w i + t*vy_w(Suc i mod length ?w))
+        = q_w ((1-s)*vx_w j + s*vx_w(Suc j mod length ?w),
+               (1-s)*vy_w j + s*vy_w(Suc j mod length ?w))
+        \<longrightarrow> (i = j \<and> t = s) \<or> (fst(?w!i) = fst(?w!j) \<and>
+              (if snd(?w!i) = snd(?w!j) then s = t else s = 1 - t))"
+    by (rule quotient_of_scheme_extract_vx[OF hY_w])
+  \<comment> \<open>Step 3g: Get polygon self-homeomorphism phi for the sigma rearrangement.\<close>
+  let ?k = "1 + length u2"
+  from paste_chain_polygon_self_homeomorphism[OF _ _ _ hP_w hC5_w hC3_w]
+  obtain \<phi> where h\<phi>_homeo: "top1_homeomorphism_on P_w
+      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w)
+      P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) \<phi>"
+    and h\<phi>_bdy: "\<forall>i<length ?w. \<forall>t\<in>I_set.
+        \<phi> ((1-t)*vx_w i + t*vx_w(Suc i mod length ?w), (1-t)*vy_w i + t*vy_w(Suc i mod length ?w))
+      = (paste_chain_sigma_x vx_w ?k (length ?w) i t,
+         paste_chain_sigma_y vy_w ?k (length ?w) i t)"
+    sorry \<comment> \<open>Instantiation of paste\\_chain\\_polygon\\_self\\_homeomorphism.
+       Needs: n >= 3, 1 <= k, k < n. These follow from hlen and k = 1 + length u2.\<close>
+  \<comment> \<open>Step 3h: Fibre equivalence gives Y\\_w \\<cong> Y\\_w'.
+     Need: q\\_w(x) = q\\_w(y) <-> q\\_w'(\\<phi>(x)) = q\\_w'(\\<phi>(y)) on P\\_w.
+     Then quotient\\_same\\_fibres\\_homeomorphic on q\\_w and q\\_w'\\<circ>\\<phi> gives the result.
+     But we need q\\_w' to be a quotient map from P\\_w (not P\\_w').
+     Since both are canonical constructions from scheme\\_quotient\\_exists with the same n,
+     P\\_w = P\\_w'. This needs verification.\<close>
   have "\<exists>h. top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h"
-    sorry \<comment> \<open>SOLE REMAINING SORRY for paste chain proper.
-       Strategy: extract full data from both scheme\\_quotient\\_exists calls.
-       Show P\\_w = P\\_w' (same n-gon construction, same n).
-       Apply quotient\\_same\\_fibres\\_homeomorphic with fibre equivalence from:
-       - Interior: both C8 give singletons.
-       - Boundary: paste\\_chain\\_boundary\\_C7 matches identifications.
-       - Cross: C8 separates interior from boundary.
-       Estimated: ~100 lines of extraction + fibre verification.\<close>
+    sorry \<comment> \<open>From \\<phi> + fibre equivalence + quotient\\_same\\_fibres\\_homeomorphic.
+       Detailed strategy:
+       1. Show P\\_w = P\\_w' (both from scheme\\_quotient\\_exists, same n).
+       2. q\\_w': P\\_w -> Y\\_w' is a quotient map.
+       3. q\\_w' \\<circ> \\<phi>: P\\_w -> Y\\_w' is also a quotient map (homeo \\<circ> quotient = quotient).
+       4. Fibre equiv: q\\_w(x)=q\\_w(y) <-> (q\\_w'\\<circ>\\<phi>)(x)=(q\\_w'\\<circ>\\<phi>)(y).
+          - Interior: both injective (C8) -> singletons -> equiv.
+          - Boundary: paste\\_chain\\_boundary\\_C7 + \\<phi>\\_bdy -> sigma matches C7.
+          - Cross: C8 separates.
+       5. quotient\\_same\\_fibres\\_homeomorphic -> Y\\_w homeo Y\\_w'.\<close>
   then obtain h_ww' where hww': "top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h_ww'" by (by100 blast)
   \<comment> \<open>Step 3g: Compose: Y -> Y\\_w -> Y\\_w' -> Y' = Y\\_w'.\<close>
   from homeomorphism_comp[OF hYYw hww']
