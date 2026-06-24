@@ -2082,6 +2082,83 @@ proof -
   from \<open>s = t\<close> \<open>t_par = 0\<close> show "1 - s - t_par = 1 - t" by simp
 qed
 
+\<comment> \<open>Fan determinant positivity from v\\_0: in a convex polygon with CCW vertices,
+   cross(v\\_a - v\\_0, v\\_b - v\\_0) > 0 for 1 \\<le> a < b < n.
+   Follows from C11 (non-adjacent vertices on interior side of each edge).\<close>
+lemma convex_polygon_fan_det_from_v0:
+  fixes vx vy :: "nat \<Rightarrow> real" and n :: nat
+  assumes hn: "n \<ge> 3"
+      and hC11: "\<forall>i<n. \<forall>kk<n. kk \<noteq> i \<longrightarrow> kk \<noteq> Suc i mod n \<longrightarrow>
+          (vx kk - vx i) * (vy (Suc i mod n) - vy i) - (vy kk - vy i) * (vx (Suc i mod n) - vx i) < 0"
+  shows "\<forall>a<n. \<forall>b<n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
+      (vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
+  sorry \<comment> \<open>Fan determinant from v\\_0. Proof: from C11 with i=0, get cross(v\\_kk - v\\_0, v\\_1 - v\\_0) < 0
+     for kk >= 2. Equivalently cross(v\\_1 - v\\_0, v\\_kk - v\\_0) > 0. For general (a,b) with 1<=a<b:
+     use induction on (b-a) + C11 applied to different edges to show the cross product stays positive.
+     Alternatively: for convex polygon, vertices are in "positive orientation" from any vertex.\<close>
+
+\<comment> \<open>The phi\\_edge\\_formula: on boundary edge i at parameter t, the piecewise phi
+   (half-and-half construction via LEAST + Cramer) gives paste\\_sigma.
+   This is the PER-EDGE algebraic verification. It subsumes the LEAST evaluation:
+   - For left-half edges (i < k): phi\\_L(edge(i,t)) = sigma(i,t)
+   - For right-half edges (i >= k): phi\\_R(edge(i,t)) = sigma(i,t)
+   The proof uses cramer\\_on\\_triangle\\_edge (for i=1..k-1 and i=k..n-2)
+   and cramer\\_on\\_triangle\\_base\\_edge (for i=0 and i=n-1).\<close>
+lemma paste_phi_L_edge_formula:
+  fixes vx vy :: "nat \<Rightarrow> real" and k n i :: nat and t :: real
+  assumes hn: "n \<ge> 3" and hk: "1 \<le> k" and hk_lt: "k < n"
+      and ht: "t \<in> I_set" and hi: "i < k"
+      and hfan: "\<forall>a<n. \<forall>b<n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
+          (vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
+  defines "phi_L_val \<equiv> (let j = (LEAST j. 1 \<le> j \<and> j < k \<and>
+            (vx j - vx 0)*(((1-t)*vy i + t*vy(Suc i mod n)) - vy 0) -
+            (vy j - vy 0)*(((1-t)*vx i + t*vx(Suc i mod n)) - vx 0) \<ge> 0 \<and>
+            (vx(Suc j) - vx 0)*(((1-t)*vy i + t*vy(Suc i mod n)) - vy 0) -
+            (vy(Suc j) - vy 0)*(((1-t)*vx i + t*vx(Suc i mod n)) - vx 0) \<le> 0) in
+          let ex = vx j - vx 0; ey = vy j - vy 0;
+              fx = vx(Suc j) - vx 0; fy = vy(Suc j) - vy 0;
+              det = ex*fy - ey*fx;
+              dx = ((1-t)*vx i + t*vx(Suc i mod n)) - vx 0;
+              dy = ((1-t)*vy i + t*vy(Suc i mod n)) - vy 0;
+              s = (fy*dx - fx*dy)/det;
+              t_par = (ex*dy - ey*dx)/det in
+          ((1-s-t_par)*vx 0 + s*vx(k+1-j) + t_par*vx(k-j),
+           (1-s-t_par)*vy 0 + s*vy(k+1-j) + t_par*vy(k-j)))"
+  shows "phi_L_val = (paste_chain_sigma_x vx k n i t, paste_chain_sigma_y vy k n i t)"
+  sorry \<comment> \<open>Left-half phi gives sigma. Proof by cases:
+     i = 0: LEAST = 1, cramer\\_on\\_triangle\\_base\\_edge gives s=t, t\\_par=0.
+       Result: (1-t)*vx 0 + t*vx k = sigma(0,t).
+     1 \\<le> i < k: LEAST = i (from fan\\_det + cross product signs),
+       cramer\\_on\\_triangle\\_edge gives s=1-t, t\\_par=t.
+       Result: (1-t)*vx(k+1-i) + t*vx(k-i) = sigma(i,t).\<close>
+
+lemma paste_phi_R_edge_formula:
+  fixes vx vy :: "nat \<Rightarrow> real" and k n i :: nat and t :: real
+  assumes hn: "n \<ge> 3" and hk: "1 \<le> k" and hk_lt: "k < n"
+      and ht: "t \<in> I_set" and hi_ge: "k \<le> i" and hi_lt: "i < n"
+      and hfan: "\<forall>a<n. \<forall>b<n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
+          (vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
+  defines "phi_R_val \<equiv> (let j = (LEAST j. k \<le> j \<and> j < n - 1 \<and>
+            (vx j - vx 0)*(((1-t)*vy i + t*vy(Suc i mod n)) - vy 0) -
+            (vy j - vy 0)*(((1-t)*vx i + t*vx(Suc i mod n)) - vx 0) \<ge> 0 \<and>
+            (vx(Suc j) - vx 0)*(((1-t)*vy i + t*vy(Suc i mod n)) - vy 0) -
+            (vy(Suc j) - vy 0)*(((1-t)*vx i + t*vx(Suc i mod n)) - vx 0) \<le> 0) in
+          let ex = vx j - vx 0; ey = vy j - vy 0;
+              fx = vx(Suc j) - vx 0; fy = vy(Suc j) - vy 0;
+              det = ex*fy - ey*fx;
+              dx = ((1-t)*vx i + t*vx(Suc i mod n)) - vx 0;
+              dy = ((1-t)*vy i + t*vy(Suc i mod n)) - vy 0;
+              s = (fy*dx - fx*dy)/det;
+              t_par = (ex*dy - ey*dx)/det in
+          ((1-s-t_par)*vx k + s*vx(Suc j) + t_par*vx(Suc(Suc j) mod n),
+           (1-s-t_par)*vy k + s*vy(Suc j) + t_par*vy(Suc(Suc j) mod n)))"
+  shows "phi_R_val = (paste_chain_sigma_x vx k n i t, paste_chain_sigma_y vy k n i t)"
+  sorry \<comment> \<open>Right-half phi gives sigma. Proof by cases:
+     k \\<le> i < n-1: LEAST = i, cramer\\_on\\_triangle\\_edge gives s=1-t, t\\_par=t.
+       Result: (1-t)*vx(i+1) + t*vx(Suc(i+1) mod n) = sigma(i,t).
+     i = n-1: LEAST = n-2, cramer\\_on\\_triangle\\_base\\_edge gives s=t, t\\_par=0.
+       Result: (1-t)*vx 0 + t*vx k = sigma(n-1,t).\<close>
+
 lemma theorem_76_1_paste_chain:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
       and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
