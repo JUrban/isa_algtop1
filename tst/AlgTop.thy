@@ -2775,11 +2775,58 @@ proof -
                phi\\_L(p) maps to old boundary (edge 0 or edge k).
                Old C8 says q2(old interior) \\<inter> q2(old boundary) = \\<emptyset>.
                So p' must also be on the diagonal. Then old C9 gives injectivity.\<close>
-          show "p = p'" sorry \<comment> \<open>Interior injectivity of g.
-             Proof: phi\\_L/phi\\_R map to disjoint old-interior regions.
-             Old C8 (singleton fibres at old interior) prevents any identification.
-             Diagonal maps to old boundary, disjoint from old interior q2-values.
-             Same-diagonal: old C9 gives parameter injectivity.\<close>
+          \<comment> \<open>Key helper: phi\\_L maps target left-half interior to OLD polygon interior.
+             phi\\_R maps target right-half interior to OLD polygon interior.
+             The two image regions (left/right sub-polygon interiors) are disjoint.
+             Diagonal maps to old boundary edge.
+             Old C8 gives singleton fibres at old interior points.
+             Therefore g is injective on target interior.\<close>
+          have hphi_L_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x < 0 \<Longrightarrow>
+              (\<forall>i<?n. \<forall>t\<in>I_set.
+                phi_L x \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))"
+            sorry \<comment> \<open>phi\\_L on strict left-half interior maps to old interior (not on any old edge).\<close>
+          have hphi_R_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow>
+              (\<forall>i<?n. \<forall>t\<in>I_set.
+                phi_R x \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))"
+            sorry \<comment> \<open>phi\\_R on strict right-half interior maps to old interior (not on any old edge).\<close>
+          have hphi_L_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> phi_L x \<in> P2"
+            sorry \<comment> \<open>phi\\_L maps P2 to P2 (Cramer coords give convex combination of vertices).\<close>
+          have hphi_R_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> phi_R x \<in> P2"
+            sorry \<comment> \<open>phi\\_R maps P2 to P2.\<close>
+          have hphi_L_R_disjoint: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
+              cross_diag x < 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_L x \<noteq> phi_R y"
+            sorry \<comment> \<open>phi\\_L and phi\\_R images are in disjoint sub-polygon interiors.\<close>
+          have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
+              cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
+            sorry \<comment> \<open>phi\\_L is injective on left half (affine per sector, sectors have disjoint interiors).\<close>
+          have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
+              cross_diag x > 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_R x = phi_R y \<Longrightarrow> x = y"
+            sorry \<comment> \<open>phi\\_R is injective on right half.\<close>
+          \<comment> \<open>Main C8 argument.\<close>
+          show "p = p'"
+          proof -
+            \<comment> \<open>p is target interior. Determine which half p and p' are in via cross\\_diag.\<close>
+            have hg_eq: "g p = g p'" by (rule heq)
+            show ?thesis
+            proof (cases "cross_diag p < 0")
+              case True
+              \<comment> \<open>p strictly left. g(p) = q2(phi\\_L(p)). phi\\_L(p) is old interior.\<close>
+              have hgp: "g p = q2 (phi_L p)" using True unfolding g_def by (by100 simp)
+              have hphi_int_p: "\<forall>i<?n. \<forall>t\<in>I_set.
+                  phi_L p \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
+                using hphi_L_int[OF hp True] .
+              have hphi_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp] .
+              \<comment> \<open>Old C8 at phi\\_L(p): singleton fibre.\<close>
+              have hC8_at_p: "\<forall>p'\<in>P2. q2 (phi_L p) = q2 p' \<longrightarrow> phi_L p = p'"
+                using hC8_2 hphi_in hphi_int_p sorry \<comment> \<open>Old C8 instantiated at phi\\_L(p).\<close>
+              \<comment> \<open>Now analyze p'.\<close>
+              show ?thesis sorry \<comment> \<open>Case split on cross\\_diag(p'): same-half, cross-half, or diagonal.
+                 Each sub-case uses hC8\\_at\\_p + disjointness/injectivity helpers.\<close>
+            next
+              case False
+              show ?thesis sorry \<comment> \<open>cross\\_diag(p) \\<ge> 0: right-half or diagonal case. Symmetric argument.\<close>
+            qed
+          qed
         qed
         show "\<forall>i<length ?w'. \<forall>j<length ?w'. \<forall>t\<in>{0<..<(1::real)}. \<forall>s\<in>{0<..<(1::real)}.
             g ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w'))
