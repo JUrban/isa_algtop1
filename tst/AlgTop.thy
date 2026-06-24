@@ -2430,14 +2430,19 @@ proof -
      - C9: edge-edge from C9 of q\\_w via \\<phi>.
      So top1\\_quotient\\_of\\_scheme\\_on Y\\_w TY\\_w w'.\<close>
   have hYw_w': "top1_quotient_of_scheme_on Y_w TY_w ?w'"
-    sorry \<comment> \<open>Y\\_w is quotient of w' via q\\_w \\<circ> \\<phi>. Uses:
-       - paste\\_chain\\_boundary\\_C7 for C7 (PROVED)
-       - h\\<phi>\\_homeo for bijection (from sorry'd lemma)
-       - hC8\\_w for interior injectivity
-       - hC9\\_w for edge injectivity
-       All conditions of top1\\_quotient\\_of\\_scheme\\_on verified.\<close>
-  from scheme_quotient_uniqueness[OF htopo_Yw htopo_Yw' hYw_w' hY_w']
-  have "\<exists>h. top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h" by (by100 blast)
+  proof -
+    \<comment> \<open>Witnesses: P = P\\_w, q = q\\_w \\<circ> \\<phi>, vx = vx\\_w, vy = vy\\_w.
+       C1, C3-C6, C10, C11: same polygon P\\_w, inherited via hlen\\_eq.
+       C2: q\\_w \\<circ> \\<phi> is quotient map (\\<phi> homeomorphism composed with quotient map).
+       C7: paste\\_chain\\_boundary\\_C7 + h\\<phi>\\_bdy gives C7 for w'.
+       C8: \\<phi> bijective + q\\_w C8 gives interior injectivity.
+       C9: \\<phi> bijective + q\\_w C9 gives edge-edge injectivity.\<close>
+    show ?thesis sorry
+  qed
+  \<comment> \<open>Now Y\\_w is quotient of w' (hYw\\_w') and Y\\_w' is quotient of w' (hY\\_w').
+     scheme\\_quotient\\_uniqueness gives homeomorphism.\<close>
+  have "\<exists>h. top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h"
+    using scheme_quotient_uniqueness[OF htopo_Yw htopo_Yw' hYw_w' hY_w'] .
   then obtain h_ww' where hww': "top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h_ww'" by (by100 blast)
   \<comment> \<open>Step 3g: Compose: Y -> Y\\_w -> Y\\_w' -> Y' = Y\\_w'.\<close>
   from homeomorphism_comp[OF hYYw hww']
