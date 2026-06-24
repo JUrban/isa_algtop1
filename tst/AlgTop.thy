@@ -2359,12 +2359,127 @@ proof -
   have hbilin: "\<And>j. (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0)
       = (1-t)*((vx j - vx 0)*(vy i - vy 0) - (vy j - vy 0)*(vx i - vx 0))
       + t*((vx j - vx 0)*(vy(Suc i) - vy 0) - (vy j - vy 0)*(vx(Suc i) - vx 0))"
-    unfolding px_def py_def using hsi_mod sorry \<comment> \<open>Bilinearity of cross product. Algebra.\<close>
+  proof -
+    fix j :: nat
+    have hpx: "px = (1-t)*vx i + t*vx(Suc i)" unfolding px_def using hsi_mod by simp
+    have hpy: "py = (1-t)*vy i + t*vy(Suc i)" unfolding py_def using hsi_mod by simp
+    have "(vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0)
+        = (vx j - vx 0)*((1-t)*(vy i - vy 0) + t*(vy(Suc i) - vy 0))
+        - (vy j - vy 0)*((1-t)*(vx i - vx 0) + t*(vx(Suc i) - vx 0))"
+      using hpx hpy by (by100 algebra)
+    also have "\<dots> = (1-t)*((vx j - vx 0)*(vy i - vy 0) - (vy j - vy 0)*(vx i - vx 0))
+      + t*((vx j - vx 0)*(vy(Suc i) - vy 0) - (vy j - vy 0)*(vx(Suc i) - vx 0))"
+      by (by100 algebra)
+    finally show "(vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0)
+      = (1-t)*((vx j - vx 0)*(vy i - vy 0) - (vy j - vy 0)*(vx i - vx 0))
+      + t*((vx j - vx 0)*(vy(Suc i) - vy 0) - (vy j - vy 0)*(vx(Suc i) - vx 0))" .
+  qed
   define expected where "expected = (if i = 0 then 1 else i)"
   \<comment> \<open>Step A: ?PL(expected) holds.\<close>
   have hPL_holds: "?PL expected"
-    sorry \<comment> \<open>Lower: t*cross(expected, i+1) \\<ge> 0 (fan det + t > 0 or = 0 for i=0).
-       Upper: (1-t)*(-cross(i+1,expected)) \\<le> 0 (fan det antisymmetry + 1-t \\<ge> 0).\<close>
+  proof -
+    have hexp_ge1: "1 \<le> expected" unfolding expected_def by simp
+    have hexp_lt_k: "expected < k" unfolding expected_def using hi hk by simp
+    \<comment> \<open>Lower bound: hbilin[of expected] = (1-t)*cross(expected,i) + t*cross(expected,Suc i).
+       Both terms: if i=0 then cross(1,0) = 0 and cross(1,1) = 0, so lower = 0.
+                   if i \\<ge> 1 then expected = i, cross(i,i) = 0, cross(i,Suc i) > 0 (fan det),
+                   so lower = t*fan\\_det > 0.\<close>
+    have hlower: "(vx expected - vx 0)*(py - vy 0) - (vy expected - vy 0)*(px - vx 0) \<ge> 0"
+    proof -
+      from hbilin[of expected]
+      have hlow_decomp: "(vx expected - vx 0)*(py - vy 0) - (vy expected - vy 0)*(px - vx 0)
+        = (1-t)*((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0))
+        + t*((vx expected - vx 0)*(vy(Suc i) - vy 0) - (vy expected - vy 0)*(vx(Suc i) - vx 0))" .
+      have hcross_eq_0: "((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0)) = 0"
+      proof (cases "i = 0")
+        case True thus ?thesis unfolding expected_def by simp
+      next
+        case False hence "expected = i" unfolding expected_def by simp
+        thus ?thesis by simp
+      qed
+      have hcross_ge_0: "t * ((vx expected - vx 0)*(vy(Suc i) - vy 0) - (vy expected - vy 0)*(vx(Suc i) - vx 0)) \<ge> 0"
+      proof (cases "i = 0")
+        case True hence "expected = 1" and "Suc i = 1" unfolding expected_def by simp+
+        thus ?thesis by simp
+      next
+        case False hence "expected = i" and "i \<ge> 1" unfolding expected_def by simp+
+        have "i < n" using hi hk_lt by linarith
+        have "i < n" using hi hk_lt by linarith
+        from hfan[rule_format, OF \<open>i < n\<close> hsi_lt \<open>i \<ge> 1\<close>]
+        have hfdi: "((vx i - vx 0)*(vy(Suc i) - vy 0) - (vy i - vy 0)*(vx(Suc i) - vx 0)) > 0"
+          using hi by linarith
+        from mult_pos_pos[OF ht_pos hfdi]
+        show ?thesis using \<open>expected = i\<close> by simp
+      qed
+      have "(1-t) * 0 + t * ((vx expected - vx 0)*(vy(Suc i) - vy 0) - (vy expected - vy 0)*(vx(Suc i) - vx 0)) \<ge> 0"
+        using hcross_ge_0 by simp
+      hence "(1-t)*((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0))
+        + t*((vx expected - vx 0)*(vy(Suc i) - vy 0) - (vy expected - vy 0)*(vx(Suc i) - vx 0)) \<ge> 0"
+        using hcross_eq_0 by simp
+      thus ?thesis using hlow_decomp by linarith
+    qed
+    \<comment> \<open>Upper bound: hbilin[of "Suc expected"] = (1-t)*cross(Suc expected, i) + t*cross(Suc expected, Suc i).
+       If i = 0: Suc expected = 2, cross(2,0) = 0, cross(2,1) = -fan\\_det(1,2) < 0.
+       If i \\<ge> 1: expected = i, Suc expected = Suc i, cross(Suc i, i) < 0, cross(Suc i, Suc i) = 0.\<close>
+    have hupper: "(vx(Suc expected) - vx 0)*(py - vy 0) - (vy(Suc expected) - vy 0)*(px - vx 0) \<le> 0"
+    proof -
+      from hbilin[of "Suc expected"]
+      have hup_decomp: "(vx(Suc expected) - vx 0)*(py - vy 0) - (vy(Suc expected) - vy 0)*(px - vx 0)
+        = (1-t)*((vx(Suc expected) - vx 0)*(vy i - vy 0) - (vy(Suc expected) - vy 0)*(vx i - vx 0))
+        + t*((vx(Suc expected) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc expected) - vy 0)*(vx(Suc i) - vx 0))" .
+      show ?thesis
+      proof (cases "i = 0")
+        case True
+        \<comment> \<open>i=0: Suc expected = 2, cross(2,0)=0, cross(2,1)=-fan\\_det(1,2)<0.\<close>
+        have "expected = 1" unfolding expected_def using True by simp
+        hence hSE: "Suc expected = 2" by simp
+        have hcr_20: "((vx 2 - vx 0)*(vy 0 - vy 0) - (vy 2 - vy 0)*(vx 0 - vx 0)) = 0" by simp
+        have "(vx 2 - vx 0)*(vy 1 - vy 0) - (vy 2 - vy 0)*(vx 1 - vx 0) < 0"
+        proof -
+          have "(1::nat) < n" using hn by linarith
+          have "(2::nat) < n" using hn by linarith
+          from hfan[rule_format, OF \<open>1 < n\<close> \<open>2 < n\<close>]
+          have "(vx 1 - vx 0)*(vy 2 - vy 0) - (vy 1 - vy 0)*(vx 2 - vx 0) > 0" by simp
+          moreover have "(vx 2 - vx 0)*(vy 1 - vy 0) - (vy 2 - vy 0)*(vx 1 - vx 0)
+            = -((vx 1 - vx 0)*(vy 2 - vy 0) - (vy 1 - vy 0)*(vx 2 - vx 0))"
+            by (by100 algebra)
+          ultimately show ?thesis by linarith
+        qed
+        have "t \<ge> 0" using ht_pos by linarith
+        hence "t * ((vx 2 - vx 0)*(vy 1 - vy 0) - (vy 2 - vy 0)*(vx 1 - vx 0)) \<le> 0"
+          using \<open>(vx 2 - vx 0)*(vy 1 - vy 0) - (vy 2 - vy 0)*(vx 1 - vx 0) < 0\<close>
+          using mult_nonneg_nonpos[of t "(vx 2 - vx 0)*(vy 1 - vy 0) - (vy 2 - vy 0)*(vx 1 - vx 0)"]
+          by linarith
+        thus ?thesis using hup_decomp hSE hcr_20 True hsi_mod
+          sorry \<comment> \<open>Assembly: combine (1-t)*0 + t*neg \\<le> 0 with decomposition. Technical.\<close>
+      next
+        case False
+        \<comment> \<open>i\\<ge>1: expected = i, Suc expected = Suc i, cross(Suc i, i) < 0, cross(Suc i, Suc i) = 0.\<close>
+        have "expected = i" unfolding expected_def using False by simp
+        hence hSE: "Suc expected = Suc i" by simp
+        have "((vx(Suc i) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc i) - vy 0)*(vx(Suc i) - vx 0)) = 0" by (by100 algebra)
+        have "((vx(Suc i) - vx 0)*(vy i - vy 0) - (vy(Suc i) - vy 0)*(vx i - vx 0)) < 0"
+        proof -
+          have "i < n" using hi hk_lt by linarith
+          from hfan[rule_format, OF \<open>i < n\<close> hsi_lt]
+          have "((vx i - vx 0)*(vy(Suc i) - vy 0) - (vy i - vy 0)*(vx(Suc i) - vx 0)) > 0"
+            using False by linarith
+          moreover have "((vx(Suc i) - vx 0)*(vy i - vy 0) - (vy(Suc i) - vy 0)*(vx i - vx 0))
+            = -((vx i - vx 0)*(vy(Suc i) - vy 0) - (vy i - vy 0)*(vx(Suc i) - vx 0))"
+            by (by100 algebra)
+          ultimately show ?thesis by linarith
+        qed
+        hence "(1-t) * ((vx(Suc i) - vx 0)*(vy i - vy 0) - (vy(Suc i) - vy 0)*(vx i - vx 0)) \<le> 0"
+          using h1mt
+          using mult_nonneg_nonpos[of "1-t" "((vx(Suc i) - vx 0)*(vy i - vy 0) - (vy(Suc i) - vy 0)*(vx i - vx 0))"]
+          by linarith
+        thus ?thesis using hup_decomp hSE
+          \<open>((vx(Suc i) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc i) - vy 0)*(vx(Suc i) - vx 0)) = 0\<close>
+          by simp
+      qed
+    qed
+    show "?PL expected" using hexp_ge1 hexp_lt_k hlower hupper by simp
+  qed
   \<comment> \<open>Step B: ?PL(j) false for j < expected.\<close>
   have hPL_min: "\<And>j. ?PL j \<Longrightarrow> expected \<le> j"
   proof -
