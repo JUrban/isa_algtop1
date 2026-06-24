@@ -1501,7 +1501,65 @@ proof (intro allI impI ballI)
       \<comment> \<open>Double negation: snd(w'!i) = \\<not>snd(u2!(k-1-i)), snd(w!(k-i)) = snd(u2!(k-i-1)) = snd(u2!(k-1-i)).
          So snd(w'!i) = \\<not>snd(w!(k-i)). Hence (snd(w'!i)=snd(w'!j)) = (snd(w!(k-i))=snd(w!(k-j))).\<close>
       have hdouble_neg: "(snd(w'!i) = snd(w'!j)) = (snd(w!(k-i)) = snd(w!(k-j)))"
-        sorry \<comment> \<open>Double negation via inv(u2) snd flip. Same list indexing as hw'i/hw'j but for snd.\<close>
+      proof -
+        \<comment> \<open>snd(w'!i) = \\<not>snd(u2!(length u2 - i)) by same decomposition as hw'i.\<close>
+        let ?rivu = "rev (map top1_inverse_edge u2)"
+        have hi2: "i - 1 < length ?rivu" using hii hi_mid(1) by (by100 simp)
+        have si1: "w'!i = ?rivu!(i-1)"
+          using nth_append_first[OF hi2] unfolding w'_def using hi_mid(1) by (by100 simp)
+        have si4: "i - 1 < length (map top1_inverse_edge u2)" using hi2 by (by100 simp)
+        have si5: "?rivu!(i-1) = (map top1_inverse_edge u2)!(length u2 - i)"
+          using rev_nth[OF si4] hi_mid(1) hii by (by100 simp)
+        have si6: "length u2 - i < length u2" using hi_mid(1) hii by (by100 linarith)
+        have si7: "(map top1_inverse_edge u2)!(length u2 - i) = top1_inverse_edge (u2!(length u2 - i))"
+          using si6 by (by100 simp)
+        have si8: "snd (w' ! i) = (\<not> snd (u2 ! (length u2 - i)))"
+        proof -
+          obtain l b where hlb: "u2!(length u2 - i) = (l, b)" by (cases "u2!(length u2 - i)")
+          have "top1_inverse_edge (l, b) = (l, \<not>b)" unfolding top1_inverse_edge_def by simp
+          with si1 si5 si7 hlb show ?thesis by simp
+        qed
+        \<comment> \<open>snd(w'!j) = \\<not>snd(u2!(length u2 - j)) by same decomposition.\<close>
+        have hj2: "j - 1 < length ?rivu" using hjj hj_mid(1) by (by100 simp)
+        have sj1: "w'!j = ?rivu!(j-1)"
+          using nth_append_first[OF hj2] unfolding w'_def using hj_mid(1) by (by100 simp)
+        have sj4: "j - 1 < length (map top1_inverse_edge u2)" using hj2 by (by100 simp)
+        have sj5: "?rivu!(j-1) = (map top1_inverse_edge u2)!(length u2 - j)"
+          using rev_nth[OF sj4] hj_mid(1) hjj by (by100 simp)
+        have sj6: "length u2 - j < length u2" using hj_mid(1) hjj by (by100 linarith)
+        have sj7: "(map top1_inverse_edge u2)!(length u2 - j) = top1_inverse_edge (u2!(length u2 - j))"
+          using sj6 by (by100 simp)
+        have sj8: "snd (w' ! j) = (\<not> snd (u2 ! (length u2 - j)))"
+        proof -
+          obtain l b where hlb: "u2!(length u2 - j) = (l, b)" by (cases "u2!(length u2 - j)")
+          have "top1_inverse_edge (l, b) = (l, \<not>b)" unfolding top1_inverse_edge_def by simp
+          with sj1 sj5 sj7 hlb show ?thesis by simp
+        qed
+        \<comment> \<open>snd(w!(k-i)) = snd(u2!(k-i-1)) = snd(u2!(length u2 - i)).\<close>
+        have hki_ge1': "k - i \<ge> 1" using hii_k hk2 by linarith
+        have hki_le': "k - i \<le> length u2" using hi_mid(1) hk_eq by (by100 simp)
+        have "w!(k-i) = (u2 @ [(a, True)] @ v)!(k-i-1)"
+          unfolding w_def using hki_ge1' by (by100 simp)
+        also have "k-i-1 < length u2" using hki_le' hki_ge1' by linarith
+        hence "(u2 @ [(a, True)] @ v)!(k-i-1) = u2!(k-i-1)"
+          by (rule nth_append_first)
+        finally have "w!(k-i) = u2!(k-i-1)" .
+        have "k-i-1 = length u2 - i" using hk_eq hi_mid(1) by (by100 simp)
+        hence swi: "snd(w!(k-i)) = snd(u2!(length u2 - i))" using \<open>w!(k-i) = u2!(k-i-1)\<close> by simp
+        \<comment> \<open>snd(w!(k-j)) = snd(u2!(length u2 - j)).\<close>
+        have hkj_ge1: "k - j \<ge> 1" using hjj_k hk2 by linarith
+        have hkj_le: "k - j \<le> length u2" using hj_mid(1) hk_eq by (by100 simp)
+        have "w!(k-j) = (u2 @ [(a, True)] @ v)!(k-j-1)"
+          unfolding w_def using hkj_ge1 by (by100 simp)
+        also have "k-j-1 < length u2" using hkj_le hkj_ge1 by linarith
+        hence "(u2 @ [(a, True)] @ v)!(k-j-1) = u2!(k-j-1)"
+          by (rule nth_append_first)
+        finally have "w!(k-j) = u2!(k-j-1)" .
+        have "k-j-1 = length u2 - j" using hk_eq hj_mid(1) by (by100 simp)
+        hence swj: "snd(w!(k-j)) = snd(u2!(length u2 - j))" using \<open>w!(k-j) = u2!(k-j-1)\<close> by simp
+        \<comment> \<open>Combine: \\<not>a = \\<not>b iff a = b.\<close>
+        from si8 sj8 swi swj show ?thesis by (by100 auto)
+      qed
       from hLHS hC7_app hTHEN hELSE hdouble_neg
       show ?thesis by (by100 auto)
     next
