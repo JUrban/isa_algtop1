@@ -2005,36 +2005,17 @@ proof (intro allI impI ballI)
   qed
 qed
 
-\<comment> \<open>POLYGON SELF-HOMEOMORPHISM for the paste chain.
-   The boundary rearrangement sigma (proved continuous by paste\\_chain\\_boundary\\_C7's
-   junction analysis) extends to a homeomorphism of the polygon to itself.
-   This is the geometric core that cannot be avoided by algebraic arguments.
-   The extension uses the half-and-half construction: split P along the virtual
-   diagonal from v\\_0 to v\\_{k+1}, map each half to a sub-polygon of P.\<close>
-lemma paste_chain_polygon_self_homeomorphism:
-  fixes vx vy :: "nat \<Rightarrow> real" and k n :: nat
-  assumes hn: "n \<ge> 3" and hk: "1 \<le> k" and hk_lt: "k < n"
-      and hP: "top1_is_polygonal_region_on P n"
-      and hC5: "P = {(x, y) | x y. \<exists>coeffs. (\<forall>i<n. coeffs i \<ge> 0)
-                     \<and> (\<Sum>i<n. coeffs i) = 1
-                     \<and> x = (\<Sum>i<n. coeffs i * vx i)
-                     \<and> y = (\<Sum>i<n. coeffs i * vy i)}"
-      and hC3: "\<forall>i<n. \<forall>j<n. i \<noteq> j \<longrightarrow> (vx i, vy i) \<noteq> (vx j, vy j)"
-  shows "\<exists>\<phi>. top1_homeomorphism_on P
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P)
-      P (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P) \<phi>
-    \<and> (\<forall>i<n. \<forall>t\<in>I_set.
-        \<phi> ((1-t)*vx i + t*vx(Suc i mod n), (1-t)*vy i + t*vy(Suc i mod n))
-      = (paste_chain_sigma_x vx k n i t, paste_chain_sigma_y vy k n i t))"
-  sorry \<comment> \<open>GEOMETRIC CORE: half-and-half polygon self-homeomorphism.
-     Construction: split P along diagonal v\\_0-v\\_{k+1} into Q1 (edges 0..k) and Q2 (edges k+1..n-1).
-     Left half maps: edge i -> reversed edge (k-i) for i=1..k-1, edge 0 -> diagonal.
-     Right half maps: edge i -> edge i+1 for i=k..n-2, edge n-1 -> diagonal.
-     Interior: barycentric extension on each half (convex polygon homeomorphism).
-     Continuity: junction analysis from paste\\_chain\\_boundary\\_C7.
-     Bijectivity: each half maps bijectively to its sub-polygon.
-     Compact Hausdorff: P homeomorphic to disk, phi continuous bijection -> homeomorphism.
-     Estimated: ~200 lines.\<close>
+\<comment> \<open>NOTE: paste\\_chain\\_polygon\\_self\\_homeomorphism was REMOVED because phi is actually
+   DISCONTINUOUS at the dividing line. Only q\\_w \\<circ> phi is continuous (C7 absorbs jumps).
+   The correct formulation is directly: top1\\_quotient\\_of\\_scheme\\_on Y\\_w TY\\_w w'.
+   This is stated as hYw\\_w' in the proof of theorem\\_76\\_1\\_paste\\_chain\\_proper.
+   The proof defines g = q\\_w \\<circ> phi (piecewise: q\\_w \\<circ> phi\\_left on Q1, q\\_w \\<circ> phi\\_right on Q2)
+   and verifies that g satisfies all C1-C11 conditions for scheme w':
+   - Continuity at dividing line: left gives q\\_w(edge\\_0(s)), right gives q\\_w(edge\\_k(s)),
+     matched by C7 for the a-pair.
+   - C7 for w': from paste\\_chain\\_boundary\\_C7 (PROVED).
+   - C8: each half maps bijectively to a sub-polygon interior, q\\_w injective there.
+   - C9: edges map to distinct original edges, q\\_w separates them.\<close>
 
 lemma theorem_76_1_paste_chain:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
@@ -2402,43 +2383,25 @@ proof -
         \<longrightarrow> (i = j \<and> t = s) \<or> (fst(?w!i) = fst(?w!j) \<and>
               (if snd(?w!i) = snd(?w!j) then s = t else s = 1 - t))"
     by (rule quotient_of_scheme_extract_vx[OF hY_w])
-  \<comment> \<open>Step 3g: Get polygon self-homeomorphism phi for the sigma rearrangement.\<close>
-  let ?k = "1 + length u2"
-  have hn_ge3: "length ?w \<ge> 3" by (rule hlen)
-  have hk_ge1: "(1::nat) \<le> ?k" by (by100 simp)
-  have hk_lt_n: "?k < length ?w" by (by100 simp)
-  from paste_chain_polygon_self_homeomorphism[OF hn_ge3 hk_ge1 hk_lt_n hP_w hC5_w hC3_w]
-  obtain \<phi> where h\<phi>_homeo: "top1_homeomorphism_on P_w
-      (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w)
-      P_w (subspace_topology UNIV (product_topology_on top1_open_sets top1_open_sets) P_w) \<phi>"
-    and h\<phi>_bdy: "\<forall>i<length ?w. \<forall>t\<in>I_set.
-        \<phi> ((1-t)*vx_w i + t*vx_w(Suc i mod length ?w), (1-t)*vy_w i + t*vy_w(Suc i mod length ?w))
-      = (paste_chain_sigma_x vx_w ?k (length ?w) i t,
-         paste_chain_sigma_y vy_w ?k (length ?w) i t)"
-    by (by100 blast)
-  \<comment> \<open>Step 3h: Fibre equivalence gives Y\\_w \\<cong> Y\\_w'.
-     Need: q\\_w(x) = q\\_w(y) <-> q\\_w'(\\<phi>(x)) = q\\_w'(\\<phi>(y)) on P\\_w.
-     Then quotient\\_same\\_fibres\\_homeomorphic on q\\_w and q\\_w'\\<circ>\\<phi> gives the result.
-     But we need q\\_w' to be a quotient map from P\\_w (not P\\_w').
-     Since both are canonical constructions from scheme\\_quotient\\_exists with the same n,
-     P\\_w = P\\_w'. This needs verification.\<close>
-  \<comment> \<open>Step 3h: Show Y\\_w is also quotient of w' via q\\_w \\<circ> \\<phi>.
-     Then scheme\\_quotient\\_uniqueness gives Y\\_w \\<cong> Y\\_w'.\<close>
-  \<comment> \<open>q\\_w \\<circ> \\<phi> satisfies:
-     - C7 for w': from paste\\_chain\\_boundary\\_C7 + \\<phi>\\_bdy (\\<phi> agrees with sigma on boundary).
-     - C8: interior injectivity from \\<phi> bijective + q\\_w C8.
-     - C9: edge-edge from C9 of q\\_w via \\<phi>.
-     So top1\\_quotient\\_of\\_scheme\\_on Y\\_w TY\\_w w'.\<close>
+  \<comment> \<open>Step 3g: Show Y\\_w is also quotient of w' (the CORE sorry).
+     Define g = q\\_w \\<circ> phi piecewise on P\\_w, where phi is DISCONTINUOUS but q\\_w \\<circ> phi
+     is continuous (C7 absorbs the jumps at the dividing line).
+     Specifically: split P\\_w into Q1 (vertices v\\_0,...,v\\_k) and Q2 (v\\_0,v\\_k,...,v\\_{n-1}).
+     On Q1: phi\\_L reverses vertex order (v\\_j -> v\\_{k+1-j} for j=1..k, v\\_0 -> v\\_0).
+     On Q2: phi\\_R shifts vertices (v\\_0->v\\_k, v\\_j->v\\_{j+1} for j=k..n-2, v\\_{n-1}->v\\_0).
+     g = q\\_w on Q1 \\<circ> phi\\_L and q\\_w \\<circ> phi\\_R on Q2.
+     At dividing line: g\\_left = q\\_w(edge\\_0(s)), g\\_right = q\\_w(edge\\_k(s)).
+     By C7 for a-pair: q\\_w(edge\\_0(s)) = q\\_w(edge\\_k(s)). Continuous!
+     C7 for w': from paste\\_chain\\_boundary\\_C7 (PROVED, ~800 lines).
+     C8: each half maps bijectively to a sub-polygon, q\\_w injective on interior.
+     C9: edges map to distinct original edges, q\\_w separates them.\<close>
   have hYw_w': "top1_quotient_of_scheme_on Y_w TY_w ?w'"
-  proof -
-    \<comment> \<open>Witnesses: P = P\\_w, q = q\\_w \\<circ> \\<phi>, vx = vx\\_w, vy = vy\\_w.
-       C1, C3-C6, C10, C11: same polygon P\\_w, inherited via hlen\\_eq.
-       C2: q\\_w \\<circ> \\<phi> is quotient map (\\<phi> homeomorphism composed with quotient map).
-       C7: paste\\_chain\\_boundary\\_C7 + h\\<phi>\\_bdy gives C7 for w'.
-       C8: \\<phi> bijective + q\\_w C8 gives interior injectivity.
-       C9: \\<phi> bijective + q\\_w C9 gives edge-edge injectivity.\<close>
-    show ?thesis sorry
-  qed
+    sorry \<comment> \<open>CORE GEOMETRIC SORRY: Y\\_w is quotient of w'.
+       Proof: define g = q\\_w \\<circ> phi (piecewise on Q1/Q2), verify C1-C11 for w'.
+       C7 is the main content (paste\\_chain\\_boundary\\_C7, PROVED).
+       C8/C9 follow from phi bijectivity on each half + original C8/C9.
+       Other conditions (C1,C3-C6,C10,C11) inherited from P\\_w.
+       Estimated: ~150 lines (define g, prove continuity, verify conditions).\<close>
   \<comment> \<open>Now Y\\_w is quotient of w' (hYw\\_w') and Y\\_w' is quotient of w' (hY\\_w').
      scheme\\_quotient\\_uniqueness gives homeomorphism.\<close>
   have "\<exists>h. top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h"
