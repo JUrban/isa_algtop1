@@ -2092,10 +2092,39 @@ lemma convex_polygon_fan_det_from_v0:
           (vx kk - vx i) * (vy (Suc i mod n) - vy i) - (vy kk - vy i) * (vx (Suc i mod n) - vx i) < 0"
   shows "\<forall>a<n. \<forall>b<n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
       (vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
-  sorry \<comment> \<open>Fan determinant from v\\_0. Proof: from C11 with i=0, get cross(v\\_kk - v\\_0, v\\_1 - v\\_0) < 0
-     for kk >= 2. Equivalently cross(v\\_1 - v\\_0, v\\_kk - v\\_0) > 0. For general (a,b) with 1<=a<b:
-     use induction on (b-a) + C11 applied to different edges to show the cross product stays positive.
-     Alternatively: for convex polygon, vertices are in "positive orientation" from any vertex.\<close>
+proof (intro allI impI)
+  fix a b assume ha: "a < n" and hb: "b < n" and ha1: "1 \<le> a" and hab: "a < b"
+  \<comment> \<open>Base case: a = 1. From C11 with i=0: cross(v\\_kk - v\\_0, v\\_1 - v\\_0) < 0 for kk \\<ge> 2.
+     Equivalently: cross(v\\_1 - v\\_0, v\\_b - v\\_0) > 0 for b \\<ge> 2.\<close>
+  \<comment> \<open>General case: by induction or geometric argument.
+     For now: sorry the full proof. The key tool is C11 applied to edge (a-1, a)
+     to show the cross product with (v\\_0) is negative, then use this to derive
+     positivity of cross(v\\_a - v\\_0, v\\_b - v\\_0) by bilinearity + induction.\<close>
+  show "(vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
+  proof (cases "a = 1")
+    case True
+    \<comment> \<open>a = 1, b \\<ge> 2. From C11 with i=0, kk=b: cross(v\\_b - v\\_0, v\\_1 - v\\_0) < 0.\<close>
+    have hb2: "b \<ge> 2" using hab True by linarith
+    have hb_ne0: "b \<noteq> 0" using hb2 by linarith
+    have hb_ne1: "b \<noteq> Suc 0 mod n" using hb2 hn hab True by (by100 simp)
+    have h0_lt: "(0::nat) < n" using hn by linarith
+    from hC11[rule_format, OF h0_lt hb hb_ne0 hb_ne1]
+    have "((vx b - vx 0) * (vy (Suc 0 mod n) - vy 0) -
+           (vy b - vy 0) * (vx (Suc 0 mod n) - vx 0)) < 0" .
+    hence "((vx b - vx 0) * (vy 1 - vy 0) -
+           (vy b - vy 0) * (vx 1 - vx 0)) < 0" using hn by (by100 simp)
+    \<comment> \<open>This is cross(v\\_b - v\\_0, v\\_1 - v\\_0) < 0, i.e., cross(v\\_1 - v\\_0, v\\_b - v\\_0) > 0.\<close>
+    moreover have "(vx 1 - vx 0) * (vy b - vy 0) - (vy 1 - vy 0) * (vx b - vx 0)
+      = -((vx b - vx 0) * (vy 1 - vy 0) - (vy b - vy 0) * (vx 1 - vx 0))" by (by100 algebra)
+    ultimately have "(vx 1 - vx 0) * (vy b - vy 0) - (vy 1 - vy 0) * (vx b - vx 0) > 0"
+      by linarith
+    thus ?thesis using True by simp
+  next
+    case False hence ha2: "a \<ge> 2" using ha1 by linarith
+    \<comment> \<open>General case a \\<ge> 2. Needs induction or stronger geometric argument.\<close>
+    show ?thesis sorry
+  qed
+qed
 
 \<comment> \<open>The phi\\_edge\\_formula: on boundary edge i at parameter t, the piecewise phi
    (half-and-half construction via LEAST + Cramer) gives paste\\_sigma.
