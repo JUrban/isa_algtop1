@@ -1249,7 +1249,17 @@ proof (intro allI impI ballI)
   proof (cases "i = 0 \<or> i = ?n - 1")
     case True
     \<comment> \<open>i is a c-edge. Label = c. Since c fresh, j must also be c-edge.\<close>
-    have hfst_i_c: "fst (w'!i) = c" sorry \<comment> \<open>Position 0 or n-1 has label c.\<close>
+    have hfst_i_c: "fst (w'!i) = c"
+    proof (cases "i = 0")
+      case True thus ?thesis unfolding w'_def by (by100 simp)
+    next
+      case False
+      with True have hi_last: "i = ?n - 1" by simp
+      have "w' \<noteq> []" using hn3 hlen by (by100 auto)
+      hence "w'!i = last w'" using hi_last hlen last_conv_nth[of w'] by (by100 simp)
+      moreover have "last w' = (c, True)" unfolding w'_def by (by100 simp)
+      ultimately show ?thesis by (by100 simp)
+    qed
     have hfst_j_c: "fst (w'!j) = c" using hlabel hfst_i_c by simp
     have hj_c: "j = 0 \<or> j = ?n - 1"
     proof (rule ccontr)
@@ -1259,9 +1269,38 @@ proof (intro allI impI ballI)
     qed
     \<comment> \<open>Both c-edges: sigma(0,t) = sigma(n-1,t) (same diagonal).\<close>
     have h\<sigma>_eq: "\<sigma> i t = \<sigma> j t"
-      using True hj_c unfolding \<sigma>_def paste_chain_sigma_x_def paste_chain_sigma_y_def sorry
+    proof -
+      from True hj_c
+      show ?thesis
+        unfolding \<sigma>_def paste_chain_sigma_x_def paste_chain_sigma_y_def
+        by (by100 auto)
+    qed
     have hsnd_eq: "snd(w'!i) = snd(w'!j)"
-      using True hj_c sorry \<comment> \<open>Both c-edge positions have snd = True.\<close>
+    proof -
+      have "snd(w'!i) = True"
+      proof (cases "i = 0")
+        case True thus ?thesis unfolding w'_def by (by100 simp)
+      next
+        case False
+        with \<open>i = 0 \<or> i = ?n - 1\<close> have "i = ?n - 1" by simp
+        have "w' \<noteq> []" using hn3 hlen by (by100 auto)
+        hence "w'!i = last w'" using \<open>i = ?n - 1\<close> hlen last_conv_nth[of w'] by (by100 simp)
+        moreover have "last w' = (c, True)" unfolding w'_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      moreover have "snd(w'!j) = True"
+      proof (cases "j = 0")
+        case True thus ?thesis unfolding w'_def by (by100 simp)
+      next
+        case False
+        with hj_c have "j = ?n - 1" by simp
+        have "w' \<noteq> []" using hn3 hlen by (by100 auto)
+        hence "w'!j = last w'" using \<open>j = ?n - 1\<close> hlen last_conv_nth[of w'] by (by100 simp)
+        moreover have "last w' = (c, True)" unfolding w'_def by (by100 simp)
+        ultimately show ?thesis by (by100 simp)
+      qed
+      ultimately show ?thesis by simp
+    qed
     thus ?thesis using h\<sigma>_eq hsnd_eq by (by100 simp)
   next
     case False
@@ -1279,7 +1318,10 @@ proof (intro allI impI ballI)
       show "j \<noteq> ?n - 1"
       proof
         assume "j = ?n - 1"
-        hence "fst (w'!j) = c" sorry \<comment> \<open>Last position of w' has label c.\<close>
+        have "w' \<noteq> []" using hn3 hlen by (by100 auto)
+        hence "w'!j = last w'" using \<open>j = ?n - 1\<close> hlen last_conv_nth[of w'] by (by100 simp)
+        moreover have "last w' = (c, True)" unfolding w'_def by (by100 simp)
+        ultimately have "fst (w'!j) = c" by (by100 simp)
         with hfst_j_ne_c show False by simp
       qed
     qed
