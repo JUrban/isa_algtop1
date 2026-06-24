@@ -3119,7 +3119,7 @@ next
                evaluate Cramer coords via cramer\\_on\\_triangle\\_edge/base\\_edge,
                simplify to paste\\_sigma. This is pure algebra + definition matching.\<close>
         next
-          case False hence "t = 0" using ht unfolding top1_unit_interval_def sorry
+          case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
           show ?thesis sorry \<comment> \<open>Vertex case: sigma(i,0) = v\\_{k+1-expected} and phi\\_L gives same.\<close>
         qed
