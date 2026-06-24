@@ -1110,6 +1110,14 @@ next
     by simp
 qed
 
+\<comment> \<open>Helper: nth of append when index is in the first list.\<close>
+lemma nth_append_first: "n < length xs \<Longrightarrow> (xs @ ys) ! n = xs ! n"
+  by (simp add: nth_append)
+
+\<comment> \<open>Helper: nth of append when index is in the second list.\<close>
+lemma nth_append_second: "n \<ge> length xs \<Longrightarrow> (xs @ ys) ! n = ys ! (n - length xs)"
+  by (simp add: nth_append)
+
 \<comment> \<open>DEFINITION: the boundary edge-correspondence map for the paste chain.
    Maps target edge (i, t) coordinates to a point in the ORIGINAL polygon P.
    This is the key ingredient of the quotient map g = q2 o sigma.\<close>
@@ -1240,7 +1248,7 @@ proof (intro allI impI ballI)
       have h1: "w'!m = (?mid @ [(c, True)])!(m - 1)"
         unfolding w'_def using hm1 by (by100 simp)
       have h2: "(?mid @ [(c, True)])!(m - 1) = ?mid!(m - 1)"
-        sorry \<comment> \<open>(xs@ys)!n = xs!n when n<length xs.\<close>
+        by (rule nth_append_first[OF hm1_lt])
       have h3: "?mid!(m - 1) \<in> set ?mid" using nth_mem[OF hm1_lt] .
       from h1 h2 h3 show ?thesis by (by100 auto)
     qed
@@ -1392,11 +1400,45 @@ proof (intro allI impI ballI)
            Proof: step-by-step append decomposition (nth\\_append at each level).
            Same for j. Sorry'd pending process\\_theories run.\<close>
         have hw'_i_eq: "w'!i = v!(i - length u2 - 1)"
-          using hi_mid hiv hvi unfolding w'_def sorry
+        proof -
+          have s1: "w'!i = (rev (map top1_inverse_edge u2) @ v @ [(c, True)])!(i - 1)"
+            unfolding w'_def using hi_mid by (by100 simp)
+          have "i - 1 \<ge> length (rev (map top1_inverse_edge u2))"
+            using hiv by (by100 simp)
+          hence s2: "(rev (map top1_inverse_edge u2) @ v @ [(c, True)])!(i - 1)
+              = (v @ [(c, True)])!(i - 1 - length (rev (map top1_inverse_edge u2)))"
+            by (rule nth_append_second)
+          have "i - 1 - length (rev (map top1_inverse_edge u2)) = i - 1 - length u2"
+            by (by100 simp)
+          hence s3: "(v @ [(c, True)])!(i - 1 - length (rev (map top1_inverse_edge u2)))
+              = (v @ [(c, True)])!(i - 1 - length u2)" by simp
+          have hvi2: "i - 1 - length u2 < length v" using hvi by (by100 simp)
+          hence s4: "(v @ [(c, True)])!(i - 1 - length u2) = v!(i - 1 - length u2)"
+            by (rule nth_append_first)
+          have "i - 1 - length u2 = i - length u2 - 1" using hiv by (by100 linarith)
+          with s1 s2 s3 s4 show ?thesis by simp
+        qed
         have hw_i1_eq: "w!(i+1) = v!(i - length u2 - 1)"
           using hi_mid hiv hvi unfolding w_def by (simp add: nth_append_skip)
         have hw'_j_eq: "w'!j = v!(j - length u2 - 1)"
-          using hj_mid hjv hvj unfolding w'_def sorry
+        proof -
+          have s1: "w'!j = (rev (map top1_inverse_edge u2) @ v @ [(c, True)])!(j - 1)"
+            unfolding w'_def using hj_mid by (by100 simp)
+          have "j - 1 \<ge> length (rev (map top1_inverse_edge u2))"
+            using hjv by (by100 simp)
+          hence s2: "(rev (map top1_inverse_edge u2) @ v @ [(c, True)])!(j - 1)
+              = (v @ [(c, True)])!(j - 1 - length (rev (map top1_inverse_edge u2)))"
+            by (rule nth_append_second)
+          have "j - 1 - length (rev (map top1_inverse_edge u2)) = j - 1 - length u2"
+            by (by100 simp)
+          hence s3: "(v @ [(c, True)])!(j - 1 - length (rev (map top1_inverse_edge u2)))
+              = (v @ [(c, True)])!(j - 1 - length u2)" by simp
+          have hvj2: "j - 1 - length u2 < length v" using hvj by (by100 simp)
+          hence s4: "(v @ [(c, True)])!(j - 1 - length u2) = v!(j - 1 - length u2)"
+            by (rule nth_append_first)
+          have "j - 1 - length u2 = j - length u2 - 1" using hjv by (by100 linarith)
+          with s1 s2 s3 s4 show ?thesis by simp
+        qed
         have hw_j1_eq: "w!(j+1) = v!(j - length u2 - 1)"
           using hj_mid hjv hvj unfolding w_def by (simp add: nth_append_skip)
         have hfst_match_i: "fst(w'!i) = fst(w!(i+1))" using hw'_i_eq hw_i1_eq by simp
