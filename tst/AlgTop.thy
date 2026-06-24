@@ -1406,7 +1406,10 @@ proof (intro allI impI ballI)
              else q2 (t*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n),
                        t*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n)))" .
         \<comment> \<open>Translate back to sigma and target labels.\<close>
-        show ?thesis using hC7_app h\<sigma>i h\<sigma>j hsnd_match_i hsnd_match_j sorry
+        have h\<sigma>j_1mt: "\<sigma> j (1-t) = (t*vx(j+1) + (1-t)*vx(Suc(j+1) mod ?n),
+                                      t*vy(j+1) + (1-t)*vy(Suc(j+1) mod ?n))"
+          sorry \<comment> \<open>sigma at 1-t for v-range edge\<close>
+        show ?thesis using hC7_app h\<sigma>i h\<sigma>j h\<sigma>j_1mt hsnd_match_i hsnd_match_j by (by100 auto)
       next
         case False
         \<comment> \<open>CASE: one in inv(u2), other in v (cross pair).\<close>
