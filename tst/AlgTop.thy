@@ -2450,8 +2450,21 @@ proof -
           using \<open>(vx 2 - vx 0)*(vy 1 - vy 0) - (vy 2 - vy 0)*(vx 1 - vx 0) < 0\<close>
           using mult_nonneg_nonpos[of t "(vx 2 - vx 0)*(vy 1 - vy 0) - (vy 2 - vy 0)*(vx 1 - vx 0)"]
           by linarith
-        thus ?thesis using hup_decomp hSE hcr_20 True hsi_mod
-          sorry \<comment> \<open>Assembly: combine (1-t)*0 + t*neg \\<le> 0 with decomposition. Technical.\<close>
+        \<comment> \<open>Need: upper \\<le> 0. From hup\\_decomp: upper = (1-t)*cross(2,i) + t*cross(2,Suc i).
+           With i=0, Suc i mod n = 1: = (1-t)*cross(2,0) + t*cross(2,1) = 0 + neg \\<le> 0.\<close>
+        have "Suc i = 1" using True by simp
+        have "Suc i mod n = 1" using \<open>Suc i = 1\<close> hn by simp
+        have hup_eq: "(vx 2 - vx 0)*(py - vy 0) - (vy 2 - vy 0)*(px - vx 0)
+          = (1-t)*((vx 2 - vx 0)*(vy 0 - vy 0) - (vy 2 - vy 0)*(vx 0 - vx 0))
+          + t*((vx 2 - vx 0)*(vy 1 - vy 0) - (vy 2 - vy 0)*(vx 1 - vx 0))"
+          using hbilin[of 2] True \<open>Suc i mod n = 1\<close> by simp
+        have "(1-t)*((vx 2 - vx 0)*(vy 0 - vy 0) - (vy 2 - vy 0)*(vx 0 - vx 0)) = 0"
+          by simp
+        hence "(vx 2 - vx 0)*(py - vy 0) - (vy 2 - vy 0)*(px - vx 0) \<le> 0"
+          using hup_eq \<open>t * ((vx 2 - vx 0)*(vy 1 - vy 0) - (vy 2 - vy 0)*(vx 1 - vx 0)) \<le> 0\<close>
+          by linarith
+        moreover have "(2::nat) = Suc expected" using hSE by simp
+        ultimately show ?thesis by (by100 auto)
       next
         case False
         \<comment> \<open>i\\<ge>1: expected = i, Suc expected = Suc i, cross(Suc i, i) < 0, cross(Suc i, Suc i) = 0.\<close>
