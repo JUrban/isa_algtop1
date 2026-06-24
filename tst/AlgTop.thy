@@ -1424,44 +1424,40 @@ proof (intro allI impI ballI)
         have hw'i: "fst(w'!i) = fst(u2!(k-1-i))"
         proof -
           let ?rivu = "rev (map top1_inverse_edge u2)"
-          have h1: "w'!i = (?rivu @ v @ [(c, True)])!(i-1)"
-            unfolding w'_def using hi_mid(1) by (by100 simp)
           have h2: "i - 1 < length ?rivu" using hii hi_mid(1) by (by100 simp)
-          have h3: "(?rivu @ v @ [(c, True)])!(i-1) = ?rivu!(i-1)"
-            using h2 by (rule nth_append_first)
+          have s1: "w'!i = ?rivu!(i-1)"
+            using nth_append_first[OF h2] unfolding w'_def using hi_mid(1) by (by100 simp)
           have h4: "i - 1 < length (map top1_inverse_edge u2)" using h2 by (by100 simp)
-          have h5: "?rivu!(i-1) = (map top1_inverse_edge u2)!(length (map top1_inverse_edge u2) - Suc(i-1))"
+          have s2: "?rivu!(i-1) = (map top1_inverse_edge u2)!(length (map top1_inverse_edge u2) - Suc(i-1))"
             using h4 by (rule rev_nth)
-          have h6: "length (map top1_inverse_edge u2) - Suc(i-1) = length u2 - i"
+          have s3: "length (map top1_inverse_edge u2) - Suc(i-1) = length u2 - i"
             using hi_mid(1) hii by (by100 simp)
-          have h7: "length u2 - i < length u2" using hi_mid(1) hii by (by100 linarith)
-          have h8: "(map top1_inverse_edge u2)!(length u2 - i) = top1_inverse_edge (u2!(length u2 - i))"
-            using h7 by (by100 simp)
-          have h9: "fst (top1_inverse_edge (u2!(length u2 - i))) = fst (u2!(length u2 - i))"
+          have s4: "length u2 - i < length u2" using hi_mid(1) hii by (by100 linarith)
+          have s5: "(map top1_inverse_edge u2)!(length u2 - i) = top1_inverse_edge (u2!(length u2 - i))"
+            using s4 by (by100 simp)
+          have s6: "fst (top1_inverse_edge (u2!(length u2 - i))) = fst (u2!(length u2 - i))"
             unfolding top1_inverse_edge_def by (cases "u2!(length u2 - i)") simp
-          have h10: "length u2 - i = k - 1 - i" using hk_eq by (by100 simp)
-          from h1 h3 h5 h6 h8 h9 h10 show ?thesis by simp
+          have s7: "length u2 - i = k - 1 - i" using hk_eq by (by100 simp)
+          from s1 s2 s3 s5 s6 s7 show ?thesis by simp
         qed
         have hw'j: "fst(w'!j) = fst(u2!(k-1-j))"
         proof -
           let ?rivu = "rev (map top1_inverse_edge u2)"
-          have h1: "w'!j = (?rivu @ v @ [(c, True)])!(j-1)"
-            unfolding w'_def using hj_mid(1) by (by100 simp)
           have h2: "j - 1 < length ?rivu" using hjj hj_mid(1) by (by100 simp)
-          have h3: "(?rivu @ v @ [(c, True)])!(j-1) = ?rivu!(j-1)"
-            using h2 by (rule nth_append_first)
+          have s1: "w'!j = ?rivu!(j-1)"
+            using nth_append_first[OF h2] unfolding w'_def using hj_mid(1) by (by100 simp)
           have h4: "j - 1 < length (map top1_inverse_edge u2)" using h2 by (by100 simp)
-          have h5: "?rivu!(j-1) = (map top1_inverse_edge u2)!(length (map top1_inverse_edge u2) - Suc(j-1))"
+          have s2: "?rivu!(j-1) = (map top1_inverse_edge u2)!(length (map top1_inverse_edge u2) - Suc(j-1))"
             using h4 by (rule rev_nth)
-          have h6: "length (map top1_inverse_edge u2) - Suc(j-1) = length u2 - j"
+          have s3: "length (map top1_inverse_edge u2) - Suc(j-1) = length u2 - j"
             using hj_mid(1) hjj by (by100 simp)
-          have h7: "length u2 - j < length u2" using hj_mid(1) hjj by (by100 linarith)
-          have h8: "(map top1_inverse_edge u2)!(length u2 - j) = top1_inverse_edge (u2!(length u2 - j))"
-            using h7 by (by100 simp)
-          have h9: "fst (top1_inverse_edge (u2!(length u2 - j))) = fst (u2!(length u2 - j))"
+          have s4: "length u2 - j < length u2" using hj_mid(1) hjj by (by100 linarith)
+          have s5: "(map top1_inverse_edge u2)!(length u2 - j) = top1_inverse_edge (u2!(length u2 - j))"
+            using s4 by (by100 simp)
+          have s6: "fst (top1_inverse_edge (u2!(length u2 - j))) = fst (u2!(length u2 - j))"
             unfolding top1_inverse_edge_def by (cases "u2!(length u2 - j)") simp
-          have h10: "length u2 - j = k - 1 - j" using hk_eq by (by100 simp)
-          from h1 h3 h5 h6 h8 h9 h10 show ?thesis by simp
+          have s7: "length u2 - j = k - 1 - j" using hk_eq by (by100 simp)
+          from s1 s2 s3 s5 s6 s7 show ?thesis by simp
         qed
         have "k-i-1 = k-1-i" using hi_mid(1) hii_k by linarith
         have "k-j-1 = k-1-j" using hj_mid(1) hjj_k by linarith
@@ -1477,7 +1473,7 @@ proof (intro allI impI ballI)
            then q2 ((1-(1-t))*vx(k-j) + (1-t)*vx(Suc(k-j) mod ?n),
                      (1-(1-t))*vy(k-j) + (1-t)*vy(Suc(k-j) mod ?n))
            else q2 ((1-t)*vx(k-j) + (1-(1-t))*vx(Suc(k-j) mod ?n),
-                     (1-t)*vy(k-j) + (1-(1-t))*vy(Suc(k-j) mod ?n)))" sorry
+                     (1-t)*vy(k-j) + (1-(1-t))*vy(Suc(k-j) mod ?n)))" .
       \<comment> \<open>Simplify 1-(1-t) = t.\<close>
       \<comment> \<open>Translate snd(w!(k-i)) \\<leftrightarrow> snd(w'!i): flipped by inv(u2).\<close>
       \<comment> \<open>Double negation: snd(w'!i)=snd(w'!j) iff snd(w!(k-i))=snd(w!(k-j)).\<close>
