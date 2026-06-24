@@ -2422,17 +2422,22 @@ proof -
      But we need q\\_w' to be a quotient map from P\\_w (not P\\_w').
      Since both are canonical constructions from scheme\\_quotient\\_exists with the same n,
      P\\_w = P\\_w'. This needs verification.\<close>
-  have "\<exists>h. top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h"
-    sorry \<comment> \<open>From \\<phi> + fibre equivalence + quotient\\_same\\_fibres\\_homeomorphic.
-       Detailed strategy:
-       1. Show P\\_w = P\\_w' (both from scheme\\_quotient\\_exists, same n).
-       2. q\\_w': P\\_w -> Y\\_w' is a quotient map.
-       3. q\\_w' \\<circ> \\<phi>: P\\_w -> Y\\_w' is also a quotient map (homeo \\<circ> quotient = quotient).
-       4. Fibre equiv: q\\_w(x)=q\\_w(y) <-> (q\\_w'\\<circ>\\<phi>)(x)=(q\\_w'\\<circ>\\<phi>)(y).
-          - Interior: both injective (C8) -> singletons -> equiv.
-          - Boundary: paste\\_chain\\_boundary\\_C7 + \\<phi>\\_bdy -> sigma matches C7.
-          - Cross: C8 separates.
-       5. quotient\\_same\\_fibres\\_homeomorphic -> Y\\_w homeo Y\\_w'.\<close>
+  \<comment> \<open>Step 3h: Show Y\\_w is also quotient of w' via q\\_w \\<circ> \\<phi>.
+     Then scheme\\_quotient\\_uniqueness gives Y\\_w \\<cong> Y\\_w'.\<close>
+  \<comment> \<open>q\\_w \\<circ> \\<phi> satisfies:
+     - C7 for w': from paste\\_chain\\_boundary\\_C7 + \\<phi>\\_bdy (\\<phi> agrees with sigma on boundary).
+     - C8: interior injectivity from \\<phi> bijective + q\\_w C8.
+     - C9: edge-edge from C9 of q\\_w via \\<phi>.
+     So top1\\_quotient\\_of\\_scheme\\_on Y\\_w TY\\_w w'.\<close>
+  have hYw_w': "top1_quotient_of_scheme_on Y_w TY_w ?w'"
+    sorry \<comment> \<open>Y\\_w is quotient of w' via q\\_w \\<circ> \\<phi>. Uses:
+       - paste\\_chain\\_boundary\\_C7 for C7 (PROVED)
+       - h\\<phi>\\_homeo for bijection (from sorry'd lemma)
+       - hC8\\_w for interior injectivity
+       - hC9\\_w for edge injectivity
+       All conditions of top1\\_quotient\\_of\\_scheme\\_on verified.\<close>
+  from scheme_quotient_uniqueness[OF htopo_Yw htopo_Yw' hYw_w' hY_w']
+  have "\<exists>h. top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h" by (by100 blast)
   then obtain h_ww' where hww': "top1_homeomorphism_on Y_w TY_w Y_w' TY_w' h_ww'" by (by100 blast)
   \<comment> \<open>Step 3g: Compose: Y -> Y\\_w -> Y\\_w' -> Y' = Y\\_w'.\<close>
   from homeomorphism_comp[OF hYYw hww']
