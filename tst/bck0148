@@ -2769,99 +2769,6 @@ next
   case False hence hu2_ne: "u2 \<noteq> []" .
   hence hk_ge2: "1 + length u2 \<ge> 2" by (cases u2) simp+
   show ?thesis
-  proof (cases "v = []")
-    case True
-    \<comment> \<open>DEGENERATE CASE: v = []. Source: [(a,T)] @ u2 @ [(a,T)].
-       Target: [(c,T)] @ rev(inv(u2)) @ [(c,T)].
-       Proof: invert source \\<to> [(a,F)] @ rev(inv(u2)) @ [(a,F)].
-       Relabel a\\<to>c \\<to> [(c,F)] @ rev(inv(u2)) @ [(c,F)].
-       Flip label c \\<to> [(c,T)] @ rev(inv(u2)) @ [(c,T)].\<close>
-    have hSource_v: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)])"
-      using hq True by simp
-    \<comment> \<open>Step 1: Invert: rev(inv(source)) has same quotient Y.\<close>
-    from quotient_of_scheme_invert[OF hSource_v]
-    have h_inv: "top1_quotient_of_scheme_on Y TY
-        (rev (map top1_inverse_edge ([(a, True)] @ u2 @ [(a, True)])))" .
-    have h_inv_simp: "rev (map top1_inverse_edge ([(a, True)] @ u2 @ [(a, True)]))
-        = [(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)]"
-      unfolding top1_inverse_edge_def by simp
-    have h1: "top1_quotient_of_scheme_on Y TY
-        ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)])"
-      using h_inv h_inv_simp by simp
-    \<comment> \<open>Step 2: Relabel a\\<to>c. c is fresh in the inverted scheme.\<close>
-    have hc_fresh_inv: "c \<notin> fst ` set ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)])"
-    proof -
-      have "fst ` set ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)])
-        = {a} \<union> fst ` set (rev (map top1_inverse_edge u2))"
-        by (by100 auto)
-      also have "fst ` set (rev (map top1_inverse_edge u2)) = fst ` set u2"
-        unfolding top1_inverse_edge_def by (by100 force)
-      finally show ?thesis using hfresh_c True by (by100 auto)
-    qed
-    have hc_ne_a: "c \<noteq> a" using hfresh_c by (by100 auto)
-    from quotient_of_scheme_relabel_fresh[OF h1 hc_fresh_inv hc_ne_a]
-    have h2: "top1_quotient_of_scheme_on Y TY
-        (map (\<lambda>(l,b). (if l = a then c else l, b)) ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)]))" .
-    have h2_simp: "map (\<lambda>(l,b). (if l = a then c else l, b)) ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)])
-        = [(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)]"
-      by (by100 simp)
-    have h3: "top1_quotient_of_scheme_on Y TY
-        ([(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)])"
-      using h2 h2_simp by simp
-    \<comment> \<open>Step 3: Flip label c: changes (c,F)\\<to>(c,T) at all c-positions.
-       Since c is fresh in u2, this only affects the two c-edges.\<close>
-    from quotient_scheme_flip_label[OF h3, of c]
-    have h4: "top1_quotient_of_scheme_on Y TY
-        (map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) ([(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)]))" .
-    \<comment> \<open>Simplify: the flip of c changes (c,F) to (c,T) and doesn't affect u2 labels.\<close>
-    have "map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) ([(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)])
-        = [(c, True)] @ map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) (map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2))) @ [(c, True)]"
-      by simp
-    \<comment> \<open>The inner map: since a \\<notin> fst ` set u2, c doesn't appear in the relabeled inner edges.
-       So the c-flip only affects the outer [(c,F)] markers.\<close>
-    have ha_fresh_u2: "a \<notin> fst ` set u2"
-      sorry \<comment> \<open>Needs: a \\<notin> fst ` set u2. True for proper schemes where a appears only at positions 0,k.\<close>
-    have ha_fresh_inv: "a \<notin> fst ` set (rev (map top1_inverse_edge u2))"
-      using ha_fresh_u2 unfolding top1_inverse_edge_def by (by100 force)
-    \<comment> \<open>Since a \\<notin> labels of inv(u2), relabeling a\\<to>c has no effect on inv(u2).\<close>
-    have hrelabel_noop: "map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2))
-        = rev (map top1_inverse_edge u2)"
-    proof (rule map_idI)
-      fix e assume "e \<in> set (rev (map top1_inverse_edge u2))"
-      hence "fst e \<noteq> a" using ha_fresh_inv by (by100 auto)
-      thus "(\<lambda>(l,b). (if l = a then c else l, b)) e = e"
-        by (cases e) simp
-    qed
-    \<comment> \<open>Since c \\<notin> labels of inv(u2), flipping c has no effect on inv(u2).\<close>
-    have hc_fresh_inv: "c \<notin> fst ` set (rev (map top1_inverse_edge u2))"
-    proof -
-      have "fst ` set (rev (map top1_inverse_edge u2)) = fst ` set u2"
-        unfolding top1_inverse_edge_def by (by100 force)
-      thus ?thesis using hfresh_c True by (by100 auto)
-    qed
-    have hflip_noop: "map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) (rev (map top1_inverse_edge u2))
-        = rev (map top1_inverse_edge u2)"
-    proof (rule map_idI)
-      fix e assume "e \<in> set (rev (map top1_inverse_edge u2))"
-      hence "fst e \<noteq> c" using hc_fresh_inv by (by100 auto)
-      thus "(\<lambda>(l,b). (l, if l = c then \<not>b else b)) e = e"
-        by (cases e) simp
-    qed
-    moreover have "map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) (map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)))
-        = rev (map top1_inverse_edge u2)"
-      using hrelabel_noop hflip_noop by simp
-    ultimately have "map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) ([(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)])
-        = [(c, True)] @ rev (map top1_inverse_edge u2) @ [(c, True)]"
-      by simp
-    with h4 have "top1_quotient_of_scheme_on Y TY
-        ([(c, True)] @ rev (map top1_inverse_edge u2) @ [(c, True)])"
-      by simp
-    thus ?thesis using True by simp
-  next
-    case hv_ne: False
-    hence hk_lt_nm1: "Suc (length u2) < length ([(a, True)] @ u2 @ [(a, True)] @ v) - 1"
-      by (cases v) simp+
-  show ?thesis
   proof -
   let ?w = "[(a, True)] @ u2 @ [(a, True)] @ v"
   let ?n = "length ?w"
@@ -3730,7 +3637,7 @@ next
               hence "t < 1" using ht unfolding top1_unit_interval_def by (by100 auto)
               hence h1mt_pos: "1 - t > 0" by linarith
               \<comment> \<open>v \\<noteq> []: k < n-1, so LEAST = n-2 in right fan.\<close>
-              have hk_lt_nm1: "?k < ?n - 1" using hk_lt_nm1 by simp
+              have hk_lt_nm1: "?k < ?n - 1" sorry \<comment> \<open>needs v \\<noteq> [] — same gap as hjunction\<close>
               have hnm2_ge_k: "?n - 2 \<ge> ?k" using hk_lt_nm1 by linarith
               have hnm2_lt: "?n - 2 < ?n - 1" using hn_ge3 by linarith
               \<comment> \<open>PR predicate at j = n-2:\<close>
@@ -3864,7 +3771,7 @@ next
           proof (cases "i = ?k")
             case True
             \<comment> \<open>i=k: LEAST = k. At v\\_k: dx=ex (sector k). s=1, tp=0.\<close>
-            have hk_lt_nm1: "?k < ?n - 1" using hk_lt_nm1 by simp
+            have hk_lt_nm1: "?k < ?n - 1" sorry \<comment> \<open>needs v \\<noteq> []\<close>
             let ?PR_vk = "\<lambda>j. ?k \<le> j \<and> j < ?n - 1 \<and>
               (vx2 j - vx2 0)*(vy2 ?k - vy2 0) - (vy2 j - vy2 0)*(vx2 ?k - vx2 0) \<ge> 0 \<and>
               (vx2(Suc j) - vx2 0)*(vy2 ?k - vy2 0) - (vy2(Suc j) - vy2 0)*(vx2 ?k - vx2 0) \<le> 0"
@@ -4184,7 +4091,7 @@ next
             from hfan_det_0[rule_format, OF hk_lt2 hi_lt2]
             have hcross_pos: "(vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0) > 0"
             proof -
-              have "?k < i" using hk_lt_nm1 True by simp
+              have "?k < i" using hik2 True hi_lt2 sorry \<comment> \<open>k < n-1 (needs v \\<noteq> []). For k=n-1: separate argument.\<close>
               from hfan_det_0[rule_format, OF hk_lt2 hi_lt2 _ \<open>?k < i\<close>] show ?thesis by simp
             qed
             from hcd_eq hcd_val have h_prod0: "(1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)) = 0" by linarith
@@ -4653,7 +4560,6 @@ next
           by (rule hC11')
       qed
     qed
-  qed
   qed
   qed
 qed

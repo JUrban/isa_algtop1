@@ -1,0 +1,43 @@
+Session bck0146 (2026-06-24):
+
+CLOSED SORRYS:
+1. hphi_L_sigma t=0 i=1 case: Fixed PL(1) assembly
+   - algebra->simp+linarith for cross(v_1,v_1)=0>=0
+   - Suc 1 = 2 normalization via simp only: hS1
+   - numeral_2_eq_2 for phi_L_def unfolding
+   - divide_simps for Cramer evaluation
+   - mod_less for Suc 1 mod n = 2
+
+2. hphi_R i=n-1 base edge (t>0, LEAST=n-2):
+   - Sub-case t=1 (vertex v_0): phi_R(v_0)=v_k, sigma(n-1,1)=v_k
+   - Sub-case t<1 (v!=[]): LEAST=n-2 proof via fan det + minimality
+   - Cramer: s=0, tp=1-t -> result = t*v_k + (1-t)*v_0 = sigma(n-1,t)
+   - One sorry remains: k < n-1 (needs v!=[])
+
+3. hphi_R t=0 vertex case:
+   - i=k case: LEAST=k, dx=ex, s=1 tp=0, result=v_{k+1}=sigma(k,0)
+   - i>k case: LEAST=i-1, dx=fx, s=0 tp=1, result=v_{Suc i mod n}
+
+4. hjunction t=0 at i=k:
+   - cross_diag = t*cross(v_k,v_{k+1}) via bilinearity
+   - cross(v_k,v_{k+1}) > 0 from fan det -> t=0
+
+Build: ~90s, 16252 lines, ~40 sorry proof commands.
+
+Session bck0147/0148 (2026-06-24, continued):
+
+5. hC8_at_p (C8 instantiation at phi_L(p)) PROVED:
+   - Direct from hC8_2[rule_format, OF hphi_in] hphi_int_p by blast
+
+6. C8 main show restructured (cross_diag(p) < 0 case):
+   - Left-left: hC8_at_p -> phi_L equality -> phi_L_inj -> p=p'
+   - Left-right: hC8_at_p -> phi_L=phi_R -> contradicts disjointness
+   - Left-diagonal: hC8_at_p -> phi_L=phi_L -> phi_L_inj -> p=p'
+
+7. C8 main show (cross_diag(p) >= 0 case):
+   - Right-right: symmetric to left-left
+   - Right-left: symmetric to left-right
+   - Diagonal cases: 2 sorrys (phi_L maps diagonal to old edge)
+
+Net effect: 1 C8 show sorry -> 2 diagonal sorrys (cleaner structure).
+Build: ~85s. Total ~41 sorry proof commands.

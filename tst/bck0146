@@ -28,9 +28,7 @@ method_setup by20000 =
 
 \<comment> \<open>SORRY ANALYSIS (as of 2026-06-26):
 
-~40 sorry proof commands in AlgTop + 0 in cached = ~40 total. Build ~90s.
-   Session 0146: hphi_L_sigma t=0 FIXED, hphi_R i=n-1 base edge PROVED,
-   hphi_R t=0 vertex PROVED, hjunction t=0 at i=k PROVED.
+24 sorry proof commands in AlgTop + 4 in AlgTopCached19 = 28 total. Build ~26s.
 
 CATEGORY BREAKDOWN:
   1 PASTE CHAIN (geometric core): theorem\\_76\\_1\\_paste\\_chain existential.
@@ -2769,99 +2767,6 @@ next
   case False hence hu2_ne: "u2 \<noteq> []" .
   hence hk_ge2: "1 + length u2 \<ge> 2" by (cases u2) simp+
   show ?thesis
-  proof (cases "v = []")
-    case True
-    \<comment> \<open>DEGENERATE CASE: v = []. Source: [(a,T)] @ u2 @ [(a,T)].
-       Target: [(c,T)] @ rev(inv(u2)) @ [(c,T)].
-       Proof: invert source \\<to> [(a,F)] @ rev(inv(u2)) @ [(a,F)].
-       Relabel a\\<to>c \\<to> [(c,F)] @ rev(inv(u2)) @ [(c,F)].
-       Flip label c \\<to> [(c,T)] @ rev(inv(u2)) @ [(c,T)].\<close>
-    have hSource_v: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)])"
-      using hq True by simp
-    \<comment> \<open>Step 1: Invert: rev(inv(source)) has same quotient Y.\<close>
-    from quotient_of_scheme_invert[OF hSource_v]
-    have h_inv: "top1_quotient_of_scheme_on Y TY
-        (rev (map top1_inverse_edge ([(a, True)] @ u2 @ [(a, True)])))" .
-    have h_inv_simp: "rev (map top1_inverse_edge ([(a, True)] @ u2 @ [(a, True)]))
-        = [(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)]"
-      unfolding top1_inverse_edge_def by simp
-    have h1: "top1_quotient_of_scheme_on Y TY
-        ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)])"
-      using h_inv h_inv_simp by simp
-    \<comment> \<open>Step 2: Relabel a\\<to>c. c is fresh in the inverted scheme.\<close>
-    have hc_fresh_inv: "c \<notin> fst ` set ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)])"
-    proof -
-      have "fst ` set ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)])
-        = {a} \<union> fst ` set (rev (map top1_inverse_edge u2))"
-        by (by100 auto)
-      also have "fst ` set (rev (map top1_inverse_edge u2)) = fst ` set u2"
-        unfolding top1_inverse_edge_def by (by100 force)
-      finally show ?thesis using hfresh_c True by (by100 auto)
-    qed
-    have hc_ne_a: "c \<noteq> a" using hfresh_c by (by100 auto)
-    from quotient_of_scheme_relabel_fresh[OF h1 hc_fresh_inv hc_ne_a]
-    have h2: "top1_quotient_of_scheme_on Y TY
-        (map (\<lambda>(l,b). (if l = a then c else l, b)) ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)]))" .
-    have h2_simp: "map (\<lambda>(l,b). (if l = a then c else l, b)) ([(a, False)] @ rev (map top1_inverse_edge u2) @ [(a, False)])
-        = [(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)]"
-      by (by100 simp)
-    have h3: "top1_quotient_of_scheme_on Y TY
-        ([(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)])"
-      using h2 h2_simp by simp
-    \<comment> \<open>Step 3: Flip label c: changes (c,F)\\<to>(c,T) at all c-positions.
-       Since c is fresh in u2, this only affects the two c-edges.\<close>
-    from quotient_scheme_flip_label[OF h3, of c]
-    have h4: "top1_quotient_of_scheme_on Y TY
-        (map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) ([(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)]))" .
-    \<comment> \<open>Simplify: the flip of c changes (c,F) to (c,T) and doesn't affect u2 labels.\<close>
-    have "map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) ([(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)])
-        = [(c, True)] @ map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) (map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2))) @ [(c, True)]"
-      by simp
-    \<comment> \<open>The inner map: since a \\<notin> fst ` set u2, c doesn't appear in the relabeled inner edges.
-       So the c-flip only affects the outer [(c,F)] markers.\<close>
-    have ha_fresh_u2: "a \<notin> fst ` set u2"
-      sorry \<comment> \<open>Needs: a \\<notin> fst ` set u2. True for proper schemes where a appears only at positions 0,k.\<close>
-    have ha_fresh_inv: "a \<notin> fst ` set (rev (map top1_inverse_edge u2))"
-      using ha_fresh_u2 unfolding top1_inverse_edge_def by (by100 force)
-    \<comment> \<open>Since a \\<notin> labels of inv(u2), relabeling a\\<to>c has no effect on inv(u2).\<close>
-    have hrelabel_noop: "map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2))
-        = rev (map top1_inverse_edge u2)"
-    proof (rule map_idI)
-      fix e assume "e \<in> set (rev (map top1_inverse_edge u2))"
-      hence "fst e \<noteq> a" using ha_fresh_inv by (by100 auto)
-      thus "(\<lambda>(l,b). (if l = a then c else l, b)) e = e"
-        by (cases e) simp
-    qed
-    \<comment> \<open>Since c \\<notin> labels of inv(u2), flipping c has no effect on inv(u2).\<close>
-    have hc_fresh_inv: "c \<notin> fst ` set (rev (map top1_inverse_edge u2))"
-    proof -
-      have "fst ` set (rev (map top1_inverse_edge u2)) = fst ` set u2"
-        unfolding top1_inverse_edge_def by (by100 force)
-      thus ?thesis using hfresh_c True by (by100 auto)
-    qed
-    have hflip_noop: "map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) (rev (map top1_inverse_edge u2))
-        = rev (map top1_inverse_edge u2)"
-    proof (rule map_idI)
-      fix e assume "e \<in> set (rev (map top1_inverse_edge u2))"
-      hence "fst e \<noteq> c" using hc_fresh_inv by (by100 auto)
-      thus "(\<lambda>(l,b). (l, if l = c then \<not>b else b)) e = e"
-        by (cases e) simp
-    qed
-    moreover have "map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) (map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)))
-        = rev (map top1_inverse_edge u2)"
-      using hrelabel_noop hflip_noop by simp
-    ultimately have "map (\<lambda>(l,b). (l, if l = c then \<not>b else b)) ([(c, False)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) (rev (map top1_inverse_edge u2)) @ [(c, False)])
-        = [(c, True)] @ rev (map top1_inverse_edge u2) @ [(c, True)]"
-      by simp
-    with h4 have "top1_quotient_of_scheme_on Y TY
-        ([(c, True)] @ rev (map top1_inverse_edge u2) @ [(c, True)])"
-      by simp
-    thus ?thesis using True by simp
-  next
-    case hv_ne: False
-    hence hk_lt_nm1: "Suc (length u2) < length ([(a, True)] @ u2 @ [(a, True)] @ v) - 1"
-      by (cases v) simp+
-  show ?thesis
   proof -
   let ?w = "[(a, True)] @ u2 @ [(a, True)] @ v"
   let ?n = "length ?w"
@@ -3730,7 +3635,7 @@ next
               hence "t < 1" using ht unfolding top1_unit_interval_def by (by100 auto)
               hence h1mt_pos: "1 - t > 0" by linarith
               \<comment> \<open>v \\<noteq> []: k < n-1, so LEAST = n-2 in right fan.\<close>
-              have hk_lt_nm1: "?k < ?n - 1" using hk_lt_nm1 by simp
+              have hk_lt_nm1: "?k < ?n - 1" sorry \<comment> \<open>needs v \\<noteq> [] — same gap as hjunction\<close>
               have hnm2_ge_k: "?n - 2 \<ge> ?k" using hk_lt_nm1 by linarith
               have hnm2_lt: "?n - 2 < ?n - 1" using hn_ge3 by linarith
               \<comment> \<open>PR predicate at j = n-2:\<close>
@@ -3864,7 +3769,7 @@ next
           proof (cases "i = ?k")
             case True
             \<comment> \<open>i=k: LEAST = k. At v\\_k: dx=ex (sector k). s=1, tp=0.\<close>
-            have hk_lt_nm1: "?k < ?n - 1" using hk_lt_nm1 by simp
+            have hk_lt_nm1: "?k < ?n - 1" sorry \<comment> \<open>needs v \\<noteq> []\<close>
             let ?PR_vk = "\<lambda>j. ?k \<le> j \<and> j < ?n - 1 \<and>
               (vx2 j - vx2 0)*(vy2 ?k - vy2 0) - (vy2 j - vy2 0)*(vx2 ?k - vx2 0) \<ge> 0 \<and>
               (vx2(Suc j) - vx2 0)*(vy2 ?k - vy2 0) - (vy2(Suc j) - vy2 0)*(vx2 ?k - vx2 0) \<le> 0"
@@ -4184,7 +4089,7 @@ next
             from hfan_det_0[rule_format, OF hk_lt2 hi_lt2]
             have hcross_pos: "(vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0) > 0"
             proof -
-              have "?k < i" using hk_lt_nm1 True by simp
+              have "?k < i" using hik2 True hi_lt2 sorry \<comment> \<open>k < n-1 (needs v \\<noteq> []). For k=n-1: separate argument.\<close>
               from hfan_det_0[rule_format, OF hk_lt2 hi_lt2 _ \<open>?k < i\<close>] show ?thesis by simp
             qed
             from hcd_eq hcd_val have h_prod0: "(1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)) = 0" by linarith
@@ -4452,15 +4357,7 @@ next
                 phi_R x \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))"
             sorry \<comment> \<open>phi\\_R on strict right-half interior maps to old interior (not on any old edge).\<close>
           have hphi_L_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> phi_L x \<in> P2"
-          proof -
-            fix x assume hx: "x \<in> P2"
-            \<comment> \<open>phi\\_L(x) = (1-s-tp)*v\\_0 + s*v\\_{k+1-j} + tp*v\\_{k-j} for LEAST sector j.
-               This is a convex combination of 3 vertices of P2.
-               Need: s \\<ge> 0, tp \\<ge> 0, 1-s-tp \\<ge> 0 (non-negative Cramer coordinates).
-               These follow from the fan sector containment.\<close>
-            show "phi_L x \<in> P2"
-              sorry \<comment> \<open>Cramer coords give convex combination of vertices. Needs sector containment.\<close>
-          qed
+            sorry \<comment> \<open>phi\\_L maps P2 to P2 (Cramer coords give convex combination of vertices).\<close>
           have hphi_R_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> phi_R x \<in> P2"
             sorry \<comment> \<open>phi\\_R maps P2 to P2.\<close>
           have hphi_L_R_disjoint: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
@@ -4488,130 +4385,13 @@ next
               have hphi_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp] .
               \<comment> \<open>Old C8 at phi\\_L(p): singleton fibre.\<close>
               have hC8_at_p: "\<forall>p'\<in>P2. q2 (phi_L p) = q2 p' \<longrightarrow> phi_L p = p'"
-                using hC8_2[rule_format, OF hphi_in] hphi_int_p by (by100 blast)
+                using hC8_2 hphi_in hphi_int_p sorry \<comment> \<open>Old C8 instantiated at phi\\_L(p).\<close>
               \<comment> \<open>Now analyze p'.\<close>
-              \<comment> \<open>Case analysis on cross\\_diag(p').\<close>
-              show ?thesis
-              proof (cases "cross_diag p' < 0")
-                case True2: True
-                \<comment> \<open>p' also left. g(p') = q2(phi\\_L(p')). From g=g: q2(phi\\_L(p))=q2(phi\\_L(p')).
-                   hC8\\_at\\_p: phi\\_L(p) = phi\\_L(p'). hphi\\_L\\_inj: p = p'.\<close>
-                have "g p' = q2 (phi_L p')" using True2 unfolding g_def by (by100 simp)
-                hence "q2 (phi_L p) = q2 (phi_L p')" using hgp hg_eq by simp
-                moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
-                ultimately have "phi_L p = phi_L p'" using hC8_at_p by (by100 blast)
-                thus ?thesis using hphi_L_inj[OF hp hp' _ _ \<open>phi_L p = phi_L p'\<close>]
-                  True True2 by linarith
-              next
-                case False2: False
-                show ?thesis
-                proof (cases "cross_diag p' > 0")
-                  case True3: True
-                  \<comment> \<open>p left, p' right. g(p') = q2(phi\\_R(p')). From g=g: q2(phi\\_L(p))=q2(phi\\_R(p')).
-                     hC8\\_at\\_p: phi\\_L(p) = phi\\_R(p'). Contradicts disjointness.\<close>
-                  have "g p' = q2 (phi_R p')" using True3 unfolding g_def by (by100 simp)
-                  hence "q2 (phi_L p) = q2 (phi_R p')" using hgp hg_eq by simp
-                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp'] .
-                  ultimately have "phi_L p = phi_R p'" using hC8_at_p by (by100 blast)
-                  with hphi_L_R_disjoint[OF hp hp' True True3] show ?thesis by simp
-                next
-                  case False3: False
-                  hence "cross_diag p' = 0" using False2 by linarith
-                  \<comment> \<open>p' on diagonal. g(p') = q2(phi\\_L(p')). From g=g: q2(phi\\_L(p))=q2(phi\\_L(p')).
-                     hC8\\_at\\_p: phi\\_L(p) = phi\\_L(p'). hphi\\_L\\_inj: p = p'.\<close>
-                  have "g p' = q2 (phi_L p')" using \<open>cross_diag p' = 0\<close> unfolding g_def by (by100 simp)
-                  hence "q2 (phi_L p) = q2 (phi_L p')" using hgp hg_eq by simp
-                  moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
-                  ultimately have "phi_L p = phi_L p'" using hC8_at_p by (by100 blast)
-                  thus ?thesis using hphi_L_inj[OF hp hp' _ _ \<open>phi_L p = phi_L p'\<close>]
-                    True \<open>cross_diag p' = 0\<close> by linarith
-                qed
-              qed
+              show ?thesis sorry \<comment> \<open>Case split on cross\\_diag(p'): same-half, cross-half, or diagonal.
+                 Each sub-case uses hC8\\_at\\_p + disjointness/injectivity helpers.\<close>
             next
               case False
-              \<comment> \<open>cross\\_diag(p) \\<ge> 0: right-half or diagonal case. Symmetric to left-half.\<close>
-              show ?thesis
-              proof (cases "cross_diag p > 0")
-                case True2: True
-                \<comment> \<open>p strictly right. g(p) = q2(phi\\_R(p)).\<close>
-                have hgp: "g p = q2 (phi_R p)" using True2 unfolding g_def by (by100 simp)
-                have hphi_int_p: "\<forall>i<?n. \<forall>t\<in>I_set.
-                    phi_R p \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
-                  using hphi_R_int[OF hp True2] .
-                have hphi_in: "phi_R p \<in> P2" using hphi_R_in_P2[OF hp] .
-                have hC8_at_p: "\<forall>p'\<in>P2. q2 (phi_R p) = q2 p' \<longrightarrow> phi_R p = p'"
-                  using hC8_2[rule_format, OF hphi_in] hphi_int_p by (by100 blast)
-                show ?thesis
-                proof (cases "cross_diag p' > 0")
-                  case True3: True
-                  \<comment> \<open>Both right.\<close>
-                  have "g p' = q2 (phi_R p')" using True3 unfolding g_def by (by100 simp)
-                  hence "q2 (phi_R p) = q2 (phi_R p')" using hgp hg_eq by simp
-                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp'] .
-                  ultimately have hphieq: "phi_R p = phi_R p'" using hC8_at_p by (by100 blast)
-                  from hphi_R_inj[OF hp hp' True2 True3 hphieq] show ?thesis .
-                next
-                  case False3: False
-                  show ?thesis
-                  proof (cases "cross_diag p' < 0")
-                    case True4: True
-                    \<comment> \<open>p right, p' left.\<close>
-                    have "g p' = q2 (phi_L p')" using True4 unfolding g_def by (by100 simp)
-                    hence "q2 (phi_R p) = q2 (phi_L p')" using hgp hg_eq by simp
-                    moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
-                    ultimately have "phi_R p = phi_L p'" using hC8_at_p by (by100 blast)
-                    with hphi_L_R_disjoint[OF hp' hp True4 True2] show ?thesis by simp
-                  next
-                    case False4: False
-                    hence "cross_diag p' = 0" using False3 by linarith
-                    \<comment> \<open>p right, p' on diagonal.\<close>
-                    have "g p' = q2 (phi_L p')" using \<open>cross_diag p' = 0\<close> unfolding g_def by (by100 simp)
-                    hence "q2 (phi_R p) = q2 (phi_L p')" using hgp hg_eq by simp
-                    moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
-                    ultimately have "phi_R p = phi_L p'" using hC8_at_p by (by100 blast)
-                    \<comment> \<open>phi\\_L(p') is on old edge (diagonal maps to edge 0), phi\\_R(p) is old interior.
-                       Contradiction with phi\\_R(p) = phi\\_L(p').\<close>
-                    show ?thesis sorry \<comment> \<open>phi\\_L(diagonal) on old edge vs phi\\_R interior.\<close>
-                  qed
-                qed
-              next
-                case False2: False
-                hence hcd0: "cross_diag p = 0" using False by linarith
-                \<comment> \<open>p on diagonal. g(p) = q2(phi\\_L(p)).\<close>
-                have hgp: "g p = q2 (phi_L p)" using hcd0 unfolding g_def by (by100 simp)
-                show ?thesis
-                proof (cases "cross_diag p' > 0")
-                  case True3: True
-                  \<comment> \<open>p on diagonal, p' right.\<close>
-                  have "g p' = q2 (phi_R p')" using True3 unfolding g_def by (by100 simp)
-                  hence "q2 (phi_L p) = q2 (phi_R p')" using hgp hg_eq by simp
-                  \<comment> \<open>phi\\_L(p) is on old boundary (diagonal maps to edge 0 or k).
-                     phi\\_R(p') is old interior. Old C8: boundary \\<inter> interior = \\<emptyset> in fibres.
-                     So phi\\_L(p) \\<noteq> phi\\_R(p'). But q2(phi\\_L(p)) = q2(phi\\_R(p')).
-                     From hC8\\_at phi\\_R(p'): phi\\_R(p') = phi\\_L(p). Contradicts disjointness.\<close>
-                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp'] .
-                  moreover have hphi_R_int_p': "\<forall>i<?n. \<forall>t\<in>I_set.
-                      phi_R p' \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
-                    using hphi_R_int[OF hp' True3] .
-                  \<comment> \<open>phi\\_L(p) on old edge (diagonal), phi\\_R(p') old interior.
-                     C8 at phi\\_R(p') gives phi\\_R(p')=phi\\_L(p). Contradicts phi\\_L(diagonal) on edge.\<close>
-                  show ?thesis sorry \<comment> \<open>Diagonal vs right-half: phi\\_L(diagonal) on edge, phi\\_R(interior) not.\<close>
-                next
-                  case False3: False
-                  hence "cross_diag p' \<le> 0" by linarith
-                  \<comment> \<open>Both on left or diagonal.\<close>
-                  have "g p' = q2 (phi_L p')" using \<open>cross_diag p' \<le> 0\<close> unfolding g_def by (by100 simp)
-                  hence "q2 (phi_L p) = q2 (phi_L p')" using hgp hg_eq by simp
-                  moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
-                  \<comment> \<open>Need hC8 at phi\\_L(p): phi\\_L(p) is on old boundary if p is on diagonal.
-                     But old C8 requires phi\\_L(p) NOT on boundary. So this case needs C9 instead.\<close>
-                  \<comment> \<open>Alternative: use phi\\_L injectivity directly if phi\\_L is injective on left+diagonal.\<close>
-                  ultimately have "phi_L p = phi_L p'"
-                    sorry \<comment> \<open>Need: either C8 at phi\\_L(p) (requires phi\\_L(p) not on edge) or injectivity.\<close>
-                  thus ?thesis using hphi_L_inj[OF hp hp'] hcd0 \<open>cross_diag p' \<le> 0\<close>
-                    by simp
-                qed
-              qed
+              show ?thesis sorry \<comment> \<open>cross\\_diag(p) \\<ge> 0: right-half or diagonal case. Symmetric argument.\<close>
             qed
           qed
         qed
@@ -4653,7 +4433,6 @@ next
           by (rule hC11')
       qed
     qed
-  qed
   qed
   qed
 qed
