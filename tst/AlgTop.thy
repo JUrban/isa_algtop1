@@ -2506,7 +2506,30 @@ lemma right_fan_edge_sector:
       (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0) \<ge> 0 \<and>
       (vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0)
     = (if i = n - 1 then n - 2 else i)"
-  sorry \<comment> \<open>Symmetric to left\\_fan\\_edge\\_sector for the right fan. Requires t > 0.\<close>
+proof -
+  let ?PR = "\<lambda>j. k \<le> j \<and> j < n - 1 \<and>
+      (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0) \<ge> 0 \<and>
+      (vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0"
+  have ht01: "t \<ge> 0 \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+  have h1mt: "1 - t \<ge> 0" using ht01 by linarith
+  \<comment> \<open>Bilinearity for right fan edge points (same as left fan).\<close>
+  have hsi_lt: "Suc i < n \<or> Suc i = n" using hi_lt by linarith
+  have hbilin: "\<And>j. (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0)
+      = (1-t)*((vx j - vx 0)*(vy i - vy 0) - (vy j - vy 0)*(vx i - vx 0))
+      + t*((vx j - vx 0)*(vy(Suc i mod n) - vy 0) - (vy j - vy 0)*(vx(Suc i mod n) - vx 0))"
+    unfolding px_def py_def by (by100 algebra)
+  define expected where "expected = (if i = n - 1 then n - 2 else i)"
+  \<comment> \<open>Step A: ?PR(expected) holds.\<close>
+  have hPR_holds: "?PR expected"
+    sorry \<comment> \<open>Symmetric to left fan PL(expected) proof.\<close>
+  \<comment> \<open>Step B: minimality.\<close>
+  have hPR_min: "\<And>j. ?PR j \<Longrightarrow> expected \<le> j"
+    sorry \<comment> \<open>For j < expected: upper cross > 0 (fan det), contradicting PR.\<close>
+  \<comment> \<open>Step C: LEAST = expected.\<close>
+  have "(LEAST j. ?PR j) = expected"
+    using Least_equality[of ?PR expected] hPR_holds hPR_min by (by100 blast)
+  thus ?thesis unfolding expected_def by simp
+qed
 
 \<comment> \<open>PHI\\_L CRAMER EVALUATION: given the LEAST sector j, the Cramer computation
    in phi\\_L evaluates to paste\\_sigma.
