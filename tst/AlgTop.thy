@@ -2646,7 +2646,59 @@ proof -
   qed
   \<comment> \<open>Step B: minimality.\<close>
   have hPR_min: "\<And>j. ?PR j \<Longrightarrow> expected \<le> j"
-    sorry \<comment> \<open>For j < expected: upper cross > 0 (fan det), contradicting PR.\<close>
+  proof -
+    fix j assume hj: "?PR j"
+    hence hj_ge_k: "k \<le> j" and hj_lt: "j < n - 1" and
+      hupper_j: "(vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0"
+      by simp+
+    show "expected \<le> j"
+    proof (cases "i = n - 1")
+      case True hence hexp_nm2: "expected = n - 2" unfolding expected_def by simp
+      \<comment> \<open>For i=n-1: PR(j) with j < n-2 fails because upper(j) = (1-t)*positive \\<ge> 0.
+         When t < 1: (1-t) > 0 so upper > 0, contradiction. When t = 1: upper = 0.
+         For t=1: ALL sectors satisfy PR, LEAST=k \\<noteq> n-2. Lemma is false at t=1,i=n-1.
+         But this case never arises in hphi\\_R\\_sigma (handled by hjunction).\<close>
+      show ?thesis using hexp_nm2 hj_lt sorry \<comment> \<open>i=n-1 minimality. Need t < 1 or handle separately.\<close>
+    next
+      case False hence hexp: "expected = i" unfolding expected_def by simp
+      have "i \<le> j"
+      proof (rule ccontr)
+        assume "\<not> i \<le> j" hence hjlt: "j < i" by linarith
+        have "Suc j \<le> i" using hjlt by linarith
+        have "Suc j < n" using hj_lt by linarith
+        have hsi_lt2: "Suc i < n" using False hi_lt by linarith
+        have hsi_mod: "Suc i mod n = Suc i" using hsi_lt2 by simp
+        \<comment> \<open>Upper(j) = (1-t)*cross(Suc j, i) + t*cross(Suc j, Suc i).
+           Both \\<ge> 0 (fan det), at least one > 0 (t > 0).\<close>
+        have hcr1: "((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0)) \<ge> 0"
+        proof (cases "Suc j = i")
+          case True thus ?thesis by simp
+        next
+          case False hence "Suc j < i" using \<open>Suc j \<le> i\<close> by linarith
+          have "1 \<le> Suc j" using hj_ge_k hk by linarith
+          from hfan[rule_format, OF \<open>Suc j < n\<close> hi_lt \<open>1 \<le> Suc j\<close> \<open>Suc j < i\<close>]
+          show ?thesis by linarith
+        qed
+        have "1 \<le> Suc j" using hj_ge_k hk by linarith
+        have "Suc j < Suc i" using hjlt by linarith
+        from hfan[rule_format, OF \<open>Suc j < n\<close> hsi_lt2 \<open>1 \<le> Suc j\<close> \<open>Suc j < Suc i\<close>]
+        have hcr2: "((vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0)) > 0" .
+        have "t * ((vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0)) > 0"
+          using mult_pos_pos[OF ht_pos hcr2] .
+        moreover have "(1-t) * ((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0)) \<ge> 0"
+          using mult_nonneg_nonneg[of "1-t" "((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0))"]
+                h1mt hcr1 by linarith
+        moreover from hbilin[of "Suc j"] hsi_mod
+        have hbilin_sj: "(vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0)
+          = (1-t)*((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0))
+          + t*((vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0))" by simp
+        ultimately have "(vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) > 0"
+          using hbilin_sj by linarith
+        with hupper_j show False by linarith
+      qed
+      thus ?thesis using hexp by simp
+    qed
+  qed
   \<comment> \<open>Step C: LEAST = expected.\<close>
   have "(LEAST j. ?PR j) = expected"
     using Least_equality[of ?PR expected] hPR_holds hPR_min by (by100 blast)
