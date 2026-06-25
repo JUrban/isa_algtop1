@@ -3367,16 +3367,31 @@ next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
           \<comment> \<open>t=0: vertex v\\_i. phi\\_L\\_def with t=0 simplifies significantly.\<close>
-          have hSuc_len_v: "Suc (length u2) = ?k" by simp
           show ?thesis
-            apply (simp only: phi_L_def Let_def fst_conv snd_conv \<open>t = 0\<close>
-                              paste_chain_sigma_x_def paste_chain_sigma_y_def
-                              Suc_1 diff_Suc_1 hSuc_len_v)
-            apply (insert hfan_det_0 hik hn_ge3)
-            apply (simp add: divide_simps)
-            apply (simp add: algebra_simps)
-            sorry \<comment> \<open>Vertex t=0. Needs: for ANY valid LEAST sector j,
-               the Cramer evaluation at vertex v\\_i gives v\\_{k+1-i} = sigma(i,0).\<close>
+          proof (cases "i = 0")
+            case True
+            \<comment> \<open>i=0, t=0: p = v\\_0. phi\\_L(v\\_0) = v\\_0 = sigma(0,0).\<close>
+            have "phi_L ((1-0)*vx2 0 + 0*vx2(Suc 0 mod ?n), (1-0)*vy2 0 + 0*vy2(Suc 0 mod ?n))
+              = phi_L (vx2 0, vy2 0)" by simp
+            also have "\<dots> = (vx2 0, vy2 0)"
+              unfolding phi_L_def Let_def by simp
+            also have "\<dots> = paste_sigma vx2 vy2 ?k ?n 0 0"
+              unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def by simp
+            finally show ?thesis using True \<open>t = 0\<close> by simp
+          next
+            case False
+            \<comment> \<open>1 \\<le> i < k, t=0: p = v\\_i. phi\\_L(v\\_i) needs LEAST at vertex.\<close>
+            have hSuc_len_v: "Suc (length u2) = ?k" by simp
+            show ?thesis
+              apply (simp only: phi_L_def Let_def fst_conv snd_conv \<open>t = 0\<close>
+                                paste_chain_sigma_x_def paste_chain_sigma_y_def
+                                Suc_1 diff_Suc_1 hSuc_len_v)
+              apply (insert hfan_det_0 hik hn_ge3)
+              apply (simp add: divide_simps)
+              apply (simp add: algebra_simps)
+              sorry \<comment> \<open>Vertex t=0, i\\<ge>1. LEAST at vertex v\\_i gives sector i-1 or i,
+                 both giving v\\_{k+1-i} = sigma(i,0).\<close>
+          qed
         qed
       qed
       \<comment> \<open>HELPER: phi\\_R at right-half boundary point gives sigma.
