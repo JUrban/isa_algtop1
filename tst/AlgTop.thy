@@ -3372,11 +3372,11 @@ next
             apply (simp only: phi_L_def Let_def fst_conv snd_conv \<open>t = 0\<close>
                               paste_chain_sigma_x_def paste_chain_sigma_y_def
                               Suc_1 diff_Suc_1 hSuc_len_v)
+            apply (insert hfan_det_0 hik hn_ge3)
             apply (simp add: divide_simps)
             apply (simp add: algebra_simps)
-            \<comment> \<open>At t=0: for i=0, all terms zero so result = (vx2 0, vy2 0) = sigma(0,0).
-               For i\\<ge>1: the LEAST-dependent terms involve v\\_{k+1-j}, and both sectors give v\\_{k+1-i}.\<close>
-            sorry \<comment> \<open>Vertex t=0 residual. LEAST unevaluated without t>0.\<close>
+            sorry \<comment> \<open>Vertex t=0. Needs: for ANY valid LEAST sector j,
+               the Cramer evaluation at vertex v\\_i gives v\\_{k+1-i} = sigma(i,0).\<close>
         qed
       qed
       \<comment> \<open>HELPER: phi\\_R at right-half boundary point gives sigma.
@@ -3400,12 +3400,12 @@ next
              Case i = n-1: LEAST = n-2, cramer\\_on\\_triangle\\_base\\_edge with (v\\_0, v\\_{n-2}, v\\_{n-1}).\<close>
           have hk_lt_n_local: "?k < ?n" by simp
           have hSuc_len_R: "Suc (length u2) = ?k" by simp
-          have hk_lt_nm1_local: "?k < ?n - 1" sorry \<comment> \<open>Needs v \\<noteq> [], i.e., length v > 0.\<close>
-          note hRLeast = right_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local hk_lt_nm1_local ht True hik hi_lt hfan_det_0]
           show ?thesis
           proof (cases "i < ?n - 1")
             case hilt: True
             \<comment> \<open>k \\<le> i < n-1: cramer\\_on\\_triangle\\_edge with (v\\_0, v\\_i, v\\_{i+1}).\<close>
+            have hk_lt_nm1_local: "?k < ?n - 1" using hilt hik by linarith
+            note hRLeast = right_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local hk_lt_nm1_local ht True hik hi_lt hfan_det_0]
             have hsi_lt: "Suc i < ?n" using hilt by linarith
             have hdd_R: "(vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0) \<noteq> 0"
             proof -
