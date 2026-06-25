@@ -2496,7 +2496,7 @@ qed
 \<comment> \<open>RIGHT FAN SECTOR SELECTION: symmetric for the right fan from v\\_0 through v\\_k,...,v\\_{n-1}.\<close>
 lemma right_fan_edge_sector:
   fixes vx vy :: "nat \<Rightarrow> real" and n k i :: nat and t :: real
-  assumes hn: "n \<ge> 3" and hk: "k \<ge> 2" and hk_lt: "k < n"
+  assumes hn: "n \<ge> 3" and hk: "k \<ge> 2" and hk_lt: "k < n" and hk_lt_nm1: "k < n - 1"
       and ht: "t \<in> I_set" and ht_pos: "t > 0" and hi_ge: "k \<le> i" and hi_lt: "i < n"
       and hfan: "\<forall>a<n. \<forall>b<n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
           (vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
@@ -2521,7 +2521,39 @@ proof -
   define expected where "expected = (if i = n - 1 then n - 2 else i)"
   \<comment> \<open>Step A: ?PR(expected) holds.\<close>
   have hPR_holds: "?PR expected"
-    sorry \<comment> \<open>Symmetric to left fan PL(expected) proof.\<close>
+  proof -
+    have hexp_ge_k: "k \<le> expected"
+    proof (cases "i = n - 1")
+      case True hence "expected = n - 2" unfolding expected_def by simp
+      thus ?thesis using hk_lt_nm1 by linarith
+    next
+      case False hence "expected = i" unfolding expected_def by simp
+      thus ?thesis using hi_ge by simp
+    qed
+    have hexp_lt_nm1: "expected < n - 1"
+    proof (cases "i = n - 1")
+      case True hence "expected = n - 2" unfolding expected_def by simp
+      thus ?thesis using hn by linarith
+    next
+      case False hence "expected = i" unfolding expected_def by simp
+      thus ?thesis using hi_lt False by linarith
+    qed
+    \<comment> \<open>Lower bound.\<close>
+    from hbilin[of expected]
+    have hlow_decomp: "(vx expected - vx 0)*(py - vy 0) - (vy expected - vy 0)*(px - vx 0)
+      = (1-t)*((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0))
+      + t*((vx expected - vx 0)*(vy(Suc i mod n) - vy 0) - (vy expected - vy 0)*(vx(Suc i mod n) - vx 0))" .
+    have hlower: "(vx expected - vx 0)*(py - vy 0) - (vy expected - vy 0)*(px - vx 0) \<ge> 0"
+      sorry \<comment> \<open>Lower bound: case i<n-1: 0+t*fan\\_det\\<ge>0. case i=n-1: (1-t)*fan\\_det+0\\<ge>0.\<close>
+    \<comment> \<open>Upper bound.\<close>
+    from hbilin[of "Suc expected"]
+    have hup_decomp: "(vx(Suc expected) - vx 0)*(py - vy 0) - (vy(Suc expected) - vy 0)*(px - vx 0)
+      = (1-t)*((vx(Suc expected) - vx 0)*(vy i - vy 0) - (vy(Suc expected) - vy 0)*(vx i - vx 0))
+      + t*((vx(Suc expected) - vx 0)*(vy(Suc i mod n) - vy 0) - (vy(Suc expected) - vy 0)*(vx(Suc i mod n) - vx 0))" .
+    have hupper: "(vx(Suc expected) - vx 0)*(py - vy 0) - (vy(Suc expected) - vy 0)*(px - vx 0) \<le> 0"
+      sorry \<comment> \<open>Upper bound: case i<n-1: (1-t)*(-fan\\_det)+0\\<le>0. case i=n-1: 0+0=0.\<close>
+    show "?PR expected" using hexp_ge_k hexp_lt_nm1 hlower hupper by simp
+  qed
   \<comment> \<open>Step B: minimality.\<close>
   have hPR_min: "\<And>j. ?PR j \<Longrightarrow> expected \<le> j"
     sorry \<comment> \<open>For j < expected: upper cross > 0 (fan det), contradicting PR.\<close>
@@ -3219,7 +3251,8 @@ next
              Case i = n-1: LEAST = n-2, cramer\\_on\\_triangle\\_base\\_edge with (v\\_0, v\\_{n-2}, v\\_{n-1}).\<close>
           have hk_lt_n_local: "?k < ?n" by simp
           have hSuc_len_R: "Suc (length u2) = ?k" by simp
-          note hRLeast = right_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local ht True hik hi_lt hfan_det_0]
+          have hk_lt_nm1_local: "?k < ?n - 1" sorry \<comment> \<open>Needs v \\<noteq> [], i.e., length v > 0.\<close>
+          note hRLeast = right_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local hk_lt_nm1_local ht True hik hi_lt hfan_det_0]
           show ?thesis
           proof (cases "i < ?n - 1")
             case hilt: True
