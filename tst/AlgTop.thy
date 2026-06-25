@@ -3646,7 +3646,20 @@ next
             unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def using True by simp
           finally show ?thesis using \<open>t = 1\<close> hsi_n hpx hpy by simp
         next
-          case False hence "i = ?k" using hik2 hi_lt2 sorry \<comment> \<open>i \\<ge> k, i < n, i \\<noteq> n-1: need to show i = k.\<close>
+          case False
+          \<comment> \<open>For k < i < n-1: cross\\_diag > 0 for all t, contradicting hcd0. So i = k.\<close>
+          have "i = ?k"
+          proof (rule ccontr)
+            assume "i \<noteq> ?k" hence "?k < i" using hik2 by linarith
+            hence "i < ?n - 1" using hi_lt2 False by linarith
+            \<comment> \<open>cross\\_diag > 0 for k < i < n-1.\<close>
+            from hcd_right[OF hik2 hi_lt2 ht2] have hcd_ge: "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) \<ge> 0" .
+            \<comment> \<open>Need strict > 0. Both cross(v\\_k,v\\_i) > 0 and cross(v\\_k,v\\_{i+1}) > 0 from fan det.\<close>
+            \<comment> \<open>cross\\_diag = (1-t)*pos + t*pos > 0 since at least one of (1-t), t is > 0.\<close>
+            have "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) > 0"
+              sorry \<comment> \<open>Strict positivity from fan det + bilinearity.\<close>
+            with hcd0 show False by linarith
+          qed
           \<comment> \<open>For k < i < n-1: cross\\_diag > 0 for all t, contradicting hcd0.\<close>
           \<comment> \<open>So i = k.\<close>
           \<comment> \<open>i = k: cross\\_diag = t * cross(v\\_k, v\\_{k+1}). For t > 0 this is > 0.\<close>
