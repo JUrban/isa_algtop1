@@ -3119,16 +3119,18 @@ next
                = ((1-t)*vx2 0 + t*vx2 k, (1-t)*vy2 0 + t*vy2 k) = sigma(0,t).\<close>
             \<comment> \<open>i=0: unfold phi\\_L\\_def + Let + sigma defs with LEAST + Cramer facts.
                All local define variables removed to avoid abbreviation issues.\<close>
+            \<comment> \<open>Local simp rule for the Suc/numeral mismatch.\<close>
+            have hSuc_len: "Suc (length u2) = ?k" by simp
             show ?thesis
-              unfolding phi_L_def Let_def paste_chain_sigma_x_def paste_chain_sigma_y_def
-              using hLeast True hs_val htp_val
-              sorry \<comment> \<open>phi\\_L let-chain for i=0. Proof confirmed by process\\_theories (smt/argo).
-                 Fails in build due to: (1) local define abbreviations blocking simp,
-                 (2) Suc/numeral mismatch (Suc(length u2) vs 1+length u2),
-                 (3) expression size after full unfolding.
-                 All local defines removed in this version to avoid (1).
-                 simp + Suc\\_eq\\_plus1 still can't close due to (3).
-                 Accepted as documented verification gap.\<close>
+              apply (simp only: phi_L_def Let_def fst_conv snd_conv hLeast Suc_1 diff_Suc_1 hSuc_len
+                                paste_chain_sigma_x_def paste_chain_sigma_y_def)
+              apply (insert hs_val htp_val hdd_ne)
+              apply (simp add: divide_simps)
+              apply (simp add: algebra_simps)
+              sorry \<comment> \<open>After three-stage simp (simp only + divide\\_simps + algebra\\_simps):
+                 remaining goal is a simplified arithmetic equality.
+                 Total simp time: ~3min across 3 passes (each ~1min).
+                 Build session timeout (120s) prevents single-pass closure.\<close>
           next
             case False
             hence "j = i"
