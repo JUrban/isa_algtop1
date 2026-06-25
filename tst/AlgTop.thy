@@ -3195,8 +3195,11 @@ next
           have hk_lt_n_local: "?k < ?n" by simp
           note hRLeast = right_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local ht True hik hi_lt hfan_det_0]
           \<comment> \<open>Fan det for Cramer denominator.\<close>
+          \<comment> \<open>NOTE: hdd\\_R uses triangle (v\\_0, v\\_i, v\\_{Suc i}). For i = n-1, Suc i = n
+             which is outside the polygon vertex range. The i=n-1 case needs
+             different treatment (base edge with LEAST=n-2, triangle (v\\_0, v\\_{n-2}, v\\_{n-1})).\<close>
           have hdd_R: "(vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0) \<noteq> 0"
-            sorry \<comment> \<open>Fan det at sector i (i \\<ge> k \\<ge> 2 and i < n-1 or i = n-1).\<close>
+            sorry \<comment> \<open>Fan det for right half. Correct for i < n-1; wrong for i = n-1.\<close>
           \<comment> \<open>Cramer on triangle edge: s = 1-t, tp = t.\<close>
           from cramer_on_triangle_edge[of "vx2 0" "vy2 0" "vx2 i" "vy2 i" "vx2(Suc i)" "vy2(Suc i)" t]
           have hsR: "((vy2(Suc i) - vy2 0) * ((1-t)*(vx2 i - vx2 0) + t*(vx2(Suc i) - vx2 0)) -
