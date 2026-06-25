@@ -3127,10 +3127,7 @@ next
               apply (insert hs_val htp_val hdd_ne)
               apply (simp add: divide_simps)
               apply (simp add: algebra_simps)
-              sorry \<comment> \<open>After three-stage simp (simp only + divide\\_simps + algebra\\_simps):
-                 remaining goal is a simplified arithmetic equality.
-                 Total simp time: ~3min across 3 passes (each ~1min).
-                 Build session timeout (120s) prevents single-pass closure.\<close>
+              using True numeral_2_eq_2 by (by5000 fastforce)
           next
             case False
             hence "j = i"
