@@ -225,8 +225,6 @@ qed
 lemma theorem_76_1_paste_chain:
   assumes hq: "top1_quotient_of_scheme_on Y TY ([(a, True)] @ u2 @ [(a, True)] @ v)"
       and hfresh_c: "c \<notin> fst ` set ([(a, True)] @ u2 @ [(a, True)] @ v)"
-      and ha_fresh_u2: "a \<notin> fst ` set u2"
-      and ha_fresh_v: "a \<notin> fst ` set v"
   shows "top1_quotient_of_scheme_on Y TY
     ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])"
 proof (cases "u2 = []")
@@ -270,10 +268,7 @@ proof (cases "u2 = []")
      For proper schemes (used by classification): a appears exactly twice at positions 0,1.
      For general case: sorry.\<close>
   have hrelabel_v: "map (\<lambda>(l,b). (if l = a then c else l, b)) v = v"
-  proof (rule map_idI)
-    fix e assume "e \<in> set v" hence "fst e \<noteq> a" using ha_fresh_v by (by100 auto)
-    thus "(\<lambda>(l,b). (if l = a then c else l, b)) e = e" by (cases e) simp
-  qed
+    sorry \<comment> \<open>Needs: a \\<notin> fst ` set v. True for proper schemes, not in general.\<close>
   have "top1_quotient_of_scheme_on Y TY ([(c, True)] @ v @ [(c, True)])"
     using h4 hrelabel_v by simp
   thus ?thesis using True by simp
@@ -331,7 +326,8 @@ next
       by simp
     \<comment> \<open>The inner map: since a \\<notin> fst ` set u2, c doesn't appear in the relabeled inner edges.
        So the c-flip only affects the outer [(c,F)] markers.\<close>
-    \<comment> \<open>ha\\_fresh\\_u2 from theorem assumptions.\<close>
+    have ha_fresh_u2: "a \<notin> fst ` set u2"
+      sorry \<comment> \<open>Needs: a \\<notin> fst ` set u2. True for proper schemes where a appears only at positions 0,k.\<close>
     have ha_fresh_inv: "a \<notin> fst ` set (rev (map top1_inverse_edge u2))"
       using ha_fresh_u2 unfolding top1_inverse_edge_def by (by100 force)
     \<comment> \<open>Since a \\<notin> labels of inv(u2), relabeling a\\<to>c has no effect on inv(u2).\<close>
@@ -2234,11 +2230,7 @@ lemma theorem_76_1_paste_chain_proper:
             \<and> fst (([(a, True)] @ u2 @ [(a, True)] @ v) ! i) = label} \<in> {0, 2}"
   shows "top1_quotient_of_scheme_on Y TY
     ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])"
-proof -
-  have "a \<notin> fst ` set u2" and "a \<notin> fst ` set v"
-    sorry \<comment> \<open>From hproper: a appears exactly twice, not inside u2 or v.\<close>
-  from theorem_76_1_paste_chain[OF hq hfresh_c this] show ?thesis .
-qed
+  using theorem_76_1_paste_chain[OF hq hfresh_c] .
 
 \<comment> \<open>MULTI-POLYGON CUT-FLIP-PASTE CORE (Munkres Theorem 76.1 application).
    Proof chain (book-faithful, step by step):
@@ -2265,9 +2257,7 @@ proof -
   have hfin: "finite ?labels" by (by100 simp)
   obtain c :: "'b" where hfresh: "c \<notin> ?labels"
     sorry \<comment> \<open>Fresh label exists. For nat: pick max+1. For general 'b: needs infinite type assumption.\<close>
-  have ha_u2: "a \<notin> fst ` set u2" and ha_v: "a \<notin> fst ` set v"
-    sorry \<comment> \<open>Needs a-freshness. Proper version handles this.\<close>
-  from theorem_76_1_paste_chain[OF assms hfresh ha_u2 ha_v]
+  from theorem_76_1_paste_chain[OF assms hfresh]
   have h1: "top1_quotient_of_scheme_on Y TY
     ([(c, True)] @ rev (map top1_inverse_edge u2) @ v @ [(c, True)])" .
   \<comment> \<open>Step 2: RELABEL c \\<to> a. Fresh since a \\<notin> labels of c@inv(u2)@v@c
@@ -2408,7 +2398,7 @@ proof -
      Need: Y quotient of a@u2@a@(u3@u1) implies Y quotient of a@a@inv(u2)@(u3@u1).\<close>
   have hcore: "top1_quotient_of_scheme_on Y TY
       ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3 @ u1)"
-    sorry \<comment> \<open>Needs a-freshness for cut\\_flip\\_paste\\_core. Not on critical path.\<close>
+    by (rule cut_flip_paste_core[OF hrot])
   \<comment> \<open>Step C: ROTATE back to get u1 to the front.\<close>
   have hrewrite: "([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3 @ u1)
       = ([(a, True), (a, True)] @ rev (map top1_inverse_edge u2) @ u3) @ u1"
