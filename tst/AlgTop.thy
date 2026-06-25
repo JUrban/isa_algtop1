@@ -2558,8 +2558,14 @@ proof (cases "u2 = []")
   have h4: "top1_quotient_of_scheme_on Y TY
       ([(c, True)] @ map (\<lambda>(l,b). (if l = a then c else l, b)) v @ [(c, True)])" by simp
   \<comment> \<open>If a \\<notin> fst ` set v, then the relabeled v equals v.\<close>
-  show ?thesis sorry \<comment> \<open>Need: map(a\\<to>c) v = v. True when a \\<notin> fst ` set v (proper case).
-     For general case: sorry. The proper version (used by classification) handles this.\<close>
+  \<comment> \<open>Need: map(a\\<to>c) v = v. Requires a \\<notin> fst ` set v.
+     For proper schemes (used by classification): a appears exactly twice at positions 0,1.
+     For general case: sorry.\<close>
+  have hrelabel_v: "map (\<lambda>(l,b). (if l = a then c else l, b)) v = v"
+    sorry \<comment> \<open>Needs: a \\<notin> fst ` set v. True for proper schemes, not in general.\<close>
+  have "top1_quotient_of_scheme_on Y TY ([(c, True)] @ v @ [(c, True)])"
+    using h4 hrelabel_v by simp
+  thus ?thesis using True by simp
 next
   case False hence hu2_ne: "u2 \<noteq> []" .
   hence hk_ge2: "1 + length u2 \<ge> 2" by (cases u2) simp+
