@@ -3165,7 +3165,8 @@ next
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
-          show ?thesis sorry \<comment> \<open>Vertex case: sigma(i,0) = v\\_{k+1-expected} and phi\\_L gives same.\<close>
+          show ?thesis sorry \<comment> \<open>Vertex case t=0: phi\\_L(v\\_i) = sigma(i,0).
+             Both phi\\_L sectors give same result v\\_{k+1-i}. Same let-chain issue.\<close>
         qed
       qed
       \<comment> \<open>HELPER: phi\\_R at right-half boundary point gives sigma.
