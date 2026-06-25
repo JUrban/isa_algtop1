@@ -3214,7 +3214,9 @@ next
             apply (insert hsR htpR hdd_R)
             apply (simp add: divide_simps)
             apply (simp add: algebra_simps)
-            sorry \<comment> \<open>Right-half residual. Needs more investigation.\<close>
+            sorry \<comment> \<open>Right-half residual after four-stage simp.
+               The mod expressions (Suc i mod n, Suc(Suc i) mod n) need case analysis.
+               Pattern from left half doesn't directly transfer.\<close>
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           show ?thesis sorry \<comment> \<open>Vertex case t=0 for right half.\<close>
