@@ -3472,8 +3472,33 @@ next
       \<comment> \<open>VERTEX HELPER: q2(phi\\_L(v\\_k)). phi\\_L at v\\_k: dx = vx2 k - vx2 0, dy = vy2 k - vy2 0.
          LEAST gives sector k-1 (last left sector). Cramer: s=0, tp=1.
          Result: 0*vx2 0 + 0*vx2 2 + 1*vx2 1 = vx2 1.\<close>
+      \<comment> \<open>Try to evaluate phi\\_L(v\\_k) directly via four-stage simp.\<close>
+      have hphi_L_vk_val: "phi_L (vx2 ?k, vy2 ?k) = (vx2 1, vy2 1)"
+      proof -
+        have hSuc_k: "Suc (length u2) = ?k" by simp
+        show ?thesis
+          apply (simp only: phi_L_def Let_def fst_conv snd_conv Suc_1 diff_Suc_1 hSuc_k)
+          apply (insert hfan_det_0 hn_ge3 hk_ge2)
+          apply (simp add: divide_simps)
+          apply (simp add: algebra_simps)
+          sorry \<comment> \<open>phi\\_L(v\\_k) = v\\_1. LEAST at v\\_k selects sector k-1 (last left sector).
+             Cramer: dx=fx, dy=fy so s=0, tp=1. Result: vx2(k-(k-1)) = vx2 1.\<close>
+      qed
       have hphi_L_vk: "q2 (phi_L (vx2 ?k, vy2 ?k)) = q2 (vx2 (Suc ?k mod ?n), vy2 (Suc ?k mod ?n))"
-        sorry \<comment> \<open>phi\\_L(v\\_k) maps to v\\_1. C7 gives q2(v\\_1) = q2(v\\_{k+1}).\<close>
+      proof -
+        have "q2 (phi_L (vx2 ?k, vy2 ?k)) = q2 (vx2 1, vy2 1)" using hphi_L_vk_val by simp
+        \<comment> \<open>q2(v\\_1) = q2(v\\_{k+1}) from C7 for a-pair at t=1.\<close>
+        also have "q2 (vx2 1, vy2 1) = q2 (vx2 (Suc ?k mod ?n), vy2 (Suc ?k mod ?n))"
+        proof -
+          have h1_in: "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+          have h0_lt: "(0::nat) < ?n" using hn_ge3 by linarith
+          have hk_lt2: "?k < ?n" by simp
+          have hfst: "fst (?w ! 0) = fst (?w ! ?k)" by simp
+          from hC7_2[rule_format, OF h0_lt hk_lt2 hfst h1_in]
+          show ?thesis by (by100 simp)
+        qed
+        finally show ?thesis .
+      qed
       \<comment> \<open>C7 vertex identifications from the a-pair.\<close>
       have hq_v0_vk: "q2 (vx2 0, vy2 0) = q2 (vx2 ?k, vy2 ?k)"
       proof -
