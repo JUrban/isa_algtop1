@@ -3446,12 +3446,36 @@ next
       qed
       \<comment> \<open>HELPER: junction continuity. At diagonal points (cross\\_diag = 0),
          q2(phi\\_L) = q2(phi\\_R) via C7 for the a-pair.\<close>
+      \<comment> \<open>VERTEX HELPER: phi\\_L at v\\_0 = v\\_0. At origin, dx=dy=0 so s=tp=0 and result = v\\_0.\<close>
+      have hphi_L_v0: "phi_L (vx2 0, vy2 0) = (vx2 0, vy2 0)"
+        unfolding phi_L_def Let_def by simp
+      \<comment> \<open>VERTEX HELPER: phi\\_L at v\\_k. Needs LEAST evaluation at vertex v\\_k.\<close>
+      \<comment> \<open>phi\\_R at v\\_0 also gives v\\_0 (same argument: dx=dy=0).\<close>
+      \<comment> \<open>phi\\_R at v\\_0: dx=dy=0, so s=tp=0. Result: (1-0-0)*vx2 k + 0 + 0 = (vx2 k, vy2 k).\<close>
+      have hphi_R_v0: "phi_R (vx2 0, vy2 0) = (vx2 ?k, vy2 ?k)"
+        unfolding phi_R_def Let_def by simp
+      \<comment> \<open>VERTEX HELPER: q2(phi\\_L(v\\_k)). phi\\_L at v\\_k: dx = vx2 k - vx2 0, dy = vy2 k - vy2 0.
+         LEAST gives sector k-1 (last left sector). Cramer: s=0, tp=1.
+         Result: 0*vx2 0 + 0*vx2 2 + 1*vx2 1 = vx2 1.\<close>
+      have hphi_L_vk: "q2 (phi_L (vx2 ?k, vy2 ?k)) = q2 (vx2 (Suc ?k mod ?n), vy2 (Suc ?k mod ?n))"
+        sorry \<comment> \<open>phi\\_L(v\\_k) maps to v\\_1. C7 gives q2(v\\_1) = q2(v\\_{k+1}).\<close>
+      \<comment> \<open>C7 vertex identifications from the a-pair.\<close>
+      have hq_v0_vk: "q2 (vx2 0, vy2 0) = q2 (vx2 ?k, vy2 ?k)"
+      proof -
+        have h0_in: "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+        have h0_lt: "(0::nat) < ?n" using hn_ge3 by linarith
+        have hk_lt2: "?k < ?n" by simp
+        have hfst: "fst (?w ! 0) = fst (?w ! ?k)" by simp
+        from hC7_2[rule_format, OF h0_lt hk_lt2 hfst h0_in]
+        show ?thesis by (by100 simp)
+      qed
       have hjunction: "\<And>i t. i \<ge> ?k \<Longrightarrow> i < ?n \<Longrightarrow> t \<in> I_set \<Longrightarrow>
           cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) = 0 \<Longrightarrow>
           q2 (phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))
         = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-        sorry \<comment> \<open>At diagonal: phi\\_L gives point on old edge 0, sigma gives point in terms of original.
-           C7 for a-pair equates q2-values. Only relevant at i=k,t=0 and i=n-1,t=1.\<close>
+        sorry \<comment> \<open>Junction at cross\\_diag=0 for right-half edges.
+           Uses hphi\\_L\\_v0, hq\\_v0\\_vk. Case i=n-1,t=1: phi\\_L(v\\_0) = v\\_0, sigma(n-1,1) = v\\_k, C7.
+           Case i=k,t=0: needs phi\\_L(v\\_k) evaluation.\<close>
       have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
           g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
         = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
