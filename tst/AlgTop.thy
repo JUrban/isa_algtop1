@@ -3634,7 +3634,7 @@ next
           have "q2 (phi_L (vx2 ?k, vy2 ?k)) = q2 (vx2 (Suc ?k mod ?n), vy2 (Suc ?k mod ?n))"
             using hphi_L_vk .
           also have "\<dots> = q2 (paste_sigma vx2 vy2 ?k ?n ?k 0)"
-            unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def sorry \<comment> \<open>sigma(k,0) = v\\_{k+1}.\<close>
+            sorry \<comment> \<open>sigma(k,0) = v\\_{k+1}. From sigma\\_def with k \\<le> k \\<le> n-2.\<close>
           finally show ?thesis using \<open>i = ?k\<close> \<open>t = 0\<close> by simp
         qed
       qed
