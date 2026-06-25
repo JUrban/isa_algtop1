@@ -3191,41 +3191,15 @@ next
           = paste_sigma vx2 vy2 ?k ?n i t"
         proof (cases "t > 0")
           case True
-          \<comment> \<open>t > 0: use right\\_fan\\_edge\\_sector + four-stage simp.\<close>
-          have hk_lt_n_local: "?k < ?n" by simp
-          note hRLeast = right_fan_edge_sector[OF hn_ge3 hk_ge2 hk_lt_n_local ht True hik hi_lt hfan_det_0]
-          \<comment> \<open>Fan det for Cramer denominator.\<close>
-          \<comment> \<open>NOTE: hdd\\_R uses triangle (v\\_0, v\\_i, v\\_{Suc i}). For i = n-1, Suc i = n
-             which is outside the polygon vertex range. The i=n-1 case needs
-             different treatment (base edge with LEAST=n-2, triangle (v\\_0, v\\_{n-2}, v\\_{n-1})).\<close>
-          have hdd_R: "(vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0) \<noteq> 0"
-            sorry \<comment> \<open>Fan det for right half. Correct for i < n-1; wrong for i = n-1.\<close>
-          \<comment> \<open>Cramer on triangle edge: s = 1-t, tp = t.\<close>
-          from cramer_on_triangle_edge[of "vx2 0" "vy2 0" "vx2 i" "vy2 i" "vx2(Suc i)" "vy2(Suc i)" t]
-          have hsR: "((vy2(Suc i) - vy2 0) * ((1-t)*(vx2 i - vx2 0) + t*(vx2(Suc i) - vx2 0)) -
-                      (vx2(Suc i) - vx2 0) * ((1-t)*(vy2 i - vy2 0) + t*(vy2(Suc i) - vy2 0))) /
-                     ((vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0)) = 1 - t"
-            and htpR: "((vx2 i - vx2 0) * ((1-t)*(vy2 i - vy2 0) + t*(vy2(Suc i) - vy2 0)) -
-                        (vy2 i - vy2 0) * ((1-t)*(vx2 i - vx2 0) + t*(vx2(Suc i) - vx2 0))) /
-                       ((vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0)) = t"
-            using hdd_R using cramer_on_triangle_edge(1) cramer_on_triangle_edge(2) by (by5000 blast)+
-          \<comment> \<open>For right half with k \\<le> i < n-1 and LEAST = i:
-             phi\\_R result = (0*vx2 k + (1-t)*vx2(Suc i) + t*vx2(Suc(Suc i) mod n), ...)
-             sigma(i,t) = ((1-t)*vx2(i+1) + t*vx2(Suc(i+1) mod n), ...)
-             These are IDENTICAL (Suc i = i+1).\<close>
-          \<comment> \<open>For i = n-1 and LEAST = n-2:
-             phi\\_R result involves vx2(Suc(n-2)) = vx2(n-1) and vx2(Suc(n-1) mod n) = vx2(0).
-             sigma(n-1,t) = (1-t)*vx2 0 + t*vx2 k (c-edge right).
-             Cramer on base edge gives s = t, tp = 0 (reversed from left half).
-             Result: (1-t-0)*vx2 k + t*vx2(n-1) + 0 = ... hmm, this doesn't match directly.\<close>
-          \<comment> \<open>Actually for i = n-1: LEAST = n-2, so j = n-2.
-             Cramer in triangle (v\\_0, v\\_{n-2}, v\\_{n-1}). Point is on edge from v\\_{n-1} to v\\_0.
-             This is the base edge case (edge from b to a in reverse).
-             The Cramer gives different coords than the interior edge case.\<close>
-          have hSuc_len_R: "Suc (length u2) = ?k" by simp
-          show ?thesis sorry \<comment> \<open>Right-half t>0 case. Needs case split on i<n-1 vs i=n-1 + four-stage simp.
-             For i<n-1: same pattern as left half with Suc(Suc i) mod n.
-             For i=n-1: base edge with different Cramer.\<close>
+          \<comment> \<open>t > 0: symmetric to hphi\\_L\\_sigma left half.
+             Case k \\<le> i < n-1: LEAST = i, cramer\\_on\\_triangle\\_edge with (v\\_0, v\\_i, v\\_{i+1}).
+             Case i = n-1: LEAST = n-2, cramer\\_on\\_triangle\\_base\\_edge with (v\\_0, v\\_{n-2}, v\\_{n-1}).\<close>
+          show ?thesis sorry \<comment> \<open>Right half t>0. Symmetric to left half but needs:
+             1. Case split on i < n-1 vs i = n-1 BEFORE Cramer instantiation.
+             2. Different Cramer triangles for each case.
+             3. Four-stage simp for each case separately.
+             The i < n-1 case should follow the left-half pattern directly.
+             The i = n-1 case uses cramer\\_on\\_triangle\\_base\\_edge.\<close>
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           show ?thesis sorry \<comment> \<open>Vertex case t=0 for right half.\<close>
