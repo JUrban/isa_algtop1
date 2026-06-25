@@ -3657,7 +3657,50 @@ next
             \<comment> \<open>Need strict > 0. Both cross(v\\_k,v\\_i) > 0 and cross(v\\_k,v\\_{i+1}) > 0 from fan det.\<close>
             \<comment> \<open>cross\\_diag = (1-t)*pos + t*pos > 0 since at least one of (1-t), t is > 0.\<close>
             have "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) > 0"
-              sorry \<comment> \<open>Strict positivity from fan det + bilinearity.\<close>
+            proof -
+              \<comment> \<open>Decompose cross\\_diag via bilinearity.\<close>
+              have hsi_lt: "Suc i < ?n" using \<open>i < ?n - 1\<close> by linarith
+              have hsi_mod: "Suc i mod ?n = Suc i" using hsi_lt by simp
+              have hk_lt_n: "?k < ?n" by simp
+              \<comment> \<open>Fan det: both cross products > 0.\<close>
+              have "1 \<le> ?k" by simp
+              from hfan_det_0[rule_format, OF hk_lt_n hi_lt2 \<open>1 \<le> ?k\<close> \<open>?k < i\<close>]
+              have hcki: "(vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0) > 0" .
+              from hfan_det_0[rule_format, OF hk_lt_n hsi_lt \<open>1 \<le> ?k\<close>]
+              have hcksi: "(vx2 ?k - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i) - vx2 0) > 0"
+                using \<open>?k < i\<close> by linarith
+              \<comment> \<open>Bilinearity: cross\\_diag = (1-t)*hcki + t*hcksi.\<close>
+              have hcd_decomp: "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+                = (vx2 ?k - vx2 0) * ((1-t)*vy2 i + t*vy2(Suc i mod ?n) - vy2 0)
+                - (vy2 ?k - vy2 0) * ((1-t)*vx2 i + t*vx2(Suc i mod ?n) - vx2 0)"
+                unfolding cross_diag_def by simp
+              also have "\<dots> = (1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))
+                + t * ((vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0))"
+                by (by100 algebra)
+              finally have hcd_bilin: "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
+                = (1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))
+                + t * ((vx2 ?k - vx2 0)*(vy2(Suc i mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i mod ?n) - vx2 0))" .
+              have ht01: "t \<ge> 0 \<and> t \<le> 1" using ht2 unfolding top1_unit_interval_def by (by100 auto)
+              \<comment> \<open>At least one of (1-t)*hcki, t*hcksi is > 0.\<close>
+              show ?thesis
+              proof (cases "t = 0")
+                case True
+                have "(1-0) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)) > 0"
+                  using hcki by simp
+                thus ?thesis using hcd_bilin True hsi_mod by simp
+              next
+                case False2: False hence "t > 0" using ht01 by linarith
+                have "t * ((vx2 ?k - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i) - vx2 0)) > 0"
+                  using mult_pos_pos[OF \<open>t > 0\<close> hcksi] .
+                moreover have "(1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)) \<ge> 0"
+                  using mult_nonneg_nonneg[of "1-t" "((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))"]
+                  ht01 hcki by linarith
+                ultimately have "(1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))
+                  + t * ((vx2 ?k - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc i) - vx2 0)) > 0"
+                  by linarith
+                thus ?thesis using hcd_bilin hsi_mod by simp
+              qed
+            qed
             with hcd0 show False by linarith
           qed
           \<comment> \<open>For k < i < n-1: cross\\_diag > 0 for all t, contradicting hcd0.\<close>
