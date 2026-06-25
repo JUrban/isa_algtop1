@@ -2496,4 +2496,218 @@ proof -
 qed
 
 
+
+\<comment> \<open>RIGHT FAN SECTOR SELECTION: symmetric for the right fan from v\\_0 through v\\_k,...,v\\_{n-1}.\<close>
+lemma right_fan_edge_sector:
+  fixes vx vy :: "nat \<Rightarrow> real" and n k i :: nat and t :: real
+  assumes hn: "n \<ge> 3" and hk: "k \<ge> 2" and hk_lt: "k < n" and hk_lt_nm1: "k < n - 1"
+      and ht: "t \<in> I_set" and ht_pos: "t > 0" and hi_ge: "k \<le> i" and hi_lt: "i < n"
+      and hfan: "\<forall>a<n. \<forall>b<n. 1 \<le> a \<longrightarrow> a < b \<longrightarrow>
+          (vx a - vx 0) * (vy b - vy 0) - (vy a - vy 0) * (vx b - vx 0) > 0"
+      and hi_lt_nm1: "i < n - 1"
+  defines "px \<equiv> (1-t)*vx i + t*vx(Suc i mod n)"
+      and "py \<equiv> (1-t)*vy i + t*vy(Suc i mod n)"
+  shows "(LEAST j. k \<le> j \<and> j < n - 1 \<and>
+      (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0) \<ge> 0 \<and>
+      (vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0)
+    = (if i = n - 1 then n - 2 else i)"
+proof -
+  let ?PR = "\<lambda>j. k \<le> j \<and> j < n - 1 \<and>
+      (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0) \<ge> 0 \<and>
+      (vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0"
+  have ht01: "t \<ge> 0 \<and> t \<le> 1" using ht unfolding top1_unit_interval_def by (by100 auto)
+  have h1mt: "1 - t \<ge> 0" using ht01 by linarith
+  \<comment> \<open>Bilinearity for right fan edge points (same as left fan).\<close>
+  have hsi_lt: "Suc i < n \<or> Suc i = n" using hi_lt by linarith
+  have hbilin: "\<And>j. (vx j - vx 0)*(py - vy 0) - (vy j - vy 0)*(px - vx 0)
+      = (1-t)*((vx j - vx 0)*(vy i - vy 0) - (vy j - vy 0)*(vx i - vx 0))
+      + t*((vx j - vx 0)*(vy(Suc i mod n) - vy 0) - (vy j - vy 0)*(vx(Suc i mod n) - vx 0))"
+    unfolding px_def py_def by (by100 algebra)
+  define expected where "expected = (if i = n - 1 then n - 2 else i)"
+  \<comment> \<open>Step A: ?PR(expected) holds.\<close>
+  have hPR_holds: "?PR expected"
+  proof -
+    have hexp_ge_k: "k \<le> expected"
+    proof (cases "i = n - 1")
+      case True hence "expected = n - 2" unfolding expected_def by simp
+      thus ?thesis using hk_lt_nm1 by linarith
+    next
+      case False hence "expected = i" unfolding expected_def by simp
+      thus ?thesis using hi_ge by simp
+    qed
+    have hexp_lt_nm1: "expected < n - 1"
+    proof (cases "i = n - 1")
+      case True hence "expected = n - 2" unfolding expected_def by simp
+      thus ?thesis using hn by linarith
+    next
+      case False hence "expected = i" unfolding expected_def by simp
+      thus ?thesis using hi_lt False by linarith
+    qed
+    \<comment> \<open>Lower bound.\<close>
+    from hbilin[of expected]
+    have hlow_decomp: "(vx expected - vx 0)*(py - vy 0) - (vy expected - vy 0)*(px - vx 0)
+      = (1-t)*((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0))
+      + t*((vx expected - vx 0)*(vy(Suc i mod n) - vy 0) - (vy expected - vy 0)*(vx(Suc i mod n) - vx 0))" .
+    have hlower: "(vx expected - vx 0)*(py - vy 0) - (vy expected - vy 0)*(px - vx 0) \<ge> 0"
+    proof (cases "i = n - 1")
+      case True
+      hence hexp: "expected = n - 2" unfolding expected_def by simp
+      hence "Suc expected = n - 1" using hn by linarith
+      \<comment> \<open>lower = (1-t)*cross(n-2, n-1) + t*cross(n-2, 0).
+         cross(n-2, 0) = 0. cross(n-2, n-1) = fan\\_det > 0. (1-t) \\<ge> 0.\<close>
+      have hcross_mod: "Suc i mod n = 0" using True hi_lt by simp
+      have "((vx expected - vx 0)*(vy(Suc i mod n) - vy 0) - (vy expected - vy 0)*(vx(Suc i mod n) - vx 0)) = 0"
+        using hcross_mod by simp
+      moreover have "((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0)) \<ge> 0"
+      proof -
+        have "expected < n" using hexp_lt_nm1 by linarith
+        have "i < n" using hi_lt .
+        have "1 \<le> expected" using hexp_ge_k hk by linarith
+        have "expected < i" using hexp True hi_lt hn by linarith
+        from hfan[rule_format, OF \<open>expected < n\<close> \<open>i < n\<close> \<open>1 \<le> expected\<close> \<open>expected < i\<close>]
+        show ?thesis by linarith
+      qed
+      hence "(1-t) * ((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0)) \<ge> 0"
+        using h1mt using mult_nonneg_nonneg[of "1-t" "((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0))"]
+        by linarith
+      moreover have "t * ((vx expected - vx 0)*(vy(Suc i mod n) - vy 0) - (vy expected - vy 0)*(vx(Suc i mod n) - vx 0)) = 0"
+        using \<open>((vx expected - vx 0)*(vy(Suc i mod n) - vy 0) - (vy expected - vy 0)*(vx(Suc i mod n) - vx 0)) = 0\<close>
+        by simp
+      ultimately show ?thesis using hlow_decomp by linarith
+    next
+      case False
+      hence hexp: "expected = i" unfolding expected_def by simp
+      \<comment> \<open>lower = (1-t)*cross(i,i) + t*cross(i, Suc i mod n) = 0 + t*fan\\_det \\<ge> 0.\<close>
+      have "((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0)) = 0"
+        using hexp by simp
+      moreover have "t * ((vx expected - vx 0)*(vy(Suc i mod n) - vy 0) - (vy expected - vy 0)*(vx(Suc i mod n) - vx 0)) \<ge> 0"
+      proof -
+        have hsi_lt2: "Suc i < n" using False hi_lt by linarith
+        have "Suc i mod n = Suc i" using hsi_lt2 by simp
+        have "1 \<le> i" using hi_ge hk by linarith
+        from hfan[rule_format, OF hi_lt hsi_lt2 \<open>1 \<le> i\<close>]
+        have "((vx i - vx 0)*(vy(Suc i) - vy 0) - (vy i - vy 0)*(vx(Suc i) - vx 0)) > 0"
+          using False by linarith
+        hence "((vx expected - vx 0)*(vy(Suc i mod n) - vy 0) - (vy expected - vy 0)*(vx(Suc i mod n) - vx 0)) > 0"
+          using hexp \<open>Suc i mod n = Suc i\<close> by simp
+        from mult_pos_pos[OF ht_pos this] show ?thesis by linarith
+      qed
+      hence "(1-t) * 0 + t * ((vx expected - vx 0)*(vy(Suc i mod n) - vy 0) - (vy expected - vy 0)*(vx(Suc i mod n) - vx 0)) \<ge> 0"
+        by simp
+      hence "(1-t) * ((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0))
+        + t * ((vx expected - vx 0)*(vy(Suc i mod n) - vy 0) - (vy expected - vy 0)*(vx(Suc i mod n) - vx 0)) \<ge> 0"
+        using \<open>((vx expected - vx 0)*(vy i - vy 0) - (vy expected - vy 0)*(vx i - vx 0)) = 0\<close> by simp
+      thus ?thesis using hlow_decomp by linarith
+    qed
+    \<comment> \<open>Upper bound.\<close>
+    from hbilin[of "Suc expected"]
+    have hup_decomp: "(vx(Suc expected) - vx 0)*(py - vy 0) - (vy(Suc expected) - vy 0)*(px - vx 0)
+      = (1-t)*((vx(Suc expected) - vx 0)*(vy i - vy 0) - (vy(Suc expected) - vy 0)*(vx i - vx 0))
+      + t*((vx(Suc expected) - vx 0)*(vy(Suc i mod n) - vy 0) - (vy(Suc expected) - vy 0)*(vx(Suc i mod n) - vx 0))" .
+    have hupper: "(vx(Suc expected) - vx 0)*(py - vy 0) - (vy(Suc expected) - vy 0)*(px - vx 0) \<le> 0"
+    proof (cases "i = n - 1")
+      case True
+      hence hexp: "expected = n - 2" unfolding expected_def by simp
+      hence hSexp: "Suc expected = n - 1" using hn by linarith
+      have hcross_mod: "Suc i mod n = 0" using True hi_lt by simp
+      \<comment> \<open>cross(n-1, n-1) = 0 and cross(n-1, 0) = 0.\<close>
+      have "((vx(Suc expected) - vx 0)*(vy i - vy 0) - (vy(Suc expected) - vy 0)*(vx i - vx 0)) = 0"
+        using hSexp True by simp
+      moreover have "((vx(Suc expected) - vx 0)*(vy(Suc i mod n) - vy 0) - (vy(Suc expected) - vy 0)*(vx(Suc i mod n) - vx 0)) = 0"
+        using hcross_mod by simp
+      ultimately have "(1-t)*0 + t*0 \<ge> (1-t)*((vx(Suc expected) - vx 0)*(vy i - vy 0) - (vy(Suc expected) - vy 0)*(vx i - vx 0))
+        + t*((vx(Suc expected) - vx 0)*(vy(Suc i mod n) - vy 0) - (vy(Suc expected) - vy 0)*(vx(Suc i mod n) - vx 0))"
+        by simp
+      thus ?thesis using hup_decomp by linarith
+    next
+      case False
+      hence hexp: "expected = i" unfolding expected_def by simp
+      hence hSexp: "Suc expected = Suc i" by simp
+      have hsi_lt2: "Suc i < n" using False hi_lt by linarith
+      have hsi_mod: "Suc i mod n = Suc i" using hsi_lt2 by simp
+      \<comment> \<open>cross(Suc i, Suc i) = 0 and cross(Suc i, i) < 0.\<close>
+      have "((vx(Suc expected) - vx 0)*(vy(Suc i mod n) - vy 0) - (vy(Suc expected) - vy 0)*(vx(Suc i mod n) - vx 0)) = 0"
+        using hSexp hsi_mod by simp
+      moreover have "((vx(Suc expected) - vx 0)*(vy i - vy 0) - (vy(Suc expected) - vy 0)*(vx i - vx 0)) < 0"
+      proof -
+        have "1 \<le> i" using hi_ge hk by linarith
+        from hfan[rule_format, OF hi_lt hsi_lt2 \<open>1 \<le> i\<close>]
+        have "((vx i - vx 0)*(vy(Suc i) - vy 0) - (vy i - vy 0)*(vx(Suc i) - vx 0)) > 0" using False by linarith
+        moreover have "((vx(Suc i) - vx 0)*(vy i - vy 0) - (vy(Suc i) - vy 0)*(vx i - vx 0))
+          = -((vx i - vx 0)*(vy(Suc i) - vy 0) - (vy i - vy 0)*(vx(Suc i) - vx 0))" by (by100 algebra)
+        ultimately have "((vx(Suc i) - vx 0)*(vy i - vy 0) - (vy(Suc i) - vy 0)*(vx i - vx 0)) < 0" by linarith
+        thus ?thesis using hSexp by simp
+      qed
+      moreover have "(1-t) * ((vx(Suc expected) - vx 0)*(vy i - vy 0) - (vy(Suc expected) - vy 0)*(vx i - vx 0)) \<le> 0"
+        using \<open>((vx(Suc expected) - vx 0)*(vy i - vy 0) - (vy(Suc expected) - vy 0)*(vx i - vx 0)) < 0\<close>
+              h1mt mult_nonneg_nonpos[of "1-t" "((vx(Suc expected) - vx 0)*(vy i - vy 0) - (vy(Suc expected) - vy 0)*(vx i - vx 0))"]
+        by linarith
+      moreover have "t * ((vx(Suc expected) - vx 0)*(vy(Suc i mod n) - vy 0) - (vy(Suc expected) - vy 0)*(vx(Suc i mod n) - vx 0)) = 0"
+        using \<open>((vx(Suc expected) - vx 0)*(vy(Suc i mod n) - vy 0) - (vy(Suc expected) - vy 0)*(vx(Suc i mod n) - vx 0)) = 0\<close>
+        by simp
+      ultimately show ?thesis using hup_decomp by linarith
+    qed
+    show "?PR expected" using hexp_ge_k hexp_lt_nm1 hlower hupper by simp
+  qed
+  \<comment> \<open>Step B: minimality.\<close>
+  have hPR_min: "\<And>j. ?PR j \<Longrightarrow> expected \<le> j"
+  proof -
+    fix j assume hj: "?PR j"
+    hence hj_ge_k: "k \<le> j" and hj_lt: "j < n - 1" and
+      hupper_j: "(vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) \<le> 0"
+      by simp+
+    show "expected \<le> j"
+    proof (cases "i = n - 1")
+      case True hence hexp_nm2: "expected = n - 2" unfolding expected_def by simp
+      \<comment> \<open>For i=n-1: PR(j) with j < n-2 fails because upper(j) = (1-t)*positive \\<ge> 0.
+         When t < 1: (1-t) > 0 so upper > 0, contradiction. When t = 1: upper = 0.
+         For t=1: ALL sectors satisfy PR, LEAST=k \\<noteq> n-2. Lemma is false at t=1,i=n-1.
+         But this case never arises in hphi\\_R\\_sigma (handled by hjunction).\<close>
+      show ?thesis using True hi_lt_nm1 by linarith
+    next
+      case False hence hexp: "expected = i" unfolding expected_def by simp
+      have "i \<le> j"
+      proof (rule ccontr)
+        assume "\<not> i \<le> j" hence hjlt: "j < i" by linarith
+        have "Suc j \<le> i" using hjlt by linarith
+        have "Suc j < n" using hj_lt by linarith
+        have hsi_lt2: "Suc i < n" using False hi_lt by linarith
+        have hsi_mod: "Suc i mod n = Suc i" using hsi_lt2 by simp
+        \<comment> \<open>Upper(j) = (1-t)*cross(Suc j, i) + t*cross(Suc j, Suc i).
+           Both \\<ge> 0 (fan det), at least one > 0 (t > 0).\<close>
+        have hcr1: "((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0)) \<ge> 0"
+        proof (cases "Suc j = i")
+          case True thus ?thesis by simp
+        next
+          case False hence "Suc j < i" using \<open>Suc j \<le> i\<close> by linarith
+          have "1 \<le> Suc j" using hj_ge_k hk by linarith
+          from hfan[rule_format, OF \<open>Suc j < n\<close> hi_lt \<open>1 \<le> Suc j\<close> \<open>Suc j < i\<close>]
+          show ?thesis by linarith
+        qed
+        have "1 \<le> Suc j" using hj_ge_k hk by linarith
+        have "Suc j < Suc i" using hjlt by linarith
+        from hfan[rule_format, OF \<open>Suc j < n\<close> hsi_lt2 \<open>1 \<le> Suc j\<close> \<open>Suc j < Suc i\<close>]
+        have hcr2: "((vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0)) > 0" .
+        have "t * ((vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0)) > 0"
+          using mult_pos_pos[OF ht_pos hcr2] .
+        moreover have "(1-t) * ((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0)) \<ge> 0"
+          using mult_nonneg_nonneg[of "1-t" "((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0))"]
+                h1mt hcr1 by linarith
+        moreover from hbilin[of "Suc j"] hsi_mod
+        have hbilin_sj: "(vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0)
+          = (1-t)*((vx(Suc j) - vx 0)*(vy i - vy 0) - (vy(Suc j) - vy 0)*(vx i - vx 0))
+          + t*((vx(Suc j) - vx 0)*(vy(Suc i) - vy 0) - (vy(Suc j) - vy 0)*(vx(Suc i) - vx 0))" by simp
+        ultimately have "(vx(Suc j) - vx 0)*(py - vy 0) - (vy(Suc j) - vy 0)*(px - vx 0) > 0"
+          using hbilin_sj by linarith
+        with hupper_j show False by linarith
+      qed
+      thus ?thesis using hexp by simp
+    qed
+  qed
+  \<comment> \<open>Step C: LEAST = expected.\<close>
+  have "(LEAST j. ?PR j) = expected"
+    using Least_equality[of ?PR expected] hPR_holds hPR_min by (by100 blast)
+  thus ?thesis unfolding expected_def by simp
+qed
+
 end
