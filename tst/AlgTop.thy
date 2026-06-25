@@ -3607,13 +3607,35 @@ next
           proof -
             have hcd_val: "cross_diag ((1-t)*vx2 i + t*vx2 0, (1-t)*vy2 i + t*vy2 0)
               = (1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))"
-              unfolding cross_diag_def sorry \<comment> \<open>cross\\_diag expansion at v\\_{n-1}.\<close>
+            proof -
+              have "cross_diag ((1-t)*vx2 i + t*vx2 0, (1-t)*vy2 i + t*vy2 0)
+                = (vx2 ?k - vx2 0) * ((1-t)*vy2 i + t*vy2 0 - vy2 0)
+                - (vy2 ?k - vy2 0) * ((1-t)*vx2 i + t*vx2 0 - vx2 0)"
+                unfolding cross_diag_def by simp
+              also have "\<dots> = (vx2 ?k - vx2 0) * ((1-t)*(vy2 i - vy2 0))
+                - (vy2 ?k - vy2 0) * ((1-t)*(vx2 i - vx2 0))"
+                by (by100 algebra)
+              also have "\<dots> = (1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))"
+                by (by100 algebra)
+              finally show ?thesis .
+            qed
             have "1 \<le> i" using hik2 hk_ge2 by linarith
             have hk_lt2: "?k < ?n" by simp
             from hfan_det_0[rule_format, OF hk_lt2 hi_lt2]
             have hcross_pos: "(vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0) > 0"
-              using \<open>1 \<le> i\<close> hik2 True sorry \<comment> \<open>Fan det: cross(v\\_k, v\\_{n-1}) > 0 when k < n-1.\<close>
-            from hcd_eq hcd_val hcross_pos show "t = 1" sorry \<comment> \<open>(1-t)*positive = 0 implies t = 1.\<close>
+            proof -
+              have "?k < i" using hik2 True hi_lt2 sorry \<comment> \<open>k < n-1 (needs v \\<noteq> []). For k=n-1: separate argument.\<close>
+              from hfan_det_0[rule_format, OF hk_lt2 hi_lt2 _ \<open>?k < i\<close>] show ?thesis by simp
+            qed
+            from hcd_eq hcd_val have h_prod0: "(1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)) = 0" by linarith
+            have "1 - t = 0"
+            proof (rule ccontr)
+              assume "1 - t \<noteq> 0"
+              with h_prod0 have "((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0)) = 0"
+                by (by100 simp)
+              with hcross_pos show False by linarith
+            qed
+            thus "t = 1" by linarith
           qed
           \<comment> \<open>At t=1: p = v\\_0.\<close>
           have hpx: "(1 - 1) * vx2 i + 1 * vx2 0 = vx2 0" by simp
