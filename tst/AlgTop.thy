@@ -3169,8 +3169,10 @@ next
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
-          show ?thesis sorry \<comment> \<open>Vertex case t=0: phi\\_L(v\\_i) = sigma(i,0).
-             Both phi\\_L sectors give same result v\\_{k+1-i}. Same let-chain issue.\<close>
+          show ?thesis sorry \<comment> \<open>Vertex case t=0: needs separate LEAST evaluation for t=0.
+             At t=0, LEAST may select sector i-1 instead of i, but both give same result.
+             The four-stage simp approach works for three passes but the residual
+             still contains the unevaluated LEAST (since hLeast requires t > 0).\<close>
         qed
       qed
       \<comment> \<open>HELPER: phi\\_R at right-half boundary point gives sigma.
