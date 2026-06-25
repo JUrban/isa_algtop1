@@ -3488,9 +3488,18 @@ next
           cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) = 0 \<Longrightarrow>
           q2 (phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))
         = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-        sorry \<comment> \<open>Junction at cross\\_diag=0 for right-half edges.
-           Uses hphi\\_L\\_v0, hq\\_v0\\_vk. Case i=n-1,t=1: phi\\_L(v\\_0) = v\\_0, sigma(n-1,1) = v\\_k, C7.
-           Case i=k,t=0: needs phi\\_L(v\\_k) evaluation.\<close>
+      proof -
+        fix i t assume hik2: "i \<ge> ?k" and hi_lt2: "i < ?n" and ht2: "t \<in> I_set"
+            and hcd0: "cross_diag ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)) = 0"
+        \<comment> \<open>cross\\_diag = 0 only at i=k,t=0 or i=n-1,t=1 (or k < i < n-1 NEVER).\<close>
+        \<comment> \<open>Cross\\_diag = 0 for right half only at i=k,t=0 and i=n-1,t=1.\<close>
+        \<comment> \<open>Case i=n-1, t=1: p = v\\_0. phi\\_L(v\\_0) = v\\_0. sigma(n-1,1) = v\\_k. q2(v\\_0) = q2(v\\_k).\<close>
+        \<comment> \<open>Case i=k, t=0: p = v\\_k. phi\\_L(v\\_k) = v\\_1 (needs LEAST). sigma(k,0) = v\\_{k+1}. q2(v\\_1) = q2(v\\_{k+1}).\<close>
+        show "q2 (phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))
+          = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+          sorry \<comment> \<open>Junction at 2 specific vertices. v\\_0 case uses hphi\\_L\\_v0 + hq\\_v0\\_vk.
+             v\\_k case uses phi\\_L(v\\_k) evaluation (LEAST at vertex).\<close>
+      qed
       have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
           g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
         = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
