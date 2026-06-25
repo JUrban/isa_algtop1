@@ -3157,9 +3157,14 @@ next
               using hdd_ne2 using cramer_on_triangle_edge(1) cramer_on_triangle_edge(2) by (by5000 blast)+
             \<comment> \<open>Assemble: phi\\_L = 0*v\\_0 + (1-t)*v\\_{k+1-i} + t*v\\_{k-i} = sigma(i,t).\<close>
             \<comment> \<open>Apply phi\\_L\\_def + Let\\_def + hLeast in one simp pass, then try to close.\<close>
+            have hSuc_len2: "Suc (length u2) = ?k" by simp
             show ?thesis
-              apply (simp only: phi_L_def Let_def fst_conv snd_conv hLeast)
-              sorry \<comment> \<open>After simp only: need numeral normalization + sigma matching.\<close>
+              apply (simp only: phi_L_def Let_def fst_conv snd_conv hLeast Suc_1 diff_Suc_1 hSuc_len2
+                                paste_chain_sigma_x_def paste_chain_sigma_y_def)
+              apply (insert hs2 htp2 hdd_ne2)
+              apply (simp add: divide_simps)
+              apply (simp add: algebra_simps)
+              using False hsi_local hik by (by5000 fastforce)
           qed
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
