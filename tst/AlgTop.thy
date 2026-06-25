@@ -3214,7 +3214,7 @@ next
             apply (insert hsR htpR hdd_R)
             apply (simp add: divide_simps)
             apply (simp add: algebra_simps)
-            sorry \<comment> \<open>Right-half residual after four-stage simp. Needs specific facts for closing.\<close>
+            sorry \<comment> \<open>Right-half residual. Needs more investigation.\<close>
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           show ?thesis sorry \<comment> \<open>Vertex case t=0 for right half.\<close>
