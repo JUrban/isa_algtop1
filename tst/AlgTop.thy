@@ -3475,14 +3475,59 @@ next
       \<comment> \<open>Try to evaluate phi\\_L(v\\_k) directly via four-stage simp.\<close>
       have hphi_L_vk_val: "phi_L (vx2 ?k, vy2 ?k) = (vx2 1, vy2 1)"
       proof -
+        \<comment> \<open>Evaluate LEAST at v\\_k: sector k-1 satisfies the predicate, and it's the minimum.\<close>
+        let ?PL_vk = "\<lambda>j. 1 \<le> j \<and> j < ?k \<and>
+            (vx2 j - vx2 0)*(vy2 ?k - vy2 0) - (vy2 j - vy2 0)*(vx2 ?k - vx2 0) \<ge> 0 \<and>
+            (vx2(Suc j) - vx2 0)*(vy2 ?k - vy2 0) - (vy2(Suc j) - vy2 0)*(vx2 ?k - vx2 0) \<le> 0"
+        have hPLvk_km1: "?PL_vk (?k - 1)"
+        proof -
+          have "1 \<le> ?k - 1" using hk_ge2 by linarith
+          moreover have "?k - 1 < ?k" using hk_ge2 by linarith
+          moreover have "(vx2(?k-1) - vx2 0)*(vy2 ?k - vy2 0) - (vy2(?k-1) - vy2 0)*(vx2 ?k - vx2 0) \<ge> 0"
+          proof -
+            have "?k - 1 < ?n" using hk_ge2 by simp
+            have "?k < ?n" by simp
+            have "1 \<le> ?k - 1" using hk_ge2 by linarith
+            from hfan_det_0[rule_format, OF \<open>?k - 1 < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k - 1\<close>]
+            show ?thesis using hk_ge2 by linarith
+          qed
+          moreover have "Suc (?k - 1) = ?k" using hk_ge2 by linarith
+          hence "(vx2(Suc(?k-1)) - vx2 0)*(vy2 ?k - vy2 0) - (vy2(Suc(?k-1)) - vy2 0)*(vx2 ?k - vx2 0) = 0"
+            by simp
+          hence "(vx2(Suc(?k-1)) - vx2 0)*(vy2 ?k - vy2 0) - (vy2(Suc(?k-1)) - vy2 0)*(vx2 ?k - vx2 0) \<le> 0"
+            by linarith
+          ultimately show ?thesis by (by100 auto)
+        qed
+        \<comment> \<open>LEAST\\_vk = k-1.\<close>
+        have hPLvk_min: "\<And>j. ?PL_vk j \<Longrightarrow> ?k - 1 \<le> j"
+        proof -
+          fix j assume hj: "?PL_vk j"
+          hence hj1: "1 \<le> j" and hjk: "j < ?k" and
+            hupper: "(vx2(Suc j) - vx2 0)*(vy2 ?k - vy2 0) - (vy2(Suc j) - vy2 0)*(vx2 ?k - vx2 0) \<le> 0"
+            by simp+
+          show "?k - 1 \<le> j"
+          proof (rule ccontr)
+            assume "\<not> ?k - 1 \<le> j" hence "j < ?k - 1" by linarith
+            hence "Suc j \<le> ?k - 1" by linarith
+            hence "Suc j < ?k" by linarith
+            have "Suc j < ?n" using \<open>Suc j < ?k\<close> by simp
+            have hk_lt2: "?k < ?n" by simp
+            have "1 \<le> Suc j" using hj1 by linarith
+            from hfan_det_0[rule_format, OF \<open>Suc j < ?n\<close> hk_lt2 \<open>1 \<le> Suc j\<close> \<open>Suc j < ?k\<close>]
+            have "(vx2(Suc j) - vx2 0)*(vy2 ?k - vy2 0) - (vy2(Suc j) - vy2 0)*(vx2 ?k - vx2 0) > 0" .
+            with hupper show False by linarith
+          qed
+        qed
+        have hLeast_vk: "(LEAST j. ?PL_vk j) = ?k - 1"
+          using Least_equality[of ?PL_vk "?k - 1"] hPLvk_km1 hPLvk_min by (by100 blast)
+        \<comment> \<open>Connect LEAST to phi\\_L\\_def and evaluate Cramer at v\\_k.\<close>
         have hSuc_k: "Suc (length u2) = ?k" by simp
         show ?thesis
-          apply (simp only: phi_L_def Let_def fst_conv snd_conv Suc_1 diff_Suc_1 hSuc_k)
+          apply (simp only: phi_L_def Let_def fst_conv snd_conv hLeast_vk Suc_1 diff_Suc_1 hSuc_k)
           apply (insert hfan_det_0 hn_ge3 hk_ge2)
           apply (simp add: divide_simps)
           apply (simp add: algebra_simps)
-          sorry \<comment> \<open>phi\\_L(v\\_k) = v\\_1. LEAST at v\\_k selects sector k-1 (last left sector).
-             Cramer: dx=fx, dy=fy so s=0, tp=1. Result: vx2(k-(k-1)) = vx2 1.\<close>
+          sorry \<comment> \<open>phi\\_L(v\\_k) = v\\_1. LEAST=k-1 PROVED. smt found proof but >1s build timeout.\<close>
       qed
       have hphi_L_vk: "q2 (phi_L (vx2 ?k, vy2 ?k)) = q2 (vx2 (Suc ?k mod ?n), vy2 (Suc ?k mod ?n))"
       proof -
