@@ -3366,10 +3366,17 @@ next
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           \<comment> \<open>t = 0: vertex case. phi\\_L(v\\_i) gives same sigma value regardless of sector.\<close>
-          show ?thesis sorry \<comment> \<open>Vertex case t=0: needs separate LEAST evaluation for t=0.
-             At t=0, LEAST may select sector i-1 instead of i, but both give same result.
-             The four-stage simp approach works for three passes but the residual
-             still contains the unevaluated LEAST (since hLeast requires t > 0).\<close>
+          \<comment> \<open>t=0: vertex v\\_i. phi\\_L\\_def with t=0 simplifies significantly.\<close>
+          have hSuc_len_v: "Suc (length u2) = ?k" by simp
+          show ?thesis
+            apply (simp only: phi_L_def Let_def fst_conv snd_conv \<open>t = 0\<close>
+                              paste_chain_sigma_x_def paste_chain_sigma_y_def
+                              Suc_1 diff_Suc_1 hSuc_len_v)
+            apply (simp add: divide_simps)
+            apply (simp add: algebra_simps)
+            \<comment> \<open>At t=0: for i=0, all terms zero so result = (vx2 0, vy2 0) = sigma(0,0).
+               For i\\<ge>1: the LEAST-dependent terms involve v\\_{k+1-j}, and both sectors give v\\_{k+1-i}.\<close>
+            sorry \<comment> \<open>Vertex t=0 residual. LEAST unevaluated without t>0.\<close>
         qed
       qed
       \<comment> \<open>HELPER: phi\\_R at right-half boundary point gives sigma.
