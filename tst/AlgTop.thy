@@ -3379,18 +3379,11 @@ next
               unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def by simp
             finally show ?thesis using True \<open>t = 0\<close> by simp
           next
-            case False
-            \<comment> \<open>1 \\<le> i < k, t=0: p = v\\_i. phi\\_L(v\\_i) needs LEAST at vertex.\<close>
-            have hSuc_len_v: "Suc (length u2) = ?k" by simp
-            show ?thesis
-              apply (simp only: phi_L_def Let_def fst_conv snd_conv \<open>t = 0\<close>
-                                paste_chain_sigma_x_def paste_chain_sigma_y_def
-                                Suc_1 diff_Suc_1 hSuc_len_v)
-              apply (insert hfan_det_0 hik hn_ge3)
-              apply (simp add: divide_simps)
-              apply (simp add: algebra_simps)
-              sorry \<comment> \<open>Vertex t=0, i\\<ge>1. LEAST at vertex v\\_i gives sector i-1 or i,
-                 both giving v\\_{k+1-i} = sigma(i,0).\<close>
+            case False hence hi1: "i \<ge> 1" by linarith
+            \<comment> \<open>1 \\<le> i < k, t=0: p = v\\_i. Direct Cramer computation.\<close>
+            \<comment> \<open>For i=1: LEAST = 1. Cramer with dx=ex gives s=1, tp=0. Result = v\\_k.
+               For i\\<ge>2: LEAST = i-1. Cramer with dx=fx gives s=0, tp=1. Result = v\\_{k+1-i}.\<close>
+            show ?thesis sorry \<comment> \<open>Vertex t=0 for i\\<ge>1. Needs direct Cramer at v\\_i.\<close>
           qed
         qed
       qed
@@ -3600,10 +3593,50 @@ next
         \<comment> \<open>Cross\\_diag = 0 for right half only at i=k,t=0 and i=n-1,t=1.\<close>
         \<comment> \<open>Case i=n-1, t=1: p = v\\_0. phi\\_L(v\\_0) = v\\_0. sigma(n-1,1) = v\\_k. q2(v\\_0) = q2(v\\_k).\<close>
         \<comment> \<open>Case i=k, t=0: p = v\\_k. phi\\_L(v\\_k) = v\\_1 (needs LEAST). sigma(k,0) = v\\_{k+1}. q2(v\\_1) = q2(v\\_{k+1}).\<close>
+        \<comment> \<open>Case split: cross\\_diag = 0 only at i=k,t=0 and i=n-1,t=1.\<close>
         show "q2 (phi_L ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))
           = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-          sorry \<comment> \<open>Junction at 2 specific vertices. v\\_0 case uses hphi\\_L\\_v0 + hq\\_v0\\_vk.
-             v\\_k case uses phi\\_L(v\\_k) evaluation (LEAST at vertex).\<close>
+        proof (cases "i = ?n - 1")
+          case True
+          \<comment> \<open>i = n-1: cross\\_diag = 0 implies t = 1 (since cross\\_diag = (1-t)*positive).\<close>
+          have hsi_n: "Suc i mod ?n = 0" using True hi_lt2 by simp
+          have hcd_eq: "cross_diag ((1-t)*vx2 i + t*vx2 0, (1-t)*vy2 i + t*vy2 0) = 0"
+            using hcd0 hsi_n by simp
+          \<comment> \<open>cross\\_diag = (1-t)*cross(v\\_k, v\\_{n-1}). For this to be 0: t = 1 (since cross > 0 from fan det).\<close>
+          have "t = 1"
+          proof -
+            have hcd_val: "cross_diag ((1-t)*vx2 i + t*vx2 0, (1-t)*vy2 i + t*vy2 0)
+              = (1-t) * ((vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0))"
+              unfolding cross_diag_def sorry \<comment> \<open>cross\\_diag expansion at v\\_{n-1}.\<close>
+            have "1 \<le> i" using hik2 hk_ge2 by linarith
+            have hk_lt2: "?k < ?n" by simp
+            from hfan_det_0[rule_format, OF hk_lt2 hi_lt2]
+            have hcross_pos: "(vx2 ?k - vx2 0)*(vy2 i - vy2 0) - (vy2 ?k - vy2 0)*(vx2 i - vx2 0) > 0"
+              using \<open>1 \<le> i\<close> hik2 True sorry \<comment> \<open>Fan det: cross(v\\_k, v\\_{n-1}) > 0 when k < n-1.\<close>
+            from hcd_eq hcd_val hcross_pos show "t = 1" sorry \<comment> \<open>(1-t)*positive = 0 implies t = 1.\<close>
+          qed
+          \<comment> \<open>At t=1: p = v\\_0.\<close>
+          have hpx: "(1 - 1) * vx2 i + 1 * vx2 0 = vx2 0" by simp
+          have hpy: "(1 - 1) * vy2 i + 1 * vy2 0 = vy2 0" by simp
+          have "q2 (phi_L (vx2 0, vy2 0)) = q2 (vx2 0, vy2 0)" using hphi_L_v0 by simp
+          also have "\<dots> = q2 (vx2 ?k, vy2 ?k)" using hq_v0_vk .
+          also have "q2 (vx2 ?k, vy2 ?k) = q2 (paste_sigma vx2 vy2 ?k ?n i 1)"
+            unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def using True by simp
+          finally show ?thesis using \<open>t = 1\<close> hsi_n hpx hpy by simp
+        next
+          case False hence "i = ?k" using hik2 hi_lt2 sorry \<comment> \<open>i \\<ge> k, i < n, i \\<noteq> n-1: need to show i = k.\<close>
+          \<comment> \<open>For k < i < n-1: cross\\_diag > 0 for all t, contradicting hcd0.\<close>
+          \<comment> \<open>So i = k.\<close>
+          \<comment> \<open>i = k: cross\\_diag = t * cross(v\\_k, v\\_{k+1}). For t > 0 this is > 0.\<close>
+          \<comment> \<open>So cross\\_diag = 0 requires t = 0.\<close>
+          have "t = 0" sorry \<comment> \<open>From cross\\_diag = 0 and cross(v\\_k, v\\_{k+1}) > 0.\<close>
+          \<comment> \<open>At t=0, i=k: p = v\\_k. phi\\_L(v\\_k) = v\\_1 (from hphi\\_L\\_vk\\_val).\<close>
+          have "q2 (phi_L (vx2 ?k, vy2 ?k)) = q2 (vx2 (Suc ?k mod ?n), vy2 (Suc ?k mod ?n))"
+            using hphi_L_vk .
+          also have "\<dots> = q2 (paste_sigma vx2 vy2 ?k ?n ?k 0)"
+            unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def sorry \<comment> \<open>sigma(k,0) = v\\_{k+1}.\<close>
+          finally show ?thesis using \<open>i = ?k\<close> \<open>t = 0\<close> by simp
+        qed
       qed
       have hg_bdy: "\<forall>i<?n. \<forall>t\<in>I_set.
           g ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))
