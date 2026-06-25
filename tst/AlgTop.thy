@@ -3436,13 +3436,8 @@ next
             \<comment> \<open>i=n-1: LEAST=n-2. Point on edge from v\\_{n-1} to v\\_0 in triangle (v\\_0, v\\_{n-2}, v\\_{n-1}).
                Cramer gives s=0, t\\_par=1-t. Result: t*vx2 k + (1-t)*vx2 0 = sigma(n-1,t).\<close>
             \<comment> \<open>Use same four-stage simp approach.\<close>
-            show ?thesis
-              apply (simp only: phi_R_def Let_def fst_conv snd_conv hRLeast \<open>i = ?n - 1\<close>
-                                Suc_1 diff_Suc_1 hSuc_len_R
-                                paste_chain_sigma_x_def paste_chain_sigma_y_def)
-              apply (simp add: divide_simps)
-              apply (simp add: algebra_simps)
-              sorry \<comment> \<open>i=n-1 base edge residual after four-stage simp.\<close>
+            show ?thesis sorry \<comment> \<open>i=n-1 right-half base edge. Four-stage simp + mod facts
+               don't close residual. Needs more decomposition.\<close>
           qed
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
