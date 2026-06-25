@@ -3206,17 +3206,23 @@ next
                         (vy2 i - vy2 0) * ((1-t)*(vx2 i - vx2 0) + t*(vx2(Suc i) - vx2 0))) /
                        ((vx2 i - vx2 0)*(vy2(Suc i) - vy2 0) - (vy2 i - vy2 0)*(vx2(Suc i) - vx2 0)) = t"
             using hdd_R using cramer_on_triangle_edge(1) cramer_on_triangle_edge(2) by (by5000 blast)+
-          \<comment> \<open>Four-stage simp: phi\\_R with LEAST + numerals + divide + algebra.\<close>
+          \<comment> \<open>For right half with k \\<le> i < n-1 and LEAST = i:
+             phi\\_R result = (0*vx2 k + (1-t)*vx2(Suc i) + t*vx2(Suc(Suc i) mod n), ...)
+             sigma(i,t) = ((1-t)*vx2(i+1) + t*vx2(Suc(i+1) mod n), ...)
+             These are IDENTICAL (Suc i = i+1).\<close>
+          \<comment> \<open>For i = n-1 and LEAST = n-2:
+             phi\\_R result involves vx2(Suc(n-2)) = vx2(n-1) and vx2(Suc(n-1) mod n) = vx2(0).
+             sigma(n-1,t) = (1-t)*vx2 0 + t*vx2 k (c-edge right).
+             Cramer on base edge gives s = t, tp = 0 (reversed from left half).
+             Result: (1-t-0)*vx2 k + t*vx2(n-1) + 0 = ... hmm, this doesn't match directly.\<close>
+          \<comment> \<open>Actually for i = n-1: LEAST = n-2, so j = n-2.
+             Cramer in triangle (v\\_0, v\\_{n-2}, v\\_{n-1}). Point is on edge from v\\_{n-1} to v\\_0.
+             This is the base edge case (edge from b to a in reverse).
+             The Cramer gives different coords than the interior edge case.\<close>
           have hSuc_len_R: "Suc (length u2) = ?k" by simp
-          show ?thesis
-            apply (simp only: phi_R_def Let_def fst_conv snd_conv hRLeast Suc_1 diff_Suc_1 hSuc_len_R
-                              paste_chain_sigma_x_def paste_chain_sigma_y_def)
-            apply (insert hsR htpR hdd_R)
-            apply (simp add: divide_simps)
-            apply (simp add: algebra_simps)
-            sorry \<comment> \<open>Right-half residual after four-stage simp.
-               The mod expressions (Suc i mod n, Suc(Suc i) mod n) need case analysis.
-               Pattern from left half doesn't directly transfer.\<close>
+          show ?thesis sorry \<comment> \<open>Right-half t>0 case. Needs case split on i<n-1 vs i=n-1 + four-stage simp.
+             For i<n-1: same pattern as left half with Suc(Suc i) mod n.
+             For i=n-1: base edge with different Cramer.\<close>
         next
           case False hence "t = 0" using ht unfolding top1_unit_interval_def by (by100 auto)
           show ?thesis sorry \<comment> \<open>Vertex case t=0 for right half.\<close>
