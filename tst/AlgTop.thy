@@ -5455,9 +5455,30 @@ next
                 unfolding cross_diag_def using hcd_lin hfstL hsndL by (by100 simp)
               \<comment> \<open>Each cross term \\<le> 0 (fan det antisymmetry).\<close>
               have h_cdA: "(vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0) \<le> 0"
-                sorry \<comment> \<open>fan det antisymmetry for vertex A.\<close>
+              proof (cases "?k+1-jL = ?k")
+                case True thus ?thesis by (by100 simp)
+              next
+                case False
+                have "1 \<le> ?k+1-jL" using hjL hk_ge2 by (by100 linarith)
+                have "?k+1-jL < ?k" using False hjL by (by100 linarith)
+                have "?k+1-jL < ?n" using \<open>?k+1-jL < ?k\<close> hk_lt_nm1 by (by100 linarith)
+                have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+                from hfan_det_0[rule_format, OF \<open>?k+1-jL < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k+1-jL\<close> \<open>?k+1-jL < ?k\<close>]
+                show ?thesis
+                  apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
+                  done
+              qed
               have h_cdB: "(vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0) \<le> 0"
-                sorry \<comment> \<open>fan det antisymmetry for vertex B.\<close>
+              proof -
+                have "1 \<le> ?k-jL" using hjL by (by100 linarith)
+                have "?k-jL < ?k" using hjL by (by100 linarith)
+                have "?k-jL < ?n" using \<open>?k-jL < ?k\<close> hk_lt_nm1 by (by100 linarith)
+                have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+                from hfan_det_0[rule_format, OF \<open>?k-jL < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k-jL\<close> \<open>?k-jL < ?k\<close>]
+                show ?thesis
+                  apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
+                  done
+              qed
               show ?thesis using hcd_eq hsL htpL h_cdA h_cdB
                 mult_nonneg_nonneg[of sL "-((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))"]
                 mult_nonneg_nonneg[of tpL "-((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"]
