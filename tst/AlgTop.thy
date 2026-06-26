@@ -2631,7 +2631,7 @@ next
               using hw'i hw_ki unfolding top1_inverse_edge_def by (by100 simp)
             show ?thesis
               apply (rule exI[of _ "?k - i"], rule exI[of _ True])
-              using hki h1mt hsx hsy hSuc_mod hlbl hsign True by (by100 simp)
+              using hki h1mt hsx hsy hSuc_mod hlbl hsign True by (by5000 simp)
           next
             case False hence hige: "i \<ge> ?k" using hi0 by (by100 simp)
             have hsi: "Suc i < ?n" using hinm1 hi by (by100 simp)
@@ -4042,9 +4042,31 @@ next
             sorry \<comment> \<open>phi\\_L and phi\\_R images are in disjoint sub-polygon interiors.\<close>
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
-            sorry \<comment> \<open>phi\\_L injective: same sector \\<to> Cramer inversion (det \\<noteq> 0),
-               different sectors \\<to> fan triangle interiors disjoint.
-               Expert: det \\<noteq> 0 gives Cramer injectivity per sector.\<close>
+          proof -
+            fix x y assume hx: "x \<in> P2" and hy: "y \<in> P2"
+              and hcdx: "cross_diag x \<le> 0" and hcdy: "cross_diag y \<le> 0"
+              and heq: "phi_L x = phi_L y"
+            \<comment> \<open>Let j\\_x, j\\_y be the LEAST sectors for x, y.\<close>
+            let ?PLx = "\<lambda>j. 1 \<le> j \<and> j < ?k \<and>
+              (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc j) - vy2 0)*(fst x - vx2 0) \<le> 0"
+            let ?PLy = "\<lambda>j. 1 \<le> j \<and> j < ?k \<and>
+              (vx2 j - vx2 0)*(snd y - vy2 0) - (vy2 j - vy2 0)*(fst y - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*(snd y - vy2 0) - (vy2(Suc j) - vy2 0)*(fst y - vx2 0) \<le> 0"
+            \<comment> \<open>Unfold phi\\_L\\_def for both x and y.\<close>
+            have hphi_x: "phi_L x = (let j = (LEAST j. ?PLx j) in
+              let ex = vx2 j - vx2 0; ey = vy2 j - vy2 0;
+                  fx = vx2(Suc j) - vx2 0; fy = vy2(Suc j) - vy2 0;
+                  det = ex*fy - ey*fx;
+                  s = (fy*(fst x - vx2 0) - fx*(snd x - vy2 0))/det;
+                  tp = (ex*(snd x - vy2 0) - ey*(fst x - vx2 0))/det in
+              ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
+               (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j)))"
+              unfolding phi_L_def Let_def by (by100 simp)
+            show "x = y"
+              sorry \<comment> \<open>Same sector: Cramer inversion (det \\<noteq> 0 gives unique (s,tp) \\<to> unique (x,y)).
+                 Different sectors: fan triangle interiors disjoint \\<to> contradiction.\<close>
+          qed
           have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x > 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_R x = phi_R y \<Longrightarrow> x = y"
             sorry \<comment> \<open>phi\\_R is injective on right half.\<close>
