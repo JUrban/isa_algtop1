@@ -3473,8 +3473,20 @@ next
                  then C11(l,i) < 0 and coefficient > 0, giving strict contribution.\<close>
               \<comment> \<open>For now: use the fact that phi\\_L(x) is a specific convex combination of
                  v\\_0, v\\_A, v\\_B with at least 2 coefficients > 0 (from cross\\_diag < 0).\<close>
+              \<comment> \<open>From hedge\\_cross = 0 + phi\\_L decomposition + C11:
+                 At most 2 of {0, A, B} can be edge endpoints {i, Suc i}.
+                 At least 1 has C11 < 0 and coefficient \\<ge> 0. For sum=0: coefficient=0.
+                 Then trace back through Cramer to get contradiction.\<close>
+              \<comment> \<open>phi\\_L(x) = (1-s-tp)*v\\_0 + s*v\\_A + tp*v\\_B. Cross product at edge = 0.
+                 By linearity: (1-s-tp)*C11(0,i) + s*C11(A,i) + tp*C11(B,i) = 0.
+                 All terms \\<le> 0 (coeff \\<ge> 0, C11 \\<le> 0). So each term = 0.
+                 For non-endpoint vertex: C11 < 0, so coefficient = 0.\<close>
+              \<comment> \<open>At least 1 of {0, A, B} \\<notin> {i, Suc i mod n} (3 distinct vs 2 endpoints).
+                 Its coefficient = 0. Trace back: either cross\\_diag = 0 (contradicts < 0)
+                 or x is on a target edge (contradicts hint\\_x).\<close>
               show False
-                sorry \<comment> \<open>Strict C11: phi\\_L(x) has positive coefficient at vertex \\<notin> {i, Suc i mod n}.\<close>
+                sorry \<comment> \<open>Case analysis on which of {0, k+1-j, k-j} is not {i, Suc i mod n}:
+                   all cases give cross\\_diag = 0 or x on target edge. ~50 lines.\<close>
             qed
           qed
           have hphi_R_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow>
