@@ -3618,8 +3618,130 @@ next
             have hA_ne_B: "?k + 1 - ?j \<noteq> ?k - ?j" using hj1 hjk by (by100 linarith)
             have h0_lt: "(0::nat) < ?n" using hn_ge3 by (by100 linarith)
             show "phi_L x \<in> P2"
-              sorry \<comment> \<open>Convex combination of 3 P2 vertices: cc = (1-s-tp)*c0 + s*cA + tp*cB.
-                 All pieces proved (s,tp,1-s-tp \\<ge> 0, sum=1). Needs sum algebra caching.\<close>
+            proof -
+              \<comment> \<open>Extract vertex P2 memberships as barycentric coords.\<close>
+              have hv0: "(vx2 0, vy2 0) \<in> P2" using hv2_in h0_lt by (by100 blast)
+              have hvA: "(vx2 (?k+1-?j), vy2 (?k+1-?j)) \<in> P2" using hv2_in hA_lt by (by100 blast)
+              have hvB: "(vx2 (?k-?j), vy2 (?k-?j)) \<in> P2" using hv2_in hB_lt by (by100 blast)
+              from hv0[unfolded hC5_2] obtain c0 where
+                hc0: "\<forall>i<?n. c0 i \<ge> 0" "(\<Sum>i<?n. c0 i) = 1"
+                     "vx2 0 = (\<Sum>i<?n. c0 i * vx2 i)" "vy2 0 = (\<Sum>i<?n. c0 i * vy2 i)"
+                by (by5000 auto)
+              from hvA[unfolded hC5_2] obtain cA where
+                hcA: "\<forall>i<?n. cA i \<ge> 0" "(\<Sum>i<?n. cA i) = 1"
+                     "vx2(?k+1-?j) = (\<Sum>i<?n. cA i * vx2 i)" "vy2(?k+1-?j) = (\<Sum>i<?n. cA i * vy2 i)"
+                by (by5000 auto)
+              from hvB[unfolded hC5_2] obtain cB where
+                hcB: "\<forall>i<?n. cB i \<ge> 0" "(\<Sum>i<?n. cB i) = 1"
+                     "vx2(?k-?j) = (\<Sum>i<?n. cB i * vx2 i)" "vy2(?k-?j) = (\<Sum>i<?n. cB i * vy2 i)"
+                by (by5000 auto)
+              \<comment> \<open>Combined coefficient: cc = (1-s-tp)*c0 + s*cA + tp*cB.\<close>
+              define cc where "cc i = (1-?s-?tp) * c0 i + ?s * cA i + ?tp * cB i" for i
+              \<comment> \<open>All coefficients \\<ge> 0.\<close>
+              have hcc_nn: "\<forall>i<?n. cc i \<ge> 0"
+              proof (intro allI impI)
+                fix i :: nat assume hi: "i < ?n"
+                have "(1-?s-?tp) * c0 i \<ge> 0"
+                  using h1stp_ge0 hc0(1) hi mult_nonneg_nonneg by (by100 blast)
+                moreover have "?s * cA i \<ge> 0"
+                  using hs_ge0 hcA(1) hi mult_nonneg_nonneg by (by100 blast)
+                moreover have "?tp * cB i \<ge> 0"
+                  using htp_ge0 hcB(1) hi mult_nonneg_nonneg by (by100 blast)
+                ultimately show "cc i \<ge> 0" unfolding cc_def by linarith
+              qed
+              \<comment> \<open>Sum = 1 via sum.distrib + sum\\_distrib\\_left + substitution.\<close>
+              have hcc_sum: "(\<Sum>i<?n. cc i) = 1"
+              proof -
+                have "(\<Sum>i<?n. cc i) = (\<Sum>i<?n. (1-?s-?tp) * c0 i + ?s * cA i + ?tp * cB i)"
+                  unfolding cc_def ..
+                also have "\<dots> = (\<Sum>i<?n. (1-?s-?tp) * c0 i + ?s * cA i) + (\<Sum>i<?n. ?tp * cB i)"
+                  by (rule sum.distrib)
+                also have "(\<Sum>i<?n. (1-?s-?tp) * c0 i + ?s * cA i)
+                  = (\<Sum>i<?n. (1-?s-?tp) * c0 i) + (\<Sum>i<?n. ?s * cA i)" by (rule sum.distrib)
+                finally have hd: "(\<Sum>i<?n. cc i) =
+                  (\<Sum>i<?n. (1-?s-?tp) * c0 i) + (\<Sum>i<?n. ?s * cA i) + (\<Sum>i<?n. ?tp * cB i)" by linarith
+                have "(\<Sum>i<?n. (1-?s-?tp) * c0 i) = (1-?s-?tp) * (\<Sum>i<?n. c0 i)"
+                  by (rule sum_distrib_left[symmetric])
+                moreover have "(\<Sum>i<?n. ?s * cA i) = ?s * (\<Sum>i<?n. cA i)"
+                  by (rule sum_distrib_left[symmetric])
+                moreover have "(\<Sum>i<?n. ?tp * cB i) = ?tp * (\<Sum>i<?n. cB i)"
+                  by (rule sum_distrib_left[symmetric])
+                ultimately have hd2: "(\<Sum>i<?n. cc i) =
+                  (1-?s-?tp)*(\<Sum>i<?n. c0 i) + ?s*(\<Sum>i<?n. cA i) + ?tp*(\<Sum>i<?n. cB i)"
+                  using hd by linarith
+                have "(1-?s-?tp)*(\<Sum>i<?n. c0 i) = (1-?s-?tp)"
+                  by (simp only: hc0(2) mult_1_right)
+                moreover have "?s*(\<Sum>i<?n. cA i) = ?s"
+                  by (simp only: hcA(2) mult_1_right)
+                moreover have "?tp*(\<Sum>i<?n. cB i) = ?tp"
+                  by (simp only: hcB(2) mult_1_right)
+                ultimately show ?thesis using hd2 by linarith
+              qed
+              \<comment> \<open>Coordinate sums via same technique.\<close>
+              have hcc_x: "fst (phi_L x) = (\<Sum>i<?n. cc i * vx2 i)"
+              proof -
+                have "(\<Sum>i<?n. cc i * vx2 i)
+                  = (\<Sum>i<?n. ((1-?s-?tp)*c0 i + ?s*cA i + ?tp*cB i) * vx2 i)"
+                  unfolding cc_def ..
+                also have "\<dots> = (\<Sum>i<?n. (1-?s-?tp)*(c0 i*vx2 i) + ?s*(cA i*vx2 i) + ?tp*(cB i*vx2 i))"
+                  by (rule sum.cong, simp, by100 algebra)
+                also have "\<dots> = (\<Sum>i<?n. (1-?s-?tp)*(c0 i*vx2 i) + ?s*(cA i*vx2 i))
+                  + (\<Sum>i<?n. ?tp*(cB i*vx2 i))" by (rule sum.distrib)
+                also have "(\<Sum>i<?n. (1-?s-?tp)*(c0 i*vx2 i) + ?s*(cA i*vx2 i))
+                  = (\<Sum>i<?n. (1-?s-?tp)*(c0 i*vx2 i)) + (\<Sum>i<?n. ?s*(cA i*vx2 i))"
+                  by (rule sum.distrib)
+                finally have hxd: "(\<Sum>i<?n. cc i * vx2 i)
+                  = (\<Sum>i<?n. (1-?s-?tp)*(c0 i*vx2 i)) + (\<Sum>i<?n. ?s*(cA i*vx2 i))
+                  + (\<Sum>i<?n. ?tp*(cB i*vx2 i))" by linarith
+                have "(\<Sum>i<?n. (1-?s-?tp)*(c0 i*vx2 i)) = (1-?s-?tp)*(\<Sum>i<?n. c0 i*vx2 i)"
+                  by (rule sum_distrib_left[symmetric])
+                moreover have "(\<Sum>i<?n. ?s*(cA i*vx2 i)) = ?s*(\<Sum>i<?n. cA i*vx2 i)"
+                  by (rule sum_distrib_left[symmetric])
+                moreover have "(\<Sum>i<?n. ?tp*(cB i*vx2 i)) = ?tp*(\<Sum>i<?n. cB i*vx2 i)"
+                  by (rule sum_distrib_left[symmetric])
+                ultimately have "(\<Sum>i<?n. cc i * vx2 i)
+                  = (1-?s-?tp)*(\<Sum>i<?n. c0 i*vx2 i) + ?s*(\<Sum>i<?n. cA i*vx2 i) + ?tp*(\<Sum>i<?n. cB i*vx2 i)"
+                  using hxd by linarith
+                also have "\<dots> = (1-?s-?tp)*vx2 0 + ?s*vx2(?k+1-?j) + ?tp*vx2(?k-?j)"
+                  by (simp only: hc0(3)[symmetric] hcA(3)[symmetric] hcB(3)[symmetric])
+                finally show ?thesis using hphi_eq by (simp only: fst_conv snd_conv)
+              qed
+              have hcc_y: "snd (phi_L x) = (\<Sum>i<?n. cc i * vy2 i)"
+              proof -
+                have "(\<Sum>i<?n. cc i * vy2 i)
+                  = (\<Sum>i<?n. ((1-?s-?tp)*c0 i + ?s*cA i + ?tp*cB i) * vy2 i)"
+                  unfolding cc_def ..
+                also have "\<dots> = (\<Sum>i<?n. (1-?s-?tp)*(c0 i*vy2 i) + ?s*(cA i*vy2 i) + ?tp*(cB i*vy2 i))"
+                  by (rule sum.cong, simp, by100 algebra)
+                also have "\<dots> = (\<Sum>i<?n. (1-?s-?tp)*(c0 i*vy2 i) + ?s*(cA i*vy2 i))
+                  + (\<Sum>i<?n. ?tp*(cB i*vy2 i))" by (rule sum.distrib)
+                also have "(\<Sum>i<?n. (1-?s-?tp)*(c0 i*vy2 i) + ?s*(cA i*vy2 i))
+                  = (\<Sum>i<?n. (1-?s-?tp)*(c0 i*vy2 i)) + (\<Sum>i<?n. ?s*(cA i*vy2 i))"
+                  by (rule sum.distrib)
+                finally have hyd: "(\<Sum>i<?n. cc i * vy2 i)
+                  = (\<Sum>i<?n. (1-?s-?tp)*(c0 i*vy2 i)) + (\<Sum>i<?n. ?s*(cA i*vy2 i))
+                  + (\<Sum>i<?n. ?tp*(cB i*vy2 i))" by linarith
+                have "(\<Sum>i<?n. (1-?s-?tp)*(c0 i*vy2 i)) = (1-?s-?tp)*(\<Sum>i<?n. c0 i*vy2 i)"
+                  by (rule sum_distrib_left[symmetric])
+                moreover have "(\<Sum>i<?n. ?s*(cA i*vy2 i)) = ?s*(\<Sum>i<?n. cA i*vy2 i)"
+                  by (rule sum_distrib_left[symmetric])
+                moreover have "(\<Sum>i<?n. ?tp*(cB i*vy2 i)) = ?tp*(\<Sum>i<?n. cB i*vy2 i)"
+                  by (rule sum_distrib_left[symmetric])
+                ultimately have "(\<Sum>i<?n. cc i * vy2 i)
+                  = (1-?s-?tp)*(\<Sum>i<?n. c0 i*vy2 i) + ?s*(\<Sum>i<?n. cA i*vy2 i) + ?tp*(\<Sum>i<?n. cB i*vy2 i)"
+                  using hyd by linarith
+                also have "\<dots> = (1-?s-?tp)*vy2 0 + ?s*vy2(?k+1-?j) + ?tp*vy2(?k-?j)"
+                  by (simp only: hc0(4)[symmetric] hcA(4)[symmetric] hcB(4)[symmetric])
+                finally show ?thesis using hphi_eq by (simp only: fst_conv snd_conv)
+              qed
+              \<comment> \<open>Show P2 membership using hC5\\_2 (which uses ?n, matching our sums).\<close>
+              have "\<exists>coeffs. (\<forall>i<?n. coeffs i \<ge> 0) \<and> (\<Sum>i<?n. coeffs i) = 1
+                \<and> fst (phi_L x) = (\<Sum>i<?n. coeffs i * vx2 i)
+                \<and> snd (phi_L x) = (\<Sum>i<?n. coeffs i * vy2 i)"
+                apply (rule exI[of _ cc])
+                using hcc_nn hcc_sum hcc_x hcc_y by (by100 blast)
+              thus ?thesis unfolding hC5_2 by (by5000 auto)
+            qed
           qed
           have hphi_R_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow> phi_R x \<in> P2"
             sorry \<comment> \<open>phi\\_R maps P2 to P2 (symmetric to phi\\_L).\<close>
