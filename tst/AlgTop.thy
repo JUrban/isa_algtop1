@@ -3856,35 +3856,111 @@ next
               \<comment> \<open>sigma(i,t) diagonal (interior), sigma(j,s) on old edge.
                  Old C8 forces sigma(i,t) = sigma(j,s), contradicting interior \\<noteq> boundary.\<close>
               \<comment> \<open>sigma(i,t) on diagonal (interior). sigma(j,s) on old edge.\<close>
+              have hj_not_c: "j \<noteq> 0" "j \<noteq> ?n - 1" using False2 by (by100 simp)+
               have hsigma_i_diag: "paste_sigma vx2 vy2 ?k ?n i t = ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k)"
                 using True unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def by (by100 simp)
-              have hsigma_i_int: "\<forall>i'<?n. \<forall>t'\<in>I_set.
-                paste_sigma vx2 vy2 ?k ?n i t \<noteq>
-                  ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
-                using hdiag_not_on_edge[OF ht] hsigma_i_diag by (by100 simp)
-              have hsigma_i_in: "paste_sigma vx2 vy2 ?k ?n i t \<in> P2"
-                using hsigma_in_P2[OF hi' ht_I] .
-              have hsigma_j_in: "paste_sigma vx2 vy2 ?k ?n j s \<in> P2"
-                using hsigma_in_P2[OF hj' hs_I] .
-              \<comment> \<open>Old C8 at sigma(i,t): singleton fibre.\<close>
-              have "paste_sigma vx2 vy2 ?k ?n i t = paste_sigma vx2 vy2 ?k ?n j s"
-                using hC8_2 hsigma_i_in hsigma_i_int hsigma_j_in hq2_eq by (by100 blast)
-              \<comment> \<open>sigma(j,s) is on some old edge (j is non-c). Contradiction.\<close>
-              moreover have "\<exists>i'<?n. \<exists>t'\<in>I_set.
-                paste_sigma vx2 vy2 ?k ?n j s =
-                  ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
-              proof -
-                have "j \<noteq> 0" "j \<noteq> ?n - 1" using False2 by (by100 simp)+
-                from hnonc_sigma_on_edge[OF hj' \<open>j \<noteq> 0\<close> \<open>j \<noteq> ?n - 1\<close> hs]
-                obtain i'' t'' where "i'' < ?n" "t'' \<in> {0<..<(1::real)}"
-                  "paste_sigma vx2 vy2 ?k ?n j s =
-                    ((1-t'')*vx2 i'' + t''*vx2(Suc i'' mod ?n), (1-t'')*vy2 i'' + t''*vy2(Suc i'' mod ?n))"
+              \<comment> \<open>Case split: k < n-1 uses hdiag + C8, k = n-1 uses C9 + freshness.\<close>
+              show ?thesis
+              proof (cases "?k < ?n - 1")
+                case hk_lt: True
+                \<comment> \<open>k < n-1: diagonal not on edge. C8 gives sigma equality, contradicting edge membership.\<close>
+                have hsigma_i_int: "\<forall>i'<?n. \<forall>t'\<in>I_set.
+                  paste_sigma vx2 vy2 ?k ?n i t \<noteq>
+                    ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
+                  using hdiag_not_on_edge[OF ht] hsigma_i_diag by (by100 simp)
+                have hsigma_i_in: "paste_sigma vx2 vy2 ?k ?n i t \<in> P2"
+                  using hsigma_in_P2[OF hi' ht_I] .
+                have hsigma_j_in: "paste_sigma vx2 vy2 ?k ?n j s \<in> P2"
+                  using hsigma_in_P2[OF hj' hs_I] .
+                have "paste_sigma vx2 vy2 ?k ?n i t = paste_sigma vx2 vy2 ?k ?n j s"
+                  using hC8_2 hsigma_i_in hsigma_i_int hsigma_j_in hq2_eq by (by100 blast)
+                moreover have "\<exists>i'<?n. \<exists>t'\<in>I_set.
+                  paste_sigma vx2 vy2 ?k ?n j s =
+                    ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
+                proof -
+                  from hnonc_sigma_on_edge[OF hj' hj_not_c(1) hj_not_c(2) hs]
+                  obtain i'' t'' where "i'' < ?n" "t'' \<in> {0<..<(1::real)}"
+                    "paste_sigma vx2 vy2 ?k ?n j s =
+                      ((1-t'')*vx2 i'' + t''*vx2(Suc i'' mod ?n), (1-t'')*vy2 i'' + t''*vy2(Suc i'' mod ?n))"
+                    by (by100 blast)
+                  moreover have "t'' \<in> I_set" using \<open>t'' \<in> {0<..<(1::real)}\<close>
+                    unfolding top1_unit_interval_def by (by100 auto)
+                  ultimately show ?thesis by (by100 blast)
+                qed
+                ultimately show ?thesis using hsigma_i_int by (by100 auto)
+              next
+                case hk_eq: False
+                hence "?k = ?n - 1" using hk_ge2 by (by100 simp)
+                \<comment> \<open>k = n-1: diagonal IS edge n-1. Use C9 + a-freshness for contradiction.
+                   sigma(i,t) on edge n-1 at 1-t. sigma(j,s) on old edge j\\_old.
+                   C9 at (n-1, j\\_old): either n-1 = j\\_old (impossible: j\\_old \\<le> n-2)
+                   or label match (impossible: w!(n-1) = (a,T) and a fresh in u2).\<close>
+                \<comment> \<open>Get j's old edge data.\<close>
+                from hnonc_sigma_on_edge_int[OF hj' hj_not_c(1) hj_not_c(2) hs]
+                obtain j_old tj_old where hj_old: "j_old < ?n" and htj: "tj_old \<in> {0<..<(1::real)}"
+                  and hsigma_j_eq: "paste_sigma vx2 vy2 ?k ?n j s =
+                    ((1-tj_old)*vx2 j_old + tj_old*vx2(Suc j_old mod ?n),
+                     (1-tj_old)*vy2 j_old + tj_old*vy2(Suc j_old mod ?n))"
                   by (by100 blast)
-                moreover have "t'' \<in> I_set" using \<open>t'' \<in> {0<..<(1::real)}\<close>
-                  unfolding top1_unit_interval_def by (by100 auto)
-                ultimately show ?thesis by (by100 blast)
+                \<comment> \<open>sigma(i,t) is edge n-1 at param 1-t.\<close>
+                have h1mt: "1 - t \<in> {0<..<(1::real)}" using ht by (by100 auto)
+                have hnm1: "?n - 1 < ?n" using hn_ge3 by (by100 linarith)
+                have hSuc_nm1: "Suc (?n - 1) mod ?n = 0" using hn_ge3 by (by100 simp)
+                have hsigma_i_edge: "paste_sigma vx2 vy2 ?k ?n i t =
+                  ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
+                   (1-(1-t))*vy2(?n-1) + (1-t)*vy2(Suc(?n-1) mod ?n))"
+                  using hsigma_i_diag \<open>?k = ?n - 1\<close> hSuc_nm1 by (by100 simp)
+                \<comment> \<open>q2 equality on old edges.\<close>
+                have hq2_edges: "q2 ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
+                   (1-(1-t))*vy2(?n-1) + (1-t)*vy2(Suc(?n-1) mod ?n)) =
+                  q2 ((1-tj_old)*vx2 j_old + tj_old*vx2(Suc j_old mod ?n),
+                   (1-tj_old)*vy2 j_old + tj_old*vy2(Suc j_old mod ?n))"
+                proof -
+                  from arg_cong[OF hsigma_i_edge, of q2]
+                  have "q2 (paste_sigma vx2 vy2 ?k ?n i t) =
+                    q2 ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
+                     (1-(1-t))*vy2(?n-1) + (1-t)*vy2(Suc(?n-1) mod ?n))" by (by100 simp)
+                  moreover from arg_cong[OF hsigma_j_eq, of q2]
+                  have "q2 (paste_sigma vx2 vy2 ?k ?n j s) =
+                    q2 ((1-tj_old)*vx2 j_old + tj_old*vx2(Suc j_old mod ?n),
+                     (1-tj_old)*vy2 j_old + tj_old*vy2(Suc j_old mod ?n))" by (by100 simp)
+                  ultimately show ?thesis using hq2_eq by (by100 simp)
+                qed
+                \<comment> \<open>Apply old C9 at (n-1, j\\_old).\<close>
+                from hC9_2[rule_format, OF hnm1 hj_old h1mt htj hq2_edges]
+                have "(?n-1 = j_old \<and> 1-t = tj_old) \<or>
+                  (fst(?w!(?n-1)) = fst(?w!j_old) \<and>
+                    (if snd(?w!(?n-1)) = snd(?w!j_old) then tj_old = 1-t else tj_old = 1-(1-t)))" .
+                \<comment> \<open>Both alternatives are impossible.\<close>
+                hence False
+                proof (elim disjE conjE)
+                  assume "?n - 1 = j_old"
+                  \<comment> \<open>j\\_old comes from non-c j: j\\_old = k-j (left) or Suc j (right).
+                     For k=n-1, all non-c are left: j\\_old = k-j = n-1-j.
+                     j \\<ge> 1 gives j\\_old \\<le> n-2 < n-1. Contradiction.\<close>
+                  have "j \<ge> 1" using hj_not_c(1) by (by100 linarith)
+                  have "j \<le> ?n - 2" using hj_not_c(2) hj' by (by100 linarith)
+                  \<comment> \<open>j\\_old \\<le> n-2 from hj\\_old and index mapping.\<close>
+                  have "j_old \<le> ?n - 2"
+                    sorry \<comment> \<open>From j\\_old mapping: j\\_old = k-j (left) with j \\<ge> 1 gives j\\_old \\<le> k-1 = n-2.\<close>
+                  with \<open>?n - 1 = j_old\<close> hn_ge3 show False by (by100 linarith)
+                next
+                  assume hlbl: "fst(?w!(?n-1)) = fst(?w!j_old)"
+                  \<comment> \<open>w!(n-1) = w!k = (a,T) (since k = n-1). fst = a.
+                     But j\\_old \\<in> \\{1,...,n-2\\}: w!(j\\_old) \\<in> u2 (for j\\_old \\<le> length u2).
+                     a fresh in u2: fst(u2!m) \\<noteq> a for all m. Contradiction.\<close>
+                  have "fst(?w!(?n-1)) = a"
+                    using \<open>?k = ?n - 1\<close> by (by100 simp)
+                  hence "fst(?w!j_old) = a" using hlbl by (by100 simp)
+                  \<comment> \<open>j\\_old \\<in> \\{1,...,n-2\\}: w!(j\\_old) is from u2.\<close>
+                  have "j_old \<ge> 1 \<and> j_old \<le> ?n - 2"
+                    sorry \<comment> \<open>From j\\_old mapping bounds.\<close>
+                  hence "fst(?w!j_old) \<noteq> a"
+                    sorry \<comment> \<open>From ha\\_fresh\\_u2: a \\<notin> fst ` set u2, and w!(j\\_old) \\<in> u2.\<close>
+                  with \<open>fst(?w!j_old) = a\<close> show False by (by100 simp)
+                qed
+                thus ?thesis by (by100 blast)
               qed
-              ultimately show ?thesis using hsigma_i_int by (by100 auto)
             qed
           next
             case False hence hi_not_c: "i \<noteq> 0" "i \<noteq> ?n - 1" by simp+
@@ -3894,32 +3970,91 @@ next
               \<comment> \<open>j c-edge, i not c-edge. Symmetric to c vs non-c above.\<close>
               have hsigma_j_diag: "paste_sigma vx2 vy2 ?k ?n j s = ((1-s)*vx2 0 + s*vx2 ?k, (1-s)*vy2 0 + s*vy2 ?k)"
                 using True2 unfolding paste_chain_sigma_x_def paste_chain_sigma_y_def by (by100 simp)
-              have hsigma_j_int: "\<forall>j'<?n. \<forall>s'\<in>I_set.
-                paste_sigma vx2 vy2 ?k ?n j s \<noteq>
-                  ((1-s')*vx2 j' + s'*vx2(Suc j' mod ?n), (1-s')*vy2 j' + s'*vy2(Suc j' mod ?n))"
-                using hdiag_not_on_edge[OF hs] hsigma_j_diag by (by100 simp)
-              have hsigma_j_in: "paste_sigma vx2 vy2 ?k ?n j s \<in> P2"
-                using hsigma_in_P2[OF hj' hs_I] .
-              have hsigma_i_in: "paste_sigma vx2 vy2 ?k ?n i t \<in> P2"
-                using hsigma_in_P2[OF hi' ht_I] .
-              have hq2_eq_sym: "q2 (paste_sigma vx2 vy2 ?k ?n j s) = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
-                using hq2_eq by (by100 simp)
-              have "paste_sigma vx2 vy2 ?k ?n j s = paste_sigma vx2 vy2 ?k ?n i t"
-                using hC8_2 hsigma_j_in hsigma_j_int hsigma_i_in hq2_eq_sym by (by100 blast)
-              moreover have "\<exists>i'<?n. \<exists>t'\<in>I_set.
-                paste_sigma vx2 vy2 ?k ?n i t =
-                  ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
-              proof -
-                from hnonc_sigma_on_edge[OF hi' hi_not_c(1) hi_not_c(2) ht]
-                obtain i'' t'' where "i'' < ?n" "t'' \<in> {0<..<(1::real)}"
-                  "paste_sigma vx2 vy2 ?k ?n i t =
-                    ((1-t'')*vx2 i'' + t''*vx2(Suc i'' mod ?n), (1-t'')*vy2 i'' + t''*vy2(Suc i'' mod ?n))"
+              \<comment> \<open>Symmetric case split: k < n-1 vs k = n-1.\<close>
+              show ?thesis
+              proof (cases "?k < ?n - 1")
+                case hk_lt: True
+                have hsigma_j_int: "\<forall>j'<?n. \<forall>s'\<in>I_set.
+                  paste_sigma vx2 vy2 ?k ?n j s \<noteq>
+                    ((1-s')*vx2 j' + s'*vx2(Suc j' mod ?n), (1-s')*vy2 j' + s'*vy2(Suc j' mod ?n))"
+                  using hdiag_not_on_edge[OF hs] hsigma_j_diag by (by100 simp)
+                have hsigma_j_in: "paste_sigma vx2 vy2 ?k ?n j s \<in> P2"
+                  using hsigma_in_P2[OF hj' hs_I] .
+                have hsigma_i_in: "paste_sigma vx2 vy2 ?k ?n i t \<in> P2"
+                  using hsigma_in_P2[OF hi' ht_I] .
+                have hq2_eq_sym: "q2 (paste_sigma vx2 vy2 ?k ?n j s) = q2 (paste_sigma vx2 vy2 ?k ?n i t)"
+                  using hq2_eq by (by100 simp)
+                have "paste_sigma vx2 vy2 ?k ?n j s = paste_sigma vx2 vy2 ?k ?n i t"
+                  using hC8_2 hsigma_j_in hsigma_j_int hsigma_i_in hq2_eq_sym by (by100 blast)
+                moreover have "\<exists>i'<?n. \<exists>t'\<in>I_set.
+                  paste_sigma vx2 vy2 ?k ?n i t =
+                    ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
+                proof -
+                  from hnonc_sigma_on_edge[OF hi' hi_not_c(1) hi_not_c(2) ht]
+                  obtain i'' t'' where "i'' < ?n" "t'' \<in> {0<..<(1::real)}"
+                    "paste_sigma vx2 vy2 ?k ?n i t =
+                      ((1-t'')*vx2 i'' + t''*vx2(Suc i'' mod ?n), (1-t'')*vy2 i'' + t''*vy2(Suc i'' mod ?n))"
                   by (by100 blast)
                 moreover have "t'' \<in> I_set" using \<open>t'' \<in> {0<..<(1::real)}\<close>
                   unfolding top1_unit_interval_def by (by100 auto)
                 ultimately show ?thesis by (by100 blast)
               qed
               ultimately show ?thesis using hsigma_j_int by (by100 auto)
+              next
+                case hk_eq: False
+                hence "?k = ?n - 1" using hk_ge2 by (by100 simp)
+                \<comment> \<open>k=n-1: symmetric to c-vs-nonc k=n-1 case. Diagonal IS edge n-1.
+                   Use C9 + a-freshness for contradiction.\<close>
+                from hnonc_sigma_on_edge_int[OF hi' hi_not_c(1) hi_not_c(2) ht]
+                obtain i_old ti_old where hi_old: "i_old < ?n" and hti: "ti_old \<in> {0<..<(1::real)}"
+                  and hsigma_i_eq: "paste_sigma vx2 vy2 ?k ?n i t =
+                    ((1-ti_old)*vx2 i_old + ti_old*vx2(Suc i_old mod ?n),
+                     (1-ti_old)*vy2 i_old + ti_old*vy2(Suc i_old mod ?n))"
+                  by (by100 blast)
+                have h1ms: "1 - s \<in> {0<..<(1::real)}" using hs by (by100 auto)
+                have hnm1: "?n - 1 < ?n" using hn_ge3 by (by100 linarith)
+                have hSuc_nm1: "Suc (?n - 1) mod ?n = 0" using hn_ge3 by (by100 simp)
+                have hsigma_j_edge: "paste_sigma vx2 vy2 ?k ?n j s =
+                  ((1-(1-s))*vx2(?n-1) + (1-s)*vx2(Suc(?n-1) mod ?n),
+                   (1-(1-s))*vy2(?n-1) + (1-s)*vy2(Suc(?n-1) mod ?n))"
+                  using hsigma_j_diag \<open>?k = ?n - 1\<close> hSuc_nm1 by (by100 simp)
+                have hq2_edges: "q2 ((1-ti_old)*vx2 i_old + ti_old*vx2(Suc i_old mod ?n),
+                   (1-ti_old)*vy2 i_old + ti_old*vy2(Suc i_old mod ?n)) =
+                  q2 ((1-(1-s))*vx2(?n-1) + (1-s)*vx2(Suc(?n-1) mod ?n),
+                   (1-(1-s))*vy2(?n-1) + (1-s)*vy2(Suc(?n-1) mod ?n))"
+                proof -
+                  from arg_cong[OF hsigma_i_eq, of q2]
+                  have "q2 (paste_sigma vx2 vy2 ?k ?n i t) =
+                    q2 ((1-ti_old)*vx2 i_old + ti_old*vx2(Suc i_old mod ?n),
+                     (1-ti_old)*vy2 i_old + ti_old*vy2(Suc i_old mod ?n))" by (by100 simp)
+                  moreover from arg_cong[OF hsigma_j_edge, of q2]
+                  have "q2 (paste_sigma vx2 vy2 ?k ?n j s) =
+                    q2 ((1-(1-s))*vx2(?n-1) + (1-s)*vx2(Suc(?n-1) mod ?n),
+                     (1-(1-s))*vy2(?n-1) + (1-s)*vy2(Suc(?n-1) mod ?n))" by (by100 simp)
+                  ultimately show ?thesis using hq2_eq by (by100 simp)
+                qed
+                from hC9_2[rule_format, OF hi_old hnm1 hti h1ms hq2_edges]
+                have "(i_old = ?n-1 \<and> ti_old = 1-s) \<or>
+                  (fst(?w!i_old) = fst(?w!(?n-1)) \<and>
+                    (if snd(?w!i_old) = snd(?w!(?n-1)) then 1-s = ti_old else 1-s = 1-ti_old))" .
+                hence False
+                proof (elim disjE conjE)
+                  assume "i_old = ?n - 1"
+                  have "i_old \<le> ?n - 2"
+                    sorry \<comment> \<open>i\\_old from non-c i: i\\_old \\<le> n-2.\<close>
+                  with \<open>i_old = ?n - 1\<close> hn_ge3 show False by (by100 linarith)
+                next
+                  assume "fst(?w!i_old) = fst(?w!(?n-1))"
+                  have "fst(?w!(?n-1)) = a" using \<open>?k = ?n - 1\<close> by (by100 simp)
+                  hence "fst(?w!i_old) = a" using \<open>fst(?w!i_old) = fst(?w!(?n-1))\<close> by (by100 simp)
+                  have "i_old \<ge> 1 \<and> i_old \<le> ?n - 2"
+                    sorry \<comment> \<open>i\\_old bounds from non-c i mapping.\<close>
+                  hence "fst(?w!i_old) \<noteq> a"
+                    sorry \<comment> \<open>ha\\_fresh\\_u2: a fresh in u2, w!(i\\_old) from u2.\<close>
+                  with \<open>fst(?w!i_old) = a\<close> show False by (by100 simp)
+                qed
+                thus ?thesis by (by100 blast)
+              qed
             next
               case False2: False hence hj_not_c: "j \<noteq> 0" "j \<noteq> ?n - 1" by simp+
               \<comment> \<open>Both non-c-edges. sigma maps to old edges.
@@ -4034,6 +4169,9 @@ qed
 
 
 end
+
+
+
 
 
 
