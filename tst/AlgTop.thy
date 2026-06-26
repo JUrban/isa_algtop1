@@ -3895,69 +3895,82 @@ next
                    sigma(i,t) on edge n-1 at 1-t. sigma(j,s) on old edge j\\_old.
                    C9 at (n-1, j\\_old): either n-1 = j\\_old (impossible: j\\_old \\<le> n-2)
                    or label match (impossible: w!(n-1) = (a,T) and a fresh in u2).\<close>
-                \<comment> \<open>Get j's old edge data.\<close>
-                from hnonc_sigma_on_edge_int[OF hj' hj_not_c(1) hj_not_c(2) hs]
-                obtain j_old tj_old where hj_old: "j_old < ?n" and htj: "tj_old \<in> {0<..<(1::real)}"
-                  and hsigma_j_eq: "paste_sigma vx2 vy2 ?k ?n j s =
-                    ((1-tj_old)*vx2 j_old + tj_old*vx2(Suc j_old mod ?n),
-                     (1-tj_old)*vy2 j_old + tj_old*vy2(Suc j_old mod ?n))"
-                  by (by100 blast)
-                \<comment> \<open>sigma(i,t) is edge n-1 at param 1-t.\<close>
+                \<comment> \<open>Compute sigma(j,s) directly on old edge k-j (bypass existential).\<close>
+                have hj1: "j \<ge> 1" using hj_not_c(1) by (by100 linarith)
+                have hjk1: "j \<le> ?k - 1" using hj_not_c(2) hj' \<open>?k = ?n - 1\<close> by (by100 linarith)
+                have hkj_lt: "?k - j < ?n" using hjk1 by (by100 simp)
+                have hkj_ne: "?k - j \<noteq> ?n - 1" using hj1 \<open>?k = ?n - 1\<close> by (by100 linarith)
+                have h1ms: "(1-s) \<in> {0<..<(1::real)}" using hs by (by100 auto)
                 have h1mt: "1 - t \<in> {0<..<(1::real)}" using ht by (by100 auto)
                 have hnm1: "?n - 1 < ?n" using hn_ge3 by (by100 linarith)
+                \<comment> \<open>Sigma(j,s) = edge(k-j, 1-s).\<close>
+                have hSuc_kj: "Suc (?k - j) mod ?n = ?k + 1 - j"
+                proof -
+                  have "?k - j < ?n - 1" using hj1 hkj_ne hkj_lt by (by100 linarith)
+                  hence "Suc (?k - j) < ?n" by (by100 simp)
+                  hence "Suc (?k - j) mod ?n = Suc (?k - j)" by (by100 simp)
+                  also have "Suc (?k - j) = ?k + 1 - j" using hjk1 by (by100 simp)
+                  finally show ?thesis .
+                qed
+                have hsigma_j_kj: "paste_sigma vx2 vy2 ?k ?n j s =
+                  ((1-(1-s))*vx2(?k-j) + (1-s)*vx2(Suc(?k-j) mod ?n),
+                   (1-(1-s))*vy2(?k-j) + (1-s)*vy2(Suc(?k-j) mod ?n))"
+                proof -
+                  have hsx: "paste_chain_sigma_x vx2 ?k ?n j s = s*vx2(?k-j) + (1-s)*vx2(?k+1-j)"
+                    using hj_not_c(1) hj_not_c(2) hjk1 unfolding paste_chain_sigma_x_def by (by100 simp)
+                  have hsy: "paste_chain_sigma_y vy2 ?k ?n j s = s*vy2(?k-j) + (1-s)*vy2(?k+1-j)"
+                    using hj_not_c(1) hj_not_c(2) hjk1 unfolding paste_chain_sigma_y_def by (by100 simp)
+                  show ?thesis using hsx hsy hSuc_kj by (by100 simp)
+                qed
+                \<comment> \<open>Sigma(i,t) = edge(n-1, 1-t).\<close>
                 have hSuc_nm1: "Suc (?n - 1) mod ?n = 0" using hn_ge3 by (by100 simp)
                 have hsigma_i_edge: "paste_sigma vx2 vy2 ?k ?n i t =
                   ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
                    (1-(1-t))*vy2(?n-1) + (1-t)*vy2(Suc(?n-1) mod ?n))"
                   using hsigma_i_diag \<open>?k = ?n - 1\<close> hSuc_nm1 by (by100 simp)
-                \<comment> \<open>q2 equality on old edges.\<close>
-                have hq2_edges: "q2 ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
+                \<comment> \<open>q2 on edges n-1 and k-j.\<close>
+                have hq2_kj: "q2 ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
                    (1-(1-t))*vy2(?n-1) + (1-t)*vy2(Suc(?n-1) mod ?n)) =
-                  q2 ((1-tj_old)*vx2 j_old + tj_old*vx2(Suc j_old mod ?n),
-                   (1-tj_old)*vy2 j_old + tj_old*vy2(Suc j_old mod ?n))"
+                  q2 ((1-(1-s))*vx2(?k-j) + (1-s)*vx2(Suc(?k-j) mod ?n),
+                   (1-(1-s))*vy2(?k-j) + (1-s)*vy2(Suc(?k-j) mod ?n))"
                 proof -
                   from arg_cong[OF hsigma_i_edge, of q2]
                   have "q2 (paste_sigma vx2 vy2 ?k ?n i t) =
                     q2 ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
                      (1-(1-t))*vy2(?n-1) + (1-t)*vy2(Suc(?n-1) mod ?n))" by (by100 simp)
-                  moreover from arg_cong[OF hsigma_j_eq, of q2]
+                  moreover from arg_cong[OF hsigma_j_kj, of q2]
                   have "q2 (paste_sigma vx2 vy2 ?k ?n j s) =
-                    q2 ((1-tj_old)*vx2 j_old + tj_old*vx2(Suc j_old mod ?n),
-                     (1-tj_old)*vy2 j_old + tj_old*vy2(Suc j_old mod ?n))" by (by100 simp)
+                    q2 ((1-(1-s))*vx2(?k-j) + (1-s)*vx2(Suc(?k-j) mod ?n),
+                     (1-(1-s))*vy2(?k-j) + (1-s)*vy2(Suc(?k-j) mod ?n))" by (by100 simp)
                   ultimately show ?thesis using hq2_eq by (by100 simp)
                 qed
-                \<comment> \<open>Apply old C9 at (n-1, j\\_old).\<close>
-                from hC9_2[rule_format, OF hnm1 hj_old h1mt htj hq2_edges]
-                have "(?n-1 = j_old \<and> 1-t = tj_old) \<or>
-                  (fst(?w!(?n-1)) = fst(?w!j_old) \<and>
-                    (if snd(?w!(?n-1)) = snd(?w!j_old) then tj_old = 1-t else tj_old = 1-(1-t)))" .
-                \<comment> \<open>Both alternatives are impossible.\<close>
+                \<comment> \<open>Old C9 at (n-1, k-j). n-1 \\<noteq> k-j and labels don't match (a fresh in u2).\<close>
+                from hC9_2[rule_format, OF hnm1 hkj_lt h1mt h1ms hq2_kj]
+                have "(?n-1 = ?k-j \<and> 1-t = 1-s) \<or>
+                  (fst(?w!(?n-1)) = fst(?w!(?k-j)) \<and>
+                    (if snd(?w!(?n-1)) = snd(?w!(?k-j)) then 1-s = 1-t else 1-s = 1-(1-t)))" .
                 hence False
                 proof (elim disjE conjE)
-                  assume "?n - 1 = j_old"
-                  \<comment> \<open>j\\_old comes from non-c j: j\\_old = k-j (left) or Suc j (right).
-                     For k=n-1, all non-c are left: j\\_old = k-j = n-1-j.
-                     j \\<ge> 1 gives j\\_old \\<le> n-2 < n-1. Contradiction.\<close>
-                  have "j \<ge> 1" using hj_not_c(1) by (by100 linarith)
-                  have "j \<le> ?n - 2" using hj_not_c(2) hj' by (by100 linarith)
-                  \<comment> \<open>j\\_old \\<le> n-2 from hj\\_old and index mapping.\<close>
-                  have "j_old \<le> ?n - 2"
-                    sorry \<comment> \<open>From j\\_old mapping: j\\_old = k-j (left) with j \\<ge> 1 gives j\\_old \\<le> k-1 = n-2.\<close>
-                  with \<open>?n - 1 = j_old\<close> hn_ge3 show False by (by100 linarith)
+                  assume "?n - 1 = ?k - j"
+                  with hkj_ne show False by (by100 simp)
                 next
-                  assume hlbl: "fst(?w!(?n-1)) = fst(?w!j_old)"
-                  \<comment> \<open>w!(n-1) = w!k = (a,T) (since k = n-1). fst = a.
-                     But j\\_old \\<in> \\{1,...,n-2\\}: w!(j\\_old) \\<in> u2 (for j\\_old \\<le> length u2).
-                     a fresh in u2: fst(u2!m) \\<noteq> a for all m. Contradiction.\<close>
-                  have "fst(?w!(?n-1)) = a"
-                    using \<open>?k = ?n - 1\<close> by (by100 simp)
-                  hence "fst(?w!j_old) = a" using hlbl by (by100 simp)
-                  \<comment> \<open>j\\_old \\<in> \\{1,...,n-2\\}: w!(j\\_old) is from u2.\<close>
-                  have "j_old \<ge> 1 \<and> j_old \<le> ?n - 2"
-                    sorry \<comment> \<open>From j\\_old mapping bounds.\<close>
-                  hence "fst(?w!j_old) \<noteq> a"
-                    sorry \<comment> \<open>From ha\\_fresh\\_u2: a \\<notin> fst ` set u2, and w!(j\\_old) \\<in> u2.\<close>
-                  with \<open>fst(?w!j_old) = a\<close> show False by (by100 simp)
+                  assume "fst(?w!(?n-1)) = fst(?w!(?k-j))"
+                  have "fst(?w!(?n-1)) = a" using \<open>?k = ?n - 1\<close> by (by100 simp)
+                  hence hfst_a: "fst(?w!(?k-j)) = a" using \<open>fst(?w!(?n-1)) = fst(?w!(?k-j))\<close> by (by100 simp)
+                  \<comment> \<open>w!(k-j) = u2!(k-j-1) since 1 \\<le> k-j \\<le> k-1 = length u2.\<close>
+                  have hkj_ge1: "?k - j \<ge> 1" using hjk1 by (by100 linarith)
+                  have hkj_le: "?k - j \<le> length u2" using hj1 by (by100 simp)
+                  have hkjm1: "?k - j - 1 < length u2" using hkj_ge1 hkj_le by (by100 linarith)
+                  have "?w ! (?k-j) = ((a,True) # u2 @ [(a,True)] @ v) ! (?k-j)" by (by100 simp)
+                  also have "\<dots> = (u2 @ [(a,True)] @ v) ! (?k-j-1)" using hkj_ge1 by (by100 simp)
+                  also have "\<dots> = u2 ! (?k-j-1)"
+                    using hkjm1 nth_append[of u2 "[(a,True)] @ v" "?k-j-1"] by (by100 simp)
+                  finally have hw_kj: "?w ! (?k-j) = u2 ! (?k-j-1)" .
+                  have "u2 ! (?k-j-1) \<in> set u2" using hkjm1 by (by100 simp)
+                  hence "fst(u2 ! (?k-j-1)) \<in> fst ` set u2" by (by100 force)
+                  hence "fst(u2 ! (?k-j-1)) \<noteq> a" using ha_fresh_u2 by (by100 auto)
+                  hence "fst(?w!(?k-j)) \<noteq> a" using hw_kj by (by100 simp)
+                  with hfst_a show False by (by100 simp)
                 qed
                 thus ?thesis by (by100 blast)
               qed
@@ -4005,53 +4018,77 @@ next
                 hence "?k = ?n - 1" using hk_ge2 by (by100 simp)
                 \<comment> \<open>k=n-1: symmetric to c-vs-nonc k=n-1 case. Diagonal IS edge n-1.
                    Use C9 + a-freshness for contradiction.\<close>
-                from hnonc_sigma_on_edge_int[OF hi' hi_not_c(1) hi_not_c(2) ht]
-                obtain i_old ti_old where hi_old: "i_old < ?n" and hti: "ti_old \<in> {0<..<(1::real)}"
-                  and hsigma_i_eq: "paste_sigma vx2 vy2 ?k ?n i t =
-                    ((1-ti_old)*vx2 i_old + ti_old*vx2(Suc i_old mod ?n),
-                     (1-ti_old)*vy2 i_old + ti_old*vy2(Suc i_old mod ?n))"
-                  by (by100 blast)
+                \<comment> \<open>Symmetric: compute sigma(i,t) directly on old edge k-i.\<close>
+                have hi1: "i \<ge> 1" using hi_not_c(1) by (by100 linarith)
+                have hik1: "i \<le> ?k - 1" using hi_not_c(2) hi' \<open>?k = ?n - 1\<close> by (by100 linarith)
+                have hki_lt: "?k - i < ?n" using hik1 by (by100 simp)
+                have hki_ne: "?k - i \<noteq> ?n - 1" using hi1 \<open>?k = ?n - 1\<close> by (by100 linarith)
+                have h1mt: "(1-t) \<in> {0<..<(1::real)}" using ht by (by100 auto)
                 have h1ms: "1 - s \<in> {0<..<(1::real)}" using hs by (by100 auto)
                 have hnm1: "?n - 1 < ?n" using hn_ge3 by (by100 linarith)
+                have hSuc_ki: "Suc (?k - i) mod ?n = ?k + 1 - i"
+                proof -
+                  have "?k - i < ?n - 1" using hi1 hki_ne hki_lt by (by100 linarith)
+                  hence "Suc (?k - i) < ?n" by (by100 simp)
+                  hence "Suc (?k - i) mod ?n = Suc (?k - i)" by (by100 simp)
+                  also have "Suc (?k - i) = ?k + 1 - i" using hik1 by (by100 simp)
+                  finally show ?thesis .
+                qed
+                have hsigma_i_ki: "paste_sigma vx2 vy2 ?k ?n i t =
+                  ((1-(1-t))*vx2(?k-i) + (1-t)*vx2(Suc(?k-i) mod ?n),
+                   (1-(1-t))*vy2(?k-i) + (1-t)*vy2(Suc(?k-i) mod ?n))"
+                proof -
+                  have hsx: "paste_chain_sigma_x vx2 ?k ?n i t = t*vx2(?k-i) + (1-t)*vx2(?k+1-i)"
+                    using hi_not_c(1) hi_not_c(2) hik1 unfolding paste_chain_sigma_x_def by (by100 simp)
+                  have hsy: "paste_chain_sigma_y vy2 ?k ?n i t = t*vy2(?k-i) + (1-t)*vy2(?k+1-i)"
+                    using hi_not_c(1) hi_not_c(2) hik1 unfolding paste_chain_sigma_y_def by (by100 simp)
+                  show ?thesis using hsx hsy hSuc_ki by (by100 simp)
+                qed
                 have hSuc_nm1: "Suc (?n - 1) mod ?n = 0" using hn_ge3 by (by100 simp)
                 have hsigma_j_edge: "paste_sigma vx2 vy2 ?k ?n j s =
                   ((1-(1-s))*vx2(?n-1) + (1-s)*vx2(Suc(?n-1) mod ?n),
                    (1-(1-s))*vy2(?n-1) + (1-s)*vy2(Suc(?n-1) mod ?n))"
                   using hsigma_j_diag \<open>?k = ?n - 1\<close> hSuc_nm1 by (by100 simp)
-                have hq2_edges: "q2 ((1-ti_old)*vx2 i_old + ti_old*vx2(Suc i_old mod ?n),
-                   (1-ti_old)*vy2 i_old + ti_old*vy2(Suc i_old mod ?n)) =
+                have hq2_ki: "q2 ((1-(1-t))*vx2(?k-i) + (1-t)*vx2(Suc(?k-i) mod ?n),
+                   (1-(1-t))*vy2(?k-i) + (1-t)*vy2(Suc(?k-i) mod ?n)) =
                   q2 ((1-(1-s))*vx2(?n-1) + (1-s)*vx2(Suc(?n-1) mod ?n),
                    (1-(1-s))*vy2(?n-1) + (1-s)*vy2(Suc(?n-1) mod ?n))"
                 proof -
-                  from arg_cong[OF hsigma_i_eq, of q2]
+                  from arg_cong[OF hsigma_i_ki, of q2]
                   have "q2 (paste_sigma vx2 vy2 ?k ?n i t) =
-                    q2 ((1-ti_old)*vx2 i_old + ti_old*vx2(Suc i_old mod ?n),
-                     (1-ti_old)*vy2 i_old + ti_old*vy2(Suc i_old mod ?n))" by (by100 simp)
+                    q2 ((1-(1-t))*vx2(?k-i) + (1-t)*vx2(Suc(?k-i) mod ?n),
+                     (1-(1-t))*vy2(?k-i) + (1-t)*vy2(Suc(?k-i) mod ?n))" by (by100 simp)
                   moreover from arg_cong[OF hsigma_j_edge, of q2]
                   have "q2 (paste_sigma vx2 vy2 ?k ?n j s) =
                     q2 ((1-(1-s))*vx2(?n-1) + (1-s)*vx2(Suc(?n-1) mod ?n),
                      (1-(1-s))*vy2(?n-1) + (1-s)*vy2(Suc(?n-1) mod ?n))" by (by100 simp)
                   ultimately show ?thesis using hq2_eq by (by100 simp)
                 qed
-                from hC9_2[rule_format, OF hi_old hnm1 hti h1ms hq2_edges]
-                have "(i_old = ?n-1 \<and> ti_old = 1-s) \<or>
-                  (fst(?w!i_old) = fst(?w!(?n-1)) \<and>
-                    (if snd(?w!i_old) = snd(?w!(?n-1)) then 1-s = ti_old else 1-s = 1-ti_old))" .
+                from hC9_2[rule_format, OF hki_lt hnm1 h1mt h1ms hq2_ki]
+                have "(?k-i = ?n-1 \<and> 1-t = 1-s) \<or>
+                  (fst(?w!(?k-i)) = fst(?w!(?n-1)) \<and>
+                    (if snd(?w!(?k-i)) = snd(?w!(?n-1)) then 1-s = 1-t else 1-s = 1-(1-t)))" .
                 hence False
                 proof (elim disjE conjE)
-                  assume "i_old = ?n - 1"
-                  have "i_old \<le> ?n - 2"
-                    sorry \<comment> \<open>i\\_old from non-c i: i\\_old \\<le> n-2.\<close>
-                  with \<open>i_old = ?n - 1\<close> hn_ge3 show False by (by100 linarith)
+                  assume "?k - i = ?n - 1"
+                  with hki_ne show False by (by100 simp)
                 next
-                  assume "fst(?w!i_old) = fst(?w!(?n-1))"
+                  assume "fst(?w!(?k-i)) = fst(?w!(?n-1))"
                   have "fst(?w!(?n-1)) = a" using \<open>?k = ?n - 1\<close> by (by100 simp)
-                  hence "fst(?w!i_old) = a" using \<open>fst(?w!i_old) = fst(?w!(?n-1))\<close> by (by100 simp)
-                  have "i_old \<ge> 1 \<and> i_old \<le> ?n - 2"
-                    sorry \<comment> \<open>i\\_old bounds from non-c i mapping.\<close>
-                  hence "fst(?w!i_old) \<noteq> a"
-                    sorry \<comment> \<open>ha\\_fresh\\_u2: a fresh in u2, w!(i\\_old) from u2.\<close>
-                  with \<open>fst(?w!i_old) = a\<close> show False by (by100 simp)
+                  hence hfst_a: "fst(?w!(?k-i)) = a" using \<open>fst(?w!(?k-i)) = fst(?w!(?n-1))\<close> by (by100 simp)
+                  have hki_ge1: "?k - i \<ge> 1" using hik1 by (by100 linarith)
+                  have hki_le: "?k - i \<le> length u2" using hi1 by (by100 simp)
+                  have hkim1: "?k - i - 1 < length u2" using hki_ge1 hki_le by (by100 linarith)
+                  have "?w ! (?k-i) = ((a,True) # u2 @ [(a,True)] @ v) ! (?k-i)" by (by100 simp)
+                  also have "\<dots> = (u2 @ [(a,True)] @ v) ! (?k-i-1)" using hki_ge1 by (by100 simp)
+                  also have "\<dots> = u2 ! (?k-i-1)"
+                    using hkim1 nth_append[of u2 "[(a,True)] @ v" "?k-i-1"] by (by100 simp)
+                  finally have hw_ki: "?w ! (?k-i) = u2 ! (?k-i-1)" .
+                  have "u2 ! (?k-i-1) \<in> set u2" using hkim1 by (by100 simp)
+                  hence "fst(u2 ! (?k-i-1)) \<in> fst ` set u2" by (by100 force)
+                  hence "fst(u2 ! (?k-i-1)) \<noteq> a" using ha_fresh_u2 by (by100 auto)
+                  hence "fst(?w!(?k-i)) \<noteq> a" using hw_ki by (by100 simp)
+                  with hfst_a show False by (by100 simp)
                 qed
                 thus ?thesis by (by100 blast)
               qed
@@ -4169,6 +4206,9 @@ qed
 
 
 end
+
+
+
 
 
 
