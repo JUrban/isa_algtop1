@@ -2559,7 +2559,8 @@ next
                (if rev_flag then 1-t else t)*vy2(Suc i_old mod ?n)) \<and>
             fst (?w' ! i) = fst (?w ! i_old) \<and>
             (snd (?w' ! i) = snd (?w ! i_old)) = (\<not> rev_flag) \<and>
-            i_old = (if rev_flag then ?k - i else Suc i)"
+            i_old = (if rev_flag then ?k - i else Suc i) \<and>
+            (if rev_flag then i \<le> ?k - 1 else i \<ge> ?k)"
         proof -
           fix i :: nat and t :: real
           assume hi: "i < ?n" and hi0: "i \<noteq> 0" and hinm1: "i \<noteq> ?n - 1" and ht: "t \<in> {0<..<(1::real)}"
@@ -2574,7 +2575,8 @@ next
               (if rev_flag then 1 - t else t) * vy2 (Suc i_old mod ?n) \<and>
             fst (?w' ! i) = fst (?w ! i_old) \<and>
             (snd (?w' ! i) = snd (?w ! i_old)) = (\<not> rev_flag) \<and>
-            i_old = (if rev_flag then ?k - i else Suc i)"
+            i_old = (if rev_flag then ?k - i else Suc i) \<and>
+            (if rev_flag then i \<le> ?k - 1 else i \<ge> ?k)"
           proof (cases "i \<le> ?k - 1")
             case True
             have hki: "?k - i < ?n" using True hi by (by100 simp)
@@ -2629,7 +2631,7 @@ next
               using hw'i hw_ki unfolding top1_inverse_edge_def by (by100 simp)
             show ?thesis
               apply (rule exI[of _ "?k - i"], rule exI[of _ True])
-              using hki h1mt hsx hsy hSuc_mod hlbl hsign by (by100 simp)
+              using hki h1mt hsx hsy hSuc_mod hlbl hsign True by (by100 simp)
           next
             case False hence hige: "i \<ge> ?k" using hi0 by (by100 simp)
             have hsi: "Suc i < ?n" using hinm1 hi by (by100 simp)
@@ -2672,7 +2674,7 @@ next
             have hsign: "snd (?w' ! i) = snd (?w ! Suc i)" using hw'i hw_si by (by100 simp)
             show ?thesis
               apply (rule exI[of _ "Suc i"], rule exI[of _ False])
-              using hsi ht hsx hsy hlbl hsign hige by (by100 simp)
+              using hsi ht hsx hsy hlbl hsign hige by (by5000 simp)
           qed
           then obtain i_old rev_flag where
             h1: "i_old < ?n" and
@@ -2685,8 +2687,9 @@ next
               (if rev_flag then 1 - t else t) * vy2 (Suc i_old mod ?n)" and
             h4: "fst (?w' ! i) = fst (?w ! i_old)" and
             h5: "(snd (?w' ! i) = snd (?w ! i_old)) = (\<not> rev_flag)" and
-            h6: "i_old = (if rev_flag then ?k - i else Suc i)"
-            by (by100 blast)
+            h6: "i_old = (if rev_flag then ?k - i else Suc i)" and
+            h7: "(if rev_flag then i \<le> ?k - 1 else i \<ge> ?k)"
+            by (by5000 blast)
           \<comment> \<open>Convert sigma\\_x/y to paste\\_sigma pair.\<close>
           have h3: "paste_sigma vx2 vy2 ?k ?n i t =
             ((1-(if rev_flag then 1-t else t))*vx2 i_old +
@@ -2704,8 +2707,9 @@ next
                (if rev_flag then 1-t else t)*vy2(Suc i_old mod ?n)) \<and>
             fst (?w' ! i) = fst (?w ! i_old) \<and>
             (snd (?w' ! i) = snd (?w ! i_old)) = (\<not> rev_flag) \<and>
-            i_old = (if rev_flag then ?k - i else Suc i)"
-            using h1 h2 h3 h4 h5 h6 by (by100 blast)
+            i_old = (if rev_flag then ?k - i else Suc i) \<and>
+            (if rev_flag then i \<le> ?k - 1 else i \<ge> ?k)"
+            using h1 h2 h3 h4 h5 h6 h7 by (by5000 blast)
         qed
         show "\<forall>p\<in>P2. (\<forall>i<length ?w'. \<forall>t\<in>I_set.
             p \<noteq> ((1-t)*vx2 i+t*vx2(Suc i mod length ?w'),(1-t)*vy2 i+t*vy2(Suc i mod length ?w')))
@@ -3362,20 +3366,257 @@ next
               qed
             qed
           qed
-          have hphi_L_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> phi_L x \<in> P2"
+          have hphi_L_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x \<le> 0 \<Longrightarrow> phi_L x \<in> P2"
           proof -
-            fix x assume hx: "x \<in> P2"
-            \<comment> \<open>phi\\_L(x) = (1-s-tp)*v\\_0 + s*v\\_{k+1-j} + tp*v\\_{k-j} for LEAST sector j.
-               This is a convex combination of 3 vertices of P2.
-               Need: s \\<ge> 0, tp \\<ge> 0, 1-s-tp \\<ge> 0 (non-negative Cramer coordinates).
-               These follow from the fan sector containment.\<close>
-            \<comment> \<open>Key: the numerator of 1-s-tp is AFFINE in x, and C11 gives \\<ge> 0 at all vertices.
-               So 1-s-tp \\<ge> 0 for all x \\<in> P2. Combined with s \\<ge> 0, tp \\<ge> 0: convex combination.\<close>
+            fix x assume hx: "x \<in> P2" and hcd: "cross_diag x \<le> 0"
+            \<comment> \<open>HELPER: affine functions non-negative at all vertices are non-negative at all P2 points.\<close>
+            have haffine_nonneg: "\<And>A B C :: real.
+                (\<forall>l<?n. A + B * vx2 l + C * vy2 l \<ge> 0) \<Longrightarrow>
+                A + B * fst x + C * snd x \<ge> 0"
+            proof -
+              fix A B C :: real
+              assume hvertex: "\<forall>l<?n. A + B * vx2 l + C * vy2 l \<ge> 0"
+              from hx[unfolded hC5_2]
+              obtain coeffs where hc_nn: "\<forall>i<?n. coeffs i \<ge> 0"
+                and hc_sum: "(\<Sum>i<?n. coeffs i) = 1"
+                and hx_fst: "fst x = (\<Sum>i<?n. coeffs i * vx2 i)"
+                and hx_snd: "snd x = (\<Sum>i<?n. coeffs i * vy2 i)"
+                by (by5000 auto)
+              have hsum_expand: "A * (\<Sum>i<?n. coeffs i) + B * (\<Sum>i<?n. coeffs i * vx2 i) + C * (\<Sum>i<?n. coeffs i * vy2 i)
+                = (\<Sum>i<?n. coeffs i * (A + B * vx2 i + C * vy2 i))"
+              proof -
+                have hsd1: "A * (\<Sum>i<?n. coeffs i) = (\<Sum>i<?n. A * coeffs i)"
+                  by (rule sum_distrib_left)
+                have hsd2: "B * (\<Sum>i<?n. coeffs i * vx2 i) = (\<Sum>i<?n. B * (coeffs i * vx2 i))"
+                  by (rule sum_distrib_left)
+                have hsd3: "C * (\<Sum>i<?n. coeffs i * vy2 i) = (\<Sum>i<?n. C * (coeffs i * vy2 i))"
+                  by (rule sum_distrib_left)
+                have "A * (\<Sum>i<?n. coeffs i) + B * (\<Sum>i<?n. coeffs i * vx2 i) + C * (\<Sum>i<?n. coeffs i * vy2 i)
+                  = (\<Sum>i<?n. A * coeffs i) + (\<Sum>i<?n. B * (coeffs i * vx2 i)) + (\<Sum>i<?n. C * (coeffs i * vy2 i))"
+                  using hsd1 hsd2 hsd3 by (by100 simp)
+                also have "\<dots> = (\<Sum>i<?n. A * coeffs i + B * (coeffs i * vx2 i) + C * (coeffs i * vy2 i))"
+                  by (simp only: sum.distrib[symmetric])
+                also have "\<dots> = (\<Sum>i<?n. coeffs i * (A + B * vx2 i + C * vy2 i))"
+                  by (rule sum.cong, simp, by5000 algebra)
+                finally show ?thesis .
+              qed
+              have "A + B * fst x + C * snd x =
+                (\<Sum>i<?n. coeffs i * (A + B * vx2 i + C * vy2 i))"
+                using hc_sum hx_fst hx_snd hsum_expand by (by100 simp)
+              also have "\<dots> \<ge> 0"
+              proof (rule sum_nonneg)
+                fix i assume "i \<in> {..<?n}"
+                hence "i < ?n" by (by100 simp)
+                hence "coeffs i \<ge> 0" using hc_nn by (by100 blast)
+                moreover have "A + B * vx2 i + C * vy2 i \<ge> 0" using hvertex \<open>i < ?n\<close> by (by100 blast)
+                ultimately show "coeffs i * (A + B * vx2 i + C * vy2 i) \<ge> 0"
+                  using mult_nonneg_nonneg by (by100 blast)
+              qed
+              finally show "A + B * fst x + C * snd x \<ge> 0" .
+            qed
+            \<comment> \<open>Step 1: cross\\_1(x) \\<ge> 0 from haffine\\_nonneg.\<close>
+            have hcross1_ge: "(vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0) \<ge> 0"
+            proof -
+              \<comment> \<open>Express cross\\_1 as A + B*X + C*Y:
+                 cross\\_1(X,Y) = (vx2 1 - vx2 0)*(Y - vy2 0) - (vy2 1 - vy2 0)*(X - vx2 0)
+                 = -(vx2 1 - vx2 0)*vy2 0 + (vy2 1 - vy2 0)*vx2 0 + (-(vy2 1 - vy2 0))*X + (vx2 1 - vx2 0)*Y
+                 = A + B*X + C*Y where
+                 A = (vy2 1 - vy2 0)*vx2 0 - (vx2 1 - vx2 0)*vy2 0
+                 B = -(vy2 1 - vy2 0), C = (vx2 1 - vx2 0)\<close>
+              let ?A = "(vy2 1 - vy2 0)*vx2 0 - (vx2 1 - vx2 0)*vy2 0"
+              let ?B = "-(vy2 1 - vy2 0)" let ?C = "vx2 1 - vx2 0"
+              have hrewrite: "(vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0)
+                = ?A + ?B * fst x + ?C * snd x" by (by5000 algebra)
+              have "\<forall>l<?n. ?A + ?B * vx2 l + ?C * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                have hval: "?A + ?B * vx2 l + ?C * vy2 l =
+                  (vx2 1 - vx2 0)*(vy2 l - vy2 0) - (vy2 1 - vy2 0)*(vx2 l - vx2 0)"
+                  by (by5000 algebra)
+                show "?A + ?B * vx2 l + ?C * vy2 l \<ge> 0"
+                proof (cases "l = 0")
+                  case True thus ?thesis unfolding hval by (by100 simp)
+                next
+                  case False hence hl1: "1 \<le> l" by (by100 linarith)
+                  show ?thesis
+                  proof (cases "l = 1")
+                    case True thus ?thesis unfolding hval by (by100 simp)
+                  next
+                    case False hence hl2: "l \<ge> 2" using hl1 by (by100 linarith)
+                    have "1 < l" using hl2 by (by100 linarith)
+                    have h1_lt_n: "(1::nat) < ?n" using hn_ge3 by (by100 linarith)
+                    have h1le1: "(1::nat) \<le> 1" by simp
+                    from hfan_det_0[rule_format, OF h1_lt_n hl h1le1 \<open>1 < l\<close>]
+                    show ?thesis unfolding hval by linarith
+                  qed
+                qed
+              qed
+              from haffine_nonneg[OF this] show ?thesis unfolding hrewrite .
+            qed
+            \<comment> \<open>cross\\_k(x) \\<le> 0 from hcd.\<close>
+            have hcrossk_le: "(vx2 ?k - vx2 0)*(snd x - vy2 0) - (vy2 ?k - vy2 0)*(fst x - vx2 0) \<le> 0"
+              using hcd unfolding cross_diag_def by (by100 simp)
+            \<comment> \<open>Step 1b: Sector existence via discrete IVT.\<close>
+            let ?PL = "\<lambda>j. 1 \<le> j \<and> j < ?k \<and>
+              (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc j) - vy2 0)*(fst x - vx2 0) \<le> 0"
+            have hex: "\<exists>j. ?PL j"
+            proof -
+              \<comment> \<open>Discrete IVT: find first j \\<ge> 1 where cross\\_{j+1} \\<le> 0.\<close>
+              define f where "f j = (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0)" for j
+              have hf1: "f 1 \<ge> 0" using hcross1_ge unfolding f_def .
+              have hfk: "f ?k \<le> 0" using hcrossk_le unfolding f_def .
+              \<comment> \<open>By strong induction: \\<exists>j \\<ge> 1. j < k \\<and> f j \\<ge> 0 \\<and> f(Suc j) \\<le> 0.\<close>
+              have hivt: "\<forall>m. 1 \<le> m \<longrightarrow> m < ?k \<longrightarrow> f m \<ge> 0 \<longrightarrow>
+                  (\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0)"
+              proof (intro allI impI)
+                fix m assume hm1: "1 \<le> m" and hmk: "m < ?k" and hfm: "f m \<ge> 0"
+                show "\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0"
+                  using hmk hfm
+                proof (induction "?k - m" arbitrary: m)
+                  case 0 thus ?case by linarith
+                next
+                  case (Suc d)
+                  show ?case
+                  proof (cases "f (Suc m) \<le> 0")
+                    case True
+                    show ?thesis
+                      apply (rule exI[of _ m])
+                      using True Suc.prems by (by100 blast)
+                  next
+                    case False hence hfSm_pos: "f (Suc m) > 0" by linarith
+                    hence hfSm: "f (Suc m) \<ge> 0" by linarith
+                    have "Suc m \<le> ?k" using Suc.prems Suc.hyps by linarith
+                    moreover have "Suc m \<noteq> ?k"
+                    proof
+                      assume "Suc m = ?k"
+                      hence "f (Suc m) \<le> 0" using hfk by (by100 simp)
+                      with hfSm_pos show False by linarith
+                    qed
+                    ultimately have "Suc m < ?k" by linarith
+                    have "d = ?k - Suc m" using Suc.hyps by linarith
+                    from Suc.hyps(1)[OF \<open>d = ?k - Suc m\<close> \<open>Suc m < ?k\<close> hfSm]
+                    obtain j where hj: "Suc m \<le> j" "j < ?k" "f j \<ge> 0" "f (Suc j) \<le> 0" by blast
+                    hence "m \<le> j" by linarith
+                    with hj show ?thesis by (by100 blast)
+                  qed
+                qed
+              qed
+              have h1ltk: "1 < ?k" using hk_ge2 by linarith
+              from hivt[rule_format, OF le_refl h1ltk hf1]
+              obtain j where hj: "1 \<le> j" "j < ?k" "f j \<ge> 0" "f (Suc j) \<le> 0"
+                by (by100 blast)
+              thus ?thesis unfolding f_def by (by100 blast)
+            qed
+            from LeastI_ex[OF this]
+            have hPL: "?PL (LEAST j. ?PL j)" .
+            let ?j = "LEAST j. ?PL j"
+            have hj1: "1 \<le> ?j" using hPL by (by100 blast)
+            have hjk: "?j < ?k" using hPL by (by100 blast)
+            have hcross_ge: "(vx2 ?j - vx2 0)*(snd x - vy2 0) - (vy2 ?j - vy2 0)*(fst x - vx2 0) \<ge> 0"
+              using hPL by (by100 blast)
+            have hcross_le: "(vx2(Suc ?j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc ?j) - vy2 0)*(fst x - vx2 0) \<le> 0"
+              using hPL by (by100 blast)
+            \<comment> \<open>Step 2: det > 0 from fan determinant.\<close>
+            have hk_lt_n_local: "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+            have hj_lt: "?j < ?n" using hjk hk_lt_n_local by (by100 linarith)
+            have hsj_lt: "Suc ?j < ?n" using hjk hk_lt_nm1 by (by100 linarith)
+            let ?det = "(vx2 ?j - vx2 0) * (vy2(Suc ?j) - vy2 0)
+              - (vy2 ?j - vy2 0) * (vx2(Suc ?j) - vx2 0)"
+            have hdet_pos: "?det > 0"
+              using hfan_det_0[rule_format, OF hj_lt hsj_lt hj1 lessI] .
+            \<comment> \<open>Step 3: Cramer coords are non-negative.\<close>
+            let ?s_num = "(vy2(Suc ?j) - vy2 0)*(fst x - vx2 0) - (vx2(Suc ?j) - vx2 0)*(snd x - vy2 0)"
+            let ?tp_num = "(vx2 ?j - vx2 0)*(snd x - vy2 0) - (vy2 ?j - vy2 0)*(fst x - vx2 0)"
+            let ?s = "?s_num / ?det"
+            let ?tp = "?tp_num / ?det"
+            have hs_num_nn: "?s_num \<ge> 0" using hcross_le by linarith
+            have htp_num_nn: "?tp_num \<ge> 0" using hcross_ge by linarith
+            have hs_ge0: "?s \<ge> 0"
+              using hs_num_nn hdet_pos divide_nonneg_nonneg by (by100 fastforce)
+            have htp_ge0: "?tp \<ge> 0"
+              using htp_num_nn hdet_pos divide_nonneg_nonneg by (by100 fastforce)
+            have h1stp_ge0: "1 - ?s - ?tp \<ge> 0"
+            proof -
+              \<comment> \<open>1-s-tp = (det - s\\_num - tp\\_num)/det = F(x)/det where
+                 F(x) = cross(v\\_j - x, v\\_{j+1} - x) is affine and \\<ge> 0 at all vertices.\<close>
+              have hnum_eq: "?det - ?s_num - ?tp_num =
+                (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
+                by (by5000 algebra)
+              \<comment> \<open>Express as A + B*X + C*Y.\<close>
+              let ?Aj = "vx2 ?j * vy2(Suc ?j) - vy2 ?j * vx2(Suc ?j)"
+              let ?Bj = "vy2 ?j - vy2(Suc ?j)" let ?Cj = "vx2(Suc ?j) - vx2 ?j"
+              have hF_form: "(vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)
+                = ?Aj + ?Bj * fst x + ?Cj * snd x" by (by5000 algebra)
+              have "\<forall>l<?n. ?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                have hval: "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                  (vx2 ?j - vx2 l)*(vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l)*(vx2(Suc ?j) - vx2 l)"
+                  by (by5000 algebra)
+                \<comment> \<open>= -cross(v\\_l - v\\_j, v\\_{j+1} - v\\_j). From C11: this is > 0 for l \\<noteq> j, j+1.\<close>
+                show "?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+                proof (cases "l = ?j")
+                  case True thus ?thesis unfolding hval by (by100 simp)
+                next
+                  case False
+                  show ?thesis
+                  proof (cases "l = Suc ?j")
+                    case True thus ?thesis unfolding hval by (by100 simp)
+                  next
+                    case False2: False
+                    have hsj_mod: "Suc ?j mod ?n = Suc ?j" using hsj_lt by (by100 simp)
+                    have hl_ne_sj_mod: "l \<noteq> Suc ?j mod ?n" using False2 hsj_mod by (by100 simp)
+                    from hC11_2[rule_format, OF hj_lt hl False hl_ne_sj_mod]
+                    have "(vx2 l - vx2 ?j) * (vy2(Suc ?j mod ?n) - vy2 ?j)
+                      - (vy2 l - vy2 ?j) * (vx2(Suc ?j mod ?n) - vx2 ?j) < 0" .
+                    hence "(vx2 l - vx2 ?j) * (vy2(Suc ?j) - vy2 ?j)
+                      - (vy2 l - vy2 ?j) * (vx2(Suc ?j) - vx2 ?j) < 0"
+                      using hsj_mod by (by100 simp)
+                    \<comment> \<open>cross(v\\_l - v\\_j, v\\_{j+1} - v\\_j) < 0, so F(v\\_l) = -cross > 0.\<close>
+                    moreover have "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                      -((vx2 l - vx2 ?j) * (vy2(Suc ?j) - vy2 ?j)
+                      - (vy2 l - vy2 ?j) * (vx2(Suc ?j) - vx2 ?j))"
+                      unfolding hval by (by5000 algebra)
+                    ultimately show ?thesis by linarith
+                  qed
+                qed
+              qed
+              from haffine_nonneg[OF this]
+              have hF_ge0: "?Aj + ?Bj * fst x + ?Cj * snd x \<ge> 0" .
+              hence hnum_ge0: "?det - ?s_num - ?tp_num \<ge> 0"
+                using hnum_eq hF_form by linarith
+              \<comment> \<open>Multiply approach: (1-s-tp)*det = det - s\\_num - tp\\_num \\<ge> 0, and det > 0.\<close>
+              have hne: "?det \<noteq> 0" using hdet_pos by linarith
+              have hs_cancel: "?s * ?det = ?s_num" using hne by (by100 simp)
+              have htp_cancel: "?tp * ?det = ?tp_num" using hne by (by100 simp)
+              have "(1 - ?s - ?tp) * ?det = ?det - ?s * ?det - ?tp * ?det"
+                by (by5000 algebra)
+              hence "(1 - ?s - ?tp) * ?det = ?det - ?s_num - ?tp_num"
+                using hs_cancel htp_cancel by linarith
+              hence h_prod_nn: "(1 - ?s - ?tp) * ?det \<ge> 0" using hnum_ge0 by linarith
+              show ?thesis
+              proof (rule ccontr)
+                assume "\<not> (1 - ?s - ?tp \<ge> 0)"
+                hence "1 - ?s - ?tp < 0" by linarith
+                hence "(1 - ?s - ?tp) * ?det < 0" using hdet_pos
+                  using mult_neg_pos by (by100 blast)
+                with h_prod_nn show False by linarith
+              qed
+            qed
+            \<comment> \<open>Step 4: phi\\_L(x) is a convex combination of 3 vertices \\<in> P2.\<close>
+            have hphi_eq: "phi_L x = ((1-?s-?tp)*vx2 0 + ?s*vx2(?k+1-?j) + ?tp*vx2(?k-?j),
+                                       (1-?s-?tp)*vy2 0 + ?s*vy2(?k+1-?j) + ?tp*vy2(?k-?j))"
+              unfolding phi_L_def Let_def by (by5000 simp)
+            \<comment> \<open>Step 5: Vertex indices valid and in P2.\<close>
+            have hA_lt: "?k + 1 - ?j < ?n" using hjk hk_lt_n_local hj1 by (by100 linarith)
+            have hB_lt: "?k - ?j < ?n" using hjk hk_lt_n_local by (by100 linarith)
+            \<comment> \<open>Step 6: Convex combination of P2 vertices is in P2.\<close>
             show "phi_L x \<in> P2"
-              sorry \<comment> \<open>phi\\_L\\_in\\_P2: Cramer coords non-negative via sector bounds + C11 affine argument.\<close>
+              sorry \<comment> \<open>Construct coeffs: (1-s-tp) at 0, s at k+1-j, tp at k-j, 0 elsewhere.\<close>
           qed
-          have hphi_R_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> phi_R x \<in> P2"
-            sorry \<comment> \<open>phi\\_R maps P2 to P2.\<close>
+          have hphi_R_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow> phi_R x \<in> P2"
+            sorry \<comment> \<open>phi\\_R maps P2 to P2 (symmetric to phi\\_L).\<close>
           have hphi_L_R_disjoint: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x < 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_L x \<noteq> phi_R y"
             sorry \<comment> \<open>phi\\_L and phi\\_R images are in disjoint sub-polygon interiors.\<close>
@@ -3398,7 +3639,7 @@ next
               have hphi_int_p: "\<forall>i<?n. \<forall>t\<in>I_set.
                   phi_L p \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
                 using hphi_L_int[OF hp True] .
-              have hphi_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp] .
+              have hphi_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp less_imp_le[OF True]] .
               \<comment> \<open>Old C8 at phi\\_L(p): singleton fibre.\<close>
               have hC8_at_p: "\<forall>p'\<in>P2. q2 (phi_L p) = q2 p' \<longrightarrow> phi_L p = p'"
                 using hC8_2[rule_format, OF hphi_in] hphi_int_p by (by100 blast)
@@ -3411,7 +3652,7 @@ next
                    hC8\\_at\\_p: phi\\_L(p) = phi\\_L(p'). hphi\\_L\\_inj: p = p'.\<close>
                 have "g p' = q2 (phi_L p')" using True2 unfolding g_def by (by100 simp)
                 hence "q2 (phi_L p) = q2 (phi_L p')" using hgp hg_eq by simp
-                moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
+                moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp' less_imp_le[OF True2]] .
                 ultimately have "phi_L p = phi_L p'" using hC8_at_p by (by100 blast)
                 thus ?thesis using hphi_L_inj[OF hp hp' _ _ \<open>phi_L p = phi_L p'\<close>]
                   True True2 by linarith
@@ -3424,7 +3665,7 @@ next
                      hC8\\_at\\_p: phi\\_L(p) = phi\\_R(p'). Contradicts disjointness.\<close>
                   have "g p' = q2 (phi_R p')" using True3 unfolding g_def by (by100 simp)
                   hence "q2 (phi_L p) = q2 (phi_R p')" using hgp hg_eq by simp
-                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp'] .
+                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp' True3] .
                   ultimately have "phi_L p = phi_R p'" using hC8_at_p by (by100 blast)
                   with hphi_L_R_disjoint[OF hp hp' True True3] show ?thesis by simp
                 next
@@ -3432,9 +3673,10 @@ next
                   hence "cross_diag p' = 0" using False2 by linarith
                   \<comment> \<open>p' on diagonal. g(p') = q2(phi\\_L(p')). From g=g: q2(phi\\_L(p))=q2(phi\\_L(p')).
                      hC8\\_at\\_p: phi\\_L(p) = phi\\_L(p'). hphi\\_L\\_inj: p = p'.\<close>
+                  have hcd_p'_le: "cross_diag p' \<le> 0" using \<open>cross_diag p' = 0\<close> by simp
                   have "g p' = q2 (phi_L p')" using \<open>cross_diag p' = 0\<close> unfolding g_def by (by100 simp)
                   hence "q2 (phi_L p) = q2 (phi_L p')" using hgp hg_eq by simp
-                  moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
+                  moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp' hcd_p'_le] .
                   ultimately have "phi_L p = phi_L p'" using hC8_at_p by (by100 blast)
                   thus ?thesis using hphi_L_inj[OF hp hp' _ _ \<open>phi_L p = phi_L p'\<close>]
                     True \<open>cross_diag p' = 0\<close> by linarith
@@ -3451,7 +3693,7 @@ next
                 have hphi_int_p: "\<forall>i<?n. \<forall>t\<in>I_set.
                     phi_R p \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
                   using hphi_R_int[OF hp True2] .
-                have hphi_in: "phi_R p \<in> P2" using hphi_R_in_P2[OF hp] .
+                have hphi_in: "phi_R p \<in> P2" using hphi_R_in_P2[OF hp True2] .
                 have hC8_at_p: "\<forall>p'\<in>P2. q2 (phi_R p) = q2 p' \<longrightarrow> phi_R p = p'"
                   using hC8_2[rule_format, OF hphi_in] hphi_int_p by (by100 blast)
                 show ?thesis
@@ -3460,7 +3702,7 @@ next
                   \<comment> \<open>Both right.\<close>
                   have "g p' = q2 (phi_R p')" using True3 unfolding g_def by (by100 simp)
                   hence "q2 (phi_R p) = q2 (phi_R p')" using hgp hg_eq by simp
-                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp'] .
+                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp' True3] .
                   ultimately have hphieq: "phi_R p = phi_R p'" using hC8_at_p by (by100 blast)
                   from hphi_R_inj[OF hp hp' True2 True3 hphieq] show ?thesis .
                 next
@@ -3471,16 +3713,17 @@ next
                     \<comment> \<open>p right, p' left.\<close>
                     have "g p' = q2 (phi_L p')" using True4 unfolding g_def by (by100 simp)
                     hence "q2 (phi_R p) = q2 (phi_L p')" using hgp hg_eq by simp
-                    moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
+                    moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp' less_imp_le[OF True4]] .
                     ultimately have "phi_R p = phi_L p'" using hC8_at_p by (by100 blast)
                     with hphi_L_R_disjoint[OF hp' hp True4 True2] show ?thesis by simp
                   next
                     case False4: False
                     hence "cross_diag p' = 0" using False3 by linarith
+                    have hcd_p'_le2: "cross_diag p' \<le> 0" using \<open>cross_diag p' = 0\<close> by simp
                     \<comment> \<open>p right, p' on diagonal.\<close>
                     have "g p' = q2 (phi_L p')" using \<open>cross_diag p' = 0\<close> unfolding g_def by (by100 simp)
                     hence "q2 (phi_R p) = q2 (phi_L p')" using hgp hg_eq by simp
-                    moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
+                    moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp' hcd_p'_le2] .
                     ultimately have heq_RL: "phi_R p = phi_L p'" using hC8_at_p by (by100 blast)
                     \<comment> \<open>Expert audit 38: phi\\_L(p') on old edge 0, phi\\_R(p) not on old edge 0.\<close>
                     from hphi_L_diagonal_on_edge[OF hp' \<open>cross_diag p' = 0\<close>]
@@ -3500,6 +3743,7 @@ next
               next
                 case False2: False
                 hence hcd0: "cross_diag p = 0" using False by linarith
+                have hcd0_le: "cross_diag p \<le> 0" using hcd0 by simp
                 \<comment> \<open>p on diagonal. g(p) = q2(phi\\_L(p)).\<close>
                 have hgp: "g p = q2 (phi_L p)" using hcd0 unfolding g_def by (by100 simp)
                 show ?thesis
@@ -3512,14 +3756,14 @@ next
                      phi\\_R(p') is old interior. Old C8: boundary \\<inter> interior = \\<emptyset> in fibres.
                      So phi\\_L(p) \\<noteq> phi\\_R(p'). But q2(phi\\_L(p)) = q2(phi\\_R(p')).
                      From hC8\\_at phi\\_R(p'): phi\\_R(p') = phi\\_L(p). Contradicts disjointness.\<close>
-                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp'] .
+                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp' True3] .
                   moreover have hphi_R_int_p': "\<forall>i<?n. \<forall>t\<in>I_set.
                       phi_R p' \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
                     using hphi_R_int[OF hp' True3] .
                   \<comment> \<open>Expert audit 38: C8 at phi\\_R(p') + diagonal image on old edge \\<to> contradiction.\<close>
                   ultimately have hC8_at_Rp': "\<forall>q\<in>P2. q2 (phi_R p') = q2 q \<longrightarrow> phi_R p' = q"
                     using hC8_2[rule_format] hphi_R_int_p' by (by100 blast)
-                  have hphi_L_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp] .
+                  have hphi_L_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp hcd0_le] .
                   have heq_RL: "phi_R p' = phi_L p"
                   proof -
                     have "q2 (phi_R p') = q2 (phi_L p)" using \<open>q2 (phi_L p) = q2 (phi_R p')\<close> by simp
@@ -3542,8 +3786,8 @@ next
                   \<comment> \<open>Both on left or diagonal.\<close>
                   have "g p' = q2 (phi_L p')" using \<open>cross_diag p' \<le> 0\<close> unfolding g_def by (by100 simp)
                   hence hq_eq: "q2 (phi_L p) = q2 (phi_L p')" using hgp hg_eq by simp
-                  have hphi_L_p'_in: "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp'] .
-                  have hphi_L_p_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp] .
+                  have hphi_L_p'_in: "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp' \<open>cross_diag p' \<le> 0\<close>] .
+                  have hphi_L_p_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp hcd0_le] .
                   \<comment> \<open>Expert audit 38: split on p' strict left vs p' diagonal.\<close>
                   have "phi_L p = phi_L p'"
                   proof (cases "cross_diag p' < 0")
@@ -4112,10 +4356,10 @@ next
                 "fst (?w' ! i) = fst (?w ! i_old)"
                 "(snd (?w' ! i) = snd (?w ! i_old)) = (\<not> ri)"
                 "i_old = (if ri then ?k - i else Suc i)"
-                by (by100 blast)
-              \<comment> \<open>Derive range: ri \\<to> i \\<le> k-1, \\<not>ri \\<to> i \\<ge> k.\<close>
+                "if ri then i \<le> ?k - 1 else i \<ge> ?k"
+                by (by5000 blast)
               have hrange_i: "if ri then i \<le> ?k - 1 else i \<ge> ?k"
-                sorry \<comment> \<open>From dictionary construction (left case vs right case).\<close>
+                using hdict_i(7) .
               from hnonc_sigma_dict[OF hj' hj_not_c(1) hj_not_c(2) hs]
               obtain j_old rj where hdict_j:
                 "j_old < ?n"
@@ -4128,9 +4372,10 @@ next
                 "fst (?w' ! j) = fst (?w ! j_old)"
                 "(snd (?w' ! j) = snd (?w ! j_old)) = (\<not> rj)"
                 "j_old = (if rj then ?k - j else Suc j)"
-                by (by100 blast)
+                "if rj then j \<le> ?k - 1 else j \<ge> ?k"
+                by (by5000 blast)
               have hrange_j: "if rj then j \<le> ?k - 1 else j \<ge> ?k"
-                sorry \<comment> \<open>From dictionary construction.\<close>
+                using hdict_j(7) .
               \<comment> \<open>q2 equality on old edges.\<close>
               let ?ti = "if ri then 1 - t else t"
               let ?tj = "if rj then 1 - s else s"
