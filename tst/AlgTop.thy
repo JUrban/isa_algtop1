@@ -3401,8 +3401,81 @@ next
               (tp = 0 \<longrightarrow> (vx2 j - vx2 0)*(snd x - vy2 0) = (vy2 j - vy2 0)*(fst x - vx2 0)) \<and>
               (1 - s - tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 j + t'*vx2(Suc j),
                                                      (1-t')*vy2 j + t'*vy2(Suc j))))"
-            sorry \<comment> \<open>Sector + LEAST + Cramer. s=0 iff on fan ray j+1, tp=0 iff on ray j,
-               1-s-tp=0 iff on edge j (from F(x)=0 + convexity).\<close>
+          proof -
+            fix x assume hx: "x \<in> P2" and hcd: "cross_diag x \<le> 0"
+            \<comment> \<open>Sector existence (same as phi\\_L\\_in\\_P2, using haffine\\_nonneg + IVT).\<close>
+            have hcross1_ge_d: "(vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0) \<ge> 0"
+              sorry \<comment> \<open>Same as hcross1\\_ge in phi\\_L\\_in\\_P2 (haffine\\_nonneg at vertex 1).\<close>
+            have hcrossk_le_d: "(vx2 ?k - vx2 0)*(snd x - vy2 0) - (vy2 ?k - vy2 0)*(fst x - vx2 0) \<le> 0"
+              using hcd unfolding cross_diag_def by (by100 simp)
+            have hex_d: "\<exists>j. 1 \<le> j \<and> j < ?k \<and>
+              (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc j) - vy2 0)*(fst x - vx2 0) \<le> 0"
+              sorry \<comment> \<open>IVT from cross\\_1 \\<ge> 0, cross\\_k \\<le> 0 (same as in phi\\_L\\_in\\_P2).\<close>
+            then obtain jj where hjj: "1 \<le> jj" "jj < ?k"
+              "(vx2 jj - vx2 0)*(snd x - vy2 0) - (vy2 jj - vy2 0)*(fst x - vx2 0) \<ge> 0"
+              "(vx2(Suc jj) - vx2 0)*(snd x - vy2 0) - (vy2(Suc jj) - vy2 0)*(fst x - vx2 0) \<le> 0"
+              by (by100 blast)
+            \<comment> \<open>The LEAST sector has the same properties.\<close>
+            let ?PL = "\<lambda>j. 1 \<le> j \<and> j < ?k \<and>
+              (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc j) - vy2 0)*(fst x - vx2 0) \<le> 0"
+            from hex_d have "\<exists>j. ?PL j" by (by100 blast)
+            from LeastI_ex[OF this] have hPL: "?PL (LEAST j. ?PL j)" .
+            let ?j = "LEAST j. ?PL j"
+            have hj1: "1 \<le> ?j" and hjk: "?j < ?k"
+              and hcross_ge: "(vx2 ?j - vx2 0)*(snd x - vy2 0) - (vy2 ?j - vy2 0)*(fst x - vx2 0) \<ge> 0"
+              and hcross_le: "(vx2(Suc ?j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc ?j) - vy2 0)*(fst x - vx2 0) \<le> 0"
+              using hPL by (by100 blast)+
+            \<comment> \<open>Cramer coordinates.\<close>
+            have hk_lt_n: "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+            have hj_lt: "?j < ?n" using hjk hk_lt_n by (by100 linarith)
+            have hsj_lt: "Suc ?j < ?n" using hjk hk_lt_nm1 by (by100 linarith)
+            let ?det = "(vx2 ?j - vx2 0)*(vy2(Suc ?j) - vy2 0) - (vy2 ?j - vy2 0)*(vx2(Suc ?j) - vx2 0)"
+            have hdet_pos: "?det > 0"
+              using hfan_det_0[rule_format, OF hj_lt hsj_lt hj1 lessI] .
+            have hne: "?det \<noteq> 0" using hdet_pos by linarith
+            let ?s_num = "(vy2(Suc ?j) - vy2 0)*(fst x - vx2 0) - (vx2(Suc ?j) - vx2 0)*(snd x - vy2 0)"
+            let ?tp_num = "(vx2 ?j - vx2 0)*(snd x - vy2 0) - (vy2 ?j - vy2 0)*(fst x - vx2 0)"
+            let ?s = "?s_num / ?det" let ?tp = "?tp_num / ?det"
+            have hs_nn: "?s_num \<ge> 0" using hcross_le by linarith
+            have htp_nn: "?tp_num \<ge> 0" using hcross_ge by linarith
+            have hs_ge0: "?s \<ge> 0" using hs_nn hdet_pos divide_nonneg_nonneg by (by100 fastforce)
+            have htp_ge0: "?tp \<ge> 0" using htp_nn hdet_pos divide_nonneg_nonneg by (by100 fastforce)
+            \<comment> \<open>1-s-tp \\<ge> 0: from C11 affine argument (same as phi\\_L\\_in\\_P2).\<close>
+            have h1stp_ge0: "1 - ?s - ?tp \<ge> 0"
+              sorry \<comment> \<open>C11 affine argument (already proved in phi\\_L\\_in\\_P2, same technique).\<close>
+            \<comment> \<open>phi\\_L equality from definition.\<close>
+            have hphi_eq: "phi_L x = ((1-?s-?tp)*vx2 0 + ?s*vx2(?k+1-?j) + ?tp*vx2(?k-?j),
+                                       (1-?s-?tp)*vy2 0 + ?s*vy2(?k+1-?j) + ?tp*vy2(?k-?j))"
+              unfolding phi_L_def Let_def by (by100 simp)
+            \<comment> \<open>Cramer connections.\<close>
+            have hs0: "?s = 0 \<longrightarrow> (vx2(Suc ?j) - vx2 0)*(snd x - vy2 0) = (vy2(Suc ?j) - vy2 0)*(fst x - vx2 0)"
+            proof
+              assume "?s = 0" hence "?s_num = 0" using hne by (by100 simp)
+              thus "(vx2(Suc ?j) - vx2 0)*(snd x - vy2 0) = (vy2(Suc ?j) - vy2 0)*(fst x - vx2 0)"
+                by linarith
+            qed
+            have htp0: "?tp = 0 \<longrightarrow> (vx2 ?j - vx2 0)*(snd x - vy2 0) = (vy2 ?j - vy2 0)*(fst x - vx2 0)"
+            proof
+              assume "?tp = 0" hence "?tp_num = 0" using hne by (by100 simp)
+              thus "(vx2 ?j - vx2 0)*(snd x - vy2 0) = (vy2 ?j - vy2 0)*(fst x - vx2 0)"
+                by linarith
+            qed
+            have h1stp0: "1 - ?s - ?tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 ?j + t'*vx2(Suc ?j),
+                                                               (1-t')*vy2 ?j + t'*vy2(Suc ?j)))"
+              sorry \<comment> \<open>F(x)=0 + x \\<in> P2 + C11 \\<to> x on edge j (sum-of-nonpositives argument).\<close>
+            \<comment> \<open>Package as existential.\<close>
+            show "\<exists>j s tp. 1 \<le> j \<and> j < ?k \<and> s \<ge> 0 \<and> tp \<ge> 0 \<and> 1 - s - tp \<ge> 0 \<and>
+              phi_L x = ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
+                         (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j)) \<and>
+              (s = 0 \<longrightarrow> (vx2(Suc j) - vx2 0)*(snd x - vy2 0) = (vy2(Suc j) - vy2 0)*(fst x - vx2 0)) \<and>
+              (tp = 0 \<longrightarrow> (vx2 j - vx2 0)*(snd x - vy2 0) = (vy2 j - vy2 0)*(fst x - vx2 0)) \<and>
+              (1 - s - tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 j + t'*vx2(Suc j),
+                                                     (1-t')*vy2 j + t'*vy2(Suc j))))"
+              apply (rule exI[of _ ?j], rule exI[of _ ?s], rule exI[of _ ?tp])
+              using hj1 hjk hs_ge0 htp_ge0 h1stp_ge0 hphi_eq hs0 htp0 h1stp0 by (by5000 blast)
+          qed
           have hphi_L_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x < 0 \<Longrightarrow>
               (\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
                 x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))) \<Longrightarrow>
