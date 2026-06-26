@@ -5421,7 +5421,58 @@ next
           \<comment> \<open>SHARED HELPER: affine functions non-negative at all vertices are non-negative at all P2 points.\<close>
           have hphi_L_R_disjoint: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x < 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_L x \<noteq> phi_R y"
-            sorry \<comment> \<open>phi\\_L and phi\\_R images are in disjoint sub-polygon interiors.\<close>
+          proof
+            fix x y assume hx: "x \<in> P2" and hy: "y \<in> P2"
+              and hcdx: "cross_diag x < 0" and hcdy: "cross_diag y > 0"
+              and heq: "phi_L x = phi_R y"
+            \<comment> \<open>Step 1: get decompositions.\<close>
+            from hphi_L_decomp[OF hx less_imp_le[OF hcdx]]
+            obtain jL sL tpL where hjL: "1 \<le> jL" "jL < ?k"
+              and hsL: "sL \<ge> 0" and htpL: "tpL \<ge> 0" and h1stL: "1 - sL - tpL \<ge> 0"
+              and hphiL_dec: "phi_L x = ((1-sL-tpL)*vx2 0 + sL*vx2(?k+1-jL) + tpL*vx2(?k-jL),
+                                          (1-sL-tpL)*vy2 0 + sL*vy2(?k+1-jL) + tpL*vy2(?k-jL))"
+              by (by5000 blast)
+            \<comment> \<open>Step 2: cross\\_diag(phi\\_L(x)) \\<le> 0 via cross\\_product\\_affine\\_3.\<close>
+            have hcd_phiL: "cross_diag (phi_L x) \<le> 0"
+            proof -
+              have hfstL: "fst (phi_L x) = (1-sL-tpL)*vx2 0 + sL*vx2(?k+1-jL) + tpL*vx2(?k-jL)"
+                using hphiL_dec by (by100 simp)
+              have hsndL: "snd (phi_L x) = (1-sL-tpL)*vy2 0 + sL*vy2(?k+1-jL) + tpL*vy2(?k-jL)"
+                using hphiL_dec by (by100 simp)
+              have hsumL: "(1-sL-tpL) + sL + tpL = (1::real)" by linarith
+              \<comment> \<open>Apply cross\\_product\\_affine\\_3 to get the 3-term decomposition.\<close>
+              have hcd_lin:
+                "(vx2 ?k - vx2 0)*((1-sL-tpL)*vy2 0 + sL*vy2(?k+1-jL) + tpL*vy2(?k-jL) - vy2 0)
+               - (vy2 ?k - vy2 0)*((1-sL-tpL)*vx2 0 + sL*vx2(?k+1-jL) + tpL*vx2(?k-jL) - vx2 0)
+               = (1-sL-tpL)*((vx2 ?k - vx2 0)*(vy2 0 - vy2 0) - (vy2 ?k - vy2 0)*(vx2 0 - vx2 0))
+               + sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))
+               + tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"
+                by (rule cross_product_affine_3[OF hsumL])
+              \<comment> \<open>LHS = cross\\_diag(phi\\_L(x)). RHS has term0 = 0.\<close>
+              have hcd_eq: "cross_diag (phi_L x) =
+                sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))
+              + tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"
+                unfolding cross_diag_def using hcd_lin hfstL hsndL by (by100 simp)
+              \<comment> \<open>Each cross term \\<le> 0 (fan det antisymmetry).\<close>
+              have h_cdA: "(vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0) \<le> 0"
+                sorry \<comment> \<open>fan det antisymmetry for vertex A.\<close>
+              have h_cdB: "(vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0) \<le> 0"
+                sorry \<comment> \<open>fan det antisymmetry for vertex B.\<close>
+              show ?thesis using hcd_eq hsL htpL h_cdA h_cdB
+                mult_nonneg_nonneg[of sL "-((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))"]
+                mult_nonneg_nonneg[of tpL "-((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"]
+                by linarith
+            qed
+            \<comment> \<open>Step 3: cross\\_diag(phi\\_R(y)) \\<ge> 0 (symmetric).\<close>
+            have hcd_phiR: "cross_diag (phi_R y) \<ge> 0"
+              sorry \<comment> \<open>Symmetric using right-fan decomposition.\<close>
+            \<comment> \<open>Step 4: equality forces cross\\_diag = 0 on both.\<close>
+            have "cross_diag (phi_L x) = cross_diag (phi_R y)" using heq by (by100 simp)
+            hence hcd_zero: "cross_diag (phi_L x) = 0" using hcd_phiL hcd_phiR by linarith
+            \<comment> \<open>Step 5: cross\\_diag = 0 forces coefficients to 0, then x = v\\_0, contradiction.\<close>
+            show False
+              sorry \<comment> \<open>cd=0 \\<to> sL=tpL=0 \\<to> x=v\\_0 \\<to> cross\\_diag(x)=0 \\<to> \\<bot>.\<close>
+          qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
           proof -
