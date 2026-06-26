@@ -178,3 +178,8 @@ session AlgTop = AlgTopCached20 +
   options [quick_and_dirty, timeout = 600]
   theories
     AlgTop
+
+session AlgTopDownstream in ds = AlgTop +
+  options [quick_and_dirty, timeout = 600]
+  theories
+    AlgTop_downstream
