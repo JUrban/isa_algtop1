@@ -3390,6 +3390,15 @@ next
               thus ?thesis unfolding hC5_2 by (by5000 auto)
             qed
           qed
+          \<comment> \<open>SHARED: phi\\_L Cramer decomposition. For any x \\<in> P2 with cross\\_diag \\<le> 0,
+             phi\\_L(x) decomposes as (1-s-tp)*v\\_0 + s*v\\_{k+1-j} + tp*v\\_{k-j} with s,tp,1-s-tp \\<ge> 0.
+             Also: s=0 \\<longleftrightarrow> cross\\_{j+1}(x)=0, tp=0 \\<longleftrightarrow> cross\\_j(x)=0, 1-s-tp=0 \\<longleftrightarrow> F(x)=0.\<close>
+          have hphi_L_decomp: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x \<le> 0 \<Longrightarrow>
+              \<exists>j s tp. 1 \<le> j \<and> j < ?k \<and> s \<ge> 0 \<and> tp \<ge> 0 \<and> 1 - s - tp \<ge> 0 \<and>
+              phi_L x = ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
+                         (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j))"
+            sorry \<comment> \<open>Follows from sector existence + LEAST + Cramer + phi\\_L\\_def unfolding.
+               Already proved inside phi\\_L\\_in\\_P2 but scoped locally. Need to extract.\<close>
           have hphi_L_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x < 0 \<Longrightarrow>
               (\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
                 x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))) \<Longrightarrow>
@@ -3484,9 +3493,89 @@ next
               \<comment> \<open>At least 1 of {0, A, B} \\<notin> {i, Suc i mod n} (3 distinct vs 2 endpoints).
                  Its coefficient = 0. Trace back: either cross\\_diag = 0 (contradicts < 0)
                  or x is on a target edge (contradicts hint\\_x).\<close>
-              show False
-                sorry \<comment> \<open>Case analysis on which of {0, k+1-j, k-j} is not {i, Suc i mod n}:
-                   all cases give cross\\_diag = 0 or x on target edge. ~50 lines.\<close>
+              \<comment> \<open>Use phi\\_L decomposition: phi\\_L(x) = (1-s-tp)*v\\_0 + s*v\\_A + tp*v\\_B.\<close>
+              from hphi_L_decomp[OF hx less_imp_le[OF hcdx]]
+              obtain jj ss ttp where hjj1: "1 \<le> jj" and hjjk: "jj < ?k"
+                and hss: "ss \<ge> 0" and htp2: "ttp \<ge> 0" and h1st2: "1 - ss - ttp \<ge> 0"
+                and hphi_dec: "phi_L x = ((1-ss-ttp)*vx2 0 + ss*vx2(?k+1-jj) + ttp*vx2(?k-jj),
+                                           (1-ss-ttp)*vy2 0 + ss*vy2(?k+1-jj) + ttp*vy2(?k-jj))"
+                by (by5000 blast)
+              \<comment> \<open>Cross product linearity: expand hedge\\_cross using phi\\_L decomposition.\<close>
+              let ?c0 = "(vx2 0 - vx2 i)*(vy2(Suc i mod ?n) - vy2 i) - (vy2 0 - vy2 i)*(vx2(Suc i mod ?n) - vx2 i)"
+              let ?cA = "(vx2(?k+1-jj) - vx2 i)*(vy2(Suc i mod ?n) - vy2 i) - (vy2(?k+1-jj) - vy2 i)*(vx2(Suc i mod ?n) - vx2 i)"
+              let ?cB = "(vx2(?k-jj) - vx2 i)*(vy2(Suc i mod ?n) - vy2 i) - (vy2(?k-jj) - vy2 i)*(vx2(Suc i mod ?n) - vx2 i)"
+              have hlin: "(fst (phi_L x) - vx2 i) * (vy2(Suc i mod ?n) - vy2 i)
+                - (snd (phi_L x) - vy2 i) * (vx2(Suc i mod ?n) - vx2 i) = (1-ss-ttp)*?c0 + ss*?cA + ttp*?cB"
+              proof -
+                have hf: "fst (phi_L x) = (1-ss-ttp)*vx2 0 + ss*vx2(?k+1-jj) + ttp*vx2(?k-jj)"
+                  using hphi_dec by (by100 simp)
+                have hs: "snd (phi_L x) = (1-ss-ttp)*vy2 0 + ss*vy2(?k+1-jj) + ttp*vy2(?k-jj)"
+                  using hphi_dec by (by100 simp)
+                show ?thesis using hf hs by (by100 algebra)
+              qed
+              \<comment> \<open>From C11: ?c0, ?cA, ?cB \\<le> 0. Combined with hedge\\_cross = 0.\<close>
+              have hc0_le: "?c0 \<le> 0"
+              proof (cases "(0::nat) = i")
+                case True thus ?thesis by (by100 simp)
+              next
+                case hne0: False show ?thesis
+                proof (cases "(0::nat) = Suc i mod ?n")
+                  case True
+                  hence hvx0: "vx2(Suc i mod ?n) = vx2 0" and hvy0: "vy2(Suc i mod ?n) = vy2 0" by simp+
+                  show ?thesis by (simp only: hvx0 hvy0, by100 simp)
+                next
+                  case False
+                  have h0_lt2: "(0::nat) < ?n" using hn_ge3 by (by100 linarith)
+                  from hC11_2[rule_format, OF hi h0_lt2 hne0 False]
+                  show ?thesis by linarith
+                qed
+              qed
+              have hA_lt2: "?k + 1 - jj < ?n" using hjjk hk_lt_nm1 hjj1 by (by100 linarith)
+              have hcA_le: "?cA \<le> 0"
+              proof (cases "?k+1-jj = i")
+                case True thus ?thesis by (by100 simp)
+              next
+                case hneA: False show ?thesis
+                proof (cases "?k+1-jj = Suc i mod ?n")
+                  case True
+                  hence hvx: "vx2(Suc i mod ?n) = vx2(?k+1-jj)" and hvy: "vy2(Suc i mod ?n) = vy2(?k+1-jj)" by simp+
+                  show ?thesis by (simp only: hvx hvy, by100 simp)
+                next
+                  case False
+                  from hC11_2[rule_format, OF hi hA_lt2 hneA False]
+                  show ?thesis by linarith
+                qed
+              qed
+              have hB_lt2: "?k - jj < ?n" using hjjk hk_lt_nm1 by (by100 linarith)
+              have hcB_le: "?cB \<le> 0"
+              proof (cases "?k-jj = i")
+                case True thus ?thesis by (by100 simp)
+              next
+                case hneB: False show ?thesis
+                proof (cases "?k-jj = Suc i mod ?n")
+                  case True
+                  hence hvx: "vx2(Suc i mod ?n) = vx2(?k-jj)" and hvy: "vy2(Suc i mod ?n) = vy2(?k-jj)" by simp+
+                  show ?thesis by (simp only: hvx hvy, by100 simp)
+                next
+                  case False
+                  from hC11_2[rule_format, OF hi hB_lt2 hneB False]
+                  show ?thesis by linarith
+                qed
+              qed
+              \<comment> \<open>Sum of non-positive terms = 0 \\<to> each term = 0.\<close>
+              have hsum0: "(1-ss-ttp)*?c0 + ss*?cA + ttp*?cB = 0" using hedge_cross hlin by linarith
+              have hterm0_le: "(1-ss-ttp)*?c0 \<le> 0" using h1st2 hc0_le
+                mult_nonneg_nonneg[of "1-ss-ttp" "-?c0"] by linarith
+              have htermA_le: "ss*?cA \<le> 0" using hss hcA_le
+                mult_nonneg_nonneg[of ss "-?cA"] by linarith
+              have htermB_le: "ttp*?cB \<le> 0" using htp2 hcB_le
+                mult_nonneg_nonneg[of ttp "-?cB"] by linarith
+              have ht0: "(1-ss-ttp)*?c0 = 0" using hsum0 hterm0_le htermA_le htermB_le by linarith
+              have htA: "ss*?cA = 0" using hsum0 hterm0_le htermA_le htermB_le by linarith
+              have htB: "ttp*?cB = 0" using hsum0 hterm0_le htermA_le htermB_le by linarith
+              \<comment> \<open>At most 2 of {0, A, B} can be {i, Suc i}. So at least 1 has strict C11 < 0.
+                 For that vertex: coefficient = 0. Then trace back to contradiction.\<close>
+              show False sorry \<comment> \<open>From ht0/htA/htB: coefficient=0 case \\<to> cross\\_diag=0 or hint\\_x.\<close>
             qed
           qed
           have hphi_R_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow>
