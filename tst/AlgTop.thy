@@ -3396,9 +3396,13 @@ next
           have hphi_L_decomp: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x \<le> 0 \<Longrightarrow>
               \<exists>j s tp. 1 \<le> j \<and> j < ?k \<and> s \<ge> 0 \<and> tp \<ge> 0 \<and> 1 - s - tp \<ge> 0 \<and>
               phi_L x = ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
-                         (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j))"
-            sorry \<comment> \<open>Follows from sector existence + LEAST + Cramer + phi\\_L\\_def unfolding.
-               Already proved inside phi\\_L\\_in\\_P2 but scoped locally. Need to extract.\<close>
+                         (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j)) \<and>
+              (s = 0 \<longrightarrow> (vx2(Suc j) - vx2 0)*(snd x - vy2 0) = (vy2(Suc j) - vy2 0)*(fst x - vx2 0)) \<and>
+              (tp = 0 \<longrightarrow> (vx2 j - vx2 0)*(snd x - vy2 0) = (vy2 j - vy2 0)*(fst x - vx2 0)) \<and>
+              (1 - s - tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 j + t'*vx2(Suc j),
+                                                     (1-t')*vy2 j + t'*vy2(Suc j))))"
+            sorry \<comment> \<open>Sector + LEAST + Cramer. s=0 iff on fan ray j+1, tp=0 iff on ray j,
+               1-s-tp=0 iff on edge j (from F(x)=0 + convexity).\<close>
           have hphi_L_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x < 0 \<Longrightarrow>
               (\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
                 x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))) \<Longrightarrow>
@@ -3499,6 +3503,10 @@ next
                 and hss: "ss \<ge> 0" and htp2: "ttp \<ge> 0" and h1st2: "1 - ss - ttp \<ge> 0"
                 and hphi_dec: "phi_L x = ((1-ss-ttp)*vx2 0 + ss*vx2(?k+1-jj) + ttp*vx2(?k-jj),
                                            (1-ss-ttp)*vy2 0 + ss*vy2(?k+1-jj) + ttp*vy2(?k-jj))"
+                and hs0_imp: "ss = 0 \<longrightarrow> (vx2(Suc jj) - vx2 0)*(snd x - vy2 0) = (vy2(Suc jj) - vy2 0)*(fst x - vx2 0)"
+                and htp0_imp: "ttp = 0 \<longrightarrow> (vx2 jj - vx2 0)*(snd x - vy2 0) = (vy2 jj - vy2 0)*(fst x - vx2 0)"
+                and h1st0_imp: "1 - ss - ttp = 0 \<longrightarrow>
+                  (\<exists>t'\<in>I_set. x = ((1-t')*vx2 jj + t'*vx2(Suc jj), (1-t')*vy2 jj + t'*vy2(Suc jj)))"
                 by (by5000 blast)
               \<comment> \<open>Cross product linearity: expand hedge\\_cross using phi\\_L decomposition.\<close>
               let ?c0 = "(vx2 0 - vx2 i)*(vy2(Suc i mod ?n) - vy2 i) - (vy2 0 - vy2 i)*(vx2(Suc i mod ?n) - vx2 i)"
@@ -3575,7 +3583,75 @@ next
               have htB: "ttp*?cB = 0" using hsum0 hterm0_le htermA_le htermB_le by linarith
               \<comment> \<open>At most 2 of {0, A, B} can be {i, Suc i}. So at least 1 has strict C11 < 0.
                  For that vertex: coefficient = 0. Then trace back to contradiction.\<close>
-              show False sorry \<comment> \<open>From ht0/htA/htB: coefficient=0 case \\<to> cross\\_diag=0 or hint\\_x.\<close>
+              \<comment> \<open>At least one of {0, k+1-jj, k-jj} is NOT {i, Suc i mod n}.
+                 So at least one of ht0/htA/htB has coefficient = 0 with C11 < 0.\<close>
+              \<comment> \<open>Case analysis: which coefficient is forced to 0?\<close>
+              \<comment> \<open>Case 1: 0 is not an endpoint AND c0 < 0 \\<to> 1-ss-ttp = 0 \\<to> x on edge jj \\<to> \\<bot>.\<close>
+              \<comment> \<open>Case 2: A is not endpoint AND cA < 0 \\<to> ss = 0 \\<to> cross\\_{jj+1}(x) = 0.\<close>
+              \<comment> \<open>Case 3: B is not endpoint AND cB < 0 \\<to> ttp = 0 \\<to> cross\\_jj(x) = 0.\<close>
+              show False
+              proof -
+                \<comment> \<open>The three vertices {0, k+1-jj, k-jj} are distinct.\<close>
+                have hA_ne_0: "?k + 1 - jj \<noteq> (0::nat)" using hjjk hjj1 hk_ge2 by (by100 linarith)
+                have hB_ne_0: "?k - jj \<noteq> (0::nat)" using hjjk hjj1 by (by100 linarith)
+                have hA_ne_B: "?k + 1 - jj \<noteq> ?k - jj" using hjj1 hjjk by (by100 linarith)
+                \<comment> \<open>At most 2 of {0, A, B} can be {i, Suc i mod n}. Since |{0,A,B}|=3 > 2:\<close>
+                have "\<not> ((0::nat) = i \<or> 0 = Suc i mod ?n) \<or>
+                      \<not> (?k+1-jj = i \<or> ?k+1-jj = Suc i mod ?n) \<or>
+                      \<not> (?k-jj = i \<or> ?k-jj = Suc i mod ?n)"
+                proof (rule ccontr)
+                  assume "\<not> ?thesis"
+                  hence h0in: "(0::nat) = i \<or> 0 = Suc i mod ?n"
+                    and hAin: "?k+1-jj = i \<or> ?k+1-jj = Suc i mod ?n"
+                    and hBin: "?k-jj = i \<or> ?k-jj = Suc i mod ?n" by (by100 simp)+
+                  \<comment> \<open>{i, Suc i mod n} has at most 2 elements, but {0, A, B} has 3 distinct.\<close>
+                  from h0in hAin hBin hA_ne_0 hB_ne_0 hA_ne_B
+                  show False by (by100 auto)
+                qed
+                thus ?thesis
+                proof (elim disjE)
+                  assume h_case0: "\<not> ((0::nat) = i \<or> 0 = Suc i mod ?n)"
+                  hence "?c0 < 0"
+                  proof -
+                    have "0 \<noteq> i" "(0::nat) \<noteq> Suc i mod ?n" using h_case0 by (by100 simp)+
+                    have "(0::nat) < ?n" using hn_ge3 by (by100 linarith)
+                    from hC11_2[rule_format, OF hi \<open>0 < ?n\<close> \<open>0 \<noteq> i\<close> \<open>0 \<noteq> Suc i mod ?n\<close>]
+                    show ?thesis by linarith
+                  qed
+                  have "?c0 \<noteq> 0" using \<open>?c0 < 0\<close> by linarith
+                  have h1st_eq0: "1 - ss - ttp = 0"
+                    using ht0 \<open>?c0 \<noteq> 0\<close> by (simp only: mult_eq_0_iff, by100 simp)
+                  from mp[OF h1st0_imp h1st_eq0]
+                  obtain t' where ht': "t' \<in> I_set" and hxeq: "x = ((1-t')*vx2 jj + t'*vx2(Suc jj),
+                    (1-t')*vy2 jj + t'*vy2(Suc jj))" by (by100 blast)
+                  have "jj < ?n" using hjjk hk_lt_nm1 by (by100 linarith)
+                  hence "jj < length ?w'" using hlen_eq by (by100 simp)
+                  have "Suc jj < ?n" using hjjk hk_lt_nm1 by (by100 linarith)
+                  hence "Suc jj mod ?n = Suc jj" by (by100 simp)
+                  hence "Suc jj mod length ?w' = Suc jj" using hlen_eq by (by100 simp)
+                  from hint_x[rule_format, OF \<open>jj < length ?w'\<close> ht']
+                  have "x \<noteq> ((1-t')*vx2 jj + t'*vx2(Suc jj mod length ?w'),
+                             (1-t')*vy2 jj + t'*vy2(Suc jj mod length ?w'))" .
+                  with hxeq \<open>Suc jj mod length ?w' = Suc jj\<close> show False by (by100 simp)
+                next
+                  assume "\<not> (?k+1-jj = i \<or> ?k+1-jj = Suc i mod ?n)"
+                  hence "?cA < 0" sorry \<comment> \<open>C11 strict: same pattern as case 0.\<close>
+                  have "?cA \<noteq> 0" using \<open>?cA < 0\<close> by linarith
+                  have hss_eq0: "ss = 0" using htA \<open>?cA \<noteq> 0\<close>
+                    by (simp only: mult_eq_0_iff, by100 simp)
+                  \<comment> \<open>ss=0 \\<to> cross\\_{jj+1}(x)=0. Combined with cross\\_diag < 0 and sector bounds.\<close>
+                  from mp[OF hs0_imp hss_eq0]
+                  have hcross_sj: "(vx2(Suc jj) - vx2 0)*(snd x - vy2 0) = (vy2(Suc jj) - vy2 0)*(fst x - vx2 0)" .
+                  show False sorry \<comment> \<open>cross\\_{jj+1}(x)=0 + sector analysis \\<to> x is vertex \\<to> hint\\_x.\<close>
+                next
+                  assume "\<not> (?k-jj = i \<or> ?k-jj = Suc i mod ?n)"
+                  hence "?cB < 0" sorry \<comment> \<open>C11 strict.\<close>
+                  have "?cB \<noteq> 0" using \<open>?cB < 0\<close> by linarith
+                  have htp_eq0: "ttp = 0" using htB \<open>?cB \<noteq> 0\<close>
+                    by (simp only: mult_eq_0_iff, by100 simp)
+                  show False sorry \<comment> \<open>cross\\_jj(x)=0 + sector analysis \\<to> x is vertex \\<to> hint\\_x.\<close>
+                qed
+              qed
             qed
           qed
           have hphi_R_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow>
@@ -5094,6 +5170,7 @@ qed
 
 
 end
+
 
 
 
