@@ -3391,10 +3391,14 @@ next
             qed
           qed
           have hphi_L_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x < 0 \<Longrightarrow>
+              (\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
+                x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))) \<Longrightarrow>
               (\<forall>i<?n. \<forall>t\<in>I_set.
                 phi_L x \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))"
           proof (intro allI impI ballI)
             fix x assume hx: "x \<in> P2" and hcdx: "cross_diag x < 0"
+              and hint_x: "\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
+                x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))"
             fix i :: nat and t :: real assume hi: "i < ?n" and ht: "t \<in> I_set"
             \<comment> \<open>C11 argument: phi\\_L(x) is a convex combination of v\\_0, v\\_A, v\\_B
                with at least 2 coefficients > 0 (from cross\\_diag < 0).
@@ -3474,9 +3478,11 @@ next
             qed
           qed
           have hphi_R_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow>
+              (\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
+                x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))) \<Longrightarrow>
               (\<forall>i<?n. \<forall>t\<in>I_set.
                 phi_R x \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))"
-            sorry \<comment> \<open>phi\\_R on strict right-half interior maps to old interior (not on any old edge).\<close>
+            sorry \<comment> \<open>phi\\_R on strict right-half interior maps to old interior. Symmetric to phi\\_L\\_int.\<close>
           \<comment> \<open>DIAGONAL IMAGE LEMMA (expert audit 38, Step 1):
              For p on the virtual diagonal (cross\\_diag = 0), phi\\_L(p) lands on old edge 0.
              Proof: p = v\\_0 + t*(v\\_k - v\\_0). LEAST = k-1. Cramer: s=0, tp=t.
@@ -4161,7 +4167,7 @@ next
               have hgp: "g p = q2 (phi_L p)" using True unfolding g_def by (by100 simp)
               have hphi_int_p: "\<forall>i<?n. \<forall>t\<in>I_set.
                   phi_L p \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
-                using hphi_L_int[OF hp True] .
+                using hphi_L_int[OF hp True hint] .
               have hphi_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp less_imp_le[OF True]] .
               \<comment> \<open>Old C8 at phi\\_L(p): singleton fibre.\<close>
               have hC8_at_p: "\<forall>p'\<in>P2. q2 (phi_L p) = q2 p' \<longrightarrow> phi_L p = p'"
@@ -4215,7 +4221,7 @@ next
                 have hgp: "g p = q2 (phi_R p)" using True2 unfolding g_def by (by100 simp)
                 have hphi_int_p: "\<forall>i<?n. \<forall>t\<in>I_set.
                     phi_R p \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
-                  using hphi_R_int[OF hp True2] .
+                  using hphi_R_int[OF hp True2 hint] .
                 have hphi_in: "phi_R p \<in> P2" using hphi_R_in_P2[OF hp True2] .
                 have hC8_at_p: "\<forall>p'\<in>P2. q2 (phi_R p) = q2 p' \<longrightarrow> phi_R p = p'"
                   using hC8_2[rule_format, OF hphi_in] hphi_int_p by (by100 blast)
@@ -4257,7 +4263,7 @@ next
                         (fst p' \<noteq> vx2 ?k \<or> snd p' \<noteq> vy2 ?k) \<longrightarrow> t_d \<in> {0<..<(1::real)}"
                       by (by100 blast)
                     have "(0::nat) < ?n" using hn_ge3 by linarith
-                    from hphi_R_int[OF hp True2, rule_format, OF \<open>0 < ?n\<close> ht_d]
+                    from hphi_R_int[OF hp True2 hint, rule_format, OF \<open>0 < ?n\<close> ht_d]
                     have "phi_R p \<noteq> ((1-t_d)*vx2 0 + t_d*vx2(Suc 0 mod ?n),
                                       (1-t_d)*vy2 0 + t_d*vy2(Suc 0 mod ?n))" .
                     with heq_RL hphiL_edge show ?thesis by simp
@@ -4282,7 +4288,7 @@ next
                   moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp' True3] .
                   moreover have hphi_R_int_p': "\<forall>i<?n. \<forall>t\<in>I_set.
                       phi_R p' \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
-                    using hphi_R_int[OF hp' True3] .
+                    sorry \<comment> \<open>p' interior: needs separate target-interior arg for p' (not from hint).\<close>
                   \<comment> \<open>Expert audit 38: C8 at phi\\_R(p') + diagonal image on old edge \\<to> contradiction.\<close>
                   ultimately have hC8_at_Rp': "\<forall>q\<in>P2. q2 (phi_R p') = q2 q \<longrightarrow> phi_R p' = q"
                     using hC8_2[rule_format] hphi_R_int_p' by (by100 blast)
@@ -4318,7 +4324,7 @@ next
                     \<comment> \<open>p' strict left: phi\\_L(p') is old interior. Old C8 at phi\\_L(p') gives equality.\<close>
                     have "\<forall>i<?n. \<forall>t\<in>I_set.
                         phi_L p' \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
-                      using hphi_L_int[OF hp' True4] .
+                      sorry \<comment> \<open>p' interior: needs separate argument (hint is about p, not p').\<close>
                     hence "\<forall>q\<in>P2. q2 (phi_L p') = q2 q \<longrightarrow> phi_L p' = q"
                       using hC8_2[rule_format, OF hphi_L_p'_in] by (by100 blast)
                     from this[rule_format, OF hphi_L_p_in]
