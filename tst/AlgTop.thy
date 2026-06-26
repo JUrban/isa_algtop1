@@ -3405,13 +3405,78 @@ next
             fix x assume hx: "x \<in> P2" and hcd: "cross_diag x \<le> 0"
             \<comment> \<open>Sector existence (same as phi\\_L\\_in\\_P2, using haffine\\_nonneg + IVT).\<close>
             have hcross1_ge_d: "(vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0) \<ge> 0"
-              sorry \<comment> \<open>Same as hcross1\\_ge in phi\\_L\\_in\\_P2 (haffine\\_nonneg at vertex 1).\<close>
+            proof -
+              let ?Ad = "(vy2 1 - vy2 0)*vx2 0 - (vx2 1 - vx2 0)*vy2 0"
+              let ?Bd = "-(vy2 1 - vy2 0)" let ?Cd = "vx2 1 - vx2 0"
+              have hrew: "(vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0)
+                = ?Ad + ?Bd * fst x + ?Cd * snd x" by (by100 algebra)
+              have hval_d1: "\<And>l. ?Ad + ?Bd * vx2 l + ?Cd * vy2 l =
+                (vx2 1 - vx2 0)*(vy2 l - vy2 0) - (vy2 1 - vy2 0)*(vx2 l - vx2 0)"
+                by (by100 algebra)
+              have "\<forall>l<?n. ?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                show "?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
+                proof (cases "l = 0")
+                  case True thus ?thesis unfolding hval_d1 by (by100 simp)
+                next
+                  case hli: False show ?thesis
+                  proof (cases "l = 1")
+                    case True thus ?thesis unfolding hval_d1 by (by100 simp)
+                  next
+                    case False hence "1 < l" using hli by (by100 linarith)
+                    have "(1::nat) < ?n" using hn_ge3 by (by100 linarith)
+                    from hfan_det_0[rule_format, OF \<open>1 < ?n\<close> hl le_refl \<open>1 < l\<close>]
+                    show ?thesis unfolding hval_d1 by linarith
+                  qed
+                qed
+              qed
+              from haffine_nonneg[OF hx this] show ?thesis unfolding hrew .
+            qed
             have hcrossk_le_d: "(vx2 ?k - vx2 0)*(snd x - vy2 0) - (vy2 ?k - vy2 0)*(fst x - vx2 0) \<le> 0"
               using hcd unfolding cross_diag_def by (by100 simp)
             have hex_d: "\<exists>j. 1 \<le> j \<and> j < ?k \<and>
               (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0) \<ge> 0 \<and>
               (vx2(Suc j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc j) - vy2 0)*(fst x - vx2 0) \<le> 0"
-              sorry \<comment> \<open>IVT from cross\\_1 \\<ge> 0, cross\\_k \\<le> 0 (same as in phi\\_L\\_in\\_P2).\<close>
+            proof -
+              define f where "f j = (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0)" for j
+              have hf1: "f 1 \<ge> 0" using hcross1_ge_d unfolding f_def .
+              have hfk: "f ?k \<le> 0" using hcrossk_le_d unfolding f_def .
+              have h1ltk: "1 < ?k" using hk_ge2 by linarith
+              have "\<forall>m. 1 \<le> m \<longrightarrow> m < ?k \<longrightarrow> f m \<ge> 0 \<longrightarrow>
+                  (\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0)"
+              proof (intro allI impI)
+                fix m assume "1 \<le> m" and hmk: "m < ?k" and hfm: "f m \<ge> 0"
+                show "\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0"
+                  using hmk hfm
+                proof (induction "?k - m" arbitrary: m)
+                  case 0 thus ?case by linarith
+                next
+                  case (Suc d)
+                  show ?case
+                  proof (cases "f (Suc m) \<le> 0")
+                    case True show ?thesis
+                      apply (rule exI[of _ m]) using True Suc.prems by (by100 blast)
+                  next
+                    case False hence "f (Suc m) > 0" by linarith
+                    hence "f (Suc m) \<ge> 0" by linarith
+                    have "Suc m \<le> ?k" using Suc.prems Suc.hyps by linarith
+                    moreover have "Suc m \<noteq> ?k"
+                    proof assume "Suc m = ?k" hence "f (Suc m) \<le> 0" using hfk by (by100 simp)
+                      with \<open>f (Suc m) > 0\<close> show False by linarith qed
+                    ultimately have "Suc m < ?k" by linarith
+                    have "d = ?k - Suc m" using Suc.hyps by linarith
+                    from Suc.hyps(1)[OF this \<open>Suc m < ?k\<close> \<open>f (Suc m) \<ge> 0\<close>]
+                    obtain j where hj: "Suc m \<le> j" "j < ?k" "f j \<ge> 0" "f (Suc j) \<le> 0" by blast
+                    hence "m \<le> j" by linarith
+                    with hj show ?thesis by (by100 blast)
+                  qed
+                qed
+              qed
+              from this[rule_format, OF le_refl h1ltk hf1]
+              obtain j where "1 \<le> j" "j < ?k" "f j \<ge> 0" "f (Suc j) \<le> 0" by (by100 blast)
+              thus ?thesis unfolding f_def by (by100 blast)
+            qed
             then obtain jj where hjj: "1 \<le> jj" "jj < ?k"
               "(vx2 jj - vx2 0)*(snd x - vy2 0) - (vy2 jj - vy2 0)*(fst x - vx2 0) \<ge> 0"
               "(vx2(Suc jj) - vx2 0)*(snd x - vy2 0) - (vy2(Suc jj) - vy2 0)*(fst x - vx2 0) \<le> 0"
