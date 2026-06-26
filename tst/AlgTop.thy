@@ -3944,6 +3944,41 @@ next
               (1 - s - tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 j + t'*vx2(Suc j),
                                                      (1-t')*vy2 j + t'*vy2(Suc j))))"
             sorry \<comment> \<open>Sector + LEAST + Cramer for right fan. Symmetric to hphi\\_L\\_decomp.\<close>
+          \<comment> \<open>HELPER: k = Suc i mod n with k \\<ge> 2, k < n, i < n implies i = k - 1.
+             Because i = n-1 gives Suc i mod n = 0, contradicting k \\<ge> 2.\<close>
+          have hk_suc_mod: "\<And>ii. ii < ?n \<Longrightarrow> ?k = Suc ii mod ?n \<Longrightarrow> ii = ?k - 1"
+          proof -
+            fix ii assume hii: "ii < ?n" and hkeq: "?k = Suc ii mod ?n"
+            show "ii = ?k - 1"
+            proof (cases "ii < ?n - 1")
+              case True hence "Suc ii < ?n" by (by100 linarith)
+              hence "Suc ii mod ?n = Suc ii" by (by100 simp)
+              hence "?k = Suc ii" using hkeq by simp
+              thus ?thesis by (by100 linarith)
+            next
+              case False hence "ii = ?n - 1" using hii by (by100 linarith)
+              hence "Suc ii = ?n" using hn_ge3 by (by100 linarith)
+              hence "Suc ii mod ?n = 0" by (by100 simp)
+              hence "?k = 0" using hkeq by simp
+              with hk_ge2 show ?thesis by (by100 linarith)
+            qed
+          qed
+          \<comment> \<open>HELPER: Suc(Suc jj) mod n cannot equal values < k when jj \\<ge> k and k \\<ge> 2.\<close>
+          have hSSj_mod_ge: "\<And>jj. ?k \<le> jj \<Longrightarrow> jj < ?n - 1 \<Longrightarrow>
+              Suc(Suc jj) mod ?n \<ge> ?k + 2 \<or> Suc(Suc jj) mod ?n = 0"
+          proof -
+            fix jj :: nat assume hjj_k: "?k \<le> jj" and hjj_n: "jj < ?n - 1"
+            show "Suc(Suc jj) mod ?n \<ge> ?k + 2 \<or> Suc(Suc jj) mod ?n = 0"
+            proof (cases "Suc(Suc jj) < ?n")
+              case True hence "Suc(Suc jj) mod ?n = Suc(Suc jj)" by (by100 simp)
+              moreover have "Suc(Suc jj) \<ge> ?k + 2" using hjj_k by (by100 linarith)
+              ultimately show ?thesis by (by100 linarith)
+            next
+              case False hence "Suc(Suc jj) = ?n" using hjj_n by (by100 linarith)
+              hence "Suc(Suc jj) mod ?n = 0" by (by100 simp)
+              thus ?thesis by simp
+            qed
+          qed
           have hphi_R_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow>
               (\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
                 x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))) \<Longrightarrow>
@@ -4322,8 +4357,28 @@ next
                         case True
                         hence "Suc i < ?n" by (by100 linarith)
                         hence "Suc i mod ?n = Suc i" by (by100 simp)
-                        hence "?k = Suc i" using hK_ep by simp
-                        show False sorry \<comment> \<open>k=Suc i with jj\\<ge>k: needs geometric arg or index bound.\<close>
+                        hence hk_si: "?k = Suc i" using hK_ep by simp
+                        \<comment> \<open>SSj mod n must be \\<ge> k+2 or 0 (from hSSj\\_mod\\_ge). Neither = k-1 or k.\<close>
+                        from hSSj_mod_ge[OF hjjk hjjn]
+                        have "Suc(Suc jj) mod ?n \<ge> ?k + 2 \<or> Suc(Suc jj) mod ?n = 0" .
+                        have hSi_eq: "Suc i mod ?n = Suc i" using True by (by100 simp)
+                        have "Suc(Suc jj) mod ?n \<noteq> i \<and> Suc(Suc jj) mod ?n \<noteq> Suc i mod ?n"
+                        proof -
+                          from \<open>Suc(Suc jj) mod ?n \<ge> ?k + 2 \<or> Suc(Suc jj) mod ?n = 0\<close>
+                          show ?thesis
+                          proof
+                            assume "Suc(Suc jj) mod ?n \<ge> ?k + 2"
+                            thus ?thesis using hk_si hSi_eq by (by100 linarith)
+                          next
+                            assume "Suc(Suc jj) mod ?n = 0"
+                            thus ?thesis using hk_si hk_ge2 hSi_eq by (by100 linarith)
+                          qed
+                        qed
+                        hence "Suc(Suc jj) mod ?n \<noteq> i" "Suc(Suc jj) mod ?n \<noteq> Suc i mod ?n" by simp+
+                        from hC11_2[rule_format, OF hi hSSj_lt
+                          \<open>Suc(Suc jj) mod ?n \<noteq> i\<close> \<open>Suc(Suc jj) mod ?n \<noteq> Suc i mod ?n\<close>]
+                        have "?cSSj < 0" unfolding hval_gen by linarith
+                        with hcSSj_eq0 show False by linarith
                       next
                         case False hence "i = ?n - 1" using hi by (by100 linarith)
                         hence "Suc i = ?n" using hn_ge3 by (by100 linarith)
@@ -4480,7 +4535,27 @@ next
                          - middle: SSj is non-endpoint (h\\_caseSSj) \\<to> ttp=0
                          No wait, we're in the THIRD case branch (h\\_caseSSj), not the second.
                          Let me re-read the proof structure.\<close>
-                      show False sorry \<comment> \<open>This needs careful structural analysis.\<close>
+                      \<comment> \<open>k=i, cSj=0 \\<to> Suc jj is endpoint \\<to> Suc jj = Suc i mod n (since k=i taken by K).
+                         Then jj = i = k. htp0\\_imp gives cross\\_k(x)=0=cross\\_diag \\<to> \\<bot>.\<close>
+                      have "Suc jj = Suc i mod ?n"
+                        using hK_ne_Sj True hSj_ep2 by (by100 auto)
+                      hence "jj = i"
+                      proof (cases "i < ?n - 1")
+                        case True hence "Suc i mod ?n = Suc i" by (by100 simp)
+                        with \<open>Suc jj = Suc i mod ?n\<close> show "jj = i" by (by100 linarith)
+                      next
+                        case False hence "i = ?n - 1" using hi by (by100 linarith)
+                        hence "Suc i = ?n" using hn_ge3 by (by100 linarith)
+                        hence "Suc i mod ?n = 0" by (by100 simp)
+                        with \<open>Suc jj = Suc i mod ?n\<close> have "Suc jj = 0" by simp
+                        thus "jj = i" by (by100 linarith)
+                      qed
+                      hence "jj = ?k" using True by simp
+                      from mp[OF htp0_imp htp_eq0]
+                      have "(vx2 ?k - vx2 0)*(snd x - vy2 0) = (vy2 ?k - vy2 0)*(fst x - vx2 0)"
+                        using \<open>jj = ?k\<close> by (by100 simp)
+                      hence "cross_diag x = 0" unfolding cross_diag_def by (by100 simp)
+                      with hcdx show False by linarith
                     next
                       case False
                       hence "?k = Suc i mod ?n" using hK_ep2 by simp
@@ -4489,9 +4564,15 @@ next
                         case True
                         hence "Suc i < ?n" by (by100 linarith)
                         hence "Suc i mod ?n = Suc i" by (by100 simp)
-                        hence "?k = Suc i" using \<open>?k = Suc i mod ?n\<close> by simp
-                        \<comment> \<open>k = Suc i, cK=cSj=0, ttp=0, ss free. Need deeper analysis.\<close>
-                        show False sorry \<comment> \<open>k=Suc i: phi\\_R on edge i. Need geometric arg.\<close>
+                        hence hk_si: "?k = Suc i" using \<open>?k = Suc i mod ?n\<close> by simp
+                        \<comment> \<open>k=Suc i, so i=k-1. Suc jj is endpoint: Suc jj \\<in> {i, Suc i mod n} = {k-1, k}.
+                           Suc jj \\<noteq> k (from K\\_ne\\_Sj). So Suc jj = k-1, jj = k-2 < k \\<le> jj. \\<bot>.\<close>
+                        have "Suc jj \<in> {i, Suc i mod ?n}" using hSj_ep2 by (by100 blast)
+                        hence "Suc jj = i \<or> Suc jj = Suc i mod ?n" by (by100 blast)
+                        hence "Suc jj = i" using hK_ne_Sj hk_si True by (by100 auto)
+                        hence "jj = ?k - 2" using hk_si by (by100 linarith)
+                        hence "jj < ?k" using hk_ge2 by (by100 linarith)
+                        with hjjk show False by (by100 linarith)
                       next
                         case False hence "i = ?n - 1" using hi by (by100 linarith)
                         hence "Suc i = ?n" using hn_ge3 by (by100 linarith)
