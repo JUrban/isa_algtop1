@@ -3934,12 +3934,474 @@ next
               qed
             qed
           qed
+          \<comment> \<open>SHARED: phi\\_R Cramer decomposition. Symmetric to hphi\\_L\\_decomp for right fan.\<close>
+          have hphi_R_decomp: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow>
+              \<exists>j s tp. ?k \<le> j \<and> j < ?n - 1 \<and> s \<ge> 0 \<and> tp \<ge> 0 \<and> 1 - s - tp \<ge> 0 \<and>
+              phi_R x = ((1-s-tp)*vx2 ?k + s*vx2(Suc j) + tp*vx2(Suc(Suc j) mod ?n),
+                         (1-s-tp)*vy2 ?k + s*vy2(Suc j) + tp*vy2(Suc(Suc j) mod ?n)) \<and>
+              (s = 0 \<longrightarrow> (vx2(Suc j) - vx2 0)*(snd x - vy2 0) = (vy2(Suc j) - vy2 0)*(fst x - vx2 0)) \<and>
+              (tp = 0 \<longrightarrow> (vx2 j - vx2 0)*(snd x - vy2 0) = (vy2 j - vy2 0)*(fst x - vx2 0)) \<and>
+              (1 - s - tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 j + t'*vx2(Suc j),
+                                                     (1-t')*vy2 j + t'*vy2(Suc j))))"
+            sorry \<comment> \<open>Sector + LEAST + Cramer for right fan. Symmetric to hphi\\_L\\_decomp.\<close>
           have hphi_R_int: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow>
               (\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
                 x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))) \<Longrightarrow>
               (\<forall>i<?n. \<forall>t\<in>I_set.
                 phi_R x \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n)))"
-            sorry \<comment> \<open>phi\\_R on strict right-half interior maps to old interior. Symmetric to phi\\_L\\_int.\<close>
+          proof (intro allI impI ballI)
+            fix x assume hx: "x \<in> P2" and hcdx: "cross_diag x > 0"
+              and hint_x: "\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
+                x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))"
+            fix i :: nat and t :: real assume hi: "i < ?n" and ht: "t \<in> I_set"
+            show "phi_R x \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
+            proof
+              assume heq: "phi_R x = ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
+              \<comment> \<open>Same structure as phi\\_L\\_int but with right-fan decomposition.\<close>
+              have hfst: "fst (phi_R x) = (1-t)*vx2 i + t*vx2(Suc i mod ?n)" using heq by (by100 simp)
+              have hsnd: "snd (phi_R x) = (1-t)*vy2 i + t*vy2(Suc i mod ?n)" using heq by (by100 simp)
+              have hedge_cross: "(fst (phi_R x) - vx2 i) * (vy2(Suc i mod ?n) - vy2 i)
+                - (snd (phi_R x) - vy2 i) * (vx2(Suc i mod ?n) - vx2 i) = 0"
+                using hfst hsnd by (by100 algebra)
+              have hphi_in: "phi_R x \<in> P2" using hphi_R_in_P2[OF hx hcdx] .
+              \<comment> \<open>C11: negated cross product \\<ge> 0 at all vertices.\<close>
+              let ?Ai = "vx2 i * vy2(Suc i mod ?n) - vy2 i * vx2(Suc i mod ?n)"
+              let ?Bi = "vy2 i - vy2(Suc i mod ?n)" let ?Ci = "vx2(Suc i mod ?n) - vx2 i"
+              have hF_form: "\<And>px py :: real. -(px - vx2 i) * (vy2(Suc i mod ?n) - vy2 i)
+                + (py - vy2 i) * (vx2(Suc i mod ?n) - vx2 i) = ?Ai + ?Bi * px + ?Ci * py"
+                by (by100 algebra)
+              have "\<forall>l<?n. ?Ai + ?Bi * vx2 l + ?Ci * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                show "?Ai + ?Bi * vx2 l + ?Ci * vy2 l \<ge> 0"
+                proof (cases "l = i")
+                  case hli: True
+                  have "?Ai + ?Bi * vx2 l + ?Ci * vy2 l =
+                    -((vx2 l - vx2 i) * (vy2(Suc i mod ?n) - vy2 i) - (vy2 l - vy2 i) * (vx2(Suc i mod ?n) - vx2 i))"
+                    by (by100 algebra)
+                  thus ?thesis unfolding hli by (by100 simp)
+                next
+                  case False show ?thesis
+                  proof (cases "l = Suc i mod ?n")
+                    case hlsi: True
+                    have "?Ai + ?Bi * vx2 l + ?Ci * vy2 l =
+                      -((vx2 l - vx2 i) * (vy2(Suc i mod ?n) - vy2 i) - (vy2 l - vy2 i) * (vx2(Suc i mod ?n) - vx2 i))"
+                      by (by100 algebra)
+                    thus ?thesis unfolding hlsi by (by100 simp)
+                  next
+                    case False2: False
+                    have hval_R: "?Ai + ?Bi * vx2 l + ?Ci * vy2 l =
+                      -((vx2 l - vx2 i) * (vy2(Suc i mod ?n) - vy2 i) - (vy2 l - vy2 i) * (vx2(Suc i mod ?n) - vx2 i))"
+                      by (by100 algebra)
+                    from hC11_2[rule_format, OF hi hl False False2]
+                    show ?thesis unfolding hval_R by linarith
+                  qed
+                qed
+              qed
+              from haffine_nonneg[OF hphi_in this]
+              have "?Ai + ?Bi * fst (phi_R x) + ?Ci * snd (phi_R x) \<ge> 0" .
+              hence hedge_le: "(fst (phi_R x) - vx2 i) * (vy2(Suc i mod ?n) - vy2 i)
+                - (snd (phi_R x) - vy2 i) * (vx2(Suc i mod ?n) - vx2 i) \<le> 0"
+                using hF_form[of "fst (phi_R x)" "snd (phi_R x)"] by linarith
+              \<comment> \<open>Get phi\\_R decomposition.\<close>
+              from hphi_R_decomp[OF hx hcdx]
+              obtain jj ss ttp where hjjk: "?k \<le> jj" and hjjn: "jj < ?n - 1"
+                and hss: "ss \<ge> 0" and htp2: "ttp \<ge> 0" and h1st2: "1 - ss - ttp \<ge> 0"
+                and hphi_dec: "phi_R x = ((1-ss-ttp)*vx2 ?k + ss*vx2(Suc jj) + ttp*vx2(Suc(Suc jj) mod ?n),
+                                           (1-ss-ttp)*vy2 ?k + ss*vy2(Suc jj) + ttp*vy2(Suc(Suc jj) mod ?n))"
+                and hs0_imp: "ss = 0 \<longrightarrow> (vx2(Suc jj) - vx2 0)*(snd x - vy2 0) = (vy2(Suc jj) - vy2 0)*(fst x - vx2 0)"
+                and htp0_imp: "ttp = 0 \<longrightarrow> (vx2 jj - vx2 0)*(snd x - vy2 0) = (vy2 jj - vy2 0)*(fst x - vx2 0)"
+                and h1st0_imp: "1 - ss - ttp = 0 \<longrightarrow>
+                  (\<exists>t'\<in>I_set. x = ((1-t')*vx2 jj + t'*vx2(Suc jj), (1-t')*vy2 jj + t'*vy2(Suc jj)))"
+                by (by5000 blast)
+              \<comment> \<open>Cross product linearity.\<close>
+              let ?cK = "(vx2 ?k - vx2 i)*(vy2(Suc i mod ?n) - vy2 i) - (vy2 ?k - vy2 i)*(vx2(Suc i mod ?n) - vx2 i)"
+              let ?cSj = "(vx2(Suc jj) - vx2 i)*(vy2(Suc i mod ?n) - vy2 i) - (vy2(Suc jj) - vy2 i)*(vx2(Suc i mod ?n) - vx2 i)"
+              let ?cSSj = "(vx2(Suc(Suc jj) mod ?n) - vx2 i)*(vy2(Suc i mod ?n) - vy2 i) - (vy2(Suc(Suc jj) mod ?n) - vy2 i)*(vx2(Suc i mod ?n) - vx2 i)"
+              have hlin: "(fst (phi_R x) - vx2 i) * (vy2(Suc i mod ?n) - vy2 i)
+                - (snd (phi_R x) - vy2 i) * (vx2(Suc i mod ?n) - vx2 i) = (1-ss-ttp)*?cK + ss*?cSj + ttp*?cSSj"
+              proof -
+                have hf: "fst (phi_R x) = (1-ss-ttp)*vx2 ?k + ss*vx2(Suc jj) + ttp*vx2(Suc(Suc jj) mod ?n)"
+                  using hphi_dec by (by100 simp)
+                have hs: "snd (phi_R x) = (1-ss-ttp)*vy2 ?k + ss*vy2(Suc jj) + ttp*vy2(Suc(Suc jj) mod ?n)"
+                  using hphi_dec by (by100 simp)
+                show ?thesis using hf hs by (by100 algebra)
+              qed
+              \<comment> \<open>C11 \\<le> 0 for each vertex.\<close>
+              have hk_lt: "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+              have hcK_le: "?cK \<le> 0"
+              proof (cases "(0::nat) + ?k = i")
+                case True thus ?thesis by (by100 simp)
+              next
+                case hne: False show ?thesis
+                proof (cases "?k = Suc i mod ?n")
+                  case True
+                  hence hvx: "vx2(Suc i mod ?n) = vx2 ?k" and hvy: "vy2(Suc i mod ?n) = vy2 ?k" by simp+
+                  show ?thesis by (simp only: hvx hvy, by100 simp)
+                next
+                  case False
+                  from hC11_2[rule_format, OF hi hk_lt hne False]
+                  show ?thesis by linarith
+                qed
+              qed
+              have hSj_lt: "Suc jj < ?n" using hjjn by (by100 linarith)
+              have hcSj_le: "?cSj \<le> 0"
+              proof (cases "Suc jj = i")
+                case True thus ?thesis by (by100 simp)
+              next
+                case hne: False show ?thesis
+                proof (cases "Suc jj = Suc i mod ?n")
+                  case True
+                  hence hvx: "vx2(Suc i mod ?n) = vx2(Suc jj)" and hvy: "vy2(Suc i mod ?n) = vy2(Suc jj)" by simp+
+                  show ?thesis by (simp only: hvx hvy, by100 simp)
+                next
+                  case False
+                  from hC11_2[rule_format, OF hi hSj_lt hne False]
+                  show ?thesis by linarith
+                qed
+              qed
+              have hSSj_lt: "Suc(Suc jj) mod ?n < ?n" by (by100 simp)
+              have hcSSj_le: "?cSSj \<le> 0"
+              proof (cases "Suc(Suc jj) mod ?n = i")
+                case True thus ?thesis by (by100 simp)
+              next
+                case hne: False show ?thesis
+                proof (cases "Suc(Suc jj) mod ?n = Suc i mod ?n")
+                  case True
+                  hence hvx: "vx2(Suc i mod ?n) = vx2(Suc(Suc jj) mod ?n)"
+                    and hvy: "vy2(Suc i mod ?n) = vy2(Suc(Suc jj) mod ?n)" by simp+
+                  show ?thesis by (simp only: hvx hvy, by100 simp)
+                next
+                  case False
+                  from hC11_2[rule_format, OF hi hSSj_lt hne False]
+                  show ?thesis by linarith
+                qed
+              qed
+              \<comment> \<open>Sum of non-positive terms = 0 \\<to> each term = 0.\<close>
+              have hsum0: "(1-ss-ttp)*?cK + ss*?cSj + ttp*?cSSj = 0" using hedge_cross hlin by linarith
+              have hterm0_le: "(1-ss-ttp)*?cK \<le> 0" using h1st2 hcK_le
+                mult_nonneg_nonneg[of "1-ss-ttp" "-?cK"] by linarith
+              have htermSj_le: "ss*?cSj \<le> 0" using hss hcSj_le
+                mult_nonneg_nonneg[of ss "-?cSj"] by linarith
+              have htermSSj_le: "ttp*?cSSj \<le> 0" using htp2 hcSSj_le
+                mult_nonneg_nonneg[of ttp "-?cSSj"] by linarith
+              have htK: "(1-ss-ttp)*?cK = 0" using hsum0 hterm0_le htermSj_le htermSSj_le by linarith
+              have htSj: "ss*?cSj = 0" using hsum0 hterm0_le htermSj_le htermSSj_le by linarith
+              have htSSj: "ttp*?cSSj = 0" using hsum0 hterm0_le htermSj_le htermSSj_le by linarith
+              \<comment> \<open>Pigeonhole + case analysis. Same structure as phi\\_L\\_int.\<close>
+              \<comment> \<open>Three output vertices: k, Suc jj, Suc(Suc jj) mod n — distinct.\<close>
+              have hK_ne_Sj: "?k \<noteq> Suc jj" using hjjk by (by100 linarith)
+              have hK_ne_SSj: "?k \<noteq> Suc(Suc jj) mod ?n"
+              proof (cases "Suc(Suc jj) < ?n")
+                case True hence "Suc(Suc jj) mod ?n = Suc(Suc jj)" by (by100 simp)
+                thus ?thesis using hjjk by (by100 linarith)
+              next
+                case False hence "Suc(Suc jj) = ?n" using hjjn by (by100 linarith)
+                hence "Suc(Suc jj) mod ?n = 0" by (by100 simp)
+                thus ?thesis using hk_ge2 by (by100 linarith)
+              qed
+              have hSj_ne_SSj: "Suc jj \<noteq> Suc(Suc jj) mod ?n"
+              proof (cases "Suc(Suc jj) < ?n")
+                case True hence "Suc(Suc jj) mod ?n = Suc(Suc jj)" by (by100 simp)
+                thus ?thesis by (by100 linarith)
+              next
+                case False hence "Suc(Suc jj) = ?n" using hjjn by (by100 linarith)
+                hence "Suc(Suc jj) mod ?n = 0" by (by100 simp)
+                thus ?thesis using hjjk hk_ge2 by (by100 linarith)
+              qed
+              \<comment> \<open>3 distinct vertices vs 2 edge endpoints \\<to> at least 1 non-endpoint.\<close>
+              have "\<not> (?k = i \<or> ?k = Suc i mod ?n) \<or>
+                    \<not> (Suc jj = i \<or> Suc jj = Suc i mod ?n) \<or>
+                    \<not> (Suc(Suc jj) mod ?n = i \<or> Suc(Suc jj) mod ?n = Suc i mod ?n)"
+              proof (rule ccontr)
+                assume "\<not> ?thesis"
+                hence hKin: "?k = i \<or> ?k = Suc i mod ?n"
+                  and hSjin: "Suc jj = i \<or> Suc jj = Suc i mod ?n"
+                  and hSSjin: "Suc(Suc jj) mod ?n = i \<or> Suc(Suc jj) mod ?n = Suc i mod ?n" by (by100 simp)+
+                from hKin hSjin hSSjin hK_ne_Sj hK_ne_SSj hSj_ne_SSj
+                show False by (by100 auto)
+              qed
+              thus False
+              proof (elim disjE)
+                assume "\<not> (?k = i \<or> ?k = Suc i mod ?n)"
+                hence "?cK < 0"
+                proof -
+                  have "?k \<noteq> i" "?k \<noteq> Suc i mod ?n" using \<open>\<not> (?k = i \<or> ?k = Suc i mod ?n)\<close> by (by100 simp)+
+                  from hC11_2[rule_format, OF hi hk_lt \<open>?k \<noteq> i\<close> \<open>?k \<noteq> Suc i mod ?n\<close>]
+                  show ?thesis by linarith
+                qed
+                have "?cK \<noteq> 0" using \<open>?cK < 0\<close> by linarith
+                have h1st_eq0: "1 - ss - ttp = 0" using htK \<open>?cK \<noteq> 0\<close>
+                  by (simp only: mult_eq_0_iff, by100 simp)
+                from mp[OF h1st0_imp h1st_eq0]
+                obtain t' where ht': "t' \<in> I_set" and hxeq: "x = ((1-t')*vx2 jj + t'*vx2(Suc jj),
+                  (1-t')*vy2 jj + t'*vy2(Suc jj))" by (by100 blast)
+                have "jj < ?n" using hjjn by (by100 linarith)
+                hence "jj < length ?w'" using hlen_eq by (by100 simp)
+                have "Suc jj < ?n" using hjjn by (by100 linarith)
+                hence "Suc jj mod ?n = Suc jj" by (by100 simp)
+                hence "Suc jj mod length ?w' = Suc jj" using hlen_eq by (by100 simp)
+                from hint_x[rule_format, OF \<open>jj < length ?w'\<close> ht']
+                show False using hxeq \<open>Suc jj mod length ?w' = Suc jj\<close> by (by100 simp)
+              next
+                assume h_caseSj: "\<not> (Suc jj = i \<or> Suc jj = Suc i mod ?n)"
+                hence "?cSj < 0"
+                proof -
+                  have "Suc jj \<noteq> i" "Suc jj \<noteq> Suc i mod ?n" using h_caseSj by (by100 simp)+
+                  from hC11_2[rule_format, OF hi hSj_lt \<open>Suc jj \<noteq> i\<close> \<open>Suc jj \<noteq> Suc i mod ?n\<close>]
+                  show ?thesis by linarith
+                qed
+                have "?cSj \<noteq> 0" using \<open>?cSj < 0\<close> by linarith
+                have hss_eq0: "ss = 0" using htSj \<open>?cSj \<noteq> 0\<close>
+                  by (simp only: mult_eq_0_iff, by100 simp)
+                \<comment> \<open>ss=0. Sub-cases on cK and cSSj.\<close>
+                show False
+                proof (cases "?cK = 0")
+                  case hcK_z: False
+                  have "1 - ss - ttp = 0" using htK hcK_z by (simp only: mult_eq_0_iff, by100 simp)
+                  from mp[OF h1st0_imp this]
+                  obtain t' where ht': "t' \<in> I_set" and hxeq: "x = ((1-t')*vx2 jj + t'*vx2(Suc jj),
+                    (1-t')*vy2 jj + t'*vy2(Suc jj))" by (by100 blast)
+                  have "jj < ?n" using hjjn by (by100 linarith)
+                  hence "jj < length ?w'" using hlen_eq by (by100 simp)
+                  have "Suc jj < ?n" using hjjn by (by100 linarith)
+                  hence "Suc jj mod length ?w' = Suc jj" using hlen_eq by (by100 simp)
+                  from hint_x[rule_format, OF \<open>jj < length ?w'\<close> ht']
+                  show False using hxeq \<open>Suc jj mod length ?w' = Suc jj\<close> by (by100 simp)
+                next
+                  case hcK_eq0: True
+                  show False
+                  proof (cases "?cSSj = 0")
+                    case hcSSj_z: False
+                    have "ttp = 0" using htSSj hcSSj_z by (simp only: mult_eq_0_iff, by100 simp)
+                    \<comment> \<open>ss=ttp=0 \\<to> fan det uniqueness \\<to> x=v\\_0 \\<to> cross\\_diag=0 \\<to> \\<bot>.
+                       Wait: for RIGHT fan, the fan is still from v\\_0. So same argument.\<close>
+                    from mp[OF hs0_imp hss_eq0]
+                    have hcr1: "(vx2(Suc jj) - vx2 0)*(snd x - vy2 0) = (vy2(Suc jj) - vy2 0)*(fst x - vx2 0)" .
+                    from mp[OF htp0_imp \<open>ttp = 0\<close>]
+                    have hcr2: "(vx2 jj - vx2 0)*(snd x - vy2 0) = (vy2 jj - vy2 0)*(fst x - vx2 0)" .
+                    have hj_lt: "jj < ?n" using hjjn by (by100 linarith)
+                    have hsj_lt: "Suc jj < ?n" using hjjn by (by100 linarith)
+                    have hjj1: "1 \<le> jj" using hjjk hk_ge2 by (by100 linarith)
+                    have hfdet: "(vx2 jj - vx2 0)*(vy2(Suc jj) - vy2 0) - (vy2 jj - vy2 0)*(vx2(Suc jj) - vx2 0) > 0"
+                      using hfan_det_0[rule_format, OF hj_lt hsj_lt hjj1 lessI] .
+                    have "fst x = vx2 0 \<and> snd x = vy2 0"
+                    proof -
+                      let ?dx = "fst x - vx2 0" let ?dy = "snd x - vy2 0"
+                      from hcr1 have h1_R: "(vx2(Suc jj) - vx2 0)*?dy = (vy2(Suc jj) - vy2 0)*?dx" by (by100 simp)
+                      from hcr2 have h2_R: "(vx2 jj - vx2 0)*?dy = (vy2 jj - vy2 0)*?dx" by (by100 simp)
+                      have "?dx * ((vx2 jj - vx2 0)*(vy2(Suc jj) - vy2 0) - (vy2 jj - vy2 0)*(vx2(Suc jj) - vx2 0)) = 0"
+                        using h1_R h2_R by (by100 algebra)
+                      hence "?dx = 0" using hfdet by (simp only: mult_eq_0_iff, by100 simp)
+                      have "(vx2 jj - vx2 0)*?dy = 0"
+                        using \<open>(vx2 jj - vx2 0)*?dy = (vy2 jj - vy2 0)*?dx\<close> \<open>?dx = 0\<close> by (by100 simp)
+                      hence "?dy = 0"
+                      proof (cases "vx2 jj = vx2 0")
+                        case False hence "vx2 jj - vx2 0 \<noteq> 0" by linarith
+                        with \<open>(vx2 jj - vx2 0)*?dy = 0\<close> show ?thesis
+                          by (simp only: mult_eq_0_iff, by100 simp)
+                      next
+                        case True
+                        have "(vx2(Suc jj) - vx2 0)*?dy = 0"
+                          using \<open>(vx2(Suc jj) - vx2 0)*?dy = (vy2(Suc jj) - vy2 0)*?dx\<close> \<open>?dx = 0\<close>
+                          by (by100 simp)
+                        moreover have "vx2(Suc jj) - vx2 0 \<noteq> 0"
+                        proof
+                          assume "vx2(Suc jj) - vx2 0 = 0"
+                          with True have "(vx2 jj - vx2 0)*(vy2(Suc jj) - vy2 0) - (vy2 jj - vy2 0)*(vx2(Suc jj) - vx2 0) = 0"
+                            by (by100 simp)
+                          with hfdet show False by linarith
+                        qed
+                        ultimately show "?dy = 0" by (simp only: mult_eq_0_iff, by100 simp)
+                      qed
+                      from \<open>?dx = 0\<close> \<open>?dy = 0\<close> show ?thesis by (by100 simp)
+                    qed
+                    hence hfst0: "fst x = vx2 0" and hsnd0: "snd x = vy2 0" by (by100 simp)+
+                    have "cross_diag x = (vx2 ?k - vx2 0) * (snd x - vy2 0)
+                      - (vy2 ?k - vy2 0) * (fst x - vx2 0)" unfolding cross_diag_def by (by100 simp)
+                    hence "cross_diag x = 0" using hfst0 hsnd0 by (by100 simp)
+                    with hcdx show False by linarith
+                  next
+                    case hcSSj_eq0: True
+                    \<comment> \<open>cK=0 and cSSj=0. Both v\\_k and v\\_{Suc(Suc jj) mod n} are edge endpoints.
+                       Same pigeonhole: {k, Suc(Suc jj) mod n} = {i, Suc i mod n}.\<close>
+                    show False
+                    proof (cases "?k = i")
+                      case True
+                      \<comment> \<open>k = i. Then Suc(Suc jj) mod n = Suc i mod n = Suc k mod n = k+1 (since k < n-1).\<close>
+                      have "Suc ?k < ?n" using hk_lt_nm1 by (by100 linarith)
+                      hence hSk_mod: "Suc ?k mod ?n = Suc ?k" by (by100 simp)
+                      \<comment> \<open>cSSj=0 \\<to> SSj = i or SSj = Suc i. i = k \\<to> SSj = k or SSj = k+1.\<close>
+                      have hSSj_ep: "Suc(Suc jj) mod ?n = ?k \<or> Suc(Suc jj) mod ?n = Suc ?k"
+                      proof (rule ccontr)
+                        assume "\<not> ?thesis"
+                        hence "Suc(Suc jj) mod ?n \<noteq> ?k" "Suc(Suc jj) mod ?n \<noteq> Suc ?k" by (by100 simp)+
+                        hence "Suc(Suc jj) mod ?n \<noteq> i" "Suc(Suc jj) mod ?n \<noteq> Suc i mod ?n"
+                          using True hSk_mod by simp+
+                        from hC11_2[rule_format, OF hi hSSj_lt
+                          \<open>Suc(Suc jj) mod ?n \<noteq> i\<close> \<open>Suc(Suc jj) mod ?n \<noteq> Suc i mod ?n\<close>]
+                        show False using hcSSj_eq0 by linarith
+                      qed
+                      \<comment> \<open>SSj = k: but SSj \\<noteq> k (from hK\\_ne\\_SSj). So SSj = k+1.\<close>
+                      hence "Suc(Suc jj) mod ?n = Suc ?k" using hK_ne_SSj by (by100 auto)
+                      \<comment> \<open>Suc(Suc jj) mod n = k+1. Since jj \\<ge> k: Suc(Suc jj) \\<ge> k+2.
+                         If Suc(Suc jj) < n: SSj mod n = Suc(Suc jj) = k+1 \\<to> jj = k-1. But jj \\<ge> k. \\<bot>.
+                         If Suc(Suc jj) = n: SSj mod n = 0 = k+1 \\<to> k+1 = 0. But k \\<ge> 2. \\<bot>.
+                         If Suc(Suc jj) > n: impossible (jj < n-1 \\<to> Suc(Suc jj) \\<le> n).\<close>
+                      have "Suc(Suc jj) \<le> ?n" using hjjn by (by100 linarith)
+                      show False
+                      proof (cases "Suc(Suc jj) < ?n")
+                        case True
+                        hence "Suc(Suc jj) mod ?n = Suc(Suc jj)" by (by100 simp)
+                        hence "Suc(Suc jj) = Suc ?k" using \<open>Suc(Suc jj) mod ?n = Suc ?k\<close> by simp
+                        hence "jj = ?k - 1" by (by100 linarith)
+                        with hjjk show False by (by100 linarith)
+                      next
+                        case False
+                        hence "Suc(Suc jj) = ?n" using \<open>Suc(Suc jj) \<le> ?n\<close> by (by100 linarith)
+                        hence "Suc(Suc jj) mod ?n = 0" by (by100 simp)
+                        hence "0 = Suc ?k" using \<open>Suc(Suc jj) mod ?n = Suc ?k\<close> by simp
+                        with hk_ge2 show False by (by100 linarith)
+                      qed
+                    next
+                      case False
+                      \<comment> \<open>k \\<noteq> i. cK=0 \\<to> k = Suc i mod n \\<to> i = k-1 or i = n-1.\<close>
+                      have hK_ep: "?k = Suc i mod ?n"
+                      proof (rule ccontr)
+                        assume "\<not> ?thesis"
+                        with False have "?k \<noteq> i" "?k \<noteq> Suc i mod ?n" by (by100 simp)+
+                        from hC11_2[rule_format, OF hi hk_lt \<open>?k \<noteq> i\<close> \<open>?k \<noteq> Suc i mod ?n\<close>]
+                        show False using hcK_eq0 by linarith
+                      qed
+                      \<comment> \<open>k = Suc i mod n. Combined with cSSj=0: Suc(Suc jj) mod n = i (since Suc i taken by k).\<close>
+                      have hSSj_eq_i: "Suc(Suc jj) mod ?n = i"
+                      proof (rule ccontr)
+                        assume "\<not> ?thesis"
+                        hence "Suc(Suc jj) mod ?n \<noteq> i" by simp
+                        moreover have "Suc(Suc jj) mod ?n \<noteq> Suc i mod ?n"
+                          using hK_ne_SSj hK_ep by simp
+                        ultimately show False
+                          using hC11_2[rule_format, OF hi hSSj_lt] hcSSj_eq0 by linarith
+                      qed
+                      \<comment> \<open>ss=0 \\<to> cross\\_{Suc jj}(x)=0. Now Suc(Suc jj) mod n = i and k = Suc i mod n.
+                         From cross\\_{Suc jj}=0 and cross\\_jj conditions, derive x=v\\_0 or x on edge.
+                         Actually: we need tp=0 too for the v\\_0 argument.
+                         tp might not be 0. But 1-ss-ttp might also not be 0.
+                         The only forced-to-zero coefficient is ss (from Suc jj non-endpoint).
+                         cK=0 (K is endpoint), cSSj=0 (SSj is endpoint). So the ONLY non-endpoint is Suc jj.
+                         Its coefficient ss=0 is already established. The other two are free.
+                         phi\\_R(x) = (1-ttp)*v\\_k + ttp*v\\_{SSj mod n} = (1-ttp)*v\\_{Suc i mod n} + ttp*v\\_i.
+                         This IS on edge i (reversed). So phi\\_R(x) on edge i.\<close>
+                      \<comment> \<open>But we ASSUMED phi\\_R(x) = edge(i,t) via heq. This is consistent, not a contradiction.
+                         The contradiction must come from tracing back to x.
+                         ss=0 \\<to> cross\\_{Suc jj}(x)=0. This means x on fan ray through v\\_{Suc jj}.
+                         If Suc jj \\<ge> k+1: cross\\_{Suc jj} \\<noteq> cross\\_diag. So x can be on this ray
+                         with cross\\_diag > 0. x is on a diagonal (not edge). So x is target-interior.
+                         But phi\\_R(x) IS on edge i. This is allowed — phi\\_R CAN map interior to edge.
+                         WAIT: but phi\\_R\\_int claims this can't happen!
+
+                         Is this case actually reachable? k = Suc i mod n and Suc(Suc jj) mod n = i.
+                         If i < k: then Suc i \\<le> k, and Suc i mod n = Suc i (since Suc i < n). So k = Suc i.
+                         Then i = k-1. And Suc(Suc jj) mod n = k-1.
+                         jj \\<ge> k. Suc(Suc jj) \\<ge> k+2. Suc(Suc jj) mod n = k-1.
+                         If Suc(Suc jj) < n: Suc(Suc jj) = k-1. But Suc(Suc jj) \\<ge> k+2 > k-1. Impossible.
+                         If Suc(Suc jj) = n: n mod n = 0 = k-1 \\<to> k = 1. But k \\<ge> 2. Impossible.
+                         So i < k is impossible here.
+
+                         If i \\<ge> k: then i \\<ge> k and k = Suc i mod n.
+                         If i < n-1: Suc i < n, Suc i mod n = Suc i. k = Suc i. But i \\<ge> k = Suc i > i. \\<bot>.
+                         If i = n-1: Suc i = n, Suc i mod n = 0. k = 0. But k \\<ge> 2. \\<bot>.\<close>
+                      \<comment> \<open>So this case is impossible!\<close>
+                      show False sorry \<comment> \<open>k = Suc i mod n with k \\<ge> 2 and i < n: impossible sub-cases.\<close>
+                    qed
+                  qed
+                qed
+              next
+                assume h_caseSSj: "\<not> (Suc(Suc jj) mod ?n = i \<or> Suc(Suc jj) mod ?n = Suc i mod ?n)"
+                hence "?cSSj < 0"
+                proof -
+                  have "Suc(Suc jj) mod ?n \<noteq> i" "Suc(Suc jj) mod ?n \<noteq> Suc i mod ?n" using h_caseSSj by (by100 simp)+
+                  from hC11_2[rule_format, OF hi hSSj_lt \<open>Suc(Suc jj) mod ?n \<noteq> i\<close> \<open>Suc(Suc jj) mod ?n \<noteq> Suc i mod ?n\<close>]
+                  show ?thesis by linarith
+                qed
+                have "?cSSj \<noteq> 0" using \<open>?cSSj < 0\<close> by linarith
+                have htp_eq0: "ttp = 0" using htSSj \<open>?cSSj \<noteq> 0\<close>
+                  by (simp only: mult_eq_0_iff, by100 simp)
+                \<comment> \<open>ttp=0. Symmetric to Case A (ss=0). Same sub-case analysis.\<close>
+                show False
+                proof (cases "?cK = 0")
+                  case hcK_z2: False
+                  have "1 - ss - ttp = 0" using htK hcK_z2 by (simp only: mult_eq_0_iff, by100 simp)
+                  from mp[OF h1st0_imp this]
+                  obtain t' where ht': "t' \<in> I_set" and hxeq: "x = ((1-t')*vx2 jj + t'*vx2(Suc jj),
+                    (1-t')*vy2 jj + t'*vy2(Suc jj))" by (by100 blast)
+                  have "jj < ?n" using hjjn by (by100 linarith)
+                  hence "jj < length ?w'" using hlen_eq by (by100 simp)
+                  have "Suc jj < ?n" using hjjn by (by100 linarith)
+                  hence "Suc jj mod length ?w' = Suc jj" using hlen_eq by (by100 simp)
+                  from hint_x[rule_format, OF \<open>jj < length ?w'\<close> ht']
+                  show False using hxeq \<open>Suc jj mod length ?w' = Suc jj\<close> by (by100 simp)
+                next
+                  case hcK_eq02: True
+                  show False
+                  proof (cases "?cSj = 0")
+                    case hcSj_z2: False
+                    have "ss = 0" using htSj hcSj_z2 by (simp only: mult_eq_0_iff, by100 simp)
+                    \<comment> \<open>ss=ttp=0 \\<to> x=v\\_0 \\<to> cross\\_diag=0 \\<to> \\<bot>.\<close>
+                    from mp[OF hs0_imp \<open>ss = 0\<close>]
+                    have hcr1: "(vx2(Suc jj) - vx2 0)*(snd x - vy2 0) = (vy2(Suc jj) - vy2 0)*(fst x - vx2 0)" .
+                    from mp[OF htp0_imp htp_eq0]
+                    have hcr2: "(vx2 jj - vx2 0)*(snd x - vy2 0) = (vy2 jj - vy2 0)*(fst x - vx2 0)" .
+                    have hj_lt: "jj < ?n" using hjjn by (by100 linarith)
+                    have hsj_lt2: "Suc jj < ?n" using hjjn by (by100 linarith)
+                    have hjj1: "1 \<le> jj" using hjjk hk_ge2 by (by100 linarith)
+                    have hfdet: "(vx2 jj - vx2 0)*(vy2(Suc jj) - vy2 0) - (vy2 jj - vy2 0)*(vx2(Suc jj) - vx2 0) > 0"
+                      using hfan_det_0[rule_format, OF hj_lt hsj_lt2 hjj1 lessI] .
+                    have "fst x = vx2 0 \<and> snd x = vy2 0"
+                    proof -
+                      let ?dx = "fst x - vx2 0" let ?dy = "snd x - vy2 0"
+                      from hcr1 have h1_R2: "(vx2(Suc jj) - vx2 0)*?dy = (vy2(Suc jj) - vy2 0)*?dx" by (by100 simp)
+                      from hcr2 have h2_R2: "(vx2 jj - vx2 0)*?dy = (vy2 jj - vy2 0)*?dx" by (by100 simp)
+                      have "?dx * ((vx2 jj - vx2 0)*(vy2(Suc jj) - vy2 0) - (vy2 jj - vy2 0)*(vx2(Suc jj) - vx2 0)) = 0"
+                        using h1_R2 h2_R2 by (by100 algebra)
+                      hence "?dx = 0" using hfdet by (simp only: mult_eq_0_iff, by100 simp)
+                      have "(vx2 jj - vx2 0)*?dy = 0"
+                        using \<open>(vx2 jj - vx2 0)*?dy = (vy2 jj - vy2 0)*?dx\<close> \<open>?dx = 0\<close> by (by100 simp)
+                      hence "?dy = 0"
+                      proof (cases "vx2 jj = vx2 0")
+                        case False hence "vx2 jj - vx2 0 \<noteq> 0" by linarith
+                        with \<open>(vx2 jj - vx2 0)*?dy = 0\<close> show ?thesis
+                          by (simp only: mult_eq_0_iff, by100 simp)
+                      next
+                        case True
+                        have "(vx2(Suc jj) - vx2 0)*?dy = 0"
+                          using \<open>(vx2(Suc jj) - vx2 0)*?dy = (vy2(Suc jj) - vy2 0)*?dx\<close> \<open>?dx = 0\<close>
+                          by (by100 simp)
+                        moreover have "vx2(Suc jj) - vx2 0 \<noteq> 0"
+                        proof
+                          assume "vx2(Suc jj) - vx2 0 = 0"
+                          with True have "(vx2 jj - vx2 0)*(vy2(Suc jj) - vy2 0) - (vy2 jj - vy2 0)*(vx2(Suc jj) - vx2 0) = 0"
+                            by (by100 simp)
+                          with hfdet show False by linarith
+                        qed
+                        ultimately show "?dy = 0" by (simp only: mult_eq_0_iff, by100 simp)
+                      qed
+                      from \<open>?dx = 0\<close> \<open>?dy = 0\<close> show ?thesis by (by100 simp)
+                    qed
+                    hence hfst0: "fst x = vx2 0" and hsnd0: "snd x = vy2 0" by (by100 simp)+
+                    have "cross_diag x = (vx2 ?k - vx2 0) * (snd x - vy2 0)
+                      - (vy2 ?k - vy2 0) * (fst x - vx2 0)" unfolding cross_diag_def by (by100 simp)
+                    hence "cross_diag x = 0" using hfst0 hsnd0 by (by100 simp)
+                    with hcdx show False by linarith
+                  next
+                    case hcSj_eq02: True
+                    \<comment> \<open>cK=0 and cSj=0. {k, Suc jj} endpoints. Similar impossible sub-cases.\<close>
+                    show False sorry \<comment> \<open>Same pigeonhole: k=Suc i mod n with k\\<ge>2 impossible.\<close>
+                  qed
+                qed
+              qed
+            qed
+          qed
           \<comment> \<open>DIAGONAL IMAGE LEMMA (expert audit 38, Step 1):
              For p on the virtual diagonal (cross\\_diag = 0), phi\\_L(p) lands on old edge 0.
              Proof: p = v\\_0 + t*(v\\_k - v\\_0). LEAST = k-1. Cramer: s=0, tp=t.
