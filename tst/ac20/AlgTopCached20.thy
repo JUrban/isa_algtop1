@@ -2710,4 +2710,17 @@ proof -
   thus ?thesis unfolding expected_def by simp
 qed
 
+\<comment> \<open>Cross product distributes over affine 3-term combination.
+   Used for cross\\_diag linearity in disjoint/inj proofs.\<close>
+lemma cross_product_affine_3:
+  fixes ax ay bx by' cx cy kx ky ox oy :: real
+    and alpha beta gamma :: real
+  assumes hsum: "alpha + beta + gamma = 1"
+  shows "(kx - ox)*((alpha*ay + beta*by' + gamma*cy) - oy)
+       - (ky - oy)*((alpha*ax + beta*bx + gamma*cx) - ox)
+       = alpha*((kx-ox)*(ay-oy) - (ky-oy)*(ax-ox))
+       + beta*((kx-ox)*(by'-oy) - (ky-oy)*(bx-ox))
+       + gamma*((kx-ox)*(cy-oy) - (ky-oy)*(cx-ox))"
+  using hsum by algebra
+
 end
