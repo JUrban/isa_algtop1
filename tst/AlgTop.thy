@@ -3397,7 +3397,7 @@ next
                 also have "\<dots> = (\<Sum>i<?n. A * coeffs i + B * (coeffs i * vx2 i) + C * (coeffs i * vy2 i))"
                   by (simp only: sum.distrib[symmetric])
                 also have "\<dots> = (\<Sum>i<?n. coeffs i * (A + B * vx2 i + C * vy2 i))"
-                  by (rule sum.cong, simp, by5000 algebra)
+                  by (rule sum.cong, simp, by100 algebra)
                 finally show ?thesis .
               qed
               have "A + B * fst x + C * snd x =
@@ -3426,13 +3426,13 @@ next
               let ?A = "(vy2 1 - vy2 0)*vx2 0 - (vx2 1 - vx2 0)*vy2 0"
               let ?B = "-(vy2 1 - vy2 0)" let ?C = "vx2 1 - vx2 0"
               have hrewrite: "(vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0)
-                = ?A + ?B * fst x + ?C * snd x" by (by5000 algebra)
+                = ?A + ?B * fst x + ?C * snd x" by (by100 algebra)
               have "\<forall>l<?n. ?A + ?B * vx2 l + ?C * vy2 l \<ge> 0"
               proof (intro allI impI)
                 fix l assume hl: "l < ?n"
                 have hval: "?A + ?B * vx2 l + ?C * vy2 l =
                   (vx2 1 - vx2 0)*(vy2 l - vy2 0) - (vy2 1 - vy2 0)*(vx2 l - vx2 0)"
-                  by (by5000 algebra)
+                  by (by100 algebra)
                 show "?A + ?B * vx2 l + ?C * vy2 l \<ge> 0"
                 proof (cases "l = 0")
                   case True thus ?thesis unfolding hval by (by100 simp)
@@ -3542,18 +3542,18 @@ next
                  F(x) = cross(v\\_j - x, v\\_{j+1} - x) is affine and \\<ge> 0 at all vertices.\<close>
               have hnum_eq: "?det - ?s_num - ?tp_num =
                 (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
-                by (by5000 algebra)
+                by (by100 algebra)
               \<comment> \<open>Express as A + B*X + C*Y.\<close>
               let ?Aj = "vx2 ?j * vy2(Suc ?j) - vy2 ?j * vx2(Suc ?j)"
               let ?Bj = "vy2 ?j - vy2(Suc ?j)" let ?Cj = "vx2(Suc ?j) - vx2 ?j"
               have hF_form: "(vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)
-                = ?Aj + ?Bj * fst x + ?Cj * snd x" by (by5000 algebra)
+                = ?Aj + ?Bj * fst x + ?Cj * snd x" by (by100 algebra)
               have "\<forall>l<?n. ?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
               proof (intro allI impI)
                 fix l assume hl: "l < ?n"
                 have hval: "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
                   (vx2 ?j - vx2 l)*(vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l)*(vx2(Suc ?j) - vx2 l)"
-                  by (by5000 algebra)
+                  by (by100 algebra)
                 \<comment> \<open>= -cross(v\\_l - v\\_j, v\\_{j+1} - v\\_j). From C11: this is > 0 for l \\<noteq> j, j+1.\<close>
                 show "?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
                 proof (cases "l = ?j")
@@ -3577,7 +3577,7 @@ next
                     moreover have "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
                       -((vx2 l - vx2 ?j) * (vy2(Suc ?j) - vy2 ?j)
                       - (vy2 l - vy2 ?j) * (vx2(Suc ?j) - vx2 ?j))"
-                      unfolding hval by (by5000 algebra)
+                      unfolding hval by (by100 algebra)
                     ultimately show ?thesis by linarith
                   qed
                 qed
@@ -3591,7 +3591,7 @@ next
               have hs_cancel: "?s * ?det = ?s_num" using hne by (by100 simp)
               have htp_cancel: "?tp * ?det = ?tp_num" using hne by (by100 simp)
               have "(1 - ?s - ?tp) * ?det = ?det - ?s * ?det - ?tp * ?det"
-                by (by5000 algebra)
+                by (by100 algebra)
               hence "(1 - ?s - ?tp) * ?det = ?det - ?s_num - ?tp_num"
                 using hs_cancel htp_cancel by linarith
               hence h_prod_nn: "(1 - ?s - ?tp) * ?det \<ge> 0" using hnum_ge0 by linarith
@@ -3607,7 +3607,7 @@ next
             \<comment> \<open>Step 4: phi\\_L(x) is a convex combination of 3 vertices \\<in> P2.\<close>
             have hphi_eq: "phi_L x = ((1-?s-?tp)*vx2 0 + ?s*vx2(?k+1-?j) + ?tp*vx2(?k-?j),
                                        (1-?s-?tp)*vy2 0 + ?s*vy2(?k+1-?j) + ?tp*vy2(?k-?j))"
-              unfolding phi_L_def Let_def by (by5000 simp)
+              unfolding phi_L_def Let_def by (by100 simp)
             \<comment> \<open>Step 5: Vertex indices valid and in P2.\<close>
             have hA_lt: "?k + 1 - ?j < ?n" using hjk hk_lt_n_local hj1 by (by100 linarith)
             have hB_lt: "?k - ?j < ?n" using hjk hk_lt_n_local by (by100 linarith)
@@ -3618,8 +3618,8 @@ next
             have hA_ne_B: "?k + 1 - ?j \<noteq> ?k - ?j" using hj1 hjk by (by100 linarith)
             have h0_lt: "(0::nat) < ?n" using hn_ge3 by (by100 linarith)
             show "phi_L x \<in> P2"
-              sorry \<comment> \<open>Convex combination of 3 vertices (0, k+1-j, k-j) with coeffs (1-s-tp, s, tp).
-                 All coeffs \\<ge> 0, sum = 1, indices distinct and < n. Pure sum mechanics.\<close>
+              sorry \<comment> \<open>Convex combination of 3 P2 vertices: cc = (1-s-tp)*c0 + s*cA + tp*cB.
+                 All pieces proved (s,tp,1-s-tp \\<ge> 0, sum=1). Needs sum algebra caching.\<close>
           qed
           have hphi_R_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow> phi_R x \<in> P2"
             sorry \<comment> \<open>phi\\_R maps P2 to P2 (symmetric to phi\\_L).\<close>
