@@ -4027,21 +4027,24 @@ next
                   using hphi_dec by (by100 simp)
                 show ?thesis using hf hs by (by100 algebra)
               qed
-              \<comment> \<open>C11 \\<le> 0 for each vertex.\<close>
+              \<comment> \<open>C11 \\<le> 0 for each vertex. General identity for the cross product.\<close>
+              have hval_gen: "\<And>l. ?Ai + ?Bi * vx2 l + ?Ci * vy2 l =
+                -((vx2 l - vx2 i) * (vy2(Suc i mod ?n) - vy2 i) - (vy2 l - vy2 i) * (vx2(Suc i mod ?n) - vx2 i))"
+                by (by100 algebra)
               have hk_lt: "?k < ?n" using hk_lt_nm1 by (by100 linarith)
               have hcK_le: "?cK \<le> 0"
-              proof (cases "(0::nat) + ?k = i")
-                case True thus ?thesis by (by100 simp)
+              proof (cases "?k = i")
+                case hli_k: True thus ?thesis unfolding hli_k by (by100 simp)
               next
-                case hne: False show ?thesis
+                case hne_k: False show ?thesis
                 proof (cases "?k = Suc i mod ?n")
                   case True
                   hence hvx: "vx2(Suc i mod ?n) = vx2 ?k" and hvy: "vy2(Suc i mod ?n) = vy2 ?k" by simp+
                   show ?thesis by (simp only: hvx hvy, by100 simp)
                 next
                   case False
-                  from hC11_2[rule_format, OF hi hk_lt hne False]
-                  show ?thesis by linarith
+                  from hC11_2[rule_format, OF hi hk_lt hne_k False]
+                  show ?thesis unfolding hval_gen by linarith
                 qed
               qed
               have hSj_lt: "Suc jj < ?n" using hjjn by (by100 linarith)
@@ -4312,7 +4315,22 @@ next
                          If i < n-1: Suc i < n, Suc i mod n = Suc i. k = Suc i. But i \\<ge> k = Suc i > i. \\<bot>.
                          If i = n-1: Suc i = n, Suc i mod n = 0. k = 0. But k \\<ge> 2. \\<bot>.\<close>
                       \<comment> \<open>So this case is impossible!\<close>
-                      show False sorry \<comment> \<open>k = Suc i mod n with k \\<ge> 2 and i < n: impossible sub-cases.\<close>
+                      \<comment> \<open>k = Suc i mod n. If i < n-1: k = Suc i > i \\<ge> k. \\<bot>.
+                         If i = n-1: k = 0. But k \\<ge> 2. \\<bot>.\<close>
+                      show False
+                      proof (cases "i < ?n - 1")
+                        case True
+                        hence "Suc i < ?n" by (by100 linarith)
+                        hence "Suc i mod ?n = Suc i" by (by100 simp)
+                        hence "?k = Suc i" using hK_ep by simp
+                        show False sorry \<comment> \<open>k=Suc i with jj\\<ge>k: needs geometric arg or index bound.\<close>
+                      next
+                        case False hence "i = ?n - 1" using hi by (by100 linarith)
+                        hence "Suc i = ?n" using hn_ge3 by (by100 linarith)
+                        hence "Suc i mod ?n = 0" by (by100 simp)
+                        hence "?k = 0" using hK_ep by simp
+                        with hk_ge2 show False by (by100 linarith)
+                      qed
                     qed
                   qed
                 qed
@@ -4395,8 +4413,93 @@ next
                     with hcdx show False by linarith
                   next
                     case hcSj_eq02: True
-                    \<comment> \<open>cK=0 and cSj=0. {k, Suc jj} endpoints. Similar impossible sub-cases.\<close>
-                    show False sorry \<comment> \<open>Same pigeonhole: k=Suc i mod n with k\\<ge>2 impossible.\<close>
+                    \<comment> \<open>cK=0 and cSj=0. {k, Suc jj} are edge endpoints.
+                       At least one of {k, Suc jj} must be Suc i mod n (since they're 2 distinct
+                       values mapping to 2 endpoints {i, Suc i mod n}). Then k = Suc i mod n
+                       or Suc jj = Suc i mod n. Combined with cSSj non-endpoint: derive contradiction.\<close>
+                    \<comment> \<open>cK=0 \\<to> k is endpoint: k = i or k = Suc i mod n.\<close>
+                    have hK_ep2: "?k = i \<or> ?k = Suc i mod ?n"
+                    proof (rule ccontr)
+                      assume "\<not> ?thesis"
+                      hence "?k \<noteq> i" "?k \<noteq> Suc i mod ?n" by (by100 simp)+
+                      from hC11_2[rule_format, OF hi hk_lt \<open>?k \<noteq> i\<close> \<open>?k \<noteq> Suc i mod ?n\<close>]
+                      show False using hcK_eq02 unfolding hval_gen by linarith
+                    qed
+                    \<comment> \<open>cSj=0 \\<to> Suc jj is endpoint.\<close>
+                    have hSj_ep2: "Suc jj = i \<or> Suc jj = Suc i mod ?n"
+                    proof (rule ccontr)
+                      assume "\<not> ?thesis"
+                      hence "Suc jj \<noteq> i" "Suc jj \<noteq> Suc i mod ?n" by (by100 simp)+
+                      from hC11_2[rule_format, OF hi hSj_lt \<open>Suc jj \<noteq> i\<close> \<open>Suc jj \<noteq> Suc i mod ?n\<close>]
+                      show False using hcSj_eq02 unfolding hval_gen by linarith
+                    qed
+                    \<comment> \<open>k \\<noteq> Suc jj. So {k, Suc jj} = {i, Suc i mod n}.
+                       Sub-case k=i, Suc jj = Suc i: jj = i \\<ge> k. But k = i, so jj \\<ge> k = i = jj - hmm.
+                       Actually: k=i \\<to> Suc jj = Suc i mod n (since k \\<noteq> Suc jj).
+                       Suc k mod n = Suc jj? Not necessarily.
+                       Let me just use: k \\<noteq> Suc jj and both in {i, Suc i mod n}.\<close>
+                    show False
+                    proof (cases "?k = i")
+                      case True
+                      hence "Suc jj = Suc i mod ?n" using hK_ne_Sj hSj_ep2 by (by100 auto)
+                      \<comment> \<open>k = i and Suc jj = Suc i mod n. SSj non-endpoint.
+                         SSj mod n \\<noteq> i (since SSj \\<noteq> Suc jj = Suc i mod n and ...).
+                         Actually, the conclusion cSSj < 0 already applies.
+                         Wait, we're not in the SSj-non-endpoint branch here.
+                         We need: with ss=0, ttp free, 1-ttp free: phi\\_R(x) = (1-ttp)*v\\_k + ttp*v\\_{SSj}.
+                         = (1-ttp)*v\\_i + ttp*v\\_{SSj mod n}. This is on a segment from v\\_i.
+                         For this to be on edge i = k: need SSj mod n = Suc i mod n = Suc k mod n.
+                         But SSj = Suc(Suc jj) \\<ge> k+2. Suc k mod n = k+1 (k < n-1).
+                         SSj mod n = k+1 needs Suc(Suc jj) = k+1 (if < n) or Suc(Suc jj) = n+k+1 (impossible).
+                         Suc(Suc jj) = k+1 \\<to> jj = k-1. But jj \\<ge> k. \\<bot>.\<close>
+                      \<comment> \<open>Direct: Suc jj = Suc i mod n = Suc k mod n = k+1 (since k < n-1).
+                         So jj = k. But sector requires jj \\<ge> k. jj = k is OK.
+                         But then ttp = 0 \\<to> cross\\_k(x) = cross\\_diag(x) = 0. \\<bot>? No, ttp isn't forced to 0.
+                         Actually, we're in the ss=0 branch. 1-ss-ttp = 1-ttp. If cK \\<noteq> 0: 1-ttp=0.
+                         But cK = 0 here! So 1-ttp is free.
+                         And cSSj: free too. Actually cSSj is the one being checked.
+                         We're in the sub-case cK=0 AND cSj=0 (both endpoints).
+                         The ss coefficient is 0 (from case assumption). But 1-ttp and ttp are free.
+                         There's no forced zero from {K, SSj} being non-endpoints.
+                         Wait: the outer case is that Suc jj is the non-endpoint (case middle).
+                         Oh wait, we're in the INNER case of case B (ttp=0), sub-case cK=0, sub-sub-case cSj=0.
+                         In this sub-sub-case: ss=0 (from case B's cSSj non-endpoint), ttp=0 (from case B main),
+                         so both ss=ttp=0, 1-ss-ttp=1. phi\\_R(x)=v\\_k.
+                         But cK=0 means v\\_k is endpoint. And cSj=0 means v\\_{Suc jj} is endpoint.
+                         With ss=ttp=0: phi\\_R(x)=v\\_k which is on edge endpoints.
+                         And v\\_k being on edges means phi\\_R maps x to v\\_k.
+                         From the fan det argument: ss=ttp=0 \\<to> x=v\\_0 \\<to> cross\\_diag=0 \\<to> \\<bot>.\<close>
+                      \<comment> \<open>Wait, ttp=0 (from outer case). ss=0. So both are 0.
+                         The fan det argument gives x=v\\_0 \\<to> cross\\_diag=0 \\<to> \\<bot>.
+                         But that's the ss=ttp=0 argument from the hcSj\\_z2=False sub-case above.
+                         In THIS sub-case (hcSj\\_eq02=True), we have cSj=0, meaning we can't use it to force ss=0.
+                         But ss is ALREADY 0 (from the outer h\\_caseSj case). And ttp is ALREADY 0 (from the outer h\\_caseSSj case).
+                         So ss=ttp=0 holds, and the x=v\\_0 argument applies.\<close>
+                      \<comment> \<open>Actually: re-checking the structure. We're in:
+                         - outer: Suc jj is non-endpoint (h\\_caseSj) \\<to> ss=0
+                         - middle: SSj is non-endpoint (h\\_caseSSj) \\<to> ttp=0
+                         No wait, we're in the THIRD case branch (h\\_caseSSj), not the second.
+                         Let me re-read the proof structure.\<close>
+                      show False sorry \<comment> \<open>This needs careful structural analysis.\<close>
+                    next
+                      case False
+                      hence "?k = Suc i mod ?n" using hK_ep2 by simp
+                      show False
+                      proof (cases "i < ?n - 1")
+                        case True
+                        hence "Suc i < ?n" by (by100 linarith)
+                        hence "Suc i mod ?n = Suc i" by (by100 simp)
+                        hence "?k = Suc i" using \<open>?k = Suc i mod ?n\<close> by simp
+                        \<comment> \<open>k = Suc i, cK=cSj=0, ttp=0, ss free. Need deeper analysis.\<close>
+                        show False sorry \<comment> \<open>k=Suc i: phi\\_R on edge i. Need geometric arg.\<close>
+                      next
+                        case False hence "i = ?n - 1" using hi by (by100 linarith)
+                        hence "Suc i = ?n" using hn_ge3 by (by100 linarith)
+                        hence "Suc i mod ?n = 0" by (by100 simp)
+                        hence "?k = 0" using \<open>?k = Suc i mod ?n\<close> by simp
+                        with hk_ge2 show False by (by100 linarith)
+                      qed
+                    qed
                   qed
                 qed
               qed
