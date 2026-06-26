@@ -4297,30 +4297,35 @@ next
                      phi\\_R(p') is old interior. Old C8: boundary \\<inter> interior = \\<emptyset> in fibres.
                      So phi\\_L(p) \\<noteq> phi\\_R(p'). But q2(phi\\_L(p)) = q2(phi\\_R(p')).
                      From hC8\\_at phi\\_R(p'): phi\\_R(p') = phi\\_L(p). Contradicts disjointness.\<close>
-                  moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp' True3] .
-                  moreover have hphi_R_int_p': "\<forall>i<?n. \<forall>t\<in>I_set.
-                      phi_R p' \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
-                    sorry \<comment> \<open>p' interior: needs separate target-interior arg for p' (not from hint).\<close>
-                  \<comment> \<open>Expert audit 38: C8 at phi\\_R(p') + diagonal image on old edge \\<to> contradiction.\<close>
-                  ultimately have hC8_at_Rp': "\<forall>q\<in>P2. q2 (phi_R p') = q2 q \<longrightarrow> phi_R p' = q"
-                    using hC8_2[rule_format] hphi_R_int_p' by (by100 blast)
+                  have hphi_R_in: "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp' True3] .
                   have hphi_L_in: "phi_L p \<in> P2" using hphi_L_in_P2[OF hp hcd0_le] .
-                  have heq_RL: "phi_R p' = phi_L p"
-                  proof -
-                    have "q2 (phi_R p') = q2 (phi_L p)" using \<open>q2 (phi_L p) = q2 (phi_R p')\<close> by simp
-                    with hC8_at_Rp'[rule_format, OF hphi_L_in] show ?thesis by simp
-                  qed
-                  \<comment> \<open>phi\\_L(p) is on old edge 0, phi\\_R(p') is not.\<close>
+                  \<comment> \<open>phi\\_L(p) is on old edge 0 (from diagonal).\<close>
                   from hphi_L_diagonal_on_edge[OF hp hcd0]
                   obtain t_d where ht_d: "t_d \<in> I_set"
                     and hphiL_edge: "phi_L p = ((1-t_d)*vx2 0 + t_d*vx2(Suc 0 mod ?n),
                                                 (1-t_d)*vy2 0 + t_d*vy2(Suc 0 mod ?n))"
                     by (by5000 blast)
-                  have "(0::nat) < ?n" using hn_ge3 by linarith
-                  from hphi_R_int_p'[rule_format, OF \<open>0 < ?n\<close> ht_d]
-                  have "phi_R p' \<noteq> ((1-t_d)*vx2 0 + t_d*vx2(Suc 0 mod ?n),
-                                    (1-t_d)*vy2 0 + t_d*vy2(Suc 0 mod ?n))" .
-                  with heq_RL hphiL_edge show ?thesis by simp
+                  \<comment> \<open>Case split: is phi\\_R(p') on an old edge or interior?\<close>
+                  show ?thesis
+                  proof (cases "\<forall>ii<?n. \<forall>tt\<in>I_set.
+                      phi_R p' \<noteq> ((1-tt)*vx2 ii+tt*vx2(Suc ii mod ?n),(1-tt)*vy2 ii+tt*vy2(Suc ii mod ?n))")
+                    case True_int: True
+                    \<comment> \<open>phi\\_R(p') is interior. C8 at phi\\_R(p') \\<to> phi\\_R(p')=phi\\_L(p) \\<to> on edge 0 \\<to> contradiction.\<close>
+                    have hC8_Rp: "\<forall>q\<in>P2. q2 (phi_R p') = q2 q \<longrightarrow> phi_R p' = q"
+                      using hC8_2[rule_format, OF hphi_R_in] True_int by (by100 blast)
+                    have "q2 (phi_R p') = q2 (phi_L p)" using \<open>q2 (phi_L p) = q2 (phi_R p')\<close> by simp
+                    hence heq_RL: "phi_R p' = phi_L p" using hC8_Rp[rule_format, OF hphi_L_in] by simp
+                    \<comment> \<open>phi\\_R(p') = phi\\_L(p) = edge\\_0(t\\_d). But phi\\_R(p') is not on any edge. Contradiction.\<close>
+                    have "(0::nat) < ?n" using hn_ge3 by linarith
+                    from True_int[rule_format, OF \<open>0 < ?n\<close> ht_d]
+                    have "phi_R p' \<noteq> ((1-t_d)*vx2 0 + t_d*vx2(Suc 0 mod ?n),
+                                      (1-t_d)*vy2 0 + t_d*vy2(Suc 0 mod ?n))" .
+                    with heq_RL hphiL_edge show ?thesis by simp
+                  next
+                    case False
+                    \<comment> \<open>phi\\_R(p') IS on an old edge. Both on edges: use C9.\<close>
+                    show ?thesis sorry \<comment> \<open>Edge-vs-edge C9 analysis for diagonal p, edge p'.\<close>
+                  qed
                 next
                   case False3: False
                   hence "cross_diag p' \<le> 0" by linarith
@@ -4333,14 +4338,20 @@ next
                   have "phi_L p = phi_L p'"
                   proof (cases "cross_diag p' < 0")
                     case True4: True
-                    \<comment> \<open>p' strict left: phi\\_L(p') is old interior. Old C8 at phi\\_L(p') gives equality.\<close>
-                    have "\<forall>i<?n. \<forall>t\<in>I_set.
-                        phi_L p' \<noteq> ((1-t)*vx2 i + t*vx2(Suc i mod ?n), (1-t)*vy2 i + t*vy2(Suc i mod ?n))"
-                      sorry \<comment> \<open>p' interior: needs separate argument (hint is about p, not p').\<close>
-                    hence "\<forall>q\<in>P2. q2 (phi_L p') = q2 q \<longrightarrow> phi_L p' = q"
-                      using hC8_2[rule_format, OF hphi_L_p'_in] by (by100 blast)
-                    from this[rule_format, OF hphi_L_p_in]
-                    show ?thesis using hq_eq by simp
+                    \<comment> \<open>p' strict left. Case split on phi\\_L(p') interior vs on edge.\<close>
+                    show ?thesis
+                    proof (cases "\<forall>ii<?n. \<forall>tt\<in>I_set.
+                        phi_L p' \<noteq> ((1-tt)*vx2 ii+tt*vx2(Suc ii mod ?n),(1-tt)*vy2 ii+tt*vy2(Suc ii mod ?n))")
+                      case True_int: True
+                      hence "\<forall>q\<in>P2. q2 (phi_L p') = q2 q \<longrightarrow> phi_L p' = q"
+                        using hC8_2[rule_format, OF hphi_L_p'_in] by (by100 blast)
+                      from this[rule_format, OF hphi_L_p_in]
+                      show ?thesis using hq_eq by simp
+                    next
+                      case False
+                      \<comment> \<open>phi\\_L(p') is on an old edge. Both phi\\_L(p) and phi\\_L(p') on edges.\<close>
+                      show ?thesis sorry \<comment> \<open>Edge-vs-edge: use C9 for two boundary points.\<close>
+                    qed
                   next
                     case False4: False
                     hence "cross_diag p' = 0" using \<open>cross_diag p' \<le> 0\<close> by linarith
@@ -4994,6 +5005,7 @@ qed
 
 
 end
+
 
 
 
