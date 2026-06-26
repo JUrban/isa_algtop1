@@ -3612,8 +3612,14 @@ next
             have hA_lt: "?k + 1 - ?j < ?n" using hjk hk_lt_n_local hj1 by (by100 linarith)
             have hB_lt: "?k - ?j < ?n" using hjk hk_lt_n_local by (by100 linarith)
             \<comment> \<open>Step 6: Convex combination of P2 vertices is in P2.\<close>
+            \<comment> \<open>Need: 0, k+1-j, k-j are distinct indices < n.\<close>
+            have hA_ne_0: "?k + 1 - ?j \<noteq> (0::nat)" using hjk hj1 hk_ge2 by (by100 linarith)
+            have hB_ne_0: "?k - ?j \<noteq> (0::nat)" using hjk hj1 by (by100 linarith)
+            have hA_ne_B: "?k + 1 - ?j \<noteq> ?k - ?j" using hj1 hjk by (by100 linarith)
+            have h0_lt: "(0::nat) < ?n" using hn_ge3 by (by100 linarith)
             show "phi_L x \<in> P2"
-              sorry \<comment> \<open>Construct coeffs: (1-s-tp) at 0, s at k+1-j, tp at k-j, 0 elsewhere.\<close>
+              sorry \<comment> \<open>Convex combination of 3 vertices (0, k+1-j, k-j) with coeffs (1-s-tp, s, tp).
+                 All coeffs \\<ge> 0, sum = 1, indices distinct and < n. Pure sum mechanics.\<close>
           qed
           have hphi_R_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> cross_diag x > 0 \<Longrightarrow> phi_R x \<in> P2"
             sorry \<comment> \<open>phi\\_R maps P2 to P2 (symmetric to phi\\_L).\<close>
