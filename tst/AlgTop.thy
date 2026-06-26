@@ -2059,10 +2059,421 @@ next
             qed
           qed
         qed
+        \<comment> \<open>Helper: cross\\_diag at vertex j = -fan\\_det(j,k), proved via commutativity.
+           Used in hdiag\\_not\\_on\\_edge to determine cross\\_diag signs.\<close>
+        have hcross_diag_neg_fan: "\<And>j. j < ?n \<Longrightarrow> 1 \<le> j \<Longrightarrow> j < ?k \<Longrightarrow>
+          cross_diag (vx2 j, vy2 j) < 0"
+        proof -
+          fix j :: nat assume hj: "j < ?n" and hj1: "1 \<le> j" and hjk: "j < ?k"
+          have "?k < ?n" by (by100 simp)
+          from hfan_det_0[rule_format, OF hj \<open>?k < ?n\<close> hj1 hjk]
+          have hfd: "(vx2 j - vx2 0)*(vy2 ?k - vy2 0) - (vy2 j - vy2 0)*(vx2 ?k - vx2 0) > 0" .
+          have hcd_val: "cross_diag (vx2 j, vy2 j) =
+            (vx2 ?k - vx2 0)*(vy2 j - vy2 0) - (vy2 ?k - vy2 0)*(vx2 j - vx2 0)"
+            unfolding cross_diag_def by (by100 simp)
+          \<comment> \<open>cross\\_diag + fan\\_det = (cb - bc) + (ad - da) = 0 by commutativity.\<close>
+          have h1: "(vx2 ?k - vx2 0)*(vy2 j - vy2 0) = (vy2 j - vy2 0)*(vx2 ?k - vx2 0)"
+            by (rule mult.commute)
+          have h2: "(vy2 ?k - vy2 0)*(vx2 j - vx2 0) = (vx2 j - vx2 0)*(vy2 ?k - vy2 0)"
+            by (rule mult.commute)
+          from hcd_val h1 h2 hfd show "cross_diag (vx2 j, vy2 j) < 0" by (by100 linarith)
+        qed
+        have hcross_diag_pos_fan: "\<And>j. j < ?n \<Longrightarrow> ?k < j \<Longrightarrow>
+          cross_diag (vx2 j, vy2 j) > 0"
+        proof -
+          fix j :: nat assume hj: "j < ?n" and hkj: "?k < j"
+          have "?k < ?n" by (by100 simp)
+          have "1 \<le> ?k" using hk_ge2 by (by100 linarith)
+          from hfan_det_0[rule_format, OF \<open>?k < ?n\<close> hj \<open>1 \<le> ?k\<close> hkj]
+          have hfd: "(vx2 ?k - vx2 0)*(vy2 j - vy2 0) - (vy2 ?k - vy2 0)*(vx2 j - vx2 0) > 0" .
+          have hcd_val: "cross_diag (vx2 j, vy2 j) =
+            (vx2 ?k - vx2 0)*(vy2 j - vy2 0) - (vy2 ?k - vy2 0)*(vx2 j - vx2 0)"
+            unfolding cross_diag_def by (by100 simp)
+          from hcd_val hfd show "cross_diag (vx2 j, vy2 j) > 0" by (by100 linarith)
+        qed
         have hdiag_not_on_edge: "\<And>t. t \<in> {0<..<(1::real)} \<Longrightarrow>
             \<forall>i'<?n. \<forall>t'\<in>I_set. ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) \<noteq>
               ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
-          sorry \<comment> \<open>Diagonal (1-t)*v\\_0+t*v\\_k not on old edge for 0<t<1.\<close>
+        proof -
+          fix t :: real assume ht_int: "t \<in> {0<..<(1::real)}"
+          have ht_gt: "t > 0" and ht_lt: "t < 1" using ht_int by (by100 simp)+
+          have hcd_diag: "cross_diag ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) = 0"
+          proof -
+            have "(vx2 ?k - vx2 0) * ((1-t)*vy2 0 + t*vy2 ?k - vy2 0) -
+              (vy2 ?k - vy2 0) * ((1-t)*vx2 0 + t*vx2 ?k - vx2 0) = 0"
+              by (by100 algebra)
+            thus ?thesis unfolding cross_diag_def by (by100 simp)
+          qed
+          have hcd_v0: "cross_diag (vx2 0, vy2 0) = 0" unfolding cross_diag_def by (by100 simp)
+          have hcd_vk: "cross_diag (vx2 ?k, vy2 ?k) = 0"
+          proof -
+            have "(vx2 ?k - vx2 0) * (vy2 ?k - vy2 0) - (vy2 ?k - vy2 0) * (vx2 ?k - vx2 0) = 0"
+              by (by100 algebra)
+            thus ?thesis unfolding cross_diag_def by (by100 simp)
+          qed
+          \<comment> \<open>Diagonal point \\<noteq> v\\_0 and \\<noteq> v\\_k.\<close>
+          have hne_v0: "((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) \<noteq> (vx2 0, vy2 0)"
+          proof
+            assume heq_v0: "((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) = (vx2 0, vy2 0)"
+            hence "(1-t)*vx2 0 + t*vx2 ?k = vx2 0" "(1-t)*vy2 0 + t*vy2 ?k = vy2 0" by (by100 simp)+
+            hence heq_x: "(1-t)*vx2 0 + t*vx2 ?k - vx2 0 = 0" and
+                  heq_y: "(1-t)*vy2 0 + t*vy2 ?k - vy2 0 = 0" by (by100 simp)+
+            have "t * (vx2 ?k - vx2 0) = 0" using heq_x by (by100 algebra)
+            moreover have "t * (vy2 ?k - vy2 0) = 0" using heq_y by (by100 algebra)
+            ultimately have "vx2 ?k = vx2 0" "vy2 ?k = vy2 0" using ht_gt by (by100 force)+
+            moreover have "(vx2 0, vy2 0) \<noteq> (vx2 ?k, vy2 ?k)"
+              using hC3_2[rule_format] hk_ge2 hn_ge3 by (by100 force)
+            ultimately show False by (by100 simp)
+          qed
+          have hne_vk: "((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) \<noteq> (vx2 ?k, vy2 ?k)"
+          proof
+            assume heq_vk: "((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) = (vx2 ?k, vy2 ?k)"
+            hence heq_x2: "(1-t)*vx2 0 + t*vx2 ?k - vx2 ?k = 0" and
+                  heq_y2: "(1-t)*vy2 0 + t*vy2 ?k - vy2 ?k = 0" by (by100 simp)+
+            have hx2: "(1-t) * (vx2 0 - vx2 ?k) = 0" using heq_x2 by (by100 algebra)
+            have hy2: "(1-t) * (vy2 0 - vy2 ?k) = 0" using heq_y2 by (by100 algebra)
+            from hx2 ht_lt have "vx2 0 = vx2 ?k" by (by100 force)
+            moreover from hy2 ht_lt have "vy2 0 = vy2 ?k" by (by100 force)
+            moreover have "(vx2 0, vy2 0) \<noteq> (vx2 ?k, vy2 ?k)"
+              using hC3_2[rule_format] hk_ge2 hn_ge3 by (by100 force)
+            ultimately show False by (by100 simp)
+          qed
+          show "\<forall>i'<?n. \<forall>t'\<in>I_set. ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) \<noteq>
+            ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
+          proof (cases "?k < ?n - 1")
+            case hk_lt: True
+            show ?thesis
+            proof (intro allI impI ballI)
+              fix i' :: nat and t' :: real assume "i' < ?n" and "t' \<in> I_set"
+              show "((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) \<noteq>
+                ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
+              proof
+                assume heq: "((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) =
+                  ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
+                \<comment> \<open>cross\\_diag of the edge point = 0.\<close>
+                have hcd_ep: "cross_diag ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n),
+                  (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n)) = 0"
+                  using hcd_diag heq by (by100 simp)
+                \<comment> \<open>cd vertex signs: v\\_0, v\\_k = 0; 1..k-1 < 0; k+1..n-1 > 0.\<close>
+                have hSuc: "Suc i' mod ?n < ?n" by (by100 simp)
+                \<comment> \<open>Edge point = v\\_0 or v\\_k (from cd sign analysis).\<close>
+                \<comment> \<open>cd(v\\_{i'}) and cd(v\\_{Suc i' mod n}) determine the edge cd.\<close>
+                have hcd_i': "cross_diag (vx2 i', vy2 i') = 0 \<or>
+                  cross_diag (vx2 i', vy2 i') < 0 \<or> cross_diag (vx2 i', vy2 i') > 0"
+                  by (by100 linarith)
+                have hcd_si': "cross_diag (vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) = 0 \<or>
+                  cross_diag (vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) < 0 \<or>
+                  cross_diag (vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) > 0"
+                  by (by100 linarith)
+                \<comment> \<open>cd is affine: cd(edge(i',t')) = (1-t')cd(v\\_{i'}) + t'cd(v\\_{Suc i'}).\<close>
+                have hcd_aff: "cross_diag ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n),
+                  (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n)) =
+                  (1-t')*cross_diag(vx2 i', vy2 i') +
+                  t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n))"
+                proof -
+                  let ?a = "vx2 ?k - vx2 0" and ?b = "vy2 ?k - vy2 0"
+                  have lhs: "cross_diag ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n),
+                    (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n)) =
+                    ?a * ((1-t')*vy2 i' + t'*vy2(Suc i' mod ?n) - vy2 0) -
+                    ?b * ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n) - vx2 0)"
+                    unfolding cross_diag_def by (by100 simp)
+                  have rhs: "(1-t')*cross_diag(vx2 i', vy2 i') +
+                    t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) =
+                    (1-t')*(?a * (vy2 i' - vy2 0) - ?b * (vx2 i' - vx2 0)) +
+                    t'*(?a * (vy2(Suc i' mod ?n) - vy2 0) - ?b * (vx2(Suc i' mod ?n) - vx2 0))"
+                    unfolding cross_diag_def by (by100 simp)
+                  show ?thesis
+                    unfolding lhs rhs by (by100 algebra)
+                qed
+                have ht'_ge: "t' \<ge> 0" and ht'_le: "t' \<le> 1"
+                  using \<open>t' \<in> I_set\<close> unfolding top1_unit_interval_def by (by100 auto)+
+                \<comment> \<open>From hcd\\_ep = 0 and hcd\\_aff: (1-t')*A + t'*B = 0 with t'\\<in>[0,1].
+                   Case: both A,B same sign \\<noteq> 0 \\<to> impossible.
+                   Case: one = 0, other \\<noteq> 0 \\<to> t'=0 or 1 \\<to> edge point is vertex.\<close>
+                have "((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))
+                  = (vx2 0, vy2 0) \<or>
+                  ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))
+                  = (vx2 ?k, vy2 ?k)"
+                proof -
+                  from hcd_ep hcd_aff
+                  have hsum0: "(1-t')*cross_diag(vx2 i', vy2 i') +
+                    t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) = 0"
+                    by (by100 linarith)
+                  \<comment> \<open>cd(v\\_j) = 0 iff j = 0 or j = k (when k < n-1).\<close>
+                  have hcd0_iff: "\<And>j. j < ?n \<Longrightarrow> cross_diag(vx2 j, vy2 j) = 0 \<Longrightarrow> j = 0 \<or> j = ?k"
+                  proof -
+                    fix j :: nat assume hj: "j < ?n" and hcd0: "cross_diag(vx2 j, vy2 j) = 0"
+                    show "j = 0 \<or> j = ?k"
+                    proof (rule ccontr)
+                      assume "\<not> (j = 0 \<or> j = ?k)"
+                      hence hj0: "j \<noteq> 0" and hjk: "j \<noteq> ?k" by (by100 simp)+
+                      have "1 \<le> j" using hj0 by (by100 linarith)
+                      show False
+                      proof (cases "j < ?k")
+                        case True
+                        from hcross_diag_neg_fan[OF hj \<open>1 \<le> j\<close> True]
+                        show False using hcd0 by (by100 linarith)
+                      next
+                        case False hence "?k < j" using hjk by (by100 linarith)
+                        from hcross_diag_pos_fan[OF hj \<open>?k < j\<close>]
+                        show False using hcd0 by (by100 linarith)
+                      qed
+                    qed
+                  qed
+                  \<comment> \<open>If cd(v\\_{i'}) \\<noteq> 0 and cd(v\\_{Suc i'}) \\<noteq> 0 with same sign: sum \\<noteq> 0.\<close>
+                  \<comment> \<open>If different signs: sum = 0 at some t' \\<in> (0,1), but then edge point is NOT a vertex.\<close>
+                  \<comment> \<open>The only resolution: one endpoint has cd = 0, forcing t'=0 or 1.\<close>
+                  show ?thesis
+                  proof (cases "cross_diag(vx2 i', vy2 i') = 0")
+                    case True
+                    hence "i' = 0 \<or> i' = ?k" using hcd0_iff \<open>i' < ?n\<close> by (by100 blast)
+                    from hsum0 True have "t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) = 0"
+                      by (by100 simp)
+                    show ?thesis
+                    proof (cases "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) = 0")
+                      case True2: True
+                      hence "Suc i' mod ?n = 0 \<or> Suc i' mod ?n = ?k" using hcd0_iff hSuc by (by100 blast)
+                      \<comment> \<open>Both endpoints have cd = 0: both are v\\_0 or v\\_k. But consecutive vertices
+                         \\<to> would need i'=0,Suc i'=k or i'=k,Suc i'=0 or... contradicts k \\<ge> 2.\<close>
+                      \<comment> \<open>Both endpoints cd=0: i' \\<in> \\{0,k\\} and Suc i' mod n \\<in> \\{0,k\\}.
+                         Consecutive vertices both in \\{0,k\\} with k \\<ge> 2 and k < n-1: impossible.\<close>
+                      have False
+                      proof -
+                        from \<open>i' = 0 \<or> i' = ?k\<close> \<open>Suc i' mod ?n = 0 \<or> Suc i' mod ?n = ?k\<close>
+                        show False
+                        proof (elim disjE)
+                          assume "i' = 0" "Suc i' mod ?n = 0"
+                          hence "Suc 0 mod ?n = 0" by (by100 simp)
+                          hence "(1::nat) = 0" using hn_ge3 by (by100 simp)
+                          thus False by (by100 simp)
+                        next
+                          assume "i' = 0" "Suc i' mod ?n = ?k"
+                          hence "1 = ?k" using hn_ge3 by (by100 simp)
+                          with hk_ge2 show False by (by100 linarith)
+                        next
+                          assume "i' = ?k" "Suc i' mod ?n = 0"
+                          hence "Suc ?k mod ?n = 0" by (by100 simp)
+                          have "?k < ?n" by (by100 simp)
+                          hence "Suc ?k \<le> ?n" by (by100 linarith)
+                          have "Suc ?k > 0" by (by100 simp)
+                          from \<open>Suc ?k mod ?n = 0\<close> have "?n dvd Suc ?k"
+                            by (by100 auto)
+                          with \<open>Suc ?k \<le> ?n\<close> \<open>Suc ?k > 0\<close> have "Suc ?k = ?n"
+                            using Suc_leI dvd_imp_le le_antisym by (by100 blast)
+                          hence "?k = ?n - 1" by (by100 linarith)
+                          with hk_lt show False by (by100 linarith)
+                        next
+                          assume "i' = ?k" "Suc i' mod ?n = ?k"
+                          hence "Suc ?k mod ?n = ?k" by (by100 simp)
+                          have "?k < ?n" by (by100 simp)
+                          hence "Suc ?k \<le> ?n" by (by100 linarith)
+                          show False
+                          proof (cases "Suc ?k < ?n")
+                            case True3: True
+                            hence "Suc ?k mod ?n = Suc ?k" by (by100 simp)
+                            with \<open>Suc ?k mod ?n = ?k\<close> show False by (by100 linarith)
+                          next
+                            case False3: False
+                            with \<open>Suc ?k \<le> ?n\<close> have "Suc ?k = ?n" by (by100 linarith)
+                            hence "Suc ?k mod ?n = 0" by (by100 simp)
+                            with \<open>Suc ?k mod ?n = ?k\<close> have "?k = 0" by (by100 simp)
+                            with hk_ge2 show False by (by100 linarith)
+                          qed
+                        qed
+                      qed
+                      thus ?thesis by (by100 blast)
+                    next
+                      case False2: False
+                      \<comment> \<open>cd(Suc i') \\<noteq> 0 so t' = 0 from t'*nonzero = 0.\<close>
+                      from \<open>t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) = 0\<close> False2
+                      have "t' = 0" by (by100 force)
+                      hence "((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))
+                        = (vx2 i', vy2 i')" by (by100 simp)
+                      with \<open>i' = 0 \<or> i' = ?k\<close> show ?thesis by (by100 auto)
+                    qed
+                  next
+                    case False
+                    show ?thesis
+                    proof (cases "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) = 0")
+                      case True2: True
+                      hence "Suc i' mod ?n = 0 \<or> Suc i' mod ?n = ?k" using hcd0_iff hSuc by (by100 blast)
+                      from hsum0 True2 have "(1-t')*cross_diag(vx2 i', vy2 i') = 0"
+                        by (by100 simp)
+                      with False have "1-t' = 0" by (by100 force)
+                      hence "t' = 1" by (by100 linarith)
+                      hence "((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))
+                        = (vx2(Suc i' mod ?n), vy2(Suc i' mod ?n))" by (by100 simp)
+                      with \<open>Suc i' mod ?n = 0 \<or> Suc i' mod ?n = ?k\<close> show ?thesis by (by100 auto)
+                    next
+                      case False2: False
+                      \<comment> \<open>Both cd \\<noteq> 0. Same sign \\<to> sum \\<noteq> 0. Different signs: possible but still sum \\<noteq> 0
+                         because convex combination of same-sign nonzeros is nonzero.\<close>
+                      \<comment> \<open>Actually: if cd(v\\_{i'}) < 0 and cd(v\\_{Suc i'}) < 0: both < 0, sum < 0 \\<noteq> 0.
+                         Similarly both > 0. Mixed signs: can be 0 but then the point is interior, not vertex.\<close>
+                      \<comment> \<open>But mixed signs can only happen if one is left (cd<0) and other is right (cd>0).
+                         In a convex polygon, consecutive vertices cannot jump from left to right
+                         without passing through 0 (v\\_0 or v\\_k). Since k<n-1 and k\\<ge>2, the only
+                         transition edges are 0 (v\\_0 to v\\_1) and k-1 (v\\_{k-1} to v\\_k) and k (v\\_k to v\\_{k+1})
+                         and n-1 (v\\_{n-1} to v\\_0). But all transition edges have one endpoint at v\\_0 or v\\_k (cd=0),
+                         which contradicts both cd \\<noteq> 0.\<close>
+                      from False False2 show ?thesis
+                      proof -
+                        have "cross_diag(vx2 i', vy2 i') < 0 \<or> cross_diag(vx2 i', vy2 i') > 0"
+                          using False by (by100 linarith)
+                        moreover have "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) < 0 \<or>
+                          cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) > 0"
+                          using False2 by (by100 linarith)
+                        ultimately show ?thesis
+                        proof (elim disjE)
+                          \<comment> \<open>Case: both < 0. Sum < 0 \\<noteq> 0.\<close>
+                          assume "cross_diag(vx2 i', vy2 i') < 0"
+                            "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) < 0"
+                          hence "(1-t')*cross_diag(vx2 i', vy2 i') +
+                            t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) < 0"
+                          proof -
+                            have "(1-t')*cross_diag(vx2 i', vy2 i') \<le> 0"
+                              using mult_nonneg_nonpos[of "1-t'" "cross_diag(vx2 i', vy2 i')"]
+                                ht'_le \<open>cross_diag(vx2 i', vy2 i') < 0\<close> by (by100 linarith)
+                            moreover have "t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) \<le> 0"
+                              using mult_nonneg_nonpos[of "t'" "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n))"]
+                                ht'_ge \<open>cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) < 0\<close> by (by100 linarith)
+                            moreover have "(1-t')*cross_diag(vx2 i', vy2 i') \<noteq> 0 \<or>
+                              t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) \<noteq> 0"
+                              using \<open>cross_diag(vx2 i', vy2 i') < 0\<close>
+                                \<open>cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) < 0\<close>
+                                ht'_ge ht'_le by (by100 force)
+                            ultimately show ?thesis by (by100 linarith)
+                          qed
+                          with hsum0 have False by (by100 linarith)
+                          thus ?thesis by (by100 blast)
+                        next
+                          \<comment> \<open>Case: both > 0. Sum > 0 \\<noteq> 0.\<close>
+                          assume "cross_diag(vx2 i', vy2 i') > 0"
+                            "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) > 0"
+                          hence "(1-t')*cross_diag(vx2 i', vy2 i') +
+                            t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) > 0"
+                          proof -
+                            have "(1-t')*cross_diag(vx2 i', vy2 i') \<ge> 0"
+                              using mult_nonneg_nonneg[of "1-t'" "cross_diag(vx2 i', vy2 i')"]
+                                ht'_le \<open>cross_diag(vx2 i', vy2 i') > 0\<close> by (by100 linarith)
+                            moreover have "t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) \<ge> 0"
+                              using mult_nonneg_nonneg[of "t'" "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n))"]
+                                ht'_ge \<open>cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) > 0\<close> by (by100 linarith)
+                            moreover have "(1-t')*cross_diag(vx2 i', vy2 i') \<noteq> 0 \<or>
+                              t'*cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) \<noteq> 0"
+                              using \<open>cross_diag(vx2 i', vy2 i') > 0\<close>
+                                \<open>cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) > 0\<close>
+                                ht'_ge ht'_le by (by100 force)
+                            ultimately show ?thesis by (by100 linarith)
+                          qed
+                          with hsum0 have False by (by100 linarith)
+                          thus ?thesis by (by100 blast)
+                        next
+                          \<comment> \<open>Mixed: cd(i') < 0, cd(Suc i') > 0. But then i' \\<in> left, Suc i' \\<in> right.
+                             Consecutive vertices can't jump left-to-right without passing through v\\_0 or v\\_k.
+                             In polygon order: left vertices are 1..k-1, right vertices are k+1..n-1.
+                             The only transition is at vertex k (between left and right side).
+                             If i' < k and Suc i' > k: then i' = k-1 and Suc i' = k. But cd(k)=0, contradicting cd>0.\<close>
+                          assume hA: "cross_diag(vx2 i', vy2 i') < 0"
+                            and hB: "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) > 0"
+                          \<comment> \<open>i' \\<in> {1..k-1} from cd < 0.\<close>
+                          have "i' \<noteq> 0"
+                          proof assume "i' = 0" hence "cross_diag(vx2 i', vy2 i') = 0"
+                            using hcd_v0 by (by100 simp)
+                            with hA show False by (by100 linarith) qed
+                          have "i' \<noteq> ?k"
+                          proof assume "i' = ?k" hence "cross_diag(vx2 i', vy2 i') = 0"
+                            using hcd_vk by (by100 simp)
+                            with hA show False by (by100 linarith) qed
+                          have "1 \<le> i'" using \<open>i' \<noteq> 0\<close> by (by100 linarith)
+                          have "i' < ?k"
+                          proof (rule ccontr)
+                            assume "\<not> (i' < ?k)"
+                            hence "?k < i'" using \<open>i' \<noteq> ?k\<close> by (by100 linarith)
+                            from hcross_diag_pos_fan[OF \<open>i' < ?n\<close> \<open>?k < i'\<close>]
+                            show False using hA by (by100 linarith)
+                          qed
+                          \<comment> \<open>Suc i' mod n = Suc i' since i' < k < n-1.\<close>
+                          have "Suc i' < ?n" using \<open>i' < ?k\<close> hk_lt by (by100 linarith)
+                          hence "Suc i' mod ?n = Suc i'" by (by100 simp)
+                          hence "Suc i' \<le> ?k" using \<open>i' < ?k\<close> by (by100 linarith)
+                          show ?thesis
+                          proof (cases "Suc i' = ?k")
+                            case True3: True
+                            hence "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) = 0"
+                              using \<open>Suc i' mod ?n = Suc i'\<close> hcd_vk by (by100 simp)
+                            with hB have False by (by100 linarith)
+                            thus ?thesis by (by100 blast)
+                          next
+                            case False3: False
+                            hence "Suc i' < ?k" using \<open>Suc i' \<le> ?k\<close> by (by100 linarith)
+                            have "1 \<le> Suc i'" by (by100 linarith)
+                            from hcross_diag_neg_fan[OF hSuc[unfolded \<open>Suc i' mod ?n = Suc i'\<close>]
+                              \<open>1 \<le> Suc i'\<close> \<open>Suc i' < ?k\<close>]
+                            have "cross_diag(vx2(Suc i'), vy2(Suc i')) < 0" .
+                            hence "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) < 0"
+                              using \<open>Suc i' mod ?n = Suc i'\<close> by (by100 simp)
+                            with hB have False by (by100 linarith)
+                            thus ?thesis by (by100 blast)
+                          qed
+                        next
+                          \<comment> \<open>Mixed: cd(i') > 0, cd(Suc i') < 0. Similar: i' is right, Suc i' is left.
+                             Transition at n-1 to 0 goes right-to-left through v\\_0 (cd=0).\<close>
+                          assume hA: "cross_diag(vx2 i', vy2 i') > 0"
+                            and hB: "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) < 0"
+                          have "i' \<noteq> 0"
+                          proof assume "i' = 0" hence "cross_diag(vx2 i', vy2 i') = 0"
+                            using hcd_v0 by (by100 simp)
+                            with hA show False by (by100 linarith) qed
+                          have "i' \<noteq> ?k"
+                          proof assume "i' = ?k" hence "cross_diag(vx2 i', vy2 i') = 0"
+                            using hcd_vk by (by100 simp)
+                            with hA show False by (by100 linarith) qed
+                          have "?k < i'"
+                          proof (rule ccontr)
+                            assume "\<not> (?k < i')"
+                            hence "i' \<le> ?k" by (by100 linarith)
+                            hence "i' < ?k" using \<open>i' \<noteq> ?k\<close> by (by100 linarith)
+                            have "1 \<le> i'" using \<open>i' \<noteq> 0\<close> by (by100 linarith)
+                            from hcross_diag_neg_fan[OF \<open>i' < ?n\<close> \<open>1 \<le> i'\<close> \<open>i' < ?k\<close>]
+                            show False using hA by (by100 linarith)
+                          qed
+                          \<comment> \<open>Suc i' mod n: if i' < n-1 then Suc i', otherwise 0.\<close>
+                          show ?thesis
+                          proof (cases "i' = ?n - 1")
+                            case True3: True
+                            hence "Suc i' mod ?n = 0" using hn_ge3 by (by100 simp)
+                            hence "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) = 0"
+                              using hcd_v0 by (by100 simp)
+                            with hB have False by (by100 linarith)
+                            thus ?thesis by (by100 blast)
+                          next
+                            case False3: False
+                            hence "Suc i' mod ?n = Suc i'" using \<open>i' < ?n\<close> by (by100 simp)
+                            have "?k < Suc i'" using \<open>?k < i'\<close> by (by100 linarith)
+                            have "Suc i' < ?n" using \<open>i' < ?n\<close> False3 by (by100 linarith)
+                            from hcross_diag_pos_fan[OF \<open>Suc i' < ?n\<close> \<open>?k < Suc i'\<close>]
+                            have "cross_diag(vx2(Suc i'), vy2(Suc i')) > 0" .
+                            hence "cross_diag(vx2(Suc i' mod ?n), vy2(Suc i' mod ?n)) > 0"
+                              using \<open>Suc i' mod ?n = Suc i'\<close> by (by100 simp)
+                            with hB have False by (by100 linarith)
+                            thus ?thesis by (by100 blast)
+                          qed
+                        qed
+                      qed
+                    qed
+                  qed
+                qed
+                \<comment> \<open>But diagonal point is neither v\\_0 nor v\\_k.\<close>
+                thus False using heq hne_v0 hne_vk by (by100 auto)
+              qed
+            qed
+          next
+            case hk_eq: False
+            hence "?k = ?n - 1" using hk_ge2 by (by100 simp)
+            show ?thesis sorry \<comment> \<open>k = n-1: diagonal IS edge n-1. Needs C9 restructuring.\<close>
+          qed
+        qed
         have hnonc_sigma_on_edge: "\<And>i t. i < ?n \<Longrightarrow> i \<noteq> 0 \<Longrightarrow> i \<noteq> ?n - 1 \<Longrightarrow> t \<in> {0<..<(1::real)} \<Longrightarrow>
             \<exists>i'<?n. \<exists>t'\<in>{0<..<(1::real)}. paste_sigma vx2 vy2 ?k ?n i t =
               ((1-t')*vx2 i' + t'*vx2(Suc i' mod ?n), (1-t')*vy2 i' + t'*vy2(Suc i' mod ?n))"
@@ -2159,11 +2570,15 @@ next
              Result: (1-t)*v\\_0 + t*v\\_1 = old edge 0 at parameter t.\<close>
           have hphi_L_diagonal_on_edge: "\<And>p. p \<in> P2 \<Longrightarrow> cross_diag p = 0 \<Longrightarrow>
               \<exists>t\<in>I_set. phi_L p = ((1-t)*vx2 0 + t*vx2(Suc 0 mod ?n),
-                                    (1-t)*vy2 0 + t*vy2(Suc 0 mod ?n))"
+                                    (1-t)*vy2 0 + t*vy2(Suc 0 mod ?n)) \<and>
+              ((fst p \<noteq> vx2 0 \<or> snd p \<noteq> vy2 0) \<longrightarrow>
+               (fst p \<noteq> vx2 ?k \<or> snd p \<noteq> vy2 ?k) \<longrightarrow> t \<in> {0<..<(1::real)})"
           proof -
             fix p assume hp: "p \<in> P2" and hcd: "cross_diag p = 0"
             show "\<exists>t\<in>I_set. phi_L p = ((1-t)*vx2 0 + t*vx2(Suc 0 mod ?n),
-                                        (1-t)*vy2 0 + t*vy2(Suc 0 mod ?n))"
+                                        (1-t)*vy2 0 + t*vy2(Suc 0 mod ?n)) \<and>
+              ((fst p \<noteq> vx2 0 \<or> snd p \<noteq> vy2 0) \<longrightarrow>
+               (fst p \<noteq> vx2 ?k \<or> snd p \<noteq> vy2 ?k) \<longrightarrow> t \<in> {0<..<(1::real)})"
             proof (cases "fst p = vx2 0 \<and> snd p = vy2 0")
               case True
               \<comment> \<open>p = v\\_0. phi\\_L(v\\_0) = v\\_0 = edge\\_0(0).\<close>
@@ -2174,6 +2589,7 @@ next
               finally have "phi_L p = ((1-(0::real))*vx2 0 + 0*vx2(Suc 0 mod ?n),
                                         (1-0)*vy2 0 + 0*vy2(Suc 0 mod ?n))" .
               moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+              moreover have "fst p = vx2 0 \<and> snd p = vy2 0" using True by (cases p) simp
               ultimately show ?thesis by (by100 blast)
             next
               case hne0: False
@@ -2188,6 +2604,8 @@ next
                 finally have "phi_L p = ((1-(1::real))*vx2 0 + 1*vx2(Suc 0 mod ?n),
                                           (1-1)*vy2 0 + 1*vy2(Suc 0 mod ?n))" .
                 moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                moreover have "fst p = vx2 ?k \<and> snd p = vy2 ?k"
+                  using \<open>fst p = vx2 ?k \<and> snd p = vy2 ?k\<close> .
                 ultimately show ?thesis by (by100 blast)
               next
                 case hnek: False
@@ -2209,6 +2627,247 @@ next
                   from hC3_2[rule_format, OF \<open>0 < ?n\<close> \<open>?k < ?n\<close>]
                   have hvne: "(vx2 0, vy2 0) \<noteq> (vx2 ?k, vy2 ?k)" using hk_ge2 by (by100 simp)
                   hence "vx2 0 \<noteq> vx2 ?k \<or> vy2 0 \<noteq> vy2 ?k" by (by100 auto)
+                  \<comment> \<open>L functional: fan\\_det(1,k) > 0 and L(p) \\<ge> 0 for all p \\<in> P2.
+                     Used in both True/False cases to prove \\<tau> > 0.\<close>
+                  have hfd1k: "(vx2 1 - vx2 0) * (vy2 ?k - vy2 0) - (vy2 1 - vy2 0) * (vx2 ?k - vx2 0) > 0"
+                  proof -
+                    have "1 < ?n" using hn_ge3 by (by100 linarith)
+                    from hfan_det_0[rule_format, OF \<open>1 < ?n\<close> \<open>?k < ?n\<close>]
+                    show ?thesis using hk_ge2 by (by100 linarith)
+                  qed
+                  have hLp_nn: "(vx2 1 - vx2 0) * (snd p - vy2 0) - (vy2 1 - vy2 0) * (fst p - vx2 0) \<ge> 0"
+                  proof -
+                    have "p \<in> P2" using hp .
+                    hence "\<exists>cfs. (\<forall>j<?n. cfs j \<ge> 0) \<and> (\<Sum>j<?n. cfs j) = 1 \<and>
+                      fst p = (\<Sum>j<?n. cfs j * vx2 j) \<and> snd p = (\<Sum>j<?n. cfs j * vy2 j)"
+                      using hC5_2 by (by5000 auto)
+                    then obtain cfs where
+                      hcg: "\<forall>j<?n. cfs j \<ge> 0"
+                      and hcs: "(\<Sum>j<?n. cfs j) = 1"
+                      and hcx: "fst p = (\<Sum>j<?n. cfs j * vx2 j)"
+                      and hcy: "snd p = (\<Sum>j<?n. cfs j * vy2 j)"
+                      by (by100 blast)
+                    have hsy: "(\<Sum>j<?n. cfs j * (vy2 j - vy2 0)) = snd p - vy2 0"
+                    proof -
+                      have "(\<Sum>j<?n. cfs j * (vy2 j - vy2 0)) = (\<Sum>j<?n. cfs j * vy2 j + cfs j * (- vy2 0))"
+                        by (simp add: algebra_simps)
+                      also have "\<dots> = (\<Sum>j<?n. cfs j * vy2 j) + (\<Sum>j<?n. cfs j * (- vy2 0))"
+                        by (rule sum.distrib)
+                      also have "(\<Sum>j<?n. cfs j * (- vy2 0)) = - vy2 0 * (\<Sum>j<?n. cfs j)"
+                        by (simp only: mult.commute[of _ "- vy2 0"] sum_distrib_left[symmetric])
+                      finally show ?thesis using hcy hcs by (by100 simp)
+                    qed
+                    have hsx: "(\<Sum>j<?n. cfs j * (vx2 j - vx2 0)) = fst p - vx2 0"
+                    proof -
+                      have "(\<Sum>j<?n. cfs j * (vx2 j - vx2 0)) = (\<Sum>j<?n. cfs j * vx2 j + cfs j * (- vx2 0))"
+                        by (simp add: algebra_simps)
+                      also have "\<dots> = (\<Sum>j<?n. cfs j * vx2 j) + (\<Sum>j<?n. cfs j * (- vx2 0))"
+                        by (rule sum.distrib)
+                      also have "(\<Sum>j<?n. cfs j * (- vx2 0)) = - vx2 0 * (\<Sum>j<?n. cfs j)"
+                        by (simp only: mult.commute[of _ "- vx2 0"] sum_distrib_left[symmetric])
+                      finally show ?thesis using hcx hcs by (by100 simp)
+                    qed
+                    have "(vx2 1 - vx2 0) * (snd p - vy2 0) - (vy2 1 - vy2 0) * (fst p - vx2 0) =
+                      (vx2 1 - vx2 0) * (\<Sum>j<?n. cfs j * (vy2 j - vy2 0)) -
+                      (vy2 1 - vy2 0) * (\<Sum>j<?n. cfs j * (vx2 j - vx2 0))"
+                      using hsy hsx by (by100 simp)
+                    also have "\<dots> = (\<Sum>j<?n. (vx2 1 - vx2 0) * (cfs j * (vy2 j - vy2 0))) -
+                      (\<Sum>j<?n. (vy2 1 - vy2 0) * (cfs j * (vx2 j - vx2 0)))"
+                      by (simp only: sum_distrib_left)
+                    also have "\<dots> = (\<Sum>j<?n. (vx2 1 - vx2 0) * (cfs j * (vy2 j - vy2 0)) -
+                      (vy2 1 - vy2 0) * (cfs j * (vx2 j - vx2 0)))"
+                      by (rule sum_subtractf[symmetric])
+                    also have "\<dots> = (\<Sum>j<?n. cfs j * ((vx2 1 - vx2 0) * (vy2 j - vy2 0) -
+                      (vy2 1 - vy2 0) * (vx2 j - vx2 0)))"
+                    proof -
+                      have hfact: "\<And>x. (vx2 1 - vx2 0) * (cfs x * (vy2 x - vy2 0)) -
+                        (vy2 1 - vy2 0) * (cfs x * (vx2 x - vx2 0)) =
+                        cfs x * ((vx2 1 - vx2 0) * (vy2 x - vy2 0) -
+                        (vy2 1 - vy2 0) * (vx2 x - vx2 0))"
+                      proof -
+                        fix x
+                        have "(vx2 1 - vx2 0) * (cfs x * (vy2 x - vy2 0)) -
+                          (vy2 1 - vy2 0) * (cfs x * (vx2 x - vx2 0)) =
+                          cfs x * ((vx2 1 - vx2 0) * (vy2 x - vy2 0)) -
+                          cfs x * ((vy2 1 - vy2 0) * (vx2 x - vx2 0))"
+                          by (by100 simp)
+                        also have "\<dots> = cfs x * ((vx2 1 - vx2 0) * (vy2 x - vy2 0) -
+                          (vy2 1 - vy2 0) * (vx2 x - vx2 0))"
+                          using right_diff_distrib[symmetric, of "cfs x"]
+                          by (by100 simp)
+                        finally show "(vx2 1 - vx2 0) * (cfs x * (vy2 x - vy2 0)) -
+                          (vy2 1 - vy2 0) * (cfs x * (vx2 x - vx2 0)) =
+                          cfs x * ((vx2 1 - vx2 0) * (vy2 x - vy2 0) -
+                          (vy2 1 - vy2 0) * (vx2 x - vx2 0))" .
+                      qed
+                      show ?thesis using hfact by (intro sum.cong) (by100 simp)+
+                    qed
+                    finally have hLs: "(vx2 1 - vx2 0) * (snd p - vy2 0) - (vy2 1 - vy2 0) * (fst p - vx2 0) =
+                      (\<Sum>j<?n. cfs j * ((vx2 1 - vx2 0) * (vy2 j - vy2 0) - (vy2 1 - vy2 0) * (vx2 j - vx2 0)))" .
+                    have "\<And>j. j \<in> {..<?n} \<Longrightarrow>
+                      cfs j * ((vx2 1 - vx2 0) * (vy2 j - vy2 0) - (vy2 1 - vy2 0) * (vx2 j - vx2 0)) \<ge> 0"
+                    proof -
+                      fix j assume "j \<in> {..<?n}"
+                      hence hj: "j < ?n" by (by100 simp)
+                      have hcj: "cfs j \<ge> 0" using hcg hj by (by100 simp)
+                      have hfd: "(vx2 1 - vx2 0) * (vy2 j - vy2 0) - (vy2 1 - vy2 0) * (vx2 j - vx2 0) \<ge> 0"
+                      proof (cases "j \<le> 1")
+                        case True
+                        thus ?thesis
+                        proof (cases "j = 0")
+                          case True thus ?thesis by (by100 simp)
+                        next
+                          case False with \<open>j \<le> 1\<close> have "j = 1" by (by100 linarith)
+                          thus ?thesis by (by100 simp)
+                        qed
+                      next
+                        case False
+                        hence "1 < j" by (by100 linarith)
+                        have "1 < ?n" using hn_ge3 by (by100 linarith)
+                        from hfan_det_0[rule_format, OF \<open>1 < ?n\<close> hj]
+                        show ?thesis using \<open>1 < j\<close> by (by100 force)
+                      qed
+                      from hcj hfd show "cfs j * ((vx2 1 - vx2 0) * (vy2 j - vy2 0) - (vy2 1 - vy2 0) * (vx2 j - vx2 0)) \<ge> 0"
+                        by (rule mult_nonneg_nonneg)
+                    qed
+                    hence "(\<Sum>j<?n. cfs j * ((vx2 1 - vx2 0) * (vy2 j - vy2 0) - (vy2 1 - vy2 0) * (vx2 j - vx2 0))) \<ge> 0"
+                      by (rule sum_nonneg)
+                    with hLs show ?thesis by (by100 linarith)
+                  qed
+                  \<comment> \<open>M functional: cross(p - v\\_{k-1}, v\\_k - v\\_{k-1}) \\<le> 0 for p \\<in> P2.
+                     From C11 at edge k-1: all non-adjacent vertices on interior side.
+                     Used to prove \\<tau> \\<le> 1.\<close>
+                  have hMd1k: "(vx2 0 - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 0 - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)) < 0"
+                  proof -
+                    have hkm1: "?k - 1 < ?n" using hk_ge2 by (by100 simp)
+                    have h0n: "(0::nat) < ?n" using hn_ge3 by (by100 linarith)
+                    have h0_ne_km1: "(0::nat) \<noteq> ?k - 1" using hk_ge2 by (by100 linarith)
+                    have hSuc_km1: "Suc (?k - 1) mod ?n = ?k"
+                    proof -
+                      have "Suc (?k - 1) = ?k" using hk_ge2 by (by100 linarith)
+                      moreover have "?k < ?n" by (by100 simp)
+                      ultimately show ?thesis by (by100 simp)
+                    qed
+                    have h0_ne_k: "(0::nat) \<noteq> ?k" using hk_ge2 by (by100 linarith)
+                    from hC11_2[rule_format, OF hkm1 h0n h0_ne_km1]
+                    have "(vx2 0 - vx2 (?k - 1)) * (vy2 (Suc (?k - 1) mod ?n) - vy2 (?k - 1)) -
+                      (vy2 0 - vy2 (?k - 1)) * (vx2 (Suc (?k - 1) mod ?n) - vx2 (?k - 1)) < 0"
+                      using h0_ne_k hSuc_km1 by (by100 force)
+                    thus ?thesis using hSuc_km1 by (by100 simp)
+                  qed
+                  have hMp_le0: "(fst p - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (snd p - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)) \<le> 0"
+                  proof -
+                    have "p \<in> P2" using hp .
+                    hence "\<exists>cfs2. (\<forall>j<?n. cfs2 j \<ge> 0) \<and> (\<Sum>j<?n. cfs2 j) = 1 \<and>
+                      fst p = (\<Sum>j<?n. cfs2 j * vx2 j) \<and> snd p = (\<Sum>j<?n. cfs2 j * vy2 j)"
+                      using hC5_2 by (by5000 auto)
+                    then obtain cfs2 where
+                      hcg2: "\<forall>j<?n. cfs2 j \<ge> 0"
+                      and hcs2: "(\<Sum>j<?n. cfs2 j) = 1"
+                      and hcx2: "fst p = (\<Sum>j<?n. cfs2 j * vx2 j)"
+                      and hcy2: "snd p = (\<Sum>j<?n. cfs2 j * vy2 j)"
+                      by (by100 blast)
+                    \<comment> \<open>Express coordinate sums shifted by v\\_{k-1}.\<close>
+                    have hsy2: "(\<Sum>j<?n. cfs2 j * (vy2 j - vy2(?k-1))) = snd p - vy2(?k-1)"
+                    proof -
+                      have "(\<Sum>j<?n. cfs2 j * (vy2 j - vy2(?k-1))) = (\<Sum>j<?n. cfs2 j * vy2 j + cfs2 j * (- vy2(?k-1)))"
+                        by (simp add: algebra_simps)
+                      also have "\<dots> = (\<Sum>j<?n. cfs2 j * vy2 j) + (\<Sum>j<?n. cfs2 j * (- vy2(?k-1)))"
+                        by (rule sum.distrib)
+                      also have "(\<Sum>j<?n. cfs2 j * (- vy2(?k-1))) = - vy2(?k-1) * (\<Sum>j<?n. cfs2 j)"
+                        by (simp only: mult.commute[of _ "- vy2(?k-1)"] sum_distrib_left[symmetric])
+                      finally show ?thesis using hcy2 hcs2 by (by100 simp)
+                    qed
+                    have hsx2: "(\<Sum>j<?n. cfs2 j * (vx2 j - vx2(?k-1))) = fst p - vx2(?k-1)"
+                    proof -
+                      have "(\<Sum>j<?n. cfs2 j * (vx2 j - vx2(?k-1))) = (\<Sum>j<?n. cfs2 j * vx2 j + cfs2 j * (- vx2(?k-1)))"
+                        by (simp add: algebra_simps)
+                      also have "\<dots> = (\<Sum>j<?n. cfs2 j * vx2 j) + (\<Sum>j<?n. cfs2 j * (- vx2(?k-1)))"
+                        by (rule sum.distrib)
+                      also have "(\<Sum>j<?n. cfs2 j * (- vx2(?k-1))) = - vx2(?k-1) * (\<Sum>j<?n. cfs2 j)"
+                        by (simp only: mult.commute[of _ "- vx2(?k-1)"] sum_distrib_left[symmetric])
+                      finally show ?thesis using hcx2 hcs2 by (by100 simp)
+                    qed
+                    \<comment> \<open>M(p) = \\<Sigma> cfs2 j * M(v\\_j).\<close>
+                    have "(fst p - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (snd p - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)) =
+                      (vy2 ?k - vy2(?k-1)) * (\<Sum>j<?n. cfs2 j * (vx2 j - vx2(?k-1))) -
+                      (vx2 ?k - vx2(?k-1)) * (\<Sum>j<?n. cfs2 j * (vy2 j - vy2(?k-1)))"
+                      using hsx2 hsy2 by (by100 simp)
+                    also have "\<dots> = (\<Sum>j<?n. (vy2 ?k - vy2(?k-1)) * (cfs2 j * (vx2 j - vx2(?k-1)))) -
+                      (\<Sum>j<?n. (vx2 ?k - vx2(?k-1)) * (cfs2 j * (vy2 j - vy2(?k-1))))"
+                      by (simp only: sum_distrib_left)
+                    also have "\<dots> = (\<Sum>j<?n. (vy2 ?k - vy2(?k-1)) * (cfs2 j * (vx2 j - vx2(?k-1))) -
+                      (vx2 ?k - vx2(?k-1)) * (cfs2 j * (vy2 j - vy2(?k-1))))"
+                      by (rule sum_subtractf[symmetric])
+                    also have "\<dots> = (\<Sum>j<?n. cfs2 j * ((vx2 j - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) -
+                      (vy2 j - vy2(?k-1)) * (vx2 ?k - vx2(?k-1))))"
+                    proof -
+                      have hfact2: "\<And>x. (vy2 ?k - vy2(?k-1)) * (cfs2 x * (vx2 x - vx2(?k-1))) -
+                        (vx2 ?k - vx2(?k-1)) * (cfs2 x * (vy2 x - vy2(?k-1))) =
+                        cfs2 x * ((vx2 x - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) -
+                        (vy2 x - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)))"
+                      proof -
+                        fix x
+                        have "(vy2 ?k - vy2(?k-1)) * (cfs2 x * (vx2 x - vx2(?k-1))) -
+                          (vx2 ?k - vx2(?k-1)) * (cfs2 x * (vy2 x - vy2(?k-1))) =
+                          cfs2 x * ((vy2 ?k - vy2(?k-1)) * (vx2 x - vx2(?k-1))) -
+                          cfs2 x * ((vx2 ?k - vx2(?k-1)) * (vy2 x - vy2(?k-1)))"
+                          by (by100 simp)
+                        also have "\<dots> = cfs2 x * ((vx2 x - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) -
+                          (vy2 x - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)))"
+                          using right_diff_distrib[symmetric, of "cfs2 x"]
+                          by (by100 simp)
+                        finally show "(vy2 ?k - vy2(?k-1)) * (cfs2 x * (vx2 x - vx2(?k-1))) -
+                          (vx2 ?k - vx2(?k-1)) * (cfs2 x * (vy2 x - vy2(?k-1))) =
+                          cfs2 x * ((vx2 x - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) -
+                          (vy2 x - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)))" .
+                      qed
+                      show ?thesis using hfact2 by (intro sum.cong) (by100 simp)+
+                    qed
+                    finally have hMs: "(fst p - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (snd p - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)) =
+                      (\<Sum>j<?n. cfs2 j * ((vx2 j - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 j - vy2(?k-1)) * (vx2 ?k - vx2(?k-1))))" .
+                    \<comment> \<open>Each term \\<le> 0 by C11 at edge k-1.\<close>
+                    have "\<And>j. j \<in> {..<?n} \<Longrightarrow>
+                      cfs2 j * ((vx2 j - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 j - vy2(?k-1)) * (vx2 ?k - vx2(?k-1))) \<le> 0"
+                    proof -
+                      fix j assume "j \<in> {..<?n}"
+                      hence hj: "j < ?n" by (by100 simp)
+                      have hcj: "cfs2 j \<ge> 0" using hcg2 hj by (by100 simp)
+                      show "cfs2 j * ((vx2 j - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 j - vy2(?k-1)) * (vx2 ?k - vx2(?k-1))) \<le> 0"
+                      proof (cases "j = ?k - 1 \<or> j = ?k")
+                        case True
+                        hence "(vx2 j - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 j - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)) = 0"
+                        proof
+                          assume "j = ?k - 1" thus ?thesis by (by100 simp)
+                        next
+                          assume "j = ?k" thus ?thesis by (by100 simp)
+                        qed
+                        thus ?thesis by (by100 simp)
+                      next
+                        case False
+                        hence hj_ne: "j \<noteq> ?k - 1" "j \<noteq> ?k" by (by100 simp)+
+                        have hkm1: "?k - 1 < ?n" using hk_ge2 by (by100 simp)
+                        have hSuc_km1: "Suc (?k - 1) mod ?n = ?k"
+                        proof -
+                          have "Suc (?k - 1) = ?k" using hk_ge2 by (by100 linarith)
+                          moreover have "?k < ?n" by (by100 simp)
+                          ultimately show ?thesis by (by100 simp)
+                        qed
+                        from hC11_2[rule_format, OF hkm1 hj hj_ne(1)]
+                        have "(vx2 j - vx2(?k-1)) * (vy2(Suc(?k-1) mod ?n) - vy2(?k-1)) -
+                          (vy2 j - vy2(?k-1)) * (vx2(Suc(?k-1) mod ?n) - vx2(?k-1)) < 0"
+                          using hj_ne(2) hSuc_km1 by (by100 force)
+                        hence "(vx2 j - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 j - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)) < 0"
+                          using hSuc_km1 by (by100 simp)
+                        hence "(vx2 j - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 j - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)) \<le> 0"
+                          by (by100 linarith)
+                        with hcj show ?thesis using mult_nonneg_nonpos by (by100 fastforce)
+                      qed
+                    qed
+                    hence "(\<Sum>j<?n. cfs2 j * ((vx2 j - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 j - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)))) \<le> 0"
+                      by (intro sum_nonpos) (by100 simp)
+                    with hMs show ?thesis by (by100 linarith)
+                  qed
                   \<comment> \<open>Case split: extract \\<tau> from the non-zero coordinate.\<close>
                   show ?thesis
                   proof (cases "vx2 ?k \<noteq> vx2 0")
@@ -2342,14 +3001,43 @@ next
                         also have "\<dots> = 0" using hcd .
                         finally show ?thesis .
                       qed
-                      \<comment> \<open>All non-\\{0,k\\} coefficients are 0.\<close>
-                      have hcoeffs_zero: "\<And>j. j < ?n \<Longrightarrow> j \<noteq> 0 \<Longrightarrow> j \<noteq> ?k \<Longrightarrow> coeffs j = 0"
-                        sorry \<comment> \<open>From hcd\\_sum: positive terms (right) and negative terms (left)
-                           sum to 0, with non-negative coefficients. So each term = 0 \\<to> coeffs = 0.\<close>
-                      \<comment> \<open>p = coeffs(0)*v\\_0 + coeffs(k)*v\\_k. So \\<tau> = coeffs(k) \\<in> [0,1].\<close>
-                      have "0 \<le> \<tau> \<and> \<tau> \<le> 1"
-                        sorry \<comment> \<open>From hcoeffs\\_zero + hcoeffs\\_sum + hfst\\_eq/hsnd\\_eq \\<to> \\<tau>=coeffs(k).\<close>
-                      with \<open>\<tau> \<noteq> 0\<close> \<open>\<tau> \<noteq> 1\<close> show "\<tau> > 0 \<and> \<tau> < 1" by (by100 linarith)
+                      \<comment> \<open>\\<tau> > 0 via supporting hyperplane (L functional at v\\_0).
+                         L(p) = \\<tau> * fan\\_det(1,k), with L(p) \\<ge> 0 (hLp\\_nn) and fan\\_det > 0.\<close>
+                      have htau_pos: "\<tau> > 0"
+                      proof -
+                        have "(vx2 1 - vx2 0) * (snd p - vy2 0) - (vy2 1 - vy2 0) * (fst p - vx2 0) =
+                          \<tau> * ((vx2 1 - vx2 0) * (vy2 ?k - vy2 0) - (vy2 1 - vy2 0) * (vx2 ?k - vx2 0))"
+                          using hfst_eq hsnd_eq by (by100 algebra)
+                        hence "\<tau> * ((vx2 1 - vx2 0) * (vy2 ?k - vy2 0) - (vy2 1 - vy2 0) * (vx2 ?k - vx2 0)) \<ge> 0"
+                          using hLp_nn by (by100 linarith)
+                        hence "(0 \<le> \<tau> \<and> 0 \<le> (vx2 1 - vx2 0) * (vy2 ?k - vy2 0) - (vy2 1 - vy2 0) * (vx2 ?k - vx2 0)) \<or>
+                          (\<tau> \<le> 0 \<and> (vx2 1 - vx2 0) * (vy2 ?k - vy2 0) - (vy2 1 - vy2 0) * (vx2 ?k - vx2 0) \<le> 0)"
+                          using zero_le_mult_iff by (by100 blast)
+                        with hfd1k have "\<tau> \<ge> 0" by (by100 linarith)
+                        with \<open>\<tau> \<noteq> 0\<close> show "\<tau> > 0" by (by100 linarith)
+                      qed
+                      \<comment> \<open>\\<tau> < 1 via C11 supporting hyperplane at v\\_k (edge k-1).
+                         M(p) = (1-\\<tau>)*M(v\\_0) with M(v\\_0) < 0 and M(p) \\<le> 0 \\<to> 1-\\<tau> \\<ge> 0.\<close>
+                      have "\<tau> < 1"
+                      proof -
+                        have "(fst p - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (snd p - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)) =
+                          (1-\<tau>) * ((vx2 0 - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 0 - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)))"
+                          using hfst_eq hsnd_eq by (by100 algebra)
+                        hence hMt_le: "(1-\<tau>) * ((vx2 0 - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 0 - vy2(?k-1)) * (vx2 ?k - vx2(?k-1))) \<le> 0"
+                          using hMp_le0 by (by100 linarith)
+                        \<comment> \<open>If 1-\\<tau> < 0: (negative)*(negative from hMd1k) = positive, contradicting \\<le> 0.\<close>
+                        have "1-\<tau> \<ge> 0"
+                        proof (rule ccontr)
+                          assume "\<not> (0 \<le> 1 - \<tau>)"
+                          hence "1 - \<tau> < 0" by (by100 linarith)
+                          from mult_neg_neg[OF \<open>1 - \<tau> < 0\<close> hMd1k]
+                          have "(1-\<tau>) * ((vx2 0 - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 0 - vy2(?k-1)) * (vx2 ?k - vx2(?k-1))) > 0" .
+                          with hMt_le show False by (by100 linarith)
+                        qed
+                        hence "\<tau> \<le> 1" by (by100 linarith)
+                        with \<open>\<tau> \<noteq> 1\<close> show "\<tau> < 1" by (by100 linarith)
+                      qed
+                      with htau_pos show "\<tau> > 0 \<and> \<tau> < 1" by (by100 linarith)
                     qed
                     with hfst_eq hsnd_eq show ?thesis by (by100 blast)
                   next
@@ -2370,7 +3058,37 @@ next
                     have "\<tau> \<noteq> 0" using hne0 hsnd_eq hfst_eq by (by100 auto)
                     have "\<tau> \<noteq> 1" using hnek hsnd_eq hfst_eq by (by100 auto)
                     have "\<tau> > 0 \<and> \<tau> < 1"
-                      sorry \<comment> \<open>Same as above: needs convexity.\<close>
+                    proof -
+                      have "(vx2 1 - vx2 0) * (snd p - vy2 0) - (vy2 1 - vy2 0) * (fst p - vx2 0) =
+                        \<tau> * ((vx2 1 - vx2 0) * (vy2 ?k - vy2 0) - (vy2 1 - vy2 0) * (vx2 ?k - vx2 0))"
+                        using hfst_eq hsnd_eq by (by100 algebra)
+                      hence "\<tau> * ((vx2 1 - vx2 0) * (vy2 ?k - vy2 0) - (vy2 1 - vy2 0) * (vx2 ?k - vx2 0)) \<ge> 0"
+                        using hLp_nn by (by100 linarith)
+                      hence "(0 \<le> \<tau> \<and> 0 \<le> (vx2 1 - vx2 0) * (vy2 ?k - vy2 0) - (vy2 1 - vy2 0) * (vx2 ?k - vx2 0)) \<or>
+                        (\<tau> \<le> 0 \<and> (vx2 1 - vx2 0) * (vy2 ?k - vy2 0) - (vy2 1 - vy2 0) * (vx2 ?k - vx2 0) \<le> 0)"
+                        using zero_le_mult_iff by (by100 blast)
+                      with hfd1k have "\<tau> \<ge> 0" by (by100 linarith)
+                      with \<open>\<tau> \<noteq> 0\<close> have "\<tau> > 0" by (by100 linarith)
+                      moreover have "\<tau> < 1"
+                      proof -
+                        have "(fst p - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (snd p - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)) =
+                          (1-\<tau>) * ((vx2 0 - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 0 - vy2(?k-1)) * (vx2 ?k - vx2(?k-1)))"
+                          using hfst_eq hsnd_eq by (by100 algebra)
+                        hence hMt_le2: "(1-\<tau>) * ((vx2 0 - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 0 - vy2(?k-1)) * (vx2 ?k - vx2(?k-1))) \<le> 0"
+                          using hMp_le0 by (by100 linarith)
+                        have "1-\<tau> \<ge> 0"
+                        proof (rule ccontr)
+                          assume "\<not> (0 \<le> 1 - \<tau>)"
+                          hence "1 - \<tau> < 0" by (by100 linarith)
+                          from mult_neg_neg[OF \<open>1 - \<tau> < 0\<close> hMd1k]
+                          have "(1-\<tau>) * ((vx2 0 - vx2(?k-1)) * (vy2 ?k - vy2(?k-1)) - (vy2 0 - vy2(?k-1)) * (vx2 ?k - vx2(?k-1))) > 0" .
+                          with hMt_le2 show False by (by100 linarith)
+                        qed
+                        hence "\<tau> \<le> 1" by (by100 linarith)
+                        with \<open>\<tau> \<noteq> 1\<close> show "\<tau> < 1" by (by100 linarith)
+                      qed
+                      ultimately show ?thesis by (by100 linarith)
+                    qed
                     with hfst_eq hsnd_eq show ?thesis by (by100 blast)
                   qed
                 qed
@@ -2477,6 +3195,9 @@ next
                 moreover have "((1-\<tau>)*vx2 0 + \<tau>*vx2 1, (1-\<tau>)*vy2 0 + \<tau>*vy2 1) =
                   ((1-\<tau>)*vx2 0 + \<tau>*vx2(Suc 0 mod ?n), (1-\<tau>)*vy2 0 + \<tau>*vy2(Suc 0 mod ?n))"
                   using \<open>Suc 0 mod ?n = 1\<close> by (by100 simp)
+                moreover have "(fst p \<noteq> vx2 0 \<or> snd p \<noteq> vy2 0) \<longrightarrow>
+                  (fst p \<noteq> vx2 ?k \<or> snd p \<noteq> vy2 ?k) \<longrightarrow> \<tau> \<in> {0<..<(1::real)}"
+                  using htau hne0 hnek by (by100 auto)
                 ultimately show ?thesis by (by100 metis)
               qed
             qed
@@ -2604,6 +3325,8 @@ next
                     obtain t_d where ht_d: "t_d \<in> I_set"
                       and hphiL_edge: "phi_L p' = ((1-t_d)*vx2 0 + t_d*vx2(Suc 0 mod ?n),
                                                     (1-t_d)*vy2 0 + t_d*vy2(Suc 0 mod ?n))"
+                      and ht_d_strict: "(fst p' \<noteq> vx2 0 \<or> snd p' \<noteq> vy2 0) \<longrightarrow>
+                        (fst p' \<noteq> vx2 ?k \<or> snd p' \<noteq> vy2 ?k) \<longrightarrow> t_d \<in> {0<..<(1::real)}"
                       by (by100 blast)
                     have "(0::nat) < ?n" using hn_ge3 by linarith
                     from hphi_R_int[OF hp True2, rule_format, OF \<open>0 < ?n\<close> ht_d]
@@ -2645,7 +3368,7 @@ next
                   obtain t_d where ht_d: "t_d \<in> I_set"
                     and hphiL_edge: "phi_L p = ((1-t_d)*vx2 0 + t_d*vx2(Suc 0 mod ?n),
                                                 (1-t_d)*vy2 0 + t_d*vy2(Suc 0 mod ?n))"
-                    by (by100 blast)
+                    by (by5000 blast)
                   have "(0::nat) < ?n" using hn_ge3 by linarith
                   from hphi_R_int_p'[rule_format, OF \<open>0 < ?n\<close> ht_d]
                   have "phi_R p' \<noteq> ((1-t_d)*vx2 0 + t_d*vx2(Suc 0 mod ?n),
@@ -2685,15 +3408,46 @@ next
                     obtain tp where htp: "tp \<in> I_set"
                       and hphiL_p: "phi_L p = ((1-tp)*vx2 0 + tp*vx2(Suc 0 mod ?n),
                                                 (1-tp)*vy2 0 + tp*vy2(Suc 0 mod ?n))"
-                      by (by100 blast)
+                      and htp_strict: "(fst p \<noteq> vx2 0 \<or> snd p \<noteq> vy2 0) \<longrightarrow>
+                        (fst p \<noteq> vx2 ?k \<or> snd p \<noteq> vy2 ?k) \<longrightarrow> tp \<in> {0<..<(1::real)}"
+                      by (by5000 blast)
                     from hphi_L_diagonal_on_edge[OF hp' \<open>cross_diag p' = 0\<close>]
                     obtain tp' where htp': "tp' \<in> I_set"
                       and hphiL_p': "phi_L p' = ((1-tp')*vx2 0 + tp'*vx2(Suc 0 mod ?n),
                                                   (1-tp')*vy2 0 + tp'*vy2(Suc 0 mod ?n))"
-                      by (by100 blast)
-                    \<comment> \<open>p is target interior \\<to> tp \\<in> (0,1).\<close>
+                      by (by5000 blast)
+                    \<comment> \<open>p is target interior: p \\<noteq> v\\_0 (on edge 0 at t=0), p \\<noteq> v\\_k (on edge k-1 at t=1).\<close>
                     have htp_interior: "tp \<in> {0<..<(1::real)}"
-                      sorry \<comment> \<open>From p target interior + diagonal \\<to> phi\\_L param is interior.\<close>
+                    proof -
+                      have hpne0: "fst p \<noteq> vx2 0 \<or> snd p \<noteq> vy2 0"
+                      proof (rule ccontr)
+                        assume "\<not> (fst p \<noteq> vx2 0 \<or> snd p \<noteq> vy2 0)"
+                        hence "fst p = vx2 0" "snd p = vy2 0" by (by100 simp)+
+                        hence "p = ((1-(0::real))*vx2 0+0*vx2(Suc 0 mod length ?w'),(1-0)*vy2 0+0*vy2(Suc 0 mod length ?w'))"
+                          by (cases p) simp
+                        moreover have "(0::nat) < length ?w'" using hlen_eq hn_ge3 by (by100 simp)
+                        moreover have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                        ultimately show False using hint by (by100 blast)
+                      qed
+                      have hpnek: "fst p \<noteq> vx2 ?k \<or> snd p \<noteq> vy2 ?k"
+                      proof (rule ccontr)
+                        assume "\<not> (fst p \<noteq> vx2 ?k \<or> snd p \<noteq> vy2 ?k)"
+                        hence "fst p = vx2 ?k" "snd p = vy2 ?k" by (by100 simp)+
+                        have hSuc_km1: "Suc (?k - 1) mod ?n = ?k"
+                        proof -
+                          have "Suc (?k - 1) = ?k" using hk_ge2 by (by100 linarith)
+                          moreover have "?k < ?n" by (by100 simp)
+                          ultimately show ?thesis by (by100 simp)
+                        qed
+                        have "p = ((1-(1::real))*vx2(?k-1)+1*vx2(Suc(?k-1) mod length ?w'),(1-1)*vy2(?k-1)+1*vy2(Suc(?k-1) mod length ?w'))"
+                          using \<open>fst p = vx2 ?k\<close> \<open>snd p = vy2 ?k\<close> hSuc_km1 hlen_eq
+                          by (cases p) simp
+                        moreover have "?k - 1 < length ?w'" using hlen_eq hk_ge2 by (by100 simp)
+                        moreover have "(1::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                        ultimately show False using hint by (by100 blast)
+                      qed
+                      from htp_strict hpne0 hpnek show ?thesis by (by100 simp)
+                    qed
                     show ?thesis
                     proof (cases "tp' \<in> {0<..<(1::real)}")
                       case True5: True
@@ -2790,7 +3544,70 @@ next
               \<comment> \<open>From hq2\\_eq: q2 of these are equal. Since they are on the diagonal
                  (inside polygon, not on any old edge for 0<t<1), old C8 forces equality.\<close>
               have "paste_sigma vx2 vy2 ?k ?n i t = paste_sigma vx2 vy2 ?k ?n j s"
-                sorry \<comment> \<open>From old C8 at diagonal interior point.\<close>
+              proof (cases "?k < ?n - 1")
+                case True3: True
+                \<comment> \<open>k < n-1: diagonal not an edge. hdiag gives interior point. Old C8 gives equality.\<close>
+                have "paste_sigma vx2 vy2 ?k ?n i t \<in> P2" using hsigma_in_P2[OF hi' ht_I] .
+                moreover have "\<forall>i''<?n. \<forall>t''\<in>I_set.
+                  paste_sigma vx2 vy2 ?k ?n i t \<noteq>
+                  ((1-t'')*vx2 i'' + t''*vx2(Suc i'' mod ?n), (1-t'')*vy2 i'' + t''*vy2(Suc i'' mod ?n))"
+                  using hdiag_not_on_edge[OF ht] hsigma_i by (by100 simp)
+                ultimately have "\<forall>p'\<in>P2. q2 (paste_sigma vx2 vy2 ?k ?n i t) = q2 p' \<longrightarrow>
+                  paste_sigma vx2 vy2 ?k ?n i t = p'"
+                  using hC8_2[rule_format] by (by100 blast)
+                moreover have "paste_sigma vx2 vy2 ?k ?n j s \<in> P2" using hsigma_in_P2[OF hj' hs_I] .
+                ultimately show ?thesis using hq2_eq by (by100 blast)
+              next
+                case False3: False
+                hence "?k = ?n - 1" using hk_ge2 by (by100 simp)
+                \<comment> \<open>k = n-1: diagonal IS edge n-1. Use old C9 at (n-1, n-1) to get t = s.\<close>
+                \<comment> \<open>k=n-1: diagonal IS edge n-1. diagonal(t) = edge(n-1, 1-t).\<close>
+                have h1mt: "1 - t \<in> {0<..<(1::real)}" using ht by (by100 auto)
+                have h1ms: "1 - s \<in> {0<..<(1::real)}" using hs by (by100 auto)
+                have hnm1: "?n - 1 < ?n" using hn_ge3 by (by100 linarith)
+                have hSuc_nm1: "Suc (?n - 1) mod ?n = 0" using hn_ge3 by (by100 simp)
+                \<comment> \<open>diagonal(t) = (1-t)*v\\_0 + t*v\\_{n-1} = edge(n-1, 1-t).\<close>
+                have hedge_i: "((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) =
+                  ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
+                   (1-(1-t))*vy2(?n-1) + (1-t)*vy2(Suc(?n-1) mod ?n))"
+                  using \<open>?k = ?n - 1\<close> hSuc_nm1 by (by100 simp)
+                have hedge_j: "((1-s)*vx2 0 + s*vx2 ?k, (1-s)*vy2 0 + s*vy2 ?k) =
+                  ((1-(1-s))*vx2(?n-1) + (1-s)*vx2(Suc(?n-1) mod ?n),
+                   (1-(1-s))*vy2(?n-1) + (1-s)*vy2(Suc(?n-1) mod ?n))"
+                  using \<open>?k = ?n - 1\<close> hSuc_nm1 by (by100 simp)
+                \<comment> \<open>q2 equality on edge n-1.\<close>
+                have hq2_diag: "q2 ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) =
+                  q2 ((1-s)*vx2 0 + s*vx2 ?k, (1-s)*vy2 0 + s*vy2 ?k)"
+                  using hq2_eq hsigma_i hsigma_j by (by100 simp)
+                have hq2_edge: "q2 ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
+                   (1-(1-t))*vy2(?n-1) + (1-t)*vy2(Suc(?n-1) mod ?n)) =
+                  q2 ((1-(1-s))*vx2(?n-1) + (1-s)*vx2(Suc(?n-1) mod ?n),
+                   (1-(1-s))*vy2(?n-1) + (1-s)*vy2(Suc(?n-1) mod ?n))"
+                proof -
+                  from arg_cong[OF hedge_i, of q2]
+                  have "q2 ((1-t)*vx2 0 + t*vx2 ?k, (1-t)*vy2 0 + t*vy2 ?k) =
+                    q2 ((1-(1-t))*vx2(?n-1) + (1-t)*vx2(Suc(?n-1) mod ?n),
+                     (1-(1-t))*vy2(?n-1) + (1-t)*vy2(Suc(?n-1) mod ?n))" .
+                  moreover from arg_cong[OF hedge_j, of q2]
+                  have "q2 ((1-s)*vx2 0 + s*vx2 ?k, (1-s)*vy2 0 + s*vy2 ?k) =
+                    q2 ((1-(1-s))*vx2(?n-1) + (1-s)*vx2(Suc(?n-1) mod ?n),
+                     (1-(1-s))*vy2(?n-1) + (1-s)*vy2(Suc(?n-1) mod ?n))" .
+                  ultimately show ?thesis using hq2_diag by (by100 simp)
+                qed
+                \<comment> \<open>Old C9 at (n-1, n-1): gives 1-t = 1-s.\<close>
+                from hC9_2[rule_format, OF hnm1 hnm1 h1mt h1ms hq2_edge]
+                have "(1-t) = (1-s)"
+                proof (elim disjE conjE)
+                  assume "?n - 1 = ?n - 1" "1 - t = 1 - s"
+                  thus "(1-t) = (1-s)" by (by100 simp)
+                next
+                  assume "fst(?w!(?n-1)) = fst(?w!(?n-1))"
+                    and hif: "if snd(?w!(?n-1)) = snd(?w!(?n-1)) then 1-s = 1-t else 1-s = 1-(1-t)"
+                  from hif show "(1-t) = (1-s)" by (by100 simp)
+                qed
+                hence "t = s" by (by100 linarith)
+                thus ?thesis using hsigma_i hsigma_j by (by100 simp)
+              qed
               hence ht_eq_s: "t = s"
               proof -
                 from \<open>paste_sigma vx2 vy2 ?k ?n i t = paste_sigma vx2 vy2 ?k ?n j s\<close>
