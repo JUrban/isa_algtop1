@@ -3583,7 +3583,9 @@ next
             qed
             have h1stp0: "1 - ?s - ?tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 ?j + t'*vx2(Suc ?j),
                                                                (1-t')*vy2 ?j + t'*vy2(Suc ?j)))"
-              sorry \<comment> \<open>F(x)=0 + x \\<in> P2 + C11 \\<to> x on edge j (sum-of-nonpositives argument).\<close>
+              sorry \<comment> \<open>F(x)=0 + x \\<in> P2 + C11 affine sum \\<to> x on edge j. Needs sum algebra.
+                 KEY: cross(v\\_j-x,v\\_{j+1}-x)=0 + P2 barycentrics + C11 at each vertex
+                 \\<to> only v\\_j, v\\_{j+1} have nonzero barycentrics \\<to> x on edge j.\<close>
             \<comment> \<open>Package as existential.\<close>
             show "\<exists>j s tp. 1 \<le> j \<and> j < ?k \<and> s \<ge> 0 \<and> tp \<ge> 0 \<and> 1 - s - tp \<ge> 0 \<and>
               phi_L x = ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
