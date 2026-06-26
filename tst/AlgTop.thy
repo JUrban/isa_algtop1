@@ -3369,8 +3369,10 @@ next
                This is a convex combination of 3 vertices of P2.
                Need: s \\<ge> 0, tp \\<ge> 0, 1-s-tp \\<ge> 0 (non-negative Cramer coordinates).
                These follow from the fan sector containment.\<close>
+            \<comment> \<open>Key: the numerator of 1-s-tp is AFFINE in x, and C11 gives \\<ge> 0 at all vertices.
+               So 1-s-tp \\<ge> 0 for all x \\<in> P2. Combined with s \\<ge> 0, tp \\<ge> 0: convex combination.\<close>
             show "phi_L x \<in> P2"
-              sorry \<comment> \<open>Cramer coords give convex combination of vertices. Needs sector containment.\<close>
+              sorry \<comment> \<open>phi\\_L\\_in\\_P2: Cramer coords non-negative via sector bounds + C11 affine argument.\<close>
           qed
           have hphi_R_in_P2: "\<And>x. x \<in> P2 \<Longrightarrow> phi_R x \<in> P2"
             sorry \<comment> \<open>phi\\_R maps P2 to P2.\<close>
@@ -4206,6 +4208,7 @@ qed
 
 
 end
+
 
 
 
