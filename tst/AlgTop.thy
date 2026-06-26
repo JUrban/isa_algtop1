@@ -3509,7 +3509,61 @@ next
             have htp_ge0: "?tp \<ge> 0" using htp_nn hdet_pos divide_nonneg_nonneg by (by100 fastforce)
             \<comment> \<open>1-s-tp \\<ge> 0: from C11 affine argument (same as phi\\_L\\_in\\_P2).\<close>
             have h1stp_ge0: "1 - ?s - ?tp \<ge> 0"
-              sorry \<comment> \<open>C11 affine argument (already proved in phi\\_L\\_in\\_P2, same technique).\<close>
+            proof -
+              let ?Aj = "vx2 ?j * vy2(Suc ?j) - vy2 ?j * vx2(Suc ?j)"
+              let ?Bj = "vy2 ?j - vy2(Suc ?j)" let ?Cj = "vx2(Suc ?j) - vx2 ?j"
+              have hnum_eq: "?det - ?s_num - ?tp_num =
+                (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
+                by (by100 algebra)
+              have hF_form: "\<And>px py :: real. (vx2 ?j - px)*(vy2(Suc ?j) - py) - (vy2 ?j - py)*(vx2(Suc ?j) - px)
+                = ?Aj + ?Bj * px + ?Cj * py" by (by100 algebra)
+              have "\<forall>l<?n. ?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                have hval_j: "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                  (vx2 ?j - vx2 l)*(vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l)*(vx2(Suc ?j) - vx2 l)"
+                  by (by100 algebra)
+                show "?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+                proof (cases "l = ?j")
+                  case True thus ?thesis unfolding hval_j by (by100 simp)
+                next
+                  case False show ?thesis
+                  proof (cases "l = Suc ?j")
+                    case True thus ?thesis unfolding hval_j by (by100 simp)
+                  next
+                    case False2: False
+                    have hsj_mod: "Suc ?j mod ?n = Suc ?j" using hsj_lt by (by100 simp)
+                    have hl_ne_sj_mod: "l \<noteq> Suc ?j mod ?n" using False2 hsj_mod by simp
+                    from hC11_2[rule_format, OF hj_lt hl False hl_ne_sj_mod]
+                    have "(vx2 l - vx2 ?j)*(vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j)*(vx2(Suc ?j) - vx2 ?j) < 0"
+                      using hsj_mod by (by100 simp)
+                    moreover have "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                      -((vx2 l - vx2 ?j)*(vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j)*(vx2(Suc ?j) - vx2 ?j))"
+                      unfolding hval_j by (by100 algebra)
+                    ultimately show ?thesis by linarith
+                  qed
+                qed
+              qed
+              from haffine_nonneg[OF hx this]
+              have hF_ge0: "?Aj + ?Bj * fst x + ?Cj * snd x \<ge> 0" .
+              have hF_eq_cross: "?Aj + ?Bj * fst x + ?Cj * snd x =
+                (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
+                using hF_form by simp
+              hence hnum_ge0: "?det - ?s_num - ?tp_num \<ge> 0"
+                using hF_ge0 hnum_eq by linarith
+              have hs_cancel: "?s * ?det = ?s_num" using hne by (by100 simp)
+              have htp_cancel: "?tp * ?det = ?tp_num" using hne by (by100 simp)
+              have "(1 - ?s - ?tp) * ?det = ?det - ?s * ?det - ?tp * ?det" by (by100 algebra)
+              hence "(1 - ?s - ?tp) * ?det = ?det - ?s_num - ?tp_num"
+                using hs_cancel htp_cancel by linarith
+              hence "(1 - ?s - ?tp) * ?det \<ge> 0" using hnum_ge0 by linarith
+              show ?thesis
+              proof (rule ccontr)
+                assume "\<not> ?thesis" hence "1 - ?s - ?tp < 0" by linarith
+                hence "(1 - ?s - ?tp) * ?det < 0" using hdet_pos mult_neg_pos by (by100 blast)
+                with \<open>(1 - ?s - ?tp) * ?det \<ge> 0\<close> show False by linarith
+              qed
+            qed
             \<comment> \<open>phi\\_L equality from definition.\<close>
             have hphi_eq: "phi_L x = ((1-?s-?tp)*vx2 0 + ?s*vx2(?k+1-?j) + ?tp*vx2(?k-?j),
                                        (1-?s-?tp)*vy2 0 + ?s*vy2(?k+1-?j) + ?tp*vy2(?k-?j))"
