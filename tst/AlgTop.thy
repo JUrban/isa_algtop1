@@ -4042,7 +4042,9 @@ next
             sorry \<comment> \<open>phi\\_L and phi\\_R images are in disjoint sub-polygon interiors.\<close>
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
-            sorry \<comment> \<open>phi\\_L is injective on left half (affine per sector, sectors have disjoint interiors).\<close>
+            sorry \<comment> \<open>phi\\_L injective: same sector \\<to> Cramer inversion (det \\<noteq> 0),
+               different sectors \\<to> fan triangle interiors disjoint.
+               Expert: det \\<noteq> 0 gives Cramer injectivity per sector.\<close>
           have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x > 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_R x = phi_R y \<Longrightarrow> x = y"
             sorry \<comment> \<open>phi\\_R is injective on right half.\<close>
