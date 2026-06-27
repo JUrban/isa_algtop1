@@ -6335,7 +6335,92 @@ next
                 unfolding phi_L_def Let_def True by (by100 simp)
               \<comment> \<open>Source det \\<noteq> 0 and target det \\<noteq> 0. Need PLx bounds.\<close>
               have hPLx_ex: "\<exists>j. ?PLx j"
-                sorry \<comment> \<open>IVT sector existence (cross\\_1 \\<ge> 0, cross\\_k \\<le> 0).\<close>
+              proof -
+                \<comment> \<open>From hphi\\_L\\_decomp: the existential jx satisfies sector bounds.
+                   The full PLx predicate follows from the Cramer s \\<ge> 0 and tp \\<ge> 0
+                   (which encode the cross product sign conditions).
+                   Rather than re-derive PLx, use the IVT directly.\<close>
+                have hcrossk_le: "(vx2 ?k - vx2 0)*(snd x - vy2 0) - (vy2 ?k - vy2 0)*(fst x - vx2 0) \<le> 0"
+                  using hcdx unfolding cross_diag_def by linarith
+                have hcross1_ge: "(vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0) \<ge> 0"
+                proof -
+                  let ?Ad = "(vy2 1 - vy2 0)*vx2 0 - (vx2 1 - vx2 0)*vy2 0"
+                  let ?Bd = "-(vy2 1 - vy2 0)" let ?Cd = "vx2 1 - vx2 0"
+                  have hvals_nn: "\<forall>l<?n. ?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
+                  proof (intro allI impI)
+                    fix l assume hl: "l < ?n"
+                    show "?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
+                    proof (cases "l = 0")
+                      case True
+                      have "?Ad + ?Bd * vx2 0 + ?Cd * vy2 0 = 0" by (by100 algebra)
+                      thus ?thesis unfolding True by linarith
+                    next
+                      case False show ?thesis
+                      proof (cases "l = 1")
+                        case True
+                        have "?Ad + ?Bd * vx2 1 + ?Cd * vy2 1 = 0" by (by100 algebra)
+                        thus ?thesis unfolding True by linarith
+                      next
+                        case False2: False hence "1 < l" using \<open>l \<noteq> 0\<close> by linarith
+                        have "(1::nat) < ?n" using hn_ge3 by linarith
+                        have "?Ad + ?Bd * vx2 l + ?Cd * vy2 l =
+                          (vx2 1 - vx2 0)*(vy2 l - vy2 0) - (vy2 1 - vy2 0)*(vx2 l - vx2 0)"
+                          by (by100 algebra)
+                        with hfan_det_0[rule_format, OF \<open>1 < ?n\<close> hl le_refl \<open>1 < l\<close>]
+                        show ?thesis by linarith
+                      qed
+                    qed
+                  qed
+                  from haffine_nonneg[OF hx hvals_nn]
+                  have "?Ad + ?Bd * fst x + ?Cd * snd x \<ge> 0" .
+                  moreover have "?Ad + ?Bd * fst x + ?Cd * snd x =
+                    (vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0)"
+                    by (by100 algebra)
+                  ultimately show ?thesis by linarith
+                qed
+                \<comment> \<open>IVT: cross\\_1 \\<ge> 0 and cross\\_k \\<le> 0 \\<to> \\<exists>j \\<in> [1,k). cross\\_j \\<ge> 0 \\<and> cross\\_{j+1} \\<le> 0.\<close>
+                define f where "f j = (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0)" for j
+                have hf1: "f 1 \<ge> 0" using hcross1_ge unfolding f_def .
+                have hfk: "f ?k \<le> 0" using hcrossk_le unfolding f_def .
+                have "\<forall>m. 1 \<le> m \<longrightarrow> m < ?k \<longrightarrow> f m \<ge> 0 \<longrightarrow>
+                    (\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0)"
+                proof (intro allI impI)
+                  fix m assume "1 \<le> m" and hmk: "m < ?k" and hfm: "f m \<ge> 0"
+                  show "\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0"
+                    using hmk hfm
+                  proof (induction "?k - m" arbitrary: m)
+                    case 0 thus ?case by linarith
+                  next
+                    case (Suc d)
+                    show ?case
+                    proof (cases "f (Suc m) \<le> 0")
+                      case True show ?thesis
+                        apply (rule exI[of _ m]) using True Suc.prems by (by100 blast)
+                    next
+                      case False hence "f (Suc m) > 0" by linarith
+                      hence "f (Suc m) \<ge> 0" by linarith
+                      have "Suc m < ?k"
+                      proof (rule ccontr)
+                        assume "\<not> Suc m < ?k" hence "Suc m \<ge> ?k" by linarith
+                        with Suc.prems have "Suc m = ?k" by linarith
+                        hence "f (Suc m) \<le> 0" using hfk by simp
+                        with \<open>f (Suc m) > 0\<close> show False by linarith
+                      qed
+                      have "d = ?k - Suc m" using Suc.hyps by linarith
+                      from Suc.hyps(1)[OF this \<open>Suc m < ?k\<close> \<open>f (Suc m) \<ge> 0\<close>]
+                      obtain j where "Suc m \<le> j" "j < ?k" "f j \<ge> 0" "f (Suc j) \<le> 0" by blast
+                      hence "m \<le> j" by linarith
+                      with \<open>j < ?k\<close> \<open>f j \<ge> 0\<close> \<open>f (Suc j) \<le> 0\<close> show ?thesis by (by100 blast)
+                    qed
+                  qed
+                qed
+                have h1ltk: "1 < ?k" using hk_ge2 by linarith
+                from \<open>\<forall>m. 1 \<le> m \<longrightarrow> m < ?k \<longrightarrow> f m \<ge> 0 \<longrightarrow> (\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0)\<close>
+                have "\<exists>j. 1 \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0"
+                  using le_refl h1ltk hf1 by (by100 blast)
+                then obtain j where "1 \<le> j" "j < ?k" "f j \<ge> 0" "f (Suc j) \<le> 0" by (by100 blast)
+                thus ?thesis unfolding f_def by (by100 blast)
+              qed
               from LeastI_ex[OF hPLx_ex] have hPLx: "?PLx ?jxL" .
               have hjxL_ge1: "1 \<le> ?jxL" and hjxL_lt_k: "?jxL < ?k"
                 using hPLx by (by100 blast)+
