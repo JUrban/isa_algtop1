@@ -6314,10 +6314,27 @@ next
             have hsnd_eq: "(1-sx-tpx)*vy2 0 + sx*vy2(?k+1-jx) + tpx*vy2(?k-jx) =
               (1-sy-tpy)*vy2 0 + sy*vy2(?k+1-jy) + tpy*vy2(?k-jy)"
               using heq hphiL_x hphiL_y by (by100 simp)
-            \<comment> \<open>Cramer inversion: (s,tp) uniquely determines x within each sector.\<close>
+            \<comment> \<open>Cramer inversion + sector matching: phi\\_L injective on left half.\<close>
+            \<comment> \<open>Use phi\\_L\\_def to get the Cramer connection to (fst x, snd x).\<close>
+            define jx_def where "jx_def = (LEAST j. ?PLx j)"
+            define jy_def where "jy_def = (LEAST j. ?PLy j)"
+            \<comment> \<open>Key: phi\\_L(x) = f(jx\\_def, fst x, snd x) and phi\\_L(y) = f(jy\\_def, fst y, snd y)
+               where f uses Cramer coordinates. If jx\\_def = jy\\_def, the Cramer det \\<noteq> 0
+               gives a bijection (fst x, snd x) \\<leftrightarrow> (s, tp) \\<to> same output \\<to> same input.\<close>
+            \<comment> \<open>Derive: fst x, snd x satisfy the Cramer system for sector jx\\_def.\<close>
+            let ?ex = "vx2 jx_def - vx2 0" let ?ey = "vy2 jx_def - vy2 0"
+            let ?fx = "vx2(Suc jx_def) - vx2 0" let ?fy = "vy2(Suc jx_def) - vy2 0"
+            let ?det_j = "?ex * ?fy - ?ey * ?fx"
+            have hphi_fst_x: "fst (phi_L x) =
+              (1 - (?fy*(fst x - vx2 0) - ?fx*(snd x - vy2 0))/?det_j -
+                   (?ex*(snd x - vy2 0) - ?ey*(fst x - vx2 0))/?det_j) * vx2 0
+              + (?fy*(fst x - vx2 0) - ?fx*(snd x - vy2 0))/?det_j * vx2(?k+1-jx_def)
+              + (?ex*(snd x - vy2 0) - ?ey*(fst x - vx2 0))/?det_j * vx2(?k-jx_def)"
+              unfolding phi_L_def Let_def jx_def_def by (by100 simp)
             show "x = y"
-              sorry \<comment> \<open>From output equality + fan det \\<noteq> 0: (sx,tpx)=(sy,tpy) and jx=jy.
-                 Then Cramer inversion gives x=y. Needs sector matching argument.\<close>
+              sorry \<comment> \<open>phi\\_L\\_inj: Jacobian det = det\\_input * det\\_output \\<noteq> 0 \\<to> x = y.
+                 Same sector: linear system from output equality + Cramer inversion.
+                 Different sectors: fan partition (image triangles disjoint).\<close>
           qed
           have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x > 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_R x = phi_R y \<Longrightarrow> x = y"
