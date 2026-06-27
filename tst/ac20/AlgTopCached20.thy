@@ -2723,4 +2723,31 @@ lemma cross_product_affine_3:
        + gamma*((kx-ox)*(cy-oy) - (ky-oy)*(cx-ox))"
   using hsum by algebra
 
+\<comment> \<open>Two cross products from same origin both zero + nonzero determinant
+   implies the displacement is zero (point equals origin).
+   Used for: sL=tpL=0 \\<to> x=v\\_0 in the disjoint/inj proofs.\<close>
+lemma cross_pair_zero_imp_origin:
+  fixes ex ey fx fy dx dy :: real
+  assumes "ex * dy = ey * dx"
+      and "fx * dy = fy * dx"
+      and "ex * fy - ey * fx \<noteq> 0"
+  shows "dx = 0 \<and> dy = 0"
+proof -
+  have "dx * (ex * fy - ey * fx) = 0"
+    using assms(1) assms(2) by algebra
+  hence "dx = 0" using assms(3) by simp
+  have "ex * dy = 0" using assms(1) \<open>dx = 0\<close> by simp
+  moreover have "fx * dy = 0" using assms(2) \<open>dx = 0\<close> by simp
+  ultimately show ?thesis
+  proof (cases "ex = 0")
+    case True
+    hence "ey * fx \<noteq> 0" using assms(3) by simp
+    hence "fx \<noteq> 0" by auto
+    with \<open>fx * dy = 0\<close> \<open>dx = 0\<close> show ?thesis by simp
+  next
+    case False
+    with \<open>ex * dy = 0\<close> \<open>dx = 0\<close> show ?thesis by simp
+  qed
+qed
+
 end
