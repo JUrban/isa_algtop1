@@ -5681,8 +5681,99 @@ next
               \<comment> \<open>This means x is on the line through v\\_0, v\\_1. Combined with x \\<in> P2:
                  by haffine\\_nonneg analysis, x is on edge 0 \\<to> contradicts hint\\_x.
                  The edge-0 argument uses the same C11 sum-of-nonpositives as h1stp0.\<close>
-              show False
-                sorry \<comment> \<open>cross\\_1(x)=0 + x \\<in> P2 \\<to> x on edge 0 \\<to> hint\\_x contradiction.\<close>
+              \<comment> \<open>Use affine\\_zero\\_on\\_convex\\_hull\\_imp\\_on\\_edge: cross\\_1 is affine,
+                 = 0 at x, \\<ge> 0 at all vertices, > 0 for l \\<ge> 2. Coeffs at l \\<ge> 2 are 0.
+                 So x = c0*v\\_0 + c1*v\\_1 on edge 0. hint\\_x says x NOT on edge 0. \\<bot>.\<close>
+              \<comment> \<open>Express cross\\_1 as affine: A + B*X + C*Y.\<close>
+              let ?A1 = "(vy2 1 - vy2 0)*vx2 0 - (vx2 1 - vx2 0)*vy2 0"
+              let ?B1 = "-(vy2 1 - vy2 0)" let ?C1 = "vx2 1 - vx2 0"
+              have hcross1_eq: "?A1 + ?B1 * fst x + ?C1 * snd x = 0"
+                using \<open>(vx2 1 - vx2 0)*(snd x - vy2 0) = (vy2 1 - vy2 0)*(fst x - vx2 0)\<close>
+                by (by100 algebra)
+              \<comment> \<open>Extract barycentrics from P2 membership.\<close>
+              from hx[unfolded hC5_2]
+              obtain cc where hcc: "\<forall>i<?n. cc i \<ge> 0" "(\<Sum>i<?n. cc i) = 1"
+                "fst x = (\<Sum>i<?n. cc i * vx2 i)" "snd x = (\<Sum>i<?n. cc i * vy2 i)"
+                by (by5000 auto)
+              \<comment> \<open>F \\<ge> 0 at all vertices, > 0 for l \\<ge> 2.\<close>
+              have hval_d1_eq: "\<And>l. ?A1 + ?B1 * vx2 l + ?C1 * vy2 l =
+                (vx2 1 - vx2 0)*(vy2 l - vy2 0) - (vy2 1 - vy2 0)*(vx2 l - vx2 0)"
+                by (by100 algebra)
+              have hF1_nn: "\<forall>l<?n. ?A1 + ?B1 * vx2 l + ?C1 * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                show "?A1 + ?B1 * vx2 l + ?C1 * vy2 l \<ge> 0"
+                proof (cases "l = 0")
+                  case True thus ?thesis unfolding hval_d1_eq by (by100 simp)
+                next
+                  case False show ?thesis
+                  proof (cases "l = 1")
+                    case True thus ?thesis unfolding hval_d1_eq by (by100 simp)
+                  next
+                    case False2: False hence "1 < l" using False by (by100 linarith)
+                    have "(1::nat) < ?n" using hn_ge3 by (by100 linarith)
+                    from hfan_det_0[rule_format, OF \<open>1 < ?n\<close> hl le_refl \<open>1 < l\<close>]
+                    show ?thesis unfolding hval_d1_eq by linarith
+                  qed
+                qed
+              qed
+              have hF1_strict: "\<forall>l<?n. l \<noteq> 0 \<longrightarrow> l \<noteq> Suc 0 \<longrightarrow> ?A1 + ?B1 * vx2 l + ?C1 * vy2 l > 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n" and hl0: "l \<noteq> 0" and hl1: "l \<noteq> Suc 0"
+                have "1 < l" using hl0 hl1 by (by100 linarith)
+                have "(1::nat) < ?n" using hn_ge3 by (by100 linarith)
+                from hfan_det_0[rule_format, OF \<open>1 < ?n\<close> hl le_refl \<open>1 < l\<close>]
+                show "?A1 + ?B1 * vx2 l + ?C1 * vy2 l > 0" unfolding hval_d1_eq by linarith
+              qed
+              have "0 < ?n" using hn_ge3 by (by100 linarith)
+              have "Suc 0 < ?n" using hn_ge3 by (by100 linarith)
+              from affine_zero_on_convex_hull_imp_on_edge[OF hcc(1) hcc(2) hcc(3) hcc(4)
+                hcross1_eq hF1_nn \<open>0 < ?n\<close> \<open>Suc 0 < ?n\<close> hF1_strict]
+              have hcoeffs_zero: "\<forall>l<?n. l \<noteq> 0 \<longrightarrow> l \<noteq> Suc 0 \<longrightarrow> cc l = 0" .
+              \<comment> \<open>x = cc(0)*v\\_0 + cc(1)*v\\_1. This is on edge 0.\<close>
+              \<comment> \<open>Need to show \\<exists>t \\<in> I\\_set. x = (1-t)*v\\_0 + t*v\\_1.
+                 Then hint\\_x gives contradiction.\<close>
+              \<comment> \<open>x = cc(0)*v\\_0 + cc(1)*v\\_1 where cc(0)+cc(1)=1. So x on edge 0.\<close>
+              \<comment> \<open>All cc(l)=0 for l\\<ge>2 \\<to> sums reduce to cc(0)*v(0) + cc(1)*v(1).\<close>
+              have hcc_rest_zero: "\<forall>l\<in>{..<?n}-{0}-{1}. cc l = 0"
+              proof
+                fix l assume "l \<in> {..<?n}-{0}-{1}"
+                hence "l < ?n" "l \<noteq> 0" "l \<noteq> Suc 0" by (by100 simp)+
+                from hcoeffs_zero[rule_format, OF \<open>l < ?n\<close> \<open>l \<noteq> 0\<close> \<open>l \<noteq> Suc 0\<close>] show "cc l = 0" .
+              qed
+              have hsum_rest_x: "(\<Sum>l\<in>{..<?n}-{0}-{1}. cc l * vx2 l) = 0"
+                by (rule sum.neutral, simp add: hcc_rest_zero)
+              have hsum_rest_y: "(\<Sum>l\<in>{..<?n}-{0}-{1}. cc l * vy2 l) = 0"
+                by (rule sum.neutral, simp add: hcc_rest_zero)
+              have hsum_rest_1: "(\<Sum>l\<in>{..<?n}-{0}-{1}. cc l) = 0"
+                by (rule sum.neutral, simp add: hcc_rest_zero)
+              have h0_in: "(0::nat) \<in> {..<?n}" using hn_ge3 by (by100 simp)
+              have h1_in: "(1::nat) \<in> {..<?n} - {0}" using hn_ge3 by (by100 simp)
+              have "(\<Sum>i<?n. cc i) = cc 0 + cc 1 + (\<Sum>l\<in>{..<?n}-{0}-{1}. cc l)"
+                using sum.remove[of "{..<?n}" 0 cc] h0_in
+                      sum.remove[of "{..<?n}-{0}" 1 cc] h1_in by (by100 simp)
+              hence "cc 0 + cc 1 = 1" using hcc(2) hsum_rest_1 by linarith
+              have "(\<Sum>i<?n. cc i * vx2 i) = cc 0 * vx2 0 + cc 1 * vx2 1 + (\<Sum>l\<in>{..<?n}-{0}-{1}. cc l * vx2 l)"
+                using sum.remove[of "{..<?n}" 0 "\<lambda>i. cc i * vx2 i"] h0_in
+                      sum.remove[of "{..<?n}-{0}" 1 "\<lambda>i. cc i * vx2 i"] h1_in by (by100 simp)
+              hence hfst_eq: "fst x = cc 0 * vx2 0 + cc 1 * vx2 1"
+                using hcc(3) hsum_rest_x by linarith
+              have "(\<Sum>i<?n. cc i * vy2 i) = cc 0 * vy2 0 + cc 1 * vy2 1 + (\<Sum>l\<in>{..<?n}-{0}-{1}. cc l * vy2 l)"
+                using sum.remove[of "{..<?n}" 0 "\<lambda>i. cc i * vy2 i"] h0_in
+                      sum.remove[of "{..<?n}-{0}" 1 "\<lambda>i. cc i * vy2 i"] h1_in by (by100 simp)
+              hence hsnd_eq: "snd x = cc 0 * vy2 0 + cc 1 * vy2 1"
+                using hcc(4) hsum_rest_y by linarith
+              have hx_eq: "x = ((1 - cc 1)*vx2 0 + cc 1*vx2 1, (1 - cc 1)*vy2 0 + cc 1*vy2 1)"
+                using hfst_eq hsnd_eq \<open>cc 0 + cc 1 = 1\<close> by (cases x, by100 simp)
+              have "cc 1 \<in> I_set" unfolding top1_unit_interval_def
+                using hcc(1) \<open>cc 0 + cc 1 = 1\<close> hn_ge3 by (by100 auto)
+              have "(0::nat) < length ?w'" using hn_ge3 hlen_eq by (by100 simp)
+              have "Suc 0 mod length ?w' = 1" using hn_ge3 hlen_eq by (by100 simp)
+              from hint_x[rule_format, OF \<open>0 < length ?w'\<close> \<open>cc 1 \<in> I_set\<close>]
+              have "x \<noteq> ((1-cc 1)*vx2 0+cc 1*vx2(Suc 0 mod length ?w'),(1-cc 1)*vy2 0+cc 1*vy2(Suc 0 mod length ?w'))" .
+              with \<open>x = ((1 - cc 1)*vx2 0 + cc 1*vx2 1, (1 - cc 1)*vy2 0 + cc 1*vy2 1)\<close>
+                \<open>Suc 0 mod length ?w' = 1\<close>
+              show False by (by100 simp)
             qed
           qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
