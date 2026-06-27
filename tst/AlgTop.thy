@@ -6404,10 +6404,28 @@ next
                 by (by100 algebra)
               finally show ?thesis .
             qed
+            \<comment> \<open>Same identity for snd.\<close>
+            have hphi_snd_x: "snd (phi_L x) =
+              (1 - (?fy*(fst x - vx2 0) - ?fx*(snd x - vy2 0))/?det_j -
+                   (?ex*(snd x - vy2 0) - ?ey*(fst x - vx2 0))/?det_j) * vy2 0
+              + (?fy*(fst x - vx2 0) - ?fx*(snd x - vy2 0))/?det_j * vy2(?k+1-jx_def)
+              + (?ex*(snd x - vy2 0) - ?ey*(fst x - vx2 0))/?det_j * vy2(?k-jx_def)"
+              unfolding phi_L_def Let_def jx_def_def by (by100 simp)
+            have hiden_x_snd: "?det_j * snd (phi_L x) = ?det_j * vy2 0
+              + ?s_num_x * (vy2(?k+1-jx_def) - vy2 0)
+              + ?tp_num_x * (vy2(?k-jx_def) - vy2 0)"
+            proof -
+              have "?det_j * snd (phi_L x) =
+                (?det_j - ?s_num_x - ?tp_num_x) * vy2 0 + ?s_num_x * vy2(?k+1-jx_def) + ?tp_num_x * vy2(?k-jx_def)"
+                using hphi_snd_x hs_cancel htp_cancel by (by5000 algebra)
+              also have "... = ?det_j * vy2 0 + ?s_num_x * (vy2(?k+1-jx_def) - vy2 0) + ?tp_num_x * (vy2(?k-jx_def) - vy2 0)"
+                by (by100 algebra)
+              finally show ?thesis .
+            qed
+            \<comment> \<open>From phi\\_L(x) = phi\\_L(y) and same identities for y (assuming jx\\_def = jy\\_def):
+               linear system det = det\\_input * det\\_output \\<noteq> 0 \\<to> x = y.\<close>
             show "x = y"
-              sorry \<comment> \<open>Same identity for y (with jy\\_def). If jx\\_def = jy\\_def:
-                 subtract \\<to> linear system in (dx, dy). Det = det\\_input * det\\_output \\<noteq> 0.
-                 Hence dx = dy = 0 \\<to> x = y. Different sectors: sorry.\<close>
+              sorry \<comment> \<open>Need: same identity for y, linear system, det \\<noteq> 0, then x = y.\<close>
           qed
           have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x > 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_R x = phi_R y \<Longrightarrow> x = y"
