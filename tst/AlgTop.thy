@@ -6625,8 +6625,28 @@ next
                       have "?A + ?B * fst p + ?C * snd p =
                         ?A * (\<Sum>i<?n. cc i) + ?B * (\<Sum>i<?n. cc i * vx2 i) + ?C * (\<Sum>i<?n. cc i * vy2 i)"
                         using hcc(2) hcc(3) hcc(4) by simp
-                      hence hval: "(\<Sum>i<?n. cc i * (?A + ?B * vx2 i + ?C * vy2 i)) = ?A + ?B * fst p + ?C * snd p"
-                        sorry \<comment> \<open>Sum distribution: needs F affine \\<to> F(\\<Sum>) = \\<Sum> F.\<close>
+                      moreover have "(\<Sum>i<?n. cc i * (?A + ?B * vx2 i + ?C * vy2 i)) =
+                        ?A * (\<Sum>i<?n. cc i) + ?B * (\<Sum>i<?n. cc i * vx2 i) + ?C * (\<Sum>i<?n. cc i * vy2 i)"
+                      proof -
+                        have step1: "(\<Sum>i<?n. cc i * (?A + ?B * vx2 i + ?C * vy2 i)) =
+                          (\<Sum>i<?n. ?A * cc i + (?B * (cc i * vx2 i) + ?C * (cc i * vy2 i)))"
+                          by (rule sum.cong[of "{..<?n}" "{..<?n}"], simp, by100 algebra)
+                        have "(\<Sum>i<?n. ?A * cc i + (?B * (cc i * vx2 i) + ?C * (cc i * vy2 i))) =
+                          (\<Sum>i<?n. ?A * cc i) + (\<Sum>i<?n. ?B * (cc i * vx2 i) + ?C * (cc i * vy2 i))"
+                          by (rule sum.distrib)
+                        moreover have "(\<Sum>i<?n. ?B * (cc i * vx2 i) + ?C * (cc i * vy2 i)) =
+                          (\<Sum>i<?n. ?B * (cc i * vx2 i)) + (\<Sum>i<?n. ?C * (cc i * vy2 i))"
+                          by (rule sum.distrib)
+                        moreover have "(\<Sum>i<?n. ?A * cc i) = ?A * (\<Sum>i<?n. cc i)"
+                          by (rule sum_distrib_left[symmetric])
+                        moreover have "(\<Sum>i<?n. ?B * (cc i * vx2 i)) = ?B * (\<Sum>i<?n. cc i * vx2 i)"
+                          by (rule sum_distrib_left[symmetric])
+                        moreover have "(\<Sum>i<?n. ?C * (cc i * vy2 i)) = ?C * (\<Sum>i<?n. cc i * vy2 i)"
+                          by (rule sum_distrib_left[symmetric])
+                        ultimately show ?thesis using step1 by simp
+                      qed
+                      ultimately have hval: "(\<Sum>i<?n. cc i * (?A + ?B * vx2 i + ?C * vy2 i)) = ?A + ?B * fst p + ?C * snd p"
+                        by simp
                       thus ?thesis using hF_zero by linarith
                     qed
                     have "\<forall>l<?n. l \<noteq> 0 \<longrightarrow> l \<noteq> ?n - 1 \<longrightarrow> cc l = 0"
