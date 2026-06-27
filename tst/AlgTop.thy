@@ -6331,10 +6331,83 @@ next
               + (?fy*(fst x - vx2 0) - ?fx*(snd x - vy2 0))/?det_j * vx2(?k+1-jx_def)
               + (?ex*(snd x - vy2 0) - ?ey*(fst x - vx2 0))/?det_j * vx2(?k-jx_def)"
               unfolding phi_L_def Let_def jx_def_def by (by100 simp)
+            \<comment> \<open>Sector existence for PLx (from IVT: cross\\_1(x) \\<ge> 0 and cross\\_k(x) \\<le> 0).\<close>
+            have hPLx_ex: "\<exists>j. ?PLx j"
+            proof -
+              have "cross_diag x \<le> 0" using hcdx .
+              have hcrossk_le: "(vx2 ?k - vx2 0)*(snd x - vy2 0) - (vy2 ?k - vy2 0)*(fst x - vx2 0) \<le> 0"
+                using hcdx unfolding cross_diag_def by linarith
+              have hcross1_ge: "(vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0) \<ge> 0"
+              proof -
+                let ?Ad = "(vy2 1 - vy2 0)*vx2 0 - (vx2 1 - vx2 0)*vy2 0"
+                let ?Bd = "-(vy2 1 - vy2 0)" let ?Cd = "vx2 1 - vx2 0"
+                have "\<forall>l<?n. ?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
+                proof (intro allI impI)
+                  fix l assume hl: "l < ?n"
+                  show "?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
+                  proof (cases "l = 0")
+                    case True
+                    have "?Ad + ?Bd * vx2 0 + ?Cd * vy2 0 = 0" by (by100 algebra)
+                    thus ?thesis unfolding True by linarith
+                  next
+                    case False show ?thesis
+                    proof (cases "l = 1")
+                      case True
+                      have "?Ad + ?Bd * vx2 1 + ?Cd * vy2 1 = 0" by (by100 algebra)
+                      thus ?thesis unfolding True by linarith
+                    next
+                      case False2: False hence "1 < l" using False by linarith
+                      have "(1::nat) < ?n" using hn_ge3 by linarith
+                      from hfan_det_0[rule_format, OF \<open>1 < ?n\<close> hl le_refl \<open>1 < l\<close>]
+                      have "(vx2 1 - vx2 0)*(vy2 l - vy2 0) - (vy2 1 - vy2 0)*(vx2 l - vx2 0) > 0" .
+                      moreover have "?Ad + ?Bd * vx2 l + ?Cd * vy2 l =
+                        (vx2 1 - vx2 0)*(vy2 l - vy2 0) - (vy2 1 - vy2 0)*(vx2 l - vx2 0)"
+                        by (by100 algebra)
+                      ultimately show ?thesis by linarith
+                    qed
+                  qed
+                qed
+                from haffine_nonneg[OF hx this]
+                have "?Ad + ?Bd * fst x + ?Cd * snd x \<ge> 0" .
+                moreover have "?Ad + ?Bd * fst x + ?Cd * snd x =
+                  (vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0)"
+                  by (by100 algebra)
+                ultimately show ?thesis by linarith
+              qed
+              \<comment> \<open>IVT on [1, k): cross changes sign.\<close>
+              from hphi_L_decomp[OF hx hcdx]
+              obtain jj where "1 \<le> jj" "jj < ?k" by (by5000 blast)
+              thus ?thesis sorry \<comment> \<open>IVT sector existence. Available from left-fan proof pattern.\<close>
+            qed
+            from LeastI_ex[OF hPLx_ex] have hPLx: "?PLx (LEAST j. ?PLx j)" .
+            have hjx_ge1: "1 \<le> jx_def" and hjx_lt_k: "jx_def < ?k"
+              using hPLx unfolding jx_def_def by (by100 blast)+
+            have hjx_lt_n: "jx_def < ?n" using hjx_lt_k hk_lt_nm1 by linarith
+            have hjx_suc_lt: "Suc jx_def < ?n" using hjx_lt_k hk_lt_nm1 by linarith
+            \<comment> \<open>Input fan det > 0.\<close>
+            have hdet_pos: "?det_j > 0"
+              using hfan_det_0[rule_format, OF hjx_lt_n hjx_suc_lt hjx_ge1 lessI] .
+            have hdet_ne: "?det_j \<noteq> 0" using hdet_pos by linarith
+            \<comment> \<open>Cramer identity: det\\_j * fst(phi\\_L(x)) = linear(fst x, snd x).\<close>
+            let ?s_num_x = "?fy*(fst x - vx2 0) - ?fx*(snd x - vy2 0)"
+            let ?tp_num_x = "?ex*(snd x - vy2 0) - ?ey*(fst x - vx2 0)"
+            have hs_cancel: "?det_j * (?s_num_x / ?det_j) = ?s_num_x" using hdet_ne by (by100 simp)
+            have htp_cancel: "?det_j * (?tp_num_x / ?det_j) = ?tp_num_x" using hdet_ne by (by100 simp)
+            have hiden_x: "?det_j * fst (phi_L x) = ?det_j * vx2 0
+              + ?s_num_x * (vx2(?k+1-jx_def) - vx2 0)
+              + ?tp_num_x * (vx2(?k-jx_def) - vx2 0)"
+            proof -
+              have "?det_j * fst (phi_L x) =
+                (?det_j - ?s_num_x - ?tp_num_x) * vx2 0 + ?s_num_x * vx2(?k+1-jx_def) + ?tp_num_x * vx2(?k-jx_def)"
+                using hphi_fst_x hs_cancel htp_cancel by (by5000 algebra)
+              also have "... = ?det_j * vx2 0 + ?s_num_x * (vx2(?k+1-jx_def) - vx2 0) + ?tp_num_x * (vx2(?k-jx_def) - vx2 0)"
+                by (by100 algebra)
+              finally show ?thesis .
+            qed
             show "x = y"
-              sorry \<comment> \<open>phi\\_L\\_inj: Jacobian det = det\\_input * det\\_output \\<noteq> 0 \\<to> x = y.
-                 Same sector: linear system from output equality + Cramer inversion.
-                 Different sectors: fan partition (image triangles disjoint).\<close>
+              sorry \<comment> \<open>Same identity for y (with jy\\_def). If jx\\_def = jy\\_def:
+                 subtract \\<to> linear system in (dx, dy). Det = det\\_input * det\\_output \\<noteq> 0.
+                 Hence dx = dy = 0 \\<to> x = y. Different sectors: sorry.\<close>
           qed
           have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x > 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_R x = phi_R y \<Longrightarrow> x = y"
