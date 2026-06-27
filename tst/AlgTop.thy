@@ -5581,9 +5581,35 @@ next
                Then phi\\_R(y) = phi\\_L(x) on diagonal. By symmetric argument: cross\\_diag(y) = 0. \\<bot>.\<close>
             have hsL_cdA_zero: "sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0)) = 0"
               using hsum_zero htpL_zero by (by100 simp)
+            \<comment> \<open>From sL*cdA=0 and cdA \\<le> 0 and sL \\<ge> 0: if sL > 0 then cdA = 0.
+               In all cases: (1-sL-tpL)*cd(v\\_0) + sL*cdA + tpL*cdB = 0 gives phi\\_L on diagonal.
+               phi\\_R(y) = phi\\_L(x) also on diagonal \\<to> cross\\_diag(phi\\_R y) = 0.
+               Right-fan decomp: sR*cdSj + tpR*cdSSj = 0 with cdSj > 0, cdSSj \\<ge> 0.
+               So sR = 0 (and tpR = 0 if cdSSj > 0). Then phi\\_R(y) = v\\_k.
+               But phi\\_L(x) = (1-sL)*v\\_0 + sL*v\\_k (since tpL=0, and cdA=0 means A=k).
+               phi\\_L(x) = phi\\_R(y) = v\\_k forces sL = 1, phi\\_L(x) = v\\_k.
+               From Cramer inverse: x is on a specific fan ray.
+               But this is getting complex. The KEY insight is simpler:
+               phi\\_L(x) and phi\\_R(y) are both on the diagonal (cd = 0).
+               But x has cd < 0 and y has cd > 0.
+               The contradiction comes from: being on the diagonal with strict cd on both sides
+               is geometrically impossible — phi maps strict-half points to the diagonal only
+               when the point itself is on a specific fan ray, which forces cd = 0.\<close>
+            \<comment> \<open>Actually, the cleanest argument: we already proved phi\\_L\\_int and phi\\_R\\_int
+               which say phi maps strict-interior target points to OLD interior.
+               If cross\\_diag(x) < 0 (strict) and x is TARGET interior:
+               phi\\_L(x) is NOT on any old edge (from phi\\_L\\_int).
+               The diagonal v\\_0\\<to>v\\_k is NOT a polygon edge (k \\<ge> 2, so it's a chord).
+               So phi\\_L(x) on the diagonal is fine — it's not on a POLYGON edge.
+               The contradiction must come from phi\\_R(y) analysis.\<close>
+            \<comment> \<open>From the right-fan: cross\\_diag(phi\\_R y) = 0 forces sR*cdSj = 0.
+               cdSj > 0 (strict since k < Suc jR). So sR = 0.
+               Then tpR*cdSSj = 0. If cdSSj > 0: tpR = 0. phi\\_R(y) = v\\_k.
+               If cdSSj = 0 (SSj mod n = 0): phi\\_R(y) = tpR*v\\_0 + (1-tpR)*v\\_k on diagonal.
+               In all cases: phi\\_R(y) on diagonal v\\_0\\<to>v\\_k.
+               From phi\\_R(y) = v\\_k (or on diagonal): symmetric Cramer \\<to> y = v\\_0 \\<to> cd(y) = 0. \\<bot>.\<close>
             show False
-              sorry \<comment> \<open>sL*cdA=0. If cdA\\<noteq>0: sL=tpL=0 \\<to> x=v\\_0 \\<to> cd=0 \\<to> \\<bot>.
-                 If cdA=0 (jL=1): phi on diagonal \\<to> symmetric y argument \\<to> cd(y)=0 \\<to> \\<bot>.\<close>
+              sorry \<comment> \<open>Final: right-fan cd=0 \\<to> sR=0 \\<to> Cramer \\<to> y=v\\_0 \\<to> cd(y)=0 \\<to> \\<bot>.\<close>
           qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
