@@ -2750,4 +2750,55 @@ proof -
   qed
 qed
 
+\<comment> \<open>If an affine function is zero at a convex hull point, non-negative at all vertices,
+   and strictly positive at all vertices except j and Suc j, then all coefficients
+   at non-{j, Suc j} vertices are zero. Used for: F(x)=0 + x \\<in> P2 \\<to> x on edge j.\<close>
+lemma affine_zero_on_convex_hull_imp_on_edge:
+  fixes vx vy :: "nat \<Rightarrow> real" and n j :: nat
+    and coeffs :: "nat \<Rightarrow> real"
+    and A B C :: real
+  assumes hnn: "\<forall>i<n. coeffs i \<ge> 0"
+      and hsum: "(\<Sum>i<n. coeffs i) = 1"
+      and hx: "fst_x = (\<Sum>i<n. coeffs i * vx i)"
+      and hy: "snd_x = (\<Sum>i<n. coeffs i * vy i)"
+      and hF_zero: "A + B * fst_x + C * snd_x = 0"
+      and hF_nn: "\<forall>l<n. A + B * vx l + C * vy l \<ge> 0"
+      and hj: "j < n" and hsj: "Suc j < n"
+      and hF_strict: "\<forall>l<n. l \<noteq> j \<longrightarrow> l \<noteq> Suc j \<longrightarrow> A + B * vx l + C * vy l > 0"
+  shows "\<forall>l<n. l \<noteq> j \<longrightarrow> l \<noteq> Suc j \<longrightarrow> coeffs l = 0"
+proof (intro allI impI)
+  fix l assume hl: "l < n" and hlj: "l \<noteq> j" and hlsj: "l \<noteq> Suc j"
+  have hF_sum: "(\<Sum>i<n. coeffs i * (A + B * vx i + C * vy i)) = 0"
+  proof -
+    have h1: "A * (\<Sum>i<n. coeffs i) = (\<Sum>i<n. A * coeffs i)" by (rule sum_distrib_left)
+    have h2: "B * (\<Sum>i<n. coeffs i * vx i) = (\<Sum>i<n. B * (coeffs i * vx i))" by (rule sum_distrib_left)
+    have h3: "C * (\<Sum>i<n. coeffs i * vy i) = (\<Sum>i<n. C * (coeffs i * vy i))" by (rule sum_distrib_left)
+    have h_split1: "(\<Sum>i<n. A * coeffs i + B * (coeffs i * vx i)) =
+      (\<Sum>i<n. A * coeffs i) + (\<Sum>i<n. B * (coeffs i * vx i))" by (rule sum.distrib)
+    have h_split2: "(\<Sum>i<n. A * coeffs i + B * (coeffs i * vx i) + C * (coeffs i * vy i)) =
+      (\<Sum>i<n. A * coeffs i + B * (coeffs i * vx i)) + (\<Sum>i<n. C * (coeffs i * vy i))"
+      by (rule sum.distrib)
+    have h_combined: "A + B * fst_x + C * snd_x =
+      (\<Sum>i<n. A * coeffs i + B * (coeffs i * vx i) + C * (coeffs i * vy i))"
+      using h1 h2 h3 h_split1 h_split2 hsum hx hy by simp
+    have "(\<Sum>i<n. A * coeffs i + B * (coeffs i * vx i) + C * (coeffs i * vy i)) =
+      (\<Sum>i<n. coeffs i * (A + B * vx i + C * vy i))"
+      by (rule sum.cong, simp, algebra)
+    with h_combined hF_zero show ?thesis by linarith
+  qed
+  have hterm_nn: "\<And>i. i < n \<Longrightarrow> coeffs i * (A + B * vx i + C * vy i) \<ge> 0"
+    using hnn hF_nn mult_nonneg_nonneg by blast
+  have "coeffs l * (A + B * vx l + C * vy l) = 0"
+  proof -
+    have "(\<Sum>i<n. coeffs i * (A + B * vx i + C * vy i)) =
+      coeffs l * (A + B * vx l + C * vy l) + (\<Sum>i\<in>{..<n}-{l}. coeffs i * (A + B * vx i + C * vy i))"
+      using sum.remove[of "{..<n}" l "\<lambda>i. coeffs i * (A + B * vx i + C * vy i)"] hl by simp
+    moreover have "(\<Sum>i\<in>{..<n}-{l}. coeffs i * (A + B * vx i + C * vy i)) \<ge> 0"
+      by (rule sum_nonneg, auto intro: hterm_nn)
+    ultimately show ?thesis using hF_sum hterm_nn[OF hl] by linarith
+  qed
+  from hF_strict[rule_format, OF hl hlj hlsj]
+  show "coeffs l = 0" using \<open>coeffs l * (A + B * vx l + C * vy l) = 0\<close> by (simp add: mult_eq_0_iff)
+qed
+
 end
