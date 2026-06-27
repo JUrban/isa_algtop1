@@ -5431,6 +5431,8 @@ next
               and hsL: "sL \<ge> 0" and htpL: "tpL \<ge> 0" and h1stL: "1 - sL - tpL \<ge> 0"
               and hphiL_dec: "phi_L x = ((1-sL-tpL)*vx2 0 + sL*vx2(?k+1-jL) + tpL*vx2(?k-jL),
                                           (1-sL-tpL)*vy2 0 + sL*vy2(?k+1-jL) + tpL*vy2(?k-jL))"
+              and hs0_impL: "sL = 0 \<longrightarrow> (vx2(Suc jL) - vx2 0)*(snd x - vy2 0) = (vy2(Suc jL) - vy2 0)*(fst x - vx2 0)"
+              and htp0_impL: "tpL = 0 \<longrightarrow> (vx2 jL - vx2 0)*(snd x - vy2 0) = (vy2 jL - vy2 0)*(fst x - vx2 0)"
               by (by5000 blast)
             \<comment> \<open>Step 2: cross\\_diag decomposition for phi\\_L(x) — facts at outer scope.\<close>
             have hfstL: "fst (phi_L x) = (1-sL-tpL)*vx2 0 + sL*vx2(?k+1-jL) + tpL*vx2(?k-jL)"
@@ -5622,8 +5624,25 @@ next
                And tpR*cdSSj = 0. If cdSSj > 0: tpR = 0 \\<to> y = v\\_0 \\<to> cd(y)=0 \\<to> \\<bot>.
                If cdSSj = 0 (SSj mod n = 0): tpR free, phi\\_R on diagonal.
                In either case: use Cramer \\<to> cross\\_diag(y) = 0 \\<to> \\<bot>.\<close>
+            \<comment> \<open>sL=0 case: use cross\\_pair\\_zero\\_imp\\_origin.\<close>
+            have "sL = 0 \<longrightarrow> False"
+            proof
+              assume "sL = 0"
+              from mp[OF htp0_impL htpL_zero]
+              have hcr_jL: "(vx2 jL - vx2 0)*(snd x - vy2 0) = (vy2 jL - vy2 0)*(fst x - vx2 0)" .
+              from mp[OF hs0_impL \<open>sL = 0\<close>]
+              have hcr_sjL: "(vx2(Suc jL) - vx2 0)*(snd x - vy2 0) = (vy2(Suc jL) - vy2 0)*(fst x - vx2 0)" .
+              have hfdet_ne: "(vx2 jL - vx2 0)*(vy2(Suc jL) - vy2 0) - (vy2 jL - vy2 0)*(vx2(Suc jL) - vx2 0) \<noteq> 0"
+                using hfan_det_0[rule_format, OF _ _ hjL(1) lessI] hjL hk_lt_nm1 by linarith
+              have "fst x - vx2 0 = 0 \<and> snd x - vy2 0 = 0"
+                by (rule cross_pair_zero_imp_origin[OF hcr_jL hcr_sjL hfdet_ne])
+              hence "cross_diag x = 0" unfolding cross_diag_def by (by100 simp)
+              with hcdx show False by linarith
+            qed
+            \<comment> \<open>So sL \\<noteq> 0 is impossible (leads to False). But sL*cdA=0, so cdA=0.
+               cdA=0 \\<to> jL=1, phi\\_L on diagonal. Symmetric y argument.\<close>
             show False
-              sorry \<comment> \<open>sR=0 proved. tpR analysis + Cramer \\<to> y=v\\_0 \\<to> cd(y)=0 \\<to> \\<bot>.\<close>
+              sorry \<comment> \<open>sL=0 case proved above. cdA=0 case (jL=1): symmetric y argument.\<close>
           qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
