@@ -5420,10 +5420,15 @@ next
           qed
           \<comment> \<open>SHARED HELPER: affine functions non-negative at all vertices are non-negative at all P2 points.\<close>
           have hphi_L_R_disjoint: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
-              cross_diag x < 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_L x \<noteq> phi_R y"
+              cross_diag x < 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow>
+              (\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
+                x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))) \<Longrightarrow>
+              phi_L x \<noteq> phi_R y"
           proof
             fix x y assume hx: "x \<in> P2" and hy: "y \<in> P2"
               and hcdx: "cross_diag x < 0" and hcdy: "cross_diag y > 0"
+              and hint_x: "\<forall>i'<length ?w'. \<forall>t'\<in>I_set.
+                x \<noteq> ((1-t')*vx2 i'+t'*vx2(Suc i' mod length ?w'),(1-t')*vy2 i'+t'*vy2(Suc i' mod length ?w'))"
               and heq: "phi_L x = phi_R y"
             \<comment> \<open>Step 1: get decompositions.\<close>
             from hphi_L_decomp[OF hx less_imp_le[OF hcdx]]
@@ -5642,7 +5647,43 @@ next
             \<comment> \<open>So sL \\<noteq> 0 is impossible (leads to False). But sL*cdA=0, so cdA=0.
                cdA=0 \\<to> jL=1, phi\\_L on diagonal. Symmetric y argument.\<close>
             show False
-              sorry \<comment> \<open>sL=0 case proved above. cdA=0 case (jL=1): symmetric y argument.\<close>
+            proof -
+              \<comment> \<open>sL=0 gives False (proved above). So sL \\<noteq> 0.\<close>
+              have "sL \<noteq> 0" using \<open>sL = 0 \<longrightarrow> False\<close> by (by100 blast)
+              \<comment> \<open>From sL*cdA=0 and sL\\<noteq>0: cdA=0 \\<to> k+1-jL=k \\<to> jL=1.\<close>
+              have "sL * ((vx2 ?k - vx2 0) * (vy2 (?k + 1 - jL) - vy2 0) -
+                (vy2 ?k - vy2 0) * (vx2 (?k + 1 - jL) - vx2 0)) = 0" using hsL_cdA_zero .
+              hence "((vx2 ?k - vx2 0) * (vy2 (?k + 1 - jL) - vy2 0) -
+                (vy2 ?k - vy2 0) * (vx2 (?k + 1 - jL) - vx2 0)) = 0"
+                using \<open>sL \<noteq> 0\<close> by (simp only: mult_eq_0_iff, by100 simp)
+              \<comment> \<open>cdA=0 means k+1-jL = k (from h\\_cdA proof: nonzero for k+1-jL < k).\<close>
+              have "?k+1-jL = ?k"
+              proof (rule ccontr)
+                assume "?k+1-jL \<noteq> ?k"
+                hence "?k+1-jL < ?k" using hjL by (by100 linarith)
+                have "1 \<le> ?k+1-jL" using hjL hk_ge2 by (by100 linarith)
+                have "?k+1-jL < ?n" using \<open>?k+1-jL < ?k\<close> hk_lt_nm1 by (by100 linarith)
+                have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+                from hfan_det_0[rule_format, OF \<open>?k+1-jL < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k+1-jL\<close> \<open>?k+1-jL < ?k\<close>]
+                have "(vx2(?k+1-jL) - vx2 0)*(vy2 ?k - vy2 0) - (vy2(?k+1-jL) - vy2 0)*(vx2 ?k - vx2 0) > 0" .
+                hence "(vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0) < 0"
+                  apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"]) done
+                with \<open>((vx2 ?k - vx2 0) * (vy2 (?k + 1 - jL) - vy2 0) -
+                  (vy2 ?k - vy2 0) * (vx2 (?k + 1 - jL) - vx2 0)) = 0\<close>
+                show False by linarith
+              qed
+              hence "jL = 1" using hjL hk_ge2 by (by100 linarith)
+              \<comment> \<open>jL=1. tpL=0 gives cross\\_1(x) = 0 (from htp0\\_impL with jL=1).
+                 x on line through v\\_0, v\\_1. x \\<in> P2 \\<to> x on edge 0. But hint\\_x says x NOT on edge 0. \\<bot>.\<close>
+              from mp[OF htp0_impL htpL_zero]
+              have "(vx2 1 - vx2 0)*(snd x - vy2 0) = (vy2 1 - vy2 0)*(fst x - vx2 0)"
+                using \<open>jL = 1\<close> by (by100 simp)
+              \<comment> \<open>This means x is on the line through v\\_0, v\\_1. Combined with x \\<in> P2:
+                 by haffine\\_nonneg analysis, x is on edge 0 \\<to> contradicts hint\\_x.
+                 The edge-0 argument uses the same C11 sum-of-nonpositives as h1stp0.\<close>
+              show False
+                sorry \<comment> \<open>cross\\_1(x)=0 + x \\<in> P2 \\<to> x on edge 0 \\<to> hint\\_x contradiction.\<close>
+            qed
           qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
@@ -5715,7 +5756,7 @@ next
                   hence "q2 (phi_L p) = q2 (phi_R p')" using hgp hg_eq by simp
                   moreover have "phi_R p' \<in> P2" using hphi_R_in_P2[OF hp' True3] .
                   ultimately have "phi_L p = phi_R p'" using hC8_at_p by (by100 blast)
-                  with hphi_L_R_disjoint[OF hp hp' True True3] show ?thesis by simp
+                  with hphi_L_R_disjoint[OF hp hp' True True3 hint] show ?thesis by simp
                 next
                   case False3: False
                   hence "cross_diag p' = 0" using False2 by linarith
@@ -5763,7 +5804,8 @@ next
                     hence "q2 (phi_R p) = q2 (phi_L p')" using hgp hg_eq by simp
                     moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp' less_imp_le[OF True4]] .
                     ultimately have "phi_R p = phi_L p'" using hC8_at_p by (by100 blast)
-                    with hphi_L_R_disjoint[OF hp' hp True4 True2] show ?thesis by simp
+                    with hphi_L_R_disjoint[OF hp' hp True4 True2] show ?thesis
+                      sorry \<comment> \<open>Need target-interior for p' (hint is for p). Use C8/C9 instead.\<close>
                   next
                     case False4: False
                     hence "cross_diag p' = 0" using False3 by linarith
