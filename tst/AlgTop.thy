@@ -6339,10 +6339,9 @@ next
               qed
               moreover have "f ?k \<le> 0" using hcdx unfolding cross_diag_def f_def by linarith
               moreover have "1 < ?k" using hk_ge2 by linarith
-              ultimately show ?thesis unfolding f_def sorry
-                \<comment> \<open>Discrete IVT: f(1)\\<ge>0, f(k)\\<le>0 \\<to> \\<exists>j\\<in>[1,k). f(j)\\<ge>0 \\<and> f(j+1)\\<le>0.\<close>
+              ultimately show ?thesis unfolding f_def sorry \<comment> \<open>Discrete IVT.\<close>
             qed
-            have hPLy_ex: "\<exists>j. ?PLy j" sorry \<comment> \<open>Same IVT for y.\<close>
+            have hPLy_ex: "\<exists>j. ?PLy j" sorry \<comment> \<open>Same IVT for y (symmetric).\<close>
             from LeastI_ex[OF hPLx_ex] have hPLx_prop: "?PLx ?jxL" .
             from LeastI_ex[OF hPLy_ex] have hPLy_prop: "?PLy ?jyL" .
             have hjxL_ge1: "1 \<le> ?jxL" and hjxL_lt_k: "?jxL < ?k"
@@ -6488,7 +6487,56 @@ next
               \<comment> \<open>Now apply fan\\_triangle\\_interior\\_disjoint (inline from scratch).
                  Rewrite in standard fan form: output triangle j uses (v\\_0, v\\_{Suc m}, v\\_m) with m=k-j.
                  In standard form (v\\_0, v\\_m, v\\_{Suc m}): s=tp, t=s (swapped).\<close>
-              show "x = y" sorry \<comment> \<open>fan\\_triangle\\_interior\\_disjoint + adjacent boundary.\<close>
+              \<comment> \<open>Output in standard fan form. Output triangle for sector j:
+                 (v\\_0, v\\_{k+1-j}, v\\_{k-j}). Let m=k-j. Triangle = (v\\_0, v\\_{Suc m}, v\\_m).
+                 Standard form (v\\_0, v\\_m, v\\_{Suc m}): swap s and tp.
+                 phi\\_L(x) = (1-sx-tpx)*v\\_0 + sx*v\\_{Suc mx} + tpx*v\\_mx  with mx=k-jxL
+                           = (1-tpx-sx)*v\\_0 + tpx*v\\_mx + sx*v\\_{Suc mx}
+                 Standard: s\\_std=tpx, t\\_std=sx for triangle mx.
+                 phi\\_L(y) similarly with my=k-jyL: s\\_std=tpy, t\\_std=sy.\<close>
+              \<comment> \<open>From hphiL\\_x\\_least and hphiL\\_y\\_least + heq, extract the standard equality.\<close>
+              let ?mx = "?k - ?jxL" let ?my = "?k - ?jyL"
+              have hmx_ne_my: "?mx \<noteq> ?my" using hne_sector hjxL_lt_k hjyL_lt_k by linarith
+              have hmx_ge1: "1 \<le> ?mx" using hjxL_lt_k hk_ge2 by linarith
+              have hmy_ge1: "1 \<le> ?my" using hjyL_lt_k hk_ge2 by linarith
+              have hmx_suc_lt: "Suc ?mx < ?n" using hjxL_ge1 hk_lt_nm1 by linarith
+              have hmy_suc_lt: "Suc ?my < ?n" using hjyL_ge1 hk_lt_nm1 by linarith
+              have hk1jx: "?k+1-?jxL = Suc ?mx" using hjxL_lt_k by linarith
+              have hk1jy: "?k+1-?jyL = Suc ?my" using hjyL_lt_k by linarith
+              \<comment> \<open>Standard fan equality: (v\\_0, v\\_mx, v\\_{Suc mx}) and (v\\_0, v\\_my, v\\_{Suc my}).\<close>
+              \<comment> \<open>Rewrite output equality using k+1-j = Suc(k-j).\<close>
+              have hfst_std: "(1-?tpx-?sx)*vx2 0 + ?tpx*vx2 ?mx + ?sx*vx2(Suc ?mx) =
+                (1-?tpy-?sy)*vx2 0 + ?tpy*vx2 ?my + ?sy*vx2(Suc ?my)"
+              proof -
+                from hphiL_x_least have "fst (phi_L x) =
+                  (1-?sx-?tpx)*vx2 0 + ?sx*vx2(?k+1-?jxL) + ?tpx*vx2(?k-?jxL)" by (by100 simp)
+                hence hfx: "fst (phi_L x) = (1-?sx-?tpx)*vx2 0 + ?sx*vx2(Suc ?mx) + ?tpx*vx2 ?mx"
+                  using hk1jx by simp
+                from hphiL_y_least have "fst (phi_L y) =
+                  (1-?sy-?tpy)*vx2 0 + ?sy*vx2(?k+1-?jyL) + ?tpy*vx2(?k-?jyL)" by (by100 simp)
+                hence hfy: "fst (phi_L y) = (1-?sy-?tpy)*vx2 0 + ?sy*vx2(Suc ?my) + ?tpy*vx2 ?my"
+                  using hk1jy by simp
+                from hfst_L hfx hfy show ?thesis by linarith
+              qed
+              have hsnd_std: "(1-?tpx-?sx)*vy2 0 + ?tpx*vy2 ?mx + ?sx*vy2(Suc ?mx) =
+                (1-?tpy-?sy)*vy2 0 + ?tpy*vy2 ?my + ?sy*vy2(Suc ?my)"
+              proof -
+                from hphiL_x_least have "snd (phi_L x) =
+                  (1-?sx-?tpx)*vy2 0 + ?sx*vy2(?k+1-?jxL) + ?tpx*vy2(?k-?jxL)" by (by100 simp)
+                hence hsx2: "snd (phi_L x) = (1-?sx-?tpx)*vy2 0 + ?sx*vy2(Suc ?mx) + ?tpx*vy2 ?mx"
+                  using hk1jx by simp
+                have "snd (phi_L y) =
+                  (1-?sy-?tpy)*vy2 0 + ?sy*vy2(?k+1-?jyL) + ?tpy*vy2(?k-?jyL)"
+                  using hphiL_y_least by simp
+                hence hsy2: "snd (phi_L y) = (1-?sy-?tpy)*vy2 0 + ?sy*vy2(Suc ?my) + ?tpy*vy2 ?my"
+                  using hk1jy by simp
+                from hsnd_L hsx2 hsy2 show ?thesis by linarith
+              qed
+              \<comment> \<open>Apply fan\\_triangle\\_interior\\_disjoint.
+                 Need: either tpx > 0 \\<and> sx > 0 or tpy > 0 \\<and> sy > 0 (one side interior).
+                 If both sides have all coords > 0: contradiction (non-adjacent or adjacent).
+                 If some coord = 0: boundary case.\<close>
+              show "x = y" sorry \<comment> \<open>fan\\_triangle\\_interior\\_disjoint from scratch + boundary.\<close>
             qed
           qed
           have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
