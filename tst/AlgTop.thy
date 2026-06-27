@@ -5432,15 +5432,16 @@ next
               and hphiL_dec: "phi_L x = ((1-sL-tpL)*vx2 0 + sL*vx2(?k+1-jL) + tpL*vx2(?k-jL),
                                           (1-sL-tpL)*vy2 0 + sL*vy2(?k+1-jL) + tpL*vy2(?k-jL))"
               by (by5000 blast)
-            \<comment> \<open>Step 2: cross\\_diag(phi\\_L(x)) \\<le> 0 via cross\\_product\\_affine\\_3.\<close>
-            have hcd_phiL: "cross_diag (phi_L x) \<le> 0"
+            \<comment> \<open>Step 2: cross\\_diag decomposition for phi\\_L(x) — facts at outer scope.\<close>
+            have hfstL: "fst (phi_L x) = (1-sL-tpL)*vx2 0 + sL*vx2(?k+1-jL) + tpL*vx2(?k-jL)"
+              using hphiL_dec by (by100 simp)
+            have hsndL: "snd (phi_L x) = (1-sL-tpL)*vy2 0 + sL*vy2(?k+1-jL) + tpL*vy2(?k-jL)"
+              using hphiL_dec by (by100 simp)
+            have hsumL: "(1-sL-tpL) + sL + tpL = (1::real)" by linarith
+            have hcd_eq: "cross_diag (phi_L x) =
+              sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))
+            + tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"
             proof -
-              have hfstL: "fst (phi_L x) = (1-sL-tpL)*vx2 0 + sL*vx2(?k+1-jL) + tpL*vx2(?k-jL)"
-                using hphiL_dec by (by100 simp)
-              have hsndL: "snd (phi_L x) = (1-sL-tpL)*vy2 0 + sL*vy2(?k+1-jL) + tpL*vy2(?k-jL)"
-                using hphiL_dec by (by100 simp)
-              have hsumL: "(1-sL-tpL) + sL + tpL = (1::real)" by linarith
-              \<comment> \<open>Apply cross\\_product\\_affine\\_3 to get the 3-term decomposition.\<close>
               have hcd_lin:
                 "(vx2 ?k - vx2 0)*((1-sL-tpL)*vy2 0 + sL*vy2(?k+1-jL) + tpL*vy2(?k-jL) - vy2 0)
                - (vy2 ?k - vy2 0)*((1-sL-tpL)*vx2 0 + sL*vx2(?k+1-jL) + tpL*vx2(?k-jL) - vx2 0)
@@ -5448,42 +5449,38 @@ next
                + sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))
                + tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"
                 by (rule cross_product_affine_3[OF hsumL])
-              \<comment> \<open>LHS = cross\\_diag(phi\\_L(x)). RHS has term0 = 0.\<close>
-              have hcd_eq: "cross_diag (phi_L x) =
-                sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))
-              + tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"
-                unfolding cross_diag_def using hcd_lin hfstL hsndL by (by100 simp)
-              \<comment> \<open>Each cross term \\<le> 0 (fan det antisymmetry).\<close>
-              have h_cdA: "(vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0) \<le> 0"
-              proof (cases "?k+1-jL = ?k")
-                case True thus ?thesis by (by100 simp)
-              next
-                case False
-                have "1 \<le> ?k+1-jL" using hjL hk_ge2 by (by100 linarith)
-                have "?k+1-jL < ?k" using False hjL by (by100 linarith)
-                have "?k+1-jL < ?n" using \<open>?k+1-jL < ?k\<close> hk_lt_nm1 by (by100 linarith)
-                have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
-                from hfan_det_0[rule_format, OF \<open>?k+1-jL < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k+1-jL\<close> \<open>?k+1-jL < ?k\<close>]
-                show ?thesis
-                  apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
-                  done
-              qed
-              have h_cdB: "(vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0) \<le> 0"
-              proof -
-                have "1 \<le> ?k-jL" using hjL by (by100 linarith)
-                have "?k-jL < ?k" using hjL by (by100 linarith)
-                have "?k-jL < ?n" using \<open>?k-jL < ?k\<close> hk_lt_nm1 by (by100 linarith)
-                have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
-                from hfan_det_0[rule_format, OF \<open>?k-jL < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k-jL\<close> \<open>?k-jL < ?k\<close>]
-                show ?thesis
-                  apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
-                  done
-              qed
-              show ?thesis using hcd_eq hsL htpL h_cdA h_cdB
-                mult_nonneg_nonneg[of sL "-((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))"]
-                mult_nonneg_nonneg[of tpL "-((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"]
-                by linarith
+              show ?thesis unfolding cross_diag_def using hcd_lin hfstL hsndL by (by100 simp)
             qed
+            have h_cdA: "(vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0) \<le> 0"
+            proof (cases "?k+1-jL = ?k")
+              case True thus ?thesis by (by100 simp)
+            next
+              case False
+              have "1 \<le> ?k+1-jL" using hjL hk_ge2 by (by100 linarith)
+              have "?k+1-jL < ?k" using False hjL by (by100 linarith)
+              have "?k+1-jL < ?n" using \<open>?k+1-jL < ?k\<close> hk_lt_nm1 by (by100 linarith)
+              have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+              from hfan_det_0[rule_format, OF \<open>?k+1-jL < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k+1-jL\<close> \<open>?k+1-jL < ?k\<close>]
+              show ?thesis
+                apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
+                done
+            qed
+            have h_cdB: "(vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0) \<le> 0"
+            proof -
+              have "1 \<le> ?k-jL" using hjL by (by100 linarith)
+              have "?k-jL < ?k" using hjL by (by100 linarith)
+              have "?k-jL < ?n" using \<open>?k-jL < ?k\<close> hk_lt_nm1 by (by100 linarith)
+              have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+              from hfan_det_0[rule_format, OF \<open>?k-jL < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k-jL\<close> \<open>?k-jL < ?k\<close>]
+              show ?thesis
+                apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
+                done
+            qed
+            have hcd_phiL: "cross_diag (phi_L x) \<le> 0"
+              using hcd_eq hsL htpL h_cdA h_cdB
+              mult_nonneg_nonneg[of sL "-((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))"]
+              mult_nonneg_nonneg[of tpL "-((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"]
+              by linarith
             \<comment> \<open>Step 3: cross\\_diag(phi\\_R(y)) \\<ge> 0 (symmetric).\<close>
             have hcd_phiR: "cross_diag (phi_R y) \<ge> 0"
             proof -
@@ -5549,7 +5546,38 @@ next
             hence hcd_zero: "cross_diag (phi_L x) = 0" using hcd_phiL hcd_phiR by linarith
             \<comment> \<open>Step 5: cross\\_diag = 0 forces coefficients to 0, then x = v\\_0, contradiction.\<close>
             show False
-              sorry \<comment> \<open>tpL=0 proved (see commit attempt). Needs sL + Cramer.\<close>
+            proof -
+              have hsum_zero: "sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))
+                + tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0)) = 0"
+                using hcd_eq hcd_zero by linarith
+              have hcdB_strict: "(vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0) < 0"
+              proof -
+                have "?k-jL < ?k" using hjL by (by100 linarith)
+                have "?k-jL < ?n" using \<open>?k-jL < ?k\<close> hk_lt_nm1 by (by100 linarith)
+                have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+                have "1 \<le> ?k-jL" using hjL by (by100 linarith)
+                from hfan_det_0[rule_format, OF \<open>?k-jL < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k-jL\<close> \<open>?k-jL < ?k\<close>]
+                show ?thesis
+                  apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
+                  done
+              qed
+              have htpL_zero: "tpL = 0"
+              proof -
+                have "tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0)) \<le> 0"
+                  using htpL hcdB_strict
+                  mult_nonneg_nonneg[of tpL "-((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"]
+                  by linarith
+                moreover have "sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0)) \<le> 0"
+                  using hsL h_cdA
+                  mult_nonneg_nonneg[of sL "-((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))"]
+                  by linarith
+                ultimately have "tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0)) = 0"
+                  using hsum_zero by linarith
+                with hcdB_strict show "tpL = 0"
+                  by (simp only: mult_eq_0_iff, by100 simp)
+              qed
+              show False sorry \<comment> \<open>tpL=0. Remaining: sL + Cramer \\<to> x=v\\_0 or y=v\\_0 \\<to> \\<bot>.\<close>
+            qed
           qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
