@@ -6471,10 +6471,21 @@ next
               thus ?thesis by (cases x, cases y) simp
             next
               case False
-              \<comment> \<open>Different LEAST sectors. Use fan disjointness + adjacent boundary.\<close>
+              \<comment> \<open>Different LEAST sectors. Use existential decomposition + fan disjointness.\<close>
+              \<comment> \<open>From hfst\\_eq, hsnd\\_eq: output(jx, sx, tpx) = output(jy, sy, tpy) with jx \\<noteq> jy
+                 (if the existential sectors also differ). The output fan triangles use vertices
+                 (v\\_0, v\\_{k+1-j}, v\\_{k-j}). Rewrite as (v\\_0, v\\_{Suc m}, v\\_m) with m=k-j.
+                 Apply fan\\_triangle\\_interior\\_disjoint (proved in scratch).\<close>
+              \<comment> \<open>Actually: the existential jx,jy might be equal even when LEAST differs.
+                 But if jx=jy: hfst\\_eq gives output equality in SAME triangle.
+                 triangle\\_coords\\_injective \\<to> sx=sy, tpx=tpy.
+                 Then from same output: phi\\_L(x)=phi\\_L(y) is trivially given (heq).
+                 But we need x=y, which requires Cramer inversion.
+                 Use same\\_sector\\_affine\\_injective via LEAST (which are equal when jx=jy
+                 gives the same Cramer coords).\<close>
+              \<comment> \<open>For now: sorry. The full proof needs fan\\_triangle\\_interior\\_disjoint (inline)
+                 + adjacent boundary analysis + Cramer connection.\<close>
               show "x = y" sorry
-                \<comment> \<open>fan\\_triangle\\_interior\\_disjoint for non-adjacent;
-                   spur\\_match for adjacent; both force x = y or contradiction.\<close>
             qed
           qed
           have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
