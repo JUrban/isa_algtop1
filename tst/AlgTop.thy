@@ -5481,66 +5481,59 @@ next
               mult_nonneg_nonneg[of sL "-((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))"]
               mult_nonneg_nonneg[of tpL "-((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"]
               by linarith
-            \<comment> \<open>Step 3: cross\\_diag(phi\\_R(y)) \\<ge> 0 (symmetric).\<close>
-            have hcd_phiR: "cross_diag (phi_R y) \<ge> 0"
+            \<comment> \<open>Step 3: right-fan decomposition and cross\\_diag \\<ge> 0 — facts at outer scope.\<close>
+            from hphi_R_decomp[OF hy hcdy]
+            obtain jR sR tpR where hjR: "?k \<le> jR" "jR < ?n - 1"
+              and hsR: "sR \<ge> 0" and htpR: "tpR \<ge> 0" and h1stR: "1 - sR - tpR \<ge> 0"
+              and hphiR_dec: "phi_R y = ((1-sR-tpR)*vx2 ?k + sR*vx2(Suc jR) + tpR*vx2(Suc(Suc jR) mod ?n),
+                                         (1-sR-tpR)*vy2 ?k + sR*vy2(Suc jR) + tpR*vy2(Suc(Suc jR) mod ?n))"
+              sorry \<comment> \<open>hphi\\_R\\_decomp extraction.\<close>
+            have hsumR: "(1-sR-tpR) + sR + tpR = (1::real)" by linarith
+            have hcd_eqR: "cross_diag (phi_R y) =
+              sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))
+            + tpR*((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0))"
             proof -
-              from hphi_R_decomp[OF hy hcdy]
-              obtain jR sR tpR where hjR: "?k \<le> jR" "jR < ?n - 1"
-                and hsR: "sR \<ge> 0" and htpR: "tpR \<ge> 0" and h1stR: "1 - sR - tpR \<ge> 0"
-                and hphiR_dec: "phi_R y = ((1-sR-tpR)*vx2 ?k + sR*vx2(Suc jR) + tpR*vx2(Suc(Suc jR) mod ?n),
-                                           (1-sR-tpR)*vy2 ?k + sR*vy2(Suc jR) + tpR*vy2(Suc(Suc jR) mod ?n))"
-                sorry \<comment> \<open>hphi\\_R\\_decomp extraction.\<close>
-              have hsumR: "(1-sR-tpR) + sR + tpR = (1::real)" by linarith
-              have hcd_eqR: "cross_diag (phi_R y) =
-                sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))
-              + tpR*((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0))"
-              proof -
-                have hcd_linR:
-                  "(vx2 ?k - vx2 0)*((1-sR-tpR)*vy2 ?k + sR*vy2(Suc jR) + tpR*vy2(Suc(Suc jR) mod ?n) - vy2 0)
-                 - (vy2 ?k - vy2 0)*((1-sR-tpR)*vx2 ?k + sR*vx2(Suc jR) + tpR*vx2(Suc(Suc jR) mod ?n) - vx2 0)
-                 = (1-sR-tpR)*((vx2 ?k - vx2 0)*(vy2 ?k - vy2 0) - (vy2 ?k - vy2 0)*(vx2 ?k - vx2 0))
-                 + sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))
-                 + tpR*((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0))"
-                  by (rule cross_product_affine_3[OF hsumR])
-                show ?thesis unfolding cross_diag_def
-                  using hcd_linR hphiR_dec by (by100 simp)
-              qed
-              \<comment> \<open>Right-fan vertices have cross\\_diag \\<ge> 0.\<close>
-              have h_cdSj: "(vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0) \<ge> 0"
-              proof -
-                have "?k < Suc jR" using hjR by (by100 linarith)
-                have "Suc jR < ?n" using hjR by (by100 linarith)
-                have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+              have hcd_linR:
+                "(vx2 ?k - vx2 0)*((1-sR-tpR)*vy2 ?k + sR*vy2(Suc jR) + tpR*vy2(Suc(Suc jR) mod ?n) - vy2 0)
+               - (vy2 ?k - vy2 0)*((1-sR-tpR)*vx2 ?k + sR*vx2(Suc jR) + tpR*vx2(Suc(Suc jR) mod ?n) - vx2 0)
+               = (1-sR-tpR)*((vx2 ?k - vx2 0)*(vy2 ?k - vy2 0) - (vy2 ?k - vy2 0)*(vx2 ?k - vx2 0))
+               + sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))
+               + tpR*((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0))"
+                by (rule cross_product_affine_3[OF hsumR])
+              show ?thesis unfolding cross_diag_def
+                using hcd_linR hphiR_dec by (by100 simp)
+            qed
+            have h_cdSj: "(vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0) > 0"
+            proof -
+              have "?k < Suc jR" using hjR by (by100 linarith)
+              have "Suc jR < ?n" using hjR by (by100 linarith)
+              have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+              have "1 \<le> ?k" using hk_ge2 by (by100 linarith)
+              from hfan_det_0[rule_format, OF \<open>?k < ?n\<close> \<open>Suc jR < ?n\<close> \<open>1 \<le> ?k\<close> \<open>?k < Suc jR\<close>]
+              show ?thesis .
+            qed
+            have h_cdSSj: "(vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0) \<ge> 0"
+            proof -
+              have hSSjR_lt: "Suc(Suc jR) mod ?n < ?n" by (by100 simp)
+              have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+              show ?thesis
+              proof (cases "Suc(Suc jR) mod ?n = 0")
+                case True thus ?thesis by (by100 simp)
+              next
+                case False
+                from hSSj_mod_ge[OF hjR(1) hjR(2)]
+                have "Suc(Suc jR) mod ?n \<ge> ?k + 2 \<or> Suc(Suc jR) mod ?n = 0" .
+                with False have "?k < Suc(Suc jR) mod ?n" by linarith
                 have "1 \<le> ?k" using hk_ge2 by (by100 linarith)
-                from hfan_det_0[rule_format, OF \<open>?k < ?n\<close> \<open>Suc jR < ?n\<close> \<open>1 \<le> ?k\<close> \<open>?k < Suc jR\<close>]
+                from hfan_det_0[rule_format, OF \<open>?k < ?n\<close> hSSjR_lt \<open>1 \<le> ?k\<close> \<open>?k < Suc(Suc jR) mod ?n\<close>]
                 show ?thesis by linarith
               qed
-              have h_cdSSj: "(vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0) \<ge> 0"
-              proof -
-                have hSSjR_lt: "Suc(Suc jR) mod ?n < ?n" by (by100 simp)
-                have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
-                show ?thesis
-                proof (cases "Suc(Suc jR) mod ?n = 0")
-                  case True
-                  \<comment> \<open>SSj mod n = 0 = vertex v\\_0. cross\\_diag(v\\_0) = 0.\<close>
-                  thus ?thesis by (by100 simp)
-                next
-                  case False
-                  \<comment> \<open>SSj mod n > 0. From hSSj\\_mod\\_ge: SSj mod n \\<ge> k+2 > k.\<close>
-                  from hSSj_mod_ge[OF hjR(1) hjR(2)]
-                  have "Suc(Suc jR) mod ?n \<ge> ?k + 2 \<or> Suc(Suc jR) mod ?n = 0" .
-                  with False have "Suc(Suc jR) mod ?n \<ge> ?k + 2" by linarith
-                  hence "?k < Suc(Suc jR) mod ?n" by linarith
-                  have "1 \<le> ?k" using hk_ge2 by (by100 linarith)
-                  from hfan_det_0[rule_format, OF \<open>?k < ?n\<close> hSSjR_lt \<open>1 \<le> ?k\<close> \<open>?k < Suc(Suc jR) mod ?n\<close>]
-                  show ?thesis by linarith
-                qed
-              qed
-              show ?thesis using hcd_eqR hsR htpR h_cdSj h_cdSSj
-                mult_nonneg_nonneg[of sR "((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))"]
-                mult_nonneg_nonneg[of tpR "((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0))"]
-                by linarith
             qed
+            have hcd_phiR: "cross_diag (phi_R y) \<ge> 0"
+              using hcd_eqR hsR htpR h_cdSj h_cdSSj
+              mult_nonneg_nonneg[of sR "((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))"]
+              mult_nonneg_nonneg[of tpR "((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0))"]
+              by linarith
             \<comment> \<open>Step 4: equality forces cross\\_diag = 0 on both.\<close>
             have "cross_diag (phi_L x) = cross_diag (phi_R y)" using heq by (by100 simp)
             hence hcd_zero: "cross_diag (phi_L x) = 0" using hcd_phiL hcd_phiR by linarith
@@ -5608,8 +5601,29 @@ next
                If cdSSj = 0 (SSj mod n = 0): phi\\_R(y) = tpR*v\\_0 + (1-tpR)*v\\_k on diagonal.
                In all cases: phi\\_R(y) on diagonal v\\_0\\<to>v\\_k.
                From phi\\_R(y) = v\\_k (or on diagonal): symmetric Cramer \\<to> y = v\\_0 \\<to> cd(y) = 0. \\<bot>.\<close>
+            \<comment> \<open>Step 5b: From cd(phi\\_R y) = 0: sR*cdSj + tpR*cdSSj = 0.
+               cdSj > 0 (strict). So sR = 0. Then tpR*cdSSj = 0.\<close>
+            have hcd_zero_R: "cross_diag (phi_R y) = 0" using heq hcd_zero by (by100 simp)
+            have hsum_zeroR: "sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))
+              + tpR*((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0)) = 0"
+              using hcd_eqR hcd_zero_R by linarith
+            have "sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0)) = 0"
+            proof -
+              have "sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0)) \<ge> 0"
+                using hsR h_cdSj mult_nonneg_nonneg[of sR "((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))"]
+                by linarith
+              moreover have "tpR*((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0)) \<ge> 0"
+                using htpR h_cdSSj mult_nonneg_nonneg by (by100 blast)
+              ultimately show ?thesis using hsum_zeroR by linarith
+            qed
+            hence hsR_zero: "sR = 0" using h_cdSj
+              by (simp only: mult_eq_0_iff, by100 simp)
+            \<comment> \<open>sR=0. From hphi\\_R\\_decomp Cramer: cross\\_{Suc jR}(y) = 0.
+               And tpR*cdSSj = 0. If cdSSj > 0: tpR = 0 \\<to> y = v\\_0 \\<to> cd(y)=0 \\<to> \\<bot>.
+               If cdSSj = 0 (SSj mod n = 0): tpR free, phi\\_R on diagonal.
+               In either case: use Cramer \\<to> cross\\_diag(y) = 0 \\<to> \\<bot>.\<close>
             show False
-              sorry \<comment> \<open>Final: right-fan cd=0 \\<to> sR=0 \\<to> Cramer \\<to> y=v\\_0 \\<to> cd(y)=0 \\<to> \\<bot>.\<close>
+              sorry \<comment> \<open>sR=0 proved. tpR analysis + Cramer \\<to> y=v\\_0 \\<to> cd(y)=0 \\<to> \\<bot>.\<close>
           qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
