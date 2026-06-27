@@ -6309,6 +6309,46 @@ next
               (vx2 j - vx2 0)*(snd y - vy2 0) - (vy2 j - vy2 0)*(fst y - vx2 0) \<ge> 0 \<and>
               (vx2(Suc j) - vx2 0)*(snd y - vy2 0) - (vy2(Suc j) - vy2 0)*(fst y - vx2 0) \<le> 0"
             let ?jxL = "LEAST j. ?PLx j" let ?jyL = "LEAST j. ?PLy j"
+            \<comment> \<open>Sector existence and bounds (shared by both cases).\<close>
+            have hPLx_ex: "\<exists>j. ?PLx j"
+            proof -
+              define f where "f j = (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0)" for j
+              have "f 1 \<ge> 0"
+              proof -
+                let ?Ad = "(vy2 1 - vy2 0)*vx2 0 - (vx2 1 - vx2 0)*vy2 0"
+                let ?Bd = "-(vy2 1 - vy2 0)" let ?Cd = "vx2 1 - vx2 0"
+                have "\<forall>l<?n. ?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
+                proof (intro allI impI)
+                  fix l assume hl: "l < ?n"
+                  show "?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
+                  proof (cases "l = 0")
+                    case True have "?Ad + ?Bd * vx2 0 + ?Cd * vy2 0 = 0" by (by100 algebra)
+                      thus ?thesis unfolding True by linarith
+                  next case False show ?thesis proof (cases "l = 1")
+                    case True have "?Ad + ?Bd * vx2 1 + ?Cd * vy2 1 = 0" by (by100 algebra)
+                      thus ?thesis unfolding True by linarith
+                  next case False2: False hence "1 < l" using \<open>l \<noteq> 0\<close> by linarith
+                    have "?Ad + ?Bd * vx2 l + ?Cd * vy2 l =
+                      (vx2 1 - vx2 0)*(vy2 l - vy2 0) - (vy2 1 - vy2 0)*(vx2 l - vx2 0)" by (by100 algebra)
+                    with hfan_det_0[rule_format, OF _ hl le_refl \<open>1 < l\<close>] hn_ge3
+                    show ?thesis by linarith
+                  qed qed qed
+                from haffine_nonneg[OF hx this] have "?Ad + ?Bd * fst x + ?Cd * snd x \<ge> 0" .
+                moreover have "?Ad + ?Bd * fst x + ?Cd * snd x = f 1" unfolding f_def by (by100 algebra)
+                ultimately show ?thesis by linarith
+              qed
+              moreover have "f ?k \<le> 0" using hcdx unfolding cross_diag_def f_def by linarith
+              moreover have "1 < ?k" using hk_ge2 by linarith
+              ultimately show ?thesis unfolding f_def sorry
+                \<comment> \<open>Discrete IVT: f(1)\\<ge>0, f(k)\\<le>0 \\<to> \\<exists>j\\<in>[1,k). f(j)\\<ge>0 \\<and> f(j+1)\\<le>0.\<close>
+            qed
+            have hPLy_ex: "\<exists>j. ?PLy j" sorry \<comment> \<open>Same IVT for y.\<close>
+            from LeastI_ex[OF hPLx_ex] have hPLx_prop: "?PLx ?jxL" .
+            from LeastI_ex[OF hPLy_ex] have hPLy_prop: "?PLy ?jyL" .
+            have hjxL_ge1: "1 \<le> ?jxL" and hjxL_lt_k: "?jxL < ?k"
+              using hPLx_prop by (by100 blast)+
+            have hjyL_ge1: "1 \<le> ?jyL" and hjyL_lt_k: "?jyL < ?k"
+              using hPLy_prop by (by100 blast)+
             show "x = y"
             proof (cases "?jxL = ?jyL")
               case True
@@ -6333,97 +6373,7 @@ next
                 t = (?ex*(snd y - vy2 0) - ?ey*(fst y - vx2 0))/(?ex*?fy-?ey*?fx) in
                 (1-s-t)*vy2 0 + s*vy2(?k+1-?jxL) + t*vy2(?k-?jxL))"
                 unfolding phi_L_def Let_def True by (by100 simp)
-              \<comment> \<open>Source det \\<noteq> 0 and target det \\<noteq> 0. Need PLx bounds.\<close>
-              have hPLx_ex: "\<exists>j. ?PLx j"
-              proof -
-                \<comment> \<open>From hphi\\_L\\_decomp: the existential jx satisfies sector bounds.
-                   The full PLx predicate follows from the Cramer s \\<ge> 0 and tp \\<ge> 0
-                   (which encode the cross product sign conditions).
-                   Rather than re-derive PLx, use the IVT directly.\<close>
-                have hcrossk_le: "(vx2 ?k - vx2 0)*(snd x - vy2 0) - (vy2 ?k - vy2 0)*(fst x - vx2 0) \<le> 0"
-                  using hcdx unfolding cross_diag_def by linarith
-                have hcross1_ge: "(vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0) \<ge> 0"
-                proof -
-                  let ?Ad = "(vy2 1 - vy2 0)*vx2 0 - (vx2 1 - vx2 0)*vy2 0"
-                  let ?Bd = "-(vy2 1 - vy2 0)" let ?Cd = "vx2 1 - vx2 0"
-                  have hvals_nn: "\<forall>l<?n. ?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
-                  proof (intro allI impI)
-                    fix l assume hl: "l < ?n"
-                    show "?Ad + ?Bd * vx2 l + ?Cd * vy2 l \<ge> 0"
-                    proof (cases "l = 0")
-                      case True
-                      have "?Ad + ?Bd * vx2 0 + ?Cd * vy2 0 = 0" by (by100 algebra)
-                      thus ?thesis unfolding True by linarith
-                    next
-                      case False show ?thesis
-                      proof (cases "l = 1")
-                        case True
-                        have "?Ad + ?Bd * vx2 1 + ?Cd * vy2 1 = 0" by (by100 algebra)
-                        thus ?thesis unfolding True by linarith
-                      next
-                        case False2: False hence "1 < l" using \<open>l \<noteq> 0\<close> by linarith
-                        have "(1::nat) < ?n" using hn_ge3 by linarith
-                        have "?Ad + ?Bd * vx2 l + ?Cd * vy2 l =
-                          (vx2 1 - vx2 0)*(vy2 l - vy2 0) - (vy2 1 - vy2 0)*(vx2 l - vx2 0)"
-                          by (by100 algebra)
-                        with hfan_det_0[rule_format, OF \<open>1 < ?n\<close> hl le_refl \<open>1 < l\<close>]
-                        show ?thesis by linarith
-                      qed
-                    qed
-                  qed
-                  from haffine_nonneg[OF hx hvals_nn]
-                  have "?Ad + ?Bd * fst x + ?Cd * snd x \<ge> 0" .
-                  moreover have "?Ad + ?Bd * fst x + ?Cd * snd x =
-                    (vx2 1 - vx2 0)*(snd x - vy2 0) - (vy2 1 - vy2 0)*(fst x - vx2 0)"
-                    by (by100 algebra)
-                  ultimately show ?thesis by linarith
-                qed
-                \<comment> \<open>IVT: cross\\_1 \\<ge> 0 and cross\\_k \\<le> 0 \\<to> \\<exists>j \\<in> [1,k). cross\\_j \\<ge> 0 \\<and> cross\\_{j+1} \\<le> 0.\<close>
-                define f where "f j = (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0)" for j
-                have hf1: "f 1 \<ge> 0" using hcross1_ge unfolding f_def .
-                have hfk: "f ?k \<le> 0" using hcrossk_le unfolding f_def .
-                have "\<forall>m. 1 \<le> m \<longrightarrow> m < ?k \<longrightarrow> f m \<ge> 0 \<longrightarrow>
-                    (\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0)"
-                proof (intro allI impI)
-                  fix m assume "1 \<le> m" and hmk: "m < ?k" and hfm: "f m \<ge> 0"
-                  show "\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0"
-                    using hmk hfm
-                  proof (induction "?k - m" arbitrary: m)
-                    case 0 thus ?case by linarith
-                  next
-                    case (Suc d)
-                    show ?case
-                    proof (cases "f (Suc m) \<le> 0")
-                      case True show ?thesis
-                        apply (rule exI[of _ m]) using True Suc.prems by (by100 blast)
-                    next
-                      case False hence "f (Suc m) > 0" by linarith
-                      hence "f (Suc m) \<ge> 0" by linarith
-                      have "Suc m < ?k"
-                      proof (rule ccontr)
-                        assume "\<not> Suc m < ?k" hence "Suc m \<ge> ?k" by linarith
-                        with Suc.prems have "Suc m = ?k" by linarith
-                        hence "f (Suc m) \<le> 0" using hfk by simp
-                        with \<open>f (Suc m) > 0\<close> show False by linarith
-                      qed
-                      have "d = ?k - Suc m" using Suc.hyps by linarith
-                      from Suc.hyps(1)[OF this \<open>Suc m < ?k\<close> \<open>f (Suc m) \<ge> 0\<close>]
-                      obtain j where "Suc m \<le> j" "j < ?k" "f j \<ge> 0" "f (Suc j) \<le> 0" by blast
-                      hence "m \<le> j" by linarith
-                      with \<open>j < ?k\<close> \<open>f j \<ge> 0\<close> \<open>f (Suc j) \<le> 0\<close> show ?thesis by (by100 blast)
-                    qed
-                  qed
-                qed
-                have h1ltk: "1 < ?k" using hk_ge2 by linarith
-                from \<open>\<forall>m. 1 \<le> m \<longrightarrow> m < ?k \<longrightarrow> f m \<ge> 0 \<longrightarrow> (\<exists>j. m \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0)\<close>
-                have "\<exists>j. 1 \<le> j \<and> j < ?k \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0"
-                  using le_refl h1ltk hf1 by (by100 blast)
-                then obtain j where "1 \<le> j" "j < ?k" "f j \<ge> 0" "f (Suc j) \<le> 0" by (by100 blast)
-                thus ?thesis unfolding f_def by (by100 blast)
-              qed
-              from LeastI_ex[OF hPLx_ex] have hPLx: "?PLx ?jxL" .
-              have hjxL_ge1: "1 \<le> ?jxL" and hjxL_lt_k: "?jxL < ?k"
-                using hPLx by (by100 blast)+
+              \<comment> \<open>Source det \\<noteq> 0 and target det \\<noteq> 0. Use pre-split PLx bounds.\<close>
               have hjxL_lt_n: "?jxL < ?n" using hjxL_lt_k hk_lt_nm1 by linarith
               have hjxL_suc_lt: "Suc ?jxL < ?n" using hjxL_lt_k hk_lt_nm1 by linarith
               have hdet_src: "?ex * ?fy - ?ey * ?fx \<noteq> 0"
@@ -6470,22 +6420,75 @@ next
               qed
               thus ?thesis by (cases x, cases y) simp
             next
-              case False
-              \<comment> \<open>Different LEAST sectors. Use existential decomposition + fan disjointness.\<close>
-              \<comment> \<open>From hfst\\_eq, hsnd\\_eq: output(jx, sx, tpx) = output(jy, sy, tpy) with jx \\<noteq> jy
-                 (if the existential sectors also differ). The output fan triangles use vertices
-                 (v\\_0, v\\_{k+1-j}, v\\_{k-j}). Rewrite as (v\\_0, v\\_{Suc m}, v\\_m) with m=k-j.
-                 Apply fan\\_triangle\\_interior\\_disjoint (proved in scratch).\<close>
-              \<comment> \<open>Actually: the existential jx,jy might be equal even when LEAST differs.
-                 But if jx=jy: hfst\\_eq gives output equality in SAME triangle.
-                 triangle\\_coords\\_injective \\<to> sx=sy, tpx=tpy.
-                 Then from same output: phi\\_L(x)=phi\\_L(y) is trivially given (heq).
-                 But we need x=y, which requires Cramer inversion.
-                 Use same\\_sector\\_affine\\_injective via LEAST (which are equal when jx=jy
-                 gives the same Cramer coords).\<close>
-              \<comment> \<open>For now: sorry. The full proof needs fan\\_triangle\\_interior\\_disjoint (inline)
-                 + adjacent boundary analysis + Cramer connection.\<close>
-              show "x = y" sorry
+              case hne_sector: False
+              \<comment> \<open>Different LEAST sectors (?jxL \\<noteq> ?jyL).
+                 phi\\_L(x) uses Cramer in sector ?jxL; phi\\_L(y) uses sector ?jyL.
+                 The Cramer coords satisfy s \\<ge> 0, tp \\<ge> 0 from PLx/PLy.
+                 Fan\\_triangle\\_interior\\_disjoint: if both s > 0 and tp > 0, contradicts ?jxL \\<noteq> ?jyL.
+                 Boundary (s=0 or tp=0): the output is on a fan chord, and adjacent analysis gives x=y.\<close>
+              \<comment> \<open>LEAST-based Cramer coords for x.\<close>
+              let ?ex = "vx2 ?jxL - vx2 0" let ?ey = "vy2 ?jxL - vy2 0"
+              let ?fx = "vx2(Suc ?jxL) - vx2 0" let ?fy = "vy2(Suc ?jxL) - vy2 0"
+              let ?det_x = "?ex * ?fy - ?ey * ?fx"
+              let ?sx = "(?fy*(fst x - vx2 0) - ?fx*(snd x - vy2 0)) / ?det_x"
+              let ?tpx = "(?ex*(snd x - vy2 0) - ?ey*(fst x - vx2 0)) / ?det_x"
+              \<comment> \<open>s\\_x \\<ge> 0 from PLx cross condition + det > 0.\<close>
+              have hjxL_lt_n: "?jxL < ?n" using hjxL_lt_k hk_lt_nm1 by linarith
+              have hjxL_suc_lt: "Suc ?jxL < ?n" using hjxL_lt_k hk_lt_nm1 by linarith
+              have hdet_x_pos: "?det_x > 0"
+                using hfan_det_0[rule_format, OF hjxL_lt_n hjxL_suc_lt hjxL_ge1 lessI] .
+              have hsx_nn: "?sx \<ge> 0"
+              proof -
+                have "(vx2(Suc ?jxL) - vx2 0)*(snd x - vy2 0) - (vy2(Suc ?jxL) - vy2 0)*(fst x - vx2 0) \<le> 0"
+                  using hPLx_prop by (by100 blast)
+                hence "?fy*(fst x - vx2 0) - ?fx*(snd x - vy2 0) \<ge> 0" by linarith
+                with hdet_x_pos show ?thesis using divide_nonneg_nonneg by (by100 fastforce)
+              qed
+              have htpx_nn: "?tpx \<ge> 0"
+              proof -
+                have "(vx2 ?jxL - vx2 0)*(snd x - vy2 0) - (vy2 ?jxL - vy2 0)*(fst x - vx2 0) \<ge> 0"
+                  using hPLx_prop by (by100 blast)
+                hence "?ex*(snd x - vy2 0) - ?ey*(fst x - vx2 0) \<ge> 0" by linarith
+                with hdet_x_pos show ?thesis using divide_nonneg_nonneg by (by100 fastforce)
+              qed
+              \<comment> \<open>phi\\_L(x) output using LEAST coords.\<close>
+              have hphiL_x_least: "phi_L x = ((1-?sx-?tpx)*vx2 0 + ?sx*vx2(?k+1-?jxL) + ?tpx*vx2(?k-?jxL),
+                                               (1-?sx-?tpx)*vy2 0 + ?sx*vy2(?k+1-?jxL) + ?tpx*vy2(?k-?jxL))"
+                unfolding phi_L_def Let_def by (by100 simp)
+              \<comment> \<open>Similarly for y with LEAST = ?jyL.\<close>
+              let ?exy = "vx2 ?jyL - vx2 0" let ?eyy = "vy2 ?jyL - vy2 0"
+              let ?fxy = "vx2(Suc ?jyL) - vx2 0" let ?fyy = "vy2(Suc ?jyL) - vy2 0"
+              let ?det_y = "?exy * ?fyy - ?eyy * ?fxy"
+              let ?sy = "(?fyy*(fst y - vx2 0) - ?fxy*(snd y - vy2 0)) / ?det_y"
+              let ?tpy = "(?exy*(snd y - vy2 0) - ?eyy*(fst y - vx2 0)) / ?det_y"
+              have hjyL_lt_n: "?jyL < ?n" using hjyL_lt_k hk_lt_nm1 by linarith
+              have hjyL_suc_lt: "Suc ?jyL < ?n" using hjyL_lt_k hk_lt_nm1 by linarith
+              have hdet_y_pos: "?det_y > 0"
+                using hfan_det_0[rule_format, OF hjyL_lt_n hjyL_suc_lt hjyL_ge1 lessI] .
+              have hsy_nn: "?sy \<ge> 0"
+              proof -
+                have "(vx2(Suc ?jyL) - vx2 0)*(snd y - vy2 0) - (vy2(Suc ?jyL) - vy2 0)*(fst y - vx2 0) \<le> 0"
+                  using hPLy_prop by (by100 blast)
+                hence "?fyy*(fst y - vx2 0) - ?fxy*(snd y - vy2 0) \<ge> 0" by linarith
+                with hdet_y_pos show ?thesis using divide_nonneg_nonneg by (by100 fastforce)
+              qed
+              have htpy_nn: "?tpy \<ge> 0"
+              proof -
+                have "(vx2 ?jyL - vx2 0)*(snd y - vy2 0) - (vy2 ?jyL - vy2 0)*(fst y - vx2 0) \<ge> 0"
+                  using hPLy_prop by (by100 blast)
+                hence "?exy*(snd y - vy2 0) - ?eyy*(fst y - vx2 0) \<ge> 0" by linarith
+                with hdet_y_pos show ?thesis using divide_nonneg_nonneg by (by100 fastforce)
+              qed
+              have hphiL_y_least: "phi_L y = ((1-?sy-?tpy)*vx2 0 + ?sy*vx2(?k+1-?jyL) + ?tpy*vx2(?k-?jyL),
+                                               (1-?sy-?tpy)*vy2 0 + ?sy*vy2(?k+1-?jyL) + ?tpy*vy2(?k-?jyL))"
+                unfolding phi_L_def Let_def by (by100 simp)
+              \<comment> \<open>Output equality from phi\\_L(x) = phi\\_L(y).\<close>
+              have hfst_L: "fst (phi_L x) = fst (phi_L y)" using heq by simp
+              have hsnd_L: "snd (phi_L x) = snd (phi_L y)" using heq by simp
+              \<comment> \<open>Now apply fan\\_triangle\\_interior\\_disjoint (inline from scratch).
+                 Rewrite in standard fan form: output triangle j uses (v\\_0, v\\_{Suc m}, v\\_m) with m=k-j.
+                 In standard form (v\\_0, v\\_m, v\\_{Suc m}): s=tp, t=s (swapped).\<close>
+              show "x = y" sorry \<comment> \<open>fan\\_triangle\\_interior\\_disjoint + adjacent boundary.\<close>
             qed
           qed
           have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
