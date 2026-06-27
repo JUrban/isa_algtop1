@@ -5545,8 +5545,42 @@ next
             have "cross_diag (phi_L x) = cross_diag (phi_R y)" using heq by (by100 simp)
             hence hcd_zero: "cross_diag (phi_L x) = 0" using hcd_phiL hcd_phiR by linarith
             \<comment> \<open>Step 5: cross\\_diag = 0 forces coefficients to 0, then x = v\\_0, contradiction.\<close>
+            \<comment> \<open>Step 5: sL*cdA + tpL*cdB = 0, cdB < 0 \\<to> tpL = 0, then sL analysis.\<close>
+            have hsum_zero: "sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))
+              + tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0)) = 0"
+              using hcd_eq hcd_zero by linarith
+            have hcdB_strict: "(vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0) < 0"
+            proof -
+              have "?k-jL < ?k" using hjL by (by100 linarith)
+              have "?k-jL < ?n" using \<open>?k-jL < ?k\<close> hk_lt_nm1 by (by100 linarith)
+              have "?k < ?n" using hk_lt_nm1 by (by100 linarith)
+              have "1 \<le> ?k-jL" using hjL by (by100 linarith)
+              from hfan_det_0[rule_format, OF \<open>?k-jL < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k-jL\<close> \<open>?k-jL < ?k\<close>]
+              show ?thesis
+                apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
+                done
+            qed
+            have "tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0)) = 0"
+            proof -
+              have "tpL*((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0)) \<le> 0"
+                using htpL hcdB_strict
+                mult_nonneg_nonneg[of tpL "-((vx2 ?k - vx2 0)*(vy2(?k-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL) - vx2 0))"]
+                by linarith
+              moreover have "sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0)) \<le> 0"
+                using hsL h_cdA
+                mult_nonneg_nonneg[of sL "-((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0))"]
+                by linarith
+              ultimately show ?thesis using hsum_zero by linarith
+            qed
+            hence htpL_zero: "tpL = 0" using hcdB_strict
+              by (simp only: mult_eq_0_iff, by100 simp)
+            \<comment> \<open>tpL=0. From hphi\\_L\\_decomp Cramer: cross\\_jL(x) = 0.
+               From sL*cdA = 0 (since sum=0 and tpL=0): either sL=0 or cdA=0.
+               If sL=0: phi\\_L(x) = v\\_0. Cramer \\<to> x = v\\_0. cross\\_diag(v\\_0) = 0. \\<bot>.
+               If cdA=0 (jL=1): phi\\_L(x) = (1-sL)*v\\_0 + sL*v\\_k on diagonal.
+               Then phi\\_R(y) = phi\\_L(x) on diagonal. By symmetric argument: cross\\_diag(y) = 0. \\<bot>.\<close>
             show False
-              sorry \<comment> \<open>cd=0 from both sides. tpL=0 (cdB strict). Then sL+Cramer \\<to> x=v\\_0 \\<to> \\<bot>.\<close>
+              sorry \<comment> \<open>tpL=0 proved. sL+Cramer or symmetric y-argument needed.\<close>
           qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
