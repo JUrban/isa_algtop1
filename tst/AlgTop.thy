@@ -5579,8 +5579,11 @@ next
                If sL=0: phi\\_L(x) = v\\_0. Cramer \\<to> x = v\\_0. cross\\_diag(v\\_0) = 0. \\<bot>.
                If cdA=0 (jL=1): phi\\_L(x) = (1-sL)*v\\_0 + sL*v\\_k on diagonal.
                Then phi\\_R(y) = phi\\_L(x) on diagonal. By symmetric argument: cross\\_diag(y) = 0. \\<bot>.\<close>
+            have hsL_cdA_zero: "sL*((vx2 ?k - vx2 0)*(vy2(?k+1-jL) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL) - vx2 0)) = 0"
+              using hsum_zero htpL_zero by (by100 simp)
             show False
-              sorry \<comment> \<open>tpL=0 proved. sL+Cramer or symmetric y-argument needed.\<close>
+              sorry \<comment> \<open>sL*cdA=0. If cdA\\<noteq>0: sL=tpL=0 \\<to> x=v\\_0 \\<to> cd=0 \\<to> \\<bot>.
+                 If cdA=0 (jL=1): phi on diagonal \\<to> symmetric y argument \\<to> cd(y)=0 \\<to> \\<bot>.\<close>
           qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
