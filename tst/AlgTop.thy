@@ -6294,9 +6294,30 @@ next
               ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
                (1-s-tp)*vy2 0 + s*vy2(?k+1-j) + tp*vy2(?k-j)))"
               unfolding phi_L_def Let_def by (by100 simp)
+            \<comment> \<open>Get decompositions from hphi\\_L\\_decomp.\<close>
+            from hphi_L_decomp[OF hx hcdx]
+            obtain jx sx tpx where hjx: "1 \<le> jx" "jx < ?k"
+              and hsx: "sx \<ge> 0" and htpx: "tpx \<ge> 0" and h1stx: "1 - sx - tpx \<ge> 0"
+              and hphiL_x: "phi_L x = ((1-sx-tpx)*vx2 0 + sx*vx2(?k+1-jx) + tpx*vx2(?k-jx),
+                                        (1-sx-tpx)*vy2 0 + sx*vy2(?k+1-jx) + tpx*vy2(?k-jx))"
+              by (by5000 blast)
+            from hphi_L_decomp[OF hy hcdy]
+            obtain jy sy tpy where hjy: "1 \<le> jy" "jy < ?k"
+              and hsy: "sy \<ge> 0" and htpy: "tpy \<ge> 0" and h1sty: "1 - sy - tpy \<ge> 0"
+              and hphiL_y: "phi_L y = ((1-sy-tpy)*vx2 0 + sy*vx2(?k+1-jy) + tpy*vx2(?k-jy),
+                                        (1-sy-tpy)*vy2 0 + sy*vy2(?k+1-jy) + tpy*vy2(?k-jy))"
+              by (by5000 blast)
+            \<comment> \<open>From phi\\_L(x) = phi\\_L(y): output decompositions equal.\<close>
+            have hfst_eq: "(1-sx-tpx)*vx2 0 + sx*vx2(?k+1-jx) + tpx*vx2(?k-jx) =
+              (1-sy-tpy)*vx2 0 + sy*vx2(?k+1-jy) + tpy*vx2(?k-jy)"
+              using heq hphiL_x hphiL_y by (by100 simp)
+            have hsnd_eq: "(1-sx-tpx)*vy2 0 + sx*vy2(?k+1-jx) + tpx*vy2(?k-jx) =
+              (1-sy-tpy)*vy2 0 + sy*vy2(?k+1-jy) + tpy*vy2(?k-jy)"
+              using heq hphiL_x hphiL_y by (by100 simp)
+            \<comment> \<open>Cramer inversion: (s,tp) uniquely determines x within each sector.\<close>
             show "x = y"
-              sorry \<comment> \<open>Same sector: Cramer inversion (det \\<noteq> 0 gives unique (s,tp) \\<to> unique (x,y)).
-                 Different sectors: fan triangle interiors disjoint \\<to> contradiction.\<close>
+              sorry \<comment> \<open>From output equality + fan det \\<noteq> 0: (sx,tpx)=(sy,tpy) and jx=jy.
+                 Then Cramer inversion gives x=y. Needs sector matching argument.\<close>
           qed
           have hphi_R_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x > 0 \<Longrightarrow> cross_diag y > 0 \<Longrightarrow> phi_R x = phi_R y \<Longrightarrow> x = y"
@@ -6389,9 +6410,173 @@ next
                     have "g p' = q2 (phi_L p')" using True4 unfolding g_def by (by100 simp)
                     hence "q2 (phi_R p) = q2 (phi_L p')" using hgp hg_eq by simp
                     moreover have "phi_L p' \<in> P2" using hphi_L_in_P2[OF hp' less_imp_le[OF True4]] .
-                    ultimately have "phi_R p = phi_L p'" using hC8_at_p by (by100 blast)
-                    with hphi_L_R_disjoint[OF hp' hp True4 True2] show ?thesis
-                      sorry \<comment> \<open>Need target-interior for p' (hint is for p). Use C8/C9 instead.\<close>
+                    ultimately have heq_RL: "phi_R p = phi_L p'" using hC8_at_p by (by100 blast)
+                    \<comment> \<open>Symmetric disjoint: cross\\_diag=0 forces sR=0, then tpR analysis \\<to> contradiction.\<close>
+                    from hphi_R_decomp[OF hp True2]
+                    obtain jR sR tpR where hjR_loc: "?k \<le> jR" "jR < ?n - 1"
+                      and hsR_loc: "sR \<ge> 0" and htpR_loc: "tpR \<ge> 0" and h1stR_loc: "1 - sR - tpR \<ge> 0"
+                      and hphiR_loc: "phi_R p = ((1-sR-tpR)*vx2 ?k + sR*vx2(Suc jR) + tpR*vx2(Suc(Suc jR) mod ?n),
+                                                  (1-sR-tpR)*vy2 ?k + sR*vy2(Suc jR) + tpR*vy2(Suc(Suc jR) mod ?n))"
+                      by (by5000 blast)
+                    have hsumR_loc: "(1-sR-tpR) + sR + tpR = (1::real)" by linarith
+                    \<comment> \<open>cross\\_diag of phi\\_R(p) \\<ge> 0.\<close>
+                    have hcd_eqR_loc: "cross_diag (phi_R p) =
+                      sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))
+                    + tpR*((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0))"
+                    proof -
+                      have hcd_lin: "(vx2 ?k - vx2 0)*((1-sR-tpR)*vy2 ?k + sR*vy2(Suc jR) + tpR*vy2(Suc(Suc jR) mod ?n) - vy2 0)
+                       - (vy2 ?k - vy2 0)*((1-sR-tpR)*vx2 ?k + sR*vx2(Suc jR) + tpR*vx2(Suc(Suc jR) mod ?n) - vx2 0)
+                       = (1-sR-tpR)*((vx2 ?k - vx2 0)*(vy2 ?k - vy2 0) - (vy2 ?k - vy2 0)*(vx2 ?k - vx2 0))
+                       + sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))
+                       + tpR*((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0))"
+                        by (rule cross_product_affine_3[OF hsumR_loc])
+                      show ?thesis unfolding cross_diag_def using hcd_lin hphiR_loc by (by100 simp)
+                    qed
+                    have h_cdSj_loc: "(vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0) > 0"
+                    proof -
+                      have "?k < Suc jR" using hjR_loc by linarith
+                      have "Suc jR < ?n" using hjR_loc by linarith
+                      have "?k < ?n" using hk_lt_nm1 by linarith
+                      have "1 \<le> ?k" using hk_ge2 by linarith
+                      from hfan_det_0[rule_format, OF \<open>?k < ?n\<close> \<open>Suc jR < ?n\<close> \<open>1 \<le> ?k\<close> \<open>?k < Suc jR\<close>]
+                      show ?thesis .
+                    qed
+                    \<comment> \<open>cross\\_diag(phi\\_L(p')) \\<le> 0 from left-fan structure.\<close>
+                    from hphi_L_decomp[OF hp' less_imp_le[OF True4]]
+                    obtain jL' sL' tpL' where hjL': "1 \<le> jL'" "jL' < ?k"
+                      and hsL': "sL' \<ge> 0" and htpL': "tpL' \<ge> 0" and h1stL': "1 - sL' - tpL' \<ge> 0"
+                      and hphiL_loc: "phi_L p' = ((1-sL'-tpL')*vx2 0 + sL'*vx2(?k+1-jL') + tpL'*vx2(?k-jL'),
+                                                    (1-sL'-tpL')*vy2 0 + sL'*vy2(?k+1-jL') + tpL'*vy2(?k-jL'))"
+                      by (by5000 blast)
+                    \<comment> \<open>cross\\_diag = 0.\<close>
+                    have h_cdSSj_loc: "(vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0) \<ge> 0"
+                      proof (cases "Suc(Suc jR) mod ?n = 0")
+                        case True thus ?thesis by (by100 simp)
+                      next
+                        case False
+                        have hSSjR_lt: "Suc(Suc jR) mod ?n < ?n" by (by100 simp)
+                        have "?k < ?n" using hk_lt_nm1 by linarith
+                        from hSSj_mod_ge[OF hjR_loc(1) hjR_loc(2)]
+                        have "Suc(Suc jR) mod ?n \<ge> ?k + 2 \<or> Suc(Suc jR) mod ?n = 0" .
+                        with False have "?k < Suc(Suc jR) mod ?n" by linarith
+                        have "1 \<le> ?k" using hk_ge2 by linarith
+                        from hfan_det_0[rule_format, OF \<open>?k < ?n\<close> hSSjR_lt \<open>1 \<le> ?k\<close> \<open>?k < Suc(Suc jR) mod ?n\<close>]
+                        show ?thesis by linarith
+                      qed
+                    have "cross_diag (phi_R p) \<ge> 0"
+                    proof -
+                      have h_cdSj_nn: "0 \<le> (vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0)"
+                        using h_cdSj_loc by linarith
+                      have hsR_nn: "sR * ((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0)) \<ge> 0"
+                        using mult_nonneg_nonneg[OF hsR_loc h_cdSj_nn] .
+                      have htpR_nn: "tpR * ((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0)) \<ge> 0"
+                        using mult_nonneg_nonneg[OF htpR_loc h_cdSSj_loc] .
+                      show ?thesis using hcd_eqR_loc hsR_nn htpR_nn by linarith
+                    qed
+                    moreover have "cross_diag (phi_L p') \<le> 0"
+                    proof -
+                      have hsumL_loc: "(1-sL'-tpL') + sL' + tpL' = (1::real)" by linarith
+                      have hcd_eqL_loc: "cross_diag (phi_L p') =
+                        sL'*((vx2 ?k - vx2 0)*(vy2(?k+1-jL') - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL') - vx2 0))
+                      + tpL'*((vx2 ?k - vx2 0)*(vy2(?k-jL') - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL') - vx2 0))"
+                      proof -
+                        have hcd_lin: "(vx2 ?k - vx2 0)*((1-sL'-tpL')*vy2 0 + sL'*vy2(?k+1-jL') + tpL'*vy2(?k-jL') - vy2 0)
+                         - (vy2 ?k - vy2 0)*((1-sL'-tpL')*vx2 0 + sL'*vx2(?k+1-jL') + tpL'*vx2(?k-jL') - vx2 0)
+                         = (1-sL'-tpL')*((vx2 ?k - vx2 0)*(vy2 0 - vy2 0) - (vy2 ?k - vy2 0)*(vx2 0 - vx2 0))
+                         + sL'*((vx2 ?k - vx2 0)*(vy2(?k+1-jL') - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL') - vx2 0))
+                         + tpL'*((vx2 ?k - vx2 0)*(vy2(?k-jL') - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL') - vx2 0))"
+                          by (rule cross_product_affine_3[OF hsumL_loc])
+                        show ?thesis unfolding cross_diag_def using hcd_lin hphiL_loc by (by100 simp)
+                      qed
+                      have h_cdA_loc: "(vx2 ?k - vx2 0)*(vy2(?k+1-jL') - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL') - vx2 0) \<le> 0"
+                      proof (cases "?k+1-jL' = ?k")
+                        case True thus ?thesis by (by100 simp)
+                      next
+                        case False hence "?k+1-jL' < ?k" using hjL' by linarith
+                        have "1 \<le> ?k+1-jL'" using hjL' hk_ge2 by linarith
+                        have "?k+1-jL' < ?n" using \<open>?k+1-jL' < ?k\<close> hk_lt_nm1 by linarith
+                        have "?k < ?n" using hk_lt_nm1 by linarith
+                        from hfan_det_0[rule_format, OF \<open>?k+1-jL' < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k+1-jL'\<close> \<open>?k+1-jL' < ?k\<close>]
+                        show ?thesis
+                          apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
+                          done
+                      qed
+                      have h_cdB_loc: "(vx2 ?k - vx2 0)*(vy2(?k-jL') - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL') - vx2 0) < 0"
+                      proof -
+                        have "?k-jL' < ?k" using hjL' by linarith
+                        have "?k-jL' < ?n" using \<open>?k-jL' < ?k\<close> hk_lt_nm1 by linarith
+                        have "?k < ?n" using hk_lt_nm1 by linarith
+                        have "1 \<le> ?k-jL'" using hjL' by linarith
+                        from hfan_det_0[rule_format, OF \<open>?k-jL' < ?n\<close> \<open>?k < ?n\<close> \<open>1 \<le> ?k-jL'\<close> \<open>?k-jL' < ?k\<close>]
+                        show ?thesis
+                          apply (simp only: mult.commute[of "vx2 ?k - vx2 0"] mult.commute[of "vy2 ?k - vy2 0"])
+                          done
+                      qed
+                      show ?thesis using hcd_eqL_loc hsL' htpL' h_cdA_loc h_cdB_loc
+                        mult_nonneg_nonneg[of sL' "-((vx2 ?k - vx2 0)*(vy2(?k+1-jL') - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k+1-jL') - vx2 0))"]
+                        mult_nonneg_nonneg[of tpL' "-((vx2 ?k - vx2 0)*(vy2(?k-jL') - vy2 0) - (vy2 ?k - vy2 0)*(vx2(?k-jL') - vx2 0))"]
+                        by linarith
+                    qed
+                    moreover have "cross_diag (phi_R p) = cross_diag (phi_L p')" using heq_RL by simp
+                    ultimately have hcd_zero: "cross_diag (phi_R p) = 0" by linarith
+                    \<comment> \<open>From cross\\_diag=0 and right-fan: sR=0 (since cdSj > 0).\<close>
+                    have hsR_zero: "sR = 0"
+                    proof (rule ccontr)
+                      assume "sR \<noteq> 0" hence "sR > 0" using hsR_loc by linarith
+                      hence "sR * ((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0)) > 0"
+                        using h_cdSj_loc mult_pos_pos by (by100 blast)
+                      moreover have "tpR * ((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0)) \<ge> 0"
+                        using mult_nonneg_nonneg[OF htpR_loc h_cdSSj_loc] .
+                      ultimately have "cross_diag (phi_R p) > 0" using hcd_eqR_loc by linarith
+                      with hcd_zero show False by linarith
+                    qed
+                    \<comment> \<open>From sR=0: phi\\_R(p) = (1-tpR)*v\\_k + tpR*v\\_{Suc(Suc jR) mod n}.\<close>
+                    \<comment> \<open>Case: tpR=0 \\<to> phi\\_R(p)=v\\_k \\<to> v\\_k on old edge \\<to> contradicts old interior.\<close>
+                    have "tpR \<noteq> 0"
+                    proof
+                      assume "tpR = 0"
+                      hence "phi_R p = (vx2 ?k, vy2 ?k)" using hphiR_loc hsR_zero by (by100 simp)
+                      have "?k < ?n" using hk_lt_nm1 by linarith
+                      have "(0::real) \<in> I_set" unfolding top1_unit_interval_def by (by100 simp)
+                      from hphi_int_p[rule_format, OF \<open>?k < ?n\<close> \<open>0 \<in> I_set\<close>]
+                      show False using \<open>phi_R p = (vx2 ?k, vy2 ?k)\<close> by (by100 simp)
+                    qed
+                    hence "tpR > 0" using htpR_loc by linarith
+                    \<comment> \<open>tpR > 0 and sR=0: from cross\\_diag=0, cdSSj=0, so jR=n-2.\<close>
+                    have "sR * ((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0)) = 0"
+                      using hsR_zero by simp
+                    have "tpR * ((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0)) = 0"
+                      using hcd_zero hcd_eqR_loc \<open>sR * _ = 0\<close> by linarith
+                    hence "((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0)) = 0"
+                      using \<open>tpR > 0\<close> by (simp only: mult_eq_0_iff, by100 simp)
+                    \<comment> \<open>cdSSj=0 means Suc(Suc jR) mod n = 0 (the only possibility with jR \\<ge> k).\<close>
+                    have "Suc(Suc jR) mod ?n = 0"
+                    proof (rule ccontr)
+                      assume hne0: "Suc(Suc jR) mod ?n \<noteq> 0"
+                      from hSSj_mod_ge[OF hjR_loc(1) hjR_loc(2)]
+                      have "Suc(Suc jR) mod ?n \<ge> ?k + 2 \<or> Suc(Suc jR) mod ?n = 0" .
+                      with hne0 have "?k < Suc(Suc jR) mod ?n" by linarith
+                      have hSSjR_lt: "Suc(Suc jR) mod ?n < ?n" by (by100 simp)
+                      have "?k < ?n" using hk_lt_nm1 by linarith
+                      have "1 \<le> ?k" using hk_ge2 by linarith
+                      from hfan_det_0[rule_format, OF \<open>?k < ?n\<close> hSSjR_lt \<open>1 \<le> ?k\<close> \<open>?k < Suc(Suc jR) mod ?n\<close>]
+                      have "(vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0) > 0"
+                        by linarith
+                      with \<open>((vx2 ?k - vx2 0)*(vy2(Suc(Suc jR) mod ?n) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc(Suc jR) mod ?n) - vx2 0)) = 0\<close>
+                      show False by linarith
+                    qed
+                    hence "?n dvd Suc(Suc jR)" using dvd_eq_mod_eq_0[of ?n "Suc(Suc jR)"] hn_ge3 by linarith
+                    have "Suc(Suc jR) \<le> ?n" using hjR_loc by linarith
+                    have "Suc(Suc jR) > 0" by simp
+                    hence "Suc(Suc jR) = ?n" using \<open>?n dvd Suc(Suc jR)\<close> \<open>Suc(Suc jR) \<le> ?n\<close>
+                      using dvd_imp_le[OF \<open>?n dvd Suc(Suc jR)\<close> \<open>Suc(Suc jR) > 0\<close>] by linarith
+                    hence "jR = ?n - 2" by linarith
+                    hence "Suc jR = ?n - 1" using hn_ge3 by linarith
+                    \<comment> \<open>sR=0 + jR=n-2: from hphi\\_R\\_decomp, p on line v\\_0-v\\_{n-1}.
+                       p \\<in> P2 on this line \\<to> p on edge n-1 \\<to> contradicts target-interior.\<close>
+                    \<comment> \<open>Hmm, the sR=0 Cramer condition says p is on line v\\_0 to v\\_{Suc jR}=v\\_{n-1}.
+                       But we need this from hphi\\_R\\_decomp's s=0 implication.\<close>
+                    show ?thesis sorry \<comment> \<open>p on line v\\_0-v\\_{n-1} + P2 \\<to> edge n-1 \\<to> hint contradiction.\<close>
                   next
                     case False4: False
                     hence "cross_diag p' = 0" using False3 by linarith
