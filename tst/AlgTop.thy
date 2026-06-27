@@ -5549,7 +5549,7 @@ next
             hence hcd_zero: "cross_diag (phi_L x) = 0" using hcd_phiL hcd_phiR by linarith
             \<comment> \<open>Step 5: cross\\_diag = 0 forces coefficients to 0, then x = v\\_0, contradiction.\<close>
             show False
-              sorry \<comment> \<open>cd=0 \\<to> sL=tpL=0 \\<to> x=v\\_0 \\<to> cross\\_diag(x)=0 \\<to> \\<bot>.\<close>
+              sorry \<comment> \<open>tpL=0 proved (see commit attempt). Needs sL + Cramer.\<close>
           qed
           have hphi_L_inj: "\<And>x y. x \<in> P2 \<Longrightarrow> y \<in> P2 \<Longrightarrow>
               cross_diag x \<le> 0 \<Longrightarrow> cross_diag y \<le> 0 \<Longrightarrow> phi_L x = phi_L y \<Longrightarrow> x = y"
