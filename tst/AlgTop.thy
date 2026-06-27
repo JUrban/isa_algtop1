@@ -6417,6 +6417,7 @@ next
                       and hsR_loc: "sR \<ge> 0" and htpR_loc: "tpR \<ge> 0" and h1stR_loc: "1 - sR - tpR \<ge> 0"
                       and hphiR_loc: "phi_R p = ((1-sR-tpR)*vx2 ?k + sR*vx2(Suc jR) + tpR*vx2(Suc(Suc jR) mod ?n),
                                                   (1-sR-tpR)*vy2 ?k + sR*vy2(Suc jR) + tpR*vy2(Suc(Suc jR) mod ?n))"
+                      and hsR0_imp: "sR = 0 \<longrightarrow> (vx2(Suc jR) - vx2 0)*(snd p - vy2 0) = (vy2(Suc jR) - vy2 0)*(fst p - vx2 0)"
                       by (by5000 blast)
                     have hsumR_loc: "(1-sR-tpR) + sR + tpR = (1::real)" by linarith
                     \<comment> \<open>cross\\_diag of phi\\_R(p) \\<ge> 0.\<close>
@@ -6576,7 +6577,174 @@ next
                        p \\<in> P2 on this line \\<to> p on edge n-1 \\<to> contradicts target-interior.\<close>
                     \<comment> \<open>Hmm, the sR=0 Cramer condition says p is on line v\\_0 to v\\_{Suc jR}=v\\_{n-1}.
                        But we need this from hphi\\_R\\_decomp's s=0 implication.\<close>
-                    show ?thesis sorry \<comment> \<open>p on line v\\_0-v\\_{n-1} + P2 \\<to> edge n-1 \\<to> hint contradiction.\<close>
+                    \<comment> \<open>sR=0 gives p on line v\\_0 to v\\_{n-1}.\<close>
+                    from mp[OF hsR0_imp hsR_zero]
+                    have hp_line: "(vx2(?n-1) - vx2 0)*(snd p - vy2 0) = (vy2(?n-1) - vy2 0)*(fst p - vx2 0)"
+                      using \<open>Suc jR = ?n - 1\<close> by simp
+                    \<comment> \<open>p \\<in> P2 on line v\\_0-v\\_{n-1}: direct sum argument for coefficient zeroing.\<close>
+                    from hp[unfolded hC5_2]
+                    obtain cc where hcc: "\<forall>i<?n. cc i \<ge> 0" "(\<Sum>i<?n. cc i) = 1"
+                      "fst p = (\<Sum>i<?n. cc i * vx2 i)" "snd p = (\<Sum>i<?n. cc i * vy2 i)"
+                      by (by5000 auto)
+                    \<comment> \<open>Affine function G(q) = cross(q - v\\_0, v\\_{n-1} - v\\_0) \\<ge> 0 at all vertices,
+                       G(p) = 0 (from hp\\_line), G > 0 at vertices \\<noteq> 0, n-1.\<close>
+                    let ?A = "(vx2(?n-1) - vx2 0)*vy2 0 - (vy2(?n-1) - vy2 0)*vx2 0"
+                    let ?B = "vy2(?n-1) - vy2 0" let ?C = "-(vx2(?n-1) - vx2 0)"
+                    have hF_zero: "?A + ?B * fst p + ?C * snd p = 0"
+                    proof -
+                      have "?A + ?B * fst p + ?C * snd p =
+                        -((vx2(?n-1) - vx2 0)*(snd p - vy2 0) - (vy2(?n-1) - vy2 0)*(fst p - vx2 0))"
+                        by (by100 algebra)
+                      thus ?thesis using hp_line by linarith
+                    qed
+                    have hF_nn: "\<forall>l<?n. ?A + ?B * vx2 l + ?C * vy2 l \<ge> 0"
+                    proof (intro allI impI)
+                      fix l assume hl: "l < ?n"
+                      have hval: "?A + ?B * vx2 l + ?C * vy2 l =
+                        (vx2 l - vx2 0)*(vy2(?n-1) - vy2 0) - (vy2 l - vy2 0)*(vx2(?n-1) - vx2 0)"
+                        by (by100 algebra)
+                      show "?A + ?B * vx2 l + ?C * vy2 l \<ge> 0"
+                      proof (cases "l = 0")
+                        case True thus ?thesis unfolding hval by (by100 simp)
+                      next
+                        case False show ?thesis
+                        proof (cases "l = ?n - 1")
+                          case True thus ?thesis unfolding hval by (by100 simp)
+                        next
+                          case False2: False hence "l < ?n - 1" using hl by linarith
+                          hence "1 \<le> l" using False by linarith
+                          have hnm1_lt: "?n - 1 < ?n" using hn_ge3 by linarith
+                          from hfan_det_0[rule_format, OF hl hnm1_lt \<open>1 \<le> l\<close> \<open>l < ?n - 1\<close>]
+                          show ?thesis unfolding hval by linarith
+                        qed
+                      qed
+                    qed
+                    \<comment> \<open>Direct sum argument: \\<Sum> cc\\_i * F(v\\_i) = 0, each term \\<ge> 0, strict for l \\<notin> \\{0,n-1\\}.\<close>
+                    have hF_sum: "(\<Sum>i<?n. cc i * (?A + ?B * vx2 i + ?C * vy2 i)) = 0"
+                    proof -
+                      have "?A + ?B * fst p + ?C * snd p =
+                        ?A * (\<Sum>i<?n. cc i) + ?B * (\<Sum>i<?n. cc i * vx2 i) + ?C * (\<Sum>i<?n. cc i * vy2 i)"
+                        using hcc(2) hcc(3) hcc(4) by simp
+                      hence hval: "(\<Sum>i<?n. cc i * (?A + ?B * vx2 i + ?C * vy2 i)) = ?A + ?B * fst p + ?C * snd p"
+                        sorry \<comment> \<open>Sum distribution: needs F affine \\<to> F(\\<Sum>) = \\<Sum> F.\<close>
+                      thus ?thesis using hF_zero by linarith
+                    qed
+                    have "\<forall>l<?n. l \<noteq> 0 \<longrightarrow> l \<noteq> ?n - 1 \<longrightarrow> cc l = 0"
+                    proof (intro allI impI)
+                      fix l assume hl: "l < ?n" and hl0: "l \<noteq> 0" and hlnm1: "l \<noteq> ?n - 1"
+                      have hterm_nn: "\<And>i. i < ?n \<Longrightarrow> cc i * (?A + ?B * vx2 i + ?C * vy2 i) \<ge> 0"
+                        using hcc(1) hF_nn mult_nonneg_nonneg by (by100 blast)
+                      have "cc l * (?A + ?B * vx2 l + ?C * vy2 l) = 0"
+                      proof -
+                        have "(\<Sum>i<?n. cc i * (?A + ?B * vx2 i + ?C * vy2 i)) =
+                          cc l * (?A + ?B * vx2 l + ?C * vy2 l) + (\<Sum>i\<in>{..<  ?n}-{l}. cc i * (?A + ?B * vx2 i + ?C * vy2 i))"
+                          using sum.remove[of "{..<?n}" l] hl by (by100 simp)
+                        moreover have "(\<Sum>i\<in>{..<?n}-{l}. cc i * (?A + ?B * vx2 i + ?C * vy2 i)) \<ge> 0"
+                          apply (rule sum_nonneg)
+                          using hterm_nn by (by100 blast)
+                        ultimately show ?thesis using hF_sum hterm_nn[OF hl] by linarith
+                      qed
+                      have "?A + ?B * vx2 l + ?C * vy2 l > 0"
+                      proof -
+                        have hval: "?A + ?B * vx2 l + ?C * vy2 l =
+                          (vx2 l - vx2 0)*(vy2(?n-1) - vy2 0) - (vy2 l - vy2 0)*(vx2(?n-1) - vx2 0)"
+                          by (by100 algebra)
+                        have "l < ?n - 1" using hl hlnm1 by linarith
+                        have "1 \<le> l" using hl0 by linarith
+                        have hnm1_lt: "?n - 1 < ?n" using hn_ge3 by linarith
+                        from hfan_det_0[rule_format, OF hl hnm1_lt \<open>1 \<le> l\<close> \<open>l < ?n - 1\<close>]
+                        show ?thesis unfolding hval by linarith
+                      qed
+                      with \<open>cc l * (?A + ?B * vx2 l + ?C * vy2 l) = 0\<close>
+                      show "cc l = 0" by (simp add: mult_eq_0_iff)
+                    qed
+                    \<comment> \<open>p = cc(0)*v\\_0 + cc(n-1)*v\\_{n-1} with cc(0)+cc(n-1)=1 \\<to> on edge n-1.\<close>
+                    have "?n - 1 < ?n" using hn_ge3 by linarith
+                    have "?n - 1 < length ?w'" using \<open>?n - 1 < ?n\<close> hlen_eq by simp
+                    have hSuc_nm1: "Suc (?n - 1) mod ?n = 0" using hn_ge3 by (by100 simp)
+                    have "cc (?n - 1) \<ge> 0" using hcc(1) \<open>?n - 1 < ?n\<close> by (by100 blast)
+                    have "cc (?n - 1) \<le> 1"
+                    proof -
+                      have "cc 0 \<ge> 0" using hcc(1) hn_ge3 by (by100 blast)
+                      have "\<forall>l\<in>{..<?n}-{0}-{?n-1}. cc l = 0"
+                        using \<open>\<forall>l<?n. l \<noteq> 0 \<longrightarrow> l \<noteq> ?n - 1 \<longrightarrow> cc l = 0\<close> by (by100 blast)
+                      have h0_in: "(0::nat) \<in> {..<?n}" using hn_ge3 by (by100 simp)
+                      have hnm1_in: "?n - 1 \<in> {..<?n} - {0}" using hn_ge3 by (by100 simp)
+                      have "(\<Sum>i<?n. cc i) = cc 0 + cc (?n - 1) + (\<Sum>l\<in>{..<?n}-{0}-{?n-1}. cc l)"
+                        using sum.remove[of "{..<?n}" 0 cc] h0_in
+                              sum.remove[of "{..<?n}-{0}" "?n-1" cc] hnm1_in by (by5000 simp)
+                      hence "cc 0 + cc (?n - 1) = 1"
+                        using hcc(2) sum.neutral[OF \<open>\<forall>l\<in>{..<?n}-{0}-{?n-1}. cc l = 0\<close>] by linarith
+                      with \<open>cc 0 \<ge> 0\<close> show ?thesis by linarith
+                    qed
+                    have "cc (?n - 1) \<in> I_set" unfolding top1_unit_interval_def
+                      using \<open>cc (?n - 1) \<ge> 0\<close> \<open>cc (?n - 1) \<le> 1\<close> by simp
+                    \<comment> \<open>p = (1-cc(n-1))*v\\_0 + cc(n-1)*v\\_{n-1} \\<to> on edge n-1 \\<to> hint contradiction.\<close>
+                    have hfst_p: "fst p = (\<Sum>i<?n. cc i * vx2 i)" using hcc(3) .
+                    have hsnd_p: "snd p = (\<Sum>i<?n. cc i * vy2 i)" using hcc(4) .
+                    \<comment> \<open>All cc\\_l = 0 for l \\<noteq> 0 and l \\<noteq> n-1, so sums reduce.\<close>
+                    have hcc_rest: "\<forall>l\<in>{..<?n}-{0}-{?n-1}. cc l = 0"
+                      using \<open>\<forall>l<?n. l \<noteq> 0 \<longrightarrow> l \<noteq> ?n - 1 \<longrightarrow> cc l = 0\<close> by (by100 blast)
+                    have h0_in: "(0::nat) \<in> {..<?n}" using hn_ge3 by (by100 simp)
+                    have hnm1_in: "?n - 1 \<in> {..<?n} - {0}" using hn_ge3 by (by100 simp)
+                    have "(\<Sum>i<?n. cc i) = cc 0 + cc (?n - 1) + (\<Sum>l\<in>{..<?n}-{0}-{?n-1}. cc l)"
+                      using sum.remove[of "{..<?n}" 0 cc] h0_in
+                            sum.remove[of "{..<?n}-{0}" "?n-1" cc] hnm1_in by (by5000 simp)
+                    hence hcc_sum: "cc 0 + cc (?n - 1) = 1"
+                      using hcc(2) sum.neutral[OF hcc_rest] by linarith
+                    hence hcc_0_eq: "cc 0 = 1 - cc (?n - 1)" by linarith
+                    have "(\<Sum>i<?n. cc i * vx2 i) = cc 0 * vx2 0 + cc (?n - 1) * vx2 (?n - 1)"
+                    proof -
+                      have "(\<Sum>i<?n. cc i * vx2 i) = cc 0 * vx2 0 + cc (?n - 1) * vx2 (?n - 1) +
+                        (\<Sum>l\<in>{..<?n}-{0}-{?n-1}. cc l * vx2 l)"
+                        using sum.remove[of "{..<?n}" 0 "\<lambda>i. cc i * vx2 i"] h0_in
+                              sum.remove[of "{..<?n}-{0}" "?n-1" "\<lambda>i. cc i * vx2 i"] hnm1_in
+                        by (by5000 simp)
+                      moreover have "(\<Sum>l\<in>{..<?n}-{0}-{?n-1}. cc l * vx2 l) = 0"
+                        by (rule sum.neutral, simp add: hcc_rest)
+                      ultimately show ?thesis by linarith
+                    qed
+                    hence "(\<Sum>i<?n. cc i * vx2 i) = (1 - cc(?n-1)) * vx2 0 + cc(?n-1) * vx2(?n-1)"
+                      using hcc_0_eq by (by100 simp)
+                    hence hfst_eq: "fst p = (1 - cc(?n-1)) * vx2 0 + cc(?n-1) * vx2(?n-1)"
+                      using hfst_p by linarith
+                    have "(\<Sum>i<?n. cc i * vy2 i) = cc 0 * vy2 0 + cc (?n - 1) * vy2 (?n - 1)"
+                    proof -
+                      have "(\<Sum>i<?n. cc i * vy2 i) = cc 0 * vy2 0 + cc (?n - 1) * vy2 (?n - 1) +
+                        (\<Sum>l\<in>{..<?n}-{0}-{?n-1}. cc l * vy2 l)"
+                        using sum.remove[of "{..<?n}" 0 "\<lambda>i. cc i * vy2 i"] h0_in
+                              sum.remove[of "{..<?n}-{0}" "?n-1" "\<lambda>i. cc i * vy2 i"] hnm1_in
+                        by (by5000 simp)
+                      moreover have "(\<Sum>l\<in>{..<?n}-{0}-{?n-1}. cc l * vy2 l) = 0"
+                        by (rule sum.neutral, simp add: hcc_rest)
+                      ultimately show ?thesis by linarith
+                    qed
+                    hence "(\<Sum>i<?n. cc i * vy2 i) = (1 - cc(?n-1)) * vy2 0 + cc(?n-1) * vy2(?n-1)"
+                      using hcc_0_eq by (by100 simp)
+                    hence hsnd_eq: "snd p = (1 - cc(?n-1)) * vy2 0 + cc(?n-1) * vy2(?n-1)"
+                      using hsnd_p by linarith
+                    \<comment> \<open>p = edge\\_{n-1}(1 - cc(n-1)). hint excludes this.\<close>
+                    let ?t_edge = "1 - cc(?n-1)"
+                    have ht_edge_I: "?t_edge \<in> I_set" unfolding top1_unit_interval_def
+                      using \<open>cc(?n-1) \<ge> 0\<close> \<open>cc(?n-1) \<le> 1\<close> by simp
+                    have hSuc_nm1_mod: "Suc (?n - 1) mod ?n = 0" using hn_ge3 by (by100 simp)
+                    have hp_eq: "p = ((1-?t_edge)*vx2(?n-1)+?t_edge*vx2(Suc(?n-1) mod ?n),
+                                     (1-?t_edge)*vy2(?n-1)+?t_edge*vy2(Suc(?n-1) mod ?n))"
+                    proof -
+                      have "fst p = cc(?n-1)*vx2(?n-1) + (1-cc(?n-1))*vx2 0"
+                        using hfst_eq by linarith
+                      hence hfst2: "fst p = (1-?t_edge)*vx2(?n-1)+?t_edge*vx2 0" by simp
+                      have "snd p = cc(?n-1)*vy2(?n-1) + (1-cc(?n-1))*vy2 0"
+                        using hsnd_eq by linarith
+                      hence hsnd2: "snd p = (1-?t_edge)*vy2(?n-1)+?t_edge*vy2 0" by simp
+                      show ?thesis using hfst2 hsnd2 hSuc_nm1_mod
+                        by (metis surjective_pairing fst_conv snd_conv)
+                    qed
+                    have "?n - 1 < length ?w'" using \<open>?n - 1 < ?n\<close> hlen_eq by simp
+                    from hint[rule_format, OF \<open>?n - 1 < length ?w'\<close> ht_edge_I]
+                    have "p \<noteq> ((1-?t_edge)*vx2(?n-1)+?t_edge*vx2(Suc(?n-1) mod length ?w'),
+                               (1-?t_edge)*vy2(?n-1)+?t_edge*vy2(Suc(?n-1) mod length ?w'))" .
+                    with hp_eq hlen_eq show ?thesis by simp
                   next
                     case False4: False
                     hence "cross_diag p' = 0" using False3 by linarith
