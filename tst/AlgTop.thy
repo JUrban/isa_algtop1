@@ -2472,7 +2472,7 @@ next
           next
             case hk_eq: False
             hence "?k = ?n - 1" using hk_ge2 by (by100 simp)
-            show ?thesis sorry \<comment> \<open>k = n-1: diagonal IS edge n-1. Needs C9 restructuring.\<close>
+            show ?thesis using \<open>?k = ?n - 1\<close> hk_lt_nm1 by linarith
           qed
         qed
         have hnonc_sigma_on_edge: "\<And>i t. i < ?n \<Longrightarrow> i \<noteq> 0 \<Longrightarrow> i \<noteq> ?n - 1 \<Longrightarrow> t \<in> {0<..<(1::real)} \<Longrightarrow>
@@ -3583,9 +3583,156 @@ next
             qed
             have h1stp0: "1 - ?s - ?tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 ?j + t'*vx2(Suc ?j),
                                                                (1-t')*vy2 ?j + t'*vy2(Suc ?j)))"
-              sorry \<comment> \<open>F(x)=0 + x \\<in> P2 + C11 affine sum \\<to> x on edge j. Needs sum algebra.
-                 KEY: cross(v\\_j-x,v\\_{j+1}-x)=0 + P2 barycentrics + C11 at each vertex
-                 \\<to> only v\\_j, v\\_{j+1} have nonzero barycentrics \\<to> x on edge j.\<close>
+            proof
+              assume h1eq0: "1 - ?s - ?tp = 0"
+              \<comment> \<open>F(x) = cross(v\\_j - x, v\\_{j+1} - x) = 0 from 1-s-tp=0.\<close>
+              have hF_zero_x: "(vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x) = 0"
+              proof -
+                have "(1 - ?s - ?tp) * ?det = ?det - ?s_num - ?tp_num"
+                proof -
+                  have hs_c: "?s * ?det = ?s_num" using hne by (by100 simp)
+                  have htp_c: "?tp * ?det = ?tp_num" using hne by (by100 simp)
+                  have "(1 - ?s - ?tp) * ?det = ?det - ?s * ?det - ?tp * ?det" by (by100 algebra)
+                  thus ?thesis using hs_c htp_c by linarith
+                qed
+                hence "?det - ?s_num - ?tp_num = 0" using h1eq0 by simp
+                moreover have "?det - ?s_num - ?tp_num =
+                  (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
+                  by (by100 algebra)
+                ultimately show ?thesis by linarith
+              qed
+              \<comment> \<open>Express F as affine A+B*X+C*Y.\<close>
+              let ?Aj = "vx2 ?j * vy2(Suc ?j) - vy2 ?j * vx2(Suc ?j)"
+              let ?Bj = "vy2 ?j - vy2(Suc ?j)" let ?Cj = "vx2(Suc ?j) - vx2 ?j"
+              have hval_j_eq: "\<And>l. ?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                (vx2 ?j - vx2 l)*(vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l)*(vx2(Suc ?j) - vx2 l)"
+                by (by100 algebra)
+              have hF_affine_zero: "?Aj + ?Bj * fst x + ?Cj * snd x = 0"
+              proof -
+                have "?Aj + ?Bj * fst x + ?Cj * snd x =
+                  (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
+                  by (by100 algebra)
+                with hF_zero_x show ?thesis by linarith
+              qed
+              \<comment> \<open>Cross product negation identity (pure algebra, no LEAST).\<close>
+              have cross_sum_neg: "\<And>a b c d e f :: real.
+                (a - c) * (d - b) - (e - b) * (f - c) + ((c - a) * (d - e) - (b - e) * (f - a)) = 0"
+                by (by100 algebra)
+              \<comment> \<open>F \\<ge> 0 at all vertices (from C11).\<close>
+              have hF_nn: "\<forall>l<?n. ?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                show "?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+                proof (cases "l = ?j")
+                  case True thus ?thesis unfolding hval_j_eq by (by100 simp)
+                next
+                  case False show ?thesis
+                  proof (cases "l = Suc ?j")
+                    case True thus ?thesis unfolding hval_j_eq by (by100 simp)
+                  next
+                    case False2: False
+                    have hsj_mod: "Suc ?j mod ?n = Suc ?j" using hsj_lt by (by100 simp)
+                    have "l \<noteq> Suc ?j mod ?n" using False2 hsj_mod by simp
+                    from hC11_2[rule_format, OF hj_lt hl False \<open>l \<noteq> Suc ?j mod ?n\<close>]
+                    have hc11l: "(vx2 l - vx2 ?j)*(vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j)*(vx2(Suc ?j) - vx2 ?j) < 0"
+                      using hsj_mod by (by100 simp)
+                    have hneg_sum: "(vx2 l - vx2 ?j) * (vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j) * (vx2(Suc ?j) - vx2 ?j) +
+                      ((vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)) = 0"
+                      by (rule cross_sum_neg)
+                    have hcross_pos: "(vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l) > 0"
+                      using hc11l hneg_sum by linarith
+                    have hval_l: "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                      (vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)"
+                      by (rule hval_j_eq)
+                    thus ?thesis using hcross_pos hval_l by linarith
+                  qed
+                qed
+              qed
+              \<comment> \<open>F > 0 at vertices \\<noteq> j, Suc j.\<close>
+              have hF_strict: "\<forall>l<?n. l \<noteq> ?j \<longrightarrow> l \<noteq> Suc ?j \<longrightarrow> ?Aj + ?Bj * vx2 l + ?Cj * vy2 l > 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n" and hlj: "l \<noteq> ?j" and hlsj: "l \<noteq> Suc ?j"
+                have hsj_mod: "Suc ?j mod ?n = Suc ?j" using hsj_lt by (by100 simp)
+                have "l \<noteq> Suc ?j mod ?n" using hlsj hsj_mod by simp
+                from hC11_2[rule_format, OF hj_lt hl hlj \<open>l \<noteq> Suc ?j mod ?n\<close>]
+                have hc11l: "(vx2 l - vx2 ?j)*(vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j)*(vx2(Suc ?j) - vx2 ?j) < 0"
+                  using hsj_mod by (by100 simp)
+                have hneg_sum: "(vx2 l - vx2 ?j) * (vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j) * (vx2(Suc ?j) - vx2 ?j) +
+                  ((vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)) = 0"
+                  by (rule cross_sum_neg)
+                have hcross_pos: "(vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l) > 0"
+                  using hc11l hneg_sum by linarith
+                have hval_l: "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                  (vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)"
+                  by (rule hval_j_eq)
+                thus "?Aj + ?Bj * vx2 l + ?Cj * vy2 l > 0" using hcross_pos hval_l by linarith
+              qed
+              \<comment> \<open>Extract barycentrics from P2.\<close>
+              from hx[unfolded hC5_2]
+              obtain cc where hcc: "\<forall>i<?n. cc i \<ge> 0" "(\<Sum>i<?n. cc i) = 1"
+                "fst x = (\<Sum>i<?n. cc i * vx2 i)" "snd x = (\<Sum>i<?n. cc i * vy2 i)"
+                by (by5000 auto)
+              \<comment> \<open>Apply affine\\_zero lemma: all coeffs except j, Suc j are 0.\<close>
+              from affine_zero_on_convex_hull_imp_on_edge[OF hcc(1) hcc(2) hcc(3) hcc(4)
+                hF_affine_zero hF_nn hj_lt hsj_lt hF_strict]
+              have hcoeffs_zero: "\<forall>l<?n. l \<noteq> ?j \<longrightarrow> l \<noteq> Suc ?j \<longrightarrow> cc l = 0" .
+              \<comment> \<open>x = cc(?j)*v\\_j + cc(Suc ?j)*v\\_{j+1} on edge j.\<close>
+              have hcc_rest_zero: "\<forall>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l = 0"
+              proof
+                fix l assume "l \<in> {..<?n}-{?j}-{Suc ?j}"
+                hence "l < ?n" "l \<noteq> ?j" "l \<noteq> Suc ?j" by (by100 simp)+
+                from hcoeffs_zero[rule_format, OF \<open>l < ?n\<close> \<open>l \<noteq> ?j\<close> \<open>l \<noteq> Suc ?j\<close>] show "cc l = 0" .
+              qed
+              have hj_in: "?j \<in> {..<?n}" using hj_lt by (by100 simp)
+              have hsj_in: "Suc ?j \<in> {..<?n} - {?j}" using hsj_lt by (by100 simp)
+              have "(\<Sum>i<?n. cc i) = cc ?j + cc (Suc ?j) + (\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l)"
+                using sum.remove[of "{..<?n}" ?j cc] hj_in
+                      sum.remove[of "{..<?n}-{?j}" "Suc ?j" cc] hsj_in by (by5000 simp)
+              hence hcc_jj_sum: "cc ?j + cc (Suc ?j) = 1"
+                using hcc(2) sum.neutral[OF hcc_rest_zero] by linarith
+              have "(\<Sum>i<?n. cc i * vx2 i) = cc ?j * vx2 ?j + cc (Suc ?j) * vx2(Suc ?j)"
+              proof -
+                have "(\<Sum>i<?n. cc i * vx2 i) = cc ?j * vx2 ?j + cc (Suc ?j) * vx2(Suc ?j) +
+                  (\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l * vx2 l)"
+                  using sum.remove[of "{..<?n}" ?j "\<lambda>i. cc i * vx2 i"] hj_in
+                        sum.remove[of "{..<?n}-{?j}" "Suc ?j" "\<lambda>i. cc i * vx2 i"] hsj_in
+                  by (by5000 simp)
+                moreover have "(\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l * vx2 l) = 0"
+                  by (rule sum.neutral, simp add: hcc_rest_zero)
+                ultimately show ?thesis by linarith
+              qed
+              hence hfst_jj: "fst x = cc ?j * vx2 ?j + cc (Suc ?j) * vx2(Suc ?j)"
+                using hcc(3) by linarith
+              have "(\<Sum>i<?n. cc i * vy2 i) = cc ?j * vy2 ?j + cc (Suc ?j) * vy2(Suc ?j)"
+              proof -
+                have "(\<Sum>i<?n. cc i * vy2 i) = cc ?j * vy2 ?j + cc (Suc ?j) * vy2(Suc ?j) +
+                  (\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l * vy2 l)"
+                  using sum.remove[of "{..<?n}" ?j "\<lambda>i. cc i * vy2 i"] hj_in
+                        sum.remove[of "{..<?n}-{?j}" "Suc ?j" "\<lambda>i. cc i * vy2 i"] hsj_in
+                  by (by5000 simp)
+                moreover have "(\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l * vy2 l) = 0"
+                  by (rule sum.neutral, simp add: hcc_rest_zero)
+                ultimately show ?thesis by linarith
+              qed
+              hence hsnd_jj: "snd x = cc ?j * vy2 ?j + cc (Suc ?j) * vy2(Suc ?j)"
+                using hcc(4) by linarith
+              \<comment> \<open>x = (1 - cc(Suc j))*v\\_j + cc(Suc j)*v\\_{j+1} with t' = cc(Suc j) \\<in> [0,1].\<close>
+              have hcc_j_eq: "cc ?j = 1 - cc(Suc ?j)" using hcc_jj_sum by linarith
+              have hx_fst: "fst x = (1 - cc(Suc ?j))*vx2 ?j + cc(Suc ?j)*vx2(Suc ?j)"
+                using hfst_jj[unfolded hcc_j_eq] .
+              have hx_snd: "snd x = (1 - cc(Suc ?j))*vy2 ?j + cc(Suc ?j)*vy2(Suc ?j)"
+                using hsnd_jj[unfolded hcc_j_eq] .
+              have hx_edge: "x = ((1 - cc(Suc ?j))*vx2 ?j + cc(Suc ?j)*vx2(Suc ?j),
+                                  (1 - cc(Suc ?j))*vy2 ?j + cc(Suc ?j)*vy2(Suc ?j))"
+                using hx_fst hx_snd by (metis surjective_pairing fst_conv snd_conv)
+              have hcc_sj_nn: "0 \<le> cc(Suc ?j)" using hcc(1)[rule_format, OF hsj_lt] .
+              have hcc_sj_le1: "cc(Suc ?j) \<le> 1"
+                using hcc_jj_sum hcc(1)[rule_format, OF hj_lt] by linarith
+              have "cc(Suc ?j) \<in> I_set" unfolding top1_unit_interval_def
+                using hcc_sj_nn hcc_sj_le1 by simp
+              show "\<exists>t'\<in>I_set. x = ((1-t')*vx2 ?j + t'*vx2(Suc ?j), (1-t')*vy2 ?j + t'*vy2(Suc ?j))"
+                using hx_edge \<open>cc(Suc ?j) \<in> I_set\<close> by (by100 blast)
+            qed
             \<comment> \<open>Package as existential.\<close>
             show "\<exists>j s tp. 1 \<le> j \<and> j < ?k \<and> s \<ge> 0 \<and> tp \<ge> 0 \<and> 1 - s - tp \<ge> 0 \<and>
               phi_L x = ((1-s-tp)*vx2 0 + s*vx2(?k+1-j) + tp*vx2(?k-j),
@@ -4137,7 +4284,355 @@ next
               (tp = 0 \<longrightarrow> (vx2 j - vx2 0)*(snd x - vy2 0) = (vy2 j - vy2 0)*(fst x - vx2 0)) \<and>
               (1 - s - tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 j + t'*vx2(Suc j),
                                                      (1-t')*vy2 j + t'*vy2(Suc j))))"
-            sorry \<comment> \<open>Sector + LEAST + Cramer for right fan. Symmetric to hphi\\_L\\_decomp.\<close>
+          proof -
+            fix x assume hx: "x \<in> P2" and hcd: "cross_diag x > 0"
+            \<comment> \<open>Step 1: cross at k \\<ge> 0 (from cross\\_diag > 0).\<close>
+            have hcrossk_ge: "(vx2 ?k - vx2 0)*(snd x - vy2 0) - (vy2 ?k - vy2 0)*(fst x - vx2 0) \<ge> 0"
+              using hcd unfolding cross_diag_def by linarith
+            \<comment> \<open>Step 2: cross at n-1 \\<le> 0 (affine argument: all vertices have value \\<le> 0).\<close>
+            have hcrossnm1_le: "(vx2(?n - 1) - vx2 0)*(snd x - vy2 0) - (vy2(?n - 1) - vy2 0)*(fst x - vx2 0) \<le> 0"
+            proof -
+              \<comment> \<open>Use negated affine function: G(p) = cross(p - v\\_0, v\\_{n-1} - v\\_0) \\<ge> 0 at all vertices.\<close>
+              let ?An = "(vx2(?n-1) - vx2 0)*vy2 0 - (vy2(?n-1) - vy2 0)*vx2 0"
+              let ?Bn = "vy2(?n-1) - vy2 0" let ?Cn = "-(vx2(?n-1) - vx2 0)"
+              have hrew: "(vx2(?n-1) - vx2 0)*(snd x - vy2 0) - (vy2(?n-1) - vy2 0)*(fst x - vx2 0)
+                = -(?An + ?Bn * fst x + ?Cn * snd x)" by (by100 algebra)
+              have hval_nm1: "\<And>l. ?An + ?Bn * vx2 l + ?Cn * vy2 l =
+                (vx2 l - vx2 0)*(vy2(?n-1) - vy2 0) - (vy2 l - vy2 0)*(vx2(?n-1) - vx2 0)"
+                by (by100 algebra)
+              have "\<forall>l<?n. ?An + ?Bn * vx2 l + ?Cn * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                show "?An + ?Bn * vx2 l + ?Cn * vy2 l \<ge> 0"
+                proof (cases "l = 0")
+                  case True thus ?thesis unfolding hval_nm1 by (by100 simp)
+                next
+                  case hli: False show ?thesis
+                  proof (cases "l = ?n - 1")
+                    case True thus ?thesis unfolding hval_nm1 by (by100 simp)
+                  next
+                    case False hence "l < ?n - 1" using hl by (by100 linarith)
+                    hence "1 \<le> l" using hli by (by100 linarith)
+                    have hnm1: "?n - 1 < ?n" using hn_ge3 by (by100 linarith)
+                    from hfan_det_0[rule_format, OF hl hnm1 \<open>1 \<le> l\<close> \<open>l < ?n - 1\<close>]
+                    show ?thesis unfolding hval_nm1 by linarith
+                  qed
+                qed
+              qed
+              from haffine_nonneg[OF hx this] show ?thesis unfolding hrew by linarith
+            qed
+            \<comment> \<open>Step 3: IVT for sector existence in [k, n-1).\<close>
+            have hnm1_val: "?n - 1 = ?n - Suc 0" using hn_ge3 by (by100 linarith)
+            have hk_lt_nm1': "?k < ?n - 1" using hk_lt_nm1 by linarith
+            have hex_d: "\<exists>j. ?k \<le> j \<and> j < ?n - 1 \<and>
+              (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc j) - vy2 0)*(fst x - vx2 0) \<le> 0"
+            proof -
+              define f where "f j = (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0)" for j
+              have hfk: "f ?k \<ge> 0" using hcrossk_ge unfolding f_def .
+              have hfnm1: "f (?n - 1) \<le> 0" using hcrossnm1_le unfolding f_def .
+              have "\<forall>m. ?k \<le> m \<longrightarrow> m < ?n - 1 \<longrightarrow> f m \<ge> 0 \<longrightarrow>
+                  (\<exists>j. m \<le> j \<and> j < ?n - 1 \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0)"
+              proof (intro allI impI)
+                fix m assume "?k \<le> m" and hmn: "m < ?n - 1" and hfm: "f m \<ge> 0"
+                show "\<exists>j. m \<le> j \<and> j < ?n - 1 \<and> f j \<ge> 0 \<and> f (Suc j) \<le> 0"
+                  using hmn hfm
+                proof (induction "?n - 1 - m" arbitrary: m)
+                  case 0 thus ?case by linarith
+                next
+                  case (Suc d)
+                  show ?case
+                  proof (cases "f (Suc m) \<le> 0")
+                    case True show ?thesis
+                      apply (rule exI[of _ m]) using True Suc.prems by (by100 blast)
+                  next
+                    case False hence "f (Suc m) > 0" by linarith
+                    hence "f (Suc m) \<ge> 0" by linarith
+                    have "Suc m \<le> ?n - 1" using Suc.prems Suc.hyps by linarith
+                    moreover have "Suc m \<noteq> ?n - 1"
+                    proof assume "Suc m = ?n - 1" hence "f (Suc m) \<le> 0" using hfnm1 by (by100 simp)
+                      with \<open>f (Suc m) > 0\<close> show False by linarith qed
+                    ultimately have "Suc m < ?n - 1" by linarith
+                    have "d = ?n - 1 - Suc m" using Suc.hyps by linarith
+                    from Suc.hyps(1)[OF this \<open>Suc m < ?n - 1\<close> \<open>f (Suc m) \<ge> 0\<close>]
+                    obtain j where hj: "Suc m \<le> j" "j < ?n - 1" "f j \<ge> 0" "f (Suc j) \<le> 0" by blast
+                    hence "m \<le> j" by linarith
+                    with hj show ?thesis by (by100 blast)
+                  qed
+                qed
+              qed
+              from this[rule_format, OF le_refl hk_lt_nm1' hfk]
+              obtain j where "?k \<le> j" "j < ?n - 1" "f j \<ge> 0" "f (Suc j) \<le> 0" by (by100 blast)
+              thus ?thesis unfolding f_def by (by100 blast)
+            qed
+            then obtain jj where hjj: "?k \<le> jj" "jj < ?n - 1"
+              "(vx2 jj - vx2 0)*(snd x - vy2 0) - (vy2 jj - vy2 0)*(fst x - vx2 0) \<ge> 0"
+              "(vx2(Suc jj) - vx2 0)*(snd x - vy2 0) - (vy2(Suc jj) - vy2 0)*(fst x - vx2 0) \<le> 0"
+              by (by100 blast)
+            \<comment> \<open>The LEAST sector has the same properties.\<close>
+            let ?PR = "\<lambda>j. ?k \<le> j \<and> j < ?n - 1 \<and>
+              (vx2 j - vx2 0)*(snd x - vy2 0) - (vy2 j - vy2 0)*(fst x - vx2 0) \<ge> 0 \<and>
+              (vx2(Suc j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc j) - vy2 0)*(fst x - vx2 0) \<le> 0"
+            from hex_d have "\<exists>j. ?PR j" by (by100 blast)
+            from LeastI_ex[OF this] have hPR: "?PR (LEAST j. ?PR j)" .
+            let ?j = "LEAST j. ?PR j"
+            have hj_ge_k: "?k \<le> ?j" and hjn: "?j < ?n - 1"
+              and hcross_ge: "(vx2 ?j - vx2 0)*(snd x - vy2 0) - (vy2 ?j - vy2 0)*(fst x - vx2 0) \<ge> 0"
+              and hcross_le: "(vx2(Suc ?j) - vx2 0)*(snd x - vy2 0) - (vy2(Suc ?j) - vy2 0)*(fst x - vx2 0) \<le> 0"
+              using hPR by (by100 blast)+
+            \<comment> \<open>Cramer coordinates.\<close>
+            have hj_lt: "?j < ?n" using hjn by (by100 linarith)
+            have hsj_lt: "Suc ?j < ?n" using hjn by (by100 linarith)
+            let ?det = "(vx2 ?j - vx2 0)*(vy2(Suc ?j) - vy2 0) - (vy2 ?j - vy2 0)*(vx2(Suc ?j) - vx2 0)"
+            have hdet_pos: "?det > 0"
+            proof -
+              have "1 \<le> ?j" using hj_ge_k hk_ge2 by (by100 linarith)
+              from hfan_det_0[rule_format, OF hj_lt hsj_lt \<open>1 \<le> ?j\<close> lessI] show ?thesis .
+            qed
+            have hne: "?det \<noteq> 0" using hdet_pos by linarith
+            let ?s_num = "(vy2(Suc ?j) - vy2 0)*(fst x - vx2 0) - (vx2(Suc ?j) - vx2 0)*(snd x - vy2 0)"
+            let ?tp_num = "(vx2 ?j - vx2 0)*(snd x - vy2 0) - (vy2 ?j - vy2 0)*(fst x - vx2 0)"
+            let ?s = "?s_num / ?det" let ?tp = "?tp_num / ?det"
+            have hs_nn: "?s_num \<ge> 0" using hcross_le by linarith
+            have htp_nn: "?tp_num \<ge> 0" using hcross_ge by linarith
+            have hs_ge0: "?s \<ge> 0" using hs_nn hdet_pos divide_nonneg_nonneg by (by100 fastforce)
+            have htp_ge0: "?tp \<ge> 0" using htp_nn hdet_pos divide_nonneg_nonneg by (by100 fastforce)
+            \<comment> \<open>1-s-tp \\<ge> 0: from C11 affine argument.\<close>
+            have h1stp_ge0: "1 - ?s - ?tp \<ge> 0"
+            proof -
+              let ?Aj = "vx2 ?j * vy2(Suc ?j) - vy2 ?j * vx2(Suc ?j)"
+              let ?Bj = "vy2 ?j - vy2(Suc ?j)" let ?Cj = "vx2(Suc ?j) - vx2 ?j"
+              have hnum_eq: "?det - ?s_num - ?tp_num =
+                (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
+                by (by100 algebra)
+              have hF_form: "\<And>px py :: real. (vx2 ?j - px)*(vy2(Suc ?j) - py) - (vy2 ?j - py)*(vx2(Suc ?j) - px)
+                = ?Aj + ?Bj * px + ?Cj * py" by (by100 algebra)
+              have hval_j_eq: "\<And>l. ?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                (vx2 ?j - vx2 l)*(vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l)*(vx2(Suc ?j) - vx2 l)"
+                by (by100 algebra)
+              have cross_sum_neg: "\<And>a b c d e f :: real.
+                (a - c) * (d - b) - (e - b) * (f - c) + ((c - a) * (d - e) - (b - e) * (f - a)) = 0"
+                by (by100 algebra)
+              have "\<forall>l<?n. ?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                show "?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+                proof (cases "l = ?j")
+                  case True thus ?thesis unfolding hval_j_eq by (by100 simp)
+                next
+                  case False show ?thesis
+                  proof (cases "l = Suc ?j")
+                    case True thus ?thesis unfolding hval_j_eq by (by100 simp)
+                  next
+                    case False2: False
+                    have hsj_mod: "Suc ?j mod ?n = Suc ?j" using hsj_lt by (by100 simp)
+                    have hl_ne_sj_mod: "l \<noteq> Suc ?j mod ?n" using False2 hsj_mod by simp
+                    from hC11_2[rule_format, OF hj_lt hl False hl_ne_sj_mod]
+                    have hc11l: "(vx2 l - vx2 ?j)*(vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j)*(vx2(Suc ?j) - vx2 ?j) < 0"
+                      using hsj_mod by (by100 simp)
+                    have hneg_sum: "(vx2 l - vx2 ?j) * (vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j) * (vx2(Suc ?j) - vx2 ?j) +
+                      ((vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)) = 0"
+                      by (rule cross_sum_neg)
+                    have hcross_pos: "(vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l) > 0"
+                      using hc11l hneg_sum by linarith
+                    have hval_l: "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                      (vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)"
+                      by (rule hval_j_eq)
+                    thus ?thesis using hcross_pos hval_l by linarith
+                  qed
+                qed
+              qed
+              from haffine_nonneg[OF hx this]
+              have hF_ge0: "?Aj + ?Bj * fst x + ?Cj * snd x \<ge> 0" .
+              have hF_eq_cross: "?Aj + ?Bj * fst x + ?Cj * snd x =
+                (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
+                using hF_form by simp
+              hence hnum_ge0: "?det - ?s_num - ?tp_num \<ge> 0"
+                using hF_ge0 hnum_eq by linarith
+              have hs_cancel: "?s * ?det = ?s_num" using hne by (by100 simp)
+              have htp_cancel: "?tp * ?det = ?tp_num" using hne by (by100 simp)
+              have "(1 - ?s - ?tp) * ?det = ?det - ?s * ?det - ?tp * ?det" by (by100 algebra)
+              hence "(1 - ?s - ?tp) * ?det = ?det - ?s_num - ?tp_num"
+                using hs_cancel htp_cancel by linarith
+              hence "(1 - ?s - ?tp) * ?det \<ge> 0" using hnum_ge0 by linarith
+              show ?thesis
+              proof (rule ccontr)
+                assume "\<not> ?thesis" hence "1 - ?s - ?tp < 0" by linarith
+                hence "(1 - ?s - ?tp) * ?det < 0" using hdet_pos mult_neg_pos by (by100 blast)
+                with \<open>(1 - ?s - ?tp) * ?det \<ge> 0\<close> show False by linarith
+              qed
+            qed
+            \<comment> \<open>phi\\_R equality from definition.\<close>
+            have hphi_eq: "phi_R x = ((1-?s-?tp)*vx2 ?k + ?s*vx2(Suc ?j) + ?tp*vx2(Suc(Suc ?j) mod ?n),
+                                       (1-?s-?tp)*vy2 ?k + ?s*vy2(Suc ?j) + ?tp*vy2(Suc(Suc ?j) mod ?n))"
+              unfolding phi_R_def Let_def by (by100 simp)
+            \<comment> \<open>Cramer connections.\<close>
+            have hs0: "?s = 0 \<longrightarrow> (vx2(Suc ?j) - vx2 0)*(snd x - vy2 0) = (vy2(Suc ?j) - vy2 0)*(fst x - vx2 0)"
+            proof
+              assume "?s = 0" hence "?s_num = 0" using hne by (by100 simp)
+              thus "(vx2(Suc ?j) - vx2 0)*(snd x - vy2 0) = (vy2(Suc ?j) - vy2 0)*(fst x - vx2 0)"
+                by linarith
+            qed
+            have htp0: "?tp = 0 \<longrightarrow> (vx2 ?j - vx2 0)*(snd x - vy2 0) = (vy2 ?j - vy2 0)*(fst x - vx2 0)"
+            proof
+              assume "?tp = 0" hence "?tp_num = 0" using hne by (by100 simp)
+              thus "(vx2 ?j - vx2 0)*(snd x - vy2 0) = (vy2 ?j - vy2 0)*(fst x - vx2 0)"
+                by linarith
+            qed
+            have h1stp0: "1 - ?s - ?tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 ?j + t'*vx2(Suc ?j),
+                                                               (1-t')*vy2 ?j + t'*vy2(Suc ?j)))"
+            proof
+              assume h1eq0: "1 - ?s - ?tp = 0"
+              have hF_zero_x: "(vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x) = 0"
+              proof -
+                have "(1 - ?s - ?tp) * ?det = ?det - ?s_num - ?tp_num"
+                proof -
+                  have hs_c: "?s * ?det = ?s_num" using hne by (by100 simp)
+                  have htp_c: "?tp * ?det = ?tp_num" using hne by (by100 simp)
+                  have "(1 - ?s - ?tp) * ?det = ?det - ?s * ?det - ?tp * ?det" by (by100 algebra)
+                  thus ?thesis using hs_c htp_c by linarith
+                qed
+                hence "?det - ?s_num - ?tp_num = 0" using h1eq0 by simp
+                moreover have "?det - ?s_num - ?tp_num =
+                  (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
+                  by (by100 algebra)
+                ultimately show ?thesis by linarith
+              qed
+              let ?Aj = "vx2 ?j * vy2(Suc ?j) - vy2 ?j * vx2(Suc ?j)"
+              let ?Bj = "vy2 ?j - vy2(Suc ?j)" let ?Cj = "vx2(Suc ?j) - vx2 ?j"
+              have hval_j_eq: "\<And>l. ?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                (vx2 ?j - vx2 l)*(vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l)*(vx2(Suc ?j) - vx2 l)"
+                by (by100 algebra)
+              have hF_affine_zero: "?Aj + ?Bj * fst x + ?Cj * snd x = 0"
+              proof -
+                have "?Aj + ?Bj * fst x + ?Cj * snd x =
+                  (vx2 ?j - fst x)*(vy2(Suc ?j) - snd x) - (vy2 ?j - snd x)*(vx2(Suc ?j) - fst x)"
+                  by (by100 algebra)
+                with hF_zero_x show ?thesis by linarith
+              qed
+              have cross_sum_neg: "\<And>a b c d e f :: real.
+                (a - c) * (d - b) - (e - b) * (f - c) + ((c - a) * (d - e) - (b - e) * (f - a)) = 0"
+                by (by100 algebra)
+              have hF_nn: "\<forall>l<?n. ?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n"
+                show "?Aj + ?Bj * vx2 l + ?Cj * vy2 l \<ge> 0"
+                proof (cases "l = ?j")
+                  case True thus ?thesis unfolding hval_j_eq by (by100 simp)
+                next
+                  case False show ?thesis
+                  proof (cases "l = Suc ?j")
+                    case True thus ?thesis unfolding hval_j_eq by (by100 simp)
+                  next
+                    case False2: False
+                    have hsj_mod: "Suc ?j mod ?n = Suc ?j" using hsj_lt by (by100 simp)
+                    have "l \<noteq> Suc ?j mod ?n" using False2 hsj_mod by simp
+                    from hC11_2[rule_format, OF hj_lt hl False \<open>l \<noteq> Suc ?j mod ?n\<close>]
+                    have hc11l: "(vx2 l - vx2 ?j)*(vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j)*(vx2(Suc ?j) - vx2 ?j) < 0"
+                      using hsj_mod by (by100 simp)
+                    have hneg_sum: "(vx2 l - vx2 ?j) * (vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j) * (vx2(Suc ?j) - vx2 ?j) +
+                      ((vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)) = 0"
+                      by (rule cross_sum_neg)
+                    have hcross_pos: "(vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l) > 0"
+                      using hc11l hneg_sum by linarith
+                    have hval_l: "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                      (vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)"
+                      by (rule hval_j_eq)
+                    thus ?thesis using hcross_pos hval_l by linarith
+                  qed
+                qed
+              qed
+              have hF_strict: "\<forall>l<?n. l \<noteq> ?j \<longrightarrow> l \<noteq> Suc ?j \<longrightarrow> ?Aj + ?Bj * vx2 l + ?Cj * vy2 l > 0"
+              proof (intro allI impI)
+                fix l assume hl: "l < ?n" and hlj: "l \<noteq> ?j" and hlsj: "l \<noteq> Suc ?j"
+                have hsj_mod: "Suc ?j mod ?n = Suc ?j" using hsj_lt by (by100 simp)
+                have "l \<noteq> Suc ?j mod ?n" using hlsj hsj_mod by simp
+                from hC11_2[rule_format, OF hj_lt hl hlj \<open>l \<noteq> Suc ?j mod ?n\<close>]
+                have hc11l: "(vx2 l - vx2 ?j)*(vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j)*(vx2(Suc ?j) - vx2 ?j) < 0"
+                  using hsj_mod by (by100 simp)
+                have hneg_sum: "(vx2 l - vx2 ?j) * (vy2(Suc ?j) - vy2 ?j) - (vy2 l - vy2 ?j) * (vx2(Suc ?j) - vx2 ?j) +
+                  ((vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)) = 0"
+                  by (rule cross_sum_neg)
+                have hcross_pos: "(vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l) > 0"
+                  using hc11l hneg_sum by linarith
+                have hval_l: "?Aj + ?Bj * vx2 l + ?Cj * vy2 l =
+                  (vx2 ?j - vx2 l) * (vy2(Suc ?j) - vy2 l) - (vy2 ?j - vy2 l) * (vx2(Suc ?j) - vx2 l)"
+                  by (rule hval_j_eq)
+                thus "?Aj + ?Bj * vx2 l + ?Cj * vy2 l > 0" using hcross_pos hval_l by linarith
+              qed
+              from hx[unfolded hC5_2]
+              obtain cc where hcc: "\<forall>i<?n. cc i \<ge> 0" "(\<Sum>i<?n. cc i) = 1"
+                "fst x = (\<Sum>i<?n. cc i * vx2 i)" "snd x = (\<Sum>i<?n. cc i * vy2 i)"
+                by (by5000 auto)
+              from affine_zero_on_convex_hull_imp_on_edge[OF hcc(1) hcc(2) hcc(3) hcc(4)
+                hF_affine_zero hF_nn hj_lt hsj_lt hF_strict]
+              have hcoeffs_zero: "\<forall>l<?n. l \<noteq> ?j \<longrightarrow> l \<noteq> Suc ?j \<longrightarrow> cc l = 0" .
+              have hcc_rest_zero: "\<forall>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l = 0"
+              proof
+                fix l assume "l \<in> {..<?n}-{?j}-{Suc ?j}"
+                hence "l < ?n" "l \<noteq> ?j" "l \<noteq> Suc ?j" by (by100 simp)+
+                from hcoeffs_zero[rule_format, OF \<open>l < ?n\<close> \<open>l \<noteq> ?j\<close> \<open>l \<noteq> Suc ?j\<close>] show "cc l = 0" .
+              qed
+              have hj_in: "?j \<in> {..<?n}" using hj_lt by (by100 simp)
+              have hsj_in: "Suc ?j \<in> {..<?n} - {?j}" using hsj_lt by (by100 simp)
+              have "(\<Sum>i<?n. cc i) = cc ?j + cc (Suc ?j) + (\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l)"
+                using sum.remove[of "{..<?n}" ?j cc] hj_in
+                      sum.remove[of "{..<?n}-{?j}" "Suc ?j" cc] hsj_in by (by5000 simp)
+              hence hcc_jj_sum: "cc ?j + cc (Suc ?j) = 1"
+                using hcc(2) sum.neutral[OF hcc_rest_zero] by linarith
+              have "(\<Sum>i<?n. cc i * vx2 i) = cc ?j * vx2 ?j + cc (Suc ?j) * vx2(Suc ?j)"
+              proof -
+                have "(\<Sum>i<?n. cc i * vx2 i) = cc ?j * vx2 ?j + cc (Suc ?j) * vx2(Suc ?j) +
+                  (\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l * vx2 l)"
+                  using sum.remove[of "{..<?n}" ?j "\<lambda>i. cc i * vx2 i"] hj_in
+                        sum.remove[of "{..<?n}-{?j}" "Suc ?j" "\<lambda>i. cc i * vx2 i"] hsj_in
+                  by (by5000 simp)
+                moreover have "(\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l * vx2 l) = 0"
+                  by (rule sum.neutral, simp add: hcc_rest_zero)
+                ultimately show ?thesis by linarith
+              qed
+              hence hfst_jj: "fst x = cc ?j * vx2 ?j + cc (Suc ?j) * vx2(Suc ?j)"
+                using hcc(3) by linarith
+              have "(\<Sum>i<?n. cc i * vy2 i) = cc ?j * vy2 ?j + cc (Suc ?j) * vy2(Suc ?j)"
+              proof -
+                have "(\<Sum>i<?n. cc i * vy2 i) = cc ?j * vy2 ?j + cc (Suc ?j) * vy2(Suc ?j) +
+                  (\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l * vy2 l)"
+                  using sum.remove[of "{..<?n}" ?j "\<lambda>i. cc i * vy2 i"] hj_in
+                        sum.remove[of "{..<?n}-{?j}" "Suc ?j" "\<lambda>i. cc i * vy2 i"] hsj_in
+                  by (by5000 simp)
+                moreover have "(\<Sum>l\<in>{..<?n}-{?j}-{Suc ?j}. cc l * vy2 l) = 0"
+                  by (rule sum.neutral, simp add: hcc_rest_zero)
+                ultimately show ?thesis by linarith
+              qed
+              hence hsnd_jj: "snd x = cc ?j * vy2 ?j + cc (Suc ?j) * vy2(Suc ?j)"
+                using hcc(4) by linarith
+              have hcc_j_eq: "cc ?j = 1 - cc(Suc ?j)" using hcc_jj_sum by linarith
+              have hx_fst: "fst x = (1 - cc(Suc ?j))*vx2 ?j + cc(Suc ?j)*vx2(Suc ?j)"
+                using hfst_jj[unfolded hcc_j_eq] .
+              have hx_snd: "snd x = (1 - cc(Suc ?j))*vy2 ?j + cc(Suc ?j)*vy2(Suc ?j)"
+                using hsnd_jj[unfolded hcc_j_eq] .
+              have hx_edge: "x = ((1 - cc(Suc ?j))*vx2 ?j + cc(Suc ?j)*vx2(Suc ?j),
+                                  (1 - cc(Suc ?j))*vy2 ?j + cc(Suc ?j)*vy2(Suc ?j))"
+                using hx_fst hx_snd by (metis surjective_pairing fst_conv snd_conv)
+              have hcc_sj_nn: "0 \<le> cc(Suc ?j)" using hcc(1)[rule_format, OF hsj_lt] .
+              have hcc_sj_le1: "cc(Suc ?j) \<le> 1"
+                using hcc_jj_sum hcc(1)[rule_format, OF hj_lt] by linarith
+              have "cc(Suc ?j) \<in> I_set" unfolding top1_unit_interval_def
+                using hcc_sj_nn hcc_sj_le1 by simp
+              show "\<exists>t'\<in>I_set. x = ((1-t')*vx2 ?j + t'*vx2(Suc ?j), (1-t')*vy2 ?j + t'*vy2(Suc ?j))"
+                using hx_edge \<open>cc(Suc ?j) \<in> I_set\<close> by (by100 blast)
+            qed
+            \<comment> \<open>Package as existential.\<close>
+            show "\<exists>j s tp. ?k \<le> j \<and> j < ?n - 1 \<and> s \<ge> 0 \<and> tp \<ge> 0 \<and> 1 - s - tp \<ge> 0 \<and>
+              phi_R x = ((1-s-tp)*vx2 ?k + s*vx2(Suc j) + tp*vx2(Suc(Suc j) mod ?n),
+                         (1-s-tp)*vy2 ?k + s*vy2(Suc j) + tp*vy2(Suc(Suc j) mod ?n)) \<and>
+              (s = 0 \<longrightarrow> (vx2(Suc j) - vx2 0)*(snd x - vy2 0) = (vy2(Suc j) - vy2 0)*(fst x - vx2 0)) \<and>
+              (tp = 0 \<longrightarrow> (vx2 j - vx2 0)*(snd x - vy2 0) = (vy2 j - vy2 0)*(fst x - vx2 0)) \<and>
+              (1 - s - tp = 0 \<longrightarrow> (\<exists>t'\<in>I_set. x = ((1-t')*vx2 j + t'*vx2(Suc j),
+                                                     (1-t')*vy2 j + t'*vy2(Suc j))))"
+              apply (rule exI[of _ ?j], rule exI[of _ ?s], rule exI[of _ ?tp])
+              using hj_ge_k hjn hs_ge0 htp_ge0 h1stp_ge0 hphi_eq hs0 htp0 h1stp0 by (by5000 blast)
+          qed
           \<comment> \<open>HELPER: k = Suc i mod n with k \\<ge> 2, k < n, i < n implies i = k - 1.
              Because i = n-1 gives Suc i mod n = 0, contradicting k \\<ge> 2.\<close>
           have hk_suc_mod: "\<And>ii. ii < ?n \<Longrightarrow> ?k = Suc ii mod ?n \<Longrightarrow> ii = ?k - 1"
@@ -5494,7 +5989,7 @@ next
               and hsR: "sR \<ge> 0" and htpR: "tpR \<ge> 0" and h1stR: "1 - sR - tpR \<ge> 0"
               and hphiR_dec: "phi_R y = ((1-sR-tpR)*vx2 ?k + sR*vx2(Suc jR) + tpR*vx2(Suc(Suc jR) mod ?n),
                                          (1-sR-tpR)*vy2 ?k + sR*vy2(Suc jR) + tpR*vy2(Suc(Suc jR) mod ?n))"
-              sorry \<comment> \<open>hphi\\_R\\_decomp extraction.\<close>
+              by (by5000 blast)
             have hsumR: "(1-sR-tpR) + sR + tpR = (1::real)" by linarith
             have hcd_eqR: "cross_diag (phi_R y) =
               sR*((vx2 ?k - vx2 0)*(vy2(Suc jR) - vy2 0) - (vy2 ?k - vy2 0)*(vx2(Suc jR) - vx2 0))
